@@ -60,5 +60,5 @@ rep("  // ---------- Magic Shop (east) ----------\n  {const b=new THREE.Group();
 rep("  }\n  // ---------- Tavern (west) ----------","  T.mvCol=T.col.slice(mvc0);\n  }\n  // ---------- Tavern (west) ----------")
 
 # v78: arsenal (weapon types, attacks, 100 items) and mounts + Stable
-a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzA_arsenal.js').read()+"\n"+open(M+'zzB_mounts.js').read()+"\n"+open(M+'zzC_music.js').read()+a)
+a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzA_arsenal.js').read()+"\n"+open(M+'zzB_mounts.js').read()+"\n"+open(M+'zzC_music.js').read()+"\n"+open(M+'zzD_anim.js').read()+a)
 open(P,'w').write(h);print('v6 ok')
