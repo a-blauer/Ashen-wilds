@@ -29,8 +29,8 @@ The build is a **patch chain**, not a bundler:
 
 ## v79: Valheim-style fox
 
-- `zzC_fox.js` (spliced last in pV6) replaces the Foxlet look with a hand-built low-poly fox: one flat-shaded, vertex-coloured body loft (head, torso, bushy tail, legs) skinned to the old Foxlet bones, plus baked detail parts (`foxKit`: eyes, jaw, cheek/throat ruffs, paws, variant and trait extras) and ear pivots on the head bone. `crRig` is wrapped so any creature using the `Foxlet` rig (Foxlet, Emberlynx, wild foxes) gets the new model; animation is still `rigAnim`. Fused companions still get the other species' signature parts.
-- Test: `python3 v79t.py` renders the fox in a studio scene (angles, walk, attack, variants) to `test/out/fox_*.png`.
+- `zzD_fox.js` (spliced last in pV6) replaces the Foxlet look with a hand-built low-poly fox: one flat-shaded, vertex-coloured body loft (head, torso, bushy tail, legs) skinned to the old Foxlet bones, plus baked detail parts (`foxKit`: eyes, jaw, cheek/throat ruffs, paws, variant and trait extras) and ear pivots on the head bone. `crRig` is wrapped so any creature using the `Foxlet` rig (Foxlet, Emberlynx, wild foxes) gets the new model; animation is still `rigAnim`. Fused companions still get the other species' signature parts.
+- Test: `python3 v79fox.py` renders the fox in a studio scene (angles, walk, attack, variants) to `test/out/fox_*.png`.
 
 ## Conventions (read before changing code)
 
@@ -58,7 +58,7 @@ python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmo
 python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
-python3 v79t.py                 # fox model renders (test/out/fox_*.png)
+python3 v79fox.py               # fox model renders (test/out/fox_*.png)
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
