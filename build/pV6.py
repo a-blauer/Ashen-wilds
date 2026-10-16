@@ -58,4 +58,7 @@ a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,uns+a)
 # v77: the Magic Shop building (and its walls) only appear once it is built at the Steward
 rep("  // ---------- Magic Shop (east) ----------\n  {const b=new THREE.Group();","  // ---------- Magic Shop (east) ----------\n  {const b=new THREE.Group();T.mvG=b;T.mvArr=T.col;const mvc0=T.col.length;")
 rep("  }\n  // ---------- Tavern (west) ----------","  T.mvCol=T.col.slice(mvc0);\n  }\n  // ---------- Tavern (west) ----------")
+
+# v78: arsenal (weapon types, attacks, 100 items) and mounts + Stable
+a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzA_arsenal.js').read()+"\n"+open(M+'zzB_mounts.js').read()+a)
 open(P,'w').write(h);print('v6 ok')
