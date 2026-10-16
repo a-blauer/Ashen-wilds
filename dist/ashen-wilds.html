@@ -9275,19 +9275,23 @@ function lpRig(c,n,D){
   const x={g:g,b:b,C:C,bones:bones,spec:S,S:S,ears:[],wings:[],red:red};
   if(D.post)D.post(x,c,C,lpMat(c.v,0,D.mat));
   // fused companions: overlay the other species' signature parts like the old rig did
-  const extra=c.g.slice(1).filter(o=>SPEC[o]&&SPEC[o].sig);
+  const extra=c.g.slice(1).map((o,i)=>[SPEC[rigOf(o)],c.cl[i+1]||C]).filter(a=>a[0]&&a[0].sig);
+  // tier/evolution ornaments (horns, crowns, spines) from the old rig, kept so progress still shows
+  const vparts=[],vax=(bn,geo,col,px,py,pz,sx,sy,sz,rx,rz,basic)=>{if(!S.bones[bn])return;const r=S.T?S.T([px,py,pz]):[px,py,pz];vparts.push({bn:bn,geo:geo,col:col,x:r[0],y:r[1],z:r[2],sx:sx||1,sy:sy||1,sz:sz||1,rx:rx||0,rz:rz||0,basic:basic})};
+  if(S.hd&&S.bk&&ornLv(c)){try{crOrn(c,vax,S.bk,S.hd)}catch(e){console.error('lp orn',n,e)}
+    [false,true].forEach(bs=>{const m=bakeMesh(vparts,O,'LPO|'+n+'|'+ornLv(c)+'|'+famOf(c.g[0]),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}})}
   if(extra.length){
     const parts=[],bax=raw=>(bn,geo,col,px,py,pz,sx,sy,sz,rx,rz,basic)=>{if(!S.bones[bn])return;const r=(S.T&&!raw)?S.T([px,py,pz]):[px,py,pz];parts.push({bn:bn,geo:geo,col:col,x:r[0],y:r[1],z:r[2],sx:sx||1,sy:sy||1,sz:sz||1,rx:rx||0,rz:rz||0,basic:basic})};
     Object.assign(x,{ax:bax(),axw:bax(true),axm:(bn,...a)=>S.bones[bn]?mkAx(S,bones)(bn,...a):new THREE.Object3D(),
       tex:(st,hex,pal)=>{const t=rigTex({id:'x'+st,st:st,pal:pal},hex);return new THREE.MeshStandardMaterial({map:t.map,normalMap:t.nm,roughness:.9})},
       wing:(bn,s,span,chord,col,col2,type,px,py,pz)=>{if(!S.bones[bn])return new THREE.Group();const grp=mkWing(type,span,chord,col,col2);if(s<0)grp.scale.x=-1;const p=new THREE.Group();p.add(grp);
         const r=S.bones[bn],q=S.T?S.T([s*px,py,pz]):[s*px,py,pz];p.position.set(q[0]-r[1],q[1]-r[2],q[2]-r[3]);bones[bn].add(p);x.wings.push({p:p,s:s,base:.35,amp:.55});return p}});
-    extra.forEach(o=>{try{SPEC[o].sig(x,c.cl[c.g.indexOf(o)]||C,c)}catch(e){console.error('lp fuse',o,e)}});
+    extra.forEach(a=>{try{a[0].sig(x,a[1],c)}catch(e){console.error('lp fuse',n,e)}});
     [false,true].forEach(bs=>{const m=bakeMesh(parts,O,'LPF|'+n+'|'+c.g.join()+'|'+c.cl.join(),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}});
   }
   if(c.tr=='Bulky')b.scale.set(1.15,1.08,1.08);
   g.rig=(now,mv,sp)=>rigAnim(x,now,mv,sp);
-  g.bs=(D.sc||S.sc||1)*(1+.07*(c.f||0))*(c.z||1);g.scale.setScalar(g.bs);return g;
+  g.bs=(D.sc||S.sc||1)*(1+.04*(c.f||0))*(c.z||1)*(SP2[c.g[0]]?1+.12*(SP2[c.g[0]][1]-1):1)*(1+.06*(c.evo||0));g.scale.setScalar(g.bs);return g;
 }
 {const f=crRig;crRig=function(c,n){const D=LPR[n];if(D&&SPEC[n]){try{return lpRig(c,n,D)}catch(e){console.error('low-poly rig failed',n,e)}}return f.apply(this,arguments)}}
 
