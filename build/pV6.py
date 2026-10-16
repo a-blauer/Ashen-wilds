@@ -33,7 +33,10 @@ var LT={on:0};
 a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,loot+a)
 rep("if(safeP){e.agg=0;if(e.atk)mCancel(e)}else if(","if(e.wv&&!safeP)e.agg=1;else if(safeP){e.agg=0;if(e.atk)mCancel(e)}else if(")
 rep("party.slice(0,2).forEach(c2=>{if(!c2||c2.h<=0||c2.l>=MAXLV)return;","party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;")
-a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzzzz_fish.js').read()+"\n"+open(M+'zz7_v71.js').read()+a)
+a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzzzz_fish.js').read()+"\n"+open(M+'zz7_v71.js').read()+"\n"+open(M+'zz8_danger.js').read()+a)
+# v73: death screen pauses the game like any open window
+rep("'tal','hatch','start','xw'].some(","'tal','hatch','start','xw','dth'].some(")
+rep('<div id="fade"></div>','<div id="fade"></div><div id="dth" class="hide"></div>')
 rep('<h2>World Map</h2><span class="wsub">Each walled town marks the start of a harder region · N or Esc to close</span>','<h2>Map</h2><span class="wsub">The area you are in · N or Esc to close</span>')
 rep('<canvas id="wmc" width="1060" height="640" style="width:100%;display:block;border-radius:4px;background:#0a0d12"></canvas>','<canvas id="wmc" width="1060" height="640" style="max-width:100%;max-height:calc(100vh - 150px);width:auto;height:auto;display:block;margin:0 auto;border-radius:4px;background:#0a0d12"></canvas>')
 a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{const x=Math.round(pl.position.x),z=Math.round(pl.position.z),g=regionAt(x,z);if(g>=0&&MAP.DW[z*W+x]>=0){const p=PMAP[g];toPos(p.en[0],p.en[1])}}catch(_){}return r}}"+a)

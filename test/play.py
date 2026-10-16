@@ -16,6 +16,7 @@ def run(steps,out_prefix=TMP+'/g',w=820,hh=520):
         logs=[]
         pg.on('console',lambda m:logs.append(m.type+': '+m.text))
         pg.on('pageerror',lambda e:logs.append('PAGEERROR: '+str(e)+' || '+(e.stack or '')[:500].replace('\n',' ')))
+        if not os.environ.get('TITLE'):pg.add_init_script('window.AW_NOTITLE=1')
         pg.goto('file://'+TMP+'/live.html')
         pg.wait_for_timeout(1500)
         steps(pg)
