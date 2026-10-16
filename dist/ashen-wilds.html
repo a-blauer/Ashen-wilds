@@ -6256,36 +6256,16 @@ function openChest(c){const i=CHESTS.indexOf(c);if(i<0)return;CHESTS.splice(i,1)
 function stdLoot(p,T,o){o=o||{};const l=Math.max(1,Math.min(MAXLV,TIER_LV[T-1][0]+R(2,8)));const g=Math.round((30+l*10)*(o.g||1));gold+=g;dn(p,'+'+g+' 🪙','#fbbf24',-26,1300);
   const it=genItem(l,{minR:o.minR||1,cls:hero.cls});drop('gear',it,p,it.r);if(Math.random()<(o.egg||.3)){const eg=rollEgg(T);drop('egg',eg,p,eg.tier)}if(Math.random()<(o.rune||.25))drop('sup',{k:RUNEK[R(0,RUNEK.length-1)],n:1},p,2);drop('mat',{k:UPM[T-1][0],n:R(2,4)},p,T-1)}
 
-// =============== 6. SECRETS: cracked boulders, lore stones, treasure maps ===============
-const SECRETS=[];const secOpen=new Set(),loreRead=new Set();let tmaps=[];
-const LORE=[
- ['The First Hatching','Long before the towns, the Heartlands were a nursery. Companions laid their eggs in warm meadow soil, and the first tamers were simply the ones who stayed to watch them hatch.'],
- ['Grimtusk’s Den','The wolves of the Frostwood follow a mother older than the trees. Hunters say she remembers every pup that was ever taken from her den.'],
- ['The Drowned Bell','A bell rings under the Murky Mire on still nights. The old village that owned it sank in a single storm, along with everyone who refused to leave their eggs behind.'],
- ['Stonegate’s Oath','The walls of Stonegate were raised in nine days by people who had already lost one home. Each stone is carved with the name of someone who did not make it.'],
- ['Spores and Silence','In the Fungal Grove, the mushrooms talk to each other through the ground. Stand still long enough and you can feel the conversation in your boots.'],
- ['The Ashen Warden','The Warden was a tortoise who swallowed a dying star to keep it from burning the highlands. It has been carrying that fire for a thousand years.'],
- ['Cinderwatch Rising','Cinderwatch was built on cooled lava, and the smiths swear the ground is still warm in winter. They are not wrong.'],
- ['Silk and Shadow','The Webwood spiders weave their webs in patterns. Scholars have copied them for centuries; nobody has worked out what they spell.'],
- ['The Pyrelord’s Pact','The drakes of the Ember Crags once served the cultists willingly. Then the cultists asked for eggs as tribute.'],
- ['Palehaven’s Bones','Every building in Palehaven sits on a foundation of ancient bone. The founders said it was the only material the wraiths would not walk through.'],
- ['The Hollow Knights','The armour still marches, but nobody is inside. Some say they guard a king; others say they are looking for one.'],
- ['Lights of the Fen','The wisps of the Haunted Fens are kind to travelers who carry a lantern, and cruel to those who carry torches. Nobody knows why.'],
- ['Skyreach Winds','Skyreach was founded by harpy tamers who learned to read the wind. The town bells are tuned so that each storm plays a different song.'],
- ['The Giant’s Stones','The standing stones of Stormreach are not monuments. The giants placed them to count the years, and they are almost out of stones.'],
- ['The Last Sovereign','The oldest tale says that when the final Sovereign falls, the eggs of the world will hatch all at once. The Wyrm of the Barrens has not fallen yet.']];
+// =============== 6. SECRETS: cracked boulders, treasure maps ===============
+const SECRETS=[];const secOpen=new Set();let tmaps=[];
 {
   for(let T=1;T<=5;T++){
-    for(let k=0;k<3;k++){const s=pickSpot(T,26);if(s)SECRETS.push({id:SECRETS.length,k:'lore',x:s[0],z:s[1],T,li:(T-1)*3+k})}
     for(let k=0;k<2;k++){const s=pickSpot(T,26);if(s)SECRETS.push({id:SECRETS.length,k:'boulder',x:s[0],z:s[1],T})}
   }
 }
 function buildSecret(S){
   const g=new THREE.Group();g.position.set(S.x,GH(S.x,S.z),S.z);
-  if(S.k=='lore'){TQ(g,G_BOX,sm(0x7a7a80),0,1.15,0,.8,2.3,.38,0,0,.04);TQ(g,G_BOX,sm(0x5a5a62),0,.1,0,1.3,.2,.8);
-    const r=TQ(g,G_BOX,gmat(0x8ad8ff),0,1.35,.2,.36,1.1,.02);r.castShadow=false;S.glow=r;
-    const h=new THREE.Mesh(new THREE.CircleGeometry(1.1,24),new THREE.MeshBasicMaterial({color:0x8ad8ff,transparent:true,opacity:.18,depthWrite:false}));h.rotation.x=-Math.PI/2;h.position.y=.05;g.add(h)}
-  else{const b=TQ(g,new THREE.DodecahedronGeometry(1,0),sm(0x6e6a64),0,.95,0,1.25,1.05,1.15,.3,.6,0);
+  {const b=TQ(g,new THREE.DodecahedronGeometry(1,0),sm(0x6e6a64),0,.95,0,1.25,1.05,1.15,.3,.6,0);
     [[0,1.2,.9,.5],[.5,.9,.8,-.6],[-.4,1.4,.75,.9]].forEach(([x,y,z,r])=>{const c=TQ(g,G_BOX,gmat(0xffb050),x,y,z,.06,.6,.02,0,0,r);c.castShadow=false});
     S.body=b;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)CBLK.add((S.z+j)*W+S.x+i)}
   scene.add(g);S.g=g;
@@ -6297,10 +6277,6 @@ function breakBoulder(S){
   popT(V(S.x,0,S.z),'SECRET FOUND!','#fbbf24',true);say('🗝️ The cracked boulder shatters, revealing a hidden cache!');
   makeChest(S.x,S.z,'hidden cache',p=>stdLoot(p,S.T,{minR:2,egg:.5,rune:.6,g:1.5}));
 }
-function readLore(S){const L=LORE[S.li];const first=!loreRead.has(S.li);loreRead.add(S.li);if(S.glow)S.glow.material=gmat(0x4a6a7a);
-  if(first){const xp=Math.round(needH(Math.max(1,TIER_LV[S.T-1][0]))*.25);if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}pickup({ic:'📜',t:'Lore discovered',col:'#8ad8ff',sub:L[0]+' · +'+xp+' XP',r:2});sfx('chime')}
-  openX('lore',S.li)}
-XR.lore=()=>{const L=LORE[xwArg|0];$('xwT').textContent='📜 '+L[0];$('xwS').textContent='Lore stone · '+loreRead.size+' / '+LORE.length+' found';$('xwB').innerHTML=`<p class="lore">${L[1]}</p>`;$('xwF').innerHTML='<span class="mut dtl">Lore stones glow blue. Each one you read adds to your Bestiary (L).</span>'};
 // treasure maps
 function giveMap(p){const T=tierAt(p.x,p.z);let s=null;for(let k=0;k<200&&!s;k++){const x=8+Math.floor(Math.random()*(W-16)),y=8+Math.floor(Math.random()*(H-16));if(tierAt(x,y)==T&&freeSpot(x,y,1)&&Math.hypot(x-p.x,y-p.z)>30)s=[x,y]}
   if(!s)return;tmaps.push({x:s[0],z:s[1],T});pickup({ic:'🗺️',t:'Treasure Map',col:'#fbbf24',sub:'An ✕ is marked on your minimap and world map (N)',r:2});sfx('chime')}
@@ -6491,16 +6467,15 @@ const DEXM=[[5,'🪙 500 gold',()=>{gold+=500}],[10,'🔮 A random rune',()=>giv
  [35,'🔮🔮 Two runes',()=>{giveS(RUNEK[R(0,RUNEK.length-1)],1);giveS(RUNEK[R(0,RUNEK.length-1)],1)}],[45,'🥚 A tier-4 egg',()=>eggs.push(rollEgg(4))],[55,'📖 Scholar II: +5% XP & loot (permanent)',()=>permBuff('Scholar II',{xp:.05,loot:.05})],[70,'👑 Master Tamer: +5% all stats (permanent)',()=>permBuff('Master Tamer',{hpP:.05,paP:.05,maP:.05,pdP:.05,mdP:.05})]];
 function permBuff(n,s){hero.buffs.push({n,i:'📖',s,t:Infinity,perm:1,d:n});hsDirty()}
 function dexScan(){party.forEach(c=>c&&c.g&&dex.own.add(c.g[0]));eggs.forEach(e=>e&&e.sp&&dex.egg.add(e.sp))}
-function dexPoints(){const enK=Object.keys(EN).filter(k=>!k.startsWith('boss'));return {cre:dex.own.size,en:enK.filter(k=>(kills[k]||0)>=25).length,boss:bossDone.size*2,fish:Object.keys(fishLog).length,lore:loreRead.size}}
-const dexTotal=()=>{const p=dexPoints();return p.cre+p.en+p.boss+p.fish+p.lore};
-XR.dex=()=>{dexScan();const p=dexPoints(),tot=dexTotal();$('xwT').textContent='📖 Bestiary';$('xwS').textContent=tot+' discovery points · companions '+p.cre+'/'+SPK.length+' · enemies '+p.en+' · bosses '+bossDone.size+'/10 · fish '+p.fish+'/'+FISH.length+' · lore '+p.lore+'/'+LORE.length;
+function dexPoints(){const enK=Object.keys(EN).filter(k=>!k.startsWith('boss'));return {cre:dex.own.size,en:enK.filter(k=>(kills[k]||0)>=25).length,boss:bossDone.size*2,fish:Object.keys(fishLog).length}}
+const dexTotal=()=>{const p=dexPoints();return p.cre+p.en+p.boss+p.fish};
+XR.dex=()=>{dexScan();const p=dexPoints(),tot=dexTotal();$('xwT').textContent='📖 Bestiary';$('xwS').textContent=tot+' discovery points · companions '+p.cre+'/'+SPK.length+' · enemies '+p.en+' · bosses '+bossDone.size+'/10 · fish '+p.fish+'/'+FISH.length;
   const tabs=[['cre','🐾 Companions'],['en','💀 Enemies'],['boss','👑 Sovereigns'],['fish','🎣 Fish'],['rew','🎁 Rewards']];
   let b='<div class="dexT">'+tabs.map(t=>`<button data-dext="${t[0]}" class="${dexTab==t[0]?'on':''}">${t[1]}</button>`).join('')+'</div>';
   if(dexTab=='cre')b+='<div class="dexG">'+SPK.map(n=>{const q=SP2[n],own=dex.own.has(n),seen=own||dex.egg.has(n);return `<div class="dexC ${own?'own':seen?'seen':''}"><span>${seen?q[3]:'❔'}</span><b>${seen?n:'???'}</b><small>${q[0]} · T${q[1]}${own?' · ✔ tamed':seen?' · egg seen':''}</small></div>`}).join('')+'</div>';
   else if(dexTab=='en')b+='<div class="rows">'+Object.keys(EN).filter(k=>!k.startsWith('boss')).map(k=>{const n=kills[k]||0,E=EN[k];return `<div class="rw" style="--rc:${n>=100?'#fbbf24':n>=25?'#6ee7b7':'transparent'}"><span class="rn">${n?E.e:'❔'} <b>${n?E.n:'Unknown enemy'}</b><small>${n} defeated${n>=25?' · ✔ studied':' · '+Math.max(0,25-n)+' more to study'}${n>=100?' · ★ mastered':''}</small></span></div>`}).join('')+'</div>';
   else if(dexTab=='boss')b+='<div class="rows">'+BOSSES.map((B,i)=>`<div class="rw" style="--rc:${bossDone.has(i)?'#6ee7b7':'transparent'}"><span class="rn">${bossDone.has(i)?B.i:'❔'} <b>${bossDone.has(i)?B.name:'Undefeated Sovereign'}</b><small>${ZN[B.zone-1]} · Lv ${B.lvl}${bossDone.has(i)?' · ✔ defeated':''}</small></span></div>`).join('')+'</div>';
   else if(dexTab=='fish')b+='<div class="dexG">'+FISH.map(f=>{const n=fishLog[f[0]]||0;return `<div class="dexC ${n?'own':''}"><span>${n?f[1]:'❔'}</span><b>${n?f[0]:'???'}</b><small>${['Common','Uncommon','Rare','Legendary'][f[3]]} · ${ZN[f[2]-1]}${n?' · caught '+n:''}</small></div>`}).join('')+'</div>';
-  else if(dexTab=='lore')b+='<div class="rows">'+LORE.map((L,i)=>`<div class="rw"><span class="rn">${loreRead.has(i)?'📜':'❔'} <b>${loreRead.has(i)?L[0]:'Undiscovered lore'}</b><small>${loreRead.has(i)?L[1]:ZN[Math.floor(i/3)]+' · find the glowing blue stone'}</small></span></div>`).join('')+'</div>';
   else b+='<div class="rows">'+DEXM.map((m,i)=>{const got=dex.claim.has(i),ok=tot>=m[0];return `<div class="rw" style="--rc:${got?'#6ee7b7':ok?'#c9a24a':'transparent'}"><span class="rn"><b>${m[0]} points</b><small>${m[1]}</small></span><span class="ra">${got?'<em style="color:#6ee7b7">✔ Claimed</em>':`<button class="pri" data-dexc="${i}" ${ok?'':'disabled'}>${ok?'Claim':tot+'/'+m[0]}</button>`}</span></div>`}).join('')+'</div>';
   $('xwB').innerHTML=b;$('xwF').innerHTML='<span class="mut dtl">Earn points by taming species, studying enemies (25 defeats), defeating Sovereigns (2 each), and catching fish.</span>'};
 $('xw').addEventListener('click',e=>{if(xwMode!='dex')return;const t=e.target.closest('[data-dext],[data-dexc]');if(!t||t.disabled)return;if(t.dataset.dext)dexTab=t.dataset.dext;else{const i=+t.dataset.dexc,m=DEXM[i];if(dex.claim.has(i)||dexTotal()<m[0])return;dex.claim.add(i);m[2]();say('🎁 Bestiary reward: '+m[1]);sfx('chime');hud();ui()}rX()});
@@ -6511,7 +6486,6 @@ addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||fishing)return
 function worldPrompt(){
   if(fishing)return null;const P=pl.position;
   for(const c of CHESTS)if(Math.hypot(P.x-c.x,P.z-c.z)<2.2)return {label:'F · Open '+c.label,fn:()=>openChest(c)};
-  for(const S of SECRETS)if(S.k=='lore'&&S.g&&Math.hypot(P.x-S.x,P.z-S.z)<2.2)return {label:'F · Read the lore stone',fn:()=>readLore(S)};
   for(const m of tmaps)if(Math.hypot(P.x-m.x,P.z-m.z)<2)return {label:'F · Dig for treasure',fn:()=>digTreasure(m)};
   for(const S of SECRETS)if(S.k=='boulder'&&!S.broken&&S.g&&Math.hypot(P.x-S.x,P.z-S.z)<2.6)return {label:'Attack the cracked boulder to break it',fn:()=>say('Hit it with an attack or skill to break it open.')};
   const w=!riding&&nearWater();if(w)return {label:'F · Fish',fn:()=>fishStart(w)};
@@ -6543,11 +6517,11 @@ function miniMarks(w,h,vw,vh,cx,cy){const P=(x,z)=>[(x-(cx-vw/2)+.5)*w/vw,(z-(cy
   if(EVT){const p=EVT.wagon?EVT.g.position:{x:EVT.x,z:EVT.z};let [x,y]=P(p.x,p.z);if(!inV(x,y)){const a=Math.atan2(y-h/2,x-w/2);x=w/2+Math.cos(a)*(w/2-8);y=h/2+Math.sin(a)*(h/2-8)}star(x,y,'#fbbf24')}
   tmaps.forEach(m=>{const [x,y]=P(m.x,m.z);if(!inV(x,y))return;mmX.strokeStyle='#ef4444';mmX.lineWidth=2.5;mmX.beginPath();mmX.moveTo(x-4,y-4);mmX.lineTo(x+4,y+4);mmX.moveTo(x+4,y-4);mmX.lineTo(x-4,y+4);mmX.stroke()});
   CHESTS.forEach(c=>{const [x,y]=P(c.x,c.z);if(inV(x,y)){mmX.fillStyle='#fbbf24';mmX.fillRect(x-2.5,y-2.5,5,5)}});
-  SECRETS.forEach(S=>{if(S.k!='lore'||!S.g||loreRead.has(S.li))return;const [x,y]=P(S.x,S.z);if(inV(x,y)){mmX.fillStyle='#8ad8ff';mmX.fillRect(x-2,y-2,4,4)}})}
+}
 function wmExtra(g,P){if(EVT){const p=EVT.wagon?EVT.g.position:{x:EVT.x,z:EVT.z},[x,y]=P(p.x,p.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('★',x,y)}
   tmaps.forEach(m=>{const [x,y]=P(m.x,m.z);g.font='800 16px system-ui';g.fillStyle='#ef4444';g.fillText('✕',x,y)})}
-function x2Save(){return {own:[...dex.own],egg:[...dex.egg],claim:[...dex.claim],sec:[...secOpen],lore:[...loreRead],tmaps,fish:fishLog}}
-function x2Load(s){(s.own||[]).forEach(k=>dex.own.add(k));(s.egg||[]).forEach(k=>dex.egg.add(k));(s.claim||[]).forEach(k=>dex.claim.add(k));(s.lore||[]).forEach(k=>loreRead.add(k));tmaps=s.tmaps||[];Object.assign(fishLog,s.fish||{});
+function x2Save(){return {own:[...dex.own],egg:[...dex.egg],claim:[...dex.claim],sec:[...secOpen],tmaps,fish:fishLog}}
+function x2Load(s){(s.own||[]).forEach(k=>dex.own.add(k));(s.egg||[]).forEach(k=>dex.egg.add(k));(s.claim||[]).forEach(k=>dex.claim.add(k));tmaps=s.tmaps||[];Object.assign(fishLog,s.fish||{});
   (s.sec||[]).forEach(k=>{secOpen.add(k);const S=SECRETS[+String(k).slice(1)];if(S&&S.k=='boulder'){S.broken=1;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)CBLK.delete((S.z+j)*W+S.x+i)}})}
 
 // ================= v52: dark-fantasy look — nebula skies, giant moon, colored moonlight, glowing mist, vivid grade =================
@@ -7891,8 +7865,7 @@ XR.trade=()=>{const T=MP.tr;if(!T){$('xwB').innerHTML='';return}const lk=T.st!==
   $('xwF').innerHTML=`<button class="pri" id="mpRdy"${T.st!=='open'?' disabled':''}>${T.rdy?'✋ Not ready':'✅ Ready'}</button> <button id="mpCan">Cancel</button> <span class="mut dtl">If either offer changes, both players must press Ready again.</span>`;
 };
 
-// ---- v61: lore stones and bounty boards removed ----
-for(let i=SECRETS.length-1;i>=0;i--){const S=SECRETS[i];if(S.k=='lore'){if(S.g)scene.remove(S.g);SECRETS.splice(i,1)}}
+// ---- v61: bounty boards removed ----
 boardPrompt=function(){return null};bountyOnKill=function(){};bountyOnDungeon=function(){};
 {const f=bTrack;bTrack=function(){bounties=[];const d=$('btrk');if(d)d.classList.add('hide')}}bTrack();
 

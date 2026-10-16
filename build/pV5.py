@@ -6,7 +6,7 @@ P=OUT
 h=open(P).read()
 R=[('<title>Eudemon Trails</title>','<title>Kill Quest</title>'),('<h1>Eudemon Trails</h1>','<h1>Kill Quest</h1>'),
 ('Choose your first Eudemon','Choose your first companion'),('First Eudemon','First companion'),('That Eudemon needs healing first.','That companion needs healing first.'),
-('Eudemons laid their eggs','Companions laid their eggs'),('every Eudemon rolls one','every companion rolls one'),
+('every Eudemon rolls one','every companion rolls one'),
 ("Needs creature Lv ","Needs companion Lv "),('collect creature materials','collect companion evolution materials'),("'Lead creature level'","'Lead companion level'"),
 ("Creature materials (evolution)","Companion materials (evolution)"),('Pick the creature to keep first','Pick the companion to keep first'),('Now pick a creature of','Now pick a companion of'),
 ('the consumed creature is a lower tier','the consumed companion is a lower tier'),('hatches a stronger creature','hatches a stronger companion'),
@@ -18,11 +18,8 @@ for a,b in R:
 
 import re as _re
 _i=h.index("  // notice board\n  {tcb(g,-10.8");_j=h.index("(i-1)*.12))}\n",_i)+len("(i-1)*.12))}\n");h=h[:_i]+h[_j:]
-for a,b in [("['lore','📜 Lore'],",""),("catching fish and reading lore stones.","and catching fish.")]:
-    assert h.count(a)==1,a;h=h.replace(a,b)
 cut="""
-// ---- v61: lore stones and bounty boards removed ----
-for(let i=SECRETS.length-1;i>=0;i--){const S=SECRETS[i];if(S.k=='lore'){if(S.g)scene.remove(S.g);SECRETS.splice(i,1)}}
+// ---- v61: bounty boards removed ----
 boardPrompt=function(){return null};bountyOnKill=function(){};bountyOnDungeon=function(){};
 {const f=bTrack;bTrack=function(){bounties=[];const d=$('btrk');if(d)d.classList.add('hide')}}bTrack();
 """
