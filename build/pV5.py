@@ -4,7 +4,7 @@ M=_ROOT+'/src/modules/'
 OUT=_os.environ.get('AW_OUT',_ROOT+'/dist/ashen-wilds.html')
 P=OUT
 h=open(P).read()
-R=[('<title>Eudemon Trails</title>','<title>Ashen Wilds</title>'),('<h1>Eudemon Trails</h1>','<h1>Ashen Wilds</h1>'),
+R=[('<title>Eudemon Trails</title>','<title>Kill Quest</title>'),('<h1>Eudemon Trails</h1>','<h1>Kill Quest</h1>'),
 ('Choose your first Eudemon','Choose your first companion'),('First Eudemon','First companion'),('That Eudemon needs healing first.','That companion needs healing first.'),
 ('Eudemons laid their eggs','Companions laid their eggs'),('every Eudemon rolls one','every companion rolls one'),
 ("Needs creature Lv ","Needs companion Lv "),('collect creature materials','collect companion evolution materials'),("'Lead creature level'","'Lead companion level'"),

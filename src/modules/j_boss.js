@@ -140,7 +140,7 @@ function bossDefeated(e){
   const ul=A.b.un.map(unName);
   setTimeout(()=>{if(ul.length)say('🔓 Unlocked: '+ul.join(', ')+'.');say('⚒️ Forge mastery: gear can now be upgraded to +'+upCap()+'.');
     if(A.b.guard&&A.b.zone<5){openGate(A.b.zone);banner('🔓 THE WAY IS OPEN',TOWNS[A.b.zone].n+"'s eastern gate is unsealed",ZN[A.b.zone]+' awaits')}
-    if(i==9)banner('🏆 THE ASHEN WILDS ARE YOURS','Every Sovereign has fallen','Thank you for playing!')},2600);
+    if(i==9)banner('🏆 KILL QUEST COMPLETE','Every Sovereign has fallen','Thank you for playing!')},2600);
   setTimeout(()=>{if(!uiOpen())openX('bosses')},5200);
 }
 function kill(e){if(e.ar!=null)bossDefeated(e);bountyOnKill(e);if(typeof campOnKill=='function')campOnKill(e);return kill_base(e)}

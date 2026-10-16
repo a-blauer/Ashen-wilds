@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ashen Wilds</title>
+<title>Kill Quest</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cinzel:wght@600;800&family=VT323&display=swap">
 <style>
 :root{--bg:#0b0f14;--glass:rgba(22,17,12,.74);--glass2:rgba(34,26,18,.92);--line:rgba(236,200,130,.16);--ink:#eadfc6;--mut:#a39378;--acc:#c9a24a;--gold:#f0cc72;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -312,7 +312,7 @@ body.psx #wmap canvas{filter:saturate(.9) brightness(.9)}
 
 </style></head><body>
 <div class="wrap">
-<h1>Ashen Wilds</h1>
+<h1>Kill Quest</h1>
 <p class="sub">WASD move · Hold right mouse + drag to rotate camera · Left click attack · 1-4 class skills · Shift dash (2 charges) · K talents · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · G fusion · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
 <div class="stage" id="stage">
   <div id="gl"></div>
@@ -5094,7 +5094,7 @@ function bossDefeated(e){
   const ul=A.b.un.map(unName);
   setTimeout(()=>{if(ul.length)say('🔓 Unlocked: '+ul.join(', ')+'.');say('⚒️ Forge mastery: gear can now be upgraded to +'+upCap()+'.');
     if(A.b.guard&&A.b.zone<5){openGate(A.b.zone);banner('🔓 THE WAY IS OPEN',TOWNS[A.b.zone].n+"'s eastern gate is unsealed",ZN[A.b.zone]+' awaits')}
-    if(i==9)banner('🏆 THE ASHEN WILDS ARE YOURS','Every Sovereign has fallen','Thank you for playing!')},2600);
+    if(i==9)banner('🏆 KILL QUEST COMPLETE','Every Sovereign has fallen','Thank you for playing!')},2600);
   setTimeout(()=>{if(!uiOpen())openX('bosses')},5200);
 }
 function kill(e){if(e.ar!=null)bossDefeated(e);bountyOnKill(e);if(typeof campOnKill=='function')campOnKill(e);return kill_base(e)}
@@ -8389,7 +8389,7 @@ function awFmtSave(s){const C=CLS[s.hero.cls]||{i:'',n:''};return `${C.i} ${s.he
 function awTitle(){
   if(window.AW_NOTITLE||$('awT'))return;
   const T=document.createElement('div');T.id='awT';const s=saveInfo();
-  T.innerHTML=`<canvas id="awTc"></canvas><div class="awin"><div class="awk">A tale of embers and ruin</div><h1>Ashen Wilds</h1><div class="awr"></div>
+  T.innerHTML=`<canvas id="awTc"></canvas><div class="awin"><div class="awk">A tale of embers and ruin</div><h1>Kill Quest</h1><div class="awr"></div>
    <div class="aws">The sky-fortress Duskhold stands alone. Beyond its portals, six realms burn.</div>
    <div class="awm">${s?`<button class="p" data-aw="cont">Continue<small>${awFmtSave(s)}</small></button><button data-aw="new">New Game</button>`:`<button class="p" data-aw="new">Begin</button>`}</div></div>
    <div class="awh">${matchMedia('(pointer:coarse)').matches?'Tap to choose':'Press Enter'}</div>`;

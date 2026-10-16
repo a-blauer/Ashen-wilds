@@ -83,7 +83,7 @@ function awFmtSave(s){const C=CLS[s.hero.cls]||{i:'',n:''};return `${C.i} ${s.he
 function awTitle(){
   if(window.AW_NOTITLE||$('awT'))return;
   const T=document.createElement('div');T.id='awT';const s=saveInfo();
-  T.innerHTML=`<canvas id="awTc"></canvas><div class="awin"><div class="awk">A tale of embers and ruin</div><h1>Ashen Wilds</h1><div class="awr"></div>
+  T.innerHTML=`<canvas id="awTc"></canvas><div class="awin"><div class="awk">A tale of embers and ruin</div><h1>Kill Quest</h1><div class="awr"></div>
    <div class="aws">The sky-fortress Duskhold stands alone. Beyond its portals, six realms burn.</div>
    <div class="awm">${s?`<button class="p" data-aw="cont">Continue<small>${awFmtSave(s)}</small></button><button data-aw="new">New Game</button>`:`<button class="p" data-aw="new">Begin</button>`}</div></div>
    <div class="awh">${matchMedia('(pointer:coarse)').matches?'Tap to choose':'Press Enter'}</div>`;
