@@ -1,0 +1,12 @@
+#bpanel{width:min(980px,98%);padding:6px 8px;bottom:8px}
+.bcats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}.bcats button{padding:4px 8px;font-size:.7rem}.bcats button.on{outline:2px solid var(--acc);background:rgba(201,164,74,.2)}.bcats button.rm.on{outline-color:#f87171;background:rgba(248,113,113,.2)}
+.bpcs{display:flex;gap:5px;overflow-x:auto;padding:2px 2px 6px}.bpc{flex:none;width:68px;min-height:58px;padding:4px 3px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:1px;font-size:.62rem;line-height:1.15;text-align:center}.bpc .bi{font-size:1.15rem;line-height:1.25}.bpc b{font-weight:700;font-size:.64rem}.bpc.on{outline:2px solid var(--acc);background:rgba(201,164,74,.2)}.bpc.no{opacity:.45}.bpc .bk{color:var(--mut);font-size:.58rem}
+.bmats{display:flex;gap:3px;flex-wrap:nowrap;overflow-x:auto;margin:3px 0;padding-bottom:3px;align-items:center;font-size:.68rem}.bmats button{flex:none;padding:2px 6px;font-size:.62rem;display:inline-flex;align-items:center;gap:4px}.bmats button.on{outline:2px solid var(--acc)}.bmats button.no{opacity:.5}.bmats i{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.6)}
+.bfoot{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:.72rem;flex-wrap:wrap;margin-top:3px}.binf{color:var(--ink)}.bctl{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.bctl button{padding:3px 8px;font-size:.72rem}#bst{color:#fbbf24;font-weight:600}#bst.ok{color:#6ee7b7}
+.xcols{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}@media (max-width:760px){.xcols{grid-template-columns:1fr}}
+.fcat{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:.74rem}.fcat button{padding:3px 8px;font-size:.72rem}.fcat button.on{outline:2px solid var(--acc)}
+.bf.fd{background:rgba(255,170,80,.2);color:#ffc890}.bf.ex{background:rgba(176,138,255,.2);color:#cdb6ff}
+#xw .rw.on{outline:2px solid var(--acc)}#xw [data-msel]{cursor:pointer}
+.matline span{margin-right:10px;white-space:nowrap;display:inline-block}
+
+#bbar.hide{display:none}
