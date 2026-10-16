@@ -1,4 +1,4 @@
-// ================= v80: smoother, more responsive combat animation =================
+// ================= v81: smoother, more responsive combat animation =================
 // The hero's upper body is now driven by one "action" at a time (swing, spin, bow, staff, cast, dodge).
 // - A new action starts from the pose the body is in right now, so combos flow into each other.
 // - When an action ends, the body eases back to walking/idle instead of snapping.

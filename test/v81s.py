@@ -1,4 +1,4 @@
-# v80: screenshots of the hero mid-attack (strike, spin, dodge) to eyeball poses.
+# v81: screenshots of the hero mid-attack (strike, spin, dodge) to eyeball poses.
 import play,json
 O=play.TMP
 def game(pg):

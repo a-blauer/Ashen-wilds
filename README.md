@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v80 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v81 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -19,7 +19,7 @@ The build is a **patch chain**, not a bundler:
    - **pV5**: `zzzz_more.js` (stronghold/shops, shiny & rare, companion talents), name/text cleanups, lore & bounty removal.
    - **pV6**: world size `W=920,H=568`, Duskhold layout scale (`TS=21,TK=1.5`), XP/loot balance, anti-stuck, `zzzzz_fish.js` (map + fishing), `zz7_v71.js` (zone population, atmosphere, unlockable skills, grades, Consume), `zz8_danger.js` (title screen, death screen with "Rise Again", hit flash + damage-direction arcs, low-health vignette and heartbeat; adds `dth` to `uiOpen()` so death pauses single-player), `zz9_cmpegg.js` (Companions & Eggs: one window for both, egg preview + in-window hatch scene in `#cvw`/`#cd`; the old `#inc`/`#hatch` popups stay in the HTML but are no longer shown).
 
-   - **pV6 (v78/v79)**: `zzA_arsenal.js`, `zzB_mounts.js`, `zzC_music.js` and `zzD_anim.js` are spliced last (see below).
+   - **pV6 (v78–v81)**: `zzA_arsenal.js`, `zzB_mounts.js`, `zzC_music.js`, `zzD_fox.js` and `zzE_anim.js` are spliced last (see below).
 
 ## v78: Arsenal and mounts
 
@@ -34,14 +34,18 @@ The build is a **patch chain**, not a bundler:
 - New effects (`mSfx`): level up, coins (any gold gain), item pickup / rare pickup, enemy and elite deaths, boss victory, dodge, potion, mount, portal travel, window open/close and button ticks.
 - Settings → Sound: Music volume (`SET.mus`) and Sound effects volume (`SET.sfxV`, which also drives the old `SET.sfx` on/off).
 - `test/v79t.py` checks theme switching, fight intensity, volumes and death silence, and renders every theme offline to `test/out/v79_music.wav`/`.mp3`. `preview/kill-quest-music-preview.mp3` is that render.
+## v80: Valheim-style fox
 
-## v80: Combat animation
+- `zzD_fox.js` (spliced last in pV6, after `zzC_music.js`) replaces the Foxlet look with a hand-built low-poly fox: one flat-shaded, vertex-coloured body loft (head, torso, bushy tail, legs) skinned to the old Foxlet bones, plus baked detail parts (`foxKit`: eyes, jaw, cheek/throat ruffs, paws, variant and trait extras) and ear pivots on the head bone. `crRig` is wrapped so any creature using the `Foxlet` rig (Foxlet, Emberlynx, wild foxes) gets the new model; animation is still `rigAnim`. Fused companions still get the other species' signature parts.
+- Test: `python3 v79fox.py` renders the fox in a studio scene (angles, walk, attack, variants) to `test/out/fox_*.png`.
 
-- `zzD_anim.js` re-declares the hero action animations (`swingAnim`, `spinAnim`, `bowAnim`, `staffAnim`, `castAnim`, `heroFlinch`) and `animHero`. Only one hero action runs at a time (`HA.cur`), driven from `animHero` instead of `tw()`. Each action is `haPlay(ms, pose(k), hitAt, onHit, blendIn)`; `pose(k)` returns channel values (`HACH`: `sy sx py ax az ex lx lz le hx lh rh`), missing channels use the walk/idle pose.
+## v81: Combat animation
+
+- `zzE_anim.js` re-declares the hero action animations (`swingAnim`, `spinAnim`, `bowAnim`, `staffAnim`, `castAnim`, `heroFlinch`) and `animHero`. Only one hero action runs at a time (`HA.cur`), driven from `animHero` instead of `tw()`. Each action is `haPlay(ms, pose(k), hitAt, onHit, blendIn)`; `pose(k)` returns channel values (`HACH`: `sy sx py ax az ex lx lz le hx lh rh`), missing channels use the walk/idle pose.
 - An action blends in from the current pose; a new action replacing an old one fires the old one's pending hit (`haCancel(true)`), a dodge drops it (`haCancel(false)`). At the end the body eases back to walk/idle over 170 ms (`HA.snap`/`HA.sb`). During hit-stop (`hstop`) actions run at 12% speed. Flinch is added on top of anything.
 - Walking blends in and out by `h.mvW`. An attack pressed up to 0.35 s early is remembered (`HA.buf`, only for fresh presses, not held-button repeats).
 - `animC` (enemies) smooths `pose` changes between wind-up, strike and recovery (spin angles unwrap) and uses an eased hit flinch.
-- `test/v80t.py` measures frame-to-frame bone jumps (combo hand-offs, stopping, dodge, enemy bite, flinch) plus buffering and hit-stop; run it with `SRC=out/old.html` against an older build to compare. `test/v80s.py` screenshots mid-attack poses.
+- `test/v81t.py` measures frame-to-frame bone jumps (combo hand-offs, stopping, dodge, enemy bite, flinch) plus buffering and hit-stop; run it with `SRC=out/old.html` against an older build to compare. `test/v81s.py` screenshots mid-attack poses.
 
 ## Conventions (read before changing code)
 
@@ -69,8 +73,9 @@ python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmo
 python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
-python3 v80t.py                 # combat animation smoothness (frame jumps), early-press buffer, hit-stop
+python3 v81t.py                 # combat animation smoothness (frame jumps), early-press buffer, hit-stop
 python3 v79t.py                 # music themes, fight layer, volume settings; renders a music preview (NOREN=1 to skip)
+python3 v79fox.py               # fox model renders (test/out/fox_*.png)
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```

@@ -1,6 +1,6 @@
-# v80: combat animation smoothness. Measures the biggest single-frame jump of key bones during
+# v81: combat animation smoothness. Measures the biggest single-frame jump of key bones during
 # a hero combo, a dodge mid-swing, and an enemy attack; also checks early-press buffering and hit-stop.
-# Run on an older build to compare: SRC=out/old.html python3 v80t.py
+# Run on an older build to compare: SRC=out/old.html python3 v81t.py
 import play,json,os
 O=play.TMP
 REC="""window.__rec=(get,n)=>new Promise(res=>{const out=[];let i=0;const f=()=>{out.push(get());if(++i<n)requestAnimationFrame(f);else res(out)};requestAnimationFrame(f)});
