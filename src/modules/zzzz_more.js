@@ -102,6 +102,7 @@ function shSites(){const T=TOWNS[0];if(!T)return;
     T.col.forEach(q=>{[0,1].forEach(j=>{if(q.r&&Math.abs(q.x-old[j][0])<.01&&Math.abs(q.z-old[j][1])<.01){const n=j?T.st2.a:T.st2.c;q.x=n[0];q.z=n[1]}})})}SHM.sites=SHM.sites||{};SHM.vsite=[];
   const want={};if(!shopBuilt('magic'))want.magic=[T.mv[0],T.mv[1]-.4,'🔮 Magic Shop'];
   if(T.stG){T.stG.c.visible=shopBuilt('cook');T.stG.a.visible=shopBuilt('alch')}
+  if(T.mvG){const on=shopBuilt('magic');T.mvG.visible=on;try{const c=mmB.getContext('2d');for(let y=-18;y<=-14;y++)for(let x=12;x<=17;x++){const X=T.cx+x,Y=T.cy+y,w=on?'B':'P';if(MAP[Y][X]!=w&&(MAP[Y][X]=='B'||MAP[Y][X]=='P')){MAP[Y][X]=w;c.fillStyle=on?'rgb(168,126,92)':'rgb(200,190,164)';c.fillRect(X,Y,1,1)}}}catch(err){console.warn(err)}(T.mvCol||[]).forEach(q=>{const i=T.mvArr.indexOf(q);if(on&&i<0)T.mvArr.push(q);else if(!on&&i>=0)T.mvArr.splice(i,1)})}
   if(T.st2){if(!shopBuilt('cook'))want.cook=[T.st2.c[0],T.st2.c[1],'🍳 Hearth'];if(!shopBuilt('alch'))want.alch=[T.st2.a[0],T.st2.a[1],'⚗️ Alchemy']}
   if(!T.vsp)T.vsp=rwSpots(T,VIS.length);VIS.forEach((v,i)=>{if(!shopBuilt(v.k)){const o=SHOPS.find(q=>q.k==v.k);want[v.k]=[T.vsp[i][0],T.vsp[i][1],o.i+' '+o.n];SHM.vsite.push({x:T.vsp[i][0],z:T.vsp[i][1],n:o.n})}});
   for(const k in SHM.sites)if(!want[k]){scene.remove(SHM.sites[k]);delete SHM.sites[k]}

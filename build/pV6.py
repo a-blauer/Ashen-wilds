@@ -54,4 +54,8 @@ function unstick(){if(inRealm||!party.length)return;const p=pl.position;if(nowP(
 {const f=homeTick;homeTick=function(){f.apply(this,arguments);try{unstick()}catch(_){}}}
 """
 a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,uns+a)
+
+# v77: the Magic Shop building (and its walls) only appear once it is built at the Steward
+rep("  // ---------- Magic Shop (east) ----------\n  {const b=new THREE.Group();","  // ---------- Magic Shop (east) ----------\n  {const b=new THREE.Group();T.mvG=b;T.mvArr=T.col;const mvc0=T.col.length;")
+rep("  }\n  // ---------- Tavern (west) ----------","  T.mvCol=T.col.slice(mvc0);\n  }\n  // ---------- Tavern (west) ----------")
 open(P,'w').write(h);print('v6 ok')
