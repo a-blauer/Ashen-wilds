@@ -33,7 +33,9 @@ var LT={on:0};
 a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,loot+a)
 rep("if(safeP){e.agg=0;if(e.atk)mCancel(e)}else if(","if(e.wv&&!safeP)e.agg=1;else if(safeP){e.agg=0;if(e.atk)mCancel(e)}else if(")
 rep("party.slice(0,2).forEach(c2=>{if(!c2||c2.h<=0||c2.l>=MAXLV)return;","party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;")
-a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzzzz_fish.js').read()+"\n"+open(M+'zz7_v71.js').read()+"\n"+open(M+'zz8_danger.js').read()+a)
+a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1;h=h.replace(a,"\n"+open(M+'zzzzz_fish.js').read()+"\n"+open(M+'zz7_v71.js').read()+"\n"+open(M+'zz8_danger.js').read()+"\n"+open(M+'zz9_cmpegg.js').read()+a)
+# v74: eggs live in the Companions window
+rep("Open Eggs (U) and click it.","Open Companions & Eggs (P) and click it.")
 # v73: death screen pauses the game like any open window
 rep("'tal','hatch','start','xw'].some(","'tal','hatch','start','xw','dth'].some(")
 rep('<div id="fade"></div>','<div id="fade"></div><div id="dth" class="hide"></div>')

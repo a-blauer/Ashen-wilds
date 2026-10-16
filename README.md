@@ -1,7 +1,7 @@
 # Ashen Wilds
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v73 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v74 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -17,7 +17,7 @@ The build is a **patch chain**, not a bundler:
    - **pV3**: the big module list `a0_new` … `zz_portal`, text patches, and the world section — it cuts `src/modules/w0_world.js` on `//@@TOP`, `//@@BOSSES`, `//@@BIOMES`, `//@@MAP`, `//@@HF` markers into the base file.
    - **pV4**: `zzz_mp.js` (co-op) + main-loop hooks (`mpAct`, `mpNear`, `mpLive`).
    - **pV5**: `zzzz_more.js` (stronghold/shops, shiny & rare, companion talents), name/text cleanups, lore & bounty removal.
-   - **pV6**: world size `W=920,H=568`, Duskhold layout scale (`TS=21,TK=1.5`), XP/loot balance, anti-stuck, `zzzzz_fish.js` (map + fishing), `zz7_v71.js` (zone population, atmosphere, unlockable skills, grades, Consume), `zz8_danger.js` (title screen, death screen with "Rise Again", hit flash + damage-direction arcs, low-health vignette and heartbeat; adds `dth` to `uiOpen()` so death pauses single-player).
+   - **pV6**: world size `W=920,H=568`, Duskhold layout scale (`TS=21,TK=1.5`), XP/loot balance, anti-stuck, `zzzzz_fish.js` (map + fishing), `zz7_v71.js` (zone population, atmosphere, unlockable skills, grades, Consume), `zz8_danger.js` (title screen, death screen with "Rise Again", hit flash + damage-direction arcs, low-health vignette and heartbeat; adds `dth` to `uiOpen()` so death pauses single-player), `zz9_cmpegg.js` (Companions & Eggs: one window for both, egg preview + in-window hatch scene in `#cvw`/`#cd`; the old `#inc`/`#hatch` popups stay in the HTML but are no longer shown).
 
 ## Conventions (read before changing code)
 
@@ -43,6 +43,7 @@ cd test && python3 v38t.py      # save/load
 python3 v32t.py                 # portal → boss kill → wave trial
 python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmosphere screenshots
 python3 v60t.py                 # zone roster (no respawn)
+python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
