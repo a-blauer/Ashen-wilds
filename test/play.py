@@ -1,7 +1,7 @@
 import sys,re,json,time
 from playwright.sync_api import sync_playwright
 import os
-HERE=os.path.dirname(os.path.abspath(__file__));VEND=HERE+'/vendor';TMP=HERE+'/out';os.makedirs(TMP,exist_ok=True)
+HERE=os.path.dirname(os.path.abspath(__file__));VEND=HERE+'/vendor';TMP=os.environ.get('AW_TMP',HERE+'/out');os.makedirs(TMP,exist_ok=True)
 SRC=os.environ.get('SRC',os.environ.get('AW_OUT',os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','dist','ashen-wilds.html')))
 h=open(SRC).read()
 h=h.replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','file://'+VEND+'/three.min.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js','file://'+VEND+'/GLTFLoader.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js','file://'+VEND+'/SkeletonUtils.js')

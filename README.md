@@ -66,7 +66,7 @@ python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
 python3 v79t.py                 # music themes, fight layer, volume settings; renders a music preview (NOREN=1 to skip)
-python3 v79fox.py               # fox model renders (test/out/fox_*.png)
+python3 lpview.py               # low-poly companion preview: SP=Ashwolf,Direfang python3 lpview.py → out/lp_*.png
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
