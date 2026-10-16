@@ -27,6 +27,11 @@ The build is a **patch chain**, not a bundler:
 - **100 new templates** are appended to `ITPL` from index `ITPL_V78` (=100). Never insert or reorder `ITPL`: saves store the index. New templates carry `nw:1` and an innate bonus `imp:{stat:value}` that `itStats` adds (scaled by upgrade level). Wands and orbs give magical attack and mana like staves.
 - **Mounts** (`zzB_mounts.js`): the `MOUNTS` table is replaced by 10 new mounts with their own procedural models (`mkMountRig(k)`, returned through `mountModel`). Riding is `toggleMount` (V), the list is `openMounts` (H / `#mntBtn`). Mounts are only sold for gold by the Stable Master; the Stable is a `SHOPS` entry (`stable`) built at the Steward, placed at `STB` (Duskhold offset −7,−8) and shown/hidden with its colliders by `stableSync()` from `shApply`. Old-roster mounts in saves are mapped to a same-tier mount and old mount eggs are refunded (`mFix` after `loadGame`).
 
+## v79: Valheim-style fox
+
+- `zzC_fox.js` (spliced last in pV6) replaces the Foxlet look with a hand-built low-poly fox: one flat-shaded, vertex-coloured body loft (head, torso, bushy tail, legs) skinned to the old Foxlet bones, plus baked detail parts (`foxKit`: eyes, jaw, cheek/throat ruffs, paws, variant and trait extras) and ear pivots on the head bone. `crRig` is wrapped so any creature using the `Foxlet` rig (Foxlet, Emberlynx, wild foxes) gets the new model; animation is still `rigAnim`. Fused companions still get the other species' signature parts.
+- Test: `python3 v79t.py` renders the fox in a studio scene (angles, walk, attack, variants) to `test/out/fox_*.png`.
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
@@ -53,6 +58,7 @@ python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmo
 python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
+python3 v79t.py                 # fox model renders (test/out/fox_*.png)
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
