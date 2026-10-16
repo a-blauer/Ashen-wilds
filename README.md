@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v78 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v79 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -19,13 +19,21 @@ The build is a **patch chain**, not a bundler:
    - **pV5**: `zzzz_more.js` (stronghold/shops, shiny & rare, companion talents), name/text cleanups, lore & bounty removal.
    - **pV6**: world size `W=920,H=568`, Duskhold layout scale (`TS=21,TK=1.5`), XP/loot balance, anti-stuck, `zzzzz_fish.js` (map + fishing), `zz7_v71.js` (zone population, atmosphere, unlockable skills, grades, Consume), `zz8_danger.js` (title screen, death screen with "Rise Again", hit flash + damage-direction arcs, low-health vignette and heartbeat; adds `dth` to `uiOpen()` so death pauses single-player), `zz9_cmpegg.js` (Companions & Eggs: one window for both, egg preview + in-window hatch scene in `#cvw`/`#cd`; the old `#inc`/`#hatch` popups stay in the HTML but are no longer shown).
 
-   - **pV6 (v78)**: `zzA_arsenal.js` and `zzB_mounts.js` are spliced last (see below).
+   - **pV6 (v78/v79)**: `zzA_arsenal.js`, `zzB_mounts.js` and `zzC_music.js` are spliced last (see below).
 
 ## v78: Arsenal and mounts
 
 - **Weapon types** (`zzA_arsenal.js`): `WTYPE` gains `axes, halberd, flail, claws, knives, crossbow, sling, wand, orb`. Each class has 3-4 types. A basic attack is chosen by the equipped weapon's type, not the class: `WBEH[wt]` (melee combos come from the `MW` tables run by `wMelee`; ranged types are their own functions). Types without an entry (`gs, dagger, bow, staff`) fall through to the old `swing`. Projectile side effects ride on `s.wfx` and run from a `heroHit` wrapper (`WFX`). `WDESC` is the text shown on the item. Models: `mkWpn` wrapper (`NWM` builders, `WALIAS` for reused meshes) and a `refreshGear` wrapper for dual-wield/left-hand placement.
 - **100 new templates** are appended to `ITPL` from index `ITPL_V78` (=100). Never insert or reorder `ITPL`: saves store the index. New templates carry `nw:1` and an innate bonus `imp:{stat:value}` that `itStats` adds (scaled by upgrade level). Wands and orbs give magical attack and mana like staves.
 - **Mounts** (`zzB_mounts.js`): the `MOUNTS` table is replaced by 10 new mounts with their own procedural models (`mkMountRig(k)`, returned through `mountModel`). Riding is `toggleMount` (V), the list is `openMounts` (H / `#mntBtn`). Mounts are only sold for gold by the Stable Master; the Stable is a `SHOPS` entry (`stable`) built at the Steward, placed at `STB` (Duskhold offset −7,−8) and shown/hidden with its colliders by `stableSync()` from `shApply`. Old-roster mounts in saves are mapped to a same-tier mount and old mount eggs are refunded (`mFix` after `loadGame`).
+
+## v79: Music and sound
+
+- `zzC_music.js` is a generative soundtrack built with Web Audio (no audio files). `MTH` holds one theme per place: `title` (title screen and new-hero setup), `town` (Duskhold), `z0`…`z5` (the six zones, by `regionAt`) and `boss` (an aggroed Sovereign within 45 tiles). Each theme sets key, mode, tempo, chord progression and instruments (pad, drone, harp/lute arpeggio, bells, melody, bass, drums). Pattern strings are 16 steps: `X` loud, `x` normal, `g` ghost.
+- `muTick` (every 50 ms) picks the theme (`muWant`), cross-fades through `MU.xg`, and schedules notes 0.3 s ahead with `muStep`. Fighting nearby (`muFight`: an aggroed enemy within 24 tiles, or a running Wave Trial) fades in each theme's `f` drum/bass set. Death and the 7 s after a Sovereign falls are silent.
+- New effects (`mSfx`): level up, coins (any gold gain), item pickup / rare pickup, enemy and elite deaths, boss victory, dodge, potion, mount, portal travel, window open/close and button ticks.
+- Settings → Sound: Music volume (`SET.mus`) and Sound effects volume (`SET.sfxV`, which also drives the old `SET.sfx` on/off).
+- `test/v79t.py` checks theme switching, fight intensity, volumes and death silence, and renders every theme offline to `test/out/v79_music.wav`/`.mp3`. `preview/kill-quest-music-preview.mp3` is that render.
 
 ## Conventions (read before changing code)
 
@@ -53,6 +61,7 @@ python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmo
 python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
+python3 v79t.py                 # music themes, fight layer, volume settings; renders a music preview (NOREN=1 to skip)
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
