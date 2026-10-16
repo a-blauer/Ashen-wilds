@@ -58,16 +58,16 @@ function lpExtras(k,c,D){
   if(c.v=='Ember')bk.forEach((q,i)=>k.L(q[0],'g',i%2?0xffb040:0xff6a1a,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up*.8,q[3]-.05],.03,.002,4));
   if(c.v=='Frost')bk.forEach(q=>k.L(q[0],'g',0xd8f6ff,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up,q[3]-.03],.03,.002,4));
   if(c.v=='Golden'&&hd)k.p(hd[0],'ring','g',0xffd84a,hd[1],hd[2]+.1,hd[3],.1,.12,.1);
-  if(c.tr=='Horned'&&hd)[-1,1].forEach(s=>k.L(hd[0],'c',0xd8ccb0,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.07,hd[2]+.1,hd[3]-.09],.022,.004,5));
+  if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
   if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
-  if(c.tr=='Armored')bk.slice(0,3).forEach(q=>k.p(q[0],'box','m',0x4a4a52,q[1],q[2]-.005,q[3],.2,.04,.15));
+  if(c.tr=='Armored'){const w=D.armor||.17;bk.slice(0,4).forEach((q,i)=>{k.p(q[0],'hem','m',0x4a4c54,q[1],q[2]-.03,q[3],w,.035,.07,-.15);k.p(q[0],'box','m',0x7a6a3a,q[1],q[2]+.004,q[3]+.05,w*.5,.012,.014,-.15)})}
   if(c.tr=='Universal'&&hd){k.p(hd[0],'ring','g',0x7cf0ff,hd[1],hd[2]+.15,hd[3],.13,.1,.13);[0,1,2].forEach(i=>k.p(hd[0],'sph','g',[0xff6a9a,0x7cf0ff,0xffe36a][i],hd[1]+Math.cos(i*2.1)*.13,hd[2]+.13,hd[3]+Math.sin(i*2.1)*.13,.018))}
 }
 // The generic rig. D = LPR[n]:
 //   geo(C,c)            → skinned BufferGeometry (cache it with lpGeo, keyed by colour)
 //   kit(k,c,C,red)      → add rigid detail parts to dkKit k (eyes, teeth, claws …); positions in model space
 //   post(x,c,C,mat)     → optional: add animated non-skinned parts (x.ears pivots, x.wings {p,s,base,amp}); x.S, x.bones available
-//   back, head, up      → anchor points for variant/trait extras (lpExtras)
+//   back, head, up      → anchor points for variant/trait extras (lpExtras); horn / armor = optional size factors
 //   mat                 → optional material options (e.g. ghosts)
 function lpRig(c,n,D){
   const S=SPEC[n],g=new THREE.Group(),b=new THREE.Group();g.add(b);g.b=b;g.legs=[];g.wings=[];g.tails=[];

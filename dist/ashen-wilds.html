@@ -9252,16 +9252,16 @@ function lpExtras(k,c,D){
   if(c.v=='Ember')bk.forEach((q,i)=>k.L(q[0],'g',i%2?0xffb040:0xff6a1a,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up*.8,q[3]-.05],.03,.002,4));
   if(c.v=='Frost')bk.forEach(q=>k.L(q[0],'g',0xd8f6ff,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up,q[3]-.03],.03,.002,4));
   if(c.v=='Golden'&&hd)k.p(hd[0],'ring','g',0xffd84a,hd[1],hd[2]+.1,hd[3],.1,.12,.1);
-  if(c.tr=='Horned'&&hd)[-1,1].forEach(s=>k.L(hd[0],'c',0xd8ccb0,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.07,hd[2]+.1,hd[3]-.09],.022,.004,5));
+  if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
   if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
-  if(c.tr=='Armored')bk.slice(0,3).forEach(q=>k.p(q[0],'box','m',0x4a4a52,q[1],q[2]-.005,q[3],.2,.04,.15));
+  if(c.tr=='Armored'){const w=D.armor||.17;bk.slice(0,4).forEach((q,i)=>{k.p(q[0],'hem','m',0x4a4c54,q[1],q[2]-.03,q[3],w,.035,.07,-.15);k.p(q[0],'box','m',0x7a6a3a,q[1],q[2]+.004,q[3]+.05,w*.5,.012,.014,-.15)})}
   if(c.tr=='Universal'&&hd){k.p(hd[0],'ring','g',0x7cf0ff,hd[1],hd[2]+.15,hd[3],.13,.1,.13);[0,1,2].forEach(i=>k.p(hd[0],'sph','g',[0xff6a9a,0x7cf0ff,0xffe36a][i],hd[1]+Math.cos(i*2.1)*.13,hd[2]+.13,hd[3]+Math.sin(i*2.1)*.13,.018))}
 }
 // The generic rig. D = LPR[n]:
 //   geo(C,c)            → skinned BufferGeometry (cache it with lpGeo, keyed by colour)
 //   kit(k,c,C,red)      → add rigid detail parts to dkKit k (eyes, teeth, claws …); positions in model space
 //   post(x,c,C,mat)     → optional: add animated non-skinned parts (x.ears pivots, x.wings {p,s,base,amp}); x.S, x.bones available
-//   back, head, up      → anchor points for variant/trait extras (lpExtras)
+//   back, head, up      → anchor points for variant/trait extras (lpExtras); horn / armor = optional size factors
 //   mat                 → optional material options (e.g. ghosts)
 function lpRig(c,n,D){
   const S=SPEC[n],g=new THREE.Group(),b=new THREE.Group();g.add(b);g.b=b;g.legs=[];g.wings=[];g.tails=[];
@@ -9363,6 +9363,108 @@ LPR.Foxlet={
     [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.062,.665,.47,.06,.16,.026,0,-s*.25,0);
       const n=new THREE.Mesh(ig,mat);n.scale.set(.6,.68,.5);n.position.set(0,.02,.45);p.children[0].add(n);p.userData={rz:-s*.3,sd:s};x.ears.push(p)});
   }};
+
+// ================= Mossfrog: low-poly bog toad (v81) =================
+// Species on this rig: Mossfrog, Bogmaw (colour C tints the skin). Anim type 'hop'.
+// Positions are in the Mossfrog's own model space (a wide, squashed Foxlet skeleton: head bone at z≈.34).
+(function(){
+  const nz=(i,s,c)=>{const v=Math.sin(i*12.9898+s*78.233+c*37.719)*43758.5453;return v-Math.floor(v)};
+  // body + head: [z, centre y, half width, half height above, below, [boneA,boneB,blend], belly line]
+  const BODY=[[.47,.27,.04,.025,.025,['head','head',0],-.3],[.43,.28,.14,.065,.05,['head','head',0],-.25],[.37,.29,.195,.105,.07,['head','head',0],-.2],
+    [.29,.29,.215,.15,.1,['neck','head',.5],-.25],[.17,.285,.235,.19,.13,['chest','chest',0],-.35],[.03,.285,.245,.2,.14,['spine','spine',0],-.4],
+    [-.11,.285,.225,.19,.13,['spine','pelvis',.6],-.4],[-.21,.285,.175,.15,.1,['pelvis','pelvis',0],-.4],[-.29,.28,.09,.08,.06,['pelvis','tail0',.3],-.4],[-.32,.28,.02,.02,.02,['tail0','tail0',0],-1]];
+  LPR.Mossfrog={
+    head:['head',0,.43,.36],up:.08,sc:1.18,
+    back:[['chest',0,.46,.16],['spine',0,.47,.02],['spine',0,.46,-.1],['pelvis',0,.43,-.2]],
+    geo(C){
+      const skin=lpMain(C,.42).multiplyScalar(.82),back=skin.clone().multiplyScalar(.68),spot=skin.clone().lerp(new THREE.Color(0x14180e),.6),belly=new THREE.Color(0xc4bf96),warm=new THREE.Color(0x8a8a4a);
+      const legs=[].concat(...[-1,1].map(s=>{const F=s<0?'fl':'fr',H=s<0?'hl':'hr';return [
+        [[s*.15,.22,.14,.05,['chest',F+'0',.5]],[s*.17,.14,.16,.044,[F+'0',F+'1',.7]],[s*.175,.065,.15,.036,[F+'1',F+'1',0]],[s*.175,.025,.155,.032,[F+'2',F+'2',0]]],
+        [[s*.15,.26,-.16,.085,['pelvis',H+'0',.5]],[s*.2,.18,-.11,.072,[H+'0',H+'0',0]],[s*.215,.12,-.08,.05,[H+'0',H+'1',.6]],[s*.205,.075,-.16,.046,[H+'1',H+'1',0]],[s*.195,.035,-.22,.036,[H+'1',H+'2',.5]],[s*.19,.018,-.245,.03,[H+'2',H+'2',0]]]]}));
+      return lpGeo('Mossfrog|'+C,'Mossfrog',[
+        {rings:BODY.map(r=>({p:[0,r[1],r[0]],rx:r[2],ryT:r[3],ryB:r[4],b:r[5],bl:r[6]})),seg:10,capA:1,capB:1,paint:(o,r,s,c,i)=>{
+          o.copy(skin);if(s>.6)o.lerp(back,.7);const n=nz(i,s,c);if(s>.1&&n>.7)o.copy(spot);else if(s>-.1&&n<.12)o.lerp(warm,.5);
+          const t=Math.min(1,Math.max(0,(r.bl-s)*3));if(t>0)o.lerp(belly,t)}}]
+      .concat(legs.map(L=>({rings:L.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[3]*1.1,ryB:r[3]*1.1,b:r[4]})),seg:6,ref:[0,0,1],capB:1,
+        paint:(o,r,sn,c,i)=>{o.copy(skin);if(sn>.3)o.lerp(belly,.3);if(nz(i,sn,c)>.75)o.copy(spot);if(r.p[1]<.05)o.multiplyScalar(.85)}}))));
+    },
+    kit(k,c,C,red){
+      const skin=lpMain(C,.42).multiplyScalar(.82).getHex(),dk=dkShade(skin,.6),lid=dkShade(skin,.85),belly=0xc4bf96,eye=red?0xff2a2a:0xd8c030;
+      // bulging eyes on top of the head: lidded domes, glowing gold iris with a black slit
+      [-1,1].forEach(s=>{
+        k.p('head','sph','c',lid,s*.12,.42,.34,.064,.062,.064);
+        k.p('head','sph','g',eye,s*.137,.43,.37,.04,.038,.03,0,s*.5,0);
+        k.p('head','box','c',0x050505,s*.141,.43,.392,.006,.03,.01,0,s*.5,0);
+        k.p('head','box','c',dk,s*.115,.476,.345,.074,.016,.05,0,s*.3,s*.25);
+        k.p('head','box','c',0x0a0c08,s*.03,.31,.455,.012,.008,.01);
+      });
+      // wide mouth seam and a pale lower jaw that drops on attack (tongue inside)
+      k.p('jaw','sph','c',belly,0,.245,.34,.155,.04,.11);
+      k.p('jaw','box','c',0x8a2a2a,0,.265,.36,.06,.012,.1);
+      // warts along the back and flanks
+      [[.08,.45,.14,.03],[-.09,.455,.08,.028],[.12,.44,-.04,.032],[-.13,.43,-.08,.03],[.05,.455,-.13,.026],[-.04,.44,.2,.022],[.18,.38,.06,.026],[-.19,.37,.02,.028],[.15,.39,-.15,.024],[-.15,.4,.14,.022]]
+        .forEach((q,i)=>k.p(q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis','ico','c',i%3?dk:dkShade(skin,1.15),q[0],q[1]+(q[1]>.42?.015:0),q[2],q[3],q[3]*.7,q[3]));
+      // moss on the back
+      [[.04,.462,.04],[-.06,.455,-.06]].forEach((q,i)=>k.p('spine','ico','c',0x4a6a2a,q[0],q[1],q[2],.055,.015,.045,0,i));
+      // webbed feet: three splayed toes with knobbed tips
+      [['fl2',-.175,.155,1],['fr2',.175,.155,1],['hl2',-.19,-.245,1.3],['hr2',.19,-.245,1.3]].forEach(f=>{
+        k.p(f[0],'box','c',dkShade(skin,.8),f[1],.012,f[2]+.03*f[3],.08*f[3],.012,.06*f[3]);
+        [-1,0,1].forEach(i=>{const a=i*.5+(f[1]<0?-.2:.2),L=.07*f[3],x=f[1]+Math.sin(a)*L,z=f[2]+Math.cos(a)*L;
+          k.L(f[0],'c',dkShade(skin,.85),[f[1],.014,f[2]],[x,.012,z],.014,.01,4);k.p(f[0],'sph','c',belly,x,.014,z,.014,.01,.014)});
+      });
+    }};
+})();
+
+// ================= Stoneshell: low-poly stone-backed tortoise (v81) =================
+// Species on this rig: Stoneshell, Cragback, Titanshell (colour C tints the shell stone).
+// Positions are in the Stoneshell's own model space (a squashed Foxlet skeleton: head bone at z≈.41, feet at y≈0).
+(function(){
+  const nz=(i,s,c)=>{const v=Math.sin(i*12.9898+s*78.233+c*37.719)*43758.5453;return v-Math.floor(v)};
+  // shell dome: [z, centre y, half width, dome height, underside depth]
+  const SHELL=[[.44,.21,.13,.06,.04],[.39,.215,.24,.14,.07],[.29,.22,.32,.24,.08],[.16,.22,.355,.31,.09],[.02,.22,.365,.34,.09],[-.12,.22,.36,.33,.09],[-.26,.22,.335,.28,.08],[-.38,.21,.28,.19,.07],[-.47,.2,.16,.08,.04]];
+  const domeY=(x,z)=>.22+.33*Math.sqrt(Math.max(0,1-(x/.36)**2-((z+.04)/.5)**2));
+  LPR.Stoneshell={
+    head:['head',0,.37,.46],up:.12,
+    back:[['spine',0,.5,.14],['spine',0,.54,-.06],['spine',0,.51,-.26]],
+    geo(C){
+      const stone=lpMain(C,.22).multiplyScalar(.72),light=stone.clone().multiplyScalar(1.22),rim=stone.clone().multiplyScalar(.5),moss=new THREE.Color(0x3e5428),
+        skin=new THREE.Color(C).lerp(new THREE.Color(0x3a3e2c),.7),belly=skin.clone().lerp(new THREE.Color(0xb8b494),.45),dark=new THREE.Color(0x1a1a14);
+      const legs=[].concat(...[-1,1].map(s=>{const F=s<0?'fl':'fr',H=s<0?'hl':'hr';return [
+        [[s*.14,.2,.17,.07,['chest',F+'0',.5]],[s*.15,.12,.19,.066,[F+'0',F+'1',.7]],[s*.155,.06,.185,.06,[F+'1',F+'1',0]],[s*.155,.025,.185,.066,[F+'2',F+'2',0],1],[s*.155,.004,.195,.072,[F+'2',F+'2',0],1]],
+        [[s*.15,.2,-.21,.075,['pelvis',H+'0',.5]],[s*.16,.12,-.18,.07,[H+'0',H+'1',.7]],[s*.165,.06,-.2,.065,[H+'1',H+'1',0]],[s*.165,.025,-.21,.068,[H+'2',H+'2',0],1],[s*.165,.004,-.21,.074,[H+'2',H+'2',0],1]]]}));
+      return lpGeo('Stoneshell|'+C,'Stoneshell',[
+        // rocky shell: vertex jitter makes each facet a chipped stone
+        {rings:SHELL.map((r,i)=>({p:[0,r[1],r[0]],rx:r[2],ryT:r[3],ryB:r[4],b:[r[0]>.25?'chest':r[0]<-.3?'pelvis':'spine','spine',r[0]>.25||r[0]<-.3?.5:0],j:i&&i<SHELL.length-1?.2:.05})),seg:12,capA:1,capB:1,
+          paint:(o,r,s,c,i)=>{o.copy(stone);if(s>.55)o.lerp(light,.5);if(nz(i+3,c,s)>.6)o.multiplyScalar(.78);if(s<.05)o.copy(rim);if(s<-.4)o.copy(belly).multiplyScalar(.8);if(s>.45&&nz(i,s,c)>.8)o.lerp(moss,.8)}},
+        // neck + head with a horny beak
+        {rings:[[.3,.24,.075,.075],[.4,.27,.072,.07],[.47,.3,.088,.07],[.53,.31,.08,.062],[.59,.302,.06,.046],[.635,.29,.03,.025],[.655,.285,.008,.008]].map((r,i)=>({p:[0,r[1],r[0]],rx:r[2],ryT:r[3],ryB:r[3]*.9,b:i<1?['neck','neck',0]:i<2?['neck','head',.5]:['head','head',0],beak:i>4})),seg:8,capA:1,capB:1,
+          paint:(o,r,s)=>{o.copy(r.beak?dark:skin);if(!r.beak&&s>.5)o.multiplyScalar(.8);if(!r.beak&&s<-.3)o.copy(belly)}},
+        // stubby tail
+        {rings:[[-.4,.2,.05],[-.5,.21,.038],[-.58,.22,.02],[-.63,.225,.006]].map((r,i)=>({p:[0,r[1],r[0]],rx:r[2],b:i<1?['tail0','tail0',0]:i<2?['tail0','tail1',.5]:['tail2','tail2',0]})),seg:6,capB:1,paint:o=>o.copy(skin)}]
+      .concat(legs.map(L=>({rings:L.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[3]*1.05,ryB:r[3]*1.05,b:r[4],d:r[5]})),seg:6,ref:[0,0,1],capB:1,
+        paint:(o,r,sn)=>{o.copy(skin);if(r.d)o.multiplyScalar(.6);if(sn>.4&&!r.d)o.lerp(belly,.25)}}))));
+    },
+    kit(k,c,C,red){
+      const stone=dkShade(lpMain(C,.12).getHex(),.72),dstone=dkShade(stone,.65),eye=red?0xff2a2a:0xc8d05a,horn=0x2a2a20,moss=0x3e5a2a;
+      // face: sunken eyes under a heavy brow, beak-edged jaw
+      [-1,1].forEach(s=>{
+        k.p('head','box','c',0x080806,s*.07,.335,.535,.032,.024,.02,0,s*.5,-s*.15);
+        k.p('head','box','g',eye,s*.076,.336,.538,.02,.011,.008,0,s*.5,-s*.2);
+        k.p('head','box','c',horn,s*.066,.355,.53,.048,.016,.036,0,s*.45,s*.3);
+      });
+      k.L('jaw','c',0x5a5a46,[0,.272,.47],[0,.272,.625],.05,.014,5);
+      k.p('jaw','box','c',horn,0,.283,.62,.03,.012,.03);
+      // shell: embedded boulders, moss tufts and a ring of rim stones
+      const rocks=[[0,.02,.075],[-.2,.0,.06],[.2,-.02,.06],[0,.26,.055],[0,-.3,.065],[-.22,.18,.05],[.22,.17,.05],[-.21,-.2,.055],[.21,-.22,.05],[.1,-.1,.045],[-.1,.1,.04]];
+      rocks.forEach((q,i)=>k.p('spine',i%3?'dod':'ico','c',i%2?stone:dstone,q[0],domeY(q[0],q[1])-q[2]*.5,q[1],q[2],q[2]*.75,q[2],i*.7,i*1.3,i*.4));
+      [[.12,.08],[-.15,-.12],[.17,-.02],[-.05,.18]].forEach((q,i)=>k.p('spine','ico','c',moss,q[0],domeY(q[0],q[1])-.005,q[1],.06,.018,.05,0,i));
+      for(let i=0;i<12;i++){const a=i/12*Math.PI*2,x=Math.sin(a)*.355,z=Math.cos(a)*.44-.02;k.p('spine','dod','c',i%2?dstone:stone,x,.215,z,.045,.03,.045,i,i*.5,0)}
+      // glowing crystal cluster growing from the shell
+      [[.06,-.02,.12,.15],[-.02,.04,.09,-.25],[.0,-.08,.07,.35],[-.16,-.16,.06,-.2]].forEach((q,i)=>{const y=domeY(q[0],q[1])-.02;k.L('spine',i<3?'g':'c',i<3?0x5ae8d0:0x3a6a64,[q[0],y,q[1]],[q[0]+q[3]*.12,y+q[2],q[1]-q[3]*.05],.028,.003,4)});
+      // claws
+      [['fl2',-.155,.19],['fr2',.155,.19],['hl2',-.165,-.21],['hr2',.165,-.21]].forEach(f=>[-1,0,1].forEach(i=>k.p(f[0],'cone4','c',0x1a1812,f[1]+i*.03,.012,f[2]+.075,.012,.04,.012,Math.PI/2)));
+    }};
+})();
 
 $('talBtn').onclick=openTal;
 ui();refreshGear();
