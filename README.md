@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v81 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v82 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -40,6 +40,8 @@ The build is a **patch chain**, not a bundler:
 - Each of the 12 companion rigs has its own file `zzE_<Rig>.js` (Foxlet, Ashwolf, Boneling, Stoneshell, Mossfrog, Batwing, Skyhawk, Drakelet, Gravewyrm, Cryptspider, Gloomcap, Wispling); pV6 splices every `zzE_*.js` after the toolkit. Bodies are skinned to the rig's original `SPEC[rig].bones`, so `rigAnim` (walk, hop, fly, slither, spider, float, attack) is unchanged. Wild monsters that use these rigs get the new look too; the other monster rigs are untouched.
 - `zzE_Batwing.js` also holds the shared wing builders (`lpwWing`, `lpwPair`) used by Skyhawk and Drakelet.
 - Preview any species: `cd test && SP=Ashwolf,Direfang python3 lpview.py` → `out/lp_<species>_*.png` (angles, walk, attack, variants, old-vs-new, in-game). Run previews one at a time; the build and tests accept `AW_OUT`/`AW_TMP` for separate output paths.
+
+- `zzF_combatanim.js` (spliced after the creatures) is the v81 combat-animation update published from another session (hero upper body driven by one action at a time, eased transitions); it was recovered from the live page.
 
 ## Conventions (read before changing code)
 
