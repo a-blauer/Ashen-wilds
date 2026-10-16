@@ -1,4 +1,4 @@
-// ================= v79: new low-poly fox (Valheim style) =================
+// ================= v80: new low-poly fox (Valheim style) =================
 // Replaces the Foxlet look (wild foxes, fox companions and every creature that uses the Foxlet rig).
 // One chunky, flat-shaded body skinned to the old Foxlet skeleton, so the existing walk/attack animation still drives it.
 // Colours are painted per vertex with a little random mottling, like Valheim's hand-painted fur.
