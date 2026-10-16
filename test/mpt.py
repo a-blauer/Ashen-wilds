@@ -20,7 +20,7 @@ try:
     logs={'A':[],'B':[]}
     pgs={}
     for k in 'AB':
-        pg=ctx.new_page();pgs[k]=pg
+        pg=ctx.new_page();pgs[k]=pg;pg.add_init_script('window.AW_NOTITLE=1')
         pg.on('console',lambda m,k=k:logs[k].append(m.type+': '+m.text))
         pg.on('pageerror',lambda e,k=k:logs[k].append('PAGEERROR: '+str(e)+' || '+(e.stack or '')[:600].replace('\n',' ')))
         pg.goto('http://127.0.0.1:8765/out/mp.html',wait_until='commit',timeout=60000);pg.wait_for_function('document.readyState=="complete"',timeout=120000);pg.wait_for_timeout(1500)
