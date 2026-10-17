@@ -287,7 +287,7 @@ DEN[4]={
     if(S.tide){S.tide.r=Math.max(S.tide.min,S.tide.r-S.tide.sp*dt);d4TideDraw(A,now);if(Math.random()<dt*8){const a=Math.random()*6.283;burst(V(A.cx+Math.cos(a)*S.tide.r,GH(A.cx,A.cz)+.2,A.cz+Math.sin(a)*S.tide.r),0x9aff6a,2,.5,1,.5)}}
     // standing in rot burns and slows
     S.hz-=dt;if(d4InRot(A,pl.position)){dqDebuff('Rotting','🤢',{mspd:-.3},700,'Slowed by rot');if(S.hz<=0&&hero.iv<=0){S.hz=.5;bossHit(e,S.ph>=3?.2:.16);if(!S.hint){S.hint=1;say('🤢 The rot burns and slows you — keep to clean ground.')}}}
-    if(D4.cur.visible)D4.cur.material.opacity=.5+.12*Math.sin(now/260)},
+    if(D4.cur.visible)D4.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.2?.16:.5)+.1*Math.sin(now/260)},
   clear(A,won){const S=A.dq;if(!S)return;dqReset(S);(S.pools||[]).forEach(p=>scene.remove(p.ms,p.fr));S.pools=[];S.pus=[];S.tide=null;D4.tide.visible=D4.tideF.visible=false;
     dqUndebuff('Rotting');const e=bossEnt(A.i);if(e){e.dqVul=0;e.bs.face=0;if(e.m)e.m.ak=null}
     enemies.slice().forEach(q=>{if(q.minion&&!q.dprop&&q.c.g[0]=='maggot'&&d2(q.m.position,V(A.cx,0,A.cz))<ARENA_R+4)removeE(q)});

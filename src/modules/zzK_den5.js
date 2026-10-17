@@ -234,7 +234,7 @@ DEN[5]={
     BSTY[5]=Object.assign(BSTY[5]||{m:'blink',sp:1.8},{m:'blink',sp:1.8,pool:[['bloodfan','dive','batswarm'],['mirror','beam','bloodfan','prison'],['batswarm','cross','mirror','bloodfan']]});
     e.dqImm=0;e.dqLift=0;e.dqOnHit=null;setTimeout(()=>{if(A.f)say('🩸 The Crimson Throne Hall: shatter the blood chalices, watch for the one true shadow, and seek the moonlight when the Blood Moon rises.')},2400)},
   ai(A,e,dt,now){const S=A.dq;if(!S)return false;
-    if(S.rite){const R=S.rite,m=e.m;e.agg=1;const v=V().subVectors(pl.position,m.position);m.rotation.y=Math.atan2(v.x,v.z);animC(m,now,false,0);bxTick(A,e,dt,now);
+    if(S.rite){const R=S.rite,m=e.m;e.agg=1;m.rotation.y=Math.atan2(pl.position.x-m.position.x,pl.position.z-m.position.z);animC(m,now,false,0);bxTick(A,e,dt,now);
       e.dqLift=Math.min(2.2,(e.dqLift||0)+dt*2);m.b.position.y+=(e.dqLift+Math.sin(now/400)*.15)/(m.bs||1);if(m.ak==null)m.ak={n:'rainfire',ph:0,k:1};return true}
     if(S.stun>0){S.stun-=dt;animC(e.m,now,false,0);bxTick(A,e,dt,now);e.m.ak={n:'slam',ph:2,k:Math.min(1,S.stun)};if(Math.random()<dt*6)burst(gY(e.m.position,3.6),0xffe08a,1,.6,.4,.5);if(S.stun<=0)e.m.ak=null;return true}
     return false},
@@ -257,7 +257,7 @@ DEN[5]={
       if(!auth&&R.t>R.T+3)d5RiteEnd(A,e,R.ob.every(p=>p._gone))}
     d5MoonTick(A,e,dt,now);
     // stained glass and moat breathe with the phases
-    if(D5.cur.visible)D5.cur.material.opacity=.42+.1*Math.sin(now/240)},
+    if(D5.cur.visible)D5.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.1?.14:.42)+.08*Math.sin(now/240)},
   clear(A,won){const S=A.dq;if(!S)return;if(S.rite){S.rite.fin=true;if(S.rite.bar)scene.remove(S.rite.bar);S.rite=null}dqReset(S);d5Clear(S);d5MoonEnd(A);S.chal=[];S.mir=null;S.stun=0;
     D5.sigil.visible=false;if(D5.riteEl)D5.riteEl.style.display='none';D5.bats.forEach(b=>{b.on=0;b.g.visible=false});
     const e=bossEnt(A.i)||enemies.find(q=>q.ar===A.i);if(e){e.dqImm=0;e.dqLift=0;e.dqOnHit=null;e.dqVul=0;e.bs.face=0;if(e.m)e.m.ak=null;if(e.hid)bxHide(e,false)}
