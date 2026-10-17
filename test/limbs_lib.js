@@ -5,17 +5,24 @@ window.LB={
   Object.keys(EN).forEach(k=>{if(!EN[k].hum&&!/^boss/.test(k))L.push(['en',k])});
   (typeof BOSSES!='undefined'?BOSSES:[]).forEach((d,i)=>{if(!d.hum&&d.sp)L.push(['bs',i+':'+d.sp])});
   if(typeof MOUNTS!='undefined'&&typeof mkMountRig=='function')Object.keys(MOUNTS).forEach(k=>L.push(['mt',k]));
+  if(window.LB_VT){const V=[['Ember','Horned'],['Frost','Spiked'],['Golden','Armored'],['Shadow','Universal']];['Foxlet','Ashwolf','Boneling','Stoneshell','Mossfrog','Batwing','Skyhawk','Drakelet','Gravewyrm','Cryptspider','Gloomcap','Wispling'].forEach(n=>V.forEach(v=>L.push(['vt',n+'|'+v[0]+'|'+v[1]])))}
   return L;
  },
  make(ty,k){
   if(ty=='sp')return cr(mkC(k,10,0,''));
+  if(ty=='vt'){const [n,v,tr]=k.split('|'),c=mkC(n,10,0,v);c.v=v;c.tr=tr;return cr(c)}
   if(ty=='en')return cr(enemyC(k,10,{}));
   if(ty=='bs'){const i=+k.split(':')[0],d=BOSSES[i],key='lbBoss'+i;EN[key]={n:d.name,e:'x',rig:d.sp,col:d.bc||d.col||0x888888,w:{hp:1,pa:1,ma:1,pd:1,md:1},mt:'p',moves:[],fam:famOf(d.sp)};S[key]=S[key]||{e:'x',c:d.col||0x888888};MSET[key]=[];const c=enemyC(key,30,{boss:1});return cr(c)}
   return mkMountRig(k);
  },
  pose(m,p){const now=p==2?5237:p==1?4321:0;try{if(m.rig)m.rig(now,!!p,p?3:0);else animC0(m,now,!!p,p?3:0)}catch(e){}},
  hook(){ if(window.__lbHook)return;window.__lbHook=1;
-  const ob=bakeMesh;bakeMesh=function(parts,O,key,basic){const m=ob.apply(this,arguments);if(m){const list=parts.filter(p=>!!p.basic==basic);let off=0;m.userData.lbParts=list.map(p=>{let geo=p.geo;if(Math.max(p.sx,p.sy,p.sz)<.05)geo=geo===RS?RSL:geo===RC?RCL:geo===RY?RYL:geo;const n=geo.attributes.position.count,ix=geo.index?geo.index.count:n,r={p:p,v0:off,n:n};off+=n;return r})}return m};
+  const ob=bakeMesh;bakeMesh=function(parts,O,key,basic){const m=ob.apply(this,arguments);if(m){const list=parts.filter(p=>!!p.basic==basic);let off=0;m.userData.lbParts=list.map(p=>{let geo=p.geo;if(Math.max(p.sx,p.sy,p.sz)<.05)geo=geo===RS?RSL:geo===RC?RCL:geo===RY?RYL:geo;const n=geo.attributes.position.count,r={p:p,v0:off,n:n};off+=n;return r})}return m};
+  // dkBake: remember which vertices belong to which kit part (per geometry)
+  window.LBGP=new WeakMap();const od=dkBake;dkBake=function(P,O,key){const ms=od.apply(this,arguments);try{if(P&&P.length){const by={};P.forEach(p=>(by[p.t]=by[p.t]||[]).push(p));ms.forEach(m=>{if(LBGP.has(m.geometry))return;for(const t in by){let n=0;by[t].forEach(p=>n+=p.geo.attributes.position.count);if(n==m.geometry.attributes.position.count&&!LBGP.has(m.geometry)){let off=0;const v=new THREE.Vector3();LBGP.set(m.geometry,by[t].map(p=>{const c=p.geo.attributes.position.count,r={p:p,v0:off,n:c,at:v.setFromMatrixPosition(p.m).toArray()};off+=c;return r}));break}}})}}catch(e){console.error('lbhook',e)}return ms};
+  // lpGeo: vertex range per loft
+  const og=lpGeo;lpGeo=function(key,n,lofts){const G=og.apply(this,arguments);if(!G.userData.lbLofts){let off=0;G.userData.lbLofts=lofts.map((L,i)=>{const c=L.rings.length*(L.seg||8)+(L.capA?1:0)+(L.capB?1:0),r={v0:off,n:c,b:L.rings.map(r=>r.b[0]).filter((v,j,a)=>a.indexOf(v)==j).join(',')};off+=c;return r})}return G};
+  for(const k in DKBK||{})if(/^LP/.test(k))delete DKBK[k];for(const k in LPG)delete LPG[k];for(const k in BK)delete BK[k];
  },
  // world-space triangle soup of a mesh, split into nodes
  nodes(g){
@@ -28,9 +35,11 @@ window.LB={
    for(let i=0;i<N;i++){v.fromBufferAttribute(P,i);if(o.isSkinnedMesh)o.boneTransform(i,v);v.applyMatrix4(o.matrixWorld).applyMatrix4(inv);W[i*3]=v.x;W[i*3+1]=v.y;W[i*3+2]=v.z}
    const I=G.index?G.index.array:null,T=I?I.length:N;
    const mk=(name,info,a,b,c0,c1)=>({name,info,W,I,t0:a,t1:b,vmin:c0,vmax:c1,mesh:o});
-   if(o.userData.lbParts){o.userData.lbParts.forEach(r=>{const p=r.p;out.push(mk('part',{bn:p.bn,col:'#'+(p.col&&p.col.getHexString?p.col.getHexString():(p.col>>>0).toString(16).padStart(6,'0')),at:[+p.x.toFixed(3),+p.y.toFixed(3),+p.z.toFixed(3)],sc:[+p.sx.toFixed(3),+p.sy.toFixed(3),+p.sz.toFixed(3)],geo:p.geo.type,basic:!!p.basic},0,T,r.v0,r.v0+r.n))})}
-   else if(o.isSkinnedMesh&&g.__spec&&o.geometry===rigGeo(g.__spec)){let base=0;g.__spec.lofts.forEach((L,li)=>{const n=Math.max(6,Math.round(L.N*.85))*(Math.max(5,Math.round(L.seg*.72))+1);out.push(mk(li?'loft':'body',{loft:li,b:L.b.join(',')},0,T,base,base+n));base+=n})}
-   else{let nm=o.name||'';let a=o;while(!nm&&a.parent&&a!==g){a=a.parent;nm=a.name||''}out.push(mk('mesh',{geo:G.type,col:o.material&&o.material.color?'#'+o.material.color.getHexString():'',name:nm,at:o.getWorldPosition(new THREE.Vector3()).applyMatrix4(inv).toArray().map(x=>+x.toFixed(3))},0,T,0,N))}
+   const hx=c=>'#'+new THREE.Color(c).getHexString(),R3=a=>a.map(x=>+(+x).toFixed(3));
+   if(o.userData.lbParts){o.userData.lbParts.forEach(r=>{const p=r.p;out.push(mk('part',{bn:p.bn,col:hx(p.col),at:R3([p.x,p.y,p.z]),sc:R3([p.sx,p.sy,p.sz]),geo:p.geo.type,basic:!!p.basic},0,T,r.v0,r.v0+r.n))})}
+   else if(LBGP.has(G)){LBGP.get(G).forEach(r=>{const p=r.p;out.push(mk('kit',{bn:p.bn,col:hx(p.col),at:R3(r.at),geo:p.geo.type||'',t:p.t},0,T,r.v0,r.v0+r.n))})}
+   else if(G.userData.lbLofts){G.userData.lbLofts.forEach((L,li)=>out.push(mk(li?'loft':'body',{loft:li,b:L.b},0,T,L.v0,L.v0+L.n)))}
+   else{let nm=o.name||'';let a=o;while(!nm&&a.parent&&a!==g){a=a.parent;nm=a.name||''}out.push(mk(o.isSkinnedMesh?'skin':'mesh',{geo:G.type,col:o.material&&o.material.color?'#'+o.material.color.getHexString():'',name:nm,par:o.parent&&o.parent.parent&&o.parent.parent.isBone?'bone':'',at:o.getWorldPosition(new THREE.Vector3()).applyMatrix4(inv).toArray().map(x=>+x.toFixed(3))},0,T,0,N))}
   });
   return out;
  },

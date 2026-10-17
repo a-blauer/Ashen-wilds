@@ -1,4 +1,4 @@
-# v79: world tidy-up, balance, HUD rework, companion care, Kindlelight gloom, fixes
+# v84: world tidy-up, balance, HUD rework, companion care, Kindlelight gloom, fixes
 import os as _os
 _ROOT=_os.environ.get('AW_ROOT',_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 M=_ROOT+'/src/modules/'
@@ -18,5 +18,5 @@ rep("atkCd=base*(fin?1.3:1);pl.step={x:d.x,z:d.z,t:fin?.16:.1,sp:fin?5.5:3.5};",
 rep("atkCd=base*(fin?1.3:1);pl.step={x:d.x,z:d.z,t:fin&&Q.fin=='pounce'?.2:fin?.16:.1,sp:fin&&Q.fin=='pounce'?10:fin?5.5:3.5};","atkCd=base*(fin?1.3:1);pl.step=fin?null:{x:d.x,z:d.z,t:.1,sp:3.5};")
 
 a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1
-h=h.replace(a,"\n"+open(M+'zzC_v79.js').read()+"\n"+open(M+'zzD_limbs.js').read()+a)
+h=h.replace(a,"\n"+open(M+'zzH_v84.js').read()+"\n"+open(M+'zzH_limbs.js').read()+a)
 open(P,'w').write(h);print('v7 ok')

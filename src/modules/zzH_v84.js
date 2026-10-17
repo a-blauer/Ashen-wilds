@@ -1,4 +1,4 @@
-// ================= v79: HUD rework, companion care, Kindlelight gloom, material hints, courtyard =================
+// ================= v84: HUD rework, companion care, Kindlelight gloom, material hints, courtyard =================
 
 // ---------------- the courtyard north-east of Duskhold: low stone walls and a gate sign ----------------
 {const C=CYD,st=sm(0x5a5662),cap=sm(0x6e6a76),L=[];

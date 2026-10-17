@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v78 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v84 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -19,7 +19,7 @@ The build is a **patch chain**, not a bundler:
    - **pV5**: `zzzz_more.js` (stronghold/shops, shiny & rare, companion talents), name/text cleanups, lore & bounty removal.
    - **pV6**: world size `W=920,H=568`, Duskhold layout scale (`TS=21,TK=1.5`), XP/loot balance, anti-stuck, `zzzzz_fish.js` (map + fishing), `zz7_v71.js` (zone population, atmosphere, unlockable skills, grades, Consume), `zz8_danger.js` (title screen, death screen with "Rise Again", hit flash + damage-direction arcs, low-health vignette and heartbeat; adds `dth` to `uiOpen()` so death pauses single-player), `zz9_cmpegg.js` (Companions & Eggs: one window for both, egg preview + in-window hatch scene in `#cvw`/`#cd`; the old `#inc`/`#hatch` popups stay in the HTML but are no longer shown).
 
-   - **pV6 (v78)**: `zzA_arsenal.js` and `zzB_mounts.js` are spliced last (see below).
+   - **pV6 (v78/v79)**: `zzA_arsenal.js`, `zzB_mounts.js` and `zzC_music.js` are spliced last (see below).
 
 ## v78: Arsenal and mounts
 
@@ -27,9 +27,31 @@ The build is a **patch chain**, not a bundler:
 - **100 new templates** are appended to `ITPL` from index `ITPL_V78` (=100). Never insert or reorder `ITPL`: saves store the index. New templates carry `nw:1` and an innate bonus `imp:{stat:value}` that `itStats` adds (scaled by upgrade level). Wands and orbs give magical attack and mana like staves.
 - **Mounts** (`zzB_mounts.js`): the `MOUNTS` table is replaced by 10 new mounts with their own procedural models (`mkMountRig(k)`, returned through `mountModel`). Riding is `toggleMount` (V), the list is `openMounts` (H / `#mntBtn`). Mounts are only sold for gold by the Stable Master; the Stable is a `SHOPS` entry (`stable`) built at the Steward, placed at `STB` (Duskhold offset −7,−8) and shown/hidden with its colliders by `stableSync()` from `shApply`. Old-roster mounts in saves are mapped to a same-tier mount and old mount eggs are refunded (`mFix` after `loadGame`).
 
-## v79: world tidy-up, HUD rework, companion care
+## v79: Music and sound
 
-`build/pV7.py` (text patches) splices `zzC_v79.js` and `zzD_limbs.js` last.
+- `zzC_music.js` is a generative soundtrack built with Web Audio (no audio files). `MTH` holds one theme per place: `title` (title screen and new-hero setup), `town` (Duskhold), `z0`…`z5` (the six zones, by `regionAt`) and `boss` (an aggroed Sovereign within 45 tiles). Each theme sets key, mode, tempo, chord progression and instruments (pad, drone, harp/lute arpeggio, bells, melody, bass, drums). Pattern strings are 16 steps: `X` loud, `x` normal, `g` ghost.
+- `muTick` (every 50 ms) picks the theme (`muWant`), cross-fades through `MU.xg`, and schedules notes 0.3 s ahead with `muStep`. Fighting nearby (`muFight`: an aggroed enemy within 24 tiles, or a running Wave Trial) fades in each theme's `f` drum/bass set. Death and the 7 s after a Sovereign falls are silent.
+- New effects (`mSfx`): level up, coins (any gold gain), item pickup / rare pickup, enemy and elite deaths, boss victory, dodge, potion, mount, portal travel, window open/close and button ticks.
+- Settings → Sound: Music volume (`SET.mus`) and Sound effects volume (`SET.sfxV`, which also drives the old `SET.sfx` on/off).
+- `test/v79t.py` checks theme switching, fight intensity, volumes and death silence, and renders every theme offline to `test/out/v79_music.wav`/`.mp3`. `preview/kill-quest-music-preview.mp3` is that render.
+## v83: the whole world in the low-poly style
+- `zzG_0style.js` runs first: lower-segment spheres/cylinders/cones/rings and flat shading for every lit material (opt out with `userData.lpsSkip`).
+- `zzG_humans.js` hero, humanoid enemies, NPCs · `zzG_beasts.js` remaining creature rigs, Sovereigns, eggs · `zzG_town.js` + `build/pG_town.py` Duskhold, Portal Court · `zzG_nature.js` + `build/pG_nature.py` terrain, trees, grass, props, camps, zone portals · `zzG_gear*.js` weapons, drops, chests, mounts · `zzG_arena.js` boss arenas, wave-trial grounds, boulders, bobber.
+- `build.sh` also runs any `build/pG_*.py` patch after pV6; pV6 splices `zzG_*.js` (sorted) after `zzF`.
+- Screenshot helpers: `test/tour.py` (town, court, every zone) plus the per-area scripts in `test/`.
+
+## v81: Valheim-style low-poly creatures
+
+- `zzD_lowpoly.js` is a shared toolkit: `lpGeo` lofts faceted, vertex-painted rings into one skinned body; `lpMat` is the flat-shaded material; `lpSpikeGeo`/`lpPart` make animated non-skinned parts (ears, wings); `lpExtras` adds variant (Ember/Frost/Golden/Shadow) and trait (Horned/Spiked/Armored/Universal) extras; `lpRig` assembles everything and `crRig` is wrapped to use it for any rig registered in `LPR`.
+- Each of the 12 companion rigs has its own file `zzE_<Rig>.js` (Foxlet, Ashwolf, Boneling, Stoneshell, Mossfrog, Batwing, Skyhawk, Drakelet, Gravewyrm, Cryptspider, Gloomcap, Wispling); pV6 splices every `zzE_*.js` after the toolkit. Bodies are skinned to the rig's original `SPEC[rig].bones`, so `rigAnim` (walk, hop, fly, slither, spider, float, attack) is unchanged. Wild monsters that use these rigs get the new look too; the other monster rigs are untouched.
+- `zzE_Batwing.js` also holds the shared wing builders (`lpwWing`, `lpwPair`) used by Skyhawk and Drakelet.
+- Preview any species: `cd test && SP=Ashwolf,Direfang python3 lpview.py` → `out/lp_<species>_*.png` (angles, walk, attack, variants, old-vs-new, in-game). Run previews one at a time; the build and tests accept `AW_OUT`/`AW_TMP` for separate output paths.
+
+- `zzF_combatanim.js` (spliced after the creatures) is the v81 combat-animation update published from another session (hero upper body driven by one action at a time, eased transitions); it was recovered from the live page.
+
+## v84: world tidy-up, HUD rework, companion care
+
+`build/pV7.py` (text patches, runs after the `pG_*` patches) splices `zzH_v84.js` and `zzH_limbs.js` last.
 - **Harvest nodes** (`w0_world.js`): placed as small clusters (3–5 of one kind), about a quarter of the old count; rocks stay off the road.
 - **Courtyard** (`CYD` in `w0_world.js`): walled woodland north-east of Duskhold, joined to the Portal Court by a path; trees (`#`) and rocks (`r`) regrow like any node. Walls/sign are drawn in `zzC_v79.js`; the town map (N) includes it.
 - **Balance**: kill gold ×0.65, wave-trial XP ×0.525 (was ×0.75), raw meat 10%/25% (elite)/boss 2–3, companions regen 0.6%/s after 8s out of combat (`s_fix.js`), combo finishers no longer lunge forward.
@@ -66,9 +88,11 @@ python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmo
 python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
+python3 v79t.py                 # music themes, fight layer, volume settings; renders a music preview (NOREN=1 to skip)
+python3 lpview.py               # low-poly companion preview: SP=Ashwolf,Direfang python3 lpview.py → out/lp_*.png
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
-python3 v79_ui.py               # HUD bars, feeding over time, stat breakdown, material hints
-python3 v79_fish.py             # fishing window size, kill gold, no finisher lunge
+python3 v84_ui.py               # HUD bars, feeding over time, stat breakdown, material hints
+python3 v84_fish.py             # fishing window size, kill gold, no finisher lunge
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
 
