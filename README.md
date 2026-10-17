@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v85 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v86 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -75,6 +75,18 @@ The build is a **patch chain**, not a bundler:
 - **Inventory preview** re-syncs whenever equipment or class changes while the bag is open.
 - **Enemy attacks** (`zzI_combat.js`): wind-up glows at the hand/mouth, travelling arrows/stones/globs/bolts with impacts, meteors for fire rain, boss projectile moves with visuals; ranged moves usable at range (min range 0), casters keep distance; companion spells only cast in range; red warnings dimmed 35%; Rime Wraith orbs spawn at the arena edge.
 - **Animation** (`zzI_anim.js`): see that file's header.
+
+## v86: Sovereign dens
+
+The round stone arena is gone. `zzK_dens.js` strips the old arena dressing and gives each boss a `DEN[i]` hook set (`build/start/tick/ai/clear/seal`, `denBlock` for solid tiles); `build/pV9.py` splices it, then every `zzK_den<i>.js`, then `denBuildAll()`. The playable circle is still `ARENA_R` (14). During a den fight the floating 3× boss bar is hidden (the top boss bar shows health).
+- **0 Argus — the Drowned Hollow** (`zzK_den0.js`, shared `d01*` helpers): eye-stalks sweep gaze cones (SEEN → MARKED → leap), root pillars block line of sight, stalks can be burst; `argusgaze` tracking beam; Phase III Lights Out + `argstalk`.
+- **1 Crest Hydra — the Serpent Mere** (`zzK_den1.js`): brood necks with own health that regrow as two unless seared with Serpent-fire from a brazier; brood guard (−35% damage taken at 3+ necks); `tide` waves (stand on a stepping stone or dash).
+- **2 Rime Wraith — the Frozen Sepulchre** (`zzK_den2.js`): Deep Cold meter (Chilled → Freezing → Frozen) countered by four Warmfires; Snuff (relight by standing near); Thaw (frozen statues → adds); Phase III Whiteout.
+- **3 Ssith'ra — the Sunken Pit** (`zzK_den3.js`): quicksand vortex toward the sinkhole; burrow-hunt + eruption → EXPOSED (×1.6); Ram into a column → STUCK; Sandstorm with tail lashes.
+- **4 The Bloated One — the Charnel Pit** (`zzK_den4.js`, shared `dq*` toolkit: hittable props, cancellable telegraphs, den scheduler, co-op relay, wall cutaway shader): spreading rot pools, swelling corpse piles → maggots, bile pustules (pop all three → reel), belch cone, Phase III Rot Tide.
+- **5 Lord Vaelric — the Crimson Throne Hall** (`zzK_den5.js`): Blood Chalices heal him; bat swarm lanes; Crimson Doubles (only the real one has a shadow); Blood Moon flood with moonlight safe spots; Phase III Crimson Rite (break four obelisks or eat a hall-wide cataclysm).
+- Den mechanics run on the player driving the boss and relay to co-op partners as boss moves (`kqBmv`); damage is only applied to your own hero.
+- Tests: `test/v86_den<i>.py` (one at a time), `v86_den01_mp.py`, `v86_den45_mp.py`.
 
 ## Conventions (read before changing code)
 

@@ -11,7 +11,7 @@ def s(pg):
     P('state',"()=>[[...bossDone],curMap(),Math.round(pl.position.x),Math.round(pl.position.z)]")
     P('save',"()=>{saveGame(true);return !!localStorage.getItem(Object.keys(localStorage)[0])}")
     print('ERRS1',len(errs),errs[:3])
-    pg.reload();pg.wait_for_timeout(3000)
+    pg.reload(wait_until='domcontentloaded',timeout=180000);pg.wait_for_timeout(3000)
     pg.click('[data-dev=desktop]',timeout=60000);pg.wait_for_timeout(500)
     try:
         pg.click('#svpC',timeout=60000)

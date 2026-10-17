@@ -7430,7 +7430,7 @@ var BSTY=[
  {m:'kite',r:9,sp:5.2,fly:.9,pool:[['dive','lightning','gust'],['rain','cross'],['dive','beam']]},
  {m:'burrow',sp:1.7,pool:[['submerge','tailsweep','beam'],['charge','mines'],['submerge','wave','adds']]}];
 function bxTick(A,e,dt,now){const L=bxA(A);
-  for(let i=L.length-1;i>=0;i--){const f=L[i];f.t-=dt;let gone=f.t<=0;
+  for(let i=L.length-1;i>=0;i--){const f=L[i];if(!f)continue;f.t-=dt;let gone=f.t<=0;
     if(f.k=='pool'){f.tick-=dt;f.ms.material.opacity=.32*Math.min(1,f.t/1.2);if(f.tick<=0&&d2(pl.position,f.o)<f.r&&hero.iv<=0){f.tick=.5;bossHit(e,f.mult)}if(gone)scene.remove(f.ms)}
     else if(f.k=='orb'){const d=V().subVectors(gY(pl.position,1.2),f.ms.position);const l=d.length();f.ms.position.addScaledVector(d,Math.min(1,f.sp*dt/(l||1)));f.ms.scale.setScalar(1+.15*Math.sin(now/120+i));
       if(l<1&&hero.iv<=0){bossHit(e,.8);burst(f.ms.position,A.b.col,16,2,2,.4);gone=true}if(gone)scene.remove(f.ms)}
@@ -12983,8 +12983,1563 @@ function denBuildAll(){ARN.forEach(A=>{const D=DEN[A.i];if(D&&D.build){try{D.bui
 {const f=arenaClear;arenaClear=function(A){const D=DEN[A.i],e=bossEnt(A.i),won=!e||e.dead;try{D&&D.clear&&D.clear(A,won);if(D&&D.seal)D.seal(A,false)}catch(err){console.error('den clear',A.i,err)}
   const r=f.apply(this,arguments);if(D&&D.seal)A.wall.visible=false;return r}}
 {const f=arenaTick;arenaTick=function(dt,now){f.apply(this,arguments);const A=AF;if(!A)return;const D=DEN[A.i];if(!D||!D.tick)return;const e=bossEnt(A.i);if(!e)return;try{D.tick(A,e,dt,now)}catch(err){console.error('den tick',A.i,err)}}}
-{const f=bossAI;bossAI=function(e,dt,now){const A=arenaOf(e),D=A&&DEN[A.i];if(D&&D.ai&&A.f){try{if(D.ai(A,e,dt,now))return}catch(err){console.error('den ai',A.i,err)}}return f.apply(this,arguments)}}
+{const f=bossAI;bossAI=function(e,dt,now){const A=arenaOf(e),D=A&&DEN[A.i];
+  // during a den fight the big boss bar at the top shows its health; the floating 3x bar over the boss only blocks the view
+  if(A&&A.f&&e.hb)e.hb.visible=false;
+  if(D&&D.ai&&A.f){try{if(D.ai(A,e,dt,now))return}catch(err){console.error('den ai',A.i,err)}}const r=f.apply(this,arguments);if(A&&A.f&&e.hb)e.hb.visible=false;return r}}
 
+// ================= v86 den 0 — Argus, the Hundred-Eyed: THE DROWNED HOLLOW =================
+// A sunken bog hollow in Kindlelight: peat floor, black pools, a wall of arching roots, dead trees and staring eye-growths.
+// Mechanics (on top of Argus's pounce/charge/rain/adds/triple):
+//  1. Watching Stalks — six eye-stalks ring the hollow. They tremble and part their lids (tell), then sweep a yellow gaze cone
+//     across the ground. Standing in a gaze builds SEEN (3 pips); at 3 you are MARKED and Argus leaps on you (red circle).
+//     Four root pillars block the gaze (the cone visibly stops at them). Stalks can be struck down (open eyes take +60%);
+//     a burst eye makes Argus reel. Phase II/III: more eyes wake at once and burst stalks regrow at each phase change.
+//  2. The Great Eye (BMV 'argusgaze') — Argus's brow-eye locks a slow-tracking beam onto you; break line of sight behind a
+//     pillar, outrun it, or dash. Standing in it also fills SEEN.
+//  3. Phase III — Lights Out: the hollow goes dark around your lantern and Argus melts into the shadows (BMV 'argstalk'),
+//     its eyes glint where it will burst out along a red line.
+//  Bog pools slow you (Mired) — mind where you dodge.
+// Shared helpers for both of my dens (d01*) live here; zzK_den1.js (the Crest Hydra) uses them.
+var D01={g:{},m:{}};
+function d01Auth(A){try{return !MP.on||mpBossAuth(A.i)===MP.me}catch(_){return true}}
+// run a den move as the boss driver so co-op relays it (the kqBmv wrapper only relays from inside the boss AI)
+function d01Cast(k,e,A,en){const o=MP.inAI;MP.inAI=1;try{return BMV[k](e,A,en||1)}finally{MP.inAI=o}}
+const d01Ad=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+// polar angle (x=cos, z=sin) of the road into the den
+function d01Ent(A){const P=PMAP[A.i].path,p=P[Math.max(0,P.length-14)];return Math.atan2(p[1]-A.cz,p[0]-A.cx)}
+function d01Cyl(rt,rb,s){const k=rt.toFixed(2)+'|'+rb.toFixed(2)+'|'+(s||6);return D01.g[k]||(D01.g[k]=new THREE.CylinderGeometry(rt,rb,1,s||6,1))}
+const D01UP=new THREE.Vector3(0,1,0);
+function d01Seg(S,a,b,ra,rb,col,s){const d=new THREE.Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]),L=d.length();if(L<1e-3)return;d.multiplyScalar(1/L);
+  S.geo(d01Cyl(Math.max(.012,rb),Math.max(.012,ra),s),new THREE.Matrix4().compose(new THREE.Vector3((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2),new THREE.Quaternion().setFromUnitVectors(D01UP,d),new THREE.Vector3(1,L,1)),col)}
+function d01Bez(p0,p1,p2,n){const o=[];for(let i=0;i<=n;i++){const t=i/n,u=1-t;o.push([0,1,2].map(j=>u*u*p0[j]+2*u*t*p1[j]+t*t*p2[j]))}return o}
+// a bent, tapering tube through points (roots, branches, necks); col may be fn(t)
+function d01Tube(S,P,r0,r1,col,s,joint){const n=P.length-1;for(let i=0;i<n;i++){const ra=r0+(r1-r0)*i/n,rb=r0+(r1-r0)*(i+1)/n,c=typeof col=='function'?col(i/n):col;
+  d01Seg(S,P[i],P[i+1],ra,rb,c,s);if(joint!==false&&i>0)S.geo(ARKG.oct,arkM4(P[i][0],P[i][1],P[i][2],ra*1.02),c)}}
+D01.sph=new THREE.SphereGeometry(1,8,6);
+function d01Mat(k){if(D01.m[k])return D01.m[k];let m;
+  if(k=='glow')m=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
+  else if(k=='dead')m=new THREE.MeshBasicMaterial({vertexColors:true,color:0x3a3530});
+  else if(k=='water')m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.15,metalness:.4,side:THREE.DoubleSide});
+  else if(k=='char')m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,color:0x3a3430,side:THREE.DoubleSide});
+  else m=arkMat();
+  m.userData.lps=1;return D01.m[k]=m}
+function d01Add(col,op,ro){const m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide});m.userData.lps=1;return m}
+// small health bar (the game's own bar), hidden until the thing is hurt
+function d01Bar(col){const b=bar(false);b.fill.material.color.setHex(col);b.visible=false;b.scale.setScalar(1.7);return b}
+function d01BarSet(b,x,y,z,r){b.visible=true;b.position.set(x,y,z);b.quaternion.copy(cam.quaternion);r=Math.max(.001,r);b.fill.scale.x=r;b.fill.position.x=-(1-r)/2}
+function d01Buff(n,i,ms,d,s){const t=nowP()+ms;let b=hero.buffs.find(q=>q.n==n);if(b){b.t=t;b.d=d;return b}b={n,i,s:s||{},t,d};hero.buffs.push(b);hsDirty();return b}
+function d01Unbuff(n){const k=hero.buffs.length;hero.buffs=hero.buffs.filter(b=>b.n!=n);if(hero.buffs.length!=k)hsDirty()}
+// a ray from (ox,oz) along unit (dx,dz): length until it meets a pillar circle [x,z,r] or leaves the den circle
+function d01Clip(ox,oz,dx,dz,L,P,A,R){
+  if(A){const fx=ox-A.cx,fz=oz-A.cz,b=fx*dx+fz*dz,c=fx*fx+fz*fz-R*R,h=b*b-c;if(h>0)L=Math.min(L,Math.max(0,-b+Math.sqrt(h)))}
+  for(let i=0;i<P.length;i++){const p=P[i],fx=p[0]-ox,fz=p[1]-oz,t=fx*dx+fz*dz;if(t<-p[2]||t-p[2]>L)continue;const q=fx*fx+fz*fz-t*t,r2=p[2]*p[2];if(q<r2){const h=t-Math.sqrt(r2-q);if(h<L)L=Math.max(0,h)}}
+  return L}
+// a ground fan (gaze cone) whose rays stop at pillars; positions rewritten in place each frame
+function d01Fan(n,col,op){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array((n-1)*9),3));
+  const m=new THREE.Mesh(g,d01Add(col,op));m.renderOrder=18;m.frustumCulled=false;m.visible=false;m.userData.n=n;return m}
+function d01FanSet(m,ox,oz,yaw,half,maxL,P,A,y){const n=m.userData.n,a=m.geometry.attributes.position.array;let px=0,pz=0,k=0;
+  for(let i=0;i<n;i++){const ay=yaw+(i/(n-1)*2-1)*half,dx=Math.sin(ay),dz=Math.cos(ay),L=d01Clip(ox,oz,dx,dz,maxL,P,A,ARENA_R+.3),x=ox+dx*L,z=oz+dz*L;
+    if(i>0){a[k++]=ox;a[k++]=y;a[k++]=oz;a[k++]=px;a[k++]=y;a[k++]=pz;a[k++]=x;a[k++]=y;a[k++]=z}px=x;pz=z}
+  m.geometry.attributes.position.needsUpdate=true}
+// a flat strip on the ground from o along yaw (beams)
+function d01Strip(col,op){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(18),3));const m=new THREE.Mesh(g,d01Add(col,op));m.renderOrder=18;m.frustumCulled=false;m.visible=false;return m}
+function d01StripSet(m,ox,oz,dx,dz,L,w,y){const a=m.geometry.attributes.position.array,nx=-dz*w/2,nz=dx*w/2,ex=ox+dx*L,ez=oz+dz*L;
+  const v=[ox+nx,oz+nz,ex+nx,ez+nz,ex-nx,ez-nz,ox+nx,oz+nz,ex-nx,ez-nz,ox-nx,oz-nz];for(let i=0;i<6;i++){a[i*3]=v[i*2];a[i*3+1]=y;a[i*3+2]=v[i*2+1]}m.geometry.attributes.position.needsUpdate=true}
+// melee/AoE hits reach den objects (stalks, necks): area() is what every hero swing and splash goes through
+function d01InArc(p,r,dir,half,x,z,rad){const dx=x-p.x,dz=z-p.z,L=Math.hypot(dx,dz);if(L>r+rad)return false;
+  if(dir&&half<3&&L>.6&&Math.acos(Math.max(-1,Math.min(1,(dx*dir.x+dz*dir.z)/L)))>half+.35)return false;return true}
+{const f=area;area=function(p,r,dm,s,dir,half){const out=f.apply(this,arguments);
+  try{const A=AF,D=A&&DEN[A.i];if(D&&D.hitA&&A.f&&!(s&&s.cc)&&dm>0&&p)D.hitA(A,p,r,dm,s,dir,half==null?1.2:half)}catch(err){console.error('den hit',err)}return out}}
+// hero projectiles: fn(pos,dm,s) returns true when it struck something (the shot then ends)
+function d01Shots(fn){if(typeof shots=='undefined')return;for(let i=0;i<shots.length;i++){const sh=shots[i];if(sh.t<=0||(sh.s&&sh.s.cc)||sh.d01)continue;if(fn(sh.m.position,sh.dm,sh.s)){sh.t=0;sh.d01=1}}}
+// a tiny HUD line for den status (below the boss bar)
+function d01Hud(html,col){let d=document.getElementById('d01hud');if(!html){if(d)d.style.display='none';return}
+  if(!d){d=document.createElement('div');d.id='d01hud';d.style.cssText='margin:6px auto 0;display:inline-block;background:rgba(14,12,8,.84);border:1px solid #8a7a3a;color:#ffe9a8;border-radius:8px;padding:3px 12px;font:700 12px system-ui,sans-serif;pointer-events:none;text-align:center;white-space:nowrap;text-shadow:0 1px 2px #000';($('boss')||document.body).appendChild(d)}
+  d.style.display='inline-block';if(d._h!==html){d._h=html;d.innerHTML=html}if(col&&d._c!==col){d._c=col;d.style.borderColor=col}}
+// timers that follow the game clock (pauses with the game, works with the test's virtual clock)
+function d01After(Q,t,fn){Q.push({t,fn})}
+function d01Run(Q,dt){for(let i=Q.length-1;i>=0;i--){const q=Q[i];q.t-=dt;if(q.t<=0){Q.splice(i,1);try{q.fn()}catch(err){console.error('den timer',err)}}}}
+// an eye growth: fleshy pustule, glowing eyeball, iris and slit, facing yaw
+function d01Eye(S,G,x,y,z,yaw,s,iris,flesh){const fx=Math.sin(yaw),fz=Math.cos(yaw);
+  S.geo(D01.sph,arkM4(x,y,z,s,s*.9,s,0,yaw),flesh||0x4a2a34);
+  S.geo(ARKG.cyl6,arkM4(x+fx*s*.55,y,z+fz*s*.55,s*.62,s*.18,s*.62,Math.PI/2,yaw),arkShade(flesh||0x4a2a34,.8));
+  G.geo(D01.sph,arkM4(x+fx*s*.5,y,z+fz*s*.5,s*.55,s*.5,s*.55,0,yaw),0xd8ccaa);
+  G.geo(D01.sph,arkM4(x+fx*s*.98,y,z+fz*s*.98,s*.3,s*.3,s*.1,0,yaw),iris||0xffd040);
+  G.geo(ARKG.box,arkM4(x+fx*s*1.06,y,z+fz*s*1.06,s*.07,s*.42,s*.04,0,yaw),0x050302)}
+
+// ---------------- the den ----------------
+var AR={st:[],pil:[],pools:[],q:[],seen:0,sN:0,sT:0,ph:1,dk:0,dkT:0,wt:4,beam:null,mark:null,A:null,v:new THREE.Vector3(),o:new THREE.Vector3(),d:new THREE.Vector3()};
+const AR_BARK=[0x4a3828,0x3e3022,0x54402e,0x352a1c],AR_MUD=[0x2a2618,0x2e2a1a,0x262214,0x30301c,0x24281a],AR_MOSS=[0x34401e,0x3a4622,0x2e3a1c];
+function arPillar(S,G,x,z,R){const y=GH(x,z);
+  for(let j=0;j<3;j++){const pts=[];for(let i=0;i<=7;i++){const t=i/7,th=j*2.094+t*2.6,rr=.5*(1-.3*t);pts.push([x+Math.cos(th)*rr,y-.1+t*3.7,z+Math.sin(th)*rr])}
+    d01Tube(S,pts,.46,.22,t=>t>.55&&j==1?AR_MOSS[1]:AR_BARK[j],6)}
+  for(let k=0;k<6;k++){const a=k/6*6.283+R()*.4;d01Tube(S,d01Bez([x+Math.cos(a)*.4,y+1.2,z+Math.sin(a)*.4],[x+Math.cos(a)*1.15,y+.7,z+Math.sin(a)*1.15],[x+Math.cos(a)*1.75,y-.15,z+Math.sin(a)*1.75],4),.32,.08,AR_BARK[k%4],5)}
+  for(let k=0;k<5;k++){const a=k/5*6.283+R(),h=.5+R()*.9;S.geo(ARKG.cone4,arkM4(x+Math.cos(a)*.32,y+3.6+h/2,z+Math.sin(a)*.32,.13,h,.13,Math.sin(a)*.3,0,-Math.cos(a)*.3),k%2?0x4a3a2a:0x5a4a36)}
+  // shelf fungus and a staring eye knot
+  for(let k=0;k<3;k++){const a=R()*6.283,h=.8+R()*2.2;G.geo(ARKG.cyl6,arkM4(x+Math.cos(a)*.52,y+h,z+Math.sin(a)*.52,.24,.05,.24),0x8ad04a)}
+  const a=R()*6.283;d01Eye(S,G,x+Math.sin(a)*.5,y+2.3,z+Math.cos(a)*.5,a,.3,0xffb020)}
+function arBuild(A){
+  const R=ARK.rng(9100),cx=A.cx,cz=A.cz,y0=GH(cx,cz),ent=d01Ent(A),gap=(a,w)=>Math.abs(d01Ad(a,ent))<(w||.5),P=(a,r)=>[cx+Math.cos(a)*r,cz+Math.sin(a)*r],P3=(a,r,y)=>{const x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;return [x,y==null?GH(x,z):y,z]};
+  AR.A=A;AR.ent=ent;
+  const F=arkSoup(9101),W=arkSoup(9102),G=arkSoup(9103),S=arkSoup(9104);
+  // --- root pillars (cover that blocks the gaze) ---
+  for(let k=0;k<4;k++){const a=ent+Math.PI/4+k*Math.PI/2+(R()-.5)*.2,[x,z]=P(a,6.4+R()*.6);AR.pil.push([x,z,1.15]);arPillar(S,G,x,z,R);
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const tx=Math.round(x)+dx,tz=Math.round(z)+dz;if(Math.hypot(tx-x,tz-z)<1.2)denBlock(tx,tz)}}
+  // --- bog floor: a jagged peat disc that sinks into the ground at its rim ---
+  const RS=[0,1.5,3,4.5,6,7.5,9,10.5,12,13.4,14.7,15.9,17.2],N=44,vt=RS.map((r,i)=>[...Array(N)].map((_,k)=>{
+    const a=(k+.5*(i%2))/N*6.283+(i?(R()-.5)*.07:0),rr=r+(i&&i<RS.length-1?(R()-.5)*.8:0),x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;
+    return [x,i>=RS.length-1?GH(x,z)-.14:GH(x,z)+.04+R()*.05,z]}));
+  for(let i=0;i<RS.length-1;i++)for(let k=0;k<N;k++){const a=vt[i][k],b=vt[i][(k+1)%N],c=vt[i+1][(k+1)%N],d=vt[i+1][k],mo=R()<.15+.35*(i/RS.length);
+    const col=(mo?AR_MOSS:AR_MUD)[(R()*3)|0];F.tri(a,b,c,col);F.tri(a,c,d,arkShade(col,.9+R()*.18))}
+  // --- black pools with a scum rim (wading through them slows you) ---
+  for(let t=0;t<80&&AR.pools.length<6;t++){const a=R()*6.283,r=3.4+R()*8.6,[x,z]=P(a,r),pr=1.3+R()*1.1;
+    if(AR.pools.some(p=>Math.hypot(p[0]-x,p[1]-z)<p[2]+pr+1.4)||AR.pil.some(p=>Math.hypot(p[0]-x,p[1]-z)<pr+2.1)||(gap(a,.6)&&r>8))continue;AR.pools.push([x,z,pr])}
+  AR.pools.forEach(([x,z,pr])=>{const n=11,pts=[...Array(n)].map((_,k)=>{const a=k/n*6.283,rr=pr*(.82+R()*.3);return [Math.cos(a)*rr,Math.sin(a)*rr]}),y=GH(x,z);
+    for(let k=0;k<n;k++){const p=pts[k],q=pts[(k+1)%n];W.tri([x,y+.115,z],[x+q[0],y+.115,z+q[1]],[x+p[0],y+.115,z+p[1]],[0x0c1610,0x101c12,0x0a120c][k%3],.2);
+      F.quad([x+p[0],y+.105,z+p[1]],[x+q[0],y+.105,z+q[1]],[x+q[0]*1.28,y+.07,z+q[1]*1.28],[x+p[0]*1.28,y+.07,z+p[1]*1.28],AR_MOSS[k%3],.2)}
+    // a faint glowing scum line marks each pool in the dark, with glowing algae flecks
+    for(let k=0;k<n;k++){const p=pts[k],q=pts[(k+1)%n];G.quad([x+p[0]*.97,y+.118,z+p[1]*.97],[x+q[0]*.97,y+.118,z+q[1]*.97],[x+q[0]*1.06,y+.118,z+q[1]*1.06],[x+p[0]*1.06,y+.118,z+p[1]*1.06],k%2?0x2e5a22:0x37682a,.2)}
+    for(let k=0;k<7;k++){const a=R()*6.283,rr=R()*pr*.75,sx=x+Math.cos(a)*rr,sz=z+Math.sin(a)*rr,s=.08+R()*.14;G.tri([sx,y+.125,sz-s],[sx-s,y+.125,sz+s*.6],[sx+s,y+.125,sz+s*.6],k%3?0x3a6a24:0x6a9a34,.2)}
+    // drowned snag
+    if(R()<.6){const a=R()*6.283;d01Tube(S,d01Bez([x,y-.2,z],[x+Math.cos(a)*.5,y+.9,z+Math.sin(a)*.5],[x+Math.cos(a)*1.1,y+1.3+R(),z+Math.sin(a)*1.1],3),.14,.04,AR_BARK[3],5)}});
+  // --- the wall: earth mounds, arching roots, dead trees, glowing fungus and staring eye-growths ---
+  for(let a=0;a<6.283;a+=.15){if(gap(a,.46))continue;for(let q=0;q<2;q++){const r=15.2+R()*2.6,[x,z]=P(a+(R()-.5)*.12,r),s=1+R()*1.4,h=.6+R()*1.1+(r-15)*.3;
+    S.geo(ARK.rock[(R()*4)|0],arkM4(x,GH(x,z)+h*.3,z,s,h,s*1.1,0,R()*6),(cy,n)=>n.y>.45?AR_MOSS[(R()*3)|0]:AR_MUD[(R()*5)|0])}}
+  [-1,1].forEach(sd=>{const a=ent+sd*.52,[x,z]=P(a,15.4);S.geo(ARK.rock[sd>0?1:2],arkM4(x,GH(x,z)+.6,z,1.6,1.8,1.5,0,R()*6),(cy,n)=>n.y>.5?AR_MOSS[0]:0x2a2a22);
+    for(let k=0;k<3;k++){const b=a+sd*(.05+k*.06);{const p0=P3(b,17.5),p1=P3(b,16,y0+3.2+k*.5),p2=P3(a+(R()-.5)*.08,14.9,y0-.2);p0[1]-=.2;d01Tube(S,d01Bez(p0,p1,p2,7),.45,.16,AR_BARK[k],6)}}});
+  for(let k=0;k<15;k++){const a=ent+.62+k/14*(6.283-1.24)+(R()-.5)*.1,a2=a+(R()-.5)*.4,[x0,z0]=P(a,18.4),[x1,z1]=P((a+a2)/2,16.4),[x2,z2]=P(a2,14.4),h=3+R()*1.8;
+    d01Tube(S,d01Bez([x0,GH(x0,z0)-.4,z0],[x1,y0+h*1.6,z1],[x2,y0-.25,z2],9),.62,.2,t=>t>.2&&t<.65&&R()<.5?AR_MOSS[1]:AR_BARK[(R()*3)|0],6);
+    if(R()<.6){const [x3,z3]=P(a2+(R()-.5)*.3,13.9);d01Tube(S,d01Bez([x1,y0+h*.75,z1],[(x1+x3)/2,y0+h*.7,(z1+z3)/2],[x3,y0-.1,z3],5),.2,.06,AR_BARK[3],5)}}
+  for(let k=0;k<7;k++){const a=ent+.95+k/6*(6.283-1.9)+(R()-.5)*.2,[x,z]=P(a,16.8+R()*1.2),y=GH(x,z),H=5.5+R()*2.5,lx=(R()-.5)*1.2,lz=(R()-.5)*1.2,tr=[];
+    for(let i=0;i<=5;i++){const t=i/5;tr.push([x+lx*t*t+Math.sin(t*5+k)*.18,y-.2+H*t,z+lz*t*t+Math.cos(t*4+k)*.18])}
+    d01Tube(S,tr,.6,.12,AR_BARK[k%3],6);
+    for(let b=0;b<5;b++){const p=tr[2+(b%3)],ba=R()*6.283,L=1.4+R()*1.6,e2=[p[0]+Math.cos(ba)*L,p[1]+.5+R()*1.2,p[2]+Math.sin(ba)*L];
+      d01Tube(S,d01Bez(p,[(p[0]+e2[0])/2,p[1]+.6,(p[2]+e2[2])/2],e2,3),.17,.03,AR_BARK[(b+1)%3],5);
+      if(R()<.75){const h=1+R()*1.4;S.geo(ARKG.box,arkM4(e2[0],e2[1]-h/2,e2[2],.07,h,.07,0,R()*3),0x56644a)}}
+    for(let r=0;r<4;r++){const ra=R()*6.283;d01Tube(S,d01Bez([x,y+.8,z],[x+Math.cos(ra)*.9,y+.3,z+Math.sin(ra)*.9],[x+Math.cos(ra)*1.6,y-.2,z+Math.sin(ra)*1.6],3),.28,.06,AR_BARK[r%3],5)}}
+  for(let k=0;k<40;k++){const a=R()*6.283;if(gap(a,.5))continue;const [x,z]=P(a,14.2+R()*1.3),y=GH(x,z);
+    for(let m=0;m<2+(R()*3|0);m++){const mx=x+(R()-.5)*.7,mz=z+(R()-.5)*.7,h=.15+R()*.35,s=.08+R()*.12;S.geo(ARKG.cyl5,arkM4(mx,y+h/2,mz,s*.35,h,s*.35),0xb8b090);
+      G.geo(ARKG.cone5,arkM4(mx,y+h+s*.25,mz,s,s*.5,s),R()<.5?0xb8ff6a:0x8ae05a)}}
+  for(let k=0;k<18;k++){const a=R()*6.283;if(gap(a,.55))continue;const [x,z]=P(a,15+R()*.8),y=GH(x,z)+.6+R()*1.8;
+    d01Eye(S,G,x,y,z,Math.atan2(cx-x,cz-z)+(R()-.5)*.6,.22+R()*.25,[0xffd040,0xffa020,0xe8ff60,0xff6a2a][k%4])}
+  // --- the eye-stalks (animated, one group each; the meshes share geometry) ---
+  {const B=arkSoup(9106);B.geo(ARK.rock[0],arkM4(0,.2,0,1.0,.55,1.0),(cy,n)=>n.y>.5?AR_MOSS[0]:0x3a2830);B.geo(ARK.rock[2],arkM4(.4,.1,-.3,.6,.4,.6),0x4a2c36);
+    const sp=d01Bez([0,0,0],[0,1.8,-.15],[0,3.0,.42],6);d01Tube(B,sp,.42,.22,t=>[0x4a2c38,0x3e2430][(t*6|0)%2],7);
+    for(let v=0;v<3;v++){const a=v*2.1;d01Tube(B,sp.map((p,i)=>[p[0]+Math.cos(a+i*.5)*(.44-.03*i),p[1],p[2]+Math.sin(a+i*.5)*(.44-.03*i)]),.05,.03,0x7a1a2a,4,false)}
+    for(let k=0;k<4;k++){const a=k*1.57+.4;d01Tube(B,d01Bez([0,.4,0],[Math.cos(a)*.8,.4,Math.sin(a)*.8],[Math.cos(a)*1.4,-.1,Math.sin(a)*1.4],3),.18,.05,0x3e2430,5)}
+    const E=arkSoup(9107);E.geo(D01.sph,arkM4(0,0,0,.56),0xe0d4b4);E.geo(D01.sph,arkM4(0,0,.42,.36,.36,.16),0xb87808);E.geo(D01.sph,arkM4(0,0,.47,.3,.3,.12),0xffd040);E.geo(ARKG.box,arkM4(0,0,.58,.07,.4,.04),0x050302);
+    for(let k=0;k<5;k++){const a=k*1.25;E.geo(ARKG.box,arkM4(Math.cos(a)*.3,Math.sin(a)*.3,.43,.02,.2,.02,0,0,a),0xa02020)}
+    const LU=arkSoup(9108),LL=arkSoup(9109);LU.geo(new THREE.SphereGeometry(.63,10,5,0,6.283,0,Math.PI/2),arkM4(0,0,0,1),0x4e2e3a);LL.geo(new THREE.SphereGeometry(.62,10,5,0,6.283,Math.PI/2,Math.PI/2),arkM4(0,0,0,1),0x48283a);
+    const gB=B.mesh().geometry,gE=E.mesh().geometry,gU=LU.mesh().geometry,gL=LL.mesh().geometry;
+    for(let k=0;k<6;k++){const a=ent+.78+k/5*(6.283-1.56),[x,z]=P(a,12.9),y=GH(x,z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=Math.atan2(cx-x,cz-z);
+      const body=new THREE.Mesh(gB,d01Mat('std'));body.castShadow=true;g.add(body);
+      const eye=new THREE.Group();eye.position.set(0,3.25,.5);g.add(eye);const ball=new THREE.Mesh(gE,d01Mat('glow'));eye.add(ball);
+      const lu=new THREE.Mesh(gU,d01Mat('std')),ll=new THREE.Mesh(gL,d01Mat('std'));eye.add(lu,ll);
+      const spr=kqSpr(0xffd040,1.4);spr.position.set(0,0,.7);spr.visible=false;eye.add(spr);
+      const fan=d01Fan(20,0xffe060,.3);A.g.add(g,fan);
+      denBlock(x,z);
+      AR.st.push({i:k,g,eye,ball,lu,ll,spr,fan,x,z,gy:g.rotation.y,ox:x+Math.sin(g.rotation.y)*.5,oz:z+Math.cos(g.rotation.y)*.5,st:'closed',t:0,hp:1,hpM:1,lid:0,hb:d01Bar(0xffd040),p:new THREE.Vector3(x,y+3.25,z),hit:0})}}
+  // --- the seal: roots that knot across the entrance ---
+  {const L=arkSoup(9110);for(let k=0;k<5;k++){const h=.8+k*.55,s=k%2?1:-1,[x0,z0]=P(ent-.56*s,15.6),[x1,z1]=P(ent+.56*s,15.6),[xm,zm]=P(ent+(R()-.5)*.2,14.3+R()*.6);
+      d01Tube(L,d01Bez([x0,y0-.3,z0],[xm,y0+h*2,zm],[x1,y0+h*.6,z1],9),.42-.04*k,.2,AR_BARK[k%3],6)}
+    for(let k=0;k<9;k++){const a=ent-.46+k/8*.92,[x,z]=P(a,14.5+R()*1.2),h=2.4+R()*1.4,b=a+(R()-.5)*.2;
+      const pts=d01Bez([x,y0-.3,z],[x+(R()-.5),y0+h*.6,z+(R()-.5)],P3(b,14.8,y0+h),5);d01Tube(L,pts,.32,.04,AR_BARK[(k+1)%3],5);
+      for(let t=1;t<5;t+=2){const p=pts[t];L.geo(ARKG.cone4,arkM4(p[0],p[1],p[2],.07,.35,.07,R()*2,R()*6,R()*2),0x5a4a36)}
+      if(k%3==1){const p=pts[3];d01Eye(L,L,p[0],p[1],p[2],Math.atan2(cx-p[0],cz-p[2]),.22,0xffd040)}}
+    const m=L.mesh();m.scale.y=.02;m.visible=false;A.g.add(m);AR.seal=m}
+  // --- dynamic: the Great Eye's beam, the stalker's glinting eyes, the MARKED sigil ---
+  AR.bm=d01Strip(0xffd040,.5);AR.bm3=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),d01Add(0xffe080,.55));AR.bm3.renderOrder=19;AR.bm3.visible=false;AR.bm3.frustumCulled=false;A.g.add(AR.bm,AR.bm3);
+  AR.eyes=new THREE.Group();[-.32,.32].forEach(o=>{const s=kqSpr(0xffd040,.7);s.position.x=o;AR.eyes.add(s)});AR.eyes.visible=false;A.g.add(AR.eyes);
+  AR.wisp=[];for(let k=0;k<7;k++){const a=ent+.8+k/6*(6.283-1.6),[x,z]=P(a,14.6+R()*1.5),w=kqSpr(k%2?0xb8ff6a:0x9adf5a,.9);w.position.set(x,y0+1.5,z);w.userData.b=[x,z,R()*6];A.g.add(w);AR.wisp.push(w)}
+  AR.mk=kqSpr(0xff3a2a,1.4);AR.mk.visible=false;A.g.add(AR.mk);
+  // static meshes: floor, pool water, glow (eyes/fungus), scenery
+  const fm=F.mesh(d01Mat('std'));fm.castShadow=false;fm.receiveShadow=true;const wm=W.mesh(d01Mat('water'));wm.castShadow=false;
+  const gm=G.mesh(d01Mat('glow'));gm.castShadow=false;gm.receiveShadow=false;A.g.add(fm,wm,gm,S.mesh(d01Mat('std')));
+  // idle: stalks sway and look about, lids blink, while nobody fights here
+  TANIM.push({x:cx,z:cz,f:now=>{AR.wisp.forEach(w=>{const b=w.userData.b;w.position.set(b[0]+Math.sin(now/2100+b[2])*.6,y0+1.3+Math.sin(now/900+b[2])*.4,b[1]+Math.cos(now/1900+b[2])*.6)});if(A.f)return;AR.st.forEach((T,i)=>{if(T.st!='closed')return;T.g.rotation.z=Math.sin(now/900+i*1.7)*.035;T.eye.rotation.y=Math.sin(now/1700+i)*.5;
+    const bl=(Math.sin(now/2300+i*2.3)>.97)?0:.55;T.lid+=(bl-T.lid)*.15;arLids(T,T.lid)})}});
+}
+function arLids(T,k){T.lu.rotation.x=-1.25*k;T.ll.rotation.x=1.0*k}
+function arReset(T){T.st='closed';T.t=0;T.spr.visible=false;T.fan.visible=false;T.hb.visible=false;T.ball.material=d01Mat('glow');T.g.rotation.set(0,T.gy,0);T.eye.scale.setScalar(1);T.eye.rotation.y=0;T.lid=0;arLids(T,0)}
+
+// ---------------- moves ----------------
+// one relayed move per stalk, so a co-op partner sees the same eyes wake
+for(let k=0;k<6;k++)kqBmv('arEye'+k,function(e,A,en){const T=AR.st[k];if(T&&A.i===0&&T.st=='closed'){T.st='wake';T.t=0;T.spr.visible=true;T.spr.scale.setScalar(.3);burst(T.p,0xffd040,10,1,1,.5)}return {d:0,lock:0}});
+// the Great Eye: a slow-tracking beam from Argus's brow, stopped by root pillars
+kqBmv('argusgaze',function(e,A,en){const o=e.m.position;AR.beam={warm:1.05*en,t:e.bs.ph>=3?3.2:2.5,yaw:Math.atan2(pl.position.x-o.x,pl.position.z-o.z),tick:0,e};
+  e.bs.face=1;kqBossCast(e,0xffd040,1000*en);say('👁 Argus opens its Great Eye — break line of sight behind a root pillar!');sfx('power',.6);return {d:1.05*en+AR.beam.t+.5,lock:1}});
+// Lights Out: melt into the dark, then burst out along a red line from where its eyes glint
+kqBmv('argstalk',function(e,A,en){if(e.hid)return {d:.5,lock:0};bxHide(e,true);burst(gY(e.m.position,1),0x14140c,40,3,2,.9);burst(gY(e.m.position,1.6),0xffd040,16,2,1,.5);
+  say('👁 Argus melts into the dark… watch for its eyes!');
+  d01After(AR.q,1.1*en,()=>{if(!A.f||e.dead){bxHide(e,false);return}const a=Math.atan2(pl.position.z-A.cz,pl.position.x-A.cx)+Math.PI+(Math.random()-.5)*1.4,sx=A.cx+Math.cos(a)*12.3,sz=A.cz+Math.sin(a)*12.3;
+    const dx=pl.position.x-sx,dz=pl.position.z-sz,dl=Math.hypot(dx,dz)||1,d=V(dx/dl,0,dz/dl),L=Math.min(25,dl+7);AR.eyes.position.set(sx,GH(sx,sz)+2.3,sz);AR.eyes.rotation.y=Math.atan2(d.x,d.z);AR.eyes.visible=true;
+    tele(V(sx,0,sz),0,.95*en,()=>{AR.eyes.visible=false;if(!A.f||e.dead){bxHide(e,false);return}e.m.position.set(sx,0,sz);bxHide(e,false);e.m.rotation.y=Math.atan2(d.x,d.z);
+      e.bs.dash={x:d.x,z:d.z,t:L/22,h:0,sp:22};burst(gY(e.m.position,1),0xffd040,30,4,2,.6);shake(.2);sfx('boom',.5)},{w:2.8,l:L,d})});
+  return {d:(1.1+.95+1.3)*en,lock:1}});
+// Argus's movement and pool: the Great Eye replaces the generic beam; Phase III adds the stalk from the dark
+BSTY[0].pool=[['pounce','charge','argusgaze'],['rain','adds'],['triple','argusgaze','argstalk']];
+
+// ---------------- the fight ----------------
+function arStart(A,e){AR.st.forEach(T=>{arReset(T);T.hpM=T.hp=Math.round(M(e.c)*.03)});AR.q.length=0;AR.seen=0;AR.sN=0;AR.ph=1;AR.wt=3.5;AR.beam=null;AR.mark=null;AR.dkT=0;AR.n=0;
+  setTimeout(()=>{if(A.f)say('👁 The Drowned Hollow. Its eye-stalks watch — hide behind the root pillars, and strike the stalks down.')},1400)}
+function arPhase(A,e,ph){const dead=AR.st.filter(T=>T.st=='dead');
+  dead.forEach(T=>{arReset(T);T.hp=T.hpM;T.g.scale.setScalar(.1);burst(T.p,0x7ac84a,20,2,2,.6);tw(900,k=>T.g.scale.setScalar(.1+.9*k))});
+  if(dead.length)say('🌱 The hollow sprouts new eyes!');
+  if(ph>=3){AR.dkT=1;AR.wt=Math.min(AR.wt,4);setTimeout(()=>{if(A.f)banner('👁 LIGHTS OUT','The Drowned Hollow sinks into darkness','Only your lantern — and its eyes — remain')},1400)}}
+function arEyeYaw(T){return Math.atan2(pl.position.x-T.ox,pl.position.z-T.oz)}
+function arStalk(A,e,T,dt,now,ph){
+  if(T.hit>0){T.hit-=dt;T.g.rotation.x=-.12*Math.sin(T.hit*40)}else if(T.st!='dead')T.g.rotation.x=0;
+  if(T.hb.visible||(T.hp<T.hpM&&T.st!='dead'))d01BarSet(T.hb,T.x,GH(T.x,T.z)+4.7,T.z,T.hp/T.hpM);
+  if(T.st=='closed'){T.g.rotation.z=Math.sin(now/900+T.i*1.7)*.03;T.lid+=(0-T.lid)*Math.min(1,dt*6);arLids(T,T.lid);return false}
+  if(T.st=='dead')return false;
+  const half=.27,y=GH(T.ox,T.oz)+.2;
+  if(T.st=='wake'){T.t+=dt;const k=Math.min(1,T.t/1.15);T.g.rotation.z=Math.sin(now/28)*.06*k;T.lid=.35*k;arLids(T,T.lid);T.spr.scale.setScalar(.4+1.6*k);
+    const yw=arEyeYaw(T);T.eye.rotation.y=Math.max(-1.1,Math.min(1.1,d01Ad(yw,T.gy)));
+    T.fan.visible=true;T.fan.material.opacity=.05+.07*(Math.sin(now/70)*.5+.5);d01FanSet(T.fan,T.ox,T.oz,T.gy+T.eye.rotation.y,half,26,AR.pil,A,y);
+    if(k>=1){T.st='open';T.t=0;T.dur=[4.2,4.6,5][ph-1];const sw=ph>=3?1.6:1.3,sd=Math.random()<.5?1:-1;T.y0=yw-sd*sw/2;T.y1=yw+sd*sw/2;sfx('zap',.35)}
+    return false}
+  if(T.st=='open'){T.t+=dt;const u=Math.min(1,T.t/T.dur),s=u*u*(3-2*u),yaw=T.y0+(T.y1-T.y0)*s;T.g.rotation.z=Math.sin(now/300+T.i)*.02;T.lid+=(1-T.lid)*Math.min(1,dt*8);arLids(T,T.lid);
+    T.eye.rotation.y=Math.max(-1.3,Math.min(1.3,d01Ad(yaw,T.gy)));const wy=T.gy+T.eye.rotation.y;T.fan.visible=true;T.fan.material.opacity=.3+.06*Math.sin(now/90);
+    d01FanSet(T.fan,T.ox,T.oz,wy,half,26,AR.pil,A,y);T.spr.scale.setScalar(1.8+.3*Math.sin(now/80));
+    if(u>=1){T.st='shut';T.t=0;T.fan.visible=false;T.spr.visible=false}
+    // is the hero in this gaze, with nothing in between?
+    const dx=pl.position.x-T.ox,dz=pl.position.z-T.oz,L=Math.hypot(dx,dz);if(L<.5||hero.hp<=0)return false;
+    if(Math.abs(d01Ad(Math.atan2(dx,dz),wy))>half)return false;return d01Clip(T.ox,T.oz,dx/L,dz/L,26,AR.pil,null,0)>=L-.3}
+  if(T.st=='shut'){T.t+=dt;T.lid=Math.max(0,1-T.t/.5);arLids(T,T.lid);if(T.t>=.5){T.st='closed';T.eye.rotation.y=0}return false}
+  return false}
+function arHitStalk(A,T,dm){if(T.st=='dead')return;const open=T.st=='open'||T.st=='wake',d=Math.max(1,Math.round(dm*.8*(open?1.6:1)));T.hp-=d;T.hit=.18;
+  dn(T.p,(open?'👁 ':'')+d,open?'#ffd040':'#c8b890',-10,700);burst(T.p,open?0xffd040:0x8a3a4a,8,2,1,.4);if(T.hp<=0)arKillStalk(A,T)}
+function arKillStalk(A,T){T.st='dead';T.hp=0;T.fan.visible=false;T.spr.visible=false;T.hb.visible=false;T.ball.material=d01Mat('dead');T.lid=.6;arLids(T,.6);
+  tw(500,k=>{T.g.rotation.x=.55*k;T.eye.scale.setScalar(1-.35*k)});burst(T.p,0xffd040,40,4,3,.8);burst(T.p,0x5a1020,30,3,2,.7);ring(V(T.x,0,T.z),0xffd040,3,350);shake(.15);sfx('brk',.6);
+  popT(T.p,'EYE BURST!','#ffd040',true);const e=bossEnt(A.i);if(e&&!e.dead){hurt(e,Math.round(M(e.c)*.025),{col:0xffd040});e.bs.t=Math.max(e.bs.t,1)+.8;burst(gY(e.m.position,1.6),0xffd040,20,2,2,.5)}
+  if(!AR.n++)say('👁 An eye-stalk bursts — Argus reels!')}
+function arMark(A,e,auth){AR.mark={t:0,done:false};popT(pl.position,'👁 MARKED!','#ff5a3a',true);say('👁 You are MARKED — Argus leaps for you! Get out of the red circle!');sfx('horn',.5);shake(.12)}
+function arLeap(A,e){const q=inArena(A,pl.position.clone());AR.pil.forEach(p=>{const dx=q.x-p[0],dz=q.z-p[1],l=Math.hypot(dx,dz);if(l<p[2]+1.4){q.x=p[0]+dx/(l||1)*(p[2]+1.4);q.z=p[1]+dz/(l||1)*(p[2]+1.4)}});
+  tele(q,3,1.0,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,7,400);burst(gY(q,.4),0xffd040,40,4,3,.7);shake(.3);if(d2(pl.position,q)<3&&hero.iv<=0)bossHit(e,1.5)});
+  jumpTo(e,q,1.0,5.5);e.bs.lock=Math.max(e.bs.lock,1.4);e.bs.t=Math.max(e.bs.t,2);e.bs.last='pounce'}
+// a non-driving co-op player: the open eyes strike at the marked spot instead of Argus leaping
+function arBolts(A,e){const q=pl.position.clone(),src=AR.st.find(T=>T.st=='open')||AR.st.find(T=>T.st!='dead');if(src)kqFall(A,q,1.0,0xffd040,'orb',1.2,src.p);
+  tele(q,2.6,1.0,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,5,350);burst(gY(q,.4),0xffd040,30,3,3,.6);if(d2(pl.position,q)<2.6&&hero.iv<=0)bossHit(e,1.3)})}
+function arBeamTick(A,e,dt,now){const b=AR.beam,m=e.m,bs=m.bs||3,ph=e.bs.ph;
+  const ty=Math.atan2(pl.position.x-m.position.x,pl.position.z-m.position.z),turn=(b.warm>0?4:ph>=3?1.2:.85)*dt,dy=d01Ad(ty,b.yaw);b.yaw+=Math.max(-turn,Math.min(turn,dy));m.rotation.y=b.yaw;
+  const dx=Math.sin(b.yaw),dz=Math.cos(b.yaw),ox=m.position.x+dx*.4*bs,oz=m.position.z+dz*.4*bs,L=d01Clip(ox,oz,dx,dz,26,AR.pil,A,ARENA_R+.3),gy=GH(ox,oz);
+  const w=b.warm>0?.22:1.5;d01StripSet(AR.bm,ox,oz,dx,dz,L,w,gy+.2);AR.bm.visible=true;AR.bm.material.opacity=b.warm>0?.35+.25*Math.sin(now/50):.55;
+  const ey=gy+Math.min(5,.85*bs),ex=ox+dx*L,ez=oz+dz*L;AR.bm3.visible=b.warm<=0;AR.bm3.position.set((ox+ex)/2,(ey+gy+.6)/2,(oz+ez)/2);AR.o.set(ex,gy+.6,ez);AR.bm3.lookAt(AR.o);
+  AR.bm3.scale.set(.35+.08*Math.sin(now/40),.35,Math.hypot(L,ey-gy-.6));
+  let hit=false;
+  if(b.warm>0){b.warm-=dt;return false}
+  b.t-=dt;b.tick-=dt;if(Math.random()<.6){AR.v.set(ox+dx*L*Math.random(),gy+.4,oz+dz*L*Math.random());burst(AR.v,0xffd040,2,.6,1.2,.3)}
+  AR.o.set(ox,0,oz);AR.d.set(dx,0,dz);if(inLine(pl.position,AR.o,AR.d,L,1.6)&&hero.hp>0){hit=true;if(b.tick<=0&&hero.iv<=0){b.tick=.3;bossHit(e,.42)}}
+  if(b.t<=0){AR.beam=null;AR.bm.visible=AR.bm3.visible=false;e.bs.face=0}
+  return hit}
+function arTick(A,e,dt,now){
+  const ph=e.bs.ph,auth=d01Auth(A);
+  if(ph!==AR.ph){if(ph>AR.ph)arPhase(A,e,ph);AR.ph=ph}
+  d01Run(AR.q,dt);
+  // the driver decides which eyes wake (relayed to co-op partners)
+  if(auth&&!e.dead){AR.wt-=dt;if(AR.wt<=0){const free=AR.st.filter(T=>T.st=='closed');let n=Math.min(ph,free.length);
+    while(n-->0){const T=free.splice(Math.random()*free.length|0,1)[0];d01Cast('arEye'+T.i,e,A,1)}AR.wt=[8.5,8,7.2][ph-1]+Math.random()*1.5}}
+  let seen=false;for(let i=0;i<AR.st.length;i++)if(arStalk(A,e,AR.st[i],dt,now,ph))seen=true;
+  if(AR.beam){if(e.dead||e.hid){AR.beam=null;AR.bm.visible=AR.bm3.visible=false;e.bs.face=0}else if(arBeamTick(A,e,dt,now))seen=true}
+  // SEEN stacks → MARKED → Argus leaps
+  if(seen){AR.seen+=dt*(ph>=3?2.1:1.75);AR.sT=now}else if(now-AR.sT>700)AR.seen=Math.max(0,AR.seen-dt*.5);
+  const sn=Math.floor(AR.seen);if(sn>AR.sN&&sn<3)popT(pl.position,'👁 SEEN '+sn+'/3','#ffd040');AR.sN=sn;
+  if(AR.seen>=3&&!AR.mark&&hero.hp>0){AR.seen=0;AR.sN=0;arMark(A,e)}
+  if(AR.mark){const k=AR.mark;k.t+=dt;AR.mk.visible=true;AR.mk.position.set(pl.position.x,pl.position.y+3.1+.15*Math.sin(now/90),pl.position.z);AR.mk.scale.setScalar(1.2+.3*Math.sin(now/70));
+    if(!k.done){if(!auth){k.done=true;arBolts(A,e)}else if((!e.jmp&&!e.hid&&!e.bs.dash&&!e.spin&&!e.fly&&(!AR.beam)&&(e.bs.lock<=.05||k.t>1.6))){k.done=true;if(AR.beam){AR.beam=null;AR.bm.visible=AR.bm3.visible=false;e.bs.face=0}arLeap(A,e)}}
+    if(k.t>4)AR.mark=null}else AR.mk.visible=false;
+  if(seen&&Math.random()<.25)burst(gY(pl.position,1.2),0xffd040,1,.4,.6,.4);
+  // strikes from range
+  d01Shots(AR.shot||(AR.shot=(p,dm)=>{for(const T of AR.st){if(T.st=='dead')continue;if(Math.hypot(p.x-T.x,p.z-T.z)<1.1||Math.hypot(p.x-T.ox,p.z-T.oz)<.9){arHitStalk(AR.A,T,dm);return true}}return false}));
+  // bog pools: wading slows
+  let mired=false;for(const p of AR.pools)if(Math.hypot(pl.position.x-p[0],pl.position.z-p[1])<p[2]*.9){mired=true;break}
+  if(mired){if(!AR.mired)popT(pl.position,'Mired!','#8aa060');d01Buff('Mired','🟫',400,'Wading through bog water: slowed',{mspd:-.3})}AR.mired=mired;
+  // HUD (a few times a second)
+  AR.hT=(AR.hT||0)-dt;if(AR.hT<=0||AR.mark){AR.hT=.12;const alive=AR.st.filter(T=>T.st!='dead').length,pip=[0,1,2].map(i=>AR.seen>=i+1?'<b style="color:#ff6a3a">◉</b>':AR.seen>i?'<b style="color:#ffd040">◍</b>':'<span style="opacity:.45">○</span>').join(' ');
+  d01Hud(AR.mark?'<b style="color:#ff5a3a">👁 MARKED — MOVE!</b>':'👁 Seen '+pip+' &nbsp;·&nbsp; Eye-stalks '+alive+'/6'+(seen?' &nbsp;<b style="color:#ffd040">IN GAZE</b>':''),AR.mark?'#ff5a3a':seen?'#ffd040':'#8a7a3a');}
+  AR.dkT=ph>=3?1:0}
+function arClear(A,won){AR.q.length=0;AR.st.forEach(arReset);AR.beam=null;AR.bm.visible=AR.bm3.visible=false;AR.mark=null;AR.mk.visible=false;AR.eyes.visible=false;AR.seen=0;AR.dkT=0;
+  d01Hud(null);d01Unbuff('Mired');const e=bossEnt(A.i);if(e){e.bs.face=0;if(e.hid)bxHide(e,false)}}
+function arSeal(A,on){const m=AR.seal;if(!m)return;const y0=GH(A.cx,A.cz);
+  if(on){m.visible=true;const s0=m.scale.y;tw(800,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,3)));for(let k=0;k<8;k++){const a=AR.ent-.45+k/7*.9;burst(V(A.cx+Math.cos(a)*15,y0+.4,A.cz+Math.sin(a)*15),0x3a2c20,10,2,3,.6)}shake(.2)}
+  else{const s0=m.scale.y;tw(700,k=>m.scale.y=Math.max(.02,s0*(1-k)),()=>{if(!AR.A.f)m.visible=false})}}
+// the boss's own floating health bar is hidden in the den (the top boss bar shows its health; up close it covered the view)
+DEN[0]={build:arBuild,start:arStart,tick:arTick,clear:arClear,seal:arSeal,
+  ai(A,e){if(e.hb)e.hb.visible=false;return false},
+  hitA(A,p,r,dm,s,dir,half){for(const T of AR.st){if(T.st=='dead')continue;if(d01InArc(p,r,dir,half,T.x,T.z,1.0))arHitStalk(A,T,dm)}}};
+// Lights Out: dim the world toward the lantern while the hollow is dark
+{const f=atmos;atmos=function(dt,now){f.apply(this,arguments);
+  try{AR.dk+=((AR.dkT&&AF&&AF.i===0?1:0)-AR.dk)*Math.min(1,(dt||.016)*.8);const k=AR.dk;if(k<.004)return;
+    sun.intensity*=1-.85*k;hemi.intensity*=1-.75*k;scene.fog.color.multiplyScalar(1-.6*k);scene.fog.density+=.03*k;scene.background=scene.fog.color;
+    torch.intensity=Math.max(torch.intensity,1.2)*(1+.6*k);if(typeof POST!='undefined'&&POST.u){POST.u.vig.value+=1.1*k;POST.u.ex.value*=1-.18*k}}catch(_){}}}
+
+// ================= v86 den 1 — The Crest Hydra: THE SERPENT MERE =================
+// A half-flooded ruined serpent temple on Hillside Crest: a shallow mere over a sunken mosaic floor, raised stepping stones,
+// a broken colonnade with serpent reliefs, serpent idols at the gate and four serpent-fire braziers.
+// Mechanics (on top of the Hydra's spit/tongue/beam/mines/spores and its Cataclysm):
+//  1. Brood Necks — serpent heads burst from the water (red circle first). They bite along a red line when you are close and
+//     lob venom (red circle + pool) when you are far. Each has its own health. SEVER one and the Hydra takes a wound — but the
+//     stump regrows as TWO heads (shrinking green ring = time left) unless you SEAR it: touch a brazier to pick up
+//     Serpent-fire, then touch the stump. While 3+ necks live the Hydra is Brood-guarded (takes 35% less damage).
+//     More necks are kept up in later phases and stumps regrow faster.
+//  2. Tidal Surge (BMV 'tide') — the Hydra rears and the stones glow blue; a wall of water rolls out from it. Stand on a raised
+//     stone or dash through the crest, or be swept away. Phase II+: two surges back to back.
+// Uses the d01* helpers from zzK_den0.js.
+var HY={necks:[],slots:[],stones:[],braz:[],q:[],waves:[],fire:0,clk:0,ph:1,nt:3,lastAtk:0,glow:0,gk:0,wl:0,gen:0,guard:false,byp:0,A:null,
+  v:new THREE.Vector3(),o:new THREE.Vector3(),d:new THREE.Vector3()};
+const HY_NS=1.35,HY_STONE=[0xb8b09a,0xa8a08a,0xc4bca4,0x9a937e],HY_MOSS=[0x6a8a3a,0x5a7a34,0x7a9a44],HY_COL=0x7ac850;
+function hyMat(k){if(D01.m[k])return D01.m[k];let m;
+  if(k=='mere')m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.1,metalness:.3,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide});
+  else if(k=='curtain')m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.1,metalness:.2,transparent:true,opacity:.45,depthWrite:false,side:THREE.DoubleSide});
+  m.userData.lps=1;return D01.m[k]=m}
+function hyColumn(S,G,x,z,h,R,broken){const y=GH(x,z),st=HY_STONE[(R()*4)|0];
+  S.geo(ARKG.box,arkM4(x,y+.15,z,1.4,.3,1.4,0,R()*.2),arkShade(st,.8));S.geo(d01Cyl(.5,.56,8),arkM4(x,y+.3+h/2,z,1,h,1),st);
+  // a serpent relief winding up the shaft
+  const n=Math.floor(h*4);for(let i=0;i<n;i++){const t=i/n,a=t*9.5,yy=y+.45+t*(h-.3);S.geo(ARKG.box,arkM4(x+Math.cos(a)*.55,yy,z+Math.sin(a)*.55,.16,.22,.16,0,-a),i==n-1?0x5a8a4a:arkMix(st,0x4a7a40,.45))}
+  if(!broken){S.geo(ARKG.box,arkM4(x,y+.3+h+.15,z,1.3,.3,1.3),arkShade(st,1.08));S.geo(ARKG.box,arkM4(x,y+.3+h+.38,z,1.0,.18,1.0),arkShade(st,.9))}
+  else{for(let k=0;k<3;k++)S.geo(ARKG.cone4,arkM4(x+(R()-.5)*.5,y+.3+h+.1,z+(R()-.5)*.5,.25,.35+R()*.3,.25,0,R()*6),st);
+    // fallen drums beside it
+    for(let k=0;k<2;k++){const a=R()*6.283,d=1.4+k*1.2,fx=x+Math.cos(a)*d,fz=z+Math.sin(a)*d;S.geo(d01Cyl(.5,.5,8),arkM4(fx,GH(fx,fz)+.42,fz,1,.95,1,Math.PI/2,a,0),arkShade(st,.9+R()*.2))}}
+  if(R()<.6)S.geo(ARK.rock[(R()*4)|0],arkM4(x,y+.1,z,1.0,.25,1.0),HY_MOSS[0])}
+function hyIdol(S,G,x,z,yaw){const y=GH(x,z),st=0x9a947e,fx=Math.sin(yaw),fz=Math.cos(yaw);
+  S.geo(ARKG.box,arkM4(x,y+.6,z,1.6,1.2,1.6,0,yaw),arkShade(st,.85));S.geo(ARKG.box,arkM4(x,y+1.25,z,1.8,.15,1.8,0,yaw),arkShade(st,.7));
+  const P=d01Bez([x-fx*.3,y+1.2,z-fz*.3],[x-fx*.6,y+3.4,z-fz*.6],[x+fx*.7,y+4.1,z+fz*.7],6);d01Tube(S,P,.5,.34,t=>t>.5?arkShade(st,1.05):st,8);
+  for(let i=0;i<5;i++){const p=P[i+1];S.geo(ARKG.cone4,arkM4(p[0]-fx*.35,p[1]+.25,p[2]-fz*.35,.12,.5,.12,-.6*fz,0,.6*fx),0x6a6452)}
+  const h=P[6],hx=h[0]+fx*.35,hz=h[2]+fz*.35,hy=h[1]+.05;
+  S.geo(ARKG.box,arkM4(hx,hy+.1,hz,.8,.45,1.1,0,yaw),st);S.geo(ARKG.cone4,arkM4(hx+fx*.75,hy+.12,hz+fz*.75,.38,.7,.2,Math.PI/2,yaw,Math.PI/4),arkShade(st,.95));
+  S.geo(ARKG.box,arkM4(hx+fx*.35,hy-.35,hz+fz*.35,.62,.12,.8,.35,yaw),arkShade(st,.8));
+  [-1,1].forEach(s=>{const sx=Math.cos(yaw)*s,sz=-Math.sin(yaw)*s;G.geo(ARKG.box,arkM4(hx+sx*.36+fx*.2,hy+.22,hz+sz*.36+fz*.2,.08,.1,.18,0,yaw),0x9aff5a);
+    S.geo(ARKG.cone4,arkM4(hx+sx*.3-fx*.35,hy+.45,hz+sz*.3-fz*.35,.1,.6,.1,-.9*fz,0,.9*fx),0xd0c4a0);
+    S.geo(ARKG.cone4,arkM4(hx+sx*.2+fx*.75,hy-.12,hz+sz*.2+fz*.75,.05,.25,.05,Math.PI),0xf0eadc)})}
+function hyBuild(A){
+  const R=ARK.rng(9200),cx=A.cx,cz=A.cz,y0=GH(cx,cz),ent=d01Ent(A),gap=(a,w)=>Math.abs(d01Ad(a,ent))<(w||.5),P=(a,r)=>[cx+Math.cos(a)*r,cz+Math.sin(a)*r],
+    P3=(a,r,y)=>{const x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;return [x,y==null?GH(x,z):y,z]};
+  HY.A=A;HY.ent=ent;const WL=y0+.17;HY.wy=WL;
+  const F=arkSoup(9201),Wt=arkSoup(9202),G=arkSoup(9203),S=arkSoup(9204),SG=arkSoup(9205);
+  // --- the mere bed: a mosaic dais, then broken flagstones, then silt and pebbles, rising to a muddy bank ---
+  const RS=[0,1.2,2.4,3.6,4.8,6,7.3,8.6,9.9,11.2,12.5,13.6,14.6,15.5,16.6],N=44,vt=RS.map((r,i)=>[...Array(N)].map((_,k)=>{
+    const a=(k+.5*(i%2))/N*6.283+(i>4?(R()-.5)*.06:0),rr=r+(i>4&&i<RS.length-1?(R()-.5)*.5:0),x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;
+    const y=r<14.4?GH(x,z)+.02:r<15.6?GH(x,z)+.12:GH(x,z)-.12;return [x,y,z]}));
+  for(let i=0;i<RS.length-1;i++)for(let k=0;k<N;k++){const a=vt[i][k],b=vt[i][(k+1)%N],c=vt[i+1][(k+1)%N],d=vt[i+1][k],r=RS[i];
+    let col=r<4.8?((k+i)%2?0x3a7a5a:0x2e6a4e):r<8.6?HY_STONE[(k*3+i)%4]:r<14.4?[0x6a6a4a,0x5e6246,0x72705a,0x585c40][(R()*4)|0]:r<15.5?0x5a5232:HY_MOSS[(R()*3)|0];
+    if(r>=4.8&&r<8.6&&R()<.2)col=0x4a5a3a;F.tri(a,b,c,col);F.tri(a,c,d,arkShade(col,.9+R()*.15))}
+  // a coiled serpent inlaid in gold on the dais
+  for(let i=0;i<70;i++){const t=i/70,a=t*11+.3,r=.4+t*4.1,[x,z]=P(a,r),s=.16+.12*Math.sin(t*Math.PI);G.geo(ARKG.box,arkM4(x,y0+.05,z,s*2.2,.02,s*1.4,0,-a),i>66?0x8affa0:i%2?0xc8b060:0xa89040)}
+  // pebbles and sunken rubble
+  for(let k=0;k<60;k++){const a=R()*6.283,r=5+R()*9.3,[x,z]=P(a,r),s=.1+R()*.3;F.geo(ARK.rock[k%4],arkM4(x,GH(x,z)+.04,z,s,s*.5,s,0,R()*6),arkShade(HY_STONE[k%4],.65+R()*.2))}
+  // --- the water surface: one sheet over the whole floor, ragged at the bank ---
+  {const WR=[0,2.5,5,7.5,10,12.5,14.2,15.1],WN=40;const wv=WR.map((r,i)=>[...Array(WN)].map((_,k)=>{const a=(k+.5*(i%2))/WN*6.283,rr=r+(i==WR.length-1?(R()-.5)*.8:0),x=cx+Math.cos(a)*rr,z=cz+Math.sin(a)*rr;return [x,WL,z]}));
+    for(let i=0;i<WR.length-1;i++)for(let k=0;k<WN;k++){const a=wv[i][k],b=wv[i][(k+1)%WN],c=wv[i+1][(k+1)%WN],d=wv[i+1][k],col=[0x2e7a74,0x347e78,0x28706c,0x3a8a80][(R()*4)|0];
+      Wt.tri(a,b,c,i>=WR.length-2?arkMix(col,0x9ad8c8,.3):col,.15);Wt.tri(a,c,d,arkShade(col,.95),.15)}}
+  // --- raised stepping stones (safe from the surge) ---
+  for(let k=0;k<5;k++){const a=ent+.95+k/4*(6.283-1.9),[x,z]=P(a,8.4);HY.stones.push([x,z,1.3])}
+  [ent+Math.PI/2,ent-Math.PI/2].forEach(a=>{const [x,z]=P(a,4.9);HY.stones.push([x,z,1.2])});
+  HY.stones.forEach(([x,z,r],k)=>{const y=GH(x,z),top=y+.34;S.geo(d01Cyl(r,r*1.12,6),arkM4(x,y+.1-.25,z,1,top-y+.5,1,0,k),arkShade(HY_STONE[k%4],.85));
+    S.geo(d01Cyl(r*.98,r,6),arkM4(x,top-.03,z,1,.08,1,0,k),(cy,n)=>n.y>.5?HY_STONE[(k+1)%4]:arkShade(HY_STONE[k%4],.75));
+    for(let j=0;j<6;j++){const a=j/6*6.283+k;S.geo(ARKG.box,arkM4(x+Math.cos(a)*r*.62,top+.02,z+Math.sin(a)*r*.62,.32,.03,.08,0,-a),0x6a8a3a)}
+    S.geo(ARKG.box,arkM4(x,top+.025,z,.5,.03,.5,0,k+.4),0x5a8a4a);
+    for(let j=0;j<6;j++){const a=j/6*6.283+k,b=(j+1)/6*6.283+k;SG.quad([x+Math.cos(a)*r*1.02,top+.06,z+Math.sin(a)*r*1.02],[x+Math.cos(b)*r*1.02,top+.06,z+Math.sin(b)*r*1.02],[x+Math.cos(b)*r*.8,top+.06,z+Math.sin(b)*r*.8],[x+Math.cos(a)*r*.8,top+.06,z+Math.sin(a)*r*.8],0x9ae8ff,.05)}});
+  // --- the temple rim: a broken curb, the colonnade, idols at the gate, an arch behind the Hydra ---
+  for(let k=0;k<54;k++){const a=k/54*6.283;if(gap(a,.42)||R()<.12)continue;const a1=a+6.283/54*.9,r=15.1,yb=GH(...P(a,r)),tl=(R()-.5)*.25;
+    const pts=[P(a,r-.3),P(a1,r-.3),P(a1,r+.35),P(a,r+.35)],yt=pts.map(()=>yb+.42+tl+R()*.05);S.slab(pts,yt,yb-.3,HY_STONE[k%4],arkShade(HY_STONE[k%4],.7))}
+  for(let k=0;k<12;k++){const a=ent+.7+k/11*(6.283-1.4),[x,z]=P(a+(R()-.5)*.05,16.4+R()*.5);if(Math.abs(d01Ad(a,ent+Math.PI))<.32)continue;const br=R()<.45;hyColumn(S,G,x,z,br?1.2+R()*1.6:3.8+R()*1.4,R,br)}
+  {const a=ent+Math.PI,[x1,z1]=P(a-.24,17),[x2,z2]=P(a+.24,17);hyColumn(S,G,x1,z1,6,R,false);hyColumn(S,G,x2,z2,6,R,false);
+    const yy=y0+6.9,yaw=Math.atan2(x2-x1,z2-z1),mx=(x1+x2)/2,mz=(z1+z2)/2,L=Math.hypot(x2-x1,z2-z1);
+    S.geo(ARKG.box,arkM4(mx,yy,mz,1.1,.7,L+1.4,0,yaw),HY_STONE[2]);S.geo(ARKG.box,arkM4(mx,yy+.5,mz,.9,.3,L+.6,0,yaw),HY_STONE[1]);
+    for(let i=0;i<9;i++){const t=i/8-.5,px=mx+Math.sin(yaw)*t*L,pz=mz+Math.cos(yaw)*t*L;S.geo(ARKG.box,arkM4(px-Math.cos(yaw)*.56,yy+Math.sin(i*1.4)*.15,pz+Math.sin(yaw)*.56,.06,.2,.5,0,yaw+i),0x4a7a40)}
+    const [ix,iz]=P(a,18.6);hyIdol(S,G,ix,iz,Math.atan2(cx-ix,cz-iz))}
+  [-1,1].forEach(s=>{const a=ent+s*.6,[x,z]=P(a,15.9);hyIdol(S,G,x,z,Math.atan2(cx-x,cz-z)-s*.35)});
+  // reeds at the bank, lily pads on the water, wind-bent grass outside
+  for(let k=0;k<40;k++){const a=R()*6.283;if(gap(a,.5))continue;const [x,z]=P(a,13.6+R()*1.3);if(HY.stones.some(p=>Math.hypot(p[0]-x,p[1]-z)<2))continue;
+    for(let j=0;j<5;j++){const rx=x+(R()-.5)*.6,rz=z+(R()-.5)*.6,h=.8+R()*1.1;S.geo(ARKG.cone4,arkM4(rx,GH(rx,rz)+h/2,rz,.04,h,.04,(R()-.5)*.3,0,(R()-.5)*.3),R()<.5?0x8aa050:0x6a8a3a);
+      if(R()<.3)S.geo(ARKG.cyl5,arkM4(rx,GH(rx,rz)+h*.8,rz,.06,.25,.06),0x5a3a1a)}}
+  for(let k=0;k<26;k++){const a=R()*6.283,[x,z]=P(a,4+R()*9.5);if(HY.stones.some(p=>Math.hypot(p[0]-x,p[1]-z)<1.8))continue;const s=.3+R()*.3;
+    S.geo(ARKG.cyl6,arkM4(x,WL+.02,z,s,.02,s,0,R()*6),R()<.5?0x4a8a3a:0x5a9a40);if(R()<.3)G.geo(ARKG.cone5,arkM4(x+.1,WL+.1,z,.1,.12,.1),R()<.5?0xfff0f0:0xffd0e0)}
+  for(let k=0;k<70;k++){const a=R()*6.283,[x,z]=P(a,15.6+R()*3);if(gap(a,.45)&&Math.hypot(x-cx,z-cz)<17.5)continue;const y=GH(x,z);
+    for(let j=0;j<3;j++){const h=.4+R()*.5;S.geo(ARKG.cone4,arkM4(x+(R()-.5)*.5,y+h/2,z+(R()-.5)*.5,.06,h,.06,.35,0,.2),HY_MOSS[(R()*3)|0])}}
+  // tattered serpent pennants on poles
+  for(let k=0;k<4;k++){const a=ent+1.2+k*1.3,[x,z]=P(a,15.4),y=GH(x,z),c=k%2?0x3a7a3a:0xb8a040;S.geo(ARKG.cyl5,arkM4(x,y+2.2,z,.07,4.4,.07),0x4a3424);
+    const ta=-a+1.57,ca=Math.cos(ta),sa=Math.sin(ta),Q=(u,v)=>[x+u*ca*.5+u*u*.1,y+v,z-u*sa*.5];S.quad(Q(0,4.3),Q(1.6,4.2),Q(1.5,3.2),Q(0,3.3),c,.1);S.tri(Q(0,3.3),Q(1.5,3.2),Q(.6,2.5),arkShade(c,.85))}
+  // --- serpent-fire braziers (touch one to carry the fire) ---
+  [ent+1.3,ent-1.3,ent+Math.PI-.8,ent+Math.PI+.8].forEach((a,k)=>{const [x,z]=P(a,12.4),y=GH(x,z);
+    S.geo(d01Cyl(.55,.7,6),arkM4(x,y+.35,z,1,.8,1,0,k),HY_STONE[1]);S.geo(d01Cyl(.4,.5,6),arkM4(x,y+.85,z,1,.2,1),HY_STONE[2]);
+    S.geo(d01Cyl(.62,.3,8),arkM4(x,y+1.15,z,1,.4,1),0x8a6a2a);S.geo(d01Cyl(.66,.62,8),arkM4(x,y+1.37,z,1,.06,1),0xb8903a);
+    [-1,1].forEach(s=>{const ox=Math.cos(a+1.57*s)*.66,oz=Math.sin(a+1.57*s)*.66;S.geo(ARKG.cone4,arkM4(x+ox,y+1.35,z+oz,.1,.35,.1,0,0,s*.6),0xb8903a)});
+    const fg=new THREE.Group();fg.position.set(x,y+1.45,z);const o=new THREE.Mesh(ARKG.cone5,new THREE.MeshBasicMaterial({color:0x9aff5a}));o.scale.set(.42,.9,.42);o.position.y=.4;
+    const ic=new THREE.Mesh(ARKG.cone4,new THREE.MeshBasicMaterial({color:0xf8ffb0}));ic.scale.set(.25,.6,.25);ic.position.y=.28;const sp=kqSpr(0x9aff5a,2.2);sp.position.y=.5;fg.add(o,ic,sp);
+    fg.traverse(q=>{if(q.material)q.material.userData.lps=1});A.g.add(fg);HY.braz.push({x,z,fg,o,ic});denBlock(x,z)});
+  // --- neck slots, the brood necks (a pool of six, sharing geometry) ---
+  for(let k=0;k<9;k++){const a=ent+.62+k/8*(6.283-1.24),[x,z]=P(a,10.9);if(HY.stones.some(p=>Math.hypot(p[0]-x,p[1]-z)<2.4)||HY.braz.some(b=>Math.hypot(b.x-x,b.z-z)<2.2))continue;HY.slots.push([x,z])}
+  for(let k=0;k<4;k++){const a=ent+Math.PI/4+k*Math.PI/2,[x,z]=P(a,6.4);if(HY.stones.some(p=>Math.hypot(p[0]-x,p[1]-z)<2.4))continue;HY.slots.push([x,z])}
+  {const B=arkSoup(9206),E=arkSoup(9207),T=arkSoup(9208),sc=[0x3e6a3a,0x4e7a40,0x456e3a],P0=d01Bez([0,-.4,0],[0,2,-.4],[0,3.0,.45],8);
+    d01Tube(B,P0,.46,.27,t=>sc[(t*8|0)%3],8);
+    for(let i=1;i<8;i++){const p=P0[i];B.geo(ARKG.box,arkM4(p[0],p[1],p[2]+.3-.03*i,.34-.02*i,.1,.12,.2),0xc8b88a)}           // pale belly scutes
+    for(let i=1;i<7;i++){const p=P0[i];B.geo(ARKG.cone4,arkM4(p[0],p[1]+.05,p[2]-.4+.03*i,.06,.32,.06,-.7,0,0),0xd0c4a0)}      // back fin spines
+    const hx=0,hy=3.12,hz=.75;B.geo(ARKG.box,arkM4(hx,hy+.05,hz,.62,.4,.8),0x4e7a40);B.geo(ARKG.box,arkM4(hx,hy+.24,hz-.05,.5,.08,.7),0x2e4e2a);
+    B.geo(ARKG.cone4,arkM4(hx,hy+.06,hz+.72,.3,.68,.16,Math.PI/2,0,Math.PI/4),0x5a8a48);B.geo(ARKG.box,arkM4(hx,hy-.24,hz+.35,.46,.12,.82,.32,0,0),0xb8a878);
+    B.geo(ARKG.box,arkM4(hx,hy-.12,hz+.45,.4,.06,.6,.15,0,0),0x6a1018);
+    [-1,1].forEach(s=>{B.geo(ARKG.cone4,arkM4(hx+s*.16,hy-.18,hz+.85,.04,.2,.04,Math.PI),0xf0eadc);B.geo(ARKG.cone4,arkM4(hx+s*.2,hy-.04,hz+.62,.035,.16,.035,Math.PI),0xf0eadc);
+      B.geo(ARKG.cone4,arkM4(hx+s*.24,hy+.3,hz-.25,.07,.55,.07,-1.0,0,s*.35),0xd0c4a0);B.geo(ARKG.cone4,arkM4(hx+s*.32,hy+.12,hz-.2,.05,.4,.05,-1.2,0,s*.7),0xb8ac88);
+      E.geo(ARKG.box,arkM4(hx+s*.3,hy+.14,hz+.25,.06,.09,.16,0,s*.3,0),0xffc020)});
+    B.geo(ARKG.cone4,arkM4(hx,hy+.38,hz-.2,.08,.6,.08,-1.0),0xd0c4a0);
+    const Pst=d01Bez([0,-.4,0],[0,.4,-.05],[0,.95,.05],3);d01Tube(T,Pst,.5,.42,t=>sc[(t*3|0)%3],8);T.geo(d01Cyl(.42,.42,8),arkM4(0,.97,.05,1,.06,1),0x8a1a1a);T.geo(d01Cyl(.24,.24,6),arkM4(0,1.0,.05,1,.03,1),0xc8b88a);
+    for(let j=0;j<5;j++){const a=j*1.26;T.geo(ARKG.cone4,arkM4(Math.cos(a)*.35,1.0,.05+Math.sin(a)*.35,.08,.2,.08,Math.sin(a)*.6,0,-Math.cos(a)*.6),0x6a1018)}
+    const gB=B.mesh().geometry,gE=E.mesh().geometry,gT=T.mesh().geometry,gR=new THREE.RingGeometry(.9,1.08,28);gR.rotateX(-Math.PI/2);
+    for(let k=0;k<6;k++){const g=new THREE.Group(),piv=new THREE.Group();g.add(piv);const neck=new THREE.Mesh(gB,d01Mat('std')),eyes=new THREE.Mesh(gE,d01Mat('glow')),stump=new THREE.Mesh(gT,d01Mat('std'));
+      neck.castShadow=true;piv.add(neck,eyes);g.add(stump);const rg=new THREE.Mesh(gR,d01Add(0x9aff5a,.7));rg.renderOrder=17;rg.position.y=(WL-y0+.04)/HY_NS;g.add(rg);g.visible=false;g.scale.setScalar(HY_NS);A.g.add(g);
+      HY.necks.push({i:k,g,piv,neck,eyes,stump,rg,hb:d01Bar(HY_COL),st:'off',slot:-1,x:0,z:0,hp:1,hpM:1,t:0,T0:1,cd:2,atk:null,yaw:0,hit:0,p:new THREE.Vector3(),warn:0})}}
+  // --- tidal surge walls and the brood-guard shell ---
+  {// a curling wall of water: lathe profile (radius, height) — a sloped back, a tall face and a foaming lip that leans outward
+    const pr=[[.93,0],[.96,.45],[.985,.85],[1.0,1.0],[1.02,1.08],[1.035,.98],[1.02,.6],[1.01,0]].map(q=>new THREE.Vector2(q[0],q[1])),g=new THREE.LatheGeometry(pr,56).toNonIndexed(),P=g.attributes.position,C=[];
+    for(let i=0;i<P.count;i++){const y=P.getY(i),c=new THREE.Color(0x3a9a94).lerp(new THREE.Color(0xf0fffc),Math.min(1,Math.max(0,(y-.55)/.45)));C.push(c.r,c.g,c.b)}g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
+    for(let k=0;k<2;k++){const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));
+    m.material.userData.lps=1;m.visible=false;m.renderOrder=16;m.frustumCulled=false;A.g.add(m);HY.waves.push({ms:m,on:false,r:0,hit:false,safe:false})}}
+  HY.shell=new THREE.Mesh(D01.sph,d01Add(0x9aff5a,.12));HY.shell.renderOrder=15;HY.shell.visible=false;A.g.add(HY.shell);
+  HY.fl=kqSpr(0x9aff5a,1.1);HY.fl.visible=false;A.g.add(HY.fl);
+  // --- the seal: the mere rises into a curtain of falling water across the gate ---
+  {const C=arkSoup(9209);for(let k=0;k<13;k++){const a=ent-.42+k/12*.84,[x,z]=P(a,15.1+(k%2)*.35),h=3+R()*.9,r=.3+R()*.16;
+      C.geo(d01Cyl(r*.7,r,7),arkM4(x,y0+h/2-.3,z,1,h,1,0,R()*6),(cy,n)=>cy>y0+h-.9?0xd8f4f0:[0x5ab8b0,0x4aa8a4,0x6ac8c0][k%3]);C.geo(D01.sph,arkM4(x,y0+h-.3,z,r*.9,r*.35,r*.9),0xe8fffa)}
+    const m=C.mesh(hyMat('curtain'));m.castShadow=false;m.scale.y=.02;m.visible=false;A.g.add(m);HY.seal=m}
+  // static meshes
+  const fm=F.mesh(d01Mat('std'));fm.castShadow=false;const wm=Wt.mesh(hyMat('mere'));wm.castShadow=false;wm.receiveShadow=false;wm.renderOrder=2;HY.water=wm;
+  const gm=G.mesh(d01Mat('glow'));gm.castShadow=false;const sg=SG.mesh(d01Add(0x9ae8ff,0));sg.material.vertexColors=true;sg.castShadow=false;sg.renderOrder=17;sg.visible=false;HY.sg=sg;
+  A.g.add(fm,wm,gm,S.mesh(d01Mat('std')),sg);
+  // idle: flames flicker and the mere breathes
+  TANIM.push({x:cx,z:cz,f:now=>{HY.braz.forEach((b,i)=>{b.o.scale.y=.9*(1+.18*Math.sin(now/80+i*2));b.ic.scale.y=.6*(1+.25*Math.sin(now/60+i));b.o.rotation.y=now/400+i});
+    wm.position.y=Math.sin(now/1300)*.025+HY.wl}});
+}
+function hyFreeNeck(){return HY.necks.find(N=>N.st=='off')}
+function hySlotFree(s){return !HY.necks.some(N=>N.st!='off'&&N.slot===s)}
+function hyLive(){let n=0;for(const N of HY.necks)if(N.st=='bub'||N.st=='rise'||N.st=='up')n++;return n}
+function hyStumps(){let n=0;for(const N of HY.necks)if(N.st=='stump')n++;return n}
+// a neck bursts up at slot s (a red circle first)
+function hyRise(A,e,s,N){N=N||hyFreeNeck();if(!N||s<0||s>=HY.slots.length)return;const [x,z]=HY.slots[s],gen=HY.gen;
+  N.slot=s;N.x=x;N.z=z;N.st='bub';N.t=0;N.g.visible=true;N.g.position.set(x,GH(x,z),z);N.piv.visible=false;N.stump.visible=false;N.rg.visible=false;N.hb.visible=false;N.atk=null;
+  const q=V(x,0,z);tele(q,1.7,1.0,()=>{if(gen!==HY.gen||!A.f||N.st!='bub')return;N.st='rise';N.t=0;N.piv.visible=true;N.piv.scale.set(1,.05,1);N.hpM=N.hp=Math.round(M(e.c)*.045);
+    N.cd=1.4+Math.random();N.yaw=Math.atan2(pl.position.x-x,pl.position.z-z);burst(gY(q,.3),0x9ae8e0,30,3,4,.7);burst(gY(q,.3),HY_COL,12,2,3,.5);ring(q,0x9ae8e0,2.4,300);
+    if(d2(pl.position,q)<1.7&&hero.iv<=0){bossHit(e,.6);dn(pl.position,'Erupted!','#9ae870',-20,700)}})}
+for(let k=0;k<16;k++)kqBmv('hyNeck'+k,function(e,A,en){if(A.i===1&&hySlotFree(k))hyRise(A,e,k);return {d:0,lock:0}});
+// the surge: a ring wall of water rolls out from the Hydra
+kqBmv('tide',function(e,A,en){const n=e.bs.ph>=2?2:1,W=1.25*en;kqBossCast(e,0x9ae8e0,W*1000);HY.glow=W+n*1.3+1.8;
+  if(!HY.tideN++)banner('🌊 TIDAL SURGE','The Hydra calls up the mere','Climb onto a glowing stone — or dash through the wave');
+  say('🌊 Tidal surge'+(n>1?' — two waves!':'!')+' Get onto a raised stone or dash through the crest.');
+  for(let i=0;i<n;i++)d01After(HY.q,W+i*1.3,()=>{if(!A.f||e.dead)return;const w=HY.waves.find(q=>!q.on);if(!w)return;w.on=true;w.r=2.4;w.hit=false;w.safe=false;w.ms.visible=true;
+    w.ms.position.set(A.cx,GH(A.cx,A.cz),A.cz);shake(.25);sfx('boom',.45);burst(gY(e.m.position,.5),0x9ae8e0,40,5,4,.8)});
+  return {d:W+n*1.3+1.2,lock:1}});
+BSTY[1].pool=[['spit','tongue','tide'],['beam','mines','tide'],['spores','tide']];
+// the Hydra is guarded while 3+ of its brood live (not for wounds from severing/searing, and never twice in co-op)
+{const f=hurt;hurt=function(e,d,s,c,dot){try{if(e&&!e.dead&&e.boss&&e.ar===1&&HY.guard&&!HY.byp&&AF&&AF.i===1&&!MP.ap&&d>0&&d<1e8){d=Math.max(1,Math.round(d*.65));
+  if(nowP()-(HY.gT||0)>1500){HY.gT=nowP();popT(e.m.position,'🛡 Brood-guarded','#9ae870')}}}catch(_){}return f.call(this,e,d,s,c,dot)}}
+function hyWound(e,k,col){if(!e||e.dead)return;HY.byp=1;try{hurt(e,Math.round(M(e.c)*k),{col})}finally{HY.byp=0}}
+function hyHitNeck(A,N,dm){if(N.st!='up'&&N.st!='rise')return;const d=Math.max(1,Math.round(dm*.8));N.hp-=d;N.hit=.2;dn(N.p,d,'#c8ff9a',-10,700);burst(N.p,0x3a7a20,8,2,1,.4);
+  if(N.hp<=0)hySever(A,N)}
+function hySever(A,N){const e=bossEnt(A.i),ph=e?e.bs.ph:1;N.st='stump';N.T0=N.t=[9,7.5,6][ph-1];N.atk=null;N.piv.visible=false;N.stump.visible=true;N.stump.material=d01Mat('std');N.rg.visible=true;N.hb.visible=false;N.warn=0;
+  burst(N.p,0x3a8a20,50,4,3,.8);burst(N.p,0x8a1a1a,20,3,2,.6);ring(V(N.x,0,N.z),HY_COL,3,350);shake(.2);sfx('brk',.6);popT(N.p,'SEVERED!','#c8ff9a',true);hyWound(e,.025,HY_COL);
+  if(!HY.sevN++)say('🔥 Sear the stump with fire from a serpent brazier — or it grows back as TWO heads!')}
+function hySear(A,N){const e=bossEnt(A.i);N.st='seared';N.t=12;N.rg.visible=false;N.stump.material=d01Mat('char');const q=V(N.x,0,N.z);
+  burst(gY(q,1),0xffa020,40,3,4,.8);burst(gY(q,1),0x9aff5a,20,2,3,.6);ring(q,0xffa020,2.6,350);sfx('power',.5);popT(gY(q,1.5),'SEARED!','#ffb040',true);hyWound(e,.035,0xffa020);
+  if(!HY.searN++)say('🔥 Seared shut — that head will not return.')}
+function hyNeckTick(A,e,N,dt,now,ph){
+  if(N.st=='off'||N.st=='bub')return;
+  const gy=GH(N.x,N.z);
+  if(N.st=='stump'){N.t-=dt;const k=Math.max(0,N.t/N.T0);N.rg.scale.setScalar(.55+1.5*k);N.rg.material.opacity=k<.3?.45+.45*Math.sin(now/60):.7;
+    if(Math.random()<.15){HY.v.set(N.x+(Math.random()-.5),HY.wy,N.z+(Math.random()-.5));burst(HY.v,0x9ae8e0,1,.5,1,.4)}
+    if(N.t<2.2&&!N.warn){N.warn=1;popT(V(N.x,gy+1.5,N.z),'⚠ Regrowing!','#ff8a5a')}
+    if(HY.fire>HY.clk&&Math.hypot(pl.position.x-N.x,pl.position.z-N.z)<1.9){hySear(A,N);return}
+    if(N.t<=0){// two heads: this one and a neighbour
+      const s=N.slot;N.stump.visible=false;N.rg.visible=false;N.st='off';hyRise(A,e,s,N);
+      if(hyLive()+hyStumps()<6){let best=-1,bd=1e9;HY.slots.forEach((q,j)=>{if(!hySlotFree(j))return;const d=Math.hypot(q[0]-N.x,q[1]-N.z);if(d<bd){bd=d;best=j}});if(best>=0)hyRise(A,e,best)}
+      popT(V(N.x,gy+2,N.z),'TWO HEADS!','#ff8a5a',true);if(!HY.twoN++)say('🐍 The stump splits into two heads!')}
+    return}
+  if(N.st=='seared'){N.t-=dt;if(N.t<1)N.g.position.y=gy-(1-N.t)*1.2;if(N.t<=0){N.st='off';N.g.visible=false;N.g.position.y=gy;N.stump.visible=false}return}
+  // living neck: face the hero, sway, attack
+  const ty=Math.atan2(pl.position.x-N.x,pl.position.z-N.z);N.yaw+=Math.max(-3*dt,Math.min(3*dt,d01Ad(ty,N.yaw)));N.g.rotation.y=N.yaw;
+  const fx=Math.sin(N.yaw),fz=Math.cos(N.yaw);N.p.set(N.x+fx*.8*HY_NS,gy+3*HY_NS,N.z+fz*.8*HY_NS);
+  if(N.st=='rise'){N.t+=dt;const k=Math.min(1,N.t/.7);N.piv.scale.set(1,.05+.95*(1-Math.pow(1-k,3)),1);if(k>=1){N.st='up';N.piv.scale.set(1,1,1)}}
+  if(N.hp<N.hpM)d01BarSet(N.hb,N.x,gy+4.3*HY_NS,N.z,N.hp/N.hpM);
+  let rx=Math.sin(now/600+N.i*1.3)*.06,rz=Math.sin(now/800+N.i)*.08;
+  if(N.hit>0){N.hit-=dt;rx-=.25*Math.sin(N.hit*30)}
+  if(N.st=='up'){
+    if(!N.atk){N.cd-=dt;if(N.cd<=0&&HY.clk-HY.lastAtk>.75&&hero.hp>0){HY.lastAtk=HY.clk;const L=Math.hypot(pl.position.x-N.x,pl.position.z-N.z),o=V(N.x,0,N.z);
+      if(L<6.8){const d=V(fx,0,fz);N.atk={k:'bite',t:0,T:.85};tele(o,0,.85,()=>{if(!A.f||N.st!='up')return;for(let s=1;s<6.5;s+=1)burst(gY(o.clone().addScaledVector(d,s),.6),HY_COL,2,1,1,.3);
+          if(inLine(pl.position,o,d,6.5,2)&&hero.iv<=0){bossHit(e,.9);dn(pl.position,'Bitten!','#9ae870',-20,600)}},{w:2,l:6.5,d})}
+      else if(L<17){const q=pl.position.clone();N.atk={k:'spit',t:0,T:1.1};kqLob(A,N.p.clone(),q,1.1,0x9aff3a,1.6);
+        tele(q,1.8,1.1,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff3a,16,2,2,.5);if(d2(pl.position,q)<1.8&&hero.iv<=0)bossHit(e,.6);bxPool(A,q,1.8,4,0x6aff3a,.15)})}
+      N.cd=(2.8+Math.random()*1.4)*(ph>=3?.75:1)}}
+    else{const a=N.atk;a.t+=dt;const u=a.t/a.T;
+      if(a.k=='bite'){if(u<1)rx-=.45*u;else if(u<1.25)rx+=-.45+1.6*((u-1)/.25);else if(u<1.9)rx+=1.15*(1-(u-1.25)/.65);else N.atk=null}
+      else{if(u<.35)rx-=.5*(u/.35);else if(u<.55)rx+=-.5+.8*((u-.35)/.2);else if(u<1)rx+=.3*(1-(u-.55)/.45);else N.atk=null}}}
+  N.piv.rotation.x=rx;N.piv.rotation.z=rz}
+function hyStart(A,e){HY.gen++;HY.necks.forEach(hyOff);HY.q.length=0;HY.waves.forEach(w=>{w.on=false;w.ms.visible=false});HY.ph=1;HY.nt=2.2;HY.fire=0;HY.clk=0;HY.glow=0;HY.guard=false;HY.tideN=HY.tideN||0;
+  setTimeout(()=>{if(A.f)say('🐍 The Serpent Mere. Sever its brood necks, then sear the stumps with serpent-fire from the braziers.')},1400)}
+function hyOff(N){N.st='off';N.g.visible=false;N.atk=null;N.hb.visible=false;N.rg.visible=false;N.stump.visible=false;N.piv.visible=true;N.piv.scale.set(1,1,1);N.slot=-1}
+function hyTick(A,e,dt,now){
+  const ph=e.bs.ph,auth=d01Auth(A);HY.clk+=dt;
+  if(ph!==HY.ph){if(ph>HY.ph){HY.nt=Math.min(HY.nt,1);say(ph==2?'🐍 More heads stir beneath the mere!':'🐍 The whole brood rises — the mere boils!')}HY.ph=ph}
+  d01Run(HY.q,dt);
+  // the driver brings up necks (relayed so a partner sees them too)
+  if(auth&&!e.dead){HY.nt-=dt;if(HY.nt<=0){const live=hyLive(),want=[2,3,4][ph-1];HY.nt=1;
+    if(live<want&&live+hyStumps()<6){const fr=HY.slots.map((_,j)=>j).filter(j=>hySlotFree(j)&&Math.hypot(HY.slots[j][0]-pl.position.x,HY.slots[j][1]-pl.position.z)>2.5);
+      if(fr.length){d01Cast('hyNeck'+fr[Math.random()*fr.length|0],e,A,1);HY.nt=live<want-1?1.6:[5,4.2,3.4][ph-1]}}}}
+  for(const N of HY.necks)hyNeckTick(A,e,N,dt,now,ph);
+  // brood guard
+  const live=hyLive();HY.guard=live>=3;HY.shell.visible=HY.guard&&!e.hid;if(HY.guard){const bs=e.m.bs||4;HY.shell.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+bs*.35,e.m.position.z);HY.shell.scale.setScalar(bs*.75+.1*Math.sin(now/200));HY.shell.material.opacity=.1+.05*Math.sin(now/150)}
+  // braziers give serpent-fire
+  for(const b of HY.braz)if(Math.hypot(pl.position.x-b.x,pl.position.z-b.z)<1.95&&hero.hp>0){if(HY.fire-HY.clk<9.5){if(HY.fire<HY.clk)popT(pl.position,'🔥 Serpent-fire!','#ffb040',true);burst(gY(pl.position,1.2),0x9aff5a,14,2,2,.5)}
+    HY.fire=HY.clk+10;d01Buff('Serpent-fire','🔥',10000,'Touch a severed stump to sear it shut')}
+  const fire=HY.fire>HY.clk;HY.fl.visible=fire;if(fire){HY.fl.position.set(pl.position.x+Math.sin(pl.rotation.y+.6)*.5,pl.position.y+1.4,pl.position.z+Math.cos(pl.rotation.y+.6)*.5);HY.fl.scale.setScalar(1+.25*Math.sin(now/60));if(Math.random()<.3)burst(HY.fl.position,0x9aff5a,1,.3,.8,.4)}
+  else if(hero.buffs.some(b=>b.n=='Serpent-fire'))d01Unbuff('Serpent-fire');
+  // tidal surges
+  const on=hyOnStone(pl.position.x,pl.position.z),dc=Math.hypot(pl.position.x-A.cx,pl.position.z-A.cz);let anyW=false;
+  for(const w of HY.waves){if(!w.on)continue;anyW=true;w.r+=7.2*dt;const k=w.r/(ARENA_R+.5);w.ms.scale.set(w.r,1.8*(1-.45*k),w.r);w.ms.material.opacity=.85*(1-.55*k);
+    for(let j=0;j<3;j++){const a=Math.random()*6.283;HY.v.set(A.cx+Math.cos(a)*w.r,HY.wy+1.2*(1-.45*k),A.cz+Math.sin(a)*w.r);burst(HY.v,0xe8fffa,1,1,1.5,.4)}
+    if(!w.hit&&Math.abs(dc-w.r)<.85&&hero.hp>0){if(on){if(!w.safe){w.safe=true;popT(pl.position,'Safe!','#9ae8ff')}}else if(hero.iv<=0){w.hit=true;bossHit(e,1.25);
+      const q=inArena(A,pl.position.clone().add(V((pl.position.x-A.cx)/(dc||1)*2.4,0,(pl.position.z-A.cz)/(dc||1)*2.4)),1);if(!solid(q.x,q.z)){pl.position.x=q.x;pl.position.z=q.z}dn(pl.position,'Swept away!','#9ae8ff',-20,800)}}
+    if(w.r>ARENA_R+.6){w.on=false;w.ms.visible=false}}
+  HY.wl+=((anyW?.2:0)-HY.wl)*Math.min(1,dt*3);
+  HY.glow=Math.max(0,HY.glow-dt);HY.gk+=((HY.glow>0?1:0)-HY.gk)*Math.min(1,dt*5);HY.sg.visible=HY.gk>.02;HY.sg.material.opacity=HY.gk*(.55+.3*Math.sin(now/90));
+  // strikes from range
+  d01Shots(HY.shot||(HY.shot=(p,dm)=>{for(const N of HY.necks){if(N.st!='up'&&N.st!='rise')continue;if(Math.hypot(p.x-N.p.x,p.z-N.p.z)<1.1||Math.hypot(p.x-N.x,p.z-N.z)<.9){hyHitNeck(HY.A,N,dm);return true}}return false}));
+  // HUD (a few times a second)
+  HY.hT=(HY.hT||0)-dt;if(HY.hT>0)return;HY.hT=.12;const st=hyStumps(),f=fire?Math.ceil(HY.fire-HY.clk):0;
+  d01Hud('🐍 Heads '+live+(st?' &nbsp;·&nbsp; <b style="color:#ff8a5a">Stumps regrowing '+st+'</b>':'')+(HY.guard?' &nbsp;·&nbsp; <b style="color:#9ae870">🛡 Brood-guarded</b>':'')+(f?' &nbsp;·&nbsp; <b style="color:#ffb040">🔥 '+f+'s</b>':''),HY.guard?'#9ae870':fire?'#ffb040':'#5a7a3a')}
+function hyOnStone(x,z){for(const s of HY.stones)if(Math.hypot(x-s[0],z-s[1])<s[2]-.05)return true;return false}
+function hyClear(A,won){HY.gen++;HY.necks.forEach(hyOff);HY.q.length=0;HY.waves.forEach(w=>{w.on=false;w.ms.visible=false});HY.fire=0;HY.fl.visible=false;HY.glow=0;HY.gk=0;HY.sg.visible=false;HY.wl=0;
+  HY.guard=false;HY.shell.visible=false;d01Hud(null);d01Unbuff('Serpent-fire')}
+function hySeal(A,on){const m=HY.seal;if(!m)return;const y0=GH(A.cx,A.cz);
+  if(on){m.visible=true;const s0=m.scale.y;tw(900,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,2)));for(let k=0;k<8;k++){const a=HY.ent-.4+k/7*.8;burst(V(A.cx+Math.cos(a)*15.2,y0+.3,A.cz+Math.sin(a)*15.2),0x9ae8e0,14,2,5,.7)}shake(.15)}
+  else{const s0=m.scale.y;tw(800,k=>m.scale.y=Math.max(.02,s0*(1-k)),()=>{if(!HY.A.f)m.visible=false})}}
+// the boss's own floating health bar is hidden in the den (the top boss bar shows its health; up close it covered the view)
+DEN[1]={build:hyBuild,start:hyStart,tick:hyTick,clear:hyClear,seal:hySeal,
+  ai(A,e){if(e.hb)e.hb.visible=false;return false},
+  hitA(A,p,r,dm,s,dir,half){for(const N of HY.necks){if(N.st!='up'&&N.st!='rise')continue;if(d01InArc(p,r,dir,half,N.x,N.z,1.1)||d01InArc(p,r,dir,half,N.p.x,N.p.z,.9))hyHitNeck(A,N,dm)}}};
+// the raised stones carry you (also outside the fight) and the curtain ripples
+{const f=arenaTick;arenaTick=function(dt,now){f.apply(this,arguments);try{const A=HY.A;if(!A||inDun)return;const p=pl.position;if(Math.abs(p.x-A.cx)>16||Math.abs(p.z-A.cz)>16)return;
+  if(hyOnStone(p.x,p.z))p.y=GH(p.x,p.z)+.34}catch(_){}}}
+
+// ================= v86 den 2: The Frozen Sepulchre — the Rime Wraith, Ghost of Burningeye Summit =================
+// The den: a frozen crater. A cracked ice lake with frost runes at the heart, snow fields around it, a jagged wall of
+// snow-capped rock and ice spires (two great spires lean together over the entrance), the wraith's ice-bound sarcophagus
+// at the back, four iron Warmfires and five challengers frozen in ice where they fell.
+// Signature mechanics (on top of its orbs / fade / prison / clones / beam / mines / wave pool):
+//  1. DEEP COLD   — away from a lit Warmfire you chill (HUD meter). Chilled −15% speed, Freezing −30%, at 100% you freeze
+//                   solid for 1.5s and take a hit. Standing in a fire's warm circle thaws you fast. Rate rises per phase.
+//  2. SNUFF       — every ~15s/12s/10s the wraith draws the heat out of the Warmfire nearest it (a frost stream + a red
+//                   circle on the fire): it goes dark and bursts with frost. Stand beside a dark fire for 2s to rekindle it.
+//                   Phase III snuffs two at once. At least one fire always stays lit.
+//  3. THAW        — the frozen challengers crack (glowing cracks, shaking, red circle) and burst free as Thawed thralls:
+//                   two at Phase II, more from the Phase II pool, one after every Whiteout.
+//  4. WHITEOUT    — Phase III: the wraith vanishes into a blizzard (thick white fog, driving snow, cold ×1.7) while ice
+//                   lances fall where you stand; it re-forms beside you with a frost nova. Forced on entering Phase III.
+// Co-op: every mechanic starts from a relayed BMV move (kqBmv) or from the boss state, and each player only takes damage
+// from their own copy, so nothing hits twice. Fires snuffed by the wraith match on both screens (nearest to the boss);
+// a rekindle is local. Thralls are only spawned by the player who runs the boss.
+var RW={g:null,ice:null,iceT:null,flm:null,flm2:null,warm:null,rl:null,blk:null,atm:null};
+function rwAuth(A){return !(typeof MP!='undefined'&&MP.on&&AF&&AF.i===A.i&&typeof mpBossAuth=='function'&&mpBossAuth(A.i)!==MP.me)}
+function rwEntA(A){const p=PMAP[A.i],P=p.path||[];let q=p.wp[p.wp.length-2];for(let k=P.length-1;k>=0;k--){if(Math.hypot(P[k][0]-A.cx,P[k][1]-A.cz)>21){q=P[k];break}}return Math.atan2(q[1]-A.cz,q[0]-A.cx)}
+const rwAD=(a,b)=>{let d=a-b;return Math.atan2(Math.sin(d),Math.cos(d))};
+// a matrix that leans an object outward (lean>0) or inward around the den centre, then spins it
+function rwTM(x,y,z,sx,sy,sz,a,lean,spin){const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-Math.sin(a),0,Math.cos(a)),-lean),q2=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),spin||0);
+  return new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),q.multiply(q2),new THREE.Vector3(sx,sy,sz))}
+function rwMats(){if(RW.ice)return;
+  RW.ice=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.22,metalness:.12,side:THREE.DoubleSide});RW.ice.userData.lps=1;
+  RW.iceT=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.15,metalness:.1,transparent:true,opacity:.34,depthWrite:false,side:THREE.DoubleSide});RW.iceT.userData.lps=1;
+  RW.flm=new THREE.MeshBasicMaterial({color:0xff8a2a});RW.flm2=new THREE.MeshBasicMaterial({color:0xffe08a});RW.flm.userData.lps=RW.flm2.userData.lps=1;
+  RW.warm=new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide});
+  RW.warmD=new THREE.MeshBasicMaterial({color:0xff8a30,transparent:true,opacity:.09,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide});
+  RW.gRing=new THREE.RingGeometry(3.0,3.22,48).rotateX(-Math.PI/2);RW.gDisc=new THREE.CircleGeometry(3.0,40).rotateX(-Math.PI/2);RW.gRl=new THREE.RingGeometry(.86,1,40).rotateX(-Math.PI/2)}
+const RW_WARM=3.1,RW_COL=0x9ad8ff;
+// ---------------- the frozen challenger statues ----------------
+function rwStatue(A,x,z,face,v,R){
+  const y=GH(x,z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=face;g.scale.setScalar(1.2);A.g.add(g);
+  const F=arkSoup(7300+v*13+A.i),fz=0x3e4b60,fzd=0x2a3242,stl=0x9aa6b8;
+  // a frost-blackened figure: legs, torso, head, arms posed as it fell
+  const lean=[0,.12,-.1,.25,0][v%5],kneel=v%5==3;
+  F.geo(ARKG.box,arkM4(-.17,kneel?.3:.5,0,.2,kneel?.6:1,.24,kneel?-.9:0),fzd);F.geo(ARKG.box,arkM4(.17,.5,kneel?.15:0,.2,1,.24),fzd);
+  F.geo(ARKG.box,arkM4(0,kneel?.95:1.32,0,.62,.72,.36,lean),fz);F.geo(ARKG.box,arkM4(0,kneel?1.36:1.74,0,.7,.14,.4,lean),arkShade(fz,.85));
+  F.geo(ARK.rock[v%4],arkM4(0,kneel?1.58:1.98,lean*.4,.21,.25,.22),fz);
+  const arms=[[[-.42,1.55,.15,-2.6],[.42,1.35,.25,-.6]],[[-.42,1.3,.2,-1.2],[.42,1.3,.2,-1.2]],[[-.4,1.55,0,-2.9],[.4,1.55,0,-2.9]],[[-.4,1.05,.25,-1.3],[.42,1.1,.3,-.4]],[[-.45,1.35,.05,-.3],[.45,1.6,.15,-2.3]]][v%5];
+  arms.forEach(([ax,ay,az,rx],i)=>{F.geo(ARKG.box,arkM4(ax,ay+(kneel?-.38:0),az,.15,.7,.16,rx,0,ax<0?.2:-.2),fz);
+    if(i==(v%2)){const hx=ax,hy=ay+(kneel?-.38:0)-Math.cos(rx)*.38,hz=az+Math.sin(-rx)*.38;F.geo(ARKG.box,arkM4(hx,hy-Math.cos(rx)*.55,hz-Math.sin(rx)*.55,.06,1.1,.11,rx),stl)}});
+  if(v%3==1)F.geo(ARKG.cyl6,arkM4(.5,1.25,.3,.42,.07,.42,1.4,0,.3),arkShade(stl,.8));   // shield
+  const fig=F.mesh();g.add(fig);
+  // the ice that holds it: a leaning hexagonal block and a few shards
+  const I=arkSoup(7400+v*7+A.i),ic=(cy,n)=>arkMix(0x5aa8d8,0xcdeefc,Math.min(1,Math.max(0,cy/2.8))*.6+(n.y>.5?.3:0));
+  I.geo(ARKG.cyl6,arkM4(0,1.15,0,.82,2.5,.72,(R()-.5)*.08,R(),(R()-.5)*.08),ic,.1);
+  for(let k=0;k<4;k++){const a=k*1.6+R(),r=.75;I.geo(ARKG.cone5,arkM4(Math.cos(a)*r,.55+R()*.4,Math.sin(a)*r,.22+R()*.12,1.1+R()*1.2,.22,Math.sin(a)*.35,0,-Math.cos(a)*.35),ic,.1)}
+  const ice=I.mesh(RW.iceT);ice.castShadow=false;ice.renderOrder=2;g.add(ice);
+  // what is left after it breaks: a jagged ring of stumps
+  const B=arkSoup(7500+v);for(let k=0;k<7;k++){const a=k/7*6.283+R()*.4,r=.55+R()*.3;B.geo(ARKG.cone5,arkM4(Math.cos(a)*r,.18,Math.sin(a)*r,.2,.35+R()*.4,.2,Math.sin(a)*.4,0,-Math.cos(a)*.4),ic,.1)}
+  B.geo(ARK.rock[1],arkM4(0,.04,0,.9,.12,.9),0xdfeef8);
+  const brk=B.mesh(RW.ice);brk.visible=false;g.add(brk);
+  const gl=kqSpr(RW_COL,.1);gl.position.y=1.3;gl.visible=false;g.add(gl);
+  return {g,fig,ice,brk,gl,x,z,p:new THREE.Vector3(x,0,z),ok:true,crk:0}}
+// ---------------- build ----------------
+function rwBuild(A){
+  rwMats();const R=ARK.rng(9100+A.i),y0=GH(A.cx,A.cz),ea=rwEntA(A),GAP=.36,cx=A.cx,cz=A.cz;
+  const D=A.dn={ea,cold:0,tier:0,br:[],st:[],ph:1,snT:0,whCD:0,wh:null,frz:0,buff:null,thawN:1,ok:false};
+  const inGap=a=>Math.abs(rwAD(a,ea))<GAP;
+  const P=(a,r)=>[cx+Math.cos(a)*r,cz+Math.sin(a)*r];
+  // ---- floor: the cracked ice lake ----
+  const L=arkSoup(9200+A.i);
+  [[0,1.7,1],[1.7,3.3,7],[3.3,4.9,10],[4.9,6.5,14],[6.5,8.1,17]].forEach(([r0,r1,n],ri)=>{const off=R()*6.283;
+    for(let k=0;k<n;k++){const a0=off+k/n*6.283,a1=off+(k+1)/n*6.283,gp=.07,pts=[];
+      const cs=n==1?[...Array(7)].map((_,i)=>[r1-gp,i/7*6.283]):[[r0+gp,a0+.05/r1],[r1-gp,a0+.03/r1+(R()-.5)*.08],[r1-gp,(a0+a1)/2+(R()-.5)*.1],[r1-gp,a1-.03/r1],[r0+gp,a1-.05/r1]];
+      cs.forEach(([r,a])=>{const jr=r+(R()-.5)*.25;pts.push(P(a,jr))});
+      const yt=pts.map(p=>GH(p[0],p[1])+.05+R()*.025),t=ri/4,top=arkMix(arkMix(0x3a78a8,0x7fbadc,t),0xd8f0ff,R()*.15);
+      L.slab(pts,yt,y0-.2,top,arkShade(top,.6))}});
+  // frost bubbles under the ice
+  for(let k=0;k<26;k++){const a=R()*6.283,r=R()*7.6,[x,z]=P(a,r);L.geo(ARKG.oct,arkM4(x,y0+.085,z,.08+R()*.1,.01,.08+R()*.1,0,R()*3),0xe8f8ff,.05)}
+  const lake=L.mesh(RW.ice);lake.castShadow=false;A.g.add(lake);
+  // ---- floor: snow field from the lake to the wall, with drifts ----
+  const S=arkSoup(9300+A.i),snow=0xe2e9f2,shad=0xa9bad0;
+  [[8.1,9.9,22],[9.9,11.8,27],[11.8,13.7,32],[13.7,15.8,38]].forEach(([r0,r1,n],ri)=>{const off=R()*6.283;
+    for(let k=0;k<n;k++){const a0=off+k/n*6.283,a1=off+(k+1)/n*6.283,pts=[P(a0,r0),P(a0+.004,r1),P(a1+.004,r1),P(a1,r0)];
+      const yt=pts.map((p,i)=>GH(p[0],p[1])+.06+(i==1||i==2?ri*.03:0)+R()*.08);S.slab(pts,yt,y0-.25,arkMix(snow,shad,R()*.35),shad)}});
+  for(let k=0;k<34;k++){let a=R()*6.283;const r=9+R()*6.4,[x,z]=P(a,r),s=.6+R()*1.2;if(inGap(a)&&r>13)continue;
+    S.geo(ARK.rock[k%4],arkM4(x,y0+.02,z,s*1.4,.18+R()*.22,s,0,a+1.57),(cy,n)=>n.y>.3?arkMix(snow,0xffffff,.3):shad,.08)}
+  // drift banks heaped against the wall
+  for(let k=0;k<70;k++){const a=k/70*6.283+R()*.05;if(inGap(a))continue;const r=15.2+R()*1.2,[x,z]=P(a,r),s=1.1+R()*.9;
+    S.geo(ARK.rock[k%4],arkM4(x,y0+.15,z,s*1.3,.55+R()*.5,s,0,a+1.57),(cy,n)=>n.y>.2?arkMix(snow,0xffffff,R()*.3):shad,.08)}
+  // ---- the crater wall: snow-capped slate rock and ice spires ----
+  const slate=0x343b48,iceC=(cy,y1,h)=>arkMix(0x4d94c0,0xdff6ff,Math.max(0,Math.min(1,(cy-y1)/h)));
+  const rockC=y=>(cy,n)=>n.y>.55?arkMix(0xf2f6fa,0xd8e4f0,R()*.5):arkShade(slate,.75+R()*.4+(cy-y)*.03);
+  for(let k=0;k<64;k++){const a=k/64*6.283+(R()-.5)*.06;if(inGap(a))continue;
+    // inner row: low boulders
+    {const r=16.1+R()*.9,[x,z]=P(a,r),y=GH(x,z);if(y>y0-1){const s=1.1+R()*.9;S.geo(ARK.rock[k%4],arkM4(x,y+s*.25,z,s*1.2,s*(.7+R()*.5),s,R()*.3,R()*6,0),rockC(y))}}
+    // outer row: big crags
+    {const r=18.6+R()*2.2,[x,z]=P(a,r),y=GH(x,z);if(y>y0-1){const s=2.2+R()*1.8;S.geo(ARK.rock[(k+2)%4],arkM4(x,y+s*.35,z,s*1.1,s*(.9+R()*.9),s,R()*.3,R()*6,0),rockC(y))}}
+    // ice spires growing out of the wall, leaning outward
+    if(k%2==0||R()<.3){const r=16.9+R()*1.6,[x,z]=P(a,r),y=GH(x,z),h=2.4+R()*4.2,w=.35+R()*.5;if(y>y0-1)S.geo(ARKG.cone5,rwTM(x,y+h/2-.2,z,w,h,w*.9,a,.12+R()*.2,R()*3),(cy)=>iceC(cy,y,h),.12);
+      if(R()<.5){const h2=h*.55,[x2,z2]=P(a+.05,r+.6);S.geo(ARKG.cone4,rwTM(x2,y+h2/2-.2,z2,w*.6,h2,w*.6,a+.05,.35,R()*3),(cy)=>iceC(cy,y,h2),.12)}}}
+  // the entrance: two great spires lean together into a broken arch
+  [-1,1].forEach(s=>{const a=ea+s*(GAP+.03),r=16.4,[x,z]=P(a,r),y=GH(x,z),h=8.5;
+    const tq=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(Math.cos(a),0,Math.sin(a)),s*.32),M=new THREE.Matrix4().compose(new THREE.Vector3(x,y+h/2-.3,z),tq,new THREE.Vector3(1.05,h,.95));
+    S.geo(ARKG.cone5,M,(cy)=>iceC(cy,y,h),.1);
+    const M2=new THREE.Matrix4().compose(new THREE.Vector3(x+Math.cos(a)*.9,y+2.2,z+Math.sin(a)*.9),tq,new THREE.Vector3(.7,4.4,.7));S.geo(ARKG.cone4,M2,(cy)=>iceC(cy,y,4.4),.1);
+    S.geo(ARK.rock[s>0?1:2],arkM4(x,y+.5,z,1.6,1.1,1.5,0,a),rockC(y))});
+  // ---- the sarcophagus at the back: a stepped ice dais, an upright coffin bound in crystal ----
+  {const a=ea+Math.PI,[x,z]=P(a,17.2),y=GH(x,z),ry=-a-Math.PI/2;
+    [[3.6,.35,2.8],[2.8,.35,2.1],[2.0,.35,1.5]].forEach(([w,h,d],i)=>S.geo(ARKG.box,arkM4(x,y+h/2+i*h,z,w,h,d,0,ry),arkMix(0x8fb4cc,0xd0e6f4,i*.3)));
+    const cy=y+1.05;S.geo(ARKG.box,rwTM(x,cy+1.3,z,1.05,2.6,.7,a,-.08,ry),0x2c3446);S.geo(ARKG.box,rwTM(x-Math.cos(a)*.4,cy+1.3,z-Math.sin(a)*.4,.85,2.3,.12,a,-.08,ry),0x46546a);
+    S.geo(ARKG.box,arkM4(x+Math.cos(a+1.57)*1.9,y+.2,z+Math.sin(a+1.57)*1.9,1.0,.15,2.5,.1,ry+.4,.2),0x2c3446);   // the fallen lid
+    for(let k=0;k<7;k++){const b=a+(k-3)*.3,rr=1.2+R()*.6,xx=x+Math.cos(b)*rr,zz=z+Math.sin(b)*rr,h=3+R()*3.5;S.geo(ARKG.cone5,rwTM(xx,y+h/2,zz,.45+R()*.3,h,.42,b,.2*(k-3)/3,R()*3),(c)=>iceC(c,y,h),.1)}}
+  // ---- bones and broken arms of earlier challengers ----
+  for(let k=0;k<16;k++){const a=R()*6.283,r=9+R()*5.2;if(inGap(a))continue;const [x,z]=P(a,r),y=GH(x,z)+.1;
+    if(k%3==0)S.geo(ARK.rock[k%4],arkM4(x,y+.08,z,.17,.19,.2,0,R()*6),0xd8d0bc);
+    else if(k%3==1){S.geo(ARKG.box,arkM4(x,y+.45,z,.06,1.0,.12,(R()-.5)*.6,R()*3,(R()-.5)*.5),0x9aa4b2);S.geo(ARKG.box,arkM4(x,y+.82,z,.32,.06,.08,0,R()*3),0x5a5040)}
+    else for(let q=0;q<3;q++)S.geo(ARKG.cyl5,arkM4(x+(R()-.5)*.6,y+.04,z+(R()-.5)*.6,.05,.5,.05,1.57,R()*3,0),0xd8d0bc)}
+  // ---- the Warmfires: stone ring, iron tripod and bowl (the flame, glow and warm circle are separate) ----
+  for(let k=0;k<4;k++){const a=ea+Math.PI/4+k*Math.PI/2,[x,z]=P(a,8.2),y=GH(x,z);
+    for(let q=0;q<7;q++){const b=q/7*6.283;S.geo(ARK.rock[q%4],arkM4(x+Math.cos(b)*.62,y+.1,z+Math.sin(b)*.62,.24,.18,.22,0,b),arkShade(0x5a6270,.8+R()*.4))}
+    for(let l=0;l<3;l++){const la=l*2.094;S.geo(ARKG.box,arkM4(x+Math.cos(la)*.2,y+.5,z+Math.sin(la)*.2,.06,.95,.06,Math.sin(la)*.25,0,-Math.cos(la)*.25),0x26242a)}
+    S.geo(ARKG.cone5,arkM4(x,y+1.05,z,.52,.34,.52,Math.PI),0x2c2a30);S.geo(ARKG.cyl5,arkM4(x,y+1.2,z,.55,.06,.55),0x46424a);S.geo(ARK.rock[k%4],arkM4(x,y+1.18,z,.3,.1,.3),0x1a1210);
+    const fl=new THREE.Group();fl.position.set(x,y+1.45,z);const o=new THREE.Mesh(ARKG.cone5,RW.flm);o.scale.set(.42,.9,.42);fl.add(o);const ic=new THREE.Mesh(ARKG.cone4,RW.flm2);ic.scale.set(.24,.55,.24);ic.position.y=-.12;fl.add(ic);
+    fl.traverse(q=>{if(q.isMesh)q.castShadow=false});A.g.add(fl);
+    const gl=kqSpr(0xff9a40,3.4);gl.position.set(x,y+1.6,z);A.g.add(gl);
+    const wr=new THREE.Mesh(RW.gRing,RW.warm),wd=new THREE.Mesh(RW.gDisc,RW.warmD);[wr,wd].forEach(m=>{m.position.set(x,y+.13,z);m.renderOrder=18;m.visible=false;m.frustumCulled=false;A.g.add(m)});
+    const rl=new THREE.Mesh(RW.gRl,new THREE.MeshBasicMaterial({color:0xffb050,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));rl.position.set(x,y+.15,z);rl.renderOrder=19;rl.visible=false;A.g.add(rl);
+    denBlock(x,z);D.br.push({x,z,y,p:new THREE.Vector3(x,0,z),fl,gl,wr,wd,rl,lit:true,rk:0,snf:0,ph:R()*6})}
+  // ---- the frozen challengers ----
+  [62,108,180,252,298].forEach((dg,v)=>{const a=ea+dg*Math.PI/180,[x,z]=P(a,11.4);const st=rwStatue(A,x,z,Math.atan2(-Math.cos(a),-Math.sin(a))+(R()-.5)*.8,v,R);denBlock(x,z);D.st.push(st)});
+  const wallM=S.mesh();A.g.add(wallM);
+  // ---- glowing frost runes in the lake ----
+  const G=arkSoup(9400+A.i),rc=0xbfeaff;
+  for(let k=0;k<12;k++){const a=k/12*6.283,[x,z]=P(a,4.15);arkRune(G,x,y0+.1,z,a+1.57,1.25,rc,R)}
+  [[3.55,.05],[4.75,.05],[1.6,.05]].forEach(([r,w])=>{for(let k=0;k<48;k++){const a0=k/48*6.283,a1=(k+1)/48*6.283,p=(rr,a)=>{const [x,z]=P(a,rr);return [x,y0+.1,z]};G.quad(p(r-w,a0),p(r-w,a1),p(r+w,a1),p(r+w,a0),rc,.05)}});
+  const rm=G.mesh(new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));rm.castShadow=rm.receiveShadow=false;rm.material.userData.lps=1;A.g.add(rm);D.rune=rm;
+  // ---- the seal: a ring of ice shards that bursts out of the snow ----
+  const W=arkSoup(9500+A.i);for(let k=0;k<84;k++){const a=k/84*6.283,r=14.5+(R()-.5)*.5,[x,z]=P(a,r),h=1.6+R()*2.4+(k%3==0?1.4:0),w=.35+R()*.35;
+    W.geo(ARKG.cone5,rwTM(x,y0+h/2-.3,z,w,h,w,a,(R()-.5)*.3,R()*3),(c)=>iceC(c,y0,h),.12)}
+  const seal=W.mesh(RW.ice);seal.visible=false;seal.castShadow=false;A.g.add(seal);D.seal=seal;
+  // ---- solid wall: block the ring of tiles behind the rocks (leave the entrance open) ----
+  for(let z=Math.floor(cz-19);z<=cz+19;z++)for(let x=Math.floor(cx-19);x<=cx+19;x++){const r=Math.hypot(x-cx,z-cz);if(r<15.9||r>18.6)continue;if(inGap(Math.atan2(z-cz,x-cx)))continue;denBlock(x,z)}
+  // flame flicker (also while no fight runs)
+  TANIM.push({x:cx,z:cz,f:now=>{D.br.forEach(B=>{if(!B.fl.visible)return;const q=1+.16*Math.sin(now/85+B.ph)+.08*Math.sin(now/37+B.ph*2);B.fl.scale.set(1,q,1);B.fl.rotation.y=now/400+B.ph})}});
+  D.ok=true}
+// ---------------- HUD: the Deep Cold meter + frost vignette ----------------
+function rwHud(on){let h=document.getElementById('rwCold');
+  if(!h){if(!on)return;h=document.createElement('div');h.id='rwCold';h.className='glass';
+    h.style.cssText='position:absolute;left:50%;transform:translateX(-50%);width:min(300px,38%);padding:5px 10px;z-index:2;text-align:center;font-size:.72rem;font-weight:700;color:#d8f0ff;pointer-events:none';
+    h.innerHTML='<div style="display:flex;justify-content:space-between"><span>❄ Deep Cold <span id="rwCt"></span></span><span id="rwCf"></span></div><div class="meter" style="margin-top:3px;height:7px"><i id="rwCb" style="background:linear-gradient(90deg,#9ad8ff,#e8f8ff);width:0%"></i></div>';
+    const b=document.getElementById('boss');(b&&b.parentNode||document.body).appendChild(h);
+    const v=document.createElement('div');v.id='rwVig';v.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 48%,rgba(170,215,255,.55) 85%,rgba(225,245,255,.85) 100%)';document.body.appendChild(v)}
+  h.style.display=on?'':'none';const v=document.getElementById('rwVig');if(v&&!on)v.style.opacity=0;
+  if(on){const b=document.getElementById('boss');h.style.top=b?(b.offsetTop+b.offsetHeight+6)+'px':'100px'}}
+function rwHudSet(D){if(!((D._hk=(D._hk|0)+1)%20)){const b=document.getElementById('boss'),h=document.getElementById('rwCold');if(b&&h&&b.offsetHeight)h.style.top=(b.offsetTop+b.offsetHeight+6)+'px'}
+  const c=Math.round(D.cold);if(c!==D._hc){D._hc=c;const b=document.getElementById('rwCb');if(b)b.style.width=c+'%';const t=document.getElementById('rwCt');if(t)t.textContent=D.frz>0?'· FROZEN':c>=67?'· Freezing':c>=34?'· Chilled':'';
+    const v=document.getElementById('rwVig');if(v)v.style.opacity=Math.max(0,(c-25)/75).toFixed(2)}
+  const n=D.br.filter(B=>B.lit).length;if(n!==D._hn){D._hn=n;const f=document.getElementById('rwCf');if(f)f.textContent='🔥 Warmfires '+n+'/4'}}
+// ---------------- fires ----------------
+function rwFire(A,B,on){B.lit=on;B.fl.visible=B.gl.visible=on;const f=A.f;B.wr.visible=B.wd.visible=on&&f;B.rk=0;B.rl.visible=false}
+function rwSnuff(A,B){rwFire(A,B,false);burst(V(B.x,B.y+1.5,B.z),0x9aa8c0,26,1.2,2.4,1.2);burst(V(B.x,B.y+1.4,B.z),RW_COL,18,2,1.5,.6);ring(B.p,RW_COL,4,420);
+  if(typeof sfx=='function')sfx('zap',.4)}
+// ---------------- thaw: a statue cracks and a thrall breaks out ----------------
+function rwThaw(A,e,n,en){const D=A.dn;const L=D.st.filter(s=>s.ok&&!s.crk).sort((a,b)=>d2(a.p,pl.position)-d2(b.p,pl.position)).slice(0,n);
+  L.forEach((s,j)=>{s.crk=1;const T=(1.8+j*.35)*(en||1);s.gl.visible=true;
+    kqTimed(T,k=>{s.g.position.x=s.x+(Math.random()-.5)*.08*k;s.g.position.z=s.z+(Math.random()-.5)*.08*k;s.gl.scale.setScalar(.5+3.5*k);if(Math.random()<.25+k*.5)burst(V(s.x,GH(s.x,s.z)+.4+Math.random()*2.2,s.z),0xe8f8ff,2,1,1.2,.5)},
+      ab=>{s.g.position.set(s.x,GH(s.x,s.z),s.z);s.gl.visible=false;s.crk=0;if(ab)return;
+        s.ok=false;s.fig.visible=s.ice.visible=false;s.brk.visible=true;denUnblock(s.x,s.z);
+        const q=V(s.x,0,s.z);burst(gY(q,1.2),0xe8f8ff,50,4,4,.9);burst(gY(q,.8),RW_COL,30,3,3,.7);kqFlash(gY(q,1.2),RW_COL,4,260);ring(q,RW_COL,5,400);shake(.18);
+        if(rwAuth(A)&&e&&!e.dead){const live=enemies.filter(x=>x.minion&&!x.dead&&d2(x.m.position,V(A.cx,0,A.cz))<ARENA_R).length;
+          if(live<6){const m=spawnEnemy(j%2?'troll':'yeti',s.x,s.z,Math.max(1,e.c.l-4),{minion:1,agg:1});if(m){m.agg=1;m.c.n='Thawed '+m.c.n}}}},()=>A.f);
+    tele(s.p,2.4,T,()=>{if(A.f&&d2(pl.position,s.p)<2.4)bossHit(e,1.0)})});
+  if(L.length)say('🧊 The frozen challengers crack free!');return L.length}
+// ---------------- the wraith's den moves (wrapped like every Sovereign move so co-op relays them) ----------------
+kqBmv('snuff',function(e,A,en){const D=A.dn;if(!D)return {d:.4,lock:0};const lit=D.br.filter(B=>B.lit&&!B.snf).sort((a,b)=>d2(a.p,e.m.position)-d2(b.p,e.m.position));
+  const n=Math.min(e.bs.ph>=3?2:1,lit.length-1);if(n<=0)return BMV.orbs(e,A,en);
+  kqBossCast(e,RW_COL,1100*en);
+  lit.slice(0,n).forEach((B,j)=>{B.snf=1;const T=(1.5+j*.5)*en;
+    kqTimed(T,k=>{const p=kqMouth(e),t=Math.random(),h=V(p.x+(B.x-p.x)*t,p.y+(B.y+1.5-p.y)*t+Math.sin(t*Math.PI)*1.2,p.z+(B.z-p.z)*t);burst(h,RW_COL,1,.3,.3,.5);if(Math.random()<.5)burst(V(B.x,B.y+1.5,B.z),0xd8f0ff,1,.4,.8,.4);
+        B.fl.scale.x=B.fl.scale.z=1-.6*k},
+      ab=>{B.snf=0;B.fl.scale.x=B.fl.scale.z=1;if(!ab&&B.lit)rwSnuff(A,B)},()=>A.f);
+    tele(B.p,RW_WARM+.2,T,()=>{if(!A.f)return;burst(V(B.x,B.y+.5,B.z),0xe8f8ff,40,4,2,.7);if(d2(pl.position,B.p)<RW_WARM+.2)bossHit(e,.9)})});
+  say(n>1?'❄ The Rime Wraith drains two Warmfires — step out of the frost, then rekindle them!':'❄ The Rime Wraith drains a Warmfire — step out of the frost, then rekindle it!');
+  return {d:1.7*en,lock:1}});
+kqBmv('thaw',function(e,A,en){const D=A.dn;if(!D)return {d:.4,lock:0};kqBossCast(e,RW_COL,900*en);const n=rwThaw(A,e,D.thawN||1,en);D.thawN=1;if(!n)return BMV.wave(e,A,en);return {d:1.5*en,lock:1}});
+kqBmv('whiteout',function(e,A,en){const D=A.dn;if(!D||D.wh||D.whCD>0)return BMV.mines(e,A,en);
+  D.wh={t:7.5,nx:1.4};D.whCD=24;burst(gY(e.m.position,1.4),RW_COL,60,3,3,1);kqFlash(gY(e.m.position,1.6),0xffffff,6,400);bxHide(e,true);
+  banner('❄ WHITEOUT','The Rime Wraith vanishes into the blizzard','Stay by a Warmfire and keep moving — ice falls where you stand');rwAtm(true);
+  return {d:8.6,lock:1}});
+// ---------------- atmosphere: blizzard on, blizzard off ----------------
+function rwAtm(on){try{const Z=ZATM[2];if(!RW.atm)RW.atm={fog:Z.fog,fm:Z.fm,sun:Z.sun};
+  if(on){Z.fog=.085;Z.fm=1.55;Z.sun=.75;ZP.mat.size=.28}else{Z.fog=RW.atm.fog;Z.fm=RW.atm.fm;Z.sun=RW.atm.sun;if(ZP.type=='snow')ZP.mat.size=.14}}catch(err){}}
+// ---------------- the hero freezes solid ----------------
+function rwBlock(){if(RW.blk)return RW.blk;rwMats();const S=arkSoup(9600),R=S.R;
+  S.geo(ARKG.cyl6,arkM4(0,.95,0,.75,1.9,.7),(cy,n)=>arkMix(0xa8dcf0,0xf0faff,cy/2),.1);
+  for(let k=0;k<6;k++){const a=k/6*6.283;S.geo(ARKG.cone5,arkM4(Math.cos(a)*.6,.6+R()*.5,Math.sin(a)*.6,.2,.9+R()*.6,.2,Math.sin(a)*.4,0,-Math.cos(a)*.4),0xd8f0ff,.1)}
+  const m=S.mesh(RW.iceT);m.castShadow=false;m.renderOrder=3;return RW.blk=m}
+function rwBuff(D,tier){const nm='Deep Cold',sp=[0,-.15,-.3][tier]||0;
+  if(!tier){if(D.buff){hero.buffs=hero.buffs.filter(b=>b!==D.buff);D.buff=null;hsDirty()}return}
+  if(!D.buff||!hero.buffs.includes(D.buff)){hero.buffs=hero.buffs.filter(b=>b.n!=nm);D.buff={n:nm,i:'❄️',s:{mspd:sp},t:nowP()+1500,d:tier>1?'Freezing: −30% move speed':'Chilled: −15% move speed'};hero.buffs.push(D.buff)}
+  else{D.buff.s.mspd=sp;D.buff.d=tier>1?'Freezing: −30% move speed':'Chilled: −15% move speed'}hsDirty()}
+// ---------------- den hooks ----------------
+DEN[2]={build:rwBuild,
+  start(A,e){const D=A.dn;if(!D)return;D.cold=0;D.tier=0;D.ph=1;D.snT=11;D.whCD=0;D.wh=null;D.frz=0;D.thawN=1;D._hc=D._hn=-1;D.warn=0;
+    D.br.forEach(B=>rwFire(A,B,true));D.br.forEach(B=>{B.wr.visible=B.wd.visible=true});rwHud(true);
+    setTimeout(()=>{if(A.f)say('🔥 Deep Cold: away from a Warmfire you freeze. Stand in a fire\'s warm circle to thaw.')},1800)},
+  ai(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[2];
+    // a forced move has been picked: give the pool back
+    if(S._p0&&b.last===S._fk){S.pool=S._p0;S._p0=null}
+    const force=k=>{if(S._p0)return;S._p0=S.pool;S._fk=k;S.pool=[[k],[k],[k]];b.last='';b.t=Math.min(b.t,.5)};
+    if(b.ph>D.ph){D.ph=b.ph;if(b.ph==2){D.thawN=2;force('thaw')}else if(b.ph==3){D.whCD=0;force('whiteout')}}
+    D.whCD=Math.max(0,D.whCD-dt);D.snT-=dt;
+    if(D.snT<=0&&!D.wh&&!e.hid&&b.t<1.2){const lit=D.br.filter(B=>B.lit&&!B.snf).length;if(lit>1){force('snuff');D.snT=[15,12,10][b.ph-1]}else D.snT=3}
+    return false},
+  tick(A,e,dt,now){const D=A.dn;if(!D)return;const ph=e.bs.ph,P=pl.position;
+    // fires: rekindle by standing beside a dark one
+    let warm=false;
+    for(const B of D.br){const d=d2(P,B.p);
+      if(B.lit){if(d<RW_WARM&&!B.snf)warm=true;B.wr.material.opacity=.32+.12*Math.sin(now/240+B.ph);continue}
+      if(!B.snf&&d<2.4&&hero.hp>0){B.rk+=dt/2.0;if(Math.random()<.3)burst(V(B.x,B.y+1.3,B.z),0xffa040,2,.5,1,.5)}else B.rk=Math.max(0,B.rk-dt*.6);
+      B.rl.visible=B.rk>0;if(B.rk>0)B.rl.scale.setScalar(2.4-2.0*B.rk);
+      if(B.rk>=1){rwFire(A,B,true);ring(B.p,0xffa040,4,400);burst(V(B.x,B.y+1.5,B.z),0xffb050,40,2,3,.8);popT(V(B.x,0,B.z),'🔥 Rekindled!','#ffc070')}}
+    // deep cold
+    if(D.frz>0){D.frz-=dt;if(RW.blk)RW.blk.position.set(P.x,GH(P.x,P.z),P.z);
+      if(D.frz<=0){if(RW.blk)scene.remove(RW.blk);hero.buffs=hero.buffs.filter(b=>b.n!='Frozen');hsDirty();burst(gY(P,1),0xe8f8ff,40,3,3,.7);D.cold=45}}
+    else{const rate=[5.5,7,8.5][ph-1]*(D.wh?1.7:1);D.cold=warm?Math.max(0,D.cold-30*dt):Math.min(100,D.cold+rate*dt);
+      if(D.cold>=85&&!D.warn){D.warn=1;popT(P,'❄ Freezing! Get to a fire!','#bfe8ff')}if(D.cold<70)D.warn=0;
+      if(D.cold>=100&&hero.hp>0){D.frz=1.5;D.cold=100;const m=rwBlock();m.position.set(P.x,GH(P.x,P.z),P.z);scene.add(m);
+        hero.buffs=hero.buffs.filter(b=>b.n!='Frozen');hero.buffs.push({n:'Frozen',i:'🧊',s:{mspd:-1},t:nowP()+1500,d:'Frozen solid'});hsDirty();
+        popT(P,'🧊 FROZEN SOLID','#d8f4ff',true);burst(gY(P,1),RW_COL,40,2,2,.6);shake(.2);if(hero.iv<=0)bossHit(e,.7)}}
+    const tier=D.frz>0?2:D.cold>=67?2:D.cold>=34?1:0;if(tier!==D.tier){D.tier=tier;rwBuff(D,tier)}if(D.buff)D.buff.t=now+1500;
+    if(D.cold>50&&Math.random()<dt*D.cold/30)burst(gY(P,.8+Math.random()),0xe8f8ff,1,.4,.6,.6);
+    rwHudSet(D);
+    // whiteout: driving snow, falling ice, then the wraith re-forms beside you
+    if(D.wh){const W2=D.wh;W2.t-=dt;W2.nx-=dt;
+      try{const ps=ZP.pos,N=ZP.N,w=14*dt;for(let i=0;i<N;i++){ps[i*3]+=w;ps[i*3+1]-=w*.4}}catch(err){}
+      if(W2.nx<=0&&W2.t>.8){W2.nx=1.15;const q=inArena(A,P.clone().add(V((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4)));kqFall(A,q,.95,RW_COL,'spike',1.3);
+        tele(q,1.8,.95,()=>{if(!A.f)return;burst(gY(q,.4),0xe8f8ff,24,2,2,.5);ring(q,RW_COL,3,300);if(d2(pl.position,q)<1.8)bossHit(e,1)})}
+      if(W2.t<=0){D.wh=null;rwAtm(false);const a=Math.random()*6.283,q=inArena(A,P.clone().add(V(Math.cos(a)*5,0,Math.sin(a)*5)),2);e.m.position.set(q.x,0,q.z);bxHide(e,false);
+        burst(gY(q,1.4),RW_COL,60,3,3,1);kqFlash(gY(q,1.5),0xffffff,5,400);const o=q.clone();tele(o,4.2,1.0,()=>{if(!A.f)return;ring(o,RW_COL,8,420);burst(gY(o,.5),0xe8f8ff,60,5,3,.8);shake(.25);if(d2(pl.position,o)<4.2)bossHit(e,1.3)});
+        say('❄ The blizzard breaks — the wraith re-forms beside you!');rwThaw(A,e,1,1)}}},
+  clear(A,won){const D=A.dn;if(!D)return;D.wh=null;rwAtm(false);D.frz=0;D.cold=0;if(RW.blk)scene.remove(RW.blk);
+    hero.buffs=hero.buffs.filter(b=>b.n!='Deep Cold'&&b.n!='Frozen');D.buff=null;D.tier=0;hsDirty();rwHud(false);
+    D.br.forEach(B=>{B.snf=0;B.fl.scale.set(1,1,1);rwFire(A,B,true);B.wr.visible=B.wd.visible=false});
+    D.st.forEach(s=>{s.ok=true;s.crk=0;s.fig.visible=s.ice.visible=true;s.brk.visible=false;s.gl.visible=false;s.g.position.set(s.x,GH(s.x,s.z),s.z);denBlock(s.x,s.z)});
+    const S=BSTY[2];if(S._p0){S.pool=S._p0;S._p0=null}},
+  seal(A,on){const D=A.dn;if(!D)return;const s=D.seal,y1=-4.2;if(on){s.visible=true;s.position.y=y1;
+      tw(650,k=>{s.position.y=y1*(1-k*k*(3-2*k))},()=>{});shake(.25)}
+    else tw(800,k=>{s.position.y=y1*k},()=>{if(!A.f)s.visible=false})}};
+// the wraith's moves: snuff and thaw join its pool; whiteout is its Phase III signature
+if(BSTY[2])BSTY[2].pool=[['orbs','fade','prison'],['clones','beam','thaw'],['mines','wave','whiteout']];
+
+// ================= v86 den 3: The Sunken Pit — Ssith'ra the Endless, Devourer of the Searing Sands =================
+// The den: a sand-drowned amphitheatre. Rippled sand slopes down to a dark sinkhole at the heart; three tiers of broken
+// sandstone seating ring the pit with half-buried columns on top; the bones of a colossal serpent arch over the back wall;
+// two obelisks flank the way in, and four great columns stand half-sunk in the arena floor.
+// Signature mechanics (on top of tail sweep / acid spit / meteor mines):
+//  1. QUICKSAND VORTEX — the sinkhole churns (swirl speeds up, sand rings rush inward, 1s warning) and drags you toward
+//                        the pit for 6s; its core (2.6) grinds you (damage + 'Sinking' slow). Walk or dash against it.
+//                        Pull 1.5 / 2.0 / 2.6 by phase; forced on entering Phase III.
+//  2. BURROW & ERUPT   — it dives (big sand burst); a moving sand mound hunts you, stops, a red circle marks the spot and it
+//                        bursts out. Phase II+ adds three sand geysers around it; Phase III dives twice. After the final
+//                        eruption it is EXPOSED for 2.8s: ×1.6 damage (gold marker, "WEAK POINT").
+//  3. RAM              — a long red lane: it charges to the wall. Lure it into one of the four half-sunk columns and it
+//                        smashes the column and gets its head STUCK for 3.6s (×1.6 damage). Columns stay broken for the
+//                        fight. Phase III rams twice when it misses.
+//  4. SANDSTORM        — Phase II signature (forced on entering it): thick dust and driving sand cut visibility for 8s while
+//                        its body segments lash up out of the sand under you (red circles, one every 0.7s / 0.5s in III).
+// Co-op: all start from relayed BMV moves; damage is local to each player; the player who runs the boss moves it while
+// it burrows (others follow the synced position). Exposure multiplies damage before co-op relays it.
+var SS={tm:null,scr:new THREE.Vector3(),atm:null};
+function ssAuth(A){return !(typeof MP!='undefined'&&MP.on&&AF&&AF.i===A.i&&typeof mpBossAuth=='function'&&mpBossAuth(A.i)!==MP.me)}
+function ssEntA(A){const p=PMAP[A.i],P=p.path||[];let q=p.wp[p.wp.length-2];for(let k=P.length-1;k>=0;k--){if(Math.hypot(P[k][0]-A.cx,P[k][1]-A.cz)>21){q=P[k];break}}return Math.atan2(q[1]-A.cz,q[0]-A.cx)}
+const ssAD=(a,b)=>{let d=a-b;return Math.atan2(Math.sin(d),Math.cos(d))};
+const SS_COL=0xff7a30,SS_SAND=0xd9b273,SS_CORE=3.0;
+function ssTM(x,y,z,sx,sy,sz,qx,qy,qz,ang,spin){const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(qx,qy,qz).normalize(),ang),q2=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),spin||0);
+  return new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),q.multiply(q2),new THREE.Vector3(sx,sy,sz))}
+// a centipede segment chain bursting out of the sand (used by the sandstorm lashes)
+function ssTail(R){const S=arkSoup(8800+(R()*1000|0)),dk=0x6a2a18,or=SS_COL;
+  for(let i=0;i<6;i++){const y=i*.55,r=.5-i*.06,c=i%2?dk:arkMix(or,dk,.25);S.geo(ARKG.cyl6,arkM4(Math.sin(i*.5)*.18,y+.3,0,r,.5,r*.9,0,i*.4,Math.sin(i*.6)*.15),c,.1);
+    [-1,1].forEach(s=>S.geo(ARKG.cone4,arkM4(s*(r+.22),y+.3,0,.07,.5,.07,0,0,s*1.9),0x2a1208))}
+  S.geo(ARKG.cone5,arkM4(Math.sin(3)*.18,3.65,0,.2,.8,.2),0xffd0a0);
+  const m=S.mesh();m.visible=false;return m}
+function ssBuild(A){
+  const R=ARK.rng(8100+A.i),y0=GH(A.cx,A.cz),ea=ssEntA(A),GAP=.38,cx=A.cx,cz=A.cz;
+  const D=A.dn={ea,cols:[],ph:1,vx:null,st:null,er:null,ram:null,vxCD:0,stCD:0,tails:[],buff:null,swS:.25,ok:false};
+  const inGap=a=>Math.abs(ssAD(a,ea))<GAP,P=(a,r)=>[cx+Math.cos(a)*r,cz+Math.sin(a)*r];
+  const sand=SS_SAND,sandD=0xb98d52,stone=0xc49a64,stoneD=0x8a6440,bone=0xe6d8b8;
+  // ---- floor: rippled sand sloping into the sinkhole ----
+  const F=arkSoup(8200+A.i);
+  [[4.2,5.2,16],[5.2,6.2,18],[6.2,8.0,22],[8.0,9.9,26],[9.9,11.9,30],[11.9,13.9,34],[13.9,15.9,40]].forEach(([r0,r1,n],ri)=>{const off=R()*6.283;
+    for(let k=0;k<n;k++){const a0=off+k/n*6.283,a1=off+(k+1)/n*6.283,pts=[P(a0,r0),P(a0+.003,r1),P(a1+.003,r1),P(a1,r0)],t=ri/6;
+      const yt=pts.map((p,i)=>GH(p[0],p[1])+.05+(i==1||i==2?(ri+1):ri)*.025+R()*.04),c=arkMix(arkMix(0xa87a44,sand,Math.min(1,t*1.6)),0xffe6b0,R()*.12);F.slab(pts,yt,y0-.25,c,sandD)}});
+  // ripples: thin raised arcs
+  for(let r=5.0;r<15.4;r+=.75){const n=Math.round(r*4),off=R()*6.283;for(let k=0;k<n;k++){if(R()<.35)continue;const a0=off+k/n*6.283,a1=a0+5.2/n+R()*.02,w=.09,rr=r+Math.sin(a0*3+r)*.25,yy=y0+.07+(r-3.2)/12.7*.17+.04;
+    const p=(q,a)=>{const [x,z]=P(a,q);return [x,yy,z]};F.quad(p(rr-w,a0),p(rr-w,a1),p(rr+w,a1),p(rr+w,a0),arkShade(sand,.82),.08)}}
+  // the sinkhole: darker rings toward the middle
+  for(let i=0;i<10;i++){const r0=i*.42,r1=(i+1)*.42,n=28,c=arkMix(0x140a04,0xa87a44,Math.pow(i/9.5,1.4));for(let k=0;k<n;k++){const a0=k/n*6.283,a1=(k+1)/n*6.283,p=(q,a)=>{const [x,z]=P(a,q);return [x,y0+.06+i*.004,z]};
+    if(i==0)F.tri(p(0,0),p(r1,a1),p(r1,a0),c,.06);else F.quad(p(r0,a0),p(r0,a1),p(r1,a1),p(r1,a0),c,.06)}}
+  // bones in the sand
+  for(let k=0;k<20;k++){const a=R()*6.283,r=5+R()*9.5;if(inGap(a)&&r>12)continue;const [x,z]=P(a,r),y=y0+.12;
+    if(k%4==0){F.geo(ARK.rock[k%4],arkM4(x,y+.12,z,.28,.24,.34,0,R()*6),bone);F.geo(ARKG.box,arkM4(x+.12,y+.06,z,.08,.06,.1,0,R()*6),0x2a2018)}
+    else if(k%4==1){for(let q=0;q<4;q++)F.geo(ARKG.cyl5,ssTM(x+q*.18,y+.05,z+(R()-.5)*.3,.05,.9,.05,1,0,0,1.5,R()),bone)}
+    else if(k%4==2)F.geo(ARKG.box,ssTM(x,y,z,.16,.12,1.4,0,1,0,R()*3,0),bone);
+    else F.geo(ARK.rock[k%4],arkM4(x,y,z,.6+R()*.5,.15,.5+R()*.4,0,R()*6),arkShade(stone,.9))}
+  const floor=F.mesh();floor.castShadow=false;A.g.add(floor);
+  // ---- the amphitheatre: three broken sandstone tiers, columns on top, dunes spilling down ----
+  const S=arkSoup(8300+A.i);
+  for(let t=0;t<3;t++){const r0=15.9+t*1.9,r1=r0+1.95,h=.8*(t+1),n=Math.round(r1*6.283/2.7),off=R()*.3;
+    for(let k=0;k<n;k++){const a0=off+k/n*6.283+.005,a1=off+(k+1)/n*6.283-.005,am=(a0+a1)/2;if(inGap(am))continue;if(R()<.07)continue;
+      const sink=R()<.15?R()*.4:0,tl=0,pts=[P(a0,r0),P(a0,r1),P(am,r1),P(a1,r1),P(a1,r0),P(am,r0)],yb=GH(pts[0][0],pts[0][1]);if(yb<y0-1)continue;
+      const yt=pts.map((p,i)=>Math.max(GH(p[0],p[1]),y0)+h-sink+(i<3?tl:-tl)*.5),c=arkShade(0xd6b680,.93+R()*.1);S.slab(pts,yt,y0-.3,c,arkShade(0xa47a4a,.85+R()*.2))}}
+  // dunes heaped against the tiers
+  for(let k=0;k<60;k++){const a=k/60*6.283+R()*.08;if(inGap(a))continue;const r=15.4+R()*2.6,[x,z]=P(a,r),s=1.2+R()*1.3,y=Math.max(GH(x,z),y0);
+    S.geo(ARK.rock[k%4],arkM4(x,y+.1,z,s*1.5,.5+R()*.9,s,0,a+1.57),(cy,n)=>n.y>.25?arkMix(sand,0xf2d8a0,R()*.4):sandD,.08)}
+  // columns on the top tier: standing, broken, toppled
+  for(let k=0;k<26;k++){const a=k/26*6.283+.1;if(Math.abs(ssAD(a,ea))<GAP+.12)continue;const r=21.1,[x,z]=P(a,r),y=Math.max(GH(x,z),y0)+2.55;if(GH(x,z)<y0-1)continue;
+    const kind=k%3;if(kind==2&&R()<.6){const b=a+1.57+(R()-.5)*.6;S.geo(ARKG.cyl6,ssTM(x,y+.4,z,.42,3.6,.42,Math.cos(b),0,Math.sin(b),1.5,0),arkShade(stone,.95));continue}
+    const h=kind==0?4.5+R()*1.6:1.5+R()*1.8;S.geo(ARKG.cyl6,arkM4(x,y+h/2,z,.42,h,.42,(R()-.5)*.06,R(),(R()-.5)*.06),arkShade(stone,.95+R()*.15));
+    S.geo(ARKG.box,arkM4(x,y+.12,z,1.05,.25,1.05,0,a),arkShade(stone,.8));if(kind==0){S.geo(ARKG.box,arkM4(x,y+h+.15,z,1.1,.3,1.1,0,a),arkShade(stone,1.05));if(k%2==0)S.geo(ARKG.box,arkM4(x+Math.cos(a+1.57)*1.4,y+h+.5,z+Math.sin(a+1.57)*1.4,2.6,.4,.7,0,-a),arkShade(stone,.9))}}
+  // the obelisks at the way in, with a fallen block between
+  [-1,1].forEach(s=>{const a=ea+s*(GAP+.04),[x,z]=P(a,16.6),y=Math.max(GH(x,z),y0);S.geo(ARKG.box,arkM4(x,y+.3,z,1.6,.6,1.6,0,-a),arkShade(stone,.75));
+    S.geo(ARKG.cyl5,arkM4(x,y+3.6,z,.75,6.2,.75,0,.6,0),arkShade(stone,1.02));S.geo(ARKG.cone5,arkM4(x,y+7.3,z,.75,1.3,.75,0,.6,0),0xe8c070);
+    for(let q=0;q<3;q++)S.geo(ARKG.cyl5,arkM4(x,y+1.6+q*1.6,z,.8,.12,.8,0,.6,0),arkShade(stoneD,.9));
+    S.geo(ARK.rock[s>0?0:3],arkM4(x+Math.cos(a)*1.2,y+.3,z+Math.sin(a)*1.2,1.3,.7,1.1,0,a),(cy,n)=>n.y>.4?sand:sandD)});
+  // the bones of a colossal serpent arching over the back of the pit
+  {const ab=ea+Math.PI;for(let k=-7;k<=7;k++){const a=ab+k*.085,[x,z]=P(a,20.2),y=Math.max(GH(x,z),y0)+2.6;S.geo(ARK.rock[(k+8)%4],arkM4(x,y+.35,z,.8,.6,.9,0,a),bone);
+      if(k%2==0&&Math.abs(k)<7){[0].forEach(()=>{let px=x,pz=z,py=y+.5;for(let s=0;s<7;s++){const u=(s+1)/7,r=20.2-u*4.4,h=y+.5+Math.sin(u*Math.PI*.85)*6.2,[nx,nz]=P(a+(k<0?-1:1)*u*.05,r),mx=(px+nx)/2,mz=(pz+nz)/2,my=(py+h)/2,L=Math.hypot(nx-px,nz-pz,h-py);
+        const dir=new THREE.Vector3(nx-px,h-py,nz-pz).normalize(),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),dir),M=new THREE.Matrix4().compose(new THREE.Vector3(mx,my,mz),q,new THREE.Vector3(.24-s*.02,L+.12,.27-s*.02));
+        S.geo(ARKG.cyl6,M,arkShade(bone,.92+s*.02),.06);px=nx;pz=nz;py=h}})}}
+    const [sx,sz]=P(ab+.75,19.4),sy=Math.max(GH(sx,sz),y0)+2.6,fa=-(ab+.75)+Math.PI;S.geo(ARK.rock[2],arkM4(sx,sy+.9,sz,1.5,1.0,2.4,0,fa),bone);S.geo(ARKG.box,ssTM(sx,sy+.3,sz,1.6,.35,2.2,1,0,0,.3,fa),arkShade(bone,.9));
+    [-1,1].forEach(q=>{S.geo(ARKG.oct,arkM4(sx+Math.cos(fa)*q*.6,sy+1.2,sz-Math.sin(fa)*q*.6,.32,.22,.3),0x1a0e08);S.geo(ARKG.cone5,ssTM(sx+Math.cos(fa)*q*.5,sy+.1,sz-Math.sin(fa)*q*.5,.15,.9,.15,1,0,0,Math.PI,0),bone)})}
+  // a toppled statue head half-buried to the side
+  {const a=ea+2.1,[x,z]=P(a,17.2),y=Math.max(GH(x,z),y0)+1.1;S.geo(ARKG.box,ssTM(x,y+.6,z,1.6,2.0,1.4,Math.cos(a),0,Math.sin(a),.5,-a),arkShade(stone,1.05));S.geo(ARKG.box,ssTM(x+.2,y+1.0,z,.4,.25,.9,Math.cos(a),0,Math.sin(a),.5,-a),0x2a1a10);S.geo(ARKG.cone4,ssTM(x,y+1.9,z,1.0,.9,1.0,Math.cos(a),0,Math.sin(a),.5,-a+.78),0xe8c070)}
+  A.g.add(S.mesh());
+  // ---- the four half-sunk columns inside the pit (the ram smashes them) ----
+  for(let k=0;k<4;k++){const a=ea+Math.PI/4+k*Math.PI/2,[x,z]=P(a,8.6),y=GH(x,z),lean=.12+R()*.08,la=R()*6.283;
+    const C=arkSoup(8400+k),tm=(yy,h,s)=>ssTM(x+Math.cos(la)*lean*yy,y+yy,z+Math.sin(la)*lean*yy,s,h,s,-Math.sin(la),0,Math.cos(la),-lean,R());
+    C.geo(ARKG.cyl6,tm(1.5,3.0,.85),(cy,n)=>arkShade(stone,.85+(cy-y)*.06),.12);C.geo(ARKG.cyl6,tm(.35,.4,1.05),arkShade(stone,.8));C.geo(ARKG.box,tm(3.15,.35,1.25),arkShade(stone,1.05));
+    for(let q=0;q<4;q++){const b=q*1.57+la,rr=1.1;C.geo(ARK.rock[q],arkM4(x+Math.cos(b)*rr,y+.05,z+Math.sin(b)*rr,.9,.35,.8,0,b),(cy,n)=>n.y>.3?sand:sandD,.08)}
+    const col=C.mesh();A.g.add(col);
+    const B2=arkSoup(8500+k);for(let q=0;q<8;q++){const b=R()*6.283,rr=R()*1.6;B2.geo(ARK.rock[q%4],arkM4(x+Math.cos(b)*rr,y+.15,z+Math.sin(b)*rr,.35+R()*.4,.25+R()*.3,.35+R()*.3,R(),R()*6,0),arkShade(stone,.8+R()*.3))}
+    B2.geo(ARKG.cyl6,tm(.4,.7,.85),arkShade(stone,.85));const rub=B2.mesh();rub.visible=false;A.g.add(rub);
+    const tiles=[[0,0],[1,0],[-1,0],[0,1],[0,-1]].map(([i,j])=>[Math.round(x)+i,Math.round(z)+j]);tiles.forEach(t=>denBlock(t[0],t[1]));
+    D.cols.push({x,z,p:new THREE.Vector3(x,0,z),col,rub,tiles,ok:true})}
+  // ---- the sinkhole swirl (spins faster when the vortex wakes) ----
+  {const W=arkSoup(8600);for(let arm=0;arm<5;arm++){for(let s=0;s<16;s++){const u0=s/16,u1=(s+1)/16,f=(u,o)=>{const r=.4+u*3.9,a=arm/5*6.283+u*2.6+o;return [Math.cos(a)*r,.0,Math.sin(a)*r]},w=.18*(1-u0*.5);
+      W.quad(f(u0,-w),f(u0,w),f(u1,w),f(u1,-w),arkMix(0x2a1608,0xe8c890,u0*.9),.08)}}
+    const sw=W.mesh(new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide}));sw.material.userData.lps=1;sw.castShadow=sw.receiveShadow=false;sw.position.set(cx,y0+.1,cz);sw.renderOrder=3;A.g.add(sw);D.sw=sw}
+  // inward-rushing sand rings for the vortex
+  D.vr=[0,1,2].map(i=>{const m=new THREE.Mesh(new THREE.RingGeometry(.94,1,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xf0d090,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));
+    m.position.set(cx,y0+.14,cz);m.renderOrder=18;m.visible=false;A.g.add(m);return m});
+  // the burrowing mound and the exposure marker
+  {const M=arkSoup(8700);M.geo(ARK.rock[0],arkM4(0,0,0,1.6,.7,1.9),(cy,n)=>n.y>.3?arkMix(sand,0xf0d8a0,.3):sandD,.1);for(let q=0;q<5;q++){const b=q*1.26;M.geo(ARK.rock[q%4],arkM4(Math.cos(b)*1.5,0,Math.sin(b)*1.5,.5,.3,.5,0,b),sandD)}
+    const m=M.mesh();m.visible=false;scene.add(m);D.mound=m}
+  {const g=new THREE.Group(),s1=kqSpr(0xffd040,2.2),r=new THREE.Mesh(new THREE.RingGeometry(.8,1,32),new THREE.MeshBasicMaterial({color:0xffd040,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));r.renderOrder=22;g.add(s1,r);g.visible=false;scene.add(g);D.mark=g;D.markR=r}
+  // the lashing tails (a small pool, reused)
+  for(let k=0;k<6;k++){const m=ssTail(R);A.g.add(m);D.tails.push({m,t:0,p:new THREE.Vector3()})}
+  // ---- the seal: a curtain of whirling sand ----
+  {const g=new THREE.CylinderGeometry(14.7,15.1,6,72,3,true).translate(0,3,0),pa=g.attributes.position,col=[],c=new THREE.Color();
+    for(let i=0;i<pa.count;i++){const a=Math.atan2(pa.getZ(i),pa.getX(i)),y=pa.getY(i),k=.55+.45*Math.sin(a*23+y*1.3)*Math.sin(a*7-y);c.set(arkMix(0x8a5a2a,0xf0d098,k));col.push(c.r,c.g,c.b)}
+    g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.62,depthWrite:false,side:THREE.DoubleSide}));m.material.userData.lps=1;g.userData.lps=1;m.position.set(cx,y0-.2,cz);m.visible=false;m.renderOrder=4;A.g.add(m);D.seal=m}
+  // ---- solid tiers: block the ring of tiles behind the pit (leave the entrance open) ----
+  for(let z=Math.floor(cz-19);z<=cz+19;z++)for(let x=Math.floor(cx-19);x<=cx+19;x++){const r=Math.hypot(x-cx,z-cz);if(r<16.0||r>18.8)continue;if(inGap(Math.atan2(z-cz,x-cx)))continue;denBlock(x,z)}
+  TANIM.push({x:cx,z:cz,f:now=>{const dt=Math.min(.05,(now-(D._tn||now))/1000);D._tn=now;D.sw.rotation.y-=dt*D.swS}});
+  D.ok=true}
+// ---------------- atmosphere ----------------
+function ssAtm(on){try{const Z=ZATM[3];if(!SS.atm)SS.atm={fog:Z.fog,fm:Z.fm,sun:Z.sun};
+  if(on){Z.fog=.075;Z.fm=1.25;Z.sun=.8;ZP.mat.size=.2}else{Z.fog=SS.atm.fog;Z.fm=SS.atm.fm;Z.sun=SS.atm.sun;if(ZP.type=='sand')ZP.mat.size=.07}}catch(err){}}
+// ---------------- columns ----------------
+function ssBreak(A,C){C.ok=false;C.col.visible=false;C.rub.visible=true;C.tiles.forEach(t=>denUnblock(t[0],t[1]));
+  const q=C.p;burst(gY(q,1.5),0xc49a64,60,5,4,1);burst(gY(q,.6),SS_SAND,40,4,2,.8);kqFlash(gY(q,1.5),0xffe0a0,5,300);ring(q,0xffd080,6,450);shake(.45);if(typeof sfx=='function')sfx('hit',.6)}
+function ssExpose(A,e,sec,txt){e._ssX=nowP()+sec*1000;popT(e.m.position,txt,'#ffd040',true);ring(e.m.position,0xffd040,5,500)}
+// ---------------- the Devourer's den moves (relayed like every Sovereign move) ----------------
+kqBmv('vortex',function(e,A,en){const D=A.dn;if(!D||D.vx||D.vxCD>0)return BMV.tailsweep(e,A,en);const ph=e.bs.ph;
+  D.vx={w:1.1,t:ph>=3?7.5:6,pull:[1.5,2.0,2.6][ph-1],tick:0};D.vxCD=15;kqBossCast(e,SS_COL,700);
+  say('🌀 The Sunken Pit churns — the sand drags you toward the sinkhole! Walk or dash against it.');shake(.2);
+  return {d:1.4*en,lock:0}});
+kqBmv('erupt',function(e,A,en){const D=A.dn;if(!D||D.er)return BMV.tailsweep(e,A,en);
+  D.er={s:'dive',t:.45,n:e.bs.ph>=3?2:1,en};burst(gY(e.m.position,.4),SS_SAND,70,5,4,1);ring(e.m.position,SS_SAND,6,400);shake(.25);
+  say('⚠ '+A.b.name+' dives into the sand — keep moving, then punish it when it surfaces!');return {d:6,lock:1}});
+kqBmv('ram',function(e,A,en){const D=A.dn;if(!D||D.ram)return BMV.tailsweep(e,A,en);ssAim(A,e,D,e.bs.ph>=3?2:1,(e.bs.ph>=3?.8:.95)*en);
+  if(!D.rh){D.rh=1;say('💡 Lure its charge into a column — its head gets stuck!')}return {d:5,lock:1}});
+kqBmv('sandstorm',function(e,A,en){const D=A.dn;if(!D||D.st||D.stCD>0)return BMV.spit(e,A,en);
+  D.st={t:8,nx:1.2};D.stCD=22;ssAtm(true);kqBossCast(e,SS_COL,600);banner('🌪 SANDSTORM',A.b.name+' whips up the desert','Its body lashes up from under the sand — watch for red circles');
+  return {d:1.4*en,lock:0}});
+function ssAim(A,e,D,n,wind){const o=e.m.position.clone(),d=toPl(o);
+  // distance to the den's edge along d
+  const ox=o.x-A.cx,oz=o.z-A.cz,b=ox*d.x+oz*d.z,c=ox*ox+oz*oz-(ARENA_R-1.6)**2,L=Math.max(3,-b+Math.sqrt(Math.max(0,b*b-c)));
+  tele(o,0,wind,()=>{},{w:3.2,l:L,d});kqBossCast(e,SS_COL,wind*900);
+  D.ram={s:'wind',t:wind,d,o,L,n,run:0,hit:false}}
+// ---------------- per-frame boss control while a den state runs ----------------
+function ssAI(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[3],m=e.m;
+  if(S._p0&&b.last===S._fk){S.pool=S._p0;S._p0=null}
+  const force=k=>{if(S._p0)return;S._p0=S.pool;S._fk=k;S.pool=[[k],[k],[k]];b.last='';b.t=Math.min(b.t,.5)};
+  if(b.ph>D.ph){D.ph=b.ph;if(b.ph==2){D.stCD=0;force('sandstorm')}else if(b.ph==3){D.vxCD=0;force('vortex')}}
+  D.vxCD=Math.max(0,D.vxCD-dt);D.stCD=Math.max(0,D.stCD-dt);
+  // exposed / stuck: it can't act
+  if(e._ssX&&nowP()<e._ssX){if(!e.hid){animC(m,now,false,0);m.b.rotation.z=Math.sin(now/70)*.05;m.b.position.y-=.18}return true}
+  if(e._ssX){e._ssX=0;m.b.rotation.z=0;if(!D.er&&!D.ram){b.lock=0;b.t=Math.min(b.t,.9)}}
+  const auth=ssAuth(A);
+  // ---- burrow & erupt ----
+  if(D.er){const R2=D.er;R2.t-=dt;
+    if(R2.s=='dive'){if(R2.t<=0){bxHide(e,true);R2.s='hunt';R2.t=e.bs.ph>=3?1.7:2.2;D.mound.visible=true;R2.tr=0}}
+    else if(R2.s=='hunt'){const d=toPl(m.position);if(auth&&d2(pl.position,m.position)>.8){m.position.x+=d.x*6.5*dt;m.position.z+=d.z*6.5*dt;inArena(A,m.position,1.6);for(const C of D.cols){if(!C.ok)continue;const cx=m.position.x-C.x,cz=m.position.z-C.z,l=Math.hypot(cx,cz);if(l<2.2&&l>.01){m.position.x=C.x+cx/l*2.2;m.position.z=C.z+cz/l*2.2}}}
+      D.mound.position.set(m.position.x,GH(m.position.x,m.position.z)+.05,m.position.z);D.mound.rotation.y+=dt*2;R2.tr-=dt;if(R2.tr<=0){R2.tr=.1;burst(gY(m.position,.3),SS_SAND,5,2,2,.5)}
+      if(R2.t<=0){R2.s='tele';R2.t=1.0*R2.en;const q=m.position.clone();R2.q=q;tele(q,3.3,R2.t,()=>{})}}
+    else if(R2.s=='tele'){D.mound.position.y=GH(R2.q.x,R2.q.z)+.05+Math.sin(now/40)*.08;if(Math.random()<.4)burst(gY(R2.q,.2),SS_SAND,3,2,2,.5);
+      if(R2.t<=0){const q=R2.q;D.mound.visible=false;bxHide(e,false);m.position.set(q.x,0,q.z);ring(q,SS_COL,8,450);burst(gY(q,.6),SS_SAND,90,6,6,1.1);burst(gY(q,1),SS_COL,30,3,4,.7);shake(.4);
+        if(d2(pl.position,q)<3.3&&hero.iv<=0)bossHit(e,1.5);
+        if(e.bs.ph>=2){const a0=Math.random()*6.283;for(let k=0;k<3;k++){const a=a0+k*2.094,g=inArena(A,q.clone().add(V(Math.cos(a)*4.6,0,Math.sin(a)*4.6)),1);
+          tele(g,2.0,.9,()=>{if(!A.f)return;burst(gY(g,.4),SS_SAND,50,3,7,1);ring(g,SS_SAND,4,350);if(d2(pl.position,g)<2.0)bossHit(e,.9)})}}
+        R2.n--;if(R2.n>0){R2.s='dive';R2.t=.7}else{D.er=null;ssExpose(A,e,2.8,'EXPOSED! ×1.6');return true}}}
+    if(D.er&&D.er.s!='hunt'&&D.er.s!='tele')animC(m,now,false,0);return true}
+  // ---- ram ----
+  if(D.ram){const Rm=D.ram;Rm.t-=dt;m.rotation.y=Math.atan2(Rm.d.x,Rm.d.z);
+    if(Rm.s=='wind'){animC(m,now,true,.6);if(Rm.t<=0){Rm.s='run';Rm.run=0;shake(.12)}return true}
+    if(Rm.s=='run'){const st=19*dt;Rm.run+=st;m.position.x+=Rm.d.x*st;m.position.z+=Rm.d.z*st;animC(m,now,true,9);if(Math.random()<.7)burst(gY(m.position,.3),SS_SAND,4,2,1.5,.5);
+      if(!Rm.hit&&d2(pl.position,m.position)<2.7&&hero.iv<=0){Rm.hit=true;bossHit(e,1.6);const s=Math.sign(Rm.d.x*(pl.position.z-m.position.z)-Rm.d.z*(pl.position.x-m.position.x))||1;walk(pl,-Rm.d.z*s*1.6,Rm.d.x*s*1.6);dn(pl.position,'Trampled!','#ffb070',-20,700)}
+      for(const C of D.cols){if(C.ok&&d2(C.p,m.position)<2.0){ssBreak(A,C);m.position.x-=Rm.d.x*.8;m.position.z-=Rm.d.z*.8;D.ram=null;ssExpose(A,e,3.6,'STUCK! ×1.6');say('💥 Its head is stuck in the rubble — strike now!');return true}}
+      if(Rm.run>=Rm.L||Math.hypot(m.position.x-A.cx,m.position.z-A.cz)>ARENA_R-1.5){inArena(A,m.position,1.5);ring(m.position,SS_SAND,4,350);burst(gY(m.position,.5),SS_SAND,30,3,3,.6);shake(.2);Rm.s='daze';Rm.t=.8}return true}
+    if(Rm.s=='daze'){animC(m,now,false,0);if(Rm.t<=0){Rm.n--;if(Rm.n>0)ssAim(A,e,D,Rm.n,.7);else{D.ram=null;b.lock=0;b.t=Math.min(b.t,.8)}}return true}}
+  return false}
+// ---------------- per-frame hazards ----------------
+function ssTick(A,e,dt,now){const D=A.dn;if(!D)return;const P=pl.position,v=SS.scr;
+  if(D.seal&&D.seal.visible)D.seal.rotation.y+=dt*.9;
+  // exposure marker over the head
+  const xp=e._ssX&&nowP()<e._ssX;D.mark.visible=!!xp;if(xp){const p=kqMouth(e);D.mark.position.set(p.x,p.y+1.6,p.z);D.mark.scale.setScalar(1+.15*Math.sin(now/90));D.markR.rotation.x=-Math.PI/2;D.markR.rotation.z+=dt*3}
+  // quicksand vortex
+  if(D.vx){const X=D.vx;D.swS=X.w>0?.25+4*(1.1-X.w):4.5;
+    if(X.w>0){X.w-=dt;if(Math.random()<.5){const a=Math.random()*6.283,r=2+Math.random()*4;v.set(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.3,A.cz+Math.sin(a)*r);burst(v,SS_SAND,2,1,1.5,.5)}}
+    else{X.t-=dt;const dx=A.cx-P.x,dz=A.cz-P.z,d=Math.hypot(dx,dz)||1,sp=X.pull*(.45+.55*(1-Math.min(d,14)/14))*(hero.iv>0?.5:1);if(d>.3&&hero.hp>0)walk(pl,dx/d*sp*dt,dz/d*sp*dt);
+      D.vr.forEach((m,i)=>{const k=((now/1000*.55+i/3)%1),r=13.5*(1-k)+.5;m.visible=true;m.scale.setScalar(r);m.material.opacity=.55*Math.min(1,k*4)*(1-k)});
+      if(Math.random()<.8){const a=Math.random()*6.283,r=3+Math.random()*10;v.set(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.25,A.cz+Math.sin(a)*r);burst(v,0xe8c890,2,.6,.5,.6)}
+      X.tick-=dt;const core=d<SS_CORE;if(core&&X.tick<=0&&hero.iv<=0){X.tick=.5;bossHit(e,e.bs.ph>=3?.45:.35);dn(P,'Sinking!','#ffcf8a',-20,500)}
+      ssSink(D,core);
+      if(X.t<=0){D.vx=null;D.vr.forEach(m=>m.visible=false);D.swS=.25;ssSink(D,false)}}}
+  // sandstorm: lashing segments
+  if(D.st){const T=D.st;T.t-=dt;T.nx-=dt;try{const ps=ZP.pos,N=ZP.N,w=10*dt;for(let i=0;i<N;i++){ps[i*3]+=w;ps[i*3+2]+=w*.3}}catch(err){}
+    if(T.nx<=0&&T.t>.9){T.nx=e.bs.ph>=3?.5:.7;const mv=pl.mvd||{x:0,z:0},q=inArena(A,P.clone().add(V((Math.random()-.5)*2.6+(mv.x||0)*1.2,0,(Math.random()-.5)*2.6+(mv.z||0)*1.2)),1);
+      tele(q,1.5,.9,()=>{if(!A.f)return;ssLash(D,q);burst(gY(q,.4),SS_SAND,30,3,4,.7);if(d2(pl.position,q)<1.5)bossHit(e,.8)})}
+    if(T.t<=0){D.st=null;ssAtm(false)}}
+  for(const L of D.tails){if(L.t<=0)continue;L.t-=dt;const k=1-L.t/1.1,y=k<.2?-3.8+3.8*(k/.2):k<.55?0:-3.8*((k-.55)/.45);L.m.position.y=GH(L.p.x,L.p.z)+y;L.m.rotation.y+=dt*1.5;if(L.t<=0)L.m.visible=false}}
+function ssLash(D,q){const L=D.tails.find(t=>t.t<=0);if(!L)return;L.t=1.1;L.p.copy(q);L.m.position.set(q.x,GH(q.x,q.z)-3.8,q.z);L.m.rotation.set((Math.random()-.5)*.3,Math.random()*6,(Math.random()-.5)*.3);L.m.visible=true}
+function ssSink(D,on){if(on){if(!D.buff||!hero.buffs.includes(D.buff)){hero.buffs=hero.buffs.filter(b=>b.n!='Sinking');D.buff={n:'Sinking',i:'⏳',s:{mspd:-.35},t:nowP()+600,d:'Quicksand: −35% move speed'};hero.buffs.push(D.buff);hsDirty()}D.buff.t=nowP()+600}
+  else if(D.buff){hero.buffs=hero.buffs.filter(b=>b!==D.buff);D.buff=null;hsDirty()}}
+// exposed: hits land ×1.6
+{const f=hurt;hurt=function(e,d,s,c,dot){if(e&&e.ar===3&&e._ssX&&!e.hid&&nowP()<e._ssX&&d>0){arguments[1]=d*1.6;if(nowP()-(e._ssW||0)>500){e._ssW=nowP();dn(e.m.position,'WEAK POINT','#ffd040',-60,700)}}return f.apply(this,arguments)}}
+// ---------------- den hooks ----------------
+DEN[3]={build:ssBuild,ai:ssAI,tick:ssTick,
+  start(A,e){const D=A.dn;if(!D)return;D.ph=1;D.vx=D.st=D.er=D.ram=null;D.vxCD=6;D.stCD=0;D.rh=0;e._ssX=0;
+    setTimeout(()=>{if(A.f)say('🏜️ The Sunken Pit: stay off the sinkhole, and use the columns — its charge can get stuck in them.')},1800)},
+  clear(A,won){const D=A.dn;if(!D)return;const e=bossEnt(A.i)||enemies.find(x=>x.ar===A.i);
+    D.vx=D.st=D.er=D.ram=null;ssAtm(false);D.vr.forEach(m=>m.visible=false);D.swS=.25;D.mound.visible=false;D.mark.visible=false;ssSink(D,false);
+    D.tails.forEach(L=>{L.t=0;L.m.visible=false});if(e){e._ssX=0;e.m.b.rotation.z=0}
+    D.cols.forEach(C=>{C.ok=true;C.col.visible=true;C.rub.visible=false;C.tiles.forEach(t=>denBlock(t[0],t[1]))});
+    const S=BSTY[3];if(S._p0){S.pool=S._p0;S._p0=null}},
+  seal(A,on){const D=A.dn;if(!D)return;const s=D.seal;if(on){s.visible=true;s.scale.y=.01;burst(V(A.cx,GH(A.cx,A.cz)+.5,A.cz),SS_SAND,1,1,1,.1);tw(700,k=>{s.scale.y=Math.max(.01,k)},()=>{});shake(.2)}
+    else tw(700,k=>{s.scale.y=Math.max(.01,1-k)},()=>{if(!A.f)s.visible=false})}};
+if(BSTY[3])BSTY[3].pool=[['erupt','tailsweep','ram','vortex'],['sandstorm','spit','mines'],['erupt','ram']];
+
+// ================= v86 den 4: The Charnel Pit — The Bloated One, Rot-King of the Derge =================
+// A sunken mass grave: crypt retaining walls full of skull niches, an embankment of leaning graves and iron fences,
+// gibbet cages over the pit, three bubbling rot vats, four corpse piles and a rusted portcullis that slams shut.
+// Mechanics (all on top of its slow brawler move pool):
+//  • Rot pools  — bile globs (rotspit), the belch and every burst leave rot that stays for the fight and slowly
+//                 spreads; standing in it burns and slows (Rotting). Older pools dry up once there are too many.
+//  • Corpse piles — a pile swells (green ring + pulsing sac): destroy the sac before it bursts into Bloat Maggots.
+//  • Bile pustules (phase 2+) — pustules grow on his hide; pop them for burst damage and a stagger
+//                 (all three: he reels and takes extra damage); left alone they erupt into a rain of bile.
+//  • Belch      — a wide cone of rot gas in front of him (red cone warning; dash out or step behind him).
+//  • Rot Tide (phase 3) — the vats burst and rot creeps in from the walls, shrinking the clean ground.
+// The first half of this file is a small toolkit shared with zzK_den5.js (props you can hit, cancelable warnings,
+// a per-den scheduler, co-op relay helpers). Prefix dq*.
+
+// ---------------- shared den toolkit (dens 4 & 5) ----------------
+var DQ={v:new THREE.Vector3(),v2:new THREE.Vector3(),q:new THREE.Quaternion(),up:new THREE.Vector3(0,1,0),geo:{},TAU:Math.PI*2};
+// the player whose game simulates the boss (solo: always you). Only they start den mechanics; peers get them relayed.
+function dqAuth(A){return !(typeof MP!='undefined'&&MP.on)||mpBossAuth(A.i)===MP.me}
+// cast a BMV move from den code so it is relayed to co-op peers exactly like a move picked by the boss AI
+function dqCast(e,A,k,en){if(!dqAuth(A)||!BMV[k])return null;const w=MP.inAI;MP.inAI=1;try{return BMV[k](e,A,en)}finally{MP.inAI=w}}
+// a small index (0-9) rides on the relayed move speed so every peer picks the same pile / chalice set
+const dqEnc=(en,i)=>Math.round(en*100)/100+(i%10)/1000,dqDec=en=>Math.round(en*1000)%10;
+const dqAng=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
+// the road reaches the den from this angle (the gate goes here)
+function dqEntry(A){const P=PMAP[A.i].path;for(let i=P.length-1;i>=0;i--){const dx=P[i][0]-A.cx,dz=P[i][1]-A.cz;if(Math.hypot(dx,dz)>17)return Math.atan2(dz,dx)}return Math.PI/4}
+// den state: scheduler + effect list; tok changes every start/clear so stale callbacks die
+function dqState(A){return A.dq||(A.dq={tok:0,q:[],fx:[],props:[]})}
+function dqAfter(S,sec,fn){const tok=S.tok;S.q.push({t:sec,fn,tok})}
+function dqRun(S,dt){for(let i=S.q.length-1;i>=0;i--){const q=S.q[i];if(q.tok!==S.tok){S.q.splice(i,1);continue}q.t-=dt;if(q.t<=0){S.q.splice(i,1);try{q.fn()}catch(err){console.error('den q',err)}}}
+  const L=S.fx;for(let i=L.length-1;i>=0;i--){const f=L[i];let keep=false;try{keep=f.tick(dt)}catch(err){console.error('den fx',err)}if(!keep){const j=L.indexOf(f);if(j>=0)L.splice(j,1)}}}
+function dqReset(S){S.tok++;S.q.length=0;S.fx.slice().forEach(f=>{try{f.end&&f.end()}catch(err){}});S.fx.length=0;S.props.slice().forEach(p=>dqPropGone(p,false));S.props.length=0}
+// ---- warnings that can be cancelled (circle {r}, line {d,l,w}, cone {a,half,l}); same red as tele() ----
+function dqFan(half){const k='fan'+half.toFixed(2);if(DQ.geo[k])return DQ.geo[k];const P=[],n=18;for(let i=0;i<n;i++){const a0=-half+2*half*i/n,a1=-half+2*half*(i+1)/n;P.push(0,0,0,Math.sin(a1),0,Math.cos(a1),Math.sin(a0),0,Math.cos(a0))}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.computeBoundingSphere();return DQ.geo[k]=g}
+function dqG(k){const G=DQ.geo;if(G[k])return G[k];let g;
+  if(k=='disc'){g=new THREE.CircleGeometry(1,40);g.rotateX(-Math.PI/2)}else if(k=='edge'){g=new THREE.RingGeometry(.93,1,48);g.rotateX(-Math.PI/2)}
+  else if(k=='line'){g=new THREE.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);g.translate(0,0,.5)}else if(k=='ico'){g=new THREE.IcosahedronGeometry(1,1)}else if(k=='ico0'){g=new THREE.IcosahedronGeometry(1,0)}
+  return G[k]=g}
+function dqWarn(S,o){
+  const D=(typeof KQ!='undefined'&&KQ.dim)||1,mk=(c,op)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,depthWrite:false,depthTest:false,side:THREE.DoubleSide});
+  const g=new THREE.Group(),y=(o.y!=null?o.y:GH(o.x,o.z))+.15;g.position.set(o.x,y,o.z);const mO=mk(o.col||0xd01808,.22*D),mF=mk(o.fc||0xff3010,.12*D),mats=[mO,mF];let fill;
+  if(o.d){g.rotation.y=Math.atan2(o.d.x,o.d.z);const a=new THREE.Mesh(dqG('line'),mO);a.scale.set(o.w,1,o.l);fill=new THREE.Mesh(dqG('line'),mF);fill.scale.set(o.w,1,.01);g.add(a,fill);fill.userData.ln=1}
+  else if(o.half){g.rotation.y=o.a;const a=new THREE.Mesh(dqFan(o.half),mO);a.scale.setScalar(o.l);fill=new THREE.Mesh(dqFan(o.half),mF);fill.scale.setScalar(.01);g.add(a,fill)}
+  else{const a=new THREE.Mesh(dqG('disc'),mO);a.scale.setScalar(o.r);fill=new THREE.Mesh(dqG('disc'),mF);fill.scale.setScalar(.01);const mE=mk(o.col||0xff2a10,.85*D);mats.push(mE);const ed=new THREE.Mesh(dqG('edge'),mE);ed.scale.setScalar(o.r);ed.renderOrder=21;g.add(a,fill,ed)}
+  g.children.forEach(c=>{if(!c.renderOrder)c.renderOrder=20;c.frustumCulled=false});scene.add(g);
+  const w={t:0,dead:false,g,o,kill(){if(w.dead)return;w.dead=true;scene.remove(g);mats.forEach(m=>m.dispose())}};
+  S.fx.push({tick(dt){if(w.dead)return false;w.t+=dt;const k=Math.min(1,w.t/o.t);mF.opacity=(.12+.33*k)*D;
+      if(fill.userData.ln)fill.scale.z=Math.max(.01,o.l*k);else fill.scale.setScalar(Math.max(.01,(o.half?o.l:o.r)*k));
+      if(o.follow)o.follow(g);if(k>=1){w.kill();if(o.fn)o.fn();return false}return true},end(){w.kill()}});
+  return w}
+// ---- props: lightweight den objects that hero attacks, projectiles, skills and companions can hit (they live in `enemies`)
+// o: {n name, frac (share of the boss's max health), mesh, hbY, hbS, tick(e,dt,now), die(e,killed)}. They never move or
+// attack, give no XP or loot, and are removed by the den's clear() (and by arenaClear as minions).
+function dqProp(A,x,z,o){const S=dqState(A),B=bossEnt(A.i),l=B?B.c.l:(A.b.lvl||40),c=enemyC('ghoul',l,{});c.n=o.n;
+  const bs=B?B.c.st:c.st;c.st=Object.assign({},c.st,{hp:Math.max(40,Math.round((B?M(B.c):c.st.hp*12)*o.frac)),pd:bs.pd*.8,md:bs.md*.8});c.h=Math.round(c.st.hp);
+  const m=new THREE.Group();m.position.set(x,GH(x,z),z);m.bs=1;if(o.mesh)m.add(o.mesh);scene.add(m);
+  const e={c,m,hb:bar(false),cd:99,ch:0,vx:0,vz:0,tier:3,wx:x,wz:z,wt:0,agg:1,minion:1,dots:[],dprop:o,boss4:B};if(o.hbS)e.hb.scale.setScalar(o.hbS);
+  enemies.unshift(e);S.props.push(e);return e}
+function dqPropGone(e,killed){if(e._gone)return;e._gone=1;e.dead=1;if(e.hb)e.hb.visible=false;if(typeof tgt!='undefined'&&tgt===e)setTarget(null);
+  try{e.dprop.die&&e.dprop.die(e,killed)}catch(err){console.error('den prop',err)}removeE(e);for(const A of ARN){const S=A.dq;if(S&&S.props){const i=S.props.indexOf(e);if(i>=0)S.props.splice(i,1)}}}
+{const f=kill;kill=function(e){if(e&&e.dprop){dqPropGone(e,true);return}return f.apply(this,arguments)}}
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.dprop){const o=e.dprop;if(o.hbY!=null)e.hb.position.y=e.m.position.y+o.hbY;e.vx=e.vz=0;e.dots.length=0;if(o.tick&&dt>0)o.tick(e,dt,now);return true}return f.apply(this,arguments)}}
+// immunity (e.dqImm = text shown) and vulnerability windows (e.dqVul = until, e.dqVulK = multiplier)
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&!e.dead){if(e.dqImm){if(!dot&&nowP()-(e.dqImT||0)>450){e.dqImT=nowP();dn(e.m.position,e.dqImm,'#ffb0c0',-30,700)}return 0}
+  if(e.dqVul&&e.dqVul>nowP())d=Math.round(d*(e.dqVulK||1.5))}return f.call(this,e,d,s,crit,dot)}}
+// e.dqOnHit(e) fires when the hero (not a companion) strikes e — attacks, skills and projectiles all go through heroHit
+{const f=heroHit;heroHit=function(e){if(e&&!e.dead&&!e.hid&&e.dqOnHit){try{e.dqOnHit(e)}catch(err){console.error(err)}}return f.apply(this,arguments)}}
+// slows / debuffs ride on hero.buffs like the Crypt Matriarch's 'Webbed'
+function dqDebuff(n,i,s,ms,d){const t=nowP()+ms,b=hero.buffs.find(q=>q.n==n);if(b){b.t=Math.max(b.t,t);return}hero.buffs.push({n,i,s,t,d});hsDirty()}
+function dqUndebuff(n){const k=hero.buffs.length;hero.buffs=hero.buffs.filter(b=>b.n!=n);if(hero.buffs.length!=k)hsDirty()}
+// drive a humanoid attack pose on a humanoid boss (zzI_anim's g.ak: wind-up → strike → recover)
+function dqPose(e,n,wind,act){const m=e&&e.m;if(!m)return;const id=(m._dqp=(m._dqp|0)+1);m.ak={n,ph:0,k:0};
+  tw(wind*1000,k=>{if(m._dqp==id&&m.ak)m.ak.k=k},()=>{if(m._dqp!=id)return;m.ak={n,ph:1,k:0};
+    tw((act||.3)*1000,k=>{if(m._dqp==id&&m.ak)m.ak.k=k},()=>{if(m._dqp!=id)return;m.ak={n,ph:2,k:1};tw(320,k=>{if(m._dqp==id&&m.ak)m.ak.k=1-k},()=>{if(m._dqp==id)m.ak=null})})})}
+// cutaway: den geometry beyond radius rIn and higher than yMin above the floor dissolves (dithered) on the camera's side
+// whenever the camera is outside the den, so walls never hide the fight (the game's default camera sits low and far back)
+function dqCut(base,A,rIn,yMin){const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector2(rIn,yMin)};
+  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPc=(modelMatrix*vec4(transformed,1.)).xyz;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
+    {vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
+     if(uCut.w>.5&&lc>uCutR.x-3.&&lf>uCutR.x&&vWPc.y>uCut.z+uCutR.y){float c=dot(fp/lf,cp/lc);float f=1.-smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);
+       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+  m.customProgramCacheKey=()=>'dqcut'+base.type;return m}
+// static den meshes: one soup per material
+function dqMesh(A,S,mat,shadow){const m=S.mesh(mat);m.castShadow=shadow!==false;m.receiveShadow=true;A.g.add(m);return m}
+// block a band of tiles (the den's walls) except the gate
+function dqWall(A,r0,r1,ea,gap){for(let z=Math.floor(A.cz-r1-1);z<=A.cz+r1+1;z++)for(let x=Math.floor(A.cx-r1-1);x<=A.cx+r1+1;x++){const d=Math.hypot(x-A.cx,z-A.cz);if(d<r0||d>r1)continue;if(dqAng(Math.atan2(z-A.cz,x-A.cx),ea)<gap/(d/15))continue;denBlock(x,z)}}
+function dqDisc(x,z,r){const L=[];for(let j=Math.floor(z-r);j<=z+r;j++)for(let i=Math.floor(x-r);i<=x+r;i++)if(Math.hypot(i-x,j-z)<=r)L.push([i,j]);return L}
+// a skull: faceted cranium, jaw, two dark eye sockets facing angle a
+function dqSkull(S,x,y,z,a,s,col){S.geo(ARK.rock[1],arkM4(x,y+s*.55,z,s*.5,s*.46,s*.56,0,a),col||0xd8cfb4);S.geo(ARKG.box,arkM4(x+Math.sin(a)*s*.18,y+s*.22,z+Math.cos(a)*s*.18,s*.42,s*.18,s*.36,0,a),arkShade(col||0xd8cfb4,.85));
+  [-1,1].forEach(q=>{const ex=x+Math.sin(a)*s*.42+Math.cos(a)*q*s*.17,ez=z+Math.cos(a)*s*.42-Math.sin(a)*q*s*.17;S.geo(ARKG.oct,arkM4(ex,y+s*.56,ez,s*.11),0x0a0806)})}
+function dqBone(S,x,y,z,a,l,col){S.geo(ARKG.cyl5,arkM4(x,y,z,.045,l,.045,Math.PI/2,a,0),col||0xcfc6ae);[-1,1].forEach(q=>S.geo(ARKG.oct,arkM4(x+Math.sin(a)*q*l/2,y,z+Math.cos(a)*q*l/2,.07),arkShade(col||0xcfc6ae,.95)))}
+// tower of a fading glow curtain (bottom bright, top black — invisible in additive blending)
+function dqCurtain(r,h,col){const g=new THREE.CylinderGeometry(r,r,h,72,1,true),p=g.attributes.position,c=[],cc=new THREE.Color(col);for(let i=0;i<p.count;i++){const k=p.getY(i)>0?0:1;c.push(cc.r*k,cc.g*k,cc.b*k)}
+  g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));g.userData.lps=1;const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.material.userData.lps=1;m.visible=false;m.renderOrder=8;return m}
+
+// ---------------- den 4: the Charnel Pit ----------------
+var D4={};
+function d4Build(A){
+  const cx=A.cx,cz=A.cz,y0=GH(cx,cz),TAU=DQ.TAU,R=ARK.rng(4400),ea=dqEntry(A),GAP=.23;A.dqA=ea;
+  const S=arkSoup(4401),I=arkSoup(4402),G=arkSoup(4403),P=(a,r)=>[cx+Math.cos(a)*r,cz+Math.sin(a)*r];
+  const mud=[0x2e2a22,0x26231d,0x34302a,0x2f3826,0x3a3428],bone=0xcfc6ae,stone=0x4c4a44,dirt=[0x3a3226,0x2e2a20,0x342e24,0x2c3426];
+  const W0=14.9,W1=15.7,WH=2.9,inGap=a=>dqAng(a,ea)<GAP;
+  // ---- floor: trampled grave mud with crypt flagstone remnants, bones, open graves and green rot puddles ----
+  // one continuous faceted sheet (jittered grid), painted in patches: mud, grave dirt, rot-stained earth, old crypt paving near the middle
+  {const st=1.25,N=Math.ceil(15.6/st),VX={},nz=(x,z)=>Math.sin(x*.41+z*.17)*.55+Math.sin(z*.37-x*.29+1.3)*.45+Math.sin((x+z)*.9)*.18,
+    vt=(i,j)=>{const k=i+','+j;if(VX[k])return VX[k];const h=((i*73856093)^(j*19349663))>>>0,jx=((h%1000)/1000-.5)*.62,jz=(((h>>10)%1000)/1000-.5)*.62,x=cx+i*st+jx,z=cz+j*st+jz;return VX[k]=[x,GH(x,z)+.035+((h>>20)%100)/100*.04,z]};
+    for(let j=-N;j<N;j++)for(let i=-N;i<N;i++){const a=vt(i,j),b=vt(i+1,j),c=vt(i+1,j+1),d=vt(i,j+1);
+      [[a,c,b],[a,d,c]].forEach(T=>{const mx=(T[0][0]+T[1][0]+T[2][0])/3,mz=(T[0][2]+T[1][2]+T[2][2])/3,r=Math.hypot(mx-cx,mz-cz);if(r>15.3)return;
+        const n=nz(mx,mz),k=.82+R()*.3;let col=n>.55?0x2f3a24:n>.1?mud[0]:n>-.45?mud[2]:mud[1];if(r<6.5&&nz(mx*1.7,mz*1.7)>.15)col=0x4a4840;if(r>13)col=arkMix(col,0x1c1a16,.35);S.tri(T[0],T[1],T[2],arkShade(col,k),.08)})}}
+  // tilted, cracked flagstones and scattered bones
+  for(let k=0;k<26;k++){const a=R()*TAU,r=2+R()*10.5,[x,z]=P(a,r),w=.5+R()*.5,d=.4+R()*.4,ry=R()*3;S.geo(ARKG.box,arkM4(x,y0+.06,z,w,.08,d,(R()-.5)*.12,ry,(R()-.5)*.12),arkShade(0x56544a,.7+R()*.35))}
+  for(let k=0;k<44;k++){const a=R()*TAU,r=1.5+R()*12.6,[x,z]=P(a,r);dqBone(S,x,y0+.08,z,R()*6,.3+R()*.35,arkShade(bone,.8+R()*.25))}
+  for(let k=0;k<14;k++){const a=R()*TAU,r=2+R()*12,[x,z]=P(a,r);dqSkull(S,x,y0+.03,z,R()*6,.32+R()*.12,arkShade(bone,.85+R()*.2))}
+  // open graves: a dark hole and a heap of dug earth
+  [[ea+1.45,10.9],[ea-1.5,10.6],[ea+Math.PI+.55,9.4]].forEach(([a,r])=>{const [x,z]=P(a,r),ta=a+Math.PI/2,c=Math.cos(ta),s=Math.sin(ta),Q=(u,v)=>[x+c*u-s*v,z+s*u+c*v];
+    const pts=[Q(-1,-.45),Q(1,-.45),Q(1,.45),Q(-1,.45)];S.slab(pts,pts.map(()=>y0+.07),y0-.2,0x0b0a08,0x1a1612);
+    const [mx,mz]=P(a,r+1.1);S.geo(ARK.rock[2],arkM4(mx,y0+.12,mz,1.1,.3,.55,0,-ta),0x3a3022);S.geo(ARKG.box,arkM4(mx+.3,y0+.6,mz,.06,1.1,.06,.3,0,.2),0x4a3424);S.geo(ARKG.box,arkM4(mx+.42,y0+.12,mz,.26,.06,.34,.3,0,.2),0x6a6660)});
+  // rot puddles (glow)
+  for(let k=0;k<9;k++){const a=R()*TAU,r=3+R()*10,[x,z]=P(a,r),s=.5+R()*.8;for(let q=0;q<7;q++){const a0=q/7*TAU,a1=(q+1)/7*TAU,p=(aa,rr)=>[x+Math.cos(aa)*rr,y0+.085,z+Math.sin(aa)*rr];G.tri(p(0,0),p(a1,s*(.8+R()*.4)),p(a0,s*(.8+R()*.4)),0x2e5a14,.2)}}
+  // ---- retaining wall of crypt stone with skull niches; collapsed stretches spill rubble ----
+  const NW=64;for(let k=0;k<NW;k++){const a0=k/NW*TAU,a1=(k+1)/NW*TAU,am=(a0+a1)/2;if(dqAng(am,ea)<GAP+.02)continue;
+    const brk=R()<.16,h=brk?WH*(.4+R()*.25):WH*(.94+R()*.12),ry=Math.PI/2-am,wd=2*Math.PI*15.3/NW;
+    for(let c=0;c<3;c++){const yb=y0+c*h/3,ch=h/3-.04;if(ch<=.05)break;const nb=c%2?2:1;for(let b=0;b<nb;b++){const aa=nb==1?am:am+(b-.5)*(a1-a0)/2,[x,z]=P(aa,15.3+(R()-.5)*.08);
+      S.geo(ARKG.box,arkM4(x,yb+ch/2,z,wd/nb-.06,ch,.85+R()*.1,0,ry+(R()-.5)*.04,0),arkMix(arkShade(stone,.72+R()*.4),0x3a4a2a,c==2?.25*R():0))}}
+    S.geo(ARKG.box,arkM4(...(([x,z])=>[x,y0+h+.06,z])(P(am,15.35)),wd+.04,.12,1.05,0,ry,0),arkShade(stone,.6));
+    if(!brk&&k%2==1){const [x,z]=P(am,14.84);const c=Math.cos(ry),s=Math.sin(ry),Q=(u,v)=>[x+c*u,y0+v,z-s*u];[.55,1.55].forEach((ny,row)=>{if(row&&R()<.35)return;S.quad(Q(-.38,ny),Q(.38,ny),Q(.38,ny+.52),Q(-.38,ny+.52),0x0b0a08,.05);
+      const [sx,sz]=P(am+(row?.012:-.01),14.95);dqSkull(S,sx,y0+ny+.02,sz,am+Math.PI,.34,0xc8bfa4);if(R()<.4){const [bx,bz]=P(am+.03,14.9);dqBone(S,bx,y0+ny+.06,bz,ry,.3,0xbab09a)}
+      if(R()<.45){const [fx,fz]=P(am-.016,14.82);G.geo(ARKG.cyl5,arkM4(fx,y0+ny+.08,fz,.05,.16,.05),0xd8d0b0);G.geo(ARKG.cone4,arkM4(fx,y0+ny+.27,fz,.055,.2,.055),0x9aff6a);G.geo(ARKG.cone4,arkM4(fx,y0+ny+.24,fz,.03,.12,.03),0xe8ffd0)}})}
+    if(brk){for(let q=0;q<4;q++){const [x,z]=P(am+(R()-.5)*.08,14.3+R()*.5),s=.18+R()*.25;S.geo(ARK.rock[q],arkM4(x,y0+s*.4,z,s,s*.7,s,0,R()*6),arkShade(stone,.6+R()*.3))}if(R()<.6){const [x,z]=P(am,14.5);dqSkull(S,x,y0+.02,z,am+Math.PI,.34,0xc8bfa4)}}
+    // roots and moss hanging over the wall top
+    if(R()<.3){const [x,z]=P(am,14.95);S.geo(ARKG.cone4,arkM4(x,y0+h-.35,z,.08,.7,.08,Math.PI,R()),0x2a2418)}}
+  // gate pillars and lintel (skull keystone)
+  const gpt=[-1,1].map(s=>P(ea+s*(GAP+.035),15.3));gpt.forEach(([x,z],q)=>{S.geo(ARKG.box,arkM4(x,y0+2.5,z,1.15,5,1.15,0,Math.PI/2-ea),arkShade(stone,.8));S.geo(ARKG.box,arkM4(x,y0+5.1,z,1.35,.3,1.35,0,Math.PI/2-ea),arkShade(stone,.6));
+    S.geo(ARKG.cone4,arkM4(x,y0+5.65,z,.5,.8,.5,0,Math.PI/4-ea),arkShade(stone,.7));dqSkull(S,x+Math.cos(ea)*-.6,y0+3.6,z+Math.sin(ea)*-.6,ea+Math.PI,.5)});
+  {const [x,z]=P(ea,15.3),L=Math.hypot(gpt[0][0]-gpt[1][0],gpt[0][1]-gpt[1][1]);S.geo(ARKG.box,arkM4(x,y0+4.6,z,L,.55,.9,0,Math.PI/2-ea),arkShade(stone,.7));dqSkull(S,x-Math.cos(ea)*.5,y0+4.35,z-Math.sin(ea)*.5,ea+Math.PI,.6,0xe0d6bc)}
+  // green-fire skull braziers on the wall top light the pit
+  for(let k=0;k<7;k++){const a=ea+GAP+.45+k*(TAU-2*GAP-.9)/6,[x,z]=P(a,15.3),y=y0+WH+.12;
+    for(let l=0;l<3;l++){const la=l*2.094;I.geo(ARKG.box,arkM4(x+Math.cos(la)*.16,y+.3,z+Math.sin(la)*.16,.05,.6,.05,Math.sin(la)*.3,0,-Math.cos(la)*.3),0x2a2622)}
+    I.geo(ARKG.cone5,arkM4(x,y+.72,z,.42,.32,.42,Math.PI),0x2e2a26);dqSkull(S,x-Math.cos(a)*.42,y+.5,z-Math.sin(a)*.42,a+Math.PI,.3);
+    G.geo(ARKG.cone5,arkM4(x,y+1.15,z,.32,.75,.32,0,R()),0x6aff3a);G.geo(ARKG.cone4,arkM4(x,y+1.05,z,.17,.48,.17,0,R()),0xd8ffb0)}
+  // ---- the embankment of graves above the wall, sloping up to the hills ----
+  const emb=(a,r)=>{const t=Math.max(0,Math.min(1,(r-W1)/(20.6-W1))),xo=cx+Math.cos(a)*20.8,zo=cz+Math.sin(a)*20.8,yt=y0+WH,yo=Math.max(yt,GH(xo,zo)+.05),s=t*t*(3-2*t);return yt+(yo-yt)*s+Math.sin(a*9+r*1.7)*.1*Math.sin(Math.PI*t)};
+  const RS=[W1-.1,16.6,17.6,18.7,19.7,20.6],NE=96;for(let k=0;k<NE;k++){const a0=k/NE*TAU,a1=(k+1)/NE*TAU;if(dqAng((a0+a1)/2,ea)<GAP+.06)continue;
+    for(let j=0;j<RS.length-1;j++){const p=(a,r)=>{const [x,z]=P(a,r);return [x,emb(a,r),z]};S.quad(p(a0,RS[j]),p(a0,RS[j+1]),p(a1,RS[j+1]),p(a1,RS[j]),arkShade(dirt[(R()*4)|0],.75+R()*.3),.14)}
+    const po=(a,y)=>{const [x,z]=P(a,20.6);return [x,y,z]};S.quad(po(a0,emb(a0,20.6)),po(a1,emb(a1,20.6)),po(a1,GH(...P(a1,20.6))-.3),po(a0,GH(...P(a0,20.6))-.3),0x2a241c,.1)}
+  [-1,1].forEach(s=>{const a=ea+s*(GAP+.06),p=(r,y)=>{const [x,z]=P(a,r);return [x,y,z]};for(let j=0;j<RS.length-1;j++)S.quad(p(RS[j],emb(a,RS[j])),p(RS[j+1],emb(a,RS[j+1])),p(RS[j+1],y0-.2),p(RS[j],y0-.2),0x2c261c,.1)});
+  // leaning headstones and crosses on the embankment
+  for(let k=0;k<46;k++){const a=R()*TAU;if(dqAng(a,ea)<GAP+.12)continue;const r=16.1+R()*3.6,[x,z]=P(a,r),y=emb(a,r),ry=Math.PI/2-a+(R()-.5)*.5,lx=(R()-.5)*.35,lz=(R()-.5)*.25,col=arkShade(0x6a6860,.6+R()*.45);
+    if(R()<.65){const h=.6+R()*.5;S.geo(ARKG.box,arkM4(x,y+h/2-.1,z,.55,h,.15,lx,ry,lz),col);S.geo(ARKG.cyl6,arkM4(x,y+h-.1,z,.27,.15,.27,Math.PI/2,ry,lz),col)}
+    else{S.geo(ARKG.box,arkM4(x,y+.5,z,.12,1.1,.12,lx,ry,lz),col);S.geo(ARKG.box,arkM4(x,y+.72,z,.6,.12,.12,lx,ry,lz),col)}}
+  // iron fence along the wall top
+  {let a=0;const st=.55/15.9;while(a<TAU){const am=a;a+=st;if(dqAng(am,ea)<GAP+.03)continue;if(Math.sin(am*5.3)>.82)continue;const [x,z]=P(am,15.9),y=y0+WH;
+    I.geo(ARKG.box,arkM4(x,y+.55,z,.05,1.1,.05,(R()-.5)*.15,0,(R()-.5)*.15),0x2a2622);I.geo(ARKG.cone4,arkM4(x,y+1.18,z,.06,.18,.06),0x34302a);
+    const [x2,z2]=P(am+st,15.9);if(dqAng(am+st,ea)>=GAP+.03&&Math.sin((am+st)*5.3)<=.82)[.35,.9].forEach(h=>I.geo(ARKG.box,arkM4((x+x2)/2,y+h,(z+z2)/2,.55,.04,.04,0,Math.PI/2-am-st/2),0x2a2622))}}
+  // gibbets with hanging cages leaning over the pit (one still holds its prisoner)
+  [ea+Math.PI*.55,ea-Math.PI*.6,ea+Math.PI*1.02,ea+Math.PI*1.38].forEach((a,q)=>{const [px,pz]=P(a,16.4),py=emb(a,16.4),top=py+4.6,[cx2,cz2]=P(a,13.7),ry=Math.PI/2-a;
+    S.geo(ARKG.box,arkM4(px,py+2.3,pz,.26,4.7,.26,0,ry),0x3a2a1c);const ax=(px+cx2)/2,az=(pz+cz2)/2;S.geo(ARKG.box,arkM4(ax,top,az,2.9,.22,.22,0,ry+Math.PI/2),0x3a2a1c);
+    const cy=top-2.3;for(let l=0;l<5;l++)I.geo(ARKG.oct,arkM4(cx2,top-.2-l*.22,cz2,.06,.11,.06,0,l*1.57),0x3a3632);
+    for(let b=0;b<8;b++){const ba=b/8*TAU;I.geo(ARKG.cyl5,arkM4(cx2+Math.cos(ba)*.45,cy,cz2+Math.sin(ba)*.45,.025,1.5,.025),0x2e2a26)}
+    I.geo(ARKG.cyl6,arkM4(cx2,cy+.75,cz2,.5,.06,.5),0x2e2a26);I.geo(ARKG.cone5,arkM4(cx2,cy+.95,cz2,.5,.35,.5),0x2a2622);I.geo(ARKG.cyl6,arkM4(cx2,cy-.75,cz2,.5,.06,.5),0x2e2a26);
+    if(q==0){dqSkull(S,cx2,cy-.1,cz2,a+Math.PI,.32);for(let i=0;i<4;i++)S.geo(ARKG.box,arkM4(cx2,cy-.3-i*.1,cz2+.04,.32-i*.03,.03,.18,0,ry),bone);dqBone(S,cx2+.1,cy-.68,cz2,ry,.4)}});
+  // ---- three rot vats (solid): staved wood, iron bands, glowing sludge spilling over ----
+  D4.vats=[];[ea+Math.PI,ea+Math.PI-1.25,ea+Math.PI+1.25].forEach((a,q)=>{const [x,z]=P(a,12.3);D4.vats.push([x,z]);dqDisc(x,z,1.5).forEach(([i,j])=>denBlock(i,j));
+    for(let s=0;s<10;s++){const sa=s/10*TAU,sx=x+Math.cos(sa)*1.18,sz=z+Math.sin(sa)*1.18;S.geo(ARKG.box,arkM4(sx,y0+.78,sz,.74,1.56,.12,0,Math.PI/2-sa,0),arkShade(0x4a3a28,.7+R()*.4))}
+    [.28,1.22].forEach(h=>I.geo(ARKG.cyl6,arkM4(x,y0+h,z,1.28,.12,1.28,0,.3),0x2a2826));I.geo(ARKG.cyl6,arkM4(x,y0+1.52,z,1.3,.08,1.3,0,.3),0x34302c);
+    G.geo(ARKG.cyl6,arkM4(x,y0+1.42,z,1.14,.05,1.14,0,.3),0x8aef3a);
+    const ia=Math.atan2(cz-z,cx-x);for(let d=-1;d<=1;d++){const da=ia+d*.5,dx=x+Math.cos(da)*1.25,dz=z+Math.sin(da)*1.25,c=Math.cos(Math.PI/2-da),s2=Math.sin(Math.PI/2-da),Q=(u,v)=>[dx+c*u,y0+v,dz-s2*u];
+      const w=.14+R()*.1,len=.5+R()*.8;G.quad(Q(-w,1.5),Q(w,1.5),Q(w*.6,1.5-len),Q(-w*.6,1.5-len),0x6ad02a,.1)}
+    for(let p=0;p<8;p++){const a0=p/8*TAU,a1=(p+1)/8*TAU,px=x+Math.cos(ia)*1.6,pz=z+Math.sin(ia)*1.6,pp=(aa,rr)=>[px+Math.cos(aa)*rr,y0+.09,pz+Math.sin(aa)*rr];G.tri(pp(0,0),pp(a1,.9+R()*.3),pp(a0,.9+R()*.3),0x3a7a18,.15)}});
+  // ---- four corpse piles (solid) ----
+  D4.piles=[];[ea+.95,ea+2.45,ea-.95,ea-2.45].forEach((a,q)=>{const [x,z]=P(a,7.8);D4.piles.push([x,z,a]);dqDisc(x,z,.8).forEach(([i,j])=>denBlock(i,j));
+    S.geo(ARK.rock[q],arkM4(x,y0+.15,z,1.5,.42,1.3,0,R()*6),0x2e2820);
+    const body=[0xb8b496,0xa8b08a,0x9aa47e,0xc0b498,0x8a9a72],rag=[0x4a3a2a,0x3a2a26,0x5a4a36,0x2e3a2a];
+    for(let p=0;p<9;p++){const a0=p/9*TAU,a1=(p+1)/9*TAU,pp=(aa,rr)=>[x+Math.cos(aa)*rr,y0+.08,z+Math.sin(aa)*rr];S.tri(pp(0,0),pp(a1,1.7+R()*.5),pp(a0,1.7+R()*.5),0x3a1410,.2)}
+    for(let b=0;b<14;b++){const ba=R()*TAU,br=R()*1.0,bx=x+Math.cos(ba)*br,bz=z+Math.sin(ba)*br,by=y0+.3+(1-br)*.62+R()*.12,ry2=R()*6,cl=b%3==2;
+      S.geo(ARK.rock[b%4],arkM4(bx,by,bz,.66+R()*.2,.21,.25,(R()-.5)*.5,ry2,(R()-.5)*.4),cl?arkShade(rag[(R()*4)|0],.9+R()*.3):arkShade(body[(R()*body.length)|0],.85+R()*.25));
+      if(!cl&&R()<.5){const la=ry2+(R()<.5?1.4:-1.4);S.geo(ARKG.cyl5,arkM4(bx+Math.cos(la)*.3,by+.12,bz-Math.sin(la)*.3,.05,.5,.05,(R()-.5)*1.4,la,(R()-.5)*1.4),arkShade(body[0],.9))}}
+    for(let b=0;b<3;b++){const ba=R()*TAU;dqSkull(S,x+Math.cos(ba)*.7,y0+.35+R()*.3,z+Math.sin(ba)*.7,R()*6,.3,0xd0c6a8)}
+    S.geo(ARKG.cyl5,arkM4(x+.2,y0+1.15,z-.1,.06,.7,.06,.5,R(),.3),0x8a8a6a);dqBone(S,x-.5,y0+.9,z+.3,R()*6,.45)});
+  // ---- two broken sarcophagi (solid) ----
+  [ea+1.42,ea-1.38].forEach(a=>{const [x,z]=P(a,10.6),ry=Math.PI/2-a;S.geo(ARKG.box,arkM4(x,y0+.4,z,2.3,.8,1.05,0,ry),arkShade(stone,.95));S.geo(ARKG.box,arkM4(x,y0+.85,z,1.1,.1,.8,0,ry),0x141210);
+    S.geo(ARKG.box,arkM4(x+Math.cos(a)*.35,y0+.95,z+Math.sin(a)*.35,2.35,.18,1.1,.18,ry+.35,.1),arkShade(stone,1.1));S.geo(ARKG.box,arkM4(x+Math.cos(a)*.6,y0+.9,z+Math.sin(a)*.6,.6,.12,.4,.1,ry+.2,0),arkShade(stone,.8));
+    const c=Math.cos(ry),s=Math.sin(ry);[-1,0,1].forEach(u=>denBlock(x+c*u*.9,z-s*u*.9))});
+  dqWall(A,14.95,18.6,ea,GAP*1.05);
+  // ---- build static meshes ----
+  dqMesh(A,S,dqCut(arkMat('std'),A,14.2,.5));dqMesh(A,I,dqCut(arkMat('iron'),A,14.2,.5));const gm=dqMesh(A,G,dqCut(arkMat('glow'),A,14.2,.5),false);gm.receiveShadow=false;
+  // ---- live pieces: portcullis, miasma seal, vat bubbles, ghost lights ----
+  const PC=arkSoup(4404),[gx,gz]=P(ea,15.3),gL=Math.hypot(gpt[0][0]-gpt[1][0],gpt[0][1]-gpt[1][1])-1.1,tx=-Math.sin(ea),tz=Math.cos(ea);
+  for(let b=0;b<=9;b++){const u=-gL/2+gL*b/9,x=gx+tx*u,z=gz+tz*u;PC.geo(ARKG.cyl5,arkM4(x,y0+2.05,z,.06,4.1,.06),0x2a2622);PC.geo(ARKG.cone4,arkM4(x,y0-.08,z,.08,.3,.08,Math.PI),0x34302c)}
+  [.5,1.7,2.9,3.9].forEach(h=>PC.geo(ARKG.box,arkM4(gx,y0+h,gz,gL+.1,.1,.08,0,Math.PI/2-ea),0x2a2622));
+  const pcm=PC.mesh(dqCut(arkMat('iron'),A,14.2,.5));const pcg=new THREE.Group();pcg.add(pcm);pcg.position.y=3.9;A.g.add(pcg);D4.gate=pcg;
+  const cur=dqCurtain(14.4,3.4,0x5aff2a);cur.position.set(cx,y0+1.7,cz);A.g.add(cur);D4.cur=cur;
+  const bub=[],bm=new THREE.MeshBasicMaterial({color:0xaaff60});D4.vats.forEach(([x,z],q)=>{for(let i=0;i<3;i++){const b=new THREE.Mesh(dqG('ico0'),bm);b.position.set(x+(R()-.5)*1.3,y0+1.45,z+(R()-.5)*1.3);b.userData.ph=R()*10;A.g.add(b);bub.push(b)}});
+  const wl=[];for(let k=0;k<7;k++){const s=kqSpr(0x9affc8,.7);s.userData={a:R()*TAU,r:4+R()*9,h:1.4+R()*2,ph:R()*10};A.g.add(s);wl.push(s)}
+  TANIM.push({x:cx,z:cz,f:now=>{const t=now/1000;bub.forEach((b,i)=>{const k=((t*.7+b.userData.ph)%1);b.scale.setScalar(.04+.16*Math.sin(Math.PI*k));b.position.y=y0+1.45+k*.12});
+    wl.forEach(s=>{const u=s.userData,a=u.a+t*.08;s.position.set(cx+Math.cos(a)*u.r,y0+u.h+Math.sin(t*.9+u.ph)*.35,cz+Math.sin(a)*u.r);s.material.opacity=.55+.3*Math.sin(t*2+u.ph)})}});
+  // shared rot pool meshes (irregular blob + a frothy rim)
+  const blob=(n,j,ri,ro)=>{const R2=ARK.rng(4500+n),pos=[],idx=[],rr=[...Array(n)].map(()=>1+(R2()-.5)*j);pos.push(0,0,0);for(let i=0;i<n;i++){const a=i/n*TAU;pos.push(Math.cos(a)*rr[i]*ro,0,Math.sin(a)*rr[i]*ro)}
+    if(ri==null){for(let i=0;i<n;i++)idx.push(0,1+(i+1)%n,1+i)}else{for(let i=0;i<n;i++){const a=i/n*TAU;pos.push(Math.cos(a)*rr[i]*ri,0,Math.sin(a)*rr[i]*ri)}for(let i=0;i<n;i++){const a=1+i,b=1+(i+1)%n,c=1+n+i,d=1+n+(i+1)%n;idx.push(c,b,a,c,d,b)}}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeBoundingSphere();g.userData.lps=1;return g};
+  D4.pg=blob(22,.28,null,1);D4.fg=blob(22,.28,.8,1.04);
+  D4.pm=new THREE.MeshBasicMaterial({color:0x2a4a12,transparent:true,opacity:.86,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,side:THREE.DoubleSide});
+  D4.fm=new THREE.MeshBasicMaterial({color:0x7aff3a,transparent:true,opacity:.42,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-5,side:THREE.DoubleSide});
+  [D4.pm,D4.fm].forEach(m=>m.userData.lps=1);
+  // the rot tide: a ring whose inner edge is rewritten in place each frame
+  {const N=80,pos=new Float32Array((N+1)*2*3),idx=[];for(let i=0;i<N;i++){const a=i*2,b=i*2+1,c=i*2+2,d=i*2+3;idx.push(a,c,b,b,c,d)}
+    const mk=(mat)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos),3));g.setIndex(idx);g.boundingSphere=new THREE.Sphere(new THREE.Vector3(cx,y0,cz),20);g.userData.lps=1;const m=new THREE.Mesh(g,mat);m.visible=false;m.frustumCulled=false;A.g.add(m);return m};
+    D4.tide=mk(D4.pm);D4.tideF=mk(D4.fm);D4.tideN=N}
+  A.b.ult=0;   // the Rot Tide replaces the generic Cataclysm
+}
+// ---- rot pools ----
+function d4Pool(A,x,z,r0){const S=A.dq;if(!S||!A.f)return;const y=GH(x,z)+.1+(S.pn%9)*.003;S.pn++;
+  const p={x,z,r:.15,r0,rMax:Math.min(4.2,r0*1.6),age:0,dry:0,ms:new THREE.Mesh(D4.pg,D4.pm),fr:new THREE.Mesh(D4.fg,D4.fm)};
+  p.ms.position.set(x,y,z);p.fr.position.set(x,y+.002,z);p.ms.rotation.y=p.fr.rotation.y=Math.random()*6.28;p.ms.renderOrder=17;p.fr.renderOrder=18;p.ms.scale.setScalar(.15);p.fr.scale.setScalar(.15);scene.add(p.ms,p.fr);S.pools.push(p);
+  const cap=[0,5,7,9][S.ph]||7;const live=S.pools.filter(q=>!q.dry);if(live.length>cap)live[0].dry=1;burst(V(x,y+.2,z),0x7aff3a,10,2,2,.5)}
+function d4InRot(A,p){const S=A.dq;for(const q of S.pools)if(!q.dry&&Math.hypot(p.x-q.x,p.z-q.z)<q.r*.88)return true;if(S.tide&&Math.hypot(p.x-A.cx,p.z-A.cz)>S.tide.r+.25)return true;return false}
+function d4TideDraw(A,now){const S=A.dq,T=S.tide,N=D4.tideN,y=GH(A.cx,A.cz)+.11,t=now/1000;
+  [[D4.tide,0,15.6],[D4.tideF,-.12,.55]].forEach(([m,o,w],q)=>{const p=m.geometry.attributes.position.array;for(let i=0;i<=N;i++){const a=i/N*DQ.TAU,wob=Math.sin(a*6+t*1.3)*.28+Math.sin(a*11-t*.9)*.14,ri=Math.max(.5,T.r+wob+o),ro=q?ri+w:w;
+    p[i*6]=A.cx+Math.cos(a)*ri;p[i*6+1]=y+q*.003;p[i*6+2]=A.cz+Math.sin(a)*ri;p[i*6+3]=A.cx+Math.cos(a)*ro;p[i*6+4]=y+q*.003;p[i*6+5]=A.cz+Math.sin(a)*ro}m.geometry.attributes.position.needsUpdate=true;m.visible=true})}
+// ---- pustules on the Rot-King's hide ----
+function d4Pustules(e,A,en){const S=A.dq,B=e;if(!S||S.pus.some(p=>!p._gone))return;const n=3,mat=new THREE.MeshStandardMaterial({color:0xc8e86a,emissive:0x6a9a10,emissiveIntensity:.8,roughness:.4,flatShading:true});mat.userData.lps=1;
+  S.pusMat=mat;S.pusT=S.ph>=3?9:11;S.pusMax=S.pusT;S.pusPop=0;
+  for(let i=0;i<n;i++){const g=new THREE.Group(),b=new THREE.Mesh(dqG('ico'),mat),gl=kqSpr(0xb8ff4a,.6);g.add(b,gl);
+    const ang=[.0,2.1,-2.1][i]+(Math.random()-.5)*.3,h=[1.75,2.35,1.45][i],off=[.8,.72,.76][i];
+    const p=dqProp(A,B.m.position.x,B.m.position.z,{n:'Bile Pustule',frac:.022,mesh:g,hbY:h+.9,hbS:.6,
+      tick(pe,dt,now){if(B.dead){dqPropGone(pe,false);return}const s=B.m.bs/2.5,ry=B.m.rotation.y+ang;pe.m.position.x=B.m.position.x+Math.sin(ry)*off*s;pe.m.position.z=B.m.position.z+Math.cos(ry)*off*s;
+        pe.m.visible=!B.hid;const k=1-S.pusT/S.pusMax,pul=1+.12*Math.sin(now/(140-60*k));b.position.y=h*s;gl.position.y=h*s;b.scale.setScalar((.32+.3*k)*pul*s);gl.scale.setScalar((.6+.6*k)*pul*s);mat.emissiveIntensity=.7+.8*k},
+      die(pe,killed){const q=gY(pe.m.position,b.position.y);burst(q,0xc8ff4a,40,4,3,.7);burst(q,0x6aaa20,20,2,4,.6);kqFlash&&kqFlash(q,0xb8ff4a,3,220);if(!killed||B.dead||!A.f)return;
+        sfx&&sfx('brk',.6);S.pusPop++;hurt(B,Math.round(M(B.c)*.03),{col:0xc8ff4a},false);popT(B.m.position,'💥 POP!','#c8ff4a');
+        B.bs.lock=Math.max(B.bs.lock,1.2);B.bs.t=Math.max(B.bs.t,1.6);B.bs.dash=null;shake(.12);
+        if(S.pusPop>=n){B.dqVul=nowP()+5000;B.dqVulK=1.35;banner('🤢 THE ROT-KING REELS','Every pustule burst — strike now!','+35% damage for 5 seconds');B.bs.lock=Math.max(B.bs.lock,2.4);B.bs.t=Math.max(B.bs.t,2.8);ring(B.m.position,0xc8ff4a,6,500)}}});
+    S.pus.push(p)}
+  if(!S.pusSeen){S.pusSeen=1;banner('🟢 BILE PUSTULES','Pop them for burst damage and a stagger','Left alone, they erupt into a rain of bile')}else say('🟢 Bile pustules swell on the Rot-King — pop them!')}
+function d4Erupt(e,A){const S=A.dq,L=S.pus.filter(p=>!p._gone);if(!L.length)return;say('⚠ The pustules erupt!');const en=1.2;
+  L.forEach((p,i)=>{const from=gY(p.m.position,2.6);dqPropGone(p,false);for(let k=0;k<3;k++){const q=inArena(A,pl.position.clone().add(V((Math.random()-.5)*7,0,(Math.random()-.5)*7)));if(k==0&&i==0)q.copy(inArena(A,pl.position.clone()));
+    const dl=(1.0+k*.18+i*.1)*en;kqLob(A,from,q,dl,0xb8ff4a,1.6);tele(q,1.8,dl,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff6a,16,2,2,.5);if(d2(pl.position,q)<1.8&&hero.iv<=0)bossHit(e,.75);d4Pool(A,q.x,q.z,1.3)})}});S.pus.length=0}
+// ---- corpse piles swell into maggot swarms ----
+function d4Swell(e,A,idx,en){const S=A.dq,pile=D4.piles[idx],st=S.pileS[idx];if(!pile||st.on)return;st.on=1;const [x,z]=pile,y=GH(x,z),T=S.ph>=3?5.2:S.ph>=2?5.8:6.4;
+  const mat=new THREE.MeshStandardMaterial({color:0x9ac85a,emissive:0x3a7a10,emissiveIntensity:.6,roughness:.5,flatShading:true});mat.userData.lps=1;
+  const g=new THREE.Group(),sac=new THREE.Mesh(dqG('ico'),mat),gl=kqSpr(0x9aff6a,1.6);sac.position.y=1.15;gl.position.y=1.2;g.add(sac,gl);
+  for(let v=0;v<4;v++){const vn=new THREE.Mesh(ARKG.box,new THREE.MeshBasicMaterial({color:0x3a5a12}));vn.scale.set(.04,.9,.04);vn.position.set(Math.cos(v*1.57)*.42,1.15,Math.sin(v*1.57)*.42);vn.rotation.set(Math.sin(v*1.57)*.5,0,-Math.cos(v*1.57)*.5);g.add(vn)}
+  let t=0;const w=dqWarn(S,{x,z,r:2.8,t:T,fn:()=>{if(!p._gone){dqPropGone(p,false);d4Burst(e,A,idx)}}});
+  const p=dqProp(A,x,z,{n:'Swelling Corpse Pile',frac:S.ph>=3?.04:.034,mesh:g,hbY:2.4,hbS:.9,
+    tick(pe,dt,now){t+=dt;const k=Math.min(1,t/T),pul=1+(.06+.14*k)*Math.sin(now/(160-90*k));sac.scale.setScalar((.45+.5*k)*pul);gl.scale.setScalar((1.2+1.6*k)*pul);mat.emissiveIntensity=.5+k;if(Math.random()<dt*6)burst(gY(pe.m.position,1.4),0x9aff6a,1,.6,.8,.5)},
+    die(pe,killed){mat.dispose();st.on=0;if(killed){w.kill();burst(gY(pe.m.position,1),0x9aff6a,30,3,3,.6);burst(gY(pe.m.position,1),0x6a1a10,16,2,2,.5);popT(pe.m.position,'☠ PURGED','#c8ff9a')}}});
+  burst(V(x,y+1,z),0x9aff6a,24,2,3,.6);say('🪱 A corpse pile swells — destroy it before it bursts into maggots!');popT(V(x,y,z),'SWELLING!','#b8ff6a')}
+function d4Burst(e,A,idx){const S=A.dq,[x,z]=D4.piles[idx],o=V(x,0,z),st=S.pileS[idx];st.on=0;if(!A.f||e.dead)return;
+  ring(o,0x9aff6a,5,400);burst(gY(o,1),0x9aff6a,60,5,4,.9);burst(gY(o,.8),0x7a2a18,30,4,3,.7);shake(.2);if(d2(pl.position,o)<2.8&&hero.iv<=0)bossHit(e,.9);
+  d4Pool(A,x,z,2.0);const live=enemies.filter(q=>q.minion&&!q.dead&&!q.dprop&&q.c.g[0]=='maggot'&&d2(q.m.position,V(A.cx,0,A.cz))<ARENA_R).length,n=Math.min([0,2,3,4][S.ph]||3,9-live);
+  for(let k=0;k<n;k++){const a=k/n*6.283+Math.random(),mx=x+Math.cos(a)*1.9,mz=z+Math.sin(a)*1.9;if(solid(mx,mz))continue;const m=spawnEnemy('maggot',mx,mz,Math.max(1,e.c.l-4),{minion:1,agg:1});if(m){m.agg=1;burst(gY(m.m.position,.4),0x9aff6a,10,2,2,.4)}}
+  if(n>0)say('🪱 Bloat maggots spill from the pile!')}
+// ---- BMV moves (relayed to co-op peers) ----
+kqBmv('rotspit',function(e,A,en){const S=A.dq,N=[0,3,4,5][S?S.ph:1]||4,mo=kqMouth(e);kqBossCast(e,0x9aff6a,300);dqPose(e,'throw',.35*en,.3);
+  for(let i=0;i<N;i++){const q=inArena(A,pl.position.clone().add(V((Math.random()-.5)*7,0,(Math.random()-.5)*7)));if(i==0)q.copy(inArena(A,pl.position.clone()));const dl=(.95+i*.16)*en;
+    kqLob(A,mo,q,dl,0x9aff6a,1.9);tele(q,1.9,dl,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff6a,18,2,2,.5);if(d2(pl.position,q)<1.9&&hero.iv<=0)bossHit(e,.75);d4Pool(A,q.x,q.z,1.6)})}
+  return {d:1.4*en,lock:0}});
+kqBmv('belch',function(e,A,en){const S=A.dq;if(!S)return {d:.5,lock:0};const o=e.m.position.clone(),a=Math.atan2(pl.position.x-o.x,pl.position.z-o.z),half=.62,L=9.5,T=1.1*en;
+  e.m.rotation.y=a;e.bs.face=1;kqBossCast(e,0x9aff6a,T*1000);dqPose(e,'slam',T*.85,.35);
+  dqWarn(S,{x:o.x,z:o.z,a,half,l:L,t:T,fn:()=>{e.bs.face=0;if(!A.f||e.dead)return;const s=Math.sin(a),c=Math.cos(a);
+    for(let k=0;k<26;k++){const r=1.5+Math.random()*(L-1.5),aa=a+(Math.random()-.5)*2*half*.9;burst(V(o.x+Math.sin(aa)*r,GH(o.x,o.z)+.6+Math.random(),o.z+Math.cos(aa)*r),k%3?0x9aff6a:0x5a8a2a,4,2,1.5,.8)}
+    shake(.18);const dx=pl.position.x-o.x,dz=pl.position.z-o.z,dd=Math.hypot(dx,dz);
+    if(dd<L&&dqAng(Math.atan2(dx,dz),a)<half&&hero.iv<=0){bossHit(e,1.25);dqDebuff('Rotting','🤢',{mspd:-.35},3000,'Slowed by rot');dn(pl.position,'Rotting!','#9aff6a',-20,800)}
+    d4Pool(A,o.x+s*4.2,o.z+c*4.2,1.5)}});
+  return {d:1.9*en,lock:1}});
+kqBmv('corpsecall',function(e,A,en){const S=A.dq;if(S)d4Swell(e,A,dqDec(en)%4,en);return {d:.8*en,lock:0}});
+kqBmv('pustules',function(e,A,en){const S=A.dq;if(S){kqBossCast(e,0xc8ff4a,600);d4Pustules(e,A,en)}return {d:1.1*en,lock:1}});
+kqBmv('rottide',function(e,A,en){const S=A.dq;if(!S||S.tide)return {d:.5,lock:0};S.tide={r:15.2,min:8.4,sp:.16};
+  banner('☣ THE PIT FLOODS','The rot vats burst — the tide creeps in from the walls','Kill the Rot-King before clean ground runs out');shake(.35);
+  D4.vats.forEach(([x,z])=>{burst(V(x,GH(x,z)+1.6,z),0x9aff6a,60,4,5,1);ring(V(x,0,z),0x9aff6a,4,500);d4Pool(A,x+(A.cx-x)*.18,z+(A.cz-z)*.18,2.2)});return {d:1.6*en,lock:1}});
+// ---- den hooks ----
+DEN[4]={
+  build:d4Build,
+  start(A,e){const S=dqState(A);dqReset(S);Object.assign(S,{ph:1,pools:S.pools||[],pn:0,cT:8,pT:0,pus:[],pusT:0,tide:null,hz:0,pileS:[0,1,2,3].map(()=>({on:0})),hint:0});
+    BSTY[4]=Object.assign(BSTY[4]||{m:'slow',sp:1},{m:'slow',sp:1.0,pool:[['slam','rotspit','belch'],['belch','rotspit','slam','sporering'],['quake','belch','rotspit','sporering']]});
+    setTimeout(()=>{if(A.f)say('☣ The Charnel Pit: rot burns and slows you and keeps spreading. Smash swelling corpse piles before they burst.')},2200)},
+  tick(A,e,dt,now){const S=A.dq;if(!S||!S.pools)return;dqRun(S,dt);
+    const ph=e.bs.ph||1;if(ph>S.ph){S.ph=ph;if(ph==2){S.pT=3}if(ph==3){S.cT=Math.min(S.cT,4);dqAfter(S,1.5,()=>{if(A.f&&!e.dead)dqCast(e,A,'rottide',1.2)})}}
+    if(dqAuth(A)&&!e.dead){S.cT-=dt;if(S.cT<=0){S.cT=[0,15,12,9][S.ph];const free=[0,1,2,3].filter(i=>!S.pileS[i].on);if(free.length){const i=free[(Math.random()*free.length)|0];dqCast(e,A,'corpsecall',dqEnc(1.2,i))}}
+      if(S.ph>=2&&!S.pus.some(p=>!p._gone)){S.pT-=dt;if(S.pT<=0){S.pT=[0,0,18,13][S.ph];dqCast(e,A,'pustules',1.2)}}}
+    if(S.pus.length){S.pusT-=dt;if(S.pus.every(p=>p._gone)){S.pus.length=0}else if(S.pusT<=0)d4Erupt(e,A)}
+    // pools grow, the oldest dry up
+    for(let i=S.pools.length-1;i>=0;i--){const p=S.pools[i];p.age+=dt;if(p.dry){p.r-=dt*.9;if(p.r<=.05){scene.remove(p.ms,p.fr);S.pools.splice(i,1);continue}}
+      else if(p.r<p.r0)p.r=Math.min(p.r0,p.r+dt*p.r0*2.5);else p.r=Math.min(p.rMax,p.r+dt*(p.rMax-p.r0)/22);
+      p.ms.scale.setScalar(p.r);p.fr.scale.setScalar(p.r*(1+.03*Math.sin(now/300+i)));if(Math.random()<dt*1.2)burst(V(p.x+(Math.random()-.5)*p.r,GH(p.x,p.z)+.15,p.z+(Math.random()-.5)*p.r),0x9aff6a,1,.4,1,.5)}
+    if(S.tide){S.tide.r=Math.max(S.tide.min,S.tide.r-S.tide.sp*dt);d4TideDraw(A,now);if(Math.random()<dt*8){const a=Math.random()*6.283;burst(V(A.cx+Math.cos(a)*S.tide.r,GH(A.cx,A.cz)+.2,A.cz+Math.sin(a)*S.tide.r),0x9aff6a,2,.5,1,.5)}}
+    // standing in rot burns and slows
+    S.hz-=dt;if(d4InRot(A,pl.position)){dqDebuff('Rotting','🤢',{mspd:-.3},700,'Slowed by rot');if(S.hz<=0&&hero.iv<=0){S.hz=.5;bossHit(e,S.ph>=3?.2:.16);if(!S.hint){S.hint=1;say('🤢 The rot burns and slows you — keep to clean ground.')}}}
+    if(D4.cur.visible)D4.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.2?.16:.5)+.1*Math.sin(now/260)},
+  clear(A,won){const S=A.dq;if(!S)return;dqReset(S);(S.pools||[]).forEach(p=>scene.remove(p.ms,p.fr));S.pools=[];S.pus=[];S.tide=null;D4.tide.visible=D4.tideF.visible=false;
+    dqUndebuff('Rotting');const e=bossEnt(A.i);if(e){e.dqVul=0;e.bs.face=0;if(e.m)e.m.ak=null}
+    enemies.slice().forEach(q=>{if(q.minion&&!q.dprop&&q.c.g[0]=='maggot'&&d2(q.m.position,V(A.cx,0,A.cz))<ARENA_R+4)removeE(q)});
+    if(won){D4.vats.forEach(([x,z])=>burst(V(x,GH(x,z)+1.5,z),0x9aff6a,30,3,4,.8))}},
+  seal(A,on){const g=D4.gate,c=D4.cur,gx=A.cx+Math.cos(A.dqA)*15.3,gz=A.cz+Math.sin(A.dqA)*15.3;if(on){c.visible=true;tw(500,k=>{g.position.y=3.9*(1-k*k)},()=>{shake(.25);burst(V(gx,GH(A.cx,A.cz)+.2,gz),0x8a8070,30,3,2,.6)});tw(700,k=>c.material.opacity=.5*k)}
+    else{tw(1400,k=>{g.position.y=3.9*k});tw(800,k=>c.material.opacity=.5*(1-k),()=>{if(!A.f)c.visible=false})}}
+};
+
+// ================= v86 den 5: The Crimson Throne Hall — Lord Vaelric, the Crimson King (final boss) =================
+// A ruined gothic throne hall: checkered marble under a long crimson carpet, a moat of blood around the floor, a ring of
+// clustered pillars and pointed arches, stained-glass lancets and a rose window, candelabras, banners, two blood
+// fountains and the throne on its dais. The gate drops an iron portcullis and a curtain of blood when the fight begins.
+// Mechanics (uses the dq* toolkit from zzK_den4.js):
+//  • Blood Chalices — golden chalices rise on the four pedestals; while one stands a blood tether heals Vaelric. Shatter them.
+//  • Bat Swarm      — he bursts into bats that sweep the hall along red lanes (2/3/4 sweeps), then reforms with a burst.
+//  • Crimson Doubles (phase 2+) — he splits into four; all four channel blood lances at you. Only the real one casts a
+//                     shadow: hit him to shatter every copy and stagger him (copies can be cut down one by one too).
+//  • Blood Moon (phase 2+) — the hall floods with blood; only the pale moonlight shafts are safe (they drift in phase 3).
+//  • The Crimson Rite (phase 3 finale) — he rises before his throne, warded, while four blood obelisks feed a sigil.
+//                     Break all four to bring him crashing down (stunned, +50% damage); if the rite completes, a
+//                     Crimson Cataclysm hits the whole hall — dash through it.
+var D5={};
+function d5Build(A){
+  const cx=A.cx,cz=A.cz,y0=GH(cx,cz),TAU=DQ.TAU,R=ARK.rng(5500),ea=dqEntry(A),fa=ea+Math.PI,GAP=.196;A.dqA=ea;
+  const F={x:Math.cos(fa),z:Math.sin(fa)},Rt={x:-Math.sin(fa),z:Math.cos(fa)},L=(u,v)=>[cx+F.x*u+Rt.x*v,cz+F.z*u+Rt.z*v],RY=Math.atan2(F.x,F.z);
+  const P=(a,r)=>[cx+Math.cos(a)*r,cz+Math.sin(a)*r];
+  const S=arkSoup(5501),I=arkSoup(5502),G=arkSoup(5503),W=arkSoup(5508),WG=arkSoup(5509),stone=0x4a4048,dstone=0x2e282e,gold=0xb08a3a,crim=0x7a0c1a;
+  D5.L=L;D5.fa=fa;
+  // ---- floor: checkered marble on a dark bed, crimson carpet with gold borders, gold inlay ring ----
+  {const pts=[...Array(48)].map((_,i)=>P(i/48*TAU,14.5));S.slab(pts,pts.map(()=>y0+.02),y0-.3,0x161216,0x161216)}
+  const T=1.6;for(let j=-10;j<=10;j++)for(let i=-10;i<=10;i++){const u=i*T,v=j*T,cs=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>[u+a*(T/2-.03),v+b*(T/2-.03)]);
+    if(Math.max(...cs.map(([a,b])=>Math.hypot(a,b)))>14.45)continue;const pts=cs.map(([a,b])=>L(a,b)),cr=R()<.06;
+    const col=cr?0x1a1416:((i+j)&1)?arkShade(0x2b2228,.85+R()*.25):arkShade(0x6a2630,.8+R()*.3);S.slab(pts,pts.map(p=>GH(p[0],p[1])+.05),y0-.05,col,0x120e10)}
+  {const strip=(u0,u1,v0,v1,col,y)=>{const a=L(u0,v0),b=L(u1,v0),c=L(u1,v1),d=L(u0,v1),q=p=>[p[0],y0+y,p[1]];S.quad(q(a),q(b),q(c),q(d),col,.06)};
+    for(let u=-14.3;u<10.4;u+=1.3){const u1=Math.min(10.4,u+1.3);strip(u,u1,-1.25,1.25,arkShade(crim,.9+R()*.15),.085);strip(u,u1,-1.45,-1.25,gold,.086);strip(u,u1,1.25,1.45,gold,.086)}
+    for(let k=0;k<6;k++){strip(-1.6+k*2.4,-1.0+k*2.4,-.5,.5,0x5a0814,.088)}}
+  for(let k=0;k<64;k++){const a0=k/64*TAU,a1=(k+1)/64*TAU,p=(a,r)=>{const [x,z]=P(a,r);return [x,y0+.06,z]};if(dqAng((a0+a1)/2,ea)<.12)continue;S.quad(p(a0,13.55),p(a1,13.55),p(a1,13.75),p(a0,13.75),gold,.05)}
+  // ---- the moat of blood, its curbs and the gate bridge ----
+  for(let k=0;k<72;k++){const a0=k/72*TAU,a1=(k+1)/72*TAU,am=(a0+a1)/2;if(dqAng(am,ea)<.16)continue;const p=(a,r,y)=>{const [x,z]=P(a,r);return [x,y,z]};
+    G.quad(p(a0,14.45,y0-.08),p(a1,14.45,y0-.08),p(a1,15.9,y0-.08),p(a0,15.9,y0-.08),R()<.25?0x8a1424:0x56060f,.15);
+    S.slab([P(a0,14.3),P(a1,14.3),P(a1,14.5),P(a0,14.5)],[0,0,0,0].map(()=>y0+.28),y0-.4,arkShade(dstone,1.2),dstone);
+    S.slab([P(a0,15.88),P(a1,15.88),P(a1,16.1),P(a0,16.1)],[0,0,0,0].map(()=>y0+.38),y0-.4,arkShade(dstone,1.2),dstone)}
+  {const tq=-Math.sin(ea),tz=Math.cos(ea),B=(r,s)=>[cx+Math.cos(ea)*r+tq*s,cz+Math.sin(ea)*r+tz*s];S.slab([B(14.2,-1.9),B(16.6,-1.9),B(16.6,1.9),B(14.2,1.9)],[0,0,0,0].map(()=>y0+.1),y0-.45,arkShade(stone,.95),dstone);
+    [-1.85,1.85].forEach(s=>{for(let r=14.4;r<16.6;r+=.55){const [x,z]=B(r,s);S.geo(ARKG.cyl6,arkM4(x,y0+.45,z,.1,.7,.1),arkShade(stone,1.1))}const [x,z]=B(15.4,s);S.geo(ARKG.box,arkM4(x,y0+.84,z,.18,.1,2.3,0,Math.atan2(Math.cos(ea),Math.sin(ea))),arkShade(stone,1.2))})}
+  // ---- colonnade: clustered gothic pillars, pointed arches, entablature ----
+  const NP=16,PR=16.65,pa=k=>ea+(k+.5)*TAU/NP,cap=9.9;
+  for(let k=0;k<NP;k++){const a=pa(k),[x,z]=P(a,PR),ry=Math.PI/2-a,c=arkShade(stone,.9+R()*.2);
+    W.geo(ARKG.box,arkM4(x,y0+.35,z,1.35,.7,1.35,0,ry),arkShade(stone,.7));W.geo(ARKG.box,arkM4(x,y0+.82,z,1.1,.24,1.1,0,ry),arkShade(stone,.8));
+    W.geo(ARKG.cyl6,arkM4(x,y0+.94+4.3,z,.48,8.6,.48,0,ry),c);for(let q=0;q<4;q++){const qa=q*Math.PI/2+Math.PI/4,ox=Math.cos(qa)*.5,oz=Math.sin(qa)*.5;W.geo(ARKG.cyl5,arkM4(x+ox,y0+.94+4.3,z+oz,.16,8.6,.16),arkShade(c,.9))}
+    W.geo(ARKG.box,arkM4(x,y0+9.65,z,1.25,.5,1.25,0,ry),arkShade(stone,1.05));W.geo(ARKG.box,arkM4(x,y0+cap,z,1.45,.22,1.45,0,ry),arkShade(stone,.8))}
+  for(let k=0;k<NP;k++){const [x1,z1]=P(pa(k),PR),[x2,z2]=P(pa(k+1),PR),dx=x2-x1,dz=z2-z1,ch=Math.hypot(dx,dz),ry=Math.atan2(-dz,dx),rise=2.2,half=ch/2,len=Math.hypot(half,rise),tilt=Math.atan2(rise,half);
+    const mx=(x1+x2)/2,mz=(z1+z2)/2;W.geo(ARKG.box,arkM4(x1+dx/4,y0+cap+rise/2,z1+dz/4,len,.42,.7,0,ry,tilt),arkShade(stone,.95));W.geo(ARKG.box,arkM4(mx+dx/4-dx/2+dx/2,y0+cap+rise/2,mz+dz/4,len,.42,.7,0,ry,-tilt),arkShade(stone,.95));
+    W.geo(ARKG.box,arkM4(mx,y0+cap+2.75,mz,ch+.3,.6,.9,0,ry),arkShade(stone,.75));W.geo(ARKG.box,arkM4(mx,y0+cap+3.15,mz,ch+.5,.2,1.1,0,ry),arkShade(stone,.6));
+    W.geo(ARKG.cone4,arkM4(mx,y0+cap+2.45,mz,.22,.5,.22,Math.PI,0),arkShade(stone,.8))}
+  // ---- outer wall with stained-glass lancets; a rose window behind the throne ----
+  const pane=[0xa01028,0x5a1a7a,0xc89a30,0x2a3a9a,0xc02040,0x7a2a9a],glass=[];D5.glass=glass;
+  for(let k=0;k<NP;k++){const a0=pa(k),a1=pa(k+1),am=(a0+a1)/2,gate=k==NP-1;if(gate)continue;const [x,z]=P(am,18.25),ch=2*18.25*Math.sin((a1-a0)/2)+.4,ry=Math.PI/2-am;
+    W.geo(ARKG.box,arkM4(x,y0+6.7,z,ch,13.4,.8,0,ry),arkShade(0x3a3238,.85+R()*.2));
+    const tx=-Math.sin(am),tz=Math.cos(am),[bx,bz]=P(am,17.82),Q=(u,v)=>[bx+tx*u,y0+v,bz+tz*u],rose=dqAng(am,fa)<.1;
+    if(rose){const rc=[bx,y0+8.6,bz],seg=16;for(let s=0;s<seg;s++){const s0=s/seg*TAU,s1=(s+1)/seg*TAU,pp=(an,rr)=>[bx+tx*Math.cos(an)*rr,y0+8.6+Math.sin(an)*rr,bz+tz*Math.cos(an)*rr];
+        WG.quad(pp(s0+.03,.55),pp(s1-.03,.55),pp(s1-.03,2.2),pp(s0+.03,2.2),pane[s%2?0:4],.1);WG.tri(pp(s0+.05,2.32),pp(s1-.05,2.32),pp((s0+s1)/2,2.75),pane[s%3==0?2:1],.1)}
+      WG.geo(ARKG.cyl6,arkM4(rc[0],rc[1],rc[2],.45,.06,.45,Math.PI/2,ry,0),0xffc860);W.geo(ARKG.cyl6,arkM4(rc[0]-Math.cos(am)*.05,rc[1],rc[2]-Math.sin(am)*.05,2.95,.2,2.95,Math.PI/2,ry,0),arkShade(stone,.7))}
+    const top=rose?5.6:8.3,w=rose?.75:.85;for(let c=0;c<3;c++)for(let r=0;r<6;r++){const u0=-w+c*(2*w/3)+.05,u1=-w+(c+1)*(2*w/3)-.05,v0=2.6+r*((top-2.6)/6)+.05,v1=2.6+(r+1)*((top-2.6)/6)-.05;WG.quad(Q(u0,v0),Q(u1,v0),Q(u1,v1),Q(u0,v1),pane[(c+r*2+k)%pane.length],.12)}
+    WG.tri(Q(-w+.05,top+.08),Q(w-.05,top+.08),Q(0,top+1.5),pane[(k+2)%pane.length],.1);
+    [-w-.12,w+.12].forEach(u=>{const [jx,jz]=[bx+tx*u,bz+tz*u];W.geo(ARKG.box,arkM4(jx,y0+(top+2.4)/2+.6,jz,.22,top-1.6,.3,0,ry),arkShade(stone,.8))});W.geo(ARKG.box,arkM4(bx,y0+2.5,bz,2*w+.5,.22,.36,0,ry),arkShade(stone,.8))}
+  // banners on the inner face of the pillars (not the two flanking the gate)
+  for(let k=0;k<NP;k++){if(k==0||k==NP-1)continue;const a=pa(k),[x,z]=P(a,PR-.78),tx=-Math.sin(a),tz=Math.cos(a),Q=(u,v)=>[x+tx*u,y0+v,z+tz*u],w=.5;
+    W.quad(Q(-w,8.6),Q(w,8.6),Q(w,4.2),Q(-w,4.2),crim,.08);W.tri(Q(-w,4.2),Q(0,4.2),Q(-w,3.5),crim);W.tri(Q(0,4.2),Q(w,4.2),Q(w,3.5),crim);
+    W.quad(Q(-w,8.6),Q(w,8.6),Q(w,8.4),Q(-w,8.4),gold,.05);W.quad(Q(-.06,7.6),Q(.06,7.6),Q(.06,5.0),Q(-.06,5.0),gold,.05);W.quad(Q(0,7.1),Q(.32,6.6),Q(0,6.1),Q(-.32,6.6),gold,.05);
+    I.geo(ARKG.cyl5,arkM4(x,y0+8.7,z,.05,1.25,.05,Math.PI/2,Math.PI/2-a+Math.PI/2,0),0x2a2420)}
+  // ---- candelabras around the floor's edge ----
+  const fl=[];for(let k=0;k<12;k++){const a=ea+(k+.5)*TAU/12;if(dqAng(a,ea)<.3||dqAng(a,fa)<.3)continue;const [x,z]=P(a,13.85),y=y0+.06;
+    for(let l=0;l<3;l++){const la=l*2.094+a;I.geo(ARKG.box,arkM4(x+Math.cos(la)*.22,y+.18,z+Math.sin(la)*.22,.05,.4,.05,Math.sin(la)*.6,0,-Math.cos(la)*.6),0x2a2420)}
+    I.geo(ARKG.cyl5,arkM4(x,y+1.25,z,.05,2.3,.05),0x2a2420);I.geo(ARKG.cone5,arkM4(x,y+.42,z,.12,.2,.12),0x34302a);
+    const tx=-Math.sin(a),tz=Math.cos(a);[[-.5,2.25],[0,2.55],[.5,2.25]].forEach(([u,h])=>{const cx2=x+tx*u,cz2=z+tz*u;if(u)I.geo(ARKG.box,arkM4(x+tx*u/2,y+h-.18,z+tz*u/2,.04,.04,.55,0,Math.atan2(tx,tz),0),0x2a2420);
+      I.geo(ARKG.cyl6,arkM4(cx2,y+h-.05,cz2,.11,.06,.11),gold);S.geo(ARKG.cyl6,arkM4(cx2,y+h+.15,cz2,.06,.36,.06),0xe8dcc0);fl.push([cx2,y+h+.42,cz2])})}
+  fl.forEach(([x,y,z])=>{G.geo(ARKG.cone4,arkM4(x,y,z,.075,.22,.075,0,R()),0xffa040);G.geo(ARKG.cone4,arkM4(x,y-.03,z,.04,.13,.04,0,R()),0xfff0c0)});
+  // ---- the throne on its dais ----
+  {const step=(u0,u1,w,h,c)=>{const pts=[L(u0,-w),L(u1,-w),L(u1,w),L(u0,w)];S.slab(pts,pts.map(()=>y0+h),y0-.05,c,arkShade(c,.7))};
+    step(10.5,13.9,3.4,.16,arkShade(dstone,1.4));step(11.2,13.9,2.7,.32,arkShade(0x5a2630,.9));step(11.9,13.9,2.1,.48,arkShade(dstone,1.5));
+    {const strip=(u0,u1,v,col,y)=>{const pts=[L(u0,-v),L(u1,-v),L(u1,v),L(u0,v)];S.quad(...pts.map(p=>[p[0],y0+y,p[1]]),col,.05)};strip(10.5,10.75,1.25,crim,.17);strip(11.2,11.45,1.25,crim,.33);strip(11.9,12.6,1.25,crim,.49)}
+    const [tx,tz]=L(13.1,0),y=y0+.48,ry=RY;S.geo(ARKG.box,arkM4(tx,y+.35,tz,1.7,.7,1.3,0,ry),arkShade(0x2a1a20,1.1));S.geo(ARKG.box,arkM4(tx,y+.75,tz,1.45,.14,1.1,0,ry),0x8a1022);
+    const [bx,bz]=L(13.7,0);S.geo(ARKG.box,arkM4(bx,y+2.6,bz,1.8,4.4,.35,0,ry),arkShade(0x2a1a20,1.1));S.geo(ARKG.box,arkM4(bx-F.x*.05,y+2.4,bz-F.z*.05,1.2,3.0,.3,0,ry),0x7a0c1a);
+    [-.7,0,.7].forEach((v,i)=>{const [sx,sz]=L(13.7,v);S.geo(ARKG.cone4,arkM4(sx,y+5.2+(i==1?.5:0),sz,.22,i==1?1.6:1.1,.22,0,ry+Math.PI/4),arkShade(0x2a1a20,1.2));G.geo(ARKG.oct,arkM4(sx,y+4.6+(i==1?.3:0),sz-0,.14),0xff3050)});
+    [-1,1].forEach(s=>{const [ax,az]=L(13.0,s*.95);S.geo(ARKG.box,arkM4(ax,y+1.05,az,.25,.25,1.3,0,ry),arkShade(0x2a1a20,1.3));dqSkull(S,...L(12.35,s*.95).flatMap((q,i)=>i?[y+1.0,q]:[q]),RY+Math.PI,.3,0xd8cfb4)});
+    const [gx,gz]=L(13.62,0);G.geo(ARKG.oct,arkM4(gx,y+4.1,gz,.32,.4,.12,0,ry),0xff2040);
+    [[11.9,13.9,2.1]].forEach(([u0,u1,w])=>{for(let u=u0;u<=u1;u+=.8)for(let v=-w;v<=w;v+=.8)denBlock(...L(u,v))})}
+  // ---- two blood fountains flanking the dais ----
+  D5.fount=[];[-1,1].forEach(s=>{const [x,z]=L(9.6,s*5.5);D5.fount.push([x,z]);dqDisc(x,z,1.45).forEach(([i,j])=>denBlock(i,j));
+    S.geo(ARKG.cyl6,arkM4(x,y0+.3,z,1.4,.6,1.4,0,.26),arkShade(stone,1.0));S.geo(ARKG.cyl6,arkM4(x,y0+.62,z,1.48,.1,1.48,0,.26),arkShade(stone,1.25));G.geo(ARKG.cyl6,arkM4(x,y0+.58,z,1.25,.04,1.25,0,.26),0x6a0612);
+    S.geo(ARKG.cyl6,arkM4(x,y0+1.2,z,.24,1.3,.24),arkShade(stone,1.1));S.geo(ARKG.cone5,arkM4(x,y0+1.95,z,.8,.42,.8,Math.PI),arkShade(stone,1.15));G.geo(ARKG.cyl5,arkM4(x,y0+2.15,z,.72,.04,.72),0x8a0a18);
+    S.geo(ARKG.cyl6,arkM4(x,y0+2.45,z,.12,.6,.12),arkShade(stone,1.1));G.geo(ARKG.oct,arkM4(x,y0+2.85,z,.16,.24,.16),0xff2a40);
+    for(let q=0;q<6;q++){const qa=q/6*TAU,o=.74,ox=x+Math.cos(qa)*o,oz=z+Math.sin(qa)*o,t={x:-Math.sin(qa),z:Math.cos(qa)},Q=(u,v,r)=>[x+Math.cos(qa)*r+t.x*u,y0+v,z+Math.sin(qa)*r+t.z*u];G.quad(Q(-.06,2.12,.76),Q(.06,2.12,.76),Q(.05,.62,.95),Q(-.05,.62,.95),0x9a0c20,.15)}});
+  // ---- four chalice pedestals ----
+  D5.ped=[];[50,130,-50,-130].forEach(dg=>{const ang=dg*Math.PI/180,[x,z]=L(Math.cos(ang)*8.4,Math.sin(ang)*8.4);D5.ped.push([x,z]);denBlock(x,z);
+    S.geo(ARKG.box,arkM4(x,y0+.12,z,1.0,.24,1.0,0,RY),arkShade(stone,.9));S.geo(ARKG.cyl6,arkM4(x,y0+.62,z,.3,.8,.3,0,.2),arkShade(stone,1.15));S.geo(ARKG.box,arkM4(x,y0+1.07,z,.8,.12,.8,0,RY),arkShade(stone,.95));I.geo(ARKG.cyl6,arkM4(x,y0+1.0,z,.36,.05,.36),gold)});
+  dqWall(A,14.95,18.9,ea,GAP*.95);
+  dqMesh(A,S,arkMat('std'));dqMesh(A,I,arkMat('iron'));const gm=dqMesh(A,G,arkMat('glow'),false);gm.receiveShadow=false;
+  dqMesh(A,W,d5Cut(arkMat('std'),A));const wg=dqMesh(A,WG,d5Cut(arkMat('glow'),A),false);wg.receiveShadow=false;
+  // ---- live pieces ----
+  // portcullis between the gate pillars + the blood curtain
+  {const PC=arkSoup(5504),[x1,z1]=P(pa(NP-1),PR),[x2,z2]=P(pa(0),PR),n=12;for(let b=0;b<=n;b++){const t=.06+.88*b/n,x=x1+(x2-x1)*t,z=z1+(z2-z1)*t;PC.geo(ARKG.cyl5,arkM4(x,y0+2.6,z,.07,5.2,.07),0x2a2226);PC.geo(ARKG.cone4,arkM4(x,y0-.1,z,.09,.35,.09,Math.PI),0x3a3236)}
+    const ry=Math.atan2(-(z2-z1),x2-x1);[.6,1.9,3.2,4.5].forEach(h=>PC.geo(ARKG.box,arkM4((x1+x2)/2,y0+h,(z1+z2)/2,Math.hypot(x2-x1,z2-z1)-.8,.1,.09,0,ry),0x2a2226));
+    const g=new THREE.Group();g.add(PC.mesh(d5Cut(arkMat('iron'),A)));g.position.y=5.6;A.g.add(g);D5.gate=g}
+  const cur=dqCurtain(14.3,4.2,0xff1030);cur.position.set(cx,y0+2.1,cz);A.g.add(cur);D5.cur=cur;
+  // the Crimson Rite sigil (hidden until the rite)
+  {const RS=arkSoup(5505),line=(a,b,w,col)=>{const dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz),nx=-dz/l*w,nz=dx/l*w,y=y0+.1;RS.quad([a[0]+nx,y,a[1]+nz],[b[0]+nx,y,b[1]+nz],[b[0]-nx,y,b[1]-nz],[a[0]-nx,y,a[1]-nz],col,.05)};
+    [[6.9,.09],[6.3,.06],[3.4,.07]].forEach(([r,w])=>{for(let k=0;k<64;k++)line(P(k/64*TAU,r),P((k+1)/64*TAU,r),w,0xff2040)});
+    const st=[...Array(8)].map((_,k)=>P(fa+Math.PI/4+k*TAU/8,6.3));for(let k=0;k<8;k++)line(st[k],st[(k+3)%8],.06,0xff3050);
+    const RR=ARK.rng(77);for(let k=0;k<20;k++){const a=k/20*TAU,[x,z]=P(a,6.6);arkRune(RS,x,y0+.1,z,a+1.57,1.0,0xff4060,RR)}
+    const m=RS.mesh(new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.material.userData.lps=1;m.castShadow=false;m.visible=false;m.renderOrder=16;A.g.add(m);D5.sigil=m}
+  // Blood Moon: the flood and three moonlight shafts
+  {const g=new THREE.CircleGeometry(14.45,64);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0x6a0010,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-6}));m.position.set(cx,y0+.14,cz);m.visible=false;m.renderOrder=15;A.g.add(m);D5.flood=m;
+    const rg=new THREE.RingGeometry(.5,14.4,64,3);rg.rotateX(-Math.PI/2);const rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:0xff2a3a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,wireframe:true}));rm.position.set(cx,y0+.16,cz);rm.visible=false;A.g.add(rm);D5.ripple=rm;
+    D5.moon=[];for(let k=0;k<3;k++){const gr=new THREE.Group(),d=new THREE.Mesh(dqG('disc'),new THREE.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:.0,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false})),ed=new THREE.Mesh(dqG('edge'),new THREE.MeshBasicMaterial({color:0xeef4ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false}));
+      d.renderOrder=22;ed.renderOrder=23;d.position.y=ed.position.y=.17;const sh=dqCurtain(1,1,0x9ab8ff);sh.geometry=(()=>{const q=new THREE.CylinderGeometry(.55,1,1,20,1,true),p=q.attributes.position,c=[];for(let i=0;i<p.count;i++){const t=p.getY(i)>0?.08:1;c.push(.6*t,.72*t,1*t)}q.setAttribute('color',new THREE.Float32BufferAttribute(c,3));return q})();
+      sh.position.y=7;sh.renderOrder=9;gr.add(d,ed,sh);gr.visible=false;A.g.add(gr);D5.moon.push({g:gr,d,ed,sh,x:0,z:0})}}
+  // bats (a reusable flock)
+  {const B=arkSoup(5506);B.geo(ARKG.oct,arkM4(0,0,0,.16,.14,.26),0x1a0a10);B.geo(ARKG.oct,arkM4(0,.06,.2,.09),0x220c12);B.geo(ARKG.oct,arkM4(.04,.08,.28,.025),0xff2030);B.geo(ARKG.oct,arkM4(-.04,.08,.28,.025),0xff2030);
+    const body=B.mesh(arkMat('glow')),W=arkSoup(5507);W.tri([0,0,.1],[.75,.05,-.05],[.55,-.05,.22],0x3a0e16);W.tri([0,0,.1],[.55,-.05,.22],[.25,0,-.2],0x2a0a12);W.tri([.55,-.05,.22],[.75,.05,-.05],[.9,-.1,.3],0x3a0e16);const wing=W.mesh(arkMat('glow'));
+    D5.bats=[];for(let k=0;k<20;k++){const g=new THREE.Group(),b=new THREE.Mesh(body.geometry,body.material),l=new THREE.Mesh(wing.geometry,wing.material),r=new THREE.Mesh(wing.geometry,wing.material);r.scale.x=-1;g.add(b,l,r);g.visible=false;g.scale.setScalar(1.3);scene.add(g);D5.bats.push({g,l,r,on:0,ph:k*.7})}}
+  // tether beams (chalices / obelisks → Vaelric)
+  {const g=new THREE.CylinderGeometry(.07,.07,1,6,1,true);g.translate(0,.5,0);D5.tg=g;D5.tm=new THREE.MeshBasicMaterial({color:0xff1a3a,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false});D5.tm.userData.lps=1}
+  // the red mood overlay for the Blood Moon and the rite progress bar
+  {const st=$('stage');if(st){const d=document.createElement('div');d.id='d5tint';d.style.cssText='position:absolute;inset:0;pointer-events:none;opacity:0;z-index:1;background:radial-gradient(ellipse at center,rgba(120,0,20,.05) 35%,rgba(150,0,25,.55) 100%)';st.appendChild(d);D5.tint=d;
+    const b=document.createElement('div');b.id='d5rite';b.style.cssText='position:absolute;left:50%;top:112px;transform:translateX(-50%);z-index:6;pointer-events:none;display:none;min-width:260px;padding:5px 12px;border-radius:9px;background:rgba(30,4,10,.85);border:1px solid #c0203a;color:#ffd0d8;font:700 12px system-ui,sans-serif;text-align:center';
+    b.innerHTML='<div id="d5riteT">🩸 THE CRIMSON RITE</div><div style="height:8px;margin-top:4px;background:#2a0810;border-radius:4px;overflow:hidden"><i id="d5riteB" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#ff2040,#ff8090)"></i></div>';st.appendChild(b);D5.riteEl=b}}
+  // ambient life: fountains spurt, rose window and candles breathe
+  TANIM.push({x:cx,z:cz,f:now=>{if(Math.random()<.18){const [x,z]=D5.fount[(Math.random()*2)|0];burst(V(x+(Math.random()-.5)*.6,y0+2.3,z+(Math.random()-.5)*.6),0xc01028,2,.8,1.6,.6)}}});
+  A.b.ult=0;   // the Blood Moon and the Crimson Rite replace the generic Cataclysm
+}
+// ---------------- helpers ----------------
+// cutaway: the tall walls, pillars and arches on the camera's side dissolve (dithered) when the camera is outside the hall
+function d5Cut(base,A){return dqCut(base,A,12,1.1)}
+function d5Tether(S,from,e){const m=new THREE.Mesh(D5.tg,D5.tm);m.frustumCulled=false;m.renderOrder=12;scene.add(m);const t={m,from,e,pulse:Math.random()};S.teth.push(t);return t}
+function d5TetherTick(S,now){for(let i=S.teth.length-1;i>=0;i--){const t=S.teth[i];if(t.dead||!t.from.m.parent||t.e.dead){scene.remove(t.m);S.teth.splice(i,1);continue}
+  const a=DQ.v.copy(t.from.m.position);a.y+=t.from.dprop.cupY||1.4;const b=DQ.v2.copy(t.e.m.position);b.y+=GH(b.x,b.z)-b.y+2.6+(t.e.dqLift||0);t.m.visible=!t.e.hid;
+  t.m.position.copy(a);b.sub(a);const l=b.length();if(l<.01)continue;t.m.scale.set(1+.4*Math.sin(now/90+i),l,1+.4*Math.sin(now/90+i));b.multiplyScalar(1/l);t.m.quaternion.setFromUnitVectors(DQ.up,b);
+  if(Math.random()<.25){const k=(now/700+t.pulse)%1;burst(DQ.v.copy(a).addScaledVector(b,l*k),0xff2040,1,.2,.3,.4)}}}
+function d5Clear(S){(S.teth||[]).forEach(t=>scene.remove(t.m));S.teth=[]}
+function d5Hide(on){D5.bats.forEach(b=>{if(!on){b.on=0;b.g.visible=false}})}
+// a flock of bats flying from a to b over dur seconds (positions only; reused meshes)
+function d5Flock(S,a,b,dur,n,h){const L=D5.bats.filter(q=>!q.on).slice(0,n||14);const f={t:0,dur,a:a.clone(),b:b.clone(),L,h:h||1.6};L.forEach((q,i)=>{q.on=1;q.o=[(Math.random()-.5)*2.6,Math.random()*1.4,(Math.random()-.5)*2.6,Math.random()*.25];q.g.visible=true});
+  S.fx.push({tick(dt){f.t+=dt;const k=Math.min(1,f.t/f.dur),now=nowP(),dx=f.b.x-f.a.x,dz=f.b.z-f.a.z,ry=Math.atan2(dx,dz);
+    f.L.forEach(q=>{const kk=Math.max(0,Math.min(1,(k-q.o[3]*.3)/(1-q.o[3]*.3))),x=f.a.x+dx*kk+q.o[0]*Math.sin(kk*Math.PI),z=f.a.z+dz*kk+q.o[2]*Math.sin(kk*Math.PI);q.g.position.set(x,GH(x,z)+f.h+q.o[1]+Math.sin(now/120+q.ph)*.2,z);q.g.rotation.y=ry;const w=Math.sin(now/45+q.ph*3)*.9;q.l.rotation.z=w;q.r.rotation.z=-w});
+    if(k>=1){f.L.forEach(q=>{q.on=0;q.g.visible=false});return false}return true},end(){f.L.forEach(q=>{q.on=0;q.g.visible=false})}})}
+// ---------------- mechanics ----------------
+// Blood Chalices: n of the four pedestals, chosen by idx so co-op peers agree
+function d5Chalices(e,A,idx){const S=A.dq;if(!S)return;const n=Math.min(4,[0,2,3,4][S.ph]||2),order=[[0,2,1,3],[1,3,0,2],[0,3,1,2],[2,1,3,0]][idx%4];let k=0;
+  for(const pi of order){if(k>=n)break;if(S.chal.some(c=>!c._gone&&c.dprop.pi===pi))continue;k++;const [x,z]=D5.ped[pi];
+    const g=new THREE.Group(),gm=new THREE.MeshStandardMaterial({color:0xd8a840,metalness:.75,roughness:.3,flatShading:true,emissive:0x3a2008});gm.userData.lps=1;
+    const st=new THREE.Mesh(ARKG.cyl6,gm);st.scale.set(.07,.4,.07);st.position.y=1.35;const bs=new THREE.Mesh(ARKG.cyl6,gm);bs.scale.set(.22,.06,.22);bs.position.y=1.16;const cup=new THREE.Mesh(ARKG.cone5,gm);cup.scale.set(.34,.42,.34);cup.rotation.x=Math.PI;cup.position.y=1.72;
+    const bl=new THREE.Mesh(ARKG.cyl5,new THREE.MeshBasicMaterial({color:0xc0102a}));bl.scale.set(.3,.03,.3);bl.position.y=1.9;const gl=kqSpr(0xff2040,1.3);gl.position.y=1.95;g.add(st,bs,cup,bl,gl);g.position.y=-1.2;
+    let t=0;const p=dqProp(A,x,z,{n:'Blood Chalice',frac:S.ph>=3?.03:.026,mesh:g,hbY:2.5,hbS:.8,cupY:1.9,pi,
+      tick(pe,dt,now){t+=dt;g.position.y=-1.2*Math.max(0,1-t/.8);g.rotation.y+=dt*.8;gl.scale.setScalar(1.1+.3*Math.sin(now/150));if(Math.random()<dt*5)burst(gY(pe.m.position,1.95),0xff2040,1,.3,.8,.5)},
+      die(pe,killed){gm.dispose();bl.material.dispose();if(killed){burst(gY(pe.m.position,1.7),0xd8a840,24,3,3,.6);burst(gY(pe.m.position,1.6),0xc0102a,30,3,2,.7);popT(pe.m.position,'🩸 SHATTERED','#ffb0c0');sfx&&sfx('brk',.6)}}});
+    S.chal.push(p);d5Tether(S,p,e);burst(V(x,GH(x,z)+1.2,z),0xff2040,30,2,3,.6)}
+  if(!S.chSeen){S.chSeen=1;banner('🩸 BLOOD CHALICES','They feed Lord Vaelric while they stand','Shatter them!')}else say('🩸 Blood chalices rise again — shatter them before they heal Vaelric!')}
+// Bat Swarm
+function d5Bats(e,A,en,idx){const S=A.dq,n=[0,2,3,4][S.ph]||2,rng=ARK.rng(1000+idx*37+((S.batN=(S.batN|0)+1)*7)),gap=1.05*en,W=3.4,y0=GH(A.cx,A.cz);
+  bxHide(e,true);burst(gY(e.m.position,1.6),0x2a0810,50,3,3,.8);burst(gY(e.m.position,1.6),0xff2040,20,2,2,.6);d5Flock(S,e.m.position,V(A.cx,0,A.cz),.6*en,10,2.6);say('🦇 Vaelric bursts into a swarm of bats!');
+  let last=null;for(let k=0;k<n;k++){const th=rng()*Math.PI;dqAfter(S,.55*en+k*gap,()=>{if(!A.f||e.dead)return;const d=V(Math.sin(th),0,Math.cos(th)),c=pl.position,
+      // chord of the hall through the hero along d
+      ox=c.x-A.cx,oz=c.z-A.cz,b=ox*d.x+oz*d.z,cc=ox*ox+oz*oz-13.4*13.4,disc=Math.sqrt(Math.max(0,b*b-cc)),t0=-b-disc,t1=-b+disc,s=V(c.x+d.x*t0,0,c.z+d.z*t0),f=V(c.x+d.x*t1,0,c.z+d.z*t1),len=t1-t0;
+    if(k%2){s.copy(f);f.set(c.x+d.x*t0,0,c.z+d.z*t0);d.multiplyScalar(-1)}last=f;
+    dqWarn(S,{x:s.x,z:s.z,y:y0,d,l:len,w:W,t:.95*en,fn:()=>{if(!A.f||e.dead)return;d5Flock(S,s,f,.5,14,1.5);dqAfter(S,.22,()=>{if(!A.f||e.dead)return;shake(.12);
+      if(inLine(pl.position,s,d,len,W)&&hero.iv<=0){bossHit(e,1.0);dn(pl.position,'Drained!','#ff6080',-20,800);if(dqAuth(A))e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*.015)}})}})})}
+  dqAfter(S,.55*en+n*gap+.6,()=>{if(!A.f||e.dead){bxHide(e,false);return}const q=inArena(A,(last||pl.position).clone(),2.2);e.m.position.set(q.x,0,q.z);bxHide(e,false);burst(gY(q,1.5),0x2a0810,50,3,3,.8);burst(gY(q,1.5),0xff2040,30,3,3,.7);
+    dqWarn(S,{x:q.x,z:q.z,r:3,t:.6*en,fn:()=>{if(!A.f||e.dead)return;ring(q,0xff2040,6,350);burst(gY(q,.4),0xff2040,30,4,3,.6);if(d2(pl.position,q)<3&&hero.iv<=0)bossHit(e,.85)}})});
+  return .55*en+n*gap+.6+.6*en}
+// Crimson Doubles: four Vaelrics around you; only the real one casts a shadow
+function d5Mirror(e,A,en,idx){const S=A.dq,c=pl.position.clone(),a0=Math.random()*6.283,real=idx%4,T=2.5*en,y0=GH(A.cx,A.cz),spots=[];
+  for(let k=0;k<4;k++){const a=a0+k*Math.PI/2,q=inArena(A,c.clone().add(V(Math.cos(a)*6.5,0,Math.sin(a)*6.5)),2);spots.push(q)}
+  burst(gY(e.m.position,1.5),0x2a0810,40,3,3,.7);const M0={done:false,ws:[],clones:[]};S.mir=M0;
+  const fire=(o,w)=>{const d=V().subVectors(c,o).setY(0).normalize();return dqWarn(S,{x:o.x,z:o.z,y:y0,d,l:15,w:1.9,t:T,fn:()=>{if(!A.f||e.dead||M0.done)return;kqSweep(A,o,d,15,.3,0xff2040,'orb');
+      dqAfter(S,.3,()=>{if(!A.f||e.dead)return;for(let s=1;s<15;s+=1.5)burst(gY(o.clone().addScaledVector(d,s),.6),0xff2040,2,1,1,.4);if(!M0.hit&&inLine(pl.position,o,d,15,1.9)&&hero.iv<=0){M0.hit=1;bossHit(e,1.15)}})}})};
+  spots.forEach((q,k)=>{if(k==real){e.m.position.set(q.x,0,q.z);burst(gY(q,1.5),0xff2040,20,2,2,.5);M0.ws.push(fire(q));return}
+    const mdl=cr(e.c);mdl.scale.setScalar(e.m.bs);mdl.traverse(o=>{if(o.isMesh){o.castShadow=false}});mdl.rotation.y=Math.atan2(c.x-q.x,c.z-q.z);
+    let w=null;const p=dqProp(A,q.x,q.z,{n:'Crimson Double',frac:.014,mesh:mdl,hbY:5.2,hbS:.8,
+      tick(pe,dt,now){mdl.rotation.y=Math.atan2(pl.position.x-pe.m.position.x,pl.position.z-pe.m.position.z);try{mdl.ak={n:'bolt',ph:0,k:Math.min(1,(w?w.t:0)/T)};animC(mdl,now,false,0)}catch(err){}if(Math.random()<dt*8)burst(gY(pe.m.position,1+Math.random()*3),0xff2040,1,.3,.6,.5)},
+      die(pe,killed){if(w)w.kill();burst(gY(pe.m.position,2),0x2a0810,40,3,3,.7);burst(gY(pe.m.position,2),0xff2040,16,2,2,.5);d5Flock(S,pe.m.position,pe.m.position.clone().add(V((Math.random()-.5)*16,0,(Math.random()-.5)*16)),.7,5,2.4);if(killed)popT(pe.m.position,'✖ A COPY','#ffb0c0')}});
+    burst(gY(q,1.5),0xff2040,20,2,2,.5);w=fire(q);M0.clones.push(p)});
+  // the real one's shadow
+  const sd=new THREE.Mesh(dqG('disc'),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.6,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-6}));sd.renderOrder=16;scene.add(sd);
+  S.fx.push({tick(){if(M0.done||e.dead||!A.f){scene.remove(sd);sd.material.dispose();return false}sd.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+.12,e.m.position.z);sd.scale.setScalar(1.6+.1*Math.sin(nowP()/200));return true},end(){scene.remove(sd);sd.material.dispose()}});
+  e.dqOnHit=()=>{if(M0.done)return;M0.done=true;e.dqOnHit=null;M0.ws.forEach(w=>w.kill());M0.clones.slice().forEach(p=>dqPropGone(p,false));popT(e.m.position,'⚡ INTERRUPTED!','#ffe08a',true);
+    e.bs.lock=Math.max(e.bs.lock,1.6);e.bs.t=Math.max(e.bs.t,2.0);e.dqVul=nowP()+3000;e.dqVulK=1.25;ring(e.m.position,0xffe08a,4,300);shake(.15)};
+  dqAfter(S,T+.5,()=>{if(M0.done)return;M0.done=true;e.dqOnHit=null;M0.clones.slice().forEach(p=>dqPropGone(p,false))});
+  if(!S.mirSeen){S.mirSeen=1;banner('🪞 CRIMSON DOUBLES','Only the real Vaelric casts a shadow','Strike him to shatter the copies')}else say('🪞 Vaelric splits — find the one with a shadow!');
+  return T+.6}
+// Blood Moon
+function d5Moon(e,A,en,idx){const S=A.dq;if(S.moon)return 0;const rng=ARK.rng(300+idx*53+(S.moonN=(S.moonN|0)+1)*11),n=S.ph>=3?2:3,spots=[];
+  for(let tries=0;spots.length<n&&tries<60;tries++){const a=rng()*6.283,r=3.5+rng()*7,x=A.cx+Math.cos(a)*r,z=A.cz+Math.sin(a)*r;if(solid(x,z)||spots.some(s=>Math.hypot(s.x-x,s.z-z)<6))continue;spots.push({x,z,a,r,va:(rng()<.5?-1:1)*(.12+rng()*.08)})}
+  S.moon={t:0,warn:3.4*Math.min(1.2,en/1.1),dur:6.5,spots,hz:0};D5.flood.visible=D5.ripple.visible=true;
+  spots.forEach((s,k)=>{const m=D5.moon[k];m.g.visible=true;m.s=s});
+  banner('🌑 BLOOD MOON','The hall floods with blood','Stand in the pale moonlight!');shake(.2);return S.moon.warn}
+function d5MoonTick(A,e,dt,now){const S=A.dq,Mn=S.moon;if(!Mn)return;Mn.t+=dt;const y0=GH(A.cx,A.cz),w=Mn.warn,end=w+Mn.dur,fin=end+1.3;
+  const k=Mn.t<w?Mn.t/w:Mn.t<end?1:Math.max(0,1-(Mn.t-end)/1.3),flood=Mn.t>=w&&Mn.t<end;
+  D5.flood.material.opacity=Mn.t<w?.22*k:.72*k;D5.flood.position.y=y0+.1+.06*k;D5.ripple.material.opacity=(flood?.18:.06)*k;D5.ripple.rotation.y+=dt*.15;if(D5.tint)D5.tint.style.opacity=(.55+.25*Math.sin(now/300))*k;
+  Mn.spots.forEach((s,i)=>{const m=D5.moon[i];if(S.ph>=3&&Mn.t>w*.6){s.a+=s.va*dt;s.x=A.cx+Math.cos(s.a)*s.r;s.z=A.cz+Math.sin(s.a)*s.r}const rr=2.3;m.g.position.set(s.x,y0,s.z);m.d.scale.setScalar(rr);m.ed.scale.setScalar(rr);m.sh.scale.set(rr,16,rr);m.sh.position.y=8;
+    m.d.material.opacity=.32*Math.min(1,Mn.t/1)*(Mn.t>end?k:1);m.ed.material.opacity=.8*Math.min(1,Mn.t/1)*(Mn.t>end?k:1);m.sh.material.opacity=.55*Math.min(1,Mn.t/1)*(Mn.t>end?k:1);m.sh.visible=true});
+  if(flood&&Math.random()<dt*14){const a=Math.random()*6.283,r=Math.random()*14;burst(V(A.cx+Math.cos(a)*r,y0+.2,A.cz+Math.sin(a)*r),0xc01028,2,.6,1,.6)}
+  if(flood){const safe=Mn.spots.some(s=>Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3);if(!safe){dqDebuff('Wading','🩸',{mspd:-.2},500,'Wading through blood');Mn.hz-=dt;if(Mn.hz<=0&&hero.iv<=0&&!e.dead){Mn.hz=.5;bossHit(e,.34);if(dqAuth(A))e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*.004)}}else Mn.hz=Math.min(Mn.hz,.15)}
+  if(Mn.t>=fin)d5MoonEnd(A)}
+function d5MoonEnd(A){const S=A.dq;if(S)S.moon=null;D5.flood.visible=D5.ripple.visible=false;D5.flood.material.opacity=0;D5.moon.forEach(m=>{m.g.visible=false});if(D5.tint)D5.tint.style.opacity=0;dqUndebuff('Wading')}
+// The Crimson Rite
+function d5Rite(e,A,en){const S=A.dq;if(S.rite||S.riteDone)return;S.riteDone=1;const T=24,R={t:0,T,ob:[],harass:2.5,fin:false};S.rite=R;
+  if(S.mir&&!S.mir.done&&e.dqOnHit)e.dqOnHit();if(S.moon)d5MoonEnd(A);if(e.hid)bxHide(e,false);e.bs.dash=null;
+  const [tx,tz]=D5.L(10.4,0);burst(gY(e.m.position,1.5),0x2a0810,40,3,3,.7);e.m.position.set(tx,0,tz);burst(V(tx,GH(tx,tz)+2,tz),0xff2040,60,4,4,.9);
+  e.dqImm='Warded';e.dqLift=0;const bar=new THREE.Mesh(dqG('ico'),new THREE.MeshBasicMaterial({color:0xff2040,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(bar);R.bar=bar;
+  D5.sigil.visible=true;banner('🩸 THE CRIMSON RITE','Vaelric is warded while the blood obelisks feed the sigil','Destroy all four obelisks!');shake(.4);flash&&flash('rgba(255,30,60,.35)');
+  for(let k=0;k<4;k++){const a=D5.fa+Math.PI/4+k*Math.PI/2,x=A.cx+Math.cos(a)*6.3,z=A.cz+Math.sin(a)*6.3;
+    const g=new THREE.Group(),om=new THREE.MeshStandardMaterial({color:0x2a1a22,roughness:.5,flatShading:true,emissive:0x3a0008});om.userData.lps=1;const o=new THREE.Mesh(ARKG.box,om);o.scale.set(.75,3.6,.75);o.position.y=1.8;const tp=new THREE.Mesh(ARKG.cone4,om);tp.scale.set(.55,.8,.55);tp.position.y=4.0;tp.rotation.y=Math.PI/4;
+    const rm=new THREE.MeshBasicMaterial({color:0xff2040});[.9,1.7,2.5,3.2].forEach((h,i)=>{for(let s=0;s<4;s++){const q=new THREE.Mesh(ARKG.box,rm);q.scale.set(.32,.1,.02);q.position.set(Math.sin(s*Math.PI/2)*.39,h,Math.cos(s*Math.PI/2)*.39);q.rotation.y=s*Math.PI/2;if(i%2)q.rotation.z=.6;g.add(q)}});
+    const gl=kqSpr(0xff2040,1.6);gl.position.y=4.3;g.add(o,tp,gl);g.position.y=-4.4;let t=0;
+    const p=dqProp(A,x,z,{n:'Blood Obelisk',frac:.036,mesh:g,hbY:5.0,hbS:1,cupY:4.2,
+      tick(pe,dt,now){t+=dt;g.position.y=-4.4*Math.max(0,1-t/1.1);gl.scale.setScalar(1.4+.4*Math.sin(now/130+k));if(Math.random()<dt*6)burst(gY(pe.m.position,1+Math.random()*3),0xff2040,1,.3,1,.5)},
+      die(pe,killed){om.dispose();rm.dispose();burst(gY(pe.m.position,2),0x2a1a22,40,4,4,.8);burst(gY(pe.m.position,3),0xff2040,30,3,3,.7);if(killed){popT(pe.m.position,'⛓ OBELISK BROKEN','#ffb0c0');shake(.2);sfx&&sfx('brk',.7)}}});
+    R.ob.push(p);d5Tether(S,p,e)}
+  if(D5.riteEl)D5.riteEl.style.display='block'}
+function d5RiteEnd(A,e,broken){const S=A.dq,R=S.rite;if(!R||R.fin)return;R.fin=true;S.rite=null;e.dqImm=0;e.dqLift=0;if(R.bar){scene.remove(R.bar);R.bar.material.dispose()}
+  R.ob.slice().forEach(p=>dqPropGone(p,false));D5.sigil.visible=false;D5.sigil.material.opacity=0;if(D5.riteEl)D5.riteEl.style.display='none';
+  if(broken){S.stun=4.5;e.dqVul=nowP()+6500;e.dqVulK=1.5;e.bs.lock=Math.max(e.bs.lock,4.5);e.bs.t=Math.max(e.bs.t,5);banner('⛓ THE RITE IS BROKEN','Vaelric crashes to the floor','+50% damage — strike now!');ring(e.m.position,0xffe08a,6,500);shake(.5);burst(gY(e.m.position,1.5),0xff2040,80,5,4,1)}
+  else{flash&&flash('rgba(255,20,40,.6)');shake(.8);for(let k=0;k<50;k++){const a=Math.random()*6.283,r=Math.random()*14;burst(V(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.4,A.cz+Math.sin(a)*r),0xff2040,4,3,4,.8)}ring(V(A.cx,0,A.cz),0xff2040,14,700);
+    if(hero.iv>0)dn(pl.position,'Dodged!','#bfe3ff',-20,1200);else{const d=Math.round(heroMax()*.55);hero.hp-=d;hero.lastHit=nowP();heroFlinch&&heroFlinch();dn(pl.position,d,'#ff3a2a');if(hero.hp<=0)down()}
+    if(dqAuth(A))e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*.1);banner('🩸 CRIMSON CATACLYSM','The rite is complete — Vaelric drinks deep','')}}
+// ---------------- BMV moves (relayed to co-op peers) ----------------
+kqBmv('bloodfan',function(e,A,en){const S=A.dq,o=e.m.position.clone(),a0=Math.atan2(pl.position.x-o.x,pl.position.z-o.z),n=[0,3,4,5][S?S.ph:1]||3,T=.95*en;let hit=false;kqBossCast(e,0xff2040,T*800);dqPose(e,'bolt',T*.8,.3);
+  for(let i=0;i<n;i++){const da=(i-(n-1)/2)*.3,d=V(Math.sin(a0+da),0,Math.cos(a0+da));kqSweep(A,o,d,15,T,0xff2040,'orb');
+    tele(o,0,T,()=>{if(!A.f)return;for(let s=1;s<15;s+=1.3)burst(gY(o.clone().addScaledVector(d,s),.6),0xff2040,2,1,1.5,.4);if(!hit&&inLine(pl.position,o,d,15,1.9)&&hero.iv<=0){hit=true;bossHit(e,1.1)}},{w:1.9,l:15,d})}
+  return {d:1.5*en,lock:1}});
+kqBmv('batswarm',function(e,A,en){const S=A.dq;if(!S||S.rite)return BMV.bloodfan(e,A,en);const d=d5Bats(e,A,en,dqDec(en));return {d,lock:1}});
+kqBmv('mirror',function(e,A,en){const S=A.dq;if(!S||S.rite||(S.mir&&!S.mir.done))return BMV.bloodfan(e,A,en);const d=d5Mirror(e,A,en,dqDec(en));return {d,lock:1}});
+kqBmv('bloodmoon',function(e,A,en){const S=A.dq;if(S&&!S.rite)d5Moon(e,A,en,dqDec(en));return {d:.6*en,lock:0}});
+kqBmv('chalices',function(e,A,en){const S=A.dq;if(S){kqBossCast(e,0xff2040,500);d5Chalices(e,A,dqDec(en))}return {d:.8*en,lock:0}});
+kqBmv('rite',function(e,A,en){const S=A.dq;if(S)d5Rite(e,A,en);return {d:.5,lock:0}});
+kqBmv('riteend',function(e,A,en){const S=A.dq;if(S&&S.rite)d5RiteEnd(A,e,dqDec(en)===0);return {d:.5,lock:0}});
+// ---------------- den hooks ----------------
+DEN[5]={
+  build:d5Build,
+  start(A,e){const S=dqState(A);dqReset(S);d5Clear(S);Object.assign(S,{ph:1,chal:[],teth:[],chT:3.5,chFirst:1,moonT:0,moon:null,mir:null,rite:null,riteDone:0,stun:0,healAcc:0,healT:0});
+    BSTY[5]=Object.assign(BSTY[5]||{m:'blink',sp:1.8},{m:'blink',sp:1.8,pool:[['bloodfan','dive','batswarm'],['mirror','beam','bloodfan','prison'],['batswarm','cross','mirror','bloodfan']]});
+    e.dqImm=0;e.dqLift=0;e.dqOnHit=null;setTimeout(()=>{if(A.f)say('🩸 The Crimson Throne Hall: shatter the blood chalices, watch for the one true shadow, and seek the moonlight when the Blood Moon rises.')},2400)},
+  ai(A,e,dt,now){const S=A.dq;if(!S)return false;
+    if(S.rite){const R=S.rite,m=e.m;e.agg=1;m.rotation.y=Math.atan2(pl.position.x-m.position.x,pl.position.z-m.position.z);animC(m,now,false,0);bxTick(A,e,dt,now);
+      e.dqLift=Math.min(2.2,(e.dqLift||0)+dt*2);m.b.position.y+=(e.dqLift+Math.sin(now/400)*.15)/(m.bs||1);if(m.ak==null)m.ak={n:'rainfire',ph:0,k:1};return true}
+    if(S.stun>0){S.stun-=dt;animC(e.m,now,false,0);bxTick(A,e,dt,now);e.m.ak={n:'slam',ph:2,k:Math.min(1,S.stun)};if(Math.random()<dt*6)burst(gY(e.m.position,3.6),0xffe08a,1,.6,.4,.5);if(S.stun<=0)e.m.ak=null;return true}
+    return false},
+  tick(A,e,dt,now){const S=A.dq;if(!S||!S.chal)return;dqRun(S,dt);d5TetherTick(S,now);const auth=dqAuth(A),ph=e.bs.ph||1;
+    if(ph>S.ph){S.ph=ph;if(ph==2){S.chT=Math.min(S.chT,2.5);S.moonT=7}if(ph==3){dqAfter(S,1.2,()=>{if(A.f&&!e.dead)dqCast(e,A,'rite',1.2)})}}
+    S.chal=S.chal.filter(p=>!p._gone);
+    if(auth&&!e.dead){
+      if(!S.rite&&!S.chal.length){S.chT-=dt;if(S.chT<=0){S.chT=S.ph>=3?20:26;dqCast(e,A,'chalices',dqEnc(1.2,(Math.random()*4)|0))}}
+      if(S.ph>=2&&!S.rite&&!S.moon){S.moonT-=dt;if(S.moonT<=0){S.moonT=S.ph>=3?20:25;dqCast(e,A,'bloodmoon',dqEnc(1.2,(Math.random()*10)|0))}}
+      // chalices heal him
+      const n=S.chal.length;if(n){const h=M(e.c)*[0,.004,.005,.006][S.ph]*n*dt,h0=e.c.h;e.c.h=Math.min(M(e.c),e.c.h+h);S.healAcc+=e.c.h-h0}
+      S.healT-=dt;if(S.healT<=0){S.healT=1.2;if(S.healAcc>=1){dn(e.m.position,'+'+Math.round(S.healAcc),'#ff7090',-50,900);S.healAcc=0}}
+      // the rite: harass from the throne, then complete
+      const R=S.rite;if(R){R.harass-=dt;if(R.harass<=0){R.harass=3.3;dqCast(e,A,R.hk=!R.hk?'rain':'bloodfan',1.2)}
+        if(R.ob.every(p=>p._gone))dqCast(e,A,'riteend',dqEnc(1.2,0));else if(R.t>=R.T)dqCast(e,A,'riteend',dqEnc(1.2,1))}}
+    const R=S.rite;if(R){R.t+=dt;const k=Math.min(1,R.t/R.T);D5.sigil.material.opacity=.35+.5*k+.12*Math.sin(now/(200-120*k));D5.sigil.rotation.y=0;
+      if(R.bar){R.bar.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+2.6+(e.dqLift||0),e.m.position.z);R.bar.scale.setScalar(2.4+.1*Math.sin(now/150));R.bar.material.opacity=.18+.08*Math.sin(now/120)}
+      const b=$('d5riteB');if(b)b.style.width=(k*100).toFixed(1)+'%';const tl=$('d5riteT');if(tl)tl.textContent='🩸 THE CRIMSON RITE · '+R.ob.filter(p=>!p._gone).length+' obelisk'+(R.ob.filter(p=>!p._gone).length==1?'':'s')+' left · '+Math.max(0,Math.ceil(R.T-R.t))+'s';
+      if(R.T-R.t<3.2&&!R.warned){R.warned=1;banner('⚠ THE RITE IS ALMOST COMPLETE','Dash the moment it ends!','');dqWarn(S,{x:A.cx,z:A.cz,r:13.6,t:Math.max(.5,R.T-R.t)})}
+      if(!auth&&R.t>R.T+3)d5RiteEnd(A,e,R.ob.every(p=>p._gone))}
+    d5MoonTick(A,e,dt,now);
+    // stained glass and moat breathe with the phases
+    if(D5.cur.visible)D5.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.1?.14:.42)+.08*Math.sin(now/240)},
+  clear(A,won){const S=A.dq;if(!S)return;if(S.rite){S.rite.fin=true;if(S.rite.bar)scene.remove(S.rite.bar);S.rite=null}dqReset(S);d5Clear(S);d5MoonEnd(A);S.chal=[];S.mir=null;S.stun=0;
+    D5.sigil.visible=false;if(D5.riteEl)D5.riteEl.style.display='none';D5.bats.forEach(b=>{b.on=0;b.g.visible=false});
+    const e=bossEnt(A.i)||enemies.find(q=>q.ar===A.i);if(e){e.dqImm=0;e.dqLift=0;e.dqOnHit=null;e.dqVul=0;e.bs.face=0;if(e.m)e.m.ak=null;if(e.hid)bxHide(e,false)}
+    if(won){const y0=GH(A.cx,A.cz);flash&&flash('rgba(255,60,80,.4)');for(let k=0;k<4;k++){const [x,z]=D5.ped[k];burst(V(x,y0+1.2,z),0xffd060,30,3,4,.9)}ring(V(A.cx,0,A.cz),0xffd060,12,900)}},
+  seal(A,on){const g=D5.gate,c=D5.cur;if(on){c.visible=true;tw(450,k=>{g.position.y=5.6*(1-k*k)},()=>{shake(.3)});tw(700,k=>c.material.opacity=.45*k)}
+    else{tw(1500,k=>{g.position.y=5.6*k});tw(800,k=>c.material.opacity=.45*(1-k),()=>{if(!A.f)c.visible=false})}}
+};
 
 denBuildAll();
 

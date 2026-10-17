@@ -274,7 +274,9 @@ function arClear(A,won){AR.q.length=0;AR.st.forEach(arReset);AR.beam=null;AR.bm.
 function arSeal(A,on){const m=AR.seal;if(!m)return;const y0=GH(A.cx,A.cz);
   if(on){m.visible=true;const s0=m.scale.y;tw(800,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,3)));for(let k=0;k<8;k++){const a=AR.ent-.45+k/7*.9;burst(V(A.cx+Math.cos(a)*15,y0+.4,A.cz+Math.sin(a)*15),0x3a2c20,10,2,3,.6)}shake(.2)}
   else{const s0=m.scale.y;tw(700,k=>m.scale.y=Math.max(.02,s0*(1-k)),()=>{if(!AR.A.f)m.visible=false})}}
+// the boss's own floating health bar is hidden in the den (the top boss bar shows its health; up close it covered the view)
 DEN[0]={build:arBuild,start:arStart,tick:arTick,clear:arClear,seal:arSeal,
+  ai(A,e){if(e.hb)e.hb.visible=false;return false},
   hitA(A,p,r,dm,s,dir,half){for(const T of AR.st){if(T.st=='dead')continue;if(d01InArc(p,r,dir,half,T.x,T.z,1.0))arHitStalk(A,T,dm)}}};
 // Lights Out: dim the world toward the lantern while the hollow is dark
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);

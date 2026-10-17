@@ -234,7 +234,9 @@ function hyClear(A,won){HY.gen++;HY.necks.forEach(hyOff);HY.q.length=0;HY.waves.
 function hySeal(A,on){const m=HY.seal;if(!m)return;const y0=GH(A.cx,A.cz);
   if(on){m.visible=true;const s0=m.scale.y;tw(900,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,2)));for(let k=0;k<8;k++){const a=HY.ent-.4+k/7*.8;burst(V(A.cx+Math.cos(a)*15.2,y0+.3,A.cz+Math.sin(a)*15.2),0x9ae8e0,14,2,5,.7)}shake(.15)}
   else{const s0=m.scale.y;tw(800,k=>m.scale.y=Math.max(.02,s0*(1-k)),()=>{if(!HY.A.f)m.visible=false})}}
+// the boss's own floating health bar is hidden in the den (the top boss bar shows its health; up close it covered the view)
 DEN[1]={build:hyBuild,start:hyStart,tick:hyTick,clear:hyClear,seal:hySeal,
+  ai(A,e){if(e.hb)e.hb.visible=false;return false},
   hitA(A,p,r,dm,s,dir,half){for(const N of HY.necks){if(N.st!='up'&&N.st!='rise')continue;if(d01InArc(p,r,dir,half,N.x,N.z,1.1)||d01InArc(p,r,dir,half,N.p.x,N.p.z,.9))hyHitNeck(A,N,dm)}}};
 // the raised stones carry you (also outside the fight) and the curtain ripples
 {const f=arenaTick;arenaTick=function(dt,now){f.apply(this,arguments);try{const A=HY.A;if(!A||inDun)return;const p=pl.position;if(Math.abs(p.x-A.cx)>16||Math.abs(p.z-A.cz)>16)return;
