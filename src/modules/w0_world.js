@@ -51,7 +51,8 @@ const TOWNS=[
 const START=TOWNS[0].sp.slice();
 const PCOURT=[84,284];
 // the woodland courtyard north-east of Duskhold (trees and stone to harvest)
-const CYD={x:76,y:251,r:11,gate:[74,276]};
+// It starts small and grows by one ring per completed zone; ring i holds 6 nodes of every node type found in zone i.
+const CYD={x:76,y:244,r0:9,dr:1.3,rmax:17,r:9,gate:[75,276],nodes:[]};
 //@@BOSSES
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
@@ -80,7 +81,7 @@ const MAP=(()=>{
   const T=TOWNS[0];
   for(let y=T.cy-31;y<=T.cy+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const d=Math.max(Math.abs(x-T.cx),Math.abs(y-T.cy))-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
   for(let x=T.cx+22;x<=PCOURT[0];x+=1)stamp(x,T.cy,4.5);stamp(PCOURT[0],PCOURT[1],19);
-  stamp(CYD.x,CYD.y,CYD.r+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
+  stamp(CYD.x,CYD.y,CYD.rmax+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
   // ---- the six portal maps ----
   PMAP.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
@@ -127,18 +128,23 @@ const MAP=(()=>{
     for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
   });
   for(let x=T.cx+TS+1;x<=PCOURT[0]-8;x++)for(let y=-1;y<=1;y++)if(m[T.cy+y][x]=='.')m[T.cy+y][x]='p';
-  // ---- the courtyard: low stone wall with a south gate, groves of trees and stone outcrops ----
-  {const C=CYD,ga=Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),inC=(x,y)=>Math.hypot(x-C.x,y-C.y);
-   for(let y=C.y-C.r-2;y<=C.y+C.r+2;y++)for(let x=C.x-C.r-2;x<=C.x+C.r+2;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;const d=inC(x,y);
-     if(d<C.r+.6){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}
-     let da=Math.abs(Math.atan2(y-C.y,x-C.x)-ga);if(da>Math.PI)da=6.283-da;
-     if(d>=C.r-.4&&d<C.r+.6&&da>.42)m[y][x]='B'}
-   for(let q=0;q<=1;q+=.04){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
-   const spot=(cx,cy,rad,n,fn)=>{let got=0;for(let tr=0;tr<60&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
-     if(!'.g'.includes(m[y][x])||inC(x,y)>C.r-1.6||inC(x,y)<3.2)continue;let near=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')near=true;if(near)continue;fn(x,y);got++}};
-   // groves on the west, north and east, stone outcrops between them
-   [[-6,-3],[-2,-7],[4,-6],[7,-1],[-7,3]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,2.2,6,(x,y)=>m[y][x]='#'));
-   [[-3,-4],[6,3],[-5,6]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.8,4,(x,y)=>{m[y][x]='r';props.push([x,y,'rock'])}));
+  // ---- the courtyard: south gate path, a grove at the heart, then one ring of nodes per zone (walls are placed at runtime) ----
+  {const C=CYD,inC=(x,y)=>Math.hypot(x-C.x,y-C.y),R=C.rmax+.6;
+   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;
+     if(inC(x,y)<R){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}}
+   for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
+   const nearP=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')return true;return false};
+   const spot=(cx,cy,rad,n,lo,hi,fn)=>{let got=0;for(let tr=0;tr<80&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
+     if(!'.g'.includes(m[y][x])||inC(x,y)>hi||inC(x,y)<lo||nearP(x,y))continue;fn(x,y);got++}};
+   const rk=k=>k=='rock'||k=='grave'||k=='pillar',put=(x,y,k,zi)=>{if(rk(k))m[y][x]='r';props.push([x,y,k]);C.nodes.push([x,y,k,zi])};
+   // the heart: trees for wood and a little stone, always open
+   const hi0=C.r0-1.6;[[-4,-2],[-1,-4.5],[3,-4],[4.5,0],[-4.5,2]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.8,4,2.6,hi0,(x,y)=>m[y][x]='#'));
+   [[-2,-3],[4,2.5]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.5,3,2.6,hi0,(x,y)=>put(x,y,'rock',-1)));
+   // ring i opens when zone i is completed: 6 nodes of every node type that grows in that zone
+   PMAP.forEach((p,i)=>{const lo=C.r0-1.6+C.dr*i+.15,hi=C.r0-1.6+C.dr*(i+1),kinds=[...new Set(BIOMES[p.bi].pr)];
+     kinds.forEach((k,j)=>{let got=0;const a0=j/kinds.length*6.283+i*.7;
+       for(let tr=0;tr<400&&got<6;tr++){const a=a0+(rnd()-.5)*(6.283/kinds.length)*.9,d=lo+rnd()*(hi-lo),x=Math.round(C.x+Math.cos(a)*d),y=Math.round(C.y+Math.sin(a)*d);
+         if(!'.g'.includes(m[y][x])||nearP(x,y)||townAt(x,y,3)>=0)continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
   }
   m.bio=bio;m.DW=DW;
   m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));

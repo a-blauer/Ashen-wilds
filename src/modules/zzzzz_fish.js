@@ -3,7 +3,7 @@
 openWMap=function(){
   if(inRealm)return;const c=$('wmc'),r=curMap(),T=TOWNS[0];let x0,y0,w,h,title,sub;
   if(r>=0){const p=PMAP[r];x0=p.x0;y0=p.y0;w=PMW;h=PMH;title=p.n;sub=(p.sub||'')+' · Lv '+p.lv[0]+'–'+p.lv[1]}
-  else{x0=T.cx-32;y0=(typeof CYD!='undefined'?Math.min(T.cy-32,CYD.y-CYD.r-4):T.cy-32);w=(PCOURT[0]+24)-x0;h=T.cy+32-y0;title='Duskhold';sub='The floating stronghold · Portal Court and Courtyard to the east'}
+  else{x0=T.cx-32;y0=(typeof CYD!='undefined'?Math.min(T.cy-32,CYD.y-CYD.rmax-4):T.cy-32);w=(PCOURT[0]+24)-x0;h=T.cy+32-y0;title='Duskhold';sub='The floating stronghold · Portal Court and Courtyard to the east'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
   const P=(x,z)=>[(x-x0+.5)*s,(z-y0+.5)*s],inV=(x,z)=>x>=x0&&x<x0+w&&z>=y0&&z<y0+h;g.textAlign='center';g.textBaseline='middle';
@@ -67,5 +67,5 @@ fishPress=function(down){const F=fishing;if(!F||!down)return;
   if(d<=F.zw/7){F.hits+=2;F.perf++;fsPop('PERFECT!','#ffd24a');sfx('chime');burst(F.bob.position,0xffe08a,10,1,1,.4)}
   else if(d<=F.zw/2){F.hits++;fsPop('Good!','#7ee8a0');sfx('arrow')}
   else{F.miss++;fsPop('Miss — the line strains!','#ff8a7a');sfx('blunt');shake(.06);if(F.miss>=3){fsDraw();return fishEnd('The line snapped... the '+F.fish[0]+' escaped.')}}
-  if(F.hits>=F.need){const flaw=!F.miss,rr=F.fish[3];fishCatch();if(flaw){const T=tierAt(pl.position.x,pl.position.z),g=Math.round([3,8,20,120][rr]*T*.5+5);gold+=g;say('🎣 Flawless catch! +'+g+' bonus gold.');hud()}return}
+  if(F.hits>=F.need){const flaw=!F.miss;FSHF=flaw;try{fishCatch()}finally{FSHF=false}if(flaw)say('🎣 Flawless catch! Better odds of treasure on the line.');return}
   if(Math.random()<.5)F.dir*=-1;fsZone(F);fsDraw()};

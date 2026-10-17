@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v84 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v85 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -61,6 +61,20 @@ The build is a **patch chain**, not a bundler:
 - **Material hints**: clicking a material label in any window shows where to get it (`msrcBuild`).
 - **Kindlelight**: greener, thicker fog, drifting ground mist sprites, darker by day (`kGloom`).
 - **Fixes**: fishing window has a fixed size; boss shockwave/beam/pool effects draw over terrain.
+
+## v85: recall runs, growing courtyard, readable attacks, smoother animation
+
+`build/pV8.py` (text patches, runs after pV7) splices `zzI_v85.js`, `zzI_combat.js` and `zzI_anim.js`.
+- **Numbers**: level ups restore 50% health/mana; healing potion cooldown 9s; gear upgrades cost 35% less gold.
+- **Companions** (`zzI_v85.js`): magic-family companions (Spirit, Dragon) cast a bolt from 5.5 tiles (`compTick`, `compBolt`) instead of biting; **Space** (`commandAttack`, 📣 on mobile) sends the team at your target for 12s (`CMD`, via `teamFoe`).
+- **Consume** eats another companion (not an egg): gain by its tier, a little more for level/evolution (`conGainC`); locked companions can't be picked.
+- **Beast Trainer**: one purchase raises a companion to your level, `trainCost` ≈ 1.9 × Σ(level + 1.1) (Lv 1→20 ≈ 400).
+- **Fishing** gives no gold; each catch has a chance (10–40% by rarity, ×1.5 when flawless) of a gold pouch, ring or amulet (`fishTreasure`).
+- **Recall runs**: recalling (or the zone's home portal) saves the zone run (`INST`: roster with dead flags + position, saved in `x2Save`). In Duskhold, T channels you back (`RECBACK`). Entering that zone's portal asks "Restart zone instance?" (Continue / Restart / Cancel).
+- **Courtyard** (`CYD` in `w0_world.js`, runtime `cySync`/`cyWalls`): a grove at the heart, then one ring per zone with 6 nodes of each of that zone's node types; rings unlock with `bossDone`, the wall moves out (`r0 9`, `+1.3` per zone, max 16.8). Courtyard nodes regrow after 10 minutes.
+- **Inventory preview** re-syncs whenever equipment or class changes while the bag is open.
+- **Enemy attacks** (`zzI_combat.js`): wind-up glows at the hand/mouth, travelling arrows/stones/globs/bolts with impacts, meteors for fire rain, boss projectile moves with visuals; ranged moves usable at range (min range 0), casters keep distance; companion spells only cast in range; red warnings dimmed 35%; Rime Wraith orbs spawn at the arena edge.
+- **Animation** (`zzI_anim.js`): see that file's header.
 
 ## Conventions (read before changing code)
 

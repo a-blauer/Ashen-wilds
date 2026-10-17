@@ -492,7 +492,8 @@ const TOWNS=[
 const START=TOWNS[0].sp.slice();
 const PCOURT=[84,284];
 // the woodland courtyard north-east of Duskhold (trees and stone to harvest)
-const CYD={x:76,y:251,r:11,gate:[74,276]};
+// It starts small and grows by one ring per completed zone; ring i holds 6 nodes of every node type found in zone i.
+const CYD={x:76,y:244,r0:9,dr:1.3,rmax:17,r:9,gate:[75,276],nodes:[]};
 const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.abs(x-t.cx)<=TS+.5+(pad||0)&&Math.abs(z-t.cy)<=TS+.5+(pad||0));
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
@@ -521,7 +522,7 @@ const MAP=(()=>{
   const T=TOWNS[0];
   for(let y=T.cy-31;y<=T.cy+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const d=Math.max(Math.abs(x-T.cx),Math.abs(y-T.cy))-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
   for(let x=T.cx+22;x<=PCOURT[0];x+=1)stamp(x,T.cy,4.5);stamp(PCOURT[0],PCOURT[1],19);
-  stamp(CYD.x,CYD.y,CYD.r+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
+  stamp(CYD.x,CYD.y,CYD.rmax+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
   // ---- the six portal maps ----
   PMAP.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
@@ -568,18 +569,23 @@ const MAP=(()=>{
     for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
   });
   for(let x=T.cx+TS+1;x<=PCOURT[0]-8;x++)for(let y=-1;y<=1;y++)if(m[T.cy+y][x]=='.')m[T.cy+y][x]='p';
-  // ---- the courtyard: low stone wall with a south gate, groves of trees and stone outcrops ----
-  {const C=CYD,ga=Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),inC=(x,y)=>Math.hypot(x-C.x,y-C.y);
-   for(let y=C.y-C.r-2;y<=C.y+C.r+2;y++)for(let x=C.x-C.r-2;x<=C.x+C.r+2;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;const d=inC(x,y);
-     if(d<C.r+.6){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}
-     let da=Math.abs(Math.atan2(y-C.y,x-C.x)-ga);if(da>Math.PI)da=6.283-da;
-     if(d>=C.r-.4&&d<C.r+.6&&da>.42)m[y][x]='B'}
-   for(let q=0;q<=1;q+=.04){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
-   const spot=(cx,cy,rad,n,fn)=>{let got=0;for(let tr=0;tr<60&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
-     if(!'.g'.includes(m[y][x])||inC(x,y)>C.r-1.6||inC(x,y)<3.2)continue;let near=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')near=true;if(near)continue;fn(x,y);got++}};
-   // groves on the west, north and east, stone outcrops between them
-   [[-6,-3],[-2,-7],[4,-6],[7,-1],[-7,3]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,2.2,6,(x,y)=>m[y][x]='#'));
-   [[-3,-4],[6,3],[-5,6]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.8,4,(x,y)=>{m[y][x]='r';props.push([x,y,'rock'])}));
+  // ---- the courtyard: south gate path, a grove at the heart, then one ring of nodes per zone (walls are placed at runtime) ----
+  {const C=CYD,inC=(x,y)=>Math.hypot(x-C.x,y-C.y),R=C.rmax+.6;
+   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;
+     if(inC(x,y)<R){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}}
+   for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
+   const nearP=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')return true;return false};
+   const spot=(cx,cy,rad,n,lo,hi,fn)=>{let got=0;for(let tr=0;tr<80&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
+     if(!'.g'.includes(m[y][x])||inC(x,y)>hi||inC(x,y)<lo||nearP(x,y))continue;fn(x,y);got++}};
+   const rk=k=>k=='rock'||k=='grave'||k=='pillar',put=(x,y,k,zi)=>{if(rk(k))m[y][x]='r';props.push([x,y,k]);C.nodes.push([x,y,k,zi])};
+   // the heart: trees for wood and a little stone, always open
+   const hi0=C.r0-1.6;[[-4,-2],[-1,-4.5],[3,-4],[4.5,0],[-4.5,2]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.8,4,2.6,hi0,(x,y)=>m[y][x]='#'));
+   [[-2,-3],[4,2.5]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.5,3,2.6,hi0,(x,y)=>put(x,y,'rock',-1)));
+   // ring i opens when zone i is completed: 6 nodes of every node type that grows in that zone
+   PMAP.forEach((p,i)=>{const lo=C.r0-1.6+C.dr*i+.15,hi=C.r0-1.6+C.dr*(i+1),kinds=[...new Set(BIOMES[p.bi].pr)];
+     kinds.forEach((k,j)=>{let got=0;const a0=j/kinds.length*6.283+i*.7;
+       for(let tr=0;tr<400&&got<6;tr++){const a=a0+(rnd()-.5)*(6.283/kinds.length)*.9,d=lo+rnd()*(hi-lo),x=Math.round(C.x+Math.cos(a)*d),y=Math.round(C.y+Math.sin(a)*d);
+         if(!'.g'.includes(m[y][x])||nearP(x,y)||townAt(x,y,3)>=0)continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
   }
   m.bio=bio;m.DW=DW;
   m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
@@ -1951,7 +1957,7 @@ function dodge(){
 }
 function drink(){
   if(!pots||(hero.cdP||0)>0||hero.hp>=heroMax())return;
-  pots--;hero.cdP=6;const h=Math.round(heroMax()*.4);hero.hp=Math.min(heroMax(),hero.hp+h);dn(pl.position,'+'+h,'#6ee7b7');burst(gY(pl.position,.8),0x6ee7b7,24,2,2.5,.7);hud();
+  pots--;hero.cdP=9;const h=Math.round(heroMax()*.4);hero.hp=Math.min(heroMax(),hero.hp+h);dn(pl.position,'+'+h,'#6ee7b7');burst(gY(pl.position,.8),0x6ee7b7,24,2,2.5,.7);hud();
 }
 // ================= Realm: your own instance - crafting, building, decor, terrain, habitats =================
 const FAMS=['Primal','Aquatic','Insect','Avian','Draconic','Stone','Undead','Spirit','Fungal'];
@@ -2331,7 +2337,7 @@ function featTick(dt,now,al){
     if(hero.hp<rec.hp-.01){rec=null;say('Recall interrupted!')}
     else{rec.hp=hero.hp;rec.t+=dt;if(rec.t>=rec.need){rec=null;fadeTo(recallTown)}}
   }
-  $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent='🌀 Recalling to '+(home||TOWNS[0]).n+'...'}
+  $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+PMAP[INST.r].n+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')}
   if(!inRealm){if(building){building=false;realmHud()}bGhostHide()}
   else{
     // realm life: building ghost, flames, pooled lights, portal swirl
@@ -2621,7 +2627,7 @@ function hud(){
   $('goldT').textContent='🪙 '+gold;
   const slot=(x,ic,kb,cd,mx,sub,dim)=>`<button class="hs" data-x="${x}" ${cd>0?'disabled':''} ${dim?'style="opacity:.55"':''}><span class="ic">${ic}</span><span class="kb">${kb}</span><span class="sb">${sub||''}</span><span class="cdv" style="height:${mx?Math.min(100,100*cd/mx):0}%"></span></button>`;
   $('acts').innerHTML=building?'':
-    slot('a','⚔️','LMB',0,0,'')+hero.sp.map((n,i)=>{const sp=MOVES[n],c=hero.cd[n]||0;return slot(i,sp.i,i+1,c,sp.cd,'Lv'+hero.sl[n].l,hero.mp<spCost(n))}).join('')+slot('d','💨','Shift',hero.cdD||0,1.8,'')+slot('p','🧪','Q',hero.cdP||0,6,'×'+pots);
+    slot('a','⚔️','LMB',0,0,'')+hero.sp.map((n,i)=>{const sp=MOVES[n],c=hero.cd[n]||0;return slot(i,sp.i,i+1,c,sp.cd,'Lv'+hero.sl[n].l,hero.mp<spCost(n))}).join('')+slot('d','💨','Shift',hero.cdD||0,1.8,'')+slot('p','🧪','Q',hero.cdP||0,9,'×'+pots);
   const bs=enemies.find(e=>e.boss&&!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<30);
   $('boss').classList.toggle('hide',!bs||!!tgt);if(bs){$('bossN').textContent=bs.c.n+' · Lv '+bs.c.l;$('bossB').style.width=Math.max(0,100*bs.c.h/M(bs.c))+'%'}
   $('areaT').textContent=inRealm?'🌀 Your Realm · '+cozyName(cozyScore())+' ('+cozyScore()+')':areaName();
@@ -3501,9 +3507,9 @@ function gainXP(e){
   return xp;
 }
 function heroLevelUp(){
-  hero.lvl++;hsDirty();hero.hp=heroMax();hero.mp=mpMax();
+  hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (press K)',ns?'New skill unlocked: '+ns.i+' '+ns.n:'Health and mana fully restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (press K)',ns?'New skill unlocked: '+ns.i+' '+ns.n:'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){
@@ -3547,7 +3553,7 @@ function itStats(it){
 }
 const SNM={pa:'Physical attack',ma:'Magical attack',pd:'Physical defense',md:'Magical defense',hp:'Health',mp:'Mana',crit:'Critical chance',cdm:'Critical damage',as:'Attack speed',ls:'Lifesteal',hpP:'Max health',paP:'Physical attack',maP:'Magical attack',cdr:'Cooldown reduction',loot:'Loot find',xp:'Experience',mspd:'Move speed',regen:'Health regen /s',blockC:'Block chance'};
 const fmtS=(k,v)=>(['pa','ma','pd','md','hp','mp'].includes(k)?'+'+Math.round(v):'+'+(+(v*100).toFixed(1))+'%');
-function upCost(it){const T=tierOfLv(it.lv)-1,u=it.up||0;return {m:UPM[T][0],n:1+Math.floor(u/2)+(u>=7?2:0),g:Math.round((25+it.lv*7)*(u+1)*(1+it.r*.3)),ch:[1,1,1,1,1,.85,.72,.6,.48,.36][u]||0}}
+function upCost(it){const T=tierOfLv(it.lv)-1,u=it.up||0;return {m:UPM[T][0],n:1+Math.floor(u/2)+(u>=7?2:0),g:Math.round((25+it.lv*7)*(u+1)*(1+it.r*.3)*.65),ch:[1,1,1,1,1,.85,.72,.6,.48,.36][u]||0}}
 function doUpgrade_base(it){
   if((it.up||0)>=10)return say('This item is fully upgraded.');
   if(townAt(pl.position.x,pl.position.z,1)<0)return say('Upgrades need a forge. Visit any town.');
@@ -3858,7 +3864,7 @@ function hud_base(){
   const slot=(x,ic,kb,cd,mx,sub,dim,tt)=>`<button class="hs" data-x="${x}" title="${tt||''}" ${cd>0?'disabled':''} ${dim?'style="opacity:.5"':''}><span class="ic">${ic}</span><span class="kb">${kb}</span><span class="sb">${sub||''}</span><span class="cdv" style="height:${mx?Math.min(100,100*cd/mx):0}%"></span></button>`;
   const dsh=Math.floor(hero.dc||0);
   $('acts').innerHTML=building?'':
-    slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Q',hero.cdP||0,6,'×'+pots);
+    slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Q',hero.cdP||0,9,'×'+pots);
   const bs=enemies.find(e=>e.boss&&!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<30);
   $('boss').classList.toggle('hide',!bs||!!tgt);if(bs){$('bossN').textContent=bs.c.n+' · Lv '+bs.c.l;$('bossB').style.width=Math.max(0,100*bs.c.h/M(bs.c))+'%'}
   $('areaT').textContent=inRealm?'🌀 Your Realm · '+cozyName(cozyScore())+' ('+cozyScore()+')':areaName();
@@ -6455,10 +6461,10 @@ function fishPress(down){const F=fishing;if(!F)return;
   if(F.ph=='bite'&&down){F.ph='reel';F.t=0;F.fy=.5;F.tg=.5;F.ft=0;F.zy=.35;F.zv=0;F.zh=[.34,.28,.22,.17][F.fish[3]];F.prog=.3;F.hold=true;$('fishui').dataset.ph='reel';$('fsT').textContent='Hold F / press to keep the fish in the green zone!';$('fsBar').classList.remove('hide');return}
   if(F.ph=='reel')F.hold=down}
 function fishCatch(){const f=fishing.fish,T=tierAt(pl.position.x,pl.position.z),p=pl.position.clone();fishLog[f[0]]=(fishLog[f[0]]||0)+1;const first=fishLog[f[0]]==1;
-  giveS('fish',f[3]+1);const g=[3,8,20,120][f[3]]*T;gold+=g;
-  pickup({ic:f[1],t:'Caught a '+f[0]+'!',col:['#a8a8a8','#5fcf6a','#5a96ff','#ff9a2a'][f[3]],sub:'+'+(f[3]+1)+' Fish · +'+g+' gold'+(first?' · New in your Bestiary!':''),r:f[3]+1});sfx('chime');
+  giveS('fish',f[3]+1);
+  pickup({ic:f[1],t:'Caught a '+f[0]+'!',col:['#a8a8a8','#5fcf6a','#5a96ff','#ff9a2a'][f[3]],sub:'+'+(f[3]+1)+' Fish'+(first?' · New in your Bestiary!':''),r:f[3]+1});sfx('chime');
   if(Math.random()<(f[3]>=2?.08:.012)){const eg=rollEgg(T);drop('egg',eg,p,eg.tier)}if(f[3]>=2&&Math.random()<.35)drop('sup',{k:RUNEK[R(0,RUNEK.length-1)],n:1},p,2);
-  fishEnd();hud()}
+  fishTreasure(f[3],T,p);fishEnd();hud()}
 function fishUI(){let d=$('fishui');if(d)return d;d=document.createElement('div');d.id='fishui';d.className='glass hide';
   d.innerHTML='<div id="fsT">Waiting for a bite...</div><div id="fsBar" class="hide"><div class="fsTrack"><i id="fsZone"></i><b id="fsFish">🐟</b></div><div class="fsProgT"><i id="fsProg"></i></div></div><div class="fsBtns"><button id="fsHold" class="pri">🎣 Reel</button><button id="fsQuit">Stop</button></div>';
   $('stage').appendChild(d);const hb=$('fsHold');
@@ -8125,7 +8131,7 @@ var LT={on:0};
 openWMap=function(){
   if(inRealm)return;const c=$('wmc'),r=curMap(),T=TOWNS[0];let x0,y0,w,h,title,sub;
   if(r>=0){const p=PMAP[r];x0=p.x0;y0=p.y0;w=PMW;h=PMH;title=p.n;sub=(p.sub||'')+' · Lv '+p.lv[0]+'–'+p.lv[1]}
-  else{x0=T.cx-32;y0=(typeof CYD!='undefined'?Math.min(T.cy-32,CYD.y-CYD.r-4):T.cy-32);w=(PCOURT[0]+24)-x0;h=T.cy+32-y0;title='Duskhold';sub='The floating stronghold · Portal Court and Courtyard to the east'}
+  else{x0=T.cx-32;y0=(typeof CYD!='undefined'?Math.min(T.cy-32,CYD.y-CYD.rmax-4):T.cy-32);w=(PCOURT[0]+24)-x0;h=T.cy+32-y0;title='Duskhold';sub='The floating stronghold · Portal Court and Courtyard to the east'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
   const P=(x,z)=>[(x-x0+.5)*s,(z-y0+.5)*s],inV=(x,z)=>x>=x0&&x<x0+w&&z>=y0&&z<y0+h;g.textAlign='center';g.textBaseline='middle';
@@ -8189,7 +8195,7 @@ fishPress=function(down){const F=fishing;if(!F||!down)return;
   if(d<=F.zw/7){F.hits+=2;F.perf++;fsPop('PERFECT!','#ffd24a');sfx('chime');burst(F.bob.position,0xffe08a,10,1,1,.4)}
   else if(d<=F.zw/2){F.hits++;fsPop('Good!','#7ee8a0');sfx('arrow')}
   else{F.miss++;fsPop('Miss — the line strains!','#ff8a7a');sfx('blunt');shake(.06);if(F.miss>=3){fsDraw();return fishEnd('The line snapped... the '+F.fish[0]+' escaped.')}}
-  if(F.hits>=F.need){const flaw=!F.miss,rr=F.fish[3];fishCatch();if(flaw){const T=tierAt(pl.position.x,pl.position.z),g=Math.round([3,8,20,120][rr]*T*.5+5);gold+=g;say('🎣 Flawless catch! +'+g+' bonus gold.');hud()}return}
+  if(F.hits>=F.need){const flaw=!F.miss;FSHF=flaw;try{fishCatch()}finally{FSHF=false}if(flaw)say('🎣 Flawless catch! Better odds of treasure on the line.');return}
   if(Math.random()<.5)F.dir*=-1;fsZone(F);fsDraw()};
 
 // ================= v71: roaming wildlife · zone atmosphere · unlockable skills · bell-curve grades · consume eggs =================
@@ -11745,18 +11751,7 @@ function twStall(st,col){let k=null;const key='STALL|'+col;
 
 // ================= v84: HUD rework, companion care, Kindlelight gloom, material hints, courtyard =================
 
-// ---------------- the courtyard north-east of Duskhold: low stone walls and a gate sign ----------------
-{const C=CYD,st=sm(0x5a5662),cap=sm(0x6e6a76),L=[];
- for(let y=C.y-C.r-2;y<=C.y+C.r+2;y++)for(let x=C.x-C.r-2;x<=C.x+C.r+2;x++)if(MAP[y]&&MAP[y][x]=='B'&&townAt(x,y,3)<0)L.push([x,y]);
- const g=new THREE.Group();scene.add(g);const ga=Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x);
- if(L.length){const im=new THREE.InstancedMesh(G_BOX,st,L.length),ic=new THREE.InstancedMesh(G_BOX,cap,L.length),o=new THREE.Object3D();im.castShadow=im.receiveShadow=ic.receiveShadow=true;
-  L.forEach(([x,y],i)=>{const h=GH(x,y);o.position.set(x,h+.5,y);o.rotation.set(0,Math.atan2(x-C.x,y-C.y),0);o.scale.set(1.04,1.1,.8);o.updateMatrix();im.setMatrixAt(i,o.matrix);
-   o.position.y=h+1.1;o.scale.set(1.12,.14,.92);o.updateMatrix();ic.setMatrixAt(i,o.matrix)});g.add(im,ic)}
- // gate posts with a sign
- [-1,1].forEach(s=>{const a=ga+s*.48,x=C.x+Math.cos(a)*C.r,z=C.y+Math.sin(a)*C.r;TQ(g,G_BOX,st,x,GH(x,z)+.9,z,.7,1.8,.7);TQ(g,G_BOX,cap,x,GH(x,z)+1.85,z,.85,.15,.85)});
- {const a=ga+.3,x=C.x+Math.cos(a)*(C.r+1.2),z=C.y+Math.sin(a)*(C.r+1.2),y=GH(x,z),wd=sm(0x3a2a20);TQ(g,G_BOX,wd,x,y+.9,z,.14,1.8,.14);
-  sign(g,[{t:'🌲 Courtyard',f:'700 40px'},{t:'Wood & stone',f:'600 26px'}],1.7,.46,'#1a1424','#efe6ff',null,x,y+1.65,z,Math.atan2(Math.cos(ga),Math.sin(ga)))}
-}
+// (the courtyard walls are built at runtime by cyWalls in zzI_v85.js, since the courtyard grows)
 
 // ---------------- Kindlelight: thick green gloom, drifting ground mist, and dimmer days ----------------
 var KG={k:0,col:new THREE.Color(0x1c3414),mist:null};
@@ -11824,7 +11819,7 @@ body.mob #tgt{top:120px}
  // the "Your team" strip under the game screen is gone
  const pt=$('pty');if(pt){const r=pt.previousElementSibling;if(r&&r.classList.contains('bar-row'))r.style.display='none';pt.style.display='none'}}
 // courtyard name
-{const f=areaName;areaName=function(){try{if(!inRealm&&!inDun&&townAt(pl.position.x,pl.position.z,0)<0&&curMap()<0&&Math.hypot(pl.position.x-CYD.x,pl.position.z-CYD.y)<CYD.r+1.5)return '🌲 Duskhold · Courtyard'}catch(_){}return f.apply(this,arguments)}}
+{const f=areaName;areaName=function(){try{if(!inRealm&&!inDun&&townAt(pl.position.x,pl.position.z,0)<0&&curMap()<0&&Math.hypot(pl.position.x-CYD.x,pl.position.z-CYD.y)<CYD.r+.8)return '🌲 Duskhold · Courtyard'}catch(_){}return f.apply(this,arguments)}}
 
 // companion head portraits: render each companion's head once into a small picture
 {const f=mkBones;mkBones=function(S){const r=f.apply(this,arguments);for(const k in r.bones)r.bones[k].name=k;return r}}
@@ -11893,8 +11888,8 @@ var MSRC=null;
 function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].map(zn);return u.length?u.join(', '):''};
   const pz={};MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);(pz[q[2]]=pz[q[2]]||[]).push(r)});const zonesOf=ks=>zl(ks.flatMap(k=>(pz[k]||[]).filter(r=>r>=0)));
   const add=(n,ic,t)=>{S[n.toLowerCase()]={n,ic,t}};
-  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Courtyard north-east of Duskhold has plenty; every portal zone has trees too.');
-  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Courtyard north-east of Duskhold has stone outcrops. Also: '+zonesOf(['rock','grave','pillar'])+'.');
+  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Courtyard north-east of Duskhold has a grove; every portal zone has trees too.');
+  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Courtyard north-east of Duskhold has stone, and gains more nodes with every zone you complete. Also: '+zonesOf(['rock','grave','pillar'])+'.');
   add('Iron Ore','⛏️','A lucky find while mining rocks; higher Mining level finds it more often. Rocks are in the 🌲 Courtyard and '+zonesOf(['rock'])+'.');
   add('Crystal Shard','💎','Mine glowing crystals in '+(zonesOf(['crystal'])||'Burningeye Summit')+'. Falling meteors also leave crystals.');
   add('Plant Fiber','🌿','Gather bushes in '+zonesOf(['bush'])+'.');
@@ -11961,6 +11956,699 @@ function lfTopS(n,x,z,lo,r){const P=lfSurf(n);r=r||.025;let y=null;for(let i=0;i
     if(p.geo===RC&&t!=null){p.y=t+p.sy*.3;return}
     p.x=q[0];p.y=q[1];p.z=q[2]})}}catch(e){console.error('limbs orn',e)}
   return o.apply(this,arguments)}}
+
+// ================= v85: level-up heal, companion command, fishing loot, recall instances, courtyard growth, trainer =================
+
+// ---------------- companions: magic users attack from range; Space commands the team to attack your target ----------------
+var CMD={e:null,t:0};
+const CMD_MS=12000,MAG_R=5.5;
+function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<24)return tgt;
+  let b=null,bd=14;const d=aimDir?aimDir():V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
+  enemies.forEach(e=>{if(e.dead)return;const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z),L=v.length();if(L>=bd)return;if(L>2&&v.dot(d)/L<.2)return;bd=L;b=e});return b}
+function commandAttack(){
+  if(inRealm||townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
+  const act=party.slice(0,2).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
+  const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
+  CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
+  ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
+  act.forEach(c=>{const f=fols[party.indexOf(c)];if(f){f.cdA=Math.min(f.cdA||0,.15);dn(f.position,'!','#ffd24a',-10,700)}});
+  say('📣 '+act.map(c=>c.n).join(' and ')+(act.length>1?' attack ':' attacks ')+(e.c.n||e.c.g[0])+'!');if(typeof sfx=='function')sfx('chime',.5)}
+{const f=teamFoe;teamFoe=function(){const C=CMD;if(C.e){if(C.e.dead||nowP()>C.t||!enemies.includes(C.e)||d2(C.e.m.position,pl.position)>30)CMD={e:null,t:0};
+  else if(townAt(pl.position.x,pl.position.z,0)<0&&!inRealm)return C.e}return f.apply(this,arguments)}}
+addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey)return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
+  e.preventDefault();e.stopImmediatePropagation();if(e.repeat||building||uiOpen())return;commandAttack()},true);
+{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Command companions to attack';b.textContent='📣';mb.appendChild(b);
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();commandAttack()})}}
+{const s=document.querySelector('.sub');if(s)s.innerHTML=s.innerHTML.replace('Tab target ·','Tab target · Space command companions to attack ·')}
+
+// a magic bolt from a companion to its foe; the hit lands when the bolt arrives
+function compBolt(f,c,foe,done){const col=(FAMD[famOf(c.g[0])]||{}).col||0x9ad8ff,s=gY(f.position,.75),m=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),addMat(col));m.position.copy(s);scene.add(m);
+  const gl=new THREE.Mesh(new THREE.SphereGeometry(.32,10,8),addMat(col));gl.material.opacity=.35;m.add(gl);burst(s,col,8,.8,1,.3);
+  const L=d2(f.position,foe.m.position),ms=Math.max(140,L/18*1000);let tr=0;
+  tw(ms,k=>{const t=gY(foe.m.position,.8);m.position.lerpVectors(s,t,k);m.position.y+=Math.sin(k*Math.PI)*.4;if((tr++)%2==0)burst(m.position,col,2,.3,.4,.25)},
+    ()=>{scene.remove(m);m.geometry.dispose();gl.geometry.dispose();if(!foe.dead){burst(gY(foe.m.position,.8),col,16,1.4,1.6,.45);ring(foe.m.position,col,1.2,260)}done&&done()})}
+// magic companions keep their distance and cast; physical ones still close in and bite
+function compTick(dt,now){
+  const foe=teamFoe();
+  fols.forEach((f,i)=>{
+    const c=party[i];if(!f||!c)return;
+    f.visible=c.h>0&&!c.emp;f.position.y=inRealm?rGY(f.position.x,f.position.z):GH(f.position.x,f.position.z);
+    f.vel=f.vel||V();f.idleT=f.idleT||0;
+    const P=pl.position,dpl=d2(f.position,P);
+    if(dpl>28){f.position.set(P.x-Math.sin(pl.rotation.y)*2+(i?-1:1),0,P.z-Math.cos(pl.rotation.y)*2);f.vel.set(0,0,0)}
+    f.cdA=(f.cdA||0)-dt;
+    if(!f.visible||dt<=0){animC(f,now,false);return}
+    const spdK=FAMD[famOf(c.g[0])].spd*((c.mods||[]).includes('Swift')?1.18:1),mg=xMt(c)=='m';
+    let goal=null,want=0,face=null;
+    if(foe&&!c.emp){
+      const fp=foe.m.position,big=foe.boss?2.2:foe.c.al?.6:0,reach=mg?MAG_R+big:1.5+big,dv=V(fp.x-f.position.x,0,fp.z-f.position.z),L=dv.length();
+      const ang=Math.atan2(f.position.x-fp.x,f.position.z-fp.z)+(i?.5:-.5)*dt,slot=V(fp.x+Math.sin(ang)*reach*.85,0,fp.z+Math.cos(ang)*reach*.85);
+      face=dv;
+      if(L>reach){goal=slot;want=Math.min(7,3.2+L)*spdK}
+      else if(mg&&L<2.2&&!foe.boss){const away=V(-dv.x,0,-dv.z).normalize();goal=V(f.position.x+away.x*2,0,f.position.z+away.z*2);want=3*spdK} // step back to casting range
+      if(L<=reach&&!f.lk&&f.cdA<=0){f.rotation.y=Math.atan2(dv.x,dv.z);
+        if(mg){f.cdA=1.35/spdK;f.lk=1;const b=f.b;tw(220,k=>{if(b){b.position.y=Math.sin(k*Math.PI)*.12;b.rotation.x=-Math.sin(k*Math.PI)*.25}},()=>{if(b){b.position.y=0;b.rotation.x=0}f.lk=0;if(!foe.dead)compBolt(f,c,foe,()=>{if(!foe.dead)compHit(c,foe,1)})})}
+        else{f.cdA=1.15/spdK;f.lk=1;lunge(f,fp,()=>{f.lk=0;if(!foe.dead)compHit(c,foe,1)})}}
+    }else{
+      const fy=pl.rotation.y,sd=i?-1:1,home=V(P.x-Math.sin(fy)*2.2+Math.cos(fy)*1.6*sd,0,P.z-Math.cos(fy)*2.2-Math.sin(fy)*1.6*sd),dh=d2(f.position,home);
+      if(f.fol){if(dh<1.1)f.fol=0}else if(dh>3.4||dpl>4.6)f.fol=1;
+      if(f.fol){goal=home;want=Math.min(12,1.2+dh*1.9)*(riding?1.6:1)}
+      else{f.idleT-=dt;if(f.idleT<=0){f.idleT=2.5+Math.random()*4;f.look=Math.random()<.5?null:fy+(Math.random()-.5)*2.4;f.sniff=Math.random()<.3?V(f.position.x+(Math.random()-.5)*2.4,0,f.position.z+(Math.random()-.5)*2.4):null}
+        if(f.sniff&&d2(f.sniff,P)<4.5){goal=f.sniff;want=1.1;if(d2(f.position,f.sniff)<.3)f.sniff=null}}
+    }
+    const tv=V();if(goal){const g=V(goal.x-f.position.x,0,goal.z-f.position.z),gl=g.length();if(gl>.15)tv.copy(g).multiplyScalar(Math.min(want,gl*4)/gl)}
+    if(f.lk)tv.set(0,0,0);
+    f.vel.lerp(tv,Math.min(1,dt*(tv.lengthSq()>f.vel.lengthSq()?5:7)));
+    const sp=f.vel.length();if(sp>.05)compMove(f,f.vel.x*dt,f.vel.z*dt);
+    let ty=null;if(face&&(f.lk||sp<1.5))ty=Math.atan2(face.x,face.z);else if(sp>.3)ty=Math.atan2(f.vel.x,f.vel.z);else if(f.look!=null)ty=f.look;
+    if(ty!=null&&!f.lk){let da=ty-f.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));f.rotation.y+=da*Math.min(1,dt*(sp>.3?8:2.5))}
+    animC(f,now,sp>.25,sp);
+  });
+}
+
+// ---------------- fishing treasure: a gold pouch, a ring or an amulet may come up with the fish ----------------
+var FSHF=false;
+function fishTreasure(r,T,p){
+  const flaw=FSHF?1.5:1,ch=[.1,.15,.22,.4][r]*flaw;if(Math.random()>=ch)return;
+  const roll=Math.random(),lv=Math.max(1,Math.min(MAXLV,Math.max(hero.lvl-1,(typeof zoneLv=='function'?zoneLv(p.x,p.z):hero.lvl)))),pos=p.clone().add(V(.6,0,.6));
+  if(roll<.6){const g=Math.round((8+4*lv)*[1,1.4,2.1,4][r]*(.8+Math.random()*.4));gold+=g;pickup({ic:'💰',t:'A gold pouch! +'+g+' gold',col:'#ffd24a',sub:'Snagged on your line'});burst(gY(pl.position,1),0xffd24a,18,1.4,1.8,.5);if(typeof sfx=='function')sfx('chime');hud();return}
+  const sl=roll<.8?'ring':'amulet';let it=null;try{it=genItem(lv,{sl,minR:r>=2?1:0,cls:hero.cls});if(!it||itT(it).sl!==sl)it=null}catch(_){it=null}
+  if(!it){const g=Math.round((8+4*lv)*[1,1.4,2.1,4][r]);gold+=g;pickup({ic:'💰',t:'A gold pouch! +'+g+' gold',col:'#ffd24a'});hud();return}
+  drop('gear',it,pos,it.r);say('🎣 Something glints on your hook: '+(sl=='ring'?'a ring':'an amulet')+'!')}
+
+// ---------------- inventory preview: always mirrors what is equipped right now ----------------
+var BAGSIG='';
+const bagSig=()=>hero.cls+'|'+SLOTS.map(k=>eq[k]?eq[k].id+':'+(eq[k].up||0):'-').join(',');
+{const f=bagPV;bagPV=function(){try{if(typeof HP!='undefined'&&HP&&HP._cls&&HP._cls!==hero.cls){if(PV.obj===HP.pv){PV.sc.remove(HP.pv);PV.obj=null}HP=null}}catch(_){}
+  const r=f.apply(this,arguments);try{if(HP){HP._cls=hero.cls;BAGSIG=bagSig()}}catch(_){}return r}}
+setInterval(()=>{try{if($('bag')&&!$('bag').classList.contains('hide')&&HP&&bagSig()!==BAGSIG){BAGSIG=bagSig();refreshGear(HP);bagPV()}}catch(_){}},400);
+
+// ---------------- recall keeps your zone run: return with T, or restart it at the portal ----------------
+// INST = the zone run you recalled out of: which creatures are dead, where you stood. Saved with the game.
+var INST=null,RECBACK=false;
+const instMP=()=>typeof MP!='undefined'&&MP.on&&MP.host&&MP.host!==MP.me;
+function instSave(){const r=curMap();if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
+  INST={r,x:pl.position.x,z:pl.position.z,quiet:ROST.quiet,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1}))};
+  enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&regionAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
+function instRestore(){const I=INST;if(!I)return false;ROST.r=I.r;ROST.quiet=I.quiet;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null}));
+  const p=PMAP[I.r];toPos(I.x,I.z);INST=null;banner(p.ic+' '+p.n.toUpperCase(),'Back where you left off','The creatures you defeated stay defeated');return true}
+{const f=recallTown;recallTown=function(){const back=RECBACK&&nowP()-RECBACK<8000;RECBACK=false;if(back&&instRestore())return;instSave();return f.apply(this,arguments)}}
+{const f=goHome;goHome=function(){instSave();return f.apply(this,arguments)}}
+{const f=doRecall;doRecall=function(){
+  if(INST&&!inRealm&&!inDun&&curMap()<0&&!rec&&!uiOpen()){if(instMP())return say('Only the zone host can return to a saved run.');
+    if(enemies.some(e=>!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<10))return say('You cannot recall with enemies this close.');
+    RECBACK=nowP();rec={t:0,need:4,hp:hero.hp};say('Returning to your '+PMAP[INST.r].n+' run... stay still for 4 seconds.');return}
+  if(rec)RECBACK=false;return f.apply(this,arguments)}}
+$('recallBtn').onclick=()=>doRecall();
+// walking into the portal of a zone you have a saved run in asks first
+function instAsk(i,fresh){let d=$('instQ');if(!d){d=document.createElement('div');d.id='instQ';d.className='glass';$('stage').appendChild(d);
+    document.head.insertAdjacentHTML('beforeend','<style>#instQ{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:40;padding:16px 18px;max-width:340px;text-align:center}#instQ h3{margin:0 0 6px;font-size:1rem}#instQ p{margin:0 0 12px;font-size:.8rem;color:var(--mut)}#instQ .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}</style>')}
+  const p=PMAP[i],left=INST.slots.filter(s=>!s.dead).length;
+  d.innerHTML=`<h3>Restart zone instance?</h3><p>You have a run in progress in ${p.ic} ${p.n} (${left} creature${left==1?'':'s'} left). Restarting brings every creature back.</p><div class="btns"><button class="pri" data-iq="cont">Continue my run</button><button data-iq="new">Restart</button><button data-iq="no">Cancel</button></div>`;
+  d.classList.remove('hide');d.onclick=e=>{const b=e.target.closest('[data-iq]');if(!b)return;d.classList.add('hide');const k=b.dataset.iq;
+    if(k=='cont')fadeTo(()=>instRestore());else if(k=='new'){INST=null;fresh(i)}}}
+{const f=enterMap;enterMap=function(i){if(INST&&INST.r===i&&!instMP()){instAsk(i,j=>f.call(this,j));return}if(INST&&INST.r===i)INST=null;return f.apply(this,arguments)}}
+// a hint while a run is saved
+{const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&curMap()<0&&!inRealm){const b=$('buffs');if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to your ${PMAP[INST.r].n} run">🌀 ${PMAP[INST.r].n} run saved · T</span>`)}}catch(_){}}}
+{const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots?s.inst:null}catch(_){INST=null}return r}}
+
+// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
+var fCon=null;
+// gain from a consumed companion: its tier matters most, its level a little
+const conGainC=b=>consGain(Math.max(0,tierSp(b.g[0])-1))*(1+Math.min(.5,(b.l-1)/60))*(1+.1*(b.evo||0));
+function conHTML(a){const L=party.filter(c=>c&&c!==a);
+  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on every base stat; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
+  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
+{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion for a boost to every base stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
+{const f=rF;rF=function(){f.apply(this,arguments);try{const a=sel.length>=1?party[sel[0]]:null;if(fCon&&(!party.includes(fCon)||fCon===a||fCon.lock))fCon=null;const d=$('doF');
+  if(a&&fOpt=='con'&&d){d.disabled=!fCon;d.textContent=fCon?'🍽️ Consume '+fCon.n:'🍽️ Consume'}}catch(_){}}}
+$('fz').addEventListener('click',e=>{const g=e.target.closest('[data-fcon]');if(g){e.stopPropagation();if(g.disabled)return;fCon=party[+g.dataset.fcon]||null;rF()}},true);
+{const f=$('doF').onclick;$('doF').onclick=function(){
+  if(fOpt!='con')return f.apply(this,arguments);
+  const a=party[sel[0]],b=fCon;if(!a||!b||b===a||!party.includes(b)||b.lock)return;
+  ivFix(a);const g=conGainC(b),up=[];
+  IVK.forEach(k=>{const o=ivOf(a,k),n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1])});ivSync(a);
+  if(b.emp)b.emp=false;party=party.filter(c=>c!==b);sel=[party.indexOf(a)];cmpSel=Math.max(0,party.indexOf(a));a.h=Math.min(M(a),a.h+Math.round(M(a)*.1));fCon=null;
+  say('🍽️ '+nm(a)+' absorbed '+b.n+' · every base stat +'+pctS(g)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
+
+// ---------------- Beast Trainer: one purchase raises a companion to your level ----------------
+// each level costs about 1.9 × (level + 1.1) gold: Lv 1→20 ≈ 400, Lv 10→20 ≈ 315, Lv 1→40 ≈ 1,560
+function trainCost(c){const a=c.l,b=Math.min(hero.lvl,MAXLV);if(b<=a)return 0;const n=b-a,sum=(a+b-1)*n/2;return Math.max(10,Math.round(1.9*(sum+1.1*n)))}
+{const f=XR.visitor;XR.visitor=function(){const r=f.apply(this,arguments);try{const B=$('xwB'),rows=B&&B.querySelectorAll('[data-vtrain]');if(rows&&rows.length){
+  const dtl=B.querySelector('.dtl');if(dtl)dtl.textContent='One training session raises a companion straight to your level. The bigger the gap, the more it costs.';
+  rows.forEach(bt=>{const c=party[+bt.dataset.vtrain];if(!c)return;const cost=trainCost(c),ok=cost>0;bt.disabled=!ok||gold<cost;bt.textContent=ok?'Train to Lv '+Math.min(hero.lvl,MAXLV)+' · 🪙 '+cost:'At your level'})}}catch(_){}return r}}
+$('xw').addEventListener('click',e=>{if(xwMode!='visitor')return;const t=e.target.closest('[data-vtrain]');if(!t)return;e.stopImmediatePropagation();if(t.disabled)return;
+  const c=party[+t.dataset.vtrain];if(!c)return;const cost=trainCost(c);if(!cost||gold<cost)return;const to=Math.min(hero.lvl,MAXLV),from=c.l;
+  gold-=cost;c.l=to;c.x=0;c.h=M(c);say('💪 '+c.n+' trained hard: Lv '+from+' → Lv '+to+'!'+(EVLV.some(v=>v>from&&v<=to)?' ✨ It can evolve now (Companions menu).':''));if(typeof sfx=='function')sfx('power');hsDirty();ui();hud();if(XR.visitor)XR.visitor()},true);
+
+// ---------------- the courtyard grows: one ring per completed zone, 6 nodes of each of that zone's node types; nodes regrow in 10 minutes ----------------
+var CYG={n:-1,walls:[],g:null,set:new Set(),lock:new Set()};
+CYD.nodes.forEach(q=>CYG.set.add(q[1]*W+q[0]));
+const cyRock=k=>k=='rock'||k=='grave'||k=='pillar';
+function mmPaint(x,y){try{const c=mmB.getContext('2d'),t=MAP[y][x],bm=BIOMES[MAP.bio[y][x]],b=t=='R'?[96,92,88]:t=='W'?[196,188,170]:t=='B'?[168,126,92]:t=='P'?[200,190,164]:t=='p'?[168,140,96]:t=='#'?bm.frs.map(v=>v*.8):t=='~'?bm.wat:t=='g'?bm.grs:t=='a'?bm.acc:bm.gnd;
+  c.fillStyle='rgb('+(b[0]|0)+','+(b[1]|0)+','+(b[2]|0)+')';c.fillRect(x,y,1,1)}catch(_){}}
+function cyWalls(){const C=CYD,r=C.r,ga=Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x);
+  CYG.walls.forEach(([x,y])=>{if(MAP[y][x]=='B'){MAP[y][x]='g';mmPaint(x,y)}});CYG.walls=[];
+  for(let y=Math.floor(C.y-r-2);y<=C.y+r+2;y++)for(let x=Math.floor(C.x-r-2);x<=C.x+r+2;x++){if(townAt(x,y,3)>=0)continue;const t=MAP[y]&&MAP[y][x];if(t!=='.'&&t!=='g')continue;
+    const d=Math.hypot(x-C.x,y-C.y);let da=Math.abs(Math.atan2(y-C.y,x-C.x)-ga);if(da>Math.PI)da=6.283-da;
+    if(d>=r-.4&&d<r+.6&&da*r>3.4){MAP[y][x]='B';CYG.walls.push([x,y]);mmPaint(x,y)}}
+  if(CYG.g){scene.remove(CYG.g);CYG.g.traverse(o=>{if(o.isInstancedMesh)o.dispose&&o.dispose()})}
+  const g=new THREE.Group();CYG.g=g;scene.add(g);const st=sm(0x5a5662),cap=sm(0x6e6a76),L=CYG.walls;
+  if(L.length){const im=new THREE.InstancedMesh(G_BOX,st,L.length),ic=new THREE.InstancedMesh(G_BOX,cap,L.length),o=new THREE.Object3D();im.castShadow=im.receiveShadow=ic.receiveShadow=true;
+    L.forEach(([x,y],i)=>{const h=GH(x,y);o.position.set(x,h+.5,y);o.rotation.set(0,Math.atan2(x-C.x,y-C.y),0);o.scale.set(1.04,1.1,.8);o.updateMatrix();im.setMatrixAt(i,o.matrix);
+      o.position.y=h+1.1;o.scale.set(1.12,.14,.92);o.updateMatrix();ic.setMatrixAt(i,o.matrix)});g.add(im,ic)}
+  const gw=3.4/r;[-1,1].forEach(s=>{const a=ga+s*(gw+.5/r),x=C.x+Math.cos(a)*r,z=C.y+Math.sin(a)*r;TQ(g,G_BOX,st,x,GH(x,z)+.9,z,.7,1.8,.7);TQ(g,G_BOX,cap,x,GH(x,z)+1.85,z,.85,.15,.85)});
+  {const a=ga+gw+1.6/r,x=C.x+Math.cos(a)*(r+1.2),z=C.y+Math.sin(a)*(r+1.2),y=GH(x,z),wd=sm(0x3a2a20);TQ(g,G_BOX,wd,x,y+.9,z,.14,1.8,.14);
+    const n=bossDone.size;sign(g,[{t:'🌲 Courtyard',f:'700 40px'},{t:n?n+' zone'+(n>1?'s':'')+' tended':'Wood & stone',f:'600 26px'}],1.7,.46,'#1a1424','#efe6ff',null,x,y+1.65,z,Math.atan2(Math.cos(ga),Math.sin(ga)))}}
+function cySync(){const n=bossDone.size;if(n===CYG.n)return;const first=CYG.n<0;CYG.n=n;CYD.r=Math.min(CYD.rmax,CYD.r0+CYD.dr*n);
+  CYD.nodes.forEach(([x,y,k,zi])=>{const key=y*W+x,open=zi<0||bossDone.has(zi);
+    if(open){if(CYG.lock.has(key)){CYG.lock.delete(key);delete gdep[key];nodeSet(key,true);if(cyRock(k))MAP[y][x]='r';mmPaint(x,y)}}
+    else if(!CYG.lock.has(key)){CYG.lock.add(key);gdep[key]=1;nodeSet(key,false);if(cyRock(k))MAP[y][x]='g';mmPaint(x,y)}});
+  cyWalls();if(!first&&n>0)say('🌲 The Courtyard grows: new '+PMAP[Math.min(n,PMAP.length)-1].n+' nodes to harvest in Duskhold.')}
+setInterval(()=>{try{cySync()}catch(e){console.warn('courtyard',e)}},1500);
+try{cySync()}catch(e){console.warn('courtyard',e)}
+// courtyard nodes come back after 10 minutes
+{const f=gFinish;gFinish=function(tg){const r=f.apply(this,arguments);try{if(tg&&CYG.set.has(tg.k))for(let i=gresp.length-1;i>=0;i--)if(gresp[i].tg===tg){gresp[i].t=600;break}}catch(_){}return r}}
+
+// ================= v85: readable enemy attacks — projectiles, effects, ranges, dimmer warnings =================
+// 1) every projectile / spell move shows a wind-up glow at the caster's hand or mouth, a travelling projectile and an impact
+// 2) attack ranges: ranged moves fire at range (and point-blank for pure casters), melee only in reach; companion spells only in range
+// 3) red ground warnings are 35% dimmer
+// 4) Rime Wraith orbs gather at the arena edge and drift inward
+var KQ={fx:[],gm:{},mm:{},sm:{},dim:.65};
+// ---------- shared geometry / materials (never disposed) ----------
+function kqGeo(k){const g=KQ.gm;if(g[k])return g[k];
+  g[k]=k=='sph'?new THREE.SphereGeometry(1,12,9):k=='shaft'?new THREE.CylinderGeometry(.028,.028,1,6).rotateX(Math.PI/2):k=='head'?new THREE.ConeGeometry(.07,.2,6).rotateX(Math.PI/2):
+    k=='fl'?new THREE.PlaneGeometry(.12,.16):k=='rock'?new THREE.DodecahedronGeometry(.2,0):k=='tor'?new THREE.TorusGeometry(.32,.035,6,20):k=='rune'?new THREE.RingGeometry(.72,.9,36).rotateX(-Math.PI/2):
+    k=='disc'?new THREE.CircleGeometry(.55,20).rotateX(-Math.PI/2):k=='spike'?new THREE.ConeGeometry(.16,1.1,5).rotateX(Math.PI/2):k=='col'?new THREE.CylinderGeometry(.18,.32,1,10,1,true).translate(0,.5,0):new THREE.SphereGeometry(1,8,6);
+  return g[k]}
+function kqAdd(c){const m=KQ.mm;return m[c]||(m[c]=addMat(c))}
+function kqBas(c){const m=KQ.mm;return m['b'+c]||(m['b'+c]=new THREE.MeshBasicMaterial({color:c}))}
+function kqSpr(c,s){const k=c,m=KQ.sm[k]||(KQ.sm[k]=new THREE.SpriteMaterial({map:SPR,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));const o=new THREE.Sprite(m);o.scale.setScalar(s||1);return o}
+function kqLit(c,k){const a=new THREE.Color(c),b=new THREE.Color(0xffffff);return a.lerp(b,k==null?.55:k).getHex()}
+// one-off fading flash (own material, disposed)
+function kqFlash(p,c,s,ms){const o=new THREE.Sprite(new THREE.SpriteMaterial({map:SPR,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));o.position.copy(p);scene.add(o);
+  tw(ms||240,k=>{o.scale.setScalar(.3+s*k);o.material.opacity=1-k*k},()=>{scene.remove(o);o.material.dispose()})}
+// per-frame effect list, ticked from eshotTick (runs every frame of the main loop)
+function kqFx(o){KQ.fx.push(o);return o}
+function kqFxTick(dt){const L=KQ.fx;for(let i=L.length-1;i>=0;i--){const o=L[i];let keep=false;try{keep=o.tick(dt)}catch(err){console.warn('kqfx',err)}
+  if(!keep){L.splice(i,1);try{o.end&&o.end()}catch(err){}}}}
+function kqRm(o){if(o&&o.parent)o.parent.remove(o)}
+// ---------- who throws what ----------
+const KQR={spit:1,throw:1,bolt:1},KQMEL={bite:1,strike:1};
+const KQBC={shaman:0x9aff5a,cultist:0xff7a2a,wraith:0x9fb8ff,revenant:0xe8c070,spitter:0xc8f03a,nagas:0x4ae0d0,trollsh:0x9ad8ff,selem:0xe0b060,vampm:0xff3a5a};
+const KQRC={shaman:[0x8aff4a,'fire'],cultist:[0xff6a2a,'fire'],giant:[0xbfe0ff,'storm'],revenant:[0xe0b060,'fire'],nagas:[0x4ad8c8,'fire'],trollsh:[0x9ad8ff,'ice'],vampm:[0xff3050,'fire']};
+const KQARROW={bonearcher:1,nagaa:1};
+function kqKey(e){return e&&e.c&&e.c.g?e.c.g[0]:''}
+function kqKind(e,n){const k=kqKey(e);if(n=='throw')return KQARROW[k]?'arrow':'rock';if(n=='bolt')return 'orb';if(n=='rainfire')return 'meteor';return 'glob'}
+function kqCol(e,n){const k=kqKey(e);
+  if(n=='bolt')return KQBC[k]||(e.c.mt=='m'?0xc08aff:0xffd27a);
+  if(n=='rainfire')return (KQRC[k]||[0xff6a2a])[0];
+  if(n=='throw')return KQARROW[k]?0xffe8b0:0xd8c8a8;
+  return SPITC[rigOf(k)]||(e.c.mt=='m'?0xff7a2a:0xb0ff6a)}
+// where the shot leaves from: the raised right hand of humanoids, the mouth of creatures
+const _kqV=new THREE.Vector3();
+function kqHand(e,out){out=out||new THREE.Vector3();const m=e.m,bs=m.bs||1,b=m.h&&m.h.bones;
+  if(b&&(b.aR2||b.aR1)){(b.aR2||b.aR1).getWorldPosition(out);if(isFinite(out.y)&&out.distanceTo(m.position)<4*bs)return out}
+  const ry=m.rotation.y;out.set(m.position.x+Math.sin(ry)*.55*bs,GH(m.position.x,m.position.z)+(m.isHum?1.5:.72)*bs,m.position.z+Math.cos(ry)*.55*bs);return out}
+// ---------- projectile models ----------
+function kqShot(kind,c,sz){const g=new THREE.Group();sz=sz||1;
+  if(kind=='arrow'){const sh=new THREE.Mesh(kqGeo('shaft'),kqBas(0xcdbb90));sh.scale.set(1.3,1.3,1.05);g.add(sh);const hd=new THREE.Mesh(kqGeo('head'),kqBas(0xd8dde4));hd.position.z=.6;g.add(hd);
+    [0,1].forEach(i=>{const f=new THREE.Mesh(kqGeo('fl'),kqBas(0xb03a2a));f.material.side=THREE.DoubleSide;f.position.z=-.45;f.rotation.z=i*Math.PI/2;f.rotation.y=Math.PI/2;g.add(f)});
+    const gl=kqSpr(c,1.1);gl.position.z=.45;g.add(gl);g.scale.setScalar(1.35*sz)}
+  else if(kind=='rock'){const r=new THREE.Mesh(kqGeo('rock'),kqBas(0x8a8070));r.scale.setScalar(1.5*sz);g.add(r);g.userData.spin=r;g.add(kqSpr(0xe8d8b0,1.3*sz))}
+  else if(kind=='orb'||kind=='meteor'){const R=(kind=='meteor'?.34:.2)*sz,core=new THREE.Mesh(kqGeo('sph'),kqBas(kqLit(c,.6)));core.scale.setScalar(R);g.add(core);
+    const h1=kqSpr(c,R*7);g.add(h1);const h2=kqSpr(kqLit(c,.3),R*3.6);g.add(h2);
+    const t=new THREE.Mesh(kqGeo('tor'),kqAdd(c));t.scale.setScalar(R*4.2);g.add(t);g.userData.spin=t}
+  else{const core=new THREE.Mesh(kqGeo('sph'),kqBas(c));core.scale.setScalar(.22*sz);g.add(core);const h=kqSpr(c,1.6*sz);g.add(h);
+    const d=new THREE.Mesh(kqGeo('sph'),kqBas(kqLit(c,.4)));d.scale.setScalar(.11*sz);d.position.set(.12*sz,.1*sz,-.16*sz);g.add(d)}
+  return g}
+function kqImpact(p,c,kind,hit){
+  if(kind=='arrow'||kind=='rock'){burst(p,kind=='rock'?0xb8a888:0xffe8b0,hit?12:8,1.4,1.2,.35);burst(p,0xc8b090,6,1,1,.4);kqFlash(p,kind=='rock'?0xffe0b0:0xfff0c8,1.2,160);if(hit)ring(p,0xffe0a0,1.2,220);return}
+  kqFlash(p,c,hit?2.6:1.8,240);burst(p,c,hit?22:14,2,1.6,.5);burst(p,kqLit(c),8,1,2.2,.35);ring(p,c,hit?1.8:1.2,300)}
+// ---------- wind-up at the caster: a growing glow at the hand/mouth, plus a rune circle for spells ----------
+function kqCast(e,a){
+  const n=a.n,c=kqCol(e,n),mag=n=='bolt'||n=='rainfire',bs=e.m.bs||1,g=new THREE.Group();
+  const s1=kqSpr(c,1),s2=kqSpr(kqLit(c,.5),.5);g.add(s1,s2);scene.add(g);
+  let rn=null;if(mag){rn=new THREE.Mesh(kqGeo('rune'),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));rn.renderOrder=22;rn.scale.setScalar(Math.max(1,bs*.9));scene.add(rn)}
+  const big=(n=='throw'?.55:mag?1.25:.95)*Math.min(1.6,Math.max(.8,bs)),cleanup=()=>{kqRm(g);if(rn){kqRm(rn);rn.material.dispose()}};
+  kqFx({t:0,tick(dt){this.t+=dt;
+    if(e.atk!==a||e.dead){cleanup();return false}
+    const P=kqHand(e,_kqV);
+    if(a.ph==0){const k=Math.max(0,Math.min(1,1-a.t/a.T)),fl=k>.75?1+.25*Math.sin(this.t*40):1;
+      g.position.copy(P);s1.scale.setScalar((.25+big*1.6*k)*fl);s2.scale.setScalar((.1+big*.6*k)*fl);
+      if(Math.random()<dt*18)burst(P,c,1,.5*k,.4,.35);
+      if(rn){rn.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+.16,e.m.position.z);rn.material.opacity=.75*k;rn.rotation.y+=dt*2.5}
+      return true}
+    // release
+    burst(P,c,mag?18:10,1.4,1.2,.4);kqFlash(P,c,big*2.2,200);
+    if(n=='rainfire'){const col=new THREE.Mesh(kqGeo('col'),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));col.position.copy(P);scene.add(col);
+      tw(420,k=>{col.scale.set(1-.6*k,1+9*k,1-.6*k);col.material.opacity=.7*(1-k)},()=>{scene.remove(col);col.material.dispose()})}
+    cleanup();return false}});
+}
+// ---------- fire rain: a meteor (or hail, or a lightning bolt) drops from the sky onto the red circle ----------
+function kqRain(e,a){
+  const k=kqKey(e),rc=KQRC[k]||[0xff6a2a,'fire'],c=rc[0],ty=rc[1],tp=a.tp.clone(),FALL=.62;let ms=[],done=false;
+  const ox=(e.m.position.x-tp.x),oz=(e.m.position.z-tp.z),ol=Math.hypot(ox,oz)||1,sky=V(tp.x+ox/ol*3.5,0,tp.z+oz/ol*3.5);
+  const offs=[[0,0,1],[.9,-.6,.55],[-.8,.7,.5]];
+  kqFx({tick(dt){
+    if(e.atk!==a||e.dead){ms.forEach(kqRm);return false}
+    const rem=a.ph==0?a.t+a.M.act:a.ph==1?a.t:0;
+    if(rem<FALL&&rem>0&&!ms.length)ms=offs.map(o=>{const g=kqShot(ty=='ice'?'orb':'meteor',c,o[2]*(ty=='ice'?1.6:1.15));g.userData.o=o;scene.add(g);return g});
+    if(ms.length&&!done){const kk=Math.max(0,Math.min(1,1-rem/FALL));
+      ms.forEach((g,i)=>{const o=g.userData.o,kq=Math.min(1,kk*(1+i*.12)),x=tp.x+o[0]+(sky.x-tp.x)*(1-kq),z=tp.z+o[1]+(sky.z-tp.z)*(1-kq);g.position.set(x,GH(x,z)+.3+9.5*(1-kq),z);g.visible=kq<1;
+        if(g.userData.spin)g.userData.spin.rotation.x+=dt*8;if(Math.random()<.8)burst(g.position,c,2,.3,.6,.4)});
+      if(rem<=0||a.ph==2){done=true;ms.forEach(kqRm);
+        if(ty=='storm'){const top=gY(tp,12);bolt(top,gY(tp,.2),0xdff0ff);bolt(top.clone().add(V(.6,0,.4)),gY(tp,.2),0x9ad8ff);sfx('zap',.6)}
+        kqFlash(gY(tp,.6),c,3.2,300);burst(gY(tp,.4),kqLit(c),18,2.4,3,.5)}}
+    return !done}});
+}
+// ---------- monster moves: hooks ----------
+{const f=mStart;mStart=function(e,tg,n){f.apply(this,arguments);const a=e&&e.atk;if(!a||a.n!==n)return;
+  kqDimTel(a);
+  if(KQR[n]||n=='rainfire'){try{kqCast(e,a);if(n=='rainfire')kqRain(e,a)}catch(err){console.warn('kqcast',err)}}}}
+function kqDimTel(a){const t=a&&a.tel;if(!t)return;[t.o,t.f].forEach(q=>{if(q&&q.material&&q.material.opacity!==q._kw){q.material.opacity*=KQ.dim;q._kw=q.material.opacity}})}
+{const f=mTick;mTick=function(e,dt,now){const a=e.atk,n0=eshots.length;
+  f.apply(this,arguments);
+  if(a&&eshots.length>n0)for(let i=n0;i<eshots.length;i++)kqDress(eshots[i],e,a);
+  if(e.atk)kqDimTel(e.atk)}}
+// swap the plain sphere the base game fires for a proper projectile that leaves from the hand/mouth
+function kqDress(s,e,a){
+  if(s.kq)return;s.kq=1;const kind=kqKind(e,a.n),c=a.n=='spit'?s.c:kqCol(e,a.n),old=s.m,g=kqShot(kind,c,a.sz||1),P=kqHand(e,_kqV);
+  g.position.set(old.position.x,P.y,old.position.z);scene.remove(old);if(old.geometry)old.geometry.dispose();if(old.material)old.material.dispose();
+  scene.add(g);s.m=g;s.c=c;s.kind=kind;s.tg=a.tg;s.y0=P.y-GH(P.x,P.z);s.hy=e.m.isHum?1.0:.75;s.age=0;
+  if(kind=='arrow')g.lookAt(g.position.x+s.v.x,g.position.y,g.position.z+s.v.z);
+}
+eshotTick=function(dt){
+  kqFxTick(dt);
+  for(let i=eshots.length-1;i>=0;i--){const s=eshots[i],o=s.m,p=o.position;s.t-=dt;s.age=(s.age||0)+dt;
+    p.x+=s.v.x*dt;p.z+=s.v.z*dt;const y0=s.y0==null?.7:s.y0,hy=s.hy||.7,hk=Math.min(1,s.age/.28);p.y=GH(p.x,p.z)+y0+(hy-y0)*(1-(1-hk)*(1-hk));
+    if(s.kind=='arrow')o.lookAt(p.x+s.v.x,p.y,p.z+s.v.z);
+    else if(o.userData&&o.userData.spin){o.userData.spin.rotation.x+=dt*12;o.userData.spin.rotation.y+=dt*7}
+    if(s.kind=='arrow'){if(Math.random()<.6)burst(p,0xfff0c8,1,.05,.05,.22)}else if(s.kind=='rock'){if(Math.random()<.4)burst(p,0xb8a888,1,.15,.1,.3)}
+    else{burst(p,s.c,Math.random()<.5?2:1,.25,.25,.38);if(s.kind=='glob'&&Math.random()<.25)burst(p,s.c,1,.1,-1.5,.5)}
+    let gone=s.t<=0||solid(p.x,p.z),hit=null;
+    if(!gone){if(Math.hypot(p.x-pl.position.x,p.z-pl.position.z)<.6)hit=pl;
+      else if(s.tg&&s.tg!==pl&&fols.indexOf(s.tg)>=0&&s.tg.visible&&Math.hypot(p.x-s.tg.position.x,p.z-s.tg.position.z)<.75)hit=s.tg}
+    if(hit){gone=true;hitTarget(s.e,hit,s.mult,s.mt)}
+    if(gone){kqImpact(p,s.c,s.kind,!!hit);scene.remove(o);if(!s.kq&&o.geometry)o.geometry.dispose();eshots.splice(i,1)}}
+};
+// ---------- attack choice: ranged moves are ordinary attacks at range; up close, fight up close ----------
+MV.spit.rmin=0;MV.throw.rmin=0;MV.bolt.rmin=0;   // casters with no melee may still fire point-blank (ePick prefers melee when in reach)
+function ePick(e,ok){
+  e.buN=e.buN||R(2,4);const ready=(e.bu|0)>=e.buN,ms=MSET[kqKey(e)]||['bite'],hasBM=ms.some(n=>KQMEL[n]),isB=n=>KQMEL[n]||KQR[n];
+  let pool=ok;const mel=ok.filter(n=>!KQR[n]&&MV[n]&&MV[n].rmax<3);
+  if(mel.length&&(mel.some(n=>KQMEL[n])||ready||!hasBM))pool=ok.filter(n=>!KQR[n]);   // in reach: no point-blank shots when a melee move is usable
+  const sp=pool.filter(n=>!isB(n)),bs=pool.filter(isB);
+  let pk=null;if(ready&&sp.length)pk=sp[Math.random()*sp.length|0];else if(bs.length)pk=bs[Math.random()*bs.length|0];
+  else if(sp.length&&!hasBM&&mel.length)pk=sp[Math.random()*sp.length|0];  // no basic melee (wraith, Gloomcap…): use its spin/slam instead of idling next to you
+  if(!pk)return null;
+  if(isB(pk)){e.bu=(e.bu|0)+1;if(e.bu>=e.buN&&e.m)ring(e.m.position,0xffb020,1.1,300)}else{e.bu=0;e.buN=R(2,4)-(e.c.al?1:0)}
+  return pk;
+}
+// preferred fighting distance: archers/casters keep away; spell/spit users without a basic melee hover at mid range
+function kqPref(e){const k=kqKey(e),ms=MSET[k]||['bite'],en=EN[k]||{},hasR=ms.some(n=>KQR[n]||n=='rainfire'),hasBM=ms.some(n=>KQMEL[n]);
+  if(en.ranged)return 5.2;if(hasR&&!hasBM)return 4;return ms.some(n=>n=='bite'||n=='spin'||n=='slam'||n=='strike')?1.3:4.3}
+{const f=eTick;eTick=function(e,dt,now){if(e&&!e.boss&&!e._kp&&e.c){e._kp=1;e.pref=kqPref(e)}return f.apply(this,arguments)}}
+// ---------- companion spells: only cast when the target is inside the spell's reach ----------
+function kqSpRange(sp){switch(sp.k){case 'bite':return 3.2;case 'cone':return (sp.r||2.6)+.4;case 'nova':return (sp.r||2.6);case 'beam':return 7.5;case 'fan':return 9;case 'bolt':return 12;default:return 9}}
+function compSpells(dt){
+  fols.forEach((f,i)=>{
+    const c=party[i];if(!f||!c||c.h<=0||c.emp||!c.sp)return;c.cdm=c.cdm||{};const spd=FAMD[famOf(c.g[0])].spd*((c.mods||[]).includes('Swift')?1.18:1);
+    for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*spd);
+    const t0=teamFoe(),L=t0?d2(t0.m.position,f.position):99,t=t0&&L<9?t0:null;
+    c.sp.forEach(n=>{
+      const sp=CSP[n];if(!sp||c.cdm[n]>0)return;
+      const help=sp.k=='shield'||sp.k=='heal'||sp.k=='buff';
+      if(help){const need=sp.k=='heal'?hero.hp<heroMax()*.7:enemies.some(e=>e.agg&&!e.dead&&d2(e.m.position,pl.position)<10);if(!need)return}
+      else if(!t||f.lk||L>kqSpRange(sp)+(t.boss?2.2:0))return;
+      c.cdm[n]=sp.cd;compCast(c,f,sp,t);
+    });
+  });
+}
+// ---------- dimmer red ground warnings (35% less opaque) ----------
+function tele(pos,r,delay,fn,line){
+  const D=KQ.dim,mk=(c,op)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,depthWrite:false,depthTest:false,side:THREE.DoubleSide});
+  const geo=()=>line?new THREE.PlaneGeometry(line.w,line.l,3,Math.max(4,Math.round(line.l))):new THREE.RingGeometry(.001,1,Math.max(24,Math.round(r*10)),Math.max(3,Math.round(r*1.5)));
+  const go=geo(),gf=geo(),base=go.attributes.position.array.slice(),ox=pos.x,oz=pos.z;
+  let ca=1,sa=0;if(line){const a=Math.atan2(-line.d.x,-line.d.z);ca=Math.cos(a);sa=Math.sin(a)}
+  const drape=(g,k)=>{const P=g.attributes.position;for(let i=0;i<P.count;i++){let u=base[i*3],v=base[i*3+1];
+      if(line){const lz=-(v)-line.l/2;const wx=ox+u*ca+lz*sa,wz=oz-u*sa+lz*ca;P.setXYZ(i,wx,GH(wx,wz)+.14,wz)}
+      else{const wx=ox+u*r*k,wz=oz-v*r*k;P.setXYZ(i,wx,GH(wx,wz)+.14,wz)}}P.needsUpdate=true;g.computeBoundingSphere()};
+  drape(go,1);drape(gf,line?1:.15);
+  const o=new THREE.Mesh(go,mk(0xd01808,.22*D)),f=new THREE.Mesh(gf,mk(0xff3010,.12*D)),edge=line?null:new THREE.Mesh(new THREE.RingGeometry(.93,1,Math.max(24,Math.round(r*10)),1),mk(0xff2a10,.85*D));
+  o.renderOrder=f.renderOrder=20;o.frustumCulled=f.frustumCulled=false;scene.add(o,f);
+  if(edge){const P=edge.geometry.attributes.position,b2=P.array.slice();for(let i=0;i<P.count;i++){const wx=ox+b2[i*3]*r,wz=oz-b2[i*3+1]*r;P.setXYZ(i,wx,GH(wx,wz)+.15,wz)}edge.renderOrder=21;edge.frustumCulled=false;scene.add(edge)}
+  let last=-1;
+  tw(delay*1000,k=>{f.material.opacity=(.12+.33*k)*D;if(!line){const q=Math.round((.15+.85*k)*20)/20;if(q!==last){last=q;drape(gf,q)}}},()=>{scene.remove(o,f);if(edge)scene.remove(edge);go.dispose();gf.dispose();if(edge)edge.geometry.dispose();o.material.dispose();f.material.dispose();if(edge)edge.material.dispose();fn()});
+}
+// ================= Sovereign spells: visible projectiles =================
+// new BMV entries are wrapped like zzz_mp.js does, so the boss driver still relays them to the other player
+function kqBmv(k,fn){BMV[k]=function(e,A,en){const top=MP.inAI&&!MP.dep;MP.dep++;try{if(top&&MP.on&&MP.others&&A)MP.evq.push(['b',A.i,k,+(+en).toFixed(3)]);return fn.apply(this,arguments)}finally{MP.dep--}}}
+function kqMouth(e){const m=e.m,bs=m.bs||3,ry=m.rotation.y;return V(m.position.x+Math.sin(ry)*.35*bs,GH(m.position.x,m.position.z)+Math.min(5,.85*bs)+(e.lift?.6:0),m.position.z+Math.cos(ry)*.35*bs)}
+// a glow gathering at the Sovereign before it casts
+function kqBossCast(e,col,ms){const g=kqSpr(col,.5),g2=kqSpr(kqLit(col,.5),.3);scene.add(g,g2);
+  tw(ms,k=>{const p=kqMouth(e);g.position.copy(p);g2.position.copy(p);g.scale.setScalar(.5+3.2*k);g2.scale.setScalar(.3+1.4*k);if(Math.random()<.4)burst(p,col,1,.8,.6,.4)},()=>{const p=kqMouth(e);scene.remove(g,g2);burst(p,col,20,2,2,.5);kqFlash(p,col,4,220)})}
+// real-time timed effect (boss moves run on setTimeout/tw timing, so these use the clock too)
+function kqTimed(dur,step,end,alive){const t0=performance.now();kqFx({tick(){const k=(performance.now()-t0)/(dur*1000);if(alive&&!alive()){end&&end(true);return false}if(k>=1){end&&end(false);return false}step(k);return true}})}
+// a glob lobbed in an arc that lands when the red circle fires
+function kqLob(A,from,to,dur,col,sz){const g=kqShot('glob',col,sz||1.8);g.position.copy(from);scene.add(g);const h=3+d2(from,to)*.22,ty=GH(to.x,to.z)+.3;
+  kqTimed(dur,k=>{const x=from.x+(to.x-from.x)*k,z=from.z+(to.z-from.z)*k;g.position.set(x,from.y+(ty-from.y)*k+h*4*k*(1-k),z);if(Math.random()<.7)burst(g.position,col,1,.2,.2,.4)},()=>kqRm(g),()=>A.f)}
+// something falling from the sky onto a red circle, landing exactly when it fires
+function kqFall(A,to,delay,col,kind,sz,from){const FALL=Math.min(delay,.7),wait=delay-FALL;let g=null;const sx=from?from.x-to.x:-2,sz2=from?from.z-to.z:-2,sl=Math.hypot(sx,sz2)||1;
+  kqTimed(delay,k=>{const t=k*delay;if(t<wait)return;if(!g){g=kind=='spike'?(()=>{const q=new THREE.Group(),s=new THREE.Mesh(kqGeo('spike'),kqBas(kqLit(col,.5)));s.scale.setScalar(1.3*(sz||1));s.rotation.x=Math.PI/2;q.add(s,kqSpr(col,1.6*(sz||1)));return q})():kqShot(kind||'meteor',col,sz||1.2);scene.add(g)}
+    const q=(t-wait)/FALL,x=to.x+sx/sl*3*(1-q),z=to.z+sz2/sl*3*(1-q);g.position.set(x,GH(x,z)+.3+10*(1-q),z);if(g.userData.spin)g.userData.spin.rotation.x+=.3;if(Math.random()<.8)burst(g.position,col,2,.3,.6,.4)},
+    ab=>{kqRm(g);if(!ab){kqFlash(gY(to,.5),col,3,260);burst(gY(to,.4),kqLit(col),12,2,2.4,.45)}},()=>A.f)}
+// a lance that races out along a red line, reaching the end the moment it fires
+function kqSweep(A,o,d,l,delay,col,kind){const TR=Math.min(delay,.38),wait=delay-TR;let g=null;
+  kqTimed(delay,k=>{const t=k*delay;if(t<wait)return;if(!g){g=new THREE.Group();if(kind=='bone'){const s=new THREE.Mesh(kqGeo('spike'),kqBas(0xf0e8d8));s.scale.set(1.4,1.4,1.6);g.add(s,kqSpr(col,1.6))}else g.add(kqShot('orb',col,1.6));scene.add(g)}
+    const q=(t-wait)/TR,s=1+(l-1)*q,x=o.x+d.x*s,z=o.z+d.z*s;g.position.set(x,GH(x,z)+.8,z);g.lookAt(x+d.x,g.position.y,z+d.z);burst(g.position,col,2,.3,.4,.4);if(kind=='bone'&&Math.random()<.5)burst(gY(g.position,-.6),0xc8b090,2,.6,.6,.4)},()=>kqRm(g),()=>A.f)}
+// ---- rewritten Sovereign moves (same damage and timing as before, plus the visuals) ----
+kqBmv('rain',function(e,A,en){let n=0;const N=e.bs.ph>=3?7:5;kqBossCast(e,A.b.col,450*en);const f=()=>{if(n++>=N||e.dead||!A.f)return;const q=pl.position.clone().add(V((Math.random()-.5)*3,0,(Math.random()-.5)*3));
+    kqFall(A,q,.9*en,A.b.col,'meteor',1.1,e.m.position);
+    tele(q,2.1,.9*en,()=>{if(!A.f)return;ring(q,A.b.col,5,350);burst(gY(q,.3),A.b.col,24,4,3,.6);if(d2(pl.position,q)<2.2)bossHit(e,1)});setTimeout(f,420*en)};f();return {d:(N*.42+1)*en,lock:0}});
+kqBmv('spit',function(e,A,en){const N=e.bs.ph>=3?5:3,mo=kqMouth(e);kqBossCast(e,0x7aff4a,300);for(let i=0;i<N;i++){const q=inArena(A,pl.position.clone().add(V((Math.random()-.5)*6,0,(Math.random()-.5)*6)));if(i==0)q.copy(inArena(A,pl.position.clone()));
+    const dl=(.9+i*.15)*en;kqLob(A,mo,q,dl,0x7aff4a,1.9);
+    tele(q,2.2,dl,()=>{if(!A.f)return;burst(gY(q,.3),0x7aff4a,16,2,2,.5);if(d2(pl.position,q)<2.2)bossHit(e,.7);bxPool(A,q,2.2,6,0x6aff3a)})}return {d:1.3*en,lock:0}});
+kqBmv('spores',function(e,A,en){const mo=kqMouth(e);kqBossCast(e,0xb050e0,300);for(let i=0;i<(e.bs.ph>=2?5:4);i++){const q=inArena(A,i==0?pl.position.clone():V(A.cx+(Math.random()-.5)*20,0,A.cz+(Math.random()-.5)*20));const dl=(.9+i*.1)*en;
+    kqLob(A,mo,q,dl,0xc070ff,2.2);tele(q,2.6,dl,()=>{if(A.f)bxPool(A,q,2.6,7,0xb050e0,.25)})}say('☁ Toxic spores drift across the arena.');return {d:1.4*en,lock:0}});
+kqBmv('bonelines',function(e,A,en){const o=e.m.position.clone(),a0=Math.atan2(pl.position.x-o.x,pl.position.z-o.z);let hit=false;kqBossCast(e,0xe8e0c8,1000*en*.8);[-.45,0,.45].forEach(da=>{const d=V(Math.sin(a0+da),0,Math.cos(a0+da));
+    kqSweep(A,o,d,15,1.0*en,0xe8e0c8,'bone');
+    tele(o,0,1.0*en,()=>{if(!A.f)return;for(let s=1;s<15;s+=1.2)burst(gY(o.clone().addScaledVector(d,s),.6),0xe8e0c8,3,1,3,.5);if(!hit&&inLine(pl.position,o,d,15,2.2)&&hero.iv<=0){hit=true;bossHit(e,1.2)}},{w:2.2,l:15,d})});return {d:1.6*en,lock:1}});
+kqBmv('cross',function(e,A,en){const o=e.m.position.clone(),a0=Math.random()<.5?0:Math.PI/4;let hit=false;kqBossCast(e,A.b.col,1250*en*.8);
+    for(let k=0;k<4;k++){const a=a0+k*Math.PI/2,d=V(Math.sin(a),0,Math.cos(a));kqSweep(A,o,d,14,1.25*en,A.b.col,'orb');tele(o,0,1.25*en,()=>{if(!A.f)return;for(let s=1;s<14;s+=1.5)burst(gY(o.clone().addScaledVector(d,s),.3),A.b.col,3,1,2,.4);if(!hit&&inLine(pl.position,o,d,14,2.6)&&hero.iv<=0){hit=true;bossHit(e,1.3)}},{w:2.6,l:14,d})}
+    if(e.bs.ph>=3)setTimeout(()=>{if(!A.f||e.dead)return;const o2=e.m.position.clone();let h2=false;for(let k=0;k<4;k++){const a=a0+Math.PI/4+k*Math.PI/2,d=V(Math.sin(a),0,Math.cos(a));kqSweep(A,o2,d,14,1.1*en,A.b.col,'orb');tele(o2,0,1.1*en,()=>{if(!A.f)return;if(!h2&&inLine(pl.position,o2,d,14,2.6)&&hero.iv<=0){h2=true;bossHit(e,1.3)}},{w:2.6,l:14,d})}},900*en);
+    return {d:(e.bs.ph>=3?2.6:1.7)*en,lock:1}});
+kqBmv('lightning',function(e,A,en){const o=e.m.position.clone(),d=toPl(o);kqBossCast(e,0xcfe8ff,500*en);for(let i=0;i<8;i++){const q=inArena(A,o.clone().addScaledVector(d,2+i*2.4),.8),dl=(.6+i*.13)*en;
+    kqFall(A,q,dl,0xcfe8ff,'orb',1.2,o);
+    tele(q,1.8,dl,()=>{if(!A.f)return;bolt(gY(q,11),gY(q,.2),0xdff0ff);burst(gY(q,2),0xcfe8ff,12,1,6,.3);ring(q,0x9ad8ff,3,200);if(d2(pl.position,q)<1.8)bossHit(e,1)})}return {d:1.8*en,lock:0}});
+kqBmv('mines',function(e,A,en){const N=6+e.bs.ph*2,ice=A.b.sp=='IceWraith',kind=ice?'spike':'meteor';kqBossCast(e,A.b.col,500*en);
+    for(let k=0;k<N;k++){const a=Math.random()*6.283,r=2+Math.random()*(ARENA_R-3.5),q=V(A.cx+Math.cos(a)*r,0,A.cz+Math.sin(a)*r),dl=(1.5+k*.12)*en;kqFall(A,q,dl,A.b.col,kind,1,e.m.position);
+      tele(q,1.9,dl,()=>{if(!A.f)return;ring(q,A.b.col,4,300);burst(gY(q,.3),A.b.col,20,3,3,.5);if(d2(pl.position,q)<2)bossHit(e,1.1)})}
+    const q0=pl.position.clone();kqFall(A,q0,1.4*en,A.b.col,kind,1.2,e.m.position);tele(q0,1.9,1.4*en,()=>{if(A.f&&d2(pl.position,q0)<2)bossHit(e,1.1)});return {d:1.2*en,lock:0}});
+// ---- Rime Wraith orbs: they gather at the arena's outer edge (a frost swirl marks each spot) and then hunt you inward ----
+kqBmv('orbs',function(e,A,en){const N=e.bs.ph>=2?6:4,col=A.b.col,a0=Math.random()*6.283,WARN=.95*en;kqBossCast(e,col,WARN*1000);
+  for(let i=0;i<N;i++){const a=a0+i/N*6.283,R0=ARENA_R-1.4,q=V(A.cx+Math.cos(a)*R0,0,A.cz+Math.sin(a)*R0),gy=GH(q.x,q.z);
+    // spawn telegraph: a blue frost circle + a rising wisp at the edge
+    const rg=new THREE.Mesh(kqGeo('rune'),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));rg.renderOrder=22;rg.position.set(q.x,gy+.16,q.z);scene.add(rg);
+    const w=kqSpr(col,.4);w.position.set(q.x,gy+.3,q.z);scene.add(w);
+    kqTimed(WARN,k=>{rg.material.opacity=.85*k;rg.scale.setScalar(1.6-.6*k);rg.rotation.y+=.08;w.position.y=gy+.3+.9*k;w.scale.setScalar(.4+1.6*k);if(Math.random()<.5)burst(V(q.x,gy+.2,q.z),col,1,.8,1.2,.5)},
+      ab=>{kqRm(rg);kqRm(w);rg.material.dispose();if(ab||e.dead)return;
+        const g=kqShot('orb',col,1.8),cr=new THREE.Mesh(kqGeo('sph'),new THREE.MeshBasicMaterial({color:0x2a6ad0,transparent:true,opacity:.6,depthWrite:false}));cr.scale.setScalar(.62);cr.renderOrder=-1;g.add(cr);const sh=new THREE.Mesh(kqGeo('disc'),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false}));sh.renderOrder=21;sh.position.y=-1.08;g.add(sh);
+        g.position.set(q.x,gy+1.2,q.z);scene.add(g);burst(g.position,col,24,2,2,.5);kqFlash(g.position,col,3,240);
+        bxA(A).push({k:'orb',ms:g,t:9,sp:3.3+i*.18,e});
+        kqFx({end(){sh.material.dispose()},tick(){if(!g.parent)return false;sh.position.y=(GH(g.position.x,g.position.z)+.12-g.position.y)/(g.scale.x||1);if(Math.random()<.6)burst(g.position,col,1,.25,.2,.45);return true}})},()=>A.f)}
+  say('✦ Wailing orbs gather at the edge of the arena — they hunt you down!');return {d:1.2*en,lock:0}});
+
+// ================= v85: smoother movement animation — bow shot, companion and mount gaits, all models =================
+// One shared "gait clock" drives every walking model (hero, humanoid foes, companions, creature foes, Sovereigns, mounts):
+// - Speed is measured from how far the model really moved over the ground, so the legs never cycle faster than the body travels.
+// - Stride length grows with speed like a real animal's (Alexander's rule: stride ≈ 2.3 × hip height × Froude^0.3),
+//   so a faster creature takes longer strides instead of frantic short ones; big creatures step slower than small ones.
+// - Each leg is planted for part of the cycle (the stance) and sweeps back at ground speed, then swings forward with a lift.
+// - Four-legged creatures walk (4-beat), trot (diagonal pairs) and gallop (hind pair, front pair, flight) as they speed up.
+// - Moving/idle blend with an eased spring instead of snapping; body bob, sway, lean into turns and acceleration,
+//   head and tail follow-through ride on top.
+// Nothing here changes gameplay: only bone rotations/offsets are set. Attack poses are left to the existing code.
+
+var _gaV=null,_gaO=[0,0,0,0],_gaO2=[0,0,0,0];
+var GA_OFF={walk:{hl:0,fl:.25,hr:.5,fr:.75},trot:{hl:0,fl:.5,hr:.5,fr:1},gal:{hl:0,hr:.12,fl:.42,fr:.54}};
+function gaSS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
+function gaCl(x,a,b){return x<a?a:x>b?b:x}
+// critically damped spring toward target (eases in and out); state in G[k], velocity in G[k+'V']
+function gaSD(G,k,target,T,dt){const om=2/Math.max(.01,T),x=om*dt,e=1/(1+x+.48*x*x+.235*x*x*x),vk=k+'V',c=G[k]-target,tmp=((G[vk]||0)+om*c)*dt;
+  G[vk]=((G[vk]||0)-om*tmp)*e;G[k]=target+(c+tmp)*e;return G[k]}
+// one leg over a gait cycle. p = cycle fraction since touchdown, beta = share of the cycle the foot is planted.
+// out[0] hip swing (-1 forward .. +1 back; linear in stance so the foot stays put), out[1] swing lift 0..1, out[2] stance compression 0..1, out[3] stance progress (or -1 in swing)
+function gaLeg(p,beta,out){
+  p-=Math.floor(p);
+  if(p<beta){const s=p/beta;out[0]=-1+2*s;out[1]=0;out[2]=Math.sin(Math.PI*s);out[3]=s}
+  else{const u=(p-beta)/(1-beta),m=.6*(1-beta)/beta,u2=u*u,u3=u2*u;
+    // Hermite from back (+1) to front (-1); both ends keep a little of the stance's backward motion (lift-off follow-through, swing retraction)
+    out[0]=(2*u3-3*u2+1)+(u3-2*u2+u)*m-(-2*u3+3*u2)+(u3-u2)*m;out[1]=Math.sin(Math.PI*Math.pow(u,.75));out[2]=0;out[3]=-1}
+  return out}
+// advance the gait clock of object o. Lm = hip height in model units; k = stride factor; fmax = highest stride rate (Hz)
+function gaStep(o,now,mv,sp,Lm,k,fmax){
+  const V3=_gaV||(_gaV=new THREE.Vector3());o.getWorldPosition(V3);
+  const e=o.matrixWorld.elements,sc=Math.hypot(e[0],e[1],e[2])||1,yaw=Math.atan2(e[8],e[10]);
+  let G=o._ga;
+  if(!G)G=o._ga={t:now,x:V3.x,z:V3.z,yaw:yaw,w:mv?1:0,v:mv?Math.min(sp||0,6):0,vm:0,ph:Math.random(),turn:0,tl:0,acc:0,Fr:0,f:0,cp:0,wp:0,br:0,sl:0};
+  const dt=(now-G.t)/1000;G.t=now;G.dt=0;
+  const L=Math.max(.05,Lm*sc);G.L=L;G.sc=sc;
+  if(dt>0&&dt<.5){
+    const dtc=Math.min(dt,.06),vm=Math.hypot(V3.x-G.x,V3.z-G.z)/dt;G.dt=dt;
+    if(vm<40)G.vm+=(vm-G.vm)*(1-Math.exp(-dt*14));
+    // moving: trust the measured ground speed; if blocked (pushing into a wall) step slowly in place
+    const vt=mv?(G.vm>.25?Math.min(G.vm,14):gaCl(sp||1.2,.5,3)):0,v0=G.v;
+    gaSD(G,'v',vt,mv?.2:.16,dtc);if(G.v<0){G.v=0;G.vV=0}
+    gaSD(G,'w',mv?1:0,mv?.14:.2,dtc);G.w=gaCl(G.w,0,1);
+    G.acc+=(gaCl((G.v-v0)/dtc,-40,40)-G.acc)*(1-Math.exp(-dtc*6));
+    let dy=yaw-G.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+    G.turn+=(gaCl(dy/dt,-6,6)-G.turn)*(1-Math.exp(-dtc*8));G.tl+=(G.turn-G.tl)*(1-Math.exp(-dtc*3.5));
+    const Fr=G.v*G.v/(9.8*L);G.Fr=Fr;
+    const D=Math.max(.05,L*2.3*Math.pow(Math.max(Fr,1e-4),.3)*(k||1));G.D=D;
+    G.f=Math.min(fmax||4.5,G.v/D);G.ph+=G.f*dt;if(G.ph>1e4)G.ph-=1e4;
+  }else if(!(dt>=0&&dt<.5)){G.vm=0}
+  G.x=V3.x;G.z=V3.z;G.yaw=yaw;return G}
+function gaLegLen(S){
+  if(S._gaL)return S._gaL;let L=0;
+  (S.legs||[]).forEach(q=>{const b=S.bones&&S.bones[q[0]+'0'];if(b&&b[2]>L)L=b[2]});
+  if(!L&&S.bones&&S.bones.pelvis)L=S.bones.pelvis[2];
+  return S._gaL=Math.max(.15,L||.4)}
+
+// ---------------- companions, creature foes, Sovereigns (every SPEC rig) ----------------
+rigAnim=function(x,now,mv,sp){
+  const S=x.spec,b=x.bones,B=x.b,A=x.g.atk,ty=S.anim,legs=S.legs||[],TAU=Math.PI*2;
+  const Lm=gaLegLen(S),slow=!!S.gs;
+  const G=gaStep(x.g,now,mv,sp,Lm,ty=='hop'?1.6:ty=='slither'?1:slow?1.25:1,ty=='spider'?5.5:slow?3:4.5);
+  const w=G.w,P=G.ph,Fr=G.Fr||0,dt=G.dt,id=1-w;
+  const run=ty=='waddle'?0:slow?.5*gaSS(.3,1.4,Fr):gaSS(.3,1.4,Fr);
+  const gal=(ty=='quad'&&legs.length==4&&!slow)?gaSS(1.8,4,Fr):0;
+  const turnW=gaCl(G.turn,-3,3)*w,bank=gaCl(-G.turn*G.v*.02,-.2,.2)*w;
+  // accumulated phases for things whose speed changes (so speeding up never makes them jump)
+  if(dt>0){G.wp+=dt*1000/(ty=='fly'?55:85+215*id);G.br+=dt*(2.2+2.4*run*w);G.cp+=dt*(1.6+2*w)}
+  let pitch=0;
+  // ---- legs ----
+  const beta=ty=='hop'?.3:ty=='spider'?.55:(legs.length<=2||ty=='waddle')?.6-.22*run:.62-.17*run-.13*gal;
+  const Am=ty=='spider'?.45:ty=='hop'?.8:.62,reach=ty=='spider'?Lm*1.5*G.sc:G.L*.95;
+  const amp=Math.min(Am,Math.asin(Math.min(.95,beta*(G.D||0)/(2*reach))))*w;
+  const lift=(ty=='hop'?1.1:(.5+.45*run+.15*gal)*(slow?.6:1))*w;
+  legs.forEach((q,i)=>{
+    const k=q[0],h=b[k+'0'],kn=b[k+'1'],an=b[k+'2'];if(!h)return;
+    if(ty=='fly'){h.rotation.x=.5;kn.rotation.x=1;an.rotation.x=-.6;return}
+    let off=q[1]/TAU;
+    if(ty=='hop')off=0;
+    else if(ty=='quad'&&legs.length==4&&GA_OFF.walk[k]!=null){const wk=GA_OFF.walk[k],tr=GA_OFF.trot[k],ga=GA_OFF.gal[k];off=(wk+(tr-wk)*run)*(1-gal)+ga*gal}
+    else if(ty=='spider')off+=(+k[1]||0)*.06;
+    const o=gaLeg(P+off,beta,_gaO);
+    if(ty=='spider'){const sd=k[0]=='a'?-1:1;h.rotation.y=o[0]*amp*sd;h.rotation.x=0;kn.rotation.z=sd*o[1]*.45*w;return}
+    if(ty=='waddle'&&k[0]=='f'){h.rotation.x=-Math.sin(TAU*(P+off))*amp*.8;kn.rotation.x=0;an.rotation.x=0;return} // arms swing
+    h.rotation.x=o[0]*amp;kn.rotation.x=o[1]*lift*.95+o[2]*.12*w;an.rotation.x=-(o[1]*lift*.6+o[2]*.06*w);
+  });
+  // ---- body: sway, bob, pitch, lean ----
+  const s1=Math.sin(TAU*P)*w,sw=(ty=='waddle'?.14:.07)*(1-.6*run);
+  b.pelvis.rotation.y=s1*sw;b.spine.rotation.y=-s1*sw*.85+turnW*.05;b.chest.rotation.y=-s1*sw*.7+turnW*.06;
+  b.spine.rotation.z=0;
+  if(ty=='waddle'){b.spine.rotation.z=s1*.1;b.pelvis.rotation.z=-s1*.08+bank}
+  else b.pelvis.rotation.z=bank;
+  // gallop: the back flexes and extends once per stride, the body rocks
+  const gf=gal*w*Math.cos(TAU*(P-.95));b.spine.rotation.x=-gf*.07;b.chest.rotation.x=gf*.09;
+  if(ty=='quad'||ty=='hop'||ty=='waddle'||ty=='spider')pitch=gaCl(-G.acc*.012,-.08,.08)*w-.05*gal*w*Math.sin(TAU*(P-.05));
+  if(ty=='fly')pitch=.22*Math.min(1,G.v/4)*w;
+  if(ty=='float')pitch=.18*Math.min(1,G.v/4)*w;
+  let hopY=0;
+  if(ty=='hop'){const p=P-Math.floor(P);if(p>=.3){const u=(p-.3)/.7;hopY=4*u*(1-u)*Math.min(.16,(G.D||0)/G.sc*.18)*w;pitch+=-.22*Math.cos(Math.PI*u)*w}else pitch+=.1*Math.sin(Math.PI*p/.3)*w}
+  if(ty=='fly')b.pelvis.rotation.z=gaCl(-G.turn*.12,-.35,.35)*w;
+  b.pelvis.rotation.x=pitch;
+  b.chest.scale.y=1+Math.sin(G.br)*.025;
+  // ---- head: steady gaze (counters bob/pitch), looks into turns, nods with the walk ----
+  const hb=b.chest.rotation.x+b.spine.rotation.x+pitch;
+  b.head.rotation.x=A?.45:id*Math.sin(now/1300)*.05+w*(-hb*.7+Math.sin(TAU*2*P)*.04*(1-run));
+  b.head.rotation.y=A?0:id*Math.sin(now/1700)*.25+gaCl(turnW*.13,-.4,.4);
+  if(b.neck)b.neck.rotation.y=A?0:gaCl(turnW*.06,-.2,.2);
+  b.jaw.rotation.x=A?.65:.04+Math.sin(now/300)*.03+.12*run*w*(.6+.4*Math.sin(G.br*2));
+  // ---- tail: wags with the stride, lifts when running, trails behind in turns ----
+  for(let i=0;i<4;i++){
+    const tb=b['tail'+i];if(!tb)continue;
+    if(ty=='slither')continue;
+    if(ty=='float'){tb.rotation.y=Math.sin(now/420-i*.9)*.35-G.tl*w*.1*(i+1);tb.rotation.x=Math.sin(now/600-i*.7)*.2+.12*w*Math.min(1,G.v/3)*(i+1)*.5;continue}
+    const k1=1+i*.35;
+    tb.rotation.y=id*Math.sin(now/380-i*.8)*.14*k1+w*Math.sin(TAU*P-i*.9)*(.16-.08*run-.06*gal)*k1-gaCl(G.tl,-3,3)*w*(.07+.05*i);
+    tb.rotation.x=id*(.03+Math.sin(now/900+i)*.02)+w*(-.1-.08*run+.07*gal*Math.cos(TAU*(P-.1)-i*.7)+.03*Math.cos(TAU*2*P-i*.8)*(1-gal));
+  }
+  // slithering: the body wave travels back along the body exactly as fast as the body moves forward (no sliding)
+  if(ty=='slither'){
+    if(dt>0)G.sl+=dt*(w*(G.v/Math.max(.1,1.31*G.sc))+id*.245)*TAU;
+    const th=G.sl,ta=.18+.22*w,ba=.1+.2*w;
+    for(let i=0;i<4;i++){const tb=b['tail'+i];if(tb)tb.rotation.y=Math.sin(th-i*1.1)*ta}
+    ['pelvis','spine','chest','neck'].forEach((k,i)=>{if(b[k])b[k].rotation.y=Math.sin(th-(i+4)*1.1)*ba*(k=='neck'?.6:1)+(k=='neck'?turnW*.08:0)});
+    b.head.rotation.y=A?0:-Math.sin(th-8*1.1)*ba*.5+gaCl(turnW*.12,-.4,.4)+id*Math.sin(now/1700)*.2;
+  }
+  if(ty=='float')['fl','fr'].forEach((k,i)=>{if(b[k+'0']){b[k+'0'].rotation.z=(i?1:-1)*(.25+Math.sin(now/500+i*2)*.15);b[k+'0'].rotation.x=.35*w*Math.min(1,G.v/3)}});
+  x.ears.forEach(e=>{e.rotation.z=e.userData.rz+Math.sin(now/620+e.userData.sd)*.06;e.rotation.x=A?-.5:-.12-.18*run*w+.05*w*Math.sin(TAU*2*P-.8)});
+  x.wings.forEach(wg=>{wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*(ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w))});
+  const bob=Lm*w*((1-run)*.012*(.5+.5*Math.cos(TAU*2*(P-beta*.5)))+run*(1-gal)*.045*(.5-.5*Math.cos(TAU*2*(P-beta*.5)))+gal*.08*(.5+.5*Math.cos(TAU*(P-.92))))*(slow?.5:1);
+  B.position.y=ty=='fly'?.4+Math.sin(now/180)*.06:ty=='float'?.3+Math.sin(now/500)*.07:ty=='spider'?bob*.4:ty=='hop'?hopY:bob;
+};
+
+// ---------------- hero, humanoid foes, co-op players ----------------
+// extra pose channels: draw-arm yaw (bow draw) and head yaw (look at the target / into turns)
+HACH.ay=['aR0','y'];HACH.hy=['head','y'];HACH.lw=['aL2','x'];HACH.rw=['aR2','x'];
+var HERO_LM=.55;
+animHero=function(now,mv,h){
+  h=h||pl;const b=h.bones;if(!b)return;
+  const isP=h===pl,rid=isP&&typeof riding!='undefined'&&!!riding;
+  const dt=Math.min(.05,Math.max(0,(now-(h._at||now))/1000));h._at=now;
+  const G=gaStep(h,now,mv&&!rid,0,HERO_LM,1.15,3.2),TAU=Math.PI*2;
+  const w=h.mvW=G.w,Fr=G.Fr||0,P=G.ph,idle=1-w,br=Math.sin(now/700),run=gaSS(.35,1.5,Fr);
+  const beta=.6-.24*run,amp=Math.min(.8,Math.asin(Math.min(.95,beta*(G.D||0)/(2*G.L*.95))))*w;
+  const oL=gaLeg(P,beta,_gaO),oR=gaLeg(P+.5,beta,_gaO2);
+  const lh=oL[0]*amp,rh=oR[0]*amp,klift=(.7+.75*run)*w;
+  b.lh1.rotation.x=oL[1]*klift+oL[2]*.14*w;b.rh1.rotation.x=oR[1]*klift+oR[2]*.14*w;
+  // ankles: push off the toes at the end of stance, toes up through the swing
+  if(b.lh2){b.lh2.rotation.x=(oL[3]>=0?gaSS(.55,1,oL[3])*.4:-.12*oL[1])*w*(.5+.5*run)}
+  if(b.rh2){b.rh2.rotation.x=(oR[3]>=0?gaSS(.55,1,oR[3])*.4:-.12*oR[1])*w*(.5+.5*run)}
+  // arms: smooth counter-swing to the legs (right arm with the left leg), bigger with longer strides
+  const arm=(.22+.12*run)*w+Math.min(.28,amp*.4),sA=Math.cos(Math.PI*2*(P-beta));
+  const lean=.05*w+.12*run*w+gaCl(G.acc*.025,-.1,.14)*w;
+  const L={lh:lh,rh:rh,ax:sA*arm-.2+br*.03*idle,az:0,ex:-.3-.4*run*w,lx:-sA*arm-br*.03*idle,lz:0,le:-.25-.45*run*w,
+    sy:sA*.14*w,sx:lean,py:-sA*.09*w,hx:-lean*.45,ay:0,lw:0,rw:0,hy:Math.sin(now/1900)*.2*idle+gaCl(G.turn*.1,-.3,.3)*w};
+  // pelvis: bob (high mid-stance when walking, low when running), small hip drop and lean into turns
+  const pv=b.pelvis;if(pv.userData.y0==null)pv.userData.y0=pv.position.y;
+  const c2=Math.cos(TAU*2*(P-beta*.5));
+  pv.position.y=pv.userData.y0+w*((1-run)*.018*(.5+.5*c2)+run*(.04*(.5-.5*c2)-.012));
+  pv.rotation.z=w*(.035*Math.sin(TAU*P)*(1-run))+gaCl(-G.turn*G.v*.012,-.14,.14)*w;
+  b.chest.scale.y=1+Math.sin(now/500)*.015;
+  // cape: lifts with speed, flutters faster, swings out against turns, bounces with the stride
+  if(dt>0)G.cp+=dt*(3.3+3.5*w*Math.min(1,G.v/5));
+  const cv=Math.min(1,G.v/5)*w,cb=.05*w*Math.cos(TAU*2*P-1);
+  b.cp0.rotation.x=.05+.25*cv+Math.sin(G.cp)*.04+cb*.5;b.cp1.rotation.x=.06+.29*cv+Math.sin(G.cp*.87+1)*.05+cb;b.cp2.rotation.x=.07+.33*cv+Math.sin(G.cp*.77+2)*.06+cb;
+  const ct=gaCl(G.tl*.08,-.3,.3)*w;b.cp0.rotation.z=ct*.5;b.cp1.rotation.z=ct;b.cp2.rotation.z=ct*1.3;
+  if(!isP){h._gaLean=lean;if(!h.sw)for(const k in HACH){const [n,ax]=HACH[k];if(b[n]&&L[k]!=null)b[n].rotation[ax]=L[k]}else{b.lh0.rotation.x=L.lh;b.rh0.rotation.x=L.rh}return}
+  // ---- player: the v81 action system on top of the walk ----
+  let F=L;const pz=typeof uiOpen=='function'&&uiOpen();
+  if(HA.buf&&!pz){if(now-HA.buf>380||!party.length)HA.buf=0;else if(atkCd<=0&&!hero.chan){HA.buf=0;swing()}}
+  const A=HA.cur;
+  if(A){
+    if(!pz)A.k=Math.min(1,A.k+dt*1000/A.ms*(hstop>0?.12:1));
+    const Pp=A.pose(A.k);F={};for(const k in L)F[k]=Pp[k]==null?L[k]:Pp[k];
+    if(A.k<A.bi){const t=haIO(A.k/A.bi);for(const k in F){const f=A.from[k];if(f!=null){let d=F[k]-f;if(k=='sy'||k=='py')d=haWrap(d);F[k]=f+d*t}}}
+    if(!A.hit&&A.k>=A.hitAt){A.hit=1;A.onHit&&A.onHit()}
+    if(A.tick)A.tick(A.k);
+    if(A.k>=1&&HA.cur===A){HA.cur=null;HA.snap={};for(const k in F)HA.snap[k]=(k=='sy'||k=='py')?haWrap(F[k]):F[k];HA.sb=1;pl.sw=hero.chan?1:0;if(A.end)A.end()}
+  }else{
+    if(hero.chan)F=Object.assign({},L,{ax:-1.2,az:-.9,lx:-.5,lz:.7,sx:.1});
+    if(HA.sb>0&&HA.snap){if(!pz)HA.sb=Math.max(0,HA.sb-dt/.17);const t=haIO(HA.sb);F=Object.assign({},F);
+      for(const k in F){const sn=HA.snap[k];if(sn!=null){let d=sn-F[k];if(k=='sy'||k=='py')d=haWrap(d);F[k]+=d*t}}}
+  }
+  const fx=(now-HA.flT)/240;if(fx>=0&&fx<1){const a=(fx<.2?haOut(fx/.2):1-haIO((fx-.2)/.8))*(A?.6:1);F=F===L?Object.assign({},L):F;F.sx-=.32*a;F.hx-=.25*a}
+  for(const k in HACH){const [n,ax]=HACH[k];if(b[n]&&F[k]!=null)b[n].rotation[ax]=F[k]}
+};
+// an action replaced or cancelled mid-way still tidies up its extras (nocked arrow, drawn string)
+{const f=haCancel;haCancel=function(keepHit){const A=HA.cur;const r=f.apply(this,arguments);if(A&&A.end)try{A.end()}catch(e){}return r}}
+// humanoid foes: the base code zeroes the spine pitch when not attacking; put the running lean back
+{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);const h=g.h;if(h&&!g.ak&&h._gaLean&&h.bones)h.bones.spine.rotation.x+=h._gaLean;return r}}
+
+// ---------------- bow and crossbow ----------------
+// Bow (release at 53% of the animation, when the arrow flies): raise the bow and turn side-on, reach for the string,
+// draw to the cheek with the elbow high, settle at anchor, release (string hand flicks back past the ear, bow arm kicks),
+// hold the follow-through, then relax. A nocked arrow and a drawn string are shown between nock and release.
+// Crossbow (bolt at 54%): shoulder and sight down the stock, recoil kick on the shot, crank the string back, relax.
+var BOW_FX=null;
+function bowFx(){
+  if(BOW_FX)return BOW_FX;
+  const g=new THREE.Group(),arrow=new THREE.Group(),sm=new THREE.MeshBasicMaterial({color:0xd8c8a0}),hm=new THREE.MeshBasicMaterial({color:0xc0c8d0}),fm=new THREE.MeshBasicMaterial({color:0xe8e0d0,side:THREE.DoubleSide});
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,1,5),sm);sh.rotation.x=Math.PI/2;arrow.add(sh);
+  const hd=new THREE.Mesh(new THREE.ConeGeometry(.026,.09,5),hm);hd.rotation.x=Math.PI/2;hd.position.z=.54;arrow.add(hd);
+  [0,1,2].forEach(i=>{const f=new THREE.Mesh(new THREE.PlaneGeometry(.035,.12),fm);f.position.z=-.42;f.rotation.z=i*Math.PI/3*2;f.rotation.y=Math.PI/2;const p=new THREE.Group();p.rotation.z=i*Math.PI*2/3;f.position.x=0;f.position.y=.022;p.add(f);arrow.add(p)});
+  const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
+  const str=new THREE.Line(sg,new THREE.LineBasicMaterial({color:0xe8e0c8}));str.frustumCulled=false;
+  arrow.scale.setScalar(.82);g.add(arrow,str);g.visible=false;g.userData.lps=1;g.traverse(o=>{o.userData.lpsSkip=1});
+  return BOW_FX={g:g,arrow:arrow,str:str}}
+// k: 0..1 how far the string is pulled (0 = hidden)
+function bowFxSet(k,g){
+  try{
+    const F=bowFx(),W=(pl.gearG||[]).find(o=>o.userData&&o.userData.wt=='bow'&&o.parent);if(!W){F.g.visible=false;return}
+    const u=W.userData;if(!u.p0){u.p0=W.position.clone();u.s0=W.scale.x}
+    // during the shot the bow is held by its grip (it is carried by the string side) and its limbs flex as it is drawn
+    g=g||0;W.scale.x=u.s0*(1-.6*g+.12*k*g);W.position.copy(u.p0);W.position.z-=g*.555*W.scale.x;
+    if(g<=0||!pl.visible){F.g.visible=false;return}
+    if(F.g.parent!==scene)scene.add(F.g);
+    pl.updateMatrixWorld(true);
+    const V=THREE.Vector3,t1=new V(-.062,.594,0).applyMatrix4(W.matrixWorld),t2=new V(-.062,-.594,0).applyMatrix4(W.matrixWorld),grip=new V(-.555,0,0).applyMatrix4(W.matrixWorld);
+    const hand=new V(0,-.03,.02).applyMatrix4(pl.bones.aR2.matrixWorld);
+    // the nock point sits between the string's rest line and the drawing hand
+    const rest=t1.clone().add(t2).multiplyScalar(.5),nock=rest.clone().lerp(hand,Math.min(1,k));
+    const pa=F.str.geometry.attributes.position;pa.setXYZ(0,t1.x,t1.y,t1.z);pa.setXYZ(1,nock.x,nock.y,nock.z);pa.setXYZ(2,t2.x,t2.y,t2.z);pa.needsUpdate=true;
+    const dir=grip.clone().sub(nock);if(dir.lengthSq()<1e-6){F.g.visible=false;return}dir.normalize();
+    F.arrow.position.copy(nock).addScaledVector(dir,.42*.82);F.arrow.lookAt(F.arrow.position.clone().add(dir));F.arrow.visible=k>0;F.g.visible=true;
+  }catch(e){if(BOW_FX)BOW_FX.g.visible=false}
+}
+function bowPose(k){
+  // keyframes: N nock (string hand at the bow), D full draw (anchor at the cheek, elbow high, side-on), X release follow-through
+  // lw turns the bow hand so the bow stays upright when the arm is raised
+  const N={lx:-1.45,lz:-.3,lw:1.45,le:-.05,ax:0,az:1.4,ay:-1.15,ex:-.6,sy:.4,py:.1,sx:.03,hx:-.02,hy:-.45};
+  const D={lx:-1.5,lz:-.42,lw:1.5,le:0,ax:0,az:1.4,ay:-.55,ex:-2.7,sy:.75,py:.2,sx:-.04,hx:-.06,hy:-.85};
+  const X={lx:-1.42,lz:-.36,lw:1.42,le:-.08,ax:-.05,az:1.5,ay:-.08,ex:-1.3,sy:.78,py:.2,sx:-.09,hx:-.08,hy:-.85};
+  if(k<.14)return haMix(N,N,0);                                              // (blend-in from the current pose does the raise)
+  if(k<.47)return haMix(N,D,haIO((k-.14)/.33));                             // draw
+  if(k<.53){const P=haMix(D,D,0);P.ex-=.05*Math.sin((k-.47)/.06*Math.PI);return P} // anchor, tiny settle
+  if(k<.6)return haMix(D,X,haOut((k-.53)/.07));                             // release snap
+  if(k<.74)return X;                                                         // hold the follow-through
+  return haMix(X,{lx:-.3,lz:0,lw:0,le:-.25,ax:-.2,az:0,ay:0,ex:-.3,sy:0,py:0,sx:.03,hx:0,hy:0},haIO((k-.74)/.26));
+}
+function xbowPose(k){
+  // rw turns the trigger hand so the crossbow stays level against the cheek while the arm is raised
+  const S={ax:-1.25,az:-.28,ex:-1.0,rw:2.25,lx:-1.35,lz:.72,le:-.6,sy:.28,py:.06,sx:.06,hx:.14,hy:-.22};
+  const C={ax:-.55,az:.1,ex:-1.6,rw:2.55,lx:-1.0,lz:.45,le:-.9,sy:.2,py:.04,sx:.14,hx:.22,hy:-.15}; // tilt down and crank the string back
+  const kick=j=>{const P=haMix(S,S,0);P.ax+=.22*j;P.rw-=.35*j;P.lx+=.18*j;P.sx-=.14*j;P.hx-=.1*j;return P};
+  if(k<.2)return S;                                             // (blend-in raises it to the shoulder)
+  if(k<.54){const P=haMix(S,S,0);P.sx+=.02*Math.sin((k-.2)/.34*Math.PI);return P} // sight, hold steady
+  if(k<.62)return kick(haOut((k-.54)/.08));                     // recoil: muzzle climbs, shoulder pushed back
+  if(k<.8)return haMix(kick(1),C,haIO((k-.62)/.18));             // crank
+  return haMix(C,{ax:-.2,az:0,ex:-.3,rw:0,lx:-.3,lz:0,le:-.25,sy:0,py:0,sx:.03,hx:0,hy:0},haIO((k-.8)/.2));
+}
+bowAnim=function(ms){
+  const wt=typeof curWT=='function'?curWT():null;
+  if(wt=='crossbow'){haPlay(ms,xbowPose,2,null,.2);return}
+  haPlay(ms,bowPose,2,null,.18);
+  const A=HA.cur;if(!A)return;
+  A.tick=k=>bowFxSet(k<.12||k>=.53?0:gaSS(.12,.47,k)*.97+.03,k<.12?haOut(k/.12):k<.76?1:1-haIO(Math.min(1,(k-.76)/.2)));
+  A.end=()=>bowFxSet(0,0);
+};
+
+// ---------------- mounts ----------------
+// The v83 mount rig keeps its own flames/wings/idle; the walk is replaced by the shared gait (walk → trot → gallop for
+// four legs, a running stride for the raptor) driven by the real riding speed, with head nod, back flex, and tail flow.
+function mtGait(r,k){
+  const S=(typeof LGMS!='undefined'&&LGMS[k])||null,o=r.rig,b=r.b;if(!o||!b||!S)return;
+  const hips=r.children.filter(c=>c.isBone&&c!==b);if(!hips.length)return;
+  const biped=!!S.biped,legs=hips.map((h,i)=>({hip:h,kn:h.children.find(c=>c.isBone),key:biped?(i?'hr':'hl'):(h.position.z>0?'f':'h')+(h.position.x<0?'l':'r')}));
+  const bb=b.children.filter(c=>c.isBone),neck=bb[0],tail=bb[1],head=neck&&neck.children.find(c=>c.isBone);
+  const n0=neck?neck.rotation.x:0,h0=head?head.rotation.x:0,t0=tail?tail.rotation.x:0,Lm=hips[0].position.y;
+  r.rig=function(now,mv,sp){
+    o(now,mv,sp); // flames, wing beats, idle breathing; the gait below overrides legs/body/neck/tail
+    const G=gaStep(r,now,mv,sp,Lm,1.1,3.6),TAU=Math.PI*2,w=G.w,P=G.ph,Fr=G.Fr||0,id=1-w;
+    const run=gaSS(.3,1.4,Fr),gal=biped?0:gaSS(1.6,3.6,Fr);
+    const beta=biped?.6-.24*run:.62-.17*run-.14*gal,amp=Math.min(biped?.75:.6,Math.asin(Math.min(.95,beta*(G.D||0)/(2*G.L*.95))))*w,lift=(.55+.4*run+.2*gal)*w;
+    legs.forEach(q=>{let off;
+      if(biped)off=q.key=='hl'?0:.5;else{const wk=GA_OFF.walk[q.key],tr=GA_OFF.trot[q.key],ga=GA_OFF.gal[q.key];off=(wk+(tr-wk)*run)*(1-gal)+ga*gal}
+      const g=gaLeg(P+off,beta,_gaO),front=q.key[0]=='f'&&!biped;
+      q.hip.rotation.x=g[0]*amp;if(q.kn)q.kn.rotation.x=(g[1]*lift*1.05+g[2]*.1*w)*(front?-1:1)*(biped?-1:1)});
+    const c2=Math.cos(TAU*2*(P-beta*.5));
+    const bob=w*((1-run)*.012*(.5+.5*c2)+run*(1-gal)*.04*(.5-.5*c2)+gal*.07*(.5+.5*Math.cos(TAU*(P-.92))))*(biped?1.4:1);
+    b.position.y=bob+id*Math.sin(now/1000*1.6)*.008;
+    b.rotation.x=w*(gal*-.05*Math.sin(TAU*(P-.05))+(1-gal)*.015*Math.sin(TAU*2*P))+gaCl(-G.acc*.008,-.05,.05)*w;
+    b.rotation.z=gaCl(-G.turn*G.v*.012,-.12,.12)*w;
+    // head and neck: walking horses nod twice a stride, gallopers once; the head keeps level against the body's rocking
+    if(neck)neck.rotation.x=n0+w*((1-gal)*.06*(1-run*.5)*Math.sin(TAU*2*P-.6)+gal*.1*Math.sin(TAU*(P-.2)))+id*Math.sin(now/1000*1.1)*.04+.05*run*w;
+    if(neck)neck.rotation.y=gaCl(G.turn*.08,-.25,.25)*w;
+    if(head)head.rotation.x=h0-b.rotation.x*.6;
+    if(tail){tail.rotation.z=id*Math.sin(now/1000*2.2)*.12+w*Math.sin(TAU*P)*(.14-.08*gal)-gaCl(G.tl,-3,3)*.08*w;tail.rotation.x=t0+w*(-.12*run+.08*gal*Math.cos(TAU*(P-.15)))}
+  };
+}
+{const f=mkMountRig;mkMountRig=function(k){const r=f.apply(this,arguments);try{mtGait(r,LGMS[k]?k:'pony')}catch(e){console.error('mount gait',e)}return r}}
 
 $('talBtn').onclick=openTal;
 ui();refreshGear();

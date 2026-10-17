@@ -1,17 +1,6 @@
 // ================= v84: HUD rework, companion care, Kindlelight gloom, material hints, courtyard =================
 
-// ---------------- the courtyard north-east of Duskhold: low stone walls and a gate sign ----------------
-{const C=CYD,st=sm(0x5a5662),cap=sm(0x6e6a76),L=[];
- for(let y=C.y-C.r-2;y<=C.y+C.r+2;y++)for(let x=C.x-C.r-2;x<=C.x+C.r+2;x++)if(MAP[y]&&MAP[y][x]=='B'&&townAt(x,y,3)<0)L.push([x,y]);
- const g=new THREE.Group();scene.add(g);const ga=Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x);
- if(L.length){const im=new THREE.InstancedMesh(G_BOX,st,L.length),ic=new THREE.InstancedMesh(G_BOX,cap,L.length),o=new THREE.Object3D();im.castShadow=im.receiveShadow=ic.receiveShadow=true;
-  L.forEach(([x,y],i)=>{const h=GH(x,y);o.position.set(x,h+.5,y);o.rotation.set(0,Math.atan2(x-C.x,y-C.y),0);o.scale.set(1.04,1.1,.8);o.updateMatrix();im.setMatrixAt(i,o.matrix);
-   o.position.y=h+1.1;o.scale.set(1.12,.14,.92);o.updateMatrix();ic.setMatrixAt(i,o.matrix)});g.add(im,ic)}
- // gate posts with a sign
- [-1,1].forEach(s=>{const a=ga+s*.48,x=C.x+Math.cos(a)*C.r,z=C.y+Math.sin(a)*C.r;TQ(g,G_BOX,st,x,GH(x,z)+.9,z,.7,1.8,.7);TQ(g,G_BOX,cap,x,GH(x,z)+1.85,z,.85,.15,.85)});
- {const a=ga+.3,x=C.x+Math.cos(a)*(C.r+1.2),z=C.y+Math.sin(a)*(C.r+1.2),y=GH(x,z),wd=sm(0x3a2a20);TQ(g,G_BOX,wd,x,y+.9,z,.14,1.8,.14);
-  sign(g,[{t:'🌲 Courtyard',f:'700 40px'},{t:'Wood & stone',f:'600 26px'}],1.7,.46,'#1a1424','#efe6ff',null,x,y+1.65,z,Math.atan2(Math.cos(ga),Math.sin(ga)))}
-}
+// (the courtyard walls are built at runtime by cyWalls in zzI_v85.js, since the courtyard grows)
 
 // ---------------- Kindlelight: thick green gloom, drifting ground mist, and dimmer days ----------------
 var KG={k:0,col:new THREE.Color(0x1c3414),mist:null};
@@ -79,7 +68,7 @@ body.mob #tgt{top:120px}
  // the "Your team" strip under the game screen is gone
  const pt=$('pty');if(pt){const r=pt.previousElementSibling;if(r&&r.classList.contains('bar-row'))r.style.display='none';pt.style.display='none'}}
 // courtyard name
-{const f=areaName;areaName=function(){try{if(!inRealm&&!inDun&&townAt(pl.position.x,pl.position.z,0)<0&&curMap()<0&&Math.hypot(pl.position.x-CYD.x,pl.position.z-CYD.y)<CYD.r+1.5)return '🌲 Duskhold · Courtyard'}catch(_){}return f.apply(this,arguments)}}
+{const f=areaName;areaName=function(){try{if(!inRealm&&!inDun&&townAt(pl.position.x,pl.position.z,0)<0&&curMap()<0&&Math.hypot(pl.position.x-CYD.x,pl.position.z-CYD.y)<CYD.r+.8)return '🌲 Duskhold · Courtyard'}catch(_){}return f.apply(this,arguments)}}
 
 // companion head portraits: render each companion's head once into a small picture
 {const f=mkBones;mkBones=function(S){const r=f.apply(this,arguments);for(const k in r.bones)r.bones[k].name=k;return r}}
@@ -148,8 +137,8 @@ var MSRC=null;
 function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].map(zn);return u.length?u.join(', '):''};
   const pz={};MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);(pz[q[2]]=pz[q[2]]||[]).push(r)});const zonesOf=ks=>zl(ks.flatMap(k=>(pz[k]||[]).filter(r=>r>=0)));
   const add=(n,ic,t)=>{S[n.toLowerCase()]={n,ic,t}};
-  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Courtyard north-east of Duskhold has plenty; every portal zone has trees too.');
-  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Courtyard north-east of Duskhold has stone outcrops. Also: '+zonesOf(['rock','grave','pillar'])+'.');
+  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Courtyard north-east of Duskhold has a grove; every portal zone has trees too.');
+  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Courtyard north-east of Duskhold has stone, and gains more nodes with every zone you complete. Also: '+zonesOf(['rock','grave','pillar'])+'.');
   add('Iron Ore','⛏️','A lucky find while mining rocks; higher Mining level finds it more often. Rocks are in the 🌲 Courtyard and '+zonesOf(['rock'])+'.');
   add('Crystal Shard','💎','Mine glowing crystals in '+(zonesOf(['crystal'])||'Burningeye Summit')+'. Falling meteors also leave crystals.');
   add('Plant Fiber','🌿','Gather bushes in '+zonesOf(['bush'])+'.');
