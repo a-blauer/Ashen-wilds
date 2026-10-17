@@ -438,7 +438,7 @@ function twStall(st,col){let k=null;const key='STALL|'+col;
       return twGroup(k3,key)};
     PORT.forEach(P=>{const keep=new Set([P.disc,P.sw,P.ch]);P.g.children.slice().forEach(c=>{if(keep.has(c)||c.geometry===G_PLN||(c.material&&c.material.isMeshBasicMaterial))return;if(c.isMesh)P.g.remove(c)});
       const f=frame(2.5,3.15,'PFRM');P.g.add(f);P.g.children.forEach(c=>{if(c.geometry===G_OCT)c.position.y=3.4})});
-    RPORT.forEach(R=>{R.g.children.slice().forEach(c=>{if(c===R.disc||c.geometry===G_PLN||(c.material&&c.material.isMeshBasicMaterial))return;if(c.isMesh)R.g.remove(c)});R.g.add(frame(1.8,2.35,'RFRM'))});
+    RPORT.forEach(R=>{if(R.g.userData.lpn)return;R.g.children.slice().forEach(c=>{if(c===R.disc||c.geometry===G_PLN||(c.material&&c.material.isMeshBasicMaterial))return;if(c.isMesh)R.g.remove(c)});R.g.add(frame(1.8,2.35,'RFRM'))});
   }catch(e){console.warn('town court',e)}}
 // paving: irregular flagstones over the town's paved tiles, and lashing rails along the palisade
 {try{const T=TOWNS[0],R=dkRng(77),L=[],Wl=[];

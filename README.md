@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v82 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v83 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -34,6 +34,12 @@ The build is a **patch chain**, not a bundler:
 - New effects (`mSfx`): level up, coins (any gold gain), item pickup / rare pickup, enemy and elite deaths, boss victory, dodge, potion, mount, portal travel, window open/close and button ticks.
 - Settings → Sound: Music volume (`SET.mus`) and Sound effects volume (`SET.sfxV`, which also drives the old `SET.sfx` on/off).
 - `test/v79t.py` checks theme switching, fight intensity, volumes and death silence, and renders every theme offline to `test/out/v79_music.wav`/`.mp3`. `preview/kill-quest-music-preview.mp3` is that render.
+## v83: the whole world in the low-poly style
+- `zzG_0style.js` runs first: lower-segment spheres/cylinders/cones/rings and flat shading for every lit material (opt out with `userData.lpsSkip`).
+- `zzG_humans.js` hero, humanoid enemies, NPCs · `zzG_beasts.js` remaining creature rigs, Sovereigns, eggs · `zzG_town.js` + `build/pG_town.py` Duskhold, Portal Court · `zzG_nature.js` + `build/pG_nature.py` terrain, trees, grass, props, camps, zone portals · `zzG_gear*.js` weapons, drops, chests, mounts · `zzG_arena.js` boss arenas, wave-trial grounds, boulders, bobber.
+- `build.sh` also runs any `build/pG_*.py` patch after pV6; pV6 splices `zzG_*.js` (sorted) after `zzF`.
+- Screenshot helpers: `test/tour.py` (town, court, every zone) plus the per-area scripts in `test/`.
+
 ## v81: Valheim-style low-poly creatures
 
 - `zzD_lowpoly.js` is a shared toolkit: `lpGeo` lofts faceted, vertex-painted rings into one skinned body; `lpMat` is the flat-shaded material; `lpSpikeGeo`/`lpPart` make animated non-skinned parts (ears, wings); `lpExtras` adds variant (Ember/Frost/Golden/Shadow) and trait (Horned/Spiked/Armored/Universal) extras; `lpRig` assembles everything and `crRig` is wrapped to use it for any rig registered in `LPR`.
