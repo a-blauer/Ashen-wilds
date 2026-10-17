@@ -286,3 +286,35 @@ function mtGait(r,k){
   };
 }
 {const f=mkMountRig;mkMountRig=function(k){const r=f.apply(this,arguments);try{mtGait(r,LGMS[k]?k:'pony')}catch(e){console.error('mount gait',e)}return r}}
+
+// ---------------- enemy archers use the hero's bow shot ----------------
+// Any humanoid foe whose look carries a bow (bone archer, naga archer, ...) plays bowPose over its 'throw' attack:
+// wind-up = raise and draw, act = release (the arrow flies then), recover = follow-through and relax.
+// Each archer gets its own drawn string and nocked arrow.
+{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{const L=HUMLOOK[key];if(L&&L.wpn=='bow'&&g.h&&g.h.bones){const a=g.h.bones.aL2;
+  g.bowW=a.children.find(o=>o.userData&&o.userData.wt=='bow')||a.children[0]||null}}catch(_){}return g}}
+function eBowFx(g){if(g.bowFx)return g.bowFx;const B=bowFx(),c=B.g.clone(true);c.visible=false;c.traverse(o=>{if(o.isLine){o.geometry=o.geometry.clone();o.material=o.material.clone()}});
+  const arrow=c.children[0],str=c.children[1];return g.bowFx={g:c,arrow,str}}
+function eBowFxSet(g,k,gr){const W=g.bowW;if(!W)return;const F=eBowFx(g);
+  try{const u=W.userData;if(!u.p0){u.p0=W.position.clone();u.s0=W.scale.x}
+    W.scale.x=u.s0*(1-.6*gr+.12*k*gr);W.position.copy(u.p0);W.position.z-=gr*.555*W.scale.x;
+    if(gr<=0||!g.visible||!g.parent){F.g.visible=false;return}
+    if(F.g.parent!==scene)scene.add(F.g);g.updateMatrixWorld(true);
+    const V3=THREE.Vector3,t1=new V3(-.062,.594,0).applyMatrix4(W.matrixWorld),t2=new V3(-.062,-.594,0).applyMatrix4(W.matrixWorld),grip=new V3(-.555,0,0).applyMatrix4(W.matrixWorld);
+    const hand=new V3(0,-.03,.02).applyMatrix4(g.h.bones.aR2.matrixWorld),rest=t1.clone().add(t2).multiplyScalar(.5),nock=rest.clone().lerp(hand,Math.min(1,k));
+    const pa=F.str.geometry.attributes.position;pa.setXYZ(0,t1.x,t1.y,t1.z);pa.setXYZ(1,nock.x,nock.y,nock.z);pa.setXYZ(2,t2.x,t2.y,t2.z);pa.needsUpdate=true;
+    const dir=grip.clone().sub(nock);if(dir.lengthSq()<1e-6){F.g.visible=false;return}dir.normalize();
+    F.arrow.position.copy(nock).addScaledVector(dir,.42*.82*(g.bs||1));F.arrow.scale.setScalar(.82*(g.bs||1));F.arrow.lookAt(F.arrow.position.clone().add(dir));F.arrow.visible=k>0;F.g.visible=true}
+  catch(e){F.g.visible=false}}
+{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{
+  if(!g.bowW)return r;const a=g.ak;
+  if(!a||a.n!=='throw'){if(g.bowFx&&g.bowFx.g.visible)eBowFxSet(g,0,0);return r}
+  // map the attack phases onto the hero's bow timeline (release at .53)
+  const kb=a.ph==0?.47*a.k:a.ph==1?.53+.07*Math.min(1,a.k):.6+.4*(1-a.k);
+  const P=bowPose(kb),wt=a.ph==0?Math.min(1,kb/.12):a.ph==2?1-gaSS(.86,1,kb):1,b=g.h.bones;
+  for(const k in P){const ch=HACH[k];if(!ch)continue;const bn=b[ch[0]];if(!bn)continue;const cur=bn.rotation[ch[1]];bn.rotation[ch[1]]=cur+(P[k]-cur)*wt}
+  const draw=kb<.12||kb>=.53?0:gaSS(.12,.47,kb)*.97+.03,grip=kb<.12?haOut(kb/.12):kb<.76?1:1-haIO(Math.min(1,(kb-.76)/.2));
+  eBowFxSet(g,draw,grip)}catch(e){}return r}}
+// tidy up an archer's string and arrow when it dies or despawns
+{const f=removeE;removeE=function(e){try{const F=e&&e.m&&e.m.bowFx;if(F&&F.g.parent)F.g.parent.remove(F.g)}catch(_){}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){try{const F=e&&e.m&&e.m.bowFx;if(F)F.g.visible=false}catch(_){}return f.apply(this,arguments)}}
