@@ -28,6 +28,8 @@ def s(pg):
     P('start',"""()=>{const A=ARN[4],e=bossEnt(4);window.GOD=1;toPos(A.cx+Math.cos(A.dqA)*9,A.cz+Math.sin(A.dqA)*9,0);camPitch=.75;camDist=17;snapCam();STEP(.6);
       e.bs.t=99;STEP(1.2,1);const bb=new THREE.Box3().setFromObject(e.m);return {f:A.f,AF:!!AF&&AF.i,gateY:+D4.gate.position.y.toFixed(2),cur:D4.cur.visible,wall:A.wall.visible,boss:[+(bb.max.y-bb.min.y).toFixed(2),+(bb.max.x-bb.min.x).toFixed(2)],bs:e.m.bs,pool:BSTY[4].pool,ult:A.b.ult}}""")
     shot('fight_start')
+    ev("()=>{const A=ARN[4],a=A.dqA+2.0;toPos(A.cx+Math.cos(a)*12.6,A.cz+Math.sin(a)*12.6,a+Math.PI/2);camYaw=Math.atan2(Math.cos(a),Math.sin(a));camPitch=.3;camDist=9.5;snapCam();bossEnt(4).bs.t=99;STEP(1.5,1);return 1}");shot('edge_defaultcam')
+    if os.environ.get('STOP')=='start':return
     ev("()=>{const A=ARN[4];VIEW(A.cx+Math.cos(A.dqA)*20,GH(A.cx,A.cz)+5,A.cz+Math.sin(A.dqA)*20,A.cx,GH(A.cx,A.cz)+2,A.cz);return 1}");shot('sealed')
     # belch cone
     P('belch',"""()=>{const A=ARN[4],e=bossEnt(4);e.bs.t=99;e.bs.lock=0;e.m.position.set(A.cx,0,A.cz);toPos(A.cx+Math.cos(A.dqA)*5,A.cz+Math.sin(A.dqA)*5);snapCam();STEP(.1);const r=BMV.belch(e,A,1.28);STEP(.8,1);return [r,A.dq.fx.length,e.m.ak&&e.m.ak.n]}""")

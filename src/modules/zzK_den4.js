@@ -72,6 +72,16 @@ function dqUndebuff(n){const k=hero.buffs.length;hero.buffs=hero.buffs.filter(b=
 function dqPose(e,n,wind,act){const m=e&&e.m;if(!m)return;const id=(m._dqp=(m._dqp|0)+1);m.ak={n,ph:0,k:0};
   tw(wind*1000,k=>{if(m._dqp==id&&m.ak)m.ak.k=k},()=>{if(m._dqp!=id)return;m.ak={n,ph:1,k:0};
     tw((act||.3)*1000,k=>{if(m._dqp==id&&m.ak)m.ak.k=k},()=>{if(m._dqp!=id)return;m.ak={n,ph:2,k:1};tw(320,k=>{if(m._dqp==id&&m.ak)m.ak.k=1-k},()=>{if(m._dqp==id)m.ak=null})})})}
+// cutaway: den geometry beyond radius rIn and higher than yMin above the floor dissolves (dithered) on the camera's side
+// whenever the camera is outside the den, so walls never hide the fight (the game's default camera sits low and far back)
+function dqCut(base,A,rIn,yMin){const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector2(rIn,yMin)};
+  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPc=(modelMatrix*vec4(transformed,1.)).xyz;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
+    {vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
+     if(uCut.w>.5&&lc>uCutR.x-3.&&lf>uCutR.x&&vWPc.y>uCut.z+uCutR.y){float c=dot(fp/lf,cp/lc);float f=1.-smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);
+       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+  m.customProgramCacheKey=()=>'dqcut'+base.type;return m}
 // static den meshes: one soup per material
 function dqMesh(A,S,mat,shadow){const m=S.mesh(mat);m.castShadow=shadow!==false;m.receiveShadow=true;A.g.add(m);return m}
 // block a band of tiles (the den's walls) except the gate
@@ -175,12 +185,12 @@ function d4Build(A){
     const c=Math.cos(ry),s=Math.sin(ry);[-1,0,1].forEach(u=>denBlock(x+c*u*.9,z-s*u*.9))});
   dqWall(A,14.95,18.6,ea,GAP*1.05);
   // ---- build static meshes ----
-  dqMesh(A,S,arkMat('std'));dqMesh(A,I,arkMat('iron'));const gm=dqMesh(A,G,arkMat('glow'),false);gm.receiveShadow=false;
+  dqMesh(A,S,dqCut(arkMat('std'),A,14.2,.5));dqMesh(A,I,dqCut(arkMat('iron'),A,14.2,.5));const gm=dqMesh(A,G,dqCut(arkMat('glow'),A,14.2,.5),false);gm.receiveShadow=false;
   // ---- live pieces: portcullis, miasma seal, vat bubbles, ghost lights ----
   const PC=arkSoup(4404),[gx,gz]=P(ea,15.3),gL=Math.hypot(gpt[0][0]-gpt[1][0],gpt[0][1]-gpt[1][1])-1.1,tx=-Math.sin(ea),tz=Math.cos(ea);
   for(let b=0;b<=9;b++){const u=-gL/2+gL*b/9,x=gx+tx*u,z=gz+tz*u;PC.geo(ARKG.cyl5,arkM4(x,y0+2.05,z,.06,4.1,.06),0x2a2622);PC.geo(ARKG.cone4,arkM4(x,y0-.08,z,.08,.3,.08,Math.PI),0x34302c)}
   [.5,1.7,2.9,3.9].forEach(h=>PC.geo(ARKG.box,arkM4(gx,y0+h,gz,gL+.1,.1,.08,0,Math.PI/2-ea),0x2a2622));
-  const pcm=PC.mesh(arkMat('iron'));const pcg=new THREE.Group();pcg.add(pcm);pcg.position.y=3.9;A.g.add(pcg);D4.gate=pcg;
+  const pcm=PC.mesh(dqCut(arkMat('iron'),A,14.2,.5));const pcg=new THREE.Group();pcg.add(pcm);pcg.position.y=3.9;A.g.add(pcg);D4.gate=pcg;
   const cur=dqCurtain(14.4,3.4,0x5aff2a);cur.position.set(cx,y0+1.7,cz);A.g.add(cur);D4.cur=cur;
   const bub=[],bm=new THREE.MeshBasicMaterial({color:0xaaff60});D4.vats.forEach(([x,z],q)=>{for(let i=0;i<3;i++){const b=new THREE.Mesh(dqG('ico0'),bm);b.position.set(x+(R()-.5)*1.3,y0+1.45,z+(R()-.5)*1.3);b.userData.ph=R()*10;A.g.add(b);bub.push(b)}});
   const wl=[];for(let k=0;k<7;k++){const s=kqSpr(0x9affc8,.7);s.userData={a:R()*TAU,r:4+R()*9,h:1.4+R()*2,ph:R()*10};A.g.add(s);wl.push(s)}

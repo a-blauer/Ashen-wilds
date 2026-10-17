@@ -123,14 +123,7 @@ function d5Build(A){
 }
 // ---------------- helpers ----------------
 // cutaway: the tall walls, pillars and arches on the camera's side dissolve (dithered) when the camera is outside the hall
-function d5Cut(base,A){const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)};
-  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uCut=U;
-    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPc=(modelMatrix*vec4(transformed,1.)).xyz;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;uniform vec4 uCut;varying vec3 vWPc;').replace('void main() {',`void main() {
-    {vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
-     if(uCut.w>.5&&lc>9.&&lf>12.&&vWPc.y>uCut.z+1.1){float c=dot(fp/lf,cp/lc);float f=1.-smoothstep(.15,.5,c)*smoothstep(9.,13.,lc);
-       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  m.customProgramCacheKey=()=>'d5cut'+base.type;return m}
+function d5Cut(base,A){return dqCut(base,A,12,1.1)}
 function d5Tether(S,from,e){const m=new THREE.Mesh(D5.tg,D5.tm);m.frustumCulled=false;m.renderOrder=12;scene.add(m);const t={m,from,e,pulse:Math.random()};S.teth.push(t);return t}
 function d5TetherTick(S,now){for(let i=S.teth.length-1;i>=0;i--){const t=S.teth[i];if(t.dead||!t.from.m.parent||t.e.dead){scene.remove(t.m);S.teth.splice(i,1);continue}
   const a=DQ.v.copy(t.from.m.position);a.y+=t.from.dprop.cupY||1.4;const b=DQ.v2.copy(t.e.m.position);b.y+=GH(b.x,b.z)-b.y+2.6+(t.e.dqLift||0);t.m.visible=!t.e.hid;
