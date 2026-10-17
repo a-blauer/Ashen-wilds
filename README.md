@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v86 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v87 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -87,6 +87,10 @@ The round stone arena is gone. `zzK_dens.js` strips the old arena dressing and g
 - **5 Lord Vaelric — the Crimson Throne Hall** (`zzK_den5.js`): Blood Chalices heal him; bat swarm lanes; Crimson Doubles (only the real one has a shadow); Blood Moon flood with moonlight safe spots; Phase III Crimson Rite (break four obelisks or eat a hall-wide cataclysm).
 - Den mechanics run on the player driving the boss and relay to co-op partners as boss moves (`kqBmv`); damage is only applied to your own hero.
 - Tests: `test/v86_den<i>.py` (one at a time), `v86_den01_mp.py`, `v86_den45_mp.py`.
+
+## v87: Cheats
+
+Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons). Test: `test/v87_cheats.py`.
 
 ## Conventions (read before changing code)
 
