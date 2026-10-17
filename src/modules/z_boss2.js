@@ -69,7 +69,7 @@ var BSTY=[
  {m:'kite',r:9,sp:5.2,fly:.9,pool:[['dive','lightning','gust'],['rain','cross'],['dive','beam']]},
  {m:'burrow',sp:1.7,pool:[['submerge','tailsweep','beam'],['charge','mines'],['submerge','wave','adds']]}];
 function bxTick(A,e,dt,now){const L=bxA(A);
-  for(let i=L.length-1;i>=0;i--){const f=L[i];f.t-=dt;let gone=f.t<=0;
+  for(let i=L.length-1;i>=0;i--){const f=L[i];if(!f)continue;f.t-=dt;let gone=f.t<=0;
     if(f.k=='pool'){f.tick-=dt;f.ms.material.opacity=.32*Math.min(1,f.t/1.2);if(f.tick<=0&&d2(pl.position,f.o)<f.r&&hero.iv<=0){f.tick=.5;bossHit(e,f.mult)}if(gone)scene.remove(f.ms)}
     else if(f.k=='orb'){const d=V().subVectors(gY(pl.position,1.2),f.ms.position);const l=d.length();f.ms.position.addScaledVector(d,Math.min(1,f.sp*dt/(l||1)));f.ms.scale.setScalar(1+.15*Math.sin(now/120+i));
       if(l<1&&hero.iv<=0){bossHit(e,.8);burst(f.ms.position,A.b.col,16,2,2,.4);gone=true}if(gone)scene.remove(f.ms)}
