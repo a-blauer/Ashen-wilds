@@ -3,7 +3,7 @@
 openWMap=function(){
   if(inRealm)return;const c=$('wmc'),r=curMap(),T=TOWNS[0];let x0,y0,w,h,title,sub;
   if(r>=0){const p=PMAP[r];x0=p.x0;y0=p.y0;w=PMW;h=PMH;title=p.n;sub=(p.sub||'')+' · Lv '+p.lv[0]+'–'+p.lv[1]}
-  else{x0=T.cx-32;y0=T.cy-32;w=(PCOURT[0]+24)-x0;h=64;title='Duskhold';sub='The floating stronghold · Portal Court to the east'}
+  else{x0=T.cx-32;y0=(typeof CYD!='undefined'?Math.min(T.cy-32,CYD.y-CYD.r-4):T.cy-32);w=(PCOURT[0]+24)-x0;h=T.cy+32-y0;title='Duskhold';sub='The floating stronghold · Portal Court and Courtyard to the east'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
   const P=(x,z)=>[(x-x0+.5)*s,(z-y0+.5)*s],inV=(x,z)=>x>=x0&&x<x0+w&&z>=y0&&z<y0+h;g.textAlign='center';g.textBaseline='middle';
@@ -15,7 +15,8 @@ openWMap=function(){
     {const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
     if(bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
   }else{{const [x,y]=P(T.cx,T.cy);g.fillStyle='#fbbf24';g.fillRect(x-7,y-7,14,14);g.strokeStyle='#000';g.lineWidth=2;g.strokeRect(x-7,y-7,14,14);lab('Duskhold',x,y+20)}
-    {const [x,y]=P(PCOURT[0],PCOURT[1]);g.fillStyle='#a78bfa';g.beginPath();g.arc(x,y,8,0,6.28);g.fill();lab('🌀 Portal Court',x,y+20,'#e4d8ff')}}
+    {const [x,y]=P(PCOURT[0],PCOURT[1]);g.fillStyle='#a78bfa';g.beginPath();g.arc(x,y,8,0,6.28);g.fill();lab('🌀 Portal Court',x,y+20,'#e4d8ff')}
+    if(typeof CYD!='undefined'){const [x,y]=P(CYD.x,CYD.y);lab('🌲 Courtyard',x,y,'#c8f0b0')}}
   (typeof tmaps!='undefined'?tmaps:[]).forEach(m=>{if(!inV(m.x,m.z))return;const [x,y]=P(m.x,m.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('✕',x,y)});
   if(typeof MP!='undefined'&&MP.on)for(const k in MP.rh){const q=MP.rh[k];if(!q.pr||!inV(q.pr.x,q.pr.z))continue;const [x,y]=P(q.pr.x,q.pr.z);g.fillStyle='#60a5fa';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();lab(String(q.pr.n||'').slice(0,14),x,y-12,'#cfe3ff')}
   {const [x,y]=P(pl.position.x,pl.position.z);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(x,y,10,0,6.28);g.stroke();g.fillStyle='#4ade80';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke()}
@@ -26,8 +27,9 @@ openWMap=function(){
 
 // ---------- fishing: false nibbles, a quick strike, then a timing dial fight ----------
 document.head.insertAdjacentHTML('beforeend',`<style>
-#fishui{min-width:260px}#fsDial{width:170px;height:170px;display:block}#fsInfo{display:flex;gap:10px;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
-#fsLine{letter-spacing:2px}#fsHits{color:#fbbf24}#fsT.big{font-size:1.05rem;color:#ffd060}#fsPop{height:16px;font-weight:800;font-size:.85rem}
+#fishui{width:300px;min-width:300px;max-width:300px;box-sizing:border-box}#fsDial{width:170px;height:170px;display:block;margin:0 auto}#fsInfo{display:flex;gap:10px;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;height:20px;white-space:nowrap}
+#fsT{height:2.7em;display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1.3}#fsBar{width:100%}
+#fsLine{letter-spacing:2px}#fsHits{color:#fbbf24;min-width:90px;text-align:right}#fsT.big{font-size:1.05rem;color:#ffd060}#fsPop{height:18px;line-height:18px;font-weight:800;font-size:.85rem;white-space:nowrap;overflow:hidden}
 </style>`);
 fishUI=function(){let d=$('fishui');if(d&&d.dataset.v==2)return d;if(d)d.remove();d=document.createElement('div');d.id='fishui';d.className='glass hide';d.dataset.v=2;
   d.innerHTML='<div id="fsT">Waiting for a bite...</div><div id="fsBar" class="hide"><canvas id="fsDial" width="340" height="340"></canvas><div id="fsPop"></div><div id="fsInfo"><span id="fsHits"></span><span id="fsLine"></span></div></div><div class="fsBtns"><button id="fsHold" class="pri">🎣 Strike / Reel</button><button id="fsQuit">Stop</button></div>';

@@ -2,7 +2,7 @@ import sys,json;sys.path.insert(0,__import__('os').path.dirname(__import__('os')
 import play
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+    b=p.chromium.launch(executable_path=__import__('os').environ.get('PW_CHROME') or (__import__('os').path.exists('/opt/pw-browsers/chromium') and '/opt/pw-browsers/chromium') or None,args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
     ctx=b.new_context(viewport={'width':1000,'height':660});pg=ctx.new_page();errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)+' '+(e.stack or '')[:300]))
     pg.add_init_script('window.AW_NOTITLE=1')

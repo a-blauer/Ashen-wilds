@@ -4,7 +4,7 @@
 const bxA=A=>A.bx||(A.bx=[]);
 const inArena=(A,q,m)=>{const dx=q.x-A.cx,dz=q.z-A.cz,l=Math.hypot(dx,dz),r=ARENA_R-(m||1.6);if(l>r){q.x=A.cx+dx/l*r;q.z=A.cz+dz/l*r}return q};
 const toPl=(o)=>{const d=V().subVectors(pl.position,o).setY(0);const l=d.length()||1;return d.multiplyScalar(1/l)};
-function bxPool(A,o,r,t,col,k){const ms=new THREE.Mesh(new THREE.CircleGeometry(r,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.32,depthWrite:false,blending:THREE.AdditiveBlending}));ms.rotation.x=-Math.PI/2;ms.position.set(o.x,GH(o.x,o.z)+.16,o.z);scene.add(ms);bxA(A).push({k:'pool',o:o.clone(),r,t,ms,tick:0,mult:k||.22})}
+function bxPool(A,o,r,t,col,k){const ms=new THREE.Mesh(new THREE.CircleGeometry(r,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.32,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending}));ms.renderOrder=19;ms.rotation.x=-Math.PI/2;ms.position.set(o.x,GH(o.x,o.z)+.16,o.z);scene.add(ms);bxA(A).push({k:'pool',o:o.clone(),r,t,ms,tick:0,mult:k||.22})}
 function bxHide(e,on){e.hid=on?1:0;e.m.visible=!on;if(e.hb)e.hb.visible=!on}
 function jumpTo(e,q,dur,h){e.jmp={sx:e.m.position.x,sz:e.m.position.z,tx:q.x,tz:q.z,t:0,dur,h}}
 Object.assign(BMV,{

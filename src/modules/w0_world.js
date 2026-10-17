@@ -50,6 +50,8 @@ const TOWNS=[
 ].map((t,i)=>{t.i=i;t.cx=t.fx;t.mp=[t.cx,t.cy-7.9];t.mv=[t.cx+10.2,t.cy-7.7];t.col=[];t.tv=[t.cx-9.5,t.cy-7.5];t.sp=[t.cx,t.cy+7];return t});
 const START=TOWNS[0].sp.slice();
 const PCOURT=[84,284];
+// the woodland courtyard north-east of Duskhold (trees and stone to harvest)
+const CYD={x:76,y:251,r:11,gate:[74,276]};
 //@@BOSSES
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
@@ -78,6 +80,7 @@ const MAP=(()=>{
   const T=TOWNS[0];
   for(let y=T.cy-31;y<=T.cy+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const d=Math.max(Math.abs(x-T.cx),Math.abs(y-T.cy))-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
   for(let x=T.cx+22;x<=PCOURT[0];x+=1)stamp(x,T.cy,4.5);stamp(PCOURT[0],PCOURT[1],19);
+  stamp(CYD.x,CYD.y,CYD.r+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
   // ---- the six portal maps ----
   PMAP.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
@@ -102,8 +105,16 @@ const MAP=(()=>{
   const keep=(cx,cy,r)=>{for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=Math.floor(cx-r);x<=cx+r;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<r)m[y][x]='a'};
   PMAP.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],13));keep(p.ba[0],p.ba[1],18);keep(p.wa[0],p.wa[1],16)});
   const props=[];
-  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const t=m[y][x],r=regionAt(x,y);if(r<0||(t!='.'&&t!='g'&&t!='a'))continue;const b=BIOMES[bio[y][x]];
-    if(rnd()<.03*(b.pd||1)){const k=b.pr[Math.floor(rnd()*b.pr.length)];if(k=='rock'||k=='grave'||k=='pillar'){if(rnd()<.35&&DW[y*W+x]>-3.5){m[y][x]='r';props.push([x,y,k])}}else props.push([x,y,k])}}
+  // harvest nodes: a few small clusters of one kind each (about a quarter of the old scattered count)
+  const okT=(x,y)=>{const t=m[y]&&m[y][x];return t=='.'||t=='g'||t=='a'},rockK=k=>k=='rock'||k=='grave'||k=='pillar',used=new Set();
+  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const r=regionAt(x,y);if(r<0||!okT(x,y))continue;const b=BIOMES[bio[y][x]];
+    if(rnd()>=.0012*(b.pd||1))continue;
+    const wt=b.pr.map(k=>rockK(k)?.6:1),tot=wt.reduce((a,v)=>a+v,0);let u=rnd()*tot,k=b.pr[0];for(let i=0;i<b.pr.length;i++){u-=wt[i];if(u<=0){k=b.pr[i];break}}
+    if(rockK(k)&&PMAP[r].path.some((q,i)=>i%3==0&&Math.hypot(q[0]-x,q[1]-y)<5))continue; // keep rocks off the road
+    const n=3+Math.floor(rnd()*3);let got=0;
+    for(let tr=0;tr<30&&got<n;tr++){const a=rnd()*6.283,d=tr?.8+rnd()*1.9:0,cx=Math.round(x+Math.cos(a)*d),cy=Math.round(y+Math.sin(a)*d),key=cy*W+cx;
+      if(used.has(key)||!okT(cx,cy)||regionAt(cx,cy)!==r)continue;
+      used.add(key);if(rockK(k))m[cy][cx]='r';props.push([cx,cy,k]);got++}}
   // boss arenas: rune floor, ring of columns and four cover pillars
   BOSSES.forEach(b=>{for(let y=b.y-16;y<=b.y+16;y++)for(let x=b.x-16;x<=b.x+16;x++)if(Math.hypot(x-b.x,y-b.y)<15.5)m[y][x]='a';
     });
@@ -116,6 +127,19 @@ const MAP=(()=>{
     for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
   });
   for(let x=T.cx+TS+1;x<=PCOURT[0]-8;x++)for(let y=-1;y<=1;y++)if(m[T.cy+y][x]=='.')m[T.cy+y][x]='p';
+  // ---- the courtyard: low stone wall with a south gate, groves of trees and stone outcrops ----
+  {const C=CYD,ga=Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),inC=(x,y)=>Math.hypot(x-C.x,y-C.y);
+   for(let y=C.y-C.r-2;y<=C.y+C.r+2;y++)for(let x=C.x-C.r-2;x<=C.x+C.r+2;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;const d=inC(x,y);
+     if(d<C.r+.6){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}
+     let da=Math.abs(Math.atan2(y-C.y,x-C.x)-ga);if(da>Math.PI)da=6.283-da;
+     if(d>=C.r-.4&&d<C.r+.6&&da>.42)m[y][x]='B'}
+   for(let q=0;q<=1;q+=.04){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
+   const spot=(cx,cy,rad,n,fn)=>{let got=0;for(let tr=0;tr<60&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
+     if(!'.g'.includes(m[y][x])||inC(x,y)>C.r-1.6||inC(x,y)<3.2)continue;let near=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')near=true;if(near)continue;fn(x,y);got++}};
+   // groves on the west, north and east, stone outcrops between them
+   [[-6,-3],[-2,-7],[4,-6],[7,-1],[-7,3]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,2.2,6,(x,y)=>m[y][x]='#'));
+   [[-3,-4],[6,3],[-5,6]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.8,4,(x,y)=>{m[y][x]='r';props.push([x,y,'rock'])}));
+  }
   m.bio=bio;m.DW=DW;
   m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();

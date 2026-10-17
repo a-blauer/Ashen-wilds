@@ -11,7 +11,7 @@ CAMH=os.environ.get('CAMH');CAMZ=os.environ.get('CAMZ')
 open(TMP+'/live.html','w').write(h)
 def run(steps,out_prefix=TMP+'/g',w=820,hh=520):
     with sync_playwright() as p:
-        b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+        b=p.chromium.launch(executable_path=os.environ.get('PW_CHROME') or (os.path.exists('/opt/pw-browsers/chromium') and '/opt/pw-browsers/chromium') or None,args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
         pg=b.new_page(viewport={'width':w,'height':hh})
         logs=[]
         pg.on('console',lambda m:logs.append(m.type+': '+m.text))

@@ -27,6 +27,19 @@ The build is a **patch chain**, not a bundler:
 - **100 new templates** are appended to `ITPL` from index `ITPL_V78` (=100). Never insert or reorder `ITPL`: saves store the index. New templates carry `nw:1` and an innate bonus `imp:{stat:value}` that `itStats` adds (scaled by upgrade level). Wands and orbs give magical attack and mana like staves.
 - **Mounts** (`zzB_mounts.js`): the `MOUNTS` table is replaced by 10 new mounts with their own procedural models (`mkMountRig(k)`, returned through `mountModel`). Riding is `toggleMount` (V), the list is `openMounts` (H / `#mntBtn`). Mounts are only sold for gold by the Stable Master; the Stable is a `SHOPS` entry (`stable`) built at the Steward, placed at `STB` (Duskhold offset −7,−8) and shown/hidden with its colliders by `stableSync()` from `shApply`. Old-roster mounts in saves are mapped to a same-tier mount and old mount eggs are refunded (`mFix` after `loadGame`).
 
+## v79: world tidy-up, HUD rework, companion care
+
+`build/pV7.py` (text patches) splices `zzC_v79.js` and `zzD_limbs.js` last.
+- **Harvest nodes** (`w0_world.js`): placed as small clusters (3–5 of one kind), about a quarter of the old count; rocks stay off the road.
+- **Courtyard** (`CYD` in `w0_world.js`): walled woodland north-east of Duskhold, joined to the Portal Court by a path; trees (`#`) and rocks (`r`) regrow like any node. Walls/sign are drawn in `zzC_v79.js`; the town map (N) includes it.
+- **Balance**: kill gold ×0.65, wave-trial XP ×0.525 (was ×0.75), raw meat 10%/25% (elite)/boss 2–3, companions regen 0.6%/s after 8s out of combat (`s_fix.js`), combo finishers no longer lunge forward.
+- **HUD**: companions get their own bars (top-left) with a rendered head portrait (`cpic`, bones are named in `mkBones`), ⚡ empower and 🍖 feed (best food first); location box top-middle (`#locBox`); level, gold, talent points and buffs above the hotbar (`#chInfo`). The "Your team" strip and the team-up attack are gone.
+- **Feeding** heals over 8s (`c.fhot`, ticked from `compRegen`).
+- **Companion window**: each stat shows base + level bonus = total; Universal shows as a modifier chip.
+- **Material hints**: clicking a material label in any window shows where to get it (`msrcBuild`).
+- **Kindlelight**: greener, thicker fog, drifting ground mist sprites, darker by day (`kGloom`).
+- **Fixes**: fishing window has a fixed size; boss shockwave/beam/pool effects draw over terrain.
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
@@ -54,6 +67,8 @@ python3 v60t.py                 # zone roster (no respawn)
 python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
 python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
 python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
+python3 v79_ui.py               # HUD bars, feeding over time, stat breakdown, material hints
+python3 v79_fish.py             # fishing window size, kill gold, no finisher lunge
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 ```
 

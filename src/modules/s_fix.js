@@ -122,10 +122,10 @@ function eTarget(e,m,dpl){
   fols.forEach((f,i)=>{const c=party[i];if(i>1||!f||!c||c.h<=0||c.emp||!f.visible||cnts[i]>=2)return;const dd=m.position.distanceTo(f.position);if(dd<bd){bd=dd;tg=f;e.tgI=i}});
   if(tg===pl)e.tgI=null;return tg;
 }
-// 3) companions recover between fights: 4% of max health per second after 5s without taking damage
+// 3) companions recover between fights: 0.6% of max health per second after 8s without taking damage
 function compRegen(dt,now){
   if(dt<=0)return;party.forEach(c=>{if(!c||c.h<=0)return;const mx=M(c);
     if(c._ph!=null&&c.h<c._ph-.01)c._dt=now;
-    if(now-(c._dt||0)>5000&&c.h<mx)c.h=Math.min(mx,c.h+mx*.04*dt);
+    if(now-(c._dt||0)>8000&&c.h<mx)c.h=Math.min(mx,c.h+mx*.006*dt);
     c._ph=c.h});
 }

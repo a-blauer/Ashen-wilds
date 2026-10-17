@@ -3,7 +3,7 @@ import play
 from playwright.sync_api import sync_playwright
 from PIL import Image
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+    b=p.chromium.launch(executable_path=__import__('os').environ.get('PW_CHROME') or (__import__('os').path.exists('/opt/pw-browsers/chromium') and '/opt/pw-browsers/chromium') or None,args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
     pg=b.new_page(viewport={'width':1000,'height':640});errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)+' '+(e.stack or '')[:300]))
     pg.add_init_script('window.AW_NOTITLE=1')

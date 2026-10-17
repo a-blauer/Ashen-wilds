@@ -23,7 +23,7 @@ var WDESC={
   hammer:'Slow, crushing blows that send out a shockwave. The third blow is a ground slam that stuns everything nearby.',
   flail:'Every attack is a spin that hits all around you. The second spin calls holy light that heals you for each enemy hit.',
   dagger:'Quick 4-hit combo with both blades. The last cut hits hardest.',
-  claws:'Very fast 5-hit rake at close range, often causing bleeding. The last hit is a pouncing leap.',
+  claws:'Very fast 5-hit rake at close range, often causing bleeding. The last hit is a deep rending slash.',
   knives:'Throws a fan of 3 knives, and every 4th throw a fan of 5. Knives can cause bleeding.',
   bow:'Fires a fast arrow.',
   crossbow:'Slow, heavy bolt that pierces every enemy in a line and knocks them back.',

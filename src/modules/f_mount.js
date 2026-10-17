@@ -119,7 +119,7 @@ function down(){if(riding)dismount();arenaFail();if(inDun){say('You were overwhe
 // ---------- hooks: loot (meat, seeds, mount eggs) and pickups ----------
 function lootE(e){
   lootE_base(e);const c=e.c,p=e.m.position,al=c.al?1:0,bs=c.boss?1:0,T=c.zt||tierOfLv(c.l),lk=1+HS().loot,en=EN[c.en]||{},fam=en.fam||famOf(c.g[0]);
-  if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<(bs?1:al?.6:.3))drop('sup',{k:'meat',n:bs?R(3,5):R(1,2)},p,0);
+  if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<(bs?1:al?.25:.1))drop('sup',{k:'meat',n:bs?R(2,3):1},p,0);
 }
 function take(d){
   if(d.kind=='sup'){const S=SUP[d.data.k];giveS(d.data.k,d.data.n);pickup({ic:S.c=='seed'?'🌱':S.i,t:'+'+d.data.n+' '+S.n,col:'#bfe8a0',sub:S.c=='seed'?'Plant it on a Farm Plot':S.c=='rune'?'Socket it into a companion (P)':'For cooking'})}

@@ -14,7 +14,7 @@ def setup(pg,cls,name):
     ev("()=>{hero.name='%s';window.FAST=()=>{window.requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}}"%name)
 try:
   with sync_playwright() as p:
-    b=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--no-proxy-server'])
+    b=p.chromium.launch(executable_path=os.environ.get('PW_CHROME') or (os.path.exists('/opt/pw-browsers/chromium') and '/opt/pw-browsers/chromium') or None,args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--no-proxy-server'])
     ctx=b.new_context(viewport={'width':1000,'height':620})
     ctx.add_init_script(FAKE)
     logs={'A':[],'B':[]}
