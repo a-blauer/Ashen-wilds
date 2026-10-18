@@ -17122,7 +17122,8 @@ function cbHeavy(e){if(!e||e.boss||e.dead)return;
 // - Nothing new is left in the scene: the wolves are removed by their own end(), wisps come from the pooled FXA.root.
 var CBW={on:1,made:0};
 function cbwWolf(sc){if(!CBW.on||typeof fxaGhostWolf!='function')return null;const g=fxaGhostWolf();if(!g)return null;
-  g.scale.setScalar(g.userData.sc0*(sc||1));g.userData.sc0=g.scale.x;g.userData.legs=[];g.userData.cbw=1;CBW.made++;return g}
+// v92: the rig is already bigger than the old box wolf, so the extra scale is capped at 1.05 (visual only)
+  g.scale.setScalar(g.userData.sc0*Math.min(sc||1,1.05));g.userData.sc0=g.scale.x;g.userData.legs=[];g.userData.cbw=1;CBW.made++;return g}
 // Wild Hunt: same summon hook as Call of the Wild
 {const f=KQH.r_hunt;if(typeof f=='function')KQH.r_hunt=function(c){const W=kqsWolf,S=kqsSummon,made=[];
   kqsWolf=function(col,sc){const g=cbwWolf(sc);if(g){made.push(g);return g}return W.apply(this,arguments)};
