@@ -50,6 +50,11 @@ for _r in ["body.psx .glass{background:linear-gradient(180deg,rgba(24,19,15,.9),
   "body.psx button{border-radius:2px;background:linear-gradient(#2a211a,#16110d);border-color:#4a3a26}","body.psx button:hover{background:linear-gradient(#3a2d22,#1e1712)}",
   "body.psx button.pri{background:linear-gradient(#6a4a22,#3a2810);border-color:#a8823a;color:#f1e2bf}"]:rep(_r,"")
 # --- end ui ---
+# --- creation preview (main) ---
+# character creation lists the class default ability and how the others are unlocked (v88 ability points)
+rep("`<div class=\"sec\">Skills</div>`+SKL[ccCls].map(k=>`<div class=\"ccsk\">${k.i} <b>${k.n}</b> <span class=\"mut\">Lv ${k.lv}</span><br><small class=\"mut\">${k.d}</small></div>`).join('');",
+    "`<div class=\"sec\">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class=\"ccsk\">${k.i} <b>${k.n}</b><br><small class=\"mut\">${k.d}</small></div>`).join('')+`<div class=\"mut\" style=\"font-size:.72rem;margin-top:6px\">⚡ Earn 1 ability point every level and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;")
+
 a="\n$('talBtn').onclick=openTal;\n";assert h.count(a)==1
 # order: abilities, town, menus, then the UI theme + icon layer last (so it sees every window)
 h=h.replace(a,"\n"+"\n".join(open(M+f).read() for f in ['zzM_skills.js','zzM_town.js','zzM_menus.js','zzM_ui.js'])+a)
