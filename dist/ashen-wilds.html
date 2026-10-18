@@ -415,6 +415,8 @@ body.psx #wmap canvas{filter:saturate(.9) brightness(.9)}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+var DK=1.35,DKY=1.15;
+
 // ================= v88: ui icons — an original engraved icon set that replaces every emoji =================
 // Inserted at the very top of the game script by build/pV10.py (block "# --- ui ---"), so the canvas patch is in
 // place before any 3D sign / minimap label is drawn and the DOM layer sees every UI string the game writes.
@@ -881,7 +883,7 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
   {const k=Math.floor(rnd()*2),flip=rnd()<.5,s0=sides[k];st=flip?s0[1]:s0[0];en=flip?s0[0]:s0[1];}
   const awayWA=(q,r)=>{const dx=q[0]-WA[0],dy=q[1]-WA[1],d=Math.hypot(dx,dy);if(d<r){q[0]=WA[0]+dx/(d||1)*r;q[1]=WA[1]+dy/(d||1)*r}q[0]=cl(q[0],M,PMW-M);q[1]=cl(q[1],M,PMH-M);return q};
   awayWA(st,62);st[0]=cl(st[0],14,PMW-14);st[1]=cl(st[1],14,PMH-14);
-  const ba=awayWA([cl(en[0],30,PMW-30),cl(en[1],30,PMH-30)],70);
+  const ba=awayWA([cl(en[0],30,PMW-30),cl(en[1],30,PMH-30)],70);ba[0]=cl(ba[0],36,PMW-36);ba[1]=cl(ba[1],36,PMH-36);
   // main road: wander from start to the boss with big sideways swings
   const N=11+Math.floor(rnd()*3),wp=[st.slice()],ux=ba[0]-st[0],uy=ba[1]-st[1],L=Math.hypot(ux,uy),nx=-uy/L,ny=ux/L,amp=ri(48,80),ph=rnd()*6.28,fr=ri(1.2,2.4);
   for(let k=1;k<N;k++){const t=k/N,o=amp*Math.sin(t*Math.PI*fr+ph)+ri(-16,16);wp.push(awayWA([st[0]+ux*t+nx*o,st[1]+uy*t+ny*o],60))}
@@ -892,7 +894,7 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
     br.push([o.slice(),awayWA(mid,58),e]);fd.push([e[0],e[1],ri(17,23)])}
   for(let f=0;f<3;f++){const k=2+Math.floor(rnd()*(N-3)),q=wp[k];fd.push([q[0],q[1],ri(19,25)])}
   // six camp clearings: field ends first, then spread along the road
-  const cls=[];let spc=64;const far=q=>Math.hypot(q[0]-st[0],q[1]-st[1])>30&&Math.hypot(q[0]-ba[0],q[1]-ba[1])>34&&cls.every(c=>Math.hypot(c[0]-q[0],c[1]-q[1])>spc);
+  const cls=[];let spc=64;const far=q=>Math.hypot(q[0]-st[0],q[1]-st[1])>30&&Math.hypot(q[0]-ba[0],q[1]-ba[1])>34*DK&&cls.every(c=>Math.hypot(c[0]-q[0],c[1]-q[1])>spc);
   fd.forEach(f=>{if(cls.length<3&&far(f))cls.push([f[0],f[1]])});
   const segs=[];for(let k=0;k<N;k++)segs.push([wp[k],wp[k+1]]);br.forEach(l=>{for(let k=0;k<l.length-1;k++)segs.push([l[k],l[k+1]])});
   for(let tries=0;cls.length<3&&tries<1200;tries++){if(tries&&tries%150==0)spc=Math.max(30,spc-6);const sg=segs[Math.floor(rnd()*segs.length)],t=rnd(),q=[sg[0][0]+(sg[1][0]-sg[0][0])*t,sg[0][1]+(sg[1][1]-sg[0][1])*t];if(far(q))cls.push(q)}
@@ -949,7 +951,7 @@ const MAP=(()=>{
     pts.forEach(([x,y],i)=>{if(i%2)return;const hw=12+3*Math.sin(i*.045+p.i)+2*Math.sin(i*.13+p.i*2);stamp(x+3*Math.sin(i*.07),y+3*Math.cos(i*.05),hw)});
     p.br.forEach(l=>{for(let k=0;k<l.length-1;k++){const [ax,ay]=l[k],[bx,by]=l[k+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)/2);for(let q=0;q<=n;q++){const t=q/n;stamp(ax+(bx-ax)*t,ay+(by-ay)*t,9+2*Math.sin(q*.4+k))}}});
     p.fd.forEach(([x,y,r])=>{stamp(x,y,r);stamp(x+r*.45,y-r*.3,r*.7);stamp(x-r*.4,y+r*.35,r*.65)});
-    p.cl.forEach(([x,y])=>stamp(x,y,16));stamp(p.ba[0],p.ba[1],17);stamp(p.wa[0],p.wa[1],15);
+    p.cl.forEach(([x,y])=>stamp(x,y,16));stamp(p.ba[0],p.ba[1],17*DK);stamp(p.wa[0],p.wa[1],15);
     for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++)bio[y][x]=p.bi;
   });
   const isW=(x,y)=>DW[y*W+x]<0;
@@ -964,7 +966,7 @@ const MAP=(()=>{
   PMAP.forEach(p=>{const b=BIOMES[p.bi],d=b.den;blob('g',p.bi,Math.round(40*d[0]),3,7);blob('a',p.bi,Math.round(26*d[1]),3,7);blob('~',p.bi,Math.round(9*d[3]),1.6,3.4)});
   // never block the road itself or the arenas with water
   const keep=(cx,cy,r)=>{for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=Math.floor(cx-r);x<=cx+r;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<r)m[y][x]='a'};
-  PMAP.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],13));keep(p.ba[0],p.ba[1],18);keep(p.wa[0],p.wa[1],16)});
+  PMAP.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],13));keep(p.ba[0],p.ba[1],18*DK);keep(p.wa[0],p.wa[1],16)});
   const props=[];
   // harvest nodes: a few small clusters of one kind each (about a quarter of the old scattered count)
   const okT=(x,y)=>{const t=m[y]&&m[y][x];return t=='.'||t=='g'||t=='a'},rockK=k=>k=='rock'||k=='grave'||k=='pillar',used=new Set();
@@ -977,7 +979,7 @@ const MAP=(()=>{
       if(used.has(key)||!okT(cx,cy)||regionAt(cx,cy)!==r)continue;
       used.add(key);if(rockK(k))m[cy][cx]='r';props.push([cx,cy,k]);got++}}
   // boss arenas: rune floor, ring of columns and four cover pillars
-  BOSSES.forEach(b=>{for(let y=b.y-16;y<=b.y+16;y++)for(let x=b.x-16;x<=b.x+16;x++)if(Math.hypot(x-b.x,y-b.y)<15.5)m[y][x]='a';
+  BOSSES.forEach(b=>{for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
     });
   // the stronghold town (same layout as before)
   TOWNS.forEach(t=>{
@@ -1007,7 +1009,7 @@ const MAP=(()=>{
          if(!'.g'.includes(m[y][x])||nearP(x,y)||townAt(x,y,3)>=0)continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
   }
   m.bio=bio;m.DW=DW;
-  m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
+  m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17*DK)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();
 
 const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const q=Math.max(Math.abs(x-t.cx),Math.abs(z-t.cy));if(q<d)d=q}return d};
@@ -1034,7 +1036,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
       const dd=Math.max(0,d);h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
-      const p=PMAP[r];[[p.ba,22],[p.wa,19]].forEach(([c,R0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-5,R0,q);if(d<0)h=h*m+.6*(1-m)});
+      const p=PMAP[r];[[p.ba,22*DK,5*DK],[p.wa,19,5]].forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
@@ -5470,7 +5472,7 @@ if(SET.dev)document.body.classList.toggle('mob',SET.dev=='mobile');
 setInterval(()=>{const m=$('mctl');if(m)m.style.display=(building||uiOpen()||!$('devp').classList.contains('hide'))?'none':''},250);
 
 // ================= v31: Sovereign boss arenas — boss-driven progression =================
-const ARENA_R=14,COVER_R=6.3,COVER_HIT=1.05;
+const ARENA_R=14*DK,COVER_R=6.3,COVER_HIT=1.05;
 // powers are permanent; unlocks gate recipes, materials and stations; guardians (odd index) open the next zone's gate
 const BOSSX=[
  {i:'🐺',col:0x9ab0c8,mv:[['charge','slam','rain'],['adds'],['wave']],ult:0,pw:{n:"Hunter's Stride",i:'🐾',s:{mspd:.08},d:'+8% move speed'},un:['d:alchemy','m:brick','m:mossy']},
@@ -5550,7 +5552,7 @@ const BMV={
     return {d:1.2*en,lock:1}},
   ult(e,A,en){const o=V(A.cx,0,A.cz);e.m.position.set(A.cx,0,A.cz);burst(gY(o,1),A.b.col,60,4,4,.8);ring(o,A.b.col,6,500);
     banner('⚠ CATACLYSM','Get into a glowing blue safe circle!','');A.wedges.forEach(w=>{if(w.parent)w.parent.remove(w)});A.safe=[];A.wedges=[];
-    const a0=Math.random()*6.283;for(let k=0;k<3;k++){const a=a0+k*2.094+(Math.random()-.5)*.6,r=5+Math.random()*6,x=A.cx+Math.cos(a)*r,z=A.cz+Math.sin(a)*r;A.safe.push([x,z]);
+    const a0=Math.random()*6.283;for(let k=0;k<3;k++){const a=a0+k*2.094+(Math.random()-.5)*.6,r=(5+Math.random()*6)*DK,x=A.cx+Math.cos(a)*r,z=A.cz+Math.sin(a)*r;A.safe.push([x,z]);
       const rg=new THREE.CircleGeometry(2.3,32);rg.rotateX(-Math.PI/2);const w=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:0x6ad0ff,transparent:true,opacity:.55,depthWrite:false,depthTest:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));
       w.position.set(x,GH(x,z)+.15,z);w.renderOrder=5;A.g.add(w);A.wedges.push(w)}
     tele(o,ARENA_R,3.6*Math.max(.8,en),()=>{A.wedges.forEach(w=>{if(w.parent)w.parent.remove(w)});A.wedges=[];const sf=A.safe;if(!A.f){A.safe=[];return}shake(.5);for(let k=0;k<40;k++){const a=Math.random()*6.283,r=Math.random()*ARENA_R;burst(gY(V(A.cx+Math.cos(a)*r,0,A.cz+Math.sin(a)*r),.5),A.b.col,3,2,4,.6)}
@@ -5835,7 +5837,7 @@ const DUNS=[
 const DX0=1200,DZ0=40,DGW=72,DGH=34;let inDun=null;const dunClears={};
 // put each entrance on the nearest open, walkable tile
 DUNS.forEach(D=>{let best=null,bd=1e9;for(let r=0;r<30&&!best;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=D.tx+dx,y=D.ty+dy;if(x<3||y<3||x>W-4||y>H-4)continue;const t=MAP[y][x];
-  if(!'.ga'.includes(t)||townAt(x,y,4)>=0||BOSSES.some(b=>Math.hypot(b.x-x,b.y-y)<20))continue;let ok=true;for(let q=-1;q<=1;q++)for(let w=-1;w<=1;w++){const u=MAP[y+q]&&MAP[y+q][x+w];if(!u||'#~rRWB'.includes(u))ok=false}if(!ok)continue;const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=[x,y]}}
+  if(!'.ga'.includes(t)||townAt(x,y,4)>=0||BOSSES.some(b=>Math.hypot(b.x-x,b.y-y)<20*DK))continue;let ok=true;for(let q=-1;q<=1;q++)for(let w=-1;w<=1;w++){const u=MAP[y+q]&&MAP[y+q][x+w];if(!u||'#~rRWB'.includes(u))ok=false}if(!ok)continue;const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=[x,y]}}
   D.x=best?best[0]:D.tx;D.y=best?best[1]:D.ty;
   const g=new THREE.Group(),y0=GH(D.x,D.y);g.position.set(D.x,y0,D.y);scene.add(g);D.g=g;
   const rk=sm(0x6a6258,{flatShading:true});[[-1.3,0,1.6,2.2],[1.3,0,1.6,2.1],[0,2.2,2.6,1.1],[-.6,-1.1,1.1,1.3],[.8,-1.2,1,1.2]].forEach(q=>{const m=TQ(g,G_OCT,rk,q[0],q[1]*.55+1,q[3]*-.2-.4,q[2]*.8,q[3],q[2]*.8);m.rotation.y=q[0]})
@@ -7804,7 +7806,7 @@ Object.assign(BMV,{
   // ---- Mire Colossus: rooted, burrows and fills the air with spores ----
   burrow(e,A,en){bxHide(e,true);burst(gY(e.m.position,.4),0x7a5a3a,40,3,3,.8);setTimeout(()=>{if(!A.f||e.dead){bxHide(e,false);return}const q=inArena(A,pl.position.clone());
       tele(q,3.2,1.0*en,()=>{e.m.position.set(q.x,0,q.z);bxHide(e,false);if(!A.f)return;ring(q,A.b.col,7,400);burst(gY(q,.5),0x7a5a3a,50,5,4,.9);shake(.3);if(d2(pl.position,q)<3.2)bossHit(e,1.4)})},350*en);return {d:2.2*en,lock:1}},
-  spores(e,A,en){for(let i=0;i<(e.bs.ph>=2?5:4);i++){const q=inArena(A,i==0?pl.position.clone():V(A.cx+(Math.random()-.5)*20,0,A.cz+(Math.random()-.5)*20));tele(q,2.6,(.9+i*.1)*en,()=>{if(A.f)bxPool(A,q,2.6,7,0xb050e0,.25)})}say('☁ Toxic spores drift across the arena.');return {d:1.4*en,lock:0}},
+  spores(e,A,en){for(let i=0;i<(e.bs.ph>=2?5:4);i++){const q=inArena(A,i==0?pl.position.clone():V(A.cx+(Math.random()-.5)*20*DK,0,A.cz+(Math.random()-.5)*20*DK));tele(q,2.6,(.9+i*.1)*en,()=>{if(A.f)bxPool(A,q,2.6,7,0xb050e0,.25)})}say('☁ Toxic spores drift across the arena.');return {d:1.4*en,lock:0}},
   sporering(e,A,en){const o=e.m.position.clone();[4,7.5,11].forEach((r,j)=>{for(let k=0;k<10+j*4;k++){const a=k/(10+j*4)*6.283+j*.3,q=inArena(A,o.clone().add(V(Math.cos(a)*r,0,Math.sin(a)*r)),.8);tele(q,1.3,(.8+j*.55)*en,()=>{if(!A.f)return;burst(gY(q,.3),A.b.col,6,2,2,.4);if(d2(pl.position,q)<1.3)bossHit(e,.8)})}});return {d:2.6*en,lock:1}},
   // ---- Crypt Matriarch: skitters and webs ----
   web(e,A,en){const o=e.m.position.clone(),a0=Math.atan2(pl.position.x-o.x,pl.position.z-o.z);let hit=false;[-.38,0,.38].forEach(da=>{const d=V(Math.sin(a0+da),0,Math.cos(a0+da));
@@ -7814,7 +7816,7 @@ Object.assign(BMV,{
   flyby(e,A,en){const o=e.m.position.clone(),d=toPl(o),L=Math.min(22,d2(o,pl.position)+8),end=inArena(A,o.clone().addScaledVector(d,L),2);const len=d2(o,end);say('⚠ '+A.b.name+' takes to the sky!');
     tele(o,0,1.0*en,()=>{if(!A.f)return;e.fly={sx:o.x,sz:o.z,tx:end.x,tz:end.z,t:0,dur:.7};setTimeout(()=>{if(!A.f)return;for(let s=0;s<len;s+=1.2)burst(gY(o.clone().addScaledVector(d,s),.4),0xff6a20,6,3,4,.6);shake(.2);if(inLine(pl.position,o,d,len,3.2)&&hero.iv<=0)bossHit(e,1.4)},700)},{w:3.2,l:len,d});
     e.lift=1;return {d:2.3*en,lock:1}},
-  meteor(e,A,en){let n=0;const N=e.bs.ph>=3?8:6,f=()=>{if(n++>=N||!A.f)return;const q=inArena(A,n%2?pl.position.clone():V(A.cx+(Math.random()-.5)*22,0,A.cz+(Math.random()-.5)*22));
+  meteor(e,A,en){let n=0;const N=e.bs.ph>=3?8:6,f=()=>{if(n++>=N||!A.f)return;const q=inArena(A,n%2?pl.position.clone():V(A.cx+(Math.random()-.5)*22*DK,0,A.cz+(Math.random()-.5)*22*DK));
       tele(q,2.8,1.2*en,()=>{if(!A.f)return;ring(q,0xff6a20,6,400);burst(gY(q,.5),0xff6a20,40,5,5,.8);shake(.15);if(d2(pl.position,q)<2.8)bossHit(e,1.1)});setTimeout(f,350*en)};f();return {d:(N*.35+1.4)*en,lock:0}},
   // ---- The Hollow King: blinks, bone lines and prisons ----
   bonelines(e,A,en){const o=e.m.position.clone(),a0=Math.atan2(pl.position.x-o.x,pl.position.z-o.z);let hit=false;[-.45,0,.45].forEach(da=>{const d=V(Math.sin(a0+da),0,Math.cos(a0+da));
@@ -8627,7 +8629,7 @@ function spawnWild(P,dmin){const r=regionAt(Math.round(P.x),Math.round(P.z));if(
     if(x<2||z<2||x>W-3||z>H-3||regionAt(x,z)!==r||DW[z*W+x]>-2.5||solid(x,z))continue;
     if(Math.hypot(x-pl.position.x,z-pl.position.z)<dmin-2)continue;
     if(CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
-    if(Math.hypot(x-p.ba[0],z-p.ba[1])<24||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<16)continue;
+    if(Math.hypot(x-p.ba[0],z-p.ba[1])<24*DK||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<16)continue;
     if(enemies.some(o=>!o.dead&&Math.hypot(o.m.position.x-x,o.m.position.z-z)<13))continue;
     const L=BIOEN[p.n]||['hobgoblin'],key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
     for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.035;
@@ -8644,7 +8646,7 @@ function rosterBuild(r){const p=PMAP[r],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p
   // roaming groups spread across the whole zone
   const grp=[];for(let t=0;t<6000&&grp.length<45;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
-    if(Math.hypot(x-p.ba[0],z-p.ba[1])<24||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<22)continue;
+    if(Math.hypot(x-p.ba[0],z-p.ba[1])<24*DK||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
   grp.forEach(([x,z])=>{const key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
     for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.035;
@@ -12748,7 +12750,7 @@ kqBmv('rain',function(e,A,en){let n=0;const N=e.bs.ph>=3?7:5;kqBossCast(e,A.b.co
 kqBmv('spit',function(e,A,en){const N=e.bs.ph>=3?5:3,mo=kqMouth(e);kqBossCast(e,0x7aff4a,300);for(let i=0;i<N;i++){const q=inArena(A,pl.position.clone().add(V((Math.random()-.5)*6,0,(Math.random()-.5)*6)));if(i==0)q.copy(inArena(A,pl.position.clone()));
     const dl=(.9+i*.15)*en;kqLob(A,mo,q,dl,0x7aff4a,1.9);
     tele(q,2.2,dl,()=>{if(!A.f)return;burst(gY(q,.3),0x7aff4a,16,2,2,.5);if(d2(pl.position,q)<2.2)bossHit(e,.7);bxPool(A,q,2.2,6,0x6aff3a)})}return {d:1.3*en,lock:0}});
-kqBmv('spores',function(e,A,en){const mo=kqMouth(e);kqBossCast(e,0xb050e0,300);for(let i=0;i<(e.bs.ph>=2?5:4);i++){const q=inArena(A,i==0?pl.position.clone():V(A.cx+(Math.random()-.5)*20,0,A.cz+(Math.random()-.5)*20));const dl=(.9+i*.1)*en;
+kqBmv('spores',function(e,A,en){const mo=kqMouth(e);kqBossCast(e,0xb050e0,300);for(let i=0;i<(e.bs.ph>=2?5:4);i++){const q=inArena(A,i==0?pl.position.clone():V(A.cx+(Math.random()-.5)*20*DK,0,A.cz+(Math.random()-.5)*20*DK));const dl=(.9+i*.1)*en;
     kqLob(A,mo,q,dl,0xc070ff,2.2);tele(q,2.6,dl,()=>{if(A.f)bxPool(A,q,2.6,7,0xb050e0,.25)})}say('☁ Toxic spores drift across the arena.');return {d:1.4*en,lock:0}});
 kqBmv('bonelines',function(e,A,en){const o=e.m.position.clone(),a0=Math.atan2(pl.position.x-o.x,pl.position.z-o.z);let hit=false;kqBossCast(e,0xe8e0c8,1000*en*.8);[-.45,0,.45].forEach(da=>{const d=V(Math.sin(a0+da),0,Math.cos(a0+da));
     kqSweep(A,o,d,15,1.0*en,0xe8e0c8,'bone');
@@ -13589,7 +13591,7 @@ kqBmv('argusgaze',function(e,A,en){const o=e.m.position;AR.beam={warm:1.05*en,t:
 // Lights Out: melt into the dark, then burst out along a red line from where its eyes glint
 kqBmv('argstalk',function(e,A,en){if(e.hid)return {d:.5,lock:0};bxHide(e,true);burst(gY(e.m.position,1),0x14140c,40,3,2,.9);burst(gY(e.m.position,1.6),0xffd040,16,2,1,.5);
   say('👁 Argus melts into the dark… watch for its eyes!');
-  d01After(AR.q,1.1*en,()=>{if(!A.f||e.dead){bxHide(e,false);return}const a=Math.atan2(pl.position.z-A.cz,pl.position.x-A.cx)+Math.PI+(Math.random()-.5)*1.4,sx=A.cx+Math.cos(a)*12.3,sz=A.cz+Math.sin(a)*12.3;
+  d01After(AR.q,1.1*en,()=>{if(!A.f||e.dead){bxHide(e,false);return}const a=Math.atan2(pl.position.z-A.cz,pl.position.x-A.cx)+Math.PI+(Math.random()-.5)*1.4,sx=A.cx+Math.cos(a)*12.3*DK,sz=A.cz+Math.sin(a)*12.3*DK;
     const dx=pl.position.x-sx,dz=pl.position.z-sz,dl=Math.hypot(dx,dz)||1,d=V(dx/dl,0,dz/dl),L=Math.min(25,dl+7);AR.eyes.position.set(sx,GH(sx,sz)+2.3,sz);AR.eyes.rotation.y=Math.atan2(d.x,d.z);AR.eyes.visible=true;
     tele(V(sx,0,sz),0,.95*en,()=>{AR.eyes.visible=false;if(!A.f||e.dead){bxHide(e,false);return}e.m.position.set(sx,0,sz);bxHide(e,false);e.m.rotation.y=Math.atan2(d.x,d.z);
       e.bs.dash={x:d.x,z:d.z,t:L/22,h:0,sp:22};burst(gY(e.m.position,1),0xffd040,30,4,2,.6);shake(.2);sfx('boom',.5)},{w:2.8,l:L,d})});
@@ -13613,16 +13615,16 @@ function arStalk(A,e,T,dt,now,ph){
   const half=.27,y=GH(T.ox,T.oz)+.2;
   if(T.st=='wake'){T.t+=dt;const k=Math.min(1,T.t/1.15);T.g.rotation.z=Math.sin(now/28)*.06*k;T.lid=.35*k;arLids(T,T.lid);T.spr.scale.setScalar(.4+1.6*k);
     const yw=arEyeYaw(T);T.eye.rotation.y=Math.max(-1.1,Math.min(1.1,d01Ad(yw,T.gy)));
-    T.fan.visible=true;T.fan.material.opacity=.05+.07*(Math.sin(now/70)*.5+.5);d01FanSet(T.fan,T.ox,T.oz,T.gy+T.eye.rotation.y,half,26,AR.pil,A,y);
+    T.fan.visible=true;T.fan.material.opacity=.05+.07*(Math.sin(now/70)*.5+.5);d01FanSet(T.fan,T.ox,T.oz,T.gy+T.eye.rotation.y,half,26*DK,AR.pil,A,y);
     if(k>=1){T.st='open';T.t=0;T.dur=[4.2,4.6,5][ph-1];const sw=ph>=3?1.6:1.3,sd=Math.random()<.5?1:-1;T.y0=yw-sd*sw/2;T.y1=yw+sd*sw/2;sfx('zap',.35)}
     return false}
   if(T.st=='open'){T.t+=dt;const u=Math.min(1,T.t/T.dur),s=u*u*(3-2*u),yaw=T.y0+(T.y1-T.y0)*s;T.g.rotation.z=Math.sin(now/300+T.i)*.02;T.lid+=(1-T.lid)*Math.min(1,dt*8);arLids(T,T.lid);
     T.eye.rotation.y=Math.max(-1.3,Math.min(1.3,d01Ad(yaw,T.gy)));const wy=T.gy+T.eye.rotation.y;T.fan.visible=true;T.fan.material.opacity=.3+.06*Math.sin(now/90);
-    d01FanSet(T.fan,T.ox,T.oz,wy,half,26,AR.pil,A,y);T.spr.scale.setScalar(1.8+.3*Math.sin(now/80));
+    d01FanSet(T.fan,T.ox,T.oz,wy,half,26*DK,AR.pil,A,y);T.spr.scale.setScalar(1.8+.3*Math.sin(now/80));
     if(u>=1){T.st='shut';T.t=0;T.fan.visible=false;T.spr.visible=false}
     // is the hero in this gaze, with nothing in between?
     const dx=pl.position.x-T.ox,dz=pl.position.z-T.oz,L=Math.hypot(dx,dz);if(L<.5||hero.hp<=0)return false;
-    if(Math.abs(d01Ad(Math.atan2(dx,dz),wy))>half)return false;return d01Clip(T.ox,T.oz,dx/L,dz/L,26,AR.pil,null,0)>=L-.3}
+    if(Math.abs(d01Ad(Math.atan2(dx,dz),wy))>half)return false;return d01Clip(T.ox,T.oz,dx/L,dz/L,26*DK,AR.pil,null,0)>=L-.3}
   if(T.st=='shut'){T.t+=dt;T.lid=Math.max(0,1-T.t/.5);arLids(T,T.lid);if(T.t>=.5){T.st='closed';T.eye.rotation.y=0}return false}
   return false}
 function arHitStalk(A,T,dm){if(T.st=='dead')return;const open=T.st=='open'||T.st=='wake',d=Math.max(1,Math.round(dm*.8*(open?1.6:1)));T.hp-=d;T.hit=.18;
@@ -13640,7 +13642,7 @@ function arBolts(A,e){const q=pl.position.clone(),src=AR.st.find(T=>T.st=='open'
   tele(q,2.6,1.0,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,5,350);burst(gY(q,.4),0xffd040,30,3,3,.6);if(d2(pl.position,q)<2.6&&hero.iv<=0)bossHit(e,1.3)})}
 function arBeamTick(A,e,dt,now){const b=AR.beam,m=e.m,bs=m.bs||3,ph=e.bs.ph;
   const ty=Math.atan2(pl.position.x-m.position.x,pl.position.z-m.position.z),turn=(b.warm>0?4:ph>=3?1.2:.85)*dt,dy=d01Ad(ty,b.yaw);b.yaw+=Math.max(-turn,Math.min(turn,dy));m.rotation.y=b.yaw;
-  const dx=Math.sin(b.yaw),dz=Math.cos(b.yaw),ox=m.position.x+dx*.4*bs,oz=m.position.z+dz*.4*bs,L=d01Clip(ox,oz,dx,dz,26,AR.pil,A,ARENA_R+.3),gy=GH(ox,oz);
+  const dx=Math.sin(b.yaw),dz=Math.cos(b.yaw),ox=m.position.x+dx*.4*bs,oz=m.position.z+dz*.4*bs,L=d01Clip(ox,oz,dx,dz,26*DK,AR.pil,A,ARENA_R+.3),gy=GH(ox,oz);
   const w=b.warm>0?.22:1.5;d01StripSet(AR.bm,ox,oz,dx,dz,L,w,gy+.2);AR.bm.visible=true;AR.bm.material.opacity=b.warm>0?.35+.25*Math.sin(now/50):.55;
   const ey=gy+Math.min(5,.85*bs),ex=ox+dx*L,ez=oz+dz*L;AR.bm3.visible=b.warm<=0;AR.bm3.position.set((ox+ex)/2,(ey+gy+.6)/2,(oz+ez)/2);AR.o.set(ex,gy+.6,ez);AR.bm3.lookAt(AR.o);
   AR.bm3.scale.set(.35+.08*Math.sin(now/40),.35,Math.hypot(L,ey-gy-.6));
@@ -13679,7 +13681,7 @@ function arTick(A,e,dt,now){
 function arClear(A,won){AR.q.length=0;AR.st.forEach(arReset);AR.beam=null;AR.bm.visible=AR.bm3.visible=false;AR.mark=null;AR.mk.visible=false;AR.eyes.visible=false;AR.seen=0;AR.dkT=0;
   d01Hud(null);d01Unbuff('Mired');const e=bossEnt(A.i);if(e){e.bs.face=0;if(e.hid)bxHide(e,false)}}
 function arSeal(A,on){const m=AR.seal;if(!m)return;const y0=GH(A.cx,A.cz);
-  if(on){m.visible=true;const s0=m.scale.y;tw(800,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,3)));for(let k=0;k<8;k++){const a=AR.ent-.45+k/7*.9;burst(V(A.cx+Math.cos(a)*15,y0+.4,A.cz+Math.sin(a)*15),0x3a2c20,10,2,3,.6)}shake(.2)}
+  if(on){m.visible=true;const s0=m.scale.y;tw(800,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,3)));for(let k=0;k<8;k++){const a=AR.ent-.45+k/7*.9;burst(V(A.cx+Math.cos(a)*15*DK,y0+.4,A.cz+Math.sin(a)*15*DK),0x3a2c20,10,2,3,.6)}shake(.2)}
   else{const s0=m.scale.y;tw(700,k=>m.scale.y=Math.max(.02,s0*(1-k)),()=>{if(!AR.A.f)m.visible=false})}}
 // the boss's own floating health bar is hidden in the den (the top boss bar shows its health; up close it covered the view)
 DEN[0]={build:arBuild,start:arStart,tick:arTick,clear:arClear,seal:arSeal,
@@ -13881,7 +13883,7 @@ function hyNeckTick(A,e,N,dt,now,ph){
     if(!N.atk){N.cd-=dt;if(N.cd<=0&&HY.clk-HY.lastAtk>.75&&hero.hp>0){HY.lastAtk=HY.clk;const L=Math.hypot(pl.position.x-N.x,pl.position.z-N.z),o=V(N.x,0,N.z);
       if(L<6.8){const d=V(fx,0,fz);N.atk={k:'bite',t:0,T:.85};tele(o,0,.85,()=>{if(!A.f||N.st!='up')return;for(let s=1;s<6.5;s+=1)burst(gY(o.clone().addScaledVector(d,s),.6),HY_COL,2,1,1,.3);
           if(inLine(pl.position,o,d,6.5,2)&&hero.iv<=0){bossHit(e,.9);dn(pl.position,'Bitten!','#9ae870',-20,600)}},{w:2,l:6.5,d})}
-      else if(L<17){const q=pl.position.clone();N.atk={k:'spit',t:0,T:1.1};kqLob(A,N.p.clone(),q,1.1,0x9aff3a,1.6);
+      else if(L<17*DK){const q=pl.position.clone();N.atk={k:'spit',t:0,T:1.1};kqLob(A,N.p.clone(),q,1.1,0x9aff3a,1.6);
         tele(q,1.8,1.1,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff3a,16,2,2,.5);if(d2(pl.position,q)<1.8&&hero.iv<=0)bossHit(e,.6);bxPool(A,q,1.8,4,0x6aff3a,.15)})}
       N.cd=(2.8+Math.random()*1.4)*(ph>=3?.75:1)}}
     else{const a=N.atk;a.t+=dt;const u=a.t/a.T;
@@ -13903,7 +13905,7 @@ function hyTick(A,e,dt,now){
   // brood guard
   const live=hyLive();HY.guard=live>=3;HY.shell.visible=HY.guard&&!e.hid;if(HY.guard){const bs=e.m.bs||4;HY.shell.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+bs*.35,e.m.position.z);HY.shell.scale.setScalar(bs*.75+.1*Math.sin(now/200));HY.shell.material.opacity=.1+.05*Math.sin(now/150)}
   // braziers give serpent-fire
-  for(const b of HY.braz)if(Math.hypot(pl.position.x-b.x,pl.position.z-b.z)<1.95&&hero.hp>0){if(HY.fire-HY.clk<9.5){if(HY.fire<HY.clk)popT(pl.position,'🔥 Serpent-fire!','#ffb040',true);burst(gY(pl.position,1.2),0x9aff5a,14,2,2,.5)}
+  for(const b of HY.braz)if(Math.hypot(pl.position.x-b.x,pl.position.z-b.z)<2.25&&hero.hp>0){if(HY.fire-HY.clk<9.5){if(HY.fire<HY.clk)popT(pl.position,'🔥 Serpent-fire!','#ffb040',true);burst(gY(pl.position,1.2),0x9aff5a,14,2,2,.5)}
     HY.fire=HY.clk+10;d01Buff('Serpent-fire','🔥',10000,'Touch a severed stump to sear it shut')}
   const fire=HY.fire>HY.clk;HY.fl.visible=fire;if(fire){HY.fl.position.set(pl.position.x+Math.sin(pl.rotation.y+.6)*.5,pl.position.y+1.4,pl.position.z+Math.cos(pl.rotation.y+.6)*.5);HY.fl.scale.setScalar(1+.25*Math.sin(now/60));if(Math.random()<.3)burst(HY.fl.position,0x9aff5a,1,.3,.8,.4)}
   else if(hero.buffs.some(b=>b.n=='Serpent-fire'))d01Unbuff('Serpent-fire');
@@ -13925,15 +13927,15 @@ function hyOnStone(x,z){for(const s of HY.stones)if(Math.hypot(x-s[0],z-s[1])<s[
 function hyClear(A,won){HY.gen++;HY.necks.forEach(hyOff);HY.q.length=0;HY.waves.forEach(w=>{w.on=false;w.ms.visible=false});HY.fire=0;HY.fl.visible=false;HY.glow=0;HY.gk=0;HY.sg.visible=false;HY.wl=0;
   HY.guard=false;HY.shell.visible=false;d01Hud(null);d01Unbuff('Serpent-fire')}
 function hySeal(A,on){const m=HY.seal;if(!m)return;const y0=GH(A.cx,A.cz);
-  if(on){m.visible=true;const s0=m.scale.y;tw(900,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,2)));for(let k=0;k<8;k++){const a=HY.ent-.4+k/7*.8;burst(V(A.cx+Math.cos(a)*15.2,y0+.3,A.cz+Math.sin(a)*15.2),0x9ae8e0,14,2,5,.7)}shake(.15)}
+  if(on){m.visible=true;const s0=m.scale.y;tw(900,k=>m.scale.y=s0+(1-s0)*(1-Math.pow(1-k,2)));for(let k=0;k<8;k++){const a=HY.ent-.4+k/7*.8;burst(V(A.cx+Math.cos(a)*15.2*DK,y0+.3,A.cz+Math.sin(a)*15.2*DK),0x9ae8e0,14,2,5,.7)}shake(.15)}
   else{const s0=m.scale.y;tw(800,k=>m.scale.y=Math.max(.02,s0*(1-k)),()=>{if(!HY.A.f)m.visible=false})}}
 // the boss's own floating health bar is hidden in the den (the top boss bar shows its health; up close it covered the view)
 DEN[1]={build:hyBuild,start:hyStart,tick:hyTick,clear:hyClear,seal:hySeal,
   ai(A,e){if(e.hb)e.hb.visible=false;return false},
   hitA(A,p,r,dm,s,dir,half){for(const N of HY.necks){if(N.st!='up'&&N.st!='rise')continue;if(d01InArc(p,r,dir,half,N.x,N.z,1.1)||d01InArc(p,r,dir,half,N.p.x,N.p.z,.9))hyHitNeck(A,N,dm)}}};
 // the raised stones carry you (also outside the fight) and the curtain ripples
-{const f=arenaTick;arenaTick=function(dt,now){f.apply(this,arguments);try{const A=HY.A;if(!A||inDun)return;const p=pl.position;if(Math.abs(p.x-A.cx)>16||Math.abs(p.z-A.cz)>16)return;
-  if(hyOnStone(p.x,p.z))p.y=GH(p.x,p.z)+.34}catch(_){}}}
+{const f=arenaTick;arenaTick=function(dt,now){f.apply(this,arguments);try{const A=HY.A;if(!A||inDun)return;const p=pl.position;if(Math.abs(p.x-A.cx)>16*DK||Math.abs(p.z-A.cz)>16*DK)return;
+  if(hyOnStone(p.x,p.z))p.y=GH(p.x,p.z)+.34*DKY}catch(_){}}}
 
 // ================= v86 den 2: The Frozen Sepulchre — the Rime Wraith, Ghost of Burningeye Summit =================
 // The den: a frozen crater. A cracked ice lake with frost runes at the heart, snow fields around it, a jagged wall of
@@ -13966,7 +13968,7 @@ function rwMats(){if(RW.ice)return;
   RW.warm=new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide});
   RW.warmD=new THREE.MeshBasicMaterial({color:0xff8a30,transparent:true,opacity:.09,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide});
   RW.gRing=new THREE.RingGeometry(3.0,3.22,48).rotateX(-Math.PI/2);RW.gDisc=new THREE.CircleGeometry(3.0,40).rotateX(-Math.PI/2);RW.gRl=new THREE.RingGeometry(.86,1,40).rotateX(-Math.PI/2)}
-const RW_WARM=3.1,RW_COL=0x9ad8ff;
+const RW_WARM=3.1*DK,RW_COL=0x9ad8ff;
 // ---------------- the frozen challenger statues ----------------
 function rwStatue(A,x,z,face,v,R){
   const y=GH(x,z),g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=face;g.scale.setScalar(1.2);A.g.add(g);
@@ -14204,7 +14206,7 @@ var SS={tm:null,scr:new THREE.Vector3(),atm:null};
 function ssAuth(A){return !(typeof MP!='undefined'&&MP.on&&AF&&AF.i===A.i&&typeof mpBossAuth=='function'&&mpBossAuth(A.i)!==MP.me)}
 function ssEntA(A){const p=PMAP[A.i],P=p.path||[];let q=p.wp[p.wp.length-2];for(let k=P.length-1;k>=0;k--){if(Math.hypot(P[k][0]-A.cx,P[k][1]-A.cz)>21){q=P[k];break}}return Math.atan2(q[1]-A.cz,q[0]-A.cx)}
 const ssAD=(a,b)=>{let d=a-b;return Math.atan2(Math.sin(d),Math.cos(d))};
-const SS_COL=0xff7a30,SS_SAND=0xd9b273,SS_CORE=3.0;
+const SS_COL=0xff7a30,SS_SAND=0xd9b273,SS_CORE=3.0*DK;
 function ssTM(x,y,z,sx,sy,sz,qx,qy,qz,ang,spin){const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(qx,qy,qz).normalize(),ang),q2=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),spin||0);
   return new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),q.multiply(q2),new THREE.Vector3(sx,sy,sz))}
 // a centipede segment chain bursting out of the sand (used by the sandstorm lashes)
@@ -14335,7 +14337,7 @@ function ssAI(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[3]
   // ---- burrow & erupt ----
   if(D.er){const R2=D.er;R2.t-=dt;
     if(R2.s=='dive'){if(R2.t<=0){bxHide(e,true);R2.s='hunt';R2.t=e.bs.ph>=3?1.7:2.2;D.mound.visible=true;R2.tr=0}}
-    else if(R2.s=='hunt'){const d=toPl(m.position);if(auth&&d2(pl.position,m.position)>.8){m.position.x+=d.x*6.5*dt;m.position.z+=d.z*6.5*dt;inArena(A,m.position,1.6);for(const C of D.cols){if(!C.ok)continue;const cx=m.position.x-C.x,cz=m.position.z-C.z,l=Math.hypot(cx,cz);if(l<2.2&&l>.01){m.position.x=C.x+cx/l*2.2;m.position.z=C.z+cz/l*2.2}}}
+    else if(R2.s=='hunt'){const d=toPl(m.position);if(auth&&d2(pl.position,m.position)>.8){m.position.x+=d.x*6.5*dt;m.position.z+=d.z*6.5*dt;inArena(A,m.position,1.6);for(const C of D.cols){if(!C.ok)continue;const cx=m.position.x-C.x,cz=m.position.z-C.z,l=Math.hypot(cx,cz);if(l<2.5&&l>.01){m.position.x=C.x+cx/l*2.5;m.position.z=C.z+cz/l*2.5}}}
       D.mound.position.set(m.position.x,GH(m.position.x,m.position.z)+.05,m.position.z);D.mound.rotation.y+=dt*2;R2.tr-=dt;if(R2.tr<=0){R2.tr=.1;burst(gY(m.position,.3),SS_SAND,5,2,2,.5)}
       if(R2.t<=0){R2.s='tele';R2.t=1.0*R2.en;const q=m.position.clone();R2.q=q;tele(q,3.3,R2.t,()=>{})}}
     else if(R2.s=='tele'){D.mound.position.y=GH(R2.q.x,R2.q.z)+.05+Math.sin(now/40)*.08;if(Math.random()<.4)burst(gY(R2.q,.2),SS_SAND,3,2,2,.5);
@@ -14350,7 +14352,7 @@ function ssAI(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[3]
     if(Rm.s=='wind'){animC(m,now,true,.6);if(Rm.t<=0){Rm.s='run';Rm.run=0;shake(.12)}return true}
     if(Rm.s=='run'){const st=19*dt;Rm.run+=st;m.position.x+=Rm.d.x*st;m.position.z+=Rm.d.z*st;animC(m,now,true,9);if(Math.random()<.7)burst(gY(m.position,.3),SS_SAND,4,2,1.5,.5);
       if(!Rm.hit&&d2(pl.position,m.position)<2.7&&hero.iv<=0){Rm.hit=true;bossHit(e,1.6);const s=Math.sign(Rm.d.x*(pl.position.z-m.position.z)-Rm.d.z*(pl.position.x-m.position.x))||1;walk(pl,-Rm.d.z*s*1.6,Rm.d.x*s*1.6);dn(pl.position,'Trampled!','#ffb070',-20,700)}
-      for(const C of D.cols){if(C.ok&&d2(C.p,m.position)<2.0){ssBreak(A,C);m.position.x-=Rm.d.x*.8;m.position.z-=Rm.d.z*.8;D.ram=null;ssExpose(A,e,3.6,'STUCK! ×1.6');say('💥 Its head is stuck in the rubble — strike now!');return true}}
+      for(const C of D.cols){if(C.ok&&d2(C.p,m.position)<2.3){ssBreak(A,C);m.position.x-=Rm.d.x*.8;m.position.z-=Rm.d.z*.8;D.ram=null;ssExpose(A,e,3.6,'STUCK! ×1.6');say('💥 Its head is stuck in the rubble — strike now!');return true}}
       if(Rm.run>=Rm.L||Math.hypot(m.position.x-A.cx,m.position.z-A.cz)>ARENA_R-1.5){inArena(A,m.position,1.5);ring(m.position,SS_SAND,4,350);burst(gY(m.position,.5),SS_SAND,30,3,3,.6);shake(.2);Rm.s='daze';Rm.t=.8}return true}
     if(Rm.s=='daze'){animC(m,now,false,0);if(Rm.t<=0){Rm.n--;if(Rm.n>0)ssAim(A,e,D,Rm.n,.7);else{D.ram=null;b.lock=0;b.t=Math.min(b.t,.8)}}return true}}
   return false}
@@ -14362,9 +14364,9 @@ function ssTick(A,e,dt,now){const D=A.dn;if(!D)return;const P=pl.position,v=SS.s
   // quicksand vortex
   if(D.vx){const X=D.vx;D.swS=X.w>0?.25+4*(1.1-X.w):4.5;
     if(X.w>0){X.w-=dt;if(Math.random()<.5){const a=Math.random()*6.283,r=2+Math.random()*4;v.set(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.3,A.cz+Math.sin(a)*r);burst(v,SS_SAND,2,1,1.5,.5)}}
-    else{X.t-=dt;const dx=A.cx-P.x,dz=A.cz-P.z,d=Math.hypot(dx,dz)||1,sp=X.pull*(.45+.55*(1-Math.min(d,14)/14))*(hero.iv>0?.5:1);if(d>.3&&hero.hp>0)walk(pl,dx/d*sp*dt,dz/d*sp*dt);
-      D.vr.forEach((m,i)=>{const k=((now/1000*.55+i/3)%1),r=13.5*(1-k)+.5;m.visible=true;m.scale.setScalar(r);m.material.opacity=.55*Math.min(1,k*4)*(1-k)});
-      if(Math.random()<.8){const a=Math.random()*6.283,r=3+Math.random()*10;v.set(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.25,A.cz+Math.sin(a)*r);burst(v,0xe8c890,2,.6,.5,.6)}
+    else{X.t-=dt;const dx=A.cx-P.x,dz=A.cz-P.z,d=Math.hypot(dx,dz)||1,sp=X.pull*(.45+.55*(1-Math.min(d,ARENA_R)/ARENA_R))*(hero.iv>0?.5:1);if(d>.3&&hero.hp>0)walk(pl,dx/d*sp*dt,dz/d*sp*dt);
+      D.vr.forEach((m,i)=>{const k=((now/1000*.55+i/3)%1),r=13.5*DK*(1-k)+.5;m.visible=true;m.scale.setScalar(r);m.material.opacity=.55*Math.min(1,k*4)*(1-k)});
+      if(Math.random()<.8){const a=Math.random()*6.283,r=(3+Math.random()*10)*DK;v.set(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.25,A.cz+Math.sin(a)*r);burst(v,0xe8c890,2,.6,.5,.6)}
       X.tick-=dt;const core=d<SS_CORE;if(core&&X.tick<=0&&hero.iv<=0){X.tick=.5;bossHit(e,e.bs.ph>=3?.45:.35);dn(P,'Sinking!','#ffcf8a',-20,500)}
       ssSink(D,core);
       if(X.t<=0){D.vx=null;D.vr.forEach(m=>m.visible=false);D.swS=.25;ssSink(D,false)}}}
@@ -14468,7 +14470,7 @@ function dqPose(e,n,wind,act){const m=e&&e.m;if(!m)return;const id=(m._dqp=(m._d
     tw((act||.3)*1000,k=>{if(m._dqp==id&&m.ak)m.ak.k=k},()=>{if(m._dqp!=id)return;m.ak={n,ph:2,k:1};tw(320,k=>{if(m._dqp==id&&m.ak)m.ak.k=1-k},()=>{if(m._dqp==id)m.ak=null})})})}
 // cutaway: den geometry beyond radius rIn and higher than yMin above the floor dissolves (dithered) on the camera's side
 // whenever the camera is outside the den, so walls never hide the fight (the game's default camera sits low and far back)
-function dqCut(base,A,rIn,yMin){const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector2(rIn,yMin)};
+function dqCut(base,A,rIn,yMin){rIn*=DK;yMin*=DKY;const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector2(rIn,yMin)};
   m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPc=(modelMatrix*vec4(transformed,1.)).xyz;');
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
@@ -14588,7 +14590,7 @@ function d4Build(A){
   const cur=dqCurtain(14.4,3.4,0x5aff2a);cur.position.set(cx,y0+1.7,cz);A.g.add(cur);D4.cur=cur;
   const bub=[],bm=new THREE.MeshBasicMaterial({color:0xaaff60});D4.vats.forEach(([x,z],q)=>{for(let i=0;i<3;i++){const b=new THREE.Mesh(dqG('ico0'),bm);b.position.set(x+(R()-.5)*1.3,y0+1.45,z+(R()-.5)*1.3);b.userData.ph=R()*10;A.g.add(b);bub.push(b)}});
   const wl=[];for(let k=0;k<7;k++){const s=kqSpr(0x9affc8,.7);s.userData={a:R()*TAU,r:4+R()*9,h:1.4+R()*2,ph:R()*10};A.g.add(s);wl.push(s)}
-  TANIM.push({x:cx,z:cz,f:now=>{const t=now/1000;bub.forEach((b,i)=>{const k=((t*.7+b.userData.ph)%1);b.scale.setScalar(.04+.16*Math.sin(Math.PI*k));b.position.y=y0+1.45+k*.12});
+  TANIM.push({x:cx,z:cz,f:now=>{const t=now/1000;bub.forEach((b,i)=>{const k=((t*.7+b.userData.ph)%1);b.scale.setScalar(.04+.16*Math.sin(Math.PI*k));b.position.y=y0+1.45*DKY+k*.12});
     wl.forEach(s=>{const u=s.userData,a=u.a+t*.08;s.position.set(cx+Math.cos(a)*u.r,y0+u.h+Math.sin(t*.9+u.ph)*.35,cz+Math.sin(a)*u.r);s.material.opacity=.55+.3*Math.sin(t*2+u.ph)})}});
   // shared rot pool meshes (irregular blob + a frothy rim)
   const blob=(n,j,ri,ro)=>{const R2=ARK.rng(4500+n),pos=[],idx=[],rr=[...Array(n)].map(()=>1+(R2()-.5)*j);pos.push(0,0,0);for(let i=0;i<n;i++){const a=i/n*TAU;pos.push(Math.cos(a)*rr[i]*ro,0,Math.sin(a)*rr[i]*ro)}
@@ -14611,7 +14613,7 @@ function d4Pool(A,x,z,r0){const S=A.dq;if(!S||!A.f)return;const y=GH(x,z)+.1+(S.
   const cap=[0,5,7,9][S.ph]||7;const live=S.pools.filter(q=>!q.dry);if(live.length>cap)live[0].dry=1;burst(V(x,y+.2,z),0x7aff3a,10,2,2,.5)}
 function d4InRot(A,p){const S=A.dq;for(const q of S.pools)if(!q.dry&&Math.hypot(p.x-q.x,p.z-q.z)<q.r*.88)return true;if(S.tide&&Math.hypot(p.x-A.cx,p.z-A.cz)>S.tide.r+.25)return true;return false}
 function d4TideDraw(A,now){const S=A.dq,T=S.tide,N=D4.tideN,y=GH(A.cx,A.cz)+.11,t=now/1000;
-  [[D4.tide,0,15.6],[D4.tideF,-.12,.55]].forEach(([m,o,w],q)=>{const p=m.geometry.attributes.position.array;for(let i=0;i<=N;i++){const a=i/N*DQ.TAU,wob=Math.sin(a*6+t*1.3)*.28+Math.sin(a*11-t*.9)*.14,ri=Math.max(.5,T.r+wob+o),ro=q?ri+w:w;
+  [[D4.tide,0,15.6*DK],[D4.tideF,-.12,.55]].forEach(([m,o,w],q)=>{const p=m.geometry.attributes.position.array;for(let i=0;i<=N;i++){const a=i/N*DQ.TAU,wob=Math.sin(a*6+t*1.3)*.28+Math.sin(a*11-t*.9)*.14,ri=Math.max(.5,T.r+wob+o),ro=q?ri+w:w;
     p[i*6]=A.cx+Math.cos(a)*ri;p[i*6+1]=y+q*.003;p[i*6+2]=A.cz+Math.sin(a)*ri;p[i*6+3]=A.cx+Math.cos(a)*ro;p[i*6+4]=y+q*.003;p[i*6+5]=A.cz+Math.sin(a)*ro}m.geometry.attributes.position.needsUpdate=true;m.visible=true})}
 // ---- pustules on the Rot-King's hide ----
 function d4Pustules(e,A,en){const S=A.dq,B=e;if(!S||S.pus.some(p=>!p._gone))return;const n=3,mat=new THREE.MeshStandardMaterial({color:0xc8e86a,emissive:0x6a9a10,emissiveIntensity:.8,roughness:.4,flatShading:true});mat.userData.lps=1;
@@ -14660,7 +14662,7 @@ kqBmv('belch',function(e,A,en){const S=A.dq;if(!S)return {d:.5,lock:0};const o=e
   return {d:1.9*en,lock:1}});
 kqBmv('corpsecall',function(e,A,en){const S=A.dq;if(S)d4Swell(e,A,dqDec(en)%4,en);return {d:.8*en,lock:0}});
 kqBmv('pustules',function(e,A,en){const S=A.dq;if(S){kqBossCast(e,0xc8ff4a,600);d4Pustules(e,A,en)}return {d:1.1*en,lock:1}});
-kqBmv('rottide',function(e,A,en){const S=A.dq;if(!S||S.tide)return {d:.5,lock:0};S.tide={r:15.2,min:8.4,sp:.16};
+kqBmv('rottide',function(e,A,en){const S=A.dq;if(!S||S.tide)return {d:.5,lock:0};S.tide={r:15.2*DK,min:8.4*DK,sp:.16*DK};
   banner('☣ THE PIT FLOODS','The rot vats burst — the tide creeps in from the walls','Kill the Rot-King before clean ground runs out');shake(.35);
   D4.vats.forEach(([x,z])=>{burst(V(x,GH(x,z)+1.6,z),0x9aff6a,60,4,5,1);ring(V(x,0,z),0x9aff6a,4,500);d4Pool(A,x+(A.cx-x)*.18,z+(A.cz-z)*.18,2.2)});return {d:1.6*en,lock:1}});
 // ---- den hooks ----
@@ -14681,12 +14683,12 @@ DEN[4]={
     if(S.tide){S.tide.r=Math.max(S.tide.min,S.tide.r-S.tide.sp*dt);d4TideDraw(A,now);if(Math.random()<dt*8){const a=Math.random()*6.283;burst(V(A.cx+Math.cos(a)*S.tide.r,GH(A.cx,A.cz)+.2,A.cz+Math.sin(a)*S.tide.r),0x9aff6a,2,.5,1,.5)}}
     // standing in rot burns and slows
     S.hz-=dt;if(d4InRot(A,pl.position)){dqDebuff('Rotting','🤢',{mspd:-.3},700,'Slowed by rot');if(S.hz<=0&&hero.iv<=0){S.hz=.5;bossHit(e,S.ph>=3?.2:.16);if(!S.hint){S.hint=1;say('🤢 The rot burns and slows you — keep to clean ground.')}}}
-    if(D4.cur.visible)D4.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.2?.16:.5)+.1*Math.sin(now/260)},
+    if(D4.cur.visible)D4.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.2*DK?.16:.5)+.1*Math.sin(now/260)},
   clear(A,won){const S=A.dq;if(!S)return;dqReset(S);(S.pools||[]).forEach(p=>scene.remove(p.ms,p.fr));S.pools=[];S.pus=[];S.tide=null;D4.tide.visible=D4.tideF.visible=false;
     dqUndebuff('Rotting');const e=bossEnt(A.i);if(e){e.dqVul=0;e.bs.face=0;if(e.m)e.m.ak=null}
     enemies.slice().forEach(q=>{if(q.minion&&!q.dprop&&q.c.g[0]=='maggot'&&d2(q.m.position,V(A.cx,0,A.cz))<ARENA_R+4)removeE(q)});
     if(won){D4.vats.forEach(([x,z])=>burst(V(x,GH(x,z)+1.5,z),0x9aff6a,30,3,4,.8))}},
-  seal(A,on){const g=D4.gate,c=D4.cur,gx=A.cx+Math.cos(A.dqA)*15.3,gz=A.cz+Math.sin(A.dqA)*15.3;if(on){c.visible=true;tw(500,k=>{g.position.y=3.9*(1-k*k)},()=>{shake(.25);burst(V(gx,GH(A.cx,A.cz)+.2,gz),0x8a8070,30,3,2,.6)});tw(700,k=>c.material.opacity=.5*k)}
+  seal(A,on){const g=D4.gate,c=D4.cur,gx=A.cx+Math.cos(A.dqA)*15.3*DK,gz=A.cz+Math.sin(A.dqA)*15.3*DK;if(on){c.visible=true;tw(500,k=>{g.position.y=3.9*(1-k*k)},()=>{shake(.25);burst(V(gx,GH(A.cx,A.cz)+.2,gz),0x8a8070,30,3,2,.6)});tw(700,k=>c.material.opacity=.5*k)}
     else{tw(1400,k=>{g.position.y=3.9*k});tw(800,k=>c.material.opacity=.5*(1-k),()=>{if(!A.f)c.visible=false})}}
 };
 
@@ -14845,7 +14847,7 @@ function d5Bats(e,A,en,idx){const S=A.dq,n=[0,2,3,4][S.ph]||2,rng=ARK.rng(1000+i
   bxHide(e,true);burst(gY(e.m.position,1.6),0x2a0810,50,3,3,.8);burst(gY(e.m.position,1.6),0xff2040,20,2,2,.6);d5Flock(S,e.m.position,V(A.cx,0,A.cz),.6*en,10,2.6);say('🦇 Vaelric bursts into a swarm of bats!');
   let last=null;for(let k=0;k<n;k++){const th=rng()*Math.PI;dqAfter(S,.55*en+k*gap,()=>{if(!A.f||e.dead)return;const d=V(Math.sin(th),0,Math.cos(th)),c=pl.position,
       // chord of the hall through the hero along d
-      ox=c.x-A.cx,oz=c.z-A.cz,b=ox*d.x+oz*d.z,cc=ox*ox+oz*oz-13.4*13.4,disc=Math.sqrt(Math.max(0,b*b-cc)),t0=-b-disc,t1=-b+disc,s=V(c.x+d.x*t0,0,c.z+d.z*t0),f=V(c.x+d.x*t1,0,c.z+d.z*t1),len=t1-t0;
+      ox=c.x-A.cx,oz=c.z-A.cz,b=ox*d.x+oz*d.z,cc=ox*ox+oz*oz-(13.4*DK)**2,disc=Math.sqrt(Math.max(0,b*b-cc)),t0=-b-disc,t1=-b+disc,s=V(c.x+d.x*t0,0,c.z+d.z*t0),f=V(c.x+d.x*t1,0,c.z+d.z*t1),len=t1-t0;
     if(k%2){s.copy(f);f.set(c.x+d.x*t0,0,c.z+d.z*t0);d.multiplyScalar(-1)}last=f;
     dqWarn(S,{x:s.x,z:s.z,y:y0,d,l:len,w:W,t:.95*en,fn:()=>{if(!A.f||e.dead)return;d5Flock(S,s,f,.5,14,1.5);dqAfter(S,.22,()=>{if(!A.f||e.dead)return;shake(.12);
       if(inLine(pl.position,s,d,len,W)&&hero.iv<=0){bossHit(e,1.0);dn(pl.position,'Drained!','#ff6080',-20,800);if(dqAuth(A))e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*.015)}})}})})}
@@ -14874,7 +14876,7 @@ function d5Mirror(e,A,en,idx){const S=A.dq,c=pl.position.clone(),a0=Math.random(
   return T+.6}
 // Blood Moon
 function d5Moon(e,A,en,idx){const S=A.dq;if(S.moon)return 0;const rng=ARK.rng(300+idx*53+(S.moonN=(S.moonN|0)+1)*11),n=S.ph>=3?2:3,spots=[];
-  for(let tries=0;spots.length<n&&tries<60;tries++){const a=rng()*6.283,r=3.5+rng()*7,x=A.cx+Math.cos(a)*r,z=A.cz+Math.sin(a)*r;if(solid(x,z)||spots.some(s=>Math.hypot(s.x-x,s.z-z)<6))continue;spots.push({x,z,a,r,va:(rng()<.5?-1:1)*(.12+rng()*.08)})}
+  for(let tries=0;spots.length<n&&tries<60;tries++){const a=rng()*6.283,r=(3.5+rng()*7)*DK,x=A.cx+Math.cos(a)*r,z=A.cz+Math.sin(a)*r;if(solid(x,z)||spots.some(s=>Math.hypot(s.x-x,s.z-z)<6))continue;spots.push({x,z,a,r,va:(rng()<.5?-1:1)*(.12+rng()*.08)})}
   S.moon={t:0,warn:3.4*Math.min(1.2,en/1.1),dur:6.5,spots,hz:0};D5.flood.visible=D5.ripple.visible=true;
   spots.forEach((s,k)=>{const m=D5.moon[k];m.g.visible=true;m.s=s});
   banner('🌑 BLOOD MOON','The hall floods with blood','Stand in the pale moonlight!');shake(.2);return S.moon.warn}
@@ -14883,7 +14885,7 @@ function d5MoonTick(A,e,dt,now){const S=A.dq,Mn=S.moon;if(!Mn)return;Mn.t+=dt;co
   D5.flood.material.opacity=Mn.t<w?.22*k:.72*k;D5.flood.position.y=y0+.1+.06*k;D5.ripple.material.opacity=(flood?.18:.06)*k;D5.ripple.rotation.y+=dt*.15;if(D5.tint)D5.tint.style.opacity=(.55+.25*Math.sin(now/300))*k;
   Mn.spots.forEach((s,i)=>{const m=D5.moon[i];if(S.ph>=3&&Mn.t>w*.6){s.a+=s.va*dt;s.x=A.cx+Math.cos(s.a)*s.r;s.z=A.cz+Math.sin(s.a)*s.r}const rr=2.3;m.g.position.set(s.x,y0,s.z);m.d.scale.setScalar(rr);m.ed.scale.setScalar(rr);m.sh.scale.set(rr,16,rr);m.sh.position.y=8;
     m.d.material.opacity=.32*Math.min(1,Mn.t/1)*(Mn.t>end?k:1);m.ed.material.opacity=.8*Math.min(1,Mn.t/1)*(Mn.t>end?k:1);m.sh.material.opacity=.55*Math.min(1,Mn.t/1)*(Mn.t>end?k:1);m.sh.visible=true});
-  if(flood&&Math.random()<dt*14){const a=Math.random()*6.283,r=Math.random()*14;burst(V(A.cx+Math.cos(a)*r,y0+.2,A.cz+Math.sin(a)*r),0xc01028,2,.6,1,.6)}
+  if(flood&&Math.random()<dt*14){const a=Math.random()*6.283,r=Math.random()*14*DK;burst(V(A.cx+Math.cos(a)*r,y0+.2,A.cz+Math.sin(a)*r),0xc01028,2,.6,1,.6)}
   if(flood){const safe=Mn.spots.some(s=>Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3);if(!safe){dqDebuff('Wading','🩸',{mspd:-.2},500,'Wading through blood');Mn.hz-=dt;if(Mn.hz<=0&&hero.iv<=0&&!e.dead){Mn.hz=.5;bossHit(e,.34);if(dqAuth(A))e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*.004)}}else Mn.hz=Math.min(Mn.hz,.15)}
   if(Mn.t>=fin)d5MoonEnd(A)}
 function d5MoonEnd(A){const S=A.dq;if(S)S.moon=null;D5.flood.visible=D5.ripple.visible=false;D5.flood.material.opacity=0;D5.moon.forEach(m=>{m.g.visible=false});if(D5.tint)D5.tint.style.opacity=0;dqUndebuff('Wading')}
@@ -14893,7 +14895,7 @@ function d5Rite(e,A,en){const S=A.dq;if(S.rite||S.riteDone)return;S.riteDone=1;c
   const [tx,tz]=D5.L(10.4,0);burst(gY(e.m.position,1.5),0x2a0810,40,3,3,.7);e.m.position.set(tx,0,tz);burst(V(tx,GH(tx,tz)+2,tz),0xff2040,60,4,4,.9);
   e.dqImm='Warded';e.dqLift=0;const bar=new THREE.Mesh(dqG('ico'),new THREE.MeshBasicMaterial({color:0xff2040,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(bar);R.bar=bar;
   D5.sigil.visible=true;banner('🩸 THE CRIMSON RITE','Vaelric is warded while the blood obelisks feed the sigil','Destroy all four obelisks!');shake(.4);flash&&flash('rgba(255,30,60,.35)');
-  for(let k=0;k<4;k++){const a=D5.fa+Math.PI/4+k*Math.PI/2,x=A.cx+Math.cos(a)*6.3,z=A.cz+Math.sin(a)*6.3;
+  for(let k=0;k<4;k++){const a=D5.fa+Math.PI/4+k*Math.PI/2,x=A.cx+Math.cos(a)*6.3*DK,z=A.cz+Math.sin(a)*6.3*DK;
     const g=new THREE.Group(),om=new THREE.MeshStandardMaterial({color:0x2a1a22,roughness:.5,flatShading:true,emissive:0x3a0008});om.userData.lps=1;const o=new THREE.Mesh(ARKG.box,om);o.scale.set(.75,3.6,.75);o.position.y=1.8;const tp=new THREE.Mesh(ARKG.cone4,om);tp.scale.set(.55,.8,.55);tp.position.y=4.0;tp.rotation.y=Math.PI/4;
     const rm=new THREE.MeshBasicMaterial({color:0xff2040});[.9,1.7,2.5,3.2].forEach((h,i)=>{for(let s=0;s<4;s++){const q=new THREE.Mesh(ARKG.box,rm);q.scale.set(.32,.1,.02);q.position.set(Math.sin(s*Math.PI/2)*.39,h,Math.cos(s*Math.PI/2)*.39);q.rotation.y=s*Math.PI/2;if(i%2)q.rotation.z=.6;g.add(q)}});
     const gl=kqSpr(0xff2040,1.6);gl.position.y=4.3;g.add(o,tp,gl);g.position.y=-4.4;let t=0;
@@ -14905,7 +14907,7 @@ function d5Rite(e,A,en){const S=A.dq;if(S.rite||S.riteDone)return;S.riteDone=1;c
 function d5RiteEnd(A,e,broken){const S=A.dq,R=S.rite;if(!R||R.fin)return;R.fin=true;S.rite=null;e.dqImm=0;e.dqLift=0;if(R.bar){scene.remove(R.bar);R.bar.material.dispose()}
   R.ob.slice().forEach(p=>dqPropGone(p,false));D5.sigil.visible=false;D5.sigil.material.opacity=0;if(D5.riteEl)D5.riteEl.style.display='none';
   if(broken){S.stun=4.5;e.dqVul=nowP()+6500;e.dqVulK=1.5;e.bs.lock=Math.max(e.bs.lock,4.5);e.bs.t=Math.max(e.bs.t,5);banner('⛓ THE RITE IS BROKEN','Vaelric crashes to the floor','+50% damage — strike now!');ring(e.m.position,0xffe08a,6,500);shake(.5);burst(gY(e.m.position,1.5),0xff2040,80,5,4,1)}
-  else{flash&&flash('rgba(255,20,40,.6)');shake(.8);for(let k=0;k<50;k++){const a=Math.random()*6.283,r=Math.random()*14;burst(V(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.4,A.cz+Math.sin(a)*r),0xff2040,4,3,4,.8)}ring(V(A.cx,0,A.cz),0xff2040,14,700);
+  else{flash&&flash('rgba(255,20,40,.6)');shake(.8);for(let k=0;k<50;k++){const a=Math.random()*6.283,r=Math.random()*14*DK;burst(V(A.cx+Math.cos(a)*r,GH(A.cx,A.cz)+.4,A.cz+Math.sin(a)*r),0xff2040,4,3,4,.8)}ring(V(A.cx,0,A.cz),0xff2040,14*DK,700);
     if(hero.iv>0)dn(pl.position,'Dodged!','#bfe3ff',-20,1200);else{const d=Math.round(heroMax()*.55);hero.hp-=d;hero.lastHit=nowP();heroFlinch&&heroFlinch();dn(pl.position,d,'#ff3a2a');if(hero.hp<=0)down()}
     if(dqAuth(A))e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*.1);banner('🩸 CRIMSON CATACLYSM','The rite is complete — Vaelric drinks deep','')}}
 // ---------------- BMV moves (relayed to co-op peers) ----------------
@@ -14945,11 +14947,11 @@ DEN[5]={
     const R=S.rite;if(R){R.t+=dt;const k=Math.min(1,R.t/R.T);D5.sigil.material.opacity=.35+.5*k+.12*Math.sin(now/(200-120*k));D5.sigil.rotation.y=0;
       if(R.bar){R.bar.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+2.6+(e.dqLift||0),e.m.position.z);R.bar.scale.setScalar(2.4+.1*Math.sin(now/150));R.bar.material.opacity=.18+.08*Math.sin(now/120)}
       const b=$('d5riteB');if(b)b.style.width=(k*100).toFixed(1)+'%';const tl=$('d5riteT');if(tl)tl.textContent='🩸 THE CRIMSON RITE · '+R.ob.filter(p=>!p._gone).length+' obelisk'+(R.ob.filter(p=>!p._gone).length==1?'':'s')+' left · '+Math.max(0,Math.ceil(R.T-R.t))+'s';
-      if(R.T-R.t<3.2&&!R.warned){R.warned=1;banner('⚠ THE RITE IS ALMOST COMPLETE','Dash the moment it ends!','');dqWarn(S,{x:A.cx,z:A.cz,r:13.6,t:Math.max(.5,R.T-R.t)})}
+      if(R.T-R.t<3.2&&!R.warned){R.warned=1;banner('⚠ THE RITE IS ALMOST COMPLETE','Dash the moment it ends!','');dqWarn(S,{x:A.cx,z:A.cz,r:13.6*DK,t:Math.max(.5,R.T-R.t)})}
       if(!auth&&R.t>R.T+3)d5RiteEnd(A,e,R.ob.every(p=>p._gone))}
     d5MoonTick(A,e,dt,now);
     // stained glass and moat breathe with the phases
-    if(D5.cur.visible)D5.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.1?.14:.42)+.08*Math.sin(now/240)},
+    if(D5.cur.visible)D5.cur.material.opacity=(Math.hypot(cam.position.x-A.cx,cam.position.z-A.cz)>14.1*DK?.14:.42)+.08*Math.sin(now/240)},
   clear(A,won){const S=A.dq;if(!S)return;if(S.rite){S.rite.fin=true;if(S.rite.bar)scene.remove(S.rite.bar);S.rite=null}dqReset(S);d5Clear(S);d5MoonEnd(A);S.chal=[];S.mir=null;S.stun=0;
     D5.sigil.visible=false;if(D5.riteEl)D5.riteEl.style.display='none';D5.bats.forEach(b=>{b.on=0;b.g.visible=false});
     const e=bossEnt(A.i)||enemies.find(q=>q.ar===A.i);if(e){e.dqImm=0;e.dqLift=0;e.dqOnHit=null;e.dqVul=0;e.bs.face=0;if(e.m)e.m.ak=null;if(e.hid)bxHide(e,false)}
@@ -16950,6 +16952,265 @@ function bfxCutDen(A,rIn,yMin,tube){A.g.traverse(o=>{if(!o.isMesh||!o.material||
   o.material=bfxCutMat(b,A,rIn,yMin,tube)})}
 // dens 0-3 (Argus hollow, Hydra mere, Frozen Sepulchre, Sunken Pit); 4-5 already cut their walls with dqCut
 ARN.forEach(A=>{if(A.i>3)return;try{bfxCutDen(A,ARENA_R-.2,A.i===1?.75:.55,2.4)}catch(err){console.error('bossfx cut',A.i,err)}});
+
+// ================= v89 dens: every Sovereign den is 35% bigger =================
+// The den files (zzK_den*.js) still build each den at its original size (radius 14 arena). Right after that, this file
+// maps the whole den outward from its centre: horizontally by DK (1.35) and in height above the ground by DKY (1.15).
+//  - world-space den meshes (floors, walls, soups) get every vertex moved: x,z scaled about the centre, y re-draped onto
+//    the terrain at the new spot (height above ground × DKY)
+//  - objects centred on the den (seals, curtains, the sinkhole swirl, the blood flood) are scaled in x/z
+//  - placed objects (eye-stalks, statues, flames, warm circles, sprites) are moved, not resized (a few decorations grow)
+//  - every stored mechanic position (pillars, pools, stepping stones, braziers, neck slots, Warmfires, statues, columns,
+//    vats, corpse piles, pedestals, fountains, throne) is moved the same way; radii of things that grew are scaled
+//  - the solid tiles (denBlock) are rebuilt as the scaled image of the old footprint; runtime denBlock/denUnblock of a
+//    den object (statues, columns) blocks/unblocks its whole scaled footprint
+// DK/DKY are defined at the top of the script (build/pN_dens.py), which also scales ARENA_R, the map clearing and the
+// numbers inside the dens' runtime code.
+var DENS={on:false,img:[],n:0};
+function denMapXZ(A,x,z){return [A.cx+(x-A.cx)*DK,A.cz+(z-A.cz)*DK]}
+function denMapY(A,x,y,z,nx,nz){return GH(nx,nz)+(y-GH(x,z))*DKY}
+// move every vertex of a world-space geometry that lies in the den
+function denMapGeo(A,g,seen){if(!g||!g.attributes||!g.attributes.position||seen.has(g))return;seen.add(g);const P=g.attributes.position,a=P.array;let n=0;
+  for(let i=0;i<P.count;i++){const x=a[i*3],y=a[i*3+1],z=a[i*3+2];if(Math.hypot(x-A.cx,z-A.cz)>34)continue;const [nx,nz]=denMapXZ(A,x,z);a[i*3]=nx;a[i*3+1]=denMapY(A,x,y,z,nx,nz);a[i*3+2]=nz;n++}
+  if(!n)return;P.needsUpdate=true;if(g.attributes.normal&&!g.index)g.computeVertexNormals();g.boundingBox=null;g.computeBoundingSphere();DENS.n+=n}
+function denMapObj(A,o,seen,grow){
+  const px=o.position.x,pz=o.position.z,d=Math.hypot(px-A.cx,pz-A.cz);
+  if(d>60){ // a container at the world origin: its geometry/children are in world space
+    if(o.geometry&&!o.isSprite)denMapGeo(A,o.geometry,seen);o.children.forEach(c=>denMapObj(A,c,seen,grow));return}
+  if(o===A.wall)return;   // already built at the new ARENA_R
+  if(d<.6){o.scale.x*=DK;o.scale.z*=DK;return}
+  const [nx,nz]=denMapXZ(A,px,pz);o.position.set(nx,denMapY(A,px,o.position.y,pz,nx,nz),nz);
+  if(grow&&grow.has(o)){o.scale.x*=DK;o.scale.z*=DK;o.scale.y*=grow.get(o)}}
+// data: [x,z,(r)] arrays, objects with x/z, Vector3s
+function denMapA(A,q,r){const [x,z]=denMapXZ(A,q[0],q[1]);q[0]=x;q[1]=z;if(r&&q.length>2)q[2]*=DK;return q}
+function denMapO(A,o){const [x,z]=denMapXZ(A,o.x,o.z);o.x=x;o.z=z;return o}
+function denMapV(A,v){const [x,z]=denMapXZ(A,v.x,v.z);v.x=x;v.z=z;return v}
+// per-den state that the den files keep outside A.g
+function denMapState(A,grow){const i=A.i,D=A.dn;
+  if(i===0&&typeof AR!='undefined'&&AR.A===A){AR.pil.forEach(p=>denMapA(A,p,1));AR.pools.forEach(p=>denMapA(A,p,1));
+    AR.st.forEach(T=>{denMapO(A,T);T.ox=T.x+Math.sin(T.gy)*.5;T.oz=T.z+Math.cos(T.gy)*.5;T.p.set(T.x,GH(T.x,T.z)+3.25,T.z)});
+    (AR.wisp||[]).forEach(w=>{const b=w.userData.b;if(b)denMapA(A,b)})}
+  if(i===1&&typeof HY!='undefined'&&HY.A===A){HY.stones.forEach(s=>denMapA(A,s,1));HY.slots.forEach(s=>denMapA(A,s));HY.braz.forEach(b=>{denMapO(A,b);grow.set(b.fg,DKY)});
+    HY.wy=GH(A.cx,A.cz)+.17*DKY}
+  if(i===2&&D&&D.br){D.br.forEach(B=>{denMapO(A,B);B.y=GH(B.x,B.z);B.p.set(B.x,0,B.z);[B.wr,B.wd,B.gl].forEach(m=>m&&grow.set(m,1))});
+    D.st.forEach(s=>{denMapO(A,s);s.p.set(s.x,0,s.z)})}
+  if(i===3&&D&&D.cols){D.cols.forEach(C=>{denMapO(A,C);C.p.set(C.x,0,C.z);C.tiles=C.tiles.map(t=>denMapXZ(A,t[0],t[1]))})}
+  if(i===4&&typeof D4!='undefined'&&D4.vats){D4.vats.forEach(v=>denMapA(A,v));D4.piles.forEach(p=>denMapA(A,p));
+    A.g.children.forEach(o=>{const u=o.userData;if(o.isSprite&&u&&u.r!=null&&u.h!=null&&u.a!=null){u.r*=DK;u.h*=DKY}})}
+  if(i===5&&typeof D5!='undefined'&&D5.ped){D5.ped.forEach(p=>denMapA(A,p));D5.fount.forEach(p=>denMapA(A,p));
+    if(D5.L&&!D5.L._dk){const L0=D5.L;D5.L=(u,v)=>L0(u*DK,v*DK);D5.L._dk=1}}}
+// solid tiles: the scaled image of each den's old footprint
+function denRetile(){const W0=W,by=ARN.map(()=>new Set());
+  DENB.forEach(k=>{const x=k%W0,z=(k-x)/W0;for(const A of ARN){if(Math.hypot(x-A.cx,z-A.cz)<26){by[A.i].add(k);break}}});
+  by.forEach(S=>S.forEach(k=>{const x=k%W0,z=(k-x)/W0;denUnblock(x,z)}));
+  ARN.forEach(A=>{const S=by[A.i],img=new Map(),R=Math.ceil(26*DK);if(!S.size){DENS.img[A.i]=img;return}
+    for(let z=Math.floor(A.cz-R);z<=A.cz+R;z++)for(let x=Math.floor(A.cx-R);x<=A.cx+R;x++){const ox=Math.round(A.cx+(x-A.cx)/DK),oz=Math.round(A.cz+(z-A.cz)/DK),ok=oz*W0+ox;
+      if(!S.has(ok))continue;const before=DENB.size;denBlock(x,z);if(DENB.size>before){if(!img.has(ok))img.set(ok,[]);img.get(ok).push(z*W0+x)}}
+    DENS.img[A.i]=img})}
+function denImg(x,z){if(!DENS.on)return null;for(const A of ARN){const m=DENS.img[A.i];if(!m||Math.hypot(x-A.cx,z-A.cz)>30)continue;
+  const L=m.get(Math.round(A.cz+(z-A.cz)/DK)*W+Math.round(A.cx+(x-A.cx)/DK));if(L)return L}return null}
+function denScaleAll(){if(DENS.on)return;
+  ARN.forEach(A=>{try{const seen=new Set(),grow=new Map();denMapState(A,grow);A.g.children.slice().forEach(o=>denMapObj(A,o,seen,grow))}catch(err){console.error('den scale',A.i,err)}});
+  try{denRetile()}catch(err){console.error('den retile',err)}
+  DENS.on=true;
+  // runtime blocks of den objects (Thawed statues, smashed columns) cover their whole scaled footprint
+  {const fb=denBlock,fu=denUnblock;
+    denBlock=function(x,z){const L=denImg(x,z);if(L){L.forEach(k=>{const tx=k%W;fb(tx,(k-tx)/W)});return}return fb(x,z)};
+    denUnblock=function(x,z){const L=denImg(x,z);if(L){L.forEach(k=>{const tx=k%W;if(DENB.has(k)){DENB.delete(k);MAP[(k-tx)/W][tx]='a'}});return}return fu(x,z)}}}
+try{denScaleAll()}catch(err){console.error('den scale',err)}
+
+// ================= v89 dens: a warning sign on the road outside every Sovereign den =================
+// A two-post sign (the Duskhold sign look from zzM_town.js) stands beside the road just outside each den's gate.
+// Walk up to it and press F (the normal interact prompt, via worldPrompt) to read it: the window lists the Sovereign's
+// attacks with how to avoid each one, its weaknesses / the den's counters, and a recommended level next to yours.
+// The text is written from the den code (zzK_den*.js, z_boss2.js, j_boss.js move pools).
+var DSIGN=[], DSTXT=[
+ {den:'The Drowned Hollow',zone:'Kindlelight',
+  atk:[['🐾 Pounce','Leaps onto a red circle under your feet.','Step or dash out of the circle before it lands.'],
+   ['💨 Charge','Rushes along a red lane (three times in a row in Phase III).','Sidestep the lane — don\'t run straight away from it.'],
+   ['👁 The Great Eye','A golden beam from its brow locks on and slowly tracks you; every moment inside hurts and fills SEEN.','Break line of sight behind a root pillar, out-turn it, or dash through it.'],
+   ['👀 Watching Stalks','Six eye-stalks wake and sweep yellow gaze cones over the ground. Standing in a gaze fills SEEN; at 3/3 you are MARKED and Argus leaps on you (big red circle).','Keep a root pillar between you and any open eye. When MARKED, run out of the red circle.'],
+   ['☄ Eye Rain','Phase II: strikes fall on red circles around you.','Keep moving.'],
+   ['🐺 Calls the brood','Phase II: bog creatures join the fight.','Kill them quickly or lead them away from the gaze.'],
+   ['🌑 Lights Out','Phase III: the hollow goes dark and Argus melts into the shadows, then bursts out along a red line from where two eyes glint.','Watch for the glinting eyes and step off the red line.']],
+  weak:['Root pillars block every gaze cone and the Great Eye beam — fight near them.',
+   'Eye-stalks can be struck down. Open eyes take +60% damage, and every burst eye wounds Argus and makes it reel (they regrow at each phase).',
+   'Black bog pools slow you (Mired) — don\'t dodge into them.']},
+ {den:'The Serpent Mere',zone:'Hillside Crest',
+  atk:[['🟢 Venom Spit','Globs land on red circles and leave poison pools.','Step out of the circles and stay out of the green pools.'],
+   ['👅 Tongue Lash','A red line in front of it; if it catches you, you are pulled in.','Sidestep the line.'],
+   ['🌊 Tidal Surge','The stones glow blue and a wall of water rolls out from the Hydra (two waves from Phase II).','Stand on a raised glowing stepping stone, or dash through the crest.'],
+   ['🐍 Brood Necks','Heads burst from the water (red circle first). Up close they bite along a red line; from afar they lob venom.','Leave the circle as they rise; sidestep bites; sever them.'],
+   ['🔆 Sweeping Beam','Phase II: a beam sweeps around the mere.','Dash through it or stay ahead of it.'],
+   ['💥 Venom Mines','Phase II: many red circles across the water.','Find the gaps and keep still only between them.'],
+   ['☁ Toxic Spores','Phase III: spore clouds that linger.','Stay out of the purple clouds.'],
+   ['⚠ Cataclysm','From Phase II the Hydra gathers the mere and blasts everything.','Get into a glowing blue safe circle.']],
+  weak:['Sever a neck to wound the Hydra — but the stump regrows as TWO heads unless you sear it: touch a serpent-fire brazier, then touch the stump.',
+   'While 3 or more necks live the Hydra is Brood-guarded and takes 35% less damage — keep the heads down.',
+   'The raised stepping stones are safe from every Tidal Surge.']},
+ {den:'The Frozen Sepulchre',zone:'Burningeye Summit',
+  atk:[['✦ Wailing Orbs','Orbs gather at the edge of the den and hunt you down.','Keep moving and lead them around; never let them corner you.'],
+   ['👻 Fade','It vanishes and re-forms behind you with a red circle.','Move as soon as it fades.'],
+   ['🦴 Bone Prison','A ring of red circles closes around you.','Dash out through the gap.'],
+   ['🔥 Snuff','It drains the Warmfire nearest it (red circle on the fire; two fires in Phase III).','Step out of the frost, then stand beside the dark fire for 2 seconds to rekindle it.'],
+   ['🪞 Clones','Phase II: copies split off and explode.','Get away from them before they burst.'],
+   ['🧊 Thaw','Phase II: frozen challengers crack (red circle) and Thawed thralls break free.','Step back from cracking statues and kill the thralls.'],
+   ['🔆 Beam · Ice Mines · Shockwave','Phase II–III: a sweeping beam, falling ice spikes on red circles, a ring shockwave.','Dash through beams and shockwaves; find gaps in the mines.'],
+   ['❄ Whiteout','Phase III: it vanishes into a blizzard (cold builds faster) while ice lances fall where you stand, then re-forms beside you with a frost nova.','Keep moving near a lit Warmfire; leave the nova circle.'],
+   ['⚠ Cataclysm','From Phase II it blasts the whole den.','Get into a glowing blue safe circle.']],
+  weak:['DEEP COLD: away from a lit Warmfire you chill (Chilled −15% speed, Freezing −30%; at 100% you freeze solid and take a hit).',
+   'Stand in a Warmfire\'s warm circle to thaw fast — fight close to the fires and relight any that go dark. One always stays lit.']},
+ {den:'The Sunken Pit',zone:'Searing Sands',
+  atk:[['🐛 Burrow & Erupt','It dives; a sand mound hunts you, stops, and a red circle marks where it bursts out (Phase II adds three sand geysers; Phase III dives twice).','Keep moving while it hunts; leave the red circles.'],
+   ['💢 Ram','A long red lane: it charges to the wall (twice in Phase III).','Sidestep — or stand in front of a column so it rams the column.'],
+   ['🌀 Tail Sweep','A red circle around its body.','Back out of the circle.'],
+   ['⏳ Quicksand Vortex','The sinkhole churns and drags you toward the middle for 6 seconds; its core grinds and slows you.','Walk or dash against the pull and stay off the sinkhole.'],
+   ['🌪 Sandstorm','Phase II: thick dust for 8 seconds while body segments lash up under you (red circles).','Keep moving; each circle follows where you are going.'],
+   ['🟠 Acid Spit · Mines','Phase II: acid globs and falling strikes on red circles.','Step out of the circles.'],
+   ['⚠ Cataclysm','From Phase II it blasts the whole pit.','Get into a glowing blue safe circle.']],
+  weak:['Lure its Ram into one of the four half-sunk columns: it smashes the column and gets its head STUCK for 3.6 s (×1.6 damage). Broken columns stay broken.',
+   'After its final eruption it is EXPOSED for 2.8 s (×1.6 damage) — be ready to strike.']},
+ {den:'The Charnel Pit',zone:'The Derge',
+  atk:[['💥 Slam','A big red circle around him.','Back off before it lands.'],
+   ['🤮 Rot Spit','Bile globs on red circles; each leaves a rot pool.','Leave the circles; keep the pools away from where you fight.'],
+   ['🌫 Belch','A wide red cone of rot gas in front of him — hits hard and slows (Rotting).','Dash out of the cone or step behind him.'],
+   ['🍄 Spore Ring','Phase II: rings of small red circles burst outward one after another.','Stand where a ring has just burst.'],
+   ['🌋 Quake','Phase III: three shockwaves in a row.','Dash through each ring.'],
+   ['🪱 Corpse Piles','A pile swells (green ring) and bursts into Bloat Maggots.','Destroy the swelling sac before it bursts.'],
+   ['☣ Rot Tide','Phase III: the vats burst and rot creeps in from the walls, shrinking the clean ground.','Finish him before the clean ground runs out.']],
+  weak:['Bile pustules (Phase II+): pop them for burst damage and a stagger. Pop all three and he reels, taking +35% damage for 5 s. Left alone they erupt into bile rain.',
+   'Rot pools spread and stay all fight — standing in rot burns and slows you. Keep to clean ground.']},
+ {den:'The Crimson Throne Hall',zone:'The Citadel',
+  atk:[['🩸 Blood Fan','Three to five blood lances along red lines.','Step between the lines.'],
+   ['🦇 Dive','He dashes at you along a red line, two or three times.','Sidestep each line.'],
+   ['🦇 Bat Swarm','He bursts into bats that sweep the hall along red lanes (2/3/4 sweeps), draining you, then reforms with a red-circle burst.','Step out of each lane before the bats pass.'],
+   ['🪞 Crimson Doubles','Phase II: four Vaelrics channel blood lances at you.','Only the real one casts a shadow — strike him to shatter every copy.'],
+   ['🦴 Prison · Beam · Cross','Phase II–III: a bone prison, a sweeping beam and a cross of lines.','Dash out of prisons; stay out of the lines.'],
+   ['🌑 Blood Moon','Phase II: the hall floods with blood; only the pale moonlight shafts are safe (they drift in Phase III).','Stand in the moonlight.'],
+   ['⛓ The Crimson Rite','Phase III: he rises before his throne, warded, while four blood obelisks feed a sigil for 24 s. If it completes, a Crimson Cataclysm hits the whole hall.','Break all four obelisks — or dash the moment it ends.']],
+  weak:['Blood Chalices heal him while they stand — shatter them as soon as they rise.',
+   'Hitting the real Vaelric during the Doubles staggers him (+25% damage for 3 s).',
+   'Break all four obelisks and he crashes down stunned, taking +50% damage for 6.5 s.']}];
+// where the road reaches the den: first road point at least ~31 tiles out, then a spot beside the road
+function dsignSpot(i){const A=ARN[i],P=PMAP[i].path,Rr=ARENA_R+12.5;let k=P.length-1;while(k>0&&Math.hypot(P[k][0]-A.cx,P[k][1]-A.cz)<Rr)k--;
+  const q=P[k],o=P[Math.max(0,k-6)],dx=q[0]-o[0],dz=q[1]-o[1],L=Math.hypot(dx,dz)||1,nx=-dz/L,nz=dx/L;
+  const ok=(x,z)=>{for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const t=MAP[Math.round(z)+a]&&MAP[Math.round(z)+a][Math.round(x)+b];if(!t||!'.gap'.includes(t))return false}return Math.hypot(x-A.cx,z-A.cz)>ARENA_R+9};
+  for(const off of [4.2,-4.2,3,-3,5.5,-5.5,2,-2])for(const back of [0,2,4]){const x=q[0]+nx*off-dx/L*back,z=q[1]+nz*off-dz/L*back;if(ok(x,z))return {x,z,fx:o[0],fz:o[1]}}
+  return {x:q[0]+nx*3,z:q[1]+nz*3,fx:o[0],fz:o[1]}}
+function dsignBuild(){ARN.forEach(A=>{const i=A.i,T=DSTXT[i];if(!T)return;try{const s=dsignSpot(i),y=GH(s.x,s.z),g=new THREE.Group();g.position.set(s.x,y,s.z);
+    g.rotation.y=Math.atan2(s.fx-s.x,s.fz-s.z);   // the painted face looks back down the road at whoever walks up
+    g.add(twPostG(1.5,1.38,.74));sign(g,[{t:'⚠ '+T.den,f:'700 36px'},{t:A.b.name,f:'600 24px'},{t:'Read before you enter',f:'italic 600 20px'}],1.5,.74,'#2a1a10','#f3dcb0','#b0863a',0,1.38,0,0,512,256);
+    const gl=kqSpr(0xffb060,.9);gl.position.set(0,2.35,0);g.add(gl);scene.add(g);DSIGN[i]={i,x:s.x,z:s.z,g}}catch(err){console.error('den sign',i,err)}})}
+function dsignNear(){if(inDun||inRealm||AF)return null;for(const s of DSIGN){if(s&&Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<3.2&&Math.abs(pl.position.y-GH(s.x,s.z))<2.5)return s}return null}
+{const f=typeof worldPrompt=='function'?worldPrompt:null;worldPrompt=function(){const s=dsignNear();if(s)return {label:'F · Read the warning sign',fn:()=>openDenSign(s.i)};return f?f.apply(this,arguments):null}}
+// recommended level: the Sovereign's own level (never below the road's monsters + 1); power: the game's usual power for that level
+function dsignLv(i){const b=bossEnt(i)||enemies.find(e=>e.ar===i),bl=b&&b.c?b.c.l:BOSSES[i].lvl,s=DSIGN[i]||{x:ARN[i].cx,z:ARN[i].cz},zl=zoneLv(s.x,s.z),rec=Math.max(bl,zl+1);
+  let pw=0,me=0;try{pw=recPower(rec);me=heroPower()}catch(_){}return {bl,zl,rec,pw,me}}
+function openDenSign(i){if(uiOpen()&&$('xw').classList.contains('hide'))return;openX('densign',i);try{mSfx('open')}catch(_){}}
+XR.densign=()=>{const i=+xwArg,T=DSTXT[i],B=BOSSES[i];if(!T||!B)return;const L=dsignLv(i),me=hero.lvl|0,good=me>=L.rec,done=bossDone.has(i);
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  $('xwT').textContent='📜 '+T.den;$('xwS').textContent=B.name+' · '+B.title;
+  const pg=!L.pw||L.me>=L.pw,col=g=>g?'#6ee7b7':'#ff6b5b';
+  const rec=`<div class="dsg-lv"><span>Recommended level <b>Lv ${L.rec}</b></span><span>Your level <b style="color:${col(good)}">Lv ${me}</b>${good?' ✔':' ✖'}</span>
+    ${L.pw?`<span>Recommended power <b>${L.pw.toLocaleString()}</b></span><span>Your power <b style="color:${col(pg)}">${L.me.toLocaleString()}</b>${pg?' ✔':' ✖'}</span>`:''}
+    <small class="mut">${esc(B.name)} is Lv ${L.bl}; monsters on the road here are about Lv ${L.zl}.${good&&pg?'':' Come back stronger, or bring a co-op partner.'}${done?' You have defeated it before.':''}</small></div>`;
+  const atk=T.atk.map(([n,d,a])=>`<div class="rw dsg-a"><span class="rn"><b>${esc(n)}</b><small>${esc(d)}</small><small class="dsg-av">➜ ${esc(a)}</small></span></div>`).join('');
+  const wk=T.weak.map(w=>`<li>${esc(w)}</li>`).join('');
+  $('xwB').innerHTML=`<div class="dsg">${rec}<h4 class="dsg-h">Attacks</h4><div class="rows">${atk}</div><h4 class="dsg-h">Weaknesses &amp; counters</h4><ul class="dsg-w">${wk}</ul></div>`;
+  $('xwF').innerHTML='<span class="mut dtl">Red on the ground marks where a hit will land — it stays until the blow falls. Phases change at 70% and 40% health.</span>'};
+{const st=document.createElement('style');st.textContent=`.dsg-lv{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:baseline;padding:8px 12px;margin:2px 0 8px;border:1px solid rgba(201,162,74,.45);border-radius:8px;background:rgba(40,24,12,.55)}
+.dsg-lv small{flex-basis:100%}.dsg-h{margin:10px 0 4px;font-family:Cinzel,Georgia,serif;color:var(--kq-gold,#e6bf6a);letter-spacing:.04em;font-size:.95rem}
+.dsg-a .rn small{display:block;margin-top:2px}.dsg-a .rn .dsg-av{color:#9ae8b0}.dsg-w{margin:0;padding-left:20px;line-height:1.45}.dsg-w li{margin:3px 0}`;document.head.appendChild(st)}
+try{dsignBuild()}catch(err){console.error('den signs',err)}
+
+// ================= v89 dens: red ground warnings that stay visible for the whole wind-up =================
+// Why warnings flickered or vanished:
+//  1. The low-poly style pass (zzG_0style.js) swaps every Ring/Circle geometry with many segments for a fresh low-segment
+//     copy ~0.1 s after it is added. tele() writes its rings straight into world space (draped over the terrain) and the
+//     den warnings (dqWarn) use rings/discs that were rotated flat — the fresh copies sit at the world origin or stand up
+//     on edge, so a circle warning showed for a split second and then disappeared. (Lines were plane geometry: unaffected.)
+//     → lpsGeo now keeps a geometry whose shape no longer matches its parameters (moved/rotated/draped), and every
+//       warning mesh opts out of the style pass.
+//  2. Warnings used fog, so in thick fog (Kindlelight, Lights Out, Whiteout, Sandstorm) they faded to nothing. → fog off.
+//  3. tele() ran on the real clock while the hit it announces runs on game time (den timers use dt, which is capped at
+//     0.05 s per frame and slowed during hit-stop): on a slow frame rate the warning ended well before the hit. → tele()
+//     and kqTimed() (meteors/globs that land on the warning) now advance with the game's dt, paused while menus are open.
+//  4. Very faint: area 14%, edge 55% after the 35% dim. → a crisp edge (90%) that pulses in the last quarter, area/fill a
+//     little stronger (still dimmed by KQ.dim).
+// DTL.live lists the warnings on screen (used by test/v89_dens.py).
+var DTL={live:[],n:0,log:[]};
+function dtlLog(W,early){DTL.log.push({id:W.id,T:+W.T.toFixed(3),t:+W.t.toFixed(3),early:!!early,dq:!!W.dq});if(DTL.log.length>600)DTL.log.shift()}
+// ---- 1. the style pass leaves transformed geometry alone ----
+function lpsGeo(g){
+  if(!g||g.userData&&g.userData.lps)return null;
+  if(LPS.gc.has(g))return LPS.gc.get(g);
+  const p=g.parameters,t=g.type;let r=null;
+  try{
+    if(p){
+      if(t=='SphereGeometry'&&(p.widthSegments>8||p.heightSegments>6))r=new THREE.SphereGeometry(p.radius,Math.min(8,p.widthSegments),Math.min(6,p.heightSegments),p.phiStart,p.phiLength,p.thetaStart,p.thetaLength);
+      else if(t=='CylinderGeometry'&&(p.radialSegments>8||p.heightSegments>1))r=new THREE.CylinderGeometry(p.radiusTop,p.radiusBottom,p.height,Math.min(8,p.radialSegments),1,p.openEnded,p.thetaStart,p.thetaLength);
+      else if(t=='ConeGeometry'&&(p.radialSegments>8||p.heightSegments>1))r=new THREE.ConeGeometry(p.radius,p.height,Math.min(8,p.radialSegments),1,p.openEnded,p.thetaStart,p.thetaLength);
+      else if(t=='TorusGeometry'&&(p.tubularSegments>12||p.radialSegments>4))r=new THREE.TorusGeometry(p.radius,p.tube,Math.min(4,p.radialSegments),Math.min(12,p.tubularSegments),p.arc);
+      else if(t=='CircleGeometry'&&p.segments>10)r=new THREE.CircleGeometry(p.radius,10,p.thetaStart,p.thetaLength);
+      else if(t=='RingGeometry'&&p.thetaSegments>12)r=new THREE.RingGeometry(p.innerRadius,p.outerRadius,12,1,p.thetaStart,p.thetaLength);
+      else if(t=='LatheGeometry'&&p.segments>8)r=new THREE.LatheGeometry(p.points,8,p.phiStart,p.phiLength);
+      else if((t=='IcosahedronGeometry'||t=='OctahedronGeometry'||t=='DodecahedronGeometry')&&p.detail>1)r=new THREE[t](p.radius,1);
+    }
+  }catch(e){r=null}
+  if(r){r.userData.lps=1;if(g.attributes.color&&!r.attributes.color)r=null}
+  // the copy must occupy the same box as the original; if the original was rotated, moved or rewritten, keep it
+  if(r){try{g.computeBoundingBox();r.computeBoundingBox();const a=g.boundingBox,b=r.boundingBox,s=Math.max(.05,a.getSize(new THREE.Vector3()).length());
+    if(a.min.distanceTo(b.min)>.2*s+.02||a.max.distanceTo(b.max)>.2*s+.02){r.dispose();r=null}}catch(e){r=null}}
+  LPS.gc.set(g,r);return r}
+// ---- 2-4. the warning itself ----
+function teleMat(c,op){const m=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,depthWrite:false,depthTest:false,side:THREE.DoubleSide,fog:false});m.userData.lps=1;m.userData.lpsSkip=1;return m}
+function teleMesh(g,m,ro){g.userData.lps=1;const o=new THREE.Mesh(g,m);o.renderOrder=ro;o.frustumCulled=false;o.userData.lpsSkip=1;return o}
+function tele(pos,r,delay,fn,line){
+  const D=(typeof KQ!='undefined'&&KQ.dim)||1,T=Math.max(.05,+delay||0);
+  const geo=()=>line?new THREE.PlaneGeometry(line.w,line.l,3,Math.max(4,Math.round(line.l))):new THREE.RingGeometry(.001,1,Math.max(24,Math.round(r*10)),Math.max(3,Math.round(r*1.5)));
+  const go=geo(),gf=geo(),base=go.attributes.position.array.slice(),ox=pos.x,oz=pos.z;
+  let ca=1,sa=0;if(line){const a=Math.atan2(-line.d.x,-line.d.z);ca=Math.cos(a);sa=Math.sin(a)}
+  // local (u,v) on the plane -> world x,z ; circles scale by radius, lines grow from the caster by k
+  const drape=(g,k)=>{const P=g.attributes.position;for(let i=0;i<P.count;i++){const u=base[i*3],v=base[i*3+1];
+      if(line){const lz=(-(v)-line.l/2)*k;const wx=ox+u*ca+lz*sa,wz=oz-u*sa+lz*ca;P.setXYZ(i,wx,GH(wx,wz)+.14,wz)}
+      else{const wx=ox+u*r*k,wz=oz-v*r*k;P.setXYZ(i,wx,GH(wx,wz)+.14,wz)}}P.needsUpdate=true;g.computeBoundingSphere()};
+  drape(go,1);drape(gf,.15);
+  const mo=teleMat(0xd01808,(line?.34:.3)*D),mf=teleMat(0xff3010,.16*D),o=teleMesh(go,mo,20),f=teleMesh(gf,mf,20);
+  let edge=null,me=null;
+  if(!line){me=teleMat(0xff2a10,.9);const eg=new THREE.RingGeometry(.93,1,Math.max(24,Math.round(r*10)),1),P=eg.attributes.position,b2=P.array.slice();
+    for(let i=0;i<P.count;i++){const wx=ox+b2[i*3]*r,wz=oz-b2[i*3+1]*r;P.setXYZ(i,wx,GH(wx,wz)+.15,wz)}eg.computeBoundingSphere();edge=teleMesh(eg,me,21)}
+  scene.add(o,f);if(edge)scene.add(edge);
+  const W={o,f,edge,r,line:!!line,T,t:0,pos:{x:ox,z:oz},id:++DTL.n,g0:go,e0:edge&&edge.geometry};DTL.live.push(W);
+  let last=-1,done=false;
+  const end=()=>{if(done)return;done=true;scene.remove(o,f);if(edge)scene.remove(edge);go.dispose();gf.dispose();mo.dispose();mf.dispose();if(edge){edge.geometry.dispose();me.dispose()}
+    const j=DTL.live.indexOf(W);if(j>=0)DTL.live.splice(j,1);dtlLog(W,W.t<W.T-1e-6)};
+  const step=dt=>{W.t+=dt;const k=Math.min(1,W.t/T);
+    mf.opacity=(.16+(line?.4:.34)*k)*D;const q=Math.round((.15+.85*k)*20)/20;if(q!==last){last=q;drape(gf,q)}
+    if(me)me.opacity=k<.75?.9:.75+.25*Math.abs(Math.sin(W.t*18));
+    if(k>=1){end();try{fn&&fn()}catch(err){console.error('tele',err)}return false}return true};
+  if(typeof kqFx=='function')kqFx({tick(dt){if(done)return false;return step(dt||0)},end});
+  else tw(T*1000,k=>step(Math.max(0,k*T-W.t)),()=>{if(!done)step(T)});
+}
+// meteors, globs and lances that land on a warning use the same (game) clock as the warning
+function kqTimed(dur,step,end,alive){let t=0;const T=Math.max(.01,dur);kqFx({tick(dt){t+=dt||0;const k=t/T;if(alive&&!alive()){end&&end(true);return false}if(k>=1){end&&end(false);return false}step(k);return true}})}
+// den warnings (circles, lines, cones) from the dq toolkit: same look, no fog, never restyled
+function dqWarn(S,o){
+  const D=(typeof KQ!='undefined'&&KQ.dim)||1;
+  const g=new THREE.Group(),y=(o.y!=null?o.y:GH(o.x,o.z))+.15;g.position.set(o.x,y,o.z);const mO=teleMat(o.col||0xd01808,.3*D),mF=teleMat(o.fc||0xff3010,.16*D),mats=[mO,mF];let fill,mE=null;
+  if(o.d){g.rotation.y=Math.atan2(o.d.x,o.d.z);const a=new THREE.Mesh(dqG('line'),mO);a.scale.set(o.w,1,o.l);fill=new THREE.Mesh(dqG('line'),mF);fill.scale.set(o.w,1,.01);g.add(a,fill);fill.userData.ln=1}
+  else if(o.half){g.rotation.y=o.a;const a=new THREE.Mesh(dqFan(o.half),mO);a.scale.setScalar(o.l);fill=new THREE.Mesh(dqFan(o.half),mF);fill.scale.setScalar(.01);g.add(a,fill)}
+  else{const a=new THREE.Mesh(dqG('disc'),mO);a.scale.setScalar(o.r);fill=new THREE.Mesh(dqG('disc'),mF);fill.scale.setScalar(.01);mE=teleMat(o.col||0xff2a10,.9);mats.push(mE);const ed=new THREE.Mesh(dqG('edge'),mE);ed.scale.setScalar(o.r);ed.renderOrder=21;g.add(a,fill,ed)}
+  g.children.forEach(c=>{if(!c.renderOrder)c.renderOrder=20;c.frustumCulled=false;c.userData.lpsSkip=1;if(c.geometry)c.geometry.userData.lps=1});scene.add(g);
+  const w={t:0,dead:false,g,o,kill(){if(w.dead)return;w.dead=true;scene.remove(g);mats.forEach(m=>m.dispose());const j=DTL.live.indexOf(W);if(j>=0)DTL.live.splice(j,1);dtlLog(W,w.t<o.t-1e-6)}};
+  const W={g,o:g.children[0],f:fill,edge:mE?g.children[2]:null,r:o.r||0,line:!!(o.d||o.half),T:o.t,get t(){return w.t},pos:{x:o.x,z:o.z},id:++DTL.n,dq:1,g0:g.children[0].geometry,e0:mE?g.children[2].geometry:null};DTL.live.push(W);
+  S.fx.push({tick(dt){if(w.dead)return false;w.t+=dt;const k=Math.min(1,w.t/o.t);mF.opacity=(.16+.34*k)*D;if(mE)mE.opacity=k<.75?.9:.75+.25*Math.abs(Math.sin(w.t*18));
+      if(fill.userData.ln)fill.scale.z=Math.max(.01,o.l*k);else fill.scale.setScalar(Math.max(.01,(o.half?o.l:o.r)*k));
+      if(o.follow)o.follow(g);if(k>=1){w.kill();if(o.fn)o.fn();return false}return true},end(){w.kill()}});
+  return w}
+// the shared den glow material (gaze cones, beams, neck rings) ignores fog too, so Lights Out never hides a gaze
+function d01Add(col,op,ro){const m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide,fog:false});m.userData.lps=1;return m}
+// the dq toolkit's unit shapes are rotated flat: never swap them for unrotated low-poly copies
+try{['disc','edge','line'].forEach(k=>{const g=dqG(k);g.userData.lps=1;LPS.gc.set(g,null)})}catch(_){}
 
 // ================= v89 (gear track): vampire standing collar =================
 // The old dkHighCollar fanned a row of boxes out to one side. This one is a proper high, stiff standing collar:
