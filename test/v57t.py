@@ -11,7 +11,7 @@ def s(pg):
     pg.wait_for_timeout(500)
     pg.screenshot(path=play.TMP+'/sk.png',timeout=120000,animations='disabled')
     P('castnew',"()=>{closeX();$('tal').classList.add('hide');hero.mp=999;hero.cd={};const i=heroSkills().findIndex(s=>s.n=='Shockwave');cast(i);return [i,hero.cd['s'+i]]}")
-    P('consume',"()=>{const a=party[0];a.l=7;const iv0=IVK.map(k=>+ivOf(a,k).toFixed(3));const b=hatch(Object.assign(rollEgg(3),{basic:true}));$('fz').classList.remove('hide');sel=[0];fOpt='con';rF();const bt=document.querySelector('[data-fcon=\\"'+party.indexOf(b)+'\\"]');bt&&bt.click();$('doF').click();return [iv0,IVK.map(k=>+ivOf(a,k).toFixed(3)),party.includes(b),a.l]}")
+    P('consume',"()=>{const a=party[0];a.l=7;const iv0=IVK.map(k=>+ivOf(a,k).toFixed(3));const b=hatch(Object.assign(rollEgg(3),{basic:true}));$('fz').classList.remove('hide');sel=[0];fOpt='con';rF();const bt=[...document.querySelectorAll('[data-fcon]')].find(x=>+x.dataset.fcon===party.indexOf(b));bt&&bt.click();$('doF').click();return [iv0,IVK.map(k=>+ivOf(a,k).toFixed(3)),party.includes(b),a.l]}")
     pg.screenshot(path=play.TMP+'/fz.png',timeout=120000,animations='disabled')
     P('fuse',"()=>{const a=party[0];a.l=9;const b=hatch(Object.assign({id:uid++,sp:a.g[0],tier:0,pa:1,tag:TAGS[a.g[0]]},{basic:true}));sel=[0,party.indexOf(b)];fOpt='std';rF();$('doF').click();return [a.l,party.includes(b)]}")
     ev("()=>{$('fz').classList.add('hide');window.__hp=setInterval(()=>{hero.hp=heroMax();hero.iv=3},100)}")
