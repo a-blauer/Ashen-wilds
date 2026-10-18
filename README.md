@@ -90,7 +90,7 @@ The round stone arena is gone. `zzK_dens.js` strips the old arena dressing and g
 
 ## v87: Cheats
 
-Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons). Test: `test/v87_cheats.py`.
+Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons); v89 adds **Unlock all shops** and **Add 100 of all resources** (`zzN_misc_cheats.js`). Tests: `test/v87_cheats.py`, `test/v89_misc.py`.
 
 ## v88: dark-fantasy UI, slot menus, living Duskhold, ability points
 
@@ -109,6 +109,12 @@ Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved
 - **Item icons** (`zzN_gear_icons.js`): `icoOf(it)` returns a picture of the actual item, rendered from its 3D model on the companion-portrait renderer (`CPIC.r`, no new WebGL context): 3/4 view, three-point light, orthographic fit (centred), rarity-tinted vignette and frame, blob URL cached per template + rarity (LRU `V89I.max`=400), geometry disposed after each render. Lazy: the first call returns the old emoji in a `[data-kqg]` placeholder and queues the render (`v89Pump`, a few per frame); placeholders are swapped in place. No WebGL → old emoji. Covers bag, paper doll, forge, every shop grid/buy bar, tooltips, loot popup, co-op trade.
 - **Models**: weapons/shields = `lgWpnKit` tinted by tier material (`v89WCol`, `v89Tint`) and rarity; helms, chests, boots, amulets, rings = `v89ArmorKit` (shape by armour type and tier, tier colours, own accent per v78 set, gem colour from the item's innate bonus). The hero and co-op partners hold the same weapon/shield model (`mkWpn` is swapped inside `refreshGear`), and gear loot on the ground uses it too (`lgDropModel`).
 - Tests/previews: `test/v89_gear.py` (icons in bag/doll/shop/tooltip/popup, held model, cache cap, fallback, collar halves), `v89_iconsheet.py` (every template → `v89_icons_all.png`), `v89_collar_view.py` (`KEYS=vamp,vlord`: front/back/sides/3-4 + walk/attack/slam/head-turn poses).
+## v89: misc
+
+Modules `src/modules/zzN_misc_*.js` (spliced by pV11); test `test/v89_misc.py` (screenshots `out/v89_*.png`).
+- **Floating lantern** (`zzN_misc_lantern.js`): the v71 belt lantern (`LANT`) is taken off the hero and kept hidden; its visibility flag (lantern zones, not in dungeons/realm) now shows `FLAN`, an enchanted lantern hovering over the hero's left shoulder, a little behind (`FLAN_OFF`). A damped spring (`flanStep`) makes it lag, sway and bob as you move, turn, dash or ride (raised by the saddle height); it snaps on jumps over 9 tiles (teleport, recall, portals). Halo sprite + sparkle motes; the hero light `torch` is moved onto it with the same colour, intensity and distance. Co-op heroes (`MP.rh`) get one too in lantern zones (`FLANR`, glow only).
+- **Citadel minimap** (`zzN_misc_minimap.js`): every zone's ground is rimmed with trees/rock tiles, which the minimap image `mmB` draws as the dark/light outline of the road, branches, camps and arena. The Citadel's rim is void (floating castle) and void is baked in the ground colour, so its minimap had no outline. `mmRimPaint()` paints a two-tone rim onto `mmB` wherever void touches walkable ground inside a zone (world map too, it draws `mmB`); tiles are unchanged.
+- **Cheats** (`zzN_misc_cheats.js`): **Unlock all shops** (`cheatShops`: `SH.shop[k]=1` for every `SHOPS` entry → `shApply()` → save, like the Steward without the cost); **Add 100 of all resources** (`cheatRes`/`cheatResKeys`: `RES`, family and upgrade materials, every material a shop/upgrade/recipe uses, and supplies of kind ingredient/crop (seeds become crops anyway); not gold, gear, runes, food, potions, eggs or companions).
 
 ## Conventions (read before changing code)
 
