@@ -3927,7 +3927,7 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
 // ---------------- XP / leveling ----------------
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*6)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
-  const gap=c.l-hero.lvl;xp*=gap<-5?.25:gap<-2?.7:gap>2?1.2:1;xp*=.6375*(e&&e.wv?.525:1);xp=Math.max(1,Math.round(xp));
+  const gap=c.l-hero.lvl;xp*=gap<-5?.25:gap<-2?.7:gap>2?1.2:1;xp*=.6375*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
@@ -4140,7 +4140,7 @@ function swing_base(){
   swingAnim(anim,ms,()=>{
     slashFx(d,anim,rg);if(n4)slashFx(d,anim==1?0:1,rg*.9);
     const hits=area(pl.position,rg,raw*mult,{mt:C.mt,col:0xffe6b0,basic:1},d,fin?1.25:1.15);
-    if(fin){ring(pl.position.clone().addScaledVector(d,1.2),0xffe0a0,2.4,320);burst(gY(pl.position.clone().addScaledVector(d,1.3),.15),0xc8b090,22,2.4,1.4,.5);shake(.14);hits.forEach(e=>{if(!e.boss&&!e.dead&&!e.c.al){mCancel(e);e.cd=Math.max(e.cd,1)}})}
+    if(fin){ring(pl.position.clone().addScaledVector(d,1.2),0xffe0a0,2.4,320);burst(gY(pl.position.clone().addScaledVector(d,1.3),.15),0xc8b090,22,2.4,1.4,.5);shake(.14);hits.forEach(e=>cbHeavy(e))}
     if(hits.length){hstop=fin?.05:.02;shake(fin?.2:.06)}
   });
 }
@@ -6567,12 +6567,12 @@ function heroHit(e,raw,mt,o){
   if(s&&s.basic&&t-(hero.rbT||0)>150){hero.rbT=t;const R=CRES[hero.cls];if(R)resGain(R.gain)}
   // team-up: both of you hitting the same enemy
   e.lhH=t;if(t-(e.lcH||0)<1200)teamGain(5);
-  const wasWind=e.atk&&e.atk.ph==0&&!EBASIC[e.atk.n],h0=e.c.h;
+  const wasWind=e.atk&&e.atk.ph==0,h0=e.c.h;
   const d=heroHit_base(e,raw,mt,o);
   // hit sound
   if(t-lastHitSnd>40){lastHitSnd=t;const w=hero.cls=='mage'||(s&&s.mt=='m')?'zap':(s&&s.arrow)||hero.cls=='ranger'?'arrow':hero.cls=='paladin'?'blunt':hero.cls=='assassin'?'stab':'slash';sfx(w);if(o.crit||(d&&e.c.h<h0&&h0-e.c.h>M(e.c)*.2))sfx('crit')}
   // break: a heavy hit or any skill interrupts a special attack wind-up
-  if(wasWind&&!e.dead&&!e.boss&&e.atk&&((s&&!s.basic)||(h0-e.c.h)>=M(e.c)*.06)){mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;popT(e.m.position,'BREAK!','#fde68a',true);burst(gY(e.m.position,1),0xffe08a,30,2.5,2,.5);ring(e.m.position,0xffe08a,1.8,300);hstop=.08;shake(.15);sfx('brk')}
+  if(wasWind&&!e.dead&&!e.boss&&e.atk&&cbBreakChk(e)){mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;popT(e.m.position,'BREAK!','#fde68a',true);burst(gY(e.m.position,1),0xffe08a,30,2.5,2,.5);ring(e.m.position,0xffe08a,1.8,300);hstop=.08;shake(.15);sfx('brk')}
   return d;
 }
 // companions apply their family's element too
@@ -9303,7 +9303,7 @@ function wMelee(Q,C,s,raw,d,spdK,base){
       else if(Q.fin=='holy'){ring(pl.position,0xfff0a0,rg+.4,380);if(hits.length){healHero(Math.round(heroMax()*.015*Math.min(6,hits.length)));burst(gY(pl.position,1),0xfff0a0,24,1.4,2,.6)}}
       else if(Q.fin=='pounce'){hits.forEach(e=>wBleed(e,3,raw));burst(gY(pl.position,.5),0xff6a6a,20,2,1.4,.4)}
       if(Q.fin!='slam'){ring(pl.position.clone().addScaledVector(d,dir?1.2:0),0xffe0a0,dir?2.4:rg,320);shake(.14)}
-      hits.forEach(e=>{if(!e.boss&&!e.dead&&!e.c.al){mCancel(e);e.cd=Math.max(e.cd,1)}})}
+      hits.forEach(e=>cbHeavy(e))}
     if(hits.length){hstop=fin?.05:.02;shake(fin?.2:.06)}
   };
   if(Q.spin)spinAnim(ms*1.15,hitFn);else swingAnim(Q.a?Q.a[st]:0,ms,hitFn);
@@ -17060,6 +17060,99 @@ function bfxCutDen(A,rIn,yMin,tube){A.g.traverse(o=>{if(!o.isMesh||!o.material||
   o.material=bfxCutMat(b,A,rIn,yMin,tube)})}
 // dens 0-3 (Argus hollow, Hydra mere, Frozen Sepulchre, Sunken Pit); 4-5 already cut their walls with dqCut
 ARN.forEach(A=>{if(A.i>3)return;try{bfxCutDen(A,ARENA_R-.2,A.i===1?.75:.55,2.4)}catch(err){console.error('bossfx cut',A.i,err)}});
+
+// ================= v92 combat: poise (harder to interrupt enemy attacks) + wave-trial drops =================
+// Why enemy attacks were easy to interrupt (old rules):
+// - t_combat.js heroHit: during the wind-up of any special move (pounce, charge, spin, slam, spit, throw-less specials),
+//   ANY ability hit, or any single hit worth >= 6% of the mob's max health, cancelled the attack and stunned the mob for
+//   1.1 s ("BREAK!"). That included elites. With most abilities hitting several times, nearly every special was cancelled.
+// - Combo finishers (b_logic.js swing, zzA_arsenal.js wMelee) cancel the current attack of normal (non-elite) mobs.
+// - Any stun (eStatus fx.stun) cancels non-boss attacks; Frozen/Steam element combos too.
+// New rules (poise):
+// - Each wind-up (phase 0 of e.atk, basic and special moves) has poise. Every direct, non-DoT hit (hero, ability, companion,
+//   shot) during the wind-up adds its damage to a.pz. Only when a.pz reaches KQP.pz (28% of max health for a normal mob, 42%
+//   for an elite) is the attack broken (same "BREAK!" + 1.1 s stun as before). Lighter hits only flinch the mob (the old hit
+//   flinch plus a small white spark); the attack keeps going, its red warning finishes and it hits as usual.
+// - Heavy hits: a combo finisher still interrupts a normal mob (now with the BREAK effect when it was attacking); on an
+//   elite it adds KQP.fin (15% of max health) of extra poise damage instead.
+// - Explicit stun / interrupt abilities are unchanged on normal mobs and elites: stuns, Intimidating Shout, Frozen, Steam,
+//   Vanish/stealth aggro drop, Stampede's knockback stun.
+// - Bosses (Sovereigns, den moves): never broken by hits (as before). Stuns still apply at 30% duration and don't cancel the
+//   move; after a stun the boss resists further stuns for KQP.bossImm seconds ("RESIST").
+// Wave trials (e.wv): XP ×.6 is in build/pN_combat.py (the gainXP factor .525 → .315). Drops: lootE marks wave kills with
+//   LT.on==2 (pV6 already keeps .7×.5 of their drops); here drop() keeps a further KQP.wvDrop (50%) of them, eggs included.
+//   The end-of-trial reward chest drops with LT.on==0, so it is unchanged.
+var KQP={pz:{n:.28,el:.42},fin:.15,bossImm:6,wvDrop:.5,log:[]};
+function cbThr(e){return M(e.c)*(e.c.al?KQP.pz.el:KQP.pz.n)}
+function cbWind(e){return !!(e&&!e.dead&&!e.boss&&e.atk&&e.atk.ph==0)}
+// used by the patched break test in heroHit (t_combat.js): true when the poise of this wind-up is gone
+function cbBreakChk(e){const a=e&&e.atk;return !!(a&&!e.boss&&(a.pz||0)>=cbThr(e))}
+function cbBreakFx(e){popT(e.m.position,'BREAK!','#fde68a',true);burst(gY(e.m.position,1),0xffe08a,30,2.5,2,.5);ring(e.m.position,0xffe08a,1.8,300);hstop=.08;shake(.15);sfx('brk')}
+function cbBreak(e,why){if(!(e&&e.atk&&!e.boss&&!e.dead))return;mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;cbBreakFx(e);KQP.log.push(why||'poise')}
+// poise damage: every direct hit during a wind-up
+{const f=hurt;hurt=function(e,d,s,crit,dot){const w=!dot&&cbWind(e),a=w?e.atk:null,h0=w?e.c.h:0;const r=f.apply(this,arguments);
+  if(a&&e.atk===a&&!e.dead){a.pz=(a.pz||0)+Math.max(0,h0-e.c.h);
+    if((a.pz||0)<cbThr(e)&&Math.random()<.6)burst(gY(e.m.position,1.1),0xffffff,4,.8,1,.25)}   // light hit: flinch only
+  return r}}
+// companions break a wind-up through the same poise (their hits don't pass heroHit)
+{const f=compHit;compHit=function(c,e){const w=cbWind(e);const r=f.apply(this,arguments);if(w&&cbWind(e)&&cbBreakChk(e))cbBreak(e,'comp');return r}}
+// heavy hit (combo finisher): normal mobs are interrupted, elites take extra poise damage
+function cbHeavy(e){if(!e||e.boss||e.dead)return;
+  if(!e.c.al){const was=!!e.atk;mCancel(e);e.cd=Math.max(e.cd,1);if(was){cbBreakFx(e);KQP.log.push('finisher')}return}
+  if(cbWind(e)){e.atk.pz=(e.atk.pz||0)+M(e.c)*KQP.fin;if(cbBreakChk(e))cbBreak(e,'finisher')}}
+// bosses resist stuns for a while after one lands
+{const f=eStatus;eStatus=function(e,fx,atk,src){if(e&&e.boss&&fx&&fx.stun&&!e.dead){const t=nowP();
+    if(t<(e.cbImm||0)){fx=Object.assign({},fx);delete fx.stun;if(t-(e.cbRt||0)>700){e.cbRt=t;dn(e.m.position,'RESIST','#e5e7eb',-30,700)}}else e.cbImm=t+KQP.bossImm*1000}
+  return f.call(this,e,fx,atk,src)}}
+// wave-trial drops: a further 50% on top of pV6's LT filter (LT.on==2 only while a wave mob's lootE runs)
+{const f=drop;drop=function(kind,data,p,r){if(typeof LT!='undefined'&&LT.on==2&&Math.random()>KQP.wvDrop)return;return f.apply(this,arguments)}}
+
+// ================= v92 combat: Wild Hunt and Stampede use the v91 ghost wolf =================
+// How it works (read this before changing it):
+// - Call of the Wild already gets the ghost wolf from zzN_fxA.js (fxaGhostWolf: the Ashwolf low-poly rig with the spectral
+//   fresnel material, glowing eyes and wisps). Wild Hunt (KQH.r_hunt) and Stampede (KQH.r_stamp) still built the old box
+//   wolves with kqsWolf(col,scale). Here both handlers run unchanged, but while they run kqsWolf() returns a ghost wolf of
+//   the same scale, so every number (damage, count, paths, timing, knockback) still comes from the old code.
+// - Wild Hunt: the three wolves are kqsSummon summons, exactly like Call of the Wild, so they get the same fxA summon hook
+//   (fxaSumHook: fade in, creature gait through animC/rigAnim, the v85 bite timed on the damage tick, wisps, dissolve on end).
+// - Stampede: the four wolves are driven by the stampede's own kqsObj (it sets their position and facing every frame). We wrap
+//   that object: after its tick each ghost wolf fades in, gallops with the rig (animC), trails wisps, and snaps its jaws when
+//   the charge tramples an enemy next to it (lunge with a short reach, so the body stays on the stampede path). Its end() is
+//   replaced for ghost wolves: the old kqsFade would dispose the shared rig geometry; we fade and remove with fxaRm instead.
+// - Nothing new is left in the scene: the wolves are removed by their own end(), wisps come from the pooled FXA.root.
+var CBW={on:1,made:0};
+function cbwWolf(sc){if(!CBW.on||typeof fxaGhostWolf!='function')return null;const g=fxaGhostWolf();if(!g)return null;
+  g.scale.setScalar(g.userData.sc0*(sc||1));g.userData.sc0=g.scale.x;g.userData.legs=[];g.userData.cbw=1;CBW.made++;return g}
+// Wild Hunt: same summon hook as Call of the Wild
+{const f=KQH.r_hunt;if(typeof f=='function')KQH.r_hunt=function(c){const W=kqsWolf,S=kqsSummon,made=[];
+  kqsWolf=function(col,sc){const g=cbwWolf(sc);if(g){made.push(g);return g}return W.apply(this,arguments)};
+  kqsSummon=function(o){if(o&&made.includes(o.mesh)){o.wolf=0;return fxaSumHook(S.apply(this,arguments),o,'wolf')}return S.apply(this,arguments)};
+  try{return f.apply(this,arguments)}finally{kqsWolf=W;kqsSummon=S}}}
+// Stampede: hook the stampede's own object
+function cbwStampHook(o,B){
+  const G=B.filter(b=>b.userData.cbw);if(!G.length)return o;
+  const M=new Map();G.forEach(b=>{M.set(b,fxaMats(b));fxaOp(M.get(b),0);b.userData.wp=0;b.userData.p0=null});
+  const t0=o.tick,e0=o.end,kh=kqsHit;
+  o.tick=function(dt,now,ob){
+    // a trampled enemy: the closest ghost wolf bites at it (body stays on the path)
+    kqsHit=function(e){const r=kh.apply(this,arguments);try{if(e&&e.m){let bw=null,bd=9;G.forEach(b=>{const d=d2(b.position,e.m.position);if(d<bd&&!b.atk){bd=d;bw=b}});
+        if(bw&&bd<3.2&&typeof lunge=='function'){const ry=bw.rotation.y,to=V(bw.position.x+Math.sin(ry)*1.5,0,bw.position.z+Math.cos(ry)*1.5);lunge(bw,to,null)}}}catch(_){}return r};
+    let keep;try{keep=t0.apply(this,arguments)}finally{kqsHit=kh}
+    const fin=Math.min(1,o.age/.15);
+    G.forEach(b=>{const L=M.get(b),p=b.userData.p0,sp=p&&dt>0?Math.hypot(b.position.x-p.x,b.position.z-p.z)/dt:10;b.userData.p0=b.position.clone();
+      fxaOp(L,fin);try{animC(b,now,true,Math.min(12,Math.max(6,sp)))}catch(_){}
+      b.userData.wp-=dt;if(b.userData.wp<=0&&dt>0){b.userData.wp=.035;const q=b.position.clone();q.y+=.4+Math.random()*.5;q.x+=(Math.random()-.5)*.6;q.z+=(Math.random()-.5)*.6;
+        fxaPuff(q,{col:Math.random()<.5?0x7ff0e0:0x9ad0ff,r0:.14,r1:.5,life:.8,op:.24*fin,add:1,v:[(Math.random()-.5)*.3,.4,(Math.random()-.5)*.3],drag:1,fin:.2,geo:'dod'})}});
+    return keep};
+  o.end=function(){B.forEach(b=>{if(!b.userData.cbw){kqsFade(b,250);return}
+      const L=M.get(b),p=b.position.clone();burst(gY(p,.8),0x9ad0ff,14,1.2,1.6,.4);
+      for(let i=0;i<6;i++){const q=p.clone();q.y=GH(p.x,p.z)+.2+Math.random()*1.2;q.x+=(Math.random()-.5)*.8;q.z+=(Math.random()-.5)*.8;fxaPuff(q,{col:0x7ff0e0,r0:.15,r1:.6,life:1,op:.3,add:1,v:[0,.8,0],drag:1,geo:'dod'})}
+      let k=0;kqsObj({life:.3,tick:(dt,now)=>{k+=dt>0?dt:0;fxaOp(L,Math.max(0,1-k/.3));b.scale.setScalar(b.userData.sc0*(1+.12*k/.3));try{animC(b,now,false,0)}catch(_){}},end:()=>fxaRm(b)})})};
+  return o}
+{const f=KQH.r_stamp;if(typeof f=='function')KQH.r_stamp=function(c){const W=kqsWolf,O=kqsObj,B=[];
+  kqsWolf=function(col,sc){const g=cbwWolf(sc);if(g){B.push(g);return g}const m=W.apply(this,arguments);B.push(m);return m};
+  kqsObj=function(o){if(B.length&&o&&o.tick&&!o.cbw){o.cbw=1;cbwStampHook(o,B.slice())}return O.apply(this,arguments)};
+  try{return f.apply(this,arguments)}finally{kqsWolf=W;kqsObj=O}}}
 
 // ================= v89 dens: every Sovereign den is 35% bigger =================
 // The den files (zzK_den*.js) still build each den at its original size (radius 14 arena). Right after that, this file
