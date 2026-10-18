@@ -7,7 +7,7 @@ def s(pg):
     pg.wait_for_timeout(1500)
     pg.locator('#hv').screenshot(path=play.TMP+'/v85_bag_a.png')
     for i in range(2):
-        pg.locator('button.rw.it[data-k="g"]').first.click();pg.wait_for_timeout(500)
+        pg.locator('#bl [data-k="g"]').first.click();pg.wait_for_timeout(500)
         btns=pg.locator('#idt button').all_inner_texts();print(btns)
         b=pg.locator('#idt button',has_text='Equip')
         if b.count():b.first.click()
