@@ -237,6 +237,26 @@ Track files: `src/modules/zzN_ui.js`, `src/modules/zzN_ui_drag.js` (no `pN_ui.py
 - **Sovereigns**: slower, heavier; out of the fight an occasional roar, in the fight only breathing/head sway and a snort (nothing that looks like a telegraph).
 - **Mounts** (`mkMountRig` wrapper): weight shift, head look/bob, head toss, hoof stamp, tail swish, graze.
 - Desync: every instance gets a constant random time offset for the inner animation (the old shared idle terms no longer move in lockstep) and its own rates/phases. Only drawn models within `IDL.dist` (34) of the camera run it; no per-frame allocations. Measured with 60 enemies in view (headless): ≈0.4 ms/frame for ~65 idle instances. `IDL.on=false` turns it off.
+## v93: grip
+
+`src/modules/zzN_grip.js` (header explains it); test `test/v93_grip.py`.
+- **Why weapons were held wrong**: every weapon model has its grip at the origin and the blade/head along −y, and `refreshGear`/`mkHumanoid` put it in the hand with one tilt (`rotation.x=-1`). With the relaxed arm (forearm ~30° forward) that laid swords, axes and hafts flat, pointing straight ahead; the bow was attached at its model origin, which is the string.
+- **Two grips per weapon type** (`GRIP` table, in the hand bone's frame): *carry* (idle, walking) and *strike* (attacks, casts, shots — the old placement the v85 attack tracks and v85/v91 bow draws were tuned with). The hand turns to the strike grip in ~0.05 s (the hero: by 18% of the swing) and back to carry in ~0.28 s. Carrying a weapon upright adds a small elbow bend (`el`) on top of the idle/walk pose.
+  | type | carry |
+  |---|---|
+  | sword, axe(s), mace, club, hammer | upright, top 9° forward, edge / axe bit / hammer face forward, elbow −0.45 |
+  | dagger, knives | forward grip, blade up and 35° forward |
+  | greatsword, greataxe | resting on the shoulder (17° back, leaning in), elbow −0.75 |
+  | halberd, staff | upright at the shaft, butt near the ground |
+  | flail | haft forward, the chain and ball hang (the chain is split off the model and swings; it trails the haft in strikes) |
+  | wand | pointing forward and up · **orb** (left hand) held by its stem, orb on top · **sling** hangs from the fist |
+  | crossbow | stock level, bow arms across the front · **claws** one grip (over the fist) |
+  | bow | left hand at the riser, upright, string behind the hand (away from the body); shots unchanged |
+  | shield | left forearm, face out and a little forward |
+- **Edge leads**: during the strike itself (hero 22–58% of the swing, foes the act phase) edged weapons turn about their own axis toward the tip's motion (in the body's frame), so cuts lead with the edge (axes with the bit); thrusts and slow moves keep their spin.
+- Applies to the hero, co-op partners, the bag (`#hv`) and character-creation previews (all through `refreshGear`), and humanoid foes (`mkHumanoid`, incl. archers' bows and skeleton/naga shields). `bowFxSet`/`eBowFxSet` are wrapped so the drawn string and nocked arrow use the same grip.
+- Test: `python3 v93_grip.py` writes `out/v93_<TAG>_hero1..4.png` (each weapon type: idle front/side/¾, walk, three attack frames), `v93_<TAG>_foes1..2.png`, `v93_<TAG>_bow.png` and prints `CHECKS OK` (blade/head up, hand on the grip, bow at the riser with the string clear of the hand, chain hangs, edge leads at contact, bow shot frames). `SRC=<old build> TAG=before` for a comparison.
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
