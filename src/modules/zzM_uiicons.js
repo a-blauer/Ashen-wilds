@@ -390,7 +390,8 @@ var KQ_MO=new MutationObserver(recs=>{const t0=performance.now();kqRecs(recs);KQ
 var KQ_HC=new Map();
 const KQ_TAG=/<[!\/a-zA-Z](?:[^"'>]|"[^"]*"|'[^']*')*>/g,KQ_ATT=/(\s(?:title|placeholder|aria-label)\s*=\s*)("[^"]*"|'[^']*')/gi;
 function kqHtml(v){
-  let o=KQ_HC.get(v);if(o!==undefined)return o;
+  let o=KQ_HC.get(v);if(o!==undefined)return o;const t0=performance.now();try{return o=kqHtml0(v)}finally{KQIS.t+=performance.now()-t0}}
+function kqHtml0(v){let o;
   let mode=0;o='';let last=0;const T=t=>{if(!t)return;if(mode==2)o+=t;else if(mode==1)o+=kqStrip(t);else o+=t.replace(KQ_RXG,m=>{const r=kqLook(m);if(!r)return m;kqUse(r[0]);KQIS.nodes++;return '<i class="kqi kqi-'+r[0]+' kt-'+r[1]+'">'+m+'</i>'})};
   v.replace(KQ_TAG,(tag,off)=>{T(v.slice(last,off));last=off+tag.length;
     const nm=(/^<\/?([a-zA-Z0-9-]+)/.exec(tag)||[])[1],lo=nm&&nm.toLowerCase(),close=tag[1]=='/';
@@ -400,7 +401,7 @@ function kqHtml(v){
   if(KQ_HC.size>800)KQ_HC.clear();KQ_HC.set(v,o);return o}
 (function(){
   const XH='http://www.w3.org/1999/xhtml',ok=e=>e.nodeType==1&&e.namespaceURI==XH&&!KQ_SKIP[e.nodeName]&&e.nodeName!='OPTION'&&e.nodeName!='SELECT';
-  const run=(e,f)=>{const t0=performance.now();const pend=KQ_MO.takeRecords();if(pend.length)kqRecs(pend);f();KQ_MO.takeRecords();KQIS.t+=performance.now()-t0;KQIS.fast=(KQIS.fast||0)+1};
+  const run=(e,f)=>{let t0=performance.now();const pend=KQ_MO.takeRecords();if(pend.length)kqRecs(pend);KQIS.t+=performance.now()-t0;f();t0=performance.now();KQ_MO.takeRecords();KQIS.t+=performance.now()-t0;KQIS.fast=(KQIS.fast||0)+1};
   const ih=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
   if(ih&&ih.set)Object.defineProperty(Element.prototype,'innerHTML',{configurable:true,enumerable:ih.enumerable,get:ih.get,set(v){
     if(typeof v!='string'||!KQ_RXT.test(v)||!ok(this))return ih.set.call(this,v);const e=this;run(e,()=>ih.set.call(e,kqHtml(v)))}});
