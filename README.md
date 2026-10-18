@@ -102,6 +102,14 @@ Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved
 - **Abilities** (`zzM_skills.js`, header explains it): ability points (1 per level, `apFree()` = earned − spent, migration bonus `hero.tal.__apB`); heroes start with the class default; 17 abilities per class (4 original + 3 v71 + 10 new in `KQN`), cost `1+floor(lv/6)` AP, some need a prerequisite; 4 equip slots (`__ld`); K opens Talents | Abilities tabs; ground targeting (circle/line/wall/cone reticle, click to cast, Esc/right-click cancels, drag on touch) for 26 new abilities and the old ground skills. Old saves keep their skills and get the talent points back.
 - Tests: `test/v88_ui_*.py`, `v88_menus.py`, `v88_town_*.py`, `v88_skills*.py`.
 
+## v89: loot
+
+`src/modules/zzN_loot.js` + `build/pN_loot.py` (two small `rep()` patches in `gFinish`).
+- **Secrets**: walk up to a cracked boulder → `F · Uncover the secret` (keyboard F, the prompt pill or the mobile F button all call `interact()`); `lnUncover` plays a short shake/glow, then the old `breakBoulder` makes one hidden-cache chest. Attacks still crack boulders. Each player has their own secrets/chests (nothing is relayed in co-op).
+- **Treasure maps**: a map belongs to one zone (`m.r`, plus `m.id`); `giveMap` picks the ✕ with `tmPick`/`tmOk`: a tile reachable from the zone entrance (`lnReach` flood fill over `!solid` tiles, cached per zone, sized from `PMAP`/`PMW` at runtime), away from the den, wave arena, camps, secrets and the entrance. Old bug: maps were placed by tier (Sands/Derge swapped, Kindlelight maps could land in Duskhold) without a reachability check (e.g. inside the sealed wave arena). `x2Load` migrates old maps (`tmMigrate`). Maps show in the bag (Gear grid and Supplies tab, tooltip `tm:<id>`, can't be sold) until dug up; red ✕ on the minimap (edge arrow when off-view), on the zone map (N) and on the ground; other zones' map windows say which zone your maps are for.
+- **Gathering nodes**: every node kind has its own instanced model (`LNM`): stone, iron vein (`lnV`: ~30% of plain rocks; always gives iron ore, plain stone rarely), crystal, fiber grass, berry bush (~40% of bushes; always gives berries), flowers, glow caps, bones. `lnSwapNodes` replaces the old prop instances at load with the same tiles/scale, re-points `NODE` (depletion/regrowth unchanged) and adds the meshes to the existing chunks. The F prompt names the material (`Mine Iron Ore`, `Pick Berries & Fiber`, …).
+- Test: `test/v89_loot.py` (`ONLY=nodes|secret|maps`), screenshots `out/v89_*.png` (node lineup: `v89_nodes_lineup.png`).
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
