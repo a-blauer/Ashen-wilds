@@ -125,7 +125,7 @@ def s(pg):
         if d(b['strM'],b['hand'])<.25:bad.append('bow string in the hand %.3f'%d(b['strM'],b['hand']))
         if abs(b['head'][1])<.95:bad.append('bow not upright %s'%b['head'])
     f=res.get('flail')
-    if f and f.get('chain',[0,0,0])[1]>-.9:bad.append('flail chain does not hang %s'%f.get('chain'))
+    if f and f.get('chain',[0,0,0])[1]>-.8:bad.append('flail chain does not hang %s'%f.get('chain'))  # (-.8: the v93 idle sway swings the chain a little)
     if res.get('crossbow') and abs(res['crossbow']['flat'][0])>.1:bad.append('crossbow arms not level')
     for k,v in res.items():
         if k.startswith('foe_') and v['wt'] in('sword','axe','gs','hammer','club','staff') and v['head'][1]<.85:bad.append('%s weapon not up %s'%(k,v['head']))
