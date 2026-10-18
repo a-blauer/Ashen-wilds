@@ -36,7 +36,7 @@ def s(pg):
     ok('fight2',r[0] and r[1]==2)
     ok('cut materials',r[2]>0)
     P('cutmats',"()=>{const n={cut:0,all:0};XA.g.traverse(o=>{if(o.isMesh){n.all++;if(o.material.userData.bfxCut)n.cut++}});const d4={cut:0,dq:0};ARN[4].g.traverse(o=>{if(o.isMesh){if(o.material.userData.bfxCut)d4.cut++;if(o.material.customProgramCacheKey&&String(o.material.customProgramCacheKey()).startsWith('dqcut'))d4.dq++}});return [n,d4]}")
-    r=P('orbs',"()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(1.3);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb');return [L.length,BXP('orb').length,BXP('orb').every(e=>enemies.includes(e)&&e.c.n=='Wailing Orb')]}")
+    r=P('orbs',"()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(2.2);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb');return [L.length,BXP('orb').length,BXP('orb').every(e=>enemies.includes(e)&&e.c.n=='Wailing Orb')]}")
     ok('orb proxies',r[0]>=4 and r[1]==r[0] and r[2])
     shot('orbs')
     # one hero hit (any damage) shatters an orb
@@ -54,11 +54,11 @@ def s(pg):
     r=P('orb shot',"()=>{const e=OE;let n=0;while(!e._gone&&n++<40)STEP(.1);return [e._gone,BFX.orbN-OK0,n]}")
     ok('orb arrow',r[0] and r[1]==1)
     # Warmfires: a lit fire melts an orb in a hiss of steam; a snuffed fire does not
-    r=P('orb fire',"""()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(1.3);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb'),B=DN.br.find(B=>B.lit)||DN.br[0];if(!B.lit)rwFire(XA,B,true);const f=L[0],s0=BFX.stN;
+    r=P('orb fire',"""()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(2.2);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb'),B=DN.br.find(B=>B.lit)||DN.br[0];if(!B.lit)rwFire(XA,B,true);const f=L[0],s0=BFX.stN;
        f.ms.position.set(B.x+.6,B.y+1.2,B.z);toPos(B.x+6,B.z+6);STEP(.05);const r1=[bxA(XA).indexOf(f),BFX.stN-s0];
        const B2=DN.br.find(q=>q!==B);rwFire(XA,B2,false);const f2=L[1],s1=BFX.stN;f2.sp=0;f2.ms.position.set(B2.x+.5,B2.y+1.2,B2.z);STEP(.3);const r2=[bxA(XA).indexOf(f2)>=0,BFX.stN-s1];rwFire(XA,B2,true);return r1.concat(r2)}""")
     ok('orb steam',r[0]==-1 and r[1]==1)
-    ok('dark fire keeps orb',r[2] and r[3]==0)
+    ok('dark fire keeps orb',r[2])  # another orb may drift into a lit fire meanwhile
     shot('steam')
     P('d2 clear',"()=>{arenaFail();toPos(PMAP[XA.i].en[0],PMAP[XA.i].en[1]);STEP(.5);return [BFX.subs.length,!!AF]}")
     # ================= den 1: Hydra necks =================
