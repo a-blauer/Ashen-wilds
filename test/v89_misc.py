@@ -24,7 +24,7 @@ def s(pg):
 
     # ---------- 1. cheats ----------
     if 'cheats' in ONLY:
-        ev("()=>openSet()");pg.wait_for_timeout(500);pg.click('#cheatBtn');pg.wait_for_timeout(300)
+        ev("()=>openSet()");pg.wait_for_timeout(500);ev("()=>{if(typeof CHU!='undefined')CHU.unlock('112233')}");pg.click('#cheatBtn');pg.wait_for_timeout(300)
         P('cheat buttons',"()=>[!!$('ch_shops'),!!$('ch_res'),$('cheatBox').textContent.includes('Unlock all shops')]")
         ev("()=>$('ch_res').scrollIntoView()");shot('v89_cheats2.png','#cheatBox',False)
         P('shops before',"()=>[SHOPS.length,SHOPS.filter(o=>shopBuilt(o.k)).length,STB.g?STB.g.visible:null]")

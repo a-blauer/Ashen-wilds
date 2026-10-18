@@ -1,10 +1,14 @@
 import play,json
 def s(pg):
-    ev=pg.evaluate;errs=[];pg.on('pageerror',lambda e:errs.append(str(e)[:300]))
+    pg.set_default_timeout(600000);ev=pg.evaluate;errs=[];pg.on('pageerror',lambda e:errs.append(str(e)[:300]))
     ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     P=lambda n,c:print(n,'=>',json.dumps(ev(c))[:400])
     ev("()=>openSet()");pg.wait_for_timeout(500)
+    # v90: the cheats need the password first
+    P('locked',"()=>[CHU.on,$('cheatBtn').offsetParent===null,$('chLock').offsetParent!==null]")
+    pg.fill('#chPw','112233');pg.press('#chPw','Enter');pg.wait_for_timeout(300)
+    P('unlocked',"()=>[CHU.on,$('cheatBtn').offsetParent!==null]")
     pg.click('#cheatBtn');pg.wait_for_timeout(300)
     pg.locator('#cheatBox').scroll_into_view_if_needed()
     pg.screenshot(path=play.TMP+'/v87_cheats.png')

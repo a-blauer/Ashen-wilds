@@ -17965,6 +17965,209 @@ function ssrRig(x,now,mv,sp){
 {const f=bossAI;bossAI=function(e){const r=f.apply(this,arguments);if(e&&e.hid&&e.m&&e.m._ssr){e.m.visible=false;if(e.hb)e.hb.visible=false}
   else if(e&&e.m&&e.m._ssSnap&&e.m._ssx){try{ssrRig(e.m._ssx,performance.now(),false,0)}catch(err){}}return r}}
 
+// ================= v90 ui: cheats password, location box under the minimap =================
+// 1. Cheats (Settings → Cheats, zzL_cheats.js + zzN_misc_cheats.js) need the password CHU.pw. Until it is entered the section
+//    shows only a password field + Unlock button; the cheat controls stay hidden and every cheat handler refuses.
+//    The unlock lasts for this browser session (sessionStorage CHU.key) or until Lock is pressed. Cheat flags that are
+//    already on in a save (CHEAT.portals/money/god) keep working while locked; only changing them needs the password.
+//    Keys typed in the password field never reach the game hotkeys (window capture listener below).
+// 2. The location box (#locBox, v84) sits right under the minimap, as wide as the minimap; area name/level on line 1,
+//    the recommendation on line 2 (each line shrinks a little to fit, then wraps). The buttons/panels under the minimap
+//    (#fsBtn, #sysBtn, #sysmenu, #evtk) move down by the box's height. v90Lay() measures, it runs on HUD updates and resizes.
+var CHU={on:false,pw:'112233',key:'kq_cheatpw'};
+try{CHU.on=sessionStorage.getItem(CHU.key)=='1'}catch(_){}
+document.head.insertAdjacentHTML('beforeend',`<style id="v90css">
+#chLock{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px dashed #c9a24a;border-radius:3px;background:rgba(201,162,74,.06);font-size:.78rem}
+#chLock small{color:var(--mut);font-size:.68rem}
+#chLock .chlr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#chLock input{flex:1;min-width:120px;max-width:220px;font-size:16px;padding:6px 8px}
+#chLock input:not(:placeholder-shown){letter-spacing:.2em}
+#chErr{color:#f87171;font-size:.72rem;font-weight:700}
+#chLock.bad input{animation:chShake .35s;border-color:#f87171}
+@keyframes chShake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+#chOpen{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#chOpen small{color:#6ee7b7;font-size:.68rem}
+#chLock.hide,#chOpen.hide,#chErr.hide{display:none}
+#locBox.v90{left:auto;right:auto;transform:none;max-width:none;white-space:normal;overflow:hidden;text-overflow:clip;box-sizing:border-box;
+  padding:5px 8px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15;text-align:center}
+#locBox.v90 .v90l1,#locBox.v90 .v90l2{display:block;max-width:100%;white-space:nowrap}
+#locBox.v90 .v90w{white-space:normal}
+#locBox.v90 .v90w .v90s{display:none}#locBox.v90 .v90w .v90c{display:block}
+#locBox.v90 .v90c{white-space:nowrap}
+#locBox.v90 .v90l1{font-size:11px}
+#locBox.v90 .v90l1 .v90c:not(.v90n){font:700 .9em/1.15 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0}
+#locBox.v90 .v90l2{font:600 10px/1.15 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;color:var(--kq-ink,#e8dcc0);opacity:.9}
+#locBox.v90.v90cut .v90o{display:none}
+#locBox.v90 .v90h{display:none}
+body.kq #locBox.v90{padding:5px 8px;letter-spacing:.03em;border-image-width:9px}
+@media (min-width:900px){body:not(.mob) #tgt,body:not(.mob) #boss{top:10px}}
+/* phone held upright: the boss bar and target frame use the space left of the minimap column */
+#sysmenu{z-index:4}
+@media (orientation:portrait){body.mob #boss,body.mob #tgt{left:8px;transform:none;width:calc(100% - 146px);box-sizing:border-box}body.mob #boss{top:58px}}
+</style>`);
+
+// ---------------- 1. cheats password ----------------
+{const btn=$('cheatBtn');if(btn){
+  btn.insertAdjacentHTML('beforebegin',`<div id="chLock" class="hide"><span>🔒 Cheats are locked.<br><small>Enter the cheat password to use them.</small></span>
+    <div class="chlr"><input id="chPw" type="password" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="24" placeholder="Password" aria-label="Cheat password"><button id="chUnBtn" class="pri">Unlock</button></div>
+    <div id="chErr" class="hide" role="alert"></div></div><div id="chOpen" class="hide"></div>`);
+  const op=$('chOpen');op.appendChild(btn);op.insertAdjacentHTML('beforeend','<button id="chLockBtn" title="Lock the cheats again">🔒 Lock</button><small>Unlocked</small>')}}
+CHU.sync=function(){const L=$('chLock'),O=$('chOpen'),B=$('cheatBox');if(!L)return;L.classList.toggle('hide',CHU.on);if(O)O.classList.toggle('hide',!CHU.on);
+  if(!CHU.on&&B)B.classList.add('hide');try{cheatSync()}catch(_){}};
+CHU.err=function(t){const e=$('chErr'),L=$('chLock');if(!e)return;e.textContent=t;e.classList.remove('hide');L.classList.remove('bad');void L.offsetWidth;L.classList.add('bad');
+  clearTimeout(CHU.et);CHU.et=setTimeout(()=>{e.classList.add('hide');L.classList.remove('bad')},2500)};
+CHU.unlock=function(pw){const ok=String(pw==null?'':pw).trim()===CHU.pw,f=$('chPw');if(f)f.value='';
+  if(!ok){CHU.err('Wrong password.');return false}
+  CHU.on=true;try{sessionStorage.setItem(CHU.key,'1')}catch(_){}const e=$('chErr');if(e)e.classList.add('hide');CHU.sync();if(f)f.blur();say('🔓 Cheats unlocked.');return true};
+CHU.lock=function(){CHU.on=false;try{sessionStorage.removeItem(CHU.key)}catch(_){}CHU.sync();say('🔒 Cheats locked.')};
+CHU.deny=function(){CHU.sync();say('🔒 Cheats are locked — enter the password in Settings → Cheats.');return false};
+{const u=$('chUnBtn');if(u)u.onclick=()=>CHU.unlock($('chPw').value);const l=$('chLockBtn');if(l)l.onclick=()=>CHU.lock()}
+// every cheat control refuses while locked: wrap the handlers (also covers scripts calling .onclick()/.onchange())
+['cheatBtn','ch_portals','ch_money','ch_god','ch_lv1','ch_lvmax','ch_shops','ch_res'].forEach(id=>{const e=$(id);if(!e)return;
+  ['onclick','onchange'].forEach(p=>{const f=e[p];if(typeof f=='function')e[p]=function(){if(!CHU.on)return CHU.deny();return f.apply(this,arguments)}})});
+// …and any other control inside the box (cheats added later), before their own listeners run
+{const B=$('cheatBox');if(B)['click','change','input'].forEach(t=>B.addEventListener(t,e=>{if(CHU.on)return;if(e.target.closest&&e.target.closest('input,button,select')){e.preventDefault();e.stopImmediatePropagation();if(t!='input')CHU.deny()}},true))}
+// the password field: Enter submits, Escape leaves the field, no key reaches the game's hotkeys (WASD, I, K, O, Space…)
+['keydown','keyup','keypress'].forEach(t=>addEventListener(t,e=>{const f=e.target;if(!f||f.id!='chPw')return;e.stopImmediatePropagation();
+  if(t=='keydown'&&e.key=='Enter'){e.preventDefault();CHU.unlock(f.value)}else if(t=='keydown'&&e.key=='Escape'){e.preventDefault();f.blur()}},true));
+{const f=openSet;openSet=function(){const r=f.apply(this,arguments);try{CHU.sync()}catch(_){}return r}}
+CHU.sync();
+
+// ---------------- 2. location box under the minimap ----------------
+var V90L={k:"",gap:6};
+function v90LocBuild(){const a=$('areaT'),lb=$('locBox');if(!a||!lb)return;lb.classList.add('v90');
+  if(lb.querySelector('.v90l1')&&lb.dataset.v90===a.innerHTML)return;
+  const c=a.cloneNode(true),rec=c.querySelector('.rec');
+  if(rec)rec.remove();
+  // " · " separated parts stay whole when a line has to wrap; the first part of line 1 is the place name (Cinzel)
+  const parts=(h,first)=>'<span class="v90c'+(first?' v90n':'')+'">'+h.split(' · ').join('</span><span class="v90s"> · </span><span class="v90c">')+'</span>';
+  const l1=c.innerHTML.replace(/\s+$/,'');let h='<span class="v90l1">'+parts(l1,1)+'</span>';
+  if(rec){// the pieces add up to the same text as #areaT, so the v84 copy (textContent compare) leaves the box alone
+    const t1=c.textContent.replace(/\s+$/,''),tail=a.textContent.slice(t1.length),rt=rec.textContent,lead=tail.slice(0,tail.length-rt.length)+(rt.match(/^\s*·\s*/)||[''])[0];
+    const l2=rec.innerHTML.replace(/^\s*·\s*/,'').replace(/^(Rec:\s*)((?:companion|creature)\s+)/,'$1<span class="v90o">$2</span>');
+    h+='<span class="v90l2"><span class="v90h">'+lead+'</span>'+parts(l2,0)+'</span>'}
+  lb.innerHTML=h;lb.dataset.v90=a.innerHTML;lb.classList.remove('v90cut');v90Fit();V90L.k=''}
+// each line shrinks a little to stay on one line (11 → 9.5px, 10 → 8.5px); line 2 then drops the word "companion";
+// only then does a line wrap, between its " · " parts
+function v90Fit(){const lb=$('locBox');if(!lb||lb.offsetParent===null)return;lb.classList.remove('v90cut');
+  const fit=(e,mx,mn)=>{e.classList.remove('v90w');let z=mx;e.style.fontSize=z+'px';while(z>mn&&e.scrollWidth>e.clientWidth+1){z-=.5;e.style.fontSize=z+'px'}return e.scrollWidth<=e.clientWidth+1};
+  const e1=lb.querySelector('.v90l1'),e2=lb.querySelector('.v90l2');
+  if(e1&&!fit(e1,11,9.5)){e1.style.fontSize='10.5px';e1.classList.add('v90w')}
+  if(e2&&!fit(e2,10,8.5)){if(e2.querySelector('.v90o')){lb.classList.add('v90cut');if(fit(e2,10,8.5))return}e2.style.fontSize='9.5px';e2.classList.add('v90w')}}
+var V90_MOVE=['fsBtn','sysBtn','sysmenu','evtk'];
+function v90Lay(force){const lb=$('locBox'),m=$('mini');if(!lb||!m)return;const P=lb.offsetParent;if(!P||m.offsetParent===null){return}
+  const pr=P.getBoundingClientRect(),mr=m.getBoundingClientRect();
+  const kq=document.body.classList.contains('kq')?4:0;  // the themed minimap has a 4px bronze ring outside its border
+  const L=Math.round(mr.left-pr.left-kq),W=Math.round(mr.width+2*kq),T=Math.round(mr.bottom-pr.top+kq+V90L.gap);
+  const key=[L,W,T,pr.width,pr.height,lb.dataset.v90||'',document.body.className,V90_MOVE.map(id=>{const e=$(id);return e?(e.style.top?1:0)+(e.offsetParent?2:0):9}).join('')].join('|');
+  if(!force&&key===V90L.k)return;V90L.k=key;
+  Object.assign(lb.style,{left:L+'px',top:T+'px',width:W+'px',right:'auto',transform:'none'});v90Fit();
+  const D=lb.offsetHeight+V90L.gap;
+  V90_MOVE.forEach(id=>{const e=$(id);if(!e)return;e.style.top='';const t=parseFloat(getComputedStyle(e).top);if(!isFinite(t))return;e.style.top=Math.round(t+D)+'px'})}
+{const f=hud;hud=function(){const r=f.apply(this,arguments);try{v90LocBuild();v90Lay()}catch(_){}return r}}
+{const f=evUI;if(typeof f=='function')evUI=function(){const r=f.apply(this,arguments);try{v90Lay()}catch(_){}return r}}
+addEventListener('resize',()=>setTimeout(()=>{try{v90Lay(true)}catch(_){}},60));
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>{try{v90Lay(true)}catch(_){}},120));
+setInterval(()=>{try{v90LocBuild();v90Lay()}catch(_){}},700);
+try{v90LocBuild();v90Lay(true)}catch(_){}
+
+// ================= v90 ui: drag & drop equipment in the inventory (I) =================
+// Drag a gear item from the bag grid (.kqm-bagg) onto its paper-doll slot (or onto the hero picture) to equip it; drag a worn
+// item from the paper doll onto the bag side to take it off. Equipping/unequipping goes through the game's own invAct(),
+// so stats, models, class and level rules are the same as double-click. Wrong slot / class / level: red flash + a message.
+// Pointer events, so mouse and touch both work: with a mouse the drag starts after moving 6px with the button held (a plain
+// click still selects, double-click still equips); on touch it starts after a 0.38s long-press (a tap still selects, a
+// swipe still scrolls). A ghost with the item's icon follows the pointer, the matching slot glows, the tooltip is hidden.
+// The game has one ring slot, so a ring goes there.
+var V90D={on:false,p:null,src:null,it:null,from:'',ghost:null,tm:0,x0:0,y0:0,noClick:0,ok:false,hl:[]};
+document.head.insertAdjacentHTML('beforeend',`<style id="v90dcss">
+#bag .kqm-bagg .kqm-it,#bag .kqm-doll .kqm-it{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bag .kqm-it img{-webkit-user-drag:none;user-drag:none}
+.v90-ghost{position:fixed;z-index:80;width:54px;height:54px;margin:-27px 0 0 -27px;pointer-events:none;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--rc,#c9a24a);border-radius:6px;background:rgba(16,12,10,.9);box-shadow:0 0 0 1px #000,0 8px 22px rgba(0,0,0,.75),inset 0 0 14px -4px var(--rc,#c9a24a);
+  transform:scale(1.08) rotate(-4deg);opacity:.95}
+.v90-ghost .kqm-ic{font-size:1.6rem;line-height:1}.v90-ghost img{width:100%;height:100%;object-fit:contain;border-radius:5px}
+.v90-ghost.bad{border-color:#f87171;box-shadow:0 0 0 1px #000,0 0 14px #f87171}
+#bag .kqm-slot.v90-src{opacity:.35;outline:1px dashed rgba(255,255,255,.4)}
+#bag .kqm-slot.v90-ok{outline:2px solid #6ee7b7!important;outline-offset:1px;box-shadow:0 0 14px rgba(110,231,183,.55),inset 0 0 14px rgba(110,231,183,.3);animation:v90Glow 1s ease-in-out infinite}
+#bag .kqm-slot.v90-no{outline:2px dashed #f87171!important;outline-offset:1px}
+#bag .kqm-slot.v90-ok.v90-over{background:rgba(110,231,183,.25);transform:scale(1.06)}
+#bag .v90-binz{outline:2px dashed #6ee7b7;outline-offset:2px;border-radius:6px}
+#bag .v90-binz.v90-over{background:rgba(110,231,183,.08)}
+#bag .kqm-slot.v90-flash,#bag .v90-flash{animation:v90Red .55s ease-out 2}
+@keyframes v90Glow{50%{box-shadow:0 0 22px rgba(110,231,183,.8),inset 0 0 18px rgba(110,231,183,.45)}}
+@keyframes v90Red{0%{box-shadow:0 0 0 2px #f87171,0 0 22px #f87171;background:rgba(248,113,113,.45)}100%{box-shadow:none}}
+#bag .kqm-slot.v90-press{transform:scale(.92);transition:transform .3s}
+body.v90drag,body.v90drag *{cursor:grabbing!important;-webkit-user-select:none!important;user-select:none!important}
+</style>`);
+function v90Item(el){const k=el.dataset.k,id=+el.dataset.id;return k=='e'?SLOTS.map(s=>eq[s]).find(x=>x&&x.id==id):gear.find(x=>x.id==id)}
+// the paper-doll element for a slot (worn tile or the empty placeholder)
+function v90DollEl(sl){const d=document.querySelector('#bag .kqm-doll');if(!d)return null;const e=d.querySelector('[data-kqs="'+sl+'"]');if(e)return e;
+  const it=eq[sl];return it?d.querySelector('.kqm-it[data-k="e"][data-id="'+it.id+'"]'):null}
+function v90SlotOf(el){if(!el)return null;if(el.dataset.kqs)return el.dataset.kqs;if(el.dataset.k=='e'){const id=+el.dataset.id;return SLOTS.find(s=>eq[s]&&eq[s].id==id)||null}return null}
+function v90Why(it){const t=itT(it);if(!fitsCls(t,hero.cls)||(t.sl=='offhand'&&hero.cls!='paladin'))return 'Your class can’t use that.';if(hero.lvl<it.req)return 'You need level '+it.req+' to use that.';if(!canUse(it))return 'You can’t use that.';return ''}
+function v90Flash(el,msg){if(el){el.classList.remove('v90-flash');void el.offsetWidth;el.classList.add('v90-flash');setTimeout(()=>el.classList.remove('v90-flash'),1200)}
+  if(msg)say('<span style="color:#f87171">✖ '+msg+'</span>')}
+function v90Under(x,y){const g=V90D.ghost;if(g)g.style.display='none';const el=document.elementFromPoint(x,y);if(g)g.style.display='';return el}
+// where would a drop at (x,y) go?  {kind:'slot',sl,el} | {kind:'hero',el} | {kind:'bag',el} | null
+function v90Target(x,y){const el=v90Under(x,y);if(!el||!el.closest||!el.closest('#bag'))return null;
+  const d=el.closest('.kqm-doll .kqm-slot');if(d){const sl=v90SlotOf(d);return sl?{kind:'slot',sl,el:d}:null}
+  if(el.closest('#hv'))return {kind:'hero',el:$('hv')};
+  const r=el.closest('.kqm-right');if(r)return {kind:'bag',el:r.querySelector('.kqm-bagg')||$('bl')||r};
+  return null}
+function v90Clear(){V90D.hl.forEach(e=>e.classList.remove('v90-ok','v90-no','v90-over','v90-binz'));V90D.hl=[];
+  document.querySelectorAll('#bag .v90-src,#bag .v90-press').forEach(e=>e.classList.remove('v90-src','v90-press'))}
+function v90Start(){let el=V90D.src;const it=V90D.it;if(!it)return v90End();
+  // the bag may have re-rendered since the press: find the same item's tile again
+  if(!el||!el.isConnected)el=V90D.src=document.querySelector(V90D.sel);if(!el)return v90End();try{getSelection().removeAllRanges()}catch(_){}
+  V90D.on=true;V90D.from=el.dataset.k;try{kqmTipHide()}catch(_){}clearTimeout(V90D.tm);
+  const g=document.createElement('div');g.className='v90-ghost';g.style.setProperty('--rc',RAR[it.r][1]);const ic=el.querySelector('.kqm-ic');g.innerHTML=ic?ic.outerHTML:'';
+  document.body.appendChild(g);V90D.ghost=g;el.classList.remove('v90-press');el.classList.add('v90-src');document.body.classList.add('v90drag');
+  if(V90D.from=='g'){const sl=itT(it).sl,t=v90DollEl(sl),ok=!v90Why(it);V90D.ok=ok;if(t){t.classList.add(ok?'v90-ok':'v90-no');V90D.hl.push(t)}}
+  else{const b=document.querySelector('#bag .kqm-bagg')||$('bl');V90D.ok=true;if(b){b.classList.add('v90-binz');V90D.hl.push(b)}}
+  try{navigator.vibrate&&V90D.p&&V90D.p.t=='touch'&&navigator.vibrate(12)}catch(_){}
+  v90Move(V90D.x,V90D.y)}
+function v90Move(x,y){const g=V90D.ghost;if(!g)return;g.style.left=x+'px';g.style.top=y+'px';
+  const T=v90Target(x,y);V90D.hl.forEach(e=>e.classList.remove('v90-over'));let bad=false;
+  if(T){if(V90D.from=='g'&&(T.kind=='slot'||T.kind=='hero')){const sl=itT(V90D.it).sl;if(T.kind=='slot'&&T.sl!=sl)bad=true;else{if(!V90D.ok)bad=true;const t=v90DollEl(sl);if(t)t.classList.add('v90-over')}}
+    else if(V90D.from=='e'&&T.kind=='bag')T.el.classList.add('v90-over')}
+  g.classList.toggle('bad',bad)}
+function v90Drop(x,y){const it=V90D.it,T=v90Target(x,y);if(!T||!it)return;
+  if(V90D.from=='g'){if(T.kind!='slot'&&T.kind!='hero')return;const sl=itT(it).sl;
+    if(T.kind=='slot'&&T.sl!=sl){v90Flash(T.el,'That goes in the '+SLOTN[sl]+' slot, not '+SLOTN[T.sl]+'.');return}
+    const why=v90Why(it);if(why){v90Flash(T.kind=='slot'?T.el:v90DollEl(sl)||T.el,why);return}
+    if(!gear.includes(it))return;selI={k:'g',id:it.id};invAct();try{sfx('chime')}catch(_){}return}
+  if(V90D.from=='e'&&T.kind=='bag'){if(!SLOTS.some(s=>eq[s]===it))return;
+    if(typeof BAG_MAX!='undefined'&&gear.length>=BAG_MAX){v90Flash(T.el,'Your bag is full.');return}
+    selI={k:'e',id:it.id};invAct()}}
+function v90End(){clearTimeout(V90D.tm);if(V90D.ghost)V90D.ghost.remove();V90D.ghost=null;v90Clear();document.body.classList.remove('v90drag');
+  V90D.on=false;V90D.p=null;V90D.src=null;V90D.it=null}
+// --- pointer handling ---
+$('bag').addEventListener('pointerdown',e=>{if(V90D.p||(e.pointerType=='mouse'&&e.button!==0))return;
+  const el=e.target.closest&&e.target.closest('.kqm-bagg .kqm-it[data-k="g"],.kqm-doll .kqm-it[data-k="e"]');if(!el)return;const it=v90Item(el);if(!it)return;
+  V90D.p={id:e.pointerId,t:e.pointerType};V90D.src=el;V90D.it=it;V90D.sel=(el.dataset.k=='e'?'#bag .kqm-doll':'#bag .kqm-bagg')+' .kqm-it[data-k="'+el.dataset.k+'"][data-id="'+el.dataset.id+'"]';V90D.t0=e.timeStamp;V90D.x0=V90D.x=e.clientX;V90D.y0=V90D.y=e.clientY;
+  if(e.pointerType!='mouse'){el.classList.add('v90-press');V90D.tm=setTimeout(v90Start,380)}});
+addEventListener('pointermove',e=>{const P=V90D.p;if(!P||e.pointerId!==P.id)return;V90D.x=e.clientX;V90D.y=e.clientY;const d=Math.hypot(e.clientX-V90D.x0,e.clientY-V90D.y0);
+  // touch: moving away before the long-press time is a swipe (checked by event time, so a busy frame can't turn it into a drag)
+  if(P.t!='mouse'&&d>9&&e.timeStamp-V90D.t0<370){v90End();return}
+  if(!V90D.on){if(P.t=='mouse'){if(d>6)v90Start()}else if(d>9){v90End()}return}
+  e.preventDefault();v90Move(e.clientX,e.clientY)},{passive:false});
+addEventListener('pointerup',e=>{const P=V90D.p;if(!P||e.pointerId!==P.id)return;if(V90D.on){e.preventDefault();V90D.noClick=performance.now();try{v90Drop(e.clientX,e.clientY)}catch(err){console.warn('v90 drop',err)}}v90End()},true);
+addEventListener('pointercancel',e=>{const P=V90D.p;if(P&&e.pointerId===P.id)v90End()},true);
+// touch: once the long-press drag has started, the finger must not scroll the bag (and no context menu / text selection)
+addEventListener('touchmove',e=>{if(V90D.on)e.preventDefault()},{passive:false,capture:true});
+addEventListener('contextmenu',e=>{if(V90D.on||(V90D.p&&V90D.p.t!='mouse'))e.preventDefault()},true);
+document.addEventListener('selectstart',e=>{if(V90D.p)e.preventDefault()},true);
+$('bag').addEventListener('dragstart',e=>{if(e.target.closest&&e.target.closest('.kqm-slot'))e.preventDefault()},true);
+// the click that follows a drop must not select / equip anything; no tooltips while dragging
+addEventListener('click',e=>{if(performance.now()-V90D.noClick<350){V90D.noClick=0;e.stopImmediatePropagation();e.preventDefault()}},true);
+['mouseover','mousemove'].forEach(t=>addEventListener(t,e=>{if(V90D.on){e.stopImmediatePropagation();try{kqmTipHide()}catch(_){}}},true));
+addEventListener('keydown',e=>{if(V90D.on&&e.key=='Escape'){e.stopImmediatePropagation();v90End()}},true);
+// the window closing or re-rendering mid-drag ends it cleanly
+new MutationObserver(()=>{if(V90D.p&&$('bag').classList.contains('hide'))v90End()}).observe($('bag'),{attributes:true,attributeFilter:['class']});
+{const f=rB0;rB0=function(){const r=f.apply(this,arguments);try{if(V90D.on){const sl=V90D.from=='g'?itT(V90D.it).sl:null;v90Clear();
+  if(sl){const t=v90DollEl(sl);if(t){t.classList.add(V90D.ok?'v90-ok':'v90-no');V90D.hl.push(t)}}else{const b=document.querySelector('#bag .kqm-bagg')||$('bl');if(b){b.classList.add('v90-binz');V90D.hl.push(b)}}}}catch(_){}return r}}
+
 // ================= v89 world: bigger zones, themed decorations, old-layout saves =================
 // The zone layout itself is in w0_world.js (PMS=1.3: zones 338x351, 5 camps each) and build/pN_world.py (W/H, ground texture).
 // Decorations: wdDeco() runs at load just before buildVI() (it is a hoisted function, so nothing here may rely on module-level
