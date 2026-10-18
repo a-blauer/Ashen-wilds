@@ -1,0 +1,111 @@
+{
+"note": "measured on the v89 build (commit 9812c12) with the same harness: rot = rotation DPS (random crits), he50 = one cast at level 50 in basic hits (expected-value crits; spenders at full resource)",
+"rot": {
+"5": {
+"warrior": 144.1,
+"paladin": 203.5,
+"assassin": 171,
+"ranger": 183.7,
+"mage": 225.2
+},
+"15": {
+"warrior": 500.7,
+"paladin": 566.3,
+"assassin": 562.1,
+"ranger": 811.3,
+"mage": 1107.3
+},
+"30": {
+"warrior": 1255.3,
+"paladin": 1291.9,
+"assassin": 1518.8,
+"ranger": 1415,
+"mage": 2240.8
+},
+"50": {
+"warrior": 2585.7,
+"paladin": 3374.6,
+"assassin": 3172.2,
+"ranger": 3961.2,
+"mage": 3490.6
+}
+},
+"he50": {
+"warrior": {
+"Cleave": 1.47,
+"Bull Rush": 1.16,
+"Leap Slam": 1.65,
+"Shockwave": 1.58,
+"Intimidating Shout": 0.49,
+"Skull Splitter": 5.12,
+"Seismic Rupture": 1.77,
+"Whirlwind": 5.05,
+"Earthshatter": 2.12,
+"Chain Hook": 0.95,
+"Execute": 3.08,
+"Titan's Fall": 3.11
+},
+"paladin": {
+"Holy Smite": 0.86,
+"Shield Bash": 1.58,
+"Judgment": 1.01,
+"Blessed Hammers": 2.88,
+"Consecration": 1.86,
+"Hammer of Light": 2.22,
+"Beacon of Light": 2.18,
+"Crusader's Charge": 0.81,
+"Sanctuary": 1.82,
+"Avenger's Shield": 1.86,
+"Penance": 1.4,
+"Divine Intervention": 0.93,
+"Heaven's Wrath": 2.01
+},
+"assassin": {
+"Shadow Rush": 5.71,
+"Eviscerate": 10.25,
+"Fan of Knives": 1.94,
+"Smoke Bomb": 2.14,
+"Venom Flask": 6.55,
+"Shuriken Volley": 5.82,
+"Shadow Clone": 10.19,
+"Death Mark": 3.38,
+"Phantom Strike": 3.76,
+"Caltrops": 4.56,
+"Garrote": 4.27,
+"Thousand Cuts": 3.11,
+"Envenom": 2.09,
+"Eclipse": 10.08
+},
+"ranger": {
+"Multishot": 4.08,
+"Disengage": 1.45,
+"Piercing Arrow": 2.99,
+"Explosive Arrow": 3.47,
+"Call of the Wild": 16.43,
+"Frost Trap": 1.49,
+"Hawk Dive": 2.59,
+"Rain of Arrows": 8.29,
+"Barrage": 3.5,
+"Explosive Trap": 3.89,
+"Rapid Fire": 9.42,
+"Entangling Roots": 1.65,
+"Stampede": 3.34,
+"Aimed Shot": 6.03,
+"Wild Hunt": 35.66
+},
+"mage": {
+"Fireball": 2.69,
+"Frost Nova": 1.51,
+"Arcane Missiles": 3.81,
+"Dragon's Breath": 2.33,
+"Chain Lightning": 2.59,
+"Blizzard": 5.89,
+"Frozen Orb": 1.68,
+"Meteor": 4.47,
+"Disintegrate": 6.51,
+"Wall of Fire": 7.62,
+"Singularity": 7.41,
+"Comet Storm": 3.94
+}
+}
+}
