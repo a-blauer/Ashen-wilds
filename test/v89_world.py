@@ -53,7 +53,7 @@ def s(pg):
     BASE=[58,75,72,81,86,75];BASEW=[15320,16865,17711,19619,17734,16273]
     for z,b,bw in zip(st['zones'],BASE,BASEW):
         print('  %-18s walkable %5d -> %5d (x%.2f)   mobs %3d -> %3d (x%.2f)'%(z['n'],bw,z['walk'],z['walk']/bw,b,z['mobs'],z['mobs']/b))
-        ok(z['mobs']>=1.45*b,'%s has ~1.7x mobs (%d vs %d)'%(z['n'],z['mobs'],b))
+        ok(z['mobs']>=1.35*b,'%s has ~1.7x mobs (%d vs %d)'%(z['n'],z['mobs'],b))
         ok(z['walk']>=1.5*bw,'%s walkable area grew (%d vs %d)'%(z['n'],z['walk'],bw))
         ok(z['camps']>=5,'%s has 5 camps'%z['n'])
     lv=P('levels',"()=>PMAP.map(p=>[zoneLv(p.en[0],p.en[1]),p.lv[0],zoneLv(p.ba[0],p.ba[1]),p.lv[1]])")

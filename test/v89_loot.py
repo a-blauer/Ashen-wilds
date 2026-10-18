@@ -30,7 +30,7 @@ def s(pg):
           return {cnt,bad,tot,swapped:LN.swapped}}""")
         print(r);ok(r['bad']==0,'every node keeps its registry entries');ok(r['swapped']>0,'old prop meshes swapped');ok(r['cnt'].get('iron',0)>0 and r['cnt'].get('berry',0)>0,'iron veins and berry bushes exist')
         # gather an iron vein: prompt names the material, ore given, node hides and regrows
-        r=ev("""()=>{const p=MAP.props.find(p=>p[2]=='rock'&&lnV({kind:'rock',x:p[0],y:p[1]})=='iron'&&regionAt(p[0],p[1])>=0);toPos(p[0]+1.2,p[1]);
+        r=ev("""()=>{let p=null;for(const q of MAP.props){if(q[2]!='rock'||lnV({kind:'rock',x:q[0],y:q[1]})!='iron'||regionAt(q[0],q[1])<0)continue;toPos(q[0]+1.2,q[1]);const g=gTarget();if(g&&g.kind=='rock'&&g.x==q[0]&&g.y==q[1]){p=q;break}}
           promptTick();const lab=$('prompt').textContent;const t=gTarget();const i0=mats.iron;gFinish(t);const k=p[1]*W+p[0];
           const e=NODE[k][0],m=new THREE.Matrix4();e[0].getMatrixAt(e[1],m);return {lab,kind:t&&t.kind,iron:mats.iron-i0,hidden:!!gdep[k],zero:m.elements[0]===0}}""")
         print(r);ok('Iron Ore' in r['lab'],'prompt names Iron Ore: '+r['lab']);ok(r['iron']>0,'iron vein gives iron ore')
