@@ -19,6 +19,7 @@ function kqmSave(){try{localStorage.setItem('kqm_menus',JSON.stringify({sort:KQM
 .kqm-left{display:flex;flex-direction:column;gap:8px;min-width:0}
 .kqm-doll{display:grid;grid-template-columns:58px minmax(0,1fr) 58px;gap:8px;align-items:stretch}
 .kqm-doll #hv.pvbox.sm{height:100%;min-height:268px;margin:0}
+.kqm-doll #hv canvas{max-width:100%}
 .kqm-dl,.kqm-dr{display:flex;flex-direction:column;gap:8px;justify-content:flex-start}
 .kqm-sum{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:.74rem}
 .kqm-sum .kv{font-size:.74rem;padding:2px 0}
@@ -106,7 +107,7 @@ function kqmSave(){try{localStorage.setItem('kqm_menus',JSON.stringify({sort:KQM
   #bag #idt{flex-wrap:wrap;max-height:36vh;overflow:auto;align-items:flex-start}
   #bag #idt .dtl{flex:1 1 100%}
   #bag #idt .wsrow .wsbox{flex-basis:100%}
-  #bag .wb.cols.kqm-bagw{grid-template-columns:1fr}
+  #bag .wb.cols.kqm-bagw{grid-template-columns:minmax(0,1fr)}
   .kqm-doll{grid-template-columns:50px minmax(0,1fr) 50px}
   .kqm-doll #hv.pvbox.sm{min-height:214px}
   .kqm-dl,.kqm-dr{gap:5px}

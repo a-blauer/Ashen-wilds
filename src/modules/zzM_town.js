@@ -304,8 +304,8 @@ function kdBanner(k,x,y,z,ry,col,w,h){const c=Math.cos(ry),s=Math.sin(ry),P=(lx,
     q=P(0,-.1,.035);k.p('c',TWC.gold,'box',q[0],q[1],q[2],w*1.02,.06,.01,0,ry,0,0);q=P(0,-h*.48,.036);k.p('c',TWC.gold,'oct',q[0],q[1],q[2],w*.18,w*.24,.01,0,ry,0,0)})}
 
 // one straight stretch of town wall at level lv: along x from -len/2 to len/2, the town is on +z
-function kdSeg(lv,len){const key='KDW|'+lv+'|'+len.toFixed(2);let k=null;
-  if(!twHas(key)){k=twKit(Math.round(len*13+lv*101));const L2=len/2,R=k.R;
+function kdSegK(k,lv,len){
+  {const L2=len/2,R=k.R;
     const logs=(y0,y1a,y1b,rows)=>{const n=Math.round(len/.4);for(let i=0;i<n;i++)rows.forEach((zz,r)=>{const x=-L2+(i+.5+(r?.5:0))*len/n;if(x>L2-.05)return;const hh=y1a+R()*(y1b-y1a)+(r?.2:0),
         col=R()<.25?TWC.woodD:R()<.2?TWC.woodL:TWC.wood,rr=.16+R()*.05,dx=(R()-.5)*.06,dz=zz+(R()-.5)*.06;
       k.as('bark',()=>k.L('c',col,[x,y0,dz],[x+dx,hh,dz],rr,'log',.1));k.as('wood',()=>k.p('c',col,'cone6',x+dx,hh+.27,dz,rr*1.05,.56,rr*1.05,(R()-.5)*.1,R()*3,0,.08))})};
@@ -332,10 +332,10 @@ function kdSeg(lv,len){const key='KDW|'+lv+'|'+len.toFixed(2);let k=null;
       for(let x=-L2+5.25;x<L2-1;x+=10.5){k.L('m',TWC.iron,[x,1.7,.47],[x,1.95,.72],.025,'box',0);k.p('m',TWC.iron,'frus8',x,1.98,.72,.09,.12,.09,Math.PI,0,0,0);kdFlame(k,x,2.02,.72,.6)}
       if(lv==3){for(let x=-L2+4.2;x<L2-2;x+=8.4)kdBanner(k,x,top-.25,-.68,Math.PI,TOWNS[0].pal.ban||0x7a2230,.8,1.6);
         for(let x=-L2+2.6;x<L2-1;x+=10.5)kdBrazier(k,x,.15,top+.12,.8)}}}
-  return twGroup(k,key)}
+}
 // gatehouse across a 3-tile opening along z (the name boards sit on its faces at x=±.72); the town is on +x
-function kdGate(lv){const key='KDG|'+lv;let k=null;
-  if(!twHas(key)){k=twKit(301+lv);const R=k.R;
+function kdGateK(k,lv){
+  {const R=k.R;
     const door=(s,iron)=>{const n=6;for(let i=0;i<n;i++){const x=.78+(i+.5)*1.42/n;k.as('wood',()=>k.p('c',R()<.3?TWC.woodD:0x4a3426,'box',x,1.12,s*1.58,1.42/n-.015,2.2-R()*.05,.08,0,0,0,.05))}
       [.45,1.12,1.8].forEach(h=>k.p('m',TWC.iron,'box',1.48,h,s*1.53,1.42,iron?.1:.06,.02,0,0,0,0));if(iron)for(let i=0;i<4;i++)[.45,1.12,1.8].forEach(h=>k.p('m',TWC.iron,'oct',.95+i*.35,h,s*1.515,.035,.035,.02))};
     if(lv<2){[-1,1].forEach(s=>[-.45,.45].forEach(x=>{k.as('bark',()=>k.L('c',TWC.woodD,[x,-.3,s*1.75],[x,4.0,s*1.75],.21,'log'));k.as('wood',()=>k.p('c',TWC.woodD,'cone6',x,4.25,s*1.75,.22,.5,.22,0,0,0,.05));
@@ -354,10 +354,10 @@ function kdGate(lv){const key='KDG|'+lv;let k=null;
       [-1,1].forEach(s=>{k.L('m',TWC.iron,[.5,3.0,s*1.3],[.5,2.2,s*1.3],.02,'cyl6',0);door(s,1)});
       [-1,1].forEach(s=>kdBrazier(k,-1.25,s*2.75,0,1));
       [-1,1].forEach(s=>kdBanner(k,-.69,3.55,s*1.25,-Math.PI/2,TOWNS[0].pal.ban||0x7a2230,.6,1.0))}}
-  return twGroup(k,key)}
+}
 // wall towers: 0 timber watchtower · 1 stone base, timber top · 3 tall stone tower with battlements (level 2 = the v83 tower)
-function kdTower(lv,r,h){const ban=TOWNS[0].pal.ban||0x7a2230,key='KDT|'+lv+'|'+r+'|'+h;let k=null;
-  if(!twHas(key)){k=twKit(Math.round(r*91+h*17+lv));const R=k.R,a=r*.72;
+function kdTowerK(k,lv,r,h){const ban=TOWNS[0].pal.ban||0x7a2230;
+  {const R=k.R,a=r*.72;
     if(lv==0){[-1,1].forEach(sx=>[-1,1].forEach(sz=>{k.as('bark',()=>k.L('c',TWC.woodD,[sx*a,-.3,sz*a],[sx*a*.92,h+1.2,sz*a*.92],.15,'log'));k.p('c',TWC.stoneD,'dod',sx*a,.05,sz*a,.26,.16,.26)}));
       k.as('wood',()=>{[[1,0],[0,1]].forEach(([dx,dz])=>[-1,1].forEach(s=>{const p0=dx?[-a,0,s*a]:[s*a,0,-a],p1=dx?[a,0,s*a]:[s*a,0,a];
           k.L('c',TWC.woodD,[p0[0],.4,p0[2]],[p1[0],h-.2,p1[2]],.05,'box');k.L('c',TWC.woodD,[p1[0],.4,p1[2]],[p0[0],h-.2,p0[2]],.05,'box');
@@ -379,18 +379,20 @@ function kdTower(lv,r,h){const ban=TOWNS[0].pal.ban||0x7a2230,key='KDT|'+lv+'|'+
       twCone(k,0x3e3a48,0,H+.3,0,r*.85,r*2);k.p('m',TWC.gold,'oct',0,H+.3+r*2+.2,0,.12,.2,.12);
       const top=H+.3+r*2;k.L('c',TWC.woodD,[0,top,0],[0,top+1.3,0],.035,'cyl6',0);k.as('cloth',()=>{k.p('c',ban,'box',.42,top+1.0,0,.78,.44,.03,0,0,0,.06);k.p('c',ban,'tri',.92,top+1.0,0,.44,.24,.03,0,0,-Math.PI/2,.05)});
       kdBrazier(k,r*.55,r*.55,H+.1,.6)}}
-  return twGroup(k,key)}
+}
+// the whole ring (walls, towers, gates) is baked into one kit per level, so it costs only a few draw calls
 function kdWalls(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.wg=null}
-  const g=new THREE.Group();g.name='kdWalls';K.wg=g;T.g.add(g);const R=TS,gz=1.75,LH=R-gz;
-  o.gate.forEach(q=>q.visible=lv==2);o.tw.forEach(q=>q.visible=lv==2);o.ban.forEach(q=>q.visible=false);
-  const add=(m,x,z,ry)=>{m.position.set(x,0,z);m.rotation.y=ry||0;g.add(m);return m};
-  add(kdSeg(lv,2*R),0,-R,0);add(kdSeg(lv,2*R),0,R,Math.PI);
-  [-1,1].forEach(sz=>{add(kdSeg(lv,LH),-R,sz*(gz+LH/2),Math.PI/2);add(kdSeg(lv,LH),R,sz*(gz+LH/2),-Math.PI/2)});
-  if(lv!=2){[-1,1].forEach(s=>{[-2.3,2.3].forEach(z=>add(kdTower(lv,.95,3.1),s*R,z,(s*7+z)%6));[-1,1].forEach(sz=>add(kdTower(lv,1.45,4.2),s*R,sz*R,(s+sz)*1.3))});
-    [-1,1].forEach(s=>add(kdGate(lv),s*R,0,s>0?Math.PI:0))}
+  const R=TS,gz=1.75,LH=R-gz,key='KDRING|'+lv;o.gate.forEach(q=>q.visible=lv==2);o.tw.forEach(q=>q.visible=lv==2);o.ban.forEach(q=>q.visible=false);
+  const mids=[[-10.5,-R],[10.5,-R],[-10.5,R],[10.5,R],[-R,-11.5],[R,-11.5],[-R,11.5],[R,11.5]];let k=null;
+  if(!twHas(key)){k=twKit(601+lv);const at=(x,z,ry,f)=>k.at(x,0,z,f,ry);
+    at(0,-R,0,()=>kdSegK(k,lv,2*R));at(0,R,Math.PI,()=>kdSegK(k,lv,2*R));
+    [-1,1].forEach(sz=>{at(-R,sz*(gz+LH/2),Math.PI/2,()=>kdSegK(k,lv,LH));at(R,sz*(gz+LH/2),-Math.PI/2,()=>kdSegK(k,lv,LH))});
+    if(lv!=2){[-1,1].forEach(s=>{[-2.3,2.3].forEach(z=>at(s*R,z,(s*7+z)%6,()=>kdTowerK(k,lv,.95,3.1)));[-1,1].forEach(sz=>at(s*R,sz*R,(s+sz)*1.3,()=>kdTowerK(k,lv,1.45,4.2)))});
+      [-1,1].forEach(s=>at(s*R,0,s>0?Math.PI:0,()=>kdGateK(k,lv)))}
+    if(lv>=3)mids.forEach(([x,z],i)=>at(x,z,i*1.7,()=>kdTowerK(k,3,1.15,3.6)))}
+  const g=twGroup(k,key);g.name='kdWalls';K.wg=g;T.g.add(g);
   const cols=[],lamps=[];
-  if(lv>=3){[[-10.5,-R],[10.5,-R],[-10.5,R],[10.5,R],[-R,-11.5],[R,-11.5],[-R,11.5],[R,11.5]].forEach(([x,z],i)=>{add(kdTower(3,1.15,3.6),x,z,i*1.7);cols.push({x:T.cx+x,z:T.cy+z,r:1.15})});
-    [-1,1].forEach(s=>[-1,1].forEach(q=>lamps.push([T.cx+s*(R+1.25),T.ph+1.2,T.cy+q*2.75])))}
+  if(lv>=3){mids.forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:1.15}));[-1,1].forEach(s=>[-1,1].forEach(q=>lamps.push([T.cx+s*(R+1.25),T.ph+1.2,T.cy+q*2.75])))}
   kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps}
 
 // ---------- the upgrade structures (one spot each, rebuilt when its level changes) ----------
