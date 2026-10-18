@@ -102,6 +102,15 @@ Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved
 - **Abilities** (`zzM_skills.js`, header explains it): ability points (1 per level, `apFree()` = earned − spent, migration bonus `hero.tal.__apB`); heroes start with the class default; 17 abilities per class (4 original + 3 v71 + 10 new in `KQN`), cost `1+floor(lv/6)` AP, some need a prerequisite; 4 equip slots (`__ld`); K opens Talents | Abilities tabs; ground targeting (circle/line/wall/cone reticle, click to cast, Esc/right-click cancels, drag on touch) for 26 new abilities and the old ground skills. Old saves keep their skills and get the talent points back.
 - Tests: `test/v88_ui_*.py`, `v88_menus.py`, `v88_town_*.py`, `v88_skills*.py`.
 
+## v89: bossfx
+
+`src/modules/zzN_bossfx.js` (spliced by pV11):
+- **Sub-targets**: Hydra brood necks, Argus eye-stalks and Wailing Orbs get inert proxy enemies in `enemies` (`e.bfx`, built on the den4 `dprop` hooks, synced every frame from `arenaTick`). Damage on a proxy (`hurt` wrapper) is handed to `hyHitNeck` / `arHitStalk` (sever/sear/regrow, open-eye bonus, eye burst) — the den hit paths (`DEN[i].hitA`, `d01Shots`) use the proxy too, so nothing is hit twice. Proxies are never synced to co-op peers (`mpElig`).
+- **Targeting in a den fight**: Tab cycles boss + sub-targets + adds nearest first; left click / tap picks the enemy under the pointer (`bfxPick`); a non-boss target shows the target frame below the boss bar (`body.bfxT`) and a red chevron over it. Ranged weapons aim at the target up to 24 tiles (`aimDir`) and launched shots home onto it (`launch`/`homeShot` wrappers).
+- **Orbs**: any hit (hero, shot, skill, companion) shatters an orb; an orb that drifts within 1.7 of a lit Warmfire dissolves in steam (snuffed fires don't). Orbs are per-player copies in co-op, so breaking one is local. New sounds `sfx('shatter')`, `sfx('hiss')`.
+- **Den cutaway**: dens 0–3 get `bfxCutMat` (dens 4–5 already use `dqCut`): scenery above the floor dithers away along the camera→hero line of sight, and the wall arc on the camera's side when the camera is beyond the wall.
+- Tests: `test/v89_bossfx.py`; screenshots of every den edge: `test/v89_bossfx_view.py` (`DENS=`, `CFG=`).
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
