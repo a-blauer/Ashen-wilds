@@ -123,6 +123,13 @@ Modules `src/modules/zzN_misc_*.js` (spliced by pV11); test `test/v89_misc.py` (
 - **Orbs**: any hit (hero, shot, skill, companion) shatters an orb; an orb that drifts within 1.7 of a lit Warmfire dissolves in steam (snuffed fires don't). Orbs are per-player copies in co-op, so breaking one is local. New sounds `sfx('shatter')`, `sfx('hiss')`.
 - **Den cutaway**: dens 0–3 get `bfxCutMat` (dens 4–5 already use `dqCut`): scenery above the floor dithers away along the camera→hero line of sight, and the wall arc on the camera's side when the camera is beyond the wall.
 - Tests: `test/v89_bossfx.py`; screenshots of every den edge: `test/v89_bossfx_view.py` (`DENS=`, `CFG=`).
+## v89: sands
+
+Ssith'ra (den 3) no longer flails. `src/modules/zzN_sands.js` drives the Centipede rig on its own (`ssrRig`; `rigAnim` skips the old slither code and the generic attack overlay for it). Old problems: the slither wave put up to ±0.3 rad on every chained body bone (the swings added up, the pelvis swung the whole body, the front half's wave ran toward the head); the Sovereign attack overlay added tail lift with `+=` every frame and nothing reset it (the tail curled up more and more); every hit pitched the whole 8-tile body 0.45 rad; the instant AI turn spun the body around its middle.
+- **Body**: follow-the-leader. The head eases toward the facing (heavy spring, speed-capped), each segment eases toward the heading of the one in front at the speed the body travels, bends are limited, and the body turns about the model origin (the pelvis bone is moved to match). On top: a travelling wave head → tail (0 at the head, largest at the tail, speed matched to ground speed).
+- **Poses** (rear, head pitch, jaw, tail lift, curl, crouch, dive tilt) ease through critically damped springs. Moves are read by wrapping `BMV` (so co-op partners see them too): tail sweep coils, then whips through exactly at the telegraph's end (`.75*en`); spit rears and thrusts on the cast flash; mines rear and slam; vortex/sandstorm rear and roar; ram coils during the wind-up, drives low, shakes its head when it misses; it dives head-first, bursts up from the sand and lies slack when EXPOSED, tugs at the rubble when STUCK. A hit is a small head recoil.
+- **Death**: it curls and rolls over, then sinks into the sand. `build/pN_sands.py` holds the corpse 1.5 s before it shrinks (only for this model) and drops the exposed roll shiver for it.
+- Test: `test/v89_sands.py` takes frame sheets from the side and from above for idle, move, turn, every attack, stuck and death (`out/v89s_<tag>_<state>.jpg`; `SRC=<other build> TAG=before` for a comparison). It also prints per-frame bone rotation deltas.
 
 ## Conventions (read before changing code)
 
