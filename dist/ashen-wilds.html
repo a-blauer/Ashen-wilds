@@ -3935,7 +3935,7 @@ function gainXP(e){
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +1 ability point (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){
@@ -4165,8 +4165,8 @@ function cast_base(i){
   if(hero.lvl<sk.lv){if(performance.now()-(hero.nmT||0)>900){hero.nmT=performance.now();say(sk.i+' '+sk.n+' unlocks at level '+sk.lv+'.')}return}
   const key='s'+i;if((hero.cd[key]||0)>0)return;const s=HS();
   if(hero.mp<sk.mp){if(performance.now()-(hero.nmT||0)>1200){hero.nmT=performance.now();say('Not enough mana.')}return}
-  hero.mp-=sk.mp;hero.cd[key]=Math.random()<s.echo?.6:sk.cd*(1-Math.min(.5,s.cdr));
-  const d=aimDir();face(d);const mt=sk.mt||CLS[hero.cls].mt,raw=atkOf(mt)*(sk.m||0)*(1+s.skillP),Rr=(sk.r||0)*(1+s.aoeP),now=performance.now(),P=pl.position;
+  hero.mp-=sk.mp;hero.cd[key]=Math.random()<s.echo?.6:sk.cd*kqrC(sk)*(1-Math.min(.5,s.cdr));
+  const d=aimDir();face(d);const mt=sk.mt||CLS[hero.cls].mt,raw=atkOf(mt)*(sk.m||0)*(1+s.skillP)*kqrP(sk),Rr=(sk.r||0)*(1+s.aoeP),now=performance.now(),P=pl.position;
   const fx={mt,col:sk.col,stun:sk.stun,burn:sk.burn};
   if(sk.k!='buff'&&sk.k!='heal'&&sk.k!='barrier')castAnim();
   switch(sk.k){
@@ -4174,16 +4174,16 @@ function cast_base(i){
     case 'nova':ring(P,sk.col,Rr*2.2,380);ring(P,0xffffff,Rr*1.6,260);burst(gY(P,.5),sk.col,50,Rr*1.6,3,.7);area(P,Rr,raw,fx,null,0);break;
     case 'leap':{const tp=aimPoint(7),o=P.clone();let k0=1;while(k0>0&&plBlocked(o.x+(tp.x-o.x)*k0,o.z+(tp.z-o.z)*k0))k0-=.05;UNS.air=nowP()+480;tp.set(o.x+(tp.x-o.x)*k0,0,o.z+(tp.z-o.z)*k0);hero.iv=Math.max(hero.iv,.5);
       tw(420,k=>{P.x=o.x+(tp.x-o.x)*k;P.z=o.z+(tp.z-o.z)*k;pl.children[0].position.y=Math.sin(k*Math.PI)*1.6},()=>{pl.children[0].position.y=0;ring(P,sk.col,Rr*2,380);burst(gY(P,.3),0xc8b090,40,Rr*1.5,2,.6);shake(.25);area(P,Rr,raw,fx,null,0)});break}
-    case 'buff':hero.buffs.push({s:sk.buff,t:now+sk.dur*1000,n:sk.n,i:sk.i});hsDirty();ring(P,sk.col,3,600);burst(gY(P,1),sk.col,40,2,3,.8);break;
+    case 'buff':hero.buffs.push({s:kqrB(sk,sk.buff),t:now+sk.dur*1000,n:sk.n,i:sk.i});hsDirty();ring(P,sk.col,3,600);burst(gY(P,1),sk.col,40,2,3,.8);break;
     case 'channel':hero.chan={t:sk.dur,tick:0,sk,raw,R:Rr,mt};pl.sw=1;break;
-    case 'barrier':hero.sh=heroMax()*sk.v*(1+s.shieldP);hero.shT=now+sk.dur*1000;ring(P,sk.col,2.2,600);burst(gY(P,1),sk.col,30,1.5,2,.7);break;
+    case 'barrier':hero.sh=heroMax()*sk.v*(1+s.shieldP)*kqrP(sk);hero.shT=now+sk.dur*1000;ring(P,sk.col,2.2,600);burst(gY(P,1),sk.col,30,1.5,2,.7);break;
     case 'rain':{const p=sk.at=='self'?P.clone():aimPoint(10);zoneAt(p,Rr,raw,mt,sk.col,sk.ticks,sk.iv,{follow:sk.at=='self'});break}
-    case 'heal':healHero(heroMax()*sk.v);pl.slow=0;ring(P,sk.col,2.6,700);burst(gY(P,1),sk.col,40,1.5,3,.9);break;
+    case 'heal':healHero(heroMax()*sk.v*kqrP(sk));pl.slow=0;ring(P,sk.col,2.6,700);burst(gY(P,1),sk.col,40,1.5,3,.9);break;
     case 'blink':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);const dv=t?V(t.m.position.x-P.x,0,t.m.position.z-P.z):d.clone().setY(0);const L_=dv.length()||1;dv.multiplyScalar(1/L_);const dist=t?Math.min(8,L_+1.8):5.5;face(dv);hero.iv=Math.max(hero.iv,dist/14+.15);hero.dash={x:dv.x,z:dv.z,t:dist/14};shadowRush(dist,raw,mt,fx,sk);break}if(0){const t=null;
       const v=V(t.m.position.x-P.x,0,t.m.position.z-P.z).normalize(),np=t.m.position.clone().addScaledVector(v,1.1);burst(gY(P,1),0x5a3a8a,30,1.5,2,.5);if(!solid(np.x,np.z)){P.x=np.x;P.z=np.z}face(v.clone().negate());hero.iv=Math.max(hero.iv,.35);
       setTimeout(()=>{heroHit(t,raw,mt,{crit:true,s:fx});burst(gY(t.m.position,1),sk.col,30,2,2,.5);hstop=.04},60);break}
     case 'fan':for(let j=0;j<sk.n2;j++){const a=j/sk.n2*6.283,dd=V(Math.sin(a),0,Math.cos(a));launch(P,dd,16,{col:sk.col,mt,arrow:0},raw,.55)}break;
-    case 'mark':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);if(!t){hero.cd[key]=0;hero.mp+=sk.mp;say('No target in reach.');return}t.mark=sk.dur;t.markV=sk.v;heroHit(t,raw,mt,{s:fx});ring(t.m.position,sk.col,1.6,600);dn(t.m.position,'Marked','#ff6a9a',-36,1000);break}
+    case 'mark':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);if(!t){hero.cd[key]=0;hero.mp+=sk.mp;say('No target in reach.');return}t.mark=sk.dur;t.markV=sk.v*kqrU(sk);heroHit(t,raw,mt,{s:fx});ring(t.m.position,sk.col,1.6,600);dn(t.m.position,'Marked','#ff6a9a',-36,1000);break}
     case 'trap':{const mesh=new THREE.Mesh(new THREE.TorusGeometry(.45,.08,6,16),new THREE.MeshStandardMaterial({color:0x8a7a5a,metalness:.6,roughness:.4}));mesh.rotation.x=Math.PI/2;mesh.position.copy(gY(P,.06));scene.add(mesh);traps.push({p:P.clone(),t:20,raw,root:sk.root,mesh});break}
     case 'shot':for(let j=0;j<(sk.n2||1);j++){const n=sk.n2||1,a=(j-(n-1)/2)*.2,co=Math.cos(a),sn=Math.sin(a),dd=V(d.x*co+d.z*sn,0,-d.x*sn+d.z*co);launch(P,dd,sk.arrow?22:13,{col:sk.col,mt,arrow:sk.arrow,big:sk.big,burn:sk.burn,pierce:sk.arrow?s.pierce:0},raw,sk.arrow?.65:1.1)}break;
     case 'beam':{const o=gY(P,.9);bolt(o,o.clone().addScaledVector(d,9),sk.col);bolt(o,o.clone().addScaledVector(d,9),0xffffff);enemies.forEach(e=>{if(e.dead)return;const v=V().subVectors(e.m.position,P).setY(0),a=v.dot(d),w=Math.abs(v.x*d.z-v.z*d.x);if(a>0&&a<9&&w<1.1)heroHit(e,raw,mt,{s:fx})});break}
@@ -4506,7 +4506,7 @@ function ccRender(){
     const C=CLS[ccCls],S50=k=>C.base[k]+C.per[k]*49;
     $('ccInfo').innerHTML=`<h3 style="color:${C.col}">${C.i} ${C.n}</h3><p>${C.d}</p><div class="mut" style="font-size:.72rem;margin-bottom:6px">${C.st} · ${C.arm} armor · ${({melee3:'heavy 3-hit combo',melee4:'fast 4-hit combo',bow:'arrows from range',staff:'magic bolts from range'})[C.atk]}</div>`+
       statBar('Health',S50('hp'),1400)+statBar('Phys. attack',S50('pa'),200)+statBar('Magic attack',S50('ma'),215)+statBar('Phys. defense',S50('pd'),150)+statBar('Magic defense',S50('md'),125)+statBar('Speed',1/C.spd,2.8)+
-      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 1 ability point every level and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
+      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
   }else{
     $('ccList').innerHTML=STARTERS.map(n=>{const f=famOf(n);return `<button class="ccc${n==ccSp?' on':''}" data-s="${n}" style="--cc:#${('00000'+FAMD[f].col.toString(16)).slice(-6)}"><span class="cci">${SP2[n][3]}</span><span><b>${n}</b><small>${FAMD[f].i} ${f} family</small></span></button>`}).join('');
     const f=famOf(ccSp),F=FAMD[f],sp=CSP[SP2[ccSp][8]];
@@ -6079,7 +6079,7 @@ CLS.assassin.crit=.06;CLS.assassin.spd=.43;
  set('a2',.07);set('a3',.12);set('a4',.1);set('a5',.25,'Critical hits deal 25% more damage')}
 // Paladin hits harder; Mage gets a little more armour (applied once per stat refresh)
 function HS(){const s=HS_base();if(!s._bal){s._bal=1;
-  if(hero.cls=='paladin'){const pb=.2+.011*hero.lvl;s.basicP+=pb;s.skillP+=pb}
+  if(hero.cls=='paladin'){const pb=.12+.004*hero.lvl;s.basicP+=pb;s.skillP+=pb}
   if(hero.cls=='mage'){s.pd*=1.25}
   if(typeof gearX=='function')gearX(s)}return s}
 // Earth: real tanks with a proper bite, and sturdier shields
@@ -6598,15 +6598,15 @@ function resGain(v){hero.cr=Math.min(100,(hero.cr||0)+v);hero.crT=nowP();resUI()
 function cast(i){
   if(riding)dismount();
   const sk=heroSkills()[i],ok=sk&&party.length&&!hero.chan&&hero.lvl>=sk.lv&&!((hero.cd['s'+i]||0)>0)&&hero.mp>=sk.mp,R=CRES[hero.cls];
-  let pw=0;if(ok&&R&&(hero.cr||0)>=50){pw=hero.cr;hero.buffs.push({n:R.n+' empowered',i:R.i,s:{skillP:.9*pw/100,aoeP:.45*pw/100},t:nowP()+1600});hsDirty();hero.cr=0;
-    popT(pl.position,'EMPOWERED ×'+(1+.9*pw/100).toFixed(1),R.col,true);const c=parseInt(R.col.slice(1),16);burst(gY(pl.position,1),c,40,2.5,3,.6);ring(pl.position,c,2.6,320);sfx('power');resUI()}
+  let pw=0;if(ok&&R&&(hero.cr||0)>=50){pw=hero.cr;hero.buffs.push({n:R.n+' empowered',i:R.i,s:{skillP:.5*pw/100,aoeP:.3*pw/100},t:nowP()+1600});hsDirty();hero.cr=0;
+    popT(pl.position,'EMPOWERED ×'+(1+.5*pw/100).toFixed(1),R.col,true);const c=parseInt(R.col.slice(1),16);burst(gY(pl.position,1),c,40,2.5,3,.6);ring(pl.position,c,2.6,320);sfx('power');resUI()}
   const cd0=hero.cd['s'+i]||0,r_=cast_base(i);if((hero.cd['s'+i]||0)>cd0&&typeof lpCast=='function')lpCast(heroSkills()[i]);return r_;
 }
 {const b=document.createElement('div');b.id='resb';b.innerHTML='<span class="ri"></span><div class="rbar"><i></i><b class="m50"></b></div><span class="rt"></span>';$('bmid').insertBefore(b,$('bmid').firstChild)}
 function resUI(){const R=CRES[hero.cls],b=$('resb');if(!R||!b)return;const v=hero.cr||0;b.style.setProperty('--rc',R.col);b.querySelector('.ri').textContent=R.i;
   b.querySelector('i').style.width=v+'%';b.classList.toggle('rdy',v>=50);b.classList.toggle('full',v>=100);
   b.querySelector('.rt').textContent=R.pips?'●'.repeat(Math.floor(v/20))+'○'.repeat(5-Math.floor(v/20)):R.n+' '+Math.round(v);
-  b.title=R.n+': fills from basic attacks'+(R.hurt?' and taking hits':'')+'. At 50+ your next skill is empowered (up to ×1.9 damage and bigger area at 100).'}
+  b.title=R.n+': fills from basic attacks'+(R.hurt?' and taking hits':'')+'. At 50+ your next skill is empowered (up to ×1.5 damage and bigger area at 100).'}
 
 // =============== 6. TEAM-UP ===============
 const TEAM={Beast:['Pack Ambush','🐾',0xff8a3a,{bleed:5}],Sky:['Thunder Dive','⚡',0xfff06a,null,'shock'],Dragon:['Dragonfire','🔥',0xff5a1a,{burn:5},'fire'],Earth:['Earthshatter','🪨',0xc8a070,{stun:1.6}],Spirit:['Soul Frost','❄️',0x9fe3ff,{slow:4},'frost'],Swarm:['Plague Swarm','🕸️',0x8ad84a,{poison:6},'poison']};
@@ -15052,7 +15052,7 @@ var KQN={
   {n:'Divine Intervention',i:'😇',lv:44,x:'p_interv',m:2.2,r:4,mt:'m',dur:3,cd:75,mp:30,col:0xfffbe0,pose:'raise',ty:'Invulnerable · heal',d:'Become untouchable for 3s while healing 30% of your max health, then release a holy nova around you.'},
   {n:'Heaven\'s Wrath',i:'🌩️',lv:48,x:'p_wrath',gt:1,sh:'circle',r:5,rng:12,m:1.6,mt:'m',stun:1,cd:28,mp:32,col:0xfff2a0,pose:'raise',req:'Hammer of Light',ty:'Barrage · AoE',d:'Pillars of light strike six spots in the target area, then a final judgement lands at its center and stuns.'}],
  assassin:[
-  {n:'Eviscerate',i:'✂️',lv:2,x:'a_evisc',m:1.3,cd:6,mp:10,spend:1,col:0xe04a6a,pose:'thrust',ty:'Finisher · single target',d:'A finishing strike that spends all Combo points: +45% damage per point (5 points: ×3.25, always critical).'},
+  {n:'Eviscerate',i:'✂️',lv:2,x:'a_evisc',m:1.3,cd:6,mp:10,spend:1,col:0xe04a6a,pose:'thrust',ty:'Finisher · single target',d:'A finishing strike that spends all Combo points: +25% damage per point (5 points: ×2.25, always critical).'},
   {n:'Venom Flask',i:'⚗️',lv:8,x:'a_flask',gt:1,sh:'circle',r:2.8,rng:9,m:.35,dur:6,cd:13,mp:14,col:0x7ae04a,pose:'throw',ty:'Poison · zone',d:'Lob a flask that bursts into a poison cloud for 6s: enemies inside are poisoned and slowed.'},
   {n:'Vanish',i:'🌫️',lv:14,x:'a_vanish',dur:4,cd:20,mp:14,col:0x6a5a8a,pose:'flex',ty:'Stealth',d:'Melt into the shadows for 4s: enemies lose track of you and you move 40% faster. Your next hit is an ambush: critical and +50% damage.'},
   {n:'Shadow Clone',i:'👥',lv:16,x:'a_clone',m:.6,dur:8,cd:24,mp:18,col:0x7a4ae0,pose:'cast',ty:'Summon',d:'Split off a shadow double that hunts nearby enemies with its own daggers for 8s.'},
@@ -15207,18 +15207,18 @@ var KQH={
  w_banner(c){const p=c.gp.clone(),R=c.R,g=new THREE.Group();g.add(kqsMesh(new THREE.CylinderGeometry(.06,.07,3.2,6),kqsStd(0x6a4a2a,.15),0,1.6,0));g.add(kqsMesh(new THREE.ConeGeometry(.12,.3,5),kqsStd(0xd8b050,.6),0,3.3,0));
   const cl=kqsMesh(new THREE.PlaneGeometry(1,1.3,4,1),new THREE.MeshStandardMaterial({color:0xb01818,emissive:0x400606,side:THREE.DoubleSide,flatShading:true}),.52,2.45,0);g.add(cl);g.add(kqsMesh(new THREE.TorusGeometry(.2,.05,5,10),kqsStd(0xffd060,.7),.52,2.5,.02));
   g.position.copy(gY(p,0));g.scale.set(1,.01,1);scene.add(g);tw(260,k=>g.scale.set(1,k,1));const D=kqsDecal(p,R,c.sk.col,.12,.6);burst(gY(p,.3),0xc8a070,30,2.5,2,.5);shake(.12);kqsSnd('horn');let ti=0;
-  kqsObj({life:c.sk.dur,tick:(dt,now,o)=>{cl.rotation.y=Math.sin(now/260)*.25;ti-=dt;if(ti>0)return;ti=.5;if(d2(pl.position,p)<R){kqsBuff('War Banner','🚩',{paP:.2,dr:.15,regen:.02},700);burst(gY(pl.position,.2),c.sk.col,4,.6,1.4,.5)}
+  kqsObj({life:c.sk.dur,tick:(dt,now,o)=>{cl.rotation.y=Math.sin(now/260)*.25;ti-=dt;if(ti>0)return;ti=.5;if(d2(pl.position,p)<R){kqsBuff('War Banner','🚩',kqrB(c.sk,{paP:.2,dr:.15,regen:.02}),700);burst(gY(pl.position,.2),c.sk.col,4,.6,1.4,.5)}
     kqsFoes(p,R).forEach(e=>eStatus(e,{slow:1},0));if(Math.random()<.5)ring(p,c.sk.col,R*1.9,500)},end:()=>{D.rm(400);kqsFade(g,400);kqsUnbuff('War Banner')}})},
  w_blood(c){const lost=Math.min(hero.hp-1,hero.hp*.15);hero.hp-=Math.max(0,lost);dn(pl.position,'-'+Math.round(lost),'#ff6b5b');hero.cr=100;try{resUI()}catch(_){}
-  hero.buffs.push({s:{as:.25,paP:.1,ls:.1},t:c.now+c.sk.dur*1000,n:'Bloodrage',i:'🩸'});hsDirty();burst(gY(pl.position,1),0xc0101a,60,2.5,3,.8);ring(pl.position,0xff2020,3,500);popT(pl.position,'BLOODRAGE','#ff4040',true);flash('rgba(200,20,20,.25)');kqsSnd('shout')},
+  hero.buffs.push({s:kqrB(c.sk,{as:.25,paP:.1,ls:.1}),t:c.now+c.sk.dur*1000,n:'Bloodrage',i:'🩸'});hsDirty();burst(gY(pl.position,1),0xc0101a,60,2.5,3,.8);ring(pl.position,0xff2020,3,500);popT(pl.position,'BLOODRAGE','#ff4040',true);flash('rgba(200,20,20,.25)');kqsSnd('shout')},
  w_hook(c){const p=c.gp.clone(),P=c.P;kqsChain(gY(P,1.1),gY(p,.5),0xa8a8b8,180);kqsSnd('chain');
   setTimeout(()=>{ring(p,c.sk.col,c.R*1.8,300);burst(gY(p,.5),0xc8c8d8,24,c.R,1.5,.4);const L=kqsFoes(p,c.R);L.forEach(e=>{kqsHit(e,c.raw,c);if(e.boss||e.dead)return;const a=e.m.position.clone(),d=kqsDir(pl.position,a),b=kqsV(pl.position.x+d.x*1.4+(Math.random()-.5)*.6,pl.position.z+d.z*1.4+(Math.random()-.5)*.6);
     kqsChain(gY(pl.position,1.1),gY(a,.8),0x8a8a9a,260);e.vx=e.vz=0;tw(260,k=>{if(e.dead)return;e.m.position.x=a.x+(b.x-a.x)*k;e.m.position.z=a.z+(b.z-a.z)*k})});if(L.length)shake(.15)},180)},
  w_exec(c){const t=kqsNear(5.2);if(!t)return false;const lg=kqsLunge(t);const low=t.c.h/M(t.c)<.3,k=(low?3:1)*(1+Math.min(100,c.cr)/100*.8);
   setTimeout(()=>{if(t.dead)return;kqsHit(t,c.raw*k,c);burst(gY(t.m.position,1),0xff2a1a,low?50:24,2.6,2.5,.5);hstop=low?.12:.06;shake(low?.35:.18);kqsSnd('thud');
    if(t.dead){hero.cd[c.key]=(hero.cd[c.key]||0)*.3;popT(t.m.position,'EXECUTED','#ff4a3a',true)}},150+lg)},
- w_unbrk(c){KQS.unbrk=c.now+c.sk.dur*1000;hero.buffs.push({s:{dr:.3},t:KQS.unbrk,n:'Unbreakable',i:'🗿'});hsDirty();ring(pl.position,0xb0a898,3,600);burst(gY(pl.position,1),0x9a9080,50,2,2.5,.8);popT(pl.position,'UNBREAKABLE','#d6d3d1',true);kqsSnd('thud');
-  kqsObj({life:c.sk.dur,tick:()=>{if(Math.random()<.3)burst(gY(pl.position,1),0xb0a898,2,.6,1,.4)},end:o=>{if(!o.abort){healHero(heroMax()*.15);ring(pl.position,0x9affb0,2.4,500)}}})},
+ w_unbrk(c){KQS.unbrk=c.now+c.sk.dur*1000;hero.buffs.push({s:kqrB(c.sk,{dr:.3}),t:KQS.unbrk,n:'Unbreakable',i:'🗿'});hsDirty();ring(pl.position,0xb0a898,3,600);burst(gY(pl.position,1),0x9a9080,50,2,2.5,.8);popT(pl.position,'UNBREAKABLE','#d6d3d1',true);kqsSnd('thud');
+  kqsObj({life:c.sk.dur,tick:()=>{if(Math.random()<.3)burst(gY(pl.position,1),0xb0a898,2,.6,1,.4)},end:o=>{if(!o.abort){healHero(heroMax()*.15*c.rk);ring(pl.position,0x9affb0,2.4,500)}}})},
  w_titan(c){const o=c.P.clone(),tp=kqsLand(o,c.gp),R=c.R;hero.iv=Math.max(hero.iv||0,.9);try{UNS.air=nowP()+760}catch(_){}kqsSnd('whoosh');
   tw(650,k=>{pl.position.x=o.x+(tp.x-o.x)*k;pl.position.z=o.z+(tp.z-o.z)*k;if(pl.children[0])pl.children[0].position.y=Math.sin(k*Math.PI)*4.2;if(k>.2&&k<.9)burst(gY(pl.position,1+Math.sin(k*Math.PI)*4),0xffb060,2,.3,.2,.3)},
    ()=>{if(pl.children[0])pl.children[0].position.y=0;const p=pl.position.clone();ring(p,c.sk.col,R*2.2,450);ring(p,0xffffff,R*1.4,300);burst(gY(p,.3),0xb08a60,90,R*1.6,4,.9);for(let j=0;j<8;j++){const a=j/8*6.283;kqsSpike(kqsV(p.x+Math.cos(a)*R*.7,p.z+Math.sin(a)*R*.7),0x8a6a4a,1.2)}
@@ -15233,32 +15233,32 @@ var KQH={
  p_beacon(c){const p=c.gp.clone(),R=c.R,g=new THREE.Group(),cr=kqsMesh(new THREE.OctahedronGeometry(.42,0),kqsStd(0xffe8a0,1.1),0,1.6,0),col=kqsMesh(new THREE.CylinderGeometry(.32,.32,7,10,1,true),kqsAdd(0xfff0b0),0,3.5,0);col.material.opacity=.35;
   g.add(cr,col,kqsMesh(new THREE.CylinderGeometry(.5,.62,.3,6),kqsStd(0xa8a090,.2),0,.15,0));g.position.copy(gY(p,0));scene.add(g);const D=kqsDecal(p,R,c.sk.col,.12,.55);kqsPillar(p,0xfff0b0,10,500,.9);kqsSnd('holy');let ti=.2;
   kqsObj({life:c.sk.dur,tick:(dt,now)=>{cr.rotation.y+=dt*2;cr.position.y=1.6+Math.sin(now/300)*.12;ti-=dt;if(ti>0)return;ti=1;ring(p,c.sk.col,R*1.9,600);kqsArea(p,R,c.raw,c,{proc:false});
-    if(d2(pl.position,p)<R){healHero(heroMax()*.025);burst(gY(pl.position,1),0x9affb0,10,1,1.5,.6)}},end:()=>{D.rm(400);kqsFade(g,400)}})},
+    if(d2(pl.position,p)<R){healHero(heroMax()*.025*c.rk);burst(gY(pl.position,1),0x9affb0,10,1,1.5,.6)}},end:()=>{D.rm(400);kqsFade(g,400)}})},
  p_charge(c){const d=c.d,T=8/14,hit=new Set();hero.dash={x:d.x,z:d.z,t:T};hero.iv=Math.max(hero.iv||0,T+.15);kqsSnd('charge');kqsSnd('holy');
   kqsObj({life:T+.08,tick:()=>{burst(gY(pl.position,.8),0xffe080,6,1,1.5,.5);kqsFoes(pl.position,1.9).forEach(e=>{if(hit.has(e))return;hit.add(e);kqsHit(e,c.raw,c);eStatus(e,{weak:4},0);burst(gY(e.m.position,1),0xfff0b0,16,2,2,.4)})},end:()=>ring(pl.position,c.sk.col,2.4,320)})},
  p_sanct(c){const p=c.gp.clone(),R=c.R,dome=kqsMesh(new THREE.SphereGeometry(1,20,10,0,6.283,0,Math.PI/2),kqsAdd(0xfff6c8));dome.material.opacity=.0;dome.position.copy(gY(p,0));scene.add(dome);const D=kqsDecal(p,R,c.sk.col,.16,.7);kqsSnd('holy');let ti=0;
   tw(300,k=>{dome.scale.setScalar(R*k);dome.material.opacity=.22*k});
-  kqsObj({life:c.sk.dur,tick:(dt,now)=>{dome.material.opacity=.18+Math.sin(now/220)*.05;ti-=dt;if(ti>0)return;ti=.5;if(d2(pl.position,p)<R)kqsBuff('Sanctuary','⛪',{dr:.35},700);kqsFoes(p,R).forEach(e=>eStatus(e,{slow:1},0));kqsArea(p,R,c.raw,c,{proc:false})},end:()=>{D.rm(400);kqsFade(dome,400);kqsUnbuff('Sanctuary')}})},
+  kqsObj({life:c.sk.dur,tick:(dt,now)=>{dome.material.opacity=.18+Math.sin(now/220)*.05;ti-=dt;if(ti>0)return;ti=.5;if(d2(pl.position,p)<R)kqsBuff('Sanctuary','⛪',kqrB(c.sk,{dr:.35}),700);kqsFoes(p,R).forEach(e=>eStatus(e,{slow:1},0));kqsArea(p,R,c.raw,c,{proc:false})},end:()=>{D.rm(400);kqsFade(dome,400);kqsUnbuff('Sanctuary')}})},
  p_avenger(c){const t0=kqsNear(12);if(!t0)return false;const L=[t0],seen=new Set([t0]);let cur=t0;for(let j=0;j<4;j++){const nx=enemies.filter(e=>!e.dead&&!seen.has(e)&&d2(e.m.position,cur.m.position)<7).sort((a,b)=>d2(a.m.position,cur.m.position)-d2(b.m.position,cur.m.position))[0];if(!nx)break;L.push(nx);seen.add(nx);cur=nx}
   const disc=new THREE.Group();disc.add(kqsMesh(new THREE.CylinderGeometry(.38,.38,.08,10),kqsStd(0xd8c8a0,.6)));disc.add(kqsMesh(new THREE.TorusGeometry(.38,.05,5,12),kqsStd(0xffd860,.9)));disc.children[1].rotation.x=Math.PI/2;scene.add(disc);
   let from=gY(pl.position,1.1),j=0;kqsSnd('whoosh');const leg=()=>{const e=L[j],to=e&&!e.dead?gY(e.m.position,1):null;if(!to){back();return}const a=from.clone();tw(140,k=>{disc.position.lerpVectors(a,to,k);disc.rotation.y+=.6;burst(disc.position,0xffe8b0,1,.2,.1,.25)},()=>{kqsHit(e,c.raw*(1-.1*j),c);burst(to,0xffe8b0,16,1.6,1.5,.4);sfx('blunt');from=to;j++;if(j<L.length)leg();else back()})};
   const back=()=>{const a=disc.position.clone();tw(200,k=>{disc.position.lerpVectors(a,gY(pl.position,1.1),k);disc.rotation.y+=.6},()=>kqsRm(disc))};leg()},
- p_penance(c){kqsSnd('holy');kqsChan({t:c.sk.dur,iv:.5,slow:.65,tick:()=>{healHero(heroMax()*.03);ring(pl.position,c.sk.col,c.R*1.9,420);burst(gY(pl.position,1.6),0xfff0b0,16,1.5,2,.6);kqsArea(pl.position,c.R,c.raw,c,{proc:false});kqsPose('raise',460)}})},
- p_seal(c){hero.buffs.push({s:{basicP:.35,maP:.15,ls:.06},t:c.now+c.sk.dur*1000,n:'Seal of Light',i:'🌟'});hsDirty();ring(pl.position,c.sk.col,3,600);burst(gY(pl.position,1.2),c.sk.col,50,2,3,.8);kqsSnd('bell')},
+ p_penance(c){kqsSnd('holy');kqsChan({t:c.sk.dur,iv:.5,slow:.65,tick:()=>{healHero(heroMax()*.03*c.rk);ring(pl.position,c.sk.col,c.R*1.9,420);burst(gY(pl.position,1.6),0xfff0b0,16,1.5,2,.6);kqsArea(pl.position,c.R,c.raw,c,{proc:false});kqsPose('raise',460)}})},
+ p_seal(c){hero.buffs.push({s:kqrB(c.sk,{basicP:.35,maP:.15,ls:.06}),t:c.now+c.sk.dur*1000,n:'Seal of Light',i:'🌟'});hsDirty();ring(pl.position,c.sk.col,3,600);burst(gY(pl.position,1.2),c.sk.col,50,2,3,.8);kqsSnd('bell')},
  p_interv(c){const T=c.sk.dur;hero.iv=Math.max(hero.iv||0,T);const sph=kqsMesh(new THREE.SphereGeometry(1.15,16,10),kqsAdd(0xfffbe0));sph.material.opacity=.25;scene.add(sph);popT(pl.position,'DIVINE INTERVENTION','#fde68a',true);flash('rgba(255,240,180,.3)');kqsSnd('holy');kqsSnd('bell');
-  kqsObj({life:T,tick:(dt,now)=>{sph.position.copy(gY(pl.position,1));sph.material.opacity=.2+Math.sin(now/120)*.06;healHero(heroMax()*.1*dt,true);if(Math.random()<.4)burst(gY(pl.position,1.2),0xfffbe0,2,.8,1.5,.5)},
+  kqsObj({life:T,tick:(dt,now)=>{sph.position.copy(gY(pl.position,1));sph.material.opacity=.2+Math.sin(now/120)*.06;healHero(heroMax()*.1*dt*c.rk,true);if(Math.random()<.4)burst(gY(pl.position,1.2),0xfffbe0,2,.8,1.5,.5)},
    end:o=>{kqsRm(sph);if(o.abort)return;const P=pl.position;ring(P,0xfff0a0,c.R*2.2,420);ring(P,0xffffff,c.R*1.4,300);burst(gY(P,.6),0xfff0a0,70,c.R*1.5,3,.8);kqsArea(P,c.R,c.raw,c);shake(.25);kqsSnd('boom')}})},
  p_wrath(c){const p=c.gp.clone(),R=c.R;kqsSnd('holy');const D=kqsDecal(p,R,c.sk.col,.08,.6);
   for(let j=0;j<6;j++)setTimeout(()=>{const a=Math.random()*6.283,r=Math.sqrt(Math.random())*R*.85,q=kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r);kqsWarn(q,1.6,c.sk.col,.35,()=>{kqsPillar(q,0xfff2a0,12,380,.6);burst(gY(q,.4),0xfff2a0,30,1.8,3,.5);kqsArea(q,1.6,c.raw,c,{stun:0});sfx('zap');shake(.08)})},j*280);
   setTimeout(()=>kqsWarn(p,3,0xffffff,.5,()=>{kqsPillar(p,0xffffff,16,520,1.6);ring(p,c.sk.col,6,450);burst(gY(p,.4),0xfff2a0,80,3,4,.8);kqsArea(p,3,c.A*3.0,c);shake(.35);kqsSnd('boom');D.rm(400)}),1750)},
  // ===== ASSASSIN =====
- a_evisc(c){const t=kqsNear(5);if(!t)return false;const lg=kqsLunge(t);const k=1+.45*c.pips;
+ a_evisc(c){const t=kqsNear(5);if(!t)return false;const lg=kqsLunge(t);const k=1+.25*c.pips;
   setTimeout(()=>{if(t.dead)return;kqsHit(t,c.raw*k,c,{crit:c.pips>=5});burst(gY(t.m.position,1),0xe04a6a,14+c.pips*8,2,2,.4);if(c.pips)popT(t.m.position,'●'.repeat(c.pips)+' ×'+k.toFixed(2),'#f0abfc',c.pips>=4);hstop=.05;sfx('stab')},90+lg)},
  a_flask(c){const p=c.gp.clone(),R=c.R,fl=kqsMesh(new THREE.SphereGeometry(.16,6,5),kqsStd(0x7ae04a,.8));kqsSnd('whoosh');
   kqsLob(c.P,p,fl,380,2.2,()=>{burst(gY(p,.4),0x7ae04a,40,R,2,.6);ring(p,0x7ae04a,R*1.8,300);sfx('brk',.4);kqsSnd('poison');const D=kqsDecal(p,R,0x6ac03a,.22,.55);let ti=0;
    kqsObj({life:c.sk.dur,tick:dt=>{for(let k=0;k<2;k++){const a=Math.random()*6.283,r=Math.random()*R;burst(gY(kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r),.3+Math.random()),0x8ad84a,1,.4,.6,.9)}ti-=dt;if(ti>0)return;ti=.5;
     kqsFoes(p,R).forEach(e=>{eStatus(e,{poison:4,slow:1},c.A*.35*(1+(c.s.poisonP||0)));kqsHit(e,c.raw,c,{proc:false})})},end:()=>D.rm(400)})})},
- a_vanish(c){KQS.stealth=c.now+c.sk.dur*1000;hero.buffs.push({s:{mspd:.4},t:KQS.stealth,n:'Vanish',i:'🌫️'});hsDirty();burst(gY(pl.position,1),0x3a2a4a,60,2.2,1.6,.9);ring(pl.position,0x6a5a8a,2.4,400);kqsStealthVis(true);kqsSnd('shadow');
+ a_vanish(c){KQS.stealth=c.now+c.sk.dur*kqrD(c.sk)*1000;hero.buffs.push({s:{mspd:.4},t:KQS.stealth,n:'Vanish',i:'🌫️'});hsDirty();burst(gY(pl.position,1),0x3a2a4a,60,2.2,1.6,.9);ring(pl.position,0x6a5a8a,2.4,400);kqsStealthVis(true);kqsSnd('shadow');
   enemies.forEach(e=>{if(!e.dead&&!e.boss&&d2(e.m.position,pl.position)<30){e.agg=0;mCancel(e)}});if(tgt&&!tgt.boss){}},
  a_clone(c){const m=kqsShade(0x3a2a5a),P=c.P;m.position.set(P.x-Math.cos(pl.rotation.y)*1.2,GH(P.x,P.z),P.z+Math.sin(pl.rotation.y)*1.2);burst(gY(m.position,1),0x7a4ae0,30,1.5,2,.5);kqsSnd('shadow');
   kqsSummon({mesh:m,life:c.sk.dur,spd:8,reach:1.5,iv:.55,dmg:c.raw,c,col:0x9a6ae0,hum:1})},
@@ -15278,7 +15278,7 @@ var KQH={
  a_eclipse(c){const p=c.gp.clone(),R=c.R,D=kqsDecal(p,R,0x2a0a4a,.0,.9),dark=kqsDrapeM(new THREE.RingGeometry(.001,1,40,3),new THREE.MeshBasicMaterial({color:0x05000a,transparent:true,opacity:.0,depthWrite:false,side:THREE.DoubleSide}),27);
   kqsDrape(dark,(u,v)=>[p.x+u*R,p.z-v*R],.13);tw(300,k=>dark.material.opacity=.55*k);const orb=kqsMesh(new THREE.SphereGeometry(.42,14,10),new THREE.MeshBasicMaterial({color:0x000000}));const hal=kqsMesh(new THREE.RingGeometry(.42,.62,24),kqsAdd(0x9a6ae0));orb.position.copy(gY(p,3.6));hal.position.copy(orb.position);scene.add(orb,hal);kqsSnd('shadow');let ti=0;
   kqsObj({life:c.sk.dur,tick:(dt,now)=>{hal.quaternion.copy(cam.quaternion);if(Math.random()<.5){const a=Math.random()*6.283,r=Math.random()*R;burst(gY(kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r),.2),0x3a1a5a,1,.2,1.2,.8)}ti-=dt;if(ti>0)return;ti=.5;
-    if(d2(pl.position,p)<R)kqsBuff('Eclipse','🌒',{crit:.25,cdm:.3},700);kqsFoes(p,R).forEach(e=>{eStatus(e,{weak:1,slow:1},0);kqsHit(e,c.raw,c,{proc:false})})},end:()=>{D.rm(400);kqsFade(dark,400);kqsRm(orb);kqsFade(hal,300);kqsUnbuff('Eclipse')}})},
+    if(d2(pl.position,p)<R)kqsBuff('Eclipse','🌒',kqrB(c.sk,{crit:.25,cdm:.3}),700);kqsFoes(p,R).forEach(e=>{eStatus(e,{weak:1,slow:1},0);kqsHit(e,c.raw,c,{proc:false})})},end:()=>{D.rm(400);kqsFade(dark,400);kqsRm(orb);kqsFade(hal,300);kqsUnbuff('Eclipse')}})},
  // ===== RANGER =====
  r_diseng(c){const d=c.d,o=c.P.clone(),tp=kqsLand(o,kqsV(o.x-d.x*6,o.z-d.z*6));launch(o,d,22,{col:c.sk.col,mt:'p',arrow:1},c.raw,.65);kqsFoes(o,3).forEach(e=>eStatus(e,{slow:3},0));burst(gY(o,.3),0xc8e0a0,20,2,1,.4);hero.iv=Math.max(hero.iv||0,.45);kqsSnd('whoosh');
   try{UNS.air=nowP()+460}catch(_){}tw(380,k=>{pl.position.x=o.x+(tp.x-o.x)*k;pl.position.z=o.z+(tp.z-o.z)*k;if(pl.children[0])pl.children[0].position.y=Math.sin(k*Math.PI)*1.3},()=>{if(pl.children[0])pl.children[0].position.y=0;burst(gY(pl.position,.2),0xc8b090,12,1.2,1,.4)})},
@@ -15309,7 +15309,7 @@ var KQH={
   kqsChan({t:.9,iv:.9,ti:.9,slow:.6,tick:()=>{},upd:()=>{const d=aimDir();face(d);glow.position.copy(gY(pl.position,1.3)).addScaledVector(d,.8);glow.scale.setScalar(.6+(KQS.ch?Math.min(1,KQS.ch.el/.9):1)*1.4)},
    end:cancel=>{kqsRm(glow);if(cancel)return;const d=aimDir(),o=gY(pl.position,1.1);face(d);const e=o.clone().addScaledVector(d,20);kqsSpark(o,e,0xfff6d0);kqsSpark(o,e,0xffffff);kqsBeam(o,e,0xfff6d0,.12,260);kqsSnd('snipe');shake(.15);
     kqsLine(pl.position,d,20,1.6).forEach(q=>{kqsHit(q,c.raw,c);burst(gY(q.m.position,1),0xfff6d0,16,1.6,1.5,.4)})}})},
- r_hunt(c){const P=c.P;kqsSnd('beast');kqsSnd('horn');hero.buffs.push({s:{mspd:.2,compP:.2},t:c.now+c.sk.dur*1000,n:'Wild Hunt',i:'🐾'});hsDirty();ring(P,c.sk.col,3.2,500);
+ r_hunt(c){const P=c.P;kqsSnd('beast');kqsSnd('horn');hero.buffs.push({s:kqrB(c.sk,{mspd:.2,compP:.2}),t:c.now+c.sk.dur*1000,n:'Wild Hunt',i:'🐾'});hsDirty();ring(P,c.sk.col,3.2,500);
   [0,1,2].forEach(j=>{const a=pl.rotation.y+Math.PI+(j-1)*.9,m=kqsWolf(j==1?0xb0e8ff:0x7ab8f0,j==1?1.15:.95);m.position.set(P.x+Math.sin(a)*1.8,0,P.z+Math.cos(a)*1.8);m.position.y=GH(m.position.x,m.position.z);burst(gY(m.position,.8),0xa0e0ff,24,1.4,2,.5);
    kqsSummon({mesh:m,life:c.sk.dur,spd:7.8,reach:1.6,iv:.75,dmg:c.raw,c,col:0xa0e0ff,wolf:1,off:j})})},
  // ===== MAGE =====
@@ -15323,11 +15323,11 @@ var KQH={
    end:()=>{const p=orb.position.clone().setY(0);kqsRm(orb);ring(p,0x9fe3ff,5,380);burst(gY(p,1),0xdff6ff,60,2.5,2.5,.6);kqsArea(p,2.5,c.raw,c,{stun:.4});kqsSnd('ice')}})},
  m_rift(c){const a=c.P.clone(),b=kqsLand(a,c.gp),mk=p=>{const g=new THREE.Group(),r=kqsMesh(new THREE.TorusGeometry(.75,.1,6,22),kqsAdd(0xc06aff)),f=kqsMesh(new THREE.CircleGeometry(.72,22),kqsAdd(0x5a2a9a));f.material.opacity=.55;g.add(r,f);g.position.copy(gY(p,1.05));scene.add(g);return g};
   const A=mk(a),B=mk(b),D1=kqsDecal(a,.9,0xc06aff,.2,.8),D2=kqsDecal(b,.9,0xc06aff,.2,.8);kqsTp(b);burst(gY(a,1),0xc06aff,30,1.4,2,.5);burst(gY(b,1),0xc06aff,30,1.4,2,.5);kqsSnd('portal');let inside=1,cd=0;
-  kqsObj({life:c.sk.dur,tick:(dt,now)=>{[A,B].forEach((g,j)=>{g.quaternion.copy(cam.quaternion);g.children[0].rotation.z+=dt*3;if(Math.random()<.3)burst(g.position,0xc06aff,1,.6,.4,.5)});cd-=dt;
+  kqsObj({life:c.sk.dur*kqrD(c.sk),tick:(dt,now)=>{[A,B].forEach((g,j)=>{g.quaternion.copy(cam.quaternion);g.children[0].rotation.z+=dt*3;if(Math.random()<.3)burst(g.position,0xc06aff,1,.6,.4,.5)});cd-=dt;
     const da=d2(pl.position,a),db=d2(pl.position,b),near=da<.95?a:db<.95?b:null;if(!near){inside=0;return}if(inside||cd>0)return;const to=near===a?b:a;burst(gY(pl.position,1),0xc06aff,30,1.4,2,.5);kqsTp(to);inside=1;cd=.8;kqsSnd('portal');burst(gY(to,1),0xc06aff,30,1.4,2,.5)},
    end:()=>{kqsFade(A,300);kqsFade(B,300);D1.rm(300);D2.rm(300)}})},
  m_warp(c){const p=c.gp.clone(),R=c.R,D=kqsDecal(p,R,c.sk.col,.16,.8),hand=kqsDrapeM(new THREE.PlaneGeometry(.12,1,1,6),kqsDMat(0xdff6ff,.8)),hand2=kqsDrapeM(new THREE.PlaneGeometry(.18,1,1,6),kqsDMat(0xdff6ff,.8));kqsSnd('portal');
-  kqsObj({life:c.sk.dur,tick:(dt,now,o)=>{const a1=o.age*3,a2=o.age*.5;[[hand,a1,.9],[hand2,a2,.6]].forEach(([h,an,len])=>kqsDrape(h,(u,v)=>{const y=(v+.5)*R*len;return [p.x+Math.sin(an)*y+Math.cos(an)*u,p.z-Math.cos(an)*y+Math.sin(an)*u]},.17));
+  kqsObj({life:c.sk.dur*kqrD(c.sk),tick:(dt,now,o)=>{const a1=o.age*3,a2=o.age*.5;[[hand,a1,.9],[hand2,a2,.6]].forEach(([h,an,len])=>kqsDrape(h,(u,v)=>{const y=(v+.5)*R*len;return [p.x+Math.sin(an)*y+Math.cos(an)*u,p.z-Math.cos(an)*y+Math.sin(an)*u]},.17));
     kqsFoes(p,R).forEach(e=>{e.ch=Math.max(e.ch||0,.4);e.cd=(e.cd||0)+dt*.6;if(e.atk&&e.atk.t!=null)e.atk.t+=dt*.5;if(Math.random()<.05)burst(gY(e.m.position,1.2),0x8ad8ff,2,.4,.4,.6)});
     if(d2(pl.position,p)<R){for(const k in hero.cd)hero.cd[k]=Math.max(0,hero.cd[k]-dt*.5);if(Math.random()<.2)burst(gY(pl.position,1.4),0x8ad8ff,1,.3,.5,.6)}},end:()=>{D.rm(400);kqsFade(hand,300);kqsFade(hand2,300)}})},
  m_disint(c){kqsSnd('beam');let ti=0;kqsChan({t:c.sk.dur,iv:.2,slow:.6,tick:()=>{const d=aimDir();face(d);const o=gY(pl.position,1.15).addScaledVector(d,.6),e=o.clone().addScaledVector(d,10);kqsBeam(o,e,0xc890ff,.18,210);kqsBeam(o,e,0xffffff,.06,210);burst(e,0xc890ff,4,.8,.6,.3);
@@ -15418,10 +15418,10 @@ function kqsPoseT(p){if(typeof ATK=='undefined')return null;return ({cast:[ATK.c
   const key='s'+i;if((hero.cd[key]||0)>0)return;const s=HS();
   if(hero.mp<sk.mp){if(performance.now()-(hero.nmT||0)>1200){hero.nmT=performance.now();say('Not enough mana.')}return}
   const H=KQH[sk.x];if(!H)return;
-  hero.mp-=sk.mp;hero.cd[key]=Math.random()<s.echo?.6:sk.cd*(1-Math.min(.5,s.cdr));
+  hero.mp-=sk.mp;hero.cd[key]=Math.random()<s.echo?.6:sk.cd*kqrC(sk)*(1-Math.min(.5,s.cdr));
   const gp=sk.gt?(KQS.gp?KQS.gp.clone():kqsDefPt(sk)):null,d=gp&&d2(gp,pl.position)>.3?kqsDir(pl.position,gp):aimDir();face(d);
-  const mt=sk.mt||CLS[hero.cls].mt,A=atkOf(mt)*(1+s.skillP),cr=KQS.cr0||0;
-  const c={sk,i,key,s,P:pl.position,d,mt,A,raw:A*(sk.m||0),R:(sk.r||0)*(1+s.aoeP),now:performance.now(),gp,fx:{mt,col:sk.col,stun:sk.stun,burn:sk.burn},cr,pips:Math.min(5,Math.floor(cr/20))};
+  const mt=sk.mt||CLS[hero.cls].mt,A=atkOf(mt)*(1+s.skillP)*kqrP(sk),cr=KQS.cr0||0;
+  const c={rk:kqrP(sk),sk,i,key,s,P:pl.position,d,mt,A,raw:A*(sk.m||0),R:(sk.r||0)*(1+s.aoeP),now:performance.now(),gp,fx:{mt,col:sk.col,stun:sk.stun,burn:sk.burn},cr,pips:Math.min(5,Math.floor(cr/20))};
   let ok;const prev=typeof ATK_SK!='undefined'?ATK_SK:null;try{ATK_SK=sk;castAnim()}catch(_){}finally{ATK_SK=prev}
   try{ok=H(c)}catch(err){console.error('ability '+sk.n,err);ok=true}
   if(ok===false){hero.cd[key]=0;hero.mp+=sk.mp;if(performance.now()-(hero.nmT||0)>900){hero.nmT=performance.now();say('No target in reach.')}}
@@ -16797,6 +16797,114 @@ const keepLast=()=>{if(document.head.lastElementChild!==st)document.head.appendC
 new MutationObserver(keepLast).observe(document.head,{childList:true});
 setTimeout(keepLast,0);addEventListener('load',keepLast);
 })();
+
+// ================= v90: ability ranks 1–5, more ability points, balance =================
+// How it works (read this with the header of zzM_skills.js):
+// - Rank is stored in hero.tal['ab:<name>'] (1…5). Unlocking an ability = rank 1 (old saves store 1, so they load as rank 1).
+//   The class default ability has no 'ab:' key until you rank it up (no key = rank 1).
+// - What a rank does (kqrP/kqrU/kqrD/kqrC below, applied by the patches in build/pN_abil.py):
+//     damage, damage over time, summons, traps, heals and shields  ×(1 + 12% per rank above 1)   → rank 5 = ×1.48
+//     buff / debuff strength (War Cry, Seal of Light, Death Mark…)  ×(1 + 8% per rank above 1)    → rank 5 = ×1.32
+//     pure utility (Vanish, Rift Gate, Time Warp) lasts             +10% per rank above 1          → rank 5 = +40%
+//     cooldown                                                       −8% from rank 3, −15% at rank 5
+//   Damage is scaled where the cast computes its attack value (cast_base for the old kinds, the KQN cast wrapper for the new ones),
+//   so every hit, DoT, projectile, trap, zone and summon that comes from that cast is scaled the same way.
+// - Ability points: 2 per level gained, 3 on every 5th level (108 by level 50) + hero.tal.__apB. apFree() = earned − spent, never negative.
+//   Unlock cost (v88): 1 + floor(level requirement / 6). Rank-up cost to rank r: ceil(unlock cost / 3) + r − 2
+//   (the default ability counts as unlock cost 1). So maxing costs 10 AP for an early ability and up to 18 for a level-48 one.
+// - Abilities window: rank pips (5 small diamonds, kqrPips) on every row and the slots, "Rank up · N ⚡" buttons, the detail panel lists this rank → next rank.
+//   The hotbar shows a small rank badge. "Reset abilities" refunds ranks too (it removes every 'ab:' key).
+var KQR_MAX=5;
+function kqrRank(s){if(!s||!hero||!hero.tal)return 1;const v=hero.tal['ab:'+s.n]|0;return Math.max(1,Math.min(KQR_MAX,v||1))}
+function kqrPr(r){return 1+.12*(r-1)}
+function kqrUr(r){return 1+.08*(r-1)}
+function kqrCr(r){return r>=5?.85:r>=3?.92:1}
+var KQR_UTIL={Vanish:1,'Rift Gate':1,'Time Warp':1};
+function kqrDr(s,r){return KQR_UTIL[s.n]?1+.1*(r-1):1}
+// is this hero's ability (not a co-op partner's, not a different class's)
+function kqrOwn(s){return !!s&&!!hero&&kqsAll(hero.cls).some(q=>q.n===s.n)}
+// v90 balance: per-ability damage factor (applied with the rank, to everything the cast does) and cooldowns — see README "v90: abilities".
+// Measured by test/v90_abil.py (level 50, rank 1): damage of one cast on a same-level mob ÷ the hero's average basic hit.
+// Targets at rank 1: single target 2.5 hits, area 2.0 per target, big cooldowns 3.2, lasting summons/zones 3.6 in total → ×1.48 at rank 5.
+var KQR_TUNE={
+ 'Bull Rush':1.5,'Intimidating Shout':1.6,'Skull Splitter':.49,'Whirlwind':.4,'Earthshatter':.94,'Chain Hook':1.47,'Execute':.81,
+ 'Holy Smite':1.6,'Shield Bash':1.11,'Judgment':1.39,'Hammer of Light':.9,'Beacon of Light':1.16,"Crusader's Charge":1.6,'Sanctuary':1.38,'Divine Intervention':1.6,"Heaven's Wrath":1.11,
+ 'Shadow Rush':.44,'Eviscerate':.42,'Smoke Bomb':.93,'Venom Flask':.55,'Shuriken Volley':.34,'Shadow Clone':.35,'Death Mark':.74,'Phantom Strike':.53,'Caltrops':.79,'Garrote':.59,'Thousand Cuts':.8,'Envenom':1,'Eclipse':.36,
+ 'Multishot':.56,'Disengage':1.21,'Hawk Dive':.9,'Piercing Arrow':.75,'Explosive Arrow':.72,'Call of the Wild':.22,'Rain of Arrows':.24,'Barrage':.57,'Explosive Trap':.6,'Rapid Fire':.27,'Stampede':.6,'Aimed Shot':.53,'Wild Hunt':.1,
+ 'Fireball':.75,'Arcane Missiles':.45,"Dragon's Breath":.55,'Chain Lightning':.77,'Blizzard':.3,'Frozen Orb':1.04,'Meteor':.45,'Disintegrate':.46,'Wall of Fire':.45,'Singularity':.43,'Comet Storm':.81};
+// abilities whose hits got much smaller come back a little sooner
+var KQR_CD={'Whirlwind':11,'Shadow Clone':18,'Eclipse':24,'Venom Flask':10,'Rain of Arrows':10,'Rapid Fire':10,'Explosive Trap':8,'Aimed Shot':13,'Call of the Wild':18,'Wild Hunt':30,
+ 'Blizzard':13,'Disintegrate':11,'Meteor':14,'Wall of Fire':16,'Singularity':22,'Fireball':4.5,'Arcane Missiles':5};
+// class knobs (added to the hero's stats): every class gets to use its abilities over a long fight (mana regeneration, % of max mana per second),
+// and the rotation damage of the five classes lands within about ±12% of each other at levels 5-50 (test/v90_abil.py)
+var KQR_CLS={warrior:{basicP:.05,skillP:.1,mpr:.01,mp:L=>5+.5*L},paladin:{mpr:.008},assassin:{as:L=>.1+.002*L,basicP:.15,mpr:.01},ranger:{basicP:.12,mpr:.01},mage:{skillP:L=>-.36+.008*L}};  // a number, or a function of the hero's level
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(!s._kqr){s._kqr=1;const o=KQR_CLS[hero.cls];if(o)for(const k in o)s[k]=(s[k]||0)+(typeof o[k]=='function'?o[k](hero.lvl|0):o[k])}return s}}
+function kqrT(s){return (s&&KQR_TUNE[s.n])||1}
+function kqrP(s){return kqrT(s)*(kqrOwn(s)?kqrPr(kqrRank(s)):1)}
+function kqrU(s){return kqrOwn(s)?kqrUr(kqrRank(s)):1}
+function kqrC(s){return kqrOwn(s)?kqrCr(kqrRank(s)):1}
+function kqrD(s){return kqrOwn(s)?kqrDr(s,kqrRank(s)):1}
+// a buff's stats scaled by rank (flags stay as they are)
+var KQR_FLAG={poisonOn:1,dash3:1,setArc:1};
+function kqrB(s,o){const k=kqrU(s);if(k===1||!o)return o;const n={};for(const q in o)n[q]=KQR_FLAG[q]||typeof o[q]!='number'?o[q]:o[q]*k;return n}
+
+Object.keys(SKB).forEach(c=>kqsAll(c).forEach(s=>{if(KQR_CD[s.n]!=null)s.cd=KQR_CD[s.n]}));
+// ---------------- ability points ----------------
+function kqrLvAP(l){return l%5==0?3:2}
+function apEarned(){const L=hero.lvl|0;let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n+((hero.tal&&hero.tal.__apB)|0)}
+function kqrUnlockCost(s){return 1+Math.floor((s.lv|0)/6)}
+// AP to go from rank r-1 to rank r
+function kqrCost(s,r){return Math.ceil((s===kqsDef(hero.cls)?1:kqrUnlockCost(s))/3)+r-2}
+function kqrSpentOn(s){let n=0;const r=kqrRank(s);for(let k=2;k<=r;k++)n+=kqrCost(s,k);return n}
+function apSpent(){const c=hero.cls;let n=0;kqsAll(c).forEach(s=>{if(!kqsUnl(c,s))return;if(s!==kqsDef(c))n+=apCost(s);n+=kqrSpentOn(s)});return n}
+function kqrWhy(s){const c=hero.cls;if(!kqsUnl(c,s))return 'Unlock it first';const r=kqrRank(s);if(r>=KQR_MAX)return 'Max rank';const k=kqrCost(s,r+1);if(apFree()<k)return 'Needs '+k+' ability point'+(k>1?'s':'');return ''}
+function kqrUp(n){const c=hero.cls,s=kqsFind(c,n);if(!s)return;const w=kqrWhy(s);KQS.sel=s.n;if(w){say('🔒 '+s.n+': '+w+'.');return}
+  const r=kqrRank(s)+1;hero.tal['ab:'+s.n]=r;hsDirty();say('⚡ '+s.i+' <b>'+s.n+'</b> is now rank '+r+' '+kqrPips(r)+'.');try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}
+  try{hud()}catch(_){}if(xwMode=='abil')rX();try{if(!$('tal').classList.contains('hide'))rTal()}catch(_){}}
+// tests / cheats: every learned ability to rank r
+function kqrSetAll(r){const c=hero.cls;kqsAll(c).forEach(s=>{if(kqsUnl(c,s)){if(r<=1&&s===kqsDef(c))delete hero.tal['ab:'+s.n];else hero.tal['ab:'+s.n]=Math.max(1,Math.min(KQR_MAX,r))}});hsDirty()}
+
+// ---------------- text ----------------
+// rank pips as small diamonds (the emoji/icon layer would draw ★ and ☆ alike)
+function kqrPips(r){let h='';for(let k=0;k<KQR_MAX;k++)h+='<span class="'+(k<r?'on':'')+'"></span>';return '<span class="kqr-pips" title="Rank '+r+' of '+KQR_MAX+'">'+h+'</span>'}
+var KQR_HEAL={heal:1,barrier:1},KQR_HX={p_beacon:1,p_penance:1,p_interv:1,w_unbrk:1};
+var KQR_BUFF={buff:1,mark:1},KQR_BX={w_banner:1,w_blood:1,w_unbrk:1,p_sanct:1,p_seal:1,a_eclipse:1,r_hunt:1};
+function kqrLines(s,r,n){const a=[],pc=x=>Math.round(x*100)+'%',to=(x,y)=>n?x+' → <b>'+y+'</b>':x;
+  if(s.m){const mt=s.mt||CLS[hero.cls].mt,A=atkOf(mt)*(1+HS().skillP),v=q=>Math.round(A*s.m*kqrT(s)*kqrPr(q));a.push('⚔ Damage '+to(pc(kqrPr(r)),pc(kqrPr(n)))+' <small>(≈ '+to(v(r),v(n))+' per hit)</small>')}
+  if(KQR_HEAL[s.k]||KQR_HX[s.x])a.push('💚 '+(s.k=='barrier'?'Shield':'Healing')+' '+to(pc(kqrPr(r)),pc(kqrPr(n))));
+  if(KQR_BUFF[s.k]||KQR_BX[s.x])a.push('✦ Effect strength '+to(pc(kqrUr(r)),pc(kqrUr(n))));
+  if(KQR_UTIL[s.n]&&s.dur)a.push('⌛ Lasts '+to((+(s.dur*kqrDr(s,r)).toFixed(1))+'s',(+(s.dur*kqrDr(s,n)).toFixed(1))+'s'));
+  if(s.cd){const c=q=>(+(s.cd*kqrCr(q)).toFixed(1))+'s';a.push('⏱ Cooldown '+(n&&kqrCr(n)!==kqrCr(r)?to(c(r),c(n)):c(r)))}
+  return a}
+
+// ---------------- the Abilities window: pips, rank-up buttons, this rank → next ----------------
+{const f=XR.abil;XR.abil=function(){f.apply(this,arguments);try{kqrDecor()}catch(err){console.error(err)}}}
+function kqrDecor(){const c=hero.cls,B=$('xwB');if(!B)return;
+  document.querySelectorAll('#xwB [data-kqsel]').forEach(row=>{const s=kqsFind(c,row.dataset.kqsel);if(!s||!kqsUnl(c,s))return;const r=kqrRank(s),b=row.querySelector('.rn b');
+    if(b)b.insertAdjacentHTML('afterend',` <span class="kqr-pip" title="Rank ${r} of ${KQR_MAX}">${kqrPips(r)}</span>`);
+    const ra=row.querySelector('.ra');if(ra&&r<KQR_MAX){const k=kqrCost(s,r+1),ok=apFree()>=k;ra.insertAdjacentHTML('afterbegin',`<button class="kqr-up${ok?' pri':''}" data-kqrup="${s.n}" ${ok?'':'disabled'} title="${ok?'Rank '+(r+1)+' for '+k+' ability point'+(k>1?'s':''):'Needs '+k+' ability points'}">Rank up · ${k} ⚡</button>`)}});
+  document.querySelectorAll('#xwB [data-kqslot]').forEach(sl=>{const s=heroSkills()[+sl.dataset.kqslot];if(!s)return;const n=sl.querySelector('.kqs-sn');if(n)n.insertAdjacentHTML('afterend',`<span class="kqr-sp">${kqrPips(kqrRank(s))}</span>`)});
+  const sel=kqsFind(c,KQS.sel)||heroSkills()[0],det=B.querySelector('.kqs-det');if(!sel||!det)return;const un=kqsUnl(c,sel),r=kqrRank(sel),n=un&&r<KQR_MAX?r+1:0;
+  const lines=kqrLines(sel,un?r:1,n),w=un?kqrWhy(sel):'',k=n?kqrCost(sel,n):0;
+  const h=`<div class="kqr-box"><div class="kqr-h"><b>${un?'Rank '+r:'Rank 1 when unlocked'}</b> <span class="kqr-pip">${kqrPips(un?r:1)}</span>${n?` <span class="mut">→ rank ${n}</span>`:un?' <span class="kqr-max">Max rank</span>':''}</div>
+    <div class="kqr-ln">${lines.map(x=>`<span>${x}</span>`).join('')}</div>
+    ${n?`<div class="btns"><button class="${w?'':'pri'}" data-kqrup="${sel.n}" ${w?'disabled':''}>${w?'🔒 '+w:'Rank up to '+n+' · '+k+' ⚡'}</button></div>`:''}</div>`;
+  const st=det.querySelector('.kqs-stats');if(st)st.insertAdjacentHTML('afterend',h);else det.insertAdjacentHTML('beforeend',h);
+  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+2 points every level (+3 every 5th)');
+  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn 2 ability points every level (3 on every 5th level). Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
+$('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-kqrup]');if(!t)return;e.stopPropagation();e.preventDefault();if(t.disabled)return;kqrUp(t.dataset.kqrup)},true);
+// the talents window link
+{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','(2 per level, 3 every 5th level)')}}
+// hotbar: a small rank badge on every ability key
+{const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||building||!party.length)return;heroSkills().forEach((s,i)=>{const b=A.querySelector('button[data-x="'+i+'"]');if(!b||b.querySelector('.kqr-b'))return;const r=kqrRank(s);b.insertAdjacentHTML('beforeend',`<span class="kqr-b r${r}" title="Rank ${r}">${r}★</span>`)})}catch(_){}}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+.kqr-pip{white-space:nowrap}.kqr-pips{display:inline-flex;gap:3px;vertical-align:middle;margin:0 2px}.kqr-pips span{width:6px;height:6px;transform:rotate(45deg);border:1px solid #c9a24f;display:inline-block;box-sizing:border-box}.kqr-pips span.on{background:#f0cc72;border-color:#f0cc72;box-shadow:0 0 3px rgba(240,204,114,.6)}
+.kqr-sp{position:absolute;right:6px;bottom:2px;line-height:0}.kqr-sp .kqr-pips span{width:5px;height:5px}
+.kqs-ab .ra{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.kqr-up{font-size:.68rem;padding:2px 7px;white-space:nowrap}
+.kqr-box{margin:8px 0;padding:8px;border-radius:8px;background:rgba(240,204,114,.07);border:1px solid rgba(240,204,114,.22)}.kqr-h{font-size:.8rem;margin-bottom:4px}.kqr-max{color:#6ee7b7;font-size:.7rem;font-weight:700}
+.kqr-ln{display:flex;flex-direction:column;gap:2px;font-size:.74rem}.kqr-ln small{opacity:.75}.kqr-box .btns{margin-top:6px}
+#acts .hs .kqr-b{position:absolute;right:5px;top:4px;font-size:.55rem;font-weight:800;line-height:1;color:#f0cc72;text-shadow:0 1px 2px #000;pointer-events:none}#acts .hs .kqr-b.r1{opacity:.55}#acts .hs .kqr-b.r5{color:#fde68a}
+</style>`);
 
 // ================= v89 bossfx: breakable Rime Wraith orbs, den walls that never block the camera, targetable necks and eye-stalks =================
 // 1. ORBS (den 2 and any boss using BMV.orbs): every Wailing Orb is a one-hit "sub-target" — any hero swing, shot, skill or
