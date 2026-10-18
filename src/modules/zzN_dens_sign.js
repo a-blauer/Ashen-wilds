@@ -28,7 +28,7 @@ var DSIGN=[], DSTXT=[
    'While 3 or more necks live the Hydra is Brood-guarded and takes 35% less damage — keep the heads down.',
    'The raised stepping stones are safe from every Tidal Surge.']},
  {den:'The Frozen Sepulchre',zone:'Burningeye Summit',
-  atk:[['✦ Wailing Orbs','Orbs gather at the edge of the den and hunt you down.','Keep moving and lead them around; never let them corner you.'],
+  atk:[['✦ Wailing Orbs','Orbs gather at the edge of the den and hunt you down. Attacks pass straight through them.','Lead them into a lit Warmfire — they melt in a hiss of steam (a dark fire does nothing). Keep moving; never let them corner you.'],
    ['👻 Fade','It vanishes and re-forms behind you with a red circle.','Move as soon as it fades.'],
    ['🦴 Bone Prison','A ring of red circles closes around you.','Dash out through the gap.'],
    ['🔥 Snuff','It drains the Warmfire nearest it (red circle on the fire; two fires in Phase III).','Step out of the frost, then stand beside the dark fire for 2 seconds to rekindle it.'],

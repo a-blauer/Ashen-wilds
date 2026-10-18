@@ -8564,7 +8564,7 @@ openWMap=function(){
   const lab=(t,x,y,col)=>{g.font='700 12px system-ui,sans-serif';const hw=g.measureText(t).width/2+4;x=Math.max(hw,Math.min(c.width-hw,x));g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText(t,x,y);g.fillStyle=col||'#fff3c8';g.fillText(t,x,y)};
   const dia=(x,y,col,sz)=>{sz=sz||7;g.fillStyle=col;g.beginPath();g.moveTo(x,y-sz);g.lineTo(x+sz*.85,y);g.lineTo(x,y+sz);g.lineTo(x-sz*.85,y);g.fill();g.strokeStyle='#000';g.lineWidth=1.2;g.stroke()};
   if(r>=0){const p=PMAP[r];
-    CAMPS.forEach(C=>{if(C.pm!==r)return;const [x,y]=P(C.x,C.z),cl=nowP()-(C.kt||-1e9)<45000;g.fillStyle=cl?'rgba(110,231,183,.35)':'rgba(239,68,68,.35)';g.beginPath();g.arc(x,y,CAMP_R*s*.55,0,6.28);g.fill();lab(cl?'⛺ cleared':'⛺ '+(C.th?C.th.n:'Camp'),x,y,cl?'#bfe8a0':'#ffc8c0')});
+    CAMPS.forEach(C=>{if(C.pm!==r)return;const [x,y]=P(C.x,C.z),cl=campCleared(C);g.fillStyle=cl?'rgba(110,231,183,.35)':'rgba(239,68,68,.35)';g.beginPath();g.arc(x,y,CAMP_R*s*.55,0,6.28);g.fill();lab(cl?'⛺ cleared':'⛺ '+(C.th?C.th.n:'Camp'),x,y,cl?'#bfe8a0':'#ffc8c0')});
     {const [x,y]=P(p.en[0],p.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
     {const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
     if(bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
@@ -13563,7 +13563,7 @@ function arBuild(A){
       const eye=new THREE.Group();eye.position.set(0,3.25,.5);g.add(eye);const ball=new THREE.Mesh(gE,d01Mat('glow'));eye.add(ball);
       const lu=new THREE.Mesh(gU,d01Mat('std')),ll=new THREE.Mesh(gL,d01Mat('std'));eye.add(lu,ll);
       const spr=kqSpr(0xffd040,1.4);spr.position.set(0,0,.7);spr.visible=false;eye.add(spr);
-      const fan=d01Fan(20,0xffe060,.3);A.g.add(g,fan);
+      const fan=d01Fan(20,0xffe060,.3*arFanK());A.g.add(g,fan);
       denBlock(x,z);
       AR.st.push({i:k,g,eye,ball,lu,ll,spr,fan,x,z,gy:g.rotation.y,ox:x+Math.sin(g.rotation.y)*.5,oz:z+Math.cos(g.rotation.y)*.5,st:'closed',t:0,hp:1,hpM:1,lid:0,hb:d01Bar(0xffd040),p:new THREE.Vector3(x,y+3.25,z),hit:0})}}
   // --- the seal: roots that knot across the entrance ---
@@ -13622,11 +13622,11 @@ function arStalk(A,e,T,dt,now,ph){
   const half=.27,y=GH(T.ox,T.oz)+.2;
   if(T.st=='wake'){T.t+=dt;const k=Math.min(1,T.t/1.15);T.g.rotation.z=Math.sin(now/28)*.06*k;T.lid=.35*k;arLids(T,T.lid);T.spr.scale.setScalar(.4+1.6*k);
     const yw=arEyeYaw(T);T.eye.rotation.y=Math.max(-1.1,Math.min(1.1,d01Ad(yw,T.gy)));
-    T.fan.visible=true;T.fan.material.opacity=.05+.07*(Math.sin(now/70)*.5+.5);d01FanSet(T.fan,T.ox,T.oz,T.gy+T.eye.rotation.y,half,26*DK,AR.pil,A,y);
+    T.fan.visible=true;T.fan.material.opacity=arFanK()*(.05+.07*(Math.sin(now/70)*.5+.5));d01FanSet(T.fan,T.ox,T.oz,T.gy+T.eye.rotation.y,half,26*DK,AR.pil,A,y);
     if(k>=1){T.st='open';T.t=0;T.dur=[4.2,4.6,5][ph-1];const sw=ph>=3?1.6:1.3,sd=Math.random()<.5?1:-1;T.y0=yw-sd*sw/2;T.y1=yw+sd*sw/2;sfx('zap',.35)}
     return false}
   if(T.st=='open'){T.t+=dt;const u=Math.min(1,T.t/T.dur),s=u*u*(3-2*u),yaw=T.y0+(T.y1-T.y0)*s;T.g.rotation.z=Math.sin(now/300+T.i)*.02;T.lid+=(1-T.lid)*Math.min(1,dt*8);arLids(T,T.lid);
-    T.eye.rotation.y=Math.max(-1.3,Math.min(1.3,d01Ad(yaw,T.gy)));const wy=T.gy+T.eye.rotation.y;T.fan.visible=true;T.fan.material.opacity=.3+.06*Math.sin(now/90);
+    T.eye.rotation.y=Math.max(-1.3,Math.min(1.3,d01Ad(yaw,T.gy)));const wy=T.gy+T.eye.rotation.y;T.fan.visible=true;T.fan.material.opacity=arFanK()*(.3+.06*Math.sin(now/90));
     d01FanSet(T.fan,T.ox,T.oz,wy,half,26*DK,AR.pil,A,y);T.spr.scale.setScalar(1.8+.3*Math.sin(now/80));
     if(u>=1){T.st='shut';T.t=0;T.fan.visible=false;T.spr.visible=false}
     // is the hero in this gaze, with nothing in between?
@@ -16906,14 +16906,14 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #acts .hs .kqr-b{position:absolute;right:5px;top:4px;font-size:.55rem;font-weight:800;line-height:1;color:#f0cc72;text-shadow:0 1px 2px #000;pointer-events:none}#acts .hs .kqr-b.r1{opacity:.55}#acts .hs .kqr-b.r5{color:#fde68a}
 </style>`);
 
-// ================= v89 bossfx: breakable Rime Wraith orbs, den walls that never block the camera, targetable necks and eye-stalks =================
-// 1. ORBS (den 2 and any boss using BMV.orbs): every Wailing Orb is a one-hit "sub-target" — any hero swing, shot, skill or
-//    companion hit shatters it; an orb that drifts into a lit Warmfire dissolves in a hiss of steam (dark fires do nothing).
-//    Orbs are per-player copies in co-op (each copy hunts its own hero), so breaking one is local and needs no relay.
+// ================= v89 bossfx: Rime Wraith orbs melt in Warmfires, den walls that never block the camera, targetable necks and eye-stalks =================
+// 1. ORBS (den 2): attacks pass straight through a Wailing Orb (v91: orbs are no longer targets/enemies); an orb led within
+//    1.7 of a lit Warmfire dissolves in a hiss of steam (dark fires do nothing).
+//    Orbs are per-player copies in co-op (each copy hunts its own hero), so melting one is local and needs no relay.
 // 2. CUTAWAY: den scenery (dens 0-3; dens 4-5 already use dqCut) gets a shader that dithers away whatever stands between the
 //    camera and the hero (a tube along the line of sight, like the trees in the wilds) and — when the camera is out past the
 //    wall — the whole stretch of wall on the camera's side (like dqCut). The floor is never cut.
-// 3. SUB-TARGETS: Hydra brood necks (den 1), Argus eye-stalks (den 0) and orbs live in `enemies` as inert proxy enemies
+// 3. SUB-TARGETS: Hydra brood necks (den 1) and Argus eye-stalks (den 0) live in `enemies` as inert proxy enemies
 //    (e.bfx). Tab (den order: nearest first, then on round the list), clicking/tapping them, the target frame, homing shots
 //    and targeted skills all work on them. Every hit on a proxy is handed to the neck's / stalk's own health logic
 //    (hyHitNeck / arHitStalk: sever → stump → sear or regrow, open eyes +60%, eye burst), so nothing is counted twice.
@@ -16934,8 +16934,7 @@ const bfxLive=e=>e&&!e.dead&&!e._gone;
 // damage on a proxy goes to the thing it stands for
 function bfxDmg(e,d,s){if(BFX.aHit)BFX.aHit.add(e);const b=e.bfx,A=b.A,r=b.ref;if(!(d>0))return;
   try{if(b.k=='neck'){if(r.st=='up'||r.st=='rise'){hyHitNeck(A,r,d);e.c.h=Math.max(0,r.hp)}if(r.st!='up'&&r.st!='rise')bfxDrop(e)}
-    else if(b.k=='stalk'){if(r.st!='dead'){arHitStalk(A,r,d);e.c.h=Math.max(0,r.hp)}if(r.st=='dead')bfxDrop(e)}
-    else if(b.k=='orb'){bfxOrbEnd(A,r,'shatter');bfxDrop(e)}}catch(err){console.error('bossfx hit',err)}}
+    else if(b.k=='stalk'){if(r.st!='dead'){arHitStalk(A,r,d);e.c.h=Math.max(0,r.hp)}if(r.st=='dead')bfxDrop(e)}}catch(err){console.error('bossfx hit',err)}}
 {const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.bfx){if(!e.dead&&!e._gone)bfxDmg(e,d,s);return}return f.apply(this,arguments)}}
 // proxies stand for den objects that keep their own level-free health: no level-gap penalty on them
 {const f=rollHero;rollHero=function(e){if(e&&e.bfx){const c=e.c,l=c.l;c.l=Math.min(l,hero.lvl);try{return f.apply(this,arguments)}finally{c.l=l}}return f.apply(this,arguments)}}
@@ -16943,17 +16942,13 @@ function bfxDmg(e,d,s){if(BFX.aHit)BFX.aHit.add(e);const b=e.bfx,A=b.A,r=b.ref;i
 {const f=mpElig;mpElig=function(e){return e&&e.bfx?false:f.apply(this,arguments)}}
 // ---------------- orbs ----------------
 function bfxOrbEnd(A,f,how){const L=bxA(A),i=L.indexOf(f);if(i>=0)L.splice(i,1);const g=f.ms;if(!g)return;const p=g.position.clone();if(g.parent)g.parent.remove(g);f.t=0;
-  if(how=='shatter'){BFX.orbN++;burst(p,0xe8f8ff,30,3,2,.5);burst(p,0x9ad8ff,16,2,2.5,.45);kqFlash(p,0xcfefff,2.6,220);ring(V(p.x,0,p.z),0x9ad8ff,2,260);dn(p,'Shattered!','#cfefff',-24,700);sfx('shatter',.6)}
-  else if(how=='steam'){BFX.stN++;const q=V(p.x,p.y-.2,p.z);burst(q,0xdfe6ee,28,1.2,3.4,1.1);burst(p,0xffffff,14,.8,2.6,.9);burst(p,0xffb060,8,.8,1.6,.5);kqFlash(p,0xffd0a0,2.2,240);
+  if(how=='steam'){BFX.stN++;const q=V(p.x,p.y-.2,p.z);burst(q,0xdfe6ee,28,1.2,3.4,1.1);burst(p,0xffffff,14,.8,2.6,.9);burst(p,0xffb060,8,.8,1.6,.5);kqFlash(p,0xffd0a0,2.2,240);
     tw(900,k=>{if(Math.random()<.6)burst(V(q.x+(Math.random()-.5)*.6,q.y+k*2,q.z+(Math.random()-.5)*.6),0xe8eef4,1,.4,1.5,.9)});dn(p,'💨 Hiss!','#e8f0f8',-24,800);sfx('hiss',.7)}}
-function bfxOrbs(A){const L=bxA(A),D=A.i===2&&A.dn;
-  for(let i=L.length-1;i>=0;i--){const f=L[i];if(!f||f.k!='orb'||!f.ms)continue;const p=f.ms.position;
+// v91: orbs get no proxy enemy (hits, shots, skills and companions pass through them; Tab/click never pick them) — only fire melts them
+function bfxOrbs(A){const L=bxA(A),D=A.i===2&&A.dn;if(!D||!D.br)return;
+  for(let i=L.length-1;i>=0;i--){const f=L[i];if(!f||f.k!='orb'||!f.ms||!f.ms.parent)continue;const p=f.ms.position;
     // a lit Warmfire melts it (a snuffed one does not)
-    if(D&&D.br){let hot=null;for(const B of D.br)if(B.lit&&Math.hypot(p.x-B.x,p.z-B.z)<1.7){hot=B;break}
-      if(hot){if(f._bfx)bfxDrop(f._bfx);bfxOrbEnd(A,f,'steam');continue}}
-    const e=f._bfx;if(!bfxLive(e)){bfxProxy(A,'orb',f,{n:'Wailing Orb',hp:1,hpM:1,x:p.x,z:p.z,bs:.7,sub:'One hit shatters it · a lit Warmfire melts it',pts:()=>[f.ms.position],pm:'orb'});continue}
-    e.m.position.x=p.x;e.m.position.z=p.z}
-  for(const e of BFX.subs.slice())if(e.bfx.k=='orb'&&(L.indexOf(e.bfx.ref)<0||!e.bfx.ref.ms||!e.bfx.ref.ms.parent))bfxDrop(e)}
+    for(const B of D.br)if(B.lit&&Math.hypot(p.x-B.x,p.z-B.z)<1.7){bfxOrbEnd(A,f,'steam');break}}}
 // ---------------- necks and stalks ----------------
 function bfxNecks(A){if(typeof HY=='undefined'||!HY.necks)return;const y0=GH(A.cx,A.cz);
   for(const N of HY.necks){const live=N.st=='up'||N.st=='rise',e=N._bfx;
@@ -16973,10 +16968,10 @@ function bfxSync(dt,now){const A=AF;
   bfxMark(now)}
 {const f=arenaTick;arenaTick=function(dt,now){const r=f.apply(this,arguments);bfxSync(dt,now);return r}}
 {const f=arenaClear;arenaClear=function(A){const r=f.apply(this,arguments);for(const e of BFX.subs.slice())if(e.bfx.A===A)bfxDrop(e);return r}}
-// a red chevron over the targeted neck / stalk / orb (the ground ring alone is easy to miss under a tall neck)
+// a red chevron over the targeted neck / stalk (the ground ring alone is easy to miss under a tall neck)
 function bfxMark(now){let m=BFX.mk;const t=tgt,on=t&&t.bfx&&bfxLive(t);
   if(!m){if(!on)return;m=BFX.mk=new THREE.Mesh(new THREE.ConeGeometry(.24,.5,4),new THREE.MeshBasicMaterial({color:0xff4a2a,transparent:true,opacity:.95,depthTest:false,depthWrite:false,fog:false}));m.rotation.x=Math.PI;m.renderOrder=30;m.material.userData.lps=1;scene.add(m)}
-  m.visible=!!on;if(!on)return;const P=t.bfx.pts()[0];m.position.set(P.x,P.y+(t.bfx.k=='orb'?.9:1.3)+.12*Math.sin(now/160),P.z);m.rotation.y=now/400}
+  m.visible=!!on;if(!on)return;const P=t.bfx.pts()[0];m.position.set(P.x,P.y+1.3+.12*Math.sin(now/160),P.z);m.rotation.y=now/400}
 // ---------------- melee / projectiles reach a proxy once (no double hits with the dens' own hit paths) ----------------
 {const f=area;area=function(){const o=BFX.aHit;BFX.aHit=new Set();try{return f.apply(this,arguments)}finally{BFX.aHit=o}}}
 const bfxMt=s=>(s&&s.mt)||heroMt();
@@ -17014,7 +17009,7 @@ function bfxCands(A){const c=V(A.cx,0,A.cz),p=pl.position;return enemies.filter(
 // pick the enemy under a screen point: sub-targets by their own points, others by body centre
 function bfxPick(cx,cy){const r=gl.getBoundingClientRect();if(!r.width)return null;const th=Math.tan(cam.fov*Math.PI/360),v=new THREE.Vector3();let best=null,bs=1;
   for(const e of enemies){if(e.dead||e._gone||e.hid||!e.m.visible)continue;if(d2(e.m.position,pl.position)>40)continue;
-    const P=e.bfx?e.bfx.pts():[gY(e.m.position,(e.boss?.55:.45)*(e.m.bs||1)*(e.boss?2.2:1.6))],rad=e.bfx?(e.bfx.k=='orb'?.7:.95):e.boss?1.6*(e.m.bs||1)*.5+.8:.75*(e.c.al?1.3:1);
+    const P=e.bfx?e.bfx.pts():[gY(e.m.position,(e.boss?.55:.45)*(e.m.bs||1)*(e.boss?2.2:1.6))],rad=e.bfx?.95:e.boss?1.6*(e.m.bs||1)*.5+.8:.75*(e.c.al?1.3:1);
     for(const q of P){v.copy(q).project(cam);if(v.z>1||v.z<-1)continue;const sx=r.left+(v.x+1)/2*r.width,sy=r.top+(1-v.y)/2*r.height,dist=cam.position.distanceTo(q)||1;
       const pr=Math.max(26,rad/(dist*th)*r.height/2),k=Math.hypot(sx-cx,sy-cy)/pr*(e.bfx?.5:1);if(k<bs){bs=k;best=e}}}
   return best}
@@ -17031,21 +17026,19 @@ function bfxTgtCls(){const t=tgt,on=!!(t&&!t.boss&&!t.dead&&AF&&AF.f);document.b
 function bfxPortrait(e){const b=e.bfx,g=new THREE.Group(),bm=q=>(q&&q.userData.bfxBase)||q;try{
     if(b.pm=='neck'){const N=b.ref;g.add(new THREE.Mesh(N.neck.geometry,bm(N.neck.material)),new THREE.Mesh(N.eyes.geometry,bm(N.eyes.material)))}
     else if(b.pm=='stalk'){const T=b.ref;T.g.children.forEach(c=>{if(c.isMesh)g.add(new THREE.Mesh(c.geometry,bm(c.material)))});const eg=T.eye.clone(true);eg.traverse(q=>{if(q.isSprite)q.visible=false;else if(q.isMesh)q.material=bm(q.material)});g.add(eg)}
-    else{const o=b.ref.ms.clone(true);o.position.set(0,0,0);o.scale.setScalar(1);o.traverse(q=>{if(q.material&&q.material.depthTest===false)q.visible=false});g.add(o)}}catch(err){return null}
+    else return null}catch(err){return null}
   g.rig=now=>{g.rotation.y=.55+Math.sin(now/1400)*.35};return g}
 {const f=setTarget;setTarget=function(e){const r=f.apply(this,arguments);
   try{if(e&&e.bfx&&TPV.sc){const m=bfxPortrait(e);if(m){if(TPV.m)TPV.sc.remove(TPV.m);TPV.sc.add(m);TPV.m=m;m.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(V()),sz=bb.getSize(V()),q=Math.max(sz.x,sz.y,sz.z);
       TPV.cam.position.set(c.x+q*.3,c.y+q*.32,c.z+q*1.45);TPV.cam.lookAt(c.x,c.y+sz.y*.12,c.z);portraitDraw(performance.now())}}}catch(err){console.warn('bossfx portrait',err)}
   bfxTgtCls();return r}}
 {const f=tgtHud;tgtHud=function(){const r=f.apply(this,arguments);try{const e=tgt;if(e&&e.bfx){$('tgN').textContent=e.c.n;const s=$('tgS');if(s&&!(e.atk&&e.atk.ph==0)){s.className='tgs';s.textContent=e.bfx.sub||''}}bfxTgtCls()}catch(err){}return r}}
-// ---------------- sounds: ice shattering, steam hissing ----------------
-{const f=sfx;sfx=function(k,vol){if(k!='shatter'&&k!='hiss')return f.apply(this,arguments);
+// ---------------- sounds: steam hissing ----------------
+{const f=sfx;sfx=function(k,vol){if(k!='hiss')return f.apply(this,arguments);
   try{if(SET.sfx===false)return;const a=AUD;if(!a||a.state!='running'||!NOISE)return;const t=a.currentTime;vol=vol||1;
     const nz=(ft,f0,f1,at,dur,v,q)=>{const s=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;fl.type=ft;fl.frequency.setValueAtTime(f0,t);fl.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+dur);fl.Q.value=q||1;
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*vol,t+at);g.gain.exponentialRampToValueAtTime(.001,t+at+dur);s.connect(fl);fl.connect(g);g.connect(a.out);s.start(t,Math.random()*.5);s.stop(t+at+dur+.05)};
-    const os=(f0,f1,dur,v,dl)=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t+dl);o.frequency.exponentialRampToValueAtTime(f1,t+dl+dur);g.gain.setValueAtTime(0,t);g.gain.setValueAtTime(0,t+dl);g.gain.linearRampToValueAtTime(v*vol,t+dl+.004);g.gain.exponentialRampToValueAtTime(.001,t+dl+dur);o.connect(g);g.connect(a.out);o.start(t);o.stop(t+dl+dur+.05)};
-    if(k=='shatter'){nz('highpass',5200,2600,.002,.18,.45,1);[2637,3520,3136,4186].forEach((fq,i)=>os(fq,fq*.97,.22+i*.05,.07,i*.025))}
-    else{nz('highpass',6500,3800,.06,.75,.35,.7);nz('bandpass',2400,1200,.02,.3,.15,2)}}catch(err){}}}
+    nz('highpass',6500,3800,.06,.75,.35,.7);nz('bandpass',2400,1200,.02,.3,.15,2)}catch(err){}}}
 // ---------------- den cutaway: scenery between the camera and the hero dithers away ----------------
 // uCut = (den centre x, z, floor height, on), uCutR = (wall radius rIn, keep-below height yMin, line-of-sight tube radius)
 function bfxCutMat(base,A,rIn,yMin,tube){const k=A.i+':'+base.uuid;if(BFX.cut[k])return BFX.cut[k];const m=base.clone();m.userData.lps=1;m.userData.bfxCut=1;m.userData.bfxBase=base;
@@ -17164,7 +17157,7 @@ var DSIGN=[], DSTXT=[
    'While 3 or more necks live the Hydra is Brood-guarded and takes 35% less damage — keep the heads down.',
    'The raised stepping stones are safe from every Tidal Surge.']},
  {den:'The Frozen Sepulchre',zone:'Burningeye Summit',
-  atk:[['✦ Wailing Orbs','Orbs gather at the edge of the den and hunt you down.','Keep moving and lead them around; never let them corner you.'],
+  atk:[['✦ Wailing Orbs','Orbs gather at the edge of the den and hunt you down. Attacks pass straight through them.','Lead them into a lit Warmfire — they melt in a hiss of steam (a dark fire does nothing). Keep moving; never let them corner you.'],
    ['👻 Fade','It vanishes and re-forms behind you with a red circle.','Move as soon as it fades.'],
    ['🦴 Bone Prison','A ring of red circles closes around you.','Dash out through the gap.'],
    ['🔥 Snuff','It drains the Warmfire nearest it (red circle on the fire; two fires in Phase III).','Step out of the frost, then stand beside the dark fire for 2 seconds to rekindle it.'],
@@ -17326,6 +17319,22 @@ function dqWarn(S,o){
 function d01Add(col,op,ro){const m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide,fog:false});m.userData.lps=1;return m}
 // the dq toolkit's unit shapes are rotated flat: never swap them for unrotated low-poly copies
 try{['disc','edge','line'].forEach(k=>{const g=dqG(k);g.userData.lps=1;LPS.gc.set(g,null)})}catch(_){}
+
+// ================= v91 fix track: small fixes the owner asked for =================
+// 1. Argus eye-stalk gaze cone: 40% of its old opacity (build/pN_fix.py multiplies both opacity lines in zzK_den0.js by arFanK()).
+// 2. Camps on the zone map (N) stay green once cleared, for the rest of that zone run.
+//    Old bug: the map coloured a camp green only while nowP()-C.kt < 45 s (the pre-v72 respawn timer), so it went red again
+//    after 45 seconds although the zone roster keeps camp mobs dead; C.kt was also wiped by rosterBuild and never saved, so
+//    a recall run / save-load showed every camp red. Now the camp's roster slots decide: every slot of that camp dead =
+//    cleared. The slots (with their dead flags) are what a recall run (INST) saves and restores, so the green state comes
+//    back with the run, and a restarted zone instance (new roster, mobs back) shows the camps red again.
+//    Co-op guests (no roster of their own) fall back to C.clr, set on the kill that clears the camp (same rule as campOnKill).
+function arFanK(){return .4}
+function campCleared(C){if(!C)return false;
+  try{if(typeof ROST!='undefined'&&ROST.r===C.pm&&ROST.slots&&ROST.slots.length){let n=0,a=0;for(const s of ROST.slots)if(s.camp===C){n++;if(!s.dead)a++}if(n)return a===0}}catch(_){}
+  return !!C.clr}
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{CAMPS.forEach(C=>{if(C.pm===r)C.clr=false})}catch(_){}return o}}
+{const f=kill;kill=function(e){const C=e&&e.camp,r=f.apply(this,arguments);try{if(C&&!C.raid&&e.leader!==C&&campAlive(C)===0)C.clr=true}catch(_){}return r}}
 
 // ================= v89 (gear track): vampire standing collar =================
 // The old dkHighCollar fanned a row of boxes out to one side. This one is a proper high, stiff standing collar:
@@ -18387,7 +18396,7 @@ function wdDeco(){const T0=performance.now();
   def('k_reeds',{parts:[reeds(0x6a8a3a,0x5a3a22)],near:true,s:[.8,1.3],sway:.18});
   def('k_lily',{parts:[lilies()],near:true,abs:.035,s:[.8,1.4]});
   def('k_log',{parts:[logG(0x3e3428,0x5a8a3a)],cast:true,cp:[[-.9,0,.45],[0,0,.45],[.9,0,.45]],s:[.9,1.2]});
-  def('k_stump',{parts:[M([stump(0x3e3428,0x8a6a48),mushC(0xd8d0b8,0xb85a3a,4).translate(.3,.5,0)])],near:true,s:[.8,1.3]});
+  def('k_stump',{parts:[M([stump(0x3e3428,0x8a6a48),mushC(0xd8d0b8,0xb85a3a,4).scale(.55,.8,.55).translate(.04,.5,.02)])],near:true,s:[.8,1.3]});
   def('k_glow',{parts:[{g:mushC(0x8ad8c0,0xffffff,7),glow:1}],near:true,s:[.9,1.8],tint:[0x6affc0,0x9ae8ff,0xc8ff6a]});
   def('k_web',{parts:[{g:plain(pln(1.8,1.8)),mat:'web'}],near:true,y:1.3,s:[.8,1.3],j:0});
   def('k_lamp',{parts:[lanternPost(),{g:lanternGlow(),glow:1}],cast:true,s:[.95,1.1],tint:[0xffffff],gt:[0xffc870]});

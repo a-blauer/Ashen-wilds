@@ -1,11 +1,11 @@
-// ================= v89 bossfx: breakable Rime Wraith orbs, den walls that never block the camera, targetable necks and eye-stalks =================
-// 1. ORBS (den 2 and any boss using BMV.orbs): every Wailing Orb is a one-hit "sub-target" — any hero swing, shot, skill or
-//    companion hit shatters it; an orb that drifts into a lit Warmfire dissolves in a hiss of steam (dark fires do nothing).
-//    Orbs are per-player copies in co-op (each copy hunts its own hero), so breaking one is local and needs no relay.
+// ================= v89 bossfx: Rime Wraith orbs melt in Warmfires, den walls that never block the camera, targetable necks and eye-stalks =================
+// 1. ORBS (den 2): attacks pass straight through a Wailing Orb (v91: orbs are no longer targets/enemies); an orb led within
+//    1.7 of a lit Warmfire dissolves in a hiss of steam (dark fires do nothing).
+//    Orbs are per-player copies in co-op (each copy hunts its own hero), so melting one is local and needs no relay.
 // 2. CUTAWAY: den scenery (dens 0-3; dens 4-5 already use dqCut) gets a shader that dithers away whatever stands between the
 //    camera and the hero (a tube along the line of sight, like the trees in the wilds) and — when the camera is out past the
 //    wall — the whole stretch of wall on the camera's side (like dqCut). The floor is never cut.
-// 3. SUB-TARGETS: Hydra brood necks (den 1), Argus eye-stalks (den 0) and orbs live in `enemies` as inert proxy enemies
+// 3. SUB-TARGETS: Hydra brood necks (den 1) and Argus eye-stalks (den 0) live in `enemies` as inert proxy enemies
 //    (e.bfx). Tab (den order: nearest first, then on round the list), clicking/tapping them, the target frame, homing shots
 //    and targeted skills all work on them. Every hit on a proxy is handed to the neck's / stalk's own health logic
 //    (hyHitNeck / arHitStalk: sever → stump → sear or regrow, open eyes +60%, eye burst), so nothing is counted twice.
@@ -26,8 +26,7 @@ const bfxLive=e=>e&&!e.dead&&!e._gone;
 // damage on a proxy goes to the thing it stands for
 function bfxDmg(e,d,s){if(BFX.aHit)BFX.aHit.add(e);const b=e.bfx,A=b.A,r=b.ref;if(!(d>0))return;
   try{if(b.k=='neck'){if(r.st=='up'||r.st=='rise'){hyHitNeck(A,r,d);e.c.h=Math.max(0,r.hp)}if(r.st!='up'&&r.st!='rise')bfxDrop(e)}
-    else if(b.k=='stalk'){if(r.st!='dead'){arHitStalk(A,r,d);e.c.h=Math.max(0,r.hp)}if(r.st=='dead')bfxDrop(e)}
-    else if(b.k=='orb'){bfxOrbEnd(A,r,'shatter');bfxDrop(e)}}catch(err){console.error('bossfx hit',err)}}
+    else if(b.k=='stalk'){if(r.st!='dead'){arHitStalk(A,r,d);e.c.h=Math.max(0,r.hp)}if(r.st=='dead')bfxDrop(e)}}catch(err){console.error('bossfx hit',err)}}
 {const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.bfx){if(!e.dead&&!e._gone)bfxDmg(e,d,s);return}return f.apply(this,arguments)}}
 // proxies stand for den objects that keep their own level-free health: no level-gap penalty on them
 {const f=rollHero;rollHero=function(e){if(e&&e.bfx){const c=e.c,l=c.l;c.l=Math.min(l,hero.lvl);try{return f.apply(this,arguments)}finally{c.l=l}}return f.apply(this,arguments)}}
@@ -35,17 +34,13 @@ function bfxDmg(e,d,s){if(BFX.aHit)BFX.aHit.add(e);const b=e.bfx,A=b.A,r=b.ref;i
 {const f=mpElig;mpElig=function(e){return e&&e.bfx?false:f.apply(this,arguments)}}
 // ---------------- orbs ----------------
 function bfxOrbEnd(A,f,how){const L=bxA(A),i=L.indexOf(f);if(i>=0)L.splice(i,1);const g=f.ms;if(!g)return;const p=g.position.clone();if(g.parent)g.parent.remove(g);f.t=0;
-  if(how=='shatter'){BFX.orbN++;burst(p,0xe8f8ff,30,3,2,.5);burst(p,0x9ad8ff,16,2,2.5,.45);kqFlash(p,0xcfefff,2.6,220);ring(V(p.x,0,p.z),0x9ad8ff,2,260);dn(p,'Shattered!','#cfefff',-24,700);sfx('shatter',.6)}
-  else if(how=='steam'){BFX.stN++;const q=V(p.x,p.y-.2,p.z);burst(q,0xdfe6ee,28,1.2,3.4,1.1);burst(p,0xffffff,14,.8,2.6,.9);burst(p,0xffb060,8,.8,1.6,.5);kqFlash(p,0xffd0a0,2.2,240);
+  if(how=='steam'){BFX.stN++;const q=V(p.x,p.y-.2,p.z);burst(q,0xdfe6ee,28,1.2,3.4,1.1);burst(p,0xffffff,14,.8,2.6,.9);burst(p,0xffb060,8,.8,1.6,.5);kqFlash(p,0xffd0a0,2.2,240);
     tw(900,k=>{if(Math.random()<.6)burst(V(q.x+(Math.random()-.5)*.6,q.y+k*2,q.z+(Math.random()-.5)*.6),0xe8eef4,1,.4,1.5,.9)});dn(p,'💨 Hiss!','#e8f0f8',-24,800);sfx('hiss',.7)}}
-function bfxOrbs(A){const L=bxA(A),D=A.i===2&&A.dn;
-  for(let i=L.length-1;i>=0;i--){const f=L[i];if(!f||f.k!='orb'||!f.ms)continue;const p=f.ms.position;
+// v91: orbs get no proxy enemy (hits, shots, skills and companions pass through them; Tab/click never pick them) — only fire melts them
+function bfxOrbs(A){const L=bxA(A),D=A.i===2&&A.dn;if(!D||!D.br)return;
+  for(let i=L.length-1;i>=0;i--){const f=L[i];if(!f||f.k!='orb'||!f.ms||!f.ms.parent)continue;const p=f.ms.position;
     // a lit Warmfire melts it (a snuffed one does not)
-    if(D&&D.br){let hot=null;for(const B of D.br)if(B.lit&&Math.hypot(p.x-B.x,p.z-B.z)<1.7){hot=B;break}
-      if(hot){if(f._bfx)bfxDrop(f._bfx);bfxOrbEnd(A,f,'steam');continue}}
-    const e=f._bfx;if(!bfxLive(e)){bfxProxy(A,'orb',f,{n:'Wailing Orb',hp:1,hpM:1,x:p.x,z:p.z,bs:.7,sub:'One hit shatters it · a lit Warmfire melts it',pts:()=>[f.ms.position],pm:'orb'});continue}
-    e.m.position.x=p.x;e.m.position.z=p.z}
-  for(const e of BFX.subs.slice())if(e.bfx.k=='orb'&&(L.indexOf(e.bfx.ref)<0||!e.bfx.ref.ms||!e.bfx.ref.ms.parent))bfxDrop(e)}
+    for(const B of D.br)if(B.lit&&Math.hypot(p.x-B.x,p.z-B.z)<1.7){bfxOrbEnd(A,f,'steam');break}}}
 // ---------------- necks and stalks ----------------
 function bfxNecks(A){if(typeof HY=='undefined'||!HY.necks)return;const y0=GH(A.cx,A.cz);
   for(const N of HY.necks){const live=N.st=='up'||N.st=='rise',e=N._bfx;
@@ -65,10 +60,10 @@ function bfxSync(dt,now){const A=AF;
   bfxMark(now)}
 {const f=arenaTick;arenaTick=function(dt,now){const r=f.apply(this,arguments);bfxSync(dt,now);return r}}
 {const f=arenaClear;arenaClear=function(A){const r=f.apply(this,arguments);for(const e of BFX.subs.slice())if(e.bfx.A===A)bfxDrop(e);return r}}
-// a red chevron over the targeted neck / stalk / orb (the ground ring alone is easy to miss under a tall neck)
+// a red chevron over the targeted neck / stalk (the ground ring alone is easy to miss under a tall neck)
 function bfxMark(now){let m=BFX.mk;const t=tgt,on=t&&t.bfx&&bfxLive(t);
   if(!m){if(!on)return;m=BFX.mk=new THREE.Mesh(new THREE.ConeGeometry(.24,.5,4),new THREE.MeshBasicMaterial({color:0xff4a2a,transparent:true,opacity:.95,depthTest:false,depthWrite:false,fog:false}));m.rotation.x=Math.PI;m.renderOrder=30;m.material.userData.lps=1;scene.add(m)}
-  m.visible=!!on;if(!on)return;const P=t.bfx.pts()[0];m.position.set(P.x,P.y+(t.bfx.k=='orb'?.9:1.3)+.12*Math.sin(now/160),P.z);m.rotation.y=now/400}
+  m.visible=!!on;if(!on)return;const P=t.bfx.pts()[0];m.position.set(P.x,P.y+1.3+.12*Math.sin(now/160),P.z);m.rotation.y=now/400}
 // ---------------- melee / projectiles reach a proxy once (no double hits with the dens' own hit paths) ----------------
 {const f=area;area=function(){const o=BFX.aHit;BFX.aHit=new Set();try{return f.apply(this,arguments)}finally{BFX.aHit=o}}}
 const bfxMt=s=>(s&&s.mt)||heroMt();
@@ -106,7 +101,7 @@ function bfxCands(A){const c=V(A.cx,0,A.cz),p=pl.position;return enemies.filter(
 // pick the enemy under a screen point: sub-targets by their own points, others by body centre
 function bfxPick(cx,cy){const r=gl.getBoundingClientRect();if(!r.width)return null;const th=Math.tan(cam.fov*Math.PI/360),v=new THREE.Vector3();let best=null,bs=1;
   for(const e of enemies){if(e.dead||e._gone||e.hid||!e.m.visible)continue;if(d2(e.m.position,pl.position)>40)continue;
-    const P=e.bfx?e.bfx.pts():[gY(e.m.position,(e.boss?.55:.45)*(e.m.bs||1)*(e.boss?2.2:1.6))],rad=e.bfx?(e.bfx.k=='orb'?.7:.95):e.boss?1.6*(e.m.bs||1)*.5+.8:.75*(e.c.al?1.3:1);
+    const P=e.bfx?e.bfx.pts():[gY(e.m.position,(e.boss?.55:.45)*(e.m.bs||1)*(e.boss?2.2:1.6))],rad=e.bfx?.95:e.boss?1.6*(e.m.bs||1)*.5+.8:.75*(e.c.al?1.3:1);
     for(const q of P){v.copy(q).project(cam);if(v.z>1||v.z<-1)continue;const sx=r.left+(v.x+1)/2*r.width,sy=r.top+(1-v.y)/2*r.height,dist=cam.position.distanceTo(q)||1;
       const pr=Math.max(26,rad/(dist*th)*r.height/2),k=Math.hypot(sx-cx,sy-cy)/pr*(e.bfx?.5:1);if(k<bs){bs=k;best=e}}}
   return best}
@@ -123,21 +118,19 @@ function bfxTgtCls(){const t=tgt,on=!!(t&&!t.boss&&!t.dead&&AF&&AF.f);document.b
 function bfxPortrait(e){const b=e.bfx,g=new THREE.Group(),bm=q=>(q&&q.userData.bfxBase)||q;try{
     if(b.pm=='neck'){const N=b.ref;g.add(new THREE.Mesh(N.neck.geometry,bm(N.neck.material)),new THREE.Mesh(N.eyes.geometry,bm(N.eyes.material)))}
     else if(b.pm=='stalk'){const T=b.ref;T.g.children.forEach(c=>{if(c.isMesh)g.add(new THREE.Mesh(c.geometry,bm(c.material)))});const eg=T.eye.clone(true);eg.traverse(q=>{if(q.isSprite)q.visible=false;else if(q.isMesh)q.material=bm(q.material)});g.add(eg)}
-    else{const o=b.ref.ms.clone(true);o.position.set(0,0,0);o.scale.setScalar(1);o.traverse(q=>{if(q.material&&q.material.depthTest===false)q.visible=false});g.add(o)}}catch(err){return null}
+    else return null}catch(err){return null}
   g.rig=now=>{g.rotation.y=.55+Math.sin(now/1400)*.35};return g}
 {const f=setTarget;setTarget=function(e){const r=f.apply(this,arguments);
   try{if(e&&e.bfx&&TPV.sc){const m=bfxPortrait(e);if(m){if(TPV.m)TPV.sc.remove(TPV.m);TPV.sc.add(m);TPV.m=m;m.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(V()),sz=bb.getSize(V()),q=Math.max(sz.x,sz.y,sz.z);
       TPV.cam.position.set(c.x+q*.3,c.y+q*.32,c.z+q*1.45);TPV.cam.lookAt(c.x,c.y+sz.y*.12,c.z);portraitDraw(performance.now())}}}catch(err){console.warn('bossfx portrait',err)}
   bfxTgtCls();return r}}
 {const f=tgtHud;tgtHud=function(){const r=f.apply(this,arguments);try{const e=tgt;if(e&&e.bfx){$('tgN').textContent=e.c.n;const s=$('tgS');if(s&&!(e.atk&&e.atk.ph==0)){s.className='tgs';s.textContent=e.bfx.sub||''}}bfxTgtCls()}catch(err){}return r}}
-// ---------------- sounds: ice shattering, steam hissing ----------------
-{const f=sfx;sfx=function(k,vol){if(k!='shatter'&&k!='hiss')return f.apply(this,arguments);
+// ---------------- sounds: steam hissing ----------------
+{const f=sfx;sfx=function(k,vol){if(k!='hiss')return f.apply(this,arguments);
   try{if(SET.sfx===false)return;const a=AUD;if(!a||a.state!='running'||!NOISE)return;const t=a.currentTime;vol=vol||1;
     const nz=(ft,f0,f1,at,dur,v,q)=>{const s=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;fl.type=ft;fl.frequency.setValueAtTime(f0,t);fl.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+dur);fl.Q.value=q||1;
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*vol,t+at);g.gain.exponentialRampToValueAtTime(.001,t+at+dur);s.connect(fl);fl.connect(g);g.connect(a.out);s.start(t,Math.random()*.5);s.stop(t+at+dur+.05)};
-    const os=(f0,f1,dur,v,dl)=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t+dl);o.frequency.exponentialRampToValueAtTime(f1,t+dl+dur);g.gain.setValueAtTime(0,t);g.gain.setValueAtTime(0,t+dl);g.gain.linearRampToValueAtTime(v*vol,t+dl+.004);g.gain.exponentialRampToValueAtTime(.001,t+dl+dur);o.connect(g);g.connect(a.out);o.start(t);o.stop(t+dl+dur+.05)};
-    if(k=='shatter'){nz('highpass',5200,2600,.002,.18,.45,1);[2637,3520,3136,4186].forEach((fq,i)=>os(fq,fq*.97,.22+i*.05,.07,i*.025))}
-    else{nz('highpass',6500,3800,.06,.75,.35,.7);nz('bandpass',2400,1200,.02,.3,.15,2)}}catch(err){}}}
+    nz('highpass',6500,3800,.06,.75,.35,.7);nz('bandpass',2400,1200,.02,.3,.15,2)}catch(err){}}}
 // ---------------- den cutaway: scenery between the camera and the hero dithers away ----------------
 // uCut = (den centre x, z, floor height, on), uCutR = (wall radius rIn, keep-below height yMin, line-of-sight tube radius)
 function bfxCutMat(base,A,rIn,yMin,tube){const k=A.i+':'+base.uuid;if(BFX.cut[k])return BFX.cut[k];const m=base.clone();m.userData.lps=1;m.userData.bfxCut=1;m.userData.bfxBase=base;

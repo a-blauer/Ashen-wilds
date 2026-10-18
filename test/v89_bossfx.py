@@ -1,4 +1,4 @@
-# v89 bossfx — breakable Rime Wraith orbs (hit / shot / companion / Warmfire steam), Tab + click + target frame for
+# v89 bossfx — Rime Wraith orbs (v91: hits pass through, only a lit Warmfire melts them in steam), Tab + click + target frame for
 # Hydra necks and Argus eye-stalks, ranged shots and skills on them (through their own health logic), den cutaway materials.
 # AW_TMP=<out dir> python3 v89_bossfx.py      (SHOTS=0 skips the screenshots)
 import play,json,os
@@ -36,23 +36,21 @@ def s(pg):
     ok('fight2',r[0] and r[1]==2)
     ok('cut materials',r[2]>0)
     P('cutmats',"()=>{const n={cut:0,all:0};XA.g.traverse(o=>{if(o.isMesh){n.all++;if(o.material.userData.bfxCut)n.cut++}});const d4={cut:0,dq:0};ARN[4].g.traverse(o=>{if(o.isMesh){if(o.material.userData.bfxCut)d4.cut++;if(o.material.customProgramCacheKey&&String(o.material.customProgramCacheKey()).startsWith('dqcut'))d4.dq++}});return [n,d4]}")
-    r=P('orbs',"()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(2.2);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb');return [L.length,BXP('orb').length,BXP('orb').every(e=>enemies.includes(e)&&e.c.n=='Wailing Orb')]}")
-    ok('orb proxies',r[0]>=4 and r[1]==r[0] and r[2])
+    r=P('orbs',"()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(2.2);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb');return [L.length,BXP('orb').length,enemies.filter(e=>e.c&&e.c.n=='Wailing Orb').length]}")
+    ok('orbs spawn, not enemies (v91)',r[0]>=4 and r[1]==0 and r[2]==0)
     shot('orbs')
-    # one hero hit (any damage) shatters an orb
-    r=P('orb hit',"()=>{const e=BXP('orb')[0],f=e.bfx.ref,n0=bxA(XA).length,k0=BFX.orbN;heroHit(e,1,'p');STEP(.05);return [bxA(XA).indexOf(f),!!f.ms.parent,e._gone,!enemies.includes(e),BFX.orbN-k0,bxA(XA).length-n0]}")
-    ok('orb one hit',r[0]==-1 and not r[1] and r[2] and r[3] and r[4]==1)
-    # a companion bite shatters one too
-    r=P('orb comp',"()=>{const e=BXP('orb')[0];const c=party[0];const k0=BFX.orbN;compHit(c,e,.01);STEP(.05);return [e._gone,BFX.orbN-k0]}")
-    ok('orb companion',r[0] and r[1]==1)
-    # Tab targets orbs too; an arrow shot at the selected orb flies to it and shatters it
-    r=P('orb tab',"()=>{setTarget(null);BFX.cyc=null;const seen=new Set();for(let k=0;k<8;k++){selectTarget();if(tgt)seen.add(tgt.bfx?tgt.bfx.k:tgt.boss?'boss':'x')}return [...seen]}")
-    ok('orb tab',('orb' in r) and ('boss' in r))
-    # (the bow releases on a real-time timer, so wait between swing() and stepping the game)
-    P('orb shot0',"()=>{const e=BXP('orb')[0];window.OE=e;const f=e.bfx.ref;window.OK0=BFX.orbN;f.sp=0;f.t=30;const a=Math.atan2(f.ms.position.z-XA.cz,f.ms.position.x-XA.cx);toPos(XA.cx+Math.cos(a+.25)*4,XA.cz+Math.sin(a+.25)*4);setTarget(e);atkCd=0;swing();return d2(pl.position,f.ms.position)}")
-    pg.wait_for_timeout(1500)
-    r=P('orb shot',"()=>{const e=OE;let n=0;while(!e._gone&&n++<40)STEP(.1);return [e._gone,BFX.orbN-OK0,n]}")
-    ok('orb arrow',r[0] and r[1]==1)
+    # v91: hits do NOT break orbs — a melee sweep over an orb, an arrow through it, Tab
+    r=P('orb area',"()=>{const L=bxA(XA).filter(f=>f.k=='orb');L.forEach(f=>{f.sp=0;f.t=60});const f=L[0];area(f.ms.position.clone(),3,9999,{mt:'p',basic:1},null,0);STEP(.05);return [bxA(XA).indexOf(f)>=0,!!f.ms.parent]}")
+    ok('orb survives melee',r[0] and r[1])
+    r=P('orb arrow',"""()=>{const f=bxA(XA).find(f=>f.k=='orb');window.OF=f;const p=f.ms.position,o=V(p.x+4,0,p.z),d=V(-1,0,0);toPos(p.x+8,p.z+8);setTarget(null);launch(o,d,14,{col:0xffffff,arrow:1,mt:'p'},5,1);const sh=shots[shots.length-1];
+       let n=0,past=false;while(shots.includes(sh)&&n++<40){STEP(.05);if(sh.m.position.x<p.x-1)past=true}return [bxA(XA).indexOf(f)>=0,!!f.ms.parent,past]}""")
+    ok('arrow passes through orb',r[0] and r[1] and r[2])
+    r=P('orb skill',"()=>{const f=OF;toPos(f.ms.position.x+1.5,f.ms.position.z);setTarget(null);return [kqsNear(25)?kqsNear(25).c.n:null,teamFoe?String((teamFoe(party[0])||{c:{}}).c.n):null]}")
+    ok('skills/companions never pick an orb',r[0]!='Wailing Orb' and r[1]!='Wailing Orb')
+    r=P('orb tab',"()=>{setTarget(null);BFX.cyc=null;const seen=new Set();for(let k=0;k<8;k++){selectTarget();if(tgt)seen.add(tgt.bfx?tgt.bfx.k:tgt.boss?'boss':(tgt.c&&tgt.c.n)||'x')}return [...seen]}")
+    ok('orb not in tab',('orb' not in r) and ('Wailing Orb' not in r) and ('boss' in r))
+    r=P('orb click',"()=>{const f=OF;STEP(.03,1);const q=f.ms.position.clone().project(cam),R=gl.getBoundingClientRect();const e=bfxPick(R.left+(q.x+1)/2*R.width,R.top+(1-q.y)/2*R.height);return e?(e.boss?'boss':e.c.n):null}")
+    ok('orb not clickable',r!='Wailing Orb')
     # Warmfires: a lit fire melts an orb in a hiss of steam; a snuffed fire does not
     r=P('orb fire',"""()=>{BE.bs.t=99;BMV.orbs(BE,XA,1);STEP(2.2);BE.bs.t=99;const L=bxA(XA).filter(f=>f.k=='orb'),B=DN.br.find(B=>B.lit)||DN.br[0];if(!B.lit)rwFire(XA,B,true);const f=L[0],s0=BFX.stN;
        f.ms.position.set(B.x+.6,B.y+1.2,B.z);toPos(B.x+6,B.z+6);STEP(.05);const r1=[bxA(XA).indexOf(f),BFX.stN-s0];

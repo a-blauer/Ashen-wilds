@@ -94,7 +94,7 @@ function wdDeco(){const T0=performance.now();
   def('k_reeds',{parts:[reeds(0x6a8a3a,0x5a3a22)],near:true,s:[.8,1.3],sway:.18});
   def('k_lily',{parts:[lilies()],near:true,abs:.035,s:[.8,1.4]});
   def('k_log',{parts:[logG(0x3e3428,0x5a8a3a)],cast:true,cp:[[-.9,0,.45],[0,0,.45],[.9,0,.45]],s:[.9,1.2]});
-  def('k_stump',{parts:[M([stump(0x3e3428,0x8a6a48),mushC(0xd8d0b8,0xb85a3a,4).translate(.3,.5,0)])],near:true,s:[.8,1.3]});
+  def('k_stump',{parts:[M([stump(0x3e3428,0x8a6a48),mushC(0xd8d0b8,0xb85a3a,4).scale(.55,.8,.55).translate(.04,.5,.02)])],near:true,s:[.8,1.3]});
   def('k_glow',{parts:[{g:mushC(0x8ad8c0,0xffffff,7),glow:1}],near:true,s:[.9,1.8],tint:[0x6affc0,0x9ae8ff,0xc8ff6a]});
   def('k_web',{parts:[{g:plain(pln(1.8,1.8)),mat:'web'}],near:true,y:1.3,s:[.8,1.3],j:0});
   def('k_lamp',{parts:[lanternPost(),{g:lanternGlow(),glow:1}],cast:true,s:[.95,1.1],tint:[0xffffff],gt:[0xffc870]});
