@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v88 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v89 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -101,6 +101,10 @@ Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved
 - **Town** (`zzM_town.js`): one procedural texture atlas (19 materials) mapped at world scale on every town part (pV10 renames the v83 bakers to `*_0` and tags parts by material); new `sign()` (two-sided planks, iron straps, painted Cinzel text, posts beside the board); `kdSync()` (from `shApply`) rebuilds visible upgrades: Bastion Walls 0 palisade → 1 stone footing → 2 stone wall → 3 fortified wall with towers and gatehouse; Training Grounds, Scholar's Tower, Treasury, Beast Den, Hatchery each have 3 visible stages; total level adds banners, braziers and pennants.
 - **Abilities** (`zzM_skills.js`, header explains it): ability points (1 per level, `apFree()` = earned − spent, migration bonus `hero.tal.__apB`); heroes start with the class default; 17 abilities per class (4 original + 3 v71 + 10 new in `KQN`), cost `1+floor(lv/6)` AP, some need a prerequisite; 4 equip slots (`__ld`); K opens Talents | Abilities tabs; ground targeting (circle/line/wall/cone reticle, click to cast, Esc/right-click cancels, drag on touch) for 26 new abilities and the old ground skills. Old saves keep their skills and get the talent points back.
 - Tests: `test/v88_ui_*.py`, `v88_menus.py`, `v88_town_*.py`, `v88_skills*.py`.
+
+## v89: tracks framework
+
+`build/pV11.py` (runs after pV10) exec's every `build/pN_<track>.py` in sorted order with the shared `h`/`rep`, then splices every `src/modules/zzN_<track>*.js` (sorted) last. Each v89 track below owns its own `pN_`/`zzN_` files. "The Derge" is now **The Dirge**. When `pN_dens.py` and `pN_world.py` touch the same den numbers, the world track's den clearing (`PM_DENR`) wins and dens only scales what is left.
 
 ## v89: gear
 
