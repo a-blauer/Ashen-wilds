@@ -513,13 +513,17 @@ function kdPrestige(T,P){const K=kdState(),o=kdOld(T),lv=P>=12?3:P>=8?2:P>=4?1:0
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>{const x=sx*4.6,z=sz*4.6;twStones(k,TWC.stone,x-.35,z,x+.35,z,0,.45,.7,.35);kdBrazier(k,x,z,.45,.9)});
     // shopfront banners: [x, top, z, width, height] (clear of doors, windows and signs)
     if(lv>=2)[[-2.1,1.84,-12.3,.4,.62],[2.1,1.84,-12.3,.4,.62],[-16.9,2.5,-13.62,.38,.9],[-11.6,2.5,-13.62,.38,.9],[13.65,2.3,-13.62,.4,.9],[15.9,2.3,-13.62,.4,.9]].forEach(([x,y,z,w,h])=>kdBanner(k,x,y,z,0,ban,w,h));
-    if(lv>=3){const pts=[[-9.75,14.7],[9.75,14.7],[12.6*1.5,-3.6*1.5],[-12.6*1.5,-3.6*1.5]],cols=[ban,0xc9a24a,0x2a3a6a,0xe8dcc0];
-      [[0,1],[1,2],[3,0]].forEach(([a,b])=>{const A=pts[a],B=pts[b],n=Math.round(Math.hypot(B[0]-A[0],B[1]-A[1])/.7);for(let i=0;i<n;i++){const t=(i+.5)/n,x=A[0]+(B[0]-A[0])*t,z=A[1]+(B[1]-A[1])*t,y=3.0-Math.sin(Math.PI*t)*.9,ry=-Math.atan2(B[1]-A[1],B[0]-A[0]);
-        k.as('cloth',()=>k.p('c',cols[i%4],'tri',x,y-.22,z,.32,.3,.015,0,ry,Math.PI,.02))}
-        k.L('c',0x8a7450,[A[0],3.05,A[1]],[(A[0]+B[0])/2,2.15,(A[1]+B[1])/2],.012,'cyl6',0);k.L('c',0x8a7450,[(A[0]+B[0])/2,2.15,(A[1]+B[1])/2],[B[0],3.05,B[1]],.012,'cyl6',0)})}}
+    // pennant lines along the shopfront row and the south wall (kept off the plaza so they never hide the hero)
+    if(lv>=3){const cols=[ban,0xc9a24a,0x2a3a6a,0xe8dcc0];
+      [[[-18.6,-12.3],[-3.2,-11.9]],[[3.2,-11.9],[18.6,-12.3]],[[-17,19.6],[17,19.6]]].forEach(([A,B])=>{const n=Math.round(Math.hypot(B[0]-A[0],B[1]-A[1])/.6),ry=-Math.atan2(B[1]-A[1],B[0]-A[0]),y0=3.9,sg=.55;
+        for(let i=0;i<n;i++){const t=(i+.5)/n,x=A[0]+(B[0]-A[0])*t,z=A[1]+(B[1]-A[1])*t,y=y0-Math.sin(Math.PI*t)*sg;k.as('cloth',()=>k.p('c',cols[i%4],'tri',x,y-.16,z,.24,.22,.015,0,ry,Math.PI,.02))}
+        for(let i=0;i<8;i++){const t0=i/8,t1=(i+1)/8,P=t=>[A[0]+(B[0]-A[0])*t,y0-Math.sin(Math.PI*t)*sg,A[1]+(B[1]-A[1])*t];k.L('c',0x8a7450,P(t0),P(t1),.012,'cyl6',0)}
+        [A,B].forEach(q=>{k.as('bark',()=>k.L('c',TWC.woodD,[q[0],-.05,q[1]],[q[0],y0+.15,q[1]],.06,'log'))})})}}
   const g=twGroup(k,key);g.name='kdPrestige';T.g.add(g);K.pg=g;
   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>lamps.push([T.cx+sx*4.6,T.ph+1.5,T.cy+sz*4.6]));
-  kdCol(T,K.pcol=K.pcol||[],[[-1,-1],[1,-1],[-1,1],[1,1]].map(([sx,sz])=>({x:T.cx+sx*4.6,z:T.cy+sz*4.6,r:.42})));return lamps}
+  const pc=[[-1,-1],[1,-1],[-1,1],[1,1]].map(([sx,sz])=>({x:T.cx+sx*4.6,z:T.cy+sz*4.6,r:.42}));
+  if(lv>=3)[[-18.6,-12.3],[-3.2,-11.9],[3.2,-11.9],[18.6,-12.3],[-17,19.6],[17,19.6]].forEach(([x,z])=>pc.push({x:T.cx+x,z:T.cy+z,r:.1}));
+  kdCol(T,K.pcol=K.pcol||[],pc);return lamps}
 
 // rebuild everything that depends on the stronghold levels (called from shApply, i.e. on load and after every purchase)
 function kdSync(){const T=TOWNS[0];if(!T||!T.g)return;const K=kdState();let lamps=[];

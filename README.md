@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v87 = this commit's `dist/ashen-wilds.html`).
+Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v88 = this commit's `dist/ashen-wilds.html`).
 
 ## Build
 
@@ -91,6 +91,16 @@ The round stone arena is gone. `zzK_dens.js` strips the old arena dressing and g
 ## v87: Cheats
 
 Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons). Test: `test/v87_cheats.py`.
+
+## v88: dark-fantasy UI, slot menus, living Duskhold, ability points
+
+`build/pV10.py` splices `zzM_skills.js`, `zzM_town.js`, `zzM_menus.js`, `zzM_ui.js` (in that order) and inserts `zzM_uiicons.js` right after `<script>`; each track's text patches sit in its own `# --- <track> ---` block.
+- **UI theme** (`zzM_ui.js`): `--kq-*` tokens; leather/iron panels with grain, bronze bevel frames and gilded corners (border-image, layout unchanged); Cinzel headings; themed buttons, tabs, rows, inputs, HUD (hotbar, orbs, bars, plates, banners), mobile.
+- **Icons** (`zzM_uiicons.js`): 183 original SVG icons; `KQE` maps every emoji the game uses to an icon + tint (unknown → rune fallback, counted in `KQ_MISS`). DOM: `innerHTML`/`insertAdjacentHTML`/`textContent` hooks rewrite emoji to `<i class="kqi …">` masks (MutationObserver fallback); canvas `fillText`/`strokeText` draw icon bitmaps (signs, map labels).
+- **Menus** (`zzM_menus.js`, wraps `rB0`/`rC0`/`rC`/shop renderers — keep it after modules that inject into `#cd` or the bag): inventory paper-doll + 48-slot bag grid with filter/sort, gear lock (`it.lock`, never sold), new marker (`it.kqn`); bag tabs 7 = Forge (upgrade), 8 = Stats; hover/tap tooltip `#kqmTip` with ▲/▼ comparison to the equipped item; every shop is a priced slot grid (original rows stay hidden in `.kqm-hold` and are clicked by the buy bar); companion window tabs Overview / Stats & Grades / Spells & Evolution / Care / Talents. Remembered tabs/sort in localStorage `kqm_menus`.
+- **Town** (`zzM_town.js`): one procedural texture atlas (19 materials) mapped at world scale on every town part (pV10 renames the v83 bakers to `*_0` and tags parts by material); new `sign()` (two-sided planks, iron straps, painted Cinzel text, posts beside the board); `kdSync()` (from `shApply`) rebuilds visible upgrades: Bastion Walls 0 palisade → 1 stone footing → 2 stone wall → 3 fortified wall with towers and gatehouse; Training Grounds, Scholar's Tower, Treasury, Beast Den, Hatchery each have 3 visible stages; total level adds banners, braziers and pennants.
+- **Abilities** (`zzM_skills.js`, header explains it): ability points (1 per level, `apFree()` = earned − spent, migration bonus `hero.tal.__apB`); heroes start with the class default; 17 abilities per class (4 original + 3 v71 + 10 new in `KQN`), cost `1+floor(lv/6)` AP, some need a prerequisite; 4 equip slots (`__ld`); K opens Talents | Abilities tabs; ground targeting (circle/line/wall/cone reticle, click to cast, Esc/right-click cancels, drag on touch) for 26 new abilities and the old ground skills. Old saves keep their skills and get the talent points back.
+- Tests: `test/v88_ui_*.py`, `v88_menus.py`, `v88_town_*.py`, `v88_skills*.py`.
 
 ## Conventions (read before changing code)
 
