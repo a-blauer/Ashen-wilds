@@ -59,7 +59,7 @@ def s(pg):
     # ---------------- 2. location box layout ----------------
     if 'layout' in PART:
         ev("""(t)=>{window.LB=()=>{const q=id=>{const e=$(id);if(!e||e.offsetParent===null||getComputedStyle(e).display=='none')return null;const b=e.getBoundingClientRect();return b.width?[Math.round(b.left),Math.round(b.top),Math.round(b.right),Math.round(b.bottom)]:null};
-          const r={};['mini','locBox','fsBtn','sysBtn','evtk','tgt','boss','topl','sysmenu'].forEach(k=>r[k]=q(k));r.lines=$('locBox')?Math.round($('locBox').getBoundingClientRect().height):0;return r};
+          const r={};['mini','locBox','fsBtn','sysBtn','evtk','tgt','boss','topl','sysmenu','mbtn','joy'].forEach(k=>r[k]=q(k));r.lines=$('locBox')?Math.round($('locBox').getBoundingClientRect().height):0;return r};
           window.OV=(a,b)=>a&&b&&a[0]<b[2]&&b[0]<a[2]&&a[1]<b[3]&&b[1]<a[3];
           // anything else on the HUD that the location box now covers
           window.HITS=()=>{const lb=$('locBox').getBoundingClientRect(),L=[lb.left,lb.top,lb.right,lb.bottom];return [...$('stage').querySelectorAll('*')].filter(e=>{if(e===$('locBox')||e.closest('#locBox')||e.contains($('locBox'))||e.id=='mini'||e.closest('.modal')||e.tagName=='CANVAS')return false;const cs=getComputedStyle(e);if(cs.position!='absolute'&&cs.position!='fixed')return false;if(e.offsetParent===null||cs.visibility=='hidden'||+cs.opacity==0)return false;const b=e.getBoundingClientRect();return b.width>4&&b.height>4&&b.width<innerWidth*.6&&OV(L,[b.left,b.top,b.right,b.bottom])}).map(e=>e.id||e.className)};
@@ -75,15 +75,19 @@ def s(pg):
             ev("([b,t])=>FAKE(b,t)",[boss,txt]);pg.wait_for_timeout(1500)
             r=P('lay '+tag,"()=>LB()")
             m,l=r['mini'],r['locBox']
-            ok(tag+' loc under mini',m and l and l[1]>=m[3]-1 and l[1]-m[3]<16 and abs(l[0]-m[0])<=8 and abs(l[2]-m[2])<=8)
-            for k in ['fsBtn','sysBtn','evtk','tgt','boss','topl']:
+            short=tag.startswith('mob_land')
+            if short:  # short landscape phone: box left of the minimap on the top row
+                ok(tag+' loc left of mini',m and l and l[2]<=m[0] and abs(l[1]-m[1])<=8 and l[3]-l[1]<=48)
+            else:
+                ok(tag+' loc under mini',m and l and l[1]>=m[3]-1 and l[1]-m[3]<16 and abs(l[0]-m[0])<=8 and abs(l[2]-m[2])<=8)
+            for k in ['fsBtn','sysBtn','evtk','tgt','boss','topl','mbtn','joy']:
                 if r.get(k):ok(tag+' no overlap loc/'+k,not ev("([a,b])=>OV(a,b)",[l,r[k]]))
-            for k in ['fsBtn','sysBtn']:
-                if r.get(k) and r.get('evtk'):ok(tag+' no overlap '+k+'/evtk',not ev("([a,b])=>OV(a,b)",[r[k],r['evtk']]))
-                if r.get(k):ok(tag+' '+k+' below loc',r[k][1]>=l[3])
+            for k in ['fsBtn','sysBtn','evtk']:
+                for o in ['mbtn','joy','boss','tgt','topl']+(['evtk'] if k!='evtk' else []):
+                    if r.get(k) and r.get(o):ok(tag+' no overlap '+k+'/'+o,not ev("([a,b])=>OV(a,b)",[r[k],r[o]]))
+                if not short and k!='evtk' and r.get(k):ok(tag+' '+k+' below loc',r[k][1]>=l[3])
             if r.get('tgt') and r.get('boss'):ok(tag+' tgt below boss',r['tgt'][1]>=r['boss'][3])
-            h=P('hits',"()=>HITS()");ok(tag+' nothing else under loc',not [x for x in h if x!='mbtn'])
-            if 'mbtn' in h:print('WARN',tag,'touch buttons (#mbtn) overlap the minimap column (they already covered #fsBtn/#sysBtn/#evtk before v90)')
+            h=P('hits',"()=>HITS()");ok(tag+' nothing else under loc',not h)
             shot('v90_loc_'+tag+'.png')
         pg.set_viewport_size({'width':1100,'height':760});lay('desk');lay('desk_boss',True)
         lay('desk_short',False,'🏰 Duskhold · Safe haven')

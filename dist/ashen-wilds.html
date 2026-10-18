@@ -18003,6 +18003,8 @@ body.kq #locBox.v90{padding:5px 8px;letter-spacing:.03em;border-image-width:9px}
 @media (min-width:900px){body:not(.mob) #tgt,body:not(.mob) #boss{top:10px}}
 /* phone held upright: the boss bar and target frame use the space left of the minimap column */
 #sysmenu{z-index:4}
+body.v90s #boss,body.v90s #tgt{left:calc(46% - min(150px,18%));transform:none;width:min(300px,36%);box-sizing:border-box}body.v90s #boss{top:58px}
+body.v90s #evtk{min-width:0;width:128px;box-sizing:border-box}
 @media (orientation:portrait){body.mob #boss,body.mob #tgt{left:8px;transform:none;width:calc(100% - 146px);box-sizing:border-box}body.mob #boss{top:58px}}
 </style>`);
 
@@ -18055,15 +18057,28 @@ function v90Fit(){const lb=$('locBox');if(!lb||lb.offsetParent===null)return;lb.
   if(e1&&!fit(e1,11,9.5)){e1.style.fontSize='10.5px';e1.classList.add('v90w')}
   if(e2&&!fit(e2,10,8.5)){if(e2.querySelector('.v90o')){lb.classList.add('v90cut');if(fit(e2,10,8.5))return}e2.style.fontSize='9.5px';e2.classList.add('v90w')}}
 var V90_MOVE=['fsBtn','sysBtn','sysmenu','evtk'];
+// short landscape phone (body.mob, stage under 520px tall): the touch buttons (#mbtn) fill the column under the minimap, so
+// the box goes LEFT of the minimap on the top row, the fullscreen/menu buttons left of it, and the event tracker left of
+// the touch buttons; the boss bar / target frame shift left and down a little (body.v90s CSS).
+function v90Short(pr){return document.body.classList.contains('mob')&&pr.height<520&&pr.width>pr.height}
 function v90Lay(force){const lb=$('locBox'),m=$('mini');if(!lb||!m)return;const P=lb.offsetParent;if(!P||m.offsetParent===null){return}
-  const pr=P.getBoundingClientRect(),mr=m.getBoundingClientRect();
+  const pr=P.getBoundingClientRect(),mr=m.getBoundingClientRect(),mb=$('mbtn'),br=mb&&mb.offsetParent?mb.getBoundingClientRect():null;
   const kq=document.body.classList.contains('kq')?4:0;  // the themed minimap has a 4px bronze ring outside its border
-  const L=Math.round(mr.left-pr.left-kq),W=Math.round(mr.width+2*kq),T=Math.round(mr.bottom-pr.top+kq+V90L.gap);
-  const key=[L,W,T,pr.width,pr.height,lb.dataset.v90||'',document.body.className,V90_MOVE.map(id=>{const e=$(id);return e?(e.style.top?1:0)+(e.offsetParent?2:0):9}).join('')].join('|');
+  const sh=v90Short(pr);document.body.classList.toggle('v90s',sh);
+  const key=[sh,mr.left,mr.top,mr.width,mr.height,pr.width,pr.height,br?[br.left,br.top].join(','):'',lb.dataset.v90||'',document.body.className,V90_MOVE.map(id=>{const e=$(id);return e?(e.style.top?1:0)+(e.offsetParent?2:0):9}).join('')].join('|');
   if(!force&&key===V90L.k)return;V90L.k=key;
-  Object.assign(lb.style,{left:L+'px',top:T+'px',width:W+'px',right:'auto',transform:'none'});v90Fit();
-  const D=lb.offsetHeight+V90L.gap;
-  V90_MOVE.forEach(id=>{const e=$(id);if(!e)return;e.style.top='';const t=parseFloat(getComputedStyle(e).top);if(!isFinite(t))return;e.style.top=Math.round(t+D)+'px'})}
+  const clr=e=>{e.style.top='';e.style.right=''};
+  if(!sh){const L=Math.round(mr.left-pr.left-kq),W=Math.round(mr.width+2*kq),T=Math.round(mr.bottom-pr.top+kq+V90L.gap);
+    Object.assign(lb.style,{left:L+'px',top:T+'px',width:W+'px',right:'auto',transform:'none'});v90Fit();
+    const D=lb.offsetHeight+V90L.gap;
+    V90_MOVE.forEach(id=>{const e=$(id);if(!e)return;clr(e);const t=parseFloat(getComputedStyle(e).top);if(!isFinite(t))return;e.style.top=Math.round(t+D)+'px'});return}
+  const R=Math.round(mr.left-pr.left-kq-V90L.gap),W=Math.min(220,Math.round(pr.width*.27)),T=Math.round(mr.top-pr.top-kq);
+  Object.assign(lb.style,{left:(R-W)+'px',top:T+'px',width:W+'px',right:'auto',transform:'none'});v90Fit();
+  const fromR=x=>Math.round(pr.right-x)+'px',sy=$('sysBtn'),fs=$('fsBtn'),sm=$('sysmenu'),ev=$('evtk');let x=pr.left+R-W-V90L.gap;
+  [sy,fs].forEach(e=>{if(!e)return;clr(e);e.style.top=T+'px';e.style.right=fromR(x);x-=(e.offsetWidth||38)+4});
+  const rowB=T+Math.max(lb.offsetHeight,sy?sy.offsetHeight:0);
+  if(sm){clr(sm);sm.style.top=(rowB+6)+'px';sm.style.right=fromR(pr.left+R-W-V90L.gap)}
+  if(ev){clr(ev);ev.style.top=(rowB+8)+'px';ev.style.right=fromR(br?br.left-8:pr.left+R-W-V90L.gap)}}
 {const f=hud;hud=function(){const r=f.apply(this,arguments);try{v90LocBuild();v90Lay()}catch(_){}return r}}
 {const f=evUI;if(typeof f=='function')evUI=function(){const r=f.apply(this,arguments);try{v90Lay()}catch(_){}return r}}
 addEventListener('resize',()=>setTimeout(()=>{try{v90Lay(true)}catch(_){}},60));
