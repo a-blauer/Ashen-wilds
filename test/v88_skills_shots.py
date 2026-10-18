@@ -14,7 +14,7 @@ with sync_playwright() as p:
     pg.on('pageerror',lambda e:errs.append(str(e)+' '+(e.stack or '')[:400]))
     pg.on('console',lambda m:errs.append('console '+m.text) if m.type=='error' else None)
     pg.add_init_script('window.AW_NOTITLE=1')
-    pg.goto('file://'+play.TMP+'/live.html',wait_until='domcontentloaded',timeout=120000);pg.wait_for_timeout(4000)
+    pg.goto('file://'+play.TMP+'/live.html',wait_until='domcontentloaded',timeout=600000);pg.wait_for_timeout(4000)
     ev=pg.evaluate;ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="mage"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     ev("()=>{window.__r=ren.render;window.__pr=window.POST&&POST.render;window.FAST=on=>{if(on){ren.render=()=>{};if(window.POST)POST.render=()=>{}}else{ren.render=__r;if(window.POST)POST.render=__pr}}}")

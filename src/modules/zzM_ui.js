@@ -81,6 +81,7 @@ body.kq .modal.w{background:radial-gradient(ellipse at 50% 45%,rgba(10,7,4,.45),
 body.kq .win,body.kq .ccw{position:relative;background:var(--kq-grain),var(--kq-leath),radial-gradient(ellipse 120% 70% at 50% 0%,rgba(150,100,50,.16),transparent 60%),linear-gradient(180deg,#271a10 0%,#1b120b 55%,#130c07 100%);
  background-size:160px 160px,260px 260px,auto,auto;border:1px solid transparent;border-radius:3px;border-image:var(--kq-fl) 32 / 21px / 8px stretch;box-shadow:var(--kq-sh);color:var(--kq-ink)}
 body.kq .win .wh,body.kq .win .wf,body.kq .cch,body.kq .ccf{background:var(--kq-grain),linear-gradient(180deg,rgba(66,45,26,.85),rgba(34,23,14,.9));background-size:160px 160px,auto;border-radius:0}
+body.kq .cch{position:relative}
 body.kq .win .wh{position:relative;height:42px;padding:0 10px 0 18px;border-bottom:0;box-shadow:inset 0 -1px 0 rgba(0,0,0,.7),inset 0 1px 0 rgba(255,220,150,.08)}
 body.kq .win .wh::after,body.kq .cch::after{content:'';position:absolute;left:8px;right:8px;bottom:-7px;height:14px;background:var(--kq-dv) center/240px 16px no-repeat,linear-gradient(90deg,transparent,#8a5e28 12%,#d9ac5c 50%,#8a5e28 88%,transparent) center/100% 1.4px no-repeat;pointer-events:none;z-index:1}
 body.kq .win .wf{border-top:1px solid #0b0704;box-shadow:inset 0 1px 0 rgba(230,190,110,.22)}
