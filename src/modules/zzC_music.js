@@ -34,7 +34,7 @@ var MTH={
    arp:{e:2,p:[0,1,2,1,0,2,1,0],oct:0,v:.07,w:'square'},bass:{v:.12,c:'x.....x.........',f:'x..x..x.x..x..x.'},
    lead:{den:.55,oct:1,rest:.25,i:{w:'square',cut:1500,bp:1,vib:1.4,at:.05,slide:1},v:.055},
    drums:{c:{shak:'..g...g...g...g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}}},
- // The Derge: haunted graveyard — locrian, bells, hollow choir
+ // The Dirge: haunted graveyard — locrian, bells, hollow choir
  z4:{bpm:64,root:48,mode:'loc',prog:[0,1,0,4,0,1,3,1],pad:{v:.028,cut:600,form:1},drone:.12,bell:{p:.3,v:.05,oct:2},
    bass:{v:.14,c:'x...............',f:'x..x....x..x....'},
    lead:{den:.3,oct:1,rest:.4,i:{w:'sine',cut:2000,vib:1.6,at:.15,sub:1},v:.06},

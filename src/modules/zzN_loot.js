@@ -4,7 +4,7 @@
 // 2. MAPS     — every treasure map belongs to one zone (m.r) and sits in the bag as an item until its treasure is dug up.
 //               The ✕ is placed at runtime on a tile reachable from the zone entrance (flood fill over !solid tiles),
 //               away from the den, the sealed wave arena, camps and water. Old saves are migrated in x2Load.
-//               (Old bug: maps were placed by tier, so Sands/Derge maps swapped zones and Kindlelight maps could land in
+//               (Old bug: maps were placed by tier, so Sands/Dirge maps swapped zones and Kindlelight maps could land in
 //               Duskhold; spots were never checked for reachability, e.g. inside the sealed wave arena.)
 // 3. NODES    — every gathering node kind has its own low-poly model (stone, iron vein, crystal, fiber grass, berry bush,
 //               flowers, glow caps, bones), one instanced mesh per part, and the F prompt names the material.

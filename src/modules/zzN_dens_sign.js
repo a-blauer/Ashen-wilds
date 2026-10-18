@@ -49,7 +49,7 @@ var DSIGN=[], DSTXT=[
    ['⚠ Cataclysm','From Phase II it blasts the whole pit.','Get into a glowing blue safe circle.']],
   weak:['Lure its Ram into one of the four half-sunk columns: it smashes the column and gets its head STUCK for 3.6 s (×1.6 damage). Broken columns stay broken.',
    'After its final eruption it is EXPOSED for 2.8 s (×1.6 damage) — be ready to strike.']},
- {den:'The Charnel Pit',zone:'The Derge',
+ {den:'The Charnel Pit',zone:'The Dirge',
   atk:[['💥 Slam','A big red circle around him.','Back off before it lands.'],
    ['🤮 Rot Spit','Bile globs on red circles; each leaves a rot pool.','Leave the circles; keep the pools away from where you fight.'],
    ['🌫 Belch','A wide red cone of rot gas in front of him — hits hard and slows (Rotting).','Dash out of the cone or step behind him.'],

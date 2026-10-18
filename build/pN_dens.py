@@ -8,17 +8,15 @@ _i=h.rindex('<script>')+8;h=h[:_i]+'\nvar DK=1.35,DKY=1.15;\n'+h[_i:]
 # ---- the playable circle ----
 rep('const ARENA_R=14,','const ARENA_R=14*DK,')
 # ---- map generation (w0_world.js): a bigger walkable, flattened clearing; keep the den away from the zone edge ----
-rep('stamp(p.ba[0],p.ba[1],17)','stamp(p.ba[0],p.ba[1],17*DK)')
-rep('keep(p.ba[0],p.ba[1],18)','keep(p.ba[0],p.ba[1],18*DK)')
+# (v89 world track: zones are 30% bigger and the den clearing is PM_DENR=25 wide, which already covers the bigger den's
+#  walkable stamp, water keep-out, prop filter and camp distance; only the numbers below still need the den scale)
 rep("for(let y=b.y-16;y<=b.y+16;y++)for(let x=b.x-16;x<=b.x+16;x++)if(Math.hypot(x-b.x,y-b.y)<15.5)m[y][x]='a';",
     "for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';")
-rep('!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17)','!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<17*DK)')
-rep('[[p.ba,22],[p.wa,19]].forEach(([c,R0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-5,R0,q)',
-    '[[p.ba,22*DK,5*DK],[p.wa,19,5]].forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q)')
+rep('[[p.ba,PM_DENR+3],[p.wa,19]].forEach(([c,R0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-5,R0,q)',
+    '[[p.ba,Math.max(PM_DENR+3,22*DK),5*DK],[p.wa,19,5]].forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q)')
 _m=_re.search(r'const ba=awayWA\([^;]*;',h);assert _m,'ba line'
 h=h[:_m.end()]+'ba[0]=cl(ba[0],36,PMW-36);ba[1]=cl(ba[1],36,PMH-36);'+h[_m.end():]
-rep('Math.hypot(q[0]-ba[0],q[1]-ba[1])>34','Math.hypot(q[0]-ba[0],q[1]-ba[1])>34*DK')
-rep('Math.hypot(x-p.ba[0],z-p.ba[1])<24','Math.hypot(x-p.ba[0],z-p.ba[1])<24*DK',2)   # zone roster keeps clear of the den
+rep('Math.hypot(x-p.ba[0],z-p.ba[1])<30','Math.hypot(x-p.ba[0],z-p.ba[1])<Math.max(30,24*DK)',2)   # zone roster keeps clear of the den
 rep('BOSSES.some(b=>Math.hypot(b.x-x,b.y-y)<20)','BOSSES.some(b=>Math.hypot(b.x-x,b.y-y)<20*DK)')  # dungeon entrances
 # ---- base Sovereign moves that scatter over a fixed area ----
 rep('V(A.cx+(Math.random()-.5)*20,0,A.cz+(Math.random()-.5)*20)','V(A.cx+(Math.random()-.5)*20*DK,0,A.cz+(Math.random()-.5)*20*DK)',2)

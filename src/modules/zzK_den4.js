@@ -1,4 +1,4 @@
-// ================= v86 den 4: The Charnel Pit — The Bloated One, Rot-King of the Derge =================
+// ================= v86 den 4: The Charnel Pit — The Bloated One, Rot-King of the Dirge =================
 // A sunken mass grave: crypt retaining walls full of skull niches, an embankment of leaning graves and iron fences,
 // gibbet cages over the pit, three bubbling rot vats, four corpse piles and a rusted portcullis that slams shut.
 // Mechanics (all on top of its slow brawler move pool):

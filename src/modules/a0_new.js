@@ -78,7 +78,7 @@ const NEWEN={
  bloodbat:{n:'Blood Bat',e:'🦇',rig:'Batwing',col:0x8a1a2a,w:{hp:.75,pa:1.1,ma:.6,pd:.7,md:.8},mt:'p',moves:['strike','charge'],fam:'Sky'}};
 Object.assign(EN,NEWEN);
 Object.keys(NEWEN).forEach(k=>{S[k]=S[k]||{e:EN[k].e,c:EN[k].col||0x888888,h:'X',t:'x',hp:20,a:8,d:5};MSET[k]=EN[k].moves});
-Object.assign(BIOEN,{'Kindlelight':['goo','spitter','maggot'],'Hillside Crest':['nagaw','nagaa','nagas'],'Burningeye Summit':['troll','yeti','trollsh'],'Searing Sands':['scorp','selem'],'The Derge':['skeleton','ghoul','bonearcher'],'The Citadel':['vamp','bloodbat','vampk','vampm']});
+Object.assign(BIOEN,{'Kindlelight':['goo','spitter','maggot'],'Hillside Crest':['nagaw','nagaa','nagas'],'Burningeye Summit':['troll','yeti','trollsh'],'Searing Sands':['scorp','selem'],'The Dirge':['skeleton','ghoul','bonearcher'],'The Citadel':['vamp','bloodbat','vampk','vampm']});
 // camp themes for the portal maps (the outpost style reuses existing camp builders)
 var CTH2={
  goopit:{n:'Caustic Pool',mem:[['goo',3],['spitter',1]],b:'bog'},maggots:{n:'Maggot Nest',mem:[['maggot',3]],b:'mire'},spitmire:{n:'Spitter Mire',mem:[['spitter',2],['goo',1]],b:'bog'},
