@@ -90,7 +90,7 @@ The round stone arena is gone. `zzK_dens.js` strips the old arena dressing and g
 
 ## v87: Cheats
 
-Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons). Test: `test/v87_cheats.py`.
+Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons); v89 adds **Unlock all shops** and **Add 100 of all resources** (`zzN_misc_cheats.js`). Tests: `test/v87_cheats.py`, `test/v89_misc.py`.
 
 ## v88: dark-fantasy UI, slot menus, living Duskhold, ability points
 
@@ -101,6 +101,13 @@ Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved
 - **Town** (`zzM_town.js`): one procedural texture atlas (19 materials) mapped at world scale on every town part (pV10 renames the v83 bakers to `*_0` and tags parts by material); new `sign()` (two-sided planks, iron straps, painted Cinzel text, posts beside the board); `kdSync()` (from `shApply`) rebuilds visible upgrades: Bastion Walls 0 palisade → 1 stone footing → 2 stone wall → 3 fortified wall with towers and gatehouse; Training Grounds, Scholar's Tower, Treasury, Beast Den, Hatchery each have 3 visible stages; total level adds banners, braziers and pennants.
 - **Abilities** (`zzM_skills.js`, header explains it): ability points (1 per level, `apFree()` = earned − spent, migration bonus `hero.tal.__apB`); heroes start with the class default; 17 abilities per class (4 original + 3 v71 + 10 new in `KQN`), cost `1+floor(lv/6)` AP, some need a prerequisite; 4 equip slots (`__ld`); K opens Talents | Abilities tabs; ground targeting (circle/line/wall/cone reticle, click to cast, Esc/right-click cancels, drag on touch) for 26 new abilities and the old ground skills. Old saves keep their skills and get the talent points back.
 - Tests: `test/v88_ui_*.py`, `v88_menus.py`, `v88_town_*.py`, `v88_skills*.py`.
+
+## v89: misc
+
+Modules `src/modules/zzN_misc_*.js` (spliced by pV11); test `test/v89_misc.py` (screenshots `out/v89_*.png`).
+- **Floating lantern** (`zzN_misc_lantern.js`): the v71 belt lantern (`LANT`) is taken off the hero and kept hidden; its visibility flag (lantern zones, not in dungeons/realm) now shows `FLAN`, an enchanted lantern hovering over the hero's left shoulder, a little behind (`FLAN_OFF`). A damped spring (`flanStep`) makes it lag, sway and bob as you move, turn, dash or ride (raised by the saddle height); it snaps on jumps over 9 tiles (teleport, recall, portals). Halo sprite + sparkle motes; the hero light `torch` is moved onto it with the same colour, intensity and distance. Co-op heroes (`MP.rh`) get one too in lantern zones (`FLANR`, glow only).
+- **Citadel minimap** (`zzN_misc_minimap.js`): every zone's ground is rimmed with trees/rock tiles, which the minimap image `mmB` draws as the dark/light outline of the road, branches, camps and arena. The Citadel's rim is void (floating castle) and void is baked in the ground colour, so its minimap had no outline. `mmRimPaint()` paints a two-tone rim onto `mmB` wherever void touches walkable ground inside a zone (world map too, it draws `mmB`); tiles are unchanged.
+- **Cheats** (`zzN_misc_cheats.js`): **Unlock all shops** (`cheatShops`: `SH.shop[k]=1` for every `SHOPS` entry → `shApply()` → save, like the Steward without the cost); **Add 100 of all resources** (`cheatRes`/`cheatResKeys`: `RES`, family and upgrade materials, every material a shop/upgrade/recipe uses, and supplies of kind ingredient/crop (seeds become crops anyway); not gold, gear, runes, food, potions, eggs or companions).
 
 ## Conventions (read before changing code)
 
