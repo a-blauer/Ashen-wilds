@@ -357,6 +357,25 @@ Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it
   | chunks drawn (avg) / mobs streamed in (avg) | 26.9 / 44 | 25.9 / 52 |
   | zone map (N) draw / roster build per zone | 1.9 ms / 1–6 ms | 3.0 ms / 2–7 ms |
 
+## v98 perf_shadow
+
+`build/pN_perf_shadow.py` (shadow type) + `src/modules/zzN_perf_shadow.js` (header explains it; numbers in `SHD`). Test `test/v98_shadow.py` (`SRC=out/v98/before.html TAG=before NOCHK=1` for the old build, then `REF=out/v98_shadow_before.json`), screenshots `out/v98_shadow_<camp|camp2|town>[_lit]_<TAG>.png` (`_lit`: moon bright, ambient low, so the shadows are easy to see). `test/v98_probe.py file.js` runs one JS snippet beside a Kindlelight camp.
+- **PCF instead of PCF-soft** shadows (about half the shadow-map lookups per lit pixel), set where the renderer is created so no shader is ever compiled with the old type. `sun.shadow.radius` 2.5 → 1.5 (PCF uses the radius; 2.5 looked blotchy).
+- **Shadow square** 40×40 tiles (was 48×48), pushed 7 tiles ahead of the hero in the view direction (`SHD.half`, `SHD.fwd`; an `atmos` wrapper moves the sun and its target together, so the light direction is unchanged). It covers more of what the camera sees and nothing far behind it.
+- **Only casters that can reach the square are drawn into it.** Every 0.5 s (or after 4 tiles of movement) `shdPass` lists the decoration chunks whose box misses the square (+6 tiles) and the rigged top-level objects (monsters, companions, co-op heroes: skinned or never frustum-culled) whose bounding sphere misses it; instanced meshes with no instances are skipped too. They are hidden only while the shadow map is drawn (`ren.shadowMap.render` wrapper) and shown again at once — nobody's `castShadow` flag is changed, so anything that turns shadows on later (new monsters, drops, FX) keeps working, and the hero is never hidden. Ordinary meshes were already culled by three.js against the shadow camera.
+- **Small clutter never casts** (`shdClutter`, once when the world is up and again when the scene grows by 200+ top-level objects): decoration chunk meshes under ~0.45 tiles and static props (no rig) under 0.25 tiles get `castShadow=false`.
+- **Shadow map every 2nd frame** (`ren.shadowMap.autoUpdate=false`, `needsUpdate` from a `POST.render` wrapper), and every frame while the hero moves more than 0.15 tiles per frame (dash, riding, low frame rates), or when the map was reallocated (`setQ`). The light's matrix only changes when the map is drawn, so a skipped frame shows last frame's shadows in the right place; the hero's shadow lags at most 0.15 tiles. `SHD.on=false` restores the old every-frame update (the culling and square stay).
+
+  Measured (headless software GL; draw calls are exact, times are rough):
+
+  | spot | casters in shadow pass | draw calls, frame with shadow map | avg draw calls / frame | shadow pass ms | main pass ms |
+  |---|---|---|---|---|---|
+| camp | 106 → 85 | 500 → 478 | 500 → 436 | 115 → 43 (avg per frame) | 1,782 → 1,018 |
+  | camp2 | 110 → 96 | 455 → 461 | 455 → 413 | 138 → 106 | 1,239 → 1,952 (noise) |
+  | Duskhold | 93 → 74 | 272 → 273 | 272 → 236 | 114 → 33 | 629 → 323 |
+
+  Shadow-casting flags in the scene: 449 → 424 (camp), 456 → 433 (Duskhold). The software renderer's times swing ±50% between runs (other jobs on the machine); draw calls are the reliable number. On a real GPU the gains are the halved shadow-map passes and the cheaper PCF filtering in every lit pixel.
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
