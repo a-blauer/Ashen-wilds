@@ -404,6 +404,29 @@ Level of detail for the enemy update. `build/pN_perf_ai.py` (two `rep()` patches
   | Duskhold | 93 → 74 | 272 → 273 | 272 → 236 | 114 → 33 | 629 → 323 |
 
   Shadow-casting flags in the scene: 449 → 424 (camp), 456 → 433 (Duskhold). The software renderer's times swing ±50% between runs (other jobs on the machine); draw calls are the reliable number. On a real GPU the gains are the halved shadow-map passes and the cheaper PCF filtering in every lit pixel.
+## v98: perf_gpu
+
+`src/modules/zzN_perf_gpu.js` (no text patches). Test `test/v98_gpu.py` (see its header: `ZONES=`, `CAMPS=`, `FX=0`, `PART=shots|bench`, `SRC=<old build> TAG=before`, `NOWARM=1`, `PGLN=`).
+- **Point-light pool** (`PGL`): the 12 point lights the game kept in the scene (hero `torch`, town lamps `TPL`×4, realm `RLT`×3, dungeon/flash `DLT`×4) are now *virtual sources*: they are taken out of the scene but keep being moved, coloured and flickered by the same code (`townLights`, realm decor, `fxaFlash`, the floating lantern, `atmos`…). Before every render of the main scene `pglTick` copies the `PGL.n` (4) nearest lit sources (intensity > 0, visible; sorted by distance to the hero minus a quarter of the light's reach) onto 4 real `PointLight`s that never leave the scene; unused ones sit at intensity 0. So every lit fragment loops over 4 point lights instead of 12, and the light count (part of every lit shader's program key) never changes. When more sources than slots are lit (Duskhold at night: torch + 4 lamps), the last slot fades with the gap to the next candidate (`PGL.fade` tiles), so lamps never pop.
+  - A `PointLight` passed to `scene.add` later becomes a source automatically (`pglReg`; `scene.remove` unregisters). Don't add point lights *inside* groups: that would change the light count again and recompile every lit material.
+- **Shader warm-up** (`PGW`): a program is compiled the first time a new combination of material features is drawn — that was a 1–5 s frame on software GL (and a visible hitch on real GPUs) whenever a new monster type, effect or loot first came into view; `ren.info.programs` grew 37 → ~48 during a walk across a zone and casting abilities, and summons recompiled their programs on every cast.
+  1. `ren.debug.checkShaderErrors=false` (three no longer reads the compile/link logs after every compile; `window.AW_SHDBG=1` before load keeps them for shader work).
+  2. Programs are pinned (`pgwPin`, +1 `usedTimes` each): three destroyed a program when the last material using it was disposed, so effects that dispose their materials (Shadow Clone, Call of the Wild…) compiled the same program again on every cast.
+  3. A warm-up queue (`pgwQueue`/`pgwStep`) runs a slice before each render from the first frame on, while the title / hero screens are up: every object already in the scene (all zones, dens, bosses, town), a staging model of every `EN` monster (normal + elite), every companion species (`SP2`) and colour variant (`VAR`) + shiny, every mount, every drop kind and gear slot/weapon type (`lgDropModel`, common and legendary), the effect models with their own materials (`fxbHammerModel`, `fxaBombModel`, `fxaPierceModel`, `fxaFres` plain/skinned/vertex-coloured) and a short list of plain effect materials (`PGW_FX`). Each slice goes through `ren.compile(scene,cam)` with `scene.traverse` narrowed to the slice (`pgwCompile`), so programs get the real light setup (hemi + sun with shadow + the 4 pool lights), fog and environment. A slice stops after 2 new programs or 12 ms. Staging models are then dropped (their programs stay pinned). `window.AW_NOWARM=1` before load turns it off (screenshot tests that don't care).
+  - If you add a monster, effect or material combination the queue does not build, `v98_gpu.py` lists every program compiled after the warm-up with the object that asked for it and how its key differs from the nearest existing one (e.g. `flipSided`, `customKey fxaFres`); add a builder or a `PGW_FX` entry.
+- **Numbers** (headless software GL, 4 shared cores, so times are rough):
+
+  | | before | after |
+  |---|---|---|
+  | point lights in the scene | 12 (+ hemi + sun) | 4 (+ hemi + sun), constant |
+  | programs after the first frame / after warm-up | 37 / — | 37–55 (warm-up under way) / 71 |
+  | programs compiled walking all 16 camps of Kindlelight + Searing Sands, killing, looting, 10 mounts, all 85 abilities | 11+ (each a 1–7 s frame), summons recompiled per cast | 0 |
+  | first frame drawn (navigation → end of first frame, same machine back to back) | 14.1 s | 12.6 s |
+  | warm-up (runs behind the title / hero screens) | — | 67–75 frames, 63–100 s wall, 21–31 s of it compiling (~0.3 s per program on software GL); the queue's own JS is 0.2 s (model building 70 ms, compile walks 124 ms) |
+  | Duskhold at night, main-scene render (min of 7, software GL) | 355–421 ms | 309–322 ms |
+
+  The other four zones (3 camps each, `ZONES=1,2,4,5 CAMPS=3 FX=0`) also compile 0 programs after the warm-up. A camp view's render time on software GL is dominated by draw calls and did not change measurably; the light loop matters on fill-rate-bound GPUs (integrated, mobile), where every lit pixel now evaluates 4 point lights instead of 12.
+  Screenshots at night (`PART=shots`): Duskhold with torch + 4 lamps lit and a Kindlelight camp look the same (mean brightness of the 3D view 77.2 → 77.9 and 33.3 → 33.4; the per-pixel differences are edges from camera/NPC motion; a 5-light pool gives 77.2). On software GL the warm-up keeps compiling for the first ~1–4 minutes of a headless test, so frames there are slower; tests that need fast early frames can pass `AW_NOWARM`.
 
 ## Conventions (read before changing code)
 
@@ -439,6 +462,7 @@ python3 v84_fish.py             # fishing window size, kill gold, no finisher lu
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
 python3 v98_static.py           # frozen scenery matrices: world matrices match a full recompute (camp, harvest, Duskhold, dens)
 python3 v98_ai.py               # enemy update LOD: rates, dt hand-over, pose skip, sleeping, aggro on approach, ms off/on
+python3 v98_gpu.py              # shader warm-up (no programs compiled in play) + constant point-light pool
 ```
 
 `play.py` skips the title screen (sets `window.AW_NOTITLE`) unless `TITLE=1`. It rewrites CDN URLs to `test/vendor/` and writes screenshots/logs to `test/out/`.
