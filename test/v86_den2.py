@@ -13,7 +13,7 @@ def s(pg):
     ev("()=>{enterMap(2)}");pg.wait_for_timeout(3500)
     ev("""()=>{window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;
       window.__pr=POST.render;window.STEP=(sec,draw)=>{const n=Math.max(1,Math.round(sec/.016));POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;if(window.GOD)hero.hp=heroMax();if(window.GOD>1)hero.iv=1;if(i==n-1&&draw)POST.render=__pr;try{loop(VT)}catch(err){window.LERR=window.LERR||[];if(LERR.length<6)LERR.push(String(err&&err.stack||err).slice(0,500))}}POST.render=__pr;return VT};
-      window.GOD=1;window.HITS=[];window.__bh=bossHit;bossHit=function(e,k){HITS.push(+(+k).toFixed(2))};window.XA=ARN[2];window.DN=XA.dn;window.EA=DN.ea;window.CAM=(x,z,yaw,pit,dist)=>{toPos(x,z);camYaw=yaw;camPitch=pit;camDist=dist;snapCam()};
+      window.GOD=1;if(window.PACE)PACE.basic=false;/* v96: no boss basic attacks in these mechanic checks */window.HITS=[];window.__bh=bossHit;bossHit=function(e,k){HITS.push(+(+k).toFixed(2))};window.XA=ARN[2];window.DN=XA.dn;window.EA=DN.ea;window.CAM=(x,z,yaw,pit,dist)=>{toPos(x,z);camYaw=yaw;camPitch=pit;camDist=dist;snapCam()};
       window.YAW=a=>Math.atan2(Math.cos(a),Math.sin(a));return [XA.cx,XA.cz,+DN.ea.toFixed(2),DN.br.length,DN.st.length,XA.g.children.length,DENB.size]}""")
     P('den',"()=>[XA.cx,XA.cz,+DN.ea.toFixed(2),DN.br.length,DN.st.length,XA.g.children.length,DENB.size,XA.g.children.map(o=>o.type+(o.geometry?':'+(o.geometry.attributes.position.count/3|0):'')).join(' ')]")
     # ---- the den from above (from the entrance side) and from the back ----

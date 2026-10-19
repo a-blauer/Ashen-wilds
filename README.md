@@ -294,6 +294,26 @@ Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it
 - **Class extras over armour**: warrior/paladin cape → short half-cape on the left shoulder (none with a tabard chest), ranger cape → none (the quiver stays), assassin scarf → slim neck scarf, paladin tabard → lower tabard with the cross below the belt.
 - **Perf** (hero body triangles incl. helm/chest/boots/amulet/ring, Legendary): before avg/max warrior 3,051/3,470, paladin 3,069/3,510, ranger 2,807/3,152, assassin 2,421/2,728, mage 2,579/2,752; after warrior 4,890/5,918, paladin 5,052/6,150, ranger 4,423/4,858, assassin 3,428/3,844, mage 3,874/4,760 (≤1.8×). Draw calls unchanged.
 
+## v96: pace
+
+`build/pN_pace.py` (text patches) + `src/modules/zzN_pace.js` (header explains it; numbers in `PACE`). Test `test/v96_pace.py` (`PART=hp,fight,open`, `DL=`, `PHS=` seconds per phase; `SRC=<old build> TAG=before`, then `REF=out/v96_before.json`; `CMP=out/v96_after.json` only prints the comparison). It runs every den fight on a virtual clock (setTimeout too) with the hero circling the boss, health pinned at 100/55/25% for 75 s per phase.
+- **Sovereign health ×1.5** (`PACE.hp`, `spawnBoss` wrapper; the six Sovereigns are the only boss-flagged enemies — dungeon wardens and camp leaders are elites and unchanged). Argus 6,440 → 9,660, Hydra 11,984 → 17,976, Rime Wraith 17,528 → 26,292, Ssith'ra 23,072 → 34,608, Bloated One 28,000 → 42,000, Vaelric 32,312 → 48,468. Co-op: every client spawns the same health. Den sub-targets (eye-stalks, necks, pustules, piles, chalices, doubles, obelisks) keep their old health (`paceM0`); wounds/heals that are a share of the boss's health keep their share.
+- **Wind-ups ×1.5** (`PACE.W`): `paceWrap()` (called right after the splice marker, so after every module) wraps each `BMV` move outermost and scales `en` when the boss driver casts it fresh (`MP.inAI`, not nested); partners replay the relayed scaled `en` unscaled; `dqEnc` den indexes are kept. Plain-number den timings (eye wakes, leaps, neck bites/spits/rises, ice falls, geysers, sandstorm lashes, follow-up rams, pustule eruption, clone blasts, burrow eruption) are patched in pN_pace. The Cataclysm (4.6 s+) and the Blood Moon (3.7 s) keep theirs. Damage still lands on the warning's last frame (`test/v89_dens.py` `early: []`; it now casts as the boss driver does).
+- **Twice the time between specials** (`PACE.I`): next-special timer = 2 × (old move length + old recovery); Ssith'ra's ram/erupt hand-back (`paceEnd`); den schedulers ×2 (eye wakes, neck spawns, neck attack cooldowns and the shared neck gap, snuff, whiteout, vortex, sandstorm, corpse piles, pustules, chalices, blood moon, rite harass); Cataclysm cooldown ×2 (`PACE.U`); first special at 3.3 s (was 2.2). Phase changes still cast at once.
+- **Basic attacks between specials**: when free (no special due within 1.4 s, no den state), every 2.6–3.4 s the boss swipes (`pbasic`: 0.8 s red circle in front, ×0.6 hit) when you are in reach, else throws one aimed bolt (`pbolt`: 1.0 s, ×0.5). Relayed like other moves; the sands rig plays them as a sweep/spit.
+
+  | Sovereign | specials/min before → after | avg time between specials (s) before → after | wind-up per move (s) before → after | basics/min |
+  |---|---|---|---|---|
+  | Argus | 12.5 → 6.9 | 4.71 → 8.36 (×1.77) | charge 1.04→1.59, pounce 0.97→1.54, rain 1.06→1.62 | 9.3 |
+  | Crest Hydra | 14.7 → 8.5 | 4.06 → 7.17 (×1.77) | spit 1.30→1.97, tongue 0.66→0.97, mines 2.35→3.52 | 10.7 |
+  | Rime Wraith | 16.0 → 9.1 | 3.76 → 6.66 (×1.77) | prison 1.52→2.29, snuff 1.86→2.74, thaw 1.74→2.91 | 11.2 |
+  | Ssith'ra | 12.8 → 7.7 | 4.72 → 7.90 (×1.67) | ram 1.03→1.50, tailsweep 0.90→1.31, sandstorm 1.26→1.81 | 11.2 |
+  | Bloated One | 27.2 → 14.4 | 2.22 → 4.25 (×1.91) | rotspit 1.34→2.01, belch 1.23→1.85, slam 1.26→1.87 | 12.5 |
+  | Vaelric | 16.8 → 9.1 | 3.66 → 6.75 (×1.84) | bloodfan 1.09→1.63, mirror 2.73→4.18, cross 1.31→1.97 | 6.4 |
+
+  The measured interval is a little under ×2 because phase changes and den-forced moves (snuff, sandstorm/vortex at a phase change, eye bursts) still cast at once. `PACE.basic=false` turns the basics off (the v86 den tests do, so their hit counts only count mechanics).
+- **Ranged openers**: every enemy's attack cooldown starts at 1 and keeps running while it is idle, so when a pack aggroes on the same frame every archer/caster fires its first shot (the ranged attack is their basic) on that frame. Now each ranged/caster mob waits 1–4 s (random, `PACE.op`) after aggro before its first shot (it keeps repositioning), and within 16 tiles at most 2 ranged attacks may start per 0.6 s (`PACE.tok*`; others retry 0.25–0.65 s later). Host only (co-op mirrors replay the host's attacks). Pack of 6 casters/archers, 12 trials: ranged attacks in the first second 6.0 → 0.0, most in any 0.6 s window 6 → 2, first shots spread 0 → ~2 s.
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.

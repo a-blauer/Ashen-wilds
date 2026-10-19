@@ -12,7 +12,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     ev("()=>{enterMap(0)}");pg.wait_for_timeout(3500)
     ev("""()=>{window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;
-      window.__pr=POST.render;window.STEP=(sec,draw)=>{const n=Math.max(1,Math.round(sec/.016));POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();if(window.GOD)hero.iv=1;if(window.HOLD&&window.BE&&!BE.dead){BE.c.h=Math.max(BE.c.h,M(BE.c)*HOLD);BE.bs.t=Math.max(BE.bs.t,50)}if(i==n-1&&draw)POST.render=__pr;loop(VT)}POST.render=__pr;return VT};
+      if(window.PACE)PACE.basic=false;/* v96: no boss basic attacks in these mechanic checks */window.__pr=POST.render;window.STEP=(sec,draw)=>{const n=Math.max(1,Math.round(sec/.016));POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();if(window.GOD)hero.iv=1;if(window.HOLD&&window.BE&&!BE.dead){BE.c.h=Math.max(BE.c.h,M(BE.c)*HOLD);BE.bs.t=Math.max(BE.bs.t,50)}if(i==n-1&&draw)POST.render=__pr;loop(VT)}POST.render=__pr;return VT};
       window.__down=down;down=function(){hero.hp=heroMax()};window.CLR=()=>{enemies.slice().forEach(e=>{if(!e.boss)removeE(e)})};window.AA=ARN[0];return 1}""")
     P('den',"()=>({ent:+AR.ent.toFixed(2),pil:AR.pil.map(p=>p.map(v=>+v.toFixed(1))),pools:AR.pools.length,st:AR.st.length,kids:AA.g.children.length,tris:AA.g.children.reduce((a,o)=>a+(o.geometry&&o.geometry.attributes.position?o.geometry.attributes.position.count/3:0),0)|0,blocked:DENB.size})")
     # overview from above (outside the circle so the fight doesn't start)
@@ -31,13 +31,13 @@ def s(pg):
     P('wake',"()=>{const T=AR.st[2],e=BE;e.bs.t=99;e.m.position.set(AA.cx,0,AA.cz);const dx=AA.cx-T.x,dz=AA.cz-T.z,l=Math.hypot(dx,dz);toPos(T.x+dx/l*7,T.z+dz/l*7,0);AR.wt=99;AR.seen=0;BMV.arEye2(e,AA,1);STEP(.7);return [T.st,+T.lid.toFixed(2)]}")
     ev("()=>{const T=AR.st[2];camYaw=Math.atan2(T.x-pl.position.x,T.z-pl.position.z)+Math.PI;camPitch=.6;camDist=13;snapCam();STEP(.1,1);return 1}")
     shot('5_stalk_wake')
-    P('open',"()=>{STEP(.8);const T=AR.st[2];toPos(pl.position.x,pl.position.z);return [T.st,+AR.seen.toFixed(2)]}")
+    P('open',"()=>{STEP(1.3);const T=AR.st[2];toPos(pl.position.x,pl.position.z);return [T.st,+AR.seen.toFixed(2)]}")
     # stand in the gaze: aim the sweep through the hero
     P('gaze',"()=>{const T=AR.st[2];const y=arEyeYaw(T);T.y0=y-.05;T.y1=y+.05;T.t=0;STEP(.9,1);return [T.st,+AR.seen.toFixed(2),AR.sN,$('d01hud').textContent]}")
     shot('6_in_gaze')
     P('mark',"()=>{const T=AR.st[2];const y=arEyeYaw(T);T.y0=y;T.y1=y;T.t=0;BE.bs.lock=0;let n=0;while(!AR.mark&&n++<200)STEP(.05);const m=!!AR.mark;STEP(.35,1);return {marked:m,done:AR.mark&&AR.mark.done,jmp:!!BE.jmp,hud:$('d01hud').textContent}}")
     shot('7_marked_leap')
-    P('leap',"()=>{const h=hero.hp;let hits=0;const f=hitHero;hitHero=function(){hits++;return f.apply(this,arguments)};STEP(1.4);hitHero=f;const r={hits,mark:!!AR.mark};AR.st.forEach(arReset);AR.mark=null;AR.seen=0;return r}")
+    P('leap',"()=>{const h=hero.hp;let hits=0;const f=hitHero;hitHero=function(){hits++;return f.apply(this,arguments)};STEP(2.0);hitHero=f;const r={hits,mark:!!AR.mark};AR.st.forEach(arReset);AR.mark=null;AR.seen=0;return r}")
     # hide behind a pillar: the cone stops at it and Seen doesn't grow
     P('hide',"""()=>{const T=AR.st.slice().sort((a,b)=>Math.min(...AR.pil.map(p=>Math.hypot(p[0]-a.x,p[1]-a.z)))-Math.min(...AR.pil.map(p=>Math.hypot(p[0]-b.x,p[1]-b.z))))[0];const p=AR.pil.slice().sort((a,b)=>Math.hypot(a[0]-T.x,a[1]-T.z)-Math.hypot(b[0]-T.x,b[1]-T.z))[0];
       const dx=p[0]-T.ox,dz=p[1]-T.oz,l=Math.hypot(dx,dz);toPos(p[0]+dx/l*1.9,p[1]+dz/l*1.9,0);arReset(T);T.st='open';T.t=0;T.dur=9;T.spr.visible=true;const y=arEyeYaw(T);T.y0=y-.02;T.y1=y+.02;AR.seen=0;AR.mark=null;window.ZT=T;STEP(1.5);
