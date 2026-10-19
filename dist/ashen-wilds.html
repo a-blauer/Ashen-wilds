@@ -8080,11 +8080,11 @@ function mpMyGear(){return ['weapon','offhand','helm','chest','boots'].map(k=>eq
 function mpTagDraw(r){const pr=r.pr,key=(pr.n||'')+'|'+pr.lv+'|'+pr.hp;if(key===r.tk)return;r.tk=key;const c=r.tagC,g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);
   g.font='700 30px system-ui,sans-serif';g.textAlign='center';g.lineWidth=6;g.strokeStyle='rgba(0,0,0,.85)';const t=String(pr.n||'Adventurer').slice(0,20)+'  ·  Lv '+(pr.lv|0);g.strokeText(t,128,34);g.fillStyle='#9fe3ff';g.fillText(t,128,34);
   g.fillStyle='rgba(0,0,0,.7)';g.fillRect(48,48,160,12);g.fillStyle=pr.hp>35?'#4ade80':'#f87171';g.fillRect(50,50,156*Math.max(0,Math.min(100,pr.hp|0))/100,8);r.tagT.needsUpdate=true}
-function mpModel(r){const pr=r.pr,cls=CLS[pr.c]?pr.c:'warrior',sig=cls+'|'+JSON.stringify(pr.g||[]);
+function mpModel(r){const pr=r.pr,cls=CLS[pr.c]?pr.c:'warrior',sig=cls+'|'+JSON.stringify(pr.g||[])+'|'+JSON.stringify(pr.lk||0);
   if(!r.m){r.m=buildHero();r.m.mpPeer=r.peer;r.m.position.set(pr.x,GH(pr.x,pr.z),pr.z);scene.add(r.m);
     r.tagC=document.createElement('canvas');r.tagC.width=256;r.tagC.height=64;r.tagT=new THREE.CanvasTexture(r.tagC);
     r.tag=new THREE.Sprite(new THREE.SpriteMaterial({map:r.tagT,transparent:true,depthWrite:false}));r.tag.scale.set(2.2,.55,1);r.tag.position.y=2.35;r.m.add(r.tag)}
-  if(sig!==r.sig){r.sig=sig;try{refreshGear(r.m,cls,mpGearE(pr.g))}catch(err){console.warn(err)}}
+  if(sig!==r.sig){r.sig=sig;try{if(typeof mpLookIn=='function')r.m.mdLook=mpLookIn(pr.lk);refreshGear(r.m,cls,mpGearE(pr.g))}catch(err){console.warn(err)}}
   mpTagDraw(r)}
 function mpDropRH(k){const r=MP.rh[k];if(!r)return;if(r.m){scene.remove(r.m)}delete MP.rh[k]}
 function mpSwingRH(h){if(h.sw)return;h.sw=1;const b=h.bones;tw(300,k=>{const s=Math.sin(k*Math.PI);b.aR0.rotation.x=-.2-1.5*s;b.aR0.rotation.z=.5*s;b.spine.rotation.y=-.6*s},()=>{h.sw=0;b.aR0.rotation.z=0;b.spine.rotation.y=0})}
@@ -8106,7 +8106,7 @@ function mpPeersSync(){
 function mpPresence(now){
   if(now-MP.tP<125)return;MP.tP=now;
   const x=mpR2(pl.position.x),z=mpR2(pl.position.z);MP.mv=Math.hypot(x-MP.lx,z-MP.lz)>.02?1:0;MP.lx=x;MP.lz=z;
-  const P={n:String(hero.name||'Hero').slice(0,20),c:hero.cls,x,z,ry:mpR2(pl.rotation.y),mv:MP.mv,rg:MP.rg,ar:AF?AF.i:-1,lv:hero.lvl,hp:Math.max(0,Math.round(100*hero.hp/heroMax())),g:mpMyGear(),sw:MP.sw,pw:typeof heroPower=='function'?heroPower():0};
+  const P={n:String(hero.name||'Hero').slice(0,20),c:hero.cls,x,z,ry:mpR2(pl.rotation.y),mv:MP.mv,rg:MP.rg,ar:AF?AF.i:-1,lv:hero.lvl,hp:Math.max(0,Math.round(100*hero.hp/heroMax())),g:mpMyGear(),lk:typeof mpLookOut=='function'?mpLookOut():0,sw:MP.sw,pw:typeof heroPower=='function'?heroPower():0};
   const s=JSON.stringify(P);if(s===MP.lastPres)return;MP.lastPres=s;MP.room.presence(P).catch(()=>{});
 }
 
@@ -19276,6 +19276,701 @@ function mmRimPaint(){try{
     c.putImageData(id,x0,y0);MMRIM.push(p.n)});
 }catch(err){console.warn('minimap rim',err)}}
 mmRimPaint();
+
+// ================= v94 (model track): one clean low-poly style for every humanoid =================
+// The hero (all classes, co-op partners, bag and creator previews), every humanoid foe, the humanoid Sovereigns and the
+// town folk are rebuilt in the look of the v81 companions: few smooth lofted shapes, flat shading, crisp per-face colour
+// regions (no random jitter, no per-vertex mottling) and a small, coherent palette per character.
+//  * Skeletons are untouched: every body is skinned to the SAME bones (HB for heroes and foes, idlNB for town folk), the
+//    bone names, rest positions and hand bones (aL2/aR2) are the old ones, so the v85 animation, v91 ability poses,
+//    v93 grips and v93 idle layer work as before. Only geometry and materials change.
+//  * Builder (mdB): lofts of rings (like lpGeo) skinned with up to 4 bone weights per vertex, plus rigid dkKit parts on a
+//    bone, merged into at most three geometries per model — cloth/skin ('c'), metal ('m'), glow ('g') — so a whole
+//    character is one to three draw calls (+ its weapons). Faces are coloured one colour each (non-indexed geometry), so
+//    colour regions have hard, clean edges. Geometry is cached by a key (hero: class + look + worn items; foe: type).
+//  * Equipment is built against the body (zzN_model_gear.js): armour pieces are shells of the body's own ring profile,
+//    pushed out by a small offset, with the body's bone weights — so they deform with every pose and never float.
+//  * Hero look (contract with the creator track): heroLook(h) (defined by that track) returns
+//    {skin,hair,hairStyle 0-5,face 0-5,eye,build 0-2,height .94-1.06,sex 0|1}; without it hero.look or defaults are used.
+//    heroRebuild(h) rebuilds a hero model in place; heroBuildPreview(look,cls) makes a stand-alone preview model.
+var MDL;
+function mdS(){return MDL||(MDL={G:new Map(),cap:48,M:null,stat:{built:0,ms:0}})}
+// ---------------- materials (shared for foes and town folk; heroes get their own copies) ----------------
+function mdMats(){const S=mdS();if(S.M)return S.M;const f=o=>Object.assign({vertexColors:true,flatShading:true,skinning:true},o);
+  S.M={c:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,side:THREE.DoubleSide})),
+    m:new THREE.MeshStandardMaterial(f({roughness:.48,metalness:.5,side:THREE.DoubleSide})),
+    g:new THREE.MeshBasicMaterial({vertexColors:true,skinning:true,side:THREE.DoubleSide})};
+  for(const k in S.M)S.M[k].userData.lps=1;return S.M}
+function mdOwnMats(){const M=mdMats(),o={};for(const k in M){o[k]=M[k].clone();o[k].userData.lps=1;o[k].userData.mdOwn=1}return o}
+// ---------------- colour helpers ----------------
+function mdC(h){return typeof h=='string'?parseInt(h.replace('#',''),16):Array.isArray(h)?dkHex(h.map(v=>Math.max(0,Math.min(255,Math.round(v))))):h}
+function mdMix(a,b,t){return new THREE.Color(mdC(a)).lerp(new THREE.Color(mdC(b)),t).getHex()}
+function mdSh(a,f){const c=new THREE.Color(mdC(a));c.multiplyScalar(f);c.r=Math.min(1,c.r);c.g=Math.min(1,c.g);c.b=Math.min(1,c.b);return c.getHex()}
+function mdHash(s){let h=7;s=String(s);for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)}
+
+// =====================================================================================================
+// the builder
+// =====================================================================================================
+function mdB(bones){const O=Object.keys(bones);return {O,bones,L:{c:mdBuf(),m:mdBuf(),g:mdBuf()},bi:{}}}
+function mdBuf(){return {p:[],c:[],si:[],sw:[]}}
+function mdBI(B,n){let i=B.bi[n];if(i==null){i=B.O.indexOf(n);if(i<0)throw new Error('md: no bone '+n);B.bi[n]=i}return i}
+// weights [[bone,w],…] → 4 indices + 4 weights
+function mdW(B,w){const si=[0,0,0,0],sw=[0,0,0,0];let t=0;for(let j=0;j<w.length&&j<4;j++){si[j]=mdBI(B,w[j][0]);sw[j]=w[j][1];t+=w[j][1]}if(t>0)for(let j=0;j<4;j++)sw[j]/=t;else sw[0]=1;return [si,sw]}
+var MD_TC;
+function mdTri(B,t,a,b,c,col){const L=B.L[t]||B.L.c,C=MD_TC||(MD_TC=new THREE.Color());C.setHex(col);
+  for(const v of [a,b,c]){L.p.push(v.x,v.y,v.z);L.c.push(C.r,C.g,C.b);L.si.push(v.w[0][0],v.w[0][1],v.w[0][2],v.w[0][3]);L.sw.push(v.w[1][0],v.w[1][1],v.w[1][2],v.w[1][3])}}
+// two-bone weight shorthand
+function mdWb(a,b,t){return t<=0||a==b?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]]}
+// Loft: R = rings {p:[x,y,z], rx, f (front / +up-side radius), b (back radius), w:[[bone,w]…], col?}
+//   o: seg, t ('c'|'m'|'g'), col (hex or fn(m)→hex), keep (fn(m)→bool), off (shell offset), ref ([0,0,1] = "front"),
+//      wf (fn(x,y,z,ring)→weights, overrides ring.w), capA/capB, rot (angle offset), sq (squareness 0..1 → boxier rings)
+//   m (per face): {x,y,z centroid, s (+1 front … −1 back), c (side), i (ring position), r (ring)}
+function mdLoft(B,R,o){
+  o=o||{};const seg=o.seg||8,n=R.length,off=o.off||0,V=THREE.Vector3,t=o.t||'c',rows=[];if(n<2)return;
+  const pts=R.map(r=>new V(r.p[0],r.p[1],r.p[2]));let U=null;
+  for(let i=0;i<n;i++){
+    const tg=pts[Math.min(i+1,n-1)].clone().sub(pts[Math.max(i-1,0)]);if(tg.lengthSq()<1e-12)tg.set(0,1,0);tg.normalize();
+    let u=U?U.clone():new V(...(o.ref||[0,0,1]));u.sub(tg.clone().multiplyScalar(u.dot(tg)));
+    if(u.lengthSq()<1e-6){u=new V(1,0,0);u.sub(tg.clone().multiplyScalar(u.dot(tg)))}u.normalize();U=u;
+    const Sd=new V().crossVectors(u,tg),r=R[i],row=[],sq=o.sq||r.sq||0;
+    for(let k=0;k<seg;k++){
+      const a=Math.PI/2+(o.rot||0)+k/seg*Math.PI*2;let c=Math.cos(a),s=Math.sin(a);
+      if(sq){const m=Math.max(Math.abs(c),Math.abs(s)),c2=c/m,s2=s/m;c=c+(c2-c)*sq;s=s+(s2-s)*sq}
+      const ry=(s>0?(r.f==null?r.rx:r.f):(r.b==null?r.rx:r.b))+off,rx=r.rx+off;
+      const x=pts[i].x+Sd.x*c*rx+u.x*s*ry,y=pts[i].y+Sd.y*c*rx+u.y*s*ry,z=pts[i].z+Sd.z*c*rx+u.z*s*ry;
+      row.push({x,y,z,s:Math.sin(a),c:Math.cos(a),i,w:mdW(B,o.wf?o.wf(x,y,z,r,i):r.w)})}
+    rows.push(row)}
+  const face=(A,Bv,C)=>{const m={x:(A.x+Bv.x+C.x)/3,y:(A.y+Bv.y+C.y)/3,z:(A.z+Bv.z+C.z)/3,s:(A.s+Bv.s+C.s)/3,c:(A.c+Bv.c+C.c)/3,i:(A.i+Bv.i+C.i)/3};
+    m.r=R[Math.min(n-1,Math.round(m.i))];if(o.keep&&!o.keep(m))return;
+    const col=typeof o.col=='function'?o.col(m):(m.r.col!=null&&!o.colAll?m.r.col:o.col);mdTri(B,t,A,Bv,C,mdC(col==null?0x808080:col))};
+  // one colour / keep decision per quad, so colour regions have straight edges
+  const quad=(a,a1,b2,b3)=>{const m={x:(a.x+a1.x+b2.x+b3.x)/4,y:(a.y+a1.y+b2.y+b3.y)/4,z:(a.z+a1.z+b2.z+b3.z)/4,s:(a.s+a1.s+b2.s+b3.s)/4,c:(a.c+a1.c+b2.c+b3.c)/4,i:(a.i+b2.i)/2};
+    m.r=R[Math.min(n-1,Math.round(m.i))];if(o.keep&&!o.keep(m))return;const cc=typeof o.col=='function'?o.col(m):(m.r.col!=null&&!o.colAll?m.r.col:o.col),col=mdC(cc==null?0x808080:cc);
+    mdTri(B,t,a,a1,b2,col);mdTri(B,t,b2,a1,b3,col)};
+  for(let i=0;i<n-1;i++)for(let k=0;k<seg;k++){const a=rows[i][k],a1=rows[i][(k+1)%seg],b2=rows[i+1][k],b3=rows[i+1][(k+1)%seg];quad(a,a1,b2,b3)}
+  [[o.capA,0],[o.capB,n-1]].forEach(q=>{if(!q[0])return;const row=rows[q[1]],r=R[q[1]],cv={x:pts[q[1]].x,y:pts[q[1]].y,z:pts[q[1]].z,s:0,c:0,i:q[1],w:mdW(B,o.wf?o.wf(pts[q[1]].x,pts[q[1]].y,pts[q[1]].z,r,q[1]):r.w)};
+    if(q[0]!==true&&q[0].dy){cv.y+=q[0].dy}if(q[0]!==true&&q[0].dz){cv.z+=q[0].dz}
+    for(let k=0;k<seg;k++)face(cv,row[k],row[(k+1)%seg])})}
+// rigid dkKit parts (k.P) merged in with one bone each (or ring weights via p.w)
+var MD_KV,MD_KE;
+function mdKit(B,k){const v=MD_KV||(MD_KV=new THREE.Vector3());
+  k.P.forEach(p=>{const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,cnt=ix?ix.length:pa.count,bn=p.bn||B.O[0],w=mdW(B,p.w||[[bn,1]]),col=mdC(p.col);
+    const V=[];for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);V.push({x:v.x,y:v.y,z:v.z,w})}
+    for(let i=0;i+2<cnt;i+=3){const a=ix?ix[i]:i,b=ix?ix[i+1]:i+1,c=ix?ix[i+2]:i+2;mdTri(B,p.t=='m'?'m':p.t=='g'?'g':'c',V[a],V[b],V[c],col)}})}
+function mdBake(B){const out={};
+  for(const t in B.L){const L=B.L[t];if(!L.p.length)continue;const G=new THREE.BufferGeometry();
+    G.setAttribute('position',new THREE.Float32BufferAttribute(L.p,3));G.setAttribute('color',new THREE.Float32BufferAttribute(L.c,3));
+    G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(L.si,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(L.sw,4));
+    G.computeVertexNormals();G.computeBoundingSphere();G.userData.lps=1;G.userData.md=1;out[t]=G}
+  return out}
+// cached build: key → {c,m,g}; hero keys are evicted (oldest first, only when no model uses them)
+function mdGeo(key,build,evict){const S=mdS();let e=S.G.get(key);
+  if(e){S.G.delete(key);S.G.set(key,e);return e.g}
+  const t0=performance.now();const B=build();e={g:mdBake(B),use:0,ev:!!evict};S.G.set(key,e);S.stat.built++;S.stat.ms+=performance.now()-t0;
+  if(evict){let n=0;S.G.forEach(q=>{if(q.ev)n++});if(n>S.cap)for(const [k,q] of S.G){if(n<=S.cap)break;if(q.ev&&q.use<=0&&k!==key){for(const t in q.g)q.g[t].dispose();S.G.delete(k);n--}}}
+  return e.g}
+function mdUse(key,d){const e=mdS().G.get(key);if(e)e.use+=d}
+
+// =====================================================================================================
+// body profile (HB skeleton; town folk use idlNB — the arms follow whatever bones the table has)
+// =====================================================================================================
+// P: {bones, sex 0|1, build 0..2, wf (width), af (arm thickness), lf (leg thickness), belly, hunch, col:{…}, paint:{…}}
+//   col regions: skin, torso, torsoLo, belt, sleeve, fore, hand, pants, shin, boot, sole, neck
+function mdP(o){const P=Object.assign({sex:0,build:1,wf:1,af:1,lf:1,belly:0,col:{},paint:{}},o||{});
+  if(!P.bones)P.bones=HB;P.col=Object.assign({skin:0xd9b38c,torso:0x6a4a34,belt:0x3a2618,sleeve:null,fore:null,hand:null,pants:0x4a3a2c,shin:null,boot:0x3a2a1e,sole:0x1e1610,neck:null},P.col);
+  const C=P.col;if(C.sleeve==null)C.sleeve=C.torso;if(C.fore==null)C.fore=C.skin;if(C.hand==null)C.hand=C.skin;if(C.shin==null)C.shin=C.pants;if(C.neck==null)C.neck=C.skin;if(C.torsoLo==null)C.torsoLo=C.torso;
+  return P}
+function mdBuildF(P){return [.86,1,1.16][P.build|0]*(P.wf||1)}
+// torso rings bottom → neck, with bone weights by height
+function mdTorsoW(y){return y<=.5?[['pelvis',1]]:y<=.66?mdWb('pelvis','spine',(y-.5)/.16):y<=.82?mdWb('spine','chest',(y-.66)/.16):y<=.97?[['chest',1]]:y<=1.035?mdWb('chest','neck',(y-.97)/.065):mdWb('neck','head',Math.min(1,(y-1.035)/.05))}
+function mdTorso(P){const W=mdBuildF(P),fem=P.sex==1,sh=fem?.86:1,wa=fem?.8:1,hp=fem?1.15:1,bu=P.belly||0,bust=fem?.064:0;
+  const T=[[.44,.145*hp,.1,.105],[.5,.158*hp+bu*.1,.11+bu*.3,.114],[.56,.165*hp+bu*.25,.116+bu*.6,.118+bu*.2],[.62,.158*(wa+.06)+bu*.35,.112+bu,.114+bu*.3],[.7,.16*wa+bu*.35,.114+bu,.114+bu*.3],[.78,.18*(fem?.92:1)+bu*.25,.124+bu*.6+bust*.5,.118+bu*.2],
+    [.86,.205*sh,.132+bu*.2+bust,.124],[.93,.212*sh,.124+bust*.4,.122],[.972,.18*sh,.102,.104],[1.0,.104,.074,.08],[1.035,.062,.062,.058],[1.075,.056,.058,.055]];
+  return T.map(q=>{const y=q[0],k=y>.98?1:W;return {p:[0,y,y>.9?-.004:0],rx:q[1]*k,f:q[2]*(y>.98?1:(1+(W-1)*.6)),b:q[3]*(y>.98?1:(1+(W-1)*.6)),w:mdTorsoW(y),y}})}
+// the torso ring at height y (interpolated) — used to place things on the surface
+function mdTorsoAt(P,y){const T=P._T||(P._T=mdTorso(P));for(let i=0;i<T.length-1;i++){const a=T[i],b=T[i+1];if(y<=b.y||i==T.length-2){const t=Math.max(0,Math.min(1,(y-a.y)/(b.y-a.y)));
+  return {rx:a.rx+(b.rx-a.rx)*t,f:a.f+(b.f-a.f)*t,b:a.b+(b.b-a.b)*t,z:a.p[2]+(b.p[2]-a.p[2])*t}}}return T[0]}
+function mdV(a){return new THREE.Vector3(a[1],a[2],a[3])}
+// arm rings shoulder → fingertips (s = −1 left, +1 right)
+function mdArm(P,s){const bn=s<0?'aL':'aR',Bt=P.bones,A0=mdV(Bt[bn+'0']),A1=mdV(Bt[bn+'1']),A2=mdV(Bt[bn+'2']),W=mdBuildF(P),af=(P.af||1)*(P.sex==1?.88:1)*(1+(W-1)*.7),L=(a,b,t)=>a.clone().lerp(b,t);
+  const sh=A0.clone().add(new THREE.Vector3(-s*.035*(2-W),.03,0)),d2=A2.clone().sub(A1).normalize(),hand=A2.clone().add(d2.clone().multiplyScalar(.05)),tip=A2.clone().add(d2.clone().multiplyScalar(.1));
+  const xo=s*((W-1)*.12+(P.armX||0)),X=v=>{v.x+=xo;return v};
+  const r=(p,rx,w,part,f,b)=>({p:p.toArray(),rx:rx*af,f:(f||rx)*af,b:(b||rx)*af,w,part});
+  return [r(X(sh.clone()),.064,[['chest',.5],[bn+'0',.5]],'up'),r(X(A0.clone().add(new THREE.Vector3(0,-.02,0))),.067,[[bn+'0',1]],'up'),r(X(L(A0,A1,.5)),.062,[[bn+'0',1]],'up'),
+    r(X(A1.clone()),.056,[[bn+'0',.5],[bn+'1',.5]],'el'),r(X(L(A1,A2,.45)),.054,[[bn+'1',1]],'fore'),r(X(L(A1,A2,.88)),.047,[[bn+'1',.6],[bn+'2',.4]],'wrist'),
+    r(X(A2.clone().add(new THREE.Vector3(0,0,.006))),.05,[[bn+'2',1]],'hand',.054,.04),r(X(hand.add(new THREE.Vector3(0,0,.014))),.046,[[bn+'2',1]],'hand',.05,.03),r(X(tip.add(new THREE.Vector3(0,0,.02))),.026,[[bn+'2',1]],'hand',.03,.02)]}
+// leg rings hip → ankle, foot rings heel → toe
+function mdLeg(P,s){const l=s<0?'lh':'rh',Bt=P.bones,H0=mdV(Bt[l+'0']),K=mdV(Bt[l+'1']),A=mdV(Bt[l+'2']),lf=(P.lf||1)*(1+(mdBuildF(P)-1)*.5),fh=P.sex==1?1.04:1,L=(a,b,t)=>a.clone().lerp(b,t);
+  const r=(p,rx,w,part,f,b)=>({p:p.toArray(),rx:rx*lf,f:(f||rx)*lf,b:(b||rx)*lf,w,part});
+  return [r(H0.clone().add(new THREE.Vector3(-s*.005,.02,0)),.09*fh,[['pelvis',.5],[l+'0',.5]],'hip'),r(L(H0,K,.3),.086*fh,[[l+'0',1]],'thigh'),r(L(H0,K,.68),.074,[[l+'0',1]],'thigh'),
+    r(K.clone(),.066,[[l+'0',.5],[l+'1',.5]],'knee',.068,.064),r(L(K,A,.35),.064,[[l+'1',1]],'shin',.062,.068),r(L(K,A,.75),.056,[[l+'1',1]],'shin'),r(A.clone().add(new THREE.Vector3(0,.01,0)),.054,[[l+'1',.4],[l+'2',.6]],'ankle')]}
+function mdFoot(P,s){const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),x=A.x,lf=(P.lf||1)*(P.sex==1?.9:1);
+  const r=(z,y,rx,f,b,part)=>({p:[x,y,A.z+z],rx:rx*lf,f:f*lf,b:b*lf,w:[[l,1]],part});
+  return [r(-.06,.05,.05,.03,.045,'heel'),r(-.035,.055,.058,.045,.05,'foot'),r(.035,.05,.06,.04,.045,'foot'),r(.11,.04,.054,.028,.036,'toe'),r(.155,.032,.036,.016,.028,'toe')]}
+// head rings (around the head bone); hp = head params {w,jaw,len,top,fwd}
+function mdHeadR(P){const h=P.head||{},w=h.w||1,jw=(h.jaw||1)*(P.sex==1?.88:1),fz=h.fwd||0,top=h.top||1,ln=h.len||1;
+  const R=(y,rx,f,b,ww,jj)=>({p:[0,y,fz*(y<1.13?1:.5)],rx:rx*w*(jj?jw:1),f:f*(jj?(1+(jw-1)*.6):1)*ln,b:b*w,w:ww||[['head',1]],y});
+  return [R(1.02,.056,.06,.054,[['neck',.5],['head',.5]],1),R(1.056,.078,.094,.072,null,1),R(1.09,.09,.108,.09,null,1),R(1.13,.1,.11,.106),R(1.17,.104,.104,.11),
+    R(1.21,.097,.088,.104),R(1.24+(top-1)*.03,.074,.06,.08),R(1.262+(top-1)*.05,.034,.026,.04)]}
+// front surface of the head at height y (for placing eyes, brows, beards)
+function mdHeadZ(P,y){const H=P._H||(P._H=mdHeadR(P));for(let i=0;i<H.length-1;i++){const a=H[i],b=H[i+1];if(y<=b.y){const t=(y-a.y)/(b.y-a.y);return a.p[2]+a.f+(b.p[2]+b.f-a.p[2]-a.f)*t}}return 0}
+function mdHeadX(P,y){const H=P._H||(P._H=mdHeadR(P));for(let i=0;i<H.length-1;i++){const a=H[i],b=H[i+1];if(y<=b.y){const t=(y-a.y)/(b.y-a.y);return a.rx+(b.rx-a.rx)*t}}return .05}
+
+// paint of a body part: P.paint[region](m) wins over P.col[region]
+function mdPaintF(P,region,fb){const f=P.paint[region];if(f)return m=>f(m);const c=P.col[region];return c!=null?c:fb}
+// build the whole body: torso + neck, arms + hands, legs, feet (head separately: mdHead)
+function mdBody(B,P){const C=P.col,T=mdTorso(P);P._T=T;
+  // torso: lower part (hips/pants), belt band, upper (shirt), neck skin
+  const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY;
+  if(!P.noTorso)mdLoft(B,T,{seg:12,capA:true,sq:P.sq||0,col:m=>m.y>1.0?C.neck:m.y>.985&&!P.highNeck?C.neck:Math.abs(m.y-belt)<.026&&C.belt!=null?C.belt:m.y<belt?(P.paint.torsoLo?P.paint.torsoLo(m):C.torsoLo==C.torso&&m.y<.5?C.pants:C.torsoLo):tp?tp(m):C.torso});
+  [-1,1].forEach(s=>{
+    mdLoft(B,mdArm(P,s),{seg:7,capB:true,col:m=>{const p=m.r.part;return p=='hand'?(P.paint.hand?P.paint.hand(m,s):C.hand):p=='up'||(p=='el'&&m.i<3.5)?(P.paint.sleeve?P.paint.sleeve(m,s):C.sleeve):(P.paint.fore?P.paint.fore(m,s):C.fore)}});
+    mdLoft(B,mdLeg(P,s),{seg:8,col:m=>{const p=m.r.part;return (P.paint.leg?P.paint.leg(m,s):null)||(p=='shin'||p=='ankle'||(p=='knee'&&m.i>3.5)?C.shin:C.pants)}});
+    mdLoft(B,mdFoot(P,s),{seg:7,ref:[0,1,0],capA:true,capB:true,col:m=>m.y<.022?C.sole:C.boot})})}
+
+// =====================================================================================================
+// heads, faces, hair (the hero look)
+// =====================================================================================================
+// hair region on the head shell: front hairline high, temples, nape low
+function mdHairLine(m,lo){const s=m.s;return s>0?1.13+.065*s+(lo||0)*s:1.13-(1.13-1.055)*(-s)}
+// P.look: normalised look; P.face options: {eyes:'human'|'glow'|'none', eye, brow, ears, nose, mouth, glow}
+function mdHead(B,P,o){o=o||{};const H=mdHeadR(P);P._H=H;const sk=P.col.skin,lk=P.look||{},hair=mdC(lk.hair==null?0x3a2414:lk.hair);
+  const stubble=lk.face==1,stC=mdMix(sk,hair,.42),bald=lk.hairStyle==5||o.bald,mo=lk.hairStyle==4,shav=mo?mdMix(sk,hair,.35):null;
+  mdLoft(B,H,{seg:10,capA:true,capB:true,col:o.headCol||(m=>{if(stubble&&m.y<1.1&&m.s>.05)return stC;if(shav&&m.y>mdHairLine(m))return shav;if(o.paint)return o.paint(m)||sk;return sk})});
+  if(o.noFace)return H;
+  const k=dkKit(),ey=1.145,ez=mdHeadZ(P,ey),ex=.04*(P.head&&P.head.w||1);
+  // eyes: dark socket, white, iris (eye colour)
+  [-1,1].forEach(s=>{
+    if(o.eyes=='glow'){k.p('head','box','c',0x080606,s*ex,ey,ez-.004,.034,.02,.012);k.p('head','box','g',o.glow||0xff3020,s*ex,ey,ez+.003,.024,.011,.008)}
+    else if(o.eyes!='none'){k.p('head','box','c',mdSh(sk,.62),s*ex,ey,ez-.003,.034,.02,.012);k.p('head','box','c',0xf2eee6,s*ex,ey,ez+.002,.026,.013,.008);
+      k.p('head','box','c',mdC(lk.eye==null?0x3a5a7a:lk.eye),s*(ex-.002),ey-.001,ez+.006,.012,.012,.006);k.p('head','box','c',0x0a0808,s*(ex-.002),ey-.001,ez+.0085,.006,.006,.004)}
+    // brow
+    if(o.brow!==false)k.p('head','box','c',o.brow!=null?o.brow:mdSh(hair,.9),s*ex,ey+.022,mdHeadZ(P,ey+.022)+.002,.04,.011,.014,0,0,s*(P.sex==1?.12:.2));
+    // ear
+    if(o.ears!==false){const hx=mdHeadX(P,1.14);k.p('head','box','c',mdSh(sk,.9),s*(hx+.004),1.135,-.005,.022,.045,.032)}});
+  // nose and mouth
+  if(o.nose!==false){const nz=mdHeadZ(P,1.118);k.p('head','cone4','c',mdSh(sk,.88),0,1.118,nz+.008,.018,.04,.016,-.35)}
+  if(o.mouth!==false){const mz=mdHeadZ(P,1.088);k.p('head','box','c',o.mouth||0x5a2a22,0,1.088,mz-.001,.036,.007,.006)}
+  mdKit(B,k);
+  if(o.noHair)return H;
+  // facial hair
+  const f=lk.face|0,bc=mdSh(hair,.95);
+  if(f==2||f==3)mdLoft(B,H.slice(0,4),{seg:10,off:.011,col:bc,keep:m=>m.s>-.1&&m.y<1.108&&!(m.s>.6&&m.y>1.075&&m.y<1.1)});
+  if(f==3){const z=mdHeadZ(P,1.04);mdLoft(B,[{p:[0,1.06,z-.03],rx:.06,f:.03,b:.03,w:[['head',1]]},{p:[0,1.0,z-.012],rx:.05,f:.028,b:.024,w:[['head',1]]},{p:[0,.95,z],rx:.026,f:.016,b:.014,w:[['head',1]]}],{seg:6,capB:{dy:-.03},col:bc})}
+  if(f==2||f==3||f==4){const mk=dkKit(),mz=mdHeadZ(P,1.1);[-1,1].forEach(s=>mk.p('head','box','c',bc,s*.022,1.1,mz+.004,.034,.012,.012,0,0,-s*.25));if(f==4)[-1,1].forEach(s=>mk.p('head','box','c',bc,s*.04,1.084,mz-.004,.012,.028,.01,0,0,s*.15));mdKit(B,mk)}
+  if(f==5){const sk2=dkKit();sk2.p('head','box','c',0x9a4a40,-.04,1.15,mdHeadZ(P,1.15)+.009,.008,.07,.004,0,0,.35);mdKit(B,sk2)}
+  // hair
+  if(!bald&&!o.hood)mdHair(B,P,H,hair,lk.hairStyle|0,o);
+  return H}
+function mdHair(B,P,H,hair,st,o){const hd=mdSh(hair,.82),fem=P.sex==1;
+  if(st==4){// mohawk: shaved sides (painted on the head) + a crest
+    if(o.noScalp)return;const k=dkKit();for(let i=0;i<7;i++){const a=-1.1+i*.36,y=1.17+Math.cos(a)*.1,z=Math.sin(a)*.115;k.p('head','box','c',i%2?hair:hd,0,y,z,.026,.075,.05,a)}mdKit(B,k);return}
+  if(!o.noScalp)mdLoft(B,H.slice(1),{seg:10,off:.013,capB:true,col:m=>m.y>1.2?hair:m.s<-.3?hd:hair,keep:m=>m.y>mdHairLine(m,fem?.012:0)});
+  if(st==1){// long: down the back to the shoulders (+ locks framing the face when feminine)
+    mdLoft(B,[{p:[0,1.16,-.06],rx:.1,f:.04,b:.05,w:[['head',1]]},{p:[0,1.06,-.085],rx:.098,f:.03,b:.04,w:[['head',.8],['neck',.2]]},{p:[0,.98,-.1],rx:.09,f:.02,b:.03,w:[['head',.4],['chest',.6]]},{p:[0,fem?.86:.92,-.12],rx:.07,f:.012,b:.02,w:[['chest',1]]}],{seg:8,capB:true,col:m=>m.y<.95?hd:hair});
+    if(fem)[-1,1].forEach(s=>mdLoft(B,[{p:[s*.098,1.18,.0],rx:.022,f:.03,b:.03,w:[['head',1]]},{p:[s*.1,1.08,.0],rx:.02,f:.028,b:.028,w:[['head',1]]},{p:[s*.095,.99,-.01],rx:.012,f:.018,b:.018,w:[['head',.6],['neck',.4]]}],{seg:5,capB:true,col:hair}))}
+  if(st==2){// ponytail
+    const k=dkKit();k.p('head','sph','c',hd,0,1.17,-.115,.03);mdKit(B,k);
+    mdLoft(B,[{p:[0,1.18,-.12],rx:.032,w:[['head',1]]},{p:[0,1.12,-.155],rx:.036,w:[['head',1]]},{p:[0,1.03,-.165],rx:.03,w:[['head',.6],['neck',.4]]},{p:[0,.95,-.16],rx:.012,w:[['head',.3],['chest',.7]]}],{seg:6,capB:true,col:hair})}
+  if(st==3){// braid down the back
+    const k=dkKit();for(let i=0;i<6;i++){const y=1.1-i*.042,z=-.12-i*.008;k.p(i<3?'head':'neck','oct','c',i%2?hd:hair,0,y,z,.028-i*.002,.032,.026)}k.p('neck','box','c',0x6a2a1a,0,.85,-.17,.03,.016,.03);mdKit(B,k);
+    mdLoft(B,[{p:[0,1.1,-.13],rx:.022,w:[['head',1]]},{p:[0,.86,-.17],rx:.016,w:[['neck',.4],['chest',.6]]}],{seg:5,col:hd})}
+  if(st==0&&fem){// short + a short bob at the back
+    mdLoft(B,[{p:[0,1.15,-.06],rx:.106,f:.05,b:.06,w:[['head',1]]},{p:[0,1.06,-.07],rx:.104,f:.04,b:.05,w:[['head',1]]},{p:[0,1.03,-.07],rx:.09,f:.03,b:.04,w:[['head',.8],['neck',.2]]}],{seg:9,col:hair,keep:m=>m.s<.2})}}
+
+// =====================================================================================================
+// the hero look
+// =====================================================================================================
+var MD_LOOK0={skin:'#d9b38c',hair:'#3a2414',hairStyle:0,face:0,eye:'#4a6a8a',build:1,height:1,sex:0};
+// per-class default looks (used when the player never chose one): the classic hero of each class
+function mdClassLook(cls){const L={warrior:{skin:'#b8875e',hair:'#2a1a12',hairStyle:0,face:2},paladin:{skin:'#d9b38c',hair:'#8a6a40',hairStyle:0,face:1},
+  assassin:{skin:'#c8a080',hair:'#141016',hairStyle:2,face:0},ranger:{skin:'#d2aa82',hair:'#5a3418',hairStyle:1,face:0},mage:{skin:'#e1be9c',hair:'#b8b8bc',hairStyle:1,face:3}}[cls];
+  return Object.assign({},MD_LOOK0,L||{})}
+function mdLookN(L,cls){const D=mdClassLook(cls),o=Object.assign({},D,L||{}),hx=v=>{v=mdC(v);return typeof v=='number'&&isFinite(v)?v:null};
+  const c=(v,d)=>{const x=hx(v);return x==null?mdC(d):x},i=(v,a,b,d)=>{v=Math.round(+v);return isFinite(v)?Math.max(a,Math.min(b,v)):d};
+  return {skin:c(o.skin,D.skin),hair:c(o.hair,D.hair),hairStyle:i(o.hairStyle,0,5,0),face:i(o.face,0,5,0),eye:c(o.eye,D.eye),build:i(o.build,0,2,1),
+    height:Math.max(.94,Math.min(1.06,isFinite(+o.height)?+o.height:1)),sex:i(o.sex,0,1,0)}}
+function mdLookKey(L){return [L.skin,L.hair,L.hairStyle,L.face,L.eye,L.build,Math.round(L.height*100),L.sex].join('.')}
+// the look of a hero model: preview/co-op models carry their own (h.mdLook); the player's models read heroLook()
+function mdLookOf(h,cls){
+  if(h&&h.mdLook)return mdLookN(h.mdLook,cls);
+  if(h&&h.mpPeer)return mdLookN(null,cls);
+  // the player's models: the creator's heroLook() when the hero has chosen a look; old heroes keep their class look
+  let L=null;try{if(typeof hero!='undefined'&&hero&&hero.look)L=typeof heroLook=='function'?heroLook(hero):hero.look}catch(e){L=hero.look}
+  return mdLookN(L,cls)}
+
+// ================= v94 (model track): humanoid foes and the humanoid Sovereigns =================
+// mkHumanoid is wrapped: the HB skeleton, weapon, shield, bow helpers and animation hooks of the old model stay; the
+// textured body and the v54/v56 detail kits (dkEnemyKit/dkNewKit, many small overlapping boxes) are replaced by one
+// clean body per foe type in the companion style, built with the same toolkit as the hero (and the same armour
+// builders, so a Hollow Knight's plate fits like a hero's). Every instance of a type shares the cached geometry and the
+// shared materials (one to three draw calls + weapon). Each type keeps its signature: goblin ears and noses, orc and
+// troll tusks, skeleton bones, the vampires' standing collar (v89 dkHighCollar), naga snake heads and tails, etc.
+function mdD(a,st,M,A,o){return Object.assign({a,st,ti:2,r:0,M,A,G:null,dk:mdSh(M,.6),gem:A,sl:''},o||{})}
+function mdLoin(B,P,c,c2,y1,y0){mdSkirt(B,P,y0||.6,y1||.36,.02,.02,{col:m=>m.y<(y1||.36)+.04?c2||mdSh(c,.75):c,keep:m=>Math.abs(m.c)<.36,n:4});mdTS(B,P,(y0||.6)-.02,(y0||.6)+.03,.016,{col:mdSh(c2||c,.8)})}
+function mdStrap(B,P,c,sd){mdTS(B,P,.6,.99,(P.tOff||0)+.008,{col:c,keep:m=>Math.abs(m.c+(sd||1)*m.s*.55)<.12})}
+function mdTusks(k,P,c,len,w){const z=mdHeadZ(P,1.07);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*.04*(w||1),1.072+len*.022,z-.004,.014*len*1.4,.05*len,.014*len*1.4,0,0,-s*.2))}
+function mdEars(k,P,c,len,up){const x=mdHeadX(P,1.15);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*(x+.03*len),1.16+(up||0),-.01,.03,.14*len,.018,0,0,-s*(1.25-(up||0)*3)))}
+function mdNose(k,P,c,len){k.p('head','cone4','c',c,0,1.12,mdHeadZ(P,1.12)+.02*len,.024,.07*len,.022,Math.PI/2+.3)}
+function mdNeck(k,c,bead,n){for(let i=0;i<(n||7);i++){const a=-1.1+i*(2.2/((n||7)-1));k.p('chest','cone4','c',i%2?c:bead,Math.sin(a)*.13,.95-Math.cos(a)*.03,Math.cos(a)*.115,.01,.04,.01,Math.PI)}}
+function mdSpikePad(k,P,s,c,sp,n){const a=s<0?'aL0':'aR0',x=P.bones[a][1];k.p(a,'hem','m',c,x+s*.02,.985,0,.11,.08,.115,0,0,s*.35);for(let i=0;i<(n||2);i++)k.L(a,'m',sp,[x+s*(.05+i*.03),1.03,-.02+i*.04],[x+s*(.1+i*.03),1.14,-.03+i*.04],.02,.003,5)}
+function mdGlowEyes(k,P,c,y){const ey=y||1.145,z=mdHeadZ(P,ey);[-1,1].forEach(s=>{k.p('head','box','c',0x080606,s*.04,ey,z-.002,.036,.022,.01);k.p('head','box','g',c,s*.04,ey,z+.004,.024,.011,.008)})}
+// skeleton: skull, spine, banded ribcage, pelvis, thin bones for limbs
+function mdSkel(B,P,bone,eye){const bd=mdSh(bone,.72),k=dkKit();P.noTorso=1;P.af=.42;P.lf=.42;P.col=Object.assign(P.col,{skin:bone,torso:bone,sleeve:bone,fore:bone,hand:bone,pants:bone,shin:bone,boot:bone,sole:bd});
+  mdBody(B,P);mdHead(B,P,{eyes:'none',noHair:true,brow:false,ears:false,nose:false,mouth:false,headCol:m=>m.s>.55&&m.y<1.1&&m.y>1.07?bd:bone});
+  mdGlowEyes(k,P,eye);k.p('head','cone4','c',0x080606,0,1.115,mdHeadZ(P,1.115)+.004,.016,.03,.008,Math.PI);for(let i=-3;i<=3;i++)k.p('head','box','c',0xe8e0c8,i*.013,1.078,mdHeadZ(P,1.078)+.004,.008,.016,.006);
+  mdLoft(B,[[.5,.03],[.62,.034],[.75,.03],[.9,.03],[1.04,.025]].map(q=>({p:[0,q[0],-.04],rx:q[1],w:mdTorsoW(q[0])})),{seg:6,col:m=>Math.round(m.y*30)%2?bone:bd});
+  mdLoft(B,Array.from({length:12},(_,i)=>.71+i*.022).map((y,i)=>({p:[0,y,-.004],rx:(.11+Math.sin(i/11*Math.PI)*.045),f:.1+Math.sin(i/11*Math.PI)*.02,b:.1,w:mdTorsoW(y)})),{seg:12,col:m=>m.s>.85?bd:bone,keep:m=>Math.floor(m.i)%2==0&&!(m.s>.9&&m.y<.9)});
+  mdLoft(B,[{p:[0,.47,0],rx:.1,f:.06,b:.07,w:[['pelvis',1]]},{p:[0,.54,0],rx:.135,f:.08,b:.08,w:[['pelvis',1]]},{p:[0,.58,0],rx:.12,f:.07,b:.07,w:[['pelvis',1]]}],{seg:10,col:bd});
+  [-1,1].forEach(s=>{const a=s<0?'aL0':'aR0';k.L('chest','c',bone,[s*.04,.96,.02],[s*.2,.97,0],.016,.014,5);k.p(a,'sph','c',bd,P.bones[a][1],P.bones[a][2],0,.035)});mdKit(B,k)}
+// naga: long snake head (on the head bone) and a tail from the pelvis
+function mdNagaHead(B,P,sk,eye){const sd=mdSh(sk,.65),k=dkKit();P.head={w:.9,len:1.45,fwd:.035,top:.9};
+  mdHead(B,P,{eyes:'none',noHair:true,brow:false,ears:false,nose:false,mouth:false,headCol:m=>m.y<1.1&&m.s>-.2?mdSh(sk,1.18):Math.round(m.c*6+m.y*30)%2?sk:sd});
+  [-1,1].forEach(s=>{const z=mdHeadZ(P,1.17)-.02;k.p('head','box','c',0x080606,s*.06,1.17,z,.03,.024,.03);k.p('head','box','g',eye,s*.064,1.17,z+.012,.012,.026,.012);k.p('head','cone4','c',0xe8e0c8,s*.03,1.075,mdHeadZ(P,1.08)-.01,.008,.04,.008,Math.PI)});
+  k.L('head','c',0xb02030,[0,1.09,mdHeadZ(P,1.09)],[0,1.09,mdHeadZ(P,1.09)+.07],.006,.003,3);
+  for(let i=0;i<5;i++)k.p('head','cone4','c',sd,0,1.27-i*.03,-.02-i*.04,.03,.06,.02,-.6-i*.3);mdKit(B,k);
+  mdLoft(B,[{p:[0,.5,-.06],rx:.1,f:.08,b:.08},{p:[0,.36,-.3],rx:.085},{p:[0,.16,-.6],rx:.06},{p:[.06,.06,-.86],rx:.035},{p:[.14,.04,-1.06],rx:.01}].map(r=>Object.assign(r,{w:[['pelvis',1]]})),{seg:8,capB:true,col:m=>m.s<-.5?mdSh(sk,.9):Math.round(m.i*3)%2?sk:sd})}
+// cache + build per foe type
+function mdFoeGeo(key){return mdGeo('F|'+key,()=>mdFoeB(key))}
+function mdFoeB(key){const L=HUMLOOK[key]||{},B=mdB(HB),skin=mdSh(dkHex(L.skin||[200,160,130]),key=='skel'||key=='archer'?.9:.86),k=dkKit(),lt=0x3a2618,iron=0x4a4e56;
+  const P=mdP({col:{skin}}),C=P.col,body=()=>{P._T=mdTorso(P);mdBody(B,P)},head=o=>mdHead(B,P,Object.assign({},o));
+  const human=(o)=>{P.look=Object.assign({hair:0x2a1a12,hairStyle:0,face:0,eye:0x4a3a2a},o||{});};
+  const goblin=(eye)=>{P.head={w:1.08,jaw:1.08,top:.95};P.af=.92;P.lf=.9;P.belly=.02;Object.assign(C,{torso:skin,sleeve:skin,fore:skin,hand:skin,pants:0x4a3a22,shin:skin,boot:skin,sole:mdSh(skin,.6),belt:lt});body();
+    head({eyes:'glow',glow:eye,noHair:true,brow:mdSh(skin,.6),ears:false,nose:false});mdEars(k,P,skin,1.1);mdNose(k,P,mdSh(skin,.9),1.1);mdTusks(k,P,0xe0d8b8,.6,.9)};
+  switch(key){
+  case 'hob':goblin(0xffc020);mdLoin(B,P,0x5a4628);mdStrap(B,P,lt);mdSpikePad(k,P,-1,0x5a4028,0x8a8a90,3);mdNeck(k,0xd8d0b0,0x6a3a2a);break;
+  case 'sling':goblin(0xffc020);mdLoin(B,P,0x6a5434);mdHelm(B,P,mdD('medium','hood',0x5a4630,0x3a2a1a));k.p('pelvis','sph','c',0x4a3420,.17,.5,.05,.05,.06,.045);mdStrap(B,P,lt,-1);break;
+  case 'shaman':goblin(0x7aff6a);mdChest(B,P,mdD('cloth','robe',0x3a5434,0x8a7a4a));mdNeck(k,0xe8e0c8,0x2a6a3a,9);
+    k.p('head','sph','c',0xc8bea4,0,1.2,mdHeadZ(P,1.2)-.04,.09,.08,.07);[-1,1].forEach(s=>k.p('head','box','c',0x14100c,s*.035,1.2,mdHeadZ(P,1.2)+.02,.024,.016,.01));
+    for(let i=0;i<5;i++)k.p('head','cone4','c',[0x8a2a1a,0x2a6a8a,0xc8a02a,0x2a2a2a,0x8a2a1a][i],-.08+i*.04,1.3,-.06,.022,.14,.008,-.5,0,(i-2)*.22);break;
+  case 'bandit':human({hairStyle:5});Object.assign(C,{torso:0x34343c,pants:0x2e2a30,boot:0x2a2018,belt:lt});body();head({noHair:true});
+    mdChest(B,P,mdD('light','garb',0x34343c,0x6a2222));mdHelm(B,P,mdD('light','ashcowl',0x2a2a30,0x6a2222));mdBoots(B,P,mdD('medium','trail',0x2a2018,0x4a3020));mdCape(B,P,0x2a1c1e,{len:.5,trim:0x4a1a1a});break;
+  case 'brigand':human({face:3,hair:0x3a2414});body();head({});mdChest(B,P,mdD('heavy','hauberk',0x6a6c72,0x8a6a2a));mdTabard(B,P,0x6a1e18,0x3a0e0a);mdHelm(B,P,mdD('heavy','nasal',0x4a4e56,0x6a6c72));
+    mdBoots(B,P,mdD('medium','pelt',0x3a2a1c,0x5a4a3a));mdSpikePad(k,P,-1,0x4a4e56,0x8a8e96,2);mdCape(B,P,0x4a1410,{len:.45});break;
+  case 'cultist':human();body();head({eyes:'glow',glow:0xff6a20,noHair:true,headCol:()=>0x120a08});mdChest(B,P,mdD('cloth','robe',0x6a1610,0x2a0a08));mdHelm(B,P,mdD('cloth','linen',0x4a0c0a,0x2a0806));
+    [-1,1].forEach(s=>k.L('head','c',0x2a2420,[s*.08,1.24,-.01],[s*.15,1.33,-.03],.022,.012).L('head','c',0x2a2420,[s*.15,1.33,-.03],[s*.14,1.42,-.06],.012,.002));
+    k.p('chest','oct','g',0xff6a20,0,.8,mdTorsoAt(P,.8).f+P.tOff+.012,.03,.045,.014);mdBoots(B,P,mdD('cloth','slipper',0x1a1210,0x2a1a10));break;
+  case 'orc':P.build=2;P.wf=1.05;P.head={w:1.1,jaw:1.25,top:.95};human({hair:0x141010,hairStyle:2,eye:0xff3a1a});Object.assign(C,{torso:skin,sleeve:skin,fore:0x4a3420,pants:0x4a3a2a,shin:0x4a3a2a,boot:0x3a2a1c,belt:lt});body();
+    head({eyes:'glow',glow:0xff3a1a,brow:mdSh(skin,.55)});mdTusks(k,P,0xe8e0c8,1.2,1.1);mdEars(k,P,skin,.5,.02);mdStrap(B,P,lt);mdStrap(B,P,lt,-1);mdLoin(B,P,0x4a3a2a,0x2a1d14);
+    [-1,1].forEach(s=>{mdSpikePad(k,P,s,0x5a4630,0x8a8a90,2);mdAS(B,P,s,4,5,.012,{col:m=>Math.round(m.y*40)%2?0x4a3420:0x5a4430})});mdBoots(B,P,mdD('medium','pelt',0x3a2a1c,0x6a5a48));mdNeck(k,0xd8d0b0,0x2a2a2a);break;
+  case 'skel':mdSkel(B,P,0xc8bea4,0x6aff9a);mdHelm(B,P,mdD('heavy','nasal',0x6a4630,0x5a3a24));mdSpikePad(k,P,-1,0x6a4630,0x6a4630,0);mdLoin(B,P,0x3a3a34,0x2a2a24,.4);break;
+  case 'archer':mdSkel(B,P,0xc8bea4,0x7ad8ff);mdHelm(B,P,mdD('medium','hood',0x34342c,0x24241e));mdQuiver(B,P);mdLoin(B,P,0x34342c,0x24241e,.42);mdCape(B,P,0x2a2a24,{len:.55});break;
+  case 'knight':human();body();head({noHair:true});const K1=0x2a2c32,K2=0x44474f;mdChest(B,P,mdD('heavy','warplate',K1,K2,{ti:3}));mdHelm(B,P,mdD('heavy','great',K1,K2,{G:0xff2a1a}));
+    [-1,1].forEach(s=>k.L('head','c',0x8a8270,[s*.1,1.22,-.02],[s*.14,1.32,-.06],.026,.016).L('head','c',0x8a8270,[s*.14,1.32,-.06],[s*.13,1.42,-.12],.016,.002));
+    mdBoots(B,P,mdD('heavy','sabaton',K1,K2));mdCape(B,P,0x18141e,{len:.42,trim:0x2a1e30});break;
+  case 'giant':P.build=2;P.head={w:1.05,jaw:1.15};human({hairStyle:5,face:3,hair:0xc8e8ff});Object.assign(C,{torso:skin,sleeve:skin,fore:0x5a6070,pants:0x5a5040,shin:skin,boot:0x3a3026,belt:0x3a2a1a});body();
+    head({eyes:'glow',glow:0x6ac8ff,brow:0xc8e8ff});mdLoin(B,P,0x6a5e4e,0x4a4030);mdTS(B,P,.9,1.0,.03,{col:m=>Math.round(m.c*7)%2?0x6a5e4e:0x5a4e40,lip:.03});
+    [-1,1].forEach(s=>{mdAS(B,P,s,4,5,.014,{t:'m',col:0x5a6070});mdAS(B,P,s,4,4,.02,{t:'g',col:0x6ac8ff,keep:m=>m.s>.3})});k.p('head','ring','g',0x6ac8ff,0,1.19,0,mdHeadX(P,1.19)+.012,.12,mdHeadZ(P,1.19)+.012);
+    [0,1,2].forEach(i=>k.p('chest','box','g',0x6ac8ff,-.05+i*.05,.85-Math.abs(i-1)*.04,mdTorsoAt(P,.85).f+.003,.012,.1,.006,0,0,(i-1)*.5));mdBoots(B,P,mdD('medium','pelt',0x3a3026,0x6a5e4e));break;
+  case 'revenant':{const w1=0xb8a47c,w2=0x8a7a58;Object.assign(C,{torso:w1,sleeve:w1,fore:w1,hand:w1,pants:w1,shin:w1,boot:w2});P.paint.torso=m=>Math.round(m.y*28+m.c)%2?w1:w2;P.paint.sleeve=P.paint.fore=m=>Math.round(m.y*30)%2?w1:w2;P.paint.leg=m=>Math.round(m.y*28)%2?w1:w2;
+    body();head({eyes:'glow',glow:0xffc040,noHair:true,headCol:m=>Math.round(m.y*36)%2?w1:w2,brow:false,ears:false});
+    const nem=mdD('cloth','linen',0x2a3a6a,0xc8a040);mdHelm(B,P,nem);mdTS(B,P,.9,1.0,.032,{t:'m',col:m=>Math.round(m.y*60)%2?0xc8a040:0x2a3a6a,lip:.04});
+    mdChest(B,P,mdD('cloth','robe',0x6a5a3a,0xc8a040));break}
+  case 'nagaw':case 'nagaa':case 'nagas':{Object.assign(C,{torso:skin,sleeve:skin,fore:skin,hand:skin,pants:skin,shin:skin,boot:skin,sole:mdSh(skin,.6)});P.paint.torso=m=>m.s>.6&&m.y<.9?mdSh(skin,1.2):skin;body();mdNagaHead(B,P,skin,0xffd020);
+    if(key=='nagaw'){mdChest(B,P,mdD('heavy','mail',0x8a6a2a,0xb08a3a));mdSpikePad(k,P,-1,0x8a6a2a,0xb08a3a,2);[-1,1].forEach(s=>mdAS(B,P,s,4,5,.014,{t:'m',col:0x8a6a2a}))}
+    else if(key=='nagaa'){mdChest(B,P,mdD('medium','vest',0x5a4426,0x8a6a3a));mdQuiver(B,P)}
+    else{mdChest(B,P,mdD('cloth','robe',0x1a4444,0xd8c060));mdNeck(k,0xe8e0c8,0x2a8a6a,9);for(let i=0;i<5;i++)k.p('head','cone4','c',[0x2a8a6a,0xd8c060,0x2a6a8a][i%3],-.08+i*.04,1.28,-.08,.02,.16,.008,-.4,0,(i-2)*.25)}break}
+  case 'troll':case 'trollsh':P.build=2;P.head={w:1.1,jaw:1.2,top:.92};human({hairStyle:4,hair:0xd8e8f0});Object.assign(C,{torso:skin,sleeve:skin,fore:skin,pants:0xc8ccd4,shin:skin,boot:skin,sole:mdSh(skin,.6),belt:lt});body();
+    head({eyes:'glow',glow:0x6ad8ff,brow:mdSh(skin,.55),ears:false,nose:false});mdNose(k,P,mdSh(skin,.92),1.5);mdTusks(k,P,0xe8e0c8,1.3,1.1);mdEars(k,P,skin,.7);
+    for(let i=0;i<7;i++)k.p('head','cone4','c',0xd8e8f0,(i-3)*.03,1.25-Math.abs(i-3)*.01,-.03,.022,.14,.022,-.6,0,(i-3)*.18);
+    if(key=='troll'){mdLoin(B,P,0xc8ccd4,0x9aa0a8);mdNeck(k,0xd8d0b0,0x8a9aa8,9);[-1,1].forEach(s=>mdAS(B,P,s,4,5,.016,{col:0xd8dce4}))}
+    else{mdChest(B,P,mdD('cloth','robe',0x26344e,0x9ad8ff));k.p('chest','oct','g',0x9ad8ff,0,.8,mdTorsoAt(P,.8).f+P.tOff+.012,.03,.045,.014);[-1,1].forEach(s=>k.L('head','c',0x8a8270,[s*.08,1.24,-.02],[s*.18,1.36,-.08],.022,.012).L('head','c',0x8a8270,[s*.18,1.36,-.08],[s*.2,1.46,-.04],.012,.002))}break;
+  case 'yeti':{const f1=0xc4c8d0,f2=0xa4aab4;P.build=2;P.belly=.04;P.af=1.25;P.lf=1.2;Object.assign(C,{skin:0x5a6a7a,torso:f1,sleeve:f1,fore:f1,hand:0x5a6a7a,pants:f1,shin:f1,boot:f2,sole:0x5a6a7a});
+    const fur=m=>Math.round(m.y*22+m.c*3)%2?f1:f2;P.paint.torso=fur;P.paint.sleeve=P.paint.fore=fur;P.paint.leg=fur;body();
+    head({eyes:'glow',glow:0x7ad8ff,noHair:true,brow:false,ears:false,nose:false,headCol:m=>m.s>.3&&m.y<1.2?0x5a6a7a:fur(m)});mdLoft(B,mdHeadR(P).slice(1,7),{seg:10,off:.03,col:fur,keep:m=>!(m.s>.25&&m.y<1.2)});
+    [-1,1].forEach(s=>k.L('head','c',0xb8ad90,[s*.1,1.22,0],[s*.2,1.3,-.04],.03,.02).L('head','c',0xb8ad90,[s*.2,1.3,-.04],[s*.22,1.4,.02],.02,.003));mdTS(B,P,.9,1.02,.04,{col:fur,lip:.04});
+    for(let i=-2;i<=2;i++)k.p('head','cone4','c',0xe8e0c8,i*.016,1.095,mdHeadZ(P,1.095)+.006,.007,.03,.007,Math.PI);break}
+  case 'selem':{const s1=0xc8a060,s2=0xa8844a,s3=0xd8b878;P.sq=.6;P.af=1.25;P.lf=1.15;P.build=2;Object.assign(C,{skin:s1,torso:s1,sleeve:s2,fore:s1,hand:s2,pants:s2,shin:s1,boot:s2,sole:s2,belt:s2,neck:s2});
+    P.paint.torso=m=>m.y>.8?s3:Math.round(m.y*14)%2?s1:s2;body();head({eyes:'glow',glow:0xffa030,noHair:true,brow:false,ears:false,nose:false,mouth:false,headCol:m=>m.y>1.2?s3:s1});
+    k.p('chest','oct','g',0xffa030,0,.86,mdTorsoAt(P,.86).f+.01,.06,.07,.03);[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0';k.p(a,'dod','c',s2,P.bones[a][1]+s*.03,.99,0,.1);k.p('chest','dod','c',s3,s*.12,1.02,-.04,.06)});
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.p('pelvis','cone4','c',s2,Math.cos(a)*.16,.4,Math.sin(a)*.12,.05,.22,.05,Math.PI+Math.sin(a)*.3,0,Math.cos(a)*.3)}break}
+  case 'ghoul':P.af=.8;P.lf=.85;P.head={w:.95,jaw:1.1,fwd:.02};Object.assign(C,{torso:skin,sleeve:skin,fore:skin,hand:mdSh(skin,.8),pants:0x2e2e28,shin:skin,boot:skin,sole:mdSh(skin,.6),belt:0x2a2a24});
+    P.paint.torso=m=>m.y>.72&&m.y<.92&&Math.round(m.y*44)%2&&m.s>-.2?mdSh(skin,.78):skin;body();head({eyes:'glow',glow:0x9aff6a,noHair:true,brow:mdSh(skin,.55),ears:false});mdEars(k,P,skin,.6);mdTusks(k,P,0xc8c0a0,.5);
+    [-1,1].forEach(s=>{const a=s<0?'aL2':'aR2',A2=P.bones[a];for(let f=0;f<4;f++)k.L(a,'c',0x2a2420,[A2[1]+s*.005+(f-1.5)*.013,A2[2]-.08,A2[3]+.02],[A2[1]+(f-1.5)*.02,A2[2]-.18,A2[3]+.06],.008,.002,4)});mdLoin(B,P,0x2e2e28,0x1e1e1a,.4);break;
+  case 'vamp':case 'vampm':human({hair:0x0a0808,hairStyle:key=='vamp'?0:5,eye:0xff2030});C.skin=mdSh(dkHex(L.skin),.92);Object.assign(C,{pants:0x1e1418,boot:0x140a0c});body();
+    head({eyes:'glow',glow:0xff2030,brow:0x0a0808,noHair:key=='vampm'});[-1,1].forEach(s=>k.p('head','cone4','c',0xf0ece4,s*.016,1.083,mdHeadZ(P,1.083)+.002,.006,.024,.006,Math.PI));
+    if(key=='vamp'){mdChest(B,P,mdD('light','shroud',0x2a0a12,0x9a7a30));[-1,1].forEach(s=>mdAS(B,P,s,6,8,.006,{col:0x1a0a10}));mdBoots(B,P,mdD('medium','strider',0x140a0c,0x6a0c16));dkHighCollar(k,0x6a0c16,false);mdCape(B,P,0x6a0c16,{len:.36})}
+    else{mdChest(B,P,mdD('cloth','vestments',0x3a0a14,0x6a0c16));mdHelm(B,P,mdD('cloth','linen',0x2a0610,0x6a0c16));dkHighCollar(k,0x6a0c16,true);k.p('chest','oct','g',0xff2030,0,.8,mdTorsoAt(P,.8).f+P.tOff+.012,.03,.045,.014)}break;
+  case 'vampk':human();body();head({noHair:true});mdChest(B,P,mdD('heavy','warplate',0x2a1a20,0x5a2a30,{ti:3}));mdHelm(B,P,mdD('heavy','winged',0x2a1a20,0x5a2a30,{G:0xff2030}));
+    mdBoots(B,P,mdD('heavy','sabaton',0x2a1a20,0x5a2a30));dkHighCollar(k,0x6a0c16,false);mdCape(B,P,0x5a0a14,{len:.36,trim:0x2a0610});break;
+  case 'vlord':human({hair:0x0a0808,hairStyle:0,eye:0xff2030});C.skin=mdSh(dkHex(L.skin),.92);body();head({eyes:'glow',glow:0xff2030,brow:0x0a0808});
+    P.noTabard=1;mdChest(B,P,mdD('heavy','aegis',0x24161c,0x9a7a30,{ti:4}));mdTabard(B,P,0x5a0a14,0x9a7a30,null);mdHelm(B,P,mdD('cloth','crown',0x9a7a30,0xc8a040,{gem:0xff2030}));mdBoots(B,P,mdD('heavy','tread',0x24161c,0x9a7a30));
+    dkHighCollar(k,0x6a0c16,true);mdCape(B,P,0x6a0c16,{len:.22,w:1.12,trim:0x9a7a30});break;
+  case 'abom':P.belly=.22;P.armX=.05;P.build=2;P.head={w:.92};Object.assign(C,{torso:skin,sleeve:skin,fore:skin,pants:0x4a4030,shin:skin,boot:skin,sole:mdSh(skin,.6),belt:0x2a1a14});
+    P.paint.torso=m=>m.s>.3&&Math.abs(m.c)<.07&&m.y<.86?0x3a2418:m.y<.8&&m.y>.52&&m.s>.25?mdMix(skin,0xc8b890,.3):skin;body();head({eyes:'glow',glow:0xffd040,noHair:true,brow:mdSh(skin,.55)});
+    mdLoin(B,P,0x4a4030,0x2a2418,.36,.5);[-1,1].forEach(s=>mdAS(B,P,s,4,5,.012,{col:0x3a2a1a}));
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4,q=mdTorsoAt(P,.95);k.L('chest','m',0x5a5a60,[Math.cos(a)*q.rx*.95,1.0,Math.sin(a)*q.f*.95],[Math.cos(a)*q.rx*1.15,.76,Math.sin(a)*q.f*1.3],.012,.012,4);k.p('chest','cone4','m',0x6a6a70,Math.cos(a)*q.rx*1.15,.73,Math.sin(a)*q.f*1.3,.02,.07,.02,Math.PI)}
+    for(let i=0;i<6;i++){const y=.58+i*.05;k.p('spine','box','c',0x2a1a14,0,y,mdTorsoAt(P,y).f+.004,.05,.006,.006)}break;
+  default:human();body();head({})}
+  mdKit(B,k);return B}
+// swap the body of a freshly built humanoid foe; the old kit is never baked (DKBK entry pre-filled with nothing)
+{const f=mkHumanoid;mkHumanoid=function(key){DKBK=DKBK||{};if(HUMLOOK[key]&&!DKBK['E|'+key])DKBK['E|'+key]={};const g=f.apply(this,arguments);
+  try{const h=g.h,body=huBody(h);if(body&&body.skeleton&&HUMLOOK[key]){const G=mdFoeGeo(key),M=mdMats();
+      h.children.filter(o=>o.isSkinnedMesh&&o!==body).forEach(o=>h.remove(o));
+      body.geometry=G.c;body.material=M.c;body.castShadow=true;body.userData.lowpoly=1;
+      ['m','g'].forEach(t=>{if(!G[t])return;const m=new THREE.SkinnedMesh(G[t],M[t]);m.dk=1;m.castShadow=t!='g';m.frustumCulled=false;h.add(m);m.bind(body.skeleton,body.bindMatrix)})}}
+  catch(e){console.error('foe model',key,e)}return g}}
+
+// ================= v94 (model track): worn equipment built against the body =================
+// Every helm, chest piece, pair of boots, amulet and ring is built from the body's own ring profile (mdTorso, mdArm,
+// mdLeg, mdFoot, mdHeadR) pushed out by a small offset, with the body's bone weights, so it sits on the body and bends
+// with it in every pose (walk, attacks, idle fidgets, riding). Rigid pieces (pauldrons, horns, buckles, pendants) ride
+// the bone they belong to.
+//  * Shape: by armour type and tier, and the v78 sets have their own shape (MD_STY). Colour: tier material (V89_ARM),
+//    accent per tier or per set (v89Acc), trims pulled toward the rarity colour from Rare, glowing trims/gems from Epic.
+//  * The v89 item icons and the gear lying on the ground are rendered from these same builders (v89ArmorKit is replaced
+//    below), so the icon shows exactly what the hero wears.
+// shape per template: [arm][slot] by tier, and per v78 set (first word of the name)
+function mdSty(){return mdSty.c||(mdSty.c={
+  heavy:{helm:['nasal','horned','great','visage','winged'],chest:['mail','hauberk','cuirass','warplate','aegis'],boots:['hobnail','sabaton','greave','stomper','tread']},
+  medium:{helm:['hood','pelt','cowl','skullhood','galemask'],chest:['padded','brigandine','vest','longcoat','mantle'],boots:['trail','pelt','stalker','strider','gale']},
+  light:{helm:['wrap','viper','ashcowl','glassmask','stormhood'],chest:['wraps','scale','garb','shroud','raiment'],boots:['soft','wrapped','ashstep','glass','storm']},
+  cloth:{helm:['linen','hat','circlet','diadem','crown'],chest:['robe','moss','pyre','vestments','regalia'],boots:['sandal','slipper','pyre','lich','tempest']},
+  set:{Bloodsworn:['barbute','blood','blood'],Ironwall:['bucket','wall','wall'],Warlord:['crowned','warlord','warlord'],Pathfinder:['feather','path','trail'],Deadeye:['deadeye','bandolier','stalker'],
+    Windrunner:['wind','tails','gale'],Cutthroat:['bandana','cutthroat','wrapped'],Venomweave:['venom','venom','glass'],Duskdancer:['dusk','scarf','storm'],
+    'Hedge-Witch':['witch','witch','slipper'],Spellbinder:['tallcowl','binder','pyre'],Starweaver:['star','star','tempest']}})}
+// descriptor of a worn item
+function mdGD(it){if(!it||it.tp==null||!ITPL[it.tp])return null;const t=itT(it);if(!t)return null;const sl=t.sl,a=t.arm||'heavy',ti=t.t|0,r=Math.max(0,Math.min(4,it.r|0)),S=mdSty();
+  const set=t.nw&&sl!='weapon'?String(t.n).split(' ')[0]:null,si={helm:0,chest:1,boots:2}[sl];
+  let st=S[a]&&S[a][sl]?S[a][sl][ti]:null;if(set&&S.set[set]&&si!=null)st=S.set[set][si];
+  const acc=v89Acc(t),base0=(V89_ARM[a]||V89_TM)[ti],M=t.nw?mdMix(base0,acc,.22):base0,A=r>=2?mdMix(acc,v89Rc(r),.3):acc,G=r>=3?v89Rc(r):null;
+  return {sl,a,ti,r,set,st,M,A,G,gem:v89Gem(t,r),dk:mdSh(M,.6),n:t.n,tp:it.tp,key:it.tp+'.'+r}}
+// ---------------- shell helpers ----------------
+function mdTRing(P,y){const q=mdTorsoAt(P,y);return {p:[0,y,q.z],rx:q.rx,f:q.f,b:q.b,w:mdTorsoW(y),y}}
+// torso shell between heights y0..y1 (o.lip: flare the lower edge)
+function mdTS(B,P,y0,y1,off,o){o=o||{};const T=P._T||(P._T=mdTorso(P)),R=[mdTRing(P,y0)];T.forEach(r=>{if(r.y>y0+.006&&r.y<y1-.006)R.push(r)});R.push(mdTRing(P,y1));
+  if(o.lip){const r=Object.assign({},R[0]);r.rx+=o.lip;r.f+=o.lip;r.b+=o.lip;r.p=[0,R[0].p[1]-.012,r.p[2]];R.unshift(r)}
+  if(o.lipT){const q=R[R.length-1],r=Object.assign({},q);r.rx+=o.lipT;r.f+=o.lipT;r.b+=o.lipT;r.p=[0,q.p[1]+.006,q.p[2]];R.push(r)}
+  P.tOff=Math.max(P.tOff||0,off);mdLoft(B,R,Object.assign({seg:12,off,sq:P.sq||0},o))}
+function mdAS(B,P,s,i0,i1,off,o){mdLoft(B,mdArm(P,s).slice(i0,i1+1),Object.assign({seg:7,off},o))}
+function mdLS(B,P,s,i0,i1,off,o){mdLoft(B,mdLeg(P,s).slice(i0,i1+1),Object.assign({seg:8,off},o))}
+function mdFS(B,P,s,off,o){mdLoft(B,mdFoot(P,s),Object.assign({seg:7,off,ref:[0,1,0],capA:true,capB:true},o))}
+// skirt / coat / robe from y0 down to y1 that follows the legs (weights: pelvis + each thigh by side)
+function mdSkirt(B,P,y0,y1,fl,off,o){o=o||{};const q=mdTorsoAt(P,y0),n=o.n||5,R=[],w0=Math.max(q.rx,.205),f0=Math.max(q.f,.128),b0=Math.max(q.b,.13);
+  for(let i=0;i<n;i++){const t=i/(n-1),y=y0+(y1-y0)*t,e=Math.min(1,t*2.2);R.push({p:[0,y,(q.z||0)+(o.dz||0)*t],rx:q.rx+(w0-q.rx)*e+fl*t,f:q.f+(f0-q.f)*e+fl*.75*t,b:q.b+(b0-q.b)*e+fl*.8*t,w:[['pelvis',1]],t})}
+  const wf=(x,y,z)=>{const d=Math.max(0,Math.min(1,(y0-y)/Math.max(.05,y0-.32)))*.9,l=Math.max(0,Math.min(1,.5-x/.16));return d<=0?[['pelvis',1]]:[['pelvis',1-d],['lh0',d*l],['rh0',d*(1-l)]]};
+  P.sOff=Math.max(P.sOff||0,off);mdLoft(B,R,Object.assign({seg:14,off,wf},o))}
+// cape on the cape bones, outside whatever the torso wears
+function mdCape(B,P,col,o){o=o||{};const off=(P.tOff||0)+.016,len=o.len||.36,w=o.w||1,ins=mdSh(col,.58),tr=o.trim;
+  const at=(y,bn,rx)=>{const q=mdTorsoAt(P,Math.min(.97,y));return {p:[0,y,-(Math.max(q.b,.12)+off+(.97-Math.min(.97,y))*.08)],rx:rx*w,f:.012,b:.012,w:bn}};
+  const R=[at(.99,[['chest',.7],['cp0',.3]],.15),at(.86,[['cp0',1]],.19),at(.7,[['cp0',.5],['cp1',.5]],.205),at(.54,[['cp1',.5],['cp2',.5]],.215),at(len,[['cp2',1]],.22)];
+  R[0].p[2]+=.012;mdLoft(B,R,{seg:6,capA:true,capB:true,col:m=>tr!=null&&m.i>R.length-1.45?tr:m.s>.3?ins:col})}
+function mdKP(){return dkKit()}
+// rarity glow strip (Epic+) or accent strip
+function mdGlowOr(d,c){return d.G!=null?d.G:c}
+
+// =====================================================================================================
+// chest
+// =====================================================================================================
+function mdChestPre(P,d){P.col.torso=d.M;P.col.sleeve=d.M;P.hasChest=1;if(d.a=='cloth'){P.col.pants=mdSh(d.M,.7)}}
+function mdChest(B,P,d,cls){const st=d.st,M=d.M,A=d.A,dk=d.dk,G=d.G,k=mdKP(),gl=mdGlowOr(d,A),lt=0x3a2618,ti=d.ti;
+  const mail=(o0)=>{const mc=mdMix(M,0x6a6c70,.3),md=mdSh(mc,.78);mdTS(B,P,.43,.99,.012,{col:m=>(Math.round(m.y*48)%2?mc:md),lip:.012});[-1,1].forEach(s=>mdAS(B,P,s,0,o0||3,.01,{col:m=>(Math.round(m.y*48)%2?mc:md)}));
+    mdSkirt(B,P,.5,.36,.03,.014,{col:m=>m.y<.385?dk:(Math.round(m.y*48)%2?mc:md),n:4})};
+  const belt=(y,c,bc)=>{mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.008,{col:c||lt});k.p('spine','box','m',bc||A,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.012,.05,.04,.014)};
+  const plate=(lv)=>{const pc=M,ps=mdSh(M,1.18);mdTS(B,P,.6,.985,.03,{t:'m',col:m=>m.s>.55&&m.y>.68&&m.y<.95&&lv>1?ps:m.y<.64?dk:pc,lip:.012,lipT:.006});
+    if(G)mdTS(B,P,.6,.62,.034,{t:'g',col:G})};
+  const pauld=(n,sz,spk,sq)=>[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',x=s*(P.bones[a][1]*1+s*.012*(mdBuildF(P)-1)*3),W=mdBuildF(P);
+    for(let i=0;i<n;i++){const r=(.1+sz*.022-i*.014)*(1+(W-1)*.5);k.p(a,sq?'box':'hem','m',i?M:mdSh(M,1.15),x+s*(.02+i*.012),.985-i*.04,0,r,sq?.035:r*.75,r*1.05,0,0,s*(.3+i*.22))}
+    if(G)k.p(a,'oct','g',G,x+s*(.07+sz*.012),1.02+sz*.008,.0,.016,.022,.016,0,0,s*.3);
+    for(let i=0;i<spk;i++)k.L(a,'m',mdSh(A,1.1),[x+s*(.05+i*.03),1.02-i*.02,-.02+i*.04],[x+s*(.1+i*.03),1.13-i*.03,-.03+i*.04],.022,.003,5)});
+  const tasset=(c)=>[-1,1].forEach(s=>mdLS(B,P,s,0,2,.024,{t:'m',col:m=>m.y<.43?mdSh(c,.8):c,keep:m=>m.s>-.3&&m.y>.4}));
+  const vamb=(c)=>[-1,1].forEach(s=>mdAS(B,P,s,4,5,.016,{t:'m',col:c}));
+  const gorget=(c)=>mdTS(B,P,.96,1.03,.034,{t:'m',col:c});
+  const tabard=(c,tr,sym)=>{const z=m=>Math.abs(m.c)<.36;mdTS(B,P,.62,.97,(P.tOff||0)+.008,{col:m=>Math.abs(m.c)>.3?tr:c,keep:m=>z(m)&&(m.s>0||m.s<0)});
+    mdSkirt(B,P,.62,.34,.02,(P.tOff||0)+.012,{col:m=>m.y<.36?tr:Math.abs(m.c)>.28?tr:c,keep:m=>Math.abs(m.c)<.34,n:4});
+    if(sym){const f=mdTorsoAt(P,.82).f+(P.tOff||0)+.016;k.p('chest','box','c',sym,0,.82,f,.022,.12,.006).p('chest','box','c',sym,0,.85,f,.08,.022,.006)}};
+  const fur=(c)=>{mdTS(B,P,.9,1.0,(P.tOff||0)+.03,{col:m=>Math.round(m.c*6+m.s*3)%2?c:mdSh(c,.82),lip:.03,lipT:.02})};
+  const vest=(c,lo)=>{mdTS(B,P,lo||.55,.985,(P.tOff||0)+.014,{col:m=>m.s>.75&&m.y<.95?mdSh(c,.7):c,lip:.006})};
+  const sleeves=(c,to,off)=>[-1,1].forEach(s=>mdAS(B,P,s,0,to,off||.008,{col:c}));
+  const shirt=(c,lo)=>{mdTS(B,P,lo||.5,.99,.008,{col:c});};
+  const coat=(c,y1,fl,split)=>mdSkirt(B,P,.56,y1,fl,(P.tOff||0)+.012,{col:m=>m.y<y1+.03?mdSh(c,.75):c,keep:split?(m=>!(m.s>.86)):null,n:5});
+  if(d.a=='heavy'){
+    if(st=='mail'){mail(3);belt(.6,lt,A)}
+    else if(st=='hauberk'){mail(3);pauld(1,0,0);belt(.6,lt,A);mdTS(B,P,.66,.96,.02,{col:lt,keep:m=>Math.abs(m.c+m.s*.6)<.16})}
+    else if(st=='cuirass'){mail(3);plate(1);pauld(2,1,0);tasset(mdSh(M,.9))}
+    else if(st=='warplate'){shirt(mdSh(M,.5));sleeves(dk,3);plate(2);pauld(3,2,ti>=3?1:0);tasset(M);vamb(M);gorget(mdSh(M,1.1))}
+    else if(st=='aegis'){shirt(mdSh(M,.5));sleeves(dk,3);plate(2);pauld(3,3,0);tasset(M);vamb(M);gorget(A);[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0';k.p(a,'box','m',A,s*.29,1.04,-.02,.012,.12,.1,-.2,0,-s*.5)});
+      if(!P.noTabard)tabard(mdSh(A,.75),mdMix(A,0xe8e0c8,.4))}
+    else if(st=='blood'){mail(3);plate(1);pauld(2,1,2);tabard(0x6a0c14,0x2a0608);vamb(mdSh(M,.9))}
+    else if(st=='wall'){shirt(mdSh(M,.5));sleeves(dk,3);plate(2);pauld(3,2,0,1);tasset(M);vamb(M);gorget(M);
+      const f=mdTorsoAt(P,.8).f+.034;for(let i=0;i<4;i++)k.p('chest','sph','m',A,(i%2?.07:-.07),.72+(i>>1)*.16,f-.01,.012)}
+    else{/*warlord*/shirt(mdSh(M,.5));sleeves(dk,3);plate(2);pauld(3,2,2);tasset(M);vamb(M);fur(0x5a4636);const f=mdTorsoAt(P,.84).f+.04;k.p('chest','oct','m',0xd8ccb0,0,.84,f,.035,.04,.02)}}
+  else if(d.a=='medium'){
+    if(st=='padded'){mdTS(B,P,.48,.99,.012,{col:m=>Math.round(m.y*30)%2?M:mdSh(M,.85),lip:.01});sleeves(mdSh(M,.9),3,.01);belt(.6,lt,A)}
+    else if(st=='brigandine'){shirt(mdSh(M,.7));sleeves(mdSh(M,.7),3);vest(M);const f=y=>mdTorsoAt(P,y).f+(P.tOff||0)+.004;for(let r=0;r<3;r++)for(let c=0;c<3;c++)k.p('chest','sph','m',A,-.06+c*.06,.72+r*.08,f(.72+r*.08),.011);belt(.6,lt,A)}
+    else if(st=='vest'){shirt(mdSh(M,.65));sleeves(mdSh(M,.65),3);vest(M,.5);mdAS(B,P,-1,0,2,.024,{col:mdSh(M,1.15)});belt(.6,lt,A);k.p('pelvis','box','c',mdSh(lt,1.2),.15,.52,.08,.05,.07,.04,0,.5,0)}
+    else if(st=='longcoat'){shirt(mdSh(M,.6));sleeves(M,5,.012);vest(M,.56);coat(M,.3,.06,true);belt(.6,lt,A);k.p('aL0','hem','c',0xd8ccb0,-.25,.985,0,.1,.07,.105,0,0,-.4)}
+    else if(st=='mantle'){shirt(mdSh(M,.6));sleeves(M,5,.012);vest(M,.56);coat(M,.36,.04,true);mdTS(B,P,.86,.99,(P.tOff||0)+.024,{col:m=>Math.round(m.c*7)%2?A:mdSh(A,.8),lip:.05});belt(.6,lt,A)}
+    else if(st=='path'){shirt(mdSh(M,.7));sleeves(mdSh(M,.7),3);vest(M);belt(.6,lt,A);mdTS(B,P,.95,1.0,(P.tOff||0)+.02,{col:A,lipT:.01});k.p('pelvis','box','c',lt,-.16,.5,.06,.06,.08,.05,0,-.5,0)}
+    else if(st=='bandolier'){shirt(mdSh(M,.7));sleeves(mdSh(M,.7),3);vest(M);belt(.6,lt,A);mdTS(B,P,.62,.98,(P.tOff||0)+.008,{col:lt,keep:m=>Math.abs(m.c-m.s*.55)<.14||Math.abs(m.c+m.s*.55)<.14});
+      for(let i=0;i<4;i++){const y=.7+i*.06;k.p('chest','box','m',A,-.08+i*.05,y,mdTorsoAt(P,y).f+(P.tOff||0)+.006,.014,.03,.008,0,0,.6)}}
+    else{/*tails*/shirt(mdSh(M,.6));sleeves(M,5,.012);vest(M,.56);coat(M,.22,.08,true);belt(.6,lt,A)}}
+  else if(d.a=='light'){
+    if(st=='wraps'){mdTS(B,P,.5,.99,.01,{col:m=>Math.round(m.y*26+m.c*2)%2?M:mdSh(M,.8)});[-1,1].forEach(s=>mdAS(B,P,s,3,5,.01,{col:m=>Math.round(m.y*30)%2?M:mdSh(M,.75)}))}
+    else if(st=='scale'){mdTS(B,P,.5,.99,.012,{col:m=>(Math.round(m.y*36)+Math.round((m.c+1)*5))%2?M:mdSh(M,.78)});sleeves(mdSh(M,.6),2);belt(.6,A,A)}
+    else if(st=='garb'){shirt(M);sleeves(M,5);mdTS(B,P,.66,.98,(P.tOff||0)+.008,{col:mdSh(M,.6),keep:m=>Math.abs(m.c-m.s*.5)<.12||Math.abs(m.c+m.s*.5)<.12});belt(.6,A,mdSh(A,1.2));
+      mdSkirt(B,P,.6,.42,.02,(P.tOff||0)+.012,{col:mdSh(M,.75),keep:m=>Math.abs(m.c)<.5,n:3})}
+    else if(st=='shroud'){shirt(M);sleeves(M,5);belt(.6,mdSh(M,.6),A);coat(mdSh(M,.85),.3,.05,true);mdTS(B,P,.93,1.03,(P.tOff||0)+.02,{col:mdSh(M,.7),lipT:.02});k.p('aR0','hem','m',A,.25,.985,0,.1,.07,.1,0,0,.4)}
+    else if(st=='raiment'){shirt(M);sleeves(M,5);belt(.6,A,A);coat(mdSh(M,.85),.26,.07,true);mdTS(B,P,.94,1.06,(P.tOff||0)+.03,{col:m=>m.s<0?mdSh(M,.6):A,lipT:.04,keep:m=>m.s<.55})}
+    else if(st=='cutthroat'){shirt(M);sleeves(M,5);vest(mdSh(M,.75));belt(.6,lt,A);for(let i=0;i<4;i++){const y=.66+i*.07;k.p('chest','box','m',0xb8bec8,.09-i*.04,y,mdTorsoAt(P,y).f+(P.tOff||0)+.006,.012,.05,.006,0,0,-.6)}}
+    else if(st=='venom'){shirt(M);sleeves(M,5);belt(.6,lt,A);for(let i=0;i<3;i++)k.p('pelvis','cyl','g',G||0x6ae05a,-.12+i*.06,.55,mdTorsoAt(P,.55).f+.02,.014,.04,.014);mdTS(B,P,.66,.98,(P.tOff||0)+.008,{col:A,keep:m=>Math.abs(m.c-m.s*.5)<.1})}
+    else{/*scarf*/shirt(M);sleeves(M,5);belt(.6,A,A);mdTS(B,P,.92,1.04,(P.tOff||0)+.03,{col:A,lip:.01,lipT:.01});mdLoft(B,[{p:[.08,.98,-.14],rx:.04,f:.01,b:.01,w:[['chest',1]]},{p:[.1,.7,-.17],rx:.05,f:.01,b:.01,w:[['chest',.4],['cp1',.6]]},{p:[.12,.5,-.2],rx:.045,f:.01,b:.01,w:[['cp2',1]]}],{seg:4,capA:true,capB:true,col:A})}}
+  else{ // cloth: robes
+    const rb=M,rd=mdSh(M,.78),tr=mdGlowOr(d,A),long=st=='regalia'||st=='vestments'||st=='star'?.06:st=='robe'||st=='witch'?.1:.08;
+    shirt(rb,.5);[-1,1].forEach(s=>{mdAS(B,P,s,0,3,.01,{col:rb});mdLoft(B,mdArm(P,s).slice(3,6).map((r,i)=>Object.assign({},r,{rx:r.rx+i*.018,f:r.f+i*.02,b:r.b+i*.018})),{seg:8,off:.012,col:m=>m.i>1.5?tr:rd})});
+    mdSkirt(B,P,.6,long,.09,.016,{col:m=>m.y<long+.03?tr:(st=='witch'&&(Math.round(m.c*4+m.y*9)%3==0))?mdMix(rb,0x6a5a3a,.3):rb,n:6});
+    belt(.6,st=='pyre'?0x5a1a10:mdSh(A,.6),A);
+    if(st=='robe'||st=='witch')mdTS(B,P,.88,1.0,(P.tOff||0)+.02,{col:st=='witch'?0x4a3a2a:rd,lip:.04});
+    if(st=='moss')mdTS(B,P,.84,1.0,(P.tOff||0)+.024,{col:m=>Math.round(m.c*6)%2?mdSh(rb,1.15):rd,lip:.06});
+    if(st=='pyre'||st=='binder'){mdTS(B,P,.66,.98,(P.tOff||0)+.008,{col:tr,keep:m=>Math.abs(m.c)<.1});mdTS(B,P,.95,1.06,(P.tOff||0)+.03,{col:rd,lipT:.035,keep:m=>m.s<.6})}
+    if(st=='binder')[-1,1].forEach(s=>k.p('pelvis','box','c',s<0?0x6a3a1a:0xd8ccb0,s*.17,.52,.06,.05,.07,.025,0,s*.6,0));
+    if(st=='vestments'||st=='regalia'||st=='star'){mdTS(B,P,.92,1.08,(P.tOff||0)+.034,{col:m=>m.s>0?tr:rd,lipT:.05,keep:m=>m.s<.5});[-1,1].forEach(s=>k.p(s<0?'aL0':'aR0','hem','c',st=='regalia'?A:rd,s*.25,.985,0,.11,.07,.115,0,0,s*.4));
+      mdTS(B,P,.66,.98,(P.tOff||0)+.008,{col:tr,keep:m=>Math.abs(m.c)<.12})}
+    if(ti>=2||d.set){const f=mdTorsoAt(P,.84).f+(P.tOff||0)+.012;k.p('chest','oct',G?'g':'m',G||d.gem,0,.84,f,.022,.028,.012)}}
+  if(G&&d.a!='cloth'){const f=mdTorsoAt(P,.86).f+(P.tOff||0)+.012;k.p('chest','oct','g',G,0,.86,f,.02,.026,.01)}
+  mdKit(B,k)}
+
+// =====================================================================================================
+// helm (returns how much hair stays: 'none' | 'hang' | 'all')
+// =====================================================================================================
+function mdHelmHair(d){const s=d.st;if(['circlet','diadem','crown','hat','witch','star','wrap','bandana','galemask','glassmask','venom','viper','feather'].includes(s))return s=='star'?'none':'all';
+  if(['nasal','horned','great','visage','winged','barbute','bucket','crowned'].includes(s))return 'hang';return 'none'}
+function mdHelm(B,P,d){const H=P._H||(P._H=mdHeadR(P)),M=d.M,A=d.A,G=d.G,dk=d.dk,k=mdKP(),st=d.st,hz=y=>mdHeadZ(P,y),slit=G||0x0a0806,top=H[H.length-1].y;
+  const dome=(y0,off,col,t)=>mdLoft(B,H.filter(r=>r.y>=y0),{seg:10,off,t:t||'m',capB:true,col:col||M});
+  const full=(off,col,face,sq)=>mdLoft(B,H,{seg:10,off,t:'m',capB:true,capA:false,sq:sq||0,col:m=>face&&face(m)||col||M});
+  const rim=(y,off,col,t)=>{const R=H.filter(r=>Math.abs(r.y-y)<.045);if(R.length>=2)mdLoft(B,[R[0],R[R.length-1]],{seg:10,off,t:t||'m',col})};
+  const hood=(off,col,open,o)=>{o=o||{};const fy=o.fy||1.21;mdLoft(B,H,{seg:10,off,t:'c',capB:true,col:m=>m.y<1.04?mdSh(col,.85):col,keep:m=>!(m.s>(open||.3)&&m.y<fy&&m.y>1.0)});
+    // drape over the neck and shoulders
+    mdLoft(B,[{p:[0,1.04,-.005],rx:.1+off,f:.08,b:.1+off,w:[['neck',.5],['head',.5]]},{p:[0,.995,-.01],rx:.15+off,f:.11,b:.13+off,w:[['chest',.5],['neck',.5]]},{p:[0,.95,-.01],rx:.2+off,f:.14,b:.15+off,w:[['chest',1]]}],
+      {seg:12,t:'c',col:o.drape||mdSh(col,.9),keep:m=>!(m.s>.7&&m.y>1.0)});
+    if(o.tip!==false)k.L('head','c',col,[0,top-.03,-.09],[0,top-.07,-.2],.04,.008,5)};
+  const face=(c,y0,y1,s0)=>mdLoft(B,H,{seg:10,off:.012,t:'c',col:c,keep:m=>m.s>(s0==null?-.25:s0)&&m.y>y0&&m.y<y1});
+  const horns=(c,sz,up)=>[-1,1].forEach(s=>{const x=mdHeadX(P,1.2)+.01,a=[s*x,1.2,0],b=[s*(x+.07*sz),1.24+.02*sz,-.02],c2=[s*(x+.1*sz),1.3+.06*sz*(up||1),-.03];k.L('head','c',c,a,b,.032*sz,.022*sz,6).L('head','c',mdSh(c,.8),b,c2,.022*sz,.003,6)});
+  const crest=(c,n,h)=>{for(let i=0;i<n;i++){const a=-.6+i*(1.6/(n-1)),y=1.17+Math.cos(a)*.12,z=Math.sin(a)*.12;k.p('head','box','m',c,0,y+h*.3,z-.01,.014,h*(1-Math.abs(a+.2)*.3),.05,a)}};
+  const visor=m=>m.s>.6&&Math.abs(m.y-1.145)<.014?slit:null;
+  const pts=(c,n,h,y,t)=>{for(let i=0;i<n;i++){const a=i/n*Math.PI*2,r=mdHeadX(P,y)+.016,big=i==0;k.p('head','cone4',t||'m',c,Math.sin(a)*r,y+.03*(big?1.5:1)*h,Math.cos(a)*r*1.05,.018,(.06*(big?1.5:1))*h,.018)}};
+  const gemF=(c,y,sz)=>k.p('head','oct',G?'g':'m',G||c,0,y,hz(y)+.016,.02*(sz||1),.026*(sz||1),.012);
+  if(d.a=='heavy'){
+    if(st=='nasal'){dome(1.13,.022);rim(1.15,.026,A);k.p('head','box','m',A,0,1.12,hz(1.12)+.022,.022,.08,.014)}
+    else if(st=='horned'){dome(1.13,.022);rim(1.15,.026,A);k.p('head','box','m',A,0,1.12,hz(1.12)+.022,.022,.08,.014);horns(0xd8ccb0,1)}
+    else if(st=='great'){full(.024,M,visor);rim(1.2,.028,A)}
+    else if(st=='visage'){full(.024,M,m=>m.s>.5&&m.y>1.12&&m.y<1.16&&Math.abs(m.c)>.06?slit:m.s>.75&&m.y<1.1?mdSh(M,.75):null);crest(A,6,.06)}
+    else if(st=='winged'){full(.024,M,visor);rim(1.2,.028,A);crest(A,5,.05);[-1,1].forEach(s=>{const x=mdHeadX(P,1.17)+.03;for(let j=0;j<3;j++)k.p('head','box','m',j%2?M:A,s*(x+j*.012),1.19+j*.04,-.04-j*.02,.012,.1-j*.018,.06,-.35,0,-s*(.5+j*.25))})}
+    else if(st=='barbute'){full(.024,M,m=>(m.s>.55&&Math.abs(m.y-1.145)<.016)||(Math.abs(m.c)<.12&&m.s>.6&&m.y<1.15&&m.y>1.05)?slit:null);horns(0x8a1a1a,.8);k.L('head','c',0x8a1a1a,[0,top+.02,-.02],[0,top+.02,-.16],.03,.01,5)}
+    else if(st=='bucket'){full(.026,M,m=>m.s>.6&&Math.abs(m.y-1.15)<.012?slit:m.s>.7&&m.y<1.12&&Math.round(m.y*90)%3==0?0x141210:null,.55);rim(1.2,.03,A);rim(1.07,.03,A)}
+    else{/*crowned*/full(.024,M,visor);rim(1.2,.03,A);pts(A,8,1.2,1.21);horns(0x2a2420,1.1,1.4)}}
+  else if(d.a=='medium'){
+    if(st=='hood')hood(.03,M,.3);
+    else if(st=='pelt'){hood(.034,M,.3,{tip:false});[-1,1].forEach(s=>k.p('head','cone4','c',mdSh(M,1.1),s*.07,top+.02,-.01,.035,.08,.025,0,0,-s*.25));k.p('head','box','c',mdSh(M,.85),0,top-.01,.07,.07,.04,.08,.3);
+      [-1,1].forEach(s=>k.p('head','cone4','c',0xe8e0d0,s*.025,top-.035,.115,.008,.03,.008,Math.PI))}
+    else if(st=='cowl'){hood(.03,M,.3);face(A,1.04,1.125,.15)}
+    else if(st=='skullhood'){hood(.034,M,.3,{tip:false});k.p('head','sph','c',0xd8ccb0,0,top-.02,.04,.09,.06,.09);[-1,1].forEach(s=>{k.p('head','box','c',0x14100c,s*.03,top-.03,.12,.02,.014,.01);k.L('head','c',0xd8ccb0,[s*.07,top,0],[s*.13,top+.05,-.05],.018,.004,5)})}
+    else if(st=='galemask'||st=='wind'){face(mdSh(A,.9),1.125,1.17,.2);[-1,1].forEach(s=>{const x=mdHeadX(P,1.16)+.012;for(let j=0;j<4;j++)k.p('head','cone4','c',j%2?A:0xe8e8f0,s*(x+j*.008),1.16+j*.025,-.02-j*.025,.012,.1-j*.012,.03,-.5-j*.2,0,-s*(.9+j*.15))});if(st=='wind')hood(.032,M,.3,{tip:false})}
+    else if(st=='feather'){dome(1.16,.02,M,'c');rim(1.165,.024,mdSh(M,.75),'c');k.L('head','c',A,[.06,1.21,-.02],[.13,1.33,-.1],.012,.002,4)}
+    else{/*deadeye*/hood(.03,M,.3);face(mdSh(M,.6),1.04,1.125,.15);k.p('head','box','c',0x14100c,.04,1.145,hz(1.145)+.012,.034,.03,.008);k.p('head','ring','m',A,.04,1.145,hz(1.145)+.014,.02,.15,.02,Math.PI/2)}}
+  else if(d.a=='light'){
+    if(st=='wrap'){face(M,1.04,1.13,.05);rim(1.19,.016,mdSh(M,.8),'c')}
+    else if(st=='viper'){face(M,1.04,1.13,.05);for(let i=0;i<5;i++){const a=-.4+i*.3;k.p('head','cone4','c',A,0,1.17+Math.cos(a)*.115,Math.sin(a)*.115,.016,.05,.02,a)}}
+    else if(st=='ashcowl'){hood(.022,M,.32,{tip:false,fy:1.2});face(mdSh(M,.8),1.04,1.13,.1)}
+    else if(st=='glassmask'){face(mdSh(M,.55),1.04,1.2,.1);[-1,1].forEach(s=>k.p('head','box',G?'g':'m',G||A,s*.04,1.145,hz(1.145)+.016,.026,.014,.006));rim(1.19,.016,M,'c')}
+    else if(st=='stormhood'){hood(.026,M,.32);face(mdSh(M,.6),1.04,1.13,.1);rim(1.2,.034,G||A,G?'g':'m')}
+    else if(st=='bandana'){face(M,1.04,1.13,.05);dome(1.18,.016,mdSh(M,.75),'c');k.L('head','c',mdSh(M,.75),[0,1.18,-.11],[.03,1.1,-.18],.02,.01,4)}
+    else if(st=='venom'){face(mdSh(M,.7),1.04,1.13,.05);[-1,1].forEach(s=>k.p('head','box',G?'g':'c',G||A,s*.04,1.145,hz(1.145)+.006,.03,.006,.006))}
+    else{/*dusk*/hood(.024,M,.32,{tip:false});face(A,1.04,1.13,.05);k.L('head','c',A,[0,1.14,-.13],[.05,.95,-.2],.03,.012,4)}}
+  else{ // cloth
+    if(st=='linen')hood(.036,M,.25);
+    else if(st=='hat'||st=='witch'){const br=st=='witch'?.26:.22,c=st=='witch'?mdSh(M,.6):M;k.p('head','cyl','c',mdSh(c,.85),0,1.235,0,br,.018,br);rim(1.235,.022,A,'c');
+      k.L('head','c',c,[0,1.24,0],[.02,1.42,-.04],.11,.06,8).L('head','c',mdSh(c,.92),[.02,1.42,-.04],[.08,1.53,-.12],.06,.025,7).L('head','c',mdSh(c,.82),[.08,1.53,-.12],[.15,1.56,-.18],.025,.004,6);
+      k.p('head','cyl','c',A,0,1.26,0,.115,.03,.115);if(G)k.p('head','oct','g',G,0,1.27,.115,.016)}
+    else if(st=='circlet'){rim(1.19,.016,A);gemF(d.gem,1.19)}
+    else if(st=='diadem'){rim(1.19,.016,A);for(let i=0;i<5;i++){const a=(i-2)*.32,x=Math.sin(a)*(mdHeadX(P,1.19)+.016),z=Math.cos(a)*(hz(1.19)+.016);k.p('head','cone4','m',A,x,1.22+(i==2?.025:0),z,.014,.05+(i==2?.04:0),.01,.0,0,-a*.3)}gemF(d.gem,1.205,1.2)}
+    else if(st=='crown'){rim(1.2,.02,A);rim(1.22,.022,A);pts(A,9,1,1.235);gemF(d.gem,1.21,1.3);[-1,1].forEach(s=>k.p('head','oct','m',d.gem,s*.08,1.21,hz(1.21)-.03,.012))}
+    else if(st=='tallcowl'){hood(.034,M,.28,{tip:false});k.L('head','c',M,[0,top-.01,-.03],[0,top+.16,-.1],.07,.004,7);rim(1.2,.04,A,'c')}
+    else{/*star*/hood(.034,M,.28);rim(1.2,.04,G||A,G?'g':'m');for(let i=0;i<5;i++){const a=(i-2)*.38;k.p('head','oct',G?'g':'m',G||A,Math.sin(a)*.14,1.22,Math.cos(a)*.15,.012)}}}
+  mdKit(B,k)}
+
+// =====================================================================================================
+// boots
+// =====================================================================================================
+function mdBootsPre(P,d){P.col.boot=d.M;P.col.shin=d.M}
+function mdBoots(B,P,d){const M=d.M,A=d.A,G=d.G,dk=d.dk,st=d.st,k=mdKP(),a=d.a;
+  [-1,1].forEach(s=>{const l=s<0?'lh':'rh';
+    if(a=='heavy'){const off=.022;mdFS(B,P,s,off,{t:'m',col:m=>m.y<.03?dk:M});mdLS(B,P,s,st=='hobnail'?4:3,6,off,{t:'m',col:m=>m.y>.27?A:M});
+      if(st!='hobnail'){const K=P.bones[l+'1'];k.p(l+'1','sph','m',A,K[1],K[2],K[3]+.062,.044,.05,.036);if(st=='stomper'||st=='tread'||st=='wall'||st=='warlord')k.p(l+'1','cone4','m',A,K[1],K[2],K[3]+.105,.016,.05,.016,Math.PI/2)}
+      if(st=='tread'||st=='blood'||st=='warlord')k.L(l+'1','m',mdSh(A,1.1),[s*.15,.2,0],[s*.2,.26,-.02],.016,.002,4);
+      if(G)mdLS(B,P,s,5,6,off+.006,{t:'g',col:G,keep:m=>m.y>.13})}
+    else if(a=='medium'){const off=.016;mdFS(B,P,s,off,{col:m=>m.y<.03?0x1e1610:M});mdLS(B,P,s,st=='trail'?5:4,6,off,{col:M});
+      const L=mdLeg(P,s),cuff=Object.assign({},L[st=='trail'?5:4]);cuff.rx+=.012;cuff.f+=.012;cuff.b+=.012;mdLoft(B,[cuff,Object.assign({},cuff,{p:[cuff.p[0],cuff.p[1]+.03,cuff.p[2]]})],{seg:8,off,col:st=='pelt'||st=='path'?0xd8ccb0:mdSh(M,1.15)});
+      if(st=='stalker'||st=='strider'||st=='gale')mdLS(B,P,s,4,6,off+.004,{col:A,keep:m=>m.s>.5&&Math.round(m.y*45)%2==0});
+      if(G)k.p(l+'1','oct','g',G,P.bones[l+'1'][1],.2,.09,.012)}
+    else if(a=='light'){const off=.012;mdFS(B,P,s,off,{col:m=>m.y<.03?0x14100c:M});mdLS(B,P,s,st=='soft'?6:4,6,off,{col:m=>Math.round(m.y*40)%2?M:mdSh(M,.75)});
+      if(st=='storm'||st=='glass')mdLS(B,P,s,5,6,off+.006,{col:G||A,t:G?'g':'c',keep:m=>m.y>.14});if(st=='wrapped')mdLS(B,P,s,3,4,off,{col:mdSh(M,.8)})}
+    else{const off=.01;
+      if(st=='sandal'){mdFS(B,P,s,.004,{col:P.col.skin});mdLoft(B,mdFoot(P,s).slice(0,4),{seg:7,off:.008,ref:[0,1,0],col:m=>m.y<.03?0x3a2618:M,keep:m=>m.y<.03||Math.round(m.i*2)%2==0});mdLS(B,P,s,5,6,.008,{col:M,keep:m=>Math.round(m.y*50)%2==0})}
+      else{mdFS(B,P,s,off,{col:m=>m.y<.03?0x14100c:M});mdLS(B,P,s,st=='slipper'?6:5,6,off,{col:M});if(st=='tempest'||st=='lich')k.p(l+'2','cone4','c',A,P.bones[l+'2'][1],.05,.19,.022,.06,.018,Math.PI/2-.4);
+        if(st!='slipper')mdLS(B,P,s,5,6,off+.006,{col:G||A,t:G?'g':'c',keep:m=>m.y>.13})}}});
+  mdKit(B,k)}
+
+// =====================================================================================================
+// amulet (on the chest, outside whatever the torso wears) and ring (a small glint on the right hand)
+// =====================================================================================================
+function mdAmulet(B,P,d){const k=mdKP(),ti=d.ti,gold=ti==0?0x7a6a4a:ti>=3?0xd8b050:0xa88848,off=(P.tOff||0)+.008,y=.87,f=mdTorsoAt(P,y).f+off+.008,sh=d.set?mdHash(d.n)%5:ti,gem=d.gem;
+  // chain: a ring round the neck base lying on the shoulders
+  const top=mdTorsoAt(P,.975);k.p('chest','ring','m',gold,0,.965,(top.z||0)+.005,top.rx*.62+off,.22,(top.f+top.b)/2*.95+off,-.18);
+  k.L('chest','m',gold,[-.05,.95,f-.02],[0,y+.02,f],.005,.005,3).L('chest','m',gold,[.05,.95,f-.02],[0,y+.02,f],.005,.005,3);
+  if(sh==0){k.p('chest','cone4','c',0xe8e0c8,0,y-.015,f,.014,.05,.01,Math.PI)}
+  else if(sh==1){k.p('chest','oct','m',gold,0,y,f,.03,.036,.012);k.p('chest','oct',d.G?'g':'m',d.G||gem,0,y,f+.006,.02,.026,.01)}
+  else if(sh==2){k.p('chest','cyl','m',gold,0,y,f,.028,.012,.028,Math.PI/2);k.p('chest','sph',d.G?'g':'m',d.G||gem,0,y,f+.008,.012)}
+  else if(sh==3){k.p('chest','sph','m',gold,0,y,f,.026,.032,.012);k.p('chest','sph','g',d.G||gem,0,y,f+.01,.012,.014,.006)}
+  else{for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.p('chest','cone4','m',gold,Math.sin(a)*.02,y+Math.cos(a)*.02,f,.008,.03,.006,0,0,-a)}k.p('chest','oct',d.G?'g':'m',d.G||gem,0,y,f+.006,.014)}
+  mdKit(B,k)}
+function mdRingW(B,P,d){const k=mdKP(),A2=P.bones.aR2,band=[0xb06a3a,0xc8ccd4,0xd8a040,0x3a3a46,0x7ab0d8][d.ti],hand=mdArm(P,1)[7],x=hand.p[0]-.012,y=hand.p[1]+.002,z=hand.p[2]+hand.f*.55;
+  k.p('aR2','ring','m',band,x,y,z,.024,.16,.022,0,0,Math.PI/2);k.p('aR2','oct',d.G?'g':'m',d.G||d.gem,x+.004,y,z+.016,.012,.014,.01);mdKit(B,k)}
+
+// =====================================================================================================
+// icons and ground loot: the same builders, without the body, as rigid parts (one part per colour)
+// =====================================================================================================
+// a mannequin-less build of one item in body space → dkKit parts on k (positions centred later by the icon camera)
+function mdItemKit(k,it){const d=mdGD(it);if(!d)return false;const P=mdP({look:mdLookN(null,'warrior')}),B=mdB(HB);P._T=mdTorso(P);P._H=mdHeadR(P);
+  if(d.sl=='chest'){mdChestPre(P,d);mdChest(B,P,d)}else if(d.sl=='helm')mdHelm(B,P,d);else if(d.sl=='boots')mdBoots(B,P,d);else if(d.sl=='amulet')mdAmulet(B,P,d);else return false; // rings keep the v89 close-up model (the worn ring is a tiny band + gem on the hand)
+  const oy=d.sl=='helm'?-1.15:d.sl=='chest'?-.8:d.sl=='amulet'?-.9:d.sl=='ring'?-.58:0,ox=d.sl=='ring'?-.25:0;
+  for(const t in B.L){const L=B.L[t];if(!L.p.length)continue;const by=new Map();
+    for(let i=0;i<L.p.length;i+=9){const ci=i;const key=Math.round(L.c[ci]*255)<<16|Math.round(L.c[ci+1]*255)<<8|Math.round(L.c[ci+2]*255);let a=by.get(key);if(!a){a=[];by.set(key,a)}
+      for(let j=0;j<9;j+=3)a.push(L.p[i+j]+ox,L.p[i+j+1]+oy,L.p[i+j+2])}
+    by.forEach((a,col)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(a,3));g.computeVertexNormals();
+      // the boots are both feet: keep one for the picture
+      k.p('',g,t=='m'?'m':t=='g'?'g':'c',col,0,0,0,1,1,1)})}
+  if(d.sl=='boots'){k.P=k.P.map(p=>{const g=p.geo,pa=g.attributes.position,a=[];for(let i=0;i<pa.count;i+=3){const x=(pa.getX(i)+pa.getX(i+1)+pa.getX(i+2))/3;if(x>0)for(let j=0;j<3;j++)a.push(pa.getX(i+j)-.1,pa.getY(i+j),pa.getZ(i+j))}
+    if(!a.length)return null;const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.Float32BufferAttribute(a,3));ng.computeVertexNormals();return Object.assign({},p,{geo:ng})}).filter(Boolean)}
+  return true}
+{const f=v89ArmorKit;v89ArmorKit=function(k,it){try{if(mdItemKit(k,it))return}catch(e){console.warn('item model',e)}return f.apply(this,arguments)}}
+
+// ================= v94 (model track): the hero — class outfit + look + worn equipment =================
+// refreshGear (re-declared: replaces the v54 one; the v78/v89/v93 wrappers still wrap it) builds the hero's body from
+// the class outfit, the hero look and the worn helm/chest/boots/amulet/ring, cached per class + look + items, and keeps
+// the v54 weapon placement (v93 grip re-poses it). heroOutfit(h,cls) rebuilds with the last worn items.
+// Contract with the creator track: heroLook(h) / hero.look → look; heroRebuild(h) rebuilds a model in place;
+// heroBuildPreview(look,cls) → THREE.Group with userData.anim(now) (idle) and userData.setLook(look,cls).
+// class outfit: colours of the bare body + base pieces when a slot is empty + class extras (cape, quiver, tabard, collar)
+function mdOutfit(cls){
+  const O={
+    warrior:{col:{torso:0x7e3626,sleeve:null,fore:0x5a3a22,pants:0x4a3a2e,shin:0x4a3a2e,boot:0x3e2a1c,belt:0x3a2618},bare:1,cape:0x6e2018,capeLen:.4,boots:{a:'medium',st:'trail',M:0x4a3020,A:0x6a4a2a},
+      base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>m.s>.85&&m.y>.8?mdSh(0x7e3626,.8):0x7e3626,lip:.008});mdTS(B,P,.93,1.0,.036,{col:m=>Math.round(m.c*7+m.s*2)%2?0x5a4636:0x4a3a2c,lip:.03,lipT:.012});
+        [-1,1].forEach(s=>mdAS(B,P,s,4,5,.012,{col:0x5a3a22}));mdBelt(B,P,.6,0x3a2618,0xa88848)}},
+    paladin:{col:{torso:0x8a8e9a,fore:0x6a6e78,pants:0x5a5a66,shin:0x5a5a66,boot:0x3a2e24,belt:0x4a3424},cape:0xd8ccaa,capeTrim:0xc9a24a,boots:{a:'medium',st:'trail',M:0x3a2e24,A:0x5a4a3a},
+      base:(B,P)=>{mdTS(B,P,.5,.99,.012,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a,lip:.01});[-1,1].forEach(s=>mdAS(B,P,s,0,5,.01,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a}))},
+      extra:(B,P,D)=>{if(!(D.chest&&(D.chest.st=='aegis'||D.chest.st=='blood')))mdTabard(B,P,0xe6dcc0,0xc9a24a,0xc9a24a)}},
+    assassin:{col:{torso:0x3a2c4a,sleeve:0x2e2438,fore:0x241e2a,hand:0x1e1a22,pants:0x26222c,shin:0x2e2836,boot:0x1e1a20,belt:0x6a3a8a},boots:{a:'light',st:'soft',M:0x1e1a20,A:0x6a3a8a},
+      base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>Math.abs(m.c-m.s*.5)<.1&&m.y>.66?0x241e2a:0x3a2c4a});[-1,1].forEach(s=>{mdAS(B,P,s,0,3,.008,{col:0x2e2438});mdAS(B,P,s,4,6,.008,{col:m=>Math.round(m.y*40)%2?0x241e2a:0x302838})});mdBelt(B,P,.6,0x6a3a8a,0x8a8e96)},
+      extra:(B,P,D)=>{const sc=D.chest?mdSh(D.chest.A,.85):0x5a3478;if(!D.helm||mdHelmHair(D.helm)!='none'){mdTS(B,P,.93,1.06,(P.tOff||0)+.024,{col:sc,lipT:.012,lip:.01});mdLoft(B,[{p:[-.06,.97,-.15],rx:.035,f:.01,b:.01,w:[['chest',1]]},{p:[-.09,.78,-.18],rx:.04,f:.01,b:.01,w:[['chest',.4],['cp1',.6]]},{p:[-.1,.62,-.2],rx:.034,f:.01,b:.01,w:[['cp1',1]]}],{seg:4,capA:true,capB:true,col:sc})}}},
+    ranger:{col:{torso:0x4e6a34,fore:0x5a3e24,pants:0x5a4632,shin:0x4a3420,boot:0x4a3420,belt:0x3a2618},cape:0x2e4a26,capeLen:.38,boots:{a:'medium',st:'stalker',M:0x4a3420,A:0x6a4a2a},
+      base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:0x4e6a34,lip:.008});[-1,1].forEach(s=>{mdAS(B,P,s,0,3,.008,{col:0x4e6a34});mdAS(B,P,s,4,5,.012,{col:0x5a3e24})});
+        mdTS(B,P,.56,.975,.022,{col:m=>m.s>.82&&m.y<.95?0x4a3420:0x6a4a2e,lip:.006});mdBelt(B,P,.6,0x3a2618,0x8a8e96)},
+      extra:(B,P)=>mdQuiver(B,P)},
+    mage:{col:{torso:0x34449a,pants:0x2a2a48,shin:0x2a2a48,boot:0x2a2030,belt:0x7a2a1a},boots:{a:'cloth',st:'slipper',M:0x2a2030,A:0xc9a24a},
+      base:(B,P)=>{const d={a:'cloth',st:'robe',ti:0,M:0x34449a,A:0xc9a24a,G:null,dk:mdSh(0x34449a,.6),gem:0x7cc8ff};mdChest(B,P,d)}}};
+  return O[cls]||O.warrior}
+function mdBelt(B,P,y,c,bc){mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.008,{col:c});const k=dkKit();k.p('spine','box','m',bc,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.012,.05,.042,.014);mdKit(B,k)}
+function mdTabard(B,P,c,tr,sym){const off=(P.tOff||0)+.01;
+  mdTS(B,P,.62,.975,off,{col:m=>Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.33});
+  mdSkirt(B,P,.62,.33,.02,Math.max(off+.006,(P.sOff||0)+.008),{col:m=>m.y<.355||Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.31,n:4});
+  if(sym){const k=dkKit(),f=mdTorsoAt(P,.83).f+off+.006;k.p('chest','box','m',sym,0,.83,f,.022,.13,.006).p('chest','box','m',sym,0,.86,f,.085,.022,.006);mdKit(B,k)}}
+function mdQuiver(B,P){const k=dkKit(),z=-(mdTorsoAt(P,.85).b+(P.tOff||0)+.05),a=[-.06,.66,z],b=[.1,1.0,z-.03];
+  k.L('chest','c',0x5a3a20,a,b,.05,.056,8);k.L('chest','c',0x3a2618,[a[0]+.02,a[1]+.04,a[2]],[b[0]-.02,b[1]-.04,b[2]],.058,.058,8);
+  for(let i=0;i<4;i++){const x=.07+i*.022,t=[x+.05,1.14,z-.05];k.L('chest','c',0x8a6a40,[x,.98,z-.03],t,.006,.006,4);k.p('chest','cone4','c',[0x8a2a1a,0xe8e0d0,0x2a2a2a,0x8a2a1a][i],t[0],t[1],t[2],.02,.06,.006,0,0,-.4)}
+  // strap across the chest
+  mdTS(B,P,.62,.99,(P.tOff||0)+.01,{col:0x3a2618,keep:m=>Math.abs(m.c+m.s*.55)<.1});mdKit(B,k)}
+// ---------------- the whole hero ----------------
+function mdHeroD(E){const D={};['helm','chest','boots','amulet','ring'].forEach(s=>{const d=E&&E[s]?mdGD(E[s]):null;if(d&&d.sl==s)D[s]=d});return D}
+function mdHeroKey(cls,L,E){const D=mdHeroD(E);return 'H|'+cls+'|'+mdLookKey(Object.assign({},L,{height:1}))+'|'+['helm','chest','boots','amulet','ring'].map(s=>D[s]?D[s].key:'-').join(',')}
+function mdHeroB(cls,L,E){
+  const B=mdB(HB),O=mdOutfit(cls),P=mdP({look:L,sex:L.sex,build:L.build,col:Object.assign({},O.col,{skin:L.skin})}),D=mdHeroD(E);
+  if(O.bare&&!D.chest)P.col.sleeve=L.skin;if(P.col.fore==null||O.col.fore==null)P.col.fore=L.skin;
+  if(D.chest)mdChestPre(P,D.chest);if(D.boots)mdBootsPre(P,D.boots);
+  P._T=mdTorso(P);mdBody(B,P);
+  const hh=D.helm?mdHelmHair(D.helm):'all';
+  mdHead(B,P,{hood:hh=='none',noScalp:hh=='hang'});
+  if(D.chest)mdChest(B,P,D.chest,cls);else O.base(B,P);
+  const bd=D.boots||Object.assign({ti:0,G:null,r:0,dk:mdSh(O.boots.M,.6),gem:0},O.boots);mdBoots(B,P,bd);
+  if(D.helm)mdHelm(B,P,D.helm);
+  if(O.extra)O.extra(B,P,D);
+  if(D.amulet)mdAmulet(B,P,D.amulet);if(D.ring)mdRingW(B,P,D.ring);
+  if(O.cape!=null){const ct=D.chest?(D.chest.G!=null?D.chest.G:D.chest.r>=2?D.chest.A:O.capeTrim):O.capeTrim;mdCape(B,P,O.cape,{len:O.capeLen||.36,trim:ct})}
+  return B}
+// put the cached geometry on a hero model (keeps its bones, skeleton and weapons)
+function mdHeroApply(h,cls,E){const body=huBody(h);if(!body||!body.skeleton)return;cls=CLS[cls]?cls:'warrior';const L=mdLookOf(h,cls);
+  const key=mdHeroKey(cls,L,E),G=mdGeo(key,()=>mdHeroB(cls,L,E),true);
+  if(h._mdKey!==key){if(h._mdKey)mdUse(h._mdKey,-1);mdUse(key,1);h._mdKey=key}
+  const M=h._mdM||(h._mdM=mdOwnMats());
+  body.geometry=G.c;body.material=M.c;body.userData.lowpoly=1;body.castShadow=true;body.frustumCulled=false;h.mat=M.c;if(h===pl)pl.mat=M.c;
+  (h._mdX||[]).forEach(m=>m.parent&&m.parent.remove(m));h._mdX=[];
+  ['m','g'].forEach(t=>{if(!G[t])return;const m=new THREE.SkinnedMesh(G[t],M[t]);m.dk=1;m.castShadow=t!='g';m.frustumCulled=false;body.parent.add(m);m.bind(body.skeleton,body.bindMatrix);h._mdX.push(m)});
+  body.scale.setScalar(L.height);h.mdL=L;h._mdE=E;h.cls=cls}
+function heroOutfit(h,cls){h=h||pl;try{mdHeroApply(h,cls,h._mdE||{})}catch(e){console.error('hero model',e)}}
+function refreshGear(h,cls,E){
+  h=h||pl;cls=cls||hero.cls;E=E||eq;
+  (h.gearG||[]).forEach(o=>o.parent&&o.parent.remove(o));h.gearG=[];
+  if(!h.dkHid){h.dkHid=1;Object.values(h.bones).forEach(b=>b.children.forEach(o=>{if(o.isMesh&&!o.isSkinnedMesh)o.visible=false}))}
+  try{mdHeroApply(h,cls,E)}catch(e){console.error('hero model',e)}
+  const col=r=>parseInt(RAR[r][1].slice(1),16),w=E.weapon,wt=w?itT(w).wt:DEFW[cls],wr=w?w.r:0,wc=w&&w.r>=2?col(w.r):0x9aa2ae;
+  const W1=mkWpn(wt,wt=='staff'?(cls=='mage'?(wr>=2?col(wr):0x9a7aff):0xffe08a):wc,wr);
+  if(wt=='bow'){W1.rotation.set(0,Math.PI/2,0);W1.position.set(-.05,-.02,.05);h.bones.aL2.add(W1)}else{W1.rotation.x=-1.0;W1.position.set(0,-.03,.02);h.bones.aR2.add(W1)}h.gearG.push(W1);
+  if(wt=='dagger'){const W2=mkWpn('dagger',wc,wr);W2.rotation.x=-1.0;W2.position.set(0,-.03,.02);h.bones.aL2.add(W2);h.gearG.push(W2)}
+  if(cls=='paladin'){const sh=E.offhand,S2=mkWpn('shield',sh&&sh.r>=2?col(sh.r):0x6a1a1a,sh?sh.r:0);S2.position.set(-.06,0,.06);S2.rotation.y=Math.PI/2;S2.scale.setScalar(MD_SHIELD);h.bones.aL2.add(S2);h.gearG.push(S2)}
+}
+var MD_SHIELD=.82;
+// ---------------- contract API ----------------
+// rebuild a hero model in place: h = a model (pl, the bag preview, a co-op or preview model) or the hero data / nothing (= the player)
+function heroRebuild(h){
+  try{
+    if(!h||h===hero||!h.isObject3D){const L=[pl];if(typeof HP!='undefined'&&HP)L.push(HP);L.forEach(m=>{try{refreshGear(m===pl?pl:m,hero.cls,eq);if(m.pv&&typeof pvFit=='function'){} }catch(e){console.error('heroRebuild',e)}});return pl}
+    if(h.userData&&h.userData.mdPrev){h.userData.setLook(h.userData.look,h.userData.cls);return h}
+    const m=h.h||h;if(m.bones)refreshGear(m,m.cls||hero.cls,m._mdE||(m===pl?eq:{}));return h
+  }catch(e){console.error('heroRebuild',e)}return h}
+// a stand-alone hero (look + class, starter outfit and class weapon) for previews; userData.anim(now) plays the idle
+function heroBuildPreview(look,cls){cls=CLS[cls]?cls:'warrior';
+  const root=new THREE.Group(),h=buildHero();root.add(h);h.mdLook=Object.assign({},look||{});
+  const set=(lk,c)=>{c=CLS[c]?c:cls;h.mdLook=Object.assign({},lk||{});root.userData.look=h.mdLook;root.userData.cls=c;cls=c;
+    const tp=ITPL.findIndex(t=>t.cls==c&&t.sl=='weapon'&&!t.nw),E={};if(tp>=0)E.weapon={id:-1,tp,lv:1,req:1,r:0,up:0,aff:[]};
+    if(c=='paladin'){const so=ITPL.findIndex(t=>t.sl=='offhand');if(so>=0)E.offhand={id:-1,tp:so,lv:1,req:1,r:0,up:0,aff:[]}}
+    refreshGear(h,c,E);h.position.set(0,0,0);h.rotation.set(0,0,0)};
+  root.userData.mdPrev=1;root.userData.hero=h;root.userData.setLook=set;
+  root.userData.anim=now=>{try{h.position.set(0,0,0);animHero(now==null?performance.now():now,false,h);h.position.set(0,0,0)}catch(e){}};
+  set(look,cls);return root}
+// ---------------- the hero models that already exist ----------------
+{const f=buildHero;buildHero=function(){const h=f.apply(this,arguments);try{mdHeroApply(h,(typeof hero!='undefined'&&hero&&hero.cls)||'warrior',{})}catch(e){console.error('hero model',e)}return h}}
+// co-op: partners see your look (sent as a short array), and their models carry theirs
+function mpLookOut(){try{const L=mdLookOf(pl,hero.cls);return [L.skin,L.hair,L.hairStyle,L.face,L.eye,L.build,Math.round(L.height*100),L.sex]}catch(e){return 0}}
+function mpLookIn(a){if(!Array.isArray(a)||a.length<8)return null;return {skin:a[0]|0,hair:a[1]|0,hairStyle:a[2]|0,face:a[3]|0,eye:a[4]|0,build:a[5]|0,height:(+a[6]||100)/100,sex:a[7]|0}}
+try{(function(){const b=huBody(pl);if(!b)return;const old=pl.children.filter(o=>o.isSkinnedMesh&&o.dk);old.forEach(o=>pl.remove(o));(pl.gearG||[]).forEach(o=>{if(o.isSkinnedMesh&&o.parent)o.parent.remove(o)});
+  if(pl.cls||hero.cls)refreshGear(pl,pl.cls||hero.cls,eq);else mdHeroApply(pl,'warrior',{})})()}catch(e){console.error('hero model',e)}
+
+// ================= v94 (model track): town folk =================
+// idlNpcBody (v93 idle, re-declared here) builds the Duskhold folk on the same small skeleton (idlNB: hands folded in
+// front), so the v93 town-folk idle (breathing, weight shifts, stretches, nods) is unchanged. The body now comes from the
+// shared v94 toolkit: a clean robe with sleeves, belt and pouch, an apron for cooks and smiths, and a hat, hood or hair
+// with an optional beard — one cached geometry per look (key from the npc options), shared materials.
+// Runs while the towns are built, before this file's own code: only hoisted functions and lazily created state here.
+function mdNpcB(o){const NB=idlNB(),B=mdB(NB),seed=((o.robe|0)*31+(o.trim|0)*7+((o.hatC|0)*3))%99991+11,R=dkRng(seed);
+  const sks=[0xd6aa84,0xbe926e,0x966c4e,0xdeba98],hcs=[0x2a1a12,0x4a3a2a,0x6a6a66,0x8a8a88,0x5a3418,0x1a1410],skin=sks[Math.floor(R()*4)],hair=hcs[Math.floor(R()*6)];
+  const fem=R()<.35,look={hair,hairStyle:fem?(R()<.5?1:2):(R()<.5?0:5),face:fem?0:[0,1,2,3][Math.floor(R()*4)],eye:0x3a3a2a,sex:fem?1:0};
+  const rb=mdC(o.robe),tr=mdC(o.trim||mdSh(rb,.6)),P=mdP({bones:NB,sex:look.sex,look,col:{skin,torso:rb,pants:mdSh(rb,.7),boot:0x2a1d14,belt:0x2a1d14}});
+  P._T=mdTorso(P);mdBody(B,P);const hat=o.hat||'',hood=!hat&&R()<.4;
+  mdHead(B,P,{hood:hood||hat=='chef',noScalp:hat=='cap'});
+  const d={a:'cloth',st:'robe',ti:0,r:0,M:rb,A:tr,G:null,dk:mdSh(rb,.6),gem:tr};mdChest(B,P,d);
+  mdBoots(B,P,{a:'cloth',st:'slipper',ti:0,M:0x2a1d14,A:tr,G:null,dk:0x1a1410});
+  const k=dkKit();
+  if(o.apron){mdTS(B,P,.62,.93,(P.tOff||0)+.008,{col:0xd8d0bc,keep:m=>m.s>.45});mdSkirt(B,P,.62,.3,.04,(P.sOff||0)+.008,{col:m=>m.y<.33?0xb8b0a0:0xd8d0bc,keep:m=>m.s>.5,n:4})}
+  k.p('pelvis','box','c',0x3a2a1a,-.17,.52,.08,.06,.08,.04,0,-.5,0);
+  if(hat=='wiz')mdHelm(B,P,{a:'cloth',st:'hat',ti:1,r:0,M:mdC(o.hatC),A:tr,G:null,dk:mdSh(mdC(o.hatC),.6),gem:tr});
+  else if(hat=='cap'){const c=mdC(o.hatC);mdLoft(B,mdHeadR(P).filter(r=>r.y>=1.15),{seg:10,off:.022,capB:true,col:c});k.p('head','box','c',mdSh(c,.8),0,1.17,mdHeadZ(P,1.17)+.03,.15,.016,.06,.15);k.L('head','c',mdSh(c,1.3),[.07,1.24,-.04],[.15,1.34,-.12],.012,.003,4)}
+  else if(hat=='chef'){k.p('head','cyl','c',0xd8d2c4,0,1.29,0,.11,.12,.11);k.p('head','sph','c',0xe4ded0,0,1.37,0,.14,.07,.14);mdLoft(B,mdHeadR(P).filter(r=>r.y>=1.15),{seg:10,off:.016,capB:true,col:0xd8d2c4})}
+  else if(hood)mdHelm(B,P,{a:'cloth',st:'linen',ti:0,r:0,M:mdSh(tr,.8),A:tr,G:null,dk:mdSh(tr,.5),gem:tr});
+  mdKit(B,k);return B}
+function idlNpcBody(o){const NB=idlNB(),key='NPC|'+o.robe+'|'+(o.trim||0)+'|'+(o.hat||'')+'|'+(o.hatC||0)+'|'+(o.apron?1:0),G=mdGeo(key,()=>mdNpcB(o)),M=mdMats();
+  const mb=mkBones({bones:NB}),mesh=new THREE.SkinnedMesh(G.c,M.c);mesh.castShadow=true;mesh.add(mb.bones.pelvis);mesh.updateMatrixWorld(true);mesh.bind(new THREE.Skeleton(mb.arr));
+  const out=[mesh];['m','g'].forEach(t=>{if(!G[t])return;const m=new THREE.SkinnedMesh(G[t],M[t]);m.castShadow=t!='g';m.bind(mesh.skeleton,mesh.bindMatrix);out.push(m)});
+  return {meshes:out,bones:mb.bones}}
 
 // ================= v89 sands: Ssith'ra the Endless moves like a heavy desert centipede =================
 // Why it used to flail (all of these stacked on the same 9 bones):
