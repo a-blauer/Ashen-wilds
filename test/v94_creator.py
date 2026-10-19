@@ -99,7 +99,7 @@ def part_mount(b):
 COUNT=r"""window.__iv=new Set();{const si=setInterval,ci=clearInterval;window.setInterval=function(){const id=si.apply(this,arguments);__iv.add(id);return id};window.clearInterval=function(id){__iv.delete(id);return ci.apply(this,arguments)}}
 window.__raf=0;{const r=requestAnimationFrame;window.requestAnimationFrame=function(f){__raf++;return r.call(this,f)}}
 window.__wl=0;{const a=EventTarget.prototype.addEventListener,rm=EventTarget.prototype.removeEventListener;EventTarget.prototype.addEventListener=function(t,f,o){if(this===window)__wl++;return a.call(this,t,f,o)};EventTarget.prototype.removeEventListener=function(t,f,o){if(this===window)__wl--;return rm.call(this,t,f,o)}}"""
-SIG=r"""()=>{const m=LK.model;if(!m)return null;const g=[];m.traverse(o=>{if(o.isMesh)g.push(o.geometry.uuid.slice(0,6)+(o.material&&o.material.color?o.material.color.getHexString():''))});
+SIG=r"""()=>{const m0=LK.model;if(!m0)return null;const m=(m0.userData&&m0.userData.hero&&m0.userData.hero.bones)?m0.userData.hero:m0;const g=[];m.traverse(o=>{if(o.isMesh)g.push(o.geometry.uuid.slice(0,6)+(o.material&&o.material.color?o.material.color.getHexString():''))});
   const b=m.bones,sc=n=>b[n].scale.toArray().map(v=>v.toFixed(3)).join(',');const body=m.children.find(o=>o.isSkinnedMesh&&!o.dk);
   return g.sort().join('|')+'#'+['pelvis','chest','aL0'].map(sc).join(';')+'#'+(body?body.scale.x.toFixed(3):'')}"""
 def to_creator(pg,dev='desktop',cls='ranger'):
