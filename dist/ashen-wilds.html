@@ -2180,7 +2180,7 @@ const mpMax=()=>Math.round(HS().mp),spCost=n=>{const s=MOVES[n];return Math.roun
 const gs=k=>0;
 const empS=k=>0;
 const heroMax=()=>Math.round(HS().hp),heroAtk=()=>atkOf(heroMt()),df=()=>Math.round(HS().pd);
-const uiOpen=()=>['fz','bag','inc','cmp','shop','mshop','craft','wmap','setw','tal','hatch','start','xw','dth'].some(i=>!$(i).classList.contains('hide'));
+const uiOpen=()=>(typeof KQMENU!='undefined'&&KQMENU.on)||['fz','bag','inc','cmp','shop','mshop','craft','wmap','setw','tal','hatch','start','xw','dth'].some(i=>!$(i).classList.contains('hide'));
 const solid_old=(x,z)=>{if(inRealm)return realmSolid(x,z);const t=MAP[Math.round(z)]&&MAP[Math.round(z)][Math.round(x)];return !t||t=='#'||t=='~'||t=='r'||t=='R'||t=='W'||t=='B'||hasBlock(x,z)};
 function walkM(o,dx,dz){const p=o.position,bx=p.x,bz=p.z,od=tDist(bx,bz);walk(o,dx,dz);const nd=tDist(p.x,p.z);if(nd<TS+4&&nd<od){p.x=bx;p.z=bz}}
 function tcHit(x,z){if(inRealm)return false;const t=townAt(x,z,0);if(t<0)return false;for(const c of TOWNS[t].col){if(c.r!=null){const dx=x-c.x,dz=z-c.z,rr=c.r+.28;if(dx*dx+dz*dz<rr*rr)return true}else if(Math.abs(x-c.x)<c.hx+.28&&Math.abs(z-c.z)<c.hz+.28)return true}return false}
@@ -2906,7 +2906,7 @@ let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);const rd=now-last;let dt=Math.min(.05,rd/1000);last=now;const pz=uiOpen();
   for(let i=tws.length-1;i>=0;i--){const w=tws[i];if(pz){w.t+=rd;continue}const k=Math.min(1,(now-w.t)/w.ms);w.fn(k);if(k>=1){tws.splice(i,1);w.done&&w.done()}}
-  if((uiOpen()&&!mpLive())||!party.length)dt=0;
+  if((uiOpen()&&!mpLive())||!party.length||(typeof KQMENU!='undefined'&&KQMENU.on))dt=0;
   const dtR=dt;if(hstop>0){hstop-=rd/1000;dt*=.3}if(slowT>0){slowT-=rd/1000;dt*=.35}
   if(!inited){inited=true;for(let i=0;i<MAXMOB;i++)spawn(true);BOSSES.forEach((_,i)=>spawnBoss(i))}
   // hero movement
@@ -7305,7 +7305,7 @@ function refreshGear(h,cls,E){
   if(!h.dkHid){h.dkHid=1;Object.values(h.bones).forEach(b=>b.children.forEach(o=>{if(o.isMesh&&!o.isSkinnedMesh)o.visible=false}))}
   if(h.cls!=cls){heroOutfit(h,cls);h.cls=cls}
   DKBK=DKBK||{};const body=h.children.find(o=>o.isSkinnedMesh&&!o.dk),sig=it=>it?it.r+'.'+((it.tp||0)%5):'-';
-  const key='H|'+cls+'|'+sig(E.chest)+'|'+sig(E.helm)+'|'+sig(E.boots),k=DKBK[key]?null:dkHeroKit(cls,E);
+  const key='H|'+cls+'|'+sig(E.chest)+'|'+sig(E.helm)+'|'+sig(E.boots)+(typeof lkKey=='function'?lkKey():''),k=DKBK[key]?null:dkHeroKit(cls,E);
   dkBind(body,dkBake(k?k.P:[],hbo(),key)).forEach(m=>{m.dk=1;h.gearG.push(m)});
   const col=r=>parseInt(RAR[r][1].slice(1),16),w=E.weapon,wt=w?itT(w).wt:DEFW[cls],wr=w?w.r:0,wc=w&&w.r>=2?col(w.r):0x9aa2ae;
   const W1=mkWpn(wt,wt=='staff'?(cls=='mage'?(wr>=2?col(wr):0x9a7aff):0xffe08a):wc,wr);
@@ -17294,6 +17294,412 @@ function cm92Titles(root){if(!root)return;root.querySelectorAll('.rw').forEach(b
   const s=n.querySelector('small'),t=(n.textContent||'').replace(s?s.textContent:'','').trim(),u=s?s.textContent.trim():'';const v=t+(u?' — '+u:'');if(v)b.title=v})}
 {const f=rC;rC=function(){const r=f.apply(this,arguments);try{cm92Titles($('cl'))}catch(_){}return r}}
 {const f=rF;rF=function(){const r=f.apply(this,arguments);try{const m=$('fmsg');if(m)m.querySelectorAll('.fstats button').forEach(b=>{if(!b.title)b.title=b.textContent.trim()})}catch(_){}return r}}
+
+// ================= v94: creator track — hero look, character creator step, barber =================
+// hero.look = {skin, hair, hairStyle, face, eye, build, height, sex} (saved with the hero; old saves have none and get
+// their class's default look, which is exactly how heroes looked before v94). heroLook(h) always returns a full look.
+//   hairStyle 0 short · 1 long · 2 top-knot · 3 spiky · 4 ponytail · 5 shaved
+//   face      0 none · 1 stubble · 2 short beard · 3 long beard · 4 moustache · 5 scar
+//   build     0 lean · 1 average · 2 broad          height .9 … 1.1 (model scale)          sex 0 male · 1 female
+// Contract with the model track (its files sort after this one, so its definitions win):
+//   heroRebuild(h)            rebuild the player's hero (no argument) or a hero model h (co-op partner) after a look change
+//   heroBuildPreview(look,cls,E)  a THREE.Group hero with that look, class (and gear E) for previews
+// The versions below are the fallback for the current body: colours through the class palette (CLS[cls].sk, dkC hair)
+// while the body/kit is built, hair/face pieces through dkFace, build/height/sex through bone and mesh scale. They only
+// act while heroRebuild is still this file's own (lkFB()); the creator UI only uses heroLook/heroRebuild/heroBuildPreview.
+var LOOK_DEF={skin:'#d9b38c',hair:'#2a1a12',hairStyle:0,face:2,eye:'#4a6a8a',build:1,height:1,sex:0};
+var LOOK_OPT={
+  skin:['#f0d2b6','#e1bea0','#d9b38c','#d2aa82','#c8a080','#b88a64','#8e623e','#5a3e2c','#3e2a1e'],
+  hair:['#121014','#2a1a12','#3a2414','#5a3a20','#8a5a2a','#b8823a','#d8b870','#8a8a90','#dcdad4','#7a2a1e'],
+  eye:['#4a6a8a','#3a2a1c','#5a7a3a','#7a8a9a','#9a7a2a','#6a3a8a'],
+  hairStyle:['Short','Long','Top-knot','Spiky','Ponytail','Shaved'],
+  face:['None','Stubble','Short beard','Long beard','Moustache','Scar'],
+  build:['Lean','Average','Broad'],sex:['Male','Female']};
+function lkHexA(a){return '#'+a.map(v=>('0'+Math.max(0,Math.min(255,Math.round(v))).toString(16)).slice(-2)).join('')}
+function lkArr(h){const n=parseInt(String(h).slice(1),16);return [n>>16&255,n>>8&255,n&255]}
+// each class's look before v94 (skin from CLS, hair/beard from the v71 dark-fantasy kit)
+function lkClsDef(cls){
+  const C=(typeof CLS!='undefined'&&CLS[cls])||null,D=(typeof dkC=='function'&&dkC()[cls])||null,o={};
+  if(C&&C.sk)o.skin=lkHexA(C.sk);
+  if(D){o.hair=D.hair!=null?'#'+('00000'+D.hair.toString(16)).slice(-6):LOOK_DEF.hair;o.hairStyle=Math.max(0,['short','long','topknot','spiky'].indexOf(D.hs||'short'));o.face=D.beard?2:0}
+  return o}
+// keep only valid fields (saves and co-op data are untrusted)
+function lkClean(o){
+  const r={};if(!o||typeof o!='object')return r;const hx=v=>typeof v=='string'&&/^#[0-9a-f]{6}$/i.test(v);
+  if(hx(o.skin))r.skin=o.skin.toLowerCase();if(hx(o.hair))r.hair=o.hair.toLowerCase();if(hx(o.eye))r.eye=o.eye.toLowerCase();
+  const it=(k,n)=>{const v=+o[k];if(Number.isInteger(v)&&v>=0&&v<n)r[k]=v};it('hairStyle',6);it('face',6);it('build',3);it('sex',2);
+  if(isFinite(+o.height)&&o.height!==null&&o.height!=='')r.height=Math.max(.9,Math.min(1.1,+o.height));
+  return r}
+function heroLook(h){h=h||hero;return Object.assign({},LOOK_DEF,lkClsDef(h&&h.cls),h&&h.look||{})}
+function lkFull(cls,part){return Object.assign({},LOOK_DEF,lkClsDef(cls),lkClean(part))}
+function lkSig(L){return [L.skin,L.hair,L.hairStyle,L.face,L.eye,L.build,(+L.height).toFixed(2),L.sex].join(',')}
+function lkPack(){return hero&&hero.look?lkClean(hero.look):0}
+function lkUnpack(pk,cls){const c=lkClean(pk);return Object.keys(c).length?lkFull(cls,c):null}
+
+// ---------------- fallback model hooks ----------------
+var LK_CUR=null,LK_FACE=0;
+// true while heroRebuild is still this file's fallback (the model track's own definitions replace it)
+function lkFB(){return typeof heroRebuild=='function'&&String(heroRebuild).indexOf('lkRebuildFB')>=0}
+function lkKey(){const L=LK_CUR;return L?'|lk'+[L.skin,L.hair,L.hairStyle,L.face,L.eye].join(','):''}
+// the look a hero model wears: its own (co-op partner, preview) or, for the player and the bag picture, the hero's
+function lkFor(h,cls){const own=h&&h.look?h.look:(h===pl||(typeof HP!='undefined'&&h===HP))?hero.look:null;return lkFull(cls||hero.cls,own)}
+function lkSwap(cls,L,fn){
+  const C=CLS[cls],D=typeof dkC=='function'?dkC()[cls]:null,o1=C&&C.sk,o2=D&&{hair:D.hair,hs:D.hs,beard:D.beard};
+  try{if(C)C.sk=lkArr(L.skin);
+    if(D){const hc=parseInt(L.hair.slice(1),16);D.hair=L.hairStyle==5?null:hc;D.hs=['short','long','topknot','spiky','short','short'][L.hairStyle]||'short';D.beard=L.face==2||L.face==3?hc:null}
+    return fn()}finally{if(C)C.sk=o1;if(D)Object.assign(D,o2)}}
+{const f=heroOutfit;heroOutfit=function(h,cls){if(!LK_CUR)return f.apply(this,arguments);return lkSwap(cls,LK_CUR,()=>f.apply(this,arguments))}}
+{const f=dkHeroKit;dkHeroKit=function(cls,E){if(!LK_CUR)return f.apply(this,arguments);LK_FACE=1;try{return lkSwap(cls,LK_CUR,()=>f.apply(this,arguments))}finally{LK_FACE=0}}}
+{const f=dkFace;dkFace=function(k,o){
+  if(!LK_CUR||!LK_FACE)return f.apply(this,arguments);
+  const L=LK_CUR,hair=parseInt(L.hair.slice(1),16);
+  o=Object.assign({},o);if(o.brow==null)o.brow=hair;
+  const r=f.call(this,k,o);
+  try{
+    const sk=o.skin,eye=parseInt(L.eye.slice(1),16),mix=(a,b,t)=>new THREE.Color(a).lerp(new THREE.Color(b),t).getHex();
+    [-1,1].forEach(s=>k.p('head','box','c',eye,s*.038,1.143,.1095,.014,.009,.004));
+    if(L.face==1){const st=mix(sk,hair,.55);k.p('head','box','c',st,0,1.075,.093,.12,.045,.026);[-1,1].forEach(s=>k.p('head','box','c',st,s*.068,1.095,.062,.02,.065,.06))}
+    if(L.face==3){k.p('head','cone4','c',hair,0,.99,.08,.06,.2,.05,Math.PI+.18);k.p('head','box','c',hair,0,1.05,.098,.09,.05,.03)}
+    if(L.face==4){k.p('head','box','c',hair,0,1.1,.108,.064,.013,.016);[-1,1].forEach(s=>k.p('head','box','c',hair,s*.036,1.084,.106,.012,.032,.012,0,0,s*.15))}
+    if(L.face==5){k.p('head','box','c',0x7a3028,.044,1.142,.107,.007,.075,.005,0,0,.42);k.p('head','box','c',0x9a4a40,.04,1.12,.108,.004,.03,.004,0,0,-.5)}
+    if(L.hairStyle==4&&o.hair!=null){k.p('head','sph','c',hair,0,1.17,-.115,.035);k.L('head','c',hair,[0,1.16,-.13],[0,1.0,-.17],.032,.016);k.p('head','ring','c',dkShade(hair,.6),0,1.14,-.135,.03,.4,.03)}
+    if(L.sex==1&&L.face!=2&&L.face!=3)[-1,1].forEach(s=>k.p('head','box','c',0x0b0807,s*.05,1.152,.104,.012,.004,.012,0,0,s*.5)); // lashes
+  }catch(e){console.warn('look face',e)}
+  return r}}
+// build, height and sex through bone/mesh scale (the arms, neck and legs are scaled back so only the trunk widens)
+function lkBody(h,L){
+  const b=h&&h.bones;if(!b||!b.chest)return;
+  const bw=[.9,1,1.12][L.build]||1,px=(L.sex==1?1.09:1)*(1+(bw-1)*.5),cx=(L.sex==1?.9:1)*bw,cz=1+(bw-1)*.6,arm=1+(bw-1)*.45;
+  b.pelvis.scale.x=px;b.spine.scale.x=1/px;b.lh0.scale.x=b.rh0.scale.x=1/px;
+  b.chest.scale.x=cx;b.chest.scale.z=cz;b.neck.scale.set(1/cx,1,1/cz);b.aL0.scale.set(arm/cx,1,arm/cz);b.aR0.scale.set(arm/cx,1,arm/cz);
+  const m=h.children.find(o=>o.isSkinnedMesh&&!o.dk)||h.children[0];if(m)m.scale.setScalar(+L.height||1)}
+{const f=refreshGear;refreshGear=function(h,cls,E){
+  if(!lkFB())return f.apply(this,arguments);
+  const hh=h||pl,cc=cls||hero.cls,L=lkFor(hh,cc),sig=lkSig(L);if(hh._lkSig!==sig){hh.cls=null;hh._lkSig=sig}
+  const o=LK_CUR;LK_CUR=L;let r;try{r=f.apply(this,arguments)}finally{LK_CUR=o}
+  try{lkBody(hh,L);hh._lkArgs=[cc,E]}catch(e){console.warn('look body',e)}return r}}
+function lkRebuildFB(h){
+  if(!h||h===pl){pl._lkSig=null;refreshGear();if(typeof HP!='undefined'&&HP){HP._lkSig=null;try{refreshGear(HP)}catch(_){}}return}
+  if(h._lkArgs&&lkSig(lkFor(h,h._lkArgs[0]))!==h._lkSig)refreshGear(h,h._lkArgs[0],h._lkArgs[1])}
+function lkStarter(cls){
+  const C=CLS[cls],E={},w=ITPL.findIndex(t=>t.sl=='weapon'&&t.cls==cls&&t.t==0);E.weapon={id:-1,tp:w,lv:1,req:1,r:1,up:0,aff:[]};
+  ['chest','boots'].forEach(sl=>{const i=ITPL.findIndex(t=>t.sl==sl&&t.arm==C.arm&&t.t==1);if(i>=0)E[sl]={id:-2,tp:i,lv:5,req:1,r:2,up:0,aff:[]}});
+  if(cls=='paladin')E.offhand={id:-3,tp:ITPL.findIndex(t=>t.sl=='offhand'&&t.t==1),lv:5,req:1,r:2,up:0,aff:[]};return E}
+function lkPreviewFB(look,cls,E){const h=buildHero();h.look=lkFull(cls,look);refreshGear(h,cls,E||lkStarter(cls));return h}
+function heroRebuild(h){return lkRebuildFB(h)}
+function heroBuildPreview(look,cls,E){return lkPreviewFB(look,cls,E)}
+
+// ---------------- saves ----------------
+{const f=gameSnapshot;gameSnapshot=function(){const s=f.apply(this,arguments);try{if(hero.look)s.hero.look=lkClean(hero.look)}catch(_){}return s}}
+{const f=loadGame;loadGame=function(){
+  try{const s=saveInfo();const c=s&&s.hero?lkClean(s.hero.look):{};hero.look=Object.keys(c).length?c:null}catch(_){hero.look=null}
+  const r=f.apply(this,arguments);try{if(r&&typeof heroRebuild=='function')heroRebuild()}catch(e){console.warn('look load',e)}return r}}
+
+// ---------------- the appearance editor (creator step and barber) ----------------
+var LK={on:0,look:{},zoom:1,rot:.35,cls:'warrior',host:null,model:null,piv:null,inner:null,dirty:0,tgt:null};
+function lkRandom(){const R=a=>a[Math.floor(Math.random()*a.length)],O=LOOK_OPT,sex=Math.random()<.5?0:1;
+  return {skin:R(O.skin),hair:R(O.hair),eye:R(O.eye),hairStyle:Math.floor(Math.random()*6),face:sex?(Math.random()<.7?0:5):Math.floor(Math.random()*6),build:Math.floor(Math.random()*3),height:+(.93+Math.random()*.14).toFixed(2),sex}}
+function lkCtl(L){
+  const O=LOOK_OPT,sw=(k,a)=>`<div class="lks">${a.map(c=>`<button class="lksw${L[k]==c?' on':''}" data-lk="${k}" data-v="${c}" style="background:${c}" title="${c}" aria-label="${k} ${c}"></button>`).join('')}</div>`,
+    ch=(k,a)=>`<div class="lkcs">${a.map((n,i)=>`<button class="lkc${L[k]==i?' on':''}" data-lk="${k}" data-v="${i}">${n}</button>`).join('')}</div>`,g=(t,x)=>`<div class="lkg"><div class="lkl">${t}</div>${x}</div>`;
+  const body=g('Body',ch('sex',O.sex))+g('Build',ch('build',O.build))+g(`Height <b>${Math.round(L.height*100)}%</b>`,`<input class="lkr" type="range" min="0.9" max="1.1" step="0.01" value="${L.height}" data-lk="height" aria-label="Height">`)+g('Skin tone',sw('skin',O.skin));
+  const head=g('Hair style',ch('hairStyle',O.hairStyle))+g('Hair colour',sw('hair',O.hair))+g('Face',ch('face',O.face))+g('Eye colour',sw('eye',O.eye))+
+    `<div class="lkb"><button data-lka="rnd">🎲 Randomize</button><button data-lka="reset">↺ Reset</button></div>`;
+  return {body,head}}
+function lkSet(state,k,v){if(k=='height')v=+v;else if(k!='skin'&&k!='hair'&&k!='eye')v=+v;state.look=Object.assign({},state.look,{[k]:v})}
+// a click/input inside an editor panel; returns true when the look changed
+function lkInput(state,e){
+  const a=e.target.closest('[data-lka]');if(a){state.look=a.dataset.lka=='rnd'?lkRandom():{};return true}
+  const t=e.target.closest('[data-lk]');if(!t)return false;lkSet(state,t.dataset.lk,t.tagName=='INPUT'?t.value:t.dataset.v);return true}
+// live preview in a host element (the shared preview renderer): drag to turn, wheel / pinch / +− to zoom, idle animation
+function lkPreview(state,host,E){
+  const look=lkFull(state.cls,state.look);let m=null;
+  try{m=heroBuildPreview(look,state.cls,E)}catch(e){console.warn('preview',e)}
+  if(!m){try{m=lkPreviewFB(look,state.cls,E)}catch(_){return}}
+  if(!state.piv){const piv=new THREE.Group(),inner=new THREE.Group();inner.scale.setScalar(1.42);piv.add(inner);
+    const ped=new THREE.Mesh(new THREE.CylinderGeometry(.7,.8,.12,32),new THREE.MeshStandardMaterial({color:0x3a2c1e,roughness:.8}));ped.position.y=-.06;piv.add(ped);
+    const rg=new THREE.Mesh(new THREE.RingGeometry(.72,.8,48),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true,opacity:.6,side:THREE.DoubleSide}));rg.rotation.x=-Math.PI/2;rg.position.y=.005;piv.add(rg);
+    state.piv=piv;state.inner=inner;state.rg=rg}
+  if(state.model)state.inner.remove(state.model);state.model=m;state.inner.add(m);
+  try{state.rg.material.color.set(CLS[state.cls].col)}catch(_){}
+  lkDrag(state,host);
+  if(PV.obj!==state.piv||!PV.cv||PV.cv.parentNode!==host)pvShow(host,state.piv,now=>{
+    const z=state.zoom,t=(z-1)/1.6;state.piv.scale.setScalar(z);state.piv.position.y=.9-(.9+(1.72-.9)*t)*z;state.piv.rotation.y=state.rot;
+    if(!state.drag)state.rot+=(state.spin||0);if(state.model){const ua=state.model.userData&&state.model.userData.anim;if(ua)ua(now);else animHero(now,false,state.model)}state.rg.material.opacity=.4+.25*Math.sin(now/300)});
+}
+function lkDrag(state,host){
+  if(host._lkd)return;host._lkd=1;host.style.touchAction='none';const P={};
+  const zoom=f=>{state.zoom=Math.max(1,Math.min(2.6,state.zoom*f))};
+  host.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;P[e.pointerId]={x:e.clientX,y:e.clientY};state.drag=1;try{host.setPointerCapture(e.pointerId)}catch(_){}});
+  host.addEventListener('pointermove',e=>{const p=P[e.pointerId];if(!p)return;const ks=Object.keys(P);
+    if(ks.length>=2){const [a,b]=ks.map(k=>P[k]),d0=Math.hypot(a.x-b.x,a.y-b.y);p.x=e.clientX;p.y=e.clientY;const d1=Math.hypot(a.x-b.x,a.y-b.y);if(d0>10)zoom(d1/d0);return}
+    state.rot+=(e.clientX-p.x)*.012;p.x=e.clientX;p.y=e.clientY});
+  const up=e=>{delete P[e.pointerId];if(!Object.keys(P).length)state.drag=0};host.addEventListener('pointerup',up);host.addEventListener('pointercancel',up);
+  host.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(-e.deltaY*.0015))},{passive:false});
+  host.insertAdjacentHTML('beforeend','<div class="lkz"><button data-z="1" title="Zoom in">+</button><button data-z="-1" title="Zoom out">−</button></div><div class="lkhint">Drag to turn · scroll or pinch to zoom</div>');
+  host.querySelector('.lkz').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(b)zoom(b.dataset.z>0?1.25:.8)})}
+
+// ---------------- creator: class → appearance → first companion ----------------
+function lkHdr(){
+  const s1=$('ccS1'),s2=$('ccS2');if(!s1||!s2)return;
+  if(!$('ccS1b'))s1.insertAdjacentHTML('afterend','<span id="ccS1b">2 · Appearance</span>');
+  s2.textContent=s2.textContent.replace(/^\s*2 ·/,'3 ·');
+  const look=LK.on;$('ccS1b').classList.toggle('on',!!look);if(look){s1.classList.remove('on');s2.classList.remove('on')}
+  $('ccS1b').classList.toggle('hide',!!window.AW_NOTITLE)}
+function lkStep(){
+  const L=lkFull(ccCls,LK.look),c=lkCtl(L),w=document.querySelector('#start .ccw');if(w)w.classList.add('lkon');
+  $('ccT').textContent='Shape your hero';$('ccBack').classList.remove('hide');$('ccNext').textContent='Next ›';$('ccName').classList.remove('hide');
+  $('ccList').innerHTML='<div class="lkp">'+c.body+'</div>';$('ccInfo').innerHTML='<div class="lkp">'+c.head+'</div>';lkHdr();
+  LK.cls=ccCls;lkPreview(LK,$('ccPV'))}
+{const f=ccRender;ccRender=function(){
+  if(LK.on)return lkStep();
+  const w=document.querySelector('#start .ccw');if(w)w.classList.remove('lkon');
+  const r=f.apply(this,arguments);lkHdr();return r}}
+// the class step's turning preview wears the look chosen so far
+{const f=ccPreview;ccPreview=function(){try{if(typeof ccHero!='undefined'&&ccHero)ccHero.look=lkFull(ccCls,LK.look)}catch(_){}return f.apply(this,arguments)}}
+function lkPanelInput(e){if(!LK.on)return;if(lkInput(LK,e)){if(e.type=='input'){const L=lkFull(ccCls,LK.look),b=e.target.closest('.lkg');if(b){const t=b.querySelector('.lkl b');if(t)t.textContent=Math.round(L.height*100)+'%'}lkQueue()}else lkStep()}}
+function lkQueue(){if(LK.q)return;LK.q=requestAnimationFrame(()=>{LK.q=0;if(LK.on)lkPreview(LK,$('ccPV'))})}
+$('ccList').addEventListener('click',e=>{if(LK.on){e.stopImmediatePropagation();lkPanelInput(e)}},true);
+$('ccInfo').addEventListener('click',lkPanelInput);
+$('ccList').addEventListener('input',lkPanelInput);
+$('ccNext').onclick=()=>{
+  if(ccStep==0&&!LK.on&&!window.AW_NOTITLE){LK.on=1;ccRender();return}  // (tests that skip the title skip this step too)
+  if(ccStep==0){LK.on=0;ccStep=1;ccRender();return}
+  ccBegin()};
+$('ccBack').onclick=()=>{if(LK.on){LK.on=0;ccStep=0}else if(ccStep==1){ccStep=0;LK.on=window.AW_NOTITLE?0:1}ccRender()};
+{const f=ccBegin;ccBegin=function(){
+  const c=lkClean(lkFull(ccCls,LK.look));hero.look=c;LK.on=0;
+  const r=f.apply(this,arguments);try{if(typeof heroRebuild=='function')heroRebuild()}catch(e){console.warn('look begin',e)}return r}}
+requestAnimationFrame(()=>{try{lkHdr()}catch(_){}});
+
+// ---------------- barber (Inventory → ✂ on the hero picture): change the look, free ----------------
+var LKB={on:0,look:{},zoom:1,rot:.35,cls:'warrior',piv:null,model:null};
+function lkBarberHTML(){
+  if($('lkw'))return;const st=$('start').parentNode;
+  st.insertAdjacentHTML('beforeend',`<div id="lkw" class="modal w hide"><div class="win lkwin"><div class="wh"><h2>Barber</h2><span class="wsub">Change your look · free</span><button class="x" id="lkClose" title="Close (Esc)">✕</button></div>
+   <div class="wb lkbb"><div id="lkwL" class="ccl lkp"></div><div class="ccm"><div id="lkwPV" class="ccpv"></div></div><div id="lkwR" class="ccr lkp"></div></div>
+   <div class="wf"><span class="mut dtl">Your companions will still recognise you.</span><span style="flex:1"></span><button id="lkCancel">Cancel</button><button id="lkApply" class="pri">Apply look</button></div></div></div>`);
+  const W=$('lkw'),inp=e=>{if(lkInput(LKB,e)){if(e.type=='input'){const t=e.target.closest('.lkg').querySelector('.lkl b');if(t)t.textContent=Math.round(lkFull(LKB.cls,LKB.look).height*100)+'%';lkBQ()}else lkBarberRender()}};
+  $('lkwL').addEventListener('click',inp);$('lkwR').addEventListener('click',inp);$('lkwL').addEventListener('input',inp);
+  $('lkClose').onclick=$('lkCancel').onclick=()=>lkBarberClose(false);$('lkApply').onclick=()=>lkBarberClose(true);
+  W.addEventListener('pointerdown',e=>{if(e.target===W)lkBarberClose(false)});
+  addEventListener('keydown',e=>{if(LKB.on&&e.key=='Escape'){e.preventDefault();e.stopImmediatePropagation();lkBarberClose(false)}else if(LKB.on&&e.target.tagName!='INPUT')e.stopImmediatePropagation()},true)}
+function lkBQ(){if(LKB.q)return;LKB.q=requestAnimationFrame(()=>{LKB.q=0;if(LKB.on)lkPreview(LKB,$('lkwPV'),eq)})}
+function lkBarberRender(){const c=lkCtl(lkFull(LKB.cls,LKB.look));$('lkwL').innerHTML=c.body;$('lkwR').innerHTML=c.head;lkPreview(LKB,$('lkwPV'),eq)}
+function openBarber(){lkBarberHTML();LKB.cls=hero.cls;LKB.look=Object.assign({},heroLook(hero));LKB.on=1;LKB.zoom=1.15;LKB.rot=.35;$('lkw').classList.remove('hide');lkBarberRender();try{mSfx&&mSfx('open')}catch(_){}}
+function lkBarberClose(apply){
+  if(!LKB.on)return;LKB.on=0;$('lkw').classList.add('hide');
+  if(apply){hero.look=lkClean(lkFull(hero.cls,LKB.look));try{heroRebuild()}catch(e){console.warn('barber',e)}try{saveGame(true)}catch(_){}say('✂ You have a new look.')}
+  try{if(!$('bag').classList.contains('hide'))bagPV()}catch(_){}}
+function lkBagBtn(){const hv=$('hv');if(!hv||$('lkBtn'))return;if(getComputedStyle(hv).position=='static')hv.style.position='relative';
+  hv.insertAdjacentHTML('beforeend','<button id="lkBtn" class="lkbtn" title="Barber: change your look">✂ Look</button>');$('lkBtn').onclick=e=>{e.stopPropagation();openBarber()}}
+{const f=bagPV;bagPV=function(){const r=f.apply(this,arguments);try{lkBagBtn()}catch(_){}return r}}
+
+// ---------------- styles (v88 theme tokens, with plain fallbacks) ----------------
+document.head.insertAdjacentHTML('beforeend',`<style id="lkCss">
+.lkp{display:flex;flex-direction:column;gap:10px;width:100%}
+.lkg{display:flex;flex-direction:column;gap:5px}.lkl{font:700 .72rem/1.2 Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase;color:var(--kq-gold2,#f0cc72)}.lkl b{font-family:Inter,sans-serif;color:var(--kq-ink,#e8dcc4);letter-spacing:0;margin-left:4px}
+.lks{display:flex;flex-wrap:wrap;gap:6px}.lksw{width:26px;height:26px;min-width:0;border-radius:50%!important;padding:0!important;border:2px solid rgba(0,0,0,.55)!important;box-shadow:inset 0 1px 2px rgba(255,255,255,.25),0 1px 2px #000!important;cursor:pointer}
+.lksw.on{outline:2px solid var(--kq-gold2,#f0cc72);outline-offset:2px}
+.lkcs{display:flex;flex-wrap:wrap;gap:5px}.lkc{padding:5px 9px!important;font-size:.74rem!important;min-height:0}.lkc.on{border-color:var(--kq-gold2,#f0cc72)!important;background:linear-gradient(180deg,rgba(230,170,80,.35),rgba(120,70,20,.35))!important;color:#fff}
+.lkr{width:100%;accent-color:#d9ac5c}.lkb{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.lkb button{flex:1}
+.lkz{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;z-index:2}.lkz button{width:30px;height:30px;padding:0;font-size:1.1rem;line-height:1}
+.lkhint{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:.7rem;color:rgba(232,220,196,.7);pointer-events:none;text-shadow:0 1px 2px #000}
+.ccpv canvas{cursor:grab}.ccpv canvas:active{cursor:grabbing}
+.ccw.lkon .ccb{grid-template-columns:270px 1fr 290px}.ccw.lkon .ccl{display:block}
+#lkw .lkwin{width:min(1000px,100%);height:min(600px,100%);display:flex;flex-direction:column}#lkw .lkbb{flex:1;display:grid;grid-template-columns:260px 1fr 280px;min-height:0;padding:0!important}
+#lkw .ccl,#lkw .ccr{padding:12px;overflow:auto}#lkw .ccm{position:relative;min-height:220px}
+.lkbtn{position:absolute;right:4px;top:4px;z-index:2;padding:3px 8px!important;font-size:.72rem!important}
+@media (max-width:760px){.ccw.lkon .ccb{display:flex;flex-direction:column;overflow:auto}.ccw.lkon .ccm{height:230px;flex:0 0 230px;order:-1;position:sticky;top:0;z-index:3}.ccw.lkon .ccl,.ccw.lkon .ccr{overflow:visible;border:0;padding:12px 14px}.ccw.lkon .ccl{border-bottom:1px solid rgba(236,200,130,.15)}
+ .ccst{white-space:nowrap}.ccst span:not(.on){display:none}.ccf{gap:6px;padding:8px 10px}.ccf input{width:auto!important;flex:1 1 auto;min-width:0}.ccf>span[style]{display:none}.ccf button{white-space:nowrap}
+ .lksw{width:32px;height:32px}.lkc{padding:7px 10px!important}
+ #lkw .lkbb{grid-template-columns:1fr;grid-template-rows:240px auto auto;overflow:auto}#lkw .ccm{grid-row:1}#lkw .ccl{grid-row:2}#lkw .lkwin{height:100%}}
+</style>`);
+
+// ================= v94: creator track — "Return to main menu" =================
+// Settings → Saved game and the ☰ menu get "Return to main menu". After a confirm ("Your progress is saved") the game is
+// saved; if that fails (storage blocked, Sovereign fight) nothing happens. Then, without reloading:
+//   - every window, the ☰ menu and the confirm close, the mount is dismissed, held keys are released, the target is cleared;
+//   - KQMENU.on pauses the game (uiOpen() and the main loop's dt, patched in pN_creator.py — also in co-op) and the
+//     co-op presence is cleared, so partners see you leave (your hero drops out of their world);
+//   - the v73 title screen is shown again (music switches to the title theme because #awT exists).
+// Continue: the world is exactly the one just saved, so it simply resumes (nothing is rebuilt → nothing can be duplicated);
+//   the title's own resize listener (added by awTitle) is removed again, presence is sent again.
+// New game: the old "Start over?" second tap, then the save is deleted and the page reloads straight into the character
+//   creator (sessionStorage kq_new; saving on page hide is switched off first so the old hero is not written back).
+var KQMENU={on:0,ls:[],nosave:0};
+function kqMenuCan(){
+  if(!party.length)return 'There is nothing to save yet.';
+  if(typeof AWD!='undefined'&&AWD.dead)return 'Rise again first.';
+  if(typeof AF!='undefined'&&AF)return 'Finish the Sovereign fight first.';
+  if(typeof WV!='undefined'&&WV&&WV.go)return 'Finish or leave your Wave Trial first.';
+  return ''}
+function kqMenuAsk(){
+  const why=kqMenuCan();if(why){say(why);return}
+  if(!$('kqMenuQ'))$('start').parentNode.insertAdjacentHTML('beforeend',`<div id="kqMenuQ" class="modal hide"><div class="win nar kqmq"><div class="wh"><h2>Main menu</h2></div>
+    <div class="wb"><p>Return to the main menu?</p><p class="mut">Your progress is saved.</p></div>
+    <div class="wf"><span style="flex:1"></span><button id="kqMenuNo">Cancel</button><button id="kqMenuYes" class="pri">Return to main menu</button></div></div></div>`),
+    $('kqMenuNo').onclick=()=>$('kqMenuQ').classList.add('hide'),$('kqMenuYes').onclick=kqMenuGo,
+    $('kqMenuQ').addEventListener('pointerdown',e=>{if(e.target.id=='kqMenuQ')$('kqMenuQ').classList.add('hide')});
+  $('sysmenu').classList.add('hide');$('kqMenuQ').classList.remove('hide');setTimeout(()=>{try{$('kqMenuYes').focus()}catch(_){}},30)}
+function kqMenuGo(){
+  $('kqMenuQ').classList.add('hide');
+  const why=kqMenuCan();if(why){say(why);return}
+  if(!saveGame(true)){say('Could not save here, so you stay in the game.');return}
+  // leave the world
+  try{if(typeof closeWin=='function')closeWin();if(typeof xwMode!='undefined'&&!$('xw').classList.contains('hide')&&typeof closeX=='function')closeX()}catch(_){}
+  try{if(typeof LKB!='undefined'&&LKB.on)lkBarberClose(false)}catch(_){}
+  try{$('sysmenu').classList.add('hide');if(riding)dismount();if(typeof setTarget=='function')setTarget(null)}catch(_){}
+  try{for(const k in K)K[k]=false;if(typeof dp!='undefined'){dp[0]=0;dp[1]=0}}catch(_){}
+  KQMENU.on=1;
+  try{if(typeof MP!='undefined'&&MP.room&&MP.on){MP.room.presence({n:String(hero.name||'Hero').slice(0,20),x:null,z:null}).catch(()=>{});MP.lastPres='away'}}catch(_){}
+  // the title screen, as on first load; listeners it adds to window are remembered and removed on Continue
+  const ae=window.addEventListener,na=window.AW_NOTITLE;KQMENU.ls=[];
+  window.addEventListener=function(t,f,o){KQMENU.ls.push([t,f,o]);return ae.call(this,t,f,o)};
+  try{window.AW_NOTITLE=0;awTitle()}catch(e){console.warn('menu title',e)}finally{window.addEventListener=ae;window.AW_NOTITLE=na}
+  if(!$('awT')){KQMENU.on=0;return}
+  try{awSnd('open')}catch(_){}}
+function kqMenuResume(){
+  KQMENU.ls.forEach(([t,f,o])=>removeEventListener(t,f,o));KQMENU.ls=[];KQMENU.on=0;
+  try{if(typeof MP!='undefined')MP.lastPres=''}catch(_){}
+  try{last=performance.now()}catch(_){}
+  hud();try{fadeTo(()=>banner('Welcome back, '+hero.name,CLS[hero.cls].i+' '+CLS[hero.cls].n+' · Lv '+hero.lvl,''))}catch(_){}}
+// co-op: no presence while on the title
+{const f=mpPresence;mpPresence=function(){if(KQMENU.on)return;return f.apply(this,arguments)}}
+{const f=saveGame;saveGame=function(){if(KQMENU.nosave)return false;return f.apply(this,arguments)}}
+{const f=awTitleGo;awTitleGo=function(mode,btn){
+  if(!KQMENU.on)return f.apply(this,arguments);
+  const T=$('awT');if(!T||T.classList.contains('out'))return;
+  if(mode=='cont'){try{audio()}catch(_){}awSnd('open');T.classList.add('out');setTimeout(()=>T.remove(),950);kqMenuResume();return}
+  if(mode=='new'){
+    if(!btn.dataset.sure){btn.dataset.sure=1;btn.classList.add('warn');btn.innerHTML='Start over?<small>Tap again — this replaces your saved hero</small>';return}
+    KQMENU.nosave=1;deleteSave();try{sessionStorage.setItem('kq_new','1')}catch(_){}
+    T.classList.add('out');setTimeout(()=>{try{location.reload()}catch(_){}},400)}}}
+// after "New game" from the menu: straight into the creator (no title, no layout prompt when it is saved)
+try{if(sessionStorage.getItem('kq_new')){sessionStorage.removeItem('kq_new');const b=document.querySelector('#awT [data-aw="new"]');if(b&&!saveInfo())awTitleGo('new',b)}}catch(_){}
+// buttons: Settings → Saved game, and the ☰ menu
+{const d=$('delSave');if(d&&!$('kqMenuBtn')){d.insertAdjacentHTML('afterend','<button id="kqMenuBtn" style="justify-self:start">🏠 Return to main menu</button>');$('kqMenuBtn').onclick=kqMenuAsk}
+ const sm=$('sysmenu');if(sm&&!$('kqMenuSys')){const b=document.createElement('button');b.id='kqMenuSys';b.innerHTML='🏠 Main menu';sm.appendChild(b);b.onclick=e=>{e.stopPropagation();kqMenuAsk()}}}
+addEventListener('keydown',e=>{const q=$('kqMenuQ');if(q&&!q.classList.contains('hide')){if(e.key=='Escape'){q.classList.add('hide');e.preventDefault()}if(e.target.tagName!='BUTTON'||e.key!='Enter')e.stopImmediatePropagation()}},true);
+document.head.insertAdjacentHTML('beforeend','<style>#kqMenuQ:not(.hide){display:flex;align-items:center;justify-content:center;z-index:30}#kqMenuQ .kqmq{width:min(420px,100%);height:auto}#kqMenuQ .wb{padding:14px 18px}#kqMenuQ p{margin:0 0 6px}</style>');
+
+// ================= v94: creator track — a natural riding pose =================
+// Before v94 the rider sat with the thighs flat on the saddle, the knees folded under and both arms held straight out in
+// front (upper arm −0.75 + elbow −0.8 ≈ 90°: the forearms pointed straight ahead).
+// mountTick (f_mount.js) still moves the hero onto the saddle and sets the old pose; this wrapper then replaces the pose:
+//   legs   — thighs forward and out around the mount's flanks, knees bent, shins down the flanks, heels a little down.
+//            The angles are solved once per mount model (lkrSolve): the mount's body + saddle blanket is sampled into a
+//            grid of half widths around the saddle (lkrProfile), then a small grid search picks the thigh pitch/yaw/splay
+//            and knee bend that keep the knee, shin and foot outside that body while staying close to a relaxed seat
+//            (broad mounts like the boar get wider legs, narrow ones like the stag a closer seat);
+//   torso  — upright, leaning forward a little more with speed; it gives with the saddle's bounce (a spring on the
+//            saddle's vertical speed) so it rocks with the gait instead of moving rigidly with the mount;
+//   arms   — a free hand holds the reins low in front, near the mount's neck (both hands when no weapon is carried);
+//            a hand that carries a weapon keeps the v93 carry grip (same forearm angle as standing, so the blade stays
+//            upright, great weapons on the shoulder); a shield arm still holds the reins;
+//   head   — looks forward against the lean, a slow look around while standing; standing still also sways a little.
+// While an action plays (HA.cur / pl.sw / channel) the upper body is left to the v81 action system; attacking still
+// dismounts as before (swing/cast wrappers in f_mount.js). Every channel this file touches that animHero does not
+// set each frame (left arm yaw, thigh yaw, spine roll) is put back to 0 when the hero leaves the saddle.
+var LKR={on:0,sv:0,sp:0,lp:0,last:null,vy:0,yb:null,t:0,hw:{},spd:0};
+function lkrSS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
+// The mount's body around the saddle as a grid of half widths in the rider's frame (hip height .55, unscaled): cell
+// [iy][iz] = widest |x| of the mount (body + saddle blanket) at height iy*.05 and depth −.2+iz*.1. Measured once per model.
+var LKR_GY=13,LKR_GZ=8;
+function lkrProfile(m,ps){
+  const P=new Float32Array(LKR_GY*LKR_GZ);
+  try{m.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(m.matrixWorld).invert(),s=m.seat,y0=s[0]+.05-.55*ps;
+    const put=(x,y,z)=>{y=(y-y0)/ps;z=(z-s[1])/ps;const iy=Math.floor(y/.05),iz=Math.floor((z+.2)/.1);if(iy<0||iy>=LKR_GY||iz<0||iz>=LKR_GZ)return;
+      const k=iy*LKR_GZ+iz;x=Math.abs(x)/ps;if(x>P[k]&&x<1.2)P[k]=x};
+    const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
+    m.traverse(o=>{if(!o.isMesh||!o.geometry||!o.geometry.attributes.position||!o.visible)return;const g=o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;
+      const W=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),get=(i,out)=>{out.fromBufferAttribute(pa,i);if(o.isSkinnedMesh)o.boneTransform(i,out);return out.applyMatrix4(W)};
+      // sample each triangle's surface (the low-poly faces are big: their corners alone leave holes)
+      for(let t=0;t+2<n;t+=3){get(ix?ix[t]:t,A);get(ix?ix[t+1]:t+1,B);get(ix?ix[t+2]:t+2,C);
+        if(Math.max(A.y,B.y,C.y)<y0-.05||Math.min(A.y,B.y,C.y)>y0+.7*ps)continue;
+        const N=Math.min(8,1+Math.ceil(Math.max(A.distanceTo(B),B.distanceTo(C),C.distanceTo(A))/.04));
+        for(let i=0;i<=N;i++)for(let j=0;j<=N-i;j++){const u=i/N,w=j/N,r=1-u-w;put(A.x*r+B.x*u+C.x*w,A.y*r+B.y*u+C.y*w,A.z*r+B.z*u+C.z*w)}}})}catch(e){console.warn('ride profile',e)}
+  return P}
+function lkrHW(P,y,z){const iy=Math.floor(y/.05),iz=Math.floor((z+.2)/.1);if(iy<0||iy>=LKR_GY||iz<0||iz>=LKR_GZ)return 0;return P[iy*LKR_GZ+iz]}
+// right-leg angles (thigh pitch p, yaw y, splay s; knee k) that sit around that body: every sample point of the leg stays
+// outside it (plus the leg's radius), with the angles as close as possible to a relaxed seat and the foot near the stirrup.
+function lkrSolve(m,ps){
+  const key=ps.toFixed(2);if(m._lkL&&m._lkL.key==key)return m._lkL;
+  const P=lkrProfile(m,ps),b=pl.bones,r0=n=>{const o=b[n];if(!o.userData.lk0)o.userData.lk0=o.position.clone();return o.userData.lk0};
+  const H=r0('rh0'),K=r0('rh1'),A=r0('rh2'),pv=b.pelvis,hx=Math.abs(H.x)+LKR_HIPW,hy=(pv.userData.y0!=null?pv.userData.y0:pv.position.y)+H.y,hz=H.z;
+  let best=null;const M=new Float64Array(9),pts=new Float64Array(3);
+  const rot=(x,y,z)=>{const a=Math.cos(x),bb=Math.sin(x),c=Math.cos(y),d=Math.sin(y),e=Math.cos(z),f=Math.sin(z),ae=a*e,af=a*f,be=bb*e,bf=bb*f;
+    M[0]=c*e;M[1]=-c*f;M[2]=d;M[3]=af+be*d;M[4]=ae-bf*d;M[5]=-bb*c;M[6]=bf-ae*d;M[7]=be+af*d;M[8]=a*c};
+  for(let p=-1.5;p<=-.25;p+=.1)for(let s=.15;s<=1.45;s+=.1)for(let yw=-.4;yw<=.7;yw+=.1)for(let k=.4;k<=2.1;k+=.1){
+    rot(p,yw,s);
+    // knee
+    const kx=hx+M[0]*K.x+M[1]*K.y+M[2]*K.z,ky=hy+M[3]*K.x+M[4]*K.y+M[5]*K.z,kz=hz+M[6]*K.x+M[7]*K.y+M[8]*K.z;
+    // shin direction = M · Rx(k) · A
+    const ck=Math.cos(k),sk=Math.sin(k),ax=A.x,ay=ck*A.y-sk*A.z,az=sk*A.y+ck*A.z;
+    const sx=M[0]*ax+M[1]*ay+M[2]*az,sy=M[3]*ax+M[4]*ay+M[5]*az,sz=M[6]*ax+M[7]*ay+M[8]*az;
+    let pen=0;
+    const tst=(x,y,z,rad)=>{const w=lkrHW(P,y,z);if(w>0){const d=w+rad-x;if(d>0)pen+=d*d}};
+    tst(kx,ky,kz,0);tst(kx+sx*.5,ky+sy*.5,kz+sz*.5,.03);tst(kx+sx,ky+sy,kz+sz,.04);
+    tst(kx+sx*1.25,ky+sy*1.25-.02,kz+sz*1.25+.08,.04);
+    const ex=kx+sx,ey=ky+sy,ez=kz+sz;
+    const c=pen*LKR_W.pen+(p+.85)*(p+.85)*LKR_W.p+(k-1.15)*(k-1.15)*LKR_W.k+(s-.55)*(s-.55)*LKR_W.s+yw*yw*LKR_W.y
+      +LKR_W.ay*(ey-.14)*(ey-.14)+LKR_W.az*ez*ez+(ky>.5?(ky-.5)*(ky-.5)*20:0)+(ey<.04?(.04-ey)*20:0);
+    if(!best||c<best.c)best={c,p,s,y:yw,k,pen}}
+  best.key=key;return m._lkL=best}
+var LKR_W={pen:30,p:.3,k:.2,s:.1,y:.2,ay:2,az:.6};
+var LKR_HIPW=.035; // the thighs sit a little wider apart on the saddle (hidden by the saddle)
+// which hands carry something (v93 grip registry; without it: the weapon hand, the bow hand)
+function lkrHands(){
+  const R={R:null,L:null};
+  try{if(pl._grip&&pl._grip.L)for(const e of pl._grip.L){if(!e.W||!e.W.parent)continue;if(R[e.side]&&R[e.side].ty!='shield')continue;R[e.side]={ty:e.ty,el:(e.C&&e.C.el)||0}}
+    else{const wt=typeof curWT=='function'?curWT():null;if(wt=='bow')R.L={ty:'bow',el:0};else if(wt)R.R={ty:wt,el:-.45}}}catch(_){}
+  if(R.L&&R.L.ty=='shield')R.L=null; // a shield sits on the forearm: that hand still holds the reins
+  return R}
+function lkrTick(dt,now,al){
+  if(!riding||!mModel||!pl.bones)return lkrOff();
+  const b=pl.bones,h=pl.children[0],S=LKR,t=now/1000;S.on=1;
+  // seat: keep the hips on the saddle whatever the hero's height (look) is
+  const ps=h.scale?h.scale.y:1,B=mModel.r&&mModel.r.b,bob=B?B.position.y*mModel.r.scale.y:0;
+  h.position.y=mModel.seat[0]+bob+.05-.55*ps;
+  // speed (tiles/s, smoothed) and the saddle's vertical speed for the rider's give
+  const p=pl.position;if(S.last&&dt>0){const d=Math.hypot(p.x-S.last.x,p.z-S.last.z);if(d<3)S.spd+=(d/dt-S.spd)*Math.min(1,dt*6)}S.last={x:p.x,z:p.z};
+  if(dt>0){const v=S.yb==null?0:(bob-S.yb)/dt;S.yb=bob;S.vy+=(v-S.vy)*Math.min(1,dt*14)}
+  // spring: the torso lags the saddle (pitch) — critically damped toward the saddle's vertical speed
+  if(dt>0){const k=90,c=2*Math.sqrt(k),tg=Math.max(-1,Math.min(1,S.vy*.9));S.sv+=(k*(tg-S.sp)-c*S.sv)*dt;S.sp+=S.sv*dt}
+  const run=lkrSS(1.2,9,S.spd),mov=lkrSS(.2,1.2,S.spd),idle=1-mov;
+  // ---- legs around the flanks ----
+  const L=lkrSolve(mModel,ps),lp=L.p-.06*run,ls=L.s,ly=L.y,lk=L.k+.06*run,la=-(lp+lk)-.12;
+  const sq=S.sp*.08;                                                // knees give a little with the bounce
+  b.lh0.rotation.set(lp-sq,-ly,-ls);b.rh0.rotation.set(lp-sq,ly,ls);b.lh1.rotation.x=lk+sq*1.4;b.rh1.rotation.x=lk+sq*1.4;
+  if(b.lh2){b.lh2.rotation.x=la;b.rh2.rotation.x=la}
+  {const l0=b.lh0.userData.lk0,r0=b.rh0.userData.lk0;if(l0)b.lh0.position.x=l0.x-LKR_HIPW;if(r0)b.rh0.position.x=r0.x+LKR_HIPW}
+  b.pelvis.rotation.z=0;
+  if(HA.cur||pl.sw||hero.chan){if(b.aL0)b.aL0.rotation.y=0;return}
+  // ---- torso and head ----
+  const lean=.07+.13*run+.03*mov,give=S.sp*.12,sway=idle*Math.sin(t*.9)*.025;
+  b.spine.rotation.x=lean+give;b.spine.rotation.y=idle*Math.sin(t*.55+1)*.05;b.spine.rotation.z=sway;
+  if(b.pelvis)b.pelvis.rotation.y=0;
+  b.head.rotation.x=-(lean+give)*.75-.02;b.head.rotation.y=idle*Math.sin(t/2.3)*.32+mov*Math.sin(t/3.1)*.08;
+  // ---- arms ----
+  const H=lkrHands(),rein=(a1,a2,side,two)=>{ // upper arm a little forward, elbows bent, hands low in front together
+      const s=side=='L'?-1:1,bob2=S.sp*.1+(mov?Math.sin(t*6.5)*.015*mov:0);
+      a1.rotation.x=-.42-.12*run+bob2;a1.rotation.y=-s*(two?.42:.55);a1.rotation.z=s*.12;a2.rotation.x=-.78-.1*run-bob2*.6};
+  const carry=(a1,a2,side,c)=>{const B0=typeof GRIP_B!='undefined'?(GRIP_B[side]||-.5):(side=='L'?-.25:-.5),tot=B0+(c.el||0);
+      a1.rotation.x=-.18-lean*.6;a1.rotation.z=(side=='L'?-1:1)*.14;if(side=='L')a1.rotation.y=0;else a1.rotation.y=0;a2.rotation.x=tot-a1.rotation.x-lean};
+  const two=!H.L&&!H.R;
+  if(H.R)carry(b.aR0,b.aR1,'R',H.R);else rein(b.aR0,b.aR1,'R',two);
+  if(H.L)carry(b.aL0,b.aL1,'L',H.L);else rein(b.aL0,b.aL1,'L',two);
+  if(b.aL2)b.aL2.rotation.x=H.L?0:-.25;if(b.aR2)b.aR2.rotation.x=H.R?0:-.25;
+  // cape: streams back with speed
+  if(b.cp0){const cv=Math.min(1,S.spd/8);b.cp0.rotation.x=.08+.45*cv+Math.sin(t*4.1)*.04*(.3+cv);b.cp1.rotation.x=.08+.5*cv+Math.sin(t*4.6+1)*.05*(.3+cv);b.cp2.rotation.x=.1+.55*cv+Math.sin(t*5.2+2)*.06*(.3+cv)}
+}
+function lkrOff(){
+  if(!LKR.on)return;LKR.on=0;LKR.last=null;LKR.yb=null;LKR.spd=0;LKR.sp=LKR.sv=0;
+  try{const b=pl.bones;b.aL0.rotation.y=0;b.lh0.rotation.y=0;b.rh0.rotation.y=0;b.lh0.rotation.z=0;b.rh0.rotation.z=0;b.spine.rotation.z=0;
+    for(const n of ['lh0','rh0']){const o=b[n];if(o.userData.lk0)o.position.copy(o.userData.lk0)}
+    const h=pl.children[0];h.position.y=0;h.position.z=0}catch(_){}}
+{const f=mountTick;mountTick=function(dt,now,al){const r=f.apply(this,arguments);try{lkrTick(dt,now,al)}catch(e){if(!LKR.err){LKR.err=1;console.warn('riding pose',e)}}return r}}
+{const f=dismount;dismount=function(){const r=f.apply(this,arguments);try{if(!riding)lkrOff()}catch(_){}return r}}
 
 // ================= v89 dens: every Sovereign den is 35% bigger =================
 // The den files (zzK_den*.js) still build each den at its original size (radius 14 arena). Right after that, this file

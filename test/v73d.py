@@ -2,7 +2,7 @@ import play
 def s(pg):
     ev=pg.evaluate
     pg.wait_for_timeout(1500);pg.keyboard.press('Enter');pg.wait_for_timeout(1500)
-    pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="mage"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
+    pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="mage"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)  # v94: class → appearance → companion
     print('saved',ev("()=>{hero.name='Tester';hero.lvl=7;return saveGame(true)}"))
     pg.reload();pg.wait_for_timeout(3000)
     print('title',ev("()=>[...document.querySelectorAll('[data-aw]')].map(b=>b.innerText.replace(/\\n/g,' | '))"))
