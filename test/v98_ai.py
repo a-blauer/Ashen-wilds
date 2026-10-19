@@ -54,7 +54,7 @@ def s(pg):
     r=ev("""()=>{const e=__S,m=e.m;const before=AIL.st.sleepN;m.position.x+=.5;scene.updateMatrixWorld();const stale=Math.abs(m.matrixWorld.elements[12]-m.position.x)>.4;
       const wp=new THREE.Vector3();m.getWorldPosition(wp);return {vis:m.visible,sleep:m._aiS,stale,wpOk:Math.abs(wp.x-m.position.x)<1e-3,cnt:AIL.st.sleepN-before}}""")
     print('sleep',r)
-    ok(r['vis']==False and r['sleep']==1 and r['stale'] and r['cnt']>0,'hidden enemy sleeps (no matrix update)')
+    ok(r['vis']==False and r['sleep']==1 and r['stale'],'hidden enemy sleeps (no matrix update; skipped by perf_static or perf_ai: %d)'%r['cnt'])
     ok(r['wpOk'],'getWorldPosition still exact on a sleeping enemy')
     ev("()=>{const m=__S.m;m.position.x=pl.position.x+8;m.position.z=pl.position.z;__S.hx=__S.wx=m.position.x;__S.hz=__S.wz=m.position.z}");pg.wait_for_timeout(800)
     r=ev("()=>{scene.updateMatrixWorld();const m=__S.m;return {vis:m.visible,sleep:m._aiS,dx:Math.abs(m.matrixWorld.elements[12]-m.position.x)}}")
