@@ -480,3 +480,33 @@ Publish `dist/ashen-wilds.html` to the same artifact URL with capabilities
 - Presets: `real` (heroes, human foes, Vaelric, town folk): legs +34%, torso ~20% narrower, head 80%, arms +16%. `brute` (orc, trolls, yeti, giant, Bloated One, nagas, ghoul, sand elemental): longer limbs and smaller head, bulk kept. Goblins (`hob`, `sling`, `shaman`) unchanged. Hips move from 0.55 to `AW_PROP99.hipOf()` (≈0.713).
 - Riding (`zzN_creator_ride.js`) seats the hips with `AW_PROP99.hipOf()` and the leg-fit grid is taller (`LKR_GY=17`). Humanoid foe health bars sit at `max(1.6, bs*1.62)`.
 - Test: `python3 test/v99_props.py` — bind/geometry match and feet on the ground for every humanoid, plus an armour pose sheet.
+
+## v100: anim
+
+`src/modules/zzN_zz_anim.js` (header explains it), baked keys `src/modules/zzN_zz_anim0_data.js`, two text patches in
+`build/pN_zz_anim.py`; move descriptions `test/v100_anim_moves.js`, IK baker `test/v100_anim_bake.js`, test `test/v100_anim.py`.
+- **Hero melee basic attacks** (every weapon type and combo step) are re-authored as *strikes*, not joint-angle guesses: each
+  phase gives where the weapon grip goes, which way the blade points and the body pose; an IK on the real v99 skeleton turns that
+  into joint angles (`BAKE=1 python3 test/v100_anim.py` re-bakes and rebuilds). Beats: anticipation (weapon drawn back along its
+  path) → loaded hold → acceleration (hips first, blade lagging) → contact at k .42 (the game's hit moment) → follow-through past
+  the target → recover → rest. Monotone cubic interpolation per channel plus small per-channel lags (hips/legs lead, wrist trails).
+- Move sets: one-handers forehand (high on the weapon side → low past the off hip), backhand (off shoulder → out past the weapon
+  side), overhead finisher; greatsword/greataxe the same with both hands on the grip, bigger coil and crouch (greataxe finisher =
+  heavy overhead cleave); mace/hammer heavier with the shield held up as a guard, hammer finisher = full-body overhead smash; twin
+  axes alternate hands, finisher both axes down; daggers quick low slashes, stab, rising X; claws alternating rakes, uppercut rakes,
+  crouch-and-spring double rake; halberd side-on two-handed lunge thrusts, finisher two-handed sweep; throwing knives whip from
+  over the shoulder; sling whirl and forward release. Flail (spin attack), bow, crossbow, staff, wand, orb keep their v85/v91
+  tracks. Whole body: weight from back foot to front foot, hip yaw leading the chest twist, lean, knees, side bend, off hand
+  counterbalancing (or on the handle), head kept on the target, pelvis drop so the lower foot stays on the ground.
+- New pose channels (HACH): `sz` spine side-bend, `cy` chest twist, `lhy/rhy` hip yaw (feet keep pointing forward while the
+  pelvis turns), `la/ra` ankles, `ly` off-arm roll, `rz/lq` wrist deviation; the walk layer feeds them so they blend back.
+- Timing is unchanged (same `haPlay` durations and hit fraction; the test compares hit frames and frame counts with the old build).
+- **Humanoid foes** (`humAtkPose`): strikes alternate forehand/backhand, slams use the overhead (two-handed for great weapons,
+  hammer smash for the giant), mapped onto the foe's wind-up / act / recover phases (contact at the act's hit moment); the off arm
+  keeps its guard (skeleton shields stay up).
+- **Bow carry** (`V100A_BOW`, through the v93 `gripCarry`): held by the riser in the left hand, limbs tipped a little forward,
+  string out away from the leg, arm relaxed and steady while walking (no swing that sweeps the limb through the legs); applies to
+  the hero, co-op heroes, bag/creator previews and archer foes; shots still use the strike grip and draw.
+- Test: `python3 test/v100_anim.py` (after `SRC=<old build> TAG=before python3 test/v100_anim.py`) writes
+  `out/v100_<TAG>_<weapon>.png` (front + weapon-side views, 12 frames per combo step with the tip trail),
+  `v100_<TAG>_bow.png`, `v100_<TAG>_bowbig.png`, `v100_<TAG>_foes.png` and prints `CHECKS OK`.
