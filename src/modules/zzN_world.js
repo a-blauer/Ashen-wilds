@@ -1,5 +1,6 @@
 // ================= v89 world: bigger zones, themed decorations, old-layout saves =================
-// The zone layout itself is in w0_world.js (PMS=1.3: zones 338x351, 5 camps each) and build/pN_world.py (W/H, ground texture).
+// The zone layout itself is in w0_world.js (v97: PMS=1.82, zones 473x491, 8 camps each) and build/pN_world.py (W/H);
+// the v97 changes (ground textures, dungeons, realm, mob count) are in build/pN_world2.py and zzN_world2.js.
 // Decorations: wdDeco() runs at load just before buildVI() (it is a hoisted function, so nothing here may rely on module-level
 // vars being set yet). It places themed props per zone into WD.list and their collider tiles into WDCOL (CBLK starts from it).
 // wdBuild() runs right after buildVI(): it builds one InstancedMesh per part per 64x64 chunk and hands the chunks to chunkVis
@@ -216,7 +217,7 @@ function wdDeco(){const T0=performance.now();
       const cp=bank?null:S.cp?S.cp:S.col?[[0,0,S.col]]:null;
       if(cp){const c=Math.cos(ry),sn=Math.sin(ry),pts=cp.map(([lx,lz,rr])=>[x+(lx*c+lz*sn)*s,y+(-lx*sn+lz*c)*s,rr*s]);
         for(const [px,pz,rr] of pts){if(DW[Math.round(pz)*W+Math.round(px)]>-(rr+2.2)||t(px,pz)=='~'||rd(px,pz)<6+rr)return false}
-        const R0=Math.max(...pts.map(q=>Math.hypot(q[0]-x,q[1]-y)+q[2]));if(!free(x,y,R0))return false;
+        const R0=Math.max(...pts.map(q=>Math.hypot(q[0]-x,q[1]-y)+q[2]));if(!free(x,y,R0)||rd(x,y)<5.75+R0)return false; // v97: the whole prop stays 5 tiles off the road centre (rd is per tile: +.75)
         const tl=[];pts.forEach(([px,pz,rr])=>{for(let j=Math.floor(pz-rr-1);j<=Math.ceil(pz+rr+1);j++)for(let i=Math.floor(px-rr-1);i<=Math.ceil(px+rr+1);i++)if(Math.hypot(i-px,j-pz)<=rr+.3)tl.push(j*W+i);tl.push(Math.round(pz)*W+Math.round(px))});
         if(tl.some(k=>ptile.has(k)))return false;
         tl.forEach(k=>col.add(k));big.push([x,y,R0]);it.col=R0;it.tl=tl}
@@ -269,23 +270,27 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
   try{const v=window.WD_RK;if(v)for(let i=0;i<v.n;i++){const x=v.M[i*16+12],z=v.M[i*16+14];if(regionAt(Math.round(x),Math.round(z))!==3)continue;
     const q=((x*12.9898+z*78.233)%1+1)%1;cc.setHex(0xd09060).multiplyScalar(.82+.3*q);v.C.set([cc.r,cc.g,cc.b],i*3);const m=v.cm[i];if(m&&m.instanceColor){m.instanceColor.setXYZ(v.cl[i],cc.r,cc.g,cc.b);m.instanceColor.needsUpdate=true}}}catch(err){console.warn('sand rocks',err)}
   WD.stats.buildMs=Math.round(performance.now()-T0);WD.stats.meshes=WD.ms.length}
-// ---------- old saves: the zone layout changed in v89 ----------
-// x2 carries wl:89. A save without it was made on the old layout: a position in a zone goes to that zone's entrance,
-// a saved zone run (INST) is dropped, treasure-map marks are moved to a free spot in the same tier.
-var WD_OLD={x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270};
-function wdOldZone(x,z){for(let i=0;i<6;i++)if(x>=WD_OLD.x0[i]&&x<WD_OLD.x0[i]+WD_OLD.w&&z>=WD_OLD.y0[i]&&z<WD_OLD.y0[i]+WD_OLD.h)return i;return -1}
-{const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=89;if(s.inst)s.inst=Object.assign({},s.inst,{wl:89})}catch(_){}return s}}
+// ---------- old saves: the zone layout changed in v89 and again in v97 ----------
+// x2 carries wl (layout version, WD_WL). A save from another layout: a position in a zone goes to that zone's entrance
+// (the old zone is found on that layout's grid, WD_OLDG: v89 saves carry wl:89, older ones none), a saved zone run (INST)
+// is dropped, treasure maps keep their zone (m.r; maps from before v89 get the zone they were in) and are re-placed on a
+// reachable spot in it (zzN_loot.js tmMigrate). Duskhold, the Portal Court and the Courtyard never moved (x < 110).
+var WD_WL=97;
+var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351}};
+var WD_OLD=WD_OLDG[88];
+function wdOldZone(x,z,wl){const G=WD_OLDG[wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
+{const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=WD_WL;if(s.inst)s.inst=Object.assign({},s.inst,{wl:WD_WL})}catch(_){}return s}}
 var WD_LOADOLD=false;
-{const f=x2Load;x2Load=function(s){WD_LOADOLD=!(s&&s.wl===89);
-  // old-layout treasure maps: tag each with the zone it was in on the old grid (by its saved spot), then the loot
-  // module's migration (inside f) re-picks a reachable spot in that same zone on the new grid
-  try{if(WD_LOADOLD&&s&&Array.isArray(s.tmaps))s.tmaps.forEach(m=>{if(m&&m.r==null){const oz=wdOldZone(Math.round(m.x),Math.round(m.z));if(oz>=0){m.r=oz;m.x=-1;m.z=-1}}})}catch(_){}
+{const f=x2Load;x2Load=function(s){const wl=s&&s.wl;WD_LOADOLD=wl!==WD_WL;
+  // other-layout treasure maps: keep (or find, on the old grid) the zone, forget the spot; the loot module's migration
+  // (inside f) then picks a reachable spot in that same zone on the new grid
+  try{if(WD_LOADOLD&&s&&Array.isArray(s.tmaps))s.tmaps.forEach(m=>{if(!m)return;if(m.r==null){const oz=wdOldZone(Math.round(m.x),Math.round(m.z),wl);if(oz<0)return;m.r=oz}m.x=-1;m.z=-1})}catch(_){}
   const r=f.apply(this,arguments);try{
-  if(typeof INST!='undefined'&&INST&&INST.wl!==89)INST=null;
+  if(typeof INST!='undefined'&&INST&&INST.wl!==WD_WL)INST=null;
   if(WD_LOADOLD&&Array.isArray(tmaps)&&typeof tmMigrate!='function')tmaps=tmaps.map(m=>{if(freeSpot(Math.round(m.x),Math.round(m.z),1)&&tierAt(m.x,m.z)==m.T)return m;
     for(let k=0;k<400;k++){const x=8+Math.floor(Math.random()*(W-16)),y=8+Math.floor(Math.random()*(H-16));if(tierAt(x,y)==m.T&&regionAt(x,y)>=0&&freeSpot(x,y,1))return Object.assign({},m,{x,z:y})}return null}).filter(Boolean)}catch(err){console.warn('world load',err)}return r}}
 {const f=loadGame;loadGame=function(){const s=saveInfo&&saveInfo();const r=f.apply(this,arguments);try{
-  const old=!(s&&s.x2&&s.x2.wl===89);if(old&&s&&s.pos&&!s.pos.realm&&!inRealm&&!inDun){const oz=wdOldZone(s.pos.x,s.pos.z);
+  const wl=s&&s.x2&&s.x2.wl,old=wl!==WD_WL;if(old&&s&&s.pos&&!s.pos.realm&&!inRealm&&!inDun){const oz=wdOldZone(s.pos.x,s.pos.z,wl);
     if(oz>=0){const p=PMAP[oz],n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]))}
     else{const x=Math.round(pl.position.x),z=Math.round(pl.position.z);if(x>=110||MAP.DW[z*W+x]>=0)toPos(START[0],START[1])}}}catch(err){console.warn('world load pos',err)}return r}}
 // the Citadel's castle walls only draw while you are in the Citadel (they were drawn from every zone and Duskhold)

@@ -19,13 +19,14 @@ function spawnWild(P,dmin){const r=regionAt(Math.round(P.x),Math.round(P.z));if(
 // v72: each zone has a fixed population for the visit — the dead stay dead until you leave and come back through the portal
 var ROST={r:-9,slots:[],left:0,quiet:false};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
-var ROST_G=60;
+// v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
+var ROST_G=130;
 function rosterBuild(r){const p=PMAP[r],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.pm!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
   // roaming groups spread across the whole zone
-  const grp=[];for(let t=0;t<16000&&grp.length<ROST_G;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
+  const grp=[];for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
     if(Math.hypot(x-p.ba[0],z-p.ba[1])<30||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}

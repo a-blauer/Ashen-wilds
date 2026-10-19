@@ -859,46 +859,47 @@ const M=c=>cM(c),A=c=>cPA(c),D=c=>cPD(c),pot=c=>Math.round((c.iv.hp+c.iv.a+c.iv.
 const mk=(n,l,f=0,v='',iv)=>mkC(n,l,f,v,iv),mkOld=(n,l,f=0,v='',iv)=>{const rv=()=>.85+Math.random()*.3;const s=S[n],col=new THREE.Color(s.c);if(v)col.lerp(new THREE.Color(VAR[v].c),.65);const c={n,l,x:0,f,v,iv:iv||{hp:rv(),a:rv(),d:rv()},g:[n],cl:[col.getHex()],sy:[s.h,s.t],z:.92+Math.random()*.2,tr:Math.random()<.55?['Horned','Bulky','Armored','Spiked'][R(0,3)]:'',sp:spl(n,v),cdm:{}};c.h=M(c);return c};
 const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+'★'.repeat(Math.floor(c.fp||c.f||0))+(c.evo?' '+'✦'.repeat(c.evo):'');
 const dmg=(a,b,k,p)=>dmgCE(a,b,k,p);
-const W=1154,H=730,TS=21,TK=1.5;
+const W=1559,H=1010,TS=21,TK=1.5;
 // ---- Progressive world: five zones separated by mountain ridges. The only way through each ridge is a walled town. ----
 const TIER_LV=[[1,9],[10,19],[20,29],[30,39],[40,50]],ZN=['Kindlelight','Hillside Crest','Burningeye Summit','Searing Sands','The Citadel'];
 const RIDGE=[],ridgeX=()=>-999;
 // ---- v56: a floating stronghold, and six portal maps. Each map is a winding road that ends at a boss arena. ----
 const PMAP=[
  {n:'Kindlelight',sub:'A drowned, gloomy bog',bi:1,lv:[1,8],t:1,x0:110,y0:8,col:0x7aff4a,ic:'🫧'},
- {n:'Hillside Crest',sub:'Windswept plains of the serpent folk',bi:2,lv:[9,17],t:2,x0:458,y0:8,col:0xd8c060,ic:'🐍'},
- {n:'Burningeye Summit',sub:'A frozen peak under a burning sky',bi:3,lv:[18,26],t:3,x0:806,y0:8,col:0x9ad8ff,ic:'❄️'},
- {n:'Searing Sands',sub:'An endless scorched desert',bi:4,lv:[27,35],t:4,x0:110,y0:369,col:0xffa040,ic:'🏜️'},
- {n:'The Dirge',sub:'A haunted graveyard that never sleeps',bi:5,lv:[36,43],t:4,x0:458,y0:369,col:0x9affc8,ic:'🪦'},
- {n:'The Citadel',sub:'The halls of the vampire court',bi:6,lv:[44,50],t:5,x0:806,y0:369,col:0xff3040,ic:'🏰'}];
-// v89: every zone is 30% bigger in each direction (was 260x270); PMS scales the generator's distances
-const PMS=1.3,PMW=338,PMH=351;
+ {n:'Hillside Crest',sub:'Windswept plains of the serpent folk',bi:2,lv:[9,17],t:2,x0:593,y0:8,col:0xd8c060,ic:'🐍'},
+ {n:'Burningeye Summit',sub:'A frozen peak under a burning sky',bi:3,lv:[18,26],t:3,x0:1076,y0:8,col:0x9ad8ff,ic:'❄️'},
+ {n:'Searing Sands',sub:'An endless scorched desert',bi:4,lv:[27,35],t:4,x0:110,y0:509,col:0xffa040,ic:'🏜️'},
+ {n:'The Dirge',sub:'A haunted graveyard that never sleeps',bi:5,lv:[36,43],t:4,x0:593,y0:509,col:0x9affc8,ic:'🪦'},
+ {n:'The Citadel',sub:'The halls of the vampire court',bi:6,lv:[44,50],t:5,x0:1076,y0:509,col:0xff3040,ic:'🏰'}];
+// v89: every zone was made 30% bigger in each direction (260x270 -> 338x351); v97: 40% bigger again (473x491).
+// PMS scales the generator's distances against the original 260x270 zone (1.3*1.4); PMA is the area against it.
+const PMS=1.82,PMW=473,PMH=491,PMA=PMW*PMH/(260*270);
 // v69: every map gets its own procedurally laid-out, wide, winding route with side branches, open fields and a sealed wave arena
-const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=5,PM_DENR=25; // 5 camps per zone (was 3)
+const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=8,PM_DENR=25; // 8 camps per zone (v88: 3, v89: 5)
 PMAP.forEach((p,i)=>{p.i=i;let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(p,i,PM_TH_SEED[i]*7919+13+at*104729);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});let sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(L0.clr<50)sc*=.05;if(sc>bsc){bsc=sc;best=L0}}Object.assign(p,best.out)});
 function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
   const G=(x,y)=>[p.x0+Math.round(x),p.y0+Math.round(y)],cl=(v,a,b)=>Math.max(a,Math.min(b,v)),M=26,S=PMS;
   // pick a corner for the sealed wave arena, start on the far side, end with the boss on yet another side
-  const cor=[[44,44],[PMW-44,44],[44,PMH-44],[PMW-44,PMH-44]],wc=Math.floor(rnd()*4),WA=cor[wc],opp=cor[3-wc];
-  const sides=[[[14,ri(65,PMH-65)],[PMW-20,ri(65,PMH-65)]],[[ri(65,PMW-65),14],[ri(65,PMW-65),PMH-18]]];let st,en;
+  const CR=Math.round(34*S),cor=[[CR,CR],[PMW-CR,CR],[CR,PMH-CR],[PMW-CR,PMH-CR]],wc=Math.floor(rnd()*4),WA=cor[wc],opp=cor[3-wc];
+  const SD=50*S,sides=[[[14,ri(SD,PMH-SD)],[PMW-20,ri(SD,PMH-SD)]],[[ri(SD,PMW-SD),14],[ri(SD,PMW-SD),PMH-18]]];let st,en;
   {const k=Math.floor(rnd()*2),flip=rnd()<.5,s0=sides[k];st=flip?s0[1]:s0[0];en=flip?s0[0]:s0[1];}
   const awayWA=(q,r)=>{const dx=q[0]-WA[0],dy=q[1]-WA[1],d=Math.hypot(dx,dy);if(d<r){q[0]=WA[0]+dx/(d||1)*r;q[1]=WA[1]+dy/(d||1)*r}q[0]=cl(q[0],M,PMW-M);q[1]=cl(q[1],M,PMH-M);return q};
   awayWA(st,62*S);st[0]=cl(st[0],14,PMW-14);st[1]=cl(st[1],14,PMH-14);
-  const ba=awayWA([cl(en[0],40,PMW-40),cl(en[1],40,PMH-40)],70*S);ba[0]=cl(ba[0],36,PMW-36);ba[1]=cl(ba[1],36,PMH-36);if(ba[0]<40||ba[0]>PMW-40||ba[1]<40||ba[1]>PMH-40){ba[0]=cl(ba[0],40,PMW-40);ba[1]=cl(ba[1],40,PMH-40)}
+  const BM=Math.round(30*S);const ba=awayWA([cl(en[0],BM,PMW-BM),cl(en[1],BM,PMH-BM)],70*S);ba[0]=cl(ba[0],36,PMW-36);ba[1]=cl(ba[1],36,PMH-36);if(ba[0]<BM||ba[0]>PMW-BM||ba[1]<BM||ba[1]>PMH-BM){ba[0]=cl(ba[0],BM,PMW-BM);ba[1]=cl(ba[1],BM,PMH-BM)}
   // main road: wander from start to the boss with big sideways swings
-  const N=14+Math.floor(rnd()*4),wp=[st.slice()],ux=ba[0]-st[0],uy=ba[1]-st[1],L=Math.hypot(ux,uy),nx=-uy/L,ny=ux/L,amp=ri(48*S,80*S),ph=rnd()*6.28,fr=ri(1.2,2.4);
+  const N=20+Math.floor(rnd()*5),wp=[st.slice()],ux=ba[0]-st[0],uy=ba[1]-st[1],L=Math.hypot(ux,uy),nx=-uy/L,ny=ux/L,amp=ri(48*S,80*S),ph=rnd()*6.28,fr=ri(1.2,2.4);
   for(let k=1;k<N;k++){const t=k/N,o=amp*Math.sin(t*Math.PI*fr+ph)+ri(-16*S,16*S);wp.push(awayWA([st[0]+ux*t+nx*o,st[1]+uy*t+ny*o],60*S))}
   wp.push(ba.slice());
   // side branches ending in open fields, and a couple of wide clearings on the road
-  const br=[],fd=[],nb=4+Math.floor(rnd()*2);
-  for(let b=0;b<nb;b++){const k=1+Math.floor(rnd()*(N-2)),o=wp[k],a=rnd()*6.283,len=ri(45*S,85*S),e=awayWA([o[0]+Math.cos(a)*len,o[1]+Math.sin(a)*len],62*S),mid=[(o[0]+e[0])/2+ri(-18,18),(o[1]+e[1])/2+ri(-18,18)];
+  const br=[],fd=[],nb=6+Math.floor(rnd()*2);
+  for(let b=0;b<nb;b++){const k=1+Math.floor(rnd()*(N-2)),o=wp[k],a=rnd()*6.283,len=ri(45*S,85*S),e=awayWA([o[0]+Math.cos(a)*len,o[1]+Math.sin(a)*len],62*S),mid=[(o[0]+e[0])/2+ri(-14*S,14*S),(o[1]+e[1])/2+ri(-14*S,14*S)];
     br.push([o.slice(),awayWA(mid,58*S),e]);fd.push([e[0],e[1],ri(17*S,23*S)])}
-  for(let f=0;f<4;f++){const k=2+Math.floor(rnd()*(N-3)),q=wp[k];fd.push([q[0],q[1],ri(19*S,25*S)])}
-  // six camp clearings: field ends first, then spread along the road
-  const NC=PM_NC,cls=[];let spc=64*S;const far=q=>Math.hypot(q[0]-st[0],q[1]-st[1])>39&&Math.hypot(q[0]-ba[0],q[1]-ba[1])>48&&cls.every(c=>Math.hypot(c[0]-q[0],c[1]-q[1])>spc);
+  for(let f=0;f<6;f++){const k=2+Math.floor(rnd()*(N-3)),q=wp[k];fd.push([q[0],q[1],ri(19*S,25*S)])}
+  // PM_NC camp clearings: field ends first, then spread along the road
+  const NC=PM_NC,cls=[];let spc=64*S;const far=q=>Math.hypot(q[0]-st[0],q[1]-st[1])>30*S&&Math.hypot(q[0]-ba[0],q[1]-ba[1])>34*S&&cls.every(c=>Math.hypot(c[0]-q[0],c[1]-q[1])>spc);
   fd.forEach(f=>{if(cls.length<NC-1&&far(f))cls.push([f[0],f[1]])});
   const segs=[];for(let k=0;k<N;k++)segs.push([wp[k],wp[k+1]]);br.forEach(l=>{for(let k=0;k<l.length-1;k++)segs.push([l[k],l[k+1]])});
-  for(let tries=0;cls.length<NC&&tries<2400;tries++){if(tries&&tries%150==0)spc=Math.max(36,spc-6);const sg=segs[Math.floor(rnd()*segs.length)],t=rnd(),q=[sg[0][0]+(sg[1][0]-sg[0][0])*t,sg[0][1]+(sg[1][1]-sg[0][1])*t];if(far(q))cls.push(q)}
+  for(let tries=0;cls.length<NC&&tries<4000;tries++){if(tries&&tries%150==0)spc=Math.max(36,spc-6);const sg=segs[Math.floor(rnd()*segs.length)],t=rnd(),q=[sg[0][0]+(sg[1][0]-sg[0][0])*t,sg[0][1]+(sg[1][1]-sg[0][1])*t];if(far(q))cls.push(q)}
   while(cls.length<NC){const q=wp[1+cls.length%(N-1)];cls.push([q[0]+3,q[1]+3])}
   // order camps along the road so their levels rise with the route
   const prog=q=>{let bi=0,bd=1e9;wp.forEach((w,k)=>{const d=Math.hypot(w[0]-q[0],w[1]-q[1]);if(d<bd){bd=d;bi=k}});return bi};cls.sort((a,b)=>prog(a)-prog(b));
@@ -964,7 +965,7 @@ const MAP=(()=>{
   // grass, accent and water patches inside the walkable ground
   const blob=(ch,bi,n,a,b2)=>{const p=PMAP[bi-1];for(let i=0;i<n;i++){let cx=0,cy=0;for(let k=0;k<60;k++){const q=p.path[Math.floor(rnd()*p.path.length)];cx=Math.round(q[0]+(rnd()-.5)*22);cy=Math.round(q[1]+(rnd()-.5)*22);if(m[cy]&&m[cy][cx]=='.')break}
     const r=a+rnd()*(b2-a);for(let y=Math.floor(cy-r*1.3)-1;y<cy+r*1.3+1;y++)for(let x=Math.floor(cx-r)-1;x<cx+r+1;x++){if(!m[y]||m[y][x]!='.')continue;if(Math.hypot(x-cx,(y-cy)*1.25)<r*(.75+.25*Math.sin(x*1.7+y*1.1+i)))m[y][x]=ch}}};
-  PMAP.forEach(p=>{const b=BIOMES[p.bi],d=b.den;blob('g',p.bi,Math.round(68*d[0]),3,7);blob('a',p.bi,Math.round(44*d[1]),3,7);blob('~',p.bi,Math.round(15*d[3]),1.6,3.4)});
+  PMAP.forEach(p=>{const b=BIOMES[p.bi],d=b.den;blob('g',p.bi,Math.round(40*PMA*d[0]),3,7);blob('a',p.bi,Math.round(26*PMA*d[1]),3,7);blob('~',p.bi,Math.round(9*PMA*d[3]),1.6,3.4)});
   // never block the road itself or the arenas with water
   const keep=(cx,cy,r)=>{for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=Math.floor(cx-r);x<=cx+r;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<r)m[y][x]='a'};
   PMAP.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],14));keep(p.ba[0],p.ba[1],PM_DENR+1);keep(p.wa[0],p.wa[1],16)});
@@ -1183,13 +1184,13 @@ function buildTerrain(chk){
   float vn3(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs3(i),hs3(i+vec2(1,0)),f.x),mix(hs3(i+vec2(0,1)),hs3(i+vec2(1,1)),f.x),f.y);}
   float fb3(vec2 p){return vn3(p)*.55+vn3(p*2.1)*.3+vn3(p*4.3)*.15;}`;
   mat.flatShading=true;mat.userData.lps=1;
-  mat.onBeforeCompile=sh=>{sh.uniforms.uWH={value:new THREE.Vector2(W,H)};
+  const obc=T=>sh=>{sh.uniforms.uWH={value:new THREE.Vector2(T.w,T.h)};sh.uniforms.uGO={value:new THREE.Vector2(T.x0,T.y0)};
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWP=position;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;uniform vec2 uWH;\n'+NZ).replace('#include <map_fragment>',`
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;uniform vec2 uWH,uGO;\n'+NZ).replace('#include <map_fragment>',`
     vec2 fi=floor(vWP.xz),ff=vWP.xz-fi;float par=mod(fi.x+fi.y,2.);
     vec2 co=par>.5?((ff.x+ff.y<1.)?vec2(.3333):vec2(.6667)):((ff.y>ff.x)?vec2(.3333,.6667):vec2(.6667,.3333));
     vec2 fc=fi+co;
-    vec4 tC=texture2D(map,vUv),tF=texture2D(map,vec2((fc.x+.5)/uWH.x,1.-(fc.y+.5)/uWH.y));float pav=step(tC.a,.995);
+    vec4 tC=texture2D(map,vUv),tF=texture2D(map,vec2((fc.x-uGO.x+.5)/uWH.x,1.-(fc.y-uGO.y+.5)/uWH.y));float pav=step(tC.a,.995);
     vec4 texelColor=mapTexelToLinear(mix(tF,tC,pav));diffuseColor.rgb*=texelColor.rgb;
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
      vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
@@ -1197,17 +1198,18 @@ function buildTerrain(chk){
      float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.82+.36*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
      float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.84+.28*n2)*mix(.84+.3*fh,1.,pav);
      diffuseColor.rgb=mix(diffuseColor.rgb,rock,rm);float sn=smoothstep(9.5,14.,yc+(n1-.5)*4.)*(1.-smoothstep(.22,.6,sl))*(1.-sand);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.9,.94,1.)*(.84+.16*fh),sn);}`)};
+  GTX.list.forEach(T=>{const m=T===GTX.main?mat:mat.clone();m.map=T.t;m.flatShading=true;m.userData.lps=1;m.onBeforeCompile=obc(T);T.mat=m});
   for(let cz=0;cz*CHN<H;cz++)for(let cx=0;cx*CHN<W;cx++){
-    const x0=cx*CHN,z0=cz*CHN,nx=Math.min(CHN,W-x0),nz=Math.min(CHN,H-z0),vc=(nx+1)*(nz+1),pos=new Float32Array(vc*3),nor=new Float32Array(vc*3),uv=new Float32Array(vc*2),idx=[];
+    const x0=cx*CHN,z0=cz*CHN,TT=GTX.pick(cx,cz),nx=Math.min(CHN,W-x0),nz=Math.min(CHN,H-z0),vc=(nx+1)*(nz+1),pos=new Float32Array(vc*3),nor=new Float32Array(vc*3),uv=new Float32Array(vc*2),idx=[];
     let y0=1e9,y1=-1e9;
     for(let iz=0;iz<=nz;iz++)for(let ix=0;ix<=nx;ix++){
       const x=x0+ix,z=z0+iz,k=iz*(nx+1)+ix,y=GHv(x,z);pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;
       const gx=GHv(x-1,z)-GHv(x+1,z),gz=GHv(x,z-1)-GHv(x,z+1),l=Math.hypot(gx,2,gz);nor[k*3]=gx/l;nor[k*3+1]=2/l;nor[k*3+2]=gz/l;
-      uv[k*2]=(x+.5)/W;uv[k*2+1]=1-(z+.5)/H;if(y<y0)y0=y;if(y>y1)y1=y}
+      uv[k*2]=(x-TT.x0+.5)/TT.w;uv[k*2+1]=1-(z-TT.y0+.5)/TT.h;if(y<y0)y0=y;if(y>y1)y1=y}
     for(let iz=0;iz<nz;iz++)for(let ix=0;ix<nx;ix++){const a=iz*(nx+1)+ix,b=a+1,c=a+nx+1,d=c+1;if((ix+iz)&1)idx.push(a,c,b,b,c,d);else idx.push(a,c,d,a,d,b)}
     if(y1<-30)continue; // v89: skip chunks that are all void
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);
-    const m=new THREE.Mesh(g,mat);m.receiveShadow=true;m.frustumCulled=false;m.visible=false;m.userData.cast=false;scene.add(m);
+    const m=new THREE.Mesh(g,TT.mat);m.receiveShadow=true;m.frustumCulled=false;m.visible=false;m.userData.cast=false;scene.add(m);
     const k=cz*100+cx,c=chk[k]=chk[k]||{ms:[],ns:[],on:false,non:false,box:null};c.ms.push(m);
     c.box=new THREE.Box3(new THREE.Vector3(x0-2,y0-2,z0-2),new THREE.Vector3(x0+nx+2,y1+9,z0+nz+2));
   }
@@ -1282,22 +1284,30 @@ function chunkVis(){
 
 function put(m,i,x,y,z,sx,sy,sz,hex,j){d0.position.set(x,y+GH(x,z),z);d0.scale.set(sx,sy,sz);d0.updateMatrix();m.setMatrixAt(i,d0.matrix);cc.setHex(hex).offsetHSL(0,0,(Math.random()-.5)*j);m.setColorAt(i,cc)}
 // ---- terrain: smooth painted ground (colors blend between neighboring tiles) ----
-const PX=4,GW=W*PX,GT=H*PX,gc=document.createElement('canvas');gc.width=GW;gc.height=GT;
-const g2=gc.getContext('2d'),gid=g2.createImageData(GW,GT);
+// v97: two ground textures painted from the same tile colours (see build/pN_world2.py): the world at GPX px per tile,
+// Duskhold's paved square at 4 px per tile. GTX.pick(cx,cz) gives a terrain chunk its texture.
+const GPX=2;
+const GTX=(()=>{
 const bc=(x,y)=>{x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));const t=MAP[y][x],b=BIOMES[MAP.bio[y][x]],w=b.wat;return t=='g'?b.grs:t=='a'?b.acc:t=='#'?b.frs:t=='R'?[b.gnd[0]*.45+42,b.gnd[1]*.45+40,b.gnd[2]*.45+38]:(t=='P'||t=='B'||t=='W')?[156,148,134]:t=='p'?[146,121,86]:t=='~'?(b.lava?[110,40,14]:[w[0]*.4,w[1]*.4,w[2]*.5]):b.gnd};
 const TC=new Float32Array(W*H*3),CF=new Uint8Array(W*H);
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=bc(x,y),k=y*W+x,t=MAP[y][x];TC[k*3]=c[0];TC[k*3+1]=c[1];TC[k*3+2]=c[2];CF[k]=(t=='P'||t=='B'||t=='W')?1:t=='p'?2:0}
-{const gd=gid.data,cl=(v,m)=>v<0?0:v>m?m:v;
-for(let qy=0;qy<GT;qy++){const ty=qy/PX-.5,y0=Math.floor(ty),fy=ty-y0,ya=cl(y0,H-1),yb=cl(y0+1,H-1),yr=cl(Math.round(ty),H-1);
-  for(let qx=0;qx<GW;qx++){
+const cl=(v,m)=>v<0?0:v>m?m:v;
+const paint=(OX,OY,TW,TH,PX)=>{const NW=TW*PX,NH=TH*PX,c=document.createElement('canvas');c.width=NW;c.height=NH;const g2=c.getContext('2d'),gid=g2.createImageData(NW,NH),gd=gid.data;
+ for(let ly=0;ly<NH;ly++){const qy=ly+OY*PX,ty=qy/PX-.5,y0=Math.floor(ty),fy=ty-y0,ya=cl(y0,H-1),yb=cl(y0+1,H-1),yr=cl(Math.round(ty),H-1);
+  for(let lx=0;lx<NW;lx++){const qx=lx+OX*PX;
     const tx=qx/PX-.5,x0=Math.floor(tx),fx=tx-x0,xa=cl(x0,W-1),xb=cl(x0+1,W-1),ct=CF[yr*W+cl(Math.round(tx),W-1)];let cb=1;
     if(ct==1){const rw=Math.floor(qy/2),lx=(qx+(rw&1)*1)%2;cb=(lx<.6||qy%2<.6)?.78:.96+(((qx/2|0)*7+rw*13)%7)/55}else if(ct==2){cb=.94+(((qx*7+qy*13)>>2)%5)/45}
-    const n=cb*(.9+.1*(Math.sin(qx*.31+qy*.17)+Math.sin(qx*.13-qy*.29)+Math.sin((qx+qy)*.05))/1.5+(((qx*73856093^qy*19349663)>>>0)%100)/100*.07),k=(qy*GW+qx)*4,
+    const n=cb*(.9+.1*(Math.sin(qx*.31+qy*.17)+Math.sin(qx*.13-qy*.29)+Math.sin((qx+qy)*.05))/1.5+(((qx*73856093^qy*19349663)>>>0)%100)/100*.07),k=(ly*NW+lx)*4,
       i0=(ya*W+xa)*3,i1=(ya*W+xb)*3,i2=(yb*W+xa)*3,i3=(yb*W+xb)*3,w0=(1-fx)*(1-fy)*n,w1=fx*(1-fy)*n,w2=(1-fx)*fy*n,w3=fx*fy*n;
     gd[k]=TC[i0]*w0+TC[i1]*w1+TC[i2]*w2+TC[i3]*w3;gd[k+1]=TC[i0+1]*w0+TC[i1+1]*w1+TC[i2+1]*w2+TC[i3+1]*w3;gd[k+2]=TC[i0+2]*w0+TC[i1+2]*w1+TC[i2+2]*w2+TC[i3+2]*w3;gd[k+3]=ct?250:255;
-  }}}
-g2.putImageData(gid,0,0);
-const gt=new THREE.CanvasTexture(gc);gt.anisotropy=ren.capabilities.getMaxAnisotropy();
+  }}
+ g2.putImageData(gid,0,0);return {c,x0:OX,y0:OY,w:TW,h:TH,px:PX}};
+// the paved square: chunk-aligned (CHN=32) rectangle around the town, the road to the Portal Court and the Courtyard path
+const TR=[0,7,3,10],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);
+return {main,town,list:[main,town],pick:(cx,cz)=>cx>=TR[0]&&cx<TR[2]&&cz>=TR[1]&&cz<TR[3]?town:main}})();
+const gt=new THREE.CanvasTexture(GTX.main.c);gt.anisotropy=ren.capabilities.getMaxAnisotropy();GTX.main.t=gt;
+try{for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=MAP[y][x];if((t=='P'||t=='B'||t=='W'||t=='p')&&GTX.pick(x>>5,y>>5)!==GTX.town){console.warn('paved tile outside the town texture',x,y);y=H;break}}}catch(_){}
+const gtT=new THREE.CanvasTexture(GTX.town.c);gtT.anisotropy=gt.anisotropy;GTX.town.t=gtT;
 const NODE={},ZM=new THREE.Matrix4().makeScale(0,0,0),regN=(x,y,m,i)=>{(NODE[y*W+x]=NODE[y*W+x]||[]).push([m,i,null])};
 const hx=(a,k)=>((a[0]*k|0)<<16)|((a[1]*k|0)<<8)|(a[2]*k|0);
 const trees=[],gr=[];
@@ -5839,7 +5849,7 @@ const DUNS=[
  {n:'Ossuary of Kings',z:4,lv:[33,39],tx:574,ty:231,col:0xd8d0b8,flo:0x48443c,wal:0x5c564a},
  {n:'Stormspire Vault',z:5,lv:[43,49],tx:700,ty:224,col:0x9ad8ff,flo:0x34384a,wal:0x44485e}
 ];
-const DX0=1200,DZ0=40,DGW=72,DGH=34;let inDun=null;const dunClears={};
+const DX0=W+60,DZ0=40,DGW=72,DGH=34;let inDun=null;const dunClears={};
 // put each entrance on the nearest open, walkable tile
 DUNS.forEach(D=>{let best=null,bd=1e9;for(let r=0;r<30&&!best;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=D.tx+dx,y=D.ty+dy;if(x<3||y<3||x>W-4||y>H-4)continue;const t=MAP[y][x];
   if(!'.ga'.includes(t)||townAt(x,y,4)>=0||BOSSES.some(b=>Math.hypot(b.x-x,b.y-y)<20*DK))continue;let ok=true;for(let q=-1;q<=1;q++)for(let w=-1;w<=1;w++){const u=MAP[y+q]&&MAP[y+q][x+w];if(!u||'#~rRWB'.includes(u))ok=false}if(!ok)continue;const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=[x,y]}}
@@ -7050,7 +7060,7 @@ function x2Load(s){(s.own||[]).forEach(k=>dex.own.add(k));(s.egg||[]).forEach(k=
 
 // ================= v52: dark-fantasy look — nebula skies, giant moon, colored moonlight, glowing mist, vivid grade =================
 document.body.classList.toggle('psx',PSXON);document.body.classList.toggle('psxpx',PSXON&&PSXH>0);
-if(PSXON&&PSXH>0&&typeof gt!='undefined'){gt.magFilter=THREE.NearestFilter;gt.needsUpdate=true}
+if(PSXON&&PSXH>0&&typeof gt!='undefined'){[gt,typeof gtT!='undefined'?gtT:null].forEach(t=>{if(t){t.magFilter=THREE.NearestFilter;t.needsUpdate=true}})}
 const hxC=s=>new THREE.Color(s);
 // one palette per zone, taken from the reference art
 const ZPAL=[
@@ -8645,13 +8655,14 @@ function spawnWild(P,dmin){const r=regionAt(Math.round(P.x),Math.round(P.z));if(
 // v72: each zone has a fixed population for the visit — the dead stay dead until you leave and come back through the portal
 var ROST={r:-9,slots:[],left:0,quiet:false};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
-var ROST_G=60;
+// v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
+var ROST_G=130;
 function rosterBuild(r){const p=PMAP[r],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.pm!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
   // roaming groups spread across the whole zone
-  const grp=[];for(let t=0;t<16000&&grp.length<ROST_G;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
+  const grp=[];for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
     if(Math.hypot(x-p.ba[0],z-p.ba[1])<Math.max(30,24*DK)||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
@@ -19734,8 +19745,9 @@ function mmRimPaint(){try{
   PMAP.forEach((p,ri)=>{const x0=p.x0,y0=p.y0,x1=p.x0+PMW-1,y1=p.y0+PMH-1,bm=BIOMES[p.bi]||BIOMES[0];
     const inner=(bm.frs||[30,24,28]).map(v=>Math.round(v*.8)),outer=bm.n=='The Citadel'?[150,100,108]:[96,92,88];
     const L=[];let edge=0;
+    // v97: the neighbour test checks the zone rectangle directly instead of calling regionAt() (same result, faster bake)
     for(let y=y0+1;y<y1;y++){const row=MAP[y];if(!row)continue;for(let x=x0+1;x<x1;x++){if(row[x]!=='')continue;
-      let d=9;for(let dy=-3;dy<=3&&d>1;dy++){const r2=MAP[y+dy];if(!r2)continue;for(let dx=-3;dx<=3;dx++){if(!walk(r2[x+dx])||regionAt(x+dx,y+dy)!==ri)continue;const q=Math.hypot(dx,dy);if(q<d)d=q}}
+      let d=9;for(let dy=-3;dy<=3&&d>1;dy++){const r2=MAP[y+dy];if(!r2)continue;for(let dx=-3;dx<=3;dx++){if(x+dx<x0||x+dx>x1||y+dy<y0||y+dy>y1||!walk(r2[x+dx]))continue;const q=Math.hypot(dx,dy);if(q<d)d=q}}
       if(d>3.1)continue;L.push(x,y,d);if(d<1.5)edge++}}
     if(edge<200)return;                 // zones whose rim is already trees/rock (all but the Citadel today) are left as they are
     const id=c.getImageData(x0,y0,PMW,PMH);
@@ -21451,7 +21463,8 @@ new MutationObserver(()=>{if(V90D.p&&$('bag').classList.contains('hide'))v90End(
   if(sl){const t=v90DollEl(sl);if(t){t.classList.add(V90D.ok?'v90-ok':'v90-no');V90D.hl.push(t)}}else{const b=document.querySelector('#bag .kqm-bagg')||$('bl');if(b){b.classList.add('v90-binz');V90D.hl.push(b)}}}}catch(_){}return r}}
 
 // ================= v89 world: bigger zones, themed decorations, old-layout saves =================
-// The zone layout itself is in w0_world.js (PMS=1.3: zones 338x351, 5 camps each) and build/pN_world.py (W/H, ground texture).
+// The zone layout itself is in w0_world.js (v97: PMS=1.82, zones 473x491, 8 camps each) and build/pN_world.py (W/H);
+// the v97 changes (ground textures, dungeons, realm, mob count) are in build/pN_world2.py and zzN_world2.js.
 // Decorations: wdDeco() runs at load just before buildVI() (it is a hoisted function, so nothing here may rely on module-level
 // vars being set yet). It places themed props per zone into WD.list and their collider tiles into WDCOL (CBLK starts from it).
 // wdBuild() runs right after buildVI(): it builds one InstancedMesh per part per 64x64 chunk and hands the chunks to chunkVis
@@ -21668,7 +21681,7 @@ function wdDeco(){const T0=performance.now();
       const cp=bank?null:S.cp?S.cp:S.col?[[0,0,S.col]]:null;
       if(cp){const c=Math.cos(ry),sn=Math.sin(ry),pts=cp.map(([lx,lz,rr])=>[x+(lx*c+lz*sn)*s,y+(-lx*sn+lz*c)*s,rr*s]);
         for(const [px,pz,rr] of pts){if(DW[Math.round(pz)*W+Math.round(px)]>-(rr+2.2)||t(px,pz)=='~'||rd(px,pz)<6+rr)return false}
-        const R0=Math.max(...pts.map(q=>Math.hypot(q[0]-x,q[1]-y)+q[2]));if(!free(x,y,R0))return false;
+        const R0=Math.max(...pts.map(q=>Math.hypot(q[0]-x,q[1]-y)+q[2]));if(!free(x,y,R0)||rd(x,y)<5.75+R0)return false; // v97: the whole prop stays 5 tiles off the road centre (rd is per tile: +.75)
         const tl=[];pts.forEach(([px,pz,rr])=>{for(let j=Math.floor(pz-rr-1);j<=Math.ceil(pz+rr+1);j++)for(let i=Math.floor(px-rr-1);i<=Math.ceil(px+rr+1);i++)if(Math.hypot(i-px,j-pz)<=rr+.3)tl.push(j*W+i);tl.push(Math.round(pz)*W+Math.round(px))});
         if(tl.some(k=>ptile.has(k)))return false;
         tl.forEach(k=>col.add(k));big.push([x,y,R0]);it.col=R0;it.tl=tl}
@@ -21721,27 +21734,71 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
   try{const v=window.WD_RK;if(v)for(let i=0;i<v.n;i++){const x=v.M[i*16+12],z=v.M[i*16+14];if(regionAt(Math.round(x),Math.round(z))!==3)continue;
     const q=((x*12.9898+z*78.233)%1+1)%1;cc.setHex(0xd09060).multiplyScalar(.82+.3*q);v.C.set([cc.r,cc.g,cc.b],i*3);const m=v.cm[i];if(m&&m.instanceColor){m.instanceColor.setXYZ(v.cl[i],cc.r,cc.g,cc.b);m.instanceColor.needsUpdate=true}}}catch(err){console.warn('sand rocks',err)}
   WD.stats.buildMs=Math.round(performance.now()-T0);WD.stats.meshes=WD.ms.length}
-// ---------- old saves: the zone layout changed in v89 ----------
-// x2 carries wl:89. A save without it was made on the old layout: a position in a zone goes to that zone's entrance,
-// a saved zone run (INST) is dropped, treasure-map marks are moved to a free spot in the same tier.
-var WD_OLD={x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270};
-function wdOldZone(x,z){for(let i=0;i<6;i++)if(x>=WD_OLD.x0[i]&&x<WD_OLD.x0[i]+WD_OLD.w&&z>=WD_OLD.y0[i]&&z<WD_OLD.y0[i]+WD_OLD.h)return i;return -1}
-{const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=89;if(s.inst)s.inst=Object.assign({},s.inst,{wl:89})}catch(_){}return s}}
+// ---------- old saves: the zone layout changed in v89 and again in v97 ----------
+// x2 carries wl (layout version, WD_WL). A save from another layout: a position in a zone goes to that zone's entrance
+// (the old zone is found on that layout's grid, WD_OLDG: v89 saves carry wl:89, older ones none), a saved zone run (INST)
+// is dropped, treasure maps keep their zone (m.r; maps from before v89 get the zone they were in) and are re-placed on a
+// reachable spot in it (zzN_loot.js tmMigrate). Duskhold, the Portal Court and the Courtyard never moved (x < 110).
+var WD_WL=97;
+var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351}};
+var WD_OLD=WD_OLDG[88];
+function wdOldZone(x,z,wl){const G=WD_OLDG[wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
+{const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=WD_WL;if(s.inst)s.inst=Object.assign({},s.inst,{wl:WD_WL})}catch(_){}return s}}
 var WD_LOADOLD=false;
-{const f=x2Load;x2Load=function(s){WD_LOADOLD=!(s&&s.wl===89);
-  // old-layout treasure maps: tag each with the zone it was in on the old grid (by its saved spot), then the loot
-  // module's migration (inside f) re-picks a reachable spot in that same zone on the new grid
-  try{if(WD_LOADOLD&&s&&Array.isArray(s.tmaps))s.tmaps.forEach(m=>{if(m&&m.r==null){const oz=wdOldZone(Math.round(m.x),Math.round(m.z));if(oz>=0){m.r=oz;m.x=-1;m.z=-1}}})}catch(_){}
+{const f=x2Load;x2Load=function(s){const wl=s&&s.wl;WD_LOADOLD=wl!==WD_WL;
+  // other-layout treasure maps: keep (or find, on the old grid) the zone, forget the spot; the loot module's migration
+  // (inside f) then picks a reachable spot in that same zone on the new grid
+  try{if(WD_LOADOLD&&s&&Array.isArray(s.tmaps))s.tmaps.forEach(m=>{if(!m)return;if(m.r==null){const oz=wdOldZone(Math.round(m.x),Math.round(m.z),wl);if(oz<0)return;m.r=oz}m.x=-1;m.z=-1})}catch(_){}
   const r=f.apply(this,arguments);try{
-  if(typeof INST!='undefined'&&INST&&INST.wl!==89)INST=null;
+  if(typeof INST!='undefined'&&INST&&INST.wl!==WD_WL)INST=null;
   if(WD_LOADOLD&&Array.isArray(tmaps)&&typeof tmMigrate!='function')tmaps=tmaps.map(m=>{if(freeSpot(Math.round(m.x),Math.round(m.z),1)&&tierAt(m.x,m.z)==m.T)return m;
     for(let k=0;k<400;k++){const x=8+Math.floor(Math.random()*(W-16)),y=8+Math.floor(Math.random()*(H-16));if(tierAt(x,y)==m.T&&regionAt(x,y)>=0&&freeSpot(x,y,1))return Object.assign({},m,{x,z:y})}return null}).filter(Boolean)}catch(err){console.warn('world load',err)}return r}}
 {const f=loadGame;loadGame=function(){const s=saveInfo&&saveInfo();const r=f.apply(this,arguments);try{
-  const old=!(s&&s.x2&&s.x2.wl===89);if(old&&s&&s.pos&&!s.pos.realm&&!inRealm&&!inDun){const oz=wdOldZone(s.pos.x,s.pos.z);
+  const wl=s&&s.x2&&s.x2.wl,old=wl!==WD_WL;if(old&&s&&s.pos&&!s.pos.realm&&!inRealm&&!inDun){const oz=wdOldZone(s.pos.x,s.pos.z,wl);
     if(oz>=0){const p=PMAP[oz],n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]))}
     else{const x=Math.round(pl.position.x),z=Math.round(pl.position.z);if(x>=110||MAP.DW[z*W+x]>=0)toPos(START[0],START[1])}}}catch(err){console.warn('world load pos',err)}return r}}
 // the Citadel's castle walls only draw while you are in the Citadel (they were drawn from every zone and Duskhold)
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{if(window.CITW){const on=!inRealm&&!inDun&&regionAt(Math.round(pl.position.x),Math.round(pl.position.z))===5;if(CITW[0].visible!==on)CITW.forEach(m=>m.visible=on)}}catch(_){}}}
+
+// ================= v97 world: every zone 40% bigger again =================
+// Layout: w0_world.js (PMS=1.82: zones 473x491, 20-24 road waypoints, 6-7 branches, 6 road clearings, 8 camps);
+// grid W=1559,H=1010 in build/pN_world.py; split ground texture and the dungeon offset in build/pN_world2.py;
+// 130 roaming groups in zz7_v71.js (ROST_G); old-layout saves (wl 97) in zzN_world.js. This file:
+//  1. chunkVis only looks at the chunks near you (there are ~1,100 visibility chunks now, was ~620)
+//  2. the realm island (RX/RZ 1000) now sits just south of The Dirge's edge: it is hidden while you are in the world,
+//     and the zone scenery near it is hidden while you are in the realm
+
+// ---- 1. chunk visibility from a coarse grid ----
+// Same rule as the base chunkVis (draw within FARR and in view, small props within NEARR, shadows within 34), but each
+// frame only the chunks in grid cells around the hero plus the ones that are currently shown are tested.
+var CVG={n:-1,B:128,g:new Map(),live:new Set(),f:0};
+function cvgBuild(){const B=CVG.B;CVG.g=new Map();CVG.live=new Set();CVG.n=CHL.length;
+  CHL.forEach(c=>{const k=Math.floor((c.box.min.z+c.box.max.z)/2/B)*1000+Math.floor((c.box.min.x+c.box.max.x)/2/B);let L=CVG.g.get(k);if(!L)CVG.g.set(k,L=[]);L.push(c);if(c.on||c.non)CVG.live.add(c)})}
+chunkVis=function(){
+  if(CVG.n!==CHL.length)cvgBuild();
+  cam.updateMatrixWorld();PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);FR.setFromProjectionMatrix(PM);
+  const p=pl.position,B=CVG.B,R=Math.max(FARR,NEARR)+48,test=c=>{const d=c.box.distanceToPoint(p),inF=d<20||FR.intersectsBox(c.box),on=!inRealm&&d<FARR&&inF,non=!inRealm&&d<NEARR&&(d<12||inF),cs=d<34;
+    if(on!==c.on||(on&&cs!==c.cs)){c.on=on;c.cs=cs;c.ms.forEach(m=>{m.visible=on;m.castShadow=on&&cs&&m.userData.cast})}
+    if(non!==c.non){c.non=non;c.ns.forEach(m=>{m.visible=non;m.castShadow=false})}
+    if(c.on||c.non)CVG.live.add(c);else CVG.live.delete(c)};
+  const F=++CVG.f;
+  if(!inRealm)for(let gz=Math.floor((p.z-R)/B);gz<=Math.floor((p.z+R)/B);gz++)for(let gx=Math.floor((p.x-R)/B);gx<=Math.floor((p.x+R)/B);gx++){const L=CVG.g.get(gz*1000+gx);if(L)for(const c of L){c.cvf=F;test(c)}}
+  for(const c of CVG.live)if(c.cvf!==F)test(c);
+};
+
+// ---- 2. realm island vs. the zones ----
+var RLV={on:null,hid:[],n:0};
+function rlvSync(force){try{if(typeof RLG=='undefined')return;const on=!!inRealm;
+  if(on===RLV.on&&!force)return;
+  if(on!==RLV.on){RLV.on=on;RLG.visible=on;if(!on){RLV.hid.forEach(o=>{if(o.userData.rlvH){o.visible=true;delete o.userData.rlvH}});RLV.hid=[]}}
+  if(on)for(const o of scene.children){if(!o.visible||o===RLG||o.isLight||o.isCamera)continue;const x=o.position.x,z=o.position.z;
+    if(x===0&&z===0)continue;if(regionAt(Math.round(x),Math.round(z))<0)continue;
+    if(Math.abs(x-RX-RN/2)>260||Math.abs(z-RZ-RN/2)>260)continue;o.visible=false;o.userData.rlvH=1;RLV.hid.push(o)}
+}catch(err){console.warn('realm view',err)}}
+{const f=realmEnv;realmEnv=function(on){const r=f.apply(this,arguments);rlvSync(true);return r}}
+// things that switch themselves back on (or appear) while in the realm are caught every half second
+{const f=atmos;atmos=function(dt,now){f.apply(this,arguments);rlvSync(inRealm&&++RLV.n%30==0)}}
+rlvSync(true);
 
 $('talBtn').onclick=openTal;
 try{paceWrap()}catch(err){console.error('pace wrap',err)}

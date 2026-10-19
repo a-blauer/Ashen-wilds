@@ -1,7 +1,8 @@
 # v89 world track: bigger zones (the layout itself lives in src/modules/w0_world.js), themed decorations (zzN_world.js).
 # Runs inside pV11 with the shared `h` and `rep`.
-# 1. the world grid grows with the zones: three 338-wide zones per row (x0 110/458/806), two rows of 351 (y0 8/369)
-rep("const W=920,H=568,TS=21,TK=1.5;","const W=1154,H=730,TS=21,TK=1.5;")
+# 1. the world grid grows with the zones: three zones per row, two rows, 10 void tiles between them.
+#    v89: 338x351 zones (x0 110/458/806, y0 8/369) -> 1154x730; v97: 473x491 zones (x0 110/593/1076, y0 8/509) -> 1559x1010
+rep("const W=920,H=568,TS=21,TK=1.5;","const W=1559,H=1010,TS=21,TK=1.5;")
 # 2. the painted ground texture is 5 px per tile; at the bigger grid that is 5770x3650 (21M px). 4 px per tile keeps it the
 #    same size as before (4616x2920); the town cobbles keep their size in tiles.
 rep("const PX=5,GW=W*PX,GT=H*PX,","const PX=4,GW=W*PX,GT=H*PX,")

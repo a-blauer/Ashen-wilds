@@ -34,7 +34,7 @@ def s(pg):
       window.CCL=C=>typeof campCleared=='function'?campCleared(C):null;window.MAPL=()=>{WML=[];openWMap();$('wmap').classList.add('hide');return WML.filter(t=>t.indexOf('⛺')>=0)};
       STEP(.5);rosterTick();return [ROST.r,CAMPS.filter(C=>C.pm===0).length]}""")
     r=P('camps',"()=>{const L=CAMPS.filter(C=>C.pm===0);return [L.length,L.map(C=>ROST.slots.filter(s=>s.camp===C).length),MAPL()]}")
-    ok('5 camps, all red at the start',r[0]==5 and all(n>0 for n in r[1]) and not any('cleared' in t for t in r[2]))
+    ok('8 camps (v97), all red at the start',r[0]==8 and all(n>0 for n in r[1]) and not any('cleared' in t for t in r[2]))
     r=P('clear camp',"""()=>{const C=CAMPS.filter(C=>C.pm===0).sort((a,b)=>Math.hypot(a.x-pl.position.x,a.z-pl.position.z)-Math.hypot(b.x-pl.position.x,b.z-pl.position.z))[0];window.CC=C;
        toPos(C.x+CAMP_R+3,C.z);STEP(.3);rosterTick();STEP(.3);let n=0;
        for(let k=0;k<12;k++){enemies.filter(e=>e.camp===C&&!e.dead).forEach(e=>{hurt(e,1e9,{});n++});STEP(.2);rosterTick()}

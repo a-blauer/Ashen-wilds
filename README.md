@@ -150,11 +150,11 @@ Track files: `build/pN_dens.py`, `src/modules/zzN_dens.js`, `zzN_dens_sign.js`, 
 ## v89: world
 
 `build/pN_world.py` (text patches) + `src/modules/zzN_world.js`; the layout numbers live in `w0_world.js`.
-- **Bigger zones**: every zone is 30% bigger each way (`PMS=1.3`, 338×351): longer winding road (14–17 waypoints), wider swings, 4–5 side branches, 4 road clearings, 5 camps (`PM_NC`), the den keeps an open circle of `PM_DENR`=25 around `ba` (no rocks, nodes, camps or decorations). About 1.8× the walkable ground; the roster has 60 roaming groups (`ROST_G`, was 45 but the old zones only fit ~22–40) and 5×7 camp mobs: 125–140 mobs per zone (was 58–86), ~1.8× at about the same density; roaming groups stay 30 tiles from the den. Levels still run entrance → boss along `pmProg`. Duskhold, the Portal Court and the Courtyard keep their coordinates (they sit west of x=110).
-- **Grid**: `W=1154,H=730`; the painted ground texture is 4 px per tile (was 5) so it stays ~4600×2900; terrain chunks that are all void are skipped (fewer terrain triangles than before); the Citadel's castle-wall instances only draw inside the Citadel (`CITW`).
+- **Bigger zones** (v97: 40% bigger again, see v97: world): every zone is 30% bigger each way (`PMS=1.3`, 338×351): longer winding road (14–17 waypoints), wider swings, 4–5 side branches, 4 road clearings, 5 camps (`PM_NC`), the den keeps an open circle of `PM_DENR`=25 around `ba` (no rocks, nodes, camps or decorations). About 1.8× the walkable ground; the roster has 60 roaming groups (`ROST_G`, was 45 but the old zones only fit ~22–40) and 5×7 camp mobs: 125–140 mobs per zone (was 58–86), ~1.8× at about the same density; roaming groups stay 30 tiles from the den. Levels still run entrance → boss along `pmProg`. Duskhold, the Portal Court and the Courtyard keep their coordinates (they sit west of x=110).
+- **Grid** (v97: `W=1559,H=1010`, two ground textures): `W=1154,H=730`; the painted ground texture is 4 px per tile (was 5) so it stays ~4600×2900; terrain chunks that are all void are skipped (fewer terrain triangles than before); the Citadel's castle-wall instances only draw inside the Citadel (`CITW`).
 - **Decorations** (`wdDeco` before `buildVI`, `wdBuild` after it): ~6,900 seeded props (840–1,420 per zone, ~880 with colliders), 10–17 kinds per zone, placed in clusters with noise-driven density on walkable ground off the road (`in`/`edge`), beside the road (`lane`), on the raised rim (`bank`), on water and shores. Kindlelight: mossy twisted trees, giant roots, ferns, reeds, lily pads, rotting logs, stumps, glowing mushrooms, spider webs, lantern posts, mist. Hillside: wildflowers, tall grass, fences, standing-stone circles, boulders, serpent shrines, hay bales, cairns, totems. Burningeye: ice crystals, snow-capped rocks, frozen trees and pines, icicles, drifts, basalt columns, bones, climbers' cairns. Searing Sands: dunes, sandstone arches, ribcages, skulls, half-buried walls, broken pillars, carts, mesas, cacti, dead shrubs (and sandstone ridge boulders). The Dirge: graves, crosses, mausoleums, iron fences, dead trees, skull piles, candles, coffins, angel statues, ghost lamps, mist. Citadel: ruined walls, statues, gargoyles, banners, braziers, rubble, columns, graves, candelabras, blood pools, coffins. One `InstancedMesh` per part per 64×64 chunk, pushed into `CHL` (small kinds in the near list); glow parts are unlit, no extra lights. Big props have collider tiles (`WDCOL` → `CBLK`), are kept 6+ tiles from the road centre and 2.6 tiles apart; small ones don't collide. `WD.list`/`WD.stats` for tests.
 - **Terrain colour**: cliffs take some of the ground colour; sandy ground has no green tint or snow.
-- **Old saves**: `x2.wl=89` marks the new layout. An older save standing in a zone goes to that zone's entrance (old zone found with the old 260×270 grid), elsewhere unsafe → Duskhold; a saved zone run (`INST`) without `wl:89` is dropped; treasure-map marks that are no longer on free ground move to a free spot in the same tier.
+- **Old saves** (v97: `x2.wl=97`, see v97: world): `x2.wl=89` marks the new layout. An older save standing in a zone goes to that zone's entrance (old zone found with the old 260×270 grid), elsewhere unsafe → Duskhold; a saved zone run (`INST`) without `wl:89` is dropped; treasure-map marks that are no longer on free ground move to a free spot in the same tier.
 - Test: `test/v89_world.py` (sizes, mobs before/after, perf, nothing on the road/den/arenas, road walkable entrance → boss, colliders, old saves); `SRC=old.html NOCHK=1` prints only the numbers.
 
 ## v90: ui
@@ -320,6 +320,43 @@ Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it
   The measured interval is a little under ×2 because phase changes and den-forced moves (snuff, sandstorm/vortex at a phase change, eye bursts) still cast at once. `PACE.basic=false` turns the basics off (the v86 den tests do, so their hit counts only count mechanics).
 - **Ranged openers**: every enemy's attack cooldown starts at 1 and keeps running while it is idle, so when a pack aggroes on the same frame every archer/caster fires its first shot (the ranged attack is their basic) on that frame. Now each ranged/caster mob waits 1–4 s (random, `PACE.op`) after aggro before its first shot (it keeps repositioning), and within 16 tiles at most 2 ranged attacks may start per 0.6 s (`PACE.tok*`; others retry 0.25–0.65 s later). Host only (co-op mirrors replay the host's attacks). Pack of 6 casters/archers, 12 trials: ranged attacks in the first second 6.0 → 0.0, most in any 0.6 s window 6 → 2, first shots spread 0 → ~2 s.
 
+## v97: world
+
+`build/pN_world2.py` (text patches) + `src/modules/zzN_world2.js`; the layout numbers live in `w0_world.js`, the grid size in `build/pN_world.py`, the roster size in `zz7_v71.js` (`ROST_G`), the save migration in `zzN_world.js`. Test `test/v97_world.py` (`SRC=<old build> TAG=before NOCHK=1`, then `REF=out/v97_before.json` prints the tables below); screenshots `test/v97_shots.py` (`out/v97_z<i>a|b|hi.png`, zone map `v97_map<i>.png`, `ONLY=`, `TAG=`).
+- **Zones 40% bigger again**: 473×491 each (was 338×351; `PMS=1.82` against the original 260×270, `PMA` = area against it, 3.31), x0 110/593/1076, y0 8/509, grid `W=1559,H=1010`. The generator scales its distances by `PMS` (wave-arena corner, start/end sides, den margin, camp spacing, branch length, field size) and grows its counts: 20–24 road waypoints (was 14–17), 6–7 side branches (4–5), 6 road clearings (4), 8 camps (`PM_NC`, was 5). Grass/accent/water patches scale with `PMA`. Road width, den clearing (`PM_DENR`), wave arena and camp size are unchanged. About 2.1× the walkable ground.
+- **More mobs at the same density**: 130 roaming groups (`ROST_G`, was 60) + 8 camps × 7: 250–285 mobs per zone (was 127–140). Levels still run entrance → boss along `pmProg`; camps are sorted along the road, so their levels rise too.
+- **Decorations and harvest nodes** keep their density per tile, so there are about twice as many (~15,000 props, ~2,200 with colliders; 250–340 harvest nodes per zone). A big prop's whole collider now stays 5 tiles off the road centre (`zzN_world.js` `place`).
+- **Ground texture**: one 4 px/tile canvas would be 6236×4040 (25M px, ~130 MB on the GPU). The terrain shader reads that texture at full detail only on paved ground (`pav`); elsewhere it samples one colour per triangle at the tile centre, so the resolution there doesn't show (checked side by side at 2 and 4 px/tile). Now `gt` is the whole world at `GPX=2` px/tile (3118×2020) and `gtT` Duskhold's paved square at 4 px/tile (400×400, chunks x 0–96 / z 224–320 with a 2-tile apron); each terrain chunk takes the material of its texture (`GTX.pick`), the shader gets the texture's origin/size (`uGO`/`uWH`). 33 MB on the GPU instead of 68, painted in ~0.6 s instead of ~5.8 s; the ImageData and colour arrays are freed after painting.
+- **Culling**: `chunkVis` keeps its rule (FARR/NEARR/frustum, shadows within 34) but only tests the chunks in a 128-tile grid around the hero plus the ones currently shown (1,086 chunks now, was 621). Draw calls and triangles in view stay where they were.
+- **Realm island**: the realm (`RX/RZ` 1000) now lies just south of The Dirge's edge (the grid reaches z 1010). `RLG` is hidden while you are in the world, and while you are in the realm every top-level object standing in a zone within 260 tiles is hidden (restored when you leave; re-checked every 30 frames).
+- **Dungeon builder** `DX0` = `W+60` (was 1200, which is now inside Burningeye Summit; dungeons themselves were retired in v56). **Minimap rim** (`zzN_misc_minimap.js`): the neighbour test checks the zone rectangle instead of calling `regionAt` (bake ~0.6 s for the bigger zones).
+- **Old saves**: `x2.wl=97`. A save from another layout standing in a zone goes to that zone's entrance (old zone found on its own grid: `WD_OLDG[89]` for v89 saves, `[88]` for older), anything west of the zones (Duskhold, Portal Court, Courtyard, all at x < 110) stays; a saved zone run (`INST`) without `wl:97` is dropped; treasure maps keep their zone (`m.r`) and get a new reachable spot in it (`tmMigrate`).
+
+  | zone | walkable tiles before → after | camps | roaming groups | mobs before → after | harvest nodes | decorations |
+  |---|---|---|---|---|---|---|
+  | Kindlelight | 29,732 → 65,997 (×2.22) | 5 → 8 | 60 → 130 | 133 → 284 (×2.14) | 111 → 302 | 1,341 → 3,094 |
+  | Hillside Crest | 33,416 → 64,237 (×1.92) | 5 → 8 | 60 → 130 | 128 → 266 (×2.08) | 141 → 279 | 1,421 → 2,815 |
+  | Burningeye Summit | 32,990 → 73,392 (×2.22) | 5 → 8 | 60 → 130 | 127 → 272 (×2.14) | 124 → 311 | 1,142 → 2,485 |
+  | Searing Sands | 31,267 → 73,298 (×2.34) | 5 → 8 | 60 → 130 | 140 → 277 (×1.98) | 130 → 340 | 1,155 → 2,747 |
+  | The Dirge | 30,668 → 61,090 (×1.99) | 5 → 8 | 60 → 130 | 140 → 257 (×1.84) | 140 → 250 | 1,011 → 1,994 |
+  | The Citadel | 30,186 → 65,657 (×2.18) | 5 → 8 | 60 → 130 | 129 → 285 (×2.21) | 88 → 272 | 839 → 1,911 |
+
+  (Roster sizes vary a little from visit to visit: groups of 1–3.) Performance, same headless harness (software WebGL, so frame times are only a rough guide; draw calls and triangles are exact):
+
+  | metric | before | after |
+  |---|---|---|
+  | world grid | 1154×730 | 1559×1010 |
+  | JS heap after load (after GC) | 56 MB | 73 MB |
+  | load: whole script / map / heightfield / ground texture / instancing | 9.5 / 0.14 / 1.6 / 5.8 / 0.27 s | 5.0 / 0.21 / 1.8 / 0.59 / 0.54 s |
+  | ground texture | 4616×2920, 68 MB GPU | 3118×2020 + 400×400, 33 MB GPU |
+  | terrain chunks / triangles (all) | 483 / 0.98 M | 847 / 1.71 M |
+  | visibility chunks / instanced deco meshes | 621 / 1,006 | 1,086 / 1,847 |
+  | world arrays (MAP, bio, DW, HF, water maps) | 26 MB | 48 MB |
+  | 12 road spots, median draw calls / triangles | 492 / 466 k | 463 / 422 k |
+  | 12 road spots, max draw calls / triangles | 628 / 648 k | 608 / 703 k |
+  | chunks drawn (avg) / mobs streamed in (avg) | 26.9 / 44 | 25.9 / 52 |
+  | zone map (N) draw / roster build per zone | 1.9 ms / 1–6 ms | 3.0 ms / 2–7 ms |
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
@@ -330,7 +367,7 @@ Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it
 
 ## World
 
-- `PMAP` (in `w0_world.js`): six 338×351 regions (v89: 1.3× the old 260×270 each way, `PMS`; x0 110/458/806, y0 8/369; world grid `W=1154,H=730`). Each map is generated by `pmGen()` from a seed: winding road (`wp`/`path`), side branches (`br`), open fields (`fd`), 5 camps (`cl`, `PM_NC`), boss arena (`ba`), sealed wave arena (`wa`), entrance (`en`). `regionAt(x,y)` → map index or −1 (Duskhold).
+- `PMAP` (in `w0_world.js`): six 473×491 regions (v97: 1.82× the original 260×270 each way, `PMS`; v89 was 338×351; x0 110/593/1076, y0 8/509; world grid `W=1559,H=1010`). Each map is generated by `pmGen()` from a seed: winding road (`wp`/`path`), side branches (`br`), open fields (`fd`), 8 camps (`cl`, `PM_NC`), boss arena (`ba`), sealed wave arena (`wa`), entrance (`en`). `regionAt(x,y)` → map index or −1 (Duskhold).
 - Monster level rises along the road: `zoneLv()` uses `pmProg()`.
 - Zone population (`zz7_v71.js`): a fixed roster per visit (`ROST`), streamed in within 78 tiles; kills stay dead until the zone is re-entered.
 - Duskhold: `TOWNS[0]`, Portal Court at `PCOURT`. Shops must be built through the Stronghold Steward (`SHOPS`, `SHU` upgrades in `zzzz_more.js`).

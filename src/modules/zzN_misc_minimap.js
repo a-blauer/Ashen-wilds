@@ -11,8 +11,9 @@ function mmRimPaint(){try{
   PMAP.forEach((p,ri)=>{const x0=p.x0,y0=p.y0,x1=p.x0+PMW-1,y1=p.y0+PMH-1,bm=BIOMES[p.bi]||BIOMES[0];
     const inner=(bm.frs||[30,24,28]).map(v=>Math.round(v*.8)),outer=bm.n=='The Citadel'?[150,100,108]:[96,92,88];
     const L=[];let edge=0;
+    // v97: the neighbour test checks the zone rectangle directly instead of calling regionAt() (same result, faster bake)
     for(let y=y0+1;y<y1;y++){const row=MAP[y];if(!row)continue;for(let x=x0+1;x<x1;x++){if(row[x]!=='')continue;
-      let d=9;for(let dy=-3;dy<=3&&d>1;dy++){const r2=MAP[y+dy];if(!r2)continue;for(let dx=-3;dx<=3;dx++){if(!walk(r2[x+dx])||regionAt(x+dx,y+dy)!==ri)continue;const q=Math.hypot(dx,dy);if(q<d)d=q}}
+      let d=9;for(let dy=-3;dy<=3&&d>1;dy++){const r2=MAP[y+dy];if(!r2)continue;for(let dx=-3;dx<=3;dx++){if(x+dx<x0||x+dx>x1||y+dy<y0||y+dy>y1||!walk(r2[x+dx]))continue;const q=Math.hypot(dx,dy);if(q<d)d=q}}
       if(d>3.1)continue;L.push(x,y,d);if(d<1.5)edge++}}
     if(edge<200)return;                 // zones whose rim is already trees/rock (all but the Citadel today) are left as they are
     const id=c.getImageData(x0,y0,PMW,PMH);
