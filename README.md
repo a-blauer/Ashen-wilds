@@ -357,6 +357,16 @@ Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it
   | chunks drawn (avg) / mobs streamed in (avg) | 26.9 / 44 | 25.9 / 52 |
   | zone map (N) draw / roster build per zone | 1.9 ms / 1–6 ms | 3.0 ms / 2–7 ms |
 
+## v98 perf_ai
+
+Level of detail for the enemy update. `build/pN_perf_ai.py` (two `rep()` patches in the main loop's enemy section) + `src/modules/zzN_perf_ai.js` (`AIL`, header explains it); test `test/v98_ai.py`.
+- **Rate by distance**: the main loop asks `aiLod(e,dpl,dtAI)` for the dt of each drawn enemy. Calm world mobs (`slot`/`camp`/`wild`, not aggroed) within `AIL.r1` (25 tiles) of a hero update every frame; farther ones every `AIL.n2`=2nd frame, every `AIL.n3`=3rd when also off-screen. Each enemy has a fixed phase (`e._aiPh`) so they take turns; the dt of skipped frames is saved (`e._aiAcc`) and handed on (cap `AIL.maxDt`), so speeds/timers/DoTs keep game time. A skipped frame returns `-1` (the enemy's AI, eTick and animation are skipped; its health bar still follows the camera).
+- **Always every frame** (`aiMust`): bosses, aggroed/attacking enemies, the current target, arena minions and den parts, wave-trial and dungeon mobs, co-op mirrors, raid leaders, stunned/rooted/frozen/burning/knocked-back/alarm-running/hidden ones, and anything hit in the last 2 s. Aggro range (≤ 6 tiles) is far inside `r1`, so aggro reacts as before; distance is to the nearest hero, co-op partners included.
+- **Off-screen pose skip**: an enemy outside the camera frustum (`aiInView`, last frame's camera) gets `m._aiNA` and the outermost `animC` wrapper skips its pose (gait, skeleton, v93 idle layer). Animation is time based, so it resumes in step.
+- **Sleeping**: the loop already skipped enemies more than 30 tiles away (not drawn, no co-op partner near); now `aiSleep` also stops `scene.updateMatrixWorld` from recomputing their bones, and hidden health bars are skipped too. `getWorldPosition()` still works; matrices are current again the frame the enemy is drawn.
+- `AIL.on=false` turns everything off (old behaviour). `AIL.st` counts full/throttled/skipped updates, skipped poses and skipped matrix updates.
+- Measured (`test/v98_ai.py`, ~65 enemies around the hero in Kindlelight, `ren.render`/`POST.render` stubbed, desktop CPU, interleaved windows): enemy section of the loop ≈ 0.58–0.73 ms → 0.39–0.47 ms per frame (−30 to −35%; ~1.1 → 0.45 ms on a busier CPU); about half the drawn enemies are behind the camera and skip their pose, ~40 hidden enemy models/bars skip their matrix update each frame. An approaching hero still gets aggro at 4.4–4.5 tiles (threshold 4.5). The enemy loop is a small share of the frame: the CPU profile with rendering stubbed is dominated by `scene.updateMatrixWorld` (static scenery, ~11k objects; enemies are ~1.1k of them).
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
@@ -389,6 +399,7 @@ python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 
 python3 v84_ui.py               # HUD bars, feeding over time, stat breakdown, material hints
 python3 v84_fish.py             # fishing window size, kill gold, no finisher lunge
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
+python3 v98_ai.py               # enemy update LOD: rates, dt hand-over, pose skip, sleeping, aggro on approach, ms off/on
 ```
 
 `play.py` skips the title screen (sets `window.AW_NOTITLE`) unless `TITLE=1`. It rewrites CDN URLs to `test/vendor/` and writes screenshots/logs to `test/out/`.
