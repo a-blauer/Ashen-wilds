@@ -472,3 +472,11 @@ Headless runs at ~1 fps: stub `ren.render`/`POST.render` and use `requestAnimati
 
 Publish `dist/ashen-wilds.html` to the same artifact URL with capabilities
 `{"room":{"topics":{"es":"interact","ev":"interact","hit":"interact","bs":"interact","trade":"interact","chat":"interact"}}}` (or omit `capabilities` on a redeploy to keep them).
+
+## v99: realistic humanoid proportions
+
+- `src/modules/p0_proportions.js` (`AW_PROP99`), spliced at the **top** of the main script by `build/pN_proportions.py`, because the hero and the town folk are built before the usual splice point.
+- Proportions are baked into the rest pose, not done with runtime bone scale: `mdBake` moves every vertex by its skin weights through a per-bone transform, and `mkBones` creates HB / idlNB bones at the moved rest positions. Bones keep unit scale, so animations, idle, grips, ability poses and riding drive them unchanged, and armour shells deform with the body.
+- Presets: `real` (heroes, human foes, Vaelric, town folk): legs +34%, torso ~20% narrower, head 80%, arms +16%. `brute` (orc, trolls, yeti, giant, Bloated One, nagas, ghoul, sand elemental): longer limbs and smaller head, bulk kept. Goblins (`hob`, `sling`, `shaman`) unchanged. Hips move from 0.55 to `AW_PROP99.hipOf()` (≈0.713).
+- Riding (`zzN_creator_ride.js`) seats the hips with `AW_PROP99.hipOf()` and the leg-fit grid is taller (`LKR_GY=17`). Humanoid foe health bars sit at `max(1.6, bs*1.62)`.
+- Test: `python3 test/v99_props.py` — bind/geometry match and feet on the ground for every humanoid, plus an armour pose sheet.

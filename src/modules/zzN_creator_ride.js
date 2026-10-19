@@ -20,10 +20,10 @@ var LKR={on:0,sv:0,sp:0,lp:0,last:null,vy:0,yb:null,t:0,hw:{},spd:0};
 function lkrSS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
 // The mount's body around the saddle as a grid of half widths in the rider's frame (hip height .55, unscaled): cell
 // [iy][iz] = widest |x| of the mount (body + saddle blanket) at height iy*.05 and depth −.2+iz*.1. Measured once per model.
-var LKR_GY=13,LKR_GZ=8;
+var LKR_GY=17,LKR_GZ=8; // v99: tall enough for the longer legs (hips at AW_PROP99.hipOf())
 function lkrProfile(m,ps){
   const P=new Float32Array(LKR_GY*LKR_GZ);
-  try{m.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(m.matrixWorld).invert(),s=m.seat,y0=s[0]+.05-.55*ps;
+  try{m.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(m.matrixWorld).invert(),s=m.seat,y0=s[0]+.05-AW_PROP99.hipOf()*ps;
     const put=(x,y,z)=>{y=(y-y0)/ps;z=(z-s[1])/ps;const iy=Math.floor(y/.05),iz=Math.floor((z+.2)/.1);if(iy<0||iy>=LKR_GY||iz<0||iz>=LKR_GZ)return;
       const k=iy*LKR_GZ+iz;x=Math.abs(x)/ps;if(x>P[k]&&x<1.2)P[k]=x};
     const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
@@ -31,7 +31,7 @@ function lkrProfile(m,ps){
       const W=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),get=(i,out)=>{out.fromBufferAttribute(pa,i);if(o.isSkinnedMesh)o.boneTransform(i,out);return out.applyMatrix4(W)};
       // sample each triangle's surface (the low-poly faces are big: their corners alone leave holes)
       for(let t=0;t+2<n;t+=3){get(ix?ix[t]:t,A);get(ix?ix[t+1]:t+1,B);get(ix?ix[t+2]:t+2,C);
-        if(Math.max(A.y,B.y,C.y)<y0-.05||Math.min(A.y,B.y,C.y)>y0+.7*ps)continue;
+        if(Math.max(A.y,B.y,C.y)<y0-.05||Math.min(A.y,B.y,C.y)>y0+(.15+AW_PROP99.hipOf())*ps)continue;
         const N=Math.min(8,1+Math.ceil(Math.max(A.distanceTo(B),B.distanceTo(C),C.distanceTo(A))/.04));
         for(let i=0;i<=N;i++)for(let j=0;j<=N-i;j++){const u=i/N,w=j/N,r=1-u-w;put(A.x*r+B.x*u+C.x*w,A.y*r+B.y*u+C.y*w,A.z*r+B.z*u+C.z*w)}}})}catch(e){console.warn('ride profile',e)}
   return P}
@@ -42,7 +42,7 @@ function lkrSolve(m,ps){
   const key=ps.toFixed(2);if(m._lkL&&m._lkL.key==key)return m._lkL;
   const P=lkrProfile(m,ps),b=pl.bones,r0=n=>{const o=b[n];if(!o.userData.lk0)o.userData.lk0=o.position.clone();return o.userData.lk0};
   const H=r0('rh0'),K=r0('rh1'),A=r0('rh2'),pv=b.pelvis,hx=Math.abs(H.x)+LKR_HIPW,hy=(pv.userData.y0!=null?pv.userData.y0:pv.position.y)+H.y,hz=H.z;
-  let best=null;const M=new Float64Array(9),pts=new Float64Array(3);
+  let best=null;const M=new Float64Array(9),pts=new Float64Array(3),kqKY=.5+AW_PROP99.hipOf()-.55;
   const rot=(x,y,z)=>{const a=Math.cos(x),bb=Math.sin(x),c=Math.cos(y),d=Math.sin(y),e=Math.cos(z),f=Math.sin(z),ae=a*e,af=a*f,be=bb*e,bf=bb*f;
     M[0]=c*e;M[1]=-c*f;M[2]=d;M[3]=af+be*d;M[4]=ae-bf*d;M[5]=-bb*c;M[6]=bf-ae*d;M[7]=be+af*d;M[8]=a*c};
   for(let p=-1.5;p<=-.25;p+=.1)for(let s=.15;s<=1.45;s+=.1)for(let yw=-.4;yw<=.7;yw+=.1)for(let k=.4;k<=2.1;k+=.1){
@@ -58,7 +58,7 @@ function lkrSolve(m,ps){
     tst(kx+sx*1.25,ky+sy*1.25-.02,kz+sz*1.25+.08,.04);
     const ex=kx+sx,ey=ky+sy,ez=kz+sz;
     const c=pen*LKR_W.pen+(p+.85)*(p+.85)*LKR_W.p+(k-1.15)*(k-1.15)*LKR_W.k+(s-.55)*(s-.55)*LKR_W.s+yw*yw*LKR_W.y
-      +LKR_W.ay*(ey-.14)*(ey-.14)+LKR_W.az*ez*ez+(ky>.5?(ky-.5)*(ky-.5)*20:0)+(ey<.04?(.04-ey)*20:0);
+      +LKR_W.ay*(ey-.14)*(ey-.14)+LKR_W.az*ez*ez+(ky>kqKY?(ky-kqKY)*(ky-kqKY)*20:0)+(ey<.04?(.04-ey)*20:0);
     if(!best||c<best.c)best={c,p,s,y:yw,k,pen}}
   best.key=key;return m._lkL=best}
 var LKR_W={pen:30,p:.3,k:.2,s:.1,y:.2,ay:2,az:.6};
@@ -75,7 +75,7 @@ function lkrTick(dt,now,al){
   const b=pl.bones,h=pl.children[0],S=LKR,t=now/1000;S.on=1;
   // seat: keep the hips on the saddle whatever the hero's height (look) is
   const ps=h.scale?h.scale.y:1,B=mModel.r&&mModel.r.b,bob=B?B.position.y*mModel.r.scale.y:0;
-  h.position.y=mModel.seat[0]+bob+.05-.55*ps;
+  h.position.y=mModel.seat[0]+bob+.05-AW_PROP99.hipOf()*ps;
   // speed (tiles/s, smoothed) and the saddle's vertical speed for the rider's give
   const p=pl.position;if(S.last&&dt>0){const d=Math.hypot(p.x-S.last.x,p.z-S.last.z);if(d<3)S.spd+=(d/dt-S.spd)*Math.min(1,dt*6)}S.last={x:p.x,z:p.z};
   if(dt>0){const v=S.yb==null?0:(bob-S.yb)/dt;S.yb=bob;S.vy+=(v-S.vy)*Math.min(1,dt*14)}
