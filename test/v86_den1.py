@@ -12,7 +12,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     ev("()=>{enterMap(1)}");pg.wait_for_timeout(3500)
     ev("""()=>{window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;
-      window.__pr=POST.render;window.STEP=(sec,draw)=>{const n=Math.max(1,Math.round(sec/.016));POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();if(window.GOD)hero.iv=1;if(window.HOLD&&window.BE&&!BE.dead){BE.c.h=Math.max(BE.c.h,M(BE.c)*HOLD);BE.bs.t=Math.max(BE.bs.t,50)}if(i==n-1&&draw)POST.render=__pr;loop(VT)}POST.render=__pr;return VT};
+      if(window.PACE)PACE.basic=false;/* v96: no boss basic attacks in these mechanic checks */window.__pr=POST.render;window.STEP=(sec,draw)=>{const n=Math.max(1,Math.round(sec/.016));POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();if(window.GOD)hero.iv=1;if(window.HOLD&&window.BE&&!BE.dead){BE.c.h=Math.max(BE.c.h,M(BE.c)*HOLD);BE.bs.t=Math.max(BE.bs.t,50)}if(i==n-1&&draw)POST.render=__pr;loop(VT)}POST.render=__pr;return VT};
       window.__down=down;down=function(){hero.hp=heroMax()};window.CLR=()=>{enemies.slice().forEach(e=>{if(!e.boss)removeE(e)})};window.AA=ARN[1];window.HITS=()=>{window.__h=0;const f=hitHero;window.__hf=f;hitHero=function(){__h++;return f.apply(this,arguments)}};window.UNHIT=()=>{hitHero=__hf;return __h};return 1}""")
     P('den',"()=>({ent:+HY.ent.toFixed(2),stones:HY.stones.length,slots:HY.slots.length,braz:HY.braz.length,kids:AA.g.children.length,tris:AA.g.children.reduce((a,o)=>a+(o.geometry&&o.geometry.attributes.position?o.geometry.attributes.position.count/3:0),0)|0})")
     ev("()=>{CLR();const a=HY.ent;toPos(AA.cx+Math.cos(a)*15.5,AA.cz+Math.sin(a)*15.5,0);camYaw=Math.atan2(Math.cos(a),Math.sin(a));camPitch=1.05;camDist=34;snapCam();STEP(.4,1);return 1}")
@@ -28,17 +28,17 @@ def s(pg):
     P('rise',"""()=>{const e=BE;HY.nt=99;BMV.hyNeck0(e,AA,1);BMV.hyNeck2(e,AA,1);BMV.hyNeck5(e,AA,1);const N=HY.necks[0];toPos(N.x+(AA.cx-N.x)*.35,N.z+(AA.cz-N.z)*.35);STEP(.6,1);
       camYaw=Math.atan2(N.x-pl.position.x,N.z-pl.position.z)+Math.PI+.4;camPitch=.45;camDist=12;snapCam();STEP(.05,1);return HY.necks.map(n=>n.st)}""")
     shot('5_neck_tele')
-    P('up',"()=>{HY.necks.forEach(n=>n.cd=99);STEP(1.4,1);return {st:HY.necks.map(n=>n.st),guard:HY.guard,hpM:HY.necks[0].hpM}}")
+    P('up',"()=>{HY.necks.forEach(n=>n.cd=99);STEP(2.4,1);return {st:HY.necks.map(n=>n.st),guard:HY.guard,hpM:HY.necks[0].hpM}}")
     shot('6_necks_up')
     P('guard',"()=>{const e=BE,h=e.c.h;hurt(e,1000,{});const d1=h-e.c.h;HY.necks[2].st='off';HY.guard=false;const h2=e.c.h;hurt(e,1000,{});const d2=h2-e.c.h;HY.necks[2].st='up';return {guarded:Math.round(d1),open:Math.round(d2)}}")
     P('bite',"""()=>{const N=HY.necks[0];toPos(N.x+(AA.cx-N.x)/11*3,N.z+(AA.cz-N.z)/11*3);N.cd=0;HY.lastAtk=-9;HITS();STEP(.55,1);return N.atk&&N.atk.k}""")
     shot('7_bite_windup')
-    P('bite2',"()=>{STEP(.45,1);return {hits:UNHIT()}}")
+    P('bite2',"()=>{STEP(.9,1);return {hits:UNHIT()}}")
     shot('8_bite_strike')
     P('spit',"""()=>{const N=HY.necks[1].st=='up'?HY.necks[1]:HY.necks[2];toPos(AA.cx,AA.cz-3);N.cd=0;HY.lastAtk=-9;HITS();STEP(.6,1);
       camYaw=Math.atan2(N.x-pl.position.x,N.z-pl.position.z)+Math.PI+.6;camPitch=.5;camDist=13;snapCam();STEP(.05,1);return N.atk&&N.atk.k}""")
     shot('9_spit')
-    P('spit2',"()=>{STEP(1.0);return {hits:UNHIT(),pools:(AA.bx||[]).length}}")
+    P('spit2',"()=>{STEP(1.4);return {hits:UNHIT(),pools:(AA.bx||[]).length}}")
     P('sever',"""()=>{HY.necks.forEach(n=>n.cd=99);const N=HY.necks[0];toPos(N.x+(AA.cx-N.x)/11*1.6,N.z+(AA.cz-N.z)/11*1.6);const h0=BE.c.h;let n=0;while(N.st=='up'&&n<300){area(pl.position,2.4,atkOf('p'),{mt:'p',basic:1},null,Math.PI);n++}
       STEP(.3,1);camYaw=Math.atan2(N.x-pl.position.x,N.z-pl.position.z)+Math.PI+.5;camPitch=.4;camDist=9;snapCam();STEP(.05,1);return {swings:n,st:N.st,wound:+((h0-BE.c.h)/M(BE.c)*100).toFixed(1),T:N.T0}}""")
     shot('10_stump')

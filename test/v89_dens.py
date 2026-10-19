@@ -7,7 +7,8 @@ _go=_Pg.goto;_Pg.goto=lambda self,url,**k:_go(self,url,**dict(k,timeout=max(k.ge
 SH=os.environ.get('SHOTS','1')!='0'
 DL=[int(x) for x in os.environ.get('DL','0,1,2,3,4,5').split(',')]
 PART=os.environ.get('PART','scale,tele,sign').split(',')
-# moves to trigger per Sovereign: (label, js run with BE=boss, XA=den, S=den state) — every one makes red warnings
+# moves to trigger per Sovereign: (label, js run with BE=boss, XA=den, S=den state) — every one makes red warnings.
+# v96: they run as the boss driver casts them (MP.inAI), so T (the wind-ups) are the v96 ones (×1.5); `early` must stay [].
 MOVES={
  0:[('pounce','BMV.pounce(BE,XA,1)'),('charge','BMV.charge(BE,XA,1)'),('rain','BMV.rain(BE,XA,1)'),('triple','BMV.triple(BE,XA,1)'),
     ('marked leap','arLeap(XA,BE)'),('argstalk','BMV.argstalk(BE,XA,1)'),('adds+slam','BMV.slam(BE,XA,1)')],
@@ -66,9 +67,11 @@ def s(pg):
         # ---------------- 2. every red warning stays visible for its whole wind-up ----------------
         if 'tele' in PART:
             ev("()=>{const A=XA;if(!AF){toPos(A.cx+Math.cos(EA)*(ARENA_R-4),A.cz+Math.sin(EA)*(ARENA_R-4));STEP(.4)}window.BE=bossEnt(A.i);BE.bs.t=99;BE.bs.ult=99;STEP(.2)}")
-            ev("""()=>{window.BFULL=1;window.TSTART=(js)=>{const A=XA;enemies.slice().forEach(e=>{if(e.minion&&!e.dprop)removeE(e)});BE.bs.t=99;BE.bs.ult=99;BE.bs.dash=null;if(BE.hid)bxHide(BE,false);
+            ev("""()=>{window.BFULL=1;window.TSTART=(js)=>{const A=XA;enemies.slice().forEach(e=>{if(e.minion&&!e.dprop)removeE(e)});BE.bs.t=99;BE.bs.ult=99;BE.bs.pb=99;BE.bs.dash=null;if(BE.hid)bxHide(BE,false);
                   const p0=V(A.cx+Math.cos(EA+1)*6,0,A.cz+Math.sin(EA+1)*6);toPos(p0.x,p0.z);BE.m.position.set(A.cx,0,A.cz);STEP(.05);
-                  window.TSQ={L0:DTL.log.length,seen:new Map(),maxLive:0,bad:[],minA:9,minE:9,minF:9,st:0,s:0,fight:!!AF};HITS.length=0;try{eval(js)}catch(err){return 'ERR '+err}return 'ok'};
+                  window.TSQ={L0:DTL.log.length,seen:new Map(),maxLive:0,bad:[],minA:9,minE:9,minF:9,st:0,s:0,fight:!!AF};HITS.length=0;
+                  // v96: cast like the boss driver does (MP.inAI), so the move gets the v96 wind-up (×1.5) exactly as in a fight
+                  const o0=MP.inAI;MP.inAI=1;try{eval(js)}catch(err){return 'ERR '+err}finally{MP.inAI=o0}return 'ok'};
                 window.TSAMP=()=>{const T=TSQ;STEP(.05);T.s++;try{lpsFlush()}catch(_){}const L=DTL.live;T.maxLive=Math.max(T.maxLive,L.length);
                   for(const w of L){T.seen.set(w.id,w);const ob=w.dq?w.g:w.o;if(!ob.parent)T.bad.push('detached '+w.id);if(w.o.geometry!==w.g0)T.bad.push('geometry swapped '+w.id);
                     if(w.edge&&w.edge.geometry!==w.e0)T.bad.push('edge swapped '+w.id);

@@ -5583,7 +5583,7 @@ function bossAI(e,dt,now,tg,L,v){
   walkM(m,(ux*sp+e.vx)*dt,(uz*sp+e.vz)*dt);e.vx*=.85;e.vz*=.85;
   if(b.dash){walkM(m,b.dash.x*dt*12,b.dash.z*dt*12);b.dash.t-=dt;if(!b.dash.h&&d2(pl.position,m.position)<2.4){b.dash.h=1;bossHit(e,1.6)}if(b.dash.t<=0)b.dash=null}
   const cdx=m.position.x-A.cx,cdz=m.position.z-A.cz,cl=Math.hypot(cdx,cdz);if(cl>ARENA_R-1.5){m.position.x=A.cx+cdx/cl*(ARENA_R-1.5);m.position.z=A.cz+cdz/cl*(ARENA_R-1.5);if(b.dash)b.dash=null}
-  if(A.b.ult&&ph>=A.b.ult){b.ult-=dt;if(b.ult<=0&&!b.lock&&!b.dash){b.ult=ph==3?20:26;const r=BMV.ult(e,A,en);b.lock=r.d;b.t=r.d+.8;b.last='ult';animC(m,now,false,0);return}}
+  if(A.b.ult&&ph>=A.b.ult){b.ult-=dt;if(b.ult<=0&&!b.lock&&!b.dash){b.ult=(ph==3?20:26)*PACE.U;const r=BMV.ult(e,A,en);b.lock=r.d;b.t=r.d+.8;b.last='ult';animC(m,now,false,0);return}}
   if(b.t<=0&&!b.lock&&!b.dash){
     let pool=[];for(let q=0;q<ph;q++)pool=pool.concat(A.b.mv[q]||[]);
     if(L>9){const f2=pool.filter(x=>x!='slam');if(f2.length)pool=f2}if(L<4&&pool.includes('slam'))pool.push('slam');
@@ -5594,7 +5594,7 @@ function bossAI(e,dt,now,tg,L,v){
 }
 // ---------- arena flow: enter → seal → fight → win or wipe ----------
 function arenaStart(A,e){
-  AF=A;A.f=true;e.bs=Object.assign(e.bs,{t:2.2,lock:0,ph:1,last:'',ult:A.b.ult==2?14:10,dash:null});e.enr=0;
+  AF=A;A.f=true;e.bs=Object.assign(e.bs,{t:PACE.T0,lock:0,ph:1,last:'',ult:(A.b.ult==2?14:10)*PACE.U,dash:null});e.enr=0;
   A.wall.visible=true;tw(600,k=>A.wall.material.opacity=.32*k);
   banner(A.b.i+' '+A.b.name.toUpperCase(),A.b.title+' · Lv '+A.b.lvl,'The arena is sealed. Win, or fall.');shake(.3);
   if(riding)dismount();setTarget(e);
@@ -7861,7 +7861,7 @@ function bxTick(A,e,dt,now){const L=bxA(A);
     else if(f.k=='orb'){const d=V().subVectors(gY(pl.position,1.2),f.ms.position);const l=d.length();f.ms.position.addScaledVector(d,Math.min(1,f.sp*dt/(l||1)));f.ms.scale.setScalar(1+.15*Math.sin(now/120+i));
       if(l<1&&hero.iv<=0){bossHit(e,.8);burst(f.ms.position,A.b.col,16,2,2,.4);gone=true}if(gone)scene.remove(f.ms)}
     else if(f.k=='clone'){const g=f.g,d=V().subVectors(pl.position,g.position).setY(0),l=d.length();if(!f.boom){if(l>.5)g.position.addScaledVector(d,Math.min(1,2.2*dt/l));g.rotation.y=Math.atan2(d.x,d.z);if(g.rig)g.rig(now,true,2)}
-      if(f.t<1.1&&!f.boom){f.boom=true;const q=g.position.clone();tele(q,2.6,1.0,()=>{burst(gY(q,1),A.b.col,40,4,3,.8);if(A.f&&d2(pl.position,q)<2.6)bossHit(e,1.1)})}if(gone)scene.remove(g)}
+      if(f.t<1.0*PACE.W+.1&&!f.boom){f.boom=true;const q=g.position.clone();tele(q,2.6,1.0*PACE.W,()=>{burst(gY(q,1),A.b.col,40,4,3,.8);if(A.f&&d2(pl.position,q)<2.6)bossHit(e,1.1)})}if(gone)scene.remove(g)}
     if(gone)L.splice(i,1)}}
 function bossAI(e,dt,now,tg,L,v){
   const A=arenaOf(e),m=e.m,b=e.bs,S=BSTY[A?A.i:0]||BSTY[0];
@@ -7880,7 +7880,7 @@ function bossAI(e,dt,now,tg,L,v){
     if(cl>ARENA_R-1.8){const nx=cx/cl,nz=cz/cl,dt2=s.x*nx+s.z*nz;s.x-=2*dt2*nx;s.z-=2*dt2*nz;const tp=toPl(m.position);s.x=s.x*.6+tp.x*.4;s.z=s.z*.6+tp.z*.4;const l=Math.hypot(s.x,s.z);s.x/=l;s.z/=l;m.position.x=A.cx+nx*(ARENA_R-1.9);m.position.z=A.cz+nz*(ARENA_R-1.9);ring(m.position,A.b.col,3,200);shake(.1)}
     s.hitT-=dt;if(s.hitT<=0&&d2(pl.position,m.position)<2.4&&hero.iv<=0){s.hitT=.7;bossHit(e,1.1)}if(s.t<=0)e.spin=null;animC(m,now,false,0);return}
   else if(e.sub){const s=e.sub;s.t-=dt;const d=toPl(m.position);if(d2(pl.position,m.position)>1)walkM(m,d.x*7*dt,d.z*7*dt);s.trail-=dt;if(s.trail<=0){s.trail=.12;burst(gY(m.position,.2),0xd8b070,6,2,2,.5)}
-    if(s.t<=0){e.sub=null;const q=m.position.clone();tele(q,3.2,.6*en,()=>{bxHide(e,false);if(!A.f)return;ring(q,A.b.col,7,400);burst(gY(q,.5),0xd8b070,60,6,5,1);shake(.35);if(d2(pl.position,q)<3.2)bossHit(e,1.5)})}return}
+    if(s.t<=0){e.sub=null;const q=m.position.clone();tele(q,3.2,.6*en*PACE.W,()=>{bxHide(e,false);if(!A.f)return;ring(q,A.b.col,7,400);burst(gY(q,.5),0xd8b070,60,6,5,1);shake(.35);if(d2(pl.position,q)<3.2)bossHit(e,1.5)})}return}
   else if(!b.lock&&!b.dash&&!e.hid){
     let ux=0,uz=0,sp=S.sp*sm;const vx=v.x/L,vz=v.z/L;b.side=b.side||1;b.sw=(b.sw||0)-dt;if(b.sw<=0){b.sw=2.5+Math.random()*2;b.side*=-1}
     if(S.m=='circle'||S.m=='hover'||S.m=='kite'){const rad=Math.max(-1,Math.min(1,(L-S.r)/2.5));ux=vx*rad-vz*b.side*(S.m=='kite'?1:.85);uz=vz*rad+vx*b.side*(S.m=='kite'?1:.85)}
@@ -7897,12 +7897,12 @@ function bossAI(e,dt,now,tg,L,v){
   walkM(m,e.vx*dt,e.vz*dt);e.vx*=.85;e.vz*=.85;
   if(b.dash){const ds=b.dash.sp||12;walkM(m,b.dash.x*dt*ds,b.dash.z*dt*ds);m.rotation.y=Math.atan2(b.dash.x,b.dash.z);b.dash.t-=dt;if(!b.dash.h&&d2(pl.position,m.position)<2.4){b.dash.h=1;bossHit(e,1.6)}if(b.dash&&b.dash.t<=0)b.dash=null}
   const cdx=m.position.x-A.cx,cdz=m.position.z-A.cz,cl=Math.hypot(cdx,cdz);if(cl>ARENA_R-1.5){m.position.x=A.cx+cdx/cl*(ARENA_R-1.5);m.position.z=A.cz+cdz/cl*(ARENA_R-1.5);if(b.dash)b.dash=null}
-  if(A.b.ult&&ph>=A.b.ult&&!e.hid&&!e.jmp&&!e.fly){b.ult-=dt;if(b.ult<=0&&!b.lock&&!b.dash){b.ult=ph==3?20:26;const r=BMV.ult(e,A,en);b.lock=r.d;b.t=r.d+.8;b.last='ult';animC(m,now,false,0);return}}
+  if(A.b.ult&&ph>=A.b.ult&&!e.hid&&!e.jmp&&!e.fly){b.ult-=dt;if(b.ult<=0&&!b.lock&&!b.dash){b.ult=(ph==3?20:26)*PACE.U;const r=BMV.ult(e,A,en);b.lock=r.d;b.t=r.d+.8;b.last='ult';animC(m,now,false,0);return}}
   if(b.t<=0&&!b.lock&&!b.dash&&!e.hid&&!e.jmp&&!e.fly){
     let pool=[];for(let q=0;q<ph;q++)pool=pool.concat(S.pool[q]||[]);
     if(L>9){const f2=pool.filter(x=>x!='slam'&&x!='tailsweep');if(f2.length)pool=f2}if(L<4&&pool.includes('slam'))pool.push('slam');
     const c2=pool.filter(x=>x!=b.last),k=(c2.length?c2:pool)[Math.random()*(c2.length?c2.length:pool.length)|0]||'slam';
-    const r=BMV[k](e,A,en);b.last=k;b.lock=r.lock?r.d:0;b.t=r.d+(ph==3?.6:1.0)*en;if(k=='slam')lunge(m,pl.position);
+    const r=BMV[k](e,A,en);b.last=k;b.lock=r.lock?r.d:0;b.t=paceGap(k,r,(ph==3?.6:1.0)*en,e);if(k=='slam')lunge(m,pl.position);
   }
   animC(m,now,mv||!!b.dash,mv?S.sp*sm:b.dash?6:0);
   if(fly||e.lift)m.b.position.y+=(fly+(e.lift?.6:0)+(S.fly?Math.sin(now/400)*.12:0))/(m.bs||1);
@@ -13607,7 +13607,7 @@ kqBmv('argstalk',function(e,A,en){if(e.hid)return {d:.5,lock:0};bxHide(e,true);b
 BSTY[0].pool=[['pounce','charge','argusgaze'],['rain','adds'],['triple','argusgaze','argstalk']];
 
 // ---------------- the fight ----------------
-function arStart(A,e){AR.st.forEach(T=>{arReset(T);T.hpM=T.hp=Math.round(M(e.c)*.03)});AR.q.length=0;AR.seen=0;AR.sN=0;AR.ph=1;AR.wt=3.5;AR.beam=null;AR.mark=null;AR.dkT=0;AR.n=0;
+function arStart(A,e){AR.st.forEach(T=>{arReset(T);T.hpM=T.hp=Math.round(paceM0(e.c)*.03)});AR.q.length=0;AR.seen=0;AR.sN=0;AR.ph=1;AR.wt=3.5;AR.beam=null;AR.mark=null;AR.dkT=0;AR.n=0;
   setTimeout(()=>{if(A.f)say('👁 The Drowned Hollow. Its eye-stalks watch — hide behind the root pillars, and strike the stalks down.')},1400)}
 function arPhase(A,e,ph){const dead=AR.st.filter(T=>T.st=='dead');
   dead.forEach(T=>{arReset(T);T.hp=T.hpM;T.g.scale.setScalar(.1);burst(T.p,0x7ac84a,20,2,2,.6);tw(900,k=>T.g.scale.setScalar(.1+.9*k))});
@@ -13620,7 +13620,7 @@ function arStalk(A,e,T,dt,now,ph){
   if(T.st=='closed'){T.g.rotation.z=Math.sin(now/900+T.i*1.7)*.03;T.lid+=(0-T.lid)*Math.min(1,dt*6);arLids(T,T.lid);return false}
   if(T.st=='dead')return false;
   const half=.27,y=GH(T.ox,T.oz)+.2;
-  if(T.st=='wake'){T.t+=dt;const k=Math.min(1,T.t/1.15);T.g.rotation.z=Math.sin(now/28)*.06*k;T.lid=.35*k;arLids(T,T.lid);T.spr.scale.setScalar(.4+1.6*k);
+  if(T.st=='wake'){T.t+=dt;const k=Math.min(1,T.t/(1.15*PACE.W));T.g.rotation.z=Math.sin(now/28)*.06*k;T.lid=.35*k;arLids(T,T.lid);T.spr.scale.setScalar(.4+1.6*k);
     const yw=arEyeYaw(T);T.eye.rotation.y=Math.max(-1.1,Math.min(1.1,d01Ad(yw,T.gy)));
     T.fan.visible=true;T.fan.material.opacity=arFanK()*(.05+.07*(Math.sin(now/70)*.5+.5));d01FanSet(T.fan,T.ox,T.oz,T.gy+T.eye.rotation.y,half,26*DK,AR.pil,A,y);
     if(k>=1){T.st='open';T.t=0;T.dur=[4.2,4.6,5][ph-1];const sw=ph>=3?1.6:1.3,sd=Math.random()<.5?1:-1;T.y0=yw-sd*sw/2;T.y1=yw+sd*sw/2;sfx('zap',.35)}
@@ -13642,11 +13642,11 @@ function arKillStalk(A,T){T.st='dead';T.hp=0;T.fan.visible=false;T.spr.visible=f
   if(!AR.n++)say('👁 An eye-stalk bursts — Argus reels!')}
 function arMark(A,e,auth){AR.mark={t:0,done:false};popT(pl.position,'👁 MARKED!','#ff5a3a',true);say('👁 You are MARKED — Argus leaps for you! Get out of the red circle!');sfx('horn',.5);shake(.12)}
 function arLeap(A,e){const q=inArena(A,pl.position.clone());AR.pil.forEach(p=>{const dx=q.x-p[0],dz=q.z-p[1],l=Math.hypot(dx,dz);if(l<p[2]+1.4){q.x=p[0]+dx/(l||1)*(p[2]+1.4);q.z=p[1]+dz/(l||1)*(p[2]+1.4)}});
-  tele(q,3,1.0,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,7,400);burst(gY(q,.4),0xffd040,40,4,3,.7);shake(.3);if(d2(pl.position,q)<3&&hero.iv<=0)bossHit(e,1.5)});
-  jumpTo(e,q,1.0,5.5);e.bs.lock=Math.max(e.bs.lock,1.4);e.bs.t=Math.max(e.bs.t,2);e.bs.last='pounce'}
+  tele(q,3,1.0*PACE.W,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,7,400);burst(gY(q,.4),0xffd040,40,4,3,.7);shake(.3);if(d2(pl.position,q)<3&&hero.iv<=0)bossHit(e,1.5)});
+  jumpTo(e,q,1.0*PACE.W,5.5);e.bs.lock=Math.max(e.bs.lock,1.9);e.bs.t=Math.max(e.bs.t,2*PACE.I);e.bs.last='pounce'}
 // a non-driving co-op player: the open eyes strike at the marked spot instead of Argus leaping
-function arBolts(A,e){const q=pl.position.clone(),src=AR.st.find(T=>T.st=='open')||AR.st.find(T=>T.st!='dead');if(src)kqFall(A,q,1.0,0xffd040,'orb',1.2,src.p);
-  tele(q,2.6,1.0,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,5,350);burst(gY(q,.4),0xffd040,30,3,3,.6);if(d2(pl.position,q)<2.6&&hero.iv<=0)bossHit(e,1.3)})}
+function arBolts(A,e){const q=pl.position.clone(),src=AR.st.find(T=>T.st=='open')||AR.st.find(T=>T.st!='dead');if(src)kqFall(A,q,1.0*PACE.W,0xffd040,'orb',1.2,src.p);
+  tele(q,2.6,1.0*PACE.W,()=>{if(AR.mark)AR.mark=null;if(!A.f)return;ring(q,0xffd040,5,350);burst(gY(q,.4),0xffd040,30,3,3,.6);if(d2(pl.position,q)<2.6&&hero.iv<=0)bossHit(e,1.3)})}
 function arBeamTick(A,e,dt,now){const b=AR.beam,m=e.m,bs=m.bs||3,ph=e.bs.ph;
   const ty=Math.atan2(pl.position.x-m.position.x,pl.position.z-m.position.z),turn=(b.warm>0?4:ph>=3?1.2:.85)*dt,dy=d01Ad(ty,b.yaw);b.yaw+=Math.max(-turn,Math.min(turn,dy));m.rotation.y=b.yaw;
   const dx=Math.sin(b.yaw),dz=Math.cos(b.yaw),ox=m.position.x+dx*.4*bs,oz=m.position.z+dz*.4*bs,L=d01Clip(ox,oz,dx,dz,26*DK,AR.pil,A,ARENA_R+.3),gy=GH(ox,oz);
@@ -13665,7 +13665,7 @@ function arTick(A,e,dt,now){
   d01Run(AR.q,dt);
   // the driver decides which eyes wake (relayed to co-op partners)
   if(auth&&!e.dead){AR.wt-=dt;if(AR.wt<=0){const free=AR.st.filter(T=>T.st=='closed');let n=Math.min(ph,free.length);
-    while(n-->0){const T=free.splice(Math.random()*free.length|0,1)[0];d01Cast('arEye'+T.i,e,A,1)}AR.wt=[8.5,8,7.2][ph-1]+Math.random()*1.5}}
+    while(n-->0){const T=free.splice(Math.random()*free.length|0,1)[0];d01Cast('arEye'+T.i,e,A,1)}AR.wt=([8.5,8,7.2][ph-1]+Math.random()*1.5)*PACE.I}}
   let seen=false;for(let i=0;i<AR.st.length;i++)if(arStalk(A,e,AR.st[i],dt,now,ph))seen=true;
   if(AR.beam){if(e.dead||e.hid){AR.beam=null;AR.bm.visible=AR.bm3.visible=false;e.bs.face=0}else if(arBeamTick(A,e,dt,now))seen=true}
   // SEEN stacks → MARKED → Argus leaps
@@ -13842,7 +13842,7 @@ function hyStumps(){let n=0;for(const N of HY.necks)if(N.st=='stump')n++;return 
 // a neck bursts up at slot s (a red circle first)
 function hyRise(A,e,s,N){N=N||hyFreeNeck();if(!N||s<0||s>=HY.slots.length)return;const [x,z]=HY.slots[s],gen=HY.gen;
   N.slot=s;N.x=x;N.z=z;N.st='bub';N.t=0;N.g.visible=true;N.g.position.set(x,GH(x,z),z);N.piv.visible=false;N.stump.visible=false;N.rg.visible=false;N.hb.visible=false;N.atk=null;
-  const q=V(x,0,z);tele(q,1.7,1.0,()=>{if(gen!==HY.gen||!A.f||N.st!='bub')return;N.st='rise';N.t=0;N.piv.visible=true;N.piv.scale.set(1,.05,1);N.hpM=N.hp=Math.round(M(e.c)*.045);
+  const q=V(x,0,z);tele(q,1.7,1.0*PACE.W,()=>{if(gen!==HY.gen||!A.f||N.st!='bub')return;N.st='rise';N.t=0;N.piv.visible=true;N.piv.scale.set(1,.05,1);N.hpM=N.hp=Math.round(paceM0(e.c)*.045);
     N.cd=1.4+Math.random();N.yaw=Math.atan2(pl.position.x-x,pl.position.z-z);burst(gY(q,.3),0x9ae8e0,30,3,4,.7);burst(gY(q,.3),HY_COL,12,2,3,.5);ring(q,0x9ae8e0,2.4,300);
     if(d2(pl.position,q)<1.7&&hero.iv<=0){bossHit(e,.6);dn(pl.position,'Erupted!','#9ae870',-20,700)}})}
 for(let k=0;k<16;k++)kqBmv('hyNeck'+k,function(e,A,en){if(A.i===1&&hySlotFree(k))hyRise(A,e,k);return {d:0,lock:0}});
@@ -13887,12 +13887,12 @@ function hyNeckTick(A,e,N,dt,now,ph){
   let rx=Math.sin(now/600+N.i*1.3)*.06,rz=Math.sin(now/800+N.i)*.08;
   if(N.hit>0){N.hit-=dt;rx-=.25*Math.sin(N.hit*30)}
   if(N.st=='up'){
-    if(!N.atk){N.cd-=dt;if(N.cd<=0&&HY.clk-HY.lastAtk>.75&&hero.hp>0){HY.lastAtk=HY.clk;const L=Math.hypot(pl.position.x-N.x,pl.position.z-N.z),o=V(N.x,0,N.z);
-      if(L<6.8){const d=V(fx,0,fz);N.atk={k:'bite',t:0,T:.85};tele(o,0,.85,()=>{if(!A.f||N.st!='up')return;for(let s=1;s<6.5;s+=1)burst(gY(o.clone().addScaledVector(d,s),.6),HY_COL,2,1,1,.3);
+    if(!N.atk){N.cd-=dt;if(N.cd<=0&&HY.clk-HY.lastAtk>.75*PACE.I&&hero.hp>0){HY.lastAtk=HY.clk;const L=Math.hypot(pl.position.x-N.x,pl.position.z-N.z),o=V(N.x,0,N.z);
+      if(L<6.8){const d=V(fx,0,fz);N.atk={k:'bite',t:0,T:.85*PACE.W};tele(o,0,.85*PACE.W,()=>{if(!A.f||N.st!='up')return;for(let s=1;s<6.5;s+=1)burst(gY(o.clone().addScaledVector(d,s),.6),HY_COL,2,1,1,.3);
           if(inLine(pl.position,o,d,6.5,2)&&hero.iv<=0){bossHit(e,.9);dn(pl.position,'Bitten!','#9ae870',-20,600)}},{w:2,l:6.5,d})}
-      else if(L<17*DK){const q=pl.position.clone();N.atk={k:'spit',t:0,T:1.1};kqLob(A,N.p.clone(),q,1.1,0x9aff3a,1.6);
-        tele(q,1.8,1.1,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff3a,16,2,2,.5);if(d2(pl.position,q)<1.8&&hero.iv<=0)bossHit(e,.6);bxPool(A,q,1.8,4,0x6aff3a,.15)})}
-      N.cd=(2.8+Math.random()*1.4)*(ph>=3?.75:1)}}
+      else if(L<17*DK){const q=pl.position.clone();N.atk={k:'spit',t:0,T:1.1*PACE.W};kqLob(A,N.p.clone(),q,1.1*PACE.W,0x9aff3a,1.6);
+        tele(q,1.8,1.1*PACE.W,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff3a,16,2,2,.5);if(d2(pl.position,q)<1.8&&hero.iv<=0)bossHit(e,.6);bxPool(A,q,1.8,4,0x6aff3a,.15)})}
+      N.cd=(2.8+Math.random()*1.4)*(ph>=3?.75:1)*PACE.I}}
     else{const a=N.atk;a.t+=dt;const u=a.t/a.T;
       if(a.k=='bite'){if(u<1)rx-=.45*u;else if(u<1.25)rx+=-.45+1.6*((u-1)/.25);else if(u<1.9)rx+=1.15*(1-(u-1.25)/.65);else N.atk=null}
       else{if(u<.35)rx-=.5*(u/.35);else if(u<.55)rx+=-.5+.8*((u-.35)/.2);else if(u<1)rx+=.3*(1-(u-.55)/.45);else N.atk=null}}}
@@ -13907,7 +13907,7 @@ function hyTick(A,e,dt,now){
   // the driver brings up necks (relayed so a partner sees them too)
   if(auth&&!e.dead){HY.nt-=dt;if(HY.nt<=0){const live=hyLive(),want=[2,3,4][ph-1];HY.nt=1;
     if(live<want&&live+hyStumps()<6){const fr=HY.slots.map((_,j)=>j).filter(j=>hySlotFree(j)&&Math.hypot(HY.slots[j][0]-pl.position.x,HY.slots[j][1]-pl.position.z)>2.5);
-      if(fr.length){d01Cast('hyNeck'+fr[Math.random()*fr.length|0],e,A,1);HY.nt=live<want-1?1.6:[5,4.2,3.4][ph-1]}}}}
+      if(fr.length){d01Cast('hyNeck'+fr[Math.random()*fr.length|0],e,A,1);HY.nt=live<want-1?1.6:[5,4.2,3.4][ph-1]*PACE.I}}}}
   for(const N of HY.necks)hyNeckTick(A,e,N,dt,now,ph);
   // brood guard
   const live=hyLive();HY.guard=live>=3;HY.shell.visible=HY.guard&&!e.hid;if(HY.guard){const bs=e.m.bs||4;HY.shell.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+bs*.35,e.m.position.z);HY.shell.scale.setScalar(bs*.75+.1*Math.sin(now/200));HY.shell.material.opacity=.1+.05*Math.sin(now/150)}
@@ -14125,7 +14125,7 @@ kqBmv('snuff',function(e,A,en){const D=A.dn;if(!D)return {d:.4,lock:0};const lit
   return {d:1.7*en,lock:1}});
 kqBmv('thaw',function(e,A,en){const D=A.dn;if(!D)return {d:.4,lock:0};kqBossCast(e,RW_COL,900*en);const n=rwThaw(A,e,D.thawN||1,en);D.thawN=1;if(!n)return BMV.wave(e,A,en);return {d:1.5*en,lock:1}});
 kqBmv('whiteout',function(e,A,en){const D=A.dn;if(!D||D.wh||D.whCD>0)return BMV.mines(e,A,en);
-  D.wh={t:7.5,nx:1.4};D.whCD=24;burst(gY(e.m.position,1.4),RW_COL,60,3,3,1);kqFlash(gY(e.m.position,1.6),0xffffff,6,400);bxHide(e,true);
+  D.wh={t:7.5,nx:1.4};D.whCD=24*PACE.I;burst(gY(e.m.position,1.4),RW_COL,60,3,3,1);kqFlash(gY(e.m.position,1.6),0xffffff,6,400);bxHide(e,true);
   banner('❄ WHITEOUT','The Rime Wraith vanishes into the blizzard','Stay by a Warmfire and keep moving — ice falls where you stand');rwAtm(true);
   return {d:8.6,lock:1}});
 // ---------------- atmosphere: blizzard on, blizzard off ----------------
@@ -14151,7 +14151,7 @@ DEN[2]={build:rwBuild,
     const force=k=>{if(S._p0)return;S._p0=S.pool;S._fk=k;S.pool=[[k],[k],[k]];b.last='';b.t=Math.min(b.t,.5)};
     if(b.ph>D.ph){D.ph=b.ph;if(b.ph==2){D.thawN=2;force('thaw')}else if(b.ph==3){D.whCD=0;force('whiteout')}}
     D.whCD=Math.max(0,D.whCD-dt);D.snT-=dt;
-    if(D.snT<=0&&!D.wh&&!e.hid&&b.t<1.2){const lit=D.br.filter(B=>B.lit&&!B.snf).length;if(lit>1){force('snuff');D.snT=[15,12,10][b.ph-1]}else D.snT=3}
+    if(D.snT<=0&&!D.wh&&!e.hid&&b.t<1.2){const lit=D.br.filter(B=>B.lit&&!B.snf).length;if(lit>1){force('snuff');D.snT=[15,12,10][b.ph-1]*PACE.I}else D.snT=3}
     return false},
   tick(A,e,dt,now){const D=A.dn;if(!D)return;const ph=e.bs.ph,P=pl.position;
     // fires: rekindle by standing beside a dark one
@@ -14175,10 +14175,10 @@ DEN[2]={build:rwBuild,
     // whiteout: driving snow, falling ice, then the wraith re-forms beside you
     if(D.wh){const W2=D.wh;W2.t-=dt;W2.nx-=dt;
       try{const ps=ZP.pos,N=ZP.N,w=14*dt;for(let i=0;i<N;i++){ps[i*3]+=w;ps[i*3+1]-=w*.4}}catch(err){}
-      if(W2.nx<=0&&W2.t>.8){W2.nx=1.15;const q=inArena(A,P.clone().add(V((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4)));kqFall(A,q,.95,RW_COL,'spike',1.3);
-        tele(q,1.8,.95,()=>{if(!A.f)return;burst(gY(q,.4),0xe8f8ff,24,2,2,.5);ring(q,RW_COL,3,300);if(d2(pl.position,q)<1.8)bossHit(e,1)})}
+      if(W2.nx<=0&&W2.t>.8*PACE.W){W2.nx=1.15*PACE.W;const q=inArena(A,P.clone().add(V((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4)));kqFall(A,q,.95*PACE.W,RW_COL,'spike',1.3);
+        tele(q,1.8,.95*PACE.W,()=>{if(!A.f)return;burst(gY(q,.4),0xe8f8ff,24,2,2,.5);ring(q,RW_COL,3,300);if(d2(pl.position,q)<1.8)bossHit(e,1)})}
       if(W2.t<=0){D.wh=null;rwAtm(false);const a=Math.random()*6.283,q=inArena(A,P.clone().add(V(Math.cos(a)*5,0,Math.sin(a)*5)),2);e.m.position.set(q.x,0,q.z);bxHide(e,false);
-        burst(gY(q,1.4),RW_COL,60,3,3,1);kqFlash(gY(q,1.5),0xffffff,5,400);const o=q.clone();tele(o,4.2,1.0,()=>{if(!A.f)return;ring(o,RW_COL,8,420);burst(gY(o,.5),0xe8f8ff,60,5,3,.8);shake(.25);if(d2(pl.position,o)<4.2)bossHit(e,1.3)});
+        burst(gY(q,1.4),RW_COL,60,3,3,1);kqFlash(gY(q,1.5),0xffffff,5,400);const o=q.clone();tele(o,4.2,1.0*PACE.W,()=>{if(!A.f)return;ring(o,RW_COL,8,420);burst(gY(o,.5),0xe8f8ff,60,5,3,.8);shake(.25);if(d2(pl.position,o)<4.2)bossHit(e,1.3)});
         say('❄ The blizzard breaks — the wraith re-forms beside you!');rwThaw(A,e,1,1)}}},
   clear(A,won){const D=A.dn;if(!D)return;D.wh=null;rwAtm(false);D.frz=0;D.cold=0;if(RW.blk)scene.remove(RW.blk);
     hero.buffs=hero.buffs.filter(b=>b.n!='Deep Cold'&&b.n!='Frozen');D.buff=null;D.tier=0;hsDirty();rwHud(false);
@@ -14315,7 +14315,7 @@ function ssBreak(A,C){C.ok=false;C.col.visible=false;C.rub.visible=true;C.tiles.
 function ssExpose(A,e,sec,txt){e._ssX=nowP()+sec*1000;popT(e.m.position,txt,'#ffd040',true);ring(e.m.position,0xffd040,5,500)}
 // ---------------- the Devourer's den moves (relayed like every Sovereign move) ----------------
 kqBmv('vortex',function(e,A,en){const D=A.dn;if(!D||D.vx||D.vxCD>0)return BMV.tailsweep(e,A,en);const ph=e.bs.ph;
-  D.vx={w:1.1,t:ph>=3?7.5:6,pull:[1.5,2.0,2.6][ph-1],tick:0};D.vxCD=15;kqBossCast(e,SS_COL,700);
+  D.vx={w:1.1,t:ph>=3?7.5:6,pull:[1.5,2.0,2.6][ph-1],tick:0};D.vxCD=15*PACE.I;kqBossCast(e,SS_COL,700);
   say('🌀 The Sunken Pit churns — the sand drags you toward the sinkhole! Walk or dash against it.');shake(.2);
   return {d:1.4*en,lock:0}});
 kqBmv('erupt',function(e,A,en){const D=A.dn;if(!D||D.er)return BMV.tailsweep(e,A,en);
@@ -14324,7 +14324,7 @@ kqBmv('erupt',function(e,A,en){const D=A.dn;if(!D||D.er)return BMV.tailsweep(e,A
 kqBmv('ram',function(e,A,en){const D=A.dn;if(!D||D.ram)return BMV.tailsweep(e,A,en);ssAim(A,e,D,e.bs.ph>=3?2:1,(e.bs.ph>=3?.8:.95)*en);
   if(!D.rh){D.rh=1;say('💡 Lure its charge into a column — its head gets stuck!')}return {d:5,lock:1}});
 kqBmv('sandstorm',function(e,A,en){const D=A.dn;if(!D||D.st||D.stCD>0)return BMV.spit(e,A,en);
-  D.st={t:8,nx:1.2};D.stCD=22;ssAtm(true);kqBossCast(e,SS_COL,600);banner('🌪 SANDSTORM',A.b.name+' whips up the desert','Its body lashes up from under the sand — watch for red circles');
+  D.st={t:8,nx:1.2};D.stCD=22*PACE.I;ssAtm(true);kqBossCast(e,SS_COL,600);banner('🌪 SANDSTORM',A.b.name+' whips up the desert','Its body lashes up from under the sand — watch for red circles');
   return {d:1.4*en,lock:0}});
 function ssAim(A,e,D,n,wind){const o=e.m.position.clone(),d=toPl(o);
   // distance to the den's edge along d
@@ -14339,7 +14339,7 @@ function ssAI(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[3]
   D.vxCD=Math.max(0,D.vxCD-dt);D.stCD=Math.max(0,D.stCD-dt);
   // exposed / stuck: it can't act
   if(e._ssX&&nowP()<e._ssX){if(!e.hid){animC(m,now,false,0);if(!m._ssr){m.b.rotation.z=Math.sin(now/70)*.05;m.b.position.y-=.18}}return true}
-  if(e._ssX){e._ssX=0;m.b.rotation.z=0;if(!D.er&&!D.ram){b.lock=0;b.t=Math.min(b.t,.9)}}
+  if(e._ssX){e._ssX=0;m.b.rotation.z=0;if(!D.er&&!D.ram){b.lock=0;b.t=Math.min(b.t,paceEnd(.9))}}
   const auth=ssAuth(A);
   // ---- burrow & erupt ----
   if(D.er){const R2=D.er;R2.t-=dt;
@@ -14351,7 +14351,7 @@ function ssAI(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[3]
       if(R2.t<=0){const q=R2.q;D.mound.visible=false;bxHide(e,false);m.position.set(q.x,0,q.z);ring(q,SS_COL,8,450);burst(gY(q,.6),SS_SAND,90,6,6,1.1);burst(gY(q,1),SS_COL,30,3,4,.7);shake(.4);
         if(d2(pl.position,q)<3.3&&hero.iv<=0)bossHit(e,1.5);
         if(e.bs.ph>=2){const a0=Math.random()*6.283;for(let k=0;k<3;k++){const a=a0+k*2.094,g=inArena(A,q.clone().add(V(Math.cos(a)*4.6,0,Math.sin(a)*4.6)),1);
-          tele(g,2.0,.9,()=>{if(!A.f)return;burst(gY(g,.4),SS_SAND,50,3,7,1);ring(g,SS_SAND,4,350);if(d2(pl.position,g)<2.0)bossHit(e,.9)})}}
+          tele(g,2.0,.9*PACE.W,()=>{if(!A.f)return;burst(gY(g,.4),SS_SAND,50,3,7,1);ring(g,SS_SAND,4,350);if(d2(pl.position,g)<2.0)bossHit(e,.9)})}}
         R2.n--;if(R2.n>0){R2.s='dive';R2.t=.7}else{D.er=null;ssExpose(A,e,2.8,'EXPOSED! ×1.6');return true}}}
     if(D.er&&D.er.s!='hunt'&&D.er.s!='tele')animC(m,now,false,0);return true}
   // ---- ram ----
@@ -14361,7 +14361,7 @@ function ssAI(A,e,dt,now){const D=A.dn;if(!D)return false;const b=e.bs,S=BSTY[3]
       if(!Rm.hit&&d2(pl.position,m.position)<2.7&&hero.iv<=0){Rm.hit=true;bossHit(e,1.6);const s=Math.sign(Rm.d.x*(pl.position.z-m.position.z)-Rm.d.z*(pl.position.x-m.position.x))||1;walk(pl,-Rm.d.z*s*1.6,Rm.d.x*s*1.6);dn(pl.position,'Trampled!','#ffb070',-20,700)}
       for(const C of D.cols){if(C.ok&&d2(C.p,m.position)<2.3){ssBreak(A,C);m.position.x-=Rm.d.x*.8;m.position.z-=Rm.d.z*.8;D.ram=null;ssExpose(A,e,3.6,'STUCK! ×1.6');say('💥 Its head is stuck in the rubble — strike now!');return true}}
       if(Rm.run>=Rm.L||Math.hypot(m.position.x-A.cx,m.position.z-A.cz)>ARENA_R-1.5){inArena(A,m.position,1.5);ring(m.position,SS_SAND,4,350);burst(gY(m.position,.5),SS_SAND,30,3,3,.6);shake(.2);Rm.s='daze';Rm.t=.8}return true}
-    if(Rm.s=='daze'){animC(m,now,false,0);if(Rm.t<=0){Rm.n--;if(Rm.n>0)ssAim(A,e,D,Rm.n,.7);else{D.ram=null;b.lock=0;b.t=Math.min(b.t,.8)}}return true}}
+    if(Rm.s=='daze'){animC(m,now,false,0);if(Rm.t<=0){Rm.n--;if(Rm.n>0)ssAim(A,e,D,Rm.n,.7*PACE.W);else{D.ram=null;b.lock=0;b.t=Math.min(b.t,paceEnd(.8))}}return true}}
   return false}
 // ---------------- per-frame hazards ----------------
 function ssTick(A,e,dt,now){const D=A.dn;if(!D)return;const P=pl.position,v=SS.scr;
@@ -14379,8 +14379,8 @@ function ssTick(A,e,dt,now){const D=A.dn;if(!D)return;const P=pl.position,v=SS.s
       if(X.t<=0){D.vx=null;D.vr.forEach(m=>m.visible=false);D.swS=.25;ssSink(D,false)}}}
   // sandstorm: lashing segments
   if(D.st){const T=D.st;T.t-=dt;T.nx-=dt;try{const ps=ZP.pos,N=ZP.N,w=10*dt;for(let i=0;i<N;i++){ps[i*3]+=w;ps[i*3+2]+=w*.3}}catch(err){}
-    if(T.nx<=0&&T.t>.9){T.nx=e.bs.ph>=3?.5:.7;const mv=pl.mvd||{x:0,z:0},q=inArena(A,P.clone().add(V((Math.random()-.5)*2.6+(mv.x||0)*1.2,0,(Math.random()-.5)*2.6+(mv.z||0)*1.2)),1);
-      tele(q,1.5,.9,()=>{if(!A.f)return;ssLash(D,q);burst(gY(q,.4),SS_SAND,30,3,4,.7);if(d2(pl.position,q)<1.5)bossHit(e,.8)})}
+    if(T.nx<=0&&T.t>.9){T.nx=(e.bs.ph>=3?.5:.7)*PACE.I;const mv=pl.mvd||{x:0,z:0},q=inArena(A,P.clone().add(V((Math.random()-.5)*2.6+(mv.x||0)*1.2,0,(Math.random()-.5)*2.6+(mv.z||0)*1.2)),1);
+      tele(q,1.5,.9*PACE.W,()=>{if(!A.f)return;ssLash(D,q);burst(gY(q,.4),SS_SAND,30,3,4,.7);if(d2(pl.position,q)<1.5)bossHit(e,.8)})}
     if(T.t<=0){D.st=null;ssAtm(false)}}
   for(const L of D.tails){if(L.t<=0)continue;L.t-=dt;const k=1-L.t/1.1,y=k<.2?-3.8+3.8*(k/.2):k<.55?0:-3.8*((k-.55)/.45);L.m.position.y=GH(L.p.x,L.p.z)+y;L.m.rotation.y+=dt*1.5;if(L.t<=0)L.m.visible=false}}
 function ssLash(D,q){const L=D.tails.find(t=>t.t<=0);if(!L)return;L.t=1.1;L.p.copy(q);L.m.position.set(q.x,GH(q.x,q.z)-3.8,q.z);L.m.rotation.set((Math.random()-.5)*.3,Math.random()*6,(Math.random()-.5)*.3);L.m.visible=true}
@@ -14455,7 +14455,7 @@ function dqWarn(S,o){
 // o: {n name, frac (share of the boss's max health), mesh, hbY, hbS, tick(e,dt,now), die(e,killed)}. They never move or
 // attack, give no XP or loot, and are removed by the den's clear() (and by arenaClear as minions).
 function dqProp(A,x,z,o){const S=dqState(A),B=bossEnt(A.i),l=B?B.c.l:(A.b.lvl||40),c=enemyC('ghoul',l,{});c.n=o.n;
-  const bs=B?B.c.st:c.st;c.st=Object.assign({},c.st,{hp:Math.max(40,Math.round((B?M(B.c):c.st.hp*12)*o.frac)),pd:bs.pd*.8,md:bs.md*.8});c.h=Math.round(c.st.hp);
+  const bs=B?B.c.st:c.st;c.st=Object.assign({},c.st,{hp:Math.max(40,Math.round((B?paceM0(B.c):c.st.hp*12)*o.frac)),pd:bs.pd*.8,md:bs.md*.8});c.h=Math.round(c.st.hp);
   const m=new THREE.Group();m.position.set(x,GH(x,z),z);m.bs=1;if(o.mesh)m.add(o.mesh);scene.add(m);
   const e={c,m,hb:bar(false),cd:99,ch:0,vx:0,vz:0,tier:3,wx:x,wz:z,wt:0,agg:1,minion:1,dots:[],dprop:o,boss4:B};if(o.hbS)e.hb.scale.setScalar(o.hbS);
   enemies.unshift(e);S.props.push(e);return e}
@@ -14636,7 +14636,7 @@ function d4Pustules(e,A,en){const S=A.dq,B=e;if(!S||S.pus.some(p=>!p._gone))retu
         if(S.pusPop>=n){B.dqVul=nowP()+5000;B.dqVulK=1.35;banner('🤢 THE ROT-KING REELS','Every pustule burst — strike now!','+35% damage for 5 seconds');B.bs.lock=Math.max(B.bs.lock,2.4);B.bs.t=Math.max(B.bs.t,2.8);ring(B.m.position,0xc8ff4a,6,500)}}});
     S.pus.push(p)}
   if(!S.pusSeen){S.pusSeen=1;banner('🟢 BILE PUSTULES','Pop them for burst damage and a stagger','Left alone, they erupt into a rain of bile')}else say('🟢 Bile pustules swell on the Rot-King — pop them!')}
-function d4Erupt(e,A){const S=A.dq,L=S.pus.filter(p=>!p._gone);if(!L.length)return;say('⚠ The pustules erupt!');const en=1.2;
+function d4Erupt(e,A){const S=A.dq,L=S.pus.filter(p=>!p._gone);if(!L.length)return;say('⚠ The pustules erupt!');const en=1.2*PACE.W;
   L.forEach((p,i)=>{const from=gY(p.m.position,2.6);dqPropGone(p,false);for(let k=0;k<3;k++){const q=inArena(A,pl.position.clone().add(V((Math.random()-.5)*7,0,(Math.random()-.5)*7)));if(k==0&&i==0)q.copy(inArena(A,pl.position.clone()));
     const dl=(1.0+k*.18+i*.1)*en;kqLob(A,from,q,dl,0xb8ff4a,1.6);tele(q,1.8,dl,()=>{if(!A.f)return;burst(gY(q,.3),0x9aff6a,16,2,2,.5);if(d2(pl.position,q)<1.8&&hero.iv<=0)bossHit(e,.75);d4Pool(A,q.x,q.z,1.3)})}});S.pus.length=0}
 // ---- corpse piles swell into maggot swarms ----
@@ -14680,8 +14680,8 @@ DEN[4]={
     setTimeout(()=>{if(A.f)say('☣ The Charnel Pit: rot burns and slows you and keeps spreading. Smash swelling corpse piles before they burst.')},2200)},
   tick(A,e,dt,now){const S=A.dq;if(!S||!S.pools)return;dqRun(S,dt);
     const ph=e.bs.ph||1;if(ph>S.ph){S.ph=ph;if(ph==2){S.pT=3}if(ph==3){S.cT=Math.min(S.cT,4);dqAfter(S,1.5,()=>{if(A.f&&!e.dead)dqCast(e,A,'rottide',1.2)})}}
-    if(dqAuth(A)&&!e.dead){S.cT-=dt;if(S.cT<=0){S.cT=[0,15,12,9][S.ph];const free=[0,1,2,3].filter(i=>!S.pileS[i].on);if(free.length){const i=free[(Math.random()*free.length)|0];dqCast(e,A,'corpsecall',dqEnc(1.2,i))}}
-      if(S.ph>=2&&!S.pus.some(p=>!p._gone)){S.pT-=dt;if(S.pT<=0){S.pT=[0,0,18,13][S.ph];dqCast(e,A,'pustules',1.2)}}}
+    if(dqAuth(A)&&!e.dead){S.cT-=dt;if(S.cT<=0){S.cT=[0,15,12,9][S.ph]*PACE.I;const free=[0,1,2,3].filter(i=>!S.pileS[i].on);if(free.length){const i=free[(Math.random()*free.length)|0];dqCast(e,A,'corpsecall',dqEnc(1.2,i))}}
+      if(S.ph>=2&&!S.pus.some(p=>!p._gone)){S.pT-=dt;if(S.pT<=0){S.pT=[0,0,18,13][S.ph]*PACE.I;dqCast(e,A,'pustules',1.2)}}}
     if(S.pus.length){S.pusT-=dt;if(S.pus.every(p=>p._gone)){S.pus.length=0}else if(S.pusT<=0)d4Erupt(e,A)}
     // pools grow, the oldest dry up
     for(let i=S.pools.length-1;i>=0;i--){const p=S.pools[i];p.age+=dt;if(p.dry){p.r-=dt*.9;if(p.r<=.05){scene.remove(p.ms,p.fr);S.pools.splice(i,1);continue}}
@@ -14943,13 +14943,13 @@ DEN[5]={
     if(ph>S.ph){S.ph=ph;if(ph==2){S.chT=Math.min(S.chT,2.5);S.moonT=7}if(ph==3){dqAfter(S,1.2,()=>{if(A.f&&!e.dead)dqCast(e,A,'rite',1.2)})}}
     S.chal=S.chal.filter(p=>!p._gone);
     if(auth&&!e.dead){
-      if(!S.rite&&!S.chal.length){S.chT-=dt;if(S.chT<=0){S.chT=S.ph>=3?20:26;dqCast(e,A,'chalices',dqEnc(1.2,(Math.random()*4)|0))}}
-      if(S.ph>=2&&!S.rite&&!S.moon){S.moonT-=dt;if(S.moonT<=0){S.moonT=S.ph>=3?20:25;dqCast(e,A,'bloodmoon',dqEnc(1.2,(Math.random()*10)|0))}}
+      if(!S.rite&&!S.chal.length){S.chT-=dt;if(S.chT<=0){S.chT=(S.ph>=3?20:26)*PACE.I;dqCast(e,A,'chalices',dqEnc(1.2,(Math.random()*4)|0))}}
+      if(S.ph>=2&&!S.rite&&!S.moon){S.moonT-=dt;if(S.moonT<=0){S.moonT=(S.ph>=3?20:25)*PACE.I;dqCast(e,A,'bloodmoon',dqEnc(1.2,(Math.random()*10)|0))}}
       // chalices heal him
       const n=S.chal.length;if(n){const h=M(e.c)*[0,.004,.005,.006][S.ph]*n*dt,h0=e.c.h;e.c.h=Math.min(M(e.c),e.c.h+h);S.healAcc+=e.c.h-h0}
       S.healT-=dt;if(S.healT<=0){S.healT=1.2;if(S.healAcc>=1){dn(e.m.position,'+'+Math.round(S.healAcc),'#ff7090',-50,900);S.healAcc=0}}
       // the rite: harass from the throne, then complete
-      const R=S.rite;if(R){R.harass-=dt;if(R.harass<=0){R.harass=3.3;dqCast(e,A,R.hk=!R.hk?'rain':'bloodfan',1.2)}
+      const R=S.rite;if(R){R.harass-=dt;if(R.harass<=0){R.harass=3.3*PACE.I;dqCast(e,A,R.hk=!R.hk?'rain':'bloodfan',1.2)}
         if(R.ob.every(p=>p._gone))dqCast(e,A,'riteend',dqEnc(1.2,0));else if(R.t>=R.T)dqCast(e,A,'riteend',dqEnc(1.2,1))}}
     const R=S.rite;if(R){R.t+=dt;const k=Math.min(1,R.t/R.T);D5.sigil.material.opacity=.35+.5*k+.12*Math.sin(now/(200-120*k));D5.sigil.rotation.y=0;
       if(R.bar){R.bar.position.set(e.m.position.x,GH(e.m.position.x,e.m.position.z)+2.6+(e.dqLift||0),e.m.position.z);R.bar.scale.setScalar(2.4+.1*Math.sin(now/150));R.bar.material.opacity=.18+.08*Math.sin(now/120)}
@@ -20982,6 +20982,102 @@ function mdBootsO(B,P,d){mdDX(d);const M=d.M,A=d.A,G=d.G,dk=d.dk,st=d.st,k=mdKP(
   if(cls=='ranger'&&O.extra){const e=O.extra;O.extra=function(B,P,D){if(MD_ORN&&D.chest)P.noCape=1;return e.apply(this,arguments)}}
   return O}}
 
+// ================= v96 pace: tougher Sovereigns, slower and readable boss specials, staggered ranged openers =================
+// 1. Boss health ×1.5: every Sovereign (the only enemies spawned with the boss flag, by spawnBoss) gets PACE.hp × its max
+//    health. Dungeon wardens and camp leaders are elites (al flag) and are unchanged. Every client spawns the boss the same
+//    way, so co-op health sync (zzz_mp 'bs', clamped to M(e.c)) stays consistent. Den sub-targets (eye-stalks, brood necks,
+//    pustules, corpse piles, chalices, doubles, obelisks) keep their old absolute health (paceM0 = health before the ×1.5);
+//    mechanic wounds/heals that are a share of the boss's health (eye burst, sever/sear, pustule pop, chalice heal) keep their share.
+// 2. Specials: twice the time between them, ×1.5 wind-ups.
+//    - Wind-ups: every Sovereign move reads its timing from `en`. paceWrap() (run after every module, see build/pN_pace.py)
+//      wraps each BMV move outermost and multiplies en by PACE.W when the move is cast fresh by the boss driver (inside the
+//      boss AI or a den scheduler: MP.inAI, depth 0). Nested calls (fallbacks, setTimeout chains) already got the scaled en,
+//      co-op partners replay the relayed (already scaled) en unscaled, so nothing is scaled twice. Moves that pack a den index
+//      into en (dqEnc) keep the index. The v89 sands rig reads en inside this wrapper, so its whips still land on the warning.
+//      Den timings written as plain numbers (neck bites, eye wakes, leaps, ice falls, geysers, lashes, …) are patched in
+//      build/pN_pace.py with the same factor.
+//    - Intervals: bossAI's next-special timer becomes PACE.I × (the old move length + the old recovery gap); den schedulers
+//      (eye wakes, neck spawns/attacks, snuff, whiteout, vortex, sandstorm, corpse piles, pustules, chalices, blood moon,
+//      rite harass) and the Cataclysm cooldown are ×PACE.I / ×PACE.U.
+//    - Between specials the boss keeps the pressure with basic attacks (BMV pbasic: a short red circle in front when you
+//      are in reach; pbolt: one aimed bolt when you are not), every PACE.B.cd seconds, only while it is free.
+// 3. Ranged openers: on aggro every ranged/caster mob waits PACE.op seconds (random) before its first shot (it keeps
+//    repositioning), and within PACE.tokR tiles only PACE.tokN ranged/caster attacks may start per PACE.tokW seconds
+//    (an "attack token"; a mob without one retries a moment later). Host only: co-op mirrors replay the host's attacks.
+var PACE={hp:1.5,W:1.5,I:2,U:2,T0:3.3,
+  B:{cd:[2.6,3.4],wm:.8,wr:1.0,dm:.6,dr:.5},
+  op:[1,4],tokN:2,tokW:.6,tokR:16,
+  clk:0,tok:[],dep:0,lastK:1,mvT:0,basic:true,wrapped:0,on:true,log:[],st:{op:0,tok:0,basic:0,bolt:0},
+  // moves whose en must not be scaled: the Cataclysm (already 4.6 s+), basics, den sub-events, idx-only den casts
+  raw:{ult:1,pbasic:1,pbolt:1,chalices:1,riteend:1,rite:1,corpsecall:1,rottide:1,bloodmoon:1,whiteout:1},
+  // moves that carry a den index in en (dqEnc): scaled with the index kept
+  enc:{batswarm:1,mirror:1},
+  // moves whose returned length does not grow with en
+  fixD:{erupt:1,ram:1,whiteout:1}};
+// health before the ×1.5 (for den sub-targets sized from the boss)
+function paceM0(c){return M(c)/((c&&c._pHP)||1)}
+function paceRaw(k){return PACE.raw[k]||/^arEye\d|^hyNeck\d/.test(k)}
+function paceEnc(en,w){const n=Math.round((+en||1)*1000),i=n%10,b=(n-i)/1000;return Math.round(b*w*100)/100+i/1000}
+// the next-special timer: PACE.I × (old move length + old recovery gap). The old length is the returned length / the
+// wind-up factor, except for parts that do not grow with en (the Great Eye's beam, the Hydra's second wave and tail).
+function paceFixPart(k,e){if(k=='argusgaze')return typeof AR!='undefined'&&AR.beam?AR.beam.t+.5:3;if(k=='tide')return ((e&&e.bs&&e.bs.ph>=2)?2:1)*1.3+1.2;return 0}
+function paceGap(k,r,g,e){const d=(r&&+r.d)||0,k0=PACE.lastK||1,fx=Math.min(d,paceFixPart(k,e));return PACE.I*((d-fx)/k0+fx+g)}
+// a den state (Ssith'ra's ram, dive & erupt) hands the boss back: remaining wait so the whole interval is ~PACE.I× the old one
+// (old elapsed ≈ elapsed / 1.2, as only its wind-ups grew)
+function paceEnd(g){const el=Math.min(8,Math.max(0,PACE.clk-(PACE.mvT||0)));return PACE.I*g+Math.max(0,PACE.I/1.2-1)*el}
+// ---- 1. boss health ----
+{const f=spawnBoss;spawnBoss=function(i){const e=f.apply(this,arguments);try{if(e&&e.c&&e.c.st&&!e.c._pHP){e.c._pHP=PACE.hp;e.c.st.hp*=PACE.hp;e.c.h=Math.round(e.c.st.hp)}}catch(err){console.error('pace hp',err)}return e}}
+// ---- 2. scaled wind-ups (wrapped outermost, after every module: see paceWrap() in build/pN_pace.py) ----
+function paceWrap(){if(PACE.wrapped)return;PACE.wrapped=1;
+  Object.keys(BMV).forEach(k=>{const f=BMV[k];if(typeof f!='function')return;
+    BMV[k]=function(e,A,en){const top=PACE.on&&!PACE.dep&&typeof MP!='undefined'&&MP.inAI;let en2=en;
+      if(top){let w=paceRaw(k)?1:PACE.W;if(w!==1)en2=PACE.enc[k]?paceEnc(en,w):(+en||1)*w;PACE.lastK=PACE.fixD[k]?1:w;if(!/^pb/.test(k))PACE.mvT=PACE.clk;
+        if(PACE.log.length<4000&&A)PACE.log.push([k,+PACE.clk.toFixed(2),A.i])}
+      PACE.dep++;try{return f.call(this,e,A,en2)}finally{PACE.dep--}}});
+  // the sands rig plays our basics like its own sweep / spit
+  if(typeof ssrMove=='function'){const g=ssrMove;ssrMove=function(e,k,en,r){return g.call(this,e,k=='pbasic'?'tailsweep':k=='pbolt'?'spit':k,en,r)}}}
+// ---- basic attacks between specials (relayed like every boss move) ----
+kqBmv('pbasic',function(e,A,en){const m=e.m,bs=m.bs||3,W=.75*(+en||1),d=toPl(m.position),reach=1.8+.45*bs,rr=Math.max(2,1+.35*bs);
+  const o=inArena(A,m.position.clone().addScaledVector(d,Math.min(reach*.55,d2(pl.position,m.position))),1);m.rotation.y=Math.atan2(d.x,d.z);
+  if(m.isHum&&typeof dqPose=='function')dqPose(e,'slam',W*.85,.3);else kqTimed(Math.max(.05,W-.3),()=>{},ab=>{if(!ab&&!e.dead)lunge(m,o)},()=>A.f);
+  tele(o,rr,W,()=>{if(!A.f||e.dead)return;burst(gY(o,.3),A.b.col||0xff5030,14,2,2,.4);if(d2(pl.position,o)<rr&&hero.iv<=0)bossHit(e,PACE.B.dm)});
+  return {d:W+.25,lock:1}});
+kqBmv('pbolt',function(e,A,en){const m=e.m,W=PACE.B.wr*(+en||1),q=pl.position.clone(),col=A.b.col||0xff5030;m.rotation.y=Math.atan2(q.x-m.position.x,q.z-m.position.z);
+  kqBossCast(e,col,W*700);if(m.isHum&&typeof dqPose=='function')dqPose(e,'bolt',W*.8,.3);kqFall(A,q,W,col,'orb',1.0,kqMouth(e));
+  tele(q,1.5,W,()=>{if(!A.f||e.dead)return;burst(gY(q,.3),col,14,2,2,.4);if(d2(pl.position,q)<1.5&&hero.iv<=0)bossHit(e,PACE.B.dr)});
+  return {d:.6,lock:0}});
+// the boss is free for a basic: no special running or due, no den state that owns it
+function paceFree(A,e){const b=e.bs;if(!b||!A||!A.f||e.dead||hero.hp<=0)return false;
+  if(b.lock>0||b.dash||b.face||e.hid||e.jmp||e.fly||e.spin||e.sub||e.dqImm)return false;
+  if(b.t<1.4)return false;
+  if(e._ssX&&nowP()<e._ssX)return false;
+  const D=A.dn;if(D&&(D.er||D.ram||D.wh))return false;
+  const S=A.dq;if(S&&(S.rite||S.stun>0||(S.mir&&!S.mir.done)))return false;
+  if(A.i===0&&typeof AR!='undefined'&&(AR.beam||AR.mark))return false;
+  return true}
+function paceAuth(A){try{return !MP.on||mpBossAuth(A.i)===MP.me}catch(_){return true}}
+{const f=bossAI;bossAI=function(e,dt){const r=f.apply(this,arguments);
+  try{const A=arenaOf(e);if(PACE.basic&&A&&A.f&&e&&e.bs&&paceAuth(A)){const b=e.bs;b.pb=(b.pb==null?PACE.B.cd[0]:b.pb)-(dt||0);
+    if(b.pb<=0&&paceFree(A,e)){const L=d2(pl.position,e.m.position),reach=1.8+.45*(e.m.bs||3),mel=L<=reach;
+      const o=MP.inAI;MP.inAI=1;let q=null;try{q=BMV[mel?'pbasic':'pbolt'](e,A,mel?PACE.B.wm/.75:1)}finally{MP.inAI=o}
+      if(q&&q.lock)b.lock=Math.max(b.lock,q.d);PACE.st[mel?'basic':'bolt']++;b.pb=PACE.B.cd[0]+Math.random()*(PACE.B.cd[1]-PACE.B.cd[0])}}}
+  catch(err){console.error('pace basic',err)}return r}}
+{const f=arenaStart;arenaStart=function(A,e){const r=f.apply(this,arguments);if(e&&e.bs)e.bs.pb=PACE.T0+1+Math.random();return r}}
+// ---- 3. ranged openers + attack tokens ----
+function paceRanged(e){if(e._pR!=null)return e._pR;const k=kqKey(e),ms=MSET[k]||[],en=EN[k]||{};return e._pR=!!(en.ranged||e.role=='caster'||ms.some(n=>KQR[n]||n=='rainfire'))}
+function paceRMove(n){return !!(KQR[n]||n=='rainfire')}
+{const f=eshotTick;eshotTick=function(dt){PACE.clk+=dt||0;return f.apply(this,arguments)}}
+{const f=eTick;eTick=function(e,dt,now){if(e&&!e.boss&&!e.mir){if(e.agg){if(e._pAgT==null){e._pAgT=PACE.clk;e._pOp=PACE.op[0]+Math.random()*(PACE.op[1]-PACE.op[0])}}else e._pAgT=null}return f.apply(this,arguments)}}
+function paceTok(e){const t=PACE.clk,L=PACE.tok;while(L.length&&t-L[0].t>PACE.tokW)L.shift();let n=0;const p=e.m.position;
+  for(const q of L)if(Math.hypot(q.x-p.x,q.z-p.z)<PACE.tokR)n++;return n<PACE.tokN}
+{const f=mStart;mStart=function(e,tg,n){
+  if(PACE.on&&e&&!e.boss&&!e.mir&&!e.dprop&&e.m&&e.c&&paceRMove(n)&&paceRanged(e)){
+    if(e._pAgT==null){e._pAgT=PACE.clk;e._pOp=PACE.op[0]+Math.random()*(PACE.op[1]-PACE.op[0])}
+    const w=e._pOp-(PACE.clk-e._pAgT);if(w>0){e.cd=Math.max(e.cd||0,w);PACE.st.op++;return}
+    if(!paceTok(e)){e.cd=Math.max(e.cd||0,.25+Math.random()*.4);PACE.st.tok++;return}
+    PACE.tok.push({t:PACE.clk,x:e.m.position.x,z:e.m.position.z})}
+  return f.apply(this,arguments)}}
+
 // ================= v89 sands: Ssith'ra the Endless moves like a heavy desert centipede =================
 // Why it used to flail (all of these stacked on the same 9 bones):
 //  - the generic 'slither' wave put up to ±0.3 rad on EVERY body bone (pelvis, spine, chest, neck) with a 1.1 rad phase step.
@@ -21648,5 +21744,6 @@ var WD_LOADOLD=false;
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{if(window.CITW){const on=!inRealm&&!inDun&&regionAt(Math.round(pl.position.x),Math.round(pl.position.z))===5;if(CITW[0].visible!==on)CITW.forEach(m=>m.visible=on)}}catch(_){}}}
 
 $('talBtn').onclick=openTal;
+try{paceWrap()}catch(err){console.error('pace wrap',err)}
 ui();refreshGear();
 </script></body></html>

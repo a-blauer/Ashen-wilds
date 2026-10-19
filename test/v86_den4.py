@@ -25,7 +25,7 @@ def s(pg):
     ev("""()=>{const A=ARN[4],y=GH(A.cx,A.cz),a=A.dqA+1.2;VIEW(A.cx-Math.cos(a)*4,y+2.0,A.cz-Math.sin(a)*4,A.cx+Math.cos(a)*14,y+2,A.cz+Math.sin(a)*14);return 1}""");shot('ground2')
     ev("""()=>{const A=ARN[4],y=GH(A.cx,A.cz);VIEW(A.cx+Math.cos(A.dqA)*24,y+3.5,A.cz+Math.sin(A.dqA)*24,A.cx,y+1,A.cz);return 1}""");shot('gate')
     # ---------- fight: walk in ----------
-    P('start',"""()=>{const A=ARN[4],e=bossEnt(4);window.GOD=1;toPos(A.cx+Math.cos(A.dqA)*9,A.cz+Math.sin(A.dqA)*9,0);camPitch=.75;camDist=17;snapCam();STEP(.6);
+    P('start',"""()=>{const A=ARN[4],e=bossEnt(4);window.GOD=1;if(window.PACE)PACE.basic=false;/* v96: no boss basic attacks in these mechanic checks */toPos(A.cx+Math.cos(A.dqA)*9,A.cz+Math.sin(A.dqA)*9,0);camPitch=.75;camDist=17;snapCam();STEP(.6);
       e.bs.t=99;STEP(1.2,1);const bb=new THREE.Box3().setFromObject(e.m);return {f:A.f,AF:!!AF&&AF.i,gateY:+D4.gate.position.y.toFixed(2),cur:D4.cur.visible,wall:A.wall.visible,boss:[+(bb.max.y-bb.min.y).toFixed(2),+(bb.max.x-bb.min.x).toFixed(2)],bs:e.m.bs,pool:BSTY[4].pool,ult:A.b.ult}}""")
     shot('fight_start')
     ev("()=>{const A=ARN[4],a=A.dqA+2.0;toPos(A.cx+Math.cos(a)*12.6,A.cz+Math.sin(a)*12.6,a+Math.PI/2);camYaw=Math.atan2(Math.cos(a),Math.sin(a));camPitch=.3;camDist=9.5;snapCam();bossEnt(4).bs.t=99;STEP(1.5,1);return 1}");shot('edge_defaultcam')

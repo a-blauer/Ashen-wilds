@@ -22,7 +22,7 @@ def s(pg):
     ev("""()=>{const A=ARN[5],y=GH(A.cx,A.cz),a=A.dqA+1.6;VIEW(A.cx-Math.cos(a)*6,y+2.0,A.cz-Math.sin(a)*6,A.cx+Math.cos(a)*16,y+5,A.cz+Math.sin(a)*16);return 1}""");shot('ground_side')
     ev("""()=>{const A=ARN[5],y=GH(A.cx,A.cz);VIEW(A.cx+Math.cos(A.dqA)*25,y+3.5,A.cz+Math.sin(A.dqA)*25,A.cx,y+2,A.cz);return 1}""");shot('gate')
     # ---------- fight ----------
-    P('start',"""()=>{const A=ARN[5],e=bossEnt(5);window.GOD=1;window.BHP=.95;toPos(A.cx+Math.cos(A.dqA)*9,A.cz+Math.sin(A.dqA)*9,0);camPitch=.45;camDist=12;snapCam();STEP(.6);
+    P('start',"""()=>{const A=ARN[5],e=bossEnt(5);window.GOD=1;if(window.PACE)PACE.basic=false;/* v96: no boss basic attacks in these mechanic checks */window.BHP=.95;toPos(A.cx+Math.cos(A.dqA)*9,A.cz+Math.sin(A.dqA)*9,0);camPitch=.45;camDist=12;snapCam();STEP(.6);
       e.bs.t=99;STEP(1.2,1);const bb=new THREE.Box3().setFromObject(e.m);return {hp:+(e.c.h/M(e.c)).toFixed(2),ph:e.bs.ph,rite:!!A.dq.rite,f:A.f,gateY:+D5.gate.position.y.toFixed(2),cur:D5.cur.visible,boss:[+(bb.max.y-bb.min.y).toFixed(2)],pool:BSTY[5].pool,ult:A.b.ult}}""")
     shot('fight_start')
     if os.environ.get('STOP')=='start':return
