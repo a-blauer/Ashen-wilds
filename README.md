@@ -357,6 +357,27 @@ Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it
   | chunks drawn (avg) / mobs streamed in (avg) | 26.9 / 44 | 25.9 / 52 |
   | zone map (N) draw / roster build per zone | 1.9 ms / 1–6 ms | 3.0 ms / 2–7 ms |
 
+## v98 perf_static
+
+`src/modules/zzN_perf_static.js` (no text patches). Test `test/v98_static.py` (`SRC=<old build> TAG=before NOCHK=1 SHOTS=0`, then `REF=out/v98_before.json` prints the table below; `DIAG=1` lists what still recomputes its matrix every frame; `DENF=1,5` the dens it fights in; screenshots `out/v98_<spot>.png`).
+three.js r128 recomputes every object's matrix and world matrix every frame (`scene.updateMatrixWorld()`, called by `ren.render`), hidden or not. After v97 a zone holds ~10,800 objects, 8,100 of them direct children of the scene (mostly the per-chunk scenery InstancedMeshes), so that alone cost ~2 ms a frame.
+- **Chunk containers**: the terrain and decoration InstancedMeshes of each visibility chunk (`CHL[i].ms/ns`) now sit in one Group per chunk (`c.g`), all under one group `PSROOT` (name `psStatic`). `c.g` is shown while the chunk shows anything (`c.on||c.non`, synced right before each render), so the renderer and the shadow pass skip a hidden chunk in one step. Their matrices are computed once; the per-frame update never walks `PSROOT`. `chunkVis` is unchanged (it still sets each mesh's `visible`/`castShadow`). New chunk meshes are picked up every 120 frames.
+- **Hidden top-level objects are skipped**: a top-level object with `visible=false` is not updated; it gets a full update the frame it is shown again. Everything else updates exactly as before (forced) unless its root is in frozen mode.
+- **Freezing**: every 30 frames a sweep looks at the visible top-level objects. An object whose position, rotation and scale have not changed for 3 sweeps gets `matrixAutoUpdate=false`, and its root is then updated with `updateMatrixWorld(false)` (the stock three.js way: anything that moves still calls `updateMatrix` and updates its own branch). Frozen objects are **guarded**: writing a new value to `position`/`scale` x/y/z or changing `rotation`/`quaternion` (including `set`, `copy`, `lookAt`, `rotateY`, tweens…) thaws the object on the spot, so a door, chest, camp flame, portal or den prop that starts moving later moves in the same frame; it then stays a normal object (`PST.log` lists the last things that thawed). Not frozen: anything with bones below it (hero, NPCs, creatures), the hero, enemy models, lights, objects the game already manages with `matrixAutoUpdate=false` (camp pieces, flames), and roots where something thawed more than 24 times. Something added inside a frozen root gives that root one full update; a `clone()` of a frozen object starts as a normal object.
+- Writing your own code: nothing to do. Move objects as usual (`o.position.x=…`, `o.rotation.y+=…`). Only setting `o.matrix` by hand on an object with `matrixAutoUpdate=false` needs `o.matrixWorldNeedsUpdate=true` (the stock three.js rule). `PST.on=false` switches the per-frame update back to stock (A/B check); `PST.st` has counters, `userData.psNo=1` on a top-level object keeps it from ever freezing.
+- **Numbers** (middle of Kindlelight next to a camp, then Duskhold's square; headless software WebGL, so only the matrix work is meaningful; frame = `loop()` + `POST.render()` with `ren.render` stubbed by the renderer's CPU work before drawing: `scene.updateMatrixWorld()` plus a camera and a shadow walk of the visible tree):
+
+  | metric | before | after |
+  |---|---|---|
+  | objects in the scene / direct children | 10,863 / 8,185 | 11,764 / 347 (1,086 chunk groups added) |
+  | `updateMatrixWorld` calls per frame / matrices composed | 10,863 / 10,854 | 1,375 / 365 (Duskhold: 1,368 / 262) |
+  | `scene.updateMatrixWorld()` | 2.03 ms | 0.095 ms (Duskhold 1.59 → 0.09 ms) |
+  | frame JS, median / p90 | 5.6 / 39.5 ms | 1.3 / 3.7 ms (Duskhold median 4.4 → 1.0 ms) |
+  | objects frozen / thawed after a tour (camp, harvest, Duskhold, 2 den fights) | – | ~1,350 / ~180 |
+
+  What still updates every frame is mostly the creatures (bones; another track throttles them) and Duskhold's walking NPCs.
+- **Checks** (`v98_static.py`): at a camp, after harvesting a tree and walking 160 tiles away and back, in Duskhold, outside a den and during the Hydra and Vaelric fights, every visible object's world matrix equals a full stock recompute, and every frozen object's matrix matches its position/rotation/scale; a frozen object that is moved and one that is turned thaw and draw in the new place. `v38t.py`, `v97_world.py` (checks) and `v89_dens.py` pass.
+
 ## Conventions (read before changing code)
 
 - **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
@@ -389,6 +410,7 @@ python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 
 python3 v84_ui.py               # HUD bars, feeding over time, stat breakdown, material hints
 python3 v84_fish.py             # fishing window size, kill gold, no finisher lunge
 python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
+python3 v98_static.py           # frozen scenery matrices: world matrices match a full recompute (camp, harvest, Duskhold, dens)
 ```
 
 `play.py` skips the title screen (sets `window.AW_NOTITLE`) unless `TITLE=1`. It rewrites CDN URLs to `test/vendor/` and writes screenshots/logs to `test/out/`.
