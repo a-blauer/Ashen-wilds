@@ -8,9 +8,10 @@
 //  * Rendering: one offscreen renderer shared with the companion portraits (CPIC.r, no extra WebGL context), 3/4 view,
 //    three-point light, fitted with an orthographic camera so every icon is centred; the bitmap gets a rarity-tinted
 //    vignette and frame, then becomes a blob URL. Cached per template + rarity (LRU, 400 entries); geometry is disposed after each render.
-//  * Lazy: icoOf(it) returns an <img> when the icon is cached, otherwise a placeholder with the old emoji and queues the
-//    render; a few icons are rendered per frame and the placeholders are swapped in place. No WebGL → the old emoji stay.
-var V89I={cache:new Map(),q:[],qs:new Set(),busy:false,sc:null,cam:null,ok:null,max:400,n:0,ms:0};
+//  * Lazy (v96, see below): icoOf(it) returns an <img> when cached, renders it on the spot while the frame budget lasts, else a
+//    neutral placeholder (no emoji) and queues the render; drops are pre-rendered as they fall. No WebGL → the old emoji stay.
+var V89I={cache:new Map(),q:[],qs:new Set(),busy:false,sc:null,cam:null,ok:null,max:400,n:0,ms:0,
+  last:0,mx:0,log:[],sb:10,pb:5,su:0,rs:0,must:0,nsync:0,nph:0};
 var V89_TM=[0x7a5a44,0x8a929e,0x5e3a2e,0x50545e,0x6a88ae], // metal tint per tier: rusted, iron, cinder-black, hollowsteel, stormsteel
     V89_TA=[0x8a6a3a,0xb8bec8,0xe06a28,0x8ad8c8,0x7ac8ff], // accent per tier: bronze, silver, ember, ghost-teal, storm-blue
     V89_ORG=[0x7a5a40,0x8a8070,0x6a2618,0xc8bca0,0x2e3e58],// wood/leather tint per tier
@@ -145,21 +146,59 @@ function v89Render(it){const t=itT(it),S=112,key='KQI|'+v89Key(it);let g=null;co
   finally{if(g){const gs=LGB[key];if(gs)for(const q in gs)gs[q].dispose();delete LGB[key]}}}
 function v89Put(k,url){const C=V89I.cache;C.set(k,url);while(C.size>V89I.max){const o=C.keys().next().value,u=C.get(o);C.delete(o);try{if(u&&u.startsWith('blob:'))URL.revokeObjectURL(u)}catch(_){}}}
 function v89Swap(k,url){document.querySelectorAll('[data-kqg="'+k+'"]').forEach(el=>{const im=document.createElement('img');im.className='kqgi';im.alt='';im.draggable=false;im.src=url;el.replaceWith(im)})}
+// ---------------- v96: never the old symbol ----------------
+// Old behaviour: an icon not yet in the cache came back as the old slot emoji (rewritten to its kqi symbol by the v88 icon
+// hook) and was only rendered on the next animation frame, so every new drop showed the symbol in the loot popup, then flipped.
+// Now: (1) drops are rendered as they fall (queued at the front), (2) a missing icon is rendered on the spot while this frame's
+// icon budget lasts (the loot popup always), (3) otherwise a neutral placeholder (empty rarity frame + shimmer) is shown and
+// swapped in place, (4) worn/bag/shop gear is pre-warmed in the background. The old emoji only when rendering is impossible.
+// a render that failed: remember it and show the old symbol (the only case besides no WebGL)
+function v89Fail(k,it){v89Put(k,'');let o='';try{o=v89IcoOld(it)}catch(_){}document.querySelectorAll('[data-kqg="'+k+'"]').forEach(el=>{const sp=document.createElement('span');sp.innerHTML=o;el.replaceWith(sp)})}
+// v89Make: one icon, start to finish. sync=true → ready when this returns (a JPEG data URL now — the icon is opaque, ~6 KB and
+// faster to encode than PNG; the cache gets the PNG blob URL once it is encoded). sync=false → the blob URL arrives a moment later and the placeholders are swapped.
+function v89Make(it,sync){const k=v89Key(it),t0=performance.now();V89I.qs.delete(k);let cv=null;
+  try{cv=v89Render(it)}catch(e){console.warn('item icon',e)}
+  if(!cv){v89Fail(k,it);return ''}V89I.n++;
+  let url='';
+  if(sync){try{url=cv.toDataURL('image/jpeg',.92)}catch(_){}if(!url){v89Fail(k,it);return ''}v89Put(k,url);v89Swap(k,url)}
+  const done=u=>{if(!u)return;if(sync){if(V89I.cache.has(k))V89I.cache.set(k,u)}else{v89Put(k,u);v89Swap(k,u)}};
+  try{if(cv.toBlob)cv.toBlob(b=>{try{done(b?URL.createObjectURL(b):sync?'':cv.toDataURL('image/png'))}catch(_){}},'image/png');else if(!sync)done(cv.toDataURL('image/png'))}
+  catch(e){if(!sync)try{done(cv.toDataURL('image/png'))}catch(_){v89Fail(k,it)}}
+  const ms=performance.now()-t0;V89I.ms+=ms;V89I.last=ms;V89I.mx=Math.max(V89I.mx,ms);V89I.log.push(ms);if(V89I.log.length>64)V89I.log.shift();return url}
+// background renders: one per frame, more while this frame's icon time stays under V89I.pb ms
 function v89Pump(){V89I.busy=false;if(!V89I.q.length)return;const t0=performance.now();let n=0;
-  while(V89I.q.length&&n<4&&(n<1||performance.now()-t0<7)){const it=V89I.q.shift(),k=v89Key(it);V89I.qs.delete(k);if(V89I.cache.has(k))continue;n++;
-    let cv=null;try{cv=v89Render(it)}catch(e){console.warn('item icon',e)}
-    if(!cv){v89Put(k,'');continue}V89I.n++;
-    const done=url=>{v89Put(k,url);v89Swap(k,url)};
-    try{if(cv.toBlob)cv.toBlob(b=>{try{done(b?URL.createObjectURL(b):cv.toDataURL('image/png'))}catch(_){}},'image/png');else done(cv.toDataURL('image/png'))}catch(e){try{done(cv.toDataURL('image/png'))}catch(_){v89Put(k,'')}}}
-  V89I.ms+=performance.now()-t0;v89Kick()}
+  while(V89I.q.length&&(n<1||(n<4&&performance.now()-t0+v89Est()<V89I.pb))){const it=V89I.q.shift(),k=v89Key(it);V89I.qs.delete(k);if(V89I.cache.has(k))continue;n++;v89Make(it,false)}
+  v89SyncUse(performance.now()-t0);v89Kick()}
 function v89Kick(){if(V89I.busy||!V89I.q.length)return;V89I.busy=true;requestAnimationFrame(v89Pump)}
-function v89Want(it){const k=v89Key(it);if(V89I.qs.has(k)||V89I.cache.has(k))return;V89I.qs.add(k);V89I.q.push({tp:it.tp,r:it.r|0});v89Kick()}
-// the icon HTML for one item: the picture when ready, otherwise the old emoji (swapped in place once rendered)
+// front=true: next in line (an item that just dropped)
+function v89Want(it,front){if(!it||it.tp==null||!ITPL[it.tp])return;const k=v89Key(it);if(V89I.cache.has(k))return;
+  if(V89I.qs.has(k)){if(front){const i=V89I.q.findIndex(x=>v89Key(x)==k);if(i>0)V89I.q.unshift(V89I.q.splice(i,1)[0])}return}
+  V89I.qs.add(k);const o={tp:it.tp,r:it.r|0};if(front)V89I.q.unshift(o);else V89I.q.push(o);v89Kick()}
+// on-the-spot budget: icons drawn inside an HTML builder, up to V89I.sb ms per frame (the time used resets on the next animation
+// frame), judged by the median of the recent render times; V89I.must>0 (picking loot up): always
+function v89Est(){const L=V89I.log;if(!L.length)return 4;const a=L.slice(-15).sort((x,y)=>x-y);return a[a.length>>1]}
+function v89SyncOk(){if(V89I.must>0)return true;return V89I.su+v89Est()<=V89I.sb}
+function v89SyncUse(ms){V89I.su+=ms;if(!V89I.rs){V89I.rs=1;requestAnimationFrame(()=>{V89I.su=0;V89I.rs=0})}}
+function v89Ph(it,k){V89I.nph++;const rc=RAR[Math.max(0,Math.min(RAR.length-1,it.r|0))][1];return `<span class="kqgp" data-kqg="${k}" style="--kqgr:${rc}"></span>`}
+// the icon HTML for one item: the picture (drawn now if the budget allows), else the placeholder (swapped in place once drawn)
 var v89IcoOld=icoOf;
 icoOf=function(it){let old='';try{old=v89IcoOld(it)}catch(e){old=SLOTIC.weapon}
   try{if(!it||it.tp==null||!ITPL[it.tp]||!v89Init())return old;const k=v89Key(it),u=V89I.cache.get(k);
     if(u){V89I.cache.delete(k);V89I.cache.set(k,u);return `<img class="kqgi" src="${u}" alt="" draggable="false">`}
-    if(u==='')return old;v89Want(it);return `<span class="kqgp" data-kqg="${k}">${old}</span>`}catch(e){return old}};
+    if(u==='')return old;
+    if(v89SyncOk()){const t0=performance.now(),url=v89Make(it,true);v89SyncUse(performance.now()-t0);V89I.nsync++;
+      return url?`<img class="kqgi" src="${url}" alt="" draggable="false">`:old}
+    v89Want(it);return v89Ph(it,k)}catch(e){return old}};
+// picking loot up (take → pickup popup): its one icon is always drawn on the spot if the pre-warm missed it
+{const f=take;take=function(){V89I.must++;try{return f.apply(this,arguments)}finally{V89I.must--}}}
+// gear that drops is queued at the front, so it is ready long before you walk over it
+{const f=drop;drop=function(kind,data){if(kind=='gear')try{if(v89Init())v89Want(data,true)}catch(_){}return f.apply(this,arguments)}}
+// worn gear, the bag and the open shop's stock: a few at a time while the queue is idle
+function v89Warm(){try{if(V89I.q.length||!v89Init())return;let n=0;const L=[];
+    if(typeof eq!='undefined'&&eq)for(const s in eq)if(eq[s])L.push(eq[s]);if(typeof gear!='undefined'&&gear)L.push(...gear);
+    if(typeof stock2!='undefined'&&stock2&&stock2.gear)L.push(...stock2.gear);
+    for(const it of L){if(n>=3)break;if(it&&it.tp!=null&&ITPL[it.tp]){const k=v89Key(it);if(!V89I.cache.has(k)&&!V89I.qs.has(k)){v89Want(it);n++}}}}catch(_){}}
+setInterval(v89Warm,1500);
 {const st=document.createElement('style');st.id='v89Css';st.textContent=`
 img.kqgi{display:inline-block;width:1.7em;height:1.7em;vertical-align:-.55em;border-radius:3px;object-fit:cover;pointer-events:none;box-shadow:0 1px 2px rgba(0,0,0,.6)}
 .kqm-slot .kqm-ic img.kqgi{position:absolute;inset:1px;width:calc(100% - 2px);height:calc(100% - 2px);border-radius:2px;box-shadow:none}
@@ -168,6 +207,15 @@ img.kqgi{display:inline-block;width:1.7em;height:1.7em;vertical-align:-.55em;bor
 .kqm-tn img.kqgi{width:2.3em;height:2.3em;vertical-align:middle;margin-right:2px}
 #pk .pt img.kqgi{width:2em;height:2em;vertical-align:middle}
 .mpch img.kqgi{width:1.5em;height:1.5em}
+span.kqgp{display:inline-block;width:1.7em;height:1.7em;vertical-align:-.55em;border-radius:3px;box-sizing:border-box;position:relative;overflow:hidden;
+  border:2px solid color-mix(in srgb,var(--kqgr,#888) 65%,#000);background:radial-gradient(circle at 50% 44%,color-mix(in srgb,var(--kqgr,#888) 35%,#1a120c),#060403 78%);box-shadow:0 1px 2px rgba(0,0,0,.6)}
+span.kqgp::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);background-size:220% 100%;animation:kqgSh 1.1s linear infinite}
+@keyframes kqgSh{from{background-position:120% 0}to{background-position:-120% 0}}
+.kqm-slot .kqm-ic span.kqgp{position:absolute;inset:1px;width:calc(100% - 2px);height:calc(100% - 2px);border-radius:2px;box-shadow:none}
+.kqm-bbar .kqm-bn .kqm-ic span.kqgp{width:2.2em;height:2.2em;vertical-align:middle}
+.kqm-tn span.kqgp{width:2.3em;height:2.3em;vertical-align:middle;margin-right:2px}
+#pk .pt span.kqgp{width:2em;height:2em;vertical-align:middle}
+.mpch span.kqgp{width:1.5em;height:1.5em}
 `;document.head.appendChild(st)}
 // shop buy bar: the slot's icon string was taken when the grid was built; ask again so a finished picture is used
 {const f=kqmBuyBar;kqmBuyBar=function(cells){try{(cells||[]).forEach(c=>{const I=c&&c._kq,it=I&&I.item&&I.item();if(it&&it.tp!=null)I.ic=icoOf(it)})}catch(_){}return f.apply(this,arguments)}}

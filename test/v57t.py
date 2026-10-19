@@ -6,6 +6,9 @@ def s(pg):
     P=lambda n,c:print(n,'=>',json.dumps(ev(c))[:700])
     P('grades',"()=>{const n0=party.length,cnt={};for(let i=0;i<400;i++){const c=hatch(Object.assign(rollEgg(1),{basic:true}));IVK.forEach(k=>{const g=grade(ivOf(c,k))[1];cnt[g]=(cnt[g]||0)+1})}party.length=n0;return cnt}")
     P('xp',"()=>{hero.lvl=5;const e=spawnEnemy('goo',pl.position.x+50,pl.position.z,5,{});const a=gainXP(e);e.wv=1;const b=gainXP(e);removeE(e);return [a,b]}")
+    # v96: XP ×0.75 — a level-5 kill at level 5 gives 18 (was 24), a wave-trial kill 6 (was 8); rest bonus / buffs can raise both
+    xp=ev("()=>{hero.lvl=5;const e=spawnEnemy('goo',pl.position.x+50,pl.position.z,5,{});const a=gainXP(e);e.wv=1;const b=gainXP(e);removeE(e);return [a,b,restBonus()+HS().xp]}")
+    print('xp check', 'OK' if xp[2]>0 or (xp[0]==18 and xp[1]==6) else 'FAIL', xp)
     # v88: abilities are unlocked with ability points in the Abilities tab (K → Abilities)
     P('skills',"()=>{hero.lvl=15;hsDirty();const before=heroSkills().map(s=>s.n);openAbil();const b=document.querySelector('[data-kqsbuy=\"Shockwave\"]');b.click();const after=heroSkills().map(s=>s.n);KQS.sel='Shockwave';rX();document.querySelector('.kqs-det [data-kqseq][data-kqsk=\"0\"]').click();const after2=heroSkills().map(s=>s.n);return [before,after,after2,tpFree(),apFree()]}")
     pg.wait_for_timeout(500)

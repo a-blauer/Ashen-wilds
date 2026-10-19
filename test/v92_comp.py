@@ -103,12 +103,12 @@ def s(pg):
         # the real loot code runs; only the last step (making the 3D drop) is swapped for a counter, so 10,000s of kills are quick.
         # lootE_base is the kill loot (monsters, elites, wave-trial mobs, Sovereigns); stdLoot is every random chest
         # (hidden caches, buried treasure, event chests). EGG92.rate=1 is the old rate, .65 the new one.
-        r=ev("""()=>{const D=dn,F=EGG92.f;dn=()=>{};let n=0;EGG92.f=function(k){if(k=='egg')n++};
+        r=ev("""()=>{const D=dn,F=EGG92.f,R0=EGG92.rate;dn=()=>{};let n=0;EGG92.f=function(k){if(k=='egg')n++};
           const sim=(rate,fn,N)=>{EGG92.rate=rate;n=0;for(let i=0;i<N;i++)fn();return n};
           const mob=(al,bs)=>()=>lootE_base({c:{l:20,al:al?1:0,boss:bs?1:0,zt:2,en:'',g:['Foxlet'],iv:{hp:1,a:1,d:1}},m:{position:new THREE.Vector3(0,0,0)}});
           const P=new THREE.Vector3(),r={};
           try{for(const [k,fn,N] of [['mob',mob(0,0),40000],['elite',mob(1,0),8000],['boss',mob(0,1),300],['chest',()=>stdLoot(P,2,{egg:.3}),6000]])r[k]=[sim(1,fn,N),sim(.65,fn,N),N]}
-          finally{EGG92.rate=.65;EGG92.f=F;dn=D}return r}""")
+          finally{EGG92.rate=R0;EGG92.f=F;dn=D}return r}""")
         print('eggs',json.dumps(r))
         for k in ['mob','elite','chest']:
             b,a,n=r[k];ok(b>0 and abs(a/b-.65)<.08,'%s: %d eggs before vs %d after in %d (x%.2f; %.2f%% -> %.2f%%)'%(k,b,a,n,a/max(1,b),100*b/n,100*a/n))
