@@ -2,7 +2,6 @@
 #   python3 v97_world.py                         checks + perf of dist/ashen-wilds.html -> out/v97_after.json
 #   SRC=old.html TAG=before NOCHK=1 python3 v97_world.py   numbers only (writes out/v97_before.json)
 #   REF=out/v97_before.json python3 v97_world.py           also prints the before -> after tables
-#   screenshots: v97_shots.py
 # Prints zone sizes, walkable tiles, roster sizes per zone, load-time phases, heap, textures, terrain triangles,
 # draw calls / triangles at 12 spots, minimap bake, world-map draw, roster build/stream cost, array memory.
 import play,json,os,re
@@ -152,16 +151,6 @@ def checks(ev,P,ok):
     # treasure-map spots: reachable, in their own zone
     tm=P('tmaps',"""()=>PMAP.map((p,i)=>{let n=0,okN=0;for(let k=0;k<6;k++){const s=tmPick(i,null);n++;if(s&&regionAt(s[0],s[1])===i&&lnReachable(i,s[0],s[1]))okN++}return [n,okN,lnReach(i).n]})""")
     ok(all(a==b for a,b,c in tm),'treasure-map spots reachable in their zone %s'%tm)
-    # the (retired) dungeon builder and the realm live off the zone grid
-    off=P('off grid',"()=>({dx0:DX0,W,H,dunEnd:DX0+DGW,realm:[RX,RZ,RN]})")
-    ok(off['dx0']>=off['W']+40,'dungeons sit east of the zone grid %s'%off)
-    # realm hidden outside of it, world hidden inside it
-    rl=P('realm view',"""()=>{const vis=o=>{for(let q=o;q;q=q.parent)if(!q.visible)return false;return true};
-      toPos(PMAP[4].x0+430,PMAP[4].y0+470);atmos(0,performance.now());const outR=vis(RLG);
-      const back=pl.position.clone();inRealm=true;pl.position.set(PORTAL[0],0,PORTAL[1]-2);realmEnv(true);atmos(0,performance.now());chunkVis();let near=0;const L=[];
-      scene.children.forEach(o=>{if(o===RLG||!vis(o)||o.isLight||o.isCamera)return;const x=o.position.x,z=o.position.z;if(regionAt(Math.round(x),Math.round(z))>=0&&Math.hypot(x-RX-24,z-RZ-24)<260){near++;if(L.length<6)L.push([o.type,Math.round(x),Math.round(z),o.name||''])}});
-      const inR=vis(RLG);inRealm=false;pl.position.copy(back);realmEnv(false);atmos(0,performance.now());chunkVis();return {outR,inR,near,L}}""")
-    ok(not rl['outR'] and rl['inR'] and rl['near']==0,'realm island hidden from the zones, zone objects hidden from the realm %s'%rl)
     # old saves: a v89-layout save in a zone goes to that zone's new entrance, its INST run is dropped,
     # treasure maps keep their zone and are re-placed
     sv=P('v89 save',"""()=>{saveGame(true);const s=JSON.parse(localStorage.getItem(SAVE_KEY));

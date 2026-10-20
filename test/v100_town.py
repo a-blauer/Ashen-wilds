@@ -27,7 +27,7 @@ def s(pg):
     L.start(pg);ev=pg.evaluate
     P=lambda n,c,a=None:(lambda v:(print(n,'=>',json.dumps(v)[:1200]),v)[1])(ev(c,a) if a is not None else ev(c))
     T=ev("()=>{const T=TOWNS[0];return [T.cx,T.cy]}");cx,cy=T
-    # ---- performance: same spots as v88_town_perf (+ the new wards), every upgrade at level 3, all shops built ----
+    # ---- performance: the main Duskhold spots (+ the new wards), every upgrade at level 3, all shops built ----
     ev("()=>{SHOPS.forEach(o=>SH.shop[o.k]=1);SHU.forEach(u=>SH.lv[u.k]=3);shApply();visTick();TOD=.3}")
     spots=[['plaza',cx,cy+6,0,9.5,.3],['north',cx,cy-6,0,9.5,.3],['gate',cx+17,cy,-1.57,9.5,.3],['high',cx,cy+10,0,24,.7]]
     if not (PERF and TAG=='before'):spots+=[['market',cx,cy+36,0,9.5,.3],['courtyard',cx,cy+70,0,12,.4],['portal_k',96,284,-1.57,9.5,.3],['crossroads',84,286,0,12,.4]]

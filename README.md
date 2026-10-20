@@ -1,582 +1,127 @@
 # Kill Quest (formerly Ashen Wilds)
 
-A single-file three.js (r128) action RPG with hatchable companions, six portal zones, Sovereign bosses, wave trials, a buildable stronghold and online co-op.
-Published as a claude.ai artifact: https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (v89 = this commit's `dist/ashen-wilds.html`).
+A single-file three.js (r128) action RPG: five hero classes, hatchable companions, the floating stronghold Duskhold,
+six portal zones each ending in a Sovereign den, wave trials, mounts, fishing, crafting at town stations and online co-op.
+Published as the claude.ai artifact https://claude.ai/artifact/2xVbSBw1i6dpRGSRQqPQoC (`dist/ashen-wilds.html`).
+
+## Layout
+
+```
+src/page.html      the page: markup, with /*@@CSS@@*/ and //@@JS@@ where the stylesheet and the game script go
+src/style.css      the head stylesheet
+src/js/NNNN-*.js   the game script in load order (one file per feature section; ~190 files, none over ~60 KB)
+build/assemble.py  joins the three into one page
+build.sh           -> dist/ashen-wilds.html, then `node --check` on the script
+test/              headless Playwright tests (see Testing)
+tools/deadcode/    finds top-level code nothing can reach (see Cleaning up)
+```
+
+The files in `src/js` are plain JavaScript concatenated in file-name order into one `<script>`. What you read is
+exactly what runs: there is no patch step. The number prefix is the load order (gaps of 10 leave room; a new feature
+goes in a new file, numbered after the code it depends on, usually at the end: `1800-v101-<topic>.js`).
+The name says which version added the section; files without a version are the original game.
+
+Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting points:
+
+| system | file(s) |
+|---|---|
+| main loop `loop()`, prompts, vendors | `0104-vendors-main-loop.js` |
+| classes, skills, talents, item templates `ITPL`, creature families | `0110-v2-*` |
+| enemies, damage, XP, loot (`genItem`) | `0120-v2-*`, `0410-v49-9-gear-sets*` |
+| zones (`PMAP`, `pmGen`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world) |
+| save / load (`gameSnapshot`, `loadGame`, `x2Save`) | `0230-v36-save-load*`, `0450-shared-prompts*` |
+| co-op (`MP`) | `0520-v58-online-co-op*` |
+| Duskhold, portals, `enterMap` | `0510-v56-duskhold*`, `1020`–`1030` (v88 town), `1820`–`1850` (v100 town) |
+| stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
+| zone roster, atmosphere, grades | `0550-v71-*` |
+| companions & eggs window, fusion window | `0570-v74-*`, `1780-v100-fusemenu*` |
+| weapon types / mounts / Stable | `0580-v78-*`, `0590-v78-*`, `0790-v83-*` (gaits, specs), `1790`/`1810` (v100 mount models) |
+| Sovereign dens | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
+| abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
+| cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password) |
+| loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
+| UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
+| hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions) |
+| creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
+| animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
+| performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
+
+## Conventions (read before changing code)
+
+- **Later definitions win.** Many systems were built by later sections wrapping earlier functions:
+  `{const f=hud;hud=function(){f.apply(this,arguments);…}}`. Before changing a function, grep for every
+  `name=function` and `const f=name` to see the whole chain; the last wrapper runs first.
+  Prefer adding a wrapper in a new file (keeps earlier behaviour) or editing the one definition when it has no wrappers.
+- Code runs at load in file order. Use `var` and function declarations for anything the main loop may reach early
+  (avoids "cannot access before initialization").
+- **Never insert into or reorder `ITPL`** (item templates): saves store the index. Append only.
+- **Saves**: `localStorage` key `SAVE_KEY`; `gameSnapshot()` builds it, `loadGame()` restores it, extra state rides
+  in `x2Save()/x2Load()`. Companion objects and `hero.tal` save automatically. Old saves must keep loading
+  (they may still contain fields of retired systems such as `realm`, `incS`, `have`, `bounties`; load ignores or migrates them).
+- **Co-op**: anything that spawns or simulates enemies must respect the region host (`MP.host===MP.me`).
+  The artifact's `room` topics `es, ev, hit, bs, trade, chat` stay declared as `"interact"`.
+- **Point lights** go straight into the scene (`scene.add`), never inside groups: they join the fixed light pool
+  (`PGL`); a light inside a group changes the light count and recompiles every lit material.
+- **Frozen matrices** (`PST`): still objects stop recomputing their matrices. Move objects as usual; only when you
+  set `o.matrix` by hand on an object with `matrixAutoUpdate=false` also set `o.matrixWorldNeedsUpdate=true`.
+  `userData.psNo=1` on a top-level object keeps it from ever freezing.
+- Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
+- Design: dark fantasy, no cutesy models. Hatchable creatures are "companions" (never "Eudemon").
+  Grade C is the norm (S and F ≈2% each). Shops in Duskhold (except the Trading Post) are built at the Stronghold Steward.
+
+## Retired systems
+
+Removed in v101 (they were switched off years of versions ago but still shipped): the Realm (building, farming,
+crafting window, habitats, sky island), dungeons, bounty boards, world events, the team-up attack, the v34 incubator
+slots, the v83 mount models (every mount is built by the v100 model track), and code that later versions replaced at load.
+Kept on purpose: dungeon entrance *spots* (`DUNS`, emptied at load) still steer where camps and secrets go;
+soil mounds and shallow water still give the old Realm terrain items (`ITEMS['t:…']`, shown under "Realm items" in the
+bag) — removing those would change the world, so it is a design decision for later.
+Everything removed is in git history (tag `v100-before-cleanup`).
 
 ## Build
 
 ```bash
-./build.sh            # -> dist/ashen-wilds.html, then `node --check` on the inline script
+./build.sh          # -> dist/ashen-wilds.html (BUILD_OK + size)
 ```
-
-The build is a **patch chain**, not a bundler:
-
-1. `src/base.html` — the original v27 game (one HTML file, all code inline).
-2. `build/pV2.py` … `build/pV6.py` — run in order. Each one does exact-text replacements on the HTML (`rep(old,new)` asserts the old text occurs exactly once) and splices modules from `src/modules/` in front of the marker line `$('talBtn').onclick=openTal;`.
-   - **pV2**: `b_logic.js`, `c_ui.js`, `d_css.css` (v2 systems: classes, talents, gear, families).
-   - **pV3**: the big module list `a0_new` … `zz_portal`, text patches, and the world section — it cuts `src/modules/w0_world.js` on `//@@TOP`, `//@@BOSSES`, `//@@BIOMES`, `//@@MAP`, `//@@HF` markers into the base file.
-   - **pV4**: `zzz_mp.js` (co-op) + main-loop hooks (`mpAct`, `mpNear`, `mpLive`).
-   - **pV5**: `zzzz_more.js` (stronghold/shops, shiny & rare, companion talents), name/text cleanups, lore & bounty removal.
-   - **pV6**: world size `W=920,H=568`, Duskhold layout scale (`TS=21,TK=1.5`), XP/loot balance, anti-stuck, `zzzzz_fish.js` (map + fishing), `zz7_v71.js` (zone population, atmosphere, unlockable skills, grades, Consume), `zz8_danger.js` (title screen, death screen with "Rise Again", hit flash + damage-direction arcs, low-health vignette and heartbeat; adds `dth` to `uiOpen()` so death pauses single-player), `zz9_cmpegg.js` (Companions & Eggs: one window for both, egg preview + in-window hatch scene in `#cvw`/`#cd`; the old `#inc`/`#hatch` popups stay in the HTML but are no longer shown).
-
-   - **pV6 (v78/v79)**: `zzA_arsenal.js`, `zzB_mounts.js` and `zzC_music.js` are spliced last (see below).
-
-## v78: Arsenal and mounts
-
-- **Weapon types** (`zzA_arsenal.js`): `WTYPE` gains `axes, halberd, flail, claws, knives, crossbow, sling, wand, orb`. Each class has 3-4 types. A basic attack is chosen by the equipped weapon's type, not the class: `WBEH[wt]` (melee combos come from the `MW` tables run by `wMelee`; ranged types are their own functions). Types without an entry (`gs, dagger, bow, staff`) fall through to the old `swing`. Projectile side effects ride on `s.wfx` and run from a `heroHit` wrapper (`WFX`). `WDESC` is the text shown on the item. Models: `mkWpn` wrapper (`NWM` builders, `WALIAS` for reused meshes) and a `refreshGear` wrapper for dual-wield/left-hand placement.
-- **100 new templates** are appended to `ITPL` from index `ITPL_V78` (=100). Never insert or reorder `ITPL`: saves store the index. New templates carry `nw:1` and an innate bonus `imp:{stat:value}` that `itStats` adds (scaled by upgrade level). Wands and orbs give magical attack and mana like staves.
-- **Mounts** (`zzB_mounts.js`): the `MOUNTS` table is replaced by 10 new mounts with their own procedural models (`mkMountRig(k)`, returned through `mountModel`). Riding is `toggleMount` (V), the list is `openMounts` (H / `#mntBtn`). Mounts are only sold for gold by the Stable Master; the Stable is a `SHOPS` entry (`stable`) built at the Steward, placed at `STB` (Duskhold offset −7,−8) and shown/hidden with its colliders by `stableSync()` from `shApply`. Old-roster mounts in saves are mapped to a same-tier mount and old mount eggs are refunded (`mFix` after `loadGame`).
-
-## v79: Music and sound
-
-- `zzC_music.js` is a generative soundtrack built with Web Audio (no audio files). `MTH` holds one theme per place: `title` (title screen and new-hero setup), `town` (Duskhold), `z0`…`z5` (the six zones, by `regionAt`) and `boss` (an aggroed Sovereign within 45 tiles). Each theme sets key, mode, tempo, chord progression and instruments (pad, drone, harp/lute arpeggio, bells, melody, bass, drums). Pattern strings are 16 steps: `X` loud, `x` normal, `g` ghost.
-- `muTick` (every 50 ms) picks the theme (`muWant`), cross-fades through `MU.xg`, and schedules notes 0.3 s ahead with `muStep`. Fighting nearby (`muFight`: an aggroed enemy within 24 tiles, or a running Wave Trial) fades in each theme's `f` drum/bass set. Death and the 7 s after a Sovereign falls are silent.
-- New effects (`mSfx`): level up, coins (any gold gain), item pickup / rare pickup, enemy and elite deaths, boss victory, dodge, potion, mount, portal travel, window open/close and button ticks.
-- Settings → Sound: Music volume (`SET.mus`) and Sound effects volume (`SET.sfxV`, which also drives the old `SET.sfx` on/off).
-- `test/v79t.py` checks theme switching, fight intensity, volumes and death silence, and renders every theme offline to `test/out/v79_music.wav`/`.mp3`. `preview/kill-quest-music-preview.mp3` is that render.
-## v83: the whole world in the low-poly style
-- `zzG_0style.js` runs first: lower-segment spheres/cylinders/cones/rings and flat shading for every lit material (opt out with `userData.lpsSkip`).
-- `zzG_humans.js` hero, humanoid enemies, NPCs · `zzG_beasts.js` remaining creature rigs, Sovereigns, eggs · `zzG_town.js` + `build/pG_town.py` Duskhold, Portal Court · `zzG_nature.js` + `build/pG_nature.py` terrain, trees, grass, props, camps, zone portals · `zzG_gear*.js` weapons, drops, chests, mounts · `zzG_arena.js` boss arenas, wave-trial grounds, boulders, bobber.
-- `build.sh` also runs any `build/pG_*.py` patch after pV6; pV6 splices `zzG_*.js` (sorted) after `zzF`.
-- Screenshot helpers: `test/tour.py` (town, court, every zone) plus the per-area scripts in `test/`.
-
-## v81: Valheim-style low-poly creatures
-
-- `zzD_lowpoly.js` is a shared toolkit: `lpGeo` lofts faceted, vertex-painted rings into one skinned body; `lpMat` is the flat-shaded material; `lpSpikeGeo`/`lpPart` make animated non-skinned parts (ears, wings); `lpExtras` adds variant (Ember/Frost/Golden/Shadow) and trait (Horned/Spiked/Armored/Universal) extras; `lpRig` assembles everything and `crRig` is wrapped to use it for any rig registered in `LPR`.
-- Each of the 12 companion rigs has its own file `zzE_<Rig>.js` (Foxlet, Ashwolf, Boneling, Stoneshell, Mossfrog, Batwing, Skyhawk, Drakelet, Gravewyrm, Cryptspider, Gloomcap, Wispling); pV6 splices every `zzE_*.js` after the toolkit. Bodies are skinned to the rig's original `SPEC[rig].bones`, so `rigAnim` (walk, hop, fly, slither, spider, float, attack) is unchanged. Wild monsters that use these rigs get the new look too; the other monster rigs are untouched.
-- `zzE_Batwing.js` also holds the shared wing builders (`lpwWing`, `lpwPair`) used by Skyhawk and Drakelet.
-- Preview any species: `cd test && SP=Ashwolf,Direfang python3 lpview.py` → `out/lp_<species>_*.png` (angles, walk, attack, variants, old-vs-new, in-game). Run previews one at a time; the build and tests accept `AW_OUT`/`AW_TMP` for separate output paths.
-
-- `zzF_combatanim.js` (spliced after the creatures) is the v81 combat-animation update published from another session (hero upper body driven by one action at a time, eased transitions); it was recovered from the live page.
-
-## v84: world tidy-up, HUD rework, companion care
-
-`build/pV7.py` (text patches, runs after the `pG_*` patches) splices `zzH_v84.js` and `zzH_limbs.js` last.
-- **Harvest nodes** (`w0_world.js`): placed as small clusters (3–5 of one kind), about a quarter of the old count; rocks stay off the road.
-- **Courtyard** (`CYD` in `w0_world.js`): walled woodland north-east of Duskhold, joined to the Portal Court by a path; trees (`#`) and rocks (`r`) regrow like any node. Walls/sign are drawn in `zzC_v79.js`; the town map (N) includes it.
-- **Balance**: kill gold ×0.65, wave-trial XP ×0.525 (was ×0.75), raw meat 10%/25% (elite)/boss 2–3, companions regen 0.6%/s after 8s out of combat (`s_fix.js`), combo finishers no longer lunge forward.
-- **HUD**: companions get their own bars (top-left) with a rendered head portrait (`cpic`, bones are named in `mkBones`), ⚡ empower and 🍖 feed (best food first); location box top-middle (`#locBox`); level, gold, talent points and buffs above the hotbar (`#chInfo`). The "Your team" strip and the team-up attack are gone.
-- **Feeding** heals over 8s (`c.fhot`, ticked from `compRegen`).
-- **Companion window**: each stat shows base + level bonus = total; Universal shows as a modifier chip.
-- **Material hints**: clicking a material label in any window shows where to get it (`msrcBuild`).
-- **Kindlelight**: greener, thicker fog, drifting ground mist sprites, darker by day (`kGloom`).
-- **Fixes**: fishing window has a fixed size; boss shockwave/beam/pool effects draw over terrain.
-
-## v85: recall runs, growing courtyard, readable attacks, smoother animation
-
-`build/pV8.py` (text patches, runs after pV7) splices `zzI_v85.js`, `zzI_combat.js` and `zzI_anim.js`.
-- **Numbers**: level ups restore 50% health/mana; healing potion cooldown 9s; gear upgrades cost 35% less gold.
-- **Companions** (`zzI_v85.js`): magic-family companions (Spirit, Dragon) cast a bolt from 5.5 tiles (`compTick`, `compBolt`) instead of biting; **Space** (`commandAttack`, 📣 on mobile) sends the team at your target for 12s (`CMD`, via `teamFoe`).
-- **Consume** eats another companion (not an egg): gain by its tier, a little more for level/evolution (`conGainC`); locked companions can't be picked.
-- **Beast Trainer**: one purchase raises a companion to your level, `trainCost` ≈ 1.9 × Σ(level + 1.1) (Lv 1→20 ≈ 400).
-- **Fishing** gives no gold; each catch has a chance (10–40% by rarity, ×1.5 when flawless) of a gold pouch, ring or amulet (`fishTreasure`).
-- **Recall runs**: recalling (or the zone's home portal) saves the zone run (`INST`: roster with dead flags + position, saved in `x2Save`). In Duskhold, T channels you back (`RECBACK`). Entering that zone's portal asks "Restart zone instance?" (Continue / Restart / Cancel).
-- **Courtyard** (`CYD` in `w0_world.js`, runtime `cySync`/`cyWalls`): a grove at the heart, then one ring per zone with 6 nodes of each of that zone's node types; rings unlock with `bossDone`, the wall moves out (`r0 9`, `+1.3` per zone, max 16.8). Courtyard nodes regrow after 10 minutes.
-- **Inventory preview** re-syncs whenever equipment or class changes while the bag is open.
-- **Enemy attacks** (`zzI_combat.js`): wind-up glows at the hand/mouth, travelling arrows/stones/globs/bolts with impacts, meteors for fire rain, boss projectile moves with visuals; ranged moves usable at range (min range 0), casters keep distance; companion spells only cast in range; red warnings dimmed 35%; Rime Wraith orbs spawn at the arena edge.
-- **Animation** (`zzI_anim.js`): see that file's header.
-
-## v86: Sovereign dens
-
-The round stone arena is gone. `zzK_dens.js` strips the old arena dressing and gives each boss a `DEN[i]` hook set (`build/start/tick/ai/clear/seal`, `denBlock` for solid tiles); `build/pV9.py` splices it, then every `zzK_den<i>.js`, then `denBuildAll()`. The playable circle is still `ARENA_R` (14). During a den fight the floating 3× boss bar is hidden (the top boss bar shows health).
-- **0 Argus — the Drowned Hollow** (`zzK_den0.js`, shared `d01*` helpers): eye-stalks sweep gaze cones (SEEN → MARKED → leap), root pillars block line of sight, stalks can be burst; `argusgaze` tracking beam; Phase III Lights Out + `argstalk`.
-- **1 Crest Hydra — the Serpent Mere** (`zzK_den1.js`): brood necks with own health that regrow as two unless seared with Serpent-fire from a brazier; brood guard (−35% damage taken at 3+ necks); `tide` waves (stand on a stepping stone or dash).
-- **2 Rime Wraith — the Frozen Sepulchre** (`zzK_den2.js`): Deep Cold meter (Chilled → Freezing → Frozen) countered by four Warmfires; Snuff (relight by standing near); Thaw (frozen statues → adds); Phase III Whiteout.
-- **3 Ssith'ra — the Sunken Pit** (`zzK_den3.js`): quicksand vortex toward the sinkhole; burrow-hunt + eruption → EXPOSED (×1.6); Ram into a column → STUCK; Sandstorm with tail lashes.
-- **4 The Bloated One — the Charnel Pit** (`zzK_den4.js`, shared `dq*` toolkit: hittable props, cancellable telegraphs, den scheduler, co-op relay, wall cutaway shader): spreading rot pools, swelling corpse piles → maggots, bile pustules (pop all three → reel), belch cone, Phase III Rot Tide.
-- **5 Lord Vaelric — the Crimson Throne Hall** (`zzK_den5.js`): Blood Chalices heal him; bat swarm lanes; Crimson Doubles (only the real one has a shadow); Blood Moon flood with moonlight safe spots; Phase III Crimson Rite (break four obelisks or eat a hall-wide cataclysm).
-- Den mechanics run on the player driving the boss and relay to co-op partners as boss moves (`kqBmv`); damage is only applied to your own hero.
-- Tests: `test/v86_den<i>.py` (one at a time), `v86_den01_mp.py`, `v86_den45_mp.py`.
-
-## v87: Cheats
-
-Settings → Cheats (`zzL_cheats.js`, spliced by pV9 after the dens; flags saved in `SET.cheat`; since v90 the controls need the cheat password, see v90): **Unlock all portals** (`pUnlocked` patched in pV9 to honour `CHEAT.portals`), **Infinite money** (gold pinned at 9,999,999; turning it off restores the old amount), **God mode** (`down()` is cancelled, health never below 1), **Level up** (+1 / max level buttons); v89 adds **Unlock all shops** and **Add 100 of all resources** (`zzN_misc_cheats.js`). Tests: `test/v87_cheats.py`, `test/v89_misc.py`.
-
-## v88: dark-fantasy UI, slot menus, living Duskhold, ability points
-
-`build/pV10.py` splices `zzM_skills.js`, `zzM_town.js`, `zzM_menus.js`, `zzM_ui.js` (in that order) and inserts `zzM_uiicons.js` right after `<script>`; each track's text patches sit in its own `# --- <track> ---` block.
-- **UI theme** (`zzM_ui.js`): `--kq-*` tokens; leather/iron panels with grain, bronze bevel frames and gilded corners (border-image, layout unchanged); Cinzel headings; themed buttons, tabs, rows, inputs, HUD (hotbar, orbs, bars, plates, banners), mobile.
-- **Icons** (`zzM_uiicons.js`): 183 original SVG icons; `KQE` maps every emoji the game uses to an icon + tint (unknown → rune fallback, counted in `KQ_MISS`). DOM: `innerHTML`/`insertAdjacentHTML`/`textContent` hooks rewrite emoji to `<i class="kqi …">` masks (MutationObserver fallback); canvas `fillText`/`strokeText` draw icon bitmaps (signs, map labels).
-- **Menus** (`zzM_menus.js`, wraps `rB0`/`rC0`/`rC`/shop renderers — keep it after modules that inject into `#cd` or the bag): inventory paper-doll + 48-slot bag grid with filter/sort, gear lock (`it.lock`, never sold), new marker (`it.kqn`); bag tabs 7 = Forge (upgrade), 8 = Stats; hover/tap tooltip `#kqmTip` with ▲/▼ comparison to the equipped item; every shop is a priced slot grid (original rows stay hidden in `.kqm-hold` and are clicked by the buy bar); companion window tabs Overview / Stats & Grades / Spells & Evolution / Care / Talents. Remembered tabs/sort in localStorage `kqm_menus`.
-- **Town** (`zzM_town.js`): one procedural texture atlas (19 materials) mapped at world scale on every town part (pV10 renames the v83 bakers to `*_0` and tags parts by material); new `sign()` (two-sided planks, iron straps, painted Cinzel text, posts beside the board); `kdSync()` (from `shApply`) rebuilds visible upgrades: Bastion Walls 0 palisade → 1 stone footing → 2 stone wall → 3 fortified wall with towers and gatehouse; Training Grounds, Scholar's Tower, Treasury, Beast Den, Hatchery each have 3 visible stages; total level adds banners, braziers and pennants.
-- **Abilities** (`zzM_skills.js`, header explains it): ability points (v90: 2 per level, 3 on every 5th level; `apFree()` = earned − spent, migration bonus `hero.tal.__apB`); heroes start with the class default; 17 abilities per class (4 original + 3 v71 + 10 new in `KQN`), unlock cost `1+floor(lv/6)` AP (v90 adds ranks 2–5, see below), some need a prerequisite; 4 equip slots (`__ld`); K opens Talents | Abilities tabs; ground targeting (circle/line/wall/cone reticle, click to cast, Esc/right-click cancels, drag on touch) for 26 new abilities and the old ground skills. Old saves keep their skills and get the talent points back.
-- Tests: `test/v88_ui_*.py`, `v88_menus.py`, `v88_town_*.py`, `v88_skills*.py`.
-
-## v89: tracks framework
-
-`build/pV11.py` (runs after pV10) exec's every `build/pN_<track>.py` in sorted order with the shared `h`/`rep`, then splices every `src/modules/zzN_<track>*.js` (sorted) last. Each v89 track below owns its own `pN_`/`zzN_` files. "The Derge" is now **The Dirge**. When `pN_dens.py` and `pN_world.py` touch the same den numbers, the world track's den clearing (`PM_DENR`) wins and dens only scales what is left.
-
-## v89: gear
-
-`build/pN_gear.py` (makes `icoOf` reassignable) · `src/modules/zzN_gear.js` · `src/modules/zzN_gear_icons.js`.
-- **Vampire collar** (`zzN_gear.js`): `dkHighCollar` is replaced by a high, stiff standing collar — two mirrored curved panels (`v89CollarGeo`) rise from the shoulders behind the neck, wrap both sides, flare at the top and stay open at the front; red inner face, near-black outer face, edge trim (gold on Lord Vaelric and the Blood Magister) and ribs. On the chest bone, clear of head and hair. Used by Vampire Thrall, Blood Magister, Blood Knight and Lord Vaelric (and his Crimson Doubles).
-- **Item icons** (`zzN_gear_icons.js`): `icoOf(it)` returns a picture of the actual item, rendered from its 3D model on the companion-portrait renderer (`CPIC.r`, no new WebGL context): 3/4 view, three-point light, orthographic fit (centred), rarity-tinted vignette and frame, blob URL cached per template + rarity (LRU `V89I.max`=400), geometry disposed after each render. Lazy: the first call returns the old emoji in a `[data-kqg]` placeholder and queues the render (`v89Pump`, a few per frame); placeholders are swapped in place (since v96: rendered on the spot or a neutral placeholder, never the emoji — see v96: econ). No WebGL → old emoji. Covers bag, paper doll, forge, every shop grid/buy bar, tooltips, loot popup, co-op trade.
-- **Models**: weapons/shields = `lgWpnKit` tinted by tier material (`v89WCol`, `v89Tint`) and rarity; helms, chests, boots, amulets, rings = `v89ArmorKit` (shape by armour type and tier, tier colours, own accent per v78 set, gem colour from the item's innate bonus). The hero and co-op partners hold the same weapon/shield model (`mkWpn` is swapped inside `refreshGear`), and gear loot on the ground uses it too (`lgDropModel`).
-- Tests/previews: `test/v89_gear.py` (icons in bag/doll/shop/tooltip/popup, held model, cache cap, fallback, collar halves), `v89_iconsheet.py` (every template → `v89_icons_all.png`), `v89_collar_view.py` (`KEYS=vamp,vlord`: front/back/sides/3-4 + walk/attack/slam/head-turn poses).
-## v89: misc
-
-Modules `src/modules/zzN_misc_*.js` (spliced by pV11); test `test/v89_misc.py` (screenshots `out/v89_*.png`).
-- **Floating lantern** (`zzN_misc_lantern.js`): the v71 belt lantern (`LANT`) is taken off the hero and kept hidden; its visibility flag (lantern zones, not in dungeons/realm) now shows `FLAN`, an enchanted lantern hovering over the hero's left shoulder, a little behind (`FLAN_OFF`). A damped spring (`flanStep`) makes it lag, sway and bob as you move, turn, dash or ride (raised by the saddle height); it snaps on jumps over 9 tiles (teleport, recall, portals). Halo sprite + sparkle motes; the hero light `torch` is moved onto it with the same colour, intensity and distance. Co-op heroes (`MP.rh`) get one too in lantern zones (`FLANR`, glow only).
-- **Citadel minimap** (`zzN_misc_minimap.js`): every zone's ground is rimmed with trees/rock tiles, which the minimap image `mmB` draws as the dark/light outline of the road, branches, camps and arena. The Citadel's rim is void (floating castle) and void is baked in the ground colour, so its minimap had no outline. `mmRimPaint()` paints a two-tone rim onto `mmB` wherever void touches walkable ground inside a zone (world map too, it draws `mmB`); tiles are unchanged.
-- **Cheats** (`zzN_misc_cheats.js`, behind the v90 cheat password): **Unlock all shops** (`cheatShops`: `SH.shop[k]=1` for every `SHOPS` entry → `shApply()` → save, like the Steward without the cost); **Add 100 of all resources** (`cheatRes`/`cheatResKeys`: `RES`, family and upgrade materials, every material a shop/upgrade/recipe uses, and supplies of kind ingredient/crop (seeds become crops anyway); not gold, gear, runes, food, potions, eggs or companions).
-## v89: bossfx
-
-`src/modules/zzN_bossfx.js` (spliced by pV11):
-- **Sub-targets**: Hydra brood necks and Argus eye-stalks get inert proxy enemies in `enemies` (`e.bfx`, built on the den4 `dprop` hooks, synced every frame from `arenaTick`). Damage on a proxy (`hurt` wrapper) is handed to `hyHitNeck` / `arHitStalk` (sever/sear/regrow, open-eye bonus, eye burst) — the den hit paths (`DEN[i].hitA`, `d01Shots`) use the proxy too, so nothing is hit twice. Proxies are never synced to co-op peers (`mpElig`).
-- **Targeting in a den fight**: Tab cycles boss + sub-targets + adds nearest first; left click / tap picks the enemy under the pointer (`bfxPick`); a non-boss target shows the target frame below the boss bar (`body.bfxT`) and a red chevron over it. Ranged weapons aim at the target up to 24 tiles (`aimDir`) and launched shots home onto it (`launch`/`homeShot` wrappers).
-- **Orbs** (changed in v91): orbs are not enemies or targets — hits, shots, skills and companions pass through them, Tab/click never pick them. The only way to destroy one is to lead it within 1.7 of a lit Warmfire, where it dissolves in steam (snuffed fires don't). Orbs are per-player copies in co-op, so melting one is local. New sound `sfx('hiss')`.
-- **Den cutaway**: dens 0–3 get `bfxCutMat` (dens 4–5 already use `dqCut`): scenery above the floor dithers away along the camera→hero line of sight, and the wall arc on the camera's side when the camera is beyond the wall.
-- Tests: `test/v89_bossfx.py`; screenshots of every den edge: `test/v89_bossfx_view.py` (`DENS=`, `CFG=`).
-## v89: sands
-
-Ssith'ra (den 3) no longer flails. `src/modules/zzN_sands.js` drives the Centipede rig on its own (`ssrRig`; `rigAnim` skips the old slither code and the generic attack overlay for it). Old problems: the slither wave put up to ±0.3 rad on every chained body bone (the swings added up, the pelvis swung the whole body, the front half's wave ran toward the head); the Sovereign attack overlay added tail lift with `+=` every frame and nothing reset it (the tail curled up more and more); every hit pitched the whole 8-tile body 0.45 rad; the instant AI turn spun the body around its middle.
-- **Body**: follow-the-leader. The head eases toward the facing (heavy spring, speed-capped), each segment eases toward the heading of the one in front at the speed the body travels, bends are limited, and the body turns about the model origin (the pelvis bone is moved to match). On top: a travelling wave head → tail (0 at the head, largest at the tail, speed matched to ground speed).
-- **Poses** (rear, head pitch, jaw, tail lift, curl, crouch, dive tilt) ease through critically damped springs. Moves are read by wrapping `BMV` (so co-op partners see them too): tail sweep coils, then whips through exactly at the telegraph's end (`.75*en`); spit rears and thrusts on the cast flash; mines rear and slam; vortex/sandstorm rear and roar; ram coils during the wind-up, drives low, shakes its head when it misses; it dives head-first, bursts up from the sand and lies slack when EXPOSED, tugs at the rubble when STUCK. A hit is a small head recoil.
-- **Death**: it curls and rolls over, then sinks into the sand. `build/pN_sands.py` holds the corpse 1.5 s before it shrinks (only for this model) and drops the exposed roll shiver for it.
-- Test: `test/v89_sands.py` takes frame sheets from the side and from above for idle, move, turn, every attack, stuck and death (`out/v89s_<tag>_<state>.jpg`; `SRC=<other build> TAG=before` for a comparison). It also prints per-frame bone rotation deltas.
-## v89: loot
-
-`src/modules/zzN_loot.js` + `build/pN_loot.py` (two small `rep()` patches in `gFinish`).
-- **Secrets**: walk up to a cracked boulder → `F · Uncover the secret` (keyboard F, the prompt pill or the mobile F button all call `interact()`); `lnUncover` plays a short shake/glow, then the old `breakBoulder` makes one hidden-cache chest. Attacks still crack boulders. Each player has their own secrets/chests (nothing is relayed in co-op).
-- **Treasure maps**: a map belongs to one zone (`m.r`, plus `m.id`); `giveMap` picks the ✕ with `tmPick`/`tmOk`: a tile reachable from the zone entrance (`lnReach` flood fill over `!solid` tiles, cached per zone, sized from `PMAP`/`PMW` at runtime), away from the den, wave arena, camps, secrets and the entrance. Old bug: maps were placed by tier (Sands/Dirge swapped, Kindlelight maps could land in Duskhold) without a reachability check (e.g. inside the sealed wave arena). `x2Load` migrates old maps (`tmMigrate`). Maps show in the bag (Gear grid and Supplies tab, tooltip `tm:<id>`, can't be sold) until dug up; red ✕ on the minimap (edge arrow when off-view), on the zone map (N) and on the ground; other zones' map windows say which zone your maps are for.
-- **Gathering nodes**: every node kind has its own instanced model (`LNM`): stone, iron vein (`lnV`: ~30% of plain rocks; always gives iron ore, plain stone rarely), crystal, fiber grass, berry bush (~40% of bushes; always gives berries), flowers, glow caps, bones. `lnSwapNodes` replaces the old prop instances at load with the same tiles/scale, re-points `NODE` (depletion/regrowth unchanged) and adds the meshes to the existing chunks. The F prompt names the material (`Mine Iron Ore`, `Pick Berries & Fiber`, …).
-- Test: `test/v89_loot.py` (`ONLY=nodes|secret|maps`), screenshots `out/v89_*.png` (node lineup: `v89_nodes_lineup.png`).
-## v89: dens
-
-Track files: `build/pN_dens.py`, `src/modules/zzN_dens.js`, `zzN_dens_sign.js`, `zzN_dens_tele.js`. Test: `test/v89_dens.py` (`DL=0,3` picks dens, `PART=scale,tele,sign`).
-- **35% bigger dens**: `DK=1.35` (width) and `DKY=1.15` (height) are defined at the top of the script. `ARENA_R` is `14*DK`; the map clearing, flattened ground, keep-clear radii for camps/roster/dungeons and the den's distance from the zone edge (36) scale with it (pN_dens.py). The den files still build at the old size; `denScaleAll()` then maps every den mesh vertex (x/z × DK about the centre, height above ground × DKY, re-draped on the terrain), moves placed objects, scales centred ones (seals, curtains, sinkhole, blood flood), moves every stored mechanic position (pillars, pools, stones, braziers, neck slots, Warmfires, statues, columns, vats, piles, pedestals, fountains, throne via `D5.L`) and rebuilds the solid tiles as the scaled image of the old footprint (`DENS.img`; runtime `denBlock/denUnblock` of a den object covers its whole new footprint). Runtime radii inside den code (gaze length, Lights-Out ring, warm circle, sinkhole core, vortex, rot tide, bat lanes, moon spots, obelisks, cutaway radius…) are patched in pN_dens.py.
-- **Red warnings**: the low-poly pass (`lpsGeo`) used to swap tele()'s draped rings and the dq toolkit's flat discs for fresh copies at the origin/standing upright ~0.1 s after they appeared; it now keeps any geometry whose box no longer matches its parameters, and warnings opt out. Warnings ignore fog, run on game time (`tele`, `kqTimed` advance with dt, like den timers), and have a crisp 90% edge that pulses in the last quarter. `DTL.live`/`DTL.log` track them for tests.
-- **Warning signs**: a two-post sign (`twPostG` + `sign()`) beside the road just outside each den (`DSIGN`); F (`worldPrompt`) opens `#xw` mode `densign`: attacks with how to avoid them, weaknesses/counters (`DSTXT`), recommended level (`dsignLv`: max(boss level, road level + 1)) and the matching power (`recPower`), with your level and power in green/red.
-## v89: world
-
-`build/pN_world.py` (text patches) + `src/modules/zzN_world.js`; the layout numbers live in `w0_world.js`.
-- **Bigger zones** (v97: 40% bigger again, see v97: world): every zone is 30% bigger each way (`PMS=1.3`, 338×351): longer winding road (14–17 waypoints), wider swings, 4–5 side branches, 4 road clearings, 5 camps (`PM_NC`), the den keeps an open circle of `PM_DENR`=25 around `ba` (no rocks, nodes, camps or decorations). About 1.8× the walkable ground; the roster has 60 roaming groups (`ROST_G`, was 45 but the old zones only fit ~22–40) and 5×7 camp mobs: 125–140 mobs per zone (was 58–86), ~1.8× at about the same density; roaming groups stay 30 tiles from the den. Levels still run entrance → boss along `pmProg`. Duskhold, the Portal Court and the Courtyard keep their coordinates (they sit west of x=110).
-- **Grid** (v97: `W=1559,H=1010`, two ground textures): `W=1154,H=730`; the painted ground texture is 4 px per tile (was 5) so it stays ~4600×2900; terrain chunks that are all void are skipped (fewer terrain triangles than before); the Citadel's castle-wall instances only draw inside the Citadel (`CITW`).
-- **Decorations** (`wdDeco` before `buildVI`, `wdBuild` after it): ~6,900 seeded props (840–1,420 per zone, ~880 with colliders), 10–17 kinds per zone, placed in clusters with noise-driven density on walkable ground off the road (`in`/`edge`), beside the road (`lane`), on the raised rim (`bank`), on water and shores. Kindlelight: mossy twisted trees, giant roots, ferns, reeds, lily pads, rotting logs, stumps, glowing mushrooms, spider webs, lantern posts, mist. Hillside: wildflowers, tall grass, fences, standing-stone circles, boulders, serpent shrines, hay bales, cairns, totems. Burningeye: ice crystals, snow-capped rocks, frozen trees and pines, icicles, drifts, basalt columns, bones, climbers' cairns. Searing Sands: dunes, sandstone arches, ribcages, skulls, half-buried walls, broken pillars, carts, mesas, cacti, dead shrubs (and sandstone ridge boulders). The Dirge: graves, crosses, mausoleums, iron fences, dead trees, skull piles, candles, coffins, angel statues, ghost lamps, mist. Citadel: ruined walls, statues, gargoyles, banners, braziers, rubble, columns, graves, candelabras, blood pools, coffins. One `InstancedMesh` per part per 64×64 chunk, pushed into `CHL` (small kinds in the near list); glow parts are unlit, no extra lights. Big props have collider tiles (`WDCOL` → `CBLK`), are kept 6+ tiles from the road centre and 2.6 tiles apart; small ones don't collide. `WD.list`/`WD.stats` for tests.
-- **Terrain colour**: cliffs take some of the ground colour; sandy ground has no green tint or snow.
-- **Old saves** (v97: `x2.wl=97`, see v97: world): `x2.wl=89` marks the new layout. An older save standing in a zone goes to that zone's entrance (old zone found with the old 260×270 grid), elsewhere unsafe → Duskhold; a saved zone run (`INST`) without `wl:89` is dropped; treasure-map marks that are no longer on free ground move to a free spot in the same tier.
-- Test: `test/v89_world.py` (sizes, mobs before/after, perf, nothing on the road/den/arenas, road walkable entrance → boss, colliders, old saves); `SRC=old.html NOCHK=1` prints only the numbers.
-
-## v90: ui
-
-Track files: `src/modules/zzN_ui.js`, `src/modules/zzN_ui_drag.js` (no `pN_ui.py` needed). Test: `test/v90_ui.py` (`PART=cheats,layout,drag`), screenshots `out/v90_*.png`.
-- **Cheat password** (`CHU` in `zzN_ui.js`): Settings → Cheats shows a locked box (password field + Unlock; Enter submits, wrong password → "Wrong password." with a shake) until the password `112233` (`CHU.pw`) is entered. The unlock is kept in `sessionStorage` (`kq_cheatpw`, try/catch) so it lasts until the tab is closed or **Lock** is pressed. While locked every cheat handler refuses (the `ch_*`/`cheatBtn` handlers are wrapped and a capture listener on `#cheatBox` blocks any other control). Flags already on in a save (`CHEAT.portals/money/god`) keep working. A window capture listener stops every key typed in `#chPw` from reaching the game hotkeys; the field is `type=password inputmode=numeric` at 16px (no zoom on phones).
-- **Location box under the minimap**: `#locBox` is placed by `v90Lay()` right under `#mini` (same left edge and width, incl. the bronze ring) and `#fsBtn`, `#sysBtn`, `#sysmenu`, `#evtk` move down by its height (measured on HUD updates, resize, fullscreen, every 0.7s; only re-laid when something changed). `v90LocBuild()` splits `#areaT` into line 1 (place in Cinzel + level) and line 2 (the recommendation); each line shrinks a little (11→9.5px / 10→8.5px), line 2 then drops "companion", then lines wrap between their " · " parts. The pieces add up to the same text as `#areaT`, so the v84 copy leaves it alone. With the top centre free, the boss bar and target frame move up to `top:10px` on desktop (≥900px); on a phone held upright they sit left of the minimap column. `#sysmenu` is drawn above `#evtk`. **Short landscape phone** (`body.mob`, stage < 520px tall → `body.v90s`, `v90Short()`): the touch buttons (`#mbtn`) fill the column under the minimap, so the box sits on the top row LEFT of the minimap (same top, ≤220px / 27% wide, 1–2 lines), `#fsBtn`/`#sysBtn` left of it, `#sysmenu` below them, `#evtk` left of `#mbtn`; the boss bar / target frame shift left (`left:calc(46% - …)`, ≤300px) and the boss bar moves to `top:58px`.
-- **Drag & drop equipment** (`zzN_ui_drag.js`, `V90D`): drag a bag gear tile (`.kqm-bagg`) onto its paper-doll slot or onto the hero picture to equip it (through `invAct()`, the same path as double-click); drag a worn tile onto the bag side to take it off. Wrong slot, class or level → red flash on the slot + a message. The matching slot glows green (red dashed if you can't use the item), a ghost with the item icon follows the pointer, the tooltip is hidden. Mouse: drag starts after 6px with the button held (clicks/double-clicks unchanged). Touch: 0.38s long-press starts it (a tap still selects, a swipe still scrolls). Escape cancels. The game has one ring slot.
-## v90: abilities
-
-`build/pN_abil.py` (text patches) + `src/modules/zzN_abil.js` (header explains it); test `test/v90_abil.py` (+ harness `test/v90_abil_lib.js`).
-- **Ranks 1–5**: unlocking = rank 1; the rank lives in `hero.tal['ab:<name>']` (old saves store 1 → rank 1; the class default has no key until ranked). Each rank above 1: damage, DoTs, summons, traps, zones, heals and shields **+12%** (rank 5 ×1.48), buff/debuff strength **+8%** (×1.32), pure utility (Vanish, Rift Gate, Time Warp) lasts +10%; cooldown −8% from rank 3, −15% at rank 5. It is applied where a cast computes its attack value (`kqrP(sk)` in the old `cast_base` and in the v88 cast wrapper), so everything that cast does scales; fixed heal/buff numbers in v88 handlers are patched to `c.rk` / `kqrB()`.
-- **Costs**: rank r costs `ceil(unlock cost / 3) + r − 2` AP (unlock cost `1+floor(lv/6)`, the default counts as 1): maxing an early ability = 10 AP, level 18–35 = 14, level 36–47 = 18 (with the unlock 9 for a level-48 one: 27 in total). `kqsReset` refunds ranks (all `ab:` keys go).
-- **AP budget**: 2 AP per level, 3 on every 5th level → 42 at level 20, **108 at level 50** (was 49). A typical build of 4 maxed abilities (default + level ~18 + ~30 + 48) costs ~75, a 5th maxed one ~18 more, which leaves ~15 for 3–4 more unlocks. The whole book (unlock + max all 17) costs 280, so choices still matter. `apFree()` = earned − spent, never below 0: old saves keep everything (they only gain AP), a hero who spent more than earned keeps all ranks with 0 free.
-- **UI**: Abilities window rows show rank pips (◆◆◇◇◇) and `Rank up · N ⚡`; the slots show pips; the detail panel lists this rank → next (damage % and ≈ per-hit damage, healing/shield %, effect strength %, cooldown). Hotbar keys carry a small `N★` badge. Level-up banner: "+2 ability points (K)".
-- **Balance** (numbers in `test/out/v90_balance.md`, made by `python3 test/v90_abil.py`, ~45 min; `BAL=0` for the functional checks only):
-  - Rule: one cast on one same-level mob ≈ at most 4 basic hits at rank 5 (single target), 3 per target for area abilities, ~5 for big-cooldown "ultimates" and lasting summons/zones (total over 5–15 s). `KQR_TUNE` (per-ability damage factor, applied with the rank) brings every ability to that; weak ones (Cleave-era warrior/paladin skills at ~1 hit) went up, big ones down (assassin finishers, ranger summons and volleys, mage channels/zones). `KQR_CD` gives the ones that lost the most a shorter cooldown.
-  - Outliers fixed: Wild Hunt (3 wolves, 36 basic hits per cast), Call of the Wild (16), Shadow Clone / Eclipse (10), Eviscerate (+45% per Combo point + forced crit → 10 hits; now +25% per point), Rapid Fire / Rain of Arrows / Blizzard / Disintegrate / Wall of Fire / Singularity (6–9, many hits on one target). The class-resource empower (Rage/Faith/… at 50+) stacked ×1.9 on any skill; now ×1.5.
-  - Classes (`KQR_CLS`, added to the hero's stats): warrior +5% basic / +10% skill damage, +5 + 0.5×level max mana and +1%/s mana regeneration (with 51 mana at level 15 it could cast about once every 9 s), paladin's bonus 20% + 1.1%/level → 12% + 0.4%/level (it had the strongest basic attack *and* the most health), assassin +15% basic damage and +10% (+0.2%/level) attack speed, ranger +12% basic damage, mage skill damage −30% + 0.7%/level (−20% at 15, +5% at 50: it cast twice as often as anyone at mid levels); small mana regeneration bonuses for paladin, assassin and ranger.
-  - Result (rotation DPS, worst class vs the class average; before → after): level 5 −22%/+21% → −6%/+7%; level 15 −29%/+56% → −8%/+15% (mage); level 30 −19%/+45% → −10%/+12% (ranger/warrior); level 50 −22%/+19% → −5%/+6%. Biggest single cast at level 50, rank 5: 5.2 basic hits (Wall of Fire, over 6 s); was 36 (Wild Hunt). Paladin stays the toughest (11–17 mob hits to die), assassin and mage the most fragile (6–9).
-  - The harness (`v90_abil_lib.js`): a stunned dummy with the real stats of the level's zone mob, rare gear of the level's tier, auto-spent talents, companions out of the fight, crits as expected value; rotation = basic attacks + the 4 abilities with the most damage per cooldown, real mana and class resource, 30 s. Runs vary by ~5%. Mid levels move with the tier's weapon (e.g. the tier-4 greataxe makes the level-30 warrior strong).
-
-## v91: fix
-
-`build/pN_fix.py` (text patches) + `src/modules/zzN_fix.js`; test `test/v91_fix.py` (`SRC=<old build> TAG=before` for comparison shots `out/v91_*_<tag>.png`).
-- **Rime Wraith orbs** (`zzN_bossfx.js`): the v89 "any hit shatters an orb" is reverted — orbs get no proxy enemy any more, so melee, arrows, area skills and companions pass through them, and they are not in Tab/click targeting or the target frame. Leading an orb into a lit Warmfire still melts it in steam. The den sign (`zzN_dens_sign.js`) says so. Tested in `test/v89_bossfx.py`.
-- **Kindlelight stump mushrooms** (`zzN_world.js` `k_stump`): the mushroom cluster was centred on the rim of the cut top (x=.3, top radius .3) and spread .36 further out, so most of it hung in the air beside the stump. It is now scaled to fit inside the top (`.scale(.55,.8,.55).translate(.04,.5,.02)`).
-- **Camps on the zone map (N)**: a camp was drawn green only while `nowP()-C.kt<45000` (the old 45 s respawn timer), so it went red again 45 s after clearing although the zone roster keeps camp mobs dead; `C.kt` was also reset by `rosterBuild` and never saved. `campCleared(C)` now asks the roster: every slot of that camp dead = cleared (co-op guests without a roster use `C.clr`, set on the clearing kill). The slots and their dead flags are what a recall run (`INST`) saves, so the state survives recall runs and save/load, and a restarted zone instance shows every camp red again.
-- **Argus gaze cone**: 40% of its old opacity in every state (`arFanK()`, both opacity lines in `zzK_den0.js` `arStalk`).
-## v91: fxA
-
-`src/modules/zzN_fxA.js` (header explains it; no `pN_fxA.py` needed) gives four abilities real models and animation. Damage, ranges, hit areas and cooldowns are untouched: the old cast code still computes every number, this file only replays the hit when the projectile gets there.
-- **Bow draw** (Piercing Arrow, Explosive Arrow): a heavy draw → straining hold → release (`fxaPose`, built on the v85 `bowPose`; 760 ms, release at 50%, `FXA_DRAW`). The ability's own arrow is nocked on the string and leaves from the bow; crossbow/sling play their normal v85 shot. Splinter Shot's side arrows leave with the arrow.
-- **Piercing Arrow**: long ash shaft, silver bands, glowing fletching, barbed spectral head, light streak. During the cast `bolt()` is muted and `heroHit()` records the hit; at the release the arrow flies (46 tiles/s) down the same 9 × 2.2 line and each enemy in it takes that hit (with a spark) as the arrow passes.
-- **Explosive Arrow**: `launch()` is recorded during the cast and made at the release (same speed, damage, life, burn), so the old shot code still decides the hit and the 2.2 splash. Mesh: arrow with a lashed clay fire-pot, rope bands, iron tip and a sparking fuse, smoke trail, a small visual arc that ends on the target. Impact: fireball, smoke, dust, bouncing debris, a short light flash (a dungeon torch light, dark outside dungeons — no new light) and a scorch mark with cooling embers (6 s).
-- **Call of the Wild**: the summon is the Ashwolf low-poly rig (`crRig`) with a ghost material (`fxaFres`: fresnel rim, translucent teal, glowing eyes) and wisps; it runs with the creature gait (`animC`/`rigAnim`) and bites with the v85 bite (`lunge`) timed so the jaws snap on the damage tick; fades in and out.
-- **Shadow Clone**: a copy of the hero's current model (body, outfit, gear, weapons; `fxaCloneHero` clones the hierarchy and gives every skinned mesh a skeleton of the cloned bones, like SkeletonUtils.clone; geometry is shared) as a dark, smoky shadow with a violet rim. It walks with `animHero` and strikes with the hero's own attack poses for the equipped weapon (`ATK.dagger/claws/axes/knives`), timed on the summon's strike; fades out on expiry.
-- Summon movement and strikes are still `kqsSummon`; `fxaSwap` only swaps the model (`kqsWolf`/`kqsShade`) inside the unchanged `KQH.r_wolf`/`KQH.a_clone` and wraps the summon's tick/end. Removal disposes only what this file made (materials, skeletons), never shared geometry. Smoke/fire/debris come from one pooled group (`FXA.root`, added once). Wild Hunt and Stampede use the same ghost wolf since v92 (`zzN_combat_wolf.js`).
-- Co-op: hero abilities are not relayed to partners (they only see the swing pose), so these visuals are local, like the rest of the ability effects.
-- Test: `test/v91_fxA.py` (`ONLY=pierce,draw,explo,wolf,clone`, `NOSHOT=1`, `SPOT=zone,pathIndex`, `TAG`): casts each ability at training dummies on a virtual clock, writes frame sheets `out/v91_<TAG>_<ability>.jpg`, checks deterministic damage against a reference build (`DMG=out/v91_dmg_before.json` from `SRC=<old build> TAG=before`), that Piercing Arrow hits each dummy as the arrow reaches it, no page errors and nothing left in the scene.
-## v91: fxB
-
-`build/pN_fxB.py` (one hook in the old `cast_base`: `switch(fxbCast(...)?'_fxb':sk.k)`) + `src/modules/zzN_fxB.js` (header explains it); test `test/v91_fxB.py` (`PART=bar,parity,homing,relay,leak,shots`, frame sheets `out/v91fxb_<ability>.jpg`). Damage numbers are unchanged: cast_base still takes mana, sets the cooldown and computes the attack value (with v90 ranks); the hook only changes what is drawn and when the hit lands.
-- **Shockwave** (warrior): two-hand overhead slam (crouch → weapon high overhead → whip into the ground → low hold → recover, 640 ms). The ground is struck on the impact frame (0.29 s); a wave of bursting rock spikes, flying debris and dust runs down the 9-tile line at 28 tiles/s behind a dust wall, leaving a glowing crack that cools and fades. Enemies in the old line shape are hit as the wave reaches them.
-- **Judgment** (paladin): the hand rises to the sky and gathers light, a golden rune line + sigil lights the line, a sword of light falls inside a light column onto the target in the line (or 6 tiles ahead); on impact (0.43 s, arm brought down) a flash, motes and a ripple of light pillars run along the line, which is hit all at once.
-- **Hammer of Light** (paladin): a gold sigil replaces the red warning; a giant spectral warhammer (octagonal beveled head, striking faces, collar, runes, haft rings, leather grip, pommel gem, glow shell) appears above the point, winds back and swings down with accelerating fall, landing exactly at `sk.delay` (0.7 s): area damage, flash, shockwave ring, rock spikes, debris, dust, crater cracks, camera shake; it stays planted, then fades upward. Both arms raise to call it and pull down as it lands.
-- **Arcane Missiles** (mage): the same 3 shots (same damage, speed, timing) now home: `homeShot` is wrapped for `s.fxb` shots — turn-rate-limited steering (faster with age) toward `tgt` if valid, else the best enemy in front; retarget when the target dies; they weave around each other on the way; alive up to 2.4 s while they have a target. Bosses and v89 proxy sub-targets work (they are in `enemies`). New missile model (core, halo, comet tail) and an arcane pop on impact.
-- **Class resource bar** (all classes, noticed on the mage's Arcane): `resUI()` filled `b.querySelector('i')`, but since v88 the icon emoji in `.ri` is rewritten into an `<i class="kqi">` that comes first, so the width went onto the icon and the fill stayed at 0. `resUI` is re-declared to fill `.rbar > i` (smooth width transition, gradient + glow) and only rewrites the icon when the class changes.
-- **Co-op**: each cast is queued as `['fxB',code,x,z,dx,dz,px,pz,R]` on `MP.evq`; partners replay the visuals (and the pose on your model) without damage (`mpOnEV` wrapper).
-
-## v92: comp
-
-`src/modules/zzN_comp.js` (empower timer, feed tooltip, egg rate), `src/modules/zzN_comp_menus.js` (crowded lists), `build/pN_comp.py` (bounty egg chance). Test: `test/v92_comp.py` (`PART=emp,feed,eggs,menus`, `MOB=0` skips the phone-size run, `TAG`), screenshots `out/v92_*.png`.
-- **Empower is temporary** (`EMP92`): E / R / ⚡ empowers you for 15 s, then the companion goes back to fighting by itself and rests 60 s before it can empower again (each companion has its own timer, saved as `c.empL` / `c.empCd`, ticked on game time from `compRegen`). Pressing again ends it early with a shorter rest (4 s per second used). Fainting or moving it to the reserve ends it. The ⚡ button shows the seconds left (gold, pulsing) or the rest countdown with a dark sweep; a thin strip under the health bar shows the same; tooltips say what it does and how long is left. Old saves: empower was already off after loading; a leftover timer becomes a rest.
-- **Feed tooltip**: the 🍖 button said "Feed the best food you have", and clicking/tapping it popped up the v84 material hint for *Stone* (the hint scanned the companion bar text, and "Stoneshell" contains "stone"). The HUD bars no longer give material hints; the title now names the food it will use (best food first), how much it heals (% of max health and amount, over 8 s) and that it only restores health.
-- **Menus with many companions/eggs**: list rows are flex items in a fixed-height scrolling column, and `.win .rw{min-height:36px}` removed the "not smaller than its content" floor, so with many rows every row was squeezed to 36 px and the text of each row was drawn over the rows below. Rows no longer shrink (`.rows>*{flex-shrink:0}`), the Companions & Eggs list shows one name line + one detail line cut with "…" (full text in the tooltip), the name column can shrink so the health bar/slot number keep their place, the "Eggs"/"Companions" headers stick to the top while scrolling, and Consume picker buttons are cut with "…" too.
-- **Egg drops ×0.65** (`EGG92.rate`): every egg that drops by chance goes through a `drop()` wrapper (monsters, elites, wave-trial mobs, camp/hidden/treasure/event chests, crates, dungeon chests, the wave-trial reward chest, fishing); bounty-board eggs are scaled in `pN_comp.py`. Unchanged (guaranteed): the Sovereign kill egg, Bestiary milestone eggs, shop eggs. Mount eggs are not companion eggs and are unchanged. Measured (test, level-20 tier-2 loot): normal kill ≈4.2% → ≈2.7%, elite ≈12.5% → ≈8.3%, chest ≈30% → ≈19.5% (before the v66 −30% kill-loot cut, which still applies on top).
-## v92: combat
-
-`build/pN_combat.py` (text patches) + `src/modules/zzN_combat.js` (poise, wave drops) + `src/modules/zzN_combat_wolf.js` (ghost wolves); headers explain them. Test `test/v92_combat.py` (`PART=wolf,poise,wave`, `NOSHOT=1`; `SRC=<old build> TAG=before` then `REF=out/v92_before.json` to compare), frame sheets `out/v92_<TAG>_hunt.jpg`, `out/v92_<TAG>_stamp.jpg`.
-- **Ghost wolves**: Wild Hunt (`KQH.r_hunt`) and Stampede (`KQH.r_stamp`) run unchanged, but while they run `kqsWolf()` returns the v91 ghost wolf (`fxaGhostWolf`, same scale as the old box wolf). Wild Hunt's three summons get the Call of the Wild summon hook (`fxaSumHook`: fade in, rig gait, bite on the damage tick, wisps, dissolve). Stampede's four wolves keep the stampede's own path/timing; `cbwStampHook` wraps its object: fade in, gallop (`animC`), wisps, a jaw snap (`lunge` with a short reach) on each trampled enemy, and an end that fades and removes them with `fxaRm` (the old `kqsFade` would dispose the shared rig geometry). Damage, hit count and hit times are identical to the old build.
-- **Poise** (enemy attacks are harder to interrupt). Old: during a special wind-up any ability hit, or one hit ≥ 6% max health, broke the attack (incl. elites). New: every direct hit (hero, ability, shot, companion; not DoTs) during any wind-up (`e.atk.ph==0`) adds its damage to `e.atk.pz`; the attack breaks ("BREAK!" + 1.1 s stun, as before) only when that reaches `KQP.pz` = 28% max health (normal) / 42% (elite). Lighter hits only flinch the mob (old flinch + a small white spark); the attack keeps its red warning and hits.
-
-  | What | Normal mob | Elite | Boss / den move |
-  |---|---|---|---|
-  | basic or ability hits during the wind-up | breaks at 28% max HP taken in that wind-up | breaks at 42% | never |
-  | companion hits | count toward the same poise | same | never |
-  | DoTs (burn, poison, bleed) | don't count | don't count | never |
-  | combo finisher (3rd/4th swing) | interrupts (any phase) | +15% max HP poise damage | never |
-  | stun abilities, Frozen, Steam, Stampede knockback-stun | interrupt (stun) | interrupt (stun ×0.6) | stun ×0.3, move not cancelled; then **RESIST** to stuns for 6 s |
-  | Intimidating Shout, Vanish/stealth aggro drop | interrupt (unchanged) | interrupt | no |
-- **Wave trials**: wave-kill XP factor `.525` → `.315` (×0.6; pN_combat.py on the pV7 line); wave-kill drops (`LT.on==2` inside `lootE`) keep a further `KQP.wvDrop` = 50% (eggs included). The end-of-trial reward chest (`waveEnd`) drops with `LT.on==0` and is unchanged.
-
-## v93: idle
-
-`src/modules/zzN_idle.js` (header explains it; no `pN_idle.py` needed). Test `test/v93_idle.py` (`PART=sheets,perf,game`, `SUBJ=`, `FORCE=<fidget id>`, `ROTY`, `FSC`; `SRC=<old build> TAG=before` for comparison sheets `out/v93_<TAG>_<subject>.jpg`).
-- A layered idle plays on top of the existing animation only while a model stands still and is not attacking. It is additive with an "undo" (it remembers what it added per channel), blended by a spring and multiplied by (1 − the gait's moving blend), so walking and attacks override it without a pop. For the player, channels driven by the v81 action system are dropped the moment an action starts (the action blends from the current pose).
-- **Humanoids** (hero, co-op heroes, humanoid foes, The Bloated One, Lord Vaelric, town folk): breathing, weight shifts with hip sway (hips counter-rotate so the feet stay planted), head glances, arm settle, and a fidget every 4–10 s (`IDL.fmin/fmax`). Hero: roll shoulders, check weapon, adjust grip, look over shoulder; mage hand-glow flick, ranger bow check, warrior neck stretch. Combat-ready stance (bent knees, weapon up, no fidgets) while a foe is within 6 tiles or a hunting foe within 15. Foes: menacing sway, weapon tap, growl lean, look around, neck roll; aggroed foes take the combat stance. Town folk (`npc()` is re-declared): now skinned figures on a small skeleton (`idlNB`): stretch, scratch head, shift weight, nod.
-- **Creatures** (`rigAnim` wrapper): breathing, glances, hip roll, own-rhythm tail sway and flicks, ear twitches; fidgets per rig type: quadrupeds sniff/look/shake/groom/yawn (companions also sit; slow shells don't shake), hop (throat pulse), fly (flutter, swoop), spider (leg shuffle, mandibles, body turn), slime (wobble, squash), float (slow turn, drift), serpent (rear and look, tongue, coil). **Ssith'ra (Centipede rig) is skipped** (v89 sands animation untouched).
-- **Sovereigns**: slower, heavier; out of the fight an occasional roar, in the fight only breathing/head sway and a snort (nothing that looks like a telegraph).
-- **Mounts** (`mkMountRig` wrapper): weight shift, head look/bob, head toss, hoof stamp, tail swish, graze.
-- Desync: every instance gets a constant random time offset for the inner animation (the old shared idle terms no longer move in lockstep) and its own rates/phases. Only drawn models within `IDL.dist` (34) of the camera run it; no per-frame allocations. Measured with 60 enemies in view (headless): ≈0.4 ms/frame for ~65 idle instances. `IDL.on=false` turns it off.
-## v93: grip
-
-`src/modules/zzN_grip.js` (header explains it); test `test/v93_grip.py`.
-- **Why weapons were held wrong**: every weapon model has its grip at the origin and the blade/head along −y, and `refreshGear`/`mkHumanoid` put it in the hand with one tilt (`rotation.x=-1`). With the relaxed arm (forearm ~30° forward) that laid swords, axes and hafts flat, pointing straight ahead; the bow was attached at its model origin, which is the string.
-- **Two grips per weapon type** (`GRIP` table, in the hand bone's frame): *carry* (idle, walking) and *strike* (attacks, casts, shots — the old placement the v85 attack tracks and v85/v91 bow draws were tuned with). The hand turns to the strike grip in ~0.05 s (the hero: by 18% of the swing) and back to carry in ~0.28 s. Carrying a weapon upright adds a small elbow bend (`el`) on top of the idle/walk pose.
-  | type | carry |
-  |---|---|
-  | sword, axe(s), mace, club, hammer | upright, top 9° forward, edge / axe bit / hammer face forward, elbow −0.45 |
-  | dagger, knives | forward grip, blade up and 35° forward |
-  | greatsword, greataxe | resting on the shoulder (17° back, leaning in), elbow −0.75 |
-  | halberd, staff | upright at the shaft, butt near the ground |
-  | flail | haft forward, the chain and ball hang (the chain is split off the model and swings; it trails the haft in strikes) |
-  | wand | pointing forward and up · **orb** (left hand) held by its stem, orb on top · **sling** hangs from the fist |
-  | crossbow | stock level, bow arms across the front · **claws** one grip (over the fist) |
-  | bow | left hand at the riser, upright, string behind the hand (away from the body); shots unchanged |
-  | shield | left forearm, face out and a little forward |
-- **Edge leads**: during the strike itself (hero 22–58% of the swing, foes the act phase) edged weapons turn about their own axis toward the tip's motion (in the body's frame), so cuts lead with the edge (axes with the bit); thrusts and slow moves keep their spin.
-- Applies to the hero, co-op partners, the bag (`#hv`) and character-creation previews (all through `refreshGear`), and humanoid foes (`mkHumanoid`, incl. archers' bows and skeleton/naga shields). `bowFxSet`/`eBowFxSet` are wrapped so the drawn string and nocked arrow use the same grip.
-- Test: `python3 v93_grip.py` writes `out/v93_<TAG>_hero1..4.png` (each weapon type: idle front/side/¾, walk, three attack frames), `v93_<TAG>_foes1..2.png`, `v93_<TAG>_bow.png` and prints `CHECKS OK` (blade/head up, hand on the grip, bow at the riser with the string clear of the hand, chain hangs, edge leads at contact, bow shot frames). `SRC=<old build> TAG=before` for a comparison.
-
-## v94: model
-
-Track files: `src/modules/zzN_model.js` (toolkit, body, heads, hair, faces, hero look), `zzN_model_foes.js` (humanoid foes + humanoid Sovereigns), `zzN_model_gear.js` (worn equipment + item icons), `zzN_model_hero.js` (class outfits, `refreshGear`, `heroRebuild`, `heroBuildPreview`, co-op look), `zzN_model_npc.js` (town folk), `build/pN_model.py` (co-op presence carries the look). Test `test/v94_model.py` (`PART=ref,heroes,foes,npc,gear,look,perf,checks,game`, `ONLY=`, `SRC=<old build> TAG=before`), sheets `out/v94_<TAG>_*.jpg`; `test/v94_probe.py file.js` runs one JS snippet in a started game.
-- **Style**: every humanoid (hero of all 5 classes, co-op heroes, bag/creator previews, all 25 humanoid foe types incl. The Bloated One and Lord Vaelric + Crimson Doubles, town folk) is rebuilt like the v81 companions: few smooth lofted shapes, flat shading, one colour per face (no random jitter or mottling), a small palette per character. The old detail kits (`dkHeroKit`, `dkEnemyKit`, `dkNewKit`, `huNpcKit`) are no longer used for bodies (the v89 vampire collar `dkHighCollar` is reused).
-- **Skeleton unchanged**: bodies are skinned to the same bones (`HB` via `mkBones(HSPEC)`; town folk `idlNB`), same names, rest positions and hand bones, so v85 animation, v91 ability poses, v93 grips and v93 idle work unchanged. Scale/hitboxes unchanged (`g.bs`).
-- **Builder** (`mdB`, `mdLoft`, `mdKit`, `mdBake`): ring lofts with up to 4 bone weights per vertex (rotation-minimising frames, colour/keep decided per quad so regions have straight edges) + rigid `dkKit` parts on one bone, merged into ≤3 non-indexed geometries per model (`c` cloth/skin, `m` metal, `g` glow). Cache `mdGeo(key)`: hero = class + look + worn items (LRU 48, only unused keys are freed), foe = type (shared by every instance and the shared materials `mdMats`), town folk = npc options. Heroes get their own material copies (`pl.mat` glow, stealth fade).
-- **Body** (`mdTorso`, `mdArm`, `mdLeg`, `mdFoot`, `mdHeadR`; `mdTorsoAt`/`mdHeadZ` give the surface for placing things): parameters sex, build, belly, width/limb factors, head shape (width, jaw, snout, top).
-- **Equipment** (`mdGD(item)` → descriptor; `mdChest`, `mdHelm`, `mdBoots`, `mdAmulet`, `mdRingW`): pieces are shells of the body's own ring profile pushed out by an offset (`mdTS` torso, `mdAS` arm, `mdLS` leg, `mdFS` foot, `mdSkirt` robes/coats/tassets that follow both thighs, `mdCape` on the cape bones outside whatever the torso wears), so they bend with the body and never float; pauldrons, horns, buckles and pendants are rigid on their bone. Shape per armour type × tier and per v78 set (`mdSty`: heavy helm nasal/horned/great/visage/winged, sets barbute/bucket/crowned; medium hoods/pelt/cowl/skull hood/gale mask; light masks/cowls/glass mask; cloth hood/hat/circlet/diadem/crown, witch hat, tall cowl, star hood; chests mail → hauberk → cuirass → war plate → aegis, padded → brigandine → vest → long coat → mantle, wraps → scale → garb → shroud → raiment, robes; boots likewise). Colour: tier material (`V89_ARM`), accent per tier/set (`v89Acc`), trims toward the rarity colour from Rare, glowing slits/gems/trims from Epic. Amulet: chain + pendant (5 shapes) on the chest outside the armour; ring: band + gem on the right hand (glows from Epic). Class identity stays on top of armour: paladin tabard, ranger quiver, assassin scarf, class capes. Shields are held at 0.82 scale (`MD_SHIELD`).
-- **Icons**: `v89ArmorKit` is replaced by `mdItemKit`, the same builders without the body (one part per colour), so the bag icon / ground loot shows what the hero wears. Weapons/shields keep the v89 models.
-- **Hero look contract** (creator track): `heroLook(h)` (that track) returns `{skin:'#rrggbb', hair, hairStyle 0-5, face 0-5, eye, build 0-2, height .94-1.06, sex 0|1}`. The builder reads `heroLook(hero)` when `hero.look` exists (else `hero.look`; a hero without a look keeps the classic look of its class, `mdClassLook`). Every field is built: skin, hair colour, hair styles 0 short (feminine: + bob) · 1 long (feminine: + face locks) · 2 ponytail · 3 braid · 4 mohawk (shaved sides) · 5 bald; face 0 none · 1 stubble · 2 short beard + moustache · 3 long beard · 4 moustache · 5 scar; eye colour (iris); build (shoulder/chest/arm/leg width ×0.86/1/1.16); height (scale of the skinned body, weapons included); sex 1 = narrower shoulders and waist, wider hips, bust, smaller jaw, slimmer limbs. Helms decide how much hair stays (`mdHelmHair`: all / hanging part / none).
-- **`heroRebuild(h)`**: no argument (or `hero`) → rebuilds the player model and the bag preview (`refreshGear`: body + gear + weapons + grip; bones and the idle state stay). A model → that model with its own class/items; a preview from `heroBuildPreview` → rebuilt with its stored look. Safe to call any time.
-- **`heroBuildPreview(look,cls)`** → `THREE.Group`; `userData.anim(now)` plays the idle (animHero + v93 idle/grip), `userData.setLook(look,cls)` rebuilds it in place, `userData.hero` is the model. Starter outfit + the class's first weapon.
-- **Co-op**: the presence carries `lk` (8 numbers, `mpLookOut`); a partner's model is rebuilt when it changes (`mpLookIn` → `h.mdLook`). Old clients ignore it and show the default look.
-- **Perf** (one hero + 20 foes, headless, incl. weapons): before 60,518 triangles / 123 draw calls (hero 2,521 / 5), after 51,412 / 99 (hero 2,460 / 4). All instances of a foe type share geometry and materials.
-## v94: creator
-
-`build/pN_creator.py` (text patches) + `src/modules/zzN_creator.js` (look, creator step, barber), `zzN_creator_menu.js` (return to main menu), `zzN_creator_ride.js` (riding pose); headers explain them. Test `test/v94_creator.py` (`PART=mount,creator`, `MNT=pony,drake`; `SRC=<old build> TAG=before PART=mount` for comparison riding sheets), screenshots `out/v94_*`.
-- **Riding pose**: the old pose had the thighs flat on the saddle and both arms straight out in front. Now the legs go around the mount's flanks (per mount: its body + saddle blanket is sampled into a grid of half widths around the saddle and a small grid search picks thigh pitch/yaw/splay and knee bend that keep knee, shin and foot outside it, close to a relaxed seat), knees bent, heels down; torso upright, leaning forward with speed and giving with the saddle's bounce (a spring on the saddle's vertical speed); a free hand holds the reins low in front (both hands when nothing is carried; a shield arm still holds them), a weapon hand keeps the v93 carry grip; head looks forward, slow look-around and sway when standing. Attacking still dismounts (unchanged); while an action plays the upper body is left to the action system; dismount puts every extra channel back.
-- **Look** (`hero.look`, saved with the hero): body (male/female), build (lean/average/broad), height (90–110%), skin (9), hair style (short, long, top-knot, spiky, ponytail, shaved), hair colour (10), face (none, stubble, short beard, long beard, moustache, scar), eye colour (6). `heroLook(h)` = `LOOK_DEF` + the class's pre-v94 look + `h.look`, so old saves (no look) look exactly as before. Contract with the model track: `LOOK_DEF`, `heroLook`, and after any change `heroRebuild()` (player) / `heroRebuild(model)` (co-op partner); previews call `heroBuildPreview(look,cls,E)`. This track's own `heroRebuild`/`heroBuildPreview` are a fallback for the current body (colours through `CLS[cls].sk` / `dkC()` while the body/kit is built, extra face/hair pieces in a `dkFace` wrapper, build/height/sex by bone and mesh scale; the hero kit cache key carries the look, `lkKey()`); they switch themselves off once another file defines `heroRebuild`.
-- **Creator**: Class → **Appearance** → First companion. Live preview (drag to turn, wheel / pinch / +− to zoom, idle animation), Randomize, Reset, name field on the same step; desktop three columns, phone stacked. Test runs that skip the title (`window.AW_NOTITLE`) also skip the appearance step, so the old two-click setup in the tests still starts the game.
-- **Barber**: Inventory → ✂ Look on the hero picture: the same editor with the hero's current gear, free; Apply saves.
-- **Co-op**: the look rides in the presence (`lk`), partners' models wear it (`mpModel` sig includes it).
-- **Return to main menu** (Settings → Saved game, and ☰ → Main menu): confirm ("Your progress is saved") → save (if saving fails nothing happens; not during a Sovereign fight, a Wave Trial or death) → windows close, mount dismissed, keys released, the game pauses (`KQMENU.on` in `uiOpen()` and the loop's `dt`, also in co-op), co-op presence is cleared (partners see you leave) → the v73 title screen (title music). **Continue** resumes the world that was just saved (nothing is rebuilt, so nothing can be duplicated; the title's resize listener is removed again). **New game** asks "Start over?", deletes the save and reloads the page straight into the creator (`sessionStorage kq_new`, the page-hide autosave is switched off first). Tested: 3× return/continue keeps scene children, enemies, intervals, window listeners and RAF rate unchanged.
-
-## v95: ornate armour
-
-Track files: `src/modules/zzN_ornate.js` (builders + toolkit; header explains it), test `test/v95_ornate.py` (`PART=sets,close,rar,look,anim,perf`; `SRC=<old build> TAG=before` for comparison), sheets `out/v95_<TAG>_*.jpg` (`sets_<arm>` front/back of all 32 sets, `close_<arm>` T5 + named sets front/back/side, `rar` Common→Legendary, `look` sex/build/height with armour, `anim`/`anim2` walk + attack).
-- **Hero and icon only**: the ornate `mdChest`/`mdHelm`/`mdBoots` run while `MD_ORN` is set (wrapped `mdHeroB` and `mdItemKit`); humanoid foes and town folk keep the v94 pieces. Same construction as v94 (shells of the body rings with its bone weights + rigid parts, ≤3 merged geometries, cached by key), so pieces bend in every pose and fit every build/sex/height.
-- **Toolkit**: `mdTP` (point on the torso surface), `mdRAt`/`mdLB` (band round a limb), `mdRib`/`mdTStrap`/`mdTLoop` (flat straps and sashes along a path, tilted loops for bandoliers), `mdSk` (skirt rings for faulds and hem bands), `mdEdge` (thin tube: hood/mask edges, chains), `mdBuckle`, `mdPouch`, `mdKnife`, `mdStar`.
-- **Heavy**: mail with leather yoke and bracers (T1), studded plastron (T2), breastplate with keel ridge, neckline/edge trims, rivets, engraved band, shoulder-blade plates (T3+), multi-lame pauldrons with rims, rivets, ridges and spikes, gorget, rerebraces, couters with fans, vambraces with flared cuffs, faulds, tassets, studded belt + buckle; helms get aventails, rivet rings, breaths, crests, plumes, cheek guards. Sets: Bloodsworn blood-drop sigil on a crimson tabard + red plume, Ironwall square pauldrons, tower crest and crenellated bucket helm, Warlord fur collar, crowned skull and bone spikes. Greaves: sabaton lames, knee cops with fans, rivets.
-- **Medium**: stitched seams, laced/quilted jerkin, studded vest, crossed straps with buckles, fur collars, shoulder pads, laced bracers, pouches and knife on the belt, hoods with trimmed openings; Pathfinder compass + leaf guards + bedroll, Deadeye cartridge bandoliers + target + feathers, Windrunner feather wings and silver trims; boots with folded/fur cuffs, laces and buckled straps.
-- **Light**: wrapped bands, sashes with knotted tails, dark-metal shoulder guards, throwing blades, sheathed knives, masks with metal edges; Cutthroat dagger clasps + oxblood sash, Venomweave vial bandolier + serpent, Duskdancer crescent moons + trailing ribbons.
-- **Cloth**: layered, embroidered hems, cuff bands, collars, sashes with tassels, stoles with borders, shoulder pieces, embroidered back panel with a glyph, brooches; Hedge-Witch charms and herbs (also on the hat), Spellbinder chains + runic band, Starweaver stars on robe and hood; crowns/diadems with more gems.
-- **Tier / rarity**: trim metal per tier (`MD_TRIM` bronze → iron → brass → silver → gold) and more pieces per tier; Rare+ a trim in the rarity colour (belt, boots, collar/hem), Epic+ glow inlays, Legendary extra glow gems. The accent keeps its own hue (only 12% rarity tint). Named sets have their own darker palette (`MD_SETPAL`; Pathfinder forest green instead of pink, Duskdancer dusk violet instead of neon green).
-- **Class extras over armour**: warrior/paladin cape → short half-cape on the left shoulder (none with a tabard chest), ranger cape → none (the quiver stays), assassin scarf → slim neck scarf, paladin tabard → lower tabard with the cross below the belt.
-- **Perf** (hero body triangles incl. helm/chest/boots/amulet/ring, Legendary): before avg/max warrior 3,051/3,470, paladin 3,069/3,510, ranger 2,807/3,152, assassin 2,421/2,728, mage 2,579/2,752; after warrior 4,890/5,918, paladin 5,052/6,150, ranger 4,423/4,858, assassin 3,428/3,844, mage 3,874/4,760 (≤1.8×). Draw calls unchanged.
-
-## v96: econ
-
-`build/pN_econ.py` (XP factor in `gainXP`) + `src/modules/zzN_econ.js` (`ECON96`) + the icon pipeline in `src/modules/zzN_gear_icons.js`. Test `test/v96_econ.py` (`PART=icons,eggs,xp`).
-- **Gear icons never show the old symbol.** Old: an icon not yet cached came back from `icoOf` as the old slot emoji (which the v88 icon hook turns into a `kqi` symbol) and was only rendered on the next frame, so every new drop showed the symbol in the loot popup and then flipped. Now: gear is queued at the front as it drops (`drop` wrapper → `v89Want(it,true)`, rendered while it lies on the ground); `icoOf` renders a missing icon on the spot while this frame's icon budget lasts (`V89I.sb` = 10 ms, judged by the median of recent render times; picking loot up — `take` — always gets its one icon: `V89I.must`); otherwise it returns a neutral placeholder `span.kqgp` (empty rarity-coloured frame with a shimmer, no emoji) that is swapped in place. Background renders (`v89Pump`): one per frame, more while under `V89I.pb` = 5 ms. Worn gear, the bag and the open shop's stock are pre-warmed 3 at a time every 1.5 s while the queue is idle (`v89Warm`). The old emoji only when rendering is impossible (no WebGL) or a render failed (`v89Fail`). On-the-spot icons are JPEG data URLs (opaque, ~6 KB); the cache then gets the PNG blob URL. Render time per icon is in `V89I.log`/`V89I.mx` (headless software GL: ~2–30 ms, most of it the canvas read-back).
-- **Eggs ×0.6** (`ECON96.egg`): `EGG92.rate` .65 → .39 of the original chance, same eggs as v92 (every random egg through `drop()`, the bounty-board egg). Unchanged: the Sovereign kill egg, Bestiary milestone eggs, shop eggs, mount eggs. Measured (level-20 tier-2 loot, original → v92 → now): normal kill 4.2% → 2.6% → 1.6%, elite 11.8% → 7.5% → 4.6%, chest 30% → 19% → 11.6%; bounty board 20% → 13% → 7.8%. Wave-trial kills keep their extra ×0.5.
-- **XP ×0.75** (`ECON96.xp`): kills (all mobs, elites, Sovereigns, dungeon and wave-trial mobs) in `gainXP`, and bounty rewards (`bReward` wrapper, so the offer text, popup and XP given agree). There are no other XP sources. Companions get the same `gainXP` amount as the hero, so they slow down by the same 25% and keep pace. Same-level kill XP before → after: Lv 5 24 → 18, Lv 10 43 → 33, Lv 20 82 → 61, Lv 30 120 → 90, Lv 50 196 → 147 (elites ×3, Sovereigns ×25); kills per level ≈ ×1.33 (Lv 10: 24 → 31, Lv 30: 65 → 87); level 1 → 20 ≈ 460 → 607 same-level kills, 1 → 50 ≈ 2,715 → 3,608. Bounties already accepted in an old save keep their old XP number.
-## v96: pace
-
-`build/pN_pace.py` (text patches) + `src/modules/zzN_pace.js` (header explains it; numbers in `PACE`). Test `test/v96_pace.py` (`PART=hp,fight,open`, `DL=`, `PHS=` seconds per phase; `SRC=<old build> TAG=before`, then `REF=out/v96_before.json`; `CMP=out/v96_after.json` only prints the comparison). It runs every den fight on a virtual clock (setTimeout too) with the hero circling the boss, health pinned at 100/55/25% for 75 s per phase.
-- **Sovereign health ×1.5** (`PACE.hp`, `spawnBoss` wrapper; the six Sovereigns are the only boss-flagged enemies — dungeon wardens and camp leaders are elites and unchanged). Argus 6,440 → 9,660, Hydra 11,984 → 17,976, Rime Wraith 17,528 → 26,292, Ssith'ra 23,072 → 34,608, Bloated One 28,000 → 42,000, Vaelric 32,312 → 48,468. Co-op: every client spawns the same health. Den sub-targets (eye-stalks, necks, pustules, piles, chalices, doubles, obelisks) keep their old health (`paceM0`); wounds/heals that are a share of the boss's health keep their share.
-- **Wind-ups ×1.5** (`PACE.W`): `paceWrap()` (called right after the splice marker, so after every module) wraps each `BMV` move outermost and scales `en` when the boss driver casts it fresh (`MP.inAI`, not nested); partners replay the relayed scaled `en` unscaled; `dqEnc` den indexes are kept. Plain-number den timings (eye wakes, leaps, neck bites/spits/rises, ice falls, geysers, sandstorm lashes, follow-up rams, pustule eruption, clone blasts, burrow eruption) are patched in pN_pace. The Cataclysm (4.6 s+) and the Blood Moon (3.7 s) keep theirs. Damage still lands on the warning's last frame (`test/v89_dens.py` `early: []`; it now casts as the boss driver does).
-- **Twice the time between specials** (`PACE.I`): next-special timer = 2 × (old move length + old recovery); Ssith'ra's ram/erupt hand-back (`paceEnd`); den schedulers ×2 (eye wakes, neck spawns, neck attack cooldowns and the shared neck gap, snuff, whiteout, vortex, sandstorm, corpse piles, pustules, chalices, blood moon, rite harass); Cataclysm cooldown ×2 (`PACE.U`); first special at 3.3 s (was 2.2). Phase changes still cast at once.
-- **Basic attacks between specials**: when free (no special due within 1.4 s, no den state), every 2.6–3.4 s the boss swipes (`pbasic`: 0.8 s red circle in front, ×0.6 hit) when you are in reach, else throws one aimed bolt (`pbolt`: 1.0 s, ×0.5). Relayed like other moves; the sands rig plays them as a sweep/spit.
-
-  | Sovereign | specials/min before → after | avg time between specials (s) before → after | wind-up per move (s) before → after | basics/min |
-  |---|---|---|---|---|
-  | Argus | 12.5 → 6.9 | 4.71 → 8.36 (×1.77) | charge 1.04→1.59, pounce 0.97→1.54, rain 1.06→1.62 | 9.3 |
-  | Crest Hydra | 14.7 → 8.5 | 4.06 → 7.17 (×1.77) | spit 1.30→1.97, tongue 0.66→0.97, mines 2.35→3.52 | 10.7 |
-  | Rime Wraith | 16.0 → 9.1 | 3.76 → 6.66 (×1.77) | prison 1.52→2.29, snuff 1.86→2.74, thaw 1.74→2.91 | 11.2 |
-  | Ssith'ra | 12.8 → 7.7 | 4.72 → 7.90 (×1.67) | ram 1.03→1.50, tailsweep 0.90→1.31, sandstorm 1.26→1.81 | 11.2 |
-  | Bloated One | 27.2 → 14.4 | 2.22 → 4.25 (×1.91) | rotspit 1.34→2.01, belch 1.23→1.85, slam 1.26→1.87 | 12.5 |
-  | Vaelric | 16.8 → 9.1 | 3.66 → 6.75 (×1.84) | bloodfan 1.09→1.63, mirror 2.73→4.18, cross 1.31→1.97 | 6.4 |
-
-  The measured interval is a little under ×2 because phase changes and den-forced moves (snuff, sandstorm/vortex at a phase change, eye bursts) still cast at once. `PACE.basic=false` turns the basics off (the v86 den tests do, so their hit counts only count mechanics).
-- **Ranged openers**: every enemy's attack cooldown starts at 1 and keeps running while it is idle, so when a pack aggroes on the same frame every archer/caster fires its first shot (the ranged attack is their basic) on that frame. Now each ranged/caster mob waits 1–4 s (random, `PACE.op`) after aggro before its first shot (it keeps repositioning), and within 16 tiles at most 2 ranged attacks may start per 0.6 s (`PACE.tok*`; others retry 0.25–0.65 s later). Host only (co-op mirrors replay the host's attacks). Pack of 6 casters/archers, 12 trials: ranged attacks in the first second 6.0 → 0.0, most in any 0.6 s window 6 → 2, first shots spread 0 → ~2 s.
-
-## v97: world
-
-`build/pN_world2.py` (text patches) + `src/modules/zzN_world2.js`; the layout numbers live in `w0_world.js`, the grid size in `build/pN_world.py`, the roster size in `zz7_v71.js` (`ROST_G`), the save migration in `zzN_world.js`. Test `test/v97_world.py` (`SRC=<old build> TAG=before NOCHK=1`, then `REF=out/v97_before.json` prints the tables below); screenshots `test/v97_shots.py` (`out/v97_z<i>a|b|hi.png`, zone map `v97_map<i>.png`, `ONLY=`, `TAG=`).
-- **Zones 40% bigger again**: 473×491 each (was 338×351; `PMS=1.82` against the original 260×270, `PMA` = area against it, 3.31), x0 110/593/1076, y0 8/509, grid `W=1559,H=1010`. The generator scales its distances by `PMS` (wave-arena corner, start/end sides, den margin, camp spacing, branch length, field size) and grows its counts: 20–24 road waypoints (was 14–17), 6–7 side branches (4–5), 6 road clearings (4), 8 camps (`PM_NC`, was 5). Grass/accent/water patches scale with `PMA`. Road width, den clearing (`PM_DENR`), wave arena and camp size are unchanged. About 2.1× the walkable ground.
-- **More mobs at the same density**: 130 roaming groups (`ROST_G`, was 60) + 8 camps × 7: 250–285 mobs per zone (was 127–140). Levels still run entrance → boss along `pmProg`; camps are sorted along the road, so their levels rise too.
-- **Decorations and harvest nodes** keep their density per tile, so there are about twice as many (~15,000 props, ~2,200 with colliders; 250–340 harvest nodes per zone). A big prop's whole collider now stays 5 tiles off the road centre (`zzN_world.js` `place`).
-- **Ground texture**: one 4 px/tile canvas would be 6236×4040 (25M px, ~130 MB on the GPU). The terrain shader reads that texture at full detail only on paved ground (`pav`); elsewhere it samples one colour per triangle at the tile centre, so the resolution there doesn't show (checked side by side at 2 and 4 px/tile). Now `gt` is the whole world at `GPX=2` px/tile (3118×2020) and `gtT` Duskhold's paved square at 4 px/tile (400×400, chunks x 0–96 / z 224–320 with a 2-tile apron); each terrain chunk takes the material of its texture (`GTX.pick`), the shader gets the texture's origin/size (`uGO`/`uWH`). 33 MB on the GPU instead of 68, painted in ~0.6 s instead of ~5.8 s; the ImageData and colour arrays are freed after painting.
-- **Culling**: `chunkVis` keeps its rule (FARR/NEARR/frustum, shadows within 34) but only tests the chunks in a 128-tile grid around the hero plus the ones currently shown (1,086 chunks now, was 621). Draw calls and triangles in view stay where they were.
-- **Realm island**: the realm (`RX/RZ` 1000) now lies just south of The Dirge's edge (the grid reaches z 1010). `RLG` is hidden while you are in the world, and while you are in the realm every top-level object standing in a zone within 260 tiles is hidden (restored when you leave; re-checked every 30 frames).
-- **Dungeon builder** `DX0` = `W+60` (was 1200, which is now inside Burningeye Summit; dungeons themselves were retired in v56). **Minimap rim** (`zzN_misc_minimap.js`): the neighbour test checks the zone rectangle instead of calling `regionAt` (bake ~0.6 s for the bigger zones).
-- **Old saves**: `x2.wl=97`. A save from another layout standing in a zone goes to that zone's entrance (old zone found on its own grid: `WD_OLDG[89]` for v89 saves, `[88]` for older), anything west of the zones (Duskhold, Portal Court, Courtyard, all at x < 110) stays; a saved zone run (`INST`) without `wl:97` is dropped; treasure maps keep their zone (`m.r`) and get a new reachable spot in it (`tmMigrate`).
-
-  | zone | walkable tiles before → after | camps | roaming groups | mobs before → after | harvest nodes | decorations |
-  |---|---|---|---|---|---|---|
-  | Kindlelight | 29,732 → 65,997 (×2.22) | 5 → 8 | 60 → 130 | 133 → 284 (×2.14) | 111 → 302 | 1,341 → 3,094 |
-  | Hillside Crest | 33,416 → 64,237 (×1.92) | 5 → 8 | 60 → 130 | 128 → 266 (×2.08) | 141 → 279 | 1,421 → 2,815 |
-  | Burningeye Summit | 32,990 → 73,392 (×2.22) | 5 → 8 | 60 → 130 | 127 → 272 (×2.14) | 124 → 311 | 1,142 → 2,485 |
-  | Searing Sands | 31,267 → 73,298 (×2.34) | 5 → 8 | 60 → 130 | 140 → 277 (×1.98) | 130 → 340 | 1,155 → 2,747 |
-  | The Dirge | 30,668 → 61,090 (×1.99) | 5 → 8 | 60 → 130 | 140 → 257 (×1.84) | 140 → 250 | 1,011 → 1,994 |
-  | The Citadel | 30,186 → 65,657 (×2.18) | 5 → 8 | 60 → 130 | 129 → 285 (×2.21) | 88 → 272 | 839 → 1,911 |
-
-  (Roster sizes vary a little from visit to visit: groups of 1–3.) Performance, same headless harness (software WebGL, so frame times are only a rough guide; draw calls and triangles are exact):
-
-  | metric | before | after |
-  |---|---|---|
-  | world grid | 1154×730 | 1559×1010 |
-  | JS heap after load (after GC) | 56 MB | 73 MB |
-  | load: whole script / map / heightfield / ground texture / instancing | 9.5 / 0.14 / 1.6 / 5.8 / 0.27 s | 5.0 / 0.21 / 1.8 / 0.59 / 0.54 s |
-  | ground texture | 4616×2920, 68 MB GPU | 3118×2020 + 400×400, 33 MB GPU |
-  | terrain chunks / triangles (all) | 483 / 0.98 M | 847 / 1.71 M |
-  | visibility chunks / instanced deco meshes | 621 / 1,006 | 1,086 / 1,847 |
-  | world arrays (MAP, bio, DW, HF, water maps) | 26 MB | 48 MB |
-  | 12 road spots, median draw calls / triangles | 492 / 466 k | 463 / 422 k |
-  | 12 road spots, max draw calls / triangles | 628 / 648 k | 608 / 703 k |
-  | chunks drawn (avg) / mobs streamed in (avg) | 26.9 / 44 | 25.9 / 52 |
-  | zone map (N) draw / roster build per zone | 1.9 ms / 1–6 ms | 3.0 ms / 2–7 ms |
-
-## v98 perf_static
-
-`src/modules/zzN_perf_static.js` (no text patches). Test `test/v98_static.py` (`SRC=<old build> TAG=before NOCHK=1 SHOTS=0`, then `REF=out/v98_before.json` prints the table below; `DIAG=1` lists what still recomputes its matrix every frame; `DENF=1,5` the dens it fights in; screenshots `out/v98_<spot>.png`).
-three.js r128 recomputes every object's matrix and world matrix every frame (`scene.updateMatrixWorld()`, called by `ren.render`), hidden or not. After v97 a zone holds ~10,800 objects, 8,100 of them direct children of the scene (mostly the per-chunk scenery InstancedMeshes), so that alone cost ~2 ms a frame.
-- **Chunk containers**: the terrain and decoration InstancedMeshes of each visibility chunk (`CHL[i].ms/ns`) now sit in one Group per chunk (`c.g`), all under one group `PSROOT` (name `psStatic`). `c.g` is shown while the chunk shows anything (`c.on||c.non`, synced right before each render), so the renderer and the shadow pass skip a hidden chunk in one step. Their matrices are computed once; the per-frame update never walks `PSROOT`. `chunkVis` is unchanged (it still sets each mesh's `visible`/`castShadow`). New chunk meshes are picked up every 120 frames.
-- **Hidden top-level objects are skipped**: a top-level object with `visible=false` is not updated; it gets a full update the frame it is shown again. Everything else updates exactly as before (forced) unless its root is in frozen mode.
-- **Freezing**: every 30 frames a sweep looks at the visible top-level objects. An object whose position, rotation and scale have not changed for 3 sweeps gets `matrixAutoUpdate=false`, and its root is then updated with `updateMatrixWorld(false)` (the stock three.js way: anything that moves still calls `updateMatrix` and updates its own branch). Frozen objects are **guarded**: writing a new value to `position`/`scale` x/y/z or changing `rotation`/`quaternion` (including `set`, `copy`, `lookAt`, `rotateY`, tweens…) thaws the object on the spot, so a door, chest, camp flame, portal or den prop that starts moving later moves in the same frame; it then stays a normal object (`PST.log` lists the last things that thawed). Not frozen: anything with bones below it (hero, NPCs, creatures), the hero, enemy models, lights, objects the game already manages with `matrixAutoUpdate=false` (camp pieces, flames), and roots where something thawed more than 24 times. Something added inside a frozen root gives that root one full update; a `clone()` of a frozen object starts as a normal object.
-- Writing your own code: nothing to do. Move objects as usual (`o.position.x=…`, `o.rotation.y+=…`). Only setting `o.matrix` by hand on an object with `matrixAutoUpdate=false` needs `o.matrixWorldNeedsUpdate=true` (the stock three.js rule). `PST.on=false` switches the per-frame update back to stock (A/B check); `PST.st` has counters, `userData.psNo=1` on a top-level object keeps it from ever freezing.
-- **Numbers** (middle of Kindlelight next to a camp, then Duskhold's square; headless software WebGL, so only the matrix work is meaningful; frame = `loop()` + `POST.render()` with `ren.render` stubbed by the renderer's CPU work before drawing: `scene.updateMatrixWorld()` plus a camera and a shadow walk of the visible tree):
-
-  | metric | before | after |
-  |---|---|---|
-  | objects in the scene / direct children | 10,863 / 8,185 | 11,764 / 347 (1,086 chunk groups added) |
-  | `updateMatrixWorld` calls per frame / matrices composed | 10,863 / 10,854 | 1,375 / 365 (Duskhold: 1,368 / 262) |
-  | `scene.updateMatrixWorld()` | 2.03 ms | 0.095 ms (Duskhold 1.59 → 0.09 ms) |
-  | frame JS, median / p90 | 5.6 / 39.5 ms | 1.3 / 3.7 ms (Duskhold median 4.4 → 1.0 ms) |
-  | objects frozen / thawed after a tour (camp, harvest, Duskhold, 2 den fights) | – | ~1,350 / ~180 |
-
-  What still updates every frame is mostly the creatures (bones; another track throttles them) and Duskhold's walking NPCs.
-- **Checks** (`v98_static.py`): at a camp, after harvesting a tree and walking 160 tiles away and back, in Duskhold, outside a den and during the Hydra and Vaelric fights, every visible object's world matrix equals a full stock recompute, and every frozen object's matrix matches its position/rotation/scale; a frozen object that is moved and one that is turned thaw and draw in the new place. `v38t.py`, `v97_world.py` (checks) and `v89_dens.py` pass.
-## v98 perf_ai
-
-Level of detail for the enemy update. `build/pN_perf_ai.py` (two `rep()` patches in the main loop's enemy section) + `src/modules/zzN_perf_ai.js` (`AIL`, header explains it); test `test/v98_ai.py`.
-- **Rate by distance**: the main loop asks `aiLod(e,dpl,dtAI)` for the dt of each drawn enemy. Calm world mobs (`slot`/`camp`/`wild`, not aggroed) within `AIL.r1` (25 tiles) of a hero update every frame; farther ones every `AIL.n2`=2nd frame, every `AIL.n3`=3rd when also off-screen. Each enemy has a fixed phase (`e._aiPh`) so they take turns; the dt of skipped frames is saved (`e._aiAcc`) and handed on (cap `AIL.maxDt`), so speeds/timers/DoTs keep game time. A skipped frame returns `-1` (the enemy's AI, eTick and animation are skipped; its health bar still follows the camera).
-- **Always every frame** (`aiMust`): bosses, aggroed/attacking enemies, the current target, arena minions and den parts, wave-trial and dungeon mobs, co-op mirrors, raid leaders, stunned/rooted/frozen/burning/knocked-back/alarm-running/hidden ones, and anything hit in the last 2 s. Aggro range (≤ 6 tiles) is far inside `r1`, so aggro reacts as before; distance is to the nearest hero, co-op partners included.
-- **Off-screen pose skip**: an enemy outside the camera frustum (`aiInView`, last frame's camera) gets `m._aiNA` and the outermost `animC` wrapper skips its pose (gait, skeleton, v93 idle layer). Animation is time based, so it resumes in step.
-- **Sleeping**: the loop already skipped enemies more than 30 tiles away (not drawn, no co-op partner near); now `aiSleep` also stops `scene.updateMatrixWorld` from recomputing their bones, and hidden health bars are skipped too. `getWorldPosition()` still works; matrices are current again the frame the enemy is drawn.
-- `AIL.on=false` turns everything off (old behaviour). `AIL.st` counts full/throttled/skipped updates, skipped poses and skipped matrix updates.
-- Measured (`test/v98_ai.py`, ~65 enemies around the hero in Kindlelight, `ren.render`/`POST.render` stubbed, desktop CPU, interleaved windows): enemy section of the loop ≈ 0.58–0.73 ms → 0.39–0.47 ms per frame (−30 to −35%; ~1.1 → 0.45 ms on a busier CPU); about half the drawn enemies are behind the camera and skip their pose, ~40 hidden enemy models/bars skip their matrix update each frame. An approaching hero still gets aggro at 4.4–4.5 tiles (threshold 4.5). The enemy loop is a small share of the frame: the CPU profile with rendering stubbed is dominated by `scene.updateMatrixWorld` (static scenery, ~11k objects; enemies are ~1.1k of them).
-## v98 perf_shadow
-
-`build/pN_perf_shadow.py` (shadow type) + `src/modules/zzN_perf_shadow.js` (header explains it; numbers in `SHD`). Test `test/v98_shadow.py` (`SRC=out/v98/before.html TAG=before NOCHK=1` for the old build, then `REF=out/v98_shadow_before.json`), screenshots `out/v98_shadow_<camp|camp2|town>[_lit]_<TAG>.png` (`_lit`: moon bright, ambient low, so the shadows are easy to see). `test/v98_probe.py file.js` runs one JS snippet beside a Kindlelight camp.
-- **PCF instead of PCF-soft** shadows (about half the shadow-map lookups per lit pixel), set where the renderer is created so no shader is ever compiled with the old type. `sun.shadow.radius` 2.5 → 1.5 (PCF uses the radius; 2.5 looked blotchy).
-- **Shadow square** 40×40 tiles (was 48×48), pushed 7 tiles ahead of the hero in the view direction (`SHD.half`, `SHD.fwd`; an `atmos` wrapper moves the sun and its target together, so the light direction is unchanged). It covers more of what the camera sees and nothing far behind it.
-- **Only casters that can reach the square are drawn into it.** Every 0.5 s (or after 4 tiles of movement) `shdPass` lists the decoration chunks whose box misses the square (+6 tiles) and the rigged top-level objects (monsters, companions, co-op heroes: skinned or never frustum-culled) whose bounding sphere misses it; instanced meshes with no instances are skipped too. They are hidden only while the shadow map is drawn (`ren.shadowMap.render` wrapper) and shown again at once — nobody's `castShadow` flag is changed, so anything that turns shadows on later (new monsters, drops, FX) keeps working, and the hero is never hidden. Ordinary meshes were already culled by three.js against the shadow camera.
-- **Small clutter never casts** (`shdClutter`, once when the world is up and again when the scene grows by 200+ top-level objects): decoration chunk meshes under ~0.45 tiles and static props (no rig) under 0.25 tiles get `castShadow=false`.
-- **Shadow map every 2nd frame** (`ren.shadowMap.autoUpdate=false`, `needsUpdate` from a `POST.render` wrapper), and every frame while the hero moves more than 0.15 tiles per frame (dash, riding, low frame rates), or when the map was reallocated (`setQ`). The light's matrix only changes when the map is drawn, so a skipped frame shows last frame's shadows in the right place; the hero's shadow lags at most 0.15 tiles. `SHD.on=false` restores the old every-frame update (the culling and square stay).
-
-  Measured (headless software GL; draw calls are exact, times are rough):
-
-  | spot | casters in shadow pass | draw calls, frame with shadow map | avg draw calls / frame | shadow pass ms | main pass ms |
-  |---|---|---|---|---|---|
-| camp | 106 → 85 | 500 → 478 | 500 → 436 | 115 → 43 (avg per frame) | 1,782 → 1,018 |
-  | camp2 | 110 → 96 | 455 → 461 | 455 → 413 | 138 → 106 | 1,239 → 1,952 (noise) |
-  | Duskhold | 93 → 74 | 272 → 273 | 272 → 236 | 114 → 33 | 629 → 323 |
-
-  Shadow-casting flags in the scene: 449 → 424 (camp), 456 → 433 (Duskhold). The software renderer's times swing ±50% between runs (other jobs on the machine); draw calls are the reliable number. On a real GPU the gains are the halved shadow-map passes and the cheaper PCF filtering in every lit pixel.
-## v98: perf_gpu
-
-`src/modules/zzN_perf_gpu.js` (no text patches). Test `test/v98_gpu.py` (see its header: `ZONES=`, `CAMPS=`, `FX=0`, `PART=shots|bench`, `SRC=<old build> TAG=before`, `NOWARM=1`, `PGLN=`).
-- **Point-light pool** (`PGL`): the 12 point lights the game kept in the scene (hero `torch`, town lamps `TPL`×4, realm `RLT`×3, dungeon/flash `DLT`×4) are now *virtual sources*: they are taken out of the scene but keep being moved, coloured and flickered by the same code (`townLights`, realm decor, `fxaFlash`, the floating lantern, `atmos`…). Before every render of the main scene `pglTick` copies the `PGL.n` (4) nearest lit sources (intensity > 0, visible; sorted by distance to the hero minus a quarter of the light's reach) onto 4 real `PointLight`s that never leave the scene; unused ones sit at intensity 0. So every lit fragment loops over 4 point lights instead of 12, and the light count (part of every lit shader's program key) never changes. When more sources than slots are lit (Duskhold at night: torch + 4 lamps), the last slot fades with the gap to the next candidate (`PGL.fade` tiles), so lamps never pop.
-  - A `PointLight` passed to `scene.add` later becomes a source automatically (`pglReg`; `scene.remove` unregisters). Don't add point lights *inside* groups: that would change the light count again and recompile every lit material.
-- **Shader warm-up** (`PGW`): a program is compiled the first time a new combination of material features is drawn — that was a 1–5 s frame on software GL (and a visible hitch on real GPUs) whenever a new monster type, effect or loot first came into view; `ren.info.programs` grew 37 → ~48 during a walk across a zone and casting abilities, and summons recompiled their programs on every cast.
-  1. `ren.debug.checkShaderErrors=false` (three no longer reads the compile/link logs after every compile; `window.AW_SHDBG=1` before load keeps them for shader work).
-  2. Programs are pinned (`pgwPin`, +1 `usedTimes` each): three destroyed a program when the last material using it was disposed, so effects that dispose their materials (Shadow Clone, Call of the Wild…) compiled the same program again on every cast.
-  3. A warm-up queue (`pgwQueue`/`pgwStep`) runs a slice before each render from the first frame on, while the title / hero screens are up: every object already in the scene (all zones, dens, bosses, town), a staging model of every `EN` monster (normal + elite), every companion species (`SP2`) and colour variant (`VAR`) + shiny, every mount, every drop kind and gear slot/weapon type (`lgDropModel`, common and legendary), the effect models with their own materials (`fxbHammerModel`, `fxaBombModel`, `fxaPierceModel`, `fxaFres` plain/skinned/vertex-coloured) and a short list of plain effect materials (`PGW_FX`). Each slice goes through `ren.compile(scene,cam)` with `scene.traverse` narrowed to the slice (`pgwCompile`), so programs get the real light setup (hemi + sun with shadow + the 4 pool lights), fog and environment. A slice stops after 2 new programs or 12 ms. Staging models are then dropped (their programs stay pinned). `window.AW_NOWARM=1` before load turns it off (screenshot tests that don't care).
-  - If you add a monster, effect or material combination the queue does not build, `v98_gpu.py` lists every program compiled after the warm-up with the object that asked for it and how its key differs from the nearest existing one (e.g. `flipSided`, `customKey fxaFres`); add a builder or a `PGW_FX` entry.
-- **Numbers** (headless software GL, 4 shared cores, so times are rough):
-
-  | | before | after |
-  |---|---|---|
-  | point lights in the scene | 12 (+ hemi + sun) | 4 (+ hemi + sun), constant |
-  | programs after the first frame / after warm-up | 37 / — | 37–55 (warm-up under way) / 71 |
-  | programs compiled walking all 16 camps of Kindlelight + Searing Sands, killing, looting, 10 mounts, all 85 abilities | 11+ (each a 1–7 s frame), summons recompiled per cast | 0 |
-  | first frame drawn (navigation → end of first frame, same machine back to back) | 14.1 s | 12.6 s |
-  | warm-up (runs behind the title / hero screens) | — | 67–75 frames, 63–100 s wall, 21–31 s of it compiling (~0.3 s per program on software GL); the queue's own JS is 0.2 s (model building 70 ms, compile walks 124 ms) |
-  | Duskhold at night, main-scene render (min of 7, software GL) | 355–421 ms | 309–322 ms |
-
-  The other four zones (3 camps each, `ZONES=1,2,4,5 CAMPS=3 FX=0`) also compile 0 programs after the warm-up. A camp view's render time on software GL is dominated by draw calls and did not change measurably; the light loop matters on fill-rate-bound GPUs (integrated, mobile), where every lit pixel now evaluates 4 point lights instead of 12.
-  Screenshots at night (`PART=shots`): Duskhold with torch + 4 lamps lit and a Kindlelight camp look the same (mean brightness of the 3D view 77.2 → 77.9 and 33.3 → 33.4; the per-pixel differences are edges from camera/NPC motion; a 5-light pool gives 77.2). On software GL the warm-up keeps compiling for the first ~1–4 minutes of a headless test, so frames there are slower; tests that need fast early frames can pass `AW_NOWARM`.
-
-## Conventions (read before changing code)
-
-- **Later definitions win.** Modules override base functions by re-declaring them (`function x(){}` is hoisted) or by chaining: `{const f=x;x=function(){f.apply(this,arguments);…}}`. Prefer chaining so earlier behavior stays.
-- `const`/arrow functions in the base cannot be reassigned — patch their text in a `pV*.py` with `rep()` instead.
-- Module code runs at load: use `var` + function declarations for anything the main loop may touch early (avoid TDZ errors).
-- **Saves**: `localStorage` key `SAVE_KEY`, snapshot built by `gameSnapshot()`; extra state rides in `x2Save()/x2Load()` (stronghold levels `sh`, shops `shp`). Companion objects (talents `c.tal`, shiny `c.shn`, rare `c.rv`) and `hero.tal` (incl. unlocked skills `sk:<name>` and loadout `__ld`) save automatically. Keep old saves loading.
-- **Co-op** (`zzz_mp.js`) uses the artifact `room` capability; topics `es, ev, hit, bs, trade, chat` must stay declared as `"interact"` when publishing.
-
-## World
-
-- `PMAP` (in `w0_world.js`): six 473×491 regions (v97: 1.82× the original 260×270 each way, `PMS`; v89 was 338×351; x0 110/593/1076, y0 8/509; world grid `W=1559,H=1010`). Each map is generated by `pmGen()` from a seed: winding road (`wp`/`path`), side branches (`br`), open fields (`fd`), 8 camps (`cl`, `PM_NC`), boss arena (`ba`), sealed wave arena (`wa`), entrance (`en`). `regionAt(x,y)` → map index or −1 (Duskhold).
-- Monster level rises along the road: `zoneLv()` uses `pmProg()`.
-- Zone population (`zz7_v71.js`): a fixed roster per visit (`ROST`), streamed in within 78 tiles; kills stay dead until the zone is re-entered.
-- Duskhold: `TOWNS[0]`, Portal Court at `PCOURT`. Shops must be built through the Stronghold Steward (`SHOPS`, `SHU` upgrades in `zzzz_more.js`).
 
 ## Testing
 
-Headless Playwright (Chromium) harness in `test/`:
+Headless Playwright (Chromium, software WebGL, ~1 fps). `play.py` is the harness: it rewrites CDN URLs to
+`test/vendor/`, skips the title screen (`window.AW_NOTITLE`; `TITLE=1` keeps it) and writes screenshots/logs to
+`test/out/`. `SRC=<other.html>` tests another build, `AW_TMP=<dir>` uses another output folder (needed to run two at once).
+Run tests one at a time on a small machine; two in parallel can time out at page load.
 
 ```bash
-cd test && python3 v38t.py      # save/load
-python3 v32t.py                 # portal → boss kill → wave trial
-python3 v57t.py                 # grades, XP, skills, consume, fusion, zone atmosphere screenshots
-python3 v60t.py                 # zone roster (no respawn)
-python3 v74t.py                 # Companions & Eggs window: egg select, in-window hatch, close mid-hatch
-python3 v78t.py                 # every weapon type's attack, mounts + Stable, new items
-python3 v79t.py                 # music themes, fight layer, volume settings; renders a music preview (NOREN=1 to skip)
-python3 lpview.py               # low-poly companion preview: SP=Ashwolf,Direfang python3 lpview.py → out/lp_*.png
-python3 v73t.py                 # hit/low-health/death/respawn; TITLE=1 python3 v73d.py for title → Continue
-python3 v84_ui.py               # HUD bars, feeding over time, stat breakdown, material hints
-python3 v84_fish.py             # fishing window size, kill gold, no finisher lunge
-python3 mpt.py mpsteps.py       # two-player co-op via a fake room over BroadcastChannel
-python3 v98_static.py           # frozen scenery matrices: world matrices match a full recompute (camp, harvest, Duskhold, dens)
-python3 v98_ai.py               # enemy update LOD: rates, dt hand-over, pose skip, sleeping, aggro on approach, ms off/on
-python3 v98_gpu.py              # shader warm-up (no programs compiled in play) + constant point-light pool
+cd test
+python3 v38t.py              # save/load
+python3 v32t.py              # portal → Sovereign kill → wave trial
+python3 v57t.py              # grades, XP, skills, consume, fusion
+python3 v60t.py              # zone roster (no respawn)
+python3 v73t.py              # hit feedback, low health, death, Rise Again   (TITLE=1 python3 v73d.py: title → Continue)
+python3 v78t.py              # every weapon type's attack, Stable + mounts, items
+python3 mpt.py mpsteps.py    # two-player co-op over a fake room
+python3 v100_town.py         # Duskhold layout, reachability, shops, portals (prints CHECKS OK)
+python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den
 ```
 
-`play.py` skips the title screen (sets `window.AW_NOTITLE`) unless `TITLE=1`. It rewrites CDN URLs to `test/vendor/` and writes screenshots/logs to `test/out/`.
-Headless runs at ~1 fps: stub `ren.render`/`POST.render` and use `requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)` for faster loops; drive state with `page.evaluate`.
+Every other `v*.py` is the check written for that version's feature (the first comment line says what it covers;
+most accept `PART=`, `NOSHOT=1`, `SRC=<old build> TAG=before` for before/after comparisons).
+For faster simulation stub rendering and the frame clock in `page.evaluate`:
+`POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)`.
+`python3 v94_probe.py file.js` runs one JS snippet in a started game and prints the result.
+`COV_OUT=out/cov.json python3 covrun.py <test.py>` records which functions ran (V8 coverage).
+`BAKE=1 python3 v100_anim.py` re-bakes `src/js/1705-v100-anim-baked-keys.js` from `test/v100_anim_moves.js`.
+`v79t.py` renders a music preview to `test/out/` (`NOREN=1` skips it).
+
+## Cleaning up
+
+`tools/deadcode/run.sh` (needs `npm i -g typescript`) lists top-level declarations that nothing can reach, writing
+a stripped copy to `/tmp/kq_stripped.html`, and checks it for names or element ids that would go missing. Names used
+inside the tests' JavaScript and the few looked up dynamically (`window[name]`) are kept. Treat the output as a
+suggestion: rebuild, run the tests and load the game before keeping anything.
 
 ## Publishing
 
-Publish `dist/ashen-wilds.html` to the same artifact URL with capabilities
-`{"room":{"topics":{"es":"interact","ev":"interact","hit":"interact","bs":"interact","trade":"interact","chat":"interact"}}}` (or omit `capabilities` on a redeploy to keep them).
-
-## v99: realistic humanoid proportions
-
-- `src/modules/p0_proportions.js` (`AW_PROP99`), spliced at the **top** of the main script by `build/pN_proportions.py`, because the hero and the town folk are built before the usual splice point.
-- Proportions are baked into the rest pose, not done with runtime bone scale: `mdBake` moves every vertex by its skin weights through a per-bone transform, and `mkBones` creates HB / idlNB bones at the moved rest positions. Bones keep unit scale, so animations, idle, grips, ability poses and riding drive them unchanged, and armour shells deform with the body.
-- Presets: `real` (heroes, human foes, Vaelric, town folk): legs +34%, torso ~20% narrower, head 80%, arms +16%. `brute` (orc, trolls, yeti, giant, Bloated One, nagas, ghoul, sand elemental): longer limbs and smaller head, bulk kept. Goblins (`hob`, `sling`, `shaman`) unchanged. Hips move from 0.55 to `AW_PROP99.hipOf()` (≈0.713).
-- Riding (`zzN_creator_ride.js`) seats the hips with `AW_PROP99.hipOf()` and the leg-fit grid is taller (`LKR_GY=17`). Humanoid foe health bars sit at `max(1.6, bs*1.62)`.
-- Test: `python3 test/v99_props.py` — bind/geometry match and feet on the ground for every humanoid, plus an armour pose sheet.
-
-## v100: anim
-
-`src/modules/zzN_zz_anim.js` (header explains it), baked keys `src/modules/zzN_zz_anim0_data.js`, two text patches in
-`build/pN_zz_anim.py`; move descriptions `test/v100_anim_moves.js`, IK baker `test/v100_anim_bake.js`, test `test/v100_anim.py`.
-- **Hero melee basic attacks** (every weapon type and combo step) are re-authored as *strikes*, not joint-angle guesses: each
-  phase gives where the weapon grip goes, which way the blade points and the body pose; an IK on the real v99 skeleton turns that
-  into joint angles (`BAKE=1 python3 test/v100_anim.py` re-bakes and rebuilds). Beats: anticipation (weapon drawn back along its
-  path) → loaded hold → acceleration (hips first, blade lagging) → contact at k .42 (the game's hit moment) → follow-through past
-  the target → recover → rest. Monotone cubic interpolation per channel plus small per-channel lags (hips/legs lead, wrist trails).
-- Move sets: one-handers forehand (high on the weapon side → low past the off hip), backhand (off shoulder → out past the weapon
-  side), overhead finisher; greatsword/greataxe the same with both hands on the grip, bigger coil and crouch (greataxe finisher =
-  heavy overhead cleave); mace/hammer heavier with the shield held up as a guard, hammer finisher = full-body overhead smash; twin
-  axes alternate hands, finisher both axes down; daggers quick low slashes, stab, rising X; claws alternating rakes, uppercut rakes,
-  crouch-and-spring double rake; halberd side-on two-handed lunge thrusts, finisher two-handed sweep; throwing knives whip from
-  over the shoulder; sling whirl and forward release. Flail (spin attack), bow, crossbow, staff, wand, orb keep their v85/v91
-  tracks. Whole body: weight from back foot to front foot, hip yaw leading the chest twist, lean, knees, side bend, off hand
-  counterbalancing (or on the handle), head kept on the target, pelvis drop so the lower foot stays on the ground.
-- New pose channels (HACH): `sz` spine side-bend, `cy` chest twist, `lhy/rhy` hip yaw (feet keep pointing forward while the
-  pelvis turns), `la/ra` ankles, `ly` off-arm roll, `rz/lq` wrist deviation; the walk layer feeds them so they blend back.
-- Timing is unchanged (same `haPlay` durations and hit fraction; the test compares hit frames and frame counts with the old build).
-- **Humanoid foes** (`humAtkPose`): strikes alternate forehand/backhand, slams use the overhead (two-handed for great weapons,
-  hammer smash for the giant), mapped onto the foe's wind-up / act / recover phases (contact at the act's hit moment); the off arm
-  keeps its guard (skeleton shields stay up).
-- **Bow carry** (`V100A_BOW`, through the v93 `gripCarry`): held by the riser in the left hand, limbs tipped a little forward,
-  string out away from the leg, arm relaxed and steady while walking (no swing that sweeps the limb through the legs); applies to
-  the hero, co-op heroes, bag/creator previews and archer foes; shots still use the strike grip and draw.
-- Test: `python3 test/v100_anim.py` (after `SRC=<old build> TAG=before python3 test/v100_anim.py`) writes
-  `out/v100_<TAG>_<weapon>.png` (front + weapon-side views, 12 frames per combo step with the tip trail),
-  `v100_<TAG>_bow.png`, `v100_<TAG>_bowbig.png`, `v100_<TAG>_foes.png` and prints `CHECKS OK`.
-
-## v100: evolve
-
-Species-specific evolution looks for every companion rig, replacing the generic rank ornaments (`crOrn` cones/torus) on them.
-Files: `src/modules/zzN_zz_evolve.js` (framework, header explains it) + one design file per family: `zzN_zz_evolve_beast.js` (Foxlet, Ashwolf), `_dragon.js` (Drakelet, Gravewyrm), `_earth.js` (Stoneshell, Mossfrog), `_spirit.js` (Boneling, Wispling), `_sky.js` (Batwing, Skyhawk), `_swarm.js` (Cryptspider, Gloomcap). No text patches, no edits to older modules.
-- **Levels** (`evo100Lv`): stage 0/1/2/3 → level 0/1/2/4 for tier 1-2 species, 1/2/3/5 for tier 3-4, 2/3/4/5 for tier 5; wild elites 1, normal wild monsters 0. Every level keeps the previous parts and adds more (level 1 subtle, 4-5 crowns, armour, glowing runes).
-- **Designs** (`EVO100.D[rig].build(E,L,P)`): Foxlet — forehead blaze, runes, collar + tooth charm → extra tails, nape crest → flame-tipped tails, harness, chest plate → gold circlet, 5 tails → spirit-flame mane. Ashwolf — thick ruff, claw-mark war paint → spiked collar with fang necklace, hackle crest → lamellar pauldrons, saddle plates, tusks → brow helm with horns, chest plate, bracers, tail charms → ember mane. Drakelet — second horn pair, ember vents → sail spines, cheek frills, tail blade → scale armour, spine vents → horn crown, molten belly seams, patterned wings with claws → flame crest. Gravewyrm — horns, venom, eye lines → cobra hood, ridge → bone back armour, rune bands → horn crown, glowing hood veins, tail rattle → spirit flames. Stoneshell — moss/ferns, crystal → spires, rim runes → stone horns, rim spikes → standing-stone shrine, glowing cracks → crystal crown. Mossfrog — glowing pustules → moss cloak, reed crown → bone charm necklace, brow spurs → angler lantern lure → toxic spines. Boneling — eye soul-fire, chain collar → spine flames, horns, rib soul-fire → grave-iron skull plate, pauldrons → lich crown, phylactery → spectral flames. Wispling — hood runes, soul-lantern → mantle, ghost chains → rune halo → silver circlet, motes, 2nd lantern → flame crown. Batwing — ear tufts, brow rune, throat mane → mohawk, fang charms → bone nose horn, glowing eye rims → crescent crown, chest gem → shadow flames. Skyhawk — plumed crest, lightning war paint, tail streamers → feather mantle, talon bands → breastplate with rune → sun crown → lightning arcs. Cryptspider — carapace crest, venom drops, extra eyes → abdomen sigil, knee spurs → bone-ringed abdomen armour, hourglass → horn crown, egg sacs, banded legs → venom mist. Gloomcap — glowing gills, bracket fungi → sprouting caps, spot ring → root mantle → spore-stalk crown, gold band → glowing rim.
-- **How**: `lpRig` is wrapped; parts are placed by casting rays against the rig's rest-pose body (`E.on/E.top`), conforming armour is a copy of selected body triangles pushed out along the normals (`E.shell`), and everything is skinned like the nearest body vertex (or to a named bone), then baked into ≤3 skinned meshes (`dkM()` c/m/g materials) bound to the body skeleton — they follow idle, gait and attack. Wing membranes (`lpwWing`) get an evolved copy of their geometry (same mesh). Cached per look (`EVO100.cache`); first build of a look 2–200 ms on the loaded test machine, cached <5 ms.
-- **Palette**: accent glow from the species' signature spell colour (rig default otherwise), overridden by variant (Ember/Frost/Shadow/Golden), rare variant and shiny; metal/trim by level and variant. Fused-companion overlays (`LPF`) and the v81 variant/trait extras are unchanged.
-- **Budget**: +2–3 draw calls and 150–3500 triangles per evolved companion (≤12 draw calls in total for any companion).
-- Test: `python3 test/v100_evolve.py` (`SP=`, `PART=sheets,checks,game`; `SRC=<old.html> TAG=before` for comparison sheets) → `out/v100_<TAG>_<species>.jpg` (stages side / ¾ / close-up, variants, walk, attack), `out/v100_<TAG>_portraits.png`, `out/v100_<TAG>_window.png`. Checks: every species × stage builds, evolution triangles grow with each stage, parts skinned to the body skeleton, no NaN, ≤14 draw calls, attached parts stay attached while walking/attacking, wild elites get level 1 and normal wild monsters none, no console/page errors.
-
-## v100: fusemenu
-
-`src/modules/zzN_zz_fusemenu.js` (globals `FSM100`, `FSM100_*`; DOM ids `fsmB`, `fsmF`, `fsmGo`, `fsmImp`, `fsmCss`; localStorage `fsm100` = sort choices). Test: `python3 test/v100_fusemenu.py` (`DEV=desk|phone`), screenshots `out/v100_fsm_<dev>_*.png`, contact sheets `out/v100_fsm_sheet_<dev>.jpg`.
-- **Guided Fusion window**: the `#fz` window is now a 4-step flow with step chips: **1 Companion** (which one to make stronger; sortable by team order / grade / level / family) → **2 Method** (cards for Fuse, Siphon, Consume: one plain line each, what they are best for, and how many partners can be used, or why none can) → **3 Partner** (usable partners first, sorted by what they give then the least valuable; unusable ones greyed with the reason: locked, other family, nothing better to copy, all stats maxed; warnings for half strength, active team, runes, evolved, shiny, Binding Salts) → **4 Confirm** (improved vs used-up cards, Siphon stat chips, optional catalyst, a Now / After / Change table for all five stats with grades and green/red changes plus the overall grade, notes on growth, stars, half strength, modifier inheritance, Universal loss, and a red "will be used up" box listing everything lost). The confirm button says exactly what happens ("Fuse — Runt is used up"). Afterwards a result step shows the real change, with "Improve again" / "Choose another".
-- **?** in the title bar explains grades, growth, stars, tiers, Universal, locks and catalysts. Back button, step chips and Backspace go back; Esc closes (as before). The Companions window gets an **⚗️ Improve** button that opens Fusion on that companion.
-- **Rules unchanged**: the confirm button sets `sel`/`fOpt`/`fStat`/`fCon`/`fCat` and calls the existing `$('doF').onclick` chain (m_fuse → y_rework → zz7_v71 → zzI_v85), so saves, co-op and the old paths behave as before. Previews run the same formulas (`fuseVal`, `compat`, `conGainC`, `ivOf`, `cStat`) on a clone swapped into the party slot; Consume is random (±20%), so its preview shows the range. The old `.wb`/`.wf` (`#fmsg`, `#fl`, `#doF`) stay in the DOM, hidden, for older code and tests.
-- Note on the rules as they run today (documented, not changed): Bolster was replaced by Consume in v71; the "Consume an egg" option (v71) was replaced by "absorb a companion" in v85; fusing keeps the level (v71); stars only count fusions and scale the model (`cStat` uses `iv`, `gs`, evo, mods, runes, not `fp`).
-
-## v100: models
-
-`src/modules/zzN_zz_models.js` (header explains it) + `build/pN_zz_models.py` (two one-line hooks in the v83 `mkMountRig` / `mountModel` of `zzG_gear_mounts.js`, which hand over to `MDL100_rig` / `MDL100_fin`; `MDL100.on=false` restores the v83 mounts). Test `test/v100_models.py` (`PART=mounts,ride,close,lineup,grid,checks`, `MNT=pony,drake`, `SRC=<old build> TAG=before` for comparison), sheets `out/v100_<TAG>_*.jpg`.
-- **Mounts rebuilt with real anatomy** from five species templates (horse, boar, cat/wolf, raptor, drake; the stag and ram are the horse template re-proportioned, the Bone Destrier a horse skeleton): barrel, shoulder and hindquarter masses, tucked waist for the cats/wolves, neck carriage and head shape per animal, jointed legs (forearm–knee–cannon–fetlock–pastern–hoof / gaskin–hock; digitigrade paws with toes and claws; bird legs for the raptor), cloven hooves and dewclaws for the boar/stag/ram, feathering on the pony and charger, proper tails (hair curtain, flag, tuft, cat, bushy, raptor, drake fins). Sizes: pony 1.36, boar 1.1, stag 2.15 (antlers), ram 1.14, charger 1.79, raptor 1.62, panther 1.08, destrier 1.7, dread wolf 1.49, drake 1.77 tall next to the 2.2 hero box (body 1.46).
-- **Rig contract unchanged**: `r.b` body bone (neck and tail its first two child bones, head the neck's first child), hips directly under `r` with the knee as first child, `r.rig`, `r.seat`, `g.sd`, `g.seat`. The knee bone now sits at the joint that folds (carpus / hock) with a Y-flipped rest (`YXZ`, ry=π) so the v85 gait and v93 idle signs fold front cannons back and hind cannons forward like a real horse (raptor not flipped). v85 gait, v93 idle and the v94 riding solver work unchanged.
-- **Tack**: tier-coloured blanket, saddle with dished seat, raised cantle/pommel, horn, studs, skirts, girth, saddle bags + bedroll, breast collar, bridle (crown, browband, noseband, cheekpieces, throatlatch, bit rings); muzzle harness, collar (spiked for the wolf), trophy and tassels for the beasts; charger: chanfron, crinet lames, caparison, crupper; destrier: dark barding with bone spikes. Reins run from the bit to the rider's hands and the stirrups sit under the rider's feet while riding (`MDL100_ride`, one 12-box dynamic mesh, no per-frame allocations); at rest they hang over the neck / down the flanks.
-- **Draw calls**: body + one baked skinned kit (≤3 materials) + reins = 4–5 per mount (drake 9 with its wings); 5–8.6k triangles (only one mount on screen). Fire manes / ghost-fire flicker through the mount's own glow material colour.
-- **Other proportion fixes**: held melee weapons scaled about the grip for the v99 hero (`MDL100_WS`: sword .86, greatsword .8 (was 1.6 long vs a 1.46 body), greataxe .86, axe(s) .9, mace/hammer/flail .86, club .9, dagger/knives .78, halberd .88, staff .9); bows, crossbow, sling, wand, orb, claws and shields unchanged. Ashwolf family (Ashwolf, Direfang, Skollmaw, Snow Wolf) tail 20% shorter and 28% slimmer (it was as long and thick as the body). Everything else audited OK (table in the track report).
-
-## v100: town
-
-Track `town`: `build/pN_zz_town.py` (text patches) + `src/modules/zzN_zz_town1.js` … `zzN_zz_town4.js`; the layout numbers live in `src/modules/w0_world.js`. Test `test/v100_town.py` (harness `test/v100_lib.py`).
-
-**Layout plan** (world tiles; Duskhold centre `cx,cy` = 40,284, `TS`=21; town-local z = world z − 284):
-
-| area | where | what |
-|---|---|---|
-| upper town | z −21…21 (as before) | plaza, fountain, Trading Post / Tavern / Magic Shop row, Steward, kingdom upgrade structures |
-| market ward | z 21…56 | an archway from the plaza (5 tiles wide at z=21), a 11-tile street, 8 shop plots `TWN100_SH` (west row x −12…−6, east row 6…12, at z 26/34/42/50) |
-| inner wall | z 56 (`TWN100_IW`) | 3-tile gatehouse into the courtyard ward |
-| courtyard ward | z 56…100 | the Courtyard `CYD` at (40,362), r 9 → 16.8, gate N (40,340) and S (40,384); kingdom tiers 4–6 sit in its corners |
-| south wall | z 100 (`TWN100_SZ`) | 3-tile south gate onto the road |
-| crossroads | `PCOURT` (84,284) | the old Portal Court, now a fingerpost where the east road meets the ring road |
-| portal islands `TWN100_PG` | Kindlelight (96,284) · Hillside (84,252) · Burningeye (40,233) · Sands (86,322) · Dirge (84,364) · Citadel (40,415) | r 8.5 each, the zone's ground colours and decoration kinds, its own themed gate |
-| roads `TWN100_RD` | 3 tiles wide | east gate → crossroads → Kindlelight / Hillside → Burningeye; crossroads → Sands → Dirge → Citadel; west gate → Burningeye and → Citadel; south gate → Citadel |
-
-Everything stays west of x=110 (max x 105). Duskhold's 4 px/tile ground texture `gtT` now covers chunks x 0–128 / z 224–448 (`TR=[0,7,4,14]`), so every paved, wall and road tile is in it. `townAt`, `tDist` and the town-visibility test (`townTick`) use the long rectangle (cy−TS … cy+`T.sz`).
-
-- **Walls** (`zzN_zz_town1.js`, `kdWalls`): the whole ring is rebuilt for every Bastion Walls level (0 palisade, 1 stone-footed palisade, 2 stone wall with the v83 towers, 3 fortified bastion) in three baked parts (upper town / market / courtyard ward). It includes the plaza archway, the inner gatehouse and the south gatehouse.
-- **Courtyard inside the walls** (`cyWalls`): same rings, growth (`bossDone`), regrowth and node kinds; the garden wall is a low rough-stone ring with lantern posts at its two openings, rebuilt as it grows.
-- **Shops are buildings** (`zzN_zz_town3.js`): Blacksmith (stone forge with a lean-to, anvil, quench barrel, grindstone, weapon rack, chimney smoke; opens the bag's Forge tab, always open), Alchemist (half-timbered, bottle shelves, bubbling cauldron, herbs, glass flask emblem), Cookhouse (log walls, thatch, bread oven, spit roast, counter of bread and pies), Bard's Stage (curtained stage, lanterns, lute, drum, harp), Curio Shop (jettied two storeys, bay window of oddities, golden key), Rune Sanctum (dark stone, tall roof, rune monoliths, violet braziers, floating crystal), Beast Trainer (hunter's lodge, horned skull, pen with a training post), Stable (barn, hayloft, hay, trough, horseshoe, a pony). Each is one baked kit on the town atlas plus a painted sign. The keeper stands in the street in front; the F prompt (2.4 tiles) opens the same windows as before. Unbuilt shops show a fenced construction plot with a "build it at the Steward" sign. The old hearth/alchemy table and the visitor stalls are gone (their prompts now point at the Cook and the Alchemist); the old Stable lean-to is not built. One InstancedMesh carries all chimney smoke.
-- **Kingdom upgrades you can see** (`zzN_zz_town4.js`): the banners by the fountain are gone. Each Steward upgrade keeps its three-stage structure (v88 `KDU`) and Bastion Walls rebuilds the ring. The total level adds buildings instead of banners and pennants: ≥2 braziers round the fountain, ≥5 granary + windmill (turning sails), ≥8 chapel with bell tower, ≥11 barracks + watch platform, ≥14 great hall with a keep tower + beacons on the south gate, ≥17 statues at the inner gate and verdigris copper roofs.
-- **Portal islands** (`zzN_zz_town2.js`): the six `PORT` portals keep their disc, swirl and chains, prompts and windows; each moves to its island with a themed gate. Kindlelight: twisted root arch, moss, green lanterns. Hillside Crest: a trilithon with a serpent and flowers. Burningeye: ice-crystal pillars and icicles. Searing Sands: a sandstone gate with a sun disc. The Dirge: a grave arch with a skull keystone and ghost lamps. The Citadel: a crimson castle arch with banners and braziers. Each island also gets a signpost, a dais and 25–35 of the zone's own decorations merged into one lit and one glowing mesh (mist quads for Kindlelight and the Dirge). Locked islands keep their lanterns dark. Coming home from a zone (`goHome` → `TWN100_home`) lands you in front of that zone's gate. Recall, `RECBACK`, the restart-instance prompt and co-op "Go to"/"Join" are unchanged. The town map (N) and the minimap show the six gates.
-- **Old saves**: a save standing where there is no ground any more (the old Portal Court ring, the old courtyard at 76,244) moves to the crossroads or the courtyard's gate; anything else unsafe goes to the nearest free tile, then to the spawn (`TWN100_fixPos`, after the v97 load fix). The courtyard keeps no save state of its own (nodes regrow; growth follows `bossDone`).
-- **Text**: the portal window, the "new portal opens" banner, material hints and treasure maps no longer mention the Portal Court.
-- **Performance** (`PERF=1 SRC=<old dist> TAG=before python3 v100_town.py` vs the new build; every upgrade at level 3, all shops built; headless software GL, so draw calls and triangles are exact, times are not). The ring's long walls use bigger stone blocks (`TWN100_coarse`), each wall part (upper town / market / courtyard ward) is drawn only within 46 tiles of its stretch, the ward dressing is one baked kit and the portal-island scenery is merged per island:
-
-  | view | draw calls before → after | triangles before → after |
-  |---|---|---|
-  | plaza | 397 → 297 | 382 k → 433 k |
-  | north row | 223 → 170 | 352 k → 360 k |
-  | east gate | 341 → 268 | 424 k → 443 k |
-  | high view over the plaza | 450 → 336 | 416 k → 469 k |
-  | market ward (new) | – → 437 | – → 615 k |
-  | courtyard (new) | – → 489 | – → 565 k |
-  | Kindlelight gate island (new) | – → 232 | – → 276 k |
-  | crossroads (new) | – → 156 | – → 238 k |
-
-- **Test**: `python3 test/v100_town.py` → `CHECKS OK` (63 checks): layout west of the zones and inside the 4 px ground texture; flood-fill reachability of every NPC, shop counter, gate, portal island and open courtyard node at kingdom levels 0–3 with shops built and unbuilt; roads, market street and gates free of colliders; prompts for every shop (built / unbuilt), the Steward and every portal (locked / open); every shop window opens; each portal enters its own zone, coming home lands at that gate; recall saves the run, recall-back returns, re-entering asks Continue / Restart; courtyard growth, harvest, 10-minute regrowth, chopping; old saves in the old Portal Court / old courtyard land on solid ground; every upgrade level and total-level tier adds geometry; no fountain banners; town map; no page errors. Sheets: `test/out/v100_sheet_{town,shops,upgrades,walls,kingdom,portals}.png`. `SHOTS=0` checks only, `CHK=0` sheets only.
-- `test/v88_town_paths.py` now covers the longer town (its grid reaches cy+`T.sz`).
+Publish `dist/ashen-wilds.html` to the same artifact URL. Omitting `capabilities` on a redeploy keeps the co-op room;
+if they must be re-declared: `{"room":{"topics":{"es":"interact","ev":"interact","hit":"interact","bs":"interact","trade":"interact","chat":"interact"}}}`.

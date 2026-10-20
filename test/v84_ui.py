@@ -8,7 +8,6 @@ def s(pg):
     pg.wait_for_timeout(2500)
     P('feed',"()=>{const c=party[0];c.h=Math.round(M(c)*.3);const h0=c.h;feedBest(0);const r=[h0,c.h,JSON.stringify(c.fhot),sup.f_meat,sup.meat];compRegen(2,performance.now());r.push(Math.round(c.h));compRegen(10,performance.now());r.push(Math.round(c.h),M(c),c.fhot);return r}")
     P('regen',"()=>{const c=party[0];c.h=10;c._dt=0;c._ph=10;compRegen(10,performance.now()+1e6);return [Math.round(c.h*10)/10,M(c)]}")
-    P('team',"()=>{teamGain(500);return [hero.tm||0,!!$('tub')&&getComputedStyle($('tub')).display]}")
     P('hud',"()=>{hud();return [$('locBox').textContent,$('chInfo').innerText,$('cbars').innerText,[...document.querySelectorAll('#cbars img')].length,getComputedStyle(document.querySelector('.bar-row')).display]}")
     pg.wait_for_timeout(1500)
     pg.locator('#stage').screenshot(path=play.TMP+'/v79_hud.png',timeout=120000,animations='disabled')

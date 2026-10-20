@@ -1,4 +1,4 @@
-// v100 anim: move specs — the source of the baked hero attack keys in src/modules/zzN_zz_anim0_data.js.
+// v100 anim: move specs — the source of the baked hero attack keys in src/js/1705-v100-anim-baked-keys.js.
 // Re-bake with `BAKE=1 python3 test/v100_anim.py` after changing anything here (or the skeleton).
 // Hero frame: feet at the origin, facing +z, the weapon arm (bones aR*) on the +x side ("W side"), the off arm on −x.
 // Hips y .713, shoulders y 1.13 at x ±.176, arm (shoulder→grip) ≈ .45.

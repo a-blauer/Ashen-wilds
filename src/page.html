@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kill Quest</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cinzel:wght@600;800&family=VT323&display=swap">
+<style>/*@@CSS@@*/</style></head><body>
+<div class="wrap">
+<h1>Kill Quest</h1>
+<p class="sub">WASD move · Hold right mouse + drag to rotate camera · Left click attack · 1-4 class skills · Shift dash (2 charges) · K talents · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · G fusion · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
+<div class="stage" id="stage">
+  <div id="gl"></div>
+  <div id="topl" class="glass"><div class="row"><span id="lvT">Lv 1</span><span id="goldT">🪙 0</span></div><div id="areaT" style="font-size:.68rem;color:var(--mut)"></div><div id="act" class="actrow"></div><div id="buffs"></div></div>
+  <div id="tgt" class="glass hide"><div class="tgpw"><canvas id="tgP" width="112" height="112"></canvas></div><div class="tgi"><div class="tgn"><b id="tgN"></b><span id="tgL"></span></div><div class="meter tgm"><i id="tgB"></i><span id="tgH"></span></div><div id="tgS" class="tgs"></div></div></div>
+  <div id="boss" class="glass hide"><span id="bossN"></span><div class="meter boss" style="margin-top:4px"><i id="bossB"></i></div></div>
+  <canvas id="mini" width="160" height="120"></canvas>
+  <button class="ib glass" id="sysBtn" title="Menu (M)">☰</button><button class="ib glass" id="fsBtn" title="Fullscreen">⛶</button>
+  <div id="sysmenu" class="glass hide">
+    <button id="bagBtn">🎒 Inventory <kbd>I</kbd></button><button id="cmpBtn">🐾 Companions <kbd>P</kbd></button><button id="incBtn">🥚 Incubators <kbd>U</kbd></button><button id="shopBtn">🛒 Shop</button><button id="fuseBtn">⚗️ Fusion <kbd>G</kbd></button>
+    <button id="bossBtn">👑 Sovereigns <kbd>J</kbd></button><button id="saveBtn">💾 Save game</button><button id="talBtn">✦ Talents <kbd>K</kbd></button><button id="mntBtn">🐎 Mounts <kbd>H</kbd></button><button id="setBtn">⚙️ Settings <kbd>O</kbd></button><button id="recallBtn">🌀 Recall to Town <kbd>T</kbd></button>
+  </div>
+  <button id="prompt" class="pri hide"></button>
+  <div id="rcb" class="glass hide"><span id="rcT"></span><div class="meter" style="margin-top:4px"><i id="rcB" style="width:0"></i></div></div>
+  <div id="fade"></div><div id="dth" class="hide"></div>
+  <div id="bbar"><div class="orb hp"><div class="fill" id="orbHf"></div><span id="orbHt"></span></div><div id="bmid"><div id="hot" class="glass"><div id="acts"></div></div><div class="xpbar"><i id="xpB"></i><span id="xpT"></span></div></div><div class="orb mp"><div class="fill" id="orbMf"></div><span id="orbMt"></span></div></div>
+  <div id="glog"></div><div id="pk"></div><div id="banner"></div>
+  <div id="start" class="modal">
+    <h2>Choose your first companion</h2>
+    <p class="sub">Roam the wilds, defeat monsters and bosses, collect loot, and hatch eggs.</p>
+    <div class="starters" id="starters"></div>
+  </div>
+  <div id="fz" class="modal w hide"><div class="win nar">
+    <div class="wh"><h2>Fusion</h2><span class="wsub">Same type, or Universal</span><button class="x" id="fCancel" title="Close (Esc)">✕</button></div>
+    <div class="wb"><div id="fmsg" class="warn"></div><div class="rows" id="fl"></div></div>
+    <div class="wf"><span class="mut dtl">Result gains a ★ (bonus ★ for the same kind). Universal is consumed.</span><button class="pri" id="doF">Fuse</button></div>
+  </div></div>
+  <div id="bag" class="modal w hide"><div class="win">
+    <div class="wh"><h2>Inventory</h2><button class="x" id="bClose" title="Close (Esc)">✕</button></div>
+    <div class="wb cols">
+      <div><div id="hv" class="pvbox sm"></div><div id="hs"></div></div>
+      <div><div class="sec">Equipped</div><div id="eqrow" class="rows"></div><div id="bt" class="tabs"></div><div id="bl"></div></div>
+    </div>
+    <div class="wf" id="idt"></div>
+  </div></div>
+  <div id="inc" class="modal w hide"><div class="win">
+    <div class="wh"><h2>Incubators</h2><span class="wsub">Hatch time 30s · richer habitat = stronger hatchling</span><button class="x" id="iClose" title="Close (Esc)">✕</button></div>
+    <div class="wb"><div class="sec">Incubators</div><div class="rows" id="islots"></div><div class="sec">Eggs <span style="text-transform:none;letter-spacing:0">(click, or drag onto an incubator)</span></div><div class="rows" id="eggs"></div></div>
+  </div></div>
+  <div id="cmp" class="modal w hide"><div class="win">
+    <div class="wh"><h2>Companions</h2><button class="x" id="cClose" title="Close (Esc)">✕</button></div>
+    <div class="wb cols c2"><div class="rows" id="cl"></div><div><div id="cvw" class="pvbox sm"></div><div id="cd"></div></div></div>
+  </div></div>
+  <div id="shop" class="modal w hide"><div class="win">
+    <div class="wh"><h2>Merchant</h2><span class="wsub">🪙 <b id="gold2">0</b></span><button class="x" id="sClose" title="Close (Esc)">✕</button></div>
+    <div class="wb cols2"><div><div class="sec">Buy</div><div class="rows" id="sb"></div></div><div><div class="sec">Sell · half value</div><div class="rows" id="ss"></div></div></div>
+  </div></div>
+  <div id="mshop" class="modal w hide"><div class="win">
+    <div class="wh"><h2>Magic Vendor</h2><span class="wsub">🪙 <b id="gold3">0</b> · spells level from combat XP</span><button class="x" id="msClose" title="Close (Esc)">✕</button></div>
+    <div class="wb"><div id="mst" class="rows"></div></div>
+  </div></div>
+  <div id="wmap" class="modal w hide"><div class="win" style="width:min(1120px,100%)">
+    <div class="wh"><h2>Map</h2><span class="wsub">The area you are in · N or Esc to close</span><button class="x" id="wmClose" title="Close (Esc)">✕</button></div>
+    <div class="wb" style="padding:8px"><canvas id="wmc" width="1060" height="640" style="max-width:100%;max-height:calc(100vh - 150px);width:auto;height:auto;display:block;margin:0 auto;border-radius:4px;background:#0a0d12"></canvas></div>
+  </div></div>
+  <div id="setw" class="modal w hide"><div class="win nar">
+    <div class="wh"><h2>Settings</h2><span class="wsub">Saved on this device</span><button class="x" id="setClose" title="Close (Esc)">✕</button></div>
+    <div class="wb" style="padding:14px 16px;display:grid;gap:14px">
+      <div class="setg">Camera</div>
+      <label class="setr"><span>Rotation sensitivity <b id="sv_sens"></b></span><input type="range" id="s_sens" min="0.2" max="3" step="0.05"></label>
+      <label class="setr"><span>Zoom speed <b id="sv_zoom"></b></span><input type="range" id="s_zoom" min="0.3" max="3" step="0.1"></label>
+      <label class="setc"><input type="checkbox" id="s_inv"> Invert vertical camera movement</label>
+      <label class="setc"><input type="checkbox" id="s_shake"> Screen shake on heavy hits</label>
+      <div class="setg">Sound</div>
+      <label class="setr"><span>Sound effects</span><input type="checkbox" id="s_sfx" checked></label>
+      <div class="setg">Layout</div>
+      <label class="setr"><span>Screen and controls</span><select id="s_dev"><option value="desktop">Desktop (keyboard and mouse)</option><option value="mobile">Mobile (full screen, touch controls)</option></select></label>
+      <div class="setg">Graphics</div>
+      <label class="setr"><span>Quality</span><select id="s_q"><option value="auto">Auto (adjusts to your frame rate)</option><option value="0">High</option><option value="1">Medium</option><option value="2">Low</option><option value="3">Very low</option></select></label>
+      <div class="setg">Saved game</div><span class="mut" style="font-size:.74rem">The game saves itself every 30 seconds and when you close the tab.</span><button id="delSave" style="justify-self:start">Delete saved game</button>
+      <button id="s_reset" style="justify-self:start">Reset to defaults</button>
+    </div>
+  </div></div>
+  <div id="tal" class="modal w hide"><div class="win" style="width:min(860px,100%)"><div class="wh"><h2>Talents</h2><span class="wsub" id="talSub"></span><button class="x" id="talClose" title="Close (Esc)">✕</button></div><div class="wb"><div id="talT" class="talg"></div></div><div class="wf"><span id="talInfo" class="mut dtl"></span><button id="talReset">Reset</button></div></div></div>
+  </div></div>
+  <div id="devp" class="modal"><h2>How are you playing?</h2><p class="sub">The screen and controls adjust to fit. You can switch later in Settings (O).</p><div class="devb"><button data-dev="desktop"><span>🖥️</span>Desktop<small>Keyboard and mouse<br>WASD, mouse camera</small></button><button data-dev="mobile"><span>📱</span>Mobile<small>Full-screen touch controls<br>Turn your phone sideways for the best view</small></button></div></div>
+  <div id="mctl"><div id="joy"><i></i></div><div id="mbtn"><button data-m="f" title="Interact">F</button><button data-m="tgt" title="Target nearest">🎯</button><button data-m="dash" title="Dash">💨</button><button data-m="atk" title="Attack (hold)">⚔️</button></div></div>
+  <div id="svp" class="modal hide"><div class="svpw"><h2>Welcome back</h2><div id="svpI" class="svpi"></div><div class="devb"><button class="pri" id="svpC">▶ Continue</button><button id="svpN">New game</button></div></div></div>
+  <div id="xw" class="modal w hide"><div class="win" style="width:min(980px,100%)">
+    <div class="wh"><h2 id="xwT"></h2><span class="wsub" id="xwS"></span><button class="x" id="xwClose" title="Close (Esc)">✕</button></div>
+    <div class="wb" id="xwB"></div><div class="wf" id="xwF"></div>
+  </div></div>
+  <div id="hatch" class="modal hide"><h2 id="hst">Your egg is hatching...</h2><div id="hcv" class="pvbox" style="width:min(320px,80%);height:min(300px,50%)"></div><div id="hr" class="sub"></div><button id="hOk" class="pri hide">Continue</button></div>
+</div>
+
+<div class="dpad" id="dpad">
+  <button class="u" data-d="0,-1" aria-label="Up">▲</button>
+  <button data-d="-1,0" aria-label="Left" style="grid-row:2">◀</button>
+  <button data-d="0,1" aria-label="Down" style="grid-row:2">▼</button>
+  <button data-d="1,0" aria-label="Right" style="grid-row:2;grid-column:3">▶</button>
+</div>
+
+<div class="bar-row"><b>Your team <small style="font-weight:400;color:var(--mut)">(tap one to lead)</small></b></div>
+<div class="party" id="pty"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>//@@JS@@</script></body></html>

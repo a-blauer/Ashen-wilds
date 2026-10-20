@@ -113,8 +113,6 @@ def s(pg):
         for k in ['mob','elite','chest']:
             b,a,n=r[k];ok(b>0 and abs(a/b-.65)<.08,'%s: %d eggs before vs %d after in %d (x%.2f; %.2f%% -> %.2f%%)'%(k,b,a,n,a/max(1,b),100*b/n,100*a/n))
         b,a,n=r['boss'];ok(b==n and a==n,'boss egg stays guaranteed: %d/%d before, %d/%d after'%(b,n,a,n))
-        r=ev("()=>bTurnIn.toString().includes('EGG92')")
-        ok(r,'bounty-board egg chance uses EGG92.rate')
     if 'menus' in PART:
         res=menus(pg,'desk')
         bad={k:v for k,v in res.items() if isinstance(v,list) and v}

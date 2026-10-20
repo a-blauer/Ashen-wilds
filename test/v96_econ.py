@@ -96,7 +96,6 @@ def eggs(pg):
     for k in ['mob','elite','chest']:
         o,v,a,n=r[k];ok(o>0 and abs(a/max(1,v)-.6)<.09,'%s: original %.2f%% → v92 %.2f%% → now %.2f%% (×%.2f vs v92, ×%.2f vs original)'%(k,100*o/n,100*v/n,100*a/n,a/max(1,v),a/max(1,o)))
     o,v,a,n=r['boss'];ok(o==n and a==n,'Sovereign egg stays guaranteed (%d/%d)'%(a,n))
-    ok(ev("()=>bTurnIn.toString().includes('EGG92.rate')"),'bounty-board egg chance follows EGG92.rate (20%% → %.1f%%)'%(20*.39))
 
 def xp(pg):
     ev=pg.evaluate

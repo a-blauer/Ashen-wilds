@@ -1,4 +1,4 @@
-# v98 perf_ai: enemy update level of detail (src/modules/zzN_perf_ai.js, build/pN_perf_ai.py).
+# v98 perf_ai: enemy update level of detail (src/js: search 'AIL').
 # Checks: near calm enemies update every frame, farther drawn ones every AIL.n2/n3-th frame with the skipped dt handed on
 # (same game time per second), off-screen ones skip their pose, hidden ones sleep (no matrix updates), a throttled enemy
 # still aggroes promptly when the hero walks up to it, and prints the enemy-loop / matrix ms per frame with AIL off vs on
