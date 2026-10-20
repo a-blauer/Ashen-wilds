@@ -20,27 +20,39 @@ const M=c=>cM(c),A=c=>cPA(c),D=c=>cPD(c),pot=c=>Math.round((c.iv.hp+c.iv.a+c.iv.
 const mk=(n,l,f=0,v='',iv)=>mkC(n,l,f,v,iv),mkOld=(n,l,f=0,v='',iv)=>{const rv=()=>.85+Math.random()*.3;const s=S[n],col=new THREE.Color(s.c);if(v)col.lerp(new THREE.Color(VAR[v].c),.65);const c={n,l,x:0,f,v,iv:iv||{hp:rv(),a:rv(),d:rv()},g:[n],cl:[col.getHex()],sy:[s.h,s.t],z:.92+Math.random()*.2,tr:Math.random()<.55?['Horned','Bulky','Armored','Spiked'][R(0,3)]:'',sp:spl(n,v),cdm:{}};c.h=M(c);return c};
 const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+'★'.repeat(Math.floor(c.fp||c.f||0))+(c.evo?' '+'✦'.repeat(c.evo):'');
 const dmg=(a,b,k,p)=>dmgCE(a,b,k,p);
-const W=1559,H=1010,TS=21,TK=1.5;
+const W=1180,H=2030,TS=21,TK=1.5; // v106: 6 rows of 3 zone instances (see PMI below); H*GPX stays under 4096 px
 // ---- Progressive world: five zones separated by mountain ridges. The only way through each ridge is a walled town. ----
 const TIER_LV=[[1,9],[10,19],[20,29],[30,39],[40,50]],ZN=['Kindlelight','Hillside Crest','Burningeye Summit','Searing Sands','The Citadel'];
 // ---- v56: a floating stronghold, and six portal maps. Each map is a winding road that ends at a boss arena. ----
 const PMAP=[
- {n:'Kindlelight',sub:'A drowned, gloomy bog',bi:1,lv:[1,8],t:1,x0:110,y0:8,col:0x7aff4a,ic:'🫧'},
- {n:'Hillside Crest',sub:'Windswept plains of the serpent folk',bi:2,lv:[9,17],t:2,x0:593,y0:8,col:0xd8c060,ic:'🐍'},
- {n:'Burningeye Summit',sub:'A frozen peak under a burning sky',bi:3,lv:[18,26],t:3,x0:1076,y0:8,col:0x9ad8ff,ic:'❄️'},
- {n:'Searing Sands',sub:'An endless scorched desert',bi:4,lv:[27,35],t:4,x0:110,y0:509,col:0xffa040,ic:'🏜️'},
- {n:'The Dirge',sub:'A haunted graveyard that never sleeps',bi:5,lv:[36,43],t:4,x0:593,y0:509,col:0x9affc8,ic:'🪦'},
- {n:'The Citadel',sub:'The halls of the vampire court',bi:6,lv:[44,50],t:5,x0:1076,y0:509,col:0xff3040,ic:'🏰'}];
+ {n:'Kindlelight',sub:'A drowned, gloomy bog',bi:1,lv:[1,8],t:1,col:0x7aff4a,ic:'🫧'},
+ {n:'Hillside Crest',sub:'Windswept plains of the serpent folk',bi:2,lv:[9,17],t:2,col:0xd8c060,ic:'🐍'},
+ {n:'Burningeye Summit',sub:'A frozen peak under a burning sky',bi:3,lv:[18,26],t:3,col:0x9ad8ff,ic:'❄️'},
+ {n:'Searing Sands',sub:'An endless scorched desert',bi:4,lv:[27,35],t:4,col:0xffa040,ic:'🏜️'},
+ {n:'The Dirge',sub:'A haunted graveyard that never sleeps',bi:5,lv:[36,43],t:4,col:0x9affc8,ic:'🪦'},
+ {n:'The Citadel',sub:'The halls of the vampire court',bi:6,lv:[44,50],t:5,col:0xff3040,ic:'🏰'}];
 // v89: every zone was made 30% bigger in each direction (260x270 -> 338x351); v97: 40% bigger again (473x491).
-// PMS scales the generator's distances against the original 260x270 zone (1.3*1.4); PMA is the area against it.
-const PMS=1.82,PMW=473,PMH=491,PMA=PMW*PMH/(260*270);
+// v106: every zone is split into three instances, I -> II -> III, each half the area of the v97 zone (350x331). Zone i is
+// row i of the grid, instance k is column k, with a 6-tile void between neighbours (regionAt = zone, rgAt = instance key
+// g = zone*3+k, insAt = the instance record). Enemy levels rise through I, II and III (the zone's range split in thirds,
+// pmLvSplit). Instance III holds the Sovereign's den and the wave arena; the end of I and II is a gateway to the next one.
+// PMS scales the generator's distances against the original 260x270 zone (the square root of the area ratio); PMA is the area.
+const PMI=3,PMW=350,PMH=331,PMS=1.29,PMA=PMW*PMH/(260*270),PM_X0=110,PM_Y0=8,PM_PX=PMW+6,PM_PY=PMH+6,PM_RN=['I','II','III'];
 // v69: every map gets its own procedurally laid-out, wide, winding route with side branches, open fields and a sealed wave arena
-const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=8,PM_DENR=25; // 8 camps per zone (v88: 3, v89: 5)
-PMAP.forEach((p,i)=>{p.i=i;let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(p,i,PM_TH_SEED[i]*7919+13+at*104729);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});let sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(L0.clr<50)sc*=.05;if(sc>bsc){bsc=sc;best=L0}}Object.assign(p,best.out)});
-function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
+const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=4,PM_DENR=25,PM_GTR=14; // 4 camps per instance (12 per zone); PM_GTR: gateway clearing
+const INSL=[];
+function pmLvSplit(lv,k){const n=lv[1]-lv[0]+1,b=q=>lv[0]+Math.round(n*q/PMI);return [b(k),b(k+1)-1]}
+PMAP.forEach((p,i)=>{p.i=i;p.ins=[];
+  for(let k=0;k<PMI;k++){const I={z:i,k,g:i*PMI+k,x0:PM_X0+k*PM_PX,y0:PM_Y0+i*PM_PY,den:k==PMI-1,lv:pmLvSplit(p.lv,k),n:p.n+' '+PM_RN[k],rn:PM_RN[k]};
+    let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(I,i,PM_TH_SEED[i]*7919+13+at*104729+k*7717,!I.den);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});let sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(L0.clr<50)sc*=.05;if(sc>bsc){bsc=sc;best=L0}}
+    Object.assign(I,best.out);if(!I.den)I.wa=null;p.ins.push(I);INSL.push(I)}
+  // zone-level fields that older code reads: the den instance's road and arenas, the first instance's entrance and corner,
+  // and every instance's camps (CAMPS records which instance each camp is in: C.ig)
+  const D=p.ins[PMI-1];['wp','br','fd','ba','wa'].forEach(k=>p[k]=D[k]);p.cl=[].concat(...p.ins.map(I=>I.cl));p.en=p.ins[0].en;p.x0=p.ins[0].x0;p.y0=p.ins[0].y0});
+function pmGen(p,i,seed,nw){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
   const G=(x,y)=>[p.x0+Math.round(x),p.y0+Math.round(y)],cl=(v,a,b)=>Math.max(a,Math.min(b,v)),M=26,S=PMS;
   // pick a corner for the sealed wave arena, start on the far side, end with the boss on yet another side
-  const CR=Math.round(34*S),cor=[[CR,CR],[PMW-CR,CR],[CR,PMH-CR],[PMW-CR,PMH-CR]],wc=Math.floor(rnd()*4),WA=cor[wc],opp=cor[3-wc];
+  const CR=Math.round(34*S),cor=[[CR,CR],[PMW-CR,CR],[CR,PMH-CR],[PMW-CR,PMH-CR]],wc=Math.floor(rnd()*4),WA=nw?[-1e5,-1e5]:cor[wc],opp=cor[3-wc]; // nw: no wave arena (instances I, II)
   const SD=50*S,sides=[[[14,ri(SD,PMH-SD)],[PMW-20,ri(SD,PMH-SD)]],[[ri(SD,PMW-SD),14],[ri(SD,PMW-SD),PMH-18]]];let st,en;
   {const k=Math.floor(rnd()*2),flip=rnd()<.5,s0=sides[k];st=flip?s0[1]:s0[0];en=flip?s0[0]:s0[1];}
   const awayWA=(q,r)=>{const dx=q[0]-WA[0],dy=q[1]-WA[1],d=Math.hypot(dx,dy);if(d<r){q[0]=WA[0]+dx/(d||1)*r;q[1]=WA[1]+dy/(d||1)*r}q[0]=cl(q[0],M,PMW-M);q[1]=cl(q[1],M,PMH-M);return q};
@@ -67,7 +79,9 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
   let clr=1e9;const chk=(x,y,r)=>{clr=Math.min(clr,Math.hypot(x-WA[0],y-WA[1])-r)},seg=(a,b,r)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let q=0;q<=n;q++){const t=q/n;chk(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,r)}};
   for(let k=0;k<N;k++)seg(wp[k],wp[k+1],21);br.forEach(l=>{for(let k=0;k<l.length-1;k++)seg(l[k],l[k+1],12)});fd.forEach(f=>chk(f[0],f[1],f[2]*1.2));cls.forEach(c=>chk(c[0],c[1],16));
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
-const regionAt=(x,y)=>{for(let i=0;i<PMAP.length;i++){const p=PMAP[i];if(x>=p.x0&&x<p.x0+PMW&&y>=p.y0&&y<p.y0+PMH)return i}return -1};
+const insAt=(x,y)=>{const c=Math.floor((x-PM_X0)/PM_PX),r=Math.floor((y-PM_Y0)/PM_PY);if(c<0||c>=PMI||r<0||r>=PMAP.length)return null;const I=PMAP[r].ins[c];return x<I.x0+PMW&&y<I.y0+PMH?I:null};
+const regionAt=(x,y)=>{const I=insAt(x,y);return I?I.z:-1};
+const rgAt=(x,y)=>{const I=insAt(x,y);return I?I.g:-1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
 var TWN100_SZ=51,TWN100_IW=51,TWN100_WX=36; // v101: one Grand Square — walls at x ±36 (TWN100_WX), z -21..+51; no inner wards (IW = SZ)
 const TOWNS=[
@@ -126,40 +140,41 @@ const MAP=(()=>{
   const road=(L,r)=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);for(let q=0;q<=n;q++)stamp(ax+(bx-ax)*q/n,ay+(by-ay)*q/n,r)}};
   TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1]+1,8.5);
   TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
-  // ---- the six portal maps ----
-  PMAP.forEach(p=>{
+  // ---- the six portal maps, three instances each (v106) ----
+  INSL.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
     pts.push(p.wp[p.wp.length-1]);p.path=pts;
-    pts.forEach(([x,y],i)=>{if(i%2)return;const hw=12+3*Math.sin(i*.045+p.i)+2*Math.sin(i*.13+p.i*2);stamp(x+3*Math.sin(i*.07),y+3*Math.cos(i*.05),hw)});
+    pts.forEach(([x,y],i)=>{if(i%2)return;const hw=12+3*Math.sin(i*.045+p.g)+2*Math.sin(i*.13+p.g*2);stamp(x+3*Math.sin(i*.07),y+3*Math.cos(i*.05),hw)});
     p.br.forEach(l=>{for(let k=0;k<l.length-1;k++){const [ax,ay]=l[k],[bx,by]=l[k+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)/2);for(let q=0;q<=n;q++){const t=q/n;stamp(ax+(bx-ax)*t,ay+(by-ay)*t,9+2*Math.sin(q*.4+k))}}});
     p.fd.forEach(([x,y,r])=>{stamp(x,y,r);stamp(x+r*.45,y-r*.3,r*.7);stamp(x-r*.4,y+r*.35,r*.65)});
-    p.cl.forEach(([x,y])=>stamp(x,y,17));stamp(p.ba[0],p.ba[1],PM_DENR);stamp(p.wa[0],p.wa[1],15);
-    for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++)bio[y][x]=p.bi;
+    p.cl.forEach(([x,y])=>stamp(x,y,17));stamp(p.ba[0],p.ba[1],p.den?PM_DENR:PM_GTR);if(p.wa)stamp(p.wa[0],p.wa[1],15);
+    const bi=PMAP[p.z].bi;for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++)bio[y][x]=bi;
   });
+  PMAP.forEach(p=>{p.path=p.ins[PMI-1].path});
   const isW=(x,y)=>DW[y*W+x]<0;
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const d=DW[y*W+x],r=regionAt(x,y);
     if(d<0)m[y][x]='.';
     else if(r>=0&&d<2.6){const b=BIOMES[PMAP[r].bi];m[y][x]=b.n=='The Citadel'?'':(b.n=='Searing Sands'||d>1.6?'R':'#')}}
   // keep the regions sealed from each other (a 1-tile border is always void)
-  PMAP.forEach(p=>{for(let x=p.x0;x<p.x0+PMW;x++){m[p.y0][x]='';m[p.y0+PMH-1][x]=''}for(let y=p.y0;y<p.y0+PMH;y++){m[y][p.x0]='';m[y][p.x0+PMW-1]=''}});
+  INSL.forEach(p=>{for(let x=p.x0;x<p.x0+PMW;x++){m[p.y0][x]='';m[p.y0+PMH-1][x]=''}for(let y=p.y0;y<p.y0+PMH;y++){m[y][p.x0]='';m[y][p.x0+PMW-1]=''}});
   // grass, accent and water patches inside the walkable ground
-  const blob=(ch,bi,n,a,b2)=>{const p=PMAP[bi-1];for(let i=0;i<n;i++){let cx=0,cy=0;for(let k=0;k<60;k++){const q=p.path[Math.floor(rnd()*p.path.length)];cx=Math.round(q[0]+(rnd()-.5)*22);cy=Math.round(q[1]+(rnd()-.5)*22);if(m[cy]&&m[cy][cx]=='.')break}
+  const blob=(ch,p,n,a,b2)=>{for(let i=0;i<n;i++){let cx=0,cy=0;for(let k=0;k<60;k++){const q=p.path[Math.floor(rnd()*p.path.length)];cx=Math.round(q[0]+(rnd()-.5)*22);cy=Math.round(q[1]+(rnd()-.5)*22);if(m[cy]&&m[cy][cx]=='.')break}
     const r=a+rnd()*(b2-a);for(let y=Math.floor(cy-r*1.3)-1;y<cy+r*1.3+1;y++)for(let x=Math.floor(cx-r)-1;x<cx+r+1;x++){if(!m[y]||m[y][x]!='.')continue;if(Math.hypot(x-cx,(y-cy)*1.25)<r*(.75+.25*Math.sin(x*1.7+y*1.1+i)))m[y][x]=ch}}};
-  PMAP.forEach(p=>{const b=BIOMES[p.bi],d=b.den;blob('g',p.bi,Math.round(40*PMA*d[0]),3,7);blob('a',p.bi,Math.round(26*PMA*d[1]),3,7);blob('~',p.bi,Math.round(9*PMA*d[3]),1.6,3.4)});
+  INSL.forEach(p=>{const b=BIOMES[PMAP[p.z].bi],d=b.den;blob('g',p,Math.round(40*PMA*d[0]),3,7);blob('a',p,Math.round(26*PMA*d[1]),3,7);blob('~',p,Math.round(9*PMA*d[3]),1.6,3.4)});
   // never block the road itself or the arenas with water
   const keep=(cx,cy,r)=>{for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=Math.floor(cx-r);x<=cx+r;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<r)m[y][x]='a'};
-  PMAP.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],14));keep(p.ba[0],p.ba[1],PM_DENR+1);keep(p.wa[0],p.wa[1],16)});
+  INSL.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],14));keep(p.ba[0],p.ba[1],(p.den?PM_DENR:PM_GTR)+1);if(p.wa)keep(p.wa[0],p.wa[1],16)});
   const props=[];
   // harvest nodes: a few small clusters of one kind each (about a quarter of the old scattered count)
   const okT=(x,y)=>{const t=m[y]&&m[y][x];return t=='.'||t=='g'||t=='a'},rockK=k=>k=='rock'||k=='grave'||k=='pillar',used=new Set();
-  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const r=regionAt(x,y);if(r<0||!okT(x,y))continue;const b=BIOMES[bio[y][x]];
+  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const I=insAt(x,y);if(!I||!okT(x,y))continue;const r=I.g,b=BIOMES[bio[y][x]];
     if(rnd()>=.0012*(b.pd||1))continue;
     const wt=b.pr.map(k=>rockK(k)?.6:1),tot=wt.reduce((a,v)=>a+v,0);let u=rnd()*tot,k=b.pr[0];for(let i=0;i<b.pr.length;i++){u-=wt[i];if(u<=0){k=b.pr[i];break}}
-    if(Math.hypot(x-PMAP[r].ba[0],y-PMAP[r].ba[1])<PM_DENR+4)continue; // v89: the den circle stays open
-    if(rockK(k)&&PMAP[r].path.some((q,i)=>i%3==0&&Math.hypot(q[0]-x,q[1]-y)<5))continue; // keep rocks off the road
+    if(Math.hypot(x-I.ba[0],y-I.ba[1])<(I.den?PM_DENR:PM_GTR)+4)continue; // v89: the den circle stays open (v106: and the gateway)
+    if(rockK(k)&&I.path.some((q,i)=>i%3==0&&Math.hypot(q[0]-x,q[1]-y)<5))continue; // keep rocks off the road
     const n=3+Math.floor(rnd()*3);let got=0;
     for(let tr=0;tr<30&&got<n;tr++){const a=rnd()*6.283,d=tr?.8+rnd()*1.9:0,cx=Math.round(x+Math.cos(a)*d),cy=Math.round(y+Math.sin(a)*d),key=cy*W+cx;
-      if(used.has(key)||!okT(cx,cy)||regionAt(cx,cy)!==r)continue;
+      if(used.has(key)||!okT(cx,cy)||rgAt(cx,cy)!==r)continue;
       used.add(key);if(rockK(k))m[cy][cx]='r';props.push([cx,cy,k]);got++}}
   // boss arenas: rune floor, ring of columns and four cover pillars
   BOSSES.forEach(b=>{for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
@@ -187,7 +202,7 @@ const MAP=(()=>{
      if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
-  m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
+  m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!INSL.some(p=>(p.wa&&Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16)||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();
 
 const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(ax>xe?ax-xe:0,dz);if(q<d)d=q}return d}; // v100
@@ -206,7 +221,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
   const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dx=ax>xe?ax-xe:0,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(dx,4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
   TOWNS.forEach(t=>{t.ph=1.6});
   for(let j=-HPD;j<=H+HPD;j++)for(let i=-HPD;i<=W+HPD;i++){
-    const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,r=regionAt(tx,ty),d=DW[k];let h;
+    const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,I=insAt(tx,ty),r=I?I.z:-1,d=DW[k];let h;
     if(r<0){ // the floating stronghold, and empty sky everywhere else
       h=1.6+.05*fbm2(i*.2,j*.2,2);const dd=Math.max(0,d);h-=48*smt(0,4,dd)*(1+.3*fbm2(i*.1,j*.1,3));
       TOWNS.forEach(t=>{const q=supd(i,j,t),m=smt(TS+1,TS+6,q);h=h*m+t.ph*(1-m)});
@@ -214,7 +229,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
       const dd=Math.max(0,d);h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
-      const p=PMAP[r];[[p.ba,Math.max(PM_DENR+3,22*DK),5*DK],[p.wa,19,5]].forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
+      (I.den?[[I.ba,Math.max(PM_DENR+3,22*DK),5*DK],[I.wa,19,5]]:[[I.ba,PM_GTR+2,5]]).forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }

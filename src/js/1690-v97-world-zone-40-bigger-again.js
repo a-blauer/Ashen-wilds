@@ -12,10 +12,16 @@
 var CVG={n:-1,B:128,g:new Map(),live:new Set(),f:0};
 function cvgBuild(){const B=CVG.B;CVG.g=new Map();CVG.live=new Set();CVG.n=CHL.length;
   CHL.forEach(c=>{const k=Math.floor((c.box.min.z+c.box.max.z)/2/B)*1000+Math.floor((c.box.min.x+c.box.max.x)/2/B);let L=CVG.g.get(k);if(!L)CVG.g.set(k,L=[]);L.push(c);if(c.on||c.non)CVG.live.add(c)})}
+// v106: only the chunks touching the zone instance you are in (or, outside the zones, the ones west of them: Duskhold and
+// the Portal Road) draw; the other instances sit across the void and are separate maps now
+var CVA={k:null,r:null};
+function cvKey(){const I=curIns();return I?I.g:-1}
+function cvOK(c,k){if(c.cvk===k)return c.cvok;if(CVA.k!==k){CVA.k=k;const I=k>=0?INSL[k]:null;CVA.r=I?[I.x0-3,I.y0-3,I.x0+PMW+3,I.y0+PMH+3]:[-1e5,-1e5,PM_X0-3,1e5]}
+  const r=CVA.r,b=c.box;c.cvk=k;c.cvok=b.max.x>=r[0]&&b.min.x<=r[2]&&b.max.z>=r[1]&&b.min.z<=r[3];return c.cvok}
 function chunkVis(){
   if(CVG.n!==CHL.length)cvgBuild();
   cam.updateMatrixWorld();PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);FR.setFromProjectionMatrix(PM);
-  const p=pl.position,B=CVG.B,R=Math.max(FARR,NEARR)+48,test=c=>{const d=c.box.distanceToPoint(p),inF=d<20||FR.intersectsBox(c.box),on=d<FARR&&inF,non=d<NEARR&&(d<12||inF),cs=d<34;
+  const p=pl.position,B=CVG.B,R=Math.max(FARR,NEARR)+48,ak=cvKey(),test=c=>{const ok=cvOK(c,ak),d=c.box.distanceToPoint(p),inF=d<20||FR.intersectsBox(c.box),on=ok&&d<FARR&&inF,non=ok&&d<NEARR&&(d<12||inF),cs=d<34;
     if(on!==c.on||(on&&cs!==c.cs)){c.on=on;c.cs=cs;c.ms.forEach(m=>{m.visible=on;m.castShadow=on&&cs&&m.userData.cast})}
     if(non!==c.non){c.non=non;c.ns.forEach(m=>{m.visible=non;m.castShadow=false})}
     if(c.on||c.non)CVG.live.add(c);else CVG.live.delete(c)};

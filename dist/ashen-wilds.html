@@ -906,27 +906,39 @@ const M=c=>cM(c),A=c=>cPA(c),D=c=>cPD(c),pot=c=>Math.round((c.iv.hp+c.iv.a+c.iv.
 const mk=(n,l,f=0,v='',iv)=>mkC(n,l,f,v,iv),mkOld=(n,l,f=0,v='',iv)=>{const rv=()=>.85+Math.random()*.3;const s=S[n],col=new THREE.Color(s.c);if(v)col.lerp(new THREE.Color(VAR[v].c),.65);const c={n,l,x:0,f,v,iv:iv||{hp:rv(),a:rv(),d:rv()},g:[n],cl:[col.getHex()],sy:[s.h,s.t],z:.92+Math.random()*.2,tr:Math.random()<.55?['Horned','Bulky','Armored','Spiked'][R(0,3)]:'',sp:spl(n,v),cdm:{}};c.h=M(c);return c};
 const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+'★'.repeat(Math.floor(c.fp||c.f||0))+(c.evo?' '+'✦'.repeat(c.evo):'');
 const dmg=(a,b,k,p)=>dmgCE(a,b,k,p);
-const W=1559,H=1010,TS=21,TK=1.5;
+const W=1180,H=2030,TS=21,TK=1.5; // v106: 6 rows of 3 zone instances (see PMI below); H*GPX stays under 4096 px
 // ---- Progressive world: five zones separated by mountain ridges. The only way through each ridge is a walled town. ----
 const TIER_LV=[[1,9],[10,19],[20,29],[30,39],[40,50]],ZN=['Kindlelight','Hillside Crest','Burningeye Summit','Searing Sands','The Citadel'];
 // ---- v56: a floating stronghold, and six portal maps. Each map is a winding road that ends at a boss arena. ----
 const PMAP=[
- {n:'Kindlelight',sub:'A drowned, gloomy bog',bi:1,lv:[1,8],t:1,x0:110,y0:8,col:0x7aff4a,ic:'🫧'},
- {n:'Hillside Crest',sub:'Windswept plains of the serpent folk',bi:2,lv:[9,17],t:2,x0:593,y0:8,col:0xd8c060,ic:'🐍'},
- {n:'Burningeye Summit',sub:'A frozen peak under a burning sky',bi:3,lv:[18,26],t:3,x0:1076,y0:8,col:0x9ad8ff,ic:'❄️'},
- {n:'Searing Sands',sub:'An endless scorched desert',bi:4,lv:[27,35],t:4,x0:110,y0:509,col:0xffa040,ic:'🏜️'},
- {n:'The Dirge',sub:'A haunted graveyard that never sleeps',bi:5,lv:[36,43],t:4,x0:593,y0:509,col:0x9affc8,ic:'🪦'},
- {n:'The Citadel',sub:'The halls of the vampire court',bi:6,lv:[44,50],t:5,x0:1076,y0:509,col:0xff3040,ic:'🏰'}];
+ {n:'Kindlelight',sub:'A drowned, gloomy bog',bi:1,lv:[1,8],t:1,col:0x7aff4a,ic:'🫧'},
+ {n:'Hillside Crest',sub:'Windswept plains of the serpent folk',bi:2,lv:[9,17],t:2,col:0xd8c060,ic:'🐍'},
+ {n:'Burningeye Summit',sub:'A frozen peak under a burning sky',bi:3,lv:[18,26],t:3,col:0x9ad8ff,ic:'❄️'},
+ {n:'Searing Sands',sub:'An endless scorched desert',bi:4,lv:[27,35],t:4,col:0xffa040,ic:'🏜️'},
+ {n:'The Dirge',sub:'A haunted graveyard that never sleeps',bi:5,lv:[36,43],t:4,col:0x9affc8,ic:'🪦'},
+ {n:'The Citadel',sub:'The halls of the vampire court',bi:6,lv:[44,50],t:5,col:0xff3040,ic:'🏰'}];
 // v89: every zone was made 30% bigger in each direction (260x270 -> 338x351); v97: 40% bigger again (473x491).
-// PMS scales the generator's distances against the original 260x270 zone (1.3*1.4); PMA is the area against it.
-const PMS=1.82,PMW=473,PMH=491,PMA=PMW*PMH/(260*270);
+// v106: every zone is split into three instances, I -> II -> III, each half the area of the v97 zone (350x331). Zone i is
+// row i of the grid, instance k is column k, with a 6-tile void between neighbours (regionAt = zone, rgAt = instance key
+// g = zone*3+k, insAt = the instance record). Enemy levels rise through I, II and III (the zone's range split in thirds,
+// pmLvSplit). Instance III holds the Sovereign's den and the wave arena; the end of I and II is a gateway to the next one.
+// PMS scales the generator's distances against the original 260x270 zone (the square root of the area ratio); PMA is the area.
+const PMI=3,PMW=350,PMH=331,PMS=1.29,PMA=PMW*PMH/(260*270),PM_X0=110,PM_Y0=8,PM_PX=PMW+6,PM_PY=PMH+6,PM_RN=['I','II','III'];
 // v69: every map gets its own procedurally laid-out, wide, winding route with side branches, open fields and a sealed wave arena
-const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=8,PM_DENR=25; // 8 camps per zone (v88: 3, v89: 5)
-PMAP.forEach((p,i)=>{p.i=i;let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(p,i,PM_TH_SEED[i]*7919+13+at*104729);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});let sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(L0.clr<50)sc*=.05;if(sc>bsc){bsc=sc;best=L0}}Object.assign(p,best.out)});
-function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
+const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=4,PM_DENR=25,PM_GTR=14; // 4 camps per instance (12 per zone); PM_GTR: gateway clearing
+const INSL=[];
+function pmLvSplit(lv,k){const n=lv[1]-lv[0]+1,b=q=>lv[0]+Math.round(n*q/PMI);return [b(k),b(k+1)-1]}
+PMAP.forEach((p,i)=>{p.i=i;p.ins=[];
+  for(let k=0;k<PMI;k++){const I={z:i,k,g:i*PMI+k,x0:PM_X0+k*PM_PX,y0:PM_Y0+i*PM_PY,den:k==PMI-1,lv:pmLvSplit(p.lv,k),n:p.n+' '+PM_RN[k],rn:PM_RN[k]};
+    let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(I,i,PM_TH_SEED[i]*7919+13+at*104729+k*7717,!I.den);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});let sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(L0.clr<50)sc*=.05;if(sc>bsc){bsc=sc;best=L0}}
+    Object.assign(I,best.out);if(!I.den)I.wa=null;p.ins.push(I);INSL.push(I)}
+  // zone-level fields that older code reads: the den instance's road and arenas, the first instance's entrance and corner,
+  // and every instance's camps (CAMPS records which instance each camp is in: C.ig)
+  const D=p.ins[PMI-1];['wp','br','fd','ba','wa'].forEach(k=>p[k]=D[k]);p.cl=[].concat(...p.ins.map(I=>I.cl));p.en=p.ins[0].en;p.x0=p.ins[0].x0;p.y0=p.ins[0].y0});
+function pmGen(p,i,seed,nw){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
   const G=(x,y)=>[p.x0+Math.round(x),p.y0+Math.round(y)],cl=(v,a,b)=>Math.max(a,Math.min(b,v)),M=26,S=PMS;
   // pick a corner for the sealed wave arena, start on the far side, end with the boss on yet another side
-  const CR=Math.round(34*S),cor=[[CR,CR],[PMW-CR,CR],[CR,PMH-CR],[PMW-CR,PMH-CR]],wc=Math.floor(rnd()*4),WA=cor[wc],opp=cor[3-wc];
+  const CR=Math.round(34*S),cor=[[CR,CR],[PMW-CR,CR],[CR,PMH-CR],[PMW-CR,PMH-CR]],wc=Math.floor(rnd()*4),WA=nw?[-1e5,-1e5]:cor[wc],opp=cor[3-wc]; // nw: no wave arena (instances I, II)
   const SD=50*S,sides=[[[14,ri(SD,PMH-SD)],[PMW-20,ri(SD,PMH-SD)]],[[ri(SD,PMW-SD),14],[ri(SD,PMW-SD),PMH-18]]];let st,en;
   {const k=Math.floor(rnd()*2),flip=rnd()<.5,s0=sides[k];st=flip?s0[1]:s0[0];en=flip?s0[0]:s0[1];}
   const awayWA=(q,r)=>{const dx=q[0]-WA[0],dy=q[1]-WA[1],d=Math.hypot(dx,dy);if(d<r){q[0]=WA[0]+dx/(d||1)*r;q[1]=WA[1]+dy/(d||1)*r}q[0]=cl(q[0],M,PMW-M);q[1]=cl(q[1],M,PMH-M);return q};
@@ -953,7 +965,9 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
   let clr=1e9;const chk=(x,y,r)=>{clr=Math.min(clr,Math.hypot(x-WA[0],y-WA[1])-r)},seg=(a,b,r)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let q=0;q<=n;q++){const t=q/n;chk(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,r)}};
   for(let k=0;k<N;k++)seg(wp[k],wp[k+1],21);br.forEach(l=>{for(let k=0;k<l.length-1;k++)seg(l[k],l[k+1],12)});fd.forEach(f=>chk(f[0],f[1],f[2]*1.2));cls.forEach(c=>chk(c[0],c[1],16));
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
-const regionAt=(x,y)=>{for(let i=0;i<PMAP.length;i++){const p=PMAP[i];if(x>=p.x0&&x<p.x0+PMW&&y>=p.y0&&y<p.y0+PMH)return i}return -1};
+const insAt=(x,y)=>{const c=Math.floor((x-PM_X0)/PM_PX),r=Math.floor((y-PM_Y0)/PM_PY);if(c<0||c>=PMI||r<0||r>=PMAP.length)return null;const I=PMAP[r].ins[c];return x<I.x0+PMW&&y<I.y0+PMH?I:null};
+const regionAt=(x,y)=>{const I=insAt(x,y);return I?I.z:-1};
+const rgAt=(x,y)=>{const I=insAt(x,y);return I?I.g:-1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
 var TWN100_SZ=51,TWN100_IW=51,TWN100_WX=36; // v101: one Grand Square — walls at x ±36 (TWN100_WX), z -21..+51; no inner wards (IW = SZ)
 const TOWNS=[
@@ -1012,40 +1026,41 @@ const MAP=(()=>{
   const road=(L,r)=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);for(let q=0;q<=n;q++)stamp(ax+(bx-ax)*q/n,ay+(by-ay)*q/n,r)}};
   TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1]+1,8.5);
   TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
-  // ---- the six portal maps ----
-  PMAP.forEach(p=>{
+  // ---- the six portal maps, three instances each (v106) ----
+  INSL.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
     pts.push(p.wp[p.wp.length-1]);p.path=pts;
-    pts.forEach(([x,y],i)=>{if(i%2)return;const hw=12+3*Math.sin(i*.045+p.i)+2*Math.sin(i*.13+p.i*2);stamp(x+3*Math.sin(i*.07),y+3*Math.cos(i*.05),hw)});
+    pts.forEach(([x,y],i)=>{if(i%2)return;const hw=12+3*Math.sin(i*.045+p.g)+2*Math.sin(i*.13+p.g*2);stamp(x+3*Math.sin(i*.07),y+3*Math.cos(i*.05),hw)});
     p.br.forEach(l=>{for(let k=0;k<l.length-1;k++){const [ax,ay]=l[k],[bx,by]=l[k+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)/2);for(let q=0;q<=n;q++){const t=q/n;stamp(ax+(bx-ax)*t,ay+(by-ay)*t,9+2*Math.sin(q*.4+k))}}});
     p.fd.forEach(([x,y,r])=>{stamp(x,y,r);stamp(x+r*.45,y-r*.3,r*.7);stamp(x-r*.4,y+r*.35,r*.65)});
-    p.cl.forEach(([x,y])=>stamp(x,y,17));stamp(p.ba[0],p.ba[1],PM_DENR);stamp(p.wa[0],p.wa[1],15);
-    for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++)bio[y][x]=p.bi;
+    p.cl.forEach(([x,y])=>stamp(x,y,17));stamp(p.ba[0],p.ba[1],p.den?PM_DENR:PM_GTR);if(p.wa)stamp(p.wa[0],p.wa[1],15);
+    const bi=PMAP[p.z].bi;for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++)bio[y][x]=bi;
   });
+  PMAP.forEach(p=>{p.path=p.ins[PMI-1].path});
   const isW=(x,y)=>DW[y*W+x]<0;
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const d=DW[y*W+x],r=regionAt(x,y);
     if(d<0)m[y][x]='.';
     else if(r>=0&&d<2.6){const b=BIOMES[PMAP[r].bi];m[y][x]=b.n=='The Citadel'?'':(b.n=='Searing Sands'||d>1.6?'R':'#')}}
   // keep the regions sealed from each other (a 1-tile border is always void)
-  PMAP.forEach(p=>{for(let x=p.x0;x<p.x0+PMW;x++){m[p.y0][x]='';m[p.y0+PMH-1][x]=''}for(let y=p.y0;y<p.y0+PMH;y++){m[y][p.x0]='';m[y][p.x0+PMW-1]=''}});
+  INSL.forEach(p=>{for(let x=p.x0;x<p.x0+PMW;x++){m[p.y0][x]='';m[p.y0+PMH-1][x]=''}for(let y=p.y0;y<p.y0+PMH;y++){m[y][p.x0]='';m[y][p.x0+PMW-1]=''}});
   // grass, accent and water patches inside the walkable ground
-  const blob=(ch,bi,n,a,b2)=>{const p=PMAP[bi-1];for(let i=0;i<n;i++){let cx=0,cy=0;for(let k=0;k<60;k++){const q=p.path[Math.floor(rnd()*p.path.length)];cx=Math.round(q[0]+(rnd()-.5)*22);cy=Math.round(q[1]+(rnd()-.5)*22);if(m[cy]&&m[cy][cx]=='.')break}
+  const blob=(ch,p,n,a,b2)=>{for(let i=0;i<n;i++){let cx=0,cy=0;for(let k=0;k<60;k++){const q=p.path[Math.floor(rnd()*p.path.length)];cx=Math.round(q[0]+(rnd()-.5)*22);cy=Math.round(q[1]+(rnd()-.5)*22);if(m[cy]&&m[cy][cx]=='.')break}
     const r=a+rnd()*(b2-a);for(let y=Math.floor(cy-r*1.3)-1;y<cy+r*1.3+1;y++)for(let x=Math.floor(cx-r)-1;x<cx+r+1;x++){if(!m[y]||m[y][x]!='.')continue;if(Math.hypot(x-cx,(y-cy)*1.25)<r*(.75+.25*Math.sin(x*1.7+y*1.1+i)))m[y][x]=ch}}};
-  PMAP.forEach(p=>{const b=BIOMES[p.bi],d=b.den;blob('g',p.bi,Math.round(40*PMA*d[0]),3,7);blob('a',p.bi,Math.round(26*PMA*d[1]),3,7);blob('~',p.bi,Math.round(9*PMA*d[3]),1.6,3.4)});
+  INSL.forEach(p=>{const b=BIOMES[PMAP[p.z].bi],d=b.den;blob('g',p,Math.round(40*PMA*d[0]),3,7);blob('a',p,Math.round(26*PMA*d[1]),3,7);blob('~',p,Math.round(9*PMA*d[3]),1.6,3.4)});
   // never block the road itself or the arenas with water
   const keep=(cx,cy,r)=>{for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=Math.floor(cx-r);x<=cx+r;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<r)m[y][x]='a'};
-  PMAP.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],14));keep(p.ba[0],p.ba[1],PM_DENR+1);keep(p.wa[0],p.wa[1],16)});
+  INSL.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],14));keep(p.ba[0],p.ba[1],(p.den?PM_DENR:PM_GTR)+1);if(p.wa)keep(p.wa[0],p.wa[1],16)});
   const props=[];
   // harvest nodes: a few small clusters of one kind each (about a quarter of the old scattered count)
   const okT=(x,y)=>{const t=m[y]&&m[y][x];return t=='.'||t=='g'||t=='a'},rockK=k=>k=='rock'||k=='grave'||k=='pillar',used=new Set();
-  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const r=regionAt(x,y);if(r<0||!okT(x,y))continue;const b=BIOMES[bio[y][x]];
+  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const I=insAt(x,y);if(!I||!okT(x,y))continue;const r=I.g,b=BIOMES[bio[y][x]];
     if(rnd()>=.0012*(b.pd||1))continue;
     const wt=b.pr.map(k=>rockK(k)?.6:1),tot=wt.reduce((a,v)=>a+v,0);let u=rnd()*tot,k=b.pr[0];for(let i=0;i<b.pr.length;i++){u-=wt[i];if(u<=0){k=b.pr[i];break}}
-    if(Math.hypot(x-PMAP[r].ba[0],y-PMAP[r].ba[1])<PM_DENR+4)continue; // v89: the den circle stays open
-    if(rockK(k)&&PMAP[r].path.some((q,i)=>i%3==0&&Math.hypot(q[0]-x,q[1]-y)<5))continue; // keep rocks off the road
+    if(Math.hypot(x-I.ba[0],y-I.ba[1])<(I.den?PM_DENR:PM_GTR)+4)continue; // v89: the den circle stays open (v106: and the gateway)
+    if(rockK(k)&&I.path.some((q,i)=>i%3==0&&Math.hypot(q[0]-x,q[1]-y)<5))continue; // keep rocks off the road
     const n=3+Math.floor(rnd()*3);let got=0;
     for(let tr=0;tr<30&&got<n;tr++){const a=rnd()*6.283,d=tr?.8+rnd()*1.9:0,cx=Math.round(x+Math.cos(a)*d),cy=Math.round(y+Math.sin(a)*d),key=cy*W+cx;
-      if(used.has(key)||!okT(cx,cy)||regionAt(cx,cy)!==r)continue;
+      if(used.has(key)||!okT(cx,cy)||rgAt(cx,cy)!==r)continue;
       used.add(key);if(rockK(k))m[cy][cx]='r';props.push([cx,cy,k]);got++}}
   // boss arenas: rune floor, ring of columns and four cover pillars
   BOSSES.forEach(b=>{for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
@@ -1073,7 +1088,7 @@ const MAP=(()=>{
      if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
-  m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
+  m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!INSL.some(p=>(p.wa&&Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16)||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();
 
 const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(ax>xe?ax-xe:0,dz);if(q<d)d=q}return d}; // v100
@@ -1092,7 +1107,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
   const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dx=ax>xe?ax-xe:0,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(dx,4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
   TOWNS.forEach(t=>{t.ph=1.6});
   for(let j=-HPD;j<=H+HPD;j++)for(let i=-HPD;i<=W+HPD;i++){
-    const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,r=regionAt(tx,ty),d=DW[k];let h;
+    const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,I=insAt(tx,ty),r=I?I.z:-1,d=DW[k];let h;
     if(r<0){ // the floating stronghold, and empty sky everywhere else
       h=1.6+.05*fbm2(i*.2,j*.2,2);const dd=Math.max(0,d);h-=48*smt(0,4,dd)*(1+.3*fbm2(i*.1,j*.1,3));
       TOWNS.forEach(t=>{const q=supd(i,j,t),m=smt(TS+1,TS+6,q);h=h*m+t.ph*(1-m)});
@@ -1100,7 +1115,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
       const dd=Math.max(0,d);h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
-      const p=PMAP[r];[[p.ba,Math.max(PM_DENR+3,22*DK),5*DK],[p.wa,19,5]].forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
+      (I.den?[[I.ba,Math.max(PM_DENR+3,22*DK),5*DK],[I.wa,19,5]]:[[I.ba,PM_GTR+2,5]]).forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
@@ -1338,7 +1353,7 @@ function put(m,i,x,y,z,sx,sy,sz,hex,j){d0.position.set(x,y+GH(x,z),z);d0.scale.s
 const GPX=2;
 const GTX=(()=>{
 const bc=(x,y)=>{x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));const t=MAP[y][x],b=BIOMES[MAP.bio[y][x]],w=b.wat;return t=='g'?b.grs:t=='a'?b.acc:t=='#'?b.frs:t=='R'?[b.gnd[0]*.45+42,b.gnd[1]*.45+40,b.gnd[2]*.45+38]:(t=='P'||t=='B'||t=='W')?[156,148,134]:t=='p'?[146,121,86]:t=='~'?(b.lava?[110,40,14]:[w[0]*.4,w[1]*.4,w[2]*.5]):b.gnd};
-const TC=new Float32Array(W*H*3),CF=new Uint8Array(W*H);
+let TC=new Float32Array(W*H*3),CF=new Uint8Array(W*H); // v106: freed after painting (the closures below would keep them alive)
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=bc(x,y),k=y*W+x,t=MAP[y][x];TC[k*3]=c[0];TC[k*3+1]=c[1];TC[k*3+2]=c[2];CF[k]=(t=='P'||t=='B'||t=='W')?1:t=='p'?2:0}
 const cl=(v,m)=>v<0?0:v>m?m:v;
 const paint=(OX,OY,TW,TH,PX)=>{const NW=TW*PX,NH=TH*PX,c=document.createElement('canvas');c.width=NW;c.height=NH;const g2=c.getContext('2d'),gid=g2.createImageData(NW,NH),gd=gid.data;
@@ -1352,7 +1367,7 @@ const paint=(OX,OY,TW,TH,PX)=>{const NW=TW*PX,NH=TH*PX,c=document.createElement(
   }}
  g2.putImageData(gid,0,0);return {c,x0:OX,y0:OY,w:TW,h:TH,px:PX}};
 // the paved square: chunk-aligned (CHN=32) rectangle around the town, the road to the Portal Court and the Courtyard path
-const TR=[0,7,4,17],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);
+const TR=[0,7,4,17],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);TC=null;CF=null;
 return {main,town,list:[main,town],pick:(cx,cz)=>cx>=TR[0]&&cx<TR[2]&&cz>=TR[1]&&cz<TR[3]?town:main}})();
 const gt=new THREE.CanvasTexture(GTX.main.c);gt.anisotropy=ren.capabilities.getMaxAnisotropy();GTX.main.t=gt;
 try{for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=MAP[y][x];if((t=='P'||t=='B'||t=='W'||t=='p')&&GTX.pick(x>>5,y>>5)!==GTX.town){console.warn('paved tile outside the town texture',x,y);y=H;break}}}catch(_){}
@@ -4215,7 +4230,7 @@ const pickMem=th=>{const t=th.mem.reduce((s,m)=>s+m[1],0);let r=Math.random()*t;
 // ---------- camp placement: a few large settlements per biome, spread far apart ----------
 var CBLK=new Set(typeof WDCOL!='undefined'&&WDCOL?WDCOL:[]);
 const CAMPS=[],CAMP_R=12;
-if(typeof PMAP!='undefined'){PMAP.forEach((p,pi)=>p.cl.forEach((c,k)=>{CAMPS.push({i:CAMPS.length,x:Math.round(c[0]),z:Math.round(c[1]),th:CTH[PM_TH[pi][k%3]],cap:7,g:null,kt:-1e9,seed:R(1,1e6),bi:p.bi,pm:pi})}))}else
+if(typeof PMAP!='undefined'){PMAP.forEach((p,pi)=>p.cl.forEach((c,k)=>{CAMPS.push({i:CAMPS.length,x:Math.round(c[0]),z:Math.round(c[1]),th:CTH[PM_TH[pi][k%3]],cap:7,g:null,kt:-1e9,seed:R(1,1e6),bi:p.bi,pm:pi,ig:rgAt(Math.round(c[0]),Math.round(c[1]))})}))}else // v106: ig = the zone instance
 {
   const open=(x,y)=>{const t=MAP[y]&&MAP[y][x];return t&&t!='#'&&t!='~'&&t!='r'&&t!='R'&&t!='W'&&t!='B'};
   const cand={};
@@ -5748,13 +5763,15 @@ DUNS.length=0;
 BOSSES.forEach((b,i)=>{b.zone=i+1;b.guard=false;b.ult=i>=1?2:0});
 // ---- levels rise along each map's road ----
 function pmProg(p,x,z){let bi=0,bd=1e9;const P=p.path;for(let i=0;i<P.length;i+=2){const d=(P[i][0]-x)**2+(P[i][1]-z)**2;if(d<bd){bd=d;bi=i}}return bi/(P.length-1)}
-function zoneLv(x,y){const r=regionAt(Math.round(x),Math.round(y));if(r<0)return 1;const p=PMAP[r],q=pmProg(p,x,y);return Math.max(1,Math.min(MAXLV,Math.round(p.lv[0]+(p.lv[1]-p.lv[0])*q)))}
+// v106: along the road of the instance you are in, within that instance's share of the zone's levels
+function zoneLv(x,y){const I=insAt(Math.round(x),Math.round(y));if(!I)return 1;const q=pmProg(I,x,y);return Math.max(1,Math.min(MAXLV,Math.round(I.lv[0]+(I.lv[1]-I.lv[0])*q)))}
 const curMap=()=>regionAt(Math.round(pl.position.x),Math.round(pl.position.z));
+const curIns=()=>insAt(Math.round(pl.position.x),Math.round(pl.position.z));
 function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
   const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
-  const C=campAt(pl.position.x,pl.position.z,CAMP_R);return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+p.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+p.lv[0]+'–'+p.lv[1]+')';
+  const I=curIns(),C=campAt(pl.position.x,pl.position.z,CAMP_R);return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+I.lv[0]+'–'+I.lv[1]+')';
 }
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
@@ -5782,35 +5799,46 @@ function portalRefresh(){PORT.forEach(P=>{const u=pUnlocked(P.i),d=pDone(P.i);P.
 portalRefresh();
 TANIM.push({x:PCOURT[0],z:PCOURT[1],f:now=>{PORT.forEach((P,k)=>{if(P.sw.visible){P.sw.rotation.z=now*.0018+k;P.disc.material.opacity=.66+.12*Math.sin(now*.003+k)}})}});
 // ---- return portals at each map's start, and a way home in each boss arena once it is cleared ----
-PMAP.forEach(p=>{p.en=p.path[16].slice()});
+INSL.forEach(I=>{I.en=I.path[16].slice()});PMAP.forEach(p=>{p.en=p.ins[0].en});
 var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
   sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.32,0,0);return {g,x,z,disc}}
-PMAP.forEach((p,i)=>{const n=p.path[26],e=p.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
-  const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=i;a.k='home';RPORT.push(a);
+// v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
+INSL.forEach(I=>{const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
+  const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
+  if(!I.den){const N=PMAP[I.z].ins[I.k+1],P=I.path,q=P[Math.max(0,P.length-14)],gx=I.ba[0],gz=I.ba[1],t=smallPortal(gx,gz,PMAP[I.z].col,'🌀 '+N.n);
+    t.g.rotation.y=Math.atan2(q[0]-gx,q[1]-gz);t.g.scale.setScalar(1.35);t.pi=I.z;t.ig=I.g;t.k='next';t.to=N;RPORT.push(t)}});
+PMAP.forEach((p,i)=>{
   const b=smallPortal(p.ba[0],p.ba[1]+10,0xffd060,'🌀 Return home');b.pi=i;b.k='exit';b.g.visible=pDone(i);RPORT.push(b);
   const w=smallPortal(p.wa[0],p.wa[1]+11,0xff6a40,'🚪 Leave trial');w.pi=i;w.k='wave';RPORT.push(w)});
 function rportRefresh(){RPORT.forEach(r=>{if(r.k=='exit')r.g.visible=pDone(r.pi)})}
 // ---- travel ----
 function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.forEach((f,k)=>{if(f)f.position.set(x+(k?1.4:-1.4),0,z+1)});snapCam();curTown=-2}
-function enterMap(i){if(AF)return;const p=PMAP[i];fadeTo(()=>{const n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]));
-  banner(p.ic+' '+p.n.toUpperCase(),p.sub,'Enemy levels '+p.lv[0]+'–'+p.lv[1]+' · defeat '+BOSSES[i].name+' at the end of the road')})}
+// v106: k = the instance (0 = I); every instance starts at its own entrance
+function enterMap(i,k){if(AF)return;const p=PMAP[i],I=p.ins[k|0]||p.ins[0];fadeTo(()=>{insArrive(I)})}
+function insArrive(I){const p=PMAP[I.z],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]));
+  banner(p.ic+' '+I.n.toUpperCase(),p.sub,'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.den?'defeat '+BOSSES[I.z].name+' at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
 function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
   const P=pl.position;
   for(const Q of PORT){if(Math.hypot(P.x-Q.x,P.z-Q.z)<2.6){const p=PMAP[Q.i];if(!pUnlocked(Q.i))return {label:'🔒 Sealed · defeat '+BOSSES[Q.i-1].name+' in '+PMAP[Q.i-1].n,fn:()=>openX('bosses')};
-    if(pDone(Q.i))return {label:'F · '+p.n+' (map or Wave Trial)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.n+' (Lv '+p.lv[0]+'–'+p.lv[1]+')',fn:()=>enterMap(Q.i)}}}
-  for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<2.2){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
+    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' (Lv '+p.ins[0].lv[0]+'–'+p.ins[0].lv[1]+')',fn:()=>enterMap(Q.i,0)}}}
+  for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<(r.k=='next'?2.8:2.2)){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};
+    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+' (Lv '+N.lv[0]+'–'+N.lv[1]+')',fn:()=>insGo(N)}}
+    return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
-XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i];$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+' · cleared ✓';
-  $('xwB').innerHTML=`<div class="rows"><div class="rw"><span class="rn">🗺️ <b>Enter the map</b><small>Walk the road again: farm its camps for gear, eggs and materials, and face ${b.name} (back 5 minutes after each defeat).</small></span><span class="ra"><button class="pri" data-pgo="map">Enter</button></span></div>
-   <div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div></div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Recall (T) always brings you home to Duskhold.</span>'};
-$('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target.closest('[data-pgo]');if(!b)return;const i=xwArg|0;closeX();if(b.dataset.pgo=='map')enterMap(i);else waveStart(i)});
+// v106: the portal lists every instance of the zone you have reached, and the Wave Trial once the zone is cleared
+XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+(d?' · cleared ✓':'');
+  const row=I=>{const ok=I.k<=R,txt=I.den?'The last stretch of road and '+b.name+'’s den'+(d?' (back 5 minutes after each defeat).':'.'):'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
+    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">🗺️ <b>${I.n}</b> <span class="mut">Lv ${I.lv[0]}–${I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
+  const wave=d?`<div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div>`:'';
+  $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
+  $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target.closest('[data-pgo]');if(!b)return;const i=xwArg|0;closeX();if(b.dataset.pgo=='map')enterMap(i,+b.dataset.pk||0);else waveStart(i)});
 // the J window lists the portals and their bosses
 XR.bosses=()=>{$('xwT').textContent='🌀 The Portals';$('xwS').textContent=bossDone.size+' of '+PMAP.length+' maps cleared';
   $('xwB').innerHTML='<div class="rows">'+PMAP.map((p,i)=>{const b=BOSSES[i],u=pUnlocked(i),d=pDone(i);
@@ -5871,13 +5899,13 @@ function waveEnd(won,quiet){const W2=WV;if(!W2)return;WV=null;W2.foes.forEach(e=
 var prfT=0;{const f=homeTick;homeTick=function(dt,now,al){f(dt,now,al);if(dt>0)waveTick(dt);if(home!==TOWNS[0])home=TOWNS[0];if(now-prfT>1000){prfT=now;portalRefresh();rportRefresh()}}}
 {const f=down;down=function(){if(WV){waveEnd(false,true);say('☠ You fell in the Wave Trial.')}return f.apply(this,arguments)}}
 // ---- the Citadel is a castle: stone walls instead of cliffs ----
-{const p=PMAP[5],L=[];for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
+{const p=PMAP[5],L=[];for(const I of p.ins)for(let y=I.y0;y<I.y0+PMH;y++)for(let x=I.x0;x<I.x0+PMW;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
   const mt=new THREE.MeshStandardMaterial({roughness:.92,flatShading:true}),wm=new THREE.InstancedMesh(new THREE.BoxGeometry(1.02,1,1.02),mt,L.length),cm=new THREE.InstancedMesh(new THREE.BoxGeometry(.5,.6,.5),mt,L.length),o=new THREE.Object3D(),cc=new THREE.Color();
   L.forEach(([x,y],i)=>{const h=7+((x*7+y*3)%3)*.4,g0=.3;o.position.set(x,g0+h/2,y);o.scale.set(1,h,1);o.updateMatrix();wm.setMatrixAt(i,o.matrix);cc.setHex((x+y)%2?0x3e363c:0x332c32);wm.setColorAt(i,cc);
     const on=(x+y)%2;o.position.set(x,g0+h+.3,y);o.scale.setScalar(on?1:.001);o.updateMatrix();cm.setMatrixAt(i,o.matrix);cm.setColorAt(i,cc)});
   [wm,cm].forEach(m=>{m.castShadow=true;m.receiveShadow=true;m.frustumCulled=false;m.instanceMatrix.needsUpdate=true;scene.add(m);(window.CITW=window.CITW||[]).push(m)});
   for(let k=0;k<L.length;k+=23){const [x,y]=L[k],g=new THREE.Group();g.position.set(x,0,y);scene.add(g);const b=new THREE.Mesh(new THREE.PlaneGeometry(.8,2.2),new THREE.MeshStandardMaterial({color:0x7a0c18,side:THREE.DoubleSide,roughness:.9}));b.position.y=4.2;g.add(b);
-    const tl=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,5),new THREE.MeshBasicMaterial({color:0xff8a40}));tl.position.set(0,2.6,0);g.add(tl);b.lookAt(p.x0+PMW/2,4.2,p.y0+PMH/2)}}
+    const tl=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,5),new THREE.MeshBasicMaterial({color:0xff8a40}));tl.position.set(0,2.6,0);g.add(tl);{const I=insAt(x,y)||p.ins[0];b.lookAt(I.x0+PMW/2,4.2,I.y0+PMH/2)}}}
 
 
 // ================= v58: online co-op — shared monsters, your own loot, trading =================
@@ -5888,8 +5916,8 @@ function mpLive(){return typeof MP!='undefined'&&MP&&MP.on&&MP.others>0}
 function mpAct(e){if(typeof MP=='undefined'||!MP||!MP.on||!MP.others)return false;const p=e.m.position;for(const k in MP.rh){const r=MP.rh[k];if(r.act&&r.m&&Math.abs(r.m.position.x-p.x)<32&&Math.abs(r.m.position.z-p.z)<32)return true}return false}
 function mpNear(p,d){if(typeof MP=='undefined'||!MP||!MP.on||!MP.others)return false;for(const k in MP.rh){const r=MP.rh[k];if(r.act&&r.m&&Math.hypot(r.m.position.x-p.x,r.m.position.z-p.z)<d)return true}return false}
 function mpName(peer){if(peer===MP.me)return hero.name||'You';const r=MP.rh[peer];return r&&r.pr&&r.pr.n?String(r.pr.n).slice(0,20):'Adventurer'}
-function mpLoc(rg){return rg===-1?'Duskhold':rg>=0&&PMAP[rg]?PMAP[rg].n:'Elsewhere'}
-function mpCurRg(){return regionAt(Math.round(pl.position.x),Math.round(pl.position.z))}
+function mpLoc(rg){return rg===-1?'Duskhold':rg>=0&&INSL[rg]?INSL[rg].n:'Elsewhere'} // v106: rg = zone instance key
+function mpCurRg(){return rgAt(Math.round(pl.position.x),Math.round(pl.position.z))}
 function mpBossAuth(i){let h=(AF&&AF.i===i&&hero.hp>0)?MP.me:null;for(const k in MP.rh){const r=MP.rh[k];if(r.pr&&r.pr.ar===i&&r.pr.hp>0&&(h===null||k<h))h=k}return h}
 function mpElig(e){return !e.dead&&!e.boss&&!e.minion&&!e.ev&&!e.wv}
 
@@ -5956,7 +5984,7 @@ function mpRoles(now){
 function mpSendES(now){
   if(MP.host!==MP.me||!MP.others||MP.rg<0||now-MP.tE<250)return;MP.tE=now;
   const rs=[];for(const k in MP.rh){const r=MP.rh[k];if(r.act)rs.push(r.m.position)}
-  const L=[];enemies.forEach(e=>{if(e.mir||!mpElig(e))return;const x=e.m.position.x,z=e.m.position.z;if(regionAt(Math.round(x),Math.round(z))!==MP.rg)return;
+  const L=[];enemies.forEach(e=>{if(e.mir||!mpElig(e))return;const x=e.m.position.x,z=e.m.position.z;if(rgAt(Math.round(x),Math.round(z))!==MP.rg)return;
     let d=Math.hypot(x-pl.position.x,z-pl.position.z);rs.forEach(p=>{d=Math.min(d,Math.hypot(x-p.x,z-p.z))});if(d<75)L.push([d,e])});
   L.sort((a,b)=>a[0]-b[0]);const l=[];
   for(const q of L.slice(0,45)){const e=q[1];if(!e.nid){e.nid=MP.pfx+'.'+(MP.nid++).toString(36);MP.emap[e.nid]=e}
@@ -6121,7 +6149,7 @@ function mpCoopList(){const el=$('mpList');if(!el)return;const rs=Object.values(
   $('xwS').textContent=(rs.length+1)+' adventurer'+(rs.length?'s':'')+' online';
   const row=(n,cls,lv,rg,hp,btn,me)=>`<div class="rw" style="--rc:${me?'#6ee7b7':'#7ab8ff'}"><span class="rn">${me?'🟢':'🔵'} <b>${mpEsc(n)}</b>${me?' <span class="mut">(you)</span>':''} <span class="mut">${mpEsc((CLS[cls]||{}).n||cls)} · Lv ${lv|0}</span><small>📍 ${mpEsc(mpLoc(rg))}${hp<=0?' · ☠ down':' · ❤ '+(hp|0)+'%'}</small></span><span class="ra">${btn||''}</span></div>`;
   let h='<div class="rows">'+row(hero.name||'You',hero.cls,hero.lvl,MP.rg,Math.round(100*hero.hp/heroMax()),'',1);
-  rs.forEach(r=>{const p=r.pr,rg=p.rg,can=rg>=0&&typeof pUnlocked=='function'&&pUnlocked(rg);
+  rs.forEach(r=>{const p=r.pr,rg=p.rg,can=rg>=0&&INSL[rg]&&typeof pUnlocked=='function'&&pUnlocked(INSL[rg].z);
     h+=row(p.n||'Adventurer',p.c,p.lv,rg,p.hp,`<button class="pri" data-mpt="${mpEsc(r.peer)}">🤝 Trade</button> `+(rg===-1?`<button data-mpj="${mpEsc(r.peer)}">🏰 Go to</button>`:rg>=0?(can?`<button data-mpj="${mpEsc(r.peer)}">🌀 Join</button>`:'<small>🔒 portal locked</small>'):''))});
   el.innerHTML=h+'</div>'+(rs.length?'':'<p class="mut" style="margin-top:8px">Nobody else is here yet. Share this game with friends — when they open it, they appear in your world.</p>');
 }
@@ -6351,8 +6379,8 @@ var LT={on:0};
 // ================= v68: local map · new fishing game =================
 // ---------- the map (N) shows only the area you are in ----------
 function openWMap(){
-  const c=$('wmc'),r=curMap(),T=TOWNS[0];let x0,y0,w,h,title,sub;
-  if(r>=0){const p=PMAP[r];x0=p.x0;y0=p.y0;w=PMW;h=PMH;title=p.n;sub=(p.sub||'')+' · Lv '+p.lv[0]+'–'+p.lv[1]}
+  const c=$('wmc'),r=curMap(),I=curIns(),T=TOWNS[0];let x0,y0,w,h,title,sub; // v106: the instance you are in
+  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=PMW;h=PMH;title=I.n;sub=(p.sub||'')+' · Lv '+I.lv[0]+'–'+I.lv[1]}
   else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
@@ -6360,10 +6388,11 @@ function openWMap(){
   const lab=(t,x,y,col)=>{g.font='700 12px system-ui,sans-serif';const hw=g.measureText(t).width/2+4;x=Math.max(hw,Math.min(c.width-hw,x));g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText(t,x,y);g.fillStyle=col||'#fff3c8';g.fillText(t,x,y)};
   const dia=(x,y,col,sz)=>{sz=sz||7;g.fillStyle=col;g.beginPath();g.moveTo(x,y-sz);g.lineTo(x+sz*.85,y);g.lineTo(x,y+sz);g.lineTo(x-sz*.85,y);g.fill();g.strokeStyle='#000';g.lineWidth=1.2;g.stroke()};
   if(r>=0){const p=PMAP[r];
-    CAMPS.forEach(C=>{if(C.pm!==r)return;const [x,y]=P(C.x,C.z),cl=campCleared(C);g.fillStyle=cl?'rgba(110,231,183,.35)':'rgba(239,68,68,.35)';g.beginPath();g.arc(x,y,CAMP_R*s*.55,0,6.28);g.fill();lab(cl?'⛺ cleared':'⛺ '+(C.th?C.th.n:'Camp'),x,y,cl?'#bfe8a0':'#ffc8c0')});
-    {const [x,y]=P(p.en[0],p.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
-    {const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
-    if(bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
+    CAMPS.forEach(C=>{if(C.ig!==I.g)return;const [x,y]=P(C.x,C.z),cl=campCleared(C);g.fillStyle=cl?'rgba(110,231,183,.35)':'rgba(239,68,68,.35)';g.beginPath();g.arc(x,y,CAMP_R*s*.55,0,6.28);g.fill();lab(cl?'⛺ cleared':'⛺ '+(C.th?C.th.n:'Camp'),x,y,cl?'#bfe8a0':'#ffc8c0')});
+    {const [x,y]=P(I.en[0],I.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
+    if(!I.den){const [x,y]=P(I.ba[0],I.ba[1]);dia(x,y,'#9ad8ff',9);lab('🌀 '+p.ins[I.k+1].n,x,y+18,'#cfe3ff')}
+    else{const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
+    if(I.den&&bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
   }else{{const [x,y]=P(T.cx,T.cy);g.fillStyle='#fbbf24';g.fillRect(x-7,y-7,14,14);g.strokeStyle='#000';g.lineWidth=2;g.strokeRect(x-7,y-7,14,14);lab('Duskhold',x,y+20)}
     if(typeof TWN100_wmap=='function')TWN100_wmap(g,P,lab,s);}
   (typeof tmaps!='undefined'?tmaps:[]).forEach(m=>{if(!inV(m.x,m.z))return;const [x,y]=P(m.x,m.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('✕',x,y)});
@@ -6371,7 +6400,7 @@ function openWMap(){
   {const [x,y]=P(pl.position.x,pl.position.z);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(x,y,10,0,6.28);g.stroke();g.fillStyle='#4ade80';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke()}
   g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,c.width,40);g.font='700 16px system-ui,sans-serif';g.fillStyle='#f0e0b8';g.fillText(title.toUpperCase(),c.width/2,15);g.font='600 11px system-ui,sans-serif';g.fillStyle='#c9a45a';g.fillText(sub,c.width/2,31);
   g.textAlign='left';g.font='600 11px system-ui,sans-serif';g.fillStyle='rgba(0,0,0,.6)';g.fillRect(8,c.height-26,Math.min(c.width-16,430),20);g.fillStyle='#ddd';
-  g.fillText(r>=0?'● you   ⛺ camp   ◆ Sovereign   ✕ treasure'+(typeof MP!='undefined'&&MP.on?'   🔵 ally':''):'● you   ■ town   🌀 portals',16,c.height-16);
+  g.fillText(r>=0?'● you   ⛺ camp   ◆ '+(I.den?'Sovereign':'gateway')+'   ✕ treasure'+(typeof MP!='undefined'&&MP.on?'   🔵 ally':''):'● you   ■ town   🌀 portals',16,c.height-16);
   $('wmap').classList.remove('hide')}
 
 // ---------- fishing: false nibbles, a quick strike, then a timing dial fight ----------
@@ -6420,38 +6449,46 @@ function fishPress(down){const F=fishing;if(!F||!down)return;
   if(Math.random()<.5)F.dir*=-1;fsZone(F);fsDraw()}
 // ================= v71: roaming wildlife · zone atmosphere · unlockable skills · bell-curve grades · consume eggs =================
 function wildCount(P){let n=0;for(const e of enemies)if(e.wild&&!e.dead&&Math.abs(e.m.position.x-P.x)<95&&Math.abs(e.m.position.z-P.z)<95)n++;return n}
-// v72: each zone has a fixed population for the visit — the dead stay dead until you leave and come back through the portal
+// v72: each zone has a fixed population for the visit; v106: per zone instance (ROST.r = instance key g), and a creature
+// comes back RESP_T seconds after it dies, at its own spot (not while a hero stands within RESP_NEAR tiles of that spot)
 var ROST={r:-9,slots:[],left:0,quiet:false};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
 // v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
-var ROST_G=130;
-function rosterBuild(r){const p=PMAP[r],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
+// v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
+var ROST_G=65,RESP_T=30,RESP_NEAR=6;
+function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
+  // the creatures of the instance you left go (they are out of reach behind the void anyway)
+  enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
   // camps: a full garrison each
-  CAMPS.forEach(C=>{if(C.pm!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
+  CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
-  // roaming groups spread across the whole zone
-  const grp=[];for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
-    if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
-    if(Math.hypot(x-p.ba[0],z-p.ba[1])<Math.max(30,24*DK)||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<22)continue;
+  // roaming groups spread across the whole instance
+  const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(PMW-12)),z=I.y0+6+Math.floor(Math.random()*(PMH-12));
+    if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.ig===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
+    if(Math.hypot(x-I.ba[0],z-I.ba[1])<BR||(I.wa&&Math.hypot(x-I.wa[0],z-I.wa[1])<20)||Math.hypot(x-I.en[0],z-I.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
   grp.forEach(([x,z])=>{const key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
     for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.035;
-      S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(1,Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
-  ROST.r=r;ROST.slots=S;ROST.quiet=false;CAMPS.forEach(C=>{if(C.pm===r)C.kt=-1e9})}
-function rosterTick(){const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z));
+      S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(I.lv[0],Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
+  ROST.r=r;ROST.slots=S;ROST.quiet=false;CAMPS.forEach(C=>{if(C.ig===r)C.kt=-1e9})}
+function rosterTick(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));
   if(r<0){if(ROST.r>=0){ROST.r=-1;ROST.slots=[]}return}
   if(r!==ROST.r)rosterBuild(r);
   const ps=[pl.position];if(typeof MP!='undefined'&&MP.on&&MP.others)for(const k in MP.rh){const q=MP.rh[k];if(q.act&&q.m)ps.push(q.m.position)}
-  let left=0;for(const s of ROST.slots){if(s.dead)continue;left++;if(s.on&&(s.on.dead||!enemies.includes(s.on)))s.on=null;if(s.on)continue;
+  const now=nowP(),p=PMAP[INSL[r].z];let left=0;
+  for(const s of ROST.slots){
+    if(s.dead){if(!(now>=(s.rt||0)))continue;let dn=1e9;for(const P of ps)dn=Math.min(dn,Math.hypot(P.x-s.x,P.z-s.z));if(dn<RESP_NEAR)continue;s.dead=false;s.on=null;s.rsp=1}
+    left++;if(s.on&&(s.on.dead||!enemies.includes(s.on)))s.on=null;if(s.on)continue;
     let d=1e9;for(const P of ps)d=Math.min(d,Math.hypot(P.x-s.x,P.z-s.z));if(d>78)continue;
-    if(s.camp&&!s.camp.g)buildCamp(s.camp);const p=PMAP[r],e=spawnEnemy(s.key,s.x,s.z,s.lv,{al:s.al,zt:p.t});if(!e)continue;e.slot=s;s.on=e;
+    if(s.camp&&!s.camp.g)buildCamp(s.camp);const e=spawnEnemy(s.key,s.x,s.z,s.lv,{al:s.al,zt:p.t});if(!e)continue;e.slot=s;s.on=e;
+    if(s.rsp){s.rsp=0;if(d<40&&typeof burst=='function')burst(gY(e.m.position,.5),0x9a6aff,14,1.6,1.6,.5)}
     if(s.camp){e.camp=s.camp;e.wx=s.camp.x;e.wz=s.camp.z}else{e.wild=1;e.wx=s.hx;e.wz=s.hz}}
-  ROST.left=left;if(!left&&ROST.slots.length&&!ROST.quiet){ROST.quiet=true;banner('🏳 THE ZONE FALLS QUIET',PMAP[r].n,'Every creature here has been defeated. They return the next time you enter through the portal.')}}
+  ROST.left=left}
 {const f=spawn;spawn=function(init){
   if(typeof MP!='undefined'&&MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me)return;
   const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0&&!init)return;
   if(init)return;rosterTick()}}
-{const f=kill;kill=function(e){if(e&&e.slot){e.slot.dead=true;e.slot.on=null}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){if(e&&e.slot){e.slot.dead=true;e.slot.on=null;e.slot.rt=nowP()+RESP_T*1000}return f.apply(this,arguments)}}
 // the main loop only calls spawn while below the mob cap — make sure the roster keeps streaming in either way
 setInterval(()=>{try{if(party.length&&!(typeof MP!='undefined'&&MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me))rosterTick()}catch(_){}},1500);
 
@@ -6892,7 +6929,7 @@ function ceDone(){const H=CE.hat;if(!H||!H.done)return;const i=party.indexOf(H.c
 new MutationObserver(()=>{if($('cmp').classList.contains('hide')&&CE.hat){const names=[CE.hat.c,...hq.map(h=>h.c)].map(c=>nm(c));CE.hat=null;hq.length=0;hAct=false;PV.run=false;
   say('🥚 Hatched: '+names.join(', ')+'. Find '+(names.length>1?'them':'it')+' in Companions & Eggs (P).')}}).observe($('cmp'),{attributes:true,attributeFilter:['class']});
 
-{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{const x=Math.round(pl.position.x),z=Math.round(pl.position.z),g=regionAt(x,z);if(g>=0&&MAP.DW[z*W+x]>=0){const p=PMAP[g];toPos(p.en[0],p.en[1])}}catch(_){}return r}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{const x=Math.round(pl.position.x),z=Math.round(pl.position.z),g=insAt(x,z);if(g&&MAP.DW[z*W+x]>=0){toPos(g.en[0],g.en[1])}}catch(_){}return r}}
 // ---- v70: never get stuck — after any jump, dash, pull or knockback the hero is nudged to the nearest free spot ----
 function plBlocked(x,z){return CR.some(([a,b])=>solid(x+a,z+b))||tcHit(x,z)}
 var UNS={ok:null,t:0};
@@ -9824,35 +9861,31 @@ const bagSig=()=>hero.cls+'|'+SLOTS.map(k=>eq[k]?eq[k].id+':'+(eq[k].up||0):'-')
   const r=f.apply(this,arguments);try{if(HP){HP._cls=hero.cls;BAGSIG=bagSig()}}catch(_){}return r}}
 setInterval(()=>{try{if($('bag')&&!$('bag').classList.contains('hide')&&HP&&bagSig()!==BAGSIG){BAGSIG=bagSig();refreshGear(HP);bagPV()}}catch(_){}},400);
 
-// ---------------- recall keeps your zone run: return with T, or restart it at the portal ----------------
-// INST = the zone run you recalled out of: which creatures are dead, where you stood. Saved with the game.
+// ---------------- recall keeps your place: press T again in Duskhold to go straight back ----------------
+// INST = where you recalled from: the zone instance (r = instance key, v106), where you stood, and its creatures (each dead
+// one keeps the time left until it comes back, rl ms). Saved with the game. Entering through a portal starts that instance
+// fresh at its entrance instead.
 var INST=null,RECBACK=false;
 const instMP=()=>typeof MP!='undefined'&&MP.on&&MP.host&&MP.host!==MP.me;
-function instSave(){const r=curMap();if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
-  INST={r,x:pl.position.x,z:pl.position.z,quiet:ROST.quiet,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1}))};
-  enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&regionAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
-function instRestore(){const I=INST;if(!I)return false;ROST.r=I.r;ROST.quiet=I.quiet;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null}));
-  const p=PMAP[I.r];toPos(I.x,I.z);INST=null;banner(p.ic+' '+p.n.toUpperCase(),'Back where you left off','The creatures you defeated stay defeated');return true}
+function instSave(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
+  const now=nowP();INST={v:106,r,x:pl.position.x,z:pl.position.z,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1,rl:s.dead?Math.max(0,(s.rt||0)-now):0,rt:0}))};
+  enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&rgAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
+function instRestore(){const I=INST;if(!I||!INSL[I.r])return false;const now=nowP();ROST.r=I.r;ROST.quiet=false;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null,rt:s.dead?now+(s.rl||0):0}));
+  const N=INSL[I.r],p=PMAP[N.z];toPos(I.x,I.z);INST=null;banner(p.ic+' '+N.n.toUpperCase(),'Back where you left off','Fallen creatures return '+RESP_T+' seconds after they die');return true}
 {const f=recallTown;recallTown=function(){const back=RECBACK&&nowP()-RECBACK<8000;RECBACK=false;if(back&&instRestore())return;instSave();return f.apply(this,arguments)}}
 {const f=goHome;goHome=function(){instSave();return f.apply(this,arguments)}}
 {const f=doRecall;doRecall=function(){
-  if(INST&&curMap()<0&&!rec&&!uiOpen()){if(instMP())return say('Only the zone host can return to a saved run.');
+  if(INST&&INSL[INST.r]&&curMap()<0&&!rec&&!uiOpen()){if(instMP())return say('Only the zone host can return to a saved spot.');
     if(enemies.some(e=>!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<10))return say('You cannot recall with enemies this close.');
-    RECBACK=nowP();rec={t:0,need:4,hp:hero.hp};say('Returning to your '+PMAP[INST.r].n+' run... stay still for 4 seconds.');return}
+    RECBACK=nowP();rec={t:0,need:4,hp:hero.hp};say('Returning to '+INSL[INST.r].n+'... stay still for 4 seconds.');return}
   if(rec)RECBACK=false;return f.apply(this,arguments)}}
 $('recallBtn').onclick=()=>doRecall();
-// walking into the portal of a zone you have a saved run in asks first
-function instAsk(i,fresh){let d=$('instQ');if(!d){d=document.createElement('div');d.id='instQ';d.className='glass';$('stage').appendChild(d);
-    document.head.insertAdjacentHTML('beforeend','<style>#instQ{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:40;padding:16px 18px;max-width:340px;text-align:center}#instQ h3{margin:0 0 6px;font-size:1rem}#instQ p{margin:0 0 12px;font-size:.8rem;color:var(--mut)}#instQ .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}</style>')}
-  const p=PMAP[i],left=INST.slots.filter(s=>!s.dead).length;
-  d.innerHTML=`<h3>Restart zone instance?</h3><p>You have a run in progress in ${p.ic} ${p.n} (${left} creature${left==1?'':'s'} left). Restarting brings every creature back.</p><div class="btns"><button class="pri" data-iq="cont">Continue my run</button><button data-iq="new">Restart</button><button data-iq="no">Cancel</button></div>`;
-  d.classList.remove('hide');d.onclick=e=>{const b=e.target.closest('[data-iq]');if(!b)return;d.classList.add('hide');const k=b.dataset.iq;
-    if(k=='cont')fadeTo(()=>instRestore());else if(k=='new'){INST=null;fresh(i)}}}
-{const f=enterMap;enterMap=function(i){if(INST&&INST.r===i&&!instMP()){instAsk(i,j=>f.call(this,j));return}if(INST&&INST.r===i)INST=null;return f.apply(this,arguments)}}
-// a hint while a run is saved
-{const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&curMap()<0){const b=$('buffs');if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to your ${PMAP[INST.r].n} run">🌀 ${PMAP[INST.r].n} run saved · T</span>`)}}catch(_){}}}
+// entering an instance through its portal starts it fresh, so a saved spot in that same instance is dropped
+{const f=enterMap;enterMap=function(i,k){if(INST&&INST.r===i*PMI+(k|0)&&!instMP())INST=null;return f.apply(this,arguments)}}
+// a hint while a spot is saved
+{const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&INSL[INST.r]&&curMap()<0){const b=$('buffs'),n=INSL[INST.r].n;if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to where you left ${n}">🌀 ${n} · T to return</span>`)}}catch(_){}}}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
-{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots?s.inst:null}catch(_){INST=null}return r}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===106?s.inst:null}catch(_){INST=null}return r}}
 
 // ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
 var fCon=null;
@@ -15223,9 +15256,9 @@ if(typeof EGG92!='undefined'){ECON96.egg0=EGG92.rate;EGG92.rate=Math.round(EGG92
 //    Co-op guests (no roster of their own) fall back to C.clr, set on the kill that clears the camp (same rule as campOnKill).
 function arFanK(){return .4}
 function campCleared(C){if(!C)return false;
-  try{if(typeof ROST!='undefined'&&ROST.r===C.pm&&ROST.slots&&ROST.slots.length){let n=0,a=0;for(const s of ROST.slots)if(s.camp===C){n++;if(!s.dead)a++}if(n)return a===0}}catch(_){}
+  try{if(typeof ROST!='undefined'&&ROST.r===C.ig&&ROST.slots&&ROST.slots.length){let n=0,a=0;for(const s of ROST.slots)if(s.camp===C){n++;if(!s.dead)a++}if(n)return a===0}}catch(_){}
   return !!C.clr}
-{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{CAMPS.forEach(C=>{if(C.pm===r)C.clr=false})}catch(_){}return o}}
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{CAMPS.forEach(C=>{if(C.ig===r)C.clr=false})}catch(_){}return o}}
 {const f=kill;kill=function(e){const C=e&&e.camp,r=f.apply(this,arguments);try{if(C&&!C.raid&&e.leader!==C&&campAlive(C)===0)C.clr=true}catch(_){}return r}}
 
 // ================= v91 fxA: real models and animation for Piercing Arrow, Explosive Arrow, Call of the Wild, Shadow Clone =================
@@ -16619,55 +16652,58 @@ function lnSecretPrompt(){if(typeof SECRETS=='undefined')return null;const P=pl.
 // =====================================================================================================
 // 2. treasure maps
 // =====================================================================================================
-var LNR={};   // per-zone reachability (flood fill from the entrance)
-function lnZB(r){const p=PMAP[r],w=typeof PMW!='undefined'?PMW:260,h=typeof PMH!='undefined'?PMH:270;return {x0:p.x0,y0:p.y0,w,h}}
-function lnReach(r){const B=lnZB(r),key=r+':'+B.w+'x'+B.h;let R=LNR[r];if(R&&R.key==key)return R;
-  const a=new Uint8Array(B.w*B.h),p=PMAP[r],q=[];
+var LNR={};   // per-instance reachability (flood fill from the entrance); v106: keyed by instance key g = zone*3+k
+function lnZB(g){const I=INSL[g];return {x0:I.x0,y0:I.y0,w:PMW,h:PMH}}
+function lnReach(g){const B=lnZB(g),key=g+':'+B.w+'x'+B.h;let R=LNR[g];if(R&&R.key==key)return R;
+  const a=new Uint8Array(B.w*B.h),p=INSL[g],q=[];
   const free=(x,y)=>{const t=MAP[y]&&MAP[y][x];return !!t&&t!='~'&&!solid(x,y)};
   const push=(x,y)=>{const i=(y-B.y0)*B.w+(x-B.x0);if(x<B.x0||y<B.y0||x>=B.x0+B.w||y>=B.y0+B.h||a[i]||!free(x,y))return;a[i]=1;q.push(x,y)};
   // start at the entrance (or the first free road tile)
   let s=p.en;if(!free(s[0],s[1]))for(const t of (p.path||p.wp||[]))if(free(t[0],t[1])){s=t;break}
   push(Math.round(s[0]),Math.round(s[1]));
   for(let k=0;k<q.length;k+=2){const x=q[k],y=q[k+1];push(x+1,y);push(x-1,y);push(x,y+1);push(x,y-1)}
-  R=LNR[r]={key,a,B,n:q.length/2};return R}
-function lnReachable(r,x,y){const R=lnReach(r),B=R.B;x=Math.round(x);y=Math.round(y);if(x<B.x0||y<B.y0||x>=B.x0+B.w||y>=B.y0+B.h)return false;return !!R.a[(y-B.y0)*B.w+(x-B.x0)]}
-// a good spot for a buried treasure: reachable, open around it, not in the den / wave arena / a camp / near the entrance
-function tmOk(r,x,y){if(r<0||!PMAP[r])return false;const p=PMAP[r],B=lnZB(r);x=Math.round(x);y=Math.round(y);
-  if(x<B.x0+4||y<B.y0+4||x>=B.x0+B.w-4||y>=B.y0+B.h-4||regionAt(x,y)!==r)return false;
-  for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(!lnReachable(r,x+i,y+j))return false;
+  R=LNR[g]={key,a,B,n:q.length/2};return R}
+function lnReachable(g,x,y){const R=lnReach(g),B=R.B;x=Math.round(x);y=Math.round(y);if(x<B.x0||y<B.y0||x>=B.x0+B.w||y>=B.y0+B.h)return false;return !!R.a[(y-B.y0)*B.w+(x-B.x0)]}
+// the instance a map belongs to: m.r = zone, m.k = instance (maps from before v106 have no m.k: instance I)
+function tmG(m){return m.r*PMI+(m.k|0)}
+// a good spot for a buried treasure: reachable, open around it, not in the den / gateway / wave arena / a camp / near the entrance
+function tmOk(g,x,y){if(g<0||!INSL[g])return false;const p=INSL[g],B=lnZB(g);x=Math.round(x);y=Math.round(y);
+  if(x<B.x0+4||y<B.y0+4||x>=B.x0+B.w-4||y>=B.y0+B.h-4||rgAt(x,y)!==g)return false;
+  for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(!lnReachable(g,x+i,y+j))return false;
   const R0=(typeof ARENA_R!='undefined'?ARENA_R:14);
-  if(Math.hypot(x-p.ba[0],y-p.ba[1])<R0+10||Math.hypot(x-p.wa[0],y-p.wa[1])<20||Math.hypot(x-p.en[0],y-p.en[1])<10)return false;
-  if(typeof CAMPS!='undefined'&&CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-y)<(typeof CAMP_R!='undefined'?CAMP_R:12)+3))return false;
+  if(Math.hypot(x-p.ba[0],y-p.ba[1])<R0+10||(p.wa&&Math.hypot(x-p.wa[0],y-p.wa[1])<20)||Math.hypot(x-p.en[0],y-p.en[1])<10)return false;
+  if(typeof CAMPS!='undefined'&&CAMPS.some(C=>C.ig===g&&Math.hypot(C.x-x,C.z-y)<(typeof CAMP_R!='undefined'?CAMP_R:12)+3))return false;
   if(typeof SECRETS!='undefined'&&SECRETS.some(S=>Math.hypot(S.x-x,S.z-y)<4))return false;
   if(typeof DUNS!='undefined'&&DUNS.some(D=>Math.hypot((D.x||D.tx)-x,(D.y||D.ty)-y)<10))return false;
-  if(typeof tmaps!='undefined'&&tmaps.some(m=>m.r===r&&Math.hypot(m.x-x,m.z-y)<12&&m.x!==x))return false;
+  if(typeof tmaps!='undefined'&&tmaps.some(m=>tmG(m)===g&&Math.hypot(m.x-x,m.z-y)<12&&m.x!==x))return false;
   return true}
-function tmPick(r,near){const B=lnZB(r);let fb=null;
-  for(let k=0;k<1500;k++){const x=B.x0+4+Math.floor(Math.random()*(B.w-8)),y=B.y0+4+Math.floor(Math.random()*(B.h-8));if(!tmOk(r,x,y))continue;
-    if(!fb)fb=[x,y];if(near&&regionAt(near.x,near.z)===r&&Math.hypot(x-near.x,y-near.z)<35)continue;return [x,y]}
+function tmPick(g,near){const B=lnZB(g);let fb=null;
+  for(let k=0;k<1500;k++){const x=B.x0+4+Math.floor(Math.random()*(B.w-8)),y=B.y0+4+Math.floor(Math.random()*(B.h-8));if(!tmOk(g,x,y))continue;
+    if(!fb)fb=[x,y];if(near&&rgAt(near.x,near.z)===g&&Math.hypot(x-near.x,y-near.z)<35)continue;return [x,y]}
   return fb}
-function tmZoneFor(p){let r=regionAt(Math.round(p.x),Math.round(p.z));if(r>=0)return r;
-  // in Duskhold: a zone that suits the hero's level
-  const L=hero.lvl||1;r=PMAP.findIndex(q=>L>=q.lv[0]&&L<=q.lv[1]);return r<0?(L>PMAP[PMAP.length-1].lv[1]?PMAP.length-1:0):r}
-function tmName(m){return 'Treasure Map — '+(PMAP[m.r]?PMAP[m.r].n:'Unknown lands')}
+// the instance a new map leads to: the one you are in; in Duskhold, the instance that suits the hero's level
+function tmZoneFor(p){let g=rgAt(Math.round(p.x),Math.round(p.z));if(g>=0)return g;
+  const L=hero.lvl||1;let I=INSL.find(q=>L>=q.lv[0]&&L<=q.lv[1]);if(!I)I=L>PMAP[PMAP.length-1].lv[1]?INSL[INSL.length-1]:INSL[0];return I.g}
+function tmName(m){const I=INSL[tmG(m)];return 'Treasure Map — '+(I?I.n:'Unknown lands')}
 function tmNewId(){let id=1;tmaps.forEach(m=>{if(m.id>=id)id=m.id+1});return id}
 var TM_DIR=['east','south-east','south','south-west','west','north-west','north','north-east'];
-function tmHint(m){const p=PMAP[m.r];if(!p)return '';const L=[['the zone entrance',p.en],["the Sovereign's lair",p.ba]];
-  try{CAMPS.forEach(C=>{if(C.pm===m.r)L.push([(C.th&&C.th.n?'the '+C.th.n:'a camp'),[C.x,C.z]])})}catch(_){}
+function tmHint(m){const g=tmG(m),p=INSL[g];if(!p)return '';const L=[['the entrance',p.en],[p.den?"the Sovereign's lair":'the gateway',p.ba]];
+  try{CAMPS.forEach(C=>{if(C.ig===g)L.push([(C.th&&C.th.n?'the '+C.th.n:'a camp'),[C.x,C.z]])})}catch(_){}
   let b=L[0],bd=1e9;L.forEach(q=>{const d=Math.hypot(q[1][0]-m.x,q[1][1]-m.z);if(d<bd){bd=d;b=q}});
   const a=Math.atan2(m.z-b[1][1],m.x-b[1][0]),dir=TM_DIR[((Math.round(a/(Math.PI/4))%8)+8)%8];
   return 'The ✕ lies '+(bd<6?'right by':'about '+Math.round(bd/5)*5+' paces '+dir+' of')+' '+b[0]+'.'}
-function tmCur(){const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z));return r}
-// new maps
-function giveMap(p,rz){const r=rz!=null?rz:tmZoneFor(p);const s=tmPick(r,p);if(!s)return null;
-  const m={id:tmNewId(),r,x:s[0],z:s[1],T:PMAP[r].t};tmaps.push(m);
-  pickup({ic:'🗺️',t:tmName(m),col:'#fbbf24',sub:'Kept in your bag until you dig it up. The ✕ shows on the minimap and map (N) in '+PMAP[r].n+'.',r:2});sfx('chime');
+function tmCur(){return rgAt(Math.round(pl.position.x),Math.round(pl.position.z))}
+// new maps (rz: an instance key)
+function giveMap(p,rz){const g=rz!=null?rz:tmZoneFor(p);const s=tmPick(g,p);if(!s)return null;const I=INSL[g];
+  const m={id:tmNewId(),r:I.z,k:I.k,x:s[0],z:s[1],T:PMAP[I.z].t};tmaps.push(m);
+  pickup({ic:'🗺️',t:tmName(m),col:'#fbbf24',sub:'Kept in your bag until you dig it up. The ✕ shows on the minimap and map (N) in '+I.n+'.',r:2});sfx('chime');
   say('🗺️ <b>'+tmName(m)+'</b>: '+tmHint(m));lnBagRefresh();return m}
 // digging removes the map from the bag
 {const f=digTreasure;digTreasure=function(m){if(!m||!tmaps.includes(m))return;const n=tmName(m);f.apply(this,arguments);try{say('🗺️ '+n+' is used up — the treasure is yours!');lnMarkSync()}catch(_){}lnBagRefresh()}}
-// old saves: give each map a zone, re-place it if the spot is not reachable
+// old saves: give each map a zone and an instance, re-place it if the spot is not reachable
 function tmMigrate(){let ch=0;(tmaps||[]).forEach(m=>{if(m.r==null||!PMAP[m.r]){let r=regionAt(Math.round(m.x),Math.round(m.z));if(r<0)r=Math.max(0,PMAP.findIndex(p=>p.t==m.T));m.r=r;ch=1}
-    m.T=PMAP[m.r].t;if(!tmOk(m.r,m.x,m.z)){const s=tmPick(m.r,null);if(s){m.x=s[0];m.z=s[1];ch=1}}});
+    if(m.k==null||!PMAP[m.r].ins[m.k]){const I=insAt(Math.round(m.x),Math.round(m.z));m.k=I&&I.z===m.r?I.k:0;ch=1}
+    m.T=PMAP[m.r].t;if(!tmOk(tmG(m),m.x,m.z)){const s=tmPick(tmG(m),null);if(s){m.x=s[0];m.z=s[1];ch=1}}});
   const ids=new Set();tmaps.forEach(m=>{if(!m.id||ids.has(m.id))m.id=tmNewId()+ids.size;ids.add(m.id)});return ch}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{tmMigrate()}catch(e){console.warn('tmaps migrate',e)}try{lnMarkSync()}catch(_){}return r}}
 
@@ -16679,12 +16715,12 @@ function lnMarkSync(){if(typeof scene=='undefined')return;const cur=tmCur();
       [1,-1].forEach(s=>{const b=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.32),mt);b.rotation.x=-Math.PI/2;b.rotation.z=s*Math.PI/4;b.position.y=.06;g.add(b)});
       const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:typeof SPR!='undefined'?SPR:null,color:0xffb040,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));sp.scale.set(2.2,2.2,1);sp.position.y=.6;g.add(sp);g.userData.sp=sp;
       g.position.set(m.x,GH(m.x,m.z),m.z);scene.add(g);TMG.set(m,g)}
-    g.visible=cur===m.r&&Math.hypot(pl.position.x-m.x,pl.position.z-m.z)<70;if(g.visible&&g.userData.sp)g.userData.sp.material.opacity=.35+.2*Math.sin(performance.now()/300)})}
+    g.visible=cur===tmG(m)&&Math.hypot(pl.position.x-m.x,pl.position.z-m.z)<70;if(g.visible&&g.userData.sp)g.userData.sp.material.opacity=.35+.2*Math.sin(performance.now()/300)})}
 {const f=worldTick;worldTick=function(dt,now){f.apply(this,arguments);try{lnMarkSync()}catch(_){}}}
 
 // ---- minimap: ✕ in view (old code), plus an arrow at the edge pointing to this zone's ✕ when it is off the minimap ----
 {const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{const cur=tmCur();if(cur<0)return;
-  tmaps.forEach(m=>{if(m.r!==cur)return;let x=(m.x-(cx-vw/2)+.5)*w/vw,y=(m.z-(cy-vh/2)+.5)*h/vh;if(x>-6&&y>-6&&x<w+6&&y<h+6){
+  tmaps.forEach(m=>{if(tmG(m)!==cur)return;let x=(m.x-(cx-vw/2)+.5)*w/vw,y=(m.z-(cy-vh/2)+.5)*h/vh;if(x>-6&&y>-6&&x<w+6&&y<h+6){
       mmX.strokeStyle='#000';mmX.lineWidth=4.5;mmX.beginPath();mmX.moveTo(x-5,y-5);mmX.lineTo(x+5,y+5);mmX.moveTo(x+5,y-5);mmX.lineTo(x-5,y+5);mmX.stroke();
       mmX.strokeStyle='#ef4444';mmX.lineWidth=2.5;mmX.stroke();return}
     const a=Math.atan2(y-h/2,x-w/2),ex=w/2+Math.cos(a)*(w/2-9),ey=h/2+Math.sin(a)*(h/2-9);
@@ -16694,11 +16730,11 @@ function lnMarkSync(){if(typeof scene=='undefined')return;const cur=tmCur();
 {const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{lnWmapDraw()}catch(e){console.warn('tmap wmap',e)}return r0}}
 function lnWmapDraw(){const c=$('wmc');if(!c||$('wmap').classList.contains('hide')||!tmaps.length)return;const g=c.getContext('2d'),r=tmCur();
   if(r>=0){const B=lnZB(r),s=c.width/B.w,P=(x,z)=>[(x-B.x0+.5)*s,(z-B.y0+.5)*s];
-    tmaps.filter(m=>m.r===r).forEach(m=>{const [x,y]=P(m.x,m.z),k=9;g.lineCap='round';
+    tmaps.filter(m=>tmG(m)===r).forEach(m=>{const [x,y]=P(m.x,m.z),k=9;g.lineCap='round';
       g.strokeStyle='#1a0a06';g.lineWidth=7;g.beginPath();g.moveTo(x-k,y-k);g.lineTo(x+k,y+k);g.moveTo(x+k,y-k);g.lineTo(x-k,y+k);g.stroke();
       g.strokeStyle='#e0302a';g.lineWidth=4;g.stroke();g.lineCap='butt';
       g.textAlign='center';g.textBaseline='middle';g.font='700 12px system-ui,sans-serif';const t='Treasure';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText(t,x,y+18);g.fillStyle='#ffd0c8';g.fillText(t,x,y+18)})}
-  const other=tmaps.filter(m=>m.r!==r);if(other.length){const zs=[...new Set(other.map(m=>PMAP[m.r]?PMAP[m.r].n:'?'))];
+  const other=tmaps.filter(m=>tmG(m)!==r);if(other.length){const zs=[...new Set(other.map(m=>INSL[tmG(m)]?INSL[tmG(m)].n:'?'))];
     let t='🗺️ Your treasure map'+(other.length>1?'s are':' is')+' for '+zs.join(', ')+' — open the map there to see the ✕',fs=12;
     g.font='600 12px system-ui,sans-serif';if(g.measureText(t).width>c.width-40){t='🗺️ Treasure maps for other zones: '+zs.join(', ');}
     while(fs>8){g.font='600 '+fs+'px system-ui,sans-serif';if(g.measureText(t).width<=c.width-40)break;fs--}g.textAlign='center';g.textBaseline='middle';const w=Math.min(c.width-16,g.measureText(t).width+24);
@@ -16712,18 +16748,18 @@ function lnWmapDraw(){const c=$('wmc');if(!c||$('wmap').classList.contains('hide
 
 // ---- the bag: maps are items in the Gear grid and the Supplies tab until dug up ----
 function lnBagRefresh(){try{if(!$('bag').classList.contains('hide'))rB0()}catch(_){}}
-function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" data-kqt="tm:${m.id}" style="--rc:#fbbf24" title=""><span class="kqm-ic">🗺️</span><span class="kqm-up">${(PMAP[m.r]?PMAP[m.r].n:'?').replace(/^The /,'').split(' ')[0]}</span></div>`}
-function tmTip(m){const p=PMAP[m.r],here=tmCur()===m.r;
+function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" data-kqt="tm:${m.id}" style="--rc:#fbbf24" title=""><span class="kqm-ic">🗺️</span><span class="kqm-up">${(PMAP[m.r]?PMAP[m.r].n:'?').replace(/^The /,'').split(' ')[0]+' '+(PM_RN[m.k|0]||'')}</span></div>`}
+function tmTip(m){const p=INSL[tmG(m)],here=tmCur()===tmG(m);
   return `<div class="kqm-tn"><span>🗺️ ${tmName(m)}</span></div><div class="kqm-ts">Quest item · can't be sold</div>`+
     `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' (Lv '+p.lv[0]+'–'+p.lv[1]+')':''}. ${tmHint(m)}</div>`+
-    `<div class="kqm-th">${here?'You are in this zone: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
+    `<div class="kqm-th">${here?'You are there: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its zone\'s portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
 {const f=kqmTipHTML;kqmTipHTML=function(el){const k=el&&el.dataset&&el.dataset.kqt||'';if(k.slice(0,3)=='tm:'){const m=tmaps.find(q=>q.id==+k.slice(3));return m?[tmTip(m),'#fbbf24']:null}return f.apply(this,arguments)}}
 {const f=kqmBag;kqmBag=function(){const r=f.apply(this,arguments);try{if(!tmaps.length)return r;const bl=$('bl'),T=bagTab2;if(!bl)return r;
     if(T==0&&KQM.filt=='all'){const g=bl.querySelector('.kqm-bagg');if(g){g.insertAdjacentHTML('afterbegin',tmaps.map(tmTile).join(''));for(let i=0;i<tmaps.length;i++){const e=g.querySelector('.kqm-empty:last-child');if(e)e.remove()}}}
     if(T==3)bl.insertAdjacentHTML('afterbegin',`<div class="kqm-h">Treasure maps</div><div class="kqm-grid">${tmaps.map(tmTile).join('')}${kqmEmpty((8-tmaps.length%8)%8)}</div>`);
     if(LN.tmSel&&!tmaps.some(m=>m.id==LN.tmSel))LN.tmSel=null;
     if(LN.tmSel&&(T==0||T==3)){const m=tmaps.find(q=>q.id==LN.tmSel);bl.querySelectorAll('[data-kqtm="'+m.id+'"]').forEach(e=>e.classList.add('on'));
-      $('idt').innerHTML=`<div class="dtl"><div class="dh">🗺️ ${tmName(m)}</div><div class="mut" style="font-size:.74rem">${tmHint(m)} Quest item: it can't be sold and is used up when you dig the treasure.</div></div>`+(tmCur()===m.r?'<button class="pri" data-tmopen="1">🗺️ Show on map</button>':'')}
+      $('idt').innerHTML=`<div class="dtl"><div class="dh">🗺️ ${tmName(m)}</div><div class="mut" style="font-size:.74rem">${tmHint(m)} Quest item: it can't be sold and is used up when you dig the treasure.</div></div>`+(tmCur()===tmG(m)?'<button class="pri" data-tmopen="1">🗺️ Show on map</button>':'')}
   }catch(e){console.warn('tmap bag',e)}return r}}
 $('bag').addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-kqtm],[data-tmopen]');if(!t)return;
   if(t.dataset.tmopen){$('bag').classList.add('hide');openWMap();return}
@@ -16958,7 +16994,7 @@ function flanPeers(dt,now){const live=new Set();
 var MMRIM=[];
 function mmRimPaint(){try{
   const c=mmB.getContext('2d'),walk=t=>t==='.'||t==='a'||t==='g'||t==='p'||t==='r'||t==='~'||t==='P';
-  PMAP.forEach((p,ri)=>{const x0=p.x0,y0=p.y0,x1=p.x0+PMW-1,y1=p.y0+PMH-1,bm=BIOMES[p.bi]||BIOMES[0];
+  INSL.forEach(I=>{const p=PMAP[I.z],x0=I.x0,y0=I.y0,x1=I.x0+PMW-1,y1=I.y0+PMH-1,bm=BIOMES[p.bi]||BIOMES[0]; // v106: per instance
     const inner=(bm.frs||[30,24,28]).map(v=>Math.round(v*.8)),outer=bm.n=='The Citadel'?[150,100,108]:[96,92,88];
     const L=[];let edge=0;
     // v97: the neighbour test checks the zone rectangle directly instead of calling regionAt() (same result, faster bake)
@@ -16968,7 +17004,7 @@ function mmRimPaint(){try{
     if(edge<200)return;                 // zones whose rim is already trees/rock (all but the Citadel today) are left as they are
     const id=c.getImageData(x0,y0,PMW,PMH);
     for(let i=0;i<L.length;i+=3){const b=L[i+2]<1.6?inner:outer,k=((L[i+1]-y0)*PMW+(L[i]-x0))*4;id.data[k]=b[0];id.data[k+1]=b[1];id.data[k+2]=b[2];id.data[k+3]=255}
-    c.putImageData(id,x0,y0);MMRIM.push(p.n)});
+    c.putImageData(id,x0,y0);MMRIM.push(I.n)});
 }catch(err){console.warn('minimap rim',err)}}
 mmRimPaint();
 
@@ -19222,7 +19258,8 @@ function wdDeco(){const T0=performance.now();
   const ptile=new Set();MAP.props.forEach(q=>{for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)ptile.add((q[1]+j)*W+q[0]+i)});
   const hsh=(x,y,s)=>{const k=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return k-Math.floor(k)},
     vn=(x,y,s)=>{const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);return (hsh(i,j,s)*(1-u)+hsh(i+1,j,s)*u)*(1-v)+(hsh(i,j+1,s)*(1-u)+hsh(i+1,j+1,s)*u)*v};
-  PMAP.forEach((p,r)=>{
+  // v106: placed per zone instance (r stays the zone: its decoration set Z[r] and density ZM[r])
+  INSL.forEach(I=>{const r=I.z,Z0=PMAP[r],p={x0:I.x0,y0:I.y0,path:I.path,br:I.br,ba:I.ba,wa:I.wa||[-1e5,-1e5],en:I.en,bi:Z0.bi,n:I.n};
     const x0=p.x0,y0=p.y0,w=PMW,h=PMH,RD=new Float32Array(w*h).fill(99);
     // distance to the road centre line (and the side branches)
     const st=(cx,cy,R)=>{for(let y=Math.max(y0,Math.floor(cy-R));y<=Math.min(y0+h-1,cy+R);y++)for(let x=Math.max(x0,Math.floor(cx-R));x<=Math.min(x0+w-1,cx+R);x++){const d=Math.hypot(x-cx,y-cy),k=(y-y0)*w+x-x0;if(d<RD[k])RD[k]=d}};
@@ -19309,10 +19346,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
 // (the old zone is found on that layout's grid, WD_OLDG: v89 saves carry wl:89, older ones none), a saved zone run (INST)
 // is dropped, treasure maps keep their zone (m.r; maps from before v89 get the zone they were in) and are re-placed on a
 // reachable spot in it (zzN_loot.js tmMigrate). Duskhold, the Portal Court and the Courtyard never moved (x < 110).
-var WD_WL=97;
-var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351}};
+var WD_WL=106; // v106: three instances per zone
+var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351},97:{x0:[110,593,1076,110,593,1076],y0:[8,8,8,509,509,509],w:473,h:491}};
 var WD_OLD=WD_OLDG[88];
-function wdOldZone(x,z,wl){const G=WD_OLDG[wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
+function wdOldZone(x,z,wl){const G=WD_OLDG[wl===97?97:wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=WD_WL;if(s.inst)s.inst=Object.assign({},s.inst,{wl:WD_WL})}catch(_){}return s}}
 var WD_LOADOLD=false;
 {const f=x2Load;x2Load=function(s){const wl=s&&s.wl;WD_LOADOLD=wl!==WD_WL;
@@ -19325,7 +19362,7 @@ var WD_LOADOLD=false;
     for(let k=0;k<400;k++){const x=8+Math.floor(Math.random()*(W-16)),y=8+Math.floor(Math.random()*(H-16));if(tierAt(x,y)==m.T&&regionAt(x,y)>=0&&freeSpot(x,y,1))return Object.assign({},m,{x,z:y})}return null}).filter(Boolean)}catch(err){console.warn('world load',err)}return r}}
 {const f=loadGame;loadGame=function(){const s=saveInfo&&saveInfo();const r=f.apply(this,arguments);try{
   const wl=s&&s.x2&&s.x2.wl,old=wl!==WD_WL;if(old&&s&&s.pos&&!s.pos.realm){const oz=wdOldZone(s.pos.x,s.pos.z,wl);
-    if(oz>=0){const p=PMAP[oz],n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]))}
+    if(oz>=0){const I=PMAP[oz].ins[0],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]))}
     else{const x=Math.round(pl.position.x),z=Math.round(pl.position.z);if(x>=110||MAP.DW[z*W+x]>=0)toPos(START[0],START[1])}}}catch(err){console.warn('world load pos',err)}return r}}
 // the Citadel's castle walls only draw while you are in the Citadel (they were drawn from every zone and Duskhold)
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{if(window.CITW){const on=regionAt(Math.round(pl.position.x),Math.round(pl.position.z))===5;if(CITW[0].visible!==on)CITW.forEach(m=>m.visible=on)}}catch(_){}}}
@@ -19344,10 +19381,16 @@ var WD_LOADOLD=false;
 var CVG={n:-1,B:128,g:new Map(),live:new Set(),f:0};
 function cvgBuild(){const B=CVG.B;CVG.g=new Map();CVG.live=new Set();CVG.n=CHL.length;
   CHL.forEach(c=>{const k=Math.floor((c.box.min.z+c.box.max.z)/2/B)*1000+Math.floor((c.box.min.x+c.box.max.x)/2/B);let L=CVG.g.get(k);if(!L)CVG.g.set(k,L=[]);L.push(c);if(c.on||c.non)CVG.live.add(c)})}
+// v106: only the chunks touching the zone instance you are in (or, outside the zones, the ones west of them: Duskhold and
+// the Portal Road) draw; the other instances sit across the void and are separate maps now
+var CVA={k:null,r:null};
+function cvKey(){const I=curIns();return I?I.g:-1}
+function cvOK(c,k){if(c.cvk===k)return c.cvok;if(CVA.k!==k){CVA.k=k;const I=k>=0?INSL[k]:null;CVA.r=I?[I.x0-3,I.y0-3,I.x0+PMW+3,I.y0+PMH+3]:[-1e5,-1e5,PM_X0-3,1e5]}
+  const r=CVA.r,b=c.box;c.cvk=k;c.cvok=b.max.x>=r[0]&&b.min.x<=r[2]&&b.max.z>=r[1]&&b.min.z<=r[3];return c.cvok}
 function chunkVis(){
   if(CVG.n!==CHL.length)cvgBuild();
   cam.updateMatrixWorld();PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);FR.setFromProjectionMatrix(PM);
-  const p=pl.position,B=CVG.B,R=Math.max(FARR,NEARR)+48,test=c=>{const d=c.box.distanceToPoint(p),inF=d<20||FR.intersectsBox(c.box),on=d<FARR&&inF,non=d<NEARR&&(d<12||inF),cs=d<34;
+  const p=pl.position,B=CVG.B,R=Math.max(FARR,NEARR)+48,ak=cvKey(),test=c=>{const ok=cvOK(c,ak),d=c.box.distanceToPoint(p),inF=d<20||FR.intersectsBox(c.box),on=ok&&d<FARR&&inF,non=ok&&d<NEARR&&(d<12||inF),cs=d<34;
     if(on!==c.on||(on&&cs!==c.cs)){c.on=on;c.cs=cs;c.ms.forEach(m=>{m.visible=on;m.castShadow=on&&cs&&m.userData.cast})}
     if(non!==c.non){c.non=non;c.ns.forEach(m=>{m.visible=non;m.castShadow=false})}
     if(c.on||c.non)CVG.live.add(c);else CVG.live.delete(c)};
@@ -21871,7 +21914,7 @@ var ZMAT103=null;
 function zMat103(){if(ZMAT103)return ZMAT103;const Z=PMAP.map(()=>new Set());
   const kind={rock:'stone',grave:'stone',pillar:'stone',crystal:'crystal',bush:'fiber',flower:'petals',mush:'glowcap',bones:'bone'};
   MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);if(r<0)return;const m=kind[q[2]];if(m){Z[r].add(m);if(m=='stone')Z[r].add('iron')}});
-  PMAP.forEach((p,i)=>{let tr=0,wt=0;for(let y=p.y0;y<p.y0+PMH&&!(tr&&wt);y+=2)for(let x=p.x0;x<p.x0+PMW;x+=2){const t=MAP[y][x];if(t=='#')tr=1;else if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)wt=1}
+  PMAP.forEach((p0,i)=>{let tr=0,wt=0;for(const p of p0.ins)for(let y=p.y0;y<p.y0+PMH&&!(tr&&wt);y+=2)for(let x=p.x0;x<p.x0+PMW;x+=2){const t=MAP[y][x];if(t=='#')tr=1;else if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)wt=1}
     if(tr)Z[i].add('wood');if(wt)Z[i].add('clay')});
   ZMAT103=Z;return Z}
 // materials a citizen may gather now: [key, [zone names]]
@@ -22719,4 +22762,30 @@ var SPXT105={bite:1,rain:1,chain:1,meteor:1};
     try{orig(c,f,sp,t)}finally{lunge=L0}return}
   f.lk=1;mvPlay105(f,R,tp,()=>{f.lk=0;if(x.t&&(x.t.dead||!enemies.includes(x.t))){const n=teamFoe();x.t=n&&!n.dead&&d2(n.m.position,f.position)<9?n:null}
     if(SPXT105[sp.k]&&!x.t)return;fire()})}}
+// ================= v106: every zone is three instances (I → II → III) =================
+// The layout is in 0045 (PMI, insAt / rgAt / regionAt, pmLvSplit): each instance is half the area of a v97 zone, levels
+// rise through I, II and III, and III holds the Sovereign's den and the wave arena. This file:
+//  1. which instances you have reached (INSR[zone] = the furthest one, 0..2), saved as x2.insr. Standing in an instance
+//     reaches it, however you got there (gateway, recall, joining a co-op partner). A cleared zone counts as fully reached.
+//     Saves from before v106 reach every instance of every zone that was open to them (they could walk the whole zone).
+//  2. the gateway at the end of I and II (0510 RPORT k:'next') takes you to the next instance's entrance
+//  3. the portal at the zone's gate lists the reached instances (0510 XR.portal); recall (T) and T again in Duskhold
+//     return you to the very spot (0860 INST)
+//  4. creatures come back 30 s after they die (0550 RESP_T); the "zone falls quiet" banner is gone with that
+//  5. chunk visibility only draws the instance you are in (1690 chunkVis, cvOK)
+var INSR=[0,0,0,0,0,0];
+function insReach(i){if(bossDone.has(i)||(typeof CHEAT!='undefined'&&CHEAT.portals))return PMI-1;return Math.max(0,Math.min(PMI-1,INSR[i]|0))}
+function insGo(N){if(AF||!N)return;if(typeof WV!='undefined'&&WV)return;fadeTo(()=>{insArrive(N);insMark(N)})}
+function insMark(I){if(!I||I.k<=(INSR[I.z]|0))return;INSR[I.z]=I.k;
+  setTimeout(()=>say('🌀 '+I.n+' reached · you can now travel here straight from the '+PMAP[I.z].n+' portal in Duskhold.'),1200)}
+var INSW={g:-2,t:0};
+{const f=homeTick;homeTick=function(dt,now,al){f.apply(this,arguments);try{if(now-INSW.t<400)return;INSW.t=now;const I=curIns(),g=I?I.g:-1;
+  if(g!==INSW.g){INSW.g=g;if(I)insMark(I)}}catch(_){}}}
+{const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.insr=INSR.slice()}catch(_){}return s}}
+{const f=x2Load;x2Load=function(s){try{INSR=PMAP.map((p,i)=>s&&Array.isArray(s.insr)?Math.max(0,Math.min(PMI-1,s.insr[i]|0)):0)}catch(_){INSR=[0,0,0,0,0,0]}return f.apply(this,arguments)}}
+{const f=loadGame;loadGame=function(){const sv=typeof saveInfo=='function'?saveInfo():null,old=!!sv&&!(sv.x2&&Array.isArray(sv.x2.insr));const r=f.apply(this,arguments);try{if(old)PMAP.forEach((p,i)=>{if(pUnlocked(i))INSR[i]=PMI-1});
+  const I=curIns();INSW.g=I?I.g:-1;if(I&&I.k>INSR[I.z])INSR[I.z]=I.k}catch(err){console.warn('v106 load',err)}return r}}
+// the J window: how far into each zone you are
+{const f=XR.bosses;XR.bosses=function(){f.apply(this,arguments);try{const rows=$('xwB').querySelectorAll('.rw');PMAP.forEach((p,i)=>{const rw=rows[i];if(!rw||!pUnlocked(i))return;const sm=rw.querySelector('small');
+  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+I.rn+' (Lv '+I.lv[0]+'–'+I.lv[1]+')').join(' · '))})}catch(_){}}}
 </script></body></html>

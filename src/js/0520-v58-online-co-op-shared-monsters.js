@@ -6,8 +6,8 @@ function mpLive(){return typeof MP!='undefined'&&MP&&MP.on&&MP.others>0}
 function mpAct(e){if(typeof MP=='undefined'||!MP||!MP.on||!MP.others)return false;const p=e.m.position;for(const k in MP.rh){const r=MP.rh[k];if(r.act&&r.m&&Math.abs(r.m.position.x-p.x)<32&&Math.abs(r.m.position.z-p.z)<32)return true}return false}
 function mpNear(p,d){if(typeof MP=='undefined'||!MP||!MP.on||!MP.others)return false;for(const k in MP.rh){const r=MP.rh[k];if(r.act&&r.m&&Math.hypot(r.m.position.x-p.x,r.m.position.z-p.z)<d)return true}return false}
 function mpName(peer){if(peer===MP.me)return hero.name||'You';const r=MP.rh[peer];return r&&r.pr&&r.pr.n?String(r.pr.n).slice(0,20):'Adventurer'}
-function mpLoc(rg){return rg===-1?'Duskhold':rg>=0&&PMAP[rg]?PMAP[rg].n:'Elsewhere'}
-function mpCurRg(){return regionAt(Math.round(pl.position.x),Math.round(pl.position.z))}
+function mpLoc(rg){return rg===-1?'Duskhold':rg>=0&&INSL[rg]?INSL[rg].n:'Elsewhere'} // v106: rg = zone instance key
+function mpCurRg(){return rgAt(Math.round(pl.position.x),Math.round(pl.position.z))}
 function mpBossAuth(i){let h=(AF&&AF.i===i&&hero.hp>0)?MP.me:null;for(const k in MP.rh){const r=MP.rh[k];if(r.pr&&r.pr.ar===i&&r.pr.hp>0&&(h===null||k<h))h=k}return h}
 function mpElig(e){return !e.dead&&!e.boss&&!e.minion&&!e.ev&&!e.wv}
 
@@ -74,7 +74,7 @@ function mpRoles(now){
 function mpSendES(now){
   if(MP.host!==MP.me||!MP.others||MP.rg<0||now-MP.tE<250)return;MP.tE=now;
   const rs=[];for(const k in MP.rh){const r=MP.rh[k];if(r.act)rs.push(r.m.position)}
-  const L=[];enemies.forEach(e=>{if(e.mir||!mpElig(e))return;const x=e.m.position.x,z=e.m.position.z;if(regionAt(Math.round(x),Math.round(z))!==MP.rg)return;
+  const L=[];enemies.forEach(e=>{if(e.mir||!mpElig(e))return;const x=e.m.position.x,z=e.m.position.z;if(rgAt(Math.round(x),Math.round(z))!==MP.rg)return;
     let d=Math.hypot(x-pl.position.x,z-pl.position.z);rs.forEach(p=>{d=Math.min(d,Math.hypot(x-p.x,z-p.z))});if(d<75)L.push([d,e])});
   L.sort((a,b)=>a[0]-b[0]);const l=[];
   for(const q of L.slice(0,45)){const e=q[1];if(!e.nid){e.nid=MP.pfx+'.'+(MP.nid++).toString(36);MP.emap[e.nid]=e}
@@ -239,7 +239,7 @@ function mpCoopList(){const el=$('mpList');if(!el)return;const rs=Object.values(
   $('xwS').textContent=(rs.length+1)+' adventurer'+(rs.length?'s':'')+' online';
   const row=(n,cls,lv,rg,hp,btn,me)=>`<div class="rw" style="--rc:${me?'#6ee7b7':'#7ab8ff'}"><span class="rn">${me?'🟢':'🔵'} <b>${mpEsc(n)}</b>${me?' <span class="mut">(you)</span>':''} <span class="mut">${mpEsc((CLS[cls]||{}).n||cls)} · Lv ${lv|0}</span><small>📍 ${mpEsc(mpLoc(rg))}${hp<=0?' · ☠ down':' · ❤ '+(hp|0)+'%'}</small></span><span class="ra">${btn||''}</span></div>`;
   let h='<div class="rows">'+row(hero.name||'You',hero.cls,hero.lvl,MP.rg,Math.round(100*hero.hp/heroMax()),'',1);
-  rs.forEach(r=>{const p=r.pr,rg=p.rg,can=rg>=0&&typeof pUnlocked=='function'&&pUnlocked(rg);
+  rs.forEach(r=>{const p=r.pr,rg=p.rg,can=rg>=0&&INSL[rg]&&typeof pUnlocked=='function'&&pUnlocked(INSL[rg].z);
     h+=row(p.n||'Adventurer',p.c,p.lv,rg,p.hp,`<button class="pri" data-mpt="${mpEsc(r.peer)}">🤝 Trade</button> `+(rg===-1?`<button data-mpj="${mpEsc(r.peer)}">🏰 Go to</button>`:rg>=0?(can?`<button data-mpj="${mpEsc(r.peer)}">🌀 Join</button>`:'<small>🔒 portal locked</small>'):''))});
   el.innerHTML=h+'</div>'+(rs.length?'':'<p class="mut" style="margin-top:8px">Nobody else is here yet. Share this game with friends — when they open it, they appear in your world.</p>');
 }

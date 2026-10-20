@@ -188,7 +188,8 @@ function wdDeco(){const T0=performance.now();
   const ptile=new Set();MAP.props.forEach(q=>{for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)ptile.add((q[1]+j)*W+q[0]+i)});
   const hsh=(x,y,s)=>{const k=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return k-Math.floor(k)},
     vn=(x,y,s)=>{const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);return (hsh(i,j,s)*(1-u)+hsh(i+1,j,s)*u)*(1-v)+(hsh(i,j+1,s)*(1-u)+hsh(i+1,j+1,s)*u)*v};
-  PMAP.forEach((p,r)=>{
+  // v106: placed per zone instance (r stays the zone: its decoration set Z[r] and density ZM[r])
+  INSL.forEach(I=>{const r=I.z,Z0=PMAP[r],p={x0:I.x0,y0:I.y0,path:I.path,br:I.br,ba:I.ba,wa:I.wa||[-1e5,-1e5],en:I.en,bi:Z0.bi,n:I.n};
     const x0=p.x0,y0=p.y0,w=PMW,h=PMH,RD=new Float32Array(w*h).fill(99);
     // distance to the road centre line (and the side branches)
     const st=(cx,cy,R)=>{for(let y=Math.max(y0,Math.floor(cy-R));y<=Math.min(y0+h-1,cy+R);y++)for(let x=Math.max(x0,Math.floor(cx-R));x<=Math.min(x0+w-1,cx+R);x++){const d=Math.hypot(x-cx,y-cy),k=(y-y0)*w+x-x0;if(d<RD[k])RD[k]=d}};
@@ -275,10 +276,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
 // (the old zone is found on that layout's grid, WD_OLDG: v89 saves carry wl:89, older ones none), a saved zone run (INST)
 // is dropped, treasure maps keep their zone (m.r; maps from before v89 get the zone they were in) and are re-placed on a
 // reachable spot in it (zzN_loot.js tmMigrate). Duskhold, the Portal Court and the Courtyard never moved (x < 110).
-var WD_WL=97;
-var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351}};
+var WD_WL=106; // v106: three instances per zone
+var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351},97:{x0:[110,593,1076,110,593,1076],y0:[8,8,8,509,509,509],w:473,h:491}};
 var WD_OLD=WD_OLDG[88];
-function wdOldZone(x,z,wl){const G=WD_OLDG[wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
+function wdOldZone(x,z,wl){const G=WD_OLDG[wl===97?97:wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=WD_WL;if(s.inst)s.inst=Object.assign({},s.inst,{wl:WD_WL})}catch(_){}return s}}
 var WD_LOADOLD=false;
 {const f=x2Load;x2Load=function(s){const wl=s&&s.wl;WD_LOADOLD=wl!==WD_WL;
@@ -291,7 +292,7 @@ var WD_LOADOLD=false;
     for(let k=0;k<400;k++){const x=8+Math.floor(Math.random()*(W-16)),y=8+Math.floor(Math.random()*(H-16));if(tierAt(x,y)==m.T&&regionAt(x,y)>=0&&freeSpot(x,y,1))return Object.assign({},m,{x,z:y})}return null}).filter(Boolean)}catch(err){console.warn('world load',err)}return r}}
 {const f=loadGame;loadGame=function(){const s=saveInfo&&saveInfo();const r=f.apply(this,arguments);try{
   const wl=s&&s.x2&&s.x2.wl,old=wl!==WD_WL;if(old&&s&&s.pos&&!s.pos.realm){const oz=wdOldZone(s.pos.x,s.pos.z,wl);
-    if(oz>=0){const p=PMAP[oz],n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]))}
+    if(oz>=0){const I=PMAP[oz].ins[0],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]))}
     else{const x=Math.round(pl.position.x),z=Math.round(pl.position.z);if(x>=110||MAP.DW[z*W+x]>=0)toPos(START[0],START[1])}}}catch(err){console.warn('world load pos',err)}return r}}
 // the Citadel's castle walls only draw while you are in the Citadel (they were drawn from every zone and Duskhold)
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{if(window.CITW){const on=regionAt(Math.round(pl.position.x),Math.round(pl.position.z))===5;if(CITW[0].visible!==on)CITW.forEach(m=>m.visible=on)}}catch(_){}}}

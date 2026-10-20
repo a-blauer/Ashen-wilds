@@ -192,7 +192,7 @@ function put(m,i,x,y,z,sx,sy,sz,hex,j){d0.position.set(x,y+GH(x,z),z);d0.scale.s
 const GPX=2;
 const GTX=(()=>{
 const bc=(x,y)=>{x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));const t=MAP[y][x],b=BIOMES[MAP.bio[y][x]],w=b.wat;return t=='g'?b.grs:t=='a'?b.acc:t=='#'?b.frs:t=='R'?[b.gnd[0]*.45+42,b.gnd[1]*.45+40,b.gnd[2]*.45+38]:(t=='P'||t=='B'||t=='W')?[156,148,134]:t=='p'?[146,121,86]:t=='~'?(b.lava?[110,40,14]:[w[0]*.4,w[1]*.4,w[2]*.5]):b.gnd};
-const TC=new Float32Array(W*H*3),CF=new Uint8Array(W*H);
+let TC=new Float32Array(W*H*3),CF=new Uint8Array(W*H); // v106: freed after painting (the closures below would keep them alive)
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=bc(x,y),k=y*W+x,t=MAP[y][x];TC[k*3]=c[0];TC[k*3+1]=c[1];TC[k*3+2]=c[2];CF[k]=(t=='P'||t=='B'||t=='W')?1:t=='p'?2:0}
 const cl=(v,m)=>v<0?0:v>m?m:v;
 const paint=(OX,OY,TW,TH,PX)=>{const NW=TW*PX,NH=TH*PX,c=document.createElement('canvas');c.width=NW;c.height=NH;const g2=c.getContext('2d'),gid=g2.createImageData(NW,NH),gd=gid.data;
@@ -206,7 +206,7 @@ const paint=(OX,OY,TW,TH,PX)=>{const NW=TW*PX,NH=TH*PX,c=document.createElement(
   }}
  g2.putImageData(gid,0,0);return {c,x0:OX,y0:OY,w:TW,h:TH,px:PX}};
 // the paved square: chunk-aligned (CHN=32) rectangle around the town, the road to the Portal Court and the Courtyard path
-const TR=[0,7,4,17],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);
+const TR=[0,7,4,17],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);TC=null;CF=null;
 return {main,town,list:[main,town],pick:(cx,cz)=>cx>=TR[0]&&cx<TR[2]&&cz>=TR[1]&&cz<TR[3]?town:main}})();
 const gt=new THREE.CanvasTexture(GTX.main.c);gt.anisotropy=ren.capabilities.getMaxAnisotropy();GTX.main.t=gt;
 try{for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=MAP[y][x];if((t=='P'||t=='B'||t=='W'||t=='p')&&GTX.pick(x>>5,y>>5)!==GTX.town){console.warn('paved tile outside the town texture',x,y);y=H;break}}}catch(_){}

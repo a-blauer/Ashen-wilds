@@ -9,8 +9,8 @@
 //    Co-op guests (no roster of their own) fall back to C.clr, set on the kill that clears the camp (same rule as campOnKill).
 function arFanK(){return .4}
 function campCleared(C){if(!C)return false;
-  try{if(typeof ROST!='undefined'&&ROST.r===C.pm&&ROST.slots&&ROST.slots.length){let n=0,a=0;for(const s of ROST.slots)if(s.camp===C){n++;if(!s.dead)a++}if(n)return a===0}}catch(_){}
+  try{if(typeof ROST!='undefined'&&ROST.r===C.ig&&ROST.slots&&ROST.slots.length){let n=0,a=0;for(const s of ROST.slots)if(s.camp===C){n++;if(!s.dead)a++}if(n)return a===0}}catch(_){}
   return !!C.clr}
-{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{CAMPS.forEach(C=>{if(C.pm===r)C.clr=false})}catch(_){}return o}}
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{CAMPS.forEach(C=>{if(C.ig===r)C.clr=false})}catch(_){}return o}}
 {const f=kill;kill=function(e){const C=e&&e.camp,r=f.apply(this,arguments);try{if(C&&!C.raid&&e.leader!==C&&campAlive(C)===0)C.clr=true}catch(_){}return r}}
 

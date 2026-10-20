@@ -33,7 +33,7 @@ const pickMem=th=>{const t=th.mem.reduce((s,m)=>s+m[1],0);let r=Math.random()*t;
 // ---------- camp placement: a few large settlements per biome, spread far apart ----------
 var CBLK=new Set(typeof WDCOL!='undefined'&&WDCOL?WDCOL:[]);
 const CAMPS=[],CAMP_R=12;
-if(typeof PMAP!='undefined'){PMAP.forEach((p,pi)=>p.cl.forEach((c,k)=>{CAMPS.push({i:CAMPS.length,x:Math.round(c[0]),z:Math.round(c[1]),th:CTH[PM_TH[pi][k%3]],cap:7,g:null,kt:-1e9,seed:R(1,1e6),bi:p.bi,pm:pi})}))}else
+if(typeof PMAP!='undefined'){PMAP.forEach((p,pi)=>p.cl.forEach((c,k)=>{CAMPS.push({i:CAMPS.length,x:Math.round(c[0]),z:Math.round(c[1]),th:CTH[PM_TH[pi][k%3]],cap:7,g:null,kt:-1e9,seed:R(1,1e6),bi:p.bi,pm:pi,ig:rgAt(Math.round(c[0]),Math.round(c[1]))})}))}else // v106: ig = the zone instance
 {
   const open=(x,y)=>{const t=MAP[y]&&MAP[y][x];return t&&t!='#'&&t!='~'&&t!='r'&&t!='R'&&t!='W'&&t!='B'};
   const cand={};

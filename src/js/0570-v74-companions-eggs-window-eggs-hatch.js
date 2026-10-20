@@ -127,7 +127,7 @@ function ceDone(){const H=CE.hat;if(!H||!H.done)return;const i=party.indexOf(H.c
 new MutationObserver(()=>{if($('cmp').classList.contains('hide')&&CE.hat){const names=[CE.hat.c,...hq.map(h=>h.c)].map(c=>nm(c));CE.hat=null;hq.length=0;hAct=false;PV.run=false;
   say('🥚 Hatched: '+names.join(', ')+'. Find '+(names.length>1?'them':'it')+' in Companions & Eggs (P).')}}).observe($('cmp'),{attributes:true,attributeFilter:['class']});
 
-{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{const x=Math.round(pl.position.x),z=Math.round(pl.position.z),g=regionAt(x,z);if(g>=0&&MAP.DW[z*W+x]>=0){const p=PMAP[g];toPos(p.en[0],p.en[1])}}catch(_){}return r}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{const x=Math.round(pl.position.x),z=Math.round(pl.position.z),g=insAt(x,z);if(g&&MAP.DW[z*W+x]>=0){toPos(g.en[0],g.en[1])}}catch(_){}return r}}
 // ---- v70: never get stuck — after any jump, dash, pull or knockback the hero is nudged to the nearest free spot ----
 function plBlocked(x,z){return CR.some(([a,b])=>solid(x+a,z+b))||tcHit(x,z)}
 var UNS={ok:null,t:0};

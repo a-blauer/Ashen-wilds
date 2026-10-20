@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG: five hero classes, hatchable companions, the floating stronghold Duskhold,
-six portal zones each ending in a Sovereign den, wave trials, mounts, fishing, crafting at town stations and online co-op.
+six portal zones (three instances each) ending in a Sovereign den, wave trials, mounts, fishing, crafting at town stations and online co-op.
 Published as the claude.ai artifact https://claude.ai/artifact/GZsCSNZGgULRRkVLdYHPmw (`dist/ashen-wilds.html`; v103 onward — v102 is still at CMvAWZi8x1qbMZp9SkBpGL). (The pre-v102 link was retired.)
 
 ## Layout
@@ -28,7 +28,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | main loop `loop()`, prompts, vendors | `0104-vendors-main-loop.js` |
 | classes, skills, talents, item templates `ITPL`, creature families | `0110-v2-*` |
 | enemies, damage, XP, loot (`genItem`) | `0120-v2-*`, `0410-v49-9-gear-sets*` |
-| zones (`PMAP`, `pmGen`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world) |
+| zones (`PMAP`, `pmGen`), zone instances (`INSL`, `insAt`/`rgAt`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world), `1940` (v106 instances) |
 | save / load (`gameSnapshot`, `loadGame`, `x2Save`) | `0230-v36-save-load*`, `0450-shared-prompts*` |
 | co-op (`MP`) | `0520-v58-online-co-op*` |
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
@@ -38,7 +38,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v105 companion abilities: one motion + effect per spell (`SPX105`, motions `MV105`, effect toolkit `fx*`) | `1930-v105-companion-ability-moves.js` |
 | v105 flail: wide 3-hit sweeps (baked `flail0..2`) | `1920-v105-flail-wide-swings.js`, `test/v100_anim_moves.js` |
 | v103 evolution preview (now → next stage in the Spells & Evolution tab) | `1890-v103-evolve-preview.js` |
-| zone roster, atmosphere, grades | `0550-v71-*` |
+| zone roster + respawn (`ROST`, `RESP_T`), atmosphere, grades | `0550-v71-*` |
 | companions & eggs window, fusion window | `0570-v74-*`, `1780-v100-fusemenu*` |
 | weapon types / mounts / Stable | `0580-v78-*`, `0590-v78-*`, `0790-v83-*` (gaits, specs), `1790`/`1810` (v100 mount models) |
 | Sovereign dens | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
@@ -95,6 +95,18 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   The spell lands at the motion's strike moment (`MV105[m].h`). Bites play the motion in place of the generic lunge.
 - **Baked attack keys**: re-baking with `BAKE=1 python3 v100_anim.py` nudges every move a little (the IK is not fully
   deterministic). When adding moves, splice only the new lines into `1705-v100-anim-baked-keys.js` (as v105 did for the flail).
+- **Zone instances (v106)**: every zone (`PMAP[i]`) is three instances `PMAP[i].ins[k]` (also the flat list `INSL[g]`,
+  g = i*3+k), each 350x331 tiles (half a v97 zone). Zone i is row i of the world grid, instance k column k, 6 tiles of void
+  apart. `regionAt` gives the zone, `rgAt` the instance key, `insAt` the instance record (`x0,y0,wp,path,cl,ba,wa,en,lv,n,den`).
+  Levels: the zone's range split in thirds (`pmLvSplit`), rising along each instance's road (`zoneLv`). Instance III holds the
+  den (`ba`) and the wave arena (`wa`); in I and II `ba` is the gateway clearing (`RPORT` k `'next'`) and `wa` is null.
+  Zone-level fields older code reads (`p.ba`, `p.wa`, `p.path`, `p.wp`) are instance III's; `p.en`, `p.x0/y0` instance I's;
+  `p.cl` all 12 camps (`C.ig` = the camp's instance). The roster, co-op region (`MP.rg`), treasure maps (`m.r` zone +
+  `m.k` instance), the local map and chunk visibility (`cvOK`) all work per instance. `INSR[i]` = furthest instance reached
+  (saved as `x2.insr`); the zone's portal lists the reached ones. Creatures come back `RESP_T` (30) s after death, not
+  within `RESP_NEAR` tiles of a hero. Recall saves `INST` (instance + spot + the creatures' timers); T in Duskhold goes back.
+  World layout version `WD_WL` 106; older saves go to instance I's entrance of their zone and get every instance of every
+  open zone.
 - **Decorations (v104)**: fixed spots outside every lot and door spot (checked by `PART=deco python3 v103_kingdom.py`);
   `SH.deco[k]` 1 shown / 0 owned but hidden, saved as `x2.kdeco`. Wall pieces (`D.wall`: banners, ivy, ravens) measure the wall
   of the current Bastion Walls level by ray casts (`dcWall104`) and are rebuilt when it changes (`PART=tiers` checks every level).
@@ -129,7 +141,10 @@ cd test
 python3 v38t.py              # save/load
 python3 v32t.py              # portal → Sovereign kill → wave trial
 python3 v57t.py              # grades, XP, skills, consume, fusion
-python3 v60t.py              # zone roster (no respawn)
+python3 v60t.py              # zone roster (per instance, 30 s respawn)
+python3 v106_instances.py    # v106: instances, levels, gateways, respawn, recall back, portal window, saves, chunk visibility
+python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
+MODE=make SRC=<old> AW_TMP=<dir> python3 v106_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave.json python3 v106_oldsave.py  # v97 save -> v106
 python3 v73t.py              # hit feedback, low health, death, Rise Again   (TITLE=1 python3 v73d.py: title → Continue)
 python3 v78t.py              # every weapon type's attack, Stable + mounts, items
 python3 mpt.py mpsteps.py    # two-player co-op over a fake room

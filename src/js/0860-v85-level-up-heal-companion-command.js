@@ -84,35 +84,31 @@ const bagSig=()=>hero.cls+'|'+SLOTS.map(k=>eq[k]?eq[k].id+':'+(eq[k].up||0):'-')
   const r=f.apply(this,arguments);try{if(HP){HP._cls=hero.cls;BAGSIG=bagSig()}}catch(_){}return r}}
 setInterval(()=>{try{if($('bag')&&!$('bag').classList.contains('hide')&&HP&&bagSig()!==BAGSIG){BAGSIG=bagSig();refreshGear(HP);bagPV()}}catch(_){}},400);
 
-// ---------------- recall keeps your zone run: return with T, or restart it at the portal ----------------
-// INST = the zone run you recalled out of: which creatures are dead, where you stood. Saved with the game.
+// ---------------- recall keeps your place: press T again in Duskhold to go straight back ----------------
+// INST = where you recalled from: the zone instance (r = instance key, v106), where you stood, and its creatures (each dead
+// one keeps the time left until it comes back, rl ms). Saved with the game. Entering through a portal starts that instance
+// fresh at its entrance instead.
 var INST=null,RECBACK=false;
 const instMP=()=>typeof MP!='undefined'&&MP.on&&MP.host&&MP.host!==MP.me;
-function instSave(){const r=curMap();if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
-  INST={r,x:pl.position.x,z:pl.position.z,quiet:ROST.quiet,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1}))};
-  enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&regionAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
-function instRestore(){const I=INST;if(!I)return false;ROST.r=I.r;ROST.quiet=I.quiet;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null}));
-  const p=PMAP[I.r];toPos(I.x,I.z);INST=null;banner(p.ic+' '+p.n.toUpperCase(),'Back where you left off','The creatures you defeated stay defeated');return true}
+function instSave(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
+  const now=nowP();INST={v:106,r,x:pl.position.x,z:pl.position.z,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1,rl:s.dead?Math.max(0,(s.rt||0)-now):0,rt:0}))};
+  enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&rgAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
+function instRestore(){const I=INST;if(!I||!INSL[I.r])return false;const now=nowP();ROST.r=I.r;ROST.quiet=false;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null,rt:s.dead?now+(s.rl||0):0}));
+  const N=INSL[I.r],p=PMAP[N.z];toPos(I.x,I.z);INST=null;banner(p.ic+' '+N.n.toUpperCase(),'Back where you left off','Fallen creatures return '+RESP_T+' seconds after they die');return true}
 {const f=recallTown;recallTown=function(){const back=RECBACK&&nowP()-RECBACK<8000;RECBACK=false;if(back&&instRestore())return;instSave();return f.apply(this,arguments)}}
 {const f=goHome;goHome=function(){instSave();return f.apply(this,arguments)}}
 {const f=doRecall;doRecall=function(){
-  if(INST&&curMap()<0&&!rec&&!uiOpen()){if(instMP())return say('Only the zone host can return to a saved run.');
+  if(INST&&INSL[INST.r]&&curMap()<0&&!rec&&!uiOpen()){if(instMP())return say('Only the zone host can return to a saved spot.');
     if(enemies.some(e=>!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<10))return say('You cannot recall with enemies this close.');
-    RECBACK=nowP();rec={t:0,need:4,hp:hero.hp};say('Returning to your '+PMAP[INST.r].n+' run... stay still for 4 seconds.');return}
+    RECBACK=nowP();rec={t:0,need:4,hp:hero.hp};say('Returning to '+INSL[INST.r].n+'... stay still for 4 seconds.');return}
   if(rec)RECBACK=false;return f.apply(this,arguments)}}
 $('recallBtn').onclick=()=>doRecall();
-// walking into the portal of a zone you have a saved run in asks first
-function instAsk(i,fresh){let d=$('instQ');if(!d){d=document.createElement('div');d.id='instQ';d.className='glass';$('stage').appendChild(d);
-    document.head.insertAdjacentHTML('beforeend','<style>#instQ{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:40;padding:16px 18px;max-width:340px;text-align:center}#instQ h3{margin:0 0 6px;font-size:1rem}#instQ p{margin:0 0 12px;font-size:.8rem;color:var(--mut)}#instQ .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}</style>')}
-  const p=PMAP[i],left=INST.slots.filter(s=>!s.dead).length;
-  d.innerHTML=`<h3>Restart zone instance?</h3><p>You have a run in progress in ${p.ic} ${p.n} (${left} creature${left==1?'':'s'} left). Restarting brings every creature back.</p><div class="btns"><button class="pri" data-iq="cont">Continue my run</button><button data-iq="new">Restart</button><button data-iq="no">Cancel</button></div>`;
-  d.classList.remove('hide');d.onclick=e=>{const b=e.target.closest('[data-iq]');if(!b)return;d.classList.add('hide');const k=b.dataset.iq;
-    if(k=='cont')fadeTo(()=>instRestore());else if(k=='new'){INST=null;fresh(i)}}}
-{const f=enterMap;enterMap=function(i){if(INST&&INST.r===i&&!instMP()){instAsk(i,j=>f.call(this,j));return}if(INST&&INST.r===i)INST=null;return f.apply(this,arguments)}}
-// a hint while a run is saved
-{const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&curMap()<0){const b=$('buffs');if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to your ${PMAP[INST.r].n} run">🌀 ${PMAP[INST.r].n} run saved · T</span>`)}}catch(_){}}}
+// entering an instance through its portal starts it fresh, so a saved spot in that same instance is dropped
+{const f=enterMap;enterMap=function(i,k){if(INST&&INST.r===i*PMI+(k|0)&&!instMP())INST=null;return f.apply(this,arguments)}}
+// a hint while a spot is saved
+{const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&INSL[INST.r]&&curMap()<0){const b=$('buffs'),n=INSL[INST.r].n;if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to where you left ${n}">🌀 ${n} · T to return</span>`)}}catch(_){}}}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
-{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots?s.inst:null}catch(_){INST=null}return r}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===106?s.inst:null}catch(_){INST=null}return r}}
 
 // ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
 var fCon=null;

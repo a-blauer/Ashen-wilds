@@ -6,13 +6,15 @@ DUNS.length=0;
 BOSSES.forEach((b,i)=>{b.zone=i+1;b.guard=false;b.ult=i>=1?2:0});
 // ---- levels rise along each map's road ----
 function pmProg(p,x,z){let bi=0,bd=1e9;const P=p.path;for(let i=0;i<P.length;i+=2){const d=(P[i][0]-x)**2+(P[i][1]-z)**2;if(d<bd){bd=d;bi=i}}return bi/(P.length-1)}
-function zoneLv(x,y){const r=regionAt(Math.round(x),Math.round(y));if(r<0)return 1;const p=PMAP[r],q=pmProg(p,x,y);return Math.max(1,Math.min(MAXLV,Math.round(p.lv[0]+(p.lv[1]-p.lv[0])*q)))}
+// v106: along the road of the instance you are in, within that instance's share of the zone's levels
+function zoneLv(x,y){const I=insAt(Math.round(x),Math.round(y));if(!I)return 1;const q=pmProg(I,x,y);return Math.max(1,Math.min(MAXLV,Math.round(I.lv[0]+(I.lv[1]-I.lv[0])*q)))}
 const curMap=()=>regionAt(Math.round(pl.position.x),Math.round(pl.position.z));
+const curIns=()=>insAt(Math.round(pl.position.x),Math.round(pl.position.z));
 function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
   const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
-  const C=campAt(pl.position.x,pl.position.z,CAMP_R);return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+p.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+p.lv[0]+'–'+p.lv[1]+')';
+  const I=curIns(),C=campAt(pl.position.x,pl.position.z,CAMP_R);return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+I.lv[0]+'–'+I.lv[1]+')';
 }
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
@@ -40,35 +42,46 @@ function portalRefresh(){PORT.forEach(P=>{const u=pUnlocked(P.i),d=pDone(P.i);P.
 portalRefresh();
 TANIM.push({x:PCOURT[0],z:PCOURT[1],f:now=>{PORT.forEach((P,k)=>{if(P.sw.visible){P.sw.rotation.z=now*.0018+k;P.disc.material.opacity=.66+.12*Math.sin(now*.003+k)}})}});
 // ---- return portals at each map's start, and a way home in each boss arena once it is cleared ----
-PMAP.forEach(p=>{p.en=p.path[16].slice()});
+INSL.forEach(I=>{I.en=I.path[16].slice()});PMAP.forEach(p=>{p.en=p.ins[0].en});
 var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
   sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.32,0,0);return {g,x,z,disc}}
-PMAP.forEach((p,i)=>{const n=p.path[26],e=p.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
-  const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=i;a.k='home';RPORT.push(a);
+// v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
+INSL.forEach(I=>{const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
+  const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
+  if(!I.den){const N=PMAP[I.z].ins[I.k+1],P=I.path,q=P[Math.max(0,P.length-14)],gx=I.ba[0],gz=I.ba[1],t=smallPortal(gx,gz,PMAP[I.z].col,'🌀 '+N.n);
+    t.g.rotation.y=Math.atan2(q[0]-gx,q[1]-gz);t.g.scale.setScalar(1.35);t.pi=I.z;t.ig=I.g;t.k='next';t.to=N;RPORT.push(t)}});
+PMAP.forEach((p,i)=>{
   const b=smallPortal(p.ba[0],p.ba[1]+10,0xffd060,'🌀 Return home');b.pi=i;b.k='exit';b.g.visible=pDone(i);RPORT.push(b);
   const w=smallPortal(p.wa[0],p.wa[1]+11,0xff6a40,'🚪 Leave trial');w.pi=i;w.k='wave';RPORT.push(w)});
 function rportRefresh(){RPORT.forEach(r=>{if(r.k=='exit')r.g.visible=pDone(r.pi)})}
 // ---- travel ----
 function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.forEach((f,k)=>{if(f)f.position.set(x+(k?1.4:-1.4),0,z+1)});snapCam();curTown=-2}
-function enterMap(i){if(AF)return;const p=PMAP[i];fadeTo(()=>{const n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]));
-  banner(p.ic+' '+p.n.toUpperCase(),p.sub,'Enemy levels '+p.lv[0]+'–'+p.lv[1]+' · defeat '+BOSSES[i].name+' at the end of the road')})}
+// v106: k = the instance (0 = I); every instance starts at its own entrance
+function enterMap(i,k){if(AF)return;const p=PMAP[i],I=p.ins[k|0]||p.ins[0];fadeTo(()=>{insArrive(I)})}
+function insArrive(I){const p=PMAP[I.z],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]));
+  banner(p.ic+' '+I.n.toUpperCase(),p.sub,'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.den?'defeat '+BOSSES[I.z].name+' at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
 function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
   const P=pl.position;
   for(const Q of PORT){if(Math.hypot(P.x-Q.x,P.z-Q.z)<2.6){const p=PMAP[Q.i];if(!pUnlocked(Q.i))return {label:'🔒 Sealed · defeat '+BOSSES[Q.i-1].name+' in '+PMAP[Q.i-1].n,fn:()=>openX('bosses')};
-    if(pDone(Q.i))return {label:'F · '+p.n+' (map or Wave Trial)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.n+' (Lv '+p.lv[0]+'–'+p.lv[1]+')',fn:()=>enterMap(Q.i)}}}
-  for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<2.2){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
+    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' (Lv '+p.ins[0].lv[0]+'–'+p.ins[0].lv[1]+')',fn:()=>enterMap(Q.i,0)}}}
+  for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<(r.k=='next'?2.8:2.2)){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};
+    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+' (Lv '+N.lv[0]+'–'+N.lv[1]+')',fn:()=>insGo(N)}}
+    return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
-XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i];$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+' · cleared ✓';
-  $('xwB').innerHTML=`<div class="rows"><div class="rw"><span class="rn">🗺️ <b>Enter the map</b><small>Walk the road again: farm its camps for gear, eggs and materials, and face ${b.name} (back 5 minutes after each defeat).</small></span><span class="ra"><button class="pri" data-pgo="map">Enter</button></span></div>
-   <div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div></div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Recall (T) always brings you home to Duskhold.</span>'};
-$('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target.closest('[data-pgo]');if(!b)return;const i=xwArg|0;closeX();if(b.dataset.pgo=='map')enterMap(i);else waveStart(i)});
+// v106: the portal lists every instance of the zone you have reached, and the Wave Trial once the zone is cleared
+XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+(d?' · cleared ✓':'');
+  const row=I=>{const ok=I.k<=R,txt=I.den?'The last stretch of road and '+b.name+'’s den'+(d?' (back 5 minutes after each defeat).':'.'):'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
+    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">🗺️ <b>${I.n}</b> <span class="mut">Lv ${I.lv[0]}–${I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
+  const wave=d?`<div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div>`:'';
+  $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
+  $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target.closest('[data-pgo]');if(!b)return;const i=xwArg|0;closeX();if(b.dataset.pgo=='map')enterMap(i,+b.dataset.pk||0);else waveStart(i)});
 // the J window lists the portals and their bosses
 XR.bosses=()=>{$('xwT').textContent='🌀 The Portals';$('xwS').textContent=bossDone.size+' of '+PMAP.length+' maps cleared';
   $('xwB').innerHTML='<div class="rows">'+PMAP.map((p,i)=>{const b=BOSSES[i],u=pUnlocked(i),d=pDone(i);
@@ -129,12 +142,12 @@ function waveEnd(won,quiet){const W2=WV;if(!W2)return;WV=null;W2.foes.forEach(e=
 var prfT=0;{const f=homeTick;homeTick=function(dt,now,al){f(dt,now,al);if(dt>0)waveTick(dt);if(home!==TOWNS[0])home=TOWNS[0];if(now-prfT>1000){prfT=now;portalRefresh();rportRefresh()}}}
 {const f=down;down=function(){if(WV){waveEnd(false,true);say('☠ You fell in the Wave Trial.')}return f.apply(this,arguments)}}
 // ---- the Citadel is a castle: stone walls instead of cliffs ----
-{const p=PMAP[5],L=[];for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
+{const p=PMAP[5],L=[];for(const I of p.ins)for(let y=I.y0;y<I.y0+PMH;y++)for(let x=I.x0;x<I.x0+PMW;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
   const mt=new THREE.MeshStandardMaterial({roughness:.92,flatShading:true}),wm=new THREE.InstancedMesh(new THREE.BoxGeometry(1.02,1,1.02),mt,L.length),cm=new THREE.InstancedMesh(new THREE.BoxGeometry(.5,.6,.5),mt,L.length),o=new THREE.Object3D(),cc=new THREE.Color();
   L.forEach(([x,y],i)=>{const h=7+((x*7+y*3)%3)*.4,g0=.3;o.position.set(x,g0+h/2,y);o.scale.set(1,h,1);o.updateMatrix();wm.setMatrixAt(i,o.matrix);cc.setHex((x+y)%2?0x3e363c:0x332c32);wm.setColorAt(i,cc);
     const on=(x+y)%2;o.position.set(x,g0+h+.3,y);o.scale.setScalar(on?1:.001);o.updateMatrix();cm.setMatrixAt(i,o.matrix);cm.setColorAt(i,cc)});
   [wm,cm].forEach(m=>{m.castShadow=true;m.receiveShadow=true;m.frustumCulled=false;m.instanceMatrix.needsUpdate=true;scene.add(m);(window.CITW=window.CITW||[]).push(m)});
   for(let k=0;k<L.length;k+=23){const [x,y]=L[k],g=new THREE.Group();g.position.set(x,0,y);scene.add(g);const b=new THREE.Mesh(new THREE.PlaneGeometry(.8,2.2),new THREE.MeshStandardMaterial({color:0x7a0c18,side:THREE.DoubleSide,roughness:.9}));b.position.y=4.2;g.add(b);
-    const tl=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,5),new THREE.MeshBasicMaterial({color:0xff8a40}));tl.position.set(0,2.6,0);g.add(tl);b.lookAt(p.x0+PMW/2,4.2,p.y0+PMH/2)}}
+    const tl=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,5),new THREE.MeshBasicMaterial({color:0xff8a40}));tl.position.set(0,2.6,0);g.add(tl);{const I=insAt(x,y)||p.ins[0];b.lookAt(I.x0+PMW/2,4.2,I.y0+PMH/2)}}}
 
 

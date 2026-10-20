@@ -10,7 +10,7 @@ FAKE=open(HERE+'/fakeroom.js').read()
 def setup(pg,cls,name):
     ev=pg.evaluate
     ev("()=>localStorage.clear()")
-    pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="%s"]'%cls,timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
+    pg.click('[data-dev=desktop]',timeout=60000);ev("()=>{const d=document.getElementById('svp');if(d)d.classList.add('hide')}");pg.click('[data-c="%s"]'%cls,timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     ev("()=>{hero.name='%s';window.FAST=()=>{window.requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}}"%name)
 try:
   with sync_playwright() as p:

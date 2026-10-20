@@ -1,37 +1,45 @@
 // ================= v71: roaming wildlife · zone atmosphere · unlockable skills · bell-curve grades · consume eggs =================
 function wildCount(P){let n=0;for(const e of enemies)if(e.wild&&!e.dead&&Math.abs(e.m.position.x-P.x)<95&&Math.abs(e.m.position.z-P.z)<95)n++;return n}
-// v72: each zone has a fixed population for the visit — the dead stay dead until you leave and come back through the portal
+// v72: each zone has a fixed population for the visit; v106: per zone instance (ROST.r = instance key g), and a creature
+// comes back RESP_T seconds after it dies, at its own spot (not while a hero stands within RESP_NEAR tiles of that spot)
 var ROST={r:-9,slots:[],left:0,quiet:false};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
 // v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
-var ROST_G=130;
-function rosterBuild(r){const p=PMAP[r],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
+// v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
+var ROST_G=65,RESP_T=30,RESP_NEAR=6;
+function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
+  // the creatures of the instance you left go (they are out of reach behind the void anyway)
+  enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
   // camps: a full garrison each
-  CAMPS.forEach(C=>{if(C.pm!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
+  CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
-  // roaming groups spread across the whole zone
-  const grp=[];for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=p.x0+6+Math.floor(Math.random()*(PMW-12)),z=p.y0+6+Math.floor(Math.random()*(PMH-12));
-    if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.pm===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
-    if(Math.hypot(x-p.ba[0],z-p.ba[1])<Math.max(30,24*DK)||Math.hypot(x-p.wa[0],z-p.wa[1])<20||Math.hypot(x-p.en[0],z-p.en[1])<22)continue;
+  // roaming groups spread across the whole instance
+  const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(PMW-12)),z=I.y0+6+Math.floor(Math.random()*(PMH-12));
+    if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.ig===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
+    if(Math.hypot(x-I.ba[0],z-I.ba[1])<BR||(I.wa&&Math.hypot(x-I.wa[0],z-I.wa[1])<20)||Math.hypot(x-I.en[0],z-I.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
   grp.forEach(([x,z])=>{const key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
     for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.035;
-      S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(1,Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
-  ROST.r=r;ROST.slots=S;ROST.quiet=false;CAMPS.forEach(C=>{if(C.pm===r)C.kt=-1e9})}
-function rosterTick(){const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z));
+      S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(I.lv[0],Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
+  ROST.r=r;ROST.slots=S;ROST.quiet=false;CAMPS.forEach(C=>{if(C.ig===r)C.kt=-1e9})}
+function rosterTick(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));
   if(r<0){if(ROST.r>=0){ROST.r=-1;ROST.slots=[]}return}
   if(r!==ROST.r)rosterBuild(r);
   const ps=[pl.position];if(typeof MP!='undefined'&&MP.on&&MP.others)for(const k in MP.rh){const q=MP.rh[k];if(q.act&&q.m)ps.push(q.m.position)}
-  let left=0;for(const s of ROST.slots){if(s.dead)continue;left++;if(s.on&&(s.on.dead||!enemies.includes(s.on)))s.on=null;if(s.on)continue;
+  const now=nowP(),p=PMAP[INSL[r].z];let left=0;
+  for(const s of ROST.slots){
+    if(s.dead){if(!(now>=(s.rt||0)))continue;let dn=1e9;for(const P of ps)dn=Math.min(dn,Math.hypot(P.x-s.x,P.z-s.z));if(dn<RESP_NEAR)continue;s.dead=false;s.on=null;s.rsp=1}
+    left++;if(s.on&&(s.on.dead||!enemies.includes(s.on)))s.on=null;if(s.on)continue;
     let d=1e9;for(const P of ps)d=Math.min(d,Math.hypot(P.x-s.x,P.z-s.z));if(d>78)continue;
-    if(s.camp&&!s.camp.g)buildCamp(s.camp);const p=PMAP[r],e=spawnEnemy(s.key,s.x,s.z,s.lv,{al:s.al,zt:p.t});if(!e)continue;e.slot=s;s.on=e;
+    if(s.camp&&!s.camp.g)buildCamp(s.camp);const e=spawnEnemy(s.key,s.x,s.z,s.lv,{al:s.al,zt:p.t});if(!e)continue;e.slot=s;s.on=e;
+    if(s.rsp){s.rsp=0;if(d<40&&typeof burst=='function')burst(gY(e.m.position,.5),0x9a6aff,14,1.6,1.6,.5)}
     if(s.camp){e.camp=s.camp;e.wx=s.camp.x;e.wz=s.camp.z}else{e.wild=1;e.wx=s.hx;e.wz=s.hz}}
-  ROST.left=left;if(!left&&ROST.slots.length&&!ROST.quiet){ROST.quiet=true;banner('🏳 THE ZONE FALLS QUIET',PMAP[r].n,'Every creature here has been defeated. They return the next time you enter through the portal.')}}
+  ROST.left=left}
 {const f=spawn;spawn=function(init){
   if(typeof MP!='undefined'&&MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me)return;
   const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0&&!init)return;
   if(init)return;rosterTick()}}
-{const f=kill;kill=function(e){if(e&&e.slot){e.slot.dead=true;e.slot.on=null}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){if(e&&e.slot){e.slot.dead=true;e.slot.on=null;e.slot.rt=nowP()+RESP_T*1000}return f.apply(this,arguments)}}
 // the main loop only calls spawn while below the mob cap — make sure the roster keeps streaming in either way
 setInterval(()=>{try{if(party.length&&!(typeof MP!='undefined'&&MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me))rosterTick()}catch(_){}},1500);
 
