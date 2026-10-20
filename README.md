@@ -77,7 +77,7 @@ slots, the v83 mount models (every mount is built by the v100 model track), and 
 Kept on purpose: dungeon entrance *spots* (`DUNS`, emptied at load) still steer where camps and secrets go;
 soil mounds and shallow water still give the old Realm terrain items (`ITEMS['t:…']`, shown under "Realm items" in the
 bag) — removing those would change the world, so it is a design decision for later.
-Everything removed is in git history (tag `v100-before-cleanup`).
+Everything removed is in git history: branch `claude/v100-integrate` is the last version before the cleanup.
 
 ## Build
 
