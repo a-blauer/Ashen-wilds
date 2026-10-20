@@ -22893,7 +22893,7 @@ function select(mode,key,opt){
   placeHero(KV.home.hero);
   // camera: frame the scene from the side
   const sc=mode=='mon'?Math.max(1,(EN[key].sc||1)):1;KV.orbit.dist=(mode=='hero'&&RANGEDW[KV.wt]?9.5:7.2)*sc;
-  KV.busyT=0;renderDetail();renderList();
+  KV.busyT=0;QA('#kvTabs button').forEach(x=>x.classList.toggle('on',x.dataset.t==mode));renderDetail();renderList();
 }
 function setHero(cls,wt,quiet){
   hero.cls=cls;hero.lvl=50;hero.cd={};hero.cr=0;hero.buffs=[];

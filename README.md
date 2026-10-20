@@ -161,3 +161,13 @@ suggestion: rebuild, run the tests and load the game before keeping anything.
 
 Publish `dist/ashen-wilds.html` to the artifact URL above (pass it as `url`). Omitting `capabilities` on a redeploy keeps the co-op room;
 if they must be re-declared: `{"room":{"topics":{"es":"interact","ev":"interact","hit":"interact","bs":"interact","trade":"interact","chat":"interact"}}}`.
+
+## Animation viewer (separate artifact)
+
+`viewer/` builds `dist/kq-anim-viewer.html`: the game build plus a viewer that shows every companion (all 4 evolution
+looks, basic attack and its 4 abilities), every zone monster and each of its attack moves, and every hero class and
+weapon (each combo hit, full combo, class skills) on a quiet stage, using the real game code. Speed (1×–⅒×), pause,
+frame step, camera presets, loop. `viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame /
+setTimeout on a virtual clock (`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh`,
+check with `cd test && python3 kv_viewer.py` (SHOT=1 for contact sheets). Rebuild and republish it after changing
+models or attacks.
