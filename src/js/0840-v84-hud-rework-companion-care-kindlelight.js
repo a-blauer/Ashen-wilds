@@ -1,6 +1,5 @@
 // ================= v84: HUD rework, companion care, Kindlelight gloom, material hints, courtyard =================
 
-// (the courtyard walls are built at runtime by cyWalls in zzI_v85.js, since the courtyard grows)
 
 // ---------------- Kindlelight: thick green gloom, drifting ground mist, and dimmer days ----------------
 var KG={k:0,col:new THREE.Color(0x1c3414),mist:null};
@@ -66,9 +65,6 @@ body.mob #tgt{top:120px}
    if(b.dataset.rv!=null)reviveComp(+b.dataset.rv);else if(b.dataset.fd!=null)feedBest(+b.dataset.fd);else if(b.dataset.e!=null)toggleEmp(+b.dataset.e);hud()});
  // the "Your team" strip under the game screen is gone
  const pt=$('pty');if(pt){const r=pt.previousElementSibling;if(r&&r.classList.contains('bar-row'))r.style.display='none';pt.style.display='none'}}
-// courtyard name
-{const f=areaName;areaName=function(){try{if(townAt(pl.position.x,pl.position.z,0)<0&&curMap()<0&&Math.hypot(pl.position.x-CYD.x,pl.position.z-CYD.y)<CYD.r+.8)return '🌲 Duskhold · Courtyard'}catch(_){}return f.apply(this,arguments)}}
-
 // companion head portraits: render each companion's head once into a small picture
 {const f=mkBones;mkBones=function(S){const r=f.apply(this,arguments);for(const k in r.bones)r.bones[k].name=k;return r}}
 var CPIC={r:null,sc:null,cam:null,cache:{},q:[]};
@@ -136,9 +132,9 @@ var MSRC=null;
 function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].map(zn);return u.length?u.join(', '):''};
   const pz={};MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);(pz[q[2]]=pz[q[2]]||[]).push(r)});const zonesOf=ks=>zl(ks.flatMap(k=>(pz[k]||[]).filter(r=>r>=0)));
   const add=(n,ic,t)=>{S[n.toLowerCase()]={n,ic,t}};
-  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Garden in Duskhold’s Grand Square has a grove; every portal zone has trees too.');
-  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Garden in Duskhold’s Grand Square has stone, and gains more nodes with every zone you complete. Also: '+zonesOf(['rock','grave','pillar'])+'.');
-  add('Iron Ore','⛏️','A lucky find while mining rocks; higher Mining level finds it more often. Rocks are in the 🌲 Garden and '+zonesOf(['rock'])+'.');
+  add('Wood','🪵','Chop trees (F next to a tree) in the portal zones. Citizens of Duskhold can also gather it for you from any zone you have completed (Stronghold Steward).');
+  add('Stone','🪨','Mine rocks (F next to a rock): '+zonesOf(['rock','grave','pillar'])+'. Citizens can gather it from completed zones.');
+  add('Iron Ore','⛏️','A lucky find while mining rocks; higher Mining level finds it more often. Rocks are in '+zonesOf(['rock'])+'.');
   add('Crystal Shard','💎','Mine glowing crystals in '+(zonesOf(['crystal'])||'Burningeye Summit')+'. Falling meteors also leave crystals.');
   add('Plant Fiber','🌿','Gather bushes in '+zonesOf(['bush'])+'.');
   add('Petals','🌸','Pick flowers in '+zonesOf(['flower'])+'.');

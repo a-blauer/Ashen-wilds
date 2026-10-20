@@ -76,7 +76,7 @@ def s(pg):
           [0,1,2,3,4].forEach(i=>bossDone.add(i));portalRefresh();PORT.forEach((Q,i)=>{const p=TWN100_PG[i];out['portal'+i+'_open']=at(p.a[0]+(p.x-p.a[0])*.6,p.a[1]+(p.y-p.a[1])*.6)});
           return out}""")
         for s in ['smith','alch','cook','bard','merchant','sage','trainer','stable']:
-            if s!='smith':ok(r.get('site_'+s) and 'build it at the Stronghold Steward' in r['site_'+s],'unbuilt %s shows the build prompt'%s,r.get('site_'+s))
+            if s!='smith':ok(not r.get('site_'+s) or 'Stronghold Steward' in r['site_'+s],'unbuilt %s has no shop prompt at its old plot (v103: shops are placed on a lot when built)'%s,r.get('site_'+s))
             ok(r.get('shop_'+s) and r['shop_'+s].startswith('F · '),'built %s has its shop prompt'%s,r.get('shop_'+s))
         ok(r.get('steward')=='F · Stronghold Steward','Steward prompt',r.get('steward'))
         ok(r.get('portal0_locked','').startswith('F · Enter') and all(r.get('portal%d_locked'%i,'').startswith('🔒') for i in range(1,6)),'locked portals say sealed, Kindlelight is open',[r.get('portal%d_locked'%i) for i in range(6)])

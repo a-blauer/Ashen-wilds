@@ -14,7 +14,7 @@ function areaName(){
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
   const C=campAt(pl.position.x,pl.position.z,CAMP_R);return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+p.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+p.lv[0]+'–'+p.lv[1]+')';
 }
-function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and garden · the Portal Road leads south')}}}
+function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
 var MREC=['D','C','C','B','A','A'];
 function zoneRec(){const r=curMap();if(r<1)return null;const p=PMAP[r];return {b:{n:p.n},g:MREC[r],p:recPower(p.lv[0])}}

@@ -79,10 +79,9 @@ const PCOURT=[40,347]; // v101: the crossroads just outside the south gate, wher
 // market ward cy+TS..cy+TWN100_IW (shop street), inner wall + gate at cy+TWN100_IW, courtyard ward behind it, south gate at
 // cy+TWN100_SZ. Six portal gates stand on their own islands round the castle, joined by roads (TWN100_RD); PCOURT (the
 // old Portal Court) is now the crossroads east of the main gate. Layout plan with coordinates: README "v100: town".
-// the woodland courtyard inside the south ward of Duskhold (trees and stone to harvest)
-// It starts small and grows by one ring per completed zone; ring i holds 6 nodes of every node type found in zone i.
-// gate = the inner gate (north), gate2 = the south gate; the garden wall ring has an opening toward each.
-const CYD={x:40,y:317,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,299],gate2:[40,335],nodes:[]}; // v101: the garden park in the south half of the square
+// v103: the garden park (CYD) is gone — the south half of the Grand Square holds building lots now. CYD stays as an empty
+// record (no nodes) because old code and the save loader still read its gate spots.
+const CYD={x:40,y:317,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,299],gate2:[40,335],nodes:[]};
 // v100: the six portal gates, one island each (x,y centre, r radius, a = the spot in front of the portal: you arrive there)
 // v101: the Portal Road runs straight south from the south gate; gates I..VI stand in order along it, alternating east/west
 const TWN100_PG=[0,1,2,3,4,5].map(i=>{const y=362+i*27,s=i%2?-1:1,x=40+s*16;return {x,y,r:10,a:[x-s*7,y],side:s}});
@@ -166,15 +165,13 @@ const MAP=(()=>{
   BOSSES.forEach(b=>{for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
     });
   // v101: the stronghold town — one Grand Square: walls at |x|=WX and z=-TS / z=sz, a 3-tile south gate, paving inside,
-  // the garden park (CYD) as grass, the north row and fountain solid, and the eight shop plots solid (rotated footprints)
+  // the north row and fountain solid, and the eight shop plots solid (rotated footprints; v103 re-marks them by building lot)
   TOWNS.forEach(t=>{const WX=TWN100_WX,SZ=t.sz||TS;
     for(let dy=-TS-3;dy<=SZ+3;dy++)for(let dx=-WX-3;dx<=WX+3;dx++){const x=t.cx+dx,y=t.cy+dy;if(x<1||x>W-2)continue;const ax=Math.abs(dx);
       if(ax>WX||dy<-TS||dy>SZ){if(m[y][x]=='')m[y][x]='.';continue}
       if(ax==WX||dy==-TS){m[y][x]='W';continue}
       if(dy==SZ){m[y][x]=ax<=1?'P':'W';continue}
       m[y][x]='P'}
-    // the garden park: grass (and the courtyard biome) inside its largest ring
-    {const C=CYD,R=C.rmax+.6;for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(m[y][x]!=='P')continue;if(Math.hypot(x-C.x,y-C.y)<R){m[y][x]=(x*7+y*3)%5==0?'g':'.';bio[y][x]=2}}}
     TWN100_SH.forEach(q=>{const f=[Math.sin(q.ry),Math.cos(q.ry)],a=[f[1],-f[0]];for(let lx=-2.5;lx<=2.5;lx+=.5)for(let lz=-3.5;lz<=3.5;lz+=.5){const x=Math.round(t.cx+q.x+lx*a[0]+lz*f[0]),y=Math.round(t.cy+q.z+lx*a[1]+lz*f[1]);if(m[y][x]=='P')m[y][x]='B'}});
     const B=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m[t.cy+y][t.cx+x]='B'};
     B(-17,-11,-18,-14);B(-2,2,-18,-14);B(12,17,-18,-14);B(-1,1,-12,-12);
@@ -188,24 +185,6 @@ const MAP=(()=>{
    TWN100_PG.forEach((p,i)=>{const b=PMAP[i].bi;for(let y=Math.floor(p.y-p.r*1.5);y<=p.y+p.r*1.5;y++)for(let x=Math.floor(p.x-p.r*1.5);x<=p.x+p.r*1.5;x++){if(!m[y]||m[y][x]==='')continue;
      const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
      if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
-  // ---- the courtyard: south gate path, a grove at the heart, then one ring of nodes per zone (walls are placed at runtime) ----
-  {const C=CYD,inC=(x,y)=>Math.hypot(x-C.x,y-C.y),R=C.rmax+.6;
-   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(m[y][x]!=='.'&&m[y][x]!=='g')continue; // v100: inside the ward
-     if(inC(x,y)<R){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}}
-   [C.gate,C.gate2].forEach(G=>{for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(G[0]-C.x)*q),y=Math.round(C.y+(G[1]-C.y)*q);if(Math.hypot(x-C.x,y-C.y)<3.2)continue;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}}); // v100: a path from each gate
-   const nearP=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')return true;return false};
-   const spot=(cx,cy,rad,n,lo,hi,fn)=>{let got=0;for(let tr=0;tr<80&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
-     if(!'.g'.includes(m[y][x])||inC(x,y)>hi||inC(x,y)<lo||nearP(x,y))continue;fn(x,y);got++}};
-   const rk=k=>k=='rock'||k=='grave'||k=='pillar',put=(x,y,k,zi)=>{if(rk(k))m[y][x]='r';props.push([x,y,k]);C.nodes.push([x,y,k,zi])};
-   // the heart: trees for wood and a little stone, always open
-   const hi0=C.r0-1.6;[[-4,-2],[-1,-4.5],[3,-4],[4.5,0],[-4.5,2]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.8,4,2.6,hi0,(x,y)=>m[y][x]='#'));
-   [[-2,-3],[4,2.5]].forEach(([dx,dy])=>spot(C.x+dx,C.y+dy,1.5,3,2.6,hi0,(x,y)=>put(x,y,'rock',-1)));
-   // ring i opens when zone i is completed: 6 nodes of every node type that grows in that zone
-   PMAP.forEach((p,i)=>{const lo=C.r0-1.6+C.dr*i+.15,hi=C.r0-1.6+C.dr*(i+1),kinds=[...new Set(BIOMES[p.bi].pr)];
-     kinds.forEach((k,j)=>{let got=0;const a0=j/kinds.length*6.283+i*.7;
-       for(let tr=0;tr<400&&got<6;tr++){const a=a0+(rnd()-.5)*(6.283/kinds.length)*.9,d=lo+rnd()*(hi-lo),x=Math.round(C.x+Math.cos(a)*d),y=Math.round(C.y+Math.sin(a)*d);
-         if(!'.g'.includes(m[y][x])||nearP(x,y))continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
-  }
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
   m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));

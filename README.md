@@ -33,6 +33,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | co-op (`MP`) | `0520-v58-online-co-op*` |
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
 | stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
+| v103 kingdom: building lots `LOT103` (`SH.pos`), houses + citizens `HS103`, the one Steward window, working shopkeepers `WK103` | `1860`–`1900` (v103) |
+| v103 evolution preview (now → next stage in the Spells & Evolution tab) | `1890-v103-evolve-preview.js` |
 | zone roster, atmosphere, grades | `0550-v71-*` |
 | companions & eggs window, fusion window | `0570-v74-*`, `1780-v100-fusemenu*` |
 | weapon types / mounts / Stable | `0580-v78-*`, `0590-v78-*`, `0790-v83-*` (gaits, specs), `1790`/`1810` (v100 mount models) |
@@ -68,9 +70,20 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
 - Design: dark fantasy, no cutesy models. Hatchable creatures are "companions" (never "Eudemon").
   Grade C is the norm (S and F ≈2% each). Shops in Duskhold (except the Trading Post) are built at the Stronghold Steward.
+- **Kingdom lots (v103)**: every shop, upgrade structure (not Bastion Walls) and house stands on one of the 31 lots in
+  `LOT103`; the player picks the lot when building and can move it for free. `SH.pos[key]` = lot id (key: shop key,
+  `u:`+upgrade, `h:`+house index), saved as `x2.kpos`. Anything built without a lot (old saves, cheats) goes to its old
+  spot (`DEF103`). Shop footprints are solid map tiles marked through `lotMark103` (counted, so they can overlap safely);
+  fields older code reads (`T.mv`, `T.st2`, `STB`, `T.vsp`) follow the lots in `lotSpots103`. Keep the lot grid clear of new
+  fixed scenery (a collider inside a lot would block a building's door spot: `v103_kingdom.py` checks every door).
+- **Citizens (v103)**: two per house, up to `HS103_MAX` houses. A gather task (material from a zone whose Sovereign is
+  defeated) pays `HS103_LOAD` every `HS103_TRIP`; catch-up after being away is capped (`HS103_CAP`). Saved as `x2.khs`,
+  `x2.kcit`. They walk on an A* grid built from the town's own collision (`czGrid103`).
 
 ## Retired systems
 
+Removed in v103: the Garden park in the south half of the Grand Square (its trees, rocks, walls and the ring that grew with
+every completed zone); the South Ward's building lots took its place. `CYD` stays as an empty record.
 Removed in v102 (they had been switched off many versions earlier but still shipped): the Realm (building, farming,
 crafting window, habitats, sky island), dungeons, bounty boards, world events, the team-up attack, the v34 incubator
 slots, the v83 mount models (every mount is built by the v100 model track), and code that later versions replaced at load.
@@ -101,7 +114,10 @@ python3 v60t.py              # zone roster (no respawn)
 python3 v73t.py              # hit feedback, low health, death, Rise Again   (TITLE=1 python3 v73d.py: title → Continue)
 python3 v78t.py              # every weapon type's attack, Stable + mounts, items
 python3 mpt.py mpsteps.py    # two-player co-op over a fake room
-python3 v100_town.py         # Duskhold layout, reachability, shops, portals (prints CHECKS OK)
+python3 v100_town.py         # Duskhold layout, reachability, shops, portals (portal3-5 / portal prompt checks are stale since v101)
+python3 v103_kingdom.py      # lots, houses, citizens, the Steward window, evolution preview, keepers (prints CHECKS OK)
+python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
+python3 probe.py file.js     # run one JS snippet in a started game, print the full JSON result (OUTF=out.json)
 python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den
 ```
 

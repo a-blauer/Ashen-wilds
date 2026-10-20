@@ -3,9 +3,9 @@
 // ward), TWN100_PG (portal islands), TWN100_RD (roads), TWN100_SH (market plots), CYD (courtyard), PCOURT (crossroads).
 // Town-local frame (T.g): x = world x - T.cx, z = world z - T.cy, ground at T.ph.
 //   v101: ONE Grand Square, walls at x ±36 (TWN100_WX) from z -21 to 51 (TWN100_SZ), no inner walls or wards:
-//   north row (Trading Post, Tavern, Magic Shop) and the fountain as before; four shops down each side (x ±29.5, facing
-//   in); the garden park (CYD) in the south half; prestige buildings in the corners; the south gate opens on the Portal Road
-// This file: the wall ring for every Bastion Walls level (kdWalls), the courtyard's garden wall (cyWalls), area names,
+//   north row (Trading Post, Tavern) and the fountain as before; building lots down each side and in the south half (v103:
+//   LOT103, the player picks one for every shop, upgrade and house); prestige buildings in the corners; the south gate opens on the Portal Road
+// This file: the wall ring for every Bastion Walls level (kdWalls), area names,
 // arriving home from a zone (TWN100_home), old saves standing where there is no ground any more.
 var TWN100={walls:null,cy:null,lamps:[]};
 function TWN100_L(){const T=TOWNS[0];return {T,R:TS,WX:TWN100_WX,IW:TWN100_IW,SZ:T.sz||TWN100_SZ}}
@@ -60,35 +60,9 @@ function kdWalls(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.
     [-1,1].forEach(q=>{lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+SZ+1.25]);lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+SZ-1.25])})}
   kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps}
 
-// ---------- the courtyard: a low garden wall of rough stone, openings toward the inner gate (north) and the south gate ----------
-function cyWalls(){const C=CYD,r=C.r,gaps=[Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),Math.atan2(C.gate2[1]-C.y,C.gate2[0]-C.x),0,Math.PI],gw=2.3/r; // v101: open on all four sides (it is a park in the square)
-  const inGap=a=>gaps.some(g=>{let d=Math.abs(a-g);if(d>Math.PI)d=6.283-d;return d<gw});
-  CYG.walls.forEach(([x,y])=>{if(MAP[y][x]=='B'){MAP[y][x]='g';mmPaint(x,y)}});CYG.walls=[];
-  for(let y=Math.floor(C.y-r-2);y<=C.y+r+2;y++)for(let x=Math.floor(C.x-r-2);x<=C.x+r+2;x++){const t=MAP[y]&&MAP[y][x];if(t!=='.'&&t!=='g')continue;
-    const d=Math.hypot(x-C.x,y-C.y);if(d>=r-.4&&d<r+.6&&!inGap(Math.atan2(y-C.y,x-C.x))){MAP[y][x]='B';CYG.walls.push([x,y]);mmPaint(x,y)}}
-  if(CYG.g){scene.remove(CYG.g);CYG.g=null}
-  const n=bossDone.size,key='CYW100|'+r.toFixed(2);let k=null;
-  if(!twHas(key)){k=twKit(171+Math.round(r*10));
-    // the wall in short straight runs round the circle; capstones and the odd ivy tuft on top
-    const N=Math.round(6.283*r/1.15);for(let i=0;i<N;i++){const a0=i/N*6.283,a1=(i+1)/N*6.283,am=(a0+a1)/2;if(inGap(a0)||inGap(a1))continue;
-      const x0=Math.cos(a0)*r,z0=Math.sin(a0)*r,x1=Math.cos(a1)*r,z1=Math.sin(a1)*r;twStones(k,TWC.stone,x0,z0,x1,z1,-.2,.95,.62,.42);
-      k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',Math.cos(am)*r,1.0,Math.sin(am)*r,Math.hypot(x1-x0,z1-z0)+.06,.12,.78,0,-am+Math.PI/2,0,.04));
-      if(i%3==0)k.p('c',[0x3e6a34,0x4a7a3a,0x35602e][i%3==0?(i/3|0)%3:0],'ico',Math.cos(am)*(r+.05),1.12,Math.sin(am)*(r+.05),.3,.18,.36,0,am,0,.12);
-      if(i%5==2)k.p('c',0x3e6a34,'box',Math.cos(am)*(r+.33),.62,Math.sin(am)*(r+.33),.42,.7,.04,0,-am+Math.PI/2,0,.06)}
-    // posts with lanterns either side of each opening
-    gaps.forEach(g=>[-1,1].forEach(s=>{const a=g+s*(gw+.32/r),x=Math.cos(a)*r,z=Math.sin(a)*r;twStones(k,TWC.stoneD,x-.3,z,x+.3,z,-.2,1.5,.6,.3);
-      k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',x,1.55,z,.74,.12,.74,0,0,0,.03));k.p('m',TWC.iron,'cone4',x,1.95,z,.2,.16,.2,0,Math.PI/4,0,0);
-      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>k.p('m',TWC.iron,'box',x+q[0]*.1,1.72,z+q[1]*.1,.025,.3,.025,0,0,0,0));k.p('g',0xffd27a,'oct',x,1.72,z,.1,.14,.1)}))}
-  const g=twGroup(k,key);g.position.set(C.x,TOWNS[0].ph,C.y);g.name='cyWalls';scene.add(g);CYG.g=g;
-  // a sign on the north opening
-  {const a=gaps[0]+gw+1.3/r,x=C.x+Math.cos(a)*(r+.2),z=C.y+Math.sin(a)*(r+.2),y=GH(x,z),sg=twPostG(1.7,1.65,.46);sg.position.set(x,y,z);sg.rotation.y=0;g.parent.add(sg);CYG.sg&&scene.remove(CYG.sg);CYG.sg=sg;
-    sign(sg,[{t:'🌲 Garden',f:'700 40px'},{t:n?n+' zone'+(n>1?'s':'')+' tended':'Wood & stone',f:'600 26px'}],1.7,.46,'#1a2414','#efe6d8',null,0,1.65,0,0)}}
-// the courtyard sign posts and lanterns are rebuilt with the wall (the v85 cyWalls already ran once at load with the old rules)
-try{if(CYG.g){scene.remove(CYG.g);CYG.g=null}CYG.n=-1;cySync()}catch(e){console.warn('v100 courtyard',e)}
-
 // ---------- names, coming home, old saves ----------
 {const f=areaName;areaName=function(){try{{const T=TOWNS[0],x=pl.position.x,z=pl.position.z;
-    if(townAt(x,z,0)==0){if(Math.hypot(x-CYD.x,z-CYD.y)<CYD.r+.8)return '🌲 Duskhold · Garden';return '🏰 Duskhold · Grand Square'}
+    if(townAt(x,z,0)==0)return z>T.cy+18.5&&Math.abs(x-T.cx)<22?'🏘️ Duskhold · South Ward':'🏰 Duskhold · Grand Square';
     else if(curMap()<0){const RN=['I','II','III','IV','V','VI'];for(let i=0;i<TWN100_PG.length;i++){const p=TWN100_PG[i];if(Math.hypot(x-p.x,z-p.y)<p.r+2)return PMAP[i].ic+' Portal '+RN[i]+' · '+PMAP[i].n}
       if(Math.abs(x-PCOURT[0])<5&&z>T.cy+T.sz)return '🛤️ The Portal Road'}}}catch(_){}return f.apply(this,arguments)}}
 // back from a zone (its home portal, or the Wave Trial): in front of that zone's gate, facing the road

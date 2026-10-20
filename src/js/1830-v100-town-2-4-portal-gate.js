@@ -120,7 +120,7 @@ try{portalRefresh()}catch(_){}
 function TWN100_wmap(g,P,lab,s){const T=TOWNS[0];
   PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(q.x,q.y),u=pUnlocked(i),c='#'+p.col.toString(16).padStart(6,'0');g.fillStyle=u?c:'#4a4a52';g.beginPath();g.arc(x,y,7,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke();
     lab((u?'🌀 ':'🔒 ')+['I','II','III','IV','V','VI'][i]+' · '+p.n,x,y+20,u?'#efe6ff':'#9a96a6')});
-  {const [x,y]=P(CYD.x,CYD.y);lab('🌲 Garden',x,y,'#c8f0b0')}
+  {const [x,y]=P(TOWNS[0].cx,TOWNS[0].cy+34);lab('🏘️ South Ward',x,y,'#e8dcc0')}
   {const [x,y]=P(PCOURT[0]-17,PCOURT[1]+2);lab('🛤️ Portal Road',x,y,'#ffe6b0')}}
 {const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{const P=(x,z)=>[(x-(cx-vw/2)+.5)*w/vw,(z-(cy-vh/2)+.5)*h/vh];
   PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(q.x,q.y);if(x<-6||y<-6||x>w+6||y>h+6)return;mmX.fillStyle=pUnlocked(i)?'#'+p.col.toString(16).padStart(6,'0'):'#4a4a52';mmX.beginPath();mmX.arc(x,y,4.5,0,6.28);mmX.fill();mmX.strokeStyle='#000';mmX.lineWidth=1;mmX.stroke()})}catch(_){}}}

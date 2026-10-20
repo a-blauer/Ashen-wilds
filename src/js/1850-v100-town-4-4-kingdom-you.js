@@ -8,7 +8,7 @@
 //      ≥8  a chapel with a bell tower in the square's south-east corner
 //      ≥11 a guard barracks with a watch platform in the north-west corner
 //      ≥14 a great hall / keep tower in the north-east corner, beacons on the south gate towers
-//      ≥17 statues of the fallen flank the garden's north entrance, copper (verdigris) roofs on the chapel and keep
+//      ≥17 statues of the fallen flank the way into the South Ward, copper (verdigris) roofs on the chapel and keep
 // Each tier is one baked kit (KDP2|tier) added to T.g; colliders are boxes per structure.
 var TWN100_PR=[2,5,8,11,14,17];
 function TWN100_prK(k,lv){const ban=TOWNS[0].pal.ban||0x7a2230;
@@ -46,7 +46,7 @@ function TWN100_prK(k,lv){const ban=TOWNS[0].pal.ban||0x7a2230;
         k.as('stone',()=>k.p('c',TWC.stoneL,'cyl8',0,7.65,0,1.75,.16,1.75,0,0,0,.02));[1.5,3.4,5.4].forEach((y,i)=>twWindow(k,Math.cos(i*2.1)*1.47,y+1,Math.sin(i*2.1)*1.47,.3,.55,-i*2.1+Math.PI/2,0xffd27a));
         k.L('c',TWC.woodD,[0,7.6,0],[0,9.6,0],.05,'cyl6',0);k.as('cloth',()=>{k.p('c',ban,'box',.6,9.2,0,1.1,.6,.03,0,0,0,.06);k.p('c',ban,'tri',1.3,9.2,0,.6,.3,.03,0,0,-Math.PI/2,.05)});kdBrazier(k,-.6,-.6,7.73,.7)})});
     [-1,1].forEach(s=>kdBrazier(k,s*2.3,TOWNS[0].sz-0,4.65,.9))}
-  if(lv>=6){// statues of the fallen flank the garden's north entrance
+  if(lv>=6){// statues of the fallen flank the way into the South Ward
     [-1,1].forEach(s=>k.at(s*4.4,0,13.2,()=>{twStones(k,TWC.stone,-.6,0,.6,0,0,1.0,1.2,.5);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,1.05,0,1.4,.12,1.4,0,0,0,.02));
       k.as('stone',()=>{k.p('c',0x8a8a90,'cyl8',0,1.9,0,.3,1.4,.24,0,0,0,.04);k.p('c',0x8a8a90,'ico',0,2.8,0,.22,.24,.22,0,0,0,.02);k.p('c',0x8a8a90,'box',0,2.42,0,.8,.24,.36,0,0,0,.03);
         k.p('c',0x8a8a90,'box',s*.28,2.0,.25,.1,1.6,.06,0,0,0,0);k.p('c',0x8a8a90,'box',s*.28,2.5,.25,.42,.07,.07,0,0,0,0);k.p('c',0x7a7a80,'cyl8',-s*.42,1.9,.1,.32,.08,.42,Math.PI/2,0,s*.2,.02)});

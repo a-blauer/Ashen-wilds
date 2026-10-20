@@ -5,7 +5,7 @@
 //   smith    Blacksmith (always open: opens the bag's Forge tab)  · alch  Alchemist (the old alchemy table)
 //   cook     Cookhouse (the old cooking hearth)                     · bard  Bard's Stage
 //   merchant Curio Shop · sage Rune Sanctum · trainer Beast Trainer (the visitors' stalls)  · stable  Stable (mounts)
-// Unbuilt shops (shopBuilt false) show a fenced construction plot with lumber, stone, a half-raised frame and a sign.
+// v103: shops stand on building lots the player picks (1860-v103-kingdom-lots.js: TWN100_shopSync, TWN100_prompt, shSites).
 // Each building is one baked kit (≤3 meshes, the town atlas) + its sign; chimney smoke for all shops is one InstancedMesh.
 var TWN100_S={b:{},site:{},npc:{},col:{},smoke:null,src:[]};
 // world spot of a plot-local point (local: x along the facade, z toward the street; plot centre at |x|=9)
@@ -175,34 +175,11 @@ function TWN100_build(q){const T=TOWNS[0],key='TWNS|'+q.k,S=[];let k=null;if(!tw
   const sg=TWN100_SIGN[q.k];sign(g,[{t:sg[0],f:'700 56px'},{t:sg[1],f:'600 26px'}],2.5,.56,sg[2],sg[3],'#c9a24a',q.k=='bard'?0:q.k=='merchant'?-.7:0,TWN100_SY[q.k],TWN100_SZZ[q.k]+(q.k=='bard'?.05:.08),0,512,150);
   if(q.k=='stable'){try{const dm=mountModel('pony');dm.scale.setScalar(.8);dm.position.set(.3,.36,-.8);dm.rotation.y=Math.PI*.85;g.add(dm);TANIM.push({x,z,f:now=>{if(g.visible&&dm.r&&dm.r.rig)dm.r.rig(now,false,0)}})}catch(e){console.warn('v100 stable pony',e)}}
   scene.add(g);TWN100_S.b[q.k]=g;return g}
-function TWN100_siteK(k){const P=[[-2.3,-3.2],[2.3,-3.2],[2.3,3.2],[-2.3,3.2]];
-  for(let i=0;i<3;i++){const a=P[i],b=P[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.round(L/1.1);for(let j=0;j<=n;j++){const t=j/n;k.as('bark',()=>k.L('c',TWC.woodD,[a[0]+(b[0]-a[0])*t,-.1,a[1]+(b[1]-a[1])*t],[a[0]+(b[0]-a[0])*t,.95,a[1]+(b[1]-a[1])*t],.055,'log'))}
-    [.4,.8].forEach(h=>k.as('wood',()=>k.L('c',TWC.woodL,[a[0],h,a[1]],[b[0],h,b[1]],.035,'box')))}
-  [[-2.3,3.2],[2.3,3.2]].forEach(([x,z])=>[.4,.8].forEach(h=>k.as('wood',()=>k.L('c',TWC.woodL,[x,h,z],[x*.45,h,z],.035,'box'))));
-  // a half-raised frame, lumber, stone, tools, a sawhorse
-  [[-1.8,-2.6],[1.8,-2.6],[-1.8,-.4],[1.8,-.4]].forEach(([x,z],i)=>k.as('wood',()=>k.L('c',TWC.woodL,[x,0,z],[x,i<2?2.4:1.6,z],.09,'box')));
-  k.as('wood',()=>{k.L('c',TWC.woodL,[-1.9,2.35,-2.6],[1.9,2.35,-2.6],.08,'box');k.L('c',TWC.woodL,[-1.8,.1,-2.6],[-.2,2.3,-2.6],.05,'box');k.L('c',TWC.woodL,[-1.8,1.55,-.4],[-1.8,2.3,-2.6],.06,'box')});
-  for(let i=0;i<6;i++)k.as('bark',()=>k.L('c',[TWC.wood,TWC.woodL,TWC.wood][i%3],[-.3,.1+(i>2?.17:0),.6+(i%3)*.17+(i>2?.08:0)],[1.9,.1+(i>2?.17:0),.6+(i%3)*.17+(i>2?.08:0)],.085,'log'));
-  [[-1.2,1.6,.24],[-.9,1.9,.18],[-1.4,1.95,.2],[-1.05,1.75,.17,.3]].forEach(q=>k.p('c',TWC.stone,'dod',q[0],q[3]||.14,q[1],q[2],q[2]*.8,q[2],q[0],q[1],0,.2));
-  k.as('wood',()=>{k.L('c',TWC.woodD,[.6,.75,1.9],[1.6,.75,1.9],.05,'box');[[.7,-1],[.7,1],[1.5,-1],[1.5,1]].forEach(([x,s])=>k.L('c',TWC.woodD,[x,.72,1.9],[x+.1,0,1.9+s*.22],.03,'box'))});
-  k.L('m',TWC.iron,[.3,0,2.3],[.48,.55,2.35],.02,'cyl6',0);k.p('m',TWC.iron,'box',.5,.58,2.35,.16,.07,.05,0,0,.3,0)}
-function TWN100_site(q){const T=TOWNS[0];let k=null;if(!twHas('TWNSITE')){k=twKit(889);TWN100_siteK(k)}
-  const g=twGroup(k,'TWNSITE'),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=TWN100_ry(q);g.name='site_'+q.k;
-  const o=SHOPS.find(s=>s.k==q.k)||{i:'🔨',n:q.k},sp=twPostG(1.6,1.25,.5);sp.position.set(0,0,3.45);g.add(sp);
-  sign(sp,[{t:o.i+' '+o.n,f:'700 34px'},{t:'🔨 build it at the Steward',f:'600 22px'}],1.6,.5,'#3a2614','#ffe6c0',null,0,1.25,0,0,512,150);
-  scene.add(g);TWN100_S.site[q.k]=g;return g}
 // shopkeepers that are not visitors (the visitors' NPCs come from visTick at T.vsp)
 var TWN100_NPCO={smith:{robe:0x3a3430,trim:0x5a3a20,apron:1,label:'Blacksmith'},alch:{robe:0x2e4a3a,trim:0x8a6a2a,hat:'wiz',hatC:0x24402e,label:'Alchemist'},
  cook:{robe:0x6a4a2a,trim:0x2a1a12,hat:'chef',apron:1,label:'Cook'},stable:{robe:0x5a4a2a,trim:0x2a1a10,hat:'cap',hatC:0x6a4a1a,label:'Stable Master'}};
 function TWN100_keeper(q){const T=TOWNS[0],[x,z]=TWN100_npc(q),o=Object.assign({ry:TWN100_ry(q)},TWN100_NPCO[q.k]),g=new THREE.Group(),prev=T_cur,nc=[];T_cur={col:nc,cx:0,cy:0};
   try{npc(g,x,z,o)}finally{T_cur=prev}g.position.y=GH(x,z);scene.add(g);TWN100_S.npc[q.k]=g;TWN100_S.col[q.k]=nc;return g}
-// ---------- sync: build / show / hide by shopBuilt, colliders, the stations and the visitors move into the market ----------
-function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN)return; // not before this file has run
-  TWN100_SH.forEach(q=>{const on=TWN100_built(q.k);if(on&&!TWN100_S.b[q.k])TWN100_build(q);if(!on&&!TWN100_S.site[q.k])TWN100_site(q);
-    if(TWN100_S.b[q.k])TWN100_S.b[q.k].visible=on;if(TWN100_S.site[q.k])TWN100_S.site[q.k].visible=!on;
-    if(TWN100_NPCO[q.k]){if(on&&!TWN100_S.npc[q.k])TWN100_keeper(q);const n=TWN100_S.npc[q.k];if(n)n.visible=on;
-      (TWN100_S.col[q.k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(on&&i<0)T.col.push(c);else if(!on&&i>=0)T.col.splice(i,1)})}});
-  TWN100_smokeSync()}
 // the old hearth + alchemy table: hidden, colliders gone; their prompts (T.st2) now point at the Cook and the Alchemist
 {const T=TOWNS[0];try{if(T.st2){const old=[T.st2.c.slice(),T.st2.a.slice()];T.col=T.col.filter(c=>!(c.r!=null&&old.some(o=>Math.abs(c.x-o[0])<.01&&Math.abs(c.z-o[1])<.01)));
     const sc=TWN100_SH.find(q=>q.k=='cook'),sa=TWN100_SH.find(q=>q.k=='alch');T.st2.c=TWN100_npc(sc);T.st2.a=TWN100_npc(sa);T._lay=1}
@@ -214,24 +191,10 @@ function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN)retur
 // visitors: no more stalls, and they face the street
 {const f=visTick;visTick=function(){const r=f.apply(this,arguments);try{VIS.forEach(v=>{if(!v.g||v.g.twn)return;v.g.twn=1;const q=TWN100_SH.find(s=>s.k==v.k);
     v.g.children.slice().forEach(c=>{if(!c.bones&&c.isGroup)v.g.remove(c)});const n=v.g.children.find(c=>c.bones);if(n&&q)n.rotation.y=TWN100_ry(q)})}catch(_){}return r}}
-// the Stable is one of the market buildings now (the v78 lean-to and its site are not built)
-function stableBuild(){const T=TOWNS[0];if(!T||!TWN100_S)return;if(!TWN100_S.b.stable)try{TWN100_build(TWN100_SH.find(s=>s.k=='stable'));TWN100_shopSync()}catch(e){console.warn('v100 stable',e)}
-  if(!TWN100_S.npc.stable)try{TWN100_keeper(TWN100_SH.find(s=>s.k=='stable'));TWN100_shopSync()}catch(e){console.warn('v100 stable',e)}STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[];const q=TWN100_SH.find(s=>s.k=='stable');STB.n=TWN100_npc(q)}
-function stableSync(){TWN100_shopSync();stableBuild()}
-// construction sites: only the Magic Shop still uses the old kind (north row); the market plots have their own
-function shSites(){const T=TOWNS[0];if(!T)return;SHM.sites=SHM.sites||{};SHM.vsite=[];const want={};if(!shopBuilt('magic'))want.magic=[T.mv[0],T.mv[1]-.4,'🔮 Magic Shop'];
-  if(T.mvG){const on=shopBuilt('magic');T.mvG.visible=on;try{const c=mmB.getContext('2d');for(let y=-18;y<=-14;y++)for(let x=12;x<=17;x++){const X=T.cx+x,Y=T.cy+y,w=on?'B':'P';if(MAP[Y][X]!=w&&(MAP[Y][X]=='B'||MAP[Y][X]=='P')){MAP[Y][X]=w;c.fillStyle=on?'rgb(168,126,92)':'rgb(200,190,164)';c.fillRect(X,Y,1,1)}}}catch(err){console.warn(err)}
-    (T.mvCol||[]).forEach(q=>{const i=T.mvArr.indexOf(q);if(on&&i<0)T.mvArr.push(q);else if(!on&&i>=0)T.mvArr.splice(i,1)})}
-  for(const k in SHM.sites)if(!want[k]){scene.remove(SHM.sites[k]);delete SHM.sites[k]}
-  for(const k in want)if(!SHM.sites[k])SHM.sites[k]=shSite(...want[k]);
-  try{TWN100_shopSync()}catch(e){console.warn('v100 shops',e)}}
-// walk-up prompts for every market plot (before the older prompts: same spots, clearer labels)
+// walk-up prompts for every built shop (TWN100_prompt is in 1860-v103; before the older prompts: same spots, clearer labels)
 var TWN100_ACT={smith:()=>{$('bag').classList.remove('hide');bagTab2=typeof KQM_FORGE!='undefined'?KQM_FORGE:0;rB()},alch:()=>openX('alch'),cook:()=>openX('cook'),
  merchant:()=>openX('visitor','merchant'),trainer:()=>openX('visitor','trainer'),bard:()=>openX('visitor','bard'),sage:()=>openX('visitor','sage'),stable:()=>openX('stable',0)};
 var TWN100_LBL={smith:'F · Blacksmith · upgrade your gear',alch:'F · Brew at the Alchemist',cook:'F · Cook at the Cookhouse',merchant:'F · Curio Merchant',trainer:'F · Beast Trainer',bard:'F · Listen to the Bard',sage:'F · Rune Sage',stable:'F · Stable Master'};
-function TWN100_prompt(){const T=TOWNS[0],p=pl.position;if(townAt(p.x,p.z,0)!==0)return null;
-  for(const q of TWN100_SH){const [x,z]=TWN100_npc(q);if(Math.hypot(p.x-x,p.z-z)<2.4){if(TWN100_built(q.k))return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]};
-    const o=SHOPS.find(s=>s.k==q.k);return {label:'🔨 '+(o?o.n:q.k)+' · build it at the Stronghold Steward',fn:()=>{shTab='shops';openX('hold')}}}}return null}
 {const f=townPortalPrompt;townPortalPrompt=function(T){if(T===TOWNS[0]){const r=TWN100_prompt();if(r)return r}return f.apply(this,arguments)}}
 // ---------- chimney smoke: one InstancedMesh for every built shop ----------
 function TWN100_smokeSync(){const T=TOWNS[0],L=[];TWN100_SH.forEach(q=>{if(!TWN100_built(q.k))return;(TWN100_S.src[q.k]||[]).forEach(s=>{const [x,z]=TWN100_lw(q,s[0],s[2]);L.push([x,T.ph+s[1],z,q.k])})});
@@ -243,5 +206,4 @@ function TWN100_smokeSync(){const T=TOWNS[0],L=[];TWN100_SH.forEach(q=>{if(!TWN1
     m.userData.c=c}
   const m=TWN100_S.smoke,c=m.userData.c;m.userData.L=L.slice(0,24);m.count=Math.min(24,L.length)*N;
   m.userData.L.forEach((s,i)=>{c.setHex(s[3]=='alch'?0x9ad8a0:s[3]=='sage'?0xb8a0e0:0xc8c4bc);for(let j=0;j<N;j++)m.setColorAt(i*N+j,c)});if(m.instanceColor)m.instanceColor.needsUpdate=true}
-try{TWN100_shopSync()}catch(e){console.warn('v100 shops',e)}
 

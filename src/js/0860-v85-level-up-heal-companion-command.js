@@ -143,19 +143,8 @@ $('xw').addEventListener('click',e=>{if(xwMode!='visitor')return;const t=e.targe
   const c=party[+t.dataset.vtrain];if(!c)return;const cost=trainCost(c);if(!cost||gold<cost)return;const to=Math.min(hero.lvl,MAXLV),from=c.l;
   gold-=cost;c.l=to;c.x=0;c.h=M(c);say('💪 '+c.n+' trained hard: Lv '+from+' → Lv '+to+'!'+(EVLV.some(v=>v>from&&v<=to)?' ✨ It can evolve now (Companions menu).':''));if(typeof sfx=='function')sfx('power');hsDirty();ui();hud();if(XR.visitor)XR.visitor()},true);
 
-// ---------------- the courtyard grows: one ring per completed zone, 6 nodes of each of that zone's node types; nodes regrow in 10 minutes ----------------
-var CYG={n:-1,walls:[],g:null,set:new Set(),lock:new Set()};
-CYD.nodes.forEach(q=>CYG.set.add(q[1]*W+q[0]));
-const cyRock=k=>k=='rock'||k=='grave'||k=='pillar';
+// ---------------- (v103: the courtyard garden that grew with every completed zone is gone) ----------------
+// repaint one minimap tile from MAP (used when tiles change at runtime: building lots)
 function mmPaint(x,y){try{const c=mmB.getContext('2d'),t=MAP[y][x],bm=BIOMES[MAP.bio[y][x]],b=t=='R'?[96,92,88]:t=='W'?[196,188,170]:t=='B'?[168,126,92]:t=='P'?[200,190,164]:t=='p'?[168,140,96]:t=='#'?bm.frs.map(v=>v*.8):t=='~'?bm.wat:t=='g'?bm.grs:t=='a'?bm.acc:bm.gnd;
   c.fillStyle='rgb('+(b[0]|0)+','+(b[1]|0)+','+(b[2]|0)+')';c.fillRect(x,y,1,1)}catch(_){}}
-function cySync(){const n=bossDone.size;if(n===CYG.n)return;const first=CYG.n<0;CYG.n=n;CYD.r=Math.min(CYD.rmax,CYD.r0+CYD.dr*n);
-  CYD.nodes.forEach(([x,y,k,zi])=>{const key=y*W+x,open=zi<0||bossDone.has(zi);
-    if(open){if(CYG.lock.has(key)){CYG.lock.delete(key);delete gdep[key];nodeSet(key,true);if(cyRock(k))MAP[y][x]='r';mmPaint(x,y)}}
-    else if(!CYG.lock.has(key)){CYG.lock.add(key);gdep[key]=1;nodeSet(key,false);if(cyRock(k))MAP[y][x]='g';mmPaint(x,y)}});
-  cyWalls();if(!first&&n>0)say('🌲 The Garden grows: new '+PMAP[Math.min(n,PMAP.length)-1].n+' nodes to harvest in Duskhold.')}
-setInterval(()=>{try{cySync()}catch(e){console.warn('courtyard',e)}},1500);
-try{cySync()}catch(e){console.warn('courtyard',e)}
-// courtyard nodes come back after 10 minutes
-{const f=gFinish;gFinish=function(tg){const r=f.apply(this,arguments);try{if(tg&&CYG.set.has(tg.k))for(let i=gresp.length-1;i>=0;i--)if(gresp[i].tg===tg){gresp[i].t=600;break}}catch(_){}return r}}
 
