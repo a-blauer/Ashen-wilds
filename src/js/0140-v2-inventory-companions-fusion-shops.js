@@ -108,11 +108,12 @@ function hatch_base(e){
 const itVal=i=>Math.round((10+i.lv*6)*[1,1.6,2.6,4.5,9][i.r]*(1+.15*(i.up||0))),EGV=[120,600,2000,6000,15000],UPV=[30,90,250,600,1400];
 const townTier=()=>Math.max(1,Math.min(5,tierOfLv(hero.lvl)));
 let stock2=null;
-function mkStock2(){const T=townTier(),l=Math.max(TIERS[T-1][0],Math.min(TIERS[T-1][1],hero.lvl+1));stock2={T,lvl:hero.lvl,gear:[0,0,0,0,0,0].map(()=>genItem(Math.max(1,l-R(0,2)),{cls:hero.cls})),egg:rollEgg(T)}}
+// v109: the Trading Post's level (shpL109) adds gear, raises rarities and lowers prices (shpP109); helpers in 1960
+function mkStock2(){const T=townTier(),l=Math.max(TIERS[T-1][0],Math.min(TIERS[T-1][1],hero.lvl+1)),L=shpL109('post');stock2={T,lvl:hero.lvl,L,gear:Array.from({length:shpGearN109(L)},()=>shpGear109(Math.max(1,l-R(0,2)),L)),egg:shpEgg109(T,L)}}
 function rS_base(){
-  if(!stock2||stock2.T!=townTier()||stock2.lvl!=hero.lvl)mkStock2();$('gold2').textContent=gold;
-  const T=stock2.T,P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,E=m=>`<div class="mut" style="padding:6px 8px">${m}</div>`;
-  $('sb').innerHTML='<button class="rw" data-b="pot"><span class="rn">🧪 Health Potion<small>Heals 40% HP</small></span><span class="ra">'+P(30+hero.lvl*4)+'</span></button>'+
+  if(!stock2||stock2.T!=townTier()||stock2.lvl!=hero.lvl||stock2.L!==shpL109('post'))mkStock2();$('gold2').textContent=gold;
+  const T=stock2.T,P=c=>{c=shpP109('post',c);return `<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`},E=m=>`<div class="mut" style="padding:6px 8px">${m}</div>`;
+  $('sb').innerHTML=shpNote109('post')+'<button class="rw" data-b="pot"><span class="rn">🧪 Health Potion<small>Heals 40% HP</small></span><span class="ra">'+P(30+hero.lvl*4)+'</span></button>'+
    `<button class="rw" data-b="up"><span class="rn">${UPM[T-1][1]} ${UPM[T-1][0]}<small>Upgrade material for ${TIERN[T-1]} gear</small></span><span class="ra">${P(UPV[T-1])}</span></button>`+
    stock2.gear.map((i,k)=>`<button class="rw it" data-b="g${k}" style="--rc:${RAR[i.r][1]}"><span class="rn">${icoOf(i)} <span style="color:${RAR[i.r][1]}">${itName(i)}</span><small>${SLOTN[itT(i).sl]} · iLvl ${i.lv} · ${itMain(i)}</small></span><span class="ra">${P(Math.round(itVal(i)*1.8))}</span></button>`).join('')+
    (stock2.egg?`<button class="rw" data-b="e"><span class="rn">${en(stock2.egg)}</span><span class="ra">${P(EGV[stock2.egg.tier])}</span></button>`:'');
@@ -121,7 +122,7 @@ function rS_base(){
 }
 $('sb').onclick=e=>{
   const b=e.target.closest('[data-b]');if(!b)return;const k=b.dataset.b,n=+k.slice(1),T=stock2.T;let c;
-  if(k=='pot')c=30+hero.lvl*4;else if(k=='up')c=UPV[T-1];else if(k[0]=='g')c=Math.round(itVal(stock2.gear[n])*1.8);else c=EGV[stock2.egg.tier];
+  if(k=='pot')c=30+hero.lvl*4;else if(k=='up')c=UPV[T-1];else if(k[0]=='g')c=Math.round(itVal(stock2.gear[n])*1.8);else c=EGV[stock2.egg.tier];c=shpP109('post',c);
   if(gold<c)return say('Not enough gold.');gold-=c;
   if(k=='pot')pots++;else if(k=='up')mats[UPM[T-1][0]]++;else if(k[0]=='g')gear.push(stock2.gear.splice(n,1)[0]);else{eggs.push(stock2.egg);stock2.egg=null}
   rS();hud();
@@ -134,19 +135,19 @@ $('ss').onclick=e=>{
 };
 let mstock=null;
 function rMS(){
-  const T=townTier();if(!mstock||mstock.T!=T)mstock={T,eggs:[rollEgg(T),rollEgg(T)]};$('gold3').textContent=gold;
-  const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,rc=40*hero.lvl;
-  $('mst').innerHTML=`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Reset all your talent points</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!talSpent()?'disabled':''}>Reset</button></span></div>`+
-   `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(60+hero.lvl*12)}<button class="pri" data-ms="xp" ${gold<60+hero.lvl*12?'disabled':''}>Buy</button></span></div>`+
-   UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(Math.round(UPV[i]*.9))}<button class="pri" data-ms="u${i}" ${gold<Math.round(UPV[i]*.9)?'disabled':''}>Buy</button></span></div>`).join('')+
-   mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(EGV[e.tier])}<button class="pri" data-ms="e${i}" ${gold<EGV[e.tier]?'disabled':''}>Buy</button></span></div>`:'').join('');
+  const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
+  const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,D=c=>shpP109('magic',c),rc=D(40*hero.lvl),xc=D(60+hero.lvl*12);
+  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Reset all your talent points</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!talSpent()?'disabled':''}>Reset</button></span></div>`+
+   `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
+   UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(D(Math.round(UPV[i]*.9)))}<button class="pri" data-ms="u${i}" ${gold<D(Math.round(UPV[i]*.9))?'disabled':''}>Buy</button></span></div>`).join('')+
+   mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(D(EGV[e.tier]))}<button class="pri" data-ms="e${i}" ${gold<D(EGV[e.tier])?'disabled':''}>Buy</button></span></div>`:'').join('');
 }
 $('mst').onclick=e=>{
-  const b=e.target.closest('[data-ms]');if(!b||b.disabled)return;const k=b.dataset.ms;
-  if(k=='reset'){const c=40*hero.lvl;if(gold<c)return;gold-=c;hero.tal={};hsDirty();say('Your talents were reset. Press K to spend them again.')}
-  else if(k=='xp'){const c=60+hero.lvl*12;if(gold<c)return;gold-=c;rest={t:Date.now()+600000,m:.25};say('You feel insightful: +25% XP for 10 minutes.')}
-  else if(k[0]=='u'){const i=+k[1],c=Math.round(UPV[i]*.9);if(gold<c)return;gold-=c;mats[UPM[i][0]]++}
-  else if(k[0]=='e'){const i=+k[1],eg=mstock.eggs[i];if(!eg||gold<EGV[eg.tier])return;gold-=EGV[eg.tier];eggs.push(eg);mstock.eggs[i]=null}
+  const b=e.target.closest('[data-ms]');if(!b||b.disabled)return;const k=b.dataset.ms,D=c=>shpP109('magic',c);
+  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c)return;gold-=c;hero.tal={};hsDirty();say('Your talents were reset. Press K to spend them again.')}
+  else if(k=='xp'){const c=D(60+hero.lvl*12);if(gold<c)return;gold-=c;rest={t:Date.now()+600000,m:.25};say('You feel insightful: +25% XP for 10 minutes.')}
+  else if(k[0]=='u'){const i=+k.slice(1),c=D(Math.round(UPV[i]*.9));if(gold<c)return;gold-=c;mats[UPM[i][0]]++}
+  else if(k[0]=='e'){const i=+k.slice(1),eg=mstock.eggs[i];if(!eg||gold<D(EGV[eg.tier]))return;gold-=D(EGV[eg.tier]);eggs.push(eg);mstock.eggs[i]=null}
   rMS();hud();
 };
 // ---------------- character creation ----------------

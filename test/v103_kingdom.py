@@ -12,7 +12,7 @@ def ok(c,msg,info=None):
 def want(p):return not PART or PART==p
 def s(pg):
     L.start(pg);ev=pg.evaluate
-    ev("()=>{gold=1e7;for(const k of Object.keys(RES))mats[k]=5000;['Rock Core','Silk Gland','Ectoplasm'].forEach(k=>mats[k]=500);[0,1,2,3,4,5].forEach(i=>bossDone.add(i));TOD=.3}")
+    ev("()=>{gold=1e7;for(const k of Object.keys(RES))mats[k]=5000;['Rock Core','Silk Gland','Ectoplasm'].forEach(k=>mats[k]=500);[0,1,2,3,4,5].forEach(i=>bossDone.add(i));TOD=.3;if(typeof SOV109!='undefined'){SOV109.k=13;lotSync103()}}")  # v109: open all 31 lots
     if want('keepers'):
         ev("()=>{SHOPS.forEach(o=>SH.shop[o.k]=1);shApply();toPos(TOWNS[0].cx,TOWNS[0].cy+6);visTick();STEP(.2)}")
         r=ev("()=>TWN100_SH.map(q=>[q.k,q._lot,!!TWN100_S.b[q.k],(()=>{const g=TWN100_S.npc[q.k]||((VIS.find(v=>v.k==q.k)||{}).g);const n=g&&g.children.find(c=>c.bones);return n?!!n._wk:null})()])")

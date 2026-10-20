@@ -63,7 +63,7 @@ XR.mounts=()=>{
 };
 $('xw').addEventListener('click',e=>{
   const t=e.target.closest('[data-mbuy],[data-mhatch],[data-mact],[data-msell],[data-msel]');if(!t||t.disabled)return;const ds=t.dataset;
-  if(ds.mbuy){const T=MOUNTS[ds.mbuy].t,c=MPRICE[T-1];if(gold<c)return say('Not enough gold.');gold-=c;const m=newMount(ds.mbuy,6);banner('🐎 NEW MOUNT','You bought a '+m.n,'Speed '+m.spd+' · press V to ride');hud()}
+  if(ds.mbuy){const T=MOUNTS[ds.mbuy].t,c=shpP109('stable',MPRICE[T-1]);if(gold<c)return say('Not enough gold.');gold-=c;const m=newMount(ds.mbuy,6);banner('🐎 NEW MOUNT','You bought a '+m.n,'Speed '+m.spd+' · press V to ride');hud()}
   else if(ds.mhatch){const i=meggs.findIndex(x=>x.id==+ds.mhatch);if(i<0)return;const e2=meggs.splice(i,1)[0],m=newMount(e2.k,12);banner('🐎 A MOUNT HATCHED','Your '+m.n+' is born!','Speed '+m.spd+' (peak '+m.cap+') · press V to ride')}
   else if(ds.mact){mActive=+ds.mact;if(riding){dismount();toggleMount()}say('Active mount: '+mOf(mActive).n+'.');hud()}
   else if(ds.msell){const m=mOf(+ds.msell);if(!m)return;if(riding===m)dismount();const v=Math.round(MPRICE[MOUNTS[m.k].t-1]*.3);gold+=v;mounts=mounts.filter(x=>x!==m);if(mActive==m.id)mActive=mounts[0]?mounts[0].id:null;say('Sold '+m.n+' for '+v+' gold.');hud()}

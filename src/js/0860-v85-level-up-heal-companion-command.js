@@ -131,7 +131,7 @@ $('fz').addEventListener('click',e=>{const g=e.target.closest('[data-fcon]');if(
 
 // ---------------- Beast Trainer: one purchase raises a companion to your level ----------------
 // each level costs about 1.9 × (level + 1.1) gold: Lv 1→20 ≈ 400, Lv 10→20 ≈ 315, Lv 1→40 ≈ 1,560
-function trainCost(c){const a=c.l,b=Math.min(hero.lvl,MAXLV);if(b<=a)return 0;const n=b-a,sum=(a+b-1)*n/2;return Math.max(10,Math.round(1.9*(sum+1.1*n)))}
+function trainCost(c){const a=c.l,b=Math.min(hero.lvl,MAXLV);if(b<=a)return 0;const n=b-a,sum=(a+b-1)*n/2;return shpP109('trainer',Math.max(10,Math.round(1.9*(sum+1.1*n))))} // v109: Beast Trainer discount
 {const f=XR.visitor;XR.visitor=function(){const r=f.apply(this,arguments);try{const B=$('xwB'),rows=B&&B.querySelectorAll('[data-vtrain]');if(rows&&rows.length){
   const dtl=B.querySelector('.dtl');if(dtl)dtl.textContent='One training session raises a companion straight to your level. The bigger the gap, the more it costs.';
   rows.forEach(bt=>{const c=party[+bt.dataset.vtrain];if(!c)return;const cost=trainCost(c),ok=cost>0;bt.disabled=!ok||gold<cost;bt.textContent=ok?'Train to Lv '+Math.min(hero.lvl,MAXLV)+' · 🪙 '+cost:'At your level'})}}catch(_){}return r}}

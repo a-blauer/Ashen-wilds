@@ -31,8 +31,9 @@ Object.keys(CROPS).forEach(k=>{SUP[k].d='Bought at any town hearth or alchemy ta
 SUP.honey.d='Bought at any town hearth or alchemy table.';if(SUP.c_ess)SUP.c_ess.n='Essence of Ascension';
 BOSSES.forEach(b=>{b.un=b.un.filter(k=>!/^(d:|m:)/.test(k)&&k!='fert')});
 var MKT=[['meat',10,1],['fish',12,1],['berries',8,1],['honey',16,1]];
-function mktHTML(){const T=townTier(),ks=Object.keys(CROPS).filter(k=>CROPS[k].tr<=T).map(k=>[k,CROPS[k].pr,1]).concat(MKT);
-  return `<div class="sec">Market · 🪙 ${gold}</div><div class="rows">${ks.map(([k,p])=>`<div class="rw"><span class="rn">${SUP[k].i} <b>${SUP[k].n}</b> <span class="mut">×${cnt(k)}</span></span><span class="ra"><button data-ibuy="${k}" data-n="1" data-c="${p}" ${gold<p?'disabled':''}>🪙 ${p}</button><button data-ibuy="${k}" data-n="5" data-c="${p*5}" ${gold<p*5?'disabled':''}>×5</button></span></div>`).join('')}</div>`}
+// v109: an upgraded Cooking Hearth / Alchemy Table sells crops of higher tiers and gives a discount (shpL109, shpP109 in 1960)
+function mktHTML(){const sk=xwMode=='alch'?'alch':'cook',T=Math.min(5,townTier()+shpL109(sk)),ks=Object.keys(CROPS).filter(k=>CROPS[k].tr<=T).map(k=>[k,CROPS[k].pr,1]).concat(MKT).map(([k,p,n])=>[k,shpP109(sk,p),n]);
+  return shpNote109(sk)+`<div class="sec">Market · 🪙 ${gold}</div><div class="rows">${ks.map(([k,p])=>`<div class="rw"><span class="rn">${SUP[k].i} <b>${SUP[k].n}</b> <span class="mut">×${cnt(k)}</span></span><span class="ra"><button data-ibuy="${k}" data-n="1" data-c="${p}" ${gold<p?'disabled':''}>🪙 ${p}</button><button data-ibuy="${k}" data-n="5" data-c="${p*5}" ${gold<p*5?'disabled':''}>×5</button></span></div>`).join('')}</div>`}
 function rwFix(){const b=$('xwB');b.innerHTML=b.innerHTML.replace('None. Hunt for meat, fish at the water, forage berries.','None yet. Buy them in the market below, hunt for meat, fish at the water, forage berries.');
   const r=b.querySelector('.xcols > div:last-child');if(r)r.insertAdjacentHTML('beforeend',mktHTML())}
 XR.cook=()=>{recipeWin('🍳 Cooking Hearth','Food boosts your stats for 15 minutes · up to 2 foods at once',FOOD,'Cook',['food'],[['Simple meals',['f_meat','f_fish','f_bread','f_soup']],['Hearty meals',['f_stew','f_skewer']],['Treats & feasts',['f_tart','f_cake','f_pie','f_feast']]]);rwFix()};
@@ -135,7 +136,7 @@ function sellables(){const L=[];gear.forEach(i=>L.push({k:'g'+i.id,ic:icoOf(i),n
   Object.keys(SUP).filter(k=>['crop','food'].includes(SUP[k].c)&&cnt(k)>0).forEach(k=>L.push({k:'s'+k,ic:SUP[k].i,n:SUP[k].n+' ×'+cnt(k),sub:'Whole stack',v:(SUP[k].c=='food'?12:4)*cnt(k),rc:'transparent'}));return L}
 function rS(){
   rS_base();const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`;
-  $('sb').insertAdjacentHTML('beforeend','<div class="sec">Potions</div>'+[['p_mp','🫙 Mana Potion','Restores 50% mana (Z)',40+hero.lvl*4]].map(r=>`<button class="rw" data-b2="${r[0]}" data-c="${r[3]}"><span class="rn">${r[1]}<small>${r[2]}</small></span><span class="ra">${P(r[3])}</span></button>`).join(''));
+  $('sb').insertAdjacentHTML('beforeend','<div class="sec">Potions</div>'+[['p_mp','🫙 Mana Potion','Restores 50% mana (Z)',shpP109('post',40+hero.lvl*4)]].map(r=>`<button class="rw" data-b2="${r[0]}" data-c="${r[3]}"><span class="rn">${r[1]}<small>${r[2]}</small></span><span class="ra">${P(r[3])}</span></button>`).join(''));
   const L=sellables();[...sellSel].forEach(k=>{if(!L.some(x=>x.k==k))sellSel.delete(k)});
   const tot=L.filter(x=>sellSel.has(x.k)).reduce((s,x)=>s+x.v,0),n=sellSel.size;
   $('ss').innerHTML=(L.length?L.map(x=>`<button class="rw it${sellSel.has(x.k)?' sel':''}" data-sk="${x.k}" style="--rc:${x.rc}"><span class="rn"><span class="ck"></span>${x.ic} ${x.n}<small>${x.sub}</small></span><span class="ra"><span class="gp">${x.v} 🪙</span></span></button>`).join(''):'<div class="mut" style="padding:6px 8px">Nothing to sell.</div>')+

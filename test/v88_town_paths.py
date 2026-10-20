@@ -10,7 +10,7 @@ def s(pg):
     ev=pg.evaluate
     ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext',timeout=90000);pg.wait_for_timeout(300);pg.click('#ccNext',timeout=90000);pg.wait_for_timeout(2500)
-    ev("()=>{SHOPS.forEach(o=>SH.shop[o.k]=1);shApply();visTick&&visTick()}")
+    ev("()=>{if(typeof SOV109!='undefined')SOV109.k=13;SHOPS.forEach(o=>SH.shop[o.k]=1);shApply();visTick&&visTick()}")  # v109: all 31 lots open
     fails=0
     for L in [0,1,2,3]:
         r=ev("""(L)=>{SHU.forEach(u=>SH.lv[u.k]=L);shApply();const T=TOWNS[0],st=.25,x0=T.cx-25,z0=T.cy-25,nx=Math.round(80/st),nz=Math.round((50+((T.sz||TS)-TS))/st); // v100: the town reaches cy+T.sz

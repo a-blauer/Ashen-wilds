@@ -34,6 +34,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
 | stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
 | v103 kingdom: building lots `LOT103` (`SH.pos`), houses + citizens `HS103`, the one Steward window, working shopkeepers `WK103` | `1860`–`1900` (v103) |
+| v109 kingdom growth (lots open with Sovereign kills `LOTO109`, `SOV109`, ground outlines) and shop upgrades (`SHP109`, `shpP109` discount, stock hooks) | `1960-v109-kingdom-growth-shop-upgrades.js` (hooks in `0140`, `0170`, `0430`, `0490`, `0590`, `0860`, `1880`) |
 | v104 decorations (`DECO103`, the Steward's Decorations tab), citizen trades (`CZR104`: gatherer, egg collector, fisherman, hunter) | `1910-v104-decorations.js`, `1870` (roles), `1880` (menu) |
 | v105 companion abilities: one motion + effect per spell (`SPX105`, motions `MV105`, effect toolkit `fx*`) | `1930-v105-companion-ability-moves.js` |
 | v107 zone monster signature moves: per monster `MSIG107` (basic + 2 signatures), move handlers `MV107[n].x6` | `1950-v107-monster-signature-moves.js` |
@@ -80,6 +81,18 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   spot (`DEF103`). Shop footprints are solid map tiles marked through `lotMark103` (counted, so they can overlap safely);
   fields older code reads (`T.mv`, `T.st2`, `STB`, `T.vsp`) follow the lots in `lotSpots103`. Keep the lot grid clear of new
   fixed scenery (a collider inside a lot would block a building's door spot: `v103_kingdom.py` checks every door).
+- **Kingdom growth (v109)**: only some lots are open. A new kingdom has 5 (`LOTO109` order, from the fountain out: CW CE NW NE NM),
+  every Sovereign kill (first or repeat) opens 2 more, until all 31 are open after 13 kills. Kills are `SOV109.k`, saved as `x2.ksov`
+  (missing in older saves: counted as `bossDone.size`). `lotFree103` = free and open; a lot with something on it always counts as
+  open, so old saves keep every building where it stands. A save without `x2.kpos` (pre-v103) may place on any lot once (`SOV109.grace`).
+  Empty open lots show a dim white outline on the ground (`KL103.ring`; just-opened ones glow gold for a minute, `KL103.ringN`);
+  locked lots are dark with a 🔒 on the Steward's plan. Tests that build everything set `SOV109.k=13` first.
+- **Shop upgrades (v109)**: the Trading Post and every Steward shop except the Bard's Stage have levels 0..3 (`SHP109.lv`, saved as
+  `x2.shpu`), bought at the Steward (gold ×[1.5,5,12] of the build cost, build materials ×[1,2.5,5], 0/2/4 Sovereigns).
+  Each level is 5% off everything that shop sells: every price site calls `shpP109(shop, price)`. Stock: Trading Post +2 gear per
+  level with better rarities (`shpGear109`), Magic Shop +1 egg, Curio Shop +1 ware (rune, egg, rune), higher-tier egg chance
+  (`shpEgg109`); the Hearth / Alchemy market sells crops one tier higher per level. A new shop that sells for gold needs `shpP109`
+  at both its price display and its charge.
 - **Citizens (v103)**: two per house, up to `HS103_MAX` houses. A gather task (material from a zone whose Sovereign is
   defeated) pays `HS103_LOAD` every `HS103_TRIP`; catch-up after being away is capped (`HS103_CAP`). Saved as `x2.khs`,
   `x2.kcit`. They walk on an A* grid built from the town's own collision (`czGrid103`).
@@ -165,6 +178,7 @@ python3 v73t.py              # hit feedback, low health, death, Rise Again   (TI
 python3 v78t.py              # every weapon type's attack, Stable + mounts, items
 python3 mpt.py mpsteps.py    # two-player co-op over a fake room
 python3 v100_town.py         # Duskhold layout, reachability, shops, portals (portal3-5 / portal prompt checks are stale since v101)
+python3 v109_kingdom_shops.py # v109: plots opening with Sovereign kills, outlines, locked lots, shop upgrades + discounts, saves (v109_shot.py: screenshots)
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)

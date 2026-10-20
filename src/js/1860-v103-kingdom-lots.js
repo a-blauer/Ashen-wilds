@@ -11,7 +11,7 @@
 // Old saves: anything built without a lot goes to its old spot (DEF103), or the first free lot.
 // Shops (the TWN100 market kits, the Magic Shop now one of them) and the upgrade structures (KDU) are rebuilt in place
 // when their lot changes; shop footprints are solid tiles ('B'), upgrade structures keep their own colliders.
-// Free lots show four wooden stakes (one InstancedMesh). The plan view in the Steward's window is drawn by lotPlan103.
+// Free lots showed four wooden stakes; since v109 (1960) only open lots exist and show a dim ground outline. The plan view in the Steward's window is drawn by lotPlan103.
 var LOT103=(()=>{const H=Math.PI/2,L=[];
   [-9,2,13,24].forEach((z,i)=>{L.push({id:'W'+(i+1),x:-29.5,z,ry:H,a:'West side'});L.push({id:'E'+(i+1),x:29.5,z,ry:-H,a:'East side'})});
   L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row'},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row'},{id:'NM',x:14.6,z:-17,ry:0,a:'North row'});
