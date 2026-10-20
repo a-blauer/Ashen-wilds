@@ -8,9 +8,9 @@ Page.goto=_sg
 LIB=r"""()=>{const RN=performance.now.bind(performance);window.RN=RN;window.VT=RN();performance.now=()=>VT;window.requestAnimationFrame=()=>0;
  try{CHEAT.god=true}catch(_){}
  window.__rr=ren.render.bind(ren);
- ren.render=function(s,c){let fd=null;if(window.FCAM&&c===cam){cam.position.set(...FCAM.p);cam.lookAt(...FCAM.l);cam.updateMatrixWorld();if(FCAM.nf&&s.fog){fd=s.fog.density;s.fog.density=.0025;cam.far=600;cam.updateProjectionMatrix()}}const r=__rr(s,c);if(fd!=null)s.fog.density=fd;return r};
+ ren.render=function(s,c){let fd=null;if(window.FCAM&&c===cam){cam.position.set(...FCAM.p);cam.lookAt(...FCAM.l);cam.updateMatrixWorld();if(FCAM.nf&&s.fog){fd=s.fog.density;s.fog.density=.0025;cam.far=600;cam.near=2;cam.updateProjectionMatrix()}}const r=__rr(s,c);if(fd!=null){s.fog.density=fd;cam.near=.1;cam.far=260;cam.updateProjectionMatrix()}return r};
  window.NODRAW=()=>{ren.render=function(s,c){if(window.FCAM&&c===cam){cam.position.set(...FCAM.p);cam.lookAt(...FCAM.l);cam.updateMatrixWorld()}if(s.autoUpdate!==false)s.updateMatrixWorld()}};
- window.DRAW=()=>{ren.render=function(s,c){let fd=null;if(window.FCAM&&c===cam){cam.position.set(...FCAM.p);cam.lookAt(...FCAM.l);cam.updateMatrixWorld();if(FCAM.nf&&s.fog){fd=s.fog.density;s.fog.density=.0025;cam.far=600;cam.updateProjectionMatrix()}}const r=__rr(s,c);if(fd!=null)s.fog.density=fd;return r}};
+ window.DRAW=()=>{ren.render=function(s,c){let fd=null;if(window.FCAM&&c===cam){cam.position.set(...FCAM.p);cam.lookAt(...FCAM.l);cam.updateMatrixWorld();if(FCAM.nf&&s.fog){fd=s.fog.density;s.fog.density=.0025;cam.far=600;cam.near=2;cam.updateProjectionMatrix()}}const r=__rr(s,c);if(fd!=null){s.fog.density=fd;cam.near=.1;cam.far=260;cam.updateProjectionMatrix()}return r}};
  window.STEP=(sec,draw)=>{const n=Math.max(1,Math.round(sec/.016));NODRAW();for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();try{loop(VT)}catch(e){console.warn('loop',e)}if(draw&&i==n-1){DRAW();POST.render()}else POST.render()}DRAW()};
  window.FC=(p,l,nf)=>{window.FCAM={p,l,nf}};
  {const f=chunkVis;chunkVis=function(){if(window.FCAM){cam.position.set(...FCAM.p);cam.lookAt(...FCAM.l);cam.updateMatrixWorld();if(FCAM.nf){const s=FARR;FARR=400;const r=f.apply(this,arguments);FARR=s;return r}}return f.apply(this,arguments)}}

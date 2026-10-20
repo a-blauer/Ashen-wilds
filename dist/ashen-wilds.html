@@ -977,15 +977,32 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
 const regionAt=(x,y)=>{for(let i=0;i<PMAP.length;i++){const p=PMAP[i];if(x>=p.x0&&x<p.x0+PMW&&y>=p.y0&&y<p.y0+PMH)return i}return -1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
+var TWN100_SZ=100,TWN100_IW=56; // v100: Duskhold's walls reach cy+100; the inner wall at cy+56 closes the courtyard ward
 const TOWNS=[
  {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:40,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
-].map((t,i)=>{t.i=i;t.cx=t.fx;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+10.5];return t});
+].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+10.5];return t});
 const START=TOWNS[0].sp.slice();
 const PCOURT=[84,284];
-// the woodland courtyard north-east of Duskhold (trees and stone to harvest)
+// v100 town: Duskhold's walls run from cy-TS (north) to cy+TWN100_SZ (south). Upper town cy-TS..cy+TS (plaza, north row),
+// market ward cy+TS..cy+TWN100_IW (shop street), inner wall + gate at cy+TWN100_IW, courtyard ward behind it, south gate at
+// cy+TWN100_SZ. Six portal gates stand on their own islands round the castle, joined by roads (TWN100_RD); PCOURT (the
+// old Portal Court) is now the crossroads east of the main gate. Layout plan with coordinates: README "v100: town".
+// the woodland courtyard inside the south ward of Duskhold (trees and stone to harvest)
 // It starts small and grows by one ring per completed zone; ring i holds 6 nodes of every node type found in zone i.
-const CYD={x:76,y:244,r0:9,dr:1.3,rmax:17,r:9,gate:[75,276],nodes:[]};
-const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.abs(x-t.cx)<=TS+.5+(pad||0)&&Math.abs(z-t.cy)<=TS+.5+(pad||0));
+// gate = the inner gate (north), gate2 = the south gate; the garden wall ring has an opening toward each.
+const CYD={x:40,y:362,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,340],gate2:[40,384],nodes:[]};
+// v100: the six portal gates, one island each (x,y centre, r radius, a = the spot in front of the portal: you arrive there)
+const TWN100_PG=[{x:96,y:284,r:8.5,a:[90.5,284]},{x:84,y:252,r:8.5,a:[84,257.5]},{x:40,y:233,r:8.5,a:[40,238.5]},
+ {x:86,y:322,r:8.5,a:[86,316.5]},{x:84,y:364,r:8.5,a:[84,358.5]},{x:40,y:415,r:8.5,a:[40,409.5]}];
+// roads (polylines, 3 tiles wide) make a ring round the castle: east gate -> crossroads (PCOURT) -> Kindlelight; crossroads ->
+// Hillside -> Burningeye; crossroads -> Sands -> Dirge -> Citadel <- south gate; west gate -> Burningeye and -> Citadel
+const TWN100_RD=[[[61,284],[91,284]],[[84,284],[84,256]],[[84,284],[86,318]],[[86,326],[84,360]],[[80,371],[64,395],[46,412]],
+ [[40,384],[40,410]],[[19,284],[13.5,284],[13.5,262],[22,247],[34,237]],[[13.5,284],[13.5,387],[22,404],[34,413]],[[79,248],[60,240],[46,236]]];
+// v100: the market ward's shop plots (town-local tiles): side -1 = west row (facade at x=-5.5, faces the street to the east),
+// +1 = east row; z = plot centre. The 7x5-tile footprint (|x| 6..12, z-2..z+2) is solid ('B'): building or fenced plot.
+const TWN100_SH=[{k:'smith',s:-1,z:26},{k:'alch',s:-1,z:34},{k:'cook',s:-1,z:42},{k:'bard',s:-1,z:50},
+ {k:'merchant',s:1,z:26},{k:'sage',s:1,z:34},{k:'trainer',s:1,z:42},{k:'stable',s:1,z:50}];
+const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.abs(x-t.cx)<=TS+.5+(pad||0)&&z>=t.cy-TS-.5-(pad||0)&&z<=t.cy+(t.sz||TS)+.5+(pad||0)); // v100: walls reach cy+sz
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
  {name:'The Crest Hydra',title:'Mother of Serpents',sp:'Hydra',lvl:18},
@@ -1011,9 +1028,13 @@ const MAP=(()=>{
   const stamp=(cx,cy,r)=>{for(let y=Math.max(1,Math.floor(cy-r-5));y<=Math.min(H-2,Math.ceil(cy+r+5));y++)for(let x=Math.max(1,Math.floor(cx-r-5));x<=Math.min(W-2,Math.ceil(cx+r+5));x++){const d=Math.hypot(x-cx,y-cy)-r,k=y*W+x;if(d<DW[k])DW[k]=d}};
   // ---- the floating stronghold: the town square, a road east, and the portal court ----
   const T=TOWNS[0];
-  for(let y=T.cy-31;y<=T.cy+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const d=Math.max(Math.abs(x-T.cx),Math.abs(y-T.cy))-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
-  for(let x=T.cx+22;x<=PCOURT[0];x+=1)stamp(x,T.cy,4.5);stamp(PCOURT[0],PCOURT[1],19);
-  stamp(CYD.x,CYD.y,CYD.rmax+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
+  // v100: the island is a rectangle round the walls (north square + south ward) with a 7-tile apron
+  const SE=T.sz-TS;
+  for(let y=T.cy-31;y<=T.cy+SE+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const dz=y<T.cy?T.cy-y:y>T.cy+SE?y-T.cy-SE:0,d=Math.max(Math.abs(x-T.cx),dz)-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
+  // roads, the crossroads by the main gate and the six portal islands
+  const road=(L,r)=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);for(let q=0;q<=n;q++)stamp(ax+(bx-ax)*q/n,ay+(by-ay)*q/n,r)}};
+  TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1],6);
+  TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
   // ---- the six portal maps ----
   PMAP.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
@@ -1056,16 +1077,32 @@ const MAP=(()=>{
   TOWNS.forEach(t=>{
     for(let dy=-TS-3;dy<=TS+3;dy++)for(let dx=-TS-3;dx<=TS+3;dx++){const x=t.cx+dx,y=t.cy+dy;const ax=Math.abs(dx),ay=Math.abs(dy);
       if(ax<TS&&ay<TS)m[y][x]='P';else if(ax<=TS&&ay<=TS)m[y][x]=(ax==TS&&ay<=1)?'P':'W';else if(m[y][x]=='')m[y][x]='.'}
+    // v100: the old south wall (dy=TS) opens into the market ward (paved) down to the inner wall at dy=IW (3-tile gate),
+    // then the courtyard ward (grass) down to the south wall at dy=sz (3-tile gate); side walls all the way
+    if(t.sz>TS){const IW=TWN100_IW;for(let dy=TS;dy<=t.sz+3;dy++)for(let dx=-TS-3;dx<=TS+3;dx++){const x=t.cx+dx,y=t.cy+dy,ax=Math.abs(dx);
+      if(dy>t.sz||ax>TS){if(m[y][x]=='')m[y][x]='.';continue}
+      if(ax==TS){m[y][x]='W';continue}
+      if(dy==IW||dy==t.sz){m[y][x]=ax<=1?'P':'W';continue}
+      if(dy==TS){m[y][x]=ax<=3?'P':'W';continue}
+      if(dy<IW)m[y][x]='P';else{m[y][x]=(x*7+y*3)%5==0?'g':'.';bio[y][x]=2}}
+     TWN100_SH.forEach(q=>{for(let z=q.z-2;z<=q.z+2;z++)for(let a=6;a<=12;a++)m[t.cy+z][t.cx+q.s*a]='B'})}
     const B=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m[t.cy+y][t.cx+x]='B'};
     B(-17,-11,-18,-14);B(-2,2,-18,-14);B(12,17,-18,-14);B(-1,1,-12,-12);
     for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
   });
-  for(let x=T.cx+TS+1;x<=PCOURT[0]-8;x++)for(let y=-1;y<=1;y++)if(m[T.cy+y][x]=='.')m[T.cy+y][x]='p';
+  // v100: dirt roads (3 wide) outside the portal islands; each island takes its zone's ground (bio) with accent patches
+  {const inPG=(x,y)=>TWN100_PG.some(p=>Math.hypot(x-p.x,y-p.y)<p.r-.6);
+   TWN100_RD.forEach(L=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);
+     for(let q=0;q<=n;q++){const cx=ax+(bx-ax)*q/n,cy=ay+(by-ay)*q/n;for(let y=Math.round(cy)-2;y<=Math.round(cy)+2;y++)for(let x=Math.round(cx)-2;x<=Math.round(cx)+2;x++)
+       if(Math.hypot(x-cx,y-cy)<1.45&&m[y][x]=='.'&&!inPG(x,y))m[y][x]='p'}}});
+   TWN100_PG.forEach((p,i)=>{const b=PMAP[i].bi;for(let y=Math.floor(p.y-p.r*1.5);y<=p.y+p.r*1.5;y++)for(let x=Math.floor(p.x-p.r*1.5);x<=p.x+p.r*1.5;x++){if(!m[y]||m[y][x]==='')continue;
+     const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
+     if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
   // ---- the courtyard: south gate path, a grove at the heart, then one ring of nodes per zone (walls are placed at runtime) ----
   {const C=CYD,inC=(x,y)=>Math.hypot(x-C.x,y-C.y),R=C.rmax+.6;
-   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;
+   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(m[y][x]!=='.'&&m[y][x]!=='g')continue; // v100: inside the ward
      if(inC(x,y)<R){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}}
-   for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
+   [C.gate,C.gate2].forEach(G=>{for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(G[0]-C.x)*q),y=Math.round(C.y+(G[1]-C.y)*q);if(Math.hypot(x-C.x,y-C.y)<3.2)continue;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}}); // v100: a path from each gate
    const nearP=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')return true;return false};
    const spot=(cx,cy,rad,n,lo,hi,fn)=>{let got=0;for(let tr=0;tr<80&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
      if(!'.g'.includes(m[y][x])||inC(x,y)>hi||inC(x,y)<lo||nearP(x,y))continue;fn(x,y);got++}};
@@ -1077,13 +1114,14 @@ const MAP=(()=>{
    PMAP.forEach((p,i)=>{const lo=C.r0-1.6+C.dr*i+.15,hi=C.r0-1.6+C.dr*(i+1),kinds=[...new Set(BIOMES[p.bi].pr)];
      kinds.forEach((k,j)=>{let got=0;const a0=j/kinds.length*6.283+i*.7;
        for(let tr=0;tr<400&&got<6;tr++){const a=a0+(rnd()-.5)*(6.283/kinds.length)*.9,d=lo+rnd()*(hi-lo),x=Math.round(C.x+Math.cos(a)*d),y=Math.round(C.y+Math.sin(a)*d);
-         if(!'.g'.includes(m[y][x])||nearP(x,y)||townAt(x,y,3)>=0)continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
+         if(!'.g'.includes(m[y][x])||nearP(x,y))continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
   }
   m.bio=bio;m.DW=DW;
-  m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
+  const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
+  m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();
 
-const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const q=Math.max(Math.abs(x-t.cx),Math.abs(z-t.cy));if(q<d)d=q}return d};
+const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(Math.abs(x-t.cx),dz);if(q<d)d=q}return d}; // v100
 // ---- visual terrain: smooth heightfield (collision stays tile-based) ----
 const smt=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
 const hh2=(x,y)=>{const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)};
@@ -1096,7 +1134,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
 {
   const DW=MAP.DW,sp=x=>x<-5?0:Math.log1p(Math.exp(x*1.5))/1.5;
   const base=(x,y,a)=>.55+sp(1.0+(fbm2(x*.02+3,y*.02+9,4)-.5)*6*a+(fbm2(x*.07,y*.07+4,3)-.5)*1.6*a);
-  const supd=(x,y,t)=>Math.pow(Math.pow(Math.abs(x-t.cx),4)+Math.pow(Math.abs(y-t.cy),4),.25);
+  const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(Math.abs(x-t.cx),4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
   TOWNS.forEach(t=>{t.ph=1.6});
   for(let j=-HPD;j<=H+HPD;j++)for(let i=-HPD;i<=W+HPD;i++){
     const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,r=regionAt(tx,ty),d=DW[k];let h;
@@ -1371,7 +1409,7 @@ const paint=(OX,OY,TW,TH,PX)=>{const NW=TW*PX,NH=TH*PX,c=document.createElement(
   }}
  g2.putImageData(gid,0,0);return {c,x0:OX,y0:OY,w:TW,h:TH,px:PX}};
 // the paved square: chunk-aligned (CHN=32) rectangle around the town, the road to the Portal Court and the Courtyard path
-const TR=[0,7,3,10],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);
+const TR=[0,7,4,14],main=paint(0,0,W,H,GPX),town=paint(TR[0]*32-2,TR[1]*32-2,(TR[2]-TR[0])*32+4,(TR[3]-TR[1])*32+4,4);
 return {main,town,list:[main,town],pick:(cx,cz)=>cx>=TR[0]&&cx<TR[2]&&cz>=TR[1]&&cz<TR[3]?town:main}})();
 const gt=new THREE.CanvasTexture(GTX.main.c);gt.anisotropy=ren.capabilities.getMaxAnisotropy();GTX.main.t=gt;
 try{for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=MAP[y][x];if((t=='P'||t=='B'||t=='W'||t=='p')&&GTX.pick(x>>5,y>>5)!==GTX.town){console.warn('paved tile outside the town texture',x,y);y=H;break}}}catch(_){}
@@ -1553,7 +1591,7 @@ TOWNS.forEach(buildTown);
  d0.rotation.set(0,0,0)}
 // town animation + lighting (only runs near the player)
 function townTick(now,pp){
-  TOWNS.forEach(t=>{t.g.visible=Math.hypot(pp.x-t.cx,pp.z-t.cy)<60});
+  TOWNS.forEach(t=>{const dz=Math.max(0,t.cy-pp.z,pp.z-t.cy-(t.sz||TS)+TS);t.g.visible=Math.hypot(pp.x-t.cx,dz)<62}); // v100
   TANIM.forEach(a=>{if(Math.abs(pp.x-a.x)<40&&Math.abs(pp.z-a.z)<40)a.f(now)});
 }
 function townLights(pp){
@@ -8001,11 +8039,11 @@ function zoneLv(x,y){const r=regionAt(Math.round(x),Math.round(y));if(r<0)return
 const curMap=()=>regionAt(Math.round(pl.position.x),Math.round(pl.position.z));
 function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
-  const r=curMap();if(r<0)return '🌀 Duskhold · Portal Court';
+  const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
   const C=campAt(pl.position.x,pl.position.z,CAMP_R);return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+p.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+p.lv[0]+'–'+p.lv[1]+')';
 }
-function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','Shops · Hearth · Alchemy · Tavern · Portal Court to the east')}}}
+function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','Shops · Tavern · Courtyard in the south ward · portal gates round the walls')}}}
 // zone recommendations follow the maps now
 var MREC=['D','C','C','B','A','A'];
 function zoneRec(){const r=curMap();if(r<1||inDun)return null;const p=PMAP[r];return {b:{n:p.n},g:MREC[r],p:recPower(p.lv[0])}}
@@ -8046,7 +8084,7 @@ function rportRefresh(){RPORT.forEach(r=>{if(r.k=='exit')r.g.visible=pDone(r.pi)
 function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.forEach((f,k)=>{if(f)f.position.set(x+(k?1.4:-1.4),0,z+1)});snapCam();curTown=-2}
 function enterMap(i){if(AF)return;const p=PMAP[i];fadeTo(()=>{const n=p.path[30];toPos(p.en[0],p.en[1],Math.atan2(p.en[0]-n[0],p.en[1]-n[1]));
   banner(p.ic+' '+p.n.toUpperCase(),p.sub,'Enemy levels '+p.lv[0]+'–'+p.lv[1]+' · defeat '+BOSSES[i].name+' at the end of the road')})}
-function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{const T=TOWNS[0];toPos(PCOURT[0]-6,PCOURT[1],-Math.PI/2);say('🏰 Back in Duskhold.')})}
+function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
   const P=pl.position;
@@ -8064,7 +8102,7 @@ $('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target
 XR.bosses=()=>{$('xwT').textContent='🌀 The Portals';$('xwS').textContent=bossDone.size+' of '+PMAP.length+' maps cleared';
   $('xwB').innerHTML='<div class="rows">'+PMAP.map((p,i)=>{const b=BOSSES[i],u=pUnlocked(i),d=pDone(i);
     return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">Lv ${p.lv[0]}–${p.lv[1]}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
-  $('xwF').innerHTML='<span class="mut dtl">Portals stand in the Portal Court, east of the Duskhold gate.</span>'};
+  $('xwF').innerHTML='<span class="mut dtl">Each portal has its own gate on an island round Duskhold; roads lead there from the east, west and south gates.</span>'};
 // ---- bosses ----
 function spawnBoss(i){
   const d=BOSSES[i],key='boss'+i;
@@ -8086,7 +8124,7 @@ function bossDefeated(e){
   if(!first){banner('👑 '+A.b.name+' falls again','Its loot is yours','It returns after 5 minutes');return}
   bossDone.add(i);const P=A.b.pw;hero.buffs.push({s:P.s,t:Infinity,n:P.n,i:P.i,d:P.d,perm:1});hsDirty();
   banner('👑 MAP CLEARED',A.b.name+' is slain','Power gained: '+P.i+' '+P.n+' ('+P.d+')');portalRefresh();rportRefresh();
-  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits in the Portal Court','The Wave Trial of '+PMAP[i].n+' is now open too');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
+  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','The Wave Trial of '+PMAP[i].n+' is now open too');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
     say('🌀 A golden portal home has opened in the arena.')},2800);
 }
 // ---- Wave Trials ----
@@ -8636,7 +8674,7 @@ var LT={on:0};
 openWMap=function(){
   if(inRealm)return;const c=$('wmc'),r=curMap(),T=TOWNS[0];let x0,y0,w,h,title,sub;
   if(r>=0){const p=PMAP[r];x0=p.x0;y0=p.y0;w=PMW;h=PMH;title=p.n;sub=(p.sub||'')+' · Lv '+p.lv[0]+'–'+p.lv[1]}
-  else{x0=T.cx-32;y0=(typeof CYD!='undefined'?Math.min(T.cy-32,CYD.y-CYD.rmax-4):T.cy-32);w=(PCOURT[0]+24)-x0;h=T.cy+32-y0;title='Duskhold';sub='The floating stronghold · Portal Court and Courtyard to the east'}
+  else{x0=T.cx-36;y0=T.cy-62;w=PCOURT[0]+22-x0;h=T.cy+(T.sz||TS)+42-y0;title='Duskhold';sub='The floating stronghold · six portal gates round the walls · the Courtyard in the south ward'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
   const P=(x,z)=>[(x-x0+.5)*s,(z-y0+.5)*s],inV=(x,z)=>x>=x0&&x<x0+w&&z>=y0&&z<y0+h;g.textAlign='center';g.textBaseline='middle';
@@ -8648,7 +8686,7 @@ openWMap=function(){
     {const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
     if(bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
   }else{{const [x,y]=P(T.cx,T.cy);g.fillStyle='#fbbf24';g.fillRect(x-7,y-7,14,14);g.strokeStyle='#000';g.lineWidth=2;g.strokeRect(x-7,y-7,14,14);lab('Duskhold',x,y+20)}
-    {const [x,y]=P(PCOURT[0],PCOURT[1]);g.fillStyle='#a78bfa';g.beginPath();g.arc(x,y,8,0,6.28);g.fill();lab('🌀 Portal Court',x,y+20,'#e4d8ff')}
+    if(typeof TWN100_wmap=='function')TWN100_wmap(g,P,lab,s);
     if(typeof CYD!='undefined'){const [x,y]=P(CYD.x,CYD.y);lab('🌲 Courtyard',x,y,'#c8f0b0')}}
   (typeof tmaps!='undefined'?tmaps:[]).forEach(m=>{if(!inV(m.x,m.z))return;const [x,y]=P(m.x,m.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('✕',x,y)});
   if(typeof MP!='undefined'&&MP.on)for(const k in MP.rh){const q=MP.rh[k];if(!q.pr||!inV(q.pr.x,q.pr.z))continue;const [x,y]=P(q.pr.x,q.pr.z);g.fillStyle='#60a5fa';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();lab(String(q.pr.n||'').slice(0,14),x,y-12,'#cfe3ff')}
@@ -12239,7 +12277,7 @@ function twStall(st,col){let k=null;const key='STALL|'+col;
   }catch(e){console.warn('town court',e)}}
 // paving: irregular flagstones over the town's paved tiles, and lashing rails along the palisade
 {try{const T=TOWNS[0],R=dkRng(77),L=[],Wl=[];
-    for(let y=T.cy-34;y<=T.cy+34;y++)for(let x=T.cx-34;x<=T.cx+40;x++){const t=MAP[y]&&MAP[y][x];if(t=='P')L.push([x,y]);else if(t=='W')Wl.push([x,y])}
+    for(let y=T.cy-34;y<=T.cy+(T.sz||TS)+13;y++)for(let x=T.cx-34;x<=T.cx+40;x++){const t=MAP[y]&&MAP[y][x];if(t=='P')L.push([x,y]);else if(t=='W')Wl.push([x,y])}
     if(L.length){const sg=(()=>{const g=new THREE.CircleGeometry(.5,6);g.rotateX(-Math.PI/2);const pa=g.attributes.position;for(let i=1;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i),h=twH(Math.round(x*50),0,Math.round(z*50),5);pa.setX(i,x*(.86+h*.26));pa.setZ(i,z*(.86+h*.26))}
         const n=g.toNonIndexed();n.computeVertexNormals();n.userData.lps=1;return n})();
       const N=L.length*2,m=new THREE.InstancedMesh(sg,new THREE.MeshStandardMaterial({roughness:.95,flatShading:true}),N),d=new THREE.Object3D(),c=new THREE.Color();m.material.userData.lps=1;
@@ -12394,8 +12432,8 @@ var MSRC=null;
 function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].map(zn);return u.length?u.join(', '):''};
   const pz={};MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);(pz[q[2]]=pz[q[2]]||[]).push(r)});const zonesOf=ks=>zl(ks.flatMap(k=>(pz[k]||[]).filter(r=>r>=0)));
   const add=(n,ic,t)=>{S[n.toLowerCase()]={n,ic,t}};
-  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Courtyard north-east of Duskhold has a grove; every portal zone has trees too.');
-  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Courtyard north-east of Duskhold has stone, and gains more nodes with every zone you complete. Also: '+zonesOf(['rock','grave','pillar'])+'.');
+  add('Wood','🪵','Chop trees (F next to a tree). The 🌲 Courtyard in the south ward of Duskhold has a grove; every portal zone has trees too.');
+  add('Stone','🪨','Mine rocks (F next to a rock). The 🌲 Courtyard in the south ward of Duskhold has stone, and gains more nodes with every zone you complete. Also: '+zonesOf(['rock','grave','pillar'])+'.');
   add('Iron Ore','⛏️','A lucky find while mining rocks; higher Mining level finds it more often. Rocks are in the 🌲 Courtyard and '+zonesOf(['rock'])+'.');
   add('Crystal Shard','💎','Mine glowing crystals in '+(zonesOf(['crystal'])||'Burningeye Summit')+'. Falling meteors also leave crystals.');
   add('Plant Fiber','🌿','Gather bushes in '+zonesOf(['bush'])+'.');
@@ -19569,7 +19607,7 @@ function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" da
 function tmTip(m){const p=PMAP[m.r],here=tmCur()===m.r;
   return `<div class="kqm-tn"><span>🗺️ ${tmName(m)}</span></div><div class="kqm-ts">Quest item · can't be sold</div>`+
     `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' (Lv '+p.lv[0]+'–'+p.lv[1]+')':''}. ${tmHint(m)}</div>`+
-    `<div class="kqm-th">${here?'You are in this zone: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through the Portal Court, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
+    `<div class="kqm-th">${here?'You are in this zone: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
 {const f=kqmTipHTML;kqmTipHTML=function(el){const k=el&&el.dataset&&el.dataset.kqt||'';if(k.slice(0,3)=='tm:'){const m=tmaps.find(q=>q.id==+k.slice(3));return m?[tmTip(m),'#fbbf24']:null}return f.apply(this,arguments)}}
 {const f=kqmBag;kqmBag=function(){const r=f.apply(this,arguments);try{if(!tmaps.length)return r;const bl=$('bl'),T=bagTab2;if(!bl)return r;
     if(T==0&&KQM.filt=='all'){const g=bl.querySelector('.kqm-bagg');if(g){g.insertAdjacentHTML('afterbegin',tmaps.map(tmTile).join(''));for(let i=0;i<tmaps.length;i++){const e=g.querySelector('.kqm-empty:last-child');if(e)e.remove()}}}
@@ -22226,6 +22264,589 @@ function rlvSync(force){try{if(typeof RLG=='undefined')return;const on=!!inRealm
 // things that switch themselves back on (or appear) while in the realm are caught every half second
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);rlvSync(inRealm&&++RLV.n%30==0)}}
 rlvSync(true);
+
+// ================= v100 town (1/4): the longer Duskhold — wall ring, south wards, courtyard inside the walls =================
+// Layout numbers live in w0_world.js: TWN100_SZ (south wall, town-local z), TWN100_IW (inner wall closing the courtyard
+// ward), TWN100_PG (portal islands), TWN100_RD (roads), TWN100_SH (market plots), CYD (courtyard), PCOURT (crossroads).
+// Town-local frame (T.g): x = world x - T.cx, z = world z - T.cy, ground at T.ph.
+//   upper town   z -21..21 : plaza, north row (Trading Post, Tavern, Magic Shop), kingdom structures
+//   market ward  z  21..56 : a street (|x|<6) with eight shop plots (|x| 6..12), arch to the plaza at z=21
+//   courtyard    z  56..100: the walled garden (CYD) behind the inner gate; south gate at z=100
+// This file: the wall ring for every Bastion Walls level (kdWalls), the courtyard's garden wall (cyWalls), area names,
+// arriving home from a zone (TWN100_home), old saves standing where there is no ground any more.
+var TWN100={walls:null,cy:null,lamps:[]};
+function TWN100_L(){const T=TOWNS[0];return {T,R:TS,IW:TWN100_IW,SZ:T.sz||TWN100_SZ}}
+// the v83 stone tower (Bastion Walls level 2 used the old tower groups; the ring now needs towers in new places)
+function TWN100_tw2(k,r,h){const roofC=TOWNS[0].pal.roof||0x3e3a40,flag=TOWNS[0].pal.ban||0x7a2230;
+  twStoneRing(k,TWC.stone,0,0,r*1.08,0,.45,.36);twStoneRing(k,TWC.stone,0,0,r,.45,h,.32);
+  const n=Math.max(8,Math.round(r*7));for(let i=0;i<n;i++){const a=i/n*Math.PI*2;k.as('wood',()=>k.L('c',TWC.woodD,[Math.cos(a)*r*.9,h-.25,Math.sin(a)*r*.9],[Math.cos(a)*r*1.22,h+.05,Math.sin(a)*r*1.22],.06,'box'))}
+  k.as('board',()=>k.p('c',TWC.wood,'cyl8',0,h+.12,0,r*1.24,.18,r*1.24,0,0,0,.05));
+  for(let i=0;i<n;i++){const a=(i+.5)/n*Math.PI*2;k.as('wood',()=>k.p('c',k.R()<.3?TWC.woodD:TWC.wood,'box',Math.cos(a)*r*1.2,h+.42,Math.sin(a)*r*1.2,.07,.5,r*Math.PI*2/n*1.02,0,-a,0,.06))}
+  twCone(k,roofC,0,h+.55,0,r*1.42,r*2.3);
+  [0,2.1,4.2].forEach(a=>k.p('c',0x18141a,'box',Math.cos(a)*(r+.14),h*.6,Math.sin(a)*(r+.14),.08,.5,.16,0,-a,0,0));
+  const top=h+.55+r*2.3;k.L('c',TWC.woodD,[0,top-.3,0],[0,top+1.0,0],.035,'cyl6',0);k.as('cloth',()=>{k.p('c',flag,'box',.34,top+.72,0,.62,.36,.03,0,0,0,.08);k.p('c',flag,'tri',.72,top+.72,0,.36,.2,.03,0,0,-Math.PI/2,.05)})}
+// the ring's long walls in bigger blocks and taller courses (≈1/3 of the parts of twStones; reads the same at wall scale)
+function TWN100_coarse(k,col,x0,z0,x1,z1,y0,y1,th,bl){return twCtx(k,k&&k.mt=='ashlar'?'ashlar':'stone',(k,col,x0,z0,x1,z1,y0,y1,th,bl)=>{const dx=x1-x0,dz=z1-z0,L=Math.hypot(dx,dz)||.01,ux=dx/L,uz=dz/L,ry=Math.atan2(-dz,dx);bl=(bl||.62)*1.75;
+  let y=y0,row=0;while(y<y1-.04){const bh=Math.min(y1-y,.46+k.R()*.18);let u=row%2?-bl*.45:0;
+    while(u<L-.02){const len=Math.min(L-Math.max(u,0),bl*(.7+k.R()*.6)),a=Math.max(u,0),m=a+len/2,sh=(k.R()-.5)*.1;
+      if(len>.08)k.p('c',k.R()<.25?TWC.stoneD:k.R()<.3?TWC.stoneL:col,'box',x0+ux*m,y+bh/2,z0+uz*m,len-.03,bh-.03,th*(.94+k.R()*.12),sh*.3,ry,sh*.2,.16);u+=len}
+    y+=bh;row++}},arguments)}
+function TWN100_tower(k,lv,r,h){if(lv==2)TWN100_tw2(k,r,h);else kdTowerK(k,lv,r,h)}
+// the archway between the plaza and the market ward (opening |x|<3.5 along x at z=0 local, both sides are town)
+function TWN100_archK(k,lv,w){const hw=w/2,ban=TOWNS[0].pal.ban||0x7a2230;
+  if(lv<2){[-1,1].forEach(s=>{[-.35,.35].forEach(dz=>{k.as('bark',()=>k.L('c',TWC.woodD,[s*(hw+.25),-.3,dz],[s*(hw+.25),4.1,dz],.2,'log'));if(lv==1)twStones(k,TWC.stone,s*(hw+.25)-.32,dz,s*(hw+.25)+.32,dz,-.3,.8,.6,.35)});
+      k.as('wood',()=>k.p('c',TWC.woodD,'cone6',s*(hw+.25),4.35,0,.26,.5,.26,0,0,0,.05))});
+    k.as('board',()=>k.p('c',TWC.wood,'box',0,3.35,0,w+1.2,.62,.62,0,0,0,.02));k.as('wood',()=>{[-1,1].forEach(q=>k.L('c',TWC.woodD,[-hw-.6,3.05,q*.34],[hw+.6,3.05,q*.34],.08,'box'));
+      [-1,1].forEach(s=>k.L('c',TWC.woodD,[s*(hw+.1),2.3,0],[s*(hw-.9),3.05,0],.07,'box'))})}
+  else{// stone arch: two piers, a round-ish arch of voussoirs, a walkway with merlons on top
+    [-1,1].forEach(s=>{twStones(k,TWC.stone,s*(hw+.5)-.55,0,s*(hw+.5)+.55,0,-.3,3.0,1.2,.5);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',s*(hw+.5),3.05,0,1.3,.14,1.3,0,0,0,.03))});
+    const n=11;for(let i=0;i<n;i++){const a=Math.PI*(i+.5)/n,x=Math.cos(a)*hw,y=3.0+Math.sin(a)*.9;k.p('c',i%2?TWC.stoneL:TWC.stone,'box',x,y,0,.62,.5,1.1,0,0,a-Math.PI/2,.08)}
+    twStones(k,TWC.stone,-hw-1.05,0,hw+1.05,0,3.3,4.25,1.1,.6);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,4.3,0,w+2.3,.12,1.25,0,0,0,.02));
+    for(let x=-hw-.6;x<=hw+.65;x+=1.2)[-1,1].forEach(q=>k.p('c',TWC.stone,'box',x,4.62,q*.48,.6,.55,.3,0,0,0,.08));
+    [-1,1].forEach(s=>[-1,1].forEach(q=>kdBanner(k,s*(hw+.5),2.9,q*.64,q>0?0:Math.PI,ban,.7,1.5)));
+    if(lv>=3)[-1,1].forEach(s=>kdBrazier(k,s*(hw+.5),0,3.12,.7))}}
+// the ring, baked per level into three kits (upper town / market ward / courtyard ward) so each part can be culled
+function TWN100_ringK(k,lv,part){const {R,IW,SZ}=TWN100_L(),gz=1.75,at=(x,z,ry,f)=>k.at(x,0,z,f,ry),seg=(x0,z0,x1,z1,ry)=>at((x0+x1)/2,(z0+z1)/2,ry,()=>kdSegK(k,lv,Math.hypot(x1-x0,z1-z0)));
+  const side=(z0,z1)=>[-1,1].forEach(s=>seg(s*R,z0,s*R,z1,-s*Math.PI/2)),cross=(z,g,ry)=>{seg(-R,z,-g,z,ry);seg(g,z,R,z,ry)};
+  const big=(x,z,i)=>at(x,z,i*1.3,()=>TWN100_tower(k,lv,1.45,4.2)),small=(x,z,i)=>at(x,z,i*.9+(x+z)%6,()=>TWN100_tower(k,lv,.95,3.1)),mid=(x,z,i)=>at(x,z,i*1.7,()=>kdTowerK(k,3,1.15,3.6));
+  if(part==0){seg(-R,-R,R,-R,0);side(-R,-gz);side(gz,R);cross(R,3.5,Math.PI);
+    [-1,1].forEach(s=>{[-2.3,2.3].forEach((z,i)=>small(s*R,z,i));big(s*R,-R,s);big(s*R,R,s+2);at(s*R,0,s>0?Math.PI:0,()=>kdGateK(k,lv))});
+    at(0,R,0,()=>TWN100_archK(k,lv,7));if(lv>=3){[[-10.5,-R],[10.5,-R],[-R,-11.5],[R,-11.5],[-R,11.5],[R,11.5]].forEach(([x,z],i)=>mid(x,z,i))}}
+  else if(part==1){side(R,IW);cross(IW,gz,Math.PI);at(0,IW,Math.PI/2,()=>kdGateK(k,lv));[-1,1].forEach(s=>{big(s*R,IW,s+4);small(s*2.3,IW,s)});
+    if(lv>=3)[-1,1].forEach(s=>mid(s*R,(R+IW)/2,s))}
+  else{side(IW,SZ);cross(SZ,gz,Math.PI);at(0,SZ,Math.PI/2,()=>kdGateK(k,lv));[-1,1].forEach(s=>{big(s*R,SZ,s+6);small(s*2.3,SZ,s+2)});
+    if(lv>=3)[-1,1].forEach(s=>mid(s*R,(IW+SZ)/2,s+3))}}
+function kdWalls(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.wg=null}
+  o.gate.forEach(q=>q.visible=false);o.tw.forEach(q=>q.visible=false);o.ban.forEach(q=>q.visible=false);
+  const g=new THREE.Group();g.name='kdWalls';
+  [0,1,2].forEach(part=>{const key='TWNRING|'+lv+'|'+part;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
+  K.wg=g;T.g.add(g);
+  const {R,IW,SZ}=TWN100_L(),cols=[],lamps=[];
+  if(lv>=3){[[-10.5,-R],[10.5,-R],[-R,-11.5],[R,-11.5],[-R,11.5],[R,11.5],[-R,(R+IW)/2],[R,(R+IW)/2],[-R,(IW+SZ)/2],[R,(IW+SZ)/2]].forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:1.15}));
+    [-1,1].forEach(s=>[-1,1].forEach(q=>lamps.push([T.cx+s*(R+1.25),T.ph+1.2,T.cy+q*2.75])));[IW,SZ].forEach(z=>[-1,1].forEach(q=>lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+z+1.25])))}
+  kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps}
+
+// ---------- the courtyard: a low garden wall of rough stone, openings toward the inner gate (north) and the south gate ----------
+function cyWalls(){const C=CYD,r=C.r,gaps=[Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),Math.atan2(C.gate2[1]-C.y,C.gate2[0]-C.x)],gw=2.3/r;
+  const inGap=a=>gaps.some(g=>{let d=Math.abs(a-g);if(d>Math.PI)d=6.283-d;return d<gw});
+  CYG.walls.forEach(([x,y])=>{if(MAP[y][x]=='B'){MAP[y][x]='g';mmPaint(x,y)}});CYG.walls=[];
+  for(let y=Math.floor(C.y-r-2);y<=C.y+r+2;y++)for(let x=Math.floor(C.x-r-2);x<=C.x+r+2;x++){const t=MAP[y]&&MAP[y][x];if(t!=='.'&&t!=='g')continue;
+    const d=Math.hypot(x-C.x,y-C.y);if(d>=r-.4&&d<r+.6&&!inGap(Math.atan2(y-C.y,x-C.x))){MAP[y][x]='B';CYG.walls.push([x,y]);mmPaint(x,y)}}
+  if(CYG.g){scene.remove(CYG.g);CYG.g=null}
+  const n=bossDone.size,key='CYW100|'+r.toFixed(2);let k=null;
+  if(!twHas(key)){k=twKit(171+Math.round(r*10));
+    // the wall in short straight runs round the circle; capstones and the odd ivy tuft on top
+    const N=Math.round(6.283*r/1.15);for(let i=0;i<N;i++){const a0=i/N*6.283,a1=(i+1)/N*6.283,am=(a0+a1)/2;if(inGap(a0)||inGap(a1))continue;
+      const x0=Math.cos(a0)*r,z0=Math.sin(a0)*r,x1=Math.cos(a1)*r,z1=Math.sin(a1)*r;twStones(k,TWC.stone,x0,z0,x1,z1,-.2,.95,.62,.42);
+      k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',Math.cos(am)*r,1.0,Math.sin(am)*r,Math.hypot(x1-x0,z1-z0)+.06,.12,.78,0,-am+Math.PI/2,0,.04));
+      if(i%3==0)k.p('c',[0x3e6a34,0x4a7a3a,0x35602e][i%3==0?(i/3|0)%3:0],'ico',Math.cos(am)*(r+.05),1.12,Math.sin(am)*(r+.05),.3,.18,.36,0,am,0,.12);
+      if(i%5==2)k.p('c',0x3e6a34,'box',Math.cos(am)*(r+.33),.62,Math.sin(am)*(r+.33),.42,.7,.04,0,-am+Math.PI/2,0,.06)}
+    // posts with lanterns either side of each opening
+    gaps.forEach(g=>[-1,1].forEach(s=>{const a=g+s*(gw+.32/r),x=Math.cos(a)*r,z=Math.sin(a)*r;twStones(k,TWC.stoneD,x-.3,z,x+.3,z,-.2,1.5,.6,.3);
+      k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',x,1.55,z,.74,.12,.74,0,0,0,.03));k.p('m',TWC.iron,'cone4',x,1.95,z,.2,.16,.2,0,Math.PI/4,0,0);
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>k.p('m',TWC.iron,'box',x+q[0]*.1,1.72,z+q[1]*.1,.025,.3,.025,0,0,0,0));k.p('g',0xffd27a,'oct',x,1.72,z,.1,.14,.1)}))}
+  const g=twGroup(k,key);g.position.set(C.x,TOWNS[0].ph,C.y);g.name='cyWalls';scene.add(g);CYG.g=g;
+  // a sign on the north opening
+  {const a=gaps[0]+gw+1.3/r,x=C.x+Math.cos(a)*(r+.2),z=C.y+Math.sin(a)*(r+.2),y=GH(x,z),sg=twPostG(1.7,1.65,.46);sg.position.set(x,y,z);sg.rotation.y=0;g.parent.add(sg);CYG.sg&&scene.remove(CYG.sg);CYG.sg=sg;
+    sign(sg,[{t:'🌲 Courtyard',f:'700 40px'},{t:n?n+' zone'+(n>1?'s':'')+' tended':'Wood & stone',f:'600 26px'}],1.7,.46,'#1a2414','#efe6d8',null,0,1.65,0,0)}}
+// the courtyard sign posts and lanterns are rebuilt with the wall (the v85 cyWalls already ran once at load with the old rules)
+try{if(CYG.g){scene.remove(CYG.g);CYG.g=null}CYG.n=-1;cySync()}catch(e){console.warn('v100 courtyard',e)}
+
+// ---------- names, coming home, old saves ----------
+{const f=areaName;areaName=function(){try{if(!inRealm&&!inDun){const T=TOWNS[0],x=pl.position.x,z=pl.position.z;
+    if(townAt(x,z,0)==0){const dz=z-T.cy;if(dz>TWN100_IW)return Math.hypot(x-CYD.x,z-CYD.y)<CYD.r+.8?'🌲 Duskhold · Courtyard':'🌲 Duskhold · Courtyard ward';if(dz>TS)return '🏰 Duskhold · Market ward'}
+    else if(curMap()<0){for(let i=0;i<TWN100_PG.length;i++){const p=TWN100_PG[i];if(Math.hypot(x-p.x,z-p.y)<p.r+2)return PMAP[i].ic+' '+PMAP[i].n+' gate'}}}}catch(_){}return f.apply(this,arguments)}}
+// back from a zone (its home portal, or the Wave Trial): in front of that zone's gate, facing the road
+function TWN100_home(){const r=curMap(),i=r>=0&&r<TWN100_PG.length?r:0,p=TWN100_PG[i];toPos(p.a[0],p.a[1],Math.atan2(p.a[0]-p.x,p.a[1]-p.y)+Math.PI)}
+// a spot is fine to stand on when there is ground and nothing solid
+function TWN100_ok(x,z){const X=Math.round(x),Z=Math.round(z);return X>1&&Z>1&&X<W-2&&Z<H-2&&MAP.DW[Z*W+X]<0&&!solid(x,z)&&!tcHit(x,z)}
+function TWN100_fixPos(x,z){if(inRealm||inDun)return null;if(x==null){x=pl.position.x;z=pl.position.z}if(regionAt(Math.round(x),Math.round(z))>=0)return null;if(TWN100_ok(x,z)){if(Math.hypot(pl.position.x-x,pl.position.z-z)>.5)toPos(x,z);return 'kept'}
+  // the old Portal Court (r 19 round PCOURT) and the old courtyard (r 18 round 76,244) are mostly sky now
+  if(Math.hypot(x-PCOURT[0],z-PCOURT[1])<22){toPos(PCOURT[0],PCOURT[1]);return 'court'}
+  if(Math.hypot(x-76,z-244)<20){toPos(CYD.gate[0],CYD.gate[1]+2.5);return 'yard'}
+  for(let r=1;r<7;r++)for(let a=0;a<6.283;a+=.5){const qx=x+Math.cos(a)*r,qz=z+Math.sin(a)*r;if(TWN100_ok(qx,qz)){toPos(qx,qz);return 'near'}}
+  toPos(START[0],START[1]);return 'start'}
+// (uses the saved spot: the v97 loader sends any older-layout save west of the zones to the spawn when its tile is void)
+{const f=loadGame;loadGame=function(){const s=typeof saveInfo=='function'?saveInfo():null;const r=f.apply(this,arguments);try{const p=s&&s.pos;
+  TWN100.mig=p&&!p.realm&&p.x<PMAP[0].x0?TWN100_fixPos(p.x,p.z):TWN100_fixPos()}catch(e){console.warn('v100 town load',e)}return r}}
+
+// ---------- market ward + courtyard ward dressing: one baked kit (lantern posts, crates, barrels, benches) ----------
+var TWN100_LP=[[-5.4,30],[5.4,30],[-5.4,38],[5.4,38],[-5.4,46],[5.4,46],[-2.4,TWN100_IW+3.4],[2.4,TWN100_IW+3.4],[-2.4,TWN100_SZ-2.6],[2.4,TWN100_SZ-2.6]];
+function TWN100_wardK(k){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
+      k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);
+      const lx=.32,ly=h-.28;k.p('m',TWC.iron,'cone4',lx,ly+.2,0,.17,.13,.17,0,Math.PI/4,0,0);k.p('m',TWC.iron,'box',lx,ly-.16,0,.2,.04,.2,0,0,0,0);
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>k.p('m',TWC.iron,'box',lx+q[0]*.09,ly,q[1]*.09,.025,.32,.025,0,0,0,0));k.p('g',0xffd27a,'oct',lx,ly,0,.1,.15,.1)},ry);
+  TWN100_LP.forEach(([x,z])=>lampK(x,z,x<0?0:Math.PI));
+  [[-6.2,30.2,0],[6.3,38.1,1],[-6.4,46.3,0],[6.1,29.8,1]].forEach(([x,z,b])=>{if(b)TWN100_barrel(k,x,z,1);else{TWN100_crate(k,x,z,.62,.2);TWN100_crate(k,x-.1,z+.1,.4,.6);k.at(0,.62,0,()=>TWN100_crate(k,x,z,.38,1.1))}});
+  [-8.2,8.2].forEach(x=>k.at(x,0,TWN100_IW+4,()=>{k.as('bark',()=>k.L('c',0x6a4a2e,[-.75,.42,0],[.75,.42,0],.16,'cyl6'));k.as('board',()=>k.p('c',0x7a5a3a,'box',0,.5,0,1.5,.07,.34,0,0,0,.06));
+    [-.55,.55].forEach(s=>{k.as('bark',()=>k.L('c',TWC.woodD,[s,0,0],[s,.38,0],.13,'log'));k.as('wood',()=>k.L('c',TWC.woodD,[s,.45,-.17],[s,.95,-.24],.05,'box'))});k.as('board',()=>k.p('c',0x6a4a2e,'box',0,.85,-.23,1.5,.18,.06,-.12,0,0,.06))}))}
+{const T=TOWNS[0];try{let k=null;if(!twHas('TWNWARD')){k=twKit(951);TWN100_wardK(k)}const g=twGroup(k,'TWNWARD');g.name='wardDress';T.g.add(g);
+  TWN100_LP.forEach(([x,z])=>{const lx=x+(x<0?.32:-.32);TLAMP.push([T.cx+lx,T.ph+2.0,T.cy+z]);T.col.push({x:T.cx+x,z:T.cy+z,r:.2})});
+  [[-6.2,30.2,.45],[6.3,38.1,.36],[-6.4,46.3,.45]].forEach(([x,z,r])=>T.col.push({x:T.cx+x,z:T.cy+z,r}));[-8.2,8.2].forEach(x=>T.col.push({x:T.cx+x,z:T.cy+TWN100_IW+4,hx:.78,hz:.26}))
+}catch(e){console.warn('v100 ward dressing',e)}}
+// the ring changed shape: rebuild it now (kdSync only rebuilds on a level change)
+try{if(KGD){KGD.wl=-1;kdSync()}}catch(e){console.warn('v100 walls',e)}
+
+// the three ring parts (upper town / market ward / courtyard ward) are drawn only within ~58 tiles of their stretch
+{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy,R=[[-TS,TS],[TS,TWN100_IW],[TWN100_IW,T.sz]];
+  K.wg.children.forEach((g,i)=>{const r=R[i]||R[0],d=z<r[0]?r[0]-z:z>r[1]?z-r[1]:0;g.visible=d<46})}catch(_){}}}
+
+// ================= v100 town (2/4): one portal gate per zone, each on its own island dressed in the zone's theme =================
+// The six PORT portals (zz_portal.js) keep their disc / swirl / chains and their prompts; they move from the old Portal
+// Court to TWN100_PG[i] (w0_world.js) and get a themed frame, a dais, a signpost and scenery taken from the zone's own
+// decoration kinds (WD.T, zzN_world.js), merged per island into one lit mesh + one glowing mesh (+ mist for two zones).
+// The old court floor, rune stone and their colliders are removed; PCOURT is now a crossroads with a fingerpost.
+// Locked portals: chains across a grey disc (portalRefresh), plus the island's lanterns/braziers stay dark (TWN100_P[i].glow).
+var TWN100_P=[];
+// themed frame kits (local: portal disc centred at y=1.62, x=0, facing +z; opening |x|<1.1)
+function TWN100_frameK(k,i){const R=k.R,S=(c,f)=>dkShade(c,f);
+  // dais: a ring of flagstones (colour per theme) and two steps at the front
+  const dc=[0x4e5a44,0x8a8a7a,0xb8c4d0,0xc8956a,0x4a4a52,0x3a3034][i];
+  for(let ring=0;ring<2;ring++){const r0=1.0+ring*1.15,n=Math.round(r0*5.5);for(let j=0;j<n;j++){const a=(j+(ring%2)*.5)/n*6.283;
+    k.as('stone',()=>k.p('c',R()<.3?S(dc,.85):R()<.3?S(dc,1.12):dc,'box',Math.cos(a)*(r0+.5),.06,Math.sin(a)*(r0+.5),1.05,.14+R()*.04,r0*6.283/n*.92,0,-a,0,.1))}}
+  k.as('ashlar',()=>{k.p('c',S(dc,.9),'box',0,.1,2.75,2.6,.2,.5,0,0,0,.04);k.p('c',dc,'box',0,.05,3.15,3.2,.1,.4,0,0,0,.04)});
+  if(i==0){// Kindlelight: two twisted root-trunks that meet in a gnarled arch, moss, hanging lanterns
+    [-1,1].forEach(s=>{let p=[s*1.35,-.2,0];for(let j=0;j<6;j++){const q=[s*(1.3+Math.sin(j*1.3)*.14),.6+j*.55,Math.cos(j*1.7)*.12];k.as('bark',()=>k.L('c',0x3e3428,p,q,.24-j*.018,'log'));p=q}
+      [0,1.6,3.1,4.4].forEach((a,j)=>k.as('bark',()=>k.L('c',0x3a3026,[s*1.35,.3,0],[s*1.35+Math.cos(a)*1.1,-.1,Math.sin(a)*.9],.12,'log')));
+      [[.15,.9],[-.1,1.9],[.12,2.7]].forEach(([dz,y])=>k.p('c',0x4a7a34,'ico',s*1.34,y,dz+.2,.22,.14,.18,0,0,0,.1))});
+    const n=8;for(let j=0;j<n;j++){const a0=Math.PI*j/n,a1=Math.PI*(j+1)/n;k.as('bark',()=>k.L('c',0x3e3428,[Math.cos(a0)*1.3,3.35+Math.sin(a0)*.75,0],[Math.cos(a1)*1.3,3.35+Math.sin(a1)*.75,0],.17,'log'))}
+    for(let j=0;j<6;j++){const x=-1.0+j*.4;k.p('c',0x5a7a34,'cone4',x,3.7+Math.sin(j)*.1-.25,.12,.06,.5+R()*.3,.06,Math.PI,0,0,.03)}
+    [-1,1].forEach(s=>{k.L('m',TWC.iron,[s*.75,3.85,.15],[s*.75,3.35,.15],.012,'cyl6',0);k.p('m',TWC.iron,'cone4',s*.75,3.3,.15,.13,.1,.13,0,Math.PI/4,0,0);k.p('g',0xc8ff6a,'box',s*.75,3.12,.15,.12,.2,.12)})}
+  else if(i==1){// Hillside Crest: a trilithon of weathered standing stones with a carved serpent on the lintel
+    [-1,1].forEach(s=>{k.as('stone',()=>{k.p('c',0x8a8a80,'box',s*1.55,1.75,0,.72,3.6,.62,0,s*.06,s*.03,.16);k.p('c',0x6a8a4a,'ico',s*1.55,.25,.3,.4,.2,.25,0,0,0,.1)})});
+    k.as('stone',()=>k.p('c',0x9a9488,'box',0,3.75,0,4.2,.66,.7,0,0,.02,.14));
+    for(let j=0;j<12;j++){const x=-1.7+j*.31,y=3.75+Math.sin(j*.9)*.18;k.p('c',j==11?0x3a7a4a:0x3a8a5a,'ico',x,y,.38,.15,.12,.08,0,0,0,.02)}
+    k.p('c',0x3a8a5a,'cone4',1.95,3.78,.38,.14,.3,.08,0,0,-Math.PI/2,0);[-1,1].forEach(s=>k.p('g',0xffd060,'oct',1.88,3.82,.4+s*.03,.03,.03,.02));
+    [[-1.9,.15],[1.9,.2],[-2.3,-.6],[2.2,.8]].forEach(([x,z],j)=>{for(let q=0;q<4;q++)k.p('c',[0xf0e060,0xe86a9a,0xffffff,0x9a7aff][(j+q)%4],'oct',x+Math.cos(q*1.7)*.2,.22,z+Math.sin(q*1.7)*.2,.06,.05,.06)})}
+  else if(i==2){// Burningeye Summit: pillars of blue ice crystals capped with snow, an ice lintel hung with icicles
+    [-1,1].forEach(s=>{for(let j=0;j<5;j++){const y=.4+j*.68;k.p('c',[0x9ad0f0,0xbfe4ff,0x7ab8e0][j%3],'oct',s*1.4+(R()-.5)*.1,y,0,.34,.5,.34,0,R(),(R()-.5)*.2,.06)}
+      k.p('g',0xbfe8ff,'oct',s*1.4,3.55,0,.22,.55,.22,0,0,s*.15);k.p('c',0xf4f8ff,'sph',s*1.4,3.2,0,.4,.16,.36,0,0,0,.08);
+      [0,1,2].forEach(j=>k.p('g',0x9ad8ff,'oct',s*(1.9+j*.2),.3,(j-1)*.45,.12,.45-j*.08,.12,(j-1)*.3,0,s*.3))});
+    k.p('c',0xd8ecff,'box',0,3.35,0,3.6,.42,.66,0,0,0,.1);k.p('c',0xf4f8ff,'box',0,3.6,0,3.7,.16,.72,0,0,0,.08);
+    for(let j=0;j<9;j++)k.p('c',0xc8e8ff,'cone4',-1.5+j*.375,3.0,(j%2?.2:-.15),.06,.35+R()*.3,.06,Math.PI,0,0,.02)}
+  else if(i==3){// Searing Sands: a sandstone gateway, banded lintel, a brass sun disc, wind-worn blocks
+    [-1,1].forEach(s=>{let y=0;for(let j=0;j<5;j++){const bh=.62+R()*.1;k.as('ashlar',()=>k.p('c',j%2?0xc8956a:0xd8a878,'box',s*1.55+(R()-.5)*.06,y+bh/2,0,.85-j*.03,bh-.03,.8-j*.03,0,(R()-.5)*.1,0,.12));y+=bh}
+      k.as('ashlar',()=>k.p('c',0xb88458,'box',s*1.55,.12,0,1.1,.24,1.05,0,0,0,.06))});
+    k.as('ashlar',()=>{k.p('c',0xd0a070,'box',0,3.55,0,4.3,.6,.9,0,0,0,.1);k.p('c',0x9a6a44,'box',0,3.55,.47,4.0,.16,.04,0,0,0,0);k.p('c',0xe0b884,'box',0,3.95,0,3.6,.2,.75,0,0,0,.08)});
+    k.as('brass',()=>{k.p('m',0xd8a840,'cyl8',0,4.45,.05,.42,.08,.42,Math.PI/2,0,0,0);for(let j=0;j<8;j++){const a=j/8*6.283;k.p('m',0xd8a840,'cone4',Math.cos(a)*.55,4.45+Math.sin(a)*.55,.05,.06,.22,.04,0,0,a-Math.PI/2,0)}});
+    [[-2.2,.6],[2.4,-.4]].forEach(([x,z])=>k.as('ashlar',()=>k.p('c',0xc8956a,'box',x,.18,z,.6,.36,.5,0,R(),.2,.1)))}
+  else if(i==4){// The Dirge: a gothic grave-arch of dark stone, iron spikes, a skull keystone and ghost lanterns
+    [-1,1].forEach(s=>{twStones(k,0x4e4c56,s*1.5-.35,0,s*1.5+.35,0,0,3.0,.62,.36);k.as('stone',()=>k.p('c',0x5a5862,'box',s*1.5,3.08,0,.82,.16,.74,0,0,0,.04));
+      k.p('c',0x4e4c56,'cone4',s*1.5,3.5,0,.34,.7,.34,0,Math.PI/4,0,.04)});
+    const n=9;for(let j=0;j<n;j++){const t=(j+.5)/n,a=Math.PI*t,x=-Math.cos(a)*1.25,y=3.0+Math.sin(a)*(.95+.35*(1-Math.abs(t-.5)*2));k.as('stone',()=>k.p('c',j%2?0x5a5862:0x4a4852,'box',x,y,0,.42,.38,.62,0,0,-(a-Math.PI/2)*.9,.06))}
+    k.p('c',0xd8d0b8,'ico',0,4.25,.32,.18,.15,.14,0,0,0,.03);[-1,1].forEach(s=>k.p('c',0x141018,'box',s*.06,4.27,.45,.04,.04,.02));
+    for(let j=0;j<7;j++)k.p('m',0x2a2a30,'cone4',-1.1+j*.367,4.0+Math.sin(j/6*Math.PI)*.5,-.2,.03,.25,.03,0,0,0,0);
+    [-1,1].forEach(s=>{k.L('m',0x2a2a30,[s*2.05,0,.4],[s*2.05,2.1,.4],.04,'cyl6',0);k.L('m',0x2a2a30,[s*2.05,2.1,.4],[s*1.8,2.1,.4],.02,'box',0);k.p('m',0x2a2a30,'cone4',s*1.8,2.02,.4,.12,.1,.12,0,Math.PI/4,0,0);k.p('g',0x8affd0,'box',s*1.8,1.86,.4,.12,.2,.12)})}
+  else{// The Citadel: black-and-crimson castle arch, gargoyle blocks, banners, braziers
+    [-1,1].forEach(s=>{twStones(k,0x3a3238,s*1.55-.42,0,s*1.55+.42,0,0,3.4,.8,.42);k.as('ashlar',()=>k.p('c',0x4a3e44,'box',s*1.55,3.48,0,.98,.18,.9,0,0,0,.04));
+      k.p('c',0x2a2228,'box',s*1.55,3.8,.1,.4,.42,.6,0,0,0,.06);[-1,1].forEach(q=>k.p('c',0x2a2228,'cone4',s*1.55+q*.16,3.7,.4,.05,.26,.12,-.5,0,q*.4,0));
+      kdBanner(k,s*1.55,3.25,.44,0,0x7a0c18,.62,2.0);kdBrazier(k,s*2.45,1.0,0,.9)});
+    const n=9;for(let j=0;j<n;j++){const t=(j+.5)/n,a=Math.PI*t,x=-Math.cos(a)*1.15,y=3.3+Math.sin(a)*1.0;k.as('stone',()=>k.p('c',j%2?0x3a3238:0x4a3e44,'box',x,y,0,.46,.4,.72,0,0,-(a-Math.PI/2),.05))}
+    k.as('brass',()=>k.p('m',TWC.gold,'oct',0,4.42,.32,.16,.22,.04))}}
+// scenery for each island: [WD kind, count, min radius, max radius, solid]
+var TWN100_DECO=[
+ [['k_tree',3,5.6,7.6,1],['k_roots',2,4.8,6.6,0],['k_fern',9,3.4,7.8,0],['k_glow',6,3.2,7.2,0],['k_lamp',3,4.2,5.4,1],['k_stump',2,4.5,7,0],['k_stone',4,3.8,7.6,0],['k_reeds',4,5.5,7.8,0]],
+ [['h_stone',7,6.2,6.6,1],['h_flowers',8,3.4,7.6,0],['h_flowers2',6,3.4,7.6,0],['h_grass',8,4,7.8,0],['h_shrine',1,5.6,6.4,1],['h_cairn',2,4.6,7.2,0],['h_totem',2,4.4,5.2,1],['h_bush',3,6,7.8,0]],
+ [['b_pine',5,5.6,7.8,1],['b_crystal',4,3.8,7,1],['b_rock',2,6,7.6,1],['b_drift',6,3.6,7.8,0],['b_ice',6,3.4,7.6,0],['b_cairn',2,4.4,5.4,0],['b_tree',1,6,7.4,1],['b_bones',2,4,6.5,0]],
+ [['s_pillar',3,5.6,7.4,1],['s_wall',2,6.2,7.4,1],['s_rib',1,5.8,6.8,1],['s_skull',3,3.6,7,0],['s_ripple',5,3.6,7.6,0],['s_cactus',3,5,7.6,1],['s_shrub',4,4,7.8,0],['s_barrel',3,4,7.4,0]],
+ [['d_graves',3,5,7.4,1],['d_cross',5,3.8,7.6,0],['d_fence',4,6.8,7.2,0],['d_tree',2,6,7.6,1],['d_angel',1,5.4,6.2,1],['d_candles',4,3.4,6.4,0],['d_lamp',2,4.4,5.2,1],['d_skulls',2,3.8,7,0]],
+ [['c_wall',3,6.2,7.6,1],['c_statue',2,5.4,6.4,1],['c_gargoyle',2,4.6,5.2,1],['c_banner',2,5,6.6,1],['c_brazier',2,4.2,5,1],['c_column',3,5.4,7.6,1],['c_rubble',5,3.6,7.6,0],['c_candela',2,3.8,6,0],['c_blood',2,3.4,6,0]]];
+function TWN100_island(i){const p=TWN100_PG[i],P=PORT[i];if(!P)return;const y0=TOWNS[0].ph,face=Math.atan2(p.a[0]-p.x,p.a[1]-p.y),fx=Math.sin(face),fz=Math.cos(face);
+  // move the portal: keep disc / swirl / chains, replace the frame and sign
+  const keep=new Set([P.disc,P.sw,P.ch]);P.g.children.slice().forEach(c=>{if(!keep.has(c))P.g.remove(c)});
+  [-1.25,1.25].forEach(lx=>{const wx=P.x+Math.cos(P.g.rotation.y)*lx,wz=P.z-Math.sin(P.g.rotation.y)*lx;CBLK.delete(Math.round(wz)*W+Math.round(wx))});
+  P.x=p.x;P.z=p.y;P.g.position.set(p.x,GH(p.x,p.y),p.y);P.g.rotation.y=face;P.disc.position.y=P.sw.position.y=1.62;
+  const key='TWNPF|'+i;let k=null;if(!twHas(key)){k=twKit(701+i*13);TWN100_frameK(k,i)}P.g.add(twGroup(k,key));
+  const cs=Math.cos(face),sn=Math.sin(face),loc=(lx,lz)=>[p.x+lx*cs+lz*sn,p.y-lx*sn+lz*cs];
+  [-1.45,1.45].forEach(lx=>{const q=loc(lx,0);CBLK.add(Math.round(q[1])*W+Math.round(q[0]))});
+  // signpost to the right of the dais, facing the arrival spot
+  {const q=loc(2.55,2.3),sg=twPostG(2.0,1.62,.62);sg.position.set(q[0],GH(q[0],q[1]),q[1]);sg.rotation.y=face;scene.add(sg);
+    sign(sg,[{t:PMAP[i].ic+' '+PMAP[i].n,f:'700 40px'},{t:'Enemy level '+PMAP[i].lv[0]+'–'+PMAP[i].lv[1],f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
+    CBLK.add(Math.round(q[1])*W+Math.round(q[0]))}
+  // scenery: themed WD kinds round the dais, keeping the front and every road that reaches the island clear
+  const open=[face];TWN100_RD.forEach(L=>L.forEach(v=>{const d=Math.hypot(v[0]-p.x,v[1]-p.y);if(d<p.r+4&&d>1)open.push(Math.atan2(v[0]-p.x,v[1]-p.y))}));
+  const clear=a=>open.every(o=>{let d=Math.abs(a-o)%6.283;if(d>Math.PI)d=6.283-d;return d>.62});
+  const R=dkRng(901+i*37),lit=[],glo=[],m4=new THREE.Matrix4(),q4=new THREE.Quaternion(),e=new THREE.Euler(),UP=new THREE.Vector3(0,1,0),used=[[0,0,3.2]];
+  const cl=new THREE.Color();
+  (TWN100_DECO[i]||[]).forEach(([kn,n,r0,r1,sol])=>{const S=WD&&WD.T&&WD.T[kn];if(!S)return;
+    for(let j=0,tries=0;j<n&&tries<n*40;tries++){const ring=kn=='h_stone'||kn=='d_fence';let a=ring?face+Math.PI+(j-(n-1)/2)*.62:R()*6.283;
+      if(kn=='k_lamp'||kn=='d_lamp'||kn=='h_totem'||kn=='c_gargoyle'||kn=='c_brazier'||kn=='b_cairn')a=face+(j%2?1:-1)*(.85+Math.floor(j/2)*.5);
+      const rr=r0+R()*(r1-r0),lx=Math.sin(a)*rr,lz=Math.cos(a)*rr,wx=p.x+lx,wz=p.y+lz,sc=S.s[0]+R()*(S.s[1]-S.s[0]),rad=(sol?1.1:.5)*sc;
+      if(!ring&&!clear(a))continue;if(used.some(u=>Math.hypot(u[0]-lx,u[1]-lz)<u[2]+rad))continue;if(MAP.DW[Math.round(wz)*W+Math.round(wx)]>-.8)continue;
+      used.push([lx,lz,rad]);j++;
+      const ry=ring?a+Math.PI/2:(kn.indexOf('lamp')>=0?a+Math.PI/2:R()*6.283),yy=GH(wx,wz)+(S.y||0)*(S.y>.2?1:sc);
+      e.set(0,ry,0);q4.setFromEuler(e);m4.compose(new THREE.Vector3(wx,yy,wz),q4,new THREE.Vector3(sc*(S.sc?S.sc[0]:1),sc*(S.sc?S.sc[1]:1),sc*(S.sc?S.sc[2]:1)));
+      const hh=((wx*73.13+wz*37.7)%1+1)%1;
+      S.parts.forEach(pt=>{const g=pt.g.clone();g.applyMatrix4(m4);const tl=pt.glow?(S.gt||S.tint):S.tint,c=g.attributes.color;
+        if(c){cl.setHex(tl?tl[Math.floor(hh*tl.length)%tl.length]:0xffffff);if(!pt.glow&&!pt.mat)cl.multiplyScalar(1-S.j/2+S.j*hh);for(let v=0;v<c.count;v++)c.setXYZ(v,c.getX(v)*cl.r,c.getY(v)*cl.g,c.getZ(v)*cl.b)}
+        if(!pt.mat&&g.attributes.color)(pt.glow?glo:lit).push(g)});
+      if(sol&&kn!='d_fence'){const cr=(S.col||.5)*sc;for(let tz=Math.floor(wz-cr);tz<=Math.ceil(wz+cr);tz++)for(let tx=Math.floor(wx-cr);tx<=Math.ceil(wx+cr);tx++)if(Math.hypot(tx-wx,tz-wz)<=cr+.2)CBLK.add(tz*W+tx);CBLK.add(Math.round(wz)*W+Math.round(wx))}}});
+  const out={i,g:P.g,lit:null,glow:null};
+  const toG=L=>{if(!L.length)return null;const g=NK.merge(L.map(q=>{if(!q.attributes.normal)q.computeVertexNormals();return q}));g.computeBoundingSphere();g.userData.lps=1;return g};
+  {const g=toG(lit);if(g){const m=new THREE.Mesh(g,TWN100_mat('lit'));m.castShadow=true;m.receiveShadow=true;m.userData.lpsSkip=1;scene.add(m);out.lit=m}}
+  {const g=toG(glo);if(g){const m=new THREE.Mesh(g,TWN100_mat('glow'));m.userData.lpsSkip=1;scene.add(m);out.glow=m}}
+  // low drifting mist for the bog and the graveyard: a few flat soft quads (one mesh)
+  if(i==0||i==4){const P2=[],U2=[];for(let j=0;j<7;j++){const a=R()*6.283,rr=1.5+R()*5,cx=p.x+Math.sin(a)*rr,cz=p.y+Math.cos(a)*rr,s=2.2+R()*2.4,yy=GH(cx,cz)+.3+R()*.25;
+      [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]].forEach(([u,v])=>{P2.push(cx+u*s,yy,cz+v*s);U2.push((u+1)/2,(v+1)/2)})}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P2,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U2,2));g.computeBoundingSphere();
+    const m=new THREE.Mesh(g,TWN100_mat(i==0?'mistK':'mistD'));m.renderOrder=3;m.userData.lpsSkip=1;scene.add(m);out.mist=m}
+  TWN100_P[i]=out;
+  TANIM.push({x:p.x,z:p.y,f:now=>{if(P.sw.visible){P.sw.rotation.z=now*.0018+i;P.disc.material.opacity=.66+.12*Math.sin(now*.003+i)}}})}
+var TWN100_M={};
+function TWN100_mat(k){if(TWN100_M[k])return TWN100_M[k];let m;
+  if(k=='lit'){m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});m.userData.lps=1}
+  else if(k=='glow')m=new THREE.MeshBasicMaterial({vertexColors:true});
+  else m=new THREE.MeshBasicMaterial({map:WD.mistT,color:k=='mistK'?0x9ac8a0:0x8ab8b0,transparent:true,opacity:.42,depthWrite:false,side:THREE.DoubleSide,fog:true});
+  return TWN100_M[k]=m}
+// the old Portal Court: floor, curb, rune stone and their colliders go; a fingerpost marks the crossroads
+function TWN100_court(){const C=PCOURT;
+  scene.children.slice().forEach(o=>{if(Math.abs(o.position.x-C[0])<.01&&Math.abs(o.position.z-C[1])<.01&&o!==pl)scene.remove(o)});
+  CBLK.delete(C[1]*W+C[0]);
+  const key='TWNFP';let k=null;if(!twHas(key)){k=twKit(777);k.as('bark',()=>k.L('c',TWC.woodD,[0,-.1,0],[0,3.1,0],.11,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.34,.22,.34);
+    [[0,2.65],[1.2,2.2],[2.5,1.75],[3.6,2.45]].forEach(([a,y])=>k.at(0,y,0,()=>{k.as('board',()=>k.p('c',0x5a3d20,'box',.75,0,0,1.25,.3,.06,0,0,0,.03));k.as('wood',()=>k.p('c',0x5a3d20,'tri',1.48,0,0,.3,.22,.06,0,0,-Math.PI/2,.02))},a))}
+  const g=twGroup(k,key);g.position.set(C[0]-2.6,GH(C[0]-2.6,C[1]-2.6),C[1]-2.6);g.rotation.y=Math.PI/2;scene.add(g);CBLK.add(Math.round(C[1]-2.6)*W+Math.round(C[0]-2.6));TWN100.fp=g}
+try{TWN100_court();for(let i=0;i<PORT.length;i++)TWN100_island(i);portalRefresh()}catch(e){console.warn('v100 portals',e)}
+// locked islands: lanterns and braziers dark until the portal opens
+{const f=portalRefresh;portalRefresh=function(){const r=f.apply(this,arguments);try{TWN100_P.forEach(q=>{if(q&&q.glow)q.glow.visible=pUnlocked(q.i)})}catch(_){}return r}}
+try{portalRefresh()}catch(_){}
+// world map labels (called from the patched openWMap) and minimap pips
+function TWN100_wmap(g,P,lab,s){const T=TOWNS[0];
+  PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(q.x,q.y),u=pUnlocked(i),c='#'+p.col.toString(16).padStart(6,'0');g.fillStyle=u?c:'#4a4a52';g.beginPath();g.arc(x,y,7,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke();
+    lab((u?'🌀 ':'🔒 ')+p.n,x,y+(q.y<T.cy?-16:16),u?'#efe6ff':'#9a96a6')});
+  {const [x,y]=P(CYD.x,CYD.y);lab('🌲 Courtyard',x,y,'#c8f0b0')}
+  {const [x,y]=P(T.cx,T.cy+30);lab('⚒️ Market ward',x,y,'#ffe6b0')}}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{if(inRealm||inDun)return;const P=(x,z)=>[(x-(cx-vw/2)+.5)*w/vw,(z-(cy-vh/2)+.5)*h/vh];
+  PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(q.x,q.y);if(x<-6||y<-6||x>w+6||y>h+6)return;mmX.fillStyle=pUnlocked(i)?'#'+p.col.toString(16).padStart(6,'0'):'#4a4a52';mmX.beginPath();mmX.arc(x,y,4.5,0,6.28);mmX.fill();mmX.strokeStyle='#000';mmX.lineWidth=1;mmX.stroke()})}catch(_){}}}
+
+// ================= v100 town (3/4): the market ward — every shop is a building with its own trade =================
+// Eight plots line the street between the plaza and the courtyard (TWN100_SH in w0_world.js: west row s=-1 faces +x,
+// east row s=+1 faces -x; each plot's 7x5-tile footprint is solid). The shopkeeper stands in the street in front of the
+// shop (TWN100_npc), which is also where the walk-up prompt is (2.4 tiles).
+//   smith    Blacksmith (always open: opens the bag's Forge tab)  · alch  Alchemist (the old alchemy table)
+//   cook     Cookhouse (the old cooking hearth)                     · bard  Bard's Stage
+//   merchant Curio Shop · sage Rune Sanctum · trainer Beast Trainer (the visitors' stalls)  · stable  Stable (mounts)
+// Unbuilt shops (shopBuilt false) show a fenced construction plot with lumber, stone, a half-raised frame and a sign.
+// Each building is one baked kit (≤3 meshes, the town atlas) + its sign; chimney smoke for all shops is one InstancedMesh.
+var TWN100_S={b:{},site:{},npc:{},col:{},smoke:null,src:[]};
+// world spot of a plot-local point (local: x along the facade, z toward the street; plot centre at |x|=9)
+function TWN100_lw(q,lx,lz){const T=TOWNS[0],cx=T.cx+q.s*9,cz=T.cy+q.z;return q.s<0?[cx+lz,cz-lx]:[cx-lz,cz+lx]}
+function TWN100_npc(q){return TWN100_lw(q,0,4.45)}
+// ---------- kit helpers (building local frame: body centred at z=zc, front wall at zc+d/2 facing +z) ----------
+function TWN100_body(k,o){const w=o.w,d=o.d,h=o.h,zc=o.zc||0,st=o.st;
+  k.at(0,0,zc,()=>{
+    if(st=='stone'||st=='log')twHall(k,{w,d,h,stoneWalls:st=='stone'?1:0,wc:o.wc,pc:o.pc});
+    else{const y0=.36;twStones(k,TWC.stone,-w/2-.1,d/2+.04,w/2+.1,d/2+.04,0,y0,.3);twStones(k,TWC.stone,-w/2-.1,-d/2-.04,w/2+.1,-d/2-.04,0,y0,.3);
+      twStones(k,TWC.stone,-w/2-.04,-d/2,-w/2-.04,d/2,0,y0,.28);twStones(k,TWC.stone,w/2+.04,-d/2,w/2+.04,d/2,0,y0,.28);
+      if(st=='plank'){twPlanks(k,o.wc||TWC.wood,-w/2,d/2-.04,w/2,d/2-.04,y0,h,.26);twPlanks(k,o.wc||TWC.wood,-w/2,-d/2+.04,w/2,-d/2+.04,y0,h,.26);
+        twPlanks(k,o.wc||TWC.wood,-w/2+.04,-d/2,-w/2+.04,d/2,y0,h,.26);twPlanks(k,o.wc||TWC.wood,w/2-.04,-d/2,w/2-.04,d/2,y0,h,.26)}
+      else{// plaster panels between dark timbers (half-timbering)
+        const pc=o.wc||0xd8ccb0;k.as('plaster',()=>{k.p('c',pc,'box',0,(y0+h)/2,d/2-.06,w-.1,h-y0,.1,0,0,0,.02);k.p('c',pc,'box',0,(y0+h)/2,-d/2+.06,w-.1,h-y0,.1,0,0,0,.02);
+          k.p('c',pc,'box',-w/2+.06,(y0+h)/2,0,.1,h-y0,d-.1,0,0,0,.02);k.p('c',pc,'box',w/2-.06,(y0+h)/2,0,.1,h-y0,d-.1,0,0,0,.02)});
+        k.as('wood',()=>{[-1,1].forEach(f=>{const z=f*(d/2-.0);for(let x=-w/2;x<=w/2+.01;x+=w/3)k.L('c',TWC.woodD,[x,y0,z],[x,h,z],.07,'box');
+            [y0+.05,(y0+h)/2,h-.05].forEach(y=>k.L('c',TWC.woodD,[-w/2-.05,y,z],[w/2+.05,y,z],.065,'box'));k.L('c',TWC.woodD,[-w/2,y0,z],[-w/6,(y0+h)/2,z],.05,'box');k.L('c',TWC.woodD,[w/2,y0,z],[w/6,(y0+h)/2,z],.05,'box')});
+          [-1,1].forEach(f=>{const x=f*w/2;for(let z=-d/2;z<=d/2+.01;z+=d/2)k.L('c',TWC.woodD,[x,y0,z],[x,h,z],.07,'box');[y0+.05,h-.05].forEach(y=>k.L('c',TWC.woodD,[x,y,-d/2],[x,y,d/2],.065,'box'))})})}}
+  });return k}
+// gable roof over the body; along = 'x' (ridge along the facade) or 'z' (gable end to the street)
+function TWN100_roof(k,o,col,rise,along,trim){const zc=o.zc||0;if(along=='z')k.at(0,0,zc,()=>twGable(k,col,o.d,o.w,rise,.38,o.h,trim),Math.PI/2);else k.at(0,0,zc,()=>twGable(k,col,o.w,o.d,rise,.38,o.h,trim))}
+function TWN100_chim(k,x,z,y0,y1,c){twStones(k,c||TWC.stone,x-.32,z,x+.32,z,y0,y1,.66,.42);k.as('ashlar',()=>k.p('c',TWC.stoneD,'box',x,y1+.06,z,.76,.12,.78,0,0,0,.04));return [x,y1+.25,z]}
+function TWN100_awning(k,x0,x1,zf,zt,yf,yt,cols){const n=Math.max(2,Math.round((x1-x0)/.55));for(let i=0;i<n;i++){const L=Math.hypot(zt-zf,yf-yt);
+  k.as('cloth',()=>k.p('c',cols[i%cols.length],'box',x0+(x1-x0)*(i+.5)/n,(yf+yt)/2,(zf+zt)/2,(x1-x0)/n+.01,.05,L,Math.atan2(yf-yt,zt-zf),0,0,.04))}
+  [x0+.1,x1-.1].forEach(x=>k.as('bark',()=>k.L('c',TWC.woodD,[x,0,zt],[x,yt+.05,zt],.06,'log')));k.as('wood',()=>k.L('c',TWC.woodD,[x0,yt,zt],[x1,yt,zt],.05,'box'))}
+function TWN100_barrel(k,x,z,s,top){s=s||1;k.as('wood',()=>{k.p('c',0x7a5230,'cyl8',x,.36*s,z,.3*s,.72*s,.3*s,0,0,0,.03)});[.12,.36,.6].forEach(h=>k.p('m',TWC.iron,'cyl8',x,h*s,z,.315*s,.04*s,.315*s,0,0,0,0));if(top)k.p(top[0],top[1],'cyl8',x,.72*s,z,.26*s,.02,.26*s,0,0,0,0)}
+function TWN100_crate(k,x,z,s,ry){k.as('board',()=>k.p('c',0x7a5a3a,'box',x,s/2,z,s,s,s,0,ry||0,0,.04));[-1,1].forEach(a=>k.as('wood',()=>k.p('c',TWC.woodD,'box',x,s/2,z,s*1.04,s*.12,s*1.04,0,ry||0,0,0)))}
+function TWN100_lantern(k,x,y,z,glow){k.L('m',TWC.iron,[x,y+.32,z],[x,y+.16,z],.012,'cyl6',0);k.p('m',TWC.iron,'cone4',x,y+.16,z,.12,.09,.12,0,Math.PI/4,0,0);k.p('g',glow||0xffd27a,'box',x,y,z,.11,.2,.11)}
+// ---------- the eight shops ----------
+var TWN100_KIT={
+ smith(k,S){const o={w:4.6,d:4.2,h:2.5,zc:-1.2,st:'stone'};TWN100_body(k,o);TWN100_roof(k,o,0x45403e,1.4,'z');
+   S.push(TWN100_chim(k,-1.4,-2.6,1.6,5.3));
+   twDoor(k,-.9,.36,.92,1.2,1.85,0);twWindow(k,1.2,1.55,.94,.7,.55,0,0xff9a4a);
+   // the open forge under a lean-to on the porch: stone hearth, glowing coals, a hood, bellows
+   k.as('shingle',()=>k.p('c',0x5a4a3e,'box',0,2.32,2.05,4.8,.1,2.4,.32,0,0,.04));[-2.2,2.2].forEach(x=>k.as('bark',()=>k.L('c',TWC.woodD,[x,0,3.1],[x,1.98,3.1],.08,'log')));
+   twStones(k,TWC.stoneD,.7,1.9,1.9,1.9,0,.8,.95,.4);k.p('c',0x1a1210,'box',1.3,.82,1.9,1.05,.04,.8,0,0,0,0);k.p('g',0xff5a14,'box',1.3,.85,1.9,.85,.05,.6);k.p('g',0xffa030,'dod',1.15,.9,1.85,.18,.08,.14).p('g',0xff7a20,'dod',1.45,.9,1.98,.16,.07,.12);
+   k.as('iron',()=>{k.p('m',0x3a3a40,'frus8',1.3,1.7,1.9,.55,.5,.5,0,Math.PI/8,0,0);k.L('m',0x3a3a40,[1.3,1.95,1.9],[1.3,2.6,1.6],.13,'cyl8',0)});S.push([1.3,2.7,1.6]);
+   k.as('wood',()=>{k.p('c',0x5a3c24,'box',2.15,.62,1.55,.45,.3,.7,0,0,.25,.03)});k.p('c',0x4a2a1a,'box',2.15,.62,1.55,.4,.22,.66,0,0,.25,0);
+   // anvil on a stump, quench barrel, grindstone, weapon rack, a stack of bar stock
+   k.as('bark',()=>k.L('c',0x4a3424,[-.4,0,2.5],[-.4,.55,2.5],.28,'log'));k.as('iron',()=>{k.p('m',0x3a3a42,'box',-.4,.68,2.5,.62,.2,.3,0,.2,0,0);k.p('m',0x3a3a42,'box',-.4,.53,2.5,.3,.14,.22,0,.2,0,0);k.p('m',0x3a3a42,'cone4',-.04,.7,2.57,.08,.3,.1,0,.2,-Math.PI/2,0)});
+   k.p('m',0x8a8a92,'box',-.35,.81,2.45,.04,.04,.5,0,.7,0,0);k.L('m',0x5a5a62,[-.65,.79,2.6],[-.95,.85,2.75],.03,'box',0);
+   TWN100_barrel(k,-1.55,2.75,.9,['g',0x2a4a6a]);
+   k.as('stone',()=>k.p('c',0x8a8678,'cyl8',-2.0,.55,1.75,.36,.1,.36,Math.PI/2,0,0,.02));[-.08,.08].forEach(d=>k.as('wood',()=>k.L('c',TWC.woodD,[-2.0,0,1.75+d],[-2.0,.55,1.75+d],.04,'box')));
+   [[-1.2],[-.8]].forEach(([x])=>k.as('wood',()=>k.L('c',TWC.woodD,[x,0,1.05],[x,1.6,1.05],.04,'box')));k.as('wood',()=>k.L('c',TWC.woodD,[-1.4,1.35,1.08],[-.6,1.35,1.08],.035,'box'));
+   [-1.3,-1.1,-.9,-.7].forEach((x,i)=>{k.p('m',0xa8a8b0,'box',x,.85,1.12,.06,.95+i%2*.12,.02,0,0,0,0);k.p('m',TWC.gold,'box',x,1.36+i%2*.06,1.12,.18,.035,.03,0,0,0,0)});
+   k.as('iron',()=>{for(let i=0;i<4;i++)k.p('m',0x4a4a52,'box',1.9-i*.06,.06+i*.05,2.9,.9,.05,.08,0,.1*i,0,0)});
+   // emblem: an iron anvil on a bracket over the door
+   k.as('wood',()=>k.L('c',TWC.woodD,[-.9,2.35,.95],[-.9,2.35,1.6],.05,'box'));k.as('iron',()=>{k.p('m',0x2e2e34,'box',-.9,2.05,1.55,.5,.16,.22);k.p('m',0x2e2e34,'box',-.9,1.92,1.55,.22,.12,.16);k.p('m',0x2e2e34,'cone4',-.6,2.07,1.55,.07,.24,.08,0,0,-Math.PI/2,0)})},
+ alch(k,S){const o={w:4.4,d:4.0,h:2.6,zc:-1.3,st:'plaster',wc:0xc8c0a8};TWN100_body(k,o);TWN100_roof(k,o,0x3a2e48,2.0,'x',0x2c2140);
+   S.push(TWN100_chim(k,1.4,-2.4,2.4,5.6,0x6a6678));
+   twDoor(k,-1.1,.36,.72,.95,1.75,0);twWindow(k,.8,1.45,.74,1.5,.75,0,0x9affc0);twWindow(k,0,4.0,-1.3+2.04,.42,.42,0,0xc8ffd8);
+   // shelves of glowing bottles either side of the door, a bubbling cauldron, herb bundles under the awning
+   TWN100_awning(k,-2.3,2.3,.75,2.1,2.45,2.0,[0x3a5a3a,0xd8ccb0]);
+   [[-2.1,1.25],[2.1,1.25]].forEach(([x,z])=>{k.as('wood',()=>{[.35,.85,1.35].forEach(y=>k.p('c',0x5a3c24,'box',x,y,z,.42,.05,1.0,0,0,0,.02));k.L('c',TWC.woodD,[x,0,z-.48],[x,1.5,z-.48],.03,'box');k.L('c',TWC.woodD,[x,0,z+.48],[x,1.5,z+.48],.03,'box')});
+     [.35,.85,1.35].forEach((y,j)=>{for(let i=0;i<4;i++){const c=[0x7aff6a,0xb070ff,0xff5a3a,0x5ad8ff,0xffd04a][(i+j*2)%5];k.p('g',c,'oct',x,y+.15,z-.35+i*.23,.06,.13+(i%2)*.04,.06);k.p('c',0x2a2016,'cyl6',x,y+.3+(i%2)*.04,z-.35+i*.23,.02,.05,.02,0,0,0,0)}})});
+   [0,1,2].forEach(i=>{const a=i/3*6.283;k.L('m',TWC.iron,[1.0+Math.cos(a)*.5,0,2.55+Math.sin(a)*.5],[1.0,1.2,2.55],.025,'cyl6',0)});k.as('iron',()=>k.p('m',0x26262a,'sph',1.0,.62,2.55,.42,.34,.42,0,0,0,0));
+   k.p('g',0x6aff6a,'cyl8',1.0,.86,2.55,.34,.02,.34);[[.95,2.45],[1.1,2.62],[.9,2.7]].forEach(([x,z],i)=>k.p('g',0xb0ffb0,'sph',x,.9+i*.03,z,.06,.05,.06));
+   k.p('g',0xff7a20,'cone4',1.0,.18,2.55,.18,.32,.18,0,.3,0);S.push([1.0,1.1,2.55]);
+   for(let i=0;i<6;i++){const x=-1.8+i*.55;k.L('c',0x6a5a3a,[x,1.98,2.0],[x,1.75,2.0],.008,'cyl6',0);k.p('c',[0x5a7a34,0x7a6a3a,0x4a6a3a][i%3],'cone4',x,1.62,2.0,.08,.3,.08,Math.PI,0,0,.04)}
+   TWN100_crate(k,-1.6,2.8,.42,.3);k.p('g',0x9a6aff,'oct',-1.6,.52,2.8,.07,.12,.07);
+   // emblem: a big glass flask on the ridge end
+   k.as('glass',()=>{k.p('g',0x7aff9a,'sph',0,3.25,.86,.28,.26,.12);k.p('g',0x7aff9a,'cyl6',0,3.6,.86,.08,.24,.06)});k.p('m',TWC.gold,'cyl6',0,3.75,.86,.1,.05,.08,0,0,0,0)},
+ cook(k,S){const o={w:4.6,d:4.0,h:2.4,zc:-1.3,st:'log'};TWN100_body(k,o);TWN100_roof(k,o,TWC.thatch,1.7,'x');
+   // the bread oven bulging out of the right wall, with a chimney
+   k.at(2.6,0,-1.0,()=>{twStoneRing(k,0x8a7a6a,0,0,.95,0,1.0,.3);k.as('stone',()=>k.p('c',0x8a7a6a,'sph',0,1.0,0,1.0,.75,1.0,0,0,0,.1));k.p('c',0x1a1210,'box',0,.55,.9,.5,.45,.1,0,0,0,0);k.p('g',0xff6a1a,'box',0,.45,.93,.38,.22,.04)});
+   S.push(TWN100_chim(k,2.6,-1.6,1.4,4.4,0x7a6a5a));
+   twDoor(k,-1.3,.36,.72,1.0,1.7,0);twWindow(k,.6,1.4,.74,1.1,.6,0,0xffb347);
+   // counter with bread, pies and a ham; a spit roast over a fire; sacks and barrels
+   TWN100_awning(k,-2.3,2.3,.72,2.0,2.35,1.95,[0x7a3a22,0xd8c8a0]);
+   twPlanks(k,0x6a4a2e,-.2,1.6,1.8,1.6,0,.9,.25);k.as('wood',()=>k.p('c',0x5a3c24,'box',.8,.93,1.45,2.1,.08,.55,0,0,0,.04));
+   [[0,0x9a6a32,'sph'],[.4,0xb07a3a,'sph'],[.85,0xc8a050,'cyl8'],[1.25,0x8a4a2a,'sph'],[1.6,0xa86a30,'sph']].forEach(([x,c,g],i)=>k.p('c',c,g,x,1.03,1.45+(i%2)*.1,g=='cyl8'?.16:.13,g=='cyl8'?.05:.08,g=='cyl8'?.16:.2,0,i,0,.03));
+   [-1,1].forEach(s=>k.as('bark',()=>{k.L('c',TWC.woodD,[-1.4+s*.55,0,2.55],[-1.4+s*.55,1.0,2.55],.05,'log');k.L('c',TWC.woodD,[-1.4+s*.55,1.0,2.55],[-1.4+s*.7,1.15,2.55],.03,'box')}));
+   k.L('m',TWC.iron,[-2.05,.98,2.55],[-.75,.98,2.55],.02,'cyl6',0);k.p('c',0x8a4a2a,'sph',-1.4,.98,2.55,.36,.22,.22,0,0,0,.06);
+   [[.3,.2],[-.3,.5],[.1,-.4]].forEach(q=>k.as('bark',()=>k.L('c',0x3a2616,[-1.4-q[0]*.4,.08,2.55-q[1]*.4],[-1.4+q[0]*.4,.12,2.55+q[1]*.4],.06,'log')));k.p('g',0xff7a20,'cone4',-1.4,.32,2.55,.2,.4,.2,0,.3,0).p('g',0xffc040,'cone4',-1.4,.28,2.55,.12,.28,.12,0,1.1,0);S.push([-1.4,1.4,2.55]);
+   [[-2.1,1.3],[-1.7,1.15],[2.0,2.9]].forEach(([x,z],i)=>k.as('cloth',()=>k.p('c',0xd8c8a0,'sph',x,.32,z,.3,.34,.26,0,i,0,.08)));TWN100_barrel(k,2.05,2.25,.85);
+   for(let i=0;i<5;i++){const x=-.2+i*.45;k.L('c',0x6a5a3a,[x,1.95,1.9],[x,1.7,1.9],.008,'cyl6',0);k.p('c',0x8a3a22,'cyl6',x,1.55,1.9,.06,.32,.06,0,0,(i%2-.5)*.2,.03)}
+   // emblem: a golden loaf on the ridge end
+   k.p('c',0xc8903a,'sph',0,3.0,.78,.36,.2,.2,0,0,0,.04);k.as('brass',()=>k.p('m',TWC.gold,'box',0,3.0,.68,.6,.4,.04,0,0,0,0))},
+ bard(k,S){// an open stage: platform, curtained back wall, roof on posts, lanterns along the front beam
+   k.as('board',()=>k.p('c',0x6a4a2e,'box',0,.32,-.3,4.8,.64,4.4,0,0,0,.02));twStones(k,TWC.stone,-2.45,1.9,2.45,1.9,0,.64,.3);
+   k.as('wood',()=>{[0,1,2].forEach(i=>k.p('c',0x5a3c24,'box',0,.1+i*.2,2.15+i*-.18,1.6,.2,.4,0,0,0,.03))});
+   twPlanks(k,TWC.wood,-2.4,-2.45,2.4,-2.45,.64,3.4,.26);
+   k.as('cloth',()=>{for(let i=0;i<8;i++){const x=-2.1+i*.6;k.p('c',i%2?0x7a1a2a:0x8a2232,'box',x,2.0,-2.3,.62,2.7,.08,0,0,(i%2-.5)*.03,.03)}k.p('c',0xc9a24a,'box',0,3.25,-2.25,4.8,.18,.1,0,0,0,0)});
+   [[-2.3,-2.4],[2.3,-2.4],[-2.3,1.85],[2.3,1.85]].forEach(([x,z])=>k.as('bark',()=>k.L('c',TWC.woodD,[x,.6,z],[x,3.4,z],.11,'log')));
+   k.as('wood',()=>{k.L('c',TWC.woodD,[-2.5,3.35,1.85],[2.5,3.35,1.85],.09,'box');k.L('c',TWC.woodD,[-2.5,3.35,-2.4],[2.5,3.35,-2.4],.09,'box')});
+   k.at(0,0,-.3,()=>twGable(k,0x5a2a3a,4.8,4.6,1.5,.35,3.4,TWC.woodD));
+   for(let i=0;i<7;i++)TWN100_lantern(k,-2.0+i*.667,2.9-Math.sin(i/6*Math.PI)*.15,1.9,[0xffd27a,0xffb060,0xffe0a0][i%3]);
+   // instruments: a lute on a stand, a drum, a harp, music stands
+   k.as('wood',()=>{k.p('c',0x9a6a32,'sph',-1.0,1.25,-1.4,.3,.38,.12,0,0,.3,.03);k.L('c',0x5a3a1a,[-1.0,1.4,-1.42],[-.75,2.1,-1.42],.04,'box');k.L('c',TWC.woodD,[-1.1,.64,-1.6],[-1.0,1.2,-1.5],.03,'box')});
+   k.as('cloth',()=>k.p('c',0xd8c8a0,'cyl8',.9,.95,-1.2,.38,.6,.38,0,0,0,.02));k.as('wood',()=>k.p('c',0x7a3a22,'cyl8',.9,.95,-1.2,.4,.5,.4,0,0,0,.02));
+   k.as('wood',()=>{k.L('c',0x8a6a3a,[1.7,.64,-1.8],[1.7,2.2,-1.8],.06,'box');k.L('c',0x8a6a3a,[1.7,2.2,-1.8],[2.2,1.5,-1.8],.06,'box');k.L('c',0x8a6a3a,[1.75,.7,-1.8],[2.2,1.5,-1.8],.05,'box')});
+   for(let i=0;i<5;i++)k.L('m',TWC.gold,[1.78+i*.08,.8+i*.1,-1.8],[1.78+i*.08,2.05-i*.12,-1.8],.006,'cyl6',0);
+   [-.2,.3].forEach(x=>{k.L('m',TWC.iron,[x,.64,-.6],[x,1.6,-.6],.012,'cyl6',0);k.p('m',TWC.iron,'box',x,1.65,-.6,.36,.24,.02,-.4,0,0,0);k.p('c',0xe8dcc0,'box',x,1.66,-.58,.3,.2,.01,-.4,0,0,0)});
+   kdBanner(k,-2.3,3.1,1.95,0,0x5a2a6a,.5,1.2);kdBanner(k,2.3,3.1,1.95,0,0x5a2a6a,.5,1.2);
+   // emblem: a golden lyre on the gable
+   k.as('brass',()=>{k.L('m',TWC.gold,[-.25,3.9,2.0],[-.15,4.5,2.0],.03,'box',0);k.L('m',TWC.gold,[.25,3.9,2.0],[.15,4.5,2.0],.03,'box',0);k.L('m',TWC.gold,[-.22,4.45,2.0],[.22,4.45,2.0],.025,'box',0);k.p('m',TWC.gold,'cyl8',0,3.9,2.0,.26,.06,.12,Math.PI/2,0,0,0)})},
+ merchant(k,S){// a narrow two-storey shop: stone ground floor, jettied timber upper floor, bay window of oddities
+   const o={w:4.4,d:4.0,h:2.2,zc:-1.3,st:'stone',wc:0x7a746a};TWN100_body(k,o);
+   k.at(0,0,-1.3,()=>{const U=2.5,V=2.3;k.as('wood',()=>{k.p('c',TWC.woodD,'box',0,2.27,.1,U*2+.1,.1,V*2+.1,0,0,0,.02);for(let i=0;i<7;i++){const x=-U+.1+i*(2*U-.2)/6;k.L('c',TWC.woodD,[x,2.2,V+.05],[x,2.2,-V+.2],.06,'box')}});
+     twPlanks(k,0x6a5236,-U,V,U,V,2.32,3.9,.24);twPlanks(k,0x6a5236,-U,-V+.2,U,-V+.2,2.32,3.9,.24);twPlanks(k,0x6a5236,-U,-V+.2,-U,V,2.32,3.9,.24);twPlanks(k,0x6a5236,U,-V+.2,U,V,2.32,3.9,.24);
+     [-1,1].forEach(s=>[-1,1].forEach(q=>k.as('bark',()=>k.L('c',TWC.woodD,[s*U,2.3,q*V],[s*U,3.95,q*V],.1,'log'))));
+     twWindow(k,-1.2,3.15,V+.04,.55,.6,0,0xffd27a);twWindow(k,1.2,3.15,V+.04,.55,.6,0,0xffd27a);
+     k.at(0,0,0,()=>twGable(k,0x6a4a32,4.6,5.0,1.5,.32,3.9),Math.PI/2)});
+   twDoor(k,1.35,.36,.72,.9,1.65,0);
+   // bay window on the street: glazed box with a display of curios
+   k.as('wood',()=>{k.p('c',TWC.woodD,'box',-.7,.75,1.05,2.2,.12,.75,0,0,0,.02);k.p('c',TWC.woodD,'box',-.7,1.95,1.05,2.3,.12,.8,0,0,0,.02);[-1.75,-.7,.35].forEach(x=>k.L('c',TWC.woodD,[x,.75,1.4],[x,1.95,1.4],.05,'box'))});
+   k.as('glass',()=>{k.p('g',0xffe2a8,'box',-1.22,1.35,1.42,.96,1.05,.03);k.p('g',0xffe2a8,'box',-.18,1.35,1.42,.96,1.05,.03)});
+   k.as('brass',()=>{k.p('m',0x3a6aa0,'sph',-1.4,1.0,1.1,.16,.16,.16,0,0,0,0);k.p('m',TWC.gold,'box',-1.4,.88,1.1,.1,.06,.1,0,0,0,0)});k.p('c',0xe8e0c8,'ico',-.95,.92,1.15,.12,.1,.12,0,0,0,.02);
+   k.p('g',0x9ad8ff,'oct',-.5,.95,1.1,.06,.16,.06);k.p('c',0xd8a84a,'sph',-.1,.93,1.12,.1,.14,.1,0,0,0,0);k.p('c',0x6a3a8a,'box',.15,.84,1.12,.2,.1,.15,0,.4,0,.02);
+   TWN100_awning(k,-1.9,.5,1.42,2.2,2.15,1.8,[0x2a5a6a,0xe8dcc0]);
+   TWN100_crate(k,1.0,2.4,.5,.2);TWN100_crate(k,1.55,2.75,.38,-.3);TWN100_crate(k,1.05,2.4,.32,.7);k.as('wood',()=>k.p('c',0x5a3424,'box',1.9,.25,1.9,.6,.5,.42,0,.4,0,.03));k.p('m',TWC.gold,'box',1.9,.5,1.9,.62,.05,.44,0,.4,0,0);
+   TWN100_lantern(k,1.35,2.05,1.3);
+   // emblem: a golden key over the door
+   k.as('brass',()=>{k.p('m',TWC.gold,'cyl8',1.0,2.45,.8,.14,.04,.14,Math.PI/2,0,0,0);k.p('m',TWC.gold,'box',1.4,2.45,.8,.6,.06,.04,0,0,0,0);k.p('m',TWC.gold,'box',1.62,2.38,.8,.06,.12,.04,0,0,0,0)})},
+ sage(k,S){// a dark stone sanctum with a tall pointed roof, rune monoliths and violet fires
+   const o={w:4.2,d:4.0,h:2.8,zc:-1.4,st:'stone',wc:0x4e4a5c,pc:0x2a2440};TWN100_body(k,o);TWN100_roof(k,o,0x2a2440,2.8,'z',0x1e1a30);
+   for(let i=0;i<7;i++){const a=Math.PI*i/6;k.p('c',0x5a5668,'box',Math.cos(a)*.62,1.95+Math.sin(a)*.55,.66,.2,.22,.16,0,0,a+Math.PI/2,.08)}[-.62,.62].forEach(x=>k.p('c',0x5a5668,'box',x,1.2,.66,.18,1.6,.16,0,0,0,.08));
+   k.p('c',0x120e18,'box',0,1.35,.6,1.05,1.95,.06,0,0,0,0);k.p('g',0x9a6aff,'box',0,1.35,.58,.7,1.6,.03);
+   [-1.5,1.5].forEach(x=>twWindow(k,x,1.7,.64,.32,.7,0,0xb08aff));
+   // rune monoliths
+   [[-1.55,2.4,.12],[1.55,2.3,-.1]].forEach(([x,z,r])=>{k.as('stone',()=>k.p('c',0x3e3a48,'box',x,1.0,z,.5,2.0,.36,0,r,(x>0?-1:1)*.04,.1));
+     [.6,1.0,1.45].forEach((y,i)=>k.p('g',[0xb08aff,0x9ad8ff,0xc8a0ff][i],'box',x+Math.sin(r)*.19,y,z+Math.cos(r)*.19,.2,.09,.02,0,r,i*.4))});
+   // violet braziers and the ring on the ground
+   [-.85,.85].forEach(x=>{[0,1,2].forEach(i=>{const a=i/3*6.283+.4;k.L('m',TWC.iron,[x+Math.cos(a)*.2,0,2.95+Math.sin(a)*.2],[x+Math.cos(a)*.09,.6,2.95+Math.sin(a)*.09],.02,'cyl6',0)});
+     k.p('m',TWC.iron,'frus8',x,.66,2.95,.24,.14,.24,Math.PI,0,0,0);k.p('g',0x9a5aff,'cone4',x,.88,2.95,.15,.38,.15,0,.3,0).p('g',0xd8b0ff,'cone4',x,.84,2.95,.09,.26,.09,0,1.1,0)});
+   for(let i=0;i<16;i++){const a=i/16*6.283;k.p('g',i%2?0x9a6aff:0x6a4ad8,'box',Math.cos(a)*1.1,.03,1.75+Math.sin(a)*.8,.32,.02,.06,0,-a+Math.PI/2,0)}
+   // emblem: a floating crystal over the roof peak
+   k.p('g',0xc8a0ff,'oct',0,6.2,-1.4,.24,.42,.24);k.L('m',TWC.iron,[0,5.5,-1.4],[0,5.85,-1.4],.025,'cyl6',0)},
+ trainer(k,S){// a hunter's lodge: dark logs, thatch, a great horned skull over the door, a pen with a training post
+   const o={w:4.6,d:4.0,h:2.4,zc:-1.4,st:'log',wc:0x5a4030};TWN100_body(k,o);TWN100_roof(k,o,TWC.thatch,1.6,'x');
+   twDoor(k,-1.0,.36,.62,1.1,1.75,0);twWindow(k,1.2,1.45,.64,.7,.5,0,0xffb347);
+   k.as('plain',()=>{k.p('c',0xe8e0c8,'dod',-1.0,2.55,.75,.3,.24,.26);[-1,1].forEach(s=>{k.L('c',0xe8e0c8,[-1.0+s*.2,2.65,.75],[-1.0+s*.8,3.05,.7],.06,'cone6');k.L('c',0xe8e0c8,[-1.0+s*.8,3.05,.7],[-1.0+s*1.05,3.5,.6],.04,'cone6')})});
+   [-1,1].forEach(s=>k.p('c',0x120e0c,'box',-1.0+s*.09,2.6,1.0,.06,.05,.02));
+   // the pen: posts and rails round the porch, a training post with ropes, a trough, bones
+   const P=[[-2.3,.75],[-2.3,3.2],[2.3,3.2],[2.3,.75]];for(let i=0;i<3;i++){const a=P[i],b=P[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.round(L/1.0);
+     for(let j=0;j<=n;j++){const t=j/n,x=a[0]+(b[0]-a[0])*t,z=a[1]+(b[1]-a[1])*t;if(i==1&&Math.abs(x)<.7)continue;k.as('bark',()=>k.L('c',TWC.woodD,[x,-.1,z],[x,1.0,z],.06,'log'))}
+     [.45,.85].forEach(h=>{if(i==1){[[-2.3,-.7],[.7,2.3]].forEach(([x0,x1])=>k.as('wood',()=>k.L('c',TWC.wood,[x0,h,3.2],[x1,h,3.2],.04,'cyl6')))}else k.as('wood',()=>k.L('c',TWC.wood,[a[0],h,a[1]],[b[0],h,b[1]],.04,'cyl6'))})}
+   k.as('bark',()=>k.L('c',0x4a3424,[.9,0,2.0],[.9,1.7,2.0],.12,'log'));k.as('straw',()=>k.p('c',0xc8a850,'cyl8',.9,1.05,2.0,.2,.5,.2,0,0,0,.08));
+   [.7,1.3].forEach(h=>k.L('c',0x9a8458,[.9,h,2.0],[1.4,h-.3,2.4],.02,'cyl6',0));
+   k.as('wood',()=>{k.p('c',0x5a3c24,'box',-1.3,.22,2.4,1.0,.3,.4,0,.1,0,.03)});k.p('c',0x8a3a2a,'box',-1.3,.38,2.4,.85,.04,.28,0,.1,0,0);
+   k.as('plain',()=>[[-.4,2.6],[.1,2.9],[1.7,1.3]].forEach(([x,z],i)=>k.L('c',0xe8e0c8,[x-.2,.05,z],[x+.2,.07,z+.1*i],.035,'cyl6')));
+   // drying rack with a hide, chain on the wall
+   k.as('wood',()=>{k.L('c',TWC.woodD,[1.8,0,1.05],[1.8,1.7,1.05],.04,'box');k.L('c',TWC.woodD,[2.25,0,1.05],[2.25,1.7,1.05],.04,'box');k.L('c',TWC.woodD,[1.7,1.6,1.05],[2.35,1.6,1.05],.035,'box')});
+   k.p('c',0x7a5a3a,'box',2.02,1.15,1.05,.5,.8,.03,0,0,.05,.05);for(let i=0;i<5;i++)k.p('m',TWC.iron,'cyl6',-2.05,1.9-i*.14,.66,.05,.03,.05,Math.PI/2,i,0,0)},
+ stable(k,S){// a barn: plank walls, shingle roof with a hayloft door to the street, open stalls, hay, a trough
+   const o={w:4.6,d:4.2,h:2.6,zc:-1.2,st:'plank',wc:0x6a4a30};TWN100_body(k,o);TWN100_roof(k,o,0x6a4a32,1.9,'z');
+   k.p('c',0x120e0c,'box',0,1.25,.9,2.6,1.75,.06,0,0,0,0);
+   [-1,1].forEach(s=>{twPlanks(k,0x7a5636,s*1.3-.6*s,.95,s*1.3,.95,.36,1.25,.2);k.as('wood',()=>{k.L('c',TWC.woodD,[s*.7,.4,.98],[s*1.3,1.2,.98],.04,'box')})});
+   k.as('wood',()=>{k.L('c',TWC.woodD,[0,.36,.98],[0,2.2,.98],.08,'box');k.L('c',TWC.woodD,[-1.4,2.15,.98],[1.4,2.15,.98],.08,'box')});
+   k.p('c',0x120e0c,'box',0,3.25,.92,.75,.75,.04,0,0,0,0);k.as('straw',()=>k.p('c',0xc8a850,'box',0,3.0,.95,.62,.2,.08,0,0,0,.05));k.as('wood',()=>k.L('c',TWC.woodD,[0,4.05,.98],[0,4.05,1.6],.06,'box'));k.L('m',TWC.iron,[0,4.0,1.55],[0,3.4,1.55],.015,'cyl6',0);
+   k.as('straw',()=>{k.p('c',0xc8a850,'cyl8',-1.7,.42,2.1,.4,.85,.4,0,0,Math.PI/2,.12);k.p('c',0xc8a850,'cyl8',-1.65,1.12,2.15,.38,.8,.38,0,.2,Math.PI/2,.12);k.p('c',0xb89a50,'box',0,.02,2.0,4.2,.04,2.0,0,0,0,0)});
+   [-.15,.15].forEach(d=>k.as('wood',()=>k.L('c',0x5a3c22,[1.2,.2,2.6+d],[2.2,.2,2.6+d],.05,'box')));k.as('wood',()=>{twPlanks(k,0x5a3c22,1.2,2.45,2.2,2.45,0,.45,.15);twPlanks(k,0x5a3c22,1.2,2.75,2.2,2.75,0,.45,.15)});k.p('c',0x3a6a90,'box',1.7,.42,2.6,.92,.03,.26,0,0,0,0);
+   k.as('cloth',()=>k.p('c',0x6a2a1a,'box',2.0,1.15,.98,.5,.45,.08,0,0,0,.05));
+   // emblem: an iron horseshoe over the doors
+   for(let i=0;i<7;i++){const a=Math.PI*(-.15+i/6*1.3);k.p('m',0x4a4a52,'box',Math.cos(a)*.22,2.55+Math.sin(a)*.22,1.02,.08,.11,.04,0,0,a,0)}}};
+var TWN100_SIGN={smith:['BLACKSMITH','⚒ forge · arms · armour','#2a2420','#ffcf8a'],alch:['ALCHEMIST','⚗ potions · elixirs · catalysts','#1e2a22','#c8ffd8'],
+ cook:['COOKHOUSE','🍖 meals that make you strong','#3a2414','#ffe6c0'],bard:["BARD'S STAGE",'🎵 songs of the old roads','#2a1430','#f0d8ff'],
+ merchant:['CURIO SHOP','🧳 oddities · eggs · runes','#14282e','#d8f0ff'],sage:['RUNE SANCTUM','🔯 creature runes','#1c1236','#cdb6ff'],
+ trainer:['BEAST TRAINER','🦴 companions trained to your level','#2a2014','#ffe0b0'],stable:['STABLE','🐎 mounts for sale','#2e1f12','#ffd88a']};
+var TWN100_SY={smith:2.85,alch:2.95,cook:2.75,bard:3.75,merchant:2.5,sage:3.15,trainer:2.75,stable:3.0},TWN100_SZZ={smith:.95,alch:.76,cook:.76,bard:1.95,merchant:1.0,sage:.66,trainer:.66,stable:1.0};
+function TWN100_built(k){return k=='smith'||shopBuilt(k)}
+function TWN100_build(q){const T=TOWNS[0],key='TWNS|'+q.k,S=[];let k=null;if(!twHas(key)){k=twKit(801+q.k.length*17+q.z);TWN100_KIT[q.k](k,S);TWN100_S.src[q.k]=S}
+  const g=twGroup(k,key),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=q.s<0?Math.PI/2:-Math.PI/2;g.name='shop_'+q.k;
+  const sg=TWN100_SIGN[q.k];sign(g,[{t:sg[0],f:'700 56px'},{t:sg[1],f:'600 26px'}],2.5,.56,sg[2],sg[3],'#c9a24a',q.k=='bard'?0:q.k=='merchant'?-.7:0,TWN100_SY[q.k],TWN100_SZZ[q.k]+(q.k=='bard'?.05:.08),0,512,150);
+  if(q.k=='stable'){try{const dm=mountModel('pony');dm.scale.setScalar(.8);dm.position.set(.3,.36,-.8);dm.rotation.y=Math.PI*.85;g.add(dm);TANIM.push({x,z,f:now=>{if(g.visible&&dm.r&&dm.r.rig)dm.r.rig(now,false,0)}})}catch(e){console.warn('v100 stable pony',e)}}
+  scene.add(g);TWN100_S.b[q.k]=g;return g}
+function TWN100_siteK(k){const P=[[-2.3,-3.2],[2.3,-3.2],[2.3,3.2],[-2.3,3.2]];
+  for(let i=0;i<3;i++){const a=P[i],b=P[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.round(L/1.1);for(let j=0;j<=n;j++){const t=j/n;k.as('bark',()=>k.L('c',TWC.woodD,[a[0]+(b[0]-a[0])*t,-.1,a[1]+(b[1]-a[1])*t],[a[0]+(b[0]-a[0])*t,.95,a[1]+(b[1]-a[1])*t],.055,'log'))}
+    [.4,.8].forEach(h=>k.as('wood',()=>k.L('c',TWC.woodL,[a[0],h,a[1]],[b[0],h,b[1]],.035,'box')))}
+  [[-2.3,3.2],[2.3,3.2]].forEach(([x,z])=>[.4,.8].forEach(h=>k.as('wood',()=>k.L('c',TWC.woodL,[x,h,z],[x*.45,h,z],.035,'box'))));
+  // a half-raised frame, lumber, stone, tools, a sawhorse
+  [[-1.8,-2.6],[1.8,-2.6],[-1.8,-.4],[1.8,-.4]].forEach(([x,z],i)=>k.as('wood',()=>k.L('c',TWC.woodL,[x,0,z],[x,i<2?2.4:1.6,z],.09,'box')));
+  k.as('wood',()=>{k.L('c',TWC.woodL,[-1.9,2.35,-2.6],[1.9,2.35,-2.6],.08,'box');k.L('c',TWC.woodL,[-1.8,.1,-2.6],[-.2,2.3,-2.6],.05,'box');k.L('c',TWC.woodL,[-1.8,1.55,-.4],[-1.8,2.3,-2.6],.06,'box')});
+  for(let i=0;i<6;i++)k.as('bark',()=>k.L('c',[TWC.wood,TWC.woodL,TWC.wood][i%3],[-.3,.1+(i>2?.17:0),.6+(i%3)*.17+(i>2?.08:0)],[1.9,.1+(i>2?.17:0),.6+(i%3)*.17+(i>2?.08:0)],.085,'log'));
+  [[-1.2,1.6,.24],[-.9,1.9,.18],[-1.4,1.95,.2],[-1.05,1.75,.17,.3]].forEach(q=>k.p('c',TWC.stone,'dod',q[0],q[3]||.14,q[1],q[2],q[2]*.8,q[2],q[0],q[1],0,.2));
+  k.as('wood',()=>{k.L('c',TWC.woodD,[.6,.75,1.9],[1.6,.75,1.9],.05,'box');[[.7,-1],[.7,1],[1.5,-1],[1.5,1]].forEach(([x,s])=>k.L('c',TWC.woodD,[x,.72,1.9],[x+.1,0,1.9+s*.22],.03,'box'))});
+  k.L('m',TWC.iron,[.3,0,2.3],[.48,.55,2.35],.02,'cyl6',0);k.p('m',TWC.iron,'box',.5,.58,2.35,.16,.07,.05,0,0,.3,0)}
+function TWN100_site(q){const T=TOWNS[0];let k=null;if(!twHas('TWNSITE')){k=twKit(889);TWN100_siteK(k)}
+  const g=twGroup(k,'TWNSITE'),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=q.s<0?Math.PI/2:-Math.PI/2;g.name='site_'+q.k;
+  const o=SHOPS.find(s=>s.k==q.k)||{i:'🔨',n:q.k},sp=twPostG(1.6,1.25,.5);sp.position.set(0,0,3.45);g.add(sp);
+  sign(sp,[{t:o.i+' '+o.n,f:'700 34px'},{t:'🔨 build it at the Steward',f:'600 22px'}],1.6,.5,'#3a2614','#ffe6c0',null,0,1.25,0,0,512,150);
+  scene.add(g);TWN100_S.site[q.k]=g;return g}
+// shopkeepers that are not visitors (the visitors' NPCs come from visTick at T.vsp)
+var TWN100_NPCO={smith:{robe:0x3a3430,trim:0x5a3a20,apron:1,label:'Blacksmith'},alch:{robe:0x2e4a3a,trim:0x8a6a2a,hat:'wiz',hatC:0x24402e,label:'Alchemist'},
+ cook:{robe:0x6a4a2a,trim:0x2a1a12,hat:'chef',apron:1,label:'Cook'},stable:{robe:0x5a4a2a,trim:0x2a1a10,hat:'cap',hatC:0x6a4a1a,label:'Stable Master'}};
+function TWN100_keeper(q){const T=TOWNS[0],[x,z]=TWN100_npc(q),o=Object.assign({ry:q.s<0?Math.PI/2:-Math.PI/2},TWN100_NPCO[q.k]),g=new THREE.Group(),prev=T_cur,nc=[];T_cur={col:nc,cx:0,cy:0};
+  try{npc(g,x,z,o)}finally{T_cur=prev}g.position.y=GH(x,z);scene.add(g);TWN100_S.npc[q.k]=g;TWN100_S.col[q.k]=nc;return g}
+// ---------- sync: build / show / hide by shopBuilt, colliders, the stations and the visitors move into the market ----------
+function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN)return; // not before this file has run
+  TWN100_SH.forEach(q=>{const on=TWN100_built(q.k);if(on&&!TWN100_S.b[q.k])TWN100_build(q);if(!on&&!TWN100_S.site[q.k])TWN100_site(q);
+    if(TWN100_S.b[q.k])TWN100_S.b[q.k].visible=on;if(TWN100_S.site[q.k])TWN100_S.site[q.k].visible=!on;
+    if(TWN100_NPCO[q.k]){if(on&&!TWN100_S.npc[q.k])TWN100_keeper(q);const n=TWN100_S.npc[q.k];if(n)n.visible=on;
+      (TWN100_S.col[q.k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(on&&i<0)T.col.push(c);else if(!on&&i>=0)T.col.splice(i,1)})}});
+  TWN100_smokeSync()}
+// the old hearth + alchemy table: hidden, colliders gone; their prompts (T.st2) now point at the Cook and the Alchemist
+{const T=TOWNS[0];try{if(T.st2){const old=[T.st2.c.slice(),T.st2.a.slice()];T.col=T.col.filter(c=>!(c.r!=null&&old.some(o=>Math.abs(c.x-o[0])<.01&&Math.abs(c.z-o[1])<.01)));
+    const sc=TWN100_SH.find(q=>q.k=='cook'),sa=TWN100_SH.find(q=>q.k=='alch');T.st2.c=TWN100_npc(sc);T.st2.a=TWN100_npc(sa);T._lay=1}
+  if(T.stG&&T.stG.c.parent)T.stG.c.parent.visible=false;
+  // the visitors (merchant, trainer, bard, sage) stand in front of their shops
+  T.vsp=VIS.map(v=>{const q=TWN100_SH.find(s=>s.k==v.k);return q?TWN100_npc(q):[T.cx,T.cy+10]});VIS.forEach(v=>{if(v.g){scene.remove(v.g);v.g=null}});
+  STB.x=TWN100_npc(TWN100_SH.find(q=>q.k=='stable'))[0]-T.cx;STB.z=TWN100_npc(TWN100_SH.find(q=>q.k=='stable'))[1]-T.cy-1.4;
+}catch(e){console.warn('v100 market setup',e)}}
+// visitors: no more stalls, and they face the street
+{const f=visTick;visTick=function(){const r=f.apply(this,arguments);try{VIS.forEach(v=>{if(!v.g||v.g.twn)return;v.g.twn=1;const q=TWN100_SH.find(s=>s.k==v.k);
+    v.g.children.slice().forEach(c=>{if(!c.bones&&c.isGroup)v.g.remove(c)});const n=v.g.children.find(c=>c.bones);if(n&&q)n.rotation.y=q.s<0?Math.PI/2:-Math.PI/2})}catch(_){}return r}}
+// the Stable is one of the market buildings now (the v78 lean-to and its site are not built)
+function stableBuild(){const T=TOWNS[0];if(!T||!TWN100_S)return;STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[];const q=TWN100_SH.find(s=>s.k=='stable');STB.n=TWN100_npc(q)}
+function stableSync(){TWN100_shopSync();stableBuild()}
+// construction sites: only the Magic Shop still uses the old kind (north row); the market plots have their own
+function shSites(){const T=TOWNS[0];if(!T)return;SHM.sites=SHM.sites||{};SHM.vsite=[];const want={};if(!shopBuilt('magic'))want.magic=[T.mv[0],T.mv[1]-.4,'🔮 Magic Shop'];
+  if(T.mvG){const on=shopBuilt('magic');T.mvG.visible=on;try{const c=mmB.getContext('2d');for(let y=-18;y<=-14;y++)for(let x=12;x<=17;x++){const X=T.cx+x,Y=T.cy+y,w=on?'B':'P';if(MAP[Y][X]!=w&&(MAP[Y][X]=='B'||MAP[Y][X]=='P')){MAP[Y][X]=w;c.fillStyle=on?'rgb(168,126,92)':'rgb(200,190,164)';c.fillRect(X,Y,1,1)}}}catch(err){console.warn(err)}
+    (T.mvCol||[]).forEach(q=>{const i=T.mvArr.indexOf(q);if(on&&i<0)T.mvArr.push(q);else if(!on&&i>=0)T.mvArr.splice(i,1)})}
+  for(const k in SHM.sites)if(!want[k]){scene.remove(SHM.sites[k]);delete SHM.sites[k]}
+  for(const k in want)if(!SHM.sites[k])SHM.sites[k]=shSite(...want[k]);
+  try{TWN100_shopSync()}catch(e){console.warn('v100 shops',e)}}
+// walk-up prompts for every market plot (before the older prompts: same spots, clearer labels)
+var TWN100_ACT={smith:()=>{$('bag').classList.remove('hide');bagTab2=typeof KQM_FORGE!='undefined'?KQM_FORGE:0;rB()},alch:()=>openX('alch'),cook:()=>openX('cook'),
+ merchant:()=>openX('visitor','merchant'),trainer:()=>openX('visitor','trainer'),bard:()=>openX('visitor','bard'),sage:()=>openX('visitor','sage'),stable:()=>openX('stable',0)};
+var TWN100_LBL={smith:'F · Blacksmith · upgrade your gear',alch:'F · Brew at the Alchemist',cook:'F · Cook at the Cookhouse',merchant:'F · Curio Merchant',trainer:'F · Beast Trainer',bard:'F · Listen to the Bard',sage:'F · Rune Sage',stable:'F · Stable Master'};
+function TWN100_prompt(){const T=TOWNS[0],p=pl.position;if(p.z<T.cy+TS-1||p.z>T.cy+TWN100_IW)return null;
+  for(const q of TWN100_SH){const [x,z]=TWN100_npc(q);if(Math.hypot(p.x-x,p.z-z)<2.4){if(TWN100_built(q.k))return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]};
+    const o=SHOPS.find(s=>s.k==q.k);return {label:'🔨 '+(o?o.n:q.k)+' · build it at the Stronghold Steward',fn:()=>{shTab='shops';openX('hold')}}}}return null}
+{const f=townPortalPrompt;townPortalPrompt=function(T){if(T===TOWNS[0]){const r=TWN100_prompt();if(r)return r}return f.apply(this,arguments)}}
+// ---------- chimney smoke: one InstancedMesh for every built shop ----------
+function TWN100_smokeSync(){const T=TOWNS[0],L=[];TWN100_SH.forEach(q=>{if(!TWN100_built(q.k))return;(TWN100_S.src[q.k]||[]).forEach(s=>{const [x,z]=TWN100_lw(q,s[0],s[2]);L.push([x,T.ph+s[1],z,q.k])})});
+  const N=7;if(!TWN100_S.smoke){const m=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.32,depthWrite:false}),24*N);
+    m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(24*N*3),3);m.frustumCulled=false;m.castShadow=false;m.userData.lpsSkip=1;m.userData.psNo=1;scene.add(m);TWN100_S.smoke=m;
+    const d=new THREE.Object3D(),c=new THREE.Color();TANIM.push({x:T.cx,z:T.cy+38,f:now=>{const S=TWN100_S.smoke,L=S.userData.L||[];
+      for(let i=0;i<L.length;i++)for(let j=0;j<N;j++){const t=((now/4200)+j/N+i*.37)%1,s=L[i];d.position.set(s[0]+Math.sin(t*6+j*2.1)*.25+t*.7,s[1]+t*3.2,s[2]+Math.cos(t*5+j)*.2);d.scale.setScalar(Math.sin(Math.PI*t)*.42+.03);d.rotation.set(t*2,j,0);d.updateMatrix();S.setMatrixAt(i*N+j,d.matrix)}
+      S.instanceMatrix.needsUpdate=true}});
+    m.userData.c=c}
+  const m=TWN100_S.smoke,c=m.userData.c;m.userData.L=L.slice(0,24);m.count=Math.min(24,L.length)*N;
+  m.userData.L.forEach((s,i)=>{c.setHex(s[3]=='alch'?0x9ad8a0:s[3]=='sage'?0xb8a0e0:0xc8c4bc);for(let j=0;j<N;j++)m.setColorAt(i*N+j,c)});if(m.instanceColor)m.instanceColor.needsUpdate=true}
+try{TWN100_shopSync()}catch(e){console.warn('v100 shops',e)}
+
+// ================= v100 town (4/4): a kingdom you can see — structures instead of flags =================
+// Every Steward upgrade already raises its own structure per level (KDU in zzM_town.js: Training Grounds, Scholar's Tower,
+// Treasury, Beast Den, Hatchery; Bastion Walls = the whole ring in zzN_zz_town1.js). What was only cloth is replaced:
+//  * the six upgrade banners by the fountain (one ring per level) are gone; the Steward's desk stays.
+//  * total upgrade levels (0..18) no longer hang banners/pennants. Instead Duskhold grows buildings:
+//      ≥2  braziers on stone plinths round the fountain                     (the old ≥4 braziers, sooner)
+//      ≥5  a granary with a windmill behind the market's west row            (sails turn)
+//      ≥8  a chapel with a bell tower behind the market's east row
+//      ≥11 a guard barracks with a watch platform in the courtyard ward (west)
+//      ≥14 a great hall / keep tower at the courtyard ward (east), beacons on the south gate towers
+//      ≥17 statues of the fallen flank the inner gate, copper (verdigris) roofs on the chapel and keep
+// Each tier is one baked kit (KDP2|tier) added to T.g; colliders are boxes per structure.
+var TWN100_PR=[2,5,8,11,14,17];
+function TWN100_prK(k,lv){const ban=TOWNS[0].pal.ban||0x7a2230;
+  // ≥2: braziers on plinths round the fountain
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>{const x=sx*4.6,z=sz*4.6;twStones(k,TWC.stone,x-.35,z,x+.35,z,0,.45,.7,.35);kdBrazier(k,x,z,.45,.9)});
+  if(lv>=2){// granary on stilts + windmill, behind the west row (x -16, z 26..36)
+    k.at(-16.2,0,28.5,()=>{[-1,1].forEach(s=>[-1,1].forEach(q=>{twStones(k,TWC.stone,s*1.3-.25,q*1.6,s*1.3+.25,q*1.6,0,.7,.5,.3);k.p('c',TWC.stoneL,'cyl8',s*1.3,.78,q*1.6,.4,.12,.4,0,0,0,.03)}));
+      k.as('board',()=>k.p('c',TWC.wood,'box',0,.95,0,3.2,.14,3.8,0,0,0,.02));twPlanks(k,0x6a4a30,-1.5,1.8,1.5,1.8,1.0,3.0,.26);twPlanks(k,0x6a4a30,-1.5,-1.8,1.5,-1.8,1.0,3.0,.26);
+      twPlanks(k,0x6a4a30,-1.5,-1.8,-1.5,1.8,1.0,3.0,.26);twPlanks(k,0x6a4a30,1.5,-1.8,1.5,1.8,1.0,3.0,.26);twGable(k,TWC.thatch,3.2,3.8,1.4,.3,3.0);
+      k.as('straw',()=>{k.p('c',0xc8a850,'cyl8',2.1,.4,1.2,.4,.8,.4,0,0,Math.PI/2,.12);k.p('c',0xc8a850,'cyl8',2.1,.4,.3,.4,.8,.4,0,.2,Math.PI/2,.12)});
+      [[-2.2,-.5],[-2.2,.2],[-2.5,-.15]].forEach(([x,z],i)=>k.as('cloth',()=>k.p('c',0xd8c8a0,'sph',x,.3+(i==2?.35:0),z,.3,.34,.26,0,i,0,.08)))});
+    k.at(-16.5,0,35.5,()=>{twStoneRing(k,0x8a8478,0,0,1.25,0,4.6,.34);k.as('stone',()=>k.p('c',TWC.stoneL,'cyl8',0,4.65,0,1.4,.14,1.4,0,0,0,.03));twCone(k,0x5a4632,0,4.7,0,1.55,1.8);
+      twDoor(k,1.3,0,0,.75,1.4,Math.PI/2);twWindow(k,0,3.1,1.28,.32,.42,0,0xffd27a);
+      k.as('wood',()=>{k.p('c',TWC.woodD,'cyl8',1.62,5.1,0,.16,.35,.16,0,0,Math.PI/2,0)})})}
+  if(lv>=3){// chapel with a bell tower, behind the east row (x 16, z 26..38)
+    k.at(16.4,0,30.5,()=>{twHall(k,{w:3.8,d:5.6,h:3.2,stoneWalls:1,wc:0x7a766c});k.at(0,0,0,()=>twGable(k,lv>=6?0x3e6a5e:0x3e3a48,5.6,3.8,2.2,.35,3.2),Math.PI/2);
+      [-1.6,0,1.6].forEach(z=>[-1,1].forEach(s=>twWindow(k,s*1.94,2.0,z,.4,1.1,s*Math.PI/2,0xe8c87a)));
+      twDoor(k,0,.36,-2.82,1.1,1.9,Math.PI);for(let i=0;i<7;i++){const a=Math.PI*i/6;k.p('c',TWC.stoneL,'box',Math.cos(a)*.72,2.25+Math.sin(a)*.5,-2.86,.22,.22,.16,0,0,a+Math.PI/2,.08)}
+      k.at(0,0,4.0,()=>{twStones(k,TWC.stone,-1.1,1.1,1.1,1.1,0,6.4,.4,.5);twStones(k,TWC.stone,-1.1,-1.1,1.1,-1.1,0,6.4,.4,.5);twStones(k,TWC.stone,-1.1,-1.1,-1.1,1.1,0,6.4,.4,.5);twStones(k,TWC.stone,1.1,-1.1,1.1,1.1,0,6.4,.4,.5);
+        [-1,1].forEach(s=>[-1,1].forEach(q=>k.L('c',TWC.stoneD,[s*1.1,6.4,q*1.1],[s*1.1,7.6,q*1.1],.18,'box')));k.as('ashlar',()=>{k.p('c',TWC.stoneL,'box',0,6.45,0,2.6,.16,2.6,0,0,0,.02);k.p('c',TWC.stoneL,'box',0,7.65,0,2.6,.16,2.6,0,0,0,.02)});
+        k.as('brass',()=>k.p('m',0xb08a3a,'frus8',0,6.95,0,.55,.7,.55,Math.PI,0,0,0));k.L('m',TWC.iron,[-.9,7.45,0],[.9,7.45,0],.04,'box',0);
+        twCone(k,lv>=6?0x3e6a5e:0x3e3a48,0,7.75,0,1.7,2.8);k.L('m',TWC.iron,[0,10.4,0],[0,11.4,0],.04,'cyl6',0);k.L('m',TWC.iron,[-.32,11.05,0],[.32,11.05,0],.035,'box',0)})})}
+  if(lv>=4){// guard barracks + watch platform, courtyard ward west (x -16, z 60..70)
+    k.at(-15.6,0,63.5,()=>{twHall(k,{w:4.6,d:4.0,h:2.6});twGable(k,0x5a4a3e,4.6,4.0,1.5,.35,2.6);twDoor(k,1.0,.36,2.02,1.0,1.7,0);twWindow(k,-1.0,1.5,2.04,.6,.5,0,0xffb347);
+      kdBanner(k,0,2.45,2.08,0,ban,.6,1.0);
+      [[-1.5,3.4],[1.5,3.4]].forEach(([x,z])=>{k.as('bark',()=>k.L('c',TWC.woodD,[x,-.2,z],[x,1.9,z],.07,'log'));k.as('wood',()=>k.L('c',TWC.woodD,[x-.5,1.4,z],[x+.5,1.4,z],.045,'box'));k.as('straw',()=>k.p('c',0xc8a850,'cyl8',x,1.15,z,.24,.7,.24,0,0,0,.1));k.p('c',0xb89a50,'dod',x,1.75,z,.18,.2,.18)})});
+    k.at(-18.3,0,69.5,()=>{[-1,1].forEach(s=>[-1,1].forEach(q=>k.as('bark',()=>k.L('c',TWC.woodD,[s*.9,-.2,q*.9],[s*.8,4.4,q*.8],.13,'log'))));k.as('board',()=>k.p('c',TWC.wood,'box',0,3.6,0,2.4,.14,2.4,0,0,0,.02));
+      [-1,1].forEach(s=>{twPlanks(k,TWC.wood,-1.1,s*1.1,1.1,s*1.1,3.6,4.2,.22);twPlanks(k,TWC.wood,s*1.1,-1.1,s*1.1,1.1,3.6,4.2,.22)});k.as('shingle',()=>k.p('c',0x6a4a32,'cone4',0,5.4,0,1.7,1.2,1.7,0,Math.PI/4,0,.06));
+      [-1,1].forEach(s=>k.as('wood',()=>k.L('c',TWC.woodD,[s*.9,.3,.9],[-s*.9,3.4,.9],.05,'box')));kdBrazier(k,0,0,3.68,.55)})}
+  if(lv>=5){// great hall with a keep tower, courtyard ward east (x 16, z 60..72); beacons over the south gate
+    k.at(15.8,0,64.5,()=>{twHall(k,{w:4.4,d:6.4,h:3.0,stoneWalls:1});k.at(0,0,0,()=>twGable(k,lv>=6?0x3e6a5e:0x45403e,6.4,4.4,2.0,.38,3.0),Math.PI/2);
+      twDoor(k,-2.22,.36,0,1.1,1.9,-Math.PI/2);[-2,2].forEach(z=>twWindow(k,-2.24,1.8,z,.5,.8,-Math.PI/2,0xffd27a));kdBanner(k,-2.3,2.8,-1,-Math.PI/2,ban,.6,1.2);kdBanner(k,-2.3,2.8,1,-Math.PI/2,ban,.6,1.2);
+      k.at(1.6,0,4.4,()=>{twStoneRing(k,TWC.stoneD,0,0,1.6,-.3,.6,.36);twStoneRing(k,TWC.stone,0,0,1.45,.6,7.6,.32);
+        const n=12;for(let i=0;i<n;i++)if(i%2==0){const a=(i+.5)/n*6.283;k.p('c',TWC.stone,'box',Math.cos(a)*1.55,8.0,Math.sin(a)*1.55,.32,.7,.7,0,-a,0,.1)}
+        k.as('stone',()=>k.p('c',TWC.stoneL,'cyl8',0,7.65,0,1.75,.16,1.75,0,0,0,.02));[1.5,3.4,5.4].forEach((y,i)=>twWindow(k,Math.cos(i*2.1)*1.47,y+1,Math.sin(i*2.1)*1.47,.3,.55,-i*2.1+Math.PI/2,0xffd27a));
+        k.L('c',TWC.woodD,[0,7.6,0],[0,9.6,0],.05,'cyl6',0);k.as('cloth',()=>{k.p('c',ban,'box',.6,9.2,0,1.1,.6,.03,0,0,0,.06);k.p('c',ban,'tri',1.3,9.2,0,.6,.3,.03,0,0,-Math.PI/2,.05)});kdBrazier(k,-.6,-.6,7.73,.7)})});
+    [-1,1].forEach(s=>kdBrazier(k,s*2.3,TOWNS[0].sz-0,4.65,.9))}
+  if(lv>=6){// statues of the fallen flank the inner gate (inside the courtyard ward)
+    [-1,1].forEach(s=>k.at(s*4.4,0,TWN100_IW+3.0,()=>{twStones(k,TWC.stone,-.6,0,.6,0,0,1.0,1.2,.5);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,1.05,0,1.4,.12,1.4,0,0,0,.02));
+      k.as('stone',()=>{k.p('c',0x8a8a90,'cyl8',0,1.9,0,.3,1.4,.24,0,0,0,.04);k.p('c',0x8a8a90,'ico',0,2.8,0,.22,.24,.22,0,0,0,.02);k.p('c',0x8a8a90,'box',0,2.42,0,.8,.24,.36,0,0,0,.03);
+        k.p('c',0x8a8a90,'box',s*.28,2.0,.25,.1,1.6,.06,0,0,0,0);k.p('c',0x8a8a90,'box',s*.28,2.5,.25,.42,.07,.07,0,0,0,0);k.p('c',0x7a7a80,'cyl8',-s*.42,1.9,.1,.32,.08,.42,Math.PI/2,0,s*.2,.02)});
+      kdBrazier(k,s*1.2,.6,0,.7)}))}}
+function kdPrestige(T,P){const K=kdState(),o=kdOld(T);o.ban.forEach(q=>q.visible=false);let lv=0;TWN100_PR.forEach((t,i)=>{if(P>=t)lv=i+1});if(K.pr===lv)return null;K.pr=lv;
+  if(K.pg){T.g.remove(K.pg);K.pg=null}if(!lv){kdCol(T,K.pcol=K.pcol||[],[]);return []}
+  const key='KDP2|'+lv;let k=null;if(!twHas(key)){k=twKit(521+lv);TWN100_prK(k,lv)}const g=twGroup(k,key);g.name='kdPrestige';T.g.add(g);K.pg=g;
+  const lamps=[[-1,-1],[1,-1],[-1,1],[1,1]].map(([sx,sz])=>[T.cx+sx*4.6,T.ph+1.5,T.cy+sz*4.6]),c=[];
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>c.push({x:T.cx+sx*4.6,z:T.cy+sz*4.6,r:.42}));
+  const B=(x,z,hx,hz)=>c.push({x:T.cx+x,z:T.cy+z,hx,hz});
+  if(lv>=2){B(-16.2,28.5,1.75,2.1);B(-16.5,35.5,1.45,1.45)}
+  if(lv>=3){B(16.4,30.5,2.1,3.0);B(16.4,34.5,1.3,1.3)}
+  if(lv>=4){B(-15.6,63.5,2.5,2.2);B(-18.3,69.5,1.1,1.1);c.push({x:T.cx-17.1,z:T.cy+66.9,r:.3},{x:T.cx-14.1,z:T.cy+66.9,r:.3})}
+  if(lv>=5){B(15.8,64.5,2.4,3.4);c.push({x:T.cx+17.4,z:T.cy+68.9,r:1.7})}
+  if(lv>=6)[-1,1].forEach(s=>B(s*4.4,TWN100_IW+3.0,.75,.75));
+  kdCol(T,K.pcol=K.pcol||[],c);if(lv>=5)[-1,1].forEach(s=>lamps.push([T.cx+s*2.3,T.ph+5.5,T.cy+T.sz]));return lamps}
+// the windmill's sails (one small group, turned by TANIM)
+var TWN100_MILL=null;
+function TWN100_mill(T,on){if(!TWN100_MILL&&on){let k=null;if(!twHas('TWNSAIL')){k=twKit(931);for(let i=0;i<4;i++){const a=i/4*6.283+.4,c=Math.cos(a),s=Math.sin(a);k.as('wood',()=>k.L('c',TWC.woodD,[0,0,0],[c*2.6,s*2.6,0],.06,'box'));
+        for(let j=0;j<5;j++){const r=.55+j*.42,o=.3;k.as('cloth',()=>k.p('c',j%2?0xd8ccb0:0xc8b898,'box',c*r-s*o,s*r+c*o,.03,.4,.5,.02,0,0,a,.02))}}
+      k.as('wood',()=>k.p('c',TWC.woodD,'cyl8',0,0,0,.2,.3,.2,Math.PI/2,0,0,0))}
+    const g=twGroup(k,'TWNSAIL');g.position.set(T.cx-16.5+1.85,T.ph+5.1,T.cy+35.5);g.rotation.order='YXZ';g.rotation.y=Math.PI/2;g.name='mill';T.g.parent.add(g);TWN100_MILL=g;
+    TANIM.push({x:g.position.x,z:g.position.z,f:now=>{if(TWN100_MILL&&TWN100_MILL.visible)TWN100_MILL.rotation.z=now/1600}})}
+  if(TWN100_MILL)TWN100_MILL.visible=!!on}
+// kdSync: same as before, but the prestige lamps follow the new tiers, and the windmill
+function kdSync(){const T=TOWNS[0];if(!T||!T.g)return;const K=kdState();let lamps=[];
+  const wl=kdLv('walls');if(K.wl!==wl)K.wlamps=kdWalls(T,wl)||[];lamps=lamps.concat(K.wlamps||[]);
+  ['train','tower','treas','den','hatch'].forEach(k=>kdUp(T,k,kdLv(k)));
+  const P=SHU.reduce((a,u)=>a+kdLv(u.k),0),pl=kdPrestige(T,P);if(pl)K.plamps=pl;lamps=lamps.concat(K.plamps||[]);
+  try{TWN100_mill(T,K.pr>=2)}catch(e){console.warn('v100 mill',e)}
+  kdLamps(lamps)}
+// the upgrade banners by the fountain are gone: shBuild only places the Steward and his desk
+{const f=shBuild;shBuild=function(){const r=f.apply(this,arguments);try{for(const k in SHM.pil){scene.remove(SHM.pil[k].g);SHM.pil[k].g.visible=false}}catch(_){}return r}}
+try{for(const k in SHM.pil)scene.remove(SHM.pil[k].g);if(KGD){KGD.pr=-1;kdSync()}}catch(e){console.warn('v100 kingdom',e)}
+// the Steward's footer text
+{const f=XR.hold;XR.hold=function(){const r=f.apply(this,arguments);try{if(shTab!='shops')$('xwF').innerHTML='<span class="mut dtl">Upgrades are permanent and every level raises something new in Duskhold: walls and gatehouses, the training yard, the scholar\'s tower, the treasury, the beast den, the hatchery — and the more you build in total, the granary, chapel, barracks, keep and statues. Higher levels need more materials and defeated Sovereigns.</span>'}catch(_){}return r}}
 
 $('talBtn').onclick=openTal;
 try{paceWrap()}catch(err){console.error('pace wrap',err)}

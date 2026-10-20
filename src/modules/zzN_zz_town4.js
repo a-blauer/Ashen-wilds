@@ -8,7 +8,7 @@
 //      ≥8  a chapel with a bell tower behind the market's east row
 //      ≥11 a guard barracks with a watch platform in the courtyard ward (west)
 //      ≥14 a great hall / keep tower at the courtyard ward (east), beacons on the south gate towers
-//      ≥17 statues of the fallen flank the inner gate, gilded roofs on the chapel and keep
+//      ≥17 statues of the fallen flank the inner gate, copper (verdigris) roofs on the chapel and keep
 // Each tier is one baked kit (KDP2|tier) added to T.g; colliders are boxes per structure.
 var TWN100_PR=[2,5,8,11,14,17];
 function TWN100_prK(k,lv){const ban=TOWNS[0].pal.ban||0x7a2230;
@@ -24,13 +24,13 @@ function TWN100_prK(k,lv){const ban=TOWNS[0].pal.ban||0x7a2230;
       twDoor(k,1.3,0,0,.75,1.4,Math.PI/2);twWindow(k,0,3.1,1.28,.32,.42,0,0xffd27a);
       k.as('wood',()=>{k.p('c',TWC.woodD,'cyl8',1.62,5.1,0,.16,.35,.16,0,0,Math.PI/2,0)})})}
   if(lv>=3){// chapel with a bell tower, behind the east row (x 16, z 26..38)
-    k.at(16.4,0,30.5,()=>{twHall(k,{w:3.8,d:5.6,h:3.2,stoneWalls:1,wc:0x7a766c});k.at(0,0,0,()=>twGable(k,lv>=6?0xa8842a:0x3e3a48,5.6,3.8,2.2,.35,3.2),Math.PI/2);
+    k.at(16.4,0,30.5,()=>{twHall(k,{w:3.8,d:5.6,h:3.2,stoneWalls:1,wc:0x7a766c});k.at(0,0,0,()=>twGable(k,lv>=6?0x3e6a5e:0x3e3a48,5.6,3.8,2.2,.35,3.2),Math.PI/2);
       [-1.6,0,1.6].forEach(z=>[-1,1].forEach(s=>twWindow(k,s*1.94,2.0,z,.4,1.1,s*Math.PI/2,0xe8c87a)));
       twDoor(k,0,.36,-2.82,1.1,1.9,Math.PI);for(let i=0;i<7;i++){const a=Math.PI*i/6;k.p('c',TWC.stoneL,'box',Math.cos(a)*.72,2.25+Math.sin(a)*.5,-2.86,.22,.22,.16,0,0,a+Math.PI/2,.08)}
       k.at(0,0,4.0,()=>{twStones(k,TWC.stone,-1.1,1.1,1.1,1.1,0,6.4,.4,.5);twStones(k,TWC.stone,-1.1,-1.1,1.1,-1.1,0,6.4,.4,.5);twStones(k,TWC.stone,-1.1,-1.1,-1.1,1.1,0,6.4,.4,.5);twStones(k,TWC.stone,1.1,-1.1,1.1,1.1,0,6.4,.4,.5);
         [-1,1].forEach(s=>[-1,1].forEach(q=>k.L('c',TWC.stoneD,[s*1.1,6.4,q*1.1],[s*1.1,7.6,q*1.1],.18,'box')));k.as('ashlar',()=>{k.p('c',TWC.stoneL,'box',0,6.45,0,2.6,.16,2.6,0,0,0,.02);k.p('c',TWC.stoneL,'box',0,7.65,0,2.6,.16,2.6,0,0,0,.02)});
         k.as('brass',()=>k.p('m',0xb08a3a,'frus8',0,6.95,0,.55,.7,.55,Math.PI,0,0,0));k.L('m',TWC.iron,[-.9,7.45,0],[.9,7.45,0],.04,'box',0);
-        twCone(k,lv>=6?0xa8842a:0x3e3a48,0,7.75,0,1.7,2.8);k.L('m',TWC.iron,[0,10.4,0],[0,11.4,0],.04,'cyl6',0);k.L('m',TWC.iron,[-.32,11.05,0],[.32,11.05,0],.035,'box',0)})})}
+        twCone(k,lv>=6?0x3e6a5e:0x3e3a48,0,7.75,0,1.7,2.8);k.L('m',TWC.iron,[0,10.4,0],[0,11.4,0],.04,'cyl6',0);k.L('m',TWC.iron,[-.32,11.05,0],[.32,11.05,0],.035,'box',0)})})}
   if(lv>=4){// guard barracks + watch platform, courtyard ward west (x -16, z 60..70)
     k.at(-15.6,0,63.5,()=>{twHall(k,{w:4.6,d:4.0,h:2.6});twGable(k,0x5a4a3e,4.6,4.0,1.5,.35,2.6);twDoor(k,1.0,.36,2.02,1.0,1.7,0);twWindow(k,-1.0,1.5,2.04,.6,.5,0,0xffb347);
       kdBanner(k,0,2.45,2.08,0,ban,.6,1.0);
@@ -39,7 +39,7 @@ function TWN100_prK(k,lv){const ban=TOWNS[0].pal.ban||0x7a2230;
       [-1,1].forEach(s=>{twPlanks(k,TWC.wood,-1.1,s*1.1,1.1,s*1.1,3.6,4.2,.22);twPlanks(k,TWC.wood,s*1.1,-1.1,s*1.1,1.1,3.6,4.2,.22)});k.as('shingle',()=>k.p('c',0x6a4a32,'cone4',0,5.4,0,1.7,1.2,1.7,0,Math.PI/4,0,.06));
       [-1,1].forEach(s=>k.as('wood',()=>k.L('c',TWC.woodD,[s*.9,.3,.9],[-s*.9,3.4,.9],.05,'box')));kdBrazier(k,0,0,3.68,.55)})}
   if(lv>=5){// great hall with a keep tower, courtyard ward east (x 16, z 60..72); beacons over the south gate
-    k.at(15.8,0,64.5,()=>{twHall(k,{w:4.4,d:6.4,h:3.0,stoneWalls:1});k.at(0,0,0,()=>twGable(k,lv>=6?0xa8842a:0x45403e,6.4,4.4,2.0,.38,3.0),Math.PI/2);
+    k.at(15.8,0,64.5,()=>{twHall(k,{w:4.4,d:6.4,h:3.0,stoneWalls:1});k.at(0,0,0,()=>twGable(k,lv>=6?0x3e6a5e:0x45403e,6.4,4.4,2.0,.38,3.0),Math.PI/2);
       twDoor(k,-2.22,.36,0,1.1,1.9,-Math.PI/2);[-2,2].forEach(z=>twWindow(k,-2.24,1.8,z,.5,.8,-Math.PI/2,0xffd27a));kdBanner(k,-2.3,2.8,-1,-Math.PI/2,ban,.6,1.2);kdBanner(k,-2.3,2.8,1,-Math.PI/2,ban,.6,1.2);
       k.at(1.6,0,4.4,()=>{twStoneRing(k,TWC.stoneD,0,0,1.6,-.3,.6,.36);twStoneRing(k,TWC.stone,0,0,1.45,.6,7.6,.32);
         const n=12;for(let i=0;i<n;i++)if(i%2==0){const a=(i+.5)/n*6.283;k.p('c',TWC.stone,'box',Math.cos(a)*1.55,8.0,Math.sin(a)*1.55,.32,.7,.7,0,-a,0,.1)}
