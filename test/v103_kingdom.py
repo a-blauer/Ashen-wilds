@@ -98,5 +98,59 @@ def s(pg):
             ev("()=>{for(let i=0;i<3;i++){VT+=400;if(PV.upd)PV.upd(VT,.016);PV.r.render(PV.sc,PV.cam)}}");pg.screenshot(path=OUT+'/v103_evo.png')
         r=ev("()=>{KQM.ctab='ov';kqmCApply(true);return PV.cv&&PV.cv.parentNode===$('cvw')}")
         ok(r,'back on Overview the normal preview returns',r)
+    if want('deco'):
+        r=ev("""()=>{const o={};gold=1e6;DECO103.forEach(D=>dcBuy103(D.k));o.n=DECO103.length;o.on=DECO103.filter(D=>dcOn103(D.k)).length;
+          const T=TOWNS[0],pts=[];DECO103.forEach(D=>{(D.sp||[]).forEach(q=>pts.push([D.k,q[0],q[1]]));(DC103.col[D.k]||[]).forEach(c=>pts.push([D.k,c.x-T.cx,c.z-T.cy]))});
+          o.inLot=pts.filter(([k,x,z])=>LOT103.some(l=>Math.abs(x-l.x)<3.6&&Math.abs(z-l.z)<3.6)).map(q=>q[0]+'@'+q[1]+','+q[2]);
+          o.nearDoor=pts.filter(([k,x,z])=>LOT103.some(l=>{const d=lotDoor103(l);return Math.hypot(T.cx+x-d[0],T.cy+z-d[1])<1.6})).map(q=>q[0]+'@'+q[1]+','+q[2]);
+          dcToggle103('statue');o.off=[DC103.g.statue.visible,T.col.includes(DC103.col.statue[0])];dcToggle103('statue');o.on2=[DC103.g.statue.visible,T.col.includes(DC103.col.statue[0])];
+          saveGame(true);SH.deco={};dc103Sync();loadGame();o.after=DECO103.filter(D=>dcOn103(D.k)).length;
+          const st=.25,x0=T.cx-37,z0=T.cy-22,nx=Math.round(74/st),nz=Math.round(80/st),free=(x,z)=>!CR.some(([a,b])=>solid(x+a,z+b))&&!tcHit(x,z),seen=new Uint8Array(nx*nz),q=[];
+          const id=(x,z)=>{const i=Math.round((x-x0)/st),j=Math.round((z-z0)/st);return i<0||j<0||i>=nx||j>=nz?-1:j*nx+i};const s0=id(T.sp[0],T.sp[1]);seen[s0]=1;q.push(s0);
+          while(q.length){const c=q.pop(),i=c%nx,j=(c/nx)|0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const ii=i+a,jj=j+b;if(ii<0||jj<0||ii>=nx||jj>=nz)return;const k=jj*nx+ii;if(seen[k])return;const x=x0+ii*st,z=z0+jj*st;if(!free(x,z)){seen[k]=2;return}seen[k]=1;q.push(k)})}
+          const reach=(x,z,R)=>{for(let dz=-R;dz<=R;dz+=st)for(let dx=-R;dx<=R;dx+=st){if(dx*dx+dz*dz>R*R)continue;const k=id(x+dx,z+dz);if(k>=0&&seen[k]==1)return true}return false};
+          o.unreach=LOT103.filter(l=>!reach(...lotDoor103(l),1.6)).map(l=>l.id);o.gate=reach(T.cx,T.cy+T.sz+1,1.5);o.steward=reach(SHM.st.x,SHM.st.z,2.2);return o}""")
+        ok(r['on']==r['n'] and r['n']>=20,'every decoration can be bought (%d)'%r['n'],[r['on'],r['n']])
+        ok(not r['inLot'] and not r['nearDoor'],'no decoration stands on a lot or in front of a door',r)
+        ok(r['off']==[False,False] and r['on2']==[True,True],'switching off hides it and drops its collider; on brings it back',r)
+        ok(r['after']==r['n'],'save + load keeps the decorations',r['after'])
+        ok(not r['unreach'] and r['gate'] and r['steward'],'with every decoration on, every door, the gate and the Steward are reachable',r)
+        r=ev("()=>{openX('hold');KM103.tab='deco';rX();const o=[document.querySelectorAll('#xw .dccard').length,document.querySelectorAll('#xw [data-kmtab]').length];return o}")
+        ok(r[0]>=20 and r[1]==2,'the Steward window has a Decorations tab',r)
+        if SH:
+            pg.set_viewport_size({'width':1100,'height':700});pg.wait_for_timeout(300);pg.screenshot(path=OUT+'/v104_deco_tab.png');pg.set_viewport_size({'width':1000,'height':620})
+            ev("()=>{$('xw').classList.add('hide');KM103.tab='kingdom';const T=TOWNS[0];toPos(T.cx,T.cy+8);pl.visible=false;TOD=.3;STEP(1);FC([T.cx+10,T.ph+12,T.cy+22],[T.cx,T.ph+1,T.cy+2])}");L.shot(pg,OUT+'/v104_deco_plaza.png')
+            ev("()=>{const T=TOWNS[0];toPos(T.cx,T.cy+34);STEP(.5);FC([T.cx-4,T.ph+5,T.cy+20],[T.cx,T.ph+2,T.cy+40])}");L.shot(pg,OUT+'/v104_deco_avenue.png')
+            ev("()=>{const T=TOWNS[0];toPos(T.cx+25,T.cy+38);STEP(.5);FC([T.cx+22,T.ph+4,T.cy+30],[T.cx+33,T.ph+1.5,T.cy+42])}");L.shot(pg,OUT+'/v104_deco_corner.png')
+            ev("()=>{const T=TOWNS[0];toPos(T.cx-25,T.cy+10);STEP(.5);FC([T.cx-24,T.ph+4,T.cy+2],[T.cx-34,T.ph+2,T.cy+14])}");L.shot(pg,OUT+'/v104_deco_west.png')
+            ev("()=>{const T=TOWNS[0];toPos(T.cx,T.cy+8);TOD=.92;STEP(3);FC([T.cx,T.ph+30,T.cy+60],[T.cx,T.ph+6,T.cy+10],1)}");L.shot(pg,OUT+'/v104_deco_night.png')
+            ev("()=>{TOD=.3}")
+    if want('roles'):
+        r=ev("""()=>{const o={};gold=1e6;[0,1,2].forEach(i=>bossDone.add(i));if(HS103.h.length<2){['C2','D2'].forEach(id=>{if(lotFree103(id))hsBuy103(id)})}
+          const C=HS103.cit;o.n=C.length;const g0=gold;czTrain104(C[0],'egg');czTrain104(C[1],'fish');czTrain104(C[2],'hunt');o.cost=g0-gold;o.roles=C.slice(0,4).map(czRole104);
+          o.optEgg=czOpts104(C[0]).map(q=>q[0]);o.optFish=czOpts104(C[1]).map(q=>q[0]);o.optHunt=czOpts104(C[2]).map(q=>q[0]);
+          czTask103(C[0],o.optEgg[0]);czTask103(C[1],o.optFish[0]);czTask103(C[2],o.optHunt[0]);czTask103(C[3],'wood');
+          const e0=eggs.length,f0=sup.fish||0,gg=gold,w0=mats.wood;C.slice(0,4).forEach(c=>c.t0=Date.now()-czTrip104(c)-50);
+          const ec0=eggs.length;czTick103();o.egg=eggs.slice(e0).map(e=>e.sp);o.fish=(sup.fish||0)-f0;o.huntGold=gold-gg;o.wood=mats.wood-w0;
+          // the hunter alone, many trips: never an egg
+          const e1=eggs.length;C[0].task='';C[1].task='';C[3].task='';C[2].t0=Date.now()-czTrip104(C[2])*24-50;czTick103();o.huntEggs=eggs.length-e1;
+          o.trips=[czTrip104(C[0]),czTrip104(C[3])];saveGame(true);HS103.cit=[];loadGame();o.after=HS103.cit.slice(0,4).map(czRole104);return o}""")
+        print('roles',json.dumps(r)[:900])
+        ok(r['cost']==800+500+1000 and r['roles'][:3]==['egg','fish','hunt'],'training costs gold and changes the trade',r['roles'])
+        ok(len(r['egg'])==1 and r['egg'][0]==r['optEgg'][0].split(':')[1],'an egg collector brings back one egg of the chosen kind',r['egg'])
+        ok(r['fish']>=3,'a fisherman brings back fish',r['fish'])
+        ok(r['huntGold']>0 and r['huntEggs']==0,'a hunter brings back gold and never eggs',[r['huntGold'],r['huntEggs']])
+        ok(r['wood']==2 and r['trips']==[600000,480000],'gatherers still gather (8 min), trained trades take 10 min',[r['wood'],r['trips']])
+        ok(r['after']==r['roles'],'save + load keeps every trade',r['after'])
+        if SH:
+            ev("""()=>{const T=TOWNS[0],C=HS103.cit;C.forEach(c=>{c.task='';c.t0=0});toPos(T.cx,T.cy+15);pl.visible=false;STEP(.4);
+              CZ103.live.slice(0,4).forEach((o,i)=>{o.mode='';o.wait=999;o.g.position.set(T.cx-2.4+i*1.6,T.ph,T.cy+18);o.ry=Math.PI*.15+(i==1?-0.9:i==2?2.6:0);o.g.rotation.y=o.ry});STEP(.3);FC([T.cx+.1,T.ph+1.7,T.cy+23.4],[T.cx+.1,T.ph+.95,T.cy+18])}""")
+            L.shot(pg,OUT+'/v104_roles.png')
+            ev("""()=>{const T=TOWNS[0];CZ103.live.slice(0,4).forEach((o,i)=>{o.ry+=Math.PI;o.g.rotation.y=o.ry});STEP(.1);FC([T.cx+.1,T.ph+1.7,T.cy+23.4],[T.cx+.1,T.ph+.95,T.cy+18])}""")
+            L.shot(pg,OUT+'/v104_roles_back.png')
+        r=ev("()=>{openX('hold');KM103.tab='kingdom';KM103.focus='cit';rX();return [document.querySelectorAll('#xw [data-czr]').length,document.querySelectorAll('#xw .kmrole').length]}")
+        ok(r[0]>=4,'every citizen row has a training choice',r)
+        if SH:pg.set_viewport_size({'width':1100,'height':700});ev("()=>{const e=$('xwB').querySelector('.kmcits');if(e)e.scrollIntoView()}");pg.wait_for_timeout(300);pg.screenshot(path=OUT+'/v104_roles_menu.png');pg.set_viewport_size({'width':1000,'height':620})
+        ev("()=>{$('xw').classList.add('hide')}")
     print('CHECKS OK' if not fails else 'CHECKS FAILED: '+'; '.join(fails))
 play.run(s,w=1000,hh=620)

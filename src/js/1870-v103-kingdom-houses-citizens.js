@@ -60,21 +60,62 @@ function hsBuy103(id){const ok=hsCan103();if(!ok[0]){say(ok[1]+'.');return false
   const taken=new Set(HS103.cit.map(c=>c.n)),pool=HS103_CN.filter(q=>!taken.has(q));for(let j=0;j<2;j++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0]||('Citizen '+(HS103.cit.length+1));
     HS103.cit.push({n:k,h:n,task:'',t0:0,lk:Math.floor(Math.random()*1e6)})}
   lotSync103();const who=hsWho103(n);banner('🏠 '+nm.toUpperCase(),who+' move in','Give them work at the Stronghold Steward');sfx('power');hud();ui();try{saveGame(true)}catch(_){}return true}
-// ---------- gathering trips ----------
-function czTask103(c,m){if(m&&!hsMats103().some(q=>q[0]==m))return;c.task=m||'';c.t0=m?Date.now():0;c.vt=null;try{saveGame(true)}catch(_){}}
-function czLeft103(c){return c.task&&c.t0?Math.max(0,HS103_TRIP-(Date.now()-c.t0)):0}
-function czTick103(){const now=Date.now(),av=new Set(hsMats103().map(q=>q[0])),got={};let trips=0;
-  HS103.cit.forEach(c=>{if(!c.task)return;if(!av.has(c.task)){c.task='';c.t0=0;return}if(!c.t0)c.t0=now;if(now-c.t0>HS103_CAP)c.t0=now-HS103_CAP;
-    while(now-c.t0>=HS103_TRIP){c.t0+=HS103_TRIP;const n=HS103_LOAD[c.task]||1;mats[c.task]=(mats[c.task]||0)+n;got[c.task]=(got[c.task]||0)+n;trips++;c.vt=null;
-      if(trips<=3)HS103.lastMsg=c}});
-  if(!trips)return;const line=Object.keys(got).map(k=>matInfo(k)[1]+' '+got[k]+' '+matInfo(k)[0]).join(' · ');
-  if(trips==1&&HS103.lastMsg)say('🏘️ '+HS103.lastMsg.n+' brought back '+line);else say('🏘️ Your citizens brought back '+line);hsDirty&&hsDirty();try{if(typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
+// ---------- v104: roles. Every citizen starts as a gatherer; the Steward can train them for gold ----------
+//   gather  materials of a completed zone, every HS103_TRIP (8 min)        task = material key
+//   egg     one egg of a chosen species from a completed zone, every 10 min  task = 'zone:Species'
+//   fish    fish of a completed zone with water, every 10 min              task = 'zone'
+//   hunt    hunts a completed zone's monsters, every 10 min: gold, monster parts, now and then gear (never eggs)  task = 'zone'
+var CZR104={gather:{n:'Gatherer',i:'🧺',g:0,trip:HS103_TRIP,d:'Gathers materials'},egg:{n:'Egg Collector',i:'🥚',g:800,trip:10*60000,d:'Brings back one egg of a chosen kind'},
+  fish:{n:'Fisherman',i:'🎣',g:500,trip:10*60000,d:'Fishes a zone and brings back the catch'},hunt:{n:'Hunter',i:'🏹',g:1000,trip:10*60000,d:'Hunts a zone and brings back the spoils'}};
+var CZ104_EGGMAX=40;
+function czRole104(c){return CZR104[c.r]?c.r:'gather'}
+function czTrip104(c){return CZR104[czRole104(c)].trip}
+// the companion kinds whose eggs can be found in zone i: the families of its monsters at the zone's tier, plus its own creature
+function zEggs104(i){const p=PMAP[i];if(!p)return [];const S=new Set();(BIOEN[p.n]||[]).forEach(k=>{const f=EN[k]&&EN[k].fam,sp=f&&famTier(f,p.t);if(sp)S.add(sp)});const b=BIOMES[p.bi];if(b&&b.sp&&SP2[b.sp])S.add(b.sp);return [...S]}
+function zWater104(i){return zMat103()[i]&&zMat103()[i].has('clay')}
+function czZones104(){return [...bossDone].filter(i=>PMAP[i]).sort((a,b)=>a-b)}
+// [value, label] for every task this citizen may take now
+function czOpts104(c){const r=czRole104(c),Z=czZones104();
+  if(r=='gather')return hsMats103().map(([k,z])=>[k,matInfo(k)[1]+' Gather '+matInfo(k)[0]+' ('+z.join(', ')+')']);
+  if(r=='egg'){const o=[];Z.forEach(i=>zEggs104(i).forEach(sp=>o.push([i+':'+sp,'🥚 '+sp+' egg · Tier '+SP2[sp][1]+' ('+PMAP[i].n+')'])));return o}
+  if(r=='fish')return Z.filter(zWater104).map(i=>[String(i),'🎣 Fish the waters of '+PMAP[i].n]);
+  return Z.map(i=>[String(i),'🏹 Hunt in '+PMAP[i].n+' (Lv '+czHLv104(i)+')'])}
+function czOk104(c,v){return !v||czOpts104(c).some(q=>q[0]===v)}
+function czTaskTxt104(c){const r=czRole104(c),v=c.task;if(!v)return '';
+  if(r=='gather')return 'Gathering '+matInfo(v)[1]+' '+matInfo(v)[0]+' · '+(HS103_LOAD[v]||1)+' per trip';
+  if(r=='egg'){const [i,sp]=v.split(':');return 'Collecting '+sp+' eggs in '+(PMAP[+i]||{}).n+(eggs.length>=CZ104_EGGMAX?' · <span class="warn">your egg bag is full ('+CZ104_EGGMAX+')</span>':'')}
+  if(r=='fish')return 'Fishing in '+(PMAP[+v]||{}).n;return 'Hunting in '+(PMAP[+v]||{}).n}
+function czHLv104(i){return Math.max(1,((BOSSES[i]||{}).lvl||9)-3)}
+function czTask103(c,m){if(m&&!czOk104(c,m))return;c.task=m||'';c.t0=m?Date.now():0;c.vt=null;try{saveGame(true)}catch(_){}}
+function czLeft103(c){return c.task&&c.t0?Math.max(0,czTrip104(c)-(Date.now()-c.t0)):0}
+function czTrain104(c,r){if(!CZR104[r]||czRole104(c)===r)return false;const R=CZR104[r];if(gold<R.g){say('Training a '+R.n.toLowerCase()+' costs 🪙 '+R.g+'.');return false}
+  gold-=R.g;c.r=r;c.task='';c.t0=0;c.vt=null;czClear103();say(R.i+' '+c.n+' is now '+(r=='egg'?'an':'a')+' '+R.n.toLowerCase()+'.');sfx('power');hud();try{saveGame(true)}catch(_){}return true}
+// one finished trip: add the goods, return [icon, amount, name] pieces for the message
+function czTrip1_104(c,out){const r=czRole104(c),v=c.task;
+  if(r=='gather'){const n=HS103_LOAD[v]||1;mats[v]=(mats[v]||0)+n;out.push([matInfo(v)[1],n,matInfo(v)[0]]);return}
+  if(r=='egg'){const [i,sp]=v.split(':');if(!SP2[sp])return;if(eggs.length>=CZ104_EGGMAX){HS103.full=1;return}const eg=mkEgg(sp,SP2[sp][1]-1,.95+Math.random()*.15);eggs.push(eg);try{dex.egg.add(sp)}catch(_){}out.push(['🥚',1,sp+' Egg']);return}
+  const zi=+v,p=PMAP[zi];if(!p)return;const T=p.t;
+  if(r=='fish'){let fsh=0;for(let k=0;k<3;k++){const pool=FISH.filter(f=>f[2]<=T),w=pool.map(f=>[8,3,1,.15][f[3]]*(f[2]==T?1.5:1));let x=Math.random()*w.reduce((a,b)=>a+b,0),f=pool[0];for(let j=0;j<pool.length;j++){x-=w[j];if(x<0){f=pool[j];break}}
+      fishLog[f[0]]=(fishLog[f[0]]||0)+1;giveS('fish',f[3]+1);fsh+=f[3]+1}out.push(['🐟',fsh,'Fish']);if(Math.random()<.05){const k=RUNEK[R(0,RUNEK.length-1)];giveS(k,1);out.push(['🔮',1,'rune'])}return}
+  // hunt: four kills of the zone's monsters at its level; the same drop odds as in the field, without eggs
+  const L=czHLv104(zi),E=BIOEN[p.n]||[];let g=0;const got={};
+  for(let k=0;k<4;k++){const en=EN[E[R(0,E.length-1)]]||{},fam=en.fam||'Beast';g+=Math.max(1,Math.round((3+L*1.4)*(.7+Math.random()*.6)*.65));
+    if(Math.random()<.18){const m=FAMD[fam].mat;got[m]=(got[m]||0)+R(1,2)}if(Math.random()<.1){const m=UPM[T-1][0];got[m]=(got[m]||0)+1}
+    if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<.1){giveS('meat',1);out.push(['🍖',1,'Meat'])}
+    if(Math.random()<.035){const it=genItem(L,{minR:0});gear.push(it);out.push([icoOf(it),1,itName(it)])}}
+  g=Math.round(g*(1+[0,.1,.2,.3][shL('treas')]));gold+=g;out.push(['🪙',g,'gold']);for(const m in got){mats[m]=(mats[m]||0)+got[m];out.push([matInfo(m)[1],got[m],matInfo(m)[0]])}}
+function czTick103(){const now=Date.now();let trips=0;const out=[];HS103.full=0;
+  HS103.cit.forEach(c=>{if(!c.task)return;if(!czOk104(c,c.task)){c.task='';c.t0=0;return}if(!c.t0)c.t0=now;if(now-c.t0>HS103_CAP)c.t0=now-HS103_CAP;const T=czTrip104(c);
+    while(now-c.t0>=T){c.t0+=T;czTrip1_104(c,out);trips++;c.vt=null;HS103.lastMsg=c}});
+  if(!trips)return;const sum={};out.forEach(([i,n,k])=>{const q=i+'|'+k;sum[q]=(sum[q]||0)+n});const line=Object.keys(sum).map(q=>{const [i,k]=q.split('|');return i+' '+sum[q]+' '+k}).join(' · ');
+  if(line)say('🏘️ '+(trips==1?HS103.lastMsg.n:'Your citizens')+' brought back '+line);if(HS103.full)say('🥚 Your egg bag is full ('+CZ104_EGGMAX+'): hatch or consume some so the egg collectors can bring more.');
+  hsDirty&&hsDirty();try{hud()}catch(_){}try{if(typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
 setInterval(()=>{try{czTick103()}catch(e){console.warn('v103 citizens',e)}},1000);
 // ---------- saves ----------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.khs=HS103.h.map(h=>({nm:h.nm,v:h.v}));o.kcit=HS103.cit.map(c=>({n:c.n,h:c.h,task:c.task,t0:c.t0,lk:c.lk}));return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.khs=HS103.h.map(h=>({nm:h.nm,v:h.v}));o.kcit=HS103.cit.map(c=>({n:c.n,h:c.h,r:czRole104(c),task:c.task,t0:c.t0,lk:c.lk}));return o}}
 {const f=x2Load;x2Load=function(s){for(const i in HS103.g)hsDrop103(+i);HS103.h=[];HS103.cit=[];czClear103();
   if(s&&Array.isArray(s.khs))s.khs.slice(0,HS103_MAX).forEach(h=>{if(h&&typeof h.nm=='string')HS103.h.push({nm:h.nm.slice(0,40),v:Math.max(0,Math.min(2,h.v|0))})});
-  if(s&&Array.isArray(s.kcit))s.kcit.forEach(c=>{if(c&&typeof c.n=='string'&&HS103.h[c.h|0]&&HS103.cit.length<HS103_MAX*2)HS103.cit.push({n:c.n.slice(0,24),h:c.h|0,task:RES[c.task]?c.task:'',t0:+c.t0||0,lk:c.lk|0})});
+  if(s&&Array.isArray(s.kcit))s.kcit.forEach(c=>{if(c&&typeof c.n=='string'&&HS103.h[c.h|0]&&HS103.cit.length<HS103_MAX*2)HS103.cit.push({n:c.n.slice(0,24),h:c.h|0,r:CZR104[c.r]?c.r:'gather',task:typeof c.task=='string'?c.task.slice(0,40):'',t0:+c.t0||0,lk:c.lk|0})});
   return f.apply(this,arguments)}}
 // a house is solid and lot-bound: the lot table must know it is built
 // (lotBuilt103 reads HS103.h; lotAuto103 drops any 'h:' key whose house is gone)
@@ -107,10 +148,14 @@ function czLen103(P){let s=0;for(let i=1;i<P.length;i++)s+=Math.hypot(P[i][0]-P[
 function czAt103(P,d){for(let i=1;i<P.length;i++){const a=P[i-1],b=P[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(d<=l||i==P.length-1){const t=l?Math.min(1,d/l):1;return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}d-=l}const q=P[P.length-1];return [q[0],q[1],0]}
 // ---------- citizen models ----------
 var CZ103_ROBE=[0x5a4a3a,0x3a4a5a,0x4a3a2a,0x5a3a3a,0x3a5040,0x6a5a40,0x4a4a52,0x5a4060],CZ103_HAT=['','cap','','','cap',''];
-function czLook103(c){const r=n=>(c.lk>>n)&7;return {robe:CZ103_ROBE[r(0)],trim:[0x2a1a12,0x8a6a2a,0x3a2a1a,0xc9a24a,0x1a2a3a,0x6a3a2a,0x2a2a30,0x5a4a2a][r(3)],hat:CZ103_HAT[r(6)%6],hatC:[0x3a2a1a,0x5a4a2a,0x2a3a2a,0x4a2a2a][r(9)&3],apron:r(11)<2?1:0}}
+function czLook103(c){const r=n=>(c.lk>>n)&7,ro=czRole104(c);
+  if(ro=='egg')return {robe:0xd8ccb0,trim:[0x5a7a3a,0x4a6a3a][r(0)&1],hat:'cap',hatC:0x4a6a3a,apron:1};
+  if(ro=='fish')return {robe:[0x2e4a5e,0x34505a][r(0)&1],trim:0xc8b890,hat:'',hatC:0,apron:0};
+  if(ro=='hunt')return {robe:[0x3a3a22,0x33301e][r(0)&1],trim:0x6a4a2a,hat:'cap',hatC:0x2a2a1a,apron:0};
+  return {robe:CZ103_ROBE[r(0)],trim:[0x2a1a12,0x8a6a2a,0x3a2a1a,0xc9a24a,0x1a2a3a,0x6a3a2a,0x2a2a30,0x5a4a2a][r(3)],hat:CZ103_HAT[r(6)%6],hatC:[0x3a2a1a,0x5a4a2a,0x2a3a2a,0x4a2a2a][r(9)&3],apron:r(11)<2?1:0}}
 function czModel103(c){const o=czLook103(c),rig=idlNpcBody(o),g=new THREE.Group();rig.meshes.forEach(m=>g.add(m));g.bones=rig.bones;g.userData.psNo=1;
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txTex([{t:c.n,f:'700 30px'}],256,56,'rgba(10,14,20,.7)','#f4e9c8','rgba(255,214,120,.5)'),transparent:true,depthWrite:false}));
-  sp.scale.set(1.1,.24,1);sp.position.set(0,2.0,0);g.add(sp);g.userData.lab=sp;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txTex([{t:c.n+(czRole104(c)!='gather'?' · '+CZR104[czRole104(c)].n:''),f:'700 28px'}],320,56,'rgba(10,14,20,.7)','#f4e9c8','rgba(255,214,120,.5)'),transparent:true,depthWrite:false}));
+  sp.scale.set(1.3,.23,1);sp.position.set(0,2.0,0);g.add(sp);g.userData.lab=sp;try{czProps104(g,c)}catch(e){console.warn('v104 props',e)}
   // a sack on the back (coming home) and a tool in the hand (going out)
   const sk=new THREE.Mesh(new THREE.IcosahedronGeometry(.15,0),new THREE.MeshLambertMaterial({color:0x8a6a44}));sk.scale.set(1,1.2,.75);sk.position.set(0,.06,-.15);sk.visible=false;
   (g.bones.chest||g).add(sk);g.userData.sack=sk;
@@ -164,3 +209,23 @@ function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!
 {const f=townPortalPrompt;townPortalPrompt=function(T){if(T===TOWNS[0]){const p=pl.position;for(let i=0;i<HS103.h.length;i++){const l=lotOf103('h:'+i);if(!l)continue;const d=lotDoor103(l);
     if(Math.hypot(p.x-d[0],p.z-d[1])<2.2)return {label:'F · '+HS103.h[i].nm+' · '+hsWho103(i),fn:()=>{KM103.focus='cit';KM103.house=i;openX('hold')}}}}return f.apply(this,arguments)}}
 var KM103=KM103||{};
+
+// ---------- v104: what each trade carries (on the back = chest bone; a hat on the head bone) ----------
+function czProps104(g,c){const r=czRole104(c),B=g.bones,M=col=>new THREE.MeshLambertMaterial({color:col}),add=(p,m,x,y,z,rx,ry,rz)=>{m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,rz||0);(p||g).add(m);return m};
+  const ch=B.chest||g,hd=B.head||g,role=new THREE.Group();ch.add(role);g.userData.role=role;
+  if(r=='gather'){// a coil of rope and a hatchet on the belt
+    add(role,new THREE.Mesh(new THREE.TorusGeometry(.08,.025,4,8),M(0x9a8458)),.17,-.18,-.08,0,1.3,0);return}
+  if(r=='egg'){// a big wicker basket on the back with eggs in it, and a shepherd's crook
+    const bk=add(role,new THREE.Mesh(new THREE.CylinderGeometry(.19,.14,.3,8,1,true),new THREE.MeshLambertMaterial({color:0xa8844a,side:THREE.DoubleSide})),0,.02,-.22,-.15);
+    [[0,0xe8dcc0],[.08,0xd8a84a],[-.08,0x9ad8c0]].forEach(([x,col],i)=>add(bk,new THREE.Mesh(new THREE.SphereGeometry(.065,6,5),M(col)),x,.13+(i?0:.03),i?.03:-.02).scale.set(1,1.3,1));
+    const ck=new THREE.Group();add(ch,ck,.24,-.1,-.15,-.25,0,.12);add(ck,new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,1.5,5),M(0x6a4a2a)),0,.2,0);add(ck,new THREE.Mesh(new THREE.TorusGeometry(.09,.018,4,8,Math.PI),M(0x6a4a2a)),-.09,.95,0);role.add(ck);return}
+  if(r=='fish'){// a broad straw hat, a rod over the shoulder and a creel at the hip
+    add(hd,new THREE.Mesh(new THREE.CylinderGeometry(.25,.27,.025,10),M(0xc8a860)),0,.16,0);add(hd,new THREE.Mesh(new THREE.ConeGeometry(.13,.14,8),M(0xb89850)),0,.23,0);
+    const rod=new THREE.Group();add(role,rod,.12,.05,-.12,-.75,0,-.2);add(rod,new THREE.Mesh(new THREE.CylinderGeometry(.008,.016,1.9,4),M(0x7a5a2a)),0,.75,0);
+    add(rod,new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.6,3),M(0xe8e8e8)),.0,1.4,.04,.4);
+    add(role,new THREE.Mesh(new THREE.BoxGeometry(.16,.14,.12),M(0x9a7a42)),-.2,-.28,-.05,0,0,.1);return}
+  if(r=='hunt'){// a bow and a quiver on the back, a fur mantle on the shoulders
+    const bow=add(role,new THREE.Group(),.02,-.02,-.2,0,0,.5);const arc=add(bow,new THREE.Mesh(new THREE.TorusGeometry(.4,.016,4,12,Math.PI*.7),M(0x4a2e18)),-.3,0,0,0,0,-Math.PI*.35);add(bow,new THREE.Mesh(new THREE.CylinderGeometry(.003,.003,.72,3),M(0xd8d0b8)),.0,0,0);
+    const qv=add(role,new THREE.Mesh(new THREE.CylinderGeometry(.06,.05,.42,6),M(0x5a3a22)),-.1,.05,-.19,0,0,.45);
+    for(let i=0;i<3;i++)add(qv,new THREE.Mesh(new THREE.BoxGeometry(.03,.09,.008),M([0xc83a3a,0xe8e0d0,0x3a3a3a][i])),(i-1)*.025,.25,0);
+    add(role,new THREE.Mesh(new THREE.TorusGeometry(.15,.07,5,10),M(0x6a5a44)),0,.12,0,Math.PI/2,0,0).scale.set(1.15,1,.8)}}

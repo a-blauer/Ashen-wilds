@@ -34,6 +34,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
 | stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
 | v103 kingdom: building lots `LOT103` (`SH.pos`), houses + citizens `HS103`, the one Steward window, working shopkeepers `WK103` | `1860`–`1900` (v103) |
+| v104 decorations (`DECO103`, the Steward's Decorations tab), citizen trades (`CZR104`: gatherer, egg collector, fisherman, hunter) | `1910-v104-decorations.js`, `1870` (roles), `1880` (menu) |
 | v103 evolution preview (now → next stage in the Spells & Evolution tab) | `1890-v103-evolve-preview.js` |
 | zone roster, atmosphere, grades | `0550-v71-*` |
 | companions & eggs window, fusion window | `0570-v74-*`, `1780-v100-fusemenu*` |
@@ -79,6 +80,12 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Citizens (v103)**: two per house, up to `HS103_MAX` houses. A gather task (material from a zone whose Sovereign is
   defeated) pays `HS103_LOAD` every `HS103_TRIP`; catch-up after being away is capped (`HS103_CAP`). Saved as `x2.khs`,
   `x2.kcit`. They walk on an A* grid built from the town's own collision (`czGrid103`).
+- **Trades (v104)**: a citizen is a gatherer until trained at the Steward (gold): egg collector (one egg of a chosen
+  species of a completed zone per 10 min, stops while the egg bag holds `CZ104_EGGMAX`), fisherman (3 fish of the zone's
+  tier per trip, zones with water), hunter (4 simulated kills at the zone's level: gold, family parts, rare gear — never
+  eggs). Role is `c.r`, task strings per role are documented at `CZR104`. Each trade has its own look (`czLook103`, `czProps104`).
+- **Decorations (v104)**: fixed spots outside every lot and door spot (checked by `PART=deco python3 v103_kingdom.py`);
+  `SH.deco[k]` 1 shown / 0 owned but hidden, saved as `x2.kdeco`.
 
 ## Retired systems
 
@@ -115,7 +122,7 @@ python3 v73t.py              # hit feedback, low health, death, Rise Again   (TI
 python3 v78t.py              # every weapon type's attack, Stable + mounts, items
 python3 mpt.py mpsteps.py    # two-player co-op over a fake room
 python3 v100_town.py         # Duskhold layout, reachability, shops, portals (portal3-5 / portal prompt checks are stale since v101)
-python3 v103_kingdom.py      # lots, houses, citizens, the Steward window, evolution preview, keepers (prints CHECKS OK)
+python3 v103_kingdom.py      # lots, houses, citizens + trades, decorations, the Steward window, evolution preview, keepers (CHECKS OK)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
 python3 probe.py file.js     # run one JS snippet in a started game, print the full JSON result (OUTF=out.json)
 python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den
