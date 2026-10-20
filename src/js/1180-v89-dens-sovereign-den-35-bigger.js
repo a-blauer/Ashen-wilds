@@ -1,4 +1,4 @@
-// ================= v89 dens: every Sovereign den is 35% bigger =================
+// ================= v89 dens: every Sovereign den is 35% bigger (v108: DK = 2, twice the original size) =================
 // The den files (zzK_den*.js) still build each den at its original size (radius 14 arena). Right after that, this file
 // maps the whole den outward from its centre: horizontally by DK (1.35) and in height above the ground by DKY (1.15).
 //  - world-space den meshes (floors, walls, soups) get every vertex moved: x,z scaled about the centre, y re-draped onto
@@ -51,7 +51,7 @@ function denRetile(){const W0=W,by=ARN.map(()=>new Set());
     for(let z=Math.floor(A.cz-R);z<=A.cz+R;z++)for(let x=Math.floor(A.cx-R);x<=A.cx+R;x++){const ox=Math.round(A.cx+(x-A.cx)/DK),oz=Math.round(A.cz+(z-A.cz)/DK),ok=oz*W0+ox;
       if(!S.has(ok))continue;const before=DENB.size;denBlock(x,z);if(DENB.size>before){if(!img.has(ok))img.set(ok,[]);img.get(ok).push(z*W0+x)}}
     DENS.img[A.i]=img})}
-function denImg(x,z){if(!DENS.on)return null;for(const A of ARN){const m=DENS.img[A.i];if(!m||Math.hypot(x-A.cx,z-A.cz)>30)continue;
+function denImg(x,z){if(!DENS.on)return null;for(const A of ARN){const m=DENS.img[A.i];if(!m||Math.hypot(x-A.cx,z-A.cz)>26*DK+3)continue;
   const L=m.get(Math.round(A.cz+(z-A.cz)/DK)*W+Math.round(A.cx+(x-A.cx)/DK));if(L)return L}return null}
 function denScaleAll(){if(DENS.on)return;
   ARN.forEach(A=>{try{const seen=new Set(),grow=new Map();denMapState(A,grow);A.g.children.slice().forEach(o=>denMapObj(A,o,seen,grow))}catch(err){console.error('den scale',A.i,err)}});

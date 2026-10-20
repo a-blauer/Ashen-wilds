@@ -16,7 +16,7 @@ function cvgBuild(){const B=CVG.B;CVG.g=new Map();CVG.live=new Set();CVG.n=CHL.l
 // the Portal Road) draw; the other instances sit across the void and are separate maps now
 var CVA={k:null,r:null};
 function cvKey(){const I=curIns();return I?I.g:-1}
-function cvOK(c,k){if(c.cvk===k)return c.cvok;if(CVA.k!==k){CVA.k=k;const I=k>=0?INSL[k]:null;CVA.r=I?[I.x0-3,I.y0-3,I.x0+PMW+3,I.y0+PMH+3]:[-1e5,-1e5,PM_X0-3,1e5]}
+function cvOK(c,k){if(c.cvk===k)return c.cvok;if(CVA.k!==k){CVA.k=k;const I=k>=0?INSL[k]:null;CVA.r=I?[I.x0-3,I.y0-3,I.x0+I.w+3,I.y0+I.h+3]:[-1e5,-1e5,PM_X0-3,1e5]}
   const r=CVA.r,b=c.box;c.cvk=k;c.cvok=b.max.x>=r[0]&&b.min.x<=r[2]&&b.max.z>=r[1]&&b.min.z<=r[3];return c.cvok}
 function chunkVis(){
   if(CVG.n!==CHL.length)cvgBuild();

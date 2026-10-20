@@ -60,7 +60,7 @@ function featTick(dt,now,al){
     if(hero.hp<rec.hp-.01){rec=null;say('Recall interrupted!')}
     else{rec.hp=hero.hp;rec.t+=dt;if(rec.t>=rec.need){rec=null;fadeTo(recallTown)}}
   }
-  $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+PMAP[INST.r].n+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')};
+  $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+(INSL[INST.r]?INSL[INST.r].n:'zone')+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')};
   const emo=party.slice(0,2).some(c=>c.emp&&c.h>0);
   if(pl.mat){pl.mat.emissive.setHex(emo?0xffc04a:0);pl.mat.emissiveIntensity=emo?.28+.1*Math.sin(now/300):0}
   if(emo&&dt>0){if(Math.random()<.3)burst(V(pl.position.x+(Math.random()-.5)*.6,.2,pl.position.z+(Math.random()-.5)*.6),0xffd24a,1,.2,.9,.9);if(now%800<dt*1000)ring(pl.position,0xffd24a,1.6,600)}

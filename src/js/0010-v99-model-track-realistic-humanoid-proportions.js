@@ -67,5 +67,5 @@ var AW_PROP99=(function(){
   // the hero's hip height in the new rest pose (riding seats the hips on the saddle)
   S.hipOf=()=>{try{return plan(HB,'real').hip}catch(_){return .55}};
   S.forKey=forKey;S.plan=plan;S.PRE=PRE;return S})();
-var DK=1.35,DKY=1.15;
+var DK=2,DKY=1.3; // den scale (1180); v108: 1.35 -> 2 (Sovereign dens are much larger)
 

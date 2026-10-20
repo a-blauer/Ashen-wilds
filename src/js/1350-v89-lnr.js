@@ -1,6 +1,6 @@
 // =====================================================================================================
 var LNR={};   // per-instance reachability (flood fill from the entrance); v106: keyed by instance key g = zone*3+k
-function lnZB(g){const I=INSL[g];return {x0:I.x0,y0:I.y0,w:PMW,h:PMH}}
+function lnZB(g){const I=INSL[g];return {x0:I.x0,y0:I.y0,w:I.w,h:I.h}}
 function lnReach(g){const B=lnZB(g),key=g+':'+B.w+'x'+B.h;let R=LNR[g];if(R&&R.key==key)return R;
   const a=new Uint8Array(B.w*B.h),p=INSL[g],q=[];
   const free=(x,y)=>{const t=MAP[y]&&MAP[y][x];return !!t&&t!='~'&&!solid(x,y)};
@@ -12,9 +12,9 @@ function lnReach(g){const B=lnZB(g),key=g+':'+B.w+'x'+B.h;let R=LNR[g];if(R&&R.k
   R=LNR[g]={key,a,B,n:q.length/2};return R}
 function lnReachable(g,x,y){const R=lnReach(g),B=R.B;x=Math.round(x);y=Math.round(y);if(x<B.x0||y<B.y0||x>=B.x0+B.w||y>=B.y0+B.h)return false;return !!R.a[(y-B.y0)*B.w+(x-B.x0)]}
 // the instance a map belongs to: m.r = zone, m.k = instance (maps from before v106 have no m.k: instance I)
-function tmG(m){return m.r*PMI+(m.k|0)}
+function tmG(m){return insG(m.r,m.k|0)}
 // a good spot for a buried treasure: reachable, open around it, not in the den / gateway / wave arena / a camp / near the entrance
-function tmOk(g,x,y){if(g<0||!INSL[g])return false;const p=INSL[g],B=lnZB(g);x=Math.round(x);y=Math.round(y);
+function tmOk(g,x,y){if(g<0||!INSL[g]||!INSL[g].fld)return false;const p=INSL[g],B=lnZB(g);x=Math.round(x);y=Math.round(y);
   if(x<B.x0+4||y<B.y0+4||x>=B.x0+B.w-4||y>=B.y0+B.h-4||rgAt(x,y)!==g)return false;
   for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(!lnReachable(g,x+i,y+j))return false;
   const R0=(typeof ARENA_R!='undefined'?ARENA_R:14);
@@ -29,8 +29,8 @@ function tmPick(g,near){const B=lnZB(g);let fb=null;
     if(!fb)fb=[x,y];if(near&&rgAt(near.x,near.z)===g&&Math.hypot(x-near.x,y-near.z)<35)continue;return [x,y]}
   return fb}
 // the instance a new map leads to: the one you are in; in Duskhold, the instance that suits the hero's level
-function tmZoneFor(p){let g=rgAt(Math.round(p.x),Math.round(p.z));if(g>=0)return g;
-  const L=hero.lvl||1;let I=INSL.find(q=>L>=q.lv[0]&&L<=q.lv[1]);if(!I)I=L>PMAP[PMAP.length-1].lv[1]?INSL[INSL.length-1]:INSL[0];return I.g}
+function tmZoneFor(p){let g=rgAt(Math.round(p.x),Math.round(p.z));if(g>=0)return INSL[g].fld?g:insG(INSL[g].z,PMF-1); // v108: from the den or the trial: instance III
+  const L=hero.lvl||1,F=INSL.filter(q=>q.fld);let I=F.find(q=>L>=q.lv[0]&&L<=q.lv[1]);if(!I)I=L>PMAP[PMAP.length-1].lv[1]?F[F.length-1]:F[0];return I.g}
 function tmName(m){const I=INSL[tmG(m)];return 'Treasure Map — '+(I?I.n:'Unknown lands')}
 function tmNewId(){let id=1;tmaps.forEach(m=>{if(m.id>=id)id=m.id+1});return id}
 var TM_DIR=['east','south-east','south','south-west','west','north-west','north','north-east'];
@@ -49,7 +49,7 @@ function giveMap(p,rz){const g=rz!=null?rz:tmZoneFor(p);const s=tmPick(g,p);if(!
 {const f=digTreasure;digTreasure=function(m){if(!m||!tmaps.includes(m))return;const n=tmName(m);f.apply(this,arguments);try{say('🗺️ '+n+' is used up — the treasure is yours!');lnMarkSync()}catch(_){}lnBagRefresh()}}
 // old saves: give each map a zone and an instance, re-place it if the spot is not reachable
 function tmMigrate(){let ch=0;(tmaps||[]).forEach(m=>{if(m.r==null||!PMAP[m.r]){let r=regionAt(Math.round(m.x),Math.round(m.z));if(r<0)r=Math.max(0,PMAP.findIndex(p=>p.t==m.T));m.r=r;ch=1}
-    if(m.k==null||!PMAP[m.r].ins[m.k]){const I=insAt(Math.round(m.x),Math.round(m.z));m.k=I&&I.z===m.r?I.k:0;ch=1}
+    if(m.k==null||!(m.k<PMF)){const I=insAt(Math.round(m.x),Math.round(m.z));m.k=I&&I.z===m.r&&I.fld?I.k:0;ch=1}
     m.T=PMAP[m.r].t;if(!tmOk(tmG(m),m.x,m.z)){const s=tmPick(tmG(m),null);if(s){m.x=s[0];m.z=s[1];ch=1}}});
   const ids=new Set();tmaps.forEach(m=>{if(!m.id||ids.has(m.id))m.id=tmNewId()+ids.size;ids.add(m.id)});return ch}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{tmMigrate()}catch(e){console.warn('tmaps migrate',e)}try{lnMarkSync()}catch(_){}return r}}

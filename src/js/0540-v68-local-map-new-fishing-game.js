@@ -2,7 +2,7 @@
 // ---------- the map (N) shows only the area you are in ----------
 function openWMap(){
   const c=$('wmc'),r=curMap(),I=curIns(),T=TOWNS[0];let x0,y0,w,h,title,sub; // v106: the instance you are in
-  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=PMW;h=PMH;title=I.n;sub=(p.sub||'')+' · Lv '+I.lv[0]+'–'+I.lv[1]}
+  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · Lv '+I.lv[0]+'–'+I.lv[1]:'')}
   else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
@@ -11,10 +11,10 @@ function openWMap(){
   const dia=(x,y,col,sz)=>{sz=sz||7;g.fillStyle=col;g.beginPath();g.moveTo(x,y-sz);g.lineTo(x+sz*.85,y);g.lineTo(x,y+sz);g.lineTo(x-sz*.85,y);g.fill();g.strokeStyle='#000';g.lineWidth=1.2;g.stroke()};
   if(r>=0){const p=PMAP[r];
     CAMPS.forEach(C=>{if(C.ig!==I.g)return;const [x,y]=P(C.x,C.z),cl=campCleared(C);g.fillStyle=cl?'rgba(110,231,183,.35)':'rgba(239,68,68,.35)';g.beginPath();g.arc(x,y,CAMP_R*s*.55,0,6.28);g.fill();lab(cl?'⛺ cleared':'⛺ '+(C.th?C.th.n:'Camp'),x,y,cl?'#bfe8a0':'#ffc8c0')});
-    {const [x,y]=P(I.en[0],I.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
-    if(!I.den){const [x,y]=P(I.ba[0],I.ba[1]);dia(x,y,'#9ad8ff',9);lab('🌀 '+p.ins[I.k+1].n,x,y+18,'#cfe3ff')}
+    if(!I.tri){const [x,y]=P(I.en[0],I.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
+    if(I.tri){const [x,y]=P(I.wa[0],I.wa[1]);dia(x,y,'#ff9a5a',9);lab('⚔️ Wave Trial',x,y+18,'#ffd8b0')}
+    else if(!I.den){const [x,y]=P(I.ba[0],I.ba[1]);dia(x,y,'#9ad8ff',9);lab('🌀 '+p.ins[I.k+1].n,x,y+18,'#cfe3ff')}
     else{const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
-    if(I.den&&bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
   }else{{const [x,y]=P(T.cx,T.cy);g.fillStyle='#fbbf24';g.fillRect(x-7,y-7,14,14);g.strokeStyle='#000';g.lineWidth=2;g.strokeRect(x-7,y-7,14,14);lab('Duskhold',x,y+20)}
     if(typeof TWN100_wmap=='function')TWN100_wmap(g,P,lab,s);}
   (typeof tmaps!='undefined'?tmaps:[]).forEach(m=>{if(!inV(m.x,m.z))return;const [x,y]=P(m.x,m.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('✕',x,y)});
@@ -22,7 +22,7 @@ function openWMap(){
   {const [x,y]=P(pl.position.x,pl.position.z);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(x,y,10,0,6.28);g.stroke();g.fillStyle='#4ade80';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke()}
   g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,c.width,40);g.font='700 16px system-ui,sans-serif';g.fillStyle='#f0e0b8';g.fillText(title.toUpperCase(),c.width/2,15);g.font='600 11px system-ui,sans-serif';g.fillStyle='#c9a45a';g.fillText(sub,c.width/2,31);
   g.textAlign='left';g.font='600 11px system-ui,sans-serif';g.fillStyle='rgba(0,0,0,.6)';g.fillRect(8,c.height-26,Math.min(c.width-16,430),20);g.fillStyle='#ddd';
-  g.fillText(r>=0?'● you   ⛺ camp   ◆ '+(I.den?'Sovereign':'gateway')+'   ✕ treasure'+(typeof MP!='undefined'&&MP.on?'   🔵 ally':''):'● you   ■ town   🌀 portals',16,c.height-16);
+  g.fillText(r>=0?'● you   '+(I.fld?'⛺ camp   ':'')+'◆ '+(I.den?'Sovereign':I.tri?'arena':'gateway')+'   ✕ treasure'+(typeof MP!='undefined'&&MP.on?'   🔵 ally':''):'● you   ■ town   🌀 portals',16,c.height-16);
   $('wmap').classList.remove('hide')}
 
 // ---------- fishing: false nibbles, a quick strike, then a timing dial fight ----------

@@ -6,15 +6,17 @@ var ROST={r:-9,slots:[],left:0,quiet:false};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
 // v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
-var ROST_G=65,RESP_T=30,RESP_NEAR=6;
+// v108: a field instance is half a v106 one again: 33 roaming groups and 3 camps each
+var ROST_G=33,RESP_T=30,RESP_NEAR=6;
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)
   enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
+  if(!I.fld){ROST.r=r;ROST.slots=[];ROST.quiet=false;return} // v108: the den and the wave trial have no roaming creatures
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
   // roaming groups spread across the whole instance
-  const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(PMW-12)),z=I.y0+6+Math.floor(Math.random()*(PMH-12));
+  const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(I.w-12)),z=I.y0+6+Math.floor(Math.random()*(I.h-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.ig===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
     if(Math.hypot(x-I.ba[0],z-I.ba[1])<BR||(I.wa&&Math.hypot(x-I.wa[0],z-I.wa[1])<20)||Math.hypot(x-I.en[0],z-I.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}

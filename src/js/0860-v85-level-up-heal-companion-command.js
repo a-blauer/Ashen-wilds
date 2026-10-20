@@ -90,8 +90,8 @@ setInterval(()=>{try{if($('bag')&&!$('bag').classList.contains('hide')&&HP&&bagS
 // fresh at its entrance instead.
 var INST=null,RECBACK=false;
 const instMP=()=>typeof MP!='undefined'&&MP.on&&MP.host&&MP.host!==MP.me;
-function instSave(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
-  const now=nowP();INST={v:106,r,x:pl.position.x,z:pl.position.z,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1,rl:s.dead?Math.max(0,(s.rt||0)-now):0,rt:0}))};
+function instSave(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0||ROST.r!==r||(!ROST.slots.length&&!(INSL[r]&&INSL[r].den))||instMP()||(typeof WV!='undefined'&&WV))return;
+  const now=nowP();INST={v:108,r,x:pl.position.x,z:pl.position.z,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1,rl:s.dead?Math.max(0,(s.rt||0)-now):0,rt:0}))};
   enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&rgAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
 function instRestore(){const I=INST;if(!I||!INSL[I.r])return false;const now=nowP();ROST.r=I.r;ROST.quiet=false;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null,rt:s.dead?now+(s.rl||0):0}));
   const N=INSL[I.r],p=PMAP[N.z];toPos(I.x,I.z);INST=null;banner(p.ic+' '+N.n.toUpperCase(),'Back where you left off','Fallen creatures return '+RESP_T+' seconds after they die');return true}
@@ -104,11 +104,11 @@ function instRestore(){const I=INST;if(!I||!INSL[I.r])return false;const now=now
   if(rec)RECBACK=false;return f.apply(this,arguments)}}
 $('recallBtn').onclick=()=>doRecall();
 // entering an instance through its portal starts it fresh, so a saved spot in that same instance is dropped
-{const f=enterMap;enterMap=function(i,k){if(INST&&INST.r===i*PMI+(k|0)&&!instMP())INST=null;return f.apply(this,arguments)}}
+{const f=enterMap;enterMap=function(i,k){if(INST&&INST.r===insG(i,k|0)&&!instMP())INST=null;return f.apply(this,arguments)}}
 // a hint while a spot is saved
 {const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&INSL[INST.r]&&curMap()<0){const b=$('buffs'),n=INSL[INST.r].n;if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to where you left ${n}">🌀 ${n} · T to return</span>`)}}catch(_){}}}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
-{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===106?s.inst:null}catch(_){INST=null}return r}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===108?s.inst:null}catch(_){INST=null}return r}}
 
 // ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
 var fCon=null;

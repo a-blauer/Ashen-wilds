@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG: five hero classes, hatchable companions, the floating stronghold Duskhold,
-six portal zones (three instances each) ending in a Sovereign den, wave trials, mounts, fishing, crafting at town stations and online co-op.
+six portal zones (three field instances, a Sovereign's Den and a Wave Trial each), wave trials, mounts, fishing, crafting at town stations and online co-op.
 Published as the claude.ai artifact https://claude.ai/artifact/QG2zZH4KMW4zTTfaJQGots (`dist/ashen-wilds.html`; v106 onward — saves are per link, so players start fresh there; v105 stays at GZsCSNZGgULRRkVLdYHPmw, v102 at CMvAWZi8x1qbMZp9SkBpGL). (The pre-v102 link was retired.)
 
 ## Layout
@@ -28,7 +28,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | main loop `loop()`, prompts, vendors | `0104-vendors-main-loop.js` |
 | classes, skills, talents, item templates `ITPL`, creature families | `0110-v2-*` |
 | enemies, damage, XP, loot (`genItem`) | `0120-v2-*`, `0410-v49-9-gear-sets*` |
-| zones (`PMAP`, `pmGen`), zone instances (`INSL`, `insAt`/`rgAt`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world), `1940` (v106 instances) |
+| zones (`PMAP`, `pmGen`, `pmDen`), zone instances (`INSL`, `insAt`/`rgAt`, `insG`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world), `1940` (v106/v108 instances) |
 | save / load (`gameSnapshot`, `loadGame`, `x2Save`) | `0230-v36-save-load*`, `0450-shared-prompts*` |
 | co-op (`MP`) | `0520-v58-online-co-op*` |
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
@@ -103,18 +103,25 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   damage over time (`s6Dot`). Self-heals run only on the monster's owner (`!e.mir`). A new monster needs its own entry in
   `MSIG107` with two moves no other monster uses (`v107_sig.py` checks). Serpent rigs (`anim:'slither'`) reset tail
   `rotation.x` every frame; attack poses lift a serpent's tail gently and never into the ground (`crApply`).
-- **Zone instances (v106)**: every zone (`PMAP[i]`) is three instances `PMAP[i].ins[k]` (also the flat list `INSL[g]`,
-  g = i*3+k), each 350x331 tiles (half a v97 zone). Zone i is row i of the world grid, instance k column k, 6 tiles of void
-  apart. `regionAt` gives the zone, `rgAt` the instance key, `insAt` the instance record (`x0,y0,wp,path,cl,ba,wa,en,lv,n,den`).
-  Levels: the zone's range split in thirds (`pmLvSplit`), rising along each instance's road (`zoneLv`). Instance III holds the
-  den (`ba`) and the wave arena (`wa`); in I and II `ba` is the gateway clearing (`RPORT` k `'next'`) and `wa` is null.
-  Zone-level fields older code reads (`p.ba`, `p.wa`, `p.path`, `p.wp`) are instance III's; `p.en`, `p.x0/y0` instance I's;
-  `p.cl` all 12 camps (`C.ig` = the camp's instance). The roster, co-op region (`MP.rg`), treasure maps (`m.r` zone +
-  `m.k` instance), the local map and chunk visibility (`cvOK`) all work per instance. `INSR[i]` = furthest instance reached
-  (saved as `x2.insr`); the zone's portal lists the reached ones. Creatures come back `RESP_T` (30) s after death, not
-  within `RESP_NEAR` tiles of a hero. Recall saves `INST` (instance + spot + the creatures' timers); T in Duskhold goes back.
-  World layout version `WD_WL` 106; older saves go to instance I's entrance of their zone and get every instance of every
-  open zone.
+- **Zone instances (v106, v108)**: every zone (`PMAP[i]`) is five instances on row i of the world grid, 6 tiles of void apart:
+  three field instances I, II, III (`PMW`x`PMH` = 248x234 since v108, a quarter of a v97 zone), the Sovereign's Den (k 3,
+  136x176) and the Wave Trial (k 4, 84x84). `p.ins` = I, II, III, Den (the ones you reach in turn, `PMI`=4; `PMF`=3 fields),
+  `p.tri` = the Trial; all five are in the flat list `INSL[g]`, g = `insG(zone,k)` = zone*5+k. Each record has its own
+  `x0,y0,w,h` and flags `fld`/`den`/`tri`. `regionAt` gives the zone, `rgAt` the instance key, `insAt` the instance record
+  (`x0,y0,w,h,wp,path,cl,ba,wa,en,lv,n`). Levels: the zone's range split in thirds over the fields (`pmLvSplit`), rising along
+  each road (`zoneLv`); the Den and Trial use the zone's top level. In I and II `ba` is a gateway clearing to the next field;
+  III's gateway leads to the Den (`RPORT` k `'next'`). The Den (`pmDen`) is a short road from its north edge into the den
+  clearing (`PM_DENR`); it has a Duskhold portal at its entrance and no roaming creatures. The Trial holds only the sealed arena
+  (`wa`), entered from the zone's portal once the zone is cleared. Zone-level fields older code reads: `p.ba`, `p.path`,
+  `p.wp` are the Den's, `p.wa` the Trial's, `p.en`, `p.x0/y0` instance I's, `p.cl` all 9 camps (3 per field, `C.ig` = the
+  camp's instance). The roster (33 groups per field), co-op region (`MP.rg`), treasure maps (`m.r` zone + `m.k` field
+  instance; maps found in the Den or Trial lead to III), the local map and chunk visibility (`cvOK`) all work per instance.
+  `INSR[i]` = furthest instance reached (0..3, saved as `x2.insr`); the zone's portal lists the reached ones. Creatures come
+  back `RESP_T` (30) s after death, not within `RESP_NEAR` tiles of a hero. Recall saves `INST` (instance + spot + the
+  creatures' timers; also in the Den); T in Duskhold goes back. World layout version `WD_WL` 108; older saves go to instance
+  I's entrance of their zone and get every instance of every open zone (v106/v107 saves that reached III also reach the Den).
+- **Den size (v89, v108)**: the den files build each den at its original size; `1180` maps it outward by `DK` (2 since v108,
+  was 1.35) and heights by `DKY` (1.3). `ARENA_R` = 14*DK, `PM_DENR` grows with DK. Den runtime numbers are written `n*DK`.
 - **Decorations (v104)**: fixed spots outside every lot and door spot (checked by `PART=deco python3 v103_kingdom.py`);
   `SH.deco[k]` 1 shown / 0 owned but hidden, saved as `x2.kdeco`. Wall pieces (`D.wall`: banners, ivy, ravens) measure the wall
   of the current Bastion Walls level by ray casts (`dcWall104`) and are rebuilt when it changes (`PART=tiers` checks every level).
@@ -150,7 +157,8 @@ python3 v38t.py              # save/load
 python3 v32t.py              # portal → Sovereign kill → wave trial
 python3 v57t.py              # grades, XP, skills, consume, fusion
 python3 v60t.py              # zone roster (per instance, 30 s respawn)
-python3 v106_instances.py    # v106: instances, levels, gateways, respawn, recall back, portal window, saves, chunk visibility
+python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gateways, respawn, recall back, portal window, saves, chunk visibility, den size
+python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
 MODE=make SRC=<old> AW_TMP=<dir> python3 v106_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave.json python3 v106_oldsave.py  # v97 save -> v106
 python3 v73t.py              # hit feedback, low health, death, Rise Again   (TITLE=1 python3 v73d.py: title → Continue)

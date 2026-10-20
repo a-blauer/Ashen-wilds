@@ -18,7 +18,7 @@ var ZMAT103=null;
 function zMat103(){if(ZMAT103)return ZMAT103;const Z=PMAP.map(()=>new Set());
   const kind={rock:'stone',grave:'stone',pillar:'stone',crystal:'crystal',bush:'fiber',flower:'petals',mush:'glowcap',bones:'bone'};
   MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);if(r<0)return;const m=kind[q[2]];if(m){Z[r].add(m);if(m=='stone')Z[r].add('iron')}});
-  PMAP.forEach((p0,i)=>{let tr=0,wt=0;for(const p of p0.ins)for(let y=p.y0;y<p.y0+PMH&&!(tr&&wt);y+=2)for(let x=p.x0;x<p.x0+PMW;x+=2){const t=MAP[y][x];if(t=='#')tr=1;else if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)wt=1}
+  PMAP.forEach((p0,i)=>{let tr=0,wt=0;for(const p of p0.ins)for(let y=p.y0;y<p.y0+p.h&&!(tr&&wt);y+=2)for(let x=p.x0;x<p.x0+p.w;x+=2){const t=MAP[y][x];if(t=='#')tr=1;else if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)wt=1}
     if(tr)Z[i].add('wood');if(wt)Z[i].add('clay')});
   ZMAT103=Z;return Z}
 // materials a citizen may gather now: [key, [zone names]]

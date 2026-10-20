@@ -462,7 +462,7 @@ var AW_PROP99=(function(){
   // the hero's hip height in the new rest pose (riding seats the hips on the saddle)
   S.hipOf=()=>{try{return plan(HB,'real').hip}catch(_){return .55}};
   S.forKey=forKey;S.plan=plan;S.PRE=PRE;return S})();
-var DK=1.35,DKY=1.15;
+var DK=2,DKY=1.3; // den scale (1180); v108: 1.35 -> 2 (Sovereign dens are much larger)
 
 // ================= v88: ui icons — an original engraved icon set that replaces every emoji =================
 // Inserted at the very top of the game script by build/pV10.py (block "# --- ui ---"), so the canvas patch is in
@@ -923,18 +923,34 @@ const PMAP=[
 // g = zone*3+k, insAt = the instance record). Enemy levels rise through I, II and III (the zone's range split in thirds,
 // pmLvSplit). Instance III holds the Sovereign's den and the wave arena; the end of I and II is a gateway to the next one.
 // PMS scales the generator's distances against the original 260x270 zone (the square root of the area ratio); PMA is the area.
-const PMI=3,PMW=350,PMH=331,PMS=1.29,PMA=PMW*PMH/(260*270),PM_X0=110,PM_Y0=8,PM_PX=PMW+6,PM_PY=PMH+6,PM_RN=['I','II','III'];
+// v108: the field instances are half that area again (248x234), and the Sovereign's den and the Wave Trial are instances of
+// their own. Row i holds zone i: I, II, III (fields), the Den (k 3) and the Wave Trial (k 4), 6 tiles of void apart. The field
+// instances I -> II -> III -> Den are what you reach in turn (PMI = 4, INSR 0..3); the Trial is entered from the zone's portal.
+// Instance key g = zone*PMG+k (insG); every instance record has its own x0,y0,w,h. III ends in a gateway to the Den.
+const PMF=3,PMI=4,PMG=5,PMW=248,PMH=234,PMS=Math.sqrt(PMW*PMH/(260*270)),PMA=PMW*PMH/(260*270),PM_X0=110,PM_Y0=8,PM_RN=['I','II','III','Den','Trial'];
+const PM_DNW=136,PM_DNH=176,PM_TRW=84,PM_TRH=84,PM_W=[PMW,PMW,PMW,PM_DNW,PM_TRW],PM_H=[PMH,PMH,PMH,PM_DNH,PM_TRH];
+const PM_CX=PM_W.reduce((a,w,k)=>(a.push(k?a[k-1]+PM_W[k-1]+6:PM_X0),a),[]),PM_PY=Math.max(...PM_H)+6;
+const insG=(z,k)=>z*PMG+k;
 // v69: every map gets its own procedurally laid-out, wide, winding route with side branches, open fields and a sealed wave arena
-const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=4,PM_DENR=25,PM_GTR=14; // 4 camps per instance (12 per zone); PM_GTR: gateway clearing
+const PM_TH_SEED=[7,19,31,43,57,71],PM_NC=3,PM_DENR=Math.round(25*DK/1.35),PM_GTR=14; // v108: 3 camps per field instance (9 per zone); PM_DENR: the den clearing (grows with DK); PM_GTR: gateway clearing
 const INSL=[];
-function pmLvSplit(lv,k){const n=lv[1]-lv[0]+1,b=q=>lv[0]+Math.round(n*q/PMI);return [b(k),b(k+1)-1]}
+function pmLvSplit(lv,k){if(k>=PMF)return [lv[1],lv[1]];const n=lv[1]-lv[0]+1,b=q=>lv[0]+Math.round(n*q/PMF);return [b(k),b(k+1)-1]}
 PMAP.forEach((p,i)=>{p.i=i;p.ins=[];
-  for(let k=0;k<PMI;k++){const I={z:i,k,g:i*PMI+k,x0:PM_X0+k*PM_PX,y0:PM_Y0+i*PM_PY,den:k==PMI-1,lv:pmLvSplit(p.lv,k),n:p.n+' '+PM_RN[k],rn:PM_RN[k]};
-    let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(I,i,PM_TH_SEED[i]*7919+13+at*104729+k*7717,!I.den);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});let sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(L0.clr<50)sc*=.05;if(sc>bsc){bsc=sc;best=L0}}
-    Object.assign(I,best.out);if(!I.den)I.wa=null;p.ins.push(I);INSL.push(I)}
-  // zone-level fields that older code reads: the den instance's road and arenas, the first instance's entrance and corner,
-  // and every instance's camps (CAMPS records which instance each camp is in: C.ig)
-  const D=p.ins[PMI-1];['wp','br','fd','ba','wa'].forEach(k=>p[k]=D[k]);p.cl=[].concat(...p.ins.map(I=>I.cl));p.en=p.ins[0].en;p.x0=p.ins[0].x0;p.y0=p.ins[0].y0});
+  for(let k=0;k<PMG;k++){const I={z:i,k,g:insG(i,k),x0:PM_CX[k],y0:PM_Y0+i*PM_PY,w:PM_W[k],h:PM_H[k],fld:k<PMF,den:k==PMF,tri:k==PMF+1,lv:pmLvSplit(p.lv,k),
+      n:k<PMF?p.n+' '+PM_RN[k]:p.n+(k==PMF?' · Sovereign’s Den':' · Wave Trial'),rn:PM_RN[k]};
+    if(I.fld){let best=null,bsc=-1;for(let at=0;at<14;at++){const L0=pmGen(I,i,PM_TH_SEED[i]*7919+13+at*104729+k*7717,true);const xs=[],ys=[];L0.pts.forEach(q=>{xs.push(q[0]);ys.push(q[1])});const sc=(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));if(sc>bsc){bsc=sc;best=L0}}
+      Object.assign(I,best.out);I.wa=null}
+    else if(I.den)Object.assign(I,pmDen(I,PM_TH_SEED[i]*104729+5));
+    else{const c=[I.x0+Math.round(I.w/2),I.y0+Math.round(I.h/2)];Object.assign(I,{wp:[c],br:[],fd:[],cl:[],ba:c,wa:c,en:c.slice()})}
+    if(k<PMI)p.ins.push(I);else p.tri=I;INSL.push(I)}
+  // zone-level fields that older code reads: the den's road and clearing, the trial's arena, the first instance's entrance and
+  // corner, and every instance's camps (CAMPS records which instance each camp is in: C.ig)
+  const D=p.ins[PMF];['wp','br','fd','ba'].forEach(k=>p[k]=D[k]);p.wa=p.tri.wa;p.cl=[].concat(...p.ins.map(I=>I.cl));p.en=p.ins[0].en;p.x0=p.ins[0].x0;p.y0=p.ins[0].y0});
+// v108: the den instance — the road comes in from the north edge and winds gently down into the den clearing near the south
+function pmDen(I,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647;
+  const cx=I.x0+Math.round(I.w/2),ba=[cx,I.y0+I.h-PM_DENR-28],st=[cx+Math.round((rnd()-.5)*24),I.y0+14],N=7,wp=[];
+  for(let k=0;k<=N;k++){const t=k/N,o=k&&k<N?(rnd()-.5)*22*Math.sin(t*Math.PI):0;wp.push([Math.round(st[0]+(ba[0]-st[0])*t+o),Math.round(st[1]+(ba[1]-st[1])*t)])}
+  return {wp,br:[],fd:[],cl:[],ba,wa:null,en:wp[0].slice()}}
 function pmGen(p,i,seed,nw){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
   const G=(x,y)=>[p.x0+Math.round(x),p.y0+Math.round(y)],cl=(v,a,b)=>Math.max(a,Math.min(b,v)),M=26,S=PMS;
   // pick a corner for the sealed wave arena, start on the far side, end with the boss on yet another side
@@ -965,7 +981,7 @@ function pmGen(p,i,seed,nw){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2
   let clr=1e9;const chk=(x,y,r)=>{clr=Math.min(clr,Math.hypot(x-WA[0],y-WA[1])-r)},seg=(a,b,r)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let q=0;q<=n;q++){const t=q/n;chk(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,r)}};
   for(let k=0;k<N;k++)seg(wp[k],wp[k+1],21);br.forEach(l=>{for(let k=0;k<l.length-1;k++)seg(l[k],l[k+1],12)});fd.forEach(f=>chk(f[0],f[1],f[2]*1.2));cls.forEach(c=>chk(c[0],c[1],16));
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
-const insAt=(x,y)=>{const c=Math.floor((x-PM_X0)/PM_PX),r=Math.floor((y-PM_Y0)/PM_PY);if(c<0||c>=PMI||r<0||r>=PMAP.length)return null;const I=PMAP[r].ins[c];return x<I.x0+PMW&&y<I.y0+PMH?I:null};
+const insAt=(x,y)=>{const r=Math.floor((y-PM_Y0)/PM_PY);if(r<0||r>=PMAP.length||x<PM_X0)return null;let c=PMG-1;while(c>0&&x<PM_CX[c])c--;const I=INSL[insG(r,c)];return x<I.x0+I.w&&y<I.y0+I.h?I:null};
 const regionAt=(x,y)=>{const I=insAt(x,y);return I?I.z:-1};
 const rgAt=(x,y)=>{const I=insAt(x,y);return I?I.g:-1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
@@ -1028,25 +1044,26 @@ const MAP=(()=>{
   TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
   // ---- the six portal maps, three instances each (v106) ----
   INSL.forEach(p=>{
-    const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
+    const pts=[];if(p.tri){p.path=[p.wa.slice()];stamp(p.wa[0],p.wa[1],15);for(let y=p.y0;y<p.y0+p.h;y++)for(let x=p.x0;x<p.x0+p.w;x++)bio[y][x]=PMAP[p.z].bi;return}
+    for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
     pts.push(p.wp[p.wp.length-1]);p.path=pts;
     pts.forEach(([x,y],i)=>{if(i%2)return;const hw=12+3*Math.sin(i*.045+p.g)+2*Math.sin(i*.13+p.g*2);stamp(x+3*Math.sin(i*.07),y+3*Math.cos(i*.05),hw)});
     p.br.forEach(l=>{for(let k=0;k<l.length-1;k++){const [ax,ay]=l[k],[bx,by]=l[k+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)/2);for(let q=0;q<=n;q++){const t=q/n;stamp(ax+(bx-ax)*t,ay+(by-ay)*t,9+2*Math.sin(q*.4+k))}}});
     p.fd.forEach(([x,y,r])=>{stamp(x,y,r);stamp(x+r*.45,y-r*.3,r*.7);stamp(x-r*.4,y+r*.35,r*.65)});
     p.cl.forEach(([x,y])=>stamp(x,y,17));stamp(p.ba[0],p.ba[1],p.den?PM_DENR:PM_GTR);if(p.wa)stamp(p.wa[0],p.wa[1],15);
-    const bi=PMAP[p.z].bi;for(let y=p.y0;y<p.y0+PMH;y++)for(let x=p.x0;x<p.x0+PMW;x++)bio[y][x]=bi;
+    const bi=PMAP[p.z].bi;for(let y=p.y0;y<p.y0+p.h;y++)for(let x=p.x0;x<p.x0+p.w;x++)bio[y][x]=bi;
   });
-  PMAP.forEach(p=>{p.path=p.ins[PMI-1].path});
+  PMAP.forEach(p=>{p.path=p.ins[PMF].path});
   const isW=(x,y)=>DW[y*W+x]<0;
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const d=DW[y*W+x],r=regionAt(x,y);
     if(d<0)m[y][x]='.';
     else if(r>=0&&d<2.6){const b=BIOMES[PMAP[r].bi];m[y][x]=b.n=='The Citadel'?'':(b.n=='Searing Sands'||d>1.6?'R':'#')}}
   // keep the regions sealed from each other (a 1-tile border is always void)
-  INSL.forEach(p=>{for(let x=p.x0;x<p.x0+PMW;x++){m[p.y0][x]='';m[p.y0+PMH-1][x]=''}for(let y=p.y0;y<p.y0+PMH;y++){m[y][p.x0]='';m[y][p.x0+PMW-1]=''}});
+  INSL.forEach(p=>{for(let x=p.x0;x<p.x0+p.w;x++){m[p.y0][x]='';m[p.y0+p.h-1][x]=''}for(let y=p.y0;y<p.y0+p.h;y++){m[y][p.x0]='';m[y][p.x0+p.w-1]=''}});
   // grass, accent and water patches inside the walkable ground
   const blob=(ch,p,n,a,b2)=>{for(let i=0;i<n;i++){let cx=0,cy=0;for(let k=0;k<60;k++){const q=p.path[Math.floor(rnd()*p.path.length)];cx=Math.round(q[0]+(rnd()-.5)*22);cy=Math.round(q[1]+(rnd()-.5)*22);if(m[cy]&&m[cy][cx]=='.')break}
     const r=a+rnd()*(b2-a);for(let y=Math.floor(cy-r*1.3)-1;y<cy+r*1.3+1;y++)for(let x=Math.floor(cx-r)-1;x<cx+r+1;x++){if(!m[y]||m[y][x]!='.')continue;if(Math.hypot(x-cx,(y-cy)*1.25)<r*(.75+.25*Math.sin(x*1.7+y*1.1+i)))m[y][x]=ch}}};
-  INSL.forEach(p=>{const b=BIOMES[PMAP[p.z].bi],d=b.den;blob('g',p,Math.round(40*PMA*d[0]),3,7);blob('a',p,Math.round(26*PMA*d[1]),3,7);blob('~',p,Math.round(9*PMA*d[3]),1.6,3.4)});
+  INSL.forEach(p=>{const b=BIOMES[PMAP[p.z].bi],d=b.den,A=p.w*p.h/(260*270)*(p.fld?1:.35);blob('g',p,Math.round(40*A*d[0]),3,7);blob('a',p,Math.round(26*A*d[1]),3,7);if(p.fld)blob('~',p,Math.round(9*A*d[3]),1.6,3.4)});
   // never block the road itself or the arenas with water
   const keep=(cx,cy,r)=>{for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=Math.floor(cx-r);x<=cx+r;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<r)m[y][x]='a'};
   INSL.forEach(p=>{p.path.forEach(([x,y],i)=>{if(i%2==0)keep(x,y,3.2)});p.cl.forEach(c=>keep(c[0],c[1],14));keep(p.ba[0],p.ba[1],(p.den?PM_DENR:PM_GTR)+1);if(p.wa)keep(p.wa[0],p.wa[1],16)});
@@ -1063,7 +1080,7 @@ const MAP=(()=>{
       if(used.has(key)||!okT(cx,cy)||rgAt(cx,cy)!==r)continue;
       used.add(key);if(rockK(k))m[cy][cx]='r';props.push([cx,cy,k]);got++}}
   // boss arenas: rune floor, ring of columns and four cover pillars
-  BOSSES.forEach(b=>{for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
+  BOSSES.forEach(b=>{const R=Math.ceil(15.5*DK)+1;for(let y=b.y-R;y<=b.y+R;y++)for(let x=b.x-R;x<=b.x+R;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
     });
   // v101: the stronghold town — one Grand Square: walls at |x|=WX and z=-TS / z=sz, a 3-tile south gate, paving inside,
   // the north row and fountain solid, and the eight shop plots solid (rotated footprints; v103 re-marks them by building lot)
@@ -1115,7 +1132,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
       const dd=Math.max(0,d);h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
-      (I.den?[[I.ba,Math.max(PM_DENR+3,22*DK),5*DK],[I.wa,19,5]]:[[I.ba,PM_GTR+2,5]]).forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
+      (I.den?[[I.ba,Math.max(PM_DENR+3,22*DK),5*DK]]:I.tri?[[I.wa,19,5]]:[[I.ba,PM_GTR+2,5]]).forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
@@ -2231,7 +2248,7 @@ function featTick(dt,now,al){
     if(hero.hp<rec.hp-.01){rec=null;say('Recall interrupted!')}
     else{rec.hp=hero.hp;rec.t+=dt;if(rec.t>=rec.need){rec=null;fadeTo(recallTown)}}
   }
-  $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+PMAP[INST.r].n+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')};
+  $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+(INSL[INST.r]?INSL[INST.r].n:'zone')+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')};
   const emo=party.slice(0,2).some(c=>c.emp&&c.h>0);
   if(pl.mat){pl.mat.emissive.setHex(emo?0xffc04a:0);pl.mat.emissiveIntensity=emo?.28+.1*Math.sin(now/300):0}
   if(emo&&dt>0){if(Math.random()<.3)burst(V(pl.position.x+(Math.random()-.5)*.6,.2,pl.position.z+(Math.random()-.5)*.6),0xffd24a,1,.2,.9,.9);if(now%800<dt*1000)ring(pl.position,0xffd24a,1.6,600)}
@@ -5764,7 +5781,7 @@ BOSSES.forEach((b,i)=>{b.zone=i+1;b.guard=false;b.ult=i>=1?2:0});
 // ---- levels rise along each map's road ----
 function pmProg(p,x,z){let bi=0,bd=1e9;const P=p.path;for(let i=0;i<P.length;i+=2){const d=(P[i][0]-x)**2+(P[i][1]-z)**2;if(d<bd){bd=d;bi=i}}return bi/(P.length-1)}
 // v106: along the road of the instance you are in, within that instance's share of the zone's levels
-function zoneLv(x,y){const I=insAt(Math.round(x),Math.round(y));if(!I)return 1;const q=pmProg(I,x,y);return Math.max(1,Math.min(MAXLV,Math.round(I.lv[0]+(I.lv[1]-I.lv[0])*q)))}
+function zoneLv(x,y){const I=insAt(Math.round(x),Math.round(y));if(!I)return 1;if(!I.fld)return I.lv[0];const q=pmProg(I,x,y);return Math.max(1,Math.min(MAXLV,Math.round(I.lv[0]+(I.lv[1]-I.lv[0])*q)))}
 const curMap=()=>regionAt(Math.round(pl.position.x),Math.round(pl.position.z));
 const curIns=()=>insAt(Math.round(pl.position.x),Math.round(pl.position.z));
 function areaName(){
@@ -5799,16 +5816,16 @@ function portalRefresh(){PORT.forEach(P=>{const u=pUnlocked(P.i),d=pDone(P.i);P.
 portalRefresh();
 TANIM.push({x:PCOURT[0],z:PCOURT[1],f:now=>{PORT.forEach((P,k)=>{if(P.sw.visible){P.sw.rotation.z=now*.0018+k;P.disc.material.opacity=.66+.12*Math.sin(now*.003+k)}})}});
 // ---- return portals at each map's start, and a way home in each boss arena once it is cleared ----
-INSL.forEach(I=>{I.en=I.path[16].slice()});PMAP.forEach(p=>{p.en=p.ins[0].en});
+INSL.forEach(I=>{if(!I.tri)I.en=I.path[16].slice()});PMAP.forEach(p=>{p.en=p.ins[0].en});
 var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
   sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.32,0,0);return {g,x,z,disc}}
 // v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
-INSL.forEach(I=>{const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
+INSL.forEach(I=>{if(I.tri)return;const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
   const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
-  if(!I.den){const N=PMAP[I.z].ins[I.k+1],P=I.path,q=P[Math.max(0,P.length-14)],gx=I.ba[0],gz=I.ba[1],t=smallPortal(gx,gz,PMAP[I.z].col,'🌀 '+N.n);
+  if(I.fld){const N=PMAP[I.z].ins[I.k+1],P=I.path,q=P[Math.max(0,P.length-14)],gx=I.ba[0],gz=I.ba[1],t=smallPortal(gx,gz,PMAP[I.z].col,'🌀 '+N.n);
     t.g.rotation.y=Math.atan2(q[0]-gx,q[1]-gz);t.g.scale.setScalar(1.35);t.pi=I.z;t.ig=I.g;t.k='next';t.to=N;RPORT.push(t)}});
 PMAP.forEach((p,i)=>{
   const b=smallPortal(p.ba[0],p.ba[1]+10,0xffd060,'🌀 Return home');b.pi=i;b.k='exit';b.g.visible=pDone(i);RPORT.push(b);
@@ -5819,7 +5836,7 @@ function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.f
 // v106: k = the instance (0 = I); every instance starts at its own entrance
 function enterMap(i,k){if(AF)return;const p=PMAP[i],I=p.ins[k|0]||p.ins[0];fadeTo(()=>{insArrive(I)})}
 function insArrive(I){const p=PMAP[I.z],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]));
-  banner(p.ic+' '+I.n.toUpperCase(),p.sub,'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.den?'defeat '+BOSSES[I.z].name+' at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
+  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
 function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
@@ -5827,14 +5844,14 @@ function portalPrompt(){
   for(const Q of PORT){if(Math.hypot(P.x-Q.x,P.z-Q.z)<2.6){const p=PMAP[Q.i];if(!pUnlocked(Q.i))return {label:'🔒 Sealed · defeat '+BOSSES[Q.i-1].name+' in '+PMAP[Q.i-1].n,fn:()=>openX('bosses')};
     if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' (Lv '+p.ins[0].lv[0]+'–'+p.ins[0].lv[1]+')',fn:()=>enterMap(Q.i,0)}}}
   for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<(r.k=='next'?2.8:2.2)){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};
-    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+' (Lv '+N.lv[0]+'–'+N.lv[1]+')',fn:()=>insGo(N)}}
+    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' (Lv '+N.lv[0]+'–'+N.lv[1]+')'),fn:()=>insGo(N)}}
     return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
 // v106: the portal lists every instance of the zone you have reached, and the Wave Trial once the zone is cleared
 XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+(d?' · cleared ✓':'');
-  const row=I=>{const ok=I.k<=R,txt=I.den?'The last stretch of road and '+b.name+'’s den'+(d?' (back 5 minutes after each defeat).':'.'):'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
-    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">🗺️ <b>${I.n}</b> <span class="mut">Lv ${I.lv[0]}–${I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
+  const row=I=>{const ok=I.k<=R,txt=I.den?b.name+', '+b.title+(d?' (back 5 minutes after each defeat).':'.'):I.k==PMF-1?'Its road ends at the gateway to '+b.name+'’s den.':'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
+    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">Lv ${I.den?b.lvl:I.lv[0]+'–'+I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
   const wave=d?`<div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div>`:'';
   $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
@@ -5899,13 +5916,13 @@ function waveEnd(won,quiet){const W2=WV;if(!W2)return;WV=null;W2.foes.forEach(e=
 var prfT=0;{const f=homeTick;homeTick=function(dt,now,al){f(dt,now,al);if(dt>0)waveTick(dt);if(home!==TOWNS[0])home=TOWNS[0];if(now-prfT>1000){prfT=now;portalRefresh();rportRefresh()}}}
 {const f=down;down=function(){if(WV){waveEnd(false,true);say('☠ You fell in the Wave Trial.')}return f.apply(this,arguments)}}
 // ---- the Citadel is a castle: stone walls instead of cliffs ----
-{const p=PMAP[5],L=[];for(const I of p.ins)for(let y=I.y0;y<I.y0+PMH;y++)for(let x=I.x0;x<I.x0+PMW;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
+{const p=PMAP[5],L=[];for(const I of p.ins.concat(p.tri))for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
   const mt=new THREE.MeshStandardMaterial({roughness:.92,flatShading:true}),wm=new THREE.InstancedMesh(new THREE.BoxGeometry(1.02,1,1.02),mt,L.length),cm=new THREE.InstancedMesh(new THREE.BoxGeometry(.5,.6,.5),mt,L.length),o=new THREE.Object3D(),cc=new THREE.Color();
   L.forEach(([x,y],i)=>{const h=7+((x*7+y*3)%3)*.4,g0=.3;o.position.set(x,g0+h/2,y);o.scale.set(1,h,1);o.updateMatrix();wm.setMatrixAt(i,o.matrix);cc.setHex((x+y)%2?0x3e363c:0x332c32);wm.setColorAt(i,cc);
     const on=(x+y)%2;o.position.set(x,g0+h+.3,y);o.scale.setScalar(on?1:.001);o.updateMatrix();cm.setMatrixAt(i,o.matrix);cm.setColorAt(i,cc)});
   [wm,cm].forEach(m=>{m.castShadow=true;m.receiveShadow=true;m.frustumCulled=false;m.instanceMatrix.needsUpdate=true;scene.add(m);(window.CITW=window.CITW||[]).push(m)});
   for(let k=0;k<L.length;k+=23){const [x,y]=L[k],g=new THREE.Group();g.position.set(x,0,y);scene.add(g);const b=new THREE.Mesh(new THREE.PlaneGeometry(.8,2.2),new THREE.MeshStandardMaterial({color:0x7a0c18,side:THREE.DoubleSide,roughness:.9}));b.position.y=4.2;g.add(b);
-    const tl=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,5),new THREE.MeshBasicMaterial({color:0xff8a40}));tl.position.set(0,2.6,0);g.add(tl);{const I=insAt(x,y)||p.ins[0];b.lookAt(I.x0+PMW/2,4.2,I.y0+PMH/2)}}}
+    const tl=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,5),new THREE.MeshBasicMaterial({color:0xff8a40}));tl.position.set(0,2.6,0);g.add(tl);{const I=insAt(x,y)||p.ins[0];b.lookAt(I.x0+I.w/2,4.2,I.y0+I.h/2)}}}
 
 
 // ================= v58: online co-op — shared monsters, your own loot, trading =================
@@ -6380,7 +6397,7 @@ var LT={on:0};
 // ---------- the map (N) shows only the area you are in ----------
 function openWMap(){
   const c=$('wmc'),r=curMap(),I=curIns(),T=TOWNS[0];let x0,y0,w,h,title,sub; // v106: the instance you are in
-  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=PMW;h=PMH;title=I.n;sub=(p.sub||'')+' · Lv '+I.lv[0]+'–'+I.lv[1]}
+  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · Lv '+I.lv[0]+'–'+I.lv[1]:'')}
   else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
@@ -6389,10 +6406,10 @@ function openWMap(){
   const dia=(x,y,col,sz)=>{sz=sz||7;g.fillStyle=col;g.beginPath();g.moveTo(x,y-sz);g.lineTo(x+sz*.85,y);g.lineTo(x,y+sz);g.lineTo(x-sz*.85,y);g.fill();g.strokeStyle='#000';g.lineWidth=1.2;g.stroke()};
   if(r>=0){const p=PMAP[r];
     CAMPS.forEach(C=>{if(C.ig!==I.g)return;const [x,y]=P(C.x,C.z),cl=campCleared(C);g.fillStyle=cl?'rgba(110,231,183,.35)':'rgba(239,68,68,.35)';g.beginPath();g.arc(x,y,CAMP_R*s*.55,0,6.28);g.fill();lab(cl?'⛺ cleared':'⛺ '+(C.th?C.th.n:'Camp'),x,y,cl?'#bfe8a0':'#ffc8c0')});
-    {const [x,y]=P(I.en[0],I.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
-    if(!I.den){const [x,y]=P(I.ba[0],I.ba[1]);dia(x,y,'#9ad8ff',9);lab('🌀 '+p.ins[I.k+1].n,x,y+18,'#cfe3ff')}
+    if(!I.tri){const [x,y]=P(I.en[0],I.en[1]);g.fillStyle='#7ab8ff';g.beginPath();g.arc(x,y,6,0,6.28);g.fill();lab('Entrance',x,y+14,'#cfe3ff')}
+    if(I.tri){const [x,y]=P(I.wa[0],I.wa[1]);dia(x,y,'#ff9a5a',9);lab('⚔️ Wave Trial',x,y+18,'#ffd8b0')}
+    else if(!I.den){const [x,y]=P(I.ba[0],I.ba[1]);dia(x,y,'#9ad8ff',9);lab('🌀 '+p.ins[I.k+1].n,x,y+18,'#cfe3ff')}
     else{const [x,y]=P(p.ba[0],p.ba[1]),b=BOSSES[r];dia(x,y,bossDone.has(r)?'#6ee7b7':'#c084fc',9);lab('👑 '+(b?b.name:'Sovereign'),x,y+18)}
-    if(I.den&&bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
   }else{{const [x,y]=P(T.cx,T.cy);g.fillStyle='#fbbf24';g.fillRect(x-7,y-7,14,14);g.strokeStyle='#000';g.lineWidth=2;g.strokeRect(x-7,y-7,14,14);lab('Duskhold',x,y+20)}
     if(typeof TWN100_wmap=='function')TWN100_wmap(g,P,lab,s);}
   (typeof tmaps!='undefined'?tmaps:[]).forEach(m=>{if(!inV(m.x,m.z))return;const [x,y]=P(m.x,m.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('✕',x,y)});
@@ -6400,7 +6417,7 @@ function openWMap(){
   {const [x,y]=P(pl.position.x,pl.position.z);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(x,y,10,0,6.28);g.stroke();g.fillStyle='#4ade80';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke()}
   g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,c.width,40);g.font='700 16px system-ui,sans-serif';g.fillStyle='#f0e0b8';g.fillText(title.toUpperCase(),c.width/2,15);g.font='600 11px system-ui,sans-serif';g.fillStyle='#c9a45a';g.fillText(sub,c.width/2,31);
   g.textAlign='left';g.font='600 11px system-ui,sans-serif';g.fillStyle='rgba(0,0,0,.6)';g.fillRect(8,c.height-26,Math.min(c.width-16,430),20);g.fillStyle='#ddd';
-  g.fillText(r>=0?'● you   ⛺ camp   ◆ '+(I.den?'Sovereign':'gateway')+'   ✕ treasure'+(typeof MP!='undefined'&&MP.on?'   🔵 ally':''):'● you   ■ town   🌀 portals',16,c.height-16);
+  g.fillText(r>=0?'● you   '+(I.fld?'⛺ camp   ':'')+'◆ '+(I.den?'Sovereign':I.tri?'arena':'gateway')+'   ✕ treasure'+(typeof MP!='undefined'&&MP.on?'   🔵 ally':''):'● you   ■ town   🌀 portals',16,c.height-16);
   $('wmap').classList.remove('hide')}
 
 // ---------- fishing: false nibbles, a quick strike, then a timing dial fight ----------
@@ -6455,15 +6472,17 @@ var ROST={r:-9,slots:[],left:0,quiet:false};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
 // v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
-var ROST_G=65,RESP_T=30,RESP_NEAR=6;
+// v108: a field instance is half a v106 one again: 33 roaming groups and 3 camps each
+var ROST_G=33,RESP_T=30,RESP_NEAR=6;
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)
   enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
+  if(!I.fld){ROST.r=r;ROST.slots=[];ROST.quiet=false;return} // v108: the den and the wave trial have no roaming creatures
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
   // roaming groups spread across the whole instance
-  const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(PMW-12)),z=I.y0+6+Math.floor(Math.random()*(PMH-12));
+  const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(I.w-12)),z=I.y0+6+Math.floor(Math.random()*(I.h-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.ig===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
     if(Math.hypot(x-I.ba[0],z-I.ba[1])<BR||(I.wa&&Math.hypot(x-I.wa[0],z-I.wa[1])<20)||Math.hypot(x-I.en[0],z-I.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
@@ -9867,8 +9886,8 @@ setInterval(()=>{try{if($('bag')&&!$('bag').classList.contains('hide')&&HP&&bagS
 // fresh at its entrance instead.
 var INST=null,RECBACK=false;
 const instMP=()=>typeof MP!='undefined'&&MP.on&&MP.host&&MP.host!==MP.me;
-function instSave(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0||ROST.r!==r||!ROST.slots.length||instMP()||(typeof WV!='undefined'&&WV))return;
-  const now=nowP();INST={v:106,r,x:pl.position.x,z:pl.position.z,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1,rl:s.dead?Math.max(0,(s.rt||0)-now):0,rt:0}))};
+function instSave(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0||ROST.r!==r||(!ROST.slots.length&&!(INSL[r]&&INSL[r].den))||instMP()||(typeof WV!='undefined'&&WV))return;
+  const now=nowP();INST={v:108,r,x:pl.position.x,z:pl.position.z,slots:ROST.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp?CAMPS.indexOf(s.camp):-1,rl:s.dead?Math.max(0,(s.rt||0)-now):0,rt:0}))};
   enemies.slice().forEach(e=>{if(!e.dead&&!e.boss&&e.slot&&rgAt(Math.round(e.m.position.x),Math.round(e.m.position.z))===r)removeE(e)})}
 function instRestore(){const I=INST;if(!I||!INSL[I.r])return false;const now=nowP();ROST.r=I.r;ROST.quiet=false;ROST.slots=I.slots.map(s=>Object.assign({},s,{on:null,camp:s.camp>=0?CAMPS[s.camp]:null,rt:s.dead?now+(s.rl||0):0}));
   const N=INSL[I.r],p=PMAP[N.z];toPos(I.x,I.z);INST=null;banner(p.ic+' '+N.n.toUpperCase(),'Back where you left off','Fallen creatures return '+RESP_T+' seconds after they die');return true}
@@ -9881,11 +9900,11 @@ function instRestore(){const I=INST;if(!I||!INSL[I.r])return false;const now=now
   if(rec)RECBACK=false;return f.apply(this,arguments)}}
 $('recallBtn').onclick=()=>doRecall();
 // entering an instance through its portal starts it fresh, so a saved spot in that same instance is dropped
-{const f=enterMap;enterMap=function(i,k){if(INST&&INST.r===i*PMI+(k|0)&&!instMP())INST=null;return f.apply(this,arguments)}}
+{const f=enterMap;enterMap=function(i,k){if(INST&&INST.r===insG(i,k|0)&&!instMP())INST=null;return f.apply(this,arguments)}}
 // a hint while a spot is saved
 {const f=hud;hud=function(){f.apply(this,arguments);try{if(INST&&INSL[INST.r]&&curMap()<0){const b=$('buffs'),n=INSL[INST.r].n;if(b&&!b.querySelector('.instb'))b.insertAdjacentHTML('afterbegin',`<span class="bf instb" title="Press T to return to where you left ${n}">🌀 ${n} · T to return</span>`)}}catch(_){}}}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
-{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===106?s.inst:null}catch(_){INST=null}return r}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===108?s.inst:null}catch(_){INST=null}return r}}
 
 // ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
 var fCon=null;
@@ -14977,7 +14996,7 @@ function lkrOff(){
 {const f=mountTick;mountTick=function(dt,now,al){const r=f.apply(this,arguments);try{lkrTick(dt,now,al)}catch(e){if(!LKR.err){LKR.err=1;console.warn('riding pose',e)}}return r}}
 {const f=dismount;dismount=function(){const r=f.apply(this,arguments);try{if(!riding)lkrOff()}catch(_){}return r}}
 
-// ================= v89 dens: every Sovereign den is 35% bigger =================
+// ================= v89 dens: every Sovereign den is 35% bigger (v108: DK = 2, twice the original size) =================
 // The den files (zzK_den*.js) still build each den at its original size (radius 14 arena). Right after that, this file
 // maps the whole den outward from its centre: horizontally by DK (1.35) and in height above the ground by DKY (1.15).
 //  - world-space den meshes (floors, walls, soups) get every vertex moved: x,z scaled about the centre, y re-draped onto
@@ -15030,7 +15049,7 @@ function denRetile(){const W0=W,by=ARN.map(()=>new Set());
     for(let z=Math.floor(A.cz-R);z<=A.cz+R;z++)for(let x=Math.floor(A.cx-R);x<=A.cx+R;x++){const ox=Math.round(A.cx+(x-A.cx)/DK),oz=Math.round(A.cz+(z-A.cz)/DK),ok=oz*W0+ox;
       if(!S.has(ok))continue;const before=DENB.size;denBlock(x,z);if(DENB.size>before){if(!img.has(ok))img.set(ok,[]);img.get(ok).push(z*W0+x)}}
     DENS.img[A.i]=img})}
-function denImg(x,z){if(!DENS.on)return null;for(const A of ARN){const m=DENS.img[A.i];if(!m||Math.hypot(x-A.cx,z-A.cz)>30)continue;
+function denImg(x,z){if(!DENS.on)return null;for(const A of ARN){const m=DENS.img[A.i];if(!m||Math.hypot(x-A.cx,z-A.cz)>26*DK+3)continue;
   const L=m.get(Math.round(A.cz+(z-A.cz)/DK)*W+Math.round(A.cx+(x-A.cx)/DK));if(L)return L}return null}
 function denScaleAll(){if(DENS.on)return;
   ARN.forEach(A=>{try{const seen=new Set(),grow=new Map();denMapState(A,grow);A.g.children.slice().forEach(o=>denMapObj(A,o,seen,grow))}catch(err){console.error('den scale',A.i,err)}});
@@ -16655,7 +16674,7 @@ function lnSecretPrompt(){if(typeof SECRETS=='undefined')return null;const P=pl.
 // 2. treasure maps
 // =====================================================================================================
 var LNR={};   // per-instance reachability (flood fill from the entrance); v106: keyed by instance key g = zone*3+k
-function lnZB(g){const I=INSL[g];return {x0:I.x0,y0:I.y0,w:PMW,h:PMH}}
+function lnZB(g){const I=INSL[g];return {x0:I.x0,y0:I.y0,w:I.w,h:I.h}}
 function lnReach(g){const B=lnZB(g),key=g+':'+B.w+'x'+B.h;let R=LNR[g];if(R&&R.key==key)return R;
   const a=new Uint8Array(B.w*B.h),p=INSL[g],q=[];
   const free=(x,y)=>{const t=MAP[y]&&MAP[y][x];return !!t&&t!='~'&&!solid(x,y)};
@@ -16667,9 +16686,9 @@ function lnReach(g){const B=lnZB(g),key=g+':'+B.w+'x'+B.h;let R=LNR[g];if(R&&R.k
   R=LNR[g]={key,a,B,n:q.length/2};return R}
 function lnReachable(g,x,y){const R=lnReach(g),B=R.B;x=Math.round(x);y=Math.round(y);if(x<B.x0||y<B.y0||x>=B.x0+B.w||y>=B.y0+B.h)return false;return !!R.a[(y-B.y0)*B.w+(x-B.x0)]}
 // the instance a map belongs to: m.r = zone, m.k = instance (maps from before v106 have no m.k: instance I)
-function tmG(m){return m.r*PMI+(m.k|0)}
+function tmG(m){return insG(m.r,m.k|0)}
 // a good spot for a buried treasure: reachable, open around it, not in the den / gateway / wave arena / a camp / near the entrance
-function tmOk(g,x,y){if(g<0||!INSL[g])return false;const p=INSL[g],B=lnZB(g);x=Math.round(x);y=Math.round(y);
+function tmOk(g,x,y){if(g<0||!INSL[g]||!INSL[g].fld)return false;const p=INSL[g],B=lnZB(g);x=Math.round(x);y=Math.round(y);
   if(x<B.x0+4||y<B.y0+4||x>=B.x0+B.w-4||y>=B.y0+B.h-4||rgAt(x,y)!==g)return false;
   for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(!lnReachable(g,x+i,y+j))return false;
   const R0=(typeof ARENA_R!='undefined'?ARENA_R:14);
@@ -16684,8 +16703,8 @@ function tmPick(g,near){const B=lnZB(g);let fb=null;
     if(!fb)fb=[x,y];if(near&&rgAt(near.x,near.z)===g&&Math.hypot(x-near.x,y-near.z)<35)continue;return [x,y]}
   return fb}
 // the instance a new map leads to: the one you are in; in Duskhold, the instance that suits the hero's level
-function tmZoneFor(p){let g=rgAt(Math.round(p.x),Math.round(p.z));if(g>=0)return g;
-  const L=hero.lvl||1;let I=INSL.find(q=>L>=q.lv[0]&&L<=q.lv[1]);if(!I)I=L>PMAP[PMAP.length-1].lv[1]?INSL[INSL.length-1]:INSL[0];return I.g}
+function tmZoneFor(p){let g=rgAt(Math.round(p.x),Math.round(p.z));if(g>=0)return INSL[g].fld?g:insG(INSL[g].z,PMF-1); // v108: from the den or the trial: instance III
+  const L=hero.lvl||1,F=INSL.filter(q=>q.fld);let I=F.find(q=>L>=q.lv[0]&&L<=q.lv[1]);if(!I)I=L>PMAP[PMAP.length-1].lv[1]?F[F.length-1]:F[0];return I.g}
 function tmName(m){const I=INSL[tmG(m)];return 'Treasure Map — '+(I?I.n:'Unknown lands')}
 function tmNewId(){let id=1;tmaps.forEach(m=>{if(m.id>=id)id=m.id+1});return id}
 var TM_DIR=['east','south-east','south','south-west','west','north-west','north','north-east'];
@@ -16704,7 +16723,7 @@ function giveMap(p,rz){const g=rz!=null?rz:tmZoneFor(p);const s=tmPick(g,p);if(!
 {const f=digTreasure;digTreasure=function(m){if(!m||!tmaps.includes(m))return;const n=tmName(m);f.apply(this,arguments);try{say('🗺️ '+n+' is used up — the treasure is yours!');lnMarkSync()}catch(_){}lnBagRefresh()}}
 // old saves: give each map a zone and an instance, re-place it if the spot is not reachable
 function tmMigrate(){let ch=0;(tmaps||[]).forEach(m=>{if(m.r==null||!PMAP[m.r]){let r=regionAt(Math.round(m.x),Math.round(m.z));if(r<0)r=Math.max(0,PMAP.findIndex(p=>p.t==m.T));m.r=r;ch=1}
-    if(m.k==null||!PMAP[m.r].ins[m.k]){const I=insAt(Math.round(m.x),Math.round(m.z));m.k=I&&I.z===m.r?I.k:0;ch=1}
+    if(m.k==null||!(m.k<PMF)){const I=insAt(Math.round(m.x),Math.round(m.z));m.k=I&&I.z===m.r&&I.fld?I.k:0;ch=1}
     m.T=PMAP[m.r].t;if(!tmOk(tmG(m),m.x,m.z)){const s=tmPick(tmG(m),null);if(s){m.x=s[0];m.z=s[1];ch=1}}});
   const ids=new Set();tmaps.forEach(m=>{if(!m.id||ids.has(m.id))m.id=tmNewId()+ids.size;ids.add(m.id)});return ch}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{tmMigrate()}catch(e){console.warn('tmaps migrate',e)}try{lnMarkSync()}catch(_){}return r}}
@@ -16996,7 +17015,7 @@ function flanPeers(dt,now){const live=new Set();
 var MMRIM=[];
 function mmRimPaint(){try{
   const c=mmB.getContext('2d'),walk=t=>t==='.'||t==='a'||t==='g'||t==='p'||t==='r'||t==='~'||t==='P';
-  INSL.forEach(I=>{const p=PMAP[I.z],x0=I.x0,y0=I.y0,x1=I.x0+PMW-1,y1=I.y0+PMH-1,bm=BIOMES[p.bi]||BIOMES[0]; // v106: per instance
+  INSL.forEach(I=>{const p=PMAP[I.z],x0=I.x0,y0=I.y0,x1=I.x0+I.w-1,y1=I.y0+I.h-1,bm=BIOMES[p.bi]||BIOMES[0]; // v106: per instance
     const inner=(bm.frs||[30,24,28]).map(v=>Math.round(v*.8)),outer=bm.n=='The Citadel'?[150,100,108]:[96,92,88];
     const L=[];let edge=0;
     // v97: the neighbour test checks the zone rectangle directly instead of calling regionAt() (same result, faster bake)
@@ -17004,8 +17023,8 @@ function mmRimPaint(){try{
       let d=9;for(let dy=-3;dy<=3&&d>1;dy++){const r2=MAP[y+dy];if(!r2)continue;for(let dx=-3;dx<=3;dx++){if(x+dx<x0||x+dx>x1||y+dy<y0||y+dy>y1||!walk(r2[x+dx]))continue;const q=Math.hypot(dx,dy);if(q<d)d=q}}
       if(d>3.1)continue;L.push(x,y,d);if(d<1.5)edge++}}
     if(edge<200)return;                 // zones whose rim is already trees/rock (all but the Citadel today) are left as they are
-    const id=c.getImageData(x0,y0,PMW,PMH);
-    for(let i=0;i<L.length;i+=3){const b=L[i+2]<1.6?inner:outer,k=((L[i+1]-y0)*PMW+(L[i]-x0))*4;id.data[k]=b[0];id.data[k+1]=b[1];id.data[k+2]=b[2];id.data[k+3]=255}
+    const id=c.getImageData(x0,y0,I.w,I.h);
+    for(let i=0;i<L.length;i+=3){const b=L[i+2]<1.6?inner:outer,k=((L[i+1]-y0)*I.w+(L[i]-x0))*4;id.data[k]=b[0];id.data[k+1]=b[1];id.data[k+2]=b[2];id.data[k+3]=255}
     c.putImageData(id,x0,y0);MMRIM.push(I.n)});
 }catch(err){console.warn('minimap rim',err)}}
 mmRimPaint();
@@ -19262,7 +19281,7 @@ function wdDeco(){const T0=performance.now();
     vn=(x,y,s)=>{const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);return (hsh(i,j,s)*(1-u)+hsh(i+1,j,s)*u)*(1-v)+(hsh(i,j+1,s)*(1-u)+hsh(i+1,j+1,s)*u)*v};
   // v106: placed per zone instance (r stays the zone: its decoration set Z[r] and density ZM[r])
   INSL.forEach(I=>{const r=I.z,Z0=PMAP[r],p={x0:I.x0,y0:I.y0,path:I.path,br:I.br,ba:I.ba,wa:I.wa||[-1e5,-1e5],en:I.en,bi:Z0.bi,n:I.n};
-    const x0=p.x0,y0=p.y0,w=PMW,h=PMH,RD=new Float32Array(w*h).fill(99);
+    const x0=p.x0,y0=p.y0,w=I.w,h=I.h,RD=new Float32Array(w*h).fill(99);
     // distance to the road centre line (and the side branches)
     const st=(cx,cy,R)=>{for(let y=Math.max(y0,Math.floor(cy-R));y<=Math.min(y0+h-1,cy+R);y++)for(let x=Math.max(x0,Math.floor(cx-R));x<=Math.min(x0+w-1,cx+R);x++){const d=Math.hypot(x-cx,y-cy),k=(y-y0)*w+x-x0;if(d<RD[k])RD[k]=d}};
     p.path.forEach((q,i)=>{if(i%2==0)st(q[0],q[1],12)});
@@ -19271,7 +19290,7 @@ function wdDeco(){const T0=performance.now();
     const camps=CAMPS_PRE(r);
     // the entrance (and its home portal) moves to path[16] later at load (zz_portal), so keep both clear
     const e1=p.path[16]||p.en;
-    const away=(x,y,m)=>Math.hypot(x-p.ba[0],y-p.ba[1])>PM_DENR+3+m&&Math.hypot(x-p.wa[0],y-p.wa[1])>21+m&&Math.hypot(x-p.en[0],y-p.en[1])>12+m&&Math.hypot(x-e1[0],y-e1[1])>14+m&&camps.every(c=>Math.hypot(x-c[0],y-c[1])>16+m);
+    const away=(x,y,m)=>Math.hypot(x-p.ba[0],y-p.ba[1])>(I.den?26*DK+4:PM_DENR+3)+m&&Math.hypot(x-p.wa[0],y-p.wa[1])>21+m&&Math.hypot(x-p.en[0],y-p.en[1])>12+m&&Math.hypot(x-e1[0],y-e1[1])>14+m&&camps.every(c=>Math.hypot(x-c[0],y-c[1])>16+m);
     const t=(x,y)=>{const X=Math.round(x),Y=Math.round(y);return MAP[Y]&&MAP[Y][X]};
     const cit=BIOMES[p.bi].n=='The Citadel';
     // tile classes
@@ -19348,10 +19367,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
 // (the old zone is found on that layout's grid, WD_OLDG: v89 saves carry wl:89, older ones none), a saved zone run (INST)
 // is dropped, treasure maps keep their zone (m.r; maps from before v89 get the zone they were in) and are re-placed on a
 // reachable spot in it (zzN_loot.js tmMigrate). Duskhold, the Portal Court and the Courtyard never moved (x < 110).
-var WD_WL=106; // v106: three instances per zone
-var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351},97:{x0:[110,593,1076,110,593,1076],y0:[8,8,8,509,509,509],w:473,h:491}};
+var WD_WL=108; // v106: three instances per zone; v108: smaller fields, the den and the wave trial in instances of their own
+var WD_OLDG={88:{x0:[110,380,650,110,380,650],y0:[8,8,8,288,288,288],w:260,h:270},89:{x0:[110,458,806,110,458,806],y0:[8,8,8,369,369,369],w:338,h:351},97:{x0:[110,593,1076,110,593,1076],y0:[8,8,8,509,509,509],w:473,h:491},106:{x0:[110,110,110,110,110,110],y0:[8,345,682,1019,1356,1693],w:1062,h:331}};
 var WD_OLD=WD_OLDG[88];
-function wdOldZone(x,z,wl){const G=WD_OLDG[wl===97?97:wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
+function wdOldZone(x,z,wl){const G=WD_OLDG[wl===106?106:wl===97?97:wl===89?89:88];for(let i=0;i<6;i++)if(x>=G.x0[i]&&x<G.x0[i]+G.w&&z>=G.y0[i]&&z<G.y0[i]+G.h)return i;return -1}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.wl=WD_WL;if(s.inst)s.inst=Object.assign({},s.inst,{wl:WD_WL})}catch(_){}return s}}
 var WD_LOADOLD=false;
 {const f=x2Load;x2Load=function(s){const wl=s&&s.wl;WD_LOADOLD=wl!==WD_WL;
@@ -19387,7 +19406,7 @@ function cvgBuild(){const B=CVG.B;CVG.g=new Map();CVG.live=new Set();CVG.n=CHL.l
 // the Portal Road) draw; the other instances sit across the void and are separate maps now
 var CVA={k:null,r:null};
 function cvKey(){const I=curIns();return I?I.g:-1}
-function cvOK(c,k){if(c.cvk===k)return c.cvok;if(CVA.k!==k){CVA.k=k;const I=k>=0?INSL[k]:null;CVA.r=I?[I.x0-3,I.y0-3,I.x0+PMW+3,I.y0+PMH+3]:[-1e5,-1e5,PM_X0-3,1e5]}
+function cvOK(c,k){if(c.cvk===k)return c.cvok;if(CVA.k!==k){CVA.k=k;const I=k>=0?INSL[k]:null;CVA.r=I?[I.x0-3,I.y0-3,I.x0+I.w+3,I.y0+I.h+3]:[-1e5,-1e5,PM_X0-3,1e5]}
   const r=CVA.r,b=c.box;c.cvk=k;c.cvok=b.max.x>=r[0]&&b.min.x<=r[2]&&b.max.z>=r[1]&&b.min.z<=r[3];return c.cvok}
 function chunkVis(){
   if(CVG.n!==CHL.length)cvgBuild();
@@ -21916,7 +21935,7 @@ var ZMAT103=null;
 function zMat103(){if(ZMAT103)return ZMAT103;const Z=PMAP.map(()=>new Set());
   const kind={rock:'stone',grave:'stone',pillar:'stone',crystal:'crystal',bush:'fiber',flower:'petals',mush:'glowcap',bones:'bone'};
   MAP.props.forEach(q=>{const r=regionAt(q[0],q[1]);if(r<0)return;const m=kind[q[2]];if(m){Z[r].add(m);if(m=='stone')Z[r].add('iron')}});
-  PMAP.forEach((p0,i)=>{let tr=0,wt=0;for(const p of p0.ins)for(let y=p.y0;y<p.y0+PMH&&!(tr&&wt);y+=2)for(let x=p.x0;x<p.x0+PMW;x+=2){const t=MAP[y][x];if(t=='#')tr=1;else if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)wt=1}
+  PMAP.forEach((p0,i)=>{let tr=0,wt=0;for(const p of p0.ins)for(let y=p.y0;y<p.y0+p.h&&!(tr&&wt);y+=2)for(let x=p.x0;x<p.x0+p.w;x+=2){const t=MAP[y][x];if(t=='#')tr=1;else if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)wt=1}
     if(tr)Z[i].add('wood');if(wt)Z[i].add('clay')});
   ZMAT103=Z;return Z}
 // materials a citizen may gather now: [key, [zone names]]
@@ -22775,21 +22794,24 @@ var SPXT105={bite:1,rain:1,chain:1,meteor:1};
 //     return you to the very spot (0860 INST)
 //  4. creatures come back 30 s after they die (0550 RESP_T); the "zone falls quiet" banner is gone with that
 //  5. chunk visibility only draws the instance you are in (1690 chunkVis, cvOK)
+// v108: four reachable instances per zone (I, II, III, the Den; INSR 0..3) plus the Wave Trial (p.tri, entered from the portal)
 var INSR=[0,0,0,0,0,0];
 function insReach(i){if(bossDone.has(i)||(typeof CHEAT!='undefined'&&CHEAT.portals))return PMI-1;return Math.max(0,Math.min(PMI-1,INSR[i]|0))}
 function insGo(N){if(AF||!N)return;if(typeof WV!='undefined'&&WV)return;fadeTo(()=>{insArrive(N);insMark(N)})}
-function insMark(I){if(!I||I.k<=(INSR[I.z]|0))return;INSR[I.z]=I.k;
-  setTimeout(()=>say('🌀 '+I.n+' reached · you can now travel here straight from the '+PMAP[I.z].n+' portal in Duskhold.'),1200)}
+function insMark(I){if(!I||I.k>=PMI||I.k<=(INSR[I.z]|0))return;INSR[I.z]=I.k;
+  setTimeout(()=>say((I.den?'👑 ':'🌀 ')+I.n+' reached · you can now travel here straight from the '+PMAP[I.z].n+' portal in Duskhold.'),1200)}
 var INSW={g:-2,t:0};
 {const f=homeTick;homeTick=function(dt,now,al){f.apply(this,arguments);try{if(now-INSW.t<400)return;INSW.t=now;const I=curIns(),g=I?I.g:-1;
   if(g!==INSW.g){INSW.g=g;if(I)insMark(I)}}catch(_){}}}
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments)||{};try{s.insr=INSR.slice()}catch(_){}return s}}
 {const f=x2Load;x2Load=function(s){try{INSR=PMAP.map((p,i)=>s&&Array.isArray(s.insr)?Math.max(0,Math.min(PMI-1,s.insr[i]|0)):0)}catch(_){INSR=[0,0,0,0,0,0]}return f.apply(this,arguments)}}
 {const f=loadGame;loadGame=function(){const sv=typeof saveInfo=='function'?saveInfo():null,old=!!sv&&!(sv.x2&&Array.isArray(sv.x2.insr));const r=f.apply(this,arguments);try{if(old)PMAP.forEach((p,i)=>{if(pUnlocked(i))INSR[i]=PMI-1});
+  // v108: a v106/v107 save that reached instance III could walk on to the den, which is now an instance of its own
+  if(sv&&sv.x2&&sv.x2.wl!==WD_WL)INSR.forEach((v,i)=>{if(v>=PMF-1)INSR[i]=PMI-1});
   const I=curIns();INSW.g=I?I.g:-1;if(I&&I.k>INSR[I.z])INSR[I.z]=I.k}catch(err){console.warn('v106 load',err)}return r}}
 // the J window: how far into each zone you are
 {const f=XR.bosses;XR.bosses=function(){f.apply(this,arguments);try{const rows=$('xwB').querySelectorAll('.rw');PMAP.forEach((p,i)=>{const rw=rows[i];if(!rw||!pUnlocked(i))return;const sm=rw.querySelector('small');
-  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+I.rn+' (Lv '+I.lv[0]+'–'+I.lv[1]+')').join(' · '))})}catch(_){}}}
+  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' (Lv '+I.lv[0]+'–'+I.lv[1]+')')).join(' · '))})}catch(_){}}}
 // ================= v107: every zone monster fights in its own way =================
 // Before: the 18 monsters of the six portal zones shared ten generic moves, and 12 of them had a lunge (charge or pounce).
 // Now each keeps one basic attack (strike / bite / spit / throw / bolt) and gets two signature moves of its own that
