@@ -47,14 +47,31 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
 const regionAt=(x,y)=>{for(let i=0;i<PMAP.length;i++){const p=PMAP[i];if(x>=p.x0&&x<p.x0+PMW&&y>=p.y0&&y<p.y0+PMH)return i}return -1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
+var TWN100_SZ=100,TWN100_IW=56; // v100: Duskhold's walls reach cy+100; the inner wall at cy+56 closes the courtyard ward
 const TOWNS=[
  {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:40,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
-].map((t,i)=>{t.i=i;t.cx=t.fx;t.mp=[t.cx,t.cy-7.9];t.mv=[t.cx+10.2,t.cy-7.7];t.col=[];t.tv=[t.cx-9.5,t.cy-7.5];t.sp=[t.cx,t.cy+7];return t});
+].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-7.9];t.mv=[t.cx+10.2,t.cy-7.7];t.col=[];t.tv=[t.cx-9.5,t.cy-7.5];t.sp=[t.cx,t.cy+7];return t});
 const START=TOWNS[0].sp.slice();
 const PCOURT=[84,284];
-// the woodland courtyard north-east of Duskhold (trees and stone to harvest)
+// v100 town: Duskhold's walls run from cy-TS (north) to cy+TWN100_SZ (south). Upper town cy-TS..cy+TS (plaza, north row),
+// market ward cy+TS..cy+TWN100_IW (shop street), inner wall + gate at cy+TWN100_IW, courtyard ward behind it, south gate at
+// cy+TWN100_SZ. Six portal gates stand on their own islands round the castle, joined by roads (TWN100_RD); PCOURT (the
+// old Portal Court) is now the crossroads east of the main gate. Layout plan with coordinates: README "v100: town".
+// the woodland courtyard inside the south ward of Duskhold (trees and stone to harvest)
 // It starts small and grows by one ring per completed zone; ring i holds 6 nodes of every node type found in zone i.
-const CYD={x:76,y:244,r0:9,dr:1.3,rmax:17,r:9,gate:[75,276],nodes:[]};
+// gate = the inner gate (north), gate2 = the south gate; the garden wall ring has an opening toward each.
+const CYD={x:40,y:362,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,340],gate2:[40,384],nodes:[]};
+// v100: the six portal gates, one island each (x,y centre, r radius, a = the spot in front of the portal: you arrive there)
+const TWN100_PG=[{x:96,y:284,r:8.5,a:[90.5,284]},{x:84,y:252,r:8.5,a:[84,257.5]},{x:40,y:233,r:8.5,a:[40,238.5]},
+ {x:86,y:322,r:8.5,a:[86,316.5]},{x:84,y:364,r:8.5,a:[84,358.5]},{x:40,y:415,r:8.5,a:[40,409.5]}];
+// roads (polylines, 3 tiles wide) make a ring round the castle: east gate -> crossroads (PCOURT) -> Kindlelight; crossroads ->
+// Hillside -> Burningeye; crossroads -> Sands -> Dirge -> Citadel <- south gate; west gate -> Burningeye and -> Citadel
+const TWN100_RD=[[[61,284],[91,284]],[[84,284],[84,256]],[[84,284],[86,318]],[[86,326],[84,360]],[[80,371],[64,395],[46,412]],
+ [[40,384],[40,410]],[[19,284],[13.5,284],[13.5,262],[22,247],[34,237]],[[13.5,284],[13.5,387],[22,404],[34,413]],[[79,248],[60,240],[46,236]]];
+// v100: the market ward's shop plots (town-local tiles): side -1 = west row (facade at x=-5.5, faces the street to the east),
+// +1 = east row; z = plot centre. The 7x5-tile footprint (|x| 6..12, z-2..z+2) is solid ('B'): building or fenced plot.
+const TWN100_SH=[{k:'smith',s:-1,z:26},{k:'alch',s:-1,z:34},{k:'cook',s:-1,z:42},{k:'bard',s:-1,z:50},
+ {k:'merchant',s:1,z:26},{k:'sage',s:1,z:34},{k:'trainer',s:1,z:42},{k:'stable',s:1,z:50}];
 //@@BOSSES
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
@@ -81,9 +98,13 @@ const MAP=(()=>{
   const stamp=(cx,cy,r)=>{for(let y=Math.max(1,Math.floor(cy-r-5));y<=Math.min(H-2,Math.ceil(cy+r+5));y++)for(let x=Math.max(1,Math.floor(cx-r-5));x<=Math.min(W-2,Math.ceil(cx+r+5));x++){const d=Math.hypot(x-cx,y-cy)-r,k=y*W+x;if(d<DW[k])DW[k]=d}};
   // ---- the floating stronghold: the town square, a road east, and the portal court ----
   const T=TOWNS[0];
-  for(let y=T.cy-31;y<=T.cy+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const d=Math.max(Math.abs(x-T.cx),Math.abs(y-T.cy))-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
-  for(let x=T.cx+22;x<=PCOURT[0];x+=1)stamp(x,T.cy,4.5);stamp(PCOURT[0],PCOURT[1],19);
-  stamp(CYD.x,CYD.y,CYD.rmax+1.5);for(let q=0;q<=1;q+=.05)stamp(CYD.x+(CYD.gate[0]-CYD.x)*q,CYD.y+(CYD.gate[1]-CYD.y)*q,3.2);
+  // v100: the island is a rectangle round the walls (north square + south ward) with a 7-tile apron
+  const SE=T.sz-TS;
+  for(let y=T.cy-31;y<=T.cy+SE+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const dz=y<T.cy?T.cy-y:y>T.cy+SE?y-T.cy-SE:0,d=Math.max(Math.abs(x-T.cx),dz)-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
+  // roads, the crossroads by the main gate and the six portal islands
+  const road=(L,r)=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);for(let q=0;q<=n;q++)stamp(ax+(bx-ax)*q/n,ay+(by-ay)*q/n,r)}};
+  TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1],6);
+  TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
   // ---- the six portal maps ----
   PMAP.forEach(p=>{
     const pts=[];for(let i=0;i<p.wp.length-1;i++){const [ax,ay]=p.wp[i],[bx,by]=p.wp[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay));for(let s=0;s<n;s++){const q=s/n;pts.push([ax+(bx-ax)*q,ay+(by-ay)*q])}}
@@ -126,16 +147,32 @@ const MAP=(()=>{
   TOWNS.forEach(t=>{
     for(let dy=-TS-3;dy<=TS+3;dy++)for(let dx=-TS-3;dx<=TS+3;dx++){const x=t.cx+dx,y=t.cy+dy;const ax=Math.abs(dx),ay=Math.abs(dy);
       if(ax<TS&&ay<TS)m[y][x]='P';else if(ax<=TS&&ay<=TS)m[y][x]=(ax==TS&&ay<=1)?'P':'W';else if(m[y][x]=='')m[y][x]='.'}
+    // v100: the old south wall (dy=TS) opens into the market ward (paved) down to the inner wall at dy=IW (3-tile gate),
+    // then the courtyard ward (grass) down to the south wall at dy=sz (3-tile gate); side walls all the way
+    if(t.sz>TS){const IW=TWN100_IW;for(let dy=TS;dy<=t.sz+3;dy++)for(let dx=-TS-3;dx<=TS+3;dx++){const x=t.cx+dx,y=t.cy+dy,ax=Math.abs(dx);
+      if(dy>t.sz||ax>TS){if(m[y][x]=='')m[y][x]='.';continue}
+      if(ax==TS){m[y][x]='W';continue}
+      if(dy==IW||dy==t.sz){m[y][x]=ax<=1?'P':'W';continue}
+      if(dy==TS){m[y][x]=ax<=3?'P':'W';continue}
+      if(dy<IW)m[y][x]='P';else{m[y][x]=(x*7+y*3)%5==0?'g':'.';bio[y][x]=2}}
+     TWN100_SH.forEach(q=>{for(let z=q.z-2;z<=q.z+2;z++)for(let a=6;a<=12;a++)m[t.cy+z][t.cx+q.s*a]='B'})}
     const B=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m[t.cy+y][t.cx+x]='B'};
     B(-17,-11,-18,-14);B(-2,2,-18,-14);B(12,17,-18,-14);B(-1,1,-12,-12);
     for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
   });
-  for(let x=T.cx+TS+1;x<=PCOURT[0]-8;x++)for(let y=-1;y<=1;y++)if(m[T.cy+y][x]=='.')m[T.cy+y][x]='p';
+  // v100: dirt roads (3 wide) outside the portal islands; each island takes its zone's ground (bio) with accent patches
+  {const inPG=(x,y)=>TWN100_PG.some(p=>Math.hypot(x-p.x,y-p.y)<p.r-.6);
+   TWN100_RD.forEach(L=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);
+     for(let q=0;q<=n;q++){const cx=ax+(bx-ax)*q/n,cy=ay+(by-ay)*q/n;for(let y=Math.round(cy)-2;y<=Math.round(cy)+2;y++)for(let x=Math.round(cx)-2;x<=Math.round(cx)+2;x++)
+       if(Math.hypot(x-cx,y-cy)<1.45&&m[y][x]=='.'&&!inPG(x,y))m[y][x]='p'}}});
+   TWN100_PG.forEach((p,i)=>{const b=PMAP[i].bi;for(let y=Math.floor(p.y-p.r*1.5);y<=p.y+p.r*1.5;y++)for(let x=Math.floor(p.x-p.r*1.5);x<=p.x+p.r*1.5;x++){if(!m[y]||m[y][x]==='')continue;
+     const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
+     if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
   // ---- the courtyard: south gate path, a grove at the heart, then one ring of nodes per zone (walls are placed at runtime) ----
   {const C=CYD,inC=(x,y)=>Math.hypot(x-C.x,y-C.y),R=C.rmax+.6;
-   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(townAt(x,y,3)>=0||m[y][x]==='')continue;
+   for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(m[y][x]!=='.'&&m[y][x]!=='g')continue; // v100: inside the ward
      if(inC(x,y)<R){bio[y][x]=2;if(m[y][x]=='.'&&(x*7+y*3)%5==0)m[y][x]='g'}}
-   for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(C.gate[0]-C.x)*q),y=Math.round(C.y+(C.gate[1]-C.y)*q);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}
+   [C.gate,C.gate2].forEach(G=>{for(let q=0;q<=1;q+=.03){const x=Math.round(C.x+(G[0]-C.x)*q),y=Math.round(C.y+(G[1]-C.y)*q);if(Math.hypot(x-C.x,y-C.y)<3.2)continue;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='g'||m[y+dy][x+dx]=='.')m[y+dy][x+dx]='p'}}); // v100: a path from each gate
    const nearP=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m[y+dy][x+dx]=='p')return true;return false};
    const spot=(cx,cy,rad,n,lo,hi,fn)=>{let got=0;for(let tr=0;tr<80&&got<n;tr++){const a=rnd()*6.283,d=tr?rnd()*rad:0,x=Math.round(cx+Math.cos(a)*d),y=Math.round(cy+Math.sin(a)*d);
      if(!'.g'.includes(m[y][x])||inC(x,y)>hi||inC(x,y)<lo||nearP(x,y))continue;fn(x,y);got++}};
@@ -147,16 +184,17 @@ const MAP=(()=>{
    PMAP.forEach((p,i)=>{const lo=C.r0-1.6+C.dr*i+.15,hi=C.r0-1.6+C.dr*(i+1),kinds=[...new Set(BIOMES[p.bi].pr)];
      kinds.forEach((k,j)=>{let got=0;const a0=j/kinds.length*6.283+i*.7;
        for(let tr=0;tr<400&&got<6;tr++){const a=a0+(rnd()-.5)*(6.283/kinds.length)*.9,d=lo+rnd()*(hi-lo),x=Math.round(C.x+Math.cos(a)*d),y=Math.round(C.y+Math.sin(a)*d);
-         if(!'.g'.includes(m[y][x])||nearP(x,y)||townAt(x,y,3)>=0)continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
+         if(!'.g'.includes(m[y][x])||nearP(x,y))continue;const dd=inC(x,y);if(dd<lo-.3||dd>hi+.3)continue;put(x,y,k,i);got++}})});
   }
   m.bio=bio;m.DW=DW;
-  m.props=props.filter(q=>townAt(q[0],q[1],3)<0&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
+  const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
+  m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();
 //@@HF
 {
   const DW=MAP.DW,sp=x=>x<-5?0:Math.log1p(Math.exp(x*1.5))/1.5;
   const base=(x,y,a)=>.55+sp(1.0+(fbm2(x*.02+3,y*.02+9,4)-.5)*6*a+(fbm2(x*.07,y*.07+4,3)-.5)*1.6*a);
-  const supd=(x,y,t)=>Math.pow(Math.pow(Math.abs(x-t.cx),4)+Math.pow(Math.abs(y-t.cy),4),.25);
+  const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(Math.abs(x-t.cx),4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
   TOWNS.forEach(t=>{t.ph=1.6});
   for(let j=-HPD;j<=H+HPD;j++)for(let i=-HPD;i<=W+HPD;i++){
     const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,r=regionAt(tx,ty),d=DW[k];let h;
