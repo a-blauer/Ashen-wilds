@@ -507,3 +507,18 @@ Everything stays west of x=110 (max x 105). Duskhold's 4 px/tile ground texture 
 - **Portal islands** (`zzN_zz_town2.js`): the six `PORT` portals keep their disc, swirl and chains, prompts and windows; each moves to its island with a themed gate. Kindlelight: twisted root arch, moss, green lanterns. Hillside Crest: a trilithon with a serpent and flowers. Burningeye: ice-crystal pillars and icicles. Searing Sands: a sandstone gate with a sun disc. The Dirge: a grave arch with a skull keystone and ghost lamps. The Citadel: a crimson castle arch with banners and braziers. Each island also gets a signpost, a dais and 25–35 of the zone's own decorations merged into one lit and one glowing mesh (mist quads for Kindlelight and the Dirge). Locked islands keep their lanterns dark. Coming home from a zone (`goHome` → `TWN100_home`) lands you in front of that zone's gate. Recall, `RECBACK`, the restart-instance prompt and co-op "Go to"/"Join" are unchanged. The town map (N) and the minimap show the six gates.
 - **Old saves**: a save standing where there is no ground any more (the old Portal Court ring, the old courtyard at 76,244) moves to the crossroads or the courtyard's gate; anything else unsafe goes to the nearest free tile, then to the spawn (`TWN100_fixPos`, after the v97 load fix). The courtyard keeps no save state of its own (nodes regrow; growth follows `bossDone`).
 - **Text**: the portal window, the "new portal opens" banner, material hints and treasure maps no longer mention the Portal Court.
+- **Performance** (`PERF=1 SRC=<old dist> TAG=before python3 v100_town.py` vs the new build; every upgrade at level 3, all shops built; headless software GL, so draw calls and triangles are exact, times are not). The ring's long walls use bigger stone blocks (`TWN100_coarse`), each wall part (upper town / market / courtyard ward) is drawn only within 46 tiles of its stretch, the ward dressing is one baked kit and the portal-island scenery is merged per island:
+
+  | view | draw calls before → after | triangles before → after |
+  |---|---|---|
+  | plaza | 397 → 297 | 382 k → 433 k |
+  | north row | 223 → 170 | 352 k → 360 k |
+  | east gate | 341 → 268 | 424 k → 443 k |
+  | high view over the plaza | 450 → 336 | 416 k → 469 k |
+  | market ward (new) | – → 437 | – → 615 k |
+  | courtyard (new) | – → 489 | – → 565 k |
+  | Kindlelight gate island (new) | – → 232 | – → 276 k |
+  | crossroads (new) | – → 156 | – → 238 k |
+
+- **Test**: `python3 test/v100_town.py` → `CHECKS OK` (63 checks): layout west of the zones and inside the 4 px ground texture; flood-fill reachability of every NPC, shop counter, gate, portal island and open courtyard node at kingdom levels 0–3 with shops built and unbuilt; roads, market street and gates free of colliders; prompts for every shop (built / unbuilt), the Steward and every portal (locked / open); every shop window opens; each portal enters its own zone, coming home lands at that gate; recall saves the run, recall-back returns, re-entering asks Continue / Restart; courtyard growth, harvest, 10-minute regrowth, chopping; old saves in the old Portal Court / old courtyard land on solid ground; every upgrade level and total-level tier adds geometry; no fountain banners; town map; no page errors. Sheets: `test/out/v100_sheet_{town,shops,upgrades,walls,kingdom,portals}.png`. `SHOTS=0` checks only, `CHK=0` sheets only.
+- `test/v88_town_paths.py` now covers the longer town (its grid reaches cy+`T.sz`).

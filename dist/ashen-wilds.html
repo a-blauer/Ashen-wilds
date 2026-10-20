@@ -22733,7 +22733,8 @@ function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN)retur
 {const f=visTick;visTick=function(){const r=f.apply(this,arguments);try{VIS.forEach(v=>{if(!v.g||v.g.twn)return;v.g.twn=1;const q=TWN100_SH.find(s=>s.k==v.k);
     v.g.children.slice().forEach(c=>{if(!c.bones&&c.isGroup)v.g.remove(c)});const n=v.g.children.find(c=>c.bones);if(n&&q)n.rotation.y=q.s<0?Math.PI/2:-Math.PI/2})}catch(_){}return r}}
 // the Stable is one of the market buildings now (the v78 lean-to and its site are not built)
-function stableBuild(){const T=TOWNS[0];if(!T||!TWN100_S)return;STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[];const q=TWN100_SH.find(s=>s.k=='stable');STB.n=TWN100_npc(q)}
+function stableBuild(){const T=TOWNS[0];if(!T||!TWN100_S)return;if(!TWN100_S.b.stable)try{TWN100_build(TWN100_SH.find(s=>s.k=='stable'));TWN100_shopSync()}catch(e){console.warn('v100 stable',e)}
+  if(!TWN100_S.npc.stable)try{TWN100_keeper(TWN100_SH.find(s=>s.k=='stable'));TWN100_shopSync()}catch(e){console.warn('v100 stable',e)}STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[];const q=TWN100_SH.find(s=>s.k=='stable');STB.n=TWN100_npc(q)}
 function stableSync(){TWN100_shopSync();stableBuild()}
 // construction sites: only the Magic Shop still uses the old kind (north row); the market plots have their own
 function shSites(){const T=TOWNS[0];if(!T)return;SHM.sites=SHM.sites||{};SHM.vsite=[];const want={};if(!shopBuilt('magic'))want.magic=[T.mv[0],T.mv[1]-.4,'🔮 Magic Shop'];
