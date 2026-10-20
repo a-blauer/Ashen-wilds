@@ -218,7 +218,9 @@ function crApply(x,o,Lm){
     const front=k[0]=='f'||(ty=='spider'&&(k[1]=='0'));if(ty=='spider'){if(front&&o.fh)h.rotation.x+=o.fh*.8;return}
     if(ty=='waddle'&&k[0]=='f'){if(o.fh)h.rotation.x+=o.fh*1.2;return}
     if(front){h.rotation.x+=(o.fh||0)+(o.paw&&i%2==0?o.paw:0);if(kn)kn.rotation.x+=o.fk||0}else{h.rotation.x+=o.hh||0;if(kn)kn.rotation.x+=o.hk||0}});
-  if(o.tl||o.ty)for(let i=0;i<4;i++){const tb=b['tail'+i];if(!tb)continue;tb.rotation.x+=(o.tl||0)*(i?.6:1);tb.rotation.y+=(o.ty||0)*(.4+.25*i)}
+  if(o.tl||o.ty){// v107: a serpent's tail lies on the ground and is a long chain: lift it gently and never push it into the ground
+    const sl=ty=='slither',tl=sl?Math.max(0,o.tl||0)*.35:(o.tl||0),tY=(o.ty||0)*(sl?.45:1);
+    for(let i=0;i<4;i++){const tb=b['tail'+i];if(!tb)continue;tb.rotation.x+=tl*(i?.6:1);tb.rotation.y+=tY*(.4+.25*i)}}
 }
 // companion bite: anticipation → snap → settle on the same 380 ms (done() still fires at the end, where the damage happens)
 function lunge(a,to,done){

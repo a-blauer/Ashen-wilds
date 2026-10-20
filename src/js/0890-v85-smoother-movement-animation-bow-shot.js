@@ -118,7 +118,7 @@ function rigAnim(x,now,mv,sp){
   if(ty=='slither'){
     if(dt>0)G.sl+=dt*(w*(G.v/Math.max(.1,1.31*G.sc))+id*.245)*TAU;
     const th=G.sl,ta=.18+.22*w,ba=.1+.2*w;
-    for(let i=0;i<4;i++){const tb=b['tail'+i];if(tb)tb.rotation.y=Math.sin(th-i*1.1)*ta}
+    for(let i=0;i<4;i++){const tb=b['tail'+i];if(tb){tb.rotation.y=Math.sin(th-i*1.1)*ta;tb.rotation.x=0}}// v107: x reset every frame, or attack poses added to it (+=) pile up and coil the tail
     ['pelvis','spine','chest','neck'].forEach((k,i)=>{if(b[k])b[k].rotation.y=Math.sin(th-(i+4)*1.1)*ba*(k=='neck'?.6:1)+(k=='neck'?turnW*.08:0)});
     b.head.rotation.y=A?0:-Math.sin(th-8*1.1)*ba*.5+gaCl(turnW*.12,-.4,.4)+id*Math.sin(now/1700)*.2;
   }

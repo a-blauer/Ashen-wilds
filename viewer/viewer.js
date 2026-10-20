@@ -107,8 +107,8 @@ function compActions(){const c=party[0],f=fols[0],out=[];if(!c||!f)return out;co
     out.push({k:'sp'+j,i:S.i,t:n,s:(j?'Unlocks at stage '+j:'Signature')+' · '+(KINDN[S.k]||S.k)+(R.m?' · '+R.m+' motion':''),d:S.d,ms:2600,lock:j>KV.stage,run(){const e=KV.dummy;f.lk=0;f._m105=null;KV.home.comp&&f.position.copy(KV.home.comp);if(e)faceTo(f,e.m.position);c.cdm[n]=0;hero.sh=0;compCast(c,f,S,e)}})});
   return out}
 function monActions(){const key=KV.sel.mon,ms=(typeof MSET!='undefined'&&MSET[key])||EN[key].moves||['strike'];
-  return ms.map(n=>({k:'m'+n,i:MOVEI[n]||'⚔️',t:MOVEN[n]||n,s:(MV[n]?(MV[n].sh||'')+' · wind-up '+MV[n].wind+'s':''),ms:(MV[n]?(MV[n].wind+MV[n].act+MV[n].rec)*1000+700:1800),run(){const e=KV.mon;if(!e)return;
-    mCancel(e);e.m.position.copy(KV.home.mon);const hp=V(KV.home.mon.x,0,KV.home.mon.z+(MOVED[n]||2));placeHero(hp);KV.home.hero=hp;faceTo(e.m,hp);e.cd=1e9;mStart(e,pl,n)}}))}
+  return ms.map(n=>({k:'m'+n,i:MOVEI[n]||(MV[n]&&MV[n].ic)||'⚔️',t:MOVEN[n]||(MV[n]&&MV[n].nm)||n,s:(MV[n]?(MV[n].sh||'')+' · wind-up '+MV[n].wind+'s':''),ms:(MV[n]?(MV[n].wind+MV[n].act+MV[n].rec)*1000+700:1800),run(){const e=KV.mon;if(!e)return;
+    mCancel(e);e.m.position.copy(KV.home.mon);const M_=MV[n]||{},dd=MOVED[n]||(M_.rmin>0?Math.max(M_.rmin+.8,Math.min(M_.rmax-.5,4.5)):Math.min(1.7,(M_.rmax||2)-.2)),hp=V(KV.home.mon.x,0,KV.home.mon.z+dd);placeHero(hp);KV.home.hero=hp;faceTo(e.m,hp);e.cd=1e9;mStart(e,pl,n)}}))}
 function heroActions(){const out=[],wt=KV.wt,N=comboN(wt),ranged=RANGEDW[wt];
   const prep=()=>{placeHero(KV.home.hero);faceTo(pl,KV.dummy?KV.dummy.m.position:at(0,3));tgt=KV.dummy;atkCd=0;hero.chan=null;try{riding=null}catch(_){}};
   if(N){for(let i=0;i<N;i++)out.push({k:'h'+i,i:i==N-1?'💥':'⚔️',t:i==N-1?'Finisher (hit '+(i+1)+')':'Hit '+(i+1),s:WTYPE[wt].n+' combo',ms:1200,run(){prep();combo=i;comboT=performance.now();swing()}});

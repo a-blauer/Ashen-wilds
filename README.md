@@ -36,6 +36,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v103 kingdom: building lots `LOT103` (`SH.pos`), houses + citizens `HS103`, the one Steward window, working shopkeepers `WK103` | `1860`–`1900` (v103) |
 | v104 decorations (`DECO103`, the Steward's Decorations tab), citizen trades (`CZR104`: gatherer, egg collector, fisherman, hunter) | `1910-v104-decorations.js`, `1870` (roles), `1880` (menu) |
 | v105 companion abilities: one motion + effect per spell (`SPX105`, motions `MV105`, effect toolkit `fx*`) | `1930-v105-companion-ability-moves.js` |
+| v107 zone monster signature moves: per monster `MSIG107` (basic + 2 signatures), move handlers `MV107[n].x6` | `1950-v107-monster-signature-moves.js` |
 | v105 flail: wide 3-hit sweeps (baked `flail0..2`) | `1920-v105-flail-wide-swings.js`, `test/v100_anim_moves.js` |
 | v103 evolution preview (now → next stage in the Spells & Evolution tab) | `1890-v103-evolve-preview.js` |
 | zone roster + respawn (`ROST`, `RESP_T`), atmosphere, grades | `0550-v71-*` |
@@ -95,6 +96,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   The spell lands at the motion's strike moment (`MV105[m].h`). Bites play the motion in place of the generic lunge.
 - **Baked attack keys**: re-baking with `BAKE=1 python3 v100_anim.py` nudges every move a little (the IK is not fully
   deterministic). When adding moves, splice only the new lines into `1705-v100-anim-baked-keys.js` (as v105 did for the flail).
+- **Monster moves (v107)**: each of the 18 zone monsters has one basic attack (strike/bite/spit/throw/bolt) and two signature
+  moves of its own (`MSIG107`); no zone monster uses charge or pounce. A signature move is a normal `MV` entry (timings, red
+  warning shape) plus hooks in `x6` (`start`, `tick`, `rel` at the end of the wind-up, `land` at the end of the act, `when` to
+  gate the AI). Effects on the hero are buffs via `dqDebuff` (slow, root = `mspd:-1`, defence/damage/attack-speed cuts) and
+  damage over time (`s6Dot`). Self-heals run only on the monster's owner (`!e.mir`). A new monster needs its own entry in
+  `MSIG107` with two moves no other monster uses (`v107_sig.py` checks). Serpent rigs (`anim:'slither'`) reset tail
+  `rotation.x` every frame; attack poses lift a serpent's tail gently and never into the ground (`crApply`).
 - **Zone instances (v106)**: every zone (`PMAP[i]`) is three instances `PMAP[i].ins[k]` (also the flat list `INSL[g]`,
   g = i*3+k), each 350x331 tiles (half a v97 zone). Zone i is row i of the world grid, instance k column k, 6 tiles of void
   apart. `regionAt` gives the zone, `rgAt` the instance key, `insAt` the instance record (`x0,y0,wp,path,cl,ba,wa,en,lv,n,den`).
@@ -151,6 +159,8 @@ python3 mpt.py mpsteps.py    # two-player co-op over a fake room
 python3 v100_town.py         # Duskhold layout, reachability, shops, portals (portal3-5 / portal prompt checks are stale since v101)
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
+python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
+python3 v107_ai.py           # the AI picks signature moves in each zone;  v107_tail.py: Gravewyrm/Venomcoil tail during abilities (viewer build)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
 python3 probe.py file.js     # run one JS snippet in a started game, print the full JSON result (OUTF=out.json)
 python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den
