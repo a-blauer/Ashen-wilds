@@ -580,3 +580,13 @@ Everything stays west of x=110 (max x 105). Duskhold's 4 px/tile ground texture 
 
 - **Test**: `python3 test/v100_town.py` → `CHECKS OK` (63 checks): layout west of the zones and inside the 4 px ground texture; flood-fill reachability of every NPC, shop counter, gate, portal island and open courtyard node at kingdom levels 0–3 with shops built and unbuilt; roads, market street and gates free of colliders; prompts for every shop (built / unbuilt), the Steward and every portal (locked / open); every shop window opens; each portal enters its own zone, coming home lands at that gate; recall saves the run, recall-back returns, re-entering asks Continue / Restart; courtyard growth, harvest, 10-minute regrowth, chopping; old saves in the old Portal Court / old courtyard land on solid ground; every upgrade level and total-level tier adds geometry; no fountain banners; town map; no page errors. Sheets: `test/out/v100_sheet_{town,shops,upgrades,walls,kingdom,portals}.png`. `SHOTS=0` checks only, `CHK=0` sheets only.
 - `test/v88_town_paths.py` now covers the longer town (its grid reaches cy+`T.sz`).
+
+## v101: swing timing (anim follow-up)
+The v100 swing shapes were in the game but played in ~190–340 ms with a ~100 ms wind-up, so at the game camera they looked
+unchanged. `src/modules/zzN_zz_anim2.js` (globals `V100W`, `V100W_pose`) replays the same v100 tracks with a longer wind-up
+(hit lands up to ~120 ms later), a whip through contact, a small lunge into the blow (`solid()`-checked, off when riding), a
+follow-through that fills the gap before the next swing (≤ 90% of the attack cooldown), exaggerated hip/chest/lean/knee
+channels, and a thinner, lighter slash band (`slashFx`). Cooldowns, damage and ranges are unchanged. Spins, bows, casters,
+skills and co-op partner swings are untouched. Live-loop check: `python3 test/v100_live_swing.py` (virtual clock, real
+`swing()`, close-up frame strip every 48 ms → `out/v100_live_<TAG>_<wt>.png`; `SRC=<old> TAG=old` for the same strip of
+another build).
