@@ -37,16 +37,23 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
   HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i)],col:'#d8b46a'})));
   if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
-  // ---- citizens (v104: each has a trade; train them here) ----
+  // ---- citizens (v104: each has a trade; v105: ranks, food, goods to collect at the house) ----
   R.push('<div class="sec kmcits">👥 Citizens</div>');
   if(!HS103.cit.length)R.push('<div class="mut kmnote">Nobody lives in Duskhold yet. Build a house and two citizens move in.</div>');
   else{if(!bossDone.size)R.push('<div class="mut kmnote">Complete a zone (defeat its Sovereign) and citizens can work there.</div>');
-    R.push('<div class="mut kmnote">Train a citizen as an 🥚 Egg Collector (🪙 '+CZR104.egg.g+'), 🎣 Fisherman (🪙 '+CZR104.fish.g+') or 🏹 Hunter (🪙 '+CZR104.hunt.g+'). Trained citizens make a trip every 10 minutes.</div>');
-    HS103.cit.forEach((c,i)=>{const h=HS103.h[c.h],ro=czRole104(c),RR=CZR104[ro],L=czOpts104(c);
-      const opts='<option value="">💤 Idle — strolls round town</option>'+L.map(([v,l])=>`<option value="${v}" ${c.task===v?'selected':''}>${l}</option>`).join('');
-      const tr='<option value="">'+RR.i+' '+RR.n+'</option>'+Object.keys(CZR104).filter(k=>k!==ro).map(k=>`<option value="${k}" ${gold<CZR104[k].g?'disabled':''}>Train as ${CZR104[k].i} ${CZR104[k].n}${CZR104[k].g?' · 🪙 '+CZR104[k].g:' (free)'}</option>`).join('');
-      const st=c.task?czTaskTxt104(c)+` · back in <b data-czt="${i}">${kmClock103(czLeft103(c))}</b>`:(L.length?'Idle in town':'Idle — no work yet ('+(ro=='fish'?'needs a completed zone with water':'needs a completed zone')+')');
-      R.push(`<div class="rw kmrw kmcit kmr-${ro}${KM103.house===c.h?' on':''}"><span class="rn">${RR.i} <b>${c.n}</b> <span class="kmrole">${RR.n}</span> <span class="mut">· ${h?h.nm:''}</span><small>${st}</small></span><span class="ra kmcsel"><select data-czr="${i}" aria-label="Trade for ${c.n}">${tr}</select><select data-czk="${i}" aria-label="Task for ${c.n}">${opts}</select></span></div>`)})}
+    const fd=czFood105();
+    R.push('<div class="mut kmnote">🍖 Food for trips: <b style="color:'+(fd?'var(--ink)':'#f87171')+'">'+fd+' ration'+(fd==1?'':'s')+'</b> in your bag (raw meat, fish, berries and crops are 1 ration, cooked meals 3). A trip costs 1 ration for a gatherer, otherwise the zone\'s tier.<br>'+
+      'Train a citizen as an 🥚 Egg Collector (🪙 '+CZR104.egg.g+'), 🎣 Fisherman (🪙 '+CZR104.fish.g+') or 🏹 Hunter (🪙 '+CZR104.hunt.g+'). Raise their rank to reach higher-tier zones. Goods wait at the house until you collect them there.</div>');
+    HS103.cit.forEach((c,i)=>{const h=HS103.h[c.h],ro=czRole104(c),RR=CZR104[ro],L=czOpts104(c),rk=czRank105(c),up=czUpCost105(c),busy=!!(c.t0||c.bag);
+      const opts='<option value="">💤 Idle — strolls round town</option>'+L.map(([v,l,ok])=>`<option value="${v}" ${c.task===v?'selected':''} ${ok?'':'disabled'}>${l}</option>`).join('');
+      const tr='<option value="">'+RR.i+' '+RR.n+'</option>'+Object.keys(CZR104).filter(k=>k!==ro).map(k=>`<option value="${k}" ${gold<CZR104[k].g||busy?'disabled':''}>Train as ${CZR104[k].i} ${CZR104[k].n}${CZR104[k].g?' · 🪙 '+CZR104[k].g:' (free)'}</option>`).join('');
+      let st;if(c.bag)st='<b style="color:#f0cc72">🎁 Back with goods — collect them at '+(h?h.nm:'the house')+' (F)</b><br>'+czGoodsTxt105(c.bag);
+      else if(c.task&&c.t0)st=czTaskTxt104(c)+` · back in <b data-czt="${i}">${kmClock103(czLeft103(c))}</b>`;
+      else if(c.task&&c.wf==1)st='<span class="warn" style="display:inline">🍽️ Waiting for food: needs '+czCost105(c)+' ration'+(czCost105(c)>1?'s':'')+' to set off</span> · '+czTaskTxt104(c);
+      else if(c.task&&c.wf==2)st='<span class="warn" style="display:inline">🥚 Your egg bag is full ('+CZ104_EGGMAX+')</span> · '+czTaskTxt104(c);
+      else st=L.length?'Idle in town':'Idle — no work yet ('+(ro=='fish'?'needs a completed zone with water':'needs a completed zone')+')';
+      const ub=up?`<button data-czu="${i}" ${gold<up?'disabled':''} title="Rank ${rk+1}: Tier ${rk+1} zones">⬆ Rank ${rk+1} · 🪙 ${up}</button>`:'<em style="color:#6ee7b7">Max rank</em>';
+      R.push(`<div class="rw kmrw kmcit kmr-${ro}${KM103.house===c.h?' on':''}"><span class="rn">${RR.i} <b>${c.n}</b> <span class="kmrole">${RR.n} · rank ${rk}</span> <span class="mut">· ${h?h.nm:''}</span><small>${st}</small></span><span class="ra kmcsel"><select data-czr="${i}" aria-label="Trade for ${c.n}" ${busy?'disabled title="Busy with a trip"':''}>${tr}</select><select data-czk="${i}" aria-label="Task for ${c.n}" ${c.bag?'disabled':''}>${opts}</select>${ub}</span></div>`)})}
   // ---- plan ----
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
   const info=P?`<div class="kmpick">📍 <span>${kmPickLabel103(P)} — click a lit plot on the plan.</span><button data-kmx="1">Cancel</button></div>`
@@ -70,6 +77,7 @@ $('xw').addEventListener('click',e=>{if(xwMode!='hold')return;
     if(kind=='shop')kmPickStart103({kind:'shop',k,key:k});
     else if(kind=='up')kmPickStart103({kind:'up',k,key:'u:'+k});
     else if(kind=='house')kmPickStart103({kind:'house',key:'h:'+HS103.h.length})}});
+$('xw').addEventListener('click',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-czu]');if(!t||t.disabled)return;const c=HS103.cit[+t.dataset.czu];if(c)czRankUp105(c);rX()});
 $('xw').addEventListener('change',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-czr]');if(!t||!t.value)return;const c=HS103.cit[+t.dataset.czr];if(c)czTrain104(c,t.value);rX()});
 $('xw').addEventListener('change',e=>{if(xwMode!='hold')return;const s=e.target.closest('[data-czk]');if(!s)return;const c=HS103.cit[+s.dataset.czk];if(!c)return;czTask103(c,s.value);
   say(s.value?CZR104[czRole104(c)].i+' '+c.n+' sets off: '+czTaskTxt104(c).replace(/<[^>]+>/g,'')+'.':'🧑 '+c.n+' takes it easy in town.');rX()});

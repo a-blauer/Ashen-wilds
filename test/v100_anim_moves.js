@@ -102,6 +102,25 @@ window.V100M=(function(){
     P.thru=Object.assign({},P.thru,V([.06,.72,.46],[0,-.92,.4]),{b:{f:.92,py:-.2,sy:-.1,sx:.62,c:.66,w:1.15,hx:-.2}});
     P.follow=Object.assign({},P.follow,V([.06,.66,.44],[0,-.96,.28]),{b:{f:.92,py:-.2,sy:-.1,sx:.63,c:.68,w:1.15,hx:-.2}});P.rec=Object.assign({},P.rec,{b:{f:.6,sx:.3,c:.35}});
     M.hammer2=strike({ph:P,tm:'heavy',t:{coil:.31,hold:.36,thru:.5,follow:.66,rec:.86}})}
+  // ---------------- flail (v105): wide sweeps at shoulder height — the hand travels a big flat arc, the body turns fully
+  // into it and the ball (a lagging chain child) flies round in front; the third blow is an overhead crash.
+  {const fl=(o)=>({...o});
+    const F={coil:{...V([.42,1.3,-.2],[.55,.45,-.7]),b:{f:.08,py:.46,sy:.52,cy:.16,sx:-.06,sz:-.05,c:.12}},
+      hold:{...V([.45,1.33,-.26],[.5,.4,-.76]),b:{f:.04,py:.5,sy:.58,cy:.18,sx:-.08,sz:-.06,c:.14}},
+      accel:{...V([.5,1.22,.12],[.85,.3,.42]),b:{f:.45,py:.12,sy:.32,cy:.1,sx:.04,c:.18}},
+      hit:{...V([.12,1.14,.56],[-.12,-.05,1]),b:{f:.86,py:-.36,sy:-.12,cy:-.05,sx:.12,sz:.03,c:.24}},
+      thru:{...V([-.36,1.08,.36],[-.85,-.1,.5]),b:{f:1,py:-.56,sy:-.4,cy:-.14,sx:.15,sz:.05,c:.26}},
+      follow:{...V([-.42,1.0,.0],[-.7,-.25,-.65]),b:{f:1,py:-.62,sy:-.52,cy:-.18,sx:.15,sz:.05,c:.27}},
+      rec:{...V([.05,1.0,.3],[-.1,.85,.4]),b:{f:.5,py:-.15,sy:-.1,sx:.06,c:.12}}};
+    const Bk={coil:{...V([-.2,1.2,.1],[-.6,.45,-.65]),b:{f:.1,py:-.36,sy:-.5,cy:-.14,sx:-.02,sz:.04,c:.12,lead:-1}},
+      hold:{...V([-.24,1.22,.06],[-.55,.42,-.7]),b:{f:.06,py:-.4,sy:-.56,cy:-.16,sx:-.03,sz:.05,c:.14,lead:-1}},
+      accel:{...V([-.22,1.15,.42],[-.8,.2,.55]),b:{f:.5,py:-.06,sy:-.3,cy:-.08,sx:.06,c:.18,lead:-1}},
+      hit:{...V([.12,1.12,.56],[.15,0,1]),b:{f:.86,py:.32,sy:.14,cy:.06,sx:.12,sz:-.03,c:.24,lead:-1}},
+      thru:{...V([.48,1.1,.3],[.85,0,.5]),b:{f:1,py:.5,sy:.38,cy:.14,sx:.14,sz:-.05,c:.26,lead:-1}},
+      follow:{...V([.52,1.08,-.02],[.75,.15,-.6]),b:{f:1,py:.56,sy:.48,cy:.16,sx:.14,sz:-.05,c:.27,lead:-1}},
+      rec:{...V([.2,1.0,.25],[.3,.85,.3]),b:{f:.5,py:.12,sy:.1,sx:.08,c:.12,lead:-1}}};
+    M.flail0=strike({ph:shieldOn(F,0,1),tm:'heavy',t:{coil:.28,hold:.33}});M.flail1=strike({ph:shieldOn(Bk,0,1),tm:'heavy',t:{coil:.28,hold:.33}});
+    M.flail2=strike({ph:shieldOn(over({h:1.6}),1),tm:'heavy',t:{coil:.31,hold:.36}})}
   // ---------------- twin axes: fast alternating chops, each from its own shoulder; finisher = both axes chop down ----------------
   const axOff=OFF.guard;
   M.axes0=strike({ph:offAll(fore({lo:.04}),{lx:-.55,ly:.1,lz:-.25,le:-1.3,lw:.3}),tm:'snap'});

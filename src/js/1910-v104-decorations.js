@@ -9,8 +9,10 @@ var DECO103_WALLZ=[-16,-8,0,10,16,28,34,46];
 function dcPost103(k,x,z,h,c){k.as('bark',()=>k.L('c',c||TWC.woodD,[x,0,z],[x,h,z],.06,'log'))}
 var DECO103=[
  {k:'banner',i:'🎏',n:'Kingdom Banners',g:300,d:'Crimson banners hang along the inner walls.',
-  b(k){const ban=TOWNS[0].pal.ban||0x8a2a3a;[-1,1].forEach(s=>DECO103_WALLZ.forEach((z,i)=>{const x=s*35.45;k.L('m',TWC.iron,[x,2.75,z],[x+s*.45,2.75,z],.025,'box',0);kdBanner(k,x,2.7,z,-s*Math.PI/2,i%2?ban:0x2a2a3a,.62,1.25)}));
-    [-30,-22,-15,-8,8,15,22,30].forEach((x,i)=>{const z=50.45;kdBanner(k,x,2.7,z,Math.PI,i%2?ban:0x2a2a3a,.62,1.25)})}},
+  wall:1,b(k,D,W){const ban=TOWNS[0].pal.ban||0x8a2a3a;
+    [-1,1].forEach(s=>DECO103_WALLZ.forEach((z,i)=>{const t=W.top(s*36,z);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceX(s,z,y-.5);if(f==null)return;const x=f-s*.04;
+      k.L('m',TWC.iron,[x,y+.05,z],[x+s*.05,y+.05,z],.025,'box',0);kdBanner(k,x,y,z,-s*Math.PI/2,i%2?ban:0x2a2a3a,.62,h)}));
+    [-30,-22,-15,-8,8,15,22,30].forEach((x,i)=>{const t=W.top(x,51);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceZ(x,y-.5);if(f==null)return;kdBanner(k,x,y,f-.04,Math.PI,i%2?ban:0x2a2a3a,.62,h)})}},
  {k:'garland',i:'🏮',n:'Avenue Lanterns',g:450,d:'Strings of paper lanterns across the South Ward avenue.',
   b(k){[19,26.25,33.75,41.25].forEach(z=>{[-1,1].forEach(s=>dcPost103(k,s*3.05,z,3.4));k.L('m',0x2a2420,[-3.05,3.35,z],[0,3.05,z],.012,'cyl6',0);k.L('m',0x2a2420,[0,3.05,z],[3.05,3.35,z],.012,'cyl6',0);
     for(let i=-2;i<=2;i++){const x=i*1.0,y=3.05+Math.abs(i)*.1-.25;k.p('g',[0xffb050,0xff7a5a,0xffe08a,0xc8a0ff,0xff9a40][(i+2)%5],'oct',x,y,z,.14,.2,.14)}})}},
@@ -39,11 +41,11 @@ var DECO103=[
     k.p('g',C[i],'oct',x,1.42,z,.22,.4,.22);k.p('m',TWC.gold,'box',x-.42,.6,z,.02,.2,.5,0,0,0,0)})},col(D){return D.sp.map(([x,z])=>[x,z,.45])}},
  {k:'ravens',i:'🪶',n:'Ravens',g:350,d:'A few ravens keep watch from the walls. They flap and caw.',
   sp:[[-35.6,-6,1],[-35.6,20,1],[35.6,14,-1],[35.6,32,-1],[-11,50.6,0],[17,50.6,0]],
-  an(g,D){const M=new THREE.MeshLambertMaterial({color:0x14121a}),B=new THREE.MeshLambertMaterial({color:0x3a3020}),R=D.sp.map(([x,z,s],i)=>{const r=new THREE.Group();r.position.set(x,2.55,z);r.rotation.y=s?-s*Math.PI/2:Math.PI;
+  wall:1,an(g,D,W){const M=new THREE.MeshLambertMaterial({color:0x14121a}),B=new THREE.MeshLambertMaterial({color:0x3a3020}),R=D.sp.map(([x,z,s],i)=>{const r=new THREE.Group(),t=W.top(s?s*36:x,s?z:51);r.position.set(s?s*36:x,(t==null?2.5:t)+.12,s?z:51);r.userData.y0=r.position.y;r.rotation.y=s?-s*Math.PI/2:Math.PI;
     const b=new THREE.Mesh(new THREE.IcosahedronGeometry(.13,0),M);b.scale.set(.85,.9,1.45);r.add(b);const h=new THREE.Mesh(new THREE.IcosahedronGeometry(.08,0),M);h.position.set(0,.12,.15);r.add(h);
     const bk=new THREE.Mesh(new THREE.ConeGeometry(.025,.1,4),B);bk.rotation.x=Math.PI/2;bk.position.set(0,.11,.25);h.add(bk);bk.position.set(0,-.01,.1);
     const w=[-1,1].map(q=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.24,.02,.14),M);m.position.set(q*.14,.03,-.02);m.geometry.translate(q*.1,0,0);r.add(m);return m});g.add(r);return {r,h,w,t:i*1.7}});
-    return now=>R.forEach(o=>{const t=now/1000+o.t,fl=Math.max(0,Math.sin(t*.7))>.93?Math.sin(t*28):0;o.w[0].rotation.z=.25+.9*fl;o.w[1].rotation.z=-.25-.9*fl;o.h.rotation.y=.6*Math.sin(t*.45)+.2*Math.sin(t*1.9);o.r.position.y=2.55+.05*Math.abs(fl)})}},
+    return now=>R.forEach(o=>{const t=now/1000+o.t,fl=Math.max(0,Math.sin(t*.7))>.93?Math.sin(t*28):0;o.w[0].rotation.z=.25+.9*fl;o.w[1].rotation.z=-.25-.9*fl;o.h.rotation.y=.6*Math.sin(t*.45)+.2*Math.sin(t*1.9);o.r.position.y=o.r.userData.y0+.05*Math.abs(fl)})}},
  {k:'wisps',i:'✨',n:"Will-o'-Wisps",g:900,d:'Soft lights drift through the South Ward at night.',
   an(g){const M=[0x9ad8ff,0xc8a0ff,0xffe08a].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.85}));const W=[];for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.OctahedronGeometry(.09,0),M[i%3]);m.userData.lpsSkip=1;
       const a={x:(i*37%40)-20,z:20+(i*53%28),y:1.4+(i%4)*.45,t:i*2.3};g.add(m);W.push([m,a])}
@@ -61,7 +63,8 @@ var DECO103=[
   b(k){k.at(-20,0,3,()=>{twStoneRing(k,0x7a7468,0,0,.75,0,.85,.3);k.p('c',0x1a2a3a,'cyl8',0,.6,0,.55,.02,.55,0,0,0,0);[-1,1].forEach(s=>k.as('wood',()=>k.L('c',TWC.woodD,[s*.78,0,0],[s*.78,2.0,0],.07,'box')));
     k.as('wood',()=>k.L('c',TWC.woodD,[-.85,1.6,0],[.85,1.6,0],.05,'cyl6'));k.L('m',0x8a7a5a,[0,1.6,0],[0,.95,0],.012,'cyl6',0);k.as('wood',()=>k.p('c',0x6a4a2e,'cyl8',0,.92,0,.16,.2,.16,0,0,0,.03));twGable(k,0x5a4632,2.0,1.2,.55,.2,2.0)})},col(){return [[-20,3,.95]]}},
  {k:'bunting',i:'🧵',n:'Festival Bunting',g:300,d:'Colourful pennants strung across the side streets.',
-  b(k){[-1,1].forEach(s=>[-1,6,12,20,30,38,45].forEach((z,j)=>{const x0=s*20.9,x1=s*26.1,y=3.7;k.L('m',0x3a3028,[x0,y,z],[x1,y,z],.01,'cyl6',0);
+  sp:[].concat(...[-1,1].map(s=>[-3.5,7.5,18.5,26.25,33.75,41.25].map(z=>[[s*21.05,z],[s*25.85,z]])).flat()),
+  b(k){[-1,1].forEach(s=>[-3.5,7.5,18.5,26.25,33.75,41.25].forEach((z,j)=>{const x0=s*21.05,x1=s*25.85,y=3.7;[x0,x1].forEach(x=>dcPost103(k,x,z,3.85));k.L('m',0x3a3028,[x0,y,z],[x1,y,z],.01,'cyl6',0);
     for(let i=0;i<7;i++){const t=(i+.5)/7,x=x0+(x1-x0)*t,yy=y-.18*Math.sin(t*Math.PI);k.as('cloth',()=>k.p('c',[0xc83a3a,0xe8c84a,0x3a6ac8,0x3a9a5a][(i+j)%4],'tri',x,yy-.16,z,.32,.3,.02,0,Math.PI/2,Math.PI,0))}}))}},
  {k:'benches',i:'🪑',n:'Stone Benches',g:200,d:'Benches along the walls for tired heroes.',
   sp:[[-34.4,-8,1],[-34.4,12,1],[-34.4,16,1],[34.4,-8,-1],[34.4,12,-1],[34.4,16,-1]],
@@ -80,8 +83,9 @@ var DECO103=[
   b(k,D){D.sp.forEach(([x,z],i)=>{dcPost103(k,x,z,2.2,0x4a3424);k.as('plain',()=>{k.p('c',0xe8e0c8,'dod',x,2.25,z,.22,.18,.2);[-1,1].forEach(s=>k.L('c',0xe8e0c8,[x+s*.12,2.3,z],[x+s*.55,2.75,z-.1],.04,'cone6'))});
     [.9,1.3,1.7].forEach((y,j)=>k.p('c',[0x8a2a2a,0xe8e0c8,0x2a2a30][j],'box',x,y,z,.18,.06,.18,0,j,0,.02))})}},
  {k:'ivy',i:'🌿',n:'Wall Ivy',g:200,d:'Dark ivy climbs the inside of the walls.',
-  b(k){[-1,1].forEach(s=>[-18,-11,-4,4,9,19,26,31,37,44,49].forEach((z,i)=>{for(let j=0;j<4;j++)k.p('c',[0x24402a,0x2e4a30,0x35602e][(i+j)%3],'ico',s*35.42,.4+j*.55+i%2*.2,z+(j%2-.5)*.5,.08,.35,.4,0,0,0,.12)}));
-    [-27,-18,-4,10,24,31].forEach((x,i)=>{for(let j=0;j<3;j++)k.p('c',[0x24402a,0x2e4a30][(i+j)%2],'ico',x+(j-1)*.45,.5+j*.6,50.42,.4,.35,.08,0,0,0,.12)})}},
+  wall:1,b(k,D,W){[-1,1].forEach(s=>[-18,-11,-4,4,9,19,26,31,37,44,49].forEach((z,i)=>{const t=W.top(s*36,z);if(t==null)return;for(let j=0;j<4;j++){const y=.4+j*.55+i%2*.2;if(y>t-.3)break;const f=W.faceX(s,z,y);if(f==null)continue;
+      k.p('c',[0x24402a,0x2e4a30,0x35602e][(i+j)%3],'ico',f-s*.06,y,z+(j%2-.5)*.5,.08,.35,.4,0,0,0,.12)}}));
+    [-27,-18,-4,10,24,31].forEach((x,i)=>{const t=W.top(x,51);if(t==null)return;for(let j=0;j<3;j++){const y=.5+j*.6;if(y>t-.3)break;const f=W.faceZ(x,y);if(f==null)continue;k.p('c',[0x24402a,0x2e4a30][(i+j)%2],'ico',x+(j-1)*.45,y,f-.06,.4,.35,.08,0,0,0,.12)}})}},
  {k:'gatepoles',i:'🚩',n:'Gate Standards',g:650,d:'Two tall standards flank the inside of the south gate.',
   b(k){const ban=TOWNS[0].pal.ban||0x8a2a3a;[-1,1].forEach(s=>{const x=s*4.3,z=49.2;dcPost103(k,x,z,5.2);k.p('m',TWC.gold,'oct',x,5.35,z,.1,.18,.1);k.as('wood',()=>k.L('c',TWC.woodD,[x,4.9,z],[x,4.9,z-.9],.035,'box'));kdBanner(k,x,4.85,z-.45,s*Math.PI/2,ban,.75,2.2)})},
   col(){return [[-4.3,49.2,.15],[4.3,49.2,.15]]}},
@@ -110,12 +114,21 @@ var DECO103=[
 ];
 var DC103={g:{},col:{}};SH.deco=SH.deco||{};
 function dcOn103(k){return SH.deco[k]===1}
-function dcBuild103(D){const T=TOWNS[0],key='DECO104|'+D.k;let k=null;const g=new THREE.Group();g.name='deco_'+D.k;g.position.set(T.cx,T.ph,T.cy);
-  if(D.b){if(!twHas(key)){k=twKit(1101+D.k.length*7+D.k.charCodeAt(0));D.b(k,D)}const s=twGroup(k,key);g.add(s)}
-  if(D.an){const f=D.an(g,D);if(f){g.userData.an={x:T.cx,z:T.cy+14,f:now=>{if(g.visible)f(now)}};TANIM.push(g.userData.an)}g.userData.psNo=1}
+// the wall as it stands now (Bastion Walls level): inner face and top found by casting rays at the ring's own meshes
+function dcWall104(){const T=TOWNS[0],K=kdState(),G=K.wg,lv=K.wl|0,rc=new THREE.Raycaster();if(G)G.updateMatrixWorld(true);
+  const hit=(o,d,far)=>{if(!G)return null;rc.set(o,d);rc.far=far;const h=rc.intersectObject(G,true)[0];return h?h.point:null};
+  return {lv,top:(x,z)=>{let best=null;for(const [dx,dz] of [[0,0],[.2,0],[-.2,0],[0,.2],[0,-.2],[.15,.15],[-.15,-.15]]){const p=hit(new THREE.Vector3(T.cx+x+dx,T.ph+20,T.cy+z+dz),new THREE.Vector3(0,-1,0),30);if(p&&(best==null||p.y-T.ph>best))best=p.y-T.ph}return best},
+    faceX:(s,z,y)=>{const p=hit(new THREE.Vector3(T.cx+s*30,T.ph+y,T.cy+z),new THREE.Vector3(s,0,0),12);return p?p.x-T.cx:s*35.5},
+    faceZ:(x,y)=>{const p=hit(new THREE.Vector3(T.cx+x,T.ph+y,T.cy+44),new THREE.Vector3(0,0,1),12);return p?p.z-T.cy:50.5}}}
+function dcBuild103(D){const T=TOWNS[0],W=D.wall?dcWall104():null,key='DECO104|'+D.k+(W?'|w'+W.lv:'');let k=null;const g=new THREE.Group();g.name='deco_'+D.k;g.position.set(T.cx,T.ph,T.cy);g.userData.wl=W?W.lv:null;
+  if(D.b){if(!twHas(key)){k=twKit(1101+D.k.length*7+D.k.charCodeAt(0));D.b(k,D,W)}const s=twGroup(k,key);g.add(s)}
+  if(D.an){const f=D.an(g,D,W);if(f){g.userData.an={x:T.cx,z:T.cy+14,f:now=>{if(g.visible)f(now)}};TANIM.push(g.userData.an)}g.userData.psNo=1}
   scene.add(g);DC103.g[D.k]=g;
   DC103.col[D.k]=(D.col?D.col(D):[]).map(q=>q.length==3?{x:T.cx+q[0],z:T.cy+q[1],r:q[2]}:{x:T.cx+q[0],z:T.cy+q[1],hx:q[2],hz:q[3]});return g}
-function dc103Sync(){const T=TOWNS[0];if(!T)return;DECO103.forEach(D=>{const on=dcOn103(D.k);let g=DC103.g[D.k];if(on&&!g)g=dcBuild103(D);if(g)g.visible=on;
+function dcDrop104(k){const g=DC103.g[k],T=TOWNS[0];if(!g)return;scene.remove(g);if(g.userData.an){const i=TANIM.indexOf(g.userData.an);if(i>=0)TANIM.splice(i,1)}(DC103.col[k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(i>=0)T.col.splice(i,1)});delete DC103.g[k];delete DC103.col[k]}
+function dc103Sync(){const T=TOWNS[0];if(!T)return;const wl=kdState().wl|0;
+  DECO103.forEach(D=>{if(D.wall&&DC103.g[D.k]&&DC103.g[D.k].userData.wl!==wl)dcDrop104(D.k)});
+  DECO103.forEach(D=>{const on=dcOn103(D.k);let g=DC103.g[D.k];if(on&&!g)g=dcBuild103(D);if(g)g.visible=on;
   (DC103.col[D.k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(on&&i<0)T.col.push(c);else if(!on&&i>=0)T.col.splice(i,1)})});
   try{if(typeof CZ103!='undefined')CZ103.ver=-1}catch(_){}}
 function dcBuy103(k){const D=DECO103.find(q=>q.k==k);if(!D||SH.deco[k]!=null)return;if(gold<D.g)return say('Not enough gold.');gold-=D.g;SH.deco[k]=1;dc103Sync();
@@ -144,4 +157,6 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .dci{font-size:1.5rem;text-align:center}#xw .dct small{display:block;color:var(--mut);font-size:.72rem;line-height:1.3}
 #xw .dctg{min-width:54px;border-radius:99px!important}#xw .dctg.on{background:#3a6a3a;border-color:#6ee7b7;color:#e8ffe8}
 </style>`);
+// walls rebuilt (Bastion Walls upgraded) → the wall decorations follow
+{const f=kdSync;kdSync=function(){const r=f.apply(this,arguments);try{dc103Sync()}catch(e){console.warn('v104 decorations',e)}return r}}
 try{dc103Sync()}catch(e){console.warn('v104 decorations',e)}

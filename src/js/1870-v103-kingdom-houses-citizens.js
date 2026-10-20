@@ -60,62 +60,94 @@ function hsBuy103(id){const ok=hsCan103();if(!ok[0]){say(ok[1]+'.');return false
   const taken=new Set(HS103.cit.map(c=>c.n)),pool=HS103_CN.filter(q=>!taken.has(q));for(let j=0;j<2;j++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0]||('Citizen '+(HS103.cit.length+1));
     HS103.cit.push({n:k,h:n,task:'',t0:0,lk:Math.floor(Math.random()*1e6)})}
   lotSync103();const who=hsWho103(n);banner('🏠 '+nm.toUpperCase(),who+' move in','Give them work at the Stronghold Steward');sfx('power');hud();ui();try{saveGame(true)}catch(_){}return true}
-// ---------- v104: roles. Every citizen starts as a gatherer; the Steward can train them for gold ----------
-//   gather  materials of a completed zone, every HS103_TRIP (8 min)        task = material key
-//   egg     one egg of a chosen species from a completed zone, every 10 min  task = 'zone:Species'
-//   fish    fish of a completed zone with water, every 10 min              task = 'zone'
-//   hunt    hunts a completed zone's monsters, every 10 min: gold, monster parts, now and then gear (never eggs)  task = 'zone'
-var CZR104={gather:{n:'Gatherer',i:'🧺',g:0,trip:HS103_TRIP,d:'Gathers materials'},egg:{n:'Egg Collector',i:'🥚',g:800,trip:10*60000,d:'Brings back one egg of a chosen kind'},
-  fish:{n:'Fisherman',i:'🎣',g:500,trip:10*60000,d:'Fishes a zone and brings back the catch'},hunt:{n:'Hunter',i:'🏹',g:1000,trip:10*60000,d:'Hunts a zone and brings back the spoils'}};
-var CZ104_EGGMAX=40;
+// ---------- v104/v105: trades, ranks, food and collecting ----------
+// Every citizen starts as a gatherer; the Steward trains them for gold into an egg collector, fisherman or hunter.
+// v105: a trade has a rank (1..5): a citizen only works zones of that tier or lower (Kindlelight 1 … The Citadel 5);
+// each rank above 1 is bought at the Steward. Every trip costs food rations when it starts (raw food and crops 1 ration
+// each, cooked meals 3; rations = the zone's tier, gatherers 1); with no food the citizen waits at home.
+// When a trip ends the citizen comes home and waits outside the house with a sign over the head: walk up and press F
+// to take the goods. Only then does the next trip start (no more trips piling up while you are away).
+//   gather  materials of a completed zone, 8 min per trip      task = material key
+//   egg     one egg of a chosen species of a completed zone   task = 'zone:Species'   (10 min)
+//   fish    3 fish of a completed zone with water            task = 'zone'           (10 min)
+//   hunt    4 kills of a completed zone: gold, monster parts, now and then gear (never eggs)  task = 'zone'  (10 min)
+var CZR104={gather:{n:'Gatherer',i:'🧺',g:0,up:300,trip:HS103_TRIP,d:'Gathers materials'},egg:{n:'Egg Collector',i:'🥚',g:800,up:600,trip:10*60000,d:'Brings back one egg of a chosen kind'},
+  fish:{n:'Fisherman',i:'🎣',g:500,up:400,trip:10*60000,d:'Fishes a zone and brings back the catch'},hunt:{n:'Hunter',i:'🏹',g:1000,up:700,trip:10*60000,d:'Hunts a zone and brings back the spoils'}};
+var CZ104_EGGMAX=40,CZ105_RMAX=5;
 function czRole104(c){return CZR104[c.r]?c.r:'gather'}
+function czRank105(c){return Math.max(1,Math.min(CZ105_RMAX,c.rk|0||1))}
+function czUpCost105(c){const r=czRank105(c);return r>=CZ105_RMAX?0:CZR104[czRole104(c)].up*r}
 function czTrip104(c){return CZR104[czRole104(c)].trip}
 // the companion kinds whose eggs can be found in zone i: the families of its monsters at the zone's tier, plus its own creature
 function zEggs104(i){const p=PMAP[i];if(!p)return [];const S=new Set();(BIOEN[p.n]||[]).forEach(k=>{const f=EN[k]&&EN[k].fam,sp=f&&famTier(f,p.t);if(sp)S.add(sp)});const b=BIOMES[p.bi];if(b&&b.sp&&SP2[b.sp])S.add(b.sp);return [...S]}
 function zWater104(i){return zMat103()[i]&&zMat103()[i].has('clay')}
 function czZones104(){return [...bossDone].filter(i=>PMAP[i]).sort((a,b)=>a-b)}
-// [value, label] for every task this citizen may take now
-function czOpts104(c){const r=czRole104(c),Z=czZones104();
-  if(r=='gather')return hsMats103().map(([k,z])=>[k,matInfo(k)[1]+' Gather '+matInfo(k)[0]+' ('+z.join(', ')+')']);
-  if(r=='egg'){const o=[];Z.forEach(i=>zEggs104(i).forEach(sp=>o.push([i+':'+sp,'🥚 '+sp+' egg · Tier '+SP2[sp][1]+' ('+PMAP[i].n+')'])));return o}
-  if(r=='fish')return Z.filter(zWater104).map(i=>[String(i),'🎣 Fish the waters of '+PMAP[i].n]);
-  return Z.map(i=>[String(i),'🏹 Hunt in '+PMAP[i].n+' (Lv '+czHLv104(i)+')'])}
-function czOk104(c,v){return !v||czOpts104(c).some(q=>q[0]===v)}
+// the zone a task works in (gatherers: the lowest-tier completed zone in reach that has the material)
+function czZone105(c,v){v=v==null?c.task:v;if(!v)return -1;const r=czRole104(c);if(r=='egg')return +v.split(':')[0];if(r!='gather')return +v;
+  const Z=zMat103(),rk=czRank105(c);let best=-1;czZones104().forEach(i=>{if(Z[i]&&Z[i].has(v)&&PMAP[i].t<=rk&&(best<0||PMAP[i].t<PMAP[best].t))best=i});
+  if(best<0)czZones104().forEach(i=>{if(Z[i]&&Z[i].has(v)&&(best<0||PMAP[i].t<PMAP[best].t))best=i});return best}
+function czTier105(c,v){const i=czZone105(c,v);return i>=0&&PMAP[i]?PMAP[i].t:1}
+// [value, label, allowed] for every task of this trade (allowed: the citizen's rank reaches the zone's tier)
+function czOpts104(c){const r=czRole104(c),Z=czZones104(),rk=czRank105(c),lk=t=>t>rk?' · needs rank '+t:'';
+  if(r=='gather')return hsMats103().map(([k,z])=>{const t=czTier105(c,k);return [k,matInfo(k)[1]+' Gather '+matInfo(k)[0]+' ('+z.join(', ')+')'+lk(t),t<=rk]});
+  if(r=='egg'){const o=[];Z.forEach(i=>zEggs104(i).forEach(sp=>o.push([i+':'+sp,'🥚 '+sp+' egg · Tier '+SP2[sp][1]+' ('+PMAP[i].n+')'+lk(PMAP[i].t),PMAP[i].t<=rk])));return o}
+  if(r=='fish')return Z.filter(zWater104).map(i=>[String(i),'🎣 Fish the waters of '+PMAP[i].n+lk(PMAP[i].t),PMAP[i].t<=rk]);
+  return Z.map(i=>[String(i),'🏹 Hunt in '+PMAP[i].n+' (Lv '+czHLv104(i)+')'+lk(PMAP[i].t),PMAP[i].t<=rk])}
+function czOk104(c,v){return !v||czOpts104(c).some(q=>q[0]===v&&q[2])}
 function czTaskTxt104(c){const r=czRole104(c),v=c.task;if(!v)return '';
   if(r=='gather')return 'Gathering '+matInfo(v)[1]+' '+matInfo(v)[0]+' · '+(HS103_LOAD[v]||1)+' per trip';
-  if(r=='egg'){const [i,sp]=v.split(':');return 'Collecting '+sp+' eggs in '+(PMAP[+i]||{}).n+(eggs.length>=CZ104_EGGMAX?' · <span class="warn">your egg bag is full ('+CZ104_EGGMAX+')</span>':'')}
+  if(r=='egg'){const [i,sp]=v.split(':');return 'Collecting '+sp+' eggs in '+(PMAP[+i]||{}).n}
   if(r=='fish')return 'Fishing in '+(PMAP[+v]||{}).n;return 'Hunting in '+(PMAP[+v]||{}).n}
 function czHLv104(i){return Math.max(1,((BOSSES[i]||{}).lvl||9)-3)}
-function czTask103(c,m){if(m&&!czOk104(c,m))return;c.task=m||'';c.t0=m?Date.now():0;c.vt=null;try{saveGame(true)}catch(_){}}
+// ---------- food ----------
+function czFoodV105(k){const S=SUP[k];return !S?0:S.c=='food'?3:(S.c=='ing'||S.c=='crop')?1:0}
+function czFood105(){let n=0;for(const k in sup){const v=czFoodV105(k);if(v&&sup[k]>0)n+=v*sup[k]}return n}
+function czCost105(c){return czRole104(c)=='gather'?1:czTier105(c)}
+// take n rations from the bag: raw food first, cooked meals last; false when there is not enough
+function czEat105(n){if(czFood105()<n)return false;const K=Object.keys(sup).filter(k=>czFoodV105(k)&&sup[k]>0).sort((a,b)=>czFoodV105(a)-czFoodV105(b));
+  for(const k of K){while(n>0&&sup[k]>0){sup[k]--;n-=czFoodV105(k)}if(n<=0)break}return true}
+// ---------- tasks, ranks, trades ----------
+function czTask103(c,m){if(m&&!czOk104(c,m))return;if(c.bag)return say('🎁 '+c.n+' is waiting with goods at home: collect them first.');c.task=m||'';c.t0=0;c.wf=0;c.vt=null;try{czTick103()}catch(_){}try{saveGame(true)}catch(_){}}
 function czLeft103(c){return c.task&&c.t0?Math.max(0,czTrip104(c)-(Date.now()-c.t0)):0}
-function czTrain104(c,r){if(!CZR104[r]||czRole104(c)===r)return false;const R=CZR104[r];if(gold<R.g){say('Training a '+R.n.toLowerCase()+' costs 🪙 '+R.g+'.');return false}
-  gold-=R.g;c.r=r;c.task='';c.t0=0;c.vt=null;czClear103();say(R.i+' '+c.n+' is now '+(r=='egg'?'an':'a')+' '+R.n.toLowerCase()+'.');sfx('power');hud();try{saveGame(true)}catch(_){}return true}
-// one finished trip: add the goods, return [icon, amount, name] pieces for the message
-function czTrip1_104(c,out){const r=czRole104(c),v=c.task;
-  if(r=='gather'){const n=HS103_LOAD[v]||1;mats[v]=(mats[v]||0)+n;out.push([matInfo(v)[1],n,matInfo(v)[0]]);return}
-  if(r=='egg'){const [i,sp]=v.split(':');if(!SP2[sp])return;if(eggs.length>=CZ104_EGGMAX){HS103.full=1;return}const eg=mkEgg(sp,SP2[sp][1]-1,.95+Math.random()*.15);eggs.push(eg);try{dex.egg.add(sp)}catch(_){}out.push(['🥚',1,sp+' Egg']);return}
-  const zi=+v,p=PMAP[zi];if(!p)return;const T=p.t;
-  if(r=='fish'){let fsh=0;for(let k=0;k<3;k++){const pool=FISH.filter(f=>f[2]<=T),w=pool.map(f=>[8,3,1,.15][f[3]]*(f[2]==T?1.5:1));let x=Math.random()*w.reduce((a,b)=>a+b,0),f=pool[0];for(let j=0;j<pool.length;j++){x-=w[j];if(x<0){f=pool[j];break}}
-      fishLog[f[0]]=(fishLog[f[0]]||0)+1;giveS('fish',f[3]+1);fsh+=f[3]+1}out.push(['🐟',fsh,'Fish']);if(Math.random()<.05){const k=RUNEK[R(0,RUNEK.length-1)];giveS(k,1);out.push(['🔮',1,'rune'])}return}
+function czTrain104(c,r){if(!CZR104[r]||czRole104(c)===r)return false;if(c.t0||c.bag){say('🧑 '+c.n+' is busy: wait until the trip is over and the goods are collected.');return false}
+  const R=CZR104[r];if(gold<R.g){say('Training a '+R.n.toLowerCase()+' costs 🪙 '+R.g+'.');return false}
+  gold-=R.g;c.r=r;c.rk=1;c.task='';c.t0=0;c.wf=0;c.vt=null;czClear103();say(R.i+' '+c.n+' is now '+(r=='egg'?'an':'a')+' '+R.n.toLowerCase()+' (rank 1).');sfx('power');hud();try{saveGame(true)}catch(_){}return true}
+function czRankUp105(c){const g=czUpCost105(c);if(!g)return false;if(gold<g){say('Rank '+(czRank105(c)+1)+' costs 🪙 '+g+'.');return false}gold-=g;c.rk=czRank105(c)+1;
+  say(CZR104[czRole104(c)].i+' '+c.n+' reaches rank '+c.rk+' and can now work Tier '+c.rk+' zones.');sfx('power');hud();try{saveGame(true)}catch(_){}return true}
+// ---------- one trip's goods (computed when the trip ends, given when collected) ----------
+function czGoods105(c){const r=czRole104(c),v=c.task,G=[];
+  if(r=='gather'){G.push({t:'mat',k:v,n:HS103_LOAD[v]||1});return G}
+  if(r=='egg'){const sp=v.split(':')[1];if(SP2[sp])G.push({t:'egg',sp});return G}
+  const zi=+v,p=PMAP[zi];if(!p)return G;const T=p.t;
+  if(r=='fish'){let fsh=0;const caught=[];for(let k=0;k<3;k++){const pool=FISH.filter(f=>f[2]<=T),w=pool.map(f=>[8,3,1,.15][f[3]]*(f[2]==T?1.5:1));let x=Math.random()*w.reduce((a,b)=>a+b,0),f=pool[0];for(let j=0;j<pool.length;j++){x-=w[j];if(x<0){f=pool[j];break}}
+      fsh+=f[3]+1;caught.push(f[0])}G.push({t:'sup',k:'fish',n:fsh,log:caught});if(Math.random()<.05)G.push({t:'sup',k:RUNEK[R(0,RUNEK.length-1)],n:1});return G}
   // hunt: four kills of the zone's monsters at its level; the same drop odds as in the field, without eggs
-  const L=czHLv104(zi),E=BIOEN[p.n]||[];let g=0;const got={};
+  const L=czHLv104(zi),E=BIOEN[p.n]||[];let g=0;const got={};let meat=0;
   for(let k=0;k<4;k++){const en=EN[E[R(0,E.length-1)]]||{},fam=en.fam||'Beast';g+=Math.max(1,Math.round((3+L*1.4)*(.7+Math.random()*.6)*.65));
     if(Math.random()<.18){const m=FAMD[fam].mat;got[m]=(got[m]||0)+R(1,2)}if(Math.random()<.1){const m=UPM[T-1][0];got[m]=(got[m]||0)+1}
-    if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<.1){giveS('meat',1);out.push(['🍖',1,'Meat'])}
-    if(Math.random()<.035){const it=genItem(L,{minR:0});gear.push(it);out.push([icoOf(it),1,itName(it)])}}
-  g=Math.round(g*(1+[0,.1,.2,.3][shL('treas')]));gold+=g;out.push(['🪙',g,'gold']);for(const m in got){mats[m]=(mats[m]||0)+got[m];out.push([matInfo(m)[1],got[m],matInfo(m)[0]])}}
-function czTick103(){const now=Date.now();let trips=0;const out=[];HS103.full=0;
-  HS103.cit.forEach(c=>{if(!c.task)return;if(!czOk104(c,c.task)){c.task='';c.t0=0;return}if(!c.t0)c.t0=now;if(now-c.t0>HS103_CAP)c.t0=now-HS103_CAP;const T=czTrip104(c);
-    while(now-c.t0>=T){c.t0+=T;czTrip1_104(c,out);trips++;c.vt=null;HS103.lastMsg=c}});
-  if(!trips)return;const sum={};out.forEach(([i,n,k])=>{const q=i+'|'+k;sum[q]=(sum[q]||0)+n});const line=Object.keys(sum).map(q=>{const [i,k]=q.split('|');return i+' '+sum[q]+' '+k}).join(' · ');
-  if(line)say('🏘️ '+(trips==1?HS103.lastMsg.n:'Your citizens')+' brought back '+line);if(HS103.full)say('🥚 Your egg bag is full ('+CZ104_EGGMAX+'): hatch or consume some so the egg collectors can bring more.');
-  hsDirty&&hsDirty();try{hud()}catch(_){}try{if(typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
+    if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<.25)meat++;
+    if(Math.random()<.035)G.push({t:'gear',it:genItem(L,{minR:0})})}
+  g=Math.round(g*(1+[0,.1,.2,.3][shL('treas')]));G.push({t:'gold',n:g});if(meat)G.push({t:'sup',k:'meat',n:meat});for(const m in got)G.push({t:'mat',k:m,n:got[m]});return G}
+function czGoodsTxt105(G){return (G||[]).map(q=>q.t=='mat'?matInfo(q.k)[1]+' '+q.n+' '+matInfo(q.k)[0]:q.t=='sup'?(SUP[q.k]?SUP[q.k].i+' '+q.n+' '+SUP[q.k].n:'🔮 '+q.n+' '+(RUNES[q.k]?RUNES[q.k][0]:q.k)):q.t=='gold'?'🪙 '+q.n:q.t=='egg'?'🥚 '+q.sp+' Egg':q.t=='gear'?icoOf(q.it)+' '+itName(q.it):'').filter(Boolean).join(' · ')}
+// hand over a citizen's goods
+function czCollect105(c){const G=c.bag;if(!G)return '';G.forEach(q=>{if(q.t=='mat')mats[q.k]=(mats[q.k]||0)+q.n;else if(q.t=='sup'){giveS(q.k,q.n);(q.log||[]).forEach(f=>fishLog[f]=(fishLog[f]||0)+1)}
+    else if(q.t=='gold')gold+=q.n;else if(q.t=='egg'){const eg=mkEgg(q.sp,SP2[q.sp][1]-1,.95+Math.random()*.15);eggs.push(eg);try{dex.egg.add(q.sp)}catch(_){}}else if(q.t=='gear')gear.push(q.it)});
+  const txt=czGoodsTxt105(G);c.bag=null;c.vt=null;return txt}
+function czCollectHouse105(i){const L=HS103.cit.filter(c=>c.h===i&&c.bag);if(!L.length)return;const parts=L.map(c=>c.n+': '+czCollect105(c));
+  pickup({ic:'🎁',t:'Goods from '+L.map(c=>c.n).join(' & '),col:'#f0cc72',sub:parts.join(' — ').slice(0,160),r:2});say('🏘️ '+parts.join(' — '));sfx('chime');hsDirty&&hsDirty();hud();ui();try{czTick103()}catch(_){}try{saveGame(true)}catch(_){}}
+function czTick103(){const now=Date.now();let back=[];
+  HS103.cit.forEach(c=>{if(!c.task||c.bag)return;if(!c.t0){if(!czOk104(c,c.task)){c.task='';c.wf=0;return}
+      if(czRole104(c)=='egg'&&eggs.length>=CZ104_EGGMAX){c.wf=2;return}
+      if(czEat105(czCost105(c))){c.t0=now;c.wf=0;c.vt=null}else c.wf=1;return}
+    if(now-c.t0>=czTrip104(c)){c.bag=czGoods105(c);c.t0=0;c.vt=null;back.push(c)}});
+  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');sfx&&sfx('chime')}
+  try{if(back.length&&typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
 setInterval(()=>{try{czTick103()}catch(e){console.warn('v103 citizens',e)}},1000);
 // ---------- saves ----------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.khs=HS103.h.map(h=>({nm:h.nm,v:h.v}));o.kcit=HS103.cit.map(c=>({n:c.n,h:c.h,r:czRole104(c),task:c.task,t0:c.t0,lk:c.lk}));return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.khs=HS103.h.map(h=>({nm:h.nm,v:h.v}));o.kcit=HS103.cit.map(c=>({n:c.n,h:c.h,r:czRole104(c),rk:czRank105(c),task:c.task,t0:c.t0,lk:c.lk,bag:c.bag||null}));return o}}
 {const f=x2Load;x2Load=function(s){for(const i in HS103.g)hsDrop103(+i);HS103.h=[];HS103.cit=[];czClear103();
   if(s&&Array.isArray(s.khs))s.khs.slice(0,HS103_MAX).forEach(h=>{if(h&&typeof h.nm=='string')HS103.h.push({nm:h.nm.slice(0,40),v:Math.max(0,Math.min(2,h.v|0))})});
-  if(s&&Array.isArray(s.kcit))s.kcit.forEach(c=>{if(c&&typeof c.n=='string'&&HS103.h[c.h|0]&&HS103.cit.length<HS103_MAX*2)HS103.cit.push({n:c.n.slice(0,24),h:c.h|0,r:CZR104[c.r]?c.r:'gather',task:typeof c.task=='string'?c.task.slice(0,40):'',t0:+c.t0||0,lk:c.lk|0})});
+  if(s&&Array.isArray(s.kcit))s.kcit.forEach(c=>{if(c&&typeof c.n=='string'&&HS103.h[c.h|0]&&HS103.cit.length<HS103_MAX*2)HS103.cit.push({n:c.n.slice(0,24),h:c.h|0,r:CZR104[c.r]?c.r:'gather',rk:Math.max(1,Math.min(5,c.rk|0||1)),task:typeof c.task=='string'?c.task.slice(0,40):'',t0:+c.t0||0,lk:c.lk|0,bag:Array.isArray(c.bag)?c.bag.slice(0,12):null})});
   return f.apply(this,arguments)}}
 // a house is solid and lot-bound: the lot table must know it is built
 // (lotBuilt103 reads HS103.h; lotAuto103 drops any 'h:' key whose house is gone)
@@ -186,17 +218,26 @@ function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!
   const sp=1.55,u=g.userData;let walk=false;
   if(c.task&&c.t0){// a trip: out to the gate, away, back home
     if(!o.pOut||o.pv!==CZ103.ver){const gt=czGate103();o.pOut=czPath103(door[0],door[1],gt[0],gt[1]);o.pv=CZ103.ver;o.lOut=o.pOut?czLen103(o.pOut):0}
-    const el=(Date.now()-c.t0)/1000,dO=o.lOut/sp,tot=HS103_TRIP/1000;
+    const el=(Date.now()-c.t0)/1000,dO=o.lOut/sp,tot=czTrip104(c)/1000;
     if(!o.pOut){g.visible=el<4;g.position.set(door[0],T.ph,door[1]);u.tool.visible=true;u.sack.visible=false}
     else if(el<dO){const p=czAt103(o.pOut,el*sp);g.visible=true;g.position.set(p[0],T.ph,p[1]);o.ry=p[2];walk=true;u.tool.visible=true;u.sack.visible=false;o.mode='out'}
     else if(el>tot-dO){const p=czAt103(o.pOut,Math.max(0,(tot-el)*sp));g.visible=true;g.position.set(p[0],T.ph,p[1]);o.ry=p[2]+Math.PI;walk=true;u.tool.visible=false;u.sack.visible=true;o.mode='back'}
     else{g.visible=false;o.mode='away'}}
-  else{u.tool.visible=false;u.sack.visible=false;g.visible=true;
+  else if(c.bag||(c.task&&c.wf)){// v105: home with goods (or short of food): waits outside the door, facing the street
+    const l=lotOf103('h:'+c.h),mates=HS103.cit.filter(q=>q.h===c.h),j=mates.indexOf(c),side=(j%2?1:-1)*.55,[wx,wz]=l?lotW103(l,side,4.0):door;
+    u.tool.visible=false;u.sack.visible=!!c.bag;g.visible=true;
+    if(Math.hypot(g.position.x-wx,g.position.z-wz)>.4&&o.mode!='walk'){const P=czPath103(g.position.x,g.position.z,wx,wz);if(P&&czLen103(P)>.4){o.path=P;o.len=czLen103(P);o.d=0;o.mode='walk'}else g.position.set(wx,T.ph,wz)}
+    if(o.mode=='walk'&&o.path){o.d+=sp*dt;const p=czAt103(o.path,Math.min(o.d,o.len));g.position.set(p[0],T.ph,p[1]);o.ry=p[2];walk=true;if(o.d>=o.len)o.mode='home'}
+    else{o.mode='home';o.ry=l?l.ry:o.ry}}
+  else{u.tool.visible=false;u.sack.visible=false;g.visible=true;if(o.mode=='home')o.mode='';
     if(o.mode=='walk'&&o.path){o.d+=sp*.8*dt;const L=o.len;const p=czAt103(o.path,Math.min(o.d,L));g.position.set(p[0],T.ph,p[1]);o.ry=p[2];walk=true;if(o.d>=L){o.mode='';o.wait=4+czRand103(o)*9;o.ry+=czRand103(o)*2-1}}
     else{o.wait-=dt;if(o.wait<=0){const S=czSpots103(),home=czRand103(o)<.35,t=home?door:S[Math.floor(czRand103(o)*S.length)];
         if(Math.hypot(t[0]-door[0],t[1]-door[1])<34){const P=czPath103(g.position.x,g.position.z,t[0],t[1]);if(P&&czLen103(P)>.5){o.path=P;o.len=czLen103(P);o.d=0;o.mode='walk'}else o.wait=3}else o.wait=1}}}
   // turn smoothly toward the heading
   let dr=o.ry-g.rotation.y;while(dr>Math.PI)dr-=6.283;while(dr<-Math.PI)dr+=6.283;g.rotation.y+=dr*Math.min(1,dt*8);
+  // the sign over the head: goods to collect (bobbing gift) or no food (a grey plate)
+  const sg=c.bag?'bag':(c.task&&c.wf==1&&!c.t0)?'food':(c.task&&c.wf==2&&!c.t0)?'full':'';if(u.sgK!==sg){u.sgK=sg;czSign105(g,sg)}
+  if(u.sign&&u.sign.visible){u.sign.position.y=2.45+Math.sin(now/260)*.08;u.sign.material.rotation=Math.sin(now/500)*.12}
   if(!g.visible)return;const near=Math.hypot(g.position.x-pl.position.x,g.position.z-pl.position.z);u.lab.visible=near<9;
   if(near>40)return; // too far to bother animating
   if(walk){o.ph+=dt*sp*3.6;czWalkPose103(g,o.ph,1);o.idl=0}
@@ -205,8 +246,9 @@ function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!
   if(!inT){if(CZ103.on)czClear103();return}
   if(!CZ103.on||CZ103.live.length!==HS103.cit.filter(c=>lotOf103("h:"+c.h)).length)czSpawn103();
   czGrid103();const dt=Math.min(.1,Math.max(0,(now-(CZ103.last||now))/1000));CZ103.last=now;CZ103.live.forEach(o=>czStep103(o,dt,now))}catch(e){if(!CZ103.err){CZ103.err=1;console.warn('v103 citizens',e)}}}}
-// houses have a walk-up prompt at the door: open the Steward's window on the citizens
+// houses have a walk-up prompt at the door: collect goods waiting there, else open the Steward's window on the citizens
 {const f=townPortalPrompt;townPortalPrompt=function(T){if(T===TOWNS[0]){const p=pl.position;for(let i=0;i<HS103.h.length;i++){const l=lotOf103('h:'+i);if(!l)continue;const d=lotDoor103(l);
+    if(Math.hypot(p.x-d[0],p.z-d[1])<2.6){const W=HS103.cit.filter(c=>c.h===i&&c.bag);if(W.length)return {label:'F · 🎁 Collect from '+W.map(c=>c.n).join(' & '),fn:()=>czCollectHouse105(i)}}
     if(Math.hypot(p.x-d[0],p.z-d[1])<2.2)return {label:'F · '+HS103.h[i].nm+' · '+hsWho103(i),fn:()=>{KM103.focus='cit';KM103.house=i;openX('hold')}}}}return f.apply(this,arguments)}}
 var KM103=KM103||{};
 
@@ -229,3 +271,15 @@ function czProps104(g,c){const r=czRole104(c),B=g.bones,M=col=>new THREE.MeshLam
     const qv=add(role,new THREE.Mesh(new THREE.CylinderGeometry(.06,.05,.42,6),M(0x5a3a22)),-.1,.05,-.19,0,0,.45);
     for(let i=0;i<3;i++)add(qv,new THREE.Mesh(new THREE.BoxGeometry(.03,.09,.008),M([0xc83a3a,0xe8e0d0,0x3a3a3a][i])),(i-1)*.025,.25,0);
     add(role,new THREE.Mesh(new THREE.TorusGeometry(.15,.07,5,10),M(0x6a5a44)),0,.12,0,Math.PI/2,0,0).scale.set(1.15,1,.8)}}
+
+// ---------- v105: the sign over a citizen's head ----------
+var CZ105_SG={};
+function czSignTex105(kind,role){const key=kind+'|'+role;if(CZ105_SG[key])return CZ105_SG[key];const cv=document.createElement('canvas');cv.width=cv.height=96;const x=cv.getContext('2d');
+  const col=kind=='bag'?'#f0cc72':'#9a9aa4';x.fillStyle='rgba(20,14,8,.85)';x.beginPath();x.arc(48,44,34,0,6.283);x.fill();x.lineWidth=5;x.strokeStyle=col;x.stroke();
+  x.beginPath();x.moveTo(40,76);x.lineTo(56,76);x.lineTo(48,90);x.closePath();x.fillStyle=col;x.fill();
+  x.font='38px serif';x.textAlign='center';x.textBaseline='middle';x.fillText(kind=='bag'?(CZR104[role]||CZR104.gather).i:kind=='full'?'🥚':'🍽️',48,46);
+  if(kind!='bag'){x.strokeStyle='#e85a4a';x.lineWidth=5;x.beginPath();x.moveTo(26,22);x.lineTo(70,66);x.stroke()}
+  return CZ105_SG[key]=new THREE.CanvasTexture(cv)}
+function czSign105(g,kind){const u=g.userData;if(!kind){if(u.sign)u.sign.visible=false;return}const c=CZ103.live.find(o=>o.g===g);const t=czSignTex105(kind,c?czRole104(c.c):'gather');
+  if(!u.sign){u.sign=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));u.sign.scale.set(.62,.62,1);u.sign.position.set(0,2.45,0);g.add(u.sign)}else u.sign.material.map=t;
+  u.sign.material.needsUpdate=true;u.sign.visible=true}
