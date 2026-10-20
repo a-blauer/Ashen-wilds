@@ -23077,4 +23077,115 @@ MVN&&Object.keys(MV107).forEach(n=>{MVN[n]=MV107[n].nm});
   // uses it now and then instead of only walking in (the generic picker saves signatures for after a few basic attacks)
   if(SIG107.on&&!ok.some(n=>KQMEL[n]||KQR[n])){const g=ok.filter(n=>MV107[n]&&MV107[n].rmin>=2);if(g.length&&Math.random()<.5){e.bu=0;e.buN=R(2,4);return g[Math.random()*g.length|0]}}
   return f.call(this,e,ok)}}
+// ================= v109 perf_far: don't draw scenery the fog has already hidden =================
+// Chunk scenery (terrain + props in CHL) is limited to FARR by chunkVis, but every other top-level object (Duskhold's
+// buildings, kingdom lots, portal gates, camps, signs and the scenery of the other instances) was handed to the GPU
+// whenever it was inside the camera's 260-tile frustum, or always when frustumCulled is off. Out in a zone that was
+// ~100 draw calls and ~140k triangles a frame of things hundreds of tiles away, fully behind the fog.
+// Now, every FC.every ms (or after the camera moves FC.mv tiles) `fcPass` works out each top-level object's world
+// bounding sphere (redone every FC.redo ms in turns, or when its children change; groups spanning more than FC.big
+// tiles are split into their children) and lists the ones whose nearest point is farther from the camera than the fog's reach:
+//   reach = clamp(FC.k / fog density, FARR + FC.pad, cam.far)   (exp2 fog: FC.k=2.6 leaves < 0.2% of the colour)
+// Listed objects are hidden ONLY while POST.render runs (main view and shadow map) and shown again right after, so no
+// game code sees their visible flag change. Never listed: chunk containers (PSROOT), lights, the hero, enemy and
+// companion models, anything with a fog:false material (sky, stars, glows meant to show far away), Points/Sprites/Lines
+// roots and anything marked userData.noFarCull. FC.on=false turns it off; FC.st has counters for tests.
+var FC={on:true,every:250,mv:3,k:2.6,pad:40,redo:12000,big:80,depth:3,t:-1e9,cx:1e9,cz:1e9,hide:[],hid:[],c:new WeakMap(),
+  box:new THREE.Box3(),b2:new THREE.Box3(),v:new THREE.Vector3(),m4:new THREE.Matrix4(),i:0,
+  st:{passes:0,listed:0,hidden:0,cands:0,ms:0}};
+function fcReach(){const d=scene.fog&&scene.fog.density>0?scene.fog.density:0;let r=d?FC.k/d:cam.far;
+  return Math.max(Math.min(r,cam.far),FARR+FC.pad)}
+// world box of one mesh (instanced meshes: every live instance), added into B
+function fcAddMesh(o,B){const g=o.geometry;if(!g||!g.attributes||!g.attributes.position)return;if(!g.boundingBox)g.computeBoundingBox();
+  if(o.isInstancedMesh){if(!o.count)return;const a=o.instanceMatrix.array,M=FC.m4,b=FC.b2;
+    for(let i=0;i<o.count;i++){M.fromArray(a,i*16);if(M.elements[0]===0&&M.elements[5]===0&&M.elements[10]===0)continue;
+      b.copy(g.boundingBox).applyMatrix4(M).applyMatrix4(o.matrixWorld);B.union(b)}return}
+  FC.b2.copy(g.boundingBox).applyMatrix4(o.matrixWorld);B.union(FC.b2)}
+// can this root be culled at all? (cached with its sphere)
+function fcSkip(r){if(r===PSROOT||r===pl||r.isLight||r.isCamera||r.isPoints||r.isSprite||r.isLine||r.userData.noFarCull)return true;
+  try{if(SKY&&(r===SKY||r===SKY.mesh||r===SKY.m))return true}catch(_){}
+  let s=false;r.traverse(o=>{if(s)return;const m=o.material;if(m){const L=Array.isArray(m)?m:[m];for(const x of L)if(x&&x.fog===false){s=true;return}}if(o.isCamera)s=true});return s}
+// world bounding sphere of an object: {x,y,z,r} or null (not cullable). Kept until the object's signature changes (its
+// world position, child count, or for an instanced mesh its instance count / matrix version), and redone anyway every
+// FC.redo ms with a random phase so the work is spread out; motion inside a group within that time is covered by FC.pad.
+function fcSig(o){const e=o.matrixWorld.elements;let s=e[12]*31+e[13]*7+e[14]*17+o.children.length*1e5;if(o.isInstancedMesh)s+=o.count*1e3+o.instanceMatrix.version;return s}
+function fcSphere(r,now){let e=FC.c.get(r);
+  if(e&&now<e.t&&e.g===fcSig(r))return e.s;
+  if(!e){e={g:NaN,t:0,s:null,skip:fcSkip(r)};FC.c.set(r,e)}
+  e.t=now+FC.redo*(.5+Math.random());
+  if(e.skip){e.s=null;e.g=fcSig(r);return null}
+  const B=FC.box.makeEmpty();r.updateMatrixWorld(true);e.g=fcSig(r);r.traverse(o=>{if(o.isMesh||o.isInstancedMesh)fcAddMesh(o,B)});
+  if(B.isEmpty()){e.s=null;return null}
+  const c=B.getCenter(FC.v);e.s={x:c.x,y:c.y,z:c.z,r:B.getSize(new THREE.Vector3()).length()/2};return e.s}
+// an object spanning more than FC.big tiles (a group holding things from all over the world) is split: its children are
+// tested one by one (down to FC.depth levels)
+function fcTest(o,now,R,cp,hide,d){const s=fcSphere(o,now);if(!s)return 0;
+  if(s.r>FC.big&&d<FC.depth&&o.children.length){let n=0;for(const k of o.children)if(k.visible)n+=fcTest(k,now,R,cp,hide,d+1);return n}
+  const dx=s.x-cp.x,dy=s.y-cp.y,dz=s.z-cp.z;if(Math.sqrt(dx*dx+dy*dy+dz*dz)-s.r>R)hide.push(o);return 1}
+// the enemy / companion models move on their own and stay near the action: never culled here
+function fcEnt(){const s=new Set();try{enemies.forEach(e=>e.m&&s.add(e.m))}catch(_){}try{(typeof party!='undefined'?party:[]).forEach(c=>c&&c.m&&s.add(c.m))}catch(_){}
+  try{(typeof comps!='undefined'?comps:[]).forEach(c=>c&&c.m&&s.add(c.m))}catch(_){}return s}
+function fcPass(){const t0=performance.now(),R=fcReach(),cp=cam.position,ent=fcEnt(),hide=[],ch=scene.children;let n=0;
+  for(let i=0;i<ch.length;i++){const r=ch[i];if(!r.visible||ent.has(r))continue;n+=fcTest(r,t0,R,cp,hide,0)}
+  FC.hide=hide;FC.t=t0;FC.cx=cp.x;FC.cz=cp.z;const S=FC.st;S.passes++;S.listed=hide.length;S.cands=n;S.ms=+(performance.now()-t0).toFixed(2)}
+{const f=POST.render;POST.render=function(){
+  if(!FC.on)return f.apply(this,arguments);
+  try{const now=performance.now();if(now-FC.t>FC.every||Math.hypot(cam.position.x-FC.cx,cam.position.z-FC.cz)>FC.mv)fcPass()}catch(e){FC.hide=[];console.warn('farcull',e)}
+  const H=FC.hid;H.length=0;for(const o of FC.hide)if(o.visible&&o.parent){o.visible=false;H.push(o)}FC.st.hidden=H.length;
+  try{return f.apply(this,arguments)}finally{for(const o of H)o.visible=true;H.length=0}}}
+// ================= v109 perf_blocks: props drawn in 64x64 blocks instead of 32x32 chunks =================
+// buildVI splits every prop type (VIL: rocks, tree parts, bushes, flowers...) into one InstancedMesh per 32x32-tile
+// visibility chunk, so a view showing ~17 chunks drew each of ~19 prop types ~17 times: ~200 of a frame's ~350 draw
+// calls. At load this file regroups each prop type's chunk meshes four at a time into one InstancedMesh per 64x64 block
+// (the same instances, copied in the same order per chunk), so a view draws each type ~4-6 times.
+//  * View distance stays per prop, not per block: the prop materials' wind shader (windMat) gets a cut-off. An instance
+//    farther than uFar9 (= FARR + PB.pad tiles, set every frame) from the hero collapses to a point and draws nothing,
+//    so the horizon is where it was (it no longer steps by whole 32-tile chunks).
+//  * Gathering nodes, loot nodes and anything else that moves or hides one prop goes through VIL.setMatrixAt, which
+//    uses v.cm / v.cl (mesh + index): those are remapped to the block mesh, so nothing else changes.
+//  * Blocks are new CHL chunk records (box = the 64x64 block); chunkVis, the v106 instance filter (cvOK), the shadow
+//    pass (1630) and the static containers (1640, psChunks) treat them like any other chunk. The near-only grass layer
+//    (v.near) and the v89 decoration chunks (already 64x64, `c.wd`) are left as they are.
+// PB.on=false before load keeps the 32x32 meshes (for A/B checks). PB.st: blocks made, meshes merged, draw calls saved.
+var PB={on:typeof window=='undefined'||!window.AW_NOBLOCKS,N:64,pad:20,far:{value:124},st:{blocks:0,merged:0,types:0,skipped:0,ms:0}};
+// the wind shader with a far cut-off (instanced meshes only); a separate program key so unpatched materials are unaffected
+function pbFarMat(mat){if(!mat||mat.userData.far9)return;const ob=mat.onBeforeCompile;if(typeof ob!='function')return;mat.userData.far9=1;
+  mat.onBeforeCompile=function(sh,r){ob.call(this,sh,r);sh.uniforms.uFar9=PB.far;sh.uniforms.uPl9=FADE.pl;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uFar9;uniform vec3 uPl9;').replace('#include <project_vertex>',`#ifdef USE_INSTANCING
+    {vec4 ip9=modelMatrix*instanceMatrix[3];vec2 d9=ip9.xz-uPl9.xz;if(dot(d9,d9)>uFar9*uFar9)transformed=vec3(0.);}
+    #endif
+    #include <project_vertex>`)};
+  const ck=mat.customProgramCacheKey,k0=ck?ck.call(mat):'';mat.customProgramCacheKey=()=>k0+'|far9';mat.needsUpdate=true}
+// windMat called again later (e.g. a rebuilt prop type) keeps the cut-off
+{const f=windMat;windMat=function(mat){const had=mat&&mat.userData&&mat.userData.far9;if(had)mat.userData.far9=0;const r=f.apply(this,arguments);if(had)pbFarMat(mat);return r}}
+function pbBuild(){if(!PB.on||typeof VIL=='undefined'||typeof CHL=='undefined')return 0;const T0=performance.now(),N=PB.N;
+  const own=new Map();for(const c of CHL){if(c.wd||c.pb)continue;for(const m of c.ms)own.set(m,c)}
+  const blocks={};let types=0;
+  VIL.forEach(v=>{if(v.near||!v.cm||!v.n)return;const ms=[...new Set(v.cm)].filter(m=>m&&own.has(m));if(ms.length<2)return;
+    // a mesh whose draw count was changed by other code is left alone (its hidden tail would show if merged)
+    if(ms.some(m=>m.count!==m.instanceMatrix.count||m.geometry!==v.geo||m.material!==v.material)){PB.st.skipped++;return}
+    const grp={};ms.forEach(m=>{const b=own.get(m).box,k=Math.floor((b.min.z+2)/N)*1000+Math.floor((b.min.x+2)/N);(grp[k]=grp[k]||[]).push(m)});
+    let any=false;
+    for(const k in grp){const L=grp[k];if(L.length<2)continue;any=true;
+      let n=0;const off=new Map();L.forEach(m=>{off.set(m,n);n+=m.count});
+      const nm=new THREE.InstancedMesh(v.geo,v.material,n),col=new Float32Array(n*3);
+      L.forEach(m=>{const o=off.get(m);nm.instanceMatrix.array.set(m.instanceMatrix.array.subarray(0,m.count*16),o*16);if(m.instanceColor)col.set(m.instanceColor.array.subarray(0,m.count*3),o*3);else col.fill(1,o*3,(o+m.count)*3)});
+      nm.instanceColor=new THREE.InstancedBufferAttribute(col,3);
+      const m0=L[0];nm.castShadow=false;nm.receiveShadow=m0.receiveShadow;nm.frustumCulled=false;nm.visible=false;nm.renderOrder=m0.renderOrder;nm.userData=Object.assign({},m0.userData,{pb:1});
+      nm.matrixAutoUpdate=false;nm.updateMatrix();
+      for(let i=0;i<v.n;i++){const o=off.get(v.cm[i]);if(o!==undefined){v.cl[i]=o+v.cl[i];v.cm[i]=nm}}
+      const bx=Math.floor(k%1000),bz=Math.floor(k/1000);
+      const B=blocks[k]||(blocks[k]={ms:[],ns:[],on:false,non:false,pb:1,box:new THREE.Box3(new THREE.Vector3(bx*N-2,-3,bz*N-2),new THREE.Vector3((bx+1)*N+2,40,(bz+1)*N+2))});
+      B.ms.push(nm);
+      L.forEach(m=>{const c=own.get(m),j=c.ms.indexOf(m);if(j>=0)c.ms.splice(j,1);if(m.parent)m.parent.remove(m);PB.st.merged++});
+      scene.add(nm)}
+    if(any){types++;pbFarMat(v.material)}});
+  const add=Object.values(blocks);add.forEach(b=>CHL.push(b));PB.st.blocks=add.length;PB.st.types=types;
+  // every chunk recomputes its visibility from scratch on the next chunkVis
+  CHL.forEach(c=>{c.on=null;c.non=null});try{if(typeof CVG!='undefined')CVG.n=-1}catch(_){}
+  try{if(typeof psChunks=='function')psChunks()}catch(e){console.warn('blocks psChunks',e)}
+  PB.st.ms=Math.round(performance.now()-T0);return add.length}
+try{pbBuild()}catch(e){console.warn('prop blocks',e);PB.st.err=String(e)}
+// the cut-off follows the quality level's view distance
+{const f=chunkVis;chunkVis=function(){PB.far.value=FARR+PB.pad;return f.apply(this,arguments)}}
 </script></body></html>
