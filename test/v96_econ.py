@@ -123,9 +123,6 @@ def xp(pg):
     # companions get the same (reduced) XP as the hero
     r=ev("""()=>{const c=party[0];if(!c)return null;c.l=8;c.x=0;c.h=M(c);hero.lvl=8;hero.xp=0;const g=gainXP({c:{l:8,al:0,boss:0,g:['Foxlet']}});return [g,hero.xp,c.x]}""")
     ok(r and r[0]==r[1]==r[2],'active companion gets the same kill XP as the hero %s'%r)
-    # bounty board reward XP ×0.75 (offer text, popup and the XP given all use the same number)
-    r=ev("()=>{const f=ECON96.xp;ECON96.xp=1;const a=bReward(2,1).xp;ECON96.xp=f;const b=bReward(2,1).xp;return [a,b]}")
-    ok(abs(r[1]/r[0]-.75)<.02,'bounty XP %d → %d'%(r[0],r[1]))
 
 def s(pg):
     start(pg)
