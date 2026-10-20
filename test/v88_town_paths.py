@@ -13,7 +13,7 @@ def s(pg):
     ev("()=>{SHOPS.forEach(o=>SH.shop[o.k]=1);shApply();visTick&&visTick()}")
     fails=0
     for L in [0,1,2,3]:
-        r=ev("""(L)=>{SHU.forEach(u=>SH.lv[u.k]=L);shApply();const T=TOWNS[0],st=.25,x0=T.cx-25,z0=T.cy-25,nx=Math.round(80/st),nz=Math.round(50/st);
+        r=ev("""(L)=>{SHU.forEach(u=>SH.lv[u.k]=L);shApply();const T=TOWNS[0],st=.25,x0=T.cx-25,z0=T.cy-25,nx=Math.round(80/st),nz=Math.round((50+((T.sz||TS)-TS))/st); // v100: the town reaches cy+T.sz
           const free=(x,z)=>!CR.some(([a,b])=>solid(x+a,z+b))&&!tcHit(x,z);const seen=new Uint8Array(nx*nz),q=[];
           const id=(x,z)=>{const i=Math.round((x-x0)/st),j=Math.round((z-z0)/st);return i<0||j<0||i>=nx||j>=nz?-1:j*nx+i};
           const s0=id(T.sp[0],T.sp[1]);seen[s0]=1;q.push(s0);

@@ -538,3 +538,45 @@ Files: `src/modules/zzN_zz_evolve.js` (framework, header explains it) + one desi
 - **Tack**: tier-coloured blanket, saddle with dished seat, raised cantle/pommel, horn, studs, skirts, girth, saddle bags + bedroll, breast collar, bridle (crown, browband, noseband, cheekpieces, throatlatch, bit rings); muzzle harness, collar (spiked for the wolf), trophy and tassels for the beasts; charger: chanfron, crinet lames, caparison, crupper; destrier: dark barding with bone spikes. Reins run from the bit to the rider's hands and the stirrups sit under the rider's feet while riding (`MDL100_ride`, one 12-box dynamic mesh, no per-frame allocations); at rest they hang over the neck / down the flanks.
 - **Draw calls**: body + one baked skinned kit (≤3 materials) + reins = 4–5 per mount (drake 9 with its wings); 5–8.6k triangles (only one mount on screen). Fire manes / ghost-fire flicker through the mount's own glow material colour.
 - **Other proportion fixes**: held melee weapons scaled about the grip for the v99 hero (`MDL100_WS`: sword .86, greatsword .8 (was 1.6 long vs a 1.46 body), greataxe .86, axe(s) .9, mace/hammer/flail .86, club .9, dagger/knives .78, halberd .88, staff .9); bows, crossbow, sling, wand, orb, claws and shields unchanged. Ashwolf family (Ashwolf, Direfang, Skollmaw, Snow Wolf) tail 20% shorter and 28% slimmer (it was as long and thick as the body). Everything else audited OK (table in the track report).
+
+## v100: town
+
+Track `town`: `build/pN_zz_town.py` (text patches) + `src/modules/zzN_zz_town1.js` … `zzN_zz_town4.js`; the layout numbers live in `src/modules/w0_world.js`. Test `test/v100_town.py` (harness `test/v100_lib.py`).
+
+**Layout plan** (world tiles; Duskhold centre `cx,cy` = 40,284, `TS`=21; town-local z = world z − 284):
+
+| area | where | what |
+|---|---|---|
+| upper town | z −21…21 (as before) | plaza, fountain, Trading Post / Tavern / Magic Shop row, Steward, kingdom upgrade structures |
+| market ward | z 21…56 | an archway from the plaza (5 tiles wide at z=21), a 11-tile street, 8 shop plots `TWN100_SH` (west row x −12…−6, east row 6…12, at z 26/34/42/50) |
+| inner wall | z 56 (`TWN100_IW`) | 3-tile gatehouse into the courtyard ward |
+| courtyard ward | z 56…100 | the Courtyard `CYD` at (40,362), r 9 → 16.8, gate N (40,340) and S (40,384); kingdom tiers 4–6 sit in its corners |
+| south wall | z 100 (`TWN100_SZ`) | 3-tile south gate onto the road |
+| crossroads | `PCOURT` (84,284) | the old Portal Court, now a fingerpost where the east road meets the ring road |
+| portal islands `TWN100_PG` | Kindlelight (96,284) · Hillside (84,252) · Burningeye (40,233) · Sands (86,322) · Dirge (84,364) · Citadel (40,415) | r 8.5 each, the zone's ground colours and decoration kinds, its own themed gate |
+| roads `TWN100_RD` | 3 tiles wide | east gate → crossroads → Kindlelight / Hillside → Burningeye; crossroads → Sands → Dirge → Citadel; west gate → Burningeye and → Citadel; south gate → Citadel |
+
+Everything stays west of x=110 (max x 105). Duskhold's 4 px/tile ground texture `gtT` now covers chunks x 0–128 / z 224–448 (`TR=[0,7,4,14]`), so every paved, wall and road tile is in it. `townAt`, `tDist` and the town-visibility test (`townTick`) use the long rectangle (cy−TS … cy+`T.sz`).
+
+- **Walls** (`zzN_zz_town1.js`, `kdWalls`): the whole ring is rebuilt for every Bastion Walls level (0 palisade, 1 stone-footed palisade, 2 stone wall with the v83 towers, 3 fortified bastion) in three baked parts (upper town / market / courtyard ward). It includes the plaza archway, the inner gatehouse and the south gatehouse.
+- **Courtyard inside the walls** (`cyWalls`): same rings, growth (`bossDone`), regrowth and node kinds; the garden wall is a low rough-stone ring with lantern posts at its two openings, rebuilt as it grows.
+- **Shops are buildings** (`zzN_zz_town3.js`): Blacksmith (stone forge with a lean-to, anvil, quench barrel, grindstone, weapon rack, chimney smoke; opens the bag's Forge tab, always open), Alchemist (half-timbered, bottle shelves, bubbling cauldron, herbs, glass flask emblem), Cookhouse (log walls, thatch, bread oven, spit roast, counter of bread and pies), Bard's Stage (curtained stage, lanterns, lute, drum, harp), Curio Shop (jettied two storeys, bay window of oddities, golden key), Rune Sanctum (dark stone, tall roof, rune monoliths, violet braziers, floating crystal), Beast Trainer (hunter's lodge, horned skull, pen with a training post), Stable (barn, hayloft, hay, trough, horseshoe, a pony). Each is one baked kit on the town atlas plus a painted sign. The keeper stands in the street in front; the F prompt (2.4 tiles) opens the same windows as before. Unbuilt shops show a fenced construction plot with a "build it at the Steward" sign. The old hearth/alchemy table and the visitor stalls are gone (their prompts now point at the Cook and the Alchemist); the old Stable lean-to is not built. One InstancedMesh carries all chimney smoke.
+- **Kingdom upgrades you can see** (`zzN_zz_town4.js`): the banners by the fountain are gone. Each Steward upgrade keeps its three-stage structure (v88 `KDU`) and Bastion Walls rebuilds the ring. The total level adds buildings instead of banners and pennants: ≥2 braziers round the fountain, ≥5 granary + windmill (turning sails), ≥8 chapel with bell tower, ≥11 barracks + watch platform, ≥14 great hall with a keep tower + beacons on the south gate, ≥17 statues at the inner gate and verdigris copper roofs.
+- **Portal islands** (`zzN_zz_town2.js`): the six `PORT` portals keep their disc, swirl and chains, prompts and windows; each moves to its island with a themed gate. Kindlelight: twisted root arch, moss, green lanterns. Hillside Crest: a trilithon with a serpent and flowers. Burningeye: ice-crystal pillars and icicles. Searing Sands: a sandstone gate with a sun disc. The Dirge: a grave arch with a skull keystone and ghost lamps. The Citadel: a crimson castle arch with banners and braziers. Each island also gets a signpost, a dais and 25–35 of the zone's own decorations merged into one lit and one glowing mesh (mist quads for Kindlelight and the Dirge). Locked islands keep their lanterns dark. Coming home from a zone (`goHome` → `TWN100_home`) lands you in front of that zone's gate. Recall, `RECBACK`, the restart-instance prompt and co-op "Go to"/"Join" are unchanged. The town map (N) and the minimap show the six gates.
+- **Old saves**: a save standing where there is no ground any more (the old Portal Court ring, the old courtyard at 76,244) moves to the crossroads or the courtyard's gate; anything else unsafe goes to the nearest free tile, then to the spawn (`TWN100_fixPos`, after the v97 load fix). The courtyard keeps no save state of its own (nodes regrow; growth follows `bossDone`).
+- **Text**: the portal window, the "new portal opens" banner, material hints and treasure maps no longer mention the Portal Court.
+- **Performance** (`PERF=1 SRC=<old dist> TAG=before python3 v100_town.py` vs the new build; every upgrade at level 3, all shops built; headless software GL, so draw calls and triangles are exact, times are not). The ring's long walls use bigger stone blocks (`TWN100_coarse`), each wall part (upper town / market / courtyard ward) is drawn only within 46 tiles of its stretch, the ward dressing is one baked kit and the portal-island scenery is merged per island:
+
+  | view | draw calls before → after | triangles before → after |
+  |---|---|---|
+  | plaza | 397 → 297 | 382 k → 433 k |
+  | north row | 223 → 170 | 352 k → 360 k |
+  | east gate | 341 → 268 | 424 k → 443 k |
+  | high view over the plaza | 450 → 336 | 416 k → 469 k |
+  | market ward (new) | – → 437 | – → 615 k |
+  | courtyard (new) | – → 489 | – → 565 k |
+  | Kindlelight gate island (new) | – → 232 | – → 276 k |
+  | crossroads (new) | – → 156 | – → 238 k |
+
+- **Test**: `python3 test/v100_town.py` → `CHECKS OK` (63 checks): layout west of the zones and inside the 4 px ground texture; flood-fill reachability of every NPC, shop counter, gate, portal island and open courtyard node at kingdom levels 0–3 with shops built and unbuilt; roads, market street and gates free of colliders; prompts for every shop (built / unbuilt), the Steward and every portal (locked / open); every shop window opens; each portal enters its own zone, coming home lands at that gate; recall saves the run, recall-back returns, re-entering asks Continue / Restart; courtyard growth, harvest, 10-minute regrowth, chopping; old saves in the old Portal Court / old courtyard land on solid ground; every upgrade level and total-level tier adds geometry; no fountain banners; town map; no page errors. Sheets: `test/out/v100_sheet_{town,shops,upgrades,walls,kingdom,portals}.png`. `SHOTS=0` checks only, `CHK=0` sheets only.
+- `test/v88_town_paths.py` now covers the longer town (its grid reaches cy+`T.sz`).

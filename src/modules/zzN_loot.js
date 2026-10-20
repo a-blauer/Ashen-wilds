@@ -128,7 +128,7 @@ function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" da
 function tmTip(m){const p=PMAP[m.r],here=tmCur()===m.r;
   return `<div class="kqm-tn"><span>🗺️ ${tmName(m)}</span></div><div class="kqm-ts">Quest item · can't be sold</div>`+
     `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' (Lv '+p.lv[0]+'–'+p.lv[1]+')':''}. ${tmHint(m)}</div>`+
-    `<div class="kqm-th">${here?'You are in this zone: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through the Portal Court, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
+    `<div class="kqm-th">${here?'You are in this zone: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
 {const f=kqmTipHTML;kqmTipHTML=function(el){const k=el&&el.dataset&&el.dataset.kqt||'';if(k.slice(0,3)=='tm:'){const m=tmaps.find(q=>q.id==+k.slice(3));return m?[tmTip(m),'#fbbf24']:null}return f.apply(this,arguments)}}
 {const f=kqmBag;kqmBag=function(){const r=f.apply(this,arguments);try{if(!tmaps.length)return r;const bl=$('bl'),T=bagTab2;if(!bl)return r;
     if(T==0&&KQM.filt=='all'){const g=bl.querySelector('.kqm-bagg');if(g){g.insertAdjacentHTML('afterbegin',tmaps.map(tmTile).join(''));for(let i=0;i<tmaps.length;i++){const e=g.querySelector('.kqm-empty:last-child');if(e)e.remove()}}}
