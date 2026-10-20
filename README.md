@@ -18,7 +18,7 @@ tools/deadcode/    finds top-level code nothing can reach (see Cleaning up)
 
 The files in `src/js` are plain JavaScript concatenated in file-name order into one `<script>`. What you read is
 exactly what runs: there is no patch step. The number prefix is the load order (gaps of 10 leave room; a new feature
-goes in a new file, numbered after the code it depends on, usually at the end: `1800-v101-<topic>.js`).
+goes in a new file, numbered after the code it depends on, usually at the end: `1860-v103-<topic>.js`).
 The name says which version added the section; files without a version are the original game.
 
 Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting points:
@@ -31,7 +31,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | zones (`PMAP`, `pmGen`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world) |
 | save / load (`gameSnapshot`, `loadGame`, `x2Save`) | `0230-v36-save-load*`, `0450-shared-prompts*` |
 | co-op (`MP`) | `0520-v58-online-co-op*` |
-| Duskhold, portals, `enterMap` | `0510-v56-duskhold*`, `1020`–`1030` (v88 town), `1820`–`1850` (v100 town) |
+| Duskhold (v101: one Grand Square, Portal Road with gates I–VI), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
 | stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
 | zone roster, atmosphere, grades | `0550-v71-*` |
 | companions & eggs window, fusion window | `0570-v74-*`, `1780-v100-fusemenu*` |
@@ -71,7 +71,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 
 ## Retired systems
 
-Removed in v101 (they were switched off years of versions ago but still shipped): the Realm (building, farming,
+Removed in v102 (they had been switched off many versions earlier but still shipped): the Realm (building, farming,
 crafting window, habitats, sky island), dungeons, bounty boards, world events, the team-up attack, the v34 incubator
 slots, the v83 mount models (every mount is built by the v100 model track), and code that later versions replaced at load.
 Kept on purpose: dungeon entrance *spots* (`DUNS`, emptied at load) still steer where camps and secrets go;

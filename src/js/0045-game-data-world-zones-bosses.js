@@ -69,12 +69,12 @@ function pmGen(p,i,seed){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2147
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
 const regionAt=(x,y)=>{for(let i=0;i<PMAP.length;i++){const p=PMAP[i];if(x>=p.x0&&x<p.x0+PMW&&y>=p.y0&&y<p.y0+PMH)return i}return -1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
-var TWN100_SZ=100,TWN100_IW=56; // v100: Duskhold's walls reach cy+100; the inner wall at cy+56 closes the courtyard ward
+var TWN100_SZ=51,TWN100_IW=51,TWN100_WX=36; // v101: one Grand Square — walls at x ±36 (TWN100_WX), z -21..+51; no inner wards (IW = SZ)
 const TOWNS=[
  {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:40,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
 ].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+10.5];return t});
 const START=TOWNS[0].sp.slice();
-const PCOURT=[84,284];
+const PCOURT=[40,347]; // v101: the crossroads just outside the south gate, where the Portal Road begins
 // v100 town: Duskhold's walls run from cy-TS (north) to cy+TWN100_SZ (south). Upper town cy-TS..cy+TS (plaza, north row),
 // market ward cy+TS..cy+TWN100_IW (shop street), inner wall + gate at cy+TWN100_IW, courtyard ward behind it, south gate at
 // cy+TWN100_SZ. Six portal gates stand on their own islands round the castle, joined by roads (TWN100_RD); PCOURT (the
@@ -82,19 +82,19 @@ const PCOURT=[84,284];
 // the woodland courtyard inside the south ward of Duskhold (trees and stone to harvest)
 // It starts small and grows by one ring per completed zone; ring i holds 6 nodes of every node type found in zone i.
 // gate = the inner gate (north), gate2 = the south gate; the garden wall ring has an opening toward each.
-const CYD={x:40,y:362,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,340],gate2:[40,384],nodes:[]};
+const CYD={x:40,y:317,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,299],gate2:[40,335],nodes:[]}; // v101: the garden park in the south half of the square
 // v100: the six portal gates, one island each (x,y centre, r radius, a = the spot in front of the portal: you arrive there)
-const TWN100_PG=[{x:96,y:284,r:8.5,a:[90.5,284]},{x:84,y:252,r:8.5,a:[84,257.5]},{x:40,y:233,r:8.5,a:[40,238.5]},
- {x:86,y:322,r:8.5,a:[86,316.5]},{x:84,y:364,r:8.5,a:[84,358.5]},{x:40,y:415,r:8.5,a:[40,409.5]}];
+// v101: the Portal Road runs straight south from the south gate; gates I..VI stand in order along it, alternating east/west
+const TWN100_PG=[0,1,2,3,4,5].map(i=>{const y=362+i*27,s=i%2?-1:1,x=40+s*16;return {x,y,r:10,a:[x-s*7,y],side:s}});
 // roads (polylines, 3 tiles wide) make a ring round the castle: east gate -> crossroads (PCOURT) -> Kindlelight; crossroads ->
 // Hillside -> Burningeye; crossroads -> Sands -> Dirge -> Citadel <- south gate; west gate -> Burningeye and -> Citadel
-const TWN100_RD=[[[61,284],[91,284]],[[84,284],[84,256]],[[84,284],[86,318]],[[86,326],[84,360]],[[80,371],[64,395],[46,412]],
- [[40,384],[40,410]],[[19,284],[13.5,284],[13.5,262],[22,247],[34,237]],[[13.5,284],[13.5,387],[22,404],[34,413]],[[79,248],[60,240],[46,236]]];
+const TWN100_RD=[[[40,335],[40,TWN100_PG[5].y+7]]].concat(TWN100_PG.map(p=>[[40,p.y],[p.a[0],p.y]]));
 // v100: the market ward's shop plots (town-local tiles): side -1 = west row (facade at x=-5.5, faces the street to the east),
 // +1 = east row; z = plot centre. The 7x5-tile footprint (|x| 6..12, z-2..z+2) is solid ('B'): building or fenced plot.
-const TWN100_SH=[{k:'smith',s:-1,z:26},{k:'alch',s:-1,z:34},{k:'cook',s:-1,z:42},{k:'bard',s:-1,z:50},
- {k:'merchant',s:1,z:26},{k:'sage',s:1,z:34},{k:'trainer',s:1,z:42},{k:'stable',s:1,z:50}];
-const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.abs(x-t.cx)<=TS+.5+(pad||0)&&z>=t.cy-TS-.5-(pad||0)&&z<=t.cy+(t.sz||TS)+.5+(pad||0)); // v100: walls reach cy+sz
+// v101: the shops line the west (s=-1, facing +x) and east (s=+1, facing -x) sides of the Grand Square; x = plot centre
+const TWN100_SH=[{k:'smith',s:-1,z:-9},{k:'alch',s:-1,z:2},{k:'cook',s:-1,z:13},{k:'bard',s:-1,z:24},
+ {k:'merchant',s:1,z:-9},{k:'sage',s:1,z:2},{k:'trainer',s:1,z:13},{k:'stable',s:1,z:24}].map(q=>Object.assign(q,{x:q.s*29.5,ry:TWN100_ry(q)}));
+const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.abs(x-t.cx)<=TWN100_WX+.5+(pad||0)&&z>=t.cy-TS-.5-(pad||0)&&z<=t.cy+(t.sz||TS)+.5+(pad||0)); // v100: walls reach cy+sz
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
  {name:'The Crest Hydra',title:'Mother of Serpents',sp:'Hydra',lvl:18},
@@ -121,11 +121,11 @@ const MAP=(()=>{
   // ---- the floating stronghold: the town square, a road east, and the portal court ----
   const T=TOWNS[0];
   // v100: the island is a rectangle round the walls (north square + south ward) with a 7-tile apron
-  const SE=T.sz-TS;
-  for(let y=T.cy-31;y<=T.cy+SE+31;y++)for(let x=T.cx-31;x<=T.cx+31;x++){const dz=y<T.cy?T.cy-y:y>T.cy+SE?y-T.cy-SE:0,d=Math.max(Math.abs(x-T.cx),dz)-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
+  const SE=T.sz-TS,XE=TWN100_WX-TS; // v101: the island is a rectangle round the Grand Square's walls with a 7-tile apron
+  for(let y=T.cy-31;y<=T.cy+SE+31;y++)for(let x=Math.max(1,T.cx-XE-31);x<=Math.min(W-2,T.cx+XE+31);x++){const ax=Math.abs(x-T.cx),dx=ax>XE?ax-XE:0,dz=y<T.cy?T.cy-y:y>T.cy+SE?y-T.cy-SE:0,d=Math.max(dx,dz)-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
   // roads, the crossroads by the main gate and the six portal islands
   const road=(L,r)=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);for(let q=0;q<=n;q++)stamp(ax+(bx-ax)*q/n,ay+(by-ay)*q/n,r)}};
-  TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1],6);
+  TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1]+1,8.5);
   TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
   // ---- the six portal maps ----
   PMAP.forEach(p=>{
@@ -165,19 +165,17 @@ const MAP=(()=>{
   // boss arenas: rune floor, ring of columns and four cover pillars
   BOSSES.forEach(b=>{for(let y=b.y-22;y<=b.y+22;y++)for(let x=b.x-22;x<=b.x+22;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
     });
-  // the stronghold town (same layout as before)
-  TOWNS.forEach(t=>{
-    for(let dy=-TS-3;dy<=TS+3;dy++)for(let dx=-TS-3;dx<=TS+3;dx++){const x=t.cx+dx,y=t.cy+dy;const ax=Math.abs(dx),ay=Math.abs(dy);
-      if(ax<TS&&ay<TS)m[y][x]='P';else if(ax<=TS&&ay<=TS)m[y][x]=(ax==TS&&ay<=1)?'P':'W';else if(m[y][x]=='')m[y][x]='.'}
-    // v100: the old south wall (dy=TS) opens into the market ward (paved) down to the inner wall at dy=IW (3-tile gate),
-    // then the courtyard ward (grass) down to the south wall at dy=sz (3-tile gate); side walls all the way
-    if(t.sz>TS){const IW=TWN100_IW;for(let dy=TS;dy<=t.sz+3;dy++)for(let dx=-TS-3;dx<=TS+3;dx++){const x=t.cx+dx,y=t.cy+dy,ax=Math.abs(dx);
-      if(dy>t.sz||ax>TS){if(m[y][x]=='')m[y][x]='.';continue}
-      if(ax==TS){m[y][x]='W';continue}
-      if(dy==IW||dy==t.sz){m[y][x]=ax<=1?'P':'W';continue}
-      if(dy==TS){m[y][x]=ax<=3?'P':'W';continue}
-      if(dy<IW)m[y][x]='P';else{m[y][x]=(x*7+y*3)%5==0?'g':'.';bio[y][x]=2}}
-     TWN100_SH.forEach(q=>{for(let z=q.z-2;z<=q.z+2;z++)for(let a=6;a<=12;a++)m[t.cy+z][t.cx+q.s*a]='B'})}
+  // v101: the stronghold town — one Grand Square: walls at |x|=WX and z=-TS / z=sz, a 3-tile south gate, paving inside,
+  // the garden park (CYD) as grass, the north row and fountain solid, and the eight shop plots solid (rotated footprints)
+  TOWNS.forEach(t=>{const WX=TWN100_WX,SZ=t.sz||TS;
+    for(let dy=-TS-3;dy<=SZ+3;dy++)for(let dx=-WX-3;dx<=WX+3;dx++){const x=t.cx+dx,y=t.cy+dy;if(x<1||x>W-2)continue;const ax=Math.abs(dx);
+      if(ax>WX||dy<-TS||dy>SZ){if(m[y][x]=='')m[y][x]='.';continue}
+      if(ax==WX||dy==-TS){m[y][x]='W';continue}
+      if(dy==SZ){m[y][x]=ax<=1?'P':'W';continue}
+      m[y][x]='P'}
+    // the garden park: grass (and the courtyard biome) inside its largest ring
+    {const C=CYD,R=C.rmax+.6;for(let y=Math.floor(C.y-R);y<=C.y+R;y++)for(let x=Math.floor(C.x-R);x<=C.x+R;x++){if(m[y][x]!=='P')continue;if(Math.hypot(x-C.x,y-C.y)<R){m[y][x]=(x*7+y*3)%5==0?'g':'.';bio[y][x]=2}}}
+    TWN100_SH.forEach(q=>{const f=[Math.sin(q.ry),Math.cos(q.ry)],a=[f[1],-f[0]];for(let lx=-2.5;lx<=2.5;lx+=.5)for(let lz=-3.5;lz<=3.5;lz+=.5){const x=Math.round(t.cx+q.x+lx*a[0]+lz*f[0]),y=Math.round(t.cy+q.z+lx*a[1]+lz*f[1]);if(m[y][x]=='P')m[y][x]='B'}});
     const B=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m[t.cy+y][t.cx+x]='B'};
     B(-17,-11,-18,-14);B(-2,2,-18,-14);B(12,17,-18,-14);B(-1,1,-12,-12);
     for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
@@ -213,7 +211,7 @@ const MAP=(()=>{
   m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!PMAP.some(p=>Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
   return m})();
 
-const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(Math.abs(x-t.cx),dz);if(q<d)d=q}return d}; // v100
+const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(ax>xe?ax-xe:0,dz);if(q<d)d=q}return d}; // v100
 // ---- visual terrain: smooth heightfield (collision stays tile-based) ----
 const smt=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
 const hh2=(x,y)=>{const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)};
@@ -226,7 +224,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
 {
   const DW=MAP.DW,sp=x=>x<-5?0:Math.log1p(Math.exp(x*1.5))/1.5;
   const base=(x,y,a)=>.55+sp(1.0+(fbm2(x*.02+3,y*.02+9,4)-.5)*6*a+(fbm2(x*.07,y*.07+4,3)-.5)*1.6*a);
-  const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(Math.abs(x-t.cx),4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
+  const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dx=ax>xe?ax-xe:0,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(dx,4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
   TOWNS.forEach(t=>{t.ph=1.6});
   for(let j=-HPD;j<=H+HPD;j++)for(let i=-HPD;i<=W+HPD;i++){
     const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,r=regionAt(tx,ty),d=DW[k];let h;

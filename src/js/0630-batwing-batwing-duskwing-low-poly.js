@@ -53,10 +53,10 @@ LPR.Batwing={
   kit(k,c,C,red){
     const dark=0x150f18,eye=red?0xff2a2a:0xff3a2a,back=dkShade(lpMain(C,.12).getHex(),.5);
     [-1,1].forEach(s=>{
-      k.p('head','box','c',0x070506,s*.062,.43,.46,.05,.034,.02,0,s*.55,-s*.2);
-      k.p('head','box','g',eye,s*.07,.432,.466,.036,.018,.008,0,s*.55,-s*.25);
+      k.p('head','box','c',0x070506,s*.073,.43,.465,.05,.034,.02,0,s*.55,-s*.2);
+      k.p('head','box','g',eye,s*.08,.432,.471,.036,.018,.008,0,s*.55,-s*.25);
       k.p('head','box','c',back,s*.058,.458,.462,.064,.018,.032,0,s*.5,s*.38);
-      k.p('head','cone4','c',0xece4d0,s*.022,.36,.495,.01,.04,.01,Math.PI);
+      k.p('head','cone4','c',0xece4d0,s*.03,.338,.5,.01,.044,.01,Math.PI);
       k.p('jaw','cone4','c',0xece4d0,s*.03,.35,.48,.007,.022,.007);
     });
     // leaf nose and small chin

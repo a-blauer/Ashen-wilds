@@ -3,7 +3,7 @@
 function openWMap(){
   const c=$('wmc'),r=curMap(),T=TOWNS[0];let x0,y0,w,h,title,sub;
   if(r>=0){const p=PMAP[r];x0=p.x0;y0=p.y0;w=PMW;h=PMH;title=p.n;sub=(p.sub||'')+' · Lv '+p.lv[0]+'–'+p.lv[1]}
-  else{x0=T.cx-36;y0=T.cy-62;w=PCOURT[0]+22-x0;h=T.cy+(T.sz||TS)+42-y0;title='Duskhold';sub='The floating stronghold · six portal gates round the walls · the Courtyard in the south ward'}
+  else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
   const P=(x,z)=>[(x-x0+.5)*s,(z-y0+.5)*s],inV=(x,z)=>x>=x0&&x<x0+w&&z>=y0&&z<y0+h;g.textAlign='center';g.textBaseline='middle';
@@ -16,7 +16,7 @@ function openWMap(){
     if(bossDone.has(r)){const [x,y]=P(p.wa[0],p.wa[1]);dia(x,y,'#ff9a5a',7);lab('⚔️ Wave Trial',x,y+16,'#ffd8b0')}
   }else{{const [x,y]=P(T.cx,T.cy);g.fillStyle='#fbbf24';g.fillRect(x-7,y-7,14,14);g.strokeStyle='#000';g.lineWidth=2;g.strokeRect(x-7,y-7,14,14);lab('Duskhold',x,y+20)}
     if(typeof TWN100_wmap=='function')TWN100_wmap(g,P,lab,s);
-    if(typeof CYD!='undefined'){const [x,y]=P(CYD.x,CYD.y);lab('🌲 Courtyard',x,y,'#c8f0b0')}}
+    if(typeof CYD!='undefined'){const [x,y]=P(CYD.x,CYD.y);lab('🌲 Garden',x,y,'#c8f0b0')}}
   (typeof tmaps!='undefined'?tmaps:[]).forEach(m=>{if(!inV(m.x,m.z))return;const [x,y]=P(m.x,m.z);g.font='700 18px system-ui';g.fillStyle='#fbbf24';g.fillText('✕',x,y)});
   if(typeof MP!='undefined'&&MP.on)for(const k in MP.rh){const q=MP.rh[k];if(!q.pr||!inV(q.pr.x,q.pr.z))continue;const [x,y]=P(q.pr.x,q.pr.z);g.fillStyle='#60a5fa';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();lab(String(q.pr.n||'').slice(0,14),x,y-12,'#cfe3ff')}
   {const [x,y]=P(pl.position.x,pl.position.z);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(x,y,10,0,6.28);g.stroke();g.fillStyle='#4ade80';g.beginPath();g.arc(x,y,5,0,6.28);g.fill();g.strokeStyle='#000';g.lineWidth=1.5;g.stroke()}

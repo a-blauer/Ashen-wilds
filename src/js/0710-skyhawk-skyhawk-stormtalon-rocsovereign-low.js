@@ -53,7 +53,9 @@ LPR.Skyhawk={
     [-2,-1,0,1,2].forEach(i=>{const a=i*.18;k.p(i?'tail2':'tail3','box','c',i%2?back:deep,Math.sin(a)*.13,.515-Math.abs(i)*.008,-.46-Math.cos(a)*.15,.1,.02,.34,0,a,0);
       k.p('tail3','box','c',0xb8ac92,Math.sin(a)*.29,.512-Math.abs(i)*.008,-.46-Math.cos(a)*.31,.1,.016,.04,0,a,0)});
     // breast ruff
-    [-1,0,1].forEach(i=>k.L('chest','c',0xc8bca2,[i*.06,.68,.27],[i*.07,.6,.24],.04,.004,4));
+    [-1,0,1].forEach(i=>k.L('chest','c',0xc8bca2,[i*.06,.625,.325],[i*.07,.53,.33],.04,.004,4));
+    // tail root: bridges the rump and the fanned tail feathers
+    k.L('tail0','c',back,[0,.565,-.24],[0,.522,-.5],.07,.045,6);
   },
   post(x,c,C,mat){
     const main=lpMain(C,.22),root=main.clone().multiplyScalar(.85),tipC=main.clone().multiplyScalar(.32).lerp(new THREE.Color(0x221c18),.4);

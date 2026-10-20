@@ -9,7 +9,9 @@
 // Each building is one baked kit (≤3 meshes, the town atlas) + its sign; chimney smoke for all shops is one InstancedMesh.
 var TWN100_S={b:{},site:{},npc:{},col:{},smoke:null,src:[]};
 // world spot of a plot-local point (local: x along the facade, z toward the street; plot centre at |x|=9)
-function TWN100_lw(q,lx,lz){const T=TOWNS[0],cx=T.cx+q.s*9,cz=T.cy+q.z;return q.s<0?[cx+lz,cz-lx]:[cx-lz,cz+lx]}
+// v101: plots can stand anywhere and face any way: q.x / q.z = plot centre (town-local), q.ry = facing (local +z toward the square)
+function TWN100_ry(q){return q.ry!=null?q.ry:(q.s<0?Math.PI/2:-Math.PI/2)}
+function TWN100_lw(q,lx,lz){const T=TOWNS[0],cx=T.cx+(q.x!=null?q.x:q.s*9),cz=T.cy+q.z,r=TWN100_ry(q),fx=Math.sin(r),fz=Math.cos(r);return [cx+lx*fz+lz*fx,cz-lx*fx+lz*fz]}
 function TWN100_npc(q){return TWN100_lw(q,0,4.45)}
 // ---------- kit helpers (building local frame: body centred at z=zc, front wall at zc+d/2 facing +z) ----------
 function TWN100_body(k,o){const w=o.w,d=o.d,h=o.h,zc=o.zc||0,st=o.st;
@@ -169,7 +171,7 @@ var TWN100_SIGN={smith:['BLACKSMITH','⚒ forge · arms · armour','#2a2420','#f
 var TWN100_SY={smith:2.85,alch:2.95,cook:2.75,bard:3.75,merchant:2.5,sage:3.15,trainer:2.75,stable:3.0},TWN100_SZZ={smith:.95,alch:.76,cook:.76,bard:1.95,merchant:1.0,sage:.66,trainer:.66,stable:1.0};
 function TWN100_built(k){return k=='smith'||shopBuilt(k)}
 function TWN100_build(q){const T=TOWNS[0],key='TWNS|'+q.k,S=[];let k=null;if(!twHas(key)){k=twKit(801+q.k.length*17+q.z);TWN100_KIT[q.k](k,S);TWN100_S.src[q.k]=S}
-  const g=twGroup(k,key),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=q.s<0?Math.PI/2:-Math.PI/2;g.name='shop_'+q.k;
+  const g=twGroup(k,key),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=TWN100_ry(q);g.name='shop_'+q.k;
   const sg=TWN100_SIGN[q.k];sign(g,[{t:sg[0],f:'700 56px'},{t:sg[1],f:'600 26px'}],2.5,.56,sg[2],sg[3],'#c9a24a',q.k=='bard'?0:q.k=='merchant'?-.7:0,TWN100_SY[q.k],TWN100_SZZ[q.k]+(q.k=='bard'?.05:.08),0,512,150);
   if(q.k=='stable'){try{const dm=mountModel('pony');dm.scale.setScalar(.8);dm.position.set(.3,.36,-.8);dm.rotation.y=Math.PI*.85;g.add(dm);TANIM.push({x,z,f:now=>{if(g.visible&&dm.r&&dm.r.rig)dm.r.rig(now,false,0)}})}catch(e){console.warn('v100 stable pony',e)}}
   scene.add(g);TWN100_S.b[q.k]=g;return g}
@@ -185,14 +187,14 @@ function TWN100_siteK(k){const P=[[-2.3,-3.2],[2.3,-3.2],[2.3,3.2],[-2.3,3.2]];
   k.as('wood',()=>{k.L('c',TWC.woodD,[.6,.75,1.9],[1.6,.75,1.9],.05,'box');[[.7,-1],[.7,1],[1.5,-1],[1.5,1]].forEach(([x,s])=>k.L('c',TWC.woodD,[x,.72,1.9],[x+.1,0,1.9+s*.22],.03,'box'))});
   k.L('m',TWC.iron,[.3,0,2.3],[.48,.55,2.35],.02,'cyl6',0);k.p('m',TWC.iron,'box',.5,.58,2.35,.16,.07,.05,0,0,.3,0)}
 function TWN100_site(q){const T=TOWNS[0];let k=null;if(!twHas('TWNSITE')){k=twKit(889);TWN100_siteK(k)}
-  const g=twGroup(k,'TWNSITE'),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=q.s<0?Math.PI/2:-Math.PI/2;g.name='site_'+q.k;
+  const g=twGroup(k,'TWNSITE'),[x,z]=TWN100_lw(q,0,0);g.position.set(x,T.ph,z);g.rotation.y=TWN100_ry(q);g.name='site_'+q.k;
   const o=SHOPS.find(s=>s.k==q.k)||{i:'🔨',n:q.k},sp=twPostG(1.6,1.25,.5);sp.position.set(0,0,3.45);g.add(sp);
   sign(sp,[{t:o.i+' '+o.n,f:'700 34px'},{t:'🔨 build it at the Steward',f:'600 22px'}],1.6,.5,'#3a2614','#ffe6c0',null,0,1.25,0,0,512,150);
   scene.add(g);TWN100_S.site[q.k]=g;return g}
 // shopkeepers that are not visitors (the visitors' NPCs come from visTick at T.vsp)
 var TWN100_NPCO={smith:{robe:0x3a3430,trim:0x5a3a20,apron:1,label:'Blacksmith'},alch:{robe:0x2e4a3a,trim:0x8a6a2a,hat:'wiz',hatC:0x24402e,label:'Alchemist'},
  cook:{robe:0x6a4a2a,trim:0x2a1a12,hat:'chef',apron:1,label:'Cook'},stable:{robe:0x5a4a2a,trim:0x2a1a10,hat:'cap',hatC:0x6a4a1a,label:'Stable Master'}};
-function TWN100_keeper(q){const T=TOWNS[0],[x,z]=TWN100_npc(q),o=Object.assign({ry:q.s<0?Math.PI/2:-Math.PI/2},TWN100_NPCO[q.k]),g=new THREE.Group(),prev=T_cur,nc=[];T_cur={col:nc,cx:0,cy:0};
+function TWN100_keeper(q){const T=TOWNS[0],[x,z]=TWN100_npc(q),o=Object.assign({ry:TWN100_ry(q)},TWN100_NPCO[q.k]),g=new THREE.Group(),prev=T_cur,nc=[];T_cur={col:nc,cx:0,cy:0};
   try{npc(g,x,z,o)}finally{T_cur=prev}g.position.y=GH(x,z);scene.add(g);TWN100_S.npc[q.k]=g;TWN100_S.col[q.k]=nc;return g}
 // ---------- sync: build / show / hide by shopBuilt, colliders, the stations and the visitors move into the market ----------
 function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN)return; // not before this file has run
@@ -211,7 +213,7 @@ function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN)retur
 }catch(e){console.warn('v100 market setup',e)}}
 // visitors: no more stalls, and they face the street
 {const f=visTick;visTick=function(){const r=f.apply(this,arguments);try{VIS.forEach(v=>{if(!v.g||v.g.twn)return;v.g.twn=1;const q=TWN100_SH.find(s=>s.k==v.k);
-    v.g.children.slice().forEach(c=>{if(!c.bones&&c.isGroup)v.g.remove(c)});const n=v.g.children.find(c=>c.bones);if(n&&q)n.rotation.y=q.s<0?Math.PI/2:-Math.PI/2})}catch(_){}return r}}
+    v.g.children.slice().forEach(c=>{if(!c.bones&&c.isGroup)v.g.remove(c)});const n=v.g.children.find(c=>c.bones);if(n&&q)n.rotation.y=TWN100_ry(q)})}catch(_){}return r}}
 // the Stable is one of the market buildings now (the v78 lean-to and its site are not built)
 function stableBuild(){const T=TOWNS[0];if(!T||!TWN100_S)return;if(!TWN100_S.b.stable)try{TWN100_build(TWN100_SH.find(s=>s.k=='stable'));TWN100_shopSync()}catch(e){console.warn('v100 stable',e)}
   if(!TWN100_S.npc.stable)try{TWN100_keeper(TWN100_SH.find(s=>s.k=='stable'));TWN100_shopSync()}catch(e){console.warn('v100 stable',e)}STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[];const q=TWN100_SH.find(s=>s.k=='stable');STB.n=TWN100_npc(q)}
@@ -227,7 +229,7 @@ function shSites(){const T=TOWNS[0];if(!T)return;SHM.sites=SHM.sites||{};SHM.vsi
 var TWN100_ACT={smith:()=>{$('bag').classList.remove('hide');bagTab2=typeof KQM_FORGE!='undefined'?KQM_FORGE:0;rB()},alch:()=>openX('alch'),cook:()=>openX('cook'),
  merchant:()=>openX('visitor','merchant'),trainer:()=>openX('visitor','trainer'),bard:()=>openX('visitor','bard'),sage:()=>openX('visitor','sage'),stable:()=>openX('stable',0)};
 var TWN100_LBL={smith:'F · Blacksmith · upgrade your gear',alch:'F · Brew at the Alchemist',cook:'F · Cook at the Cookhouse',merchant:'F · Curio Merchant',trainer:'F · Beast Trainer',bard:'F · Listen to the Bard',sage:'F · Rune Sage',stable:'F · Stable Master'};
-function TWN100_prompt(){const T=TOWNS[0],p=pl.position;if(p.z<T.cy+TS-1||p.z>T.cy+TWN100_IW)return null;
+function TWN100_prompt(){const T=TOWNS[0],p=pl.position;if(townAt(p.x,p.z,0)!==0)return null;
   for(const q of TWN100_SH){const [x,z]=TWN100_npc(q);if(Math.hypot(p.x-x,p.z-z)<2.4){if(TWN100_built(q.k))return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]};
     const o=SHOPS.find(s=>s.k==q.k);return {label:'🔨 '+(o?o.n:q.k)+' · build it at the Stronghold Steward',fn:()=>{shTab='shops';openX('hold')}}}}return null}
 {const f=townPortalPrompt;townPortalPrompt=function(T){if(T===TOWNS[0]){const r=TWN100_prompt();if(r)return r}return f.apply(this,arguments)}}
@@ -235,7 +237,7 @@ function TWN100_prompt(){const T=TOWNS[0],p=pl.position;if(p.z<T.cy+TS-1||p.z>T.
 function TWN100_smokeSync(){const T=TOWNS[0],L=[];TWN100_SH.forEach(q=>{if(!TWN100_built(q.k))return;(TWN100_S.src[q.k]||[]).forEach(s=>{const [x,z]=TWN100_lw(q,s[0],s[2]);L.push([x,T.ph+s[1],z,q.k])})});
   const N=7;if(!TWN100_S.smoke){const m=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.32,depthWrite:false}),24*N);
     m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(24*N*3),3);m.frustumCulled=false;m.castShadow=false;m.userData.lpsSkip=1;m.userData.psNo=1;scene.add(m);TWN100_S.smoke=m;
-    const d=new THREE.Object3D(),c=new THREE.Color();TANIM.push({x:T.cx,z:T.cy+38,f:now=>{const S=TWN100_S.smoke,L=S.userData.L||[];
+    const d=new THREE.Object3D(),c=new THREE.Color();TANIM.push({x:T.cx,z:T.cy+8,f:now=>{const S=TWN100_S.smoke,L=S.userData.L||[];
       for(let i=0;i<L.length;i++)for(let j=0;j<N;j++){const t=((now/4200)+j/N+i*.37)%1,s=L[i];d.position.set(s[0]+Math.sin(t*6+j*2.1)*.25+t*.7,s[1]+t*3.2,s[2]+Math.cos(t*5+j)*.2);d.scale.setScalar(Math.sin(Math.PI*t)*.42+.03);d.rotation.set(t*2,j,0);d.updateMatrix();S.setMatrixAt(i*N+j,d.matrix)}
       S.instanceMatrix.needsUpdate=true}});
     m.userData.c=c}

@@ -42,8 +42,8 @@ LPR.Gravewyrm={
       k.p('head','box','g',eye,s*.122,.332,.602,.012,.034,.04,0,s*.3,0);
       k.p('head','box','c',bone2,s*.1,.362,.59,.05,.018,.08,0,s*.3,s*.35);
       // fangs
-      k.p('head','cone4','c',0xf0eadc,s*.045,.225,.76,.012,.055,.012,Math.PI);
-      k.p('head','cone4','c',0xf0eadc,s*.075,.235,.68,.008,.03,.008,Math.PI);
+      k.p('head','cone4','c',0xf0eadc,s*.045,.262,.76,.012,.06,.012,Math.PI);
+      k.p('head','cone4','c',0xf0eadc,s*.075,.272,.68,.009,.04,.009,Math.PI);
       // horns sweeping back, plus cheek spurs
       k.L('head','c',bone,[s*.07,.36,.5],[s*.16,.42,.34],.03,.004,5);
       k.L('head','c',bone,[s*.125,.29,.5],[s*.2,.27,.4],.02,.003,4);

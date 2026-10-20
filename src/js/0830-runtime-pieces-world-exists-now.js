@@ -27,7 +27,7 @@
   }catch(e){console.warn('town court',e)}}
 // paving: irregular flagstones over the town's paved tiles, and lashing rails along the palisade
 {try{const T=TOWNS[0],R=dkRng(77),L=[],Wl=[];
-    for(let y=T.cy-34;y<=T.cy+(T.sz||TS)+13;y++)for(let x=T.cx-34;x<=T.cx+40;x++){const t=MAP[y]&&MAP[y][x];if(t=='P')L.push([x,y]);else if(t=='W')Wl.push([x,y])}
+    for(let y=T.cy-34;y<=T.cy+(T.sz||TS)+13;y++)for(let x=Math.max(1,T.cx-TWN100_WX-4);x<=T.cx+TWN100_WX+4;x++){const t=MAP[y]&&MAP[y][x];if(t=='P')L.push([x,y]);else if(t=='W')Wl.push([x,y])}
     if(L.length){const sg=(()=>{const g=new THREE.CircleGeometry(.5,6);g.rotateX(-Math.PI/2);const pa=g.attributes.position;for(let i=1;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i),h=twH(Math.round(x*50),0,Math.round(z*50),5);pa.setX(i,x*(.86+h*.26));pa.setZ(i,z*(.86+h*.26))}
         const n=g.toNonIndexed();n.computeVertexNormals();n.userData.lps=1;return n})();
       const N=L.length*2,m=new THREE.InstancedMesh(sg,new THREE.MeshStandardMaterial({roughness:.95,flatShading:true}),N),d=new THREE.Object3D(),c=new THREE.Color();m.material.userData.lps=1;

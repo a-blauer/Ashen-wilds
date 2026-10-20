@@ -153,7 +153,7 @@ function cySync(){const n=bossDone.size;if(n===CYG.n)return;const first=CYG.n<0;
   CYD.nodes.forEach(([x,y,k,zi])=>{const key=y*W+x,open=zi<0||bossDone.has(zi);
     if(open){if(CYG.lock.has(key)){CYG.lock.delete(key);delete gdep[key];nodeSet(key,true);if(cyRock(k))MAP[y][x]='r';mmPaint(x,y)}}
     else if(!CYG.lock.has(key)){CYG.lock.add(key);gdep[key]=1;nodeSet(key,false);if(cyRock(k))MAP[y][x]='g';mmPaint(x,y)}});
-  cyWalls();if(!first&&n>0)say('🌲 The Courtyard grows: new '+PMAP[Math.min(n,PMAP.length)-1].n+' nodes to harvest in Duskhold.')}
+  cyWalls();if(!first&&n>0)say('🌲 The Garden grows: new '+PMAP[Math.min(n,PMAP.length)-1].n+' nodes to harvest in Duskhold.')}
 setInterval(()=>{try{cySync()}catch(e){console.warn('courtyard',e)}},1500);
 try{cySync()}catch(e){console.warn('courtyard',e)}
 // courtyard nodes come back after 10 minutes

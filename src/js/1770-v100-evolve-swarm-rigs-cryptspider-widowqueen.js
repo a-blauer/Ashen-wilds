@@ -25,7 +25,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P){
   const bracket=(a,y,sz)=>{const h=E.on([Math.sin(a)*.5,y,Math.cos(a)*.5],[-Math.sin(a),0,-Math.cos(a)]);if(!h)return;
     E.pd('hem','c',shelfD,E.add(h.p,h.n,sz*.2),[0,1,0],[sz,sz*.4,sz*.85]);E.pd('hem','c',shelf,E.add(E.add(h.p,h.n,sz*.15),[0,sz*.25,0]),[0,1,0],[sz*.8,sz*.3,sz*.7])};
   // L1: glowing gill veins under the cap, a glowing rim of spots, bracket fungi on the stalk
-  for(let i=0;i<10;i++){const a=i/10*6.283;E.L([Math.sin(a)*.07,.745,Math.cos(a)*.07],[Math.sin(a)*.28,.758,Math.cos(a)*.28],.007,.004,'g',P.glow,3,hb)}
+  for(let i=0;i<10;i++){const a=i/10*6.283+.22;E.L([Math.sin(a)*.07,.729,Math.cos(a)*.07],[Math.sin(a)*.28,.743,Math.cos(a)*.28],.008,.005,'g',P.glow,3,hb)}
   bracket(-2.2,.4,.06);bracket(2.6,.3,.05);
   if(L>=2){// small toadstools sprouting from the cap, a ring of glowing spots, more brackets
     [[.15,.06],[-.13,-.1],[.04,-.2],[-.17,.12]].forEach((q,i)=>{const t=E.top(q[0],q[1]);if(!t)return;const tp=E.add(t.p,E.nrm([q[0],1,q[1]]),.06+i%2*.02);
@@ -39,7 +39,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P){
   if(L>=4){// a crown of tall spore stalks with glowing bulbs, drifting glow motes, gold-ringed stalk
     for(let i=0;i<5;i++){const a=i/5*6.283,t=E.top(Math.sin(a)*.09,Math.cos(a)*.09);if(!t)continue;const tip=E.add(t.p,E.nrm([Math.sin(a)*.35,1,Math.cos(a)*.35]),.14+(i%2)*.05);
       E.L(t.p,tip,.014,.008,'c',stalk,4,hb);E.pd('sph','g',i%2?P.glow:P.glow2,tip,[0,1,0],[.028,.022,.028],null,hb)}
-    for(let i=0;i<8;i++){const a=i*.8;E.pd('ico','g',P.glow,[Math.cos(a)*(.34+(i%3)*.04),.86+((i*5)%4)*.05,Math.sin(a)*(.34+(i%3)*.04)],[0,1,0],.013,null,hb)}
+    for(let i=0;i<8;i++){const a=i*.8+.4,r=.14+(i%3)*.055,t=E.top(Math.cos(a)*r,Math.sin(a)*r);if(t)E.pd('ico','g',P.glow,E.add(t.p,t.n,.008),t.n,.014,null,hb)}
     E.band([0,.38,0],[0,1,0],.006,.009,'m',P.trim,10)}
   if(L>=5){// the cap rim glows, a second ring of tiny caps
     for(let i=0;i<18;i++){const a=i/18*6.283,a2=(i+1)/18*6.283,r=.335;E.L([Math.sin(a)*r,.775,Math.cos(a)*r],[Math.sin(a2)*r,.775,Math.cos(a2)*r],.011,.011,'g',P.glow,3,hb)}

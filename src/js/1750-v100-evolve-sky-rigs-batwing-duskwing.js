@@ -13,7 +13,7 @@ EVO100.D.Batwing={glow:0xc04aff,wing:{grow:.07},build(E,L,P){
     for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.004,.004,'c',P.leather,3);pts.forEach((p,i)=>{if(i%2==0)M.charm(E,p,.06,P.bone,'tooth')})}
   if(L>=3){// a bone face mask on the brow with glowing eye rims, shoulder spikes, glowing veins on the belly
     E.L([0,.47,.5],[0,.53,.47],.012,.002,'c',P.bone,4,{bn:'head'});
-    [-1,1].forEach(s=>{E.band([s*.07,.432,.466],[s*.5,0,1],.008,.004,'g',P.glow,7,{bn:'head'});const h=E.on([s*.4,.42,.12],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],1,-.5]),.08),.02,.002,'c',P.boneD,4)})}
+    [-1,1].forEach(s=>{E.band([s*.074,.432,.468],[s*.5,0,1],.01,.004,'g',P.glow,7,{bn:'head'});const h=E.on([s*.4,.42,.12],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],1,-.5]),.08),.02,.002,'c',P.boneD,4)})}
   if(L>=4){// a crescent-moon crown between the ears, a gem on the chest, glowing tail tip
     const c=[0,.53,.36];for(let i=0;i<8;i++){const a=-1.3+i/7*2.6,a2=-1.3+(i+1)/7*2.6;if(i<7)E.L(E.add(c,[Math.sin(a)*.07,Math.cos(a)*.07,0]),E.add(c,[Math.sin(a2)*.07,Math.cos(a2)*.07,0]),.01-Math.abs(a)*.003,.01-Math.abs(a2)*.003,'m',P.trim,4,{bn:'head'})}
     E.pd('oct','g',P.glow,E.add(c,[0,.07,0]),[0,1,0],[.014,.024,.014],null,{bn:'head'});
@@ -41,8 +41,8 @@ EVO100.D.Skyhawk={glow:0x9ae8ff,wing:{grow:.06,claws:false},build(E,L,P){
   if(L>=4){// a sun crown of golden rays above the crest with a storm gem, glowing tail streamers
     for(let i=-3;i<=3;i++){const a=i/3*1.25;E.L([0,.95,.36],[Math.sin(a)*.13,.95+Math.cos(a)*.13,.33],.009,.002,'m',P.gold,4,hb)}
     E.pd('oct','g',P.glow,[0,.965,.37],[0,0,1],[.022,.032,.014],null,hb);
-    [-1,1].forEach(s=>E.L([s*.08,.47,-1.0],[s*.09,.46,-1.12],.012,.002,'g',P.glow,4,{bn:'tail3'}))}
+    [-1,1].forEach(s=>E.L([s*.072,.481,-1.0],[s*.079,.472,-1.13],.012,.002,'g',P.glow,4,{bn:'tail3'}))}
   if(L>=5){// lightning arcs crackling around the wing roots
-    [-1,1].forEach(s=>{const b=[s*.14,.74,.14];E.chain([b,E.add(b,[s*.05,.06,-.02]),E.add(b,[s*.03,.1,-.06]),E.add(b,[s*.08,.15,-.08])],.008,.003,'g',P.glow2,3,{at:[s*.1,.72,.14]})})}
+    [-1,1].forEach(s=>{const sh=E.on([s*.5,.74,.14],[-s,-.3,0]),b=sh?E.add(sh.p,sh.n,-.004):[s*.15,.64,.14];E.chain([b,E.add(b,[s*.05,.06,-.02]),E.add(b,[s*.03,.1,-.06]),E.add(b,[s*.08,.15,-.08])],.008,.003,'g',P.glow2,3,{at:b})})}
 }};
 

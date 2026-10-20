@@ -2,13 +2,13 @@
 // Layout numbers live in w0_world.js: TWN100_SZ (south wall, town-local z), TWN100_IW (inner wall closing the courtyard
 // ward), TWN100_PG (portal islands), TWN100_RD (roads), TWN100_SH (market plots), CYD (courtyard), PCOURT (crossroads).
 // Town-local frame (T.g): x = world x - T.cx, z = world z - T.cy, ground at T.ph.
-//   upper town   z -21..21 : plaza, north row (Trading Post, Tavern, Magic Shop), kingdom structures
-//   market ward  z  21..56 : a street (|x|<6) with eight shop plots (|x| 6..12), arch to the plaza at z=21
-//   courtyard    z  56..100: the walled garden (CYD) behind the inner gate; south gate at z=100
+//   v101: ONE Grand Square, walls at x ±36 (TWN100_WX) from z -21 to 51 (TWN100_SZ), no inner walls or wards:
+//   north row (Trading Post, Tavern, Magic Shop) and the fountain as before; four shops down each side (x ±29.5, facing
+//   in); the garden park (CYD) in the south half; prestige buildings in the corners; the south gate opens on the Portal Road
 // This file: the wall ring for every Bastion Walls level (kdWalls), the courtyard's garden wall (cyWalls), area names,
 // arriving home from a zone (TWN100_home), old saves standing where there is no ground any more.
 var TWN100={walls:null,cy:null,lamps:[]};
-function TWN100_L(){const T=TOWNS[0];return {T,R:TS,IW:TWN100_IW,SZ:T.sz||TWN100_SZ}}
+function TWN100_L(){const T=TOWNS[0];return {T,R:TS,WX:TWN100_WX,IW:TWN100_IW,SZ:T.sz||TWN100_SZ}}
 // the v83 stone tower (Bastion Walls level 2 used the old tower groups; the ring now needs towers in new places)
 function TWN100_tw2(k,r,h){const roofC=TOWNS[0].pal.roof||0x3e3a40,flag=TOWNS[0].pal.ban||0x7a2230;
   twStoneRing(k,TWC.stone,0,0,r*1.08,0,.45,.36);twStoneRing(k,TWC.stone,0,0,r,.45,h,.32);
@@ -38,29 +38,30 @@ function TWN100_archK(k,lv,w){const hw=w/2,ban=TOWNS[0].pal.ban||0x7a2230;
     for(let x=-hw-.6;x<=hw+.65;x+=1.2)[-1,1].forEach(q=>k.p('c',TWC.stone,'box',x,4.62,q*.48,.6,.55,.3,0,0,0,.08));
     [-1,1].forEach(s=>[-1,1].forEach(q=>kdBanner(k,s*(hw+.5),2.9,q*.64,q>0?0:Math.PI,ban,.7,1.5)));
     if(lv>=3)[-1,1].forEach(s=>kdBrazier(k,s*(hw+.5),0,3.12,.7))}}
-// the ring, baked per level into three kits (upper town / market ward / courtyard ward) so each part can be culled
-function TWN100_ringK(k,lv,part){const {R,IW,SZ}=TWN100_L(),gz=1.75,at=(x,z,ry,f)=>k.at(x,0,z,f,ry),seg=(x0,z0,x1,z1,ry)=>at((x0+x1)/2,(z0+z1)/2,ry,()=>kdSegK(k,lv,Math.hypot(x1-x0,z1-z0)));
-  const side=(z0,z1)=>[-1,1].forEach(s=>seg(s*R,z0,s*R,z1,-s*Math.PI/2)),cross=(z,g,ry)=>{seg(-R,z,-g,z,ry);seg(g,z,R,z,ry)};
+// v101: the ring round the Grand Square, baked per level into two kits (north half / south half) so each can be culled.
+// Walls at x = ±WX from z = -TS to SZ, one gatehouse in the south wall (the Portal Road), towers at the corners and along the sides.
+var TWN100_MIDZ=15; // where the two halves meet
+function TWN100_ringK(k,lv,part){const {WX,SZ}=TWN100_L(),N=-TS,M=15,gz=1.75,at=(x,z,ry,f)=>k.at(x,0,z,f,ry),seg=(x0,z0,x1,z1,ry)=>at((x0+x1)/2,(z0+z1)/2,ry,()=>kdSegK(k,lv,Math.hypot(x1-x0,z1-z0)));
+  const side=(z0,z1)=>[-1,1].forEach(s=>seg(s*WX,z0,s*WX,z1,-s*Math.PI/2));
   const big=(x,z,i)=>at(x,z,i*1.3,()=>TWN100_tower(k,lv,1.45,4.2)),small=(x,z,i)=>at(x,z,i*.9+(x+z)%6,()=>TWN100_tower(k,lv,.95,3.1)),mid=(x,z,i)=>at(x,z,i*1.7,()=>kdTowerK(k,3,1.15,3.6));
-  if(part==0){seg(-R,-R,R,-R,0);side(-R,-gz);side(gz,R);cross(R,3.5,Math.PI);
-    [-1,1].forEach(s=>{[-2.3,2.3].forEach((z,i)=>small(s*R,z,i));big(s*R,-R,s);big(s*R,R,s+2);at(s*R,0,s>0?Math.PI:0,()=>kdGateK(k,lv))});
-    at(0,R,0,()=>TWN100_archK(k,lv,7));if(lv>=3){[[-10.5,-R],[10.5,-R],[-R,-11.5],[R,-11.5],[-R,11.5],[R,11.5]].forEach(([x,z],i)=>mid(x,z,i))}}
-  else if(part==1){side(R,IW);cross(IW,gz,Math.PI);at(0,IW,Math.PI/2,()=>kdGateK(k,lv));[-1,1].forEach(s=>{big(s*R,IW,s+4);small(s*2.3,IW,s)});
-    if(lv>=3)[-1,1].forEach(s=>mid(s*R,(R+IW)/2,s))}
-  else{side(IW,SZ);cross(SZ,gz,Math.PI);at(0,SZ,Math.PI/2,()=>kdGateK(k,lv));[-1,1].forEach(s=>{big(s*R,SZ,s+6);small(s*2.3,SZ,s+2)});
-    if(lv>=3)[-1,1].forEach(s=>mid(s*R,(IW+SZ)/2,s+3))}}
+  if(part==0){seg(-WX,N,WX,N,0);side(N,M);
+    [-1,1].forEach(s=>{big(s*WX,N,s);small(s*WX,-3,s+1);small(s*12,N,s+3)});
+    if(lv>=3)[[-24,N],[24,N],[-WX,-12],[WX,-12],[-WX,6],[WX,6]].forEach(([x,z],i)=>mid(x,z,i))}
+  else{side(M,SZ);seg(-WX,SZ,-gz,SZ,Math.PI);seg(gz,SZ,WX,SZ,Math.PI);at(0,SZ,Math.PI/2,()=>kdGateK(k,lv));
+    [-1,1].forEach(s=>{big(s*WX,SZ,s+6);small(s*2.3,SZ,s+2);small(s*WX,33,s+4);small(s*18,SZ,s+8)});
+    if(lv>=3)[[-WX,24],[WX,24],[-WX,42],[WX,42]].forEach(([x,z],i)=>mid(x,z,i+3))}}
 function kdWalls(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.wg=null}
   o.gate.forEach(q=>q.visible=false);o.tw.forEach(q=>q.visible=false);o.ban.forEach(q=>q.visible=false);
   const g=new THREE.Group();g.name='kdWalls';
-  [0,1,2].forEach(part=>{const key='TWNRING|'+lv+'|'+part;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
+  [0,1].forEach(part=>{const key='TWNRING101|'+lv+'|'+part;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
   K.wg=g;T.g.add(g);
-  const {R,IW,SZ}=TWN100_L(),cols=[],lamps=[];
-  if(lv>=3){[[-10.5,-R],[10.5,-R],[-R,-11.5],[R,-11.5],[-R,11.5],[R,11.5],[-R,(R+IW)/2],[R,(R+IW)/2],[-R,(IW+SZ)/2],[R,(IW+SZ)/2]].forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:1.15}));
-    [-1,1].forEach(s=>[-1,1].forEach(q=>lamps.push([T.cx+s*(R+1.25),T.ph+1.2,T.cy+q*2.75])));[IW,SZ].forEach(z=>[-1,1].forEach(q=>lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+z+1.25])))}
+  const {WX,SZ}=TWN100_L(),cols=[],lamps=[];
+  if(lv>=3){[[-24,-TS],[24,-TS],[-WX,-12],[WX,-12],[-WX,6],[WX,6],[-WX,24],[WX,24],[-WX,42],[WX,42]].forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:1.15}));
+    [-1,1].forEach(q=>{lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+SZ+1.25]);lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+SZ-1.25])})}
   kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps}
 
 // ---------- the courtyard: a low garden wall of rough stone, openings toward the inner gate (north) and the south gate ----------
-function cyWalls(){const C=CYD,r=C.r,gaps=[Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),Math.atan2(C.gate2[1]-C.y,C.gate2[0]-C.x)],gw=2.3/r;
+function cyWalls(){const C=CYD,r=C.r,gaps=[Math.atan2(C.gate[1]-C.y,C.gate[0]-C.x),Math.atan2(C.gate2[1]-C.y,C.gate2[0]-C.x),0,Math.PI],gw=2.3/r; // v101: open on all four sides (it is a park in the square)
   const inGap=a=>gaps.some(g=>{let d=Math.abs(a-g);if(d>Math.PI)d=6.283-d;return d<gw});
   CYG.walls.forEach(([x,y])=>{if(MAP[y][x]=='B'){MAP[y][x]='g';mmPaint(x,y)}});CYG.walls=[];
   for(let y=Math.floor(C.y-r-2);y<=C.y+r+2;y++)for(let x=Math.floor(C.x-r-2);x<=C.x+r+2;x++){const t=MAP[y]&&MAP[y][x];if(t!=='.'&&t!=='g')continue;
@@ -81,14 +82,15 @@ function cyWalls(){const C=CYD,r=C.r,gaps=[Math.atan2(C.gate[1]-C.y,C.gate[0]-C.
   const g=twGroup(k,key);g.position.set(C.x,TOWNS[0].ph,C.y);g.name='cyWalls';scene.add(g);CYG.g=g;
   // a sign on the north opening
   {const a=gaps[0]+gw+1.3/r,x=C.x+Math.cos(a)*(r+.2),z=C.y+Math.sin(a)*(r+.2),y=GH(x,z),sg=twPostG(1.7,1.65,.46);sg.position.set(x,y,z);sg.rotation.y=0;g.parent.add(sg);CYG.sg&&scene.remove(CYG.sg);CYG.sg=sg;
-    sign(sg,[{t:'🌲 Courtyard',f:'700 40px'},{t:n?n+' zone'+(n>1?'s':'')+' tended':'Wood & stone',f:'600 26px'}],1.7,.46,'#1a2414','#efe6d8',null,0,1.65,0,0)}}
+    sign(sg,[{t:'🌲 Garden',f:'700 40px'},{t:n?n+' zone'+(n>1?'s':'')+' tended':'Wood & stone',f:'600 26px'}],1.7,.46,'#1a2414','#efe6d8',null,0,1.65,0,0)}}
 // the courtyard sign posts and lanterns are rebuilt with the wall (the v85 cyWalls already ran once at load with the old rules)
 try{if(CYG.g){scene.remove(CYG.g);CYG.g=null}CYG.n=-1;cySync()}catch(e){console.warn('v100 courtyard',e)}
 
 // ---------- names, coming home, old saves ----------
 {const f=areaName;areaName=function(){try{{const T=TOWNS[0],x=pl.position.x,z=pl.position.z;
-    if(townAt(x,z,0)==0){const dz=z-T.cy;if(dz>TWN100_IW)return Math.hypot(x-CYD.x,z-CYD.y)<CYD.r+.8?'🌲 Duskhold · Courtyard':'🌲 Duskhold · Courtyard ward';if(dz>TS)return '🏰 Duskhold · Market ward'}
-    else if(curMap()<0){for(let i=0;i<TWN100_PG.length;i++){const p=TWN100_PG[i];if(Math.hypot(x-p.x,z-p.y)<p.r+2)return PMAP[i].ic+' '+PMAP[i].n+' gate'}}}}catch(_){}return f.apply(this,arguments)}}
+    if(townAt(x,z,0)==0){if(Math.hypot(x-CYD.x,z-CYD.y)<CYD.r+.8)return '🌲 Duskhold · Garden';return '🏰 Duskhold · Grand Square'}
+    else if(curMap()<0){const RN=['I','II','III','IV','V','VI'];for(let i=0;i<TWN100_PG.length;i++){const p=TWN100_PG[i];if(Math.hypot(x-p.x,z-p.y)<p.r+2)return PMAP[i].ic+' Portal '+RN[i]+' · '+PMAP[i].n}
+      if(Math.abs(x-PCOURT[0])<5&&z>T.cy+T.sz)return '🛤️ The Portal Road'}}}catch(_){}return f.apply(this,arguments)}}
 // back from a zone (its home portal, or the Wave Trial): in front of that zone's gate, facing the road
 function TWN100_home(){const r=curMap(),i=r>=0&&r<TWN100_PG.length?r:0,p=TWN100_PG[i];toPos(p.a[0],p.a[1],Math.atan2(p.a[0]-p.x,p.a[1]-p.y)+Math.PI)}
 // a spot is fine to stand on when there is ground and nothing solid
@@ -104,23 +106,24 @@ function TWN100_fixPos(x,z){if(x==null){x=pl.position.x;z=pl.position.z}if(regio
   TWN100.mig=p&&!p.realm&&p.x<PMAP[0].x0?TWN100_fixPos(p.x,p.z):TWN100_fixPos()}catch(e){console.warn('v100 town load',e)}return r}}
 
 // ---------- market ward + courtyard ward dressing: one baked kit (lantern posts, crates, barrels, benches) ----------
-var TWN100_LP=[[-5.4,30],[5.4,30],[-5.4,38],[5.4,38],[-5.4,46],[5.4,46],[-2.4,TWN100_IW+3.4],[2.4,TWN100_IW+3.4],[-2.4,TWN100_SZ-2.6],[2.4,TWN100_SZ-2.6]];
+// v101: lantern posts between the shops on both sides of the Grand Square, and inside the south gate
+var TWN100_LP=[].concat(...[-1,1].map(s=>[-14.5,-3.5,7.5,18.5,29.5].map(z=>[s*24.6,z])),[[-2.6,TWN100_SZ-2.4],[2.6,TWN100_SZ-2.4]]);
 function TWN100_wardK(k){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
       k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);
       const lx=.32,ly=h-.28;k.p('m',TWC.iron,'cone4',lx,ly+.2,0,.17,.13,.17,0,Math.PI/4,0,0);k.p('m',TWC.iron,'box',lx,ly-.16,0,.2,.04,.2,0,0,0,0);
       [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>k.p('m',TWC.iron,'box',lx+q[0]*.09,ly,q[1]*.09,.025,.32,.025,0,0,0,0));k.p('g',0xffd27a,'oct',lx,ly,0,.1,.15,.1)},ry);
   TWN100_LP.forEach(([x,z])=>lampK(x,z,x<0?0:Math.PI));
-  [[-6.2,30.2,0],[6.3,38.1,1],[-6.4,46.3,0],[6.1,29.8,1]].forEach(([x,z,b])=>{if(b)TWN100_barrel(k,x,z,1);else{TWN100_crate(k,x,z,.62,.2);TWN100_crate(k,x-.1,z+.1,.4,.6);k.at(0,.62,0,()=>TWN100_crate(k,x,z,.38,1.1))}});
-  [-8.2,8.2].forEach(x=>k.at(x,0,TWN100_IW+4,()=>{k.as('bark',()=>k.L('c',0x6a4a2e,[-.75,.42,0],[.75,.42,0],.16,'cyl6'));k.as('board',()=>k.p('c',0x7a5a3a,'box',0,.5,0,1.5,.07,.34,0,0,0,.06));
+  [[-25.6,-13.4,0],[25.7,-13.2,1],[-25.6,30.6,0],[25.6,30.4,1]].forEach(([x,z,b])=>{if(b)TWN100_barrel(k,x,z,1);else{TWN100_crate(k,x,z,.62,.2);TWN100_crate(k,x-.1,z+.1,.4,.6);k.at(0,.62,0,()=>TWN100_crate(k,x,z,.38,1.1))}});
+  [-8.2,8.2].forEach(x=>k.at(x,0,12.4,()=>{k.as('bark',()=>k.L('c',0x6a4a2e,[-.75,.42,0],[.75,.42,0],.16,'cyl6'));k.as('board',()=>k.p('c',0x7a5a3a,'box',0,.5,0,1.5,.07,.34,0,0,0,.06));
     [-.55,.55].forEach(s=>{k.as('bark',()=>k.L('c',TWC.woodD,[s,0,0],[s,.38,0],.13,'log'));k.as('wood',()=>k.L('c',TWC.woodD,[s,.45,-.17],[s,.95,-.24],.05,'box'))});k.as('board',()=>k.p('c',0x6a4a2e,'box',0,.85,-.23,1.5,.18,.06,-.12,0,0,.06))}))}
-{const T=TOWNS[0];try{let k=null;if(!twHas('TWNWARD')){k=twKit(951);TWN100_wardK(k)}const g=twGroup(k,'TWNWARD');g.name='wardDress';T.g.add(g);
+{const T=TOWNS[0];try{let k=null;if(!twHas('TWNWARD101')){k=twKit(951);TWN100_wardK(k)}const g=twGroup(k,'TWNWARD101');g.name='wardDress';T.g.add(g);
   TWN100_LP.forEach(([x,z])=>{const lx=x+(x<0?.32:-.32);TLAMP.push([T.cx+lx,T.ph+2.0,T.cy+z]);T.col.push({x:T.cx+x,z:T.cy+z,r:.2})});
-  [[-6.2,30.2,.45],[6.3,38.1,.36],[-6.4,46.3,.45]].forEach(([x,z,r])=>T.col.push({x:T.cx+x,z:T.cy+z,r}));[-8.2,8.2].forEach(x=>T.col.push({x:T.cx+x,z:T.cy+TWN100_IW+4,hx:.78,hz:.26}))
+  [[-25.6,-13.4,.45],[25.7,-13.2,.36],[-25.6,30.6,.45],[25.6,30.4,.36]].forEach(([x,z,r])=>T.col.push({x:T.cx+x,z:T.cy+z,r}));[-8.2,8.2].forEach(x=>T.col.push({x:T.cx+x,z:T.cy+12.4,hx:.78,hz:.26}))
 }catch(e){console.warn('v100 ward dressing',e)}}
 // the ring changed shape: rebuild it now (kdSync only rebuilds on a level change)
 try{if(KGD){KGD.wl=-1;kdSync()}}catch(e){console.warn('v100 walls',e)}
 
-// the three ring parts (upper town / market ward / courtyard ward) are drawn only within ~58 tiles of their stretch
-{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy,R=[[-TS,TS],[TS,TWN100_IW],[TWN100_IW,T.sz]];
+// the two ring halves (north / south of z = 15) are drawn only within ~46 tiles of their stretch
+{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy,R=[[-TS,15],[15,T.sz]];
   K.wg.children.forEach((g,i)=>{const r=R[i]||R[0],d=z<r[0]?r[0]-z:z>r[1]?z-r[1]:0;g.visible=d<46})}catch(_){}}}
 

@@ -67,7 +67,7 @@ LPR.Ashwolf={
       B('head','g',eye,[s*.083,.634,.574],.036,.013,.008,0,s*.6,-s*.25);
       B('head','c',back,[s*.068,.658,.566],.066,.022,.04,0,s*.55,s*.36);
       // fangs: long upper canines, smaller lower ones
-      const f=P([s*.024,.534,.71]);k.p('head','cone4','c',0xe8e0c8,f[0],f[1],f[2],.012,.05,.012,Math.PI);
+      const f=P([s*.036,.513,.71]);k.p('head','cone4','c',0xe8e0c8,f[0],f[1],f[2],.013,.062,.013,Math.PI);
       const g=P([s*.022,.548,.685]);k.p('jaw','cone4','c',0xe0d8c0,g[0],g[1],g[2],.009,.03,.009);
       // cheek shag sweeping back
       L('head','c',ruff,[s*.095,.575,.52],[s*.16,.545,.43],.055,.006,5);

@@ -32,7 +32,7 @@ LPR.Gloomcap={
     [[0,1.0,.02,.05],[.16,.93,.1,.045],[-.17,.93,.06,.05],[.07,.92,-.2,.045],[-.1,.95,-.13,.04],[.24,.86,-.06,.04],[-.25,.85,-.09,.035],[.02,.86,.27,.04],[-.2,.85,.18,.035],[.2,.86,.18,.035]].forEach(q=>{
       const n=new THREE.Vector3(q[0],q[1]-.72,q[2]).normalize();k.p('head','dod','c',spot,q[0]*1.03,q[1]+.01,q[2]*1.03,q[3],q[3]*.45,q[3],Math.atan2(n.z,n.y),0,-Math.atan2(n.x,n.y))});
     // gills: dark radial blades under the cap
-    for(let i=0;i<14;i++){const a=i/14*Math.PI*2;k.p('head','box','c',gl,Math.sin(a)*.19,.748,Math.cos(a)*.19,.006,.016,.2,0,a,0)}
+    for(let i=0;i<14;i++){const a=i/14*Math.PI*2;k.p('head','box','c',gl,Math.sin(a)*.19,.735,Math.cos(a)*.19,.007,.02,.2,0,a,0)}
     // grim face on the stalk
     [-1,1].forEach(s=>{
       k.p('chest','box','c',0x050404,s*.045,.6,.105,.05,.024,.02,0,s*.3,s*.35);
@@ -42,7 +42,9 @@ LPR.Gloomcap={
     k.p('chest','box','c',0x120808,0,.538,.122,.07,.018,.016);
     for(let i=-2;i<=2;i++)k.p('chest','cone4','c',0xe8e0c8,i*.016,.547,.13,.006,.022,.006,Math.PI);
     // glowing spores drifting off the cap
-    for(let i=0;i<7;i++){const a=i*.9;k.p('head','sph','g',0xa8ff7a,Math.cos(a)*(.12+(i%3)*.06),1.0+((i*3)%4)*.02,Math.sin(a)*(.12+(i%3)*.06),.012)}
+    // (spore pods resting on the cap top: radius → cap height from the cap loft rings)
+    {const capY=r=>r<=.08?1.0+(.08-r)/.068*.015:r<=.18?.96+(.18-r)/.1*.04:r<=.275?.9+(.275-r)/.095*.06:.83+(.32-r)/.045*.07;
+     for(let i=0;i<7;i++){const a=i*.9,r=.12+(i%3)*.06;k.p('head','sph','g',0xa8ff7a,Math.cos(a)*r,capY(r)+.006,Math.sin(a)*r,.013,.009,.013)}}
     // root toes and twig fingers
     [['hl2',-.08],['hr2',.08]].forEach(f=>[-1,0,1].forEach(i=>k.L(f[0],'c',0x2a2018,[f[1]+i*.03,.02,.02],[f[1]+i*.05,.008,.1],.022,.006,4)));
     [['fl2',-.195],['fr2',.195]].forEach(f=>[-1,0,1].forEach(i=>k.L(f[0],'c',0x3a2c20,[f[1],.34,.09],[f[1]+i*.025,.29,.12],.012,.003,4)));

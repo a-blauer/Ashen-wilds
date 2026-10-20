@@ -60,8 +60,10 @@ LPR.Boneling={
     // soul-fire in the chest
     B('chest','g',glow,[0,.46,.15],.032,.032,.032,0,0,0,'ico');
     B('chest','g',dkShade(glow,.65),[0,.48,.06],.02,.02,.02,0,0,0,'ico');
+    // soul threads tying the soul-fire to the spine (so it hangs in the ribcage instead of floating)
+    L('chest','g',glow,[0,.47,.15],[0,.545,.14],.007,.004,4);L('chest','g',dkShade(glow,.65),[0,.49,.06],[0,.545,.06],.005,.003,4);
     // bony toes with claws
     [['fl2',-.1,.215],['fr2',.1,.215],['hl2',-.112,-.24],['hr2',.112,-.24]].forEach(f=>[-1,0,1].forEach(i=>{
-      L(f[0],'c',bone,[f[1]+i*.018,.025,f[2]],[f[1]+i*.022,.014,f[2]+.06],.01,.008,4);B(f[0],'c',crev,[f[1]+i*.022,.012,f[2]+.075],.006,.028,.006,Math.PI/2,0,0,'cone4')}));
+      L(f[0],'c',bone,[f[1]+i*.018,.034,f[2]-.012],[f[1]+i*.022,.014,f[2]+.06],.011,.008,4);B(f[0],'c',crev,[f[1]+i*.022,.012,f[2]+.075],.006,.028,.006,Math.PI/2,0,0,'cone4')}));
   }};
 

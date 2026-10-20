@@ -21,8 +21,8 @@
 var GRIP_H=Math.PI/2;
 var GRIP={
   sword:  {t:.15, el:-.45,sp:-GRIP_H,edge:2},
-  axe:    {t:.15, el:-.45,sp:-GRIP_H,edge:1},
-  axes:   {t:.15, el:-.45,sp:-GRIP_H,edge:1},
+  axe:    {t:.15, el:-.45,sp:GRIP_H,edge:1},                           // one-sided bit: +π/2 turns the bit toward the target
+  axes:   {t:.15, el:-.45,sp:GRIP_H,edge:1},
   mace:   {t:.15, el:-.45,sp:0},
   club:   {t:.12, el:-.45,sp:0},
   hammer: {t:.15, el:-.45,sp:-GRIP_H},
@@ -30,7 +30,7 @@ var GRIP={
   knives: {t:.6,  el:-.4, sp:-GRIP_H,edge:2},
   gs:     {t:-.3, el:-.75,sp:-GRIP_H,rl:.12,hold:[0,.02,0],edge:2},    // resting on the shoulder
   ga:     {t:-.3, el:-.75,sp:-GRIP_H,rl:.12,edge:2},
-  halberd:{t:.1,  el:-.3, sp:-GRIP_H,hold:[0,-.2,0],edge:1},           // upright, butt near the ground
+  halberd:{t:.1,  el:-.3, sp:GRIP_H,hold:[0,-.2,0],edge:1},            // upright, butt near the ground, axe blade forward, back-spike behind
   staff:  {t:.08, el:-.35,sp:0},
   flail:  {t:1.2, el:-.45,sp:0,chain:1},                               // haft forward, chain and ball hang
   wand:   {t:1.05,el:-.4, sp:0},                                       // pointing forward and up
