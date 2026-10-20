@@ -22377,6 +22377,545 @@ var V100A_K={ch:["sy","sx","sz","py","pz","cy","hx","hy","lh","rh","lk","rk","lh
  sling:[[0,0,0,0.04,0,0,0,0,0,0,-0.181,0.213,0.16,0.186,0,0,0.021,-0.329,-0.01,-2.678,1.002,-0.406,-1.111,-1.201,0.08,-1.15,0.15,-0.15,-0.35,0.1,0],[0.08,0,0.3,0,0,0.3,0,0,0.022,-0.48,-0.221,0.207,0.235,0.244,-0.21,-0.21,-0.014,-0.386,-0.015,-2.073,1.167,-0.75,-1.105,-1.202,0.545,-1.15,0.15,-0.15,-0.35,0.1,0],[0.15,0,0.3,0,0,0.3,0,0,0.022,-0.48,-0.221,0.207,0.235,0.244,-0.21,-0.21,-0.014,-0.386,-0.015,-1.732,0.854,-0.751,-1.5,-1.202,0.601,-1.15,0.15,-0.15,-0.35,0.1,0],[0.22,0,0.3,0,0,0.3,0,0,0.022,-0.48,-0.221,0.207,0.235,0.244,-0.21,-0.21,-0.014,-0.386,-0.015,-2.11,0.756,-0.638,-1.686,-1.131,0.286,-1.15,0.15,-0.15,-0.35,0.1,0],[0.29,0,0.4,0,0,0.36,0,0,0.022,-0.608,-0.211,0.216,0.215,0.262,-0.252,-0.252,-0.005,-0.406,-0.013,-2.009,1.068,-0.75,-1.182,-1.202,0.6,-1.15,0.15,-0.15,-0.35,0.1,0],[0.42,0,-0.15,0.22,0,-0.3,0,0,-0.099,0.36,-0.354,0.126,0.489,0.166,0.21,0.21,-0.135,-0.288,-0.02,-1.581,0.291,0.132,-1.195,1.225,0.034,0.45,0,-0.3,-0.45,0,0],[0.54,0,-0.28,0.26,0,-0.4,0,0,-0.121,0.544,-0.375,0.114,0.528,0.156,0.28,0.28,-0.153,-0.27,-0.017,-0.476,0.814,-0.75,-1.369,1.451,0.549,0.45,0,-0.3,-0.45,0,0],[0.78,0,0,0.12,0,-0.1,0,0,-0.044,0.08,-0.263,0.177,0.314,0.198,0.07,0.07,-0.051,-0.332,-0.02,1,0.287,2.412,-2.493,1.412,-0.126,-0.15,0,-0.15,-0.6,0,0],[1,0,0,0.04,0,0,0,0,0,0,-0.192,0.204,0.18,0.168,0,0,0.012,-0.309,-0.011,-0.2,0,0,-0.3,0,0,0,0,0,-0.25,0,0]]
 }};
 
+// ================= v100 evolve: species-specific evolution looks for every companion rig =================
+// Before: every rig got the same generic rank ornaments (crOrn in c_ui.js: two brow cones, spine cones, a gold torus,
+// a ring of gold cones) placed from the OLD rig's SPEC.hd/bk points, baked as 'LPO|…'. They looked bolted on.
+// Now each of the 12 companion rigs (Foxlet, Ashwolf, Drakelet, Stoneshell, Mossfrog, Boneling, Batwing, Skyhawk,
+// Cryptspider, Gloomcap, Wispling, Gravewyrm) has its own design in EVO100.D[rig] (files zzN_zz_evolve_*.js), drawn
+// for its anatomy and theme, with five escalating levels (each keeps the previous level's parts and adds more):
+//   level by evolution stage 0/1/2/3: tier 1-2 species 0/1/2/4, tier 3-4 1/2/3/5, tier 5 2/3/4/5 (the last stage is
+//   always the legendary look); wild elites (c.al) are level 1, Sovereigns 4. Level 0 = no ornaments.
+// How it fits in: lpRig is wrapped. While a design rig is built, crOrn does nothing (EVO100.cur). After the rig is
+// built, the design runs on an "evolution kit" E (below) and the parts are baked into at most three skinned meshes
+// (cloth/bone 'c', metal 'm', glow 'g'; shared dkM() materials, so no new shader programs) bound to the body's
+// skeleton, so they move with idle, gait and attack animation. Wings (lpwWing meshes on the wing pivots) get an
+// evolved copy of their geometry (bands, glowing veins, claws) — same mesh, no extra draw call.
+// Placement uses the creature's real body surface: E.on / E.out / E.top cast rays against the rest-pose body geometry
+// (LPR[rig].geo), and every part is skinned like the nearest body vertex (rigid parts: at their anchor; surface parts
+// with {vs:1}: per vertex). So parts sit on the body and still fit if the body proportions change a little.
+// The bake is cached per look (rig, level, palette), so the raycasts run once per look.
+// Palette (E.P): accents derive from the species' signature-spell colour (falls back to the rig's own glow), then the
+// colour variant (Ember / Frost / Shadow / Golden), rare variant, shiny; metal goes iron → blackened steel → steel with
+// gold trim with level (gilded for Golden / shiny, black with blood-red trim for Shadow, silvered for Frost).
+var EVO100={on:true,D:{},cache:{},surf:{},cur:null,wing:{},rays:0};
+var EVO100_RV={Crimson:0xff3a3a,Azure:0x4a9aff,Verdant:0x5aff8a,Amethyst:0xc07aff,Albino:0xdff4ff,Obsidian:0xff5a1a};
+function evo100Lv(c){if(!c||!c.g)return 0;if(c.boss)return 4;const e=Math.max(0,Math.min(3,c.evo|0)),q=typeof SP2!='undefined'&&SP2[c.g[0]];
+  if(!q)return c.al?Math.max(1,e):e;const t=q[1]||1,b=[0,0,0,1,1,2][t]||0;
+  return Math.min(5,e>=3?4+(t>=3?1:0):e+b)}
+function evo100Pal(c,n,L){
+  const D=EVO100.D[n],q=SP2[c.g[0]],s=q&&CSP[q[8]],C=c.cl[0];let glow=new THREE.Color(D.glow||0xff8a3a);
+  if(s&&s.col&&!D.ownGlow){const t=new THREE.Color(s.col),h={};t.getHSL(h);if(h.s>.35&&h.l<.82)glow=t.setHSL(h.h,Math.max(.75,h.s),Math.min(.6,Math.max(.5,h.l)))}
+  if(c.v=='Ember')glow.set(0xff6a1a);else if(c.v=='Frost')glow.set(0x8fe4ff);else if(c.v=='Shadow')glow.set(0xff2a3a);else if(c.v=='Golden')glow.set(0xffc840);
+  if(c.rv&&EVO100_RV[c.rv])glow.set(EVO100_RV[c.rv]);if(c.shn)glow.set(0xfff0a0);
+  // the shared metal material (dkM().m: metalness .62, no environment map) renders colours ~2x darker, so these are bright
+  const gold=0xf0c860,bronze=0xc89058,iron=0x8a8e98;let metal=L>=4?0xa8acb8:L>=3?0x9a9ca6:iron,trim=L>=4?gold:bronze;
+  if(c.v=='Golden'||c.shn){metal=L>=3?0xe0b860:bronze;trim=0xffe08a}
+  else if(c.v=='Shadow'){metal=0x4a4652;trim=L>=3?0xc04050:0x6a6474}
+  else if(c.v=='Frost'){metal=0xc0d0e0;trim=0xf0f8ff}
+  const main=lpMain(C,.15),g2=glow.clone().lerp(new THREE.Color(0xffffff),.45);
+  return {glow:glow.getHex(),glow2:g2.getHex(),glowD:glow.clone().multiplyScalar(.6).getHex(),metal,trim,iron,gold,
+    bone:c.v=='Shadow'?0x8a8494:0xd6cab0,boneD:c.v=='Shadow'?0x5a5462:0xa89a7c,dark:0x161214,leather:0x3a2618,
+    main:main.getHex(),mainD:main.clone().multiplyScalar(.55).getHex(),mainL:main.clone().lerp(new THREE.Color(0xd8cbb2),.35).getHex(),C}}
+// ---- body surface of a rig (rest pose), for rays and skinning ----
+function evo100Surf(n){if(EVO100.surf[n])return EVO100.surf[n];
+  const D=LPR[n],C=0x808080,G=D.geo(C,{g:[n],cl:[C],v:'',tr:'',f:0,z:1,evo:0}),pa=G.attributes.position.array,I=G.index.array;
+  const T=new Float32Array(I.length*3);for(let t=0;t<I.length;t++){T[t*3]=pa[I[t]*3];T[t*3+1]=pa[I[t]*3+1];T[t*3+2]=pa[I[t]*3+2]}
+  return EVO100.surf[n]={P:pa,T:T,I:I,N:G.attributes.normal.array,SI:G.attributes.skinIndex.array,SW:G.attributes.skinWeight.array,O:Object.keys(SPEC[n].bones)}}
+// nearest hit of the ray o + t·d (t > 0) with the body; returns {p,n,t} (n faces back toward the ray) or null
+function evo100Ray(S,o,d){const T=S.T;let best=1e9,bi=-1;EVO100.rays++;
+  const ox=o[0],oy=o[1],oz=o[2],dx=d[0],dy=d[1],dz=d[2];
+  for(let i=0;i<T.length;i+=9){const ax=T[i],ay=T[i+1],az=T[i+2],e1x=T[i+3]-ax,e1y=T[i+4]-ay,e1z=T[i+5]-az,e2x=T[i+6]-ax,e2y=T[i+7]-ay,e2z=T[i+8]-az;
+    const px=dy*e2z-dz*e2y,py=dz*e2x-dx*e2z,pz=dx*e2y-dy*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-9)continue;const inv=1/det;
+    const sx=ox-ax,sy=oy-ay,sz=oz-az,u=(sx*px+sy*py+sz*pz)*inv;if(u<0||u>1)continue;
+    const qx=sy*e1z-sz*e1y,qy=sz*e1x-sx*e1z,qz=sx*e1y-sy*e1x,v=(dx*qx+dy*qy+dz*qz)*inv;if(v<0||u+v>1)continue;
+    const t=(e2x*qx+e2y*qy+e2z*qz)*inv;if(t>1e-4&&t<best){best=t;bi=i}}
+  if(bi<0)return null;const i=bi,e1=new THREE.Vector3(T[i+3]-T[i],T[i+4]-T[i+1],T[i+5]-T[i+2]),e2=new THREE.Vector3(T[i+6]-T[i],T[i+7]-T[i+1],T[i+8]-T[i+2]),nn=e1.cross(e2).normalize();
+  if(nn.x*dx+nn.y*dy+nn.z*dz>0)nn.negate();return {p:[ox+dx*best,oy+dy*best,oz+dz*best],n:nn.toArray(),t:best}}
+// skin weights of the body vertex nearest to p (optionally only vertices whose main bone is in the list)
+function evo100Skin(S,p,only){const P=S.P,SI=S.SI,SW=S.SW;let b=1e9,k=-1;const ok=only?only.map(x=>S.O.indexOf(x)):null;
+  for(let i=0,v=0;i<P.length;i+=3,v++){if(ok){const mb=SW[v*4]>=SW[v*4+1]?SI[v*4]:SI[v*4+1];if(ok.indexOf(mb)<0)continue}
+    const d=(P[i]-p[0])**2+(P[i+1]-p[1])**2+(P[i+2]-p[2])**2;if(d<b){b=d;k=v}}
+  if(k<0)return [0,0,0,0,1,0,0,0];return [SI[k*4],SI[k*4+1],SI[k*4+2],SI[k*4+3],SW[k*4],SW[k*4+1],SW[k*4+2],SW[k*4+3]]}
+// ---- the evolution kit: parts in model space, skinned at bake time ----
+var EVO100_V=new THREE.Vector3(),EVO100_UP=new THREE.Vector3(0,1,0);
+function evo100Kit(n,L,P,seed){
+  const S=evo100Surf(n),parts=[],R=dkRng(seed||7),V3=(a)=>new THREE.Vector3(a[0],a[1],a[2]),Q=new THREE.Quaternion(),E0=new THREE.Euler();
+  const nrm=a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2]/l]},add=(a,b,k)=>[a[0]+b[0]*(k==null?1:k),a[1]+b[1]*(k==null?1:k),a[2]+b[2]*(k==null?1:k)];
+  const G=typeof dkG=='function'?dkG():null;
+  const push=(geo,t,col,m,o)=>{o=o||{};parts.push({geo:typeof geo=='string'?G[geo]:geo,t:t,col:col,m:m,at:o.at||[m.elements[12],m.elements[13],m.elements[14]],vs:o.vs,bn:o.bn,only:o.only,j:o.j==null?.08:o.j});return E};
+  const E={n,L,P,S,R,parts,bones:SPEC[n].bones,nrm,add,
+    bone(bn){const b=SPEC[n].bones[bn];return b?[b[1],b[2],b[3]]:[0,0,0]},
+    // ray from p along d (p outside the body) → first surface point {p,n}; out(): same from a point inside the body
+    on(p,d){return evo100Ray(S,p,nrm(d))},out(o,d){return evo100Ray(S,o,nrm(d))},
+    // top of the body at (x,z): {p,n} or null
+    top(x,z){return evo100Ray(S,[x,4,z],[0,-1,0])},
+    // part from geometry name/object, type t ('c','m','g'), colour, position, scale [sx,sy,sz] or s, rotation [rx,ry,rz]
+    p(geo,t,col,pos,s,rot,o){E0.set(...(rot||[0,0,0]));Q.setFromEuler(E0);const sc=Array.isArray(s)?s:[s,s,s];
+      return push(geo,t,col,new THREE.Matrix4().compose(V3(pos),Q.clone(),V3(sc)),o)},
+    // part with its local +y along dir (and local +z toward fwd when given)
+    pd(geo,t,col,pos,dir,s,fwd,o){const Y=V3(nrm(dir));let M=new THREE.Matrix4();
+      if(fwd){const F=V3(fwd);F.sub(Y.clone().multiplyScalar(F.dot(Y)));if(F.lengthSq()<1e-8)F.set(0,0,1).sub(Y.clone().multiplyScalar(Y.z));F.normalize();const X=new THREE.Vector3().crossVectors(Y,F);M.makeBasis(X,Y,F)}
+      else{Q.setFromUnitVectors(EVO100_UP,Y);M.makeRotationFromQuaternion(Q)}
+      const sc=Array.isArray(s)?s:[s,s,s];M.scale(V3(sc));M.setPosition(V3(pos));return push(geo,t,col,M,o)},
+    // tapered limb a → b
+    L(a,b,r1,r2,t,col,seg,o){const d=V3(b).sub(V3(a)),len=d.length()||.001;Q.setFromUnitVectors(EVO100_UP,d.normalize());
+      return push(dkTaper(r1,r2==null?r1:r2,len,seg||5),t,col,new THREE.Matrix4().compose(V3(a).add(V3(b)).multiplyScalar(.5),Q.clone(),new THREE.Vector3(1,1,1)),Object.assign({at:a},o))},
+    // bent horn / tendril through points, radius r0 → r1
+    chain(pts,r0,r1,t,col,seg,o){const N=pts.length-1;for(let i=0;i<N;i++){const k0=i/N,k1=(i+1)/N;E.L(pts[i],pts[i+1],r0+(r1-r0)*k0,r0+(r1-r0)*k1,t,col,seg,Object.assign({at:pts[0]},o))}return E},
+    // curved horn from base along dir, bending toward bend (a vector), length len, base radius r
+    horn(base,dir,bend,len,r,t,col,seg,o,tipCol){const d=nrm(dir),pts=[];for(let i=0;i<=4;i++){const s=i/4;pts.push(add(add(base,d,len*s),bend,len*s*s))}
+      for(let i=0;i<4;i++)E.L(pts[i],pts[i+1],r*(1-i/4)+.002,i==3?.001:r*(1-(i+1)/4)+.002,t,i==3&&tipCol!=null?tipCol:col,seg,Object.assign({at:base},o));return pts[4]},
+    // flat armour plate lying on the surface at hit h (or point + normal): w across, l along fwd, th thick
+    plate(at,nm,fwd,w,l,th,t,col,geo,o){return E.pd(geo||'box',t,col,add(at,nm,th*.3),nm,[w,th,l],fwd,Object.assign({vs:1},o))},
+    // loop around a limb/neck: rays from the inside point c in the plane ⟂ axis, pushed out by off; tube radius r
+    band(c,axis,off,r,t,col,N,o){N=N||10;const A=V3(nrm(axis)),U=new THREE.Vector3(),W=new THREE.Vector3();U.set(1,0,0);if(Math.abs(A.dot(U))>.9)U.set(0,1,0);U.sub(A.clone().multiplyScalar(A.dot(U))).normalize();W.crossVectors(A,U);
+      const pts=[];for(let k=0;k<N;k++){const a=k/N*Math.PI*2,d=U.clone().multiplyScalar(Math.cos(a)).add(W.clone().multiplyScalar(Math.sin(a))).toArray(),h=evo100Ray(S,c,d);
+        pts.push(h?add(h.p,d,off):add(c,d,off+.05))}
+      for(let k=0;k<N;k++)E.L(pts[k],pts[(k+1)%N],r,r,t,col,4,Object.assign({vs:1},o));return pts},
+    // small glowing rune glyph lying on the surface (three strokes)
+    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,.004);
+      const st=(a,b)=>E.L(add(add(p0,F.toArray(),a[1]*sz),X.toArray(),a[0]*sz),add(add(p0,F.toArray(),b[1]*sz),X.toArray(),b[0]*sz),sz*.09,sz*.09,'g',col||P.glow,3,Object.assign({vs:1},o));
+      const k=(R()*3)|0;st([0,-1],[0,1]);if(k==0){st([-.5,.4],[0,1]);st([.5,.4],[0,1])}else if(k==1){st([0,.2],[.6,-.4]);st([0,.2],[-.6,-.4])}else{st([-.55,0],[.55,0]);st([.5,-.8],[0,-1])}return E},
+    // gem in a metal setting on the surface
+    gem(h,sz,col,o){E.pd('cyl','m',P.trim,add(h.p,h.n,sz*.15),h.n,[sz*1.25,sz*.35,sz*1.25],null,o);return E.pd('oct','g',col||P.glow,add(h.p,h.n,sz*.6),h.n,[sz*.8,sz*.95,sz*.8],null,o)},
+    // hanging charm (tooth / claw) under point p
+    fang(p,len,col,o){return E.pd('cone4','c',col||P.bone,add(p,[0,-len*.5,0]),[0,-1,0],[len*.22,len,len*.22],null,o)},
+    // armour/mantle shell: every body triangle that passes sel is copied and pushed out along the
+    // vertex normals by off (+ lift(x,y,z) if given); col = hex or (x,y,z,i)=>hex; a rim (edge thickness) closes the
+    // open border. Skinned exactly like the body, so it bends with it. Returns the number of triangles.
+    shell(sel,off,t,col,o){// sel(x,y,z,nx,ny,nz) is called with each triangle's centre and mean vertex normal
+      o=o||{};const I=S.I,Pp=S.P,Nn=S.N,pos=[],nor=[],cols=[],sk=[],edges={};let nt=0;
+      const cen=(a,b,c,A)=>(A[a*3]+A[b*3]+A[c*3])/3,cy=(a,b,c,A)=>(A[a*3+1]+A[b*3+1]+A[c*3+1])/3,cz=(a,b,c,A)=>(A[a*3+2]+A[b*3+2]+A[c*3+2])/3;
+      const vo=v=>{const x=Pp[v*3],y=Pp[v*3+1],z=Pp[v*3+2],k=off+(o.lift?o.lift(x,y,z):0);return [x+Nn[v*3]*k,y+Nn[v*3+1]*k,z+Nn[v*3+2]*k]};
+      for(let t3=0;t3<I.length;t3+=3){const a=I[t3],b=I[t3+1],c=I[t3+2];if(!sel(cen(a,b,c,Pp),cy(a,b,c,Pp),cz(a,b,c,Pp),cen(a,b,c,Nn),cy(a,b,c,Nn),cz(a,b,c,Nn)))continue;nt++;
+        const cc=typeof col=='function'?col(Pp[a*3]/3+Pp[b*3]/3+Pp[c*3]/3,Pp[a*3+1]/3+Pp[b*3+1]/3+Pp[c*3+1]/3,Pp[a*3+2]/3+Pp[b*3+2]/3+Pp[c*3+2]/3,nt):col;
+        [a,b,c].forEach(v=>{pos.push(vo(v));cols.push(cc);sk.push(v)});
+        [[a,b],[b,c],[c,a]].forEach(e=>{const k=e[0]<e[1]?e[0]+'_'+e[1]:e[1]+'_'+e[0];edges[k]=edges[k]?null:[e[0],e[1],cc]})}
+      if(o.rim!==false)for(const k in edges){const e=edges[k];if(!e)continue;const A=vo(e[0]),B=vo(e[1]),a0=[Pp[e[0]*3],Pp[e[0]*3+1],Pp[e[0]*3+2]],b0=[Pp[e[1]*3],Pp[e[1]*3+1],Pp[e[1]*3+2]],rc=o.rimCol!=null?o.rimCol:e[2];
+        [[A,e[0]],[B,e[1]],[b0,e[1]],[A,e[0]],[b0,e[1]],[a0,e[0]],[B,e[1]],[A,e[0]],[b0,e[1]],[b0,e[1]],[A,e[0]],[a0,e[0]]].forEach(q=>{pos.push(q[0]);cols.push(rc);sk.push(q[1])})}
+      parts.push({raw:{pos,cols,sk},t:t});return nt},
+    // membrane: triangle fan hub → pts[i] → pts[i+1] (double-sided material), colour from hub (c0) to edge (c1)
+    fan(hub,pts,c0,c1,t,o){const P0=[],C0=[],a=new THREE.Color(c0),b=new THREE.Color(c1==null?c0:c1);
+      for(let i=0;i<pts.length-1;i++){P0.push(...hub,...pts[i],...pts[i+1]);C0.push(a.r,a.g,a.b,b.r,b.g,b.b,b.r,b.g,b.b)}
+      const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P0,3));G.computeVertexNormals();
+      parts.push({tri:G,cols:C0,t:t||'c',o:o||{}});return E},
+    // free skinned loft (extra tails, plumes): rings [{p,r,ry,col,sk:[bone,bone,t]}], ref up vector
+    loft(rings,seg,t,o){parts.push({loft:rings,seg:seg||6,t:t||'c',ref:(o&&o.ref)||[0,1,0],j:(o&&o.j)||0});return E},
+    jit(a){return (R()-.5)*2*(a||1)}};
+  return E}
+// bake kit parts → {c,m,g} BufferGeometries with 4-bone skinning
+function evo100Bake(E){
+  const S=E.S,by={},col=new THREE.Color(),v=new THREE.Vector3(),nm=new THREE.Matrix3(),nv=new THREE.Vector3(),R=dkRng(91);
+  const out=t=>by[t]||(by[t]={pos:[],nor:[],col:[],si:[],sw:[],idx:[],n:0});
+  const bIdx=b=>{const i=S.O.indexOf(b);return i<0?0:i};
+  E.parts.forEach(p=>{const o=out(p.t);
+    if(p.raw){const r=p.raw,SI=S.SI,SW=S.SW;for(let i=0;i<r.pos.length;i++){const q=r.pos[i],v=r.sk[i],f=.92+R()*.12;col.set(r.cols[i]);
+        o.pos.push(q[0],q[1],q[2]);o.nor.push(0,1,0);o.col.push(col.r*f,col.g*f,col.b*f);o.si.push(SI[v*4],SI[v*4+1],SI[v*4+2],SI[v*4+3]);o.sw.push(SW[v*4],SW[v*4+1],SW[v*4+2],SW[v*4+3]);o.idx.push(o.n++)}
+      o.flat=1;return}
+    if(p.tri){const pa=p.tri.attributes.position,na=p.tri.attributes.normal;let sk=p.o.bn?[bIdx(p.o.bn),0,0,0,1,0,0,0]:p.o.at?evo100Skin(S,p.o.at,p.o.only):null;
+      for(let i=0;i<pa.count;i++){o.pos.push(pa.getX(i),pa.getY(i),pa.getZ(i));o.nor.push(na.getX(i),na.getY(i),na.getZ(i));const f=.92+R()*.12;o.col.push(p.cols[i*3]*f,p.cols[i*3+1]*f,p.cols[i*3+2]*f);
+        const s2=sk||evo100Skin(S,[pa.getX(i),pa.getY(i),pa.getZ(i)],p.o.only);o.si.push(s2[0],s2[1],s2[2],s2[3]);o.sw.push(s2[4],s2[5],s2[6],s2[7]);o.idx.push(o.n++)}return}
+    if(p.loft){// skinned loft: rings around a centre line, per-ring bones
+      const rings=p.loft,seg=p.seg,base=o.n,ref=new THREE.Vector3(...p.ref),pts=rings.map(r=>new THREE.Vector3(...r.p));
+      rings.forEach((r,i)=>{const tg=pts[Math.min(i+1,pts.length-1)].clone().sub(pts[Math.max(i-1,0)]).normalize(),U=ref.clone().sub(tg.clone().multiplyScalar(ref.dot(tg))).normalize(),Sd=new THREE.Vector3().crossVectors(U,tg);
+        const sk=r.sk?[bIdx(r.sk[0]),bIdx(r.sk[1]),0,0,1-(r.sk[2]||0),r.sk[2]||0,0,0]:evo100Skin(S,r.p);col.set(r.col);
+        for(let k=0;k<seg;k++){const a=Math.PI/2+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=r.ry==null?r.r:r.ry,jj=p.j?1+(R()-.5)*p.j:1;
+          v.copy(pts[i]).addScaledVector(Sd,c*r.r*jj).addScaledVector(U,s*ry*jj);o.pos.push(v.x,v.y,v.z);o.nor.push(Sd.x*c+U.x*s,Sd.y*c+U.y*s,Sd.z*c+U.z*s);
+          const f=.9+R()*.14;o.col.push(col.r*f,col.g*f,col.b*f);o.si.push(sk[0],sk[1],sk[2],sk[3]);o.sw.push(sk[4],sk[5],sk[6],sk[7])}});
+      for(let i=0;i<rings.length-1;i++)for(let k=0;k<seg;k++){const a=base+i*seg+k,a1=base+i*seg+(k+1)%seg;o.idx.push(a,a1,a+seg,a+seg,a1,a1+seg)}
+      // tip cap
+      const last=rings.length-1,ci=base+rings.length*seg,tp=pts[last];o.pos.push(tp.x,tp.y,tp.z);o.nor.push(0,1,0);col.set(rings[last].col);o.col.push(col.r,col.g,col.b);
+      const sk=rings[last].sk?[bIdx(rings[last].sk[0]),bIdx(rings[last].sk[1]),0,0,1-(rings[last].sk[2]||0),rings[last].sk[2]||0,0,0]:evo100Skin(S,rings[last].p);o.si.push(sk[0],sk[1],sk[2],sk[3]);o.sw.push(sk[4],sk[5],sk[6],sk[7]);
+      for(let k=0;k<seg;k++)o.idx.push(ci,base+last*seg+k,base+last*seg+(k+1)%seg);
+      o.n=ci+1;return}
+    const g=p.geo,pa=g.attributes.position,na=g.attributes.normal,N=pa.count,f=1-p.j*.5+R()*p.j;col.set(p.col).multiplyScalar(f);nm.getNormalMatrix(p.m);
+    let sk=null;if(p.bn)sk=[bIdx(p.bn),0,0,0,1,0,0,0];else if(!p.vs)sk=evo100Skin(S,p.at,p.only);
+    for(let i=0;i<N;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);o.pos.push(v.x,v.y,v.z);nv.fromBufferAttribute(na,i).applyMatrix3(nm).normalize();o.nor.push(nv.x,nv.y,nv.z);o.col.push(col.r,col.g,col.b);
+      const s=sk||evo100Skin(S,[v.x,v.y,v.z],p.only);o.si.push(s[0],s[1],s[2],s[3]);o.sw.push(s[4],s[5],s[6],s[7])}
+    if(g.index){const ix=g.index.array;for(let i=0;i<ix.length;i++)o.idx.push(ix[i]+o.n)}else for(let i=0;i<N;i++)o.idx.push(i+o.n);o.n+=N});
+  const res={};for(const t in by){const o=by[t];if(!o.n)continue;const G=new THREE.BufferGeometry();
+    G.setAttribute('position',new THREE.Float32BufferAttribute(o.pos,3));G.setAttribute('normal',new THREE.Float32BufferAttribute(o.nor,3));G.setAttribute('color',new THREE.Float32BufferAttribute(o.col,3));
+    G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(o.si,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(o.sw,4));G.setIndex(o.idx);if(o.flat)G.computeVertexNormals();G.computeBoundingSphere();res[t]=G}
+  return res}
+// evolved copy of a wing geometry (lpwWing triangle soup: hub fans first, then strut prisms): finer membrane with
+// colour bands toward the edge, accent spots/veins, glowing struts and claws at the outline tips from level 3
+function evo100Wing(geo,L,P,key,o){
+  if(EVO100.wing[key])return EVO100.wing[key];o=o||{};
+  const pa=geo.attributes.position.array,ca=geo.attributes.color.array,nT=pa.length/9,hub=[pa[0],pa[1],pa[2]],P0=[],C0=[],R=dkRng(13),c=new THREE.Color(),c2=new THREE.Color();
+  const sc=1+(o.grow||.05)*L,isHub=t=>Math.abs(pa[t*9]-hub[0])+Math.abs(pa[t*9+1]-hub[1])+Math.abs(pa[t*9+2]-hub[2])<1e-6;
+  let mx=0;for(let t=0;t<nT;t++)if(isHub(t))for(let k=1;k<3;k++)mx=Math.max(mx,Math.hypot(pa[t*9+k*3]-hub[0],pa[t*9+k*3+2]-hub[2]));
+  const accent=new THREE.Color(o.accent!=null?o.accent:P.mainD).lerp(new THREE.Color(P.glowD),.35).multiplyScalar(.7),edge=new THREE.Color(o.edge!=null?o.edge:P.dark),glow=new THREE.Color(P.glow);
+  const put=(p,cc)=>{P0.push(p[0]*sc,p[1]*sc,p[2]*sc);C0.push(cc.r,cc.g,cc.b)};
+  let fan=0;for(let t=0;t<nT;t++){const q=[0,1,2].map(k=>[pa[t*9+k*3],pa[t*9+k*3+1],pa[t*9+k*3+2]]),qc=[0,1,2].map(k=>new THREE.Color(ca[t*9+k*3],ca[t*9+k*3+1],ca[t*9+k*3+2]));
+    if(!isHub(t)){// strut: glowing at high level
+      q.forEach((p,k)=>{c.copy(qc[k]);if(L>=4&&o.veins!==false&&k==2)c.lerp(glow,.7);else if(L>=3)c.lerp(edge,.4);put(p,c)});continue}
+    fan++;const B=3,lerp=(a,b,s)=>[a[0]+(b[0]-a[0])*s,a[1]+(b[1]-a[1])*s,a[2]+(b[2]-a[2])*s];
+    const ring=s=>[lerp(q[0],q[1],s),lerp(q[0],q[2],s)],colAt=(p,s,k)=>{c.copy(qc[0]).lerp(qc[1],s*s);
+      if(L>=2&&s>.66)c.lerp(edge,.5);if(L>=2&&s>.3&&s<=.66&&(fan+k)%2==0)c.lerp(accent,.55);if(L>=4&&s>.3&&s<=.66&&(fan%4)==1)c.lerp(glow,.45);return c.multiplyScalar(.92+R()*.12)};
+    for(let b=0;b<B;b++){const s0=b/B,s1=(b+1)/B,a=b?ring(s0):[q[0],q[0]],z=ring(s1);
+      if(!b){put(q[0],colAt(q[0],0,0));put(z[0],colAt(z[0],s1,0));put(z[1],colAt(z[1],s1,1))}
+      else{put(a[0],colAt(a[0],s0,0));put(z[0],colAt(z[0],s1,0));put(z[1],colAt(z[1],s1,1));put(a[0],colAt(a[0],s0,0));put(z[1],colAt(z[1],s1,1));put(a[1],colAt(a[1],s0,1))}}
+    // claw at the outer tip of every other fan edge from level 3
+    if(L>=3&&o.claws!==false&&fan%2==1){const tp=q[1],d=[tp[0]-hub[0],0,tp[2]-hub[2]],l=Math.hypot(d[0],d[2])||1;if(l>mx*.72){const u=[d[0]/l,0,d[2]/l],w=.022*(1+.15*(L-3)),len=.06*(1+.2*(L-3));
+      const base1=[tp[0]-u[2]*w,tp[1],tp[2]+u[0]*w],base2=[tp[0]+u[2]*w,tp[1],tp[2]-u[0]*w],tip=[tp[0]+u[0]*len,tp[1]-.01,tp[2]+u[2]*len];c2.set(o.claw!=null?o.claw:P.bone);
+      put(base1,c2);put(tip,c2);put(base2,c2)}}}
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P0,3));G.setAttribute('color',new THREE.Float32BufferAttribute(C0,3));G.computeVertexNormals();
+  return EVO100.wing[key]=G}
+// add the evolution look to a built low-poly rig
+function evo100Apply(g,c,n){
+  const D=EVO100.D[n],L=evo100Lv(c);if(!D||!L)return;
+  const body=g.b.children.find(m=>m.isSkinnedMesh&&m.skeleton);if(!body)return;
+  const P=evo100Pal(c,n,L),key='EVO|'+n+'|'+L+'|'+[P.glow,P.metal,P.trim,P.bone,P.main].join(',')+'|'+(c.v=='Shadow'?1:0);
+  let gs=EVO100.cache[key];
+  if(!gs){const E=evo100Kit(n,L,P,L*31+7);D.build(E,L,P,c);gs=EVO100.cache[key]=evo100Bake(E)}
+  const M=dkM();['c','m','g'].forEach(t=>{if(!gs[t])return;const m=new THREE.SkinnedMesh(gs[t],M[t]);m.castShadow=t!='g';m.frustumCulled=false;m.userData.evo100=1;
+    g.b.add(m);m.bind(body.skeleton,body.bindMatrix)});
+  // evolved wings
+  if(D.wing){const W=Object.values(LPWG);g.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&W.indexOf(o.geometry)>=0){const k0=Object.keys(LPWG).find(k=>LPWG[k]===o.geometry);
+    o.geometry=evo100Wing(o.geometry,L,P,k0+'|'+L+'|'+P.glow+'|'+P.bone,D.wing)}})}
+  g.evo100=L}
+{const f=lpRig;lpRig=function(c,n,D){const own=EVO100.on&&EVO100.D[n];const pc=EVO100.cur;EVO100.cur=own?n:null;let g;
+  try{g=f.apply(this,arguments)}finally{EVO100.cur=pc}
+  if(own&&g){try{evo100Apply(g,c,n)}catch(e){console.error('evo100',n,e)}}return g}}
+// the old generic rank ornaments are skipped for rigs with their own evolution design
+{const f=crOrn;crOrn=function(){if(EVO100.cur)return;return f.apply(this,arguments)}}
+
+// ================= v100 evolve: Beast rigs (Foxlet → Emberlynx, Ashwolf → Direfang, Skollmaw) =================
+// Shared motifs used by several designs (all positions in the rig's model space, see zzN_zz_evolve.js for the kit E).
+var EVO100_M={
+  // a row of spikes/fins on the top line: zs = [[z, height, base radius],…]; lean = backward tilt; x offset
+  ridge(E,zs,t,col,lean,x,tipCol,o){zs.forEach(q=>{const h=E.top(x||0,q[0]);if(!h)return;const d=E.nrm([h.n[0]*.5,1,-(lean==null?.6:lean)]);
+    E.L(E.add(h.p,h.n,-q[2]*.5),E.add(h.p,d,q[1]),q[2],.002,t,col,4,o);if(tipCol!=null)E.L(E.add(h.p,d,q[1]*.62),E.add(h.p,d,q[1]*1.02),q[2]*.38,.001,'g',tipCol,4,o)})},
+  // flank hit: side s (±1), y, z
+  side(E,s,y,z){return E.on([s*2,y,z],[-s,0,0])},
+  // fur tuft cone from hit h, pointing along h.n mixed with dir
+  tuft(E,h,dir,len,r,col,t){const d=E.nrm([h.n[0]+dir[0],h.n[1]+dir[1],h.n[2]+dir[2]]);return E.L(E.add(h.p,h.n,-r*.6),E.add(h.p,d,len),r,.002,t||'c',col,4)},
+  // extra tail splayed from a body tail (rings [z,y,r,bones,tip]) about root, yaw a, lift up, scale k
+  tail(E,T,root,a,up,k,cBase,cTip,tipGlow,glowCol){const ca=Math.cos(a),sa=Math.sin(a),rings=T.map((r,i)=>{const dx=0,dy=r[1]-root[1],dz=r[0]-root[2],
+      y2=dy*Math.cos(up)-dz*Math.sin(up),z2=dy*Math.sin(up)+dz*Math.cos(up);return {p:[root[0]+dx*ca+z2*sa,root[1]+y2,root[2]+z2*ca-dx*sa],r:r[2]*k,ry:r[2]*k*.92,col:r[4]?cTip:cBase,sk:r[3]}});
+    rings[0].r*=.7;E.loft(rings,6,'c',{j:.12});
+    if(tipGlow){const a1=rings[rings.length-3].p,b1=rings[rings.length-1].p,d=E.nrm([b1[0]-a1[0],b1[1]-a1[1]+.03,b1[2]-a1[2]]);
+      E.L(E.add(b1,d,-.05*k),E.add(b1,d,.11*k*tipGlow),.05*k,.002,'g',glowCol,5,{bn:T[T.length-1][3][0]});E.L(E.add(b1,d,-.02*k),E.add(b1,[d[0]*.6,d[1]+.6,d[2]*.6],.08*k*tipGlow),.03*k,.001,'g',glowCol,4,{bn:T[T.length-1][3][0]})}
+    return rings},
+  // dangling charm on a string from point p (on the body), 'tooth' or 'bone' or gem
+  charm(E,p,len,col,kind,o){E.L(p,E.add(p,[0,-len*.55,0]),.004,.004,'c',0x2a2018,3,o);const q=E.add(p,[0,-len*.55,0]);
+    if(kind=='gem')return E.pd('oct','g',col,E.add(q,[0,-len*.18,0]),[0,1,0],[len*.18,len*.28,len*.18],null,o);
+    if(kind=='bone'){E.L(E.add(q,[-len*.2,-len*.1,0]),E.add(q,[len*.2,-len*.1,0]),len*.06,len*.06,'c',col,4,o);return E}
+    return E.pd('cone4','c',col,E.add(q,[0,-len*.25,0]),[0,-1,0],[len*.11,len*.5,len*.11],null,o)},
+  // collar/band around a body section; returns the loop points; studs = metal studs every other point
+  collar(E,c,axis,off,r,col,N,studCol,studSz,o){const pts=E.band(c,axis,off,r,'c',col,N,o);if(studCol!=null)pts.forEach((p,i)=>{if(i%2==0){const d=E.nrm([p[0]-c[0],p[1]-c[1],p[2]-c[2]]);E.pd('cone4','m',studCol,E.add(p,d,studSz*.3),d,[studSz*.5,studSz,studSz*.5],null,Object.assign({vs:1},o))}});return pts}};
+
+// ---------------- Foxlet: fox spirit — runes, then more tails, harness, flame tips, gold circlet, flame mane ----------------
+EVO100.D.Foxlet={glow:0xff8a2a,build(E,L,P){
+  const M=EVO100_M,root=[0,.455,-.36];
+  // L1: glowing forehead blaze, shoulder runes, leather collar with a tooth charm, longer cheek fur
+  const fh=E.top(0,.56);if(fh){E.pd('oct','g',P.glow,E.add(fh.p,fh.n,.003),fh.n,[.022,.004,.05],[0,0,1]);if(L>=3)E.pd('oct','g',P.glow2,E.add(fh.p,fh.n,.006),fh.n,[.01,.004,.026],[0,0,1])}
+  [-1,1].forEach(s=>{const h=M.side(E,s,.5,.17);if(h)E.rune(h,[0,1,-.3],.045,P.glow);
+    [[.57,.5],[.59,.47]].forEach((q,i)=>{const hh=E.on([s*.5,q[0],q[1]],[-s,0,0]);if(hh)M.tuft(E,hh,[s*.4,-.3,-1],.09+.02*L,.03,i?P.mainL:0xd8cbb2)})});
+  const col=M.collar(E,[0,.53,.33],[0,.35,1],.006,.012,P.leather,10,L>=3?P.metal:null,.03);
+  const lo=col.reduce((a,p)=>p[1]<a[1]?p:a,col[0]);M.charm(E,lo,.09,P.bone,'tooth');
+  if(L>=2){// two more tails, a fur crest on the nape
+    [-1,1].forEach(s=>M.tail(E,FOX_TAIL,root,s*.42,.12,L>=4?.86:.72,P.main,0xd8cbb2,L>=3?1:0,P.glow));
+    for(let i=0;i<5;i++){const z=.36-i*.07,h=E.top(0,z);if(h)M.tuft(E,h,[0,.5,-1.2],.08+.012*L-.008*i,.028,i%2?P.mainD:P.main)}
+    [-1,1].forEach(s=>{const h=M.side(E,s,.45,-.06);if(h)E.rune(h,[0,1,0],.04,P.glow)})}
+  if(L>=3){// flame tip on the main tail, harness with a bronze chest plate, glowing rune bands on the forelegs
+    const tp=[0,.52,-1.09];E.L([0,.515,-1.03],[0,.56,-1.2],.05,.002,'g',P.glow,5,{bn:'tail3'});E.L([0,.52,-1.06],[0,.62,-1.15],.03,.001,'g',P.glow2,4,{bn:'tail3'});
+    M.collar(E,[0,.47,.1],[0,0,1],.006,.011,P.leather,12);
+    const cp=E.on([0,.4,1],[0,0,-1]);if(cp){E.plate(cp.p,cp.n,[0,1,0],.1,.09,.014,'m',P.metal,'box');E.gem({p:E.add(cp.p,cp.n,.01),n:cp.n},.022,P.glow)}
+    [-1,1].forEach(s=>{E.band([s*.102,.16,.212],[0,1,0],.003,.007,'m',P.trim,8);E.band([s*.112,.22,-.2],[0,1,0],.003,.007,'m',P.trim,8)})}
+  if(L>=4){// gold circlet across the brow with a gem, two more tails, glowing paw runes
+    const arc=[];for(let i=-3;i<=3;i++){const a=i/3*1.1,h=E.on([Math.sin(a)*.5,.9,.52+Math.cos(a)*.1],[-Math.sin(a),-1.2,-.1]);if(h)arc.push(h)}
+    for(let i=0;i<arc.length-1;i++)E.L(E.add(arc[i].p,arc[i].n,.008),E.add(arc[i+1].p,arc[i+1].n,.008),.008,.008,'m',P.gold,4);
+    arc.forEach((h,i)=>{if(i%2==0)E.pd('cone4','m',P.gold,E.add(h.p,h.n,.03),E.nrm([h.n[0],h.n[1]+1,h.n[2]]),[.012,.05+(i==3?.04:0),.012])});
+    if(arc[3])E.gem({p:E.add(arc[3].p,arc[3].n,.012),n:arc[3].n},.02,P.glow);
+    [-1,1].forEach(s=>M.tail(E,FOX_TAIL,root,s*.8,.25,.62,P.mainD,0xd8cbb2,1,P.glow))}
+  if(L>=5){// spirit-flame mane around the neck
+    for(let i=0;i<9;i++){const a=-1.2+i/8*2.4,h=E.on([Math.sin(a)*.6,.53+Math.cos(a)*.5,.36],[-Math.sin(a),-Math.cos(a),0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],h.n[1]+.4,-1.1]),.15+(i%2)*.05),.035,.002,'g',i%2?P.glow:P.glow2,4)}}
+}};
+
+// ---------------- Ashwolf: war-wolf — thicker ruff, war paint, bone charms, scarred lamellar armour, runes, ember mane ----------------
+EVO100.D.Ashwolf={glow:0xff7a2a,build(E,L,P){
+  const M=EVO100_M,W=wolfP,Z=z=>W([0,0,z])[2],Y=y=>W([0,y,0])[1];
+  // L1: a thicker ruff (second ring of long shag), glowing claw-mark war paint on the shoulders, a bone fang charm
+  for(let i=0;i<13;i++){const a=-Math.PI*.2+i/12*Math.PI*1.4,cx=Math.cos(a),sy=Math.sin(a),o=W([cx*.3,.53+sy*.3,.34]),c=W([0,.53,.34]);
+    const h=E.on(o,[c[0]-o[0],c[1]-o[1],c[2]-o[2]]);if(h)M.tuft(E,h,[0,0,-1.3],.12+.012*L,.04,i%2?P.main:P.mainD)}
+  [-1,1].forEach(s=>{[0,1,2].forEach(k=>{const h=E.on([s*.5,Y(.5)-k*.02,Z(.2-k*.035)],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,.004),E.add(E.add(h.p,h.n,.004),[0,-.075,-.05]),.008,.003,'g',P.glow,3,{vs:1})})});
+  if(L>=2){// spiked leather collar with a necklace of fangs and a bone talisman, longer hackle crest
+    const c=W([0,.5,.36]),pts=M.collar(E,c,[0,.4,1],.01,.016,P.leather,12,P.metal,.045);
+    pts.forEach((p,i)=>{if(p[1]<c[1]-.02&&i%2)M.charm(E,p,.1,P.bone,'tooth')});const lo=pts.reduce((a,p)=>p[1]<a[1]?p:a,pts[0]);M.charm(E,lo,.13,P.boneD,'bone');
+    for(let i=0;i<7;i++){const h=E.top(0,Z(.4-i*.07));if(h)[-1,1].forEach(s=>M.tuft(E,{p:E.add(h.p,[s*.02,0,0]),n:h.n},[s*.3,.6,-1.3],.11+.015*L,.03,i%2?P.mainD:P.dark))}}
+  if(L>=3){// lamellar pauldrons (three overlapping lames per shoulder), segmented saddle plates, rune on each pauldron, tusks
+    [[.3,.2,.024],[.24,.14,.034],[.18,.08,.044]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<Z(q[0])&&z>Z(q[1])&&y>Y(.43)&&Math.abs(nx)>.3&&ny>-.35,q[2],'m',k==1?P.metal:P.iron,{rimCol:P.trim}));
+    [[.02,-.06],[-.08,-.16],[-.18,-.25]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<Z(q[0])&&z>Z(q[1])&&ny>.45,.02,'m',k==1?P.metal:P.iron,{rimCol:P.trim}));
+    [-1,1].forEach(s=>{const h=E.on([s*.5,Y(.56),Z(.25)],[-s,-.2,0]);if(h){E.pd('sph','m',P.trim,E.add(h.p,h.n,.03),h.n,.014);E.rune({p:E.add(h.p,h.n,.03),n:h.n},[0,1,0],.045,P.glow)}
+      const t=W([s*.03,.535,.66]);E.L(t,E.add(t,[s*.012,.065,.035]),.013,.002,'c',P.bone,4,{bn:'jaw'})});
+    [.0,-.11,-.21].forEach(z=>{const h=E.top(0,Z(z));if(h)E.pd('cone4','m',P.trim,E.add(h.p,h.n,.035),h.n,[.016,.05,.016])})}
+  if(L>=4){// brow helm with swept horns, chest plate with a gem, bone bracers on the forelegs, glowing tail charms
+    E.shell((x,y,z,nx,ny)=>z>Z(.5)&&z<Z(.6)&&ny>.55,.016,'m',P.metal,{rimCol:P.trim});
+    const hb=E.top(0,Z(.56));if(hb){E.gem({p:E.add(hb.p,hb.n,.016),n:hb.n},.024,P.glow);
+      [-1,1].forEach(s=>E.horn(E.add(hb.p,[s*.07,.0,-.04]),[s*.45,.55,-.6],[0,-.04,-.07],.24,.028,'c',P.bone,5,null,P.trim))}
+    E.shell((x,y,z,nx,ny,nz)=>z>Z(.18)&&nz>.55&&y<Y(.56)&&y>Y(.36),.02,'m',P.metal,{rimCol:P.trim});
+    const cp=E.on([0,Y(.46),2],[0,0,-1]);if(cp)E.gem({p:E.add(cp.p,cp.n,.02),n:cp.n},.028,P.glow);
+    [-1,1].forEach(s=>{E.shell((x,y,z)=>Math.abs(x-s*W([.104,0,0])[0])<.07&&y>Y(.17)&&y<Y(.24)&&z>Z(.15),.01,'c',P.leather,{rimCol:P.dark});E.band(W([s*.104,.25,.215]),[0,1,0],.006,.008,'m',P.trim,8)});
+    [['tail1',-.62],['tail2',-.82]].forEach(q=>{const h=E.top(0,Z(q[1]));if(h)M.charm(E,E.add(h.p,[0,-.05,0]),.1,P.glow,'gem',{bn:q[0]})})}
+  if(L>=5){// ember mane through the ruff, burning eye trails, gold crown spikes on the helm
+    for(let i=0;i<9;i++){const a=-Math.PI*.05+i/8*Math.PI*1.1,o=W([Math.cos(a)*.3,.53+Math.sin(a)*.3,.3]),c=W([0,.53,.3]),h=E.on(o,[c[0]-o[0],c[1]-o[1],c[2]-o[2]]);
+      if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],h.n[1]+.3,-1.2]),.22),.04,.002,'g',i%2?P.glow:P.glow2,4)}
+    [-1,1].forEach(s=>{const e=W([s*.09,.636,.574]);E.L(e,E.add(e,[s*.04,.015,-.14]),.012,.001,'g',P.glow2,3,{bn:'head'})});
+    for(let i=-2;i<=2;i++){const h=E.top(i*.035,Z(.53));if(h)E.pd('cone4','m',P.gold,E.add(h.p,h.n,.03),E.nrm([i*.3,1,-.3]),[.012,.07-Math.abs(i)*.012,.012])}}
+}};
+
+// ================= v100 evolve: Dragon rigs (Drakelet → Pyrewing, Elderdrake; Gravewyrm → Venomcoil) =================
+// ---------------- Drakelet: longer horns, ember vents, back spines, patterned wings, horn crown, molten seams ----------------
+EVO100.D.Drakelet={glow:0xff6a1a,wing:{grow:.06},build(E,L,P){
+  const M=EVO100_M,bone=P.bone,boneD=P.boneD;
+  // L1: a second, longer pair of swept horns behind the first, glowing ember vents on the throat and flanks
+  [-1,1].forEach(s=>{E.horn([s*.07,.775,.56],[s*.35,.5,-1],[s*.02,-.04,-.05],.2+.03*L,.026,'c',bone,5,null,L>=4?P.trim:boneD);
+    [[.5,.15],[.46,.06],[.47,-.04]].slice(0,L>=3?3:2).forEach(q=>{const h=E.on([s*.5,q[0],q[1]],[-s,0,0]);if(h)E.L(E.add(E.add(h.p,h.n,.003),[0,.03,0]),E.add(E.add(h.p,h.n,.003),[0,-.03,-.03]),.009,.006,'g',P.glow,3,{vs:1})})});
+  const th=E.on([0,.55,1.5],[0,-.3,-1]);if(th)E.rune(th,[0,1,0],.035,P.glow);
+  if(L>=2){// tall dorsal sail-spines with glowing tips, cheek frills, jaw spikes, tail blade
+    M.ridge(E,[[.4,.07,.022],[.3,.1,.03],[.2,.13,.036],[.1,.14,.038],[0,.14,.038],[-.1,.13,.034],[-.2,.11,.03],[-.3,.08,.024]],'c',P.mainD,.9,0,L>=3?P.glow:null);
+    [-1,1].forEach(s=>{for(let i=0;i<3;i++)E.L([s*.09,.71-i*.02,.56-i*.025],[s*(.2+i*.02),.72-i*.04,.47-i*.04],.022,.002,'c',i%2?P.mainD:boneD,4,{bn:'head'});
+      E.L([s*.08,.64,.66],[s*.15,.6,.58],.016,.002,'c',bone,4,{bn:'jaw'})});
+    E.pd('cone4','c',P.mainD,[0,.57,-1.3],[0,0,-1],[.1,.16,.022],[0,1,0],{bn:'tail3'})}
+  if(L>=3){// scale armour across chest and shoulders (darker plates with bone rims), ember vents along the spine
+    E.shell((x,y,z,nx,ny,nz)=>z>.12&&z<.4&&ny>-.2&&nz>-.3&&y>.45,.016,'c',(x,y,z,i)=>i%3?P.mainD:P.dark,{rimCol:boneD});
+    [.15,.05,-.05,-.15,-.25].forEach(z=>{const h=E.top(0,z);if(h)[-1,1].forEach(s=>E.L(E.add(h.p,[s*.04,-.01,.03]),E.add(h.p,[s*.05,-.012,-.03]),.007,.007,'g',P.glow,3,{vs:1}))});
+    for(let i=0;i<4;i++){const z=-.5-i*.17,h=E.top(0,z);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([0,1,-.8]),.06-i*.008),.02,.002,'c',bone,4,{only:['tail0','tail1','tail2','tail3']})}}
+  if(L>=4){// crown of four horns banded in gold, a gem on the brow, molten seams on the belly, glowing tail blade
+    [-1,1].forEach(s=>{E.horn([s*.03,.79,.6],[s*.2,1,-.25],[0,0,-.06],.16,.016,'c',bone,4,null,P.trim);E.band([s*.075,.8,.52],[s*.35,.5,-1],.02,.006,'m',P.trim,6)});
+    const hb=E.top(0,.64);if(hb)E.gem({p:E.add(hb.p,hb.n,.008),n:hb.n},.02,P.glow);
+    E.shell((x,y,z,nx,ny)=>ny<-.6&&z>-.3&&z<.35,.006,'g',P.glowD,{rim:false});
+    E.pd('cone4','g',P.glow,[0,.57,-1.31],[0,0,-1],[.06,.12,.012],[0,1,0],{bn:'tail3'})}
+  if(L>=5){// flame crest: glowing spines down the neck, ember horns, burning eyes
+    for(let i=0;i<5;i++){const z=.5-i*.06,h=E.top(0,z);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([0,1,-1]),.1-i*.01),.022,.002,'g',i%2?P.glow:P.glow2,4)}
+    [-1,1].forEach(s=>E.L([s*.082,.733,.665],[s*.12,.745,.55],.01,.001,'g',P.glow2,3,{bn:'head'}))}
+}};
+// ---------------- Gravewyrm: horns, hood frills, venom, bone armour, rune bands, horn crown, glowing rattle ----------------
+EVO100.D.Gravewyrm={glow:0x8aff4a,build(E,L,P){
+  const M=EVO100_M,bone=P.bone,boneD=P.boneD,seg=['tail1','tail0','pelvis','spine','chest','neck'];
+  // L1: longer back-swept horns, venom drip on the fangs, glowing scale lines behind the eyes
+  [-1,1].forEach(s=>{E.horn([s*.09,.37,.52],[s*.5,.45,-1],[s*.03,-.03,-.03],.18+.03*L,.026,'c',bone,5,null,L>=4?P.trim:boneD);
+    E.L([s*.045,.2,.76],[s*.045,.17,.76],.006,.002,'g',P.glow,3,{bn:'head'});
+    E.L([s*.125,.335,.55],[s*.14,.33,.44],.006,.006,'g',P.glow,3,{bn:'head'})});
+  if(L>=2){// cobra hood frills on the neck with bony struts, bigger ridge plates
+    // cobra hood: two upright membranes flaring from the neck behind the head, ribbed with bone, eye-spots
+    [-1,1].forEach(s=>{const base=[s*.04,.34,.36],pts=[[s*.05,.47,.43],[s*.14,.54,.41],[s*.23,.52,.38],[s*.29,.44,.35],[s*.29,.34,.32],[s*.22,.25,.3],[s*.1,.22,.32]];
+      E.fan(base,pts,P.mainD,L>=4?P.glowD:P.mainL,'c',{bn:'neck'});
+      [1,2,3,4,5].forEach(i=>E.L(base,pts[i],.01,.003,'c',bone,4,{bn:'neck'}));
+      E.pd('sph','c',P.dark,[s*.19,.42,.37],[0,0,1],[.035,.035,.006],null,{bn:'neck'});E.pd('sph',L>=3?'g':'c',L>=3?P.glow:P.bone,[s*.19,.42,.375],[0,0,1],[.018,.018,.006],null,{bn:'neck'})});
+    M.ridge(E,[[.2,.07,.03],[.0,.09,.035],[-.2,.09,.035],[-.45,.08,.03],[-.7,.06,.025],[-.95,.05,.02]],'c',bone,.9,0,null)}
+  if(L>=3){// segmented bone armour over the back, glowing rune bands around the coils
+    [[.25,.1],[.05,-.12],[-.18,-.36],[-.42,-.6]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.55&&y>.15,.014,'c',k%2?P.mainD:P.dark,{rimCol:boneD}));
+    [.12,-.3,-.75].forEach(z=>{const h=E.top(0,z);if(h)E.band([0,h.p[1]*.55,z],[0,0,1],.004,.006,'g',P.glow,10)})}
+  if(L>=4){// a crown of horns, glowing frill veins, a bone rattle-blade on the tail tip
+    [-2,-1,0,1,2].forEach(i=>{const h=E.top(i*.04,.5);if(h)E.horn(E.add(h.p,h.n,-.005),[i*.25,1,-.6],[0,0,-.04],.1-Math.abs(i)*.012,.014,'c',bone,4,null,P.trim)});
+    [-1,1].forEach(s=>{[[.12,.5,.405],[.25,.47,.36],[.26,.3,.32]].forEach(q=>E.L([s*.04,.34,.36],[s*q[0],q[1],q[2]],.005,.003,'g',P.glow,3,{bn:'neck'}))});
+    E.pd('oct','c',bone,[0,.035,-1.66],[0,0,-1],[.05,.1,.02],[0,1,0],{bn:'tail3'});E.pd('oct','g',P.glow,[0,.035,-1.74],[0,0,-1],[.025,.05,.01],[0,1,0],{bn:'tail3'})}
+  if(L>=5){// spirit flames along the spine
+    [.3,.1,-.1,-.3,-.5].forEach((z,i)=>{const h=E.top(0,z);if(h)E.L(E.add(h.p,h.n,.02),E.add(h.p,E.nrm([0,1,-.7]),.14),.025,.002,'g',i%2?P.glow:P.glow2,4)})}
+}};
+
+// ================= v100 evolve: Earth rigs (Stoneshell → Cragback, Titanshell; Mossfrog → Bogmaw) =================
+// ---------------- Stoneshell: crystal spires, moss garden, stone horns, rune-carved shell, a shrine on its back ----------------
+EVO100.D.Stoneshell={glow:0x5ae8d0,ownGlow:1,build(E,L,P){
+  const moss=0x4a6a2a,moss2=0x3a5a22,stone=P.mainD,R=E.R;
+  const dome=(x,z)=>E.top(x,z);
+  // a crystal cluster on the shell (glowing core spire + dark shards around it)
+  const cluster=(x,z,h,n)=>{const t=dome(x,z);if(!t)return;for(let i=0;i<n;i++){const a=i/n*6.283+R(),r=i?.03:0,hh=i?h*(.45+R()*.3):h,p=E.add(t.p,[Math.cos(a)*r,0,Math.sin(a)*r]),d=E.nrm([t.n[0]+Math.cos(a)*(i?.5:.1),1,t.n[2]+Math.sin(a)*(i?.5:.1)]);
+    E.L(E.add(p,t.n,-.02),E.add(p,d,hh),i?.022:.032,.003,i%2?'c':'g',i%2?0x2a5a54:P.glow,4)}};
+  // L1: moss tufts and ferns sprouting from the shell, a stone brow ridge, two new crystal shards
+  [[.15,.1],[-.18,-.05],[.05,-.25],[-.08,.22],[.22,-.18]].slice(0,L>=2?5:3).forEach((q,i)=>{const t=dome(q[0],q[1]);if(!t)return;E.pd('ico','c',i%2?moss:moss2,t.p,t.n,[.07,.02,.06]);
+    for(let k=0;k<3;k++){const a=k*2.1+i;E.L(t.p,E.add(t.p,E.nrm([t.n[0]+Math.cos(a)*.6,1,t.n[2]+Math.sin(a)*.6]),.05+.01*L),.012,.002,'c',0x5a8a3a,3)}});
+  cluster(-.12,.06,.1,3);
+  [-1,1].forEach(s=>E.L([s*.03,.36,.55],[s*.1,.37,.5],.016,.01,'c',stone,4,{bn:'head'}));
+  if(L>=2){// big crystal spires, rune lines carved into the shell rim, stone knuckle plates on the legs
+    cluster(.16,-.12,.16,4);cluster(-.2,-.2,.12,3);
+    for(let i=0;i<8;i++){const a=i/8*6.283+.2,h=E.on([Math.sin(a)*.8,.25,Math.cos(a)*.9-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.18&&h.p[1]<.32)E.rune(h,[0,1,0],.04,P.glow)}
+    [['fl',.16,.19],['fr',.16,.19],['hl',.17,-.21],['hr',.17,-.21]].forEach(q=>{const s=q[0][1]=='l'?-1:1;const h=E.on([s*.5,.14,q[2]],[-s,0,0]);if(h)E.pd('dod','c',stone,E.add(h.p,h.n,.01),h.n,[.04,.03,.05])})}
+  if(L>=3){// stone horns sweeping back from the head, a ring of tall rim spikes, glowing moss
+    [-1,1].forEach(s=>E.horn([s*.05,.36,.5],[s*.4,.6,-.7],[0,-.03,-.04],.16,.03,'c',stone,5,null,0x8a8a7a));
+    for(let i=0;i<10;i++){const a=i/10*6.283,h=E.on([Math.sin(a)*.8,.3,Math.cos(a)*.9-.02],[-Math.sin(a),-.2,-Math.cos(a)]);if(h&&Math.abs(Math.cos(a))<.95)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],.6,h.n[2]]),.07),.03,.003,'c',i%2?stone:P.mainD,4)}
+    [[.1,.15],[-.15,-.15]].forEach(q=>{const t=dome(q[0],q[1]);if(t)E.pd('ico','g',P.glowD,E.add(t.p,t.n,.01),t.n,[.05,.012,.04])})}
+  if(L>=4){// a ruined shrine: two standing stones with a lintel and a glowing heart crystal on top of the shell
+    const t=dome(0,-.02);if(t){[-1,1].forEach(s=>E.pd('box','c',0x6a6a62,E.add(t.p,[s*.07,.06,0]),[0,1,0],[.035,.13,.035],[0,0,1]));E.pd('box','c',0x5a5a52,E.add(t.p,[0,.135,0]),[0,1,0],[.2,.03,.05],[0,0,1]);
+      E.pd('oct','g',P.glow,E.add(t.p,[0,.06,0]),[0,1,0],[.035,.06,.035]);E.pd('oct','g',P.glow2,E.add(t.p,[0,.18,0]),[0,1,0],[.018,.03,.018])}
+    // glowing cracks running down the shell from the shrine
+    for(let k=0;k<7;k++){const a=k/7*6.283+.3;let pr=null;for(let i=1;i<=6;i++){const r=.06+i*.045,w=Math.sin(i*1.7+k)*.05,t=dome(Math.sin(a+w)*r,Math.cos(a+w)*r-.02);if(!t)break;const q=E.add(t.p,t.n,.004);
+      if(pr)E.L(pr,q,.009-i*.0008,.008-i*.0008,'g',i<3?P.glow:P.glowD,3,{vs:1});pr=q}}}
+  if(L>=5){// crystal crown on the brow, more spires
+    for(let i=-2;i<=2;i++)E.L([i*.03,.37,.52],[i*.05,.45-Math.abs(i)*.02,.5],.012,.002,'g',P.glow,4,{bn:'head'});
+    cluster(.24,.12,.12,3);cluster(-.26,.1,.1,3)}
+}};
+// ---------------- Mossfrog: bog toad — glowing pustules, moss cloak, reed crown, bone charms, lantern lure ----------------
+EVO100.D.Mossfrog={glow:0xb8ff4a,build(E,L,P){
+  const M=EVO100_M,moss=0x4a6a2a,reed=0x7a8a3a;
+  // L1: glowing pustules on the back, darker toxic stripes
+  [[.08,.46,.05],[-.1,.45,-.06],[.13,.42,-.14],[-.04,.47,.12],[.0,.46,-.1],[-.15,.4,.08]].slice(0,L>=2?6:4).forEach(q=>{const t=E.top(q[0],q[2]);if(t)E.pd('sph','g',P.glow,E.add(t.p,t.n,.006),t.n,[.018,.012,.018])});
+  [-1,1].forEach(s=>{const h=E.on([s*.6,.36,0],[-s,0,0]);if(h)E.rune(h,[0,0,1],.05,P.glowD)});
+  if(L>=2){// moss cloak over the back with hanging strands, a reed crown between the eyes
+    E.shell((x,y,z,nx,ny)=>ny>.55&&z<.22&&z>-.25,.012,'c',(x,y,z,i)=>i%3?moss:0x3a5222,{rimCol:0x2a3a1a});
+    [-1,1].forEach(s=>[.1,-.05,-.18].forEach(z=>{const h=E.on([s*.6,.42,z],[-s,-.3,0]);if(h)E.L(h.p,E.add(h.p,[s*.02,-.08,-.01]),.012,.002,'c',moss,3)}));
+    for(let i=-2;i<=2;i++)E.L([i*.025,.44,.3],[i*.04,.52+Math.abs(i)*.0,.27-Math.abs(i)*.01],.007,.002,'c',reed,3,{bn:'head'})}
+  if(L>=3){// bone charm necklace across the throat, bony brow spurs, warty knuckle bands
+    const pts=[];for(let i=-3;i<=3;i++){const a=i/3*1.2,h=E.on([Math.sin(a)*.5,.2,.32+Math.cos(a)*.3],[-Math.sin(a),.2,-Math.cos(a)]);if(h)pts.push(E.add(h.p,h.n,.008))}
+    for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.005,.005,'c',P.leather,3);pts.forEach((p,i)=>{if(i%2)M.charm(E,p,.07,P.bone,'tooth');else E.pd('sph','c',P.bone,p,[0,1,0],.012)});
+    [-1,1].forEach(s=>E.horn([s*.12,.47,.33],[s*.4,.7,-.5],[0,0,-.02],.07,.018,'c',P.boneD,4,{bn:'head'}))}
+  if(L>=4){// an angler lure on a bony stalk with a glowing lantern bulb, glowing eye rims, moss beard
+    E.chain([[0,.45,.33],[0,.53,.36],[0,.57,.42],[0,.55,.48]],.016,.007,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,.525,.5],[0,1,0],.026,null,{bn:'head'});E.pd('ico','g',P.glow2,[0,.525,.5],[0,1,0],.014,null,{bn:'head'});
+    [0,1,2].forEach(i=>E.L([0,.5+i*.025,.35+i*.03],[0,.53+i*.025,.33+i*.03],.006,.001,'c',P.boneD,3,{bn:'head'}));
+    [-1,1].forEach(s=>E.band([s*.12,.42,.34],[s*.4,.9,.5],.004,.005,'g',P.glow,8,{bn:'head'}));
+    for(let i=-2;i<=2;i++)E.L([i*.04,.25,.36],[i*.05,.18,.36],.012,.002,'c',moss,3,{bn:'jaw'})}
+  if(L>=5){// toxic spines along the back with glowing tips
+    for(let i=-1;i<=1;i++)[.12,.0,-.12].forEach(z=>{const t=E.top(i*.1,z);if(t)E.L(E.add(t.p,t.n,-.005),E.add(t.p,E.nrm([i*.3,1,-.5]),.08),.015,.002,'g',P.glow2,4)})}
+}};
+
+// ================= v100 evolve: Sky rigs (Batwing → Duskwing; Skyhawk → Stormtalon, Rocsovereign) =================
+// ---------------- Batwing: night bat — ear tufts, blood runes, patterned wings, fang charms, crescent crown ----------------
+EVO100.D.Batwing={glow:0xc04aff,wing:{grow:.07},build(E,L,P){
+  const M=EVO100_M,fur=P.mainL;
+  // L1: long tufts at the ear bases, glowing blood-rune on the brow, a pale throat mane
+  [-1,1].forEach(s=>{[0,1,2].forEach(k=>E.L([s*.075,.47-k*.025,.38],[s*(.15+k*.03),.55-k*.05,.3],.026,.002,'c',k%2?P.mainD:fur,4,{bn:'head'}))});
+  const br=E.top(0,.43);if(br)E.rune({p:E.add(br.p,br.n,.004),n:br.n},[0,0,1],.035,P.glow);
+  for(let i=-2;i<=2;i++){const h=E.on([i*.06,.26,1],[0,0,-1]);if(h)M.tuft(E,h,[0,-.6,0],.06+.01*L,.025,i%2?fur:P.main)}
+  if(L>=2){// a mohawk crest of dark fur, nose-leaf spikes, fang charms on a cord
+    for(let i=0;i<7;i++){const z=.36-i*.075,h=E.top(0,z);if(h)[-1,1].forEach(s=>E.L(E.add(h.p,[s*.015,-.005,0]),E.add(h.p,E.nrm([s*.25,1,-.9]),.1+.012*L-i*.008),.03,.002,'c',i%2?P.mainD:P.dark,4))}
+    E.L([0,.45,.51],[0,.5,.5],.01,.002,'c',P.mainD,4,{bn:'head'});
+    const pts=[];for(let i=-2;i<=2;i++){const a=i/2*1.1,h=E.on([Math.sin(a)*.5,.3,.28+Math.cos(a)*.3],[-Math.sin(a),0,-Math.cos(a)]);if(h)pts.push(E.add(h.p,h.n,.006))}
+    for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.004,.004,'c',P.leather,3);pts.forEach((p,i)=>{if(i%2==0)M.charm(E,p,.06,P.bone,'tooth')})}
+  if(L>=3){// a bone face mask on the brow with glowing eye rims, shoulder spikes, glowing veins on the belly
+    E.L([0,.47,.5],[0,.53,.47],.012,.002,'c',P.bone,4,{bn:'head'});
+    [-1,1].forEach(s=>{E.band([s*.07,.432,.466],[s*.5,0,1],.008,.004,'g',P.glow,7,{bn:'head'});const h=E.on([s*.4,.42,.12],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],1,-.5]),.08),.02,.002,'c',P.boneD,4)})}
+  if(L>=4){// a crescent-moon crown between the ears, a gem on the chest, glowing tail tip
+    const c=[0,.53,.36];for(let i=0;i<8;i++){const a=-1.3+i/7*2.6,a2=-1.3+(i+1)/7*2.6;if(i<7)E.L(E.add(c,[Math.sin(a)*.07,Math.cos(a)*.07,0]),E.add(c,[Math.sin(a2)*.07,Math.cos(a2)*.07,0]),.01-Math.abs(a)*.003,.01-Math.abs(a2)*.003,'m',P.trim,4,{bn:'head'})}
+    E.pd('oct','g',P.glow,E.add(c,[0,.07,0]),[0,1,0],[.014,.024,.014],null,{bn:'head'});
+    const cp=E.on([0,.3,1],[0,0,-1]);if(cp)E.gem({p:E.add(cp.p,cp.n,.008),n:cp.n},.022,P.glow)}
+  if(L>=5){// shadow flames rising from the shoulders
+    [-1,1].forEach(s=>[0,1,2].forEach(k=>{const h=E.top(s*.07,.16-k*.08);if(h)E.L(h.p,E.add(h.p,E.nrm([s*.3,1,-.6]),.1-k*.02),.018,.002,'g',k%2?P.glow:P.glow2,4)}))}
+}};
+// ---------------- Skyhawk: storm raptor — plumed crest, war paint, feather mantle, talon bands, breastplate, sun crown ----------------
+EVO100.D.Skyhawk={glow:0x9ae8ff,wing:{grow:.06,claws:false},build(E,L,P){
+  const M=EVO100_M,hb={bn:'head'};
+  // L1: a tall swept crest of long plumes, a glowing lightning stripe under each eye, two long tail streamers
+  for(let i=-2;i<=2;i++){const a=[i*.024,.925,.4],b=[i*.05,.99+.012*L-Math.abs(i)*.014,.24-Math.abs(i)*.03];E.L(a,b,.024,.004,'c',Math.abs(i)%2?P.mainD:P.dark,4,hb);
+    if(L>=3)E.L(b,E.add(b,[i*.01,.01,-.05]),.008,.001,'g',P.glow,3,hb)}
+  [-1,1].forEach(s=>{const h=E.on([s*.5,.875,.43],[-s,0,0]);if(h){const o=E.add(h.p,h.n,.003);E.chain([o,E.add(o,[0,-.03,-.022]),E.add(o,[0,-.028,-.035]),E.add(o,[0,-.06,-.05])],.006,.003,'g',P.glow,3,{vs:1})}});
+  [-1,1].forEach(s=>E.chain([[s*.03,.52,-.5],[s*.06,.5,-.75],[s*.08,.47,-.95-.05*L]],.016,.004,'c',P.dark,4,{bn:'tail3'}));
+  if(L>=2){// a feather mantle over the shoulders, bronze talon bands, a bead cord in the crest
+    for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=E.on([Math.sin(a)*.5,.8-k*.05,.25+Math.cos(a)*.1-k*.04],[-Math.sin(a),-.2,-.3]);
+      if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,E.nrm([h.n[0]*1.2,-.3,-1]),.11-k*.02),.032,.002,'c',(i+k)%2?P.mainD:P.dark,4)}
+    [-1,1].forEach(s=>{E.band([s*.075,.2,.0],[0,1,0],.004,.009,'m',P.trim,8);E.band([s*.075,.27,.012],[0,1,0],.004,.007,'m',P.trim,8)});
+    E.L([0,.96,.3],[0,.89,.21],.003,.003,'c',P.leather,3,hb);[0,1,2].forEach(k=>E.pd('sph',k==1?'g':'c',k==1?P.glow:P.bone,[0,.94-k*.022,.27-k*.02],[0,1,0],.012,null,hb))}
+  if(L>=3){// a breastplate with a storm rune, a metal-capped beak, glowing plume tips (above)
+    E.shell((x,y,z,nx,ny,nz)=>nz>.35&&y>.6&&y<.8&&z>.15,.014,'m',P.metal,{rimCol:P.trim});
+    const cp=E.on([0,.7,1],[0,0,-1]);if(cp)E.rune({p:E.add(cp.p,cp.n,.016),n:cp.n},[0,1,0],.05,P.glow);
+    E.L([0,.865,.555],[0,.835,.6],.02,.004,'m',P.trim,4,hb)}
+  if(L>=4){// a sun crown of golden rays above the crest with a storm gem, glowing tail streamers
+    for(let i=-3;i<=3;i++){const a=i/3*1.25;E.L([0,.95,.36],[Math.sin(a)*.13,.95+Math.cos(a)*.13,.33],.009,.002,'m',P.gold,4,hb)}
+    E.pd('oct','g',P.glow,[0,.965,.37],[0,0,1],[.022,.032,.014],null,hb);
+    [-1,1].forEach(s=>E.L([s*.08,.47,-1.0],[s*.09,.46,-1.12],.012,.002,'g',P.glow,4,{bn:'tail3'}))}
+  if(L>=5){// lightning arcs crackling around the wing roots
+    [-1,1].forEach(s=>{const b=[s*.14,.74,.14];E.chain([b,E.add(b,[s*.05,.06,-.02]),E.add(b,[s*.03,.1,-.06]),E.add(b,[s*.08,.15,-.08])],.008,.003,'g',P.glow2,3,{at:[s*.1,.72,.14]})})}
+}};
+
+// ================= v100 evolve: Spirit rigs (Boneling → Lichbone; Wispling → Lumenwisp, Soulwarden) =================
+// ---------------- Boneling: grave-hound — soul-fire, grave-iron, rune-etched skull, lich crown, phylactery ----------------
+EVO100.D.Boneling={glow:0x6aff9a,ownGlow:1,build(E,L,P){
+  const B=boneP,M=EVO100_M,iron=P.metal,bone=P.bone;
+  // L1: soul-fire wisps rising from the eye sockets, a grave chain collar with a lantern charm
+  [-1,1].forEach(s=>{const e=B([s*.055,.625,.575]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,{bn:'head'});if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,{bn:'head'})});
+  const nk=B([0,.56,.38]);const ring=[];for(let i=0;i<10;i++){const a=i/10*6.283;ring.push(E.add(nk,[Math.cos(a)*.06,Math.sin(a)*.06,0]))}
+  for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{bn:'neck'});
+  M.charm(E,E.add(nk,[0,-.06,0]),.08,P.glow,'gem',{bn:'neck'});
+  if(L>=2){// ghostly flame ribbon along the spine, bigger back-swept horns, soul-fire in the ribcage
+    for(let i=0;i<6;i++){const p=B([0,.6,.34-i*.1]);E.L(p,E.add(p,[0,.07-i*.004,-.06]),.018,.002,'g',i%2?P.glow:P.glowD,4)}
+    [-1,1].forEach(s=>E.horn(B([s*.1,.71,.38]),[s*.3,.5,-1],[0,-.05,-.03],.16,.018,'c',P.boneD,5,{bn:'head'}));
+    E.pd('ico','g',P.glow2,B([0,.47,.12]),[0,1,0],.05,null,{bn:'chest'})}
+  if(L>=3){// grave-iron armour: a skull plate with rivets, shoulder guards, spiked spine plates
+    E.shell((x,y,z,nx,ny)=>z>B([0,0,.46])[2]&&z<B([0,0,.6])[2]&&ny>.45,.012,'m',iron,{rimCol:P.trim});
+    [-1,1].forEach(s=>{const h=E.on([s*.4,B([0,.53,0])[1],B([0,0,.24])[2]],[-s,0,0]);if(h){E.plate(h.p,h.n,[0,1,0],.07,.1,.014,'m',iron,'box');E.pd('cone4','m',P.trim,E.add(h.p,h.n,.03),h.n,[.012,.04,.012])}});
+    [.2,.06,-.08,-.22].forEach(z=>{const p=B([0,.6,z]);E.pd('box','m',iron,E.add(p,[0,.01,0]),[0,1,0],[.08,.012,.05]);E.pd('cone4','m',P.trim,E.add(p,[0,.045,0]),[0,1,-.4],[.012,.05,.012])})}
+  if(L>=4){// lich crown of bone spikes banded in gold, rune etched on the skull, a phylactery at the tail tip
+    for(let i=-2;i<=2;i++){const p=B([i*.03,.69,.48]);E.L(p,E.add(p,[i*.015,.07-Math.abs(i)*.012,-.03]),.01,.002,'c',bone,4,{bn:'head'})}
+    E.band(B([0,.66,.48]),[0,1,-.3],.003,.006,'m',P.gold,10,{bn:'head'});
+    const sk=E.top(0,B([0,0,.55])[2]);if(sk)E.rune({p:E.add(sk.p,sk.n,.012),n:sk.n},[0,0,1],.04,P.glow);
+    const tp=B([0,.47,-.98]);E.pd('cyl','m',P.trim,tp,[0,1,0],[.022,.05,.022],null,{bn:'tail3'});E.pd('oct','g',P.glow,E.add(tp,[0,-.04,0]),[0,1,0],[.028,.045,.028],null,{bn:'tail3'})}
+  if(L>=5){// spectral flames wreathing the ribcage and legs
+    [-1,1].forEach(s=>[.2,.06,-.08].forEach(z=>{const p=B([s*.15,.46,z]);E.L(p,E.add(p,[s*.03,.1,-.05]),.02,.002,'g',P.glow,4)}))}
+}};
+// ---------------- Wispling: hooded spirit — rune hood, soul-lanterns, mantle, ghost chains, rune halo, flame crown ----------------
+// The hood is a kit part (not body geometry), so its ornaments are placed on a circle around it: centre (0,.98,-.01), radius ~.18.
+EVO100.D.Wispling={glow:0x9ff0ff,build(E,L,P){
+  const hood=P.dark,trim=P.trim,H=(a,y,r)=>[Math.sin(a)*(r||.185),y,-.01+Math.cos(a)*(r||.185)],hb={bn:'head'};
+  const lantern=(bn,hand,col)=>{E.L(hand,E.add(hand,[0,-.08,0]),.004,.004,'m',P.iron,3,{bn});E.pd('cyl','m',P.iron,E.add(hand,[0,-.085,0]),[0,1,0],[.028,.012,.028],null,{bn});
+    E.pd('oct','g',col,E.add(hand,[0,-.12,0]),[0,1,0],[.024,.04,.024],null,{bn});E.pd('cone','m',P.iron,E.add(hand,[0,-.165,0]),[0,-1,0],[.022,.02,.022],null,{bn})};
+  // L1: glowing runes around the back of the hood, a soul-lantern hanging from the right hand
+  for(let i=0;i<7;i++){const a=Math.PI*.45+i/6*Math.PI*1.1,p=H(a,1.0,.19);E.pd('box','g',P.glow,p,[Math.sin(a),0,Math.cos(a)],[.02,.004,.035],[0,1,0],hb)}
+  lantern('fr2',[.225,.55,.1],P.glow);
+  if(L>=2){// a ragged mantle over the shoulders (body shell), ghost chains trailing from the wrists
+    E.shell((x,y,z,nx,ny)=>y>.68&&y<.9&&ny>-.25,.016,'c',(x,y,z,i)=>i%2?hood:0x26222c,{rimCol:trim});
+    [-1,1].forEach(s=>{let p=[s*.215,.6,.06];for(let i=0;i<4;i++){const q=E.add(p,[s*.008,-.045,-.03]);E.pd('ring','m',P.iron,q,E.nrm(i%2?[1,0,0]:[0,0,1]),[.018,.04,.018],null,{bn:s<0?'fl2':'fr2'});p=q}})}
+  if(L>=3){// a halo of runes over the hood, glowing bands in the cloak tails
+    const c=[0,1.22,-.05];for(let i=0;i<14;i++){const a=i/14*6.283,a2=(i+1)/14*6.283,r=.16;E.L(E.add(c,[Math.cos(a)*r,0,Math.sin(a)*r]),E.add(c,[Math.cos(a2)*r,0,Math.sin(a2)*r]),.007,.007,'g',P.glow,3,hb);
+      if(i%2==0)E.pd('oct','g',P.glow2,E.add(c,[Math.cos(a)*r,0,Math.sin(a)*r]),[0,1,0],[.012,.024,.012],null,hb)}
+    E.band([0,.36,-.07],[0,1,-.3],.006,.007,'g',P.glowD,8);E.band([0,.24,-.13],[0,1,-.5],.005,.006,'g',P.glow,8)}
+  if(L>=4){// a silver circlet on the hood with a brow gem, orbiting motes, a second lantern in the left hand
+    for(let i=0;i<12;i++){const a=i/12*6.283,a2=(i+1)/12*6.283;if(Math.cos(a)>.8&&Math.cos(a2)>.8)continue;E.L(H(a,1.05,.19),H(a2,1.05,.19),.01,.01,'m',trim,4,hb)}
+    E.pd('cone4','m',trim,H(0,1.1,.175),[0,1,.3],[.02,.06,.02],null,hb);E.pd('oct','g',P.glow,H(0,1.07,.2),[0,0,1],[.02,.026,.014],null,hb);
+    [0,1,2,3,4].forEach(i=>{const a=i/5*6.283;E.pd('ico','g',P.glow,[Math.cos(a)*.3,.7+Math.sin(a*2)*.08,Math.sin(a)*.3-.04],[0,1,0],.018,null,{bn:'chest'})});
+    lantern('fl2',[-.225,.55,.1],P.glow2)}
+  if(L>=5){// a crown of spectral flames rising from the hood
+    for(let i=-3;i<=3;i++){const a=i/3*1.3+Math.PI,p=H(a,1.08,.16);E.L(p,E.add(p,E.nrm([Math.sin(a)*.3,1,Math.cos(a)*.3]),.14-Math.abs(i)*.018),.022,.002,'g',i%2?P.glow:P.glow2,4,hb)}}
+}};
+
+// ================= v100 evolve: Swarm rigs (Cryptspider → Widowqueen, Hivemother; Gloomcap → Sporelord) =================
+// ---------------- Cryptspider: crypt spider — carapace crest, venom glow, bone armour, egg sac, crown of horns ----------------
+EVO100.D.Cryptspider={glow:0xff3a5a,build(E,L,P){
+  // L1: a carapace crest (spiked ridge) on the cephalothorax, glowing venom drops on the fangs, a second glowing eye row
+  [[.3,.05,.018],[.22,.07,.022],[.14,.06,.02]].forEach(q=>{const h=E.top(0,q[0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([0,1,-.8]),q[1]+.01*L),q[2],.002,'c',P.dark,4)});
+  [-1,1].forEach(s=>{E.pd('sph','g',P.glow,[s*.02,.27,.5],[0,1,0],.012,null,{bn:'jaw'});[[.05,.49,.4],[.03,.5,.37]].forEach(q=>E.pd('sph','g',P.glow,[s*q[0],q[1],q[2]],[0,1,0],.01,null,{bn:'head'}))});
+  if(L>=2){// a glowing venom sigil on the abdomen and venom veins along it, bony spurs on the knees
+    const ab=E.top(0,-.36);if(ab){E.rune({p:E.add(ab.p,ab.n,.006),n:ab.n},[0,0,1],.07,P.glow)}
+    [-1,1].forEach(s=>{for(let k=0;k<3;k++){const z=-.26-k*.1,h=E.on([s*.6,.6,z],[-s,-.3,0]);if(h)E.L(E.add(h.p,h.n,.004),E.add(E.add(h.p,h.n,.004),[0,.05,-.04]),.006,.006,'g',P.glowD,3,{vs:1})}
+      [0,1,2,3].forEach(i=>{const L1=spidLeg(s,i);E.L(L1.p1,E.add(L1.p1,[s*.02,.07,0]),.016,.002,'c',P.bone,4,{bn:L1.k+'1'})})})}
+  if(L>=3){// bone plate armour over the abdomen in rings, a glowing hourglass, a bone mantle on the thorax
+    [[-.18,-.28],[-.3,-.42],[-.44,-.56]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.35&&Math.abs(x)<.26&&y>.5,.016,'c',k%2?0x5a5048:0x40383a,{rimCol:P.boneD}));
+    E.shell((x,y,z,nx,ny)=>z>.08&&z<.34&&ny>.5&&Math.abs(x)<.13&&y>.47,.014,'c',0x4a4240,{rimCol:P.boneD});
+    const h=E.top(0,-.36);if(h){E.pd('cone4','g',P.glow,E.add(h.p,[0,.03,.03]),[0,0,-1],[.03,.05,.012],[0,1,0]);E.pd('cone4','g',P.glow,E.add(h.p,[0,.03,-.03]),[0,0,1],[.03,.05,.012],[0,1,0])}}
+  if(L>=4){// a crown of curved horns, a glowing egg-sac cluster at the spinnerets, gold-banded legs
+    for(let i=-2;i<=2;i++){const h=E.top(i*.04,.38);if(h)E.horn(E.add(h.p,h.n,-.005),[i*.3,1,-.3],[0,0,-.05],.12-Math.abs(i)*.015,.014,'c',P.bone,4,null,P.trim)}
+    [[0,.47,-.68],[.03,.45,-.7],[-.03,.45,-.7],[0,.43,-.72]].forEach((q,i)=>E.pd('sph','g',i%2?P.glowD:P.glow,q,[0,1,0],.03,null,{bn:'tail3'}));
+    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const L1=spidLeg(s,i),p=spidLerp(L1.p1,L1.p2,.3);E.band(p,[L1.p2[0]-L1.p1[0],L1.p2[1]-L1.p1[1],L1.p2[2]-L1.p1[2]],.004,.006,'m',P.trim,6,{bn:L1.k+'1'})}))}
+  if(L>=5){// spectral webs strung between the horns, venom mist rising from the abdomen
+    for(let i=0;i<4;i++){const h=E.top((i-1.5)*.08,-.3-i%2*.1);if(h)E.L(h.p,E.add(h.p,[0,.12,-.03]),.025,.002,'g',P.glow2,4)}}
+}};
+// ---------------- Gloomcap: walking toadstool — glowing gills, bracket fungi, sprouting caps, a root mantle, a spore crown ----------------
+EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P){
+  const cap=P.main,shelf=0xb89a6a,shelfD=0x7a5a3a,stalk=0xc8b99c,hb={bn:'head'};
+  const bracket=(a,y,sz)=>{const h=E.on([Math.sin(a)*.5,y,Math.cos(a)*.5],[-Math.sin(a),0,-Math.cos(a)]);if(!h)return;
+    E.pd('hem','c',shelfD,E.add(h.p,h.n,sz*.2),[0,1,0],[sz,sz*.4,sz*.85]);E.pd('hem','c',shelf,E.add(E.add(h.p,h.n,sz*.15),[0,sz*.25,0]),[0,1,0],[sz*.8,sz*.3,sz*.7])};
+  // L1: glowing gill veins under the cap, a glowing rim of spots, bracket fungi on the stalk
+  for(let i=0;i<10;i++){const a=i/10*6.283;E.L([Math.sin(a)*.07,.745,Math.cos(a)*.07],[Math.sin(a)*.28,.758,Math.cos(a)*.28],.007,.004,'g',P.glow,3,hb)}
+  bracket(-2.2,.4,.06);bracket(2.6,.3,.05);
+  if(L>=2){// small toadstools sprouting from the cap, a ring of glowing spots, more brackets
+    [[.15,.06],[-.13,-.1],[.04,-.2],[-.17,.12]].forEach((q,i)=>{const t=E.top(q[0],q[1]);if(!t)return;const tp=E.add(t.p,E.nrm([q[0],1,q[1]]),.06+i%2*.02);
+      E.L(t.p,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:cap,tp,E.nrm([q[0],1,q[1]]),[.04,.03,.04],null,hb);E.pd('sph','c',0xd8cbb2,E.add(tp,[0,.022,0]),[0,1,0],[.01,.005,.01],null,hb)});
+    for(let i=0;i<12;i++){const a=i/12*6.283,t=E.top(Math.sin(a)*.25,Math.cos(a)*.25);if(t)E.pd('sph','g',P.glowD,E.add(t.p,t.n,.003),t.n,[.016,.005,.016],null,hb)}
+    bracket(1.6,.48,.055);bracket(-.9,.26,.05)}
+  if(L>=3){// a mantle of roots and moss hanging from under the cap rim (behind and beside the face), root tendrils down the back
+    for(let i=0;i<16;i++){const a=Math.PI*.35+i/15*Math.PI*1.3,r=.27,p=[Math.sin(a)*r,.76,Math.cos(a)*r];const len=.1+((i*7)%4)*.03;
+      E.L(p,E.add(p,[Math.sin(a)*.03,-len,Math.cos(a)*.03]),.03,.004,'c',i%3?0x3a4a26:0x4a3a26,4,hb);if(i%4==1)E.pd('sph','g',P.glow,E.add(p,[Math.sin(a)*.03,-len,Math.cos(a)*.03]),[0,1,0],.012,null,hb)}
+    [-1,1].forEach(s=>E.chain([[s*.05,.62,-.08],[s*.07,.48,-.13],[s*.06,.34,-.14],[s*.08,.2,-.12]],.016,.006,'c',0x3a2c20,4))}
+  if(L>=4){// a crown of tall spore stalks with glowing bulbs, drifting glow motes, gold-ringed stalk
+    for(let i=0;i<5;i++){const a=i/5*6.283,t=E.top(Math.sin(a)*.09,Math.cos(a)*.09);if(!t)continue;const tip=E.add(t.p,E.nrm([Math.sin(a)*.35,1,Math.cos(a)*.35]),.14+(i%2)*.05);
+      E.L(t.p,tip,.014,.008,'c',stalk,4,hb);E.pd('sph','g',i%2?P.glow:P.glow2,tip,[0,1,0],[.028,.022,.028],null,hb)}
+    for(let i=0;i<8;i++){const a=i*.8;E.pd('ico','g',P.glow,[Math.cos(a)*(.34+(i%3)*.04),.86+((i*5)%4)*.05,Math.sin(a)*(.34+(i%3)*.04)],[0,1,0],.013,null,hb)}
+    E.band([0,.38,0],[0,1,0],.006,.009,'m',P.trim,10)}
+  if(L>=5){// the cap rim glows, a second ring of tiny caps
+    for(let i=0;i<18;i++){const a=i/18*6.283,a2=(i+1)/18*6.283,r=.335;E.L([Math.sin(a)*r,.775,Math.cos(a)*r],[Math.sin(a2)*r,.775,Math.cos(a2)*r],.011,.011,'g',P.glow,3,hb)}
+    [[.2,-.05],[-.05,.2],[-.2,-.12]].forEach(q=>{const t=E.top(q[0],q[1]);if(t){E.L(t.p,E.add(t.p,t.n,.035),.008,.006,'c',stalk,4,hb);E.pd('hem','g',P.glowD,E.add(t.p,t.n,.035),t.n,[.022,.016,.022],null,hb)}})}
+}};
+
 $('talBtn').onclick=openTal;
 try{paceWrap()}catch(err){console.error('pace wrap',err)}
 ui();refreshGear();
