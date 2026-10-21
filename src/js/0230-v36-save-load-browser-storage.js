@@ -1,5 +1,11 @@
 // ================= v36: Save / load (browser storage) =================
-const SAVE_KEY='et_save_v1';
+// v116: three character slots. Slot 1 keeps the old key, so an existing hero simply becomes slot 1. SAVE_KEY follows the
+// chosen slot (kqSlotSet); everything else reads and writes the save through SAVE_KEY / saveInfo as before. Slot UI: 2145.
+var KQSL={keys:['et_save_v1','et_save_v1_s2','et_save_v1_s3'],n:0};
+try{const n=parseInt(localStorage.getItem('kq_slot'),10);if(n>=0&&n<3)KQSL.n=n}catch(_){}
+var SAVE_KEY=KQSL.keys[KQSL.n];
+function kqSlotSet(n){n=Math.max(0,Math.min(2,n|0));KQSL.n=n;SAVE_KEY=KQSL.keys[n];try{localStorage.setItem('kq_slot',String(n))}catch(_){}}
+function kqSlotInfo(n){try{const s=JSON.parse(localStorage.getItem(KQSL.keys[n]));return s&&s.hero?s:null}catch(_){return null}}
 function saveInfo(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.hero?s:null}catch(_){return null}}
 function gameSnapshot(){
   const now=performance.now(),P={x:pl.position.x,z:pl.position.z};

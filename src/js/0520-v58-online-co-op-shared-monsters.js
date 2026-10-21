@@ -12,11 +12,26 @@ function mpBossAuth(i){let h=(AF&&AF.i===i&&hero.hp>0)?MP.me:null;for(const k in
 function mpElig(e){return !e.dead&&!e.boss&&!e.minion&&!e.ev&&!e.wv}
 
 // ---------- connect ----------
+// v116: MP.room is a relay that forwards to whichever backend is live: the claude.ai room (signed-in viewers of the
+// artifact) or a join-code session (2150, plain WebRTC, no account). A backend is any object with the room's
+// on / onPeers / emit / presence / peers. mpAttach listens to a backend once; only the live one (MPX.be) gets through.
+var MPX={be:null,cl:null,H:{},PH:[],none:Object.freeze([])};
+var MP_TOPICS=['es','ev','hit','bs','trade','chat'];
+MP.room={on:(t,f)=>{(MPX.H[t]=MPX.H[t]||[]).push(f);return()=>{}},onPeers:f=>{MPX.PH.push(f);return()=>{}},
+  emit:(t,d)=>MPX.be?MPX.be.emit(t,d):Promise.resolve(),presence:p=>MPX.be?MPX.be.presence(p):Promise.resolve(),peers:()=>MPX.be?MPX.be.peers():MPX.none};
+function mpAttach(be){MP_TOPICS.forEach(t=>be.on(t,m=>{if(MPX.be===be)(MPX.H[t]||[]).forEach(f=>{try{f(m)}catch(err){console.warn(err)}})}));
+  be.onPeers(ch=>{if(MPX.be===be)MPX.PH.forEach(f=>{try{f(ch)}catch(err){console.warn(err)}})})}
+// back to playing alone: other heroes go, monsters mirrored from someone else become ours again, a trade in progress ends
+function mpSolo(){for(const k in MP.rh)mpDropRH(k);MP.others=0;MP.lastPs=null;
+  const was=MP.host;try{enemies.forEach(e=>{if(e.mir){e.mir=0;e.nx=null;e.agg=0;e.cd=1}});if(was&&was!==MP.me&&typeof mpAdopt=='function')mpAdopt(MP.rg)}catch(err){console.warn(err)}
+  MP.host='';MP.emap={};MP.hitq={};MP.evq=[];MP.kq=[];MP.pend=null;MP.inv=null;try{mpToast()}catch(_){}
+  if(MP.tr){MP.tr=null;try{if(xwMode=='trade')closeX()}catch(_){}}}
+function mpUse(be){if(be===MPX.be)return;mpSolo();MPX.be=be||null;MP.lastPres='';MP.on=!!MPX.be;try{mpBtn()}catch(_){}}
+MP_TOPICS.forEach(t=>MP.room.on(t,{es:mpOnES,ev:mpOnEV,hit:mpOnHit,bs:mpOnBS,trade:mpOnTrade,chat:mpOnChat}[t]));
+MP.room.onPeers(ch=>{if(!MP.on)return;(ch.left||[]).forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
 (async function(){
-  try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MP.room=room;
-    room.on('es',mpOnES);room.on('ev',mpOnEV);room.on('hit',mpOnHit);room.on('bs',mpOnBS);room.on('trade',mpOnTrade);room.on('chat',mpOnChat);
-    room.onPeers(ch=>{if(!MP.on)return;ch.left.forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
-    MP.on=true;mpBtn();
+  try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MPX.cl=room;mpAttach(room);
+    if(!MPX.be)mpUse(room);
   }catch(err){console.warn('co-op unavailable',err)}
 })();
 

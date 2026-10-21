@@ -3712,7 +3712,13 @@ function mini(){
 // ================= v36: Bounty boards — every town's notice board hands out hunts, supply runs and challenges =================
 
 // ================= v36: Save / load (browser storage) =================
-const SAVE_KEY='et_save_v1';
+// v116: three character slots. Slot 1 keeps the old key, so an existing hero simply becomes slot 1. SAVE_KEY follows the
+// chosen slot (kqSlotSet); everything else reads and writes the save through SAVE_KEY / saveInfo as before. Slot UI: 2145.
+var KQSL={keys:['et_save_v1','et_save_v1_s2','et_save_v1_s3'],n:0};
+try{const n=parseInt(localStorage.getItem('kq_slot'),10);if(n>=0&&n<3)KQSL.n=n}catch(_){}
+var SAVE_KEY=KQSL.keys[KQSL.n];
+function kqSlotSet(n){n=Math.max(0,Math.min(2,n|0));KQSL.n=n;SAVE_KEY=KQSL.keys[n];try{localStorage.setItem('kq_slot',String(n))}catch(_){}}
+function kqSlotInfo(n){try{const s=JSON.parse(localStorage.getItem(KQSL.keys[n]));return s&&s.hero?s:null}catch(_){return null}}
 function saveInfo(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.hero?s:null}catch(_){return null}}
 function gameSnapshot(){
   const now=performance.now(),P={x:pl.position.x,z:pl.position.z};
@@ -5465,11 +5471,26 @@ function mpBossAuth(i){let h=(AF&&AF.i===i&&hero.hp>0)?MP.me:null;for(const k in
 function mpElig(e){return !e.dead&&!e.boss&&!e.minion&&!e.ev&&!e.wv}
 
 // ---------- connect ----------
+// v116: MP.room is a relay that forwards to whichever backend is live: the claude.ai room (signed-in viewers of the
+// artifact) or a join-code session (2150, plain WebRTC, no account). A backend is any object with the room's
+// on / onPeers / emit / presence / peers. mpAttach listens to a backend once; only the live one (MPX.be) gets through.
+var MPX={be:null,cl:null,H:{},PH:[],none:Object.freeze([])};
+var MP_TOPICS=['es','ev','hit','bs','trade','chat'];
+MP.room={on:(t,f)=>{(MPX.H[t]=MPX.H[t]||[]).push(f);return()=>{}},onPeers:f=>{MPX.PH.push(f);return()=>{}},
+  emit:(t,d)=>MPX.be?MPX.be.emit(t,d):Promise.resolve(),presence:p=>MPX.be?MPX.be.presence(p):Promise.resolve(),peers:()=>MPX.be?MPX.be.peers():MPX.none};
+function mpAttach(be){MP_TOPICS.forEach(t=>be.on(t,m=>{if(MPX.be===be)(MPX.H[t]||[]).forEach(f=>{try{f(m)}catch(err){console.warn(err)}})}));
+  be.onPeers(ch=>{if(MPX.be===be)MPX.PH.forEach(f=>{try{f(ch)}catch(err){console.warn(err)}})})}
+// back to playing alone: other heroes go, monsters mirrored from someone else become ours again, a trade in progress ends
+function mpSolo(){for(const k in MP.rh)mpDropRH(k);MP.others=0;MP.lastPs=null;
+  const was=MP.host;try{enemies.forEach(e=>{if(e.mir){e.mir=0;e.nx=null;e.agg=0;e.cd=1}});if(was&&was!==MP.me&&typeof mpAdopt=='function')mpAdopt(MP.rg)}catch(err){console.warn(err)}
+  MP.host='';MP.emap={};MP.hitq={};MP.evq=[];MP.kq=[];MP.pend=null;MP.inv=null;try{mpToast()}catch(_){}
+  if(MP.tr){MP.tr=null;try{if(xwMode=='trade')closeX()}catch(_){}}}
+function mpUse(be){if(be===MPX.be)return;mpSolo();MPX.be=be||null;MP.lastPres='';MP.on=!!MPX.be;try{mpBtn()}catch(_){}}
+MP_TOPICS.forEach(t=>MP.room.on(t,{es:mpOnES,ev:mpOnEV,hit:mpOnHit,bs:mpOnBS,trade:mpOnTrade,chat:mpOnChat}[t]));
+MP.room.onPeers(ch=>{if(!MP.on)return;(ch.left||[]).forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
 (async function(){
-  try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MP.room=room;
-    room.on('es',mpOnES);room.on('ev',mpOnEV);room.on('hit',mpOnHit);room.on('bs',mpOnBS);room.on('trade',mpOnTrade);room.on('chat',mpOnChat);
-    room.onPeers(ch=>{if(!MP.on)return;ch.left.forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
-    MP.on=true;mpBtn();
+  try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MPX.cl=room;mpAttach(room);
+    if(!MPX.be)mpUse(room);
   }catch(err){console.warn('co-op unavailable',err)}
 })();
 
@@ -27594,3 +27615,287 @@ function kqsxOpen(mode){const w=$('kqsx'),A=$('kqsxA'),B=$('kqsxB'),M=$('kqsxM')
   if($('kqsxI2'))$('kqsxI2').onclick=e=>{e.stopPropagation();kqsxOpen('import')};
   const s=document.querySelector('#svp .devb');if(s)s.insertAdjacentHTML('afterend',`<div class="row" style="display:flex;gap:8px;justify-content:center;margin-top:6px"><button id="kqsxE3" style="font-size:.8rem">📤 Export this save</button><button id="kqsxI3" style="font-size:.8rem">📥 Import a save</button></div>`);
   if($('kqsxE3'))$('kqsxE3').onclick=()=>kqsxOpen('export');if($('kqsxI3'))$('kqsxI3').onclick=()=>kqsxOpen('import')}
+// ================= v116: three character slots =================
+// The title screen lists three slots (KQSL, 0230). A filled slot continues that hero, an empty one starts a new hero in it.
+// Picking a slot sets SAVE_KEY (kqSlotSet) before the old Continue / New flow runs. From the in-game main menu a hero is
+// already loaded, so another slot is opened by saving, setting the slot and reloading (sessionStorage kq_cont / kq_new).
+// "Join a friend" (data-aw="join") opens the join-code window (2160), which also picks the slot.
+document.head.insertAdjacentHTML('beforeend',`<style>
+#awT .awm .kqsl-h{font:600 .72rem Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#b39a84;text-align:center;margin-bottom:-2px}
+#awT .awm .kqsl-r{display:flex;gap:6px;align-items:stretch}#awT .awm .kqsl-r>button[data-aw]{flex:1;min-width:0}
+#awT .awm .kqsl-r .kqsl-d{flex:0 0 auto;width:42px;padding:0;font-size:.95rem}
+#awT .awm .kqsl-r .kqsl-d.sure{color:#fecaca;font-size:.62rem;width:64px}
+#awT .awm button .kqsl-n{font:600 .64rem Inter,sans-serif;letter-spacing:.14em;color:#b39a84;margin-right:6px}
+#awT .awm button.kqsl-e{opacity:.82}
+#awT .awm button.kqsl-j{margin-top:6px}
+</style>`);
+function kqslEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}
+function kqslRow(i){const s=kqSlotInfo(i),cur=i===KQSL.n,inUse=cur&&typeof KQMENU!='undefined'&&KQMENU.on;
+  if(!s)return `<div class="kqsl-r"><button class="kqsl-e" data-aw="new" data-slot="${i}"><span class="kqsl-n">SLOT ${i+1}</span>Empty<small>Create a new hero here</small></button></div>`;
+  const C=CLS[s.hero.cls]||{i:'',n:''},d=new Date(s.at||Date.now());
+  return `<div class="kqsl-r"><button class="${cur?'p':''}" data-aw="cont" data-slot="${i}"><span class="kqsl-n">SLOT ${i+1}</span>${C.i} ${kqslEsc(s.hero.name||'Hero')}<small>Lv ${s.hero.lvl|0} ${C.n} · ${s.wv===3?(s.bossDone||[]).length:0} of 6 realms · ${d.toLocaleDateString()}${inUse?' · playing now':''}</small></button>`+
+    (inUse?'':`<button class="kqsl-d" data-sld="${i}" tabindex="-1" title="Delete this hero">🗑</button>`)+'</div>'}
+function kqslRender(){const T=$('awT');if(!T)return;const m=T.querySelector('.awm');if(!m)return;
+  m.innerHTML='<div class="kqsl-h">Choose your hero</div>'+[0,1,2].map(kqslRow).join('')+
+    '<button class="kqsl-j" data-aw="join">👥 Join a friend<small>Enter a join code and pick which hero to bring</small></button>';
+  if(!m.dataset.kqsl){m.dataset.kqsl=1;m.addEventListener('click',e=>{const b=e.target.closest('[data-sld]');if(!b)return;e.stopPropagation();const i=+b.dataset.sld;
+    if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Delete?';setTimeout(()=>{if(b.isConnected){b.classList.remove('sure');b.textContent='🗑'}},3000);return}
+    try{localStorage.removeItem(KQSL.keys[i])}catch(_){}kqslRender()},true)}
+  if(!matchMedia('(pointer:coarse)').matches){const b=m.querySelector('[data-aw].p')||m.querySelector('[data-aw]');if(b)setTimeout(()=>b.focus(),60)}}
+{const f=awTitle;awTitle=function(){const r=f.apply(this,arguments);try{kqslRender()}catch(e){console.warn('slots',e)}return r}}
+// open another slot from the in-game main menu: save, switch, reload, then continue / create there
+function kqslReload(sl,flag,extra){try{saveGame(true)}catch(_){}KQMENU.nosave=1;kqSlotSet(sl);
+  try{sessionStorage.setItem(flag,'1');if(extra)sessionStorage.setItem(extra[0],extra[1])}catch(_){}
+  const T=$('awT');if(T)T.classList.add('out');setTimeout(()=>{try{location.reload()}catch(_){}},400)}
+// a real (detached) button for flows that start a slot without a click
+function kqslBtn(mode,sl){const b=document.createElement('button');b.dataset.aw=mode;b.dataset.slot=String(sl);return b}
+{const f=awTitleGo;awTitleGo=function(mode,btn){
+  const T=$('awT');if(!T||T.classList.contains('out'))return;
+  if(mode=='join'){if(typeof kqJoinOpen=='function')kqJoinOpen();return}
+  const sl=btn&&btn.dataset&&btn.dataset.slot!=null?+btn.dataset.slot:null;
+  if(sl!=null&&sl>=0&&sl<3){
+    if(typeof KQMENU!='undefined'&&KQMENU.on){if(sl!==KQSL.n)return kqslReload(sl,mode=='new'?'kq_new':'kq_cont')}
+    else{kqSlotSet(sl);if(mode=='new'&&saveInfo())return}} // a filled slot is never overwritten by New
+  return f.apply(this,arguments)}}
+kqslRender();
+// after a reload from the menu into another slot (kq_new is handled in 1160)
+try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}}catch(_){}
+// ================= v116: join-code co-op (no Claude account) =================
+// One player hosts and gets a 6-letter join code; friends type it to connect. Players link up directly over WebRTC data
+// channels; the free public PeerJS signaling server (0.peerjs.com) only introduces them (its plain WebSocket protocol is
+// spoken here directly, so no library is loaded). TURN relays (PeerJS's public ones) cover strict networks.
+// Star layout: every joiner connects to the host, and the host relays. kqnRoom() wraps that as a backend with the same
+// calls as the claude.ai room (on, onPeers, emit, presence, peers), so the v58 co-op code (0520) runs unchanged on it.
+// The host stamps the sender on everything it relays, so nobody can speak as somebody else.
+// Tests set window.KQNET_SIG (signaling URL) and window.KQNET_ICE (ICE servers) to run without the internet.
+var KQN={sig:'wss://0.peerjs.com:443/peerjs',key:'peerjs',pre:'kq116-',abc:'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',max:8,
+  ice:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}],
+  cur:null};
+function kqnCode(){let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const v of a)s+=KQN.abc[v%KQN.abc.length];return s}
+function kqnClean(c){return String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)}
+function kqnRid(){const a=new Uint32Array(3);crypto.getRandomValues(a);return Array.from(a,v=>v.toString(36)).join('').slice(0,14)}
+
+// ---------- signaling: one WebSocket to the PeerJS server under our own id ----------
+function kqnSignal(id,on){const url=(window.KQNET_SIG||KQN.sig)+'?key='+KQN.key+'&id='+encodeURIComponent(id)+'&token='+kqnRid()+'&version=1.5.4';
+  const S={id,ws:null,open:false,dead:false,hb:0,
+    send(type,dst,payload){if(S.ws&&S.ws.readyState===1)S.ws.send(JSON.stringify({type,dst,payload}))},
+    close(){S.dead=true;clearInterval(S.hb);try{S.ws&&S.ws.close()}catch(_){}}};
+  try{S.ws=new WebSocket(url)}catch(err){setTimeout(()=>on('fail','The game could not reach the join-code server from here.'));return S}
+  S.ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(!m||typeof m.type!=='string')return;
+    if(m.type==='OPEN'){S.open=true;on('open')}else if(m.type==='ID-TAKEN')on('taken');else if(m.type==='ERROR')on('fail',(m.payload&&m.payload.msg)||'Join-code server error.');
+    else on('msg',m)};
+  S.ws.onclose=()=>{clearInterval(S.hb);if(!S.dead){S.dead=true;on(S.open?'lost':'fail','The game could not reach the join-code server from here.')}};
+  S.ws.onerror=()=>{};
+  S.hb=setInterval(()=>{if(S.ws&&S.ws.readyState===1)S.ws.send('{"type":"HEARTBEAT"}')},5000);
+  return S}
+
+// ---------- one WebRTC link to one other player ----------
+function kqnLink(S,remote,cid,initiator,on){
+  const L={remote,cid,pc:null,dc:null,open:false,dead:false,q:[],rset:false,last:performance.now(),
+    send(o){if(L.open&&L.dc&&L.dc.readyState==='open'){try{L.dc.send(typeof o==='string'?o:JSON.stringify(o));return true}catch(_){}}return false},
+    close(){if(L.dead)return;L.dead=true;L.open=false;try{L.dc&&L.dc.close()}catch(_){}try{L.pc&&L.pc.close()}catch(_){}on('close',L)}};
+  const pc=L.pc=new RTCPeerConnection({iceServers:window.KQNET_ICE||KQN.ice});
+  pc.onicecandidate=e=>{if(e.candidate)S.send('CANDIDATE',remote,{c:e.candidate.toJSON?e.candidate.toJSON():e.candidate,cid})};
+  pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'||pc.connectionState==='closed')L.close()};
+  const wire=dc=>{L.dc=dc;dc.onopen=()=>{L.open=true;L.last=performance.now();on('open',L)};dc.onclose=()=>L.close();
+    dc.onmessage=e=>{L.last=performance.now();if(typeof e.data!=='string'||e.data.length>200000)return;if(e.data==='~')return;let m;try{m=JSON.parse(e.data)}catch(_){return}if(m&&typeof m==='object')on('data',L,m)}};
+  if(initiator){wire(pc.createDataChannel('kq',{ordered:true}));
+    pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=>S.send('OFFER',remote,{sdp:pc.localDescription,cid,type:'data'})).catch(()=>L.close())}
+  else pc.ondatachannel=e=>wire(e.channel);
+  L.remoteSdp=sdp=>pc.setRemoteDescription(sdp).then(()=>{L.rset=true;L.q.splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}))});
+  L.answer=sdp=>L.remoteSdp(sdp).then(()=>pc.createAnswer()).then(a=>pc.setLocalDescription(a)).then(()=>S.send('ANSWER',remote,{sdp:pc.localDescription,cid,type:'data'})).catch(()=>L.close());
+  L.cand=c=>{if(!c)return;if(L.rset)pc.addIceCandidate(c).catch(()=>{});else L.q.push(c)};
+  return L}
+
+// ---------- the room ----------
+// kqnRoom('host') resolves with {room, code}; kqnRoom('join', code) with {room}. Rejections carry a plain message.
+// room.leave() ends it; room.onEnd(fn) hears when it ends for any reason (fn(reason)).
+function kqnRoom(mode,code){return new Promise((res,rej)=>{
+  const host=mode==='host';let me='',S=null,settled=false,ended=false,pres={},snap=MPX.none,tries=0,hostL=null,ka=0,to=0;
+  const H={},PH=[],EH=[],links={},P={}; // links by remote id; P: other players' presence by peer id
+  const ok=v=>{if(!settled){settled=true;clearTimeout(to);res(v)}},no=msg=>{if(!settled){settled=true;clearTimeout(to);end(null);rej(new Error(msg))}};
+  const msgOf=(t,d,peer)=>({topic:t,data:d,peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false});
+  const rec=(peer,p)=>Object.freeze({peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false,presence:Object.freeze(p||{}),updatedAt:Date.now()});
+  function rebuild(){snap=Object.freeze([rec(me,pres)].concat(Object.keys(P).map(k=>rec(k,P[k]))))}
+  function fire(joined,left){rebuild();const ch={peers:snap,joined:joined.map(k=>rec(k,P[k])),left:left.map(k=>rec(k,{})),updated:[]};PH.forEach(f=>{try{f(ch)}catch(err){console.warn(err)}})}
+  function deliver(t,d,peer){(H[t]||[]).forEach(f=>{try{f(msgOf(t,d,peer))}catch(err){console.warn(err)}})}
+  const okTopic=t=>typeof t==='string'&&MP_TOPICS.indexOf(t)>=0;
+  const okPeer=p=>typeof p==='string'&&p.length>0&&p.length<64;
+  const clean=v=>{try{return JSON.parse(JSON.stringify(v==null?{}:v))}catch(_){return {}}};
+  function end(reason){if(ended)return;ended=true;clearInterval(ka);clearTimeout(to);Object.values(links).forEach(L=>{try{L.close()}catch(_){}});try{S&&S.close()}catch(_){}
+    if(reason)EH.forEach(f=>{try{f(reason)}catch(_){}})}
+  const room={
+    on:(t,f)=>{(H[t]=H[t]||[]).push(f);return()=>{}},onPeers:f=>{PH.push(f);return()=>{}},onEnd:f=>{EH.push(f)},
+    peers:()=>snap,connected:()=>!ended,count:()=>Object.keys(P).length+1,
+    presence:patch=>{if(ended)return Promise.resolve();Object.keys(patch||{}).forEach(k=>{if(patch[k]===null)delete pres[k];else pres[k]=clean(patch[k])});rebuild();
+      if(host){const s=JSON.stringify({k:'pres',p:me,v:pres});Object.values(links).forEach(L=>L.send(s))}else if(hostL)hostL.send({k:'pres',v:pres});return Promise.resolve()},
+    emit:(t,d)=>{if(ended)return Promise.reject({code:'closed'});if(!okTopic(t))return Promise.reject({code:'invalid_argument'});const data=clean(d);deliver(t,clean(data),me);
+      if(host){const s=JSON.stringify({k:'ev',t,d:data,p:me});Object.values(links).forEach(L=>L.send(s))}else if(hostL)hostL.send({k:'ev',t,d:data});return Promise.resolve()},
+    leave:()=>{if(!ended){if(host)Object.values(links).forEach(L=>L.send({k:'bye'}));else if(hostL)hostL.send({k:'bye'})}end('left')}};
+  // keepalive: a link that has been silent for 12 s is gone (a closed tab or lost network can take long to show)
+  ka=setInterval(()=>{const now=performance.now();Object.values(links).forEach(L=>{if(!L.open)return;L.send('~');if(now-L.last>12000)L.close()})},2000);
+  function onLink(ev,L,m){
+    if(ev==='open'){if(host){if(Object.keys(P).length>=KQN.max-1){L.send({k:'full'});setTimeout(()=>L.close(),300);return}
+        L.send({k:'all',me:L.remote,l:[[me,pres]].concat(Object.keys(P).map(k=>[k,P[k]]))})}
+      else{hostL=L;L.send({k:'pres',v:pres})}return}
+    if(ev==='close'){if(links[L.remote]===L)delete links[L.remote];
+      if(host){if(P[L.remote]){delete P[L.remote];const s=JSON.stringify({k:'left',p:L.remote});Object.values(links).forEach(x=>x.send(s));fire([],[L.remote])}}
+      else if(L===hostL){no('Could not connect to that game.');end('host')}return}
+    if(host){const from=L.remote;
+      if(m.k==='pres'){const was=!!P[from];P[from]=clean(m.v);const s=JSON.stringify({k:'pres',p:from,v:P[from]});Object.values(links).forEach(x=>{if(x!==L)x.send(s)});if(was)rebuild();else fire([from],[])}
+      else if(m.k==='ev'&&okTopic(m.t)){if(!P[from])return;const s=JSON.stringify({k:'ev',t:m.t,d:m.d,p:from});Object.values(links).forEach(x=>{if(x!==L)x.send(s)});deliver(m.t,m.d,from)}
+      else if(m.k==='bye')L.close()}
+    else{
+      if(m.k==='all'&&Array.isArray(m.l)){const j=[];(m.l||[]).slice(0,KQN.max).forEach(q=>{if(Array.isArray(q)&&okPeer(q[0])&&q[0]!==me){if(!P[q[0]])j.push(q[0]);P[q[0]]=clean(q[1])}});fire(j,[]);ok({room})}
+      else if(m.k==='pres'&&okPeer(m.p)&&m.p!==me){const was=!!P[m.p];P[m.p]=clean(m.v);if(was)rebuild();else fire([m.p],[])}
+      else if(m.k==='left'&&okPeer(m.p)&&P[m.p]){delete P[m.p];fire([],[m.p])}
+      else if(m.k==='ev'&&okTopic(m.t)&&okPeer(m.p)&&m.p!==me)deliver(m.t,m.d,m.p)
+      else if(m.k==='full'){no('That game is full (8 players).');end('full')}
+      else if(m.k==='bye'){end('host')}}}
+  function onSig(ev,a){
+    if(ended)return;
+    if(ev==='taken'){if(host&&++tries<5){try{S.close()}catch(_){}start();return}return no('Could not get a join code. Try again.')}
+    if(ev==='fail'){if(!settled)return no(a||'Could not connect.');return end('net')}
+    if(ev==='lost'){if(!settled)return no('Lost the join-code server.');if(host){S=null;setTimeout(()=>{if(!ended)resign()},2000)}return} // the links stay up without it
+    if(ev==='open'){if(host)ok({room,code});else{const L=links[hostId]=kqnLink(S,hostId,'c'+kqnRid(),true,onLink)}return}
+    if(ev!=='msg')return;const m=a,src=m.src,p=m.payload||{};if(!okPeer(src))return;
+    if(m.type==='OFFER'&&host){if(links[src])links[src].close();const L=links[src]=kqnLink(S,src,p.cid,false,onLink);L.answer(p.sdp)}
+    else if(m.type==='ANSWER'&&links[src])links[src].remoteSdp(p.sdp).catch(()=>{});
+    else if(m.type==='CANDIDATE'&&links[src])links[src].cand(p.c);
+    else if(m.type==='EXPIRE'&&!host&&src===hostId)no('No game found with code '+code+'. Check the code with your friend.')}
+  let hostId='';
+  function start(){if(host){code=kqnCode();me=KQN.pre+code}else{me='j'+kqnRid()}rebuild();S=kqnSignal(me,onSig)}
+  function resign(){S=kqnSignal(me,(ev,a)=>{if(ev==='open'||ev==='msg')onSig(ev,a)})} // host: get the code back so more friends can join
+  if(!host){code=kqnClean(code);if(code.length!==6)return rej(new Error('A join code has 6 letters and numbers.'));hostId=KQN.pre+code}
+  if(typeof RTCPeerConnection=='undefined'||typeof WebSocket=='undefined')return rej(new Error('This browser cannot do online play.'));
+  start();
+  to=setTimeout(()=>no(host?'The join-code server did not answer. Check your internet connection.':'No game found with code '+code+' (or it could not be reached).'),host?15000:20000);
+})}
+// ================= v116: join-code co-op — windows and flow =================
+// Host: co-op window (Y) → Host a game → a 6-letter code to share. Join: title screen "Join a friend" or the co-op window →
+// type the code, pick one of your three heroes (or paste a save code from the Claude version / another device into a slot).
+// A link with ?join=CODE (or #join=CODE) opens the join window with the code filled in.
+// Joining with a hero other than the loaded one saves, switches slot and reloads (sessionStorage kq_join + kq_cont/kq_new);
+// KQN.pend then connects as soon as the hero is in the world (KQN.pend is also used after a title-screen start).
+document.head.insertAdjacentHTML('beforeend',`<style>
+#kqj{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(6,4,3,.86)}#kqj.hide{display:none}
+#kqj .win{width:min(520px,96vw);max-height:94vh;overflow:auto}#kqj .wb{padding:14px 16px;display:grid;gap:10px}
+.kqj-code{width:100%;box-sizing:border-box;text-align:center;font:700 1.6rem/1.2 'VT323',monospace;letter-spacing:.35em;text-transform:uppercase;background:rgba(0,0,0,.4);color:#f0cc72;border:1px solid rgba(201,162,74,.5);border-radius:6px;padding:8px}
+.kqj-sl{display:grid;gap:6px}.kqj-sl label{display:flex;gap:8px;align-items:center;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:7px;cursor:pointer;background:rgba(0,0,0,.2);font-size:.85rem}
+.kqj-sl label.on{border-color:#c9a24a;background:rgba(201,162,74,.14)}.kqj-sl small{display:block;color:var(--mut,#a39378);font-size:.72rem}
+#kqj textarea{width:100%;min-height:70px;box-sizing:border-box;font:.7rem/1.35 monospace;background:rgba(0,0,0,.35);color:var(--ink,#e8dcc0);border:1px solid rgba(201,162,74,.35);border-radius:6px;padding:6px}
+#kqj details summary{cursor:pointer;font-size:.82rem;color:#e8d8a8}#kqj .mut{font-size:.75rem}#kqj .ok{color:#8ad07a}#kqj .bad{color:#e07a6a}
+.kqc{background:rgba(201,162,74,.08);border:1px solid rgba(201,162,74,.35);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:block!important}
+.kqc h4{margin:0 0 6px;font-size:.9rem;color:#e8d8a8}.kqc .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.kqc .big{font:700 2rem/1 'VT323',monospace;letter-spacing:.3em;color:#f0cc72;padding:4px 10px;background:rgba(0,0,0,.35);border-radius:6px;user-select:all}
+.kqc input{width:9.5em;text-transform:uppercase;letter-spacing:.2em;font:600 1rem monospace;background:#0d1016;color:#f0cc72;border:1px solid #3a4150;border-radius:6px;padding:5px 7px}
+.kqc .bad{color:#e07a6a}.kqc .mut{font-size:.76rem}
+</style>`);
+document.body.insertAdjacentHTML('beforeend',`<div id="kqj" class="hide"><div class="win nar">
+  <div class="wh"><h2>👥 Join a friend</h2><button class="x" id="kqjX" title="Close">✕</button></div>
+  <div class="wb">
+    <div class="mut">Ask the host for their join code (Co-op window, <b>Y</b> → Host a game). No Claude account is needed.</div>
+    <input id="kqjCode" class="kqj-code" maxlength="6" autocomplete="off" spellcheck="false" placeholder="CODE">
+    <div><div class="mut" style="margin-bottom:4px">Play as</div><div class="kqj-sl" id="kqjSl"></div></div>
+    <details id="kqjImp"><summary>📥 Bring a hero from another link or device (save code)</summary>
+      <div class="mut" style="margin:6px 0">In the other game: Settings → Saved game → Export save, copy the code and paste it here. It goes into the slot picked above.</div>
+      <textarea id="kqjA" spellcheck="false" placeholder="KQSAVE1:…"></textarea><div class="mut" id="kqjAM"></div></details>
+    <div class="row" style="display:flex;gap:8px;align-items:center"><button class="pri" id="kqjGo">👥 Join</button><span class="mut" id="kqjM"></span></div>
+  </div></div></div>`);
+var KQJ={sl:0,sure:0};
+function kqjOpen(){const w=$('kqj');w.classList.remove('hide');KQJ.sure=0;$('kqjM').textContent='';$('kqjM').className='mut';
+  if(!kqnClean($('kqjCode').value)&&KQN.url)$('kqjCode').value=KQN.url;
+  KQJ.sl=KQSL.n;if(!kqSlotInfo(KQJ.sl)){const f=[0,1,2].find(i=>kqSlotInfo(i));if(f!=null&&!party.length)KQJ.sl=f}
+  kqjSlots();kqjCheck();setTimeout(()=>{const c=$('kqjCode');if(!kqnClean(c.value))c.focus()},40)}
+var kqJoinOpen=kqjOpen;
+function kqjClose(){$('kqj').classList.add('hide')}
+function kqjSlots(){const loaded=party.length>0;
+  $('kqjSl').innerHTML=[0,1,2].map(i=>{const s=kqSlotInfo(i),C=s?CLS[s.hero.cls]||{i:'',n:''}:null;
+    return `<label class="${i===KQJ.sl?'on':''}" data-kqjs="${i}"><input type="radio" name="kqjs" ${i===KQJ.sl?'checked':''}><span>Slot ${i+1} · ${s?C.i+' <b>'+kqslEsc(s.hero.name||'Hero')+'</b> Lv '+(s.hero.lvl|0)+' '+C.n:'<i>Empty</i>'}<small>${s?(loaded&&i===KQSL.n?'Playing now':'Saved '+new Date(s.at||Date.now()).toLocaleDateString()):'Create a new hero first, then you join'}</small></span></label>`}).join('')}
+function kqjImport(){const t=$('kqjA').value.trim();return t?kqsxDecode(t):null}
+function kqjCheck(){const t=$('kqjA').value.trim(),s=kqjImport(),M=$('kqjAM');
+  if(!t){M.textContent='';return null}
+  if(!s){M.textContent='That is not a Kill Quest save code.';M.className='mut bad';return null}
+  const o=kqSlotInfo(KQJ.sl);M.textContent='Found '+kqsxName(s)+' → Slot '+(KQJ.sl+1)+(o?' (replaces '+(o.hero.name||'Hero')+')':'');M.className=o?'mut bad':'mut ok';return s}
+$('kqjX').onclick=kqjClose;
+$('kqjSl').addEventListener('click',e=>{const l=e.target.closest('[data-kqjs]');if(!l)return;KQJ.sl=+l.dataset.kqjs;KQJ.sure=0;kqjSlots();kqjCheck()});
+$('kqjA').addEventListener('input',()=>{KQJ.sure=0;kqjCheck()});
+$('kqjCode').addEventListener('input',e=>{const v=kqnClean(e.target.value);if(v!==e.target.value)e.target.value=v});
+// typing in the join window or the co-op code box never reaches the game's controls (the title screen's own key filter runs
+// first there, so Enter on the title is handled in the awTitleGo wrapper below)
+addEventListener('keydown',e=>{const t=e.target;if(!t||!t.closest)return;const inJ=!!t.closest('#kqj'),inC=t.id=='kqcIn';if(!inJ&&!inC)return;
+  e.stopImmediatePropagation();
+  if(inJ&&e.key=='Escape'){e.preventDefault();kqjClose()}
+  else if(e.key=='Enter'&&t.id=='kqjCode'){e.preventDefault();kqjGo()}
+  else if(e.key=='Enter'&&inC){e.preventDefault();const b=document.querySelector('[data-kqc="join"]');if(b)b.click()}},true);
+addEventListener('keyup',e=>{const t=e.target;if(t&&t.closest&&(t.closest('#kqj')||t.id=='kqcIn'))e.stopImmediatePropagation()},true);
+$('kqjGo').onclick=()=>kqjGo();
+function kqjGo(){const M=$('kqjM'),code=kqnClean($('kqjCode').value);M.className='mut bad';
+  if(code.length!==6){M.textContent='Enter the 6-letter join code.';return}
+  const imp=kqjImport();if($('kqjA').value.trim()&&!imp){M.textContent='The save code is not valid (or clear it).';return}
+  const sl=KQJ.sl,had=kqSlotInfo(sl);
+  if(imp&&had&&!KQJ.sure){KQJ.sure=1;M.textContent='Press Join again: this replaces '+(had.hero.name||'the hero')+' in Slot '+(sl+1)+'.';return}
+  const loaded=party.length>0,menu=typeof KQMENU!='undefined'&&KQMENU.on;
+  if(loaded&&sl===KQSL.n&&!imp){ // the hero who is already loaded: just connect
+    kqjClose();if(menu){const T=$('awT');if(T)awTitleGo('cont',kqslBtn('cont',sl))}kqcJoin(code);return}
+  if(loaded){ // another hero (or an imported one): save this one, switch, reload, then join
+    try{saveGame(true)}catch(_){}KQMENU.nosave=1;
+    if(imp)try{localStorage.setItem(KQSL.keys[sl],JSON.stringify(imp))}catch(_){KQMENU.nosave=0;M.textContent='Your browser blocked storage here.';return}
+    kqSlotSet(sl);try{sessionStorage.setItem('kq_join',code);sessionStorage.setItem(kqSlotInfo(sl)?'kq_cont':'kq_new','1')}catch(_){}
+    M.className='mut ok';M.textContent='Loading your hero…';setTimeout(()=>{try{location.reload()}catch(_){}},300);return}
+  // from the first title screen: nothing loaded yet
+  if(imp)try{localStorage.setItem(KQSL.keys[sl],JSON.stringify(imp))}catch(_){M.textContent='Your browser blocked storage here.';return}
+  kqSlotSet(sl);KQN.pend=code;kqjClose();const T=$('awT');
+  if(T&&!T.classList.contains('out'))awTitleGo(kqSlotInfo(sl)?'cont':'new',kqslBtn(kqSlotInfo(sl)?'cont':'new',sl))}
+// the title's Enter key is not for us while the join window is open
+{const f=awTitleGo;awTitleGo=function(mode,btn){if(!$('kqj').classList.contains('hide')&&btn&&btn.isConnected){const a=document.activeElement;if(a&&a.id=='kqjCode')kqjGo();return}return f.apply(this,arguments)}}
+
+// ---------- sessions ----------
+function kqcMsg(t,bad){KQN.msg=t;KQN.bad=!!bad;try{if(xwMode=='coop')rX()}catch(_){}}
+function kqcStart(p,join){KQN.busy=join?'join':'host';kqcMsg('');
+  return p.then(({room,code})=>{KQN.busy='';const old=KQN.cur;KQN.cur=null;if(old)try{old.room.leave()}catch(_){}
+    KQN.cur={room,code:code||join,host:!join};mpAttach(room);mpUse(room);
+    room.onEnd(r=>{if(!KQN.cur||KQN.cur.room!==room)return;KQN.cur=null;mpUse(MPX.cl||null);
+      const t={host:'The host left — the game ended.',net:'Lost the connection to the game.',full:'That game is full.'}[r]||'Online game ended.';say('👥 '+t);kqcMsg(t,true)});
+    if(join){say('👥 Joined game <b>'+join+'</b>.');kqcMsg('')}else{say('👥 Hosting — your join code is <b>'+code+'</b>. Press Y to see it.');kqcMsg('')}
+  }).catch(err=>{KQN.busy='';const t=(err&&err.message)||'Could not connect.';say('👥 '+mpEsc(t));kqcMsg(t,true)})}
+function kqcHost(){if(KQN.busy)return;return kqcStart(kqnRoom('host'))}
+function kqcJoin(code){if(KQN.busy)return;code=kqnClean(code);if(KQN.cur&&KQN.cur.code===code)return;return kqcStart(kqnRoom('join',code),code)}
+function kqcLeave(){const c=KQN.cur;if(!c)return;KQN.cur=null;try{c.room.leave()}catch(_){}mpUse(MPX.cl||null);say('👥 You left the online game.');kqcMsg('')}
+// connect a pending join once the hero is in the world
+setInterval(()=>{try{if(!KQN.pend||!party.length||(typeof KQMENU!='undefined'&&KQMENU.on)||$('awT')||!$('start').classList.contains('hide'))return;
+  const c=KQN.pend;KQN.pend=null;kqcJoin(c)}catch(_){}},500);
+addEventListener('pagehide',()=>{try{if(KQN.cur)KQN.cur.room.leave()}catch(_){}});
+
+// ---------- co-op window (Y): host / join box above the player list ----------
+function kqcLink(code){try{if(window.top!==window||!/^https?:$/.test(location.protocol))return '';return location.origin+location.pathname+'?join='+code}catch(_){return ''}}
+function kqcBox(){const C=KQN.cur;let h='<div class="kqc"><h4>🌐 Online with a join code <span class="mut">· no Claude account needed</span></h4>';
+  if(C&&C.host){const n=C.room.count(),ln=kqcLink(C.code);
+    h+=`<div class="row"><span class="mut">Your join code</span><span class="big">${C.code}</span><button data-kqc="copy">📋 Copy code</button>${ln?'<button data-kqc="link">🔗 Copy invite link</button>':''}<button data-kqc="leave">✕ Stop hosting</button></div>
+      <div class="mut" style="margin-top:6px">${n>1?n+' players connected.':'Waiting for friends…'} Friends open the game in any browser, choose <b>Join a friend</b> (or press Y) and type this code. Up to ${KQN.max} players. Keep this tab open: the game ends if the host leaves.</div>`}
+  else if(C)h+=`<div class="row"><span>Joined game <b>${C.code}</b> · ${C.room.count()} players</span><button data-kqc="leave">✕ Leave</button></div>`;
+  else if(KQN.busy)h+=`<div class="mut">${KQN.busy=='host'?'Getting a join code…':'Connecting…'}</div>`;
+  else h+=`<div class="row"><button class="pri" data-kqc="host">🏠 Host a game</button><span class="mut">or</span><input id="kqcIn" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" value="${KQN.url||''}"><button data-kqc="join">Join</button></div>
+    <div class="mut" style="margin-top:6px">You join with the hero you are playing now. To bring a different hero, use ☰ → Main menu → Join a friend.</div>`;
+  if(KQN.msg)h+=`<div class="${KQN.bad?'bad':'mut'}" style="margin-top:6px">${mpEsc(KQN.msg)}</div>`;
+  return h+'</div>'}
+{const f=XR.coop;XR.coop=()=>{f();const B=$('xwB');
+  if(!MP.on){$('xwS').textContent=KQN.busy?'Connecting…':'Playing solo';B.innerHTML=kqcBox()+'<p class="lore">Fight the same monsters as your friends, each get your own loot, chat and trade. Host a game and share the code, or type a friend\'s code to join them.</p>';return}
+  B.insertAdjacentHTML('afterbegin',kqcBox())}}
+$('xwB').addEventListener('click',e=>{if(xwMode!=='coop')return;const b=e.target.closest('[data-kqc]');if(!b)return;const k=b.dataset.kqc,C=KQN.cur;
+  if(k=='host')kqcHost();else if(k=='leave')kqcLeave();
+  else if(k=='join'){const v=kqnClean(($('kqcIn')||{}).value);if(v.length!==6)return kqcMsg('Enter the 6-letter join code.',true);kqcJoin(v)}
+  else if((k=='copy'||k=='link')&&C){const t=k=='link'?kqcLink(C.code):C.code;const done=()=>kqcMsg(k=='link'?'Invite link copied.':'Code copied.');
+    try{navigator.clipboard.writeText(t).then(done,()=>kqcMsg('Copy failed — the code is '+C.code))}catch(_){kqcMsg('The code is '+C.code)}}
+  rX()});
+$('xwB').addEventListener('input',e=>{if(e.target&&e.target.id=='kqcIn'){const v=kqnClean(e.target.value);if(v!==e.target.value)e.target.value=v}});
+// the co-op window refreshes its list every 1.5 s; keep the host's player count fresh too (but not while typing a code)
+{const f=mpCoopList;mpCoopList=function(){f.apply(this,arguments);try{const C=KQN.cur;if(C&&xwMode==='coop'){const b=document.querySelector('#xwB .kqc');if(b)b.outerHTML=kqcBox()}}catch(_){}}}
+// when only the join-code session could be live, the in-game co-op tick also needs a reason to show the player list
+setInterval(()=>{try{if(xwMode==='coop'&&!MP.on&&!document.activeElement.matches('#kqcIn'))rX()}catch(_){}},1500);
+
+// ---------- a link with ?join=CODE ----------
+try{const q=new URLSearchParams(location.search).get('join')||(location.hash.match(/join=([A-Za-z0-9]{6})/)||[])[1];const c=kqnClean(q);if(c.length===6)KQN.url=c}catch(_){}
+// after a reload that switched heroes to join
+try{const c=sessionStorage.getItem('kq_join');if(c){sessionStorage.removeItem('kq_join');KQN.pend=kqnClean(c)}}catch(_){}
+if(KQN.url&&!KQN.pend&&$('awT'))setTimeout(()=>{if($('awT')&&!$('awT').classList.contains('out'))kqjOpen()},700);
