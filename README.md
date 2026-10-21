@@ -75,6 +75,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   set `o.matrix` by hand on an object with `matrixAutoUpdate=false` also set `o.matrixWorldNeedsUpdate=true`.
   `userData.psNo=1` on a top-level object keeps it from ever freezing.
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
+- **Balance (v112)**: kill XP `ECON96.xp` .1875 (another 75% off); ability ranks cost twice as many points (`kqrCost`);
+  elites are about a third as common (camps 1.8% + 0.4%·tier, wanderers 1.2%, in `rosterBuild`); Sovereign health ×4.5
+  (`PACE.hp`, was 1.5: three times v110) with posture rescaled so staggers come as often as before; `svPick` never repeats
+  either of the last two moves (falls back to barring only the last) and halves the 3rd/4th most recent.
 - Design: dark fantasy, no cutesy models. Hatchable creatures are "companions" (never "Eudemon").
   Grade C is the norm (S and F ≈2% each). Shops in Duskhold (except the Trading Post) are built at the Stronghold Steward.
 - **Kingdom lots (v103, v109)**: every shop, upgrade structure (not Bastion Walls) and house stands on one of the 20 lots in
@@ -141,7 +145,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   camp's instance). The roster (33 groups per field), co-op region (`MP.rg`), treasure maps (`m.r` zone + `m.k` field
   instance; maps found in the Den or Trial lead to III), the local map and chunk visibility (`cvOK`) all work per instance.
   `INSR[i]` = furthest instance reached (0..3, saved as `x2.insr`); the zone's portal lists the reached ones. Creatures come
-  back `RESP_T` (30) s after death, not within `RESP_NEAR` tiles of a hero. Recall saves `INST` (instance + spot + the
+  back `RESP_T` (50 since v112) s after death, not while a hero is within `RESP_NEAR` (14) tiles of the spot (beyond any aggro reach). Recall saves `INST` (instance + spot + the
   creatures' timers; also in the Den); T in Duskhold goes back. World layout version `WD_WL` 108; older saves go to instance
   I's entrance of their zone and get every instance of every open zone (v106/v107 saves that reached III also reach the Den).
 - **Sovereign fights (v110)**: every Sovereign is a souls-style boss registered with `svReg(i,B)` (`SVB[i]`). Its model is

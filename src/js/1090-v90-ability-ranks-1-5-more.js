@@ -54,7 +54,8 @@ function kqrLvAP(l){return l%5==0?3:2}
 function apEarned(){const L=hero.lvl|0;let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n+((hero.tal&&hero.tal.__apB)|0)}
 function kqrUnlockCost(s){return 1+Math.floor((s.lv|0)/6)}
 // AP to go from rank r-1 to rank r
-function kqrCost(s,r){return Math.ceil((s===kqsDef(hero.cls)?1:kqrUnlockCost(s))/3)+r-2}
+// v112: ranks cost twice as much (rank 2/3/4/5 of a starting ability: 2/4/6/8 points, was 1/2/3/4)
+function kqrCost(s,r){return 2*(Math.ceil((s===kqsDef(hero.cls)?1:kqrUnlockCost(s))/3)+r-2)}
 function kqrSpentOn(s){let n=0;const r=kqrRank(s);for(let k=2;k<=r;k++)n+=kqrCost(s,k);return n}
 function apSpent(){const c=hero.cls;let n=0;kqsAll(c).forEach(s=>{if(!kqsUnl(c,s))return;if(s!==kqsDef(c))n+=apCost(s);n+=kqrSpentOn(s)});return n}
 function kqrWhy(s){const c=hero.cls;if(!kqsUnl(c,s))return 'Unlock it first';const r=kqrRank(s);if(r>=KQR_MAX)return 'Max rank';const k=kqrCost(s,r+1);if(apFree()<k)return 'Needs '+k+' ability point'+(k>1?'s':'');return ''}

@@ -20,7 +20,7 @@
 // 3. Ranged openers: on aggro every ranged/caster mob waits PACE.op seconds (random) before its first shot (it keeps
 //    repositioning), and within PACE.tokR tiles only PACE.tokN ranged/caster attacks may start per PACE.tokW seconds
 //    (an "attack token"; a mob without one retries a moment later). Host only: co-op mirrors replay the host's attacks.
-var PACE={hp:1.5,W:1.5,I:2,U:2,T0:3.3,
+var PACE={hp:4.5,W:1.5,I:2,U:2,T0:3.3,
   B:{cd:[2.6,3.4],wm:.8,wr:1.0,dm:.6,dr:.5},
   op:[1,4],tokN:2,tokW:.6,tokR:16,
   clk:0,tok:[],dep:0,lastK:1,mvT:0,basic:true,wrapped:0,on:true,log:[],st:{op:0,tok:0,basic:0,bolt:0},

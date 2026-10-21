@@ -7,6 +7,7 @@
 // Eggs ×0.6 more (ECON96.egg): EGG92.rate .65 → .39 of the original chance. It covers the same eggs as v92 (every random
 //  egg through drop(), and the bounty-board egg via EGG92.rate); the Sovereign kill egg, Bestiary milestone eggs and shop
 //  eggs stay guaranteed.
-var ECON96={xp:.75,egg:.6,egg0:null};
+// v112: XP cut by another 75% (×.25 of the v96 rate): .75 → .1875
+var ECON96={xp:.1875,egg:.6,egg0:null};
 if(typeof EGG92!='undefined'){ECON96.egg0=EGG92.rate;EGG92.rate=Math.round(EGG92.rate*ECON96.egg*1e4)/1e4}
 

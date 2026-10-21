@@ -6475,21 +6475,21 @@ var ROST={r:-9,slots:[],left:0,quiet:false};
 // v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
 // v108: a field instance is half a v106 one again: 33 roaming groups and 3 camps each
-var ROST_G=33,RESP_T=30,RESP_NEAR=6;
+var ROST_G=33,RESP_T=50,RESP_NEAR=14; // v112: 50 s; never within aggro reach (4.5-6 tiles + a camp pulling its friends) of a hero
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)
   enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
   if(!I.fld){ROST.r=r;ROST.slots=[];ROST.quiet=false;return} // v108: the den and the wave trial have no roaming creatures
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
-    const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.05+.012*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
+    const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.018+.004*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
   // roaming groups spread across the whole instance
   const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(I.w-12)),z=I.y0+6+Math.floor(Math.random()*(I.h-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.ig===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
     if(Math.hypot(x-I.ba[0],z-I.ba[1])<BR||(I.wa&&Math.hypot(x-I.wa[0],z-I.wa[1])<20)||Math.hypot(x-I.en[0],z-I.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
   grp.forEach(([x,z])=>{const key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
-    for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.035;
+    for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.012;
       S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(I.lv[0],Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
   ROST.r=r;ROST.slots=S;ROST.quiet=false;CAMPS.forEach(C=>{if(C.ig===r)C.kt=-1e9})}
 function rosterTick(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));
@@ -14159,7 +14159,8 @@ function kqrLvAP(l){return l%5==0?3:2}
 function apEarned(){const L=hero.lvl|0;let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n+((hero.tal&&hero.tal.__apB)|0)}
 function kqrUnlockCost(s){return 1+Math.floor((s.lv|0)/6)}
 // AP to go from rank r-1 to rank r
-function kqrCost(s,r){return Math.ceil((s===kqsDef(hero.cls)?1:kqrUnlockCost(s))/3)+r-2}
+// v112: ranks cost twice as much (rank 2/3/4/5 of a starting ability: 2/4/6/8 points, was 1/2/3/4)
+function kqrCost(s,r){return 2*(Math.ceil((s===kqsDef(hero.cls)?1:kqrUnlockCost(s))/3)+r-2)}
 function kqrSpentOn(s){let n=0;const r=kqrRank(s);for(let k=2;k<=r;k++)n+=kqrCost(s,k);return n}
 function apSpent(){const c=hero.cls;let n=0;kqsAll(c).forEach(s=>{if(!kqsUnl(c,s))return;if(s!==kqsDef(c))n+=apCost(s);n+=kqrSpentOn(s)});return n}
 function kqrWhy(s){const c=hero.cls;if(!kqsUnl(c,s))return 'Unlock it first';const r=kqrRank(s);if(r>=KQR_MAX)return 'Max rank';const k=kqrCost(s,r+1);if(apFree()<k)return 'Needs '+k+' ability point'+(k>1?'s':'');return ''}
@@ -15265,7 +15266,8 @@ try{['disc','edge','line'].forEach(k=>{const g=dqG(k);g.userData.lps=1;LPS.gc.se
 // Eggs ×0.6 more (ECON96.egg): EGG92.rate .65 → .39 of the original chance. It covers the same eggs as v92 (every random
 //  egg through drop(), and the bounty-board egg via EGG92.rate); the Sovereign kill egg, Bestiary milestone eggs and shop
 //  eggs stay guaranteed.
-var ECON96={xp:.75,egg:.6,egg0:null};
+// v112: XP cut by another 75% (×.25 of the v96 rate): .75 → .1875
+var ECON96={xp:.1875,egg:.6,egg0:null};
 if(typeof EGG92!='undefined'){ECON96.egg0=EGG92.rate;EGG92.rate=Math.round(EGG92.rate*ECON96.egg*1e4)/1e4}
 
 // ================= v91 fix track: small fixes the owner asked for =================
@@ -18288,7 +18290,7 @@ function mdBootsO(B,P,d){mdDX(d);const M=d.M,A=d.A,G=d.G,dk=d.dk,st=d.st,k=mdKP(
 // 3. Ranged openers: on aggro every ranged/caster mob waits PACE.op seconds (random) before its first shot (it keeps
 //    repositioning), and within PACE.tokR tiles only PACE.tokN ranged/caster attacks may start per PACE.tokW seconds
 //    (an "attack token"; a mob without one retries a moment later). Host only: co-op mirrors replay the host's attacks.
-var PACE={hp:1.5,W:1.5,I:2,U:2,T0:3.3,
+var PACE={hp:4.5,W:1.5,I:2,U:2,T0:3.3,
   B:{cd:[2.6,3.4],wm:.8,wr:1.0,dm:.6,dr:.5},
   op:[1,4],tokN:2,tokW:.6,tokR:16,
   clk:0,tok:[],dep:0,lastK:1,mvT:0,basic:true,wrapped:0,on:true,log:[],st:{op:0,tok:0,basic:0,bolt:0},
@@ -22809,7 +22811,7 @@ var SPXT105={bite:1,rain:1,chain:1,meteor:1};
 //  2. the gateway at the end of I and II (0510 RPORT k:'next') takes you to the next instance's entrance
 //  3. the portal at the zone's gate lists the reached instances (0510 XR.portal); recall (T) and T again in Duskhold
 //     return you to the very spot (0860 INST)
-//  4. creatures come back 30 s after they die (0550 RESP_T); the "zone falls quiet" banner is gone with that
+//  4. creatures come back RESP_T s (50 since v112) after they die (0550); the "zone falls quiet" banner is gone with that
 //  5. chunk visibility only draws the instance you are in (1690 chunkVis, cvOK)
 // v108: four reachable instances per zone (I, II, III, the Den; INSR 0..3) plus the Wave Trial (p.tri, entered from the portal)
 var INSR=[0,0,0,0,0,0];
@@ -23601,13 +23603,15 @@ function svCast(e,id,seed){const S=e.sv;seed=Math.max(1,Math.min(998,Math.round(
   if(BMV[k]){const o=MP.inAI;MP.inAI=1;try{BMV[k](e,ARN[S.i],1+seed/1000)}finally{MP.inAI=o}}else svStart(e,id,seed)}
 function svRegMoves(i){const B=SVB[i];for(const id in B.M){const k='sv'+i+'_'+id;if(BMV[k])continue;kqBmv(k,function(e,A,en){if(e&&e.sv&&e.sv.i===i)svStart(e,id,Math.max(1,Math.round(((+en||1)-1)*1000)));return {d:0,lock:0}})}}
 // ---------------- the AI ----------------
-function svPick(e){const S=e.sv,B=S.B,m=e.m,L=d2(pl.position,m.position),ang=Math.abs(svAng(svYawTo(m,pl.position)-m.rotation.y));
+// v112: no repeats — a move used in either of the last two casts is not picked (if nothing else fits, only the very last
+// one is barred), and the 3rd/4th most recent are half as likely.
+function svPick(e,loose){const S=e.sv,B=S.B,m=e.m,L=d2(pl.position,m.position),ang=Math.abs(svAng(svYawTo(m,pl.position)-m.rotation.y));
   const side=ang<1.0?'f':ang>2.1?'b':'s',C=[];let tot=0;
   for(const id in B.M){const D=B.M[id];if(!D.wt||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1))continue;if((S.cd[id]||0)>0)continue;
     const r=D.r||[0,99];if(L<r[0]||L>r[1])continue;const a=D.a||'f';if(a!=='any'&&!(a===side||(a==='fs'&&side!=='b')||(a==='sb'&&side!=='f')))continue;
-    if(S.last[0]===id&&S.last[1]===id)continue;if(D.when&&!D.when(e,L,side))continue;
-    let w=typeof D.wt==='function'?D.wt(e,L,side):D.wt;if(S.last[0]===id)w*=.35;if(w>0){C.push([id,w]);tot+=w}}
-  if(!C.length)return null;let u=Math.random()*tot;for(const [id,w] of C){u-=w;if(u<=0)return id}return C[C.length-1][0]}
+    if(S.last[0]===id||(!loose&&S.last[1]===id))continue;if(D.when&&!D.when(e,L,side))continue;
+    let w=typeof D.wt==='function'?D.wt(e,L,side):D.wt;if(S.last[2]===id||S.last[3]===id)w*=.5;if(w>0){C.push([id,w]);tot+=w}}
+  if(!C.length)return loose?null:svPick(e,1);let u=Math.random()*tot;for(const [id,w] of C){u-=w;if(u<=0)return id}return C[C.length-1][0]}
 function svMoveFree(e,dt,now){const S=e.sv,B=S.B,ai=B.ai||{},m=e.m,A=ARN[S.i],v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
   // face the hero
   const da=svAng(Math.atan2(v.x,v.z)-m.rotation.y),tr=(ai.turn||2.4)*(S.ph>1?1.2:1);m.rotation.y+=Math.max(-tr*dt,Math.min(tr*dt,da));
@@ -23644,7 +23648,7 @@ function svAI(e,dt,now){const S=e.sv,A=arenaOf(e),m=e.m,B=S.B;if(!A)return;
   svApply(e,dt,now)}
 // ---------------- poise, stagger, invulnerability, death ----------------
 function svPoise(e,d){const S=e.sv;if(!S||e.dead||S.mv&&S.mv.id==='stagger'||S.mv&&S.mv.id==='awaken'||!svAuth(e))return;
-  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1);S.po=Math.min(1,S.po+d/P);S.poT=performance.now();
+  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1)*1.5/((typeof PACE!='undefined'&&PACE.hp)||1.5); // v112: posture as before the ×3 healthS.po=Math.min(1,S.po+d/P);S.poT=performance.now();
   if(S.po>=1){S.po=0;const arm=S.mv&&S.mv.D.armor;if(arm)S.qStag=1;else svCast(e,'stagger')}}
 // the generic stagger move (every boss gives its own track as B.stag)
 function svStagDef(B){return {dur:B.stagT||2.6,trk:B.stag,inv:null,go(c){const S=c.S;S.stg=c.M.D.dur;SVX.st.stag++;svSnd('stag',1);popT(c.m.position,'STAGGERED','#ffd860',true);

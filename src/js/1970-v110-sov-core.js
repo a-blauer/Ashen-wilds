@@ -272,13 +272,15 @@ function svCast(e,id,seed){const S=e.sv;seed=Math.max(1,Math.min(998,Math.round(
   if(BMV[k]){const o=MP.inAI;MP.inAI=1;try{BMV[k](e,ARN[S.i],1+seed/1000)}finally{MP.inAI=o}}else svStart(e,id,seed)}
 function svRegMoves(i){const B=SVB[i];for(const id in B.M){const k='sv'+i+'_'+id;if(BMV[k])continue;kqBmv(k,function(e,A,en){if(e&&e.sv&&e.sv.i===i)svStart(e,id,Math.max(1,Math.round(((+en||1)-1)*1000)));return {d:0,lock:0}})}}
 // ---------------- the AI ----------------
-function svPick(e){const S=e.sv,B=S.B,m=e.m,L=d2(pl.position,m.position),ang=Math.abs(svAng(svYawTo(m,pl.position)-m.rotation.y));
+// v112: no repeats — a move used in either of the last two casts is not picked (if nothing else fits, only the very last
+// one is barred), and the 3rd/4th most recent are half as likely.
+function svPick(e,loose){const S=e.sv,B=S.B,m=e.m,L=d2(pl.position,m.position),ang=Math.abs(svAng(svYawTo(m,pl.position)-m.rotation.y));
   const side=ang<1.0?'f':ang>2.1?'b':'s',C=[];let tot=0;
   for(const id in B.M){const D=B.M[id];if(!D.wt||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1))continue;if((S.cd[id]||0)>0)continue;
     const r=D.r||[0,99];if(L<r[0]||L>r[1])continue;const a=D.a||'f';if(a!=='any'&&!(a===side||(a==='fs'&&side!=='b')||(a==='sb'&&side!=='f')))continue;
-    if(S.last[0]===id&&S.last[1]===id)continue;if(D.when&&!D.when(e,L,side))continue;
-    let w=typeof D.wt==='function'?D.wt(e,L,side):D.wt;if(S.last[0]===id)w*=.35;if(w>0){C.push([id,w]);tot+=w}}
-  if(!C.length)return null;let u=Math.random()*tot;for(const [id,w] of C){u-=w;if(u<=0)return id}return C[C.length-1][0]}
+    if(S.last[0]===id||(!loose&&S.last[1]===id))continue;if(D.when&&!D.when(e,L,side))continue;
+    let w=typeof D.wt==='function'?D.wt(e,L,side):D.wt;if(S.last[2]===id||S.last[3]===id)w*=.5;if(w>0){C.push([id,w]);tot+=w}}
+  if(!C.length)return loose?null:svPick(e,1);let u=Math.random()*tot;for(const [id,w] of C){u-=w;if(u<=0)return id}return C[C.length-1][0]}
 function svMoveFree(e,dt,now){const S=e.sv,B=S.B,ai=B.ai||{},m=e.m,A=ARN[S.i],v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
   // face the hero
   const da=svAng(Math.atan2(v.x,v.z)-m.rotation.y),tr=(ai.turn||2.4)*(S.ph>1?1.2:1);m.rotation.y+=Math.max(-tr*dt,Math.min(tr*dt,da));
@@ -315,7 +317,7 @@ function svAI(e,dt,now){const S=e.sv,A=arenaOf(e),m=e.m,B=S.B;if(!A)return;
   svApply(e,dt,now)}
 // ---------------- poise, stagger, invulnerability, death ----------------
 function svPoise(e,d){const S=e.sv;if(!S||e.dead||S.mv&&S.mv.id==='stagger'||S.mv&&S.mv.id==='awaken'||!svAuth(e))return;
-  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1);S.po=Math.min(1,S.po+d/P);S.poT=performance.now();
+  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1)*1.5/((typeof PACE!='undefined'&&PACE.hp)||1.5); // v112: posture as before the ×3 healthS.po=Math.min(1,S.po+d/P);S.poT=performance.now();
   if(S.po>=1){S.po=0;const arm=S.mv&&S.mv.D.armor;if(arm)S.qStag=1;else svCast(e,'stagger')}}
 // the generic stagger move (every boss gives its own track as B.stag)
 function svStagDef(B){return {dur:B.stagT||2.6,trk:B.stag,inv:null,go(c){const S=c.S;S.stg=c.M.D.dur;SVX.st.stag++;svSnd('stag',1);popT(c.m.position,'STAGGERED','#ffd860',true);

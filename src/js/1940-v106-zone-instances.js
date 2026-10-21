@@ -7,7 +7,7 @@
 //  2. the gateway at the end of I and II (0510 RPORT k:'next') takes you to the next instance's entrance
 //  3. the portal at the zone's gate lists the reached instances (0510 XR.portal); recall (T) and T again in Duskhold
 //     return you to the very spot (0860 INST)
-//  4. creatures come back 30 s after they die (0550 RESP_T); the "zone falls quiet" banner is gone with that
+//  4. creatures come back RESP_T s (50 since v112) after they die (0550); the "zone falls quiet" banner is gone with that
 //  5. chunk visibility only draws the instance you are in (1690 chunkVis, cvOK)
 // v108: four reachable instances per zone (I, II, III, the Den; INSR 0..3) plus the Wave Trial (p.tri, entered from the portal)
 var INSR=[0,0,0,0,0,0];
