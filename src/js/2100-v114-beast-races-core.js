@@ -18,7 +18,8 @@ var BR={on:false,R:null,C:null,bare:false,feet:false,P:null};
 var BRD={};                                                   // race id -> definition (2110)
 var BR_CLS={warrior:1,assassin:2,mage:3,paladin:4,ranger:5};  // the one animal of each class
 function brOf(cls){return BRD[BR_CLS[cls]]||null}
-function brRace(L,cls){const r=L&&+L.race;return r&&BRD[r]&&BR_CLS[cls]===r?r:0}
+// since v114 every hero is its class's animal (there is no human option; old human saves become animals)
+function brRace(L,cls){const r=BR_CLS[cls];return r&&BRD[r]?r:0}
 // ---------------- registration: bone tables and proportion plans ----------------
 function brDef(id,D){D.id=id;BRD[id]=D;
   // tail bones: one per tail ring but the last two (the tip rides the last bone)
@@ -59,7 +60,8 @@ function brRig(h,race){
   const xo=s*((mdBuildF(P)-1)*.12+(P.armX||0)),at=(t,dz)=>A2.clone().add(d.clone().multiplyScalar(t)).add(new THREE.Vector3(xo,0,dz)).toArray(),pw2=pw.palm||1,pl=pw.plen||1;
   return R.map((r,i)=>{const o=Object.assign({},r);
     if(i<6){o.rx=r.rx*K[i];o.f=r.f*K[i];o.b=r.b*K[i]}
-    if(i==0){o.p=[r.p[0]+s*.012,r.p[1]-.04,r.p[2]];o.rx*=.86;o.f*=.9;o.b*=.9}if(i==1)o.p=[r.p[0],r.p[1]-.012,r.p[2]];
+    // the first ring stays inside the torso (as on the human), so the arm needs no cap and no fur shows above a sleeve
+    if(i==0){o.rx*=.94;o.f*=.94;o.b*=.94}
     if(i==6){o.p=at(.002,.002);o.rx=.022*pw2;o.f=.022*pw2;o.b=.02*pw2}
     if(i==7){o.p=at(.02*pl,.004);o.rx=.0095;o.f=.02*pw2;o.b=.017*pw2}
     if(i==8){o.p=at(.036*pl,.005);o.rx=.0075;o.f=.019*pw2;o.b=.016*pw2}
@@ -124,8 +126,18 @@ function brPaws(B){const C=BR.C,D=BR.R,pw=D.paw,V=THREE.Vector3,k=dkKit(),P=BR.P
   mdKit(B,k)}
 function brToeC(D,C){return D.toes.colOf?D.toes.colOf(C):C.PINK}
 // rounded shoulder joints (the arm loft is open at the top); half on the chest, half on the upper arm
-function brShoulders(B){const k=dkKit();['aL0','aR0'].forEach((bn,i)=>{const s=i?1:-1,A=HB[bn];
-  k.p(bn,'sph2','c',BR.C.FUR,A[1]-s*.012,A[2]-.012,A[3],.056,.05,.056);k.P[k.P.length-1].w=[['chest',.5],[bn,.5]]});mdKit(B,k)}
+// sized from the arm's own first ring, so any sleeve or pauldron built from that ring covers it
+function brShoulders(B){return;const k=dkKit(),P=BR.P||mdP({});['aL0','aR0'].forEach((bn,i)=>{const s=i?1:-1,r0=mdArm(P,s)[0],r=Math.min(r0.rx,r0.f,r0.b)*.97;
+  k.p(bn,'sph2','c',BR.C.FUR,r0.p[0],r0.p[1],r0.p[2],r,r*.92,r);k.P[k.P.length-1].w=r0.w});mdKit(B,k)}
+// the ears as ellipsoids (D.earE = right ear [x,y,z, rx,ry,rz, ax,ay,az]; the left one mirrored): helmets cut their openings
+// from these and fit their rims round the ear base
+var BR_EM=null;
+function brEarIn(D,x,y,z,grow){const E=D.earE;if(!E)return false;const g=grow||[1.25,1.2,3];
+  for(const s of [-1,1]){const M=BR_EM||(BR_EM={e:new THREE.Euler(),q:new THREE.Quaternion(),v:new THREE.Vector3()});M.e.set(E[6],s*E[7],s*E[8]);M.q.setFromEuler(M.e).invert();
+    M.v.set(x-s*E[0],y-E[1],z-E[2]).applyQuaternion(M.q);const a=M.v.x/(E[3]*g[0]),b=M.v.y/(E[4]*g[1]),c=M.v.z/(E[5]*g[2]);if(a*a+b*b+c*c<1)return true}return false}
+function brEarRimK(D,k,col,t,o){const E=D.earE;if(!E)return;o=o||{};[-1,1].forEach(s=>{const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(E[6],s*E[7],s*E[8])),
+    d=new THREE.Vector3(0,-E[4]*(o.at||.62),0).applyQuaternion(q),e=new THREE.Euler().setFromQuaternion(q);
+  k.p('head','ring',t||'m',col,s*E[0]+d.x,E[1]+d.y,E[2]+d.z,E[3]*(o.w||1.3),o.h||.07,E[5]*(o.d||3.4),e.x,e.y,e.z)})}
 // bare feet: toes (D.toes = {n, len, claw, web, dew, col}) grown from the toe ring of the race's foot
 function brToes(B,P){const C=BR.C,D=BR.R,T=D.toes,k=dkKit(),tc=T.colOf?T.colOf(C):C.PINK,tpc=T.padColOf?T.padColOf(C):tc;[-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),lf=P.lf||1,F=D.foot;
     const n=T.n,z0=A.z+.16*lf*F.len,pts=[];

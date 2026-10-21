@@ -27400,7 +27400,8 @@ var BR={on:false,R:null,C:null,bare:false,feet:false,P:null};
 var BRD={};                                                   // race id -> definition (2110)
 var BR_CLS={warrior:1,assassin:2,mage:3,paladin:4,ranger:5};  // the one animal of each class
 function brOf(cls){return BRD[BR_CLS[cls]]||null}
-function brRace(L,cls){const r=L&&+L.race;return r&&BRD[r]&&BR_CLS[cls]===r?r:0}
+// since v114 every hero is its class's animal (there is no human option; old human saves become animals)
+function brRace(L,cls){const r=BR_CLS[cls];return r&&BRD[r]?r:0}
 // ---------------- registration: bone tables and proportion plans ----------------
 function brDef(id,D){D.id=id;BRD[id]=D;
   // tail bones: one per tail ring but the last two (the tip rides the last bone)
@@ -27441,7 +27442,8 @@ function brRig(h,race){
   const xo=s*((mdBuildF(P)-1)*.12+(P.armX||0)),at=(t,dz)=>A2.clone().add(d.clone().multiplyScalar(t)).add(new THREE.Vector3(xo,0,dz)).toArray(),pw2=pw.palm||1,pl=pw.plen||1;
   return R.map((r,i)=>{const o=Object.assign({},r);
     if(i<6){o.rx=r.rx*K[i];o.f=r.f*K[i];o.b=r.b*K[i]}
-    if(i==0){o.p=[r.p[0]+s*.012,r.p[1]-.04,r.p[2]];o.rx*=.86;o.f*=.9;o.b*=.9}if(i==1)o.p=[r.p[0],r.p[1]-.012,r.p[2]];
+    // the first ring stays inside the torso (as on the human), so the arm needs no cap and no fur shows above a sleeve
+    if(i==0){o.rx*=.94;o.f*=.94;o.b*=.94}
     if(i==6){o.p=at(.002,.002);o.rx=.022*pw2;o.f=.022*pw2;o.b=.02*pw2}
     if(i==7){o.p=at(.02*pl,.004);o.rx=.0095;o.f=.02*pw2;o.b=.017*pw2}
     if(i==8){o.p=at(.036*pl,.005);o.rx=.0075;o.f=.019*pw2;o.b=.016*pw2}
@@ -27506,8 +27508,18 @@ function brPaws(B){const C=BR.C,D=BR.R,pw=D.paw,V=THREE.Vector3,k=dkKit(),P=BR.P
   mdKit(B,k)}
 function brToeC(D,C){return D.toes.colOf?D.toes.colOf(C):C.PINK}
 // rounded shoulder joints (the arm loft is open at the top); half on the chest, half on the upper arm
-function brShoulders(B){const k=dkKit();['aL0','aR0'].forEach((bn,i)=>{const s=i?1:-1,A=HB[bn];
-  k.p(bn,'sph2','c',BR.C.FUR,A[1]-s*.012,A[2]-.012,A[3],.056,.05,.056);k.P[k.P.length-1].w=[['chest',.5],[bn,.5]]});mdKit(B,k)}
+// sized from the arm's own first ring, so any sleeve or pauldron built from that ring covers it
+function brShoulders(B){return;const k=dkKit(),P=BR.P||mdP({});['aL0','aR0'].forEach((bn,i)=>{const s=i?1:-1,r0=mdArm(P,s)[0],r=Math.min(r0.rx,r0.f,r0.b)*.97;
+  k.p(bn,'sph2','c',BR.C.FUR,r0.p[0],r0.p[1],r0.p[2],r,r*.92,r);k.P[k.P.length-1].w=r0.w});mdKit(B,k)}
+// the ears as ellipsoids (D.earE = right ear [x,y,z, rx,ry,rz, ax,ay,az]; the left one mirrored): helmets cut their openings
+// from these and fit their rims round the ear base
+var BR_EM=null;
+function brEarIn(D,x,y,z,grow){const E=D.earE;if(!E)return false;const g=grow||[1.25,1.2,3];
+  for(const s of [-1,1]){const M=BR_EM||(BR_EM={e:new THREE.Euler(),q:new THREE.Quaternion(),v:new THREE.Vector3()});M.e.set(E[6],s*E[7],s*E[8]);M.q.setFromEuler(M.e).invert();
+    M.v.set(x-s*E[0],y-E[1],z-E[2]).applyQuaternion(M.q);const a=M.v.x/(E[3]*g[0]),b=M.v.y/(E[4]*g[1]),c=M.v.z/(E[5]*g[2]);if(a*a+b*b+c*c<1)return true}return false}
+function brEarRimK(D,k,col,t,o){const E=D.earE;if(!E)return;o=o||{};[-1,1].forEach(s=>{const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(E[6],s*E[7],s*E[8])),
+    d=new THREE.Vector3(0,-E[4]*(o.at||.62),0).applyQuaternion(q),e=new THREE.Euler().setFromQuaternion(q);
+  k.p('head','ring',t||'m',col,s*E[0]+d.x,E[1]+d.y,E[2]+d.z,E[3]*(o.w||1.3),o.h||.07,E[5]*(o.d||3.4),e.x,e.y,e.z)})}
 // bare feet: toes (D.toes = {n, len, claw, web, dew, col}) grown from the toe ring of the race's foot
 function brToes(B,P){const C=BR.C,D=BR.R,T=D.toes,k=dkKit(),tc=T.colOf?T.colOf(C):C.PINK,tpc=T.padColOf?T.padColOf(C):tc;[-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),lf=P.lf||1,F=D.foot;
     const n=T.n,z0=A.z+.16*lf*F.len,pts=[];
@@ -27597,12 +27609,12 @@ function brShell(B,D,off,z0,z1,keep,col,t,seg){const R=[],push=z=>{const q=brSku
   const kp=D.topW?m=>!D.topW(m)&&(!keep||keep(m)):keep;
   mdLoft(B,R,{seg:seg||16,ref:[0,1,0],t:t||'m',capA:z0<=D.SN[0][0]+.002,keep:kp,col})}
 // default openings: the ears (a ball round each ear root), the eyes (one row of faces at the eyes' height, three rings long)
-function brEarW(D,m){if(!D.EAR)return false;const r=D.earR||.032,dx=Math.abs(m.x)-D.EAR[0],dy=m.y-(D.EAR[1]-.02),dz=m.z-D.EAR[2];return Math.abs(m.x)>.03&&dx*dx+dy*dy*1.3+dz*dz<r*r}
+function brEarW(D,m){if(D.earE)return brEarIn(D,m.x,m.y,m.z);if(!D.EAR)return false;const r=D.earR||.032,dx=Math.abs(m.x)-D.EAR[0],dy=m.y-(D.EAR[1]-.02),dz=m.z-D.EAR[2];return Math.abs(m.x)>.03&&dx*dx+dy*dy*1.3+dz*dz<r*r}
 function brEyeW(D,m){const ez=D.EYEP[2];return m.z>ez-.012&&m.z<ez+.032&&m.s>.12&&m.s<.46&&Math.abs(m.c)>.6}
 function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a=d.a,slitC=0x0a0806,S=D.SN,z0=S[0][0]-.005,tipZ=S[S.length-1][0];
   const earW=m=>D.earW?D.earW(m):brEarW(D,m),eyeW=m=>D.eyeW?D.eyeW(m):brEyeW(D,m),at=z=>brSkullAt(D,z),top=z=>at(z).top,ez=D.EYEP[2],ey=D.EYEP[1];
   const mz=D.muzzleZ==null?tipZ-.05:D.muzzleZ,hz=D.hoodZ==null?ez-.02:D.hoodZ,crown=D.crownZ==null?-.05:D.crownZ;
-  const earRims=(c,t)=>{if(D.earRim)D.earRim(k,c,t||'m')};
+  const earRims=(c,t)=>{if(D.earE)brEarRimK(D,k,c,t||'m');else if(D.earRim)D.earRim(k,c,t||'m')};
   const dome=(off,zf,col,t)=>brShell(B,D,off,z0,zf,m=>m.s>-.25&&!earW(m)&&!(m.z>hz-.005&&m.s<.45),col||M,t,28);
   // closed helm: dome + cheek guards down the sides, a slit at the eyes, a guard over the snout top to the whisker pads
   const closed=(off,col,ac)=>{brShell(B,D,off,z0,mz,m=>{if(earW(m)||eyeW(m))return false;if(m.z>mz-.06)return m.s>.2;if(m.z>hz-.005)return m.s>-.5;return m.s>-.42},
@@ -27693,11 +27705,11 @@ brDef(1,{key:'rat',n:'Rat',cls:'warrior',furN:'Fur',
   fur:['#5e5248','#3a3230','#77695c','#8a6a4a','#a89c8e','#e6e0d6'],eye:['#c8301c','#e0a020','#78d040','#9a40e0','#e8e8f0'],
   cols:L=>brPal(L),
   pre:{pelvis:[1.2,1,1.12],spine:[.95,.95,1.1],chest:[.82,.95,1],neck:[1,.5,1],head:.95,arm:[.95,.85],hand:1.3,leg:[1,1.05],foot:1,cape:[1.15,1]},
-  shear:{spine:.2,chest:.36,neck:.4},crouch:[.36,.66],pose:{sp:.08,ch:.06,shx:-.35,el:-.6},run:{sp:.05,shx:-.2},look:[.1,0],
+  shear:{spine:.2,chest:.36,neck:.4},crouch:[.36,.66],pose:{sp:.13,ch:.08,shx:-.35,el:-.6},run:{sp:.1,shx:-.2},look:[.1,0],
   TR:[[1.03,1.06,1.07,1.05,1.02,.93,.94,.97,.94,.85,1.13,1.2],[1.05,1.14,1.16,1.23,1.19,1.05,.92,.92,.98,1,1.1,1.14],[1.05,1.05,1.05,1.07,1.09,1.1,1.1,1.11,1.1,1,1.14,1.16]],
   armK:[.86,.86,.82,.8,.82,.74],legK:[1.22,1.28,1.18,.98,.88,.76,.7],foot:{len:1.15,w:.78,h:.82},
   SN:[[-.11,1.16,.045,.045,.045],[-.08,1.168,.088,.085,.08],[-.04,1.176,.106,.1,.092],[0,1.174,.108,.095,.096],[.04,1.164,.1,.08,.094],[.075,1.15,.082,.062,.08],[.105,1.137,.062,.046,.06],[.13,1.126,.047,.034,.045],[.155,1.118,.035,.026,.033],[.175,1.112,.025,.018,.022],[.19,1.108,.015,.011,.014]],
-  EYEP:[.065,1.176,.055],EAR:[.078,1.258,-.05],earR:.034,muzzleZ:.15,hoodZ:.04,crownZ:-.04,
+  EYEP:[.065,1.176,.055],EAR:[.078,1.258,-.05],earR:.034,earE:[.078,1.258,-.05,.054,.06,.013,-.2,.55,.38],muzzleZ:.15,hoodZ:.04,crownZ:-.04,
   TP:[[0,.62,-.07,.052],[0,.6,-.15,.043],[0,.56,-.25,.035],[.008,.49,-.37,.029],[.02,.39,-.48,.025],[.035,.27,-.58,.021],[.05,.16,-.66,.018],[.065,.08,-.74,.015],[.08,.045,-.83,.012],[.1,.034,-.92,.01],[.12,.036,-1.0,.008],[.145,.05,-1.07,.006],[.17,.07,-1.12,.003]],
   tailCol:(m,C)=>m.i<1.2?C.FUR:m.i<1.8?mdMix(C.FUR,C.PINK,.5):Math.floor(m.i*2)%2?C.PINK:mdSh(C.PINK,.9),
   paw:{n:4,len:[.028,.033,.032,.026],claw:.011,spread:.0112},toes:{n:4,len:.045,claw:.018},
@@ -27718,11 +27730,11 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
   fur:['#2a2628','#5a5a60','#9a9aa0','#b86a2a','#6a4a30','#e8e4dc'],eye:['#e0b020','#78c040','#50a0e0','#c87020','#e8e8f0'],
   cols:L=>brPal(L,{PINK:0xc08a90,PINKD:0x9a6a70}),
   pre:{pelvis:[.9,1,.9],spine:[.82,1.15,.88],chest:[.82,1.05,.95],neck:[.9,1.1,.9],head:.92,arm:[1,.72],hand:.95,leg:[1.1,.9],foot:.95,cape:[1.1,1]},
-  shear:{spine:.08,chest:.16,neck:.2},crouch:[.28,.56],pose:{sp:.04,shx:-.15,el:-.3},run:{sp:.08,shx:-.1},look:[.06,0],
+  shear:{spine:.08,chest:.16,neck:.2},crouch:[.28,.56],pose:{sp:.08,ch:.04,shx:-.15,el:-.3},run:{sp:.14,shx:-.1},look:[.06,0],
   TR:[[1.05,1.04,1,.9,.86,.86,.9,.92,.9,.95,1.1,1.15],[1.02,1.05,1.05,1.02,1,1.02,1.05,1.02,1,1,1.1,1.12],[1.04,1.04,1.04,1.02,1.02,1.04,1.06,1.06,1.02,1,1.1,1.12]],
   armK:[.88,.88,.84,.8,.82,.76],legK:[1.22,1.26,1.12,.92,.8,.72,.68],foot:{len:1.05,w:.8,h:.75},
   SN:[[-.1,1.158,.045,.045,.045],[-.07,1.17,.09,.082,.08],[-.035,1.178,.108,.088,.094],[0,1.178,.116,.08,.1],[.03,1.172,.118,.07,.098],[.055,1.162,.1,.058,.09],[.072,1.152,.064,.046,.07],[.095,1.146,.057,.04,.062],[.115,1.141,.046,.032,.05],[.132,1.138,.03,.022,.03]],
-  EYEP:[.06,1.18,.058],EAR:[.076,1.268,-.045],earR:.042,muzzleZ:.11,hoodZ:.03,crownZ:-.04,hatZ:-.05,
+  EYEP:[.06,1.18,.058],EAR:[.076,1.268,-.045],earR:.042,earE:[.076,1.268,-.045,.036,.045,.016,-.12,.1,-.26],muzzleZ:.11,hoodZ:.03,crownZ:-.04,hatZ:-.05,
   TP:[[0,.6,-.06,.038],[0,.58,-.16,.036],[0,.55,-.27,.034],[0,.52,-.38,.032],[.01,.5,-.49,.03],[.02,.51,-.59,.029],[.03,.55,-.68,.028],[.04,.62,-.76,.027],[.05,.7,-.82,.025],[.06,.78,-.86,.022],[.07,.86,-.88,.018],[.08,.93,-.89,.012],[.09,.98,-.89,.006]],
   tailCol:(m,C)=>m.i>10?C.FURD:Math.floor(m.i)%3==2?C.FURD:C.FUR,tailSway:[.08,.08,1.2,2.4],
   paw:{n:4,len:[.02,.022,.022,.019],claw:.006,pad:true,curl:1.2,spread:.011,colOf:C=>C.FUR},handCol:C=>C.FUR,
@@ -27804,7 +27816,7 @@ brDef(4,{key:'badger',n:'Badger',cls:'paladin',furN:'Fur',
   TR:[[1.1,1.12,1.14,1.14,1.12,1.08,1.05,1.03,1,.95,1.15,1.2],[1.08,1.15,1.18,1.2,1.18,1.1,1.02,1,1,1,1.15,1.18],[1.08,1.1,1.1,1.12,1.14,1.14,1.12,1.1,1.05,1,1.15,1.18]],
   armK:[1.15,1.15,1.1,1.05,1.05,1],legK:[1.25,1.3,1.2,1.1,1.05,1,.95],foot:{len:.95,w:1.1,h:.85},
   SN:[[-.11,1.15,.05,.05,.05],[-.08,1.16,.092,.086,.08],[-.04,1.168,.11,.096,.092],[0,1.166,.112,.09,.096],[.04,1.158,.102,.078,.092],[.08,1.146,.086,.062,.08],[.12,1.133,.068,.048,.064],[.16,1.121,.052,.036,.05],[.19,1.113,.038,.027,.037],[.215,1.108,.024,.018,.024]],
-  EYEP:[.07,1.168,.06],EAR:[.085,1.238,-.06],earR:.028,muzzleZ:.17,hoodZ:.045,crownZ:-.04,
+  EYEP:[.07,1.168,.06],EAR:[.085,1.238,-.06],earR:.028,earE:[.085,1.238,-.06,.032,.03,.013,-.2,.5,.3],muzzleZ:.17,hoodZ:.045,crownZ:-.04,
   TP:[[0,.6,-.08,.045],[0,.56,-.16,.05],[0,.5,-.23,.046],[0,.43,-.28,.038],[0,.36,-.31,.026],[0,.3,-.32,.012]],
   tailCol:(m,C)=>m.i>3?C.FURL:m.s<-.3?C.FURD:C.FUR,tailSway:[.04,.05,1.4,2.6],
   paw:{n:5,len:[.022,.026,.028,.026,.021],claw:.022,rad:1.2,spread:.0105,thumb:false,colOf:C=>C.FURD},handCol:C=>C.FURD,
@@ -27828,11 +27840,11 @@ brDef(5,{key:'weasel',n:'Weasel',cls:'ranger',furN:'Fur',
   fur:['#8a5a30','#6a4424','#b08050','#4a3a2c','#e8e4dc','#a08a70'],eye:['#101010','#3a2a1c','#c87020','#c8301c','#78c040'],
   cols:L=>brPal(L,{BELLY:mdMix(mdC(L.skin),0xf0e8d0,.7),FURL:mdMix(mdC(L.skin),0xf0e8d0,.35),NOSE:0x14100e,PINK:mdMix(mdC(L.skin),0xb08a80,.5)}),
   pre:{pelvis:[.8,1.1,.8],spine:[.78,1.3,.78],chest:[.78,1.2,.8],neck:[.85,1.3,.85],head:.82,arm:[.9,.75],hand:.9,leg:[.82,.8],foot:.9,cape:[1.1,1]},
-  shear:{spine:.16,chest:.32,neck:.36},crouch:[.28,.48],pose:{sp:.03,ch:.02,shx:-.25,el:-.5},run:{sp:.04},look:[.08,0],
+  shear:{spine:.16,chest:.32,neck:.36},crouch:[.28,.48],pose:{sp:.09,ch:.06,shx:-.25,el:-.5},run:{sp:.1},look:[.08,0],
   TR:[[.95,.95,.94,.92,.9,.9,.92,.94,.94,.95,1.05,1.1],[.95,.96,.96,.95,.94,.93,.92,.92,.96,1,1.05,1.08],[.95,.95,.95,.96,.97,.98,.98,.98,.98,1,1.05,1.08]],
   armK:[.84,.84,.8,.78,.8,.74],legK:[1,1.05,.98,.9,.84,.76,.72],foot:{len:.85,w:.8,h:.8},
   SN:[[-.09,1.15,.04,.04,.04],[-.065,1.158,.074,.07,.066],[-.03,1.166,.09,.08,.08],[.005,1.166,.092,.078,.082],[.04,1.159,.086,.066,.078],[.075,1.148,.072,.052,.066],[.105,1.138,.056,.04,.052],[.13,1.13,.043,.03,.04],[.15,1.125,.032,.022,.03],[.165,1.122,.02,.015,.02]],
-  EYEP:[.055,1.168,.045],EAR:[.07,1.228,-.05],earR:.026,muzzleZ:.125,hoodZ:.03,crownZ:-.035,
+  EYEP:[.055,1.168,.045],EAR:[.07,1.228,-.05],earR:.026,earE:[.07,1.228,-.05,.028,.026,.012,-.25,.5,.35],muzzleZ:.125,hoodZ:.03,crownZ:-.035,
   TP:[[0,.6,-.07,.03],[0,.58,-.16,.028],[0,.54,-.26,.027],[.01,.48,-.36,.026],[.02,.42,-.45,.025],[.03,.37,-.54,.024],[.04,.34,-.63,.022],[.05,.33,-.72,.02],[.06,.34,-.8,.017],[.07,.37,-.87,.014],[.08,.41,-.92,.01],[.09,.45,-.95,.006]],
   tailCol:(m,C)=>m.i>8.3?0x1a1612:m.s<-.4?C.FURL:C.FUR,tailSway:[.07,.1,1.5,3],
   paw:{n:5,len:[.016,.02,.021,.02,.016],claw:.006,pad:true,spread:.009,thumb:false,palm:.9,colOf:C=>C.FUR,padColOf:C=>C.PINK},handCol:C=>C.FUR,
@@ -27846,29 +27858,28 @@ brDef(5,{key:'weasel',n:'Weasel',cls:'ranger',furN:'Fur',
     [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','sph2','c',C.FUR,s*x,y,z,.028,.026,.012,-.25,s*.5,s*.35);k.p('head','sph2','c',C.PINK,s*(x+.002),y-.002,z+.005,.02,.018,.007,-.25,s*.5,s*.35)});
     mdKit(B,k);return H}});
 // ================= v114: beast races in looks, saves, co-op, the creator and the barber =================
+// Every hero is its class's animal (rat Warrior, cat Assassin, frog Mage, badger Paladin, weasel Ranger); there is no human
+// option. A look keeps its fur / eye colour only when it is one of that animal's colours; anything else (old human saves,
+// a co-op partner's human skin tone, a class change) falls back to the animal's first colour.
 LOOK_DEF.race=0;
+function brFur(D,v,list){const n=mdC(v);if(typeof n=='number'&&isFinite(n))for(const c of list)if(mdC(c)===n)return c;return list[0]}
 {const f=lkClean;lkClean=function(o){const r=f.apply(this,arguments);if(o&&BRD[+o.race])r.race=+o.race;return r}}
-// a race belongs to one class: other classes drop it (and the fur / eye colours with it)
-{const f=lkFull;lkFull=function(cls,part){if(part&&+part.race&&BR_CLS[cls]!==+part.race){part=Object.assign({},part);delete part.race;delete part.skin;delete part.eye}return f.call(this,cls,part)}}
-// co-op partners see your race (sent after the 8 look values)
+{const f=lkFull;lkFull=function(cls,part){const r=f.apply(this,arguments),D=brOf(cls);if(!D)return r;r.race=D.id;r.skin=brFur(D,part&&part.skin,D.fur);r.eye=brFur(D,part&&part.eye,D.eye);return r}}
+{const f=mdLookN;mdLookN=function(L,cls){const r=f.apply(this,arguments),D=brOf(cls);if(!D)return r;r.race=D.id;r.skin=mdC(brFur(D,L&&L.skin,D.fur));r.eye=mdC(brFur(D,L&&L.eye,D.eye));return r}}
+// co-op partners: race follows their class; the array keeps index 8 for older peers
 {const f=mpLookOut;mpLookOut=function(){const a=f.apply(this,arguments);try{if(Array.isArray(a))a[8]=mdLookOf(pl,hero.cls).race|0}catch(_){}return a}}
 {const f=mpLookIn;mpLookIn=function(a){const r=f.apply(this,arguments);if(r&&Array.isArray(a))r.race=BRD[a[8]|0]?a[8]|0:0;return r}}
-// ---------------- creator and barber: a Race row for every class; a beast picks fur and eye colour ----------------
+// ---------------- creator and barber: the animal's build, height, fur and eye colour ----------------
 function brEdCls(){try{if(LK.on)return ccCls;if(LKB.on)return LKB.cls}catch(_){}return hero&&hero.cls}
 {const f=lkCtl;lkCtl=function(L){const r=f.apply(this,arguments),cls=brEdCls(),D=brOf(cls);if(!D)return r;
-  const race=+L.race===D.id?D.id:0,g=(t,x)=>`<div class="lkg"><div class="lkl">${t}</div>${x}</div>`,
-    ch=(k,a)=>`<div class="lkcs">${a.map(([v,n])=>`<button class="lkc${race==v?' on':''}" data-lk="${k}" data-v="${v}">${n}</button>`).join('')}</div>`,
-    sw=(k,a)=>`<div class="lks">${a.map(c=>`<button class="lksw${L[k]==c?' on':''}" data-lk="${k}" data-v="${c}" style="background:${c}" title="${c}" aria-label="${k} ${c}"></button>`).join('')}</div>`;
-  const row=g('Race',ch('race',[[0,'Human'],[D.id,D.n]]));
-  if(!race)return {body:row+r.body,head:r.head};
-  return {body:row+g('Build',`<div class="lkcs">${LOOK_OPT.build.map((n,i)=>`<button class="lkc${(+L.build||0)==i?' on':''}" data-lk="build" data-v="${i}">${n}</button>`).join('')}</div>`)+
-      g(`Height <b>${Math.round(L.height*100)}%</b>`,`<input class="lkr" type="range" min="0.9" max="1.1" step="0.01" value="${L.height}" data-lk="height" aria-label="Height">`)+g(D.furN||'Fur',sw('skin',D.fur)),
-    head:g('Eye colour',sw('eye',D.eye))+`<div class="lkb"><button data-lka="rnd">🎲 Randomize</button><button data-lka="reset">↺ Reset</button></div>`}}}
-// switching race swaps in that race's colours
-{const f=lkSet;lkSet=function(state,k,v){f.apply(this,arguments);if(k!='race')return;const L=state.look,D=BRD[+v];
-  if(D){L.skin=D.fur[0];L.eye=D.eye[0]}else{const all=Object.values(BRD);if(all.some(d=>d.fur.includes(L.skin)))delete L.skin;if(all.some(d=>d.eye.includes(L.eye)))delete L.eye}}}
-// randomize / reset keep the beast a beast
-{const f=lkInput;lkInput=function(state,e){const D=state.look&&BRD[+state.look.race],a=e.target&&e.target.closest&&e.target.closest('[data-lka]'),r=f.apply(this,arguments);
+  const g=(t,x)=>`<div class="lkg"><div class="lkl">${t}</div>${x}</div>`,skin=brFur(D,L.skin,D.fur),eye=brFur(D,L.eye,D.eye),
+    sw=(k,a,cur)=>`<div class="lks">${a.map(c=>`<button class="lksw${cur==c?' on':''}" data-lk="${k}" data-v="${c}" style="background:${c}" title="${c}" aria-label="${k} ${c}"></button>`).join('')}</div>`;
+  return {body:g('Race',`<div class="lkcs"><span class="lkc on" style="cursor:default">${D.n}</span></div>`)+
+      g('Build',`<div class="lkcs">${LOOK_OPT.build.map((n,i)=>`<button class="lkc${(+L.build||0)==i?' on':''}" data-lk="build" data-v="${i}">${n}</button>`).join('')}</div>`)+
+      g(`Height <b>${Math.round(L.height*100)}%</b>`,`<input class="lkr" type="range" min="0.9" max="1.1" step="0.01" value="${L.height}" data-lk="height" aria-label="Height">`)+g(D.furN||'Fur',sw('skin',D.fur,skin)),
+    head:g('Eye colour',sw('eye',D.eye,eye))+`<div class="lkb"><button data-lka="rnd">🎲 Randomize</button><button data-lka="reset">↺ Reset</button></div>`}}}
+// randomize / reset stay within the animal's colours
+{const f=lkInput;lkInput=function(state,e){const D=brOf(brEdCls()||state.cls),a=e.target&&e.target.closest&&e.target.closest('[data-lka]'),r=f.apply(this,arguments);
   if(a&&D){const R=x=>x[Math.floor(Math.random()*x.length)];state.look=a.dataset.lka=='rnd'?{race:D.id,skin:R(D.fur),eye:R(D.eye),build:Math.floor(Math.random()*3),height:+(.93+Math.random()*.14).toFixed(2)}:{race:D.id,skin:D.fur[0],eye:D.eye[0]}}
   return r}}
 // ================= v114: export / import the saved game =================

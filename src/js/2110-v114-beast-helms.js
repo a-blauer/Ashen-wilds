@@ -10,12 +10,12 @@ function brShell(B,D,off,z0,z1,keep,col,t,seg){const R=[],push=z=>{const q=brSku
   const kp=D.topW?m=>!D.topW(m)&&(!keep||keep(m)):keep;
   mdLoft(B,R,{seg:seg||16,ref:[0,1,0],t:t||'m',capA:z0<=D.SN[0][0]+.002,keep:kp,col})}
 // default openings: the ears (a ball round each ear root), the eyes (one row of faces at the eyes' height, three rings long)
-function brEarW(D,m){if(!D.EAR)return false;const r=D.earR||.032,dx=Math.abs(m.x)-D.EAR[0],dy=m.y-(D.EAR[1]-.02),dz=m.z-D.EAR[2];return Math.abs(m.x)>.03&&dx*dx+dy*dy*1.3+dz*dz<r*r}
+function brEarW(D,m){if(D.earE)return brEarIn(D,m.x,m.y,m.z);if(!D.EAR)return false;const r=D.earR||.032,dx=Math.abs(m.x)-D.EAR[0],dy=m.y-(D.EAR[1]-.02),dz=m.z-D.EAR[2];return Math.abs(m.x)>.03&&dx*dx+dy*dy*1.3+dz*dz<r*r}
 function brEyeW(D,m){const ez=D.EYEP[2];return m.z>ez-.012&&m.z<ez+.032&&m.s>.12&&m.s<.46&&Math.abs(m.c)>.6}
 function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a=d.a,slitC=0x0a0806,S=D.SN,z0=S[0][0]-.005,tipZ=S[S.length-1][0];
   const earW=m=>D.earW?D.earW(m):brEarW(D,m),eyeW=m=>D.eyeW?D.eyeW(m):brEyeW(D,m),at=z=>brSkullAt(D,z),top=z=>at(z).top,ez=D.EYEP[2],ey=D.EYEP[1];
   const mz=D.muzzleZ==null?tipZ-.05:D.muzzleZ,hz=D.hoodZ==null?ez-.02:D.hoodZ,crown=D.crownZ==null?-.05:D.crownZ;
-  const earRims=(c,t)=>{if(D.earRim)D.earRim(k,c,t||'m')};
+  const earRims=(c,t)=>{if(D.earE)brEarRimK(D,k,c,t||'m');else if(D.earRim)D.earRim(k,c,t||'m')};
   const dome=(off,zf,col,t)=>brShell(B,D,off,z0,zf,m=>m.s>-.25&&!earW(m)&&!(m.z>hz-.005&&m.s<.45),col||M,t,28);
   // closed helm: dome + cheek guards down the sides, a slit at the eyes, a guard over the snout top to the whisker pads
   const closed=(off,col,ac)=>{brShell(B,D,off,z0,mz,m=>{if(earW(m)||eyeW(m))return false;if(m.z>mz-.06)return m.s>.2;if(m.z>hz-.005)return m.s>-.5;return m.s>-.42},
