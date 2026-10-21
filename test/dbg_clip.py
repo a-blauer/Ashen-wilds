@@ -10,6 +10,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     ev("(L)=>{eval(L);window.requestAnimationFrame=()=>0}",LIB)
     if os.environ.get('HANDV'):ev('()=>{window.HANDV=1}')
+    if os.environ.get('POSE'):ev('(a)=>{CLIP.poseMv=a[0];CLIP.poseK=+a[1]}',os.environ['POSE'].split(':'))
     from PIL import Image
     import io
     rows=[]

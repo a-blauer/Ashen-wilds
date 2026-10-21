@@ -210,6 +210,8 @@ function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i
       S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
       S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
       const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
+      // during attacks / abilities: the shoulders spread a little (D.atk.shz) so arms clear a narrow, hunched chest and its armour
+      const ak=1-arm,AT=D.atk;if(AT&&ak>.001){if(AT.shz){brAddR(H,'aL0','z',AT.shz*ak);brAddR(H,'aR0','z',-AT.shz*ak)}if(AT.shx){brAddR(H,'aL0','x',AT.shx*ak);brAddR(H,'aR0','x',AT.shx*ak)}}
       // head levelling: measure how far the chest frame pitches forward and turn the neck and head back by that much, so
       // the eyes look ahead (a small natural tilt at idle, level when running); the idle glances / nods and the attack
       // head motions ride on top unchanged; eases off while an attack pose plays

@@ -32,3 +32,14 @@ function brFinger(P,s,i){const D=BR.R,pw=D.paw,V=THREE.Vector3,a=s<0?'aL1':'aR1'
   else if(sh==3){k.p('chest','sph','m',gold,0,y,fz2,.026,.032,.012);k.p('chest','sph','g',d.G||gem,0,y,fz2+.01,.012,.014,.006)}
   else{for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.p('chest','cone4','m',gold,Math.sin(a)*.02,y+Math.cos(a)*.02,fz2,.008,.03,.006,0,0,-a)}k.p('chest','oct',d.G?'g':'m',d.G||gem,0,y,fz2+.006,.014)}
   mdKit(B,k)}}
+// ================= v114: tail openings =================
+// Coats, robes, skirts, tassets and capes are lofted shells round the body; a beast's tail would pass straight through
+// them. While a beast's outfit / armour is built (anything but the body itself), every lofted face whose centre lies
+// within the tail's radius (+ a small margin) of the tail's path is left out, which cuts a neat opening where the tail
+// comes through; the cloth round it stays.
+var BR_BODY=0;
+['mdBody','mdHead','brPaws','brTail','brToes','brShoulders'].forEach(n=>{const f=window[n];window[n]=function(){BR_BODY++;try{return f.apply(this,arguments)}finally{BR_BODY--}}});
+function brTailNear(D,x,y,z){const T=D.TP;if(!T)return false;for(let i=0;i+1<T.length&&i<9;i++){const p=T[i],q=T[i+1],dx=q[0]-p[0],dy=q[1]-p[1],dz=q[2]-p[2],L2=dx*dx+dy*dy+dz*dz||1e-9;
+    let u=((x-p[0])*dx+(y-p[1])*dy+(z-p[2])*dz)/L2;u=Math.max(0,Math.min(1,u));const r=p[3]+(q[3]-p[3])*u+.014,ex=x-(p[0]+dx*u),ey=y-(p[1]+dy*u),ez=z-(p[2]+dz*u);if(ex*ex+ey*ey+ez*ez<r*r)return true}return false}
+{const f=mdLoft;mdLoft=function(B,R,o){if(!BR.on||BR_BODY||!BR.R||!BR.R.TP)return f.apply(this,arguments);const D=BR.R,k0=o&&o.keep;
+  return f.call(this,B,R,Object.assign({},o||{},{keep:m=>(!k0||k0(m))&&!brTailNear(D,m.x,m.y,m.z)}))}}
