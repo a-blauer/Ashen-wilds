@@ -195,7 +195,7 @@ function mpOnEV(msg){
 
 // ---------- per-frame ----------
 function mpTick(){
-  if(!MP.on||!party.length)return;const now=performance.now(),rdt=Math.min(.1,(now-(MP.lt||now))/1000);MP.lt=now;
+  if(!MP.on||!party.length||!MPX.be)return; // v116: no live backend, nothing to syncconst now=performance.now(),rdt=Math.min(.1,(now-(MP.lt||now))/1000);MP.lt=now;
   mpPeersSync();mpRoles(now);
   for(const k in MP.rh){const r=MP.rh[k],pr=r.pr;if(!pr)continue;const vis=pr.rg===MP.rg&&MP.rg>-2;
     if(vis&&!r.m)mpModel(r);if(!r.m)continue;r.m.visible=vis;if(!vis)continue;mpModel(r);

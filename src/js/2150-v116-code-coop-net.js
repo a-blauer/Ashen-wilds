@@ -100,7 +100,9 @@ function kqnRoom(mode,code){return new Promise((res,rej)=>{
     if(m.type==='OFFER'&&host){if(links[src])links[src].close();const L=links[src]=kqnLink(S,src,p.cid,false,onLink);L.answer(p.sdp)}
     else if(m.type==='ANSWER'&&links[src])links[src].remoteSdp(p.sdp).catch(()=>{});
     else if(m.type==='CANDIDATE'&&links[src])links[src].cand(p.c);
-    else if(m.type==='EXPIRE'&&!host&&src===hostId)no('No game found with code '+code+'. Check the code with your friend.')}
+    else if(m.type==='EXPIRE'&&!host&&src===hostId){ // the host may only have blinked: offer again twice before giving up
+      if(++tries<3){const old=links[hostId];setTimeout(()=>{if(ended||settled)return;if(old)try{old.dead=true;old.pc.close()}catch(_){}links[hostId]=kqnLink(S,hostId,'c'+kqnRid(),true,onLink)},1500)}
+      else no('No game found with code '+code+'. Check the code with your friend.')}}
   let hostId='';
   function start(){if(host){code=kqnCode();me=KQN.pre+code}else{me='j'+kqnRid()}rebuild();S=kqnSignal(me,onSig)}
   function resign(){S=kqnSignal(me,(ev,a)=>{if(ev==='open'||ev==='msg')onSig(ev,a)})} // host: get the code back so more friends can join

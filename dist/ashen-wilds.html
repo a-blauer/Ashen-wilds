@@ -6049,7 +6049,7 @@ function mpOnEV(msg){
 
 // ---------- per-frame ----------
 function mpTick(){
-  if(!MP.on||!party.length)return;const now=performance.now(),rdt=Math.min(.1,(now-(MP.lt||now))/1000);MP.lt=now;
+  if(!MP.on||!party.length||!MPX.be)return; // v116: no live backend, nothing to syncconst now=performance.now(),rdt=Math.min(.1,(now-(MP.lt||now))/1000);MP.lt=now;
   mpPeersSync();mpRoles(now);
   for(const k in MP.rh){const r=MP.rh[k],pr=r.pr;if(!pr)continue;const vis=pr.rg===MP.rg&&MP.rg>-2;
     if(vis&&!r.m)mpModel(r);if(!r.m)continue;r.m.visible=vis;if(!vis)continue;mpModel(r);
@@ -28171,7 +28171,9 @@ function kqnRoom(mode,code){return new Promise((res,rej)=>{
     if(m.type==='OFFER'&&host){if(links[src])links[src].close();const L=links[src]=kqnLink(S,src,p.cid,false,onLink);L.answer(p.sdp)}
     else if(m.type==='ANSWER'&&links[src])links[src].remoteSdp(p.sdp).catch(()=>{});
     else if(m.type==='CANDIDATE'&&links[src])links[src].cand(p.c);
-    else if(m.type==='EXPIRE'&&!host&&src===hostId)no('No game found with code '+code+'. Check the code with your friend.')}
+    else if(m.type==='EXPIRE'&&!host&&src===hostId){ // the host may only have blinked: offer again twice before giving up
+      if(++tries<3){const old=links[hostId];setTimeout(()=>{if(ended||settled)return;if(old)try{old.dead=true;old.pc.close()}catch(_){}links[hostId]=kqnLink(S,hostId,'c'+kqnRid(),true,onLink)},1500)}
+      else no('No game found with code '+code+'. Check the code with your friend.')}}
   let hostId='';
   function start(){if(host){code=kqnCode();me=KQN.pre+code}else{me='j'+kqnRid()}rebuild();S=kqnSignal(me,onSig)}
   function resign(){S=kqnSignal(me,(ev,a)=>{if(ev==='open'||ev==='msg')onSig(ev,a)})} // host: get the code back so more friends can join

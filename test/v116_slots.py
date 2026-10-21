@@ -28,8 +28,9 @@ def load(pg,first=False):
     pg.wait_for_function('document.readyState=="complete"',timeout=180000);pg.wait_for_timeout(1200)
 def create(pg,cls,name):
     if pg.evaluate("()=>!document.getElementById('devp').classList.contains('hide')"):pg.click('[data-dev=desktop]',force=True,timeout=90000)
-    pg.click('[data-c="%s"]'%cls,force=True,timeout=90000);pg.fill('#ccName',name);pg.click('#ccNext',force=True,timeout=90000);pg.wait_for_timeout(600);pg.click('#ccNext',force=True,timeout=90000)
-    pg.wait_for_function('party.length>0',timeout=90000);pg.wait_for_timeout(1500);pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};saveGame(true)}")
+    pg.wait_for_timeout(800);pg.evaluate("c=>document.querySelector('[data-c=\"'+c+'\"]').click()",cls);pg.wait_for_timeout(500)
+    pg.evaluate("n=>{$('ccName').value=n;$('ccNext').click()}",name);pg.wait_for_timeout(1200);pg.evaluate("n=>{if(!party.length){$('ccName').value=n;$('ccNext').click()}}",name)
+    pg.wait_for_function('party.length>0',timeout=120000);pg.wait_for_timeout(1500);pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};saveGame(true)}")
 slot=lambda pg,i:pg.evaluate("i=>{const s=localStorage.getItem(KQSL.keys[i]);return s?JSON.parse(s).hero.name:null}",i)
 try:
   with sync_playwright() as p:

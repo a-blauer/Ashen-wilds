@@ -14,7 +14,7 @@ class FWS{constructor(url){this.readyState=0;this.id=new URL(url.replace('ws://'
   setTimeout(()=>{if(this.readyState===3)return;this.readyState=1;if(this.taken){this._rx({type:'ID-TAKEN',payload:{msg:'ID is taken'}});this.close();return}this._rx({type:'OPEN'})},250)}
   _rx(m){if(this.onmessage)this.onmessage({data:JSON.stringify(m)})}
   send(s){const m=JSON.parse(s);if(m.type==='HEARTBEAT')return;m.src=this.id;
-    if(m.type==='OFFER'){const n=Math.random();this.pend[n]=1;this.bc.postMessage({k:'ping',id:m.dst,n});setTimeout(()=>{if(this.pend[n]!==2)this._rx({type:'EXPIRE',src:m.dst,dst:this.id});delete this.pend[n]},400)}
+    if(m.type==='OFFER'){const n=Math.random();this.pend[n]=1;this.bc.postMessage({k:'ping',id:m.dst,n});setTimeout(()=>{if(this.pend[n]!==2)this._rx({type:'EXPIRE',src:m.dst,dst:this.id});delete this.pend[n]},1500)}
     this.bc.postMessage({k:'msg',m})}
   close(){if(this.readyState===3)return;this.readyState=3;try{this.bc.close()}catch(_){}if(this.onclose)this.onclose({})}}
 window.WebSocket=function(url,p){return String(url).startsWith('ws://kqfake')?new FWS(url):new RW(url,p)};window.WebSocket.OPEN=1;})();
