@@ -19,7 +19,8 @@ function areaName(){
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
 var MREC=['D','C','C','B','A','A'];
-function zoneRec(){const r=curMap();if(r<1)return null;const p=PMAP[r];return {b:{n:p.n},g:MREC[r],p:recPower(p.lv[0])}}
+// v116: every zone (Kindlelight too), per instance: the power for the start of the instance you are in
+function zoneRec(){const r=curMap();if(r<0||!PMAP[r])return null;const p=PMAP[r];let I=null;try{I=curIns()}catch(_){}const L=I&&I.lv?I.lv[0]:p.lv[0];return {b:{n:p.n},g:MREC[r],p:recPower(L)}}
 // ---- the Portal Court ----
 const pUnlocked=i=>i==0||bossDone.has(i-1)||(typeof CHEAT!='undefined'&&CHEAT.portals),pDone=i=>bossDone.has(i);
 var PORT=[];
