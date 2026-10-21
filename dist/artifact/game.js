@@ -28034,7 +28034,7 @@ function mpvFolTick(now,dt){
 function mpvRH(peer){const r=MP.rh[peer];return r&&r.m&&r.m.visible&&r.pr&&r.pr.rg===MP.rg?r:null}
 function mpvLend(x,y,z,ry,fn){const P=pl.position,ox=P.x,oy=P.y,oz=P.z,or=pl.rotation.y;P.set(x,y,z);pl.rotation.y=ry;MPV.rep++;try{return fn()}finally{MPV.rep--;P.set(ox,oy,oz);pl.rotation.y=or}}
 function mpvPlay(r,e){
-  const T=e[0];
+  const T=e[0];MPV.cnt=MPV.cnt||{};MPV.cnt[T]=(MPV.cnt[T]||0)+1; // counted for the tests
   if(T==='V'){const n=MPV.FX[e[2]],f=n&&window[n];if(typeof f!='function'||!Array.isArray(e[7]))return;const a=e[7].slice(0,12).map(x=>mpvDe(x,0));
     mpvLend(+e[3]||0,+e[4]||0,+e[5]||0,+e[6]||0,()=>{try{f.apply(null,a)}catch(_){}})}
   else if(T==='P'){const h=r.m,ms=Math.max(60,Math.min(4000,+e[2]||300)),ch=Array.isArray(e[3])?e[3].filter(c=>typeof c=='string'&&HACH[c]).slice(0,16):[],K=Array.isArray(e[4])?e[4].slice(0,11):[];
