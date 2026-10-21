@@ -5,7 +5,11 @@ const hero={hp:100,sp:['Power Strike'],known:['Power Strike'],last:{},cd:{},sl:{
 const mpMax=()=>Math.round(HS().mp),spCost=n=>{const s=MOVES[n];return Math.round(4+s.m*3.5+s.cd*.8)},kills={};
 const gs=k=>0;
 const heroMax=()=>Math.round(HS().hp),heroAtk=()=>atkOf(heroMt()),df=()=>Math.round(HS().pd);
-const uiOpen=()=>(typeof KQMENU!='undefined'&&KQMENU.on)||['fz','bag','inc','cmp','shop','mshop','wmap','setw','tal','hatch','start','xw','dth'].some(i=>!$(i).classList.contains('hide'));
+// is any window open? (runs every frame: the 13 window elements are looked up once, after all of them exist)
+var UIO_IDS=['fz','bag','inc','cmp','shop','mshop','wmap','setw','tal','hatch','start','xw','dth'],UIO_EL=null;
+const uiOpen=()=>{if(typeof KQMENU!='undefined'&&KQMENU.on)return true;
+  if(!UIO_EL){const L=UIO_IDS.map(i=>$(i));if(L.some(x=>!x))return UIO_IDS.some(i=>$(i)&&!$(i).classList.contains('hide'));UIO_EL=L}
+  for(let i=0;i<UIO_EL.length;i++)if(!UIO_EL[i].classList.contains('hide'))return true;return false};
 const solid_old=(x,z)=>{const t=MAP[Math.round(z)]&&MAP[Math.round(z)][Math.round(x)];return !t||t=='#'||t=='~'||t=='r'||t=='R'||t=='W'||t=='B'};
 function walkM(o,dx,dz){const p=o.position,bx=p.x,bz=p.z,od=tDist(bx,bz);walk(o,dx,dz);const nd=tDist(p.x,p.z);if(nd<TS+4&&nd<od){p.x=bx;p.z=bz}}
 function tcHit(x,z){const t=townAt(x,z,0);if(t<0)return false;for(const c of TOWNS[t].col){if(c.r!=null){const dx=x-c.x,dz=z-c.z,rr=c.r+.28;if(dx*dx+dz*dz<rr*rr)return true}else if(Math.abs(x-c.x)<c.hx+.28&&Math.abs(z-c.z)<c.hz+.28)return true}return false}

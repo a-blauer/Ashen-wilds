@@ -82,10 +82,14 @@ const RAR=[['Common','#a8a8a8'],['Uncommon','#5fcf6a'],['Rare','#5a96ff'],['Epic
 const WB=[['Sword',.42,2.4,1],['Axe',.6,2.7,1.3],['Mace',.55,2.3,1.15],['Dagger',.3,1.9,.7]],AB=['Jerkin','Hauberk','Plate'],CB=['Talisman','Amulet','Idol'],PF=['Worn','Sturdy','Runed','Cursed','Hallowed'];
 const cn=i=>`<span style="color:${RAR[i.r][1]}">${i.nm}</span>`,en=e=>`<span style="color:${RAR[e.tier][1]}">🥚 Tier ${e.tier+1} ${e.sp} Egg <small>${TGI[e.tag]||''} ${e.tag||''}</small></span>`;
 let uid=1,gold=0,pots=1,stock=null,stockLv=0;
-function drop(kind,data,p,r){
-  const col=parseInt(RAR[r][1].slice(1),16),g=new THREE.Group(),gem=new THREE.Mesh(kind=='egg'||kind=='megg'?new THREE.SphereGeometry(.16,12,10):new THREE.OctahedronGeometry(.18),new THREE.MeshBasicMaterial({color:col}));
+// shared shapes for every drop; the materials are the drop's own (marked dropOwn, freed by dropFree when it goes)
+var G_DROP=null;
+function dropFree(d){d.g.traverse(o=>{if(o.material&&o.material.userData.dropOwn)o.material.dispose()})}
+function drop(kind,data,p,r){G_DROP=G_DROP||{s:new THREE.SphereGeometry(.16,12,10),o:new THREE.OctahedronGeometry(.18),b:new THREE.CylinderGeometry(.05,.05,1.6,8)};
+  const own=m=>{m.userData.dropOwn=1;return m};
+  const col=parseInt(RAR[r][1].slice(1),16),g=new THREE.Group(),gem=new THREE.Mesh(kind=='egg'||kind=='megg'?G_DROP.s:G_DROP.o,own(new THREE.MeshBasicMaterial({color:col})));
   if(kind=='egg'||kind=='megg')gem.scale.y=1.3;if(kind=='megg')gem.scale.setScalar(1.5);
-  const beam=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.6,8),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));
+  const beam=new THREE.Mesh(G_DROP.b,own(new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false})));
   gem.position.y=.5;beam.position.y=.8;g.add(gem,beam);
   const a=Math.random()*6.28,d=.5+Math.random()*.8;g.position.set(p.x+Math.cos(a)*d,0,p.z+Math.sin(a)*d);scene.add(g);drops.push({g,gem,kind,data,t:90});
   burst(gY(g.position,.4),col,12,2,2.5,.7);

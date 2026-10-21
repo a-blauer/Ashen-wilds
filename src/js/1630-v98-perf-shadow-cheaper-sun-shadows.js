@@ -54,7 +54,7 @@ function shdPass(){const S=SHD,F=shdFrustum(),hide=[],inst=[],chunk=new Set(),sp
   if(!S.cl||scene.children.length>S.cl+200||(!S.clT&&S.f>30)){S.clT=1;shdClutter()}
   const L=(typeof CVG!='undefined'&&CVG.live)?CVG.live:(typeof CHL!='undefined'?CHL:[]);
   L.forEach(c=>{if(!c.on)return;const out=!F.intersectsBox(c.box);c.ms.forEach(m=>{chunk.add(m);if(out&&m.castShadow)hide.push(m)})});
-  const ch=scene.children;for(let i=0;i<ch.length;i++){const r=ch[i];if(!r.visible||r===pl||r.isLight)continue;
+  const ch=scene.children;for(let i=0;i<ch.length;i++){const r=ch[i];if(!r.visible||r===pl||r.isLight||r===PSROOT)continue; // chunk props are culled per chunk above
     if(r.isInstancedMesh){if(r.castShadow&&!chunk.has(r)&&!r.userData.cast)inst.push(r);continue}
     if(r.isMesh&&r.frustumCulled)continue;
     const q=shdRig(r);if(!q)continue;sp.center.set(r.position.x+q.x,r.position.y+q.y,r.position.z+q.z);sp.radius=q.r;

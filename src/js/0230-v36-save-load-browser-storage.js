@@ -47,7 +47,7 @@ addEventListener('pagehide',()=>saveGame(true));
 // continue / new game prompt after the layout picker
 $('devp').addEventListener('click',e=>{if(!e.target.closest('[data-dev]'))return;const s=saveInfo();if(!s)return;
   const C=CLS[s.hero.cls]||{i:'',n:''},d=new Date(s.at);
-  $('svpI').innerHTML=`${C.i} <b>${s.hero.name}</b> · Lv ${s.hero.lvl} ${C.n}<br><small class="mut">${(s.party||[]).length} companion${(s.party||[]).length==1?'':'s'} · 🪙 ${s.gold} · ${s.wv===3?(s.bossDone||[]).length:0} map${(s.bossDone||[]).length==1?'':'s'} defeated · saved ${d.toLocaleString()}</small>`;
+  $('svpI').innerHTML=`${C.i} <b>${String(s.hero.name||'Hero').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}</b> · Lv ${s.hero.lvl} ${C.n}<br><small class="mut">${(s.party||[]).length} companion${(s.party||[]).length==1?'':'s'} · 🪙 ${s.gold} · ${s.wv===3?(s.bossDone||[]).length:0} map${(s.bossDone||[]).length==1?'':'s'} defeated · saved ${d.toLocaleString()}</small>`;
   $('svp').classList.remove('hide')});
 $('svpC').onclick=()=>{$('svp').classList.add('hide');if(!loadGame())say('That save could not be loaded.')};
 $('svpN').onclick=()=>{if(!$('svpN').dataset.sure){$('svpN').dataset.sure=1;$('svpN').textContent='Tap again: this replaces your save';return}deleteSave();$('svp').classList.add('hide')};

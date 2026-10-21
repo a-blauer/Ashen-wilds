@@ -25,8 +25,8 @@ function s6Hit(e,a,mult,mt){const t=s6T(a);if(t)hitTarget(e,t,mult*(e.enr?1.3:1)
 // a debuff on the hero (only when the hero is the one hit)
 function s6Deb(a,n,i,s,ms,d){if(s6T(a)!==pl||hero.iv>0)return;dqDebuff(n,i,s,ms,d);popT(pl.position,n+'!','#ffb070')}
 // poison / bleed ticks on the hero: n ticks every iv seconds
-function s6Dot(e,a,mult,n,iv,col,lab){if(s6T(a)!==pl)return;let t=0,k=0;dqDebuff(lab,'☠️',{},n*iv*1000,lab+': taking damage over time');
-  kqFx({tick(dt){t+=dt;if(t>=iv){t-=iv;k++;if(townAt(pl.position.x,pl.position.z,.5)<0&&!(typeof AWD!='undefined'&&AWD.dead)){hitHero(e,mult,'m');burst(gY(pl.position,1),col,6,.4,.6,.5)}}return k<n}})}
+function s6Dot(e,a,mult,n,iv,col,lab){if(s6T(a)!==pl||hero.iv>0)return;let t=0,k=0;dqDebuff(lab,'☠️',{},n*iv*1000,lab+': taking damage over time');
+  kqFx({tick(dt){t+=dt;if(t>=iv){t-=iv;k++;if(!(hero.iv>0)&&townAt(pl.position.x,pl.position.z,.5)<0&&!(typeof AWD!='undefined'&&AWD.dead)){hitHero(e,mult,'m');burst(gY(pl.position,1),col,6,.4,.6,.5)}}return k<n}})}
 function s6Pool(e,p,r,col,ms,mult,deb){
   // a lingering ground patch: hurts and debuffs whoever stands in it (the hero only; companions walk through)
   const m=new THREE.Mesh(new THREE.CircleGeometry(r,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,fog:false}));

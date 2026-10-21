@@ -115,7 +115,6 @@ function lotSpots103(){const T=TOWNS[0],sp=k=>{const q=TWN100_SH.find(s=>s.k==k)
   try{if(T.st2){T.st2.c=sp('cook');T.st2.a=sp('alch')}}catch(_){}
   try{const n=sp('stable');STB.x=n[0]-T.cx;STB.z=n[1]-T.cy-1.4;STB.n=n;STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[]}catch(_){}
   try{const v=VIS.map(q=>sp(q.k));if(!T.vsp||v.some((p,i)=>!T.vsp[i]||T.vsp[i][0]!==p[0]||T.vsp[i][1]!==p[1])){T.vsp=v;VIS.forEach(q=>{if(q.g){scene.remove(q.g);q.g=null}})}}catch(_){}}
-function stableBuild(){lotSpots103()}
 function stableSync(){TWN100_shopSync()}
 function shSites(){const T=TOWNS[0];if(!T)return;SHM.vsite=[];for(const k in (SHM.sites||{})){scene.remove(SHM.sites[k]);delete SHM.sites[k]}if(T.mvG)T.mvG.visible=false;try{TWN100_shopSync()}catch(e){console.warn('v103 shops',e)}}
 // walk-up prompts: only built shops that stand on a lot

@@ -20,7 +20,7 @@ function openCampChest(C){
 
 // ---------- per-frame bookkeeping (called from homeTick) ----------
 function combatTick(dt,now){
-  if((hero.cr||0)>0&&now-(hero.crT||0)>6000){hero.cr=Math.max(0,hero.cr-14*dt);resUI()}
+  if((hero.cr||0)>0&&now-(hero.crT||0)>6000)hero.cr=Math.max(0,hero.cr-14*dt); // the bar is redrawn below, 8 times a second
   if(now-(combatTick.u||0)>120){combatTick.u=now;strkUI(false);resUI()}
   CAMPS.forEach(C=>{if(C.raid&&now-C.rT>150000&&!enemies.some(e=>e.leader===C&&!e.dead)){C.raid=0;C.kt=now}});
 }

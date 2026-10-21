@@ -7,9 +7,7 @@
 // Contract with the model track (its files sort after this one, so its definitions win):
 //   heroRebuild(h)            rebuild the player's hero (no argument) or a hero model h (co-op partner) after a look change
 //   heroBuildPreview(look,cls,E)  a THREE.Group hero with that look, class (and gear E) for previews
-// The versions below are the fallback for the current body: colours through the class palette (CLS[cls].sk, dkC hair)
-// while the body/kit is built, hair/face pieces through dkFace, build/height/sex through bone and mesh scale. They only
-// act while heroRebuild is still this file's own (lkFB()); the creator UI only uses heroLook/heroRebuild/heroBuildPreview.
+// The model itself is built by the v94 model track (1520: heroLook/heroRebuild/heroBuildPreview).
 var LOOK_DEF={skin:'#d9b38c',hair:'#2a1a12',hairStyle:0,face:2,eye:'#4a6a8a',build:1,height:1,sex:0};
 var LOOK_OPT={
   skin:['#f0d2b6','#e1bea0','#d9b38c','#d2aa82','#c8a080','#b88a64','#8e623e','#5a3e2c','#3e2a1e'],
@@ -37,47 +35,7 @@ function heroLook(h){h=h||hero;return Object.assign({},LOOK_DEF,lkClsDef(h&&h.cl
 function lkFull(cls,part){return Object.assign({},LOOK_DEF,lkClsDef(cls),lkClean(part))}
 function lkSig(L){return [L.skin,L.hair,L.hairStyle,L.face,L.eye,L.build,(+L.height).toFixed(2),L.sex].join(',')}
 
-// ---------------- fallback model hooks ----------------
-var LK_CUR=null,LK_FACE=0;
-// true while heroRebuild is still this file's fallback (the model track's own definitions replace it)
-function lkFB(){return typeof heroRebuild=='function'&&String(heroRebuild).indexOf('lkRebuildFB')>=0}
-// the look a hero model wears: its own (co-op partner, preview) or, for the player and the bag picture, the hero's
-function lkFor(h,cls){const own=h&&h.look?h.look:(h===pl||(typeof HP!='undefined'&&h===HP))?hero.look:null;return lkFull(cls||hero.cls,own)}
-function lkSwap(cls,L,fn){
-  const C=CLS[cls],D=typeof dkC=='function'?dkC()[cls]:null,o1=C&&C.sk,o2=D&&{hair:D.hair,hs:D.hs,beard:D.beard};
-  try{if(C)C.sk=lkArr(L.skin);
-    if(D){const hc=parseInt(L.hair.slice(1),16);D.hair=L.hairStyle==5?null:hc;D.hs=['short','long','topknot','spiky','short','short'][L.hairStyle]||'short';D.beard=L.face==2||L.face==3?hc:null}
-    return fn()}finally{if(C)C.sk=o1;if(D)Object.assign(D,o2)}}
-{const f=heroOutfit;heroOutfit=function(h,cls){if(!LK_CUR)return f.apply(this,arguments);return lkSwap(cls,LK_CUR,()=>f.apply(this,arguments))}}
-{const f=dkHeroKit;dkHeroKit=function(cls,E){if(!LK_CUR)return f.apply(this,arguments);LK_FACE=1;try{return lkSwap(cls,LK_CUR,()=>f.apply(this,arguments))}finally{LK_FACE=0}}}
-{const f=dkFace;dkFace=function(k,o){
-  if(!LK_CUR||!LK_FACE)return f.apply(this,arguments);
-  const L=LK_CUR,hair=parseInt(L.hair.slice(1),16);
-  o=Object.assign({},o);if(o.brow==null)o.brow=hair;
-  const r=f.call(this,k,o);
-  try{
-    const sk=o.skin,eye=parseInt(L.eye.slice(1),16),mix=(a,b,t)=>new THREE.Color(a).lerp(new THREE.Color(b),t).getHex();
-    [-1,1].forEach(s=>k.p('head','box','c',eye,s*.038,1.143,.1095,.014,.009,.004));
-    if(L.face==1){const st=mix(sk,hair,.55);k.p('head','box','c',st,0,1.075,.093,.12,.045,.026);[-1,1].forEach(s=>k.p('head','box','c',st,s*.068,1.095,.062,.02,.065,.06))}
-    if(L.face==3){k.p('head','cone4','c',hair,0,.99,.08,.06,.2,.05,Math.PI+.18);k.p('head','box','c',hair,0,1.05,.098,.09,.05,.03)}
-    if(L.face==4){k.p('head','box','c',hair,0,1.1,.108,.064,.013,.016);[-1,1].forEach(s=>k.p('head','box','c',hair,s*.036,1.084,.106,.012,.032,.012,0,0,s*.15))}
-    if(L.face==5){k.p('head','box','c',0x7a3028,.044,1.142,.107,.007,.075,.005,0,0,.42);k.p('head','box','c',0x9a4a40,.04,1.12,.108,.004,.03,.004,0,0,-.5)}
-    if(L.hairStyle==4&&o.hair!=null){k.p('head','sph','c',hair,0,1.17,-.115,.035);k.L('head','c',hair,[0,1.16,-.13],[0,1.0,-.17],.032,.016);k.p('head','ring','c',dkShade(hair,.6),0,1.14,-.135,.03,.4,.03)}
-    if(L.sex==1&&L.face!=2&&L.face!=3)[-1,1].forEach(s=>k.p('head','box','c',0x0b0807,s*.05,1.152,.104,.012,.004,.012,0,0,s*.5)); // lashes
-  }catch(e){console.warn('look face',e)}
-  return r}}
-// build, height and sex through bone/mesh scale (the arms, neck and legs are scaled back so only the trunk widens)
-function lkBody(h,L){
-  const b=h&&h.bones;if(!b||!b.chest)return;
-  const bw=[.9,1,1.12][L.build]||1,px=(L.sex==1?1.09:1)*(1+(bw-1)*.5),cx=(L.sex==1?.9:1)*bw,cz=1+(bw-1)*.6,arm=1+(bw-1)*.45;
-  b.pelvis.scale.x=px;b.spine.scale.x=1/px;b.lh0.scale.x=b.rh0.scale.x=1/px;
-  b.chest.scale.x=cx;b.chest.scale.z=cz;b.neck.scale.set(1/cx,1,1/cz);b.aL0.scale.set(arm/cx,1,arm/cz);b.aR0.scale.set(arm/cx,1,arm/cz);
-  const m=h.children.find(o=>o.isSkinnedMesh&&!o.dk)||h.children[0];if(m)m.scale.setScalar(+L.height||1)}
-{const f=refreshGear;refreshGear=function(h,cls,E){
-  if(!lkFB())return f.apply(this,arguments);
-  const hh=h||pl,cc=cls||hero.cls,L=lkFor(hh,cc),sig=lkSig(L);if(hh._lkSig!==sig){hh.cls=null;hh._lkSig=sig}
-  const o=LK_CUR;LK_CUR=L;let r;try{r=f.apply(this,arguments)}finally{LK_CUR=o}
-  try{lkBody(hh,L);hh._lkArgs=[cc,E]}catch(e){console.warn('look body',e)}return r}}
+// fallback preview (only used if the v94 heroBuildPreview throws)
 function lkStarter(cls){
   const C=CLS[cls],E={},w=ITPL.findIndex(t=>t.sl=='weapon'&&t.cls==cls&&t.t==0);E.weapon={id:-1,tp:w,lv:1,req:1,r:1,up:0,aff:[]};
   ['chest','boots'].forEach(sl=>{const i=ITPL.findIndex(t=>t.sl==sl&&t.arm==C.arm&&t.t==1);if(i>=0)E[sl]={id:-2,tp:i,lv:5,req:1,r:2,up:0,aff:[]}});

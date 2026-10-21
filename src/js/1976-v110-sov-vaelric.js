@@ -29,8 +29,6 @@ function vlrCS(x,y,d){const C=VLR_CH;let i=0;while(i<C.length-2&&y>C[i+1][0])i++
 // a star-shaped flat polygon (wing membranes): fan from the centroid
 function vlrPoly(P){const c=[0,0,0];P.forEach(p=>{c[0]+=p[0]/P.length;c[1]+=p[1]/P.length;c[2]+=p[2]/P.length});const pos=[];
   for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];pos.push(...c,...a,...b)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
-// a cloth panel with a ragged lower edge
-function vlrRag(w0,w1,h,n,seed,top){const r=svRng(seed),P=[[-w0,top||0],[w0,top||0]];for(let i=0;i<=n;i++){const u=1-i/n,x=-w1+2*w1*u,d=i%2?.12+r()*.18:r()*.06;P.push([x,-h-d])}return svBlade(P,.02)}
 // a cape panel with soft vertical folds (a strip of columns; the back of the cape is -z), optionally a ragged hem
 function vlrCloth(w0,w1,h,rag,seed,dz){const r=svRng(seed),n=12,pos=[],T=[],B=[];for(let i=0;i<=n;i++){const u=i/n,x0=-w0+2*w0*u,x1=-w1+2*w1*u,f=Math.sin(u*Math.PI*4)*.045,c=-.06*Math.sin(u*Math.PI);
     T.push([x0,.06,c*.5+f*.3+(dz||0)]);B.push([x1,-h-(rag?(i%2?.1+r()*.2:r()*.05):0),c+f+(dz||0)])}

@@ -1,7 +1,7 @@
 // ================= v98 perf_gpu: a fixed pool of point lights + shader warm-up at load =================
 // Point lights. Every lit fragment loops over every point light in the scene, and adding or removing a light (or
 // toggling .visible) changes the light count, which recompiles every lit material. The game used to keep 12 point
-// lights in the scene all the time (hero torch, 4 town lamps TPL, 3 realm lights RLT, 4 dungeon/flash lights DLT).
+// lights in the scene all the time (hero torch, 4 town lamps TPL, 4 dungeon/flash lights DLT).
 // Now those 12 (and any PointLight later passed to scene.add) are *virtual light sources*: they are taken out of the
 // scene and kept in PGL.src, and the code that moves, colours and flickers them works on them as before. Before each
 // render of the main scene, pglTick copies the PGL.n sources nearest the hero (that are on: intensity > 0, visible) onto

@@ -22,15 +22,16 @@ function V100W_pose(P,D,wind,rest){
     const p=P(Math.min(1,Math.max(0,k)));
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
+var SWFIN=0; // the next swing is a combo finisher (bigger lunge)
 {const base=swingAnim;
-swingAnim=function(st,ms,onHit){
+swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   let P=null;try{P=atkPick(st|0)}catch(_){}
   if(!V100W.on||!P||!P.v100)return base.apply(this,arguments);
   try{atkMpSig()}catch(_){}
   ms=ms||300;
   const hit0=ms*.42,wind=hit0+Math.min(V100W.EXTRA_MAX,hit0*V100W.EXTRA),
     cd=atkCd>0?atkCd*1000:ms*2,D=Math.max(ms+wind-hit0,Math.min(cd*.9,wind+ms*V100W.REC)),
-    fin=ms>=400||(pl.step&&pl.step.t>=.16);
+    fin=fin1; // set by the basic-attack callers just before the swing (0130, 0580)
   haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after

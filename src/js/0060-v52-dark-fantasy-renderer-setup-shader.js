@@ -38,7 +38,7 @@ const POST=(()=>{
     if(!P.on||!r0){ren.setRenderTarget(null);ren.render(scene,cam);return}
     ren.setRenderTarget(r0);ren.clear();ren.render(scene,cam);
     P.pass(mBright,r0,rb1);
-    mRay.uniforms.sun.value.copy(ATM.sunU);P.pass(mRay,rb1,rr);
+    if(mComp.uniforms.rk.value>0){mRay.uniforms.sun.value.copy(ATM.sunU);P.pass(mRay,rb1,rr)} // god rays: off (rk 0) in the default look
     const qw=1/rb1.width,qh=1/rb1.height;
     for(let i=0;i<2;i++){mBlur.uniforms.dir.value.set(qw*(1+i),0);P.pass(mBlur,rb1,rb2);mBlur.uniforms.dir.value.set(0,qh*(1+i));P.pass(mBlur,rb2,rb1)}
     mComp.uniforms.t.value=r0.texture;mComp.uniforms.bl.value=rb1.texture;mComp.uniforms.ry.value=rr.texture;mComp.uniforms.time.value=(performance.now()%1000)/1000;

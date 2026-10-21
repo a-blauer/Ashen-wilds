@@ -184,7 +184,6 @@ var SHPU109=[
 SHPU109.forEach(u=>{const o=SHOPS.find(q=>q.k==u.k);if(o){u.n=o.n;u.i=o.i;u.g=o.g;u.m=o.m}});
 var SHP109_MAX=3,SHP109_G=[0,1.5,5,12],SHP109_X=[0,1,2.5,5],SHP109_B=[0,0,2,4];
 function shpL109(k){return typeof SHP109!='undefined'&&SHP109&&SHP109.lv?Math.min(3,SHP109.lv[k]|0):0}
-function shpOff109(k){return .05*shpL109(k)}
 function shpP109(k,c){c=+c||0;const L=shpL109(k);return L&&c>0?Math.max(1,Math.round(c*(1-.05*L))):c}
 function shpCost109(u,l){return {g:Math.round(u.g*SHP109_G[l]),m:u.m.map(([k,n])=>[k,Math.round(n*SHP109_X[l])]),b:SHP109_B[l]}}
 function shpOpen109(k){return k=='post'||shopBuilt(k)}

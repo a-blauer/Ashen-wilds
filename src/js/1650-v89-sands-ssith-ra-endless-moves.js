@@ -29,7 +29,6 @@ function ssrWr(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function ssrIO(t){t=t<0?0:t>1?1:t;return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
 function ssrOut(t){t=t<0?0:t>1?1:t;return 1-Math.pow(1-t,3)}
 function ssrIO3(t){t=t<0?0:t>1?1:t;return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
-function ssrSS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
 // where a boss move starts (wrapped below): kind + timing, so the rig can play it
 function ssrMove(e,k,en,r){if(!e||!e.m||!e.m._ssr)return;const A=typeof arenaOf=='function'?arenaOf(e):null,D=A&&A.dn;
   let kind=k;

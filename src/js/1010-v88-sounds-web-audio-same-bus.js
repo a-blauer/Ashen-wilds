@@ -1,7 +1,7 @@
 // ---------------- sounds (Web Audio, same bus as sfx) ----------------
 function kqsSnd(k){try{if(SET.sfx===false||SET.sfxV!=null&&!(+SET.sfxV>0))return;const a=AUD;if(!a||a.state!='running'||!a.out)return;const t=a.currentTime;
   const tone=(ty,f,at,dur,v,f1)=>{const o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t+at);if(f1)o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+at+dur);g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+.008);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);o.connect(g);g.connect(a.out);o.start(t+at);o.stop(t+at+dur+.05)};
-  const nz=(ft,f0,f1,at,dur,v,q)=>{if(!NOISE)return;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;f.type=ft;f.Q.value=q||.8;f.frequency.setValueAtTime(f0,t+at);f.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+at+dur);
+  const nz=(ft,f0,f1,at,dur,v,q)=>{if(!NOISE)return;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;s.loop=true;f.type=ft;f.Q.value=q||.8;f.frequency.setValueAtTime(f0,t+at);f.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+at+dur);
     g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+dur*.2);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);s.connect(f);f.connect(g);g.connect(a.out);s.start(t+at,Math.random()*.5);s.stop(t+at+dur+.05)};
   ({shout:()=>{tone('sawtooth',150,0,.5,.12,90);tone('sawtooth',225,0,.45,.07,130);nz('bandpass',700,300,0,.5,.25,1.5)},
     charge:()=>{nz('lowpass',600,150,0,.5,.35);[0,.11,.22,.33].forEach(at=>tone('sine',90,at,.09,.25,55))},

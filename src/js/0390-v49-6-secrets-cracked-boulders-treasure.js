@@ -24,5 +24,4 @@ function digTreasure(m){tmaps=tmaps.filter(q=>q!==m);const p=V(m.x,0,m.z);burst(
   makeChest(m.x,m.z+.5,'buried treasure',q=>stdLoot(q,m.T,{minR:1,egg:.35,rune:.4,g:1.3}))}
 
 // =============== 7. WORLD EVENTS ===============
-let EVT=null,evNext=nowP()+5*60000;
 

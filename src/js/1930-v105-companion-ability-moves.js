@@ -104,7 +104,6 @@ var MV105={
  bow:{D:860,h:.5,K:[[0,{}],[.35,{nk:.55,hd:.4,fh:-.2,fk:.4,by:-.12,rx:.25}],[.55,{nk:-.45,hd:-.35,jw:.3,y:.1,rx:-.2,ex:.1}],[.85,{nk:-.3,rx:-.1}],[1,{}]]},
  puff:{D:760,h:.55,K:[[0,{}],[.4,{ex:.28,nk:-.2,hd:-.2,rx:-.1,by:.02}],[.55,{ex:-.05,nk:.35,hd:.3,jw:1.0,rx:.12}],[.85,{nk:.2,jw:.5}],[1,{}]]},
  hop:{D:520,h:.55,K:[[0,{}],[.25,{by:-.12,fk:.4,hk:.5}],[.45,{y:.45,nk:-.2,jw:.4}],[.6,{y:0,nk:.3,jw:.8,rx:.1}],[1,{}]]}};
-var MVCH105=['nk','hd','jw','ch','sp','pv','ex','fh','fk','hh','hk','by','tl','ty','paw'];
 function mvEval105(M,k,A,L){const K=M.K;let i=0;while(i<K.length-2&&k>K[i+1][0])i++;const a=K[i],b=K[i+1],t0=(k-a[0])/((b[0]-a[0])||1),t=t0<=0?0:t0>=1?1:t0*t0*(3-2*t0),o={},B={z:0,y:0,ry:0,rz:0,rx:0};
   const ch=new Set(Object.keys(a[1]).concat(Object.keys(b[1])));ch.forEach(c=>{const v=(a[1][c]||0)+((b[1][c]||0)-(a[1][c]||0))*t;if(c=='zL')B.z+=v*L;else if(c in B)B[c]+=c=='ry'?v:v*A;else o[c]=v*A});
   if(M.osc){const [c,amp,f,f0,f1]=M.osc;if(k>f0&&k<f1){const e=Math.sin((k-f0)/(f1-f0)*Math.PI),v=Math.sin((k-f0)/(f1-f0)*f*6.283)*amp*e*A;if(c in B)B[c]+=v;else o[c]=(o[c]||0)+v}}

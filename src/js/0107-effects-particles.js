@@ -17,20 +17,22 @@ function fxStep(dt){
   pg.attributes.position.needsUpdate=true;pg.attributes.color.needsUpdate=true;
 }
 const addMat=c=>new THREE.MeshBasicMaterial({color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
-function ring(pos,col,r,ms){
-  const m=new THREE.Mesh(new THREE.RingGeometry(.4,.55,32),addMat(col));m.rotation.x=-Math.PI/2;m.position.copy(gY(pos,.12));scene.add(m);
-  tw(ms,k=>{m.scale.setScalar(1+k*r);m.material.opacity=1-k},()=>scene.remove(m));
+// one shared ring shape (it only scales); each ring's own material is freed when it fades out
+var G_RING=null;
+function ring(pos,col,r,ms){G_RING=G_RING||new THREE.RingGeometry(.4,.55,32);
+  const m=new THREE.Mesh(G_RING,addMat(col));m.rotation.x=-Math.PI/2;m.position.copy(gY(pos,.12));scene.add(m);
+  tw(ms,k=>{m.scale.setScalar(1+k*r);m.material.opacity=1-k},()=>{scene.remove(m);m.material.dispose()});
 }
 function arc(pos,d,col,r,ms){
   const g=new THREE.Group(),m=new THREE.Mesh(new THREE.RingGeometry(r*.55,r,20,1,-.9,1.8),addMat(col));
   m.rotation.x=-Math.PI/2;g.add(m);g.rotation.y=Math.atan2(-d.z,d.x);g.position.copy(gY(pos,.5));scene.add(g);
-  tw(ms,k=>{m.material.opacity=1-k;g.scale.setScalar(.8+k*.4)},()=>scene.remove(g));
+  tw(ms,k=>{m.material.opacity=1-k;g.scale.setScalar(.8+k*.4)},()=>{scene.remove(g);m.geometry.dispose();m.material.dispose()});
 }
 function bolt(a,b,col){
   for(let t=0;t<2;t++){
     const pts2=[];for(let i=0;i<=9;i++){const p=a.clone().lerp(b,i/9);if(i&&i<9){p.x+=(Math.random()-.5)*.8;p.z+=(Math.random()-.5)*.8;p.y+=(Math.random()-.5)*.4}pts2.push(p)}
     const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),new THREE.LineBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-    scene.add(l);tw(240,k=>l.material.opacity=1-k,()=>{scene.remove(l);l.geometry.dispose()});
+    scene.add(l);tw(240,k=>l.material.opacity=1-k,()=>{scene.remove(l);l.geometry.dispose();l.material.dispose()});
   }
 }
 

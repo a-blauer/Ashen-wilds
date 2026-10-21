@@ -130,8 +130,8 @@ function v89Pose(g,t){const wt=t.wt;
   if(t.sl=='weapon'){if(wt=='bow'){g.rotation.set(0,.35,-.62)}else if(wt=='orb'){g.rotation.set(.25,.5,0)}else if(wt=='sling'){g.rotation.set(0,.3,2.4)}else g.rotation.set(0,.42,2.36)}
   else if(t.sl=='offhand')g.rotation.set(-.12,.55,0);else if(t.sl=='boots')g.rotation.set(.12,-.55,0);else if(t.sl=='ring')g.rotation.set(.45,.35,0);else if(t.sl=='amulet')g.rotation.set(.1,.3,0);else g.rotation.set(.08,.5,0)}
 function v89Mix(a,b,t){return '#'+new THREE.Color(a).lerp(new THREE.Color(b),t).getHexString()}
-function v89Render(it){const t=itT(it),S=112,key='KQI|'+v89Key(it);let g=null;const r=CPIC.r;
-  try{g=lgGroup(key,k=>v89Kit(k,it),.14);const P=new THREE.Group();P.add(g);v89Pose(g,t);V89I.sc.add(P);P.updateMatrixWorld(true);
+function v89Render(it){const t=itT(it),S=112,key='KQI|'+v89Key(it);let g=null,P=null;const r=CPIC.r;
+  try{g=lgGroup(key,k=>v89Kit(k,it),.14);P=new THREE.Group();P.add(g);v89Pose(g,t);V89I.sc.add(P);P.updateMatrixWorld(true);
     const cam=V89I.cam,bb=new THREE.Box3().setFromObject(P),ctr=bb.getCenter(new THREE.Vector3()),d=new THREE.Vector3(.12,.16,1).normalize();
     cam.position.copy(ctr).addScaledVector(d,6);cam.up.set(0,1,0);cam.lookAt(ctr);cam.updateMatrixWorld(true);
     const inv=cam.matrixWorldInverse,v=new THREE.Vector3();let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
@@ -142,8 +142,8 @@ function v89Render(it){const t=itT(it),S=112,key='KQI|'+v89Key(it);let g=null;co
     gr.addColorStop(0,v89Mix(rc,'#1a120c',.55));gr.addColorStop(.62,v89Mix(rc,'#0c0806',.86));gr.addColorStop(1,'#060403');c.fillStyle=gr;c.fillRect(0,0,S,S);
     c.drawImage(r.domElement,0,0,r.domElement.width,r.domElement.height,0,0,S,S);
     c.lineWidth=3;c.strokeStyle=v89Mix(rc,'#000000',.25);c.strokeRect(1.5,1.5,S-3,S-3);c.lineWidth=1;c.strokeStyle='rgba(0,0,0,.8)';c.strokeRect(3.5,3.5,S-7,S-7);
-    V89I.sc.remove(P);return cv}
-  finally{if(g){const gs=LGB[key];if(gs)for(const q in gs)gs[q].dispose();delete LGB[key]}}}
+    return cv}
+  finally{if(P)V89I.sc.remove(P);if(g){const gs=LGB[key];if(gs)for(const q in gs)gs[q].dispose();delete LGB[key]}}}
 function v89Put(k,url){const C=V89I.cache;C.set(k,url);while(C.size>V89I.max){const o=C.keys().next().value,u=C.get(o);C.delete(o);try{if(u&&u.startsWith('blob:'))URL.revokeObjectURL(u)}catch(_){}}}
 function v89Swap(k,url){document.querySelectorAll('[data-kqg="'+k+'"]').forEach(el=>{const im=document.createElement('img');im.className='kqgi';im.alt='';im.draggable=false;im.src=url;el.replaceWith(im)})}
 // ---------------- v96: never the old symbol ----------------

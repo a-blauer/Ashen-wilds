@@ -1,3 +1,5 @@
+// removes every slowing debuff (negative move speed) from the hero: Lay on Hands' and the rewind's cleanse
+function heroCleanseSlow(){const n=hero.buffs.length;hero.buffs=hero.buffs.filter(b=>!(b.s&&b.s.mspd<0&&!b.perm));if(hero.buffs.length!==n&&typeof hsDirty=='function')hsDirty()}
 // ---------------- spawning ----------------
 function spawnEnemy_base(key,x,z,l,o){
   o=o||{};const al=!!o.al,c=enemyC(key,l,{al}),m=cr(c);if(o.zt)c.zt=o.zt;
@@ -60,7 +62,7 @@ function swing_base(){
   const fin=st==N-1,anim=n4?[0,1,0,2][st]:st,mult=(n4?[.8,.8,.95,1.55]:[1,1.1,1.7])[st]*(fin?1+s.finisher:1),ms=(n4?[190,190,210,330]:[300,300,450])[st]*Math.min(1.2,spdK)/(1+s.as*.5);
   const rg=C.rng*(wt=='gs'||wt=='ga'?1.08:1)*(fin?1.12:1);
   atkCd=base*(fin?1.3:1);pl.step=fin?null:{x:d.x,z:d.z,t:.1,sp:3.5};
-  swingAnim(anim,ms,()=>{
+  SWFIN=fin;swingAnim(anim,ms,()=>{
     slashFx(d,anim,rg);if(n4)slashFx(d,anim==1?0:1,rg*.9);
     const hits=area(pl.position,rg,raw*mult,{mt:C.mt,col:0xffe6b0,basic:1},d,fin?1.25:1.15);
     if(fin){ring(pl.position.clone().addScaledVector(d,1.2),0xffe0a0,2.4,320);burst(gY(pl.position.clone().addScaledVector(d,1.3),.15),0xc8b090,22,2.4,1.4,.5);shake(.14);hits.forEach(e=>cbHeavy(e))}
@@ -101,7 +103,7 @@ function cast_base(i){
     case 'channel':hero.chan={t:sk.dur,tick:0,sk,raw,R:Rr,mt};pl.sw=1;break;
     case 'barrier':hero.sh=heroMax()*sk.v*(1+s.shieldP)*kqrP(sk);hero.shT=now+sk.dur*1000;ring(P,sk.col,2.2,600);burst(gY(P,1),sk.col,30,1.5,2,.7);break;
     case 'rain':{const p=sk.at=='self'?P.clone():aimPoint(10);zoneAt(p,Rr,raw,mt,sk.col,sk.ticks,sk.iv,{follow:sk.at=='self'});break}
-    case 'heal':healHero(heroMax()*sk.v*kqrP(sk));pl.slow=0;ring(P,sk.col,2.6,700);burst(gY(P,1),sk.col,40,1.5,3,.9);break;
+    case 'heal':healHero(heroMax()*sk.v*kqrP(sk));heroCleanseSlow();ring(P,sk.col,2.6,700);burst(gY(P,1),sk.col,40,1.5,3,.9);break;
     case 'blink':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);const dv=t?V(t.m.position.x-P.x,0,t.m.position.z-P.z):d.clone().setY(0);const L_=dv.length()||1;dv.multiplyScalar(1/L_);const dist=t?Math.min(8,L_+1.8):5.5;face(dv);hero.iv=Math.max(hero.iv,dist/14+.15);hero.dash={x:dv.x,z:dv.z,t:dist/14};shadowRush(dist,raw,mt,fx,sk);break}
     case 'fan':for(let j=0;j<sk.n2;j++){const a=j/sk.n2*6.283,dd=V(Math.sin(a),0,Math.cos(a));launch(P,dd,16,{col:sk.col,mt,arrow:0},raw,.55)}break;
     case 'mark':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);if(!t){hero.cd[key]=0;hero.mp+=sk.mp;say('No target in reach.');return}t.mark=sk.dur;t.markV=sk.v*kqrU(sk);heroHit(t,raw,mt,{s:fx});ring(t.m.position,sk.col,1.6,600);dn(t.m.position,'Marked','#ff6a9a',-36,1000);break}
@@ -125,7 +127,7 @@ function compCast(c,f,sp,t){
     case 'cone':arc(P,d,col,R2,300);enemies.forEach(e=>{if(e.dead)return;const v=V(e.m.position.x-P.x,0,e.m.position.z-P.z),L=v.length();if(L<R2&&(L<.4||Math.acos(Math.min(1,v.dot(d)/L))<.9))compHit(c,e,mult,fx)});break;
     case 'beam':{const o=gY(P,.6);bolt(o,o.clone().addScaledVector(d,8),col);enemies.forEach(e=>{if(e.dead)return;const v=V().subVectors(e.m.position,P).setY(0),a=v.dot(d),w=Math.abs(v.x*d.z-v.z*d.x);if(a>0&&a<8&&w<1)compHit(c,e,mult,fx)});break}
     case 'rain':zoneAt(t.m.position.clone().setY(0),R2,0,'p',col,sp.ticks||6,sp.iv||.45,{cc:c,mm:mult,fx});break;
-    case 'chain':chainFrom(t,0,'m',sp.jumps||3,col,c,fx);break;
+    case 'chain':chainFrom(t,mult,'m',sp.jumps||3,col,c,fx);break;
     case 'meteor':{const p=t.m.position.clone();tele(p,R2,sp.delay||1,()=>{ring(p,col,R2*2,400);burst(gY(p,.4),col,50,R2*1.5,3,.8);enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,p)<R2)compHit(c,e,mult,{burn:4})})});break}
     case 'shield':{const mx=heroMax();hero.sh=Math.max(hero.sh,mx*sp.v*(1+HS().shieldP));hero.shT=performance.now()+(sp.dur||8)*1000;ring(pl.position,col,2.2,600);burst(gY(pl.position,1),col,24,1.4,2,.6);
       if(sp.nova)enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,pl.position)<2.8)compHit(c,e,sp.nova)});break}

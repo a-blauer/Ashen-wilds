@@ -121,10 +121,13 @@ function waveSpawn(){const W2=WV,p=PMAP[W2.pi],L=BIOEN[p.n]||['hobgoblin'],last=
   for(let k=0;k<cnt;k++){const a=k/cnt*6.283+Math.random()*.5,r=9+Math.random()*4,x=p.wa[0]+Math.cos(a)*r,z=p.wa[1]+Math.sin(a)*r;const al=k<nel;
     const e=spawnEnemy(L[k%L.length],x,z,Math.min(MAXLV,lv+(al?1:0)),{agg:1,minion:1,al});if(e){e.ev=1;e.wv=1;e.agg=1;W2.foes.push(e);burst(gY(e.m.position,.5),0xff6a40,16,2,2,.5)}}
   banner('WAVE '+W2.w+' / '+W2.n,PMAP[W2.pi].n,cnt+' foes · level '+lv+(nel?' · '+nel+' elite'+(nel>1?'s':'')+'!':''));if(typeof sfx=='function')sfx('horn');shake(.15)}
-function waveHud(){let d=$('wvHud');if(!WV||!WV.go){if(d)d.remove();return}
-  if(!d){document.body.insertAdjacentHTML('beforeend','<div id="wvHud" style="position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(20,10,10,.85);border:1px solid #b0402a;color:#ffd8c8;border-radius:10px;padding:5px 14px;font:700 13px system-ui,sans-serif;pointer-events:none;text-align:center"></div>');d=$('wvHud')}
-  const alive=WV.foes.filter(e=>!e.dead&&enemies.includes(e)).length,nx=WV.w<WV.n?Math.max(0,Math.ceil(WV.w?WV.nt:WV.brk)):null;
-  d.innerHTML='⚔️ Wave '+Math.max(1,WV.w)+' / '+WV.n+' · '+alive+' foe'+(alive==1?'':'s')+' left'+(nx!=null?' · <span style="color:#ffb070">next wave in '+nx+'s</span>':' · <span style="color:#ffd060">final wave!</span>')}
+// runs every frame: keeps its element, counts the live foes waveTick already filtered, and only writes when the text changes
+var WVH={d:null,s:''};
+function waveHud(){let d=WVH.d;if(!WV||!WV.go){if(d){d.remove();WVH.d=null;WVH.s=''}return}
+  if(!d){document.body.insertAdjacentHTML('beforeend','<div id="wvHud" style="position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(20,10,10,.85);border:1px solid #b0402a;color:#ffd8c8;border-radius:10px;padding:5px 14px;font:700 13px system-ui,sans-serif;pointer-events:none;text-align:center"></div>');d=WVH.d=$('wvHud');WVH.s=''}
+  const alive=WV.foes.reduce((n,e)=>n+(e.dead?0:1),0),nx=WV.w<WV.n?Math.max(0,Math.ceil(WV.w?WV.nt:WV.brk)):null;
+  const h='⚔️ Wave '+Math.max(1,WV.w)+' / '+WV.n+' · '+alive+' foe'+(alive==1?'':'s')+' left'+(nx!=null?' · <span style="color:#ffb070">next wave in '+nx+'s</span>':' · <span style="color:#ffd060">final wave!</span>');
+  if(h!==WVH.s){WVH.s=h;d.innerHTML=h}}
 function waveTick(dt){const W2=WV;if(!W2){waveHud();return}if(!W2.go){return}if(curMap()!=W2.pi){waveEnd(false,true);waveHud();return}
   if(!W2.w){W2.brk-=dt;if(W2.brk<=0){W2.w=1;W2.nt=WV_GAP;waveSpawn()}waveHud();return}
   W2.foes=W2.foes.filter(e=>!e.dead&&enemies.includes(e));const alive=W2.foes.length;
@@ -140,7 +143,7 @@ function waveEnd(won,quiet){const W2=WV;if(!W2)return;WV=null;W2.foes.forEach(e=
   for(let k=0;k<2;k++)drop('potion',null,pos,0);if(Math.random()<.35+.05*T){const eg=rollEgg(Math.min(5,T));drop('egg',eg,pos,eg.tier)}
   const g=150*T+R(0,100);gold+=g;pickup({ic:'🪙',t:'+'+g+' gold',col:'#ffd24a'});hud()}
 var prfT=0;{const f=homeTick;homeTick=function(dt,now,al){f(dt,now,al);if(dt>0)waveTick(dt);if(home!==TOWNS[0])home=TOWNS[0];if(now-prfT>1000){prfT=now;portalRefresh();rportRefresh()}}}
-{const f=down;down=function(){if(WV){waveEnd(false,true);say('☠ You fell in the Wave Trial.')}return f.apply(this,arguments)}}
+{const f=down;down=function(){if(WV&&!phxReady()){waveEnd(false,true);say('☠ You fell in the Wave Trial.')}return f.apply(this,arguments)}}
 // ---- the Citadel is a castle: stone walls instead of cliffs ----
 {const p=PMAP[5],L=[];for(const I of p.ins.concat(p.tri))for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(MAP[y][x]!=='')continue;let adj=false;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=MAP[y+dy]&&MAP[y+dy][x+dx];if(t&&t!=='')adj=true}if(adj)L.push([x,y])}
   const mt=new THREE.MeshStandardMaterial({roughness:.92,flatShading:true}),wm=new THREE.InstancedMesh(new THREE.BoxGeometry(1.02,1,1.02),mt,L.length),cm=new THREE.InstancedMesh(new THREE.BoxGeometry(.5,.6,.5),mt,L.length),o=new THREE.Object3D(),cc=new THREE.Color();
