@@ -96,7 +96,7 @@ XR.densign=()=>{const i=+xwArg,T=DSTXT[i],B=BOSSES[i];if(!T||!B)return;const L=d
   const atk=T.atk.map(([n,d,a])=>`<div class="rw dsg-a"><span class="rn"><b>${esc(n)}</b><small>${esc(d)}</small><small class="dsg-av">➜ ${esc(a)}</small></span></div>`).join('');
   const wk=T.weak.map(w=>`<li>${esc(w)}</li>`).join('');
   $('xwB').innerHTML=`<div class="dsg">${rec}<h4 class="dsg-h">Attacks</h4><div class="rows">${atk}</div><h4 class="dsg-h">Weaknesses &amp; counters</h4><ul class="dsg-w">${wk}</ul></div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Red on the ground marks where a hit will land — it stays until the blow falls. Phases change at 70% and 40% health.</span>'};
+  $('xwF').innerHTML='<span class="mut dtl">Big attacks show red on the ground until they land; close swings only flash a faint outline at the last moment — watch the wind-up. Phase II begins at 55% health. Fill the yellow posture bar to stagger it.</span>'};
 {const st=document.createElement('style');st.textContent=`.dsg-lv{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:baseline;padding:8px 12px;margin:2px 0 8px;border:1px solid rgba(201,162,74,.45);border-radius:8px;background:rgba(40,24,12,.55)}
 .dsg-lv small{flex-basis:100%}.dsg-h{margin:10px 0 4px;font-family:Cinzel,Georgia,serif;color:var(--kq-gold,#e6bf6a);letter-spacing:.04em;font-size:.95rem}
 .dsg-a .rn small{display:block;margin-top:2px}.dsg-a .rn .dsg-av{color:#9ae8b0}.dsg-w{margin:0;padding-left:20px;line-height:1.45}.dsg-w li{margin:3px 0}`;document.head.appendChild(st)}
