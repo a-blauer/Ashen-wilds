@@ -163,6 +163,19 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (0.55) through the `awaken` move. Co-op: only the driver (`svAuth`) picks; every cast is relayed as BMV `sv<i>_<id>` with the
   seed in `en` (1 + seed/1000, the relay clamps en to 0.5–2), so partners replay the same timeline and random choices.
   The v86 den hazards and den AIs are switched off by `svDenTakeover` (scenery, seal and colliders stay).
+- **Instance themes (v112, `1981-v112-instance-themes.js`)**: field instances II and III of every zone have their own sub-theme (own
+  `BIOMES` entry with the zone's name, own tiles via `v112Map`, wall profile via `v112Ht`, decoration set via `v112Deco` in 1680, glowing
+  ribbons, per-instance atmosphere and arrival name). Kindlelight: Glowmire Hollows (caves, goo streams, mushrooms) / Rotwood (decaying
+  forest); Hillside Crest: Mistmere / Galecliffs; Burningeye Summit: Rimecaverns / Stormcrown; Searing Sands: Sunken Temple / Salt Wastes;
+  The Dirge: Drowned Crypts / Ossuary Fields; The Citadel: Outer Ramparts / Inner Keep. Instance I keeps its v108 ground. `WD_WL` 112: a
+  v108 save standing in II or III goes to that instance's entrance. `test/v112_instances.py` (walkability, determinism, saves),
+  `v112_shots.py` (contact sheet).
+- **Terrain height fix (v112)**: `GHv` clamps the row by `H` (it used `W`, so everything south of row 1182 — all of The Citadel and the
+  Crimson Throne Hall — read row 1182's heights). `test/v112_arena.py` checks arrival height and floor flatness in all six dens.
+- **Sovereigns (v112)**: every boss file (1971–1976) has a far more detailed model, three new special attacks, cooldowns on every move and
+  its own `DSTXT[i]` den-sign text at the end of the file. Rime Wraith's scythe and the Bloated One's cleaver are held blade-down;
+  Ssith'ra surfaces head-only (`burrowH`/`burrowB`) when another burrow follows and only whole on the last (`burrowC`). Tests:
+  `test/v112_<argus|hydra|wraith|ssithra|bloated|vaelric>.py`.
 - **Far-scenery cull (v111)**: top-level objects (and the children of groups wider than `FC.big` tiles) whose world
   bounding sphere is beyond the fog's reach (`FC.k`/density, clamped to FARR+`FC.pad`..cam.far) are hidden only while
   `POST.render` runs, so game code never sees their `visible` change. Chunk props (CHL), lights, the hero, enemy models,
