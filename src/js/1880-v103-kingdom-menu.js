@@ -17,7 +17,7 @@ var KM103_SHOPD={smith:'Upgrade and reforge your gear at the forge'};
 function kmRow103(o){// o: {i,n,d,state,cost,btn:[[label,data,attrs]],col}
   return `<div class="rw kmrw" style="--rc:${o.col||'#c9a24a'}"><span class="rn">${o.i} <b>${o.n}</b>${o.pips?' <span class="kmpip">'+o.pips+'</span>':''}<small>${o.d}${o.cost?'<br>'+o.cost:''}</small></span><span class="ra">${o.state||''}${(o.btn||[]).map(b=>`<button ${b[2]||''} ${b[1]}>${b[0]}</button>`).join('')}</span></div>`}
 function kmLotTxt103(key){const l=lotOf103(key);return l?'<span class="mut kmlot" data-kmshow="'+l.id+'">📍 '+l.id+'</span>':''}
-XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
+XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Kingdom of Duskhold';
   $('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;$('xwS').title='Gold · Sovereigns defeated · citizens';
   const P=KM103.pick,R=[],mv=key=>['Move','data-kmmv="'+key+'"',P?'disabled':''],rt=key=>['⟳','data-kmrot="'+key+'"',(P?'disabled ':'')+'title="Turn it a quarter turn"']; // v109: turn buildings
   // ---- shops ----
@@ -40,23 +40,7 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
   HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i),rt('h:'+i)],col:'#d8b46a'})));
   if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
-  // ---- citizens (v104: each has a trade; v105: ranks, food, goods to collect at the house) ----
-  R.push('<div class="sec kmcits">👥 Citizens</div>');
-  if(!HS103.cit.length)R.push('<div class="mut kmnote">Nobody lives in Duskhold yet. Build a house and two citizens move in.</div>');
-  else{if(!bossDone.size)R.push('<div class="mut kmnote">Complete a zone (defeat its Sovereign) and citizens can work there.</div>');
-    const fd=czFood105();
-    R.push('<div class="mut kmnote">🍖 Food for trips: <b style="color:'+(fd?'var(--ink)':'#f87171')+'">'+fd+' ration'+(fd==1?'':'s')+'</b> in your bag (raw meat, fish, berries and crops are 1 ration, cooked meals 3). A trip costs 1 ration for a gatherer, otherwise the zone\'s tier.<br>'+
-      'Train a citizen as an 🥚 Egg Collector (🪙 '+CZR104.egg.g+'), 🎣 Fisherman (🪙 '+CZR104.fish.g+') or 🏹 Hunter (🪙 '+CZR104.hunt.g+'). Raise their rank to reach higher-tier zones. Goods wait at the house until you collect them there.</div>');
-    HS103.cit.forEach((c,i)=>{const h=HS103.h[c.h],ro=czRole104(c),RR=CZR104[ro],L=czOpts104(c),rk=czRank105(c),up=czUpCost105(c),busy=!!(c.t0||c.bag);
-      const opts='<option value="">💤 Idle — strolls round town</option>'+L.map(([v,l,ok])=>`<option value="${v}" ${c.task===v?'selected':''} ${ok?'':'disabled'}>${l}</option>`).join('');
-      const tr='<option value="">'+RR.i+' '+RR.n+'</option>'+Object.keys(CZR104).filter(k=>k!==ro).map(k=>`<option value="${k}" ${gold<CZR104[k].g||busy?'disabled':''}>Train as ${CZR104[k].i} ${CZR104[k].n}${CZR104[k].g?' · 🪙 '+CZR104[k].g:' (free)'}</option>`).join('');
-      let st;if(c.bag)st='<b style="color:#f0cc72">🎁 Back with goods — collect them at '+(h?h.nm:'the house')+' (F)</b><br>'+czGoodsTxt105(c.bag);
-      else if(c.task&&c.t0)st=czTaskTxt104(c)+` · back in <b data-czt="${i}">${kmClock103(czLeft103(c))}</b>`;
-      else if(c.task&&c.wf==1)st='<span class="warn" style="display:inline">🍽️ Waiting for food: needs '+czCost105(c)+' ration'+(czCost105(c)>1?'s':'')+' to set off</span> · '+czTaskTxt104(c);
-      else if(c.task&&c.wf==2)st='<span class="warn" style="display:inline">🥚 Your egg bag is full ('+CZ104_EGGMAX+')</span> · '+czTaskTxt104(c);
-      else st=L.length?'Idle in town':'Idle — no work yet ('+(ro=='fish'?'needs a completed zone with water':'needs a completed zone')+')';
-      const ub=up?`<button data-czu="${i}" ${gold<up?'disabled':''} title="Rank ${rk+1}: Tier ${rk+1} zones">⬆ Rank ${rk+1} · 🪙 ${up}</button>`:'<em style="color:#6ee7b7">Max rank</em>';
-      R.push(`<div class="rw kmrw kmcit kmr-${ro}${KM103.house===c.h?' on':''}"><span class="rn">${RR.i} <b>${c.n}</b> <span class="kmrole">${RR.n} · rank ${rk}</span> <span class="mut">· ${h?h.nm:''}</span><small>${st}</small></span><span class="ra kmcsel"><select data-czr="${i}" aria-label="Trade for ${c.n}" ${busy?'disabled title="Busy with a trip"':''}>${tr}</select><select data-czk="${i}" aria-label="Task for ${c.n}" ${busy?'disabled title="Busy with a trip"':''}>${opts}</select>${ub}</span></div>`)})}
+  // ---- citizens: their own Villagers tab since v116 (vlRender116 in 2150) ----
   // ---- plan ----
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
   const lkd=lot&&typeof lotOpen109=='function'&&!lotOpen109(lot.id),pinf=typeof lotInfo109=='function'?lotInfo109(P):'';
@@ -66,7 +50,7 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   $('xwB').innerHTML=`<div class="km"><div class="kmplan"><canvas id="kmCv" width="680" height="680"></canvas>${info}</div><div class="kmlist rows">${R.join('')}</div></div>`;
   $('xwF').innerHTML='<span class="mut dtl">Gather wood, stone, fibers, glow caps and the like in the portal zones, and monster parts like Rock Core, Silk Gland and Ectoplasm. Upgrade levels need defeated Sovereigns. Every building can be moved and turned (⟳) for free.</span>';
   kmDraw103();
-  if(KM103.focus=='cit'){KM103.focus=null;try{const e=$('xwB').querySelector('.kmcits');if(e)e.scrollIntoView({block:'start'})}catch(_){}}};
+};
 function kmClock103(ms){const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function kmDraw103(){const cv=$('kmCv');if(!cv)return;try{KM103.info=lotPlan103(cv,{pick:KM103.pick?KM103.pick.key||'__new':null,hover:KM103.hover,sel:KM103.sel})}catch(e){console.warn('v103 plan',e)}}
 function kmCvLot103(e){const cv=$('kmCv');if(!cv||!KM103.info)return null;const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.width/r.width,y=(e.clientY-r.top)*cv.height/r.height;return lotHit103(KM103.info,x,y)}

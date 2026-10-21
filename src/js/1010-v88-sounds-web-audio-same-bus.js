@@ -121,11 +121,11 @@ function kqsTick(dt,now){
 // ---------------- HUD: empty slots, aiming highlight, ability-point chip ----------------
 {const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||!party.length)return;const L=heroSkills();
   if(L.length<KQS_SLOTS){const btns=[...A.querySelectorAll('button[data-x]')],sk=btns.filter(b=>/^\d+$/.test(b.dataset.x)),after=sk[sk.length-1]||btns.find(b=>b.dataset.x=='a');
-    let h='';for(let i=L.length;i<KQS_SLOTS;i++)h+=`<button class="hs kqs-empty" data-x="E${i}" title="Empty ability slot — open Abilities (K)"><span class="ic">＋</span><span class="kb">${i+1}</span><span class="sb">empty</span><span class="cdv" style="height:0"></span></button>`;
+    let h='';for(let i=L.length;i<KQS_SLOTS;i++)h+=`<button class="hs kqs-empty" data-x="E${i}" title="Empty ability slot — open Abilities (C)"><span class="ic">＋</span><span class="kb">${i+1}</span><span class="sb">empty</span><span class="cdv" style="height:0"></span></button>`;
     if(after)after.insertAdjacentHTML('afterend',h)}
   if(KQS.tg){const b=A.querySelector('button[data-x="'+KQS.tg.i+'"]');if(b)b.classList.add('kqs-aim')}
   L.forEach((s,i)=>{if(s.gt){const b=A.querySelector('button[data-x="'+i+'"]');if(b)b.classList.add('kqs-gt')}});
-  const ap=apFree(),B=$('buffs');if(B&&ap>0)B.insertAdjacentHTML('afterbegin',`<span class="bf kqs-apn" data-kqsopen="1" title="Spend ability points (K → Abilities)">⚡ ${ap} ability point${ap>1?'s':''} · K</span>`)}catch(err){}}}
+  const ap=apFree(),B=$('buffs');if(B&&ap>0)B.insertAdjacentHTML('afterbegin',`<span class="bf kqs-apn" data-kqsopen="1" title="Spend ability points (C · Abilities)">⚡ ${ap} ability point${ap>1?'s':''} · C</span>`)}catch(err){}}}
 $('acts').addEventListener('pointerdown',e=>{const b=e.target.closest('.kqs-empty');if(!b)return;e.preventDefault();e.stopImmediatePropagation();openAbil()},true);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-kqsopen]');if(!t)return;e.preventDefault();if(!$('tal').classList.contains('hide'))$('tal').classList.add('hide');if($('sysmenu'))$('sysmenu').classList.add('hide');if(xwMode!='abil'||$('xw').classList.contains('hide'))openAbil()});
 
@@ -146,27 +146,27 @@ XR.abil=()=>{const c=hero.cls,C=CLS[c],all=kqsAll(c),eqd=heroSkills(),ap=apFree(
     ${un?`<div class="sec">Put on a key</div><div class="btns kqs-keys">${[0,1,2,3].slice(0,KQS_SLOTS).map(k=>`<button data-kqseq="${sel.n}" data-kqsk="${k}" class="${q===k?'pri':''}" ${k>eqd.length-(q>=0?1:0)?'disabled':''}>${k+1}</button>`).join('')}${q>=0&&eqd.length>1?`<button data-kqsun="${q}">Unequip</button>`:''}</div>`
       :`<div class="btns"><button class="pri" data-kqsbuy="${sel.n}" ${why?'disabled':''}>${why?'🔒 '+why:'Unlock for '+cost+' ability point'+(cost>1?'s':'')}</button></div>`}
     ${sel.gt?'<div class="mut kqs-hint">Press its key, aim the circle with the mouse (or drag on a touch screen), then click / tap — or press the key again — to cast. Right-click or Esc cancels.</div>':''}</div>`;
-  $('xwB').innerHTML=kqsTabs('ab')+`<div class="kqs-ld"><div class="sec">Equipped · keys 1–${KQS_SLOTS}</div><div class="kqs-slots">${slots}</div></div><div class="xcols kqs-cols"><div class="kqs-list">${tiers}</div><div>${det}</div></div>`;
-  $('xwF').innerHTML=`<span class="mut dtl">You earn 1 ability point every level. Unlock abilities here, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}. Talents are a separate tab.</span><button data-kqsreset="1" ${apSpent()?'':'disabled'}>Reset abilities (🪙 ${kqsResetCost()})</button>`};
+  $('xwB').innerHTML=`<div class="kqs-ld"><div class="sec">Equipped · keys 1–${KQS_SLOTS}</div><div class="kqs-slots">${slots}</div></div><div class="xcols kqs-cols"><div class="kqs-list">${tiers}</div><div>${det}</div></div>`;
+  $('xwF').innerHTML=`<span class="mut dtl">You earn 1 ability point every level. Unlock abilities here, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.</span><button data-kqsreset="1" ${apSpent()?'':'disabled'}>Reset abilities (🪙 ${kqsResetCost()})</button>`};
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-kqsbuy],[data-kqseq],[data-kqsun],[data-kqslot],[data-kqsel],[data-kqsreset],[data-kqstal]');if(!t||t.disabled)return;e.stopPropagation();const D=t.dataset;
   try{mSfx('tick')}catch(_){}
   if(D.kqsbuy!=null)return kqsBuy(D.kqsbuy);
   if(D.kqseq!=null){const k=D.kqsk!=null?+D.kqsk:KQS.slot|0;KQS.sel=D.kqseq;skSet(Math.min(k,heroSkills().length-(heroSkills().some(s=>s.n==D.kqseq)?1:0)),D.kqseq);return}
   if(D.kqsun!=null)return kqsUneq(+D.kqsun);
   if(D.kqsreset!=null)return kqsReset();
-  if(D.kqstal!=null){KQS.tab='tal';closeX();openTal();return}
-  if(D.kqslot!=null){KQS.slot=+D.kqslot;const s=heroSkills()[KQS.slot];if(s)KQS.sel=s.n;rX();return}
+    if(D.kqslot!=null){KQS.slot=+D.kqslot;const s=heroSkills()[KQS.slot];if(s)KQS.sel=s.n;rX();return}
   if(D.kqsel!=null){KQS.sel=D.kqsel;rX()}});
 // the talents window points to the ability book (replaces the v71 skill list)
-function skHTML(){const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
-// K: Talents | Abilities. K reopens the tab you used last, and closes the Abilities tab when it is open
-addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='k')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
-  if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation()}},true);
-{const f=openTal;openTal=function(){if(KQS.tab=='ab'&&!uiOpen()&&party.length)return openAbil();KQS.tab='tal';return f.apply(this,arguments)}}
+function skHTML(){return '';const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
+// v116: Talents (K) and Abilities (C) are two separate windows with their own keys; neither links to the other.
+// C opens the Abilities window and closes it again.
+addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='c')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
+  if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation();return}if(!uiOpen())openAbil()},true);
+{const f=openTal;openTal=function(){if(!$('xw').classList.contains('hide')&&xwMode=='abil')closeX();KQS.tab='tal';return f.apply(this,arguments)}}
 function kqsTabs(on){const ap=apFree();return `<div class="tabs kqs-tabs"><button class="${on=='tal'?'on':''}" data-kqstal="1">✦ Talents${tpFree()?' <b class="kqs-n">'+tpFree()+'</b>':''}</button><button class="${on=='ab'?'on':''}" data-kqsopen="1">⚡ Abilities${ap?' <b class="kqs-n">'+ap+'</b>':''}</button></div>`}
-{const f=rTal;rTal=function(){f.apply(this,arguments);try{const w=document.querySelector('#tal .wh');if(!w)return;let t=w.querySelector('.kqs-tabs');if(t)t.remove();w.querySelector('h2').insertAdjacentHTML('afterend',kqsTabs('tal'))}catch(_){}}}
+// (v116: the Talents window no longer carries a Talents | Abilities tab bar)
 document.addEventListener('click',e=>{const t=e.target.closest('#tal [data-kqstal]');if(t)e.preventDefault()});
-{const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>K</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
+{const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>C</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
 document.head.insertAdjacentHTML('beforeend',`<style>
 .kqs-tg{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:10px;padding:6px 8px 6px 14px;font-size:.8rem;pointer-events:auto;border-radius:10px;white-space:nowrap;max-width:calc(100% - 32px);box-sizing:border-box}
 .kqs-tg .kqs-tgh{opacity:.8}.kqs-tg kbd{font-size:.7rem}.kqs-tg .kqs-tgx{min-width:30px;padding:3px 8px}

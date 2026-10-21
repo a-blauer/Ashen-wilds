@@ -121,7 +121,7 @@ const skAll=c=>SKB[c].concat(SKX[c]||[]);
 var SKC={key:'',arr:null};
 Object.keys(SKB).forEach(c=>Object.defineProperty(SKL,c,{configurable:true,enumerable:true,get(){if(c!==hero.cls)return SKB[c];const key=c+'|'+((hero.tal&&hero.tal.__ld)||'')+'|'+Object.keys(hero.tal||{}).filter(k=>k.startsWith('sk:')).join(',');if(SKC.key!==key){SKC.key=key;SKC.arr=skLoad(c)}return SKC.arr}}));
 {const f=talSpent;talSpent=function(b){let n=f(b);if(b==null&&hero.tal)for(const k in hero.tal)if(k.startsWith('sk:'))n+=hero.tal[k]|0;return n}}
-{const f=rTal;rTal=function(){f.apply(this,arguments);const t=$('talT');if(!t)return;let d=$('skBox');if(!d){t.insertAdjacentHTML('afterend','<div id="skBox"></div>');d=$('skBox')}d.innerHTML=skHTML()}}
+{const f=rTal;rTal=function(){f.apply(this,arguments);const t=$('talT');if(!t)return;let d=$('skBox');if(!d){t.insertAdjacentHTML('afterend','<div id="skBox"></div>');d=$('skBox')}d.innerHTML=skHTML();d.style.display=d.innerHTML?'':'none'}}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-sku],[data-sks]');if(!t||t.disabled||!$('skBox')||!$('skBox').contains(t))return;
   if(t.dataset.sku){const s=skAll(hero.cls).find(q=>q.n===t.dataset.sku);if(!s||tpFree()<1||hero.lvl<s.lv)return;hero.tal['sk:'+s.n]=1;say('🗡️ Unlocked '+s.i+' '+s.n+'! Put it on a key below.');
     const cur=heroSkills();if(cur.length<4)skSet(cur.length,s.n);else rTal();hud()}

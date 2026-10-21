@@ -43,21 +43,25 @@ function kqmForgePanel(it){if(!it)return '<div class="mut">Pick an item on the l
     return `<div class="kqm-frow"><span>${kqmLab(k)}</span><span>${kqmFmt(k,a).replace(/^\+/,fl?'':'+')} → <b>${kqmFmt(k,b).replace(/^\+/,fl?'':'+')}</b> ${(fl?Math.abs(d)>=.5:Math.abs(d)>=.0005)?`<span class="kqm-ok">▲${kqmFmt(k,d).slice(1)}</span>`:''}</span></div>`}).join('');
   h+=`<div class="kqm-h">Cost</div><div class="kqm-frow"><span>${matInfo(c.m)[1]} ${c.m}</span><b class="${hm>=c.n?'kqm-ok':'kqm-bad'}">need ${c.n} · have ${hm}</b></div><div class="kqm-frow"><span>🪙 Gold</span><b class="${gold>=c.g?'kqm-ok':'kqm-bad'}">${c.g.toLocaleString()}</b></div><div class="kqm-frow"><span>Success chance</span><b>${Math.round(c.ch*100)}%</b></div>`+
     (c.ch<1?'<div class="mut" style="font-size:.7rem">A failed upgrade uses the materials and gold; the item is never harmed.</div>':'');
-  const lock=u>=cap,why=lock?'Forge mastery reaches +'+cap+'. Defeat Sovereigns (J) to raise it.':!inTown?'Upgrades need a forge: visit any town.':hm<c.n?'Not enough '+c.m+'.':gold<c.g?'Not enough gold.':'';
+  const lock=u>=cap,why=lock?'Forge mastery reaches +'+cap+'. Defeat Sovereigns to raise it.':!inTown?'Visit the Blacksmith in Duskhold to upgrade.':hm<c.n?'Not enough '+c.m+'.':gold<c.g?'Not enough gold.':'';
   h+=`<div class="mut" style="font-size:.7rem">Forge mastery: up to +${cap}</div>${why?`<div class="kqm-bad" style="font-size:.72rem">${why}</div>`:''}<button class="pri" data-kqup="1" ${why?'disabled':''}>⚒️ Upgrade to +${u+1}</button>`;
   return h}
 function kqmForgeTab(){const E=SLOTS.map(k=>eq[k]).filter(Boolean),G=gear.slice().sort(KQM_SORT.best);
   return `<div class="kqm-forge"><div><div class="kqm-h">Equipped</div><div class="kqm-grid">${E.map(i=>kqmTile(i,'e',{lv:1})).join('')}${kqmEmpty((6-E.length%6)%6)}</div>`+
     `<div class="kqm-h">In your bag</div><div class="kqm-grid">${G.map(i=>kqmTile(i,'g',{lv:1})).join('')}${kqmEmpty(Math.max(12,Math.ceil((G.length+1)/6)*6)-G.length)}</div></div><div class="kqm-fp" id="kqmFP">${kqmForgePanel(kqmForgeItem())}</div></div>`}
 // ---------------- the render hook ----------------
-var KQM_FORGE=7,KQM_STATS=8;
+var KQM_FORGE=7,KQM_STATS=8,KQM_SMITH=false;
 function kqmBag(){kqmBagInit();if(!KQM.ready)return;kqmMarkNew();
-  const bt=$('bt');if(bt&&!bt.querySelector('[data-bt="'+KQM_FORGE+'"]'))bt.insertAdjacentHTML('beforeend',`<button data-bt="${KQM_FORGE}" class="${bagTab2==KQM_FORGE?'on':''}" title="Upgrade your gear">⚒️ Forge</button><button data-bt="${KQM_STATS}" class="${bagTab2==KQM_STATS?'on':''}">Stats</button>`);
+  // v116: the Forge tab exists only while the bag was opened at the Blacksmith (KQM_SMITH, set by TWN100_ACT.smith)
+  const bt=$('bt');if(!KQM_SMITH&&bagTab2==KQM_FORGE)bagTab2=0;
+  if(bt){const fb=bt.querySelector('[data-bt="'+KQM_FORGE+'"]');if(fb&&!KQM_SMITH){fb.remove();bt.querySelectorAll('.on').forEach(x=>x.classList.remove('on'))}
+    if(!bt.querySelector('[data-bt="'+KQM_STATS+'"]'))bt.insertAdjacentHTML('beforeend',`<button data-bt="${KQM_STATS}" class="${bagTab2==KQM_STATS?'on':''}">Stats</button>`);
+    if(KQM_SMITH&&!bt.querySelector('[data-bt="'+KQM_FORGE+'"]'))bt.querySelector('[data-bt="'+KQM_STATS+'"]').insertAdjacentHTML('beforebegin',`<button data-bt="${KQM_FORGE}" class="${bagTab2==KQM_FORGE?'on':''}" title="Upgrade your gear">⚒️ Forge</button>`)}
   if(bt&&!bt.querySelector('.on')){bagTab2=0;const b=bt.querySelector('[data-bt="0"]');if(b)b.classList.add('on')}
   kqmDoll();const bl=$('bl'),T=bagTab2;
   $('kqmStatP').classList.toggle('kqm-tabhid',T!=KQM_STATS);bl.classList.toggle('kqm-tabhid',T==KQM_STATS);
   if(T==0)bl.innerHTML=kqmGearTab();else if(T==1)bl.innerHTML=kqmMatTab();else if(T==3)bl.innerHTML=kqmSupTab();else if(T==4)bl.innerHTML=kqmEggTab();
-  else if(T==KQM_FORGE){bl.innerHTML=kqmForgeTab();$('idt').innerHTML='<span class="mut dtl">⚒️ Upgrades need a town forge. Upgrade materials drop in the portal zones; the Trading Post sells the one for your tier. Success chance falls after +5.</span>'}
+  else if(T==KQM_FORGE){bl.innerHTML=kqmForgeTab();$('idt').innerHTML='<span class="mut dtl">⚒️ The Blacksmith upgrades your gear here. Upgrade materials drop in the portal zones; the Trading Post sells the one for your tier. Success chance falls after +5.</span>'}
   else if(T==KQM_STATS)$('idt').innerHTML='<span class="mut dtl">Hover any stat for where it comes from. Gear, talents, food, elixirs and Sovereign powers all add up here.</span>';
   if(T==1||T==4)$('idt').innerHTML='<span class="mut dtl">'+(T==1?'Hover a material to see what it is for and where to find more.':'Eggs hatch on their own while you carry them. A glowing egg is ready: click it to watch it hatch.')+'</span>';
   if(T==3){const k=KQM.supSel,S=k&&SUP[k];if(S&&cnt(k)>0){const u=['food','elixir','pot'].includes(S.c);$('idt').innerHTML=`<div class="dtl"><div class="dh">${S.i} ${kqmEsc(S.n)} <small>×${cnt(k)}</small></div><div class="mut" style="font-size:.74rem">${S.d||''}</div></div>${u?`<button class="pri" data-use="${k}">${S.c=='food'?'Eat':'Drink'}</button>`:''}`}else{KQM.supSel=null;$('idt').innerHTML='<span class="mut dtl">Select a supply to see what it does. Food and potions can be used from here.</span>'}}

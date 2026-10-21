@@ -124,7 +124,7 @@ function arenaTick(dt,now){
   }
 }
 // ---------- hooks ----------
-function doUpgrade(it){if((it.up||0)>=upCap())return say('🔒 Your forge mastery only reaches +'+upCap()+'. Defeat Sovereign bosses (J) to raise it.');return doUpgrade_base(it)}
+function doUpgrade(it){if((it.up||0)>=upCap())return say('🔒 Your forge mastery only reaches +'+upCap()+'. Defeat Sovereign bosses to raise it.');return doUpgrade_base(it)}
 function doRecall(){if(AF)return say('The arena is sealed. There is no escape.');return doRecall_base()}
 function bossHudX(){
   const e=AF&&bossEnt(AF.i);document.body.classList.toggle('bossf',!!e);if(!e)return;$('boss').classList.remove('hide');$('bossN').textContent=AF.b.i+' '+e.c.n+' · Lv '+e.c.l+' · Phase '+['I','II','III'][e.bs.ph-1];$('bossB').style.width=Math.max(0,100*e.c.h/M(e.c))+'%';

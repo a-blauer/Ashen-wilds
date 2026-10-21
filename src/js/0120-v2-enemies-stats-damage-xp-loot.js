@@ -214,7 +214,7 @@ function gainXP(e){
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (C)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){

@@ -25,7 +25,7 @@ function idHTML_base(){
   const uc=upCost(it),ok=canUse(it);
   return `<div class="dtl"><div class="dh"><span style="color:${RAR[it.r][1]}">${icoOf(it)} ${itName(it)}</span> <small>${RAR[it.r][0]} ${SLOTN[t.sl]} · ${TIERN[t.t]} · iLvl ${it.lv} · requires Lv ${it.req} · ${itClsTxt(t)}${selI.k=='e'?'':' · vs '+(cur?itName(cur):'empty slot')}</small></div><div class="dfs">${rows}</div>
    <div class="mut" style="font-size:.72rem;margin-top:4px">${(it.up||0)>=10?'Fully upgraded (+10).':`Upgrade to +${(it.up||0)+1}: ${matInfo(uc.m)[1]} ${uc.n}× ${uc.m} (have ${mats[uc.m]||0}) · 🪙 ${uc.g} · ${Math.round(uc.ch*100)}% success`}</div></div>
-   <div style="display:flex;gap:6px">${(it.up||0)<10?'<button id="idUp">⚒️ Upgrade</button>':''}<button class="pri" id="idAct" ${selI.k=='g'&&!ok?'disabled':''}>${selI.k=='e'?'Unequip':ok?'Equip':'Cannot equip'}</button></div>`;
+   <div style="display:flex;gap:6px">${(it.up||0)<10&&typeof KQM_SMITH!='undefined'&&KQM_SMITH?'<button id="idUp">⚒️ Upgrade</button>':''}<button class="pri" id="idAct" ${selI.k=='g'&&!ok?'disabled':''}>${selI.k=='e'?'Unequip':ok?'Equip':'Cannot equip'}</button></div>`;
 }
 function invAct(){
   if(!selI)return;
