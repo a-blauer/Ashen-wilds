@@ -27715,7 +27715,7 @@ function kqnRoom(mode,code){return new Promise((res,rej)=>{
   const H={},PH=[],EH=[],links={},P={}; // links by remote id; P: other players' presence by peer id
   const ok=v=>{if(!settled){settled=true;clearTimeout(to);res(v)}},no=msg=>{if(!settled){settled=true;clearTimeout(to);end(null);rej(new Error(msg))}};
   const msgOf=(t,d,peer)=>({topic:t,data:d,peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false});
-  const rec=(peer,p)=>Object.freeze({peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false,presence:Object.freeze(p||{}),updatedAt:Date.now()});
+  const rec=(peer,p)=>Object.freeze({peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false,presence:Object.freeze(Object.assign({},p)),updatedAt:Date.now()});
   function rebuild(){snap=Object.freeze([rec(me,pres)].concat(Object.keys(P).map(k=>rec(k,P[k]))))}
   function fire(joined,left){rebuild();const ch={peers:snap,joined:joined.map(k=>rec(k,P[k])),left:left.map(k=>rec(k,{})),updated:[]};PH.forEach(f=>{try{f(ch)}catch(err){console.warn(err)}})}
   function deliver(t,d,peer){(H[t]||[]).forEach(f=>{try{f(msgOf(t,d,peer))}catch(err){console.warn(err)}})}
