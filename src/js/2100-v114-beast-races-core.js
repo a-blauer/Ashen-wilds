@@ -75,18 +75,20 @@ function brSkullAt(D,z){const S=D.SN;let i=0;while(i<S.length-2&&S[i+1][0]<z)i++
 function brSurfX(D,z,y){const q=brSkullAt(D,z),dy=y-q.yc,r=dy>0?q.f:q.b;return q.rx*Math.sqrt(Math.max(0,1-(dy/r)**2))}
 // the skull loft itself (neck ring into the skull, then the rings); col(m) paints it
 function brSkull(B,D,col,o){o=o||{};const hw=[['head',1]],S=D.SN,n0=S[0];
-  mdLoft(B,[{p:[0,1.03,-.012],rx:.068,f:.067,b:.065,w:[['neck',.7],['head',.3]]},{p:[0,1.07,-.016],rx:.07,f:.068,b:.067,w:[['neck',.3],['head',.7]]},{p:[0,1.105,-.02],rx:.07,f:.066,b:.07,w:hw}],
+  if(!o.noNeck)mdLoft(B,[{p:[0,1.03,-.012],rx:.068,f:.067,b:.065,w:[['neck',.7],['head',.3]]},{p:[0,1.07,-.016],rx:.07,f:.068,b:.067,w:[['neck',.3],['head',.7]]},{p:[0,1.105,-.02],rx:.07,f:.066,b:.07,w:hw}],
     {seg:12,col:m=>m.s>.45?BR.C.BELLY:BR.C.FUR});
   mdLoft(B,S.map(q=>({p:[0,q[1],q[0]],rx:q[2],f:q[3],b:q[4],w:hw})),{seg:o.seg||14,ref:[0,1,0],capA:true,capB:o.capB||{dz:.006},col})}
 // eyes on the skull surface: dark socket, glossy eye, coloured iris, highlight (fw: how much the eyes face forward)
 function brEyes(k,D,o){const C=BR.C,[ex0,ey,ez]=D.EYEP,sz=o.sz||1,fw=o.fw==null?1:o.fw;
-  [-1,1].forEach(s=>{const ex=brSurfX(D,ez,ey)-.004,ry=s*Math.atan2(1,-brSkullAt(D,ez).slope)*fw;
-    k.p('head','sph2','c',o.socket||mdSh(C.FURD,.8),s*(ex-.002),ey,ez,.021*sz,.017*sz,.02*sz,0,ry,0);
-    k.p('head','sph2','c',o.white||0x070606,s*(ex+.003),ey,ez+.001,.0165*sz,.0145*sz,.016*sz,0,ry,0);
-    k.p('head',o.slit?'box':'sph2',o.glow?'g':'c',C.EYE,s*(ex+(o.slit?.0175:.012)),ey+(o.slit?.005:0),ez+(o.slit?.006:.004),o.slit?.004:.009*sz,o.slit?.004:.009*sz,o.slit?.003:.007*sz,0,ry,0);
-    if(o.pupil)k.p('head','box','c',0x060404,s*(ex+.019),ey,ez+.005,o.pupil[0],o.pupil[1],.002,0,ry,0);
-    k.p('head','box','c',0xe8e4dc,s*(ex+.016),ey+.007,ez+.002,.0025,.0025,.002,0,ry,0);
-    if(o.brow!==false)k.p('head','sph2','c',o.brow||C.FURD,s*(ex-.002),ey+.017*sz,ez-.002,.024*sz,.008,.02*sz,0,ry,s*-.25)})}
+  const al=o.al||1,tl=o.tilt||0;
+  [-1,1].forEach(s=>{const ex=brSurfX(D,ez,ey)-.004,ry=s*Math.atan2(1,-brSkullAt(D,ez).slope)*fw,rz=s*tl;
+    const ins=(o.inset||0);
+    k.p('head','sph2','c',o.socket||mdSh(C.FURD,.8),s*(ex-.002-ins),ey,ez,.021*sz,.017*sz,.02*sz*al,0,ry,rz);
+    k.p('head','sph2','c',o.white||0x070606,s*(ex+.003-ins),ey,ez+.001,.0165*sz,.0145*sz,.016*sz*al,0,ry,rz);
+    k.p('head',o.slit?'box':'sph2',o.glow?'g':'c',C.EYE,s*(ex+(o.slit?.0175:o.pupil?.015:.012)-ins),ey+(o.slit?.005:0),ez+(o.slit?.006:.004),o.slit?.004:.0095*sz,o.slit?.004:.0095*sz,o.slit?.003:.0075*sz*al,0,ry,rz);
+    if(o.pupil)k.p('head','box','c',0x060404,s*(ex+.023-ins),ey,ez+.005,o.pupil[0],o.pupil[1],.002,0,ry,rz);
+    k.p('head','box','c',0xe8e4dc,s*(ex+.016-ins),ey+.007,ez+.002,.0025,.0025,.002,0,ry,rz);
+    if(o.brow!==false)k.p('head','sph2','c',o.brow||C.FURD,s*(ex-.002-ins),ey+(o.browY||.017)*sz,ez-.002,.024*sz,.008,.02*sz*al,0,ry,s*-.25+rz)})}
 // whiskers from the whisker pads at z, y: n per side
 function brWhiskers(k,D,z,y,n,len,col){[-1,1].forEach(s=>{const wx=brSurfX(D,z,y);
   for(let i=0;i<n;i++)k.L('head','c',col||0x2a2420,[s*(wx-.003),y+i*.005-.004,z-i*.006],[s*(wx+len*.55-i*.008),y+(i-1)*.022*len/.12,z-.04*len/.12-i*.025],.0015,.0005,3)})}
@@ -166,12 +168,38 @@ function brBareB(L){const C=BR.C,D=BR.R,B=mdB(HB),P=mdP({look:L,sex:0,build:1,co
 // every hero model is (re)built here: retarget its skeleton when its race changes
 {const f=mdHeroApply;mdHeroApply=function(h,cls,E){try{const c=CLS[cls]?cls:'warrior',L=mdLookOf(h,c),r=brRace(L,c);if((h._race|0)!==r)brRig(h,r)}catch(e){console.error('beast rig',e)}
   return f.apply(this,arguments)}}
-// crouch and tail: layered on every animation (the leg offsets are taken off before and put back after each frame)
+// crouch, posture and tail: layered on every animation (the offsets are taken off before and put back after each frame).
+// D.pose = standing posture, D.run = what is added at full run: {sp, ch, nk, hd} pitch of spine / chest / neck / head (+ = forward),
+// {shx, shz, el} shoulder pitch / spread and elbow bend (skipped while an attack or ability pose plays)
+var BR_V=null;
+var BR_PB=[['spine','sp','x'],['chest','ch','x'],['neck','nk','x'],['head','hd','x'],['aL0','shx','x'],['aR0','shx','x'],['aL0','shz','z'],['aR0','shz','z'],['aL1','el','x'],['aR1','el','x']];
+function brPoseOff(D,w,arm){const P=D.pose||{},R=D.run||{},o={};
+  BR_PB.forEach(([bn,k,ax])=>{let v=(P[k]||0)+(R[k]||0)*w;if(!v)return;if(bn[0]=='a'){v*=arm;if(!v)return;if(ax=='z')v*=bn=='aL0'?1:-1}o[bn+'.'+ax]=(o[bn+'.'+ax]||0)+v});return o}
+// exact undo: every offset this layer adds is recorded as [bone, axis, value before, value written]; next frame, a bone that
+// still holds the written value gets back the exact value it had before (bit for bit), so the v93 idle layer, which checks
+// `value === what it wrote` to remove its own breathing / glances, never sees a rounding change and never stacks them
+function brAddR(H,bn,ax,v){const b=H.bones[bn];if(!b||!v)return;const R=b.rotation,pre=R[ax];R[ax]=pre+v;(H._brU||(H._brU=[])).push([R,ax,pre,R[ax]])}
+function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i>=0;i--){const u=U[i];if(u[0][u[1]]===u[3])u[0][u[1]]=u[2]}U.length=0}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl,b=H&&H.bones,D=H&&H._race?BRD[H._race]:null,rat=D&&b;
-  const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null,on=H&&H._brCr;
-  if(on&&b){b.lh0.rotation.x-=on.a;b.rh0.rotation.x-=on.a;b.lh1.rotation.x-=on.k;b.rh1.rotation.x-=on.k;b.lh2.rotation.x-=on.an;b.rh2.rotation.x-=on.an;H._brCr=null}
+  if(H)brUndo(H);
+  const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null;
   const r=f.apply(this,arguments);
-  if(rat){if(!rid){b.lh0.rotation.x+=R.a;b.rh0.rotation.x+=R.a;b.lh1.rotation.x+=R.k;b.rh1.rotation.x+=R.k;b.lh2.rotation.x+=R.an;b.rh2.rotation.x+=R.an;H._brCr=R}
-    const t=(now||0)/1000,w=H.mvW||0,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
+  if(rat){const w=H.mvW||0;
+    if(!rid){[['lh0',R.a],['rh0',R.a],['lh1',R.k],['rh1',R.k],['lh2',R.an],['rh2',R.an]].forEach(q=>brAddR(H,q[0],'x',q[1]));
+      // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition);
+      // the posture follows a low-passed gait blend, so uneven frame times can never make the lean flicker
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
+      S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
+      S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
+      const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
+      // head levelling: measure how far the chest frame pitches forward and turn the neck and head back by that much, so
+      // the eyes look ahead (a small natural tilt at idle, level when running); the idle glances / nods and the attack
+      // head motions ride on top unchanged; eases off while an attack pose plays
+      if(arm>0&&b.chest&&b.head&&b.neck){const V=BR_V||(BR_V={v:new THREE.Vector3(),q:new THREE.Quaternion()});b.chest.updateWorldMatrix(true,false);b.chest.getWorldQuaternion(V.q);
+        V.v.set(0,0,1).applyQuaternion(V.q);const down=Math.asin(Math.max(-1,Math.min(1,-V.v.y))),L=D.look||[.08,0],tg=L[0]+(L[1]-L[0])*S.w;
+        const dl=Math.max(-.9,Math.min(.9,(tg-down)*arm));brAddR(H,'neck','x',dl*.4);brAddR(H,'head','x',dl*.6)}}
+    const t=(now||0)/1000,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
     for(let i=0;i<n;i++){const bn=b[D.TB[i]];if(!bn)continue;bn.rotation.y=amp*Math.sin(t*sp-i*.55)*(.4+i*.12*(11/Math.max(n,1)));bn.rotation.x=(.015+.02*w)*Math.sin(t*sp*2-i*.5)}}
   return r}}
+// a model changing race (or back to human) drops the offsets of the old one
+{const f=brRig;brRig=function(h){if(h)brUndo(h);if(h)h._brS=null;return f.apply(this,arguments)}}
