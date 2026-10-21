@@ -31,22 +31,8 @@ function TWN100_coarse(k,col,x0,z0,x1,z1,y0,y1,th,bl){return twCtx(k,k&&k.mt=='a
       if(len>.08)k.p('c',k.R()<.25?TWC.stoneD:k.R()<.3?TWC.stoneL:col,'box',x0+ux*m,y+bh/2,z0+uz*m,len-.03,bh-.03,th*(.94+k.R()*.12),sh*.3,ry,sh*.2,.16);u+=len}
     y+=bh;row++}},arguments)}
 function TWN100_tower(k,lv,r,h){if(lv==2)TWN100_tw2(k,r,h);else kdTowerK(k,lv,r,h)}
-// the archway between the plaza and the market ward (opening |x|<3.5 along x at z=0 local, both sides are town)
-function TWN100_archK(k,lv,w){const hw=w/2,ban=TOWNS[0].pal.ban||0x7a2230;
-  if(lv<2){[-1,1].forEach(s=>{[-.35,.35].forEach(dz=>{k.as('bark',()=>k.L('c',TWC.woodD,[s*(hw+.25),-.3,dz],[s*(hw+.25),4.1,dz],.2,'log'));if(lv==1)twStones(k,TWC.stone,s*(hw+.25)-.32,dz,s*(hw+.25)+.32,dz,-.3,.8,.6,.35)});
-      k.as('wood',()=>k.p('c',TWC.woodD,'cone6',s*(hw+.25),4.35,0,.26,.5,.26,0,0,0,.05))});
-    k.as('board',()=>k.p('c',TWC.wood,'box',0,3.35,0,w+1.2,.62,.62,0,0,0,.02));k.as('wood',()=>{[-1,1].forEach(q=>k.L('c',TWC.woodD,[-hw-.6,3.05,q*.34],[hw+.6,3.05,q*.34],.08,'box'));
-      [-1,1].forEach(s=>k.L('c',TWC.woodD,[s*(hw+.1),2.3,0],[s*(hw-.9),3.05,0],.07,'box'))})}
-  else{// stone arch: two piers, a round-ish arch of voussoirs, a walkway with merlons on top
-    [-1,1].forEach(s=>{twStones(k,TWC.stone,s*(hw+.5)-.55,0,s*(hw+.5)+.55,0,-.3,3.0,1.2,.5);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',s*(hw+.5),3.05,0,1.3,.14,1.3,0,0,0,.03))});
-    const n=11;for(let i=0;i<n;i++){const a=Math.PI*(i+.5)/n,x=Math.cos(a)*hw,y=3.0+Math.sin(a)*.9;k.p('c',i%2?TWC.stoneL:TWC.stone,'box',x,y,0,.62,.5,1.1,0,0,a-Math.PI/2,.08)}
-    twStones(k,TWC.stone,-hw-1.05,0,hw+1.05,0,3.3,4.25,1.1,.6);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,4.3,0,w+2.3,.12,1.25,0,0,0,.02));
-    for(let x=-hw-.6;x<=hw+.65;x+=1.2)[-1,1].forEach(q=>k.p('c',TWC.stone,'box',x,4.62,q*.48,.6,.55,.3,0,0,0,.08));
-    [-1,1].forEach(s=>[-1,1].forEach(q=>kdBanner(k,s*(hw+.5),2.9,q*.64,q>0?0:Math.PI,ban,.7,1.5)));
-    if(lv>=3)[-1,1].forEach(s=>kdBrazier(k,s*(hw+.5),0,3.12,.7))}}
 // v101: the ring round the Grand Square, baked per level into two kits (north half / south half) so each can be culled.
 // Walls at x = ±WX from z = -TS to SZ, one gatehouse in the south wall (the Portal Road), towers at the corners and along the sides.
-var TWN100_MIDZ=15; // where the two halves meet
 function TWN100_ringK(k,lv,part){const {WX,SZ}=TWN100_L(),N=-TS,M=TWN100_mid(SZ),MD=TWN100_mids(WX,SZ),gz=1.75,at=(x,z,ry,f)=>k.at(x,0,z,f,ry),seg=(x0,z0,x1,z1,ry)=>at((x0+x1)/2,(z0+z1)/2,ry,()=>kdSegK(k,lv,Math.hypot(x1-x0,z1-z0)));
   const side=(z0,z1)=>[-1,1].forEach(s=>seg(s*WX,z0,s*WX,z1,-s*Math.PI/2));
   const big=(x,z,i)=>at(x,z,i*1.3,()=>TWN100_tower(k,lv,1.45,4.2)),small=(x,z,i)=>at(x,z,i*.9+(x+z)%6,()=>TWN100_tower(k,lv,.95,3.1)),mid=(x,z,i)=>at(x,z,i*1.7,()=>kdTowerK(k,3,1.15,3.6));

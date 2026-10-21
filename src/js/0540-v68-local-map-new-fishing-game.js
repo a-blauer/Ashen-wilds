@@ -60,11 +60,11 @@ function fishTick(dt){const F=fishing;if(!F)return;
     if(F.cd>0)F.cd-=dt;fsDraw()}}
 function fishPress(down){const F=fishing;if(!F||!down)return;
   if(F.ph=='wait'){F.t+=R(15,25)/10;F.nib=R(10,20)/10;$('fsT').textContent='Too early! You spooked it — wait for the real bite.';fsPop('','#fff');sfx('blunt');return}
-  if(F.ph=='bite'){F.ph='fight';F.hits=0;F.miss=0;F.need=FSH.need[F.fish[3]];F.na=-Math.PI/2;F.dir=1;F.sp=FSH.spd[F.fish[3]];F.wob=.6+Math.random()*.8;F.perf=0;F.cd=0;fsZone(F);
+  if(F.ph=='bite'){F.ph='fight';F.hits=0;F.miss=0;F.need=FSH.need[F.fish[3]];F.na=-Math.PI/2;F.dir=1;F.sp=FSH.spd[F.fish[3]];F.wob=.6+Math.random()*.8;F.cd=0;fsZone(F);
     $('fsT').className='';$('fsT').textContent='Press F when the needle is in the green — gold is perfect!';$('fsBar').classList.remove('hide');fsDraw();sfx('arrow');return}
   if(F.ph!='fight'||F.cd>0)return;F.cd=.18;
   let d=((F.na-F.za)%6.283+6.283)%6.283;if(d>Math.PI)d-=6.283;d=Math.abs(d);
-  if(d<=F.zw/7){F.hits+=2;F.perf++;fsPop('PERFECT!','#ffd24a');sfx('chime');burst(F.bob.position,0xffe08a,10,1,1,.4)}
+  if(d<=F.zw/7){F.hits+=2;fsPop('PERFECT!','#ffd24a');sfx('chime');burst(F.bob.position,0xffe08a,10,1,1,.4)}
   else if(d<=F.zw/2){F.hits++;fsPop('Good!','#7ee8a0');sfx('arrow')}
   else{F.miss++;fsPop('Miss — the line strains!','#ff8a7a');sfx('blunt');shake(.06);if(F.miss>=3){fsDraw();return fishEnd('The line snapped... the '+F.fish[0]+' escaped.')}}
   if(F.hits>=F.need){const flaw=!F.miss;FSHF=flaw;try{fishCatch()}finally{FSHF=false}if(flaw)say('🎣 Flawless catch! Better odds of treasure on the line.');return}

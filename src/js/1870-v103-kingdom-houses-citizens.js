@@ -218,7 +218,7 @@ function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],
 function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!door){g.visible=false;return}
   const sp=1.55,u=g.userData;let walk=false;
   if(c.task&&c.t0){// a trip: out to the gate, away, back home
-    if(!o.pOut||o.pv!==CZ103.ver){const gt=czGate103();o.pOut=czPath103(door[0],door[1],gt[0],gt[1]);o.pv=CZ103.ver;o.lOut=o.pOut?czLen103(o.pOut):0}
+    if(o.pv!==CZ103.ver||(!o.pOut&&Date.now()-(o.pT||0)>2000)){o.pT=Date.now();const gt=czGate103();o.pOut=czPath103(door[0],door[1],gt[0],gt[1]);o.pv=CZ103.ver;o.lOut=o.pOut?czLen103(o.pOut):0}
     const el=(Date.now()-c.t0)/1000,dO=o.lOut/sp,tot=czTrip104(c)/1000;
     if(!o.pOut){g.visible=el<4;g.position.set(door[0],T.ph,door[1]);u.tool.visible=true;u.sack.visible=false}
     else if(el<dO){const p=czAt103(o.pOut,el*sp);g.visible=true;g.position.set(p[0],T.ph,p[1]);o.ry=p[2];walk=true;u.tool.visible=true;u.sack.visible=false;o.mode='out'}

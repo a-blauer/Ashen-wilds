@@ -86,7 +86,7 @@ function svSample(B,S,trk,t,out,now){for(const k in out)out[k]=null;
   const k1=trk[i],b=svPose(B,k1[1]),u=Math.max(0,Math.min(1,(t-ta)/Math.max(1e-4,k1[0]-ta))),f=(svEase[k1[2]||'io']||svEase.io)(u);
   const ks=new Set(Object.keys(a).concat(Object.keys(b)));
   for(const k of ks){const va=a[k],vb=b[k],o=out[k]||(out[k]=[0,0,0,0,0,0]);for(let q=0;q<6;q++){const x=va&&va[q]!=null?va[q]:0,y=vb&&vb[q]!=null?vb[q]:0;o[q]=x+(y-x)*f}}
-  if(i>0&&trk[i-1][3]&&trk[i-1][1]===k1[1])svTrem(out,trk[i-1],now);return out}
+  if(i>0&&trk[i-1][1]===k1[1]){const h=k1[3]?k1:trk[i-1];if(h[3])svTrem(out,h,now)}return out}
 function svCopy(out,a,w){for(const k in a){const v=a[k],o=out[k]||(out[k]=[0,0,0,0,0,0]);for(let q=0;q<6;q++)o[q]=v[q]!=null?v[q]*w:0}}
 // a held key with a 4th field = tremble amount (shaking with effort before a big strike)
 function svTrem(out,key,now){const a=key&&key[3];if(!a)return;let n=0;for(const k in out){const o=out[k];if(!o)continue;o[0]+=Math.sin(now/27+n)*a*.6;o[2]+=Math.cos(now/31+n*1.7)*a*.5;n++}}
@@ -264,7 +264,7 @@ function svTickMove(e,dt,now){const S=e.sv,M=S.mv;if(!M)return;const D=M.D,m=e.m
 function svAfterMove(e,M){const S=e.sv,D=M.D;if(!svAuth(e)||e.dead)return;
   if(S.qStag){S.qStag=0;svCast(e,'stagger');return}
   if(S.ph===1&&S.B.ph2&&e.c.h/M_(e)<=S.B.ph2&&S.B.M.awaken){svCast(e,'awaken');return}
-  if(D.nx){const L=d2(pl.position,e.m.position);for(const [id,p,mx] of D.nx){const N=S.B.M[id];if(!N||(N.ph||1)>S.ph)continue;if(mx!=null&&L>mx)continue;if(M.rnd()<p){svCast(e,id);return}}}
+  if(D.nx){const L=d2(pl.position,e.m.position);for(const [id,p,mx] of D.nx){const N=S.B.M[id];if(!N||(N.ph||1)>S.ph||(N.ph1only&&S.ph>1))continue;if(mx!=null&&L>mx)continue;if(M.rnd()<p){svCast(e,id);return}}}
   const ai=S.B.ai||{},r=ai.rest||[.8,1.4];S.rest=(r[0]+Math.random()*(r[1]-r[0]))*(S.ph>1?(ai.ph2r||.72):1)+(D.rec||0)}
 function M_(e){return M(e.c)}
 // cast = start locally and relay to co-op partners (the seed rides in en as 1+seed/1000: the relay clamps en to 0.5..2)
@@ -317,7 +317,8 @@ function svAI(e,dt,now){const S=e.sv,A=arenaOf(e),m=e.m,B=S.B;if(!A)return;
   svApply(e,dt,now)}
 // ---------------- poise, stagger, invulnerability, death ----------------
 function svPoise(e,d){const S=e.sv;if(!S||e.dead||S.mv&&S.mv.id==='stagger'||S.mv&&S.mv.id==='awaken'||!svAuth(e))return;
-  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1)*1.5/((typeof PACE!='undefined'&&PACE.hp)||1.5); // v112: posture as before the ×3 healthS.po=Math.min(1,S.po+d/P);S.poT=performance.now();
+  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1)*1.5/((typeof PACE!='undefined'&&PACE.hp)||1.5); // v112: posture as before the ×3 health
+  S.po=Math.min(1,S.po+d/P);S.poT=performance.now();
   if(S.po>=1){S.po=0;const arm=S.mv&&S.mv.D.armor;if(arm)S.qStag=1;else svCast(e,'stagger')}}
 // the generic stagger move (every boss gives its own track as B.stag)
 function svStagDef(B){return {dur:B.stagT||2.6,trk:B.stag,inv:null,go(c){const S=c.S;S.stg=c.M.D.dur;SVX.st.stag++;svSnd('stag',1);popT(c.m.position,'STAGGERED','#ffd860',true);

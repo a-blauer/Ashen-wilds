@@ -48,15 +48,6 @@ function signQuad(){if(signQuad.g)return signQuad.g;const z=.0262/1,P=[],U=[];
 // once the Cinzel web font has loaded, repaint every sign with it
 try{if(document.fonts&&document.fonts.load)document.fonts.load('700 40px Cinzel').then(()=>{if(!document.fonts.check('700 40px Cinzel'))return;(SGNR||[]).forEach(r=>{signPaint(r.c,...r.a);r.t.needsUpdate=true})}).catch(()=>{})}catch(_){}
 
-// construction site: sign between two posts, lumber stack, stones, a half-raised frame
-function shSite(x,z,label){const g=new THREE.Group();g.position.set(x,GH(x,z),z);const T=TOWNS[0];g.rotation.y=Math.atan2(T.sp[0]-x,T.sp[1]-z);
-  let k=null;if(!twHas('SITE2')){k=twKit(111);twSignPost(k,1.05,1.3,.44);
-    for(let i=0;i<5;i++)k.L('c',[TWC.wood,TWC.woodL,TWC.wood][i%3],[-1.55,.1+(i>2?.17:0),-.6+(i%3)*.17+(i>2?.08:0)],[-.45,.1+(i>2?.17:0),-.6+(i%3)*.17+(i>2?.08:0)],.085,'log');
-    [[1.0,.12,-.4,.2],[1.3,.1,-.1,.16],[1.15,.28,-.25,.15],[.85,.09,-.05,.13]].forEach(q=>k.p('c',TWC.stone,'dod',q[0],q[1],q[2],q[3],q[3]*.8,q[3],q[0],q[1],0,.2));
-    k.as('wood',()=>{[-1,1].forEach(s=>k.L('c',TWC.woodL,[s*.9,0,-1.0],[s*.9,1.5,-1.0],.06,'box'));k.L('c',TWC.woodL,[-1.0,1.45,-1.0],[1.0,1.45,-1.0],.05,'box');k.L('c',TWC.woodL,[-.9,.1,-1.0],[.9,1.4,-1.0],.04,'box')});
-    k.L('m',TWC.iron,[.25,0,-.3],[.42,.55,-.25],.02,'cyl6',0);k.p('m',TWC.iron,'box',.44,.58,-.25,.16,.07,.05,0,0,.3,0)}
-  twBake(k?k.P:[],'SITE2',true).forEach(m=>g.add(m));
-  sign(g,[{t:label,f:'700 30px'},{t:'🔨 build at the Steward',f:'600 20px'}],1.05,.44,'#3a2614','#ffe6c0',null,0,1.3,0,0);scene.add(g);return g}
 // a ready-made two-post sign frame (for signs built outside a kit: zone camps, the courtyard)
 function twPostG(w,yc,h){const key='SPOST|'+w+'|'+yc+'|'+h;let k=null;if(!twHas(key)){k=twKit(Math.round(w*50+yc*9));twSignPost(k,w,yc,h)}return twGroup(k,key)}
 // portal frames: iron rods on the lintel hold the portal's sign above the gable cap

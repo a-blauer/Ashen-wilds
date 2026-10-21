@@ -27,7 +27,7 @@ function kqsDecal(p,R,col,op,edge){const f=kqsDrapeM(new THREE.RingGeometry(.001
 // warning circle that fills over `delay` s, then calls cb
 function kqsWarn(p,R,col,delay,cb){const D=kqsDecal(p,R,col,.12,.8),in_=kqsDrapeM(new THREE.RingGeometry(.001,1,32,2),kqsDMat(col,.3));
   kqsObj({life:delay,tick:(dt,now,o)=>{const k=Math.min(1,o.age/delay);kqsDrape(in_,(u,v)=>[p.x+u*R*k,p.z-v*R*k],.16)},end:o=>{kqsRm(in_);D.rm(200);if(!o.abort)cb&&cb()}})}
-function kqsLob(from,to,mesh,ms,h,cb){scene.add(mesh);const a=gY(from,1.2),b=gY(to,.3);tw(ms,k=>{mesh.position.lerpVectors(a,b,k);mesh.position.y+=Math.sin(k*Math.PI)*(h||2.4);mesh.rotation.x+=.3;mesh.rotation.z+=.2},()=>{kqsRm(mesh);cb&&cb()})}
+function kqsLob(from,to,mesh,ms,h,cb){scene.add(mesh);const a=gY(from,1.2),b=gY(to,.3);tw(ms,k=>{mesh.position.lerpVectors(a,b,k);mesh.position.y+=Math.sin(k*Math.PI)*(h||2.4);mesh.rotation.x+=.3;mesh.rotation.z+=.2},()=>{if(mesh.userData.kqsShared){if(mesh.parent)mesh.parent.remove(mesh)}else kqsRm(mesh);cb&&cb()})}
 function kqsPillar(p,col,h,ms,w){const m=kqsMesh(new THREE.CylinderGeometry(w||.5,w||.5,h||8,10,1,true),kqsAdd(col));m.position.copy(gY(p,(h||8)/2));scene.add(m);tw(ms||420,k=>{m.material.opacity=.85*(1-k);m.scale.set(1+k*.6,1,1+k*.6)},()=>kqsRm(m))}
 function kqsSpark(a,b,col){try{bolt(a,b,col)}catch(_){}}
 
@@ -147,7 +147,7 @@ var KQH={
  r_wolf(c){const P=c.P,m=kqsWolf(0x8ac8ff);m.position.set(P.x+1,GH(P.x+1,P.z),P.z);burst(gY(m.position,.8),0x9ad0ff,40,1.6,2,.6);ring(m.position,0x9ad0ff,2,400);kqsSnd('beast');
   kqsSummon({mesh:m,life:c.sk.dur,spd:7.5,reach:1.6,iv:.8,dmg:c.raw,c,col:0x9ad0ff,wolf:1})},
  r_frost(c){const p=c.gp.clone(),R=c.R,tr=new THREE.Group();tr.add(kqsMesh(new THREE.OctahedronGeometry(.28,0),kqsStd(0x9fe3ff,.9,.9),0,.32,0));tr.add(kqsMesh(new THREE.TorusGeometry(.45,.06,5,14),kqsStd(0x6a9ab8,.3),0,.06,0));tr.children[1].rotation.x=Math.PI/2;kqsSnd('whoosh');
-  const fl=tr.clone();kqsLob(c.P,p,fl,360,2,()=>{tr.position.copy(gY(p,0));scene.add(tr);const D=kqsDecal(p,1.3,0x9fe3ff,.06,.5);burst(gY(p,.3),0x9fe3ff,12,1,1,.4);
+  const fl=tr.clone();fl.userData.kqsShared=1;kqsLob(c.P,p,fl,360,2,()=>{tr.position.copy(gY(p,0));scene.add(tr);const D=kqsDecal(p,1.3,0x9fe3ff,.06,.5);burst(gY(p,.3),0x9fe3ff,12,1,1,.4);
    kqsTrap({p,life:20,arm:.4,trig:1.4,mesh:tr,deco:D,fire:()=>{ring(p,0x9fe3ff,R*2.1,420);burst(gY(p,.5),0xdff6ff,70,R*1.4,3,.8);kqsSnd('ice');shake(.15);kqsArea(p,R,c.raw,c,{stun:c.sk.stun});
      for(let j=0;j<7;j++){const a=j/7*6.283;kqsSpike(kqsV(p.x+Math.cos(a)*R*.6,p.z+Math.sin(a)*R*.6),0x9fe3ff,1,1)}}})})},
  r_hawk(c){const t=kqsNear(14);if(!t)return false;const h=kqsHawk(0xe8c890),a=gY(pl.position,3.2);h.position.copy(a);scene.add(h);kqsSnd('beast');
@@ -155,7 +155,7 @@ var KQH={
    ()=>{if(!t.dead){kqsHit(t,c.raw,c);t.mark=Math.max(t.mark||0,6);t.markV=Math.max(t.markV||0,.2);dn(t.m.position,'Hunted','#fde68a',-36,900);burst(gY(t.m.position,1),0xe8c890,30,2,2,.5);sfx('crit')}const b=h.position.clone();tw(400,k=>h.position.set(b.x,b.y+k*5,b.z),()=>kqsFade(h,200))})},
  r_mine(c){const p=c.gp.clone(),R=c.R,tr=new THREE.Group();tr.add(kqsMesh(new THREE.CylinderGeometry(.24,.3,.22,8),kqsStd(0x5a3a22,.1),0,.12,0));tr.add(kqsMesh(new THREE.SphereGeometry(.09,6,4),kqsStd(0xff5a1a,1.2),0,.28,0));kqsSnd('whoosh');
   const mine=KQS.objs.filter(o=>o.kqsMine);if(mine.length>=3){const o=mine[0];o.abort=1;o.life=0}
-  const fl=tr.clone();kqsLob(c.P,p,fl,360,2,()=>{tr.position.copy(gY(p,0));scene.add(tr);const D=kqsDecal(p,1.3,0xff8a3a,.05,.45);
+  const fl=tr.clone();fl.userData.kqsShared=1;kqsLob(c.P,p,fl,360,2,()=>{tr.position.copy(gY(p,0));scene.add(tr);const D=kqsDecal(p,1.3,0xff8a3a,.05,.45);
    const o=kqsTrap({p,life:20,arm:.5,trig:1.3,mesh:tr,deco:D,blink:tr.children[1],fire:()=>{ring(p,0xff8a3a,R*2,420);ring(p,0xffd080,R*1.3,300);burst(gY(p,.6),0xff7a2a,80,R*1.4,4,.8);kqsSnd('boom');shake(.3);kqsArea(p,R,c.raw,c,{burn:1})}});o.kqsMine=1})},
  r_rapid(c){let n=0;kqsSnd('arrow');kqsChan({t:c.sk.dur,iv:.2,slow:.4,tick:()=>{if(n>=10)return;n++;const d=aimDir();face(d);launch(pl.position,d,24,{col:c.sk.col,mt:'p',arrow:1,pierce:c.s.pierce||0},c.raw,.7);try{bowAnim(170)}catch(_){}sfx('arrow')}})},
  r_roots(c){const p=c.gp.clone(),R=c.R,g=new THREE.Group(),m=kqsStd(0x4a8a2a,.25);for(let j=0;j<14;j++){const a=Math.random()*6.283,r=Math.sqrt(Math.random())*R*.9,t=kqsMesh(new THREE.ConeGeometry(.12,1.1+Math.random()*.6,4),m);t.position.set(Math.cos(a)*r,0,Math.sin(a)*r);t.rotation.set((Math.random()-.5)*.8,0,(Math.random()-.5)*.8);g.add(t)}
@@ -199,7 +199,7 @@ var KQH={
   kqsObj({life:c.sk.dur,tick:(dt,now)=>{F.forEach((t,j)=>{const s=.8+Math.sin(now/90+j*1.7)*.25;t.scale.set(1,s+.4,1)});for(let k=0;k<3;k++){const y=(Math.random()-.5)*L;burst(gY(kqsV(p.x+n.x*y,p.z+n.z*y),.4+Math.random()),Math.random()<.5?0xff6a1a:0xffd060,1,.3,2,.5)}
     ti-=dt;if(ti>0)return;ti=.4;kqsLine(kqsV(p.x-n.x*L/2,p.z-n.z*L/2),n,L,w+.4).forEach(e=>{kqsHit(e,c.raw,c,{proc:false});eStatus(e,{burn:3},c.A*.3)})},end:()=>{kqsFade(strip,400);F.forEach(t=>kqsRm(t));fm.dispose()}})},
  m_rewind(c){const now=c.now,h=KQS.hist;let q=null;for(let j=0;j<h.length;j++){if(now-h[j].t>=3800){q=h[j]}}if(!q)q=h[0];if(!q||now-q.t<900){say('Nothing to rewind to yet.');return false}
-  const o=pl.position.clone();ring(o,c.sk.col,2.6,400);burst(gY(o,1),0x9ad8ff,40,1.6,2,.6);kqsTp(kqsV(q.x,q.z));hero.hp=Math.min(heroMax(),Math.max(hero.hp,q.hp));hero.mp=Math.min(mpMax(),Math.max(hero.mp,q.mp));pl.slow=0;
+  const o=pl.position.clone();ring(o,c.sk.col,2.6,400);burst(gY(o,1),0x9ad8ff,40,1.6,2,.6);kqsTp(kqsV(q.x,q.z));hero.hp=Math.min(heroMax(),Math.max(hero.hp,q.hp));hero.mp=Math.min(mpMax(),Math.max(hero.mp,q.mp));heroCleanseSlow();
   ring(pl.position,c.sk.col,3,500);burst(gY(pl.position,1),0xdff6ff,50,1.8,2.5,.7);popT(pl.position,'⌛ REWIND','#bae6fd',true);kqsSnd('rewind');hero.iv=Math.max(hero.iv||0,.4)},
  m_sing(c){const p=c.gp.clone(),R=c.R,core=kqsMesh(new THREE.SphereGeometry(.6,14,10),new THREE.MeshBasicMaterial({color:0x000000})),hal=kqsMesh(new THREE.RingGeometry(.65,1.3,28),kqsAdd(0x8a4aff)),D=kqsDecal(p,R,0x8a4aff,.14,.8);core.position.copy(gY(p,1.2));hal.position.copy(core.position);scene.add(core,hal);kqsSnd('portal');let ti=0;
   kqsObj({life:c.sk.dur,tick:(dt,now,o)=>{const k=o.age/c.sk.dur;core.scale.setScalar(.6+k*.9);hal.quaternion.copy(cam.quaternion);hal.rotation.z=now/120;hal.scale.setScalar(1+k);for(let j=0;j<3;j++){const a=Math.random()*6.283,r=R*(.5+Math.random()*.5);burst(gY(kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r),.6),0xb08aff,1,.2,.2,.5)}

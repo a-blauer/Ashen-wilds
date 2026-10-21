@@ -20,12 +20,14 @@
 //   LT.on==2 (pV6 already keeps .7×.5 of their drops); here drop() keeps a further KQP.wvDrop (50%) of them, eggs included.
 //   The end-of-trial reward chest drops with LT.on==0, so it is unchanged.
 var KQP={pz:{n:.28,el:.42},fin:.15,bossImm:6,wvDrop:.5,log:[]};
+// the last 50 breaks (what tests and the console read); it used to grow for the whole session
+function kqpLog(w){KQP.log.push(w);if(KQP.log.length>50)KQP.log.splice(0,KQP.log.length-50)}
 function cbThr(e){return M(e.c)*(e.c.al?KQP.pz.el:KQP.pz.n)}
 function cbWind(e){return !!(e&&!e.dead&&!e.boss&&e.atk&&e.atk.ph==0)}
 // used by the patched break test in heroHit (t_combat.js): true when the poise of this wind-up is gone
 function cbBreakChk(e){const a=e&&e.atk;return !!(a&&!e.boss&&(a.pz||0)>=cbThr(e))}
 function cbBreakFx(e){popT(e.m.position,'BREAK!','#fde68a',true);burst(gY(e.m.position,1),0xffe08a,30,2.5,2,.5);ring(e.m.position,0xffe08a,1.8,300);hstop=.08;shake(.15);sfx('brk')}
-function cbBreak(e,why){if(!(e&&e.atk&&!e.boss&&!e.dead))return;mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;cbBreakFx(e);KQP.log.push(why||'poise')}
+function cbBreak(e,why){if(!(e&&e.atk&&!e.boss&&!e.dead))return;mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;cbBreakFx(e);kqpLog(why||'poise')}
 // poise damage: every direct hit during a wind-up
 {const f=hurt;hurt=function(e,d,s,crit,dot){const w=!dot&&cbWind(e),a=w?e.atk:null,h0=w?e.c.h:0;const r=f.apply(this,arguments);
   if(a&&e.atk===a&&!e.dead){a.pz=(a.pz||0)+Math.max(0,h0-e.c.h);
@@ -35,7 +37,7 @@ function cbBreak(e,why){if(!(e&&e.atk&&!e.boss&&!e.dead))return;mCancel(e);e.stu
 {const f=compHit;compHit=function(c,e){const w=cbWind(e);const r=f.apply(this,arguments);if(w&&cbWind(e)&&cbBreakChk(e))cbBreak(e,'comp');return r}}
 // heavy hit (combo finisher): normal mobs are interrupted, elites take extra poise damage
 function cbHeavy(e){if(!e||e.boss||e.dead)return;
-  if(!e.c.al){const was=!!e.atk;mCancel(e);e.cd=Math.max(e.cd,1);if(was){cbBreakFx(e);KQP.log.push('finisher')}return}
+  if(!e.c.al){const was=!!e.atk;mCancel(e);e.cd=Math.max(e.cd,1);if(was){cbBreakFx(e);kqpLog('finisher')}return}
   if(cbWind(e)){e.atk.pz=(e.atk.pz||0)+M(e.c)*KQP.fin;if(cbBreakChk(e))cbBreak(e,'finisher')}}
 // bosses resist stuns for a while after one lands
 {const f=eStatus;eStatus=function(e,fx,atk,src){if(e&&e.boss&&fx&&fx.stun&&!e.dead){const t=nowP();

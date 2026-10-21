@@ -199,8 +199,11 @@ function TWN101_road(){const T=TOWNS[0],X=PCOURT[0],y0=T.cy+T.sz+2,yN=TWN100_PG[
   posts.forEach(([x,y])=>CBLK.add(Math.round(y)*W+Math.round(x)));[-1,1].forEach(s=>{for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)CBLK.add(Math.round(AY+dz*.5)*W+Math.round(X+s*3.4+dx*.5))});
   for(let dz=0;dz<=3;dz++)CBLK.add(Math.round(AY-4.0+dz*.7)*W+Math.round(X-5.5))}
 // the board's text (which portals are open / cleared)
-function TWN101_board(){const g=TWN101.board;if(!g)return;const T=TOWNS[0],AY=PCOURT[1]+3,y0=T.cy+T.sz+2;if(TWN101.bs){g.remove(TWN101.bs.parent);TWN101.bs=null}
+function TWN101_board(){const g=TWN101.board;if(!g)return;const T=TOWNS[0],AY=PCOURT[1]+3,y0=T.cy+T.sz+2;
   const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  Lv '+p.lv[0]+'–'+p.lv[1]+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
+  // repaint only when the text changed (this runs every second); free the old board's canvas texture
+  const key=L.map(l=>l.t).join('|');if(TWN101.bs&&TWN101.bk===key)return;TWN101.bk=key;
+  if(TWN101.bs){const sg=TWN101.bs.parent;g.remove(sg);sg.traverse(o=>{const m=o.material,t=m&&m.map;if(!t||typeof SGNR=='undefined'||!SGNR)return;const k=SGNR.findIndex(r=>r.t===t);if(k>=0){SGNR.splice(k,1);t.dispose();m.dispose()}});TWN101.bs=null}
   TWN101.bs=sign(g,L,2.7,2.2,'#1e1610','#f4e9c8','#c9a24a',-5.42,2.05,AY-y0-3.0,Math.PI/2,512,420)}
 // the beacon: a column of light over the next portal to clear
 function TWN101_beacon(){let n=-1;for(let i=0;i<TWN100_PG.length;i++)if(pUnlocked(i)&&!pDone(i)){n=i;break}

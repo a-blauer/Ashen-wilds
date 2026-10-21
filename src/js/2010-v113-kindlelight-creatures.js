@@ -265,7 +265,7 @@ n3Mv('akleap',{nm:'Carapace Crash',ic:'💥',an:'ao_leap',rmin:3,rmax:9,wind:.8,
   rel(e,a){const p=e.m.position;burst(gY(p,.2),0x3a3428,22,2,1.4,.5);n3Chunks(gY(p,.2),0x3a3428,5,2,6,.12);n3Snd(p,'blunt',.6)},
   tick(e,a,ph,k,dt,now,P){if(ph==1){n3Glide(e,a.o,a.L,ATK_E.io(k));P.y=Math.sin(Math.PI*k)*2.8/(e.m.bs||1);if(Math.random()<.5)burst(gY(e.m.position,1+P.y*e.m.bs),AO.acid,1,.3,.2,.3)}},
   land(e,a){const p=a.L.clone();e.m.position.x=p.x;e.m.position.z=p.z;n3Flash(p,AO.acid,2.6,520);ring(p,AO.acid,3,420);burst(gY(p,.3),0x5a5040,30,3,2,.6);n3Chunks(gY(p,.3),0x3a3428,10,3.6,7,.16);
-   for(let i=0;i<10;i++){const an=i/10*6.283,q=V(p.x+Math.cos(an)*1.9,0,p.z+Math.sin(an)*1.9);n3Spike(q,i%2?AO.c2:AO.edge,s6R(.75,1.1),.34,1.1,{geo:'shard',tx:Math.sin(an)*.4,tz:-Math.cos(an)*.4,delay:.03*i%3})}
+   for(let i=0;i<10;i++){const an=i/10*6.283,q=V(p.x+Math.cos(an)*1.9,0,p.z+Math.sin(an)*1.9);n3Spike(q,i%2?AO.c2:AO.edge,s6R(.75,1.1),.34,1.1,{geo:'shard',tx:Math.sin(an)*.4,tz:-Math.cos(an)*.4,delay:.03*(i%3)})}
    n3Shake(p,.18);n3Snd(p,'boom',.9);
    if(s6InC(a,p,2.5)){s6Hit(e,a,1.45);n3Shove(a,p,1.8,260)}n3Shock(e,a,p,4.6,AO.acid,560,.45,'p',null,1)}}});
 

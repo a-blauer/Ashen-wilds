@@ -227,6 +227,9 @@ every completed zone); the South Ward's building lots took its place. `CYD` stay
 Removed in v102 (they had been switched off many versions earlier but still shipped): the Realm (building, farming,
 crafting window, habitats, sky island), dungeons, bounty boards, world events, the team-up attack, the v34 incubator
 slots, the v83 mount models (every mount is built by the v100 model track), and code that later versions replaced at load.
+Removed in v115 (review pass): the Realm's block meshes, sky island pieces and its three point lights (still added to the scene
+and drawn every frame), `dkHeroKit`, the v78 weapon models (0780 builds every weapon), the v81 swing/cast animations (0900 replaces them),
+the 1150 look fallback hooks, and the unreachable statements `tools/deadcode` listed.
 Kept on purpose: dungeon entrance *spots* (`DUNS`, emptied at load) still steer where camps and secrets go;
 soil mounds and shallow water still give the old Realm terrain items (`ITEMS['t:…']`, shown under "Realm items" in the
 bag) — removing those would change the world, so it is a design decision for later.
@@ -256,6 +259,7 @@ python3 v113_roster.py       # v113: instance creatures per field instance, camp
 python3 v114_beasts.py       # v114: model sheets per beast race (RACE=, PART=base,helms,gear, FURI=)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
+python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance

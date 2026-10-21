@@ -366,6 +366,8 @@ var IA112={g:-9,t:null,k:0,col:new THREE.Color(),c2:new THREE.Color(),ptype:null
 function ia112(dt,now){const I=curIns(),g=I?I.g:-1,t=TH112&&TH112.byG[g]||null;
   if(g!==IA112.g){IA112.g=g;IA112.t=t;IA112.k=0;
     ST112.forEach(s=>s.m.visible=s.g===g);
+    // an instance without its own lighting goes back to the zone's (0550 only resets it when the zone changes)
+    if(!t||!t.a.env){const en=typeof ZENV!='undefined'&&ZENV[(ZATM[ZA.cur]||ZATM.town).env||'norm'];if(en)scene.environment=en}
     if(t){zpReset(t.a.pt=='spore'||t.a.pt=='mote'?'pollen':t.a.pt=='sparkle'||t.a.pt=='leaf'||t.a.pt=='ash'||t.a.pt=='petal'?'snow':t.a.pt=='blizzard'||t.a.pt=='gust'?'sand':t.a.pt);ZP.type=t.a.pt;ZP.mat.color.setHex(t.a.pc);
       ZP.mat.size={spore:.2,mote:.12,sparkle:.13,leaf:.16,ash:.1,petal:.15,blizzard:.13,gust:.06}[t.a.pt]||ZP.mat.size;IA112.ptype=t.a.pt}
     else if(IA112.ptype){IA112.ptype=null;const Z=ZATM[ZA.cur]||ZATM.town;zpReset(Z.pt)}}

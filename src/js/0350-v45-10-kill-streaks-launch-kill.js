@@ -1,5 +1,4 @@
 // =============== 10. launch on kill + explosive elites ===============
-let streak=0,streakT=0;
 function kill(e){
   if(e.ar!=null)bossDefeated(e);if(typeof campOnKill=='function')campOnKill(e);if(typeof onKillX=='function')onKillX(e);
   // kill-streak XP/loot multiplier removed

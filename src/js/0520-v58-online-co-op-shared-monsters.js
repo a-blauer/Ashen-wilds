@@ -33,8 +33,6 @@ function mpModel(r){const pr=r.pr,cls=CLS[pr.c]?pr.c:'warrior',sig=cls+'|'+JSON.
   if(sig!==r.sig){r.sig=sig;try{if(typeof mpLookIn=='function')r.m.mdLook=mpLookIn(pr.lk);refreshGear(r.m,cls,mpGearE(pr.g))}catch(err){console.warn(err)}}
   mpTagDraw(r)}
 function mpDropRH(k){const r=MP.rh[k];if(!r)return;if(r.m){scene.remove(r.m)}delete MP.rh[k]}
-{const f=swingAnim;swingAnim=function(){MP.sw=(MP.sw+1)%1000;return f.apply(this,arguments)}}
-{const f=castAnim;castAnim=function(){MP.sw=(MP.sw+1)%1000;return f.apply(this,arguments)}}
 
 function mpPeersSync(){
   const ps=MP.room.peers();if(ps===MP.lastPs)return;MP.lastPs=ps;const seen={};
@@ -61,11 +59,12 @@ function mpRoles(now){
   const rg=mpCurRg();
   if(rg!==MP.rg){ // changed map: drop every mirror from the old one
     enemies.slice().forEach(e=>{if(e.mir){removeE(e)}});MP.emap={};MP.dead={};MP.rg=rg;MP.host='';
+    MP.hitq={};MP.evq=[];MP.kq=[]; // hits, events and kills queued for the old map's monsters go too
   }
   let n=0;for(const k in MP.rh){const r=MP.rh[k];r.act=!!(r.pr&&rg>=0&&r.pr.rg===rg&&r.pr.hp>0&&r.m&&r.m.visible);if(r.pr&&rg>=0&&r.pr.rg===rg)n++}MP.others=n;
   const h=rg>=0?mpHostFor(rg):MP.me;
   if(h!==MP.host){const was=MP.host;MP.host=h;
-    if(h===MP.me){if(was){enemies.forEach(e=>{if(e.mir){e.mir=0;e.nx=null;e.agg=0;e.cd=1}});say('👥 Your world now leads the monsters here.')}}
+    if(h===MP.me){if(was){enemies.forEach(e=>{if(e.mir){e.mir=0;e.nx=null;e.agg=0;e.cd=1}});if(typeof mpAdopt=='function')mpAdopt(rg);say('👥 Your world now leads the monsters here.')}}
     else{enemies.slice().forEach(e=>{if(!mpElig(e))return;if(e.nid&&!e.mir){e.mir=1;MP.emap[e.nid]=e;e.mst=now;if(e.atk)mCancel(e)}else if(!e.nid)removeE(e)});}
   }
 }
@@ -115,12 +114,6 @@ function mpPuppet(e,dt,now){
   return r}}
 // mirrored elites keep the host's trait
 {const f=giveTrait;giveTrait=function(e,k){if(MP.mkTr!==undefined){if(MP.mkTr&&TRAITS.some(t=>t[0]===MP.mkTr))return f(e,MP.mkTr);return}return f(e,k)}}
-// only the host spawns monsters — and it spawns them around every player in the map
-{const f=spawn;spawn=function(init){
-  if(MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me)return;
-  if(MP.on&&!init&&MP.others){const rs=[];for(const k in MP.rh){const r=MP.rh[k];if(r.act)rs.push(r)}
-    if(rs.length&&Math.random()<rs.length/(rs.length+1)){const r=rs[Math.random()*rs.length|0],p=pl.position,ox=p.x,oz=p.z;p.x=r.m.position.x;p.z=r.m.position.z;try{return f.apply(this,arguments)}finally{p.x=ox;p.z=oz}}}
-  return f.apply(this,arguments)}}
 // host monsters also hunt the other players
 {const f=eTarget;eTarget=function(e,m,dpl){let tg=f(e,m,dpl);if(!MP.on||!MP.others||e.mir)return tg;let bd=tg===pl?dpl:m.position.distanceTo(tg.position);
   for(const k in MP.rh){const r=MP.rh[k];if(!r.act)continue;const d=m.position.distanceTo(r.m.position);if(d<bd-1.5){bd=d;tg=r.m}}return tg}}

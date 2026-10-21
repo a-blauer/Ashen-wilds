@@ -17,11 +17,13 @@ function sync(){
     const old=fols[i],g=cr(c);g.position.copy(old?old.position:V(pl.position.x-1-i,0,pl.position.z));scene.add(g);if(old)scene.remove(old);fols[i]=g;
   }
 }
+var G_BAR=null;
 function bar(al){
-  const g=new THREE.Group(),mb=c=>new THREE.Mesh(new THREE.PlaneGeometry(1,.1),new THREE.MeshBasicMaterial({color:c,depthTest:false})),a=mb(0x111111),b=mb(al?0xb04aff:0xc8402e);
+  G_BAR=G_BAR||new THREE.PlaneGeometry(1,.1); // one shared shape; each bar's two materials are freed in removeE
+  const g=new THREE.Group(),mb=c=>new THREE.Mesh(G_BAR,new THREE.MeshBasicMaterial({color:c,depthTest:false})),a=mb(0x111111),b=mb(al?0xb04aff:0xc8402e);
   a.renderOrder=5;b.renderOrder=6;b.position.z=.001;g.add(a,b);g.fill=b;if(al)g.scale.setScalar(1.5);scene.add(g);return g;
 }
-function removeE(e){mCancel(e);scene.remove(e.m,e.hb);const i=enemies.indexOf(e);if(i>=0)enemies.splice(i,1)}
+function removeE(e){mCancel(e);scene.remove(e.m,e.hb);if(e.hb&&!e.hb._free){e.hb._free=1;e.hb.children.forEach(o=>o.material&&o.material.dispose())}const i=enemies.indexOf(e);if(i>=0)enemies.splice(i,1)}
 function dn(p,t,col,dy,ms){const v=gY(p,1).project(cam),s=$('stage'),d=document.createElement('div');d.className='dn';d.textContent=t;d.style.cssText=`left:${(v.x*.5+.5)*s.clientWidth}px;top:${(-v.y*.5+.5)*s.clientHeight+(dy||0)}px;color:${col}${ms?';animation-duration:'+ms/1000+'s':''}`;s.appendChild(d);setTimeout(()=>d.remove(),ms||700)}
 function down_base(){
   say('You were struck down. You wake at '+home.n+', healed.');
@@ -31,7 +33,7 @@ let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);const rd=now-last;let dt=Math.min(.05,rd/1000);last=now;const pz=uiOpen();
   for(let i=tws.length-1;i>=0;i--){const w=tws[i];if(pz){w.t+=rd;continue}const k=Math.min(1,(now-w.t)/w.ms);w.fn(k);if(k>=1){tws.splice(i,1);w.done&&w.done()}}
-  if((uiOpen()&&!mpLive())||!party.length||(typeof KQMENU!='undefined'&&KQMENU.on))dt=0;
+  if((pz&&!mpLive())||!party.length||(typeof KQMENU!='undefined'&&KQMENU.on))dt=0;
   const dtR=dt;if(hstop>0){hstop-=rd/1000;dt*=.3}if(slowT>0){slowT-=rd/1000;dt*=.35}
   if(!inited){inited=true;for(let i=0;i<MAXMOB;i++)spawn(true);BOSSES.forEach((_,i)=>spawnBoss(i))}
   // hero movement
@@ -40,7 +42,7 @@ function loop(now){
   {const c=Math.cos(camYaw),s2=Math.sin(camYaw),wx=ax*c+az*s2,wz=-ax*s2+az*c;if(!(rmb&&mOn&&!K.w&&!K.a&&!K.s&&!K.d&&!dp[0]&&!dp[1])){ax=wx;az=wz}}
   const al=Math.hypot(ax,az);if(al>0)pl.mvd={x:ax/al,z:az/al,t:now};
   atkCd=Math.max(0,atkCd-dt);for(const k in hero.cd)hero.cd[k]=Math.max(0,hero.cd[k]-dt);hero.iv=Math.max(0,(hero.iv||0)-dt);hero.cdD=Math.max(0,(hero.cdD||0)-dt);hero.cdP=Math.max(0,(hero.cdP||0)-dt);
-  if(al>0&&dtR>0){const msp=4.5*(1+HS().mspd)*(hero.chan?.55:1)*(riding?1+riding.spd/100:1);walk(pl,ax/al*msp*dtR,az/al*msp*dtR);if(!pl.sw){let da=Math.atan2(ax,az)-pl.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));pl.rotation.y+=da*Math.min(1,dtR*18)}animHero(now,true)}else animHero(now,false);
+  if(al>0&&dtR>0){const msp=4.5*Math.max(0,1+HS().mspd)*(hero.chan?.55:1)*(riding?1+riding.spd/100:1);walk(pl,ax/al*msp*dtR,az/al*msp*dtR);if(!pl.sw){let da=Math.atan2(ax,az)-pl.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));pl.rotation.y+=da*Math.min(1,dtR*18)}animHero(now,true)}else animHero(now,false);
   if(pl.step&&dtR>0){walk(pl,pl.step.x*pl.step.sp*dtR,pl.step.z*pl.step.sp*dtR);pl.step.t-=dtR;if(pl.step.t<=0)pl.step=null}
   if(hero.dash){walk(pl,hero.dash.x*14*dtR,hero.dash.z*14*dtR);hero.dash.t-=dtR;burst(gY(pl.position,.3),0xbfd0ff,2,.3,.3,.3);if(hero.dash.t<=0)hero.dash=null}
   if(atkHeld&&dt>0&&!hero.chan)swing();
@@ -51,8 +53,8 @@ function loop(now){
   // ground loot
   for(let i=drops.length-1;i>=0;i--){
     const d=drops[i];d.g.position.y=GH(d.g.position.x,d.g.position.z);d.t-=dt;d.gem.rotation.y+=dt*2;d.gem.position.y=.5+Math.sin(now/300+i)*.08;
-    if(Math.hypot(d.g.position.x-pl.position.x,d.g.position.z-pl.position.z)<1.2){take(d);scene.remove(d.g);drops.splice(i,1)}
-    else if(d.t<=0){scene.remove(d.g);drops.splice(i,1)}
+    if(Math.hypot(d.g.position.x-pl.position.x,d.g.position.z-pl.position.z)<1.2){take(d);scene.remove(d.g);dropFree(d);drops.splice(i,1)}
+    else if(d.t<=0){scene.remove(d.g);dropFree(d);drops.splice(i,1)}
   }
   shotTick(dt);
   // monsters: wander, aggro, attack

@@ -36,11 +36,6 @@ const pl=new THREE.Group();
 return pl;
 }
 const pl=buildHero();
-// three-step sword combo: wind-up -> fast strike -> follow-through -> recover
-const SWK=[
- {W:{sy:.95,sx:-.06,ax:-1.25,az:-.65,ex:-.95,lx:-.45,py:.25},S:{sy:-.95,sx:.14,ax:-1.45,az:.95,ex:-.15,lx:.35,py:-.3}},
- {W:{sy:-1.05,sx:-.05,ax:-1.6,az:1.05,ex:-.45,lx:.25,py:-.3},S:{sy:.85,sx:.12,ax:-1.2,az:-.75,ex:-.15,lx:-.45,py:.3}},
- {W:{sy:.25,sx:-.4,ax:-3.05,az:.12,ex:-.65,lx:-2.3,py:0},S:{sy:0,sx:.5,ax:-.45,az:0,ex:-.05,lx:-.55,py:0}}],SW0={sy:0,sx:0,ax:-.2,az:0,ex:-.3,lx:0,py:0};
 let combo=0,comboT=0,hstop=0,shk=0;
 const shake=a=>{if(SET.shake)shk=Math.max(shk,a)};
 function slashFx(d,st,rg){

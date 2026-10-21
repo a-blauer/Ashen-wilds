@@ -56,7 +56,7 @@ function bfxStalks(A){if(typeof AR=='undefined'||!AR.st)return;
     e.c.h=Math.max(0,T.hp);e.c.st.hp=Math.max(1,T.hpM);const o=T.st=='open'||T.st=='wake';e.bfx.sub=o?'👁 Eye OPEN — takes +60% damage':'Strike it down — an open eye takes +60%'}}
 function bfxSync(dt,now){const A=AF;
   for(const e of BFX.subs.slice())if(!A||!A.f||e.bfx.A!==A||e.dead)bfxDrop(e);
-  if(A&&A.f&&bossEnt(A.i)){try{bfxOrbs(A);if(A.i===1)bfxNecks(A);if(A.i===0)bfxStalks(A)}catch(err){console.error('bossfx sync',err)}}
+  const be=A&&A.f&&bossEnt(A.i);if(be){try{bfxOrbs(A);if(!be.sv){if(A.i===1)bfxNecks(A);if(A.i===0)bfxStalks(A)}}catch(err){console.error('bossfx sync',err)}}
   bfxMark(now)}
 {const f=arenaTick;arenaTick=function(dt,now){const r=f.apply(this,arguments);bfxSync(dt,now);return r}}
 {const f=arenaClear;arenaClear=function(A){const r=f.apply(this,arguments);for(const e of BFX.subs.slice())if(e.bfx.A===A)bfxDrop(e);return r}}

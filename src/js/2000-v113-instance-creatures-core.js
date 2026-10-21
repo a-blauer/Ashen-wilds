@@ -55,7 +55,8 @@ function n3Cr(name,keys){const at=n3Trk(keys),O={};
   return f.apply(this,arguments)}}
 // the body group (pitch, yaw, forward, lift) follows the track's B channels
 function n3Body(e,a,M,ph,k,P){const T=HUP113[M.an]||CRP113[M.an];if(!T||!T.at)return;const r=T.at(n3U(ph,k)),ib=1/(e.m.bs||1);
-  P.rx=r.Brx||0;P.ry=r.Bry||0;P.z=(r.Bz||0)*ib;P.y=(r.By||0)*ib}
+  P.rx=r.Brx||0;const ry=r.Bry||0;P.ry=Math.atan2(Math.sin(ry),Math.cos(ry)); // whole turns wrap, so a held spin does not unwind backwards
+  P.z=(r.Bz||0)*ib;P.y=(r.By||0)*ib}
 // ---------------- moves ----------------
 function n3Mv(n,M){M.x6=M.x6||{};const X=M.x6,t0=X.tick;X.tick=function(e,a,ph,k,dt,now,P){n3Body(e,a,M,ph,k,P);if(t0)return t0.apply(this,arguments)};
   MV107[n]=M;MV[n]=M;try{MVN[n]=M.nm}catch(_){}return M}
@@ -118,8 +119,6 @@ function n3Bolt(p,col,h,ms,from){const top=from?from.clone():gY(p,h||9),end=gY(p
     if(i==4&&Math.random()<.7){const br=q.clone().add(V(s6R(-1.2,1.2),s6R(-1.4,-.4),s6R(-1.2,1.2))),m2=x5('box',col,(ms||280)*.7,(k,mm)=>{mm.material.opacity=.8*(1-k)},{p:q.clone().lerp(br,.5)});m2.scale.set(.06,.06,q.distanceTo(br));m2.lookAt(br)}
     prev=q}
   kqFlash(gY(p,.8),col,3.2,220);try{fxaFlash(gY(p,2),col,6,220)}catch(_){}}
-// a ball that flies from a to b on a lob with a trail; done() on landing
-function n3Lob(e,from,to,h,ms,col,sz,done,kind){const g=kqShot(kind||'glob',col,sz||1.2);s6Lob(g,from,to,h,ms,done,col);return g}
 
 // a copy of a creature body geometry with one colour swapped for another (vertex colours within tol of 'from'), cached
 var N3RC={};function n3Recolor(key,G,from,to,tol){if(N3RC[key])return N3RC[key];const g=G.clone(),c=g.attributes.color,A=new THREE.Color(from),Bc=new THREE.Color(to),t=tol||.12;

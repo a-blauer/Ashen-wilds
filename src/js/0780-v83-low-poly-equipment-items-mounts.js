@@ -167,7 +167,7 @@ function lgDropModel(kind,data,r){
   if(mx>tgt)inner.scale.setScalar(tgt/mx);const c=bb.getCenter(new THREE.Vector3()).multiplyScalar(inner.scale.x);inner.position.sub(c);
   if(kind=='gear'&&sz.y>sz.x*1.6)g.rotation.z=.75;return g}
 {const f=drop;drop=function(kind,data,p,r){const n=drops.length,res=f.apply(this,arguments);
-  try{for(let i=n;i<drops.length;i++){const d=drops[i];if(d.lg)continue;d.lg=1;const m=lgDropModel(d.kind,d.data,r);m.position.copy(d.gem.position);d.g.remove(d.gem);d.g.add(m);d.gem=m;
+  try{for(let i=n;i<drops.length;i++){const d=drops[i];if(d.lg)continue;d.lg=1;const m=lgDropModel(d.kind,d.data,r);m.position.copy(d.gem.position);d.g.remove(d.gem);if(d.gem.material&&d.gem.material.userData.dropOwn)d.gem.material.dispose();d.g.add(m);d.gem=m;
     d.g.children.forEach(o=>{if(o!==m&&o.geometry&&o.geometry.type=='CylinderGeometry'){o.scale.set(.75,1,.75)}})}}catch(e){console.warn('lp drop',e)}
   return res}}
 

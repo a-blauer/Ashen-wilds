@@ -131,57 +131,6 @@ function dkC(){return DKC0||(DKC0={
  assassin:{M1:0x2e2e36,M2:0x4a4a56,trim:0x5a3a7a,cl:0x24142e,lt:0x1a181e,fur:0x1a1a1e,glow:0xb070ff,hair:0x121014,hs:'topknot'},
  ranger:{M1:0x46484e,M2:0x6a6c72,trim:0x6a5a30,cl:0x22301c,lt:0x3a2818,fur:0x4a3c2c,glow:0x8aff9a,hair:0x3a2414,hs:'long'},
  mage:{M1:0x3a3a46,M2:0x8a6a2a,trim:0x8a6a2a,cl:0x161e3c,cl2:0x22183e,lt:0x2a1c12,fur:0x2a2a32,glow:0x7cc8ff,hair:0x8a8a90,hs:'long',beard:0x8a8a90}})}
-function dkHeroKit(cls,E){
-  const k=dkKit(),C=dkC()[cls]||dkC().warrior,arm=CLS[cls].arm,ch=E.chest,hm=E.helm,bt=E.boots,rc=it=>it&&it.r>=2?parseInt(RAR[it.r][1].slice(1),16):null;
-  const sk=dkHex(CLS[cls].sk),M1=C.M1,M2=C.M2,tr=rc(ch)||C.trim,capeC=dkHex(CLS[cls].cape.map(v=>Math.round(v*.62)));
-  // head: helm or bare face
-  if(hm){const ht=rc(hm)||C.M2,gl=hm.r>=3?parseInt(RAR[hm.r][1].slice(1),16):C.glow;
-    if(cls=='warrior'){k.p('head','cyl','m',M1,0,1.15,.004,.114,.17,.122).p('head','hem','m',M1,0,1.235,.004,.114,.06,.122).p('head','box','g',gl,0,1.152,.124,.13,.013,.01).p('head','box','m',ht,0,1.14,.126,.018,.12,.012);
-      [-1,1].forEach(s=>{k.L('head','c',0xb8ad90,[s*.1,1.2,0],[s*.17,1.25,-.01],.03,.022).L('head','c',0xb8ad90,[s*.17,1.25,-.01],[s*.2,1.33,-.02],.022,.012).L('head','c',0xb8ad90,[s*.2,1.33,-.02],[s*.18,1.41,-.01],.012,.002);
-        for(let i=0;i<3;i++)k.p('head','box','c',0x050505,s*(.03+i*.02),1.1,.124,.008,.03,.01)})}
-    else if(cls=='paladin'){k.p('head','cyl','m',M1,0,1.15,.004,.114,.17,.122).p('head','hem','m',M2,0,1.235,.004,.114,.07,.122).p('head','box','g',gl,0,1.155,.124,.14,.013,.01).p('head','box','m',ht,0,1.14,.127,.02,.14,.012).p('head','ring','m',ht,0,1.23,0,.118,.3,.126);
-      [-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('head','box','m',i?M2:ht,s*(.13+i*.012),1.2+i*.035,-.02-i*.015,.012,.1-i*.02,.05,-.3,0,-s*(.5+i*.25))})}
-    else if(cls=='assassin'){dkHood(k,C.cl,true,gl);k.p('head','cyl','c',C.lt,0,1.085,.03,.1,.06,.095)}
-    else if(cls=='ranger'){dkHood(k,C.cl,false,null,true);dkFace(k,{skin:sk,hair:null,brow:C.hair});k.p('head','cyl','c',C.lt,0,1.07,.02,.105,.05,.1)}
-    else{dkHood(k,C.cl2,true,gl,true);k.p('head','box','m',M1,0,1.115,.112,.07,.05,.012);if(hm.r>=2)k.p('head','oct','g',ht,0,1.21,.115,.016,.022,.01)}
-  }else{dkFace(k,{skin:sk,hair:C.hair,hairStyle:C.hs,beard:C.beard});if(cls=='assassin')k.p('head','cyl','c',C.cl,0,1.085,.025,.104,.065,.1);if(cls=='warrior')[-1,1].forEach(s=>k.p('head','box','c',0x4a1a14,s*.06,1.15,.106,.006,.05,.006,0,0,s*.3))}
-  // torso
-  if(cls=='warrior'){
-    if(ch){dkCuirass(k,M1,M2);[-1,1].forEach(s=>dkPauldron(k,s,M1,M2,true));dkPlateArms(k,M1,M2);k.p('pelvis','skirt','m',0x26282e,0,.48,0,.215,.16,.155);for(let i=0;i<5;i++)k.p('pelvis','box','m',i%2?M1:M2,-.16+i*.08,.5,.12-Math.abs(i-2)*.02,.07,.12,.02,.1,0,0)}
-    else{k.p('chest','tor','c',C.lt,0,.83,.006,.212,.3,.148);[-1,1].forEach(s=>{k.p('chest','box','c',0x1a120c,0,.84,.146,.04,.34,.01,0,0,s*.55);k.p(DKA(s)+'0','hem','c',C.lt,s*.25,.98,0,.11,.07,.115,0,0,s*.4)});dkGloves(k,C.lt,C.fur)}
-    k.S('pelvis',C.cl,0,.6,.135,.1,.34,0,-.06,1).S('pelvis',C.cl,0,.6,-.13,.12,.3,Math.PI,.06,2);k.p('pelvis','box','m',0x8a6a2a,0,.47,.14,.03,.12,.006).p('pelvis','box','m',0x8a6a2a,0,.5,.14,.08,.025,.006);
-    dkCollar(k,C.fur);dkBelt(k,C.lt,0x8a6a2a);dkCapeEnds(k,capeC);if(ch&&ch.r>=3)k.p('chest','oct','g',tr,0,.86,.165,.025)}
-  else if(cls=='paladin'){
-    if(ch){dkCuirass(k,M1,M2,tr);[-1,1].forEach(s=>{dkPauldron(k,s,M1,M2,false,3);k.p(DKA(s)+'0','ring','m',tr,s*.27,.95,0,.1,.3,.1,0,0,s*.6)});dkPlateArms(k,M1,M2);k.p('pelvis','skirt','m',0x5a5e66,0,.48,0,.215,.16,.155)}
-    else{k.p('chest','tor','c',0x5a5048,0,.83,.006,.212,.3,.148);dkGloves(k,C.lt,C.cl)}
-    k.S('pelvis',C.cl,0,.62,.14,.13,.4,0,-.06,3).S('pelvis',C.cl,0,.62,-.13,.13,.34,Math.PI,.06,4);k.p('chest','box','c',C.cl,0,.82,.16,.12,.24,.01);
-    k.p('chest','box','m',tr,0,.82,.167,.025,.18,.006).p('chest','box','m',tr,0,.86,.167,.11,.025,.006).p('pelvis','box','m',tr,0,.44,.155,.02,.14,.006);
-    dkBelt(k,C.lt,tr);dkCapeEnds(k,capeC,6);if(ch&&ch.r>=3)k.p('chest','oct','g',tr,0,.86,.175,.025)}
-  else if(cls=='assassin'){
-    k.p('chest','tor','c',ch?0x221e26:C.cl,0,.83,.006,.212,.3,.148);
-    [-1,1].forEach(s=>{k.p('chest','box','c',0x121014,0,.83,.148,.035,.36,.012,0,0,s*.6);if(ch)for(let i=0;i<2;i++)k.p('chest','box','m',0x8a8e96,s*(.05+i*.05),.85-s*(.04+i*.035),.155,.012,.06,.006,0,0,s*.6+Math.PI/2)});
-    if(ch){k.p('aL0','hem','c',C.lt,-.255,.99,0,.115,.08,.12,0,0,-.4).p('aL0','hem','m',M2,-.27,.955,0,.1,.065,.105,0,0,-.62).p('aL0','cone4','m',M2,-.29,1.05,0,.018,.09,.018,0,0,.5)}
-    [-1,1].forEach(s=>{const a=DKA(s);for(let i=0;i<3;i++)k.p(a+'1','ring','c',0x3a3440,s*(.244+i*.003),.74-i*.05,0,.055,.3,.055)});dkGloves(k,C.lt,C.cl);
-    k.p('spine','ring','c',C.cl,0,.6,0,.176,.7,.13);for(let i=0;i<5;i++)k.S('pelvis',i%2?C.cl:0x1c1424,-.13+i*.065,.56,.1+Math.abs(i-2)*-.01,.06,.16+((i*3)%3)*.06,0,-.12,i);
-    k.p('neck','cyl','c',C.cl,0,1.0,0,.11,.07,.1);k.S('chest',C.cl,.06,.98,-.12,.06,.36,Math.PI,.15,5);if(ch&&ch.r>=3)k.p('chest','oct','g',tr,0,.6,.135,.02);
-    dkCapeEnds(k,capeC,7)}
-  else if(cls=='ranger'){
-    k.p('chest','tor','c',ch?C.lt:0x3a3424,0,.83,.006,.212,.3,.148);if(ch)for(let r=0;r<3;r++)for(let c=0;c<4;c++)k.p('chest','sph','m',M2,-.09+c*.06,.74+r*.08,.15-r*.004,.011);
-    if(ch)[-1,1].forEach(s=>k.p(DKA(s)+'0','hem','c',C.lt,s*.25,.98,0,.11,.075,.115,0,0,s*.4));dkCollar(k,C.fur,15);dkGloves(k,C.lt,C.fur);k.L('aL1','m',M1,[-.245,.74,0],[-.25,.62,0],.056,.06);
-    k.L('chest','c',0x3a2414,[-.05,.66,-.16],[.12,1.04,-.2],.055,.06,7);k.p('chest','ring','c',0x5a3a20,.12,1.03,-.2,.06,.4,.06,.4,0,-.42);for(let i=0;i<4;i++){const x=.09+i*.025,b=[x,1.0,-.2],t=[x+.07,1.16,-.23];k.L('chest','c',0x6a5030,b,t,.006,.006,4);k.p('chest','cone4','c',[0x7a2a20,0x2a2a2a,0xd8d0b8][i%3],t[0],t[1],t[2],.022,.07,.006,0,0,-.4)}
-    dkBelt(k,C.lt,0x6a6a6a);k.p('pelvis','box','c',0x2e2014,-.15,.52,.06,.05,.07,.04,0,-.6,0);k.S('pelvis',C.cl,0,.6,.13,.11,.24,0,-.06,6);dkCapeEnds(k,capeC,7);if(ch&&ch.r>=3)k.p('chest','oct','g',tr,0,.86,.16,.02)}
-  else{ // mage
-    const rb=C.cl,r2=C.cl2;k.p('chest','tor','c',r2,0,.83,.006,.212,.3,.148);dkSkirt(k,rb,.6,.5,.3,13,1);
-    k.p('chest','hem','c',rb,0,.93,-.005,.255,.12,.18);for(let i=0;i<10;i++){const a=i/10*Math.PI*2;k.S('chest',rb,Math.sin(a)*.24,.95,Math.cos(a)*.17,.07,.07+((i*3)%3)*.025,a,-.4,i)}
-    [-1,1].forEach(s=>{k.p('chest','box','m',tr,s*.06,.78,.15,.018,.32,.01,0,0,-s*.05);k.p('pelvis','box','m',tr,s*.07,.33,.21,.02,.48,.01,-.28,0,-s*.03);const a=DKA(s);k.L(a+'0','c',rb,[s*.225,.95,0],[s*.24,.78,0],.058,.06);k.L(a+'1','c',rb,[s*.243,.77,0],[s*.255,.6,0],.055,.09,8);k.p(a+'2','box','c',dkShade(sk,.8),s*.255,.555,.012,.045,.06,.05)});
-    k.p('spine','ring','c',0x4a1a1a,0,.6,0,.178,.7,.132);k.S('pelvis',0x4a1a1a,.06,.6,.13,.05,.28,0,-.1,2);for(let i=0;i<4;i++)k.p('pelvis','ring','m',0x8a6a2a,-.16,.55-i*.03,.08,.012,.4,.012,0,i%2?0:Math.PI/2,0);
-    k.p('pelvis','box','c',0x3a1a10,-.17,.44,.08,.1,.13,.04,.2,-.4,.15).p('pelvis','box','c',0xc8bc98,-.165,.44,.083,.09,.12,.042,.2,-.4,.15);if(!hm)k.p('chest','ring','c',r2,0,1.0,-.03,.13,.9,.12,-.3);
-    if(ch&&ch.r>=3)k.p('chest','oct','g',tr,0,.88,.16,.025)}
-  if(cls!='mage'&&cls!='warrior'&&cls!='paladin')dkBoots(k,C.lt,C.fur);else if(cls=='mage')dkBoots(k,0x1a1410,0x2a1c12);
-  else if(bt||ch)dkPlateLegs(k,M1,M2);else{dkBoots(k,C.lt,C.fur);}
-  if(bt&&bt.r>=3)[-1,1].forEach(s=>k.p(DKL(s)+'h1','oct','g',parseInt(RAR[bt.r][1].slice(1),16),s*.1,.3,.1,.015));
-  return k}
-
 // ---------------- humanoid enemies ----------------
 function dkGoblinHead(k,sk,eye,o){o=o||{};const sd=dkShade(sk,.7);
   [-1,1].forEach(s=>{k.p('head','cone4','c',sk,s*.15,1.17,-.01,.035,.17,.022,0,0,-s*1.3);k.p('head','cone4','c',sd,s*.13,1.165,0,.02,.1,.012,0,0,-s*1.3);

@@ -29,7 +29,6 @@ function worldTick(dt,now){
 // set bonuses that tweak the combat systems
 {const _rg=resGain;resGain=function(v){return _rg(HS().setArc?v*1.3:v)}}
 function miniMarks(w,h,vw,vh,cx,cy){const P=(x,z)=>[(x-(cx-vw/2)+.5)*w/vw,(z-(cy-vh/2)+.5)*h/vh],inV=(x,y)=>x>-6&&y>-6&&x<w+6&&y<h+6;
-  const star=(x,y,c)=>{mmX.fillStyle=c;mmX.beginPath();for(let i=0;i<10;i++){const r=i%2?2.6:6,a=i*Math.PI/5-Math.PI/2;mmX.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r)}mmX.closePath();mmX.fill();mmX.strokeStyle='#000';mmX.lineWidth=1;mmX.stroke()};
   tmaps.forEach(m=>{const [x,y]=P(m.x,m.z);if(!inV(x,y))return;mmX.strokeStyle='#ef4444';mmX.lineWidth=2.5;mmX.beginPath();mmX.moveTo(x-4,y-4);mmX.lineTo(x+4,y+4);mmX.moveTo(x+4,y-4);mmX.lineTo(x-4,y+4);mmX.stroke()});
   CHESTS.forEach(c=>{const [x,y]=P(c.x,c.z);if(inV(x,y)){mmX.fillStyle='#fbbf24';mmX.fillRect(x-2.5,y-2.5,5,5)}});
 }

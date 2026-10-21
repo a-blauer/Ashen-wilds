@@ -2,7 +2,7 @@
 function wildCount(P){let n=0;for(const e of enemies)if(e.wild&&!e.dead&&Math.abs(e.m.position.x-P.x)<95&&Math.abs(e.m.position.z-P.z)<95)n++;return n}
 // v72: each zone has a fixed population for the visit; v106: per zone instance (ROST.r = instance key g), and a creature
 // comes back RESP_T seconds after it dies, at its own spot (not while a hero stands within RESP_NEAR tiles of that spot)
-var ROST={r:-9,slots:[],left:0,quiet:false};
+var ROST={r:-9,slots:[],left:0};
 // v89: zones are 1.3x bigger each way (~1.8x walkable ground): 60 roaming groups instead of 45 keep about the same density
 // v97: 1.4x bigger again (~2.1x walkable ground): 130 roaming groups (plus 8 camps instead of 5)
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
@@ -11,7 +11,7 @@ var ROST_G=33,RESP_T=50,RESP_NEAR=14; // v112: 50 s; never within aggro reach (4
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)
   enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
-  if(!I.fld){ROST.r=r;ROST.slots=[];ROST.quiet=false;return} // v108: the den and the wave trial have no roaming creatures
+  if(!I.fld){ROST.r=r;ROST.slots=[];return} // v108: the den and the wave trial have no roaming creatures
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
     const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.018+.004*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
@@ -23,7 +23,7 @@ function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;con
   grp.forEach(([x,z])=>{const key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
     for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.012;
       S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(I.lv[0],Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
-  ROST.r=r;ROST.slots=S;ROST.quiet=false;CAMPS.forEach(C=>{if(C.ig===r)C.kt=-1e9})}
+  ROST.r=r;ROST.slots=S;CAMPS.forEach(C=>{if(C.ig===r)C.kt=-1e9})}
 function rosterTick(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));
   if(r<0){if(ROST.r>=0){ROST.r=-1;ROST.slots=[]}return}
   if(r!==ROST.r)rosterBuild(r);
@@ -41,6 +41,11 @@ function rosterTick(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.posit
   if(typeof MP!='undefined'&&MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me)return;
   const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z));if(r<0&&!init)return;
   if(init)return;rosterTick()}}
+// co-op: a guest that becomes the host keeps the monsters it was mirroring; tie each to a free roster slot of its kind
+// so the roster does not spawn a second copy of every creature
+function mpAdopt(r){if(r<0)return;if(ROST.r!==r)rosterBuild(r);const fr=ROST.slots.filter(s=>!s.on&&!s.dead);
+  for(const e of enemies){if(e.slot||e.boss||e.dead||!e.m)continue;let b=null,bd=24;for(const s of fr){if(s.on||s.key!==e.key)continue;const d=Math.hypot(s.x-e.m.position.x,s.z-e.m.position.z);if(d<bd){bd=d;b=s}}
+    if(b){b.on=e;e.slot=b;if(b.camp){e.camp=b.camp;e.wx=b.camp.x;e.wz=b.camp.z}else{e.wild=1;e.wx=b.hx;e.wz=b.hz}}}}
 {const f=kill;kill=function(e){if(e&&e.slot){e.slot.dead=true;e.slot.on=null;e.slot.rt=nowP()+RESP_T*1000}return f.apply(this,arguments)}}
 // the main loop only calls spawn while below the mob cap — make sure the roster keeps streaming in either way
 setInterval(()=>{try{if(party.length&&!(typeof MP!='undefined'&&MP.on&&MP.rg>=0&&MP.host&&MP.host!==MP.me))rosterTick()}catch(_){}},1500);
@@ -55,7 +60,7 @@ const ZATM={
  4:{env:'dark',sun:.4,hemi:.42,fog:.032,fm:.55,ex:.84,vig:1.55,sat:1.15,li:2.8,ld:16,lc:0xfff0c0,lan:1,pt:'wisp',pc:0x8affe0},
  5:{env:'dim',sun:.5,hemi:.48,fog:.026,fm:.7,ex:.86,vig:1.5,sat:1.35,li:2.2,ld:15,lc:0xffa060,lan:1,pt:'ember',pc:0xff5a2a}};
 var ZA={sun:1,hemi:1,fog:.0155,fm:1,ex:.98,vig:1.3,sat:1.38,li:1.15,ld:13,cur:'town',op:0};
-const ZALC=new THREE.Color(0xffa070);
+const ZALC=new THREE.Color(0xffa070),ZA_LC=new THREE.Color(),ZA_K=['sun','hemi','fog','fm','ex','vig','sat','li','ld'];
 // a small lantern on the hero's belt for the dark zones
 var LANT=(()=>{const g=new THREE.Group();const fr=sm(0x2a2622,{metalness:.6,roughness:.4});
   TQ(g,G_BOX,fr,0,.16,0,.16,.03,.16);TQ(g,G_BOX,fr,0,-.03,0,.16,.03,.16);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>TQ(g,G_BOX,fr,a*.07,.065,b*.07,.02,.2,.02));
@@ -85,7 +90,7 @@ function zpTick(dt,now){const {N,pos,vel}=ZP,P=pl.position,t=ZP.type;if(t=='none
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{
   const r=regionAt(Math.round(pl.position.x),Math.round(pl.position.z)),key=r<0?'town':r,Z=ZATM[key],k=Math.min(1,(dt||.016)*1.4+.004);
   if(ZA.cur!==key){ZA.cur=key;ZA.op=0;zpReset(Z.pt);const en=ZENV[Z.env||'norm']||ZENV.norm;if(en&&scene.environment!==en)scene.environment=en}
-  ['sun','hemi','fog','fm','ex','vig','sat','li','ld'].forEach(q=>ZA[q]+=(Z[q]-ZA[q])*k);ZALC.lerp(new THREE.Color(Z.lc),k);
+  for(const q of ZA_K)ZA[q]+=(Z[q]-ZA[q])*k;ZALC.lerp(ZA_LC.set(Z.lc),k);
   sun.intensity*=ZA.sun;hemi.intensity*=ZA.hemi;scene.fog.density=ZA.fog;scene.fog.color.multiplyScalar(ZA.fm);scene.background=scene.fog.color;
   if(typeof POST!='undefined'&&POST.u&&typeof PSXON!='undefined'&&PSXON){POST.u.ex.value=ZA.ex;POST.u.vig.value=ZA.vig;POST.u.sat.value=ZA.sat}
   torch.color.copy(ZALC);torch.distance=ZA.ld;torch.intensity=ZA.li*(1+Math.sin(now/80)*.06+Math.random()*.04);

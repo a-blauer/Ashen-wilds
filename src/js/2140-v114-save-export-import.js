@@ -7,9 +7,11 @@ var KQSX={pre:'KQSAVE1:'};
 function kqsxEncode(){try{if(party.length&&!AF)saveGame(true)}catch(_){}const raw=localStorage.getItem(SAVE_KEY);if(!raw)return null;
   return KQSX.pre+btoa(unescape(encodeURIComponent(raw)))}
 function kqsxDecode(t){t=String(t||'').trim();if(!t)return null;let j=t;
-  if(t.startsWith(KQSX.pre))j=decodeURIComponent(escape(atob(t.slice(KQSX.pre.length).replace(/\s+/g,''))));
-  else if(!t.startsWith('{')){try{j=decodeURIComponent(escape(atob(t.replace(/\s+/g,''))))}catch(_){return null}}
-  try{const s=JSON.parse(j);return s&&s.hero&&s.hero.cls&&CLS[s.hero.cls]?s:null}catch(_){return null}}
+  try{if(t.startsWith(KQSX.pre))j=decodeURIComponent(escape(atob(t.slice(KQSX.pre.length).replace(/\s+/g,''))));
+    else if(!t.startsWith('{'))j=decodeURIComponent(escape(atob(t.replace(/\s+/g,''))));
+    const s=JSON.parse(j),h=s&&s.hero;
+    // the fields loadGame needs before anything else (a code that lacks them would leave the game half-loaded)
+    return h&&CLS[h.cls]&&s.pos&&isFinite(s.pos.x)&&isFinite(s.pos.z)&&isFinite(h.lvl)?s:null}catch(_){return null}}
 function kqsxName(s){const C=CLS[s.hero.cls]||{n:''};return `${s.hero.name||'Hero'} · Lv ${s.hero.lvl} ${C.n}`}
 document.head.insertAdjacentHTML('beforeend',`<style>
 #kqsx{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(6,4,3,.86)}#kqsx.hide{display:none}
@@ -33,7 +35,7 @@ function kqsxOpen(mode){const w=$('kqsx'),A=$('kqsxA'),B=$('kqsxB'),M=$('kqsxM')
     $('kqsxCopy').onclick=async()=>{try{await navigator.clipboard.writeText(code);M.textContent='Copied to the clipboard.';M.className='mut ok'}catch(_){A.select();M.textContent='Select the text above and copy it (Ctrl/Cmd + C).';M.className='mut'}};
     $('kqsxDl').onclick=()=>{try{const s=saveInfo(),n=(s&&s.hero&&s.hero.name||'hero').replace(/[^\w-]+/g,'_');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));a.download='kill-quest-'+n+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);M.textContent='Downloaded.';M.className='mut ok'}catch(_){M.textContent='Could not download here; copy the code instead.';M.className='mut bad'}}}
   else{$('kqsxH').textContent='Import saved game';$('kqsxT').textContent='Paste a save code (from Export) below, or open the downloaded file. This replaces the saved game on this device.';
-    A.value='';A.readOnly=false;
+    A.value='';A.readOnly=false;A.onclick=null;
     B.innerHTML=`<button id="kqsxFile">📂 Open file…</button><input type="file" id="kqsxF" accept=".txt,text/plain" style="display:none"><button class="pri" id="kqsxGo">📥 Import</button>`;
     $('kqsxFile').onclick=()=>$('kqsxF').click();
     $('kqsxF').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{A.value=String(r.result||'');kqsxCheck()};r.readAsText(f)};
@@ -41,7 +43,8 @@ function kqsxOpen(mode){const w=$('kqsx'),A=$('kqsxA'),B=$('kqsxB'),M=$('kqsxM')
     A.oninput=kqsxCheck;
     $('kqsxGo').onclick=()=>{const s=kqsxCheck();if(!s)return;
       if(!$('kqsxGo').dataset.sure&&saveInfo()){$('kqsxGo').dataset.sure=1;$('kqsxGo').textContent='Tap again: this replaces the save on this device';return}
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify(s))}catch(_){M.textContent='Your browser blocked storage here.';M.className='mut bad';return}
+      // stop the running game (autosave, save on page close) from writing its hero back over the import before the reload
+      KQMENU.nosave=1;try{localStorage.setItem(SAVE_KEY,JSON.stringify(s))}catch(_){KQMENU.nosave=0;M.textContent='Your browser blocked storage here.';M.className='mut bad';return}
       M.textContent='Imported '+kqsxName(s)+'. Reloading…';M.className='mut ok';setTimeout(()=>location.reload(),600)}}}
 // Settings → Saved game: Export / Import next to Delete
 {const d=$('delSave');if(d)d.insertAdjacentHTML('beforebegin',`<div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button id="kqsxE">📤 Export save</button><button id="kqsxI">📥 Import save</button></div>`);
