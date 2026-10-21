@@ -102,7 +102,7 @@ const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
 var TWN100_SZ=51,TWN100_IW=51,TWN100_WX=36; // v101: one Grand Square — walls at x ±36 (TWN100_WX), z -21..+51; no inner wards (IW = SZ)
 const TOWNS=[
  {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:40,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
-].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+10.5];return t});
+].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+8.4];return t}); // v109: spawn a little north (the smallest kingdom's south wall is at z 11)
 const START=TOWNS[0].sp.slice();
 const PCOURT=[40,347]; // v101: the crossroads just outside the south gate, where the Portal Road begins
 // v100 town: Duskhold's walls run from cy-TS (north) to cy+TWN100_SZ (south). Upper town cy-TS..cy+TS (plaza, north row),

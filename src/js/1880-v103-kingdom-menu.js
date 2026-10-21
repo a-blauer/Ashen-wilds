@@ -19,26 +19,26 @@ function kmRow103(o){// o: {i,n,d,state,cost,btn:[[label,data,attrs]],col}
 function kmLotTxt103(key){const l=lotOf103(key);return l?'<span class="mut kmlot" data-kmshow="'+l.id+'">📍 '+l.id+'</span>':''}
 XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   $('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;$('xwS').title='Gold · Sovereigns defeated · citizens';
-  const P=KM103.pick,R=[],mv=key=>['Move','data-kmmv="'+key+'"',P?'disabled':''];
+  const P=KM103.pick,R=[],mv=key=>['Move','data-kmmv="'+key+'"',P?'disabled':''],rt=key=>['⟳','data-kmrot="'+key+'"',(P?'disabled ':'')+'title="Turn it a quarter turn"']; // v109: turn buildings
   // ---- shops ----
   R.push('<div class="sec">🔨 Shops</div>');
-  R.push(kmRow103({i:'⚒️',n:'Blacksmith',d:KM103_SHOPD.smith+' · always open',state:'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103('smith'),btn:[mv('smith')],col:'#6ee7b7'}));
+  R.push(kmRow103({i:'⚒️',n:'Blacksmith',d:KM103_SHOPD.smith+' · always open',state:'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103('smith'),btn:[mv('smith'),rt('smith')],col:'#6ee7b7'}));
   // v109: shop upgrades (shpUp109 in 1960) — the Trading Post is always open, so it is listed for its upgrades
   const su=(k,P)=>typeof shpUp109=='function'?shpUp109(k,P):null;
   {const u=su('post',P);if(u)R.push(kmRow103({i:'🪙',n:'Trading Post',pips:u.pips,d:'Gear, potions, an egg and upgrade material · always open'+u.d,cost:u.cost,col:'#6ee7b7',state:'<em style="color:#6ee7b7">✔ Open</em>',btn:u.btn}))}
   SHOPS.forEach(o=>{const bt=shopBuilt(o.k),ok=shopCan(o),u=bt?su(o.k,P):null;R.push(kmRow103({i:o.i,n:o.n,pips:u?u.pips:'',d:o.d+(u?u.d:''),cost:bt?(u?u.cost:''):'Cost: '+costH(o.g,o.m),col:bt?'#6ee7b7':'#c9a24a',
-    state:bt?'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103(o.k):'',btn:bt?(u?u.btn:[]).concat([mv(o.k)]):[['Build','data-kmb="shop:'+o.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']]}))});
+    state:bt?'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103(o.k):'',btn:bt?(u?u.btn:[]).concat([mv(o.k),rt(o.k)]):[['Build','data-kmb="shop:'+o.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']]}))});
   // ---- upgrades ----
   R.push('<div class="sec">🏰 Upgrades</div>');
   SHU.forEach(u=>{const l=shL(u.k),c=SHC[l+1],ok=shCanBuy(u),pips='◆'.repeat(l)+'◇'.repeat(3-l),pl=UPK103.includes(u.k);
     const cost=c?'Next: '+u.d(l+1)+'<br>Cost: '+costH(c.g,shCost(u,l+1))+(c.b?' · 👑 '+c.b+' Sovereigns':''):'';
-    const b=[];if(l<3)b.push([l?'Upgrade':'Build','data-kmb="'+(l||!pl?'lvl':'up')+':'+u.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']);if(l&&pl)b.push(mv('u:'+u.k));
+    const b=[];if(l<3)b.push([l?'Upgrade':'Build','data-kmb="'+(l||!pl?'lvl':'up')+':'+u.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']);if(l&&pl)b.push(mv('u:'+u.k),rt('u:'+u.k));
     R.push(kmRow103({i:u.i,n:u.n,pips,d:(l?'Now: '+u.d(l):'Not built yet')+(u.k=='walls'?' · the wall ring round the whole square':''),cost,col:'#'+u.col.toString(16).padStart(6,'0'),
       state:(l>=3?'<em style="color:#6ee7b7">✔ Max</em>':'')+(pl?kmLotTxt103('u:'+u.k):''),btn:b}))});
   // ---- houses ----
   const nH=HS103.h.length,hc=hsCost103(nH),hok=hsCan103();
   R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
-  HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i)],col:'#d8b46a'})));
+  HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i),rt('h:'+i)],col:'#d8b46a'})));
   if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
   // ---- citizens (v104: each has a trade; v105: ranks, food, goods to collect at the house) ----
   R.push('<div class="sec kmcits">👥 Citizens</div>');
@@ -61,10 +61,10 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
   const lkd=lot&&typeof lotOpen109=='function'&&!lotOpen109(lot.id),pinf=typeof lotInfo109=='function'?lotInfo109(P):'';
   const info=(P?`<div class="kmpick">📍 <span>${kmPickLabel103(P)} — click a lit plot on the plan.</span><button data-kmx="1">Cancel</button></div>`
-    :lot?`<div class="kminfo"><b>Lot ${lot.id}</b> · ${lot.a} · ${lk?lnm[0]+' '+lnm[1]:lkd?'🔒 not part of the kingdom yet':'free'}${lk&&lk!=='u:walls'?` <button data-kmmv="${lk}">Move</button>`:''}</div>`
+    :lot?`<div class="kminfo"><b>Lot ${lot.id}</b> · ${lot.a} · ${lk?lnm[0]+' '+lnm[1]:lkd?'🔒 not part of the kingdom yet':'free'}${lk&&lk!=='u:walls'?` <button data-kmmv="${lk}">Move</button> <button data-kmrot="${lk}" title="Turn it a quarter turn">⟳ Turn</button>`:''}</div>`
     :'<div class="kminfo mut">Every building stands on a lot. Pick one when you build, or Move it later. 🟦 is you.</div>')+pinf;
   $('xwB').innerHTML=`<div class="km"><div class="kmplan"><canvas id="kmCv" width="680" height="680"></canvas>${info}</div><div class="kmlist rows">${R.join('')}</div></div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Gather wood, stone, fibers, glow caps and the like in the portal zones, and monster parts like Rock Core, Silk Gland and Ectoplasm. Upgrade levels need defeated Sovereigns. Every building can be moved for free.</span>';
+  $('xwF').innerHTML='<span class="mut dtl">Gather wood, stone, fibers, glow caps and the like in the portal zones, and monster parts like Rock Core, Silk Gland and Ectoplasm. Upgrade levels need defeated Sovereigns. Every building can be moved and turned (⟳) for free.</span>';
   kmDraw103();
   if(KM103.focus=='cit'){KM103.focus=null;try{const e=$('xwB').querySelector('.kmcits');if(e)e.scrollIntoView({block:'start'})}catch(_){}}};
 function kmClock103(ms){const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}

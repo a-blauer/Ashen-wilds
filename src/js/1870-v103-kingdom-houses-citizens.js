@@ -48,10 +48,10 @@ function hsBuild103(i){const h=HS103.h[i],l=lotOf103('h:'+i);if(!h||!l)return;co
   sign(g,[{t:h.nm,f:'700 46px'},{t:'🏠 home of '+hsWho103(i),f:'600 24px'}],1.9,.46,'#2a1c12','#f4e2c0','#c9a24a',1.0,2.05,.6,0,512,128);scene.add(g);
   const c=[];const box=(lx,lz,hx,hz)=>{const [X,Z]=lotW103(l,lx,lz),s=Math.abs(Math.sin(l.ry))>.5;c.push(s?{x:X,z:Z,hx:hz,hz:hx}:{x:X,z:Z,hx,hz})};
   box(1.35,2.15,.85,.6);box(-1.6,1.15,.45,.35);c.forEach(q=>T.col.push(q));
-  HS103.g[i]={g,c,lot:l.id};lotMark103('h:'+i,lotTiles103(l,...FP103H));lotEject103(l)}
+  HS103.g[i]={g,c,lot:l.id,ry:l.ry};lotMark103('h:'+i,lotTiles103(l,...FP103H));lotEject103(l)}
 function hsDrop103(i){const o=HS103.g[i],T=TOWNS[0];if(!o)return;scene.remove(o.g);o.c.forEach(q=>{const j=T.col.indexOf(q);if(j>=0)T.col.splice(j,1)});lotMark103('h:'+i,[]);delete HS103.g[i]}
 function hsWho103(i){const L=HS103.cit.filter(c=>c.h===i).map(c=>c.n);return L.length?L.join(' & '):'nobody yet'}
-function hs103Sync(){if(typeof HS103=="undefined"||!HS103)return;HS103.h.forEach((h,i)=>{const l=lotOf103('h:'+i),o=HS103.g[i];if(o&&(!l||o.lot!==l.id||o.who!==hsWho103(i)))hsDrop103(i);if(l&&!HS103.g[i]){hsBuild103(i);HS103.g[i].who=hsWho103(i)}});
+function hs103Sync(){if(typeof HS103=="undefined"||!HS103)return;HS103.h.forEach((h,i)=>{const l=lotOf103('h:'+i),o=HS103.g[i];if(o&&(!l||o.lot!==l.id||o.ry!==l.ry||o.who!==hsWho103(i)))hsDrop103(i);if(l&&!HS103.g[i]){hsBuild103(i);HS103.g[i].who=hsWho103(i)}});
   for(const i in HS103.g)if(!HS103.h[+i])hsDrop103(+i);CZ103.ver=-1}
 function hsCan103(){const n=HS103.h.length,c=hsCost103(n);if(n>=HS103_MAX)return [false,'Every house is built'];if(gold<c.g)return [false,'Not enough gold'];if(!shHas(c.m))return [false,'Not enough materials'];return [true,'']}
 // build a house on lot id: pay, raise it, two citizens move in
@@ -208,12 +208,13 @@ function czWalkPose103(g,ph,amp){const B=g.bones,R=g.userData.rest;czReset103(g)
 // ---------- citizens in town ----------
 function czClear103(){CZ103.live.forEach(o=>scene.remove(o.g));CZ103.live=[];CZ103.on=false}
 function czDoor103(c){const l=lotOf103('h:'+c.h);return l?lotDoor103(l):null}
-function czGate103(){const T=TOWNS[0];return [T.cx,T.cy+(T.sz||TS)+3.5]}
+function czGate103(){const T=TOWNS[0],F=typeof kf109=='function'?kf109():null;return [T.cx,T.cy+(F?F.SZ:(T.sz||TS))+3.5]} // v109: the gate moves with the walls
 function czSpawn103(){const T=TOWNS[0];czClear103();CZ103.on=true;HS103.cit.forEach((c,i)=>{const d=czDoor103(c);if(!d)return;const g=czModel103(c);g.position.set(d[0],T.ph,d[1]);scene.add(g);
     CZ103.live.push({c,g,i,mode:'',path:null,d:0,wait:1+Math.random()*4,ph:Math.random()*6,ry:0,seed:i*7+3})})}
 function czRand103(o){o.seed=(o.seed*16807+11)%2147483647;return o.seed/2147483647}
 // a few street spots an idle citizen may stroll to (lot doors and the plaza)
-function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],[12,-2],[0,6],[-18,9],[18,9],[0,18],[-4,30],[4,40]].forEach(([x,z])=>L.push([T.cx+x,T.cy+z]));return L}
+function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],[12,-2],[0,6],[-17,4],[17,4],[-6.8,20],[6.8,27],[-6.8,35],[6.8,42]].forEach(([x,z])=>L.push([T.cx+x,T.cy+z]));
+  return typeof kfIn109=='function'?L.filter(([x,z])=>kfIn109(x-T.cx,z-T.cy,1)):L} // v109: only spots inside the walls
 function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!door){g.visible=false;return}
   const sp=1.55,u=g.userData;let walk=false;
   if(c.task&&c.t0){// a trip: out to the gate, away, back home

@@ -12,7 +12,7 @@ def ok(c,msg,info=None):
 def want(p):return not PART or PART==p
 def s(pg):
     L.start(pg);ev=pg.evaluate
-    ev("()=>{gold=1e7;for(const k of Object.keys(RES))mats[k]=5000;['Rock Core','Silk Gland','Ectoplasm'].forEach(k=>mats[k]=500);[0,1,2,3,4,5].forEach(i=>bossDone.add(i));TOD=.3;if(typeof SOV109!='undefined'){SOV109.k=13;lotSync103()}}")  # v109: open all 31 lots
+    ev("()=>{gold=1e7;for(const k of Object.keys(RES))mats[k]=5000;['Rock Core','Silk Gland','Ectoplasm'].forEach(k=>mats[k]=500);[0,1,2,3,4,5].forEach(i=>bossDone.add(i));TOD=.3;if(typeof kfApply109=='function')kfApply109()}")  # v109: six Sovereigns -> the full kingdom, all 20 lots
     if want('keepers'):
         ev("()=>{SHOPS.forEach(o=>SH.shop[o.k]=1);shApply();toPos(TOWNS[0].cx,TOWNS[0].cy+6);visTick();STEP(.2)}")
         r=ev("()=>TWN100_SH.map(q=>[q.k,q._lot,!!TWN100_S.b[q.k],(()=>{const g=TWN100_S.npc[q.k]||((VIS.find(v=>v.k==q.k)||{}).g);const n=g&&g.children.find(c=>c.bones);return n?!!n._wk:null})()])")
@@ -25,9 +25,9 @@ def s(pg):
                       toPos(cx+3,cz);visTick();STEP(t);FC([cx,T.ph+2.1,cz],[sx,T.ph+1.0+(W0.y||0),sz])}""",[k,t])
                     L.shot(pg,OUT+'/v103_keep_%s_%s.png'%(k,ph))
     if want('town'):
-        r=ev("""()=>{const out={};SHOPS.forEach(o=>SH.shop[o.k]=1);SHU.forEach(u=>SH.lv[u.k]=2);shApply();
-          // a few houses in the south ward, citizens to work
-          ['A1','B2','C1','D3','A4','B4'].forEach(id=>{hsBuy103(id)});HS103.cit.forEach((c,i)=>czTask103(c,i%2?'wood':''));
+        r=ev("""()=>{const out={};SHOPS.forEach(o=>SH.shop[o.k]=o.k!='bard'&&o.k!='stable'?1:0);SHU.forEach(u=>SH.lv[u.k]=2);shApply();
+          // six houses on free lots (v109: 20 lots in the full kingdom; two left free for the move test), citizens to work
+          LOT103.filter(l=>lotFree103(l.id)).slice(-6).forEach(l=>{hsBuy103(l.id)});HS103.cit.forEach((c,i)=>czTask103(c,i%2?'wood':''));
           HS103.cit.forEach((c,i)=>{if(c.task)c.t0=Date.now()-((i*37)%90)*1000});
           out.houses=HS103.h.length;out.cits=HS103.cit.length;out.pos=Object.assign({},SH.pos);
           // every door can reach the south gate
@@ -50,15 +50,16 @@ def s(pg):
         ok(not r['solidLots'],'built shops and houses are solid',r['solidLots'])
         ok(not r['freeLotsSolid'],'free lots are open ground',r['freeLotsSolid'])
         # move a shop and a house and an upgrade; old spots open, new ones solid; save + load keeps it
-        r=ev("""()=>{const o={};lotPut103('cook','D4');lotPut103('h:0','C4');lotPut103('u:den','A2');
-          o.cook=[TWN100_SH.find(q=>q.k=='cook')._lot,lotTiles103(LOTM103.D4,-2,2,-3,0).every(t=>MAP[(t/W)|0][t%W]=='B'),lotTiles103(LOTM103.W3,-2,2,-3,0).some(t=>MAP[(t/W)|0][t%W]=='B')];
-          const T=TOWNS[0],d=lotDoor103(LOTM103.D4);o.st2=[T.st2.c[0]==d[0],T.st2.c[1]==d[1]];o.den=[KDU.den.x,KDU.den.z];o.h0=HS103.g[0]&&HS103.g[0].lot;
+        r=ev("""()=>{const o={},fr=LOT103.filter(l=>lotFree103(l.id)).map(l=>l.id),c0=SH.pos.cook;o.to=[fr[0],fr[1],c0];lotPut103('cook',fr[0]);
+          o.cook=[TWN100_SH.find(q=>q.k=='cook')._lot,lotTiles103(LOTM103[fr[0]],-2,2,-3,0).every(t=>MAP[(t/W)|0][t%W]=='B'),lotTiles103(LOTM103[c0],-2,2,-3,0).some(t=>MAP[(t/W)|0][t%W]=='B')];
+          lotPut103('h:0',fr[1]);lotPut103('u:den',c0);
+          const T=TOWNS[0],d=lotDoor103(LOTM103[fr[0]]);o.st2=[T.st2.c[0]==d[0],T.st2.c[1]==d[1]];o.den=[KDU.den.x,KDU.den.z,LOTM103[c0].x,LOTM103[c0].z];o.h0=HS103.g[0]&&HS103.g[0].lot;
           saveGame(true);const s=JSON.parse(localStorage.getItem(SAVE_KEY));o.kpos=s.x2&&s.x2.kpos;o.nh=s.x2&&s.x2.khs&&s.x2.khs.length;
           SH.pos={};HS103.h=[];HS103.cit=[];lotSync103();loadGame();o.after=Object.assign({},SH.pos);o.nh2=HS103.h.length;o.nc2=HS103.cit.length;o.cook2=TWN100_SH.find(q=>q.k=='cook')._lot;return o}""")
-        ok(r['cook'][0]=='D4' and r['cook'][1] and not r['cook'][2],'moving a shop rebuilds it on the new lot and frees the old one',r['cook'])
+        ok(r['cook'][0]==r['to'][0] and r['cook'][1] and not r['cook'][2],'moving a shop rebuilds it on the new lot and frees the old one',r['cook'])
         ok(all(r['st2']),'the cooking prompt follows the Cookhouse',r['st2'])
-        ok(r['den']==[-7,30],'an upgrade structure moves to its lot',r['den'])
-        ok(r['after'].get('cook')=='D4' and r['after'].get('h:0')=='C4' and r['nh2']==6 and r['nc2']==12 and r['cook2']=='D4','save + load keeps lots, houses and citizens',r)
+        ok(r['den'][:2]==r['den'][2:],'an upgrade structure moves to its lot',r['den'])
+        ok(r['after'].get('cook')==r['to'][0] and r['after'].get('h:0')==r['to'][1] and r['nh2']==6 and r['nc2']==12 and r['cook2']==r['to'][0],'save + load keeps lots, houses and citizens',r)
         # gathering: a finished trip pays out, an unlocked material only
         r=ev("""()=>{const c=HS103.cit[1];c.bag=null;c.t0=0;sup.meat=10;czTask103(c,'wood');const w=mats.wood;c.t0=Date.now()-HS103_TRIP*3-10;czTick103();const mid=mats.wood-w;czCollectHouse105(c.h);const got=mats.wood-w;
           const c2=HS103.cit[2];c2.bag=null;c2.t0=0;bossDone.clear();czTask103(c2,'crystal');const t=c2.task;[0,1,2,3,4,5].forEach(i=>bossDone.add(i));return {got,mid,t,av:hsMats103().map(q=>q[0])}}""")
@@ -77,7 +78,7 @@ def s(pg):
             print('walker',r);L.shot(pg,OUT+'/v103_walker.png')
     if want('menu'):
         r=ev("""()=>{if(HS103.h.length>2){for(const i in HS103.g)hsDrop103(+i);for(let i=2;i<HS103.h.length;i++)delete SH.pos['h:'+i];HS103.h=HS103.h.slice(0,2);HS103.cit=HS103.cit.filter(c=>c.h<2);lotSync103()}
-          if(!HS103.h.length){['A1','B2'].forEach(id=>hsBuy103(id))}openX('hold');const o={};o.secs=[...document.querySelectorAll('#xw .sec')].map(s=>s.textContent);o.tabs=document.querySelectorAll('#xw [data-sht]').length;
+          if(!HS103.h.length){['S1W','S2E'].forEach(id=>hsBuy103(id))}openX('hold');const o={};o.secs=[...document.querySelectorAll('#xw .sec')].map(s=>s.textContent);o.tabs=document.querySelectorAll('#xw [data-sht]').length;
           o.rows=document.querySelectorAll('#xw .kmrw').length;o.sel=document.querySelectorAll('#xw [data-czk]').length;
           const b=[...document.querySelectorAll('#xw [data-kmb]')].find(x=>x.dataset.kmb=='house:1');if(b)b.click();o.pick=!!KM103.pick;o.pickTxt=($('xwB').querySelector('.kmpick')||{}).textContent||'';return o}""")
         ok(r['tabs']==0 and len(r['secs'])>=4,'one Steward window: shops, upgrades, houses and citizens in one list',r)
@@ -132,7 +133,8 @@ def s(pg):
               const K=kdState(),G=[K.wg,K.pg].concat(Object.values(K.up).map(u=>u.g),typeof TWN100_MILL!='undefined'?[TWN100_MILL]:[]).filter(Boolean);G.forEach(g=>g.updateMatrixWorld(true));
               const rc=new THREE.Raycaster(),pts=[];
               DECO103.forEach(D=>{if(D.wall)return;(D.sp||[]).forEach(q=>pts.push([D.k,q[0],q[1],.3]))});
-              pts.push(['statue',0,5.6,.75],['well',-20,3,.9],['shrine',20,3.5,.6],['gatepoles',-4.3,49.2,.15],['gatepoles',4.3,49.2,.15],['mosaic',0,16,1.2]);[19,26.25,33.75,41.25].forEach(z=>[-3.05,3.05].forEach(x=>pts.push(['garland',x,z,.1])));
+              const F=kf109();pts.push(['statue',0,5.6,.75],['well',-17.4,2,.9],['shrine',14.6,6.4,.6],['gatepoles',-4.3,F.SZ-1.8,.15],['gatepoles',4.3,F.SZ-1.8,.15],['mosaic',0,9.6,1.2]); // v109 spots
+              [18.35,25.85,33.35,40.85].filter(z=>z<F.SZ-3).forEach(z=>[-9.75,-3.85,3.85,9.75].forEach(x=>pts.push(['garland',x,z,.1])));
               for(let i=0;i<8;i++){const a=i/8*6.283+.2;pts.push(['crystals',Math.cos(a)*3.3,Math.sin(a)*3.3,.2])}
               const bad=[];pts.forEach(([k,x,z,r])=>{for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){rc.set(new THREE.Vector3(T.cx+x+dx,T.ph+12,T.cy+z+dz),new THREE.Vector3(0,-1,0));rc.far=13;
                 const h=rc.intersectObjects(G,true)[0];if(h&&h.point.y>T.ph+.3){bad.push(k+'@'+x+','+z+' y'+(h.point.y-T.ph).toFixed(1));break}}});
@@ -145,7 +147,7 @@ def s(pg):
                 ev("""()=>{const T=TOWNS[0];TOD=.3;toPos(T.cx-28,T.cy+20);pl.visible=false;STEP(.3);FC([T.cx-26,T.ph+4.2,T.cy+8],[T.cx-35.5,T.ph+2.4,T.cy+22])}""");L.shot(pg,OUT+'/v105_tier%d_west.png'%LV)
                 ev("""()=>{const T=TOWNS[0];toPos(T.cx,T.cy+44);STEP(.3);FC([T.cx+7,T.ph+4.5,T.cy+40],[T.cx-6,T.ph+2,T.cy+50.5])}""");L.shot(pg,OUT+'/v105_tier%d_south.png'%LV)
     if want('roles'):
-        r=ev("""()=>{const o={};gold=1e6;[0,1,2].forEach(i=>bossDone.add(i));if(HS103.h.length<2){['C2','D2'].forEach(id=>{if(lotFree103(id))hsBuy103(id)})}
+        r=ev("""()=>{const o={};gold=1e6;[0,1,2].forEach(i=>bossDone.add(i));if(HS103.h.length<2){['S2M','S2W'].forEach(id=>{if(lotFree103(id))hsBuy103(id)})}
           const C=HS103.cit;o.n=C.length;C.forEach(c=>{c.bag=null;c.t0=0;c.task='';c.r='gather';c.rk=1});const g0=gold;czTrain104(C[0],'egg');czTrain104(C[1],'fish');czTrain104(C[2],'hunt');o.cost=g0-gold;o.roles=C.slice(0,4).map(czRole104);
           o.optEgg=czOpts104(C[0]).filter(q=>q[2]).map(q=>q[0]);o.optFish=czOpts104(C[1]).filter(q=>q[2]).map(q=>q[0]);o.optHunt=czOpts104(C[2]).filter(q=>q[2]).map(q=>q[0]);
           // rank gates the zone tier: rank 1 hunter cannot go to Hillside (tier 2) until ranked up

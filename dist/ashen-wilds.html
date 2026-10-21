@@ -988,7 +988,7 @@ const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
 var TWN100_SZ=51,TWN100_IW=51,TWN100_WX=36; // v101: one Grand Square — walls at x ±36 (TWN100_WX), z -21..+51; no inner wards (IW = SZ)
 const TOWNS=[
  {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:40,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
-].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+10.5];return t});
+].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+8.4];return t}); // v109: spawn a little north (the smallest kingdom's south wall is at z 11)
 const START=TOWNS[0].sp.slice();
 const PCOURT=[40,347]; // v101: the crossroads just outside the south gate, where the Portal Road begins
 // v100 town: Duskhold's walls run from cy-TS (north) to cy+TWN100_SZ (south). Upper town cy-TS..cy+TS (plaza, north row),
@@ -21111,13 +21111,19 @@ var MDL100_WS={sword:.86,gs:.8,ga:.86,axe:.9,axes:.9,mace:.86,hammer:.86,club:.9
 // Layout numbers live in w0_world.js: TWN100_SZ (south wall, town-local z), TWN100_IW (inner wall closing the courtyard
 // ward), TWN100_PG (portal islands), TWN100_RD (roads), TWN100_SH (market plots), CYD (courtyard), PCOURT (crossroads).
 // Town-local frame (T.g): x = world x - T.cx, z = world z - T.cy, ground at T.ph.
-//   v101: ONE Grand Square, walls at x ±36 (TWN100_WX) from z -21 to 51 (TWN100_SZ), no inner walls or wards:
+//   v101: ONE Grand Square, walls at x ±36 (TWN100_WX) from z -21 to 51 (TWN100_SZ), no inner walls or wards (v109: the walls are
+//   sized by the kingdom's stage instead, x ±20 and z -21..11..51, see 1960):
 //   north row (Trading Post, Tavern) and the fountain as before; building lots down each side and in the south half (v103:
 //   LOT103, the player picks one for every shop, upgrade and house); prestige buildings in the corners; the south gate opens on the Portal Road
 // This file: the wall ring for every Bastion Walls level (kdWalls), area names,
 // arriving home from a zone (TWN100_home), old saves standing where there is no ground any more.
 var TWN100={walls:null,cy:null,lamps:[]};
-function TWN100_L(){const T=TOWNS[0];return {T,R:TS,WX:TWN100_WX,IW:TWN100_IW,SZ:T.sz||TWN100_SZ}}
+// v109: the walls follow the kingdom's current size (kf109 in 1960: WX, SZ per stage); before that file runs, the full square
+function TWN100_L(){const T=TOWNS[0],F=typeof kf109=='function'?kf109():null;return {T,R:TS,WX:F?F.WX:TWN100_WX,IW:TWN100_IW,SZ:F?F.SZ:(T.sz||TWN100_SZ),st:F?F.s:-1}}
+// where the two baked halves of the ring meet, and the extra towers along the sides (lv 3), for the current size
+function TWN100_mid(SZ){return Math.min(15,Math.round(SZ*.55))}
+function TWN100_mids(WX,SZ){const M=TWN100_mid(SZ),n=[[-Math.round(WX*.62),-TS],[Math.round(WX*.62),-TS],[-WX,-12],[WX,-12]];if(M>2)n.push([-WX,Math.round(M*.4)],[WX,Math.round(M*.4)]);
+  const s=[];for(let z=M+9;z<SZ-5;z+=12)s.push([-WX,z],[WX,z]);return [n,s]}
 // the v83 stone tower (Bastion Walls level 2 used the old tower groups; the ring now needs towers in new places)
 function TWN100_tw2(k,r,h){const roofC=TOWNS[0].pal.roof||0x3e3a40,flag=TOWNS[0].pal.ban||0x7a2230;
   twStoneRing(k,TWC.stone,0,0,r*1.08,0,.45,.36);twStoneRing(k,TWC.stone,0,0,r,.45,h,.32);
@@ -21150,28 +21156,28 @@ function TWN100_archK(k,lv,w){const hw=w/2,ban=TOWNS[0].pal.ban||0x7a2230;
 // v101: the ring round the Grand Square, baked per level into two kits (north half / south half) so each can be culled.
 // Walls at x = ±WX from z = -TS to SZ, one gatehouse in the south wall (the Portal Road), towers at the corners and along the sides.
 var TWN100_MIDZ=15; // where the two halves meet
-function TWN100_ringK(k,lv,part){const {WX,SZ}=TWN100_L(),N=-TS,M=15,gz=1.75,at=(x,z,ry,f)=>k.at(x,0,z,f,ry),seg=(x0,z0,x1,z1,ry)=>at((x0+x1)/2,(z0+z1)/2,ry,()=>kdSegK(k,lv,Math.hypot(x1-x0,z1-z0)));
+function TWN100_ringK(k,lv,part){const {WX,SZ}=TWN100_L(),N=-TS,M=TWN100_mid(SZ),MD=TWN100_mids(WX,SZ),gz=1.75,at=(x,z,ry,f)=>k.at(x,0,z,f,ry),seg=(x0,z0,x1,z1,ry)=>at((x0+x1)/2,(z0+z1)/2,ry,()=>kdSegK(k,lv,Math.hypot(x1-x0,z1-z0)));
   const side=(z0,z1)=>[-1,1].forEach(s=>seg(s*WX,z0,s*WX,z1,-s*Math.PI/2));
   const big=(x,z,i)=>at(x,z,i*1.3,()=>TWN100_tower(k,lv,1.45,4.2)),small=(x,z,i)=>at(x,z,i*.9+(x+z)%6,()=>TWN100_tower(k,lv,.95,3.1)),mid=(x,z,i)=>at(x,z,i*1.7,()=>kdTowerK(k,3,1.15,3.6));
   if(part==0){seg(-WX,N,WX,N,0);side(N,M);
-    [-1,1].forEach(s=>{big(s*WX,N,s);small(s*WX,-3,s+1);small(s*12,N,s+3)});
-    if(lv>=3)[[-24,N],[24,N],[-WX,-12],[WX,-12],[-WX,6],[WX,6]].forEach(([x,z],i)=>mid(x,z,i))}
+    [-1,1].forEach(s=>{big(s*WX,N,s);small(s*WX,-3,s+1);small(s*Math.min(12,WX-6),N,s+3)});
+    if(lv>=3)MD[0].forEach(([x,z],i)=>mid(x,z,i))}
   else{side(M,SZ);seg(-WX,SZ,-gz,SZ,Math.PI);seg(gz,SZ,WX,SZ,Math.PI);at(0,SZ,Math.PI/2,()=>kdGateK(k,lv));
-    [-1,1].forEach(s=>{big(s*WX,SZ,s+6);small(s*2.3,SZ,s+2);small(s*WX,33,s+4);small(s*18,SZ,s+8)});
-    if(lv>=3)[[-WX,24],[WX,24],[-WX,42],[WX,42]].forEach(([x,z],i)=>mid(x,z,i+3))}}
+    [-1,1].forEach(s=>{big(s*WX,SZ,s+6);small(s*2.3,SZ,s+2);if(SZ-M>10)small(s*WX,Math.round((M+SZ)/2),s+4);small(s*Math.min(18,WX-6),SZ,s+8)});
+    if(lv>=3)MD[1].forEach(([x,z],i)=>mid(x,z,i+3))}}
 function kdWalls(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.wg=null}
   o.gate.forEach(q=>q.visible=false);o.tw.forEach(q=>q.visible=false);o.ban.forEach(q=>q.visible=false);
   const g=new THREE.Group();g.name='kdWalls';
-  [0,1].forEach(part=>{const key='TWNRING101|'+lv+'|'+part;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
-  K.wg=g;T.g.add(g);
+  const st=TWN100_L().st;[0,1].forEach(part=>{const key='TWNRING101|'+lv+'|'+part+(st>=0?'|s'+st:'');let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
+  K.wg=g;T.g.add(g);K.wst=TWN100_L().st;
   const {WX,SZ}=TWN100_L(),cols=[],lamps=[];
-  if(lv>=3){[[-24,-TS],[24,-TS],[-WX,-12],[WX,-12],[-WX,6],[WX,6],[-WX,24],[WX,24],[-WX,42],[WX,42]].forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:1.15}));
+  if(lv>=3){const MD=TWN100_mids(WX,SZ);MD[0].concat(MD[1]).forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:1.15}));
     [-1,1].forEach(q=>{lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+SZ+1.25]);lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+SZ-1.25])})}
   kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps}
 
 // ---------- names, coming home, old saves ----------
 {const f=areaName;areaName=function(){try{{const T=TOWNS[0],x=pl.position.x,z=pl.position.z;
-    if(townAt(x,z,0)==0)return z>T.cy+18.5&&Math.abs(x-T.cx)<22?'🏘️ Duskhold · South Ward':'🏰 Duskhold · Grand Square';
+    if(townAt(x,z,0)==0){const F=typeof kfIn109=='function';if(F&&!kfIn109(x-T.cx,z-T.cy,0))return '🌲 Duskhold · Outskirts';return z>T.cy+18.5&&Math.abs(x-T.cx)<22?'🏘️ Duskhold · South Ward':'🏰 Duskhold · Grand Square'}
     else if(curMap()<0){const RN=['I','II','III','IV','V','VI'];for(let i=0;i<TWN100_PG.length;i++){const p=TWN100_PG[i];if(Math.hypot(x-p.x,z-p.y)<p.r+2)return PMAP[i].ic+' Portal '+RN[i]+' · '+PMAP[i].n}
       if(Math.abs(x-PCOURT[0])<5&&z>T.cy+T.sz)return '🛤️ The Portal Road'}}}catch(_){}return f.apply(this,arguments)}}
 // back from a zone (its home portal, or the Wave Trial): in front of that zone's gate, facing the road
@@ -21190,24 +21196,24 @@ function TWN100_fixPos(x,z){if(x==null){x=pl.position.x;z=pl.position.z}if(regio
 
 // ---------- market ward + courtyard ward dressing: one baked kit (lantern posts, crates, barrels, benches) ----------
 // v101: lantern posts between the shops on both sides of the Grand Square, and inside the south gate
-var TWN100_LP=[].concat(...[-1,1].map(s=>[-14.5,-3.5,7.5,18.5,29.5].map(z=>[s*24.6,z])),[[-2.6,TWN100_SZ-2.4],[2.6,TWN100_SZ-2.4]]);
-function TWN100_wardK(k){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
+// v109: the dressing (lantern posts, crates and barrels, benches) follows the walls: TWN100_LP and TWN100_wardK(k,F) take the
+// kingdom's current size, and TWN100_ward() (1960) rebakes it whenever the walls move.
+var TWN100_LP=[];
+function TWN100_lpFor(F){const L=[];[-1,1].forEach(s=>[-14.5,7.5,18.5,29.5,40.5].forEach(z=>{if(z<F.SZ-2.5)L.push([s*(F.WX-1.1),z])}));L.push([-2.6,F.SZ-2.4],[2.6,F.SZ-2.4]);return L}
+var TWN100_WD={crate:[[-17.6,-11.2,0],[17.7,-11,1]],bench:[-6.6,6.6],benchZ:9.3};
+function TWN100_wardK(k,F){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
       k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);
       const lx=.32,ly=h-.28;k.p('m',TWC.iron,'cone4',lx,ly+.2,0,.17,.13,.17,0,Math.PI/4,0,0);k.p('m',TWC.iron,'box',lx,ly-.16,0,.2,.04,.2,0,0,0,0);
       [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>k.p('m',TWC.iron,'box',lx+q[0]*.09,ly,q[1]*.09,.025,.32,.025,0,0,0,0));k.p('g',0xffd27a,'oct',lx,ly,0,.1,.15,.1)},ry);
-  TWN100_LP.forEach(([x,z])=>lampK(x,z,x<0?0:Math.PI));
-  [[-25.6,-13.4,0],[25.7,-13.2,1],[-25.6,30.6,0],[25.6,30.4,1]].forEach(([x,z,b])=>{if(b)TWN100_barrel(k,x,z,1);else{TWN100_crate(k,x,z,.62,.2);TWN100_crate(k,x-.1,z+.1,.4,.6);k.at(0,.62,0,()=>TWN100_crate(k,x,z,.38,1.1))}});
-  [-8.2,8.2].forEach(x=>k.at(x,0,12.4,()=>{k.as('bark',()=>k.L('c',0x6a4a2e,[-.75,.42,0],[.75,.42,0],.16,'cyl6'));k.as('board',()=>k.p('c',0x7a5a3a,'box',0,.5,0,1.5,.07,.34,0,0,0,.06));
+  TWN100_lpFor(F).forEach(([x,z])=>lampK(x,z,x<0?0:Math.PI));
+  TWN100_WD.crate.forEach(([x,z,b])=>{if(b)TWN100_barrel(k,x,z,1);else{TWN100_crate(k,x,z,.62,.2);TWN100_crate(k,x-.1,z+.1,.4,.6);k.at(0,.62,0,()=>TWN100_crate(k,x,z,.38,1.1))}});
+  TWN100_WD.bench.forEach(x=>k.at(x,0,TWN100_WD.benchZ,()=>{k.as('bark',()=>k.L('c',0x6a4a2e,[-.75,.42,0],[.75,.42,0],.16,'cyl6'));k.as('board',()=>k.p('c',0x7a5a3a,'box',0,.5,0,1.5,.07,.34,0,0,0,.06));
     [-.55,.55].forEach(s=>{k.as('bark',()=>k.L('c',TWC.woodD,[s,0,0],[s,.38,0],.13,'log'));k.as('wood',()=>k.L('c',TWC.woodD,[s,.45,-.17],[s,.95,-.24],.05,'box'))});k.as('board',()=>k.p('c',0x6a4a2e,'box',0,.85,-.23,1.5,.18,.06,-.12,0,0,.06))}))}
-{const T=TOWNS[0];try{let k=null;if(!twHas('TWNWARD101')){k=twKit(951);TWN100_wardK(k)}const g=twGroup(k,'TWNWARD101');g.name='wardDress';T.g.add(g);
-  TWN100_LP.forEach(([x,z])=>{const lx=x+(x<0?.32:-.32);TLAMP.push([T.cx+lx,T.ph+2.0,T.cy+z]);T.col.push({x:T.cx+x,z:T.cy+z,r:.2})});
-  [[-25.6,-13.4,.45],[25.7,-13.2,.36],[-25.6,30.6,.45],[25.6,30.4,.36]].forEach(([x,z,r])=>T.col.push({x:T.cx+x,z:T.cy+z,r}));[-8.2,8.2].forEach(x=>T.col.push({x:T.cx+x,z:T.cy+12.4,hx:.78,hz:.26}))
-}catch(e){console.warn('v100 ward dressing',e)}}
 // the ring changed shape: rebuild it now (kdSync only rebuilds on a level change)
 try{if(KGD){KGD.wl=-1;kdSync()}}catch(e){console.warn('v100 walls',e)}
 
 // the two ring halves (north / south of z = 15) are drawn only within ~46 tiles of their stretch
-{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy,R=[[-TS,15],[15,T.sz]];
+{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy,L=TWN100_L(),M=TWN100_mid(L.SZ),R=[[-TS,M],[M,L.SZ]];
   K.wg.children.forEach((g,i)=>{const r=R[i]||R[0],d=z<r[0]?r[0]-z:z>r[1]?z-r[1]:0;g.visible=d<46})}catch(_){}}}
 
 // ================= v100 town (2/4): one portal gate per zone, each on its own island dressed in the zone's theme =================
@@ -21737,33 +21743,32 @@ $('talBtn').onclick=openTal;
 try{paceWrap()}catch(err){console.error('pace wrap',err)}
 ui();refreshGear();
 // ================= v103 kingdom (1/5): building lots — you choose where every shop, upgrade and house stands =================
-// The Grand Square is divided into 31 lots (LOT103, town-local tiles; ry = facing, local +z toward the street):
-//   W1..W4 / E1..E4  the old market plots down the west and east sides          (x ±29.5)
-//   NW NE NM         the north row gaps (old Treasury, Scholar's Tower, Magic Shop spots)
-//   CW CE            either side of the fountain (CE = the old Training Grounds)
-//   SW SE            north of the South Ward, facing the plaza (old Beast Den / Hatchery)
-//   A1..A4 B1..B4    the South Ward avenue (old garden), facing the avenue from the west / east
-//   C1..C4 D1..D4    the South Ward's outer rows, facing the side streets
+// v109: 20 lots (LOT103, town-local tiles; ry = facing, local +z toward the street), opened stage by stage as the walls move
+// south (1960, KF109):
+//   NW NE NM          the north row gaps beside the Tavern and the Trading Post                       (stage 0)
+//   CW CE             either side of the fountain                                                       (stage 0)
+//   S1W S1M S1E       row 1, south of the plaza, facing north onto it                                   (stage 1)
+//   SkW SkM SkE       rows 2..5 (z 22.1 .. 44.6, 7.5 apart): west and east lots face the two side streets,
+//                     the middle lot faces one of them (east on even rows, west on odd rows)            (stage k)
 // Each lot is a 7x7-tile square; buildings face its street side and keep a door spot 4.45 tiles in front of the centre.
+// v109: SH.rot[key] (0..3 quarter turns) turns a building on its lot; lotOf103(key) returns the turned lot.
 // SH.pos[key] = lot id, key = shop key ('smith', 'magic', …), 'u:'+upgrade key, or 'h:'+house index. Saved in x2Save.
 // Old saves: anything built without a lot goes to its old spot (DEF103), or the first free lot.
 // Shops (the TWN100 market kits, the Magic Shop now one of them) and the upgrade structures (KDU) are rebuilt in place
 // when their lot changes; shop footprints are solid tiles ('B'), upgrade structures keep their own colliders.
 // Free lots showed four wooden stakes; since v109 (1960) only open lots exist and show a dim ground outline. The plan view in the Steward's window is drawn by lotPlan103.
 var LOT103=(()=>{const H=Math.PI/2,L=[];
-  [-9,2,13,24].forEach((z,i)=>{L.push({id:'W'+(i+1),x:-29.5,z,ry:H,a:'West side'});L.push({id:'E'+(i+1),x:29.5,z,ry:-H,a:'East side'})});
-  L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row'},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row'},{id:'NM',x:14.6,z:-17,ry:0,a:'North row'});
-  L.push({id:'CW',x:-7.7,z:-7.1,ry:0,a:'By the fountain'},{id:'CE',x:7.7,z:-7.1,ry:0,a:'By the fountain'});
-  L.push({id:'SW',x:-13.6,z:14.6,ry:Math.PI,a:'Plaza south'},{id:'SE',x:13.6,z:14.6,ry:Math.PI,a:'Plaza south'});
-  [22.5,30,37.5,45].forEach((z,i)=>{L.push({id:'A'+(i+1),x:-7,z,ry:H,a:'South Ward'},{id:'B'+(i+1),x:7,z,ry:-H,a:'South Ward'},
-    {id:'C'+(i+1),x:-17,z,ry:-H,a:'South Ward'},{id:'D'+(i+1),x:17,z,ry:H,a:'South Ward'})});
+  L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row',st:0},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row',st:0},{id:'NM',x:14.6,z:-17,ry:0,a:'North row',st:0});
+  L.push({id:'CW',x:-7.7,z:-7.1,ry:0,a:'By the fountain',st:0},{id:'CE',x:7.7,z:-7.1,ry:0,a:'By the fountain',st:0});
+  for(let k=1;k<=5;k++){const z=14.6+7.5*(k-1),a='Row '+k,P=Math.PI;
+    if(k==1)L.push({id:'S1W',x:-13.6,z,ry:P,a,st:1},{id:'S1M',x:0,z,ry:P,a,st:1},{id:'S1E',x:13.6,z,ry:P,a,st:1});
+    else L.push({id:'S'+k+'W',x:-13.6,z,ry:H,a,st:k},{id:'S'+k+'M',x:0,z,ry:k%2?-H:H,a,st:k},{id:'S'+k+'E',x:13.6,z,ry:-H,a,st:k})}
   return L})();
 var LOTM103={};LOT103.forEach(l=>LOTM103[l.id]=l);
-var DEF103={smith:'W1',alch:'W2',cook:'W3',bard:'W4',merchant:'E1',sage:'E2',trainer:'E3',stable:'E4',magic:'NM',
-  'u:train':'CE','u:tower':'NE','u:treas':'NW','u:den':'SW','u:hatch':'SE'};
+var DEF103={smith:'CW',magic:'NM'};
 var UPK103=['train','tower','treas','den','hatch']; // placeable upgrades (Bastion Walls is the wall ring itself)
 var KL103={tiles:new Map(),own:{},stakes:null,ver:0};
-SH.pos=SH.pos||{};
+SH.pos=SH.pos||{};SH.rot=SH.rot||{};
 // ---------- lot geometry ----------
 function lotW103(l,lx,lz){const T=TOWNS[0],fx=Math.sin(l.ry),fz=Math.cos(l.ry);return [T.cx+l.x+lx*fz+lz*fx,T.cy+l.z-lx*fx+lz*fz]}
 function lotDoor103(l){return lotW103(l,0,4.45)}
@@ -21772,7 +21777,9 @@ function lotTiles103(l,x0,x1,z0,z1){const T=TOWNS[0],f=[Math.sin(l.ry),Math.cos(
   for(let lx=x0;lx<=x1+1e-6;lx+=.5)for(let lz=z0;lz<=z1+1e-6;lz+=.5){const x=Math.round(T.cx+l.x+lx*a[0]+lz*f[0]),y=Math.round(T.cy+l.z+lx*a[1]+lz*f[1]);S.add(y*W+x)}return [...S]}
 // ---------- who stands where ----------
 function lotKey103(id){for(const k in SH.pos)if(SH.pos[k]===id)return k;return null}
-function lotOf103(key){const id=SH.pos[key];return id&&LOTM103[id]||null}
+function lotOf103(key){const id=SH.pos[key],l=id&&LOTM103[id];if(!l)return null;const r=(SH.rot&&SH.rot[key])&3;return r?lotRot103(l,r):l}
+// a lot turned by r quarter turns (cached on the lot); same id, position and area
+function lotRot103(l,r){l._r=l._r||[];return l._r[r]||(l._r[r]={id:l.id,x:l.x,z:l.z,a:l.a,st:l.st,ry:l.ry+r*Math.PI/2,base:l})}
 function lotFree103(id){return !lotKey103(id)}
 function lotBuilt103(key){if(key.startsWith('u:'))return kdLv(key.slice(2))>0;if(key.startsWith('h:'))return typeof HS103!='undefined'&&!!HS103.h[+key.slice(2)];return key=='smith'||shopBuilt(key)}
 // every built thing gets a lot; anything placed but not built (a cheat reset, a deleted house) gives its lot back
@@ -21834,7 +21841,7 @@ function lotDropShop103(q){const T=TOWNS[0],k=q.k,b=TWN100_S.b[k],n=TWN100_S.npc
 var FAR103=[-9999,-9999];
 function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN||typeof LOT103=='undefined')return;
   TWN100_SH.forEach(q=>{const l=TWN100_built(q.k)?lotOf103(q.k):null,id=l?l.id:null;
-    if(q._lot!==id){lotDropShop103(q);q._lot=id;if(l){q.x=l.x;q.z=l.z;q.ry=l.ry}}
+    if(q._lot!==id||l&&q.ry!==l.ry){lotDropShop103(q);q._lot=id;if(l){q.x=l.x;q.z=l.z;q.ry=l.ry}}
     if(!l)return;
     if(!TWN100_S.b[q.k]){TWN100_build(q);lotMark103(q.k,lotTiles103(l,...FP103.shop));lotEject103(l)}
     else if(!KL103.own[q.k]||!KL103.own[q.k].length)lotMark103(q.k,lotTiles103(l,...FP103.shop));
@@ -21845,7 +21852,7 @@ function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN||type
   lotSpots103();try{lotStakes103()}catch(e){console.warn('v103 stakes',e)}
   KL103.ver++;try{if(typeof wk103Sync=='function')wk103Sync()}catch(e){console.warn('v103 keepers',e)}}
 // prompt spots that older code keeps in its own fields follow the lots
-function lotSpots103(){const T=TOWNS[0],sp=k=>{const q=TWN100_SH.find(s=>s.k==k),l=q&&q._lot&&LOTM103[q._lot];return l?lotDoor103(l):FAR103.slice()};
+function lotSpots103(){const T=TOWNS[0],sp=k=>{const q=TWN100_SH.find(s=>s.k==k),l=q&&q._lot&&lotOf103(k);return l?lotDoor103(l):FAR103.slice()};
   try{T.mv=sp('magic')}catch(_){}
   try{if(T.st2){T.st2.c=sp('cook');T.st2.a=sp('alch')}}catch(_){}
   try{const n=sp('stable');STB.x=n[0]-T.cx;STB.z=n[1]-T.cy-1.4;STB.n=n;STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[]}catch(_){}
@@ -21855,7 +21862,7 @@ function stableSync(){TWN100_shopSync()}
 function shSites(){const T=TOWNS[0];if(!T)return;SHM.vsite=[];for(const k in (SHM.sites||{})){scene.remove(SHM.sites[k]);delete SHM.sites[k]}if(T.mvG)T.mvG.visible=false;try{TWN100_shopSync()}catch(e){console.warn('v103 shops',e)}}
 // walk-up prompts: only built shops that stand on a lot
 function TWN100_prompt(){const p=pl.position;if(townAt(p.x,p.z,0)!==0)return null;
-  for(const q of TWN100_SH){if(!q._lot||!TWN100_built(q.k))continue;const [x,z]=lotDoor103(LOTM103[q._lot]);if(Math.hypot(p.x-x,p.z-z)<2.4)return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]}}return null}
+  for(const q of TWN100_SH){if(!q._lot||!TWN100_built(q.k))continue;const l=lotOf103(q.k);if(!l)continue;const [x,z]=lotDoor103(l);if(Math.hypot(p.x-x,p.z-z)<2.4)return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]}}return null}
 // ---------- upgrade structures: placed on their lot (box colliders turn with a 90° lot) ----------
 {const f=kdUp;kdUp=function(T,key,l){const U=KDU[key];if(U&&UPK103.includes(key)){const lt=lotOf103('u:'+key);if(lt&&(U.x!==lt.x||U.z!==lt.z||U.ry!==lt.ry)){U.x=lt.x;U.z=lt.z;U.ry=lt.ry;const st=kdState().up[key];if(st)st.l=-9}}
   const st0=kdState().up[key],l0=st0?st0.l:null;const r=f.apply(this,arguments);const st=kdState().up[key];
@@ -21886,19 +21893,19 @@ function lotSync103(){try{lotAuto103()}catch(e){console.warn('v103 auto',e)}
   try{lotStakes103()}catch(_){}}
 {const f=shApply;shApply=function(){try{lotAuto103()}catch(e){console.warn('v103 auto',e)}const r=f.apply(this,arguments);try{if(typeof hs103Sync=='function')hs103Sync();lotStakes103()}catch(e){console.warn('v103 lots',e)}return r}}
 // saves: SH.pos rides with the stronghold levels
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.kpos=Object.assign({},SH.pos);return o}}
-{const f=x2Load;x2Load=function(s){SH.pos={};if(s&&s.kpos&&typeof s.kpos=='object')for(const k in s.kpos){const v=s.kpos[k];if(typeof v=='string'&&LOTM103[v]&&!Object.values(SH.pos).includes(v))SH.pos[k]=v}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.kpos=Object.assign({},SH.pos);o.krot=Object.assign({},SH.rot);return o}}
+{const f=x2Load;x2Load=function(s){SH.pos={};SH.rot={};if(s&&s.krot&&typeof s.krot=='object')for(const k in s.krot){const v=s.krot[k]|0;if(v>0&&v<4)SH.rot[k]=v}if(s&&s.kpos&&typeof s.kpos=='object')for(const k in s.kpos){const v=s.kpos[k];if(typeof v=='string'&&LOTM103[v]&&!Object.values(SH.pos).includes(v))SH.pos[k]=v}
   const r=f.apply(this,arguments);lotSync103();return r}}
 try{lotSync103()}catch(e){console.warn('v103 lots',e)}
 
 // ---------- the plan of the Grand Square (drawn into a canvas by the Steward's window) ----------
 // opt: {pick:key|null, hover:lot id, sel:lot id}; returns the scale info used for hit tests
-function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],x0=-37,z0=-22,nx=75,nz=75,c=cv.getContext('2d'),Wd=cv.width,Hd=cv.height,s=Math.min(Wd/nx,Hd/nz),ox=(Wd-nx*s)/2,oz=(Hd-nz*s)/2;
+function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],F=typeof kf109=='function'?kf109():{WX:36,SZ:51},nx=Math.max(2*F.WX+5,F.SZ+26),nz=nx,x0=-Math.floor(nx/2),z0=Math.round(-23+(F.SZ+26-nz)/2),c=cv.getContext('2d'),Wd=cv.width,Hd=cv.height,s=Math.min(Wd/nx,Hd/nz),ox=(Wd-nx*s)/2,oz=(Hd-nz*s)/2;
   const P=(x,z)=>[ox+(x-x0)*s,oz+(z-z0)*s];c.fillStyle='#0d0b09';c.fillRect(0,0,Wd,Hd);
   for(let z=z0;z<z0+nz;z++)for(let x=x0;x<x0+nx;x++){const t=MAP[T.cy+z]&&MAP[T.cy+z][T.cx+x];if(!t)continue;
     c.fillStyle=t=='W'?'#8a8070':t=='B'?'#4a3a2c':t=='P'?'#3a342c':t=='p'?'#4a3c2a':'#1c1a16';const [px,pz]=P(x-.5,z-.5);c.fillRect(px,pz,s+.6,s+.6)}
   // colliders of everything else (wells, carts, prestige halls, upgrade structures)
-  c.fillStyle='rgba(120,104,84,.55)';T.col.forEach(q=>{const x=q.x-T.cx,z=q.z-T.cy;if(x<x0||x>x0+nx||z<z0||z>z0+nz)return;
+  c.fillStyle='rgba(120,104,84,.55)';T.col.forEach(q=>{const x=q.x-T.cx,z=q.z-T.cy;if(x<x0||x>x0+nx||z<z0||z>z0+nz)return;if(typeof kfIn109=='function'&&!kfIn109(x,z,-1))return; // v109: inside the walls only
     if(q.r!=null){const [px,pz]=P(x,z);c.beginPath();c.arc(px,pz,Math.max(1,q.r*s),0,6.283);c.fill()}else{const [px,pz]=P(x-q.hx,z-q.hz);c.fillRect(px,pz,q.hx*2*s,q.hz*2*s)}});
   // fixed landmarks
   const lab=(t,x,z,f)=>{const [px,pz]=P(x,z);c.font=f||(Math.round(s*2.2)+'px serif');c.textAlign='center';c.textBaseline='middle';c.fillText(t,px,pz)};
@@ -21911,7 +21918,7 @@ function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],x0=-37,z0=-22,nx=75,nz=
     else{c.setLineDash([3,3]);c.strokeStyle=ok?(hov?'#ffe08a':'#c9a24a'):'rgba(201,162,74,.35)';c.lineWidth=ok?2:1;c.strokeRect(ax+2,az+2,w-4,w-4);c.setLineDash([]);
       if(ok){c.fillStyle=hov?'rgba(255,224,138,.38)':'rgba(201,162,74,.14)';c.fillRect(ax+2,az+2,w-4,w-4)}}
     // the street side
-    const [dx,dz]=[Math.sin(l.ry),Math.cos(l.ry)],[mx,mz]=P(l.x+dx*3.3,l.z+dz*3.3);c.fillStyle=k?'#d8b46a':'rgba(201,162,74,.5)';c.fillRect(mx-(dz?s*1.2:s*.35),mz-(dx?s*1.2:s*.35),dz?s*2.4:s*.7,dx?s*2.4:s*.7);
+    const lr=k&&lotOf103(k)||l,[dx,dz]=[Math.sin(lr.ry),Math.cos(lr.ry)],[mx,mz]=P(l.x+dx*3.3,l.z+dz*3.3);c.fillStyle=k?'#d8b46a':'rgba(201,162,74,.5)';c.fillRect(mx-(dz?s*1.2:s*.35),mz-(dx?s*1.2:s*.35),dz?s*2.4:s*.7,dx?s*2.4:s*.7);
     if(hov){c.strokeStyle='#ffe08a';c.lineWidth=2.5;c.strokeRect(ax+1,az+1,w-2,w-2)}});
   // you
   try{const x=pl.position.x-T.cx,z=pl.position.z-T.cy;if(townAt(pl.position.x,pl.position.z,0)==0){const [px,pz]=P(x,z);c.fillStyle='#7ee8ff';c.beginPath();c.arc(px,pz,Math.max(2.5,s*.9),0,6.283);c.fill();c.strokeStyle='#000';c.lineWidth=1;c.stroke()}}catch(_){}
@@ -21967,10 +21974,10 @@ function hsBuild103(i){const h=HS103.h[i],l=lotOf103('h:'+i);if(!h||!l)return;co
   sign(g,[{t:h.nm,f:'700 46px'},{t:'🏠 home of '+hsWho103(i),f:'600 24px'}],1.9,.46,'#2a1c12','#f4e2c0','#c9a24a',1.0,2.05,.6,0,512,128);scene.add(g);
   const c=[];const box=(lx,lz,hx,hz)=>{const [X,Z]=lotW103(l,lx,lz),s=Math.abs(Math.sin(l.ry))>.5;c.push(s?{x:X,z:Z,hx:hz,hz:hx}:{x:X,z:Z,hx,hz})};
   box(1.35,2.15,.85,.6);box(-1.6,1.15,.45,.35);c.forEach(q=>T.col.push(q));
-  HS103.g[i]={g,c,lot:l.id};lotMark103('h:'+i,lotTiles103(l,...FP103H));lotEject103(l)}
+  HS103.g[i]={g,c,lot:l.id,ry:l.ry};lotMark103('h:'+i,lotTiles103(l,...FP103H));lotEject103(l)}
 function hsDrop103(i){const o=HS103.g[i],T=TOWNS[0];if(!o)return;scene.remove(o.g);o.c.forEach(q=>{const j=T.col.indexOf(q);if(j>=0)T.col.splice(j,1)});lotMark103('h:'+i,[]);delete HS103.g[i]}
 function hsWho103(i){const L=HS103.cit.filter(c=>c.h===i).map(c=>c.n);return L.length?L.join(' & '):'nobody yet'}
-function hs103Sync(){if(typeof HS103=="undefined"||!HS103)return;HS103.h.forEach((h,i)=>{const l=lotOf103('h:'+i),o=HS103.g[i];if(o&&(!l||o.lot!==l.id||o.who!==hsWho103(i)))hsDrop103(i);if(l&&!HS103.g[i]){hsBuild103(i);HS103.g[i].who=hsWho103(i)}});
+function hs103Sync(){if(typeof HS103=="undefined"||!HS103)return;HS103.h.forEach((h,i)=>{const l=lotOf103('h:'+i),o=HS103.g[i];if(o&&(!l||o.lot!==l.id||o.ry!==l.ry||o.who!==hsWho103(i)))hsDrop103(i);if(l&&!HS103.g[i]){hsBuild103(i);HS103.g[i].who=hsWho103(i)}});
   for(const i in HS103.g)if(!HS103.h[+i])hsDrop103(+i);CZ103.ver=-1}
 function hsCan103(){const n=HS103.h.length,c=hsCost103(n);if(n>=HS103_MAX)return [false,'Every house is built'];if(gold<c.g)return [false,'Not enough gold'];if(!shHas(c.m))return [false,'Not enough materials'];return [true,'']}
 // build a house on lot id: pay, raise it, two citizens move in
@@ -22127,12 +22134,13 @@ function czWalkPose103(g,ph,amp){const B=g.bones,R=g.userData.rest;czReset103(g)
 // ---------- citizens in town ----------
 function czClear103(){CZ103.live.forEach(o=>scene.remove(o.g));CZ103.live=[];CZ103.on=false}
 function czDoor103(c){const l=lotOf103('h:'+c.h);return l?lotDoor103(l):null}
-function czGate103(){const T=TOWNS[0];return [T.cx,T.cy+(T.sz||TS)+3.5]}
+function czGate103(){const T=TOWNS[0],F=typeof kf109=='function'?kf109():null;return [T.cx,T.cy+(F?F.SZ:(T.sz||TS))+3.5]} // v109: the gate moves with the walls
 function czSpawn103(){const T=TOWNS[0];czClear103();CZ103.on=true;HS103.cit.forEach((c,i)=>{const d=czDoor103(c);if(!d)return;const g=czModel103(c);g.position.set(d[0],T.ph,d[1]);scene.add(g);
     CZ103.live.push({c,g,i,mode:'',path:null,d:0,wait:1+Math.random()*4,ph:Math.random()*6,ry:0,seed:i*7+3})})}
 function czRand103(o){o.seed=(o.seed*16807+11)%2147483647;return o.seed/2147483647}
 // a few street spots an idle citizen may stroll to (lot doors and the plaza)
-function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],[12,-2],[0,6],[-18,9],[18,9],[0,18],[-4,30],[4,40]].forEach(([x,z])=>L.push([T.cx+x,T.cy+z]));return L}
+function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],[12,-2],[0,6],[-17,4],[17,4],[-6.8,20],[6.8,27],[-6.8,35],[6.8,42]].forEach(([x,z])=>L.push([T.cx+x,T.cy+z]));
+  return typeof kfIn109=='function'?L.filter(([x,z])=>kfIn109(x-T.cx,z-T.cy,1)):L} // v109: only spots inside the walls
 function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!door){g.visible=false;return}
   const sp=1.55,u=g.userData;let walk=false;
   if(c.task&&c.t0){// a trip: out to the gate, away, back home
@@ -22223,26 +22231,26 @@ function kmRow103(o){// o: {i,n,d,state,cost,btn:[[label,data,attrs]],col}
 function kmLotTxt103(key){const l=lotOf103(key);return l?'<span class="mut kmlot" data-kmshow="'+l.id+'">📍 '+l.id+'</span>':''}
 XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   $('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;$('xwS').title='Gold · Sovereigns defeated · citizens';
-  const P=KM103.pick,R=[],mv=key=>['Move','data-kmmv="'+key+'"',P?'disabled':''];
+  const P=KM103.pick,R=[],mv=key=>['Move','data-kmmv="'+key+'"',P?'disabled':''],rt=key=>['⟳','data-kmrot="'+key+'"',(P?'disabled ':'')+'title="Turn it a quarter turn"']; // v109: turn buildings
   // ---- shops ----
   R.push('<div class="sec">🔨 Shops</div>');
-  R.push(kmRow103({i:'⚒️',n:'Blacksmith',d:KM103_SHOPD.smith+' · always open',state:'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103('smith'),btn:[mv('smith')],col:'#6ee7b7'}));
+  R.push(kmRow103({i:'⚒️',n:'Blacksmith',d:KM103_SHOPD.smith+' · always open',state:'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103('smith'),btn:[mv('smith'),rt('smith')],col:'#6ee7b7'}));
   // v109: shop upgrades (shpUp109 in 1960) — the Trading Post is always open, so it is listed for its upgrades
   const su=(k,P)=>typeof shpUp109=='function'?shpUp109(k,P):null;
   {const u=su('post',P);if(u)R.push(kmRow103({i:'🪙',n:'Trading Post',pips:u.pips,d:'Gear, potions, an egg and upgrade material · always open'+u.d,cost:u.cost,col:'#6ee7b7',state:'<em style="color:#6ee7b7">✔ Open</em>',btn:u.btn}))}
   SHOPS.forEach(o=>{const bt=shopBuilt(o.k),ok=shopCan(o),u=bt?su(o.k,P):null;R.push(kmRow103({i:o.i,n:o.n,pips:u?u.pips:'',d:o.d+(u?u.d:''),cost:bt?(u?u.cost:''):'Cost: '+costH(o.g,o.m),col:bt?'#6ee7b7':'#c9a24a',
-    state:bt?'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103(o.k):'',btn:bt?(u?u.btn:[]).concat([mv(o.k)]):[['Build','data-kmb="shop:'+o.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']]}))});
+    state:bt?'<em style="color:#6ee7b7">✔ Open</em>'+kmLotTxt103(o.k):'',btn:bt?(u?u.btn:[]).concat([mv(o.k),rt(o.k)]):[['Build','data-kmb="shop:'+o.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']]}))});
   // ---- upgrades ----
   R.push('<div class="sec">🏰 Upgrades</div>');
   SHU.forEach(u=>{const l=shL(u.k),c=SHC[l+1],ok=shCanBuy(u),pips='◆'.repeat(l)+'◇'.repeat(3-l),pl=UPK103.includes(u.k);
     const cost=c?'Next: '+u.d(l+1)+'<br>Cost: '+costH(c.g,shCost(u,l+1))+(c.b?' · 👑 '+c.b+' Sovereigns':''):'';
-    const b=[];if(l<3)b.push([l?'Upgrade':'Build','data-kmb="'+(l||!pl?'lvl':'up')+':'+u.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']);if(l&&pl)b.push(mv('u:'+u.k));
+    const b=[];if(l<3)b.push([l?'Upgrade':'Build','data-kmb="'+(l||!pl?'lvl':'up')+':'+u.k+'"','class="pri" '+(ok[0]&&!P?'':'disabled')+' title="'+ok[1]+'"']);if(l&&pl)b.push(mv('u:'+u.k),rt('u:'+u.k));
     R.push(kmRow103({i:u.i,n:u.n,pips,d:(l?'Now: '+u.d(l):'Not built yet')+(u.k=='walls'?' · the wall ring round the whole square':''),cost,col:'#'+u.col.toString(16).padStart(6,'0'),
       state:(l>=3?'<em style="color:#6ee7b7">✔ Max</em>':'')+(pl?kmLotTxt103('u:'+u.k):''),btn:b}))});
   // ---- houses ----
   const nH=HS103.h.length,hc=hsCost103(nH),hok=hsCan103();
   R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
-  HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i)],col:'#d8b46a'})));
+  HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i),rt('h:'+i)],col:'#d8b46a'})));
   if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
   // ---- citizens (v104: each has a trade; v105: ranks, food, goods to collect at the house) ----
   R.push('<div class="sec kmcits">👥 Citizens</div>');
@@ -22265,10 +22273,10 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
   const lkd=lot&&typeof lotOpen109=='function'&&!lotOpen109(lot.id),pinf=typeof lotInfo109=='function'?lotInfo109(P):'';
   const info=(P?`<div class="kmpick">📍 <span>${kmPickLabel103(P)} — click a lit plot on the plan.</span><button data-kmx="1">Cancel</button></div>`
-    :lot?`<div class="kminfo"><b>Lot ${lot.id}</b> · ${lot.a} · ${lk?lnm[0]+' '+lnm[1]:lkd?'🔒 not part of the kingdom yet':'free'}${lk&&lk!=='u:walls'?` <button data-kmmv="${lk}">Move</button>`:''}</div>`
+    :lot?`<div class="kminfo"><b>Lot ${lot.id}</b> · ${lot.a} · ${lk?lnm[0]+' '+lnm[1]:lkd?'🔒 not part of the kingdom yet':'free'}${lk&&lk!=='u:walls'?` <button data-kmmv="${lk}">Move</button> <button data-kmrot="${lk}" title="Turn it a quarter turn">⟳ Turn</button>`:''}</div>`
     :'<div class="kminfo mut">Every building stands on a lot. Pick one when you build, or Move it later. 🟦 is you.</div>')+pinf;
   $('xwB').innerHTML=`<div class="km"><div class="kmplan"><canvas id="kmCv" width="680" height="680"></canvas>${info}</div><div class="kmlist rows">${R.join('')}</div></div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Gather wood, stone, fibers, glow caps and the like in the portal zones, and monster parts like Rock Core, Silk Gland and Ectoplasm. Upgrade levels need defeated Sovereigns. Every building can be moved for free.</span>';
+  $('xwF').innerHTML='<span class="mut dtl">Gather wood, stone, fibers, glow caps and the like in the portal zones, and monster parts like Rock Core, Silk Gland and Ectoplasm. Upgrade levels need defeated Sovereigns. Every building can be moved and turned (⟳) for free.</span>';
   kmDraw103();
   if(KM103.focus=='cit'){KM103.focus=null;try{const e=$('xwB').querySelector('.kmcits');if(e)e.scrollIntoView({block:'start'})}catch(_){}}};
 function kmClock103(ms){const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -22386,7 +22394,7 @@ function wkTool103(kind){const g=new THREE.Group(),M=c=>new THREE.MeshLambertMat
     const hd=new THREE.Mesh(new THREE.BoxGeometry(.07,.12,.04),M(0x4a2a12));hd.position.set(0,.66,-.02);hd.rotation.x=-.4;g.add(hd);const sh=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.01,10),M(0x1a1008));sh.rotation.x=Math.PI/2;sh.position.set(0,.04,.08);g.add(sh)}
   return g}
 // put a keeper model (the group that carries the bones) at its station and mark it as working
-function wkPlace103(n,k,q,S0){const W0=WK103[k];if(!n||!W0||!q||!q._lot)return;const l=LOTM103[q._lot],[x,z]=lotW103(l,W0.x,W0.z);
+function wkPlace103(n,k,q,S0){const W0=WK103[k];if(!n||!W0||!q||!q._lot)return;const l=lotOf103(k)||LOTM103[q._lot],[x,z]=lotW103(l,W0.x,W0.z);
   n.position.set(x,W0.y||0,z);n.rotation.y=l.ry+W0.ry;if(n.parent&&n.parent.position)n.parent.position.y=TOWNS[0].ph;
   if(!n._wk){n._wk={k,t0:Math.random()*20,base:0,g:n,mote:null};n._wk.rest=czRest103(n);
     if(W0.tool&&W0.tool!='mote'){const tl=wkTool103(W0.tool);n.add(tl);if(W0.tool=='lute'){tl.position.set(.02,1.02,.22);tl.rotation.set(.15,0,-.85)}else tl.userData.hand=1;n._wk.tool=tl}
@@ -22418,19 +22426,23 @@ try{wk103Sync()}catch(e){console.warn('v103 keepers',e)}
 // plain meshes moved by one TANIM entry. Colliders only on the chunky ones (statue, well, carts, trees, ...).
 // SH.deco[key] = 1 (owned, shown) or 0 (owned, hidden); saved as x2.kdeco.
 // spots are town-local tiles (x east, z south from the fountain)
+// v109: the kingdom grows (1960, kf109: WX, SZ, stage s). Decorations that follow the walls or the rows compute their spots from
+// that frame (spf(F)); they are rebuilt when the stage changes. Everything else stands in the plaza, which is there from the start.
+function dcF104(){return typeof kf109=='function'?kf109():{s:-1,WX:36,SZ:51}}
 var DECO103_WALLZ=[-16,-8,0,10,16,28,34,46];
 function dcPost103(k,x,z,h,c){k.as('bark',()=>k.L('c',c||TWC.woodD,[x,0,z],[x,h,z],.06,'log'))}
 var DECO103=[
  {k:'banner',i:'🎏',n:'Kingdom Banners',g:300,d:'Crimson banners hang along the inner walls.',
   wall:1,b(k,D,W){const ban=TOWNS[0].pal.ban||0x8a2a3a;
-    [-1,1].forEach(s=>DECO103_WALLZ.forEach((z,i)=>{const t=W.top(s*36,z);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceX(s,z,y-.5);if(f==null)return;const x=f-s*.04;
+    const F=W.F;[-1,1].forEach(s=>DECO103_WALLZ.forEach((z,i)=>{if(z>F.SZ-2)return;const t=W.top(s*F.WX,z);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceX(s,z,y-.5);if(f==null)return;const x=f-s*.04;
       k.L('m',TWC.iron,[x,y+.05,z],[x+s*.05,y+.05,z],.025,'box',0);kdBanner(k,x,y,z,-s*Math.PI/2,i%2?ban:0x2a2a3a,.62,h)}));
-    [-30,-22,-15,-8,8,15,22,30].forEach((x,i)=>{const t=W.top(x,51);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceZ(x,y-.5);if(f==null)return;kdBanner(k,x,y,f-.04,Math.PI,i%2?ban:0x2a2a3a,.62,h)})}},
- {k:'garland',i:'🏮',n:'Avenue Lanterns',g:450,d:'Strings of paper lanterns across the South Ward avenue.',
-  b(k){[19,26.25,33.75,41.25].forEach(z=>{[-1,1].forEach(s=>dcPost103(k,s*3.05,z,3.4));k.L('m',0x2a2420,[-3.05,3.35,z],[0,3.05,z],.012,'cyl6',0);k.L('m',0x2a2420,[0,3.05,z],[3.05,3.35,z],.012,'cyl6',0);
-    for(let i=-2;i<=2;i++){const x=i*1.0,y=3.05+Math.abs(i)*.1-.25;k.p('g',[0xffb050,0xff7a5a,0xffe08a,0xc8a0ff,0xff9a40][(i+2)%5],'oct',x,y,z,.14,.2,.14)}})}},
+    [-30,-22,-15,-8,8,15,22,30].forEach((x,i)=>{if(Math.abs(x)>F.WX-3)return;const t=W.top(x,F.SZ);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceZ(x,y-.5);if(f==null)return;kdBanner(k,x,y,f-.04,Math.PI,i%2?ban:0x2a2a3a,.62,h)})}},
+ {k:'garland',i:'🏮',n:'Street Lanterns',g:450,d:'Strings of paper lanterns across the side streets between the rows.',
+  spf:F=>[18.35,25.85,33.35,40.85].filter(z=>z<F.SZ-3).map(z=>[z]),
+  b(k,D){D.sp.forEach(([z])=>[-1,1].forEach(q=>{const a=q*3.85,b=q*9.75,m=(a+b)/2;[a,b].forEach(x=>dcPost103(k,x,z,3.4));k.L('m',0x2a2420,[a,3.35,z],[m,3.05,z],.012,'cyl6',0);k.L('m',0x2a2420,[m,3.05,z],[b,3.35,z],.012,'cyl6',0);
+    for(let i=-2;i<=2;i++){const x=m+i*1.0,y=3.05+Math.abs(i)*.1-.25;k.p('g',[0xffb050,0xff7a5a,0xffe08a,0xc8a0ff,0xff9a40][(i+2)%5],'oct',x,y,z,.14,.2,.14)}}))}},
  {k:'planter',i:'🌸',n:'Flower Planters',g:250,d:'Stone planters full of night-blooming flowers round the plaza.',
-  sp:[[-19,-1.5],[19,-1.5],[-19,9],[19,9],[-11.5,2.5],[11.5,2.5],[0,-5.8]],
+  sp:[[-17.6,-3.2],[17.4,-11.4],[-11.5,2.5],[11.5,2.5],[0,-5.8]],
   b(k,D){D.sp.forEach(([x,z],i)=>k.at(x,0,z,()=>{twStones(k,TWC.stone,-.55,0,.55,0,0,.42,.5,.3);k.as('dirt',()=>k.p('c',0x3a2a1a,'box',0,.44,0,1.0,.04,.4,0,0,0,0));
     for(let j=0;j<5;j++){k.p('c',[0x3e6a34,0x4a7a3a][j%2],'ico',-.4+j*.2,.55,(j%2-.5)*.12,.12,.12,.12,0,j,0,.06);k.p('c',[0xc83a5a,0xe8c84a,0xb070ff,0xe8e0d0,0xff7a5a][(j+i)%5],'sph',-.4+j*.2,.68,(j%2-.5)*.12,.07,.06,.07,0,j,0,.04)}},z>0?0:Math.PI/2))},
   col(D){return D.sp.map(([x,z])=>[x,z,.6,.3])}},
@@ -22440,107 +22452,106 @@ var DECO103=[
       k.p('c',0x8a8a90,'box',.38,2.6,.05,.1,.8,.1,0,0,-.5,0);k.p('c',0x8a8a90,'box',.62,3.1,.05,.06,1.1,.06,0,0,-.15,0);k.p('c',0x7a7a80,'box',-.42,1.9,.1,.5,.65,.06,0,0,.1,.02)});
     k.p('m',TWC.gold,'box',0,1.06,.76,.6,.12,.02,0,0,0,0)})},col(){return [[0,5.6,.75]]}},
  {k:'brazier',i:'🔥',n:'Watch Braziers',g:400,d:'Iron braziers burn along the south wall.',
-  sp:[[-28,49.6],[-21,49.6],[-14,49.6],[-7,49.6],[7,49.6],[14,49.6],[21,49.6],[28,49.6]],b(k,D){D.sp.forEach(([x,z])=>kdBrazier(k,x,z,0,.95))},col(D){return D.sp.map(([x,z])=>[x,z,.35])}},
- {k:'trees',i:'🌳',n:'Corner Groves',g:600,d:'Old dark-leaved trees in the south corners of the square.',
-  sp:[[-33.4,30.5],[-33.2,35],[-33.6,39.5],[-33.1,44],[-33.5,48.5],[-30.4,48.8],[33.4,48.6],[30,48.8]],
+  spf:F=>[-12.5,-8.5,8.5,12.5].map(x=>[x,F.SZ-1.4]),b(k,D){D.sp.forEach(([x,z])=>kdBrazier(k,x,z,0,.95))},col(D){return D.sp.map(([x,z])=>[x,z,.35])}},
+ {k:'trees',i:'🌳',n:'Corner Groves',g:600,d:'Old dark-leaved trees in the south corners of the town.',
+  spf:F=>[[-18.3,F.SZ-1.3],[-16.6,F.SZ-1.15],[-18.4,F.SZ-4.0],[18.3,F.SZ-1.3],[16.6,F.SZ-1.15],[18.4,F.SZ-4.0]],
   b(k,D){D.sp.forEach(([x,z],i)=>{k.as('bark',()=>k.L('c',0x3a2a1c,[x,0,z],[x+.1,2.0+i%2*.4,z+.05],.18,'log'));[[0,2.4,0,1.1],[.5,2.0,.3,.8],[-.45,2.1,-.3,.85],[0,2.9,.1,.75]].forEach(([dx,y,dz,r],j)=>k.p('c',[0x24402a,0x2e4a30,0x1e3626][(i+j)%3],'ico',x+dx,y+i%2*.4,z+dz,r,r*.85,r,0,i+j,0,.1))})},
   col(D){return D.sp.map(([x,z])=>[x,z,.32])}},
  {k:'gild',i:'⛲',n:'Gilded Fountain',g:2500,d:'Gold trim and a glowing crown for the fountain.',
   b(k){for(let i=0;i<16;i++){const a=i/16*6.283;k.p('m',TWC.gold,'box',Math.cos(a)*2.42,.8,Math.sin(a)*2.42,1.0,.09,.14,0,-a+Math.PI/2,0,0)}
     for(let i=0;i<6;i++){const a=i/6*6.283;k.p('m',TWC.gold,'cone4',Math.cos(a)*2.42,.98,Math.sin(a)*2.42,.12,.3,.12,0,a,0,0)}k.p('g',0x9ad8ff,'oct',0,3.35,0,.26,.4,.26);k.p('m',TWC.gold,'cyl8',0,3.0,0,.3,.1,.3,0,0,0,0)}},
  {k:'trophy',i:'🏆',n:'Sovereign Trophies',g:2000,d:'Six plinths, one crystal for every Sovereign of the portal zones.',
-  sp:[[33.1,30.5],[33.1,33.7],[33.1,36.9],[33.1,40.1],[33.1,43.3],[33.1,46.5]],
+  sp:[[18.2,-1.6],[18.2,-.1],[18.2,1.4],[18.2,2.9],[18.2,4.4],[18.2,5.9]],
   b(k,D){const C=[0xffb040,0x6aff9a,0x9ad8ff,0xffd06a,0x9aff6a,0xff4a5a];D.sp.forEach(([x,z],i)=>{twStones(k,TWC.stoneD,x-.35,z,x+.35,z,0,.9,.7,.3);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',x,.95,z,.8,.1,.8,0,0,0,.02));
     k.p('g',C[i],'oct',x,1.42,z,.22,.4,.22);k.p('m',TWC.gold,'box',x-.42,.6,z,.02,.2,.5,0,0,0,0)})},col(D){return D.sp.map(([x,z])=>[x,z,.45])}},
  {k:'ravens',i:'🪶',n:'Ravens',g:350,d:'A few ravens keep watch from the walls. They flap and caw.',
-  sp:[[-35.6,-6,1],[-35.6,20,1],[35.6,14,-1],[35.6,32,-1],[-11,50.6,0],[17,50.6,0]],
-  wall:1,an(g,D,W){const M=new THREE.MeshLambertMaterial({color:0x14121a}),B=new THREE.MeshLambertMaterial({color:0x3a3020}),R=D.sp.map(([x,z,s],i)=>{const r=new THREE.Group(),t=W.top(s?s*36:x,s?z:51);r.position.set(s?s*36:x,(t==null?2.5:t)+.12,s?z:51);r.userData.y0=r.position.y;r.rotation.y=s?-s*Math.PI/2:Math.PI;
+  spf:F=>[[-6,1],[4,1],[0,-1],[8,-1]].map(([z,s])=>[s*(F.WX-.4),z,s]).concat(F.SZ>24?[[-(F.WX-.4),F.SZ-6,1],[F.WX-.4,F.SZ-10,-1]]:[],[[-11,F.SZ-.4,0],[11,F.SZ-.4,0]]),
+  wall:1,an(g,D,W){const M=new THREE.MeshLambertMaterial({color:0x14121a}),B=new THREE.MeshLambertMaterial({color:0x3a3020}),R=D.sp.map(([x,z,s],i)=>{const r=new THREE.Group(),t=W.top(s?s*W.F.WX:x,s?z:W.F.SZ);r.position.set(s?s*W.F.WX:x,(t==null?2.5:t)+.12,s?z:W.F.SZ);r.userData.y0=r.position.y;r.rotation.y=s?-s*Math.PI/2:Math.PI;
     const b=new THREE.Mesh(new THREE.IcosahedronGeometry(.13,0),M);b.scale.set(.85,.9,1.45);r.add(b);const h=new THREE.Mesh(new THREE.IcosahedronGeometry(.08,0),M);h.position.set(0,.12,.15);r.add(h);
     const bk=new THREE.Mesh(new THREE.ConeGeometry(.025,.1,4),B);bk.rotation.x=Math.PI/2;bk.position.set(0,.11,.25);h.add(bk);bk.position.set(0,-.01,.1);
     const w=[-1,1].map(q=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.24,.02,.14),M);m.position.set(q*.14,.03,-.02);m.geometry.translate(q*.1,0,0);r.add(m);return m});g.add(r);return {r,h,w,t:i*1.7}});
     return now=>R.forEach(o=>{const t=now/1000+o.t,fl=Math.max(0,Math.sin(t*.7))>.93?Math.sin(t*28):0;o.w[0].rotation.z=.25+.9*fl;o.w[1].rotation.z=-.25-.9*fl;o.h.rotation.y=.6*Math.sin(t*.45)+.2*Math.sin(t*1.9);o.r.position.y=o.r.userData.y0+.05*Math.abs(fl)})}},
- {k:'wisps',i:'✨',n:"Will-o'-Wisps",g:900,d:'Soft lights drift through the South Ward at night.',
-  an(g){const M=[0x9ad8ff,0xc8a0ff,0xffe08a].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.85}));const W=[];for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.OctahedronGeometry(.09,0),M[i%3]);m.userData.lpsSkip=1;
-      const a={x:(i*37%40)-20,z:20+(i*53%28),y:1.4+(i%4)*.45,t:i*2.3};g.add(m);W.push([m,a])}
+ {k:'wisps',i:'✨',n:"Will-o'-Wisps",g:900,d:'Soft lights drift through the streets at night.',
+  spf:F=>[[F.SZ]],an(g,D){const Z0=-14,Z1=Math.max(4,D.sp[0][0]-2);const M=[0x9ad8ff,0xc8a0ff,0xffe08a].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.85}));const W=[];for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.OctahedronGeometry(.09,0),M[i%3]);m.userData.lpsSkip=1;
+      const a={x:(i*37%34)-17,z:Z0+(i*53%97)/97*(Z1-Z0),y:1.4+(i%4)*.45,t:i*2.3};g.add(m);W.push([m,a])}
     return now=>{const n=typeof ATM!='undefined'?ATM.night||0:.5;W.forEach(([m,a])=>{const t=now/1000+a.t;m.visible=n>.15;m.position.set(a.x+1.8*Math.sin(t*.31),a.y+.35*Math.sin(t*1.3),a.z+1.6*Math.cos(t*.27));m.scale.setScalar(.8+.3*Math.sin(t*3.1));M.forEach(q=>q.opacity=.4+.5*n)})}}},
  {k:'skylant',i:'🌙',n:'Sky Lanterns',g:1200,d:'Paper lanterns rise slowly over the town into the night.',
-  an(g){const L=[];const mt=new THREE.MeshBasicMaterial({color:0xffb050});for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.32,.42,.32),mt);m.userData.lpsSkip=1;g.add(m);L.push([m,i/10,(i*29%50)-25,(i*41%60)-12])}
+  an(g){const L=[];const mt=new THREE.MeshBasicMaterial({color:0xffb050});for(let i=0;i<10;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.32,.42,.32),mt);m.userData.lpsSkip=1;g.add(m);L.push([m,i/10,(i*29%32)-16,(i*41%60)-14])}
     return now=>{const n=typeof ATM!='undefined'?ATM.night||0:.5;L.forEach(([m,o,x,z])=>{const u=(now/60000+o)%1;m.visible=n>.3;m.position.set(x+Math.sin(u*9+o*7)*1.5,1.5+u*34,z+u*8);m.rotation.y=u*6;m.scale.setScalar(1-u*.5)})}}},
  {k:'carts',i:'🛒',n:'Merchant Carts',g:500,d:'Loaded handcarts parked between the market buildings.',
-  sp:[[-30,-3.5],[30,-3.5],[-30,7.5],[30,7.5],[-30,18.5],[30,18.5]],
+  sp:[[-12.9,-.6],[12.9,-.6]],
   b(k,D){D.sp.forEach(([x,z],i)=>k.at(x,0,z,()=>{k.as('board',()=>k.p('c',0x6a4a2e,'box',0,.62,0,1.9,.08,1.0,0,0,0,.03));twPlanks(k,0x7a5a3a,-.95,.5,.95,.5,.62,.95,.2);twPlanks(k,0x7a5a3a,-.95,-.5,.95,-.5,.62,.95,.2);
     [-1,1].forEach(s=>{k.as('wood',()=>k.p('c',TWC.woodD,'cyl8',-.3,.36,s*.55,.36,.06,.36,Math.PI/2,0,0,.02));k.as('wood',()=>k.L('c',TWC.woodD,[.95,.62,s*.35],[1.8,.3,s*.35],.04,'box'))});
     [[0,.1,0x8a5a2a],[-.5,-.15,0xc8a850],[.45,.2,0x6a8a3a]].forEach(([a,b,c],j)=>k.p('c',c,j==1?'cyl8':'sph',a,.85,b,.26,.22,.26,j?Math.PI/2:0,0,0,.06));TWN100_crate(k,-.45,.25,.3,.3)},i%2?Math.PI:0))},
   col(D){return D.sp.map(([x,z])=>[x,z,1.05,.6])}},
  {k:'well',i:'💧',n:'Village Well',g:700,d:'A stone well with a little roof on the west side of the plaza.',
-  b(k){k.at(-20,0,3,()=>{twStoneRing(k,0x7a7468,0,0,.75,0,.85,.3);k.p('c',0x1a2a3a,'cyl8',0,.6,0,.55,.02,.55,0,0,0,0);[-1,1].forEach(s=>k.as('wood',()=>k.L('c',TWC.woodD,[s*.78,0,0],[s*.78,2.0,0],.07,'box')));
-    k.as('wood',()=>k.L('c',TWC.woodD,[-.85,1.6,0],[.85,1.6,0],.05,'cyl6'));k.L('m',0x8a7a5a,[0,1.6,0],[0,.95,0],.012,'cyl6',0);k.as('wood',()=>k.p('c',0x6a4a2e,'cyl8',0,.92,0,.16,.2,.16,0,0,0,.03));twGable(k,0x5a4632,2.0,1.2,.55,.2,2.0)})},col(){return [[-20,3,.95]]}},
- {k:'bunting',i:'🧵',n:'Festival Bunting',g:300,d:'Colourful pennants strung across the side streets.',
-  sp:[].concat(...[-1,1].map(s=>[-3.5,7.5,18.5,26.25,33.75,41.25].map(z=>[[s*21.05,z],[s*25.85,z]])).flat()),
-  b(k){[-1,1].forEach(s=>[-3.5,7.5,18.5,26.25,33.75,41.25].forEach((z,j)=>{const x0=s*21.05,x1=s*25.85,y=3.7;[x0,x1].forEach(x=>dcPost103(k,x,z,3.85));k.L('m',0x3a3028,[x0,y,z],[x1,y,z],.01,'cyl6',0);
+  b(k){k.at(-17.4,0,2.0,()=>{twStoneRing(k,0x7a7468,0,0,.75,0,.85,.3);k.p('c',0x1a2a3a,'cyl8',0,.6,0,.55,.02,.55,0,0,0,0);[-1,1].forEach(s=>k.as('wood',()=>k.L('c',TWC.woodD,[s*.78,0,0],[s*.78,2.0,0],.07,'box')));
+    k.as('wood',()=>k.L('c',TWC.woodD,[-.85,1.6,0],[.85,1.6,0],.05,'cyl6'));k.L('m',0x8a7a5a,[0,1.6,0],[0,.95,0],.012,'cyl6',0);k.as('wood',()=>k.p('c',0x6a4a2e,'cyl8',0,.92,0,.16,.2,.16,0,0,0,.03));twGable(k,0x5a4632,2.0,1.2,.55,.2,2.0)})},col(){return [[-17.4,2.0,.95]]}},
+ {k:'bunting',i:'🧵',n:'Festival Bunting',g:300,d:'Colourful pennants strung across both sides of the plaza.',
+  b(k){[-1,1].forEach(s=>[-12.2,8.8].forEach((z,j)=>{const x0=s*11.6,x1=s*18.8,y=3.7;[x0,x1].forEach(x=>dcPost103(k,x,z,3.85));k.L('m',0x3a3028,[x0,y,z],[x1,y,z],.01,'cyl6',0);
     for(let i=0;i<7;i++){const t=(i+.5)/7,x=x0+(x1-x0)*t,yy=y-.18*Math.sin(t*Math.PI);k.as('cloth',()=>k.p('c',[0xc83a3a,0xe8c84a,0x3a6ac8,0x3a9a5a][(i+j)%4],'tri',x,yy-.16,z,.32,.3,.02,0,Math.PI/2,Math.PI,0))}}))}},
  {k:'benches',i:'🪑',n:'Stone Benches',g:200,d:'Benches along the walls for tired heroes.',
-  sp:[[-34.4,-8,1],[-34.4,12,1],[-34.4,16,1],[34.4,-8,-1],[34.4,12,-1],[34.4,16,-1]],
+  sp:[[-19,-8.4,1],[-19,-.4,1],[19,8.6,-1]],
   b(k,D){D.sp.forEach(([x,z,s])=>k.at(x,0,z,()=>{[-.55,.55].forEach(q=>twStones(k,TWC.stone,q-.12,0,q+.12,0,0,.42,.36,.22));k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,.46,0,1.5,.1,.42,0,0,0,.02))},Math.PI/2))},
   col(D){return D.sp.map(([x,z])=>[x,z,.25,.78])}},
- {k:'pumpkins',i:'🎃',n:'Harvest Piles',g:250,d:'Pumpkins, sheaves and baskets in the south corners.',
-  sp:[[28,46.5],[27.2,44.4],[-29,49.3],[-25.6,48.9]],
+ {k:'pumpkins',i:'🎃',n:'Harvest Piles',g:250,d:'Pumpkins, sheaves and baskets by the market stalls and the well.',
+  sp:[[13.4,-9.6],[13.1,-6.6],[-18.4,-.6],[-16.4,9.8]],
   b(k,D){D.sp.forEach(([x,z],i)=>{for(let j=0;j<5;j++){const a=j*1.3+i,r=j?.35:0;k.p('c',[0xd8802a,0xc8701a,0xe8a03a][j%3],'sph',x+Math.cos(a)*r,.2+(j?0:.15),z+Math.sin(a)*r,.24,.18,.24,0,a,0,.05)}
     k.as('straw',()=>k.p('c',0xc8a850,'cyl8',x+.7,.4,z-.2,.18,.8,.18,0,0,.1,.12))})}},
  {k:'shrine',i:'🕯️',n:'Candle Shrine',g:550,d:'A small stone shrine with ever-burning candles, east of the fountain.',
-  b(k){k.at(20,0,3.5,()=>{twStones(k,TWC.stoneD,-.5,0,.5,0,0,1.0,.8,.35);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,1.05,0,1.2,.1,.6,0,0,0,.02));k.at(0,0,0,()=>twGable(k,0x3e3a48,1.3,.8,.45,.15,1.7));
+  b(k){k.at(14.6,0,6.4,()=>{twStones(k,TWC.stoneD,-.5,0,.5,0,0,1.0,.8,.35);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,1.05,0,1.2,.1,.6,0,0,0,.02));k.at(0,0,0,()=>twGable(k,0x3e3a48,1.3,.8,.45,.15,1.7));
     [-.35,-.15,.05,.25,.4].forEach((x,i)=>{k.p('c',0xe8e0d0,'cyl6',x,1.15+i%2*.05,.12,.04,.16+i%2*.06,.04,0,0,0,0);k.p('g',0xffd27a,'cone4',x,1.3+i%2*.11,.12,.04,.08,.04)});
-    [-.5,.5].forEach(x=>k.as('stone',()=>k.L('c',TWC.stoneD,[x,1.1,-.25],[x,1.7,-.25],.08,'box')))})},col(){return [[20,3.5,.6]]}},
+    [-.5,.5].forEach(x=>k.as('stone',()=>k.L('c',TWC.stoneD,[x,1.1,-.25],[x,1.7,-.25],.08,'box')))})},col(){return [[14.6,6.4,.6]]}},
  {k:'totems',i:'🦴',n:'Bone Totems',g:450,d:'Grim totems of horn and bone line the road outside the south gate.',
   sp:[[-2.3,54],[2.3,54],[-2.3,58],[2.3,58]],
   b(k,D){D.sp.forEach(([x,z],i)=>{dcPost103(k,x,z,2.2,0x4a3424);k.as('plain',()=>{k.p('c',0xe8e0c8,'dod',x,2.25,z,.22,.18,.2);[-1,1].forEach(s=>k.L('c',0xe8e0c8,[x+s*.12,2.3,z],[x+s*.55,2.75,z-.1],.04,'cone6'))});
     [.9,1.3,1.7].forEach((y,j)=>k.p('c',[0x8a2a2a,0xe8e0c8,0x2a2a30][j],'box',x,y,z,.18,.06,.18,0,j,0,.02))})}},
  {k:'ivy',i:'🌿',n:'Wall Ivy',g:200,d:'Dark ivy climbs the inside of the walls.',
-  wall:1,b(k,D,W){[-1,1].forEach(s=>[-18,-11,-4,4,9,19,26,31,37,44,49].forEach((z,i)=>{const t=W.top(s*36,z);if(t==null)return;for(let j=0;j<4;j++){const y=.4+j*.55+i%2*.2;if(y>t-.3)break;const f=W.faceX(s,z,y);if(f==null)continue;
+  wall:1,b(k,D,W){const F=W.F;[-1,1].forEach(s=>[-18,-11,-4,4,9,19,26,31,37,44,49].forEach((z,i)=>{if(z>F.SZ-1.5)return;const t=W.top(s*F.WX,z);if(t==null)return;for(let j=0;j<4;j++){const y=.4+j*.55+i%2*.2;if(y>t-.3)break;const f=W.faceX(s,z,y);if(f==null)continue;
       k.p('c',[0x24402a,0x2e4a30,0x35602e][(i+j)%3],'ico',f-s*.06,y,z+(j%2-.5)*.5,.08,.35,.4,0,0,0,.12)}}));
-    [-27,-18,-4,10,24,31].forEach((x,i)=>{const t=W.top(x,51);if(t==null)return;for(let j=0;j<3;j++){const y=.5+j*.6;if(y>t-.3)break;const f=W.faceZ(x,y);if(f==null)continue;k.p('c',[0x24402a,0x2e4a30][(i+j)%2],'ico',x+(j-1)*.45,y,f-.06,.4,.35,.08,0,0,0,.12)}})}},
+    [-27,-18,-11,-4,10,17,24,31].forEach((x,i)=>{if(Math.abs(x)>F.WX-2)return;const t=W.top(x,F.SZ);if(t==null)return;for(let j=0;j<3;j++){const y=.5+j*.6;if(y>t-.3)break;const f=W.faceZ(x,y);if(f==null)continue;k.p('c',[0x24402a,0x2e4a30][(i+j)%2],'ico',x+(j-1)*.45,y,f-.06,.4,.35,.08,0,0,0,.12)}})}},
  {k:'gatepoles',i:'🚩',n:'Gate Standards',g:650,d:'Two tall standards flank the inside of the south gate.',
-  b(k){const ban=TOWNS[0].pal.ban||0x8a2a3a;[-1,1].forEach(s=>{const x=s*4.3,z=49.2;dcPost103(k,x,z,5.2);k.p('m',TWC.gold,'oct',x,5.35,z,.1,.18,.1);k.as('wood',()=>k.L('c',TWC.woodD,[x,4.9,z],[x,4.9,z-.9],.035,'box'));kdBanner(k,x,4.85,z-.45,s*Math.PI/2,ban,.75,2.2)})},
-  col(){return [[-4.3,49.2,.15],[4.3,49.2,.15]]}},
+  spf:F=>[[-4.3,F.SZ-1.8],[4.3,F.SZ-1.8]],b(k,D){const ban=TOWNS[0].pal.ban||0x8a2a3a;[-1,1].forEach(s=>{const x=s*4.3,z=D.sp[0][1];dcPost103(k,x,z,5.2);k.p('m',TWC.gold,'oct',x,5.35,z,.1,.18,.1);k.as('wood',()=>k.L('c',TWC.woodD,[x,4.9,z],[x,4.9,z-.9],.035,'box'));kdBanner(k,x,4.85,z-.45,s*Math.PI/2,ban,.75,2.2)})},
+  col(D){return D.sp.map(([x,z])=>[x,z,.15])}},
  {k:'crystals',i:'💠',n:'Moon Crystals',g:800,d:'Glowing crystal clusters ring the fountain.',
   b(k){for(let i=0;i<8;i++){const a=i/8*6.283+.2,x=Math.cos(a)*3.3,z=Math.sin(a)*3.3;if(z>2.5&&Math.abs(x)<1.4)continue;[[0,.3,0],[.18,.2,.1],[-.15,.22,-.08]].forEach(([dx,h,dz],j)=>k.p('g',[0x9ad8ff,0xc8a0ff,0xaee6ff][(i+j)%3],'oct',x+dx,h,z+dz,.09+h*.1,h,.09+h*.1,dx,a,dz))}}},
- {k:'mosaic',i:'🔆',n:'Crest Mosaic',g:700,d:'A golden sun crest set into the paving where the avenue begins.',
-  b(k){for(let i=0;i<24;i++){const a=i/24*6.283;k.p(i%2?'m':'c',i%2?TWC.gold:0x6a2a3a,'box',Math.cos(a)*1.3,.015,16+Math.sin(a)*1.3,.5,.02,.12,0,-a,0,0)}
-    for(let i=0;i<8;i++){const a=i/8*6.283;k.p('m',TWC.gold,'tri',Math.cos(a)*.7,.02,16+Math.sin(a)*.7,.3,.02,.5,0,-a+Math.PI/2,0,0)}k.p('m',TWC.gold,'cyl8',0,.02,16,.4,.02,.4,0,0,0,0)}},
+ {k:'mosaic',i:'🔆',n:'Crest Mosaic',g:700,d:'A golden sun crest set into the paving at the south edge of the plaza.',
+  b(k){for(let i=0;i<24;i++){const a=i/24*6.283;k.p(i%2?'m':'c',i%2?TWC.gold:0x6a2a3a,'box',Math.cos(a)*1.3,.015,9.6+Math.sin(a)*1.3,.5,.02,.12,0,-a,0,0)}
+    for(let i=0;i<8;i++){const a=i/8*6.283;k.p('m',TWC.gold,'tri',Math.cos(a)*.7,.02,9.6+Math.sin(a)*.7,.3,.02,.5,0,-a+Math.PI/2,0,0)}k.p('m',TWC.gold,'cyl8',0,.02,9.6,.4,.02,.4,0,0,0,0)}},
  {k:'cats',i:'🐈',n:'Town Cats',g:300,d:'A few cats doze in the warm spots. They twitch their tails.',
-  sp:[[-19.1,4.4,.5],[-34.4,12.3,.52],[22.2,9.3,0],[-2.9,47.6,0],[18.6,-1.2,.5]],
+  sp:[[-17.4,2.9,.88],[18.2,8.4,0],[-11.8,9.8,0],[6.6,9.3,.55],[18.2,-1.6,1.0]],
   an(g,D){const C=[0x2a2a30,0xd8802a,0x8a8a8a,0xe8e0d0,0x3a2a1a],R=D.sp.map(([x,z,y],i)=>{const r=new THREE.Group(),M=new THREE.MeshLambertMaterial({color:C[i%5]});r.position.set(x,y,z);r.rotation.y=i*1.9;
     const b=new THREE.Mesh(new THREE.SphereGeometry(.15,7,5),M);b.scale.set(1,.85,1.4);b.position.y=.13;r.add(b);const h=new THREE.Mesh(new THREE.SphereGeometry(.09,7,5),M);h.position.set(0,.27,.17);r.add(h);
     [-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.ConeGeometry(.03,.07,4),M);e.position.set(s*.045,.06,0);h.add(e)});
     const t=new THREE.Mesh(new THREE.CylinderGeometry(.02,.025,.32,4),M);t.geometry.translate(0,.16,0);t.position.set(0,.12,-.2);t.rotation.x=-1.0;r.add(t);g.add(r);return {h,t,o:i*2.1}});
     return now=>R.forEach(c=>{const s=now/1000+c.o;c.t.rotation.z=.6*Math.sin(s*1.6);c.h.rotation.y=.5*Math.sin(s*.3)})}},
  {k:'baskets',i:'🧺',n:'Hanging Flower Baskets',g:250,d:'Flower baskets on every lantern post down the side streets.',
-  b(k){(typeof TWN100_LP!='undefined'?TWN100_LP:[]).forEach(([x,z],i)=>{if(Math.abs(x)<20)return;const s=x<0?1:-1,bx=x+s*.05;k.as('straw',()=>k.p('c',0x8a6a3a,'sph',bx,1.55,z,.2,.14,.2,0,0,0,.05));
+  b(k){(typeof TWN100_LP!='undefined'?TWN100_LP:[]).forEach(([x,z],i)=>{if(Math.abs(x)<17)return;const s=x<0?1:-1,bx=x+s*.05;k.as('straw',()=>k.p('c',0x8a6a3a,'sph',bx,1.55,z,.2,.14,.2,0,0,0,.05));
     for(let j=0;j<4;j++)k.p('c',[0xc83a5a,0xe8c84a,0xb070ff,0x4a7a3a][(i+j)%4],'ico',bx+Math.cos(j*1.6)*.12,1.66,z+Math.sin(j*1.6)*.12,.08,.07,.08,0,j,0,.05)})}},
  {k:'woodpile',i:'🪵',n:'Firewood Stacks',g:150,d:'Neat stacks of firewood in the north corners.',
-  sp:[[-34.3,-17.5],[-34.3,-14.6],[34.3,-17.5],[34.3,-14.6]],
+  sp:[[-18.7,-16.4],[-18.7,-14.2],[18.75,-16.4],[18.75,-14.2]],
   b(k,D){D.sp.forEach(([x,z],i)=>{for(let j=0;j<9;j++){const y=.12+Math.floor(j/3)*.2,zz=z-.45+(j%3)*.3;k.as('bark',()=>k.L('c',[0x5a3a22,0x6a4a2a][j%2],[x-.4,y,zz],[x+.4,y,zz],.1,'log'))}})},col(D){return D.sp.map(([x,z])=>[x,z,.45,.5])}},
  {k:'fireworks',i:'🌠',n:'Night Fireworks',g:3000,d:'At night, fireworks burst high over Duskhold every few seconds.',
   an(g){let nx=0;return now=>{const n=typeof ATM!='undefined'?ATM.night||0:.5;if(n<.35||now<nx)return;nx=now+2600+Math.random()*3000;const T=TOWNS[0];
-    try{if(Math.hypot(pl.position.x-T.cx,pl.position.z-(T.cy+15))>60)return;const c=[0xff5a5a,0xffd24a,0x6ad8ff,0xb08aff,0x6aff9a][Math.floor(Math.random()*5)],p=new THREE.Vector3(T.cx+(Math.random()-.5)*40,T.ph+20+Math.random()*8,T.cy+5+Math.random()*30);
+    try{if(Math.hypot(pl.position.x-T.cx,pl.position.z-(T.cy+15))>60)return;const F=dcF104(),c=[0xff5a5a,0xffd24a,0x6ad8ff,0xb08aff,0x6aff9a][Math.floor(Math.random()*5)],p=new THREE.Vector3(T.cx+(Math.random()-.5)*F.WX*1.6,T.ph+20+Math.random()*8,T.cy-14+Math.random()*(F.SZ+14));
       burst(p,c,46,7,1.5,1.3);if(typeof sfx=='function'&&Math.random()<.4)sfx('chime')}catch(_){}}}}
 ];
 var DC103={g:{},col:{}};SH.deco=SH.deco||{};
 function dcOn103(k){return SH.deco[k]===1}
 // the wall as it stands now (Bastion Walls level): inner face and top found by casting rays at the ring's own meshes
-function dcWall104(){const T=TOWNS[0],K=kdState(),G=K.wg,lv=K.wl|0,rc=new THREE.Raycaster();if(G)G.updateMatrixWorld(true);
+function dcWall104(){const T=TOWNS[0],K=kdState(),G=K.wg,lv=K.wl|0,rc=new THREE.Raycaster(),F=dcF104();if(G)G.updateMatrixWorld(true);
   const hit=(o,d,far)=>{if(!G)return null;rc.set(o,d);rc.far=far;const h=rc.intersectObject(G,true)[0];return h?h.point:null};
-  return {lv,top:(x,z)=>{let best=null;for(const [dx,dz] of [[0,0],[.2,0],[-.2,0],[0,.2],[0,-.2],[.15,.15],[-.15,-.15]]){const p=hit(new THREE.Vector3(T.cx+x+dx,T.ph+20,T.cy+z+dz),new THREE.Vector3(0,-1,0),30);if(p&&(best==null||p.y-T.ph>best))best=p.y-T.ph}return best},
-    faceX:(s,z,y)=>{const p=hit(new THREE.Vector3(T.cx+s*30,T.ph+y,T.cy+z),new THREE.Vector3(s,0,0),12);return p?p.x-T.cx:s*35.5},
-    faceZ:(x,y)=>{const p=hit(new THREE.Vector3(T.cx+x,T.ph+y,T.cy+44),new THREE.Vector3(0,0,1),12);return p?p.z-T.cy:50.5}}}
-function dcBuild103(D){const T=TOWNS[0],W=D.wall?dcWall104():null,key='DECO104|'+D.k+(W?'|w'+W.lv:'');let k=null;const g=new THREE.Group();g.name='deco_'+D.k;g.position.set(T.cx,T.ph,T.cy);g.userData.wl=W?W.lv:null;
+  return {lv,F,top:(x,z)=>{let best=null;for(const [dx,dz] of [[0,0],[.2,0],[-.2,0],[0,.2],[0,-.2],[.15,.15],[-.15,-.15]]){const p=hit(new THREE.Vector3(T.cx+x+dx,T.ph+20,T.cy+z+dz),new THREE.Vector3(0,-1,0),30);if(p&&(best==null||p.y-T.ph>best))best=p.y-T.ph}return best},
+    faceX:(s,z,y)=>{const p=hit(new THREE.Vector3(T.cx+s*(F.WX-6),T.ph+y,T.cy+z),new THREE.Vector3(s,0,0),12);return p?p.x-T.cx:s*(F.WX-.5)},
+    faceZ:(x,y)=>{const p=hit(new THREE.Vector3(T.cx+x,T.ph+y,T.cy+F.SZ-7),new THREE.Vector3(0,0,1),12);return p?p.z-T.cy:F.SZ-.5}}}
+function dcBuild103(D){const T=TOWNS[0],F=dcF104(),fr=!!(D.wall||D.spf);if(D.spf)D.sp=D.spf(F);const W=D.wall?dcWall104():null,key='DECO104|'+D.k+(W?'|w'+W.lv:'')+(fr?'|s'+F.s:'');let k=null;const g=new THREE.Group();g.name='deco_'+D.k;g.position.set(T.cx,T.ph,T.cy);g.userData.wl=W?W.lv:null;g.userData.fs=fr?F.s:null;
   if(D.b){if(!twHas(key)){k=twKit(1101+D.k.length*7+D.k.charCodeAt(0));D.b(k,D,W)}const s=twGroup(k,key);g.add(s)}
   if(D.an){const f=D.an(g,D,W);if(f){g.userData.an={x:T.cx,z:T.cy+14,f:now=>{if(g.visible)f(now)}};TANIM.push(g.userData.an)}g.userData.psNo=1}
   scene.add(g);DC103.g[D.k]=g;
   DC103.col[D.k]=(D.col?D.col(D):[]).map(q=>q.length==3?{x:T.cx+q[0],z:T.cy+q[1],r:q[2]}:{x:T.cx+q[0],z:T.cy+q[1],hx:q[2],hz:q[3]});return g}
 function dcDrop104(k){const g=DC103.g[k],T=TOWNS[0];if(!g)return;scene.remove(g);if(g.userData.an){const i=TANIM.indexOf(g.userData.an);if(i>=0)TANIM.splice(i,1)}(DC103.col[k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(i>=0)T.col.splice(i,1)});delete DC103.g[k];delete DC103.col[k]}
 function dc103Sync(){const T=TOWNS[0];if(!T)return;const wl=kdState().wl|0;
-  DECO103.forEach(D=>{if(D.wall&&DC103.g[D.k]&&DC103.g[D.k].userData.wl!==wl)dcDrop104(D.k)});
+  const fs=dcF104().s;DECO103.forEach(D=>{const g=DC103.g[D.k];if(g&&(D.wall&&g.userData.wl!==wl||(D.wall||D.spf)&&g.userData.fs!==fs))dcDrop104(D.k)});
   DECO103.forEach(D=>{const on=dcOn103(D.k);let g=DC103.g[D.k];if(on&&!g)g=dcBuild103(D);if(g)g.visible=on;
   (DC103.col[D.k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(on&&i<0)T.col.push(c);else if(!on&&i>=0)T.col.splice(i,1)})});
   try{if(typeof CZ103!='undefined')CZ103.ver=-1}catch(_){}}
@@ -23083,16 +23094,21 @@ MVN&&Object.keys(MV107).forEach(n=>{MVN[n]=MV107[n].nm});
   // uses it now and then instead of only walking in (the generic picker saves signatures for after a few basic attacks)
   if(SIG107.on&&!ok.some(n=>KQMEL[n]||KQR[n])){const g=ok.filter(n=>MV107[n]&&MV107[n].rmin>=2);if(g.length&&Math.random()<.5){e.bu=0;e.buN=R(2,4);return g[Math.random()*g.length|0]}}
   return f.call(this,e,ok)}}
-// ================= v109: the kingdom grows with every Sovereign kill · shop upgrades =================
-// 1) Building plots. Duskhold starts with 5 of the 31 lots (LOT103) open; every Sovereign kill (first kills and repeat
-//    kills alike) opens 2 more, from the fountain outward (LOTO109), until all 31 are open (13 kills).
-//    SOV109.k = Sovereign kills counted so far, saved as x2.ksov (older saves start from the number of Sovereigns defeated).
-//    A lot is open when it is among the first lotN109() of LOTO109, or when something already stands on it (old saves
-//    keep every building where it is; a lot given back that way closes again). lotFree103 = free AND open, so building,
-//    moving and houses only ever use open lots. A pre-v103 save (no x2.kpos) may place its buildings on any lot once.
-//    Empty open lots show a dim white outline on the ground (one InstancedMesh, replaces the v103 stakes and flags);
-//    newly opened lots glow gold for a minute. Locked lots show nothing in town and are dark (🔒) on the Steward's plan.
-// 2) Shop upgrades (SHP109.lv[k] 0..3, saved as x2.shpu), bought at the Stronghold Steward next to each built shop
+// ================= v109: the kingdom grows with every Sovereign · buildings turn on their lots · shop upgrades =================
+// 1) The kingdom's size (KF109). Duskhold has six stages, s = Sovereigns defeated (first kills only), at most 5. The walls stand
+//    at x = ±KF109.WX (20) from the north wall (z = -TS) to z = KF109.SZ[s] (11, 21, 29, 36, 44, 51), with the gate in the middle
+//    of the south wall and a paved road from it to the old gate spot (z 51) and the Portal Road. Stage s opens the lots with
+//    l.st <= s (LOT103 in 1860): 5 plots, then 3 more per stage, 20 at the end. kf109() = {s, WX, SZ}; kfIn109(x,z,m) = inside the walls.
+//    An older save that already has more buildings than its stage allows starts at the stage that fits them (kfNeed109).
+//    kfApply109 rebuilds everything that depends on the size when the stage changes: the map tiles inside the old 72x72 square
+//    (paving inside, wall ring, open ground outside, the road), the wall ring (kdWalls keys by stage), the paving stones, the
+//    lantern posts / benches / crates (TWN100_wardK), the market stalls, the old v83 dressing (shown only inside the walls and
+//    off every lot), the wild outskirts (trees, rocks and bushes on the island outside the walls, KFWILD|s), decorations, the
+//    citizens' walking grid, and the lots. The prestige buildings (granary, chapel, barracks, keep) stand outside the walls.
+//    Empty open lots show a dim white outline on the ground; just-opened ones glow gold for a minute.
+// 2) Turning buildings: SH.rot[key] = 1..3 quarter turns (saved as x2.krot), from the ⟳ button at the Steward. A turn (or a move)
+//    that would leave any building's door unreachable on foot is refused (kfDoors109 floods the town from the spawn).
+// 3) Shop upgrades (SHP109.lv[k] 0..3, saved as x2.shpu), bought at the Stronghold Steward next to each built shop
 //    (and the Trading Post, which is always open). Every level gives 5% off everything that shop sells (shpP109).
 //    Stock: Trading Post +2 pieces of gear per level with better rarities (shpGear109) and higher-tier eggs (shpEgg109);
 //    Magic Shop +1 egg per level, higher-tier eggs; Curio Shop +1 ware per level (rune, egg, rune), higher-tier eggs;
@@ -23100,34 +23116,101 @@ MVN&&Object.keys(MV107).forEach(n=>{MVN[n]=MV107[n].nm});
 //    Price and stock hooks sit in the shop code itself (0140 Trading Post / Magic Shop, 0430 runes, 0490 market + mana
 //    potion, 0860 training, 0170/0590 mounts); the Curio stock is wrapped here (visStock).
 
-// ---------------- 1. plots that open with Sovereign kills ----------------
-var LOTO109=['CW','CE','NW','NE','NM', 'W1','E1', 'W2','E2', 'SW','SE', 'W3','E3', 'W4','E4', 'A1','B1', 'A2','B2', 'C1','D1',
-  'A3','B3', 'C2','D2', 'A4','B4', 'C3','D3', 'C4','D4'];
-var LOT109_START=5,LOT109_STEP=2;
-var SOV109={k:null,grace:0,fresh:{},ft:0};
-function sovK109(){return SOV109.k==null?(typeof bossDone!='undefined'?bossDone.size:0):SOV109.k}
-function lotN109(k){return Math.min(LOTO109.length,LOT109_START+LOT109_STEP*(k==null?sovK109():k))}
-function lotOpen109(id){const i=LOTO109.indexOf(id);return i>=0&&i<lotN109()||SOV109.grace>0||!!lotKey103(id)}
-lotFree103=function(id){if(lotKey103(id))return false;const i=LOTO109.indexOf(id);return SOV109.grace>0||i>=0&&i<lotN109()};
-// everything built gets a lot: its default lot when that one is open, otherwise the first open lot from the fountain out
-lotAuto103=function(){let ch=0;for(const k in SH.pos)if(!LOTM103[SH.pos[k]]||!lotBuilt103(k)){delete SH.pos[k];ch=1}
-  const keys=['smith'].concat(SHOPS.map(o=>o.k),UPK103.map(k=>'u:'+k));
-  keys.forEach(k=>{if(SH.pos[k]||!lotBuilt103(k))return;const d=DEF103[k];let id=d&&lotFree103(d)?d:LOTO109.find(i=>lotFree103(i));
-    if(!id)id=(LOT103.find(l=>lotFree103(l.id))||{}).id;if(id){SH.pos[k]=id;ch=1}});return ch};
-function lotCounts109(){const N=lotN109(),open=LOT103.filter(l=>lotOpen109(l.id)),used=open.filter(l=>lotKey103(l.id)).length;return {N,open:open.length,used,free:open.length-used}}
-// the Steward window: plots line under the plan
-function lotInfo109(P){const c=lotCounts109(),k=sovK109(),more=c.N<LOTO109.length;
-  return `<div class="kminfo kmplots">🏗️ <b>${c.used}</b> of <b>${c.open}</b> plots used${more?` · 👑 the next Sovereign kill opens ${Math.min(LOT109_STEP,LOTO109.length-c.N)} more`:' · the whole square is yours'}`+
-    (P&&!c.free?'<br><span class="warn" style="display:inline">No free plot. Move something, or defeat a Sovereign to grow the kingdom.</span>':'')+'</div>'}
-// placing on a locked lot is refused (the plan never lights it, this covers any other path)
-{const f=kmPlace103;kmPlace103=function(id){const p=KM103.pick;if(p&&LOTM103[id]&&!lotOpen109(id)){say('🔒 That plot is not part of the kingdom yet. Every Sovereign kill opens two more.');return}return f.apply(this,arguments)}}
-// the plan: locked lots are dark with a lock
+// ---------------- 1. the kingdom's size ----------------
+var KF109={s:-1,WX:20,SZ:[11,21,29,36,44,51],base:null,leg:null,fresh:{},ft:0,wild:null,wcol:[],ward:null,wardCol:[],wardLamps:[],stalls:null,stallCol:[],cand:null};
+var KF109_NOWILD=[[-28.6,-16.8,5],[-22.4,-17.4,2.8],[24.8,-16.4,5.2],[31.4,-16.2,2.8],[-28.5,35.5,4.2],[-27.5,44.5,5.2],[28.6,37.5,6],[0,63,19.5]]; // prestige buildings, the Portal Court
+function kfNeed109(){let n=1;try{SHOPS.forEach(o=>{if(shopBuilt(o.k))n++});UPK103.forEach(k=>{if(kdLv(k)>0)n++});if(typeof HS103!='undefined'&&HS103)n+=HS103.h.length}catch(_){}
+  let s=0;while(s<5&&5+3*s<n)s++;try{for(const k in SH.pos){const l=LOTM103[SH.pos[k]];if(l&&l.st>s)s=l.st}}catch(_){}return s}
+function kfStage109(){const b=typeof bossDone!='undefined'?bossDone.size:0;return Math.min(5,Math.max(Math.min(5,b),kfNeed109()))}
+function kf109(){if(typeof KF109=='undefined'||!KF109)return {s:-1,WX:TWN100_WX,SZ:TWN100_SZ};const s=KF109.s>=0?KF109.s:kfStage109();return {s,WX:KF109.WX,SZ:KF109.SZ[s]}}
+function kfIn109(x,z,m){const F=kf109();m=m||0;return Math.abs(x)<F.WX-.5-m&&z>-TS+.5+m&&z<F.SZ-.5-m}
+function lotN109(){return 5+3*Math.max(0,kf109().s)}
+function lotOpen109(id){const l=LOTM103[id];return !!l&&(l.st<=kf109().s||!!lotKey103(id))}
+lotFree103=function(id){const l=LOTM103[id];return !!l&&!lotKey103(id)&&l.st<=kf109().s};
+// everything built gets a lot (houses too): its default lot when free, otherwise the first free lot from the fountain out
+lotAuto103=function(){let ch=0;for(const k in SH.pos)if(!LOTM103[SH.pos[k]]||!lotBuilt103(k)){delete SH.pos[k];delete SH.rot[k];ch=1}
+  const keys=['smith'].concat(SHOPS.map(o=>o.k),UPK103.map(k=>'u:'+k),typeof HS103!='undefined'&&HS103?HS103.h.map((_,i)=>'h:'+i):[]);
+  keys.forEach(k=>{if(SH.pos[k]||!lotBuilt103(k))return;const d=DEF103[k],id=d&&lotFree103(d)?d:(LOT103.find(l=>lotFree103(l.id))||{}).id;if(id){SH.pos[k]=id;ch=1}});return ch};
+function lotCounts109(){const open=LOT103.filter(l=>lotOpen109(l.id)),used=open.filter(l=>lotKey103(l.id)).length;return {N:lotN109(),open:open.length,used,free:open.length-used}}
+// ---- map tiles of the old Grand Square: paving inside the walls, the wall ring, open ground outside, the road to the old gate ----
+function kfTiles109(F){const T=TOWNS[0],X=37,Z0=-22,Z1=52;
+  if(!KF109.base){KF109.base=new Map();for(let dz=Z0;dz<=Z1;dz++)for(let dx=-X;dx<=X;dx++){const x=T.cx+dx,y=T.cy+dz,t=y*W+x;KF109.base.set(t,KL103.tiles.has(t)?'P':MAP[y][x])}}
+  for(let dz=-21;dz<=51;dz++)for(let dx=-36;dx<=36;dx++){const x=T.cx+dx,y=T.cy+dz,t=y*W+x,b=KF109.base.get(t);if(!(b=='P'||b=='W'||b=='B'||b=='.'))continue;const ax=Math.abs(dx);let c;
+    if(ax<F.WX&&dz>-21&&dz<F.SZ)c=b=='B'?'B':'P';
+    else if(ax==F.WX&&dz<=F.SZ||dz==-21&&ax<=F.WX)c='W';
+    else if(dz==F.SZ&&ax<F.WX)c=ax<=1?'P':'W';
+    else if(ax<=1&&dz>F.SZ)c='P';
+    else c='.';
+    if(c=='P'&&KL103.tiles.has(t))c='B';
+    if(MAP[y][x]!==c){MAP[y][x]=c;try{mmPaint(x,y)}catch(_){}}}}
+// ---- paving stones over the paved tiles (the v83 flagstones, rebuilt for the current walls) ----
+function kfPave109(){const T=TOWNS[0];if(T.pave){if(T.pave.parent)T.pave.parent.remove(T.pave);try{T.pave.material.dispose()}catch(_){}T.pave=null}
+  const R=dkRng(77),L=[];for(let y=T.cy-34;y<=T.cy+(T.sz||TS)+13;y++)for(let x=Math.max(1,T.cx-TWN100_WX-4);x<=T.cx+TWN100_WX+4;x++){if(MAP[y]&&MAP[y][x]=='P')L.push([x,y])}
+  if(!L.length)return;if(!KF109.pg){const g=new THREE.CircleGeometry(.5,6);g.rotateX(-Math.PI/2);const pa=g.attributes.position;for(let i=1;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i),h=twH(Math.round(x*50),0,Math.round(z*50),5);pa.setX(i,x*(.86+h*.26));pa.setZ(i,z*(.86+h*.26))}
+    const n=g.toNonIndexed();n.computeVertexNormals();n.userData.lps=1;KF109.pg=n}
+  const m=new THREE.InstancedMesh(KF109.pg,new THREE.MeshStandardMaterial({roughness:.95,flatShading:true}),L.length*2),d=new THREE.Object3D(),c=new THREE.Color();m.material.userData.lps=1;
+  let i=0;L.forEach(([x,y])=>{const two=R()<.4;for(let j=0;j<(two?2:1);j++){const ox=two?(j?.24:-.24):(R()-.5)*.12,oz=(R()-.5)*(two?.4:.12);d.position.set(x+ox,GH(x+ox,y+oz)+.025+j*.004,y+oz);d.rotation.set((R()-.5)*.05,R()*6.28,(R()-.5)*.05);
+    const s=two?.55+R()*.18:.86+R()*.3;d.scale.set(s,1,s*(.8+R()*.3));d.updateMatrix();m.setMatrixAt(i,d.matrix);const v=.62+R()*.32,w=R();c.setRGB(.44*v*(1+w*.08),.42*v,.41*v*(1.06-w*.08));m.setColorAt(i,c);i++}});
+  m.count=i;m.receiveShadow=true;m.castShadow=false;m.userData.lpsSkip=1;m.name='pave109';scene.add(m);T.pave=m}
+// ---- lantern posts, crates, benches (1820's TWN100_wardK) ----
+function kfColSet109(list,add){const T=TOWNS[0];list.forEach(c=>{const i=T.col.indexOf(c);if(i>=0)T.col.splice(i,1)});list.length=0;(add||[]).forEach(c=>{T.col.push(c);list.push(c)})}
+function kfWard109(F){const T=TOWNS[0];if(KF109.ward){T.g.remove(KF109.ward);KF109.ward=null}
+  KF109.wardLamps.forEach(l=>{const i=TLAMP.indexOf(l);if(i>=0)TLAMP.splice(i,1)});KF109.wardLamps=[];
+  TWN100_LP=TWN100_lpFor(F);const key='TWNWARD109|'+F.s;let k=null;if(!twHas(key)){k=twKit(951+F.s);TWN100_wardK(k,F)}const g=twGroup(k,key);g.name='wardDress';T.g.add(g);KF109.ward=g;
+  const cols=[];TWN100_LP.forEach(([x,z])=>{const lx=x+(x<0?.32:-.32),l=[T.cx+lx,T.ph+2.0,T.cy+z];TLAMP.push(l);KF109.wardLamps.push(l);cols.push({x:T.cx+x,z:T.cy+z,r:.2})});
+  TWN100_WD.crate.forEach(([x,z,b])=>cols.push({x:T.cx+x,z:T.cy+z,r:b?.36:.45}));TWN100_WD.bench.forEach(x=>cols.push({x:T.cx+x,z:T.cy+TWN100_WD.benchZ,hx:.78,hz:.26}));kfColSet109(KF109.wardCol,cols)}
+// ---- two market stalls on the east side of the plaza (always there, so the small first town is not bare) ----
+var KF109_STALL=[[16.4,-8.8,0x7a3a2a],[16.4,-4.0,0x2a3a7a]];
+function kfStalls109(){const T=TOWNS[0];if(KF109.stalls)return;const g=new THREE.Group();g.name='stalls109';
+  KF109_STALL.forEach(([x,z,c])=>{const st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=-Math.PI/2;twStall(st,c);g.add(st)});
+  {let k=null;if(!twHas('STALL109X')){k=twKit(977);TWN100_crate(k,18.5,-10.6,.55,.3);TWN100_crate(k,18.6,-9.9,.4,.9);TWN100_barrel(k,18.4,-6.4,.9);TWN100_crate(k,13.3,-4.2,.45,.4)}g.add(twGroup(k,'STALL109X'))}
+  T.g.add(g);KF109.stalls=g;kfColSet109(KF109.stallCol,KF109_STALL.map(([x,z])=>({x:T.cx+x+.15,z:T.cy+z,hx:.65,hz:.92})).concat([{x:T.cx+18.5,z:T.cy-10.3,r:.55},{x:T.cx+18.4,z:T.cy-6.4,r:.3},{x:T.cx+13.3,z:T.cy-4.2,r:.35}]))}
+// ---- the old (v83) dressing of the square: shown only inside the walls and never on a lot ----
+function kfLotHit109(x,z,p){return LOT103.some(l=>Math.abs(x-l.x)<3.5+p&&Math.abs(z-l.z)<3.5+p)}
+function kfLegacy109(F){const T=TOWNS[0];
+  if(!KF109.leg){const K=typeof KGD!='undefined'&&KGD||{},own=new Set([].concat(K.wcol||[],K.pcol||[],...Object.values(K.up||{}).map(u=>u.col||[]),...Object.values(DC103.col||{}),
+      ...Object.values(typeof HS103!='undefined'&&HS103?HS103.g:{}).map(o=>o.c||[]),...Object.values(TWN100_S.col||{}),KF109.wardCol,KF109.stallCol,KF109.wcol));
+    const skip=new Set([K.wg,KF109.ward,KF109.stalls,K.pg].filter(Boolean));Object.values(K.up||{}).forEach(u=>{if(u.g)skip.add(u.g)});
+    const inSq=(x,z)=>Math.abs(x)<37&&z>-22&&z<52;
+    KF109.leg={g:T.g.children.filter(o=>!skip.has(o)&&(Math.abs(o.position.x)+Math.abs(o.position.z)>.5)&&inSq(o.position.x,o.position.z)&&!/^kd|^deco|^house|^wardDress|^stalls109|^kfwild/.test(o.name||'')).map(o=>({o,v:o.visible})),
+      c:T.col.filter(c=>!own.has(c)&&inSq(c.x-T.cx,c.z-T.cy)).map(c=>({c}))}}
+  const ok=(x,z,p)=>kfIn109(x,z,-.4)&&!kfLotHit109(x,z,p);
+  KF109.leg.g.forEach(q=>{q.o.visible=q.v&&ok(q.o.position.x,q.o.position.z,.7)});
+  KF109.leg.c.forEach(q=>{const c=q.c,on=ok(c.x-T.cx,c.z-T.cy,.15+(c.r!=null?c.r:Math.max(c.hx,c.hz))),i=T.col.indexOf(c);if(on&&i<0)T.col.push(q.c);else if(!on&&i>=0)T.col.splice(i,1)})}
+// ---- the outskirts: trees, rocks and bushes on the island outside the walls (one baked kit per stage) ----
+function kfWildCand109(){if(KF109.cand)return KF109.cand;const T=TOWNS[0],R=dkRng(4242),L=[];
+  for(let z=-27;z<=57;z+=2.6)for(let x=-42;x<=42;x+=2.6){const px=x+(R()-.5)*2.2,pz=z+(R()-.5)*2.2,u=R(),s=.75+R()*.6,ry=R()*6.28;
+    const X=Math.round(T.cx+px),Z=Math.round(T.cy+pz);if(!(MAP.DW[Z*W+X]<-3))continue;if(KF109_NOWILD.some(([a,b,r])=>Math.hypot(px-a,pz-b)<r))continue;
+    L.push({x:px,z:pz,t:u<.3?(u<.12?'dead':'pine'):u<.52?'rock':u<.86?'bush':'grass',s,ry})}
+  return KF109.cand=L}
+function kfWild109(F){const T=TOWNS[0];if(KF109.wild){T.g.remove(KF109.wild);KF109.wild=null}
+  const fixed=T.col.filter(c=>KF109.wcol.indexOf(c)<0&&!(KF109.leg&&KF109.leg.c.some(q=>q.c===c)));
+  const keep=KF109.cand&&KF109.wsel&&KF109.wsel.s===F.s?KF109.wsel.L:kfWildCand109().filter(p=>{const ax=Math.abs(p.x);
+    if(ax<F.WX+2.4&&p.z>-TS-2.4&&p.z<F.SZ+2.4)return false;if(ax<4.6&&p.z>F.SZ-1)return false;
+    return !fixed.some(c=>{const dx=T.cx+p.x-c.x,dz=T.cy+p.z-c.z;return c.r!=null?dx*dx+dz*dz<(c.r+1.4)*(c.r+1.4):Math.abs(dx)<c.hx+1.4&&Math.abs(dz)<c.hz+1.4})});
+  KF109.wsel={s:F.s,L:keep};const key='KFWILD|'+F.s;let k=null;
+  if(!twHas(key)){k=twKit(4243+F.s);keep.forEach(p=>{const {x,z,s,ry}=p;
+    if(p.t=='pine'){k.as('bark',()=>k.L('c',0x3a2a1c,[x,0,z],[x,1.2*s,z],.14*s,'log'));[[1.0,1.15,1.5],[1.6,.9,1.25],[2.2,.62,1.0]].forEach(([y,r,h],j)=>k.p('c',[0x1e3626,0x24402a,0x2a4a30][j],'cone6',x,y*s,z,r*s,h*s,r*s,0,ry+j,0,.08))}
+    else if(p.t=='dead'){k.as('bark',()=>{k.L('c',0x2e2620,[x,0,z],[x+.1*s,2.4*s,z+.05],.15*s,'log');k.L('c',0x2e2620,[x+.05,1.5*s,z],[x+.8*s*Math.cos(ry),2.2*s,z+.8*s*Math.sin(ry)],.06*s,'log');k.L('c',0x2e2620,[x+.05,1.9*s,z],[x-.6*s*Math.cos(ry),2.6*s,z-.6*s*Math.sin(ry)],.05*s,'log')})}
+    else if(p.t=='rock'){k.as('stone',()=>{k.p('c',[0x5a5662,0x4e4a54,0x66626c][Math.floor(s*7)%3],'dod',x,.22*s,z,.55*s,.42*s,.5*s,0,ry,0,.18);if(s>1)k.p('c',0x4e4a54,'dod',x+.5*s,.12*s,z+.3*s,.3*s,.24*s,.3*s,0,ry*2,0,.2)})}
+    else if(p.t=='bush'){[[0,0],[.35,.2],[-.3,.25]].forEach(([a,b],j)=>k.p('c',[0x24402a,0x2e4a30,0x35502e][j],'ico',x+a*s,.3*s,z+b*s,.42*s,.34*s,.42*s,0,ry+j,0,.12))}
+    else{for(let j=0;j<3;j++)k.p('c',[0x4a5a34,0x3e5030][j%2],'cone4',x+(j-1)*.15,.18*s,z+(j%2)*.12,.07,.36*s,.07,0,j,(j-1)*.2,.1)}})}
+  const g=twGroup(k,key);g.name='kfwild';T.g.add(g);KF109.wild=g;g.traverse(o=>{if(o.isMesh)o.castShadow=false});
+  kfColSet109(KF109.wcol,keep.filter(p=>p.t=='pine'||p.t=='dead'||p.t=='rock').map(p=>({x:T.cx+p.x,z:T.cy+p.z,r:p.t=='rock'?.4*p.s:.3})))}
+// ---- apply the current stage ----
+function kfEject109(){try{const p=pl.position;if(townAt(p.x,p.z,0)!==0)return;if(solid(p.x,p.z)||tcHit(p.x,p.z))TWN100_fixPos()}catch(_){}}
+function kfApply109(force){const s=kfStage109();if(s===KF109.s&&!force)return false;const s0=KF109.s;KF109.s=s;const F=kf109();
+  const step=(n,f)=>{try{f()}catch(e){console.warn('v109 '+n,e)}};
+  step('tiles',()=>kfTiles109(F));step('walls',()=>{if(typeof KGD!='undefined'&&KGD){KGD.wl=-1;kdSync()}});step('pave',kfPave109);
+  step('ward',()=>kfWard109(F));step('stalls',kfStalls109);step('legacy',()=>kfLegacy109(F));step('wild',()=>kfWild109(F));
+  KL103.ver++;step('cz',()=>{CZ103.ver=-1});step('lots',lotSync103);step('deco',dc103Sync);step('eject',kfEject109);
+  return s0>=0&&s>s0}
+// ---- the ground: a dim white outline round every empty open lot (gold for a minute when it has just opened) ----
 {const f=lotPlan103;lotPlan103=function(cv,opt){const info=f.apply(this,arguments);try{const c=cv.getContext('2d'),s=info.s;
   LOT103.forEach(l=>{if(lotOpen109(l.id))return;const r=info.R[l.id];if(!r)return;const [ax,az,w]=r;
     c.fillStyle='#0d0b09';c.fillRect(ax,az,w,w);c.fillStyle='rgba(60,52,44,.55)';c.fillRect(ax+2,az+2,w-4,w-4);
     c.strokeStyle='rgba(120,104,84,.35)';c.lineWidth=1;c.strokeRect(ax+2,az+2,w-4,w-4);
     c.globalAlpha=.55;c.font=Math.round(s*2.4)+'px serif';c.textAlign='center';c.textBaseline='middle';c.fillText('🔒',ax+w/2,az+w/2);c.globalAlpha=1})}catch(e){console.warn('v109 plan',e)}return info}}
-// the ground: a dim white outline round every empty open lot (gold for a minute when it has just opened)
 function lotRingGeo109(){const h=3.42,t=.12,P=[],I=[];let n=0;
   const quad=(x0,z0,x1,z1)=>{P.push(x0,0,z0, x1,0,z0, x1,0,z1, x0,0,z1);I.push(n,n+2,n+1, n,n+3,n+2);n+=4};
   quad(-h,-h,h,-h+t);quad(-h,h-t,h,h);quad(-h,-h+t,-h+t,h-t);quad(h-t,-h+t,h,h-t);
@@ -23140,26 +23223,52 @@ lotStakes103=function(){const T=TOWNS[0];if(!T||!T.g)return;
   if(!KL103.ring){KL103.ring=lotRingMesh109(0xffffff,.5,'lotOutline');KL103.ringN=lotRingMesh109(0xf0cc72,.75,'lotOutlineNew');
     const mt=KL103.ringN.material;KL103.ringN.onBeforeRender=()=>{mt.opacity=.45+.35*Math.sin(performance.now()/260)}}
   const now=Date.now(),d=new THREE.Object3D();let a=0,b=0;
-  LOT103.forEach(l=>{if(!lotFree103(l.id)||SOV109.grace>0&&LOTO109.indexOf(l.id)>=lotN109())return;const [x,z]=lotW103(l,0,0);d.position.set(x,T.ph+.045,z);d.rotation.set(0,l.ry,0);d.updateMatrix();
-    if((SOV109.fresh[l.id]||0)>now)KL103.ringN.setMatrixAt(b++,d.matrix);else KL103.ring.setMatrixAt(a++,d.matrix)});
+  LOT103.forEach(l=>{if(!lotFree103(l.id))return;const [x,z]=lotW103(l,0,0);d.position.set(x,T.ph+.045,z);d.rotation.set(0,l.ry,0);d.updateMatrix();
+    if((KF109.fresh[l.id]||0)>now)KL103.ringN.setMatrixAt(b++,d.matrix);else KL103.ring.setMatrixAt(a++,d.matrix)});
   KL103.ring.count=a;KL103.ringN.count=b;KL103.ring.instanceMatrix.needsUpdate=KL103.ringN.instanceMatrix.needsUpdate=true;KL103.ring.visible=a>0;KL103.ringN.visible=b>0};
-// a Sovereign falls (first or repeat kill): two more plots open
-function lotGrow109(k0){if(k0==null)k0=sovK109();const n0=lotN109(k0);SOV109.k=k0+1;const n1=lotN109();if(n1<=n0)return [];
-  const ids=LOTO109.slice(n0,n1),t=Date.now()+60000;ids.forEach(id=>SOV109.fresh[id]=t);
-  try{lotStakes103()}catch(e){console.warn('v109 grow',e)}clearTimeout(SOV109.ft);SOV109.ft=setTimeout(()=>{try{lotStakes103()}catch(_){}},60500);ids.n=lotCounts109().open;return ids}
-function lotGrowMsg109(ids){if(!ids||!ids.length)return;const L=ids.map(id=>LOTM103[id]),where=[...new Set(L.map(l=>l.a))].join(' and ');
-  banner('🏰 THE KINGDOM EXPANDS',ids.length+' new building plot'+(ids.length>1?'s':'')+' in Duskhold · '+where,(ids.n||lotCounts109().open)+' of '+LOTO109.length+' plots are now yours');
-  say('🏗️ Duskhold grows: plot'+(ids.length>1?'s ':' ')+ids.join(' and ')+' ('+where+') can now be built on. Build at the Stronghold Steward.');try{sfx('power')}catch(_){}}
-{const f=bossDefeated;bossDefeated=function(e){const A=typeof arenaOf=='function'?arenaOf(e):null,k0=sovK109();const r=f.apply(this,arguments);
-  if(A){const ids=lotGrow109(k0);if(ids.length)setTimeout(()=>lotGrowMsg109(ids),6200);try{saveGame(true)}catch(_){}}return r}}
-// saves
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.ksov=sovK109();return o}}
-{const f=x2Load;x2Load=function(s){SOV109.k=s&&typeof s.ksov=='number'&&s.ksov>=0?Math.floor(s.ksov):null;SOV109.fresh={};
-  SOV109.grace=s&&s.kpos&&typeof s.kpos=='object'?0:1;let r;try{r=f.apply(this,arguments)}finally{SOV109.grace=0}try{lotSync103()}catch(e){console.warn('v109 lots',e)}return r}}
-// a new game: the Blacksmith moves off its old west-side lot to the first plot by the fountain
-try{if(!lotOpen109('W1')||SH.pos.smith==='W1'&&LOTO109.indexOf('W1')>=lotN109()){delete SH.pos.smith}lotSync103()}catch(e){console.warn('v109 lots',e)}
+// ---- a Sovereign falls for the first time: the walls move out and 3 more lots open ----
+function kfGrowMsg109(s){const ids=LOT103.filter(l=>l.st===s).map(l=>l.id),c=lotCounts109();
+  banner('🏰 THE KINGDOM EXPANDS','The walls of Duskhold move out · '+ids.length+' new building plots in Row '+s,c.open+' of '+LOT103.length+' plots are now yours');
+  say('🏗️ Duskhold grows: the south wall moves out and plots '+ids.join(', ')+' can now be built on. Build at the Stronghold Steward.');try{sfx('power')}catch(_){}}
+{const f=bossDefeated;bossDefeated=function(e){const r=f.apply(this,arguments);try{const s0=KF109.s;if(kfApply109()){const s=KF109.s,t=Date.now()+60000;
+    LOT103.forEach(l=>{if(l.st>s0&&l.st<=s)KF109.fresh[l.id]=t});lotStakes103();clearTimeout(KF109.ft);KF109.ft=setTimeout(()=>{try{lotStakes103()}catch(_){}},60500);
+    setTimeout(()=>kfGrowMsg109(s),6200);try{saveGame(true)}catch(_){}}}catch(err){console.warn('v109 grow',err)}return r}}
+// the Steward window: plots line under the plan
+function lotInfo109(P){const c=lotCounts109(),s=kf109().s;
+  return `<div class="kminfo kmplots">🏗️ <b>${c.used}</b> of <b>${c.open}</b> plots used${s<5?' · 👑 defeat a new Sovereign: the walls move out and 3 more plots open':' · the kingdom has reached its full size'}`+
+    (P&&!c.free?'<br><span class="warn" style="display:inline">No free plot. Move something, or defeat a new Sovereign to grow the kingdom.</span>':'')+'</div>'}
+// placing on a locked lot is refused (the plan never lights it, this covers any other path)
+{const f=kmPlace103;kmPlace103=function(id){const p=KM103.pick;if(p&&LOTM103[id]&&!lotOpen109(id)){say('🔒 That plot is outside the walls. Every new Sovereign you defeat moves the walls out.');return}
+  const r=f.apply(this,arguments);try{kfFixDoors109()}catch(e){console.warn('v109 doors',e)}return r}}
+// ---------------- 2. turning buildings ----------------
+// every built thing's door must be reachable on foot from the spawn: flood fill over the inside of the walls (half-tile grid)
+function kfDoors109(){const T=TOWNS[0],F=kf109(),st=.5,x0=-F.WX+.5,z0=-TS+.5,nx=Math.floor((2*F.WX-1)/st)+1,nz=Math.floor((F.SZ+TS-1)/st)+1,seen=new Uint8Array(nx*nz),q=[];
+  const free=(i,j)=>{const x=T.cx+x0+i*st,z=T.cy+z0+j*st;return !solid(x,z)&&!tcHit(x,z)};
+  const at=(x,z)=>{const i=Math.round((x-T.cx-x0)/st),j=Math.round((z-T.cy-z0)/st);return i<0||j<0||i>=nx||j>=nz?-1:j*nx+i};
+  let s0=at(T.sp[0],T.sp[1]);if(s0<0)return [];seen[s0]=1;q.push(s0);
+  while(q.length){const c=q.pop(),i=c%nx,j=(c/nx)|0;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ii=i+a,jj=j+b;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k=jj*nx+ii;if(seen[k])continue;seen[k]=free(ii,jj)?1:2;if(seen[k]==1)q.push(k)}}
+  const reach=(x,z)=>{for(let dz=-1;dz<=1;dz+=st)for(let dx=-1;dx<=1;dx+=st){if(dx*dx+dz*dz>1.01)continue;const k=at(x+dx,z+dz);if(k>=0&&seen[k]==1)return true}return false};
+  const bad=[];for(const k in SH.pos){if(!lotBuilt103(k))continue;const l=lotOf103(k);if(!l)continue;const [x,z]=lotDoor103(l);if(!reach(x,z))bad.push(k)}return bad}
+// a new building can close off a turned neighbour's door: such neighbours turn back to face their street
+function kfFixDoors109(){const bad=kfDoors109().filter(k=>SH.rot[k]);if(!bad.length)return;bad.forEach(k=>delete SH.rot[k]);lotSync103();
+  say('⟳ '+bad.map(k=>lotName103(k).join(' ')).join(', ')+' turned back to face '+(bad.length>1?'their streets':'its street')+', so the door can be reached.')}
+function kfFace109(ry){const x=Math.round(Math.sin(ry)),z=Math.round(Math.cos(ry));return z>0?'south':z<0?'north':x>0?'east':'west'}
+function kfRotate109(key){if(!SH.pos[key]||!lotBuilt103(key))return false;const r0=SH.rot[key]|0,base=new Set(kfDoors109()),nm=lotName103(key);
+  for(let t=1;t<=3;t++){const r=(r0+t)&3;if(r)SH.rot[key]=r;else delete SH.rot[key];lotSync103();if(kfDoors109().every(k=>base.has(k))){
+      say('⟳ '+nm[0]+' '+nm[1]+' now faces '+kfFace109(lotOf103(key).ry)+(t>1?' (the other ways would block a door)':'')+'.');try{sfx('power')}catch(_){}try{saveGame(true)}catch(_){}return true}}
+  if(r0)SH.rot[key]=r0;else delete SH.rot[key];lotSync103();say('⟳ '+nm[1]+' can only face this way here: turned any other way, a door could not be reached.');return false}
+// moving keeps every door reachable too (the move is undone otherwise)
+{const f=lotPut103;lotPut103=function(key,id){const old=SH.pos[key],base=new Set(kfDoors109()),r=f.apply(this,arguments);if(!r)return r;
+  const bad=kfDoors109().filter(k=>!base.has(k));if(!bad.length)return r;
+  if(bad.every(k=>k!==key&&SH.rot[k])){bad.forEach(k=>delete SH.rot[k]);lotSync103();return r}
+  if(old)SH.pos[key]=old;else delete SH.pos[key];lotSync103();say('🚫 Not there: a door would be closed off. Try another plot, or turn a building first.');return false}}
+$('xw').addEventListener('click',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-kmrot]');if(!t||t.disabled)return;kfRotate109(t.dataset.kmrot);rX()});
+// saves: the stage follows the save (Sovereigns defeated and what is built)
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.kst=kf109().s;return o}}
+{const f=x2Load;x2Load=function(s){KF109.s=-1;KF109.fresh={};let r;try{r=f.apply(this,arguments)}finally{try{kfApply109(true)}catch(e){console.warn('v109 load',e)}}return r}}
+try{kfApply109(true)}catch(e){console.warn('v109 kingdom',e)}
 
-// ---------------- 2. shop upgrades ----------------
+// ---------------- 3. shop upgrades ----------------
 var SHP109={lv:{}};
 var SHPU109=[
   {k:'post',n:'Trading Post',i:'🪙',g:500,m:[['stone',10],['fiber',10]]},

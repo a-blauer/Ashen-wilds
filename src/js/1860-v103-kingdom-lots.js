@@ -1,31 +1,30 @@
 // ================= v103 kingdom (1/5): building lots — you choose where every shop, upgrade and house stands =================
-// The Grand Square is divided into 31 lots (LOT103, town-local tiles; ry = facing, local +z toward the street):
-//   W1..W4 / E1..E4  the old market plots down the west and east sides          (x ±29.5)
-//   NW NE NM         the north row gaps (old Treasury, Scholar's Tower, Magic Shop spots)
-//   CW CE            either side of the fountain (CE = the old Training Grounds)
-//   SW SE            north of the South Ward, facing the plaza (old Beast Den / Hatchery)
-//   A1..A4 B1..B4    the South Ward avenue (old garden), facing the avenue from the west / east
-//   C1..C4 D1..D4    the South Ward's outer rows, facing the side streets
+// v109: 20 lots (LOT103, town-local tiles; ry = facing, local +z toward the street), opened stage by stage as the walls move
+// south (1960, KF109):
+//   NW NE NM          the north row gaps beside the Tavern and the Trading Post                       (stage 0)
+//   CW CE             either side of the fountain                                                       (stage 0)
+//   S1W S1M S1E       row 1, south of the plaza, facing north onto it                                   (stage 1)
+//   SkW SkM SkE       rows 2..5 (z 22.1 .. 44.6, 7.5 apart): west and east lots face the two side streets,
+//                     the middle lot faces one of them (east on even rows, west on odd rows)            (stage k)
 // Each lot is a 7x7-tile square; buildings face its street side and keep a door spot 4.45 tiles in front of the centre.
+// v109: SH.rot[key] (0..3 quarter turns) turns a building on its lot; lotOf103(key) returns the turned lot.
 // SH.pos[key] = lot id, key = shop key ('smith', 'magic', …), 'u:'+upgrade key, or 'h:'+house index. Saved in x2Save.
 // Old saves: anything built without a lot goes to its old spot (DEF103), or the first free lot.
 // Shops (the TWN100 market kits, the Magic Shop now one of them) and the upgrade structures (KDU) are rebuilt in place
 // when their lot changes; shop footprints are solid tiles ('B'), upgrade structures keep their own colliders.
 // Free lots showed four wooden stakes; since v109 (1960) only open lots exist and show a dim ground outline. The plan view in the Steward's window is drawn by lotPlan103.
 var LOT103=(()=>{const H=Math.PI/2,L=[];
-  [-9,2,13,24].forEach((z,i)=>{L.push({id:'W'+(i+1),x:-29.5,z,ry:H,a:'West side'});L.push({id:'E'+(i+1),x:29.5,z,ry:-H,a:'East side'})});
-  L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row'},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row'},{id:'NM',x:14.6,z:-17,ry:0,a:'North row'});
-  L.push({id:'CW',x:-7.7,z:-7.1,ry:0,a:'By the fountain'},{id:'CE',x:7.7,z:-7.1,ry:0,a:'By the fountain'});
-  L.push({id:'SW',x:-13.6,z:14.6,ry:Math.PI,a:'Plaza south'},{id:'SE',x:13.6,z:14.6,ry:Math.PI,a:'Plaza south'});
-  [22.5,30,37.5,45].forEach((z,i)=>{L.push({id:'A'+(i+1),x:-7,z,ry:H,a:'South Ward'},{id:'B'+(i+1),x:7,z,ry:-H,a:'South Ward'},
-    {id:'C'+(i+1),x:-17,z,ry:-H,a:'South Ward'},{id:'D'+(i+1),x:17,z,ry:H,a:'South Ward'})});
+  L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row',st:0},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row',st:0},{id:'NM',x:14.6,z:-17,ry:0,a:'North row',st:0});
+  L.push({id:'CW',x:-7.7,z:-7.1,ry:0,a:'By the fountain',st:0},{id:'CE',x:7.7,z:-7.1,ry:0,a:'By the fountain',st:0});
+  for(let k=1;k<=5;k++){const z=14.6+7.5*(k-1),a='Row '+k,P=Math.PI;
+    if(k==1)L.push({id:'S1W',x:-13.6,z,ry:P,a,st:1},{id:'S1M',x:0,z,ry:P,a,st:1},{id:'S1E',x:13.6,z,ry:P,a,st:1});
+    else L.push({id:'S'+k+'W',x:-13.6,z,ry:H,a,st:k},{id:'S'+k+'M',x:0,z,ry:k%2?-H:H,a,st:k},{id:'S'+k+'E',x:13.6,z,ry:-H,a,st:k})}
   return L})();
 var LOTM103={};LOT103.forEach(l=>LOTM103[l.id]=l);
-var DEF103={smith:'W1',alch:'W2',cook:'W3',bard:'W4',merchant:'E1',sage:'E2',trainer:'E3',stable:'E4',magic:'NM',
-  'u:train':'CE','u:tower':'NE','u:treas':'NW','u:den':'SW','u:hatch':'SE'};
+var DEF103={smith:'CW',magic:'NM'};
 var UPK103=['train','tower','treas','den','hatch']; // placeable upgrades (Bastion Walls is the wall ring itself)
 var KL103={tiles:new Map(),own:{},stakes:null,ver:0};
-SH.pos=SH.pos||{};
+SH.pos=SH.pos||{};SH.rot=SH.rot||{};
 // ---------- lot geometry ----------
 function lotW103(l,lx,lz){const T=TOWNS[0],fx=Math.sin(l.ry),fz=Math.cos(l.ry);return [T.cx+l.x+lx*fz+lz*fx,T.cy+l.z-lx*fx+lz*fz]}
 function lotDoor103(l){return lotW103(l,0,4.45)}
@@ -34,7 +33,9 @@ function lotTiles103(l,x0,x1,z0,z1){const T=TOWNS[0],f=[Math.sin(l.ry),Math.cos(
   for(let lx=x0;lx<=x1+1e-6;lx+=.5)for(let lz=z0;lz<=z1+1e-6;lz+=.5){const x=Math.round(T.cx+l.x+lx*a[0]+lz*f[0]),y=Math.round(T.cy+l.z+lx*a[1]+lz*f[1]);S.add(y*W+x)}return [...S]}
 // ---------- who stands where ----------
 function lotKey103(id){for(const k in SH.pos)if(SH.pos[k]===id)return k;return null}
-function lotOf103(key){const id=SH.pos[key];return id&&LOTM103[id]||null}
+function lotOf103(key){const id=SH.pos[key],l=id&&LOTM103[id];if(!l)return null;const r=(SH.rot&&SH.rot[key])&3;return r?lotRot103(l,r):l}
+// a lot turned by r quarter turns (cached on the lot); same id, position and area
+function lotRot103(l,r){l._r=l._r||[];return l._r[r]||(l._r[r]={id:l.id,x:l.x,z:l.z,a:l.a,st:l.st,ry:l.ry+r*Math.PI/2,base:l})}
 function lotFree103(id){return !lotKey103(id)}
 function lotBuilt103(key){if(key.startsWith('u:'))return kdLv(key.slice(2))>0;if(key.startsWith('h:'))return typeof HS103!='undefined'&&!!HS103.h[+key.slice(2)];return key=='smith'||shopBuilt(key)}
 // every built thing gets a lot; anything placed but not built (a cheat reset, a deleted house) gives its lot back
@@ -96,7 +97,7 @@ function lotDropShop103(q){const T=TOWNS[0],k=q.k,b=TWN100_S.b[k],n=TWN100_S.npc
 var FAR103=[-9999,-9999];
 function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN||typeof LOT103=='undefined')return;
   TWN100_SH.forEach(q=>{const l=TWN100_built(q.k)?lotOf103(q.k):null,id=l?l.id:null;
-    if(q._lot!==id){lotDropShop103(q);q._lot=id;if(l){q.x=l.x;q.z=l.z;q.ry=l.ry}}
+    if(q._lot!==id||l&&q.ry!==l.ry){lotDropShop103(q);q._lot=id;if(l){q.x=l.x;q.z=l.z;q.ry=l.ry}}
     if(!l)return;
     if(!TWN100_S.b[q.k]){TWN100_build(q);lotMark103(q.k,lotTiles103(l,...FP103.shop));lotEject103(l)}
     else if(!KL103.own[q.k]||!KL103.own[q.k].length)lotMark103(q.k,lotTiles103(l,...FP103.shop));
@@ -107,7 +108,7 @@ function TWN100_shopSync(){const T=TOWNS[0];if(!T||!TWN100_S||!TWN100_SIGN||type
   lotSpots103();try{lotStakes103()}catch(e){console.warn('v103 stakes',e)}
   KL103.ver++;try{if(typeof wk103Sync=='function')wk103Sync()}catch(e){console.warn('v103 keepers',e)}}
 // prompt spots that older code keeps in its own fields follow the lots
-function lotSpots103(){const T=TOWNS[0],sp=k=>{const q=TWN100_SH.find(s=>s.k==k),l=q&&q._lot&&LOTM103[q._lot];return l?lotDoor103(l):FAR103.slice()};
+function lotSpots103(){const T=TOWNS[0],sp=k=>{const q=TWN100_SH.find(s=>s.k==k),l=q&&q._lot&&lotOf103(k);return l?lotDoor103(l):FAR103.slice()};
   try{T.mv=sp('magic')}catch(_){}
   try{if(T.st2){T.st2.c=sp('cook');T.st2.a=sp('alch')}}catch(_){}
   try{const n=sp('stable');STB.x=n[0]-T.cx;STB.z=n[1]-T.cy-1.4;STB.n=n;STB.g=TWN100_S.b.stable||null;STB.npc=TWN100_S.npc.stable||null;STB.col=TWN100_S.col.stable||[]}catch(_){}
@@ -117,7 +118,7 @@ function stableSync(){TWN100_shopSync()}
 function shSites(){const T=TOWNS[0];if(!T)return;SHM.vsite=[];for(const k in (SHM.sites||{})){scene.remove(SHM.sites[k]);delete SHM.sites[k]}if(T.mvG)T.mvG.visible=false;try{TWN100_shopSync()}catch(e){console.warn('v103 shops',e)}}
 // walk-up prompts: only built shops that stand on a lot
 function TWN100_prompt(){const p=pl.position;if(townAt(p.x,p.z,0)!==0)return null;
-  for(const q of TWN100_SH){if(!q._lot||!TWN100_built(q.k))continue;const [x,z]=lotDoor103(LOTM103[q._lot]);if(Math.hypot(p.x-x,p.z-z)<2.4)return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]}}return null}
+  for(const q of TWN100_SH){if(!q._lot||!TWN100_built(q.k))continue;const l=lotOf103(q.k);if(!l)continue;const [x,z]=lotDoor103(l);if(Math.hypot(p.x-x,p.z-z)<2.4)return {label:TWN100_LBL[q.k],fn:TWN100_ACT[q.k]}}return null}
 // ---------- upgrade structures: placed on their lot (box colliders turn with a 90° lot) ----------
 {const f=kdUp;kdUp=function(T,key,l){const U=KDU[key];if(U&&UPK103.includes(key)){const lt=lotOf103('u:'+key);if(lt&&(U.x!==lt.x||U.z!==lt.z||U.ry!==lt.ry)){U.x=lt.x;U.z=lt.z;U.ry=lt.ry;const st=kdState().up[key];if(st)st.l=-9}}
   const st0=kdState().up[key],l0=st0?st0.l:null;const r=f.apply(this,arguments);const st=kdState().up[key];
@@ -148,19 +149,19 @@ function lotSync103(){try{lotAuto103()}catch(e){console.warn('v103 auto',e)}
   try{lotStakes103()}catch(_){}}
 {const f=shApply;shApply=function(){try{lotAuto103()}catch(e){console.warn('v103 auto',e)}const r=f.apply(this,arguments);try{if(typeof hs103Sync=='function')hs103Sync();lotStakes103()}catch(e){console.warn('v103 lots',e)}return r}}
 // saves: SH.pos rides with the stronghold levels
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.kpos=Object.assign({},SH.pos);return o}}
-{const f=x2Load;x2Load=function(s){SH.pos={};if(s&&s.kpos&&typeof s.kpos=='object')for(const k in s.kpos){const v=s.kpos[k];if(typeof v=='string'&&LOTM103[v]&&!Object.values(SH.pos).includes(v))SH.pos[k]=v}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.kpos=Object.assign({},SH.pos);o.krot=Object.assign({},SH.rot);return o}}
+{const f=x2Load;x2Load=function(s){SH.pos={};SH.rot={};if(s&&s.krot&&typeof s.krot=='object')for(const k in s.krot){const v=s.krot[k]|0;if(v>0&&v<4)SH.rot[k]=v}if(s&&s.kpos&&typeof s.kpos=='object')for(const k in s.kpos){const v=s.kpos[k];if(typeof v=='string'&&LOTM103[v]&&!Object.values(SH.pos).includes(v))SH.pos[k]=v}
   const r=f.apply(this,arguments);lotSync103();return r}}
 try{lotSync103()}catch(e){console.warn('v103 lots',e)}
 
 // ---------- the plan of the Grand Square (drawn into a canvas by the Steward's window) ----------
 // opt: {pick:key|null, hover:lot id, sel:lot id}; returns the scale info used for hit tests
-function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],x0=-37,z0=-22,nx=75,nz=75,c=cv.getContext('2d'),Wd=cv.width,Hd=cv.height,s=Math.min(Wd/nx,Hd/nz),ox=(Wd-nx*s)/2,oz=(Hd-nz*s)/2;
+function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],F=typeof kf109=='function'?kf109():{WX:36,SZ:51},nx=Math.max(2*F.WX+5,F.SZ+26),nz=nx,x0=-Math.floor(nx/2),z0=Math.round(-23+(F.SZ+26-nz)/2),c=cv.getContext('2d'),Wd=cv.width,Hd=cv.height,s=Math.min(Wd/nx,Hd/nz),ox=(Wd-nx*s)/2,oz=(Hd-nz*s)/2;
   const P=(x,z)=>[ox+(x-x0)*s,oz+(z-z0)*s];c.fillStyle='#0d0b09';c.fillRect(0,0,Wd,Hd);
   for(let z=z0;z<z0+nz;z++)for(let x=x0;x<x0+nx;x++){const t=MAP[T.cy+z]&&MAP[T.cy+z][T.cx+x];if(!t)continue;
     c.fillStyle=t=='W'?'#8a8070':t=='B'?'#4a3a2c':t=='P'?'#3a342c':t=='p'?'#4a3c2a':'#1c1a16';const [px,pz]=P(x-.5,z-.5);c.fillRect(px,pz,s+.6,s+.6)}
   // colliders of everything else (wells, carts, prestige halls, upgrade structures)
-  c.fillStyle='rgba(120,104,84,.55)';T.col.forEach(q=>{const x=q.x-T.cx,z=q.z-T.cy;if(x<x0||x>x0+nx||z<z0||z>z0+nz)return;
+  c.fillStyle='rgba(120,104,84,.55)';T.col.forEach(q=>{const x=q.x-T.cx,z=q.z-T.cy;if(x<x0||x>x0+nx||z<z0||z>z0+nz)return;if(typeof kfIn109=='function'&&!kfIn109(x,z,-1))return; // v109: inside the walls only
     if(q.r!=null){const [px,pz]=P(x,z);c.beginPath();c.arc(px,pz,Math.max(1,q.r*s),0,6.283);c.fill()}else{const [px,pz]=P(x-q.hx,z-q.hz);c.fillRect(px,pz,q.hx*2*s,q.hz*2*s)}});
   // fixed landmarks
   const lab=(t,x,z,f)=>{const [px,pz]=P(x,z);c.font=f||(Math.round(s*2.2)+'px serif');c.textAlign='center';c.textBaseline='middle';c.fillText(t,px,pz)};
@@ -173,7 +174,7 @@ function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],x0=-37,z0=-22,nx=75,nz=
     else{c.setLineDash([3,3]);c.strokeStyle=ok?(hov?'#ffe08a':'#c9a24a'):'rgba(201,162,74,.35)';c.lineWidth=ok?2:1;c.strokeRect(ax+2,az+2,w-4,w-4);c.setLineDash([]);
       if(ok){c.fillStyle=hov?'rgba(255,224,138,.38)':'rgba(201,162,74,.14)';c.fillRect(ax+2,az+2,w-4,w-4)}}
     // the street side
-    const [dx,dz]=[Math.sin(l.ry),Math.cos(l.ry)],[mx,mz]=P(l.x+dx*3.3,l.z+dz*3.3);c.fillStyle=k?'#d8b46a':'rgba(201,162,74,.5)';c.fillRect(mx-(dz?s*1.2:s*.35),mz-(dx?s*1.2:s*.35),dz?s*2.4:s*.7,dx?s*2.4:s*.7);
+    const lr=k&&lotOf103(k)||l,[dx,dz]=[Math.sin(lr.ry),Math.cos(lr.ry)],[mx,mz]=P(l.x+dx*3.3,l.z+dz*3.3);c.fillStyle=k?'#d8b46a':'rgba(201,162,74,.5)';c.fillRect(mx-(dz?s*1.2:s*.35),mz-(dx?s*1.2:s*.35),dz?s*2.4:s*.7,dx?s*2.4:s*.7);
     if(hov){c.strokeStyle='#ffe08a';c.lineWidth=2.5;c.strokeRect(ax+1,az+1,w-2,w-2)}});
   // you
   try{const x=pl.position.x-T.cx,z=pl.position.z-T.cy;if(townAt(pl.position.x,pl.position.z,0)==0){const [px,pz]=P(x,z);c.fillStyle='#7ee8ff';c.beginPath();c.arc(px,pz,Math.max(2.5,s*.9),0,6.283);c.fill();c.strokeStyle='#000';c.lineWidth=1;c.stroke()}}catch(_){}

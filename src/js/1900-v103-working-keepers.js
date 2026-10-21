@@ -49,7 +49,7 @@ function wkTool103(kind){const g=new THREE.Group(),M=c=>new THREE.MeshLambertMat
     const hd=new THREE.Mesh(new THREE.BoxGeometry(.07,.12,.04),M(0x4a2a12));hd.position.set(0,.66,-.02);hd.rotation.x=-.4;g.add(hd);const sh=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.01,10),M(0x1a1008));sh.rotation.x=Math.PI/2;sh.position.set(0,.04,.08);g.add(sh)}
   return g}
 // put a keeper model (the group that carries the bones) at its station and mark it as working
-function wkPlace103(n,k,q,S0){const W0=WK103[k];if(!n||!W0||!q||!q._lot)return;const l=LOTM103[q._lot],[x,z]=lotW103(l,W0.x,W0.z);
+function wkPlace103(n,k,q,S0){const W0=WK103[k];if(!n||!W0||!q||!q._lot)return;const l=lotOf103(k)||LOTM103[q._lot],[x,z]=lotW103(l,W0.x,W0.z);
   n.position.set(x,W0.y||0,z);n.rotation.y=l.ry+W0.ry;if(n.parent&&n.parent.position)n.parent.position.y=TOWNS[0].ph;
   if(!n._wk){n._wk={k,t0:Math.random()*20,base:0,g:n,mote:null};n._wk.rest=czRest103(n);
     if(W0.tool&&W0.tool!='mote'){const tl=wkTool103(W0.tool);n.add(tl);if(W0.tool=='lute'){tl.position.set(.02,1.02,.22);tl.rotation.set(.15,0,-.85)}else tl.userData.hand=1;n._wk.tool=tl}
