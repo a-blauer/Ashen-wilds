@@ -229,7 +229,9 @@ const hh2=(x,y)=>{const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.flo
 const vnz=(x,y)=>{const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);return hh2(ix,iy)*(1-u)*(1-v)+hh2(ix+1,iy)*u*(1-v)+hh2(ix,iy+1)*(1-u)*v+hh2(ix+1,iy+1)*u*v};
 const fbm2=(x,y,o)=>{let s=0,a=.5,f=1;for(let i=0;i<o;i++){s+=a*vnz(x*f,y*f);f*=2.03;a*=.5}return s/(1-Math.pow(.5,o))*.5+0};
 const HPD=2,HW=W+2*HPD+1,HH=H+2*HPD+1,HF=new Float32Array(HW*HH);
-const GHv=(i,j)=>HF[(Math.max(-HPD,Math.min(W+HPD,j))+HPD)*HW+Math.max(-HPD,Math.min(W+HPD,i))+HPD];
+// v112: the row index is clamped by H (it was clamped by W=1180, so everything south of row 1182 — all of The Citadel,
+// the Crimson Throne Hall included — read row 1182's heights: the hall floor followed void/cliff heights and you arrived under it)
+const GHv=(i,j)=>HF[(Math.max(-HPD,Math.min(H+HPD,j))+HPD)*HW+Math.max(-HPD,Math.min(W+HPD,i))+HPD];
 const GH=(x,z)=>{if(x<-1||z<-1||x>W||z>H)return 0;const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j;return GHv(i,j)*(1-fx)*(1-fz)+GHv(i+1,j)*fx*(1-fz)+GHv(i,j+1)*(1-fx)*fz+GHv(i+1,j+1)*fx*fz};
 const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
 {
