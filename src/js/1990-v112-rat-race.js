@@ -26,7 +26,7 @@ var HBR=Object.assign({},HB);RAT_TB.forEach((n,i)=>{const p=RAT_TP[i];HBR[n]=[i?
 // the rat's rest pose: v99 preset + hunch (forward shear: z += k·y in the spine, chest and neck)
 var RAT_PL=null;
 function ratPlan(){if(RAT_PL)return RAT_PL;const S=AW_PROP99;
-  S.PRE.rat={pelvis:[1,1,1],spine:[.95,.98,1],chest:[.8,1,.92],neck:[1.1,1.1,1.1],head:.86,arm:[1.12,.95],hand:.95,leg:[1.14,1.04],foot:1.08,cape:[1.15,1]};
+  S.PRE.rat={pelvis:[1,1,1],spine:[.95,.98,1],chest:[.8,1,.92],neck:[1,.7,1],head:.86,arm:[1.12,.95],hand:1.32,leg:[1.14,1.04],foot:1,cape:[1.15,1]};
   S.plans.delete(HBR);const pl=S.plan(HBR,'rat'),SH={spine:.24,chest:.46,neck:.5};
   for(const n in SH)pl.M[n][7]=SH[n];
   const mul=(M,x,y,z)=>[M[0]*x+M[1]*y+M[2]*z,M[3]*x+M[4]*y+M[5]*z,M[6]*x+M[7]*y+M[8]*z],a=pl.abs;
@@ -52,7 +52,7 @@ function ratRig(h,rat){
   arr.forEach((x,i)=>x.quaternion.copy(q[i]));h._race=rat?1:0;h._ratC=null}
 // ---------------- body rings (same count, heights and parts as the human rings) ----------------
 var RAT_TR=[[.44,.15,.105,.11],[.5,.168,.125,.12],[.56,.176,.135,.124],[.62,.172,.138,.122],[.7,.164,.136,.124],[.78,.168,.13,.13],
-  [.86,.192,.122,.136],[.93,.206,.114,.136],[.972,.17,.1,.114],[1.0,.1,.084,.09],[1.035,.08,.078,.074],[1.075,.072,.072,.068]];
+  [.86,.192,.122,.136],[.93,.206,.114,.136],[.972,.17,.1,.114],[1.0,.088,.074,.08],[1.035,.07,.068,.066],[1.075,.067,.066,.064]];
 {const f=mdTorso;mdTorso=function(P){if(!RAT.on)return f.apply(this,arguments);
   return RAT_TR.map(q=>{const y=q[0];return {p:[0,y,y>.9?-.012:0],rx:q[1],f:q[2],b:q[3],w:mdTorsoW(y),y}})}}
 // thin arms; the hand rings become a small flat palm (thin across, wide front to back) ending at the knuckles
@@ -70,12 +70,13 @@ var RAT_TR=[[.44,.15,.105,.11],[.5,.168,.125,.12],[.56,.176,.135,.124],[.62,.172
   return R.map((r,i)=>Object.assign({},r,{rx:r.rx*K[i],f:r.f*K[i]*(i<3?1.06:1),b:r.b*K[i]*(i<3?1.1:1)}))}}
 // long rat hind feet: heel, arch, ball, two toe rings
 {const f=mdFoot;mdFoot=function(P,s){if(!RAT.on)return f.apply(this,arguments);const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),x=A.x,lf=P.lf||1;
-  const r=(z,y,rx,ff,b,part)=>({p:[x,y,A.z+z],rx:rx*lf,f:ff*lf,b:b*lf,w:[[l,1]],part});
+  const F=RAT_FS,r=(z,y,rx,ff,b,part)=>({p:[x,y,A.z+z*F],rx:rx*lf*(.4+.6*F),f:ff*lf,b:b*lf*(.4+.6*F),w:[[l,1]],part});
   return [r(-.06,.046,.04,.03,.04,'heel'),r(-.028,.05,.046,.042,.046,'foot'),r(.05,.038,.05,.032,.036,'foot'),r(.13,.026,.046,.022,.024,'toe'),r(.172,.02,.036,.014,.016,'toe')]}}
 // ---------------- head ----------------
 // skull / snout rings back to front: [z, y centre, half-width, top, underside]
 var RAT_SN=[[-.105,1.16,.04,.04,.04],[-.08,1.165,.078,.08,.076],[-.045,1.17,.096,.095,.088],[-.01,1.168,.1,.097,.092],[.03,1.158,.094,.086,.09],
   [.07,1.142,.074,.066,.07],[.105,1.128,.056,.05,.054],[.14,1.115,.042,.038,.042],[.17,1.105,.032,.029,.033],[.195,1.098,.024,.021,.024],[.215,1.094,.015,.013,.015]];
+var RAT_FS=.8;
 var RAT_EYEP=[.074,1.168,.058],RAT_EAR=[.078,1.252,-.045];
 // the skull ring at z (interpolated): {yc, rx, f, b}
 function ratSkullAt(z){const S=RAT_SN;let i=0;while(i<S.length-2&&S[i+1][0]<z)i++;const a=S[i],b=S[i+1],t=Math.max(0,Math.min(1,(z-a[0])/(b[0]-a[0]))),L=(u,v)=>u+(v-u)*t;
@@ -83,7 +84,7 @@ function ratSkullAt(z){const S=RAT_SN;let i=0;while(i<S.length-2&&S[i+1][0]<z)i+
 function ratSurfX(z,y){const q=ratSkullAt(z),dy=y-q.yc,r=dy>0?q.f:q.b;return q.rx*Math.sqrt(Math.max(0,1-(dy/r)**2))}
 function ratHead(B,P,o){const C=RAT.C,H=(P.head={w:.96,jaw:.82,top:1,len:.96,fwd:-.012},mdHeadR(P));P._H=H;const k=dkKit(),hw=[['head',1]];
   // neck into the skull
-  mdLoft(B,[{p:[0,1.03,-.012],rx:.08,f:.078,b:.074,w:[['neck',.7],['head',.3]]},{p:[0,1.07,-.016],rx:.084,f:.082,b:.08,w:[['neck',.3],['head',.7]]},{p:[0,1.11,-.024],rx:.086,f:.084,b:.084,w:hw}],
+  mdLoft(B,[{p:[0,1.03,-.012],rx:.068,f:.067,b:.065,w:[['neck',.7],['head',.3]]},{p:[0,1.07,-.016],rx:.068,f:.067,b:.066,w:[['neck',.3],['head',.7]]},{p:[0,1.105,-.022],rx:.068,f:.066,b:.068,w:hw}],
     {seg:12,col:m=>m.s>.45?C.BELLY:C.FUR});
   // skull + snout: one smooth loft (ref = up: f is the top of each ring, b the underside); jowls and the small lower
   // jaw are in the ring profile; the mouth is a dark line painted along each side of the muzzle
@@ -128,9 +129,9 @@ function ratShoulders(B){const k=dkKit();['aL0','aR0'].forEach((bn,i)=>{const s=
   k.p(bn,'sph2','c',RAT.C.FUR,A[1]-s*.012,A[2]-.012,A[3],.056,.05,.056);k.P[k.P.length-1].w=[['chest',.5],[bn,.5]]});mdKit(B,k)}
 // bare feet: four clawed toes and a dewclaw
 function ratToes(B,P){const C=RAT.C,k=dkKit();[-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),lf=P.lf||1;
-    for(let i=0;i<4;i++){const o=(i-1.5)*.02*lf,x=A.x+o,z0=A.z+.16*lf,ln=[.04,.05,.05,.042][i]*lf,dx=o*.5,a=[x,.018,z0],b=[x+dx,.012,z0+ln],c=[x+dx*1.2,.004,z0+ln+.018*lf];
+    const F=RAT_FS;for(let i=0;i<4;i++){const o=(i-1.5)*.02*lf*(.4+.6*F),x=A.x+o,z0=A.z+.16*lf*F,ln=[.04,.05,.05,.042][i]*lf*F,dx=o*.5,a=[x,.018,z0],b=[x+dx,.012,z0+ln],c=[x+dx*1.2,.004,z0+ln+.018*lf];
       k.L(l,'c',C.PINK,a,b,.011*lf,.008*lf,5);k.L(l,'c',C.CLAW,b,c,.006*lf,.0008,4)}
-    k.L(l,'c',C.PINK,[A.x-s*.035*lf,.03,A.z+.03],[A.x-s*.052*lf,.016,A.z+.07],.009*lf,.006*lf,4)});
+    k.L(l,'c',C.PINK,[A.x-s*.033*lf,.03,A.z+.03*F],[A.x-s*.048*lf,.016,A.z+.07*F],.009*lf,.006*lf,4)});
   mdKit(B,k)}
 // tail: part of the body mesh, each ring weighted between the tail bones on either side of it
 function ratTail(B){const C=RAT.C,n=RAT_TP.length,last=RAT_TB.length-1;
