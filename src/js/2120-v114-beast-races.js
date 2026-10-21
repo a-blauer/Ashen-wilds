@@ -21,7 +21,7 @@ brDef(1,{key:'rat',n:'Rat',cls:'warrior',furN:'Fur',
   TP:[[0,.62,-.07,.052],[0,.6,-.15,.043],[0,.56,-.25,.035],[.008,.49,-.37,.029],[.02,.39,-.48,.025],[.035,.27,-.58,.021],[.05,.16,-.66,.018],[.065,.08,-.74,.015],[.08,.045,-.83,.012],[.1,.034,-.92,.01],[.12,.036,-1.0,.008],[.145,.05,-1.07,.006],[.17,.07,-1.12,.003]],
   tailCol:(m,C)=>m.i<1.2?C.FUR:m.i<1.8?mdMix(C.FUR,C.PINK,.5):Math.floor(m.i*2)%2?C.PINK:mdSh(C.PINK,.9),
   paw:{n:4,len:[.028,.033,.032,.026],claw:.011,spread:.0112},toes:{n:4,len:.045,claw:.018},
-  earRim:(k,c,t)=>brEarRim(BRD[1],k,c,t),
+  earRim:(k,c,t)=>brEarRim(BRD[1],k,c,t),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[1].EAR;k.p('head','sph2','c',c,s*(x+.006),y+.004,z-.006,.07,.078,.03,-.2,s*.55,s*.38)}),
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:.96,jaw:.82,top:1,len:.96,fwd:-.012};const H=P._H=mdHeadR(P);
     brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.55&&z>-.03)return C.BELLY;if(m.s<-.25&&z>.0)return C.FURL;if(m.s>.5&&z<.06)return C.FURD;return C.FUR});
     brJaw(B,D,.06,.165,C.BELLY,{h:.9});
@@ -41,26 +41,26 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
   shear:{spine:.1,chest:.2,neck:.22},crouch:[.18,.38],
   TR:[[1,1,1,.96,.94,.92,.95,.98,.96,.95,1.1,1.15],[1,1.02,1.02,1,.98,.95,.92,.92,.98,1,1.1,1.12],[1.02,1.02,1.02,1.02,1.02,1.02,1.02,1.02,1,1,1.1,1.12]],
   armK:[.9,.9,.86,.84,.86,.8],legK:[1.05,1.08,1,.9,.84,.76,.72],foot:{len:.82,w:.85,h:.8},
-  SN:[[-.1,1.16,.05,.05,.05],[-.07,1.172,.096,.09,.085],[-.03,1.18,.112,.1,.1],[.01,1.178,.115,.096,.104],[.045,1.168,.108,.08,.1],[.075,1.154,.084,.058,.08],[.095,1.142,.058,.04,.06],[.11,1.134,.04,.028,.042],[.12,1.13,.026,.018,.028]],
-  EYEP:[.06,1.182,.06],EAR:[.07,1.275,-.04],earR:.04,muzzleZ:.1,hoodZ:.035,crownZ:-.04,hatZ:-.05,
+  SN:[[-.1,1.158,.045,.045,.045],[-.07,1.17,.09,.082,.08],[-.035,1.178,.108,.088,.094],[0,1.178,.116,.08,.1],[.03,1.172,.118,.07,.098],[.055,1.162,.1,.058,.09],[.072,1.152,.064,.046,.07],[.095,1.146,.057,.04,.062],[.115,1.141,.046,.032,.05],[.132,1.138,.03,.022,.03]],
+  EYEP:[.06,1.18,.058],EAR:[.076,1.268,-.045],earR:.042,muzzleZ:.11,hoodZ:.03,crownZ:-.04,hatZ:-.05,
   TP:[[0,.6,-.06,.038],[0,.58,-.16,.036],[0,.55,-.27,.034],[0,.52,-.38,.032],[.01,.5,-.49,.03],[.02,.51,-.59,.029],[.03,.55,-.68,.028],[.04,.62,-.76,.027],[.05,.7,-.82,.025],[.06,.78,-.86,.022],[.07,.86,-.88,.018],[.08,.93,-.89,.012],[.09,.98,-.89,.006]],
   tailCol:(m,C)=>m.i>10?C.FURD:Math.floor(m.i)%3==2?C.FURD:C.FUR,tailSway:[.08,.08,1.2,2.4],
   paw:{n:4,len:[.02,.022,.022,.019],claw:.006,pad:true,curl:1.2,spread:.011,colOf:C=>C.FUR},handCol:C=>C.FUR,
   toes:{n:4,len:.03,claw:.008,pad:true,dew:false,colOf:C=>C.FUR},
-  earRim:(k,c,t)=>brEarRim(BRD[2],k,c,t,[1.1,1.3,1]),
+  earRim:(k,c,t)=>brEarRim(BRD[2],k,c,t,[1.1,1.3,1]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[2].EAR;k.p('head','cone4','c',c,s*(x+.004),y+.004,z-.004,.046,.1,.036,-.12,s*.1,-s*.26)}),
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:.9,fwd:-.01};const H=P._H=mdHeadR(P);
-    brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.5&&z>.0)return C.BELLY;if(m.s<-.2&&z>.055)return C.FURL;
-      if(m.s>.6&&z<.03&&z>-.08&&Math.abs(Math.sin(z*90))>.7)return C.FURD; // forehead stripes
+    brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.45&&z>-.01)return C.BELLY;if(m.s<-.15&&z>.065)return C.FURL;
+      if(m.s>.55&&z<.02&&z>-.085&&Math.abs(Math.sin(z*90))>.7)return C.FURD; // forehead stripes
       return C.FUR});
-    brJaw(B,D,.055,.118,C.BELLY,{h:.85,w:.95});
-    // small triangular nose, the mouth's inverted Y painted under it
-    const tip=D.SN[D.SN.length-1];k.p('head','cone4','c',C.PINK,0,tip[1]+.002,tip[0]+.006,.011,.008,.008,Math.PI*.5);
-    k.p('head','box','c',C.MOUTH,0,tip[1]-.012,tip[0]+.0,.0025,.012,.003);
-    brEyes(k,D,{sz:1.25,fw:.55,socket:mdSh(C.FURD,.9),white:0xe8e4dc,pupil:[.0035,.013]});
-    brWhiskers(k,D,.09,1.135,3,.17);
+    brJaw(B,D,.07,.128,C.BELLY,{h:.8,w:.92});
+    // cheek tufts, a small triangular nose, the mouth's inverted Y painted under it
+    const tip=D.SN[D.SN.length-1];k.p('head','cone4','c',C.PINK,0,tip[1]+.003,tip[0]+.006,.012,.009,.008,Math.PI*.5);
+    k.p('head','box','c',C.MOUTH,0,tip[1]-.013,tip[0]-.002,.0025,.012,.003);
+    brEyes(k,D,{sz:1.2,al:1.25,tilt:.3,fw:.4,inset:.003,browY:.022,socket:mdSh(C.FURD,.9),white:0xe8e4dc,pupil:[.0035,.014],brow:C.FURD});
+    brWhiskers(k,D,.095,1.14,3,.17);
     // tall pointed ears, pink inside, dark tips
-    [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.032,.08,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.006,z+.009,.02,.058,.009,-.12,s*.1,-s*.26);
-      k.p('head','cone4','c',C.FURD,s*(x+.011),y+.034,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
+    [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.036,.09,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.008,z+.009,.022,.064,.009,-.12,s*.1,-s*.26);
+      k.p('head','cone4','c',C.FURD,s*(x+.013),y+.04,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
     mdKit(B,k);return H}});
 // ======================================================== 3 · FROG (Mage) ========================================================
 // A squat frog: a wide flat head with bulging eyes on top, a wide mouth, a pale throat; smooth spotted hide, no tail, no ears;
@@ -72,9 +72,9 @@ brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
   shear:{spine:.12,chest:.28,neck:.3},crouch:[.5,.9],
   TR:[[1.15,1.2,1.22,1.22,1.18,1.08,1,1,.98,1.3,1.4,1.4],[1.1,1.25,1.3,1.35,1.3,1.15,1,.95,1,1.3,1.4,1.4],[1.05,1.1,1.12,1.12,1.1,1.05,1,1,1,1.2,1.3,1.3]],
   armK:[1,1,.96,.9,.9,.85],legK:[1.1,1.15,1.05,.95,.92,.88,.85],foot:{len:1.35,w:1,h:.7},
-  SN:[[-.1,1.13,.07,.04,.05],[-.06,1.136,.12,.055,.07],[-.02,1.14,.14,.06,.08],[.02,1.138,.146,.058,.085],[.06,1.132,.142,.052,.085],[.1,1.124,.126,.045,.075],[.14,1.116,.1,.038,.06],[.17,1.11,.07,.03,.045],[.19,1.108,.04,.02,.03]],
-  EYEP:[.08,1.192,.0],EAR:null,muzzleZ:.15,hoodZ:.055,crownZ:-.07,hatZ:-.08,bandY:1.17,bandZ:-.03,
-  topW:m=>{const dx=Math.abs(m.x)-.08,dy=m.y-1.192,dz=m.z;return dx*dx+dy*dy+dz*dz<.046*.046},
+  SN:[[-.125,1.095,.07,.045,.04],[-.095,1.118,.118,.05,.065],[-.055,1.13,.148,.048,.08],[-.015,1.133,.158,.045,.085],[.025,1.13,.152,.042,.085],[.065,1.125,.14,.038,.08],[.105,1.118,.12,.034,.07],[.145,1.113,.092,.03,.055],[.185,1.109,.06,.024,.04],[.22,1.106,.03,.016,.025]],
+  EYEP:[.108,1.178,-.012],EAR:null,muzzleZ:.16,hoodZ:-.03,crownZ:-.08,hatZ:-.1,bandY:1.16,bandZ:-.04,
+  topW:m=>{const dx=Math.abs(m.x)-.108,dy=m.y-1.178,dz=m.z+.012;return dx*dx+dy*dy+dz*dz<.054*.054},
   eyeW:m=>false,
   TP:null,paw:{n:4,len:[.04,.046,.046,.038],rad:1.15,pad:true,web:true,curl:.5,spread:.013,palm:1.15,plen:1.1,thumb:false,colOf:C=>C.FUR,padColOf:C=>C.FURL},handCol:C=>C.FUR,
   toes:{n:5,len:.055,claw:0,web:true,pad:true,dew:false,w:1.1,spread:1.2,colOf:C=>C.FUR,padColOf:C=>C.FURL},
@@ -83,16 +83,36 @@ brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
     P.paint.leg=(m,s)=>m.s>.5&&m.r.part=='thigh'?mdMix(C.FUR,C.BELLY,.5):spot(m)?C.FURD:C.FUR;P.paint.fore=m=>spot(m)?C.FURD:C.FUR},
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1.3,jaw:1.1,top:.8,len:1,fwd:0};const H=P._H=mdHeadR(P);
     const spot=m=>Math.sin(m.x*83+m.y*47)*Math.sin(m.z*71-m.y*39)>.7;
-    brSkull(B,D,m=>{const z=m.r.p[2];if(z>-.02&&m.s<.12&&m.s>-.12&&Math.abs(m.c)>.35)return C.MOUTH; // the wide mouth line round the sides
-      if(m.s<-.3)return C.BELLY;if(m.s>.4&&spot(m))return C.FURD;return C.FUR},{seg:16,capB:{dz:.004}});
-    // throat sac under the jaw, nostrils at the tip
-    k.p('head','sph2','c',C.BELLY,0,1.075,.03,.075,.038,.07);k.P[k.P.length-1].w=[['head',.6],['neck',.4]];
-    const tip=D.SN[D.SN.length-1];[-1,1].forEach(s=>k.p('head','box','c',C.NOSE,s*.014,tip[1]+.012,tip[0]+.01,.005,.003,.004));
-    // bulging eyes on top: an eyelid ridge, the gold eye, a horizontal pupil, a highlight; a tympanum disc behind each
-    [-1,1].forEach(s=>{const [x,y,z]=D.EYEP;k.p('head','sph2','c',C.FURD,s*x,y-.012,z,.047,.036,.047);k.p('head','sph2','c',C.EYE,s*x,y,z,.04,.038,.04);
-      k.p('head','box','c',0x080606,s*(x+.012),y+.004,z+.03,.02,.006,.012,0,s*.5,0);k.p('head','box','c',0xf0ece0,s*(x+.016),y+.018,z+.024,.005,.004,.004);
-      const tz=-.055,tx=brSurfX(D,tz,1.142)+.002;k.p('head','cyl','c',mdSh(C.FUR,.8),s*tx,1.142,tz,.022,.004,.022,0,0,s*Math.PI/2);k.p('head','cyl','c',C.FURD,s*(tx+.002),1.142,tz,.012,.004,.012,0,0,s*Math.PI/2)});
-    mdKit(B,k);return H}});
+    brSkull(B,D,m=>{const z=m.r.p[2];if(z>-.07&&m.s<.07&&m.s>-.08&&Math.abs(m.c)>.3)return C.MOUTH; // the mouth line along the whole edge
+      if(m.s<-.3)return C.BELLY;if(m.s>.3&&m.s<.5&&z<.08&&z>-.1)return C.FURL; // the pale fold along the back
+      if(m.s>.4&&spot(m))return C.FURD;return C.FUR},{seg:16,capB:{dz:.004},noNeck:true});
+    // a throat sac under the jaw joining the chest, nostrils as two small bumps at the tip
+    k.p('head','sph2','c',C.BELLY,0,1.075,.02,.095,.045,.085);k.P[k.P.length-1].w=[['head',.5],['neck',.5]];
+    const tip=D.SN[D.SN.length-1];[-1,1].forEach(s=>{k.p('head','sph2','c',C.FUR,s*.014,tip[1]+.014,tip[0]+.004,.007,.005,.006);k.p('head','box','c',C.NOSE,s*.014,tip[1]+.017,tip[0]+.007,.004,.002,.003)});
+    // bulging eyes on the corners of the head: an eyelid ridge, the gold eye, a horizontal pupil, a highlight; a tympanum disc behind each
+    [-1,1].forEach(s=>{const [x,y,z]=D.EYEP;k.p('head','sph2','c',C.FURD,s*x,y-.014,z,.05,.036,.05);k.p('head','sph2','c',C.EYE,s*x,y,z,.044,.042,.044);
+      k.p('head','box','c',0x080606,s*(x+.014),y+.004,z+.03,.024,.006,.012,0,s*.6,0);k.p('head','box','c',0xf0ece0,s*(x+.02),y+.02,z+.022,.005,.004,.004);
+      const tz=-.075,tx=brSurfX(D,tz,1.128)+.002;k.p('head','cyl','c',mdSh(C.FUR,.8),s*tx,1.128,tz,.02,.004,.02,0,0,s*Math.PI/2);k.p('head','cyl','c',C.FURD,s*(tx+.002),1.128,tz,.011,.004,.011,0,0,s*Math.PI/2)});
+    mdKit(B,k);return H},
+  // the frog mage's head pieces: no brims across the eyes — soft caps worn far back on the crown, floating arcane halos,
+  // cowls that drape from behind the eyes
+  helmSet:{cloth:X=>{const {k,st,M,A,G,at,top,hood,band,z0}=X,D=BRD[3],dk=mdSh(M,.75);
+    // a slouch cap on the back of the crown behind the eyes, bending backward to a point
+    const cap=(col,len,wide)=>{const zb=-.095,y0=top(zb)+.004,q=at(zb),R=[[0,y0-.004,zb,q.rx*.98*(wide||1),.065],[0,y0+.05,zb-.02,q.rx*.86,.058],[0,y0+.1*len,zb-.07*len,.06,.045],[0,y0+.14*len,zb-.14*len,.034,.028],[0,y0+.15*len,zb-.21*len,.014,.012],[0,y0+.14*len,zb-.26*len,.004,.004]];
+      mdLoft(X.B,R.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],f:r[4],b:r[4],w:[['head',1]]})),{seg:12,t:'c',capB:true,col:m=>m.i<.6?mdSh(col,.85):col});
+      band(zb+.01,.014,A,'c')};
+    // a floating halo above the crown: a flat ring, crystals on it, a gem at the front
+    const halo=(r,h,n,gem)=>{const z=-.065,y=top(z)+.028+h;k.p('head','ring','m',A,0,y,z,r,.05,r);
+      for(let i=0;i<n;i++){const ang=i/n*Math.PI*2;k.p('head','oct',G?'g':'m',G||A,Math.sin(ang)*r,y+.012+(i==0?.012:0),z+Math.cos(ang)*r,.012,.022+(i==0?.012:0),.01)}
+      if(gem)k.p('head','oct',G?'g':'m',G||X.d.gem||A,0,y,z+r,.016,.022,.014)};
+    if(st=='linen')hood(.028,M);
+    else if(st=='hat'){cap(M,1,1);if(G)k.p('head','oct','g',G,0,top(-.095)+.02,-.07,.012)}
+    else if(st=='witch'){cap(dk,1.2,1.1);const zb=-.1,y=top(zb)+.012;k.p('head','cyl','c',mdSh(dk,.9),0,y,zb-.02,.16,.012,.14,-.25)}
+    else if(st=='circlet')halo(.1,0,0,1);
+    else if(st=='diadem')halo(.105,.01,3,1);
+    else if(st=='crown')halo(.115,.02,7,1);
+    else if(st=='tallcowl'){hood(.03,M,{tip:false});const q=at(-.08);k.L('head','c',M,[0,q.top+.03,-.08],[0,q.top+.2,-.16],.07,.004,7);band(-.07,.04,A,'c')}
+    else{/*star*/hood(.03,M,{tip:false});halo(.12,.03,5,0)}}}});
 // ======================================================== 4 · BADGER (Paladin) ========================================================
 // A stout badger: broad low body, short strong legs and arms, a wedge head with the white face and two black stripes through
 // the eyes, small round white-rimmed ears, a big black nose, heavy digging claws, a short bushy tail.
@@ -111,7 +131,7 @@ brDef(4,{key:'badger',n:'Badger',cls:'paladin',furN:'Fur',
   toes:{n:5,len:.035,claw:.028,dew:false,colOf:C=>C.FURD},
   paint(P,C){P.paint.torso=m=>m.s>.3?C.BELLY:m.s>-.2&&m.s<.3?C.FURD:Math.abs(m.c)<.15&&m.s<-.6?C.FURL:C.FUR;P.paint.torsoLo=m=>m.s>.3?C.BELLY:m.s>-.2?C.FURD:C.FUR;
     P.paint.leg=()=>C.FURD;P.paint.fore=()=>C.FURD;P.paint.sleeve=()=>C.FURD},
-  earRim:(k,c,t)=>brEarRim(BRD[4],k,c,t,[.9,.8,.9]),
+  earRim:(k,c,t)=>brEarRim(BRD[4],k,c,t,[.9,.8,.9]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[4].EAR;k.p('head','sph2','c',c,s*(x+.004),y+.002,z-.004,.046,.044,.03,-.2,s*.5,s*.3)}),
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:.95,len:1,fwd:-.01};const H=P._H=mdHeadR(P);
     // the badger mask: white face, a black stripe on each side running from the ear through the eye to the muzzle
     brSkull(B,D,m=>{const z=m.r.p[2],ang=Math.atan2(m.s,Math.abs(m.c));if(z<-.085)return ang<-.3?C.FURD:C.FUR;
@@ -137,7 +157,7 @@ brDef(5,{key:'weasel',n:'Weasel',cls:'ranger',furN:'Fur',
   tailCol:(m,C)=>m.i>8.3?0x1a1612:m.s<-.4?C.FURL:C.FUR,tailSway:[.07,.1,1.5,3],
   paw:{n:5,len:[.016,.02,.021,.02,.016],claw:.006,pad:true,spread:.009,thumb:false,palm:.9,colOf:C=>C.FUR,padColOf:C=>C.PINK},handCol:C=>C.FUR,
   toes:{n:5,len:.028,claw:.008,dew:false,colOf:C=>C.FUR,padColOf:C=>C.PINK},
-  earRim:(k,c,t)=>brEarRim(BRD[5],k,c,t,[.9,.8,.9]),
+  earRim:(k,c,t)=>brEarRim(BRD[5],k,c,t,[.9,.8,.9]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[5].EAR;k.p('head','sph2','c',c,s*(x+.004),y+.002,z-.004,.042,.04,.028,-.25,s*.5,s*.35)}),
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:.9,jaw:.85,top:1,len:.95,fwd:-.01};const H=P._H=mdHeadR(P);
     brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.35&&z>-.05)return C.BELLY;if(m.s<-.1&&z>.07)return C.FURL;if(m.s>.55&&z<.0)return C.FURD;return C.FUR});
     brJaw(B,D,.06,.145,C.BELLY,{h:.85,w:.95});

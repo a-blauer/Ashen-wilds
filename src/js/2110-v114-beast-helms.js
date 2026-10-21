@@ -27,19 +27,27 @@ function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a
   const horns=(c,sz,up)=>[-1,1].forEach(s=>{const q=at(crown+.02),x=q.rx-.004,y=q.top-.02,z=crown+.02,p1=[s*x,y,z],p2=[s*(x+.06*sz),y+.03*sz,z-.02],p3=[s*(x+.08*sz),y+.09*sz*(up||1),z-.04];k.L('head','m',c,p1,p2,.026*sz,.018*sz,6).L('head','m',mdSh(c,.8),p2,p3,.018*sz,.003,6)});
   const spikes=(c,n,h)=>{for(let i=0;i<n;i++){const ang=i/n*Math.PI*2,z=crown+.015+Math.cos(ang)*.07,q=at(z),x=Math.sin(ang)*q.rx*.85,y=q.yc+q.f*Math.sqrt(Math.max(.15,1-(x/q.rx)**2))+.012;k.p('head','cone4','m',c,x,y+.025*h,z,.014,.05*h*(i==0?1.6:1),.014)}};
   const gemF=(c,sz)=>{const z=crown+.04;k.p('head','oct',G?'g':'m',G||c,0,top(z)+.026,z+.05,.018*(sz||1),.022*(sz||1),.01,-.6)};
-  // cloth hood over the skull with ear openings, a hem, a drape over the neck and shoulders
-  const hood=(off,col,o)=>{o=o||{};brShell(B,D,off,z0-.005,hz,m=>!earW(m)&&!(m.z>hz-.05&&m.s<-.15),m=>m.z>hz-.01?mdSh(col,.8):col,'c',14);
-    mdLoft(B,[{p:[0,1.07,-.03],rx:.1+off,f:.075,b:.1+off,w:[['neck',.4],['head',.6]]},{p:[0,1.0,-.03],rx:.15+off,f:.1,b:.13+off,w:[['chest',.5],['neck',.5]]},{p:[0,.95,-.025],rx:.2+off,f:.13,b:.15+off,w:[['chest',1]]}],
-      {seg:12,t:'c',col:o.drape||mdSh(col,.88),keep:m=>!(m.s>.6&&m.y>.99)});
-    earRims(mdSh(col,.7),'c');
-    if(o.tip!==false){const q=at(S[0][0]);k.L('head','c',col,[0,q.top-.02,S[0][0]],[0,q.top-.08,S[0][0]-.09],.035,.006,5)}};
-  const muzzle=(c)=>{const o=.008,R=[0,.3,.65,1].map(t=>{const z=ez+.01+(mz-ez-.01)*t,q=at(z);return {p:[0,q.yc,z],rx:q.rx+o,f:q.f+o,b:q.b+o,w:[['head',1]]}});
-    mdLoft(B,R,{seg:12,ref:[0,1,0],keep:m=>!(D.topW&&D.topW(m))&&!(m.z<ez+.035&&m.s>.3),col:m=>m.i>2.3||m.i<.7?mdSh(c,.55):mdMix(c,0xe8e0d0,.12)})};
+  // cloth hood: a big loose shell round the skull (the ears inside their own cloth pockets), a rolled front edge framing
+  // the face, a soft peak at the back and a wide drape over the neck and shoulders
+  const hood=(off,col,o)=>{o=o||{};const big=off+.03,zf=hz+.012,dk=mdSh(col,.8);
+    brShell(B,D,big,z0-.02,zf,m=>!(m.z>zf-.07&&m.s<-.02)&&!earW(m),m=>m.z>zf-.014?dk:m.s<-.3?dk:col,'c',18);
+    brShell(B,D,big+.008,zf-.014,zf+.004,m=>m.s>-.02,mdSh(col,.9),'c',18);
+    if(D.earPocket)D.earPocket(k,col,big);
+    mdLoft(B,[{p:[0,1.07,-.04],rx:.12+big,f:.1+big*.6,b:.12+big,w:[['neck',.4],['head',.6]]},{p:[0,.99,-.04],rx:.19+off,f:.14,b:.17+off,w:[['chest',.5],['neck',.5]]},{p:[0,.91,-.03],rx:.25+off,f:.17,b:.21+off,w:[['chest',1]]}],
+      {seg:14,t:'c',col:o.drape||mdSh(col,.88),keep:m=>!(m.s>.45&&m.y>.985)});
+    if(o.tip!==false){const q=at(z0),zb=z0-.01;k.L('head','c',col,[0,q.top+big-.03,zb+.02],[0,q.top+big-.07,zb-.1],.05,.012,6).L('head','c',dk,[0,q.top+big-.07,zb-.1],[0,q.top+big-.11,zb-.17],.012,.003,5)}};
+  // lower-face cloth mask: a thin shell under the eyes from the cheeks to just behind the nose (the nose tip stays out),
+  // tied behind the head with a band and two tails
+  const muzzle=(c)=>{const za=ez-.004,zb=mz+.008,dk=mdSh(c,.72);
+    brShell(B,D,.014,za,zb,m=>(m.z>ez+.03?m.s<.62:m.s<.15)&&!(D.topW&&D.topW(m)),m=>m.z>zb-.016||m.z<za+.012?dk:c,'c',18);
+    brShell(B,D,.008,z0+.01,za,m=>m.s<.32&&m.s>-.2&&!earW(m),dk,'c',14);
+    const q=at(z0+.012),y=q.yc+.01,z=z0-.004;[-1,1].forEach(s=>k.L('head','c',dk,[s*.02,y,z],[s*.045,y-.11,z-.05],.014,.004,4))};
   const strap=(c,t)=>band(crown+.02,.012,c,t);
   const goggles=(c,glass)=>{[-1,1].forEach(s=>{const [x,y,z]=D.EYEP,ex=brSurfX(D,z,y)+.008,ry=s*Math.atan2(1,-at(z).slope);k.p('head','cyl','m',c,s*ex,y,z,.02,.012,.02,0,ry,Math.PI/2);
     k.p('head','cyl',G?'g':'c',G||glass,s*(ex+.006),y,z,.016,.004,.016,0,ry,Math.PI/2)});strap(mdSh(c,.7),'c')};
   const frontZ=yb=>{let fz=S[0][0];S.forEach(q=>{if(q[1]+q[3]>yb)fz=q[0]});return fz};
   if(D.helmPre)D.helmPre(k,d);
+  if(D.helmSet&&D.helmSet[a]){D.helmSet[a]({B,P,d,k,st,M,A,G,at,top,hood,band,crest,gemF,muzzle,strap,crown,hz,z0,tipZ,frontZ});mdKit(B,k);return}
   if(a=='heavy'){
     if(st=='nasal'){dome(.022,mz-.02);band(crown+.04,.026,A);nasal(A);earRims(A)}
     else if(st=='horned'){dome(.022,mz-.02);band(crown+.04,.026,A);nasal(A);earRims(A);horns(0xd8ccb0,1)}

@@ -75,18 +75,20 @@ function brSkullAt(D,z){const S=D.SN;let i=0;while(i<S.length-2&&S[i+1][0]<z)i++
 function brSurfX(D,z,y){const q=brSkullAt(D,z),dy=y-q.yc,r=dy>0?q.f:q.b;return q.rx*Math.sqrt(Math.max(0,1-(dy/r)**2))}
 // the skull loft itself (neck ring into the skull, then the rings); col(m) paints it
 function brSkull(B,D,col,o){o=o||{};const hw=[['head',1]],S=D.SN,n0=S[0];
-  mdLoft(B,[{p:[0,1.03,-.012],rx:.068,f:.067,b:.065,w:[['neck',.7],['head',.3]]},{p:[0,1.07,-.016],rx:.07,f:.068,b:.067,w:[['neck',.3],['head',.7]]},{p:[0,1.105,-.02],rx:.07,f:.066,b:.07,w:hw}],
+  if(!o.noNeck)mdLoft(B,[{p:[0,1.03,-.012],rx:.068,f:.067,b:.065,w:[['neck',.7],['head',.3]]},{p:[0,1.07,-.016],rx:.07,f:.068,b:.067,w:[['neck',.3],['head',.7]]},{p:[0,1.105,-.02],rx:.07,f:.066,b:.07,w:hw}],
     {seg:12,col:m=>m.s>.45?BR.C.BELLY:BR.C.FUR});
   mdLoft(B,S.map(q=>({p:[0,q[1],q[0]],rx:q[2],f:q[3],b:q[4],w:hw})),{seg:o.seg||14,ref:[0,1,0],capA:true,capB:o.capB||{dz:.006},col})}
 // eyes on the skull surface: dark socket, glossy eye, coloured iris, highlight (fw: how much the eyes face forward)
 function brEyes(k,D,o){const C=BR.C,[ex0,ey,ez]=D.EYEP,sz=o.sz||1,fw=o.fw==null?1:o.fw;
-  [-1,1].forEach(s=>{const ex=brSurfX(D,ez,ey)-.004,ry=s*Math.atan2(1,-brSkullAt(D,ez).slope)*fw;
-    k.p('head','sph2','c',o.socket||mdSh(C.FURD,.8),s*(ex-.002),ey,ez,.021*sz,.017*sz,.02*sz,0,ry,0);
-    k.p('head','sph2','c',o.white||0x070606,s*(ex+.003),ey,ez+.001,.0165*sz,.0145*sz,.016*sz,0,ry,0);
-    k.p('head',o.slit?'box':'sph2',o.glow?'g':'c',C.EYE,s*(ex+(o.slit?.0175:.012)),ey+(o.slit?.005:0),ez+(o.slit?.006:.004),o.slit?.004:.009*sz,o.slit?.004:.009*sz,o.slit?.003:.007*sz,0,ry,0);
-    if(o.pupil)k.p('head','box','c',0x060404,s*(ex+.019),ey,ez+.005,o.pupil[0],o.pupil[1],.002,0,ry,0);
-    k.p('head','box','c',0xe8e4dc,s*(ex+.016),ey+.007,ez+.002,.0025,.0025,.002,0,ry,0);
-    if(o.brow!==false)k.p('head','sph2','c',o.brow||C.FURD,s*(ex-.002),ey+.017*sz,ez-.002,.024*sz,.008,.02*sz,0,ry,s*-.25)})}
+  const al=o.al||1,tl=o.tilt||0;
+  [-1,1].forEach(s=>{const ex=brSurfX(D,ez,ey)-.004,ry=s*Math.atan2(1,-brSkullAt(D,ez).slope)*fw,rz=s*tl;
+    const ins=(o.inset||0);
+    k.p('head','sph2','c',o.socket||mdSh(C.FURD,.8),s*(ex-.002-ins),ey,ez,.021*sz,.017*sz,.02*sz*al,0,ry,rz);
+    k.p('head','sph2','c',o.white||0x070606,s*(ex+.003-ins),ey,ez+.001,.0165*sz,.0145*sz,.016*sz*al,0,ry,rz);
+    k.p('head',o.slit?'box':'sph2',o.glow?'g':'c',C.EYE,s*(ex+(o.slit?.0175:o.pupil?.015:.012)-ins),ey+(o.slit?.005:0),ez+(o.slit?.006:.004),o.slit?.004:.0095*sz,o.slit?.004:.0095*sz,o.slit?.003:.0075*sz*al,0,ry,rz);
+    if(o.pupil)k.p('head','box','c',0x060404,s*(ex+.023-ins),ey,ez+.005,o.pupil[0],o.pupil[1],.002,0,ry,rz);
+    k.p('head','box','c',0xe8e4dc,s*(ex+.016-ins),ey+.007,ez+.002,.0025,.0025,.002,0,ry,rz);
+    if(o.brow!==false)k.p('head','sph2','c',o.brow||C.FURD,s*(ex-.002-ins),ey+(o.browY||.017)*sz,ez-.002,.024*sz,.008,.02*sz*al,0,ry,s*-.25+rz)})}
 // whiskers from the whisker pads at z, y: n per side
 function brWhiskers(k,D,z,y,n,len,col){[-1,1].forEach(s=>{const wx=brSurfX(D,z,y);
   for(let i=0;i<n;i++)k.L('head','c',col||0x2a2420,[s*(wx-.003),y+i*.005-.004,z-i*.006],[s*(wx+len*.55-i*.008),y+(i-1)*.022*len/.12,z-.04*len/.12-i*.025],.0015,.0005,3)})}
