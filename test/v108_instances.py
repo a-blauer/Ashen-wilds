@@ -53,7 +53,7 @@ def s(pg):
     # treasure map in this instance
     T('treasure map',"()=>{const m=giveMap(pl.position);return m&&[m.r,m.k,rgAt(m.x,m.z),tmName(m)]}",lambda r:r and r[0]==0 and r[1]==1 and r[2]==1 and 'Kindlelight II' in r[3])
     # save + reload keeps the reached instances and the recall spot
-    T('save',"()=>{const q=curIns().path[100];toPos(q[0],q[1]);recallTown();saveGame&&saveGame();const s=JSON.parse(localStorage.getItem(SAVE_KEY));return [s.x2.insr,s.x2.inst&&s.x2.inst.r,s.x2.wl]}",lambda r:r[0][0]==1 and r[1]==1 and r[2]==108)
+    T('save',"()=>{const q=curIns().path[100];toPos(q[0],q[1]);recallTown();saveGame&&saveGame();const s=JSON.parse(localStorage.getItem(SAVE_KEY));return [s.x2.insr,s.x2.inst&&s.x2.inst.r,s.x2.wl]}",lambda r:r[0][0]==1 and r[1]==1 and r[2]==112)
     # III ends in the gateway to the den; the den has no roaming creatures, a way home at its entrance, and recall works there
     T('III gateway',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(0,2));toPos(g.x,g.z+1);const p=portalPrompt();return [p&&p.label,g.to.den]}",lambda r:r[0] and 'Den' in r[0] and r[1])
     T('into den',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(0,2));insArrive(g.to);insMark(g.to);rosterTick();const I=curIns();return [I.g,I.den,INSR[0],ROST.r,ROST.slots.length,RPORT.some(r=>r.k=='home'&&r.ig===I.g),zoneLv(I.en[0],I.en[1])]}",

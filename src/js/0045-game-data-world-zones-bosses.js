@@ -141,6 +141,7 @@ const BIOMES=[
  {n:'The Dirge',sp:'Boneling',x:420,y:336,t:4,gnd:[64,70,78],grs:[58,74,72],acc:[90,94,100],frs:[24,30,34],wat:[80,140,150],tree:['dead','dead','crystal'],pr:['grave','grave','bones','pillar','mush'],den:[.7,.9,.4,.4],tc:[0x2a2a30,0x3a4a50,0x4a5a64],amp:.5},
  {n:'The Citadel',sp:'Batwing',x:630,y:336,t:5,gnd:[66,58,62],grs:[90,30,36],acc:[96,88,92],frs:[30,24,28],wat:[90,20,30],tree:['dead'],pr:['pillar','pillar','bones'],den:[0,.6,0,0],tc:[0x2a1a1a,0x3a2028,0x4a2a30],amp:.08}
 ];
+if(typeof v112Biomes=='function')v112Biomes(); // v112: one biome per themed field instance (II, III; 1981)
 
 const MAP=(()=>{
   let sd=11;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,m=[],bio=[];
@@ -217,6 +218,7 @@ const MAP=(()=>{
    TWN100_PG.forEach((p,i)=>{const b=PMAP[i].bi;for(let y=Math.floor(p.y-p.r*1.5);y<=p.y+p.r*1.5;y++)for(let x=Math.floor(p.x-p.r*1.5);x<=p.x+p.r*1.5;x++){if(!m[y]||m[y][x]==='')continue;
      const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
      if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
+  if(typeof v112Map=='function')v112Map(m,bio,DW,props,stamp); // v112: the themed instances II and III get their own ground (1981)
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
   m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!INSL.some(p=>(p.wa&&Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16)||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
@@ -247,7 +249,8 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }else{
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
-      const dd=Math.max(0,d);h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
+      const dd=Math.max(0,d),hz=I.fld&&I.k&&typeof v112Ht=='function'?v112Ht(I,i,j,d,dd,MAP[ty][tx]):null; // v112: themed instances shape their own walls (1981)
+      if(hz!=null)h=hz;else h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
       (I.den?[[I.ba,Math.max(PM_DENR+3,22*DK),5*DK]]:I.tri?[[I.wa,19,5]]:[[I.ba,PM_GTR+2,5]]).forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
     }
     HF[(j+HPD)*HW+i+HPD]=h;

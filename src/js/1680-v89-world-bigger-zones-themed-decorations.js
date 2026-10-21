@@ -182,6 +182,8 @@ function wdDeco(){const T0=performance.now();
    [{k:'c_wall',w:'in',n:.5,c:[1,3],r:5},{k:'c_wall',w:'edge',n:1.4,c:[1,2],r:4},{k:'c_statue',w:'in',n:.3,c:[1,2],r:4},{k:'c_gargoyle',w:'edge',n:.6,c:[1,1],r:1},{k:'c_banner',w:'lane',n:5,c:[1,1],r:1},{k:'c_banner',w:'edge',n:1.2,c:[1,2],r:3},
     {k:'c_brazier',w:'lane',n:4,c:[1,1],r:1},{k:'c_rubble',w:'in',n:4,c:[1,3],r:4},{k:'c_rubble',w:'edge',n:7,c:[1,3],r:3},{k:'c_column',w:'in',n:.5,c:[1,3],r:5},{k:'c_column',w:'edge',n:1.2,c:[1,2],r:4},{k:'c_graves',w:'in',n:.9,c:[2,5],r:5},
     {k:'c_candela',w:'in',n:.6,c:[1,2],r:3},{k:'c_blood',w:'in',n:1.2,c:[1,2],r:3},{k:'c_coffin',w:'in',n:.4,c:[1,2],r:3}]];
+  // v112: the themed instances II and III bring their own decoration types and sets (1981 v112Deco)
+  const ZX=typeof v112Deco=='function'?v112Deco({T,def,F,M,cyl,box,ico,dod,cone,oct,tor,dome,disc,pln,deadTree,rockG,stump,logG,bonesRib,skull,pillarG,wallG,grave,crossG,fenceG,ironFence,reeds,fern,flowers,tallGrass,shrub,mushC,lilies,cairn,banner,brazier,flame,lanternPost,lanternGlow,statueG,mausoleum,coffin,archG,duneG,cartG,crystals,icicles,rubble,candles,candleGlow,candelabra,candelaGlow,rootsG,plain}):null;
   // ---------- placement ----------
   const DM=2.2,ZM=[1,1,1.3,1.4,1.5,1.9],DW=MAP.DW,out=[],col=new Set(),stats={zones:[],kinds:{}};let sd=89;
   const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
@@ -189,7 +191,7 @@ function wdDeco(){const T0=performance.now();
   const hsh=(x,y,s)=>{const k=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return k-Math.floor(k)},
     vn=(x,y,s)=>{const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);return (hsh(i,j,s)*(1-u)+hsh(i+1,j,s)*u)*(1-v)+(hsh(i,j+1,s)*(1-u)+hsh(i+1,j+1,s)*u)*v};
   // v106: placed per zone instance (r stays the zone: its decoration set Z[r] and density ZM[r])
-  INSL.forEach(I=>{const r=I.z,Z0=PMAP[r],p={x0:I.x0,y0:I.y0,path:I.path,br:I.br,ba:I.ba,wa:I.wa||[-1e5,-1e5],en:I.en,bi:Z0.bi,n:I.n};
+  INSL.forEach(I=>{const r=I.z,Z0=PMAP[r],ZS=ZX&&ZX.Z[I.g],sd0=sd;if(ZS)sd=ZX.seed[I.g];const p={x0:I.x0,y0:I.y0,path:I.path,br:I.br,ba:I.ba,wa:I.wa||[-1e5,-1e5],en:I.en,bi:Z0.bi,n:I.n};
     const x0=p.x0,y0=p.y0,w=I.w,h=I.h,RD=new Float32Array(w*h).fill(99);
     // distance to the road centre line (and the side branches)
     const st=(cx,cy,R)=>{for(let y=Math.max(y0,Math.floor(cy-R));y<=Math.min(y0+h-1,cy+R);y++)for(let x=Math.max(x0,Math.floor(cx-R));x<=Math.min(x0+w-1,cx+R);x++){const d=Math.hypot(x-cx,y-cy),k=(y-y0)*w+x-x0;if(d<RD[k])RD[k]=d}};
@@ -224,8 +226,8 @@ function wdDeco(){const T0=performance.now();
         tl.forEach(k=>col.add(k));big.push([x,y,R0]);it.col=R0;it.tl=tl}
       else if(S.cast&&!S.near&&!S.flat){if(!free(x,y,.6*s))return false;big.push([x,y,.6*s-2.2])}
       out.push(it);zstat[S.k]=(zstat[S.k]||0)+1;zn++;return true};
-    Z[r].forEach((E,ei)=>{const S=T[E.k],L=cls[E.w];if(!L||!L.length)return;
-      const want=Math.round(L.length/1000*E.n*(E.w=='in'||E.w=='edge'||E.w=='bank'?DM*ZM[r]:1));let got=0,tries=0;
+    (ZS||Z[r]).forEach((E,ei)=>{const S=T[E.k],L=cls[E.w];if(!L||!L.length)return;
+      const want=Math.round(L.length/1000*E.n*(E.w=='in'||E.w=='edge'||E.w=='bank'?DM*(ZS?ZX.ZM[I.g]:ZM[r]):1));let got=0,tries=0;
       while(got<want&&tries++<want*12){const k=L[Math.floor(rnd()*L.length)],cx=k%W,cy=Math.floor(k/W);
         // density varies across the zone: clusters are rare where the noise is low
         const nz=vn(cx/38,cy/38,r*7+ei);if(rnd()>.15+1.3*nz*nz)continue;
@@ -243,7 +245,8 @@ function wdDeco(){const T0=performance.now();
           if(!away(x,y,0))continue;
           if(place(S,x,y,rnd()*6.283,ri(S.s[0],S.s[1]),E.w=='bank'))got++}}
       (stats.dbg=stats.dbg||[]).push([r,E.k,E.w,L.length,want,got])});
-    stats.zones.push(zn);stats[p.n]=zstat});
+    stats.zones.push(zn);stats[p.n]=zstat;if(ZS)sd=sd0});
+  if(ZX&&ZX.post)ZX.post(out,col);
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
