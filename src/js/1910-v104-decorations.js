@@ -16,10 +16,11 @@ var DECO103=[
     const F=W.F;[-1,1].forEach(s=>DECO103_WALLZ.forEach((z,i)=>{if(z>F.SZ-2)return;const t=W.top(s*F.WX,z);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceX(s,z,y-.5);if(f==null)return;const x=f-s*.04;
       k.L('m',TWC.iron,[x,y+.05,z],[x+s*.05,y+.05,z],.025,'box',0);kdBanner(k,x,y,z,-s*Math.PI/2,i%2?ban:0x2a2a3a,.62,h)}));
     [-30,-22,-15,-8,8,15,22,30].forEach((x,i)=>{if(Math.abs(x)>F.WX-3)return;const t=W.top(x,F.SZ);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),f=W.faceZ(x,y-.5);if(f==null)return;kdBanner(k,x,y,f-.04,Math.PI,i%2?ban:0x2a2a3a,.62,h)})}},
- {k:'garland',i:'🏮',n:'Street Lanterns',g:450,d:'Strings of paper lanterns across the side streets between the rows.',
+ {k:'garland',i:'🏮',n:'Street Lanterns',g:450,d:'Strings of paper lanterns across the Gate Avenue between the rows.',
+  // v112: the rows line the Gate Avenue now (1860): one string across the avenue at every gap between two rows, posts at its edges
   spf:F=>[18.35,25.85,33.35,40.85].filter(z=>z<F.SZ-3).map(z=>[z]),
-  b(k,D){D.sp.forEach(([z])=>[-1,1].forEach(q=>{const a=q*3.85,b=q*9.75,m=(a+b)/2;[a,b].forEach(x=>dcPost103(k,x,z,3.4));k.L('m',0x2a2420,[a,3.35,z],[m,3.05,z],.012,'cyl6',0);k.L('m',0x2a2420,[m,3.05,z],[b,3.35,z],.012,'cyl6',0);
-    for(let i=-2;i<=2;i++){const x=m+i*1.0,y=3.05+Math.abs(i)*.1-.25;k.p('g',[0xffb050,0xff7a5a,0xffe08a,0xc8a0ff,0xff9a40][(i+2)%5],'oct',x,y,z,.14,.2,.14)}}))}},
+  b(k,D){D.sp.forEach(([z])=>{const a=-3.3,b=3.3;[a,b].forEach(x=>dcPost103(k,x,z,3.6));k.L('m',0x2a2420,[a,3.55,z],[0,3.15,z],.012,'cyl6',0);k.L('m',0x2a2420,[0,3.15,z],[b,3.55,z],.012,'cyl6',0);
+    for(let i=-3;i<=3;i++){const x=i*.95,y=3.15+Math.abs(i)*.12-.25;k.p('g',[0xffb050,0xff7a5a,0xffe08a,0xc8a0ff,0xff9a40][(i+3)%5],'oct',x,y,z,.14,.2,.14)}})}},
  {k:'planter',i:'🌸',n:'Flower Planters',g:250,d:'Stone planters full of night-blooming flowers round the plaza.',
   sp:[[-17.6,-3.2],[17.4,-11.4],[-11.5,2.5],[11.5,2.5],[0,-5.8]],
   b(k,D){D.sp.forEach(([x,z],i)=>k.at(x,0,z,()=>{twStones(k,TWC.stone,-.55,0,.55,0,0,.42,.5,.3);k.as('dirt',()=>k.p('c',0x3a2a1a,'box',0,.44,0,1.0,.04,.4,0,0,0,0));

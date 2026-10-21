@@ -212,8 +212,8 @@ function czGate103(){const T=TOWNS[0],F=typeof kf109=='function'?kf109():null;re
 function czSpawn103(){const T=TOWNS[0];czClear103();CZ103.on=true;HS103.cit.forEach((c,i)=>{const d=czDoor103(c);if(!d)return;const g=czModel103(c);g.position.set(d[0],T.ph,d[1]);scene.add(g);
     CZ103.live.push({c,g,i,mode:'',path:null,d:0,wait:1+Math.random()*4,ph:Math.random()*6,ry:0,seed:i*7+3})})}
 function czRand103(o){o.seed=(o.seed*16807+11)%2147483647;return o.seed/2147483647}
-// a few street spots an idle citizen may stroll to (lot doors and the plaza)
-function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],[12,-2],[0,6],[-17,4],[17,4],[-6.8,20],[6.8,27],[-6.8,35],[6.8,42]].forEach(([x,z])=>L.push([T.cx+x,T.cy+z]));
+// a few street spots an idle citizen may stroll to (lot doors and the plaza); v112: the Gate Avenue and the open courts beside the rows (1860)
+function czSpots103(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l));[[-12,-2],[12,-2],[0,6],[-17,4],[17,4],[-1.8,20],[1.8,27],[-1.8,35],[1.8,42],[14,13.4],[-14,20.9],[14,28.4],[-14,35.9],[14,43.4]].forEach(([x,z])=>L.push([T.cx+x,T.cy+z]));
   return typeof kfIn109=='function'?L.filter(([x,z])=>kfIn109(x-T.cx,z-T.cy,1)):L} // v109: only spots inside the walls
 function czStep103(o,dt,now){const g=o.g,c=o.c,T=TOWNS[0],door=czDoor103(c);if(!door){g.visible=false;return}
   const sp=1.55,u=g.userData;let walk=false;

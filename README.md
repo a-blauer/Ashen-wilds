@@ -82,7 +82,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - Design: dark fantasy, no cutesy models. Hatchable creatures are "companions" (never "Eudemon").
   Grade C is the norm (S and F ≈2% each). Shops in Duskhold (except the Trading Post) are built at the Stronghold Steward.
 - **Kingdom lots (v103, v109)**: every shop, upgrade structure (not Bastion Walls) and house stands on one of the 20 lots in
-  `LOT103` (v109 layout: NW NE NM CW CE round the fountain, then rows `S1W S1M S1E` .. `S5W S5M S5E` south of the plaza, 7.5 tiles apart;
+  `LOT103` (v109 layout: NW NE NM CW CE round the fountain, then rows 1..5 south of the plaza, 7.5 tiles apart. Since v112 each row is `SkW`/`SkE` at x ∓7 facing the gate avenue and `SkM`
+  at x −14 (odd rows) / +14 (even rows) facing north onto the open court left by the row before; no lot square comes within 3.5 of x=0
+  (`KF109_AVE`, `kfAve109`), so a straight avenue runs from the plaza to the south gate at every stage and turn;
   `l.st` = the stage that opens it). The player picks the lot when building and can move it for free. `SH.pos[key]` = lot id (key: shop key,
   `u:`+upgrade, `h:`+house index), saved as `x2.kpos`; a saved id that is not in the table (older layouts) is dropped and the building gets
   the first free lot. Shop footprints are solid map tiles marked through `lotMark103` (counted, so they can overlap safely);

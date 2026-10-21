@@ -90,7 +90,7 @@ function TWN100_fixPos(x,z){if(x==null){x=pl.position.x;z=pl.position.z}if(regio
 // v109: the dressing (lantern posts, crates and barrels, benches) follows the walls: TWN100_LP and TWN100_wardK(k,F) take the
 // kingdom's current size, and TWN100_ward() (1960) rebakes it whenever the walls move.
 var TWN100_LP=[];
-function TWN100_lpFor(F){const L=[];[-1,1].forEach(s=>[-14.5,7.5,18.5,29.5,40.5].forEach(z=>{if(z<F.SZ-2.5)L.push([s*(F.WX-1.1),z])}));L.push([-2.6,F.SZ-2.4],[2.6,F.SZ-2.4]);return L}
+function TWN100_lpFor(F){const L=[];[-1,1].forEach(s=>[-14.5,7.5,18.5,29.5,40.5].forEach(z=>{if(z<F.SZ-2.5)L.push([s*(F.WX-1.1),z])}));L.push([-3.3,F.SZ-2.4],[3.3,F.SZ-2.4]);return L} // v112: the gate pair stands at the edges of the Gate Avenue (|x| 3.5), not in it
 var TWN100_WD={crate:[[-17.6,-11.2,0],[17.7,-11,1]],bench:[-6.6,6.6],benchZ:9.3};
 function TWN100_wardK(k,F){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
       k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);

@@ -134,7 +134,7 @@ def s(pg):
               const rc=new THREE.Raycaster(),pts=[];
               DECO103.forEach(D=>{if(D.wall)return;(D.sp||[]).forEach(q=>pts.push([D.k,q[0],q[1],.3]))});
               const F=kf109();pts.push(['statue',0,5.6,.75],['well',-17.4,2,.9],['shrine',14.6,6.4,.6],['gatepoles',-4.3,F.SZ-1.8,.15],['gatepoles',4.3,F.SZ-1.8,.15],['mosaic',0,9.6,1.2]); // v109 spots
-              [18.35,25.85,33.35,40.85].filter(z=>z<F.SZ-3).forEach(z=>[-9.75,-3.85,3.85,9.75].forEach(x=>pts.push(['garland',x,z,.1])));
+              [18.35,25.85,33.35,40.85].filter(z=>z<F.SZ-3).forEach(z=>[-3.3,3.3].forEach(x=>pts.push(['garland',x,z,.1]))); // v112: across the Gate Avenue
               for(let i=0;i<8;i++){const a=i/8*6.283+.2;pts.push(['crystals',Math.cos(a)*3.3,Math.sin(a)*3.3,.2])}
               const bad=[];pts.forEach(([k,x,z,r])=>{for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){rc.set(new THREE.Vector3(T.cx+x+dx,T.ph+12,T.cy+z+dz),new THREE.Vector3(0,-1,0));rc.far=13;
                 const h=rc.intersectObjects(G,true)[0];if(h&&h.point.y>T.ph+.3){bad.push(k+'@'+x+','+z+' y'+(h.point.y-T.ph).toFixed(1));break}}});

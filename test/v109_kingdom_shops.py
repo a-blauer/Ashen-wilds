@@ -60,8 +60,19 @@ def s(pg):
           return lots.some(l=>Math.abs(x-l.x)<3.5+r&&Math.abs(z-l.z)<3.5+r)||doors.some(([dx,dz])=>Math.hypot(T.cx+x-dx,T.cy+z-dz)<1.2+r)||!kfIn109(x,z,-.6)}).map(c=>[+(c.x-T.cx).toFixed(1),+(c.z-T.cy).toFixed(1)]);
         // fill every open lot (shops, upgrades, houses) and check the doors
         SHOPS.forEach(o=>SH.shop[o.k]=1);UPK103.forEach(k=>SH.lv[k]=1);shApply();let n=1+SHOPS.length+UPK103.length;while(LOT103.some(l=>lotFree103(l.id))&&HS103.h.length<HS103_MAX){const id=LOT103.find(l=>lotFree103(l.id)).id;gold=1e7;['wood','stone','fiber','iron','glowcap','bone','petals','crystal'].forEach(k=>mats[k]=9999);if(!hsBuy103(id))break}
-        lotSync103();out.push([st,F.SZ,lots.length,Object.keys(SH.pos).length,bad,kfDoors109()])}
-      return out}""",lambda r:all(not q[4] and q[5]==[] for q in r) and r[-1][2]==20)
+        lotSync103();const dr=kfDoors109();
+        // v112: the Gate Avenue stays open with everything built, whatever way every building is turned: a 6-tile band (|x|<=2.75)
+        // straight from the south edge of the plaza (z 10, the spawn is at 8.4) to the south wall, then through the gate (|x|<=0.9)
+        const ave=()=>{const b=[];for(let z=10;z<=F.SZ+2;z+=.25)for(let x=-2.75;x<=2.75;x+=.25){if(z>F.SZ-1.2&&Math.abs(x)>.9)continue;const X=T.cx+x,Z=T.cy+z;if(solid(X,Z)||tcHit(X,Z))b.push([x,+z.toFixed(2)])}return b.slice(0,6)};
+        const aveBad=[];const keys=Object.keys(SH.pos);for(let r=0;r<4;r++){keys.forEach(k=>{if(r)SH.rot[k]=r;else delete SH.rot[k]});lotSync103();const b=ave();if(b.length)aveBad.push([r,b])}
+        SH.rot={};lotSync103();out.push([st,F.SZ,lots.length,Object.keys(SH.pos).length,bad,dr,aveBad])}
+      return out}""",lambda r:all(not q[4] and q[5]==[] and not q[6] for q in r) and r[-1][2]==20)
+    T('no lot (any turn) reaches into the Gate Avenue or stands in front of the gate, at any stage',"""()=>{const T=TOWNS[0],out=[];
+      for(let st=0;st<=5;st++){const SZ=KF109.SZ[st];LOT103.filter(l=>l.st<=st).forEach(l=>{for(let r=0;r<4;r++){const q=r?lotRot103(l,r):l;
+        const hit=lotTiles103(q,-3.5,3.5,-3.5,3.5).filter(t=>{const x=t%W-T.cx,z=((t/W)|0)-T.cy;return Math.abs(x)<=3&&z>=9&&z<=SZ});
+        const sq=Math.abs(l.x)<3.5+KF109_AVE&&l.z+3.5>9;if(hit.length||sq)out.push([st,l.id,r,hit.length,sq])}})}
+      // the straight line from the spawn to the gate: the tiles |x|<=3 between the plaza and the south wall belong to no lot square
+      return [out.slice(0,10),LOT103.filter(l=>l.z>9).map(l=>[l.id,l.x,l.z,+(Math.abs(l.x)-3.5).toFixed(2)])]}""",lambda r:not r[0] and all(q[3]>=3.5 for q in r[1]))
     # ---- shops ----
     T('upgrade the Trading Post at the Steward',"""()=>{gold=1e7;bossDone.clear();[0,1,2,3,4,5].forEach(i=>bossDone.add(i));['wood','stone','fiber','iron','glowcap','bone','petals','crystal','Ectoplasm','Silk Gland','Rock Core'].forEach(k=>mats[k]=9999);
       KM103.tab='kingdom';openX('hold');const b=document.querySelector('#xw [data-shpu=post]');const has=!!b;b.click();const l1=shpL109('post');document.querySelector('#xw [data-shpu=post]').click();closeX();

@@ -28,6 +28,10 @@ function kfNeed109(){let n=1;try{SHOPS.forEach(o=>{if(shopBuilt(o.k))n++});UPK10
 function kfStage109(){const b=typeof bossDone!='undefined'?bossDone.size:0;return Math.min(5,Math.max(Math.min(5,b),kfNeed109()))}
 function kf109(){if(typeof KF109=='undefined'||!KF109)return {s:-1,WX:TWN100_WX,SZ:TWN100_SZ};const s=KF109.s>=0?KF109.s:kfStage109();return {s,WX:KF109.WX,SZ:KF109.SZ[s]}}
 function kfIn109(x,z,m){const F=kf109();m=m||0;return Math.abs(x)<F.WX-.5-m&&z>-TS+.5+m&&z<F.SZ-.5-m}
+// v112: the Gate Avenue, the straight way from the plaza (spawn z 8.4) to the south gate (x 0): |x| < KF109_AVE, never part of a lot
+// (1860 keeps every lot square out of it, whatever the turn), and the old dressing is hidden there too
+var KF109_AVE=3.5;
+function kfAve109(x,z,m){m=m||0;return Math.abs(x)<KF109_AVE+m&&z>10-m&&z<kf109().SZ+m}
 function lotN109(){return 5+3*Math.max(0,kf109().s)}
 function lotOpen109(id){const l=LOTM103[id];return !!l&&(l.st<=kf109().s||!!lotKey103(id))}
 lotFree103=function(id){const l=LOTM103[id];return !!l&&!lotKey103(id)&&l.st<=kf109().s};
@@ -78,7 +82,7 @@ function kfLegacy109(F){const T=TOWNS[0];
     const inSq=(x,z)=>Math.abs(x)<37&&z>-22&&z<52;
     KF109.leg={g:T.g.children.filter(o=>!skip.has(o)&&(Math.abs(o.position.x)+Math.abs(o.position.z)>.5)&&inSq(o.position.x,o.position.z)&&!/^kd|^deco|^house|^wardDress|^stalls109|^kfwild/.test(o.name||'')).map(o=>({o,v:o.visible})),
       c:T.col.filter(c=>!own.has(c)&&inSq(c.x-T.cx,c.z-T.cy)).map(c=>({c}))}}
-  const ok=(x,z,p)=>kfIn109(x,z,-.4)&&!kfLotHit109(x,z,p);
+  const ok=(x,z,p)=>kfIn109(x,z,-.4)&&!kfLotHit109(x,z,p)&&!kfAve109(x,z,p);
   KF109.leg.g.forEach(q=>{q.o.visible=q.v&&ok(q.o.position.x,q.o.position.z,.7)});
   KF109.leg.c.forEach(q=>{const c=q.c,on=ok(c.x-T.cx,c.z-T.cy,.15+(c.r!=null?c.r:Math.max(c.hx,c.hz))),i=T.col.indexOf(c);if(on&&i<0)T.col.push(q.c);else if(!on&&i>=0)T.col.splice(i,1)})}
 // ---- the outskirts: trees, rocks and bushes on the island outside the walls (one baked kit per stage) ----

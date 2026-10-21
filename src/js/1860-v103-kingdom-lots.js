@@ -3,9 +3,12 @@
 // south (1960, KF109):
 //   NW NE NM          the north row gaps beside the Tavern and the Trading Post                       (stage 0)
 //   CW CE             either side of the fountain                                                       (stage 0)
-//   S1W S1M S1E       row 1, south of the plaza, facing north onto it                                   (stage 1)
-//   SkW SkM SkE       rows 2..5 (z 22.1 .. 44.6, 7.5 apart): west and east lots face the two side streets,
-//                     the middle lot faces one of them (east on even rows, west on odd rows)            (stage k)
+//   SkW SkM SkE       row k south of the plaza (z 14.6 .. 44.6, 7.5 apart), opened by stage k:
+//                     SkW / SkE (x -7.01 / 7.01) line the Gate Avenue and face it; SkM is the outer lot (x -14 on odd
+//                     rows, +14 on even rows) and faces north onto the plaza (row 1) or onto the little court left open
+//                     on that side of the row before it (the outer slot opposite SkM stays an open court).
+// v112: the Gate Avenue, |x| < 3.5 from the plaza to the south gate (x 0), is never part of a lot (whatever a building's
+// turn), so the straight way out of the kingdom stays open at every stage (KF109_AVE, checked by v109_kingdom_shops.py).
 // Each lot is a 7x7-tile square; buildings face its street side and keep a door spot 4.45 tiles in front of the centre.
 // v109: SH.rot[key] (0..3 quarter turns) turns a building on its lot; lotOf103(key) returns the turned lot.
 // SH.pos[key] = lot id, key = shop key ('smith', 'magic', …), 'u:'+upgrade key, or 'h:'+house index. Saved in x2Save.
@@ -16,9 +19,8 @@
 var LOT103=(()=>{const H=Math.PI/2,L=[];
   L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row',st:0},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row',st:0},{id:'NM',x:14.6,z:-17,ry:0,a:'North row',st:0});
   L.push({id:'CW',x:-7.7,z:-7.1,ry:0,a:'By the fountain',st:0},{id:'CE',x:7.7,z:-7.1,ry:0,a:'By the fountain',st:0});
-  for(let k=1;k<=5;k++){const z=14.6+7.5*(k-1),a='Row '+k,P=Math.PI;
-    if(k==1)L.push({id:'S1W',x:-13.6,z,ry:P,a,st:1},{id:'S1M',x:0,z,ry:P,a,st:1},{id:'S1E',x:13.6,z,ry:P,a,st:1});
-    else L.push({id:'S'+k+'W',x:-13.6,z,ry:H,a,st:k},{id:'S'+k+'M',x:0,z,ry:k%2?-H:H,a,st:k},{id:'S'+k+'E',x:13.6,z,ry:-H,a,st:k})}
+  for(let k=1;k<=5;k++){const z=14.6+7.5*(k-1),a='Row '+k,o=k%2?-1:1;
+    L.push({id:'S'+k+'W',x:-7.01,z,ry:H,a,st:k},{id:'S'+k+'M',x:o*14,z,ry:Math.PI,a,st:k},{id:'S'+k+'E',x:7.01,z,ry:-H,a,st:k})}
   return L})();
 var LOTM103={};LOT103.forEach(l=>LOTM103[l.id]=l);
 var DEF103={smith:'CW',magic:'NM'};
