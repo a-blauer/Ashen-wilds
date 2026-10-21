@@ -59,7 +59,7 @@ try:
     check('host sees the joiner',until(A,"()=>Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Bram')",20))
     check('joiner sees the host',until(B,"()=>Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Aria')",20))
     # same field instance: monsters are shared
-    for pg in (A,B): pg.evaluate("()=>{const p=PMAP[0].path[40];toPos(p[0]+(hero.cls=='mage'?2.2:0),p[1]+(hero.cls=='mage'?1:0))}")
+    for pg in (A,B): pg.evaluate("()=>{const p=PMAP[0].ins[0].path[60];toPos(p[0]+(hero.cls=='mage'?2.2:0),p[1]+(hero.cls=='mage'?1:0))}")
     ok=until(A,"()=>MP.others>0",30) and until(B,"()=>MP.others>0",30)
     check('both in the same instance',ok)
     hA=A.evaluate("()=>MP.host===MP.me");hB=B.evaluate("()=>MP.host===MP.me")
