@@ -27350,8 +27350,8 @@ function brBareB(L){const C=BR.C,D=BR.R,B=mdB(HB),P=mdP({look:L,sex:0,build:1,co
 // D.pose = standing posture, D.run = what is added at full run: {sp, ch, nk, hd} pitch of spine / chest / neck / head (+ = forward),
 // {shx, shz, el} shoulder pitch / spread and elbow bend (skipped while an attack or ability pose plays)
 var BR_PB=[['spine','sp','x'],['chest','ch','x'],['neck','nk','x'],['head','hd','x'],['aL0','shx','x'],['aR0','shx','x'],['aL0','shz','z'],['aR0','shz','z'],['aL1','el','x'],['aR1','el','x']];
-function brPoseOff(D,w,atk){const P=D.pose||{},R=D.run||{},o={};
-  BR_PB.forEach(([bn,k,ax])=>{let v=(P[k]||0)+(R[k]||0)*w;if(!v)return;if(bn[0]=='a'){if(atk)return;if(ax=='z')v*=bn=='aL0'?1:-1}o[bn+'.'+ax]=(o[bn+'.'+ax]||0)+v});return o}
+function brPoseOff(D,w,arm){const P=D.pose||{},R=D.run||{},o={};
+  BR_PB.forEach(([bn,k,ax])=>{let v=(P[k]||0)+(R[k]||0)*w;if(!v)return;if(bn[0]=='a'){v*=arm;if(!v)return;if(ax=='z')v*=bn=='aL0'?1:-1}o[bn+'.'+ax]=(o[bn+'.'+ax]||0)+v});return o}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl,b=H&&H.bones,D=H&&H._race?BRD[H._race]:null,rat=D&&b;
   const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null,on=H&&H._brCr,po=H&&H._brPo;
   if(on&&b){b.lh0.rotation.x-=on.a;b.rh0.rotation.x-=on.a;b.lh1.rotation.x-=on.k;b.rh1.rotation.x-=on.k;b.lh2.rotation.x-=on.an;b.rh2.rotation.x-=on.an;H._brCr=null}
@@ -27359,7 +27359,10 @@ function brPoseOff(D,w,atk){const P=D.pose||{},R=D.run||{},o={};
   const r=f.apply(this,arguments);
   if(rat){const w=H.mvW||0;
     if(!rid){b.lh0.rotation.x+=R.a;b.rh0.rotation.x+=R.a;b.lh1.rotation.x+=R.k;b.rh1.rotation.x+=R.k;b.lh2.rotation.x+=R.an;b.rh2.rotation.x+=R.an;H._brCr=R;
-      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,o=brPoseOff(D,w,atk);for(const k in o){const [bn,ax]=k.split('.');if(b[bn])b[bn].rotation[ax]+=o[k]}H._brPo=o}
+      // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition)
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
+      S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
+      const o=brPoseOff(D,w,arm);for(const k in o){const [bn,ax]=k.split('.');if(b[bn])b[bn].rotation[ax]+=o[k]}H._brPo=o}
     const t=(now||0)/1000,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
     for(let i=0;i<n;i++){const bn=b[D.TB[i]];if(!bn)continue;bn.rotation.y=amp*Math.sin(t*sp-i*.55)*(.4+i*.12*(11/Math.max(n,1)));bn.rotation.x=(.015+.02*w)*Math.sin(t*sp*2-i*.5)}}
   return r}}
