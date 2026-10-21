@@ -2,7 +2,7 @@
 
 A single-file three.js (r128) action RPG: five hero classes, hatchable companions, the floating stronghold Duskhold,
 six portal zones (three field instances, a Sovereign's Den and a Wave Trial each), wave trials, mounts, fishing, crafting at town stations and online co-op.
-Published as the claude.ai artifact https://claude.ai/artifact/Aa14wfN7jNYFh5b1yN8EQu (`dist/ashen-wilds.html`; v113 onward — saves are per link, so players start fresh there; v106–v112 stay at QG2zZH4KMW4zTTfaJQGots (the live page grew too large to re-read before republishing), v105 at GZsCSNZGgULRRkVLdYHPmw, v102 at CMvAWZi8x1qbMZp9SkBpGL). (The pre-v102 link was retired.)
+Published as the claude.ai artifact https://claude.ai/artifact/FEvfiU5RumGQJEgpwsDobC (v114 onward, as `dist/artifact/index.html` + `game.js`; saves are per link — move a hero with Settings → Export / Import save). Older links: v113 at Aa14wfN7jNYFh5b1yN8EQu, v106–v112 at QG2zZH4KMW4zTTfaJQGots, v105 at GZsCSNZGgULRRkVLdYHPmw, v102 at CMvAWZi8x1qbMZp9SkBpGL (each stopped at that version because a single-file page is too large for a new session to re-read before republishing). (The pre-v102 link was retired.)
 
 ## Layout
 
@@ -11,7 +11,8 @@ src/page.html      the page: markup, with /*@@CSS@@*/ and //@@JS@@ where the sty
 src/style.css      the head stylesheet
 src/js/NNNN-*.js   the game script in load order (one file per feature section; ~190 files, none over ~60 KB)
 build/assemble.py  joins the three into one page
-build.sh           -> dist/ashen-wilds.html, then `node --check` on the script
+build/split.py     -> dist/artifact/index.html (markup + stylesheet, loads game.js) + dist/artifact/game.js, for publishing
+build.sh           -> dist/ashen-wilds.html, then `node --check` on the script, then the split
 test/              headless Playwright tests (see Testing)
 tools/deadcode/    finds top-level code nothing can reach (see Cleaning up)
 ```
@@ -29,7 +30,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | classes, skills, talents, item templates `ITPL`, creature families | `0110-v2-*` |
 | enemies, damage, XP, loot (`genItem`) | `0120-v2-*`, `0410-v49-9-gear-sets*` |
 | zones (`PMAP`, `pmGen`, `pmDen`), zone instances (`INSL`, `insAt`/`rgAt`, `insG`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world), `1940` (v106/v108 instances) |
-| save / load (`gameSnapshot`, `loadGame`, `x2Save`) | `0230-v36-save-load*`, `0450-shared-prompts*` |
+| save / load (`gameSnapshot`, `loadGame`, `x2Save`); export / import save codes (v114, `KQSX`, `kqsxEncode/Decode`, Settings + title screen) | `0230-v36-save-load*`, `0450-shared-prompts*`, `2140-v114-save-export-import.js` |
 | co-op (`MP`) | `0520-v58-online-co-op*` |
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI; v109: walls sized by stage, see Kingdom size), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
 | stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
@@ -252,6 +253,9 @@ python3 v57t.py              # grades, XP, skills, consume, fusion
 python3 v60t.py              # zone roster (per instance, 30 s respawn)
 python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gateways, respawn, recall back, portal window, saves, chunk visibility, den size
 python3 v113_roster.py       # v113: instance creatures per field instance, camps, a free fight with each new creature
+python3 v114_beasts.py       # v114: model sheets per beast race (RACE=, PART=base,helms,gear, FURI=)
+TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
+python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
@@ -292,8 +296,11 @@ suggestion: rebuild, run the tests and load the game before keeping anything.
 
 ## Publishing
 
-Publish `dist/ashen-wilds.html` to the artifact URL above (pass it as `url`). Omitting `capabilities` on a redeploy keeps the co-op room;
+Since v114 the artifact is two files: publish `dist/artifact/index.html` as the page with `files: {"game.js": "dist/artifact/game.js"}`
+to the artifact URL above (pass it as `url`). The page is ~44 KB, so a new session can read it in full (Artifact `read`) and republish;
+only the page needs reading, the script goes up as a supporting file. Omitting `capabilities` on a redeploy keeps the co-op room;
 if they must be re-declared: `{"room":{"topics":{"es":"interact","ev":"interact","hit":"interact","bs":"interact","trade":"interact","chat":"interact"}}}`.
+`dist/ashen-wilds.html` (single file) stays the build the tests load.
 
 ## Animation viewer (separate artifact)
 
