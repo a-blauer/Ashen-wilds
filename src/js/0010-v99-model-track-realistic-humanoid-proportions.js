@@ -16,7 +16,8 @@ var AW_PROP99=(function(){
   const PRE={
     real:{pelvis:[.85,1,.86],spine:[.78,1.06,.8],chest:[.8,1.06,.82],neck:[1,1.45,1],head:.8,arm:[1.16,.83],hand:.88,leg:[1.34,1],foot:1,cape:[1.27,1]},
     brute:{pelvis:[1,1,1],spine:[1,1.03,1],chest:[1,1.03,1],neck:[1,1.2,1],head:.9,arm:[1.1,1],hand:1,leg:[1.2,1],foot:1,cape:[1.15,1]}};
-  const BRUTE={orc:1,troll:1,trollsh:1,yeti:1,giant:1,abom:1,selem:1,ghoul:1,nagaw:1,nagaa:1,nagas:1},KEEP={hob:1,sling:1,shaman:1};
+  const BRUTE={orc:1,troll:1,trollsh:1,yeti:1,giant:1,abom:1,selem:1,ghoul:1,nagaw:1,nagaa:1,nagas:1,
+    amalgam:1,lichen:1,akorror:1,gharial:1,jotun:1,saltgolem:1,drowned:1,colossus:1,executioner:1,gargoyle:1},KEEP={hob:1,sling:1,shaman:1};  // v113: the new big creatures are brutes too
   const S={on:true,ctx:null,plans:new Map(),hip:.55};
   const forKey=k=>KEEP[k]?'none':BRUTE[k]?'brute':'real';
   // limb chains: bone → child that gives the bone's direction

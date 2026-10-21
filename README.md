@@ -51,6 +51,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions) |
 | Rat race (v112, Warrior only): model, paws, skinned tail, rat helmets, creator/barber Race option | `1990-v112-rat-race.js` |
+| v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
@@ -178,6 +179,22 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   The Dirge: Drowned Crypts / Ossuary Fields; The Citadel: Outer Ramparts / Inner Keep. Instance I keeps its v108 ground. `WD_WL` 112: a
   v108 save standing in II or III goes to that instance's entrance. `test/v112_instances.py` (walkability, determinism, saves),
   `v112_shots.py` (contact sheet).
+- **Instance creatures (v113, `2000`–`2090`)**: field instances II and III of every zone have two new creatures each (24 in all;
+  instance I keeps the zone's originals). Kindlelight II Amalgam (the Caustic Goo evolved), Akidon (what the Bloat Maggot's larvae
+  become); III Lichen, Akorror (the evolved Akidon). Hillside Crest II Mire Croaker, Gharial Reaver; III Galecliff Basilisk, Shellback
+  Snapper. Burningeye II Rimeshell Crawler, Frost Wendigo; III Stormborn Jotun, Storm Harpy. Searing Sands II Tomb Priest, Sun Scarab;
+  III Salt Golem, Dust Wyrm. The Dirge II Drowned Thrall, Wailing Banshee; III Ossuary Colossus, Ossuary Hound. The Citadel II Rampart
+  Gargoyle, Blood Hound; III Crimson Executioner, Nosferatu. `n3Def(key,D)` registers one: humanoids give `D.hum` (a HUMLOOK) and
+  `D.body(B,P,k)` built with the v94 toolkit (big ones are in the v99 `BRUTE` list in `0010`); creatures give `D.rig` (a base rig's
+  low-poly body in their colour + their own `kit`, optional `geo`, `noBaseKit`/`noBasePost`). `D.moves` = [basic, sig, sig] (the
+  v107 rule: own signatures, no charge/pounce; `v107_sig.py` checks them with the rest); `D.basic` maps the basic attack to the
+  creature's own animation, `D.bfx` adds a hit effect to it, `D.stance` a permanent pose offset (hunches, crouches). Every move has
+  its own keyframe track (`n3Hum` humanoid channels as absolute HUM_ATK-style values, `n3Cr` creature channels as offsets, plus body
+  channels `Brx Bry Bz By`), time 0..1 wind-up, 1..2 act, 2..3 recovery, sampled with the v100 monotone cubic. Moves are ordinary
+  `MV107` entries (`n3Mv`) with `x6` hooks; effects only hurt through `s6Hit`/`hitHero`, knock-backs/pulls move the local hero only
+  and never through a dash. `n3Zone(z,k,{roam,camps})` sets an instance's roaming list (weights) and its three camp themes
+  (`CTH['v113_z_k_i']`, applied to `CAMPS` by `n3Camps` in `2090`). Tests: `v113_roster.py` (rosters and camps per instance, a free
+  fight per creature), `v113_models.py` (contact sheets in the viewer build: idle views + 5 frames per move; `ONLY=key`).
 - **Terrain height fix (v112)**: `GHv` clamps the row by `H` (it used `W`, so everything south of row 1182 — all of The Citadel and the
   Crimson Throne Hall — read row 1182's heights). `test/v112_arena.py` checks arrival height and floor flatness in all six dens.
 - **Sovereigns (v112)**: every boss file (1971–1976) has a far more detailed model, three new special attacks, cooldowns on every move and
@@ -229,6 +246,7 @@ python3 v32t.py              # portal → Sovereign kill → wave trial
 python3 v57t.py              # grades, XP, skills, consume, fusion
 python3 v60t.py              # zone roster (per instance, 30 s respawn)
 python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gateways, respawn, recall back, portal window, saves, chunk visibility, den size
+python3 v113_roster.py       # v113: instance creatures per field instance, camps, a free fight with each new creature
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
