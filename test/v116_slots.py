@@ -53,7 +53,7 @@ try:
     pg.click('#awT [data-slot="1"]',force=True)
     check('continue slot 2 loads Two',until(pg,"()=>party.length>0&&hero.name=='Two'&&hero.cls=='warrior'&&KQSL.n==1"))
     # in-game main menu → the other slot → reload → continue there
-    pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};kqMenuGo()}");pg.wait_for_timeout(1500)
+    pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};kqMenuAsk();kqMenuGo()}");pg.wait_for_timeout(1500)
     check('menu title marks the hero playing now (no delete)',pg.evaluate("()=>{const b=document.querySelector('#awT [data-slot=\"1\"]');return b&&b.textContent.includes('playing now')&&!document.querySelector('#awT [data-sld=\"1\"]')}"))
     pg.click('#awT [data-slot="0"]',force=True)
     pg.wait_for_timeout(2500);pg.wait_for_function('document.readyState=="complete"',timeout=180000)
