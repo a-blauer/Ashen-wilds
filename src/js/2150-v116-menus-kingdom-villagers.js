@@ -97,3 +97,20 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .vljob.lk{opacity:.5}#xw .vljob small{color:var(--mut)}
 #xw .vlft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:.72rem;margin-top:2px}#xw .vlmax{color:#6ee7b7;font-size:.74rem}
 </style>`);
+// ---------------- crossbow: the bolt leaves from the crossbow's front end (v116) ----------------
+// The weapon model's stock runs along its local -Y, so the muzzle is the far end of its bounding box on that axis
+// (measured once per model in the weapon's own frame, works for every crossbow look).
+function xbowMuzzle116(){const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='crossbow');if(!W)return null;pl.updateMatrixWorld(true);
+  let m=W.userData.muz116;if(!m){const inv=new THREE.Matrix4().copy(W.matrixWorld).invert(),B=new THREE.Box3(),v=new THREE.Vector3();
+    W.traverse(o=>{if(!o.isMesh||!o.geometry)return;const P=o.geometry.attributes.position;if(!P)return;const M=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).applyMatrix4(M);B.expandByPoint(v)}});
+    if(B.isEmpty())return null;m=W.userData.muz116=new THREE.Vector3((B.min.x+B.max.x)/2,B.min.y+.02,(B.min.z+B.max.z)/2)}
+  return W.localToWorld(m.clone())}
+// While the player aims (xbowPose from the sight to the recoil) the crossbow is turned in the hand so its barrel lies along the
+// aim, level: the v85 pose was tuned on human arms and tilted the crossbow up on the beast rigs. Runs after every other layer.
+function xbowLevel116(h){if(h&&h!==pl)return;const A=typeof HA!='undefined'&&HA.cur;if(!A||A.pose!==xbowPose)return;const k=A.k||0;
+  const w=k<.14?k/.14:k<.6?1:k<.74?1-(k-.6)/.14:0;if(w<=0)return;
+  const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='crossbow');if(!W||!W.parent)return;pl.updateMatrixWorld(true);
+  const Q=THREE.Quaternion,qw=W.getWorldQuaternion(new Q()),b=new THREE.Vector3(0,-1,0).applyQuaternion(qw).normalize(),f=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
+  const tq=new Q().setFromUnitVectors(b,f).multiply(qw),out=qw.clone().slerp(tq,w),pq=W.parent.getWorldQuaternion(new Q());
+  W.quaternion.copy(pq.invert().multiply(out));W.updateMatrixWorld(true)}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{xbowLevel116(h)}catch(_){}return r}}
