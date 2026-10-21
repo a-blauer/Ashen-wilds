@@ -43,7 +43,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | zone roster + respawn (`ROST`, `RESP_T`), atmosphere, grades | `0550-v71-*` |
 | companions & eggs window, fusion window | `0570-v74-*`, `1780-v100-fusemenu*` |
 | weapon types / mounts / Stable | `0580-v78-*`, `0590-v78-*`, `0790-v83-*` (gaits, specs), `1790`/`1810` (v100 mount models) |
-| Sovereign dens | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
+| Sovereign fights (v110, souls-style): engine `SVB`/`svAI`/moves, then one file per boss (model, poses, moves) | `1970-v110-sov-core.js`, `1971`–`1976` (Argus, Hydra, Rime Wraith, Ssith'ra, Bloated One, Vaelric) |
+| Sovereign dens (scenery, seal, colliders; their v86 hazards are off since v110) | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password) |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
@@ -142,6 +143,19 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   back `RESP_T` (30) s after death, not within `RESP_NEAR` tiles of a hero. Recall saves `INST` (instance + spot + the
   creatures' timers; also in the Den); T in Duskhold goes back. World layout version `WD_WL` 108; older saves go to instance
   I's entrance of their zone and get every instance of every open zone (v106/v107 saves that reached III also reach the Den).
+- **Sovereign fights (v110)**: every Sovereign is a souls-style boss registered with `svReg(i,B)` (`SVB[i]`). Its model is
+  rigid parts on named joints (`R.J`), built by `B.build` inside the old enemy group (scaled `1/e.m.bs`, so models are in world
+  units; the old skinned body is hidden; static meshes on one joint are merged per material, `userData.noMerge` keeps one apart).
+  Animation = `B.loco` (procedural base: breathing, gait) + the action track of the running move (`trk`: `[time, pose, ease,
+  tremble]`, poses in `B.P` as joint offsets `[rx,ry,rz,px,py,pz]`; a name ending in `~` is the left/right mirror). A move
+  (`B.M[id]`) is a timeline: `trn` turn windows (it commits after its lock), `rm` root motion, `hit` (shape `{k:'c'|'r'|'a'|'l'}`,
+  checked once at its time, so a dash with i-frames dodges it; melee moves `mel` show only a faint warning in the last 0.32 s,
+  area moves the full red warning), `ev` events, `tr` weapon trails, `nx` combo follow-ups, `rec` extra rest. The AI picks by
+  range / angle (`r`, `a`: f, b, s, fs, sb, any), weight `wt`, cooldown `cd`, phase `ph`. Poise: damage fills the posture bar
+  (`B.poise` × max health); a break casts `stagger` (+35% damage taken; `armor` moves finish first). Phase II at `B.ph2`
+  (0.55) through the `awaken` move. Co-op: only the driver (`svAuth`) picks; every cast is relayed as BMV `sv<i>_<id>` with the
+  seed in `en` (1 + seed/1000, the relay clamps en to 0.5–2), so partners replay the same timeline and random choices.
+  The v86 den hazards and den AIs are switched off by `svDenTakeover` (scenery, seal and colliders stay).
 - **Den size (v89, v108)**: the den files build each den at its original size; `1180` maps it outward by `DK` (2 since v108,
   was 1.35) and heights by `DKY` (1.3). `ARENA_R` = 14*DK, `PM_DENR` grows with DK. Den runtime numbers are written `n*DK`.
 - **Decorations (v104)**: fixed spots outside every lot and door spot (checked by `PART=deco python3 v103_kingdom.py`);
@@ -195,7 +209,10 @@ python3 v107_sig.py          # every zone monster's signature moves hit, debuff,
 python3 v107_ai.py           # the AI picks signature moves in each zone;  v107_tail.py: Gravewyrm/Venomcoil tail during abilities (viewer build)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
 python3 probe.py file.js     # run one JS snippet in a started game, print the full JSON result (OUTF=out.json)
-python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den
+python3 v110_moves.py         # v110: every Sovereign move: contact sheets at the track keys, hits (BL=0 MV=claw,snap SHOT=0 LIT=1 CAM=play)
+python3 v110_fight.py         # v110: free fights with the real AI (moves chosen, stagger, Phase II, death, wipe); avg AI ms per frame
+python3 v110_mp.py            # v110: co-op relay (driver queues, partner replays with the same seed, Phase II from health)
+python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den (stale since v110 for the den hazards they check: scenery parts still apply)
 ```
 
 Every other `v*.py` is the check written for that version's feature (the first comment line says what it covers;

@@ -23327,4 +23327,1258 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .shpnote.on{color:var(--ink);border-style:solid;border-color:rgba(201,162,74,.45);background:rgba(201,162,74,.08)}.shpnote .shpip{color:#f0cc72;letter-spacing:2px}
 #xw .kmplots{font-size:.74rem;color:var(--mut)}#xw .kmplots b{color:var(--ink)}
 </style>`);
+// ================= v110: Sovereigns fight like souls bosses — the shared engine =================
+// Every Sovereign (BOSSES[i], registered as SVB[i] by the files after this one) gets:
+//  * a new hand-built model: rigid parts hung on named joints (R.J), faceted low-poly, glowing accents. It sits inside the
+//    old enemy group e.m (scaled 1/e.m.bs so the model is authored in world units); the old skinned body is hidden.
+//  * an animator: a procedural base layer (idle breathing, walking, slithering, floating: B.loco) and an action layer
+//    (keyframed tracks of poses: [time, pose, ease]); the action fades in over the base and back out.
+//  * moves = timelines: wind-up (the readable tell, often with a held trembling key and a glow), strike (a few frames:
+//    the hit is checked once, at that moment, so a dash through it with i-frames is a clean dodge — and a Perfect Dodge),
+//    recovery (the punish window). A move turns toward you only until its lock moment, then commits.
+//    Ground warnings: area / ranged attacks show the standard red warning for their whole wind-up; melee swings only show a
+//    faint outline in the last fraction of a second, so the animation is the tell. Every hit leaves a short flash of the
+//    area it covered (learn the reach) and most swings draw a weapon trail.
+//  * a pattern AI per boss: moves are chosen by range and angle (in front / behind) with cooldowns and fixed combo
+//    strings, so the same situation brings the same few answers — learnable.
+//  * poise: damage fills a posture meter (yellow bar under the boss bar); when it breaks the boss is STAGGERED for a
+//    couple of seconds and takes +35% damage. Big moves have armour (the break waits until the move ends).
+//  * two phases: at B.ph2 health the boss performs an awakening (invulnerable, a roar and a push-back shockwave), changes
+//    its look, gains new moves and rests less between attacks.
+// The den hazards of v86 (eye-stalks, necks from the water, cold, quicksand, rot, chalices, …) are switched off: the den
+// is the stage (its scenery, seal and colliders stay), the boss is the fight.
+// Co-op: the boss driver (mpBossAuth) picks every move and relays it as BMV 'sv<i>_<move>' with a seed; partners play
+// the same timeline (same random choices) and are hit on their own screens. Root motion keeps the partner's own copy in
+// step (the position sync pauses while a move moves the boss).
+var SVB=[];         // per boss index: the boss definition (build, poses, moves, loco, ai)
+var SVX={on:true,gc:{},log:[],st:{casts:0,hits:0,stag:0},V:[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()]};
+// ---------------- small maths ----------------
+var svEase={l:k=>k,i:k=>k*k*k,o:k=>1-Math.pow(1-k,3),io:k=>k*k*(3-2*k),s:k=>1-Math.pow(1-k,5),b:k=>{const c=1.7;return 1+(c+1)*Math.pow(k-1,3)+c*Math.pow(k-1,2)}};
+function svRng(seed){let s=Math.floor(Math.abs(+seed||1)*7919)%2147483646+1;return ()=>((s=s*16807%2147483647)-1)/2147483646}
+function svAng(a){return Math.atan2(Math.sin(a),Math.cos(a))}
+function svYawTo(m,p){return Math.atan2(p.x-m.position.x,p.z-m.position.z)}
+// ---------------- geometry kit (cached: one copy per key) ----------------
+function svG(k,f){return SVX.gc[k]||(SVX.gc[k]=(()=>{const g=f();g.userData.lps=1;return g})())}
+// a loft along +Y: rings = [[y, rx, rz, ox, oz], ...]; n sides; faceted (non-indexed); caps at both ends
+function svLoft(rings,n,o){o=o||{};const pos=[],R=rings.map(([y,rx,rz,ox,oz])=>{const a=[];for(let i=0;i<n;i++){const t=(i/n)*Math.PI*2+(o.rot||0);a.push([(ox||0)+Math.sin(t)*rx,y,(oz||0)+Math.cos(t)*rz])}return a});
+  const dsc=rings[rings.length-1][0]<rings[0][0],tri=(a,b,c)=>{if(dsc){const q=b;b=c;c=q}pos.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2])};
+  for(let r=0;r<R.length-1;r++)for(let i=0;i<n;i++){const j=(i+1)%n,a=R[r][i],b=R[r][j],c=R[r+1][j],d=R[r+1][i];tri(a,b,c);tri(a,c,d)}
+  if(o.cap!==false){const c0=[R[0].reduce((s,p)=>s+p[0],0)/n,rings[0][0]-(o.tip0||0)*(dsc?-1:1),R[0].reduce((s,p)=>s+p[2],0)/n],L=R[R.length-1],y1=rings[rings.length-1][0],c1=[L.reduce((s,p)=>s+p[0],0)/n,y1+(o.tip||0)*(dsc?-1:1),L.reduce((s,p)=>s+p[2],0)/n];
+    for(let i=0;i<n;i++){const j=(i+1)%n;tri(c0,R[0][j],R[0][i]);tri(c1,L[i],L[j])}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
+// a loft along +Z (for necks, tails, snouts): rings = [[z, rx, ry, ox, oy], ...]
+function svLoftZ(rings,n,o){const g=svLoft(rings.map(([z,rx,ry,ox,oy])=>[z,rx,ry,ox,-(oy||0)]),n,o);g.rotateX(Math.PI/2);g.computeVertexNormals();return g}
+// a tube along a 3D path: pts = [[x,y,z],...], rad = number or [r per point] (or [rx,ry] pairs); n sides; caps
+function svTube(pts,rad,n,o){o=o||{};const V3=THREE.Vector3,P=pts.map(p=>new V3(p[0],p[1],p[2])),N=P.length,pos=[],R=[];let up=new V3(0,1,0);
+  for(let i=0;i<N;i++){const t=new V3().subVectors(P[Math.min(N-1,i+1)],P[Math.max(0,i-1)]).normalize();if(Math.abs(t.dot(up))>.95)up=new V3(1,0,0);
+    const b=new V3().crossVectors(t,up).normalize(),u=new V3().crossVectors(b,t).normalize();up=u.clone();
+    const r=Array.isArray(rad)?rad[i]:rad,rx=Array.isArray(r)?r[0]:r,ry=Array.isArray(r)?r[1]:r,ring=[];
+    for(let k=0;k<n;k++){const a=k/n*Math.PI*2;ring.push(new V3().copy(P[i]).addScaledVector(b,Math.cos(a)*rx).addScaledVector(u,Math.sin(a)*ry))}R.push(ring)}
+  const tri=(a,b,c)=>pos.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z);
+  for(let i=0;i<N-1;i++)for(let k=0;k<n;k++){const j=(k+1)%n,a=R[i][k],b=R[i][j],c=R[i+1][j],d=R[i+1][k];tri(a,c,b);tri(a,d,c)}
+  if(o.cap!==false){for(let k=0;k<n;k++){const j=(k+1)%n;tri(P[0],R[0][k],R[0][j]);tri(P[N-1],R[N-1][j],R[N-1][k])}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
+// a tapered horn / claw / spike curving along a quadratic path: base radius r, length l, bend (x,y) at the tip
+function svHorn(r,l,bx,by,n,seg){seg=seg||5;const pos=[];const P=[];for(let s=0;s<=seg;s++){const t=s/seg,rr=r*(1-t*.94);P.push({c:[bx*t*t,by*t*t,l*t],r:rr})}
+  const ring=(p,k)=>{const a=[];for(let i=0;i<(n||5);i++){const t=i/(n||5)*Math.PI*2;a.push([p.c[0]+Math.cos(t)*p.r,p.c[1]+Math.sin(t)*p.r,p.c[2]])}return a};
+  const R=P.map(ring),tri=(a,b,c)=>pos.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]),N=n||5;
+  for(let s=0;s<seg;s++)for(let i=0;i<N;i++){const j=(i+1)%N,a=R[s][i],b=R[s][j],c=R[s+1][j],d=R[s+1][i];tri(a,b,c);tri(a,c,d)}
+  const tip=[bx*1.1,by*1.1,l*1.04];for(let i=0;i<N;i++)tri(R[seg][i],R[seg][(i+1)%N],tip);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
+// a jittered rock / crystal / lump
+function svLump(r,det,j,seed){const g=new THREE.IcosahedronGeometry(r,det||0),P=g.attributes.position,rn=svRng(seed||3);for(let i=0;i<P.count;i++){const k=1+(rn()-.5)*(j||.3);P.setXYZ(i,P.getX(i)*k,P.getY(i)*k,P.getZ(i)*k)}
+  const ng=g.index?g.toNonIndexed():g;ng.computeVertexNormals();return ng}
+// a flat blade (sword / scythe / cleaver): outline points [x,y] in the XY plane, thickness th
+function svBlade(pts,th){const s=new THREE.Shape();pts.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:th,bevelEnabled:true,bevelThickness:th*.6,bevelSize:th*.5,bevelSegments:1});g.translate(0,0,-th/2);g.computeVertexNormals();return g}
+// ---------------- rig building ----------------
+function svRig(){return {root:new THREE.Group(),J:{},mats:[],glow:[],fx:[]}}
+function svMat(R,col,o){const m=new THREE.MeshStandardMaterial(Object.assign({color:col,roughness:.82,metalness:.08,flatShading:true},o||{}));m.userData.e0=m.emissive.getHex();m.userData.ei0=m.emissiveIntensity;R.mats.push(m);return m}
+function svGlowMat(R,col,op){const m=new THREE.MeshBasicMaterial({color:col,transparent:op!=null,opacity:op==null?1:op,fog:false});m.userData.c0=col;R.glow.push(m);return m}
+function svJ(R,name,parent,x,y,z,rx,ry,rz){const g=new THREE.Group();g.name=name;g.position.set(x||0,y||0,z||0);g.rotation.set(rx||0,ry||0,rz||0);(parent?(typeof parent=='string'?R.J[parent]:parent):R.root).add(g);R.J[name]=g;return g}
+function svM(R,j,geo,mat,x,y,z,rx,ry,rz,sx,sy,sz){const m=new THREE.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);m.rotation.set(rx||0,ry||0,rz||0);if(sx!=null)m.scale.set(sx,sy==null?sx:sy,sz==null?sx:sz);m.castShadow=true;m.receiveShadow=false;
+  (typeof j=='string'?R.J[j]:j).add(m);m.userData.lpsSkip=1;return m}
+// glow sprite fixed to a joint (eyes, embers, charge-ups); returns the sprite (its .material is shared per colour)
+function svSpr(R,j,col,s,x,y,z){const o=kqSpr(col,s);o.position.set(x||0,y||0,z||0);(typeof j=='string'?R.J[j]:j).add(o);o.userData.s0=s;return o}
+function svRest(R){for(const k in R.J){const g=R.J[k];g.userData.p0=g.position.clone();g.userData.r0=new THREE.Vector3(g.rotation.x,g.rotation.y,g.rotation.z)}}
+// ---------------- poses and tracks ----------------
+// a pose is {joint:[rx,ry,rz] or [rx,ry,rz,px,py,pz]} of offsets from the rest pose. Name ending in '~' = mirrored
+// (joints whose names end in L/R swap, and ry, rz, px flip).
+function svMir(name){const L=name[name.length-1];return L==='L'?name.slice(0,-1)+'R':L==='R'?name.slice(0,-1)+'L':name}
+function svPose(B,p){if(!p)return {};if(typeof p!=='string')return p;const c=B._pc||(B._pc={});if(c[p])return c[p];
+  let o;if(p[p.length-1]==='~'){const s=svPose(B,p.slice(0,-1));o={};for(const k in s){const v=s[k].slice();v[1]=-v[1];v[2]=-v[2];if(v.length>3)v[3]=-v[3];o[svMir(k)]=v}}
+  else{o=B.P[p];if(!o){console.warn('sv pose',p);o={}}}return c[p]=o}
+// sample a track [{t,p,e,tr}] at time t into out (map of 6-arrays); the snapshot S.snap is the implicit key at t=0
+function svSample(B,S,trk,t,out,now){for(const k in out)out[k]=null;
+  let i=0;while(i<trk.length&&trk[i][0]<=t)i++;
+  const a=i===0?S.snap:svPose(B,trk[i-1][1]),ta=i===0?0:trk[i-1][0];
+  if(i>=trk.length){svCopy(out,a,1);svTrem(out,trk[trk.length-1],now);return out}
+  const k1=trk[i],b=svPose(B,k1[1]),u=Math.max(0,Math.min(1,(t-ta)/Math.max(1e-4,k1[0]-ta))),f=(svEase[k1[2]||'io']||svEase.io)(u);
+  const ks=new Set(Object.keys(a).concat(Object.keys(b)));
+  for(const k of ks){const va=a[k],vb=b[k],o=out[k]||(out[k]=[0,0,0,0,0,0]);for(let q=0;q<6;q++){const x=va&&va[q]!=null?va[q]:0,y=vb&&vb[q]!=null?vb[q]:0;o[q]=x+(y-x)*f}}
+  if(i>0&&trk[i-1][3]&&trk[i-1][1]===k1[1])svTrem(out,trk[i-1],now);return out}
+function svCopy(out,a,w){for(const k in a){const v=a[k],o=out[k]||(out[k]=[0,0,0,0,0,0]);for(let q=0;q<6;q++)o[q]=v[q]!=null?v[q]*w:0}}
+// a held key with a 4th field = tremble amount (shaking with effort before a big strike)
+function svTrem(out,key,now){const a=key&&key[3];if(!a)return;let n=0;for(const k in out){const o=out[k];if(!o)continue;o[0]+=Math.sin(now/27+n)*a*.6;o[2]+=Math.cos(now/31+n*1.7)*a*.5;n++}}
+// ---------------- warnings (red ground shapes) and hit shapes ----------------
+// shape: {k:'c',r} circle · {k:'r',r0,r} ring · {k:'a',r,h,r0} cone (half-angle h) · {k:'l',w,l} line forward
+// anchor: {x,z,a} (a = yaw: forward = (sin a, cos a), right = (cos a, -sin a))
+function svIn(S,an,p,pad){pad=pad==null?.35:pad;const dx=p.x-an.x,dz=p.z-an.z,d=Math.hypot(dx,dz),aa=an.a||0;
+  if(S.k==='c')return d<S.r+pad;if(S.k==='r')return d>S.r0-pad&&d<S.r+pad;
+  const fz=dx*Math.sin(aa)+dz*Math.cos(aa),fx=dx*Math.cos(aa)-dz*Math.sin(aa);
+  if(S.k==='a')return d<S.r+pad&&d>(S.r0||0)-pad&&(d<.8||Math.abs(Math.atan2(fx,fz))<S.h+pad/Math.max(1,d));
+  if(S.k==='l')return fz>-pad-(S.b||0)&&fz<S.l+pad&&Math.abs(fx)<S.w/2+pad;return false}
+// flat shape points in local (u = right, v = forward): returns {pos:[u,v,...], idx}
+function svShapeUV(S,k){const P=[],I=[];k=k==null?1:k;
+  const sector=(r0,r1,a0,a1,nr,na)=>{for(let i=0;i<=nr;i++)for(let j=0;j<=na;j++){const r=r0+(r1-r0)*i/nr,a=a0+(a1-a0)*j/na;P.push(Math.sin(a)*r,Math.cos(a)*r)}
+    for(let i=0;i<nr;i++)for(let j=0;j<na;j++){const A=i*(na+1)+j,B=A+1,C=A+na+1,D=C+1;I.push(A,C,B,B,C,D)}};
+  if(S.k==='c')sector(0,S.r*k,-Math.PI,Math.PI,Math.max(2,Math.round(S.r*k*.9)),Math.max(20,Math.round(S.r*8)));
+  else if(S.k==='r')sector(S.r0,S.r0+(S.r-S.r0)*k,-Math.PI,Math.PI,Math.max(1,Math.round((S.r-S.r0)*.8)),Math.max(24,Math.round(S.r*8)));
+  else if(S.k==='a')sector(S.r0||0,(S.r0||0)+(S.r-(S.r0||0))*k,-S.h,S.h,Math.max(2,Math.round(S.r*.9)),Math.max(6,Math.round(S.h*S.r*2.4)));
+  else if(S.k==='l'){const nl=Math.max(2,Math.round(S.l*k*.8)),b=-(S.b||0);for(let i=0;i<=nl;i++)for(let j=0;j<=2;j++)P.push(-S.w/2+S.w*j/2,b+(S.l*k-b)*i/nl);
+    for(let i=0;i<nl;i++)for(let j=0;j<2;j++){const A=i*3+j,B=A+1,C=A+3,D=C+1;I.push(A,C,B,B,C,D)}}
+  return {P,I}}
+function svShapeGeo(S,an,k,lift){const {P,I}=svShapeUV(S,k),pos=new Float32Array(P.length/2*3),ca=Math.cos(an.a||0),sa=Math.sin(an.a||0);
+  for(let i=0;i<P.length/2;i++){const u=P[i*2],v=P[i*2+1],x=an.x+u*ca+v*sa,z=an.z-u*sa+v*ca;pos[i*3]=x;pos[i*3+1]=GH(x,z)+(lift||.15);pos[i*3+2]=z}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(I);g.computeBoundingSphere();g.userData.lps=1;return g}
+// a warning that fills over T seconds (game time); returns {kill()}
+function svWarn(S,an,T,o){o=o||{};const D=(typeof KQ!='undefined'&&KQ.dim)||1,faint=!!o.faint,col=o.col||0xd01808;
+  const mA=teleMat(col,(faint?.12:.3)*D),mF=teleMat(o.fc||0xff3010,(faint?.08:.16)*D),a=teleMesh(svShapeGeo(S,an,1),mA,20);let f=null,last=-1,t=0,dead=false;scene.add(a);
+  let edge=null,mE=null;if(S.k==='c'||S.k==='r'){mE=teleMat(col===0xd01808?0xff2a10:col,faint?.4:.9);const eS={k:'r',r0:S.r*.95,r:S.r};edge=teleMesh(svShapeGeo(eS,an,1,.16),mE,21);scene.add(edge)}
+  const W={o:a,f:null,edge,r:S.r||0,line:S.k!=='c',T,t:0,pos:{x:an.x,z:an.z},id:++DTL.n,sv:1};DTL.live.push(W);
+  const kill=()=>{if(dead)return;dead=true;scene.remove(a);a.geometry.dispose();mA.dispose();if(f){scene.remove(f);f.geometry.dispose()}mF.dispose();if(edge){scene.remove(edge);edge.geometry.dispose();mE.dispose()}const j=DTL.live.indexOf(W);if(j>=0)DTL.live.splice(j,1)};
+  kqFx({tick(dt){if(dead)return false;t+=dt||0;W.t=t;const k=Math.min(1,t/Math.max(.05,T)),q=Math.round((.12+.88*k)*16)/16;
+    if(q!==last){last=q;if(f){scene.remove(f);f.geometry.dispose()}f=teleMesh(svShapeGeo(S,an,q,.155),mF,20);scene.add(f);W.f=f}
+    mF.opacity=((faint?.06:.16)+(faint?.16:.34)*k)*D;if(mE)mE.opacity=(faint?.35:.9)*(k<.75?1:.8+.2*Math.abs(Math.sin(t*18)));
+    if(t>=T+.02){kill();return false}return true},end:kill});
+  return {kill}}
+// the area a hit covered, flashed in the boss colour (learn the reach)
+function svFlash(S,an,col,ms){const m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,side:THREE.DoubleSide,fog:false});
+  const o=teleMesh(svShapeGeo(S,an,1,.18),m,22);scene.add(o);let t=0;const T=(ms||320)/1000;
+  kqFx({tick(dt){t+=dt||0;m.opacity=.42*(1-t/T);return t<T},end(){scene.remove(o);o.geometry.dispose();m.dispose()}})}
+// ---------------- effects (all on the game clock) ----------------
+// weapon trail: a ribbon between two points on a joint, sampled every frame while the move is in [t0,t1]
+function svTrail(e,j,a,b,col,life){const S=e.sv,R=S.R,J=R.J[j];if(!J)return null;const N=18,pos=new Float32Array(N*2*3),g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));const al=new Float32Array(N*2*3);g.setAttribute('color',new THREE.BufferAttribute(al,3));
+  const I=[];for(let i=0;i<N-1;i++){const A=i*2;I.push(A,A+1,A+2,A+1,A+3,A+2)}g.setIndex(I);g.userData.lps=1;
+  const m=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  const o=new THREE.Mesh(g,m);o.frustumCulled=false;o.renderOrder=23;o.userData.lpsSkip=1;scene.add(o);
+  const L=[],va=new THREE.Vector3(),vb=new THREE.Vector3(),c=new THREE.Color(col);let on=true,fade=0;const LF=life||.16;
+  const T={stop(){on=false},o};
+  kqFx({tick(dt){dt=dt||0;if(on&&!e.dead&&e.m.parent){e.m.updateMatrixWorld(true);va.set(a[0],a[1],a[2]);vb.set(b[0],b[1],b[2]);J.localToWorld(va);J.localToWorld(vb);L.unshift({a:va.clone(),b:vb.clone(),t:0});if(L.length>N)L.pop()}
+    for(const q of L)q.t+=dt;while(L.length&&L[L.length-1].t>LF)L.pop();if(!on)fade+=dt;
+    for(let i=0;i<N;i++){const q=L[Math.min(i,L.length-1)];if(!q){pos.fill(0);break}const k=Math.max(0,1-q.t/LF)*(1-Math.min(1,fade/.2));
+      pos.set([q.a.x,q.a.y,q.a.z,q.b.x,q.b.y,q.b.z],i*6);al.set([c.r*k,c.g*k,c.b*k,c.r*k*.15,c.g*k*.15,c.b*k*.15],i*6)}
+    g.attributes.position.needsUpdate=true;g.attributes.color.needsUpdate=true;g.computeBoundingSphere();return on||fade<.25},end(){scene.remove(o);g.dispose();m.dispose()}});return T}
+// expanding shockwave ring on the ground
+function svShock(p,col,r,dur,w){const g=svG('shk',()=>new THREE.RingGeometry(.86,1,48,1).rotateX(-Math.PI/2)),m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  const o=new THREE.Mesh(g,m);o.position.set(p.x,GH(p.x,p.z)+.2,p.z);o.renderOrder=22;o.userData.lpsSkip=1;scene.add(o);let t=0;const T=dur||.5;
+  kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/T),s=.3+r*svEase.o(k);o.scale.set(s,1+(w||0),s);m.opacity=.85*(1-k);return k<1},end(){scene.remove(o);m.dispose()}})}
+// a soft ground decal (scorch, frost, ichor, blood) that fades over life seconds
+function svDecal(p,col,r,life,op){const g=svG('dec',()=>new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),m=new THREE.MeshBasicMaterial({color:col,map:SPR,transparent:true,opacity:op||.55,depthWrite:false,fog:false});
+  const o=new THREE.Mesh(g,m);o.position.set(p.x,GH(p.x,p.z)+.12,p.z);o.scale.setScalar(r);o.renderOrder=18;o.userData.lpsSkip=1;scene.add(o);let t=0;const T=life||3;
+  kqFx({tick(dt){t+=dt||0;m.opacity=(op||.55)*Math.min(1,(T-t)/Math.min(1,T*.4));return t<T},end(){scene.remove(o);m.dispose()}});return o}
+// a spike (ice, bone, rock, blood) bursting out of the ground and sinking back
+function svSpike(p,mat,h,r,life,tilt){const g=svG('spk',()=>{const q=new THREE.ConeGeometry(1,1,5,1);q.translate(0,.5,0);return q.toNonIndexed()}),o=new THREE.Mesh(g,mat);
+  const y0=GH(p.x,p.z);o.position.set(p.x,y0-h,p.z);o.scale.set(r,h,r);o.rotation.set((Math.random()-.5)*(tilt||.4),Math.random()*6,(Math.random()-.5)*(tilt||.4));o.castShadow=true;o.userData.lpsSkip=1;scene.add(o);let t=0;const T=life||1.4;
+  kqFx({tick(dt){t+=dt||0;const up=Math.min(1,t/.09),dn=t>T-.35?(t-(T-.35))/.35:0;o.position.y=y0-h+h*svEase.o(up)-h*1.05*svEase.i(Math.min(1,dn));return t<T},end(){scene.remove(o)}});return o}
+// a projectile flying from a to b over T seconds (arc height h), glow sprite + particle trail; onEnd at arrival
+function svShot(a,b,T,col,sz,h,onEnd,mesh){const o=mesh||kqSpr(col,sz||1.2);o.position.copy(a);scene.add(o);let t=0;const s=a.clone(),ar=new THREE.Vector3();
+  kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/T);ar.lerpVectors(s,b,k);ar.y+=Math.sin(k*Math.PI)*(h||0);if(mesh){const d=ar.clone().sub(o.position);if(d.lengthSq()>1e-6)o.lookAt(o.position.clone().add(d))}o.position.copy(ar);if(Math.random()<.7)burst(ar,col,1,.3,.2,.35);
+    if(k>=1){try{onEnd&&onEnd(ar)}catch(err){console.error('sv shot',err)}return false}return true},end(){scene.remove(o)}});return o}
+// a glow that swells on a joint for T seconds (the charge-up tell)
+function svCharge(e,j,col,s,T,x,y,z){const R=e.sv.R;const o=svSpr(R,j,col,.01,x,y,z);let t=0;
+  kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/T);o.scale.setScalar(.05+s*svEase.o(k)*(1+.12*Math.sin(t*30)));if(Math.random()<.4){const p=new THREE.Vector3();o.getWorldPosition(p);burst(p,col,1,.4,.4,.3)}return t<T&&!e.dead},end(){if(o.parent)o.parent.remove(o)}});return o}
+// world position of a point on a joint
+function svWP(e,j,x,y,z,out){out=out||new THREE.Vector3();const J=e.sv.R.J[j];out.set(x||0,y||0,z||0);if(!J)return out.copy(e.m.position);e.m.updateMatrixWorld(true);return J.localToWorld(out)}
+// ---------------- sound (synthesised on the game's audio bus) ----------------
+function svSnd(k,vol,pitch){try{if(SET.sfx===false)return;const a=AUD;if(!a||a.state!='running'||!NOISE)return;const t=a.currentTime;vol=(vol||1)*.9;const p=pitch||1;
+  const env=(g,v,at,dec,hold)=>{g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*vol,t+at);if(hold)g.gain.setValueAtTime(v*vol,t+at+hold);g.gain.exponentialRampToValueAtTime(.001,t+at+(hold||0)+dec)};
+  const osc=(type,f0,f1,dur,v,at,hold,vib)=>{const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f0*p,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1*p),t+(hold||0)+dur);
+    if(vib){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=vib;lg.gain.value=f0*p*.06;l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+(hold||0)+dur+.1)}
+    env(g,v,at||.01,dur,hold);o.connect(g);g.connect(a.out);o.start(t);o.stop(t+(at||.01)+(hold||0)+dur+.05)};
+  const noise=(ft,f0,f1,dur,v,q,at,hold)=>{const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;s.loop=true;f.type=ft;f.frequency.setValueAtTime(f0*p,t);f.frequency.exponentialRampToValueAtTime(Math.max(40,f1*p),t+(hold||0)+dur);f.Q.value=q||1;
+    env(g,v,at||.005,dur,hold);s.connect(f);f.connect(g);g.connect(a.out);s.start(t);s.stop(t+(at||.005)+(hold||0)+dur+.05)};
+  ({roar:()=>{osc('sawtooth',95,55,1.1,.22,.12,.3,7);osc('sawtooth',142,80,1,.12,.1,.3,5);noise('lowpass',900,240,1.2,.35,1,.15,.25)},
+    shriek:()=>{osc('sawtooth',620,380,.8,.1,.05,.15,11);osc('square',930,600,.7,.05,.05,.1,9);noise('bandpass',3000,1600,.8,.18,3,.05,.1)},
+    whoosh:()=>{noise('bandpass',500,2600,.22,.42,1.2,.04)},
+    swing:()=>{noise('bandpass',1800,500,.18,.5,1.6,.01);osc('triangle',300,120,.12,.08)},
+    heavy:()=>{osc('sine',90,32,.6,.75);noise('lowpass',1300,90,.55,.6,1,.004);osc('triangle',60,30,.4,.3)},
+    crack:()=>{noise('highpass',2600,1200,.14,.5,1,.002);osc('square',240,90,.1,.12)},
+    charge:()=>{osc('sawtooth',110,440,.1,.08,.6,.0,6);osc('sine',220,880,.1,.1,.6);noise('bandpass',600,2400,.1,.12,4,.6)},
+    hum:()=>{osc('sine',160,150,.6,.14,.25,.4,4);osc('triangle',320,300,.6,.06,.25,.4)},
+    hiss:()=>{noise('highpass',4200,2800,.6,.3,1,.08,.15)},
+    splash:()=>{noise('lowpass',2400,300,.5,.45,1,.005);osc('sine',220,70,.3,.2)},
+    bell:()=>{osc('sine',196,196,1.6,.16,.005);osc('sine',392,392,1.2,.08,.005);osc('sine',588,580,.9,.05,.005)},
+    ice:()=>{osc('sine',1800,2400,.25,.07,.002);osc('sine',2600,3100,.2,.05,.03);noise('highpass',5000,3000,.25,.18,1,.002)},
+    squelch:()=>{noise('lowpass',700,140,.35,.5,2,.01);osc('sine',140,60,.3,.25)},
+    blood:()=>{noise('bandpass',900,300,.4,.35,2,.01);osc('sawtooth',180,60,.4,.07)},
+    step:()=>{osc('sine',70,40,.22,.35);noise('lowpass',500,100,.2,.2)},
+    stag:()=>{osc('square',300,120,.5,.08);noise('bandpass',1600,400,.4,.3,2);osc('sine',80,40,.5,.4)},
+    gong:()=>{osc('sine',110,104,2.4,.3,.005);osc('sine',165,160,2,.12,.005);osc('triangle',220,210,1.8,.08,.005);noise('lowpass',600,100,.6,.2,1,.005)}})[k]?.()}catch(_){}}
+// fewer draw calls: the static meshes hanging on the same joint with the same material become one mesh (flat shading
+// needs positions only). Meshes that animate on their own (userData.noMerge) stay separate.
+function svMerge(R){let n0=0,n1=0;const parents=new Set();R.root.traverse(o=>{if(o.isMesh&&o.parent)parents.add(o.parent)});
+  parents.forEach(P=>{const by=new Map();P.children.slice().forEach(o=>{if(!o.isMesh||o.userData.noMerge||!o.geometry||!o.geometry.attributes.position)return;n0++;const k=o.material.uuid;if(!by.has(k))by.set(k,[]);by.get(k).push(o)});
+    by.forEach(L=>{if(L.length<2){n1+=L.length;return}let tot=0;const parts=L.map(o=>{o.updateMatrix();const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry,a=g.attributes.position;tot+=a.count;return {a,m:o.matrix,tmp:g!==o.geometry?g:null}});
+      const pos=new Float32Array(tot*3),v=new THREE.Vector3();let j=0;parts.forEach(q=>{for(let i=0;i<q.a.count;i++){v.fromBufferAttribute(q.a,i).applyMatrix4(q.m);pos[j++]=v.x;pos[j++]=v.y;pos[j++]=v.z}if(q.tmp)q.tmp.dispose()});
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.computeVertexNormals();g.userData.lps=1;g.userData.svOwn=1;
+      const m=new THREE.Mesh(g,L[0].material);m.castShadow=true;m.userData.lpsSkip=1;L.forEach(o=>P.remove(o));P.add(m);n1++})});
+  R.mergeN=[n0,n1];return R.mergeN}
+// ---------------- the boss state ----------------
+function svAuth(e){try{return !(MP&&MP.on)||!AF||AF.i!==e.ar||mpBossAuth(e.ar)===MP.me}catch(_){return true}}
+function svMake(e,i){const B=SVB[i];if(!B)return;const m=e.m;
+  m.children.forEach(o=>{o.visible=false});
+  const R=svRig();B.build(R,e);svRest(R);try{svMerge(R)}catch(err){console.error('sv merge',err)}const bs=m.bs||m.scale.x||1;R.root.scale.setScalar(1/bs);R.root.name='sv'+i;m.add(R.root);
+  const O={};for(const k in R.J)O[k]=[0,0,0,0,0,0];
+  e.sv={i,B,R,O,P:{},snap:{},aw:0,trk:null,tt:0,mv:null,ph:1,rest:1.5,last:[],cd:{},po:0,poT:0,stg:0,inv:0,spd:0,lp:m.position.clone(),hero:1,body:B.body||2.2,on:false,wait:0,act:0,fl:0};
+  B.init&&B.init(e,R);svApply(e,0,performance.now())}
+// apply the pose layers to the joints
+function svApply(e,dt,now){const S=e.sv,R=S.R,B=S.B,O=S.O;for(const k in O){const o=O[k];o[0]=o[1]=o[2]=o[3]=o[4]=o[5]=0}
+  try{B.loco&&B.loco(e,S,O,dt,now)}catch(err){if(!SVX.le){SVX.le=1;console.error('sv loco',err)}}
+  const act=!!(S.mv||S.stgM||S.dieM);S.aw+=((act?1:0)-S.aw)*Math.min(1,dt*(act?16:6));if(dt===0)S.aw=act?1:0;
+  if(S.trk&&S.aw>.001){const P=svSample(B,S,S.trk,S.tt,S.P,now),w=S.aw;for(const k in P){const p=P[k],o=O[k];if(!p||!o)continue;for(let q=0;q<6;q++)o[q]+=(p[q]-o[q])*w}}
+  else if(S.aw<=.001)S.trk=null;
+  for(const k in O){const g=R.J[k],o=O[k],r0=g.userData.r0,p0=g.userData.p0;g.rotation.set(r0.x+o[0],r0.y+o[1],r0.z+o[2]);g.position.set(p0.x+o[3],p0.y+o[4],p0.z+o[5])}
+  // the hit flash: every lit material glows briefly
+  const fx=e.m.flT?(now-e.m.flT)/200:2,fl=fx>=0&&fx<1?(1-fx)*(1-fx):0;if(Math.abs(fl-S.fl)>.01||(fl===0&&S.fl!==0)){S.fl=fl;const W=SVX.fw||(SVX.fw=new THREE.Color(0xffd8b0));for(const m of R.mats){m.emissive.setHex(m.userData.e0);if(fl>0)m.emissive.lerp(W,fl*.6);m.emissiveIntensity=1}}
+  try{B.post&&B.post(e,S,dt,now)}catch(err){if(!SVX.lp){SVX.lp=1;console.error('sv post',err)}}}
+function svSnapNow(S){S.snap={};for(const k in S.O)S.snap[k]=S.O[k].slice()}
+// ---------------- moves ----------------
+// move def: {dur, trk, trn:[[t0,t1,rate]], rm:[[t0,t1,dist|'tgt',ease,stop]], hit:[{t,s,dm,w,o,col,kb,fx,faint}], ev:[[t,fn]], tk(c,dt), armor, inv:[t0,t1],
+//            r:[min,max] range, a:'f'|'b'|'s'|'any', wt, cd, ph, nx:[[id,p]], rec (extra rest), mel (melee: faint warnings)}
+function svStart(e,id,seed){const S=e.sv;if(!S||e.dead)return false;const D=S.B.M[id];if(!D){console.warn('sv move',id);return false}
+  svEndMove(e,true);svSnapNow(S);const now=performance.now();
+  S.mv={id,D,t:0,seed:seed||1,rnd:svRng(seed||1),done:new Set(),warn:[],an:{},fx:[],tr:[]};S.trk=D.trk;S.tt=0;S.cd[id]=(D.cd||0);S.last.unshift(id);S.last.length=4;SVX.st.casts++;
+  if(SVX.log.length<3000)SVX.log.push([S.i,id,+((typeof PACE!='undefined'&&PACE.clk)||0).toFixed(2)]);
+  const c=svCtx(e);try{D.go&&D.go(c)}catch(err){console.error('sv go',id,err)}return true}
+function svCtx(e){const S=e.sv,M=S.mv;const A=ARN[S.i];
+  return {e,S,M,A,B:S.B,R:S.R,m:e.m,t:M?M.t:0,rnd:M?M.rnd:Math.random,
+    fwd(o){o=o||new THREE.Vector3();const a=e.m.rotation.y;return o.set(Math.sin(a),0,Math.cos(a))},
+    at(f,x){const a=e.m.rotation.y,p=e.m.position;return new THREE.Vector3(p.x+Math.sin(a)*(f||0)+Math.cos(a)*(x||0),0,p.z+Math.cos(a)*(f||0)-Math.sin(a)*(x||0))},
+    hero(){return pl.position},wp(j,x,y,z){return svWP(e,j,x,y,z)},inA(p,mg){return inArena(A,p,mg==null?1.2:mg)},
+    hit(s,an,dm,o){return svHitNow(e,s,an,dm,o||{})}}}
+function svEndMove(e,silent){const S=e.sv;if(!S||!S.mv)return;const M=S.mv;if(silent)M.warn.forEach(w=>w&&w.kill&&w.kill());M.tr.forEach(t=>t&&t.stop&&t.stop());M.fx.forEach(f=>{try{f()}catch(_){}});
+  try{M.D.end&&M.D.end(svCtx(e),silent)}catch(err){console.error('sv end',err)}S.mv=null;S.rmOn=0}
+function svAnchor(e,h,c){const m=e.m,a=m.rotation.y;
+  if(h.o==='tgt'){const p=c.inA(pl.position.clone(),.6);return {x:p.x,z:p.z,a:svYawTo(m,p)}}
+  if(typeof h.o==='function'){const r=h.o(c);return {x:r.x,z:r.z,a:r.a!=null?r.a:a}}
+  const f=h.f||0,x=h.x||0;return {x:m.position.x+Math.sin(a)*f+Math.cos(a)*x,z:m.position.z+Math.cos(a)*f-Math.sin(a)*x,a:a+(h.ay||0)}}
+function svHitNow(e,s,an,dm,o){const S=e.sv;if(!AF||AF.i!==S.i||e.dead)return false;let hit=false;
+  if(o.flash!==false)svFlash(s,an,o.col||S.B.col,o.fms);
+  if(hero.hp>0&&svIn(s,an,pl.position,o.pad)){hit=true;SVX.st.hits++;if(o.pre)try{o.pre()}catch(_){}
+    const iv=hero.iv>0;bossHit(e,dm);
+    if(!iv&&hero.hp>0){if(o.kb){const dx=pl.position.x-an.x,dz=pl.position.z-an.z,l=Math.hypot(dx,dz)||1,A=ARN[S.i],q=inArena(A,pl.position.clone().add(new THREE.Vector3(dx/l*o.kb,0,dz/l*o.kb)),1);pl.step={x:(q.x-pl.position.x)/(o.kb||1),z:(q.z-pl.position.z)/(o.kb||1),t:.22,sp:(o.kb||1)/.22}}
+      if(o.on)try{o.on()}catch(err){console.error('sv on hit',err)}}}
+  return hit}
+function svTickMove(e,dt,now){const S=e.sv,M=S.mv;if(!M)return;const D=M.D,m=e.m,t0=M.t,t1=t0+dt;M.t=t1;S.tt=t1;const c=svCtx(e);c.t=t1;
+  // facing: turn toward the hero inside the turn windows
+  const trn=D.trn||[[0,D.lock!=null?D.lock:.35,S.B.turnA||4]];for(const w of trn)if(t1>w[0]&&t0<w[1]){const da=svAng(svYawTo(m,pl.position)-m.rotation.y);m.rotation.y+=Math.max(-w[2]*dt,Math.min(w[2]*dt,da))}
+  // root motion along the facing
+  S.rmOn=0;if(D.rm)for(const r of D.rm){if(t1<=r[0]||t0>=r[1])continue;S.rmOn=1;
+    if(M.an['rm'+r[0]]==null){const L=d2(pl.position,m.position);M.an['rm'+r[0]]=typeof r[2]==='number'?r[2]:Math.max(0,Math.min(r[5]||99,L-(r[4]||S.body+1.2)))}
+    const dist=M.an['rm'+r[0]],E=svEase[r[3]||'io'],k0=Math.max(0,(t0-r[0])/(r[1]-r[0])),k1=Math.min(1,(t1-r[0])/(r[1]-r[0])),dd=dist*(E(k1)-E(k0)),a=m.rotation.y;
+    walkM(m,Math.sin(a)*dd,Math.cos(a)*dd)}
+  // warnings, then the hits
+  if(D.hit)D.hit.forEach((h,i)=>{const w=h.w!=null?h.w:(D.mel||h.mel?.32:.9);
+    if(!M.done.has('w'+i)&&t1>=h.t-w){M.done.add('w'+i);const an=svAnchor(e,h,c);M.an['h'+i]=an;if(w>0&&h.show!==false){const W=svWarn(h.s,an,Math.max(.05,h.t-Math.max(t0,h.t-w)),{faint:D.mel||h.mel||h.faint,col:h.wc});M.warn.push(W)}}
+    if(!M.done.has('h'+i)&&t1>=h.t){M.done.add('h'+i);let an=M.an['h'+i];if(!an||h.track)an=svAnchor(e,h,c);
+      if(h.pre)try{h.pre(c,an)}catch(err){console.error('sv pre',err)}
+      const hit=h.nohit?false:svHitNow(e,h.s,an,h.dm||1,{kb:h.kb,col:h.col,on:h.on?()=>h.on(c,an):null,flash:h.flash,fms:h.fms});
+      if(h.fx)try{h.fx(c,an,hit)}catch(err){console.error('sv fx',err)}}});
+  if(D.ev)D.ev.forEach((v,i)=>{if(!M.done.has('e'+i)&&t1>=v[0]){M.done.add('e'+i);try{v[1](c)}catch(err){console.error('sv ev',M.id,err)}}});
+  if(D.tr)D.tr.forEach((v,i)=>{if(!M.done.has('t'+i)&&t1>=v[0]){M.done.add('t'+i);M.tr.push(svTrail(e,v[2],v[3],v[4],v[5]||S.B.col,v[6]))}if(M.done.has('t'+i)&&!M.done.has('u'+i)&&t1>=v[1]){M.done.add('u'+i);const T=M.tr[M.tr.length-1];T&&T.stop()}});
+  if(D.tk)try{D.tk(c,dt)}catch(err){console.error('sv tk',err)}
+  if(M===S.mv&&t1>=D.dur){svEndMove(e);svAfterMove(e,M)}}
+// after a move: a combo follow-up, or a rest (the punish window)
+function svAfterMove(e,M){const S=e.sv,D=M.D;if(!svAuth(e)||e.dead)return;
+  if(S.qStag){S.qStag=0;svCast(e,'stagger');return}
+  if(S.ph===1&&S.B.ph2&&e.c.h/M_(e)<=S.B.ph2&&S.B.M.awaken){svCast(e,'awaken');return}
+  if(D.nx){const L=d2(pl.position,e.m.position);for(const [id,p,mx] of D.nx){const N=S.B.M[id];if(!N||(N.ph||1)>S.ph)continue;if(mx!=null&&L>mx)continue;if(M.rnd()<p){svCast(e,id);return}}}
+  const ai=S.B.ai||{},r=ai.rest||[.8,1.4];S.rest=(r[0]+Math.random()*(r[1]-r[0]))*(S.ph>1?(ai.ph2r||.72):1)+(D.rec||0)}
+function M_(e){return M(e.c)}
+// cast = start locally and relay to co-op partners (the seed rides in en as 1+seed/1000: the relay clamps en to 0.5..2)
+function svCast(e,id,seed){const S=e.sv;seed=Math.max(1,Math.min(998,Math.round(seed||(1+Math.random()*997))));const k='sv'+S.i+'_'+id;
+  if(BMV[k]){const o=MP.inAI;MP.inAI=1;try{BMV[k](e,ARN[S.i],1+seed/1000)}finally{MP.inAI=o}}else svStart(e,id,seed)}
+function svRegMoves(i){const B=SVB[i];for(const id in B.M){const k='sv'+i+'_'+id;if(BMV[k])continue;kqBmv(k,function(e,A,en){if(e&&e.sv&&e.sv.i===i)svStart(e,id,Math.max(1,Math.round(((+en||1)-1)*1000)));return {d:0,lock:0}})}}
+// ---------------- the AI ----------------
+function svPick(e){const S=e.sv,B=S.B,m=e.m,L=d2(pl.position,m.position),ang=Math.abs(svAng(svYawTo(m,pl.position)-m.rotation.y));
+  const side=ang<1.0?'f':ang>2.1?'b':'s',C=[];let tot=0;
+  for(const id in B.M){const D=B.M[id];if(!D.wt||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1))continue;if((S.cd[id]||0)>0)continue;
+    const r=D.r||[0,99];if(L<r[0]||L>r[1])continue;const a=D.a||'f';if(a!=='any'&&!(a===side||(a==='fs'&&side!=='b')||(a==='sb'&&side!=='f')))continue;
+    if(S.last[0]===id&&S.last[1]===id)continue;if(D.when&&!D.when(e,L,side))continue;
+    let w=typeof D.wt==='function'?D.wt(e,L,side):D.wt;if(S.last[0]===id)w*=.35;if(w>0){C.push([id,w]);tot+=w}}
+  if(!C.length)return null;let u=Math.random()*tot;for(const [id,w] of C){u-=w;if(u<=0)return id}return C[C.length-1][0]}
+function svMoveFree(e,dt,now){const S=e.sv,B=S.B,ai=B.ai||{},m=e.m,A=ARN[S.i],v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
+  // face the hero
+  const da=svAng(Math.atan2(v.x,v.z)-m.rotation.y),tr=(ai.turn||2.4)*(S.ph>1?1.2:1);m.rotation.y+=Math.max(-tr*dt,Math.min(tr*dt,da));
+  let sp=0,ux=0,uz=0;const pref=ai.pref||5,ws=(ai.walk||2.2)*(S.ph>1?(ai.ph2s||1.15):1);
+  if(ai.style!=='root'){if(L>pref+1.2){sp=L>pref+8&&ai.run?ai.run:ws;ux=v.x/L;uz=v.z/L}
+    else if(L<pref-2.2&&ai.back){sp=ws*.55;ux=-v.x/L;uz=-v.z/L}
+    else{S.sd=S.sd||1;S.sdT=(S.sdT||0)-dt;if(S.sdT<=0){S.sdT=2+Math.random()*2.5;S.sd=Math.random()<.5?-1:1}sp=ws*(ai.strafe==null?.45:ai.strafe);ux=-v.z/L*S.sd;uz=v.x/L*S.sd}}
+  if(sp>0&&Math.abs(da)<1.4){walkM(m,ux*sp*dt,uz*sp*dt)}else sp=0;
+  S.walkSp=sp}
+function svAI(e,dt,now){const S=e.sv,A=arenaOf(e),m=e.m,B=S.B;if(!A)return;
+  if(AF===A&&A.f){m.visible=true;if(e.hb)e.hb.visible=false}
+  const auth=svAuth(e);if(e.bs){e.bs.pb=99;e.bs.t=99;e.bs.ult=99}
+  // speed for the walk cycle (from the actual motion, so partners animate too)
+  const dx=m.position.x-S.lp.x,dz=m.position.z-S.lp.z;S.lp.copy(m.position);const ms=dt>0?Math.hypot(dx,dz)/dt:0;S.spd+=((ms>12?0:ms)-S.spd)*Math.min(1,dt*8);
+  for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.inv=Math.max(0,S.inv-dt);
+  if(!A.f){// out of the fight: walk home, heal, idle
+    if(S.mv)svEndMove(e,true);S.stgM=null;S.on=false;e.agg=0;const hx=A.cx-m.position.x,hz=A.cz-m.position.z,hl=Math.hypot(hx,hz);
+    if(hl>.8){walkM(m,hx/hl*2.2*dt,hz/hl*2.2*dt);m.rotation.y=Math.atan2(hx,hz)}else if(B.homeY!=null){m.rotation.y+=svAng(B.homeY(A)-m.rotation.y)*Math.min(1,dt*2)}
+    e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.2);S.po=0;svApply(e,dt,now);return}
+  e.agg=1;
+  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(auth&&B.M.intro)svCast(e,'intro')}
+  // peers follow the driver's phase from the health sync
+  if(!auth&&S.ph===1&&B.ph2&&e.c.h/M(e.c)<=B.ph2-.02){S.ph=2;e.bs.ph=2;try{B.awake&&B.awake(e,true)}catch(_){}}
+  // poise drains when it is not being hit
+  if(now-S.poT>3500)S.po=Math.max(0,S.po-dt*.12);
+  if(S.mv)svTickMove(e,dt,now);
+  else if(auth){
+    if(S.ph===1&&B.ph2&&e.c.h/M(e.c)<=B.ph2&&B.M.awaken)svCast(e,'awaken');
+    else{svMoveFree(e,dt,now);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}}
+  else{const da=svAng(svYawTo(m,pl.position)-m.rotation.y);m.rotation.y+=Math.max(-2*dt,Math.min(2*dt,da))}
+  // keep inside the den, push the hero out of the body
+  const cdx=m.position.x-A.cx,cdz=m.position.z-A.cz,cl=Math.hypot(cdx,cdz),lim=ARENA_R-(B.edge||2);if(cl>lim){m.position.x=A.cx+cdx/cl*lim;m.position.z=A.cz+cdz/cl*lim}
+  if(!S.ghost&&!S.rmOn&&hero.hp>0){const hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,hl=Math.hypot(hx,hz),R0=S.body;if(hl<R0&&hl>.001){const k=(R0-hl);if(typeof plBlocked!='function'||!plBlocked(pl.position.x+hx/hl*k,pl.position.z+hz/hl*k)){pl.position.x+=hx/hl*k;pl.position.z+=hz/hl*k}}}
+  svApply(e,dt,now)}
+// ---------------- poise, stagger, invulnerability, death ----------------
+function svPoise(e,d){const S=e.sv;if(!S||e.dead||S.mv&&S.mv.id==='stagger'||S.mv&&S.mv.id==='awaken'||!svAuth(e))return;
+  const P=M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1);S.po=Math.min(1,S.po+d/P);S.poT=performance.now();
+  if(S.po>=1){S.po=0;const arm=S.mv&&S.mv.D.armor;if(arm)S.qStag=1;else svCast(e,'stagger')}}
+// the generic stagger move (every boss gives its own track as B.stag)
+function svStagDef(B){return {dur:B.stagT||2.6,trk:B.stag,inv:null,go(c){const S=c.S;S.stg=c.M.D.dur;SVX.st.stag++;svSnd('stag',1);popT(c.m.position,'STAGGERED','#ffd860',true);
+    burst(gY(c.m.position,2.2),0xffe08a,40,3,3,.7);svShock(c.m.position,0xffd860,4,.4);try{S.B.onStag&&S.B.onStag(c)}catch(_){}},
+  tk(c,dt){c.S.stg=Math.max(0,c.M.D.dur-c.M.t);if(Math.random()<dt*7){const p=svWP(c.e,c.B.headJ||'root',0,0,0);burst(p,0xffe08a,1,.5,.6,.5)}},end(c){c.S.stg=0}}}
+// ---------------- hooks into the game ----------------
+{const f=spawnBoss;spawnBoss=function(i){const e=f.apply(this,arguments);try{if(SVX.on&&e&&SVB[i])svMake(e,i)}catch(err){console.error('sv make',i,err)}return e}}
+{const f=bossAI;bossAI=function(e,dt,now){if(e&&e.sv){try{svAI(e,dt||0,now||performance.now())}catch(err){if((SVX.ae=(SVX.ae||0)+1)<6)console.error('sv ai',err)}return}return f.apply(this,arguments)}}
+// the enemy loop skips models more than 30 tiles away: a den is bigger than that
+{const f=mpAct;mpAct=function(e){if(e&&e.sv&&AF&&AF.i===e.ar)return true;return f.apply(this,arguments)}}
+// co-op: the partner's copy keeps its own root motion while a move moves the boss
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.sv&&e.sv.rmOn){const x=e.m.position.x,z=e.m.position.z,r=f.apply(this,arguments);e.m.position.x=x;e.m.position.z=z;return r}return f.apply(this,arguments)}}
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.sv&&!e.dead){const S=e.sv;
+    if(S.inv>0||S.mv&&S.mv.D.inv&&S.mv.t>=S.mv.D.inv[0]&&S.mv.t<=S.mv.D.inv[1]){if(nowP()-(S.ivT||0)>500){S.ivT=nowP();dn(e.m.position,'Immune','#c8c0b0',-30,600)}return 0}
+    if(S.stg>0)d=Math.round(d*1.35);const h0=e.c.h,r=f.call(this,e,d,s,crit,dot);if(!dot)svPoise(e,Math.max(0,h0-e.c.h));return r}return f.apply(this,arguments)}}
+// death: the boss plays its fall before the body shrinks away
+{const f=kill;kill=function(e){if(e&&e.sv&&!e.sv.dying){const S=e.sv;S.dying=1;svEndMove(e,true);S.stgM=null;
+    if(S.B.die){svSnapNow(S);S.dieM=1;S.trk=S.B.die;S.tt=0;e.m._ssDead=1;const T=2.1;let t=0;svSnd('roar',.9,.7);
+      kqFx({tick(dt){t+=dt||0;S.tt=t;try{svApply(e,dt||0,performance.now())}catch(_){}try{S.B.dying&&S.B.dying(e,t)}catch(_){}return t<T&&!!e.m.parent},end(){}})}}
+  return f.apply(this,arguments)}}
+{const f=removeE;removeE=function(e){const r=f.apply(this,arguments);try{if(e&&e.sv){e.sv.R.mats.forEach(m=>m.dispose());e.sv.R.glow.forEach(m=>m.dispose());e.sv.R.root.traverse(o=>{if(o.geometry&&o.geometry.userData.svOwn)o.geometry.dispose()})}}catch(_){}return r}}
+// the dens: scenery, seal and colliders stay; their hazards, HUD lines and special targets are off while the boss fights its own way
+function svDenTakeover(){DEN.forEach((D,i)=>{if(!D||!SVB[i]||D._sv)return;D._sv=1;const c0=D.clear;
+  D.start=function(A,e){['d01hud','rwCold','rwVig','d5tint','d5rite'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});try{SVB[i].denStart&&SVB[i].denStart(A,e)}catch(err){console.error('sv den start',err)}};
+  D.tick=function(A,e,dt,now){try{SVB[i].denTick&&SVB[i].denTick(A,e,dt,now)}catch(err){}};D.ai=null;D.hitA=null;
+  D.clear=function(A,won){try{c0&&c0.call(this,A,won)}catch(_){}['d01hud','rwCold','rwVig','d5tint','d5rite'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+    const e=bossEnt(A.i)||enemies.find(q=>q.ar===A.i);if(e&&e.sv&&!e.sv.dying){const S=e.sv;svEndMove(e,true);S.on=false;S.ph=1;S.po=0;S.stg=0;S.inv=0;S.cd={};if(e.bs)e.bs.ph=1;try{S.B.reset&&S.B.reset(e)}catch(err){console.error('sv reset',err)}}
+    try{SVB[i].denClear&&SVB[i].denClear(A,won)}catch(_){}}})}
+// HUD: a posture bar under the boss's health bar
+{const f=bossHudX;bossHudX=function(){const r=f.apply(this,arguments);try{const e=AF&&bossEnt(AF.i);let p=document.getElementById('svPo');
+  if(!e||!e.sv){if(p)p.style.display='none';return r}
+  if(!p){p=document.createElement('div');p.id='svPo';p.style.cssText='height:5px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.6);border:1px solid rgba(255,216,96,.35);border-radius:2px;overflow:hidden';p.innerHTML='<i style="display:block;height:100%;width:0;background:linear-gradient(90deg,#c89020,#ffe080);transition:width .12s"></i>';const b=$('boss'),mt=b&&b.querySelector('.meter');if(mt)mt.after(p);else if(b)b.appendChild(p)}
+  p.style.display='block';const S=e.sv;p.firstChild.style.width=(S.stg>0?100:S.po*100).toFixed(1)+'%';p.firstChild.style.background=S.stg>0?'#fff4c0':'linear-gradient(90deg,#c89020,#ffe080)'}catch(_){}return r}}
+// register a boss: moves become relayable BMV entries, the stagger move is added, the den is taken over
+function svReg(i,B){B.M.stagger=B.M.stagger||svStagDef(B);SVB[i]=B;svRegMoves(i);svDenTakeover();
+  // a boss that is already standing in its den (the game was loaded before this ran) gets its new model now
+  enemies.forEach(e=>{if(e.boss&&e.ar===i&&!e.sv&&!e.dead)try{svMake(e,i)}catch(err){console.error('sv make late',err)}})}
+// ================= v110 Sovereign 0 — Argus, the Hundred-Eyed (Kindlelight) =================
+// A gaunt bog-wolf the size of a hut: black matted hide over a ribcage, bark-like plates down the spine, antler horns, and
+// eyes — dozens, half-lidded in Phase I, all staring wide (and dangerous) in Phase II. The great brow eye fires the gaze.
+// Pattern (learnable):
+//  close in front ── Rending Claws: right paw rises and trembles → sweep; often chained into the left backhand, then a bite.
+//  close behind  ── Tail Lash: it looks back over its shoulder (the tell), then the tail sweeps the rear arc.
+//  mid           ── Lunging Bite: it coils low, then lunges along a line (step aside, don't back away).
+//  far           ── Leaping Pounce (crouch, then a high leap onto where you stood; long recovery: punish it)
+//                   or the Hundred-Eyed Gaze (it rears, the brow eye charges, a beam fires down a line).
+//  Phase II (55%) ─ "The Eyes Open": a howl and a push-back. New: Eye Barrage (bolts rain on your trail, keep moving) and
+//                   Blinding Flare (it hunches and every eye brightens — get out of the circle). Combos get longer.
+var ARG={col:0xffd040,dim:0xa87a1c};
+function argBuild(R,e){
+  const fur=svMat(R,0x2a2232,{roughness:.96,emissive:0x2a1838}),fur2=svMat(R,0x3e3648,{roughness:.95,emissive:0x1c1424}),hide=svMat(R,0x3e3546,{roughness:.8}),bark=svMat(R,0x3a2e22,{roughness:.9,emissive:0x0a0604}),
+    bone=svMat(R,0xc4b494,{roughness:.6,emissive:0x40341c}),claw=svMat(R,0x141016,{roughness:.4,metalness:.2}),gum=svMat(R,0x6a1c24,{roughness:.6,emissive:0x200408}),lid=svMat(R,0x30222a,{roughness:.7}),
+    iris=svGlowMat(R,ARG.dim),slit=new THREE.MeshBasicMaterial({color:0x0a0604});R.iris=iris;R.eyes=[];
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+  J('root',null,0,0,0);J('body','root',0,2.55,0);J('chest','body',0,0,.6);J('hips','body',0,0,-.9);
+  // ---- one torso: haunches, a gaunt waist, a deep ribcage and a hunched shoulder hump ----
+  svM(R,'body',svG('ag_tor',()=>svLoftZ([[-2.5,.26,.3,0,.3],[-2.2,.58,.62,0,.16],[-1.75,.78,.8,0,.06],[-1.15,.74,.74,0,.02],[-.5,.6,.66,0,.02],[.15,.74,.86,0,-.1],[.75,.94,1.08,0,-.18],[1.3,1.0,1.08,0,-.02],[1.8,.9,.96,0,.28],[2.2,.62,.68,0,.5],[2.45,.42,.5,0,.62]],12)),fur);
+  svM(R,'body',svG('ag_hmp',()=>svLump(.8,1,.25,11)),fur,0,.75,1.55,0,0,0,1.05,.7,1.15);
+  // shaggy mane of quills on the shoulders, thinning toward the rump (bark plates between them)
+  const QS=[[2.1,1.15,1.35],[1.85,1.25,1.5],[1.6,1.22,1.6],[1.35,1.15,1.45],[1.1,1.0,1.25],[.8,.92,1.05],[.45,.85,.85],[.1,.78,.7],[-.3,.7,.55],[-.75,.72,.5],[-1.2,.78,.45],[-1.65,.8,.38],[-2.05,.66,.3]];
+  QS.forEach(([z,y,h],k)=>{[0,1,-1].forEach(sd=>{if(sd&&(k>8||k%2))return;svM(R,'body',svG('ag_q'+(k%3),()=>svHorn(.12,1,0,-.42-.12*(k%3),5,5)),bone,sd*.32,y-(sd?.12:0),z,-1.25+(sd?.2:0)-.04*k,sd*.35,sd*.25,1,1,h*(sd?.7:1))});
+    if(k%2==0)svM(R,'body',svG('ag_pl',()=>svLump(.34,0,.4,7)),bark,(k%4?1:-1)*.45,y-.25,z-.15,0,k,0,1.1,.4,.9)});
+  // ragged fur hanging from the belly and the flanks
+  for(let k=0;k<16;k++){const sd=k%2?1:-1,z=-1.9+(k>>1)*.5;svM(R,'body',svG('ag_tf',()=>svHorn(.18,.75,0,-.25,4,3)),fur2,sd*.62,-.62-.08*Math.sin(k),z,2.5,sd*.25,sd*.35)}
+  // bark plates on the flanks (armour-like hide)
+  [[1.0,.2,.85],[.4,.1,.9],[-1.4,.25,.78],[1.6,.45,.8]].forEach(([z,y,x],k)=>[-1,1].forEach(sd=>svM(R,'body',svG('ag_pl2',()=>svLump(.42,0,.3,13)),bark,sd*x,y,z,0,sd*.4,sd*.2,.5,.9,1.2)));
+  // ---- neck, head, jaw, horns ----
+  J('neck','chest',0,.45,1.55,-.42);svM(R,'neck',svG('ag_nk',()=>svLoftZ([[-.1,.55,.6],[.55,.46,.5,0,.1],[1.2,.36,.4,0,.18]],8)),fur);
+  for(let k=0;k<5;k++)svM(R,'neck',svG('ag_mn',()=>svHorn(.14,.85,0,-.3,4,3)),fur2,0,.42-.02*k,.1+k*.24,-1.3,0,0,1.4,1.2,1);
+  J('head','neck',0,.2,1.2,.42);
+  svM(R,'head',svG('ag_hd',()=>svLoftZ([[-.42,.4,.42,0,.08],[-.05,.46,.46,0,.1],[.35,.38,.36,0,.03],[.75,.25,.25,0,-.05],[1.15,.17,.16,0,-.08],[1.38,.11,.1,0,-.1]],8)),fur);
+  svM(R,'head',svG('ag_ns',()=>svLump(.13,0,.2,2)),claw,0,-.04,1.4);
+  for(let k=0;k<5;k++)[-1,1].forEach(s=>svM(R,'head',svG('ag_tu',()=>svHorn(.04,.24,0,0,4,2)),bone,s*(.16-.015*k),-.15,.6+k*.15,1.6,0,0));
+  [-1,1].forEach(s=>{svM(R,'head',svG('ag_hn',()=>svHorn(.13,1.45,.0,.7,6,6)),bone,s*.28,.32,-.1,-2.55,s*.5,0);svM(R,'head',svG('ag_hn2',()=>svHorn(.07,.6,0,.25,5,4)),bone,s*.42,.2,.05,-2.2,s*1.1,0)});
+  R.J.head.scale.setScalar(1.25);J('jaw','head',0,-.18,.05);
+  svM(R,'jaw',svG('ag_jw',()=>svLoftZ([[-.05,.32,.12],[.55,.22,.1,0,-.03],[1.15,.12,.07,0,0]],7)),fur);
+  svM(R,'jaw',svG('ag_tg',()=>svLoftZ([[.1,.18,.04,0,.08],[.9,.08,.03,0,.07]],6)),gum);
+  for(let k=0;k<5;k++)[-1,1].forEach(s=>svM(R,'jaw',svG('ag_tl',()=>svHorn(.035,.2,0,0,4,2)),bone,s*(.17-.018*k),.07,.4+k*.15,-1.55,0,0));
+  // the great brow eye
+  const brow=J('brow','head',0,.38,.42);svM(R,'brow',svG('ag_bl',()=>svLump(.26,1,.15,9)),lid,0,0,0,0,0,0,1.15,.8,.8);
+  R.big=svM(R,'brow',svG('ag_be',()=>new THREE.SphereGeometry(.2,10,8)),iris,0,.02,.12);svM(R,'brow',svG('ag_bs',()=>new THREE.BoxGeometry(.05,.3,.02)),slit,0,.02,.32);
+  R.bigSpr=svSpr(R,'brow',ARG.col,.01,0,.02,.35);
+  // ---- legs: long gaunt forelegs, digitigrade hind legs, black hooked claws ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';
+    J('sh'+L,'chest',s*.74,-.25,.7);svM(R,'sh'+L,svG('ag_ua',()=>svLoft([[.35,.44,.5],[-.15,.46,.52,0,.04],[-.65,.32,.36,0,-.02],[-1.22,.2,.24]],8)),fur);
+    J('el'+L,'sh'+L,0,-1.2,0);svM(R,'el'+L,svG('ag_fa',()=>svLoft([[.08,.22,.25],[-.45,.2,.22,0,.03],[-1.08,.13,.15]],7)),fur);svM(R,'el'+L,svG('ag_tf',()=>svHorn(.18,.75,0,-.25,4,3)),fur2,0,-.15,-.15,2.7,0,0,.8,.8,.7);
+    J('pw'+L,'el'+L,0,-1.1,0);svM(R,'pw'+L,svG('ag_pw',()=>svLump(.24,0,.25,4)),fur,0,-.06,.12,0,0,0,1,.6,1.4);
+    for(let c=0;c<4;c++)svM(R,'pw'+L,svG('ag_cl',()=>svHorn(.06,.42,0,-.18,4,3)),claw,(c-1.5)*.1,-.08,.32,.25,0,0);
+    J('hp'+L,'hips',s*.6,-.2,-.45);svM(R,'hp'+L,svG('ag_th',()=>svLoft([[.35,.5,.62,0,-.05],[-.3,.46,.56,0,.1],[-.75,.3,.36,0,.22],[-1.08,.19,.22,0,.32]],8)),fur);
+    J('kn'+L,'hp'+L,0,-1.05,.34);svM(R,'kn'+L,svG('ag_sh',()=>svLoft([[.05,.17,.2],[-.85,.12,.14,0,-.4]],6)),fur2);
+    J('hk'+L,'kn'+L,0,-.85,-.42);svM(R,'hk'+L,svG('ag_hk',()=>svLoft([[.05,.12,.13],[-.55,.1,.12,0,.08]],5)),fur2);
+    svM(R,'hk'+L,svG('ag_pw',()=>svLump(.24,0,.25,4)),fur,0,-.62,.18,0,0,0,.85,.55,1.25);
+    for(let c=0;c<3;c++)svM(R,'hk'+L,svG('ag_cl',()=>svHorn(.06,.42,0,-.18,4,3)),claw,(c-1)*.1,-.66,.38,.25,0,0)});
+  // ---- tail: four segments, ragged ----
+  J('t0','hips',0,.22,-1.4,.5);let pp='t0';[.55,.5,.45].forEach((l,k)=>{J('t'+(k+1),pp,0,0,-l);pp='t'+(k+1)});
+  ['t0','t1','t2','t3'].forEach((n,k)=>{const r=.24-.045*k;svM(R,n,svG('ag_t'+k,()=>svLoftZ([[0,r,r],[-.6,r*.8,r*.8]],6)),fur);svM(R,n,svG('ag_tt',()=>svHorn(.12,.55,0,.15,4,3)),fur2,0,.1,-.3,2.6,0,0)});
+  // ---- the hundred eyes (well, twenty-six): lids, irises, slits on hide, legs, neck and face ----
+  const EY=[['chest',.92,.25,.3],['chest',.98,-.15,.75],['chest',.86,.45,1.15],['chest',.7,-.55,.2],['chest',.6,.75,.55],['chest',.95,.05,-.25],
+    ['hips',.78,.25,-.6],['hips',.7,-.1,-1.0],['hips',.55,.45,.0],['neck',.5,.1,.55],['neck',.42,.25,1.0],['shL',.36,-.3,.12],['hpL',.43,-.25,.1],['head',.36,.15,.25]];
+  EY.forEach(([j,x,y,z],k)=>[-1,1].forEach(s=>{if(s<0&&k%5==4)return;const jn=s<0?j.replace(/L$/,'R'):j,g=new THREE.Group();g.position.set(s*x,y,z);
+    g.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(s,y*.6,j==='head'?.9:.15).normalize());R.J[jn].add(g);const sc=.11+.05*((k*7)%3);
+    svM(R,g,svG('ag_lid',()=>svLump(1,0,.2,5)),lid,0,0,0,0,0,0,sc*1.15,sc*.9,sc*.7);
+    const ir=svM(R,g,svG('ag_eye',()=>new THREE.SphereGeometry(1,8,6)),iris,0,0,sc*.4,0,0,0,sc*.82,sc*.62,sc*.5);ir.userData.noMerge=1;
+    svM(R,g,svG('ag_slit',()=>new THREE.BoxGeometry(.18,1,.1)),slit,0,0,sc*.85,0,0,0,sc,sc*.85,sc);
+    R.eyes.push({g,ir,s:sc,b:Math.random()*6})}));
+  R.root.traverse(o=>{if(o.isMesh)o.castShadow=true});
+}
+function argLoco(e,S,O,dt,now){const t=now/1000,sp=Math.min(1.6,S.spd/2.4);S.gp=(S.gp||0)+dt*(2.2+S.spd*1.25);const g=S.gp,a=Math.min(1,sp);
+  const br=Math.sin(t*1.6);O.body[4]+=.05*br*(1-a)+.09*Math.abs(Math.sin(g))*a;O.body[0]+=.02*br;O.chest[0]+=-.02*br;
+  O.neck[0]+=.05*Math.sin(t*.9)*(1-a)+.06*Math.sin(g*2)*a;O.neck[1]+=.12*Math.sin(t*.53);O.head[1]+=.1*Math.sin(t*.71+1);O.jaw[0]+=.04+.03*Math.sin(t*2.3);
+  // gait: diagonal pairs
+  const L=(n,ph,amp)=>{const s=Math.sin(g+ph),c=Math.cos(g+ph);return [s*amp,Math.max(0,c)]};
+  [['L',0],['R',Math.PI]].forEach(([s,ph])=>{const f=L(0,ph,.5*a),h=L(0,ph+Math.PI,.45*a);
+    O['sh'+s][0]+=-f[0];O['el'+s][0]+=f[1]*.7*a;O['pw'+s][0]+=-f[1]*.5*a;
+    O['hp'+s][0]+=-h[0];O['kn'+s][0]+=h[1]*.5*a;O['hk'+s][0]+=-h[1]*.6*a});
+  ['t0','t1','t2','t3'].forEach((n,k)=>{O[n][1]+=Math.sin(t*1.7-k*.7)*(.12+.05*k)*(1+a);O[n][0]+=-.05*k+.04*Math.sin(t*1.1-k)})}
+// eyes: blink, open wide in Phase II, flare with the moves
+function argPost(e,S,dt,now){const R=S.R,t=now/1000,open=S.ph>1?1:.45,fl=S.eyeF||0;S.eyeF=Math.max(0,fl-dt*1.5);
+  R.eyes.forEach(E=>{let k=open;const bl=(t+E.b)%(S.ph>1?5.2:3.4);if(bl<.14)k*=.15;E.ir.scale.y=E.s*.62*k*(1+fl*.3);E.ir.scale.x=E.s*.82*(1+fl*.3)});
+  const c=S.ph>1?ARG.col:ARG.dim;if(R._ic!==c+fl){R._ic=c+fl;R.iris.color.setHex(c).lerp(new THREE.Color(0xffffff),Math.min(.85,fl*.6))}
+  const bc=S.bigC||0;S.bigC=Math.max(0,bc-dt*.0);R.bigSpr.scale.setScalar(.05+bc*2.2+(S.ph>1?.25:0)*(1+.15*Math.sin(t*5)))}
+var ARGP={
+  // rending claws (right), mirrored for the left with '~'
+  cUp:{body:[-.16,-.32,.1,0,.18,-.1],chest:[0,-.1,0],neck:[-.25,-.25,0],head:[.3,-.15,.1],jaw:[.35,0,0],shR:[-1.75,0,-.6],elR:[1.05,0,0],pwR:[.7,0,0],shL:[.2,0,.1],elL:[-.1,0,0],hips:[0,.12,0]},
+  cHit:{body:[.14,.38,-.08,0,-.08,.35],chest:[.05,.15,0],neck:[.15,.3,0],head:[-.05,.25,0],jaw:[.1,0,0],shR:[-.85,0,.55],elR:[.15,0,0],pwR:[-.35,0,0],shL:[.25,0,0],hips:[0,-.15,0]},
+  cRec:{body:[.06,.18,-.03,0,-.05,.12],neck:[.08,.15,0],shR:[-.35,0,.2],elR:[.25,0,0],hips:[0,-.06,0]},
+  // lunging bite
+  coil:{body:[.2,0,0,0,-.55,-.35],chest:[.08,0,0],neck:[.32,0,0],head:[-.38,0,0],jaw:[.3,0,0],shL:[.55,0,.08],shR:[.55,0,-.08],elL:[-.4,0,0],elR:[-.4,0,0],hpL:[-.45,0,0],hpR:[-.45,0,0],knL:[.75,0,0],knR:[.75,0,0],hkL:[-.4,0,0],hkR:[-.4,0,0]},
+  lunge:{body:[-.08,0,0,0,.1,.3],neck:[-.15,0,0],head:[.28,0,0],jaw:[.8,0,0],shL:[-1.25,0,0],shR:[-1.1,0,0],elL:[-.15,0,0],elR:[-.3,0,0],hpL:[.75,0,0],hpR:[.6,0,0],knL:[-.35,0,0],knR:[-.3,0,0],t0:[-.3,0,0]},
+  bite:{body:[.12,0,0,0,-.12,.35],neck:[.12,0,0],head:[.32,0,0],jaw:[-.06,0,0],shL:[-.35,0,0],shR:[-.25,0,0],hpL:[.3,0,0],hpR:[.25,0,0]},
+  // tail lash: it looks back first
+  look:{body:[0,-.32,0],hips:[0,.4,-.05],neck:[-.1,-.7,0],head:[.1,-.55,.1],jaw:[.25,0,0],t0:[-.65,.7,0],t1:[-.25,.45,0],t2:[-.15,.35,0],t3:[0,.25,0],hpL:[.2,0,0]},
+  lash:{body:[0,.38,0],hips:[0,-.6,.05],neck:[.05,-.3,0],head:[0,-.25,0],t0:[-.35,-1.25,0],t1:[-.1,-.8,0],t2:[0,-.6,0],t3:[0,-.45,0],hpR:[.25,0,0]},
+  // the gaze: rear up, the brow eye charges, fire
+  rear:{body:[-.55,0,0,0,.35,-.45],chest:[-.05,0,0],hips:[.45,0,0],hpL:[.35,0,0],hpR:[.35,0,0],knL:[.35,0,0],knR:[.35,0,0],hkL:[-.5,0,0],hkR:[-.5,0,0],shL:[-.75,0,.1],shR:[-.75,0,-.1],elL:[1.25,0,0],elR:[1.25,0,0],pwL:[.6,0,0],pwR:[.6,0,0],neck:[.05,0,0],head:[.42,0,0],jaw:[.25,0,0],t0:[.3,0,0]},
+  fire:{body:[-.42,0,0,0,.28,-.6],hips:[.38,0,0],hpL:[.3,0,0],hpR:[.3,0,0],knL:[.3,0,0],knR:[.3,0,0],hkL:[-.45,0,0],hkR:[-.45,0,0],shL:[-.55,0,.1],shR:[-.55,0,-.1],elL:[1.0,0,0],elR:[1.0,0,0],neck:[.2,0,0],head:[.28,0,0],jaw:[.6,0,0]},
+  // pounce
+  pcr:{body:[.22,0,0,0,-.7,-.35],chest:[.06,0,0],neck:[.25,0,0],head:[-.28,0,0],jaw:[.2,0,0],shL:[.5,0,.12],shR:[.5,0,-.12],elL:[-.55,0,0],elR:[-.55,0,0],hpL:[-.7,0,0],hpR:[-.7,0,0],knL:[1.05,0,0],knR:[1.05,0,0],hkL:[-.6,0,0],hkR:[-.6,0,0],t0:[.4,0,0]},
+  air:{root:[0,0,0,0,3.6,0],body:[-.25,0,0],neck:[-.1,0,0],head:[.2,0,0],jaw:[.7,0,0],shL:[-1.35,0,.15],shR:[-1.35,0,-.15],elL:[-.2,0,0],elR:[-.2,0,0],pwL:[-.5,0,0],pwR:[-.5,0,0],hpL:[1.0,0,0],hpR:[1.0,0,0],knL:[-.6,0,0],knR:[-.6,0,0],t0:[-.5,0,0],t1:[-.2,0,0]},
+  land:{root:[0,0,0,0,0,0],body:[.32,0,0,0,-.6,.15],neck:[.35,0,0],head:[.05,0,0],jaw:[.1,0,0],shL:[-.4,0,.3],shR:[-.4,0,-.3],elL:[.65,0,0],elR:[.65,0,0],hpL:[-.35,0,0],hpR:[-.35,0,0],knL:[.7,0,0],knR:[.7,0,0],hkL:[-.4,0,0],hkR:[-.4,0,0]},
+  // howl (awakening) and the intro
+  howl:{body:[-.62,0,0,0,.42,-.5],chest:[-.1,0,0],hips:[.45,0,0],hpL:[.35,0,0],hpR:[.35,0,0],hkL:[-.45,0,0],hkR:[-.45,0,0],neck:[-.75,0,0],head:[-.35,0,0],jaw:[1.0,0,0],shL:[-.9,0,.2],shR:[-.9,0,-.2],elL:[1.35,0,0],elR:[1.35,0,0],t0:[-.7,0,0],t1:[-.3,0,0]},
+  low:{body:[.3,0,0,0,-.8,0],neck:[.55,0,0],head:[.2,0,0],jaw:[0,0,0],shL:[.35,0,.35],shR:[.35,0,-.35],elL:[-.3,0,0],elR:[-.3,0,0],hpL:[-.5,0,0],hpR:[-.5,0,0],knL:[.9,0,0],knR:[.9,0,0],hkL:[-.5,0,0],hkR:[-.5,0,0],t0:[.5,0,0]},
+  // blinding flare: hunch, every eye brightens, then flash
+  hunch:{body:[.25,0,0,0,-.5,-.1],chest:[.1,0,0],neck:[.4,0,0],head:[.35,0,0],shL:[.3,0,.45],shR:[.3,0,-.45],elL:[-.2,0,0],elR:[-.2,0,0],hpL:[-.4,0,.2],hpR:[-.4,0,-.2],knL:[.7,0,0],knR:[.7,0,0],t0:[.5,0,0],t1:[.3,0,0]},
+  flare:{body:[-.3,0,0,0,.25,0],neck:[-.35,0,0],head:[-.4,0,0],jaw:[1.0,0,0],shL:[-.4,0,-.25],shR:[-.4,0,.25],hpL:[.2,0,0],hpR:[.2,0,0],t0:[-.6,0,0]},
+  // barrage: stand tall, eyes fire
+  tall:{body:[-.18,0,0,0,.2,0],neck:[-.25,0,0],head:[.15,0,0],jaw:[.4,0,0],shL:[-.15,0,-.12],shR:[-.15,0,.12],t0:[-.4,0,0]},
+  tallB:{body:[-.22,.12,0,0,.25,0],neck:[-.3,.12,0],head:[.12,0,0],jaw:[.5,0,0],t0:[-.45,.3,0]},
+  // stagger and death
+  stag:{body:[.38,0,.28,0,-1.0,0],neck:[.6,0,.25],head:[.35,0,.35],jaw:[.5,0,0],shL:[.85,0,.5],shR:[.4,0,-.2],elL:[-1.1,0,0],elR:[-.4,0,0],hpL:[-.7,0,.2],hpR:[-.4,0,0],knL:[1.2,0,0],knR:[.9,0,0],hkL:[-.6,0,0],t0:[.6,0,0],t1:[.3,0,0]},
+  dead:{root:[0,0,1.42,0,-.1,0],body:[.1,0,0,0,-1.3,0],neck:[.3,.3,0],head:[.2,.2,0],jaw:[.7,0,0],shL:[-.4,0,.2],shR:[-.7,0,-.1],elL:[.3,0,0],hpL:[.3,0,0],hpR:[.5,0,0],knL:[-.4,0,0],t0:[.2,.4,0],t1:[0,.4,0]}};
+function argEyeBolt(c,i){const e=c.e,S=c.S,R=S.R,E=R.eyes[(i*7+3)%R.eyes.length],p=new THREE.Vector3();E.g.getWorldPosition(p);
+  const q=c.inA(pl.position.clone().add(new THREE.Vector3(((pl.mvd&&pl.mvd.x)||0)*.9,0,((pl.mvd&&pl.mvd.z)||0)*.9)),.8),S2={k:'c',r:1.9},an={x:q.x,z:q.z,a:0},T=.72;
+  S.eyeF=1;kqFlash(p,ARG.col,1.4,200);svSnd('crack',.5,1.6);c.M.warn.push(svWarn(S2,an,T));
+  svShot(p,new THREE.Vector3(q.x,GH(q.x,q.z)+.3,q.z),T,ARG.col,1.3,3.5,P=>{if(e.dead||!AF)return;burst(P,ARG.col,18,2.5,2.4,.5);svShock(P,ARG.col,1.9,.3);svDecal(P,0x3a2a08,1.4,2.4,.5);svHitNow(e,S2,an,.75,{})})}
+function argBeam(c,an,L){const e=c.e,o=svWP(e,'brow',0,.02,.3),end=new THREE.Vector3(an.x+Math.sin(an.a)*L,0,an.z+Math.cos(an.a)*L);end.y=GH(end.x,end.z)+.4;
+  const d=end.clone().sub(o),len=d.length(),g=svG('ag_bm',()=>{const q=new THREE.CylinderGeometry(1,1,1,8,1,true);q.translate(0,.5,0);q.rotateX(Math.PI/2);return q});
+  const m1=new THREE.MeshBasicMaterial({color:ARG.col,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),m2=new THREE.MeshBasicMaterial({color:0xfff8e0,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+  const b1=new THREE.Mesh(g,m1),b2=new THREE.Mesh(g,m2);[b1,b2].forEach(b=>{b.position.copy(o);b.lookAt(end);b.renderOrder=24;b.frustumCulled=false;scene.add(b)});b1.scale.set(.7,.7,len);b2.scale.set(.22,.22,len);
+  let t=0;shake(.25);svSnd('charge',.4,2);kqFlash(o,0xffffff,4,260);for(let s=2;s<L;s+=1.4){const q=new THREE.Vector3(an.x+Math.sin(an.a)*s,0,an.z+Math.cos(an.a)*s);burst(gY(q,.3),ARG.col,3,1.2,1.6,.5);if(s%2.8<1.4)svDecal(q,0x2a1a04,1.1,3,.6)}
+  kqFx({tick(dt){t+=dt||0;const k=t/.42;b1.scale.x=b1.scale.y=.7*(1-k*.8);b2.scale.x=b2.scale.y=.22*(1-k);m1.opacity=.8*(1-k);return k<1},end(){scene.remove(b1,b2);m1.dispose();m2.dispose()}})}
+var ARGM={
+  intro:{dur:2.6,trk:[[.3,'low','io'],[.9,'low','io',.01],[1.5,'howl','o'],[2.2,'howl','l',.02],[2.6,'cRec','io']],trn:[[0,2.6,1.5]],
+    ev:[[.95,c=>{c.S.eyeF=1.2;svSnd('hum',.6)}],[1.45,c=>{svSnd('roar',1);shake(.35);c.S.bigC=.4;svShock(c.m.position,ARG.col,8,.8)}],[2.4,c=>{c.S.bigC=0}]]},
+  claw:{wt:10,r:[0,6.2],a:'f',mel:1,dur:1.3,lock:.48,trk:[[.5,'cUp','io'],[.66,'cUp','l',.02],[.8,'cHit','s'],[1.0,'cRec','io'],[1.3,'cRec','io']],
+    hit:[{t:.78,s:{k:'a',r:5.6,h:1.05},f:.3,dm:1.05}],tr:[[.68,.86,'pwR',[0,-.1,.75],[0,0,0],0xffe8a0]],ev:[[.18,c=>svSnd('hum',.25,1.5)],[.7,c=>svSnd('swing',.8)]],
+    nx:[['claw2',.65,7]],rec:.2},
+  claw2:{dur:1.15,mel:1,lock:.3,trk:[[.36,'cUp~','io'],[.5,'cUp~','l',.02],[.64,'cHit~','s'],[.85,'cRec~','io'],[1.15,'cRec~','io']],
+    hit:[{t:.62,s:{k:'a',r:5.6,h:1.05},f:.3,dm:1.05}],tr:[[.52,.7,'pwL',[0,-.1,.75],[0,0,0],0xffe8a0]],ev:[[.55,c=>svSnd('swing',.8,.9)]],
+    nx:[['snapF',.45,9],['flare',.3,6]],rec:.15},
+  snapF:{dur:1.4,mel:1,lock:.45,trk:[[.4,'coil','io'],[.56,'coil','l',.015],[.78,'lunge','o'],[.9,'bite','s'],[1.4,'cRec','io']],
+    rm:[[.58,.9,'tgt','o',1.3,6]],hit:[{t:.88,s:{k:'a',r:4.2,h:.6},f:1.2,dm:1.25,track:1,show:false}],ev:[[.58,c=>svSnd('whoosh',.8)],[.88,c=>{svSnd('crack',.8,.7);shake(.15)}]]},
+  snap:{wt:8,r:[4.5,11],a:'f',dur:1.75,lock:.62,trk:[[.55,'coil','io'],[.78,'coil','l',.02],[1.02,'lunge','o'],[1.14,'bite','s'],[1.75,'cRec','io']],
+    rm:[[.82,1.14,9,'o']],hit:[{t:1.12,s:{k:'l',w:3,l:10.5,b:.5},f:0,dm:1.3,w:.62}],ev:[[.3,c=>svSnd('hiss',.4,.6)],[.82,c=>svSnd('whoosh',1)],[1.12,c=>{svSnd('crack',.9,.6);shake(.2);burst(gY(c.at(3),1.2),0xffe0b0,12,2,1.5,.4)}]],
+    nx:[['claw',.35,6]],rec:.3},
+  tail:{wt:12,r:[0,7.5],a:'sb',mel:1,dur:1.3,lock:.3,trn:[[0,.3,2]],trk:[[.45,'look','io'],[.62,'look','l',.015],[.82,'lash','s'],[1.3,'cRec','io']],
+    hit:[{t:.8,s:{k:'a',r:6.4,h:1.25},f:-.6,ay:Math.PI,dm:1.1,kb:3}],tr:[[.66,.9,'t3',[0,0,-.6],[0,0,0],0xc8a060]],ev:[[.3,c=>svSnd('hiss',.5)],[.72,c=>svSnd('whoosh',.9,.8)]],rec:.25},
+  gaze:{wt:7,r:[8,60],a:'any',dur:2.6,lock:1.15,trn:[[0,1.15,3]],armor:1,trk:[[.6,'rear','io'],[1.25,'rear','l',.025],[1.4,'fire','s'],[2.0,'fire','l'],[2.6,'cRec','io']],
+    hit:[{t:1.38,s:{k:'l',w:2.4,l:30,b:0},f:1.5,dm:1.45,w:.95,fx:(c,an)=>argBeam(c,an,30)}],
+    ev:[[.25,c=>{svSnd('charge',.7);svCharge(c.e,'brow',ARG.col,2.4,1.1,0,.02,.3)}],[.3,c=>{c.S.bigC=0}]],
+    tk(c,dt){c.S.bigC=Math.min(1,c.M.t/1.3)*(c.M.t<1.45?1:0)},end(c){c.S.bigC=0},nx:[['gaze2',.0]],rec:.5},
+  gaze2:{dur:1.6,lock:.62,ph:2,trn:[[0,.62,3.4]],armor:1,trk:[[.3,'rear','io'],[.68,'rear','l',.025],[.8,'fire','s'],[1.6,'cRec','io']],
+    hit:[{t:.78,s:{k:'l',w:2.4,l:30,b:0},f:1.5,dm:1.35,w:.6,fx:(c,an)=>argBeam(c,an,30)}],ev:[[.05,c=>{svSnd('charge',.6,1.2);svCharge(c.e,'brow',ARG.col,2,.7,0,.02,.3)}]],rec:.6},
+  pounce:{wt:9,r:[6.5,24],a:'fs',dur:2.1,lock:.6,armor:1,trn:[[0,.6,4]],trk:[[.5,'pcr','io'],[.62,'pcr','l',.02],[.92,'air','o'],[1.2,'land','i'],[1.75,'land','l'],[2.1,'cRec','io']],
+    rm:[[.64,1.2,'tgt','l',.3,26]],hit:[{t:1.2,s:{k:'c',r:3.8},o:'tgt',dm:1.5,w:.62,kb:2.5,fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);svShock(p,0xc8b080,5,.5);burst(gY(p,.4),0x5a4a30,40,4,3,.8);svDecal(p,0x1a1408,3,4,.6);shake(.4);svSnd('heavy',1)}}],
+    ev:[[.62,c=>svSnd('whoosh',1,.7)]],rec:.35},
+  // ---- Phase II ----
+  awaken:{dur:3.2,inv:[0,3.2],armor:1,trk:[[.4,'low','io'],[1.0,'low','l',.03],[1.45,'howl','o'],[2.6,'howl','l',.025],[3.2,'cRec','io']],trn:[[0,3,1]],
+    hit:[{t:1.5,s:{k:'c',r:7.5},dm:.5,kb:6,w:1.1,fx:c=>{svShock(c.m.position,ARG.col,10,.7);svShock(c.m.position,0xffffff,6,.45)}}],
+    ev:[[.05,c=>{banner('THE EYES OPEN','Argus wakes every eye','');svSnd('hum',.8,.7)}],[1.0,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.eyeF=2;flash('rgba(255,210,80,.35)');svSnd('roar',1.1,.85);shake(.5)}],[1.6,c=>svSnd('shriek',.6,.6)]]},
+  barrage:{wt:8,ph:2,r:[5,40],a:'any',dur:3.0,armor:1,trn:[[0,3,2.2]],trk:[[.4,'tall','io'],[.7,'tall','l',.02],[1.0,'tallB','io'],[1.5,'tall','io'],[2.0,'tallB','io'],[2.4,'tall','io'],[3.0,'cRec','io']],
+    ev:[[.15,c=>{svSnd('hum',.7,1.3);c.S.eyeF=1.2}]].concat([0,1,2,3,4,5,6].map(i=>[.55+i*.3,c=>argEyeBolt(c,i)])),rec:.4},
+  flare:{wt:7,ph:2,r:[0,7],a:'any',dur:2.2,armor:1,trn:[[0,.4,2]],trk:[[.45,'hunch','io'],[1.25,'hunch','l',.03],[1.38,'flare','s'],[1.8,'flare','l'],[2.2,'cRec','io']],
+    hit:[{t:1.36,s:{k:'c',r:7},dm:1.6,w:1.25,fx:c=>{kqFlash(gY(c.m.position,2.5),0xffffff,14,420);flash('rgba(255,240,180,.45)');svShock(c.m.position,ARG.col,8,.45);burst(gY(c.m.position,2),ARG.col,60,6,4,.7);svSnd('crack',1,.5);shake(.35)}}],
+    tk(c,dt){c.S.eyeF=c.M.t<1.4?Math.min(2,c.M.t*1.6):0},ev:[[.2,c=>svSnd('charge',.6,.6)]],rec:.6}};
+// Phase II combo strings
+ARGM.claw2.nx=[['snapF',.45,9],['flare',.3,7]];
+svReg(0,{name:'Argus',col:ARG.col,body:2.3,ph2:.55,poise:.17,headJ:'head',turnA:4,
+  ai:{pref:4.6,walk:2.6,run:4.2,turn:2.2,rest:[.9,1.6],ph2r:.7,strafe:.4},
+  build:argBuild,loco:argLoco,post:argPost,P:ARGP,M:ARGM,
+  stag:[[.25,'stag','o'],[2.0,'stag','l',.02],[2.6,'cRec','io']],stagT:2.6,
+  die:[[.4,'stag','o'],[1.2,'dead','i'],[2.1,'dead','l']],
+  homeY(A){return Math.atan2(Math.cos(AR&&AR.ent!=null?AR.ent:0),Math.sin(AR&&AR.ent!=null?AR.ent:0))},
+  awake(e){e.sv.eyeF=1},reset(e){e.sv.eyeF=0;e.sv.bigC=0},
+  dying(e,t){if(t<1.5)e.sv.eyeF=Math.max(0,1-t)}});
+// ================= v110 Sovereign 1 — The Crest Hydra (Hillside Crest) =================
+// A coiled serpent mound in the mere with three long necks, each ending in a frilled, horned head; a heavy tail behind.
+// Pattern (learnable):
+//  any range ── Fang Strike: one head (the one on your side) rears back, mouth wide, then strikes down a line at you.
+//              Serpent Fury: left, centre, right in a fixed rhythm — sidestep three times.
+//  close    ── Neck Sweep: all three heads drop low to one side, then sweep the front — dash through it or get far away.
+//              Coil Surge: the coils tighten and the water bursts out in a ring around the body.
+//  behind   ── Tail Slam: the tail rears up behind it and crashes down along a line.
+//  far      ── Venom Spit: the centre head gulps and lobs three globs onto you; they leave burning pools.
+//  Phase II (55%) "The Crests Flare": the crests glow and spread; adds Venom Breath (three cones: left and right first,
+//              then the centre — stand in the centre gap, then leave it) and Venom Deluge (drops rain around you; keep moving).
+var HYD={col:0x7ac850,ven:0x9aff4a,crest:0xd8ff60};
+function hydBuild(R,e){
+  const sk=svMat(R,0x24482c,{roughness:.62,metalness:.15,emissive:0x061006}),sk2=svMat(R,0x3a6234,{roughness:.6}),bel=svMat(R,0xc8c08a,{roughness:.8,emissive:0x100e04}),
+    dk=svMat(R,0x203a24,{roughness:.8}),horn=svMat(R,0xd8ccb0,{roughness:.55}),fang=svMat(R,0xf0ead8,{roughness:.4}),gum=svMat(R,0x7a2030,{roughness:.6}),
+    mem=svMat(R,0x8a3a48,{roughness:.6,side:THREE.DoubleSide,emissive:0x200408}),eye=svGlowMat(R,0xe8ff60),crestG=svGlowMat(R,0x5a7a30);R.crestG=crestG;R.memM=mem;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+  J('root',null,0,0,0);J('body','root',0,0,0);
+  // ---- the coiled mound: three stacked coils, scaled belly plates, a trunk rising out of them ----
+  // a spiral of serpent body: two and a half turns rising toward the centre, thick at the bottom
+  svM(R,'body',svG('hy_coil',()=>{const P=[],Rr=[];const N=46;for(let i=0;i<=N;i++){const k=i/N,a=k*Math.PI*3.3+.6,r=3.35-1.75*k,y=.55+1.3*k+.18*Math.sin(k*9);P.push([Math.sin(a)*r,y,Math.cos(a)*r]);Rr.push([1.05-.3*k,.9-.22*k])}
+    return svTube(P,Rr,10)}),sk);
+  svM(R,'body',svG('hy_coilb',()=>{const P=[],Rr=[];const N=46;for(let i=0;i<=N;i++){const k=i/N,a=k*Math.PI*3.3+.6,r=3.35-1.75*k-(.5-.12*k),y=.3+1.3*k+.18*Math.sin(k*9);P.push([Math.sin(a)*r,y,Math.cos(a)*r]);Rr.push([.5-.12*k,.5-.12*k])}
+    return svTube(P,Rr,6)}),bel);
+  svM(R,'body',svG('hy_trk',()=>svLoft([[0,1.7,1.7],[1.4,1.5,1.45],[2.4,1.25,1.2],[3.0,1.1,1.0,0,-.2],[3.4,.9,.8,0,-.3]],10)),sk);
+  for(let k=0;k<10;k++){const a=k/10*6.283;svM(R,'body',svG('hy_bp',()=>svLump(.5,0,.25,4)),bel,Math.sin(a)*2.95,.35,Math.cos(a)*2.95,0,a,0,.9,.35,.6)}
+  for(let k=0;k<14;k++){const a=k/14*6.283+.2,y=.6+(k%3)*.6,r=2.6-(k%3)*.55;svM(R,'body',svG('hy_sp',()=>svHorn(.16,.8,0,-.3,5,4)),horn,Math.sin(a)*r,y+.5,Math.cos(a)*r,-1.0,a,0)}
+  // ---- three necks (five segments each) and crowned heads ----
+  const NK=[['C',0,3.2,.35,0],['L',1.05,2.9,-.1,.35],['R',-1.05,2.9,-.1,-.35]];
+  NK.forEach(([s,x,y,z,ry])=>{let p='body';for(let k=0;k<5;k++){const n='n'+k+s,r0=.8-.075*k,r1=r0-.075;J(n,p,k?0:x,k?0:y,k?.92:z,k?.2:-1.2,k?0:ry,0);
+      svM(R,n,svG('hy_nk'+k,()=>svLoftZ([[-.08,r0,r0*.92],[.5,r0*.96,r0*.9,0,.02],[.98,r1,r1*.9]],9)),sk);
+      svM(R,n,svG('hy_nb'+k,()=>svLoftZ([[0,r0*.62,r0*.3,0,-r0*.72],[.9,r1*.62,r1*.3,0,-r1*.72]],6)),bel);
+      if(k<4)svM(R,n,svG('hy_ns',()=>svHorn(.1,.5,0,-.18,4,3)),horn,0,r0*.85,.45,-1.3,0,0);p=n}
+    const h=J('h'+s,p,0,0,.92,.6);
+    svM(R,h,svG('hy_hd',()=>svLoftZ([[-.35,.52,.5,0,.05],[.1,.58,.5,0,.1],[.6,.46,.36,0,.04],[1.1,.32,.24,0,-.04],[1.45,.18,.14,0,-.06]],9)),sk);
+    svM(R,h,svG('hy_brw',()=>svLoftZ([[.0,.5,.12,0,.42],[.75,.36,.08,0,.3]],6)),dk);
+    [-1,1].forEach(q=>{svM(R,h,svG('hy_eye',()=>new THREE.SphereGeometry(.09,6,5)),eye,q*.36,.24,.55);
+      svM(R,h,svG('hy_hn',()=>svHorn(.12,1.1,0,.35,6,5)),horn,q*.3,.36,-.05,-2.6,q*.35,0);
+      for(let f=0;f<4;f++)svM(R,h,svG('hy_fg',()=>svHorn(.05,.32,0,0,4,2)),fang,q*(.24-.03*f),-.12,.75+f*.17,1.65,0,0)});
+    // the crest: a fan of spines with membrane between them
+    const cr=J('cr'+s,'h'+s,0,.45,-.2);for(let f=0;f<7;f++){const a=-1.2+f*.4;svM(R,cr,svG('hy_cs',()=>svHorn(.07,1.25,0,-.25,4,4)),horn,0,0,0,-2.2+Math.abs(a)*.2,a,0)}
+    svM(R,cr,svG('hy_mem',()=>{const P=[0,0,0];for(let f=0;f<=6;f++){const a=-1.2+f*.4;P.push(Math.sin(a)*1.05,Math.cos(a)*.9,-.55)}const pos=[];for(let f=0;f<6;f++)pos.push(0,0,0,P[3+f*3],P[4+f*3],P[5+f*3],P[6+f*3],P[7+f*3],P[8+f*3]);
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}),mem,0,0,0,-.35,0,0);
+    for(let f=0;f<3;f++)svM(R,cr,svG('hy_cg',()=>new THREE.SphereGeometry(.07,5,4)),crestG,(f-1)*.4,.62,-.35);
+    const jw=J('j'+s,'h'+s,0,-.2,.05);svM(R,jw,svG('hy_jw',()=>svLoftZ([[-.15,.44,.14],[.6,.32,.11,0,-.03],[1.25,.16,.07]],8)),sk);svM(R,jw,svG('hy_tg',()=>svLoftZ([[0,.28,.05,0,.08],[.95,.1,.03,0,.07]],6)),gum);
+    for(let f=0;f<3;f++)[-1,1].forEach(q=>svM(R,jw,svG('hy_fg2',()=>svHorn(.045,.25,0,0,4,2)),fang,q*(.22-.04*f),.06,.5+f*.2,-1.6,0,0))});
+  // ---- the tail behind the coils ----
+  let p='body';for(let k=0;k<6;k++){const n='t'+k,r=.7-.1*k;J(n,p,0,k?0:.5,k?-1.0:-2.6,k?-.04:0,0,0);svM(R,n,svG('hy_t'+k,()=>svLoftZ([[.1,r,r*.85],[-1.05,r*.86,r*.75]],8)),sk);
+    svM(R,n,svG('hy_ts',()=>svHorn(.12,.55,0,.2,4,3)),horn,0,r*.8,-.5,-2.1,0,0);p=n}
+  svM(R,'t5',svG('hy_tc',()=>svHorn(.3,1.4,0,.3,6,5)),horn,0,0,-.9,-3.0,0,0);
+  R.mouth={C:null,L:null,R:null};
+}
+function hydLoco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/1.4);O.body[4]+=.04*Math.sin(t*1.2);O.body[1]+=.05*Math.sin(t*.4);
+  const m=e.m,dy=AF?svAng(svYawTo(m,pl.position)-m.rotation.y):0;
+  [['C',0],['L',2.1],['R',4.2]].forEach(([s,ph])=>{for(let k=0;k<5;k++){const o=O['n'+k+s];o[0]+=.07*Math.sin(t*1.3+ph-k*.5)*(1+a);o[1]+=.09*Math.sin(t*.8+ph-k*.6)+dy*.06}
+    O['h'+s][0]+=.06*Math.sin(t*1.7+ph);O['j'+s][0]+=.06+.05*Math.max(0,Math.sin(t*1.1+ph*1.7));O['cr'+s][0]+=.05*Math.sin(t*2+ph)});
+  for(let k=0;k<6;k++){O['t'+k][1]+=Math.sin(t*1.1-k*.6)*(.08+.03*k)*(1+a*1.5)}}
+function hydPost(e,S,dt,now){const R=S.R,on=S.ph>1,k=on?.55+.45*Math.sin(now/180):0,c=on?HYD.crest:0x5a7a30;R.crestG.color.setHex(c);if(on)R.crestG.color.multiplyScalar(.6+.4*k)}
+var HYDP={
+  // fang strike, left head (mirror for the right); the centre head has its own
+  rearL:{n0L:[-.35,-.15,0],n1L:[-.35,0,0],n2L:[-.3,0,0],n3L:[-.25,0,0],n4L:[-.1,0,0],hL:[-.55,0,0],jL:[.85,0,0],crL:[-.3,0,0],body:[0,.12,0],n0C:[0,.15,0],n0R:[.1,.2,0]},
+  strL:{n0L:[.55,-.2,0],n1L:[.35,0,0],n2L:[.3,0,0],n3L:[.2,0,0],n4L:[.05,0,0],hL:[.15,0,0],jL:[.15,0,0],crL:[.25,0,0],body:[0,-.12,0,0,0,.1]},
+  recL:{n0L:[.35,-.15,0],n1L:[.25,0,0],n2L:[.2,0,0],n3L:[.1,0,0],hL:[.2,0,0],jL:[.25,0,0]},
+  rearC:{n0C:[-.3,0,0],n1C:[-.35,0,0],n2C:[-.3,0,0],n3C:[-.25,0,0],n4C:[-.1,0,0],hC:[-.55,0,0],jC:[.85,0,0],crC:[-.3,0,0],n0L:[0,.25,0],n0R:[0,-.25,0]},
+  strC:{n0C:[.55,0,0],n1C:[.35,0,0],n2C:[.3,0,0],n3C:[.2,0,0],n4C:[.05,0,0],hC:[.15,0,0],jC:[.15,0,0],crC:[.25,0,0],body:[.04,0,0,0,0,.12]},
+  recC:{n0C:[.35,0,0],n1C:[.25,0,0],n2C:[.2,0,0],n3C:[.1,0,0],hC:[.2,0,0],jC:[.25,0,0]},
+  // neck sweep: all three heads low to the right, then across to the left
+  lowR:{body:[0,-.5,0],n0C:[.45,-.4,0],n1C:[.3,-.2,0],n2C:[.2,0,0],hC:[.1,0,0],jC:[.6,0,0],n0L:[.45,-.55,0],n1L:[.3,-.2,0],n2L:[.2,0,0],hL:[.15,0,0],jL:[.6,0,0],n0R:[.45,-.3,0],n1R:[.3,-.25,0],n2R:[.2,0,0],hR:[.1,0,0],jR:[.6,0,0]},
+  swpL:{body:[0,.6,0],n0C:[.5,.4,0],n1C:[.3,.25,0],n2C:[.2,0,0],hC:[.1,0,0],jC:[.3,0,0],n0L:[.5,.35,0],n1L:[.3,.2,0],n2L:[.2,0,0],hL:[.1,0,0],jL:[.3,0,0],n0R:[.5,.55,0],n1R:[.3,.3,0],n2R:[.2,0,0],hR:[.1,0,0],jR:[.3,0,0]},
+  // spit: the centre head rears high and gulps, then thrusts
+  gulp:{n0C:[-.45,0,0],n1C:[-.3,0,0],n2C:[-.25,0,0],n3C:[-.15,0,0],hC:[-.2,0,0],jC:[.05,0,0],crC:[-.4,0,0],n0L:[.1,.3,0],n0R:[.1,-.3,0]},
+  spit:{n0C:[-.1,0,0],n1C:[.05,0,0],n2C:[.1,0,0],n3C:[.1,0,0],hC:[-.3,0,0],jC:[1.0,0,0],crC:[.2,0,0]},
+  // tail slam
+  tUp:{t0:[-.6,0,0],t1:[-.45,0,0],t2:[-.35,0,0],t3:[-.2,0,0],t4:[-.1,0,0],t5:[.1,0,0],body:[0,0,0,0,0,.25],n0C:[0,0,0],hC:[-.2,0,0],n0L:[-.15,-.4,0],n0R:[-.15,.4,0],jL:[.5,0,0],jR:[.5,0,0]},
+  tDn:{t0:[.35,0,0],t1:[.25,0,0],t2:[.15,0,0],t3:[.1,0,0],t4:[.05,0,0],t5:[0,0,0],body:[0,0,0,0,0,-.2]},
+  // coil surge: everything tightens, then bursts
+  tight:{body:[0,0,0,0,-.35,0],n0C:[.3,0,0],n0L:[.3,.3,0],n0R:[.3,-.3,0],n1C:[.2,0,0],n1L:[.2,0,0],n1R:[.2,0,0],hC:[.3,0,0],hL:[.3,0,0],hR:[.3,0,0],jC:[.4,0,0],jL:[.4,0,0],jR:[.4,0,0]},
+  burst:{body:[0,0,0,0,.25,0],n0C:[-.3,0,0],n0L:[-.25,-.4,0],n0R:[-.25,.4,0],hC:[-.5,0,0],hL:[-.5,0,0],hR:[-.5,0,0],jC:[.9,0,0],jL:[.9,0,0],jR:[.9,0,0],crC:[-.3,0,0],crL:[-.3,0,0],crR:[-.3,0,0]},
+  // roar (intro / awakening): all three heads to the sky
+  roar:{n0C:[-.35,0,0],n1C:[-.3,0,0],n2C:[-.25,0,0],n3C:[-.2,0,0],hC:[-.9,0,0],jC:[1.0,0,0],crC:[-.4,0,0],n0L:[-.3,-.35,0],n1L:[-.25,0,0],n2L:[-.2,0,0],hL:[-.85,0,0],jL:[1.0,0,0],crL:[-.4,0,0],
+    n0R:[-.3,.35,0],n1R:[-.25,0,0],n2R:[-.2,0,0],hR:[-.85,0,0],jR:[1.0,0,0],crR:[-.4,0,0],t0:[-.3,0,0],t1:[-.2,0,0]},
+  // venom breath: side heads aim out, centre forward
+  brW:{n0L:[-.2,.5,0],n0R:[-.2,-.5,0],n0C:[-.25,0,0],hL:[-.3,0,0],hR:[-.3,0,0],hC:[-.3,0,0],jL:[.2,0,0],jR:[.2,0,0],jC:[.2,0,0],crL:[-.3,0,0],crR:[-.3,0,0],crC:[-.3,0,0]},
+  brS:{n0L:[.15,.65,0],n0R:[.15,-.65,0],n1L:[.15,0,0],n1R:[.15,0,0],hL:[.2,0,0],hR:[.2,0,0],jL:[1.0,0,0],jR:[1.0,0,0],n0C:[-.2,0,0],hC:[-.3,0,0],jC:[.3,0,0]},
+  brC:{n0L:[0,.5,0],n0R:[0,-.5,0],hL:[0,0,0],hR:[0,0,0],jL:[.2,0,0],jR:[.2,0,0],n0C:[.2,0,0],n1C:[.15,0,0],hC:[.2,0,0],jC:[1.0,0,0]},
+  // stagger and death
+  stag:{body:[0,0,.12,0,-.4,0],n0C:[.5,0,.2],n1C:[.35,0,.1],hC:[.5,0,.3],jC:[.6,0,0],n0L:[.6,-.3,.3],n1L:[.4,0,0],hL:[.5,0,0],jL:[.7,0,0],n0R:[.55,.3,-.2],n1R:[.4,0,0],hR:[.4,0,0],jR:[.5,0,0]},
+  dead:{body:[0,0,0,0,-1.0,0],n0C:[1.0,0,.2],n1C:[.4,0,0],n2C:[.2,0,0],hC:[.2,0,.4],jC:[.6,0,0],n0L:[1.0,-.5,.5],n1L:[.4,0,0],n2L:[.2,0,0],hL:[.2,0,0],jL:[.7,0,0],n0R:[.95,.5,-.4],n1R:[.4,0,0],n2R:[.2,0,0],hR:[.3,0,0],jR:[.5,0,0]}};
+// which head: the one on the hero's side
+function hydSide(e){const da=svAng(svYawTo(e.m,pl.position)-e.m.rotation.y);return da>.35?'L':da<-.35?'R':'C'}
+function hydBase(c,s){return svWP(c.e,'n0'+s,0,0,0)}
+function hydMouth(c,s){return svWP(c.e,'h'+s,0,-.1,1.3)}
+function hydLine(c,s){const p=hydBase(c,s),q=c.inA(pl.position.clone(),.6);return {x:p.x,z:p.z,a:Math.atan2(q.x-p.x,q.z-p.z)}}
+function hydPool(c,p,r,life){const e=c.e,o=svDecal(p,0x5aff2a,r,life,.5),S2={k:'c',r};let tk=0,t=0;svDecal(p,0x1a3a08,r*.8,life,.4);
+  kqFx({tick(dt){t+=dt||0;tk-=dt||0;if(!AF||e.dead)return false;if(Math.random()<.3)burst(gY(p,.2).add(new THREE.Vector3((Math.random()-.5)*r,0,(Math.random()-.5)*r)),HYD.ven,1,.3,.8,.6);
+    if(tk<=0&&hero.iv<=0&&hero.hp>0&&svIn(S2,{x:p.x,z:p.z,a:0},pl.position,0)){tk=.5;bossHit(e,.22);dqDebuff('Venom','🟢',{mspd:-.25},800,'Slowed by venom')}return t<life}})}
+function hydGlob(c,from,q,T,big){const e=c.e,S2={k:'c',r:big?2.4:2},an={x:q.x,z:q.z,a:0};c.M.warn.push(svWarn(S2,an,T));
+  const g=new THREE.Mesh(svG('hy_glob',()=>new THREE.IcosahedronGeometry(.35,0)),kqBas(HYD.ven));g.scale.setScalar(big?1.4:1);
+  svShot(from,new THREE.Vector3(q.x,GH(q.x,q.z)+.2,q.z),T,HYD.ven,1,4,P=>{if(e.dead||!AF)return;burst(P,HYD.ven,22,2.4,2,.6);svSnd('splash',.6,1.3);svHitNow(e,S2,an,big?.9:.8,{});hydPool(c,P,big?2.2:1.8,4)},g)}
+function hydBreath(c,s,a0,T){const e=c.e,S2={k:'a',r:10,h:.42},o=hydBase(c,s),an={x:o.x,z:o.z,a:c.m.rotation.y+a0};svFlash(S2,an,HYD.ven,700);
+  const m=hydMouth(c,s);for(let k=0;k<26;k++){const d=2+Math.random()*8,a=an.a+(Math.random()-.5)*.8;burst(new THREE.Vector3(o.x+Math.sin(a)*d,GH(o.x,o.z)+1+Math.random()*2.5,o.z+Math.cos(a)*d),HYD.ven,2,1.4,.6,.9)}
+  burst(m,HYD.ven,20,3,1,.6);svSnd('hiss',.9,.8);svHitNow(e,S2,an,1.1,{flash:false,on:()=>dqDebuff('Venom','🟢',{mspd:-.3},2500,'Slowed by venom')})}
+function hydSplash(p,n){burst(gY(p,.2),0xbfe8e0,n||30,4,4,.7);svShock(p,0xbfe8e0,5,.5)}
+var HYDM={
+  intro:{dur:2.8,trk:[[.4,'tight','io'],[1.0,'tight','l',.02],[1.6,'roar','o'],[2.4,'roar','l',.02],[2.8,'recC','io']],trn:[[0,2.8,1]],
+    ev:[[.3,c=>svSnd('hiss',.7,.6)],[1.55,c=>{svSnd('roar',1,1.15);svSnd('shriek',.5,.8);shake(.35);hydSplash(c.m.position,40)}]]},
+  bite:{wt:10,r:[0,13],a:'any',dur:1.75,lock:.62,
+    go(c){c.M.s=hydSide(c.e);const s=c.M.s;c.M.D=Object.assign({},c.M.D,{trk:s==='C'?[[.55,'rearC','io'],[.72,'rearC','l',.015],[.9,'strC','s'],[1.25,'recC','l'],[1.75,'recC','io']]:[[.55,'rear'+(s==='L'?'L':'L~'),'io'],[.72,'rear'+(s==='L'?'L':'L~'),'l',.015],[.9,'str'+(s==='L'?'L':'L~'),'s'],[1.25,'rec'+(s==='L'?'L':'L~'),'l'],[1.75,'rec'+(s==='L'?'L':'L~'),'io']]});c.S.trk=c.M.D.trk},
+    hit:[{t:.9,s:{k:'l',w:2.6,l:10.5,b:0},o:c=>hydLine(c,c.M.s),dm:1.2,w:.55,fx:(c,an)=>{const p=new THREE.Vector3(an.x+Math.sin(an.a)*8,0,an.z+Math.cos(an.a)*8);hydSplash(p,24);svSnd('crack',.8,.8);shake(.18)}}],
+    ev:[[.25,c=>svSnd('hiss',.7)],[.8,c=>svSnd('whoosh',.8,.9)]],nx:[['bite',.3]],rec:.15},
+  fury:{wt:7,r:[0,13],a:'f',dur:2.9,lock:.5,trn:[[0,2.6,2.6]],
+    trk:[[.45,'rearL','io'],[.6,'rearL','l',.015],[.78,'strL','s'],[.98,'rearL~','io'],[1.36,'strL~','s'],[1.56,'rearC','io'],[1.98,'strC','s'],[2.5,'recC','l'],[2.9,'recC','io']],
+    hit:[{t:.78,s:{k:'l',w:2.5,l:10.5},o:c=>hydLine(c,'L'),dm:1,w:.45},{t:1.36,s:{k:'l',w:2.5,l:10.5},o:c=>hydLine(c,'R'),dm:1,w:.45},{t:1.98,s:{k:'l',w:2.8,l:11},o:c=>hydLine(c,'C'),dm:1.3,w:.5,fx:(c,an)=>{hydSplash(new THREE.Vector3(an.x+Math.sin(an.a)*8,0,an.z+Math.cos(an.a)*8),30);shake(.25)}}],
+    ev:[[.3,c=>svSnd('hiss',.8)],[.7,c=>svSnd('whoosh',.7)],[1.28,c=>svSnd('whoosh',.7,1.1)],[1.9,c=>svSnd('whoosh',.9,.8)]],rec:.55},
+  sweep:{wt:9,r:[0,8.5],a:'f',dur:2.0,lock:.7,armor:1,trk:[[.6,'lowR','io'],[.92,'lowR','l',.02],[1.15,'swpL','o'],[1.55,'swpL','l'],[2.0,'recC','io']],
+    hit:[{t:1.08,s:{k:'a',r:8.6,h:1.25},f:0,dm:1.3,w:.5,kb:3}],tr:[[.95,1.2,'hC',[0,0,1.2],[0,0,0],0xbfe8a0,.22]],ev:[[.35,c=>svSnd('hiss',.8,.7)],[.98,c=>{svSnd('whoosh',1,.6);svSnd('splash',.5)}]],rec:.35},
+  coil:{wt:6,r:[0,5.5],a:'any',dur:1.9,armor:1,trk:[[.5,'tight','io'],[1.0,'tight','l',.025],[1.15,'burst','s'],[1.9,'recC','io']],
+    hit:[{t:1.12,s:{k:'c',r:6.2},dm:1.1,w:.95,kb:4,fx:c=>{hydSplash(c.m.position,60);svShock(c.m.position,0xbfe8e0,7,.6);shake(.3);svSnd('splash',1,.7)}}],ev:[[.3,c=>svSnd('hum',.5,.6)]],rec:.4},
+  tail:{wt:11,r:[0,13],a:'b',dur:1.9,lock:.5,trn:[[0,.1,1]],trk:[[.65,'tUp','io'],[.85,'tUp','l',.02],[1.05,'tDn','s'],[1.9,'recC','io']],
+    hit:[{t:1.02,s:{k:'l',w:3,l:11},o:c=>{const p=svWP(c.e,'t0',0,0,0);return {x:p.x,z:p.z,a:c.m.rotation.y+Math.PI}},dm:1.35,w:.75,fx:(c,an)=>{for(let d=3;d<11;d+=2.5)hydSplash(new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d),14);shake(.3);svSnd('heavy',1)}}],
+    ev:[[.4,c=>svSnd('hiss',.5,.5)]],rec:.3},
+  spit:{wt:8,r:[6,40],a:'any',dur:2.3,lock:.9,trk:[[.6,'gulp','io'],[1.0,'gulp','l',.02],[1.15,'spit','s'],[1.5,'spit','l'],[2.3,'recC','io']],
+    ev:[[.3,c=>svSnd('squelch',.7,.8)],[1.15,c=>{const m=hydMouth(c,'C');svSnd('squelch',.8,1.2);[0,1,2].forEach(i=>{const off=[[0,0],[3,-1.4],[-3,-1.4]][i],a=svYawTo(c.m,pl.position),
+      q=c.inA(pl.position.clone().add(new THREE.Vector3(Math.cos(a)*off[0]+Math.sin(a)*off[1],0,-Math.sin(a)*off[0]+Math.cos(a)*off[1])),.8);hydGlob(c,m,q,.85+i*.12)})}]],rec:.4},
+  // ---- Phase II ----
+  awaken:{dur:3.4,inv:[0,3.4],armor:1,trk:[[.5,'tight','io'],[1.1,'tight','l',.03],[1.7,'roar','o'],[2.9,'roar','l',.02],[3.4,'recC','io']],trn:[[0,3,1]],
+    hit:[{t:1.75,s:{k:'c',r:7.5},dm:.5,kb:6,w:1.2,fx:c=>{hydSplash(c.m.position,80);svShock(c.m.position,HYD.crest,10,.8)}}],
+    ev:[[.05,c=>{banner('THE CRESTS FLARE','The Hydra rises in fury','');svSnd('hiss',.9,.5)}],[1.1,c=>{c.S.ph=2;c.e.bs.ph=2;flash('rgba(160,255,90,.3)');svSnd('roar',1.2,1.1);svSnd('shriek',.7,.9);shake(.5)}]]},
+  breath:{wt:9,ph:2,r:[0,12],a:'f',dur:3.2,lock:.6,armor:1,trn:[[0,.6,2]],trk:[[.6,'brW','io'],[1.15,'brW','l',.02],[1.35,'brS','o'],[1.9,'brS','l'],[2.05,'brC','io'],[2.5,'brC','l'],[3.2,'recC','io']],
+    hit:[{t:1.38,s:{k:'a',r:10,h:.42},o:c=>{const p=hydBase(c,'L');return {x:p.x,z:p.z,a:c.m.rotation.y+.62}},nohit:1,w:1.0,fx:c=>hydBreath(c,'L',.62)},
+      {t:1.38,s:{k:'a',r:10,h:.42},o:c=>{const p=hydBase(c,'R');return {x:p.x,z:p.z,a:c.m.rotation.y-.62}},nohit:1,w:1.0,fx:c=>hydBreath(c,'R',-.62)},
+      {t:2.2,s:{k:'a',r:10,h:.42},o:c=>{const p=hydBase(c,'C');return {x:p.x,z:p.z,a:c.m.rotation.y}},nohit:1,w:.7,fx:c=>hydBreath(c,'C',0)}],
+    ev:[[.35,c=>svSnd('charge',.6,.5)]],rec:.5},
+  deluge:{wt:7,ph:2,r:[0,40],a:'any',dur:3.4,armor:1,trk:[[.55,'gulp','io'],[.95,'gulp','l',.02],[1.1,'roar','s'],[1.6,'roar','l'],[2.4,'recC','io'],[3.4,'recC','l']],
+    ev:[[.3,c=>svSnd('squelch',.8,.7)],[1.1,c=>{const m=hydMouth(c,'C');svShot(m,m.clone().add(new THREE.Vector3(0,9,0)),.45,HYD.ven,2.4,0);svSnd('splash',.8,1.4)}]].concat(
+      [0,1,2,3,4,5,6,7,8].map(i=>[1.45+i*.2,c=>{const a=i*2.4+c.rnd(),r=i==8?0:2.6+(i%3)*1.4,q=c.inA(pl.position.clone().add(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r)),.8);
+        hydGlob(c,new THREE.Vector3(q.x+(c.rnd()-.5)*2,GH(q.x,q.z)+12,q.z+(c.rnd()-.5)*2),q,.9,i==8)}])),rec:.5},
+  furyX:{wt:6,ph:2,r:[0,13],a:'f',dur:3.0,lock:.4,trn:[[0,2.8,3]],
+    trk:[[.38,'rearC','io'],[.52,'rearC','l',.015],[.68,'strC','s'],[.85,'rearL','io'],[1.18,'strL','s'],[1.3,'rearL~','io'],[1.62,'strL~','s'],[1.78,'rearC','io'],[2.18,'strC','s'],[2.6,'recC','l'],[3.0,'recC','io']],
+    hit:[{t:.68,s:{k:'l',w:2.6,l:11},o:c=>hydLine(c,'C'),dm:1,w:.4},{t:1.18,s:{k:'l',w:2.5,l:10.5},o:c=>hydLine(c,'L'),dm:1,w:.4},{t:1.62,s:{k:'l',w:2.5,l:10.5},o:c=>hydLine(c,'R'),dm:1,w:.4},
+      {t:2.18,s:{k:'l',w:3,l:11.5},o:c=>hydLine(c,'C'),dm:1.4,w:.5,fx:(c,an)=>{hydSplash(new THREE.Vector3(an.x+Math.sin(an.a)*8,0,an.z+Math.cos(an.a)*8),40);shake(.3)}}],
+    ev:[[.25,c=>svSnd('hiss',.9)],[.6,c=>svSnd('whoosh',.7)],[1.1,c=>svSnd('whoosh',.7,1.1)],[1.55,c=>svSnd('whoosh',.7,1.2)],[2.1,c=>svSnd('whoosh',1,.8)]],rec:.6}};
+HYDM.fury.ph1only=1;
+svReg(1,{name:'Hydra',col:HYD.col,body:3.0,ph2:.55,poise:.17,headJ:'hC',turnA:2.4,edge:4,
+  ai:{pref:7,walk:1.3,turn:1.6,rest:[.8,1.5],ph2r:.72,strafe:.25,style:'slither'},
+  build:hydBuild,loco:hydLoco,post:hydPost,P:HYDP,M:HYDM,
+  stag:[[.3,'stag','o'],[2.1,'stag','l',.02],[2.7,'recC','io']],stagT:2.7,
+  die:[[.5,'stag','o'],[1.3,'dead','i'],[2.1,'dead','l']],
+  homeY(A){const a=typeof HY!='undefined'&&HY.ent!=null?HY.ent:0;return Math.atan2(Math.cos(a),Math.sin(a))},
+  dying(e,t){if(t>.6&&t<.7)hydSplash(e.m.position,60)}});
+// ================= v110 Sovereign 2 — The Rime Wraith (Burningeye Summit) =================
+// A floating reaper of the summit: a hood of frost over a pale skull, an ice crown, a torn robe that trails into mist,
+// long bone arms, and a great scythe whose blade is a single shard of ice.
+// Pattern (learnable):
+//  close in front ── Reaping Sweep: the scythe is drawn back to its right (tremble), then a wide sweep; it almost always
+//                   reverses into a second sweep — wait for the second one before you punish.
+//  mid           ── Overhead Cleave: the scythe is raised high and held; a line slam, then ice bursts along the same line a
+//                   heartbeat later (don't step back into it).
+//  far           ── Glide Reap: it drifts back, then rushes straight through you with the blade low.
+//                   Icicle Volley: five icicles gather over its head and fire one by one at your feet; keep moving.
+//  close, any    ── Frost Nova: arms rise, frost crystals gather around it — leave the circle.
+//  Phase II (55%) "The Blizzard Wakes": the crown blazes; adds Winter's Step (it vanishes in a snow burst and re-forms
+//                   behind you with a sweep), Glacial Prison (ice bursts under you, then a ring around that spot: step out,
+//                   then back in) and a three-hit reaping spin.
+var RWR={col:0x9ad8ff,ice:0xd8f4ff,deep:0x4a90d8};
+function rwrBuild(R,e){
+  const robe=svMat(R,0x1e2838,{roughness:.95,emissive:0x060a14,side:THREE.DoubleSide}),robe2=svMat(R,0x2c3a52,{roughness:.9,side:THREE.DoubleSide}),bone=svMat(R,0xd8dce4,{roughness:.55,emissive:0x101418}),
+    ice=svMat(R,0xa8dcff,{roughness:.15,metalness:.1,emissive:0x3a88c0,transparent:true,opacity:.97}),ice2=svMat(R,0x8ac8f0,{roughness:.2,emissive:0x1a4a7a}),wood=svMat(R,0x2a2430,{roughness:.6,metalness:.3}),
+    eye=svGlowMat(R,0x9ae8ff),crown=svGlowMat(R,0x6ab0e0);R.crownG=crown;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+  J('root',null,0,0,0);J('body','root',0,2.5,0);J('robe','body',0,0,0);J('chest','body',0,.05,0);
+  // ---- robe: a tattered bell that frays into strips ----
+  svM(R,'robe',svG('rw_rb',()=>svLoft([[0,.55,.48],[-.6,.78,.7],[-1.3,1.05,.95],[-1.95,1.3,1.15]],11,{cap:false})),robe);
+  for(let k=0;k<13;k++){const a=k/13*6.283,l=.9+.5*Math.sin(k*2.3)+.3*(k%2),n='tt'+k;J(n,'robe',Math.sin(a)*1.15,-1.85,Math.cos(a)*1.05,.15*Math.cos(a),0,-.15*Math.sin(a));
+    svM(R,n,svG('rw_tt'+(k%3),()=>svBlade([[-.22,0],[.22,0],[.12,-.6-(k%3)*.15],[.18,-1.0-(k%3)*.2],[0,-1.35-(k%3)*.25],[-.1,-.9],[-.2,-.5]],.03)),k%2?robe:robe2,0,0,0,0,a,0,1,l,1)}
+  // ---- torso: a narrow cage of ribs under a frosted mantle, ice shards growing from the shoulders ----
+  svM(R,'chest',svG('rw_ch',()=>svLoft([[0,.5,.42],[.5,.68,.5],[1.0,.78,.52,0,-.04],[1.35,.58,.45]],9)),robe2);
+  for(let k=0;k<4;k++)[-1,1].forEach(s=>svM(R,'chest',svG('rw_rib',()=>svHorn(.05,.7,0,-.3,4,3)),bone,s*.12,.45+k*.2,.42,0,s*1.25,s*(.3+k*.05)));
+  svM(R,'chest',svG('rw_mt',()=>svLoft([[.85,.95,.7],[1.15,.98,.72],[1.45,.62,.5]],10,{cap:false})),robe);
+  [-1,1].forEach(s=>{for(let k=0;k<4;k++)svM(R,'chest',svG('rw_sh'+k,()=>svHorn(.16-.02*k,.8+.25*k,0,0,5,3)),ice,s*(.62+.1*k),1.3+.05*k,-.1-.08*k,-.5-.2*k,0,s*(-.9-.15*k))});
+  for(let k=0;k<5;k++)svM(R,'chest',svG('rw_cr',()=>svLump(.18,0,.5,k+3)),ice2,(k-2)*.22,.6+.15*(k%2),-.42,0,k,0,.7,1.4,.7);
+  // ---- head: a deep frost hood, a skull in its shadow, an ice crown ----
+  J('neck','chest',0,1.38,0);J('head','neck',0,.3,.05);
+  svM(R,'head',svG('rw_hd',()=>svLoft([[-.15,.42,.45,0,-.05],[.25,.5,.52,0,-.04],[.65,.42,.46,0,-.1],[1.0,.12,.15,0,-.25]],9,{cap:false})),robe);
+  svM(R,'head',svG('rw_sk',()=>svLump(.3,1,.15,8)),bone,0,.28,.2,0,0,0,.9,1,1);svM(R,'head',svG('rw_jw',()=>svLoft([[0,.2,.18],[-.22,.14,.13]],6)),bone,0,.05,.28);
+  [-1,1].forEach(s=>{svM(R,'head',svG('rw_ey',()=>new THREE.SphereGeometry(.07,6,5)),eye,s*.11,.32,.46);svSpr(R,'head',RWR.col,.5,s*.11,.32,.5)});
+  const cw=J('crown','head',0,.62,-.02);for(let k=0;k<7;k++){const a=(k-3)*.42;svM(R,cw,svG('rw_cw'+(k%2),()=>svHorn(.08,.75+.35*(1-Math.abs(k-3)/3),0,-.15,5,3)),ice,Math.sin(a)*.4,0,Math.cos(a)*.38-.05,-1.25+Math.abs(a)*.2,a,0)}
+  svM(R,cw,svG('rw_cwr',()=>{const q=new THREE.TorusGeometry(.42,.05,4,12);q.rotateX(Math.PI/2);return q.toNonIndexed()}),crown,0,0,0);
+  // ---- arms: long bones, ice-clawed hands ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('sh'+L,'chest',s*.78,1.15,0,0,0,s*.25);
+    svM(R,'sh'+L,svG('rw_pa',()=>svLump(.32,0,.3,6)),robe,0,0,0,0,0,0,1.1,.8,1);
+    svM(R,'sh'+L,svG('rw_ua',()=>svLoft([[0,.15,.15],[-.6,.12,.12],[-1.15,.09,.09]],6)),bone);svM(R,'sh'+L,svG('rw_sl',()=>svLoft([[-.05,.3,.28],[-.7,.42,.38]],8,{cap:false})),robe2,0,0,0);
+    J('el'+L,'sh'+L,0,-1.15,0,-.3);svM(R,'el'+L,svG('rw_fa',()=>svLoft([[0,.09,.09],[-1.05,.07,.07]],5)),bone);
+    J('hd'+L,'el'+L,0,-1.05,0);svM(R,'hd'+L,svG('rw_hn',()=>svLump(.12,0,.2,2)),bone,0,-.05,0,0,0,0,1,1.3,.7);
+    for(let c=0;c<4;c++)svM(R,'hd'+L,svG('rw_cl',()=>svHorn(.035,.5,0,.25,4,3)),ice,(c-1.5)*.06,-.12,.02,Math.PI/2+.2,0,(c-1.5)*.15)});
+  // ---- the scythe (held in the right hand) ----
+  const sc=J('scy','hdR',0,-.1,0,0,0,0);
+  svM(R,sc,svG('rw_haft2',()=>svLoft([[.75,.065,.065],[-3.3,.06,.06]],6)),wood);
+  [.55,-1.2,-3.0].forEach(y=>svM(R,sc,svG('rw_band',()=>svLoft([[-.06,.095,.095],[.06,.095,.095]],6)),ice2,0,y,0));
+  svM(R,sc,svG('rw_bl2',()=>svBlade([[0,.12],[.5,.22],[1.4,.12],[2.4,-.25],[3.0,-.9],[2.45,-.55],[1.4,-.28],[.4,-.2],[0,-.14]],.05)),ice,0,-3.22,0,0,-Math.PI/2,0,1.3,1.3,1);
+  svM(R,sc,svG('rw_bk',()=>svHorn(.08,.6,0,0,4,2)),ice2,0,-3.25,0,Math.PI/2,Math.PI,0);
+  R.blade=sc;
+}
+function rwrLoco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/2);O.body[4]+=.25*Math.sin(t*1.3);O.body[0]+=.08*a;O.body[2]+=.03*Math.sin(t*.9);
+  O.robe[0]+=-.12*a+.03*Math.sin(t*1.7);O.robe[2]+=.04*Math.sin(t*1.1);
+  for(let k=0;k<13;k++){const o=O['tt'+k];o[0]+=.12*Math.sin(t*2.4+k*1.3)+.25*a;o[2]+=.08*Math.sin(t*1.9+k)}
+  O.head[1]+=.15*Math.sin(t*.6);O.head[0]+=.06*Math.sin(t*.9);
+  // scythe held diagonally across the body, the left hand near the haft
+  O.shR[0]+=-.35+.05*Math.sin(t*1.2);O.elR[0]+=-.55;O.shR[2]+=-.1;O.shL[0]+=-.75+.04*Math.sin(t*1.4);O.shL[2]+=.35;O.elL[0]+=-.85;O.scy[0]+=.3;O.scy[2]+=.55}
+function rwrPost(e,S,dt,now){const R=S.R,on=S.ph>1;R.crownG.color.setHex(on?0xd8f8ff:0x6ab0e0);if(Math.random()<dt*(on?14:5)){const p=svWP(e,'robe',(Math.random()-.5)*2,-1.9,(Math.random()-.5)*2);burst(p,0xe8f8ff,1,.6,.3,1.2)}
+  e.m.visible=!S.gone&&e.m.visible}
+var RWRP={
+  // reaping sweep: drawn back to the right, sweep to the left; mirrored for the return
+  rUp:{body:[0,-.65,.1],chest:[0,-.3,0],shR:[-.4,0,-1.35],elR:[-.4,0,0],hdR:[0,0,0],shL:[-1.0,0,-.3],elL:[-.9,0,0],scy:[.0,0,1.4],head:[0,.3,0],robe:[0,.2,0]},
+  rHit:{body:[.1,.75,-.08,0,0,.6],chest:[0,.35,0],shR:[-1.35,0,.25],elR:[-.1,0,0],shL:[-1.2,0,.75],elL:[-.4,0,0],scy:[.2,0,-.3],head:[0,-.2,0],robe:[-.2,-.3,0]},
+  rRec:{body:[.05,.5,0],chest:[0,.2,0],shR:[-.9,0,.1],elR:[-.3,0,0],shL:[-.9,0,.4],elL:[-.6,0,0],scy:[.1,0,.2]},
+  rUp2:{body:[0,.75,.05],chest:[0,.35,0],shR:[-1.45,0,.55],elR:[-.2,0,0],shL:[-1.25,0,.9],elL:[-.4,0,0],scy:[.25,0,-.7],head:[0,-.3,0]},
+  rHit2:{body:[.1,-.7,.08,0,0,.5],chest:[0,-.35,0],shR:[-.35,0,-1.4],elR:[-.3,0,0],shL:[-1.1,0,-.2],elL:[-.8,0,0],scy:[0,0,1.3],head:[0,.25,0],robe:[-.2,.3,0]},
+  // overhead cleave
+  oUp:{body:[-.25,0,0,0,.4,-.2],chest:[-.2,0,0],shR:[-2.6,0,-.15],elR:[-.3,0,0],shL:[-2.5,0,.25],elL:[-.4,0,0],scy:[-.6,0,0],head:[-.2,0,0],robe:[.1,0,0]},
+  oHit:{body:[.45,0,0,0,-.55,.4],chest:[.3,0,0],shR:[-.9,0,-.1],elR:[-.1,0,0],shL:[-.95,0,.2],elL:[-.2,0,0],scy:[1.25,0,0],head:[.3,0,0],robe:[-.3,0,0]},
+  oRec:{body:[.25,0,0,0,-.35,.2],chest:[.15,0,0],shR:[-.8,0,-.1],shL:[-.85,0,.2],scy:[1.0,0,0]},
+  // glide reap: lean back, then rush with the blade low
+  gBack:{body:[-.3,-.4,0,0,.3,-.4],shR:[.4,0,-.6],elR:[-.3,0,0],shL:[-.6,0,.2],scy:[.2,0,1.0],robe:[.3,0,0],head:[.1,.2,0]},
+  gRush:{body:[.55,.3,0,0,-.4,.3],shR:[-.3,0,-1.1],elR:[0,0,0],shL:[-1.3,0,.4],scy:[.1,0,1.5],robe:[-.6,0,0],head:[-.25,-.2,0]},
+  gCut:{body:[.2,.7,0,0,0,.2],shR:[-1.4,0,.3],shL:[-1.1,0,.8],scy:[.2,0,-.4],robe:[-.4,-.2,0]},
+  // frost nova
+  nUp:{body:[-.15,0,0,0,.6,0],shR:[-2.4,0,-.7],elR:[-.2,0,0],shL:[-2.4,0,.7],elL:[-.2,0,0],scy:[0,0,.3],head:[-.45,0,0],robe:[.25,0,0]},
+  nDn:{body:[.25,0,0,0,-.5,0],shR:[-.4,0,-1.2],elR:[0,0,0],shL:[-.4,0,1.2],elL:[0,0,0],head:[.2,0,0],robe:[-.3,0,0]},
+  // icicle volley: the left hand conducts
+  vUp:{body:[-.1,0,0,0,.3,0],shL:[-2.7,0,.2],elL:[-.1,0,0],shR:[-.5,0,-.3],head:[-.3,0,0]},
+  vThr:{body:[.1,0,0,0,.2,0],shL:[-1.4,0,.1],elL:[-.1,0,0],shR:[-.5,0,-.3],head:[0,0,0]},
+  // roar / phase change
+  roar:{body:[-.35,0,0,0,.8,0],chest:[-.25,0,0],shR:[-1.8,0,-1.1],elR:[-.3,0,0],shL:[-1.8,0,1.1],elL:[-.3,0,0],head:[-.6,0,0],robe:[.3,0,0],scy:[0,0,.5]},
+  hunch:{body:[.35,0,0,0,-.6,0],chest:[.3,0,0],shR:[-.2,0,-.2],elR:[-1.2,0,0],shL:[-.2,0,.2],elL:[-1.2,0,0],head:[.5,0,0],robe:[-.3,0,0]},
+  // spin (phase II third hit)
+  spin:{body:[.1,3.1,0,0,0,0],shR:[-1.5,0,.2],shL:[-1.2,0,.7],scy:[.2,0,-.4],robe:[-.5,0,0]},
+  stag:{body:[.45,0,.2,0,-1.2,0],chest:[.35,0,0],head:[.6,0,.3],shR:[.3,0,-.4],elR:[-.3,0,0],shL:[.2,0,.5],elL:[-.4,0,0],scy:[.8,0,.6],robe:[-.4,0,0]},
+  dead:{body:[1.3,0,.3,0,-2.2,0],chest:[.4,0,0],head:[.8,0,0],shR:[.6,0,-.6],shL:[.5,0,.7],scy:[1.5,0,.5],robe:[-.8,0,0]}};
+function rwrSpikes(c,an,L,w,dm){const e=c.e,mat=c.R.mats.find(m=>m.opacity<1)||c.R.mats[0];for(let d=1.5;d<L;d+=1.1){const p=new THREE.Vector3(an.x+Math.sin(an.a)*d+(Math.random()-.5)*w*.6,0,an.z+Math.cos(an.a)*d+(Math.random()-.5)*w*.6);svSpike(p,mat,1.6+Math.random()*1.2,.32,1.3,.5);burst(gY(p,.3),RWR.ice,4,1.5,2,.5)}
+  svSnd('ice',1);shake(.2);svHitNow(e,{k:'l',w,l:L},an,dm,{col:RWR.ice})}
+function rwrRing(c,an,r0,r1,n,dm){const e=c.e,mat=c.R.mats.find(m=>m.opacity<1)||c.R.mats[0];for(let k=0;k<n;k++){const a=k/n*6.283,r=r0+(r1-r0)*Math.random(),p=new THREE.Vector3(an.x+Math.cos(a)*r,0,an.z+Math.sin(a)*r);svSpike(p,mat,1.4+Math.random(),.3,1.2,.5)}
+  svSnd('ice',1,.8);svHitNow(e,r0>0?{k:'r',r0,r:r1}:{k:'c',r:r1},an,dm,{col:RWR.ice})}
+function rwrIcicle(c,i){const e=c.e,S=c.S,R=S.R,L=S.icc||[];const o=L[i];if(!o)return;const p=o.getWorldPosition(new THREE.Vector3());o.visible=false;
+  const q=c.inA(pl.position.clone(),.8),S2={k:'c',r:1.7},an={x:q.x,z:q.z,a:0};c.M.warn.push(svWarn(S2,an,.6));svSnd('whoosh',.5,1.6);
+  const m=new THREE.Mesh(svG('rw_icm',()=>{const g=new THREE.ConeGeometry(.22,1.4,5);g.rotateX(Math.PI/2);return g}),R.mats.find(x=>x.opacity<1));
+  svShot(p,new THREE.Vector3(q.x,GH(q.x,q.z)+.2,q.z),.6,RWR.ice,.8,.8,P=>{if(e.dead||!AF)return;burst(P,RWR.ice,20,2.4,2,.5);svSnd('ice',.7,1.3);svDecal(P,0xcfefff,1.5,3,.5);svHitNow(e,S2,an,.85,{col:RWR.ice})},m)}
+function rwrIcicles(c,on){const S=c.S,R=S.R;if(S.icc){S.icc.forEach(o=>o.parent&&o.parent.remove(o));S.icc=null}if(!on)return;S.icc=[];
+  for(let k=0;k<5;k++){const o=new THREE.Mesh(svG('rw_icm2',()=>{const g=new THREE.ConeGeometry(.22,1.4,5);g.rotateX(Math.PI);return g}),R.mats.find(x=>x.opacity<1));o.position.set((k-2)*.75,2.4+.2*Math.abs(k-2),-.2);o.scale.setScalar(.01);R.J.chest.add(o);S.icc.push(o)}}
+// Winter's Step: vanish, re-form behind the hero
+function rwrGone(e,on){const S=e.sv;S.gone=on;S.ghost=on;e.m.visible=!on;if(on){burst(gY(e.m.position,2),0xe8f8ff,70,4,3,1);svShock(e.m.position,RWR.ice,4,.4)}}
+var RWRM={
+  intro:{dur:2.8,trk:[[.4,'hunch','io'],[1.1,'hunch','l',.02],[1.7,'roar','o'],[2.4,'roar','l',.02],[2.8,'rRec','io']],trn:[[0,2.8,1]],
+    ev:[[.3,c=>svSnd('hum',.6,.8)],[1.6,c=>{svSnd('shriek',.9,.7);svSnd('ice',1,.6);shake(.3);svShock(c.m.position,RWR.ice,8,.7);burst(gY(c.m.position,2.5),RWR.ice,60,5,3,1)}]]},
+  reap:{wt:10,r:[0,7.2],a:'f',mel:1,dur:1.35,lock:.52,trk:[[.55,'rUp','io'],[.7,'rUp','l',.02],[.86,'rHit','s'],[1.05,'rRec','io'],[1.35,'rRec','l']],
+    hit:[{t:.84,s:{k:'a',r:7,h:1.35},f:-.3,dm:1.1}],tr:[[.72,.95,'scy',[0,-3.6,2.7],[0,-2.9,.4],0xbfe8ff,.2]],ev:[[.25,c=>svSnd('hum',.3,1.4)],[.76,c=>svSnd('swing',1,.8)]],nx:[['reap2',.8,9]],rec:.1},
+  reap2:{dur:1.45,mel:1,lock:.3,trk:[[.32,'rUp2','io'],[.44,'rUp2','l',.015],[.6,'rHit2','s'],[.95,'rRec','io'],[1.45,'rRec','l']],
+    hit:[{t:.58,s:{k:'a',r:7,h:1.35},f:-.3,dm:1.1}],tr:[[.46,.7,'scy',[0,-3.6,2.7],[0,-2.9,.4],0xbfe8ff,.2]],ev:[[.5,c=>svSnd('swing',1,.7)]],nx:[['spinR',.5,8]],rec:.35},
+  spinR:{dur:1.6,ph:2,mel:1,lock:.25,trk:[[.3,'rUp','io'],[.4,'rUp','l',.02],[.75,'spin','l'],[1.0,'rRec','io'],[1.6,'rRec','l']],
+    hit:[{t:.62,s:{k:'c',r:7.2},dm:1.25,w:.5}],tr:[[.42,.8,'scy',[0,-3.6,2.7],[0,-2.9,.4],0xbfe8ff,.25]],ev:[[.42,c=>svSnd('whoosh',1,.6)]],rec:.5},
+  cleave:{wt:8,r:[2.5,10],a:'f',dur:2.3,lock:.85,armor:1,trk:[[.7,'oUp','io'],[1.0,'oUp','l',.025],[1.12,'oHit','s'],[1.7,'oRec','l'],[2.3,'rRec','io']],
+    hit:[{t:1.1,s:{k:'l',w:2.6,l:9,b:0},f:.5,dm:1.45,w:.4,fx:(c,an)=>{shake(.35);svSnd('heavy',1,1.2);for(let d=2;d<9;d+=1.5)burst(gY(new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d),.3),RWR.ice,6,2,2,.5);c.M.an.cl=an}},
+      {t:1.68,s:{k:'l',w:3.2,l:11,b:0},f:.5,dm:1.1,w:.5,nohit:1,fx:(c,an)=>rwrSpikes(c,c.M.an.cl||an,11,3.2,1.1)}],
+    tr:[[1.0,1.18,'scy',[0,-3.6,2.7],[0,-2.9,.4],0xbfe8ff,.2]],ev:[[.3,c=>svSnd('hum',.5,1)],[1.0,c=>svSnd('swing',1,.6)]],rec:.4},
+  glide:{wt:8,r:[7,26],a:'f',dur:2.2,lock:.9,armor:1,trn:[[0,.9,3]],trk:[[.55,'gBack','io'],[.88,'gBack','l',.02],[1.1,'gRush','o'],[1.35,'gCut','s'],[2.2,'rRec','io']],
+    rm:[[.2,.85,-2.2,'io'],[.92,1.36,'tgt','o',-3,24]],hit:[{t:1.3,s:{k:'l',w:3.2,l:16,b:0},f:0,dm:1.35,w:.75}],
+    tr:[[.95,1.4,'scy',[0,-3.6,2.7],[0,-2.9,.4],0xbfe8ff,.22]],ev:[[.92,c=>{svSnd('whoosh',1.2,.7);burst(gY(c.m.position,1),RWR.ice,40,3,1,.8)}],[1.28,c=>svSnd('swing',1,.6)]],
+    tk(c,dt){if(c.M.t>.9&&c.M.t<1.36&&Math.random()<.8)burst(gY(c.m.position,.8),0xe8f8ff,3,1,.5,.9)},rec:.45},
+  nova:{wt:7,r:[0,6.5],a:'any',dur:2.2,armor:1,trn:[[0,.5,2]],trk:[[.55,'nUp','io'],[1.2,'nUp','l',.025],[1.35,'nDn','s'],[2.2,'rRec','io']],
+    hit:[{t:1.33,s:{k:'c',r:7},dm:1.4,w:1.15,nohit:1,fx:c=>{rwrRing(c,{x:c.m.position.x,z:c.m.position.z},0,7,22,1.4);svShock(c.m.position,RWR.ice,8,.5);flash('rgba(200,240,255,.3)')}}],
+    ev:[[.2,c=>{svSnd('charge',.6,.8);for(let k=0;k<6;k++){const a=k/6*6.283;svCharge(c.e,'chest',RWR.ice,1.2,1.1,Math.sin(a)*1.4,.5,Math.cos(a)*1.4)}}]],rec:.5},
+  icicles:{wt:7,r:[8,45],a:'any',dur:3.0,armor:1,trn:[[0,3,2.5]],trk:[[.5,'vUp','io'],[1.0,'vUp','l',.02],[1.15,'vThr','s'],[1.5,'vUp','io'],[1.65,'vThr','s'],[2.0,'vUp','io'],[2.3,'vThr','s'],[3.0,'rRec','io']],
+    go(c){rwrIcicles(c,true)},tk(c,dt){const L=c.S.icc;if(L)L.forEach((o,k)=>{if(o.visible)o.scale.setScalar(Math.min(1,Math.max(.01,(c.M.t-.15*k)/.5)))})},end(c){rwrIcicles(c,false)},
+    ev:[[.15,c=>svSnd('ice',.8,.7)]].concat([0,1,2,3,4].map(i=>[1.1+i*.32,c=>rwrIcicle(c,i)])),rec:.4},
+  // ---- Phase II ----
+  awaken:{dur:3.3,inv:[0,3.3],armor:1,trk:[[.5,'hunch','io'],[1.2,'hunch','l',.03],[1.6,'roar','o'],[2.8,'roar','l',.02],[3.3,'rRec','io']],trn:[[0,3,1]],
+    hit:[{t:1.65,s:{k:'c',r:7.5},dm:.5,kb:6,w:1.2,fx:c=>{svShock(c.m.position,RWR.ice,10,.8);burst(gY(c.m.position,2),0xffffff,90,6,3,1.2)}}],
+    ev:[[.05,c=>{banner('THE BLIZZARD WAKES','The Rime Wraith calls the storm','');svSnd('hum',.8,.6)}],[1.2,c=>{c.S.ph=2;c.e.bs.ph=2;flash('rgba(220,245,255,.45)');svSnd('shriek',1.1,.6);shake(.5)}]]},
+  step:{wt:8,ph:2,r:[0,30],a:'any',dur:2.7,armor:1,trn:[[0,.1,1]],trk:[[.35,'hunch','io'],[.5,'hunch','l'],[1.4,'rUp','io'],[1.62,'rUp','l',.02],[1.8,'rHit','s'],[2.2,'rRec','io'],[2.7,'rRec','l']],
+    ev:[[.4,c=>{rwrGone(c.e,true);svSnd('whoosh',1,.5)}],[1.25,c=>{const e=c.e,m=e.m,d=pl.mvd&&nowP()-pl.mvd.t<300?pl.mvd:{x:Math.sin(pl.rotation.y),z:Math.cos(pl.rotation.y)},q=c.inA(pl.position.clone().add(new THREE.Vector3(-d.x*4.2,0,-d.z*4.2)),2.5);
+      m.position.set(q.x,0,q.z);m.rotation.y=svYawTo(m,pl.position);rwrGone(e,false);svSnd('bell',.8,1.6);burst(gY(q,2),RWR.ice,60,3,2,.8);svShock(q,RWR.ice,3,.3)}]],
+    hit:[{t:1.78,s:{k:'a',r:7,h:1.35},f:-.3,dm:1.25,w:.45}],tr:[[1.64,1.9,'scy',[0,-3.6,2.7],[0,-2.9,.4],0xbfe8ff,.2]],end(c){if(c.S.gone)rwrGone(c.e,false)},inv:[.4,1.25],rec:.4},
+  prison:{wt:7,ph:2,r:[0,16],a:'any',dur:2.8,armor:1,trn:[[0,2.8,2]],trk:[[.5,'vUp','io'],[1.25,'vUp','l',.02],[1.4,'nDn','s'],[1.9,'nUp','io'],[2.05,'nDn','s'],[2.8,'rRec','io']],
+    hit:[{t:1.4,s:{k:'c',r:3.2},o:'tgt',dm:1.2,w:1.1,nohit:1,fx:(c,an)=>{c.M.an.pr=an;rwrRing(c,an,0,3.2,14,1.2)}},
+      {t:2.05,s:{k:'r',r0:3.2,r:6.8},o:c=>c.M.an.pr||c.inA(pl.position.clone()),dm:1.2,w:.6,nohit:1,fx:(c,an)=>rwrRing(c,c.M.an.pr||an,3.2,6.8,26,1.2)}],
+    ev:[[.2,c=>svSnd('charge',.6,1.1)]],rec:.4}};
+svReg(2,{name:'Rime Wraith',col:RWR.col,body:1.6,ph2:.55,poise:.17,headJ:'head',turnA:4.5,
+  ai:{pref:5,walk:2.6,run:4,turn:2.6,rest:[.75,1.35],ph2r:.7,strafe:.6,back:1},
+  build:rwrBuild,loco:rwrLoco,post:rwrPost,P:RWRP,M:RWRM,
+  stag:[[.3,'stag','o'],[2.0,'stag','l',.02],[2.6,'rRec','io']],stagT:2.6,
+  die:[[.5,'stag','o'],[1.4,'dead','i'],[2.1,'dead','l']],
+  homeY(A){const a=A.dn&&A.dn.ea!=null?A.dn.ea:0;return Math.atan2(Math.cos(a),Math.sin(a))},
+  reset(e){if(e.sv.gone)rwrGone(e,false);rwrIcicles({S:e.sv},false)},
+  dying(e,t){if(Math.random()<.5)burst(gY(e.m.position,1.5+Math.random()*2),0xe8f8ff,3,1.5,1,1)}});
+// ================= v110 Sovereign 3 — Ssith'ra the Endless (Searing Sands) =================
+// A wurm-centipede of armoured plates, fourteen segments long, every one on a pair of hooked legs; a horned head with a
+// cluster of ember eyes and two great mandibles. The body follows the path the head has taken (it really slithers).
+// Pattern (learnable):
+//  close    ── Mandible Snap: it rears a little and the mandibles spread wide (hiss), then a short lunge and a snap.
+//  mid      ── Rearing Slam: the head rises high above you and trembles — then crashes down along a line. Long recovery.
+//              Acid Spray: it rears to mid height and sweeps acid left to right across the front (three beats).
+//  far      ── Sand Charge: the head drops low, then it charges straight down a line (columns can stop it).
+//              Burrow: it dives under the sand; a ripple hunts you; when the ripple stops, MOVE — it bursts out there.
+//  Phase II (55%) "The Endless Hunger": its seams glow like a forge; adds Triple Burrow (three eruptions in a row) and
+//              Molten Spit (globs arc onto you and your path), and the snap becomes a double.
+var SSR={col:0xff7a30,acid:0xc8ff40,sand:0xd8b070,N:14,L:1.05};
+function ssrBuild(R,e){
+  const cara=svMat(R,0x481810,{roughness:.42,metalness:.3,emissive:0x100302}),cara2=svMat(R,0x642612,{roughness:.48,metalness:.25}),bel=svMat(R,0xc89a6a,{roughness:.8}),
+    leg=svMat(R,0x3a140c,{roughness:.5,metalness:.2}),horn=svMat(R,0xe0c8a0,{roughness:.5}),eye=svGlowMat(R,0xffb040),seam=svGlowMat(R,0x5a1a08);R.seam=seam;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+  J('root',null,0,0,0);J('head','root',0,1.25,.2);
+  // ---- the head: armoured dome, horn crest, ember eyes, mandibles, antennae ----
+  svM(R,'head',svG('ss_hd',()=>svLoftZ([[-.75,.95,.72,0,.05],[-.1,1.12,.82,0,.1],[.55,.98,.66,0,.05],[1.05,.62,.42,0,-.05],[1.3,.3,.22,0,-.1]],10)),cara);
+  svM(R,'head',svG('ss_hd2',()=>svLoftZ([[-.6,.7,.5,0,-.25],[.9,.5,.3,0,-.3]],8)),bel);
+  for(let k=0;k<5;k++)svM(R,'head',svG('ss_cr'+(k%2),()=>svHorn(.14,.9+.25*(k%2),0,-.35,5,4)),horn,(k-2)*.34,.75-.06*Math.abs(k-2),-.1,-1.1,(k-2)*.25,0);
+  [[.34,.35,.92],[.55,.28,.72],[.2,.5,.8]].forEach(([x,y,z])=>[-1,1].forEach(s=>{svM(R,'head',svG('ss_ey',()=>new THREE.SphereGeometry(.1,6,5)),eye,s*x,y,z)}));
+  svSpr(R,'head',SSR.col,.9,0,.4,.95);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('md'+L,'head',s*.45,-.2,1.0,0,s*.25,0);svM(R,'md'+L,svG('ss_md',()=>svHorn(.2,1.7,-.65,-.15,6,6)),horn,0,0,0,0,s<0?Math.PI:0,s<0?Math.PI:0,1,1,1);
+    svM(R,'md'+L,svG('ss_mdt',()=>svHorn(.08,.5,0,0,4,2)),leg,0,0,.4,1.2,s*-.6,0);
+    J('an'+L,'head',s*.38,.6,.7,-.7,s*.4,0);svM(R,'an'+L,svG('ss_an',()=>svHorn(.05,2.4,0,-.8,4,6)),leg)});
+  // ---- fourteen body segments (placed along the trail every frame), each with a pair of legs ----
+  for(let k=0;k<SSR.N;k++){const n='s'+k,sc=1-.035*k;J(n,'root',0,1.1,-(k+1)*SSR.L).rotation.order='YXZ';
+    svM(R,n,svG('ss_sg',()=>svLoftZ([[-.6,.95,.58,0,.1],[-.1,1.05,.66,0,.16],[.45,.92,.55,0,.12],[.62,.75,.45,0,.08]],10)),k%2?cara:cara2,0,0,0,0,0,0,sc,sc,sc);
+    svM(R,n,svG('ss_sb',()=>svLoftZ([[-.5,.72,.3,0,-.32],[.5,.68,.28,0,-.3]],8)),bel,0,0,0,0,0,0,sc,sc,sc);
+    svM(R,n,svG('ss_sm',()=>svLoftZ([[-.62,.98,.12,0,-.1],[-.5,.98,.12,0,-.1]],10,{cap:false})),seam,0,0,0,0,0,0,sc,sc,sc);
+    [-1,1].forEach(s=>svM(R,n,svG('ss_sp',()=>svHorn(.12,.7+.15*(k%3),0,-.35,5,4)),horn,s*.42*sc,.62*sc,-.05,-1.25,s*.2,s*.2));
+    [-1,1].forEach(s=>{const L=s>0?'L':'R',lj=J('lg'+k+L,n,s*.85*sc,-.2,0,0,0,s*1.25);svM(R,lj,svG('ss_lu2',()=>svLoft([[.05,.13,.15],[-.72,.1,.11]],5)),leg);
+      const lk=J('lk'+k+L,lj,0,-.72,0,0,0,-s*1.1);svM(R,lk,svG('ss_ll2',()=>svHorn(.09,.85,0,0,4,3)),leg,0,0,0,Math.PI/2,0,0);svM(R,lk,svG('ss_lt',()=>svHorn(.05,.3,0,0,4,2)),horn,0,-.82,0,Math.PI/2,0,0)})}
+  const tl='s'+(SSR.N-1);for(let k=0;k<3;k++)svM(R,tl,svG('ss_tl'+k,()=>svHorn(.22-.05*k,1.5-.3*k,0,.4,5,5)),horn,(k-1)*.35,.3,-.4,-2.6+.3*Math.abs(k-1),(k-1)*.4,0);
+}
+// the trail the body follows (in world space), and the gait
+function ssrTrail(e,S,reset){const m=e.m,p=m.position;if(!S.tr||reset){S.tr=[];const a=m.rotation.y;for(let i=0;i<=SSR.N*4+8;i++)S.tr.push([p.x-Math.sin(a)*i*.3,p.z-Math.cos(a)*i*.3]);return}
+  const q=S.tr[0],dq=Math.hypot(p.x-q[0],p.z-q[1]);if(dq>4.5)return ssrTrail(e,S,true);if(dq>.3){S.tr.unshift([p.x,p.z]);if(S.tr.length>SSR.N*4+12)S.tr.pop()}}
+function ssrLoco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/2.5);S.gp=(S.gp||0)+dt*(3+S.spd*2.2);
+  O.head[4]+=.08*Math.sin(t*1.3);O.head[1]+=.12*Math.sin(t*.7);O.head[0]+=.05*Math.sin(t*1.1);O.mdL[1]+=.08*Math.sin(t*2.2);O.mdR[1]-=.08*Math.sin(t*2.2);
+  O.anL[0]+=.15*Math.sin(t*1.9);O.anR[0]+=.15*Math.sin(t*1.9+1);
+  for(let k=0;k<SSR.N;k++)['L','R'].forEach((s,j)=>{const ph=S.gp-k*.75+j*Math.PI,sw=Math.sin(ph)*(.15+.45*a),lf=Math.max(0,Math.cos(ph))*(.1+.35*a);O['lg'+k+s][1]+=sw;O['lg'+k+s][2]+=(j?-1:1)*lf*-1})}
+function ssrPost(e,S,dt,now){const R=S.R,m=e.m;ssrTrail(e,S);const tr=S.tr,inv=1/(m.bs||1),h=R.J.head,hy=h.position.y,hz=h.position.z,ca=Math.cos(m.rotation.y),sa=Math.sin(m.rotation.y);
+  const rear=Math.max(0,hy-1.25),gone=S.gone?1:0;let prev=null;
+  // walk the trail: arc-length from the head
+  const pts=[[m.position.x,m.position.z]].concat(tr);let acc=0,j=0;const want=[];for(let k=0;k<SSR.N;k++)want.push((k+1)*SSR.L-hz*.5);
+  const P=[];let seg=0;for(let i=1;i<pts.length&&seg<want.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]);while(seg<want.length&&acc+l>=want[seg]){const u=l>1e-6?(want[seg]-acc)/l:0;P.push([a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u]);seg++}acc+=l}
+  while(P.length<SSR.N){const L=P.length?P[P.length-1]:[m.position.x,m.position.z];P.push([L[0]-sa*SSR.L,L[1]-ca*SSR.L])}
+  const y0=GH(m.position.x,m.position.z);
+  for(let k=0;k<SSR.N;k++){const J=R.J['s'+k],w=P[k],dx=w[0]-m.position.x,dz=w[1]-m.position.z,lx=dx*ca-dz*sa,lz=dx*sa+dz*ca;
+    const f=Math.max(0,1-(k+1)/7.5),y=1.05+.08*Math.sin(now/300-k*.6)+rear*Math.pow(f,1.5)-(gone?3:0)+(GH(w[0],w[1])-y0);
+    J.position.set(lx,y,lz);
+    const nb=k?P[k-1]:[m.position.x+sa*.01,m.position.z+ca*.01],yaw=Math.atan2(nb[0]-w[0],nb[1]-w[1])-m.rotation.y,py=k?R.J['s'+(k-1)].position.y:hy;
+    J.rotation.set(-Math.atan2(py-y,SSR.L),yaw,Math.sin(now/400-k*.5)*.05)}
+  const on=S.ph>1,gl=on?.55+.45*Math.sin(now/150):0;R.seam.color.setHex(on?0xff7a20:0x5a1a08);if(on)R.seam.color.multiplyScalar(.5+.5*gl);
+  m.visible=!S.gone&&m.visible}
+var SSRP={
+  // mandible snap
+  sOpen:{head:[-.25,0,0,0,.7,-.2],mdL:[0,.75,0],mdR:[0,-.75,0],anL:[-.4,0,0],anR:[-.4,0,0]},
+  sSnap:{head:[.15,0,0,0,.2,.5],mdL:[0,-.25,0],mdR:[0,.25,0]},
+  sRec:{head:[.05,0,0,0,.1,.2],mdL:[0,.1,0],mdR:[0,-.1,0]},
+  // rearing slam
+  rUp:{head:[-.75,0,0,0,4.6,-.6],mdL:[0,.5,0],mdR:[0,-.5,0],anL:[-.6,0,0],anR:[-.6,0,0]},
+  rDn:{head:[.45,0,0,0,-.35,1.1],mdL:[0,.2,0],mdR:[0,-.2,0]},
+  rRec:{head:[.3,0,0,0,-.25,.8],mdL:[0,.15,0],mdR:[0,-.15,0]},
+  // acid spray: mid rear, head sweeps
+  aUp:{head:[-.35,.75,0,0,2.2,-.2],mdL:[0,.6,0],mdR:[0,-.6,0]},
+  aMid:{head:[-.2,0,0,0,2.1,0],mdL:[0,.65,0],mdR:[0,-.65,0]},
+  aEnd:{head:[-.2,-.75,0,0,2.0,0],mdL:[0,.6,0],mdR:[0,-.6,0]},
+  // charge
+  cLow:{head:[.35,0,0,0,-.5,-.3],mdL:[0,.5,0],mdR:[0,-.5,0],anL:[.5,0,0],anR:[.5,0,0]},
+  cRun:{head:[.2,0,0,0,-.3,.2],mdL:[0,.35,0],mdR:[0,-.35,0],anL:[.8,0,0],anR:[.8,0,0]},
+  // burrow
+  dive:{head:[1.2,0,0,0,-2.5,.6]},
+  under:{head:[1.2,0,0,0,-4,0]},
+  erupt:{head:[-.9,0,0,0,4.2,0],mdL:[0,.8,0],mdR:[0,-.8,0],anL:[-.8,0,0],anR:[-.8,0,0]},
+  // roar
+  roar:{head:[-.9,0,0,0,3.6,-.4],mdL:[0,.9,0],mdR:[0,-.9,0],anL:[-.9,0,0],anR:[-.9,0,0]},
+  coil:{head:[.3,0,0,0,-.4,-.4],mdL:[0,.2,0],mdR:[0,-.2,0]},
+  stag:{head:[.5,0,.6,0,-.6,0],mdL:[0,.8,0],mdR:[0,-.2,0],anL:[.6,0,0],anR:[.2,0,0]},
+  dead:{head:[.6,0,1.2,0,-.9,0],mdL:[0,.9,0],mdR:[0,-.9,0]}};
+function ssrSand(p,n,r){burst(gY(p,.3),SSR.sand,n||40,r||4,3.5,.9);svShock(p,SSR.sand,(r||4)*1.2,.5);svDecal(p,0x6a4a24,(r||4)*.7,3,.5)}
+function ssrGone(e,on){const S=e.sv;S.gone=on;S.ghost=on;e.m.visible=!on;if(on)ssrSand(e.m.position,50,3)}
+// burrow: hide, a ripple hunts the hero for T, then the eruption warning, then the burst
+function ssrBurrow(t0,T,W,dm){
+  return [[t0,c=>{ssrGone(c.e,true);svSnd('heavy',.8,.6);c.S.rip=1}],
+    [t0+.05,c=>{let t=0;const e=c.e,S=c.S,m=e.m;kqFx({tick(dt){t+=dt||0;if(!S.rip||e.dead)return false;const d=V().subVectors(pl.position,m.position).setY(0),l=d.length();if(l>.4)walkM(m,d.x/l*Math.min(l,9*dt),d.z/l*Math.min(l,9*dt));
+      if(Math.random()<.9)burst(gY(m.position,.15),SSR.sand,3,1.6,1.4,.6);if(Math.random()<dt*6)svSnd('step',.35,.6);return t<T}})}],
+    [t0+T,c=>{c.S.rip=0;const an={x:c.m.position.x,z:c.m.position.z,a:0};c.M.an.bu=an;c.M.warn.push(svWarn({k:'c',r:3.8},an,W));svSnd('hum',.6,.5)}],
+    [t0+T+W,c=>{const e=c.e,an=c.M.an.bu;e.m.position.set(an.x,0,an.z);e.m.rotation.y=svYawTo(e.m,pl.position);ssrTrail(e,c.S,true);ssrGone(e,false);ssrSand(e.m.position,90,4.5);shake(.45);svSnd('heavy',1.1);svSnd('roar',.7,1.3);
+      svHitNow(e,{k:'c',r:3.8},an,dm,{kb:4,col:SSR.sand})}]]}
+function ssrGlob(c,q,T){const e=c.e,S2={k:'c',r:2},an={x:q.x,z:q.z,a:0},o=svWP(e,'head',0,.2,1.3);c.M.warn.push(svWarn(S2,an,T));
+  svShot(o,new THREE.Vector3(q.x,GH(q.x,q.z)+.2,q.z),T,SSR.col,1.4,5,P=>{if(e.dead||!AF)return;burst(P,SSR.col,26,2.6,2.5,.6);svDecal(P,0x2a0800,1.8,3.5,.6);svSnd('squelch',.6,.8);svHitNow(e,S2,an,.85,{col:SSR.col})})}
+function ssrSpray(c,a0){const e=c.e,o=svWP(e,'head',0,0,1.2),S2={k:'a',r:9,h:.38},an={x:e.m.position.x,z:e.m.position.z,a:e.m.rotation.y+a0};
+  for(let k=0;k<22;k++){const d=1.5+Math.random()*7.5,a=an.a+(Math.random()-.5)*.7;burst(new THREE.Vector3(an.x+Math.sin(a)*d,GH(an.x,an.z)+.3+Math.random()*1.5,an.z+Math.cos(a)*d),SSR.acid,2,1,1.2,.6)}
+  burst(o,SSR.acid,16,3,1,.5);svSnd('hiss',.8,1.1);svHitNow(e,S2,an,.9,{col:SSR.acid,on:()=>dqDebuff('Acid','🟡',{pdP:-.15},3000,'Armour melting')});
+  for(let d=3;d<9;d+=2.5)svDecal(new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d),0x3a5a08,1.2,2.5,.4)}
+var SSRM={
+  intro:{dur:2.8,trk:[[.5,'coil','io'],[1.1,'coil','l',.02],[1.7,'roar','o'],[2.4,'roar','l',.025],[2.8,'sRec','io']],trn:[[0,2.8,1]],
+    ev:[[.3,c=>svSnd('hiss',.8,.5)],[1.6,c=>{svSnd('roar',1.1,.8);shake(.4);ssrSand(c.m.position,80,5)}]]},
+  snap:{wt:10,r:[0,6.5],a:'f',mel:1,dur:1.3,lock:.5,trk:[[.5,'sOpen','io'],[.66,'sOpen','l',.02],[.82,'sSnap','s'],[1.3,'sRec','io']],rm:[[.66,.82,2.2,'o']],
+    hit:[{t:.8,s:{k:'a',r:5.6,h:.75},f:.6,dm:1.15,track:1,show:false}],ev:[[.25,c=>svSnd('hiss',.7,1.2)],[.8,c=>{svSnd('crack',.9,.8);shake(.12)}]],nx:[['snap2',.0]],rec:.25},
+  snap2:{ph:2,dur:1.0,mel:1,lock:.25,trk:[[.25,'sOpen','io'],[.38,'sOpen','l',.02],[.52,'sSnap','s'],[1.0,'sRec','io']],rm:[[.38,.52,2,'o']],
+    hit:[{t:.5,s:{k:'a',r:5.6,h:.75},f:.6,dm:1.1,track:1,show:false}],ev:[[.5,c=>{svSnd('crack',.9,.9);shake(.12)}]],rec:.3},
+  slam:{wt:9,r:[3,11],a:'f',dur:2.35,lock:1.0,armor:1,trk:[[.75,'rUp','io'],[1.1,'rUp','l',.03],[1.28,'rDn','i'],[1.85,'rRec','l'],[2.35,'sRec','io']],
+    hit:[{t:1.26,s:{k:'l',w:3.4,l:9.5,b:0},f:.5,dm:1.55,w:.5,fx:(c,an)=>{for(let d=2;d<9;d+=2.2)ssrSand(new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d),16,2);shake(.45);svSnd('heavy',1.1)}}],
+    ev:[[.3,c=>svSnd('hiss',.8,.7)],[1.05,c=>svSnd('whoosh',1,.5)]],rec:.4},
+  spray:{wt:7,r:[0,10],a:'f',dur:2.4,lock:.75,armor:1,trn:[[0,.75,2.5]],trk:[[.6,'aUp','io'],[.95,'aUp','l',.02],[1.25,'aMid','l'],[1.55,'aEnd','l'],[2.4,'sRec','io']],
+    hit:[{t:1.0,s:{k:'a',r:9,h:.38},ay:.75,dm:0,nohit:1,w:.55,fx:c=>ssrSpray(c,.75)},{t:1.28,s:{k:'a',r:9,h:.38},dm:0,nohit:1,w:.6,fx:c=>ssrSpray(c,0)},{t:1.56,s:{k:'a',r:9,h:.38},ay:-.75,dm:0,nohit:1,w:.6,fx:c=>ssrSpray(c,-.75)}],
+    ev:[[.3,c=>svSnd('squelch',.8,.6)]],rec:.4},
+  charge:{wt:8,r:[8,30],a:'f',dur:2.4,lock:.9,armor:1,trn:[[0,.9,3]],trk:[[.6,'cLow','io'],[.9,'cLow','l',.02],[1.05,'cRun','o'],[1.75,'cRun','l'],[2.4,'sRec','io']],
+    rm:[[.95,1.75,17,'l']],hit:[{t:1.2,s:{k:'l',w:3.4,l:18,b:0},f:0,dm:1.4,w:1.0,kb:4,show:true}],
+    ev:[[.4,c=>{svSnd('hiss',.7,.6);burst(gY(c.m.position,.3),SSR.sand,20,2,1,.6)}],[.95,c=>{svSnd('roar',.8,1.2);shake(.2)}]],
+    tk(c,dt){if(c.M.t>.95&&c.M.t<1.75){burst(gY(c.m.position,.2),SSR.sand,4,2,1.5,.6);if(Math.random()<dt*8)svSnd('step',.5,.7);}},rec:.5},
+  burrow:{wt:7,r:[6,40],a:'any',dur:4.4,armor:1,inv:[.55,3.6],trk:[[.5,'cLow','io'],[.75,'dive','i'],[1.0,'under','l'],[3.45,'under','l'],[3.65,'erupt','o'],[4.0,'erupt','l'],[4.4,'sRec','io']],
+    ev:ssrBurrow(.75,1.9,.8,1.5).concat([[.2,c=>svSnd('hiss',.6,.5)]]),end(c){if(c.S.gone)ssrGone(c.e,false);c.S.rip=0},rec:.6},
+  // ---- Phase II ----
+  awaken:{dur:3.3,inv:[0,3.3],armor:1,trk:[[.5,'coil','io'],[1.2,'coil','l',.03],[1.7,'roar','o'],[2.8,'roar','l',.02],[3.3,'sRec','io']],trn:[[0,3,1]],
+    hit:[{t:1.75,s:{k:'c',r:7.5},dm:.5,kb:6,w:1.2,fx:c=>{ssrSand(c.m.position,120,7);svShock(c.m.position,SSR.col,10,.8)}}],
+    ev:[[.05,c=>{banner('THE ENDLESS HUNGER',"Ssith'ra burns from within",'');svSnd('hiss',.9,.4)}],[1.2,c=>{c.S.ph=2;c.e.bs.ph=2;flash('rgba(255,140,60,.35)');svSnd('roar',1.2,.75);shake(.55)}]]},
+  geysers:{wt:8,ph:2,r:[0,40],a:'any',dur:6.6,armor:1,inv:[.55,5.9],trk:[[.5,'cLow','io'],[.75,'dive','i'],[1.0,'under','l'],[2.35,'under','l'],[2.5,'erupt','o'],[2.75,'under','i'],[3.95,'under','l'],[4.1,'erupt','o'],[4.35,'under','i'],[5.55,'under','l'],[5.75,'erupt','o'],[6.1,'erupt','l'],[6.6,'sRec','io']],
+    ev:ssrBurrow(.75,1.1,.6,1.2).concat([[2.7,c=>{ssrGone(c.e,true);c.S.rip=1;let t=0;const e=c.e,m=e.m;kqFx({tick(dt){t+=dt||0;const d=V().subVectors(pl.position,m.position).setY(0),l=d.length();if(l>.4)walkM(m,d.x/l*Math.min(l,10*dt),d.z/l*Math.min(l,10*dt));if(Math.random()<.9)burst(gY(m.position,.15),SSR.sand,3,1.6,1.4,.6);return t<.85&&!e.dead}})}],
+      [3.55,c=>{const an={x:c.m.position.x,z:c.m.position.z,a:0};c.M.an.b2=an;c.M.warn.push(svWarn({k:'c',r:3.8},an,.55))}],[4.1,c=>{const an=c.M.an.b2;c.m.position.set(an.x,0,an.z);ssrTrail(c.e,c.S,true);ssrGone(c.e,false);ssrSand(c.m.position,80,4.5);shake(.4);svSnd('heavy',1);svHitNow(c.e,{k:'c',r:3.8},an,1.2,{kb:4})}],
+      [4.3,c=>{ssrGone(c.e,true);let t=0;const e=c.e,m=e.m;kqFx({tick(dt){t+=dt||0;const d=V().subVectors(pl.position,m.position).setY(0),l=d.length();if(l>.4)walkM(m,d.x/l*Math.min(l,10*dt),d.z/l*Math.min(l,10*dt));if(Math.random()<.9)burst(gY(m.position,.15),SSR.sand,3,1.6,1.4,.6);return t<.85&&!e.dead}})}],
+      [5.2,c=>{const an={x:c.m.position.x,z:c.m.position.z,a:0};c.M.an.b3=an;c.M.warn.push(svWarn({k:'c',r:4.2},an,.55))}],[5.75,c=>{const an=c.M.an.b3;c.m.position.set(an.x,0,an.z);c.m.rotation.y=svYawTo(c.m,pl.position);ssrTrail(c.e,c.S,true);ssrGone(c.e,false);ssrSand(c.m.position,110,5);shake(.5);svSnd('heavy',1.2);svSnd('roar',.8,1.2);svHitNow(c.e,{k:'c',r:4.2},an,1.4,{kb:5});c.S.rip=0}]]),
+    end(c){if(c.S.gone)ssrGone(c.e,false);c.S.rip=0},rec:.7},
+  spit:{wt:7,ph:2,r:[5,40],a:'any',dur:2.6,armor:1,trn:[[0,2.6,2.5]],trk:[[.5,'aMid','io'],[.8,'aMid','l',.02],[.95,'sSnap','s'],[1.25,'aMid','io'],[1.4,'sSnap','s'],[1.7,'aMid','io'],[1.85,'sSnap','s'],[2.6,'sRec','io']],
+    ev:[[.3,c=>svSnd('squelch',.8,.6)]].concat([[.95,0],[1.4,1],[1.85,2]].map(([t,i])=>[t,c=>{const d=pl.mvd&&nowP()-pl.mvd.t<300?pl.mvd:{x:0,z:0};[0,1].forEach(j=>{const q=c.inA(pl.position.clone().add(new THREE.Vector3(d.x*(1.5+j*2.2),0,d.z*(1.5+j*2.2))),.8);ssrGlob(c,q,.75)})}])),rec:.45}};
+SSRM.snap.nx=[['snap2',.65,8]];
+svReg(3,{name:"Ssith'ra",col:SSR.col,body:1.9,ph2:.55,poise:.17,headJ:'head',turnA:3.2,edge:2.5,
+  ai:{pref:5,walk:3.0,run:5,turn:2.0,rest:[.7,1.3],ph2r:.7,strafe:.55},
+  build:ssrBuild,loco:ssrLoco,post:ssrPost,P:SSRP,M:SSRM,
+  init(e){ssrTrail(e,e.sv,true)},
+  stag:[[.3,'stag','o'],[2.0,'stag','l',.03],[2.6,'sRec','io']],stagT:2.6,
+  die:[[.5,'stag','o'],[1.3,'dead','i'],[2.1,'dead','l']],
+  homeY(A){const a=A.dn&&A.dn.ea!=null?A.dn.ea:0;return Math.atan2(Math.cos(a),Math.sin(a))},
+  reset(e){if(e.sv.gone)ssrGone(e,false);e.sv.rip=0;ssrTrail(e,e.sv,true)}});
+// ================= v110 Sovereign 4 — The Bloated One (The Dirge) =================
+// A rot-king giant: a vast stitched belly, a hunched back crusted with glowing pustules, a tarnished crown pushed into a
+// small head, and a butcher's cleaver the size of a door. Slow, heavy, and every blow lands with a delay you must learn.
+// Pattern (learnable):
+//  close in front ── Cleaver Chop: the cleaver rises overhead and HANGS there (wait for it…), then crashes down a line.
+//                   Gut Sweep: the cleaver is hauled across to its left, then a wide sweep to its right; often followed by a chop.
+//  close, any    ── Ground Pound: it lifts a leg high — the stomp sends a ring out around it.
+//  mid           ── Bile Vomit: it rears back and the belly heaves — a cone of bile in front, leaving a slowing pool.
+//  far           ── Belly Flop: a heavy jump onto where you stand; it lies there afterwards — the best punish of the fight.
+//  Phase II (55%) "The Rot Spills": the belly splits and glows; adds Butcher's Frenzy (chop, sweep, chop) and
+//                   Pustule Burst (the back erupts and rot rains around you — keep moving), and the flop becomes a double.
+var BLO={col:0x9aff6a,rot:0x6ad020,bile:0xb8d040};
+function bloBuild(R,e){
+  const fl=svMat(R,0x6e6c4c,{roughness:.8,emissive:0x0a0c04}),fl2=svMat(R,0x50563a,{roughness:.9}),bruise=svMat(R,0x4a3448,{roughness:.85}),
+    iron=svMat(R,0x4a4440,{roughness:.5,metalness:.55}),rust=svMat(R,0x6a3a20,{roughness:.8,metalness:.3}),gold=svMat(R,0x8a7030,{roughness:.4,metalness:.7}),
+    cloth=svMat(R,0x3a3028,{roughness:.95,side:THREE.DoubleSide}),bone=svMat(R,0xd8ccb0,{roughness:.6}),stitch=svMat(R,0x1a1410,{roughness:.9}),
+    pus=svGlowMat(R,0x6a9a30),eye=svGlowMat(R,0xd8ff70);R.pus=pus;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+  J('root',null,0,0,0);J('hips','root',0,2.25,0);J('spine','hips',0,.35,0);J('chest','spine',0,.95,-.1);J('belly','spine',0,-.15,.55);
+  // ---- body: a barrel chest over an enormous belly, a hunched back ----
+  svM(R,'hips',svG('bl_hp',()=>svLoft([[-.55,1.05,.85],[0,1.25,1.0],[.4,1.3,1.05]],11)),fl2);
+  svM(R,'hips',svG('bl_bt',()=>svLoft([[.25,1.36,1.12],[.5,1.36,1.12]],12,{cap:false})),iron);
+  for(let k=0;k<5;k++){const a=-1.2+k*.6;svM(R,'hips',svG('bl_ch2',()=>new THREE.TorusGeometry(.16,.04,4,8)),rust,Math.sin(a)*1.38,.2-.12*(k%2),Math.cos(a)*1.14,0,a,0)}
+  [[.7,.4,.9],[-.8,.2,.85],[.2,-.35,1.05],[-.4,.6,1.0]].forEach(([x,y,z],k)=>svM(R,'belly',svG('bl_br'+k,()=>svLump(.42,0,.25,40+k)),bruise,x,y,z,0,0,0,1,.8,.35));
+  svM(R,'hips',svG('bl_lc',()=>svLoft([[-.7,1.32,1.08],[.15,1.3,1.06]],12,{cap:false})),cloth);
+  svM(R,'belly',svG('bl_bl',()=>svLump(1.35,1,.12,21)),fl,0,0,0,0,0,0,1.1,1.0,1.0);
+  for(let k=0;k<4;k++)svM(R,'belly',svG('bl_st',()=>new THREE.BoxGeometry(.06,.5,.06)),stitch,-.5+k*.32,.15-.1*k,1.33,0,0,.6);
+  svM(R,'belly',svG('bl_wd',()=>svLump(.38,0,.2,4)),bruise,.5,.3,1.2,0,0,0,1,.6,.5);
+  R.gash=svM(R,'belly',svG('bl_gs',()=>svLump(.55,0,.15,22)),pus,-.1,-.15,1.15,0,0,.4,1.4,.35,.4);R.gash.visible=false;R.gash.userData.noMerge=1;
+  svM(R,'chest',svG('bl_ch',()=>svLoft([[-.7,1.25,1.0],[.1,1.45,1.12,0,-.1],[.7,1.35,1.05,0,-.25],[1.05,.95,.8,0,-.35]],11)),fl);
+  svM(R,'chest',svG('bl_hm',()=>svLump(1.05,1,.25,24)),fl2,0,.6,-.75,0,0,0,1.3,.9,1);
+  // pustules on the back (they glow and burst in Phase II)
+  R.pz=[];[[.5,.95,-1.45],[-.45,1.1,-1.4],[0,.45,-1.6],[.85,.35,-1.25],[-.8,.5,-1.3],[.2,1.35,-1.25],[-.25,-.05,-1.5]].forEach(([x,y,z],k)=>{const g=new THREE.Group();g.position.set(x,y,z);R.J.chest.add(g);
+    svM(R,g,svG('bl_pz',()=>svLump(.26,0,.2,30+k)),fl2,0,0,0,0,0,0,1,1,.8);const p=svM(R,g,svG('bl_pg',()=>new THREE.SphereGeometry(.17,7,5)),pus,0,0,-.12);R.pz.push(g)});
+  // ---- head: small, sunk between the shoulders, a nail-crown ----
+  J('neck','chest',0,1.0,.35);J('head','neck',0,.25,.1);
+  svM(R,'head',svG('bl_hd',()=>svLump(.48,1,.15,26)),fl,0,.15,0,0,0,0,1,1.05,.95);svM(R,'head',svG('bl_jw',()=>svLoft([[-.25,.42,.36],[.12,.46,.4]],9)),fl2,0,-.18,.05);
+  [-1,1].forEach(s=>{svM(R,'head',svG('bl_ey',()=>new THREE.SphereGeometry(.07,6,5)),eye,s*.17,.22,.42)});
+  svM(R,'head',svG('bl_cr',()=>svLoft([[0,.42,.42],[.22,.44,.44]],10,{cap:false})),gold,0,.42,0);
+  for(let k=0;k<8;k++){const a=k/8*6.283;svM(R,'head',svG('bl_nl',()=>svHorn(.04,.45,0,0,4,2)),rust,Math.sin(a)*.43,.6,Math.cos(a)*.43,-Math.PI/2+.25*Math.cos(a),a,0)}
+  // ---- arms: thick, mottled; the right holds the cleaver ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('sh'+L,'chest',s*1.35,.75,0,0,0,s*.15);
+    svM(R,'sh'+L,svG('bl_ua',()=>svLoft([[.25,.62,.62],[-.45,.58,.56],[-1.2,.42,.42]],9)),fl);svM(R,'sh'+L,svG('bl_pa',()=>svLump(.6,0,.25,28)),iron,0,.25,0,0,0,0,1.1,.7,1.1);
+    J('el'+L,'sh'+L,0,-1.25,0,-.2);svM(R,'el'+L,svG('bl_fa',()=>svLoft([[.1,.42,.42],[-.6,.44,.42],[-1.1,.32,.32]],8)),fl2);
+    J('hd'+L,'el'+L,0,-1.15,0);svM(R,'hd'+L,svG('bl_hn',()=>svLump(.36,0,.2,29)),fl,0,-.15,0,0,0,0,1,1.2,.8);
+    for(let k=0;k<3;k++)svM(R,'hd'+L,svG('bl_fg',()=>svLoft([[0,.09,.09],[-.32,.07,.07]],5)),fl,(k-1)*.17,-.4,.15)});
+  const cv=J('clv','hdR',0,-.3,.05,0,0,0);
+  svM(R,cv,svG('bl_hl',()=>svLoft([[.4,.1,.1],[-.9,.11,.11]],6)),rust);
+  svM(R,cv,svG('bl_cb2',()=>{const g=svBlade([[0,0],[2.6,-.05],[2.85,-.45],[2.75,-1.5],[.2,-1.35],[0,-.9]],.09);g.rotateZ(-Math.PI/2);g.rotateY(Math.PI/2);return g}),iron,0,-.85,0);
+  svM(R,cv,svG('bl_ce',()=>new THREE.BoxGeometry(.04,2.6,.08)),bone,0,-2.25,1.42,0,0,0);
+  for(let k=0;k<3;k++)svM(R,cv,svG('bl_rv',()=>new THREE.SphereGeometry(.07,5,4)),gold,0,-1.1-k*.6,.15+.15*k);
+  // ---- legs: short trunks ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('th'+L,'hips',s*.72,-.3,0);svM(R,'th'+L,svG('bl_th',()=>svLoft([[.1,.58,.62],[-.6,.5,.52],[-1.05,.38,.4]],9)),fl2);
+    J('kn'+L,'th'+L,0,-1.05,0);svM(R,'kn'+L,svG('bl_sh',()=>svLoft([[.05,.38,.4],[-.85,.32,.34]],8)),fl);
+    J('ft'+L,'kn'+L,0,-.88,0);svM(R,'ft'+L,svG('bl_ft',()=>svLump(.38,0,.2,31)),fl2,0,-.15,.2,0,0,0,1,.5,1.5);svM(R,'ft'+L,svG('bl_wr',()=>svLoft([[.0,.36,.38],[.25,.36,.38]],8,{cap:false})),cloth,0,.05,0)});
+}
+function bloLoco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/1.6);S.gp=(S.gp||0)+dt*(1.6+S.spd*1.4);const g=S.gp;
+  const br=Math.sin(t*1.1);O.belly[4]+=.03*br;O.chest[0]+=.02*br;O.hips[4]+=.08*Math.abs(Math.sin(g))*a;O.hips[2]+=.08*Math.sin(g)*a;O.chest[2]+=-.06*Math.sin(g)*a;
+  O.head[1]+=.1*Math.sin(t*.5);O.head[0]+=.05*Math.sin(t*.8);
+  ['L','R'].forEach((s,j)=>{const ph=g+j*Math.PI,sw=Math.sin(ph)*.45*a,lf=Math.max(0,Math.cos(ph))*.6*a;O['th'+s][0]+=-sw;O['kn'+s][0]+=lf;O['ft'+s][0]+=-lf*.3;
+    O['th'+s][2]+=(j?-1:1)*.08});
+  O.shL[0]+=.2*Math.sin(g+Math.PI)*a+.04*br;O.shL[2]+=.25;O.elL[0]+=-.35;O.shR[0]+=-.25+.08*Math.sin(g)*a;O.shR[2]+=-.3;O.elR[0]+=-.6;O.clv[0]+=.4}
+function bloPost(e,S,dt,now){const R=S.R,on=S.ph>1,k=.6+.4*Math.sin(now/220);R.pus.color.setHex(on?0xb8ff50:0x6a9a30);if(on)R.pus.color.multiplyScalar(k);R.gash.visible=on;
+  const hv=S.heave||0;R.J.belly.scale.set(1+.12*hv,1+.18*hv,1+.15*hv);S.heave=Math.max(0,hv-dt*.6);
+  if(on&&Math.random()<dt*4){const p=svWP(e,'belly',(Math.random()-.5)*.6,-.3,1.2);burst(p,BLO.rot,1,.4,-.2,.8)}}
+var BLOP={
+  // cleaver chop (overhead, long hang)
+  cUp:{hips:[0,.15,0],spine:[-.15,0,0],chest:[-.2,.2,0],shR:[-2.75,0,-.2],elR:[-.35,0,0],hdR:[-.2,0,0],clv:[.3,0,0],shL:[-.4,0,.5],elL:[-.6,0,0],head:[-.15,0,0],thR:[.2,0,0],thL:[-.25,0,0],knL:[.3,0,0]},
+  cDn:{hips:[0,-.1,0,0,-.3,0],spine:[.3,0,0],chest:[.35,-.1,0],shR:[-.7,0,-.1],elR:[0,0,0],hdR:[.2,0,0],clv:[.9,0,0],shL:[.3,0,.6],head:[.3,0,0],thR:[-.35,0,0],knR:[.5,0,0],thL:[.2,0,0]},
+  cRec:{spine:[.2,0,0],chest:[.2,0,0],shR:[-.6,0,-.15],hdR:[.1,0,0],clv:[.8,0,0],head:[.1,0,0]},
+  // gut sweep (to its right)
+  sUp:{hips:[0,.4,0],chest:[0,.5,0],shR:[-1.4,0,.9],elR:[-.7,0,0],clv:[.2,0,.9],shL:[-.5,0,.2],head:[0,-.2,0]},
+  sHit:{hips:[0,-.45,0,0,-.1,.2],chest:[.1,-.6,0],shR:[-1.3,0,-1.3],elR:[-.1,0,0],clv:[.3,0,-.4],shL:[-.2,0,.7],head:[0,.3,0]},
+  sRec:{hips:[0,-.2,0],chest:[0,-.3,0],shR:[-.9,0,-.8],elR:[-.3,0,0],clv:[.3,0,0]},
+  // ground pound (left foot)
+  pUp:{hips:[0,0,-.15,0,.25,0],thL:[-1.5,0,.25],knL:[1.4,0,0],ftL:[.2,0,0],thR:[.1,0,0],chest:[-.15,0,.12],shL:[-.4,0,.9],shR:[-.4,0,-.9]},
+  pDn:{hips:[0,0,.05,0,-.35,0],thL:[-.15,0,.15],knL:[.4,0,0],thR:[-.3,0,0],knR:[.6,0,0],chest:[.25,0,0],shL:[-.2,0,.6],shR:[-.2,0,-.6]},
+  // bile vomit
+  vBack:{spine:[-.35,0,0],chest:[-.35,0,0],head:[-.5,0,0],shL:[-.2,0,.9],shR:[-.2,0,-.9],hips:[0,0,0,0,-.05,-.25]},
+  vOut:{spine:[.35,0,0],chest:[.4,0,0],head:[.2,0,0],shL:[-.5,0,.6],shR:[-.5,0,-.6],hips:[0,0,0,0,-.1,.2]},
+  // belly flop
+  fCr:{hips:[0,0,0,0,-.55,0],spine:[.25,0,0],chest:[.2,0,0],thL:[-.9,0,0],thR:[-.9,0,0],knL:[1.5,0,0],knR:[1.5,0,0],ftL:[-.5,0,0],ftR:[-.5,0,0],shL:[.4,0,.4],shR:[.4,0,-.4]},
+  fAir:{root:[0,0,0,0,4.2,0],hips:[-.3,0,0],spine:[-.2,0,0],thL:[-.6,0,0],thR:[-.6,0,0],knL:[.8,0,0],knR:[.8,0,0],shL:[-2.4,0,.6],shR:[-2.4,0,-.6],elL:[-.4,0,0],elR:[-.4,0,0],head:[-.4,0,0]},
+  fLand:{root:[0,0,0,0,-.8,1.2],hips:[1.35,0,0,0,-.6,0],spine:[.2,0,0],chest:[.1,0,0],thL:[.3,0,0],thR:[.3,0,0],shL:[-2.6,0,.5],shR:[-2.6,0,-.5],head:[-.8,0,0]},
+  fUp:{root:[0,0,0,0,-.3,.5],hips:[.6,0,0,0,-.3,0],spine:[.2,0,0],thL:[-.7,0,0],thR:[-.4,0,0],knL:[1.2,0,0],knR:[.8,0,0],shL:[-.6,0,.4],shR:[-.4,0,-.5],head:[-.2,0,0]},
+  // roar / phase change
+  roar:{spine:[-.3,0,0],chest:[-.35,0,0],head:[-.6,0,0],shL:[-1.6,0,1.2],shR:[-1.6,0,-1.2],elL:[-.4,0,0],elR:[-.4,0,0],thL:[-.2,0,.15],thR:[-.2,0,-.15],knL:[.3,0,0],knR:[.3,0,0]},
+  hunch:{hips:[0,0,0,0,-.3,0],spine:[.35,0,0],chest:[.35,0,0],head:[.4,0,0],shL:[.2,0,.3],shR:[.2,0,-.3],elL:[-1.1,0,0],elR:[-1.1,0,0],knL:[.5,0,0],knR:[.5,0,0],thL:[-.4,0,0],thR:[-.4,0,0]},
+  // pustule burst
+  pzB:{spine:[.25,0,0],chest:[.4,0,0],head:[.5,0,0],shL:[-.2,0,1.2],shR:[-.2,0,-1.2],elL:[-.6,0,0],elR:[-.6,0,0],hips:[0,0,0,0,-.35,0]},
+  stag:{hips:[.2,0,.15,0,-.9,0],spine:[.35,0,.1],chest:[.3,0,0],head:[.6,0,.3],thL:[-1.0,0,.2],thR:[-.5,0,-.1],knL:[1.6,0,0],knR:[1.1,0,0],shL:[.5,0,.6],shR:[.2,0,-.5],clv:[1.2,0,0]},
+  dead:{root:[0,0,0,0,-.6,1.0],hips:[1.4,0,.2,0,-.7,0],spine:[.2,0,0],head:[-.5,.4,0],shL:[-2.8,0,1.0],shR:[-2.6,0,-1.0],thL:[.2,0,0],thR:[.3,0,0],clv:[1.0,0,0]}};
+function bloPool(c,p,r,life){const e=c.e,S2={k:'c',r};let tk=0,t=0;svDecal(p,0x8ac030,r,life,.55);svDecal(p,0x2a3a08,r*.75,life,.5);
+  kqFx({tick(dt){t+=dt||0;tk-=dt||0;if(!AF||e.dead)return false;if(Math.random()<.25)burst(gY(p,.2).add(new THREE.Vector3((Math.random()-.5)*r,0,(Math.random()-.5)*r)),BLO.bile,1,.3,.6,.7);
+    if(svIn(S2,{x:p.x,z:p.z,a:0},pl.position,0)){dqDebuff('Bile','🤢',{mspd:-.35},600,'Slowed by bile');if(tk<=0&&hero.iv<=0&&hero.hp>0){tk=.6;bossHit(e,.18)}}return t<life}})}
+function bloSplat(p,n,r){burst(gY(p,.3),BLO.rot,n||30,r||3,2.5,.7);burst(gY(p,.3),0x4a3a2a,(n||30)/2,(r||3)*.8,2,.6);svShock(p,0x9ab060,(r||3)*1.2,.45);svDecal(p,0x3a4010,(r||3)*.6,3,.5)}
+function bloGlob(c,from,q,T){const e=c.e,S2={k:'c',r:2.1},an={x:q.x,z:q.z,a:0};c.M.warn.push(svWarn(S2,an,T));
+  svShot(from,new THREE.Vector3(q.x,GH(q.x,q.z)+.2,q.z),T,BLO.rot,1.3,6,P=>{if(e.dead||!AF)return;bloSplat(P,18,2);svSnd('squelch',.6,1.1);svHitNow(e,S2,an,.85,{col:BLO.rot});if(c.rnd()<.4)bloPool(c,P,1.7,3.5)})}
+var BLOM={
+  intro:{dur:3.0,trk:[[.5,'hunch','io'],[1.2,'hunch','l',.02],[1.8,'roar','o'],[2.6,'roar','l',.03],[3.0,'cRec','io']],trn:[[0,3,1]],
+    ev:[[.3,c=>svSnd('squelch',.8,.6)],[1.75,c=>{svSnd('roar',1.2,.6);shake(.45);svShock(c.m.position,BLO.col,8,.8);c.S.heave=1}]]},
+  chop:{wt:10,r:[0,8],a:'f',dur:2.35,lock:1.05,trk:[[.6,'cUp','io'],[1.25,'cUp','l',.025],[1.38,'cDn','s'],[1.95,'cRec','l'],[2.35,'cRec','io']],
+    hit:[{t:1.36,s:{k:'l',w:3,l:8.5,b:0},f:.6,dm:1.6,w:.4,fx:(c,an)=>{const p=new THREE.Vector3(an.x+Math.sin(an.a)*5,0,an.z+Math.cos(an.a)*5);bloSplat(p,40,3);shake(.45);svSnd('heavy',1.2,.9)}}],
+    tr:[[1.22,1.42,'clv',[0,-3.5,1.35],[0,-1.3,.9],0xd8ffb0,.2]],ev:[[.35,c=>svSnd('hum',.4,.7)],[1.26,c=>svSnd('swing',1,.5)]],nx:[['sweep',.3,8]],rec:.45},
+  sweep:{wt:9,r:[0,7.5],a:'f',mel:1,dur:1.7,lock:.7,trk:[[.65,'sUp','io'],[.88,'sUp','l',.02],[1.05,'sHit','s'],[1.35,'sRec','io'],[1.7,'sRec','l']],
+    hit:[{t:1.02,s:{k:'a',r:7.2,h:1.35},f:0,dm:1.3,kb:2.5}],tr:[[.9,1.12,'clv',[0,-3.5,1.35],[0,-1.3,.9],0xd8ffb0,.2]],ev:[[.92,c=>svSnd('swing',1.1,.55)]],nx:[['chop',.45,8]],rec:.3},
+  stomp:{wt:8,r:[0,6.5],a:'any',dur:1.9,armor:1,trn:[[0,.4,1.5]],trk:[[.75,'pUp','io'],[.98,'pUp','l',.02],[1.1,'pDn','s'],[1.9,'cRec','io']],
+    hit:[{t:1.08,s:{k:'c',r:6},dm:1.3,w:.85,kb:3.5,fx:c=>{svShock(c.m.position,0x9ab060,7,.55);bloSplat(c.m.position,40,3.5);shake(.5);svSnd('heavy',1.2,.7)}}],ev:[[.4,c=>svSnd('hum',.4,.5)]],rec:.4},
+  vomit:{wt:7,r:[0,10],a:'f',dur:2.5,lock:.85,armor:1,trn:[[0,.85,2]],trk:[[.75,'vBack','io'],[1.05,'vBack','l',.02],[1.2,'vOut','s'],[1.9,'vOut','l'],[2.5,'cRec','io']],
+    hit:[{t:1.2,s:{k:'a',r:9.5,h:.55},f:.5,dm:1.0,w:.7,on:()=>dqDebuff('Bile','🤢',{mspd:-.35},2500,'Slowed by bile'),fx:(c,an)=>{const m=svWP(c.e,'head',0,-.2,.5);
+      for(let k=0;k<40;k++){const d=1+Math.random()*8,a=an.a+(Math.random()-.5)*1;burst(new THREE.Vector3(an.x+Math.sin(a)*d,GH(an.x,an.z)+.5+Math.random()*1.2,an.z+Math.cos(a)*d),BLO.bile,2,1,.6,.8)}
+      burst(m,BLO.bile,30,3,.5,.7);bloPool(c,new THREE.Vector3(an.x+Math.sin(an.a)*5.5,0,an.z+Math.cos(an.a)*5.5),2.8,5);svSnd('squelch',1.2,.6)}}],
+    ev:[[.4,c=>{svSnd('squelch',.8,.5);c.S.heave=1.4}]],rec:.45},
+  flop:{wt:8,r:[5,22],a:'fs',dur:3.2,lock:.85,armor:1,trn:[[0,.85,3]],trk:[[.75,'fCr','io'],[.9,'fCr','l',.02],[1.25,'fAir','o'],[1.6,'fLand','i'],[2.6,'fLand','l'],[3.0,'fUp','io'],[3.2,'cRec','io']],
+    rm:[[.92,1.6,'tgt','l',.6,24]],hit:[{t:1.6,s:{k:'c',r:4.8},o:'tgt',dm:1.7,w:.8,kb:3,fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);svShock(p,0x9ab060,7,.6);bloSplat(p,70,4.5);shake(.6);svSnd('heavy',1.4,.6);svSnd('squelch',1,.5)}}],
+    ev:[[.9,c=>svSnd('whoosh',1,.5)]],nx:[['flop2',.0]],rec:.3},
+  // ---- Phase II ----
+  awaken:{dur:3.4,inv:[0,3.4],armor:1,trk:[[.5,'hunch','io'],[1.25,'hunch','l',.035],[1.7,'roar','o'],[2.9,'roar','l',.03],[3.4,'cRec','io']],trn:[[0,3,1]],
+    hit:[{t:1.75,s:{k:'c',r:7.5},dm:.5,kb:6,w:1.2,fx:c=>{svShock(c.m.position,BLO.col,10,.8);bloSplat(c.m.position,90,6)}}],
+    ev:[[.05,c=>{banner('THE ROT SPILLS','The Bloated One bursts open','');svSnd('squelch',1,.4)}],[1.25,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.heave=2;flash('rgba(160,255,90,.3)');svSnd('roar',1.3,.55);shake(.6)}]]},
+  frenzy:{wt:9,ph:2,r:[0,8],a:'f',dur:3.6,lock:.6,armor:1,trn:[[0,.6,3],[1.2,1.5,3],[2.2,2.55,3]],
+    trk:[[.55,'cUp','io'],[.72,'cUp','l',.02],[.85,'cDn','s'],[1.3,'sUp','io'],[1.62,'sHit','s'],[2.1,'cUp','io'],[2.55,'cUp','l',.03],[2.68,'cDn','s'],[3.2,'cRec','l'],[3.6,'cRec','io']],
+    hit:[{t:.83,s:{k:'l',w:3,l:8.5},f:.6,dm:1.3,w:.35,fx:(c,an)=>{bloSplat(new THREE.Vector3(an.x+Math.sin(an.a)*5,0,an.z+Math.cos(an.a)*5),30,2.5);shake(.35);svSnd('heavy',1,1)}},
+      {t:1.6,s:{k:'a',r:7.2,h:1.35},dm:1.2,mel:1,kb:2.5},{t:2.66,s:{k:'l',w:3.4,l:9},f:.6,dm:1.7,w:.4,fx:(c,an)=>{bloSplat(new THREE.Vector3(an.x+Math.sin(an.a)*5,0,an.z+Math.cos(an.a)*5),60,3.5);shake(.55);svSnd('heavy',1.3,.8)}}],
+    tr:[[.72,.9,'clv',[0,-3.5,1.35],[0,-1.3,.9],0xd8ffb0,.2],[1.45,1.68,'clv',[0,-3.5,1.35],[0,-1.3,.9],0xd8ffb0,.2],[2.56,2.74,'clv',[0,-3.5,1.35],[0,-1.3,.9],0xd8ffb0,.2]],
+    ev:[[.75,c=>svSnd('swing',1,.6)],[1.5,c=>svSnd('swing',1,.5)],[2.58,c=>svSnd('swing',1.1,.45)]],rec:.6},
+  burst:{wt:7,ph:2,r:[0,40],a:'any',dur:3.0,armor:1,trn:[[0,3,1.5]],trk:[[.6,'hunch','io'],[1.1,'hunch','l',.03],[1.3,'pzB','s'],[2.4,'pzB','l'],[3.0,'cRec','io']],
+    ev:[[.3,c=>{svSnd('squelch',.9,.5);c.S.heave=1}],[1.3,c=>{svSnd('squelch',1.2,.8);shake(.3);c.R.pz.forEach(g=>{const p=new THREE.Vector3();g.getWorldPosition(p);burst(p,BLO.rot,20,3,4,.7)})}]].concat(
+      [0,1,2,3,4,5,6,7].map(i=>[1.35+i*.13,c=>{const from=new THREE.Vector3();c.R.pz[i%c.R.pz.length].getWorldPosition(from);const a=c.rnd()*6.283,r=i<2?0:1.5+c.rnd()*4.5,d=pl.mvd&&nowP()-pl.mvd.t<300?pl.mvd:{x:0,z:0};
+        const q=c.inA(pl.position.clone().add(new THREE.Vector3(Math.cos(a)*r+d.x*i*.4,0,Math.sin(a)*r+d.z*i*.4)),.8);bloGlob(c,from,q,1.0+i*.05)}])),rec:.5},
+  flop2:{ph:2,dur:3.0,lock:.6,armor:1,trn:[[0,.6,3]],trk:[[.45,'fUp','io'],[.6,'fCr','io'],[1.0,'fAir','o'],[1.35,'fLand','i'],[2.4,'fLand','l'],[2.8,'fUp','io'],[3.0,'cRec','io']],
+    rm:[[.65,1.35,'tgt','l',.6,24]],hit:[{t:1.35,s:{k:'c',r:5.2},o:'tgt',dm:1.8,w:.7,kb:3,fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);svShock(p,0x9ab060,8,.6);bloSplat(p,80,5);shake(.65);svSnd('heavy',1.5,.55);bloPool(c,p,3,5)}}],
+    ev:[[.65,c=>svSnd('whoosh',1,.45)]],rec:.4}};
+BLOM.flop.nx=[['flop2',.55,26]];
+svReg(4,{name:'Bloated One',col:BLO.col,body:2.4,ph2:.55,poise:.19,headJ:'head',turnA:2.6,
+  ai:{pref:5,walk:1.7,run:2.6,turn:1.5,rest:[.95,1.6],ph2r:.72,strafe:.3},
+  build:bloBuild,loco:bloLoco,post:bloPost,P:BLOP,M:BLOM,
+  stag:[[.3,'stag','o'],[2.2,'stag','l',.03],[2.8,'cRec','io']],stagT:2.8,
+  die:[[.5,'stag','o'],[1.4,'dead','i'],[2.1,'dead','l']],
+  homeY(A){const a=A.dqA!=null?A.dqA:0;return Math.atan2(Math.cos(a),Math.sin(a))},
+  dying(e,t){if(t>1.3&&t<1.35){bloSplat(e.m.position,80,4);shake(.4)}}});
+// ================= v110 Sovereign 5 — Lord Vaelric, the Crimson King (The Citadel) =================
+// The last Sovereign: a tall vampire lord in black-and-crimson plate, a high collar, a thorned crown, a long cape, and a
+// slender blood-forged greatsword. Fast, precise, and every pattern has a rhythm. In Phase II great bat wings tear free.
+// Pattern (learnable):
+//  close in front ── Crimson Combo: a slash, a backhand, a pause… and a thrust (dodge the third late).
+//  mid           ── Crimson Lunge: he draws the blade back level with his eyes, then lunges a long line.
+//  far           ── Blood Wave: an overhead cut that sends a crescent of blood travelling down a line.
+//  any           ── Bat Step: he bursts into bats and re-forms at your side for a rising slash (listen for the bell).
+//  close, any    ── Sanguine Nova: he plants the sword and kneels; a blood circle bursts around him.
+//  Phase II (55%) "The Blood Moon": wings, a crimson aura; adds Skyfall (he rises, blood spears rain on your trail, then he
+//                   plunges onto you), Triple Wave (three crescents fanning out) and a five-hit combo.
+var VLR={col:0xff2040,blood:0xd01030,gold:0xd8b060};
+function vlrBuild(R,e){
+  const plate=svMat(R,0x1c1418,{roughness:.35,metalness:.65,emissive:0x0a0204}),plate2=svMat(R,0x4a0c18,{roughness:.4,metalness:.55,emissive:0x140206}),gold=svMat(R,0xb08a3a,{roughness:.35,metalness:.8}),
+    skin=svMat(R,0xd8d0d8,{roughness:.6,emissive:0x141014}),cape=svMat(R,0x5a0816,{roughness:.8,side:THREE.DoubleSide,emissive:0x100206}),capeIn=svMat(R,0x1a0a10,{roughness:.9,side:THREE.DoubleSide}),
+    steel=svMat(R,0x8a1424,{roughness:.2,metalness:.7,emissive:0x5a0614}),hair=svMat(R,0xe8e4ec,{roughness:.7}),mem=svMat(R,0x2a0810,{roughness:.7,side:THREE.DoubleSide,emissive:0x0a0004}),
+    eye=svGlowMat(R,0xff3050),rune=svGlowMat(R,0x8a1020);R.rune=rune;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+  J('root',null,0,0,0);J('hips','root',0,1.8,0);J('spine','hips',0,.25,0);J('chest','spine',0,.6,0);
+  // ---- armoured body: tasset skirt, a narrow waist, a broad plated chest ----
+  svM(R,'hips',svG('vl_hp',()=>svLoft([[-.15,.36,.26],[.25,.34,.24]],9)),plate);
+  for(let k=0;k<7;k++){const a=-1.4+k*.47;svM(R,'hips',svG('vl_ts',()=>svBlade([[-.16,0],[.16,0],[.13,-.62],[0,-.72],[-.13,-.62]],.03)),k%2?plate:plate2,Math.sin(a)*.38,0,Math.cos(a)*.3,-.12*Math.cos(a),a,0)}
+  svM(R,'spine',svG('vl_wa',()=>svLoft([[-.05,.3,.22],[.35,.32,.23],[.6,.42,.28]],9)),plate2);
+  svM(R,'chest',svG('vl_ch',()=>svLoft([[-.1,.42,.28],[.25,.52,.33,0,.02],[.5,.55,.34],[.68,.42,.27]],10)),plate);
+  svM(R,'chest',svG('vl_bp',()=>svLump(.3,0,.2,51)),plate2,0,.3,.24,0,0,0,1.2,1.1,.45);
+  svM(R,'chest',svG('vl_rn',()=>new THREE.OctahedronGeometry(.08,0)),rune,0,.33,.38,0,0,0,1,1.6,1);
+  // the high collar
+  for(let k=0;k<6;k++){const a=-2.0+k*.8;svM(R,'chest',svG('vl_cl',()=>svBlade([[-.12,0],[.12,0],[.08,.5],[0,.62],[-.08,.45]],.03)),plate2,Math.sin(a)*.3,.66,Math.cos(a)*.22-.05,-.25*Math.cos(a),a,0)}
+  // ---- head: pale, long white hair, thorned crown ----
+  J('neck','chest',0,.7,.02);J('head','neck',0,.17,0);
+  svM(R,'neck',svG('vl_nk',()=>svLoft([[0,.09,.09],[.2,.08,.08]],6)),skin);
+  svM(R,'head',svG('vl_hd',()=>svLoft([[-.08,.12,.13],[.05,.16,.17,0,.01],[.2,.16,.17],[.32,.12,.13]],8)),skin,0,0,0);
+  svM(R,'head',svG('vl_hr',()=>svLoft([[-.25,.12,.1,0,-.12],[.05,.19,.18,0,-.05],[.3,.18,.18]],8)),hair,0,0,-.02);
+  [-1,1].forEach(s=>{svM(R,'head',svG('vl_ey',()=>new THREE.SphereGeometry(.025,5,4)),eye,s*.06,.15,.15);svSpr(R,'head',VLR.col,.2,s*.06,.15,.17)});
+  svM(R,'head',svG('vl_cr',()=>svLoft([[0,.18,.18],[.07,.19,.19]],9,{cap:false})),gold,0,.3,0);
+  for(let k=0;k<7;k++){const a=k/7*6.283;svM(R,'head',svG('vl_th',()=>svHorn(.025,.22,0,-.05,4,2)),gold,Math.sin(a)*.18,.34,Math.cos(a)*.18,-Math.PI/2+.3*Math.cos(a),a,0)}
+  // ---- arms: plate pauldrons, gauntlets ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('sh'+L,'chest',s*.55,.5,0,0,0,s*.1);
+    svM(R,'sh'+L,svG('vl_pd',()=>svLump(.24,1,.15,52)),plate2,s*.05,.08,0,0,0,0,1.25,.85,1.1);
+    for(let k=0;k<3;k++)svM(R,'sh'+L,svG('vl_ps',()=>svHorn(.05,.32,0,-.1,4,2)),gold,s*.12,.22,-.12+k*.12,-1.3,0,s*-.4);
+    svM(R,'sh'+L,svG('vl_ua',()=>svLoft([[0,.1,.1],[-.6,.085,.085]],7)),plate);
+    J('el'+L,'sh'+L,0,-.6,0,-.15);svM(R,'el'+L,svG('vl_fa',()=>svLoft([[0,.09,.09],[-.5,.11,.1],[-.58,.08,.08]],7)),plate2);
+    J('hd'+L,'el'+L,0,-.58,0);svM(R,'hd'+L,svG('vl_hn',()=>svLump(.08,0,.2,53)),plate,0,-.06,0,0,0,0,1,1.4,.8)});
+  // the sword (right hand): a long, slightly curved blood-steel blade, gold guard
+  const sw=J('swd','hdR',0,-.1,.02,0,0,0);
+  svM(R,sw,svG('vl_gp',()=>svLoft([[-.32,.04,.04],[.02,.04,.04]],6)),plate,0,0,0,Math.PI/2,0,0);svM(R,sw,svG('vl_pm',()=>new THREE.OctahedronGeometry(.07,0)),gold,0,0,-.34);
+  svM(R,sw,svG('vl_gd',()=>svBlade([[-.3,0],[.3,0],[.36,.08],[0,.14],[-.36,.08]],.05)),gold,0,.02,0,Math.PI/2,0,0);
+  svM(R,sw,svG('vl_bl',()=>svBlade([[-.07,0],[.07,0],[.06,1.6],[.02,2.25],[-.04,2.3],[-.06,1.6]],.025)),steel,0,.06,0,Math.PI/2,0,0);
+  // ---- legs: plated, long ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('th'+L,'hips',s*.18,-.1,0);svM(R,'th'+L,svG('vl_th',()=>svLoft([[0,.15,.16],[-.82,.11,.12]],7)),plate);
+    J('kn'+L,'th'+L,0,-.84,0);svM(R,'kn'+L,svG('vl_kp',()=>svLump(.1,0,.2,54)),plate2,0,0,.08);svM(R,'kn'+L,svG('vl_sh',()=>svLoft([[0,.1,.11],[-.8,.09,.1]],7)),plate2);
+    J('ft'+L,'kn'+L,0,-.82,0);svM(R,'ft'+L,svG('vl_ft',()=>svLoft([[-.1,.09,.06,0,-.02],[.26,.06,.04,0,-.05]],6)),plate,0,-.05,.05,Math.PI/2,0,0)});
+  // ---- cape (three joints, sways) ----
+  J('cp0','chest',0,.62,-.24);J('cp1','cp0',0,-.85,0);J('cp2','cp1',0,-.85,0);
+  [['cp0',.55,.62],['cp1',.62,.72],['cp2',.72,.8]].forEach(([n,w0,w1])=>{svM(R,n,svG('vl_'+n,()=>svBlade([[-w0,0],[w0,0],[w1,-.88],[-w1,-.88]],.02)),cape,0,0,-.02);svM(R,n,svG('vl_'+n+'i',()=>svBlade([[-w0+.02,0],[w0-.02,0],[w1-.02,-.88],[-w1+.02,-.88]],.01)),capeIn,0,0,.02)});
+  // ---- bat wings (Phase II) ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';const w=J('wg'+L,'chest',s*.2,.45,-.3,0,s*-.3,0);
+    svM(R,w,svG('vl_wb',()=>svHorn(.05,2.2,0,.5,4,5)),plate,0,0,0,0,s*Math.PI/2,0);
+    svM(R,w,svG('vl_wm'+L,()=>{const pts=[[0,0,0],[s*2.2,.55,0],[s*2.0,-.4,0],[s*1.5,-1.2,0],[s*.9,-.9,0],[s*.5,-1.5,0],[0,-.5,0]],pos=[];for(let k=1;k<pts.length-1;k++)pos.push(...pts[0],...pts[k],...pts[k+1]);
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}),mem);
+    w.scale.setScalar(.01);R['wing'+L]=w});
+}
+function vlrWings(R,k){['L','R'].forEach(s=>{const w=R['wing'+s];w.scale.setScalar(Math.max(.01,k));w.visible=k>.02})}
+function vlrLoco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/2.2);S.gp=(S.gp||0)+dt*(2+S.spd*2.3);const g=S.gp;
+  O.hips[4]+=.03*Math.sin(t*1.4)+.05*Math.abs(Math.sin(g))*a;O.chest[0]+=.015*Math.sin(t*1.4);O.head[1]+=.08*Math.sin(t*.5);
+  ['L','R'].forEach((s,j)=>{const ph=g+j*Math.PI,sw=Math.sin(ph)*.6*a,lf=Math.max(0,Math.cos(ph))*.8*a;O['th'+s][0]+=-sw;O['kn'+s][0]+=lf;O['ft'+s][0]+=-lf*.2});
+  // guard stance: sword held low and forward, left hand open
+  O.shR[0]+=-.45+.04*Math.sin(t*1.2);O.shR[2]+=-.15;O.elR[0]+=-.75;O.hdR[0]+=.25;O.shL[0]+=.15*Math.sin(g)*a+.1;O.shL[2]+=.18;O.elL[0]+=-.3;
+  O.cp0[0]+=.15+.06*Math.sin(t*1.6)+.4*a;O.cp1[0]+=.05+.05*Math.sin(t*1.6-.8)+.15*a;O.cp2[0]+=.04*Math.sin(t*1.6-1.6)+.1*a;
+  if(S.ph>1){O.wgL[1]+=.12*Math.sin(t*1.8);O.wgR[1]-=.12*Math.sin(t*1.8);O.wgL[2]+=.06*Math.sin(t*1.8);O.wgR[2]-=.06*Math.sin(t*1.8)}}
+function vlrPost(e,S,dt,now){const R=S.R,on=S.ph>1;S.wk=Math.min(1,(S.wk||0)+(on?dt*1.2:-dt*3));vlrWings(R,on?svEase.o(Math.max(0,S.wk)):0);
+  R.rune.color.setHex(on?0xff3050:0x8a1020);e.m.visible=!S.gone&&e.m.visible;
+  if(on&&Math.random()<dt*10){const p=svWP(e,'chest',(Math.random()-.5)*.8,(Math.random()-.5)*1.2,0);burst(p,VLR.blood,1,.4,.6,.7)}}
+var VLRP={
+  // crimson combo: slash (right to left), backhand (left to right), thrust
+  s1Up:{hips:[0,-.35,0],chest:[0,-.45,0],shR:[-1.2,0,-1.25],elR:[-.6,0,0],hdR:[1.25,0,0],shL:[-.4,0,.4],head:[0,.3,0],thL:[-.4,0,0],knL:[.4,0,0]},
+  s1Hit:{hips:[0,.45,0,0,-.05,.25],chest:[.1,.55,0],shR:[-1.45,0,.55],elR:[-.1,0,0],hdR:[1.3,0,0],shL:[-.2,0,.8],head:[0,-.3,0],thL:[-.6,0,0],knL:[.5,0,0],thR:[.3,0,0]},
+  s2Hit:{hips:[0,-.5,0,0,-.05,.3],chest:[.1,-.6,0],shR:[-1.0,0,-1.45],elR:[-.2,0,0],hdR:[1.3,0,0],shL:[-.4,0,.3],head:[0,.35,0],thR:[-.6,0,0],knR:[.5,0,0],thL:[.3,0,0]},
+  thUp:{hips:[0,.4,0,0,0,-.25],chest:[0,.55,0],shR:[-.35,0,-.25],elR:[-1.9,0,0],hdR:[.5,0,0],shL:[-1.3,0,.6],elL:[-.3,0,0],head:[0,-.4,0],thR:[.3,0,0],thL:[-.4,0,0],knL:[.5,0,0]},
+  thHit:{hips:[.1,-.15,0,0,-.15,.55],chest:[.15,-.2,0],shR:[-1.55,0,-.05],elR:[0,0,0],hdR:[0,0,0],shL:[.3,0,.4],head:[0,.1,0],thL:[-1.0,0,0],knL:[.7,0,0],thR:[.55,0,0],knR:[.1,0,0]},
+  cRec:{hips:[0,0,0],shR:[-.8,0,-.2],elR:[-.6,0,0],hdR:[.2,0,0]},
+  // lunge: sword drawn back level with the eyes
+  lDraw:{hips:[0,.6,0,0,-.15,-.2],chest:[0,.5,0],shR:[-1.5,0,-.6],elR:[-1.8,0,0],hdR:[.9,0,0],shL:[-1.4,0,.1],elL:[-.2,0,0],head:[0,-.5,0],thL:[-.8,0,0],knL:[1.0,0,0],thR:[.4,0,0],knR:[.6,0,0]},
+  lGo:{hips:[.2,-.1,0,0,-.35,.3],chest:[.15,-.15,0],shR:[-1.6,0,0],elR:[0,0,0],hdR:[0,0,0],shL:[.5,0,.5],head:[-.1,.1,0],thL:[-1.2,0,0],knL:[.6,0,0],thR:[.8,0,0],knR:[.3,0,0],cp0:[.9,0,0],cp1:[.3,0,0]},
+  // blood wave: overhead cut
+  wUp:{chest:[-.2,0,0],shR:[-2.9,0,-.15],elR:[-.4,0,0],hdR:[-.4,0,0],shL:[-2.7,0,.2],elL:[-.5,0,0],head:[-.2,0,0],thR:[.2,0,0],thL:[-.3,0,0]},
+  wDn:{hips:[.1,0,0,0,-.2,.2],chest:[.4,0,0],shR:[-1.0,0,-.1],elR:[0,0,0],hdR:[.3,0,0],shL:[-.9,0,.2],head:[.25,0,0],thL:[-.6,0,0],knL:[.6,0,0],thR:[.3,0,0]},
+  // rising slash (after the bat step)
+  rLow:{hips:[0,.3,0,0,-.35,0],chest:[.3,.3,0],shR:[.4,0,-.4],elR:[-.3,0,0],hdR:[.4,0,0],shL:[-.3,0,.4],thL:[-.8,0,0],knL:[1.3,0,0],thR:[-.2,0,0],knR:[.9,0,0],head:[.1,-.2,0]},
+  rHigh:{hips:[0,-.3,0,0,.1,0],chest:[-.25,-.4,0],shR:[-2.6,0,-.4],elR:[0,0,0],hdR:[-.2,0,0],shL:[-.3,0,.6],head:[-.3,.2,0],thR:[.2,0,0]},
+  // sanguine nova: plant and kneel
+  kneel:{hips:[0,0,0,0,-.85,0],spine:[.2,0,0],chest:[.15,0,0],shR:[-.9,0,-.05],elR:[-.3,0,0],hdR:[1.5,0,0],shL:[-.9,0,.05],elL:[-.3,0,0],thL:[-1.6,0,0],knL:[1.6,0,0],thR:[.3,0,0],knR:[1.9,0,0],ftR:[-.3,0,0],head:[.3,0,0]},
+  rise:{hips:[0,0,0,0,.05,0],chest:[-.35,0,0],shR:[-1.8,0,-1.0],elR:[0,0,0],shL:[-1.8,0,1.0],head:[-.5,0,0],cp0:[.4,0,0]},
+  // skyfall
+  sUp:{root:[0,0,0,0,7,0],hips:[-.2,0,0],shR:[-1.8,0,-.4],elR:[-.2,0,0],shL:[-1.4,0,.8],thL:[-.4,0,0],knL:[.8,0,0],thR:[.1,0,0],knR:[.5,0,0],cp0:[.6,0,0]},
+  sDive:{root:[0,0,0,0,0,0],hips:[.4,0,0,0,-.4,0],chest:[.4,0,0],shR:[-.5,0,-.05],elR:[0,0,0],hdR:[1.4,0,0],shL:[-.6,0,.4],thL:[-1.4,0,0],knL:[1.5,0,0],thR:[.2,0,0],knR:[1.6,0,0]},
+  roar:{chest:[-.35,0,0],head:[-.55,0,0],shR:[-1.6,0,-1.1],elR:[-.2,0,0],shL:[-1.6,0,1.1],elL:[-.2,0,0],cp0:[.7,0,0],cp1:[.3,0,0]},
+  bow:{hips:[0,0,0,0,-.05,0],chest:[.35,0,0],head:[.4,0,0],shR:[-.4,0,-.5],elR:[-.5,0,0],shL:[.3,0,.3],elL:[-1.3,0,0]},
+  stag:{hips:[.1,0,.1,0,-.55,0],spine:[.3,0,.1],chest:[.3,0,0],head:[.5,0,.3],shR:[.3,0,-.3],elR:[-.2,0,0],hdR:[1.2,0,0],shL:[.1,0,.4],thL:[-1.3,0,0],knL:[1.6,0,0],thR:[-.2,0,0],knR:[1.2,0,0]},
+  dead:{root:[0,0,0,0,-1.5,0],hips:[-.3,0,0,0,0,0],spine:[-.2,0,0],chest:[-.4,0,0],head:[-.4,.4,0],shR:[-.4,0,-1.2],shL:[-.3,0,1.3],thL:[-1.5,0,0],knL:[1.8,0,0],thR:[-1.4,0,0],knR:[1.9,0,0]}};
+function vlrWave(c,a0,spd,L,dm){const e=c.e,o=c.m.position.clone(),a=c.m.rotation.y+a0,S2={k:'c',r:1.6};const g=svG('vl_cres',()=>{const q=new THREE.RingGeometry(1.0,1.6,14,1,-1.1+Math.PI/2,2.2);q.rotateX(-Math.PI/2);return q});
+  const m=new THREE.MeshBasicMaterial({color:VLR.col,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),ms=new THREE.Mesh(g,m);ms.renderOrder=24;ms.userData.lpsSkip=1;scene.add(ms);
+  let t=0,hit=false;const T=L/spd;svSnd('blood',.9,1.2);
+  kqFx({tick(dt){t+=dt||0;const d=1+spd*t,p=new THREE.Vector3(o.x+Math.sin(a)*d,0,o.z+Math.cos(a)*d);ms.position.set(p.x,GH(p.x,p.z)+1.0,p.z);ms.rotation.y=a+Math.PI;ms.scale.set(1.3,1,1);
+    if(Math.random()<.9)burst(gY(p,1),VLR.blood,3,1,.8,.5);if(!hit&&AF&&!e.dead&&svIn({k:'l',w:3.4,l:1.6,b:.8},{x:p.x,z:p.z,a},pl.position,.3)){hit=true;svHitNow(e,{k:'c',r:99},{x:p.x,z:p.z,a},dm,{flash:false})}
+    return t<T&&!e.dead},end(){scene.remove(ms);m.dispose()}})}
+function vlrSpear(c,q,T){const e=c.e,S2={k:'c',r:1.5},an={x:q.x,z:q.z,a:0};c.M.warn.push(svWarn(S2,an,T));
+  const m=new THREE.Mesh(svG('vl_sp',()=>{const g=new THREE.ConeGeometry(.16,2.6,5);g.rotateX(Math.PI/2);return g}),kqBas(VLR.blood));
+  svShot(new THREE.Vector3(q.x+(c.rnd()-.5)*3,GH(q.x,q.z)+14,q.z+(c.rnd()-.5)*3),new THREE.Vector3(q.x,GH(q.x,q.z)+.4,q.z),T,VLR.col,1.1,0,P=>{if(e.dead||!AF)return;burst(P,VLR.blood,20,2.2,2.5,.5);svDecal(P,0x4a0008,1.4,3,.6);svSnd('crack',.6,1.4);svHitNow(e,S2,an,.85,{col:VLR.col})},m)}
+function vlrGone(e,on){const S=e.sv;S.gone=on;S.ghost=on;e.m.visible=!on;const p=e.m.position;for(let k=0;k<24;k++)burst(gY(p,1+Math.random()*2.2),0x1a0408,2,2.5,1.5,.9);burst(gY(p,1.8),VLR.blood,30,2,2,.6);svSnd('whoosh',.8,1.4)}
+var VLRM={
+  intro:{dur:3.0,trk:[[.5,'bow','io'],[1.3,'bow','l',.005],[1.9,'rise','o'],[2.6,'rise','l'],[3.0,'cRec','io']],trn:[[0,3,1]],
+    ev:[[.4,c=>svSnd('bell',.7,.8)],[1.85,c=>{svSnd('blood',1,.6);svSnd('shriek',.5,1.4);shake(.3);svShock(c.m.position,VLR.col,8,.7);flash('rgba(200,20,40,.25)')}]]},
+  combo:{wt:10,r:[0,6.2],a:'f',mel:1,dur:2.35,lock:.38,trn:[[0,.38,5],[.75,.85,5],[1.2,1.5,4]],
+    trk:[[.38,'s1Up','io'],[.5,'s1Up','l',.01],[.62,'s1Hit','s'],[.82,'s1Hit','l'],[.98,'s2Hit','s'],[1.3,'thUp','io'],[1.55,'thUp','l',.012],[1.68,'thHit','s'],[2.0,'cRec','io'],[2.35,'cRec','l']],
+    rm:[[.55,.66,1,'o'],[.9,1.0,.8,'o'],[1.6,1.72,2.5,'o']],
+    hit:[{t:.61,s:{k:'a',r:4.6,h:1.25},f:.3,dm:.95},{t:.97,s:{k:'a',r:4.6,h:1.25},f:.3,dm:.95},{t:1.68,s:{k:'l',w:1.6,l:6.5,b:0},f:.4,dm:1.3,w:.38}],
+    tr:[[.52,.7,'swd',[0,0,2.3],[0,0,.4],0xff5060,.18],[.86,1.04,'swd',[0,0,2.3],[0,0,.4],0xff5060,.18],[1.58,1.75,'swd',[0,0,2.3],[0,0,.4],0xff5060,.15]],
+    ev:[[.55,c=>svSnd('swing',.8,1.3)],[.9,c=>svSnd('swing',.8,1.4)],[1.62,c=>svSnd('whoosh',.8,1.6)]],nx:[['lunge',.25,9]],rec:.25},
+  lunge:{wt:8,r:[4.5,15],a:'f',dur:1.9,lock:.7,armor:1,trn:[[0,.7,5]],trk:[[.55,'lDraw','io'],[.8,'lDraw','l',.012],[.95,'lGo','s'],[1.3,'lGo','l'],[1.9,'cRec','io']],
+    rm:[[.86,1.1,'tgt','o',-1.5,14]],hit:[{t:1.0,s:{k:'l',w:2.2,l:15,b:0},f:0,dm:1.4,w:.6}],tr:[[.86,1.15,'swd',[0,0,2.3],[0,0,.4],0xff5060,.2]],
+    ev:[[.3,c=>svSnd('hum',.4,1.6)],[.86,c=>{svSnd('whoosh',1.1,1.1);burst(gY(c.m.position,1),VLR.blood,30,3,1,.6)}]],rec:.4},
+  wave:{wt:8,r:[6.5,40],a:'f',dur:1.9,lock:.75,trn:[[0,.75,4]],trk:[[.6,'wUp','io'],[.85,'wUp','l',.015],[.98,'wDn','s'],[1.4,'wDn','l'],[1.9,'cRec','io']],
+    hit:[{t:.96,s:{k:'l',w:3.4,l:22,b:0},f:1,dm:0,nohit:1,w:.75,fx:c=>vlrWave(c,0,16,22,1.2)}],tr:[[.86,1.04,'swd',[0,0,2.3],[0,0,.4],0xff5060,.2]],ev:[[.88,c=>svSnd('swing',1,1)]],rec:.35},
+  batstep:{wt:7,r:[0,40],a:'any',dur:2.6,armor:1,inv:[.35,1.35],trn:[[0,.1,1]],trk:[[.3,'bow','io'],[1.35,'rLow','io'],[1.65,'rLow','l',.012],[1.8,'rHigh','s'],[2.2,'cRec','io'],[2.6,'cRec','l']],
+    ev:[[.32,c=>vlrGone(c.e,true)],[1.3,c=>{const e=c.e,m=e.m,a=svYawTo(m,pl.position)+(c.rnd()<.5?1.4:-1.4),q=c.inA(pl.position.clone().add(new THREE.Vector3(Math.sin(a)*3.2,0,Math.cos(a)*3.2)),2);
+      m.position.set(q.x,0,q.z);m.rotation.y=svYawTo(m,pl.position);vlrGone(e,false);svSnd('bell',.9,1.3)}]],
+    hit:[{t:1.78,s:{k:'a',r:5.2,h:.9},f:0,dm:1.3,w:.45}],tr:[[1.68,1.88,'swd',[0,0,2.3],[0,0,.4],0xff5060,.2]],end(c){if(c.S.gone)vlrGone(c.e,false)},rec:.35},
+  nova:{wt:6,r:[0,6],a:'any',dur:2.2,armor:1,trn:[[0,.4,2]],trk:[[.5,'kneel','io'],[1.25,'kneel','l',.01],[1.4,'rise','s'],[2.2,'cRec','io']],
+    hit:[{t:1.38,s:{k:'c',r:7},dm:1.5,w:1.2,kb:3,fx:c=>{svShock(c.m.position,VLR.col,8,.5);burst(gY(c.m.position,1),VLR.blood,70,6,4,.8);svDecal(c.m.position,0x3a0008,6,4,.55);shake(.4);svSnd('blood',1.2,.7)}}],
+    ev:[[.25,c=>{svSnd('charge',.6,.7);svDecal(c.m.position,0x8a0018,7,1.4,.35)}]],rec:.4},
+  // ---- Phase II ----
+  awaken:{dur:3.4,inv:[0,3.4],armor:1,trk:[[.5,'bow','io'],[1.2,'bow','l',.02],[1.7,'roar','o'],[2.9,'roar','l',.02],[3.4,'cRec','io']],trn:[[0,3,1]],
+    hit:[{t:1.75,s:{k:'c',r:7.5},dm:.5,kb:6,w:1.2,fx:c=>{svShock(c.m.position,VLR.col,10,.8);burst(gY(c.m.position,2),VLR.blood,90,6,4,1)}}],
+    ev:[[.05,c=>{banner('THE BLOOD MOON','Vaelric casts off his mortal shape','');svSnd('bell',.9,.6)}],[1.2,c=>{c.S.ph=2;c.e.bs.ph=2;flash('rgba(220,20,50,.4)');svSnd('shriek',1,.8);svSnd('roar',.8,1.3);shake(.5)}]]},
+  skyfall:{wt:8,ph:2,r:[0,40],a:'any',dur:4.2,armor:1,inv:[.7,3.1],trn:[[0,4.2,2.5]],trk:[[.45,'kneel','io'],[1.0,'sUp','o'],[2.95,'sUp','l'],[3.25,'sDive','i'],[3.8,'sDive','l'],[4.2,'cRec','io']],
+    ev:[[.5,c=>svSnd('whoosh',1.2,.6)],[.9,c=>{c.S.ghost=1}]].concat([0,1,2,3,4,5].map(i=>[1.15+i*.28,c=>{const d=pl.mvd&&nowP()-pl.mvd.t<300?pl.mvd:{x:0,z:0},q=c.inA(pl.position.clone().add(new THREE.Vector3(d.x*2.2,0,d.z*2.2)),.8);vlrSpear(c,q,.62)}])),
+    rm:[[2.85,3.25,'tgt','i',0,40]],hit:[{t:3.25,s:{k:'c',r:4.6},o:'tgt',dm:1.7,w:.75,kb:3.5,fx:(c,an)=>{c.S.ghost=0;const p=new THREE.Vector3(an.x,0,an.z);svShock(p,VLR.col,7,.6);burst(gY(p,.5),VLR.blood,80,5,4,.8);svDecal(p,0x3a0008,4,4,.6);shake(.55);svSnd('heavy',1.2,1.1)}}],
+    end(c){c.S.ghost=0},rec:.5},
+  waves:{wt:7,ph:2,r:[5,40],a:'f',dur:2.3,lock:.8,trn:[[0,.8,4]],trk:[[.6,'wUp','io'],[.88,'wUp','l',.015],[1.0,'wDn','s'],[1.5,'wDn','l'],[2.3,'cRec','io']],
+    hit:[{t:.98,s:{k:'l',w:3.4,l:20,b:0},ay:-.45,f:1,dm:0,nohit:1,w:.75,fx:c=>vlrWave(c,-.45,15,20,1.1)},{t:.98,s:{k:'l',w:3.4,l:20,b:0},f:1,nohit:1,w:.75,fx:c=>vlrWave(c,0,15,20,1.1)},{t:.98,s:{k:'l',w:3.4,l:20,b:0},ay:.45,f:1,nohit:1,w:.75,fx:c=>vlrWave(c,.45,15,20,1.1)}],
+    tr:[[.9,1.06,'swd',[0,0,2.3],[0,0,.4],0xff5060,.2]],ev:[[.9,c=>svSnd('swing',1,.8)]],rec:.4},
+  combo5:{wt:9,ph:2,r:[0,6.5],a:'f',mel:1,dur:3.1,lock:.3,trn:[[0,.3,5],[.6,.7,5],[1.0,1.1,5],[1.4,1.5,5],[2.0,2.25,4]],
+    trk:[[.3,'s1Up','io'],[.45,'s1Hit','s'],[.62,'s1Hit','l'],[.78,'s2Hit','s'],[.95,'s1Up','io'],[1.12,'s1Hit','s'],[1.3,'s1Up','io'],[1.48,'s2Hit','s'],[1.9,'thUp','io'],[2.2,'thUp','l',.012],[2.33,'thHit','s'],[2.7,'cRec','io'],[3.1,'cRec','l']],
+    rm:[[.4,.5,.8,'o'],[.72,.82,.6,'o'],[1.05,1.15,.6,'o'],[1.42,1.52,.6,'o'],[2.25,2.38,2.6,'o']],
+    hit:[{t:.44,s:{k:'a',r:4.6,h:1.25},f:.3,dm:.85},{t:.77,s:{k:'a',r:4.6,h:1.25},f:.3,dm:.85},{t:1.11,s:{k:'a',r:4.6,h:1.25},f:.3,dm:.85},{t:1.47,s:{k:'a',r:4.6,h:1.25},f:.3,dm:.85},{t:2.33,s:{k:'l',w:1.8,l:7,b:0},f:.4,dm:1.4,w:.4}],
+    tr:[[.38,.52,'swd',[0,0,2.3],[0,0,.4],0xff5060,.15],[.7,.84,'swd',[0,0,2.3],[0,0,.4],0xff5060,.15],[1.04,1.18,'swd',[0,0,2.3],[0,0,.4],0xff5060,.15],[1.4,1.55,'swd',[0,0,2.3],[0,0,.4],0xff5060,.15],[2.22,2.4,'swd',[0,0,2.3],[0,0,.4],0xff5060,.15]],
+    ev:[[.38,c=>svSnd('swing',.8,1.3)],[.72,c=>svSnd('swing',.8,1.4)],[1.05,c=>svSnd('swing',.8,1.3)],[1.42,c=>svSnd('swing',.8,1.5)],[2.25,c=>svSnd('whoosh',.9,1.6)]],rec:.4}};
+VLRM.combo.ph1only=1;
+svReg(5,{name:'Vaelric',col:VLR.col,body:1.3,ph2:.55,poise:.17,headJ:'head',turnA:5,
+  ai:{pref:4,walk:2.8,run:5.2,turn:3.4,rest:[.6,1.2],ph2r:.7,strafe:.65,back:1},
+  build:vlrBuild,loco:vlrLoco,post:vlrPost,P:VLRP,M:VLRM,
+  stag:[[.25,'stag','o'],[2.0,'stag','l',.02],[2.5,'cRec','io']],stagT:2.5,
+  die:[[.5,'stag','o'],[1.3,'dead','i'],[2.1,'dead','l']],
+  homeY(A){const a=A.dqA!=null?A.dqA:0;return Math.atan2(Math.cos(a),Math.sin(a))},
+  reset(e){const S=e.sv;if(S.gone)vlrGone(e,false);S.ghost=0;S.wk=0},
+  dying(e,t){if(Math.random()<.6)burst(gY(e.m.position,1+Math.random()*2),0x1a0408,2,2,1.5,.9)}});
 </script></body></html>
