@@ -27346,13 +27346,21 @@ function brBareB(L){const C=BR.C,D=BR.R,B=mdB(HB),P=mdP({look:L,sex:0,build:1,co
 // every hero model is (re)built here: retarget its skeleton when its race changes
 {const f=mdHeroApply;mdHeroApply=function(h,cls,E){try{const c=CLS[cls]?cls:'warrior',L=mdLookOf(h,c),r=brRace(L,c);if((h._race|0)!==r)brRig(h,r)}catch(e){console.error('beast rig',e)}
   return f.apply(this,arguments)}}
-// crouch and tail: layered on every animation (the leg offsets are taken off before and put back after each frame)
+// crouch, posture and tail: layered on every animation (the offsets are taken off before and put back after each frame).
+// D.pose = standing posture, D.run = what is added at full run: {sp, ch, nk, hd} pitch of spine / chest / neck / head (+ = forward),
+// {shx, shz, el} shoulder pitch / spread and elbow bend (skipped while an attack or ability pose plays)
+var BR_PB=[['spine','sp','x'],['chest','ch','x'],['neck','nk','x'],['head','hd','x'],['aL0','shx','x'],['aR0','shx','x'],['aL0','shz','z'],['aR0','shz','z'],['aL1','el','x'],['aR1','el','x']];
+function brPoseOff(D,w,atk){const P=D.pose||{},R=D.run||{},o={};
+  BR_PB.forEach(([bn,k,ax])=>{let v=(P[k]||0)+(R[k]||0)*w;if(!v)return;if(bn[0]=='a'){if(atk)return;if(ax=='z')v*=bn=='aL0'?1:-1}o[bn+'.'+ax]=(o[bn+'.'+ax]||0)+v});return o}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl,b=H&&H.bones,D=H&&H._race?BRD[H._race]:null,rat=D&&b;
-  const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null,on=H&&H._brCr;
+  const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null,on=H&&H._brCr,po=H&&H._brPo;
   if(on&&b){b.lh0.rotation.x-=on.a;b.rh0.rotation.x-=on.a;b.lh1.rotation.x-=on.k;b.rh1.rotation.x-=on.k;b.lh2.rotation.x-=on.an;b.rh2.rotation.x-=on.an;H._brCr=null}
+  if(po&&b){for(const k in po){const [bn,ax]=k.split('.');if(b[bn])b[bn].rotation[ax]-=po[k]}H._brPo=null}
   const r=f.apply(this,arguments);
-  if(rat){if(!rid){b.lh0.rotation.x+=R.a;b.rh0.rotation.x+=R.a;b.lh1.rotation.x+=R.k;b.rh1.rotation.x+=R.k;b.lh2.rotation.x+=R.an;b.rh2.rotation.x+=R.an;H._brCr=R}
-    const t=(now||0)/1000,w=H.mvW||0,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
+  if(rat){const w=H.mvW||0;
+    if(!rid){b.lh0.rotation.x+=R.a;b.rh0.rotation.x+=R.a;b.lh1.rotation.x+=R.k;b.rh1.rotation.x+=R.k;b.lh2.rotation.x+=R.an;b.rh2.rotation.x+=R.an;H._brCr=R;
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,o=brPoseOff(D,w,atk);for(const k in o){const [bn,ax]=k.split('.');if(b[bn])b[bn].rotation[ax]+=o[k]}H._brPo=o}
+    const t=(now||0)/1000,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
     for(let i=0;i<n;i++){const bn=b[D.TB[i]];if(!bn)continue;bn.rotation.y=amp*Math.sin(t*sp-i*.55)*(.4+i*.12*(11/Math.max(n,1)));bn.rotation.x=(.015+.02*w)*Math.sin(t*sp*2-i*.5)}}
   return r}}
 // ================= v114: helmets built over a beast's skull =================
@@ -27462,8 +27470,8 @@ function brEarRim(D,k,c,t,S){if(!D.EAR)return;const [x,y,z]=D.EAR,r=D.earR||.032
 brDef(1,{key:'rat',n:'Rat',cls:'warrior',furN:'Fur',
   fur:['#5e5248','#3a3230','#77695c','#8a6a4a','#a89c8e','#e6e0d6'],eye:['#c8301c','#e0a020','#78d040','#9a40e0','#e8e8f0'],
   cols:L=>brPal(L),
-  pre:{pelvis:[1,1,1],spine:[.95,.98,1],chest:[.82,1,.94],neck:[1,.75,1],head:.9,arm:[1.1,.95],hand:1.3,leg:[1.12,1.04],foot:1,cape:[1.15,1]},
-  shear:{spine:.22,chest:.42,neck:.46},crouch:[.3,.58],
+  pre:{pelvis:[1.2,1,1.12],spine:[.95,.95,1.1],chest:[.82,.95,1],neck:[1,.5,1],head:.95,arm:[.95,.85],hand:1.3,leg:[1,1.05],foot:1,cape:[1.15,1]},
+  shear:{spine:.3,chest:.55,neck:.6},crouch:[.4,.72],pose:{sp:.18,ch:.12,nk:-.1,hd:-.25,shx:-.35,el:-.6},run:{sp:.2,hd:-.1,shx:-.2},
   TR:[[1.03,1.06,1.07,1.05,1.02,.93,.94,.97,.94,.85,1.13,1.2],[1.05,1.14,1.16,1.23,1.19,1.05,.92,.92,.98,1,1.1,1.14],[1.05,1.05,1.05,1.07,1.09,1.1,1.1,1.11,1.1,1,1.14,1.16]],
   armK:[.86,.86,.82,.8,.82,.74],legK:[1.22,1.28,1.18,.98,.88,.76,.7],foot:{len:1.15,w:.78,h:.82},
   SN:[[-.11,1.16,.045,.045,.045],[-.08,1.168,.088,.085,.08],[-.04,1.176,.106,.1,.092],[0,1.174,.108,.095,.096],[.04,1.164,.1,.08,.094],[.075,1.15,.082,.062,.08],[.105,1.137,.062,.046,.06],[.13,1.126,.047,.034,.045],[.155,1.118,.035,.026,.033],[.175,1.112,.025,.018,.022],[.19,1.108,.015,.011,.014]],
@@ -27487,10 +27495,10 @@ brDef(1,{key:'rat',n:'Rat',cls:'warrior',furN:'Fur',
 brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
   fur:['#2a2628','#5a5a60','#9a9aa0','#b86a2a','#6a4a30','#e8e4dc'],eye:['#e0b020','#78c040','#50a0e0','#c87020','#e8e8f0'],
   cols:L=>brPal(L,{PINK:0xc08a90,PINKD:0x9a6a70}),
-  pre:{pelvis:[.9,1,.9],spine:[.9,1.02,.9],chest:[.86,1.02,.9],neck:[1,.95,1],head:.92,arm:[1.08,.86],hand:1.15,leg:[1.14,.9],foot:1,cape:[1.1,1]},
-  shear:{spine:.1,chest:.2,neck:.22},crouch:[.18,.38],
-  TR:[[1,1,1,.96,.94,.92,.95,.98,.96,.95,1.1,1.15],[1,1.02,1.02,1,.98,.95,.92,.92,.98,1,1.1,1.12],[1.02,1.02,1.02,1.02,1.02,1.02,1.02,1.02,1,1,1.1,1.12]],
-  armK:[.9,.9,.86,.84,.86,.8],legK:[1.05,1.08,1,.9,.84,.76,.72],foot:{len:.82,w:.85,h:.8},
+  pre:{pelvis:[.9,1,.9],spine:[.82,1.15,.88],chest:[.82,1.05,.95],neck:[.9,1.1,.9],head:.92,arm:[1,.72],hand:.95,leg:[1.1,.9],foot:.95,cape:[1.1,1]},
+  shear:{spine:.12,chest:.28,neck:.35},crouch:[.32,.62],pose:{sp:.1,ch:.08,nk:-.12,hd:-.25,shx:-.15,el:-.3},run:{sp:.35,ch:.1,hd:-.15,shx:-.1},
+  TR:[[1.05,1.04,1,.9,.86,.86,.9,.92,.9,.95,1.1,1.15],[1.02,1.05,1.05,1.02,1,1.02,1.05,1.02,1,1,1.1,1.12],[1.04,1.04,1.04,1.02,1.02,1.04,1.06,1.06,1.02,1,1.1,1.12]],
+  armK:[.88,.88,.84,.8,.82,.76],legK:[1.22,1.26,1.12,.92,.8,.72,.68],foot:{len:1.05,w:.8,h:.75},
   SN:[[-.1,1.158,.045,.045,.045],[-.07,1.17,.09,.082,.08],[-.035,1.178,.108,.088,.094],[0,1.178,.116,.08,.1],[.03,1.172,.118,.07,.098],[.055,1.162,.1,.058,.09],[.072,1.152,.064,.046,.07],[.095,1.146,.057,.04,.062],[.115,1.141,.046,.032,.05],[.132,1.138,.03,.022,.03]],
   EYEP:[.06,1.18,.058],EAR:[.076,1.268,-.045],earR:.042,muzzleZ:.11,hoodZ:.03,crownZ:-.04,hatZ:-.05,
   TP:[[0,.6,-.06,.038],[0,.58,-.16,.036],[0,.55,-.27,.034],[0,.52,-.38,.032],[.01,.5,-.49,.03],[.02,.51,-.59,.029],[.03,.55,-.68,.028],[.04,.62,-.76,.027],[.05,.7,-.82,.025],[.06,.78,-.86,.022],[.07,.86,-.88,.018],[.08,.93,-.89,.012],[.09,.98,-.89,.006]],
@@ -27518,8 +27526,8 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
 brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
   fur:['#4a7a3a','#2e5a4a','#7a8a3a','#c87a2a','#4a5a9a','#6a4a3a'],eye:['#e0a020','#c84020','#e8d8a0','#78c040','#101010'],
   cols:L=>brPal(L,{BELLY:mdMix(mdC(L.skin),0xe8e0b0,.62),FURL:mdMix(mdC(L.skin),0xe8e0b0,.3),PINK:mdMix(mdC(L.skin),0xd8c8a0,.5),MOUTH:0x2a1818,NOSE:0x1a1410}),
-  pre:{pelvis:[1.25,1,1.1],spine:[1.15,.92,1.05],chest:[1.15,.92,1.1],neck:[1.3,.45,1],head:1.05,arm:[1.12,1],hand:1.5,leg:[1.1,1.15],foot:1.25,cape:[1.1,1]},
-  shear:{spine:.12,chest:.28,neck:.3},crouch:[.5,.9],
+  pre:{pelvis:[1.35,.9,1.15],spine:[1.25,.85,1.1],chest:[1.25,.85,1.15],neck:[1.4,.3,1],head:1.1,arm:[1.1,1.05],hand:1.5,leg:[1.15,1.2],foot:1.3,cape:[1.1,1]},
+  shear:{spine:.15,chest:.32,neck:.35},crouch:[.6,1.05],pose:{sp:.12,hd:-.12,shz:.3,el:-.4},run:{sp:.15,hd:-.08},
   TR:[[1.15,1.2,1.22,1.22,1.18,1.08,1,1,.98,1.3,1.4,1.4],[1.1,1.25,1.3,1.35,1.3,1.15,1,.95,1,1.3,1.4,1.4],[1.05,1.1,1.12,1.12,1.1,1.05,1,1,1,1.2,1.3,1.3]],
   armK:[1,1,.96,.9,.9,.85],legK:[1.1,1.15,1.05,.95,.92,.88,.85],foot:{len:1.35,w:1,h:.7},
   SN:[[-.125,1.095,.07,.045,.04],[-.095,1.118,.118,.05,.065],[-.055,1.13,.148,.048,.08],[-.015,1.133,.158,.045,.085],[.025,1.13,.152,.042,.085],[.065,1.125,.14,.038,.08],[.105,1.118,.12,.034,.07],[.145,1.113,.092,.03,.055],[.185,1.109,.06,.024,.04],[.22,1.106,.03,.016,.025]],
@@ -27569,8 +27577,8 @@ brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
 brDef(4,{key:'badger',n:'Badger',cls:'paladin',furN:'Fur',
   fur:['#6a6c70','#4a4a50','#8a8c90','#8a7a5a','#3a3838','#a8a8ac'],eye:['#101010','#c87020','#c8301c','#4a6a9a','#e8e8f0'],
   cols:L=>brPal(L,{FURD:mdSh(mdC(L.skin),.4),FURL:0xe8e4dc,BELLY:mdSh(mdC(L.skin),.45),NOSE:0x14100e,PINK:mdSh(mdC(L.skin),.5)}),
-  pre:{pelvis:[1.18,1,1.1],spine:[1.15,.96,1.1],chest:[1.2,.96,1.14],neck:[1.2,.7,1],head:.95,arm:[.96,1.2],hand:1.25,leg:[.92,1.25],foot:1.1,cape:[1.05,1]},
-  shear:{spine:.18,chest:.36,neck:.4},crouch:[.2,.36],
+  pre:{pelvis:[1.3,1,1.2],spine:[1.25,.92,1.2],chest:[1.3,.92,1.25],neck:[1.3,.6,1.1],head:.95,arm:[.9,1.3],hand:1.3,leg:[.8,1.4],foot:1.1,cape:[1.05,1]},
+  shear:{spine:.25,chest:.45,neck:.5},crouch:[.3,.5],pose:{sp:.16,ch:.1,hd:-.22,shz:.25,el:-.3},run:{sp:.18,hd:-.08},
   TR:[[1.1,1.12,1.14,1.14,1.12,1.08,1.05,1.03,1,.95,1.15,1.2],[1.08,1.15,1.18,1.2,1.18,1.1,1.02,1,1,1,1.15,1.18],[1.08,1.1,1.1,1.12,1.14,1.14,1.12,1.1,1.05,1,1.15,1.18]],
   armK:[1.15,1.15,1.1,1.05,1.05,1],legK:[1.25,1.3,1.2,1.1,1.05,1,.95],foot:{len:.95,w:1.1,h:.85},
   SN:[[-.11,1.15,.05,.05,.05],[-.08,1.16,.092,.086,.08],[-.04,1.168,.11,.096,.092],[0,1.166,.112,.09,.096],[.04,1.158,.102,.078,.092],[.08,1.146,.086,.062,.08],[.12,1.133,.068,.048,.064],[.16,1.121,.052,.036,.05],[.19,1.113,.038,.027,.037],[.215,1.108,.024,.018,.024]],
@@ -27597,8 +27605,8 @@ brDef(4,{key:'badger',n:'Badger',cls:'paladin',furN:'Fur',
 brDef(5,{key:'weasel',n:'Weasel',cls:'ranger',furN:'Fur',
   fur:['#8a5a30','#6a4424','#b08050','#4a3a2c','#e8e4dc','#a08a70'],eye:['#101010','#3a2a1c','#c87020','#c8301c','#78c040'],
   cols:L=>brPal(L,{BELLY:mdMix(mdC(L.skin),0xf0e8d0,.7),FURL:mdMix(mdC(L.skin),0xf0e8d0,.35),NOSE:0x14100e,PINK:mdMix(mdC(L.skin),0xb08a80,.5)}),
-  pre:{pelvis:[.86,1.04,.86],spine:[.82,1.14,.82],chest:[.82,1.1,.84],neck:[.9,1.15,.9],head:.86,arm:[1,.8],hand:1,leg:[.96,.86],foot:.95,cape:[1.1,1]},
-  shear:{spine:.2,chest:.38,neck:.42},crouch:[.25,.45],
+  pre:{pelvis:[.8,1.1,.8],spine:[.78,1.3,.78],chest:[.78,1.2,.8],neck:[.85,1.3,.85],head:.82,arm:[.9,.75],hand:.9,leg:[.82,.8],foot:.9,cape:[1.1,1]},
+  shear:{spine:.25,chest:.5,neck:.55},crouch:[.3,.5],pose:{sp:.12,ch:.1,nk:-.1,hd:-.2,shx:-.25,el:-.5},run:{sp:.25,hd:-.1},
   TR:[[.95,.95,.94,.92,.9,.9,.92,.94,.94,.95,1.05,1.1],[.95,.96,.96,.95,.94,.93,.92,.92,.96,1,1.05,1.08],[.95,.95,.95,.96,.97,.98,.98,.98,.98,1,1.05,1.08]],
   armK:[.84,.84,.8,.78,.8,.74],legK:[1,1.05,.98,.9,.84,.76,.72],foot:{len:.85,w:.8,h:.8},
   SN:[[-.09,1.15,.04,.04,.04],[-.065,1.158,.074,.07,.066],[-.03,1.166,.09,.08,.08],[.005,1.166,.092,.078,.082],[.04,1.159,.086,.066,.078],[.075,1.148,.072,.052,.066],[.105,1.138,.056,.04,.052],[.13,1.13,.043,.03,.04],[.15,1.125,.032,.022,.03],[.165,1.122,.02,.015,.02]],
