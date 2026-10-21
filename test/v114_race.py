@@ -12,10 +12,15 @@ def chk(n,ok,info=''):
     if not ok:FAIL.append(n)
 RACES={'warrior':(1,'rat',31),'assassin':(2,'cat',31),'mage':(3,'frog',20),'paladin':(4,'badger',24),'ranger':(5,'weasel',30)}
 UI=os.environ.get('UI','assassin')
+ABIL=os.environ.get('ABIL_ONLY')
+if ABIL:os.environ['TITLE']=''
 def s(pg):
     ev=pg.evaluate;errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)[:300]))
     ev("()=>localStorage.clear()")
+    if ABIL:
+        pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
+        return abil(pg,ev,errs)
     pg.wait_for_timeout(2500);pg.keyboard.press('Enter');pg.wait_for_timeout(1500)
     pg.click('[data-dev=desktop]',timeout=60000);pg.wait_for_timeout(800)
     for sel in ['#svpN','text=New Hero','text=New game']:
@@ -60,16 +65,21 @@ def s(pg):
     chk('barber to beast again',ev("(a)=>pl._race==a[0]&&huBody(pl).skeleton.bones.length==a[1]",[rid,nb]))
     chk('co-op look carries race',ev("(r)=>{const a=mpLookOut();return a[8]===r&&mpLookIn(a).race===r}",rid))
     chk('another class drops the race',ev("(r)=>{const L=lkFull('warrior',{race:r,skin:'#2a2628'});const R=lkFull(BRD[r].cls,{race:r});return !L.race&&R.race===r}",rid))
-    # every class as its beast: all abilities cast, basic attacks land, the model stays a beast, no errors
-    ev("(L)=>{eval(L);V90.home=[pl.position.x,pl.position.z];V90.start();POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}",LIB)
+    abil(pg,ev,errs)
+def abil(pg,ev,errs):
+    # every class as its beast, in a zone: all abilities cast (most deal damage), basic attacks land, the model stays a beast, no errors
+    ev("()=>{POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16);const q=PMAP[0];toPos(q.path[40][0],q.path[40][1])}");pg.wait_for_timeout(2500)
+    ev("(L)=>{eval(L);V90.home=[pl.position.x,pl.position.z];V90.start()}",LIB)
     for cls,(rid,rname,nb) in RACES.items():
         r=ev("""async(a)=>{const [c,rid]=a;hero.look={race:rid,skin:BRD[rid].fur[0],eye:BRD[rid].eye[0]};V90.setup(c,30,{rank:1});refreshGear();
           const out={race:pl._race,bones:huBody(pl).skeleton.bones.length,ab:{},fail:[]};const names=kqsAll(c).filter(s=>s.lv<=30).map(s=>s.n);
           for(const n of names){try{const r=await V90.one(n);out.ab[n]=r.dmg;if(r.fail||r.err)out.fail.push(n)}catch(e){out.fail.push(n+':'+e)}}
           try{const b=await V90.basic(3);out.basic=b}catch(e){out.fail.push('basic:'+e)}
           out.race2=pl._race;return out}""",[cls,rid])
-        print(cls,rname,'abilities:',len(r['ab']),'basic:',r.get('basic'))
+        dmg=[n for n,v in r['ab'].items() if v>0]
+        print(cls,rname,'abilities:',len(r['ab']),'dealing damage:',len(dmg),'basic:',r.get('basic'))
         chk(cls+' as '+rname+': every ability casts',not r['fail'] and len(r['ab'])>=8,r['fail'])
+        chk(cls+' as '+rname+': abilities deal damage',len(dmg)>=len(r['ab'])//2,r['ab'])
         chk(cls+' as '+rname+': basic attacks hit',r.get('basic',{}).get('hits',0)>0,r.get('basic'))
         chk(cls+' as '+rname+': still a beast after fighting',r['race']==rid and r['race2']==rid and r['bones']==nb,(r['race'],r['race2'],r['bones']))
     chk('no page errors',len(errs)==0,errs[:3])
