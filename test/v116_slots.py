@@ -55,8 +55,8 @@ try:
     # in-game main menu → the other slot → reload → continue there
     pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};kqMenuAsk();kqMenuGo()}");pg.wait_for_timeout(1500)
     check('menu title marks the hero playing now (no delete)',pg.evaluate("()=>{const b=document.querySelector('#awT [data-slot=\"1\"]');return b&&b.textContent.includes('playing now')&&!document.querySelector('#awT [data-sld=\"1\"]')}"))
-    pg.click('#awT [data-slot="0"]',force=True)
-    pg.wait_for_timeout(2500);pg.wait_for_function('document.readyState=="complete"',timeout=180000)
+    pg.evaluate("()=>document.querySelector('#awT [data-slot=\"0\"]').click()")
+    pg.wait_for_timeout(4000);pg.wait_for_function('document.readyState=="complete"',timeout=180000)
     check('switched to slot 1 after reload',until(pg,"()=>party.length>0&&hero.name=='One'&&KQSL.n==0",90))
     check('slot 2 untouched by the switch',slot(pg,1)=='Two')
     # an old single save (pre-v116 key) is slot 1; delete slot 1 from the title
@@ -71,7 +71,7 @@ try:
     check('save code recognised for slot 3',pg.evaluate("()=>/Found Two/.test($('kqjAM').textContent)&&/Slot 3/.test($('kqjAM').textContent)"))
     pg.fill('#kqjCode','abc-def');check('code field cleans input',pg.evaluate("()=>$('kqjCode').value=='ABCDEF'"))
     pg.screenshot(path=HERE+'/out/v116_join.png',timeout=120000)
-    pg.click('#kqjGo',force=True)
+    pg.evaluate("()=>$('kqjGo').click()")
     check('imported hero loads from slot 3',until(pg,"()=>party.length>0&&hero.name=='Two'&&KQSL.n==2",90))
     check('slot 3 now holds the import',slot(pg,2)=='Two')
     check('join attempted once in the world',until(pg,"()=>!KQN.pend&&(KQN.busy||KQN.cur||KQN.msg)",30),pg.evaluate("()=>[KQN.busy,KQN.msg]"))
