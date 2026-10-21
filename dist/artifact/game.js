@@ -27812,7 +27812,7 @@ document.body.insertAdjacentHTML('beforeend',`<div id="kqj" class="hide"><div cl
   <div class="wh"><h2>👥 Join a friend</h2><button class="x" id="kqjX" title="Close">✕</button></div>
   <div class="wb">
     <div class="mut">Ask the host for their join code (Co-op window, <b>Y</b> → Host a game). No Claude account is needed.</div>
-    <input id="kqjCode" class="kqj-code" maxlength="6" autocomplete="off" spellcheck="false" placeholder="CODE">
+    <input id="kqjCode" class="kqj-code" maxlength="12" autocomplete="off" spellcheck="false" placeholder="CODE">
     <div><div class="mut" style="margin-bottom:4px">Play as</div><div class="kqj-sl" id="kqjSl"></div></div>
     <details id="kqjImp"><summary>📥 Bring a hero from another link or device (save code)</summary>
       <div class="mut" style="margin:6px 0">In the other game: Settings → Saved game → Export save, copy the code and paste it here. It goes into the slot picked above.</div>
@@ -27892,7 +27892,7 @@ function kqcBox(){const C=KQN.cur;let h='<div class="kqc"><h4>🌐 Online with a
       <div class="mut" style="margin-top:6px">${n>1?n+' players connected.':'Waiting for friends…'} Friends open the game in any browser, choose <b>Join a friend</b> (or press Y) and type this code. Up to ${KQN.max} players. Keep this tab open: the game ends if the host leaves.</div>`}
   else if(C)h+=`<div class="row"><span>Joined game <b>${C.code}</b> · ${C.room.count()} players</span><button data-kqc="leave">✕ Leave</button></div>`;
   else if(KQN.busy)h+=`<div class="mut">${KQN.busy=='host'?'Getting a join code…':'Connecting…'}</div>`;
-  else h+=`<div class="row"><button class="pri" data-kqc="host">🏠 Host a game</button><span class="mut">or</span><input id="kqcIn" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" value="${KQN.url||''}"><button data-kqc="join">Join</button></div>
+  else h+=`<div class="row"><button class="pri" data-kqc="host">🏠 Host a game</button><span class="mut">or</span><input id="kqcIn" maxlength="12" placeholder="CODE" autocomplete="off" spellcheck="false" value="${KQN.url||''}"><button data-kqc="join">Join</button></div>
     <div class="mut" style="margin-top:6px">You join with the hero you are playing now. To bring a different hero, use ☰ → Main menu → Join a friend.</div>`;
   if(KQN.msg)h+=`<div class="${KQN.bad?'bad':'mut'}" style="margin-top:6px">${mpEsc(KQN.msg)}</div>`;
   return h+'</div>'}
