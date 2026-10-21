@@ -27,7 +27,8 @@ function mpSolo(){for(const k in MP.rh)mpDropRH(k);MP.others=0;MP.lastPs=null;
   MP.host='';MP.emap={};MP.hitq={};MP.evq=[];MP.kq=[];MP.pend=null;MP.inv=null;try{mpToast()}catch(_){}
   if(MP.tr){MP.tr=null;try{if(xwMode=='trade')closeX()}catch(_){}}}
 function mpUse(be){if(be===MPX.be)return;mpSolo();MPX.be=be||null;MP.lastPres='';MP.on=!!MPX.be;try{mpBtn()}catch(_){}}
-MP_TOPICS.forEach(t=>MP.room.on(t,{es:mpOnES,ev:mpOnEV,hit:mpOnHit,bs:mpOnBS,trade:mpOnTrade,chat:mpOnChat}[t]));
+// handlers are looked up when a message arrives, so later wrappers of mpOnEV etc. (1240 fxB, 2170) are used
+MP_TOPICS.forEach(t=>MP.room.on(t,m=>({es:mpOnES,ev:mpOnEV,hit:mpOnHit,bs:mpOnBS,trade:mpOnTrade,chat:mpOnChat})[t](m)));
 MP.room.onPeers(ch=>{if(!MP.on)return;(ch.left||[]).forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
 (async function(){
   try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MPX.cl=room;mpAttach(room);

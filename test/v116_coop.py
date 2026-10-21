@@ -16,7 +16,11 @@ def check(name,ok,info=''):
     if not ok:FAIL.append(name)
 def setup(pg,cls,name):
     ev=pg.evaluate
-    pg.click('[data-dev=desktop]',timeout=90000,force=True);ev("()=>{const d=document.getElementById('svp');if(d)d.classList.add('hide')}");pg.click('[data-c="%s"]'%cls,timeout=90000,force=True);pg.click('#ccNext',timeout=90000,force=True);pg.wait_for_timeout(600);pg.click('#ccNext',timeout=90000,force=True);pg.wait_for_function('party.length>0',timeout=90000);pg.wait_for_timeout(1500)
+    pg.wait_for_function("()=>!!document.querySelector('[data-dev=desktop]')",timeout=120000)
+    ev("()=>{document.querySelector('[data-dev=desktop]').click();const d=document.getElementById('svp');if(d)d.classList.add('hide')}");pg.wait_for_timeout(800)
+    ev("c=>document.querySelector('[data-c=\"'+c+'\"]').click()",cls);pg.wait_for_timeout(500)
+    ev("()=>$('ccNext').click()");pg.wait_for_timeout(1200);ev("()=>{if(!party.length)$('ccNext').click()}")
+    pg.wait_for_function('party.length>0',timeout=120000);pg.wait_for_timeout(1500)
     ev("()=>{hero.name='%s';ren.render=()=>{};POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}"%name)
 def until(pg,js,t=30):
     t0=time.time()
