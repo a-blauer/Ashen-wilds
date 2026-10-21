@@ -50,6 +50,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions) |
+| Rat race (v112, Warrior only): model, paws, skinned tail, rat helmets, creator/barber Race option | `1990-v112-rat-race.js` |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
@@ -150,6 +151,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   back `RESP_T` (50 since v112) s after death, not while a hero is within `RESP_NEAR` (14) tiles of the spot (beyond any aggro reach). Recall saves `INST` (instance + spot + the
   creatures' timers; also in the Den); T in Duskhold goes back. World layout version `WD_WL` 108; older saves go to instance
   I's entrance of their zone and get every instance of every open zone (v106/v107 saves that reached III also reach the Den).
+- **Rat race (v112)**: `hero.look.race` 1 = rat (Warrior only; `lkFull`/`mdLookN` drop it for other classes; old saves are
+  human). `mdHeroApply` retargets the hero skeleton in place (`ratRig`: rest pose from the v99 preset `rat` + hunch shear,
+  tail bones `tl0…tl10` appended, re-bind) whenever the race changes, so `pl` itself turns rat/human. While a rat is built
+  `RAT.on` swaps in the rat torso/arm/leg/foot rings (same ring layout, so every armour shell fits), `ratHead`, `ratHelm`
+  (helmets designed for the rat skull: ear openings, eye slits, snout guard), paws and a skinned tail. `animHero` adds the
+  crouch (not when riding) and the tail sway. Look fields: `skin` = fur, `eye` = eye glint; co-op look array index 8 = race.
+  Test: `v112_rat.py` (sheets), `v112_race.py` (creator → save → reload → barber, TITLE=1).
 - **Sovereign fights (v110)**: every Sovereign is a souls-style boss registered with `svReg(i,B)` (`SVB[i]`). Its model is
   rigid parts on named joints (`R.J`), built by `B.build` inside the old enemy group (scaled `1/e.m.bs`, so models are in world
   units; the old skinned body is hidden; static meshes on one joint are merged per material, `userData.noMerge` keeps one apart).
