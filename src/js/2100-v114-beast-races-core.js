@@ -171,20 +171,35 @@ function brBareB(L){const C=BR.C,D=BR.R,B=mdB(HB),P=mdP({look:L,sex:0,build:1,co
 // crouch, posture and tail: layered on every animation (the offsets are taken off before and put back after each frame).
 // D.pose = standing posture, D.run = what is added at full run: {sp, ch, nk, hd} pitch of spine / chest / neck / head (+ = forward),
 // {shx, shz, el} shoulder pitch / spread and elbow bend (skipped while an attack or ability pose plays)
+var BR_V=null;
 var BR_PB=[['spine','sp','x'],['chest','ch','x'],['neck','nk','x'],['head','hd','x'],['aL0','shx','x'],['aR0','shx','x'],['aL0','shz','z'],['aR0','shz','z'],['aL1','el','x'],['aR1','el','x']];
 function brPoseOff(D,w,arm){const P=D.pose||{},R=D.run||{},o={};
   BR_PB.forEach(([bn,k,ax])=>{let v=(P[k]||0)+(R[k]||0)*w;if(!v)return;if(bn[0]=='a'){v*=arm;if(!v)return;if(ax=='z')v*=bn=='aL0'?1:-1}o[bn+'.'+ax]=(o[bn+'.'+ax]||0)+v});return o}
+// exact undo: every offset this layer adds is recorded as [bone, axis, value before, value written]; next frame, a bone that
+// still holds the written value gets back the exact value it had before (bit for bit), so the v93 idle layer, which checks
+// `value === what it wrote` to remove its own breathing / glances, never sees a rounding change and never stacks them
+function brAddR(H,bn,ax,v){const b=H.bones[bn];if(!b||!v)return;const R=b.rotation,pre=R[ax];R[ax]=pre+v;(H._brU||(H._brU=[])).push([R,ax,pre,R[ax]])}
+function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i>=0;i--){const u=U[i];if(u[0][u[1]]===u[3])u[0][u[1]]=u[2]}U.length=0}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl,b=H&&H.bones,D=H&&H._race?BRD[H._race]:null,rat=D&&b;
-  const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null,on=H&&H._brCr,po=H&&H._brPo;
-  if(on&&b){b.lh0.rotation.x-=on.a;b.rh0.rotation.x-=on.a;b.lh1.rotation.x-=on.k;b.rh1.rotation.x-=on.k;b.lh2.rotation.x-=on.an;b.rh2.rotation.x-=on.an;H._brCr=null}
-  if(po&&b){for(const k in po){const [bn,ax]=k.split('.');if(b[bn])b[bn].rotation[ax]-=po[k]}H._brPo=null}
+  if(H)brUndo(H);
+  const rid=H===pl&&typeof riding!='undefined'&&!!riding,R=rat?brPlan(D).crouch:null;
   const r=f.apply(this,arguments);
   if(rat){const w=H.mvW||0;
-    if(!rid){b.lh0.rotation.x+=R.a;b.rh0.rotation.x+=R.a;b.lh1.rotation.x+=R.k;b.rh1.rotation.x+=R.k;b.lh2.rotation.x+=R.an;b.rh2.rotation.x+=R.an;H._brCr=R;
-      // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition)
-      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
+    if(!rid){[['lh0',R.a],['rh0',R.a],['lh1',R.k],['rh1',R.k],['lh2',R.an],['rh2',R.an]].forEach(q=>brAddR(H,q[0],'x',q[1]));
+      // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition);
+      // the posture follows a low-passed gait blend, so uneven frame times can never make the lean flicker
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
       S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
-      const o=brPoseOff(D,w,arm);for(const k in o){const [bn,ax]=k.split('.');if(b[bn])b[bn].rotation[ax]+=o[k]}H._brPo=o}
+      S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
+      const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
+      // head levelling: measure how far the chest frame pitches forward and turn the neck and head back by that much, so
+      // the eyes look ahead (a small natural tilt at idle, level when running); the idle glances / nods and the attack
+      // head motions ride on top unchanged; eases off while an attack pose plays
+      if(arm>0&&b.chest&&b.head&&b.neck){const V=BR_V||(BR_V={v:new THREE.Vector3(),q:new THREE.Quaternion()});b.chest.updateWorldMatrix(true,false);b.chest.getWorldQuaternion(V.q);
+        V.v.set(0,0,1).applyQuaternion(V.q);const down=Math.asin(Math.max(-1,Math.min(1,-V.v.y))),L=D.look||[.08,0],tg=L[0]+(L[1]-L[0])*S.w;
+        const dl=Math.max(-.9,Math.min(.9,(tg-down)*arm));brAddR(H,'neck','x',dl*.4);brAddR(H,'head','x',dl*.6)}}
     const t=(now||0)/1000,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
     for(let i=0;i<n;i++){const bn=b[D.TB[i]];if(!bn)continue;bn.rotation.y=amp*Math.sin(t*sp-i*.55)*(.4+i*.12*(11/Math.max(n,1)));bn.rotation.x=(.015+.02*w)*Math.sin(t*sp*2-i*.5)}}
   return r}}
+// a model changing race (or back to human) drops the offsets of the old one
+{const f=brRig;brRig=function(h){if(h)brUndo(h);if(h)h._brS=null;return f.apply(this,arguments)}}
