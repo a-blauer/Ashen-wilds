@@ -1,0 +1,85 @@
+// ================= v114: helmets built over a beast's skull =================
+// Every helm style of the game (heavy: nasal horned great visage winged barbute bucket crowned · medium: hood pelt cowl
+// skullhood galemask feather deadeye wind · light: wrap viper ashcowl glassmask stormhood bandana venom dusk · cloth:
+// linen hat witch circlet diadem crown tallcowl star) is built from the race's skull rings pushed out by an offset, so
+// it sits on that skull: openings where the ears stand (`D.earW`), eye slits at the eyes (`D.eyeW`), the frog's eye
+// domes left free (`D.topW`), snout guards and masks along the muzzle, hats and circlets at the crown.
+// shell over the skull: the skull rings pushed out by off (top/sides), between z0 and z1, keep(m) chooses the faces
+function brShell(B,D,off,z0,z1,keep,col,t,seg){const R=[],push=z=>{const q=brSkullAt(D,z);R.push({p:[0,q.yc,z],rx:q.rx+off,f:q.f+off,b:q.b+off*.6,w:[['head',1]]})};
+  const zs=[z0];D.SN.forEach(q=>{if(q[0]>z0+.008&&q[0]<z1-.008)zs.push(q[0])});const ez=D.EYEP[2];[ez-.015,ez+.012,ez+.04].forEach(z=>{if(z>z0+.008&&z<z1-.008)zs.push(z)});zs.push(z1);zs.sort((a,b)=>a-b).forEach(push);
+  const kp=D.topW?m=>!D.topW(m)&&(!keep||keep(m)):keep;
+  mdLoft(B,R,{seg:seg||16,ref:[0,1,0],t:t||'m',capA:z0<=D.SN[0][0]+.002,keep:kp,col})}
+// default openings: the ears (a ball round each ear root), the eyes (one row of faces at the eyes' height, three rings long)
+function brEarW(D,m){if(!D.EAR)return false;const r=D.earR||.032,dx=Math.abs(m.x)-D.EAR[0],dy=m.y-(D.EAR[1]-.02),dz=m.z-D.EAR[2];return Math.abs(m.x)>.03&&dx*dx+dy*dy*1.3+dz*dz<r*r}
+function brEyeW(D,m){const ez=D.EYEP[2];return m.z>ez-.012&&m.z<ez+.032&&m.s>.12&&m.s<.46&&Math.abs(m.c)>.6}
+function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a=d.a,slitC=0x0a0806,S=D.SN,z0=S[0][0]-.005,tipZ=S[S.length-1][0];
+  const earW=m=>D.earW?D.earW(m):brEarW(D,m),eyeW=m=>D.eyeW?D.eyeW(m):brEyeW(D,m),at=z=>brSkullAt(D,z),top=z=>at(z).top,ez=D.EYEP[2],ey=D.EYEP[1];
+  const mz=D.muzzleZ==null?tipZ-.05:D.muzzleZ,hz=D.hoodZ==null?ez-.02:D.hoodZ,crown=D.crownZ==null?-.05:D.crownZ;
+  const earRims=(c,t)=>{if(D.earRim)D.earRim(k,c,t||'m')};
+  const dome=(off,zf,col,t)=>brShell(B,D,off,z0,zf,m=>m.s>-.25&&!earW(m)&&!(m.z>hz-.005&&m.s<.45),col||M,t,28);
+  // closed helm: dome + cheek guards down the sides, a slit at the eyes, a guard over the snout top to the whisker pads
+  const closed=(off,col,ac)=>{brShell(B,D,off,z0,mz,m=>{if(earW(m)||eyeW(m))return false;if(m.z>mz-.06)return m.s>.2;if(m.z>hz-.005)return m.s>-.5;return m.s>-.42},
+      m=>m.z>mz-.015?(ac||A):col||M,'m',32);
+    brShell(B,D,off+.004,mz-.013,mz,m=>m.s>.15,ac||A,'m',14)};
+  const nasal=(c)=>{const za=ez-.02,zb=mz-.02;k.L('head','m',c,[0,top(za)+.022,za],[0,top(zb)+.012,zb],.011,.007,5)};
+  const band=(z,off,c,t)=>brShell(B,D,off,z-.008,z+.008,m=>m.s>-.25&&!earW(m),c,t||'m');
+  const crest=(c,n,h)=>{for(let i=0;i<n;i++){const z=crown-.04+i*(.12/(n-1));k.p('head','box','m',c,0,top(z)+.02+h*.4,z,.012,h*(1-Math.abs(i-(n-1)/2)/n),.04,0)}};
+  const horns=(c,sz,up)=>[-1,1].forEach(s=>{const q=at(crown+.02),x=q.rx-.004,y=q.top-.02,z=crown+.02,p1=[s*x,y,z],p2=[s*(x+.06*sz),y+.03*sz,z-.02],p3=[s*(x+.08*sz),y+.09*sz*(up||1),z-.04];k.L('head','m',c,p1,p2,.026*sz,.018*sz,6).L('head','m',mdSh(c,.8),p2,p3,.018*sz,.003,6)});
+  const spikes=(c,n,h)=>{for(let i=0;i<n;i++){const ang=i/n*Math.PI*2,z=crown+.015+Math.cos(ang)*.07,q=at(z),x=Math.sin(ang)*q.rx*.85,y=q.yc+q.f*Math.sqrt(Math.max(.15,1-(x/q.rx)**2))+.012;k.p('head','cone4','m',c,x,y+.025*h,z,.014,.05*h*(i==0?1.6:1),.014)}};
+  const gemF=(c,sz)=>{const z=crown+.04;k.p('head','oct',G?'g':'m',G||c,0,top(z)+.026,z+.05,.018*(sz||1),.022*(sz||1),.01,-.6)};
+  // cloth hood over the skull with ear openings, a hem, a drape over the neck and shoulders
+  const hood=(off,col,o)=>{o=o||{};brShell(B,D,off,z0-.005,hz,m=>!earW(m)&&!(m.z>hz-.05&&m.s<-.15),m=>m.z>hz-.01?mdSh(col,.8):col,'c',14);
+    mdLoft(B,[{p:[0,1.07,-.03],rx:.1+off,f:.075,b:.1+off,w:[['neck',.4],['head',.6]]},{p:[0,1.0,-.03],rx:.15+off,f:.1,b:.13+off,w:[['chest',.5],['neck',.5]]},{p:[0,.95,-.025],rx:.2+off,f:.13,b:.15+off,w:[['chest',1]]}],
+      {seg:12,t:'c',col:o.drape||mdSh(col,.88),keep:m=>!(m.s>.6&&m.y>.99)});
+    earRims(mdSh(col,.7),'c');
+    if(o.tip!==false){const q=at(S[0][0]);k.L('head','c',col,[0,q.top-.02,S[0][0]],[0,q.top-.08,S[0][0]-.09],.035,.006,5)}};
+  const muzzle=(c)=>{const o=.008,R=[0,.3,.65,1].map(t=>{const z=ez+.01+(mz-ez-.01)*t,q=at(z);return {p:[0,q.yc,z],rx:q.rx+o,f:q.f+o,b:q.b+o,w:[['head',1]]}});
+    mdLoft(B,R,{seg:12,ref:[0,1,0],keep:m=>!(D.topW&&D.topW(m))&&!(m.z<ez+.035&&m.s>.3),col:m=>m.i>2.3||m.i<.7?mdSh(c,.55):mdMix(c,0xe8e0d0,.12)})};
+  const strap=(c,t)=>band(crown+.02,.012,c,t);
+  const goggles=(c,glass)=>{[-1,1].forEach(s=>{const [x,y,z]=D.EYEP,ex=brSurfX(D,z,y)+.008,ry=s*Math.atan2(1,-at(z).slope);k.p('head','cyl','m',c,s*ex,y,z,.02,.012,.02,0,ry,Math.PI/2);
+    k.p('head','cyl',G?'g':'c',G||glass,s*(ex+.006),y,z,.016,.004,.016,0,ry,Math.PI/2)});strap(mdSh(c,.7),'c')};
+  const frontZ=yb=>{let fz=S[0][0];S.forEach(q=>{if(q[1]+q[3]>yb)fz=q[0]});return fz};
+  if(D.helmPre)D.helmPre(k,d);
+  if(a=='heavy'){
+    if(st=='nasal'){dome(.022,mz-.02);band(crown+.04,.026,A);nasal(A);earRims(A)}
+    else if(st=='horned'){dome(.022,mz-.02);band(crown+.04,.026,A);nasal(A);earRims(A);horns(0xd8ccb0,1)}
+    else if(st=='great'){closed(.024);earRims(A);crest(A,4,.03)}
+    else if(st=='visage'){closed(.024,M,mdSh(M,.75));earRims(A);crest(A,7,.06)}
+    else if(st=='winged'){closed(.024);earRims(A);crest(A,5,.05);[-1,1].forEach(s=>{const q=at(crown);for(let j=0;j<3;j++)k.p('head','box','m',j%2?M:A,s*(q.rx+.02+j*.012),q.yc+j*.04,crown-.02-j*.02,.012,.1-j*.018,.06,-.35,0,-s*(.5+j*.25))})}
+    else if(st=='barbute'){closed(.024);earRims(0x8a1a1a);horns(0x8a1a1a,.8);const q=at(crown);k.L('head','c',0x8a1a1a,[0,q.top+.03,crown],[0,q.top+.01,crown-.14],.03,.01,5)}
+    else if(st=='bucket'){closed(.026);band(crown,.03,A);band(crown+.08,.03,A);earRims(A)}
+    else{/*crowned*/closed(.024);band(crown+.03,.03,A);spikes(A,8,1.2);horns(0x2a2420,1.1,1.4);earRims(A);gemF(A)}}
+  else if(a=='medium'){
+    if(st=='hood')hood(.026,M);
+    else if(st=='pelt'){hood(.03,M,{tip:false});const q=at(crown);[-1,1].forEach(s=>k.p('head','cone4','c',mdSh(M,1.1),s*.05,q.top+.07,crown-.02,.03,.07,.022,0,0,-s*.25));k.p('head','box','c',mdSh(M,.85),0,q.top+.04,crown+.03,.06,.03,.07,.3);
+      [-1,1].forEach(s=>k.p('head','cone4','c',0xe8e0d0,s*.02,q.top+.025,crown+.06,.007,.026,.007,Math.PI))}
+    else if(st=='cowl'){hood(.026,M);muzzle(A)}
+    else if(st=='skullhood'){hood(.03,M,{tip:false});const q=at(crown);k.p('head','sph2','c',0xd8ccb0,0,q.top+.03,crown,.07,.045,.08);[-1,1].forEach(s=>{k.p('head','box','c',0x14100c,s*.025,q.top+.025,crown+.07,.018,.012,.01);k.L('head','c',0xd8ccb0,[s*.05,q.top+.05,crown-.02],[s*.11,q.top+.1,crown-.06],.016,.004,5)})}
+    else if(st=='galemask'||st=='wind'){muzzle(mdSh(A,.9));strap(mdSh(M,.8),'c');[-1,1].forEach(s=>{const q=at(crown);for(let j=0;j<4;j++)k.p('head','cone4','c',j%2?A:0xe8e8f0,s*(q.rx+.01+j*.008),q.yc+j*.025,crown-.01-j*.025,.012,.1-j*.012,.03,-.5-j*.2,0,-s*(.9+j*.15))});if(st=='wind')hood(.03,M,{tip:false})}
+    else if(st=='feather'){brShell(B,D,.018,z0,hz-.03,m=>m.s>.1&&!earW(m),M,'c',14);band(hz-.03,.022,mdSh(M,.75),'c');const q=at(crown);k.L('head','c',A,[.05,q.top+.01,crown],[.12,q.top+.13,crown-.08],.012,.002,4)}
+    else{/*deadeye*/hood(.026,M);muzzle(mdSh(M,.6));const [x,y,z]=D.EYEP,ex=brSurfX(D,z,y)+.01;k.p('head','ring','m',A,ex,y,z,.022,.15,.022,0,Math.atan2(1,-at(z).slope),Math.PI/2)}}
+  else if(a=='light'){
+    if(st=='wrap'||st=='bandana'){muzzle(M);strap(mdSh(M,.8),'c');const q=at(crown);k.L('head','c',mdSh(M,.75),[0,q.top-.02,crown-.06],[.03,q.top-.1,crown-.13],.018,.008,4)}
+    else if(st=='viper'){muzzle(M);for(let i=0;i<5;i++){const z=crown-.03+i*.03;k.p('head','cone4','c',A,0,top(z)+.02,z,.014,.045,.018,-.3)}}
+    else if(st=='ashcowl'){hood(.02,M,{tip:false});muzzle(mdSh(M,.8))}
+    else if(st=='glassmask'){goggles(mdSh(M,.6),0x1a1a2a);muzzle(mdSh(M,.55))}
+    else if(st=='stormhood'){hood(.024,M);muzzle(mdSh(M,.6));band(crown+.03,.03,G||A,G?'g':'m')}
+    else if(st=='venom'){muzzle(mdSh(M,.7));goggles(mdSh(M,.5),0x2a4a1a)}
+    else{/*dusk*/hood(.022,M,{tip:false});muzzle(A);const q=at(crown);k.L('head','c',A,[0,q.top-.08,crown-.07],[.05,.95,crown-.15],.026,.01,4)}}
+  else{ // cloth
+    if(st=='linen')hood(.032,M);
+    else if(st=='hat'||st=='witch'){const br=st=='witch'?.21:.18,c=st=='witch'?mdSh(M,.6):M,zb=D.hatZ==null?crown-.01:D.hatZ,q=at(zb),y0=q.top+.008;
+      // the brim sits on the crown between the ears, tilted back; the ears come out under it
+      k.p('head','cyl','c',mdSh(c,.85),0,y0,zb,br,.016,br,-.12);k.p('head','cyl','c',A,0,y0+.016,zb-.004,q.rx+.01,.026,q.rx+.01,-.12);
+      k.L('head','c',c,[0,y0+.01,zb-.005],[.02,y0+.17,zb-.05],q.rx-.005,.05,8).L('head','c',mdSh(c,.92),[.02,y0+.17,zb-.05],[.08,y0+.27,zb-.13],.05,.022,7).L('head','c',mdSh(c,.82),[.08,y0+.27,zb-.13],[.14,y0+.3,zb-.19],.022,.004,6);
+      if(G)k.p('head','oct','g',G,0,y0+.03,zb+q.rx+.01,.016)}
+    else if(st=='circlet'||st=='diadem'||st=='crown'){
+      // a band round the skull just above the eyes and in front of the ears
+      const yb=D.bandY==null?ey+.03:D.bandY,zc=D.bandZ==null?crown+.015:D.bandZ,q=at(zc),fz=frontZ(yb)+.006,rx=q.rx+.008,fr=fz-zc,bk=zc-S[0][0]+.008;
+      const R=[0,1].map(i=>({p:[0,yb+i*.016,zc],rx,f:fr,b:bk,w:[['head',1]]}));mdLoft(B,R,{seg:16,t:'m',col:A,keep:m=>!earW(m)});
+      if(st=='diadem')for(let i=0;i<5;i++){const ang=(i-2)*.32;k.p('head','cone4','m',A,Math.sin(ang)*rx,yb+.03+(i==2?.025:0),zc+Math.cos(ang)*fr,.012,.045+(i==2?.035:0),.01)}
+      if(st=='crown')for(let i=0;i<9;i++){const ang=i/9*Math.PI*2,ca=Math.cos(ang);k.p('head','cone4','m',A,Math.sin(ang)*rx,yb+.045,zc+ca*(ca>0?fr:bk),.014,.05*(i==0?1.5:1),.014)}
+      k.p('head','oct',G?'g':'m',G||d.gem,0,yb+.012,zc+fr,.015,.02,.01)}
+    else if(st=='tallcowl'){hood(.03,M,{tip:false});const q=at(crown);k.L('head','c',M,[0,q.top+.01,crown-.02],[0,q.top+.18,crown-.09],.07,.004,7);band(hz-.01,.036,A,'c')}
+    else{/*star*/hood(.03,M);band(hz-.01,.036,G||A,G?'g':'m');const q=at(crown);for(let i=0;i<5;i++){const ang=(i-2)*.38;k.p('head','oct',G?'g':'m',G||A,Math.sin(ang)*(q.rx+.03),q.top-.01,crown+Math.cos(ang)*.13,.012)}}}
+  mdKit(B,k)}
