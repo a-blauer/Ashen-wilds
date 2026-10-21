@@ -107,7 +107,7 @@ brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
       if(gem)k.p('head','oct',G?'g':'m',G||X.d.gem||A,0,y,z+r,.016,.022,.014)};
     if(st=='linen')hood(.028,M);
     else if(st=='hat'){cap(M,1,1);if(G)k.p('head','oct','g',G,0,top(-.095)+.02,-.07,.012)}
-    else if(st=='witch'){cap(dk,1.2,1.1);const zb=-.1,y=top(zb)+.012;k.p('head','cyl','c',mdSh(dk,.9),0,y,zb-.02,.16,.012,.14,-.25)}
+    else if(st=='witch'){cap(dk,1.2,1.1);const zb=-.1,y=top(zb)+.014;k.p('head','cyl','c',mdSh(dk,.9),0,y,zb-.04,.13,.012,.07,-.22)} // an oval brim that stays behind the eyes
     else if(st=='circlet')halo(.1,0,0,1);
     else if(st=='diadem')halo(.105,.01,3,1);
     else if(st=='crown')halo(.115,.02,7,1);

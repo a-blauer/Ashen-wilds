@@ -153,18 +153,24 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   back `RESP_T` (50 since v112) s after death, not while a hero is within `RESP_NEAR` (14) tiles of the spot (beyond any aggro reach). Recall saves `INST` (instance + spot + the
   creatures' timers; also in the Den); T in Duskhold goes back. World layout version `WD_WL` 108; older saves go to instance
   I's entrance of their zone and get every instance of every open zone (v106/v107 saves that reached III also reach the Den).
-- **Beast races (v114, replaces the v112 rat)**: `hero.look.race` 0 human · 1 rat (Warrior) · 2 cat (Assassin) · 3 frog (Mage) · 4 badger
-  (Paladin) · 5 weasel (Ranger); `BR_CLS` maps class → race and `lkFull`/`mdLookN`/`brRace` drop any other value (old saves are human or rat).
-  One engine (`2100`): `brDef(id,D)` registers a race (`BRD[id]`), `brPlan` = the v99 preset `D.pre` + hunch shear + crouch, `brRig`
-  retargets the hero skeleton in place (tail bones `tl0…` appended per race) whenever the race changes, so `pl` itself turns beast/human.
-  While a beast is built `BR.on` scales the human torso/arm/leg/foot rings per ring (`D.TR`, `armK`, `legK`, `foot`: same ring count and
-  parts, so every armour shell fits), `D.head` builds the skull loft from `D.SN` rings (+ `brEyes`, `brNose`, `brJaw`, `brWhiskers`),
-  `brPaws`/`brToes` grow fingers, claws, pads and webbing (`D.paw`, `D.toes`), `brTail` lofts `D.TP`, and `brHelm` (`2110`) builds every
-  helm style of the game over that skull (ear openings at `D.EAR`, eye slits at `D.EYEP`, `D.topW` keeps the frog's eye domes free;
-  `muzzleZ`, `hoodZ`, `crownZ`, `hatZ`, `bandY/Z` place the pieces). `animHero` adds the crouch (not when riding) and the tail sway
-  (`D.tailSway`). Look fields: `skin` = fur/hide, `eye` = eye colour; co-op look array index 8 = race. Creator/barber: a Race row
-  offers Human and the class's animal (`2130`). Tests: `v114_beasts.py` (sheets per race: base, head/paws, helmets, gear; `RACE=`, `FURI=`),
-  `v114_race.py` (creator → save → reload → barber, then every class casts every ability as its beast; TITLE=1).
+- **Beast races (v114, replaces the v112 rat)**: every hero is its class's animal, there is no human option: rat (Warrior), cat
+  (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
+  class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
+  saves and co-op partners load as animals. One engine (`2100`): `brDef(id,D)` registers a race (`BRD[id]`), `brPlan` = the v99 preset
+  `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`). While a beast is built `BR.on` scales
+  the human torso/arm/leg/foot rings per ring (`D.TR`, `armK`, `legK`, `foot`; the arm's first ring stays inside the torso like the
+  human's, so sleeves need no cap), `D.head` builds the skull from `D.SN` rings (+ `brEyes`, `brNose`, `brJaw`, `brWhiskers`; whiskers
+  root on the cloth under a face mask, `BR_MASK`), `brPaws`/`brToes` grow fingers, claws, pads, webbing, `brTail` lofts `D.TP`.
+  Helmets (`2110`, `brHelm`) are built over the skull: ear openings and rims from the ear ellipsoids `D.earE` (`brEarIn`, `brEarRimK`),
+  eye slits at `D.EYEP`, goggles / monocle sized from the eyes (`D.eyeR`, `D.eyeFw`), hoods with the face opening behind the eyes and
+  an open underside, ear pockets (`D.earPocket`); the frog has its own cloth head pieces (`D.helmSet.cloth`: slouch caps, floating
+  halos). Amulet on the shoulder slope and ring on the outer finger (`2115`, `brFinger`); every outfit / armour loft leaves an opening
+  where the tail passes (`brTailNear`, `BR_BODY` marks body builds). Animation: posture layer (`D.pose` standing, `D.run` added at
+  full run, arm hold eased out during attacks), head levelled from the chest frame (`D.look`), crouch, tail sway. All offsets go
+  through `brAddR`/`brUndo`, which restore the exact values, so the v93 idle layer's `===` undo never stacks its breathing.
+  Look fields: `skin` = fur/hide, `eye` = eye colour; co-op look array index 8 = race. Tests: `v114_beasts.py` (sheets per race),
+  `v114_race.py` (creator → save → reload → barber, every class casts every ability; TITLE=1), `v114_clip.py` (armour clipping: every
+  item of the class on its animal, bind pose + idle/run/attack; `HUMAN=1` gives the human baseline; `dbg_clip.py` marks the points).
 - **Sovereign fights (v110)**: every Sovereign is a souls-style boss registered with `svReg(i,B)` (`SVB[i]`). Its model is
   rigid parts on named joints (`R.J`), built by `B.build` inside the old enemy group (scaled `1/e.m.bs`, so models are in world
   units; the old skinned body is hidden; static meshes on one joint are merged per material, `userData.noMerge` keeps one apart).
@@ -257,6 +263,7 @@ python3 v60t.py              # zone roster (per instance, 30 s respawn)
 python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gateways, respawn, recall back, portal window, saves, chunk visibility, den size
 python3 v113_roster.py       # v113: instance creatures per field instance, camps, a free fight with each new creature
 python3 v114_beasts.py       # v114: model sheets per beast race (RACE=, PART=base,helms,gear, FURI=)
+python3 v114_clip.py         # v114: armour clipping per class item on its animal (HUMAN=1 baseline, POSED=0 bind only); dbg_clip.py RACE= ITEMS= pictures
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble

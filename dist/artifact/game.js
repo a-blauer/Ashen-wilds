@@ -27197,6 +27197,8 @@ function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i
       S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
       S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
       const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
+      // during attacks / abilities: the shoulders spread a little (D.atk.shz) so arms clear a narrow, hunched chest and its armour
+      const ak=1-arm,AT=D.atk;if(AT&&ak>.001){if(AT.shz){brAddR(H,'aL0','z',AT.shz*ak);brAddR(H,'aR0','z',-AT.shz*ak)}if(AT.shx){brAddR(H,'aL0','x',AT.shx*ak);brAddR(H,'aR0','x',AT.shx*ak)}}
       // head levelling: measure how far the chest frame pitches forward and turn the neck and head back by that much, so
       // the eyes look ahead (a small natural tilt at idle, level when running); the idle glances / nods and the attack
       // head motions ride on top unchanged; eases off while an attack pose plays
@@ -27346,6 +27348,17 @@ function brFinger(P,s,i){const D=BR.R,pw=D.paw,V=THREE.Vector3,a=s<0?'aL1':'aR1'
   else if(sh==3){k.p('chest','sph','m',gold,0,y,fz2,.026,.032,.012);k.p('chest','sph','g',d.G||gem,0,y,fz2+.01,.012,.014,.006)}
   else{for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.p('chest','cone4','m',gold,Math.sin(a)*.02,y+Math.cos(a)*.02,fz2,.008,.03,.006,0,0,-a)}k.p('chest','oct',d.G?'g':'m',d.G||gem,0,y,fz2+.006,.014)}
   mdKit(B,k)}}
+// ================= v114: tail openings =================
+// Coats, robes, skirts, tassets and capes are lofted shells round the body; a beast's tail would pass straight through
+// them. While a beast's outfit / armour is built (anything but the body itself), every lofted face whose centre lies
+// within the tail's radius (+ a small margin) of the tail's path is left out, which cuts a neat opening where the tail
+// comes through; the cloth round it stays.
+var BR_BODY=0;
+['mdBody','mdHead','brPaws','brTail','brToes','brShoulders'].forEach(n=>{const f=window[n];window[n]=function(){BR_BODY++;try{return f.apply(this,arguments)}finally{BR_BODY--}}});
+function brTailNear(D,x,y,z){const T=D.TP;if(!T)return false;for(let i=0;i+1<T.length&&i<9;i++){const p=T[i],q=T[i+1],dx=q[0]-p[0],dy=q[1]-p[1],dz=q[2]-p[2],L2=dx*dx+dy*dy+dz*dz||1e-9;
+    let u=((x-p[0])*dx+(y-p[1])*dy+(z-p[2])*dz)/L2;u=Math.max(0,Math.min(1,u));const r=p[3]+(q[3]-p[3])*u+.014,ex=x-(p[0]+dx*u),ey=y-(p[1]+dy*u),ez=z-(p[2]+dz*u);if(ex*ex+ey*ey+ez*ez<r*r)return true}return false}
+{const f=mdLoft;mdLoft=function(B,R,o){if(!BR.on||BR_BODY||!BR.R||!BR.R.TP)return f.apply(this,arguments);const D=BR.R,k0=o&&o.keep;
+  return f.call(this,B,R,Object.assign({},o||{},{keep:m=>(!k0||k0(m))&&!brTailNear(D,m.x,m.y,m.z)}))}}
 // ================= v114: the five beasts — rat (Warrior), cat (Assassin), frog (Mage), badger (Paladin), weasel (Ranger) =================
 // Each entry: proportions (`pre` v99 preset, `shear` hunch, `crouch` [hip, knee]), body ring multipliers (`TR`, `armK`, `legK`,
 // `foot`), skull rings `SN` (back → front: [z, y centre, half-width, top, underside]), eye and ear positions, the tail path
@@ -27455,7 +27468,7 @@ brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
       if(gem)k.p('head','oct',G?'g':'m',G||X.d.gem||A,0,y,z+r,.016,.022,.014)};
     if(st=='linen')hood(.028,M);
     else if(st=='hat'){cap(M,1,1);if(G)k.p('head','oct','g',G,0,top(-.095)+.02,-.07,.012)}
-    else if(st=='witch'){cap(dk,1.2,1.1);const zb=-.1,y=top(zb)+.012;k.p('head','cyl','c',mdSh(dk,.9),0,y,zb-.02,.16,.012,.14,-.25)}
+    else if(st=='witch'){cap(dk,1.2,1.1);const zb=-.1,y=top(zb)+.014;k.p('head','cyl','c',mdSh(dk,.9),0,y,zb-.04,.13,.012,.07,-.22)} // an oval brim that stays behind the eyes
     else if(st=='circlet')halo(.1,0,0,1);
     else if(st=='diadem')halo(.105,.01,3,1);
     else if(st=='crown')halo(.115,.02,7,1);

@@ -59,7 +59,7 @@ window.CLIP={
 };
 // debug picture: the model in its idle pose with every poke (red) and hide (yellow) point of the posed idle check marked
 CLIP.shot=function(cls,E,views){const D=brOf(cls),h=buildHero();h.mdLook={skin:D.fur[2]||D.fur[0],eye:D.eye[0],build:1,height:1,race:D.id};refreshGear(h,cls,E);
-  let Tm=7e5;for(let t=0;t<900;t+=16){Tm+=16;animHero(Tm,false,h);h.position.set(0,0,0)}h.updateMatrixWorld(true);
+  let Tm=7e5;for(let t=0;t<900;t+=16){Tm+=16;animHero(Tm,false,h);h.position.set(0,0,0)}if(CLIP.poseMv){if(!V100A.T.sword0)V100A_build();const PT=V100A.T[CLIP.poseMv](CLIP.poseK);for(const c in PT){const ch=HACH[c];if(ch&&h.bones[ch[0]])h.bones[ch[0]].rotation[ch[1]]=PT[c]}}h.updateMatrixWorld(true);
   const {T,B}=CLIP.build(cls,E),P=CLIP.posed(h,CLIP.warp(B,T)),r=CLIP.check(P,{names:B.O});
   const FW=330,FH=330,rd=CLIP.rd||(CLIP.rd=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}));rd.setSize(FW,FH);
   const sc=new THREE.Scene();sc.background=new THREE.Color(0x2c3036);sc.add(new THREE.HemisphereLight(0xc8d0dc,0x3a3028,.9));const dl=new THREE.DirectionalLight(0xfff0d8,1);dl.position.set(2,4,4);sc.add(dl);sc.add(h);
