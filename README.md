@@ -53,6 +53,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
+| performance: far-scenery cull (`FC`, `fcPass`) | `1980-v111-perf-far-cull.js` |
 
 ## Conventions (read before changing code)
 
@@ -156,6 +157,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (0.55) through the `awaken` move. Co-op: only the driver (`svAuth`) picks; every cast is relayed as BMV `sv<i>_<id>` with the
   seed in `en` (1 + seed/1000, the relay clamps en to 0.5–2), so partners replay the same timeline and random choices.
   The v86 den hazards and den AIs are switched off by `svDenTakeover` (scenery, seal and colliders stay).
+- **Far-scenery cull (v111)**: top-level objects (and the children of groups wider than `FC.big` tiles) whose world
+  bounding sphere is beyond the fog's reach (`FC.k`/density, clamped to FARR+`FC.pad`..cam.far) are hidden only while
+  `POST.render` runs, so game code never sees their `visible` change. Chunk props (CHL), lights, the hero, enemy models,
+  Points/Sprites and anything with a `fog:false` material are never culled; `userData.noFarCull` opts an object out.
+  `test/v111_farcull.py` renders 49 spots with it on and off and checks the pixels match. Measured and not kept (v111):
+  drawing small clutter a shorter distance (~1-2% fewer triangles) and props in 64x64 blocks (28% fewer draw calls but
+  +15% triangles and no faster frames); shadows were already cheap (v98).
 - **Den size (v89, v108)**: the den files build each den at its original size; `1180` maps it outward by `DK` (2 since v108,
   was 1.35) and heights by `DKY` (1.3). `ARENA_R` = 14*DK, `PM_DENR` grows with DK. Den runtime numbers are written `n*DK`.
 - **Decorations (v104)**: fixed spots outside every lot and door spot (checked by `PART=deco python3 v103_kingdom.py`);
@@ -194,6 +202,7 @@ python3 v32t.py              # portal → Sovereign kill → wave trial
 python3 v57t.py              # grades, XP, skills, consume, fusion
 python3 v60t.py              # zone roster (per instance, 30 s respawn)
 python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gateways, respawn, recall back, portal window, saves, chunk visibility, den size
+python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
 MODE=make SRC=<old> AW_TMP=<dir> python3 v106_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave.json python3 v106_oldsave.py  # v97 save -> v106
