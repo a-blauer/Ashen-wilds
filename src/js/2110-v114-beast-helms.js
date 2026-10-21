@@ -29,9 +29,10 @@ function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a
   const gemF=(c,sz)=>{const z=crown+.04;k.p('head','oct',G?'g':'m',G||c,0,top(z)+.026,z+.05,.018*(sz||1),.022*(sz||1),.01,-.6)};
   // cloth hood: a big loose shell round the skull (the ears inside their own cloth pockets), a rolled front edge framing
   // the face, a soft peak at the back and a wide drape over the neck and shoulders
-  const hood=(off,col,o)=>{o=o||{};const big=off+.03,zf=hz+.012,dk=mdSh(col,.8);
-    brShell(B,D,big,z0-.02,zf,m=>!(m.z>zf-.07&&m.s<-.02)&&!earW(m),m=>m.z>zf-.014?dk:m.s<-.3?dk:col,'c',18);
-    brShell(B,D,big+.008,zf-.014,zf+.004,m=>m.s>-.02,mdSh(col,.9),'c',18);
+  // the face opening sits behind the eyes and cheeks; the underside is open (the drape below covers the neck)
+  const hood=(off,col,o)=>{o=o||{};const big=off+.03,zf=Math.min(hz+.012,ez-(D.eyeR||.021)-.016),dk=mdSh(col,.8);
+    brShell(B,D,big,z0-.02,zf,m=>!earW(m)&&!(m.s<-.3&&m.z>z0+.03)&&!(m.z>zf-.06&&m.s<-.1),m=>m.z>zf-.014?dk:m.s<-.3?dk:col,'c',18);
+    brShell(B,D,big+.008,zf-.014,zf+.004,m=>m.s>-.1,mdSh(col,.9),'c',18);
     if(D.earPocket)D.earPocket(k,col,big);
     mdLoft(B,[{p:[0,1.07,-.04],rx:.12+big,f:.1+big*.6,b:.12+big,w:[['neck',.4],['head',.6]]},{p:[0,.99,-.04],rx:.19+off,f:.14,b:.17+off,w:[['chest',.5],['neck',.5]]},{p:[0,.91,-.03],rx:.25+off,f:.17,b:.21+off,w:[['chest',1]]}],
       {seg:14,t:'c',col:o.drape||mdSh(col,.88),keep:m=>!(m.s>.45&&m.y>.985)});
@@ -43,8 +44,14 @@ function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a
     brShell(B,D,.008,z0+.01,za,m=>m.s<.32&&m.s>-.2&&!earW(m),dk,'c',14);
     const q=at(z0+.012),y=q.yc+.01,z=z0-.004;[-1,1].forEach(s=>k.L('head','c',dk,[s*.02,y,z],[s*.045,y-.11,z-.05],.014,.004,4))};
   const strap=(c,t)=>band(crown+.02,.012,c,t);
-  const goggles=(c,glass)=>{[-1,1].forEach(s=>{const [x,y,z]=D.EYEP,ex=brSurfX(D,z,y)+.008,ry=s*Math.atan2(1,-at(z).slope);k.p('head','cyl','m',c,s*ex,y,z,.02,.012,.02,0,ry,Math.PI/2);
-    k.p('head','cyl',G?'g':'c',G||glass,s*(ex+.006),y,z,.016,.004,.016,0,ry,Math.PI/2)});strap(mdSh(c,.7),'c')};
+  // goggles sized and placed from the animal's own eyes (the lens sits in front of the eye, facing where the eye looks)
+  const goggles=(c,glass)=>{const er=D.eyeR||.021,gr=Math.max(.017,er*1.02),V=THREE.Vector3;[-1,1].forEach(s=>{const [x,y,z]=D.EYEP,ry=s*Math.atan2(1,-at(z).slope)*(D.eyeFw==null?1:D.eyeFw),
+      d=new V(Math.sin(ry),0,Math.cos(ry)),eye=new V(s*(brSurfX(D,z,y)-.004-(D.eyeIns||0)),y,z),h=.008+er*.3,c0=eye.clone().add(d.clone().multiplyScalar(er*1.05+.003+h*.5)),
+      e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),d));
+      k.p('head','cyl','m',c,c0.x,c0.y,c0.z,gr,h,gr,e.x,e.y,e.z);const c1=c0.clone().add(d.clone().multiplyScalar(h*.5+.001));
+      k.p('head','cyl',G?'g':'c',G||glass,c1.x,c1.y,c1.z,gr*.8,.004,gr*.8,e.x,e.y,e.z);
+      // a short strap from the lens frame back to the head band
+      const b0=c0.clone().add(new V(s*gr*.8,0,-gr*.3)),b1=new V(s*(at(crown).rx+.012),y+.006,crown+.02);k.L('head','c',mdSh(c,.7),b0.toArray(),b1.toArray(),.006,.006,4)});strap(mdSh(c,.7),'c')};
   const frontZ=yb=>{let fz=S[0][0];S.forEach(q=>{if(q[1]+q[3]>yb)fz=q[0]});return fz};
   if(D.helmPre)D.helmPre(k,d);
   if(D.helmSet&&D.helmSet[a]){D.helmSet[a]({B,P,d,k,st,M,A,G,at,top,hood,band,crest,gemF,muzzle,strap,crown,hz,z0,tipZ,frontZ});mdKit(B,k);return}
@@ -65,7 +72,11 @@ function brHelm(B,P,d){const D=BR.R,C=BR.C,M=d.M,A=d.A,G=d.G,k=dkKit(),st=d.st,a
     else if(st=='skullhood'){hood(.03,M,{tip:false});const q=at(crown);k.p('head','sph2','c',0xd8ccb0,0,q.top+.03,crown,.07,.045,.08);[-1,1].forEach(s=>{k.p('head','box','c',0x14100c,s*.025,q.top+.025,crown+.07,.018,.012,.01);k.L('head','c',0xd8ccb0,[s*.05,q.top+.05,crown-.02],[s*.11,q.top+.1,crown-.06],.016,.004,5)})}
     else if(st=='galemask'||st=='wind'){muzzle(mdSh(A,.9));strap(mdSh(M,.8),'c');[-1,1].forEach(s=>{const q=at(crown);for(let j=0;j<4;j++)k.p('head','cone4','c',j%2?A:0xe8e8f0,s*(q.rx+.01+j*.008),q.yc+j*.025,crown-.01-j*.025,.012,.1-j*.012,.03,-.5-j*.2,0,-s*(.9+j*.15))});if(st=='wind')hood(.03,M,{tip:false})}
     else if(st=='feather'){brShell(B,D,.018,z0,hz-.03,m=>m.s>.1&&!earW(m),M,'c',14);band(hz-.03,.022,mdSh(M,.75),'c');const q=at(crown);k.L('head','c',A,[.05,q.top+.01,crown],[.12,q.top+.13,crown-.08],.012,.002,4)}
-    else{/*deadeye*/hood(.026,M);muzzle(mdSh(M,.6));const [x,y,z]=D.EYEP,ex=brSurfX(D,z,y)+.01;k.p('head','ring','m',A,ex,y,z,.022,.15,.022,0,Math.atan2(1,-at(z).slope),Math.PI/2)}}
+    else{/*deadeye*/hood(.026,M);muzzle(mdSh(M,.6));
+      // a monocle ring in front of the right eye, facing where the eye looks
+      const V=THREE.Vector3,er=D.eyeR||.021,[x,y,z]=D.EYEP,ry=Math.atan2(1,-at(z).slope)*(D.eyeFw==null?1:D.eyeFw),d=new V(Math.sin(ry),0,Math.cos(ry)),
+        c=new V(brSurfX(D,z,y)-.004-(D.eyeIns||0),y,z).add(d.clone().multiplyScalar(er*1.05+.004)),e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),d));
+      k.p('head','ring','m',A,c.x,c.y,c.z,er*1.25,.5,er*1.25,e.x,e.y,e.z);k.p('head','cyl',G?'g':'c',G||0x3a1a14,c.x,c.y,c.z,er*1.1,.002,er*1.1,e.x,e.y,e.z)}}
   else if(a=='light'){
     if(st=='wrap'||st=='bandana'){muzzle(M);strap(mdSh(M,.8),'c');const q=at(crown);k.L('head','c',mdSh(M,.75),[0,q.top-.02,crown-.06],[.03,q.top-.1,crown-.13],.018,.008,4)}
     else if(st=='viper'){muzzle(M);for(let i=0;i<5;i++){const z=crown-.03+i*.03;k.p('head','cone4','c',A,0,top(z)+.02,z,.014,.045,.018,-.3)}}

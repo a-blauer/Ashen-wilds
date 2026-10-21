@@ -10,19 +10,19 @@ window.CLIP={
     const lab=(n,l)=>{const f=W[n];W[n]=function(){const o=CLIP.lab;CLIP.lab=l;try{return f.apply(this,arguments)}finally{CLIP.lab=o}}};
     ['mdBody','mdHead','brPaws','brTail','brShoulders','brToes'].forEach(n=>lab(n,'body'));
     lab('mdHelm','helm');lab('mdChest','chest');lab('mdBoots','boots');lab('mdCape','cape');lab('mdAmulet','amulet');lab('mdRingW','ring');
-    {const f=W.mdLoft;W.mdLoft=function(B,R,o){const oR=CLIP.R,oA=CLIP.ax;CLIP.R=R;CLIP.ax=null;try{return f.apply(this,arguments)}finally{CLIP.R=oR;CLIP.ax=oA}}}
-    {const f=W.mdKit;W.mdKit=function(B,k){if(!CLIP.tags)return f.apply(this,arguments);for(const p of k.P){const e=p.m.elements,oA=CLIP.ax,oR=CLIP.R;CLIP.ax=[e[12],e[13],e[14]];CLIP.R=null;try{f.call(this,B,{P:[p]})}finally{CLIP.ax=oA;CLIP.R=oR}}}}
+    {const f=W.mdLoft;W.mdLoft=function(B,R,o){const oR=CLIP.R,oA=CLIP.ax,oS=CLIP.sub;CLIP.R=R;CLIP.ax=null;CLIP.sub='loft'+R.length;try{return f.apply(this,arguments)}finally{CLIP.R=oR;CLIP.ax=oA;CLIP.sub=oS}}}
+    {const f=W.mdKit;W.mdKit=function(B,k){if(!CLIP.tags)return f.apply(this,arguments);const G=dkG(),gn=g=>{for(const n in G)if(G[n]===g)return n;return 'taper'};for(const p of k.P){const e=p.m.elements,oA=CLIP.ax,oR=CLIP.R,oS=CLIP.sub;CLIP.ax=[e[12],e[13],e[14]];CLIP.R=null;CLIP.sub=gn(p.geo)+'@'+e[12].toFixed(2)+','+e[13].toFixed(2)+','+e[14].toFixed(2);try{f.call(this,B,{P:[p]})}finally{CLIP.ax=oA;CLIP.R=oR;CLIP.sub=oS}}}}
     {const f=W.mdTri;W.mdTri=function(B,t,a,b,c,col){const r=f.apply(this,arguments);if(CLIP.tags&&B.__clip){const key=B.L[t]?t:'c';
         const cx=(a.x+b.x+c.x)/3,cy=(a.y+b.y+c.y)/3,cz=(a.z+b.z+c.z)/3;let A=CLIP.ax;
         if(!A&&CLIP.R){const R=CLIP.R;let best=1e9;for(let i=0;i+1<R.length;i++){const p=R[i].p,q=R[i+1].p,dx=q[0]-p[0],dy=q[1]-p[1],dz=q[2]-p[2],L2=dx*dx+dy*dy+dz*dz||1e-9;
             let u=((cx-p[0])*dx+(cy-p[1])*dy+(cz-p[2])*dz)/L2;u=Math.max(0,Math.min(1,u));const X=p[0]+dx*u,Y=p[1]+dy*u,Z=p[2]+dz*u,d=(cx-X)**2+(cy-Y)**2+(cz-Z)**2;if(d<best){best=d;A=[X,Y,Z]}}
           if(R.length==1)A=R[0].p.slice()}
-        (B.__clip[key]||(B.__clip[key]=[])).push({l:CLIP.lab,a:A||[cx,cy,cz]})}return r}}
+        (B.__clip[key]||(B.__clip[key]=[])).push({l:CLIP.lab,a:A||[cx,cy,cz],u:CLIP.sub})}return r}}
     {const f=W.mdHeroB;W.mdHeroB=function(){const o=CLIP.lab;CLIP.lab='outfit';try{return f.apply(this,arguments)}finally{CLIP.lab=o}}}
     {const f=W.mdB;W.mdB=function(){const B=f.apply(this,arguments);if(CLIP.tags)B.__clip={};return B}}},
   // build (bind pose, pre-warp): returns triangles [{v:[9 numbers], l, a, w:[bone weights of vertex 0]}]
   build(cls,E,look){CLIP.hook();CLIP.tags=1;let B;const keep=BR_CLS[cls];if(CLIP.human)delete BR_CLS[cls];try{const D=BRD[keep],L=Object.assign({skin:D.fur[2]||D.fur[0],eye:D.eye[0],build:1,height:1,race:D.id},look||{});const LN=mdLookN(L,cls);if(CLIP.human){LN.race=0;LN.skin=0xc8a080}B=mdHeroB(cls,LN,E||{})}finally{CLIP.tags=null;BR_CLS[cls]=keep}
-    const T=[];for(const t in B.L){const L=B.L[t],tg=(B.__clip||{})[t]||[],n=L.p.length/9;for(let i=0;i<n;i++){const g=tg[i]||{l:'?',a:null};T.push({v:L.p.slice(i*9,i*9+9),l:g.l,a:g.a,si:L.si.slice(i*12,i*12+4),sw:L.sw.slice(i*12,i*12+4),t})}}
+    const T=[];for(const t in B.L){const L=B.L[t],tg=(B.__clip||{})[t]||[],n=L.p.length/9;for(let i=0;i<n;i++){const g=tg[i]||{l:'?',a:null};T.push({v:L.p.slice(i*9,i*9+9),l:g.l,a:g.a,u:g.u,si:L.si.slice(i*12,i*12+4),sw:L.sw.slice(i*12,i*12+4),t})}}
     return {T,B}},
   // uniform grid over triangles
   grid(T,cs){const G=new Map(),k=(x,y,z)=>x+','+y+','+z;T.forEach((tr,i)=>{const v=tr.v;let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;for(let j=0;j<9;j+=3){x0=Math.min(x0,v[j]);x1=Math.max(x1,v[j]);y0=Math.min(y0,v[j+1]);y1=Math.max(y1,v[j+1]);z0=Math.min(z0,v[j+2]);z1=Math.max(z1,v[j+2])}
@@ -41,7 +41,7 @@ window.CLIP={
     const cen=v=>[(v[0]+v[3]+v[6])/3,(v[1]+v[4]+v[7])/3,(v[2]+v[5]+v[8])/3];
     const out=(c,a)=>{const d=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],L=Math.hypot(d[0],d[1],d[2]);return L<1e-6?null:[d[0]/L,d[1]/L,d[2]/L,L]};
     TB.forEach(t=>{const c=cen(t.v),u=out(c,t.a);if(!u)return;const L=Math.min(len,u[3]*.6),h=CLIP.ray(gA,TA,c,[-u[0],-u[1],-u[2]],L);
-      if(h>0){const k=dom(t);res.poke[k]=(res.poke[k]||0)+1;res.nPoke++;if(res.samples.length<400)res.samples.push(['poke',k,c.map(x=>+x.toFixed(3))])}});
+      if(h>0){const k=dom(t);res.poke[k]=(res.poke[k]||0)+1;res.nPoke++;if(k=='head'){res.sub=res.sub||{};res.sub[t.u]=(res.sub[t.u]||0)+1}if(res.samples.length<400)res.samples.push(['poke',k,c.map(x=>+x.toFixed(3))])}});
     TA.forEach(t=>{const c=cen(t.v),u=out(c,t.a);if(!u)return;const h=CLIP.ray(gB,TB,c,[u[0],u[1],u[2]],len);
       if(h>0){const k=t.l+':'+dom(t);res.hide[k]=(res.hide[k]||0)+1;res.nHide++;if(res.samples.length<400)res.samples.push(['hide',k,c.map(x=>+x.toFixed(3))])}});
     res.nBody=TB.length;res.nArm=TA.length;return res},
@@ -68,4 +68,4 @@ CLIP.shot=function(cls,E,views){const D=brOf(cls),h=buildHero();h.mdLook={skin:D
   r.samples.forEach(s=>{const m=new THREE.Mesh(g,s[0]=='poke'?mr:my);m.position.set(...s[2]);m.renderOrder=9;sc.add(m)});
   const pc=new THREE.PerspectiveCamera(26,1,.01,50),cnv=document.createElement('canvas');cnv.width=FW*views.length;cnv.height=FH;const x=cnv.getContext('2d');
   views.forEach((v,i)=>{const c=new THREE.Vector3(...v.c),d=new THREE.Vector3(...v.d).normalize().multiplyScalar(v.r);pc.position.copy(c).add(d);pc.lookAt(c);rd.render(sc,pc);x.drawImage(rd.domElement,i*FW,0)});
-  return {img:cnv.toDataURL('image/jpeg',.9),n:[r.nPoke,r.nHide],poke:r.poke,hide:r.hide}};
+  return {img:cnv.toDataURL('image/jpeg',.9),n:[r.nPoke,r.nHide],poke:r.poke,hide:r.hide,sub:r.sub,smp:r.samples.filter(x=>/amulet|ring|aR2|chest:chest|chest:aR0|helm/.test(x[1])).slice(0,60)}};

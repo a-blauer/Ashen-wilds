@@ -14,7 +14,8 @@
 //    eye slits at the eyes, hoods, hats, circlets, masks), so each class's gear has its own animal version.
 //  * a crouch (hips flexed, knees bent, feet flat) layered on every animation except riding; the frog squats deep.
 // Look fields reused: skin = fur / hide colour, eye = eye colour. Hair, face and body sex are ignored.
-var BR={on:false,R:null,C:null,bare:false,feet:false,P:null};
+var BR={on:false,R:null,C:null,bare:false,feet:false,P:null,mask:false};
+var BR_MASK={cowl:1,galemask:1,wind:1,deadeye:1,wrap:1,bandana:1,viper:1,ashcowl:1,glassmask:1,stormhood:1,venom:1,dusk:1};
 var BRD={};                                                   // race id -> definition (2110)
 var BR_CLS={warrior:1,assassin:2,mage:3,paladin:4,ranger:5};  // the one animal of each class
 function brOf(cls){return BRD[BR_CLS[cls]]||null}
@@ -82,6 +83,7 @@ function brSkull(B,D,col,o){o=o||{};const hw=[['head',1]],S=D.SN,n0=S[0];
   mdLoft(B,S.map(q=>({p:[0,q[1],q[0]],rx:q[2],f:q[3],b:q[4],w:hw})),{seg:o.seg||14,ref:[0,1,0],capA:true,capB:o.capB||{dz:.006},col})}
 // eyes on the skull surface: dark socket, glossy eye, coloured iris, highlight (fw: how much the eyes face forward)
 function brEyes(k,D,o){const C=BR.C,[ex0,ey,ez]=D.EYEP,sz=o.sz||1,fw=o.fw==null?1:o.fw;
+  D.eyeR=.021*sz*(o.al||1);D.eyeFw=fw;D.eyeIns=o.inset||0;
   const al=o.al||1,tl=o.tilt||0;
   [-1,1].forEach(s=>{const ex=brSurfX(D,ez,ey)-.004,ry=s*Math.atan2(1,-brSkullAt(D,ez).slope)*fw,rz=s*tl;
     const ins=(o.inset||0);
@@ -93,7 +95,10 @@ function brEyes(k,D,o){const C=BR.C,[ex0,ey,ez]=D.EYEP,sz=o.sz||1,fw=o.fw==null?
     if(o.brow!==false)k.p('head','sph2','c',o.brow||C.FURD,s*(ex-.002-ins),ey+(o.browY||.017)*sz,ez-.002,.024*sz,.008,.02*sz*al,0,ry,s*-.25+rz)})}
 // whiskers from the whisker pads at z, y: n per side
 function brWhiskers(k,D,z,y,n,len,col){[-1,1].forEach(s=>{const wx=brSurfX(D,z,y);
-  for(let i=0;i<n;i++)k.L('head','c',col||0x2a2420,[s*(wx-.003),y+i*.005-.004,z-i*.006],[s*(wx+len*.55-i*.008),y+(i-1)*.022*len/.12,z-.04*len/.12-i*.025],.0015,.0005,3)})}
+  // they fan out sideways (not back over the cheeks), so hoods and masks never meet them; under a face mask they grow
+  // out of the cloth (the roots sit on the mask's surface)
+  const mo=BR.mask?.02:0;
+  for(let i=0;i<n;i++)k.L('head','c',col||0x2a2420,[s*(wx-.003+mo),y+i*.005-.004,z-i*.006],[s*(wx+len*.62-i*.008),y+(i-1)*.022*len/.12,z-.008-i*.008],.0015,.0005,3)})}
 // nose: rhinarium with two nostrils at the muzzle tip
 function brNose(k,D,col,sz,dy){const tip=D.SN[D.SN.length-1],z=tip[0],y=tip[1]+(dy||0);sz=sz||1;
   k.p('head','sph2','c',col,0,y+.004,z+.011*sz,.0145*sz,.012*sz,.012*sz);[-1,1].forEach(s=>k.p('head','box','c',0x2a1818,s*.0058*sz,y+.001,z+.021*sz,.004*sz,.003*sz,.003*sz));
@@ -170,7 +175,8 @@ function brBareB(L){const C=BR.C,D=BR.R,B=mdB(HB),P=mdP({look:L,sex:0,build:1,co
   if(D.paint)D.paint(P,C);
   P._T=mdTorso(P);mdBody(B,P);brShoulders(B);mdHead(B,P,{});brToes(B,P);brPaws(B);brTail(B);return B}
 {const f=mdHeroB;mdHeroB=function(cls,L,E){const r=brRace(L,cls);if(!r)return f.apply(this,arguments);
-  const o={on:BR.on,R:BR.R,C:BR.C,feet:BR.feet,P:BR.P},D=BRD[r];BR.on=true;BR.R=D;BR.C=D.cols(L);BR.feet=!(E&&E.boots&&mdGD(E.boots));
+  const o={on:BR.on,R:BR.R,C:BR.C,feet:BR.feet,P:BR.P,mask:BR.mask},D=BRD[r];BR.on=true;BR.R=D;BR.C=D.cols(L);BR.feet=!(E&&E.boots&&mdGD(E.boots));
+  {const hd=E&&E.helm?mdGD(E.helm):null;BR.mask=!!(hd&&BR_MASK[hd.st])}
   try{const L2=Object.assign({},L,{hairStyle:5,face:0,sex:0});if(BR.bare)return brBareB(L2);
     const B=f.call(this,cls,L2,E);brShoulders(B);brPaws(B);brTail(B);return B}
   finally{Object.assign(BR,o)}}}
