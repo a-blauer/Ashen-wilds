@@ -2,7 +2,7 @@
 
 A single-file three.js (r128) action RPG: five hero classes, hatchable companions, the floating stronghold Duskhold,
 six portal zones (three field instances, a Sovereign's Den and a Wave Trial each), wave trials, mounts, fishing, crafting at town stations and online co-op.
-Published as the claude.ai artifact https://claude.ai/artifact/QG2zZH4KMW4zTTfaJQGots (`dist/ashen-wilds.html`; v106 onward — saves are per link, so players start fresh there; v105 stays at GZsCSNZGgULRRkVLdYHPmw, v102 at CMvAWZi8x1qbMZp9SkBpGL). (The pre-v102 link was retired.)
+Published as the claude.ai artifact https://claude.ai/artifact/Aa14wfN7jNYFh5b1yN8EQu (`dist/ashen-wilds.html`; v113 onward — saves are per link, so players start fresh there; v106–v112 stay at QG2zZH4KMW4zTTfaJQGots (the live page grew too large to re-read before republishing), v105 at GZsCSNZGgULRRkVLdYHPmw, v102 at CMvAWZi8x1qbMZp9SkBpGL). (The pre-v102 link was retired.)
 
 ## Layout
 
