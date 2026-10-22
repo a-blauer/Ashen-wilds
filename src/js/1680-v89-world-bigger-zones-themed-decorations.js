@@ -183,7 +183,7 @@ function wdDeco(){const T0=performance.now();
     {k:'c_brazier',w:'lane',n:4,c:[1,1],r:1},{k:'c_rubble',w:'in',n:4,c:[1,3],r:4},{k:'c_rubble',w:'edge',n:7,c:[1,3],r:3},{k:'c_column',w:'in',n:.5,c:[1,3],r:5},{k:'c_column',w:'edge',n:1.2,c:[1,2],r:4},{k:'c_graves',w:'in',n:.9,c:[2,5],r:5},
     {k:'c_candela',w:'in',n:.6,c:[1,2],r:3},{k:'c_blood',w:'in',n:1.2,c:[1,2],r:3},{k:'c_coffin',w:'in',n:.4,c:[1,2],r:3}]];
   // v112: the themed instances II and III bring their own decoration types and sets (1981 v112Deco)
-  const ZX=typeof v112Deco=='function'?v112Deco({T,def,F,M,cyl,box,ico,dod,cone,oct,tor,dome,disc,pln,deadTree,rockG,stump,logG,bonesRib,skull,pillarG,wallG,grave,crossG,fenceG,ironFence,reeds,fern,flowers,tallGrass,shrub,mushC,lilies,cairn,banner,brazier,flame,lanternPost,lanternGlow,statueG,mausoleum,coffin,archG,duneG,cartG,crystals,icicles,rubble,candles,candleGlow,candelabra,candelaGlow,rootsG,plain}):null;
+  const KIT={T,def,F,M,cyl,box,ico,dod,cone,oct,tor,dome,disc,pln,deadTree,rockG,stump,logG,bonesRib,skull,pillarG,wallG,grave,crossG,fenceG,ironFence,reeds,fern,flowers,tallGrass,shrub,mushC,lilies,cairn,banner,brazier,flame,lanternPost,lanternGlow,statueG,mausoleum,coffin,archG,duneG,cartG,crystals,icicles,rubble,candles,candleGlow,candelabra,candelaGlow,rootsG,plain};const ZX=typeof v112Deco=='function'?v112Deco(KIT):null;
   // ---------- placement ----------
   const DM=2.2,ZM=[1,1,1.3,1.4,1.5,1.9],DW=MAP.DW,out=[],col=new Set(),stats={zones:[],kinds:{}};let sd=89;
   const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
@@ -247,6 +247,7 @@ function wdDeco(){const T0=performance.now();
       (stats.dbg=stats.dbg||[]).push([r,E.k,E.w,L.length,want,got])});
     stats.zones.push(zn);stats[p.n]=zstat;if(ZS)sd=sd0});
   if(ZX&&ZX.post)ZX.post(out,col);
+  if(typeof v123Edge=='function')v123Edge(KIT,out); // v123: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }

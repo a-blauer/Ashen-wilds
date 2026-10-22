@@ -222,6 +222,7 @@ const MAP=(()=>{
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
   m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!INSL.some(p=>(p.wa&&Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16)||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
+  if(typeof v123Groves=='function')v123Groves(m); // v123: choppable groves inside the fields (the rim trees are scenery now, 2270)
   return m})();
 
 const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(ax>xe?ax-xe:0,dz);if(q<d)d=q}return d}; // v100
@@ -249,7 +250,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }else{
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
-      const dd=Math.max(0,d),hz=I.fld&&I.k&&typeof v112Ht=='function'?v112Ht(I,i,j,d,dd,MAP[ty][tx]):null; // v112: themed instances shape their own walls (1981)
+      const dd=Math.max(0,d-(typeof v123Shelf=='function'?v123Shelf(I):0)),hz=I.fld&&I.k&&typeof v112Ht=='function'?v112Ht(I,i,j,d,dd,MAP[ty][tx]):null; // v112: themed instances shape their own walls (1981)
       if(hz!=null)h=hz;else h+=(b.n=='The Citadel'?6.5*smt(0,1.2,dd)-60*smt(4,9,dd):(10+5*fbm2(i*.09,j*.09,3))*smt(.6,7,dd)+dd*.15-62*smt(12,19,dd));
       (I.den?[[I.ba,Math.max(PM_DENR+3,22*DK),5*DK]]:I.tri?[[I.wa,19,5]]:[[I.ba,PM_GTR+2,5]]).forEach(([c,R0,W0])=>{const q=Math.hypot(i-c[0],j-c[1]),m=smt(R0-W0,R0,q);if(d<0)h=h*m+.6*(1-m)});
     }

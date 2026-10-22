@@ -15,7 +15,7 @@ let T_cur=null;
 const tc=(p,x,z,r)=>{const w=wbase(p,T_cur);T_cur.col.push({x:w[0]+x,z:w[1]+z,r})},tcb=(p,x,z,hx,hz)=>{const w=wbase(p,T_cur);T_cur.col.push({x:w[0]+x,z:w[1]+z,hx,hz})};
 TOWNS.forEach(buildTown);
 // walls and mountain ridges (instanced)
-{const Wt=[],Rt=[];MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='W')Wt.push([x,y]);else if(t=='R')Rt.push([x,y])}));
+{const Wt=[],Rt=[];MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='W')Wt.push([x,y]);else if(t=='R'&&!(typeof v123Rim=='function'&&v123Rim(x,y)))Rt.push([x,y])}));
  // timber palisade: pointed logs in a 2x2 cluster per wall tile
  const LG=twPaliLog(),LT=twPaliTip(),lg=inst(LG,Wt.length*4,true),lt=inst(LT,Wt.length*4,true);KDPAL={lg,lt,Wt:Wt.slice()};
  Wt.forEach(([x,y],i)=>{const T=TOWNS[townAt(x,y,0)],wc=T.pal.wood;for(let j=0;j<4;j++){const ox=(j&1?.26:-.26)+(Math.random()-.5)*.12,oz=(j&2?.26:-.26)+(Math.random()-.5)*.12,hh=2.5+Math.random()*1.1,k=i*4+j;
