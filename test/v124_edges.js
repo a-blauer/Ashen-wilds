@@ -1,6 +1,6 @@
-// v123 clean edges: run with `python3 probe.py v123_edges.js`. Prints ok:true when every check passes.
+// v124 clean edges: run with `python3 probe.py v124_edges.js`. Prints ok:true when every check passes.
 () => {
-  const bad = [], D = MAP.DW, st = window.V123 || {};
+  const bad = [], D = MAP.DW, st = window.V124 || {};
   if (!(st.stones > 1000)) bad.push('few edge stones ' + st.stones);
   if (!(st.back > 300)) bad.push('few back-row pieces ' + st.back);
   const per = {};

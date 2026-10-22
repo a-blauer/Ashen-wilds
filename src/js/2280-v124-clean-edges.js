@@ -1,24 +1,24 @@
-// ================= v123: clean map edges =================
-// Before v123 the rim band round every zone instance's walkable ground (tiles '#' and 'R', 0..2.6 tiles past the edge) was
+// ================= v124: clean map edges =================
+// Before v124 the rim band round every zone instance's walkable ground (tiles '#' and 'R', 0..2.6 tiles past the edge) was
 // drawn as one choppable tree per '#' tile (0060/0070) and three randomly tilted boulders per 'R' tile, so the trees stood
 // inside the boulders. Now:
-//   * rim tiles stay what they were (solid, same minimap), but draw nothing of their own: v123Rim(x,y) makes 0060 skip the
+//   * rim tiles stay what they were (solid, same minimap), but draw nothing of their own: v124Rim(x,y) makes 0060 skip the
 //     tree and 0070 skip the boulders there. The Citadel (void rim + castle walls) is unchanged.
-//   * v123Edge (called at the end of wdDeco in 1680) lines the edge with the instance's theme: a tidy row of low, seated
+//   * v124Edge (called at the end of wdDeco in 1680) lines the edge with the instance's theme: a tidy row of low, seated
 //     ledge stones on one contour (d ~ .55), turned along the edge, and behind them, on the slope, a spaced row of themed
 //     decorations (big background trees, stalagmites, crystals, cacti, pillars ...) that never touch the stones, each other
 //     or the zone's own bank decorations. None of them can be chopped (they are decorations, not '#' nodes).
-//   * v123Groves (called at the end of the 0045 map build) keeps wood in the game: small groves of choppable trees ('#'
+//   * v124Groves (called at the end of the 0045 map build) keeps wood in the game: small groves of choppable trees ('#'
 //     tiles + a 'tree' prop) inside the walkable ground of every field instance, off the road, camps, gateway and entrance.
 // Everything is seeded per instance, so co-op partners build the same world.
-function v123Rim(x,y){const I=insAt(x,y);return !!I&&I.z!==5&&MAP.DW[y*W+x]>=0}
+function v124Rim(x,y){const I=insAt(x,y);return !!I&&I.z!==5&&MAP.DW[y*W+x]>=0}
 // the wall starts rising this many tiles later (0045 heights), so the edge's tree line stands on a low shelf at the foot of the
 // wall instead of up its face; caves, canyons, cliffs and the Citadel keep their walls as they were
-function v123Shelf(I){if(I.z===5)return 0;const t=I.fld&&I.k&&typeof TH112!='undefined'&&TH112&&TH112.byG[I.g];if(!t)return 1.7;const k=t.sh.k;return k=='cave'||k=='canyon'||k=='cliff'||k=='keep'?0:1.7}
-function v123R(s){let sd=(Math.abs(Math.floor(s))%2147483646)+1;return ()=>(sd=sd*16807%2147483647)/2147483647}
+function v124Shelf(I){if(I.z===5)return 0;const t=I.fld&&I.k&&typeof TH112!='undefined'&&TH112&&TH112.byG[I.g];if(!t)return 1.7;const k=t.sh.k;return k=='cave'||k=='canyon'||k=='cliff'||k=='keep'?0:1.7}
+function v124R(s){let sd=(Math.abs(Math.floor(s))%2147483646)+1;return ()=>(sd=sd*16807%2147483647)/2147483647}
 // ---------- choppable groves (inside the field instances) ----------
-function v123Groves(m){const DW=m.DW,props=m.props,walk=t=>t=='.'||t=='g'||t=='a';let n=0;
-  INSL.forEach(I=>{if(!I.fld||I.z===5)return;const rnd=v123R(123000+I.g*104729),P=I.path,e1=P[16]||I.en,th=typeof TH112!='undefined'&&TH112&&TH112.byG[I.g],cave=!!th&&th.sh.k=='cave',RD=cave?5.6:8.5,ED=cave?2.6:5;
+function v124Groves(m){const DW=m.DW,props=m.props,walk=t=>t=='.'||t=='g'||t=='a';let n=0;
+  INSL.forEach(I=>{if(!I.fld||I.z===5)return;const rnd=v124R(123000+I.g*104729),P=I.path,e1=P[16]||I.en,th=typeof TH112!='undefined'&&TH112&&TH112.byG[I.g],cave=!!th&&th.sh.k=='cave',RD=cave?5.6:8.5,ED=cave?2.6:5;
     const away=(x,y)=>Math.hypot(x-I.ba[0],y-I.ba[1])>PM_GTR+7&&Math.hypot(x-I.en[0],y-I.en[1])>15&&Math.hypot(x-e1[0],y-e1[1])>15&&I.cl.every(c=>Math.hypot(x-c[0],y-c[1])>22)
       &&!(I.wa&&Math.hypot(x-I.wa[0],y-I.wa[1])<24)&&P.every((q,i)=>i%3||Math.hypot(q[0]-x,q[1]-y)>RD)&&I.br.every(l=>l.every(q=>Math.hypot(q[0]-x,q[1]-y)>RD-1.5));
     const want=Math.round(I.w*I.h/58000*9);let got=0;const cen=[];
@@ -31,9 +31,9 @@ function v123Groves(m){const DW=m.DW,props=m.props,walk=t=>t=='.'||t=='g'||t=='a
         let ok=true;for(let j=-1;j<=1&&ok;j++)for(let i=-1;i<=1;i++)if((i||j)&&m[cy+j][cx+i]=='#'){ok=false;break}if(!ok)continue;
         m[cy][cx]='#';props.push([cx,cy,'tree']);put++;n++}
       if(put){cen.push([x,y]);got++}}});
-  m.v123g=n}
+  m.v124g=n}
 // ---------- the edge line ----------
-function v123Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,ico,deadTree}=c,DW=MAP.DW,ZG=(z,k)=>insG(z,k);
+function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,ico,deadTree}=c,DW=MAP.DW,ZG=(z,k)=>insG(z,k);
   // shapes: a low ledge stone (three rounded lumps along x) and a taller standing stone; big background trees
   const ledge=(hex,top)=>M([F(dod(1),hex,{j:.16,top,tt:.6,lo:.62,hi:.42},0,.42,0,0,.3,0,[1.15,.62,.78]),
     F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},.95,.3,.12,0,1.1,.12,[.72,.46,.62]),F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},-.9,.28,-.1,0,2.2,-.1,[.7,.44,.6])]);
@@ -71,7 +71,7 @@ function v123Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
     const a=[GH(d.x+1,d.z),GH(d.x-1,d.z),GH(d.x,d.z+1),GH(d.x,d.z-1)];if(Math.max(...a)-Math.min(...a)>2.6)out.splice(i,1)}
   out.forEach(d=>{if(DW[Math.round(d.z)*W+Math.round(d.x)]>=0)addO(d.x,d.z,.9*(d.s||1))});
   const st={stones:0,back:0,ms:0};
-  INSL.forEach(I=>{const kt=K[I.g];if(!kt||I.z===5)return;const rnd=v123R(231000+I.g*7919),ri=(a,b)=>a+rnd()*(b-a);
+  INSL.forEach(I=>{const kt=K[I.g];if(!kt||I.z===5)return;const rnd=v124R(231000+I.g*7919),ri=(a,b)=>a+rnd()*(b-a);
     const sk='e_st'+I.g,sb='e_sb'+I.g;mk(sk,{parts:[ledge(kt.st[0],kt.st[1])],cast:true,s:[1.15,1.45],y:-.24,j:.16});mk(sb,{parts:[stand(kt.st[0],kt.st[1])],cast:true,s:[1.1,1.35],y:-.26,j:.16});
     const x0=I.x0+1,y0=I.y0+1,x1=I.x0+I.w-1,y1=I.y0+I.h-1,dw=(x,y)=>{x=Math.max(x0,Math.min(x1-1,Math.round(x)));y=Math.max(y0,Math.min(y1-1,Math.round(y)));return DW[y*W+x]};
     const nrm=(x,y)=>{const gx=dw(x+1,y)-dw(x-1,y),gy=dw(x,y+1)-dw(x,y-1),l=Math.hypot(gx,gy)||1;return [gx/l,gy/l]};
@@ -92,4 +92,4 @@ function v123Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
       const S=T[k],s=ri(S.s[0],S.s[1]),r=(/oak/.test(k)?1.25:/pine/.test(k)?1.05:.85)*s;if(!clear(x,z,r,.45*s))continue;
       if(rnd()>kt.bd){addO(x,z,r*.8);continue} // a gap in the row: sparse themes keep more of them
       out.push({k,x,z,ry:rnd()*6.283,s,col:0});addO(x,z,r);st.back++}});
-  st.ms=Math.round(performance.now()-T0);window.V123=st}catch(err){console.warn('v123 edges',err)}}
+  st.ms=Math.round(performance.now()-T0);window.V124=st}catch(err){console.warn('v124 edges',err)}}

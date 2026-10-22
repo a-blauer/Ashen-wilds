@@ -247,7 +247,7 @@ function wdDeco(){const T0=performance.now();
       (stats.dbg=stats.dbg||[]).push([r,E.k,E.w,L.length,want,got])});
     stats.zones.push(zn);stats[p.n]=zstat;if(ZS)sd=sd0});
   if(ZX&&ZX.post)ZX.post(out,col);
-  if(typeof v123Edge=='function')v123Edge(KIT,out); // v123: the clean edge line (2270)
+  if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }

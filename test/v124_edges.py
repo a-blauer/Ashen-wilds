@@ -1,5 +1,5 @@
-# v123: screenshots of the map edge (rim) of every zone instance, looking from the walkable ground at the rim.
-# out/v123<TAG>_<zone>_<k>[_n].png plus a contact sheet out/v123<TAG>_sheet.png.
+# v124: screenshots of the map edge (rim) of every zone instance, looking from the walkable ground at the rim.
+# out/v124<TAG>_<zone>_<k>[_n].png plus a contact sheet out/v124<TAG>_sheet.png.
 # ZONES=0,1 picks zones, KS=0,1,2,3 the instances (3 = the Den), F=0.3,0.7 the spots along the road.
 import os,sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -26,12 +26,12 @@ def s(pg):
                   window.FCAM=null;STEP(1.5);
                   const g=GH(hx,hz);FC([hx-best.nx*3,g+4.5,hz-best.ny*3],[best.x+best.nx*2,GH(best.x,best.y)+2.5,best.y+best.ny*2]);STEP(.3);
                   return [I.n,best.x,best.y,MAP[best.y][best.x]]}""".replace("GRV","1" if os.environ.get("GROVE") else "0"),[z,k,f])
-                p=OUT+'/v123%s_%d_%d%s.png'%(TAG,z,k,'' if fi==0 else '_%d'%fi);L.shot(pg,p);shots.append(p);print(r,p,flush=True)
+                p=OUT+'/v124%s_%d_%d%s.png'%(TAG,z,k,'' if fi==0 else '_%d'%fi);L.shot(pg,p);shots.append(p);print(r,p,flush=True)
     try:
         from PIL import Image
         ims=[Image.open(p) for p in shots];w,h=ims[0].size;cols=len(KS)*len(FS);rows=(len(ims)+cols-1)//cols
         sh=Image.new('RGB',(w*cols//2,h*rows//2))
         for i,im in enumerate(ims):sh.paste(im.resize((w//2,h//2)),((i%cols)*w//2,(i//cols)*h//2))
-        sh.save(OUT+'/v123%s_sheet.png'%TAG)
+        sh.save(OUT+'/v124%s_sheet.png'%TAG)
     except Exception as e:print('sheet',e)
 play.run(s,w=960,hh=560)

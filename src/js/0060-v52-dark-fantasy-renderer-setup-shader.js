@@ -214,5 +214,5 @@ const gtT=new THREE.CanvasTexture(GTX.town.c);gtT.anisotropy=gt.anisotropy;GTX.t
 const NODE={},ZM=new THREE.Matrix4().makeScale(0,0,0),regN=(x,y,m,i)=>{(NODE[y*W+x]=NODE[y*W+x]||[]).push([m,i,null])};
 const hx=(a,k)=>((a[0]*k|0)<<16)|((a[1]*k|0)<<8)|(a[2]*k|0);
 const trees=[],gr=[];
-MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v123Rim=='function'&&v123Rim(x,y)))trees.push([x,y]); // v123: the rim draws its own edge (2270)
+MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v124Rim=='function'&&v124Rim(x,y)))trees.push([x,y]); // v124: the rim draws its own edge (2270)
  if(t=='g')gr.push([x,y]);}));
