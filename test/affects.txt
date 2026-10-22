@@ -1,0 +1,20 @@
+# Which tests a change needs (run_suite.py changed). Format: <regex on the changed file's path>: <tests from full.txt>
+# The smoke suite always runs too. A path matching a FULL rule runs the whole full suite.
+# Matching is case-insensitive on paths like src/js/1960-v109-kingdom-growth-shop-upgrades.js. Changed test files run themselves.
+# When you add a test to full.txt, add it to the rules for the systems it covers.
+
+# Core engine, page, build and test tools: anything can break -> full suite
+# (Editing full.txt / smoke.txt / this file does not: a new test listed there runs because its own file changed.)
+FULL: ^src/js/0(0\d|1[0-4])\d|^src/page|^src/style|^build\.sh|^test/(play|fast|ci_run|run_suite|mpt|v100_lib)\.py|^test/vendor/|^test/ci_known_fail\.txt
+
+save|slot|export|0230-: v38t.py v114_save.py v116_slots.py
+kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor: v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
+instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes: v108_instances.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
+sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py
+compan|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v57t.py v100_fusemenu.py v105_abil.py v122_support.py v113_roster.py
+abilit|skill|talent|class|spell|resource|helpers-new: v117_abilities.py v105_abil.py v119_abprev.py v114_race.py
+beast|race|creator|look|model|humanoid|outfit|armour|equipment|helm|jewel|gear|item|md|ornate|hair|chest|boots|amulet: v120_anim.py v114_race.py v117_creator.py v117_wclip.py v117_grip_atk.py v117_xbow.py
+grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|tilt|movement|mount|riding|carry: v120_anim.py v117_grip_atk.py v117_xbow.py v117_wclip.py v110_fight.py v73t.py v32t.py
+menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py
+signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp: v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py
+coop|co-op|net: v108_instances.py v116_slots.py
