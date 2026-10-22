@@ -7004,8 +7004,8 @@ function spinFx(r,col,ms){const m=new THREE.Mesh(new THREE.RingGeometry(r*.35,r,
 function thrustFx(d,len,col){const g=new THREE.Group(),m=new THREE.Mesh(new THREE.BoxGeometry(.16,.04,len),addMat(col||0xe8f0ff));m.position.z=len/2;g.add(m);g.position.copy(gY(pl.position,.95));g.rotation.y=Math.atan2(d.x,d.z);scene.add(g);
   tw(170,k=>{m.material.opacity=.85*(1-k);m.scale.set(1-k*.6,1,.4+k*.6);m.position.z=len*(.2+k*.3)},()=>{scene.remove(g);m.geometry.dispose()})}
 
-// v125: weapon numbers that used to be written into the code (balance knobs; values set in 2290-v125-balance.js)
-var WB125={knSpread:.17,knDup:1,knPierce:0,shock:.35,slam:.6,knife:.5,wandBig:2.1,wandSplash:1.5,slingRic:2,orbFirst:.9,orbJump:.4};
+// v127: weapon numbers that used to be written into the code (balance knobs; values set in 2300-v127-balance.js)
+var WB127={knSpread:.17,knDup:1,knPierce:0,shock:.35,slam:.6,knife:.5,wandBig:2.1,wandSplash:1.5,slingRic:2,orbFirst:.9,orbJump:.4};
 // melee weapons: combo tables
 var MW={
   ga:{N:3,m:[1.05,1.15,1.8],ms:[340,340,540],a:[0,1,2],rg:1.08,half:1.15,fin:'whirl',col:0xffc890},
@@ -7027,13 +7027,13 @@ function wMelee(Q,C,s,raw,d,spdK,base){
     if(dir==null)spinFx(rg,Q.col,fin?340:260);else if(Q.thrust&&!fin)thrustFx(d,rg,Q.col);else{slashFx(d,Q.a?Q.a[st]:0,rg);if(Q.dual)slashFx(d,(Q.a?Q.a[st]:0)==1?0:1,rg*.9)}
     const hits=area(pl.position,rg,raw*mult,{mt:C.mt,col:Q.col,basic:1},dir,half);
     if(Q.bleedC)hits.forEach(e=>{if(Math.random()<Q.bleedC)wBleed(e,3,raw)});
-    if(Q.shock){const p=pl.position.clone().addScaledVector(d,rg*.8);ring(p,0xffe08a,1.8,260);area(p,1.8,raw*mult*WB125.shock,{mt:C.mt,col:0xffe08a,proc:false},null,0)}
+    if(Q.shock){const p=pl.position.clone().addScaledVector(d,rg*.8);ring(p,0xffe08a,1.8,260);area(p,1.8,raw*mult*WB127.shock,{mt:C.mt,col:0xffe08a,proc:false},null,0)}
     if(fin){
       if(Q.fin=='whirl'){hits.forEach(e=>wBleed(e,4,raw));burst(gY(pl.position,.6),0xd04a3a,30,3,1.2,.5)}
       else if(Q.fin=='sweep'){hits.forEach(e=>{const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z).normalize();wPush(e,v,1.8)});slashFx(d,0,rg)}
       else if(Q.fin=='stun')hits.forEach(e=>eStatus(e,{stun:.9},0,'h'));
       else if(Q.fin=='slam'){const p=pl.position.clone().addScaledVector(d,1.2);ring(p,0xffd060,3.8,420);burst(gY(p,.15),0xc8b090,40,3.5,1.6,.6);
-        const h2=area(p,3.8,raw*mult*WB125.slam,{mt:C.mt,col:0xffd060,proc:false},null,0);h2.forEach(e=>eStatus(e,{stun:.5},0,'h'));shake(.3)}
+        const h2=area(p,3.8,raw*mult*WB127.slam,{mt:C.mt,col:0xffd060,proc:false},null,0);h2.forEach(e=>eStatus(e,{stun:.5},0,'h'));shake(.3)}
       else if(Q.fin=='holy'){ring(pl.position,0xfff0a0,rg+.4,380);if(hits.length){healHero(Math.round(heroMax()*.015*Math.min(6,hits.length)));burst(gY(pl.position,1),0xfff0a0,24,1.4,2,.6)}}
       else if(Q.fin=='pounce'){hits.forEach(e=>wBleed(e,3,raw));burst(gY(pl.position,.5),0xff6a6a,20,2,1.4,.4)}
       if(Q.fin!='slam'){ring(pl.position.clone().addScaledVector(d,dir?1.2:0),0xffe0a0,dir?2.4:rg,320);shake(.14)}
@@ -7044,19 +7044,19 @@ function wMelee(Q,C,s,raw,d,spdK,base){
 }
 var WBEH={
   knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
-    const vol=new Set();for(let i=0;i<n;i++){const a=(i-(n-1)/2)*WB125.knSpread;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',vol,pierce:WB125.knPierce},raw*WB125.knife,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
+    const vol=new Set();for(let i=0;i<n;i++){const a=(i-(n-1)/2)*WB127.knSpread;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',vol,pierce:WB127.knPierce},raw*WB127.knife,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
   crossbow(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow'},raw,.75);
     const sh=shots[shots.length-1];if(sh){sh.m.scale.setScalar(1.5);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.45);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}sfx('arrow');shake(.05)},base*380)},
-  sling(C,s,raw,d,spdK,base){atkCd=base;SWNOL=1;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB125.slingRic},raw,.65);sfx('blunt',.5)})},
+  sling(C,s,raw,d,spdK,base){atkCd=base;SWNOL=1;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB127.slingRic},raw,.65);sfx('blunt',.5)})},
   wand(C,s,raw,d,spdK,base){atkCd=base;wandN++;const big=wandN%5==0;staffAnim(base*520);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);
-    launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?WB125.wandSplash:0},raw*(big?WB125.wandBig:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
+    launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?WB127.wandSplash:0},raw*(big?WB127.wandBig:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
   orb(C,s,raw,d,spdK,base){atkCd=base;staffAnim(base*700);setTimeout(()=>{if(!party.length)return;let e0=tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<11?tgt:nearestFront(11);
     if(!e0){const p=pl.position.clone().addScaledVector(aimDir(),3);burst(gY(p,1),0x9ad8ff,14,1.2,1,.4);return}face(V(e0.m.position.x-pl.position.x,0,e0.m.position.z-pl.position.z).normalize());
     orbChain(e0,raw);sfx('zap')},base*300)}
 };
 Object.keys(MW).forEach(k=>{WBEH[k]=(C,s,raw,d,spdK,base)=>wMelee(MW[k],C,s,raw,d,spdK,base)});
 function orbChain(e0,raw){let cur=e0,from=pl.position.clone();const hit=new Set();
-  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB125.orbJump:WB125.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
+  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB127.orbJump:WB127.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
     cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}}
 var WFX={
   knife(e,s,raw){if(Math.random()<.3)wBleed(e,2.5,raw)},
@@ -19314,8 +19314,8 @@ function chunkVis(){
 // time offset (hips and legs lead, the wrist trails). New pose channels: spine side-bend (sz), chest twist (cy), hip yaw
 // (lhy/rhy, keeps the feet pointing forward while the pelvis turns), ankles (la/ra), off-arm roll (ly), wrist deviation
 // (rz/lq). Gameplay is untouched: same hit moments, durations, cooldowns, ranges and damage — only bone rotations change.
-// Bow: the carry grip now holds the bow at the riser low at the side, limbs near vertical, string facing out (away from the
-// leg), the arm relaxed (V100A_BOW); shots still use the v85/v91 draw.
+// Bow: the carry grip now holds the bow at the riser low at the side, limbs near vertical, string facing in (toward the
+// leg; v125: it faced out, outside the bow arm), the arm relaxed (V100A_BOW); shots still use the v85/v91 draw.
 var V100A_LAG={py:-.03,pz:-.025,dy:-.02,lh:-.03,rh:-.03,lk:-.03,rk:-.03,lhy:-.03,rhy:-.03,la:-.03,ra:-.03,sy:-.012,sx:-.01,sz:-.01,cy:-.004,hx:-.02,hy:-.02,
   ax:0,ay:0,az:0,ex:.004,rw:.012,rz:.012,lx:.01,ly:.01,lz:.01,le:.016,lw:.02,lq:.02};
 // extra channels on the hero/humanoid skeleton (key -> [bone, axis]); legs get the moving-blend treatment like the old ones
@@ -19359,12 +19359,12 @@ var V100A_MAP={sword:['sword0','sword1','sword2'],gs:['gs0','gs1','gs2'],ga:['ga
 // ---------------- bow carry (idle, walking, combat-ready, riding, previews, archer foes) ----------------
 // The bow model is a deep C: the riser sits .555 in front of the string and the limb tips are ±.6 above/below it, so held
 // upright at a hanging hand the lower limb touched the ground and swept through the legs when walking. Now it is carried like
-// a hunter carries a longbow: the left hand on the riser, the bow tipped forward-down (phi) and turned a little out (psi),
-// string behind the hand, the lower limb trailing back clear of the leg; the arm hangs relaxed, slightly out from the body
+// a hunter carries a longbow: the left hand on the riser, the bow tipped forward-down (phi) and turned a little (psi),
+// string behind the hand and on the inside of the bow arm (v125, psi was +.2: string outside the arm), the lower limb trailing back clear of the leg; the arm hangs relaxed, slightly out from the body
 // with a soft elbow. Shots are untouched (the v93 strike grip takes over at the start of a shot, as before).
-var V100A_BOW={phi:.28,psi:.2,roll:-.08,lx:-.06,lz:-.13,le:-.22,sw:.65,an:[0,-.045,.015]};
+var V100A_BOW={phi:.28,psi:-.28,roll:-.08,lx:-.06,lz:-.13,le:-.22,sw:.65,an:[0,-.045,.015]};
 function V100A_bowQ(){const B=V100A_BOW,E=THREE.Euler,Q=THREE.Quaternion,V3=THREE.Vector3;
-  // model axes: +x riser→string, +y upper limb. Wanted (hero frame): string back-up, limb up-forward, yawed out
+  // model axes: +x riser→string, +y upper limb. Wanted (hero frame): string back-up, limb up-forward, yawed so the string is toward the body
   const X=new V3(0,Math.sin(B.phi),-Math.cos(B.phi)),Y=new V3(0,Math.cos(B.phi),Math.sin(B.phi)),Z=new V3().crossVectors(X,Y);
   const m=new THREE.Matrix4().makeBasis(X,Y,Z),q=new Q().setFromRotationMatrix(m);
   q.premultiply(new Q().setFromEuler(new E(0,B.psi,B.roll)));
@@ -19475,7 +19475,7 @@ function V100W_pose(P,D,wind,rest){
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
 var SWFIN=0; // the next swing is a combo finisher (bigger lunge)
-var SWNOL=0; // v125: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
+var SWNOL=0; // v127: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
 {const base=swingAnim;
 swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   let P=null;try{P=atkPick(st|0)}catch(_){}
@@ -30029,30 +30029,49 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
       if(rnd()>kt.bd){addO(x,z,r*.8);continue} // a gap in the row: sparse themes keep more of them
       out.push({k,x,z,ry:rnd()*6.283,s,col:0});addO(x,z,r);st.back++}});
   st.ms=Math.round(performance.now()-T0);window.V124=st}catch(err){console.warn('v124 edges',err)}}
-// ================= v125: balance pass — companion spells, hero abilities, weapons =================
+// ================= v126 title card timing, camp cards show only the name =================
+// Zone (area) title cards stay up 1 s longer (5.2 s -> 6.2 s) and the blur that comes with the fade-out starts 2 s later
+// (4.16 s -> 6.16 s), so the card fades out sharp. They get their own keyframes (zt126) so camp cards (camp123, 3.8 s, zt116) are unchanged.
+// Camp cards drop the description line under the camp name; an empty sub line is left out of every card.
+var ZT126_MS=6200;
+zt116Show=function(T,kick,title,sub,foot,cls){
+  let h=ZT116.el;if(!h){h=ZT116.el=document.createElement('div');h.id='ztc116';($('stage')||document.body).appendChild(h)}
+  clearTimeout(ZT116.tm);h.className='';void h.offsetWidth;
+  h.style.cssText=`--zc1:${T.c1};--zc2:${T.c2};--zc3:${T.c3};--zf:${T.f}`;
+  h.innerHTML=`<div class="ztk">${zt116Esc(kick)}</div><div class="ztt">${zt116Esc(title)}</div>${zt116Orn(T.e)}${sub?`<div class="zts">${zt116Esc(sub)}</div>`:''}${foot?`<div class="ztf">${foot}</div>`:''}`;
+  h.className='on '+(cls||'');ZT116.tm=setTimeout(()=>{h.className=''},ZT126_MS)};
+// camp cards: cs123Card passes C.des.sub as the line under the name; blank it for that call only
+{const f=cs123Card;cs123Card=function(){const s=zt116Show;zt116Show=function(T,kick,title,sub,foot,cls){return s.call(this,T,kick,title,'',foot,cls)};
+  try{return f.apply(this,arguments)}finally{zt116Show=s}}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+#ztc116.on{animation:zt126 6.2s ease forwards}
+#ztc116.camp123.on{animation:zt116 3.8s ease forwards}
+@keyframes zt126{0%{opacity:0;filter:blur(6px)}8.4%{opacity:1;filter:blur(0)}83.2%{opacity:1}99.3%{filter:blur(0)}100%{opacity:0;filter:blur(2px)}}
+</style>`);
+// ================= v127: balance pass — companion spells, hero abilities, weapons =================
 // Measured with a level 10–50 harness (every class × every weapon, 30 s fights against one target and a group of four;
-// every companion spell on a training dummy). See README "Balance (v125)".
+// every companion spell on a training dummy). See README "Balance (v127)".
 //
 // 1. Companion element reactions: a companion can no longer react with itself.
 //    Before: a companion's own spell status (poison, burn) set an element on the target, then the companion's family element
 //    (Dragon = fire, Swarm = poison, …) landed on the same hit and set off a reaction — on EVERY tick of a lingering spell.
 //    Venomcoil's Toxic Cloud (fire family + poison cloud) set off COMBUST! 32 times per cast (~7× a normal spell).
 //    Now an element set by a companion's hit only reacts with elements from other sources (your hits, the other companion).
-var CH125=null;
-{const f=compHit;compHit=function(c,e){const o=CH125;CH125=e?{c,e}:null;try{return f.apply(this,arguments)}finally{CH125=o}}}
+var CH127=null;
+{const f=compHit;compHit=function(c,e){const o=CH127;CH127=e?{c,e}:null;try{return f.apply(this,arguments)}finally{CH127=o}}}
 {const f=applyEl;applyEl=function(e,el,raw,src){
-  if(!CH125||CH125.e!==e||!e||e.dead)return f.apply(this,arguments);
+  if(!CH127||CH127.e!==e||!e||e.dead)return f.apply(this,arguments);
   const t=nowP(),cur=e.el&&e.el.t>t?e.el:null;
-  if(cur&&cur.k!==el&&cur.by===CH125.c){cur.t=t+5000;return 1}   // own element: refresh, no reaction
-  const r=f.apply(this,arguments);if(e.el&&e.el.k===el)e.el.by=CH125.c;return r}}
+  if(cur&&cur.k!==el&&cur.by===CH127.c){cur.t=t+5000;return 1}   // own element: refresh, no reaction
+  const r=f.apply(this,arguments);if(e.el&&e.el.k===el)e.el.by=CH127.c;return r}}
 
 // 2. Companion spells (CSP.m = damage per hit/tick). Lingering area spells hit 6–8 times and were 2–2.4× a normal spell on one
 //    target; they keep their crowd strength but come down. The weakest spells come up (crowd control spells stay a little lower).
 //    Was → now: Toxic Cloud .6→.4, Choking Spores .6→.35, Plague .8→.45, Brood Swarm 1→.55, Skyfall 1.4→.7, Tempest .9→.7;
 //    Web Snare .8→1.5, Sonic Screech .9→1.6, Cyclone 1.8→2.6, Quake Stomp 1.6→2.1, Gale Dive 1.5→1.9, Alpha Roar 2.5→3, Thunder Talon 1.6→2.
-var BAL125_CSP={'Toxic Cloud':.4,'Choking Spores':.35,'Plague':.45,'Brood Swarm':.55,'Skyfall':.7,'Tempest':.7,
+var BAL127_CSP={'Toxic Cloud':.4,'Choking Spores':.35,'Plague':.45,'Brood Swarm':.55,'Skyfall':.7,'Tempest':.7,
   'Web Snare':1.5,'Sonic Screech':1.6,'Cyclone':2.6,'Quake Stomp':2.1,'Gale Dive':1.9,'Alpha Roar':3,'Thunder Talon':2};
-for(const k in BAL125_CSP)if(CSP[k])CSP[k].m=BAL125_CSP[k];
+for(const k in BAL127_CSP)if(CSP[k])CSP[k].m=BAL127_CSP[k];
 
 // 3. Hero abilities: KQR_TUNE is the per-ability damage factor (v90). Outliers measured at level 50, rank 1, in damage per
 //    second of cooldown against the rest of the same class.
@@ -30075,13 +30094,13 @@ KQR_CLS.mage.skillP=L=>-.04+.008*L;
 KQR_CLS.ranger.basicP=.17;KQR_CLS.ranger.skillP=.03;
 // Assassin: +12% max health (the most fragile class, and a melee one). Max health is computed before the class knobs, so it is
 // applied here on the finished stats.
-var BAL125_HP={assassin:1.12};
-{const f=HS;HS=function(){const s=f.apply(this,arguments);if(!s._b125){s._b125=1;const k=BAL125_HP[hero&&hero.cls];if(k)s.hp*=k}return s}}
+var BAL127_HP={assassin:1.12};
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(!s._b127){s._b127=1;const k=BAL127_HP[hero&&hero.cls];if(k)s.hp*=k}return s}}
 
 // 4. Throwing knives: one throw (a fan of 3, or 5 every 4th throw) hits each enemy with one knife at full damage; the other knives of
-//    the same throw that hit that enemy deal WB125.knDup of their damage. Before, every knife of the fan landed on a lone enemy at
+//    the same throw that hit that enemy deal WB127.knDup of their damage. Before, every knife of the fan landed on a lone enemy at
 //    close range (after Eviscerate / Shadow Rush dash you in), so the fan was a point-blank shotgun: ~+50% over daggers on one target.
-{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=WB125.knDup;else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
+{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=WB127.knDup;else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
 
 // 5. Weapons. Each weapon keeps an identity; at every level 10–50 it lands within ~8% of its target against the average of all
 //    16 class + weapon pairs (30 s fights with the class's best abilities, one target / a pack of four):
@@ -30089,19 +30108,19 @@ var BAL125_HP={assassin:1.12};
 //      a crowd     (≈ −8% alone, +8% in a pack): Greataxe, Halberd, Warhammer, Flail, Throwing Knives; Orb ≈ −12% / +12%
 //      balanced    (≈ 0 / 0): Greatsword, Mace, Crossbow, Sling, Staff
 //    WTYPE.k = weapon attack (everything you do scales with it); MW = melee combo (m: hit multipliers, half: half-width of the swing
-//    arc in radians, rg: reach); WB125 = numbers that were written into the attack code (0580).
+//    arc in radians, rg: reach); WB127 = numbers that were written into the attack code (0580).
 Object.assign(WTYPE.ga,{k:1.16});MW.ga.m=[1,1.1,1.4];                         // was k 1.32, finisher 1.8: +10% / +35%
 Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.62,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
-Object.assign(WTYPE.hammer,{k:.84});Object.assign(MW.hammer,{m:[1,1.05,1.6],half:.8});WB125.shock=.05;WB125.slam=.03;
+Object.assign(WTYPE.hammer,{k:.84});Object.assign(MW.hammer,{m:[1,1.05,1.6],half:.8});WB127.shock=.05;WB127.slam=.03;
                                                                                  // was k 1.12, [1.1,1.2,1.9], arc 1.1, shockwave 35%, slam 60%: +52% / +83%
 Object.assign(WTYPE.mace,{k:1.2});Object.assign(MW.mace,{half:.8});            // was 1.0, arc 1.15: −6% / −24%
 Object.assign(WTYPE.flail,{k:1.18});Object.assign(MW.flail,{m:[.95,1,1.5],half:1.9,rg:1.5});   // was 1.02, [.9,.95,1.45], arc 1.48, reach 1.12: −19% / −30%
 Object.assign(WTYPE.dagger,{k:.9});Object.assign(WTYPE.claws,{k:.84});MW.claws.rg=1.0;   // were .78 / .8; claws reach .85 (could not reach a second enemy)
 Object.assign(WTYPE.bow,{k:1.08});                                              // was 1.0
-Object.assign(WTYPE.wand,{k:.8});WB125.wandSplash=.5;                          // was .58, big-bolt burst 1.5
-WB125.orbJump=.55;                                                              // chain jumps after the first: 40% → 55%
-WB125.slingRic=3;                                                               // ricochets: 2 → 3
-WB125.knife=.68;WB125.knSpread=.45;WB125.knDup=.3;WB125.knPierce=1;            // was 50% per knife, fan .17, no pierce (see 4.)
+Object.assign(WTYPE.wand,{k:.8});WB127.wandSplash=.5;                          // was .58, big-bolt burst 1.5
+WB127.orbJump=.55;                                                              // chain jumps after the first: 40% → 55%
+WB127.slingRic=3;                                                               // ricochets: 2 → 3
+WB127.knife=.68;WB127.knSpread=.45;WB127.knDup=.3;WB127.knPierce=1;            // was 50% per knife, fan .17, no pierce (see 4.)
 // Greatsword and Daggers used the plain class combo (0130 swing_base); they now have combo tables of their own (same hits, timing and
 // animation) so their swing width can be tuned: the greatsword's arc was 1.15 (it hit a pack as well as the cleaving greataxe) and the
 // daggers' 1.15 (a single-target weapon that was better in a pack than alone).

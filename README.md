@@ -68,7 +68,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
 | v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
 | v124 clean map edges: the rim of every zone instance is a tidy row of themed ledge stones with a spaced row of themed scenery behind (`v124Edge`, kits per instance), the old rim trees and boulders are no longer drawn (`v124Rim`), choppable trees grow in groves inside the fields (`v124Groves`) | `2280-v124-clean-edges.js` (hooks in `0045`, `0060`, `0070`, `1680`) |
-| v125 balance: companion spells (`BAL125_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB125`), companion self-reaction fix (`CH125`), knife volleys | `2290-v125-balance.js` (knobs `WB125` in `0580`, no-lunge throws `SWNOL` in `1710`) |
+| v127 balance: companion spells (`BAL127_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB127`), companion self-reaction fix (`CH127`), knife volleys | `2300-v127-balance.js` (knobs `WB127` in `0580`, no-lunge throws `SWNOL` in `1710`) |
 
 ## Conventions (read before changing code)
 
@@ -92,9 +92,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
 - **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
   about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
-- **Balance (v125)**: measured with `test/v125_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
+- **Balance (v127)**: measured with `test/v127_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
   four abilities against one target and against two crowd shapes (a tight pack of 3 around the target, a spread pack of 5), plus
-  every companion spell; ~12 min headless: `python3 test/v125_balance/mat.py` then `python3 test/v125_balance/rep.py out/mat_x.json`).
+  every companion spell; ~12 min headless: `python3 test/v127_balance/mat.py` then `python3 test/v127_balance/rep.py out/mat_x.json`).
   Melee heroes fight at ~70% of their weapon's reach, ranged and thrown weapons at 2.2. Each weapon has an identity and lands within
   ~10% of its target against the average of all 16 pairs: one target (+8 alone / −8 in a crowd: Twin Axes, Daggers, Claws, Bow, Wand),
   a crowd (−8 / +8: Greataxe, Halberd, Warhammer, Flail, Throwing Knives; Orb −12 / +12), balanced (Greatsword, Mace, Crossbow, Sling,
@@ -103,8 +103,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Fixes found on the way: a companion's own spell status (poison, burn) no longer reacts with its own family element on the same
   target (Venomcoil's Toxic Cloud set off COMBUST! on every tick, ~7× a normal spell); the sling and throwing knives no longer lunge
   forward on each throw (`SWNOL`: the hero walked into the enemy and stones, knives and ability shots spawned past it); a knife fan
-  hits each enemy with one knife at full damage (`WB125.knDup` for the rest of that throw). When tuning, change the numbers in
-  `2290-v125-balance.js` and re-run the harness; `hpP` class knobs do not reach max health (it is computed before them; see `BAL125_HP`).
+  hits each enemy with one knife at full damage (`WB127.knDup` for the rest of that throw). When tuning, change the numbers in
+  `2300-v127-balance.js` and re-run the harness; `hpP` class knobs do not reach max health (it is computed before them; see `BAL127_HP`).
 - **Balance (v112)**: kill XP `ECON96.xp` .1875 (another 75% off); ability ranks cost twice as many points (`kqrCost`);
   elites are about a third as common (camps 1.8% + 0.4%·tier, wanderers 1.2%, in `rosterBuild`); Sovereign health ×4.5
   (`PACE.hp`, was 1.5: three times v110) with posture rescaled so staggers come as often as before; `svPick` never repeats

@@ -1,4 +1,4 @@
-# v125 balance harness: python3 test/v125_balance/mat.py  (env: LV=10,20 CL=mage COMP=1 TUNE=<js file applied first> TAG=name SRC=<build>) -> out/mat_<TAG>.json; then python3 test/v125_balance/rep.py out/mat_<TAG>.json
+# v127 balance harness: python3 test/v127_balance/mat.py  (env: LV=10,20 CL=mage COMP=1 TUNE=<js file applied first> TAG=name SRC=<build>) -> out/mat_<TAG>.json; then python3 test/v127_balance/rep.py out/mat_<TAG>.json
 # full matrix: per level, per class -> best loadouts (one target / group), then every weapon of the class: basic, fight 1, fight 4, toughness
 import sys,json,os,time
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))

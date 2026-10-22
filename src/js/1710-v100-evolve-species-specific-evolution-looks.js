@@ -23,7 +23,7 @@ function V100W_pose(P,D,wind,rest){
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
 var SWFIN=0; // the next swing is a combo finisher (bigger lunge)
-var SWNOL=0; // v125: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
+var SWNOL=0; // v127: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
 {const base=swingAnim;
 swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   let P=null;try{P=atkPick(st|0)}catch(_){}
