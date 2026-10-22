@@ -65,6 +65,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v117 frog Mage carry hold (`FC116`: arm IK, upright staff, wand, orb) | `2220-v117-frog-carry.js` |
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
+| v120 balance: companion spells (`BAL120_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB120`), companion self-reaction fix (`CH120`), knife volleys | `2250-v120-balance.js` (knobs `WB120` in `0580`, no-lunge throws `SWNOL` in `1710`) |
 
 ## Conventions (read before changing code)
 
@@ -88,6 +89,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
 - **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
   about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
+- **Balance (v120)**: measured with `test/v120_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
+  four abilities against one target and a pack of four, plus every companion spell; ~9 min headless, `python3 test/v120_balance/mat.py`
+  then `rep.py out/mat_x.json`). Each weapon has an identity and lands within ~8% of its target against the average of all 16 pairs:
+  one target (+8 alone / −8 in a pack: Twin Axes, Daggers, Claws, Bow, Wand), a crowd (−8 / +8: Greataxe, Halberd, Warhammer, Flail,
+  Throwing Knives; Orb −12 / +12), balanced (Greatsword, Mace, Crossbow, Sling, Staff). The five classes are within ±8% of each other.
+  Fixes found on the way: a companion's own spell status (poison, burn) no longer reacts with its own family element on the same
+  target (Venomcoil's Toxic Cloud set off COMBUST! on every tick, ~7× a normal spell); the sling and throwing knives no longer lunge
+  forward on each throw (`SWNOL`: the hero walked into the enemy and stones, knives and ability shots spawned past it); a knife fan
+  hits each enemy with one knife at full damage (`WB120.knDup` for the rest of that throw). When tuning, change the numbers in
+  `2250-v120-balance.js` and re-run the harness; `hpP` class knobs do not reach max health (it is computed before them; see `BAL120_HP`).
 - **Balance (v112)**: kill XP `ECON96.xp` .1875 (another 75% off); ability ranks cost twice as many points (`kqrCost`);
   elites are about a third as common (camps 1.8% + 0.4%·tier, wanderers 1.2%, in `rosterBuild`); Sovereign health ×4.5
   (`PACE.hp`, was 1.5: three times v110) with posture rescaled so staggers come as often as before; `svPick` never repeats
