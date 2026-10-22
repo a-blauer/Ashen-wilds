@@ -1,6 +1,7 @@
 # v128: the warrior's Whirlwind pose — the weapon is held out level while spinning (it pointed up before).
 #   out/v128_whirl.jpg: per warrior weapon type a row of frames during the channel (side, front, top views)
-#   checks: for each weapon type the weapon's tip sits away from the body and roughly level (not pointing up)
+#   checks: for each weapon type the weapon is held level and away from the body; two-handed weapons have both hands on the grip,
+#   dual axes one in each outstretched hand; the companion does not circle the hero during the spin (it chased a spinning follow spot)
 import os,sys,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -9,7 +10,7 @@ LIB=open(HERE+'/v90_abil_lib.js').read()
 res=[]
 def chk(n,ok,info=''):
     res.append(ok);print(('PASS ' if ok else 'FAIL ')+n,'' if ok else info)
-JS=r"""async(wts)=>{const V=THREE.Vector3,FW=220,FH=220,views=[[2.6,1.1,0],[0,1.1,2.6],[0.01,3.4,0]];
+JS=r"""async(wts)=>{const V=THREE.Vector3,FW=220,FH=220,views=[[1.7,.7,0],[0,.7,1.7],[0.01,2.4,0]];
   const cnv=document.createElement('canvas');cnv.width=FW*views.length*2;cnv.height=FH*wts.length;const x=cnv.getContext('2d');
   const cam=new THREE.PerspectiveCamera(40,1,.05,60),out={};const sz=ren.getSize(new THREE.Vector2());
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -25,11 +26,18 @@ JS=r"""async(wts)=>{const V=THREE.Vector3,FW=220,FH=220,views=[[2.6,1.1,0],[0,1.
       // weapon tip: the mesh point farthest from the hand along the model's -y (blade/head axis)
       if(W){const hand=pl.bones.aR2.getWorldPosition(new V());
         const tip=W.localToWorld(new V(0,-1.2,0)),dir=tip.clone().sub(W.getWorldPosition(new V())).normalize();
-        S.push({up:+dir.y.toFixed(2),handR:+Math.hypot(hand.x-P.x,hand.z-P.z).toFixed(2),handY:+(hand.y-P.y).toFixed(2)})}
+        S.push({hands:+hand.distanceTo(pl.bones.aL2.getWorldPosition(new V())).toFixed(2),up:+dir.y.toFixed(2),handR:+Math.hypot(hand.x-P.x,hand.z-P.z).toFixed(2),handY:+(hand.y-P.y).toFixed(2)})}
       views.forEach((v,vi)=>{cam.position.set(c.x+v[0],c.y+v[1]-.85+.9,c.z+v[2]);cam.lookAt(c);POST.render=()=>{};
         ren.setSize(FW,FH,false);ren.render(scene,cam);x.drawImage(ren.domElement,(f*views.length+vi)*FW,wi*FH);ren.setSize(sz.x,sz.y,false)});
       x.fillStyle='#fff';x.font='12px sans-serif';x.fillText(wt+' t'+f,f*views.length*FW+4,wi*FH+14)}
     out[wt]={S};await wait(2200)}
+  // companion: no foe around; follow the companion through one spin (it used to circle the hero, chasing a spot that spun with him)
+  const f0=fols[0],tf=teamFoe;teamFoe=()=>null;let comp=null;
+  if(f0){hero.chan=null;hero.cd={};f0.position.set(pl.position.x-Math.sin(pl.rotation.y)*2.2,0,pl.position.z-Math.cos(pl.rotation.y)*2.2);await wait(1500);
+    const ang=()=>Math.atan2(f0.position.x-pl.position.x,f0.position.z-pl.position.z);let a0=ang(),sw=0,path=0,lp=f0.position.clone();
+    cast(0);const t0=performance.now();while(performance.now()-t0<2300){await wait(60);const a=ang();let da=a-a0;da=Math.atan2(Math.sin(da),Math.cos(da));sw+=Math.abs(da);a0=a;path+=lp.distanceTo(f0.position);lp.copy(f0.position)}
+    comp={swept:+sw.toFixed(2),path:+path.toFixed(2)}}
+  teamFoe=tf;out._comp=comp;
   return {img:cnv.toDataURL('image/jpeg',.85),out}}"""
 def s(pg):
     ev=pg.evaluate
@@ -40,11 +48,15 @@ def s(pg):
     r=ev(JS,wts)
     open(play.TMP+'/v128_whirl.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
     print(json.dumps(r['out']))
+    c=r['out'].pop('_comp',None)
+    chk('companion stays put during the spin (angle round the hero < 1, path < 3)',bool(c) and c['swept']<1 and c['path']<3,c)
     for wt,o in r['out'].items():
         if 'err' in o: print('skip',wt,o['err']);continue
         S=o['S'];chk(wt+': channel frames',len(S)>=1,o)
         for i,f in enumerate(S):
             chk(wt+' t%d: weapon held out level (|up|<.45)'%i,abs(f['up'])<.45,f)
-            chk(wt+' t%d: hand away from the body (>.42)'%i,f['handR']>.42,f)
+            if wt=='axes': chk(wt+' t%d: one axe in each outstretched hand (hands > .5 apart)'%i,f['hands']>.5,f)
+            else: chk(wt+' t%d: both hands on the grip (hands < .16 apart)'%i,f['hands']<.16,f)
+            lim=.42 if wt=='axes' else .32;chk(wt+' t%d: hand away from the body (>%.2f)'%(i,lim),f['handR']>lim,f)
     print('RESULT',sum(res),'/',len(res))
 play.run(s,w=900,hh=600)
