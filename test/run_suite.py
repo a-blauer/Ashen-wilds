@@ -53,15 +53,32 @@ log=open(os.path.join(OUT,suite+'.log'),'w')
 def say(s):
     print(s,flush=True);log.write(s+'\n');log.flush()
 say('suite %s: %d tests, build %s'%(suite,len(lines),time.ctime(os.path.getmtime(os.path.join(snap,'ashen-wilds.html')))))
+def tagged(tag):
+    """Processes carrying this test's KQ_RUN marker (browsers inherit it, even once orphaned by a crash)."""
+    out,me=[],os.getpid()
+    for d in os.listdir('/proc'):
+        if not d.isdigit() or int(d)==me:continue
+        try:
+            if tag.encode() in open('/proc/%s/environ'%d,'rb').read():out.append(int(d))
+        except OSError:pass
+    return out
 def run(i_line):
     i,line=i_line;t0=time.time()
     tmp=os.path.join(OUT,'run%d'%i);os.makedirs(tmp,exist_ok=True)
-    env=dict(os.environ,FAST=os.environ.get('FAST','1'),SRC=os.path.join(snap,'ashen-wilds.html'),AW_TMP=tmp)
+    env=dict(os.environ,KQ_RUN='KQ_RUN=%d-%d-%d'%(os.getpid(),i,time.time()),FAST=os.environ.get('FAST','1'),SRC=os.path.join(snap,'ashen-wilds.html'),AW_TMP=tmp)
+    # own process group, so the test's browser is shut down with it even after a crash or timeout
+    # (leftover browsers from crashed tests used to pile up and slow every later test)
+    p=subprocess.Popen([sys.executable,'ci_run.py',line],cwd=HERE,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)
     try:
-        p=subprocess.run([sys.executable,'ci_run.py',line],cwd=HERE,env=env,capture_output=True,text=True,timeout=int(os.environ.get('CI_TIMEOUT','3000'))+120)
-        out=p.stdout+p.stderr;ok=p.returncode==0
+        out=p.communicate(timeout=int(os.environ.get('CI_TIMEOUT','3000'))+120)[0];ok=p.returncode==0
     except subprocess.TimeoutExpired:
         out='TIMEOUT';ok=False
+    finally:
+        import signal
+        for q in tagged(env['KQ_RUN']):   # the test's browser too, even if a crash orphaned it
+            try:os.kill(q,signal.SIGKILL)
+            except ProcessLookupError:pass
+        p.wait()
     open(os.path.join(OUT,'%02d_%s.txt'%(i,line.split()[-1])),'w').write(out)
     tail=[l for l in out.splitlines() if l.startswith('====') or l.startswith('  FAIL')][:12]
     say('%s %-34s %4ds  %s'%('PASS' if ok else 'FAIL',line,time.time()-t0,' | '.join(tail)[:400]))
