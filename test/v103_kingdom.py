@@ -81,7 +81,7 @@ def s(pg):
           if(!HS103.h.length){['S1W','S2E'].forEach(id=>hsBuy103(id))}openX('hold');const o={};o.secs=[...document.querySelectorAll('#xw .sec')].map(s=>s.textContent);o.tabs=document.querySelectorAll('#xw [data-sht]').length;
           o.rows=document.querySelectorAll('#xw .kmrw').length;o.sel=document.querySelectorAll('#xw [data-czk]').length;
           const b=[...document.querySelectorAll('#xw [data-kmb]')].find(x=>x.dataset.kmb=='house:1');if(b)b.click();o.pick=!!KM103.pick;o.pickTxt=($('xwB').querySelector('.kmpick')||{}).textContent||'';return o}""")
-        ok(r['tabs']==0 and len(r['secs'])>=4,'one Steward window: shops, upgrades, houses and citizens in one list',r)
+        ok(r['tabs']==0 and len(r['secs'])>=3,'one Steward window: shops, upgrades and houses in one list (v117: citizens on the Villagers tab)',r)
         ok(r['pick'],'Build puts the window in placing mode',r['pickTxt'])
         if SH:pg.set_viewport_size({'width':1100,'height':700});pg.wait_for_timeout(300);pg.screenshot(path=OUT+'/v103_menu_pick.png')
         r=ev("""()=>{const cv=$('kmCv'),I=KM103.info,l=LOT103.find(l=>lotFree103(l.id)),R=I.R[l.id],rc=cv.getBoundingClientRect(),s=rc.width/cv.width;
@@ -117,7 +117,7 @@ def s(pg):
         ok(r['after']==r['n'],'save + load keeps the decorations',r['after'])
         ok(not r['unreach'] and r['gate'] and r['steward'],'with every decoration on, every door, the gate and the Steward are reachable',r)
         r=ev("()=>{openX('hold');KM103.tab='deco';rX();const o=[document.querySelectorAll('#xw .dccard').length,document.querySelectorAll('#xw [data-kmtab]').length];return o}")
-        ok(r[0]>=20 and r[1]==2,'the Steward window has a Decorations tab',r)
+        ok(r[0]>=20 and r[1]==3,'the Kingdom window has Construction, Villagers and Decorations tabs',r)
         if SH:
             pg.set_viewport_size({'width':1100,'height':700});pg.wait_for_timeout(300);pg.screenshot(path=OUT+'/v104_deco_tab.png');pg.set_viewport_size({'width':1000,'height':620})
             ev("()=>{$('xw').classList.add('hide');KM103.tab='kingdom';const T=TOWNS[0];toPos(T.cx,T.cy+8);pl.visible=false;TOD=.3;STEP(1);FC([T.cx+10,T.ph+12,T.cy+22],[T.cx,T.ph+1,T.cy+2])}");L.shot(pg,OUT+'/v104_deco_plaza.png')
@@ -182,8 +182,8 @@ def s(pg):
               const pr=townPortalPrompt(T);return [pr&&pr.label,CZ103.live.filter(o=>o.g.userData.sign&&o.g.userData.sign.visible).length]}""")
             print('waiting',r);L.shot(pg,OUT+'/v105_collect.png')
             ok(r[0] and 'Collect' in r[0] and r[1]>=1,'a citizen back with goods waits at the door with a sign; F collects',r)
-        r=ev("()=>{openX('hold');KM103.tab='kingdom';KM103.focus='cit';rX();return [document.querySelectorAll('#xw [data-czr]').length,document.querySelectorAll('#xw .kmrole').length]}")
-        ok(r[0]>=4,'every citizen row has a training choice',r)
+        r=ev("()=>{KM103.focus='cit';openX('hold');return [document.querySelectorAll('#xw .vlc').length,document.querySelectorAll('#xw .vlc .vltrs').length,KM103.tab]}")
+        ok(r[0]>=4 and r[1]==r[0] and r[2]=='vill','every villager card has a training choice (v117: a house door opens the Villagers tab)',r)
         if SH:pg.set_viewport_size({'width':1100,'height':700});ev("()=>{const e=$('xwB').querySelector('.kmcits');if(e)e.scrollIntoView()}");pg.wait_for_timeout(300);pg.screenshot(path=OUT+'/v104_roles_menu.png');pg.set_viewport_size({'width':1000,'height':620})
         ev("()=>{$('xw').classList.add('hide')}")
     print('CHECKS OK' if not fails else 'CHECKS FAILED: '+'; '.join(fails))
