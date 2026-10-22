@@ -115,7 +115,8 @@ function cast_base(i){
   }
   hud();
 }
-function compCast(c,f,sp,t){
+function compCast(c,f,sp,t,ally){
+  if(ally&&ally!==pl&&(sp.k=='shield'||sp.k=='heal'||sp.k=='buff')&&compSup122(c,sp,ally))return; // v122: support spell on a companion
   const mult=sp.m||1,fx=sp.fx,P=f.position,col=sp.col,R2=sp.r||2.6;
   if(t){const w=V(t.m.position.x-P.x,0,t.m.position.z-P.z);if(w.lengthSq()>0)f.rotation.y=Math.atan2(w.x,w.z)}
   const d=t?V(t.m.position.x-P.x,0,t.m.position.z-P.z).normalize():V(0,0,1);
