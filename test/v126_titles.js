@@ -1,4 +1,4 @@
-// v125: zone cards 6.2 s with late blur; camp cards show the name without the description line (python3 probe.py v125_titles.js)
+// v126: zone cards 6.2 s with late blur; camp cards show the name without the description line (python3 probe.py v126_titles.js)
 (()=>{const R={};
   const I=INSL.find(x=>x&&!x.den&&!x.tri&&x.k===0);zt116Ins(I);const h=ZT116.el;
   R.zoneAnim=getComputedStyle(h).animationName+' '+getComputedStyle(h).animationDuration;R.zoneSub=!!h.querySelector('.zts');
