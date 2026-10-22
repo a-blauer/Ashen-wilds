@@ -1,8 +1,8 @@
 // ================= v127: the raven Mage (replaces the frog) =================
 // A bipedal raven: a round feathered skull with a heavy curved beak (nasal bristles over its base, a hooked tip, the gape
 // line), dark side-set eyes, shaggy throat hackles and a ruffled nape; a deep keeled chest, a thick feathered neck; arms that
-// are wings (primaries fan out behind each wrist, so they show below a robe's sleeves; bare arms also carry the secondaries
-// along the forearm); scaly three-fingered talon hands with a thumb; feathered thighs over thin scaled shanks; bird feet with
+// are wings (flat feathers lie along each forearm from the wrist to the elbow, like a folded wing; bare arms also carry
+// coverts on the upper arm); scaly three-fingered talon hands with a thumb; feathered thighs over thin scaled shanks; bird feet with
 // three forward toes and a back toe, all hooked claws; a stiff wedge tail of long feathers that pivots at the rump.
 // Built with the v114 beast engine (2100): same hero skeleton retargeted, one tail bone (tl0) carrying the whole fan.
 // Feathers are one shared low-poly blade (`rvFeatherG`: a flat diamond, widest near the tip, a ridge along the shaft).
@@ -66,23 +66,23 @@ brDef(6,{key:'raven',n:'Raven',cls:'mage',furN:'Plumage',
     // the nape: a few loose feathers lying back over the neck
     for(let i=0;i<4;i++){const z=-.06-i*.016,q=at(z),x=(i%2?1:-1)*.012*i;rvFeather(k,'head',i%2?C.FURD:C.FUR,[x,q.top-.012,z],[x*3,-.45-i*.12,-1],[0,1,-.3],.075-.006*i,.017,.004)}
     mdKit(B,k);return H},
-  // the wings on the arms: primaries fan out behind each wrist (always), secondaries along the forearm and coverts on the
-  // upper arm (bare only, a robe's sleeve covers them)
+  // the wings on the arms: flat feathers along the forearm pointing to the elbow (always), coverts on the upper arm (bare only)
   wings(B){const C=BR.C,k=dkKit(),V=THREE.Vector3,full=!!BR.bare;
     [['aL',-1],['aR',1]].forEach(([a,s])=>{const A0=mdV(HB[a+'0']),A1=mdV(HB[a+'1']),A2=mdV(HB[a+'2']),out=[s,0,0],xo=0;
-      // primaries: 6 from the back of the wrist, trailing back (and a little down / out) like a folded wing's tip
-      for(let i=0;i<6;i++){const t=i/5,b=A2.clone().add(new V(s*(.014+t*.006),.045-t*.02,-.02)),dir=[s*(.1+t*.1),-.55+t*.25,-1];
-        rvFeather(k,a+'2',i%2?C.FURD:C.FUR,b.toArray(),dir,[s,0,0],.2+.08*t,.021,.005,'c')}
+      // flat wing feathers on the forearm: rooted round the outer back of the wrist, lying along the arm and pointing up to
+      // the elbow like a folded wing, overlapping in two layers (on the forearm bone, so a bent wrist never pushes them in)
+      const fw=A1.clone().sub(A2).normalize();
+      for(let i=0;i<7;i++){const t=i/6,ph=.15+t*1.55,lay=i%2,r=.05+.006*lay,o=new V(s*Math.cos(ph),0,-Math.sin(ph)),
+          b=A2.clone().add(fw.clone().multiplyScalar(.012+.012*lay)).add(o.clone().multiplyScalar(r)),d=fw.clone().add(o.clone().multiplyScalar(.07+.03*lay));
+        rvFeather(k,a+'1',lay?C.FURD:C.FUR,b.toArray(),d.toArray(),o.toArray(),.2+.05*Math.sin(t*Math.PI)-.015*lay,.032,.0045,'c')}
       if(!full)return;
       // bare only: a skirt of belly and flank feathers over the hip joints, so the thighs grow out of the body like a bird's
       if(s>0)for(let i=0;i<13;i++){const a=-2.3+i/12*4.6,P0=BR.P||mdP({}),q=mdTorsoAt(P0,.56),r=Math.cos(a)>0?q.f:q.b,b=new V(Math.sin(a)*q.rx*.92,.56,Math.cos(a)*r*.92);
         rvFeather(k,'pelvis',i%2?C.FURD:C.FUR,b.toArray(),[Math.sin(a)*.3,-1,Math.cos(a)*.3],[Math.sin(a),0,Math.cos(a)],.11+.02*Math.cos(a),.03,.006)}
-      // secondaries: a row along the back of the forearm, hanging down and back
-      for(let i=0;i<6;i++){const t=i/5,b=A1.clone().lerp(A2,.12+t*.8).add(new V(s*.02,0,-.03));
-        rvFeather(k,a+'1',i%2?C.FURD:C.FUR,b.toArray(),[s*.12,-.45-.3*(1-t),-1],[s,0,0],.16+.04*t,.022,.005,'c')}
-      // coverts over the upper arm and the elbow
-      for(let i=0;i<4;i++){const t=i/3,b=A0.clone().lerp(A1,.2+t*.7).add(new V(s*.035,0,-.02));
-        rvFeather(k,a+'0',i%2?C.FURL:C.FUR,b.toArray(),[s*.15,-1,-.25],[s*.6,0,-1],.09,.022,.006,'c')}});
+      // coverts on the upper arm: from the shoulder down to the elbow, lying flat on its outer back side
+      const ua=A1.clone().sub(A0).normalize();
+      for(let i=0;i<5;i++){const t=i/4,ph=.2+t*1.3,o=new V(s*Math.cos(ph),0,-Math.sin(ph)),b=A0.clone().add(ua.clone().multiplyScalar(.03)).add(o.clone().multiplyScalar(.055)),d=ua.clone().add(o.clone().multiplyScalar(.06));
+        rvFeather(k,a+'0',i%2?C.FURL:C.FUR,b.toArray(),d.toArray(),o.toArray(),.13+.03*Math.sin(t*Math.PI),.03,.005,'c')}});
     mdKit(B,k)},
   // the tail: a wedge of 11 long feathers fanned from the rump on the one tail bone, upper coverts over its base
   tailB(B){const C=BR.C,D=BR.R,k=dkKit(),V=THREE.Vector3,base=new V(0,.6,-.1),cd=new V(0,-.84,-.55).normalize(),X=new V(1,0,0),N=new V().crossVectors(X,cd);
