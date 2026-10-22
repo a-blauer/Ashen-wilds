@@ -68,6 +68,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
 | v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
 | v124 clean map edges: the rim of every zone instance is a tidy row of themed ledge stones with a spaced row of themed scenery behind (`v124Edge`, kits per instance), the old rim trees and boulders are no longer drawn (`v124Rim`), choppable trees grow in groves inside the fields (`v124Groves`) | `2280-v124-clean-edges.js` (hooks in `0045`, `0060`, `0070`, `1680`) |
+| v127 Whirlwind hold: while the warrior spins, arms out and the weapon held out level from the body, edge leading (`WW127`, `ww127Tick`, after every animation layer; visual only) | `2300-v127-whirlwind-hold.js` |
 
 ## Conventions (read before changing code)
 
@@ -400,6 +401,7 @@ python3 v109_kingdom_shops.py # v109: the kingdom's stages (walls, tiles, plots,
 MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave109.json python3 v109_oldsave.py  # v108 kingdom save -> v109
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
+python3 v127_whirl.py         # v127: Whirlwind holds the weapon out level, arms out (frames in out/v127_whirl.jpg)
 python3 v122_support.py      # v122: companion heal / shield / buff go to whoever needs it most (hero or companion)
 python3 v124_edge_test.py      # v124: clean edges (no choppable rim trees, groves choppable, edge pieces apart); v124_edges.py: edge screenshots
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
