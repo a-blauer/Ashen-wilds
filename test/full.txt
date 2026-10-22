@@ -17,6 +17,7 @@ v109_kingdom_shops.py
 TITLE=1 ABIL_ONLY=1 v114_race.py
 v117_menus.py
 v117_titles.py
+v131_load_title.py
 v117_wclip.py
 v117_xbow.py
 v117_creator.py
