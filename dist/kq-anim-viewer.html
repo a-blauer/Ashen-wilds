@@ -19406,8 +19406,8 @@ function chunkVis(){
 // time offset (hips and legs lead, the wrist trails). New pose channels: spine side-bend (sz), chest twist (cy), hip yaw
 // (lhy/rhy, keeps the feet pointing forward while the pelvis turns), ankles (la/ra), off-arm roll (ly), wrist deviation
 // (rz/lq). Gameplay is untouched: same hit moments, durations, cooldowns, ranges and damage — only bone rotations change.
-// Bow: the carry grip now holds the bow at the riser low at the side, limbs near vertical, string facing out (away from the
-// leg), the arm relaxed (V100A_BOW); shots still use the v85/v91 draw.
+// Bow: the carry grip now holds the bow at the riser low at the side, limbs near vertical, string facing in (toward the
+// leg; v125: it faced out, outside the bow arm), the arm relaxed (V100A_BOW); shots still use the v85/v91 draw.
 var V100A_LAG={py:-.03,pz:-.025,dy:-.02,lh:-.03,rh:-.03,lk:-.03,rk:-.03,lhy:-.03,rhy:-.03,la:-.03,ra:-.03,sy:-.012,sx:-.01,sz:-.01,cy:-.004,hx:-.02,hy:-.02,
   ax:0,ay:0,az:0,ex:.004,rw:.012,rz:.012,lx:.01,ly:.01,lz:.01,le:.016,lw:.02,lq:.02};
 // extra channels on the hero/humanoid skeleton (key -> [bone, axis]); legs get the moving-blend treatment like the old ones
@@ -19451,12 +19451,12 @@ var V100A_MAP={sword:['sword0','sword1','sword2'],gs:['gs0','gs1','gs2'],ga:['ga
 // ---------------- bow carry (idle, walking, combat-ready, riding, previews, archer foes) ----------------
 // The bow model is a deep C: the riser sits .555 in front of the string and the limb tips are ±.6 above/below it, so held
 // upright at a hanging hand the lower limb touched the ground and swept through the legs when walking. Now it is carried like
-// a hunter carries a longbow: the left hand on the riser, the bow tipped forward-down (phi) and turned a little out (psi),
-// string behind the hand, the lower limb trailing back clear of the leg; the arm hangs relaxed, slightly out from the body
+// a hunter carries a longbow: the left hand on the riser, the bow tipped forward-down (phi) and turned a little (psi),
+// string behind the hand and on the inside of the bow arm (v125, psi was +.2: string outside the arm), the lower limb trailing back clear of the leg; the arm hangs relaxed, slightly out from the body
 // with a soft elbow. Shots are untouched (the v93 strike grip takes over at the start of a shot, as before).
-var V100A_BOW={phi:.28,psi:.2,roll:-.08,lx:-.06,lz:-.13,le:-.22,sw:.65,an:[0,-.045,.015]};
+var V100A_BOW={phi:.28,psi:-.28,roll:-.08,lx:-.06,lz:-.13,le:-.22,sw:.65,an:[0,-.045,.015]};
 function V100A_bowQ(){const B=V100A_BOW,E=THREE.Euler,Q=THREE.Quaternion,V3=THREE.Vector3;
-  // model axes: +x riser→string, +y upper limb. Wanted (hero frame): string back-up, limb up-forward, yawed out
+  // model axes: +x riser→string, +y upper limb. Wanted (hero frame): string back-up, limb up-forward, yawed so the string is toward the body
   const X=new V3(0,Math.sin(B.phi),-Math.cos(B.phi)),Y=new V3(0,Math.cos(B.phi),Math.sin(B.phi)),Z=new V3().crossVectors(X,Y);
   const m=new THREE.Matrix4().makeBasis(X,Y,Z),q=new Q().setFromRotationMatrix(m);
   q.premultiply(new Q().setFromEuler(new E(0,B.psi,B.roll)));
