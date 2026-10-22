@@ -27200,6 +27200,36 @@ function brPoseOff(D,w,arm){const P=D.pose||{},R=D.run||{},o={};
 // still holds the written value gets back the exact value it had before (bit for bit), so the v93 idle layer, which checks
 // `value === what it wrote` to remove its own breathing / glances, never sees a rounding change and never stacks them
 function brAddR(H,bn,ax,v){const b=H.bones[bn];if(!b||!v)return;const R=b.rotation,pre=R[ax];R[ax]=pre+v;(H._brU||(H._brU=[])).push([R,ax,pre,R[ax]])}
+// v120 tail: a chain of damped springs, one per tail bone. The old tail was sin(now × speed) with the speed following the gait,
+// so every change of speed (stopping after a run) jumped the phase by (seconds since load) × Δspeed: a violent shake. Now the
+// sway phase is integrated frame by frame (a speed change only changes how fast it advances), the gait blend is low-passed,
+// and each segment springs toward its target, softer toward the tip so the motion rolls down the tail. Follow-through: the
+// tail lifts a little while running and settles back with a small overshoot when you stop, and it lags behind turns.
+// Only the tail bones' rotation.x / .y are written (nobody else animates them).
+var BRT={lift:.12,turn:.14,turnMax:.45,om0:12,omT:6.5,zy:.4,zx:.5,lag:.32,ws:.28};
+function brTailAnim(H,D,b,now,w){const TB=D.TB,n=TB.length;if(!n)return;
+  let S=H._brT;if(!S||S.n!==n)S=H._brT={n,t:null,ph:Math.random()*6.2832,w,yaw:null,yr:0,y:new Float64Array(n*2),x:new Float64Array(n*2),snap:1};
+  const tn=now||0;let dt=S.t==null?0:(tn-S.t)/1000;S.t=tn;
+  if(!(dt>=0)||dt>.25){S.snap=1;dt=0}          // first frame, a long gap (hidden, paused) or time going back (viewer scrub): no jolt
+  dt=Math.min(dt,.05);
+  S.w+=(w-S.w)*(dt>0?1-Math.exp(-dt/BRT.ws):S.snap?1:0);const ws=S.w;
+  const ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*ws,sp=ts[2]+ts[3]*ws;
+  S.ph=(S.ph+dt*sp)%(Math.PI*2);
+  // body turn rate (rad/s, low-passed) → the tail swings out the other way, like it is dragged behind
+  const yaw=H.rotation?H.rotation.y:0;if(S.yaw==null||S.snap)S.yaw=yaw;
+  let dy=yaw-S.yaw;dy-=Math.round(dy/(Math.PI*2))*Math.PI*2;S.yaw=yaw;
+  if(dt>0)S.yr+=((dy/dt)-S.yr)*(1-Math.exp(-dt/.12));else if(S.snap)S.yr=0;
+  const turn=Math.max(-BRT.turnMax,Math.min(BRT.turnMax,-BRT.turn*S.yr))/n,lift=BRT.lift*ws/n;
+  const sub=dt>.025?2:1,h=dt/sub;
+  for(let i=0;i<n;i++){const bn=b[TB[i]];if(!bn)continue;
+    const fo=.4+i*.12*(11/n),ty=amp*Math.sin(S.ph-i*BRT.lag)*fo+turn,tx=(.012+.016*ws)*Math.sin(S.ph*2-i*BRT.lag)+lift;
+    const om=BRT.om0+(BRT.omT-BRT.om0)*(n>1?i/(n-1):0),Y=S.y,X=S.x,j=i*2;
+    if(S.snap){Y[j]=ty;Y[j+1]=0;X[j]=tx;X[j+1]=0}
+    else for(let k=0;k<sub;k++){
+      Y[j+1]+=(-2*BRT.zy*om*Y[j+1]-om*om*(Y[j]-ty))*h;Y[j]+=Y[j+1]*h;
+      X[j+1]+=(-2*BRT.zx*om*X[j+1]-om*om*(X[j]-tx))*h;X[j]+=X[j+1]*h}
+    bn.rotation.y=Y[j];bn.rotation.x=X[j]}
+  S.snap=0}
 function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i>=0;i--){const u=U[i];if(u[0][u[1]]===u[3])u[0][u[1]]=u[2]}U.length=0}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl,b=H&&H.bones,D=H&&H._race?BRD[H._race]:null,rat=D&&b;
   if(H)brUndo(H);
@@ -27221,8 +27251,7 @@ function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i
       if(arm>0&&b.chest&&b.head&&b.neck){const V=BR_V||(BR_V={v:new THREE.Vector3(),q:new THREE.Quaternion()});b.chest.updateWorldMatrix(true,false);b.chest.getWorldQuaternion(V.q);
         V.v.set(0,0,1).applyQuaternion(V.q);const down=Math.asin(Math.max(-1,Math.min(1,-V.v.y))),L=D.look||[.08,0],tg=L[0]+(L[1]-L[0])*S.w;
         const dl=Math.max(-.9,Math.min(.9,(tg-down)*arm));brAddR(H,'neck','x',dl*.4);brAddR(H,'head','x',dl*.6)}}
-    const t=(now||0)/1000,ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w,n=D.TB.length;
-    for(let i=0;i<n;i++){const bn=b[D.TB[i]];if(!bn)continue;bn.rotation.y=amp*Math.sin(t*sp-i*.55)*(.4+i*.12*(11/Math.max(n,1)));bn.rotation.x=(.015+.02*w)*Math.sin(t*sp*2-i*.5)}}
+    brTailAnim(H,D,b,now,w)}
   return r}}
 // a model changing race (or back to human) drops the offsets of the old one
 {const f=brRig;brRig=function(h){if(h)brUndo(h);if(h)h._brS=null;return f.apply(this,arguments)}}

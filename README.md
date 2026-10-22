@@ -167,7 +167,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
   saves and co-op partners load as animals. One engine (`2100`): `brDef(id,D)` registers a race (`BRD[id]`), `brPlan` = the v99 preset
-  `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`). While a beast is built `BR.on` scales
+  `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`; since v120 animated by `brTailAnim`: an integrated sway phase + one damped spring per bone, tuned in `BRT`). While a beast is built `BR.on` scales
   the human torso/arm/leg/foot rings per ring (`D.TR`, `armK`, `legK`, `foot`; the arm's first ring stays inside the torso like the
   human's, so sleeves need no cap), `D.head` builds the skull from `D.SN` rings (+ `brEyes`, `brNose`, `brJaw`, `brWhiskers`; whiskers
   root on the cloth under a face mask, `BR_MASK`), `brPaws`/`brToes` grow fingers, claws, pads, webbing, `brTail` lofts `D.TP`.
@@ -352,6 +352,7 @@ TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; eve
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
 python3 probe.py v120_idle_tilt.js # v120: idle wandering enemies never pitch their whole body (the old v42 sniff tilt/wobble is gone); expects maxPitch 0
+python3 probe.py v120_tail.js # v120: beast tails stop smoothly after a run (stopMaxStep now ≪ old), lift a little while running, drag behind turns (turnLag > 0)
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
