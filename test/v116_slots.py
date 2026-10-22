@@ -74,7 +74,7 @@ try:
     pg.evaluate("()=>$('kqjGo').click()")
     check('imported hero loads from slot 3',until(pg,"()=>party.length>0&&hero.name=='Two'&&KQSL.n==2",90))
     check('slot 3 now holds the import',slot(pg,2)=='Two')
-    check('join attempted once in the world',until(pg,"()=>!KQN.pend&&(KQN.busy||KQN.cur||KQN.msg)",30),pg.evaluate("()=>[KQN.busy,KQN.msg]"))
+    check('join attempted once in the world',until(pg,"()=>!KQNET.pend&&(KQNET.busy||KQNET.cur||KQNET.msg)",30),pg.evaluate("()=>[KQNET.busy,KQNET.msg]"))
     check('no page errors',not errs,errs[:3])
     b.close()
 finally:

@@ -44,8 +44,8 @@ try:
         if k=='A':pg.evaluate("()=>localStorage.clear()")
     A,B=pgs['A'],pgs['B']
     setup(A,'warrior','Aria');setup(B,'mage','Bram')
-    A.evaluate("()=>kqcHost()");check('host',until(A,"()=>KQN.cur",20));code=A.evaluate("()=>KQN.cur.code")
-    B.evaluate("c=>kqcJoin(c)",code);check('join',until(B,"()=>KQN.cur&&MP.on",30))
+    A.evaluate("()=>kqcHost()");check('host',until(A,"()=>KQNET.cur",20));code=A.evaluate("()=>KQNET.cur.code")
+    B.evaluate("c=>kqcJoin(c)",code);check('join',until(B,"()=>KQNET.cur&&MP.on",30))
     for pg in (A,B): pg.evaluate("()=>{const p=PMAP[0].ins[0].path[60];toPos(p[0]+(hero.cls=='mage'?2.2:0),p[1]+(hero.cls=='mage'?1:0))}")
     check('together',until(A,"()=>MP.others>0",40) and until(B,"()=>MP.others>0",40))
     check('partner companion built on B',until(B,"()=>{const r=Object.values(MP.rh)[0];return r&&r.fl&&r.fl[0]&&r.fl[0].visible&&r.fl[0].parent===scene}",40),B.evaluate("()=>{const r=Object.values(MP.rh)[0];return r&&r.pr&&[!!r.pr.cf,JSON.stringify(r.pr.ck||0).slice(0,120)]}"))

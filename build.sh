@@ -3,6 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 OUT="${AW_OUT:-$PWD/dist/ashen-wilds.html}"
+python3 build/dupvars.py src/js   # v117: two files declaring the same top-level var (the v116 KQN clash) stops the build
 python3 build/assemble.py src "$OUT"
 T=$(mktemp -d)
 python3 -c "import sys;t=open(sys.argv[1]).read();open(sys.argv[2],'w').write(t[t.rindex('<script>')+8:t.rindex('</script>')])" "$OUT" "$T/game.js"

@@ -6,15 +6,15 @@
 // calls as the claude.ai room (on, onPeers, emit, presence, peers), so the v58 co-op code (0520) runs unchanged on it.
 // The host stamps the sender on everything it relays, so nobody can speak as somebody else.
 // Tests set window.KQNET_SIG (signaling URL) and window.KQNET_ICE (ICE servers) to run without the internet.
-var KQN={sig:'wss://0.peerjs.com:443/peerjs',key:'peerjs',pre:'kq116-',abc:'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',max:8,
+var KQNET={sig:'wss://0.peerjs.com:443/peerjs',key:'peerjs',pre:'kq116-',abc:'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',max:8,
   ice:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}],
   cur:null};
-function kqnCode(){let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const v of a)s+=KQN.abc[v%KQN.abc.length];return s}
+function kqnCode(){let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const v of a)s+=KQNET.abc[v%KQNET.abc.length];return s}
 function kqnClean(c){return String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)}
 function kqnRid(){const a=new Uint32Array(3);crypto.getRandomValues(a);return Array.from(a,v=>v.toString(36)).join('').slice(0,14)}
 
 // ---------- signaling: one WebSocket to the PeerJS server under our own id ----------
-function kqnSignal(id,on){const url=(window.KQNET_SIG||KQN.sig)+'?key='+KQN.key+'&id='+encodeURIComponent(id)+'&token='+kqnRid()+'&version=1.5.4';
+function kqnSignal(id,on){const url=(window.KQNET_SIG||KQNET.sig)+'?key='+KQNET.key+'&id='+encodeURIComponent(id)+'&token='+kqnRid()+'&version=1.5.4';
   const S={id,ws:null,open:false,dead:false,hb:0,
     send(type,dst,payload){if(S.ws&&S.ws.readyState===1)S.ws.send(JSON.stringify({type,dst,payload}))},
     close(){S.dead=true;clearInterval(S.hb);try{S.ws&&S.ws.close()}catch(_){}}};
@@ -32,7 +32,7 @@ function kqnLink(S,remote,cid,initiator,on){
   const L={remote,cid,pc:null,dc:null,open:false,dead:false,q:[],rset:false,last:performance.now(),
     send(o){if(L.open&&L.dc&&L.dc.readyState==='open'){try{L.dc.send(typeof o==='string'?o:JSON.stringify(o));return true}catch(_){}}return false},
     close(){if(L.dead)return;L.dead=true;L.open=false;try{L.dc&&L.dc.close()}catch(_){}try{L.pc&&L.pc.close()}catch(_){}on('close',L)}};
-  const pc=L.pc=new RTCPeerConnection({iceServers:window.KQNET_ICE||KQN.ice});
+  const pc=L.pc=new RTCPeerConnection({iceServers:window.KQNET_ICE||KQNET.ice});
   pc.onicecandidate=e=>{if(e.candidate)S.send('CANDIDATE',remote,{c:e.candidate.toJSON?e.candidate.toJSON():e.candidate,cid})};
   pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'||pc.connectionState==='closed')L.close()};
   const wire=dc=>{L.dc=dc;dc.onopen=()=>{L.open=true;L.last=performance.now();on('open',L)};dc.onclose=()=>L.close();
@@ -73,7 +73,7 @@ function kqnRoom(mode,code){return new Promise((res,rej)=>{
   // keepalive: a link that has been silent for 12 s is gone (a closed tab or lost network can take long to show)
   ka=setInterval(()=>{const now=performance.now();Object.values(links).forEach(L=>{if(!L.open)return;L.send('~');if(now-L.last>12000)L.close()})},2000);
   function onLink(ev,L,m){
-    if(ev==='open'){if(host){if(Object.keys(P).length>=KQN.max-1){L.send({k:'full'});setTimeout(()=>L.close(),300);return}
+    if(ev==='open'){if(host){if(Object.keys(P).length>=KQNET.max-1){L.send({k:'full'});setTimeout(()=>L.close(),300);return}
         L.send({k:'all',me:L.remote,l:[[me,pres]].concat(Object.keys(P).map(k=>[k,P[k]]))})}
       else{hostL=L;L.send({k:'pres',v:pres})}return}
     if(ev==='close'){if(links[L.remote]===L)delete links[L.remote];
@@ -84,7 +84,7 @@ function kqnRoom(mode,code){return new Promise((res,rej)=>{
       else if(m.k==='ev'&&okTopic(m.t)){if(!P[from])return;const s=JSON.stringify({k:'ev',t:m.t,d:m.d,p:from});Object.values(links).forEach(x=>{if(x!==L)x.send(s)});deliver(m.t,m.d,from)}
       else if(m.k==='bye')L.close()}
     else{
-      if(m.k==='all'&&Array.isArray(m.l)){const j=[];(m.l||[]).slice(0,KQN.max).forEach(q=>{if(Array.isArray(q)&&okPeer(q[0])&&q[0]!==me){if(!P[q[0]])j.push(q[0]);P[q[0]]=clean(q[1])}});fire(j,[]);ok({room})}
+      if(m.k==='all'&&Array.isArray(m.l)){const j=[];(m.l||[]).slice(0,KQNET.max).forEach(q=>{if(Array.isArray(q)&&okPeer(q[0])&&q[0]!==me){if(!P[q[0]])j.push(q[0]);P[q[0]]=clean(q[1])}});fire(j,[]);ok({room})}
       else if(m.k==='pres'&&okPeer(m.p)&&m.p!==me){const was=!!P[m.p];P[m.p]=clean(m.v);if(was)rebuild();else fire([m.p],[])}
       else if(m.k==='left'&&okPeer(m.p)&&P[m.p]){delete P[m.p];fire([],[m.p])}
       else if(m.k==='ev'&&okTopic(m.t)&&okPeer(m.p)&&m.p!==me)deliver(m.t,m.d,m.p)
@@ -104,9 +104,9 @@ function kqnRoom(mode,code){return new Promise((res,rej)=>{
       if(++tries<3){const old=links[hostId];setTimeout(()=>{if(ended||settled)return;if(old)try{old.dead=true;old.pc.close()}catch(_){}links[hostId]=kqnLink(S,hostId,'c'+kqnRid(),true,onLink)},1500)}
       else no('No game found with code '+code+'. Check the code with your friend.')}}
   let hostId='';
-  function start(){if(host){code=kqnCode();me=KQN.pre+code}else{me='j'+kqnRid()}rebuild();S=kqnSignal(me,onSig)}
+  function start(){if(host){code=kqnCode();me=KQNET.pre+code}else{me='j'+kqnRid()}rebuild();S=kqnSignal(me,onSig)}
   function resign(){S=kqnSignal(me,(ev,a)=>{if(ev==='open'||ev==='msg')onSig(ev,a)})} // host: get the code back so more friends can join
-  if(!host){code=kqnClean(code);if(code.length!==6)return rej(new Error('A join code has 6 letters and numbers.'));hostId=KQN.pre+code}
+  if(!host){code=kqnClean(code);if(code.length!==6)return rej(new Error('A join code has 6 letters and numbers.'));hostId=KQNET.pre+code}
   if(typeof RTCPeerConnection=='undefined'||typeof WebSocket=='undefined')return rej(new Error('This browser cannot do online play.'));
   start();
   to=setTimeout(()=>no(host?'The join-code server did not answer. Check your internet connection.':'No game found with code '+code+' (or it could not be reached).'),host?15000:20000);

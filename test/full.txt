@@ -1,5 +1,6 @@
 # Full suite (run before a publish: Actions → Tests → Run workflow → suite: full). Same format as smoke.txt.
 v38t.py
+v117_abilities.py
 v114_save.py
 v57t.py
 v60t.py
@@ -20,3 +21,6 @@ v117_wclip.py
 v117_xbow.py
 v117_creator.py
 v117_abprev.py
+v116_slots.py
+v116_coop.py
+v116_vis.py

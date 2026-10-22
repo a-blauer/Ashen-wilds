@@ -43,19 +43,19 @@ try:
         if k=='A':pg.evaluate("()=>localStorage.clear()")
     A,B,C=pgs['A'],pgs['B'],pgs['C']
     setup(A,'warrior','Aria');setup(B,'mage','Bram');setup(C,'ranger','Cael')
-    check('solo at start (no claude room here)',A.evaluate("()=>!MP.on&&!KQN.cur"))
+    check('solo at start (no claude room here)',A.evaluate("()=>!MP.on&&!KQNET.cur"))
     # host
     A.evaluate("()=>{openX('coop');document.querySelector('[data-kqc=host]').click()}")
-    check('host gets a code',until(A,"()=>KQN.cur&&KQN.cur.host&&/^[A-Z2-9]{6}$/.test(KQN.cur.code)",20))
-    code=A.evaluate("()=>KQN.cur.code");print('code',code)
+    check('host gets a code',until(A,"()=>KQNET.cur&&KQNET.cur.host&&/^[A-Z2-9]{6}$/.test(KQNET.cur.code)",20))
+    code=A.evaluate("()=>KQNET.cur.code");print('code',code)
     check('co-op window shows the code',A.evaluate("c=>document.querySelector('#xwB .kqc .big').textContent===c",code))
     A.screenshot(path=HERE+'/out/v116_host.png',timeout=120000,animations='disabled')
     # wrong code
     B.evaluate("()=>kqcJoin('ZZZZZZ')")
-    check('a wrong code fails cleanly',until(B,"()=>!KQN.busy&&!KQN.cur&&/No game found/.test(KQN.msg||'')",30),B.evaluate("()=>KQN.msg"))
+    check('a wrong code fails cleanly',until(B,"()=>!KQNET.busy&&!KQNET.cur&&/No game found/.test(KQNET.msg||'')",30),B.evaluate("()=>KQNET.msg"))
     # join from the co-op window
     B.evaluate("c=>{openX('coop');document.getElementById('kqcIn').value=c;document.querySelector('[data-kqc=join]').click()}",code)
-    check('joiner connects',until(B,"()=>KQN.cur&&!KQN.cur.host&&MP.on",30),B.evaluate("()=>KQN.msg"))
+    check('joiner connects',until(B,"()=>KQNET.cur&&!KQNET.cur.host&&MP.on",30),B.evaluate("()=>KQNET.msg"))
     check('host sees the joiner',until(A,"()=>Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Bram')",20))
     check('joiner sees the host',until(B,"()=>Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Aria')",20))
     # same field instance: monsters are shared
@@ -82,17 +82,17 @@ try:
     check('gold left the giver',until(B,"()=>gold==150",15))
     # a third player
     C.evaluate("c=>kqcJoin(c)",code)
-    check('third player joins',until(C,"()=>KQN.cur&&Object.keys(MP.rh).length==2",30))
-    check('host counts three',until(A,"()=>KQN.cur.room.count()==3",15))
+    check('third player joins',until(C,"()=>KQNET.cur&&Object.keys(MP.rh).length==2",30))
+    check('host counts three',until(A,"()=>KQNET.cur.room.count()==3",15))
     check('joiner sees the third',until(B,"()=>Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Cael')",20))
     # B leaves
     B.evaluate("()=>{openX('coop');document.querySelector('[data-kqc=leave]').click()}")
-    check('leaver is solo',until(B,"()=>!MP.on&&!KQN.cur&&!enemies.some(e=>e.mir)",15))
+    check('leaver is solo',until(B,"()=>!MP.on&&!KQNET.cur&&!enemies.some(e=>e.mir)",15))
     check('host drops the leaver',until(A,"()=>!Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Bram')",20))
     check('third drops the leaver',until(C,"()=>!Object.values(MP.rh).some(r=>r.pr&&r.pr.n=='Bram')",20))
     # host stops
     A.evaluate("()=>kqcLeave()")
-    check('game ends for the rest',until(C,"()=>!KQN.cur&&!MP.on&&/host left/.test(KQN.msg||'')",30),C.evaluate("()=>KQN.msg"))
+    check('game ends for the rest',until(C,"()=>!KQNET.cur&&!MP.on&&/host left/.test(KQNET.msg||'')",30),C.evaluate("()=>KQNET.msg"))
     check('nobody mirrors any more',C.evaluate("()=>!enemies.some(e=>e.mir)") and A.evaluate("()=>!enemies.some(e=>e.mir)"))
     for k in 'ABC':
         errs=[l for l in logs[k] if 'PAGEERROR' in l];check('no page errors '+k,not errs,errs[:3])

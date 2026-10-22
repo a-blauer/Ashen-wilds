@@ -1,6 +1,7 @@
 # Quick smoke suite (~10 min per test, run in parallel by .github/workflows/tests.yml on every push).
 # One test per line; an optional ENV=value prefix sets environment variables for that test.
 v38t.py
+v117_abilities.py
 v117_menus.py
 v60t.py
 v73t.py
