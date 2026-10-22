@@ -2580,7 +2580,7 @@ function gainXP(e){
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (C)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){
@@ -2868,7 +2868,7 @@ function idHTML_base(){
   const uc=upCost(it),ok=canUse(it);
   return `<div class="dtl"><div class="dh"><span style="color:${RAR[it.r][1]}">${icoOf(it)} ${itName(it)}</span> <small>${RAR[it.r][0]} ${SLOTN[t.sl]} · ${TIERN[t.t]} · iLvl ${it.lv} · requires Lv ${it.req} · ${itClsTxt(t)}${selI.k=='e'?'':' · vs '+(cur?itName(cur):'empty slot')}</small></div><div class="dfs">${rows}</div>
    <div class="mut" style="font-size:.72rem;margin-top:4px">${(it.up||0)>=10?'Fully upgraded (+10).':`Upgrade to +${(it.up||0)+1}: ${matInfo(uc.m)[1]} ${uc.n}× ${uc.m} (have ${mats[uc.m]||0}) · 🪙 ${uc.g} · ${Math.round(uc.ch*100)}% success`}</div></div>
-   <div style="display:flex;gap:6px">${(it.up||0)<10?'<button id="idUp">⚒️ Upgrade</button>':''}<button class="pri" id="idAct" ${selI.k=='g'&&!ok?'disabled':''}>${selI.k=='e'?'Unequip':ok?'Equip':'Cannot equip'}</button></div>`;
+   <div style="display:flex;gap:6px">${(it.up||0)<10&&typeof KQM_SMITH!='undefined'&&KQM_SMITH?'<button id="idUp">⚒️ Upgrade</button>':''}<button class="pri" id="idAct" ${selI.k=='g'&&!ok?'disabled':''}>${selI.k=='e'?'Unequip':ok?'Equip':'Cannot equip'}</button></div>`;
 }
 function invAct(){
   if(!selI)return;
@@ -3032,7 +3032,7 @@ function ccRender(){
     const C=CLS[ccCls],S50=k=>C.base[k]+C.per[k]*49;
     $('ccInfo').innerHTML=`<h3 style="color:${C.col}">${C.i} ${C.n}</h3><p>${C.d}</p><div class="mut" style="font-size:.72rem;margin-bottom:6px">${C.st} · ${C.arm} armor · ${({melee3:'heavy 3-hit combo',melee4:'fast 4-hit combo',bow:'arrows from range',staff:'magic bolts from range'})[C.atk]}</div>`+
       statBar('Health',S50('hp'),1400)+statBar('Phys. attack',S50('pa'),200)+statBar('Magic attack',S50('ma'),215)+statBar('Phys. defense',S50('pd'),150)+statBar('Magic defense',S50('md'),125)+statBar('Speed',1/C.spd,2.8)+
-      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
+      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (C).</div>`;
   }else{
     $('ccList').innerHTML=STARTERS.map(n=>{const f=famOf(n);return `<button class="ccc${n==ccSp?' on':''}" data-s="${n}" style="--cc:#${('00000'+FAMD[f].col.toString(16)).slice(-6)}"><span class="cci">${SP2[n][3]}</span><span><b>${n}</b><small>${FAMD[f].i} ${f} family</small></span></button>`}).join('');
     const f=famOf(ccSp),F=FAMD[f],sp=CSP[SP2[ccSp][8]];
@@ -3595,7 +3595,7 @@ function arenaTick(dt,now){
   }
 }
 // ---------- hooks ----------
-function doUpgrade(it){if((it.up||0)>=upCap())return say('🔒 Your forge mastery only reaches +'+upCap()+'. Defeat Sovereign bosses (J) to raise it.');return doUpgrade_base(it)}
+function doUpgrade(it){if((it.up||0)>=upCap())return say('🔒 Your forge mastery only reaches +'+upCap()+'. Defeat Sovereign bosses to raise it.');return doUpgrade_base(it)}
 function doRecall(){if(AF)return say('The arena is sealed. There is no escape.');return doRecall_base()}
 function bossHudX(){
   const e=AF&&bossEnt(AF.i);document.body.classList.toggle('bossf',!!e);if(!e)return;$('boss').classList.remove('hide');$('bossN').textContent=AF.b.i+' '+e.c.n+' · Lv '+e.c.l+' · Phase '+['I','II','III'][e.bs.ph-1];$('bossB').style.width=Math.max(0,100*e.c.h/M(e.c))+'%';
@@ -5144,8 +5144,8 @@ var zSeen=new Set();
 {const bm=$('hot');if(bm&&!$('pwrB'))bm.insertAdjacentHTML('afterbegin','<div id="pwrB" title="Power level: your overall damage and survivability">Power<b>0</b></div>')}
 {const f=hud;hud=function(){f.apply(this,arguments);const pw=heroPower(),pb=$('pwrB');if(pb){const zr=zoneRec();pb.querySelector('b').textContent=pw.toLocaleString();pb.querySelector('b').style.color=zr&&pw<zr.p?'#ff8a6a':''}
   const zr=zoneRec(),at=$('areaT');if(zr&&at){const lead=party[0],lg=lead?ovG(lead):null,gi=g=>GR.findIndex(x=>x[1]==g);
-    at.innerHTML=at.textContent+` <span class="rec" title="Recommended for the start of this zone">· Rec: companion ${zr.g}${lg&&gi(lg[1])>gi(zr.g)?' ⚠':''} · power ${zr.p.toLocaleString()}${pw<zr.p?' ⚠':''}</span>`;
-    if(!zSeen.has(zr.b.n)){zSeen.add(zr.b.n);banner('📍 '+zr.b.n.toUpperCase(),'Recommended: companion overall grade '+zr.g+' · power level '+zr.p.toLocaleString(),'Your power: '+pw.toLocaleString()+(lead?' · '+lead.n+': grade '+lg[1]:''))}}}}
+    // v116: no pop-up on entering a zone; the recommended power sits in the location box by the minimap (red ⚠ when yours is lower)
+    at.innerHTML=at.textContent+` <span class="rec" title="Recommended power for this area · yours: ${pw.toLocaleString()}">· <span class="${pw<zr.p?'recl':'reco'}">⚔ Rec. power ${zr.p.toLocaleString()}${pw<zr.p?' ⚠':''}</span></span>`}}}
 
 // ---------------- 7. selling: pick several, then confirm ----------------
 var sellSel=new Set(),sellAsk=false;
@@ -5316,7 +5316,8 @@ function areaName(){
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
 var MREC=['D','C','C','B','A','A'];
-function zoneRec(){const r=curMap();if(r<1)return null;const p=PMAP[r];return {b:{n:p.n},g:MREC[r],p:recPower(p.lv[0])}}
+// v116: every zone (Kindlelight too), per instance: the power for the start of the instance you are in
+function zoneRec(){const r=curMap();if(r<0||!PMAP[r])return null;const p=PMAP[r];let I=null;try{I=curIns()}catch(_){}const L=I&&I.lv?I.lv[0]:p.lv[0];return {b:{n:p.n},g:MREC[r],p:recPower(L)}}
 // ---- the Portal Court ----
 const pUnlocked=i=>i==0||bossDone.has(i-1)||(typeof CHEAT!='undefined'&&CHEAT.portals),pDone=i=>bossDone.has(i);
 var PORT=[];
@@ -5993,20 +5994,22 @@ var ROST={r:-9,slots:[],left:0};
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
 // v108: a field instance is half a v106 one again: 33 roaming groups and 3 camps each
 var ROST_G=33,RESP_T=50,RESP_NEAR=14; // v112: 50 s; never within aggro reach (4.5-6 tiles + a camp pulling its friends) of a hero
+// v116: no elites in Kindlelight's first field instance (the starting area)
+function noElite116(I){return !!I&&I.z===0&&I.k===0}
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)
   enemies.slice().forEach(e=>{if(e.slot&&!e.boss&&!e.mir)removeE(e)});
   if(!I.fld){ROST.r=r;ROST.slots=[];return} // v108: the den and the wave trial have no roaming creatures
   // camps: a full garrison each
   CAMPS.forEach(C=>{if(C.ig!==r)return;for(let k=0;k<C.cap;k++){let x,z,n=0;do{const a=Math.random()*6.283,rr=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*rr);z=Math.round(C.z+Math.sin(a)*rr);n++}while(solid(x,z)&&n<30);
-    const key=pickMem(C.th);if(!EN[key])continue;const al=Math.random()<.018+.004*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
+    const key=pickMem(C.th);if(!EN[key])continue;const al=!noElite116(I)&&Math.random()<.018+.004*p.t;S.push({id:sid++,key,x,z,lv:Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),al,camp:C,dead:false,on:null})}});
   // roaming groups spread across the whole instance
   const grp=[],BR=I.den?Math.max(30,24*DK):PM_GTR+8;for(let t=0;t<40000&&grp.length<ROST_G;t++){const x=I.x0+6+Math.floor(Math.random()*(I.w-12)),z=I.y0+6+Math.floor(Math.random()*(I.h-12));
     if(DW[z*W+x]>-2.5||solid(x,z))continue;if(CAMPS.some(C=>C.ig===r&&Math.hypot(C.x-x,C.z-z)<CAMP_R+10))continue;
     if(Math.hypot(x-I.ba[0],z-I.ba[1])<BR||(I.wa&&Math.hypot(x-I.wa[0],z-I.wa[1])<20)||Math.hypot(x-I.en[0],z-I.en[1])<22)continue;
     if(grp.some(g=>Math.hypot(g[0]-x,g[1]-z)<15))continue;grp.push([x,z])}
   grp.forEach(([x,z])=>{const key=L[Math.floor(Math.random()*L.length)],rr=Math.random(),nG=rr<.5?1:rr<.85?2:3,lv=zoneLv(x,z);
-    for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=Math.random()<.012;
+    for(let k=0;k<nG;k++){const xx=x+(k?Math.round((Math.random()-.5)*6):0),zz=z+(k?Math.round((Math.random()-.5)*6):0);if(solid(xx,zz))continue;const al=!noElite116(I)&&Math.random()<.012;
       S.push({id:sid++,key:k&&Math.random()<.4?L[Math.floor(Math.random()*L.length)]:key,x:xx,z:zz,hx:x,hz:z,lv:Math.max(I.lv[0],Math.min(MAXLV,lv+(al?2:0)+(Math.random()<.3?1:0)-(Math.random()<.3?1:0))),al,wild:1,dead:false,on:null})}});
   ROST.r=r;ROST.slots=S;CAMPS.forEach(C=>{if(C.ig===r)C.kt=-1e9})}
 function rosterTick(){const r=rgAt(Math.round(pl.position.x),Math.round(pl.position.z));
@@ -6106,7 +6109,7 @@ const skAll=c=>SKB[c].concat(SKX[c]||[]);
 var SKC={key:'',arr:null};
 Object.keys(SKB).forEach(c=>Object.defineProperty(SKL,c,{configurable:true,enumerable:true,get(){if(c!==hero.cls)return SKB[c];const key=c+'|'+((hero.tal&&hero.tal.__ld)||'')+'|'+Object.keys(hero.tal||{}).filter(k=>k.startsWith('sk:')).join(',');if(SKC.key!==key){SKC.key=key;SKC.arr=skLoad(c)}return SKC.arr}}));
 {const f=talSpent;talSpent=function(b){let n=f(b);if(b==null&&hero.tal)for(const k in hero.tal)if(k.startsWith('sk:'))n+=hero.tal[k]|0;return n}}
-{const f=rTal;rTal=function(){f.apply(this,arguments);const t=$('talT');if(!t)return;let d=$('skBox');if(!d){t.insertAdjacentHTML('afterend','<div id="skBox"></div>');d=$('skBox')}d.innerHTML=skHTML()}}
+{const f=rTal;rTal=function(){f.apply(this,arguments);const t=$('talT');if(!t)return;let d=$('skBox');if(!d){t.insertAdjacentHTML('afterend','<div id="skBox"></div>');d=$('skBox')}d.innerHTML=skHTML();d.style.display=d.innerHTML?'':'none'}}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-sku],[data-sks]');if(!t||t.disabled||!$('skBox')||!$('skBox').contains(t))return;
   if(t.dataset.sku){const s=skAll(hero.cls).find(q=>q.n===t.dataset.sku);if(!s||tpFree()<1||hero.lvl<s.lv)return;hero.tal['sk:'+s.n]=1;say('🗡️ Unlocked '+s.i+' '+s.n+'! Put it on a key below.');
     const cur=heroSkills();if(cur.length<4)skSet(cur.length,s.n);else rTal();hud()}
@@ -6618,7 +6621,7 @@ var WBEH={
   knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
     for(let i=0;i<n;i++){const a=(i-(n-1)/2)*.17;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife'},raw*.5,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
   crossbow(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow'},raw,.75);
-    const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(1.5);sfx('arrow');shake(.05)},base*380)},
+    const sh=shots[shots.length-1];if(sh){sh.m.scale.setScalar(1.5);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.45);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}sfx('arrow');shake(.05)},base*380)},
   sling(C,s,raw,d,spdK,base){atkCd=base;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:2},raw,.65);sfx('blunt',.5)})},
   wand(C,s,raw,d,spdK,base){atkCd=base;wandN++;const big=wandN%5==0;staffAnim(base*520);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);
     launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?1.5:0},raw*(big?2.1:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
@@ -11937,7 +11940,7 @@ function kqsMig(){const T=hero.tal;if(!T||T.__ab)return;const c=hero.cls;if(!SKB
   oldLd.forEach(n=>{const s=all.find(q=>q.n===n);if(s&&kqsUnl(c,s)&&!ld.includes(n)&&ld.length<KQS_SLOTS)ld.push(n)});
   SKB[c].forEach(s=>{if(ld.length<KQS_SLOTS&&kqsUnl(c,s)&&!ld.includes(s.n))ld.push(s.n)});
   T.__ld=ld.join('|');T.__apB=(T.__apB|0)+bonus;T.__ab=1;hsDirty&&hsDirty();
-  if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (K → Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
+  if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (C · Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
 // talent points no longer pay for skills
 {const f=talSpent;talSpent=function(b){if(b!=null)return f(b);let n=0;const T=TAL[hero.cls]||[];for(let i=0;i<T.length;i++)n+=f(i);return n}}
 // the hotbar: the equipped abilities, in slot order (packed, 1-4)
@@ -11964,7 +11967,7 @@ function kqsReset(){if(!apSpent())return say('You have no ability points to refu
 {const f=loadGame;loadGame=function(){kqsClear();KQS.cdn={};const r=f.apply(this,arguments);try{kqsMig();KQS.ck='';hud()}catch(err){console.warn(err)}return r}}
 {const f=ccBegin;ccBegin=function(){kqsClear();KQS.cdn={};const r=f.apply(this,arguments);try{if(hero.tal)hero.tal.__ab=1;KQS.ck='';hud()}catch(_){}return r}}
 // level up: +1 ability point (the banner text is patched in build/pV10.py)
-function kqsLvNote(){const L=kqsAll(hero.cls).filter(s=>s.lv==hero.lvl);return L.length?'New abilit'+(L.length>1?'ies':'y')+' to unlock: '+L.map(s=>s.i+' '+s.n).join(', ')+' (K → Abilities)':''}
+function kqsLvNote(){const L=kqsAll(hero.cls).filter(s=>s.lv==hero.lvl);return L.length?'New abilit'+(L.length>1?'ies':'y')+' to unlock: '+L.map(s=>s.i+' '+s.n).join(', ')+' (C · Abilities)':''}
 
 // ---------------- helpers for the new abilities ----------------
 var kqsV=(x,z)=>new THREE.Vector3(x,0,z);
@@ -12330,11 +12333,11 @@ function kqsTick(dt,now){
 // ---------------- HUD: empty slots, aiming highlight, ability-point chip ----------------
 {const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||!party.length)return;const L=heroSkills();
   if(L.length<KQS_SLOTS){const btns=[...A.querySelectorAll('button[data-x]')],sk=btns.filter(b=>/^\d+$/.test(b.dataset.x)),after=sk[sk.length-1]||btns.find(b=>b.dataset.x=='a');
-    let h='';for(let i=L.length;i<KQS_SLOTS;i++)h+=`<button class="hs kqs-empty" data-x="E${i}" title="Empty ability slot — open Abilities (K)"><span class="ic">＋</span><span class="kb">${i+1}</span><span class="sb">empty</span><span class="cdv" style="height:0"></span></button>`;
+    let h='';for(let i=L.length;i<KQS_SLOTS;i++)h+=`<button class="hs kqs-empty" data-x="E${i}" title="Empty ability slot — open Abilities (C)"><span class="ic">＋</span><span class="kb">${i+1}</span><span class="sb">empty</span><span class="cdv" style="height:0"></span></button>`;
     if(after)after.insertAdjacentHTML('afterend',h)}
   if(KQS.tg){const b=A.querySelector('button[data-x="'+KQS.tg.i+'"]');if(b)b.classList.add('kqs-aim')}
   L.forEach((s,i)=>{if(s.gt){const b=A.querySelector('button[data-x="'+i+'"]');if(b)b.classList.add('kqs-gt')}});
-  const ap=apFree(),B=$('buffs');if(B&&ap>0)B.insertAdjacentHTML('afterbegin',`<span class="bf kqs-apn" data-kqsopen="1" title="Spend ability points (K → Abilities)">⚡ ${ap} ability point${ap>1?'s':''} · K</span>`)}catch(err){}}}
+  const ap=apFree(),B=$('buffs');if(B&&ap>0)B.insertAdjacentHTML('afterbegin',`<span class="bf kqs-apn" data-kqsopen="1" title="Spend ability points (C · Abilities)">⚡ ${ap} ability point${ap>1?'s':''} · C</span>`)}catch(err){}}}
 $('acts').addEventListener('pointerdown',e=>{const b=e.target.closest('.kqs-empty');if(!b)return;e.preventDefault();e.stopImmediatePropagation();openAbil()},true);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-kqsopen]');if(!t)return;e.preventDefault();if(!$('tal').classList.contains('hide'))$('tal').classList.add('hide');if($('sysmenu'))$('sysmenu').classList.add('hide');if(xwMode!='abil'||$('xw').classList.contains('hide'))openAbil()});
 
@@ -12355,27 +12358,27 @@ XR.abil=()=>{const c=hero.cls,C=CLS[c],all=kqsAll(c),eqd=heroSkills(),ap=apFree(
     ${un?`<div class="sec">Put on a key</div><div class="btns kqs-keys">${[0,1,2,3].slice(0,KQS_SLOTS).map(k=>`<button data-kqseq="${sel.n}" data-kqsk="${k}" class="${q===k?'pri':''}" ${k>eqd.length-(q>=0?1:0)?'disabled':''}>${k+1}</button>`).join('')}${q>=0&&eqd.length>1?`<button data-kqsun="${q}">Unequip</button>`:''}</div>`
       :`<div class="btns"><button class="pri" data-kqsbuy="${sel.n}" ${why?'disabled':''}>${why?'🔒 '+why:'Unlock for '+cost+' ability point'+(cost>1?'s':'')}</button></div>`}
     ${sel.gt?'<div class="mut kqs-hint">Press its key, aim the circle with the mouse (or drag on a touch screen), then click / tap — or press the key again — to cast. Right-click or Esc cancels.</div>':''}</div>`;
-  $('xwB').innerHTML=kqsTabs('ab')+`<div class="kqs-ld"><div class="sec">Equipped · keys 1–${KQS_SLOTS}</div><div class="kqs-slots">${slots}</div></div><div class="xcols kqs-cols"><div class="kqs-list">${tiers}</div><div>${det}</div></div>`;
-  $('xwF').innerHTML=`<span class="mut dtl">You earn 1 ability point every level. Unlock abilities here, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}. Talents are a separate tab.</span><button data-kqsreset="1" ${apSpent()?'':'disabled'}>Reset abilities (🪙 ${kqsResetCost()})</button>`};
+  $('xwB').innerHTML=`<div class="kqs-ld"><div class="sec">Equipped · keys 1–${KQS_SLOTS}</div><div class="kqs-slots">${slots}</div></div><div class="xcols kqs-cols"><div class="kqs-list">${tiers}</div><div>${det}</div></div>`;
+  $('xwF').innerHTML=`<span class="mut dtl">You earn 1 ability point every level. Unlock abilities here, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.</span><button data-kqsreset="1" ${apSpent()?'':'disabled'}>Reset abilities (🪙 ${kqsResetCost()})</button>`};
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-kqsbuy],[data-kqseq],[data-kqsun],[data-kqslot],[data-kqsel],[data-kqsreset],[data-kqstal]');if(!t||t.disabled)return;e.stopPropagation();const D=t.dataset;
   try{mSfx('tick')}catch(_){}
   if(D.kqsbuy!=null)return kqsBuy(D.kqsbuy);
   if(D.kqseq!=null){const k=D.kqsk!=null?+D.kqsk:KQS.slot|0;KQS.sel=D.kqseq;skSet(Math.min(k,heroSkills().length-(heroSkills().some(s=>s.n==D.kqseq)?1:0)),D.kqseq);return}
   if(D.kqsun!=null)return kqsUneq(+D.kqsun);
   if(D.kqsreset!=null)return kqsReset();
-  if(D.kqstal!=null){KQS.tab='tal';closeX();openTal();return}
-  if(D.kqslot!=null){KQS.slot=+D.kqslot;const s=heroSkills()[KQS.slot];if(s)KQS.sel=s.n;rX();return}
+    if(D.kqslot!=null){KQS.slot=+D.kqslot;const s=heroSkills()[KQS.slot];if(s)KQS.sel=s.n;rX();return}
   if(D.kqsel!=null){KQS.sel=D.kqsel;rX()}});
 // the talents window points to the ability book (replaces the v71 skill list)
-function skHTML(){const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
-// K: Talents | Abilities. K reopens the tab you used last, and closes the Abilities tab when it is open
-addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='k')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
-  if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation()}},true);
-{const f=openTal;openTal=function(){if(KQS.tab=='ab'&&!uiOpen()&&party.length)return openAbil();KQS.tab='tal';return f.apply(this,arguments)}}
+function skHTML(){return '';const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
+// v116: Talents (K) and Abilities (C) are two separate windows with their own keys; neither links to the other.
+// C opens the Abilities window and closes it again.
+addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='c')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
+  if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation();return}if(!uiOpen())openAbil()},true);
+{const f=openTal;openTal=function(){if(!$('xw').classList.contains('hide')&&xwMode=='abil')closeX();KQS.tab='tal';return f.apply(this,arguments)}}
 function kqsTabs(on){const ap=apFree();return `<div class="tabs kqs-tabs"><button class="${on=='tal'?'on':''}" data-kqstal="1">✦ Talents${tpFree()?' <b class="kqs-n">'+tpFree()+'</b>':''}</button><button class="${on=='ab'?'on':''}" data-kqsopen="1">⚡ Abilities${ap?' <b class="kqs-n">'+ap+'</b>':''}</button></div>`}
-{const f=rTal;rTal=function(){f.apply(this,arguments);try{const w=document.querySelector('#tal .wh');if(!w)return;let t=w.querySelector('.kqs-tabs');if(t)t.remove();w.querySelector('h2').insertAdjacentHTML('afterend',kqsTabs('tal'))}catch(_){}}}
+// (v116: the Talents window no longer carries a Talents | Abilities tab bar)
 document.addEventListener('click',e=>{const t=e.target.closest('#tal [data-kqstal]');if(t)e.preventDefault()});
-{const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>K</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
+{const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>C</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
 document.head.insertAdjacentHTML('beforeend',`<style>
 .kqs-tg{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:10px;padding:6px 8px 6px 14px;font-size:.8rem;pointer-events:auto;border-radius:10px;white-space:nowrap;max-width:calc(100% - 32px);box-sizing:border-box}
 .kqs-tg .kqs-tgh{opacity:.8}.kqs-tg kbd{font-size:.7rem}.kqs-tg .kqs-tgx{min-width:30px;padding:3px 8px}
@@ -13156,21 +13159,25 @@ function kqmForgePanel(it){if(!it)return '<div class="mut">Pick an item on the l
     return `<div class="kqm-frow"><span>${kqmLab(k)}</span><span>${kqmFmt(k,a).replace(/^\+/,fl?'':'+')} → <b>${kqmFmt(k,b).replace(/^\+/,fl?'':'+')}</b> ${(fl?Math.abs(d)>=.5:Math.abs(d)>=.0005)?`<span class="kqm-ok">▲${kqmFmt(k,d).slice(1)}</span>`:''}</span></div>`}).join('');
   h+=`<div class="kqm-h">Cost</div><div class="kqm-frow"><span>${matInfo(c.m)[1]} ${c.m}</span><b class="${hm>=c.n?'kqm-ok':'kqm-bad'}">need ${c.n} · have ${hm}</b></div><div class="kqm-frow"><span>🪙 Gold</span><b class="${gold>=c.g?'kqm-ok':'kqm-bad'}">${c.g.toLocaleString()}</b></div><div class="kqm-frow"><span>Success chance</span><b>${Math.round(c.ch*100)}%</b></div>`+
     (c.ch<1?'<div class="mut" style="font-size:.7rem">A failed upgrade uses the materials and gold; the item is never harmed.</div>':'');
-  const lock=u>=cap,why=lock?'Forge mastery reaches +'+cap+'. Defeat Sovereigns (J) to raise it.':!inTown?'Upgrades need a forge: visit any town.':hm<c.n?'Not enough '+c.m+'.':gold<c.g?'Not enough gold.':'';
+  const lock=u>=cap,why=lock?'Forge mastery reaches +'+cap+'. Defeat Sovereigns to raise it.':!inTown?'Visit the Blacksmith in Duskhold to upgrade.':hm<c.n?'Not enough '+c.m+'.':gold<c.g?'Not enough gold.':'';
   h+=`<div class="mut" style="font-size:.7rem">Forge mastery: up to +${cap}</div>${why?`<div class="kqm-bad" style="font-size:.72rem">${why}</div>`:''}<button class="pri" data-kqup="1" ${why?'disabled':''}>⚒️ Upgrade to +${u+1}</button>`;
   return h}
 function kqmForgeTab(){const E=SLOTS.map(k=>eq[k]).filter(Boolean),G=gear.slice().sort(KQM_SORT.best);
   return `<div class="kqm-forge"><div><div class="kqm-h">Equipped</div><div class="kqm-grid">${E.map(i=>kqmTile(i,'e',{lv:1})).join('')}${kqmEmpty((6-E.length%6)%6)}</div>`+
     `<div class="kqm-h">In your bag</div><div class="kqm-grid">${G.map(i=>kqmTile(i,'g',{lv:1})).join('')}${kqmEmpty(Math.max(12,Math.ceil((G.length+1)/6)*6)-G.length)}</div></div><div class="kqm-fp" id="kqmFP">${kqmForgePanel(kqmForgeItem())}</div></div>`}
 // ---------------- the render hook ----------------
-var KQM_FORGE=7,KQM_STATS=8;
+var KQM_FORGE=7,KQM_STATS=8,KQM_SMITH=false;
 function kqmBag(){kqmBagInit();if(!KQM.ready)return;kqmMarkNew();
-  const bt=$('bt');if(bt&&!bt.querySelector('[data-bt="'+KQM_FORGE+'"]'))bt.insertAdjacentHTML('beforeend',`<button data-bt="${KQM_FORGE}" class="${bagTab2==KQM_FORGE?'on':''}" title="Upgrade your gear">⚒️ Forge</button><button data-bt="${KQM_STATS}" class="${bagTab2==KQM_STATS?'on':''}">Stats</button>`);
+  // v116: the Forge tab exists only while the bag was opened at the Blacksmith (KQM_SMITH, set by TWN100_ACT.smith)
+  const bt=$('bt');if(!KQM_SMITH&&bagTab2==KQM_FORGE)bagTab2=0;
+  if(bt){const fb=bt.querySelector('[data-bt="'+KQM_FORGE+'"]');if(fb&&!KQM_SMITH){fb.remove();bt.querySelectorAll('.on').forEach(x=>x.classList.remove('on'))}
+    if(!bt.querySelector('[data-bt="'+KQM_STATS+'"]'))bt.insertAdjacentHTML('beforeend',`<button data-bt="${KQM_STATS}" class="${bagTab2==KQM_STATS?'on':''}">Stats</button>`);
+    if(KQM_SMITH&&!bt.querySelector('[data-bt="'+KQM_FORGE+'"]'))bt.querySelector('[data-bt="'+KQM_STATS+'"]').insertAdjacentHTML('beforebegin',`<button data-bt="${KQM_FORGE}" class="${bagTab2==KQM_FORGE?'on':''}" title="Upgrade your gear">⚒️ Forge</button>`)}
   if(bt&&!bt.querySelector('.on')){bagTab2=0;const b=bt.querySelector('[data-bt="0"]');if(b)b.classList.add('on')}
   kqmDoll();const bl=$('bl'),T=bagTab2;
   $('kqmStatP').classList.toggle('kqm-tabhid',T!=KQM_STATS);bl.classList.toggle('kqm-tabhid',T==KQM_STATS);
   if(T==0)bl.innerHTML=kqmGearTab();else if(T==1)bl.innerHTML=kqmMatTab();else if(T==3)bl.innerHTML=kqmSupTab();else if(T==4)bl.innerHTML=kqmEggTab();
-  else if(T==KQM_FORGE){bl.innerHTML=kqmForgeTab();$('idt').innerHTML='<span class="mut dtl">⚒️ Upgrades need a town forge. Upgrade materials drop in the portal zones; the Trading Post sells the one for your tier. Success chance falls after +5.</span>'}
+  else if(T==KQM_FORGE){bl.innerHTML=kqmForgeTab();$('idt').innerHTML='<span class="mut dtl">⚒️ The Blacksmith upgrades your gear here. Upgrade materials drop in the portal zones; the Trading Post sells the one for your tier. Success chance falls after +5.</span>'}
   else if(T==KQM_STATS)$('idt').innerHTML='<span class="mut dtl">Hover any stat for where it comes from. Gear, talents, food, elixirs and Sovereign powers all add up here.</span>';
   if(T==1||T==4)$('idt').innerHTML='<span class="mut dtl">'+(T==1?'Hover a material to see what it is for and where to find more.':'Eggs hatch on their own while you carry them. A glowing egg is ready: click it to watch it hatch.')+'</span>';
   if(T==3){const k=KQM.supSel,S=k&&SUP[k];if(S&&cnt(k)>0){const u=['food','elixir','pot'].includes(S.c);$('idt').innerHTML=`<div class="dtl"><div class="dh">${S.i} ${kqmEsc(S.n)} <small>×${cnt(k)}</small></div><div class="mut" style="font-size:.74rem">${S.d||''}</div></div>${u?`<button class="pri" data-use="${k}">${S.c=='food'?'Eat':'Drink'}</button>`:''}`}else{KQM.supSel=null;$('idt').innerHTML='<span class="mut dtl">Select a supply to see what it does. Food and potions can be used from here.</span>'}}
@@ -21658,7 +21665,7 @@ var KM103_SHOPD={smith:'Upgrade and reforge your gear at the forge'};
 function kmRow103(o){// o: {i,n,d,state,cost,btn:[[label,data,attrs]],col}
   return `<div class="rw kmrw" style="--rc:${o.col||'#c9a24a'}"><span class="rn">${o.i} <b>${o.n}</b>${o.pips?' <span class="kmpip">'+o.pips+'</span>':''}<small>${o.d}${o.cost?'<br>'+o.cost:''}</small></span><span class="ra">${o.state||''}${(o.btn||[]).map(b=>`<button ${b[2]||''} ${b[1]}>${b[0]}</button>`).join('')}</span></div>`}
 function kmLotTxt103(key){const l=lotOf103(key);return l?'<span class="mut kmlot" data-kmshow="'+l.id+'">📍 '+l.id+'</span>':''}
-XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
+XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Kingdom of Duskhold';
   $('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;$('xwS').title='Gold · Sovereigns defeated · citizens';
   const P=KM103.pick,R=[],mv=key=>['Move','data-kmmv="'+key+'"',P?'disabled':''],rt=key=>['⟳','data-kmrot="'+key+'"',(P?'disabled ':'')+'title="Turn it a quarter turn"']; // v109: turn buildings
   // ---- shops ----
@@ -21681,23 +21688,7 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
   HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i),rt('h:'+i)],col:'#d8b46a'})));
   if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
-  // ---- citizens (v104: each has a trade; v105: ranks, food, goods to collect at the house) ----
-  R.push('<div class="sec kmcits">👥 Citizens</div>');
-  if(!HS103.cit.length)R.push('<div class="mut kmnote">Nobody lives in Duskhold yet. Build a house and two citizens move in.</div>');
-  else{if(!bossDone.size)R.push('<div class="mut kmnote">Complete a zone (defeat its Sovereign) and citizens can work there.</div>');
-    const fd=czFood105();
-    R.push('<div class="mut kmnote">🍖 Food for trips: <b style="color:'+(fd?'var(--ink)':'#f87171')+'">'+fd+' ration'+(fd==1?'':'s')+'</b> in your bag (raw meat, fish, berries and crops are 1 ration, cooked meals 3). A trip costs 1 ration for a gatherer, otherwise the zone\'s tier.<br>'+
-      'Train a citizen as an 🥚 Egg Collector (🪙 '+CZR104.egg.g+'), 🎣 Fisherman (🪙 '+CZR104.fish.g+') or 🏹 Hunter (🪙 '+CZR104.hunt.g+'). Raise their rank to reach higher-tier zones. Goods wait at the house until you collect them there.</div>');
-    HS103.cit.forEach((c,i)=>{const h=HS103.h[c.h],ro=czRole104(c),RR=CZR104[ro],L=czOpts104(c),rk=czRank105(c),up=czUpCost105(c),busy=!!(c.t0||c.bag);
-      const opts='<option value="">💤 Idle — strolls round town</option>'+L.map(([v,l,ok])=>`<option value="${v}" ${c.task===v?'selected':''} ${ok?'':'disabled'}>${l}</option>`).join('');
-      const tr='<option value="">'+RR.i+' '+RR.n+'</option>'+Object.keys(CZR104).filter(k=>k!==ro).map(k=>`<option value="${k}" ${gold<CZR104[k].g||busy?'disabled':''}>Train as ${CZR104[k].i} ${CZR104[k].n}${CZR104[k].g?' · 🪙 '+CZR104[k].g:' (free)'}</option>`).join('');
-      let st;if(c.bag)st='<b style="color:#f0cc72">🎁 Back with goods — collect them at '+(h?h.nm:'the house')+' (F)</b><br>'+czGoodsTxt105(c.bag);
-      else if(c.task&&c.t0)st=czTaskTxt104(c)+` · back in <b data-czt="${i}">${kmClock103(czLeft103(c))}</b>`;
-      else if(c.task&&c.wf==1)st='<span class="warn" style="display:inline">🍽️ Waiting for food: needs '+czCost105(c)+' ration'+(czCost105(c)>1?'s':'')+' to set off</span> · '+czTaskTxt104(c);
-      else if(c.task&&c.wf==2)st='<span class="warn" style="display:inline">🥚 Your egg bag is full ('+CZ104_EGGMAX+')</span> · '+czTaskTxt104(c);
-      else st=L.length?'Idle in town':'Idle — no work yet ('+(ro=='fish'?'needs a completed zone with water':'needs a completed zone')+')';
-      const ub=up?`<button data-czu="${i}" ${gold<up?'disabled':''} title="Rank ${rk+1}: Tier ${rk+1} zones">⬆ Rank ${rk+1} · 🪙 ${up}</button>`:'<em style="color:#6ee7b7">Max rank</em>';
-      R.push(`<div class="rw kmrw kmcit kmr-${ro}${KM103.house===c.h?' on':''}"><span class="rn">${RR.i} <b>${c.n}</b> <span class="kmrole">${RR.n} · rank ${rk}</span> <span class="mut">· ${h?h.nm:''}</span><small>${st}</small></span><span class="ra kmcsel"><select data-czr="${i}" aria-label="Trade for ${c.n}" ${busy?'disabled title="Busy with a trip"':''}>${tr}</select><select data-czk="${i}" aria-label="Task for ${c.n}" ${busy?'disabled title="Busy with a trip"':''}>${opts}</select>${ub}</span></div>`)})}
+  // ---- citizens: their own Villagers tab since v116 (vlRender116 in 2150) ----
   // ---- plan ----
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
   const lkd=lot&&typeof lotOpen109=='function'&&!lotOpen109(lot.id),pinf=typeof lotInfo109=='function'?lotInfo109(P):'';
@@ -21707,7 +21698,7 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Stronghold Steward';
   $('xwB').innerHTML=`<div class="km"><div class="kmplan"><canvas id="kmCv" width="680" height="680"></canvas>${info}</div><div class="kmlist rows">${R.join('')}</div></div>`;
   $('xwF').innerHTML='<span class="mut dtl">Gather wood, stone, fibers, glow caps and the like in the portal zones, and monster parts like Rock Core, Silk Gland and Ectoplasm. Upgrade levels need defeated Sovereigns. Every building can be moved and turned (⟳) for free.</span>';
   kmDraw103();
-  if(KM103.focus=='cit'){KM103.focus=null;try{const e=$('xwB').querySelector('.kmcits');if(e)e.scrollIntoView({block:'start'})}catch(_){}}};
+};
 function kmClock103(ms){const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function kmDraw103(){const cv=$('kmCv');if(!cv)return;try{KM103.info=lotPlan103(cv,{pick:KM103.pick?KM103.pick.key||'__new':null,hover:KM103.hover,sel:KM103.sel})}catch(e){console.warn('v103 plan',e)}}
 function kmCvLot103(e){const cv=$('kmCv');if(!cv||!KM103.info)return null;const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*cv.width/r.width,y=(e.clientY-r.top)*cv.height/r.height;return lotHit103(KM103.info,x,y)}
@@ -21814,7 +21805,7 @@ function wkSpark103(S,col){try{if(!S.g||!S.g.visible)return;const p=S.g.getWorld
 // tools and props (hung on the right hand, or between the hands)
 function wkTool103(kind){const g=new THREE.Group(),M=c=>new THREE.MeshLambertMaterial({color:c});
   const stick=(l,c)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,l,5),M(c||0x5a3a22));m.position.y=-l*.3;g.add(m);return m};
-  if(kind=='hammer'){stick(.42);const h=new THREE.Mesh(new THREE.BoxGeometry(.16,.07,.07),M(0x3a3a42));h.position.y=-.38;g.add(h)}
+  if(kind=='hammer'){stick(.42);const h=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.16),M(0x3a3a42));h.position.y=-.38;g.add(h)} // v116: head across the swing plane, so a face strikes down
   else if(kind=='ladle'){stick(.9,0x6a4a2a);const h=new THREE.Mesh(new THREE.SphereGeometry(.06,6,4,0,6.3,0,1.6),M(0x7a5a3a));h.position.y=-.62;h.rotation.x=Math.PI;g.add(h)}
   else if(kind=='stick'){stick(.85,0x6a4a2a)}
   else if(kind=='fork'){stick(1.3,0x6a4a2a);for(let i=-1;i<=1;i++){const t=new THREE.Mesh(new THREE.BoxGeometry(.012,.22,.012),M(0x4a4a52));t.position.set(i*.05,-1.0,0);g.add(t)}}
@@ -21997,12 +21988,15 @@ function dcRender103(){const own=DECO103.filter(D=>SH.deco[D.k]!=null).length,on
     return `<div class="dccard${has?' own':''}${o?' on':''}"><div class="dci">${D.i}</div><div class="dct"><b>${D.n}</b><small>${D.d}</small></div><div class="dca">${has?`<button class="dctg${o?' on':''}" data-dct="${D.k}" aria-pressed="${o}">${o?'On':'Off'}</button>`:`<button class="pri" data-dcb="${D.k}" ${gold>=D.g?'':'disabled'}>🪙 ${D.g}</button>`}</div></div>`}).join('');
   $('xwB').innerHTML=`<div class="mut dcsum">${own} of ${DECO103.length} owned · ${on} shown. Decorations stand in fixed spots round the square and never block a building lot.</div><div class="dcgrid">${rows}</div>`;
   $('xwF').innerHTML='<span class="mut dtl">Bought once, kept forever. Switch any decoration off to hide it, and on again whenever you like.</span>'}
-{const f=XR.hold;XR.hold=function(){if(KM103.tab=='deco'){$('xwT').textContent='🏰 Stronghold Steward';$('xwS').textContent='🪙 '+gold;try{kmPickEnd103()}catch(_){}dcRender103()}else f.apply(this,arguments);
-  $('xwB').insertAdjacentHTML('afterbegin',`<div class="tabs kmtabs"><button class="${KM103.tab!='deco'?'on':''}" data-kmtab="kingdom">🏰 Kingdom</button><button class="${KM103.tab=='deco'?'on':''}" data-kmtab="deco">🌟 Decorations</button></div>`)}}
+// v116: three tabs — Construction (the plan and the building list), Villagers (vlRender116 in 2150), Decorations
+{const f=XR.hold;XR.hold=function(){const t=KM103.tab;
+  if(t=='deco'||t=='vill'){$('xwT').textContent='🏰 Kingdom of Duskhold';$('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;try{kmPickEnd103()}catch(_){}if(t=='deco')dcRender103();else vlRender116()}else f.apply(this,arguments);
+  const b=(k,l)=>`<button class="${(t==k||(k=='kingdom'&&t!='deco'&&t!='vill'))?'on':''}" data-kmtab="${k}">${l}</button>`;
+  $('xwB').insertAdjacentHTML('afterbegin',`<div class="tabs kmtabs">${b('kingdom','🏗️ Construction')}${b('vill','👥 Villagers')}${b('deco','🌟 Decorations')}</div>`)}}
 $('xw').addEventListener('click',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-kmtab],[data-dcb],[data-dct]');if(!t||t.disabled)return;const d=t.dataset;
   if(d.kmtab){KM103.tab=d.kmtab;rX()}else if(d.dcb){dcBuy103(d.dcb);rX()}else if(d.dct){dcToggle103(d.dct);rX()}});
-// opening the Steward from a house door goes to the kingdom tab
-{const f=openX;openX=function(m){if(m=='hold'&&KM103.focus)KM103.tab='kingdom';return f.apply(this,arguments)}}
+// opening the window from a house door goes to the Villagers tab (v116)
+{const f=openX;openX=function(m){if(m=='hold'&&KM103.focus=='cit'){KM103.tab='vill';KM103.focus=null}return f.apply(this,arguments)}}
 document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .kmtabs{margin:0 0 10px}
 #xw .dcsum{font-size:.76rem;margin-bottom:8px}#xw .dcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
@@ -27607,3 +27601,398 @@ function kqsxOpen(mode){const w=$('kqsx'),A=$('kqsxA'),B=$('kqsxB'),M=$('kqsxM')
   if($('kqsxI2'))$('kqsxI2').onclick=e=>{e.stopPropagation();kqsxOpen('import')};
   const s=document.querySelector('#svp .devb');if(s)s.insertAdjacentHTML('afterend',`<div class="row" style="display:flex;gap:8px;justify-content:center;margin-top:6px"><button id="kqsxE3" style="font-size:.8rem">📤 Export this save</button><button id="kqsxI3" style="font-size:.8rem">📥 Import a save</button></div>`);
   if($('kqsxE3'))$('kqsxE3').onclick=()=>kqsxOpen('export');if($('kqsxI3'))$('kqsxI3').onclick=()=>kqsxOpen('import')}
+// ================= v116 menus: Kingdom window + Villagers tab, menu clean-up, Fusion inside Companions, forge only at the Blacksmith =================
+// Menu list: Fusion and Sovereigns are gone from the ☰ menu (Fusion lives in the Companions window, the Sovereigns list is not needed;
+// the sealed-portal prompt still opens the portal list). New "🏰 Kingdom" button (B) opens the kingdom window anywhere:
+// Construction (plan + buildings, 1880) | Villagers (vlRender116 below) | Decorations (1910).
+// ---------------- the ☰ menu ----------------
+['fuseBtn','bossBtn'].forEach(id=>{const b=$(id);if(b)b.style.setProperty('display','none','important')});
+{const c=$('cmpBtn');if(c&&!$('kgBtn')){c.insertAdjacentHTML('afterend','<button id="kgBtn">🏰 Kingdom <kbd>B</kbd></button>');$('kgBtn').onclick=()=>{$('sysmenu').classList.add('hide');openKingdom116()}}}
+function openKingdom116(tab){if(!$('xw').classList.contains('hide')&&xwMode=='hold'&&!tab)return closeX();if(uiOpen()&&$('xw').classList.contains('hide'))return;
+  if(tab)KM103.tab=tab;openX('hold');try{mSfx('open')}catch(_){}}
+// B opens / closes the kingdom window; J (the old Sovereigns list) does nothing now
+addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();if(k!='b'&&k!='j')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
+  e.stopImmediatePropagation();if(k=='b')openKingdom116()},true);
+// ---------------- Companions | Fusion: one window, two tabs ----------------
+function cfTabs116(on){const dis=$('fuseBtn')&&$('fuseBtn').disabled;
+  return `<div class="tabs cftabs"><button class="${on=='c'?'on':''}" data-cft="c">🐾 Companions &amp; Eggs</button><button class="${on=='f'?'on':''}" data-cft="f" ${dis&&on!='f'?'disabled title="Needs two companions, and no fight going on"':''}>⚗️ Fusion</button></div>`}
+function cfPaint116(){[['cmp','c'],['fz','f']].forEach(([id,on])=>{const w=document.querySelector('#'+id+' .wh');if(!w)return;const p=w.parentElement;let t=p.querySelector(':scope>.cftabs');if(t)t.remove();w.insertAdjacentHTML('afterend',cfTabs116(on))})}
+var CF116={fromCmp:false};
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-cft]');if(!t||t.disabled)return;e.preventDefault();e.stopPropagation();
+  if(t.dataset.cft=='f'){if(!$('fz').classList.contains('hide'))return;CF116.fromCmp=true;FSM100_open()}
+  else{if(!$('cmp').classList.contains('hide'))return;$('fz').classList.add('hide');openCmp(false)}cfPaint116()},true);
+{const f=rC0;rC0=function(){const r=f.apply(this,arguments);try{cfPaint116()}catch(_){}return r}}
+{const f=FSM100_open;FSM100_open=function(){const r=f.apply(this,arguments);try{cfPaint116()}catch(_){}return r}}
+// the window reads as one menu: closing Fusion after coming from Companions goes back to Companions
+{const x=$('fCancel');if(x)x.addEventListener('click',()=>{if(CF116.fromCmp){CF116.fromCmp=false;setTimeout(()=>{try{openCmp(false)}catch(_){}},0)}})}
+document.head.insertAdjacentHTML('beforeend',`<style>
+.win>.cftabs{display:flex;gap:4px;margin:0;padding:8px 14px 0;flex:none}.win>.cftabs button{white-space:nowrap}
+@media (max-width:640px){.win>.cftabs{padding:6px 8px 0}.win>.cftabs button{font-size:.72rem;padding:3px 7px}}
+</style>`);
+// ---------------- the forge only at the Blacksmith ----------------
+// The bag's Forge tab and the item Upgrade button exist only while the bag was opened with F at the Blacksmith (1050, 0140).
+{const f=TWN100_ACT.smith;TWN100_ACT.smith=function(){KQM_SMITH=true;return f.apply(this,arguments)}}
+new MutationObserver(()=>{if(KQM_SMITH&&$('bag').classList.contains('hide')){KQM_SMITH=false;if(bagTab2==KQM_FORGE)bagTab2=0}}).observe($('bag'),{attributes:true,attributeFilter:['class']});
+{const f=doUpgrade;doUpgrade=function(it){if(!KQM_SMITH)return say('⚒️ Visit the Blacksmith in Duskhold to upgrade your gear.');return f.apply(this,arguments)}}
+// ---------------- Villagers tab ----------------
+var VL116={scrolled:false};
+function vlState116(c){if(c.bag)return {k:'ready',l:'🎁 Back with goods',col:'#f0cc72'};if(c.task&&c.t0)return {k:'work',l:'⚒️ On a trip',col:'#6ee7b7'};
+  if(c.task&&c.wf==1)return {k:'stuck',l:'🍽️ Needs food',col:'#f87171'};if(c.task&&c.wf==2)return {k:'stuck',l:'🥚 Egg bag full',col:'#f87171'};return {k:'idle',l:'💤 Idle',col:'#b8ad98'}}
+function vlPct116(c){const T=czTrip104(c);return c.t0&&T?Math.max(0,Math.min(100,100*(1-czLeft103(c)/T))):0}
+function vlCollect116(L){L=L.filter(c=>c.bag);if(!L.length)return;const parts=L.map(c=>c.n+': '+czCollect105(c));
+  pickup({ic:'🎁',t:'Goods from '+(L.length>2?L.length+' villagers':L.map(c=>c.n).join(' & ')),col:'#f0cc72',sub:parts.join(' — ').slice(0,160),r:2});say('🏘️ '+parts.join(' — '));sfx('chime');
+  try{hsDirty&&hsDirty()}catch(_){}hud();ui();try{czTick103()}catch(_){}try{saveGame(true)}catch(_){}}
+function vlRender116(){const C=HS103.cit,fd=czFood105(),S=C.map(vlState116),n=k=>S.filter(s=>s.k==k).length,ready=n('ready');
+  const pill=(i,t,col,tip)=>`<span class="vlpill" style="--pc:${col}" title="${tip}">${i} <b>${t}</b></span>`;
+  let h=`<div class="vlsum">${pill('🍖',fd+' food',fd?'#d8b46a':'#f87171','Rations in your bag: raw meat, fish, berries and crops are 1, cooked meals 3')}${pill('⚒️',n('work')+' working','#6ee7b7','On a trip now')}${pill('🎁',ready+' ready','#f0cc72','Back with goods to collect')}${pill('💤',n('idle')+' idle','#b8ad98','No job yet')}${n('stuck')?pill('⚠️',n('stuck')+' stuck','#f87171','Waiting for food or a free egg slot'):''}
+    <button class="pri" data-vlall="1" ${ready?'':'disabled'}>🎁 Collect all</button></div>
+  <div class="vlhow"><span><b>1</b> Choose a trade</span><span><b>2</b> Pick a job</span><span><b>3</b> Carry food — each trip eats some</span><span><b>4</b> Collect the goods</span></div>`;
+  if(!C.length)h+='<div class="mut kmnote">Nobody lives in Duskhold yet. Build a house on the 🏗️ Construction tab and two villagers move in.</div>';
+  else{if(!bossDone.size)h+='<div class="mut kmnote">Villagers work in zones whose Sovereign you have defeated. Clear Kindlelight first.</div>';
+    h+='<div class="vlgrid">'+C.map((c,i)=>{const hs=HS103.h[c.h],ro=czRole104(c),RR=CZR104[ro],rk=czRank105(c),up=czUpCost105(c),busy=!!(c.t0||c.bag),st=S[i],L=czOpts104(c);
+      let det='';if(c.bag)det=czGoodsTxt105(c.bag);else if(st.k=='work')det=czTaskTxt104(c)+` · back in <b data-czt="${i}">${kmClock103(czLeft103(c))}</b>`;
+      else if(c.task&&c.wf==1)det='Needs '+czCost105(c)+' food ration'+(czCost105(c)>1?'s':'')+' in your bag to set off: '+czTaskTxt104(c);
+      else if(c.task&&c.wf==2)det='Your egg bag is full ('+CZ104_EGGMAX+'). Hatch or sell some eggs.';else det=L.length?'Pick a job below.':ro=='fish'?'No job yet: needs a cleared zone with water.':'No job yet: clear a zone first.';
+      const trades=Object.keys(CZR104).map(k=>{const R=CZR104[k],cur=k===ro,dis=!cur&&(busy||gold<R.g);
+        return `<button class="vltr${cur?' on':''}" data-vltr="${i}:${k}" ${cur||dis?'disabled':''} title="${cur?'Current trade':busy?'Busy: wait until the trip is over':R.d+(R.g?' · training costs 🪙 '+R.g:'')}"><span>${R.i}</span>${R.n}${cur?'':`<small>${R.g?'🪙 '+R.g:'free'}</small>`}</button>`}).join('');
+      const jobs=[['','💤 Rest in town',true]].concat(L).map(([v,l,ok])=>{const cur=(c.task||'')===v,lk=!ok,m=/needs rank (\d+)/.exec(l),txt=l.replace(/ · needs rank \d+/,'');
+        return `<button class="vljob${cur?' on':''}${lk?' lk':''}" data-vljob="${i}" data-v="${v}" ${cur||lk||busy?'disabled':''} title="${lk?'Needs rank '+(m?m[1]:'')+' — rank up below':busy&&!cur?'Busy: wait until the trip is over':''}">${lk?'🔒 ':''}${txt}${lk&&m?` <small>rank ${m[1]}</small>`:''}</button>`}).join('');
+      const ub=up?`<button data-vlrk="${i}" ${gold<up?'disabled':''} title="Rank ${rk+1} can work Tier ${rk+1} zones">⬆ Rank ${rk+1} · 🪙 ${up}</button>`:'<em class="vlmax">Max rank</em>';
+      const trip=czTrip104(c)/60000,cost=c.task?czCost105(c):(ro=='gather'?1:null);
+      return `<div class="vlc vl-${st.k} kmr-${ro}${KM103.house===c.h?' on':''}" style="--sc:${st.col}" data-vlcard="${i}">
+        <div class="vlh"><span class="vli">${RR.i}</span><div class="vln"><b>${c.n}</b><small>${RR.n} · ${hs?hs.nm:''}</small></div><span class="vlrk" title="Rank ${rk} of ${CZ105_RMAX}: works zones up to Tier ${rk}">${'◆'.repeat(rk)}${'◇'.repeat(CZ105_RMAX-rk)}</span></div>
+        <div class="vls"><div class="vlsl"><b>${st.l}</b>${c.bag?`<button class="pri" data-vlcol="${i}">Collect</button>`:''}</div><div class="vld">${det}</div>${st.k=='work'?`<div class="vlbar"><i data-vlp="${i}" style="width:${vlPct116(c).toFixed(1)}%"></i></div>`:''}</div>
+        <div class="vlsec">Trade</div><div class="vltrs">${trades}</div>
+        <div class="vlsec">Job${busy?' <span class="mut">· can change when back home'+(c.bag?' and collected':'')+'</span>':''}</div><div class="vljobs">${jobs}</div>
+        <div class="vlft"><span class="mut">⏱ ${trip|0} min trips${cost?' · 🍖 '+cost+' per trip':''}</span>${ub}</div></div>`}).join('')+'</div>'}
+  $('xwB').innerHTML=h;
+  $('xwF').innerHTML='<span class="mut dtl">Each villager has a trade and a job. Gatherers bring materials, Egg Collectors one egg, Fishermen fish, Hunters gold, parts and gear. A higher rank reaches higher-tier zones. Goods also wait at their house (F).</span>';
+  if(KM103.house!=null&&!VL116.scrolled){VL116.scrolled=true;try{const e=$('xwB').querySelector('.vlc.on');if(e)e.scrollIntoView({block:'nearest'})}catch(_){}}}
+$('xw').addEventListener('click',e=>{if(xwMode!='hold'||KM103.tab!='vill')return;const t=e.target.closest('[data-vlall],[data-vlcol],[data-vltr],[data-vljob],[data-vlrk]');if(!t||t.disabled)return;const d=t.dataset;
+  try{mSfx('tick')}catch(_){}
+  if(d.vlall){vlCollect116(HS103.cit.slice());rX();return}
+  if(d.vlcol!=null){const c=HS103.cit[+d.vlcol];if(c)vlCollect116([c]);rX();return}
+  if(d.vlrk!=null){const c=HS103.cit[+d.vlrk];if(c)czRankUp105(c);rX();return}
+  if(d.vltr){const [i,r]=d.vltr.split(':'),c=HS103.cit[+i];if(c)czTrain104(c,r);rX();return}
+  if(d.vljob!=null){const c=HS103.cit[+d.vljob];if(!c)return;czTask103(c,d.v);say(d.v?CZR104[czRole104(c)].i+' '+c.n+' sets off: '+czTaskTxt104(c).replace(/<[^>]+>/g,'')+'.':'🧑 '+c.n+' takes it easy in town.');rX()}});
+{const x=$('xwClose');if(x)x.addEventListener('click',()=>{VL116.scrolled=false})}
+setInterval(()=>{try{if(xwMode!='hold'||KM103.tab!='vill'||$('xw').classList.contains('hide'))return;document.querySelectorAll('#xw [data-vlp]').forEach(b=>{const c=HS103.cit[+b.dataset.vlp];if(c)b.style.width=vlPct116(c).toFixed(1)+'%'})}catch(_){}},1000);
+document.head.insertAdjacentHTML('beforeend',`<style>
+#xw .vlsum{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}#xw .vlsum .pri{margin-left:auto}
+#xw .vlpill{display:inline-flex;gap:4px;align-items:center;padding:3px 10px;border-radius:99px;border:1px solid color-mix(in srgb,var(--pc) 55%,transparent);background:color-mix(in srgb,var(--pc) 14%,transparent);font-size:.78rem}
+#xw .vlpill b{color:var(--pc)}
+#xw .vlhow{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.74rem;color:var(--mut);margin:0 0 10px;padding:6px 8px;border:1px dashed var(--line);border-radius:6px}
+#xw .vlhow b{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#c9a24a;color:#1a120a;font-size:.68rem;margin-right:3px}
+#xw .vlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+#xw .vlc{border:1px solid var(--line);border-left:4px solid var(--sc);border-radius:8px;padding:10px;background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:6px}
+#xw .vlc.on{box-shadow:0 0 0 1px #c9a24a inset;background:rgba(201,162,74,.08)}
+#xw .vlh{display:flex;align-items:center;gap:8px}#xw .vli{font-size:1.6rem;line-height:1}#xw .vln{flex:1;min-width:0}#xw .vln small{display:block;color:var(--mut);font-size:.72rem}
+#xw .vlrk{color:#f0cc72;letter-spacing:1px;font-size:.8rem}
+#xw .vls{background:color-mix(in srgb,var(--sc) 10%,rgba(0,0,0,.25));border-radius:6px;padding:6px 8px}
+#xw .vlsl{display:flex;align-items:center;justify-content:space-between;gap:6px}#xw .vlsl b{color:var(--sc)}
+#xw .vld{font-size:.74rem;color:var(--mut);margin-top:2px;line-height:1.35}#xw .vld b{color:var(--ink)}
+#xw .vlbar{height:6px;border-radius:3px;background:rgba(0,0,0,.4);margin-top:5px;overflow:hidden}#xw .vlbar i{display:block;height:100%;background:linear-gradient(90deg,#4a9a6a,#6ee7b7);transition:width .9s linear}
+#xw .vlsec{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}#xw .vlsec .mut{text-transform:none;letter-spacing:0}
+#xw .vltrs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+#xw .vltr{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px!important;font-size:.68rem!important;line-height:1.15}#xw .vltr span{font-size:1.05rem}#xw .vltr small{color:var(--mut);font-size:.62rem}
+#xw .vltr.on,#xw .vljob.on{opacity:1!important;border-color:#c9a24a!important;background:rgba(201,162,74,.22)!important;color:#fff3d0!important}
+#xw .vljobs{display:flex;flex-wrap:wrap;gap:4px;max-height:132px;overflow:auto}#xw .vljob{font-size:.72rem!important;padding:4px 8px!important;border-radius:99px!important}
+#xw .vljob.lk{opacity:.5}#xw .vljob small{color:var(--mut)}
+#xw .vlft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:.72rem;margin-top:2px}#xw .vlmax{color:#6ee7b7;font-size:.74rem}
+</style>`);
+// ---------------- crossbow: the bolt leaves from the crossbow's front end (v116) ----------------
+// The weapon model's stock runs along its local -Y, so the muzzle is the far end of its bounding box on that axis
+// (measured once per model in the weapon's own frame, works for every crossbow look).
+function xbowMuzzle116(){const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='crossbow');if(!W)return null;pl.updateMatrixWorld(true);
+  let m=W.userData.muz116;if(!m){const inv=new THREE.Matrix4().copy(W.matrixWorld).invert(),B=new THREE.Box3(),v=new THREE.Vector3();
+    W.traverse(o=>{if(!o.isMesh||!o.geometry)return;const P=o.geometry.attributes.position;if(!P)return;const M=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).applyMatrix4(M);B.expandByPoint(v)}});
+    if(B.isEmpty())return null;m=W.userData.muz116=new THREE.Vector3((B.min.x+B.max.x)/2,B.min.y+.02,(B.min.z+B.max.z)/2)}
+  return W.localToWorld(m.clone())}
+// While the player aims (xbowPose from the sight to the recoil) the crossbow is turned in the hand so its barrel lies along the
+// aim, level: the v85 pose was tuned on human arms and tilted the crossbow up on the beast rigs. Runs after every other layer.
+function xbowLevel116(h){if(h&&h!==pl)return;const A=typeof HA!='undefined'&&HA.cur;if(!A||A.pose!==xbowPose)return;const k=A.k||0;
+  const w=k<.14?k/.14:k<.6?1:k<.74?1-(k-.6)/.14:0;if(w<=0)return;
+  const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='crossbow');if(!W||!W.parent)return;pl.updateMatrixWorld(true);
+  const Q=THREE.Quaternion,qw=W.getWorldQuaternion(new Q()),b=new THREE.Vector3(0,-1,0).applyQuaternion(qw).normalize(),f=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
+  const tq=new Q().setFromUnitVectors(b,f).multiply(qw),out=qw.clone().slerp(tq,w),pq=W.parent.getWorldQuaternion(new Q());
+  W.quaternion.copy(pq.invert().multiply(out));W.updateMatrixWorld(true)}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{xbowLevel116(h)}catch(_){}return r}}
+// ================= v116 zone title cards =================
+// Arriving in a zone instance (and in Duskhold the first time) shows one decorated title card in the zone's own style instead of the
+// plain text banners (the v56 arrival banner and the v112 second banner are muted): a small kicker (zone · instance), the place name
+// in the zone's lettering, an ornament with the zone's emblem, the place's line, and the enemy levels with the recommended power.
+var ZT116={mute:0,el:null,tm:0,
+  // c1 lettering, c2 glow, c3 deep shade, font, emblem
+  Z:[{c1:'#c8ffa0',c2:'#5dff7a',c3:'#0c2410',f:"'IM Fell English SC','Cinzel',Georgia,serif",e:'wisp'},   // Kindlelight: a drowned bog of lantern light
+     {c1:'#f6dc8a',c2:'#d0a040',c3:'#2a1e08',f:"'Cinzel Decorative','Cinzel',Georgia,serif",e:'serpent'},// Hillside Crest: serpent folk
+     {c1:'#d4f0ff',c2:'#ff8a3a',c3:'#0a1a2a',f:"'Cinzel Decorative','Cinzel',Georgia,serif",e:'eye'},   // Burningeye Summit: ice under a burning sky
+     {c1:'#ffd88a',c2:'#ff7a2a',c3:'#2a1206',f:"'Cinzel Decorative','Cinzel',Georgia,serif",e:'sun'},   // Searing Sands
+     {c1:'#c8fff0',c2:'#5affc8',c3:'#061a16',f:"'Pirata One','Cinzel',Georgia,serif",e:'cross'},        // The Dirge: a haunted graveyard
+     {c1:'#ffb0b0',c2:'#e0102a',c3:'#2a0408',f:"'Pirata One','Cinzel',Georgia,serif",e:'bat'}],         // The Citadel: the vampire court
+  town:{c1:'#f6dc98',c2:'#fb923c',c3:'#1a1008',f:"'Cinzel Decorative','Cinzel',Georgia,serif",e:'keep'},
+  E:{wisp:'<path d="M12 2.5c3.2 4.2 5.2 6.6 5.2 9.6a5.2 5.2 0 0 1-10.4 0c0-3 2-5.4 5.2-9.6z"/><circle cx="12" cy="12.6" r="2.1" fill="var(--zc3)"/>',
+     serpent:'<path d="M3 15.5c2.6-5 5.4 1.8 8.2-3.4s5.6-4.6 7.4-1.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="19.4" cy="10.2" r="1.7"/>',
+     eye:'<path d="M2 12c4.4-6.4 15.6-6.4 20 0-4.4 6.4-15.6 6.4-20 0z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2"/>',
+     sun:'<circle cx="12" cy="12" r="4.2"/><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></g>',
+     cross:'<path d="M10.8 2.5h2.4v6.2h5.2v2.4h-5.2v10.4h-2.4V11.1H5.6V8.7h5.2z"/>',
+     bat:'<path d="M12 8.2c.8-1.6 1.8-1.8 1.8-1.8l.7 1.9c2.3-1.2 5.6-.9 7.5 2-2-.2-3.1.9-3.2 2.9-1.2-1-3.2-.8-4 1-1-.9-2-.9-2.8.2-.8-1.1-1.8-1.1-2.8-.2-.8-1.8-2.8-2-4-1-.1-2-1.2-3.1-3.2-2.9 1.9-2.9 5.2-3.2 7.5-2l.7-1.9s1 .2 1.8 1.8z"/>',
+     keep:'<path d="M5.5 21V8.5h2.2V5.2h2.1v3.3h4.4V5.2h2.1v3.3h2.2V21h-4.3v-4.6a2.2 2.2 0 0 0-4.4 0V21z"/>'}};
+function zt116Orn(e){return `<div class="ztd"><i></i><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ZT116.E[e]||''}</svg><i></i></div>`}
+function zt116Esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c])}
+function zt116Show(T,kick,title,sub,foot,cls){
+  let h=ZT116.el;if(!h){h=ZT116.el=document.createElement('div');h.id='ztc116';($('stage')||document.body).appendChild(h)}
+  clearTimeout(ZT116.tm);h.className='';void h.offsetWidth;
+  h.style.cssText=`--zc1:${T.c1};--zc2:${T.c2};--zc3:${T.c3};--zf:${T.f}`;
+  h.innerHTML=`<div class="ztk">${zt116Esc(kick)}</div><div class="ztt">${zt116Esc(title)}</div>${zt116Orn(T.e)}<div class="zts">${zt116Esc(sub)}</div>${foot?`<div class="ztf">${foot}</div>`:''}`;
+  h.className='on '+(cls||'');ZT116.tm=setTimeout(()=>{h.className=''},5200)}
+function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||ZT116.Z[0],t=typeof TH112!='undefined'&&TH112&&TH112.byG?TH112.byG[I.g]:null;
+  let kick,title,sub;
+  if(I.den){const B=BOSSES[I.z]||{};kick=p.n+' · Sovereign’s Den';title=B.name||'The Den';sub=B.title||p.sub}
+  else if(I.tri){kick=p.n;title='Wave Trial';sub=p.sub}
+  else{kick=p.n+' · '+(['First','Second','Third'][I.k]||'')+' Reach';title=t?t.nm:p.n;sub=t?t.sub:p.sub}
+  let rp=0;try{rp=recPower(I.lv[0])}catch(_){}const pw=typeof heroPower=='function'?heroPower():0;
+  const foot=`Enemies Lv ${I.lv[0]}${I.lv[1]!=I.lv[0]?'–'+I.lv[1]:''}${rp?` <span class="${pw<rp?'ztlow':''}">· ⚔ Rec. power ${rp.toLocaleString()}</span>`:''}`;
+  zt116Show(T,kick,title,sub,foot,'z'+I.z)}
+// the old arrival banners stay silent; the card replaces them
+{const f=banner;banner=function(t){if(ZT116.mute)return;if(t==='🏰 DUSKHOLD'){zt116Show(ZT116.town,'The Floating Stronghold','Duskhold','The last stronghold, adrift above the void','The Grand Square · the Portal Road leads south','town');return}return f.apply(this,arguments)}}
+{const f=insArrive;insArrive=function(I){ZT116.mute++;let r;try{r=f.apply(this,arguments)}finally{ZT116.mute--}try{zt116Ins(I)}catch(e){console.warn('v116 title',e)}return r}}
+// fonts: Cinzel Decorative, IM Fell English SC and Pirata One are in the page's Google Fonts link
+document.head.insertAdjacentHTML('beforeend',`<style>
+#ztc116{position:absolute;left:50%;top:13%;transform:translateX(-50%);z-index:40;pointer-events:none;text-align:center;min-width:min(560px,92%);max-width:94%;padding:18px 34px 14px;opacity:0;
+  background:radial-gradient(ellipse at center,color-mix(in srgb,var(--zc3) 82%,transparent) 0%,color-mix(in srgb,var(--zc3) 55%,transparent) 45%,transparent 72%);color:var(--zc1)}
+#ztc116.on{animation:zt116 5.2s ease forwards}
+#ztc116 .ztk{font-family:Cinzel,Georgia,serif;font-size:.74rem;letter-spacing:.32em;text-transform:uppercase;opacity:.85;color:color-mix(in srgb,var(--zc1) 70%,#fff 0%);text-shadow:0 1px 2px #000}
+#ztc116 .ztt{font-family:var(--zf);font-size:clamp(1.7rem,4.6vw,2.9rem);line-height:1.1;margin:4px 0 2px;letter-spacing:.06em;color:var(--zc1);
+  text-shadow:0 0 18px var(--zc2),0 0 36px color-mix(in srgb,var(--zc2) 55%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}
+#ztc116.on .ztt{animation:zt116t 1.6s cubic-bezier(.2,.7,.2,1) both}
+#ztc116 .ztd{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px auto 6px;width:min(420px,86%);color:var(--zc2);filter:drop-shadow(0 0 6px var(--zc2))}
+#ztc116 .ztd i{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--zc2) 30%,var(--zc1));position:relative}
+#ztc116 .ztd i:last-child{background:linear-gradient(270deg,transparent,var(--zc2) 30%,var(--zc1))}
+#ztc116 .ztd i::after{content:'';position:absolute;top:-3px;width:6px;height:6px;transform:rotate(45deg);background:var(--zc1)}
+#ztc116 .ztd i:first-child::after{right:-1px}#ztc116 .ztd i:last-child::after{left:-1px}
+#ztc116.on .ztd i{animation:zt116l 1.4s .25s cubic-bezier(.2,.7,.2,1) both}#ztc116 .ztd i:first-child{transform-origin:right}#ztc116 .ztd i:last-child{transform-origin:left}
+#ztc116 .ztd svg{width:26px;height:26px;flex:none;color:var(--zc1)}
+#ztc116 .zts{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:1rem;color:#f4ecdc;text-shadow:0 1px 3px #000,0 0 10px var(--zc3)}
+#ztc116 .ztf{margin-top:6px;font-family:Cinzel,Georgia,serif;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--zc1) 75%,#fff);text-shadow:0 1px 2px #000}
+#ztc116 .ztf .ztlow{color:#ff8a6a}
+#ztc116.z4 .ztt,#ztc116.z5 .ztt{letter-spacing:.03em;font-size:clamp(1.9rem,5vw,3.2rem)}
+#ztc116.z0 .ztt{animation-name:zt116t,zt116w;animation-duration:1.6s,3.2s;animation-iteration-count:1,infinite;animation-delay:0s,1.6s}
+@keyframes zt116{0%{opacity:0;filter:blur(6px)}10%{opacity:1;filter:blur(0)}80%{opacity:1}100%{opacity:0;filter:blur(2px)}}
+@keyframes zt116t{0%{letter-spacing:.5em;opacity:0}100%{letter-spacing:.06em;opacity:1}}
+@keyframes zt116l{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes zt116w{0%,100%{text-shadow:0 0 18px var(--zc2),0 0 36px color-mix(in srgb,var(--zc2) 55%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}50%{text-shadow:0 0 26px var(--zc2),0 0 52px color-mix(in srgb,var(--zc2) 70%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}}
+@media (max-width:640px){#ztc116{top:11%;padding:12px 14px 10px}#ztc116 .zts{font-size:.86rem}#ztc116 .ztk,#ztc116 .ztf{font-size:.62rem;letter-spacing:.18em}}
+</style>`);
+// ================= v116 frog Mage: how he carries his weapons =================
+// The v93 carry grip is tuned on human arms (GRIP_B), and the frog's short arms sit right on his wide robe, so staves, wands and orbs
+// cut through the robe and armour. While he is not attacking, his weapon arm is posed by a two-bone IK to a hold point out to the
+// side (staff, wand) or in front (orb), and the weapon gets its own steady orientation: the staff stands upright beside him with its
+// foot angled away from the robe hem, the wand points ahead, the orb rests above his open paw. Attacks and abilities fade the hold
+// out exactly like the beast arm hold (H._brS.a), so their tracks play unchanged.
+// Every change is put back before the next frame (FC116 keeps the bone and weapon values it found), so the base layers, the grip and
+// the beast layer's exact-value undo never see it. Numbers are in the hero's frame from the shoulder: side out, fwd, down (m);
+// the weapon direction is up/side/fwd weights (side > 0 = away from the body). test/v116_wclip.py measures the result.
+var FC116={on:true,
+  H:{staff:{arm:'R',hand:[.15,.1,.22],dir:[1,-.2,-.08]},
+     wand:{arm:'R',hand:[.14,.2,.18],dir:[.45,.15,.85]},
+     orb:{arm:'L',hand:[.12,.32,.24],dir:[1,0,0]}},
+  pole:[-.35,-1,.5]}; // elbow bends down and back, a little out (side, up, fwd)
+function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='frog'}
+function fc116Restore(H){const S=H._fc116;if(!S)return;H._fc116=null;
+  S.b.forEach(r=>{if(r.o.quaternion.equals(r.set))r.o.quaternion.copy(r.q0)});
+  S.w.forEach(r=>{if(r.o.quaternion.equals(r.set)&&r.o.position.equals(r.ps)){r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)}})}
+var FC116_T={V:null};
+function fc116Rot(bone,from,to,w){// turn a bone in world space so direction `from` points along `to` (slerped by w)
+  const T=FC116_T,q=T.q1.setFromUnitVectors(from.clone().normalize(),to.clone().normalize());if(w<1)q.slerp(T.qI,1-w);
+  const pw=bone.parent.getWorldQuaternion(T.q2),bw=bone.getWorldQuaternion(T.q3);bone.quaternion.copy(pw.clone().invert().multiply(q.multiply(bw)));bone.updateMatrixWorld(true)}
+function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
+  const W=(H.gearG||[]).find(o=>o&&o.userData&&FC116.H[o.userData.wt]&&o.parent);if(!W)return;
+  const C=FC116.H[W.userData.wt],s1=C.arm,b0=B['a'+s1+'0'],b1=B['a'+s1+'1'],b2=B['a'+s1+'2'];if(!b0||!b1||!b2||W.parent!==b2)return;
+  const st=H._brS,ar=st?st.a:1,w=ar<.001?0:ar*ar*(3-2*ar);
+  if(w<=0)return;
+  if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4()})}
+  const V=FC116_T.V,rec={b:[],w:[]};[b0,b1].forEach(o=>rec.b.push({o,q0:o.quaternion.clone()}));rec.w.push({o:W,q0:W.quaternion.clone(),p0:W.position.clone()});
+  H.updateMatrixWorld(true);
+  const S=b0.getWorldPosition(new V()),E=b1.getWorldPosition(new V()),Hd=b2.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V());
+  const f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
+  const fr=(a)=>new V().addScaledVector(sd,a[0]).addScaledVector(up,a[1]).addScaledVector(f,a[2]);
+  const T=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]]));
+  // two-bone IK: the elbow sits on the side of the pole, the upper arm aims at it, the forearm at the hold point
+  const a=E.distanceTo(S),b=Hd.distanceTo(E);let d=T.distanceTo(S);const dm=(a+b)*.985;if(d>dm){T.sub(S).setLength(dm).add(S);d=dm}
+  const ST=T.clone().sub(S).normalize(),x=(a*a-b*b+d*d)/(2*d),h=Math.sqrt(Math.max(0,a*a-x*x));
+  const P=fr([FC116.pole[0],FC116.pole[1],FC116.pole[2]]);P.addScaledVector(ST,-P.dot(ST)).normalize();
+  const Ed=S.clone().addScaledVector(ST,x).addScaledVector(P,h);
+  fc116Rot(b0,E.clone().sub(S),Ed.clone().sub(S),w);
+  const E2=b1.getWorldPosition(new V()),H2=b2.getWorldPosition(new V());fc116Rot(b1,H2.clone().sub(E2),T.clone().sub(E2),w);
+  // the weapon: local -Y along the chosen direction, local "face" axis turned toward the hero's front
+  b2.updateMatrixWorld(true);const Y=fr([C.dir[1],C.dir[0],C.dir[2]]).normalize().negate(),Fz=fr([0,0,1]);
+  const Z=Fz.clone().addScaledVector(Y,-Fz.dot(Y)).normalize(),X=new V().crossVectors(Y,Z).normalize();
+  const qd=new THREE.Quaternion().setFromRotationMatrix(FC116_T.m.makeBasis(X,Y,Z));
+  const qw=W.getWorldQuaternion(new THREE.Quaternion()),out=qw.clone().slerp(qd,w),pq=b2.getWorldQuaternion(new THREE.Quaternion());
+  W.quaternion.copy(pq.invert().multiply(out));
+  rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
+{const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
+  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding))fc116Apply(H)}catch(e){if(!FC116.err){FC116.err=1;console.warn('v116 frog carry',e)}}return r}}
+// during attacks and casts the frog's shoulders spread a little (the beast layer's D.atk), so the staff swings clear of his wide head and robe
+{const D=Object.values(BRD).find(d=>d&&d.key=='frog');if(D&&!D.atk)D.atk={shz:.3}}
+// ================= v116 character creator: the class step shows the hero as they will start, in a heroic pose =================
+// The old class-step preview (0140 ccPreview) built one model once, framed it on the first class, read the look from the wrong field
+// and dressed it in a temporary tier-1 armour set. Now every class gets its own model built the way the game builds the hero: the
+// class's animal (current beast rig) wearing exactly the starting gear (ccBegin: tier-0 weapon and chest, paladin shield) and the look
+// chosen so far, framed on its own body. Each class holds a heroic pose with effects of its own on a lit pedestal.
+// The pose is put back before every frame (like the v116 frog hold), so the beast layer's exact-value undo never sees it.
+var CC116={h:null,cache:{},tex:null,
+  // arm channels set outright (the v2 creator's values were tuned the same way), others added to the idle pose
+  P:{warrior:{set:{'aR0.x':-2.75,'aR0.z':-.18,'aR1.x':-.25,'aL0.x':-.45,'aL0.z':.42,'aL1.x':-1.15},add:{'chest.x':-.08,'head.x':-.1}},
+     paladin:{set:{'aL0.x':-1.25,'aL0.z':.22,'aL1.x':-.55,'aR0.x':-2.45,'aR0.z':-.22,'aR1.x':-.45},add:{'chest.x':-.06,'head.x':-.06}},
+     assassin:{set:{'aR0.x':-.95,'aR0.z':.85,'aR1.x':-.55,'aL0.x':-.7,'aL0.z':-.95,'aL1.x':-.7},add:{'spine.x':.22,'head.x':-.18,'spine.y':.12}},
+     mage:{set:{'aR0.x':-2.6,'aR0.z':-.3,'aR1.x':-.2,'aL0.x':-1.3,'aL0.z':-.6,'aL1.x':-.25},add:{'head.x':-.12,'chest.x':-.05}},
+     ranger:{set:{'aL0.x':-1.55,'aL0.z':.05,'aL1.x':-.05,'aR0.x':-1.45,'aR0.z':-.1,'aR1.x':-2.1},add:{'spine.y':-.45,'head.y':.4}}},
+  // effect colours per class
+  FX:{warrior:{a:0xff6a2a,b:0xffc060,kind:'embers'},paladin:{a:0xffe08a,b:0xfff6d0,kind:'holy'},assassin:{a:0x6a2a9a,b:0x7cff6a,kind:'shadow'},
+      mage:{a:0x7a8cff,b:0xd08aff,kind:'arcane'},ranger:{a:0x7ac050,b:0xd8e070,kind:'leaves'}}};
+function cc116Tex(){if(CC116.tex)return CC116.tex;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return CC116.tex=new THREE.CanvasTexture(c)}
+function cc116Pts(n,col,size,blend,op){const g=new THREE.BufferGeometry(),P=new Float32Array(n*3),S=new Float32Array(n*4);for(let i=0;i<n;i++){S[i*4]=Math.random();S[i*4+1]=Math.random();S[i*4+2]=Math.random();S[i*4+3]=Math.random()}
+  g.setAttribute('position',new THREE.BufferAttribute(P,3));const m=new THREE.PointsMaterial({color:col,size,map:cc116Tex(),transparent:true,opacity:op==null?.9:op,depthWrite:false,blending:blend==null?THREE.AdditiveBlending:blend,sizeAttenuation:true});
+  const o=new THREE.Points(g,m);o.userData.seed=S;o.frustumCulled=false;return o}
+function cc116Fx(cls,piv){const F=CC116.FX[cls]||CC116.FX.warrior,G=new THREE.Group(),L=[];piv.add(G);
+  const glow=new THREE.Mesh(new THREE.CircleGeometry(.95,40),new THREE.MeshBasicMaterial({color:F.a,map:cc116Tex(),transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));glow.rotation.x=-Math.PI/2;glow.position.y=.012;G.add(glow);
+  if(F.kind=='embers'){const a=cc116Pts(70,F.a,.07),b=cc116Pts(30,F.b,.05);G.add(a,b);L.push((t)=>[a,b].forEach((p,j)=>{const P=p.geometry.attributes.position,S=p.userData.seed;for(let i=0;i<P.count;i++){const u=(S[i*4]+t*(.18+S[i*4+1]*.25))%1,r=.25+S[i*4+2]*.55,an=S[i*4+3]*6.28+t*.4;P.setXYZ(i,Math.cos(an)*r,u*2.1,Math.sin(an)*r)}P.needsUpdate=true;p.material.opacity=.9}))}
+  if(F.kind=='holy'){const col=new THREE.Mesh(new THREE.CylinderGeometry(.55,.75,3.2,24,1,true),new THREE.MeshBasicMaterial({color:F.a,transparent:true,opacity:.1,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));col.position.y=1.6;G.add(col);
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(.34,.02,6,40),new THREE.MeshBasicMaterial({color:F.b,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));halo.rotation.x=Math.PI/2;halo.position.y=1.98;G.add(halo);
+    const m=cc116Pts(50,F.b,.05);G.add(m);L.push(t=>{col.material.opacity=.08+.04*Math.sin(t*1.8);halo.position.y=1.98+.03*Math.sin(t*1.3);halo.rotation.z=t*.4;
+      const P=m.geometry.attributes.position,S=m.userData.seed;for(let i=0;i<P.count;i++){const u=(S[i*4]+t*.08*(1+S[i*4+1]))%1,r=.15+S[i*4+2]*.5,an=S[i*4+3]*6.28;P.setXYZ(i,Math.cos(an)*r,u*2.4,Math.sin(an)*r)}P.needsUpdate=true})}
+  if(F.kind=='shadow'){const s=cc116Pts(46,F.a,.42,THREE.NormalBlending,.35),g2=cc116Pts(16,F.b,.05);G.add(s,g2);L.push(t=>{[s,g2].forEach((p,j)=>{const P=p.geometry.attributes.position,S=p.userData.seed;
+      for(let i=0;i<P.count;i++){const u=(S[i*4]+t*(j?.25:.07))%1,an=S[i*4+3]*6.28+t*(j?1.6:.5)*(S[i*4+1]>.5?1:-1),r=(j?.35:.45)+S[i*4+2]*(j?.3:.45);P.setXYZ(i,Math.cos(an)*r,(j?.3:0)+u*(j?1.4:.9),Math.sin(an)*r)}P.needsUpdate=true})})}
+  if(F.kind=='arcane'){const r1=cc116Pts(40,F.a,.07),r2=cc116Pts(40,F.b,.06),sp=cc116Pts(24,0xffffff,.04);G.add(r1,r2,sp);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(.7,.76,48),new THREE.MeshBasicMaterial({color:F.b,transparent:true,opacity:.55,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.y=.02;G.add(ring);
+    L.push(t=>{[r1,r2].forEach((p,j)=>{const P=p.geometry.attributes.position,S=p.userData.seed,tl=j?.5:-.4;for(let i=0;i<P.count;i++){const an=i/P.count*6.28+t*(j?.9:-.7),r=.62+.05*Math.sin(t*2+i),y=.95+(j?.35:.1);
+        const x=Math.cos(an)*r,z=Math.sin(an)*r;P.setXYZ(i,x,y+z*Math.sin(tl),z*Math.cos(tl))}P.needsUpdate=true});
+      const P=sp.geometry.attributes.position,S=sp.userData.seed;for(let i=0;i<P.count;i++){const u=(S[i*4]+t*.3)%1;P.setXYZ(i,(S[i*4+1]-.5)*.9,.3+u*1.9,(S[i*4+2]-.5)*.9)}P.needsUpdate=true;ring.rotation.z=t*.3;ring.material.opacity=.4+.2*Math.sin(t*2.2)})}
+  if(F.kind=='leaves'){const lv=cc116Pts(40,F.a,.08,THREE.NormalBlending,.95),l2=cc116Pts(20,F.b,.07,THREE.NormalBlending,.9),wd=cc116Pts(30,0xffffff,.035);G.add(lv,l2,wd);
+    L.push(t=>{[lv,l2,wd].forEach((p,j)=>{const P=p.geometry.attributes.position,S=p.userData.seed;for(let i=0;i<P.count;i++){const u=(S[i*4]+t*(j==2?.5:.12))%1,an=S[i*4+3]*6.28+u*(j==2?7:4),r=.45+S[i*4+2]*.45;
+        P.setXYZ(i,Math.cos(an)*r,.1+u*1.9+.05*Math.sin(t*3+i),Math.sin(an)*r)}P.needsUpdate=true})})}
+  return {G,glow,tick:t=>{glow.material.opacity=.35+.15*Math.sin(t*1.7);L.forEach(f=>f(t))}}}
+function cc116Pose(h,cls,t){const P=CC116.P[cls];if(!P||!h.bones)return;const b=h.bones,rec=[];const touch=bn=>{const o=b[bn];if(o&&!rec.some(r=>r.o===o))rec.push({o,q0:o.quaternion.clone()});return o};
+  const br=Math.sin(t*1.6)*.03;
+  for(const k in P.set){const [bn,ax]=k.split('.'),o=touch(bn);if(o)o.rotation[ax]=P.set[k]+(ax=='x'?br*(bn[1]=='R'?1:-1):0)}
+  for(const k in P.add){const [bn,ax]=k.split('.'),o=touch(bn);if(o)o.rotation[ax]+=P.add[k]}
+  rec.forEach(r=>r.set=r.o.quaternion.clone());h._cc116=rec;h.updateMatrixWorld(true)}
+function cc116Undo(h){const R=h._cc116;if(!R)return;h._cc116=null;R.forEach(r=>{if(r.o.quaternion.equals(r.set))r.o.quaternion.copy(r.q0)})}
+function cc116Model(cls){let look=null;try{look=lkFull(cls,LK.look)}catch(_){}const sig=cls+'|'+JSON.stringify(look||{});let M=CC116.cache[cls];if(M&&M.sig===sig)return M;
+  const h=buildHero();h.mdLook=Object.assign({},look||{});const E={},w=ITPL.findIndex(t=>t.sl=='weapon'&&t.cls==cls&&t.t==0),ch=ITPL.findIndex(t=>t.sl=='chest'&&t.arm==CLS[cls].arm&&t.t==0);
+  if(w>=0)E.weapon={id:-1,tp:w,lv:1,req:1,r:0,up:0,aff:[]};if(ch>=0)E.chest={id:-2,tp:ch,lv:1,req:1,r:0,up:0,aff:[]};
+  if(cls=='paladin'){const o=ITPL.findIndex(t=>t.sl=='offhand'&&t.t==0);if(o>=0)E.offhand={id:-3,tp:o,lv:1,req:1,r:0,up:0,aff:[]}}
+  refreshGear(h,cls,E);h.position.set(0,0,0);h.rotation.set(0,0,0);h.sw=1;
+  for(let t=0;t<400;t+=16)animHero(9e5+t,false,h);h.updateMatrixWorld(true);
+  // frame on the body itself (not the weapon), feet on the pedestal
+  const B=new THREE.Box3(),v=new THREE.Vector3();h.traverse(o=>{if(!o.isSkinnedMesh||!o.visible)return;const P=o.geometry.attributes.position;for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);o.boneTransform(i,v);v.applyMatrix4(o.matrixWorld);B.expandByPoint(v)}});
+  const inner=new THREE.Group(),piv=new THREE.Group();inner.add(h);piv.add(inner);const sz=B.getSize(new THREE.Vector3()),k=1.45/Math.max(.3,sz.y);inner.scale.setScalar(k);inner.position.set(-(B.min.x+B.max.x)/2*k,-B.min.y*k,-(B.min.z+B.max.z)/2*k);
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(.82,.92,.12,40),new THREE.MeshStandardMaterial({color:0x2e2418,roughness:.85,metalness:.1}));ped.position.y=-.06;piv.add(ped);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(.86,.018,6,56),new THREE.MeshBasicMaterial({color:CLS[cls].col||0xffd060}));rim.rotation.x=Math.PI/2;rim.position.y=.002;piv.add(rim);
+  const fx=cc116Fx(cls,piv);M=CC116.cache[cls]={sig,h,piv,fx,cls};return M}
+{const f=ccPreview;ccPreview=function(){if(ccStep!=0)return f.apply(this,arguments);let M;try{M=cc116Model(ccCls)}catch(e){console.warn('v116 creator',e);return f.apply(this,arguments)}
+  CC116.h=M.h;const t0=performance.now();
+  pvShow($('ccPV'),M.piv,now=>{const t=(now-t0)/1000;M.piv.rotation.y=CC116.rot!=null?CC116.rot:.35+Math.sin(t*.45)*.45;cc116Undo(M.h);M.h.sw=1;animHero(now,false,M.h);cc116Pose(M.h,M.cls,t);M.fx.tick(t)})}}
+// ================= v116 ability preview (Abilities window) =================
+// The selected ability's detail panel opens with a small stage (the shared preview renderer PV): your own hero, in your gear, plays
+// the ability's real cast pose (its kqsPoseT track, the same one castAnim plays) against a training dummy, and the ability's effect
+// appears in its own colour and shape: projectiles, rings round you, zones on the ground, lines, walls, charges, leaps, pulls,
+// auras and summoned spirits (abKind116 reads the ability's data: shape, radius, ground targeting, pose, type). It loops; ↻ replays.
+var ABP116={M:null,sig:'',run:null,tex:null};
+function abKind116(s){const ty=(s.ty||KQS_TY[s.k]||'')+'',k=s.k||'',p=s.pose||'';
+  if(/Summon/i.test(ty))return 'summon';if(s.sh=='line'||k=='beam'||/beam|piercing line/i.test(ty))return 'line';if(s.sh=='wall'||/Wall/.test(ty))return 'wall';
+  if(p=='leap'||k=='leap'||/Leap/.test(ty))return 'leap';if(p=='dash'||/charge|Mobility|Teleport|mobility/.test(ty))return 'charge';if(/Pull/.test(ty))return 'pull';
+  if((s.gt&&s.sh!='line')||['rain','meteor','trap','mark'].includes(k)||/zone|Trap|Ward|Portal/.test(ty))return 'zone';
+  if(['bolt','shot','fan','chain'].includes(k)||/Projectile|Barrage|volley/.test(ty))return 'proj';
+  if((s.r&&!s.gt)||['nova','pulse','cone'].includes(k)||/Shout|AoE/.test(ty))return 'nova';
+  if(['buff','shield','heal','regen'].includes(k)||/Buff|buff|Defensive|heal|Stealth|Rage$|Time|rewind/.test(ty)||(!s.m&&!s.r))return 'buff';return 'strike'}
+var ABP116_POSE={nova:'nova',cone:'spin',rain:'raise',bolt:'cast',shot:'point',beam:'cast',meteor:'raise',fan:'throw',chain:'cast',heal:'raise',buff:'flex',shield:'flex',regen:'raise',pulse:'nova',trap:'throw',mark:'point',leap:'leap'};
+function abTex116(){if(ABP116.tex)return ABP116.tex;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.4,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return ABP116.tex=new THREE.CanvasTexture(c)}
+function abMat116(col,op,side){return new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op==null?.8:op,depthWrite:false,blending:THREE.AdditiveBlending,side:side||THREE.FrontSide})}
+// the stage: hero on the left facing right, a dummy on the right; built once per class + gear
+function abStage116(){const sig=hero.cls+'|'+SLOTS.map(k=>eq[k]?eq[k].tp+':'+(eq[k].r|0):'').join(',')+'|'+JSON.stringify(hero.look||'');if(ABP116.M&&ABP116.sig===sig)return ABP116.M;
+  const root=new THREE.Group(),st=new THREE.Group();root.add(st);st.scale.setScalar(.64);st.position.set(0,.24,0);
+  const gnd=new THREE.Mesh(new THREE.CircleGeometry(3.4,48),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.95}));gnd.rotation.x=-Math.PI/2;st.add(gnd);
+  const rim=new THREE.Mesh(new THREE.RingGeometry(3.3,3.4,64),new THREE.MeshBasicMaterial({color:0x6a5434}));rim.rotation.x=-Math.PI/2;rim.position.y=.003;st.add(rim);
+  const h=buildHero();h.mdLook=hero.look?Object.assign({},(typeof mdLookOf=='function'?mdLookOf(pl):null)||hero.look):null;refreshGear(h,hero.cls,eq);h.position.set(0,0,0);h.rotation.set(0,0,0);
+  for(let t=0;t<300;t+=16)animHero(9e5+t,false,h);h.updateMatrixWorld(true);
+  const B=new THREE.Box3(),v=new THREE.Vector3();h.traverse(o=>{if(!o.isSkinnedMesh||!o.visible)return;const P=o.geometry.attributes.position;for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);o.boneTransform(i,v);v.applyMatrix4(o.matrixWorld);B.expandByPoint(v)}});
+  const hi=new THREE.Group(),hw=new THREE.Group();hi.add(h);hw.add(hi);const k=1.5/Math.max(.3,B.max.y-B.min.y);hi.scale.setScalar(k);hi.position.y=-B.min.y*k;hw.position.set(-1.45,0,0);hw.rotation.y=Math.PI/2;st.add(hw);
+  // training dummy: a post, a straw body and a sack head on a cross bar
+  const dm=new THREE.Group(),wood=new THREE.MeshStandardMaterial({color:0x6a4a2a,roughness:.9}),straw=new THREE.MeshStandardMaterial({color:0xc8a860,roughness:1});
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,1.5,8),wood);post.position.y=.75;dm.add(post);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.24,.2,.62,10),straw);body.position.y=.92;dm.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),straw);head.position.y=1.38;dm.add(head);
+  const bar=new THREE.Mesh(new THREE.BoxGeometry(.9,.06,.06),wood);bar.position.y=1.12;dm.add(bar);const base=new THREE.Mesh(new THREE.CylinderGeometry(.28,.32,.08,12),wood);base.position.y=.04;dm.add(base);
+  dm.position.set(1.6,0,0);st.add(dm);const fx=new THREE.Group();st.add(fx);
+  ABP116.sig=sig;return ABP116.M={root,st,h,hw,dm,fx,straw,parts:[]}}
+// ---------- effects (all in stage units; each part ticks itself and is freed when done) ----------
+function abFx116(M,o){M.parts.push(o);if(o.obj)M.fx.add(o.obj)}
+function abClear116(M){M.parts.forEach(p=>{if(p.obj){M.fx.remove(p.obj);p.obj.traverse(q=>{if(q.geometry&&!q.geometry.userData.keep)q.geometry.dispose();if(q.material)q.material.dispose()})}});M.parts=[]}
+function abBurst116(M,pos,col,n,spd,life,up){const g=new THREE.BufferGeometry(),P=new Float32Array(n*3),Vv=[];for(let i=0;i<n;i++){P[i*3]=pos.x;P[i*3+1]=pos.y;P[i*3+2]=pos.z;const a=Math.random()*6.28,e=Math.random()*1.2-.2;Vv.push([Math.cos(a)*Math.cos(e)*spd*(.4+Math.random()),Math.sin(e)*spd*(.6+Math.random())+(up||0),Math.sin(a)*Math.cos(e)*spd*(.4+Math.random())])}
+  g.setAttribute('position',new THREE.BufferAttribute(P,3));const m=new THREE.PointsMaterial({color:col,size:.18,map:abTex116(),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});const o=new THREE.Points(g,m);o.frustumCulled=false;
+  abFx116(M,{obj:o,life,t:0,tick(dt){this.t+=dt;const A=g.attributes.position;for(let i=0;i<n;i++){Vv[i][1]-=2.4*dt;A.setXYZ(i,A.getX(i)+Vv[i][0]*dt,Math.max(.02,A.getY(i)+Vv[i][1]*dt),A.getZ(i)+Vv[i][2]*dt)}A.needsUpdate=true;m.opacity=Math.max(0,1-this.t/life)}})}
+function abRing116(M,pos,col,r0,r1,life,flat){const o=new THREE.Mesh(new THREE.RingGeometry(.86,1,48),abMat116(col,.9,THREE.DoubleSide));if(flat!==false)o.rotation.x=-Math.PI/2;o.position.copy(pos);
+  abFx116(M,{obj:o,life,t:0,tick(dt){this.t+=dt;const u=Math.min(1,this.t/life);o.scale.setScalar(r0+(r1-r0)*(1-(1-u)*(1-u)));o.material.opacity=.9*(1-u)}})}
+function abDisc116(M,pos,col,r,life,rise){const o=new THREE.Mesh(new THREE.CircleGeometry(r,40),new THREE.MeshBasicMaterial({color:col,map:abTex116(),transparent:true,opacity:.6,depthWrite:false,blending:THREE.AdditiveBlending}));o.rotation.x=-Math.PI/2;o.position.copy(pos);o.position.y=.02;
+  const e=new THREE.Mesh(new THREE.RingGeometry(r*.94,r,48),abMat116(col,.9,THREE.DoubleSide));e.rotation.x=-Math.PI/2;e.position.copy(o.position);e.position.y=.025;const g=new THREE.Group();g.add(o,e);
+  abFx116(M,{obj:g,life,t:0,k:0,tick(dt){this.t+=dt;const u=this.t/life,a=u<.12?u/.12:u>.8?(1-u)/.2:1;o.material.opacity=.55*a*(.8+.2*Math.sin(this.t*9));e.material.opacity=.9*a;this.k+=dt;
+    if(this.k>.09){this.k=0;const q=pos.clone().add(new THREE.Vector3((Math.random()-.5)*r*1.6,rise?.05:1.8,(Math.random()-.5)*r*1.6));abBurst116(M,q,col,3,.3,.7,rise?1.6:-2.5)}}})}
+function abBeam116(M,a,b,col,w,life,flat){const d=b.clone().sub(a),L=d.length(),o=new THREE.Mesh(new THREE.BoxGeometry(L,flat?.04:w,flat?w:w),abMat116(col,.85));o.position.copy(a).add(b).multiplyScalar(.5);o.rotation.y=-Math.atan2(d.z,d.x);if(!flat)o.rotation.z=Math.atan2(d.y,Math.hypot(d.x,d.z));
+  abFx116(M,{obj:o,life,t:0,tick(dt){this.t+=dt;const u=this.t/life;o.material.opacity=.85*(u<.1?u/.1:1-u);o.scale.y=o.scale.z=1+.25*Math.sin(this.t*30)}})}
+function abShot116(M,a,b,col,delay,size,onHit){const o=new THREE.Mesh(new THREE.SphereGeometry(size||.11,10,8),abMat116(col,1));const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:abTex116(),color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));gl.scale.setScalar((size||.11)*5);o.add(gl);o.visible=false;
+  const arc=a.distanceTo(b)*.12;abFx116(M,{obj:o,life:delay+.5,t:0,hit:0,tick(dt){this.t+=dt;const u=(this.t-delay)/.42;if(u<0)return;o.visible=u<1;const p=a.clone().lerp(b,Math.min(1,u));p.y+=Math.sin(Math.min(1,u)*Math.PI)*arc;o.position.copy(p);
+    if(u>=1&&!this.hit){this.hit=1;abBurst116(M,b,col,16,1.6,.55);if(onHit)onHit()}}})}
+function abHit116(M,col){M.hitT=.35;M.hitC=col}
+function abPlay116(M,s){abClear116(M);const col=s.col||0xffd060,K=abKind116(s),hp=new THREE.Vector3(-1.45,0,0),dp=new THREE.Vector3(1.6,0,0),chest=new THREE.Vector3(-1.15,1,0),dc=new THREE.Vector3(1.6,1,0);
+  const rr=x=>Math.min(1.7,Math.max(.6,(x||3)*.32));M.kind=K;M.move=null;
+  if(K=='strike'){const o=new THREE.Mesh(new THREE.RingGeometry(.55,.85,32,1,0,2.4),abMat116(col,.9,THREE.DoubleSide));o.position.copy(dc).add(new THREE.Vector3(-.5,0,0));o.rotation.set(0,Math.PI/2,-.3);
+    abFx116(M,{obj:o,life:.4,t:0,tick(dt){this.t+=dt;o.rotation.z=-.3-this.t*9;o.material.opacity=.9*(1-this.t/.4)}});abBurst116(M,dc,col,22,1.8,.6);abHit116(M,col)}
+  if(K=='proj'){const n=s.k=='fan'||/Multishot|volley|Barrage|Missiles|Knives/i.test((s.ty||'')+' '+s.n)?5:s.k=='chain'||/chain/i.test(s.ty||'')?3:1;for(let i=0;i<n;i++){const off=n>1?(i-(n-1)/2)*.32:0;abShot116(M,chest,dc.clone().add(new THREE.Vector3(0,0,off)),col,i*.09,.15,()=>abHit116(M,col))}}
+  if(K=='nova'){[0,.14,.28].forEach(d=>abFx116(M,{life:d+.01,t:0,tick(dt){this.t+=dt;if(this.t>=d&&!this.f){this.f=1;abRing116(M,hp.clone().setY(.05),col,.3,rr(s.r)*1.6,.7)}}}));abBurst116(M,hp.clone().setY(.6),col,30,2.2,.8);abHit116(M,col)}
+  if(K=='zone'){const r=rr(s.r);abDisc116(M,dp,col,r,1.6,!/rain|meteor/.test(s.k||'')&&!/Barrage/.test(s.ty||''));abRing116(M,dp.clone().setY(.05),col,.2,r,.45);if(/meteor/.test(s.k||'')||/Leap|Barrage/.test(s.ty||''))abShot116(M,dc.clone().add(new THREE.Vector3(-.8,2.6,0)),dp.clone().setY(.2),col,.05,.2,()=>abBurst116(M,dp.clone().setY(.2),col,30,2.4,.7));abHit116(M,col)}
+  if(K=='line'){const a=hp.clone().setY(.06).add(new THREE.Vector3(.35,0,0)),b=dp.clone().setY(.06).add(new THREE.Vector3(.6,0,0));abBeam116(M,s.k=='beam'||/beam/i.test(s.ty||'')?chest:a,s.k=='beam'||/beam/i.test(s.ty||'')?dc:b,col,s.k=='beam'?.12:.35,.9,!(s.k=='beam'||/beam/i.test(s.ty||'')));
+    for(let i=0;i<5;i++)abBurst116(M,a.clone().lerp(b,i/4),col,8,1.4,.6);abHit116(M,col)}
+  if(K=='wall'){for(let i=0;i<5;i++){const o=new THREE.Mesh(new THREE.BoxGeometry(.18,1,.18),abMat116(col,.8));o.position.set(.35,.5,(i-2)*.38);o.scale.y=.01;
+    abFx116(M,{obj:o,life:1.5,t:0,d:i*.05,tick(dt){this.t+=dt;const u=Math.max(0,this.t-this.d);o.scale.y=Math.min(1,u/.2);o.position.y=o.scale.y*.5;o.material.opacity=.8*(this.t>1.2?(1.5-this.t)/.3:1)}})}}
+  if(K=='buff'){const c=new THREE.Mesh(new THREE.CylinderGeometry(.5,.62,1.7,24,1,true),abMat116(col,.25,THREE.DoubleSide));c.position.copy(hp).setY(.85);
+    abFx116(M,{obj:c,life:1.5,t:0,k:0,tick(dt){this.t+=dt;c.material.opacity=.25*(this.t<.2?this.t/.2:Math.max(0,(1.5-this.t)/1.3));c.rotation.y+=dt*2;this.k+=dt;if(this.k>.06){this.k=0;abBurst116(M,hp.clone().add(new THREE.Vector3((Math.random()-.5)*.8,.1,(Math.random()-.5)*.8)),col,2,.25,.8,1.8)}}});
+    abRing116(M,hp.clone().setY(.04),col,.2,.9,.6)}
+  if(K=='charge'){M.move={k:'dash',t:0};abBurst116(M,hp.clone().setY(.4),col,14,1,.5)}
+  if(K=='leap'){M.move={k:'leap',t:0,back:/back|away|Disengage|retreat/i.test((s.d||'')+' '+s.n)}}
+  if(K=='pull'){abBeam116(M,chest,dc,col,.05,.7,false);M.move={k:'pull',t:0};abHit116(M,col)}
+  if(K=='summon'){const sp=new THREE.Mesh(new THREE.SphereGeometry(.2,12,10),abMat116(col,.7));const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:abTex116(),color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));gl.scale.setScalar(1);sp.add(gl);
+    abFx116(M,{obj:sp,life:1.6,t:0,hit:0,tick(dt){this.t+=dt;const u=this.t;if(u<.5){sp.position.set(-.9,.2+u*2,.6)}else{const w=Math.min(1,(u-.5)/.5);sp.position.set(-.9+w*2.5,1.2-w*.2,.6-w*.6)}if(u>1&&!this.hit){this.hit=1;abBurst116(M,dc,col,20,1.8,.6);abHit116(M,col)}sp.material.opacity=u>1.2?Math.max(0,(1.6-u)/.4)*.7:.7}})}}
+// ---------- the loop ----------
+function abShow116(host,s){const M=abStage116();if(!M||!host)return;ABP116.s=s;ABP116.t0=performance.now();ABP116.fired=0;ABP116.cyc=-1;abClear116(M);M.move=null;M.hitT=0;M.hw.position.set(-1.45,0,0);M.dm.position.set(1.6,0,0);
+  const pT=kqsPoseT(s.pose||ABP116_POSE[s.k]||'cast')||kqsPoseT('cast'),ms=Math.max(260,(pT&&pT[1])||380)*1.7/1000,CYC=Math.max(2.6,ms+2);
+  pvShow(host,M.root,(now,dt)=>{const t=((now-ABP116.t0)/1000)%CYC,cyc=Math.floor((now-ABP116.t0)/1000/CYC);if(cyc!==ABP116.cyc){ABP116.cyc=cyc;ABP116.fired=0;abClear116(M);M.hw.position.set(-1.45,0,0);M.dm.position.set(1.6,0,0)}
+    const h=M.h,b=h.bones;abUndo116(h);const k=(t-.3)/ms;h.sw=k>=0&&k<=1.15?1:0;animHero(now,false,h);
+    if(k>=0&&k<=1&&pT&&pT[0]){const P=pT[0](Math.min(1,k)),rec=[];for(const c in P){const ch=HACH[c];if(!ch||!b[ch[0]])continue;const o=b[ch[0]];if(!rec.some(r=>r.o===o))rec.push({o,q0:o.quaternion.clone()});const w=k<.12?k/.12:k>.9?(1-k)/.1:1;o.rotation[ch[1]]+=(P[c]-o.rotation[ch[1]])*w}
+      rec.forEach(r=>r.set=r.o.quaternion.clone());h._abp=rec;h.updateMatrixWorld(true)}
+    if(k>=.5&&!ABP116.fired){ABP116.fired=1;try{abPlay116(M,s)}catch(e){console.warn('v116 abp',e)}}
+    // hero moves for charges and leaps, the dummy for pulls
+    const mv=M.move;if(mv){mv.t+=dt||0;const u=mv.t;if(mv.k=='dash'){const w=Math.min(1,u/.3);M.hw.position.x=-1.45+w*2.25;if(u>.3&&!mv.hit){mv.hit=1;abBurst116(M,new THREE.Vector3(1.4,1,0),ABP116.s.col||0xffd060,24,2,.6);abHit116(M,ABP116.s.col)}if(u>1.1)M.hw.position.x=.8-(Math.min(1,(u-1.1)/.4))*2.25}
+      if(mv.k=='leap'&&mv.back){const w=Math.min(1,u/.5);M.hw.position.x=-1.45-w*1.2;M.hw.position.y=Math.sin(w*Math.PI)*.8;if(w>=1&&!mv.hit){mv.hit=1;abRing116(M,new THREE.Vector3(-2.65,.05,0),ABP116.s.col||0xffd060,.2,.8,.5)}if(u>1.2){const r=Math.min(1,(u-1.2)/.4);M.hw.position.x=-2.65+r*1.2;M.hw.position.y=0}}
+      else if(mv.k=='leap'){const w=Math.min(1,u/.55);M.hw.position.x=-1.45+w*2.2;M.hw.position.y=Math.sin(w*Math.PI)*1.3;if(w>=1&&!mv.hit){mv.hit=1;const c=ABP116.s.col||0xffd060,p=new THREE.Vector3(.9,.05,0);abRing116(M,p,c,.3,1.6,.6);abBurst116(M,p.clone().setY(.3),c,36,2.6,.8);abHit116(M,c)}
+        if(u>1.2){const r=Math.min(1,(u-1.2)/.4);M.hw.position.x=.75-r*2.2;M.hw.position.y=0}}
+      if(mv.k=='pull'){const w=Math.min(1,u/.35);M.dm.position.x=1.6-w*1.6*(u<1.1?1:Math.max(0,1-(u-1.1)/.4))}}
+    // the dummy flinches when hit
+    if(M.hitT>0){M.hitT-=dt||0;const a=Math.max(0,M.hitT/.35);M.dm.rotation.z=-.25*a*Math.sin(a*12);M.straw.emissive=M.straw.emissive||new THREE.Color();M.straw.emissive.set(M.hitC||0xffffff).multiplyScalar(.6*a)}else{M.dm.rotation.z=0;if(M.straw.emissive)M.straw.emissive.setRGB(0,0,0)}
+    const L0=M.parts;M.parts=[];L0.forEach(p=>p.tick(dt||.016));M.parts=L0.concat(M.parts).filter(p=>{if(p.t>=p.life){if(p.obj){M.fx.remove(p.obj);p.obj.traverse(q=>{if(q.geometry)q.geometry.dispose();if(q.material)q.material.dispose()})}return false}return true});
+    M.root.rotation.y=-.38})}
+function abUndo116(h){const R=h._abp;if(!R)return;h._abp=null;R.forEach(r=>{if(r.o.quaternion.equals(r.set))r.o.quaternion.copy(r.q0)})}
+// ---------- the panel ----------
+{const f=XR.abil;XR.abil=function(){const r=f.apply(this,arguments);try{const det=document.querySelector('#xw .kqs-det');const s=kqsFind(hero.cls,KQS.sel)||heroSkills()[0];if(!det||!s)return r;
+    det.insertAdjacentHTML('afterbegin',`<div class="abpv"><div class="abpvc" id="abPV"></div><div class="abpvl"><span>▶ Preview · ${kqsKind(s)||'ability'}</span><button data-abpv="1" title="Play it again">↻</button></div></div>`);
+    abShow116($('abPV'),s)}catch(e){console.warn('v116 ability preview',e)}return r}}
+$('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-abpv]');if(!t)return;e.stopPropagation();ABP116.t0=performance.now();ABP116.cyc=-1},true);
+document.head.insertAdjacentHTML('beforeend',`<style>
+#xw .abpv{margin:-2px -2px 10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#2c2418,#0e0b08 75%)}
+#xw .abpvc{height:190px;position:relative}#xw .abpvc canvas{width:100%!important;height:100%!important;display:block}
+#xw .abpvl{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;font-size:.72rem;color:var(--mut);border-top:1px solid var(--line);background:rgba(0,0,0,.3)}
+#xw .abpvl button{padding:1px 8px!important;font-size:.8rem!important}
+@media (max-width:640px){#xw .abpvc{height:150px}}
+</style>`);

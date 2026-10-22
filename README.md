@@ -57,6 +57,11 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
 | performance: far-scenery cull (`FC`, `fcPass`) | `1980-v111-perf-far-cull.js` |
+| v116 menus: ☰ list (no Fusion / Sovereigns; Kingdom button, B), Kingdom window tabs (Construction / Villagers `vlRender116` / Decorations), Companions ⇄ Fusion tabs (`cfTabs116`), forge only at the Blacksmith (`KQM_SMITH`), crossbow muzzle (`xbowMuzzle116`, `xbowLevel116`) | `2150-v116-menus-kingdom-villagers.js` (edits in `1880`, `1910`, `1050`, `0140`, `1010`) |
+| v116 zone title cards (`zt116Show`, `ZT116.Z` styles per zone; replace the arrival banners) | `2160-v116-zone-title-cards.js` |
+| v116 frog Mage carry hold (`FC116`: arm IK, upright staff, wand, orb) | `2170-v116-frog-carry.js` |
+| v116 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2180-v116-creator-heroic.js` |
+| v116 ability preview in the Abilities window (`abShow116`, kinds `abKind116`) | `2190-v116-ability-preview.js` |
 
 ## Conventions (read before changing code)
 
@@ -225,6 +230,35 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Decorations (v104)**: fixed spots outside every lot and door spot (checked by `PART=deco python3 v103_kingdom.py`);
   `SH.deco[k]` 1 shown / 0 owned but hidden, saved as `x2.kdeco`. Wall pieces (`D.wall`: banners, ivy, ravens) measure the wall
   of the current Bastion Walls level by ray casts (`dcWall104`) and are rebuilt when it changes (`PART=tiers` checks every level).
+
+- **Menus (v116)**: the ☰ list has no Fusion or Sovereigns button (both kept hidden in the markup: `ui()`, the hotkey map and later
+  wrappers look them up; G still opens fusion, J does nothing; sealed portals still open the portal list). Fusion is a tab of the
+  Companions & Eggs window (`cfTabs116`, a row under each window's header; closing Fusion opened from there goes back to Companions).
+  Talents (K) and Abilities (C) are separate windows: no shared tab bar, no links, no "Open Abilities" box (`skHTML` returns '').
+  **Kingdom window** (B or ☰ → 🏰 Kingdom, from anywhere; still `xwMode 'hold'`, also opened by the Steward and house doors):
+  tabs `KM103.tab` = `kingdom` (🏗️ Construction: plan + shops/upgrades/houses; the citizens list moved out of it), `vill`
+  (👥 Villagers: one card per villager with state, trip progress, trade buttons, job chips, rank-up, Collect; goods can be collected
+  from the window as well as at the house) and `deco`. A house door opens the Villagers tab with that house's villagers highlighted.
+  **Forge**: the bag's Forge tab and the item Upgrade button exist only while the bag was opened with F at the Blacksmith
+  (`KQM_SMITH`, cleared when the bag closes); `doUpgrade` refuses otherwise. Tests: `v116_menus.py`.
+- **Zone arrival (v116)**: no recommendation pop-up; the recommended power (`zoneRec`, now for every zone and per instance:
+  `recPower(I.lv[0])`) sits on line 2 of the location box, red ⚠ when your power is lower. The arrival banners (v56 + v112) are muted
+  and one themed title card shows instead (`zt116Ins`: zone kicker, place name in the zone's lettering, emblem ornament, line, enemy
+  levels + rec. power); Duskhold's first-visit banner is a card too. Fonts: Cinzel Decorative, IM Fell English SC, Pirata One (page
+  font link). Tests: `v116_titles.py`.
+- **Weapons (v116)**: no elites in Kindlelight I (`noElite116` in `rosterBuild`). The crossbow bolt starts at the crossbow's front end
+  (`xbowMuzzle116`, measured once per model from its geometry) and the crossbow is turned level along the aim while aiming
+  (`xbowLevel116`, after every animation layer). The frog Mage's carry hold (`FC116`) poses his weapon arm by a two-bone IK and
+  orients the weapon (staff upright beside him, foot angled away from the hem; wand ahead; orb above the paw in front); it fades out
+  with the beast arm hold during attacks, and every change is restored before the next frame. The frog also spreads his shoulders
+  during attacks (`D.atk.shz`). `v116_wclip.py` measures weapon points inside the robe/armour shell (`v116_wclip_lib.js`; idle/run
+  frames must be 0), `v116_wclip_live.py` the real attacks. Blacksmith keeper hammer head runs across the swing plane (face down).
+- **Creator (v116)**: the class step builds each class's own model (`cc116Model`, cached per look): current beast + exactly the
+  starting gear of `ccBegin`, framed on its skinned body, a heroic pose (`CC116.P`, restored every frame) and class effects
+  (`CC116.FX`: embers, holy light + halo, shadow smoke, arcane rings, leaves). Tests: `v116_creator.py` (`ROT=` fixed turn).
+- **Ability preview (v116)**: the Abilities window's detail panel opens with a stage (shared `PV` renderer): your hero in your gear
+  plays the ability's real cast pose (`kqsPoseT` via `HACH`) at a training dummy and an effect of the ability's kind in its colour
+  (`abKind116`: proj, nova, zone, line, wall, leap, charge, pull, buff, summon, strike). It loops; ↻ replays. Tests: `v116_abprev.py`.
 
 ## Retired systems
 
