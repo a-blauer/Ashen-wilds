@@ -35,10 +35,14 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
+  // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's
+  // hitting range and stops there, so the hero never runs into or past the target
+  const lim=typeof SWLIM!='undefined'?SWLIM:null;
   const L=(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
   A.tick=function(u){
     try{if(typeof riding!='undefined'&&riding)return;if(u<u0||done>=1)return;
-      const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t),dd=(s-done)*L;done=s;if(dd<=0)return;
+      const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t);let dd=(s-done)*L;done=s;if(dd<=0)return;
+      if(lim&&lim.e){const room=swRoom(lim);if(room<=0){done=1;return}dd=Math.min(dd,room)}
       const ry=pl.rotation.y,nx=pl.position.x+Math.sin(ry)*dd,nz=pl.position.z+Math.cos(ry)*dd;
       if(typeof solid=='function'&&(solid(nx,nz)||solid(nx+Math.sin(ry)*.35,nz+Math.cos(ry)*.35)))return;
       pl.position.x=nx;pl.position.z=nz}catch(_){}}}}
