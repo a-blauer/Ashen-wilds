@@ -30206,4 +30206,14 @@ function ww128Tick(h,now){
     W.position.lerp(new V(an[0]-hv.x,an[1]-hv.y,an[2]-hv.z),w)}
 }
 {const f=animHero;animHero=function(now,mv,h){if(!h||h===pl){try{ww128Undo()}catch(_){}}const r=f.apply(this,arguments);try{ww128Tick(h,now)}catch(_){}return r}}
+// ================= v130 camp title card timing =================
+// Camp cards use the same timing as zone cards (zt126) but stay on screen 1.5 s less: 4.7 s instead of 6.2 s.
+// Same 0.52 s fade-in, same 1.04 s fade-out (from 3.66 s), and the blur only comes in over the last 0.04 s, as on zone cards.
+var CC130_MS=4700;
+{const f=cs123Card;cs123Card=function(){const tm=ZT116.tm,r=f.apply(this,arguments);
+  if(ZT116.tm!==tm&&ZT116.el&&/camp123/.test(ZT116.el.className)){clearTimeout(ZT116.tm);ZT116.tm=setTimeout(()=>{if(ZT116.el)ZT116.el.className=''},CC130_MS)}return r}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+#ztc116.camp123.on{animation:zt130c 4.7s ease forwards}
+@keyframes zt130c{0%{opacity:0;filter:blur(6px)}11.06%{opacity:1;filter:blur(0)}77.87%{opacity:1}99.15%{filter:blur(0)}100%{opacity:0;filter:blur(2px)}}
+</style>`);
 </script></body></html>
