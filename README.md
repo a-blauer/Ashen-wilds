@@ -331,12 +331,17 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 
 ## Testing
 
-**How to test (owner's standing request; since Oct 2026 off GitHub Actions, whose minutes ran low):**
-1. **Smoke suite after a change:** `cd test && python3 run_suite.py smoke` (`test/smoke.txt`, ~1 h, run it in the background).
-2. **Full suite before a publish:** `python3 run_suite.py full` (`test/full.txt`, several hours). Publish only when it is green.
+**How to test (owner's standing request; since Oct 2026 off GitHub Actions, whose minutes ran out):**
+1. **After a change:** `cd test && python3 run_suite.py changed` — the smoke suite plus the tests that `test/affects.txt` maps the
+   changed files to (compared with `origin/main`, committed or not); core engine files or test tools run the full suite.
+   `--list` only prints the choice; `changed HEAD~3` compares with another base.
+2. **Before a publish:** `python3 run_suite.py full` (`test/full.txt`). Publish only when it is green.
    `python3 run_suite.py full v57t.py v60t.py` re-runs just those lines after a fix.
-`run_suite.py` snapshots `dist/` first, runs one test at a time (`JOBS=2` on a 4+ core machine) and writes
-`test/out/suite/<suite>.log` and `.summary.txt`. `.github/workflows/tests.yml` is kept only as a manual fallback.
+`run_suite.py` snapshots `dist/` first, runs one test at a time in **fast mode** (`test/fast.py`: the main game view skips drawing
+except right before each screenshot, which still gets a full-quality frame; the game loop runs ~14 fps instead of ~0.5), stops
+each test's browser afterwards, and writes `test/out/suite/<suite>.log` and `.summary.txt`. `FAST=0` before a suite line turns fast
+mode off for that test; `python3 fast.py <test.py>` runs any single test fast by hand. Don't run two suites at once on the 2-core
+session machine (helper agents share it too). `.github/workflows/tests.yml` is kept only as a manual fallback.
 Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
 `test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
 New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).
