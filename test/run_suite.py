@@ -2,6 +2,10 @@
 #   python3 run_suite.py smoke        # test/smoke.txt
 #   python3 run_suite.py full         # test/full.txt
 #   python3 run_suite.py full v57t.py v60t.py   # only these lines of the suite
+#   python3 run_suite.py changed      # smoke + the tests test/affects.txt maps the changed files to (vs origin/main,
+#                                     # committed or not); the whole full suite if a core file changed
+#   python3 run_suite.py changed HEAD~3   # compare with another base instead
+#   python3 run_suite.py changed --list   # only print which tests it would run
 #   JOBS=2 python3 run_suite.py full  # two tests at once (only on a machine with 4+ cores)
 # Tests run against a snapshot of dist/ (taken at start), so rebuilding meanwhile doesn't change what is tested.
 # Tests run in fast mode (fast.py: the game view draws only for screenshots); FAST=0 before a line or the command turns it off.
@@ -11,7 +15,33 @@ import os,sys,subprocess,shutil,time
 from concurrent.futures import ThreadPoolExecutor
 HERE=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.dirname(HERE)
 suite=sys.argv[1] if len(sys.argv)>1 else 'smoke';only=sys.argv[2:]
-lines=[l.strip() for l in open(os.path.join(HERE,suite+'.txt')) if l.strip() and not l.startswith('#')]
+def suite_lines(n):return [l.strip() for l in open(os.path.join(HERE,n+'.txt')) if l.strip() and not l.startswith('#')]
+def changed_lines(base):
+    import re
+    git=lambda *a:subprocess.run(['git']+list(a),cwd=ROOT,capture_output=True,text=True).stdout.split()
+    mb=(git('merge-base',base,'HEAD') or [base])[0]
+    files=sorted(set(git('diff','--name-only',mb)+git('ls-files','--others','--exclude-standard')))
+    full=suite_lines('full');byname={l.split()[-1]:l for l in full};want=set(l.split()[-1] for l in suite_lines('smoke'))
+    rules=[]
+    for l in open(os.path.join(HERE,'affects.txt')):
+        if l.strip() and not l.startswith('#') and ':' in l:
+            k,v=l.split(':',1);rules.append((k.strip(),v.split()))   # patterns never contain ':'
+    why=[]
+    for f in files:
+        if not (f.startswith('src/') or f.startswith('test/') or f.startswith('viewer/') or f=='build.sh'):continue
+        for k,ts in rules:
+            if k=='FULL':
+                if re.search(' '.join(ts),f,re.I):why.append(f+' -> full suite');return full,files,why
+            elif re.search(k,f,re.I):want.update(ts);why.append('%s -> %s'%(f,' '.join(ts)))
+        if f.startswith('test/') and os.path.basename(f) in byname:want.add(os.path.basename(f))
+    return [l for l in full if l.split()[-1] in want],files,why
+if suite=='changed':
+    lst='--list' in only;only=[a for a in only if a!='--list']
+    lines,files,why=changed_lines(only[0] if only else 'origin/main');only=[]
+    print('changed files: %d'%len(files));[print('  '+w) for w in why]
+    print('tests: '+', '.join(l.split()[-1] for l in lines))
+    if lst:sys.exit(0)
+else:lines=suite_lines(suite)
 if only:lines=[l for l in lines if l.split()[-1] in only]
 OUT=os.path.join(HERE,'out','suite');os.makedirs(OUT,exist_ok=True)
 snap=os.path.join(OUT,'dist');shutil.rmtree(snap,ignore_errors=True)

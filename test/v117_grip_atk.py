@@ -18,5 +18,6 @@ def s(pg):
     ev=pg.evaluate
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     r=ev(JS,[os.environ.get('WT','staff,wand,orb').split(','),os.environ.get('TR','basic,cast').split(',')]);print('err',r['err'])
+    if r['err']:print('FAIL attack-pose sheet: '+str(r['err'])[:300])
     open(play.TMP+'/v117_grip_atk.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
 play.run(s,w=900,hh=600)
