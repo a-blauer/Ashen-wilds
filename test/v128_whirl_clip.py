@@ -1,4 +1,4 @@
-# v127: renders the warrior's Whirlwind as a clip (frames stepped by hand, no game loop) -> out/v127_whirl_<wt>.gif
+# v128: renders the warrior's Whirlwind as a clip (frames stepped by hand, no game loop) -> out/v128_whirl_<wt>.gif
 #   WT=gs (weapon type), FPS=50 (game frames per second), DUR=2.4 (channel seconds), SLOW=1 (1 = real speed)
 import os,sys,base64,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -33,6 +33,6 @@ def s(pg):
     fr=ev(JS,[WT,FPS,DUR])
     ims=[Image.open(io.BytesIO(base64.b64decode(f.split(',')[1]))).convert('RGB') for f in fr]
     for slow,tag in ((1,''),(3,'_slow')):
-        ims[0].save(play.TMP+'/v127_whirl_%s%s.gif'%(WT,tag),save_all=True,append_images=ims[1:],duration=int(1000/FPS*slow),loop=0)
+        ims[0].save(play.TMP+'/v128_whirl_%s%s.gif'%(WT,tag),save_all=True,append_images=ims[1:],duration=int(1000/FPS*slow),loop=0)
     print('frames',len(ims))
 play.run(s,w=900,hh=600)

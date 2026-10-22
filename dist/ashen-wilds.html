@@ -7004,6 +7004,8 @@ function spinFx(r,col,ms){const m=new THREE.Mesh(new THREE.RingGeometry(r*.35,r,
 function thrustFx(d,len,col){const g=new THREE.Group(),m=new THREE.Mesh(new THREE.BoxGeometry(.16,.04,len),addMat(col||0xe8f0ff));m.position.z=len/2;g.add(m);g.position.copy(gY(pl.position,.95));g.rotation.y=Math.atan2(d.x,d.z);scene.add(g);
   tw(170,k=>{m.material.opacity=.85*(1-k);m.scale.set(1-k*.6,1,.4+k*.6);m.position.z=len*(.2+k*.3)},()=>{scene.remove(g);m.geometry.dispose()})}
 
+// v127: weapon numbers that used to be written into the code (balance knobs; values set in 2300-v127-balance.js)
+var WB127={knSpread:.17,knDup:1,knPierce:0,shock:.35,slam:.6,knife:.5,wandBig:2.1,wandSplash:1.5,slingRic:2,orbFirst:.9,orbJump:.4};
 // melee weapons: combo tables
 var MW={
   ga:{N:3,m:[1.05,1.15,1.8],ms:[340,340,540],a:[0,1,2],rg:1.08,half:1.15,fin:'whirl',col:0xffc890},
@@ -7025,13 +7027,13 @@ function wMelee(Q,C,s,raw,d,spdK,base){
     if(dir==null)spinFx(rg,Q.col,fin?340:260);else if(Q.thrust&&!fin)thrustFx(d,rg,Q.col);else{slashFx(d,Q.a?Q.a[st]:0,rg);if(Q.dual)slashFx(d,(Q.a?Q.a[st]:0)==1?0:1,rg*.9)}
     const hits=area(pl.position,rg,raw*mult,{mt:C.mt,col:Q.col,basic:1},dir,half);
     if(Q.bleedC)hits.forEach(e=>{if(Math.random()<Q.bleedC)wBleed(e,3,raw)});
-    if(Q.shock){const p=pl.position.clone().addScaledVector(d,rg*.8);ring(p,0xffe08a,1.8,260);area(p,1.8,raw*mult*.35,{mt:C.mt,col:0xffe08a,proc:false},null,0)}
+    if(Q.shock){const p=pl.position.clone().addScaledVector(d,rg*.8);ring(p,0xffe08a,1.8,260);area(p,1.8,raw*mult*WB127.shock,{mt:C.mt,col:0xffe08a,proc:false},null,0)}
     if(fin){
       if(Q.fin=='whirl'){hits.forEach(e=>wBleed(e,4,raw));burst(gY(pl.position,.6),0xd04a3a,30,3,1.2,.5)}
       else if(Q.fin=='sweep'){hits.forEach(e=>{const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z).normalize();wPush(e,v,1.8)});slashFx(d,0,rg)}
       else if(Q.fin=='stun')hits.forEach(e=>eStatus(e,{stun:.9},0,'h'));
       else if(Q.fin=='slam'){const p=pl.position.clone().addScaledVector(d,1.2);ring(p,0xffd060,3.8,420);burst(gY(p,.15),0xc8b090,40,3.5,1.6,.6);
-        const h2=area(p,3.8,raw*mult*.6,{mt:C.mt,col:0xffd060,proc:false},null,0);h2.forEach(e=>eStatus(e,{stun:.5},0,'h'));shake(.3)}
+        const h2=area(p,3.8,raw*mult*WB127.slam,{mt:C.mt,col:0xffd060,proc:false},null,0);h2.forEach(e=>eStatus(e,{stun:.5},0,'h'));shake(.3)}
       else if(Q.fin=='holy'){ring(pl.position,0xfff0a0,rg+.4,380);if(hits.length){healHero(Math.round(heroMax()*.015*Math.min(6,hits.length)));burst(gY(pl.position,1),0xfff0a0,24,1.4,2,.6)}}
       else if(Q.fin=='pounce'){hits.forEach(e=>wBleed(e,3,raw));burst(gY(pl.position,.5),0xff6a6a,20,2,1.4,.4)}
       if(Q.fin!='slam'){ring(pl.position.clone().addScaledVector(d,dir?1.2:0),0xffe0a0,dir?2.4:rg,320);shake(.14)}
@@ -7041,20 +7043,20 @@ function wMelee(Q,C,s,raw,d,spdK,base){
   if(Q.spin)spinAnim(ms*1.15,hitFn);else{SWFIN=fin;swingAnim(Q.a?Q.a[st]:0,ms,hitFn)}
 }
 var WBEH={
-  knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
-    for(let i=0;i<n;i++){const a=(i-(n-1)/2)*.17;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife'},raw*.5,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
+  knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
+    const vol=new Set();for(let i=0;i<n;i++){const a=(i-(n-1)/2)*WB127.knSpread;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',vol,pierce:WB127.knPierce},raw*WB127.knife,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
   crossbow(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow'},raw,.75);
     const sh=shots[shots.length-1];if(sh){sh.m.scale.setScalar(1.5);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.45);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}sfx('arrow');shake(.05)},base*380)},
-  sling(C,s,raw,d,spdK,base){atkCd=base;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:2},raw,.65);sfx('blunt',.5)})},
+  sling(C,s,raw,d,spdK,base){atkCd=base;SWNOL=1;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB127.slingRic},raw,.65);sfx('blunt',.5)})},
   wand(C,s,raw,d,spdK,base){atkCd=base;wandN++;const big=wandN%5==0;staffAnim(base*520);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);
-    launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?1.5:0},raw*(big?2.1:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
+    launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?WB127.wandSplash:0},raw*(big?WB127.wandBig:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
   orb(C,s,raw,d,spdK,base){atkCd=base;staffAnim(base*700);setTimeout(()=>{if(!party.length)return;let e0=tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<11?tgt:nearestFront(11);
     if(!e0){const p=pl.position.clone().addScaledVector(aimDir(),3);burst(gY(p,1),0x9ad8ff,14,1.2,1,.4);return}face(V(e0.m.position.x-pl.position.x,0,e0.m.position.z-pl.position.z).normalize());
     orbChain(e0,raw);sfx('zap')},base*300)}
 };
 Object.keys(MW).forEach(k=>{WBEH[k]=(C,s,raw,d,spdK,base)=>wMelee(MW[k],C,s,raw,d,spdK,base)});
 function orbChain(e0,raw){let cur=e0,from=pl.position.clone();const hit=new Set();
-  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?.4:.9),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
+  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB127.orbJump:WB127.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
     cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}}
 var WFX={
   knife(e,s,raw){if(Math.random()<.3)wBleed(e,2.5,raw)},
@@ -19473,8 +19475,9 @@ function V100W_pose(P,D,wind,rest){
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
 var SWFIN=0; // the next swing is a combo finisher (bigger lunge)
+var SWNOL=0; // v127: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
 {const base=swingAnim;
-swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
+swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   let P=null;try{P=atkPick(st|0)}catch(_){}
   if(!V100W.on||!P||!P.v100)return base.apply(this,arguments);
   try{atkMpSig()}catch(_){}
@@ -19488,7 +19491,7 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's
   // hitting range and stops there, so the hero never runs into or past the target
   const lim=typeof SWLIM!='undefined'?SWLIM:null;
-  const L=(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
+  const L=nol?0:(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
   A.tick=function(u){
     try{if(typeof riding!='undefined'&&riding)return;if(u<u0||done>=1)return;
       const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t);let dd=(s-done)*L;done=s;if(dd<=0)return;
@@ -30045,8 +30048,87 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #ztc116.camp123.on{animation:zt116 3.8s ease forwards}
 @keyframes zt126{0%{opacity:0;filter:blur(6px)}8.4%{opacity:1;filter:blur(0)}83.2%{opacity:1}99.3%{filter:blur(0)}100%{opacity:0;filter:blur(2px)}}
 </style>`);
-// ================= v127: Whirlwind — the warrior holds his weapon out while he spins =================
-// Before v127 the channel pose (0890: ax -1.2, az -.9) and the strike grip pointed the blade straight up while the hero spun.
+// ================= v127: balance pass — companion spells, hero abilities, weapons =================
+// Measured with a level 10–50 harness (every class × every weapon, 30 s fights against one target and a group of four;
+// every companion spell on a training dummy). See README "Balance (v127)".
+//
+// 1. Companion element reactions: a companion can no longer react with itself.
+//    Before: a companion's own spell status (poison, burn) set an element on the target, then the companion's family element
+//    (Dragon = fire, Swarm = poison, …) landed on the same hit and set off a reaction — on EVERY tick of a lingering spell.
+//    Venomcoil's Toxic Cloud (fire family + poison cloud) set off COMBUST! 32 times per cast (~7× a normal spell).
+//    Now an element set by a companion's hit only reacts with elements from other sources (your hits, the other companion).
+var CH127=null;
+{const f=compHit;compHit=function(c,e){const o=CH127;CH127=e?{c,e}:null;try{return f.apply(this,arguments)}finally{CH127=o}}}
+{const f=applyEl;applyEl=function(e,el,raw,src){
+  if(!CH127||CH127.e!==e||!e||e.dead)return f.apply(this,arguments);
+  const t=nowP(),cur=e.el&&e.el.t>t?e.el:null;
+  if(cur&&cur.k!==el&&cur.by===CH127.c){cur.t=t+5000;return 1}   // own element: refresh, no reaction
+  const r=f.apply(this,arguments);if(e.el&&e.el.k===el)e.el.by=CH127.c;return r}}
+
+// 2. Companion spells (CSP.m = damage per hit/tick). Lingering area spells hit 6–8 times and were 2–2.4× a normal spell on one
+//    target; they keep their crowd strength but come down. The weakest spells come up (crowd control spells stay a little lower).
+//    Was → now: Toxic Cloud .6→.4, Choking Spores .6→.35, Plague .8→.45, Brood Swarm 1→.55, Skyfall 1.4→.7, Tempest .9→.7;
+//    Web Snare .8→1.5, Sonic Screech .9→1.6, Cyclone 1.8→2.6, Quake Stomp 1.6→2.1, Gale Dive 1.5→1.9, Alpha Roar 2.5→3, Thunder Talon 1.6→2.
+var BAL127_CSP={'Toxic Cloud':.4,'Choking Spores':.35,'Plague':.45,'Brood Swarm':.55,'Skyfall':.7,'Tempest':.7,
+  'Web Snare':1.5,'Sonic Screech':1.6,'Cyclone':2.6,'Quake Stomp':2.1,'Gale Dive':1.9,'Alpha Roar':3,'Thunder Talon':2};
+for(const k in BAL127_CSP)if(CSP[k])CSP[k].m=BAL127_CSP[k];
+
+// 3. Hero abilities: KQR_TUNE is the per-ability damage factor (v90). Outliers measured at level 50, rank 1, in damage per
+//    second of cooldown against the rest of the same class.
+Object.assign(KQR_TUNE,{
+  'Holy Smite':1.0,          // was 1.6: ~4× every other Paladin ability, and a big group hit on a 6 s cooldown
+  'Chain Lightning':.5,      // was .77: strongest ability in the game (single + 12 basic hits spread over a group)
+  'Fireball':.55,            // was .75: ~3× the Mage average because of its 4 s cooldown
+  'Shuriken Volley':.27,'Shadow Rush':.38,'Eviscerate':.36,   // were .34/.44/.42: ~2× the Assassin average
+  'Frozen Orb':1.9,          // was 1.04: under one basic hit per cast
+  'Comet Storm':1.3,         // was .81: random comets over a wide circle rarely landed on one target
+  'Intimidating Shout':2.4,  // was 1.6: the debuff is the point, but the hit was negligible
+  'Wild Hunt':.16,           // was .1
+  // ranged classes rely on their area abilities in a crowd (a melee weapon cleaves the crowd around you; a bow does not)
+  'Explosive Arrow':1.05,'Barrage':1.2,'Rain of Arrows':.75,'Multishot':.7,'Explosive Trap':1.0,   // were .72/.57/.24/.56/.6
+  'Meteor':.6,'Wall of Fire':.55,'Blizzard':.4,'Frost Nova':1.25                                // were .45/.45/.3/1
+});
+// class knobs (v90 KQR_CLS, added to the hero's stats). Mage: −.36+.008·level → −.04+.008·level, which gives back what the
+// Chain Lightning / Fireball cuts took, spread over every Mage ability. Ranger: basic +12% → +17%, skills +0 → +3%.
+KQR_CLS.mage.skillP=L=>-.04+.008*L;
+KQR_CLS.ranger.basicP=.17;KQR_CLS.ranger.skillP=.03;
+// Assassin: +12% max health (the most fragile class, and a melee one). Max health is computed before the class knobs, so it is
+// applied here on the finished stats.
+var BAL127_HP={assassin:1.12};
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(!s._b127){s._b127=1;const k=BAL127_HP[hero&&hero.cls];if(k)s.hp*=k}return s}}
+
+// 4. Throwing knives: one throw (a fan of 3, or 5 every 4th throw) hits each enemy with one knife at full damage; the other knives of
+//    the same throw that hit that enemy deal WB127.knDup of their damage. Before, every knife of the fan landed on a lone enemy at
+//    close range (after Eviscerate / Shadow Rush dash you in), so the fan was a point-blank shotgun: ~+50% over daggers on one target.
+{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=WB127.knDup;else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
+
+// 5. Weapons. Each weapon keeps an identity; at every level 10–50 it lands within ~8% of its target against the average of all
+//    16 class + weapon pairs (30 s fights with the class's best abilities, one target / a pack of four):
+//      one target  (≈ +8% alone, −8% in a pack): Twin Axes, Daggers, Claws, Bow, Wand
+//      a crowd     (≈ −8% alone, +8% in a pack): Greataxe, Halberd, Warhammer, Flail, Throwing Knives; Orb ≈ −12% / +12%
+//      balanced    (≈ 0 / 0): Greatsword, Mace, Crossbow, Sling, Staff
+//    WTYPE.k = weapon attack (everything you do scales with it); MW = melee combo (m: hit multipliers, half: half-width of the swing
+//    arc in radians, rg: reach); WB127 = numbers that were written into the attack code (0580).
+Object.assign(WTYPE.ga,{k:1.16});MW.ga.m=[1,1.1,1.4];                         // was k 1.32, finisher 1.8: +10% / +35%
+Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.62,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
+Object.assign(WTYPE.hammer,{k:.84});Object.assign(MW.hammer,{m:[1,1.05,1.6],half:.8});WB127.shock=.05;WB127.slam=.03;
+                                                                                 // was k 1.12, [1.1,1.2,1.9], arc 1.1, shockwave 35%, slam 60%: +52% / +83%
+Object.assign(WTYPE.mace,{k:1.2});Object.assign(MW.mace,{half:.8});            // was 1.0, arc 1.15: −6% / −24%
+Object.assign(WTYPE.flail,{k:1.18});Object.assign(MW.flail,{m:[.95,1,1.5],half:1.9,rg:1.5});   // was 1.02, [.9,.95,1.45], arc 1.48, reach 1.12: −19% / −30%
+Object.assign(WTYPE.dagger,{k:.9});Object.assign(WTYPE.claws,{k:.84});MW.claws.rg=1.0;   // were .78 / .8; claws reach .85 (could not reach a second enemy)
+Object.assign(WTYPE.bow,{k:1.08});                                              // was 1.0
+Object.assign(WTYPE.wand,{k:.8});WB127.wandSplash=.5;                          // was .58, big-bolt burst 1.5
+WB127.orbJump=.55;                                                              // chain jumps after the first: 40% → 55%
+WB127.slingRic=3;                                                               // ricochets: 2 → 3
+WB127.knife=.68;WB127.knSpread=.45;WB127.knDup=.3;WB127.knPierce=1;            // was 50% per knife, fan .17, no pierce (see 4.)
+// Greatsword and Daggers used the plain class combo (0130 swing_base); they now have combo tables of their own (same hits, timing and
+// animation) so their swing width can be tuned: the greatsword's arc was 1.15 (it hit a pack as well as the cleaving greataxe) and the
+// daggers' 1.15 (a single-target weapon that was better in a pack than alone).
+MW.gs={N:3,m:[1,1.1,1.7],ms:[300,300,450],a:[0,1,2],rg:1.08,half:.7,col:0xffe6b0};
+MW.dagger={N:4,m:[.8,.8,.95,1.55],ms:[190,190,210,330],a:[0,1,0,2],rg:1,half:.8,dual:1,col:0xffe6b0};
+['gs','dagger'].forEach(k=>{WBEH[k]=(C,s,raw,d,spdK,base)=>wMelee(MW[k],C,s,raw,d,spdK,base)});
+// ================= v128: Whirlwind — the warrior holds his weapon out while he spins =================
+// Before v128 the channel pose (0890: ax -1.2, az -.9) and the strike grip pointed the blade straight up while the hero spun.
 // Now, while a 'channel' skill (Whirlwind) runs, after every other animation layer:
 //   - the weapon arm is stretched out to the side at shoulder height, elbow almost straight; the off arm out the other way
 //     for balance (dual axes: the second axe is held out on that side too);
@@ -30054,17 +30136,17 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 //     with the edge (axe bit) leading into the turn; the fist stays on the weapon's grip point.
 // It eases in over ~0.12 s and back out over ~0.2 s, so the normal pose and grip take over smoothly when the spin ends.
 // Visual only: hit ranges, timings and damage are unchanged. Only the local hero (pl).
-var WW127={w:0,t:null,
+var WW128={w:0,t:null,
   arm:{R:{x:-1.5,z:1.32,el:-.12},L:{x:-1.35,z:-1.2,el:-.35}},   // shoulder pitch/roll, elbow bend
   lag:.22,     // how far the blade trails the spin (share of the sideways direction)
   lift:.04,    // a touch above level
   inT:.12,outT:.2};
-var WW127_V=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()],
-  WW127_M=new THREE.Matrix4(),WW127_Q=new THREE.Quaternion(),WW127_Q2=new THREE.Quaternion();
-function ww127On(){return !!(hero.chan&&hero.chan.sk&&hero.chan.sk.k=='channel')}
-function ww127Tick(h,now){
+var WW128_V=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()],
+  WW128_M=new THREE.Matrix4(),WW128_Q=new THREE.Quaternion(),WW128_Q2=new THREE.Quaternion();
+function ww128On(){return !!(hero.chan&&hero.chan.sk&&hero.chan.sk.k=='channel')}
+function ww128Tick(h,now){
   if(h&&h!==pl)return;const b=pl&&pl.bones;if(!b)return;
-  const on=ww127On(),S=WW127;let dt=0;
+  const on=ww128On(),S=WW128;let dt=0;
   if(now!=null){if(S.t!=null)dt=(now-S.t)/1000;S.t=now}if(!(dt>0&&dt<.5))dt=0;
   S.w=on?Math.min(1,S.w+(dt?dt/S.inT:1)):Math.max(0,S.w-(dt?dt/S.outT:1));
   if(S.w<=0)return;
@@ -30076,7 +30158,7 @@ function ww127Tick(h,now){
   // weapons
   const G=pl._grip;if(!G||!G.L||!G.L.length)return;
   pl.updateMatrixWorld(true);
-  const P=pl.position,[hp,out,tan,y,x]=WW127_V;
+  const P=pl.position,[hp,out,tan,y,x]=WW128_V;
   for(const e of G.L){const W=e.W,bn=W&&W.parent;if(!bn||!e.S||e.ty=='shield'||e.ty=='bow'||e.ty=='crossbow')continue;
     bn.getWorldPosition(hp);out.set(hp.x-P.x,0,hp.z-P.z);
     if(out.lengthSq()<1e-4){out.set(e.side=='L'?-1:1,0,0).applyQuaternion(pl.quaternion);out.y=0}
@@ -30087,14 +30169,14 @@ function ww127Tick(h,now){
     const d=out.clone().addScaledVector(tan,-S.lag);d.y=S.lift;d.normalize();
     // weapon frame in the world: local -y along the blade, local +x (the edge / axe bit) leading into the turn
     y.copy(d).negate();x.copy(tan).multiplyScalar(W.scale.x<0?-1:1);x.addScaledVector(y,-x.dot(y)).normalize();
-    const z=WW127_V[1].clone().crossVectors(x,y);
-    WW127_M.makeBasis(x,y,z);WW127_Q.setFromRotationMatrix(WW127_M);
-    bn.getWorldQuaternion(WW127_Q2);WW127_Q.premultiply(WW127_Q2.invert());     // into the hand bone's frame
-    W.quaternion.slerp(WW127_Q,w);
+    const z=WW128_V[1].clone().crossVectors(x,y);
+    WW128_M.makeBasis(x,y,z);WW128_Q.setFromRotationMatrix(WW128_M);
+    bn.getWorldQuaternion(WW128_Q2);WW128_Q.premultiply(WW128_Q2.invert());     // into the hand bone's frame
+    W.quaternion.slerp(WW128_Q,w);
     // keep the fist on the grip point
     const hd=e.C&&e.C.hold||[0,0,0],an=e.S.p;
     const hv=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z).applyQuaternion(W.quaternion);
     W.position.lerp(new THREE.Vector3(an[0]-hv.x,an[1]-hv.y,an[2]-hv.z),w)}
 }
-{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{ww127Tick(h,now)}catch(_){}return r}}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{ww128Tick(h,now)}catch(_){}return r}}
 </script></body></html>

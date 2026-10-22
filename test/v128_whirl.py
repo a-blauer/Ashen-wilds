@@ -1,5 +1,5 @@
-# v127: the warrior's Whirlwind pose — the weapon is held out level while spinning (it pointed up before).
-#   out/v127_whirl.jpg: per warrior weapon type a row of frames during the channel (side, front, top views)
+# v128: the warrior's Whirlwind pose — the weapon is held out level while spinning (it pointed up before).
+#   out/v128_whirl.jpg: per warrior weapon type a row of frames during the channel (side, front, top views)
 #   checks: for each weapon type the weapon's tip sits away from the body and roughly level (not pointing up)
 import os,sys,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +38,7 @@ def s(pg):
     ev("(L)=>{eval(L);V90.home=[pl.position.x,pl.position.z];V90.setup('warrior',30,{rank:1});refreshGear()}",LIB)
     wts=os.environ.get('WT','gs,ga,axes,halberd').split(',')
     r=ev(JS,wts)
-    open(play.TMP+'/v127_whirl.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
+    open(play.TMP+'/v128_whirl.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
     print(json.dumps(r['out']))
     for wt,o in r['out'].items():
         if 'err' in o: print('skip',wt,o['err']);continue

@@ -7,7 +7,8 @@ for p in line:
     if '=' in p and not args and not p.endswith('.py'):k,v=p.split('=',1);env[k]=v
     else:args.append(p)
 known=[l.strip() for l in open(os.path.join(HERE,'ci_known_fail.txt')) if l.strip() and not l.startswith('#')]
-p=subprocess.run([sys.executable]+args,cwd=HERE,env=env,capture_output=True,text=True,timeout=int(os.environ.get('CI_TIMEOUT','3000')))
+pre=['fast.py'] if env.get('FAST')=='1' else []   # fast.py: no drawing except for screenshots
+p=subprocess.run([sys.executable]+pre+args,cwd=HERE,env=env,capture_output=True,text=True,timeout=int(os.environ.get('CI_TIMEOUT','3000')))
 out=p.stdout+'\n'+p.stderr
 print(out[-20000:])
 fails=[l[5:].strip() for l in out.splitlines() if l.startswith('FAIL ')]

@@ -44,5 +44,9 @@ def s(pg):
           const r={started:st,intro:mv,AF:!!AF,ph:e.sv.ph,mv:e.sv.mv&&e.sv.mv.id,on:e.sv.on,hp:+(e.c.h/M(e.c)).toFixed(2),warns:DTL.live.length};toPos(A.cx+Math.cos(1)*(ARENA_R+6),A.cz+Math.sin(1)*(ARENA_R+6));STEP(2);r.home=+Math.hypot(e.m.position.x-A.cx,e.m.position.z-A.cz).toFixed(1);return r}""",i)
         print('  wipe',json.dumps(f))
         if r['ph']!=2 or d['AF'] or f['AF'] or r['warns']>12:bad.append(i)
-    print('errs',errs[:10],ev("()=>window.LERR||0"),'bad',bad)
+    lerr=ev("()=>window.LERR||0");print('errs',errs[:10],lerr,'bad',bad)
+    for i in bad:print('FAIL Sovereign %d: no Phase II, arena stuck after death/wipe, or too many warnings'%i)
+    pe=[e for e in errs if not e.startswith('console:')]
+    if pe:print('FAIL page errors:',pe[:3])
+    if lerr:print('FAIL game loop error:',lerr)
 play.run(s,w=640,hh=400)
