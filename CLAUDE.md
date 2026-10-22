@@ -5,4 +5,6 @@
   cloud runs: the smoke suite runs on every push to main (`.github/workflows/tests.yml`, `test/smoke.txt`), and the full suite
   (`gh api -X POST repos/a-blauer/Ashen-wilds/actions/workflows/tests.yml/dispatches -f ref=main -f "inputs[suite]=full"`, `test/full.txt`) runs before every publish. Publish only when it is green.
   Locally, run just the focused test for the change you are making (one browser at a time).
+  **Small tweaks (owner's request):** for a balance number or similar one-line tuning change, skip the full suite: a focused
+  local test plus the green push smoke run is enough to publish.
 - The owner is a beginner programmer: short, plain explanations.
