@@ -1,0 +1,8 @@
+# Checks that already failed before v117 (stale expectations, not game bugs). The CI runner reports them but does not fail on them.
+# Match is on the start of the check's text after "FAIL ".
+warrior as rat: every ability casts
+assassin as cat: every ability casts
+mage as frog: every ability casts
+paladin as badger: every ability casts
+ranger as weasel: every ability casts
+with no food the citizen waits

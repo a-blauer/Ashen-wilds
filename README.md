@@ -306,6 +306,16 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 
 ## Testing
 
+**How to test (owner's standing request, since v117):**
+1. **Smoke suite in the cloud on every push.** `.github/workflows/tests.yml` runs every test in `test/smoke.txt` on its own GitHub
+   runner, all at once (~15 min total). Check the run (Actions → Tests, or `gh run list` / `gh run view`) before calling work done.
+2. **Full suite in the cloud before a publish.** Actions → Tests → Run workflow → suite `full` (`test/full.txt`), or
+   `gh workflow run tests.yml -f suite=full`; every test runs in parallel. Publish only when it is green.
+Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
+`test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
+New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).
+
+
 Headless Playwright (Chromium, software WebGL, ~1 fps). `play.py` is the harness: it rewrites CDN URLs to
 `test/vendor/`, skips the title screen (`window.AW_NOTITLE`; `TITLE=1` keeps it) and writes screenshots/logs to
 `test/out/`. `SRC=<other.html>` tests another build, `AW_TMP=<dir>` uses another output folder (needed to run two at once).

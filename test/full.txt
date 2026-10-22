@@ -1,0 +1,22 @@
+# Full suite (run before a publish: Actions → Tests → Run workflow → suite: full). Same format as smoke.txt.
+v38t.py
+v114_save.py
+v57t.py
+v60t.py
+v73t.py
+v32t.py
+v108_instances.py
+v88_town_paths.py
+v113_roster.py
+v105_abil.py
+v110_fight.py
+v103_kingdom.py
+v100_fusemenu.py
+v109_kingdom_shops.py
+TITLE=1 ABIL_ONLY=1 v114_race.py
+v117_menus.py
+v117_titles.py
+v117_wclip.py
+v117_xbow.py
+v117_creator.py
+v117_abprev.py

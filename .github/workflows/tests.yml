@@ -1,0 +1,56 @@
+# Kill Quest tests in the cloud: every test on its own runner, all at the same time.
+#  - every push: the smoke suite (test/smoke.txt)
+#  - Actions → Tests → Run workflow, suite "full": the full suite (test/full.txt), before a publish
+name: Tests
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: smoke or full
+        default: full
+        type: choice
+        options: [smoke, full]
+concurrency:
+  group: tests-${{ github.ref }}-${{ github.event.inputs.suite || 'smoke' }}
+  cancel-in-progress: true
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.l.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: l
+        run: |
+          f=test/${{ github.event.inputs.suite || 'smoke' }}.txt
+          echo "tests=$(grep -v '^#' $f | grep . | python3 -c 'import sys,json;print(json.dumps([l.strip() for l in sys.stdin]))')" >> "$GITHUB_OUTPUT"
+  test:
+    needs: list
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        t: ${{ fromJSON(needs.list.outputs.tests) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - name: Install Playwright + Chromium
+        run: pip install playwright pillow && python -m playwright install --with-deps chromium
+      - name: Build
+        run: ./build.sh && ./viewer/build_viewer.sh
+      - name: Run ${{ matrix.t }}
+        run: cd test && python3 ci_run.py "${{ matrix.t }}"
+      - name: Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: out-${{ strategy.job-index }}
+          path: test/out/*.png
+          if-no-files-found: ignore
+          retention-days: 7
