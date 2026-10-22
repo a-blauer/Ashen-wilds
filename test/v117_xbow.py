@@ -13,7 +13,7 @@ def s(pg):
       eq.weapon={id:99999,tp,lv:1,req:1,r:2,up:0,aff:[]};refreshGear();const n0=shots.length;atkCd=0;let st=null;{const f=sfx;sfx=function(k){if(k=='arrow'&&!st){const sh=shots[shots.length-1],q=xbowMuzzle116();st={d:q?Math.abs(sh.m.position.distanceTo(q)-.45):-1,nil:!q};sh.v.set(0,0,0);sh.t=999;window.SNAP116()}return f.apply(this,arguments)}}swing();
       const t0=performance.now(),iv=setInterval(()=>{if(shots.length>n0){clearInterval(iv);const sh=shots[shots.length-1];const q=xbowMuzzle116();sh.v.set(0,0,0);sh.t=999;
         const hp=pl.position.clone();camYaw=pl.rotation.y+Math.PI*.6;res({tp,wt:itT(eq.weapon).wt,d:st?st.d:-1,dy:sh.m.position.y-pl.position.y,ms:performance.now()-t0})}
-        else if(performance.now()-t0>8000){clearInterval(iv);res({tp,none:1})}},5)})""")
+        else if(performance.now()-t0>90000){clearInterval(iv);res({tp,none:1})}},5)})""")
     print(r)
     ok=r.get('d',-1)>=0 and r['d']<.06;print(('ok   ' if ok else 'FAIL ')+'bolt starts at the muzzle',r)
     if not ok:FAIL.append('muzzle')

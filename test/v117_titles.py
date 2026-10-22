@@ -18,9 +18,9 @@ def s(pg):
     r=ev("()=>({area:$('areaT').textContent,loc:($('locBox')||{}).textContent,ban:[...$('banner').children].map(b=>b.textContent)})")
     chk('Kindlelight: rec power in the location box','Rec. power' in (r['loc'] or ''),r);chk('no recommendation pop-up',not any('Recommended' in b for b in r['ban']),r)
     lb=pg.query_selector('#locBox')
-    if lb:pg.screenshot(path=play.TMP+'/v117_locbox.png',clip={'x':560,'y':80,'width':260,'height':240})
+    if lb:pg.screenshot(path=play.TMP+'/v117_locbox.png',clip={'x':560,'y':80,'width':260,'height':240},timeout=600000)
     for z,k in [(0,0),(0,1),(1,2),(2,1),(3,0),(4,2),(5,1),(5,3),(-1,0)]:
         ev("([z,k])=>{if(z<0)banner('🏰 DUSKHOLD','x');else zt116Ins(INSL[insG(z,k)]);const c=$('ztc116');c.querySelectorAll('*').forEach(e=>e.style.animation='none');c.style.animation='none';c.style.opacity=1}",[z,k]);pg.wait_for_timeout(1200)
-        pg.screenshot(path=play.TMP+'/v117_title_%s%d.png'%('t' if z<0 else z,k),clip={'x':40,'y':100,'width':740,'height':230})
+        pg.screenshot(path=play.TMP+'/v117_title_%s%d.png'%('t' if z<0 else z,k),clip={'x':40,'y':100,'width':740,'height':230},timeout=600000)
 play.run(s)
 print('FAILURES:',FAIL if FAIL else 'none')

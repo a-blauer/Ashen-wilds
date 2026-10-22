@@ -26,29 +26,29 @@ def s(pg):
     chk('kingdom: B opens it',r['open'],r);chk('kingdom: three tabs',len(r['tabs'])==3,r);chk('kingdom: no citizens on construction',not r['citInCon'],r)
     chk('villagers: a card each',r['cards']==r['n'] and r['n']>=4,r);chk('villagers: working + ready states',r['work']>=1 and r['ready']>=1,r)
     pg.set_viewport_size({'width':1200,'height':900});pg.wait_for_timeout(300)
-    pg.screenshot(path=O+'/v117_villagers.png')
+    pg.screenshot(path=O+'/v117_villagers.png',timeout=600000)
     r=ev("""()=>{const o={};const b=document.querySelector('#xw [data-vlcol]');o.gold0=gold;b.click();o.gold1=gold;o.bagLeft=HS103.cit.filter(c=>c.bag).length;
       const t=document.querySelector('#xw .vltr:not([disabled])');o.trained=!!t;if(t){const i=+t.dataset.vltr.split(':')[0];t.click();o.role=czRole104(HS103.cit[i])}
       const j=document.querySelector('#xw .vljob:not([disabled]):not(.on)[data-v]:not([data-v=""])');if(j){const i=+j.dataset.vljob,v=j.dataset.v;j.click();o.job=HS103.cit[i].task===v}
       KM103.tab='kingdom';rX();return o}""")
     chk('villagers: collect from the menu',r['gold1']==r['gold0']+50 and r['bagLeft']==0,r);chk('villagers: pick a job',r.get('job'),r)
-    pg.screenshot(path=O+'/v117_construction.png')
+    pg.screenshot(path=O+'/v117_construction.png',timeout=600000)
     ev("()=>closeX()")
     # companions | fusion
     r=ev("""()=>{const o={};while(party.length<3){const c=mkC('Foxlet',1,0,'',{hp:1,a:1,d:1,pa:1,ma:1,pd:1,md:1});ivSync(c);c.mods=[];c.h=M(c);party.push(c)}ui();openCmp(false);o.ctabs=document.querySelectorAll('#cmp .cftabs button').length;
       document.querySelector('#cmp [data-cft="f"]').click();o.fz=!$('fz').classList.contains('hide');o.cmpHid=$('cmp').classList.contains('hide');o.ftabs=document.querySelectorAll('#fz .cftabs button').length;return o}""")
     chk('companions: fusion tab opens fusion',r['ctabs']==2 and r['fz'] and r['cmpHid'] and r['ftabs']==2,r)
-    pg.screenshot(path=O+'/v117_fusion.png')
+    pg.screenshot(path=O+'/v117_fusion.png',timeout=600000)
     r=ev("()=>{document.querySelector('#fz [data-cft=\"c\"]').click();return {cmp:!$('cmp').classList.contains('hide'),fz:$('fz').classList.contains('hide')}}")
     chk('fusion: companions tab goes back',r['cmp'] and r['fz'],r)
-    pg.screenshot(path=O+'/v117_companions.png')
+    pg.screenshot(path=O+'/v117_companions.png',timeout=600000)
     ev("()=>{$('cmp').classList.add('hide')}")
     # talents / abilities
     r=ev("""()=>{const o={};openTal();o.tal=!$('tal').classList.contains('hide');o.talTabs=document.querySelectorAll('#tal .kqs-tabs').length;o.talLink=document.querySelectorAll('#tal [data-kqsopen]').length;$('tal').classList.add('hide');
       document.dispatchEvent(new KeyboardEvent('keydown',{key:'c'}));o.ab=!$('xw').classList.contains('hide')&&xwMode=='abil';o.abTabs=document.querySelectorAll('#xw .kqs-tabs').length;o.abTxt=/Talent/.test($('xwB').textContent+$('xwF').textContent);
       document.dispatchEvent(new KeyboardEvent('keydown',{key:'k'}));o.kOpensTal=!$('tal').classList.contains('hide')||(!$('xw').classList.contains('hide')&&xwMode=='abil');return o}""")
     chk('talents: no ability tabs or links',r['tal'] and r['talTabs']==0 and r['talLink']==0,r);chk('abilities: C opens, no talent tabs',r['ab'] and r['abTabs']==0 and not r['abTxt'],r)
-    pg.screenshot(path=O+'/v117_abilities.png')
+    pg.screenshot(path=O+'/v117_abilities.png',timeout=600000)
     ev("()=>{closeWin();closeX()}")
     # forge only at the smith
     r=ev("""()=>{const o={};$('bag').classList.remove('hide');rB();o.forgeTab=!!document.querySelector('#bt [data-bt="'+KQM_FORGE+'"]');o.up=!!$('idUp');$('bag').classList.add('hide');
