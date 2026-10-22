@@ -13,7 +13,7 @@ function brFinger(P,s,i){const D=BR.R,pw=D.paw,V=THREE.Vector3,a=s<0?'aL1':'aR1'
 {const f=mdRingW;mdRingW=function(B,P,d){if(!BR.on)return f.apply(this,arguments);
   const k=mdKP(),band=[0xb06a3a,0xc8ccd4,0xd8a040,0x3a3a46,0x7ab0d8][d.ti],n=BR.R.paw.n,F=brFinger(P,1,n-1),V=THREE.Vector3,
     c=F.pts[2].clone().lerp(F.pts[3],.5),dir=F.dirs[2],r=(F.rad[2]+F.rad[3])/2*1.3,e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),dir));
-  k.p(F.bone,'ring','m',band,c.x,c.y,c.z,r,.35,r,e.x,e.y,e.z);
+  k.p(F.bone,'ring','m',band,c.x,c.y,c.z,r*1.08,.024,r*1.08,e.x,e.y,e.z); // v117: the torus is 0.24 tall at scale 1, so .024 = a 6 mm band (was .35: an 8 cm tube)
   // the gem on the back of the finger
   const up=new V(0,0,1).sub(dir.clone().multiplyScalar(dir.z)).normalize(),g=c.clone().add(up.multiplyScalar(r*1.05));
   k.p(F.bone,'oct',d.G?'g':'m',d.G||d.gem,g.x,g.y,g.z,r*.55,r*.6,r*.45);mdKit(B,k)}}

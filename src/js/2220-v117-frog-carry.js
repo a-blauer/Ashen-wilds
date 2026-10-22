@@ -15,7 +15,7 @@
 // test/v117_grip.py (close-ups), v117_wclip.py (robe clipping) check it.
 var FC116={on:true,
   H:{staff:{arm:'R',hand:[.14,.1,.24],dir:[1,-.18,-.06],tilt:.28},
-     wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15},
+     wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
      orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
   pole:[-.35,-1,.5]}; // elbow bends down and back, a little out [out, up, fwd]
 function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='frog'}
@@ -59,11 +59,13 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   const Fp=fc117Frame(H,'a'+s1+'2');if(!Fp)return;const T=fc116Tmp(),V=T.V,Q=T.Q;
   const rec={b:[],w:[]};[b0,b1,b2].forEach(o=>rec.b.push({o,q0:o.quaternion.clone()}));rec.w.push({o:W,q0:W.quaternion.clone(),p0:W.position.clone()});
   // the weapon in the paw (hand-bone frame), whatever the arm does
-  const sg=H['_fcs'+s1]||1,wl=Fp.e.clone().multiplyScalar(sg*Math.cos(C.tilt||0)).addScaledVector(Fp.d,Math.sin(C.tilt||0)).normalize();
-  let wq,wp;if(C.palm){const bb=fc117WB(W),foot=new V(bb.c.x,bb.min.y,bb.c.z);wq=new Q().setFromUnitVectors(new V(0,1,0),Fp.c);wp=Fp.palm.clone().addScaledVector(Fp.c,Fp.thick*.6).sub(foot.applyQuaternion(wq))}
-  else{const zl=Fp.d.clone().addScaledVector(wl,-Fp.d.dot(wl)).normalize();wq=fc117Basis(new V(0,-1,0),new V(0,0,1),wl,zl);wp=Fp.grip.clone();if(C.hold)wp.sub(new V(...C.hold).applyQuaternion(wq))}
-  // the carry pose, faded out during attacks like the beast arm hold
   const st=H._brS,ar=st?st.a:1,w=ar<.001?0:ar*ar*(3-2*ar);
+  const sg=H['_fcs'+s1]||1,wlOf=t=>Fp.e.clone().multiplyScalar(sg*Math.cos(t||0)).addScaledVector(Fp.d,Math.sin(t||0)).normalize(),wl=wlOf(C.tilt);
+  let wq,wp;if(C.palm){const bb=fc117WB(W),foot=new V(bb.c.x,bb.min.y,bb.c.z);wq=new Q().setFromUnitVectors(new V(0,1,0),Fp.c);wp=Fp.palm.clone().addScaledVector(Fp.c,Fp.thick*.6).sub(foot.applyQuaternion(wq))}
+  else{const qOf=l=>{const zl=Fp.d.clone().addScaledVector(l,-Fp.d.dot(l)).normalize();return fc117Basis(new V(0,-1,0),new V(0,0,1),l,zl)};wq=qOf(wl);
+    if(C.tiltA!=null&&w<1){const l2=wlOf(C.tiltA),zA=Fp.c.clone().multiplyScalar(-1);wq=fc117Basis(new V(0,-1,0),new V(0,0,1),l2,zA.addScaledVector(l2,-zA.dot(l2)).normalize()).slerp(wq,w)}
+    wp=Fp.grip.clone();if(C.hold)wp.sub(new V(...C.hold).applyQuaternion(wq))}
+  // the carry pose, faded out during attacks like the beast arm hold
   if(w>0){H.updateMatrixWorld(true);
     const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);
     let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
