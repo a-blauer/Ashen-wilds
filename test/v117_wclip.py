@@ -44,7 +44,7 @@ def s(pg):
         if q['in']:print('  %-6s tier %-4s %-8s inside %4d / %4d  depth %.3f'%(q['w'],q['t'],q['f'],q['in'],q['n'],q['d']))
     print('totals (inside points, deepest m):',tot,r['err'])
     bad=[q for q in r['res'] if q['f'] in('idle','run1','run2','run3') and q['in']>MAX]
-    print(('ok   ' if not bad else 'FAIL ')+'%s: no weapon points inside the robe/armour while carrying (%d frames over)'%(RACE,len(bad)))
+    print(('ok   ' if not bad else 'FAIL ')+'%s: no weapon points inside the robe/armour while carrying (%d frames over) %s'%(RACE,len(bad),' '.join('%s/t%s/%s:%d@%.3f'%(q['w'],q['t'],q['f'],q['in'],q['d']) for q in bad)))
     if bad:FAIL.append('carry')
 play.run(s,w=900,hh=600)
 print('FAILURES:',FAIL if FAIL else 'none')
