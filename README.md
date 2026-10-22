@@ -276,7 +276,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`xbowLevel116`, after every animation layer). The frog Mage's paw holds the weapon in its channel (v117.2: `fc117Frame` measures the paw from the skinned mesh: fingers, knuckle axis, curl side, grip point; staff/wand sit along the knuckle axis in every pose, the wand turns along the fingers during attacks, the orb stands in the upturned palm; frog `paw.curl` 1.05). His carry hold (`FC116`) poses his weapon arm by a two-bone IK and
   orients the weapon (staff upright beside him, foot angled away from the hem; wand ahead; orb above the paw in front); it fades out
   with the beast arm hold during attacks, and every change is restored before the next frame. The frog also spreads his shoulders
-  during attacks (`D.atk.shz`). `v117_wclip.py` measures weapon points inside the robe/armour shell (`v117_wclip_lib.js`; idle/run
+  during attacks (`D.atk.shz`). v118: his elbow bends back and a little out (`FC116.pole`; it pointed forward and in, so the arm bent backwards); the
+  staff/wand head points toward the paw's knuckle side as it faces forward in the bind pose (`fc118Sign`; it was learned from the first
+  carry frame and could come out reversed, head-down in every attack); while the hold fades in and out the shaft swings to its carry
+  direction and the twist round the shaft blends separately (`H._fcth`), so the weapon cannot tumble end over end. `v117_wclip.py` measures weapon points inside the robe/armour shell (`v117_wclip_lib.js`; idle/run
   frames must be 0), `v117_wclip_live.py` the real attacks. Blacksmith keeper hammer head runs across the swing plane (face down).
 - **Rings (v117)**: the finger ring is a 6 mm band (`ring` torus y-scale .024; it was .35, an 8 cm tube). `v117_grip.py` (PART=rings) shows it on every race, PART=grip the frog's paw; `v117_grip_atk.py` the paw in the real attack / cast poses.
 - **Creator (v117)**: the class step builds each class's own model (`cc116Model`, cached per look): current beast + exactly the

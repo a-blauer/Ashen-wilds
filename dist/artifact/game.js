@@ -28274,7 +28274,7 @@ var FC116={on:true,
   H:{staff:{arm:'R',hand:[.15,.1,.24],dir:[1,-.24,-.06],tilt:.28},
      wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
      orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
-  pole:[-.35,-1,.5]}; // elbow bends down and back, a little out [out, up, fwd]
+  pole:[.45,-.6,-1]}; // v118: elbow bends back and a little out [out, up, fwd] (it was [-.35,-1,.5]: forward and in, so the arm bent backwards)
 function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='frog'}
 var FC116_T={V:null};
 function fc116Tmp(){if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,Q,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()})}return FC116_T}
@@ -28317,6 +28317,10 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   const rec={b:[],w:[]};[b0,b1,b2].forEach(o=>rec.b.push({o,q0:o.quaternion.clone()}));rec.w.push({o:W,q0:W.quaternion.clone(),p0:W.position.clone()});
   // the weapon in the paw (hand-bone frame), whatever the arm does
   const st=H._brS,ar=st?st.a:1,w=ar<.001?0:ar*ar*(3-2*ar);
+  // v118: which way along the knuckle axis the staff/wand head points is fixed by the paw itself: toward the side the knuckles face
+  // in the model's bind pose (forward), so the head is up in attacks too. It used to be learned from the first carry frame, which
+  // could pick the other end: hidden while carrying (the wrist turned it upright) but upside down in every attack.
+  if(H['_fcs'+s1]===undefined)H['_fcs'+s1]=fc118Sign(H,b2,Fp);
   const sg=H['_fcs'+s1]||1,wlOf=t=>Fp.e.clone().multiplyScalar(sg*Math.cos(t||0)).addScaledVector(Fp.d,Math.sin(t||0)).normalize(),wl=wlOf(C.tilt);
   let wq,wp;if(C.palm){const bb=fc117WB(W),foot=new V(bb.c.x,bb.min.y,bb.c.z);wq=new Q().setFromUnitVectors(new V(0,1,0),Fp.c);wp=Fp.palm.clone().addScaledVector(Fp.c,Fp.thick*.6).sub(foot.applyQuaternion(wq))}
   else{const qOf=l=>{const zl=Fp.d.clone().addScaledVector(l,-Fp.d.dot(l)).normalize();return fc117Basis(new V(0,-1,0),new V(0,0,1),l,zl)};wq=qOf(wl);
@@ -28335,10 +28339,20 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
     let Fw=G.clone().sub(S).normalize(),R=wantR(Fw);
     for(let it=0;it<2;it++){const tip=(C.palm?Fp.palm.clone():Fp.grip.clone()).multiplyScalar(ws).applyQuaternion(R.R),Tw=G.clone().sub(tip);
       fc116IK(S,b0,b1,b2,Tw,P,w);const E2=b1.getWorldPosition(new V()),W2=b2.getWorldPosition(new V());Fw=W2.clone().sub(E2).normalize();R=wantR(Fw)}
-    if(!C.palm&&H['_fcs'+s1]===undefined){H['_fcs'+s1]=R.s;if(R.s!==sg)return fc116Restore2(H,rec)} // first frame only: learn which way the knuckle axis points
-    const pq=b2.parent.getWorldQuaternion(new Q()),cur=b2.getWorldQuaternion(new Q()),tgt=cur.clone().slerp(R.R,w);b2.quaternion.copy(pq.invert().multiply(tgt))}
+    const pq=b2.parent.getWorldQuaternion(new Q()),cur=b2.getWorldQuaternion(new Q());let tgt;
+    // v118: blending the wrist straight from the attack pose to the carry pose (one slerp) could tumble a staff end over end, because the
+    // two differ mostly by a twist round the shaft. Instead the shaft swings toward its carry direction (no twist) and the twist round
+    // the shaft is blended on its own, kept continuous from frame to frame (H._fcth), so the weapon stays upright through the hand-off.
+    if(C.palm||w>=.999)tgt=cur.clone().slerp(R.R,w);
+    else{const U=fr([C.dir[1],C.dir[0],C.dir[2]]).normalize(),ax=wl.clone().applyQuaternion(cur).normalize(),Rs=new Q().setFromUnitVectors(ax,U).multiply(cur),
+        dq=R.R.clone().multiply(Rs.clone().invert());if(dq.w<0)dq.set(-dq.x,-dq.y,-dq.z,-dq.w);
+        let th=2*Math.acos(Math.min(1,dq.w));if(dq.x*U.x+dq.y*U.y+dq.z*U.z<0)th=-th;const tk='_fcth'+s1,pv=H[tk];if(pv!=null){while(th-pv>Math.PI)th-=2*Math.PI;while(th-pv<-Math.PI)th+=2*Math.PI}H[tk]=th;
+        const sw=cur.clone().slerp(Rs,w),ax2=wl.clone().applyQuaternion(sw).normalize();tgt=new Q().setFromAxisAngle(ax2,w*th).multiply(sw)}
+    if(w>=.999)H['_fcth'+s1]=null;b2.quaternion.copy(pq.invert().multiply(tgt))}
   W.quaternion.copy(wq);W.position.copy(wp);
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
+function fc118Sign(H,b,Fp){let s=1;H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const i=o.skeleton.bones.indexOf(b);if(i<0)return;
+  const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().copy(o.skeleton.boneInverses[i]).invert());s=Fp.e.clone().applyQuaternion(q).z<0?-1:1});return s}
 function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.forEach(r=>{r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)});H.updateMatrixWorld(true)}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
   try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding)){fc116Apply(H);if(!H._fc116)fc116Apply(H)}}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog hold',e)}}return r}}
