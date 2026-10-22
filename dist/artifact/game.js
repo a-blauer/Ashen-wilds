@@ -27346,7 +27346,7 @@ function brFinger(P,s,i){const D=BR.R,pw=D.paw,V=THREE.Vector3,a=s<0?'aL1':'aR1'
 {const f=mdRingW;mdRingW=function(B,P,d){if(!BR.on)return f.apply(this,arguments);
   const k=mdKP(),band=[0xb06a3a,0xc8ccd4,0xd8a040,0x3a3a46,0x7ab0d8][d.ti],n=BR.R.paw.n,F=brFinger(P,1,n-1),V=THREE.Vector3,
     c=F.pts[2].clone().lerp(F.pts[3],.5),dir=F.dirs[2],r=(F.rad[2]+F.rad[3])/2*1.3,e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),dir));
-  k.p(F.bone,'ring','m',band,c.x,c.y,c.z,r,.35,r,e.x,e.y,e.z);
+  k.p(F.bone,'ring','m',band,c.x,c.y,c.z,r*1.08,.024,r*1.08,e.x,e.y,e.z); // v117: the torus is 0.24 tall at scale 1, so .024 = a 6 mm band (was .35: an 8 cm tube)
   // the gem on the back of the finger
   const up=new V(0,0,1).sub(dir.clone().multiplyScalar(dir.z)).normalize(),g=c.clone().add(up.multiplyScalar(r*1.05));
   k.p(F.bone,'oct',d.G?'g':'m',d.G||d.gem,g.x,g.y,g.z,r*.55,r*.6,r*.45);mdKit(B,k)}}
@@ -27454,7 +27454,7 @@ brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
   EYEP:[.108,1.178,-.012],EAR:null,muzzleZ:.16,hoodZ:-.03,crownZ:-.08,hatZ:-.1,bandY:1.16,bandZ:-.04,
   topW:m=>{const dx=Math.abs(m.x)-.108,dy=m.y-1.178,dz=m.z+.012;return dx*dx+dy*dy+dz*dz<.054*.054},
   eyeW:m=>false,
-  TP:null,paw:{n:4,len:[.04,.046,.046,.038],rad:1.15,pad:true,web:true,curl:.5,spread:.013,palm:1.15,plen:1.1,thumb:false,colOf:C=>C.FUR,padColOf:C=>C.FURL},handCol:C=>C.FUR,
+  TP:null,paw:{n:4,len:[.04,.046,.046,.038],rad:1.15,pad:true,web:true,curl:1.05,spread:.013,palm:1.15,plen:1.1,thumb:false,colOf:C=>C.FUR,padColOf:C=>C.FURL},handCol:C=>C.FUR,
   toes:{n:5,len:.055,claw:0,web:true,pad:true,dew:false,w:1.1,spread:1.2,colOf:C=>C.FUR,padColOf:C=>C.FURL},
   paint(P,C){const spot=m=>Math.sin(m.x*83+m.y*47)*Math.sin(m.z*71-m.y*39)>.72;
     P.paint.torso=m=>m.s>.45&&m.y>.5?C.BELLY:spot(m)?C.FURD:C.FUR;P.paint.torsoLo=m=>m.s>.5&&m.y>.47?C.BELLY:spot(m)?C.FURD:C.FUR;
@@ -28255,56 +28255,93 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes zt116w{0%,100%{text-shadow:0 0 18px var(--zc2),0 0 36px color-mix(in srgb,var(--zc2) 55%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}50%{text-shadow:0 0 26px var(--zc2),0 0 52px color-mix(in srgb,var(--zc2) 70%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}}
 @media (max-width:640px){#ztc116{top:11%;padding:12px 14px 10px}#ztc116 .zts{font-size:.86rem}#ztc116 .ztk,#ztc116 .ztf{font-size:.62rem;letter-spacing:.18em}}
 </style>`);
-// ================= v117 frog Mage: how he carries his weapons =================
-// The v93 carry grip is tuned on human arms (GRIP_B), and the frog's short arms sit right on his wide robe, so staves, wands and orbs
-// cut through the robe and armour. While he is not attacking, his weapon arm is posed by a two-bone IK to a hold point out to the
-// side (staff, wand) or in front (orb), and the weapon gets its own steady orientation: the staff stands upright beside him with its
-// foot angled away from the robe hem, the wand points ahead, the orb rests above his open paw. Attacks and abilities fade the hold
-// out exactly like the beast arm hold (H._brS.a), so their tracks play unchanged.
-// Every change is put back before the next frame (FC116 keeps the bone and weapon values it found), so the base layers, the grip and
-// the beast layer's exact-value undo never see it. Numbers are in the hero's frame from the shoulder: side out, fwd, down (m);
-// the weapon direction is up/side/fwd weights (side > 0 = away from the body). test/v116_wclip.py measures the result.
+// ================= v117 frog Mage: how he holds his weapons =================
+// The v93 grip lays a weapon along the fingers of a human fist (tuned on human arms, GRIP_B), so on the frog's long webbed paw the
+// shaft ran beside the fingers, the fingertips poked through it and the orb floated off the hand. Here the paw itself decides:
+//  * fc117Frame measures each paw from the final skinned mesh (the vertices that belong to the hand bone only, in that bone's own
+//    frame): finger direction d, knuckle axis e (across the fingers), the side the fingers curl toward c (the palm side), the paw
+//    length, the grip point inside the curl and the palm centre.
+//  * A staff or wand always sits in the paw's channel: through the grip point, along the knuckle axis tilted a little toward the
+//    fingertips (C.tilt), so the curled fingers close round it. This holds in every pose, attacks included (the attack tracks still
+//    move the arm). An orb rests on the open palm side.
+//  * While he is not attacking (the beast arm-hold weight, H._brS.a), his arm is posed by a two-bone IK and his wrist turned so the
+//    weapon points where it should (staff upright beside him, foot angled away from the robe; wand ahead; orb held out in front,
+//    palm up); the wrist's roll round the weapon is chosen to keep the paw in line with the forearm.
+// Every change is put back before the next frame, so the base layers, the grip and the beast layer's exact-value undo never see it.
+// Hold points are from the shoulder in the hero's frame [out, fwd, down] (m); directions are [up, out, fwd] weights.
+// test/v117_grip.py (close-ups), v117_wclip.py (robe clipping) check it.
 var FC116={on:true,
-  H:{staff:{arm:'R',hand:[.15,.1,.22],dir:[1,-.2,-.08]},
-     wand:{arm:'R',hand:[.14,.2,.18],dir:[.45,.15,.85]},
-     orb:{arm:'L',hand:[.12,.32,.24],dir:[1,0,0]}},
-  pole:[-.35,-1,.5]}; // elbow bends down and back, a little out (side, up, fwd)
+  H:{staff:{arm:'R',hand:[.14,.1,.24],dir:[1,-.18,-.06],tilt:.28},
+     wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
+     orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
+  pole:[-.35,-1,.5]}; // elbow bends down and back, a little out [out, up, fwd]
 function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='frog'}
+var FC116_T={V:null};
+function fc116Tmp(){if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,Q,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()})}return FC116_T}
+// ---------- the paw, measured once per body build ----------
+function fc117Frame(H,bn){const key=(H._mdKey||'')+'|'+bn;H._fc117=H._fc117||{};if(H._fc117[key])return H._fc117[key];const b=H.bones[bn];if(!b)return null;
+  const V=THREE.Vector3,pts=[];H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const sk=o.skeleton,bi=sk.bones.indexOf(b);if(bi<0)return;const P=o.geometry.attributes.position,SI=o.geometry.attributes.skinIndex,SW=o.geometry.attributes.skinWeight;if(!P||!SI)return;
+    const M=new THREE.Matrix4().multiplyMatrices(sk.boneInverses[bi],o.bindMatrix),v=new V();
+    for(let i=0;i<P.count;i++){let w=0;if(SI.getX(i)==bi)w+=SW.getX(i);if(SI.getY(i)==bi)w+=SW.getY(i);if(SI.getZ(i)==bi)w+=SW.getZ(i);if(SI.getW(i)==bi)w+=SW.getW(i);if(w<.99)continue;v.fromBufferAttribute(P,i).applyMatrix4(M);pts.push(v.clone())}});
+  if(pts.length<40)return null;
+  const cen=pts.reduce((a,p)=>a.add(p),new V()).multiplyScalar(1/pts.length),d=cen.clone().normalize();let L=0;pts.forEach(p=>{L=Math.max(L,p.dot(d))});
+  const band=(a,z)=>pts.filter(p=>{const t=p.dot(d)/L;return t>=a&&t<=z}),tips=band(.82,1),base=band(.22,.45),mid=band(.55,.75),mean=A=>A.reduce((a,p)=>a.add(p),new V()).multiplyScalar(1/Math.max(1,A.length));
+  // knuckle axis: the widest spread of the fingertips across the finger direction (2-D principal axis)
+  const u0=Math.abs(d.x)<.9?new V(1,0,0):new V(0,1,0),ax1=u0.clone().addScaledVector(d,-u0.dot(d)).normalize(),ax2=new V().crossVectors(d,ax1).normalize(),tm=mean(tips);
+  let sxx=0,syy=0,sxy=0;tips.forEach(p=>{const q=p.clone().sub(tm),x=q.dot(ax1),y=q.dot(ax2);sxx+=x*x;syy+=y*y;sxy+=x*y});const th=.5*Math.atan2(2*sxy,sxx-syy);
+  const e=ax1.clone().multiplyScalar(Math.cos(th)).addScaledVector(ax2,Math.sin(th)).normalize();
+  // curl: where the fingertips lean, across both the finger direction and the knuckle axis
+  let c=new V().crossVectors(d,e).normalize();if(tm.clone().sub(mean(base)).dot(c)<0)c.negate();
+  const mm=mean(mid);let lo=1e9,hi=-1e9;mid.forEach(p=>{const t=p.clone().sub(mm).dot(c);lo=Math.min(lo,t);hi=Math.max(hi,t)});
+  const F={d,e,c,L,grip:d.clone().multiplyScalar(.64*L).addScaledVector(c,.16*L).addScaledVector(e,mm.dot(e)),palm:mean(base).clone().add(mean(mid)).multiplyScalar(.5),thick:Math.max(.008,(hi-lo)/2)};
+  H._fc117[key]=F;return F}
+// a weapon's own bounding box in its local frame (orb: where the ball is)
+function fc117WB(W){if(W.userData.bb117)return W.userData.bb117;W.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(W.matrixWorld).invert(),B=new THREE.Box3(),v=new THREE.Vector3();
+  W.traverse(o=>{if(!o.isMesh||!o.geometry)return;const P=o.geometry.attributes.position;if(!P)return;const M=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).applyMatrix4(M);B.expandByPoint(v)}});
+  const c=B.getCenter(new THREE.Vector3()),s=B.getSize(new THREE.Vector3());return W.userData.bb117={c,r:Math.max(s.x,s.y,s.z)/2,min:B.min.clone(),max:B.max.clone()}}
+// rotation taking local orthonormal pair (a1,a2) to world pair (b1,b2)
+function fc117Basis(a1,a2,b1,b2){const T=fc116Tmp(),a3=new T.V().crossVectors(a1,a2),b3=new T.V().crossVectors(b1,b2);
+  const A=new THREE.Matrix4().makeBasis(a1,a2,a3),Bm=new THREE.Matrix4().makeBasis(b1,b2,b3);return new THREE.Quaternion().setFromRotationMatrix(Bm.multiply(A.transpose()))}
 function fc116Restore(H){const S=H._fc116;if(!S)return;H._fc116=null;
   S.b.forEach(r=>{if(r.o.quaternion.equals(r.set))r.o.quaternion.copy(r.q0)});
   S.w.forEach(r=>{if(r.o.quaternion.equals(r.set)&&r.o.position.equals(r.ps)){r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)}})}
-var FC116_T={V:null};
-function fc116Rot(bone,from,to,w){// turn a bone in world space so direction `from` points along `to` (slerped by w)
-  const T=FC116_T,q=T.q1.setFromUnitVectors(from.clone().normalize(),to.clone().normalize());if(w<1)q.slerp(T.qI,1-w);
+function fc116Rot(bone,from,to,w){const T=fc116Tmp(),q=T.q1.setFromUnitVectors(from.clone().normalize(),to.clone().normalize());if(w<1)q.slerp(T.qI,1-w);
   const pw=bone.parent.getWorldQuaternion(T.q2),bw=bone.getWorldQuaternion(T.q3);bone.quaternion.copy(pw.clone().invert().multiply(q.multiply(bw)));bone.updateMatrixWorld(true)}
+function fc116IK(S,b0,b1,b2,T,P,w){const V=fc116Tmp().V,E=b1.getWorldPosition(new V()),Hd=b2.getWorldPosition(new V()),a=E.distanceTo(S),b=Hd.distanceTo(E);T=T.clone();let d=T.distanceTo(S);const dm=(a+b)*.985;if(d>dm){T.sub(S).setLength(dm).add(S);d=dm}
+  const ST=T.clone().sub(S).normalize(),x=(a*a-b*b+d*d)/(2*d),h=Math.sqrt(Math.max(0,a*a-x*x)),Pp=P.clone().addScaledVector(ST,-P.dot(ST)).normalize(),Ed=S.clone().addScaledVector(ST,x).addScaledVector(Pp,h);
+  fc116Rot(b0,E.clone().sub(S),Ed.clone().sub(S),w);const E2=b1.getWorldPosition(new V()),H2=b2.getWorldPosition(new V());fc116Rot(b1,H2.clone().sub(E2),T.clone().sub(E2),w)}
 function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   const W=(H.gearG||[]).find(o=>o&&o.userData&&FC116.H[o.userData.wt]&&o.parent);if(!W)return;
   const C=FC116.H[W.userData.wt],s1=C.arm,b0=B['a'+s1+'0'],b1=B['a'+s1+'1'],b2=B['a'+s1+'2'];if(!b0||!b1||!b2||W.parent!==b2)return;
+  const Fp=fc117Frame(H,'a'+s1+'2');if(!Fp)return;const T=fc116Tmp(),V=T.V,Q=T.Q;
+  const rec={b:[],w:[]};[b0,b1,b2].forEach(o=>rec.b.push({o,q0:o.quaternion.clone()}));rec.w.push({o:W,q0:W.quaternion.clone(),p0:W.position.clone()});
+  // the weapon in the paw (hand-bone frame), whatever the arm does
   const st=H._brS,ar=st?st.a:1,w=ar<.001?0:ar*ar*(3-2*ar);
-  if(w<=0)return;
-  if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4()})}
-  const V=FC116_T.V,rec={b:[],w:[]};[b0,b1].forEach(o=>rec.b.push({o,q0:o.quaternion.clone()}));rec.w.push({o:W,q0:W.quaternion.clone(),p0:W.position.clone()});
-  H.updateMatrixWorld(true);
-  const S=b0.getWorldPosition(new V()),E=b1.getWorldPosition(new V()),Hd=b2.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V());
-  const f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
-  const fr=(a)=>new V().addScaledVector(sd,a[0]).addScaledVector(up,a[1]).addScaledVector(f,a[2]);
-  const T=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]]));
-  // two-bone IK: the elbow sits on the side of the pole, the upper arm aims at it, the forearm at the hold point
-  const a=E.distanceTo(S),b=Hd.distanceTo(E);let d=T.distanceTo(S);const dm=(a+b)*.985;if(d>dm){T.sub(S).setLength(dm).add(S);d=dm}
-  const ST=T.clone().sub(S).normalize(),x=(a*a-b*b+d*d)/(2*d),h=Math.sqrt(Math.max(0,a*a-x*x));
-  const P=fr([FC116.pole[0],FC116.pole[1],FC116.pole[2]]);P.addScaledVector(ST,-P.dot(ST)).normalize();
-  const Ed=S.clone().addScaledVector(ST,x).addScaledVector(P,h);
-  fc116Rot(b0,E.clone().sub(S),Ed.clone().sub(S),w);
-  const E2=b1.getWorldPosition(new V()),H2=b2.getWorldPosition(new V());fc116Rot(b1,H2.clone().sub(E2),T.clone().sub(E2),w);
-  // the weapon: local -Y along the chosen direction, local "face" axis turned toward the hero's front
-  b2.updateMatrixWorld(true);const Y=fr([C.dir[1],C.dir[0],C.dir[2]]).normalize().negate(),Fz=fr([0,0,1]);
-  const Z=Fz.clone().addScaledVector(Y,-Fz.dot(Y)).normalize(),X=new V().crossVectors(Y,Z).normalize();
-  const qd=new THREE.Quaternion().setFromRotationMatrix(FC116_T.m.makeBasis(X,Y,Z));
-  const qw=W.getWorldQuaternion(new THREE.Quaternion()),out=qw.clone().slerp(qd,w),pq=b2.getWorldQuaternion(new THREE.Quaternion());
-  W.quaternion.copy(pq.invert().multiply(out));
+  const sg=H['_fcs'+s1]||1,wlOf=t=>Fp.e.clone().multiplyScalar(sg*Math.cos(t||0)).addScaledVector(Fp.d,Math.sin(t||0)).normalize(),wl=wlOf(C.tilt);
+  let wq,wp;if(C.palm){const bb=fc117WB(W),foot=new V(bb.c.x,bb.min.y,bb.c.z);wq=new Q().setFromUnitVectors(new V(0,1,0),Fp.c);wp=Fp.palm.clone().addScaledVector(Fp.c,Fp.thick*.6).sub(foot.applyQuaternion(wq))}
+  else{const qOf=l=>{const zl=Fp.d.clone().addScaledVector(l,-Fp.d.dot(l)).normalize();return fc117Basis(new V(0,-1,0),new V(0,0,1),l,zl)};wq=qOf(wl);
+    if(C.tiltA!=null&&w<1){const l2=wlOf(C.tiltA),zA=Fp.c.clone().multiplyScalar(-1);wq=fc117Basis(new V(0,-1,0),new V(0,0,1),l2,zA.addScaledVector(l2,-zA.dot(l2)).normalize()).slerp(wq,w)}
+    wp=Fp.grip.clone();if(C.hold)wp.sub(new V(...C.hold).applyQuaternion(wq))}
+  // the carry pose, faded out during attacks like the beast arm hold
+  if(w>0){H.updateMatrixWorld(true);
+    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);
+    let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
+    const fr=a=>new V().addScaledVector(sd,a[0]).addScaledVector(up,a[1]).addScaledVector(f,a[2]),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
+    const ws=b2.getWorldScale(new V()).x;
+    // wrist rotation: the weapon (or the palm, for the orb) points along U; the roll round it keeps the paw in line with the forearm
+    const wantR=Fw=>{let best=null;for(const s of (C.palm?[1]:H['_fcs'+s1]!==undefined?[sg]:[1,-1])){const a1=C.palm?Fp.c.clone():Fp.e.clone().multiplyScalar(s*Math.cos(C.tilt||0)).addScaledVector(Fp.d,Math.sin(C.tilt||0)).normalize();
+        const U=C.palm?up.clone():fr([C.dir[1],C.dir[0],C.dir[2]]).normalize(),a2=Fp.d.clone().addScaledVector(a1,-Fp.d.dot(a1)).normalize(),b2v=Fw.clone().addScaledVector(U,-Fw.dot(U)).normalize();
+        const R=fc117Basis(a1,a2,U,b2v),sc=Fp.d.clone().applyQuaternion(R).dot(Fw);if(!best||sc>best.sc)best={R,s,sc}}return best};
+    let Fw=G.clone().sub(S).normalize(),R=wantR(Fw);
+    for(let it=0;it<2;it++){const tip=(C.palm?Fp.palm.clone():Fp.grip.clone()).multiplyScalar(ws).applyQuaternion(R.R),Tw=G.clone().sub(tip);
+      fc116IK(S,b0,b1,b2,Tw,P,w);const E2=b1.getWorldPosition(new V()),W2=b2.getWorldPosition(new V());Fw=W2.clone().sub(E2).normalize();R=wantR(Fw)}
+    if(!C.palm&&H['_fcs'+s1]===undefined){H['_fcs'+s1]=R.s;if(R.s!==sg)return fc116Restore2(H,rec)} // first frame only: learn which way the knuckle axis points
+    const pq=b2.parent.getWorldQuaternion(new Q()),cur=b2.getWorldQuaternion(new Q()),tgt=cur.clone().slerp(R.R,w);b2.quaternion.copy(pq.invert().multiply(tgt))}
+  W.quaternion.copy(wq);W.position.copy(wp);
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
+function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.forEach(r=>{r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)});H.updateMatrixWorld(true)}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
-  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding))fc116Apply(H)}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog carry',e)}}return r}}
+  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding)){fc116Apply(H);if(!H._fc116)fc116Apply(H)}}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog hold',e)}}return r}}
 // during attacks and casts the frog's shoulders spread a little (the beast layer's D.atk), so the staff swings clear of his wide head and robe
 {const D=Object.values(BRD).find(d=>d&&d.key=='frog');if(D&&!D.atk)D.atk={shz:.3}}
 // ================= v117 character creator: the class step shows the hero as they will start, in a heroic pose =================
