@@ -66,6 +66,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v117 frog Mage carry hold (`FC116`: arm IK, upright staff, wand, orb) | `2220-v117-frog-carry.js` |
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
+| v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
 
 ## Conventions (read before changing code)
 
@@ -135,9 +136,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   cost = zone tier, gatherers 1). Goods are computed when the trip ends and wait in `c.bag` until the player presses F at
   the house (`czCollectHouse105`); the next trip starts after that. Ranks (`c.rk`, 1..5) cap the zone tier a citizen may
   work; each rank is bought at the Steward (`czUpCost105`).
+- **Support targets (v122)**: heal goes to the ally (hero or companion) with the lowest health share below 70%; shield to the
+  one under the most pressure (`sup122Threat`: enemies winding up on it, enemies next to it, hurt in the last 3s, low health) without
+  a strong shield; attack buffs to a fighting ally (hero first), defence buffs like shields; allies that already have the buff are
+  skipped. Effect recipes for these spells draw at `x.hp` / `x.hpf` (the target), never `pl.position`.
 - **Companion abilities (v105)**: every CSP spell needs a recipe in `SPX105` (motion `m`, amplitude `a`, speed `d`, effect
   `fx`/`shot`/`zone`); `v105_abil.py` casts all of them and fails when one is missing or two share the same motion settings.
   The spell lands at the motion's strike moment (`MV105[m].h`). Bites play the motion in place of the generic lunge.
+- **Attack step (v121)**: a hero melee basic attack's small step (`pl.step`) and swing lunge (1710) only close the gap to
+  the enemy being swung at (`swPlan`/`swRoom` in `2250-v121-attack-step-to-range.js`): no movement when already in range,
+  a step in when not, re-measured every frame during the lunge. Swinging at nothing keeps the old step.
 - **Baked attack keys**: re-baking with `BAKE=1 python3 v100_anim.py` nudges every move a little (the IK is not fully
   deterministic). When adding moves, splice only the new lines into `1705-v100-anim-baked-keys.js` (as v105 did for the flail).
 - **Monster moves (v107)**: each of the 18 zone monsters has one basic attack (strike/bite/spit/throw/bolt) and two signature
@@ -335,11 +343,12 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 
 ## Testing
 
-**How to test (owner's standing request, since v117):**
-1. **Smoke suite in the cloud on every push.** `.github/workflows/tests.yml` runs every test in `test/smoke.txt` on its own GitHub
-   runner, all at once (~15 min total). Check the run (Actions → Tests, or `gh run list` / `gh run view`) before calling work done.
-2. **Full suite in the cloud before a publish.** Actions → Tests → Run workflow → suite `full` (`test/full.txt`), or
-   `gh api -X POST repos/a-blauer/Ashen-wilds/actions/workflows/tests.yml/dispatches -f ref=main -f "inputs[suite]=full"`; every test runs in parallel. Publish only when it is green.
+**How to test (owner's standing request; since Oct 2026 off GitHub Actions, whose minutes ran low):**
+1. **Smoke suite after a change:** `cd test && python3 run_suite.py smoke` (`test/smoke.txt`, ~1 h, run it in the background).
+2. **Full suite before a publish:** `python3 run_suite.py full` (`test/full.txt`, several hours). Publish only when it is green.
+   `python3 run_suite.py full v57t.py v60t.py` re-runs just those lines after a fix.
+`run_suite.py` snapshots `dist/` first, runs one test at a time (`JOBS=2` on a 4+ core machine) and writes
+`test/out/suite/<suite>.log` and `.summary.txt`. `.github/workflows/tests.yml` is kept only as a manual fallback.
 Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
 `test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
 New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).
@@ -364,6 +373,7 @@ TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; eve
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
 python3 probe.py v120_idle_tilt.js # v120: idle wandering enemies never pitch their whole body (the old v42 sniff tilt/wobble is gone); expects maxPitch 0
+python3 probe.py v121_step.js     # v121: melee swings only step into hitting range; expects inRange/touching to stay 0, outOfRange to stop ~0.8×reach away, air to keep the old step
 python3 probe.py v120_tail.js # v120: beast tails stop smoothly after a run (stopMaxStep now ≪ old), lift a little while running, drag behind turns (turnLag > 0)
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
@@ -380,6 +390,7 @@ python3 v109_kingdom_shops.py # v109: the kingdom's stages (walls, tiles, plots,
 MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave109.json python3 v109_oldsave.py  # v108 kingdom save -> v109
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
+python3 v122_support.py      # v122: companion heal / shield / buff go to whoever needs it most (hero or companion)
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
 python3 v107_ai.py           # the AI picks signature moves in each zone;  v107_tail.py: Gravewyrm/Venomcoil tail during abilities (viewer build)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen

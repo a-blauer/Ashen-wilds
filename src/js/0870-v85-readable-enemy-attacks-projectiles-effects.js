@@ -147,10 +147,11 @@ function compSpells(dt){
     const t0=teamFoe(),L=t0?d2(t0.m.position,f.position):99,t=t0&&L<9?t0:null;
     c.sp.forEach(n=>{
       const sp=CSP[n];if(!sp||c.cdm[n]>0)return;
-      const help=sp.k=='shield'||sp.k=='heal'||sp.k=='buff';
-      if(help){const need=sp.k=='heal'?hero.hp<heroMax()*.7:enemies.some(e=>e.agg&&!e.dead&&d2(e.m.position,pl.position)<10);if(!need)return}
+      const help=sp.k=='shield'||sp.k=='heal'||sp.k=='buff';let al=null;
+      // v122: heal / shield / buff go to whoever needs it most: the hero or another companion (supPick122, 2250)
+      if(help){if(f.lk)return;al=supPick122(c,f,sp);if(!al)return}
       else if(!t||f.lk||L>kqSpRange(sp)+(t.boss?2.2:0))return;
-      c.cdm[n]=sp.cd;compCast(c,f,sp,t);
+      c.cdm[n]=sp.cd;compCast(c,f,sp,t,al);
     });
   });
 }

@@ -711,7 +711,7 @@ const MAP=(()=>{
      const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
      if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
   if(typeof v112Map=='function')v112Map(m,bio,DW,props,stamp); // v112: the themed instances II and III get their own ground (1981)
-  if(typeof cs121Map=='function')cs121Map(m); // v121: the ground under each camp (2250)
+  if(typeof cs123Map=='function')cs123Map(m); // v123: the ground under each camp (2270)
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
   m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!INSL.some(p=>(p.wa&&Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16)||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));
@@ -748,7 +748,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
-  if(typeof cs121Terrain=='function')cs121Terrain(); // v121: each camp's own ground shape (2250)
+  if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
 }
 
 let party=[],inv={},gear=[],eggs=[],incS={},eq={},px=2,py=2,foe=null,busy=false,lines=[],sel=[];
@@ -2771,7 +2771,8 @@ function cast_base(i){
   }
   hud();
 }
-function compCast(c,f,sp,t){
+function compCast(c,f,sp,t,ally){
+  if(ally&&ally!==pl&&(sp.k=='shield'||sp.k=='heal'||sp.k=='buff')&&compSup122(c,sp,ally))return; // v122: support spell on a companion
   const mult=sp.m||1,fx=sp.fx,P=f.position,col=sp.col,R2=sp.r||2.6;
   if(t){const w=V(t.m.position.x-P.x,0,t.m.position.z-P.z);if(w.lengthSq()>0)f.rotation.y=Math.atan2(w.x,w.z)}
   const d=t?V(t.m.position.x-P.x,0,t.m.position.z-P.z).normalize():V(0,0,1);
@@ -3861,10 +3862,10 @@ if(!CAMPS.length||!CAMPS[0].th){const byB={};CAMPS.forEach(C=>{const b=BIOMES[C.
   let gi=0,gw=-1;L.forEach((C,k)=>{const nx=L[(k+1)%L.length],w=((nx.an-C.an)+6.283)%6.283||6.283;if(w>gw){gw=w;gi=(k+1)%L.length}});
   const R2=L.slice(gi).concat(L.slice(0,gi));R2.forEach((C,k)=>{C.th=CTH[T[Math.min(T.length-1,Math.floor(k*T.length/R2.length))]]})}
  CAMPS.forEach((C,i)=>{C.i=i;const big=C.th.mem.some(m=>m[0]=='giant'||m[0]=='sandwyrm');C.cap=big?4:6})}
-if(typeof cs121Setup=='function')cs121Setup(); // v121: each camp's size (C.r), garrison spread (C.sp), design and seed (2250)
+if(typeof cs123Setup=='function')cs123Setup(); // v123: each camp's size (C.r), garrison spread (C.sp), design and seed (2270)
 // clear the trees inside each camp so the settlement has room
 CAMPS.forEach(C=>{const r=(C.r||CAMP_R)+1;for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(i*i+j*j>r*r)continue;const x=C.x+i,y=C.z+j;if(MAP[y]&&MAP[y][x]=='#'){nodeSet(y*W+x,false);MAP[y][x]='.'}}});
-const campAt=(x,z,r)=>CAMPS.find(C=>Math.hypot(C.x-x,C.z-z)<(r||C.r||CAMP_R)); // v121: each camp's own size
+const campAt=(x,z,r)=>CAMPS.find(C=>Math.hypot(C.x-x,C.z-z)<(r||C.r||CAMP_R)); // v123: each camp's own size
 const campAlive=C=>enemies.reduce((n,e)=>n+(e.camp===C&&!e.dead?1:0),0);
 // ---------- spawning ----------
 function spawn(init){
@@ -9602,10 +9603,11 @@ function compSpells(dt){
     const t0=teamFoe(),L=t0?d2(t0.m.position,f.position):99,t=t0&&L<9?t0:null;
     c.sp.forEach(n=>{
       const sp=CSP[n];if(!sp||c.cdm[n]>0)return;
-      const help=sp.k=='shield'||sp.k=='heal'||sp.k=='buff';
-      if(help){const need=sp.k=='heal'?hero.hp<heroMax()*.7:enemies.some(e=>e.agg&&!e.dead&&d2(e.m.position,pl.position)<10);if(!need)return}
+      const help=sp.k=='shield'||sp.k=='heal'||sp.k=='buff';let al=null;
+      // v122: heal / shield / buff go to whoever needs it most: the hero or another companion (supPick122, 2250)
+      if(help){if(f.lk)return;al=supPick122(c,f,sp);if(!al)return}
       else if(!t||f.lk||L>kqSpRange(sp)+(t.boss?2.2:0))return;
-      c.cdm[n]=sp.cd;compCast(c,f,sp,t);
+      c.cdm[n]=sp.cd;compCast(c,f,sp,t,al);
     });
   });
 }
@@ -18811,7 +18813,7 @@ function wdDeco(){const T0=performance.now();
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
-function CAMPS_PRE(r){return [].concat(...PMAP[r].ins.map(I=>I.cl.map((c,j)=>[Math.round(c[0]),Math.round(c[1]),typeof cs121Rad=='function'?cs121Rad(I,j):12])))} // v121: [x, y, camp radius]
+function CAMPS_PRE(r){return [].concat(...PMAP[r].ins.map(I=>I.cl.map((c,j)=>[Math.round(c[0]),Math.round(c[1]),typeof cs123Rad=='function'?cs123Rad(I,j):12])))} // v123: [x, y, camp radius]
 // ---------- instancing into 64x64 chunks (added to the chunk list after buildVI) ----------
 function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new THREE.Object3D(),cc=new THREE.Color(),groups={};
   const mat=(S,pi,p)=>{const key=S.k+':'+pi;if(mats[key])return mats[key];let m;
@@ -19085,10 +19087,14 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
+  // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's
+  // hitting range and stops there, so the hero never runs into or past the target
+  const lim=typeof SWLIM!='undefined'?SWLIM:null;
   const L=(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
   A.tick=function(u){
     try{if(typeof riding!='undefined'&&riding)return;if(u<u0||done>=1)return;
-      const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t),dd=(s-done)*L;done=s;if(dd<=0)return;
+      const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t);let dd=(s-done)*L;done=s;if(dd<=0)return;
+      if(lim&&lim.e){const room=swRoom(lim);if(room<=0){done=1;return}dd=Math.min(dd,room)}
       const ry=pl.rotation.y,nx=pl.position.x+Math.sin(ry)*dd,nz=pl.position.z+Math.cos(ry)*dd;
       if(typeof solid=='function'&&(solid(nx,nz)||solid(nx+Math.sin(ry)*.35,nz+Math.cos(ry)*.35)))return;
       pl.position.x=nx;pl.position.z=nz}catch(_){}}}}
@@ -22175,11 +22181,11 @@ var SPX105={
  'Rending Frenzy':{m:'frenzy',fx(x){if(!x.tp)return;[0,1,2].forEach(i=>setTimeout(()=>{if(!x.t||!x.t.m)return;fxClaw(x.t.m.position,fwd5(x.d,(i-1)*.6),0xe04a4a,3,.7+.15*i,200)},i*160))}},
  'Moon Devour':{m:'howl',a:.85,d:.9,start(x){x5('disc',0x9a7aff,950,(k,m)=>{const p=x.f.position;m.position.set(p.x,p.y+2.3+k*.4,p.z);m.scale.setScalar(.2+Math.min(1,k*3)*.9);m.material.opacity=.85*(1-Math.max(0,(k-.7)/.3));m.lookAt(cam.position)},{p:x.P.clone()})},
   fx(x){ring(x.P,0x9a7aff,6,520);enemies.forEach(e=>{if(e.dead||d2(e.m.position,x.P)>3.2)return;const q=gY(e.m.position,.8);for(let i=0;i<4;i++)setTimeout(()=>x5('oct',0xc8a0ff,420,(k,m)=>{const p=gY(x.f.position,.6);m.position.copy(q.clone().lerp(p,k));m.position.y+=Math.sin(k*Math.PI)*.6;m.scale.setScalar(.14);m.material.opacity=1-k*.5},{p:q}),i*70)})}},
- 'Stone Ward':{m:'shell',fx(x){fxOrbit(HP5,7,1.15,.9,800,6,(i,fn)=>x5('dod',0x9a8a70,800,(k,m)=>{fn(k,m);m.scale.setScalar(.22*(1-Math.max(0,(k-.7)/.3)));m.rotation.x+=.1},{add:0}));setTimeout(()=>fxDome(HP5,0xc0b090,1.2,1400,1),600)}},
+ 'Stone Ward':{m:'shell',fx(x){fxOrbit(x.hpf,7,1.15,.9,800,6,(i,fn)=>x5('dod',0x9a8a70,800,(k,m)=>{fn(k,m);m.scale.setScalar(.22*(1-Math.max(0,(k-.7)/.3)));m.rotation.x+=.1},{add:0}));setTimeout(()=>fxDome(x.hpf,0xc0b090,1.2,1400,1),600)}},
  'Bog Spit':{m:'spit',shot(sh){fxShot(sh,()=>{const g=new THREE.Mesh(g105().dod,new THREE.MeshLambertMaterial({color:0x5a8a3a}));g.scale.setScalar(.36);return g},0x7acc5a)},fx(x){burst(gY(x.f.position,.7).addScaledVector(x.d,.6),0x7acc5a,10,1,.6,.4)}},
  'Quake Stomp':{m:'stomp',fx(x){fxCracks(gY(x.P,0),0xc8a070,9,3,700);ring(x.P,0xc8a070,5.6,420);burst(gY(x.P,.2),0x8a7050,30,3,1.4,.6);shake(.12)}},
  'Swallow':{m:'gulp',fx(x){if(!x.tp)return;fxJaws(x.tp,0x6a9a3a,1.3,420,Math.atan2(x.d.x,x.d.z));setTimeout(()=>{const p=x.f.position;burst(gY(p,.9),0x9aff7a,12,.6,1.2,.6)},300)}},
- "Mountain's Embrace":{m:'shell',a:1.25,d:1.15,fx(x){const p=pl.position.clone();for(let i=0;i<8;i++){const a=i/8*6.283;x5('box',0x8a8070,1600,(k,m)=>{const u=k<.2?k/.2:k>.8?(1-k)/.2:1;m.scale.set(.5,2.2*u,.5);m.position.set(p.x+Math.cos(a)*1.5,p.y+1.1*u,p.z+Math.sin(a)*1.5)},{p:p.clone(),add:0,r:[0,a,0]})}fxDome(HP5,0xb0a080,1.35,1600,0)}},
+ "Mountain's Embrace":{m:'shell',a:1.25,d:1.15,fx(x){const p=x.hp.clone();for(let i=0;i<8;i++){const a=i/8*6.283;x5('box',0x8a8070,1600,(k,m)=>{const u=k<.2?k/.2:k>.8?(1-k)/.2:1;m.scale.set(.5,2.2*u,.5);m.position.set(p.x+Math.cos(a)*1.5,p.y+1.1*u,p.z+Math.sin(a)*1.5)},{p:p.clone(),add:0,r:[0,a,0]})}fxDome(x.hpf,0xb0a080,1.35,1600,0)}},
  'Sonic Screech':{m:'roar',a:.75,d:.85,fx(x){fxWaves(gY(x.P,.8),x.d,0xc0a0ff,5,3.4,380,.8);burst(gY(x.P,.9).addScaledVector(x.d,.5),0xe0d0ff,10,1.5,.5,.3)}},
  'Gale Dive':{m:'dive',fx(x){const a=gY(x.P,.6),b=a.clone().addScaledVector(x.d,8);for(let i=0;i<3;i++)x5('box',0xbfe8d0,360,(k,m)=>{m.position.copy(a.clone().lerp(b,.5));m.lookAt(b);m.scale.set(.06,.06,8*Math.min(1,k*3));m.position.y+=(i-1)*.25;m.material.opacity=.8*(1-k)},{p:a.clone()});
   fxRise(b.clone().lerp(a,.5),8,1.5,.8,700,(i,q,fn)=>x5emo('🪶',q,700,(k,s)=>fn(k,s),.35))}},
@@ -22198,34 +22204,34 @@ var SPX105={
  'Wisp Bolt':{m:'hop',a:.7,shot(sh){fxShot(sh,()=>{const g=new THREE.Group();for(let i=0;i<3;i++){const m=new THREE.Mesh(g105().oct,addMat(0x9fe8ff));m.scale.setScalar(.18);g.add(m)}tw(1300,k=>g.children.forEach((m,i)=>{const a=k*25+i*2.1;m.position.set(Math.cos(a)*.22,Math.sin(a)*.22,0)}),()=>{});return g},0x9fe8ff)}},
  'Bone Shards':{m:'shake',shotAll:1,shot(sh){fxShot(sh,()=>{const g=new THREE.Group(),b=new THREE.Mesh(g105().bone,new THREE.MeshLambertMaterial({color:0xe8e0c8}));b.rotation.x=Math.PI/2;g.add(b);
     [-1,1].forEach(s=>{const k=new THREE.Mesh(g105().sph,new THREE.MeshLambertMaterial({color:0xe8e0c8}));k.scale.setScalar(.1);k.position.z=s*.22;g.add(k)});tw(900,k=>{g.rotation.z=k*30},()=>{});return g})}},
- 'Radiance':{m:'bow',fx(x){fxPillar(pl.position,0xffe08a,.6,4,900);for(let i=0;i<6;i++){const a=i/6*6.283;x5('box',0xffe08a,700,(k,m)=>{const p=pl.position;m.position.set(p.x+Math.cos(a)*.6,p.y+1.5,p.z+Math.sin(a)*.6);m.rotation.set(0,-a,0);m.scale.set(.04,3*Math.min(1,k*3),.04);m.material.opacity=1-k},{p:pl.position.clone()})}
-  fxRise(pl.position.clone(),10,.9,2,1000,(i,q,fn)=>x5emo('✨',q,1000,fn,.35))}},
+ 'Radiance':{m:'bow',fx(x){fxPillar(x.hp,0xffe08a,.6,4,900);for(let i=0;i<6;i++){const a=i/6*6.283;x5('box',0xffe08a,700,(k,m)=>{const p=x.hp;m.position.set(p.x+Math.cos(a)*.6,p.y+1.5,p.z+Math.sin(a)*.6);m.rotation.set(0,-a,0);m.scale.set(.04,3*Math.min(1,k*3),.04);m.material.opacity=1-k},{p:x.hp.clone()})}
+  fxRise(x.hp.clone(),10,.9,2,1000,(i,q,fn)=>x5emo('✨',q,1000,fn,.35))}},
  'Soul Siphon':{m:'channel',fx(x){if(!x.t)return;const T=x.t;fxBeam(()=>gY(x.f.position,.7),()=>gY(T.m?T.m.position:x.tp,.9),0xb07aff,.14,700,0xe0c8ff);
   fxRise(gY(x.tp,.6),3,.4,.8,700,(i,q,fn)=>x5emo('👻',q,700,fn,.4))}},
- 'Spectral Ward':{m:'howl',a:.55,d:.8,fx(x){fxOrbit(HP5,6,1.1,1.1,1400,4,(i,fn)=>x5('cone',0xb0a0ff,1400,(k,m)=>{fn(k,m);m.scale.set(.1,.32,.1);m.material.opacity=.9*(1-Math.max(0,(k-.8)/.2))},{}));ring(pl.position,0xb0a0ff,4,500)}},
+ 'Spectral Ward':{m:'howl',a:.55,d:.8,fx(x){fxOrbit(x.hpf,6,1.1,1.1,1400,4,(i,fn)=>x5('cone',0xb0a0ff,1400,(k,m)=>{fn(k,m);m.scale.set(.1,.32,.1);m.material.opacity=.9*(1-Math.max(0,(k-.8)/.2))},{}));ring(x.hp,0xb0a0ff,4,500)}},
  'Spore Puff':{m:'shake',a:1.2,d:1.1,fx(x){fxRise(gY(x.P,0),14,1.6,1.4,900,(i,q,fn)=>x5('sph',[0xc08aff,0xe0b0ff][i%2],900,(k,m)=>{fn(k,m);m.scale.setScalar(.18+k*.25)},{p:q}));x5emo('🍄',gY(x.P,1.4),700,(k,s)=>{s.position.y+=.01;s.material.opacity=1-k},.55)}},
  'Web Snare':{m:'spit',a:.7,d:.9,shot(sh,x){fxShot(sh,()=>{const g=new THREE.Mesh(g105().sph,addMat(0xe8e8ff));g.scale.setScalar(.3);return g});if(x.tp){const tt=Math.min(1.1,x.P.distanceTo(x.tp)/12)*1000;setTimeout(()=>{const p=x.t&&x.t.m?x.t.m.position.clone():x.tp;fxWeb(p,0xe8e8ff,1.1,2100)},tt)}}},
  'Choking Spores':{m:'puff',a:1.2,d:1.1,zone(z,x){const T=(z.n||8)*(z.iv||.5)*1000;fxFall(z.p,26,z.R*.85,2.6,T,(i,q,fn)=>x5('oct',[0x7ad8a0,0xa0e8c0][i%2],T*.45,(k,m)=>{fn(k,m);m.scale.setScalar(.1)},{p:q}))}},
  "Widow's Kiss":{m:'kiss',fx(x){if(!x.tp)return;x5emo('💋',gY(x.tp,1.6),700,(k,s)=>{s.position.y+=.008;s.material.opacity=1-k;s.scale.setScalar(.5+k*.3)},.5);burst(gY(x.tp,.9),0xd02a4a,16,1.2,1,.5);
   for(let i=0;i<5;i++)setTimeout(()=>{if(x.t&&x.t.m)burst(gY(x.t.m.position,.9),0xd02a4a,2,.2,-.4,.7)},200+i*140)}},
  'Brood Swarm':{m:'channel',a:1.1,d:.9,zone(z,x){const T=(z.n||8)*(z.iv||.4)*1000;for(let i=0;i<10;i++){const a0=r5(0,6.283),rr=r5(.4,z.R*.9);x5emo('🐝',z.p.clone(),T,(k,s)=>{const a=a0+k*18*(i%2?1:-1);s.position.set(z.p.x+Math.cos(a)*rr,z.p.y+.6+Math.sin(k*30+i)*.25,z.p.z+Math.sin(a)*rr);s.material.opacity=k>.9?(1-k)*10:1},.32)}}},
- 'Pack Howl':{m:'howl',a:1.1,d:1.1,fx(x){for(let i=0;i<4;i++)setTimeout(()=>x5('ring',0xffb060,700,(k,m)=>{const p=pl.position;m.position.set(p.x,p.y+.2+k*2,p.z);m.rotation.x=-Math.PI/2;m.scale.setScalar(1.6-k*.6);m.material.opacity=.9*(1-k)},{p:pl.position.clone()}),i*140);
-  fxRise(pl.position.clone(),5,1,1.6,900,(i,q,fn)=>x5emo('🐾',q,900,fn,.4))}},
+ 'Pack Howl':{m:'howl',a:1.1,d:1.1,fx(x){for(let i=0;i<4;i++)setTimeout(()=>x5('ring',0xffb060,700,(k,m)=>{const p=x.hp;m.position.set(p.x,p.y+.2+k*2,p.z);m.rotation.x=-Math.PI/2;m.scale.setScalar(1.6-k*.6);m.material.opacity=.9*(1-k)},{p:x.hp.clone()}),i*140);
+  fxRise(x.hp.clone(),5,1,1.6,900,(i,q,fn)=>x5emo('🐾',q,900,fn,.4))}},
  'Savage Pounce':{m:'maul',fx(x){if(!x.tp)return;ring(x.tp,0xe8833a,3,320);burst(gY(x.tp,.4),0xe8c08a,24,2.4,1.5,.5);shake(.15);const T=x.t;fxOrbit(()=>T&&T.m?gY(T.m.position,1.6):x.tp,3,.35,0,1100,9,(i,fn)=>x5emo('💫',x.tp.clone(),1100,fn,.3))}},
  'Alpha Roar':{m:'roar',a:1.3,d:1.15,fx(x){x5('sph',0xffa040,620,(k,m)=>{m.position.copy(gY(x.P,.5));m.scale.setScalar(.5+k*6.5);m.material.opacity=.4*(1-k)},{p:x.P.clone()});fxWaves(gY(x.P,.7),x.d,0xffa040,3,3.8,420,1.6);burst(gY(x.P,.2),0xc8a070,30,3.6,.8,.6);shake(.2)}},
- 'Earthen Bulwark':{m:'stomp',a:.6,d:.9,fx(x){const p=pl.position.clone();for(let i=0;i<12;i++){const a=i/12*6.283;x5('box',0xa09070,1500,(k,m)=>{const u=k<.25?k/.25:k>.8?(1-k)/.2:1;m.scale.set(.55,.9*u,.32);m.position.set(p.x+Math.cos(a)*1.25,p.y+.45*u+(i%2)*.0,p.z+Math.sin(a)*1.25)},{p:p.clone(),add:0,r:[0,-a+Math.PI/2,0]})}}},
+ 'Earthen Bulwark':{m:'stomp',a:.6,d:.9,fx(x){const p=x.hp.clone();for(let i=0;i<12;i++){const a=i/12*6.283;x5('box',0xa09070,1500,(k,m)=>{const u=k<.25?k/.25:k>.8?(1-k)/.2:1;m.scale.set(.55,.9*u,.32);m.position.set(p.x+Math.cos(a)*1.25,p.y+.45*u+(i%2)*.0,p.z+Math.sin(a)*1.25)},{p:p.clone(),add:0,r:[0,-a+Math.PI/2,0]})}}},
  'Boulder Toss':{m:'toss',shot(sh){fxShot(sh,()=>{const g=new THREE.Mesh(g105().dod,new THREE.MeshLambertMaterial({color:0x8a8070}));g.scale.setScalar(.55);tw(1300,k=>{g.rotation.x=k*14;g.rotation.y=k*9},()=>{});return g},0xa09070)}},
  'Tectonic Slam':{m:'stomp',a:1.3,d:1.2,fx(x){fxSpikes(gY(x.P,0),0x8a7a60,12,3.4,1.4,900,3);fxCracks(gY(x.P,0),0xc08050,12,3.6,900);ring(x.P,0xc08050,7,500);shake(.28)}},
- 'Tailwind':{m:'rise',a:.7,d:.9,fx(x){for(let i=0;i<3;i++){const ph=i*2.1;for(let j=0;j<10;j++)x5('box',0xbfe8ff,900,(k,m)=>{const p=pl.position,a=ph+k*12+j*.25,y=.2+j*.17;m.position.set(p.x+Math.cos(a)*(.7+j*.03),p.y+y,p.z+Math.sin(a)*(.7+j*.03));m.rotation.y=-a;m.scale.set(.25,.03,.03);m.material.opacity=.8*(1-k)},{p:pl.position.clone()})}}},
+ 'Tailwind':{m:'rise',a:.7,d:.9,fx(x){for(let i=0;i<3;i++){const ph=i*2.1;for(let j=0;j<10;j++)x5('box',0xbfe8ff,900,(k,m)=>{const p=x.hp,a=ph+k*12+j*.25,y=.2+j*.17;m.position.set(p.x+Math.cos(a)*(.7+j*.03),p.y+y,p.z+Math.sin(a)*(.7+j*.03));m.rotation.y=-a;m.scale.set(.25,.03,.03);m.material.opacity=.8*(1-k)},{p:x.hp.clone()})}}},
  'Cyclone':{m:'spin',a:1,d:1.5,sg:-1,fx(x){const f=x.f;fxTornado(()=>f.position,0xbfe8d0,2.6,1.6,900);burst(gY(x.P,.3),0xbfe8d0,20,3,.6,.5)}},
  'Skyfall':{m:'rise',a:1.25,d:1.05,zone(z,x){const T=(z.n||6)*(z.iv||.4)*1000;fxFall(z.p,18,z.R*.9,5,T,(i,q,fn)=>x5('oct',0xffe8a0,T*.35,(k,m)=>{fn(k,m);m.scale.set(.08,.3,.08)},{p:q}))}},
- 'Scale Armor':{m:'shell',a:.7,d:.85,fx(x){fxOrbit(HP5,10,.9,1.0,900,7,(i,fn)=>x5('hex',0xd04a2a,900,(k,m)=>{fn(k,m);m.lookAt(cam.position);m.material.opacity=1-Math.max(0,(k-.7)/.3)},{}));setTimeout(()=>fxDome(HP5,0xd04a2a,1.05,1200,1),500)}},
+ 'Scale Armor':{m:'shell',a:.7,d:.85,fx(x){fxOrbit(x.hpf,10,.9,1.0,900,7,(i,fn)=>x5('hex',0xd04a2a,900,(k,m)=>{fn(k,m);m.lookAt(cam.position);m.material.opacity=1-Math.max(0,(k-.7)/.3)},{}));setTimeout(()=>fxDome(x.hpf,0xd04a2a,1.05,1200,1),500)}},
  'Inferno':{m:'breath',a:1.15,d:1.3,fx(x){fxStream(gY(x.f.position,.8).addScaledVector(x.d,.4),x.d,0xff5a1a,40,3.6,.7,900,'ico',.3);setTimeout(()=>x5('disc',0x3a1a10,1600,(k,m)=>{m.material.opacity=.5*(1-k)},{p:gY(x.P,.04).addScaledVector(x.d,2),s:3,r:[-Math.PI/2,0,0],add:0}),400)}},
  'Cataclysm':{m:'roar',a:1.1,d:1.3,sg:1,fx(x){if(!x.tp)return;const p=x.tp.clone(),T=(x.sp.delay||1)*1000;x5('dod',0xff4a1a,T,(k,m)=>{m.position.set(p.x+6*(1-k),p.y+14*(1-k)+.3,p.z-3*(1-k));m.scale.setScalar(.9);m.rotation.x=k*10;if(Math.random()<.5)burst(m.position.clone(),0xff7a2a,2,.3,.3,.4)},{p:p.clone()})}},
- 'Mend':{m:'bow',a:.8,d:1.05,fx(x){fxRise(pl.position.clone(),9,.9,1.8,1100,(i,q,fn)=>x5emo('💖',q,1100,fn,.38));ring(pl.position,0x9affb0,2.6,600)}},
+ 'Mend':{m:'bow',a:.8,d:1.05,fx(x){fxRise(x.hp.clone(),9,.9,1.8,1100,(i,q,fn)=>x5emo('💖',q,1100,fn,.38));ring(x.hp,0x9affb0,2.6,600)}},
  'Hex':{m:'coil',a:.7,d:1.2,fx(x){if(!x.t)return;const T=x.t;const g=fxSigil(x.tp,0xb07aff,1.0,1500,5);tw(1500,()=>{if(T.m)g.position.set(T.m.position.x,T.m.position.y+.06,T.m.position.z)},()=>{});x5emo('👁️',gY(x.tp,1.9),1200,(k,s)=>{if(T.m)s.position.copy(gY(T.m.position,1.9+Math.sin(k*6)*.1));s.material.opacity=1-Math.max(0,(k-.7)/.3)},.45)}},
  'Requiem':{m:'howl',a:1.2,d:1.3,fx(x){for(let i=0;i<3;i++)setTimeout(()=>ring(x.P,0x9a7aff,6.5,600),i*200);fxRise(gY(x.P,.4),9,2.6,1.8,1200,(i,q,fn)=>x5emo(['🎵','🎶'][i%2],q,1200,fn,.4))}},
- 'Regrowth':{m:'bow',a:1.15,d:.95,fx(x){const p=pl.position.clone();for(let i=0;i<8;i++){const a=i/8*6.283;x5('cone',0x4a9a3a,1100,(k,m)=>{const u=k<.3?k/.3:k>.8?(1-k)/.2:1;m.position.set(p.x+Math.cos(a)*.9,p.y,p.z+Math.sin(a)*.9);m.scale.set(.1,1.1*u,.1);m.rotation.set(Math.sin(a)*.3,0,-Math.cos(a)*.3)},{p:p.clone(),add:0})}
+ 'Regrowth':{m:'bow',a:1.15,d:.95,fx(x){const p=x.hp.clone();for(let i=0;i<8;i++){const a=i/8*6.283;x5('cone',0x4a9a3a,1100,(k,m)=>{const u=k<.3?k/.3:k>.8?(1-k)/.2:1;m.position.set(p.x+Math.cos(a)*.9,p.y,p.z+Math.sin(a)*.9);m.scale.set(.1,1.1*u,.1);m.rotation.set(Math.sin(a)*.3,0,-Math.cos(a)*.3)},{p:p.clone(),add:0})}
   fxRise(p,8,1,1.6,1000,(i,q,fn)=>x5emo('🍃',q,1000,fn,.35))}},
  'Plague':{m:'puff',a:1.4,d:1.25,zone(z,x){const T=(z.n||8)*(z.iv||.5)*1000;for(let i=0;i<8;i++){const a0=i/8*6.283;x5('sph',0x4a6a2a,T,(k,m)=>{const a=a0+k*5;m.position.set(z.p.x+Math.cos(a)*z.R*.6,z.p.y+.4+Math.sin(k*7+i)*.2,z.p.z+Math.sin(a)*z.R*.6);m.scale.setScalar(1.1);m.material.opacity=.35*(k<.1?k*10:k>.85?(1-k)/.15:1)},{p:z.p.clone()})}
   for(let i=0;i<4;i++)x5emo('💀',z.p.clone(),T,(k,s)=>{const a=i*1.57-k*7;s.position.set(z.p.x+Math.cos(a)*z.R*.45,z.p.y+1+Math.sin(k*9+i)*.2,z.p.z+Math.sin(a)*z.R*.45);s.material.opacity=k>.9?(1-k)*10:.9},.38)}},
@@ -22235,11 +22241,13 @@ var SPX105={
 var SPXT105={bite:1,rain:1,chain:1,meteor:1};
 {const orig=compCast;compCast=function(c,f,sp,t){const name=Object.keys(CSP).find(k=>CSP[k]===sp),R=name&&SPX105[name];
   if(!FX105.on||!R||!f||!f.b||f._bo)return orig.apply(this,arguments);
+  const al=arguments[4]||null; // v122: the ally a heal / shield / buff goes to (the hero or a companion's model)
   const P=f.position.clone(),tp=t&&t.m?t.m.position.clone():null;if(tp){const w=V(tp.x-P.x,0,tp.z-P.z);if(w.lengthSq()>0)f.rotation.y=Math.atan2(w.x,w.z)}
-  const d=tp?V(tp.x-P.x,0,tp.z-P.z).normalize():V(Math.sin(f.rotation.y),0,Math.cos(f.rotation.y)),x={c,f,sp,t,P,d,tp,col:sp.col};
+  else if(al&&al!==f){const w=V(al.position.x-P.x,0,al.position.z-P.z);if(w.lengthSq()>.01)f.rotation.y=Math.atan2(w.x,w.z)}
+  const d=tp?V(tp.x-P.x,0,tp.z-P.z).normalize():V(Math.sin(f.rotation.y),0,Math.cos(f.rotation.y)),hp=(al||pl).position,x={c,f,sp,t,P,d,tp,col:sp.col,al,hp,hpf:()=>hp};
   try{R.start&&R.start(x)}catch(e){console.warn('v105 fx',e)}
   const fire=()=>{const n0=shots.length,z0=zones.length;
-    try{orig(c,f,sp,x.t)}catch(e){console.warn('v105 cast',e)}
+    try{orig(c,f,sp,x.t,al)}catch(e){console.warn('v105 cast',e)}
     x.P=f.position.clone();if(x.t&&x.t.m)x.tp=x.t.m.position.clone();
     try{R.fx&&R.fx(x)}catch(e){console.warn('v105 fx',e)}
     try{if(R.shot)shots.slice(n0).forEach((sh,i)=>{if(i==0||R.shotAll)R.shot(sh,x)})}catch(e){console.warn('v105 fx',e)}
@@ -28652,21 +28660,180 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .abpvl button{padding:1px 8px!important;font-size:.8rem!important}
 @media (max-width:640px){#xw .abpvc{height:180px}}
 </style>`);
-// ================= v121: camp sites — every camp is a place of its own =================
+// ================= v121: melee attacks step only into hitting range =================
+// Before: every melee basic attack pushed the hero forward a fixed amount — a small step (pl.step, ~0.35 tiles) plus the
+// v101 swing lunge (0.28, 0.5 on combo finishers) — however close the enemy already was. Hitting an enemy you were
+// standing next to walked you into its body, and a few swings in a row carried you through and past it.
+// Now: before each melee swing we find the enemy being swung at (the locked target if it is ahead, else the nearest
+// enemy in front) and the distance at which the swing already reaches it ("stand", a little inside the hit radius and
+// never closer than the two bodies touching). The step and the lunge together only close the gap to that distance:
+//  · out of range → the hero steps in (no more than the old step + lunge), stopping once in range;
+//  · in range     → the hero doesn't move;
+//  · the lunge re-measures the gap every frame, so an enemy that walks in during the wind-up stops it early.
+// Swinging at nothing (no enemy ahead) keeps the old step + lunge. Abilities (kqsLunge) already stop short and are untouched.
+var SWLIM=null;                     // {e,stand} for the swing being started; read by swingAnim's lunge (1710)
+var SWV121={on:true,FRONT:1.05,LOOK:2.6,STAND:.8,BODY:.95};
+// how far the hero may still move forward (along its facing) before reaching `stand` from the target
+function swRoom(lim){
+  const e=lim&&lim.e;if(!e||e.dead||!e.m)return 1e9;
+  const dx=e.m.position.x-pl.position.x,dz=e.m.position.z-pl.position.z;
+  if(Math.hypot(dx,dz)<=lim.stand)return 0;
+  const ry=pl.rotation.y,along=dx*Math.sin(ry)+dz*Math.cos(ry);
+  return along-lim.stand}
+// the enemy this swing is aimed at, and the distance to stop at
+function swPlan(rg,d){
+  if(!SWV121.on||!(rg>0)||!d||typeof enemies=='undefined')return null;
+  let best=null,bd=1e9;
+  const ok=e=>{
+    if(!e||e.dead||!e.m||!e.c)return 0;
+    const dx=e.m.position.x-pl.position.x,dz=e.m.position.z-pl.position.z,L=Math.hypot(dx,dz),bonus=(e.c.al?.5:0)+(e.boss?1.2:0);
+    if(L>rg+bonus+SWV121.LOOK)return 0;
+    if(L>.4&&Math.acos(Math.max(-1,Math.min(1,(dx*d.x+dz*d.z)/L)))>SWV121.FRONT)return 0;
+    return L};
+  if(typeof tgt!='undefined'&&tgt&&ok(tgt))best=tgt;
+  else for(const e of enemies){const L=ok(e);if(L&&L<bd){bd=L;best=e}}
+  if(!best)return null;
+  const reach=rg+(best.c.al?.5:0)+(best.boss?1.2:0),body=SWV121.BODY+(best.boss?1.2:0)+(best.c.al?.25:0);
+  const stand=Math.min(reach-.1,Math.max(body,reach*SWV121.STAND));
+  return {e:best,stand}}
+// run a melee attack with the plan in place, then trim the small step to the gap (the lunge trims itself)
+function swRun(f,self,args,rg,d){
+  let lim=null;try{lim=swPlan(rg,d)}catch(_){}
+  const s0=pl.step;SWLIM=lim;
+  try{return f.apply(self,args)}
+  finally{SWLIM=null;
+    try{if(lim&&pl.step&&pl.step!==s0&&pl.step.sp>0){
+      const room=Math.max(0,swRoom(lim)),go=Math.min(pl.step.t*pl.step.sp,room);
+      if(go<.01)pl.step=null;else pl.step.t=go/pl.step.sp}}catch(_){}}}
+// class basic attack (no weapon type behaviour): reach = class range (greatsword/greataxe a touch longer)
+{const f=swing_base;swing_base=function(){
+  let rg=0,d=null;
+  try{const C=CLS[hero.cls];if(C&&C.atk!='bow'&&C.atk!='staff'&&!(atkCd>0)&&party.length&&!hero.chan){
+    const w=eq.weapon&&canUse(eq.weapon)?eq.weapon:null,wt=w?itT(w).wt:null;rg=C.rng*(wt=='gs'||wt=='ga'?1.08:1);d=aimDir()}}catch(_){}
+  if(!d)return f.apply(this,arguments);
+  return swRun(f,this,arguments,rg,d)}}
+// weapon-type melee (swords, axes, halberd, claws…): reach = class range × weapon reach
+{const f=wMelee;wMelee=function(Q,C,s,raw,d){
+  let rg=0;try{rg=C.rng*Q.rg}catch(_){}
+  return swRun(f,this,arguments,rg,d)}}
+// ---------- v122 companion support spells pick their target ----------
+// Heal, shield and buff spells (CSP k 'heal' / 'shield' / 'buff') used to land only on the hero. Now the casting companion
+// looks at the hero and every companion on the field (itself included) and casts on whoever needs it most:
+//   heal   → the ally with the lowest health share, once someone is below 70% (the hero gets a small tie-break bonus)
+//   shield → the ally under the most pressure (enemies attacking it, recently hurt, low health) without a strong shield already
+//   buff   → attack buffs go to an ally that is fighting (hero first), defence buffs to the ally under the most pressure;
+//            an ally that already has this buff is skipped
+// supPick122 (called from compSpells, 0870) returns the target's model (pl or a follower); compCast (0130) hands a companion
+// target to compSup122, and the v105 effect recipes (1930) draw at x.hp, the target's position.
+// Companion shields and buffs live in SUP122 (a Map keyed by the companion object), so they are never saved with the companion.
+var SUP122=new Map(),SUP122H={hp:0,hitT:0},HT122=null,ABS122=0;
+function sup122(c){let o=SUP122.get(c);if(!o){o={sh:0,shT:0,bf:[],hp:c.h,hitT:0};SUP122.set(c,o)}return o}
+// total of one buff stat on a companion right now (e.g. 'paP', 'as', 'dr')
+function sup122Bf(c,k){const o=SUP122.get(c);if(!o||!o.bf.length)return 0;const now=performance.now();let v=0;for(const b of o.bf)if(b.t>now&&b.s[k])v+=b.s[k];return v}
+function sup122Shield(c){const o=SUP122.get(c);return o&&o.sh>0&&o.shT>performance.now()?o.sh:0}
+// everyone a support spell could land on: the hero, then each companion on the field near the caster
+function sup122Allies(f0){
+  const L=[];if(!(typeof AWD!='undefined'&&AWD.dead))L.push({m:pl,c:null,fr:hero.hp/Math.max(1,heroMax())});
+  fols.forEach((f,i)=>{const c=party[i];if(!f||!c||c.h<=0||c.emp||!f.visible)return;if(f0&&d2(f.position,f0.position)>14)return;
+    L.push({m:f,c,fr:c.h/Math.max(1,M(c))})});
+  return L}
+// how much an ally is being pressed: enemies winding up on it, enemies next to it, damage taken in the last 3s
+function sup122Threat(a){
+  const P=a.m.position,now=performance.now();let s=0;
+  enemies.forEach(e=>{if(e.dead||!e.agg||!e.m)return;if(e.atk&&e.atk.tg===a.m)s+=1;else if(d2(e.m.position,P)<3.5)s+=.35});
+  const ht=a.c?(SUP122.get(a.c)||{}).hitT||0:SUP122H.hitT;if(now-ht<3000)s+=.8;
+  return s}
+function sup122Fight(){return enemies.some(e=>e.agg&&!e.dead&&e.m&&d2(e.m.position,pl.position)<10)}
+function sup122HasBuff(a,sp){const now=performance.now();
+  if(!a.c)return (hero.buffs||[]).some(b=>b&&b.s===sp.buff&&b.t>now);
+  const o=SUP122.get(a.c);return !!(o&&o.bf.some(b=>b.s===sp.buff&&b.t>now))}
+var SUP122_OFF={paP:1,maP:1,as:1,crit:1,cdm:1,mspd:1};
+function supPick122(c,f,sp){
+  const A=sup122Allies(f);if(!A.length)return null;
+  let best=null,bs=-1e9;const take=(a,s)=>{if(s>bs){bs=s;best=a}};
+  if(sp.k=='heal'){
+    A.forEach(a=>{if(a.fr<.7)take(a,(1-a.fr)+(a.c?0:.05))});
+    return best&&best.m}
+  if(!sup122Fight())return null;
+  if(sp.k=='shield'){
+    const now=performance.now();
+    A.forEach(a=>{const mx=a.c?M(a.c):heroMax(),val=mx*(sp.v||.15),cur=a.c?sup122Shield(a.c):(hero.shT>now?hero.sh||0:0);
+      if(cur>=val*.5)return;take(a,sup122Threat(a)+(1-a.fr)*1.5+(a.c?0:.1))});
+    return best&&best.m}
+  if(sp.k=='buff'){
+    const off=Object.keys(sp.buff||{}).some(k=>SUP122_OFF[k]);
+    A.forEach(a=>{if(sup122HasBuff(a,sp))return;
+      if(off){const P=a.m.position,eng=enemies.some(e=>e.agg&&!e.dead&&e.m&&d2(e.m.position,P)<4.5);if(!eng&&a.c)return;
+        take(a,(eng?1:0)+(a.c?0:.5)+sup122Threat(a)*.2)}
+      else take(a,sup122Threat(a)+(1-a.fr)+(a.c?0:.1))});
+    return best&&best.m}
+  return null}
+// the spell lands on a companion (returns false when that companion can no longer take it: compCast then falls back to the hero)
+function compSup122(c,sp,ally){
+  const i=fols.indexOf(ally),tc=i>=0?party[i]:null;if(!tc||tc.h<=0||tc.emp)return false;
+  const P=ally.position,col=sp.col,mx=M(tc),now=performance.now(),o=sup122(tc);
+  if(sp.k=='heal'){const h=Math.max(1,Math.round(Math.min(mx-tc.h,mx*sp.v)));tc.h=Math.min(mx,tc.h+mx*sp.v);o.hp=tc.h;
+    dn(P,'+'+h,'#7dffa0',-10);ring(P,col,2.4,600)}
+  else if(sp.k=='shield'){const v=mx*sp.v*(1+(HS().shieldP||0));o.sh=Math.max(sup122Shield(tc),v);o.shT=now+(sp.dur||8)*1000;
+    ring(P,col,2.2,600);burst(gY(P,1),col,24,1.4,2,.6);dn(P,'🛡 '+Math.round(v),'#c8d8ff',-10);
+    if(sp.nova)enemies.forEach(e=>{if(!e.dead&&e.m&&d2(e.m.position,P)<2.8)compHit(c,e,sp.nova)})}
+  else if(sp.k=='buff'){o.bf=o.bf.filter(b=>b.t>now&&b.s!==sp.buff);o.bf.push({s:sp.buff,t:now+(sp.dur||8)*1000,i:sp.i});
+    ring(P,col,2.6,600);dn(P,sp.i||'✦','#ffe8a0',-10)}
+  return true}
+// companion stats: attack / defence buffs (paP maP pdP mdP) raise the matching stat while they last
+{const f=cStat;cStat=function(c,k){const v=f.apply(this,arguments);if(!SUP122.size||!c||c.st)return v;const b=sup122Bf(c,k+'P');return b?v*(1+b):v}}
+// damage to a companion: its damage-reduction buff, then its shield soaks the hit
+{const f=hitTarget;hitTarget=function(e,tg){const i=fols.indexOf(tg),me=i>=0?party[i]:null,h0=me?me.h:0;HT122=me?tg:null;ABS122=0;
+  try{return f.apply(this,arguments)}finally{HT122=null;if(me&&ABS122){me.h=h0;ABS122=0}}}}
+{const f=dmgCE;dmgCE=function(a,b){let d=f.apply(this,arguments);if(!HT122||!b||!SUP122.has(b))return d;
+  const i=fols.indexOf(HT122);if(i<0||party[i]!==b)return d;const o=SUP122.get(b),dr=sup122Bf(b,'dr');
+  if(dr)d=Math.max(1,Math.round(d*(1-Math.min(.75,dr))));
+  if(sup122Shield(b)>0){const s=Math.min(o.sh,d);o.sh-=s;d-=s;if(o.sh<=0)o.sh=0;if(d<=0){ABS122=1;dn(HT122.position,'Absorbed','#c8d8ff',-20,600);return 0}}
+  return d}}
+// every frame: attack-speed buffs speed up a companion's attacks, note who just took damage, drop what has run out
+function sup122Tick(dt){
+  const now=performance.now();
+  if(hero.hp<SUP122H.hp-.5)SUP122H.hitT=now;SUP122H.hp=hero.hp;
+  fols.forEach((f,i)=>{const c=party[i];if(!f||!c)return;const o=SUP122.get(c);
+    if(!o){if(c.h>0)sup122(c);return}
+    if(c.h<o.hp-.5)o.hitT=now;o.hp=c.h;
+    if(c.h<=0||c.emp){o.sh=0;o.bf.length=0;return}
+    if(o.sh>0&&o.shT<=now)o.sh=0;
+    if(o.bf.length)o.bf=o.bf.filter(b=>b.t>now);
+    const as=sup122Bf(c,'as');if(as&&f.cdA>0)f.cdA-=dt*as;
+    if(f.visible&&(o.sh>0||o.bf.length)&&Math.random()<dt*2.5)burst(gY(f.position,.8),o.sh>0?0xc8d8ff:0xffe08a,1,.4,.6,.4)});
+  if(SUP122.size>8)for(const c of SUP122.keys())if(!party.includes(c))SUP122.delete(c)}
+{const f=compSpells;compSpells=function(dt){f.apply(this,arguments);try{sup122Tick(dt)}catch(e){console.warn('v122 support',e)}}}
+// spell text: say who the spell helps now
+(function(){const D={
+  'Stone Ward':'Wraps the ally who needs it most (you or a companion) in stone that absorbs 22% of their max health.',
+  "Mountain's Embrace":'A mountain of stone shields the ally under the most pressure for 25% of their max health.',
+  'Spectral Ward':'Shields the ally under the most pressure for 26% of their max health and blasts enemies near them.',
+  'Earthen Bulwark':'Shields the ally under the most pressure for 20% of their max health.',
+  'Radiance':'Heals the most wounded ally (you or a companion) for 12% of their max health.',
+  'Mend':'Heals the most wounded ally (you or a companion) for 20% of their max health.',
+  'Regrowth':'Heals the most wounded ally (you or a companion) for 15% of their max health.',
+  'Pack Howl':'Rallies a fighting ally (you first): +15% physical attack for 8s.',
+  'Tailwind':'Gives a fighting ally (you first) +20% attack speed for 8s.',
+  'Scale Armor':'Gives the ally under the most pressure 15% damage reduction for 8s.'};
+  for(const n in D){const sp=CSP[n];if(!sp||!/^(heal|shield|buff)$/.test(sp.k))continue;
+    // keep the live numbers in the text if an earlier balance pass changed them
+    const pct=sp.k=='buff'?null:Math.round((sp.v||0)*100);sp.d=pct!=null?D[n].replace(/\d+% of their max health/,pct+'% of their max health'):D[n]}})();
+// ================= v123: camp sites — every camp is a place of its own =================
 // The 54 field camps (6 zones x 3 field instances x 3 camps) were built from ~20 shared outpost recipes with a wooden name
 // sign at the edge. Now every camp has:
 //   - its own size: C.r (8..16 tiles) instead of the fixed CAMP_R 12. The garrison spreads over C.sp (≈ 0.62 r), the zone
 //     map circle, the HUD camp label, the zone decorations' keep-out ring and the roaming groups' keep-out ring follow it.
 //   - its own ground: the heightfield is shaped round the camp at load (bowls, mounds, ridges, terraces, shelves, dunes,
-//     crags; cs121Terrain, called from 0045 right after the heights are made, so grass, trees and harvest nodes sit on the
-//     new ground) and the tiles under it are repainted (cs121Map, from the end of the 0045 map build).
-//   - its own set pieces matching its name (CS121B[key], built lazily like before by buildCamp, which this file replaces).
-//   - no sign: walking into a camp shows a small title card in the zone's lettering instead (cs121Card).
+//     crags; cs123Terrain, called from 0045 right after the heights are made, so grass, trees and harvest nodes sit on the
+//     new ground) and the tiles under it are repainted (cs123Map, from the end of the 0045 map build).
+//   - its own set pieces matching its name (CS123B[key], built lazily like before by buildCamp, which this file replaces).
+//   - no sign: walking into a camp shows a small title card in the zone's lettering instead (cs123Card).
 // Everything is seeded from the camp's position, so co-op partners see the same camp (the old seed was Math.random).
 // Camp key = 'z_k_j': zone, field instance (0 = I), camp number in that instance (the order of I.cl, as n3Camps uses).
 // The plan is a hoisted function so 0045 and 0250 can read it long before this file runs.
 
-function cs121H(x,y){const n=Math.sin(x*12.9898+y*78.233)*43758.5453;return n-Math.floor(n)}
+function cs123H(x,y){const n=Math.sin(x*12.9898+y*78.233)*43758.5453;return n-Math.floor(n)}
 // terrain ops (tile units, heights in world units) — t: list of
 //   ['bowl',depth,floor]  sunk floor (floor = flat share of r)      ['mound',h,top]  raised top (top = flat share of r)
 //   ['ridge',h,at,width]  a raised rim at at*r                       ['tiers',n,h]    n steps up to the centre (h<0: down)
@@ -28674,7 +28841,7 @@ function cs121H(x,y){const n=Math.sin(x*12.9898+y*78.233)*43758.5453;return n-Ma
 //   ['bumps',h,freq]      hummocks                                   ['dunes',h,freq] sand waves
 //   ['spire',h,dx,dz,rad] a crag at an offset                        ['dip',h,dx,dz,rad] a hollow at an offset (h<0)
 // lv: how strongly the ground inside is levelled first (default .85). gt: tile painted under the camp ('.', 'a' or 'g').
-function cs121Plan(){if(cs121Plan.P)return cs121Plan.P;
+function cs123Plan(){if(cs123Plan.P)return cs123Plan.P;
   const P={
   // ---------------- Kindlelight ----------------
   '0_0_0':{n:'Caustic Pool',r:13,t:[['bowl',1.7,.45]],gt:'a',sub:'A sunken basin where the goo pools and eats through bone'},
@@ -28736,13 +28903,13 @@ function cs121Plan(){if(cs121Plan.P)return cs121Plan.P;
   '5_2_0':{n:'Execution Yard',r:12,t:[['mound',.8,.85]],lv:1,gt:'.',sub:'The block is never dry'},
   '5_2_1':{n:'Nosferatu Crypt',r:10,t:[['bowl',1.2,.55]],gt:'a',sub:'A mausoleum sunk into a cold hollow'},
   '5_2_2':{n:'Blood Garden',r:14,t:[['tiers',2,.9]],lv:1,gt:'g',sub:'Red roses fed on something richer than rain'}};
-  return cs121Plan.P=P}
-function cs121At(z,k,j){return cs121Plan()[z+'_'+k+'_'+j]||null}
+  return cs123Plan.P=P}
+function cs123At(z,k,j){return cs123Plan()[z+'_'+k+'_'+j]||null}
 // the radius of camp j in instance I (decoration keep-out rings use it before CAMPS exists)
-function cs121Rad(I,j){const D=I&&I.fld?cs121At(I.z,I.k,j):null;return D?D.r:12}
+function cs123Rad(I,j){const D=I&&I.fld?cs123At(I.z,I.k,j):null;return D?D.r:12}
 // the camp's facing (shelves, tilts and the builders' main axis): seeded by position
-function cs121Ang(x,z){return cs121H(Math.round(x),Math.round(z))*6.283}
-function cs121Op(o,dx,dz,d,r,ca,sa,sd,x,y){const q=o[0],a=o[1];
+function cs123Ang(x,z){return cs123H(Math.round(x),Math.round(z))*6.283}
+function cs123Op(o,dx,dz,d,r,ca,sa,sd,x,y){const q=o[0],a=o[1];
   if(q=='mound')return a*(1-smt(o[2]*r,r,d));
   if(q=='bowl')return -a*(1-smt(o[2]*r,r*.95,d));
   if(q=='ridge'){const u=(d-o[2]*r)/(o[3]||2);return a*Math.exp(-u*u)}
@@ -28754,41 +28921,41 @@ function cs121Op(o,dx,dz,d,r,ca,sa,sd,x,y){const q=o[0],a=o[1];
   if(q=='spire'||q=='dip'){const ux=dx-o[2],uz=dz-o[3],e=Math.hypot(ux,uz)/o[4];if(e>=1)return 0;const w=1-e*e;return a*w*w}
   return 0}
 // heights: called from 0045 right after HF is filled (before the terrain mesh, trees, grass and nodes are placed)
-function cs121Terrain(){const P=cs121Plan(),DW=MAP.DW,ix=(i,j)=>(j+HPD)*HW+i+HPD;
+function cs123Terrain(){const P=cs123Plan(),DW=MAP.DW,ix=(i,j)=>(j+HPD)*HW+i+HPD;
   INSL.forEach(I=>{if(!I.fld)return;I.cl.forEach((c,j)=>{const D=P[I.z+'_'+I.k+'_'+j];if(!D)return;
-    const cx=Math.round(c[0]),cz=Math.round(c[1]),r=D.r,Rb=Math.min(r+4,17),an=cs121Ang(cx,cz),ca=Math.cos(an),sa=Math.sin(an),sd=cs121H(cz,cx)*100,lv=D.lv==null?.85:D.lv;
+    const cx=Math.round(c[0]),cz=Math.round(c[1]),r=D.r,Rb=Math.min(r+4,17),an=cs123Ang(cx,cz),ca=Math.cos(an),sa=Math.sin(an),sd=cs123H(cz,cx)*100,lv=D.lv==null?.85:D.lv;
     const ok=(x,y)=>x>0&&y>0&&x<W-1&&y<H-1&&MAP[y][x]&&MAP[y][x]!='~'&&DW[y*W+x]<0&&insAt(x,y)===I;
     let s=0,n=0;const r7=Math.ceil(r*.7);for(let y=cz-r7;y<=cz+r7;y++)for(let x=cx-r7;x<=cx+r7;x++)if(Math.hypot(x-cx,y-cz)<r*.7&&ok(x,y)){s+=HF[ix(x,y)];n++}
     const base=n?s/n:HF[ix(cx,cz)],R1=Math.ceil(Rb)+1;
     const L=[];let mn=1e9;
     for(let y=cz-R1;y<=cz+R1;y++)for(let x=cx-R1;x<=cx+R1;x++){const d=Math.hypot(x-cx,y-cz);if(d>Rb||!ok(x,y))continue;
       const k=ix(x,y),wl=lv*(1-smt(r*.8,Rb,d));let h=HF[k]*(1-wl)+base*wl,dv=0;
-      for(const o of D.t)dv+=cs121Op(o,x-cx,y-cz,d,r,ca,sa,sd,x,y);
+      for(const o of D.t)dv+=cs123Op(o,x-cx,y-cz,d,r,ca,sa,sd,x,y);
       h+=dv*(1-smt(r*.92,Rb,d));L.push(k,h,1-smt(r*.92,Rb,d));if(d<r)mn=Math.min(mn,h)}
     // dry camps stay above the water surface (y .02) everywhere; wet ones sink so their lowest ground is D.wet under it
     const sh=D.wet?(-D.wet-mn):Math.max(0,.4-mn);
     for(let i=0;i<L.length;i+=3)HF[L[i]]=L[i+1]+sh*L[i+2]})})}
 // tiles: called at the end of the 0045 map build (only '.', 'g' and 'a' are swapped, so walking, water and nodes don't change)
-function cs121Map(m){const P=cs121Plan();
+function cs123Map(m){const P=cs123Plan();
   INSL.forEach(I=>{if(!I.fld)return;I.cl.forEach((c,j)=>{const D=P[I.z+'_'+I.k+'_'+j];if(!D||!D.gt)return;const cx=Math.round(c[0]),cz=Math.round(c[1]),R=D.r*.88,R1=Math.ceil(R*1.3);
     for(let y=cz-R1;y<=cz+R1;y++)for(let x=cx-R1;x<=cx+R1;x++){const t=m[y]&&m[y][x];if(!t||'.ga'.indexOf(t)<0||insAt(x,y)!==I)continue;
-      const a=Math.atan2(y-cz,x-cx),lim=R*(.84+.16*Math.sin(a*3+cx)+.08*Math.sin(a*7+cz));const dd=Math.hypot(x-cx,y-cz);if(dd<lim&&cs121H(x*1.7,y*2.3)<1.15-dd/lim*.7)m[y][x]=D.gt}})})}
+      const a=Math.atan2(y-cz,x-cx),lim=R*(.84+.16*Math.sin(a*3+cx)+.08*Math.sin(a*7+cz));const dd=Math.hypot(x-cx,y-cz);if(dd<lim&&cs123H(x*1.7,y*2.3)<1.15-dd/lim*.7)m[y][x]=D.gt}})})}
 // sizes and seeds on the CAMPS records: called from 0250 right after CAMPS is made
-function cs121Setup(){const n={};CAMPS.forEach(C=>{const I=INSL[C.ig];if(!I)return;const j=n[C.ig]=(n[C.ig]==null?0:n[C.ig]+1),D=I.fld?cs121At(I.z,I.k,j):null;
-  C.j=j;C.key=I.z+'_'+I.k+'_'+j;C.des=D;C.r=D?D.r:12;C.sp=Math.max(4.5,Math.min(9.5,C.r*.62));C.ang=cs121Ang(C.x,C.z);C.seed=1+Math.floor(cs121H(C.x+.5,C.z-.5)*2e6)})}
+function cs123Setup(){const n={};CAMPS.forEach(C=>{const I=INSL[C.ig];if(!I)return;const j=n[C.ig]=(n[C.ig]==null?0:n[C.ig]+1),D=I.fld?cs123At(I.z,I.k,j):null;
+  C.j=j;C.key=I.z+'_'+I.k+'_'+j;C.des=D;C.r=D?D.r:12;C.sp=Math.max(4.5,Math.min(9.5,C.r*.62));C.ang=cs123Ang(C.x,C.z);C.seed=1+Math.floor(cs123H(C.x+.5,C.z-.5)*2e6)})}
 
 // ---------------- the set-piece kit ----------------
-// Shared low-poly geometries (never disposed: merges copy them). Animated pieces (CS121.an) and breakable boxes stay
+// Shared low-poly geometries (never disposed: merges copy them). Animated pieces (CS123.an) and breakable boxes stay
 // separate meshes; everything else is merged by material when the camp is built (one draw call per colour).
-var CS121={an:[],G:null,card:{C:null,t:0,seen:{}}};
-function cs121Geo(){if(CS121.G)return CS121.G;const T=THREE;
-  CS121.G={box:G_BOX,cyl:new T.CylinderGeometry(1,1,1,7),cyl4:new T.CylinderGeometry(1,1,1,4),hex:new T.CylinderGeometry(1,1,1,6),tcyl:new T.CylinderGeometry(.6,1,1,7),
+var CS123={an:[],G:null,card:{C:null,t:0,seen:{}}};
+function cs123Geo(){if(CS123.G)return CS123.G;const T=THREE;
+  CS123.G={box:G_BOX,cyl:new T.CylinderGeometry(1,1,1,7),cyl4:new T.CylinderGeometry(1,1,1,4),hex:new T.CylinderGeometry(1,1,1,6),tcyl:new T.CylinderGeometry(.6,1,1,7),
     cone:new T.ConeGeometry(1,1,7),cone4:new T.ConeGeometry(1,1,4),sph:new T.SphereGeometry(1,8,6),hemi:new T.SphereGeometry(1,9,4,0,Math.PI*2,0,Math.PI/2),
     ico:new T.IcosahedronGeometry(1,0),oct:G_OCT,dod:CG.dod,tor:new T.TorusGeometry(1,.18,5,12),arc:new T.TorusGeometry(1,.1,4,8,Math.PI),
     disc:new T.CircleGeometry(1,14),ring:new T.RingGeometry(.82,1,18),pln:G_PLN,link:new T.TorusGeometry(1,.3,3,6)};
-  return CS121.G}
+  return CS123.G}
 // merge every static mesh under g (nested groups too) by material; breakable boxes and kept (animated) meshes stay
-function cs121Merge(g){g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),M=new THREE.Matrix4(),by=new Map(),rm=[];
+function cs123Merge(g){g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),M=new THREE.Matrix4(),by=new Map(),rm=[];
   const walk=o=>{for(const c of o.children){if(c.userData.box||c.userData.keep)continue;
     if(c.isMesh){if(c.material.map)continue;M.multiplyMatrices(inv,c.matrixWorld);let e=by.get(c.material);if(!e)by.set(c.material,e={geo:[],sh:false});
       const gg=c.geometry.index?c.geometry.toNonIndexed():c.geometry.clone();if(gg.attributes.uv)gg.deleteAttribute('uv');gg.applyMatrix4(M);e.geo.push(gg);e.sh=e.sh||c.castShadow;rm.push(c)}
@@ -28806,7 +28973,7 @@ function cs121Merge(g){g.updateMatrixWorld(true);const inv=new THREE.Matrix4().c
     m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)})}
 
 // builds camp C into group g from its design (C.key); returns false when there is no design
-function cs121Build(C,g){const Q=cs121Geo(),R=C.r;let s=C.seed;
+function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const rn=()=>(s=s*16807%2147483647)/2147483647,rr=(a,b)=>a+rn()*(b-a),pk=L=>L[Math.floor(rn()*L.length)],P2=Math.PI/2,TAU=6.283;
   const gy=(x,z)=>GH(C.x+x,C.z+z),ca=Math.cos(C.ang),sa=Math.sin(C.ang),AN=C.ang;
   const ax=(u,v)=>[u*ca-v*sa,u*sa+v*ca]; // u along the camp's axis, v across it
@@ -28822,7 +28989,7 @@ function cs121Build(C,g){const Q=cs121Geo(),R=C.r;let s=C.seed;
   const scat=(n,r0,r1,rad,f)=>{for(let i=0;i<n;i++){const p=spot(r0,r1,rad);if(p)f(p[0],p[1],p[2],i)}};
   const ring=(n,r,f,j,a0)=>{j=j==null?.2:j;a0=a0==null?rn()*TAU:a0;for(let i=0;i<n;i++){const a=a0+i/n*TAU+rr(-j,j)*.6,d=r*rr(1-j*.3,1+j*.3);f(Math.cos(a)*d,Math.sin(a)*d,a,i)}};
   const keep=o=>{o.userData.keep=1;o.castShadow=false;return o};
-  const anim=(o,k,a,sp)=>{keep(o);CS121.an.push({C,o,k,a:a||.2,sp:sp||1,y0:o.position.y,x0:o.position.x,z0:o.position.z,ph:rn()*TAU,s0:o.scale.clone()});return o};
+  const anim=(o,k,a,sp)=>{keep(o);CS123.an.push({C,o,k,a:a||.2,sp:sp||1,y0:o.position.y,x0:o.position.x,z0:o.position.z,ph:rn()*TAU,s0:o.scale.clone()});return o};
   const flame=(x,y,z,col,k,inner)=>{k=k||1;const f1=put(Q.cone,G(col||0xff7a1a),x,y+.2*k,z,.2*k,.55*k,.2*k),f2=put(Q.cone,G(inner||0xffd36a),x,y+.14*k,z,.1*k,.32*k,.1*k);f1.castShadow=f2.castShadow=false;CFL.push(f1,f2);return f1};
   const halo=(x,z,r,col,op,y)=>{const o=put(Q.disc,T(col,op||.2),x,y||.05,z,r,r,1,-P2);o.castShadow=false;return o};
   // ground decals that follow the terrain (r0..r1 ring, wobbly edge)
@@ -29006,13 +29173,13 @@ function cs121Build(C,g){const Q=cs121Geo(),R=C.r;let s=C.seed;
     box,crate,barrel,urn,pole,stake,palis,banner,tent,aTent,table,rack,dummy,drum,cauldron,sack,skull,skullPole,bones,bonePile,ribcage,bigSkull,femur,grave,coffin,sarc,carcass,reeds,shroom,crystal,crystals,spike,
     pool,water,lily,deadTree,log,stump,web,cocoon,egg,eggs,nest,pod,hole,mound,figure,gargoyle,serpent,cage,chainPost,gallows,block,stocks,hedge,roseBush,fountain,catapult,ram,mausoleum,well,palm,pylon,throne,leanTo,
     icicles,ice,shell,meatRack,antlers,husk,scarab,burrowMouth,steam,wisp,ladder,R,Q,P2,TAU};
-  const B=cs121Designs(K)[C.key];if(!B)return false;
+  const B=cs123Designs(K)[C.key];if(!B)return false;
   B();return true}
 
 // ---------------- the 54 camps ----------------
 // Each design works in camp space (tiles from the camp centre); A(u,v) turns the camp's own axis (u along C.ang) into it.
-// The ground shape each one stands on is in cs121Plan (same key).
-function cs121Designs(K){
+// The ground shape each one stands on is in cs123Plan (same key).
+function cs123Designs(K){
   const {rn,rr,pk,A,AN,S,G,T,put,putY,sub,blk,take,spot,scat,ring,anim,flame,halo,patch,fire,brazier,torch,candle,candles,rock,slab,pillar,fallen,arch,wall,rubble,obelisk,runes,cracks,
     crate,barrel,urn,pole,stake,palis,banner,tent,aTent,table,rack,dummy,drum,cauldron,sack,skull,skullPole,bones,bonePile,ribcage,bigSkull,femur,grave,coffin,sarc,carcass,
     reeds,shroom,crystal,crystals,spike,pool,water,lily,deadTree,log,stump,web,cocoon,egg,eggs,nest,pod,hole,mound,figure,gargoyle,serpent,cage,chainPost,gallows,block,stocks,hedge,roseBush,fountain,catapult,ram,mausoleum,well,palm,pylon,throne,leanTo,
@@ -29335,11 +29502,11 @@ function cs121Designs(K){
 // buildCamp: the design when there is one (no sign), else the old outpost
 {const f=buildCamp;buildCamp=function(C){if(C.g)return;if(!C.des)return f.apply(this,arguments);
   const g=new THREE.Group();g.position.set(C.x,0,C.z);let ok=false;
-  try{ok=cs121Build(C,g)}catch(e){console.warn('v121 camp',C.key,e)}
-  if(!ok){C.boxes=[];CS121.an=CS121.an.filter(a=>a.C!==C);return f.apply(this,arguments)}
-  cs121Merge(g);scene.add(g);C.g=g;C.v121=1}}
+  try{ok=cs123Build(C,g)}catch(e){console.warn('v123 camp',C.key,e)}
+  if(!ok){C.boxes=[];CS123.an=CS123.an.filter(a=>a.C!==C);return f.apply(this,arguments)}
+  cs123Merge(g);scene.add(g);C.g=g;C.v123=1}}
 // animated pieces: bob, spin, pulse, orbit, puff — only for camps that are shown and near
-function cs121Tick(dt,now){const L=CS121.an;if(!L.length)return;const p=pl.position,t=now*.001;
+function cs123Tick(dt,now){const L=CS123.an;if(!L.length)return;const p=pl.position,t=now*.001;
   for(let i=0;i<L.length;i++){const a=L[i],C=a.C;if(!C.g||!C.g.visible)continue;if(Math.abs(C.x-p.x)>60||Math.abs(C.z-p.z)>60)continue;const o=a.o,w=t*a.sp+a.ph;
     if(a.k=='bob')o.position.y=a.y0+Math.sin(w)*a.a;
     else if(a.k=='spin'){o.rotation.y+=dt*a.sp;o.position.y=a.y0+Math.sin(w)*.15}
@@ -29348,21 +29515,21 @@ function cs121Tick(dt,now){const L=CS121.an;if(!L.length)return;const p=pl.posit
     else if(a.k=='puff'){const q=(w*.25)%1;o.scale.set(a.s0.x*(.6+q*.8),a.s0.y*(.5+q),a.s0.z*(.6+q*.8));o.position.y=a.y0+q*1.2;o.material.opacity=.22*(1-q)}}}
 // the camp's title card when you walk in (once per visit; again after you've been away a while)
 document.head.insertAdjacentHTML('beforeend',`<style>
-#ztc116.camp121{top:17%;min-width:min(380px,86%);padding:12px 26px 10px}#ztc116.camp121.on{animation:zt116 3.8s ease forwards}
-#ztc116.camp121 .ztt{font-size:clamp(1.25rem,3.2vw,2rem);letter-spacing:.05em}#ztc116.camp121 .ztd{width:min(260px,70%);margin:4px auto}#ztc116.camp121 .ztd svg{width:18px;height:18px}
-#ztc116.camp121 .zts{font-size:.86rem}#ztc116.camp121 .ztk,#ztc116.camp121 .ztf{font-size:.62rem}
+#ztc116.camp123{top:17%;min-width:min(380px,86%);padding:12px 26px 10px}#ztc116.camp123.on{animation:zt116 3.8s ease forwards}
+#ztc116.camp123 .ztt{font-size:clamp(1.25rem,3.2vw,2rem);letter-spacing:.05em}#ztc116.camp123 .ztd{width:min(260px,70%);margin:4px auto}#ztc116.camp123 .ztd svg{width:18px;height:18px}
+#ztc116.camp123 .zts{font-size:.86rem}#ztc116.camp123 .ztk,#ztc116.camp123 .ztf{font-size:.62rem}
 </style>`);
-function cs121Card(now){const st=CS121.card,p=pl.position;let C=null;
+function cs123Card(now){const st=CS123.card,p=pl.position;let C=null;
   for(const Q of CAMPS){if(!Q.des||!Q.g)continue;if(Math.hypot(Q.x-p.x,Q.z-p.z)<Q.r*.92){C=Q;break}}
   if(C===st.C)return;const prev=st.C;st.C=C;if(!C)return;
   if(prev===null&&now-(st.seen[C.key]||-1e9)<90000)return;st.seen[C.key]=now;
-  if(typeof zt116Show!='function'||typeof ZT116=='undefined')return;const el=ZT116.el;if(el&&/\bon\b/.test(el.className)&&!/camp121/.test(el.className))return; // a zone card is up
+  if(typeof zt116Show!='function'||typeof ZT116=='undefined')return;const el=ZT116.el;if(el&&/\bon\b/.test(el.className)&&!/camp123/.test(el.className))return; // a zone card is up
   const I=INSL[C.ig],Tz=ZT116.Z[I.z]||ZT116.Z[0],cl=typeof campCleared=='function'&&campCleared(C);
-  zt116Show(Tz,PMAP[I.z].n+' · Camp',C.th.n,C.des.sub,cl?'Cleared':'Garrison Lv '+zoneLv(C.x,C.z),'z'+I.z+' camp121');clearTimeout(ZT116.tm);ZT116.tm=setTimeout(()=>{if(ZT116.el)ZT116.el.className=''},3800)}
-{const f=campTick;campTick=function(dt,now){f.apply(this,arguments);try{cs121Tick(dt,now);if(now-CS121.card.t>350){CS121.card.t=now;cs121Card(now)}}catch(e){}}}
+  zt116Show(Tz,PMAP[I.z].n+' · Camp',C.th.n,C.des.sub,cl?'Cleared':'Garrison Lv '+zoneLv(C.x,C.z),'z'+I.z+' camp123');clearTimeout(ZT116.tm);ZT116.tm=setTimeout(()=>{if(ZT116.el)ZT116.el.className=''},3800)}
+{const f=campTick;campTick=function(dt,now){f.apply(this,arguments);try{cs123Tick(dt,now);if(now-CS123.card.t>350){CS123.card.t=now;cs123Card(now)}}catch(e){}}}
 // the garrison: build the instance's camps first (their pieces block tiles), then spread each camp's slots over its own size
 {const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{if(ROST.r!==r)return o;
   CAMPS.forEach(C=>{if(C.ig===r&&C.des&&!C.g)buildCamp(C)});
   ROST.slots.forEach(s=>{const C=s.camp;if(!C||!C.des||s.on)return;let x=s.x,z=s.z,n=0;
     do{const a=Math.random()*6.283,d=Math.sqrt(Math.random())*C.sp;x=Math.round(C.x+Math.cos(a)*d);z=Math.round(C.z+Math.sin(a)*d);n++}while(solid(x,z)&&n<40);
-    if(n<40){s.x=x;s.z=z;s.lv=Math.min(MAXLV,zoneLv(x,z)+(s.al?2:0))}})}catch(e){console.warn('v121 roster',e)}return o}}
+    if(n<40){s.x=x;s.z=z;s.lv=Math.min(MAXLV,zoneLv(x,z)+(s.al?2:0))}})}catch(e){console.warn('v123 roster',e)}return o}}
