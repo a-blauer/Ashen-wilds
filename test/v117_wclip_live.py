@@ -2,7 +2,7 @@
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
-LIB=open(os.path.dirname(os.path.abspath(__file__))+'/v116_wclip_lib.js').read()
+LIB=open(os.path.dirname(os.path.abspath(__file__))+'/v117_wclip_lib.js').read()
 def s(pg):
     ev=pg.evaluate
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="mage"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)

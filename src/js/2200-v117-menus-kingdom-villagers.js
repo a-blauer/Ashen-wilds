@@ -1,4 +1,4 @@
-// ================= v116 menus: Kingdom window + Villagers tab, menu clean-up, Fusion inside Companions, forge only at the Blacksmith =================
+// ================= v117 menus: Kingdom window + Villagers tab, menu clean-up, Fusion inside Companions, forge only at the Blacksmith =================
 // Menu list: Fusion and Sovereigns are gone from the ☰ menu (Fusion lives in the Companions window, the Sovereigns list is not needed;
 // the sealed-portal prompt still opens the portal list). New "🏰 Kingdom" button (B) opens the kingdom window anywhere:
 // Construction (plan + buildings, 1880) | Villagers (vlRender116 below) | Decorations (1910).

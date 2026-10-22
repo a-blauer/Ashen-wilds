@@ -1,4 +1,4 @@
-// v116 weapon clipping meter (injected by test/v116_wclip.py).
+// v116 weapon clipping meter (injected by test/v117_wclip.py).
 // The posed hero's body + outfit + armour vertices (CPU-skinned, arm/hand vertices left out) give a "shell": for every 2.5 cm
 // height band and 24 sectors round the body axis, the furthest reach of the shell. A weapon vertex whose distance from the axis is
 // less than the shell's reach in its band and sector (minus a small margin) is inside the robe / armour. Points within GRIP_R of

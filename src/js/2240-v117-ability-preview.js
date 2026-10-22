@@ -1,4 +1,4 @@
-// ================= v116 ability preview (Abilities window) =================
+// ================= v117 ability preview (Abilities window) =================
 // The selected ability's detail panel opens with a small stage (the shared preview renderer PV): your own hero, in your gear, plays
 // the ability's real cast pose (its kqsPoseT track, the same one castAnim plays) against a training dummy, and the ability's effect
 // appears in its own colour and shape: projectiles, rings round you, zones on the ground, lines, walls, charges, leaps, pulls,

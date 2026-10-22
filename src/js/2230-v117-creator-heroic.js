@@ -1,4 +1,4 @@
-// ================= v116 character creator: the class step shows the hero as they will start, in a heroic pose =================
+// ================= v117 character creator: the class step shows the hero as they will start, in a heroic pose =================
 // The old class-step preview (0140 ccPreview) built one model once, framed it on the first class, read the look from the wrong field
 // and dressed it in a temporary tier-1 armour set. Now every class gets its own model built the way the game builds the hero: the
 // class's animal (current beast rig) wearing exactly the starting gear (ccBegin: tier-0 weapon and chest, paladin shield) and the look

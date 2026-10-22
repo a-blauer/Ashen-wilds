@@ -1,4 +1,4 @@
-// ================= v116 frog Mage: how he carries his weapons =================
+// ================= v117 frog Mage: how he carries his weapons =================
 // The v93 carry grip is tuned on human arms (GRIP_B), and the frog's short arms sit right on his wide robe, so staves, wands and orbs
 // cut through the robe and armour. While he is not attacking, his weapon arm is posed by a two-bone IK to a hold point out to the
 // side (staff, wand) or in front (orb), and the weapon gets its own steady orientation: the staff stands upright beside him with its

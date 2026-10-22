@@ -1,4 +1,4 @@
-// ================= v116 zone title cards =================
+// ================= v117 zone title cards =================
 // Arriving in a zone instance (and in Duskhold the first time) shows one decorated title card in the zone's own style instead of the
 // plain text banners (the v56 arrival banner and the v112 second banner are muted): a small kicker (zone · instance), the place name
 // in the zone's lettering, an ornament with the zone's emblem, the place's line, and the enemy levels with the recommended power.

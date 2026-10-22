@@ -1,12 +1,12 @@
 # v116 weapon clipping: the frog Mage (or RACE=) with each weapon type and robe tier, idle / run / attack frames.
-# Prints weapon points inside the robe / armour shell (v116_wclip_lib.js) and writes out/v116_wclip_<race>.jpg (red = inside).
+# Prints weapon points inside the robe / armour shell (v117_wclip_lib.js) and writes out/v117_wclip_<race>.jpg (red = inside).
 #   RACE=frog (default)  WT=staff,wand,orb  MAX=… fail when any idle/run frame has more inside points than this (default 0)
 import os,sys,json,base64,re
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 HERE=os.path.dirname(os.path.abspath(__file__))
 COMMON=re.search(r'COMMON=r"""(.*?)"""',open(HERE+'/v114_beasts.py').read(),re.S).group(1)
-LIB=open(HERE+'/v116_wclip_lib.js').read()
+LIB=open(HERE+'/v117_wclip_lib.js').read()
 RACES={'rat':('warrior',1,'sword0'),'cat':('assassin',2,'dag1'),'frog':('mage',3,'sword0'),'badger':('paladin',4,'mace1'),'weasel':('ranger',5,'sling')}
 RACE=os.environ.get('RACE','frog');cls,rid,mv=RACES[RACE]
 WTS=os.environ.get('WT','staff,wand,orb' if RACE=='frog' else '').split(',')
@@ -37,7 +37,7 @@ def s(pg):
         'chest':{'heavy':['mail','hauberk','cuirass','warplate','aegis'],'medium':['padded','brigandine','vest','longcoat','mantle'],'light':['wraps','scale','garb','shroud','raiment'],'cloth':['robe','moss','pyre','vestments','regalia']}[A],
         'boots':{'heavy':['hobnail','sabaton','greave','stomper','tread'],'medium':['trail','pelt','stalker','strider','gale'],'light':['soft','wrapped','ashstep','glass','storm'],'cloth':['sandal','slipper','pyre','lich','tempest']}[A]}
     r=ev(JS,[cls,rid,[w for w in WTS if w] or [None],mv,SL])
-    open(play.TMP+'/v116_wclip_%s.jpg'%RACE,'wb').write(base64.b64decode(r['img'].split(',')[1]))
+    open(play.TMP+'/v117_wclip_%s.jpg'%RACE,'wb').write(base64.b64decode(r['img'].split(',')[1]))
     tot={}
     for q in r['res']:
         k='carry' if q['f'] in('idle','run1','run2','run3') else 'attack';tot.setdefault(k,[0,0]);tot[k][0]+=q['in'];tot[k][1]=max(tot[k][1],q['d'])

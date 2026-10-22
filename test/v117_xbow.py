@@ -1,4 +1,4 @@
-# v116: the crossbow bolt starts at the crossbow's front end (out/v116_xbow.png shows the bolt frozen just after the shot)
+# v116: the crossbow bolt starts at the crossbow's front end (out/v117_xbow.png shows the bolt frozen just after the shot)
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -21,6 +21,6 @@ def s(pg):
     _=("""()=>{const rd=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rd.setSize(420,320);const c=new THREE.PerspectiveCamera(18,420/320,.05,80);
       const cv=document.createElement('canvas');cv.width=840;cv.height=320;const x=cv.getContext('2d'),P=pl.position,f=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y)),sd=new THREE.Vector3(f.z,0,-f.x);
       [[sd.clone().multiplyScalar(3.2),0],[f.clone().multiplyScalar(-2.6).add(sd.clone().multiplyScalar(1.2)),1]].forEach(([o,i])=>{c.position.set(P.x+o.x,P.y+1.4,P.z+o.z);c.lookAt(P.x+f.x*.6,P.y+1.05,P.z+f.z*.6);rd.render(scene,c);x.drawImage(rd.domElement,i*420,0)});return cv.toDataURL('image/png')}""")
-    import base64;open(play.TMP+'/v116_xbow.png','wb').write(base64.b64decode(url.split(',')[1]))
+    import base64;open(play.TMP+'/v117_xbow.png','wb').write(base64.b64decode(url.split(',')[1]))
 play.run(s)
 print('FAILURES:',FAIL if FAIL else 'none')
