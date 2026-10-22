@@ -69,7 +69,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
 | v124 clean map edges: the rim of every zone instance is a tidy row of themed ledge stones with a spaced row of themed scenery behind (`v124Edge`, kits per instance), the old rim trees and boulders are no longer drawn (`v124Rim`), choppable trees grow in groves inside the fields (`v124Groves`) | `2280-v124-clean-edges.js` (hooks in `0045`, `0060`, `0070`, `1680`) |
 | v127 balance: companion spells (`BAL127_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB127`), companion self-reaction fix (`CH127`), knife volleys | `2300-v127-balance.js` (knobs `WB127` in `0580`, no-lunge throws `SWNOL` in `1710`) |
-| v128 Whirlwind hold: while the warrior spins, arms out and the weapon held out level from the body, edge leading (`WW128`, `ww128Tick`, after every animation layer; visual only) | `2310-v128-whirlwind-hold.js` |
+| v128 Whirlwind hold: while the warrior spins, two-handed weapons (greatsword, great axe, halberd) are held out level in both hands (arm IK `fc116IK`), dual axes one in each outstretched hand, edge leading (`WW128`, `ww128Tick`, after every animation layer; visual only). Companions follow the facing from before the spin (`plFaceY`, used in `compTick`), so they no longer circle the hero | `2310-v128-whirlwind-hold.js` (edit in `0860`) |
 
 ## Conventions (read before changing code)
 
@@ -420,7 +420,7 @@ python3 v109_kingdom_shops.py # v109: the kingdom's stages (walls, tiles, plots,
 MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave109.json python3 v109_oldsave.py  # v108 kingdom save -> v109
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
-python3 v128_whirl.py         # v128: Whirlwind holds the weapon out level, arms out (frames in out/v128_whirl.jpg)
+python3 v128_whirl.py         # v128: Whirlwind holds the weapon out level (two hands / dual axes out), companion does not circle (frames in out/v128_whirl.jpg)
 python3 v122_support.py      # v122: companion heal / shield / buff go to whoever needs it most (hero or companion)
 python3 v124_edge_test.py      # v124: clean edges (no choppable rim trees, groves choppable, edge pieces apart); v124_edges.py: edge screenshots
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
