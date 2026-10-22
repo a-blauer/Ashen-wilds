@@ -1,15 +1,15 @@
-# v116 weapon clipping: the frog Mage (or RACE=) with each weapon type and robe tier, idle / run / attack frames.
+# v116 weapon clipping: the raven Mage (or RACE=) with each weapon type and robe tier, idle / run / attack frames.
 # Prints weapon points inside the robe / armour shell (v117_wclip_lib.js) and writes out/v117_wclip_<race>.jpg (red = inside).
-#   RACE=frog (default)  WT=staff,wand,orb  MAX=… fail when any idle/run frame has more inside points than this (default 0)
+#   RACE=raven (default)  WT=staff,wand,orb  MAX=… fail when any idle/run frame has more inside points than this (default 0)
 import os,sys,json,base64,re
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 HERE=os.path.dirname(os.path.abspath(__file__))
 COMMON=re.search(r'COMMON=r"""(.*?)"""',open(HERE+'/v114_beasts.py').read(),re.S).group(1)
 LIB=open(HERE+'/v117_wclip_lib.js').read()
-RACES={'rat':('warrior',1,'sword0'),'cat':('assassin',2,'dag1'),'frog':('mage',3,'sword0'),'badger':('paladin',4,'mace1'),'weasel':('ranger',5,'sling')}
-RACE=os.environ.get('RACE','frog');cls,rid,mv=RACES[RACE]
-WTS=os.environ.get('WT','staff,wand,orb' if RACE=='frog' else '').split(',')
+RACES={'rat':('warrior',1,'sword0'),'cat':('assassin',2,'dag1'),'raven':('mage',3,'sword0'),'badger':('paladin',4,'mace1'),'weasel':('ranger',5,'sling')}
+RACE=os.environ.get('RACE','raven');cls,rid,mv=RACES[RACE]
+WTS=os.environ.get('WT','staff,wand,orb' if RACE=='raven' else '').split(',')
 MAX=int(os.environ.get('MAX','0'));FAIL=[]
 JS=COMMON+r"""(a)=>{const [cls,race,wts,mv,SL]=a,FW=230,FH=300,{rd,sc,pc}=RT.mk(FW,FH),V=THREE.Vector3,res=[];
   const arm=CLS[cls].arm,tiers=[null,0,2,4],ST=window.STY_,frames=['idle','run1','run2','run3','wind-up','strike'];

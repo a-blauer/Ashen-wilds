@@ -1,5 +1,5 @@
-# v117 close-ups: the frog's weapon paw (staff / wand / orb; idle, run, attack) from four sides, and the ring on every race.
-#   out/v117_grip_frog.jpg   out/v117_rings.jpg      PART=grip,rings
+# v117 close-ups: the Mage's (raven since v127) weapon paw (staff / wand / orb; idle, run, attack) from four sides, and the ring on every race.
+#   out/v117_grip_mage.jpg   out/v117_rings.jpg      PART=grip,rings
 import os,sys,re,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -27,7 +27,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     if 'grip' in PART:
         r=ev(GRIP,[os.environ.get('WT','staff,wand,orb').split(','),os.environ.get('FR','idle,run').split(',')]);print(r['info'],r['err'])
-        open(play.TMP+'/v117_grip_frog.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
+        open(play.TMP+'/v117_grip_mage.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
     if 'rings' in PART:
         r=ev(RINGS,[]);print('rings',r['err'])
         open(play.TMP+'/v117_rings.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))

@@ -23,6 +23,7 @@ v117_creator.py
 v119_abprev.py
 v116_slots.py
 v117_grip_atk.py
+v127_raven.py
 v122_support.py
 # Not run in the cloud: v116_coop.py and v116_vis.py open three game windows at once and time out on 2-core machines
 # (they did before v117 too). Run them by hand on a fast computer after co-op changes.

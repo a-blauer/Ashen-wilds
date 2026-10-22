@@ -1,17 +1,17 @@
 # v114 beast races: model sheets per race (base model, head/paws, helmets of the class, gear) and checks.
 #   python3 v114_beasts.py                       -> test/out/v114_<race>_base.jpg, _detail.jpg, _helms.jpg, _gear.jpg
-#   RACE=cat,frog (default all)  PART=base,helms,gear (default all)  BIG=1 larger helm close-ups
+#   RACE=cat,raven (default all)  PART=base,helms,gear (default all)  BIG=1 larger helm close-ups
 import os,sys,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP;PART=os.environ.get('PART','base,helms,gear').split(',')
-RACES={'rat':('warrior',1,'gs','gs1'),'cat':('assassin',2,'dagger','dag1'),'frog':('mage',3,'staff','sword0'),'badger':('paladin',4,'mace','mace1'),'weasel':('ranger',5,'bow','sling'),'raven':('mage',6,'staff','sword0')}
+RACES={'rat':('warrior',1,'gs','gs1'),'cat':('assassin',2,'dagger','dag1'),'raven':('mage',3,'staff','sword0'),'badger':('paladin',4,'mace','mace1'),'weasel':('ranger',5,'bow','sling')}
 ARM={'warrior':'heavy','paladin':'heavy','assassin':'light','ranger':'medium','mage':'cloth'}
 SETS={'heavy':['barbute','bucket','crowned'],'medium':['feather','deadeye','wind'],'light':['bandana','venom','dusk'],'cloth':['witch','tallcowl','star']}
 STY={'heavy':['nasal','horned','great','visage','winged'],'medium':['hood','pelt','cowl','skullhood','galemask'],'light':['wrap','viper','ashcowl','glassmask','stormhood'],'cloth':['linen','hat','circlet','diadem','crown']}
 CH={'heavy':['mail','hauberk','cuirass','warplate','aegis'],'medium':['padded','brigandine','vest','longcoat','mantle'],'light':['wraps','scale','garb','shroud','raiment'],'cloth':['robe','moss','pyre','vestments','regalia']}
 BT={'heavy':['hobnail','sabaton','greave','stomper','tread'],'medium':['trail','pelt','stalker','strider','gale'],'light':['soft','wrapped','ashstep','glass','storm'],'cloth':['sandal','slipper','pyre','lich','tempest']}
-RL=[r for r in os.environ.get('RACE','rat,cat,frog,badger,weasel').split(',') if r in RACES]
+RL=[r for r in os.environ.get('RACE','rat,cat,raven,badger,weasel').split(',') if r in RACES]
 FAIL=[]
 def chk(n,ok,info=''):
     print(('ok   ' if ok else 'FAIL ')+n,info)
@@ -88,6 +88,6 @@ def s(pg):
         if 'gear' in PART:
             sets=[{'n':'class outfit','r':0}]+[{'n':arm+' T%d'%(t+1),'arm':arm,'helm':STY[arm][t],'chest':CH[arm][t],'boots':BT[arm][t],'r':min(4,t)} for t in (0,2,4)]
             r=ev(GEAR,[cls,rid,sets,wt,mv]);print(r['info']);save('v114_%s_gear.jpg'%race,r['img']);chk(race+' gear renders',not r['err'],r.get('err'))
-BRD_TAIL={'rat':range(11),'cat':range(11),'frog':[],'badger':range(4),'weasel':range(10),'raven':range(1)}
+BRD_TAIL={'rat':range(11),'cat':range(11),'badger':range(4),'weasel':range(10),'raven':range(1)}
 play.run(s,w=900,hh=600)
 print('FAILURES:',FAIL if FAIL else 'none')

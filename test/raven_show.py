@@ -22,7 +22,7 @@ JS=COMMON+r"""(a)=>{const V=THREE.Vector3,FW=420,FH=560,{rd,sc,pc}=RT.mk(FW,FH,0
   sets.forEach(S=>{const E={};['helm','chest','boots'].forEach(sl=>{if(S[sl]){const tp=RT.find(sl,'cloth',S[sl]);if(tp>=0)E[sl]=RT.it(tp,S.r)}});
     if(S.wpn){const wtp=ITPL.findIndex((t,i)=>t.sl=='weapon'&&t.cls=='mage'&&itT(RT.it(i)).wt=='staff');if(wtp>=0)E.weapon=RT.it(wtp,S.r)}
     if(S.bare){mdS().G.clear();BR.bare=true}
-    if(H)sc.remove(H);H=RT.beast('mage',6,E,S.look);BR.bare=false;sc.add(H);if(!S.wpn)RT.hideW(H);RT.idle(H,800);
+    if(H)sc.remove(H);H=RT.beast('mage',3,E,S.look);BR.bare=false;sc.add(H);if(!S.wpn)RT.hideW(H);RT.idle(H,800);
     out[S.n]=sheet(H,S.lab);if(S.head)out[S.n+'_head']=heads(H);if(S.arms)out[S.n+'_arms']=arms(H)});
   return {out,err:RT.err||null}}"""
 def s(pg):

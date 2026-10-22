@@ -27411,7 +27411,7 @@ n3Zone(5,2,{roam:[['executioner',2],['nosferatu',3],['bloodhound',1],['vampm',1]
 try{n3Camps()}catch(e){console.error('v113 camps',e)}
 Object.keys(N3.def).forEach(k=>{const D=N3.def[k];if(D.rig&&D.rig.spit)SPITC[D.rig.name]=D.rig.spit});
 // ================= v114: beast races — one engine for every class's animal form =================
-// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 frog (Mage) · 4 badger
+// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 raven (Mage; the frog until v127) · 4 badger
 // (Paladin) · 5 weasel (Ranger). Each class has exactly one animal; other values are dropped for that class (`lkFull`).
 // The v112 rat (1990-v112-rat-race.js) is replaced by this engine; the rat itself is rebuilt here with a proper skull.
 // Every beast uses the hero skeleton retargeted in place (rest pose moved to the beast's proportions + a hunch, tail
@@ -27421,10 +27421,11 @@ Object.keys(N3.def).forEach(k=>{const D=N3.def[k];if(D.rig&&D.rig.spit)SPITC[D.r
 //  * head: one skull+muzzle loft per race (`SN` rings back→front) plus ears, eyes, nose, jaw, whiskers of its own.
 //  * paws: a flat palm grown out of the hand rings, fingers (count, length, claws, pads, webbing per race); bare feet
 //    get toes. Equipped boots fit because they are lofted over the race's own foot rings.
-//  * tail: part of the skinned body mesh along a chain of tail bones (tl0…), swaying with movement (none for the frog).
+//  * tail: part of the skinned body mesh along a chain of tail bones (tl0…), swaying with movement (the raven's
+//    is one bone carrying a fan of feathers).
 //  * helmets: `brHelm` builds every helm style of the game over the race's skull (ear openings where the ears are,
 //    eye slits at the eyes, hoods, hats, circlets, masks), so each class's gear has its own animal version.
-//  * a crouch (hips flexed, knees bent, feet flat) layered on every animation except riding; the frog squats deep.
+//  * a crouch (hips flexed, knees bent, feet flat) layered on every animation except riding.
 // Look fields reused: skin = fur / hide colour, eye = eye colour. Hair, face and body sex are ignored.
 var BR={on:false,R:null,C:null,bare:false,feet:false,P:null,mask:false};
 var BR_MASK={cowl:1,galemask:1,wind:1,deadeye:1,wrap:1,bandana:1,viper:1,ashcowl:1,glassmask:1,stormhood:1,venom:1,dusk:1};
@@ -27813,7 +27814,7 @@ function brTailNear(D,x,y,z){const T=D.TP;if(!T)return false;for(let i=0;i+1<T.l
     let u=((x-p[0])*dx+(y-p[1])*dy+(z-p[2])*dz)/L2;u=Math.max(0,Math.min(1,u));const r=p[3]+(q[3]-p[3])*u+.014,ex=x-(p[0]+dx*u),ey=y-(p[1]+dy*u),ez=z-(p[2]+dz*u);if(ex*ex+ey*ey+ez*ez<r*r)return true}return false}
 {const f=mdLoft;mdLoft=function(B,R,o){if(!BR.on||BR_BODY||!BR.R||!BR.R.TP)return f.apply(this,arguments);const D=BR.R,k0=o&&o.keep;
   return f.call(this,B,R,Object.assign({},o||{},{keep:m=>(!k0||k0(m))&&!brTailNear(D,m.x,m.y,m.z)}))}}
-// ================= v114: the five beasts — rat (Warrior), cat (Assassin), frog (Mage), badger (Paladin), weasel (Ranger) =================
+// ================= v114: the five beasts — rat (Warrior), cat (Assassin), raven (Mage, v127), badger (Paladin), weasel (Ranger) =================
 // Each entry: proportions (`pre` v99 preset, `shear` hunch, `crouch` [hip, knee]), body ring multipliers (`TR`, `armK`, `legK`,
 // `foot`), skull rings `SN` (back → front: [z, y centre, half-width, top, underside]), eye and ear positions, the tail path
 // `TP`, paw / toe recipes, colours (`cols(look)`), and `head(B,P,o)` that builds the face. Helm fitting values: `muzzleZ`
@@ -27877,57 +27878,140 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
     [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.036,.09,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.008,z+.009,.022,.064,.009,-.12,s*.1,-s*.26);
       k.p('head','cone4','c',C.FURD,s*(x+.013),y+.04,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
     mdKit(B,k);return H}});
-// ======================================================== 3 · FROG (Mage) ========================================================
-// A squat frog: a wide flat head with bulging eyes on top, a wide mouth, a pale throat; smooth spotted hide, no tail, no ears;
-// long webbed fingers and toes with round pads; a deep squat on bent legs.
-brDef(3,{key:'frog',n:'Frog',cls:'mage',furN:'Hide',
-  fur:['#4a7a3a','#2e5a4a','#7a8a3a','#c87a2a','#4a5a9a','#6a4a3a'],eye:['#e0a020','#c84020','#e8d8a0','#78c040','#101010'],
-  cols:L=>brPal(L,{BELLY:mdMix(mdC(L.skin),0xe8e0b0,.62),FURL:mdMix(mdC(L.skin),0xe8e0b0,.3),PINK:mdMix(mdC(L.skin),0xd8c8a0,.5),MOUTH:0x2a1818,NOSE:0x1a1410}),
-  pre:{pelvis:[1.35,.9,1.15],spine:[1.25,.85,1.1],chest:[1.25,.85,1.15],neck:[1.4,.3,1],head:1.1,arm:[1.1,1.05],hand:1.5,leg:[1.15,1.2],foot:1.3,cape:[1.1,1]},
-  shear:{spine:.1,chest:.2,neck:.22},crouch:[.56,1],pose:{sp:.06,shz:.3,el:-.4},run:{sp:.04},look:[.04,0],
-  TR:[[1.15,1.2,1.22,1.22,1.18,1.08,1,1,.98,1.3,1.4,1.4],[1.1,1.25,1.3,1.35,1.3,1.15,1,.95,1,1.3,1.4,1.4],[1.05,1.1,1.12,1.12,1.1,1.05,1,1,1,1.2,1.3,1.3]],
-  armK:[1,1,.96,.9,.9,.85],legK:[1.1,1.15,1.05,.95,.92,.88,.85],foot:{len:1.35,w:1,h:.7},
-  SN:[[-.125,1.095,.07,.045,.04],[-.095,1.118,.118,.05,.065],[-.055,1.13,.148,.048,.08],[-.015,1.133,.158,.045,.085],[.025,1.13,.152,.042,.085],[.065,1.125,.14,.038,.08],[.105,1.118,.12,.034,.07],[.145,1.113,.092,.03,.055],[.185,1.109,.06,.024,.04],[.22,1.106,.03,.016,.025]],
-  EYEP:[.108,1.178,-.012],EAR:null,muzzleZ:.16,hoodZ:-.03,crownZ:-.08,hatZ:-.1,bandY:1.16,bandZ:-.04,
-  topW:m=>{const dx=Math.abs(m.x)-.108,dy=m.y-1.178,dz=m.z+.012;return dx*dx+dy*dy+dz*dz<.054*.054},
-  eyeW:m=>false,
-  TP:null,paw:{n:4,len:[.04,.046,.046,.038],rad:1.15,pad:true,web:true,curl:1.05,spread:.013,palm:1.15,plen:1.1,thumb:false,colOf:C=>C.FUR,padColOf:C=>C.FURL},handCol:C=>C.FUR,
-  toes:{n:5,len:.055,claw:0,web:true,pad:true,dew:false,w:1.1,spread:1.2,colOf:C=>C.FUR,padColOf:C=>C.FURL},
-  paint(P,C){const spot=m=>Math.sin(m.x*83+m.y*47)*Math.sin(m.z*71-m.y*39)>.72;
-    P.paint.torso=m=>m.s>.45&&m.y>.5?C.BELLY:spot(m)?C.FURD:C.FUR;P.paint.torsoLo=m=>m.s>.5&&m.y>.47?C.BELLY:spot(m)?C.FURD:C.FUR;
-    P.paint.leg=(m,s)=>m.s>.5&&m.r.part=='thigh'?mdMix(C.FUR,C.BELLY,.5):spot(m)?C.FURD:C.FUR;P.paint.fore=m=>spot(m)?C.FURD:C.FUR},
-  head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1.3,jaw:1.1,top:.8,len:1,fwd:0};const H=P._H=mdHeadR(P);
-    const spot=m=>Math.sin(m.x*83+m.y*47)*Math.sin(m.z*71-m.y*39)>.7;
-    brSkull(B,D,m=>{const z=m.r.p[2];if(z>-.07&&m.s<.07&&m.s>-.08&&Math.abs(m.c)>.3)return C.MOUTH; // the mouth line along the whole edge
-      if(m.s<-.3)return C.BELLY;if(m.s>.3&&m.s<.5&&z<.08&&z>-.1)return C.FURL; // the pale fold along the back
-      if(m.s>.4&&spot(m))return C.FURD;return C.FUR},{seg:16,capB:{dz:.004},noNeck:true});
-    // a throat sac under the jaw joining the chest, nostrils as two small bumps at the tip
-    k.p('head','sph2','c',C.BELLY,0,1.075,.02,.095,.045,.085);k.P[k.P.length-1].w=[['head',.5],['neck',.5]];
-    const tip=D.SN[D.SN.length-1];[-1,1].forEach(s=>{k.p('head','sph2','c',C.FUR,s*.014,tip[1]+.014,tip[0]+.004,.007,.005,.006);k.p('head','box','c',C.NOSE,s*.014,tip[1]+.017,tip[0]+.007,.004,.002,.003)});
-    // bulging eyes on the corners of the head: an eyelid ridge, the gold eye, a horizontal pupil, a highlight; a tympanum disc behind each
-    [-1,1].forEach(s=>{const [x,y,z]=D.EYEP;k.p('head','sph2','c',C.FURD,s*x,y-.014,z,.05,.036,.05);k.p('head','sph2','c',C.EYE,s*x,y,z,.044,.042,.044);
-      k.p('head','box','c',0x080606,s*(x+.014),y+.004,z+.03,.024,.006,.012,0,s*.6,0);k.p('head','box','c',0xf0ece0,s*(x+.02),y+.02,z+.022,.005,.004,.004);
-      const tz=-.075,tx=brSurfX(D,tz,1.128)+.002;k.p('head','cyl','c',mdSh(C.FUR,.8),s*tx,1.128,tz,.02,.004,.02,0,0,s*Math.PI/2);k.p('head','cyl','c',C.FURD,s*(tx+.002),1.128,tz,.011,.004,.011,0,0,s*Math.PI/2)});
+// ======================================================== 3 · RAVEN (Mage, v127; replaced the v114 frog) ========================================================
+// A bipedal raven: a round feathered skull with a heavy curved beak (nasal bristles over its base, a hooked tip, the gape
+// line), dark side-set eyes, shaggy throat hackles and a ruffled nape; a deep keeled chest, a thick feathered neck; arms that
+// are wings (flat feathers lie along each forearm from the wrist to the elbow, like a folded wing; bare arms also carry
+// coverts on the upper arm); scaly three-fingered talon hands with a thumb; feathered thighs over thin scaled shanks; bird feet with
+// three forward toes and a back toe, all hooked claws; a stiff wedge tail of long feathers that pivots at the rump.
+// Built with the v114 beast engine (2100): same hero skeleton retargeted, one tail bone (tl0) carrying the whole fan.
+// Feathers are one shared low-poly blade (`rvFeatherG`: a flat diamond, widest near the tip, a ridge along the shaft).
+var RV_FG=null,RV={helm:null};  // RV.helm: the style of the helm being built with this raven (2300)
+function rvFeatherG(){if(RV_FG)return RV_FG;const g=new THREE.BufferGeometry(),
+    v=[0,0,0, 0,1,0, -1,.62,0, 1,.62,0, 0,.52,1, 0,.52,-1];
+  g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex([0,3,4, 0,4,2, 0,2,5, 0,5,3, 1,4,3, 1,2,4, 1,5,2, 1,3,5]);
+  return RV_FG=g}
+// the outermost surface round a forearm (bare arm or sleeve), measured from the vertices already built on its forearm / hand
+// bones: returns rad(t, o) = how far out the surface lies at t along the forearm (from the wrist) in direction o
+function rvArmR(B,a,A2,fw,FL){const b1=B.O.indexOf(a+'1'),b2=B.O.indexOf(a+'2'),pts=[];
+  for(const t in B.L){const L=B.L[t],p=L.p,si=L.si,sw=L.sw,n=p.length/3;for(let v=0;v<n;v++){let w=0;for(let j=0;j<4;j++){const ix=si[v*4+j];if(ix==b1||ix==b2)w+=sw[v*4+j]}if(w<.3)continue;
+    const dx=p[v*3]-A2.x,dy=p[v*3+1]-A2.y,dz=p[v*3+2]-A2.z,al=dx*fw.x+dy*fw.y+dz*fw.z;if(al<-.004||al>FL+.04)continue;pts.push(al,dx-fw.x*al,dy-fw.y*al,dz-fw.z*al)}}
+  return (t,o)=>{let r=0;for(let i=0;i<pts.length;i+=4){if(Math.abs(pts[i]-t)>.014)continue;const x=pts[i+1],y=pts[i+2],z=pts[i+3],L=Math.hypot(x,y,z);if(L>1e-6&&(x*o.x+y*o.y+z*o.z)/L>.88&&L>r)r=L}return r}}
+// the tip radius of a straight feather from (t0, r0) along the forearm so that it stays above the surface everywhere along it
+function rvLine(rad,o,t0,len,r0,FL,m){let rt=r0*.8;for(let t=t0+.02;t<=Math.min(FL,t0+len);t+=.01){const r=rad(t,o);if(r<=0)continue;rt=Math.max(rt,r0+(r+m-r0)*len/(t-t0))}return rt}
+// one feather on bone bn: from base along dir, flat side facing nrm; len, half-width w, half-thickness th
+function rvFeather(k,bn,col,base,dir,nrm,len,w,th,t,wt){const V=THREE.Vector3,y=new V(...dir).normalize(),z=new V(...nrm);z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
+  const x=new V().crossVectors(y,z),m=new THREE.Matrix4().makeBasis(x.multiplyScalar(w),y.multiplyScalar(len),z.multiplyScalar(th||.004));m.setPosition(new V(...base));
+  const p={bn,geo:rvFeatherG(),t:t||'c',col,m};if(wt)p.w=wt;k.P.push(p);return p}
+// a feather direction turned by yaw (about y) then pitch (down from horizontal)
+function rvDir(yaw,pitch){return [Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)]}
+brDef(3,{key:'raven',n:'Raven',cls:'mage',furN:'Plumage',
+  fur:['#2a2c35','#262232','#30333a','#3a3029','#5c5e64','#d8d6d0'],eye:['#3a2414','#0e0c0c','#d0a030','#9ec4e0','#9a40e0'],
+  cols:L=>{const f=mdC(L.skin),pale=(((f>>16)&255)+((f>>8)&255)+(f&255))>480;
+    return brPal(L,{FURD:mdSh(f,.62),FURL:mdMix(f,0x6c78c8,pale?.08:.34),BELLY:mdMix(f,0x8a8a90,.05),
+      BEAK:pale?0xb8b4ac:mdMix(0x26262c,f,.2),BEAKL:pale?0xd0ccc4:mdMix(0x3a3c46,f,.15),MOUTH:0x0c0c0e,NOSE:0x101012,
+      SCALE:pale?0xa8a49c:mdMix(0x2e2e34,f,.2),SCALED:pale?0x8a867e:mdMix(0x1e1e22,f,.2),CLAW:0x0c0c0e,PINK:pale?0xa8a49c:mdMix(0x2e2e34,f,.2)})},
+  // upright but leaning: narrow hips, a deep chest, a thick short neck, long wing-arms, long thin legs
+  pre:{pelvis:[.86,1,.92],spine:[.86,1.02,.98],chest:[.96,1.02,1.12],neck:[1.1,1.12,1.1],head:1.12,arm:[1.12,.84],hand:1.05,leg:[1.22,.84],foot:1.05,cape:[1.15,1]},
+  shear:{spine:.12,chest:.24,neck:.28},crouch:[.34,.66],pose:{sp:.1,ch:.05,shx:-.22,el:-.5},run:{sp:.14,shx:-.3,el:-.2},look:[.05,0],atk:{shz:.3,shx:-.15},
+  // torso rings (hips → neck): the keel bulges forward at the breast, the neck ruff is thick
+  TR:[[.88,.88,.87,.9,.98,1.05,1.04,.94,.9,1.04,1.06,1.06],[.95,1,1.06,1.12,1.2,1.25,1.22,1.12,1.04,1.08,1.1,1.08],[.98,1,1,1,1.02,1.06,1.1,1.1,1.04,1.04,1.06,1.06]],
+  armK:[.9,.9,.86,.8,.78,.7],legK:[1.04,1.12,1.06,.72,.5,.44,.4],foot:{len:.32,w:.58,h:.62},
+  // skull + beak, back → front: [z, y centre, half-width, top, underside]
+  SN:[[-.108,1.162,.04,.04,.04],[-.088,1.166,.074,.072,.066],[-.058,1.17,.094,.09,.084],[-.022,1.172,.1,.094,.09],[.014,1.168,.095,.087,.088],
+      [.044,1.158,.078,.07,.078],[.066,1.146,.052,.06,.06],[.088,1.141,.042,.052,.048],[.114,1.136,.034,.044,.037],[.14,1.129,.027,.036,.028],
+      [.164,1.119,.02,.028,.019],[.184,1.106,.014,.021,.011],[.198,1.09,.009,.014,.006],[.206,1.072,.004,.007,.003]],
+  EYEP:[.07,1.176,.03],EAR:null,muzzleZ:.066,hoodZ:-.004,crownZ:-.05,hatZ:-.06,bandY:1.2,bandZ:-.04,
+  TP:[[0,.62,-.09,.04],[0,.5,-.24,.04],[0,.38,-.38,.03]],tailSway:[.025,.04,1.1,2.2],
+  tailCol:(m,C)=>C.FUR,
+  paw:{n:3,len:[.034,.04,.035],rad:.95,claw:.017,spread:.0125,palm:.95,plen:1,curl:1.1,thumb:true,tlen:.022,pad:true,colOf:C=>C.SCALE,padColOf:C=>C.SCALED},handCol:C=>C.SCALE,
+  toes:{n:3,len:.085,claw:.02,colOf:C=>C.SCALE,padColOf:C=>C.SCALED},
+  paint(P,C){const row=m=>((m.y*34+Math.abs(m.x)*18)%1)<.24;
+    P.paint.torso=m=>m.s<-.45&&m.y>.78?C.FURL:m.s>.4&&m.y<.68?C.FURD:m.s>.3&&m.y>.84?C.BELLY:C.FUR;
+    P.paint.torsoLo=m=>m.s>.45?C.FURD:C.FUR;
+    P.paint.leg=(m,s)=>{const pt=m.r.part;if(pt=='hip'||pt=='thigh')return row(m)?C.FURD:C.FUR;if(pt=='knee')return C.FUR;
+      return Math.floor(m.y*70)%2?C.SCALE:C.SCALED};
+    P.paint.fore=m=>m.r.part=='wrist'?C.FURD:C.FUR;P.paint.sleeve=m=>m.s<-.3?C.FURL:C.FUR},
+  head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:-.01};const H=P._H=mdHeadR(P);
+    brSkull(B,D,m=>{const z=m.r.p[2];
+      if(z>.062){ // the beak: bristles over its base, the gape line along the side, a lighter ridge on top
+        if(z<.11&&m.s>.25)return C.FURD;
+        return m.s>.7?C.BEAKL:C.BEAK}
+      if(m.s<-.35&&z>-.04)return C.BELLY;if(m.s>.65&&z<.02)return C.FURL;return C.FUR},{seg:14,capB:{dz:.002}});
+    // nostrils under the bristles, a tuft of bristles fanning forward over the beak base
+    const at=z=>brSkullAt(D,z);
+    [-1,1].forEach(s=>{const q=at(.1),x=q.rx*.62;k.p('head','box','c',C.NOSE,s*x,q.yc+q.f*.55,.1,.004,.003,.008,0,s*.3,0);
+      for(let i=0;i<3;i++){const z=.064+i*.012,qq=at(z),xx=s*(.008+i*.006);rvFeather(k,'head',i%2?C.FURD:C.FUR,[xx,qq.top-.004,z],[s*.08,-.18,1],[s*.25,1,0],.045-.008*i,.009,.0035)}});
+    rvFeather(k,'head',C.FURD,[0,at(.06).top-.002,.06],[0,-.12,1],[0,1,0],.05,.01,.004);
+    // eyes: set on the sides, a dark ring, a glossy dark eye with the iris colour, a feathered brow
+    brEyes(k,D,{sz:1,fw:.3,socket:C.FURD,white:0x060606,brow:C.FURD,browY:.019});
+    // hackles: shaggy lance feathers hanging from the throat, longest in the middle
+    for(let r=0;r<3;r++)for(let i=-3;i<=3;i++){if(r==2&&Math.abs(i)>2)continue;const t=(i+(r==1?.5:0))/3.4,z=.03-r*.035-Math.abs(t)*.015,q=at(Math.max(-.05,z)),x=t*q.rx*.75,y=q.yc-q.b*Math.sqrt(Math.max(0,1-t*t*.56))+.006;
+      rvFeather(k,'head',(i*7+r*3)%3?C.FUR:C.FURD,[x,y,z+.006],[t*.22,-1,.2-r*.1],[t*.7,.1,1],(.1-.028*Math.abs(t)-.012*r)*(1+.18*Math.sin(i*2.7+r*1.9)),.017,.004,'c',[['head',.7],['neck',.3]])}
+    // the gape: a thin dark line along each side of the beak, from under the eye to near the tip
+    [-1,1].forEach(sd=>{const Z=[.05,.075,.1,.13,.16,.184];for(let i=0;i+1<Z.length;i++){const p=z=>{const q=at(z),y=q.yc-q.b*.12;return [sd*(brSurfX(D,z,y)+.0008),y,z]};
+      k.L('head','c',C.MOUTH,p(Z[i]),p(Z[i+1]),.0026-.0003*i,.0023-.0003*i,4)}});
+    // the nape: a few loose feathers lying back over the neck (left off under any head piece, which covers the back of the head)
+    if(!RV.helm)for(let i=0;i<4;i++){const z=-.06-i*.016,q=at(z),x=(i%2?1:-1)*.012*i;rvFeather(k,'head',i%2?C.FURD:C.FUR,[x,q.top-.012,z],[x*3,-.45-i*.12,-1],[0,1,-.3],.075-.006*i,.017,.004)}
     mdKit(B,k);return H},
-  // the frog mage's head pieces: no brims across the eyes — soft caps worn far back on the crown, floating arcane halos,
-  // cowls that drape from behind the eyes
-  helmSet:{cloth:X=>{const {k,st,M,A,G,at,top,hood,band,z0}=X,D=BRD[3],dk=mdSh(M,.75);
-    // a slouch cap on the back of the crown behind the eyes, bending backward to a point
-    const cap=(col,len,wide)=>{const zb=-.095,y0=top(zb)+.004,q=at(zb),R=[[0,y0-.004,zb,q.rx*.98*(wide||1),.065],[0,y0+.05,zb-.02,q.rx*.86,.058],[0,y0+.1*len,zb-.07*len,.06,.045],[0,y0+.14*len,zb-.14*len,.034,.028],[0,y0+.15*len,zb-.21*len,.014,.012],[0,y0+.14*len,zb-.26*len,.004,.004]];
-      mdLoft(X.B,R.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],f:r[4],b:r[4],w:[['head',1]]})),{seg:12,t:'c',capB:true,col:m=>m.i<.6?mdSh(col,.85):col});
-      band(zb+.01,.014,A,'c')};
-    // a floating halo above the crown: a flat ring, crystals on it, a gem at the front
-    const halo=(r,h,n,gem)=>{const z=-.065,y=top(z)+.028+h;k.p('head','ring','m',A,0,y,z,r,.05,r);
-      for(let i=0;i<n;i++){const ang=i/n*Math.PI*2;k.p('head','oct',G?'g':'m',G||A,Math.sin(ang)*r,y+.012+(i==0?.012:0),z+Math.cos(ang)*r,.012,.022+(i==0?.012:0),.01)}
-      if(gem)k.p('head','oct',G?'g':'m',G||X.d.gem||A,0,y,z+r,.016,.022,.014)};
-    if(st=='linen')hood(.028,M);
-    else if(st=='hat'){cap(M,1,1);if(G)k.p('head','oct','g',G,0,top(-.095)+.02,-.07,.012)}
-    else if(st=='witch'){cap(dk,1.2,1.1);const zb=-.1,y=top(zb)+.014;k.p('head','cyl','c',mdSh(dk,.9),0,y,zb-.04,.13,.012,.07,-.22)} // an oval brim that stays behind the eyes
-    else if(st=='circlet')halo(.1,0,0,1);
-    else if(st=='diadem')halo(.105,.01,3,1);
-    else if(st=='crown')halo(.115,.02,7,1);
-    else if(st=='tallcowl'){hood(.03,M,{tip:false});const q=at(-.08);k.L('head','c',M,[0,q.top+.03,-.08],[0,q.top+.2,-.16],.07,.004,7);band(-.07,.04,A,'c')}
-    else{/*star*/hood(.03,M,{tip:false});halo(.12,.03,5,0)}}}});
+  // the wings on the arms: flat feathers along the forearm pointing to the elbow (always), coverts on the upper arm (bare only)
+  wings(B){const C=BR.C,k=dkKit(),V=THREE.Vector3,full=!!BR.bare;
+    [['aL',-1],['aR',1]].forEach(([a,s])=>{const A0=mdV(HB[a+'0']),A1=mdV(HB[a+'1']),A2=mdV(HB[a+'2']),out=[s,0,0],xo=0;
+      // flat wing feathers on the forearm: rooted round the outer back of the wrist, lying along the arm and pointing up to
+      // the elbow like a folded wing, overlapping in two layers (on the forearm bone, so a bent wrist never pushes them in).
+      // They lie on whatever covers the forearm: the bare arm, or a sleeve built before them (rvArmR measures the outermost
+      // surface round the forearm from the model's own vertices), so no robe's sleeve ever covers them.
+      const fw=A1.clone().sub(A2).normalize(),FL=A1.distanceTo(A2),rad=rvArmR(B,a,A2,fw,FL);
+      for(let i=0;i<7;i++){const t=i/6,ph=.15+t*1.55,lay=i%2,o=new V(s*Math.cos(ph),0,-Math.sin(ph)),t0=.012+.012*lay,len=Math.min(FL+.03-t0,.2+.05*Math.sin(t*Math.PI)-.015*lay),
+          r0=Math.max(.03,rad(t0+.006,o))+.004+.004*lay,rt=rvLine(rad,o,t0,len,r0,FL,.006+.004*lay),
+          b=A2.clone().add(fw.clone().multiplyScalar(t0)).add(o.clone().multiplyScalar(r0)),tip=A2.clone().add(fw.clone().multiplyScalar(t0+len)).add(o.clone().multiplyScalar(rt));
+        rvFeather(k,a+'1',lay?C.FURD:C.FUR,b.toArray(),tip.clone().sub(b).toArray(),o.toArray(),tip.distanceTo(b),.032,.0045,'c')}
+      if(!full)return;
+      // bare only: a skirt of belly and flank feathers over the hip joints, so the thighs grow out of the body like a bird's
+      if(s>0)for(let i=0;i<13;i++){const a=-2.3+i/12*4.6,P0=BR.P||mdP({}),q=mdTorsoAt(P0,.56),r=Math.cos(a)>0?q.f:q.b,b=new V(Math.sin(a)*q.rx*.92,.56,Math.cos(a)*r*.92);
+        rvFeather(k,'pelvis',i%2?C.FURD:C.FUR,b.toArray(),[Math.sin(a)*.3,-1,Math.cos(a)*.3],[Math.sin(a),0,Math.cos(a)],.11+.02*Math.cos(a),.03,.006)}
+      // coverts on the upper arm: from the shoulder down to the elbow, lying flat on its outer back side
+      const ua=A1.clone().sub(A0).normalize();
+      for(let i=0;i<5;i++){const t=i/4,ph=.2+t*1.3,o=new V(s*Math.cos(ph),0,-Math.sin(ph)),b=A0.clone().add(ua.clone().multiplyScalar(.03)).add(o.clone().multiplyScalar(.055)),d=ua.clone().add(o.clone().multiplyScalar(.06));
+        rvFeather(k,a+'0',i%2?C.FURL:C.FUR,b.toArray(),d.toArray(),o.toArray(),.13+.03*Math.sin(t*Math.PI),.03,.005,'c')}});
+    mdKit(B,k)},
+  // the tail: a wedge of 11 long feathers fanned from the rump on the one tail bone, upper coverts over its base
+  tailB(B){const C=BR.C,D=BR.R,k=dkKit(),V=THREE.Vector3,base=new V(...D.FAN.base),cd=new V(...D.FAN.cd).normalize(),X=new V(1,0,0),N=new V().crossVectors(X,cd);
+    for(let i=-5;i<=5;i++){const t=i/5,a=t*D.FAN.spread,d=cd.clone().multiplyScalar(Math.cos(a)).add(X.clone().multiplyScalar(Math.sin(a))),b=base.clone().add(X.clone().multiplyScalar(t*.035)).add(N.clone().multiplyScalar(-Math.abs(t)*.012));
+      rvFeather(k,'tl0',Math.abs(i)%2?C.FURD:C.FUR,b.toArray(),d.toArray(),N.toArray(),.4-.13*Math.pow(Math.abs(t),1.4),.026,.006,'c')}
+    for(let i=-2;i<=2;i++){const t=i/2,a=t*.4,d=cd.clone().multiplyScalar(Math.cos(a)).add(X.clone().multiplyScalar(Math.sin(a))),b=base.clone().add(new V(t*.03,.03,.02)).add(N.clone().multiplyScalar(.012));
+      rvFeather(k,'tl0',i%2?C.FURL:C.FUR,b.toArray(),d.toArray(),N.toArray(),.17-.03*Math.abs(t),.03,.007,'c',[['tl0',.6],['pelvis',.4]])}
+    // the rump the fan grows from
+    k.p('tl0','sph2','c',C.FUR,0,.6,-.1,.06,.05,.05,.6);
+    mdKit(B,k)},
+  // the toes of one foot (s = -1 left, +1 right): yaw (0 = forward), length, root offset from the ankle bone [x, y, z], thickness
+  toeList(s){const L=this.toes.len;return [{yaw:0,len:L*1.1,root:[0,.024,.02]},{yaw:s*.42,len:L*.95,root:[s*.008,.024,.016]},{yaw:-s*.42,len:L*.9,root:[-s*.008,.024,.016]},{yaw:Math.PI-s*.15,len:L*.55,root:[-s*.004,.024,-.018],w:.95,back:1}]},
+  // the tail fan (tailB) and the opening it needs in coats and robes (tailNear): within the fan's wedge and close to its plane
+  FAN:{base:[0,.6,-.105],cd:[0,-.84,-.55],spread:.6,len:.4},
+  tailNear(x,y,z){const F=this.FAN,V=THREE.Vector3,c=this._fan||(this._fan={cd:new V(...F.cd).normalize()});if(!c.N)c.N=new V().crossVectors(new V(1,0,0),c.cd);
+    const v=new V(x-F.base[0],y-F.base[1],z-F.base[2]),u=v.dot(c.cd),w=v.dot(c.N);
+    return u>-.08&&u<F.len+.05&&Math.abs(v.x)<Math.max(.095,u*Math.tan(F.spread+.08)+.06)&&Math.abs(w)<.05+Math.max(0,.08-u)*.6},
+  // bird feet: three forward toes splayed, a back toe; each toe jointed (scutes as small knuckle pads), a hooked black claw
+  toesB(B,P){const C=BR.C,D=BR.R,T=D.toes,k=dkKit(),V=THREE.Vector3;
+    [-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),lf=P.lf||1;
+      const toe=(yaw,len,root,w)=>{const d=new V(Math.sin(yaw),0,Math.cos(yaw)),p0=new V(A.x+root[0],root[1],A.z+root[2]),pts=[p0];
+        [.4,.35,.25].forEach((f,j)=>{pts.push(pts[j].clone().add(d.clone().multiplyScalar(len*f*lf)).add(new V(0,-(j==0?.008:.005),0)))});
+        pts.forEach((p,j)=>{if(j<3)k.L(l,'c',j%2?C.SCALED:C.SCALE,p.toArray(),pts[j+1].toArray(),(.0115-.0022*j)*lf*(w||1),(.0095-.0022*j)*lf*(w||1),5);
+          if(j>0&&j<3)k.p(l,'sph2','c',C.SCALED,p.x,p.y+.001,p.z,.0095*lf*(w||1),.007*lf,.009*lf)});
+        const tp=pts[3],c1=tp.clone().add(d.clone().multiplyScalar(.012*lf)).add(new V(0,.002,0)),c2=c1.clone().add(d.clone().multiplyScalar(.008*lf)).add(new V(0,-.012,0));
+        k.L(l,'c',C.CLAW,tp.toArray(),c1.toArray(),.005*lf,.0035*lf,4);k.L(l,'c',C.CLAW,c1.toArray(),c2.toArray(),.0035*lf,.0006,4)};
+      D.toeList(s).forEach(q=>toe(q.yaw,q.len,q.root,q.w));
+      // a fringe of thigh feathers over the knee (the 'trousers' end), on the thigh bone; bare only (a robe covers the knee)
+      if(BR.bare){const H0=mdV(P.bones[(s<0?'lh':'rh')+'0']),K=mdV(P.bones[(s<0?'lh':'rh')+'1']);for(let i=0;i<7;i++){const a=i/7*Math.PI*2,r=.05*lf,b=H0.clone().lerp(K,.78).add(new V(Math.sin(a)*r,0,Math.cos(a)*r));
+        rvFeather(k,(s<0?'lh':'rh')+'0',i%2?C.FURD:C.FUR,b.toArray(),[Math.sin(a)*.25,-1,Math.cos(a)*.25],[Math.sin(a),0,Math.cos(a)],.065,.02,.005)}}
+      // the ankle joint: a knobbly ball where the shank meets the toes
+      k.p(l,'sph2','c',C.SCALED,A.x,.032,A.z+.004,.024*lf,.02*lf,.026*lf)});
+    mdKit(B,k)}});
+// race-specific builders: the raven's tail fan, feet and wings replace the generic loft / toes
+{const f=brTail;brTail=function(B){const D=BR.R;if(D&&D.tailB)return D.tailB(B);return f.apply(this,arguments)}}
+{const f=brToes;brToes=function(B,P){const D=BR.R;if(D&&D.toesB)return D.toesB(B,P);return f.apply(this,arguments)}}
+{const f=brPaws;brPaws=function(B){const r=f.apply(this,arguments);const D=BR.R;if(D&&D.wings)D.wings(B);return r}}
+
 // ======================================================== 4 · BADGER (Paladin) ========================================================
 // A stout badger: broad low body, short strong legs and arms, a wedge head with the white face and two black stripes through
 // the eyes, small round white-rimmed ears, a big black nose, heavy digging claws, a short bushy tail.
@@ -27981,7 +28065,7 @@ brDef(5,{key:'weasel',n:'Weasel',cls:'ranger',furN:'Fur',
     [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','sph2','c',C.FUR,s*x,y,z,.028,.026,.012,-.25,s*.5,s*.35);k.p('head','sph2','c',C.PINK,s*(x+.002),y-.002,z+.005,.02,.018,.007,-.25,s*.5,s*.35)});
     mdKit(B,k);return H}});
 // ================= v114: beast races in looks, saves, co-op, the creator and the barber =================
-// Every hero is its class's animal (rat Warrior, cat Assassin, frog Mage, badger Paladin, weasel Ranger); there is no human
+// Every hero is its class's animal (rat Warrior, cat Assassin, raven Mage, badger Paladin, weasel Ranger); there is no human
 // option. A look keeps its fur / eye colour only when it is one of that animal's colours; anything else (old human saves,
 // a co-op partner's human skin tone, a class change) falls back to the animal's first colour.
 LOOK_DEF.race=0;
@@ -28692,7 +28776,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes zt116w{0%,100%{text-shadow:0 0 18px var(--zc2),0 0 36px color-mix(in srgb,var(--zc2) 55%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}50%{text-shadow:0 0 26px var(--zc2),0 0 52px color-mix(in srgb,var(--zc2) 70%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}}
 @media (max-width:640px){#ztc116{top:11%;padding:12px 14px 10px}#ztc116 .zts{font-size:.86rem}#ztc116 .ztk,#ztc116 .ztf{font-size:.62rem;letter-spacing:.18em}}
 </style>`);
-// ================= v117 frog Mage: how he holds his weapons =================
+// ================= v117 Mage (the frog, since v127 the raven): how he holds his weapons =================
 // The v93 grip lays a weapon along the fingers of a human fist (tuned on human arms, GRIP_B), so on the frog's long webbed paw the
 // shaft ran beside the fingers, the fingertips poked through it and the orb floated off the hand. Here the paw itself decides:
 //  * fc117Frame measures each paw from the final skinned mesh (the vertices that belong to the hand bone only, in that bone's own
@@ -28708,11 +28792,12 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // Hold points are from the shoulder in the hero's frame [out, fwd, down] (m); directions are [up, out, fwd] weights.
 // test/v117_grip.py (close-ups), v117_wclip.py (robe clipping) check it.
 var FC116={on:true,
-  H:{staff:{arm:'R',hand:[.15,.1,.24],dir:[1,-.24,-.06],tilt:.28},
+  H:{staff:{arm:'R',hand:[.17,.1,.24],dir:[1,-.1,-.06],tilt:.28},  // v127 raven: a little further out and more upright (the frog's lean in brought the head of the staff past a crown's spikes)
      wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
      orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
-  pole:[.45,-.6,-1]}; // v118: elbow bends back and a little out [out, up, fwd] (it was [-.35,-1,.5]: forward and in, so the arm bent backwards)
-function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='frog'}
+  pole:[.45,-.6,-1], // v118: elbow bends back and a little out [out, up, fwd] (it was [-.35,-1,.5]: forward and in, so the arm bent backwards)
+  clear:[['spine',.19],['chest',.215],['head',.14]]}; // v127: spheres (bone, radius m) the orb stays outside of during attacks / casts
+function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='raven'}
 var FC116_T={V:null};
 function fc116Tmp(){if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,Q,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()})}return FC116_T}
 // ---------- the paw, measured once per body build ----------
@@ -28786,6 +28871,12 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
         let th=2*Math.acos(Math.min(1,dq.w));if(dq.x*U.x+dq.y*U.y+dq.z*U.z<0)th=-th;const tk='_fcth'+s1,pv=H[tk];if(pv!=null){while(th-pv>Math.PI)th-=2*Math.PI;while(th-pv<-Math.PI)th+=2*Math.PI}H[tk]=th;
         const sw=cur.clone().slerp(Rs,w),ax2=wl.clone().applyQuaternion(sw).normalize();tgt=new Q().setFromAxisAngle(ax2,w*th).multiply(sw)}
     if(w>=.999)H['_fcth'+s1]=null;b2.quaternion.copy(pq.invert().multiply(tgt))}
+  // v127: during attacks and casts (the hold faded out) the orb floats clear of the body and head: its centre is pushed out of a
+  // sphere round the spine, the chest and the head (FC116.clear radii + the orb's own radius), along the line from that centre
+  if(C.palm&&w<.999&&FC116.clear){H.updateMatrixWorld(true);const bb=fc117WB(W),ws=b2.getWorldScale(new V()).x,M=b2.matrixWorld,c0=bb.c.clone().applyQuaternion(wq).add(wp).applyMatrix4(M),c1=c0.clone();
+    FC116.clear.forEach(([bn,r0])=>{const bo=B[bn];if(!bo)return;const o=bo.getWorldPosition(new V()),d=c1.clone().sub(o),R=(r0+bb.r)*ws;if(d.length()>=R)return;
+      if(d.lengthSq()<1e-8)d.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));c1.copy(o).addScaledVector(d.normalize(),R)});
+    if(!c1.equals(c0)){const inv=new THREE.Matrix4().copy(M).invert(),off=c1.applyMatrix4(inv).sub(c0.clone().applyMatrix4(inv));wp=wp.clone().addScaledVector(off,1-w)}}
   W.quaternion.copy(wq);W.position.copy(wp);
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
 function fc118Sign(H,b,Fp){let s=1;H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const i=o.skeleton.bones.indexOf(b);if(i<0)return;
@@ -28794,7 +28885,7 @@ function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
   try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding)){fc116Apply(H);if(!H._fc116)fc116Apply(H)}}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog hold',e)}}return r}}
 // during attacks and casts the frog's shoulders spread a little (the beast layer's D.atk), so the staff swings clear of his wide head and robe
-{const D=Object.values(BRD).find(d=>d&&d.key=='frog');if(D&&!D.atk)D.atk={shz:.3}}
+{const D=Object.values(BRD).find(d=>d&&d.key=='raven');if(D&&!D.atk)D.atk={shz:.3}}
 // ================= v117 character creator: the class step shows the hero as they will start, in a heroic pose =================
 // The old class-step preview (0140 ccPreview) built one model once, framed it on the first class, read the look from the wrong field
 // and dressed it in a temporary tier-1 armour set. Now every class gets its own model built the way the game builds the hero: the
@@ -30045,122 +30136,111 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #ztc116.camp123.on{animation:zt116 3.8s ease forwards}
 @keyframes zt126{0%{opacity:0;filter:blur(6px)}8.4%{opacity:1;filter:blur(0)}83.2%{opacity:1}99.3%{filter:blur(0)}100%{opacity:0;filter:blur(2px)}}
 </style>`);
-// ================= v127: the raven Mage (replaces the frog) =================
-// A bipedal raven: a round feathered skull with a heavy curved beak (nasal bristles over its base, a hooked tip, the gape
-// line), dark side-set eyes, shaggy throat hackles and a ruffled nape; a deep keeled chest, a thick feathered neck; arms that
-// are wings (flat feathers lie along each forearm from the wrist to the elbow, like a folded wing; bare arms also carry
-// coverts on the upper arm); scaly three-fingered talon hands with a thumb; feathered thighs over thin scaled shanks; bird feet with
-// three forward toes and a back toe, all hooked claws; a stiff wedge tail of long feathers that pivots at the rump.
-// Built with the v114 beast engine (2100): same hero skeleton retargeted, one tail bone (tl0) carrying the whole fan.
-// Feathers are one shared low-poly blade (`rvFeatherG`: a flat diamond, widest near the tip, a ridge along the shaft).
-var RV_FG=null;
-function rvFeatherG(){if(RV_FG)return RV_FG;const g=new THREE.BufferGeometry(),
-    v=[0,0,0, 0,1,0, -1,.62,0, 1,.62,0, 0,.52,1, 0,.52,-1];
-  g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex([0,3,4, 0,4,2, 0,2,5, 0,5,3, 1,4,3, 1,2,4, 1,5,2, 1,3,5]);
-  return RV_FG=g}
-// one feather on bone bn: from base along dir, flat side facing nrm; len, half-width w, half-thickness th
-function rvFeather(k,bn,col,base,dir,nrm,len,w,th,t,wt){const V=THREE.Vector3,y=new V(...dir).normalize(),z=new V(...nrm);z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
-  const x=new V().crossVectors(y,z),m=new THREE.Matrix4().makeBasis(x.multiplyScalar(w),y.multiplyScalar(len),z.multiplyScalar(th||.004));m.setPosition(new V(...base));
-  const p={bn,geo:rvFeatherG(),t:t||'c',col,m};if(wt)p.w=wt;k.P.push(p);return p}
-// a feather direction turned by yaw (about y) then pitch (down from horizontal)
-function rvDir(yaw,pitch){return [Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)]}
-brDef(6,{key:'raven',n:'Raven',cls:'mage',furN:'Plumage',
-  fur:['#2a2c35','#262232','#30333a','#3a3029','#5c5e64','#d8d6d0'],eye:['#3a2414','#0e0c0c','#d0a030','#9ec4e0','#9a40e0'],
-  cols:L=>{const f=mdC(L.skin),pale=(((f>>16)&255)+((f>>8)&255)+(f&255))>480;
-    return brPal(L,{FURD:mdSh(f,.62),FURL:mdMix(f,0x6c78c8,pale?.08:.34),BELLY:mdMix(f,0x8a8a90,.05),
-      BEAK:pale?0xb8b4ac:mdMix(0x26262c,f,.2),BEAKL:pale?0xd0ccc4:mdMix(0x3a3c46,f,.15),MOUTH:0x0c0c0e,NOSE:0x101012,
-      SCALE:pale?0xa8a49c:mdMix(0x2e2e34,f,.2),SCALED:pale?0x8a867e:mdMix(0x1e1e22,f,.2),CLAW:0x0c0c0e,PINK:pale?0xa8a49c:mdMix(0x2e2e34,f,.2)})},
-  // upright but leaning: narrow hips, a deep chest, a thick short neck, long wing-arms, long thin legs
-  pre:{pelvis:[.86,1,.92],spine:[.86,1.02,.98],chest:[.96,1.02,1.12],neck:[1.1,1.12,1.1],head:1.12,arm:[1.12,.84],hand:1.05,leg:[1.22,.84],foot:1.05,cape:[1.15,1]},
-  shear:{spine:.12,chest:.24,neck:.28},crouch:[.34,.66],pose:{sp:.1,ch:.05,shx:-.22,el:-.5},run:{sp:.14,shx:-.3,el:-.2},look:[.05,0],atk:{shz:.12},
-  // torso rings (hips → neck): the keel bulges forward at the breast, the neck ruff is thick
-  TR:[[.88,.88,.87,.9,.98,1.05,1.04,.94,.9,1.04,1.06,1.06],[.95,1,1.08,1.18,1.3,1.38,1.34,1.18,1.06,1.08,1.1,1.08],[.98,1,1,1,1.02,1.06,1.1,1.1,1.04,1.04,1.06,1.06]],
-  armK:[.9,.9,.86,.8,.78,.7],legK:[1.04,1.12,1.06,.72,.5,.44,.4],foot:{len:.42,w:.7,h:.72},
-  // skull + beak, back → front: [z, y centre, half-width, top, underside]
-  SN:[[-.108,1.162,.04,.04,.04],[-.088,1.166,.074,.072,.066],[-.058,1.17,.094,.09,.084],[-.022,1.172,.1,.094,.09],[.014,1.168,.095,.087,.088],
-      [.044,1.158,.078,.07,.078],[.066,1.146,.052,.06,.06],[.088,1.141,.042,.052,.048],[.114,1.136,.034,.044,.037],[.14,1.129,.027,.036,.028],
-      [.164,1.119,.02,.028,.019],[.184,1.106,.014,.021,.011],[.198,1.09,.009,.014,.006],[.206,1.072,.004,.007,.003]],
-  EYEP:[.07,1.176,.03],EAR:null,muzzleZ:.066,hoodZ:-.004,crownZ:-.05,hatZ:-.06,bandY:1.2,bandZ:-.04,
-  TP:[[0,.62,-.09,.04],[0,.5,-.24,.04],[0,.38,-.38,.03]],tailSway:[.025,.04,1.1,2.2],
-  tailCol:(m,C)=>C.FUR,
-  paw:{n:3,len:[.034,.04,.035],rad:.95,claw:.017,spread:.0125,palm:.95,plen:1,curl:1.1,thumb:true,tlen:.022,pad:true,colOf:C=>C.SCALE,padColOf:C=>C.SCALED},handCol:C=>C.SCALE,
-  toes:{n:3,len:.085,claw:.02,colOf:C=>C.SCALE,padColOf:C=>C.SCALED},
-  paint(P,C){const row=m=>((m.y*34+Math.abs(m.x)*18)%1)<.24;
-    P.paint.torso=m=>m.s<-.45&&m.y>.78?C.FURL:m.s>.4&&m.y<.68?C.FURD:m.s>.3&&m.y>.84?C.BELLY:C.FUR;
-    P.paint.torsoLo=m=>m.s>.45?C.FURD:C.FUR;
-    P.paint.leg=(m,s)=>{const pt=m.r.part;if(pt=='hip'||pt=='thigh')return row(m)?C.FURD:C.FUR;if(pt=='knee')return C.FUR;
-      return Math.floor(m.y*70)%2?C.SCALE:C.SCALED};
-    P.paint.fore=m=>m.r.part=='wrist'?C.FURD:C.FUR;P.paint.sleeve=m=>m.s<-.3?C.FURL:C.FUR},
-  head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:-.01};const H=P._H=mdHeadR(P);
-    brSkull(B,D,m=>{const z=m.r.p[2];
-      if(z>.062){ // the beak: bristles over its base, the gape line along the side, a lighter ridge on top
-        if(z<.11&&m.s>.25)return C.FURD;
-        return m.s>.7?C.BEAKL:C.BEAK}
-      if(m.s<-.35&&z>-.04)return C.BELLY;if(m.s>.65&&z<.02)return C.FURL;return C.FUR},{seg:14,capB:{dz:.002}});
-    // nostrils under the bristles, a tuft of bristles fanning forward over the beak base
-    const at=z=>brSkullAt(D,z);
-    [-1,1].forEach(s=>{const q=at(.1),x=q.rx*.62;k.p('head','box','c',C.NOSE,s*x,q.yc+q.f*.55,.1,.004,.003,.008,0,s*.3,0);
-      for(let i=0;i<3;i++){const z=.064+i*.012,qq=at(z),xx=s*(.008+i*.006);rvFeather(k,'head',i%2?C.FURD:C.FUR,[xx,qq.top-.004,z],[s*.08,-.18,1],[s*.25,1,0],.045-.008*i,.009,.0035)}});
-    rvFeather(k,'head',C.FURD,[0,at(.06).top-.002,.06],[0,-.12,1],[0,1,0],.05,.01,.004);
-    // eyes: set on the sides, a dark ring, a glossy dark eye with the iris colour, a feathered brow
-    brEyes(k,D,{sz:1,fw:.3,socket:C.FURD,white:0x060606,brow:C.FURD,browY:.019});
-    // hackles: shaggy lance feathers hanging from the throat, longest in the middle
-    for(let r=0;r<3;r++)for(let i=-3;i<=3;i++){if(r==2&&Math.abs(i)>2)continue;const t=(i+(r==1?.5:0))/3.4,z=.03-r*.035-Math.abs(t)*.015,q=at(Math.max(-.05,z)),x=t*q.rx*.75,y=q.yc-q.b*Math.sqrt(Math.max(0,1-t*t*.56))+.006;
-      rvFeather(k,'head',(i*7+r*3)%3?C.FUR:C.FURD,[x,y,z+.006],[t*.22,-1,.2-r*.1],[t*.7,.1,1],(.1-.028*Math.abs(t)-.012*r)*(1+.18*Math.sin(i*2.7+r*1.9)),.017,.004,'c',[['head',.7],['neck',.3]])}
-    // the gape: a thin dark line along each side of the beak, from under the eye to near the tip
-    [-1,1].forEach(sd=>{const Z=[.05,.075,.1,.13,.16,.184];for(let i=0;i+1<Z.length;i++){const p=z=>{const q=at(z),y=q.yc-q.b*.12;return [sd*(brSurfX(D,z,y)+.0008),y,z]};
-      k.L('head','c',C.MOUTH,p(Z[i]),p(Z[i+1]),.0026-.0003*i,.0023-.0003*i,4)}});
-    // the nape: a few loose feathers lying back over the neck
-    for(let i=0;i<4;i++){const z=-.06-i*.016,q=at(z),x=(i%2?1:-1)*.012*i;rvFeather(k,'head',i%2?C.FURD:C.FUR,[x,q.top-.012,z],[x*3,-.45-i*.12,-1],[0,1,-.3],.075-.006*i,.017,.004)}
-    mdKit(B,k);return H},
-  // the wings on the arms: flat feathers along the forearm pointing to the elbow (always), coverts on the upper arm (bare only)
-  wings(B){const C=BR.C,k=dkKit(),V=THREE.Vector3,full=!!BR.bare;
-    [['aL',-1],['aR',1]].forEach(([a,s])=>{const A0=mdV(HB[a+'0']),A1=mdV(HB[a+'1']),A2=mdV(HB[a+'2']),out=[s,0,0],xo=0;
-      // flat wing feathers on the forearm: rooted round the outer back of the wrist, lying along the arm and pointing up to
-      // the elbow like a folded wing, overlapping in two layers (on the forearm bone, so a bent wrist never pushes them in)
-      const fw=A1.clone().sub(A2).normalize();
-      for(let i=0;i<7;i++){const t=i/6,ph=.15+t*1.55,lay=i%2,r=.05+.006*lay,o=new V(s*Math.cos(ph),0,-Math.sin(ph)),
-          b=A2.clone().add(fw.clone().multiplyScalar(.012+.012*lay)).add(o.clone().multiplyScalar(r)),d=fw.clone().add(o.clone().multiplyScalar(.07+.03*lay));
-        rvFeather(k,a+'1',lay?C.FURD:C.FUR,b.toArray(),d.toArray(),o.toArray(),.2+.05*Math.sin(t*Math.PI)-.015*lay,.032,.0045,'c')}
-      if(!full)return;
-      // bare only: a skirt of belly and flank feathers over the hip joints, so the thighs grow out of the body like a bird's
-      if(s>0)for(let i=0;i<13;i++){const a=-2.3+i/12*4.6,P0=BR.P||mdP({}),q=mdTorsoAt(P0,.56),r=Math.cos(a)>0?q.f:q.b,b=new V(Math.sin(a)*q.rx*.92,.56,Math.cos(a)*r*.92);
-        rvFeather(k,'pelvis',i%2?C.FURD:C.FUR,b.toArray(),[Math.sin(a)*.3,-1,Math.cos(a)*.3],[Math.sin(a),0,Math.cos(a)],.11+.02*Math.cos(a),.03,.006)}
-      // coverts on the upper arm: from the shoulder down to the elbow, lying flat on its outer back side
-      const ua=A1.clone().sub(A0).normalize();
-      for(let i=0;i<5;i++){const t=i/4,ph=.2+t*1.3,o=new V(s*Math.cos(ph),0,-Math.sin(ph)),b=A0.clone().add(ua.clone().multiplyScalar(.03)).add(o.clone().multiplyScalar(.055)),d=ua.clone().add(o.clone().multiplyScalar(.06));
-        rvFeather(k,a+'0',i%2?C.FURL:C.FUR,b.toArray(),d.toArray(),o.toArray(),.13+.03*Math.sin(t*Math.PI),.03,.005,'c')}});
-    mdKit(B,k)},
-  // the tail: a wedge of 11 long feathers fanned from the rump on the one tail bone, upper coverts over its base
-  tailB(B){const C=BR.C,D=BR.R,k=dkKit(),V=THREE.Vector3,base=new V(0,.6,-.1),cd=new V(0,-.84,-.55).normalize(),X=new V(1,0,0),N=new V().crossVectors(X,cd);
-    for(let i=-5;i<=5;i++){const t=i/5,a=t*.68,d=cd.clone().multiplyScalar(Math.cos(a)).add(X.clone().multiplyScalar(Math.sin(a))),b=base.clone().add(X.clone().multiplyScalar(t*.035)).add(N.clone().multiplyScalar(-Math.abs(t)*.012));
-      rvFeather(k,'tl0',Math.abs(i)%2?C.FURD:C.FUR,b.toArray(),d.toArray(),N.toArray(),.4-.13*Math.pow(Math.abs(t),1.4),.026,.006,'c')}
-    for(let i=-2;i<=2;i++){const t=i/2,a=t*.4,d=cd.clone().multiplyScalar(Math.cos(a)).add(X.clone().multiplyScalar(Math.sin(a))),b=base.clone().add(new V(t*.03,.03,.02)).add(N.clone().multiplyScalar(.012));
-      rvFeather(k,'tl0',i%2?C.FURL:C.FUR,b.toArray(),d.toArray(),N.toArray(),.17-.03*Math.abs(t),.03,.007,'c',[['tl0',.6],['pelvis',.4]])}
-    // the rump the fan grows from
-    k.p('tl0','sph2','c',C.FUR,0,.6,-.1,.06,.05,.05,.6);
-    mdKit(B,k)},
-  // bird feet: three forward toes splayed, a back toe; each toe jointed (scutes as small knuckle pads), a hooked black claw
-  toesB(B,P){const C=BR.C,D=BR.R,T=D.toes,k=dkKit(),V=THREE.Vector3;
-    [-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),lf=P.lf||1;
-      const toe=(yaw,len,root,w)=>{const d=new V(Math.sin(yaw),0,Math.cos(yaw)),p0=new V(A.x+root[0],root[1],A.z+root[2]),pts=[p0];
-        [.4,.35,.25].forEach((f,j)=>{pts.push(pts[j].clone().add(d.clone().multiplyScalar(len*f*lf)).add(new V(0,-(j==0?.008:.005),0)))});
-        pts.forEach((p,j)=>{if(j<3)k.L(l,'c',j%2?C.SCALED:C.SCALE,p.toArray(),pts[j+1].toArray(),(.0115-.0022*j)*lf*(w||1),(.0095-.0022*j)*lf*(w||1),5);
-          if(j>0&&j<3)k.p(l,'sph2','c',C.SCALED,p.x,p.y+.001,p.z,.0095*lf*(w||1),.007*lf,.009*lf)});
-        const tp=pts[3],c1=tp.clone().add(d.clone().multiplyScalar(.012*lf)).add(new V(0,.002,0)),c2=c1.clone().add(d.clone().multiplyScalar(.008*lf)).add(new V(0,-.012,0));
-        k.L(l,'c',C.CLAW,tp.toArray(),c1.toArray(),.005*lf,.0035*lf,4);k.L(l,'c',C.CLAW,c1.toArray(),c2.toArray(),.0035*lf,.0006,4)};
-      toe(0,T.len*1.1,[0,.024,.02]);toe(s*.42,T.len*.95,[s*.008,.024,.016]);toe(-s*.42,T.len*.9,[-s*.008,.024,.016]);
-      toe(Math.PI-s*.15,T.len*.55,[-s*.004,.024,-.018],.95);
-      // a fringe of thigh feathers over the knee (the 'trousers' end), on the thigh bone
-      {const H0=mdV(P.bones[(s<0?'lh':'rh')+'0']),K=mdV(P.bones[(s<0?'lh':'rh')+'1']);for(let i=0;i<7;i++){const a=i/7*Math.PI*2,r=.05*lf,b=H0.clone().lerp(K,.78).add(new V(Math.sin(a)*r,0,Math.cos(a)*r));
-        rvFeather(k,(s<0?'lh':'rh')+'0',i%2?C.FURD:C.FUR,b.toArray(),[Math.sin(a)*.25,-1,Math.cos(a)*.25],[Math.sin(a),0,Math.cos(a)],.065,.02,.005)}}
-      // the ankle joint: a knobbly ball where the shank meets the toes
-      k.p(l,'sph2','c',C.SCALED,A.x,.032,A.z+.004,.024*lf,.02*lf,.026*lf)});
-    mdKit(B,k)}});
-// the Mage is the raven now (the frog's definition stays registered but unused)
-BR_CLS.mage=6;
-// race-specific builders: the raven's tail fan, feet and wings replace the generic loft / toes
-{const f=brTail;brTail=function(B){const D=BR.R;if(D&&D.tailB)return D.tailB(B);return f.apply(this,arguments)}}
-{const f=brToes;brToes=function(B,P){const D=BR.R;if(D&&D.toesB)return D.toesB(B,P);return f.apply(this,arguments)}}
-{const f=brPaws;brPaws=function(B){const r=f.apply(this,arguments);const D=BR.R;if(D&&D.wings)D.wings(B);return r}}
+// ================= v127: the Mage's gear fitted to the raven =================
+// The v114 helm builder was made for furred skulls with ears; on the raven's sloping crown and beak a flat brim floated above
+// the head, hoods stood far off the skull and circlets cut through the forehead. Here every cloth head piece is built for him:
+//  * rvEll(D,y,off) measures the skull's horizontal section at height y (marching out from its centre line) and returns the
+//    ellipse round it, pushed out by off: hats sit down over the crown on a brim just above the brows, circlets / diadems /
+//    crowns ring the head where it really is at that height (the band's front rests on the forehead above the bristles).
+//  * hoods are a snug shell over the skull (open underneath, the face opening behind the eyes so the beak and eyes stay free)
+//    and a cowl drape round the back and sides of the neck down onto the shoulders, open at the front so the hackles show.
+//  * the nape feathers are left off under any head piece (RV.helm, set while a raven model is built).
+// Every piece is lofted on the head bone (the drape blends into neck and chest), so it moves exactly with the skull.
+function rvIn(D,x,y,z){const S=D.SN;if(z<S[0][0]||z>S[S.length-1][0])return false;const q=brSkullAt(D,z),dy=y-q.yc,r=dy>0?q.f:q.b;return x*x/(q.rx*q.rx)+dy*dy/(r*r)<1}
+function rvEll(D,y,off){const S=D.SN;let z0=9,z1=-9;for(let z=S[0][0];z<=S[S.length-1][0];z+=.002){if(rvIn(D,0,y,z)){z0=Math.min(z0,z);z1=Math.max(z1,z)}}
+  if(z0>z1){z0=z1=-.03}const zc=(z0+z1)/2,pts=[];
+  for(let i=0;i<32;i++){const a=i/32*Math.PI*2,dx=Math.sin(a),dz=Math.cos(a);let L=0;for(let s=.002;s<.3;s+=.002)if(rvIn(D,dx*s,y,zc+dz*s))L=s;pts.push([dx*(L+off),zc+dz*(L+off)])}
+  let rx=.01;pts.forEach(p=>{rx=Math.max(rx,Math.abs(p[0]))});rx*=1.03;let f=.01,b=.01;
+  pts.forEach(p=>{const k=Math.sqrt(Math.max(.08,1-(p[0]/rx)**2)),d=p[1]-zc;if(d>0)f=Math.max(f,d/k);else b=Math.max(b,-d/k)});
+  return {zc,rx,f,b,y}}
+// the raven's cloth head pieces (BRD[3].helmSet.cloth, called by brHelm)
+function rvHood(X,col,o){o=o||{};const {B,k,z0}=X,D=BRD[3],ez=D.EYEP[2],zf=ez-(D.eyeR||.021)-.012,off=.02,dk=mdSh(col,.8);
+  brShell(B,D,off,z0-.012,zf,m=>m.s>-.3,m=>m.z>zf-.012?dk:col,'c',18);
+  brShell(B,D,off+.007,zf-.012,zf+.002,m=>m.s>-.3,mdSh(col,.9),'c',18);
+  // the cowl round the back of the neck onto the shoulders, open in front
+  mdLoft(B,[{p:[0,1.17,-.03],rx:.1,f:.07,b:.095,w:[['head',1]]},{p:[0,1.1,-.035],rx:.11,f:.085,b:.11,w:[['head',.8],['neck',.2]]},{p:[0,1.05,-.035],rx:.115,f:.09,b:.115,w:[['neck',.6],['head',.4]]},
+      {p:[0,1.0,-.03],rx:.15,f:.115,b:.135,w:[['chest',.5],['neck',.5]]},{p:[0,.965,-.025],rx:.205,f:.14,b:.152,w:[['chest',1]]},{p:[0,.93,-.02],rx:.24,f:.165,b:.172,w:[['chest',1]]}],
+    {seg:16,t:'c',col:o.drape||mdSh(col,.88),keep:m=>m.s<.12});
+  if(o.tip!==false){const q=brSkullAt(D,z0),y=q.yc+q.f+off;k.L('head','c',col,[0,y-.02,z0+.01],[0,y-.05,z0-.08],.045,.012,6).L('head','c',dk,[0,y-.05,z0-.08],[0,y-.085,z0-.14],.012,.003,5)}}
+function rvHat(X,o){const {B,k,A,G}=X,D=BRD[3],yb=1.214,br=o.br,c=o.col,e0=rvEll(D,yb-.006,.012),e1=rvEll(D,yb+.014,.014),R=[];
+  const ring=(y,e,r)=>({p:[0,y,e.zc],rx:e.rx*r,f:e.f*r,b:e.b*r,w:[['head',1]]});
+  R.push(ring(yb-.006,e0,1),{p:[0,yb,e0.zc-.005],rx:br,f:br*1.04,b:br,w:[['head',1]]},{p:[0,yb+.01,e0.zc-.005],rx:br,f:br*1.04,b:br,w:[['head',1]]},ring(yb+.014,e1,1));
+  // the crown of the hat: shrinking rings bending back to a point; every ring clears the skull at its height
+  const H=o.h,S=[[.05,.9,.012],[.11*H,.72,.03],[.17*H,.5,.065],[.22*H,.28,.11],[.255*H,.1,.16],[.27*H,.02,.2]];
+  S.forEach(([h,r,dz])=>{const y=yb+.014+h,e=rvEll(D,y,.012),rx=Math.max(e1.rx*r,h<.08?e.rx:0),f=Math.max(e1.f*r,h<.08?e.f:0),bk=Math.max(e1.b*r,h<.08?e.b:0);
+    R.push({p:[0,y-(h>.2?(h-.2)*.6:0),e1.zc-dz*(o.lean||1)],rx,f,b:bk,w:[['head',1]]})});
+  mdLoft(B,R,{seg:16,t:'c',ref:[0,0,1],capB:true,col:m=>m.i<1?mdSh(c,.7):m.i<2.6?mdSh(c,.85):c});
+  // the hat band, a buckle / gem at the front
+  const eb=rvEll(D,yb+.02,.018);mdLoft(B,[{p:[0,yb+.016,e1.zc],rx:e1.rx+.004,f:e1.f+.004,b:e1.b+.004,w:[['head',1]]},{p:[0,yb+.038,e1.zc-.004],rx:Math.max(eb.rx,e1.rx*.93)+.004,f:Math.max(eb.f,e1.f*.93)+.004,b:Math.max(eb.b,e1.b*.93)+.004,w:[['head',1]]}],
+    {seg:16,t:'c',ref:[0,0,1],col:o.band||A});
+  if(G)k.p('head','oct','g',G,0,yb+.027,e1.zc+e1.f+.008,.014,.016,.008);else k.p('head','box','m',A,0,yb+.027,e1.zc+e1.f+.006,.016,.016,.006)}
+function rvBand(X,st){const {B,k,A,G,d}=X,D=BRD[3],yb=1.222,lo=rvEll(D,yb,.004),hi=rvEll(D,yb+.016,.004),lo2=rvEll(D,yb,.011),hi2=rvEll(D,yb+.016,.011);
+  const r=(e,y)=>({p:[0,y,e.zc],rx:e.rx,f:e.f,b:e.b,w:[['head',1]]});
+  mdLoft(B,[r(lo,yb),r(lo2,yb),r(hi2,yb+.016),r(hi,yb+.016)],{seg:20,t:'m',ref:[0,0,1],col:A});
+  const at=(ang,e)=>{const ca=Math.cos(ang);return [Math.sin(ang)*e.rx,e.zc+ca*(ca>0?e.f:e.b)]};
+  if(st=='diadem')for(let i=0;i<5;i++){const ang=(i-2)*.34,[x,z]=at(ang,hi2);k.p('head','cone4','m',A,x*.97,yb+.04+(i==2?.024:0),z-.002,.011,.045+(i==2?.035:0),.009,0,ang,0)}
+  if(st=='crown')for(let i=0;i<9;i++){const ang=i/9*Math.PI*2,[x,z]=at(ang,hi2);k.p('head','cone4','m',A,x*.97,yb+.044,z*.97+hi2.zc*.03,.013,.05*(i==0?1.5:1),.013,0,ang,0)}
+  const [gx,gz]=at(0,hi2);k.p('head','oct',G?'g':'m',G||d.gem||A,gx,yb+.008,gz+.004,.015,.02,.01)}
+BRD[3].helmSet={cloth:X=>{const {k,st,M,A,G,band,crown,hz}=X,D=BRD[3];
+  if(st=='linen')rvHood(X,M);
+  else if(st=='hat')rvHat(X,{col:M,br:.165,h:1,lean:1});
+  else if(st=='witch')rvHat(X,{col:mdSh(M,.6),br:.2,h:1.2,lean:1.3,band:mdSh(A,.8)});
+  else if(st=='circlet'||st=='diadem'||st=='crown')rvBand(X,st);
+  else if(st=='tallcowl'){rvHood(X,M,{tip:false});const q=brSkullAt(D,crown),y=q.yc+q.f+.02;k.L('head','c',M,[0,y-.012,crown-.01],[0,y+.17,crown-.1],.068,.004,7);band(hz-.01,.036,A,'c')}
+  else{/*star*/rvHood(X,M);band(hz-.01,.036,G||A,G?'g':'m');const q=brSkullAt(D,crown);for(let i=0;i<5;i++){const ang=(i-2)*.38;k.p('head','oct',G?'g':'m',G||A,Math.sin(ang)*(q.rx+.04),q.top+.03,crown+Math.cos(ang)*.12,.012)}}}};
+// which head piece the raven is being built with (the head leaves its nape feathers off under one)
+{const f=mdHeroB;mdHeroB=function(cls,L,E){const o=RV.helm;try{const r=brRace(L,cls);RV.helm=r==3&&E&&E.helm?(mdGD(E.helm)||{}).st||'?':null;return f.apply(this,arguments)}finally{RV.helm=o}}}
+// ---------------- robes: the opening for the tail fan ----------------
+// The v114 tail opening follows a round tail along D.TP; the raven's tail is a flat fan, so a race may give its own shape.
+{const f=brTailNear;brTailNear=function(D,x,y,z){if(D&&D.tailNear)return D.tailNear(x,y,z);return f.apply(this,arguments)}}
+// ---------------- footwear: a bird keeps its feet ----------------
+// Boots are lofted over a human foot, which the raven doesn't have. On him every pair of Mage footwear is worn the way a bird
+// would: the scaled shank is wrapped in the boot's colour (mdBootsPre already paints the shin), the toes and talons stay out,
+// and each style adds its own pieces round the shank, the ankle and the toes:
+//   sandal: crossed leather straps up the shank, a strap round each toe; slipper: a soft cloth sock over the ankle with a cuff;
+//   pyre: wraps, an ankle ring, a metal shin plate with an ember; lich: dark wraps, bone spurs, bone talon caps;
+//   tempest: wraps, a shin plate with a gem, metal talon caps and a winged ankle guard.
+function rvBoots(B,P,d){const D=BR.R,C=BR.C,k=dkKit(),V=THREE.Vector3,st=d.st,M=d.M,A=d.A,G=d.G,dk=mdSh(M,.7),ti=d.ti|0;
+  [-1,1].forEach(s=>{const l=s<0?'lh':'rh',R=mdLeg(P,s),K=new V(...R[3].p),Ak=new V(...R[6].p),Ab=mdV(P.bones[l+'2']),lf=P.lf||1;
+    // a band round the shank at t (0 = knee, 1 = ankle), lofted from the leg's own rings
+    const at=t=>{const i=t<.35?3:t<.75?4:5,j=i+1,a=R[i],b=R[j],t0=[0,0,0,0,.35,.75,1][i],t1=[0,0,0,0,.35,.75,1][j]||1,u=Math.max(0,Math.min(1,(t-t0)/((t1-t0)||1))),L=(x,y)=>x+(y-x)*u;
+        return {p:[L(a.p[0],b.p[0]),L(a.p[1],b.p[1]),L(a.p[2],b.p[2])],rx:L(a.rx,b.rx),f:L(a.f,b.f),b:L(a.b,b.b)}},
+      bandAt=(t,h,off,col,tt,tilt)=>{const q=at(t),o2=off||.004,dy=tilt||0;mdLoft(B,[{p:[q.p[0],q.p[1]-h/2,q.p[2]],rx:q.rx+o2,f:q.f+o2,b:q.b+o2,w:[[l+'1',1]]},{p:[q.p[0],q.p[1]+h/2+dy,q.p[2]+dy*.5],rx:q.rx+o2,f:q.f+o2,b:q.b+o2,w:[[l+'1',1]]}],{seg:8,t:tt||'c',col})};
+    // the toe's own joint points (as toesB builds them): a band sits in its middle segment, a cap over its claw
+    const toes=D.toeList(s),toePts=q=>{const dv=new V(Math.sin(q.yaw),0,Math.cos(q.yaw)),p0=new V(Ab.x+q.root[0],q.root[1],Ab.z+q.root[2]),p1=p0.clone().add(dv.clone().multiplyScalar(q.len*.4*lf)).add(new V(0,-.008,0)),
+        p2=p1.clone().add(dv.clone().multiplyScalar(q.len*.35*lf)).add(new V(0,-.005,0)),p3=p2.clone().add(dv.clone().multiplyScalar(q.len*.25*lf)).add(new V(0,-.005,0));return {dv,p:[p0,p1,p2,p3]}},
+      toeAt=(q,f)=>{const T=toePts(q);return f>1?{p:T.p[3].clone().add(T.dv.clone().multiplyScalar(.012*lf)),d:T.dv}:{p:T.p[1].clone().lerp(T.p[2],f),d:T.p[2].clone().sub(T.p[1]).normalize()}},
+      toeBand=(col,tt)=>toes.forEach(q=>{if(q.back)return;const {p,d:dv}=toeAt(q,.4),e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),dv));k.p(l+'2','cyl',tt||'c',col,p.x,p.y,p.z,.0108*lf,.007,.0108*lf,e.x,e.y,e.z)}),
+      // a metal cap over each claw
+      // a metal sheath over each claw, following its hook (slightly larger than the claw, a little past its point)
+      talonCaps=(col,tt)=>toes.forEach(q=>{const T=toePts(q),tp=T.p[3],c1=tp.clone().add(T.dv.clone().multiplyScalar(.012*lf)).add(new V(0,.002,0)),c2=c1.clone().add(T.dv.clone().multiplyScalar(.008*lf)).add(new V(0,-.012,0)),
+          c3=c2.clone().add(c2.clone().sub(c1).normalize().multiplyScalar(.004));
+        const c1b=c1.clone().add(c2.clone().sub(c1).normalize().multiplyScalar(.003));k.L(l+'2',tt||'m',col,tp.clone().add(T.dv.clone().multiplyScalar(.001)).toArray(),c1b.toArray(),.0078*lf,.006*lf,6);k.L(l+'2',tt||'m',col,c1.toArray(),c3.toArray(),.006*lf,.0014,6)}),
+      ankleRing=(col,tt,r)=>{const q=at(.97);k.p(l+'1','ring',tt||'m',col,q.p[0],q.p[1]+.006,q.p[2],q.rx+(r||.008),.09,Math.max(q.f,q.b)+(r||.008))},
+      shinPlate=(col)=>{const q=at(.45);k.p(l+'1','box','m',col,q.p[0],q.p[1],q.p[2]+q.f+.006,q.rx*1.05,.11,.008,-.12)};
+    if(st=='sandal'){for(let i=0;i<3;i++){bandAt(.36+i*.2,.01,.008,A,'c',(i%2?1:-1)*.012)}ankleRing(dk,'c',.006);toeBand(dk)}
+    else if(st=='slipper'){mdLoft(B,[{p:at(.62).p,rx:at(.62).rx+.006,f:at(.62).f+.006,b:at(.62).b+.006,w:[[l+'1',1]]},{p:at(1).p,rx:at(1).rx+.008,f:at(1).f+.008,b:at(1).b+.008,w:[[l+'1',.5],[l+'2',.5]]},
+        {p:[Ab.x,.046,Ab.z+.006],rx:.043*lf,f:.042*lf,b:.04*lf,w:[[l+'2',1]]},{p:[Ab.x,.024,Ab.z+.008],rx:.04*lf,f:.04*lf,b:.036*lf,w:[[l+'2',1]]}],{seg:8,t:'c',col:M});bandAt(.62,.014,.009,A);toeBand(mdSh(M,.85))}
+    else if(st=='pyre'){bandAt(.38,.012,.004,dk);bandAt(.78,.012,.004,dk);ankleRing(A);shinPlate(A);const q=at(.45);k.p(l+'1','oct',G?'g':'m',G||0xe86a20,q.p[0],q.p[1]+.01,q.p[2]+q.f+.014,.01,.014,.006)}
+    else if(st=='lich'){bandAt(.38,.012,.004,dk);bandAt(.62,.012,.004,dk);bandAt(.86,.012,.004,dk);ankleRing(mdSh(M,.6));
+      [-1,1].forEach(j=>{const q=at(.8);k.p(l+'1','cone4','c',0xd8ccb0,q.p[0]+j*.012,q.p[1],q.p[2]-q.b-.008,.006,.03,.006,-1.1,0,j*.3)});talonCaps(0xd8ccb0,'c');if(G)k.p(l+'1','oct','g',G,at(.5).p[0],at(.5).p[1],at(.5).p[2]+at(.5).f+.008,.008)}
+    else{/*tempest*/bandAt(.38,.012,.004,dk);bandAt(.8,.012,.004,dk);shinPlate(A);ankleRing(A);talonCaps(mdSh(A,1.1));
+      const q=at(.45);k.p(l+'1','oct',G?'g':'m',G||A,q.p[0],q.p[1]+.012,q.p[2]+q.f+.014,.011,.015,.007);
+      [-1,1].forEach(j=>{const q=at(.9);k.p(l+'1','cone4','m',A,q.p[0]+j*(q.rx+.012),q.p[1]+.01,q.p[2]-.006,.005,.034,.012,-.5,0,j*.9)})}});
+  mdKit(B,k)}
+{const f=mdBootsPre;mdBootsPre=function(P,d){const r=f.apply(this,arguments);if(BR.on&&BR.R&&BR.R.key=='raven'&&d&&d.st!='slipper'){P.col.boot=BR.C.SCALE;P.col.sole=BR.C.SCALED}return r}}
+{const f=mdBoots;mdBoots=function(B,P,d){if(BR.on&&BR.R&&BR.R.key=='raven'&&d&&d.key){brToes(B,P);return rvBoots(B,P,d)}return f.apply(this,arguments)}}
+// ---------------- robes: a bird's hem ----------------
+// A floor-length robe hides the raven's legs and catches his long toes: running, the trailing foot's toes passed through the
+// hem. On him every robe (and the class outfit) ends at mid-shank instead: while its outfit / chest piece is built, every
+// lofted ring and rigid part below the hips is moved up by mapping heights [0, RV_HEM.top] onto [RV_HEM.y, RV_HEM.top]
+// (same rings, bands and trims, only shorter), so the scaled shanks, the footwear and the talons show under the robe.
+var RV_HEM={y:.17,top:.5,on:0};
+function rvHemY(y){const H=RV_HEM;return y>=H.top?y:H.y+Math.max(0,y)*(H.top-H.y)/H.top}
+{const f=mdLoft;mdLoft=function(B,R,o){if(!RV_HEM.on||BR_BODY)return f.apply(this,arguments);return f.call(this,B,R.map(r=>r.p[1]<RV_HEM.top?Object.assign({},r,{p:[r.p[0],rvHemY(r.p[1]),r.p[2]]}):r),o)}}
+{const f=mdKit;mdKit=function(B,k){if(RV_HEM.on&&!BR_BODY&&k&&k.P)k.P.forEach(p=>{if(p.rvHem)return;const e=p.m.elements;if(e[13]<RV_HEM.top){e[13]=rvHemY(e[13]);p.rvHem=1}});return f.apply(this,arguments)}}
+function rvHemOn(){return BR.on&&BR.R&&BR.R.key=='raven'}
+{const f=mdChest;mdChest=function(){const o=RV_HEM.on;RV_HEM.on=rvHemOn()?1:0;try{return f.apply(this,arguments)}finally{RV_HEM.on=o}}}
+{const f=mdOutfit;mdOutfit=function(cls){const O=f.apply(this,arguments);if(!O||!O.base||O.rvHem)return O;const b=O.base;
+  return Object.assign({},O,{rvHem:1,base:function(){const o=RV_HEM.on;RV_HEM.on=rvHemOn()?1:0;try{return b.apply(this,arguments)}finally{RV_HEM.on=o}}})}}
 </script></body></html>
