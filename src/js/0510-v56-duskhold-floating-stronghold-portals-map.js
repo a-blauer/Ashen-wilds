@@ -14,7 +14,7 @@ function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
   const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
-  const I=curIns(),C=campAt(pl.position.x,pl.position.z,CAMP_R);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+I.lv[0]+'–'+I.lv[1]+')';
+  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+I.lv[0]+'–'+I.lv[1]+')';
 }
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now

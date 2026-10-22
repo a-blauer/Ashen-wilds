@@ -11,7 +11,7 @@ function brkBox(C,b){
   hud();
 }
 function brkNear(p,r,dir,half){
-  CAMPS.forEach(C=>{if(!C.boxes||!C.g||!C.g.visible)return;if(Math.abs(C.x-p.x)>CAMP_R+r+2||Math.abs(C.z-p.z)>CAMP_R+r+2)return;
+  CAMPS.forEach(C=>{if(!C.boxes||!C.g||!C.g.visible)return;const cr=C.r||CAMP_R;if(Math.abs(C.x-p.x)>cr+r+2||Math.abs(C.z-p.z)>cr+r+2)return;
     C.boxes.forEach(b=>{if(b.b)return;const dx=b.x-p.x,dz=b.z-p.z,L=Math.hypot(dx,dz);if(L>r+.45)return;
       if(dir&&L>.4&&Math.acos(Math.max(-1,Math.min(1,(dx*dir.x+dz*dir.z)/L)))>half+.25)return;brkBox(C,b)})});
 }

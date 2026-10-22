@@ -94,8 +94,8 @@ function spinFx(r,col,ms){const m=new THREE.Mesh(new THREE.RingGeometry(r*.35,r,
 function thrustFx(d,len,col){const g=new THREE.Group(),m=new THREE.Mesh(new THREE.BoxGeometry(.16,.04,len),addMat(col||0xe8f0ff));m.position.z=len/2;g.add(m);g.position.copy(gY(pl.position,.95));g.rotation.y=Math.atan2(d.x,d.z);scene.add(g);
   tw(170,k=>{m.material.opacity=.85*(1-k);m.scale.set(1-k*.6,1,.4+k*.6);m.position.z=len*(.2+k*.3)},()=>{scene.remove(g);m.geometry.dispose()})}
 
-// v120: weapon numbers that used to be written into the code (balance knobs; values set in 2250-v120-balance.js)
-var WB120={knSpread:.17,knDup:1,knPierce:0,shock:.35,slam:.6,knife:.5,wandBig:2.1,wandSplash:1.5,slingRic:2,orbFirst:.9,orbJump:.4};
+// v125: weapon numbers that used to be written into the code (balance knobs; values set in 2290-v125-balance.js)
+var WB125={knSpread:.17,knDup:1,knPierce:0,shock:.35,slam:.6,knife:.5,wandBig:2.1,wandSplash:1.5,slingRic:2,orbFirst:.9,orbJump:.4};
 // melee weapons: combo tables
 var MW={
   ga:{N:3,m:[1.05,1.15,1.8],ms:[340,340,540],a:[0,1,2],rg:1.08,half:1.15,fin:'whirl',col:0xffc890},
@@ -117,13 +117,13 @@ function wMelee(Q,C,s,raw,d,spdK,base){
     if(dir==null)spinFx(rg,Q.col,fin?340:260);else if(Q.thrust&&!fin)thrustFx(d,rg,Q.col);else{slashFx(d,Q.a?Q.a[st]:0,rg);if(Q.dual)slashFx(d,(Q.a?Q.a[st]:0)==1?0:1,rg*.9)}
     const hits=area(pl.position,rg,raw*mult,{mt:C.mt,col:Q.col,basic:1},dir,half);
     if(Q.bleedC)hits.forEach(e=>{if(Math.random()<Q.bleedC)wBleed(e,3,raw)});
-    if(Q.shock){const p=pl.position.clone().addScaledVector(d,rg*.8);ring(p,0xffe08a,1.8,260);area(p,1.8,raw*mult*WB120.shock,{mt:C.mt,col:0xffe08a,proc:false},null,0)}
+    if(Q.shock){const p=pl.position.clone().addScaledVector(d,rg*.8);ring(p,0xffe08a,1.8,260);area(p,1.8,raw*mult*WB125.shock,{mt:C.mt,col:0xffe08a,proc:false},null,0)}
     if(fin){
       if(Q.fin=='whirl'){hits.forEach(e=>wBleed(e,4,raw));burst(gY(pl.position,.6),0xd04a3a,30,3,1.2,.5)}
       else if(Q.fin=='sweep'){hits.forEach(e=>{const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z).normalize();wPush(e,v,1.8)});slashFx(d,0,rg)}
       else if(Q.fin=='stun')hits.forEach(e=>eStatus(e,{stun:.9},0,'h'));
       else if(Q.fin=='slam'){const p=pl.position.clone().addScaledVector(d,1.2);ring(p,0xffd060,3.8,420);burst(gY(p,.15),0xc8b090,40,3.5,1.6,.6);
-        const h2=area(p,3.8,raw*mult*WB120.slam,{mt:C.mt,col:0xffd060,proc:false},null,0);h2.forEach(e=>eStatus(e,{stun:.5},0,'h'));shake(.3)}
+        const h2=area(p,3.8,raw*mult*WB125.slam,{mt:C.mt,col:0xffd060,proc:false},null,0);h2.forEach(e=>eStatus(e,{stun:.5},0,'h'));shake(.3)}
       else if(Q.fin=='holy'){ring(pl.position,0xfff0a0,rg+.4,380);if(hits.length){healHero(Math.round(heroMax()*.015*Math.min(6,hits.length)));burst(gY(pl.position,1),0xfff0a0,24,1.4,2,.6)}}
       else if(Q.fin=='pounce'){hits.forEach(e=>wBleed(e,3,raw));burst(gY(pl.position,.5),0xff6a6a,20,2,1.4,.4)}
       if(Q.fin!='slam'){ring(pl.position.clone().addScaledVector(d,dir?1.2:0),0xffe0a0,dir?2.4:rg,320);shake(.14)}
@@ -134,19 +134,19 @@ function wMelee(Q,C,s,raw,d,spdK,base){
 }
 var WBEH={
   knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
-    const vol=new Set();for(let i=0;i<n;i++){const a=(i-(n-1)/2)*WB120.knSpread;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',vol,pierce:WB120.knPierce},raw*WB120.knife,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
+    const vol=new Set();for(let i=0;i<n;i++){const a=(i-(n-1)/2)*WB125.knSpread;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',vol,pierce:WB125.knPierce},raw*WB125.knife,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
   crossbow(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow'},raw,.75);
     const sh=shots[shots.length-1];if(sh){sh.m.scale.setScalar(1.5);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.45);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}sfx('arrow');shake(.05)},base*380)},
-  sling(C,s,raw,d,spdK,base){atkCd=base;SWNOL=1;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB120.slingRic},raw,.65);sfx('blunt',.5)})},
+  sling(C,s,raw,d,spdK,base){atkCd=base;SWNOL=1;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB125.slingRic},raw,.65);sfx('blunt',.5)})},
   wand(C,s,raw,d,spdK,base){atkCd=base;wandN++;const big=wandN%5==0;staffAnim(base*520);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);
-    launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?WB120.wandSplash:0},raw*(big?WB120.wandBig:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
+    launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?WB125.wandSplash:0},raw*(big?WB125.wandBig:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
   orb(C,s,raw,d,spdK,base){atkCd=base;staffAnim(base*700);setTimeout(()=>{if(!party.length)return;let e0=tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<11?tgt:nearestFront(11);
     if(!e0){const p=pl.position.clone().addScaledVector(aimDir(),3);burst(gY(p,1),0x9ad8ff,14,1.2,1,.4);return}face(V(e0.m.position.x-pl.position.x,0,e0.m.position.z-pl.position.z).normalize());
     orbChain(e0,raw);sfx('zap')},base*300)}
 };
 Object.keys(MW).forEach(k=>{WBEH[k]=(C,s,raw,d,spdK,base)=>wMelee(MW[k],C,s,raw,d,spdK,base)});
 function orbChain(e0,raw){let cur=e0,from=pl.position.clone();const hit=new Set();
-  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB120.orbJump:WB120.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
+  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB125.orbJump:WB125.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
     cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}}
 var WFX={
   knife(e,s,raw){if(Math.random()<.3)wBleed(e,2.5,raw)},

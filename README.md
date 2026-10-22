@@ -56,6 +56,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
 | Beast races (v114: rat Warrior, cat Assassin, frog Mage, badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
 | v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
+| v123 camp sites: every camp's size (`C.r`), ground shape (`cs123Plan`, `cs123Terrain` from 0045), tile paint (`cs123Map`), set pieces (`cs123Designs`), title card on entry (`cs123Card`); no signposts | `2270-v123-camp-sites.js` |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
@@ -65,7 +66,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v117 frog Mage carry hold (`FC116`: arm IK, upright staff, wand, orb) | `2220-v117-frog-carry.js` |
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
-| v120 balance: companion spells (`BAL120_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB120`), companion self-reaction fix (`CH120`), knife volleys | `2250-v120-balance.js` (knobs `WB120` in `0580`, no-lunge throws `SWNOL` in `1710`) |
+| v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
+| v124 clean map edges: the rim of every zone instance is a tidy row of themed ledge stones with a spaced row of themed scenery behind (`v124Edge`, kits per instance), the old rim trees and boulders are no longer drawn (`v124Rim`), choppable trees grow in groves inside the fields (`v124Groves`) | `2280-v124-clean-edges.js` (hooks in `0045`, `0060`, `0070`, `1680`) |
+| v125 balance: companion spells (`BAL125_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB125`), companion self-reaction fix (`CH125`), knife volleys | `2290-v125-balance.js` (knobs `WB125` in `0580`, no-lunge throws `SWNOL` in `1710`) |
 
 ## Conventions (read before changing code)
 
@@ -89,16 +92,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
 - **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
   about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
-- **Balance (v120)**: measured with `test/v120_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
-  four abilities against one target and a pack of four, plus every companion spell; ~9 min headless, `python3 test/v120_balance/mat.py`
+- **Balance (v125)**: measured with `test/v125_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
+  four abilities against one target and a pack of four, plus every companion spell; ~9 min headless, `python3 test/v125_balance/mat.py`
   then `rep.py out/mat_x.json`). Each weapon has an identity and lands within ~8% of its target against the average of all 16 pairs:
   one target (+8 alone / −8 in a pack: Twin Axes, Daggers, Claws, Bow, Wand), a crowd (−8 / +8: Greataxe, Halberd, Warhammer, Flail,
   Throwing Knives; Orb −12 / +12), balanced (Greatsword, Mace, Crossbow, Sling, Staff). The five classes are within ±8% of each other.
   Fixes found on the way: a companion's own spell status (poison, burn) no longer reacts with its own family element on the same
   target (Venomcoil's Toxic Cloud set off COMBUST! on every tick, ~7× a normal spell); the sling and throwing knives no longer lunge
   forward on each throw (`SWNOL`: the hero walked into the enemy and stones, knives and ability shots spawned past it); a knife fan
-  hits each enemy with one knife at full damage (`WB120.knDup` for the rest of that throw). When tuning, change the numbers in
-  `2250-v120-balance.js` and re-run the harness; `hpP` class knobs do not reach max health (it is computed before them; see `BAL120_HP`).
+  hits each enemy with one knife at full damage (`WB125.knDup` for the rest of that throw). When tuning, change the numbers in
+  `2290-v125-balance.js` and re-run the harness; `hpP` class knobs do not reach max health (it is computed before them; see `BAL125_HP`).
 - **Balance (v112)**: kill XP `ECON96.xp` .1875 (another 75% off); ability ranks cost twice as many points (`kqrCost`);
   elites are about a third as common (camps 1.8% + 0.4%·tier, wanderers 1.2%, in `rosterBuild`); Sovereign health ×4.5
   (`PACE.hp`, was 1.5: three times v110) with posture rescaled so staggers come as often as before; `svPick` never repeats
@@ -145,9 +148,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   cost = zone tier, gatherers 1). Goods are computed when the trip ends and wait in `c.bag` until the player presses F at
   the house (`czCollectHouse105`); the next trip starts after that. Ranks (`c.rk`, 1..5) cap the zone tier a citizen may
   work; each rank is bought at the Steward (`czUpCost105`).
+- **Support targets (v122)**: heal goes to the ally (hero or companion) with the lowest health share below 70%; shield to the
+  one under the most pressure (`sup122Threat`: enemies winding up on it, enemies next to it, hurt in the last 3s, low health) without
+  a strong shield; attack buffs to a fighting ally (hero first), defence buffs like shields; allies that already have the buff are
+  skipped. Effect recipes for these spells draw at `x.hp` / `x.hpf` (the target), never `pl.position`.
 - **Companion abilities (v105)**: every CSP spell needs a recipe in `SPX105` (motion `m`, amplitude `a`, speed `d`, effect
   `fx`/`shot`/`zone`); `v105_abil.py` casts all of them and fails when one is missing or two share the same motion settings.
   The spell lands at the motion's strike moment (`MV105[m].h`). Bites play the motion in place of the generic lunge.
+- **Attack step (v121)**: a hero melee basic attack's small step (`pl.step`) and swing lunge (1710) only close the gap to
+  the enemy being swung at (`swPlan`/`swRoom` in `2250-v121-attack-step-to-range.js`): no movement when already in range,
+  a step in when not, re-measured every frame during the lunge. Swinging at nothing keeps the old step.
 - **Baked attack keys**: re-baking with `BAKE=1 python3 v100_anim.py` nudges every move a little (the IK is not fully
   deterministic). When adding moves, splice only the new lines into `1705-v100-anim-baked-keys.js` (as v105 did for the flail).
 - **Monster moves (v107)**: each of the 18 zone monsters has one basic attack (strike/bite/spit/throw/bolt) and two signature
@@ -178,7 +188,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
   saves and co-op partners load as animals. One engine (`2100`): `brDef(id,D)` registers a race (`BRD[id]`), `brPlan` = the v99 preset
-  `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`). While a beast is built `BR.on` scales
+  `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`; since v120 animated by `brTailAnim`: an integrated sway phase + one damped spring per bone, tuned in `BRT`). While a beast is built `BR.on` scales
   the human torso/arm/leg/foot rings per ring (`D.TR`, `armK`, `legK`, `foot`; the arm's first ring stays inside the torso like the
   human's, so sleeves need no cap), `D.head` builds the skull from `D.SN` rings (+ `brEyes`, `brNose`, `brJaw`, `brWhiskers`; whiskers
   root on the cloth under a face mask, `BR_MASK`), `brPaws`/`brToes` grow fingers, claws, pads, webbing, `brTail` lofts `D.TP`.
@@ -225,6 +235,15 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (0.55) through the `awaken` move. Co-op: only the driver (`svAuth`) picks; every cast is relayed as BMV `sv<i>_<id>` with the
   seed in `en` (1 + seed/1000, the relay clamps en to 0.5–2), so partners replay the same timeline and random choices.
   The v86 den hazards and den AIs are switched off by `svDenTakeover` (scenery, seal and colliders stay).
+- **Clean edges (v124, `2280-v124-clean-edges.js`)**: rim tiles ('#' and 'R', 0–2.6 tiles past the walkable edge) stay solid and keep
+  their minimap colour, but no longer draw a choppable tree or three random boulders each (`v124Rim` is checked in 0060 and 0070; the
+  Citadel keeps its void rim and castle walls). `v124Edge` (end of `wdDeco`) lines every instance's edge from a kit per instance
+  (`K[g]`: stone colour + top, back-row kinds with weights, density `bd`, band `bw`): ledge stones on one contour (d ≈ .55) turned
+  along the edge, then on the rising slope behind them themed scenery (big background oaks/pines `e_oak_*`/`e_pine_*`, or the theme's
+  own stalagmites, crystals, cacti, pillars, dead trees), kept apart by an occupancy grid that also holds the bank decorations. None of
+  it can be chopped. Wood comes from groves (`v124Groves`, end of the 0045 map build): 3–6 choppable trees ('#' tile + `'tree'` prop,
+  a free tile round each trunk) per grove, about 9 groves per field instance, off the road, camps, gateway and entrance (caves use
+  tighter limits). Seeded per instance. Tests: `v124_edges.js` (`python3 probe.py v124_edges.js`), `v124_edges.py` (edge screenshots).
 - **Instance themes (v112, `1981-v112-instance-themes.js`)**: field instances II and III of every zone have their own sub-theme (own
   `BIOMES` entry with the zone's name, own tiles via `v112Map`, wall profile via `v112Ht`, decoration set via `v112Deco` in 1680, glowing
   ribbons, per-instance atmosphere and arrival name). Kindlelight: Glowmire Hollows (caves, goo streams, mushrooms) / Rotwood (decaying
@@ -248,6 +267,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   and never through a dash. `n3Zone(z,k,{roam,camps})` sets an instance's roaming list (weights) and its three camp themes
   (`CTH['v113_z_k_i']`, applied to `CAMPS` by `n3Camps` in `2090`). Tests: `v113_roster.py` (rosters and camps per instance, a free
   fight per creature), `v113_models.py` (contact sheets in the viewer build: idle views + 5 frames per move; `ONLY=key`).
+- **Camp sites (v123)**: all 54 field camps are designed one by one (`2250`). The plan (`cs123Plan`, key `'z_k_j'` = zone, field
+  instance, camp number in `I.cl` order) gives each its radius `r` (8..16, inside the 17-tile walkable clearing), ground ops (bowl,
+  mound, ridge, tiers, shelf, tilt, bumps, dunes, spire, dip) applied to `HF` at load before the terrain mesh, grass and nodes are
+  placed, the tile it paints underneath (dithered) and the title-card line. Dry camps are lifted so no ground sits under the world's
+  water surface (y .02); `wet` camps sink to that depth so the zone's own water fills their low ground (wadeable). `cs123Setup` (from
+  0250) puts `C.r`, `C.sp` (garrison spread), `C.des`, `C.ang` and a position-based `C.seed` on every camp, so co-op partners build
+  identical camps. `buildCamp` now builds the design (`cs123Build`: a kit of set pieces, merged by material; breakable boxes and
+  animated pieces stay separate, animated by `cs123Tick`). The wooden name sign is gone; walking into a camp shows a small title card
+  in the zone's lettering instead. Camp radius is used by `campAt`, the zone map circle, box breaking, the roaming-group and
+  decoration keep-out rings (`CAMPS_PRE` returns `[x,y,r]`). Test: `v123_camps.py` (`NOSHOT=1` for checks only; `BRIGHT=1` for
+  well-lit review shots).
 - **Terrain height fix (v112)**: `GHv` clamps the row by `H` (it used `W`, so everything south of row 1182 — all of The Citadel and the
   Crimson Throne Hall — read row 1182's heights). `test/v112_arena.py` checks arrival height and floor flatness in all six dens.
 - **Sovereigns (v112)**: every boss file (1971–1976) has a far more detailed model, three new special attacks, cooldowns on every move and
@@ -334,11 +364,12 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 
 ## Testing
 
-**How to test (owner's standing request, since v117):**
-1. **Smoke suite in the cloud on every push.** `.github/workflows/tests.yml` runs every test in `test/smoke.txt` on its own GitHub
-   runner, all at once (~15 min total). Check the run (Actions → Tests, or `gh run list` / `gh run view`) before calling work done.
-2. **Full suite in the cloud before a publish.** Actions → Tests → Run workflow → suite `full` (`test/full.txt`), or
-   `gh api -X POST repos/a-blauer/Ashen-wilds/actions/workflows/tests.yml/dispatches -f ref=main -f "inputs[suite]=full"`; every test runs in parallel. Publish only when it is green.
+**How to test (owner's standing request; since Oct 2026 off GitHub Actions, whose minutes ran low):**
+1. **Smoke suite after a change:** `cd test && python3 run_suite.py smoke` (`test/smoke.txt`, ~1 h, run it in the background).
+2. **Full suite before a publish:** `python3 run_suite.py full` (`test/full.txt`, several hours). Publish only when it is green.
+   `python3 run_suite.py full v57t.py v60t.py` re-runs just those lines after a fix.
+`run_suite.py` snapshots `dist/` first, runs one test at a time (`JOBS=2` on a 4+ core machine) and writes
+`test/out/suite/<suite>.log` and `.summary.txt`. `.github/workflows/tests.yml` is kept only as a manual fallback.
 Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
 `test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
 New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).
@@ -362,6 +393,9 @@ python3 v114_clip.py         # v114: armour clipping per class item on its anima
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
+python3 probe.py v120_idle_tilt.js # v120: idle wandering enemies never pitch their whole body (the old v42 sniff tilt/wobble is gone); expects maxPitch 0
+python3 probe.py v121_step.js     # v121: melee swings only step into hitting range; expects inRange/touching to stay 0, outOfRange to stop ~0.8×reach away, air to keep the old step
+python3 probe.py v120_tail.js # v120: beast tails stop smoothly after a run (stopMaxStep now ≪ old), lift a little while running, drag behind turns (turnLag > 0)
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
@@ -377,6 +411,8 @@ python3 v109_kingdom_shops.py # v109: the kingdom's stages (walls, tiles, plots,
 MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave109.json python3 v109_oldsave.py  # v108 kingdom save -> v109
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
+python3 v122_support.py      # v122: companion heal / shield / buff go to whoever needs it most (hero or companion)
+python3 v124_edge_test.py      # v124: clean edges (no choppable rim trees, groves choppable, edge pieces apart); v124_edges.py: edge screenshots
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
 python3 v107_ai.py           # the AI picks signature moves in each zone;  v107_tail.py: Gravewyrm/Venomcoil tail during abilities (viewer build)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
