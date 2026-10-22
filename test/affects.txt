@@ -9,7 +9,7 @@ FULL: ^src/js/0(0\d|1[0-4])\d|^src/page|^src/style|^build\.sh|^test/(play|fast|c
 
 save|slot|export|0230-: v38t.py v114_save.py v116_slots.py
 kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor: v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
-instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes: v108_instances.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
+instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes|edge|ledge|site: v108_instances.py v112_instances.py v123_camps.py v124_edge_test.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
 sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py
 compan|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v57t.py v100_fusemenu.py v105_abil.py v122_support.py v113_roster.py
 abilit|skill|talent|class|spell|resource|helpers-new: v117_abilities.py v105_abil.py v119_abprev.py v114_race.py
