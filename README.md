@@ -70,6 +70,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v124 clean map edges: the rim of every zone instance is a tidy row of themed ledge stones with a spaced row of themed scenery behind (`v124Edge`, kits per instance), the old rim trees and boulders are no longer drawn (`v124Rim`), choppable trees grow in groves inside the fields (`v124Groves`) | `2280-v124-clean-edges.js` (hooks in `0045`, `0060`, `0070`, `1680`) |
 | v127 balance: companion spells (`BAL127_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB127`), companion self-reaction fix (`CH127`), knife volleys | `2300-v127-balance.js` (knobs `WB127` in `0580`, no-lunge throws `SWNOL` in `1710`) |
 | v128 Whirlwind hold: while the warrior spins, arms out and the weapon held out level from the body, edge leading (`WW128`, `ww128Tick`, after every animation layer; visual only) | `2310-v128-whirlwind-hold.js` |
+| v129 Cheddar, the quest-giving mouse: model (`chd129Model`, from the Cheddar NPC Model concept page, game-ready: 3 skinned meshes) and per-instance quests (`CHQD129`, state `CHQ129.st`, window `XR.chq129`, tracker `#chqt129`, events `chqEv129`) | `2320-v129-cheddar-model.js`, `2330-v129-cheddar-quests.js` |
 
 ## Conventions (read before changing code)
 
@@ -188,6 +189,20 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   back `RESP_T` (50 since v112) s after death, not while a hero is within `RESP_NEAR` (14) tiles of the spot (beyond any aggro reach). Recall saves `INST` (instance + spot + the
   creatures' timers; also in the Den); T in Duskhold goes back. World layout version `WD_WL` 108; older saves go to instance
   I's entrance of their zone and get every instance of every open zone (v106/v107 saves that reached III also reach the Den).
+- **Cheddar's quests (v129)**: one Cheddar (`chd129Model({game:true})`, scaled `CHQ129_SC` 1.1, ~0.86 tall) stands beside the Duskhold
+  portal of every field instance and Den (`chqSpot129`: 2.7 tiles to the portal's side on free ground, burrow 1.3 beyond, a CBLK tile
+  under him, grass cleared around both); he moves to the instance you are in and climbs out of his burrow when you arrive. Gold "!"
+  over his head = a quest here not yet accepted, "?" = one ready to turn in (a Sprite, `fog:false`). F beside him opens `XR.chq129`.
+  Quests live in `CHQD129['zone_k']` (k 0..2 = field I..III; Kindlelight and Hillside Crest, "the plains", have them so far):
+  `{id,t,d,o:[[kind,count,label]],rw:'weapon'|'chest'|'helm'|'boots'|'egg',w}`. An accepted quest counts only while you are in its
+  instance and only shows in the tracker there (`#chqt129`, under the minimap column); progress is kept when you leave. State
+  `CHQ129.st[id]={s:1 active|2 ready|3 done,p:[...],cj}` saved as `x2.chq`. Rewards (`chqReward129`): XP and gold from the instance's
+  top level (≈ (14+L)×a kill's XP, (16+L)×a kill's gold, × `w`), gear from `genItem` at min(top level, hero+2) (uncommon+, rare+ in III)
+  or a zone egg. Objective kinds come from wrappers at the end of 2330 (kill, gFinish, fishCatch, fishTreasure, the fusion button,
+  feedComp, kqrUp/kqsBuy, breakBoulder/digTreasure, hatch, mountTick, a rune poll); a co-op partner's kill only counts for camp clears.
+  Hillside Crest I gets one extra secret boulder for "Under the Stone" (appended to `SECRETS`). To add quests for another zone, add
+  `'z_k'` lists to `CHQD129` (kinds listed above the table). Test: `v129_cheddar_test.py` (`v129_cheddar.js`; `v129_shot.js` for
+  framed screenshots).
 - **Beast races (v114, replaces the v112 rat)**: every hero is its class's animal, there is no human option: rat (Warrior), cat
   (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
