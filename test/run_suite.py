@@ -4,6 +4,7 @@
 #   python3 run_suite.py full v57t.py v60t.py   # only these lines of the suite
 #   JOBS=2 python3 run_suite.py full  # two tests at once (only on a machine with 4+ cores)
 # Tests run against a snapshot of dist/ (taken at start), so rebuilding meanwhile doesn't change what is tested.
+# Tests run in fast mode (fast.py: the game view draws only for screenshots); FAST=0 before a line or the command turns it off.
 # Each line goes through ci_run.py (same pass/fail rules and known-fail list as the old cloud runs).
 # Progress: test/out/suite/<suite>.log ; summary: test/out/suite/<suite>.summary.txt ; exit 1 if anything failed.
 import os,sys,subprocess,shutil,time
@@ -25,7 +26,7 @@ say('suite %s: %d tests, build %s'%(suite,len(lines),time.ctime(os.path.getmtime
 def run(i_line):
     i,line=i_line;t0=time.time()
     tmp=os.path.join(OUT,'run%d'%i);os.makedirs(tmp,exist_ok=True)
-    env=dict(os.environ,SRC=os.path.join(snap,'ashen-wilds.html'),AW_TMP=tmp)
+    env=dict(os.environ,FAST=os.environ.get('FAST','1'),SRC=os.path.join(snap,'ashen-wilds.html'),AW_TMP=tmp)
     try:
         p=subprocess.run([sys.executable,'ci_run.py',line],cwd=HERE,env=env,capture_output=True,text=True,timeout=int(os.environ.get('CI_TIMEOUT','3000'))+120)
         out=p.stdout+p.stderr;ok=p.returncode==0
