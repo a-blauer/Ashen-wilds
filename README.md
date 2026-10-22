@@ -341,11 +341,12 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 
 ## Testing
 
-**How to test (owner's standing request, since v117):**
-1. **Smoke suite in the cloud on every push.** `.github/workflows/tests.yml` runs every test in `test/smoke.txt` on its own GitHub
-   runner, all at once (~15 min total). Check the run (Actions → Tests, or `gh run list` / `gh run view`) before calling work done.
-2. **Full suite in the cloud before a publish.** Actions → Tests → Run workflow → suite `full` (`test/full.txt`), or
-   `gh api -X POST repos/a-blauer/Ashen-wilds/actions/workflows/tests.yml/dispatches -f ref=main -f "inputs[suite]=full"`; every test runs in parallel. Publish only when it is green.
+**How to test (owner's standing request; since Oct 2026 off GitHub Actions, whose minutes ran low):**
+1. **Smoke suite after a change:** `cd test && python3 run_suite.py smoke` (`test/smoke.txt`, ~1 h, run it in the background).
+2. **Full suite before a publish:** `python3 run_suite.py full` (`test/full.txt`, several hours). Publish only when it is green.
+   `python3 run_suite.py full v57t.py v60t.py` re-runs just those lines after a fix.
+`run_suite.py` snapshots `dist/` first, runs one test at a time (`JOBS=2` on a 4+ core machine) and writes
+`test/out/suite/<suite>.log` and `.summary.txt`. `.github/workflows/tests.yml` is kept only as a manual fallback.
 Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
 `test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
 New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).
