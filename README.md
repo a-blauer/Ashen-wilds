@@ -93,10 +93,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
   about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
 - **Balance (v125)**: measured with `test/v125_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
-  four abilities against one target and a pack of four, plus every companion spell; ~9 min headless, `python3 test/v125_balance/mat.py`
-  then `rep.py out/mat_x.json`). Each weapon has an identity and lands within ~8% of its target against the average of all 16 pairs:
-  one target (+8 alone / −8 in a pack: Twin Axes, Daggers, Claws, Bow, Wand), a crowd (−8 / +8: Greataxe, Halberd, Warhammer, Flail,
-  Throwing Knives; Orb −12 / +12), balanced (Greatsword, Mace, Crossbow, Sling, Staff). The five classes are within ±8% of each other.
+  four abilities against one target and against two crowd shapes (a tight pack of 3 around the target, a spread pack of 5), plus
+  every companion spell; ~12 min headless: `python3 test/v125_balance/mat.py` then `python3 test/v125_balance/rep.py out/mat_x.json`).
+  Melee heroes fight at ~70% of their weapon's reach, ranged and thrown weapons at 2.2. Each weapon has an identity and lands within
+  ~10% of its target against the average of all 16 pairs: one target (+8 alone / −8 in a crowd: Twin Axes, Daggers, Claws, Bow, Wand),
+  a crowd (−8 / +8: Greataxe, Halberd, Warhammer, Flail, Throwing Knives; Orb −12 / +12), balanced (Greatsword, Mace, Crossbow, Sling,
+  Staff). The five classes are within ~±10% of each other; companion damage spells are 0.7–1.35× a typical spell (lingering area
+  spells keep the crowd lead). Group numbers move ±10 between runs (crowd shape, positions), single-target numbers ±3.
   Fixes found on the way: a companion's own spell status (poison, burn) no longer reacts with its own family element on the same
   target (Venomcoil's Toxic Cloud set off COMBUST! on every tick, ~7× a normal spell); the sling and throwing knives no longer lunge
   forward on each throw (`SWNOL`: the hero walked into the enemy and stones, knives and ability shots spawned past it); a knife fan
