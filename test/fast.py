@@ -9,14 +9,18 @@
 import sys,os,runpy
 from playwright.sync_api import _generated as G
 
-JS=r"""(()=>{if(window.__fast)return;const F=window.__fast={draw:0,frames:0,on:false};
+# A test that takes over the clock (replaces requestAnimationFrame, like v100_lib's STEP or v110_fight) already decides when
+# to draw, so fast mode steps aside for that page: drawing passes straight through from then on (F.off).
+JS=r"""(()=>{if(window.__fast)return;const F=window.__fast={draw:0,frames:0,on:false,off:false};
+const RAF=window.requestAnimationFrame.bind(window);let raf=window.requestAnimationFrame;
+try{Object.defineProperty(window,'requestAnimationFrame',{configurable:true,enumerable:true,get(){return raf},set(v){raf=v;F.off=true}})}catch(e){}
 const iv=setInterval(()=>{let r;try{r=ren}catch(e){return}if(!r||!r.render)return;clearInterval(iv);const r0=r.render;
-  r.render=function(s,c){if(F.draw>0)return r0.apply(this,arguments);
+  r.render=function(s,c){if(F.draw>0||F.off)return r0.apply(this,arguments);
     if(s&&s.isScene&&s.autoUpdate!==false)s.updateMatrixWorld();
     if(c&&c.isCamera){if(!c.parent)c.updateMatrixWorld();c.matrixWorldInverse.copy(c.matrixWorld).invert()}};
   F.on=true},40);
-(function t(){F.frames++;requestAnimationFrame(t)})();
-window.__fastShot=()=>new Promise(res=>{if(!F.on){res(-1);return}F.draw++;const f0=F.frames,t0=performance.now();
+(function t(){F.frames++;RAF(t)})();   // the real browser frame clock, whatever the test does to requestAnimationFrame
+window.__fastShot=()=>new Promise(res=>{if(!F.on||F.off){res(-1);return}F.draw++;const f0=F.frames,t0=performance.now();
   (function w(){if(F.frames>=f0+3||performance.now()-t0>30000)res(F.frames-f0);else setTimeout(w,20)})()});
 window.__fastDone=()=>{F.draw=Math.max(0,F.draw-1)};})()"""
 
