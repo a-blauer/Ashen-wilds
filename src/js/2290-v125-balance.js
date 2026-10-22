@@ -35,13 +35,13 @@ Object.assign(KQR_TUNE,{
   'Intimidating Shout':2.4,  // was 1.6: the debuff is the point, but the hit was negligible
   'Wild Hunt':.16,           // was .1
   // ranged classes rely on their area abilities in a crowd (a melee weapon cleaves the crowd around you; a bow does not)
-  'Explosive Arrow':1.05,'Barrage':1.0,'Rain of Arrows':.5,'Multishot':.7,'Explosive Trap':.9,   // were .72/.57/.24/.56/.6
+  'Explosive Arrow':1.05,'Barrage':1.2,'Rain of Arrows':.75,'Multishot':.7,'Explosive Trap':1.0,   // were .72/.57/.24/.56/.6
   'Meteor':.6,'Wall of Fire':.55,'Blizzard':.4,'Frost Nova':1.25                                // were .45/.45/.3/1
 });
 // class knobs (v90 KQR_CLS, added to the hero's stats). Mage: −.36+.008·level → −.04+.008·level, which gives back what the
-// Chain Lightning / Fireball cuts took, spread over every Mage ability. Ranger: basic +12% → +17%, skills +0 → +8%.
+// Chain Lightning / Fireball cuts took, spread over every Mage ability. Ranger: basic +12% → +17%, skills +0 → +3%.
 KQR_CLS.mage.skillP=L=>-.04+.008*L;
-KQR_CLS.ranger.basicP=.17;KQR_CLS.ranger.skillP=.08;
+KQR_CLS.ranger.basicP=.17;KQR_CLS.ranger.skillP=.03;
 // Assassin: +12% max health (the most fragile class, and a melee one). Max health is computed before the class knobs, so it is
 // applied here on the finished stats.
 var BAL125_HP={assassin:1.12};
@@ -60,7 +60,7 @@ var BAL125_HP={assassin:1.12};
 //    WTYPE.k = weapon attack (everything you do scales with it); MW = melee combo (m: hit multipliers, half: half-width of the swing
 //    arc in radians, rg: reach); WB125 = numbers that were written into the attack code (0580).
 Object.assign(WTYPE.ga,{k:1.16});MW.ga.m=[1,1.1,1.4];                         // was k 1.32, finisher 1.8: +10% / +35%
-Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.72,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
+Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.62,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
 Object.assign(WTYPE.hammer,{k:.84});Object.assign(MW.hammer,{m:[1,1.05,1.6],half:.8});WB125.shock=.05;WB125.slam=.03;
                                                                                  // was k 1.12, [1.1,1.2,1.9], arc 1.1, shockwave 35%, slam 60%: +52% / +83%
 Object.assign(WTYPE.mace,{k:1.2});Object.assign(MW.mace,{half:.8});            // was 1.0, arc 1.15: −6% / −24%

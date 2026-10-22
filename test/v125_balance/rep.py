@@ -8,7 +8,9 @@ f1=lambda r:r['r1']['dps'];f2=lambda r:r['r2']['dps']+r['r2']['xdps'];fb=lambda 
 def pct(f):
   avg={L:sum(f(r) for r in W if r['L']==L)/len([r for r in W if r['L']==L]) for L in LV}
   return {k:[100*(f(next(r for r in W if r['L']==L and (r['c'],r['wt'])==k))/avg[L]-1) for L in LV] for k in keys}
-P1,P2,PB=pct(f1),pct(f2),pct(fb)
+f3=lambda r:(r['r3']['dps']+r['r3']['xdps']) if r.get('r3') else f2(r)
+P1,P2a,P3,PB=pct(f1),pct(f2),pct(f3),pct(fb)
+P2={k:[(a+b)/2 for a,b in zip(P2a[k],P3[k])] for k in P2a}  # group = mean of the tight pack (3) and the spread pack (5)
 print('levels',LV,'   one-enemy % per level | group % per level | avg one/grp | target | miss')
 bad=0
 for k in keys:
