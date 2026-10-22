@@ -15,4 +15,10 @@ real=[f for f in fails if not any(f.startswith(k) for k in known)]
 crash=('Traceback (most recent call last)' in out) or p.returncode not in (0,)
 print('\n==== %s: exit %d, %d FAIL lines (%d known), crash=%s'%(' '.join(line),p.returncode,len(fails),len(fails)-len(real),crash))
 for f in real:print('  FAIL',f[:200])
+# GitHub annotations (readable through the API, unlike the raw log)
+T=' '.join(line)
+for f in real[:10]:print('::error title=%s::%s'%(T,f[:300].replace('\n',' ')))
+if crash:
+    tb=[l for l in out.splitlines() if 'Error' in l or 'Timeout' in l or 'Traceback' in l][-3:]
+    print('::error title=%s crashed::%s'%(T,' | '.join(tb)[:600]))
 sys.exit(1 if real or crash else 0)
