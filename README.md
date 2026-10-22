@@ -64,7 +64,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v117 zone title cards (`zt116Show`, `ZT116.Z` styles per zone; replace the arrival banners) | `2210-v117-zone-title-cards.js` |
 | v117 frog Mage carry hold (`FC116`: arm IK, upright staff, wand, orb) | `2220-v117-frog-carry.js` |
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
-| v117 ability preview in the Abilities window (`abShow116`, kinds `abKind116`) | `2240-v117-ability-preview.js` |
+| v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
 
 ## Conventions (read before changing code)
 
@@ -284,10 +284,21 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Rings (v117)**: the finger ring is a 6 mm band (`ring` torus y-scale .024; it was .35, an 8 cm tube). `v117_grip.py` (PART=rings) shows it on every race, PART=grip the frog's paw; `v117_grip_atk.py` the paw in the real attack / cast poses.
 - **Creator (v117)**: the class step builds each class's own model (`cc116Model`, cached per look): current beast + exactly the
   starting gear of `ccBegin`, framed on its skinned body, a heroic pose (`CC116.P`, restored every frame) and class effects
-  (`CC116.FX`: embers, holy light + halo, shadow smoke, arcane rings, leaves). Tests: `v117_creator.py` (`ROT=` fixed turn).
-- **Ability preview (v117)**: the Abilities window's detail panel opens with a stage (shared `PV` renderer): your hero in your gear
-  plays the ability's real cast pose (`kqsPoseT` via `HACH`) at a training dummy and an effect of the ability's kind in its colour
-  (`abKind116`: proj, nova, zone, line, wall, leap, charge, pull, buff, summon, strike). It loops; ↻ replays. Tests: `v117_abprev.py`.
+  (`CC116.FX`: embers, holy light + halo, shadow smoke, arcane rings, leaves). v119: the badger Paladin holds his shield low at his
+  side (it covered his face). Tests: `v117_creator.py` (`ROT=` fixed turn).
+- **Ability preview (v119)**: the Abilities window's detail panel runs the ability itself on a small stage (shared `PV` renderer):
+  the real hero model (`pl`, lent to the stage while the window is open), the real `cast()` against a straw training dummy (a fake
+  enemy record, `abxDummy`), so every pose, projectile, decal, summon and particle is the one played in a fight. It loops (a loop
+  ends when everything has played out, at most ~6 s of game time); ↻ replays. Safety: all ability code runs inside `abxIn()/abxOut()`,
+  which swap the hero's fields, `KQS`, `tgt`, `hAgro` and the effect lists (`tws`, `enemies`, `shots`, `zones`, `traps`, `FXB_DEB`,
+  `FXA.live`, `KQ.fx`, `DTL.live`) for the preview's own, mute sounds, empty `UIO_EL` (so `uiOpen()` is false in there) and route
+  `scene.add` to the stage and `burst` to the stage's particles; timers/tweens made in there run in there; hits only make the dummy
+  flinch (`heroHit`/`hurt`/`compHit`/`eStatus` do nothing in the sandbox); town walls and `solid()` don't block. While it runs the
+  preview owns `HA`, the riding state and the ground heights under the stage (`HF` flattened, radius 22); `abxStop()` gives them back
+  (window closed / other tab / other preview: a MutationObserver on `#xw`, a 300 ms check, the `pvShow` wrapper), and `saveGame`
+  saves the world's hero position. In co-op (the world keeps running) it only shows a note. If a new effect system keeps its own
+  list ticked by the main loop, add it to `abxSwap`/`abxStep`/`abxClean`. Tests: `v119_abprev.py` (every ability of every class:
+  casts, hits the dummy, world state unchanged; frames in `out/v119_abprev_<cls>.jpg`).
 
 ## Retired systems
 

@@ -7,7 +7,7 @@
 var CC116={h:null,cache:{},tex:null,
   // arm channels set outright (the v2 creator's values were tuned the same way), others added to the idle pose
   P:{warrior:{set:{'aR0.x':-2.75,'aR0.z':-.18,'aR1.x':-.25,'aL0.x':-.45,'aL0.z':.42,'aL1.x':-1.15},add:{'chest.x':-.08,'head.x':-.1}},
-     paladin:{set:{'aL0.x':-1.25,'aL0.z':.22,'aL1.x':-.55,'aR0.x':-2.45,'aR0.z':-.22,'aR1.x':-.45},add:{'chest.x':-.06,'head.x':-.06}},
+     paladin:{set:{'aL0.x':-.35,'aL0.z':.55,'aL1.x':-.5,'aR0.x':-2.45,'aR0.z':-.22,'aR1.x':-.45},add:{'chest.x':-.06,'head.x':-.06}},
      assassin:{set:{'aR0.x':-.95,'aR0.z':.85,'aR1.x':-.55,'aL0.x':-.7,'aL0.z':-.95,'aL1.x':-.7},add:{'spine.x':.22,'head.x':-.18,'spine.y':.12}},
      mage:{set:{'aR0.x':-2.6,'aR0.z':-.3,'aR1.x':-.2,'aL0.x':-1.3,'aL0.z':-.6,'aL1.x':-.25},add:{'head.x':-.12,'chest.x':-.05}},
      ranger:{set:{'aL0.x':-1.55,'aL0.z':.05,'aL1.x':-.05,'aR0.x':-1.45,'aR0.z':-.1,'aR1.x':-2.1},add:{'spine.y':-.45,'head.y':.4}}},
