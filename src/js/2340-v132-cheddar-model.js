@@ -1,8 +1,8 @@
-// v129 Cheddar: the wandering mouse quest-giver (model from the "Cheddar NPC Model" concept page, game-ready style).
-// chd129Model({game:true}) -> {root, J, update(t,dt), setPose(name), stats}. Faces +z, feet on y=0, ~0.78 units tall
+// v132 Cheddar: the wandering mouse quest-giver (model from the "Cheddar NPC Model" concept page, game-ready style).
+// chd132Model({game:true}) -> {root, J, update(t,dt), setPose(name), stats}. Faces +z, feet on y=0, ~0.78 units tall
 // (a hero is ~1.28 in the concept's units; the quest file scales him to the game). Three skinned meshes on one skeleton.
-// Built once; the quest file (2330) moves the one Cheddar to whichever instance the hero is in.
-function chd129Model(opt){
+// Built once; the quest file (2350) moves the one Cheddar to whichever instance the hero is in.
+function chd132Model(opt){
   opt=opt||{};const GAME=!!opt.game,LP=GAME||opt.lowpoly!==false;   // low-poly: the same segment caps and flat shading as the game's v83 look
   const TH=THREE,V3=TH.Vector3;
   const T=!LP?TH:Object.assign(Object.create(TH),{
