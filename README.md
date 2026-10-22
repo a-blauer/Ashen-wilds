@@ -351,6 +351,7 @@ python3 v114_clip.py         # v114: armour clipping per class item on its anima
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
+python3 probe.py v120_idle_tilt.js # v120: idle wandering enemies never pitch their whole body (the old v42 sniff tilt/wobble is gone); expects maxPitch 0
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
 python3 mpt.py mp_v106.py    # v106 co-op: host and shared monsters per instance
