@@ -33,3 +33,8 @@ Object.assign(KQR_TUNE,{
   'Intimidating Shout':2.4,  // was 1.6: the debuff is the point, but the hit was negligible
   'Wild Hunt':.16            // was .1
 });
+
+// 4. Throwing knives: one throw (a fan of 3, or 5 every 4th throw) hits each enemy with one knife at full damage; the other knives of
+//    the same throw that hit that enemy deal WB120.knDup of their damage. Before, every knife of the fan landed on a lone enemy at
+//    close range (after Eviscerate / Shadow Rush dash you in), so the fan was a point-blank shotgun: ~+50% over daggers on one target.
+{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=WB120.knDup;else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
