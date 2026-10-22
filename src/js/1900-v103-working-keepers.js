@@ -40,7 +40,7 @@ function wkSpark103(S,col){try{if(!S.g||!S.g.visible)return;const p=S.g.getWorld
 // tools and props (hung on the right hand, or between the hands)
 function wkTool103(kind){const g=new THREE.Group(),M=c=>new THREE.MeshLambertMaterial({color:c});
   const stick=(l,c)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,l,5),M(c||0x5a3a22));m.position.y=-l*.3;g.add(m);return m};
-  if(kind=='hammer'){stick(.42);const h=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.16),M(0x3a3a42));h.position.y=-.38;g.add(h)} // v116: head across the swing plane, so a face strikes down
+  if(kind=='hammer'){stick(.42);const h=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.16),M(0x3a3a42));h.position.y=-.38;g.add(h)} // v117: head across the swing plane, so a face strikes down
   else if(kind=='ladle'){stick(.9,0x6a4a2a);const h=new THREE.Mesh(new THREE.SphereGeometry(.06,6,4,0,6.3,0,1.6),M(0x7a5a3a));h.position.y=-.62;h.rotation.x=Math.PI;g.add(h)}
   else if(kind=='stick'){stick(.85,0x6a4a2a)}
   else if(kind=='fork'){stick(1.3,0x6a4a2a);for(let i=-1;i<=1;i++){const t=new THREE.Mesh(new THREE.BoxGeometry(.012,.22,.012),M(0x4a4a52));t.position.set(i*.05,-1.0,0);g.add(t)}}

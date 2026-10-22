@@ -3,7 +3,7 @@
 // and dressed it in a temporary tier-1 armour set. Now every class gets its own model built the way the game builds the hero: the
 // class's animal (current beast rig) wearing exactly the starting gear (ccBegin: tier-0 weapon and chest, paladin shield) and the look
 // chosen so far, framed on its own body. Each class holds a heroic pose with effects of its own on a lit pedestal.
-// The pose is put back before every frame (like the v116 frog hold), so the beast layer's exact-value undo never sees it.
+// The pose is put back before every frame (like the v117 frog hold), so the beast layer's exact-value undo never sees it.
 var CC116={h:null,cache:{},tex:null,
   // arm channels set outright (the v2 creator's values were tuned the same way), others added to the idle pose
   P:{warrior:{set:{'aR0.x':-2.75,'aR0.z':-.18,'aR1.x':-.25,'aL0.x':-.45,'aL0.z':.42,'aL1.x':-1.15},add:{'chest.x':-.08,'head.x':-.1}},
@@ -55,6 +55,6 @@ function cc116Model(cls){let look=null;try{look=lkFull(cls,LK.look)}catch(_){}co
   const ped=new THREE.Mesh(new THREE.CylinderGeometry(.82,.92,.12,40),new THREE.MeshStandardMaterial({color:0x2e2418,roughness:.85,metalness:.1}));ped.position.y=-.06;piv.add(ped);
   const rim=new THREE.Mesh(new THREE.TorusGeometry(.86,.018,6,56),new THREE.MeshBasicMaterial({color:CLS[cls].col||0xffd060}));rim.rotation.x=Math.PI/2;rim.position.y=.002;piv.add(rim);
   const fx=cc116Fx(cls,piv);M=CC116.cache[cls]={sig,h,piv,fx,cls};return M}
-{const f=ccPreview;ccPreview=function(){if(ccStep!=0)return f.apply(this,arguments);let M;try{M=cc116Model(ccCls)}catch(e){console.warn('v116 creator',e);return f.apply(this,arguments)}
+{const f=ccPreview;ccPreview=function(){if(ccStep!=0)return f.apply(this,arguments);let M;try{M=cc116Model(ccCls)}catch(e){console.warn('v117 creator',e);return f.apply(this,arguments)}
   CC116.h=M.h;const t0=performance.now();
   pvShow($('ccPV'),M.piv,now=>{const t=(now-t0)/1000;M.piv.rotation.y=CC116.rot!=null?CC116.rot:.35+Math.sin(t*.45)*.45;cc116Undo(M.h);M.h.sw=1;animHero(now,false,M.h);cc116Pose(M.h,M.cls,t);M.fx.tick(t)})}}

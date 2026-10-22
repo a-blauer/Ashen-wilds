@@ -8,7 +8,7 @@ var ROST={r:-9,slots:[],left:0};
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
 // v108: a field instance is half a v106 one again: 33 roaming groups and 3 camps each
 var ROST_G=33,RESP_T=50,RESP_NEAR=14; // v112: 50 s; never within aggro reach (4.5-6 tiles + a camp pulling its friends) of a hero
-// v116: no elites in Kindlelight's first field instance (the starting area)
+// v117: no elites in Kindlelight's first field instance (the starting area)
 function noElite116(I){return !!I&&I.z===0&&I.k===0}
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)

@@ -47,6 +47,6 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   W.quaternion.copy(pq.invert().multiply(out));
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
-  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding))fc116Apply(H)}catch(e){if(!FC116.err){FC116.err=1;console.warn('v116 frog carry',e)}}return r}}
+  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding))fc116Apply(H)}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog carry',e)}}return r}}
 // during attacks and casts the frog's shoulders spread a little (the beast layer's D.atk), so the staff swings clear of his wide head and robe
 {const D=Object.values(BRD).find(d=>d&&d.key=='frog');if(D&&!D.atk)D.atk={shz:.3}}

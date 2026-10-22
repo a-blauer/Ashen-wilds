@@ -97,7 +97,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .vljob.lk{opacity:.5}#xw .vljob small{color:var(--mut)}
 #xw .vlft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:.72rem;margin-top:2px}#xw .vlmax{color:#6ee7b7;font-size:.74rem}
 </style>`);
-// ---------------- crossbow: the bolt leaves from the crossbow's front end (v116) ----------------
+// ---------------- crossbow: the bolt leaves from the crossbow's front end (v117) ----------------
 // The weapon model's stock runs along its local -Y, so the muzzle is the far end of its bounding box on that axis
 // (measured once per model in the weapon's own frame, works for every crossbow look).
 function xbowMuzzle116(){const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='crossbow');if(!W)return null;pl.updateMatrixWorld(true);

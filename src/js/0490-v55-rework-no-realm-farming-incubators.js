@@ -126,7 +126,7 @@ var zSeen=new Set();
 {const bm=$('hot');if(bm&&!$('pwrB'))bm.insertAdjacentHTML('afterbegin','<div id="pwrB" title="Power level: your overall damage and survivability">Power<b>0</b></div>')}
 {const f=hud;hud=function(){f.apply(this,arguments);const pw=heroPower(),pb=$('pwrB');if(pb){const zr=zoneRec();pb.querySelector('b').textContent=pw.toLocaleString();pb.querySelector('b').style.color=zr&&pw<zr.p?'#ff8a6a':''}
   const zr=zoneRec(),at=$('areaT');if(zr&&at){const lead=party[0],lg=lead?ovG(lead):null,gi=g=>GR.findIndex(x=>x[1]==g);
-    // v116: no pop-up on entering a zone; the recommended power sits in the location box by the minimap (red ⚠ when yours is lower)
+    // v117: no pop-up on entering a zone; the recommended power sits in the location box by the minimap (red ⚠ when yours is lower)
     at.innerHTML=at.textContent+` <span class="rec" title="Recommended power for this area · yours: ${pw.toLocaleString()}">· <span class="${pw<zr.p?'recl':'reco'}">⚔ Rec. power ${zr.p.toLocaleString()}${pw<zr.p?' ⚠':''}</span></span>`}}}
 
 // ---------------- 7. selling: pick several, then confirm ----------------

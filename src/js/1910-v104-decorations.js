@@ -147,14 +147,14 @@ function dcRender103(){const own=DECO103.filter(D=>SH.deco[D.k]!=null).length,on
     return `<div class="dccard${has?' own':''}${o?' on':''}"><div class="dci">${D.i}</div><div class="dct"><b>${D.n}</b><small>${D.d}</small></div><div class="dca">${has?`<button class="dctg${o?' on':''}" data-dct="${D.k}" aria-pressed="${o}">${o?'On':'Off'}</button>`:`<button class="pri" data-dcb="${D.k}" ${gold>=D.g?'':'disabled'}>🪙 ${D.g}</button>`}</div></div>`}).join('');
   $('xwB').innerHTML=`<div class="mut dcsum">${own} of ${DECO103.length} owned · ${on} shown. Decorations stand in fixed spots round the square and never block a building lot.</div><div class="dcgrid">${rows}</div>`;
   $('xwF').innerHTML='<span class="mut dtl">Bought once, kept forever. Switch any decoration off to hide it, and on again whenever you like.</span>'}
-// v116: three tabs — Construction (the plan and the building list), Villagers (vlRender116 in 2150), Decorations
+// v117: three tabs — Construction (the plan and the building list), Villagers (vlRender116 in 2150), Decorations
 {const f=XR.hold;XR.hold=function(){const t=KM103.tab;
   if(t=='deco'||t=='vill'){$('xwT').textContent='🏰 Kingdom of Duskhold';$('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;try{kmPickEnd103()}catch(_){}if(t=='deco')dcRender103();else vlRender116()}else f.apply(this,arguments);
   const b=(k,l)=>`<button class="${(t==k||(k=='kingdom'&&t!='deco'&&t!='vill'))?'on':''}" data-kmtab="${k}">${l}</button>`;
   $('xwB').insertAdjacentHTML('afterbegin',`<div class="tabs kmtabs">${b('kingdom','🏗️ Construction')}${b('vill','👥 Villagers')}${b('deco','🌟 Decorations')}</div>`)}}
 $('xw').addEventListener('click',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-kmtab],[data-dcb],[data-dct]');if(!t||t.disabled)return;const d=t.dataset;
   if(d.kmtab){KM103.tab=d.kmtab;rX()}else if(d.dcb){dcBuy103(d.dcb);rX()}else if(d.dct){dcToggle103(d.dct);rX()}});
-// opening the window from a house door goes to the Villagers tab (v116)
+// opening the window from a house door goes to the Villagers tab (v117)
 {const f=openX;openX=function(m){if(m=='hold'&&KM103.focus=='cit'){KM103.tab='vill';KM103.focus=null}return f.apply(this,arguments)}}
 document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .kmtabs{margin:0 0 10px}

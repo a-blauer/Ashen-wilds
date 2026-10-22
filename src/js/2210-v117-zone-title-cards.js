@@ -36,7 +36,7 @@ function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||
   zt116Show(T,kick,title,sub,foot,'z'+I.z)}
 // the old arrival banners stay silent; the card replaces them
 {const f=banner;banner=function(t){if(ZT116.mute)return;if(t==='🏰 DUSKHOLD'){zt116Show(ZT116.town,'The Floating Stronghold','Duskhold','The last stronghold, adrift above the void','The Grand Square · the Portal Road leads south','town');return}return f.apply(this,arguments)}}
-{const f=insArrive;insArrive=function(I){ZT116.mute++;let r;try{r=f.apply(this,arguments)}finally{ZT116.mute--}try{zt116Ins(I)}catch(e){console.warn('v116 title',e)}return r}}
+{const f=insArrive;insArrive=function(I){ZT116.mute++;let r;try{r=f.apply(this,arguments)}finally{ZT116.mute--}try{zt116Ins(I)}catch(e){console.warn('v117 title',e)}return r}}
 // fonts: Cinzel Decorative, IM Fell English SC and Pirata One are in the page's Google Fonts link
 document.head.insertAdjacentHTML('beforeend',`<style>
 #ztc116{position:absolute;left:50%;top:13%;transform:translateX(-50%);z-index:40;pointer-events:none;text-align:center;min-width:min(560px,92%);max-width:94%;padding:18px 34px 14px;opacity:0;

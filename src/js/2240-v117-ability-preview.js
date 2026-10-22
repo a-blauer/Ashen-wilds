@@ -75,7 +75,7 @@ function abShow116(host,s){const M=abStage116();if(!M||!host)return;ABP116.s=s;A
     const h=M.h,b=h.bones;abUndo116(h);const k=(t-.3)/ms;h.sw=k>=0&&k<=1.15?1:0;animHero(now,false,h);
     if(k>=0&&k<=1&&pT&&pT[0]){const P=pT[0](Math.min(1,k)),rec=[];for(const c in P){const ch=HACH[c];if(!ch||!b[ch[0]])continue;const o=b[ch[0]];if(!rec.some(r=>r.o===o))rec.push({o,q0:o.quaternion.clone()});const w=k<.12?k/.12:k>.9?(1-k)/.1:1;o.rotation[ch[1]]+=(P[c]-o.rotation[ch[1]])*w}
       rec.forEach(r=>r.set=r.o.quaternion.clone());h._abp=rec;h.updateMatrixWorld(true)}
-    if(k>=.5&&!ABP116.fired){ABP116.fired=1;try{abPlay116(M,s)}catch(e){console.warn('v116 abp',e)}}
+    if(k>=.5&&!ABP116.fired){ABP116.fired=1;try{abPlay116(M,s)}catch(e){console.warn('v117 abp',e)}}
     // hero moves for charges and leaps, the dummy for pulls
     const mv=M.move;if(mv){mv.t+=dt||0;const u=mv.t;if(mv.k=='dash'){const w=Math.min(1,u/.3);M.hw.position.x=-1.45+w*2.25;if(u>.3&&!mv.hit){mv.hit=1;abBurst116(M,new THREE.Vector3(1.4,1,0),ABP116.s.col||0xffd060,24,2,.6);abHit116(M,ABP116.s.col)}if(u>1.1)M.hw.position.x=.8-(Math.min(1,(u-1.1)/.4))*2.25}
       if(mv.k=='leap'&&mv.back){const w=Math.min(1,u/.5);M.hw.position.x=-1.45-w*1.2;M.hw.position.y=Math.sin(w*Math.PI)*.8;if(w>=1&&!mv.hit){mv.hit=1;abRing116(M,new THREE.Vector3(-2.65,.05,0),ABP116.s.col||0xffd060,.2,.8,.5)}if(u>1.2){const r=Math.min(1,(u-1.2)/.4);M.hw.position.x=-2.65+r*1.2;M.hw.position.y=0}}
@@ -90,7 +90,7 @@ function abUndo116(h){const R=h._abp;if(!R)return;h._abp=null;R.forEach(r=>{if(r
 // ---------- the panel ----------
 {const f=XR.abil;XR.abil=function(){const r=f.apply(this,arguments);try{const det=document.querySelector('#xw .kqs-det');const s=kqsFind(hero.cls,KQS.sel)||heroSkills()[0];if(!det||!s)return r;
     det.insertAdjacentHTML('afterbegin',`<div class="abpv"><div class="abpvc" id="abPV"></div><div class="abpvl"><span>▶ Preview · ${kqsKind(s)||'ability'}</span><button data-abpv="1" title="Play it again">↻</button></div></div>`);
-    abShow116($('abPV'),s)}catch(e){console.warn('v116 ability preview',e)}return r}}
+    abShow116($('abPV'),s)}catch(e){console.warn('v117 ability preview',e)}return r}}
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-abpv]');if(!t)return;e.stopPropagation();ABP116.t0=performance.now();ABP116.cyc=-1},true);
 document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .abpv{margin:-2px -2px 10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#2c2418,#0e0b08 75%)}

@@ -52,7 +52,7 @@ function kqmForgeTab(){const E=SLOTS.map(k=>eq[k]).filter(Boolean),G=gear.slice(
 // ---------------- the render hook ----------------
 var KQM_FORGE=7,KQM_STATS=8,KQM_SMITH=false;
 function kqmBag(){kqmBagInit();if(!KQM.ready)return;kqmMarkNew();
-  // v116: the Forge tab exists only while the bag was opened at the Blacksmith (KQM_SMITH, set by TWN100_ACT.smith)
+  // v117: the Forge tab exists only while the bag was opened at the Blacksmith (KQM_SMITH, set by TWN100_ACT.smith)
   const bt=$('bt');if(!KQM_SMITH&&bagTab2==KQM_FORGE)bagTab2=0;
   if(bt){const fb=bt.querySelector('[data-bt="'+KQM_FORGE+'"]');if(fb&&!KQM_SMITH){fb.remove();bt.querySelectorAll('.on').forEach(x=>x.classList.remove('on'))}
     if(!bt.querySelector('[data-bt="'+KQM_STATS+'"]'))bt.insertAdjacentHTML('beforeend',`<button data-bt="${KQM_STATS}" class="${bagTab2==KQM_STATS?'on':''}">Stats</button>`);
