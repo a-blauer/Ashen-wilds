@@ -7038,11 +7038,11 @@ function wMelee(Q,C,s,raw,d,spdK,base){
   if(Q.spin)spinAnim(ms*1.15,hitFn);else{SWFIN=fin;swingAnim(Q.a?Q.a[st]:0,ms,hitFn)}
 }
 var WBEH={
-  knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
+  knives(C,s,raw,d,spdK,base){atkCd=base;knN++;const n=knN%4==0?5:3;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
     for(let i=0;i<n;i++){const a=(i-(n-1)/2)*.17;launch(pl.position,rotY(d2_,a),26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife'},raw*WB120.knife,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55)}sfx('stab')})},
   crossbow(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow'},raw,.75);
     const sh=shots[shots.length-1];if(sh){sh.m.scale.setScalar(1.5);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.45);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}sfx('arrow');shake(.05)},base*380)},
-  sling(C,s,raw,d,spdK,base){atkCd=base;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB120.slingRic},raw,.65);sfx('blunt',.5)})},
+  sling(C,s,raw,d,spdK,base){atkCd=base;SWNOL=1;swingAnim(1,Math.max(200,base*560),()=>{const d2_=aimDir();face(d2_);launch(pl.position,d2_,23,{col:0x8a8478,mt:'p',basic:1,wfx:'sling',ric:WB120.slingRic},raw,.65);sfx('blunt',.5)})},
   wand(C,s,raw,d,spdK,base){atkCd=base;wandN++;const big=wandN%5==0;staffAnim(base*520);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);
     launch(pl.position,d2_,big?17:25,{col:big?0xc0a0ff:0x7ae0ff,mt:'m',basic:1,home:1,splash:big?WB120.wandSplash:0},raw*(big?WB120.wandBig:1),.75);const sh=shots[shots.length-1];if(sh)sh.m.scale.setScalar(big?2:.75)},base*200)},
   orb(C,s,raw,d,spdK,base){atkCd=base;staffAnim(base*700);setTimeout(()=>{if(!party.length)return;let e0=tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<11?tgt:nearestFront(11);
@@ -19468,8 +19468,9 @@ function V100W_pose(P,D,wind,rest){
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
 var SWFIN=0; // the next swing is a combo finisher (bigger lunge)
+var SWNOL=0; // v120: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
 {const base=swingAnim;
-swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
+swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   let P=null;try{P=atkPick(st|0)}catch(_){}
   if(!V100W.on||!P||!P.v100)return base.apply(this,arguments);
   try{atkMpSig()}catch(_){}
@@ -19480,7 +19481,7 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
-  const L=(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
+  const L=nol?0:(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
   A.tick=function(u){
     try{if(typeof riding!='undefined'&&riding)return;if(u<u0||done>=1)return;
       const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t),dd=(s-done)*L;done=s;if(dd<=0)return;

@@ -23,8 +23,9 @@ function V100W_pose(P,D,wind,rest){
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
 var SWFIN=0; // the next swing is a combo finisher (bigger lunge)
+var SWNOL=0; // v120: the next swing is a throw (sling, throwing knives): no lunge, so a ranged weapon never walks you into the enemy
 {const base=swingAnim;
-swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
+swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   let P=null;try{P=atkPick(st|0)}catch(_){}
   if(!V100W.on||!P||!P.v100)return base.apply(this,arguments);
   try{atkMpSig()}catch(_){}
@@ -35,7 +36,7 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
-  const L=(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
+  const L=nol?0:(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
   A.tick=function(u){
     try{if(typeof riding!='undefined'&&riding)return;if(u<u0||done>=1)return;
       const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t),dd=(s-done)*L;done=s;if(dd<=0)return;
