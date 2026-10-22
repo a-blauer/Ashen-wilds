@@ -310,7 +310,7 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 1. **Smoke suite in the cloud on every push.** `.github/workflows/tests.yml` runs every test in `test/smoke.txt` on its own GitHub
    runner, all at once (~15 min total). Check the run (Actions → Tests, or `gh run list` / `gh run view`) before calling work done.
 2. **Full suite in the cloud before a publish.** Actions → Tests → Run workflow → suite `full` (`test/full.txt`), or
-   `gh workflow run tests.yml -f suite=full`; every test runs in parallel. Publish only when it is green.
+   `gh api -X POST repos/a-blauer/Ashen-wilds/actions/workflows/tests.yml/dispatches -f ref=main -f "inputs[suite]=full"`; every test runs in parallel. Publish only when it is green.
 Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
 `test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
 New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).
