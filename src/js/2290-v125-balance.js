@@ -60,13 +60,12 @@ var BAL125_HP={assassin:1.12};
 //    WTYPE.k = weapon attack (everything you do scales with it); MW = melee combo (m: hit multipliers, half: half-width of the swing
 //    arc in radians, rg: reach); WB125 = numbers that were written into the attack code (0580).
 Object.assign(WTYPE.ga,{k:1.16});MW.ga.m=[1,1.1,1.4];                         // was k 1.32, finisher 1.8: +10% / +35%
-MW.halberd.half=.55;                                                            // thrust arc was .42: about even alone and in a pack
-Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.78,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
+Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.72,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
 Object.assign(WTYPE.hammer,{k:.84});Object.assign(MW.hammer,{m:[1,1.05,1.6],half:.8});WB125.shock=.05;WB125.slam=.03;
                                                                                  // was k 1.12, [1.1,1.2,1.9], arc 1.1, shockwave 35%, slam 60%: +52% / +83%
 Object.assign(WTYPE.mace,{k:1.2});Object.assign(MW.mace,{half:.8});            // was 1.0, arc 1.15: −6% / −24%
-Object.assign(WTYPE.flail,{k:1.18});Object.assign(MW.flail,{m:[.95,1,1.5],half:1.9,rg:1.2});   // was 1.02, [.9,.95,1.45], arc 1.48, reach 1.12: −19% / −30%
-Object.assign(WTYPE.dagger,{k:.9});Object.assign(WTYPE.claws,{k:.84});         // were .78 / .8
+Object.assign(WTYPE.flail,{k:1.18});Object.assign(MW.flail,{m:[.95,1,1.5],half:1.9,rg:1.5});   // was 1.02, [.9,.95,1.45], arc 1.48, reach 1.12: −19% / −30%
+Object.assign(WTYPE.dagger,{k:.9});Object.assign(WTYPE.claws,{k:.84});MW.claws.rg=1.0;   // were .78 / .8; claws reach .85 (could not reach a second enemy)
 Object.assign(WTYPE.bow,{k:1.08});                                              // was 1.0
 Object.assign(WTYPE.wand,{k:.8});WB125.wandSplash=.5;                          // was .58, big-bolt burst 1.5
 WB125.orbJump=.55;                                                              // chain jumps after the first: 40% → 55%
@@ -76,5 +75,5 @@ WB125.knife=.68;WB125.knSpread=.45;WB125.knDup=.3;WB125.knPierce=1;            /
 // animation) so their swing width can be tuned: the greatsword's arc was 1.15 (it hit a pack as well as the cleaving greataxe) and the
 // daggers' 1.15 (a single-target weapon that was better in a pack than alone).
 MW.gs={N:3,m:[1,1.1,1.7],ms:[300,300,450],a:[0,1,2],rg:1.08,half:.7,col:0xffe6b0};
-MW.dagger={N:4,m:[.8,.8,.95,1.55],ms:[190,190,210,330],a:[0,1,0,2],rg:1,half:.9,dual:1,col:0xffe6b0};
+MW.dagger={N:4,m:[.8,.8,.95,1.55],ms:[190,190,210,330],a:[0,1,0,2],rg:1,half:.8,dual:1,col:0xffe6b0};
 ['gs','dagger'].forEach(k=>{WBEH[k]=(C,s,raw,d,spdK,base)=>wMelee(MW[k],C,s,raw,d,spdK,base)});
