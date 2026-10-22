@@ -64,9 +64,10 @@ if(!CAMPS.length||!CAMPS[0].th){const byB={};CAMPS.forEach(C=>{const b=BIOMES[C.
   let gi=0,gw=-1;L.forEach((C,k)=>{const nx=L[(k+1)%L.length],w=((nx.an-C.an)+6.283)%6.283||6.283;if(w>gw){gw=w;gi=(k+1)%L.length}});
   const R2=L.slice(gi).concat(L.slice(0,gi));R2.forEach((C,k)=>{C.th=CTH[T[Math.min(T.length-1,Math.floor(k*T.length/R2.length))]]})}
  CAMPS.forEach((C,i)=>{C.i=i;const big=C.th.mem.some(m=>m[0]=='giant'||m[0]=='sandwyrm');C.cap=big?4:6})}
+if(typeof cs123Setup=='function')cs123Setup(); // v123: each camp's size (C.r), garrison spread (C.sp), design and seed (2270)
 // clear the trees inside each camp so the settlement has room
-CAMPS.forEach(C=>{const r=CAMP_R+1;for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(i*i+j*j>r*r)continue;const x=C.x+i,y=C.z+j;if(MAP[y]&&MAP[y][x]=='#'){nodeSet(y*W+x,false);MAP[y][x]='.'}}});
-const campAt=(x,z,r)=>CAMPS.find(C=>Math.hypot(C.x-x,C.z-z)<(r||CAMP_R));
+CAMPS.forEach(C=>{const r=(C.r||CAMP_R)+1;for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(i*i+j*j>r*r)continue;const x=C.x+i,y=C.z+j;if(MAP[y]&&MAP[y][x]=='#'){nodeSet(y*W+x,false);MAP[y][x]='.'}}});
+const campAt=(x,z,r)=>CAMPS.find(C=>Math.hypot(C.x-x,C.z-z)<(r||C.r||CAMP_R)); // v123: each camp's own size
 const campAlive=C=>enemies.reduce((n,e)=>n+(e.camp===C&&!e.dead?1:0),0);
 // ---------- spawning ----------
 function spawn(init){
