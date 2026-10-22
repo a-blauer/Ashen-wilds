@@ -27,6 +27,8 @@ def s(pg):
     chk('save gone',ev("()=>!saveInfo()"))
     ev("(c)=>{kqsxOpen('import');const A=$('kqsxA');A.value=c;A.oninput()}",code);pg.wait_for_timeout(200)
     chk('import recognises the code',ev("()=>/Brock/.test($('kqsxM').textContent)"),ev("()=>$('kqsxM').textContent"))
+    # the game's 30 s autosave may have written the hero back since the wipe; wipe again so Import reloads at once (no 'Tap again')
+    ev("()=>{deleteSave();localStorage.removeItem(SAVE_KEY)}")
     with pg.expect_navigation(timeout=600000):pg.click('#kqsxGo')
     pg.wait_for_function("()=>typeof saveInfo=='function'&&!!document.getElementById('devp')",timeout=180000);pg.wait_for_timeout(3000)
     st=ev("()=>({has:!!saveInfo(),name:saveInfo()&&saveInfo().hero.name})")
