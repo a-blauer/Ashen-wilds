@@ -389,7 +389,7 @@ MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDS
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
 python3 v122_support.py      # v122: companion heal / shield / buff go to whoever needs it most (hero or companion)
-python3 probe.py v123_edges.js  # v123: clean edges (no choppable rim trees, groves choppable, edge pieces apart); v123_edges.py: edge screenshots
+python3 v123_edge_test.py      # v123: clean edges (no choppable rim trees, groves choppable, edge pieces apart); v123_edges.py: edge screenshots
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
 python3 v107_ai.py           # the AI picks signature moves in each zone;  v107_tail.py: Gravewyrm/Venomcoil tail during abilities (viewer build)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
