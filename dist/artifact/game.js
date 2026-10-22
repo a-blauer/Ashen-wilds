@@ -2571,7 +2571,7 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
 }
 // ---------------- XP / leveling ----------------
 function gainXP(e){
-  const s=HS(),c=e.c;let xp=(8+c.l*6)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
+  const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   const gap=c.l-hero.lvl;xp*=gap<-5?.25:gap<-2?.7:gap>2?1.2:1;xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});

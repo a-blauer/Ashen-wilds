@@ -86,6 +86,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   set `o.matrix` by hand on an object with `matrixAutoUpdate=false` also set `o.matrixWorldNeedsUpdate=true`.
   `userData.psNo=1` on a top-level object keeps it from ever freezing.
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
+- **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
+  about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
 - **Balance (v112)**: kill XP `ECON96.xp` .1875 (another 75% off); ability ranks cost twice as many points (`kqrCost`);
   elites are about a third as common (camps 1.8% + 0.4%·tier, wanderers 1.2%, in `rosterBuild`); Sovereign health ×4.5
   (`PACE.hp`, was 1.5: three times v110) with posture rescaled so staggers come as often as before; `svPick` never repeats
