@@ -3259,7 +3259,7 @@ function cast_base(i){
   hud();
 }
 function compCast(c,f,sp,t,ally){
-  if(ally&&ally!==pl&&(sp.k=='shield'||sp.k=='heal'||sp.k=='buff')&&compSup121(c,sp,ally))return; // v121: support spell on a companion
+  if(ally&&ally!==pl&&(sp.k=='shield'||sp.k=='heal'||sp.k=='buff')&&compSup122(c,sp,ally))return; // v122: support spell on a companion
   const mult=sp.m||1,fx=sp.fx,P=f.position,col=sp.col,R2=sp.r||2.6;
   if(t){const w=V(t.m.position.x-P.x,0,t.m.position.z-P.z);if(w.lengthSq()>0)f.rotation.y=Math.atan2(w.x,w.z)}
   const d=t?V(t.m.position.x-P.x,0,t.m.position.z-P.z).normalize():V(0,0,1);
@@ -10090,8 +10090,8 @@ function compSpells(dt){
     c.sp.forEach(n=>{
       const sp=CSP[n];if(!sp||c.cdm[n]>0)return;
       const help=sp.k=='shield'||sp.k=='heal'||sp.k=='buff';let al=null;
-      // v121: heal / shield / buff go to whoever needs it most: the hero or another companion (supPick121, 2250)
-      if(help){if(f.lk)return;al=supPick121(c,f,sp);if(!al)return}
+      // v122: heal / shield / buff go to whoever needs it most: the hero or another companion (supPick122, 2250)
+      if(help){if(f.lk)return;al=supPick122(c,f,sp);if(!al)return}
       else if(!t||f.lk||L>kqSpRange(sp)+(t.boss?2.2:0))return;
       c.cdm[n]=sp.cd;compCast(c,f,sp,t,al);
     });
@@ -19573,10 +19573,14 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN;SWFIN=0;
   haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
+  // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's
+  // hitting range and stops there, so the hero never runs into or past the target
+  const lim=typeof SWLIM!='undefined'?SWLIM:null;
   const L=(fin?V100W.LUNGE_FIN:V100W.LUNGE),u0=Math.max(0,(wind-90)/D),u1=Math.min(1,(wind+70)/D);let done=0;
   A.tick=function(u){
     try{if(typeof riding!='undefined'&&riding)return;if(u<u0||done>=1)return;
-      const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t),dd=(s-done)*L;done=s;if(dd<=0)return;
+      const t=Math.min(1,(u-u0)/(u1-u0)),s=t*t*(3-2*t);let dd=(s-done)*L;done=s;if(dd<=0)return;
+      if(lim&&lim.e){const room=swRoom(lim);if(room<=0){done=1;return}dd=Math.min(dd,room)}
       const ry=pl.rotation.y,nx=pl.position.x+Math.sin(ry)*dd,nz=pl.position.z+Math.cos(ry)*dd;
       if(typeof solid=='function'&&(solid(nx,nz)||solid(nx+Math.sin(ry)*.35,nz+Math.cos(ry)*.35)))return;
       pl.position.x=nx;pl.position.z=nz}catch(_){}}}}
@@ -22723,7 +22727,7 @@ var SPX105={
 var SPXT105={bite:1,rain:1,chain:1,meteor:1};
 {const orig=compCast;compCast=function(c,f,sp,t){const name=Object.keys(CSP).find(k=>CSP[k]===sp),R=name&&SPX105[name];
   if(!FX105.on||!R||!f||!f.b||f._bo)return orig.apply(this,arguments);
-  const al=arguments[4]||null; // v121: the ally a heal / shield / buff goes to (the hero or a companion's model)
+  const al=arguments[4]||null; // v122: the ally a heal / shield / buff goes to (the hero or a companion's model)
   const P=f.position.clone(),tp=t&&t.m?t.m.position.clone():null;if(tp){const w=V(tp.x-P.x,0,tp.z-P.z);if(w.lengthSq()>0)f.rotation.y=Math.atan2(w.x,w.z)}
   else if(al&&al!==f){const w=V(al.position.x-P.x,0,al.position.z-P.z);if(w.lengthSq()>.01)f.rotation.y=Math.atan2(w.x,w.z)}
   const d=tp?V(tp.x-P.x,0,tp.z-P.z).normalize():V(Math.sin(f.rotation.y),0,Math.cos(f.rotation.y)),hp=(al||pl).position,x={c,f,sp,t,P,d,tp,col:sp.col,al,hp,hpf:()=>hp};
@@ -29142,94 +29146,150 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .abpvl button{padding:1px 8px!important;font-size:.8rem!important}
 @media (max-width:640px){#xw .abpvc{height:180px}}
 </style>`);
-// ---------- v121 companion support spells pick their target ----------
+// ================= v121: melee attacks step only into hitting range =================
+// Before: every melee basic attack pushed the hero forward a fixed amount — a small step (pl.step, ~0.35 tiles) plus the
+// v101 swing lunge (0.28, 0.5 on combo finishers) — however close the enemy already was. Hitting an enemy you were
+// standing next to walked you into its body, and a few swings in a row carried you through and past it.
+// Now: before each melee swing we find the enemy being swung at (the locked target if it is ahead, else the nearest
+// enemy in front) and the distance at which the swing already reaches it ("stand", a little inside the hit radius and
+// never closer than the two bodies touching). The step and the lunge together only close the gap to that distance:
+//  · out of range → the hero steps in (no more than the old step + lunge), stopping once in range;
+//  · in range     → the hero doesn't move;
+//  · the lunge re-measures the gap every frame, so an enemy that walks in during the wind-up stops it early.
+// Swinging at nothing (no enemy ahead) keeps the old step + lunge. Abilities (kqsLunge) already stop short and are untouched.
+var SWLIM=null;                     // {e,stand} for the swing being started; read by swingAnim's lunge (1710)
+var SWV121={on:true,FRONT:1.05,LOOK:2.6,STAND:.8,BODY:.95};
+// how far the hero may still move forward (along its facing) before reaching `stand` from the target
+function swRoom(lim){
+  const e=lim&&lim.e;if(!e||e.dead||!e.m)return 1e9;
+  const dx=e.m.position.x-pl.position.x,dz=e.m.position.z-pl.position.z;
+  if(Math.hypot(dx,dz)<=lim.stand)return 0;
+  const ry=pl.rotation.y,along=dx*Math.sin(ry)+dz*Math.cos(ry);
+  return along-lim.stand}
+// the enemy this swing is aimed at, and the distance to stop at
+function swPlan(rg,d){
+  if(!SWV121.on||!(rg>0)||!d||typeof enemies=='undefined')return null;
+  let best=null,bd=1e9;
+  const ok=e=>{
+    if(!e||e.dead||!e.m||!e.c)return 0;
+    const dx=e.m.position.x-pl.position.x,dz=e.m.position.z-pl.position.z,L=Math.hypot(dx,dz),bonus=(e.c.al?.5:0)+(e.boss?1.2:0);
+    if(L>rg+bonus+SWV121.LOOK)return 0;
+    if(L>.4&&Math.acos(Math.max(-1,Math.min(1,(dx*d.x+dz*d.z)/L)))>SWV121.FRONT)return 0;
+    return L};
+  if(typeof tgt!='undefined'&&tgt&&ok(tgt))best=tgt;
+  else for(const e of enemies){const L=ok(e);if(L&&L<bd){bd=L;best=e}}
+  if(!best)return null;
+  const reach=rg+(best.c.al?.5:0)+(best.boss?1.2:0),body=SWV121.BODY+(best.boss?1.2:0)+(best.c.al?.25:0);
+  const stand=Math.min(reach-.1,Math.max(body,reach*SWV121.STAND));
+  return {e:best,stand}}
+// run a melee attack with the plan in place, then trim the small step to the gap (the lunge trims itself)
+function swRun(f,self,args,rg,d){
+  let lim=null;try{lim=swPlan(rg,d)}catch(_){}
+  const s0=pl.step;SWLIM=lim;
+  try{return f.apply(self,args)}
+  finally{SWLIM=null;
+    try{if(lim&&pl.step&&pl.step!==s0&&pl.step.sp>0){
+      const room=Math.max(0,swRoom(lim)),go=Math.min(pl.step.t*pl.step.sp,room);
+      if(go<.01)pl.step=null;else pl.step.t=go/pl.step.sp}}catch(_){}}}
+// class basic attack (no weapon type behaviour): reach = class range (greatsword/greataxe a touch longer)
+{const f=swing_base;swing_base=function(){
+  let rg=0,d=null;
+  try{const C=CLS[hero.cls];if(C&&C.atk!='bow'&&C.atk!='staff'&&!(atkCd>0)&&party.length&&!hero.chan){
+    const w=eq.weapon&&canUse(eq.weapon)?eq.weapon:null,wt=w?itT(w).wt:null;rg=C.rng*(wt=='gs'||wt=='ga'?1.08:1);d=aimDir()}}catch(_){}
+  if(!d)return f.apply(this,arguments);
+  return swRun(f,this,arguments,rg,d)}}
+// weapon-type melee (swords, axes, halberd, claws…): reach = class range × weapon reach
+{const f=wMelee;wMelee=function(Q,C,s,raw,d){
+  let rg=0;try{rg=C.rng*Q.rg}catch(_){}
+  return swRun(f,this,arguments,rg,d)}}
+// ---------- v122 companion support spells pick their target ----------
 // Heal, shield and buff spells (CSP k 'heal' / 'shield' / 'buff') used to land only on the hero. Now the casting companion
 // looks at the hero and every companion on the field (itself included) and casts on whoever needs it most:
 //   heal   → the ally with the lowest health share, once someone is below 70% (the hero gets a small tie-break bonus)
 //   shield → the ally under the most pressure (enemies attacking it, recently hurt, low health) without a strong shield already
 //   buff   → attack buffs go to an ally that is fighting (hero first), defence buffs to the ally under the most pressure;
 //            an ally that already has this buff is skipped
-// supPick121 (called from compSpells, 0870) returns the target's model (pl or a follower); compCast (0130) hands a companion
-// target to compSup121, and the v105 effect recipes (1930) draw at x.hp, the target's position.
-// Companion shields and buffs live in SUP121 (a Map keyed by the companion object), so they are never saved with the companion.
-var SUP121=new Map(),SUP121H={hp:0,hitT:0},HT121=null,ABS121=0;
-function sup121(c){let o=SUP121.get(c);if(!o){o={sh:0,shT:0,bf:[],hp:c.h,hitT:0};SUP121.set(c,o)}return o}
+// supPick122 (called from compSpells, 0870) returns the target's model (pl or a follower); compCast (0130) hands a companion
+// target to compSup122, and the v105 effect recipes (1930) draw at x.hp, the target's position.
+// Companion shields and buffs live in SUP122 (a Map keyed by the companion object), so they are never saved with the companion.
+var SUP122=new Map(),SUP122H={hp:0,hitT:0},HT122=null,ABS122=0;
+function sup122(c){let o=SUP122.get(c);if(!o){o={sh:0,shT:0,bf:[],hp:c.h,hitT:0};SUP122.set(c,o)}return o}
 // total of one buff stat on a companion right now (e.g. 'paP', 'as', 'dr')
-function sup121Bf(c,k){const o=SUP121.get(c);if(!o||!o.bf.length)return 0;const now=performance.now();let v=0;for(const b of o.bf)if(b.t>now&&b.s[k])v+=b.s[k];return v}
-function sup121Shield(c){const o=SUP121.get(c);return o&&o.sh>0&&o.shT>performance.now()?o.sh:0}
+function sup122Bf(c,k){const o=SUP122.get(c);if(!o||!o.bf.length)return 0;const now=performance.now();let v=0;for(const b of o.bf)if(b.t>now&&b.s[k])v+=b.s[k];return v}
+function sup122Shield(c){const o=SUP122.get(c);return o&&o.sh>0&&o.shT>performance.now()?o.sh:0}
 // everyone a support spell could land on: the hero, then each companion on the field near the caster
-function sup121Allies(f0){
+function sup122Allies(f0){
   const L=[];if(!(typeof AWD!='undefined'&&AWD.dead))L.push({m:pl,c:null,fr:hero.hp/Math.max(1,heroMax())});
   fols.forEach((f,i)=>{const c=party[i];if(!f||!c||c.h<=0||c.emp||!f.visible)return;if(f0&&d2(f.position,f0.position)>14)return;
     L.push({m:f,c,fr:c.h/Math.max(1,M(c))})});
   return L}
 // how much an ally is being pressed: enemies winding up on it, enemies next to it, damage taken in the last 3s
-function sup121Threat(a){
+function sup122Threat(a){
   const P=a.m.position,now=performance.now();let s=0;
   enemies.forEach(e=>{if(e.dead||!e.agg||!e.m)return;if(e.atk&&e.atk.tg===a.m)s+=1;else if(d2(e.m.position,P)<3.5)s+=.35});
-  const ht=a.c?(SUP121.get(a.c)||{}).hitT||0:SUP121H.hitT;if(now-ht<3000)s+=.8;
+  const ht=a.c?(SUP122.get(a.c)||{}).hitT||0:SUP122H.hitT;if(now-ht<3000)s+=.8;
   return s}
-function sup121Fight(){return enemies.some(e=>e.agg&&!e.dead&&e.m&&d2(e.m.position,pl.position)<10)}
-function sup121HasBuff(a,sp){const now=performance.now();
+function sup122Fight(){return enemies.some(e=>e.agg&&!e.dead&&e.m&&d2(e.m.position,pl.position)<10)}
+function sup122HasBuff(a,sp){const now=performance.now();
   if(!a.c)return (hero.buffs||[]).some(b=>b&&b.s===sp.buff&&b.t>now);
-  const o=SUP121.get(a.c);return !!(o&&o.bf.some(b=>b.s===sp.buff&&b.t>now))}
-var SUP121_OFF={paP:1,maP:1,as:1,crit:1,cdm:1,mspd:1};
-function supPick121(c,f,sp){
-  const A=sup121Allies(f);if(!A.length)return null;
+  const o=SUP122.get(a.c);return !!(o&&o.bf.some(b=>b.s===sp.buff&&b.t>now))}
+var SUP122_OFF={paP:1,maP:1,as:1,crit:1,cdm:1,mspd:1};
+function supPick122(c,f,sp){
+  const A=sup122Allies(f);if(!A.length)return null;
   let best=null,bs=-1e9;const take=(a,s)=>{if(s>bs){bs=s;best=a}};
   if(sp.k=='heal'){
     A.forEach(a=>{if(a.fr<.7)take(a,(1-a.fr)+(a.c?0:.05))});
     return best&&best.m}
-  if(!sup121Fight())return null;
+  if(!sup122Fight())return null;
   if(sp.k=='shield'){
     const now=performance.now();
-    A.forEach(a=>{const mx=a.c?M(a.c):heroMax(),val=mx*(sp.v||.15),cur=a.c?sup121Shield(a.c):(hero.shT>now?hero.sh||0:0);
-      if(cur>=val*.5)return;take(a,sup121Threat(a)+(1-a.fr)*1.5+(a.c?0:.1))});
+    A.forEach(a=>{const mx=a.c?M(a.c):heroMax(),val=mx*(sp.v||.15),cur=a.c?sup122Shield(a.c):(hero.shT>now?hero.sh||0:0);
+      if(cur>=val*.5)return;take(a,sup122Threat(a)+(1-a.fr)*1.5+(a.c?0:.1))});
     return best&&best.m}
   if(sp.k=='buff'){
-    const off=Object.keys(sp.buff||{}).some(k=>SUP121_OFF[k]);
-    A.forEach(a=>{if(sup121HasBuff(a,sp))return;
+    const off=Object.keys(sp.buff||{}).some(k=>SUP122_OFF[k]);
+    A.forEach(a=>{if(sup122HasBuff(a,sp))return;
       if(off){const P=a.m.position,eng=enemies.some(e=>e.agg&&!e.dead&&e.m&&d2(e.m.position,P)<4.5);if(!eng&&a.c)return;
-        take(a,(eng?1:0)+(a.c?0:.5)+sup121Threat(a)*.2)}
-      else take(a,sup121Threat(a)+(1-a.fr)+(a.c?0:.1))});
+        take(a,(eng?1:0)+(a.c?0:.5)+sup122Threat(a)*.2)}
+      else take(a,sup122Threat(a)+(1-a.fr)+(a.c?0:.1))});
     return best&&best.m}
   return null}
 // the spell lands on a companion (returns false when that companion can no longer take it: compCast then falls back to the hero)
-function compSup121(c,sp,ally){
+function compSup122(c,sp,ally){
   const i=fols.indexOf(ally),tc=i>=0?party[i]:null;if(!tc||tc.h<=0||tc.emp)return false;
-  const P=ally.position,col=sp.col,mx=M(tc),now=performance.now(),o=sup121(tc);
+  const P=ally.position,col=sp.col,mx=M(tc),now=performance.now(),o=sup122(tc);
   if(sp.k=='heal'){const h=Math.max(1,Math.round(Math.min(mx-tc.h,mx*sp.v)));tc.h=Math.min(mx,tc.h+mx*sp.v);o.hp=tc.h;
     dn(P,'+'+h,'#7dffa0',-10);ring(P,col,2.4,600)}
-  else if(sp.k=='shield'){const v=mx*sp.v*(1+(HS().shieldP||0));o.sh=Math.max(sup121Shield(tc),v);o.shT=now+(sp.dur||8)*1000;
+  else if(sp.k=='shield'){const v=mx*sp.v*(1+(HS().shieldP||0));o.sh=Math.max(sup122Shield(tc),v);o.shT=now+(sp.dur||8)*1000;
     ring(P,col,2.2,600);burst(gY(P,1),col,24,1.4,2,.6);dn(P,'🛡 '+Math.round(v),'#c8d8ff',-10);
     if(sp.nova)enemies.forEach(e=>{if(!e.dead&&e.m&&d2(e.m.position,P)<2.8)compHit(c,e,sp.nova)})}
   else if(sp.k=='buff'){o.bf=o.bf.filter(b=>b.t>now&&b.s!==sp.buff);o.bf.push({s:sp.buff,t:now+(sp.dur||8)*1000,i:sp.i});
     ring(P,col,2.6,600);dn(P,sp.i||'✦','#ffe8a0',-10)}
   return true}
 // companion stats: attack / defence buffs (paP maP pdP mdP) raise the matching stat while they last
-{const f=cStat;cStat=function(c,k){const v=f.apply(this,arguments);if(!SUP121.size||!c||c.st)return v;const b=sup121Bf(c,k+'P');return b?v*(1+b):v}}
+{const f=cStat;cStat=function(c,k){const v=f.apply(this,arguments);if(!SUP122.size||!c||c.st)return v;const b=sup122Bf(c,k+'P');return b?v*(1+b):v}}
 // damage to a companion: its damage-reduction buff, then its shield soaks the hit
-{const f=hitTarget;hitTarget=function(e,tg){const i=fols.indexOf(tg),me=i>=0?party[i]:null,h0=me?me.h:0;HT121=me?tg:null;ABS121=0;
-  try{return f.apply(this,arguments)}finally{HT121=null;if(me&&ABS121){me.h=h0;ABS121=0}}}}
-{const f=dmgCE;dmgCE=function(a,b){let d=f.apply(this,arguments);if(!HT121||!b||!SUP121.has(b))return d;
-  const i=fols.indexOf(HT121);if(i<0||party[i]!==b)return d;const o=SUP121.get(b),dr=sup121Bf(b,'dr');
+{const f=hitTarget;hitTarget=function(e,tg){const i=fols.indexOf(tg),me=i>=0?party[i]:null,h0=me?me.h:0;HT122=me?tg:null;ABS122=0;
+  try{return f.apply(this,arguments)}finally{HT122=null;if(me&&ABS122){me.h=h0;ABS122=0}}}}
+{const f=dmgCE;dmgCE=function(a,b){let d=f.apply(this,arguments);if(!HT122||!b||!SUP122.has(b))return d;
+  const i=fols.indexOf(HT122);if(i<0||party[i]!==b)return d;const o=SUP122.get(b),dr=sup122Bf(b,'dr');
   if(dr)d=Math.max(1,Math.round(d*(1-Math.min(.75,dr))));
-  if(sup121Shield(b)>0){const s=Math.min(o.sh,d);o.sh-=s;d-=s;if(o.sh<=0)o.sh=0;if(d<=0){ABS121=1;dn(HT121.position,'Absorbed','#c8d8ff',-20,600);return 0}}
+  if(sup122Shield(b)>0){const s=Math.min(o.sh,d);o.sh-=s;d-=s;if(o.sh<=0)o.sh=0;if(d<=0){ABS122=1;dn(HT122.position,'Absorbed','#c8d8ff',-20,600);return 0}}
   return d}}
 // every frame: attack-speed buffs speed up a companion's attacks, note who just took damage, drop what has run out
-function sup121Tick(dt){
+function sup122Tick(dt){
   const now=performance.now();
-  if(hero.hp<SUP121H.hp-.5)SUP121H.hitT=now;SUP121H.hp=hero.hp;
-  fols.forEach((f,i)=>{const c=party[i];if(!f||!c)return;const o=SUP121.get(c);
-    if(!o){if(c.h>0)sup121(c);return}
+  if(hero.hp<SUP122H.hp-.5)SUP122H.hitT=now;SUP122H.hp=hero.hp;
+  fols.forEach((f,i)=>{const c=party[i];if(!f||!c)return;const o=SUP122.get(c);
+    if(!o){if(c.h>0)sup122(c);return}
     if(c.h<o.hp-.5)o.hitT=now;o.hp=c.h;
     if(c.h<=0||c.emp){o.sh=0;o.bf.length=0;return}
     if(o.sh>0&&o.shT<=now)o.sh=0;
     if(o.bf.length)o.bf=o.bf.filter(b=>b.t>now);
-    const as=sup121Bf(c,'as');if(as&&f.cdA>0)f.cdA-=dt*as;
+    const as=sup122Bf(c,'as');if(as&&f.cdA>0)f.cdA-=dt*as;
     if(f.visible&&(o.sh>0||o.bf.length)&&Math.random()<dt*2.5)burst(gY(f.position,.8),o.sh>0?0xc8d8ff:0xffe08a,1,.4,.6,.4)});
-  if(SUP121.size>8)for(const c of SUP121.keys())if(!party.includes(c))SUP121.delete(c)}
-{const f=compSpells;compSpells=function(dt){f.apply(this,arguments);try{sup121Tick(dt)}catch(e){console.warn('v121 support',e)}}}
+  if(SUP122.size>8)for(const c of SUP122.keys())if(!party.includes(c))SUP122.delete(c)}
+{const f=compSpells;compSpells=function(dt){f.apply(this,arguments);try{sup122Tick(dt)}catch(e){console.warn('v122 support',e)}}}
 // spell text: say who the spell helps now
 (function(){const D={
   'Stone Ward':'Wraps the ally who needs it most (you or a companion) in stone that absorbs 22% of their max health.',

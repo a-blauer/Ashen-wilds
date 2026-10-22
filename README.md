@@ -142,6 +142,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Companion abilities (v105)**: every CSP spell needs a recipe in `SPX105` (motion `m`, amplitude `a`, speed `d`, effect
   `fx`/`shot`/`zone`); `v105_abil.py` casts all of them and fails when one is missing or two share the same motion settings.
   The spell lands at the motion's strike moment (`MV105[m].h`). Bites play the motion in place of the generic lunge.
+- **Attack step (v121)**: a hero melee basic attack's small step (`pl.step`) and swing lunge (1710) only close the gap to
+  the enemy being swung at (`swPlan`/`swRoom` in `2250-v121-attack-step-to-range.js`): no movement when already in range,
+  a step in when not, re-measured every frame during the lunge. Swinging at nothing keeps the old step.
 - **Baked attack keys**: re-baking with `BAKE=1 python3 v100_anim.py` nudges every move a little (the IK is not fully
   deterministic). When adding moves, splice only the new lines into `1705-v100-anim-baked-keys.js` (as v105 did for the flail).
 - **Monster moves (v107)**: each of the 18 zone monsters has one basic attack (strike/bite/spit/throw/bolt) and two signature
@@ -357,6 +360,7 @@ TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; eve
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
 python3 probe.py v120_idle_tilt.js # v120: idle wandering enemies never pitch their whole body (the old v42 sniff tilt/wobble is gone); expects maxPitch 0
+python3 probe.py v121_step.js     # v121: melee swings only step into hitting range; expects inRange/touching to stay 0, outOfRange to stop ~0.8×reach away, air to keep the old step
 python3 probe.py v120_tail.js # v120: beast tails stop smoothly after a run (stopMaxStep now ≪ old), lift a little while running, drag behind turns (turnLag > 0)
 python3 v111_farcull.py      # v111: far-scenery cull, pixels match with it on/off at 49 spots (slow: ~10 min)
 python3 v106_instances.py    # (v106 version, superseded by v108_instances.py)
