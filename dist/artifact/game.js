@@ -3712,7 +3712,13 @@ function mini(){
 // ================= v36: Bounty boards — every town's notice board hands out hunts, supply runs and challenges =================
 
 // ================= v36: Save / load (browser storage) =================
-const SAVE_KEY='et_save_v1';
+// v116: three character slots. Slot 1 keeps the old key, so an existing hero simply becomes slot 1. SAVE_KEY follows the
+// chosen slot (kqSlotSet); everything else reads and writes the save through SAVE_KEY / saveInfo as before. Slot UI: 2145.
+var KQSL={keys:['et_save_v1','et_save_v1_s2','et_save_v1_s3'],n:0};
+try{const n=parseInt(localStorage.getItem('kq_slot'),10);if(n>=0&&n<3)KQSL.n=n}catch(_){}
+var SAVE_KEY=KQSL.keys[KQSL.n];
+function kqSlotSet(n){n=Math.max(0,Math.min(2,n|0));KQSL.n=n;SAVE_KEY=KQSL.keys[n];try{localStorage.setItem('kq_slot',String(n))}catch(_){}}
+function kqSlotInfo(n){try{const s=JSON.parse(localStorage.getItem(KQSL.keys[n]));return s&&s.hero?s:null}catch(_){return null}}
 function saveInfo(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.hero?s:null}catch(_){return null}}
 function gameSnapshot(){
   const now=performance.now(),P={x:pl.position.x,z:pl.position.z};
@@ -5144,7 +5150,7 @@ var zSeen=new Set();
 {const bm=$('hot');if(bm&&!$('pwrB'))bm.insertAdjacentHTML('afterbegin','<div id="pwrB" title="Power level: your overall damage and survivability">Power<b>0</b></div>')}
 {const f=hud;hud=function(){f.apply(this,arguments);const pw=heroPower(),pb=$('pwrB');if(pb){const zr=zoneRec();pb.querySelector('b').textContent=pw.toLocaleString();pb.querySelector('b').style.color=zr&&pw<zr.p?'#ff8a6a':''}
   const zr=zoneRec(),at=$('areaT');if(zr&&at){const lead=party[0],lg=lead?ovG(lead):null,gi=g=>GR.findIndex(x=>x[1]==g);
-    // v116: no pop-up on entering a zone; the recommended power sits in the location box by the minimap (red ⚠ when yours is lower)
+    // v117: no pop-up on entering a zone; the recommended power sits in the location box by the minimap (red ⚠ when yours is lower)
     at.innerHTML=at.textContent+` <span class="rec" title="Recommended power for this area · yours: ${pw.toLocaleString()}">· <span class="${pw<zr.p?'recl':'reco'}">⚔ Rec. power ${zr.p.toLocaleString()}${pw<zr.p?' ⚠':''}</span></span>`}}}
 
 // ---------------- 7. selling: pick several, then confirm ----------------
@@ -5316,7 +5322,7 @@ function areaName(){
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
 var MREC=['D','C','C','B','A','A'];
-// v116: every zone (Kindlelight too), per instance: the power for the start of the instance you are in
+// v117: every zone (Kindlelight too), per instance: the power for the start of the instance you are in
 function zoneRec(){const r=curMap();if(r<0||!PMAP[r])return null;const p=PMAP[r];let I=null;try{I=curIns()}catch(_){}const L=I&&I.lv?I.lv[0]:p.lv[0];return {b:{n:p.n},g:MREC[r],p:recPower(L)}}
 // ---- the Portal Court ----
 const pUnlocked=i=>i==0||bossDone.has(i-1)||(typeof CHEAT!='undefined'&&CHEAT.portals),pDone=i=>bossDone.has(i);
@@ -5466,11 +5472,27 @@ function mpBossAuth(i){let h=(AF&&AF.i===i&&hero.hp>0)?MP.me:null;for(const k in
 function mpElig(e){return !e.dead&&!e.boss&&!e.minion&&!e.ev&&!e.wv}
 
 // ---------- connect ----------
+// v116: MP.room is a relay that forwards to whichever backend is live: the claude.ai room (signed-in viewers of the
+// artifact) or a join-code session (2150, plain WebRTC, no account). A backend is any object with the room's
+// on / onPeers / emit / presence / peers. mpAttach listens to a backend once; only the live one (MPX.be) gets through.
+var MPX={be:null,cl:null,H:{},PH:[],none:Object.freeze([])};
+var MP_TOPICS=['es','ev','hit','bs','trade','chat'];
+MP.room={on:(t,f)=>{(MPX.H[t]=MPX.H[t]||[]).push(f);return()=>{}},onPeers:f=>{MPX.PH.push(f);return()=>{}},
+  emit:(t,d)=>MPX.be?MPX.be.emit(t,d):Promise.resolve(),presence:p=>MPX.be?MPX.be.presence(p):Promise.resolve(),peers:()=>MPX.be?MPX.be.peers():MPX.none};
+function mpAttach(be){MP_TOPICS.forEach(t=>be.on(t,m=>{if(MPX.be===be)(MPX.H[t]||[]).forEach(f=>{try{f(m)}catch(err){console.warn(err)}})}));
+  be.onPeers(ch=>{if(MPX.be===be)MPX.PH.forEach(f=>{try{f(ch)}catch(err){console.warn(err)}})})}
+// back to playing alone: other heroes go, monsters mirrored from someone else become ours again, a trade in progress ends
+function mpSolo(){for(const k in MP.rh)mpDropRH(k);MP.others=0;MP.lastPs=null;
+  const was=MP.host;try{enemies.forEach(e=>{if(e.mir){e.mir=0;e.nx=null;e.agg=0;e.cd=1}});if(was&&was!==MP.me&&typeof mpAdopt=='function')mpAdopt(MP.rg)}catch(err){console.warn(err)}
+  MP.host='';MP.emap={};MP.hitq={};MP.evq=[];MP.kq=[];MP.pend=null;MP.inv=null;try{mpToast()}catch(_){}
+  if(MP.tr){MP.tr=null;try{if(xwMode=='trade')closeX()}catch(_){}}}
+function mpUse(be){if(be===MPX.be)return;mpSolo();MPX.be=be||null;MP.lastPres='';MP.on=!!MPX.be;try{mpBtn()}catch(_){}}
+// handlers are looked up when a message arrives, so later wrappers of mpOnEV etc. (1240 fxB, 2170) are used
+MP_TOPICS.forEach(t=>MP.room.on(t,m=>({es:mpOnES,ev:mpOnEV,hit:mpOnHit,bs:mpOnBS,trade:mpOnTrade,chat:mpOnChat})[t](m)));
+MP.room.onPeers(ch=>{if(!MP.on)return;(ch.left||[]).forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
 (async function(){
-  try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MP.room=room;
-    room.on('es',mpOnES);room.on('ev',mpOnEV);room.on('hit',mpOnHit);room.on('bs',mpOnBS);room.on('trade',mpOnTrade);room.on('chat',mpOnChat);
-    room.onPeers(ch=>{if(!MP.on)return;ch.left.forEach(p=>{if(!p.sameTab&&MP.rh[p.peer]){const n=mpName(p.peer);say('👥 '+mpEsc(n)+' left.');if(MP.tr&&MP.tr.p===p.peer){MP.tr=null;if(xwMode=='trade')closeX();say('Trade cancelled.')}}})});
-    MP.on=true;mpBtn();
+  try{if(typeof claude=='undefined'||!claude||!claude.use)return;const room=await claude.use('room');if(!room)return;MPX.cl=room;mpAttach(room);
+    if(!MPX.be)mpUse(room);
   }catch(err){console.warn('co-op unavailable',err)}
 })();
 
@@ -5632,8 +5654,9 @@ function mpOnEV(msg){
 }
 
 // ---------- per-frame ----------
+// v116: with no live backend there is nothing to sync (MPX.be)
 function mpTick(){
-  if(!MP.on||!party.length)return;const now=performance.now(),rdt=Math.min(.1,(now-(MP.lt||now))/1000);MP.lt=now;
+  if(!MP.on||!party.length||!MPX.be)return;const now=performance.now(),rdt=Math.min(.1,(now-(MP.lt||now))/1000);MP.lt=now;
   mpPeersSync();mpRoles(now);
   for(const k in MP.rh){const r=MP.rh[k],pr=r.pr;if(!pr)continue;const vis=pr.rg===MP.rg&&MP.rg>-2;
     if(vis&&!r.m)mpModel(r);if(!r.m)continue;r.m.visible=vis;if(!vis)continue;mpModel(r);
@@ -5994,7 +6017,7 @@ var ROST={r:-9,slots:[],left:0};
 // v106: an instance is half a v97 zone: 65 roaming groups and 4 camps each
 // v108: a field instance is half a v106 one again: 33 roaming groups and 3 camps each
 var ROST_G=33,RESP_T=50,RESP_NEAR=14; // v112: 50 s; never within aggro reach (4.5-6 tiles + a camp pulling its friends) of a hero
-// v116: no elites in Kindlelight's first field instance (the starting area)
+// v117: no elites in Kindlelight's first field instance (the starting area)
 function noElite116(I){return !!I&&I.z===0&&I.k===0}
 function rosterBuild(r){const I=INSL[r],p=PMAP[I.z],DW=MAP.DW,S=[];let sid=0;const L=BIOEN[p.n]||['hobgoblin'];
   // the creatures of the instance you left go (they are out of reach behind the void anyway)
@@ -12370,13 +12393,13 @@ $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.c
   if(D.kqsel!=null){KQS.sel=D.kqsel;rX()}});
 // the talents window points to the ability book (replaces the v71 skill list)
 function skHTML(){return '';const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
-// v116: Talents (K) and Abilities (C) are two separate windows with their own keys; neither links to the other.
+// v117: Talents (K) and Abilities (C) are two separate windows with their own keys; neither links to the other.
 // C opens the Abilities window and closes it again.
 addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='c')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
   if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation();return}if(!uiOpen())openAbil()},true);
 {const f=openTal;openTal=function(){if(!$('xw').classList.contains('hide')&&xwMode=='abil')closeX();KQS.tab='tal';return f.apply(this,arguments)}}
 function kqsTabs(on){const ap=apFree();return `<div class="tabs kqs-tabs"><button class="${on=='tal'?'on':''}" data-kqstal="1">✦ Talents${tpFree()?' <b class="kqs-n">'+tpFree()+'</b>':''}</button><button class="${on=='ab'?'on':''}" data-kqsopen="1">⚡ Abilities${ap?' <b class="kqs-n">'+ap+'</b>':''}</button></div>`}
-// (v116: the Talents window no longer carries a Talents | Abilities tab bar)
+// (v117: the Talents window no longer carries a Talents | Abilities tab bar)
 document.addEventListener('click',e=>{const t=e.target.closest('#tal [data-kqstal]');if(t)e.preventDefault()});
 {const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>C</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
 document.head.insertAdjacentHTML('beforeend',`<style>
@@ -13168,7 +13191,7 @@ function kqmForgeTab(){const E=SLOTS.map(k=>eq[k]).filter(Boolean),G=gear.slice(
 // ---------------- the render hook ----------------
 var KQM_FORGE=7,KQM_STATS=8,KQM_SMITH=false;
 function kqmBag(){kqmBagInit();if(!KQM.ready)return;kqmMarkNew();
-  // v116: the Forge tab exists only while the bag was opened at the Blacksmith (KQM_SMITH, set by TWN100_ACT.smith)
+  // v117: the Forge tab exists only while the bag was opened at the Blacksmith (KQM_SMITH, set by TWN100_ACT.smith)
   const bt=$('bt');if(!KQM_SMITH&&bagTab2==KQM_FORGE)bagTab2=0;
   if(bt){const fb=bt.querySelector('[data-bt="'+KQM_FORGE+'"]');if(fb&&!KQM_SMITH){fb.remove();bt.querySelectorAll('.on').forEach(x=>x.classList.remove('on'))}
     if(!bt.querySelector('[data-bt="'+KQM_STATS+'"]'))bt.insertAdjacentHTML('beforeend',`<button data-bt="${KQM_STATS}" class="${bagTab2==KQM_STATS?'on':''}">Stats</button>`);
@@ -21688,7 +21711,7 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Kingdom of Duskhold';
   R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
   HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i),rt('h:'+i)],col:'#d8b46a'})));
   if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
-  // ---- citizens: their own Villagers tab since v116 (vlRender116 in 2150) ----
+  // ---- citizens: their own Villagers tab since v117 (vlRender116 in 2150) ----
   // ---- plan ----
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
   const lkd=lot&&typeof lotOpen109=='function'&&!lotOpen109(lot.id),pinf=typeof lotInfo109=='function'?lotInfo109(P):'';
@@ -21805,7 +21828,7 @@ function wkSpark103(S,col){try{if(!S.g||!S.g.visible)return;const p=S.g.getWorld
 // tools and props (hung on the right hand, or between the hands)
 function wkTool103(kind){const g=new THREE.Group(),M=c=>new THREE.MeshLambertMaterial({color:c});
   const stick=(l,c)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,l,5),M(c||0x5a3a22));m.position.y=-l*.3;g.add(m);return m};
-  if(kind=='hammer'){stick(.42);const h=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.16),M(0x3a3a42));h.position.y=-.38;g.add(h)} // v116: head across the swing plane, so a face strikes down
+  if(kind=='hammer'){stick(.42);const h=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.16),M(0x3a3a42));h.position.y=-.38;g.add(h)} // v117: head across the swing plane, so a face strikes down
   else if(kind=='ladle'){stick(.9,0x6a4a2a);const h=new THREE.Mesh(new THREE.SphereGeometry(.06,6,4,0,6.3,0,1.6),M(0x7a5a3a));h.position.y=-.62;h.rotation.x=Math.PI;g.add(h)}
   else if(kind=='stick'){stick(.85,0x6a4a2a)}
   else if(kind=='fork'){stick(1.3,0x6a4a2a);for(let i=-1;i<=1;i++){const t=new THREE.Mesh(new THREE.BoxGeometry(.012,.22,.012),M(0x4a4a52));t.position.set(i*.05,-1.0,0);g.add(t)}}
@@ -21988,14 +22011,14 @@ function dcRender103(){const own=DECO103.filter(D=>SH.deco[D.k]!=null).length,on
     return `<div class="dccard${has?' own':''}${o?' on':''}"><div class="dci">${D.i}</div><div class="dct"><b>${D.n}</b><small>${D.d}</small></div><div class="dca">${has?`<button class="dctg${o?' on':''}" data-dct="${D.k}" aria-pressed="${o}">${o?'On':'Off'}</button>`:`<button class="pri" data-dcb="${D.k}" ${gold>=D.g?'':'disabled'}>🪙 ${D.g}</button>`}</div></div>`}).join('');
   $('xwB').innerHTML=`<div class="mut dcsum">${own} of ${DECO103.length} owned · ${on} shown. Decorations stand in fixed spots round the square and never block a building lot.</div><div class="dcgrid">${rows}</div>`;
   $('xwF').innerHTML='<span class="mut dtl">Bought once, kept forever. Switch any decoration off to hide it, and on again whenever you like.</span>'}
-// v116: three tabs — Construction (the plan and the building list), Villagers (vlRender116 in 2150), Decorations
+// v117: three tabs — Construction (the plan and the building list), Villagers (vlRender116 in 2150), Decorations
 {const f=XR.hold;XR.hold=function(){const t=KM103.tab;
   if(t=='deco'||t=='vill'){$('xwT').textContent='🏰 Kingdom of Duskhold';$('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;try{kmPickEnd103()}catch(_){}if(t=='deco')dcRender103();else vlRender116()}else f.apply(this,arguments);
   const b=(k,l)=>`<button class="${(t==k||(k=='kingdom'&&t!='deco'&&t!='vill'))?'on':''}" data-kmtab="${k}">${l}</button>`;
   $('xwB').insertAdjacentHTML('afterbegin',`<div class="tabs kmtabs">${b('kingdom','🏗️ Construction')}${b('vill','👥 Villagers')}${b('deco','🌟 Decorations')}</div>`)}}
 $('xw').addEventListener('click',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-kmtab],[data-dcb],[data-dct]');if(!t||t.disabled)return;const d=t.dataset;
   if(d.kmtab){KM103.tab=d.kmtab;rX()}else if(d.dcb){dcBuy103(d.dcb);rX()}else if(d.dct){dcToggle103(d.dct);rX()}});
-// opening the window from a house door goes to the Villagers tab (v116)
+// opening the window from a house door goes to the Villagers tab (v117)
 {const f=openX;openX=function(m){if(m=='hold'&&KM103.focus=='cit'){KM103.tab='vill';KM103.focus=null}return f.apply(this,arguments)}}
 document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .kmtabs{margin:0 0 10px}
@@ -27601,7 +27624,456 @@ function kqsxOpen(mode){const w=$('kqsx'),A=$('kqsxA'),B=$('kqsxB'),M=$('kqsxM')
   if($('kqsxI2'))$('kqsxI2').onclick=e=>{e.stopPropagation();kqsxOpen('import')};
   const s=document.querySelector('#svp .devb');if(s)s.insertAdjacentHTML('afterend',`<div class="row" style="display:flex;gap:8px;justify-content:center;margin-top:6px"><button id="kqsxE3" style="font-size:.8rem">📤 Export this save</button><button id="kqsxI3" style="font-size:.8rem">📥 Import a save</button></div>`);
   if($('kqsxE3'))$('kqsxE3').onclick=()=>kqsxOpen('export');if($('kqsxI3'))$('kqsxI3').onclick=()=>kqsxOpen('import')}
-// ================= v116 menus: Kingdom window + Villagers tab, menu clean-up, Fusion inside Companions, forge only at the Blacksmith =================
+// ================= v116: three character slots =================
+// The title screen lists three slots (KQSL, 0230). A filled slot continues that hero, an empty one starts a new hero in it.
+// Picking a slot sets SAVE_KEY (kqSlotSet) before the old Continue / New flow runs. From the in-game main menu a hero is
+// already loaded, so another slot is opened by saving, setting the slot and reloading (sessionStorage kq_cont / kq_new).
+// "Join a friend" (data-aw="join") opens the join-code window (2160), which also picks the slot.
+document.head.insertAdjacentHTML('beforeend',`<style>
+#awT .awm .kqsl-h{font:600 .72rem Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#b39a84;text-align:center;margin-bottom:-2px}
+#awT .awm .kqsl-r{display:flex;gap:6px;align-items:stretch}#awT .awm .kqsl-r>button[data-aw]{flex:1;min-width:0}
+#awT .awm .kqsl-r .kqsl-d{flex:0 0 auto;width:42px;padding:0;font-size:.95rem}
+#awT .awm .kqsl-r .kqsl-d.sure{color:#fecaca;font-size:.62rem;width:64px}
+#awT .awm button .kqsl-n{font:600 .64rem Inter,sans-serif;letter-spacing:.14em;color:#b39a84;margin-right:6px}
+#awT .awm button.kqsl-e{opacity:.82}
+#awT .awm button.kqsl-j{margin-top:6px}
+</style>`);
+function kqslEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}
+function kqslRow(i){const s=kqSlotInfo(i),cur=i===KQSL.n,inUse=cur&&typeof KQMENU!='undefined'&&KQMENU.on;
+  if(!s)return `<div class="kqsl-r"><button class="kqsl-e" data-aw="new" data-slot="${i}"><span class="kqsl-n">SLOT ${i+1}</span>Empty<small>Create a new hero here</small></button></div>`;
+  const C=CLS[s.hero.cls]||{i:'',n:''},d=new Date(s.at||Date.now());
+  return `<div class="kqsl-r"><button class="${cur?'p':''}" data-aw="cont" data-slot="${i}"><span class="kqsl-n">SLOT ${i+1}</span>${C.i} ${kqslEsc(s.hero.name||'Hero')}<small>Lv ${s.hero.lvl|0} ${C.n} · ${s.wv===3?(s.bossDone||[]).length:0} of 6 realms · ${d.toLocaleDateString()}${inUse?' · playing now':''}</small></button>`+
+    (inUse?'':`<button class="kqsl-d" data-sld="${i}" tabindex="-1" title="Delete this hero">🗑</button>`)+'</div>'}
+function kqslRender(){const T=$('awT');if(!T)return;const m=T.querySelector('.awm');if(!m)return;
+  m.innerHTML='<div class="kqsl-h">Choose your hero</div>'+[0,1,2].map(kqslRow).join('')+
+    '<button class="kqsl-j" data-aw="join">👥 Join a friend<small>Enter a join code and pick which hero to bring</small></button>';
+  if(!m.dataset.kqsl){m.dataset.kqsl=1;m.addEventListener('click',e=>{const b=e.target.closest('[data-sld]');if(!b)return;e.stopPropagation();const i=+b.dataset.sld;
+    if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Delete?';setTimeout(()=>{if(b.isConnected){b.classList.remove('sure');b.textContent='🗑'}},3000);return}
+    try{localStorage.removeItem(KQSL.keys[i])}catch(_){}kqslRender()},true)}
+  if(!matchMedia('(pointer:coarse)').matches){const b=m.querySelector('[data-aw].p')||m.querySelector('[data-aw]');if(b)setTimeout(()=>b.focus(),60)}}
+// a title still fading out (Continue less than a second ago) would block the new one and then vanish: clear it first
+{const f=awTitle;awTitle=function(){const o=$('awT');if(o&&o.classList.contains('out'))o.remove();const r=f.apply(this,arguments);try{kqslRender()}catch(e){console.warn('slots',e)}return r}}
+// open another slot from the in-game main menu: save, switch, reload, then continue / create there
+function kqslReload(sl,flag,extra){try{saveGame(true)}catch(_){}KQMENU.nosave=1;kqSlotSet(sl);
+  try{sessionStorage.setItem(flag,'1');if(extra)sessionStorage.setItem(extra[0],extra[1])}catch(_){}
+  const T=$('awT');if(T)T.classList.add('out');setTimeout(()=>{try{location.reload()}catch(_){}},400)}
+// a real (detached) button for flows that start a slot without a click
+function kqslBtn(mode,sl){const b=document.createElement('button');b.dataset.aw=mode;b.dataset.slot=String(sl);return b}
+{const f=awTitleGo;awTitleGo=function(mode,btn){
+  const T=$('awT');if(!T||T.classList.contains('out'))return;
+  if(mode=='join'){if(typeof kqJoinOpen=='function')kqJoinOpen();return}
+  const sl=btn&&btn.dataset&&btn.dataset.slot!=null?+btn.dataset.slot:null;
+  if(sl!=null&&sl>=0&&sl<3){
+    if(typeof KQMENU!='undefined'&&KQMENU.on){if(sl!==KQSL.n)return kqslReload(sl,mode=='new'?'kq_new':'kq_cont')}
+    else{kqSlotSet(sl);if(mode=='new'&&saveInfo())return}} // a filled slot is never overwritten by New
+  return f.apply(this,arguments)}}
+kqslRender();
+// after a reload from the menu into another slot (kq_new is handled in 1160)
+try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}}catch(_){}
+// ================= v116: join-code co-op (no Claude account) =================
+// One player hosts and gets a 6-letter join code; friends type it to connect. Players link up directly over WebRTC data
+// channels; the free public PeerJS signaling server (0.peerjs.com) only introduces them (its plain WebSocket protocol is
+// spoken here directly, so no library is loaded). TURN relays (PeerJS's public ones) cover strict networks.
+// Star layout: every joiner connects to the host, and the host relays. kqnRoom() wraps that as a backend with the same
+// calls as the claude.ai room (on, onPeers, emit, presence, peers), so the v58 co-op code (0520) runs unchanged on it.
+// The host stamps the sender on everything it relays, so nobody can speak as somebody else.
+// Tests set window.KQNET_SIG (signaling URL) and window.KQNET_ICE (ICE servers) to run without the internet.
+var KQN={sig:'wss://0.peerjs.com:443/peerjs',key:'peerjs',pre:'kq116-',abc:'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',max:8,
+  ice:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}],
+  cur:null};
+function kqnCode(){let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const v of a)s+=KQN.abc[v%KQN.abc.length];return s}
+function kqnClean(c){return String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)}
+function kqnRid(){const a=new Uint32Array(3);crypto.getRandomValues(a);return Array.from(a,v=>v.toString(36)).join('').slice(0,14)}
+
+// ---------- signaling: one WebSocket to the PeerJS server under our own id ----------
+function kqnSignal(id,on){const url=(window.KQNET_SIG||KQN.sig)+'?key='+KQN.key+'&id='+encodeURIComponent(id)+'&token='+kqnRid()+'&version=1.5.4';
+  const S={id,ws:null,open:false,dead:false,hb:0,
+    send(type,dst,payload){if(S.ws&&S.ws.readyState===1)S.ws.send(JSON.stringify({type,dst,payload}))},
+    close(){S.dead=true;clearInterval(S.hb);try{S.ws&&S.ws.close()}catch(_){}}};
+  try{S.ws=new WebSocket(url)}catch(err){setTimeout(()=>on('fail','The game could not reach the join-code server from here.'));return S}
+  S.ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(!m||typeof m.type!=='string')return;
+    if(m.type==='OPEN'){S.open=true;on('open')}else if(m.type==='ID-TAKEN')on('taken');else if(m.type==='ERROR')on('fail',(m.payload&&m.payload.msg)||'Join-code server error.');
+    else on('msg',m)};
+  S.ws.onclose=()=>{clearInterval(S.hb);if(!S.dead){S.dead=true;on(S.open?'lost':'fail','The game could not reach the join-code server from here.')}};
+  S.ws.onerror=()=>{};
+  S.hb=setInterval(()=>{if(S.ws&&S.ws.readyState===1)S.ws.send('{"type":"HEARTBEAT"}')},5000);
+  return S}
+
+// ---------- one WebRTC link to one other player ----------
+function kqnLink(S,remote,cid,initiator,on){
+  const L={remote,cid,pc:null,dc:null,open:false,dead:false,q:[],rset:false,last:performance.now(),
+    send(o){if(L.open&&L.dc&&L.dc.readyState==='open'){try{L.dc.send(typeof o==='string'?o:JSON.stringify(o));return true}catch(_){}}return false},
+    close(){if(L.dead)return;L.dead=true;L.open=false;try{L.dc&&L.dc.close()}catch(_){}try{L.pc&&L.pc.close()}catch(_){}on('close',L)}};
+  const pc=L.pc=new RTCPeerConnection({iceServers:window.KQNET_ICE||KQN.ice});
+  pc.onicecandidate=e=>{if(e.candidate)S.send('CANDIDATE',remote,{c:e.candidate.toJSON?e.candidate.toJSON():e.candidate,cid})};
+  pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'||pc.connectionState==='closed')L.close()};
+  const wire=dc=>{L.dc=dc;dc.onopen=()=>{L.open=true;L.last=performance.now();on('open',L)};dc.onclose=()=>L.close();
+    dc.onmessage=e=>{L.last=performance.now();if(typeof e.data!=='string'||e.data.length>200000)return;if(e.data==='~')return;let m;try{m=JSON.parse(e.data)}catch(_){return}if(m&&typeof m==='object')on('data',L,m)}};
+  if(initiator){wire(pc.createDataChannel('kq',{ordered:true}));
+    pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=>S.send('OFFER',remote,{sdp:pc.localDescription,cid,type:'data'})).catch(()=>L.close())}
+  else pc.ondatachannel=e=>wire(e.channel);
+  L.remoteSdp=sdp=>pc.setRemoteDescription(sdp).then(()=>{L.rset=true;L.q.splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}))});
+  L.answer=sdp=>L.remoteSdp(sdp).then(()=>pc.createAnswer()).then(a=>pc.setLocalDescription(a)).then(()=>S.send('ANSWER',remote,{sdp:pc.localDescription,cid,type:'data'})).catch(()=>L.close());
+  L.cand=c=>{if(!c)return;if(L.rset)pc.addIceCandidate(c).catch(()=>{});else L.q.push(c)};
+  return L}
+
+// ---------- the room ----------
+// kqnRoom('host') resolves with {room, code}; kqnRoom('join', code) with {room}. Rejections carry a plain message.
+// room.leave() ends it; room.onEnd(fn) hears when it ends for any reason (fn(reason)).
+function kqnRoom(mode,code){return new Promise((res,rej)=>{
+  const host=mode==='host';let me='',S=null,settled=false,ended=false,pres={},snap=MPX.none,tries=0,hostL=null,ka=0,to=0;
+  const H={},PH=[],EH=[],links={},P={}; // links by remote id; P: other players' presence by peer id
+  const ok=v=>{if(!settled){settled=true;clearTimeout(to);res(v)}},no=msg=>{if(!settled){settled=true;clearTimeout(to);end(null);rej(new Error(msg))}};
+  const msgOf=(t,d,peer)=>({topic:t,data:d,peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false});
+  const rec=(peer,p)=>Object.freeze({peer,by:null,isMe:peer===me,sameTab:peer===me,kind:'viewer',guest:false,presence:Object.freeze(Object.assign({},p)),updatedAt:Date.now()});
+  function rebuild(){snap=Object.freeze([rec(me,pres)].concat(Object.keys(P).map(k=>rec(k,P[k]))))}
+  function fire(joined,left){rebuild();const ch={peers:snap,joined:joined.map(k=>rec(k,P[k])),left:left.map(k=>rec(k,{})),updated:[]};PH.forEach(f=>{try{f(ch)}catch(err){console.warn(err)}})}
+  function deliver(t,d,peer){(H[t]||[]).forEach(f=>{try{f(msgOf(t,d,peer))}catch(err){console.warn(err)}})}
+  const okTopic=t=>typeof t==='string'&&MP_TOPICS.indexOf(t)>=0;
+  const okPeer=p=>typeof p==='string'&&p.length>0&&p.length<64;
+  const clean=v=>{try{return JSON.parse(JSON.stringify(v==null?{}:v))}catch(_){return {}}};
+  function end(reason){if(ended)return;ended=true;clearInterval(ka);clearTimeout(to);Object.values(links).forEach(L=>{try{L.close()}catch(_){}});try{S&&S.close()}catch(_){}
+    if(reason)EH.forEach(f=>{try{f(reason)}catch(_){}})}
+  const room={
+    on:(t,f)=>{(H[t]=H[t]||[]).push(f);return()=>{}},onPeers:f=>{PH.push(f);return()=>{}},onEnd:f=>{EH.push(f)},
+    peers:()=>snap,connected:()=>!ended,count:()=>Object.keys(P).length+1,
+    presence:patch=>{if(ended)return Promise.resolve();Object.keys(patch||{}).forEach(k=>{if(patch[k]===null)delete pres[k];else pres[k]=clean(patch[k])});rebuild();
+      if(host){const s=JSON.stringify({k:'pres',p:me,v:pres});Object.values(links).forEach(L=>L.send(s))}else if(hostL)hostL.send({k:'pres',v:pres});return Promise.resolve()},
+    emit:(t,d)=>{if(ended)return Promise.reject({code:'closed'});if(!okTopic(t))return Promise.reject({code:'invalid_argument'});const data=clean(d);deliver(t,clean(data),me);
+      if(host){const s=JSON.stringify({k:'ev',t,d:data,p:me});Object.values(links).forEach(L=>L.send(s))}else if(hostL)hostL.send({k:'ev',t,d:data});return Promise.resolve()},
+    leave:()=>{if(!ended){if(host)Object.values(links).forEach(L=>L.send({k:'bye'}));else if(hostL)hostL.send({k:'bye'})}end('left')}};
+  // keepalive: a link that has been silent for 12 s is gone (a closed tab or lost network can take long to show)
+  ka=setInterval(()=>{const now=performance.now();Object.values(links).forEach(L=>{if(!L.open)return;L.send('~');if(now-L.last>12000)L.close()})},2000);
+  function onLink(ev,L,m){
+    if(ev==='open'){if(host){if(Object.keys(P).length>=KQN.max-1){L.send({k:'full'});setTimeout(()=>L.close(),300);return}
+        L.send({k:'all',me:L.remote,l:[[me,pres]].concat(Object.keys(P).map(k=>[k,P[k]]))})}
+      else{hostL=L;L.send({k:'pres',v:pres})}return}
+    if(ev==='close'){if(links[L.remote]===L)delete links[L.remote];
+      if(host){if(P[L.remote]){delete P[L.remote];const s=JSON.stringify({k:'left',p:L.remote});Object.values(links).forEach(x=>x.send(s));fire([],[L.remote])}}
+      else if(L===hostL){no('Could not connect to that game.');end('host')}return}
+    if(host){const from=L.remote;
+      if(m.k==='pres'){const was=!!P[from];P[from]=clean(m.v);const s=JSON.stringify({k:'pres',p:from,v:P[from]});Object.values(links).forEach(x=>{if(x!==L)x.send(s)});if(was)rebuild();else fire([from],[])}
+      else if(m.k==='ev'&&okTopic(m.t)){if(!P[from])return;const s=JSON.stringify({k:'ev',t:m.t,d:m.d,p:from});Object.values(links).forEach(x=>{if(x!==L)x.send(s)});deliver(m.t,m.d,from)}
+      else if(m.k==='bye')L.close()}
+    else{
+      if(m.k==='all'&&Array.isArray(m.l)){const j=[];(m.l||[]).slice(0,KQN.max).forEach(q=>{if(Array.isArray(q)&&okPeer(q[0])&&q[0]!==me){if(!P[q[0]])j.push(q[0]);P[q[0]]=clean(q[1])}});fire(j,[]);ok({room})}
+      else if(m.k==='pres'&&okPeer(m.p)&&m.p!==me){const was=!!P[m.p];P[m.p]=clean(m.v);if(was)rebuild();else fire([m.p],[])}
+      else if(m.k==='left'&&okPeer(m.p)&&P[m.p]){delete P[m.p];fire([],[m.p])}
+      else if(m.k==='ev'&&okTopic(m.t)&&okPeer(m.p)&&m.p!==me)deliver(m.t,m.d,m.p)
+      else if(m.k==='full'){no('That game is full (8 players).');end('full')}
+      else if(m.k==='bye'){end('host')}}}
+  function onSig(ev,a){
+    if(ended)return;
+    if(ev==='taken'){if(host&&++tries<5){try{S.close()}catch(_){}start();return}return no('Could not get a join code. Try again.')}
+    if(ev==='fail'){if(!settled)return no(a||'Could not connect.');return end('net')}
+    if(ev==='lost'){if(!settled)return no('Lost the join-code server.');if(host){S=null;setTimeout(()=>{if(!ended)resign()},2000)}return} // the links stay up without it
+    if(ev==='open'){if(host)ok({room,code});else{const L=links[hostId]=kqnLink(S,hostId,'c'+kqnRid(),true,onLink)}return}
+    if(ev!=='msg')return;const m=a,src=m.src,p=m.payload||{};if(!okPeer(src))return;
+    if(m.type==='OFFER'&&host){if(links[src])links[src].close();const L=links[src]=kqnLink(S,src,p.cid,false,onLink);L.answer(p.sdp)}
+    else if(m.type==='ANSWER'&&links[src])links[src].remoteSdp(p.sdp).catch(()=>{});
+    else if(m.type==='CANDIDATE'&&links[src])links[src].cand(p.c);
+    else if(m.type==='EXPIRE'&&!host&&src===hostId){ // the host may only have blinked: offer again twice before giving up
+      if(++tries<3){const old=links[hostId];setTimeout(()=>{if(ended||settled)return;if(old)try{old.dead=true;old.pc.close()}catch(_){}links[hostId]=kqnLink(S,hostId,'c'+kqnRid(),true,onLink)},1500)}
+      else no('No game found with code '+code+'. Check the code with your friend.')}}
+  let hostId='';
+  function start(){if(host){code=kqnCode();me=KQN.pre+code}else{me='j'+kqnRid()}rebuild();S=kqnSignal(me,onSig)}
+  function resign(){S=kqnSignal(me,(ev,a)=>{if(ev==='open'||ev==='msg')onSig(ev,a)})} // host: get the code back so more friends can join
+  if(!host){code=kqnClean(code);if(code.length!==6)return rej(new Error('A join code has 6 letters and numbers.'));hostId=KQN.pre+code}
+  if(typeof RTCPeerConnection=='undefined'||typeof WebSocket=='undefined')return rej(new Error('This browser cannot do online play.'));
+  start();
+  to=setTimeout(()=>no(host?'The join-code server did not answer. Check your internet connection.':'No game found with code '+code+' (or it could not be reached).'),host?15000:20000);
+})}
+// ================= v116: join-code co-op — windows and flow =================
+// Host: co-op window (Y) → Host a game → a 6-letter code to share. Join: title screen "Join a friend" or the co-op window →
+// type the code, pick one of your three heroes (or paste a save code from the Claude version / another device into a slot).
+// A link with ?join=CODE (or #join=CODE) opens the join window with the code filled in.
+// Joining with a hero other than the loaded one saves, switches slot and reloads (sessionStorage kq_join + kq_cont/kq_new);
+// KQN.pend then connects as soon as the hero is in the world (KQN.pend is also used after a title-screen start).
+document.head.insertAdjacentHTML('beforeend',`<style>
+#kqj{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(6,4,3,.86)}#kqj.hide{display:none}
+#kqj .win{width:min(520px,96vw);max-height:94vh;overflow:auto}#kqj .wb{padding:14px 16px;display:grid;gap:10px}
+.kqj-code{width:100%;box-sizing:border-box;text-align:center;font:700 1.6rem/1.2 'VT323',monospace;letter-spacing:.35em;text-transform:uppercase;background:rgba(0,0,0,.4);color:#f0cc72;border:1px solid rgba(201,162,74,.5);border-radius:6px;padding:8px}
+.kqj-sl{display:grid;gap:6px}.kqj-sl label{display:flex;gap:8px;align-items:center;padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:7px;cursor:pointer;background:rgba(0,0,0,.2);font-size:.85rem}
+.kqj-sl label.on{border-color:#c9a24a;background:rgba(201,162,74,.14)}.kqj-sl small{display:block;color:var(--mut,#a39378);font-size:.72rem}
+#kqj textarea{width:100%;min-height:70px;box-sizing:border-box;font:.7rem/1.35 monospace;background:rgba(0,0,0,.35);color:var(--ink,#e8dcc0);border:1px solid rgba(201,162,74,.35);border-radius:6px;padding:6px}
+#kqj details summary{cursor:pointer;font-size:.82rem;color:#e8d8a8}#kqj .mut{font-size:.75rem}#kqj .ok{color:#8ad07a}#kqj .bad{color:#e07a6a}
+.kqc{background:rgba(201,162,74,.08);border:1px solid rgba(201,162,74,.35);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:block!important}
+.kqc h4{margin:0 0 6px;font-size:.9rem;color:#e8d8a8}.kqc .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.kqc .big{font:700 2rem/1 'VT323',monospace;letter-spacing:.3em;color:#f0cc72;padding:4px 10px;background:rgba(0,0,0,.35);border-radius:6px;user-select:all}
+.kqc input{width:9.5em;text-transform:uppercase;letter-spacing:.2em;font:600 1rem monospace;background:#0d1016;color:#f0cc72;border:1px solid #3a4150;border-radius:6px;padding:5px 7px}
+.kqc .bad{color:#e07a6a}.kqc .mut{font-size:.76rem}
+</style>`);
+document.body.insertAdjacentHTML('beforeend',`<div id="kqj" class="hide"><div class="win nar">
+  <div class="wh"><h2>👥 Join a friend</h2><button class="x" id="kqjX" title="Close">✕</button></div>
+  <div class="wb">
+    <div class="mut">Ask the host for their join code (Co-op window, <b>Y</b> → Host a game). No Claude account is needed.</div>
+    <input id="kqjCode" class="kqj-code" maxlength="12" autocomplete="off" spellcheck="false" placeholder="CODE">
+    <div><div class="mut" style="margin-bottom:4px">Play as</div><div class="kqj-sl" id="kqjSl"></div></div>
+    <details id="kqjImp"><summary>📥 Bring a hero from another link or device (save code)</summary>
+      <div class="mut" style="margin:6px 0">In the other game: Settings → Saved game → Export save, copy the code and paste it here. It goes into the slot picked above.</div>
+      <textarea id="kqjA" spellcheck="false" placeholder="KQSAVE1:…"></textarea><div class="mut" id="kqjAM"></div></details>
+    <div class="row" style="display:flex;gap:8px;align-items:center"><button class="pri" id="kqjGo">👥 Join</button><span class="mut" id="kqjM"></span></div>
+  </div></div></div>`);
+var KQJ={sl:0,sure:0};
+function kqjOpen(){const w=$('kqj');w.classList.remove('hide');KQJ.sure=0;$('kqjM').textContent='';$('kqjM').className='mut';
+  if(!kqnClean($('kqjCode').value)&&KQN.url)$('kqjCode').value=KQN.url;
+  KQJ.sl=KQSL.n;if(!kqSlotInfo(KQJ.sl)){const f=[0,1,2].find(i=>kqSlotInfo(i));if(f!=null&&!party.length)KQJ.sl=f}
+  kqjSlots();kqjCheck();setTimeout(()=>{const c=$('kqjCode');if(!kqnClean(c.value))c.focus()},40)}
+var kqJoinOpen=kqjOpen;
+function kqjClose(){$('kqj').classList.add('hide')}
+function kqjSlots(){const loaded=party.length>0;
+  $('kqjSl').innerHTML=[0,1,2].map(i=>{const s=kqSlotInfo(i),C=s?CLS[s.hero.cls]||{i:'',n:''}:null;
+    return `<label class="${i===KQJ.sl?'on':''}" data-kqjs="${i}"><input type="radio" name="kqjs" ${i===KQJ.sl?'checked':''}><span>Slot ${i+1} · ${s?C.i+' <b>'+kqslEsc(s.hero.name||'Hero')+'</b> Lv '+(s.hero.lvl|0)+' '+C.n:'<i>Empty</i>'}<small>${s?(loaded&&i===KQSL.n?'Playing now':'Saved '+new Date(s.at||Date.now()).toLocaleDateString()):'Create a new hero first, then you join'}</small></span></label>`}).join('')}
+function kqjImport(){const t=$('kqjA').value.trim();return t?kqsxDecode(t):null}
+function kqjCheck(){const t=$('kqjA').value.trim(),s=kqjImport(),M=$('kqjAM');
+  if(!t){M.textContent='';return null}
+  if(!s){M.textContent='That is not a Kill Quest save code.';M.className='mut bad';return null}
+  const o=kqSlotInfo(KQJ.sl);M.textContent='Found '+kqsxName(s)+' → Slot '+(KQJ.sl+1)+(o?' (replaces '+(o.hero.name||'Hero')+')':'');M.className=o?'mut bad':'mut ok';return s}
+$('kqjX').onclick=kqjClose;
+$('kqjSl').addEventListener('click',e=>{const l=e.target.closest('[data-kqjs]');if(!l)return;KQJ.sl=+l.dataset.kqjs;KQJ.sure=0;kqjSlots();kqjCheck()});
+$('kqjA').addEventListener('input',()=>{KQJ.sure=0;kqjCheck()});
+$('kqjCode').addEventListener('input',e=>{const v=kqnClean(e.target.value);if(v!==e.target.value)e.target.value=v});
+// typing in the join window or the co-op code box never reaches the game's controls (the title screen's own key filter runs
+// first there, so Enter on the title is handled in the awTitleGo wrapper below)
+addEventListener('keydown',e=>{const t=e.target;if(!t||!t.closest)return;const inJ=!!t.closest('#kqj'),inC=t.id=='kqcIn';if(!inJ&&!inC)return;
+  e.stopImmediatePropagation();
+  if(inJ&&e.key=='Escape'){e.preventDefault();kqjClose()}
+  else if(e.key=='Enter'&&t.id=='kqjCode'){e.preventDefault();kqjGo()}
+  else if(e.key=='Enter'&&inC){e.preventDefault();const b=document.querySelector('[data-kqc="join"]');if(b)b.click()}},true);
+addEventListener('keyup',e=>{const t=e.target;if(t&&t.closest&&(t.closest('#kqj')||t.id=='kqcIn'))e.stopImmediatePropagation()},true);
+$('kqjGo').onclick=()=>kqjGo();
+function kqjGo(){const M=$('kqjM'),code=kqnClean($('kqjCode').value);M.className='mut bad';
+  if(code.length!==6){M.textContent='Enter the 6-letter join code.';return}
+  const imp=kqjImport();if($('kqjA').value.trim()&&!imp){M.textContent='The save code is not valid (or clear it).';return}
+  const sl=KQJ.sl,had=kqSlotInfo(sl);
+  if(imp&&had&&!KQJ.sure){KQJ.sure=1;M.textContent='Press Join again: this replaces '+(had.hero.name||'the hero')+' in Slot '+(sl+1)+'.';return}
+  const loaded=party.length>0,menu=typeof KQMENU!='undefined'&&KQMENU.on;
+  if(loaded&&sl===KQSL.n&&!imp){ // the hero who is already loaded: just connect
+    kqjClose();if(menu){const T=$('awT');if(T)awTitleGo('cont',kqslBtn('cont',sl))}kqcJoin(code);return}
+  if(loaded){ // another hero (or an imported one): save this one, switch, reload, then join
+    try{saveGame(true)}catch(_){}KQMENU.nosave=1;
+    if(imp)try{localStorage.setItem(KQSL.keys[sl],JSON.stringify(imp))}catch(_){KQMENU.nosave=0;M.textContent='Your browser blocked storage here.';return}
+    kqSlotSet(sl);try{sessionStorage.setItem('kq_join',code);sessionStorage.setItem(kqSlotInfo(sl)?'kq_cont':'kq_new','1')}catch(_){}
+    M.className='mut ok';M.textContent='Loading your hero…';setTimeout(()=>{try{location.reload()}catch(_){}},300);return}
+  // from the first title screen: nothing loaded yet
+  if(imp)try{localStorage.setItem(KQSL.keys[sl],JSON.stringify(imp))}catch(_){M.textContent='Your browser blocked storage here.';return}
+  kqSlotSet(sl);KQN.pend=code;kqjClose();const T=$('awT');
+  if(T&&!T.classList.contains('out'))awTitleGo(kqSlotInfo(sl)?'cont':'new',kqslBtn(kqSlotInfo(sl)?'cont':'new',sl))}
+// the title's Enter key is not for us while the join window is open
+{const f=awTitleGo;awTitleGo=function(mode,btn){if(!$('kqj').classList.contains('hide')&&btn&&btn.isConnected){const a=document.activeElement;if(a&&a.id=='kqjCode')kqjGo();return}return f.apply(this,arguments)}}
+
+// ---------- sessions ----------
+function kqcMsg(t,bad){KQN.msg=t;KQN.bad=!!bad;try{if(xwMode=='coop')rX()}catch(_){}}
+function kqcStart(p,join){KQN.busy=join?'join':'host';kqcMsg('');
+  return p.then(({room,code})=>{KQN.busy='';const old=KQN.cur;KQN.cur=null;if(old)try{old.room.leave()}catch(_){}
+    KQN.cur={room,code:code||join,host:!join};mpAttach(room);mpUse(room);
+    room.onEnd(r=>{if(!KQN.cur||KQN.cur.room!==room)return;KQN.cur=null;mpUse(MPX.cl||null);
+      const t={host:'The host left — the game ended.',net:'Lost the connection to the game.',full:'That game is full.'}[r]||'Online game ended.';say('👥 '+t);kqcMsg(t,true)});
+    if(join){say('👥 Joined game <b>'+join+'</b>.');kqcMsg('')}else{say('👥 Hosting — your join code is <b>'+code+'</b>. Press Y to see it.');kqcMsg('')}
+  }).catch(err=>{KQN.busy='';const t=(err&&err.message)||'Could not connect.';say('👥 '+mpEsc(t));kqcMsg(t,true)})}
+function kqcHost(){if(KQN.busy)return;return kqcStart(kqnRoom('host'))}
+function kqcJoin(code){if(KQN.busy)return;code=kqnClean(code);if(KQN.cur&&KQN.cur.code===code)return;return kqcStart(kqnRoom('join',code),code)}
+function kqcLeave(){const c=KQN.cur;if(!c)return;KQN.cur=null;try{c.room.leave()}catch(_){}mpUse(MPX.cl||null);say('👥 You left the online game.');kqcMsg('')}
+// connect a pending join once the hero is in the world
+setInterval(()=>{try{if(!KQN.pend||!party.length||(typeof KQMENU!='undefined'&&KQMENU.on)||$('awT')||!$('start').classList.contains('hide'))return;
+  const c=KQN.pend;KQN.pend=null;kqcJoin(c)}catch(_){}},500);
+addEventListener('pagehide',()=>{try{if(KQN.cur)KQN.cur.room.leave()}catch(_){}});
+
+// ---------- co-op window (Y): host / join box above the player list ----------
+function kqcLink(code){try{if(window.top!==window||!/^https?:$/.test(location.protocol))return '';return location.origin+location.pathname+'?join='+code}catch(_){return ''}}
+function kqcBox(){const C=KQN.cur;let h='<div class="kqc"><h4>🌐 Online with a join code <span class="mut">· no Claude account needed</span></h4>';
+  if(C&&C.host){const n=C.room.count(),ln=kqcLink(C.code);
+    h+=`<div class="row"><span class="mut">Your join code</span><span class="big">${C.code}</span><button data-kqc="copy">📋 Copy code</button>${ln?'<button data-kqc="link">🔗 Copy invite link</button>':''}<button data-kqc="leave">✕ Stop hosting</button></div>
+      <div class="mut" style="margin-top:6px">${n>1?n+' players connected.':'Waiting for friends…'} Friends open the game in any browser, choose <b>Join a friend</b> (or press Y) and type this code. Up to ${KQN.max} players. Keep this tab open: the game ends if the host leaves.</div>`}
+  else if(C)h+=`<div class="row"><span>Joined game <b>${C.code}</b> · ${C.room.count()} players</span><button data-kqc="leave">✕ Leave</button></div>`;
+  else if(KQN.busy)h+=`<div class="mut">${KQN.busy=='host'?'Getting a join code…':'Connecting…'}</div>`;
+  else h+=`<div class="row"><button class="pri" data-kqc="host">🏠 Host a game</button><span class="mut">or</span><input id="kqcIn" maxlength="12" placeholder="CODE" autocomplete="off" spellcheck="false" value="${KQN.url||''}"><button data-kqc="join">Join</button></div>
+    <div class="mut" style="margin-top:6px">You join with the hero you are playing now. To bring a different hero, use ☰ → Main menu → Join a friend.</div>`;
+  if(KQN.msg)h+=`<div class="${KQN.bad?'bad':'mut'}" style="margin-top:6px">${mpEsc(KQN.msg)}</div>`;
+  return h+'</div>'}
+{const f=XR.coop;XR.coop=()=>{f();const B=$('xwB');
+  if(!MP.on){$('xwS').textContent=KQN.busy?'Connecting…':'Playing solo';B.innerHTML=kqcBox()+'<p class="lore">Fight the same monsters as your friends, each get your own loot, chat and trade. Host a game and share the code, or type a friend\'s code to join them.</p>';return}
+  B.insertAdjacentHTML('afterbegin',kqcBox())}}
+$('xwB').addEventListener('click',e=>{if(xwMode!=='coop')return;const b=e.target.closest('[data-kqc]');if(!b)return;const k=b.dataset.kqc,C=KQN.cur;
+  if(k=='host')kqcHost();else if(k=='leave')kqcLeave();
+  else if(k=='join'){const v=kqnClean(($('kqcIn')||{}).value);if(v.length!==6)return kqcMsg('Enter the 6-letter join code.',true);kqcJoin(v)}
+  else if((k=='copy'||k=='link')&&C){const t=k=='link'?kqcLink(C.code):C.code;const done=()=>kqcMsg(k=='link'?'Invite link copied.':'Code copied.');
+    try{navigator.clipboard.writeText(t).then(done,()=>kqcMsg('Copy failed — the code is '+C.code))}catch(_){kqcMsg('The code is '+C.code)}}
+  rX()});
+$('xwB').addEventListener('input',e=>{if(e.target&&e.target.id=='kqcIn'){const v=kqnClean(e.target.value);if(v!==e.target.value)e.target.value=v}});
+// the co-op window refreshes its list every 1.5 s; keep the host's player count fresh too (but not while typing a code)
+{const f=mpCoopList;mpCoopList=function(){f.apply(this,arguments);try{const C=KQN.cur;if(C&&xwMode==='coop'){const b=document.querySelector('#xwB .kqc');if(b)b.outerHTML=kqcBox()}}catch(_){}}}
+// when only the join-code session could be live, the in-game co-op tick also needs a reason to show the player list
+setInterval(()=>{try{if(xwMode==='coop'&&!MP.on&&!document.activeElement.matches('#kqcIn'))rX()}catch(_){}},1500);
+
+// ---------- a link with ?join=CODE ----------
+try{const q=new URLSearchParams(location.search).get('join')||(location.hash.match(/join=([A-Za-z0-9]{6})/)||[])[1];const c=kqnClean(q);if(c.length===6)KQN.url=c}catch(_){}
+// after a reload that switched heroes to join
+try{const c=sessionStorage.getItem('kq_join');if(c){sessionStorage.removeItem('kq_join');KQN.pend=kqnClean(c)}}catch(_){}
+if(KQN.url&&!KQN.pend&&$('awT'))setTimeout(()=>{if($('awT')&&!$('awT').classList.contains('out'))kqjOpen()},700);
+// ================= v116: co-op — partners' companions, attacks and abilities are shown =================
+// Everything here is visual only on the partner's screen: no damage, no state, no shots that can hit.
+//  · Companions: presence carries each active companion's look (ck, the fields cr() builds from) and spot (cf). A partner
+//    builds the same model with cr(), moves it smoothly and animates it with animC.
+//  · Hero poses: every local haPlay (every attack, ability, bow / staff shot, potion) is sampled into 11 keyframes of the
+//    upper-body channels and sent; the partner plays them on that hero's model (replaces the generic v58 sword swing).
+//  · Effects: while a swing, a cast or a companion spell runs (MPV.cap, carried into its tweens, timers, hit callbacks and
+//    ability objects), calls to the visual-effect functions in MPV_FX are recorded with their arguments (world positions)
+//    and where the hero stood, then replayed on the partner in the same order and timing. Effect functions never deal
+//    damage (checked for v116); the hero's position is lent for the call because some of them (slashFx…) place
+//    themselves at the hero.
+//  · Projectiles (launch) and companion bolts / lunges / spell motions are sent as their own entries and replayed as
+//    ghosts (a ghost shot stops at walls and at the first monster, then fades).
+// Entries ride the existing 'ev' topic (types V P L C B), so older pages simply ignore them.
+var MPV={cap:0,rep:0,q:[],t0:0,tF:0,nopose:0,cf:null,ck:null,ckK:'',cfL:'',lp:[[0,0],[0,0]],stub:null,
+  FX:['burst','ring','arc','bolt','slashFx','spinFx','thrustFx','flailFx105','kqsDecal','kqsPillar','kqsSpike','kqsChain','kqsBeam','kqsLob',
+    'fxClaw','fxStream','fxWaves','fxSpikes','fxCracks','fxPillar','fxOrbit','fxRise','fxFall','fxSigil','fxTornado','fxBeam','fxJaws','fxWeb','fxDome',
+    'x5emo','fxaFlash','fxaPuff','fxaScorch','fxaBoom']};
+var MPV_FX={};MPV.FX.forEach((n,i)=>MPV_FX[n]=i);
+function mpvLive(){return typeof MP!='undefined'&&MP.on&&MP.others>0&&!MPV.rep}
+// ---------- carry the capture into callbacks made during it ----------
+function mpvCb(f){if(!MPV.cap||typeof f!='function'||f.mpvW)return f;const w=function(){const o=MPV.cap;MPV.cap=1;try{return f.apply(this,arguments)}finally{MPV.cap=o}};w.mpvW=1;return w}
+function mpvRun(f,self,args){const o=MPV.cap;MPV.cap=mpvLive()?1:0;try{return f.apply(self,args)}finally{MPV.cap=o}}
+{const st=window.setTimeout;window.setTimeout=function(f,ms){if(MPV.cap&&typeof f=='function'){const a=Array.prototype.slice.call(arguments);a[0]=mpvCb(f);return st.apply(window,a)}return st.apply(window,arguments)}}
+{const f=tw;tw=function(ms,fn,done){if(MPV.cap)return f(ms,mpvCb(fn),mpvCb(done));return f(ms,fn,done)}}
+{const f=kqsObj;kqsObj=function(o){if(MPV.cap&&o){['tick','end','upd','hit'].forEach(k=>{if(typeof o[k]=='function')o[k]=mpvCb(o[k])})}return f.apply(this,arguments)}}
+{const f=mvPlay105;mvPlay105=function(a,R,to,onHit){mpvComp(a,'m',to,R);return f.call(this,a,R,to,mpvCb(onHit))}}
+// capture starts: the hero's attack and abilities, a companion's spell (fxB skills relay themselves, 1240)
+{const f=swing;swing=function(){return mpvRun(f,this,arguments)}}
+{const f=cast;cast=function(i){let fxb=false;try{const sk=heroSkills()[i];fxb=!!(sk&&typeof FXB_SK!='undefined'&&FXB_SK[sk.n])}catch(_){}
+  if(fxb){MPV.nopose++;try{return f.apply(this,arguments)}finally{MPV.nopose--}}return mpvRun(f,this,arguments)}}
+{const f=compCast;compCast=function(){return mpvRun(f,this,arguments)}}
+{const f=cast_base;cast_base=function(i){let fxb=false;try{const sk=heroSkills()[i];fxb=!!(sk&&typeof FXB_SK!='undefined'&&FXB_SK[sk.n])}catch(_){}
+  if(fxb){MPV.nopose++;try{return f.apply(this,arguments)}finally{MPV.nopose--}}return MPV.cap?f.apply(this,arguments):mpvRun(f,this,arguments)}}
+// a replay can never hurt, spawn a damaging zone or count a companion hit, whatever an effect function might call
+['hurt','zoneAt','compHit','area','kqsArea','kqsHit','heroHit'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(){if(MPV.rep)return;return f.apply(this,arguments)}});
+
+// ---------- recording ----------
+const mpvR=v=>Math.round(v*1000)/1000;
+function mpvSer(v,d){
+  if(v==null)return null;const t=typeof v;
+  if(t=='number')return isFinite(v)?mpvR(v):0;if(t=='boolean')return v;if(t=='string')return v.length<120?v:v.slice(0,120);
+  if(t=='function'){try{if(v.length===0){const r=v();if(r&&r.isVector3)return {g:[mpvR(r.x),mpvR(r.y),mpvR(r.z)]}}}catch(_){}return {fn:1}}
+  if(v.isVector3)return {v:[mpvR(v.x),mpvR(v.y),mpvR(v.z)]};
+  if(v.isColor)return v.getHex();
+  if(v.isObject3D){const p=v.getWorldPosition?v.getWorldPosition(new THREE.Vector3()):v.position;return {o:[mpvR(p.x),mpvR(p.y),mpvR(p.z)]}}
+  if(v.m&&v.m.position&&v.m.position.isVector3){const p=v.m.position;return {o:[mpvR(p.x),mpvR(p.y),mpvR(p.z)]}} // a monster or companion
+  if(d>2)return null;
+  if(Array.isArray(v))return v.length>24?null:v.map(x=>mpvSer(x,d+1));
+  if(t=='object'){const o={};let n=0;for(const k in v){if(++n>20)return null;const s=mpvSer(v[k],d+1);if(s!==undefined)o[k]=s}return {j:o}}
+  return null}
+function mpvDe(v,d){
+  if(v==null||typeof v!='object')return v;
+  if(Array.isArray(v))return d>3?[]:v.map(x=>mpvDe(x,d+1));
+  if(v.v)return new THREE.Vector3(+v.v[0]||0,+v.v[1]||0,+v.v[2]||0);
+  if(v.g){const p=new THREE.Vector3(+v.g[0]||0,+v.g[1]||0,+v.g[2]||0);return ()=>p}
+  if(v.fn)return undefined;
+  if(v.o)return mpvStub(+v.o[0]||0,+v.o[1]||0,+v.o[2]||0);
+  if(v.j&&typeof v.j=='object'&&d<4){const o={};for(const k in v.j)if(k!=='__proto__'&&k!=='constructor')o[k]=mpvDe(v.j[k],d+1);return o}
+  return null}
+// a stand-in for a mesh / monster argument: a small glow that knows its spot
+function mpvStub(x,y,z){if(!MPV.stub)MPV.stub=new THREE.SphereGeometry(.18,10,8);const m=new THREE.Mesh(MPV.stub,addMat(0xfff0c0));m.position.set(x,y,z);m.m=m;m.dead=false;return m}
+function mpvPush(e){if(!mpvLive())return;const now=performance.now();if(!MPV.q.length)MPV.t0=now;if(MPV.q.length>=150)return;e.splice(1,0,Math.round(now-MPV.t0));MPV.q.push(e)}
+MPV.dep=0;
+MPV.FX.forEach(n=>{const f=window[n];if(typeof f!='function')return;
+  window[n]=function(){
+    if(!MPV.cap||MPV.dep||MPV.rep||!mpvLive())return f.apply(this,arguments);
+    let a=null;try{a=Array.prototype.map.call(arguments,x=>mpvSer(x,0))}catch(_){a=null}
+    const fnArg=Array.prototype.some.call(arguments,x=>typeof x=='function');
+    if(a)mpvPush(['V',MPV_FX[n],mpvR(pl.position.x),mpvR(pl.position.y),mpvR(pl.position.z),mpvR(pl.rotation.y),a]);
+    if(!a||fnArg)return f.apply(this,arguments); // getters / callbacks: what they draw later is recorded on its own
+    MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}});
+// projectiles: the real shot stays local; partners get a ghost
+{const f=launch;launch=function(pos,d,spd,s,dm,life){if(MPV.rep)return;if(mpvLive()&&!MPV.rep&&pos&&d)try{const S=s||{};
+  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||1),mpvR(+life||1.1)])}catch(_){}
+  return f.apply(this,arguments)}}
+// companion moves: lunge / bolt / spell motion on fols[0|1]
+function mpvSlot(a){return typeof fols!='undefined'&&a?fols.indexOf(a):-1}
+function mpvComp(a,k,to,R){if(!mpvLive()||MPV.rep)return;const i=mpvSlot(a);if(i<0)return;let rn='';
+  if(R&&typeof SPX105!='undefined'){for(const n in SPX105)if(SPX105[n]===R){rn=n;break}if(!rn)return}
+  const p=to&&to.isVector3?to:to&&to.position?to.position:null;mpvPush(['C',i,k,rn,p?mpvR(p.x):null,p?mpvR(p.z):null])}
+{const f=lunge;lunge=function(a,to,done){mpvComp(a,'l',to);return f.apply(this,arguments)}}
+{const f=compBolt;compBolt=function(fo,c,foe,done){if(mpvLive()&&!MPV.rep){const i=mpvSlot(fo),p=foe&&foe.m&&foe.m.position;if(i>=0&&p)mpvPush(['B',i,mpvR(p.x),mpvR(p.y),mpvR(p.z)])}return f.apply(this,arguments)}}
+// hero poses: sample whatever haPlay is about to play
+{const f=haPlay;haPlay=function(ms,pose,hitAt,onHit,blendIn){
+  const r=f.call(this,ms,pose,hitAt,mpvCb(onHit),blendIn);
+  if(mpvLive()&&!MPV.nopose&&!MPV.rep&&typeof pose=='function')try{
+    const ch=Object.keys(HACH).filter(c=>!(HA_LEGS[c]&&c!='dy')),K=[];
+    for(let i=0;i<=10;i++){const P=pose(i/10)||{};K.push(ch.map(c=>typeof P[c]=='number'&&isFinite(P[c])?Math.round(P[c]*100)/100:null))}
+    const use=ch.filter((c,j)=>K.some(k=>k[j]!==null));const keys=K.map(k=>ch.map((c,j)=>k[j]).filter((x,j)=>use.indexOf(ch[j])>=0));
+    mpvPush(['P',Math.round(Math.max(60,ms||300)),use,keys])}catch(_){}
+  return r}}
+// flush with the other co-op batches (claude.ai room messages stay under 4 KB)
+function mpvFlush(now){if(!MPV.q.length||now-MPV.tF<120)return;MPV.tF=now;const all=MPV.q.splice(0);if(!mpvLive())return;
+  let l=[],sz=20;const send=()=>{if(l.length)MP.room.emit('ev',{r:MP.rg,l}).catch(()=>{});l=[];sz=20};
+  for(const e of all){const s=JSON.stringify(e).length;if(s>3700)continue;if(sz+s>3700||l.length>=60)send();l.push(e);sz+=s+1}send()}
+
+// ---------- my companions in presence ----------
+function mpvLookOf(c){return {n:c.n,f:c.f,v:c.v||'',g:(c.g||[]).slice(0,4),cl:(c.cl||[]).slice(0,4),tr:c.tr||'',evo:c.evo|0,shn:c.shn?1:0,rv:c.rv||'',l:c.l|0}}
+function mpvMine(){const cf=[],ck=[];
+  for(let i=0;i<2;i++){const f=typeof fols!='undefined'?fols[i]:null,c=party[i];if(!f||!c){cf.push(0);ck.push(0);continue}
+    const L=MPV.lp[i],x=mpvR2(f.position.x),z=mpvR2(f.position.z),mv=Math.hypot(x-L[0],z-L[1])>.02?1:0;L[0]=x;L[1]=z;
+    cf.push([x,z,mpvR2(f.rotation.y),mv,f.visible?1:0]);ck.push(mpvLookOf(c))}
+  const k=JSON.stringify(ck);if(k!==MPV.ckK){MPV.ckK=k;MPV.ck=ck}
+  MPV.cf=cf;const s=JSON.stringify(cf);if(s!==MPV.cfL){MPV.cfL=s;MP.lastPres=''}} // a companion moved: send presence again
+function mpvR2(v){return Math.round(v*100)/100}
+{const f=MP.room.presence;MP.room.presence=p=>{if(p&&typeof p.x=='number'){p.pv=116;p.cf=MPV.cf||[];p.ck=MPV.ck||[]}return f(p)}}
+
+// ---------- partners' companions ----------
+function mpvLookIn(L){if(!L||typeof L!=='object')return null;
+  const g=(Array.isArray(L.g)?L.g:[]).filter(n=>typeof n=='string'&&S[n]).slice(0,4);if(!g.length)return null;
+  const cl=(Array.isArray(L.cl)?L.cl:[]).filter(x=>typeof x=='number'&&isFinite(x)).slice(0,4);
+  const s=v=>typeof v=='string'&&v.length<24&&!/[<>]/.test(v)?v:'';
+  return {n:s(L.n)||g[0],f:Math.max(0,Math.min(9,+L.f||0)),v:s(L.v),g,cl:cl.length?cl:[0x8a8a8a,0x555555],tr:s(L.tr),evo:Math.max(0,Math.min(4,L.evo|0)),shn:!!L.shn,rv:s(L.rv),
+    l:Math.max(1,Math.min(typeof MAXLV!='undefined'?MAXLV:99,L.l|0||1)),h:1,mods:[],sp:[],cdm:{},mpRemote:1}}
+function mpvFolDrop(r,i){const f=r.fl&&r.fl[i];if(f){scene.remove(f)}if(r.fl){r.fl[i]=null;r.flk[i]=''}}
+{const f=mpDropRH;mpDropRH=function(k){const r=MP.rh[k];if(r&&r.fl){mpvFolDrop(r,0);mpvFolDrop(r,1)}return f.apply(this,arguments)}}
+function mpvFolTick(now,dt){
+  for(const k in MP.rh){const r=MP.rh[k],pr=r.pr;if(!r.fl){r.fl=[null,null];r.flk=['','']}
+    const show=!!(pr&&r.m&&r.m.visible&&Array.isArray(pr.cf));
+    for(let i=0;i<2;i++){const e=show?pr.cf[i]:0,L=show&&Array.isArray(pr.ck)?pr.ck[i]:0;
+      if(!Array.isArray(e)||!L||typeof e[0]!='number'||typeof e[1]!='number'||!isFinite(e[0])||!isFinite(e[1])){if(r.fl[i])r.fl[i].visible=false;continue}
+      const key=JSON.stringify(L);
+      if(key!==r.flk[i]){mpvFolDrop(r,i);r.flk[i]=key;const c=mpvLookIn(L);if(!c)continue;
+        try{const g=cr(c);g.position.set(e[0],GH(e[0],e[1]),e[1]);g.rotation.y=+e[2]||0;g.userData.mpFol=1;g.mpC=c;scene.add(g);r.fl[i]=g}catch(err){console.warn('co-op companion',err)}}
+      const g=r.fl[i];if(!g)continue;g.visible=!!e[4];if(!g.visible)continue;
+      const p=g.position,dx=e[0]-p.x,dz=e[1]-p.z,D=Math.hypot(dx,dz);if(D>14){p.x=e[0];p.z=e[1]}else{const q=Math.min(1,dt*9);p.x+=dx*q;p.z+=dz*q}p.y=GH(p.x,p.z);
+      let dr=(+e[2]||0)-g.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));g.rotation.y+=dr*Math.min(1,dt*10);
+      try{animC(g,now,!!e[3]||D>.08,Math.min(3,Math.max(1,D*6)))}catch(_){}}}}
+
+// ---------- replay ----------
+function mpvRH(peer){const r=MP.rh[peer];return r&&r.m&&r.m.visible&&r.pr&&r.pr.rg===MP.rg?r:null}
+function mpvLend(x,y,z,ry,fn){const P=pl.position,ox=P.x,oy=P.y,oz=P.z,or=pl.rotation.y;P.set(x,y,z);pl.rotation.y=ry;MPV.rep++;try{return fn()}finally{MPV.rep--;P.set(ox,oy,oz);pl.rotation.y=or}}
+function mpvPlay(r,e){
+  const T=e[0];MPV.cnt=MPV.cnt||{};MPV.cnt[T]=(MPV.cnt[T]||0)+1; // counted for the tests
+  if(T==='V'){const n=MPV.FX[e[2]],f=n&&window[n];if(typeof f!='function'||!Array.isArray(e[7]))return;const a=e[7].slice(0,12).map(x=>mpvDe(x,0));
+    mpvLend(+e[3]||0,+e[4]||0,+e[5]||0,+e[6]||0,()=>{try{f.apply(null,a)}catch(_){}})}
+  else if(T==='P'){const h=r.m,ms=Math.max(60,Math.min(4000,+e[2]||300)),ch=Array.isArray(e[3])?e[3].filter(c=>typeof c=='string'&&HACH[c]).slice(0,16):[],K=Array.isArray(e[4])?e[4].slice(0,11):[];
+    if(!h.bones||!ch.length||K.length<2)return;const b=h.bones;h.sw=1;h._mpvP=(h._mpvP|0)+1;const id=h._mpvP;
+    tw(ms,k=>{if(h._mpvP!==id)return;const u=Math.max(0,Math.min(1,k))*(K.length-1),i=Math.min(K.length-2,Math.floor(u)),w=u-i,A=K[i]||[],B=K[i+1]||[];
+      ch.forEach((c,j)=>{const a=A[j],bb=B[j];if(typeof a!='number'&&typeof bb!='number')return;const v=typeof a!='number'?bb:typeof bb!='number'?a:a+(bb-a)*w;const q=HACH[c];if(b[q[0]])b[q[0]].rotation[q[1]]=v})},
+      ()=>{if(h._mpvP===id)h.sw=0})}
+  else if(T==='L'){const p=new THREE.Vector3(+e[2]||0,+e[3]||0,+e[4]||0),d=new THREE.Vector3(+e[5]||0,+e[6]||0,+e[7]||0);if(d.lengthSq()<1e-6)return;d.normalize();
+    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=shotMesh(e[9]|0,!!e[10])}catch(_){return}
+    const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
+    const s0=m.position.clone();let gone=false;
+    tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;
+      let hit=typeof solid=='function'&&solid(Math.round(x),Math.round(z));if(!hit)for(const en of enemies){if(!en.dead&&en.m&&Math.abs(en.m.position.x-x)<1&&Math.abs(en.m.position.z-z)<1){hit=true;break}}
+      if(hit){gone=true;m.visible=false;try{burst(m.position,e[9]|0||0xffffff,8,1.6,1.2,.35)}catch(_){}}},()=>scene.remove(m))}
+  else if(T==='C'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible)return;const to=typeof e[5]=='number'&&typeof e[6]=='number'?new THREE.Vector3(e[5],GH(e[5],e[6]),e[6]):null;
+    MPV.rep++;try{if(e[3]==='l'&&to)lunge(g,to,null);else if(e[3]==='m'&&typeof SPX105!='undefined'&&SPX105[e[4]]&&Object.prototype.hasOwnProperty.call(SPX105,e[4]))mvPlay105(g,SPX105[e[4]],to,null)}catch(_){}finally{MPV.rep--}}
+  else if(T==='B'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible||!g.mpC)return;const p=new THREE.Vector3(+e[3]||0,+e[4]||0,+e[5]||0);
+    MPV.rep++;try{compBolt(g,g.mpC,{m:{position:p},dead:false},()=>{})}catch(_){}finally{MPV.rep--}}}
+{const f=mpOnEV;mpOnEV=function(msg){
+  try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)&&d.r===MP.rg){const r=mpvRH(msg.peer);if(r){let n=0;
+    for(const e of d.l){if(!Array.isArray(e)||typeof e[0]!=='string'||'VPLCB'.indexOf(e[0])<0||e[0].length!==1)continue;if(++n>60)break;
+      const t=Math.max(0,Math.min(3000,+e[1]||0));if(t<16)mpvPlay(r,e);else setTimeout(()=>{const r2=mpvRH(msg.peer);if(r2)mpvPlay(r2,e)},t)}}}}catch(err){console.warn(err)}
+  return f.apply(this,arguments)}}
+// partners who send poses get no generic sword swing on top
+{const f=mpSwingRH;mpSwingRH=function(h){const r=h&&h.mpPeer&&MP.rh[h.mpPeer];if(r&&r.pr&&r.pr.pv>=116)return;return f.apply(this,arguments)}}
+// per frame, after the v58 co-op tick
+{const f=homeTick;let lt=0;homeTick=function(){const r=f.apply(this,arguments);try{if(MP.on&&party.length){const now=performance.now(),dt=Math.min(.1,(now-(lt||now))/1000);lt=now;mpvMine();mpvFolTick(now,dt);mpvFlush(now)}}catch(err){console.warn(err)}return r}}
+// ================= v117 menus: Kingdom window + Villagers tab, menu clean-up, Fusion inside Companions, forge only at the Blacksmith =================
 // Menu list: Fusion and Sovereigns are gone from the ☰ menu (Fusion lives in the Companions window, the Sovereigns list is not needed;
 // the sealed-portal prompt still opens the portal list). New "🏰 Kingdom" button (B) opens the kingdom window anywhere:
 // Construction (plan + buildings, 1880) | Villagers (vlRender116 below) | Decorations (1910).
@@ -27700,7 +28172,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .vljob.lk{opacity:.5}#xw .vljob small{color:var(--mut)}
 #xw .vlft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:.72rem;margin-top:2px}#xw .vlmax{color:#6ee7b7;font-size:.74rem}
 </style>`);
-// ---------------- crossbow: the bolt leaves from the crossbow's front end (v116) ----------------
+// ---------------- crossbow: the bolt leaves from the crossbow's front end (v117) ----------------
 // The weapon model's stock runs along its local -Y, so the muzzle is the far end of its bounding box on that axis
 // (measured once per model in the weapon's own frame, works for every crossbow look).
 function xbowMuzzle116(){const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='crossbow');if(!W)return null;pl.updateMatrixWorld(true);
@@ -27717,7 +28189,7 @@ function xbowLevel116(h){if(h&&h!==pl)return;const A=typeof HA!='undefined'&&HA.
   const tq=new Q().setFromUnitVectors(b,f).multiply(qw),out=qw.clone().slerp(tq,w),pq=W.parent.getWorldQuaternion(new Q());
   W.quaternion.copy(pq.invert().multiply(out));W.updateMatrixWorld(true)}
 {const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{xbowLevel116(h)}catch(_){}return r}}
-// ================= v116 zone title cards =================
+// ================= v117 zone title cards =================
 // Arriving in a zone instance (and in Duskhold the first time) shows one decorated title card in the zone's own style instead of the
 // plain text banners (the v56 arrival banner and the v112 second banner are muted): a small kicker (zone · instance), the place name
 // in the zone's lettering, an ornament with the zone's emblem, the place's line, and the enemy levels with the recommended power.
@@ -27755,7 +28227,7 @@ function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||
   zt116Show(T,kick,title,sub,foot,'z'+I.z)}
 // the old arrival banners stay silent; the card replaces them
 {const f=banner;banner=function(t){if(ZT116.mute)return;if(t==='🏰 DUSKHOLD'){zt116Show(ZT116.town,'The Floating Stronghold','Duskhold','The last stronghold, adrift above the void','The Grand Square · the Portal Road leads south','town');return}return f.apply(this,arguments)}}
-{const f=insArrive;insArrive=function(I){ZT116.mute++;let r;try{r=f.apply(this,arguments)}finally{ZT116.mute--}try{zt116Ins(I)}catch(e){console.warn('v116 title',e)}return r}}
+{const f=insArrive;insArrive=function(I){ZT116.mute++;let r;try{r=f.apply(this,arguments)}finally{ZT116.mute--}try{zt116Ins(I)}catch(e){console.warn('v117 title',e)}return r}}
 // fonts: Cinzel Decorative, IM Fell English SC and Pirata One are in the page's Google Fonts link
 document.head.insertAdjacentHTML('beforeend',`<style>
 #ztc116{position:absolute;left:50%;top:13%;transform:translateX(-50%);z-index:40;pointer-events:none;text-align:center;min-width:min(560px,92%);max-width:94%;padding:18px 34px 14px;opacity:0;
@@ -27783,7 +28255,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes zt116w{0%,100%{text-shadow:0 0 18px var(--zc2),0 0 36px color-mix(in srgb,var(--zc2) 55%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}50%{text-shadow:0 0 26px var(--zc2),0 0 52px color-mix(in srgb,var(--zc2) 70%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}}
 @media (max-width:640px){#ztc116{top:11%;padding:12px 14px 10px}#ztc116 .zts{font-size:.86rem}#ztc116 .ztk,#ztc116 .ztf{font-size:.62rem;letter-spacing:.18em}}
 </style>`);
-// ================= v116 frog Mage: how he carries his weapons =================
+// ================= v117 frog Mage: how he carries his weapons =================
 // The v93 carry grip is tuned on human arms (GRIP_B), and the frog's short arms sit right on his wide robe, so staves, wands and orbs
 // cut through the robe and armour. While he is not attacking, his weapon arm is posed by a two-bone IK to a hold point out to the
 // side (staff, wand) or in front (orb), and the weapon gets its own steady orientation: the staff stands upright beside him with its
@@ -27832,15 +28304,15 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   W.quaternion.copy(pq.invert().multiply(out));
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
-  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding))fc116Apply(H)}catch(e){if(!FC116.err){FC116.err=1;console.warn('v116 frog carry',e)}}return r}}
+  try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding))fc116Apply(H)}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog carry',e)}}return r}}
 // during attacks and casts the frog's shoulders spread a little (the beast layer's D.atk), so the staff swings clear of his wide head and robe
 {const D=Object.values(BRD).find(d=>d&&d.key=='frog');if(D&&!D.atk)D.atk={shz:.3}}
-// ================= v116 character creator: the class step shows the hero as they will start, in a heroic pose =================
+// ================= v117 character creator: the class step shows the hero as they will start, in a heroic pose =================
 // The old class-step preview (0140 ccPreview) built one model once, framed it on the first class, read the look from the wrong field
 // and dressed it in a temporary tier-1 armour set. Now every class gets its own model built the way the game builds the hero: the
 // class's animal (current beast rig) wearing exactly the starting gear (ccBegin: tier-0 weapon and chest, paladin shield) and the look
 // chosen so far, framed on its own body. Each class holds a heroic pose with effects of its own on a lit pedestal.
-// The pose is put back before every frame (like the v116 frog hold), so the beast layer's exact-value undo never sees it.
+// The pose is put back before every frame (like the v117 frog hold), so the beast layer's exact-value undo never sees it.
 var CC116={h:null,cache:{},tex:null,
   // arm channels set outright (the v2 creator's values were tuned the same way), others added to the idle pose
   P:{warrior:{set:{'aR0.x':-2.75,'aR0.z':-.18,'aR1.x':-.25,'aL0.x':-.45,'aL0.z':.42,'aL1.x':-1.15},add:{'chest.x':-.08,'head.x':-.1}},
@@ -27892,10 +28364,10 @@ function cc116Model(cls){let look=null;try{look=lkFull(cls,LK.look)}catch(_){}co
   const ped=new THREE.Mesh(new THREE.CylinderGeometry(.82,.92,.12,40),new THREE.MeshStandardMaterial({color:0x2e2418,roughness:.85,metalness:.1}));ped.position.y=-.06;piv.add(ped);
   const rim=new THREE.Mesh(new THREE.TorusGeometry(.86,.018,6,56),new THREE.MeshBasicMaterial({color:CLS[cls].col||0xffd060}));rim.rotation.x=Math.PI/2;rim.position.y=.002;piv.add(rim);
   const fx=cc116Fx(cls,piv);M=CC116.cache[cls]={sig,h,piv,fx,cls};return M}
-{const f=ccPreview;ccPreview=function(){if(ccStep!=0)return f.apply(this,arguments);let M;try{M=cc116Model(ccCls)}catch(e){console.warn('v116 creator',e);return f.apply(this,arguments)}
+{const f=ccPreview;ccPreview=function(){if(ccStep!=0)return f.apply(this,arguments);let M;try{M=cc116Model(ccCls)}catch(e){console.warn('v117 creator',e);return f.apply(this,arguments)}
   CC116.h=M.h;const t0=performance.now();
   pvShow($('ccPV'),M.piv,now=>{const t=(now-t0)/1000;M.piv.rotation.y=CC116.rot!=null?CC116.rot:.35+Math.sin(t*.45)*.45;cc116Undo(M.h);M.h.sw=1;animHero(now,false,M.h);cc116Pose(M.h,M.cls,t);M.fx.tick(t)})}}
-// ================= v116 ability preview (Abilities window) =================
+// ================= v117 ability preview (Abilities window) =================
 // The selected ability's detail panel opens with a small stage (the shared preview renderer PV): your own hero, in your gear, plays
 // the ability's real cast pose (its kqsPoseT track, the same one castAnim plays) against a training dummy, and the ability's effect
 // appears in its own colour and shape: projectiles, rings round you, zones on the ground, lines, walls, charges, leaps, pulls,
@@ -27972,7 +28444,7 @@ function abShow116(host,s){const M=abStage116();if(!M||!host)return;ABP116.s=s;A
     const h=M.h,b=h.bones;abUndo116(h);const k=(t-.3)/ms;h.sw=k>=0&&k<=1.15?1:0;animHero(now,false,h);
     if(k>=0&&k<=1&&pT&&pT[0]){const P=pT[0](Math.min(1,k)),rec=[];for(const c in P){const ch=HACH[c];if(!ch||!b[ch[0]])continue;const o=b[ch[0]];if(!rec.some(r=>r.o===o))rec.push({o,q0:o.quaternion.clone()});const w=k<.12?k/.12:k>.9?(1-k)/.1:1;o.rotation[ch[1]]+=(P[c]-o.rotation[ch[1]])*w}
       rec.forEach(r=>r.set=r.o.quaternion.clone());h._abp=rec;h.updateMatrixWorld(true)}
-    if(k>=.5&&!ABP116.fired){ABP116.fired=1;try{abPlay116(M,s)}catch(e){console.warn('v116 abp',e)}}
+    if(k>=.5&&!ABP116.fired){ABP116.fired=1;try{abPlay116(M,s)}catch(e){console.warn('v117 abp',e)}}
     // hero moves for charges and leaps, the dummy for pulls
     const mv=M.move;if(mv){mv.t+=dt||0;const u=mv.t;if(mv.k=='dash'){const w=Math.min(1,u/.3);M.hw.position.x=-1.45+w*2.25;if(u>.3&&!mv.hit){mv.hit=1;abBurst116(M,new THREE.Vector3(1.4,1,0),ABP116.s.col||0xffd060,24,2,.6);abHit116(M,ABP116.s.col)}if(u>1.1)M.hw.position.x=.8-(Math.min(1,(u-1.1)/.4))*2.25}
       if(mv.k=='leap'&&mv.back){const w=Math.min(1,u/.5);M.hw.position.x=-1.45-w*1.2;M.hw.position.y=Math.sin(w*Math.PI)*.8;if(w>=1&&!mv.hit){mv.hit=1;abRing116(M,new THREE.Vector3(-2.65,.05,0),ABP116.s.col||0xffd060,.2,.8,.5)}if(u>1.2){const r=Math.min(1,(u-1.2)/.4);M.hw.position.x=-2.65+r*1.2;M.hw.position.y=0}}
@@ -27987,7 +28459,7 @@ function abUndo116(h){const R=h._abp;if(!R)return;h._abp=null;R.forEach(r=>{if(r
 // ---------- the panel ----------
 {const f=XR.abil;XR.abil=function(){const r=f.apply(this,arguments);try{const det=document.querySelector('#xw .kqs-det');const s=kqsFind(hero.cls,KQS.sel)||heroSkills()[0];if(!det||!s)return r;
     det.insertAdjacentHTML('afterbegin',`<div class="abpv"><div class="abpvc" id="abPV"></div><div class="abpvl"><span>▶ Preview · ${kqsKind(s)||'ability'}</span><button data-abpv="1" title="Play it again">↻</button></div></div>`);
-    abShow116($('abPV'),s)}catch(e){console.warn('v116 ability preview',e)}return r}}
+    abShow116($('abPV'),s)}catch(e){console.warn('v117 ability preview',e)}return r}}
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-abpv]');if(!t)return;e.stopPropagation();ABP116.t0=performance.now();ABP116.cyc=-1},true);
 document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .abpv{margin:-2px -2px 10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#2c2418,#0e0b08 75%)}

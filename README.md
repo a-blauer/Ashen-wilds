@@ -31,7 +31,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | enemies, damage, XP, loot (`genItem`) | `0120-v2-*`, `0410-v49-9-gear-sets*` |
 | zones (`PMAP`, `pmGen`, `pmDen`), zone instances (`INSL`, `insAt`/`rgAt`, `insG`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world), `1940` (v106/v108 instances) |
 | save / load (`gameSnapshot`, `loadGame`, `x2Save`); export / import save codes (v114, `KQSX`, `kqsxEncode/Decode`, Settings + title screen) | `0230-v36-save-load*`, `0450-shared-prompts*`, `2140-v114-save-export-import.js` |
-| co-op (`MP`) | `0520-v58-online-co-op*` |
+| co-op (`MP`); v116: `MP.room` relay over backends (`MPX`, `mpUse`, `mpAttach`, `mpSolo`) | `0520-v58-online-co-op*` |
+| v116 character slots (`KQSL`, `kqSlotSet`, `kqSlotInfo`, title slot list) | `0230` (keys), `2145-v116-character-slots.js` |
+| v116 join-code co-op: WebRTC + PeerJS signaling (`KQN`, `kqnRoom`), join window / co-op box (`kqjOpen`, `kqcHost`, `kqcJoin`) | `2150-v116-code-coop-net.js`, `2160-v116-code-coop-ui.js` |
+| v116 co-op visuals: partners' companions, poses, effects, ghost shots, companion moves (`MPV`) | `2170-v116-coop-visuals.js` |
 | Duskhold (v101: one Grand Square, Portal Road with gates I–VI; v109: walls sized by stage, see Kingdom size), portals, `enterMap` | `0510-v56-duskhold*`, `0045` (layout numbers `TWN100_*`, `PCOURT`), `1020`–`1030` (v88 town), `1820`–`1850` (v100/v101 town) |
 | stronghold shops `SHOPS` / upgrades `SHU` | `0530-v62-stronghold*` |
 | v103 kingdom: building lots `LOT103` (`SH.pos`), houses + citizens `HS103`, the one Steward window, working shopkeepers `WK103` | `1860`–`1900` (v103) |
@@ -176,6 +179,26 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Look fields: `skin` = fur/hide, `eye` = eye colour; co-op look array index 8 = race. Tests: `v114_beasts.py` (sheets per race),
   `v114_race.py` (creator → save → reload → barber, every class casts every ability; TITLE=1), `v114_clip.py` (armour clipping: every
   item of the class on its animal, bind pose + idle/run/attack; `HUMAN=1` gives the human baseline; `dbg_clip.py` marks the points).
+- **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
+  `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
+  is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
+  menu another slot means save → switch → reload (sessionStorage `kq_cont` / `kq_new`). Export / Import work on the current slot.
+- **Join-code co-op (v116)**: works without a Claude account, in any browser. `MP.room` (0520) is now a relay that forwards to the live
+  backend (`MPX.be`): the claude.ai room when the page has one, or a join-code room (`kqnRoom`, 2150) with the same calls (on, onPeers,
+  emit, presence, peers). The host gets a 6-letter code (peer id `kq116-CODE` on the public PeerJS signaling server 0.peerjs.com, spoken
+  directly over WebSocket, no library); joiners connect over WebRTC data channels in a star, the host relays and stamps senders. Up to 8
+  players; the game ends when the host leaves. The join window picks the slot (or pastes a save code into one); `?join=CODE` fills the
+  code. Handlers in 0520 are looked up per message, so wrappers of `mpOnEV` etc. keep working. Tests set `KQNET_SIG` / `KQNET_ICE`
+  (`test/fakesig.js` fakes the signaling server; the WebRTC is real).
+- **Co-op visuals (v116, 2170)**: visual only on the partner. Presence adds `pv` 116, `cf` (companion spots) and `ck` (companion looks →
+  `cr()`). Every local `haPlay` is sampled (11 keys) and replayed on the partner's model (it replaces the v58 sword swing for v116 peers).
+  While a swing / cast / companion spell runs (`MPV.cap`, carried into tweens, timers, hit callbacks, ability objects), calls to the effect
+  functions in `MPV.FX` are recorded with their arguments and the hero's spot and replayed in order; `launch` becomes a ghost shot, companion
+  lunge / bolt / spell motion replay on the partner's companion model. Entries ride the `ev` topic (types V P L C B). During a replay
+  (`MPV.rep`) hurt / area / zones / shots are blocked. A new effect function only shows for partners once it is added to `MPV.FX` (it must
+  not deal damage itself). Summoned models (wolves, clones) and effects built straight from meshes outside these functions are not sent.
+- **Web version (v116)**: `build.sh` also writes `dist/web/` (the same `index.html` + `game.js`) and `dist/kill-quest-web.zip` for a static
+  host such as itch.io (HTML game) or Netlify Drop. Its saves live on that site; players bring a hero with Export / Import.
 - **Sovereign fights (v110)**: every Sovereign is a souls-style boss registered with `svReg(i,B)` (`SVB[i]`). Its model is
   rigid parts on named joints (`R.J`), built by `B.build` inside the old enemy group (scaled `1/e.m.bs`, so models are in world
   units; the old skinned body is hidden; static meshes on one joint are merged per material, `userData.noMerge` keeps one apart).
@@ -308,6 +331,9 @@ MODE=make SRC=<old> AW_TMP=<dir> python3 v106_oldsave.py; MODE=check OLDSAVE=<di
 python3 v73t.py              # hit feedback, low health, death, Rise Again   (TITLE=1 python3 v73d.py: title → Continue)
 python3 v78t.py              # every weapon type's attack, Stable + mounts, items
 python3 mpt.py mpsteps.py    # two-player co-op over a fake room
+python3 v116_coop.py         # v116: join-code co-op over real WebRTC (fake signaling): code, wrong code, join, shared monsters, chat, trade, 3rd player, leave, host ends
+python3 v116_vis.py          # v116: partner's companions, attack/ability poses, effects, ghost shots, companion spells show (visual only)
+python3 v116_slots.py        # v116: three character slots, switching from the menu, delete, join window with a pasted save code
 python3 v100_town.py         # Duskhold layout, reachability, shops, portals (portal3-5 / portal prompt checks are stale since v101)
 python3 v109_kingdom_shops.py # v109: the kingdom's stages (walls, tiles, plots, outskirts), locked lots, old saves, turning buildings, every stage clear with everything built, shop upgrades (v109_shot.py: screenshots)
 MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDSAVE=<dir>/oldsave109.json python3 v109_oldsave.py  # v108 kingdom save -> v109
