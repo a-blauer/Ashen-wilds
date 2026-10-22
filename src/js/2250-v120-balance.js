@@ -60,7 +60,7 @@ var BAL120_HP={assassin:1.12};
 //    WTYPE.k = weapon attack (everything you do scales with it); MW = melee combo (m: hit multipliers, half: half-width of the swing
 //    arc in radians, rg: reach); WB120 = numbers that were written into the attack code (0580).
 Object.assign(WTYPE.ga,{k:1.16});MW.ga.m=[1,1.1,1.4];                         // was k 1.32, finisher 1.8: +10% / +35%
-Object.assign(WTYPE.halberd,{k:1.24});                                          // was 1.2
+MW.halberd.half=.55;                                                            // thrust arc was .42: about even alone and in a pack
 Object.assign(WTYPE.axes,{k:.76});Object.assign(MW.axes,{half:.78,rg:.85});    // was .86, arc 1.2, reach .95: +19% alone and as good in a pack
 Object.assign(WTYPE.hammer,{k:.84});Object.assign(MW.hammer,{m:[1,1.05,1.6],half:.8});WB120.shock=.05;WB120.slam=.03;
                                                                                  // was k 1.12, [1.1,1.2,1.9], arc 1.1, shockwave 35%, slam 60%: +52% / +83%
