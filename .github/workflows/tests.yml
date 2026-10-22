@@ -1,10 +1,8 @@
-# Kill Quest tests in the cloud: every test on its own runner, all at the same time.
-#  - every push: the smoke suite (test/smoke.txt)
-#  - Actions → Tests → Run workflow, suite "full": the full suite (test/full.txt), before a publish
+# PAUSED (Oct 2026): GitHub Actions minutes were nearly used up, so tests no longer run here automatically.
+# Tests now run in the Claude session workspace: `cd test && python3 run_suite.py smoke|full` (see CLAUDE.md).
+# This file stays only as a manual fallback (Actions → Tests → Run workflow); don't trigger it unless the owner asks.
 name: Tests
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       suite:
