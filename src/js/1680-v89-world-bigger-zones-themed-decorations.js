@@ -201,7 +201,7 @@ function wdDeco(){const T0=performance.now();
     const camps=CAMPS_PRE(r);
     // the entrance (and its home portal) moves to path[16] later at load (zz_portal), so keep both clear
     const e1=p.path[16]||p.en;
-    const away=(x,y,m)=>Math.hypot(x-p.ba[0],y-p.ba[1])>(I.den?26*DK+4:PM_DENR+3)+m&&Math.hypot(x-p.wa[0],y-p.wa[1])>21+m&&Math.hypot(x-p.en[0],y-p.en[1])>12+m&&Math.hypot(x-e1[0],y-e1[1])>14+m&&camps.every(c=>Math.hypot(x-c[0],y-c[1])>16+m);
+    const away=(x,y,m)=>Math.hypot(x-p.ba[0],y-p.ba[1])>(I.den?26*DK+4:PM_DENR+3)+m&&Math.hypot(x-p.wa[0],y-p.wa[1])>21+m&&Math.hypot(x-p.en[0],y-p.en[1])>12+m&&Math.hypot(x-e1[0],y-e1[1])>14+m&&camps.every(c=>Math.hypot(x-c[0],y-c[1])>(c[2]||12)+4+m);
     const t=(x,y)=>{const X=Math.round(x),Y=Math.round(y);return MAP[Y]&&MAP[Y][X]};
     const cit=BIOMES[p.bi].n=='The Citadel';
     // tile classes
@@ -252,7 +252,7 @@ function wdDeco(){const T0=performance.now();
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
-function CAMPS_PRE(r){return PMAP[r].cl.map(c=>[Math.round(c[0]),Math.round(c[1])])}
+function CAMPS_PRE(r){return [].concat(...PMAP[r].ins.map(I=>I.cl.map((c,j)=>[Math.round(c[0]),Math.round(c[1]),typeof cs123Rad=='function'?cs123Rad(I,j):12])))} // v123: [x, y, camp radius]
 // ---------- instancing into 64x64 chunks (added to the chunk list after buildVI) ----------
 function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new THREE.Object3D(),cc=new THREE.Color(),groups={};
   const mat=(S,pi,p)=>{const key=S.k+':'+pi;if(mats[key])return mats[key];let m;
