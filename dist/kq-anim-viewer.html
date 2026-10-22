@@ -30322,7 +30322,7 @@ function rvBoots(B,P,d){const D=BR.R,C=BR.C,k=dkKit(),V=THREE.Vector3,st=d.st,M=
       const q=at(.45);k.p(l+'1','oct',G?'g':'m',G||A,q.p[0],q.p[1]+.012,q.p[2]+q.f+.014,.011,.015,.007);
       [-1,1].forEach(j=>{const q=at(.9);k.p(l+'1','cone4','m',A,q.p[0]+j*(q.rx+.012),q.p[1]+.01,q.p[2]-.006,.005,.034,.012,-.5,0,j*.9)})}});
   mdKit(B,k)}
-{const f=mdBootsPre;mdBootsPre=function(P,d){const r=f.apply(this,arguments);if(BR.on&&BR.R&&BR.R.key=='raven'&&d&&d.st!='slipper'){P.col.boot=BR.C.SCALE;P.col.sole=BR.C.SCALED}return r}}
+{const f=mdBootsPre;mdBootsPre=function(P,d){const r=f.apply(this,arguments);if(BR.on&&BR.R&&BR.R.key=='raven'){P.rvBoots=1;if(d&&d.st!='slipper'){P.col.boot=BR.C.SCALE;P.col.sole=BR.C.SCALED}}return r}}
 {const f=mdBoots;mdBoots=function(B,P,d){if(BR.on&&BR.R&&BR.R.key=='raven'&&d&&d.key){brToes(B,P);return rvBoots(B,P,d)}return f.apply(this,arguments)}}
 // ---------------- robes: a bird's hem ----------------
 // A floor-length robe hides the raven's legs and catches his long toes: running, the trailing foot's toes passed through the
@@ -30337,6 +30337,11 @@ function rvHemOn(){return BR.on&&BR.R&&BR.R.key=='raven'}
 {const f=mdChest;mdChest=function(){const o=RV_HEM.on;RV_HEM.on=rvHemOn()?1:0;try{return f.apply(this,arguments)}finally{RV_HEM.on=o}}}
 {const f=mdOutfit;mdOutfit=function(cls){const O=f.apply(this,arguments);if(!O||!O.base||O.rvHem)return O;const b=O.base;
   return Object.assign({},O,{rvHem:1,base:function(){const o=RV_HEM.on;RV_HEM.on=rvHemOn()?1:0;try{return b.apply(this,arguments)}finally{RV_HEM.on=o}}})}}
+// under a robe his legs stay a bird's: feathered thighs, scaled shanks (a cloth chest would paint them as dark trousers);
+// with footwear on, the shank takes the footwear's colour (mdBootsPre)
+{const f=mdBody;mdBody=function(B,P){if(BR.on&&BR.R&&BR.R.key=='raven'&&!BR.bare){const C=BR.C,pl=P.paint.leg;P.col.pants=C.FUR;
+    P.paint.leg=(m,s)=>{const pt=m.r.part;if(pt=='hip'||pt=='thigh'||pt=='knee')return C.FUR;if(!P.rvBoots&&(pt=='shin'||pt=='ankle'))return Math.floor(m.y*70)%2?C.SCALE:C.SCALED;return pl?pl(m,s):null}}
+  return f.apply(this,arguments)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Three tabs: Companions (every species, every evolution stage: basic attack + its 4 abilities), Monsters (every zone

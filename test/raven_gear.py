@@ -25,6 +25,7 @@ def s(pg):
     ev=pg.evaluate
     ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
+    if os.environ.get('EVAL'):ev('()=>{'+os.environ['EVAL']+'}')
     for sl in os.environ.get('SLOT','helm,chest,boots').split(','):
         only=os.environ.get('ITEMS');a={'slot':sl,'only':only.split(',') if only else None,'pose':os.environ.get('POSE','idle'),'wpn':int(os.environ.get('WPN','0')),'wt':os.environ.get('WT','staff')}
         if os.environ.get('DIST'):a['dist']=float(os.environ['DIST'])
