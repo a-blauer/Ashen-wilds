@@ -19,7 +19,7 @@ function tmOk(g,x,y){if(g<0||!INSL[g]||!INSL[g].fld)return false;const p=INSL[g]
   for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(!lnReachable(g,x+i,y+j))return false;
   const R0=(typeof ARENA_R!='undefined'?ARENA_R:14);
   if(Math.hypot(x-p.ba[0],y-p.ba[1])<R0+10||(p.wa&&Math.hypot(x-p.wa[0],y-p.wa[1])<20)||Math.hypot(x-p.en[0],y-p.en[1])<10)return false;
-  if(typeof CAMPS!='undefined'&&CAMPS.some(C=>C.ig===g&&Math.hypot(C.x-x,C.z-y)<(typeof CAMP_R!='undefined'?CAMP_R:12)+3))return false;
+  if(typeof CAMPS!='undefined'&&CAMPS.some(C=>C.ig===g&&Math.hypot(C.x-x,C.z-y)<(C.r||(typeof CAMP_R!='undefined'?CAMP_R:12))+3))return false;
   if(typeof SECRETS!='undefined'&&SECRETS.some(S=>Math.hypot(S.x-x,S.z-y)<4))return false;
   if(typeof DUNS!='undefined'&&DUNS.some(D=>Math.hypot((D.x||D.tx)-x,(D.y||D.ty)-y)<10))return false;
   if(typeof tmaps!='undefined'&&tmaps.some(m=>tmG(m)===g&&Math.hypot(m.x-x,m.z-y)<12&&m.x!==x))return false;

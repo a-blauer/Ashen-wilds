@@ -183,7 +183,7 @@ function wdDeco(){const T0=performance.now();
     {k:'c_brazier',w:'lane',n:4,c:[1,1],r:1},{k:'c_rubble',w:'in',n:4,c:[1,3],r:4},{k:'c_rubble',w:'edge',n:7,c:[1,3],r:3},{k:'c_column',w:'in',n:.5,c:[1,3],r:5},{k:'c_column',w:'edge',n:1.2,c:[1,2],r:4},{k:'c_graves',w:'in',n:.9,c:[2,5],r:5},
     {k:'c_candela',w:'in',n:.6,c:[1,2],r:3},{k:'c_blood',w:'in',n:1.2,c:[1,2],r:3},{k:'c_coffin',w:'in',n:.4,c:[1,2],r:3}]];
   // v112: the themed instances II and III bring their own decoration types and sets (1981 v112Deco)
-  const ZX=typeof v112Deco=='function'?v112Deco({T,def,F,M,cyl,box,ico,dod,cone,oct,tor,dome,disc,pln,deadTree,rockG,stump,logG,bonesRib,skull,pillarG,wallG,grave,crossG,fenceG,ironFence,reeds,fern,flowers,tallGrass,shrub,mushC,lilies,cairn,banner,brazier,flame,lanternPost,lanternGlow,statueG,mausoleum,coffin,archG,duneG,cartG,crystals,icicles,rubble,candles,candleGlow,candelabra,candelaGlow,rootsG,plain}):null;
+  const KIT={T,def,F,M,cyl,box,ico,dod,cone,oct,tor,dome,disc,pln,deadTree,rockG,stump,logG,bonesRib,skull,pillarG,wallG,grave,crossG,fenceG,ironFence,reeds,fern,flowers,tallGrass,shrub,mushC,lilies,cairn,banner,brazier,flame,lanternPost,lanternGlow,statueG,mausoleum,coffin,archG,duneG,cartG,crystals,icicles,rubble,candles,candleGlow,candelabra,candelaGlow,rootsG,plain};const ZX=typeof v112Deco=='function'?v112Deco(KIT):null;
   // ---------- placement ----------
   const DM=2.2,ZM=[1,1,1.3,1.4,1.5,1.9],DW=MAP.DW,out=[],col=new Set(),stats={zones:[],kinds:{}};let sd=89;
   const rnd=()=>(sd=sd*16807%2147483647)/2147483647,ri=(a,b)=>a+rnd()*(b-a);
@@ -201,7 +201,7 @@ function wdDeco(){const T0=performance.now();
     const camps=CAMPS_PRE(r);
     // the entrance (and its home portal) moves to path[16] later at load (zz_portal), so keep both clear
     const e1=p.path[16]||p.en;
-    const away=(x,y,m)=>Math.hypot(x-p.ba[0],y-p.ba[1])>(I.den?26*DK+4:PM_DENR+3)+m&&Math.hypot(x-p.wa[0],y-p.wa[1])>21+m&&Math.hypot(x-p.en[0],y-p.en[1])>12+m&&Math.hypot(x-e1[0],y-e1[1])>14+m&&camps.every(c=>Math.hypot(x-c[0],y-c[1])>16+m);
+    const away=(x,y,m)=>Math.hypot(x-p.ba[0],y-p.ba[1])>(I.den?26*DK+4:PM_DENR+3)+m&&Math.hypot(x-p.wa[0],y-p.wa[1])>21+m&&Math.hypot(x-p.en[0],y-p.en[1])>12+m&&Math.hypot(x-e1[0],y-e1[1])>14+m&&camps.every(c=>Math.hypot(x-c[0],y-c[1])>(c[2]||12)+4+m);
     const t=(x,y)=>{const X=Math.round(x),Y=Math.round(y);return MAP[Y]&&MAP[Y][X]};
     const cit=BIOMES[p.bi].n=='The Citadel';
     // tile classes
@@ -247,11 +247,12 @@ function wdDeco(){const T0=performance.now();
       (stats.dbg=stats.dbg||[]).push([r,E.k,E.w,L.length,want,got])});
     stats.zones.push(zn);stats[p.n]=zstat;if(ZS)sd=sd0});
   if(ZX&&ZX.post)ZX.post(out,col);
+  if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
-function CAMPS_PRE(r){return PMAP[r].cl.map(c=>[Math.round(c[0]),Math.round(c[1])])}
+function CAMPS_PRE(r){return [].concat(...PMAP[r].ins.map(I=>I.cl.map((c,j)=>[Math.round(c[0]),Math.round(c[1]),typeof cs123Rad=='function'?cs123Rad(I,j):12])))} // v123: [x, y, camp radius]
 // ---------- instancing into 64x64 chunks (added to the chunk list after buildVI) ----------
 function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new THREE.Object3D(),cc=new THREE.Color(),groups={};
   const mat=(S,pi,p)=>{const key=S.k+':'+pi;if(mats[key])return mats[key];let m;

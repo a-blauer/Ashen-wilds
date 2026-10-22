@@ -56,6 +56,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
 | Beast races (v114: rat Warrior, cat Assassin, frog Mage, badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
 | v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
+| v123 camp sites: every camp's size (`C.r`), ground shape (`cs123Plan`, `cs123Terrain` from 0045), tile paint (`cs123Map`), set pieces (`cs123Designs`), title card on entry (`cs123Card`); no signposts | `2270-v123-camp-sites.js` |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
@@ -66,6 +67,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
 | v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
+| v124 clean map edges: the rim of every zone instance is a tidy row of themed ledge stones with a spaced row of themed scenery behind (`v124Edge`, kits per instance), the old rim trees and boulders are no longer drawn (`v124Rim`), choppable trees grow in groves inside the fields (`v124Groves`) | `2280-v124-clean-edges.js` (hooks in `0045`, `0060`, `0070`, `1680`) |
 
 ## Conventions (read before changing code)
 
@@ -222,6 +224,15 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (0.55) through the `awaken` move. Co-op: only the driver (`svAuth`) picks; every cast is relayed as BMV `sv<i>_<id>` with the
   seed in `en` (1 + seed/1000, the relay clamps en to 0.5–2), so partners replay the same timeline and random choices.
   The v86 den hazards and den AIs are switched off by `svDenTakeover` (scenery, seal and colliders stay).
+- **Clean edges (v124, `2280-v124-clean-edges.js`)**: rim tiles ('#' and 'R', 0–2.6 tiles past the walkable edge) stay solid and keep
+  their minimap colour, but no longer draw a choppable tree or three random boulders each (`v124Rim` is checked in 0060 and 0070; the
+  Citadel keeps its void rim and castle walls). `v124Edge` (end of `wdDeco`) lines every instance's edge from a kit per instance
+  (`K[g]`: stone colour + top, back-row kinds with weights, density `bd`, band `bw`): ledge stones on one contour (d ≈ .55) turned
+  along the edge, then on the rising slope behind them themed scenery (big background oaks/pines `e_oak_*`/`e_pine_*`, or the theme's
+  own stalagmites, crystals, cacti, pillars, dead trees), kept apart by an occupancy grid that also holds the bank decorations. None of
+  it can be chopped. Wood comes from groves (`v124Groves`, end of the 0045 map build): 3–6 choppable trees ('#' tile + `'tree'` prop,
+  a free tile round each trunk) per grove, about 9 groves per field instance, off the road, camps, gateway and entrance (caves use
+  tighter limits). Seeded per instance. Tests: `v124_edges.js` (`python3 probe.py v124_edges.js`), `v124_edges.py` (edge screenshots).
 - **Instance themes (v112, `1981-v112-instance-themes.js`)**: field instances II and III of every zone have their own sub-theme (own
   `BIOMES` entry with the zone's name, own tiles via `v112Map`, wall profile via `v112Ht`, decoration set via `v112Deco` in 1680, glowing
   ribbons, per-instance atmosphere and arrival name). Kindlelight: Glowmire Hollows (caves, goo streams, mushrooms) / Rotwood (decaying
@@ -245,6 +256,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   and never through a dash. `n3Zone(z,k,{roam,camps})` sets an instance's roaming list (weights) and its three camp themes
   (`CTH['v113_z_k_i']`, applied to `CAMPS` by `n3Camps` in `2090`). Tests: `v113_roster.py` (rosters and camps per instance, a free
   fight per creature), `v113_models.py` (contact sheets in the viewer build: idle views + 5 frames per move; `ONLY=key`).
+- **Camp sites (v123)**: all 54 field camps are designed one by one (`2250`). The plan (`cs123Plan`, key `'z_k_j'` = zone, field
+  instance, camp number in `I.cl` order) gives each its radius `r` (8..16, inside the 17-tile walkable clearing), ground ops (bowl,
+  mound, ridge, tiers, shelf, tilt, bumps, dunes, spire, dip) applied to `HF` at load before the terrain mesh, grass and nodes are
+  placed, the tile it paints underneath (dithered) and the title-card line. Dry camps are lifted so no ground sits under the world's
+  water surface (y .02); `wet` camps sink to that depth so the zone's own water fills their low ground (wadeable). `cs123Setup` (from
+  0250) puts `C.r`, `C.sp` (garrison spread), `C.des`, `C.ang` and a position-based `C.seed` on every camp, so co-op partners build
+  identical camps. `buildCamp` now builds the design (`cs123Build`: a kit of set pieces, merged by material; breakable boxes and
+  animated pieces stay separate, animated by `cs123Tick`). The wooden name sign is gone; walking into a camp shows a small title card
+  in the zone's lettering instead. Camp radius is used by `campAt`, the zone map circle, box breaking, the roaming-group and
+  decoration keep-out rings (`CAMPS_PRE` returns `[x,y,r]`). Test: `v123_camps.py` (`NOSHOT=1` for checks only; `BRIGHT=1` for
+  well-lit review shots).
 - **Terrain height fix (v112)**: `GHv` clamps the row by `H` (it used `W`, so everything south of row 1182 — all of The Citadel and the
   Crimson Throne Hall — read row 1182's heights). `test/v112_arena.py` checks arrival height and floor flatness in all six dens.
 - **Sovereigns (v112)**: every boss file (1971–1976) has a far more detailed model, three new special attacks, cooldowns on every move and
@@ -379,6 +401,7 @@ MODE=make SRC=<v108 build> AW_TMP=<dir> python3 v109_oldsave.py; MODE=check OLDS
 python3 v103_kingdom.py      # lots, houses, citizens + trades/food/ranks, decorations at every tier, Steward window, evolution preview, keepers
 python3 v105_abil.py         # every companion ability: cast, effect, strike moment (sheets out/v105_abil_*.png)
 python3 v122_support.py      # v122: companion heal / shield / buff go to whoever needs it most (hero or companion)
+python3 v124_edge_test.py      # v124: clean edges (no choppable rim trees, groves choppable, edge pieces apart); v124_edges.py: edge screenshots
 python3 v107_sig.py          # every zone monster's signature moves hit, debuff, no shared signatures, no lunges (SHOT=1 sheets out/v107_*.png)
 python3 v107_ai.py           # the AI picks signature moves in each zone;  v107_tail.py: Gravewyrm/Venomcoil tail during abilities (viewer build)
 python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,cook  SIDE=.8);  v103_walk.py: a walking citizen
