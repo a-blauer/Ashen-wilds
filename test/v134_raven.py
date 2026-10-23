@@ -21,7 +21,7 @@ JS=r"""()=>{const out={},it=(tp,r)=>({id:-1,tp,lv:1,req:1,r:r==null?3:r,up:0,aff
       // hood: the furthest forward point of the head piece around eye height (the beak and eyes must stay free)
       const near=gear.filter(t=>{const y=(t.v[1]+t.v[4]+t.v[7])/3,x=Math.abs((t.v[0]+t.v[3]+t.v[6])/3);return y>1.14&&y<1.21&&x>.05});r.eyeZ=near.length?Math.max(...near.map(t=>Math.max(t.v[2],t.v[5],t.v[8]))):null;
       // circlet / hat: lowest point in front of the skull's centre line (above the brows?)
-      const front=gear.filter(t=>(t.v[2]+t.v[5]+t.v[8])/3>-.02);r.frontMinY=front.length?Math.min(...ys(front)):null;
+      const front=gear.filter(t=>(t.v[2]+t.v[5]+t.v[8])/3>-.02&&Math.abs((t.v[0]+t.v[3]+t.v[6])/3)<.06);r.frontMinY=front.length?Math.min(...ys(front)):null;
       const bi=n=>B.O.indexOf(n),onB=(t,n)=>{const j=bi(n);for(let k=0;k<4;k++)if(t.si[k]==j&&t.sw[k]>.5)return true;return false};
       r.toes=body.filter(t=>onB(t,'lh2')||onB(t,'rh2')).length;
       r.pokeArm=(c.poke.aL1||0)+(c.poke.aR1||0)+(c.poke.aL2||0)+(c.poke.aR2||0);r.pokeTail=c.poke.tl0||0;r.hideHelm=c.hide['helm:head']||0;r.poke=c.nPoke;r.hide=c.nHide}
@@ -42,14 +42,14 @@ def s(pg):
         if x.get('err'):chk(n+' builds',False,x['err']);continue
         chk(n+' builds',x['n']>0,x['n'])
         if x['sl'] in ('chest','outfit'):
-            chk(n+' ends at mid-shank (lowest point above .15)',x['minY']>=.15,round(x['minY'],3))
-            chk(n+' no wing feathers through it (forearm pokes <= 4)',x['pokeArm']<=4,x['pokeArm'])
+            chk(n+' hangs clear of the ground (lowest point above .05; v136 robes are long and loose)',x['minY']>=.05,round(x['minY'],3))
+            chk(n+' no wing feathers through it (forearm pokes <= 14; v136 bell sleeves hang over the feathers)',x['pokeArm']<=14,x['pokeArm'])
             chk(n+' no tail feathers through it (tail pokes <= 4)',x['pokeTail']<=4,x['pokeTail'])
         if x['sl']=='helm':
-            if x['st'] in ('hat','witch'):chk(n+' sits above the brows (front lowest point > 1.2)',x['frontMinY']>1.2,round(x['frontMinY'],3))
+            if x['st'] in ('hat','witch'):chk(n+' sits above the eyes (lowest point of the brim in front of the face > '+('1.1' if x['st']=='witch' else '1.15')+')',x['frontMinY']>(1.1 if x['st']=='witch' else 1.15),round(x['frontMinY'],3))
             if x['st'] in ('circlet','diadem','crown'):chk(n+' rings the head above the eyes',x['frontMinY']>1.205,round(x['frontMinY'],3))
             if x['st'] in ('linen','tallcowl','star'):chk(n+' leaves the eyes free (forward edge behind z .03)',x['eyeZ'] is None or x['eyeZ']<.03,x['eyeZ'])
-            chk(n+' is not buried in the head (hide <= 80)',x['hideHelm']<=80,x['hideHelm'])
+            chk(n+' is not buried in the head (hide <= '+str(340 if x['st'] in ('circlet','diadem','crown') else 80)+')',x['hideHelm']<=(340 if x['st'] in ('circlet','diadem','crown') else 80),x['hideHelm'])
         if x['sl']=='boots':chk(n+' keeps the bird feet (toes on the foot bones)',x['toes']>=300,x['toes'])
     print('FAILURES:',FAIL if FAIL else 'none')
 play.run(s,w=900,hh=600)

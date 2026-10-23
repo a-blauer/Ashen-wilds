@@ -18,6 +18,8 @@ window.CLIP={
             let u=((cx-p[0])*dx+(cy-p[1])*dy+(cz-p[2])*dz)/L2;u=Math.max(0,Math.min(1,u));const X=p[0]+dx*u,Y=p[1]+dy*u,Z=p[2]+dz*u,d=(cx-X)**2+(cy-Y)**2+(cz-Z)**2;if(d<best){best=d;A=[X,Y,Z]}}
           if(R.length==1)A=R[0].p.slice()}
         (B.__clip[key]||(B.__clip[key]=[])).push({l:CLIP.lab,a:A||[cx,cy,cz],u:CLIP.sub})}return r}}
+    // v136 hoods are built late (gkLater): keep the label of the builder that queued them
+    {const f=W.gkLater;if(f)W.gkLater=function(B,fn){const l=CLIP.lab;return f.call(this,B,function(){const o=CLIP.lab;CLIP.lab=l;try{return fn.apply(this,arguments)}finally{CLIP.lab=o}})}}
     {const f=W.mdHeroB;W.mdHeroB=function(){const o=CLIP.lab;CLIP.lab='outfit';try{return f.apply(this,arguments)}finally{CLIP.lab=o}}}
     {const f=W.mdB;W.mdB=function(){const B=f.apply(this,arguments);if(CLIP.tags)B.__clip={};return B}}},
   // build (bind pose, pre-warp): returns triangles [{v:[9 numbers], l, a, w:[bone weights of vertex 0]}]
