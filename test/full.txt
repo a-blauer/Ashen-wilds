@@ -42,3 +42,4 @@ v136_gear.py
 v136_icons.py
 v137_enemies.py
 v137_npcs.py
+PART=checks,cast v137_evolve.py

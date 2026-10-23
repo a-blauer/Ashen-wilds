@@ -90,6 +90,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v137 companion bodies: rig variants (`RV137`, `rv137`) — Gloomcap / Sporelord, Wispling / Lumenwisp / Soulwarden (cowl `wsp137Hood`), Gravewyrm / Venomcoil (`WY137`), Batwing / Duskwing fur | `2600`–`2630` (v137) |
 | v137 enemy bodies: toolkit (`e137B`, `e137Rows`, `e137Limb`, `e137Quad`, `e137Claws`), own bodies for Blood Hound, Bone Hound, Blood Bat (rig `BloodBat`), Mire Croaker, Basilisk, Snapper, Sun Scarab (middle legs `x.mid137`), Rimeshell Crawler, Storm Harpy, Dust Wyrm, Banshee, Fungal Shambler (rig `Shambler`); older foes rebuilt (`FOE137`, `f137Reg` into `N3.humB`), Goo / Maggot / Scorpion touch-ups | `2640`–`2665` (v137) |
 | v137 animal townsfolk: every Duskhold NPC is a warm-blooded animal (`FK137`, `fkBody` via `idlNpcBody`, parametric skulls `fkSN`, ears / horns / antlers / paws / hooves, 21 species, `FKO` costumes per keeper, citizens by trade `FK_ROLE`, tail + ear animation `fk137Anim`) | `2800`–`2830` (v137) |
+| v137 ability evolution: every class ability evolves at rank 5 (`EVO137` per class, `ev137Evolve`, `ev137Cost` = last rank + 4 ⚡, saved as `hero.tal['__ev:<name>']`), evolved copy cast through `cast` (`ev137Sk`), new effects (`ev137Sigil/Column/Shock/Flare/Lance/Fall/Crescent/Shards/Orbit/Rift/Impact`, projectile models `ev137Proj`), poses `ATK.evoCast/evoRaise/evoNova/evoFlex` | `2700-v137-ability-evo-core.js`, `2710-…-fx.js`, `2715-…-kit.js`, `2720`–`2740` (warrior, paladin, assassin, ranger, mage) |
 
 ## Conventions (read before changing code)
 
@@ -342,6 +343,26 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Tests: `v137_npcs.py` (every keeper and 16 citizens: sheets front / 3/4 / side / back / face / walk / work; FAIL on a human model,
   NaN vertices, a hand / foot / head bone with no body mesh near it in idle, walk or work, a held tool off the hand, live NPCs not
   animal). `SP=fox,bear` draws species sheets; `ONLY=keep|cit`, `PICK=Blacksmith`, `NOSHEET=1`.
+- **Ability evolution (v137, `2700`–`2740`)**: when an ability reaches rank 5, the Abilities window offers to evolve it into a
+  stronger form with a new name (Fireball → Phoenix Barrage, Cleave → Rending Crescent…). Cost: the last rank's cost + 4 ability points
+  (12–16 ⚡, counted by `apSpent`, refunded by "Reset abilities", which also removes evolutions). Saved as `hero.tal['__ev:<name>']=1`
+  (`__` keys survive the talent reset). "👁 Preview evolution" plays it in the ability preview before you buy (`EV137.pv`).
+  * Every evolution (`EVO137[name]`: `en` name, `d` what changed) changes the mechanic: `mod` field changes on a copy of the ability
+    (`r`, `rng`, `n2` projectiles, `jumps`, `dur`, `ticks`, `stun`, `L`/`w`, `buff`; `'*1.4'` multiplies, `'+2'` adds), `post(c)` extra
+    mechanics after the cast (extra waves, falling weapons, second rings, more summons…), `run(c,orig)` a replacement handler
+    (Thousand Cuts, Rapid Fire, Aimed Shot, Disintegrate, Avenger's Shield…). Evolved casts also hit 25% harder (`EV137.dmg`, via `kqrP`).
+  * How a cast becomes evolved: the outermost `cast` wrapper puts the evolved copy (`ev137Sk`: `Object.create` of the ability, same `n`)
+    into the loadout slot for the call, so every layer (ground targeting, fxA/fxB, `cast_base`, `KQH` handlers) uses it; `EV137.cur` is
+    carried into timers, tweens, `kqsObj` and `kqsChan` callbacks made during the cast. `aimPoint` honours an evolved `rng`.
+  * Look: every evolved cast draws a turning rune circle, a light column and orbiting sparks; while `EV137.cur` is set the old effects
+    get evolved companions (ring → `ev137Shock`, big burst → `ev137Flare`, area hit → glyph, bolt → `ev137Lance`, pillar → `ev137Column`;
+    rate limited by `evxLimit`); shots get class models (`ev137Proj`: mage astral comet, ranger spectral arrow, assassin shadow star),
+    a wake (`ev137Trail`) and an impact (`ev137Impact`). New cast poses replace cast/raise/nova/flex (`EV137.poseMap`, `kindPose`).
+    Effects are tweens with their own materials disposed at the end (shared shapes/textures in `EVX`), and are added to `MPV.FX`, so
+    co-op partners see them. Hotbar keys of evolved abilities glow and show ✦.
+  Tests: `v137_evolve.py` (PART=checks,cast,sheets · CLS= · ONLY=): coverage of all 85, Evolve rules / cost / save / reset / window,
+  mechanics measured in game (projectile counts, Frost Nova reach, Chain Lightning jumps, Cleave crescent and damage), every evolved
+  ability cast for every class with no errors and no scene leftovers, preview sheets `out/v137_evolve_<cls>.jpg`.
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main

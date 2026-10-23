@@ -33433,6 +33433,573 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
       for(let i=0;i<5;i++){const a=i*1.3;k.p('head','sph','g',K.spore,.04+Math.sin(a)*.12,.985,-.01+Math.cos(a)*.12,.012,.006,.012)}}};
   if(EN.shambler)EN.shambler.rig=n;
 })();
+// ================= v137: ability evolution =================
+// How it works (read this before changing it):
+// - Every one of the 85 class abilities (17 per class) has an evolved form in EVO137 (files 2720-2740): a new name, a line
+//   saying what changed, field changes (mod: radius, range, projectile count, jumps, duration, stun…; '*1.5' multiplies,
+//   '+2' adds, a plain value replaces) and code for what the fields can't express (post(c) runs after the ability, run(c,orig)
+//   replaces the ability's handler). Evolved casts also hit 25% harder (EV137.dmg, through kqrP, so heals and shields grow too).
+// - Evolving: when an ability is rank 5 the Abilities window shows its evolution with an "Evolve" button. It costs ability
+//   points: the last rank's cost + 4 (12–16 ⚡), counted by apSpent, so "Reset abilities" refunds it (the reset also removes
+//   the evolution). Saved in hero.tal['__ev:<name>'] = 1 ('__' keys survive the talent reset; the ability reset clears them here).
+// - Casting: cast(i) is wrapped (outermost). If the ability in slot i is evolved, the loadout array's slot i holds an evolved
+//   copy (Object.create of the ability with the mods, ev137:1, same name, so ranks, cooldowns, fx files keyed by name keep
+//   working) for the length of the call; every layer below (ground targeting, class resources, fxA/fxB, cast_base, the KQH
+//   handlers) reads that copy. EV137.cur (the evolved cast) is carried into the timers, tweens, ability objects and channels
+//   made during the cast, so later hits and effects know they belong to an evolved cast.
+// - Look: a casting sigil, a light column and orbiting sparks on every evolved cast; while EV137.cur is set, the old effects
+//   get evolved companions (ring → shockwave, big burst → star flare, area hit → ground glyph, bolt → lance, pillar → light
+//   column; rate limited); shots get a new projectile model with a glowing wake and their own impact; new cast poses
+//   (ATK.evoCast/evoRaise/evoNova/evoFlex). The effects live in 2710 and are relayed to co-op partners (MPV.FX).
+// - Preview: the Abilities window's preview plays the evolved form when the ability is evolved, and "Preview evolution" plays
+//   it before you buy it (EV137.pv).
+var EVO137={};
+var EV137={cur:null,dmg:1.25,pv:null,cache:new WeakMap(),busy:0,
+  cls:{warrior:[0xff7a2a,0xffd27a],paladin:[0xffd860,0xfff6d0],assassin:[0x9a5aff,0xff4aa8],ranger:[0x6ae08a,0xf0f0a0],mage:[0x6ab8ff,0xc890ff]},
+  poseMap:{cast:'evoCast',raise:'evoRaise',nova:'evoNova',flex:'evoFlex'},
+  kindPose:{nova:'evoNova',meteor:'evoRaise',chain:'evoCast'}};
+function ev137Key(n){return '__ev:'+n}
+function ev137On(n){try{if(typeof ABX!='undefined'&&ABX.ctx&&EV137.pv&&EV137.pv===n)return true;return !!(hero&&hero.tal&&hero.tal[ev137Key(n)])}catch(_){return false}}
+function ev137Def(s){return s&&EVO137[s.n]||null}
+function ev137Pal(cls){return EV137.cls[cls]||[0xffffff,0xffffff]}
+// the evolved copy of an ability (cached per ability object)
+function ev137Sk(s){let e=EV137.cache.get(s);if(e)return e;const E=ev137Def(s);if(!E)return s;e=Object.create(s);const M=E.mod||{};
+  for(const k in M){const v=M[k];if(typeof v=='string'&&v[0]=='*')e[k]=(+s[k]||0)*parseFloat(v.slice(1));else if(typeof v=='string'&&v[0]=='+')e[k]=(+s[k]||0)+parseFloat(v.slice(1));else if(v&&typeof v=='object'&&!Array.isArray(v))e[k]=Object.assign({},s[k]||{},v);else e[k]=v}
+  e.ev137=1;e.en=E.en;
+  const fxOwn=(typeof FXB_SK!='undefined'&&FXB_SK[s.n])||(typeof FXA!='undefined'&&FXA.on&&FXA.on[s.n]);
+  if(E.pose)e.pose=E.pose;else if(s.pose&&EV137.poseMap[s.pose])e.pose=EV137.poseMap[s.pose];
+  else if(!s.pose&&!fxOwn){const k=s.k=='rain'?(s.at=='self'?'nova':'meteor'):s.k=='shot'&&!s.arrow&&s.mt=='m'?'chain':s.k;if(EV137.kindPose[k])e.pose=EV137.kindPose[k]}
+  if(e.pose&&e.pose!==s.pose)e.pms=E.pms||({evoCast:520,evoRaise:640,evoNova:560,evoFlex:600})[e.pose]||480;
+  EV137.cache.set(s,e);return e}
+// the ability's hit value outside the handlers (old kinds), like cast_base computes it
+function ev137Ctx(sk,i){const s=HS(),mt=sk.mt||CLS[hero.cls].mt,A=atkOf(mt)*(1+s.skillP)*kqrP(sk);
+  return {rk:kqrP(sk),sk,i,key:'s'+i,s,P:pl.position.clone(),d:aimDir().clone(),mt,A,raw:A*(sk.m||0),R:(sk.r||0)*(1+(s.aoeP||0)),now:performance.now(),gp:KQS.gp?KQS.gp.clone():null,fx:{mt,col:sk.col,stun:sk.stun,burn:sk.burn},cr:0,pips:0,old:1}}
+function ev137Cur(sk){const P=ev137Pal(hero.cls);return {sk,cls:hero.cls,col:sk.col||P[0],c1:P[0],c2:P[1]}}
+// carry the evolved cast into callbacks made during it
+function ev137Cb(f){const C=EV137.cur;if(!C||typeof f!='function'||f.ev137W)return f;const w=function(){const o=EV137.cur;EV137.cur=C;try{return f.apply(this,arguments)}finally{EV137.cur=o}};w.ev137W=1;return w}
+{const st=window.setTimeout;window.setTimeout=function(f,ms){if(EV137.cur&&typeof f=='function'){const a=Array.prototype.slice.call(arguments);a[0]=ev137Cb(f);return st.apply(window,a)}return st.apply(window,arguments)}}
+{const f=tw;tw=function(ms,fn,done){if(EV137.cur)return f.call(this,ms,ev137Cb(fn),ev137Cb(done));return f.apply(this,arguments)}}
+{const f=kqsObj;kqsObj=function(o){if(EV137.cur&&o)['tick','end','upd','hit'].forEach(k=>{if(typeof o[k]=='function')o[k]=ev137Cb(o[k])});return f.apply(this,arguments)}}
+{const f=kqsChan;kqsChan=function(o){if(EV137.cur&&o)['tick','end','upd'].forEach(k=>{if(typeof o[k]=='function')o[k]=ev137Cb(o[k])});return f.apply(this,arguments)}}
+
+// ---------------- damage, cost, saving ----------------
+{const f=kqrP;kqrP=function(s){return f.apply(this,arguments)*(s&&s.ev137?EV137.dmg:1)}}
+function ev137Cost(s){return kqrCost(s,KQR_MAX)+4}
+function ev137Spent(){let n=0;try{const c=hero.cls;kqsAll(c).forEach(s=>{if(hero.tal&&hero.tal[ev137Key(s.n)])n+=ev137Cost(s)})}catch(_){}return n}
+{const f=apSpent;apSpent=function(){return f.apply(this,arguments)+ev137Spent()}}
+function ev137Why(s){const c=hero.cls;if(!ev137Def(s))return 'No evolution';if(!kqsUnl(c,s))return 'Unlock it first';if(kqrRank(s)<KQR_MAX)return 'Reach rank '+KQR_MAX+' first';
+  if(hero.tal[ev137Key(s.n)])return 'Evolved';const k=ev137Cost(s);if(apFree()<k)return 'Needs '+k+' ability points';return ''}
+function ev137Evolve(n){const c=hero.cls,s=kqsFind(c,n);if(!s)return false;const w=ev137Why(s);KQS.sel=s.n;if(w){say('🔒 '+s.n+': '+w+'.');return false}
+  hero.tal[ev137Key(s.n)]=1;hsDirty();const E=ev137Def(s);EV137.pv=null;
+  say('✦ <b>'+s.n+'</b> evolved into <b>'+E.en+'</b>! '+E.d);try{popT(pl.position,'✦ '+E.en+' ✦','#f5d0fe',true)}catch(_){}
+  try{ev137Ceremony(pl.position,s.col)}catch(e){console.warn(e)}try{ev137Snd('evolve')}catch(_){}try{mSfx('rare')}catch(_){}
+  try{hud()}catch(_){}if(typeof xwMode!='undefined'&&xwMode=='abil')rX();return true}
+// the ability reset removes evolutions (their cost is refunded through apSpent)
+{const f=kqsReset;kqsReset=function(){const ev=Object.keys(hero.tal).filter(k=>k.startsWith('__ev:'));if(ev.length&&gold>=kqsResetCost()){ev.forEach(k=>delete hero.tal[k]);EV137.pv=null}
+  const r=f.apply(this,arguments);try{hud()}catch(_){}return r}}
+// tests / cheats: evolve every learned ability (rank 5 first)
+function ev137All(on){const c=hero.cls;kqsAll(c).forEach(s=>{if(!kqsUnl(c,s))return;if(on===false)delete hero.tal[ev137Key(s.n)];else{hero.tal['ab:'+s.n]=KQR_MAX;hero.tal[ev137Key(s.n)]=1}});hsDirty();KQS.ck=''}
+
+// ---------------- the cast ----------------
+{const f=cast;cast=function(i){i=+i;let A=null,o=null;try{A=heroSkills();o=A&&A[i]}catch(_){}
+  if(!o||o.ev137||!ev137Def(o)||!ev137On(o.n))return f.apply(this,arguments);
+  const e=ev137Sk(o),prev=EV137.cur,cd0=(hero.cd&&hero.cd['s'+i])||0,ch0=hero.chan,k0=KQS.ch;let x=null;
+  A[i]=e;EV137.cur=ev137Cur(e);let r;
+  try{try{x=ev137Ctx(e,i)}catch(_){}
+    r=f.apply(this,arguments);
+    const did=((hero.cd&&hero.cd['s'+i])||0)>cd0+.01||(hero.chan&&hero.chan!==ch0)||(KQS.ch&&KQS.ch!==k0);
+    if(did&&x){x.P0=x.P;x.P=pl.position.clone();try{if(typeof mpvRun=='function')mpvRun(()=>ev137Fired(e,x),null,[]);else ev137Fired(e,x)}catch(err){console.error('evolved '+e.n,err)}}}
+  finally{if(A[i]===e)A[i]=o;EV137.cur=prev}
+  return r}}
+// after an evolved cast went off: the evolved look on the caster, and the old kinds' extra mechanics
+function ev137Fired(e,x){const E=ev137Def(e),C=EV137.cur,P=x.P0||x.P;
+  EV137.busy++;try{ev137CastFx(P,C)}finally{EV137.busy--}
+  if(e.k!='x'&&E.post)E.post(x);
+  if(e.k=='buff'||e.k=='heal'||e.k=='barrier'){try{if(ATK.evoFlex)haPlay(600,ATK.evoFlex,2,null,.12)}catch(_){}}
+  try{ev137Snd(e.k=='buff'||e.k=='heal'||e.k=='barrier'?'buff':'cast')}catch(_){}}
+// old ground skills ask aimPoint for a fixed reach (Leap Slam 7, Meteor 10…): an evolved range lifts it
+{const f=aimPoint;aimPoint=function(maxD){const C=EV137.cur;if(C&&C.sk&&C.sk.rng&&KQS.gp)maxD=Math.max(maxD||0,C.sk.rng);return f.call(this,maxD)}}
+// the new abilities (k:'x'): their handlers get the evolved extras
+Object.keys(KQH).forEach(k=>{const f=KQH[k];KQH[k]=function(c){const sk=c&&c.sk,E=sk&&sk.ev137&&ev137Def(sk);if(!E)return f.apply(this,arguments);
+  if(E.pre)try{E.pre(c)}catch(err){console.error(err)}
+  const r=E.run?E.run(c,f):f.apply(this,arguments);
+  if(r!==false&&E.post&&!E.run)try{E.post(c)}catch(err){console.error('evolved '+sk.n,err)}return r}});
+
+// ---------------- the evolved look of every cast ----------------
+function ev137CastFx(P,C){const p=pl.position,col=C.col,c2=C.c2;
+  ev137Sigil(P,col,2.2,700,0,.7);ev137Column(P,c2,3.2,.42,460,.6);ev137Orbit(P,col,1.05,800);ev137Flare(evxGY(p,1.3),c2,.9,280)}
+function ev137Ceremony(P,col){const C=ev137Pal(hero.cls);col=col||C[0];
+  ev137Sigil(P,col,4.2,1800,0);ev137Column(P,C[1],12,1.1,1400);ev137Column(P,col,7,1.8,1100);ev137Orbit(P,col,1.6,1600);ev137Orbit(P,C[1],2.2,1400);
+  setTimeout(()=>{ev137Shock(P,col,6,700);ev137Flare(evxGY(P,1.5),C[1],3.5,600);ev137Shards(P,C[1],12,2.4,1.6,1200)},700);
+  try{flash('rgba(240,200,255,.18)')}catch(_){}try{haPlay(900,ATK.evoRaise,2,null,.15)}catch(_){}}
+// while an evolved cast is running, the old effects get evolved companions (rate limited, never while drawing our own)
+{const f=ring;ring=function(pos,col,r,ms){const o=f.apply(this,arguments);const C=EV137.cur;if(C&&!EV137.busy&&pos&&(r||0)>=1.2&&evxLimit('ring',110)){EV137.busy++;try{ev137Shock(pos,evxLerp(col,C.c2,.35),Math.min(10,.55*(1+r)),(ms||400)*1.25)}finally{EV137.busy--}}return o}}
+{const f=burst;burst=function(p,col,n,sp,up,life){const o=f.apply(this,arguments);const C=EV137.cur;if(C&&!EV137.busy&&p&&(n|0)>=14&&evxLimit('burst',70)){EV137.busy++;try{ev137Flare(p,evxLerp(col,C.c2,.3),Math.min(2.6,.5+(sp||1)*.3),340);
+  for(let j=0;j<5;j++){const a=Math.random()*6.28,v=1.5+Math.random()*(sp||2);evxPuff(p.clone(),{spr:1,col:j%2?C.c2:col,r0:.3,r1:0,life:.5,op:.9,v:[Math.cos(a)*v,1+Math.random()*(up||2),Math.sin(a)*v],drag:1.6,fin:.03})}}finally{EV137.busy--}}return o}}
+{const f=area;area=function(p,r,dm,s,dir,half){const o=f.apply(this,arguments);const C=EV137.cur;if(C&&!EV137.busy&&p&&(r||0)>=1&&!dir&&evxLimit('area',150)){EV137.busy++;try{ev137Sigil(p,C.c2,r*1.05,520,1)}finally{EV137.busy--}}return o}}
+{const f=bolt;bolt=function(a,b,col){const o=f.apply(this,arguments);const C=EV137.cur;if(C&&!EV137.busy&&a&&b&&evxLimit('bolt',80)){EV137.busy++;try{ev137Lance(a,b,evxLerp(col,C.c2,.3),.08,240)}finally{EV137.busy--}}return o}}
+{const f=kqsPillar;kqsPillar=function(p,col,h,ms,w){const o=f.apply(this,arguments);const C=EV137.cur;if(C&&!EV137.busy&&p&&evxLimit('pillar',90)){EV137.busy++;try{ev137Column(p,evxLerp(col,C.c2,.3),(h||8)*1.1,(w||.5)*1.4,(ms||420)*1.3)}finally{EV137.busy--}}return o}}
+// shots of an evolved cast: the new model, a glowing wake, and an impact of their own
+{const f=launch;launch=function(pos,d,spd,s,dm,life){const n0=shots.length,r=f.apply(this,arguments);const C=EV137.cur;
+  if(C&&shots.length>n0){for(let j=n0;j<shots.length;j++){const sh=shots[j];if(sh.ev137)continue;sh.ev137=1;sh.evC=evxLerp(s&&s.col||C.col,C.c2,.2);sh.evCls=C.cls;
+    try{const M=ev137Proj(C.cls,sh.evC);M.userData.ev137P=1;sh.m.add(M);sh.m.userData.ev137S=M.userData.spin;if(!s.arrow&&sh.m.material){sh.m.material.visible=false}if(C.cls=='ranger'||C.cls=='assassin')M.scale.setScalar(1.6)}catch(err){console.warn(err)}}}return r}}
+{const f=shotTick;shotTick=function(dt){let A=null;for(const sh of shots)if(sh.ev137){(A||(A=[])).push(sh);if(dt>0)try{ev137Trail(sh,dt)}catch(_){}}
+  const r=f.apply(this,arguments);
+  if(A)A.forEach(sh=>{if(shots.indexOf(sh)>=0)return;const p=sh.m.getWorldPosition?sh.m.getWorldPosition(new THREE.Vector3()):sh.m.position.clone();
+    try{if(sh.hit&&sh.hit.size)ev137Impact(p,sh.evC,sh.evCls=='mage'?1.25:1);else ev137Flare(p,sh.evC,.8,220)}catch(_){}
+    sh.m.children.slice().forEach(q=>{if(q.userData&&q.userData.ev137P)sh.m.remove(q)})});return r}}
+
+// ---------------- poses: gather → unleash ----------------
+(function(){if(typeof ATK=='undefined'||typeof atkTrack!='function')return;const E=atkEyes;
+  // two hands gather a charge at the chest, then thrust it out with a lunge; long follow-through
+  ATK.evoCast=atkTrack([[0,ATK_REST],[.14,E({sx:-.16,hx:-.12,ax:-1.05,az:-.55,ex:-2.0,lx:-1.05,lz:.55,le:-2.0,sy:.3,py:.12,lk:.35,rk:.35,dy:-.07}),'out'],
+    [.3,E({sx:.32,hx:.1,ax:-1.65,az:.3,ex:-.05,rw:.3,lx:-1.65,lz:-.3,le:-.05,lw:.3,sy:-.12,py:-.08,lh:-.42,rh:.3,lk:.55,rk:.2,dy:-.12}),'in2'],
+    [.66,E({sx:.28,hx:.08,ax:-1.6,az:.38,ex:-.08,rw:.3,lx:-1.6,lz:-.38,le:-.08,lw:.3,sy:-.1,lh:-.4,rh:.28,lk:.52,rk:.2,dy:-.11}),'out'],[1,ATK_REST,'io']]);
+  // arms sweep low and back, then rise into a V overhead on tiptoe, and hold
+  ATK.evoRaise=atkTrack([[0,ATK_REST],[.18,E({sx:.3,hx:.15,ax:.4,az:.5,ex:-.3,lx:.4,lz:-.5,le:-.3,lk:.6,rk:.6,dy:-.16}),'out'],
+    [.42,E({sx:-.28,hx:-.45,ax:-2.85,az:.85,ex:-.12,lx:-2.85,lz:-.85,le:-.12,dy:.03,lk:.05,rk:.05}),'in2'],[.75,E({sx:-.26,hx:-.42,ax:-2.8,az:.9,ex:-.15,lx:-2.8,lz:-.9,le:-.15,dy:.03}),'out'],[1,ATK_REST,'io']]);
+  // arms cross over the chest, then burst out wide and down in a deep crouch
+  ATK.evoNova=atkTrack([[0,ATK_REST],[.16,E({sx:-.12,ax:-1.35,az:-1.05,ex:-1.9,lx:-1.35,lz:1.05,le:-1.9,lk:.3,rk:.3,dy:-.05}),'out'],
+    [.32,E({sx:.55,hx:.25,ax:-.35,az:1.35,ex:-.05,lx:-.35,lz:-1.35,le:-.05,lh:-.4,rh:.35,lk:.9,rk:.7,dy:-.2}),'in2'],[.68,E({sx:.5,hx:.22,ax:-.3,az:1.4,ex:-.08,lx:-.3,lz:-1.4,le:-.08,lh:-.38,rh:.33,lk:.86,rk:.66,dy:-.19}),'out'],[1,ATK_REST,'io']]);
+  // a roar: fists drawn in, then flung out to the sides, chest forward, head back
+  ATK.evoFlex=atkTrack([[0,ATK_REST],[.2,E({sx:.3,ax:-.4,az:.2,ex:-2.1,lx:-.4,lz:-.2,le:-2.1,lk:.4,rk:.4,dy:-.08,hx:.2}),'out'],
+    [.42,E({sx:-.3,hx:-.5,ax:-1.2,az:1.25,ex:-.5,lx:-1.2,lz:-1.25,le:-.5,dy:.02}),'in2'],[.74,E({sx:-.26,hx:-.45,ax:-1.15,az:1.2,ex:-.55,lx:-1.15,lz:-1.2,le:-.55,dy:.02}),'out'],[1,ATK_REST,'io']])})();
+{const f=kqsPoseT;kqsPoseT=function(p){if(typeof ATK!='undefined'){const m={evoCast:[ATK.evoCast,520],evoRaise:[ATK.evoRaise,640],evoNova:[ATK.evoNova,560],evoFlex:[ATK.evoFlex,600]}[p];if(m&&m[0])return m}return f.apply(this,arguments)}}
+
+// ---------------- sounds ----------------
+function ev137Snd(k){try{if(SET.sfx===false||SET.sfxV!=null&&!(+SET.sfxV>0))return;const a=AUD;if(!a||a.state!='running'||!a.out)return;const t=a.currentTime;
+  const tone=(ty,f,at,dur,v,f1)=>{const o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t+at);if(f1)o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+at+dur);g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+.01);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);o.connect(g);g.connect(a.out);o.start(t+at);o.stop(t+at+dur+.05)};
+  if(k=='cast'){tone('sine',520,0,.5,.05,1560);tone('triangle',780,.04,.45,.04,2340);tone('sine',130,0,.4,.08,65)}
+  else if(k=='buff'){[0,.06,.12].forEach((at,j)=>tone('sine',[523,659,784][j],at,.6,.05));tone('triangle',1046,.18,.7,.03)}
+  else if(k=='evolve'){[0,.1,.2,.3,.42].forEach((at,j)=>tone('sine',[392,523,659,784,1046][j],at,1.1,.06));tone('sawtooth',98,0,1.4,.05,196);tone('triangle',2093,.5,1,.03)}}catch(_){}}
+
+// ---------------- the Abilities window: evolution box, ✦ marks, preview ----------------
+function ev137Box(s){const c=hero.cls,E=ev137Def(s);if(!E)return '';const un=kqsUnl(c,s),r=un?kqrRank(s):0,on=!!hero.tal[ev137Key(s.n)],w=ev137Why(s),k=ev137Cost(s),pv=EV137.pv===s.n;
+  if(on)return `<div class="ev137-box on"><div class="ev137-h">✦ Evolved · <b>${E.en}</b></div><div class="ev137-d">${E.d}</div><div class="ev137-n">+25% damage and healing · new look</div></div>`;
+  if(r<KQR_MAX)return `<div class="ev137-box lock"><div class="ev137-h">✦ At rank ${KQR_MAX} it can evolve into <b>${E.en}</b></div><div class="ev137-d">${E.d}</div></div>`;
+  return `<div class="ev137-box ready"><div class="ev137-h">✦ Evolution · <b>${E.en}</b></div><div class="ev137-d">${E.d} <span class="ev137-n">+25% damage and healing, new look.</span></div>
+    <div class="ev137-n">Evolving costs ${k} ability points (refunded by Reset abilities).</div>
+    <div class="btns"><button class="${w?'':'pri '}ev137-go" data-ev137="${s.n}" ${w?'disabled':''}>${w?'🔒 '+w:'✦ Evolve · '+k+' ⚡'}</button><button data-ev137pv="${s.n}" class="${pv?'on':''}">${pv?'■ Stop preview':'👁 Preview evolution'}</button></div></div>`}
+{const f=XR.abil;XR.abil=function(){const r=f.apply(this,arguments);try{ev137Decor()}catch(err){console.error(err)}return r}}
+function ev137Decor(){const c=hero.cls,B=$('xwB');if(!B)return;
+  document.querySelectorAll('#xwB [data-kqsel]').forEach(row=>{const s=kqsFind(c,row.dataset.kqsel);if(!s||!hero.tal[ev137Key(s.n)])return;row.classList.add('ev137-row');const b=row.querySelector('.rn b');
+    if(b&&!row.querySelector('.ev137-tag'))b.insertAdjacentHTML('afterend',` <span class="ev137-tag" title="Evolved: ${ev137Def(s).en}">✦ ${ev137Def(s).en}</span>`)});
+  document.querySelectorAll('#xwB [data-kqslot]').forEach(sl=>{const s=heroSkills()[+sl.dataset.kqslot];if(s&&hero.tal[ev137Key(s.n)])sl.classList.add('ev137-slot')});
+  const sel=kqsFind(c,KQS.sel)||heroSkills()[0],box=B.querySelector('.kqr-box');if(!sel)return;
+  if(EV137.pv&&EV137.pv!==sel.n)EV137.pv=null;
+  const h=ev137Box(sel);if(h){if(box)box.insertAdjacentHTML('afterend',h);else{const det=B.querySelector('.kqs-det');if(det)det.insertAdjacentHTML('beforeend',h)}}
+  const lb=document.querySelector('#xw .abpvl span');if(lb&&(EV137.pv===sel.n||hero.tal[ev137Key(sel.n)]))lb.innerHTML='▶ Preview · <b class="ev137-tag">✦ '+ev137Def(sel).en+'</b>'}
+$('xw').addEventListener('click',e=>{if(typeof xwMode=='undefined'||xwMode!='abil')return;const t=e.target.closest('[data-ev137],[data-ev137pv]');if(!t)return;e.stopPropagation();e.preventDefault();if(t.disabled)return;
+  if(t.dataset.ev137)ev137Evolve(t.dataset.ev137);
+  else{const n=t.dataset.ev137pv;EV137.pv=EV137.pv===n?null:n;KQS.sel=n;rX();try{if(typeof ABX!='undefined'&&ABX.on)abxCycle(performance.now())}catch(_){}}},true);
+// the hotbar: evolved keys glow and carry a ✦
+{const f=hud;hud=function(){f.apply(this,arguments);if(typeof ABX!='undefined'&&ABX.ctx)return;try{const A=$('acts');if(!A||!party.length)return;heroSkills().forEach((s,i)=>{const b=A.querySelector('button[data-x="'+i+'"]');if(!b)return;const on=!!(hero.tal&&hero.tal[ev137Key(s.n)]);
+  b.classList.toggle('ev137-hk',on);const q=b.querySelector('.kqr-b');if(q&&on){q.textContent='✦';q.title='Evolved: '+ev137Def(s).en}if(on)b.title=ev137Def(s).en+' (evolved '+s.n+')'})}catch(_){}}}
+// the ground-targeting bar names the evolved form
+{const f=kqsTgStart;kqsTgStart=function(i,sk){const r=f.apply(this,arguments);try{if(sk&&sk.ev137){const b=$('kqsTg');const n=b&&b.querySelector('.kqs-tgn');if(n)n.innerHTML=sk.i+' <b>✦ '+sk.en+'</b>'}}catch(_){}return r}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+.ev137-box{margin:8px 0;padding:8px 9px;border-radius:8px;border:1px solid rgba(200,140,255,.35);background:linear-gradient(135deg,rgba(150,90,255,.12),rgba(255,180,90,.08));font-size:.76rem}
+.ev137-box.lock{opacity:.7;border-style:dashed}.ev137-box.on{border-color:rgba(240,200,120,.6);box-shadow:0 0 10px rgba(200,140,255,.25) inset}
+.ev137-h{font-size:.8rem;margin-bottom:3px;color:#f5d0fe}.ev137-h b{color:#fde68a}.ev137-d{line-height:1.35}.ev137-n{opacity:.75;font-size:.7rem;margin-top:3px}
+.ev137-box .btns{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}.ev137-box .btns button.on{outline:1px solid #f5d0fe}
+.ev137-go.pri{background:linear-gradient(90deg,#7c3aed,#d97706);border-color:#f5d0fe;color:#fff;animation:ev137p 1.6s ease-in-out infinite}
+@keyframes ev137p{0%,100%{box-shadow:0 0 0 rgba(245,208,254,0)}50%{box-shadow:0 0 12px rgba(245,208,254,.7)}}
+.ev137-tag{color:#f5d0fe;font-size:.68rem;font-weight:700;text-shadow:0 0 6px rgba(200,140,255,.7);white-space:nowrap}
+.ev137-row{background:linear-gradient(90deg,rgba(150,90,255,.1),transparent 70%)}.ev137-slot{box-shadow:0 0 0 1px rgba(245,208,254,.7),0 0 10px rgba(180,120,255,.45)}
+#acts .hs.ev137-hk,#acts button.ev137-hk{box-shadow:0 0 0 1px rgba(245,208,254,.85),0 0 12px rgba(180,120,255,.55);animation:ev137h 2.4s ease-in-out infinite}
+#acts button.ev137-hk .kqr-b{color:#f5d0fe!important;opacity:1!important;font-size:.7rem!important;text-shadow:0 0 6px #a855f7,0 1px 2px #000!important}
+@keyframes ev137h{0%,100%{box-shadow:0 0 0 1px rgba(245,208,254,.7),0 0 8px rgba(180,120,255,.35)}50%{box-shadow:0 0 0 1px rgba(253,230,138,.9),0 0 16px rgba(220,150,255,.7)}}
+</style>`);
+// ================= v137 evolved abilities: the effect library =================
+// Every evolved cast draws with these (on top of what the ability itself draws). All of them are visual only (no damage),
+// take plain arguments (positions, colours, numbers) so co-op partners can replay them (they are added to MPV.FX at the
+// end of this file), run on tweens (tw: game time, and the ability preview's own tween list), and free every material and
+// geometry they make when they end. Shared shapes and textures live in EVX and are never disposed.
+//   ev137Sigil(p,col,R,ms,kind)   a glowing rune circle draped on the ground, turning (kind 0 big casting circle, 1 quick glyph)
+//   ev137Column(p,col,h,r,ms)     a pillar of light shooting up, with a white core and rising motes
+//   ev137Shock(p,col,R,ms)        a shockwave: a bright torus racing out, a low wall of light and flying sparks
+//   ev137Flare(p,col,s,ms)        a star-shaped flash (glow + 4-point star)
+//   ev137Lance(a,b,col,w,ms)      a beam of light from a to b (white core in a coloured sheath) with sparks along it
+//   ev137Fall(p,col,kind,ms)      a spectral weapon (sword, hammer, spear, axe, comet, star) falling from the sky onto p
+//   ev137Crescent(p,d,col,L,ms)   a crescent blade of force flying from p along d for L tiles
+//   ev137Shards(p,col,n,R,h,ms)   crystal spikes bursting up in a ring
+//   ev137Orbit(p,col,r,ms)        sparks spiralling up around a point (buffs)
+//   ev137Rift(a,b,col,ms)         a glowing tear in the ground from a to b
+//   ev137Impact(p,col,s)          a projectile's impact (shock + flare + sparks)
+// Projectile models (ev137Proj) are shared groups put on the shots of evolved casts; ev137Trail leaves their wake.
+var EVX={g:{},t:{},m:{},lim:{}};
+function evxG(k,mk){return EVX.g[k]||(EVX.g[k]=mk())}
+function evxAdd(col,op,map){return new THREE.MeshBasicMaterial({color:col,map:map||null,transparent:true,opacity:op==null?1:op,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})}
+function evxMesh(geo,mat){const m=new THREE.Mesh(geo,mat);m.userData.lpsSkip=1;m.frustumCulled=false;m.renderOrder=33;return m}
+// remove an effect object: dispose its own materials (and geometries flagged evxOwn); shared ones stay
+function evxRm(o){if(!o)return;if(o.parent)o.parent.remove(o);o.traverse(q=>{if(q.material&&!q.material.userData.evxS)(Array.isArray(q.material)?q.material:[q.material]).forEach(m=>m.dispose());
+  if(q.geometry&&q.geometry.userData.evxOwn)q.geometry.dispose()})}
+function evxCol(c){return typeof c=='number'?c:(c&&c.getHex?c.getHex():0xffffff)}
+function evxLerp(a,b,t){return new THREE.Color(evxCol(a)).lerp(new THREE.Color(evxCol(b)),t).getHex()}
+function evxGY(p,y){return new THREE.Vector3(p.x,GH(p.x,p.z)+(y||0),p.z)}
+function evxRand(a,b){return a+Math.random()*(b-a)}
+// a puff from the shared fxA pool (does nothing if fxA is missing)
+function evxPuff(p,o){try{if(typeof fxaPuff=='function')return fxaPuff(p,o)}catch(_){}return null}
+// ---------------- textures (drawn once, white, tinted by the material colour) ----------------
+function evxTex(k){if(EVX.t[k])return EVX.t[k];const S=256,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d'),C=S/2;g.translate(C,C);g.strokeStyle='#fff';g.fillStyle='#fff';g.lineCap='round';
+  const R=(n=>{let s=n;return ()=>{s=(s*16807)%2147483647;return s/2147483647}})(k.length*977+13);
+  const circ=(r,w)=>{g.lineWidth=w;g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.stroke()};
+  const rune=(x,y,s,a)=>{g.save();g.translate(x,y);g.rotate(a);g.lineWidth=s*.16;g.beginPath();const n=2+Math.floor(R()*3);for(let i=0;i<n;i++){const x0=(R()-.5)*s,y0=(R()-.5)*s,x1=(R()-.5)*s,y1=(R()-.5)*s;g.moveTo(x0,y0);if(R()<.4)g.quadraticCurveTo(0,0,x1,y1);else g.lineTo(x1,y1)}g.stroke();g.restore()};
+  if(k=='sigil'){g.shadowColor='#fff';g.shadowBlur=6;circ(122,5);circ(112,2);circ(78,4);circ(70,1.5);circ(30,3);
+    for(let i=0;i<24;i++){const a=i/24*Math.PI*2;rune(Math.cos(a)*95,Math.sin(a)*95,14,a+Math.PI/2)}
+    for(let i=0;i<48;i++){const a=i/48*Math.PI*2;g.lineWidth=i%4?1.5:3;g.beginPath();g.moveTo(Math.cos(a)*112,Math.sin(a)*112);g.lineTo(Math.cos(a)*(i%4?117:122),Math.sin(a)*(i%4?117:122));g.stroke()}
+    g.lineWidth=3;for(let t=0;t<2;t++){g.beginPath();for(let i=0;i<=3;i++){const a=i/3*Math.PI*2+t*Math.PI/3-Math.PI/2;const x=Math.cos(a)*78,y=Math.sin(a)*78;if(i)g.lineTo(x,y);else g.moveTo(x,y)}g.stroke()}
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2+Math.PI/6-Math.PI/2;g.beginPath();g.arc(Math.cos(a)*50,Math.sin(a)*50,7,0,Math.PI*2);g.stroke()}}
+  else if(k=='glyph'){g.shadowColor='#fff';g.shadowBlur=8;circ(118,6);circ(96,2);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;g.lineWidth=3;g.beginPath();g.moveTo(Math.cos(a)*96,Math.sin(a)*96);g.lineTo(Math.cos(a+Math.PI*.75)*96,Math.sin(a+Math.PI*.75)*96);g.stroke()}
+    for(let i=0;i<12;i++){const a=i/12*Math.PI*2;rune(Math.cos(a)*107,Math.sin(a)*107,10,a)}}
+  else if(k=='star'){const gr=g.createRadialGradient(0,0,0,0,0,C);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.12,'rgba(255,255,255,.8)');gr.addColorStop(.35,'rgba(255,255,255,.18)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(-C,-C,S,S);
+    for(let i=0;i<4;i++){g.save();g.rotate(i*Math.PI/2);const l=g.createLinearGradient(0,0,C,0);l.addColorStop(0,'rgba(255,255,255,1)');l.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=l;g.beginPath();g.moveTo(0,-7);g.lineTo(C,0);g.lineTo(0,7);g.closePath();g.fill();g.restore()}}
+  else if(k=='soft'){const gr=g.createRadialGradient(0,0,0,0,0,C);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.3,'rgba(255,255,255,.55)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(-C,-C,S,S)}
+  else if(k=='beam'){g.setTransform(1,0,0,1,0,0);const l=g.createLinearGradient(0,0,S,0);l.addColorStop(0,'rgba(255,255,255,0)');l.addColorStop(.5,'rgba(255,255,255,1)');l.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=l;g.fillRect(0,0,S,S)}
+  else if(k=='vgrad'){g.setTransform(1,0,0,1,0,0);const l=g.createLinearGradient(0,S,0,0);l.addColorStop(0,'rgba(255,255,255,1)');l.addColorStop(.35,'rgba(255,255,255,.55)');l.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=l;g.fillRect(0,0,S,S)}
+  else if(k=='rift'){g.setTransform(1,0,0,1,0,0);for(let y=0;y<S;y+=2){const w=S*(.08+.1*Math.abs(Math.sin(y*.09))*Math.abs(Math.sin(y*.031)));const l=g.createLinearGradient(C-w,0,C+w,0);l.addColorStop(0,'rgba(255,255,255,0)');l.addColorStop(.5,'rgba(255,255,255,1)');l.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=l;g.fillRect(C-w,y,w*2,2)}}
+  const t=new THREE.CanvasTexture(c);t.userData={evxS:1};return EVX.t[k]=t}
+// shared shapes
+function evxCyl(){return evxG('cyl',()=>{const g=new THREE.CylinderGeometry(1,1,1,20,1,true);g.translate(0,.5,0);return g})}
+function evxTor(){return evxG('tor',()=>{const g=new THREE.TorusGeometry(1,.05,6,64);g.rotateX(Math.PI/2);return g})}
+function evxDisk(){return evxG('disk',()=>{const g=new THREE.CircleGeometry(1,40);g.rotateX(-Math.PI/2);return g})}
+function evxLimit(k,ms){const t=performance.now();if((EVX.lim[k]||0)>t)return false;EVX.lim[k]=t+ms;return true}
+// a draped, turning textured disc on the ground (radius R at full size)
+function evxGround(p,tex,col,op,R,ro){const geo=new THREE.PlaneGeometry(1,1,10,10);geo.userData.evxOwn=1;const m=kqsDrapeM(geo,evxAdd(col,0,evxTex(tex)),ro||29);
+  m.userData.dr=(a,r)=>{const c=Math.cos(a),s=Math.sin(a);kqsDrape(m,(u,v)=>{const x=(u*c-v*s)*2*r,z=(u*s+v*c)*2*r;return [p.x+x,p.z-z]},.1)};m.userData.op=op;return m}
+
+// ---------------- the effects ----------------
+function ev137Sigil(p,col,R,ms,kind,op){if(!p)return;op=op==null?1:op;R=Math.max(.6,Math.min(12,R||2.5));ms=ms||700;col=evxCol(col);const pp=new THREE.Vector3(p.x,0,p.z);
+  const big=!kind,A=evxGround(pp,big?'sigil':'glyph',col,(big?.95:.85)*op,R,29),B=big?evxGround(pp,'glyph',evxLerp(col,0xffffff,.45),.55*op,R*.62,30):null,a0=Math.random()*6.28,sp=big?.9:2.2;
+  tw(ms,k=>{const g=k<.18?ATK_E.out(k/.18):1,f=k>.62?1-(k-.62)/.38:1,r=R*(.55+.45*g);A.userData.dr(a0+k*sp*ms/1000,r);A.material.opacity=A.userData.op*f*(k<.18?g:1);
+    if(B){B.userData.dr(-a0-k*sp*1.6*ms/1000,r*.62);B.material.opacity=B.userData.op*f*(k<.25?k/.25:1)}},()=>{evxRm(A);evxRm(B)})}
+function ev137Column(p,col,h,r,ms,op){if(!p)return;op=op==null?1:op;h=h||7;r=r||.7;ms=ms||600;col=evxCol(col);const g=new THREE.Group(),b=evxGY(p,0);g.position.copy(b);
+  const o=evxMesh(evxCyl(),evxAdd(col,.55,evxTex('vgrad'))),c=evxMesh(evxCyl(),evxAdd(evxLerp(col,0xffffff,.75),.9,evxTex('vgrad'))),cap=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('soft'),color:col,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
+  cap.userData.lpsSkip=1;g.add(o,c,cap);scene.add(g);
+  for(let i=0;i<10;i++){const a=Math.random()*6.28,rr=Math.random()*r;evxPuff(new THREE.Vector3(b.x+Math.cos(a)*rr,b.y+Math.random()*1.5,b.z+Math.sin(a)*rr),{spr:1,col:i%2?col:0xffffff,r0:.22,r1:0,life:.5+Math.random()*.5,op:.95,v:[Math.cos(a)*.4,4+Math.random()*5,Math.sin(a)*.4],drag:1.2,fin:.05})}
+  tw(ms,k=>{const u=k<.16?ATK_E.out(k/.16):1,f=k>.45?1-(k-.45)/.55:1,w=r*(1+k*.5)*(k>.45?f*.7+.3:1);o.scale.set(w,h*u,w);c.scale.set(w*.32,h*u*1.05,w*.32);o.material.opacity=.55*f*op;c.material.opacity=.95*f*op;
+    cap.position.y=h*u;cap.scale.setScalar(r*3*(1-k*.4));cap.material.opacity=.9*f*op},()=>evxRm(g))}
+function ev137Shock(p,col,R,ms){if(!p)return;R=Math.max(.8,Math.min(14,R||3));ms=ms||520;col=evxCol(col);const g=new THREE.Group(),b=evxGY(p,.12);g.position.copy(b);
+  const t1=evxMesh(evxTor(),evxAdd(evxLerp(col,0xffffff,.55),1)),t2=evxMesh(evxTor(),evxAdd(col,.8)),w=evxMesh(evxCyl(),evxAdd(col,.5,evxTex('vgrad'))),d=evxMesh(evxDisk(),evxAdd(col,.35,evxTex('soft')));
+  g.add(t1,t2,w,d);scene.add(g);
+  for(let i=0;i<14;i++){const a=i/14*6.28+Math.random()*.3,v=R*evxRand(2.2,3.6);evxPuff(new THREE.Vector3(b.x+Math.cos(a)*.4,b.y+.2,b.z+Math.sin(a)*.4),{col:i%3?col:0xffffff,add:1,geo:'tet',r0:.09,r1:.02,life:.45+Math.random()*.25,op:1,v:[Math.cos(a)*v,1.5+Math.random()*3,Math.sin(a)*v],g:9,drag:2.2,spin:10,fin:.02})}
+  tw(ms,k=>{const e=ATK_E.out(k),r=R*(.15+.85*e),f=1-k;t1.scale.set(r,1+2*(1-k),r);t2.scale.set(r*.86,1.6,r*.86);t1.material.opacity=f;t2.material.opacity=.8*f*f;
+    w.scale.set(r,.7*(1-e)+.05,r);w.material.opacity=.32*f;d.scale.setScalar(r*1.05);d.material.opacity=.4*f*f},()=>evxRm(g))}
+function ev137Flare(p,col,s,ms){if(!p)return;s=s||1.5;ms=ms||360;col=evxCol(col);const g=new THREE.Group();g.position.set(p.x,p.y,p.z);
+  const a=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('soft'),color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})),b=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('star'),color:evxLerp(col,0xffffff,.6),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  a.userData.lpsSkip=b.userData.lpsSkip=1;a.renderOrder=b.renderOrder=34;g.add(a,b);scene.add(g);const r0=Math.random()*6.28;
+  tw(ms,k=>{const u=k<.12?k/.12:1,f=Math.pow(1-k,1.4);a.scale.setScalar(s*2.2*(.6+.4*u));a.material.opacity=.8*f;b.scale.setScalar(s*3*(.4+.6*u)*(1-k*.3));b.material.rotation=r0+k*1.2;b.material.opacity=f},()=>evxRm(g))}
+function ev137Lance(a,b,col,w,ms){if(!a||!b)return;w=w||.12;ms=ms||300;col=evxCol(col);const L=a.distanceTo(b);if(L<.05)return;const g=new THREE.Group(),dir=b.clone().sub(a).normalize();
+  g.position.copy(a);g.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);const o=evxMesh(evxCyl(),evxAdd(col,.6)),c=evxMesh(evxCyl(),evxAdd(evxLerp(col,0xffffff,.8),1));g.add(o,c);scene.add(g);
+  for(let i=0;i<Math.min(16,Math.ceil(L*1.5));i++){const q=a.clone().lerp(b,Math.random());evxPuff(q,{spr:1,col:i%2?col:0xffffff,r0:.25,r1:0,life:.3+Math.random()*.3,op:.9,v:[(Math.random()-.5)*2,Math.random()*2,(Math.random()-.5)*2],drag:2,fin:.05})}
+  tw(ms,k=>{const u=k<.15?ATK_E.out(k/.15):1,f=1-k,ww=w*(k<.15?1+(1-u)*2:1)*(1-k*.7);o.scale.set(ww*1.5,L*u,ww*1.5);c.scale.set(ww*.55,L*u,ww*.55);o.material.opacity=.5*f;c.material.opacity=f},()=>evxRm(g))}
+// spectral weapons (built from shared shapes, in model space: tip / impact point at y=0, pointing down)
+function evxWeapon(kind,col){const g=new THREE.Group(),m1=evxAdd(col,.85),m2=evxAdd(evxLerp(col,0xffffff,.7),.95),add=(geo,m,x,y,z,sx,sy,sz,rx,ry,rz)=>{const q=evxMesh(geo,m);q.position.set(x,y,z);q.scale.set(sx,sy,sz);q.rotation.set(rx||0,ry||0,rz||0);g.add(q);return q};
+  const box=evxG('box',()=>new THREE.BoxGeometry(1,1,1)),oct=evxG('oct',()=>new THREE.OctahedronGeometry(1,0)),ico=evxG('ico',()=>new THREE.IcosahedronGeometry(1,1)),cone=evxG('cone',()=>{const q=new THREE.ConeGeometry(1,1,4);q.rotateX(Math.PI);q.translate(0,.5,0);return q}),cyl=evxG('cyl6',()=>new THREE.CylinderGeometry(1,1,1,6));
+  if(kind=='sword'){add(cone,m2,0,0,0,.18,.9,.05);add(box,m1,0,1.9,0,.34,2.0,.07);add(box,m2,0,1.9,0,.12,2.0,.1);add(box,m1,0,2.98,0,1.1,.16,.2);add(cyl,m1,0,3.4,0,.07,.75,.07);add(oct,m2,0,3.9,0,.17,.2,.17)}
+  else if(kind=='hammer'){add(box,m1,0,.55,0,1.3,1.1,.75);add(box,m2,0,.55,0,1.36,.3,.8);add(oct,m2,0,.55,.42,.2,.2,.08);add(cyl,m1,0,2.3,0,.09,2.6,.09);add(oct,m2,0,3.7,0,.16,.2,.16)}
+  else if(kind=='axe'){add(box,m1,.45,.75,0,.9,1.2,.08);add(box,m2,.92,.75,0,.1,1.3,.12);add(cyl,m1,0,1.6,0,.08,3.2,.08);add(cone,m2,0,0,0,.12,.4,.12)}
+  else if(kind=='spear'){add(cone,m2,0,0,0,.2,1.1,.2);add(oct,m1,0,1.15,0,.17,.3,.17);add(cyl,m1,0,2.9,0,.06,3.4,.06);for(let i=0;i<3;i++)add(box,m2,0,4.3+i*.22,0,.4-.1*i,.04,.04,0,i,0)}
+  else if(kind=='star'){add(oct,m2,0,.6,0,.5,.9,.5);add(oct,m1,0,.6,0,.85,.35,.85,0,Math.PI/4,0)}
+  else{add(ico,m2,0,.6,0,.55,.55,.55);add(ico,m1,0,.6,0,.85,.85,.85)}
+  return g}
+function ev137Fall(p,col,kind,ms){if(!p)return;ms=ms||520;col=evxCol(col);const b=evxGY(p,0),w=evxWeapon(kind||'sword',col),h=11,yaw=Math.random()*6.28,tilt=kind=='comet'||kind=='star'?.6:.18;
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('soft'),color:col,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));glow.userData.lpsSkip=1;glow.scale.setScalar(2.4);glow.position.y=1;w.add(glow);
+  w.rotation.set(tilt,yaw,0);scene.add(w);const s0=new THREE.Vector3(b.x-Math.sin(yaw)*h*tilt,b.y+h,b.z-Math.cos(yaw)*h*tilt);let pt=0;
+  tw(ms,k=>{const e=k*k*(1.3-.3*k);w.position.lerpVectors(s0,b,Math.min(1,e));if(kind=='comet'||kind=='star')w.rotation.y+=.25;pt++;if(pt%2==0)evxPuff(w.position.clone().add(new THREE.Vector3(0,1,0)),{spr:1,col,r0:.6,r1:0,life:.35,op:.8,fin:.02})},
+   ()=>{ev137Shock(b,col,3.2,520);ev137Flare(evxGY(b,1),col,2.2,320);ev137Shards(b,col,7,1.4,1.1,700);
+    if(kind=='comet'||kind=='star'){evxRm(w);return}const m=[];w.traverse(q=>{if(q.material&&q.material.opacity!=null)m.push([q.material,q.material.opacity])});
+    tw(650,k=>{w.position.y=b.y-k*.4+(k>.6?(k-.6)*4:0);m.forEach(([q,o])=>q.opacity=o*(k<.5?1:1-(k-.5)/.5))},()=>evxRm(w))})}
+function ev137Crescent(p,d,col,L,ms){if(!p||!d)return;L=L||7;ms=ms||420;col=evxCol(col);const g=new THREE.Group(),geo=evxG('cres',()=>{const q=new THREE.RingGeometry(.75,1.15,28,1,-1.15,2.3);q.rotateX(-Math.PI/2);return q});
+  const a=evxMesh(geo,evxAdd(col,.9)),b=evxMesh(geo,evxAdd(evxLerp(col,0xffffff,.7),1));b.scale.set(.92,1,.6);b.position.y=.02;g.add(a,b);const yaw=Math.atan2(d.x,d.z);g.rotation.y=yaw-Math.PI/2;
+  const s=evxGY(p,.7);g.position.copy(s);scene.add(g);let pt=0;
+  tw(ms,k=>{const e=ATK_E.out(k);const x=s.x+d.x*L*e,z=s.z+d.z*L*e;g.position.set(x,GH(x,z)+.7,z);const sc=1.2+k*1.3;g.scale.set(sc,1,sc);a.material.opacity=.9*(1-k*k);b.material.opacity=1-k;
+    if(++pt%2==0)evxPuff(g.position.clone(),{spr:1,col,r0:.7,r1:0,life:.3,op:.6,fin:.02})},()=>evxRm(g))}
+function ev137Shards(p,col,n,R,h,ms){if(!p)return;n=Math.min(24,n||8);R=R||2;h=h||1.2;ms=ms||800;col=evxCol(col);const g=new THREE.Group(),b=evxGY(p,0);g.position.copy(b);
+  const geo=evxG('shard',()=>{const q=new THREE.OctahedronGeometry(1,0);q.scale(.22,1,.22);q.translate(0,.4,0);return q}),m=new THREE.MeshStandardMaterial({color:evxLerp(col,0xffffff,.35),emissive:col,emissiveIntensity:.9,flatShading:true,transparent:true,opacity:.92,roughness:.3});
+  const L=[];for(let i=0;i<n;i++){const a=i/n*6.28+Math.random()*.35,r=R*evxRand(.75,1.05),q=new THREE.Mesh(geo,m);q.userData.lpsSkip=1;const x=Math.cos(a)*r,z=Math.sin(a)*r;q.position.set(x,GH(b.x+x,b.z+z)-b.y-.1,z);
+    q.rotation.set(Math.sin(a)*.45,Math.random()*3,-Math.cos(a)*.45);q.userData.h=h*evxRand(.6,1.25);q.scale.set(1,.01,1);g.add(q);L.push(q)}scene.add(g);
+  tw(ms,k=>{const u=k<.15?ATK_E.out(k/.15):1,f=k>.6?1-(k-.6)/.4:1;L.forEach(q=>q.scale.set(f*.9+.1,q.userData.h*u*(k>.6?f:1),f*.9+.1));m.opacity=.92*f},()=>evxRm(g))}
+function ev137Orbit(p,col,r,ms){if(!p)return;r=r||1;ms=ms||900;col=evxCol(col);const g=new THREE.Group(),b=evxGY(p,0);g.position.copy(b);const S=[];
+  for(let i=0;i<8;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex(i%2?'star':'soft'),color:i%2?0xffffff:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.userData.lpsSkip=1;s.renderOrder=34;g.add(s);S.push(s)}scene.add(g);
+  tw(ms,k=>{S.forEach((s,i)=>{const a=k*9+i/8*6.28,y=.2+k*2.4+Math.sin(i)*.2,rr=r*(1-k*.35);s.position.set(Math.cos(a)*rr,y,Math.sin(a)*rr);s.scale.setScalar((i%2?.55:.4)*(1-k*.5));s.material.opacity=(k<.15?k/.15:1)*(1-k)})},()=>evxRm(g))}
+function ev137Rift(a,b,col,ms){if(!a||!b)return;ms=ms||700;col=evxCol(col);const L=Math.hypot(b.x-a.x,b.z-a.z);if(L<.2)return;const d={x:(b.x-a.x)/L,z:(b.z-a.z)/L},n={x:-d.z,z:d.x};
+  const mk=(w,c,op,ro)=>{const geo=new THREE.PlaneGeometry(1,1,1,Math.max(2,Math.ceil(L*2)));geo.userData.evxOwn=1;const m=kqsDrapeM(geo,evxAdd(c,op,evxTex('rift')),ro);kqsDrape(m,(u,v)=>{const t=v+.5;return [a.x+d.x*L*t+n.x*u*w,a.z+d.z*L*t+n.z*u*w]},.09);return m};
+  const A=mk(1.4,col,.9,29),B=mk(.45,0xffffff,.9,30);for(let i=0;i<Math.min(14,L*2);i++){const t=Math.random();evxPuff(evxGY({x:a.x+d.x*L*t,z:a.z+d.z*L*t},.2),{spr:1,col,r0:.4,r1:0,life:.6,op:.8,v:[0,2+Math.random()*2,0],drag:1,fin:.05})}
+  tw(ms,k=>{const f=k<.12?k/.12:Math.pow(1-(k-.12)/.88,1.3);A.material.opacity=.9*f;B.material.opacity=.9*f},()=>{evxRm(A);evxRm(B)})}
+function ev137Impact(p,col,s){if(!p)return;s=s||1;col=evxCol(col);ev137Shock(p,col,1.8*s,420);ev137Flare(p,col,1.3*s,300);
+  for(let i=0;i<8;i++){const a=Math.random()*6.28,v=evxRand(2,5)*s;evxPuff(p.clone(),{col:i%2?col:0xffffff,add:1,geo:'tet',r0:.08*s,r1:0,life:.4+Math.random()*.2,op:1,v:[Math.cos(a)*v,evxRand(1,4),Math.sin(a)*v],g:8,drag:2,spin:12,fin:.02})}}
+
+// ---------------- evolved projectiles ----------------
+// one shared model per class + colour (materials are shared too, so nothing to free when the shot ends)
+function evxSM(k,mk){const m=EVX.m[k]||(EVX.m[k]=mk());m.userData.evxS=1;return m}
+function ev137Proj(cls,col){col=evxCol(col);const g=new THREE.Group(),K=cls+'|'+col,c2=evxLerp(col,0xffffff,.7),add=(geo,mk,x,y,z,sx,sy,sz)=>{const q=evxMesh(geo,mk);q.position.set(x||0,y||0,z||0);q.scale.set(sx,sy==null?sx:sy,sz==null?sx:sz);g.add(q);return q},
+  M1=evxSM(K+'a',()=>evxAdd(col,.85)),M2=evxSM(K+'b',()=>evxAdd(c2,1)),SP=k=>{const s=new THREE.Sprite(evxSM(K+'s'+k,()=>new THREE.SpriteMaterial({map:evxTex(k),color:k=='star'?c2:col,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false})));s.userData.lpsSkip=1;s.renderOrder=34;g.add(s);return s};
+  const ico=evxG('ico0',()=>new THREE.IcosahedronGeometry(1,0)),oct=evxG('oct',()=>new THREE.OctahedronGeometry(1,0)),cone=evxG('pcone',()=>{const q=new THREE.ConeGeometry(1,1,6,1,true);q.rotateX(-Math.PI/2);q.translate(0,0,-.5);return q});
+  if(cls=='ranger'){add(oct,M2,0,0,.18,.07,.07,.3);add(cone,M1,0,0,-.1,.09,.09,1.6);add(evxG('fl',()=>new THREE.PlaneGeometry(.22,.5)),M1,0,0,-.42,1,1,1).rotation.x=Math.PI/2;
+    const f2=add(evxG('fl',()=>new THREE.PlaneGeometry(.22,.5)),M1,0,0,-.42,1,1,1);f2.rotation.set(Math.PI/2,0,Math.PI/2);const s=SP('soft');s.scale.setScalar(.9);s.position.z=.12;g.userData.spin={o:null,a:0}}
+  else if(cls=='assassin'){const st=new THREE.Group();g.add(st);for(let i=0;i<4;i++){const q=evxMesh(oct,M1);q.scale.set(.06,.03,.3);q.position.set(Math.sin(i*Math.PI/2)*.2,0,Math.cos(i*Math.PI/2)*.2);q.rotation.y=i*Math.PI/2;st.add(q)}
+    const c=evxMesh(oct,M2);c.scale.setScalar(.09);st.add(c);const s=SP('star');s.scale.setScalar(.5);g.userData.spin={o:st,a:'y',v:26}}
+  else{const core=add(ico,M2,0,0,0,.13);const sh=new THREE.Group();g.add(sh);const q=evxMesh(ico,M1);q.scale.setScalar(.24);sh.add(q);for(let i=0;i<3;i++){const o=evxMesh(oct,M2);o.scale.setScalar(.06);o.position.set(Math.cos(i*2.09)*.36,Math.sin(i*2.09)*.36,0);sh.add(o)}
+    add(cone,M1,0,0,-.12,.2,.2,1.1);const s=SP('soft');s.scale.setScalar(1.2);const s2=SP('star');s2.scale.setScalar(.9);g.userData.spin={o:sh,a:'z',v:9}}
+  return g}
+// the wake of an evolved shot (called every frame for it from the shotTick wrapper in 2700)
+function ev137Trail(sh,dt){const m=sh.m;if(!m||!m.parent)return;sh.evT=(sh.evT||0)-dt;const sp=m.userData.ev137S;if(sp&&sp.o){sp.o.rotation[sp.a]+=dt*sp.v}if(sh.evT>0)return;sh.evT=.03;
+  const p=m.getWorldPosition(new THREE.Vector3()),col=sh.evC||0xffffff;evxPuff(p,{spr:1,col,r0:sh.evCls=='assassin'?.35:.45,r1:0,life:.35,op:.75,fin:.02});
+  if(Math.random()<.5)evxPuff(p.clone(),{spr:1,col:0xffffff,r0:.14,r1:0,life:.4,op:.9,v:[(Math.random()-.5)*1.4,(Math.random()-.2)*1.4,(Math.random()-.5)*1.4],drag:1.5,fin:.02});
+  if(sh.evCls=='assassin'&&Math.random()<.5)evxPuff(p.clone(),{col:0x1a0a2a,r0:.12,r1:.4,life:.6,op:.45,v:[0,.4,0],drag:1,geo:'dod',fin:.1})}
+
+// ---------------- co-op: partners replay these like the other effect functions (2170) ----------------
+(function(){if(typeof MPV=='undefined'||!MPV.FX)return;
+  ['ev137Sigil','ev137Column','ev137Shock','ev137Flare','ev137Lance','ev137Fall','ev137Crescent','ev137Shards','ev137Orbit','ev137Rift','ev137Impact'].forEach(n=>{
+    const f=window[n];if(typeof f!='function'||MPV_FX[n]!=null)return;MPV_FX[n]=MPV.FX.length;MPV.FX.push(n);
+    window[n]=function(){
+      if(!MPV.cap||MPV.dep||MPV.rep||!mpvLive())return f.apply(this,arguments);
+      let a=null;try{a=Array.prototype.map.call(arguments,x=>mpvSer(x,0))}catch(_){a=null}
+      if(a)mpvPush(['V',MPV_FX[n],mpvR(pl.position.x),mpvR(pl.position.y),mpvR(pl.position.z),mpvR(pl.rotation.y),a]);
+      MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}})})();
+// ================= v137 evolved abilities: small helpers for the per-class files (2720-2740) =================
+// c is the ability's cast context: the KQH handler's c for the new abilities, or the same shape built by ev137Ctx for the old
+// kinds (raw = the cast's hit value, A = attack value per 1.0 damage, R = radius, P = where you stood, d = aim, gp = ground point).
+// Extra hits made here never proc on-hit effects twice (proc:false) and use the ability's own damage type and status effects.
+function evC(){return EV137.cur||ev137Cur({col:0xffffff})}
+function evHit(c,e,raw,o){if(!e||e.dead)return 0;return kqsHit(e,raw,c,Object.assign({proc:false},o||{}))}
+function evArea(c,p,R,raw,o){return kqsArea(p,R,raw,c,Object.assign({proc:false},o||{}))}
+// enemies whose distance from p lies in [r0, r1)
+function evRing(p,r0,r1){return enemies.filter(e=>{if(e.dead)return false;const d=d2(e.m.position,p),x=e.boss?1.2:0;return d+x>=r0&&d<r1+x})}
+function evRot(d,a){const c=Math.cos(a),s=Math.sin(a);return kqsV(d.x*c+d.z*s,-d.x*s+d.z*c)}
+function evAt(P,d,t){return kqsV(P.x+d.x*t,P.z+d.z*t)}
+// a wave that runs from P along d for L tiles at sp tiles/s, hitting each enemy within w/2 of the line once; draw(q,j) draws step j
+function evWave(c,P,d,L,w,raw,sp,draw,o){const hit=new Set(),n=Math.max(2,Math.ceil(L/.9));
+  for(let j=1;j<=n;j++)setTimeout(()=>{const q=evAt(P,d,j*L/n);if(draw)draw(q,j);kqsFoes(q,w*.5+.3).forEach(e=>{if(hit.has(e))return;hit.add(e);evHit(c,e,raw,o)})},j*L/n/sp*1000)}
+// the buff the handler just added (by name), made stronger / longer
+function evBuff(n,s,dur){for(let i=hero.buffs.length-1;i>=0;i--){const b=hero.buffs[i];if(b.n===n){if(s)b.s=s;if(dur)b.t=performance.now()+dur*1000;hsDirty();return b}}return null}
+// stretch what a dash handler set up (hero.dash and the ability objects it made since pre) by k
+function evStretch(c,k){if(hero.dash)hero.dash.t*=k;hero.iv=Math.max(hero.iv||0,(hero.dash?hero.dash.t:0)+.15);const n0=c.evN0|0;for(let j=n0;j<KQS.objs.length;j++){const o=KQS.objs[j];if(o&&o.life!=null)o.life=(o.life-.08)*k+.08}}
+function evNearest(p,R,not){return enemies.filter(e=>!e.dead&&(!not||!not.has(e))&&d2(e.m.position,p)<R).sort((a,b)=>d2(a.m.position,p)-d2(b.m.position,p))}
+// lunge timing of the melee single-target handlers (kqsLunge), to land extra effects with the blow
+function evLungeMs(t){if(!t)return 0;const L=d2(pl.position,t.m.position)-1.5-(t.boss?1.2:0);return L<=.25?0:Math.round(L/16*1000)}
+// a heavy ground hit: shock + glyph + spikes (visual)
+function evSlam(p,col,R){ev137Shock(p,col,R,520);ev137Shards(p,col,Math.round(6+R*2),R*.75,1+R*.12,760);ev137Flare(evxGY(p,.8),col,1.2+R*.25,300)}
+// ================= v137 evolved abilities: Warrior (molten orange and gold, rock and steel) =================
+Object.assign(EVO137,{
+ 'Cleave':{en:'Rending Crescent',d:'A 40% wider sweep that also hurls a crescent of force 8 tiles ahead, cutting everything in its path.',mod:{r:'*1.4'},
+  post(c){const C=evC();ev137Crescent(c.P,c.d,C.c1,8,460);setTimeout(()=>ev137Crescent(c.P,c.d,C.c2,7,420),60);evWave(c,c.P,c.d,8,2.2,c.raw*.6,17)}},
+ 'Leap Slam':{en:'Meteor Leap',d:'Leap up to 10 tiles; the landing is 50% wider, stuns longer, and two aftershocks ripple out.',mod:{r:'*1.5',rng:10,stun:1.4},
+  post(c){setTimeout(()=>{const p=pl.position.clone(),C=evC();evSlam(p,C.c1,c.R*1.2);[0,300].forEach((t,j)=>setTimeout(()=>{ev137Shock(p,j?C.c2:C.c1,c.R*(1.7+j*.5),520);evRing(p,c.R*.8,c.R*(1.7+j*.5)).forEach(e=>evHit(c,e,c.raw*.45,{stun:.3}))},160+t))},440)}},
+ 'War Cry':{en:"Warlord's Roar",d:'+45% physical attack, 22% damage reduction and +15% attack speed for 12s, and enemies within 7 are weakened.',mod:{buff:{paP:.45,dr:.22,as:.15},dur:12},
+  post(c){const C=evC(),P=pl.position;ev137Shock(P,C.c1,7,620);setTimeout(()=>ev137Shock(P,C.c2,5,480),120);kqsFoes(P,7).forEach(e=>{eStatus(e,{weak:5},0);dn(e.m.position,'Weakened','#fca5a5',-30,900)});try{popT(P,"WARLORD'S ROAR",'#fdba74',true)}catch(_){}shake(.15)}},
+ 'Whirlwind':{en:'Bladestorm',d:'Spin for 3.4s in a 35% larger storm of blades that drags nearby enemies into the edge.',mod:{r:'*1.35',dur:3.4},
+  post(c){const C=evC();let ti=0,a=0;kqsObj({life:3.6,tick:(dt,now,o)=>{if(!hero.chan)return false;const P=pl.position;a+=dt*11;ti-=dt;
+    kqsFoes(P,c.R+2.6).forEach(e=>{if(e.boss)return;const v=kqsV(P.x-e.m.position.x,P.z-e.m.position.z),L=v.length();if(L>c.R*.7)walkM(e.m,v.x/L*2.6*dt,v.z/L*2.6*dt)});
+    if(ti>0)return;ti=.14;ev137Crescent(P,kqsV(Math.sin(a),Math.cos(a)),(Math.random()<.5?C.c1:C.c2),c.R*.55,260);if(Math.random()<.35)ev137Shock(P,C.c1,c.R,300)}})}},
+ 'Shockwave':{en:'Earthsplitter',d:'Three shockwaves instead of one: two more rip out to the sides in a fan.',
+  post(c){const C=evC();setTimeout(()=>[-.42,.42].forEach(a=>{const d=evRot(c.d,a);evWave(c,c.P,d,9,2.2,c.raw*.8,26,(q,j)=>{if(j%2)ev137Shards(q,C.c1,4,.5,.9,520);burst(gY(q,.3),0xb08a60,6,1.4,2,.5)})}),300)}},
+ 'Iron Skin':{en:'Adamant Bulwark',d:'Absorbs 50% of your max health for 8s, and when the shield breaks or ends it bursts into steel shards.',mod:{v:.5,dur:8},
+  post(c){const C=evC();ev137Orbit(pl.position,C.c2,1.2,900);let done=0;const boom=()=>{if(done)return;done=1;const P=pl.position.clone();evSlam(P,C.c2,3.2);evArea(c,P,3.2,c.A*1.6);shake(.2);kqsSnd('thud')};
+   kqsObj({life:8.2,tick:()=>{if(!(hero.sh>0)||performance.now()>hero.shT){boom();return false}},end:boom})}},
+ 'Earthshatter':{en:'World Breaker',d:'The crack is 35% wider and stuns for 1.8s, then a second ring of erupting stone bursts further out.',mod:{r:'*1.35',stun:1.8},
+  post(c){const C=evC(),P=c.P.clone();evSlam(P,C.c1,c.R);setTimeout(()=>{ev137Shards(P,C.c1,16,c.R*1.25,1.7,900);ev137Shock(P,C.c2,c.R*1.6,560);evRing(P,c.R*.8,c.R*1.6).forEach(e=>evHit(c,e,c.raw*.6,{stun:.8}));shake(.3);kqsSnd('quake')},300)}},
+ 'Bull Rush':{en:'Juggernaut',d:'Charge 50% further, and the charge ends in a shockwave that stuns everything around you.',
+  pre(c){c.evN0=KQS.objs.length},post(c){evStretch(c,1.5);const T=(hero.dash?hero.dash.t:.75)+.05,C=evC();
+   kqsObj({life:T,tick:()=>{if(Math.random()<.5)ev137Flare(gY(pl.position,1),C.c1,.9,200)},end:()=>{const P=pl.position.clone();evSlam(P,C.c1,2.8);evArea(c,P,2.8,c.raw*.6,{stun:.6});shake(.2)}})}},
+ 'Intimidating Shout':{en:'Dread Roar',d:'Reaches 9 tiles instead of 6 and hurls the enemies it terrifies back.',mod:{r:9},
+  post(c){const C=evC(),P=c.P;ev137Shock(P,C.c1,c.R,700);setTimeout(()=>ev137Shock(P,C.c2,c.R*.7,500),150);kqsFoes(P,c.R).forEach(e=>{if(e.boss)return;const d=kqsDir(P,e.m.position);e.vx+=d.x*8;e.vz+=d.z*8;eStatus(e,{stun:.6},0)})}},
+ 'Skull Splitter':{en:'Skullquake',d:'The blow cracks the ground: everything within 3 tiles of the target is hit and starts bleeding.',
+  pre(c){c.evT=kqsNear(5.2)},post(c){const t=c.evT;if(!t)return;const C=evC();setTimeout(()=>{if(!t.m)return;const p=t.m.position.clone();evSlam(p,C.c1,3);ev137Fall(p,C.c2,'axe',1);
+   evArea(c,p,3,c.raw*.7).forEach(e=>eStatus(e,{bleed:6},c.A*.4))},200+evLungeMs(t))}},
+ 'Seismic Rupture':{en:'Tectonic Rift',d:'A 15-tile fissure, 45% wider, that erupts a second time half a second later.',mod:{L:15,rng:15,w:3.2},
+  post(c){const C=evC(),P=c.P.clone(),d=kqsDir(P,c.gp),L=Math.max(3,Math.min(c.sk.L,d2(P,c.gp)));ev137Rift(P,evAt(P,d,L),C.c1,1600);
+   setTimeout(()=>{evWave(c,P,d,L,c.sk.w,c.raw*.5,30,(q,j)=>{if(j%2==0)ev137Shards(q,C.c1,5,.8,1.4,700);ev137Column(q,C.c2,2.2,.35,360)})},Math.ceil(L)*45+380)}},
+ 'War Banner':{en:'Standard of the Legion',d:'A 7-tile circle that stands for 18s, and every 2s the banner sends out a burning pulse.',mod:{r:7,dur:18},
+  post(c){const p=c.gp.clone(),C=evC();ev137Column(p,C.c2,9,.8,900);let ti=1.2;kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=2;ev137Shock(p,C.c1,c.R,620);ev137Sigil(p,C.c2,c.R,700,1);evArea(c,p,c.R,c.A*.45)}})}},
+ 'Bloodrage':{en:'Crimson Frenzy',d:'No longer costs health; lasts 14s with +35% attack speed, +18% physical attack and 15% lifesteal.',mod:{dur:14},
+  pre(c){c.evHp=hero.hp},post(c){if(c.evHp>hero.hp)hero.hp=c.evHp;evBuff('Bloodrage',kqrB(c.sk,{as:.35,paP:.18,ls:.15}),14);const C=evC();ev137Orbit(pl.position,0xff2030,1.2,1200);ev137Column(pl.position,0xff3040,6,.8,700)}},
+ 'Chain Hook':{en:'Kraken Chains',d:'Catches enemies in a 4-tile circle up to 13 tiles away, and they are slammed down a second time at your feet.',mod:{r:4,rng:13},
+  post(c){setTimeout(()=>{const P=pl.position.clone(),C=evC();evSlam(P,C.c2,2.6);evArea(c,P,2.6,c.raw*.6,{stun:.6})},480)}},
+ 'Execute':{en:"Headsman's Verdict",d:'Spectral axes fall on up to 2 more enemies nearby; the low-health rule applies to each of them.',
+  pre(c){c.evT=kqsNear(5.2)},post(c){const C=evC(),not=new Set([c.evT]);evNearest(pl.position,8,not).slice(0,2).forEach((e,j)=>{const p=e.m.position.clone();setTimeout(()=>{ev137Fall(e.m.position.clone(),C.c1,'axe',480);
+   setTimeout(()=>{if(e.dead)return;const low=e.c.h/M(e.c)<.3;evHit(c,e,c.raw*(low?2.4:.8));burst(gY(e.m.position,1),0xff2a1a,low?40:20,2.4,2.4,.5);if(e.dead)popT(e.m.position,'EXECUTED','#ff4a3a',true)},480)},120+j*160)})}},
+ 'Unbreakable':{en:'Undying Colossus',d:'Lasts 11s, scorches enemies within 2.6 tiles every second, and heals twice as much when it ends.',mod:{dur:11},
+  post(c){const C=evC();let ti=.5;ev137Column(pl.position,C.c2,7,1,800);kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=1;ev137Shock(pl.position,C.c1,2.6,420);evArea(c,pl.position,2.6,c.A*.5)},
+   end:o=>{if(o.abort)return;healHero(heroMax()*.15*c.rk);ev137Orbit(pl.position,0x9affb0,1,800)}})}},
+ "Titan's Fall":{en:'Worldshaker',d:'Lands in a 6-tile crater from up to 15 tiles away, followed by three aftershocks that rattle further out.',mod:{r:6,rng:15},
+  post(c){setTimeout(()=>{const p=pl.position.clone(),C=evC();evSlam(p,C.c1,c.R);ev137Fall(p,C.c2,'hammer',1);[0,300,600].forEach((t,j)=>setTimeout(()=>{const r=c.R*(1.25+j*.3);ev137Shock(p,j%2?C.c2:C.c1,r,520);ev137Shards(p,C.c1,10,r*.9,1.2,700);evRing(p,c.R*.8,r).forEach(e=>evHit(c,e,c.raw*.35,{stun:.3}));shake(.2)},200+t))},660)}}
+});
+// ================= v137 evolved abilities: Paladin (gold and white light, swords and hammers from the sky) =================
+Object.assign(EVO137,{
+ 'Holy Smite':{en:'Radiant Cataclysm',d:'The burst reaches 4 tiles, and six spears of light fall in a ring around you.',mod:{r:4},
+  post(c){const C=evC(),P=c.P.clone();for(let j=0;j<6;j++){const a=j/6*6.283,q=kqsV(P.x+Math.cos(a)*c.R*.75,P.z+Math.sin(a)*c.R*.75);setTimeout(()=>{ev137Fall(q,j%2?C.c2:C.c1,'spear',380);setTimeout(()=>evArea(c,q,1.6,c.raw*.5),380)},j*60)}}},
+ 'Divine Barrier':{en:'Bastion of Dawn',d:'Absorbs 45% of your max health for 9s, and while it holds it sends out a searing pulse every 1.5s.',mod:{v:.45,dur:9},
+  post(c){const C=evC();let ti=.6;ev137Orbit(pl.position,C.c2,1.3,900);kqsObj({life:9,tick:dt=>{if(!(hero.sh>0)||performance.now()>hero.shT)return false;ti-=dt;if(ti>0)return;ti=1.5;ev137Shock(pl.position,C.c1,3,480);evArea(c,pl.position,3,c.A*.4)}})}},
+ 'Consecration':{en:'Hallowed Ground',d:'The burning ground is 45% wider and lasts 8.4s instead of 6s.',mod:{r:'*1.45',ticks:14},
+  post(c){const C=evC();let ti=0;kqsObj({life:14*.6,tick:dt=>{ti-=dt;if(ti>0)return;ti=.6;ev137Sigil(pl.position,C.c1,c.R,760,1);if(Math.random()<.5)ev137Column(kqsV(pl.position.x+(Math.random()-.5)*c.R,pl.position.z+(Math.random()-.5)*c.R),C.c2,3,.3,400)}})}},
+ 'Lay on Hands':{en:'Miracle',d:'Heals 60% of your max health, heals your companions by 40%, and holy light bursts out around you.',mod:{v:.6},
+  post(c){const C=evC(),P=pl.position.clone();party.forEach(q=>{if(q&&q.h>0){q.h=Math.min(M(q),q.h+M(q)*.4)}});try{hud()}catch(_){}
+   ev137Column(P,C.c2,10,1.2,900);ev137Shock(P,C.c1,4,600);evArea(c,P,4,c.A*1.6);ev137Orbit(P,0x9affb0,1.4,1000)}},
+ 'Judgment':{en:'Final Verdict',d:'Three swords of light fall instead of one: two more strike lines fanned out to the sides.',
+  post(c){const C=evC(),P=c.P.clone();[-.5,.5].forEach(a=>{const d=evRot(c.d,a),q=evAt(P,d,6);ev137Fall(q,C.c2,'sword',425);setTimeout(()=>{ev137Lance(gY(P,.3),gY(evAt(P,d,9),.3),C.c1,.18,360);
+   kqsLine(P,d,9,2.2).forEach(e=>evHit(c,e,c.raw*.85))},425)})}},
+ 'Hammer of Light':{en:'Hammerfall of the Heavens',d:'The hammer strikes a 40% wider area, and two more hammers fall on its flanks.',mod:{r:'*1.4'},
+  post(c){const C=evC(),p=(c.gp||aimPoint(10)).clone(),n=kqsV(-c.d.z,c.d.x);[-1,1].forEach((s,j)=>{const q=kqsV(p.x+n.x*s*2.8,p.z+n.z*s*2.8);ev137Sigil(q,C.c1,2.2,1100,1);
+   setTimeout(()=>ev137Fall(q,j?C.c2:C.c1,'hammer',520),400+j*120);setTimeout(()=>{evArea(c,q,2.2,c.raw*.6,{stun:.5});shake(.15)},920+j*120)})}},
+ 'Aegis':{en:'Aegis of the Ancients',d:'35% damage reduction and +30% defenses for 12s, guarded by three circling shields of light.',mod:{buff:{dr:.35,pdP:.3,mdP:.3},dur:12},
+  post(c){const C=evC(),S=[0,1,2].map(()=>{const g=evxWeapon('star',C.c2);g.scale.setScalar(.45);scene.add(g);return g});
+   kqsObj({life:12,tick:(dt,now,o)=>{S.forEach((g,j)=>{const a=o.age*2.4+j*2.094;g.position.set(pl.position.x+Math.cos(a)*1.25,pl.position.y+.9+Math.sin(o.age*3+j)*.15,pl.position.z+Math.sin(a)*1.25);g.rotation.y=-a})},end:()=>S.forEach(g=>evxRm(g))})}},
+ 'Shield Bash':{en:'Sundering Bash',d:'The bash sends a wave of force through everything in a cone in front of you, stunning them too.',
+  post(c){setTimeout(()=>{const C=evC(),P=pl.position.clone(),d=aimDir();ev137Crescent(P,d,C.c1,3.8,300);ev137Crescent(P,d,C.c2,3,260);area(P,4,c.raw*.7,Object.assign({},c.fx,{stun:1,proc:false}),d,.8);shake(.15)},140)}},
+ 'Blessed Hammers':{en:'Hammers of Zeal',d:'Five hammers instead of three, for 8s: two more circle wider, the other way round.',mod:{dur:8},
+  post(c){const H=[0,1].map(()=>{const h=kqsHammer();h.scale.setScalar(1.25);scene.add(h);return h}),last=new Map(),C=evC();
+   kqsObj({life:c.sk.dur,tick:(dt,now,o)=>{const r=1.6+Math.min(1,o.age/.6)*2.2;H.forEach((h,j)=>{const a=-o.age*3.3+j*3.1416;h.position.set(pl.position.x+Math.cos(a)*r,pl.position.y+1.1,pl.position.z+Math.sin(a)*r);h.rotation.y=-a;h.rotation.z+=dt*12;
+     if(Math.random()<.35)evxPuff(h.position.clone(),{spr:1,col:C.c2,r0:.4,r1:0,life:.3,op:.8});enemies.forEach(e=>{if(e.dead||d2(e.m.position,h.position)>1.05+(e.boss?1.2:0))return;const t=last.get(e)||{};if((t[j]||0)>now)return;t[j]=now+500;last.set(e,t);evHit(c,e,c.raw);ev137Flare(gY(e.m.position,1),C.c1,.9,220)})})},
+    end:()=>H.forEach(h=>{burst(h.position,0xffe08a,10,1,1,.4);kqsRm(h)})})}},
+ 'Beacon of Light':{en:'Lighthouse of Faith',d:'A 6-tile circle that shines for 14s, with a pillar of light flaring above it every 2 seconds.',mod:{r:6,dur:14},
+  post(c){const p=c.gp.clone(),C=evC();let ti=0;kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=2;ev137Column(p,C.c2,11,1,800);ev137Sigil(p,C.c1,c.R,900,1)}})}},
+ "Crusader's Charge":{en:'Holy Avalanche',d:'Charge 50% further, leaving a trail of holy fire that burns enemies on it for 3s.',
+  pre(c){c.evN0=KQS.objs.length;c.evP=pl.position.clone()},post(c){evStretch(c,1.5);const T=(hero.dash?hero.dash.t:.6)+.05,C=evC(),A=c.evP;
+   kqsObj({life:T,end:()=>{const B=pl.position.clone();ev137Rift(A,B,C.c1,3000);let ti=0;kqsObj({life:3,tick:dt=>{ti-=dt;if(ti>0)return;ti=.5;const d=kqsDir(A,B),L=d2(A,B);kqsLine(A,d,L,1.8).forEach(e=>{evHit(c,e,c.A*.3);eStatus(e,{burn:2},c.A*.2)})}})}})}},
+ 'Sanctuary':{en:'Celestial Sanctum',d:'A 6.5-tile dome that holds for 9s, ringed by pillars of light.',mod:{r:6.5,dur:9},
+  post(c){const p=c.gp.clone(),C=evC();for(let j=0;j<8;j++){const a=j/8*6.283;setTimeout(()=>ev137Column(kqsV(p.x+Math.cos(a)*c.R,p.z+Math.sin(a)*c.R),j%2?C.c1:C.c2,7,.4,900),j*50)}ev137Sigil(p,C.c1,c.R,1600,0)}},
+ "Avenger's Shield":{en:'Aegis Storm',d:'Hurl two shields one after the other: each bounces between up to 5 enemies.',
+  run(c,f){const r=f(c);if(r===false)return false;setTimeout(()=>{try{f(c)}catch(_){}},260);return r}},
+ 'Penance':{en:'Litany of Light',d:'Pray for 4s instead of 2.5s, and the searing light reaches 5 tiles.',mod:{dur:4,r:5},
+  post(c){const C=evC();ev137Column(pl.position,C.c2,9,.7,1200);let ti=0;kqsObj({life:4,tick:dt=>{if(!KQS.ch)return false;ti-=dt;if(ti>0)return;ti=.5;ev137Sigil(pl.position,C.c1,c.R,560,1)}})}},
+ 'Seal of Light':{en:'Seal of the Sun',d:'For 18s your basic attacks deal 50% more damage, your magic attack is 25% higher and you heal for 10% of the damage you deal.',mod:{dur:18},
+  post(c){evBuff('Seal of Light',kqrB(c.sk,{basicP:.5,maP:.25,ls:.1}),18);const C=evC();ev137Orbit(pl.position,C.c1,1.3,1200);ev137Column(pl.position,C.c2,8,.6,700)}},
+ 'Divine Intervention':{en:'Ascension',d:'Untouchable for 4.5s while spears of light strike enemies around you, then a 6-tile holy nova.',mod:{dur:4.5,r:6},
+  post(c){const C=evC();ev137Column(pl.position,C.c2,14,1.3,1400);let ti=.3;kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=.5;const e=evNearest(pl.position,8)[Math.floor(Math.random()*3)];if(!e)return;const q=e.m.position.clone();
+   ev137Fall(q,C.c1,'spear',380);setTimeout(()=>{if(!e.dead)evHit(c,e,c.A*.8)},380)}})}},
+ "Heaven's Wrath":{en:'Judgement Day',d:'Twelve pillars strike a 7-tile area instead of six, and a giant sword of light lands for the final judgement.',mod:{r:7,rng:14},
+  post(c){const p=c.gp.clone(),C=evC();for(let j=0;j<6;j++)setTimeout(()=>{const a=Math.random()*6.283,r=Math.sqrt(Math.random())*c.R*.85,q=kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r);ev137Sigil(q,C.c1,1.6,700,1);
+    setTimeout(()=>{ev137Column(q,C.c2,12,.6,420);evArea(c,q,1.6,c.raw,{stun:0});shake(.06)},350)},140+j*280);
+   setTimeout(()=>ev137Fall(p,C.c2,'sword',700),1050);setTimeout(()=>{ev137Shock(p,C.c1,c.R,700);evArea(c,p,c.R*.7,c.A*1.2)},1760)}}
+});
+// ================= v137 evolved abilities: Assassin (violet shadow, magenta edges, venom green) =================
+Object.assign(EVO137,{
+ 'Shadow Rush':{en:'Umbral Rift',d:'The path you dash along tears open behind you and detonates half a second later, cutting everything near it.',
+  post(c){const A=c.P0?c.P0.clone():c.P.clone(),C=evC();setTimeout(()=>{const B=pl.position.clone(),d=kqsDir(A,B),L=d2(A,B);if(L<1)return;ev137Rift(A,B,C.c1,900);
+   setTimeout(()=>{for(let t=0;t<=L;t+=1.6)ev137Flare(gY(evAt(A,d,t),.6),C.c2,1,260);kqsLine(A,d,L,2.6).forEach(e=>evHit(c,e,c.raw*.7));shake(.12)},420)},520)}},
+ 'Fan of Knives':{en:'Storm of Blades',d:'Eighteen knives instead of ten, and a second ring of blades follows a moment later.',mod:{n2:18},
+  post(c){const P=c.P.clone();setTimeout(()=>{for(let j=0;j<12;j++){const a=(j+.5)/12*6.283,dd=kqsV(Math.sin(a),Math.cos(a));launch(P,dd,18,{col:c.sk.col,mt:c.mt,arrow:0},c.raw*.6,.6)}},180)}},
+ 'Poison Blades':{en:'Black Widow Venom',d:'Lasts 15s, and while it does you also gain +10% attack speed and +10% critical chance.',mod:{dur:15,buff:{poisonOn:1,as:.1,crit:.1}},
+  post(c){const C=evC();ev137Orbit(pl.position,0x7aff6a,1.1,1000)}},
+ 'Death Mark':{en:'Mark of Oblivion',d:'Marks your target and the 2 enemies nearest to it: they take 50% more damage (instead of 35%) for 12s.',mod:{v:.5,dur:12},
+  post(c){const C=evC(),t=evNearest(pl.position,9)[0];if(!t)return;ev137Sigil(t.m.position,C.c2,1.6,1100,1);evNearest(t.m.position,7,new Set([t])).slice(0,2).forEach(e=>{e.mark=c.sk.dur;e.markV=c.sk.v*kqrU(c.sk);
+   kqsSpark(gY(t.m.position,1.2),gY(e.m.position,1.2),C.c1);ev137Sigil(e.m.position,C.c2,1.4,1000,1);dn(e.m.position,'Marked','#ff6a9a',-36,1000)})}},
+ 'Smoke Bomb':{en:'Nightfall Veil',d:'A 40% wider blast that stuns for 2s and leaves a cloud of night for 4s that weakens and slows enemies inside.',mod:{r:'*1.4',stun:2},
+  post(c){const P=c.P.clone(),C=evC();ev137Shock(P,C.c1,c.R,600);let ti=0;kqsObj({life:4,tick:dt=>{for(let k=0;k<2;k++){const a=Math.random()*6.283,r=Math.random()*c.R;evxPuff(gY(kqsV(P.x+Math.cos(a)*r,P.z+Math.sin(a)*r),.3+Math.random()),{col:0x2a2238,r0:.5,r1:1.4,life:1.4,op:.5,v:[0,.3,0],drag:1,geo:'dod',fin:.2})}
+   ti-=dt;if(ti>0)return;ti=.5;kqsFoes(P,c.R).forEach(e=>eStatus(e,{weak:1,slow:1},0))}})}},
+ 'Shuriken Volley':{en:'Thousand Stars',d:'Seven shuriken instead of three, in a wider spread.',mod:{n2:7}},
+ 'Shadow Dance':{en:'Dance of Death',d:'+50% attack speed, +30% critical chance and +15% move speed for 12s.',mod:{buff:{as:.5,crit:.3,mspd:.15},dur:12},
+  post(c){const C=evC();ev137Orbit(pl.position,C.c1,1.2,1200);ev137Orbit(pl.position,C.c2,.8,900)}},
+ 'Eviscerate':{en:'Exsanguinate',d:'Three phantom blades follow the strike, slashing the target and everything within 2.4 tiles of it.',
+  pre(c){c.evT=kqsNear(5)},post(c){const t=c.evT;if(!t)return;const C=evC(),t0=110+evLungeMs(t);for(let j=0;j<3;j++)setTimeout(()=>{if(!t.m)return;const p=t.m.position.clone(),a=Math.random()*6.283;
+   ev137Crescent(kqsV(p.x-Math.sin(a)*1.2,p.z-Math.cos(a)*1.2),kqsV(Math.sin(a),Math.cos(a)),j%2?C.c2:C.c1,2.4,220);evArea(c,p,2.4,c.raw*.35);burst(gY(p,1),0xe04a6a,10,1.6,1.6,.4)},t0+90+j*110)}},
+ 'Venom Flask':{en:'Plague Cask',d:'Thrown up to 12 tiles, the poison cloud is 40% wider and lingers for 9s.',mod:{r:'*1.4',dur:9,rng:12},
+  post(c){const p=c.gp.clone(),C=evC();setTimeout(()=>{ev137Shock(p,0x8ad84a,c.R,600);ev137Sigil(p,0x7ae04a,c.R,1600,1)},400)}},
+ 'Vanish':{en:'Shroud of Night',d:'Stay hidden for 6s, and you vanish in a burst of shadow that stuns enemies within 3.5 tiles.',mod:{dur:6},
+  post(c){const P=pl.position.clone(),C=evC();ev137Shock(P,C.c1,3.5,520);ev137Rift(kqsV(P.x-1.5,P.z),kqsV(P.x+1.5,P.z),C.c1,800);kqsFoes(P,3.5).forEach(e=>eStatus(e,{stun:1.2},0,'h'))}},
+ 'Shadow Clone':{en:'Shadow Legion',d:'Two shadow doubles instead of one, and they stay for 10s.',mod:{dur:10},
+  run(c,f){const r=f(c);const ry=pl.rotation.y;pl.rotation.y=ry+Math.PI;try{f(c)}finally{pl.rotation.y=ry}const C=evC();ev137Rift(kqsV(c.P.x-1.6,c.P.z),kqsV(c.P.x+1.6,c.P.z),C.c1,800);return r}},
+ 'Phantom Strike':{en:'Phantom Tempest',d:'Reaches 12 tiles, the slash is 45% wider, and an echo of the strike tears through the spot you left.',mod:{r:'*1.45',rng:12},
+  pre(c){c.evO=pl.position.clone()},post(c){const o=c.evO,C=evC();setTimeout(()=>{ev137Rift(o,pl.position.clone(),C.c1,900)},80);setTimeout(()=>{ev137Shock(o,C.c2,2.6,420);ev137Flare(gY(o,1),C.c1,1.4,300);evArea(c,o,2.6,c.raw*.6)},380)}},
+ 'Caltrops':{en:'Field of Thorns',d:'The caltrops cover a 50% wider area for 12s.',mod:{r:'*1.5',dur:12},
+  post(c){const p=c.gp.clone(),C=evC();ev137Sigil(p,C.c2,c.R,1200,1);ev137Shards(p,0xb0b0c0,14,c.R*.8,.5,1100)}},
+ 'Garrote':{en:'Strangling Shadows',d:'Silences for 2s, and shadow wires lash out to 2 more enemies nearby, choking them and making them bleed.',mod:{stun:2},
+  pre(c){c.evT=kqsNear(5)},post(c){const t=c.evT;if(!t)return;const C=evC();setTimeout(()=>{if(!t.m)return;evNearest(t.m.position,6,new Set([t])).slice(0,2).forEach(e=>{kqsChain(gY(t.m.position,1.3),gY(e.m.position,1.3),C.c1,320);
+   evHit(c,e,c.raw*.5);eStatus(e,{stun:1,bleed:6},c.A*.5,'h');dn(e.m.position,'Silenced','#fca5a5',-30,900)})},200+evLungeMs(t))}},
+ 'Thousand Cuts':{en:'Ten Thousand Cuts',d:'Flicker between up to 10 enemies within 11 tiles; every strike also cuts the enemies around its target.',
+  run(c){const L=enemies.filter(e=>!e.dead&&d2(e.m.position,pl.position)<11).sort((a,b)=>d2(a.m.position,pl.position)-d2(b.m.position,pl.position)).slice(0,10);if(!L.length)return false;const C=evC();
+   hero.iv=Math.max(hero.iv||0,L.length*.15+.3);let j=0;kqsSnd('shadow');const step=()=>{const e=L[j];if(e&&!e.dead){const a=e.m.position,an=Math.random()*6.283,o=pl.position.clone(),q=kqsLand(a,kqsV(a.x+Math.cos(an)*1.1,a.z+Math.sin(an)*1.1));
+     ev137Rift(o,q,j%2?C.c2:C.c1,420);kqsTp(q);face(kqsDir(q,a));ev137Flare(gY(q,1),C.c2,1,220);kqsHit(e,c.raw,c,{crit:true});kqsFoes(a,1.6).forEach(f=>{if(f!==e)evHit(c,f,c.raw*.4)});
+     ev137Crescent(q,kqsDir(q,a),C.c1,1.8,200);sfx('stab');kqsPose('dash',140)}j++;if(j<L.length)setTimeout(step,150);else ev137Shock(pl.position,C.c1,2.6,360)};step();return true}},
+ 'Envenom':{en:'Venom Supernova',d:'Reaches 11 tiles instead of 8, and the burst poisons every enemy it touches again.',mod:{r:11},
+  post(c){const P=pl.position.clone();ev137Shock(P,0x8ad84a,c.R,700);ev137Sigil(P,0x7ae04a,c.R,900,1);kqsFoes(P,c.R).forEach(e=>eStatus(e,{poison:4},c.A*.3*(1+(c.s.poisonP||0))))}},
+ 'Eclipse':{en:'Total Eclipse',d:'The darkness covers a 7-tile circle up to 12 tiles away and lasts 8s.',mod:{r:7,dur:8,rng:12},
+  post(c){const p=c.gp.clone(),C=evC();ev137Sigil(p,C.c1,c.R,2200,0);ev137Column(p,0x2a0a4a,9,1.2,900)}}
+});
+// ================= v137 evolved abilities: Ranger (verdant green and sunlight, spirit beasts) =================
+Object.assign(EVO137,{
+ 'Multishot':{en:'Hailstorm Volley',d:'Nine arrows instead of five.',mod:{n2:9}},
+ 'Piercing Arrow':{en:'Starpiercer',d:'Two more spectral arrows pierce lines fanned out to either side.',
+  post(c){const C=evC(),P=c.P.clone(),ms=(typeof FXA_DRAW!='undefined'?FXA_DRAW.ms*FXA_DRAW.rel:380);setTimeout(()=>[-.22,.22].forEach(a=>{const d=evRot(c.d,a);ev137Lance(gY(P,1.1),gY(evAt(P,d,9),1.1),C.c1,.1,320);
+   kqsLine(P,d,9,2.2).forEach(e=>{evHit(c,e,c.raw*.8);ev137Flare(gY(e.m.position,1),C.c2,.9,220)})}),ms)}},
+ 'Snare Trap':{en:"Hunter's Snarefield",d:'Drops three traps in a triangle instead of one.',
+  post(c){const P=c.P,f=c.d;[-1,1].forEach(s=>{const q=kqsV(P.x+f.z*s*1.8-f.x*1.2,P.z-f.x*s*1.8-f.z*1.2);const mesh=new THREE.Mesh(new THREE.TorusGeometry(.45,.08,6,16),new THREE.MeshStandardMaterial({color:0x8a7a5a,metalness:.6,roughness:.4}));
+   mesh.rotation.x=Math.PI/2;mesh.position.copy(gY(q,.06));scene.add(mesh);traps.push({p:q.clone(),t:20,raw:c.raw,root:c.sk.root,mesh});ev137Sigil(q,evC().c1,1,700,1)})}},
+ 'Rain of Arrows':{en:'Arrowstorm',d:'Arrows rain on a 50% wider area for 50% longer.',mod:{r:'*1.5',ticks:12},
+  post(c){const p=(c.gp||aimPoint(10)).clone(),C=evC();ev137Sigil(p,C.c1,c.R,12*.35*1000+400,0);let ti=0;kqsObj({life:12*.35,tick:dt=>{ti-=dt;if(ti>0)return;ti=.12;const a=Math.random()*6.283,r=Math.sqrt(Math.random())*c.R,q=kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r);
+   ev137Lance(gY(q,6),gY(q,0),Math.random()<.5?C.c1:C.c2,.04,180)}})}},
+ 'Explosive Arrow':{en:'Cluster Bomb',d:'Looses three bursting arrows in a spread instead of one.',mod:{n2:3}},
+ 'Hunter’s Focus':{en:'Eagle Eye',d:'+35% critical chance, +60% critical damage and +10% attack speed for 12s.',mod:{buff:{crit:.35,cdm:.6,as:.1},dur:12},
+  post(c){const C=evC();ev137Orbit(pl.position,C.c1,1.1,1100);ev137Flare(gY(pl.position,1.7),C.c2,1.4,500)}},
+ 'Barrage':{en:'Thousand Arrows',d:'Fifteen arrows instead of nine, in an even wider fan.',mod:{n2:15}},
+ 'Disengage':{en:'Shadowstep Volley',d:'As you leap away you fire a fan of five arrows, and the enemies you leave are rooted for 1.2s.',
+  post(c){const o=c.P.clone(),d=c.d,C=evC();[-.4,-.2,.2,.4].forEach(a=>launch(o,evRot(d,a),22,{col:c.sk.col,mt:'p',arrow:1},c.raw*.7,.65));kqsFoes(o,3.2).forEach(e=>eStatus(e,{root:1.2},0));ev137Shock(o,C.c1,3.2,420)}},
+ 'Call of the Wild':{en:"Alpha's Call",d:'Two spirit wolves answer instead of one, and they hunt for 20s.',mod:{dur:20},
+  run(c,f){const r=f(c);const P=c.P;c.P=kqsV(P.x-2,P.z);try{f(c)}finally{c.P=P}ev137Column(pl.position,evC().c1,6,.7,700);return r}},
+ 'Frost Trap':{en:'Glacial Prison',d:'The trap freezes everything within 4.5 tiles for 3s.',mod:{r:4.5,stun:3},
+  post(c){const p=c.gp.clone(),C=evC();ev137Sigil(p,0x9fe3ff,1.3,800,1)}},
+ 'Hawk Dive':{en:'Thunderbird',d:'The hawk strikes with lightning that leaps to 3 more enemies.',
+  pre(c){c.evT=kqsNear(14)},post(c){const t=c.evT;if(!t)return;setTimeout(()=>{if(t.dead||!t.m)return;ev137Column(t.m.position,0xfff06a,8,.5,420);try{chainFrom(t,c.raw*.5,c.mt,3,0xfff06a,null,{})}catch(_){}},460)}},
+ 'Explosive Trap':{en:'Firestorm Mine',d:'Each mine bursts in a 40% wider blast of fire.',mod:{r:'*1.4'},
+  post(c){const p=c.gp.clone(),C=evC();ev137Sigil(p,0xff8a3a,1.2,700,1)}},
+ 'Rapid Fire':{en:'Gatling Volley',d:'Looses 16 arrows in 2 seconds instead of 10.',
+  run(c){let n=0;kqsSnd('arrow');const C=evC();kqsChan({t:c.sk.dur,iv:.125,slow:.4,tick:()=>{if(n>=16)return;n++;const d=aimDir();face(d);launch(pl.position,d,26,{col:c.sk.col,mt:'p',arrow:1,pierce:c.s.pierce||0},c.raw,.7);
+   if(n%4==0)ev137Flare(gY(pl.position,1.2).addScaledVector(d,.9),C.c2,.8,180);try{bowAnim(120)}catch(_){}sfx('arrow')}});return true}},
+ 'Entangling Roots':{en:'Worldroot Grasp',d:'Roots burst over a 45% wider area and hold enemies for 4.5s.',mod:{r:'*1.45'},
+  post(c){const p=c.gp.clone(),C=evC();setTimeout(()=>{ev137Shards(p,0x6ac04a,16,c.R*.85,1.6,1400);kqsFoes(p,c.R).forEach(e=>eStatus(e,{root:4.5},0))},270)}},
+ 'Stampede':{en:'Primal Stampede',d:'The herd charges 16 tiles in a 40% wider line.',mod:{L:16,w:4.5,rng:16},
+  post(c){const P=c.P.clone(),d=kqsDir(P,c.gp),C=evC();ev137Rift(P,evAt(P,d,Math.min(c.sk.L,d2(P,c.gp)+1.5)),C.c1,1200)}},
+ 'Aimed Shot':{en:'Heartseeker',d:'The shot pierces a 30-tile line, 50% wider.',
+  run(c){const C=evC(),glow=kqsMesh(new THREE.SphereGeometry(.16,8,6),kqsAdd(C.c2));scene.add(glow);try{bowAnim(950)}catch(_){}kqsSnd('draw');let ft=0;
+   kqsChan({t:.9,iv:.9,ti:.9,slow:.6,tick:()=>{},upd:()=>{const d=aimDir();face(d);glow.position.copy(gY(pl.position,1.3)).addScaledVector(d,.8);const k=KQS.ch?Math.min(1,KQS.ch.el/.9):1;glow.scale.setScalar(.6+k*1.8);
+     if(performance.now()>ft){ft=performance.now()+90;evxPuff(glow.position.clone().add(kqsV((Math.random()-.5)*1.4,(Math.random()-.5)*1.4)),{spr:1,col:C.c1,r0:.3,r1:0,life:.25,op:.8,v:[0,0,0],fin:.05})}},
+    end:cancel=>{kqsRm(glow);if(cancel)return;const d=aimDir(),o=gY(pl.position,1.1);face(d);const e=o.clone().addScaledVector(d,30);ev137Lance(o,e,C.c1,.22,420);ev137Lance(o,e,0xffffff,.08,300);ev137Flare(o.clone().addScaledVector(d,.8),C.c2,2,300);kqsSnd('snipe');shake(.2);
+     kqsLine(pl.position,d,30,2.4).forEach(q=>{kqsHit(q,c.raw,c);ev137Flare(gY(q.m.position,1),C.c2,1,240)})}});return true}},
+ 'Wild Hunt':{en:'The Endless Hunt',d:'Five spirit wolves join the hunt instead of three, for 16s.',mod:{dur:16},
+  post(c){const P=c.P;[0,1].forEach(j=>{const a=pl.rotation.y+Math.PI+(j?1.5:-1.5),m=kqsWolf(0xc0f0ff,1.05);m.position.set(P.x+Math.sin(a)*2.2,0,P.z+Math.cos(a)*2.2);m.position.y=GH(m.position.x,m.position.z);ev137Column(m.position,0xa0e0ff,4,.5,600);
+   kqsSummon({mesh:m,life:c.sk.dur,spd:7.8,reach:1.6,iv:.75,dmg:c.raw,c,col:0xa0e0ff,wolf:1,off:3+j})})}}
+});
+// ================= v137 evolved abilities: Mage (arcane azure and violet, frost, fire and stars) =================
+Object.assign(EVO137,{
+ 'Fireball':{en:'Phoenix Barrage',d:'Hurls three fireballs in a spread instead of one.',mod:{n2:3}},
+ 'Frost Nova':{en:'Absolute Zero',d:'Freezes everything within 4.8 tiles for 2.4s, and a ring of ice spikes bursts from the ground.',mod:{r:'*1.45',stun:2.4},
+  post(c){const P=c.P.clone();ev137Shards(P,0x9fe3ff,18,c.R*.85,1.5,1300);ev137Shock(P,0xdff6ff,c.R,620);ev137Sigil(P,0x9fe3ff,c.R,900,1)}},
+ 'Chain Lightning':{en:'Storm Lattice',d:'The lightning jumps between up to 8 enemies instead of 4.',mod:{jumps:8}},
+ 'Meteor':{en:'Cataclysm',d:'A wider impact, followed by two more meteors crashing down around it.',mod:{r:'*1.3'},
+  post(c){const p=(c.gp||aimPoint(10)).clone(),C=evC();[0,1].forEach(j=>{const a=Math.random()*6.283,q=kqsV(p.x+Math.cos(a)*2.8,p.z+Math.sin(a)*2.8),dl=1.35+j*.3;
+   tele(q,2.4,dl,()=>{evSlam(q,0xff7a2a,2.4);burst(gY(q,.4),0xff5a1a,40,2.4,3,.8);evArea(c,q,2.4,c.raw*.55,{burn:1});shake(.2)});setTimeout(()=>ev137Fall(q,0xff7a2a,'comet',600),dl*1000-600)});
+   setTimeout(()=>ev137Fall(p,0xffa040,'comet',600),c.sk.delay*1000-600)}},
+ 'Arcane Missiles':{en:'Arcane Torrent',d:'Seven seeking bolts instead of three.',mod:{n2:7}},
+ 'Blizzard':{en:'Eternal Winter',d:'The storm covers a 45% wider area for 50% longer.',mod:{r:'*1.45',ticks:15},
+  post(c){const p=(c.gp||aimPoint(10)).clone();ev137Sigil(p,0x9fe3ff,c.R,15*.4*1000+300,0);let ti=0;kqsObj({life:15*.4,tick:dt=>{ti-=dt;if(ti>0)return;ti=.5;const a=Math.random()*6.283,r=Math.sqrt(Math.random())*c.R*.8;ev137Shards(kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r),0xbfefff,4,.4,.8,700)}})}},
+ 'Mana Shield':{en:'Arcane Aegis',d:'Absorbs 60% of your max health for 10s, and a burst of arcane force hurls nearby enemies back.',mod:{v:.6,dur:10},
+  post(c){const P=pl.position.clone(),C=evC();ev137Shock(P,C.c1,4.5,560);ev137Orbit(P,C.c2,1.2,1100);kqsFoes(P,4.5).forEach(e=>{evHit(c,e,c.A*.8);if(e.boss)return;const d=kqsDir(P,e.m.position);e.vx+=d.x*9;e.vz+=d.z*9})}},
+ 'Blink':{en:'Rift Walk',d:'Teleport up to 12 tiles, and you arrive in an arcane explosion.',mod:{rng:12},
+  post(c){const p=pl.position.clone(),C=evC();ev137Rift(c.P0||c.evO||p,p,C.c2,600);ev137Shock(p,C.c1,2.8,460);ev137Flare(gY(p,1),C.c2,1.6,300);evArea(c,p,2.8,c.raw*1.2)},pre(c){c.evO=pl.position.clone()}},
+ "Dragon's Breath":{en:'Wyrmfire',d:'The cone of fire reaches 7.5 tiles and leaves three patches of burning ground.',mod:{r:7.5},
+  post(c){const P=c.P.clone(),d=c.d;ev137Crescent(P,d,0xff7a2a,c.R*.8,380);[[0,3],[-.35,5.2],[.35,5.2]].forEach(([a,t])=>{const q=evAt(P,evRot(d,a),t);zoneAt(q,1.7,c.A*.25,c.mt,0xff6a1a,6,.5,{});ev137Sigil(q,0xff6a1a,1.7,3200,1)})}},
+ 'Frozen Orb':{en:'Glacial Twins',d:'Two orbs of ice fly out side by side instead of one.',
+  run(c,f){const d=c.d;let r;try{r=f(Object.assign({},c,{d:evRot(d,-.2)}));f(Object.assign({},c,{d:evRot(d,.2)}))}catch(err){console.error(err)}return r}},
+ 'Rift Gate':{en:'Astral Gateway',d:'Portals up to 20 tiles apart that stay open for 14s.',mod:{rng:20,dur:14},
+  post(c){const C=evC();ev137Column(c.P0||c.P,C.c2,5,.5,700,.7);ev137Column(pl.position,C.c2,5,.5,700,.7)}},
+ 'Time Warp':{en:'Stasis Field',d:'Time bends over a 6.5-tile circle for 9s.',mod:{r:6.5,dur:9},
+  post(c){const p=c.gp.clone();ev137Sigil(p,0x8ad8ff,c.R,9000*.4,0);ev137Sigil(p,0xdff6ff,c.R*.6,9000*.3,0)}},
+ 'Disintegrate':{en:'Annihilation Ray',d:'Channel for 3.2s: the beam reaches 14 tiles and is 45% wider.',mod:{dur:3.2},
+  run(c){kqsSnd('beam');const C=evC();kqsChan({t:c.sk.dur,iv:.2,slow:.6,tick:()=>{const d=aimDir();face(d);const o=gY(pl.position,1.15).addScaledVector(d,.6),e=o.clone().addScaledVector(d,14);
+   ev137Lance(o,e,C.c2,.16,230);ev137Flare(o.clone().addScaledVector(d,.3),C.c1,.9,200);ev137Flare(e,C.c2,.9,200);
+   kqsLine(pl.position,d,14,1.9).forEach(q=>{kqsHit(q,c.raw,c,{proc:false});burst(gY(q.m.position,1),0xc890ff,4,1,1,.3)});if(Math.random()<.4)kqsPose('cast',220)}});return true}},
+ 'Wall of Fire':{en:'Inferno Rampart',d:'An 11-tile wall of fire that burns for 9s.',mod:{L:11,dur:9},
+  post(c){const p=c.gp.clone(),d=kqsDir(c.P,p),n=kqsV(-d.z,d.x);ev137Rift(kqsV(p.x-n.x*c.sk.L/2,p.z-n.z*c.sk.L/2),kqsV(p.x+n.x*c.sk.L/2,p.z+n.z*c.sk.L/2),0xff7a2a,9000)}},
+ 'Chronoshift':{en:'Temporal Paradox',d:'Also halves the cooldowns of your other abilities and heals 15% of your max health.',
+  post(c){for(const k in hero.cd)if(k!==c.key)hero.cd[k]=(hero.cd[k]||0)*.5;healHero(heroMax()*.15*c.rk);const C=evC();ev137Sigil(pl.position,0x9ad8ff,3,1200,0);ev137Orbit(pl.position,0xdff6ff,1.2,1000)}},
+ 'Singularity':{en:'Event Horizon',d:'A 7-tile singularity that pulls for 4s before it collapses.',mod:{r:7,dur:4},
+  post(c){const p=c.gp.clone(),C=evC();ev137Sigil(p,C.c1,c.R,4000,0);setTimeout(()=>{ev137Shock(p,C.c2,c.R,700);ev137Column(p,C.c1,10,1.4,800)},4000)}},
+ 'Comet Storm':{en:'Starfall Apocalypse',d:'Fourteen comets instead of eight, over an 8-tile area.',mod:{r:8,rng:14},
+  post(c){const p=c.gp.clone(),C=evC(),K=[0xff7a2a,0x9fe3ff,0xfff06a];for(let j=0;j<6;j++)setTimeout(()=>{const a=Math.random()*6.283,r=Math.sqrt(Math.random())*c.R*.85,q=kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r),col=K[j%3];
+   kqsWarn(q,2,col,.5,()=>{});ev137Fall(q,col,j%2?'comet':'star',500);setTimeout(()=>{evArea(c,q,2,c.raw,j%3==0?{burn:1}:j%3==1?{stun:.5}:{});shake(.1)},500)},150+j*360)}}
+});
 // ================= v137: animal townsfolk — core =================
 // Every Duskhold townsperson is a warm-blooded animal now: keepers each have their own species and a costume of their trade
 // (2820), citizens get a species and clothes picked from their name, trade and look (2830). The bodies are built with the
