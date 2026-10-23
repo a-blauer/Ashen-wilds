@@ -71,6 +71,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v127 balance: companion spells (`BAL127_CSP`), ability factors (`KQR_TUNE`), class knobs, weapon identities (`WTYPE.k`, `MW`, `WB127`), companion self-reaction fix (`CH127`), knife volleys | `2300-v127-balance.js` (knobs `WB127` in `0580`, no-lunge throws `SWNOL` in `1710`) |
 | v128 Whirlwind hold: while the warrior spins, two-handed weapons (greatsword, great axe, halberd) are held out level in both hands (arm IK `fc116IK`), dual axes one in each outstretched hand, edge leading (`WW128`, `ww128Tick`, after every animation layer; visual only). Companions follow the facing from before the spin (`plFaceY`, used in `compTick`), so they no longer circle the hero | `2310-v128-whirlwind-hold.js` (edit in `0860`) |
 | v132 Cheddar, the quest-giving mouse: model (`chd132Model`, from the Cheddar NPC Model concept page, game-ready: 3 skinned meshes) and per-instance quests (`CHQD132`, state `CHQ132.st`, window `XR.chq132`, tracker `#chqt132`, events `chqEv132`) | `2340-v132-cheddar-model.js`, `2350-v132-cheddar-quests.js` |
+| v133 Sovereign footwork: sturdier posture (`POS133`), retreat after heavy damage (`RT133`), spacing plans (`PL133`, `svPlan133`) | `2360-v133-sov-spacing.js` |
 
 ## Conventions (read before changing code)
 
@@ -203,6 +204,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Hillside Crest I gets one extra secret boulder for "Under the Stone" (appended to `SECRETS`). To add quests for another zone, add
   `'z_k'` lists to `CHQD132` (kinds listed above the table). Test: `v132_cheddar_test.py` (`v132_cheddar.js`; `v132_shot.js` for
   framed screenshots).
+- **Sovereign footwork (v133, `2360-v133-sov-spacing.js`)**: posture now needs `POS133.mul` (2) times the damage, +15% per stagger already
+  taken (max +45%), fills at half speed for 3.5 s after a stagger ends and drains a little after 2.5 s unhit. Damage of 40% of the stagger
+  threshold within 3 s (`RT133`) makes the boss back away fast for 1–1.5 s (sliding along the den wall, `svStep133`), at most every 14 s
+  (10 s in Phase II), then answer quickly from the new range. After each move the boss may make a spacing plan (`svPlan133`, chance
+  `PL133`, 80% when the hero has stood still for 3 s): a front/any move it has not used lately whose range does not cover the current
+  distance; it walks or backs off to that range (up to 3.2 s) and casts it (`S.force`, read by `svPick`). Driver-only, like the rest of the AI.
+  Test: `v133_sov_spacing.py` (old vs new per boss with the hero standing still in melee: staggers, retreats, far-range casts).
 - **Beast races (v114, replaces the v112 rat)**: every hero is its class's animal, there is no human option: rat (Warrior), cat
   (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
@@ -444,6 +452,7 @@ python3 v103_poses.py        # close-ups of the working shopkeepers (KEEP=smith,
 python3 probe.py file.js     # run one JS snippet in a started game, print the full JSON result (OUTF=out.json)
 python3 v110_moves.py         # v110: every Sovereign move: contact sheets at the track keys, hits (BL=0 MV=claw,snap SHOT=0 LIT=1 CAM=play)
 python3 v110_fight.py         # v110: free fights with the real AI (moves chosen, stagger, Phase II, death, wipe); avg AI ms per frame
+python3 v133_sov_spacing.py   # v133: posture, retreat and spacing plans vs the old AI, hero standing still in melee
 python3 v110_mp.py            # v110: co-op relay (driver queues, partner replays with the same seed, Phase II from health)
 python3 v86_den0.py … v86_den5.py, v89_dens.py   # every Sovereign den (stale since v110 for the den hazards they check: scenery parts still apply)
 ```
