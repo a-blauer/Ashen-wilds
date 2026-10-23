@@ -89,14 +89,14 @@ function chqTurnIn132(id){const q=CHQ132_ID[id],I=chqHere132(),S=q&&chqS132(q);i
 
 // ---------------- Cheddar's spot beside each Duskhold portal ----------------
 function chqSpot132(I){if(CHQ132.spots[I.g])return CHQ132.spots[I.g];
-  const r=RPORT.find(q=>q.k=='home'&&q.ig===I.g),n=I.path[26],e=I.en;let dx=n[0]-e[0],dz=n[1]-e[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
-  const px=r?r.x:e[0]-dx*5-dz*4,pz=r?r.z:e[1]-dz*5+dx*4,sx=-dz,sz=dx;   // s: from the road towards the portal's far side
+  // v134: he stands a few steps down the road in front of where you arrive (the camera looks down the road), a little to its side,
+  // facing the arrival spot, so he is the first thing you see; the burrow is just behind him
+  const n=I.path[26],e=I.en;let dx=n[0]-e[0],dz=n[1]-e[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;const sx=-dz,sz=dx;
   const free=(x,z,rr)=>{for(let j=-rr;j<=rr;j++)for(let i=-rr;i<=rr;i++){const X=Math.round(x)+i,Z=Math.round(z)+j;if(X<1||Z<1||X>=W-1||Z>=H-1||solid(X,Z))return false}return true};
-  // beside the portal: its far side, then its road side, then a little forward of either
-  const C=[[2.7,0],[-2.7,0],[2.9,1.6],[-2.9,1.6],[3.6,-1.2],[-3.6,-1.2],[2.2,3],[-2.2,3]];let best=null;
-  for(const [a,b] of C){const x=px+sx*a+dx*b,z=pz+sz*a+dz*b,o=Math.sign(a),bx=x+sx*o*1.15-dx*.55,bz=z+sz*o*1.15-dz*.55;
-    if(free(x,z,1)&&free(bx,bz,0)&&Math.abs(GH(x,z)-GH(bx,bz))<.6){best={x,z,bx,bz};break}}
-  if(!best){const x=px+sx*2.7,z=pz+sz*2.7;best={x,z,bx:x+sx*1.15,bz:z+sz*1.15}}
+  const C=[[4.2,1.9],[4.2,-1.9],[3.6,2.4],[3.6,-2.4],[5,2.2],[5,-2.2],[4.4,1.4],[4.4,-1.4],[3.2,3],[3.2,-3]];let best=null;
+  for(const [a,b] of C){const x=e[0]+dx*a+sx*b,z=e[1]+dz*a+sz*b,o=Math.sign(b),bx=x+dx*1.2+sx*o*.55,bz=z+dz*1.2+sz*o*.55;
+    if(free(x,z,0)&&free(bx,bz,0)&&Math.abs(GH(x,z)-GH(bx,bz))<.6&&Math.abs(GH(x,z)-GH(e[0],e[1]))<1.2){best={x,z,bx,bz};break}}
+  if(!best){const x=e[0]+dx*4.2+sx*1.9,z=e[1]+dz*4.2+sz*1.9;best={x,z,bx:x+dx*1.2,bz:z+dz*1.2}}
   best.face=Math.atan2(e[0]-best.x,e[1]-best.z);best.g=I.g;CHQ132.spots[I.g]=best;return best}
 // a cheap collider on his tile so you don't walk through him (built once for every spot)
 try{INSL.forEach(I=>{if(I.tri)return;const s=chqSpot132(I);CBLK.add(Math.round(s.z)*W+Math.round(s.x))})}catch(err){console.warn('chq132 spots',err)}

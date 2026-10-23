@@ -219,7 +219,7 @@ function bowFxSet(k,g){
     if(g<=0||!pl.visible){F.g.visible=false;return}
     if(F.g.parent!==scene)scene.add(F.g);
     pl.updateMatrixWorld(true);
-    const V=THREE.Vector3,t1=new V(-.062,.594,0).applyMatrix4(W.matrixWorld),t2=new V(-.062,-.594,0).applyMatrix4(W.matrixWorld),grip=new V(-.555,0,0).applyMatrix4(W.matrixWorld);
+    const V=THREE.Vector3,t1=new V(BOW_T[0],BOW_T[1],0).applyMatrix4(W.matrixWorld),t2=new V(BOW_T[0],-BOW_T[1],0).applyMatrix4(W.matrixWorld),grip=new V(-.555,0,0).applyMatrix4(W.matrixWorld);
     const hand=new V(0,-.03,.02).applyMatrix4(pl.bones.aR2.matrixWorld);
     // the nock point sits between the string's rest line and the drawing hand
     const rest=t1.clone().add(t2).multiplyScalar(.5),nock=rest.clone().lerp(hand,Math.min(1,k));
@@ -306,7 +306,7 @@ function eBowFxSet(g,k,gr){const W=g.bowW;if(!W)return;const F=eBowFx(g);
     W.scale.x=u.s0*(1-.6*gr+.12*k*gr);W.position.copy(u.p0);W.position.z-=gr*.555*W.scale.x;
     if(gr<=0||!g.visible||!g.parent){F.g.visible=false;return}
     if(F.g.parent!==scene)scene.add(F.g);g.updateMatrixWorld(true);
-    const V3=THREE.Vector3,t1=new V3(-.062,.594,0).applyMatrix4(W.matrixWorld),t2=new V3(-.062,-.594,0).applyMatrix4(W.matrixWorld),grip=new V3(-.555,0,0).applyMatrix4(W.matrixWorld);
+    const V3=THREE.Vector3,t1=new V3(BOW_T[0],BOW_T[1],0).applyMatrix4(W.matrixWorld),t2=new V3(BOW_T[0],-BOW_T[1],0).applyMatrix4(W.matrixWorld),grip=new V3(-.555,0,0).applyMatrix4(W.matrixWorld);
     const hand=new V3(0,-.03,.02).applyMatrix4(g.h.bones.aR2.matrixWorld),rest=t1.clone().add(t2).multiplyScalar(.5),nock=rest.clone().lerp(hand,Math.min(1,k));
     const pa=F.str.geometry.attributes.position;pa.setXYZ(0,t1.x,t1.y,t1.z);pa.setXYZ(1,nock.x,nock.y,nock.z);pa.setXYZ(2,t2.x,t2.y,t2.z);pa.needsUpdate=true;
     const dir=grip.clone().sub(nock);if(dir.lengthSq()<1e-6){F.g.visible=false;return}dir.normalize();

@@ -6,13 +6,16 @@
 
 // ---------------- shared baking: rigid parts → 1-3 vertex-coloured meshes (cloth/wood, metal, glow), mottled ----------------
 var LGB={},LGM=null;
+// v134: bow size (scaled about the riser: BOW_K height, BOW_KX depth, a shallower C) and the string's rest points in the bow's own frame: [x of the string, y of the tips]
+var BOW_K=.7,BOW_KX=.55,BOW_T=[-.555+.493*BOW_KX,.594*BOW_K];
 function lgMats(){if(LGM)return LGM;const f=o=>Object.assign({vertexColors:true,flatShading:true},o);
   LGM={c:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,side:THREE.DoubleSide})),
     m:new THREE.MeshStandardMaterial(f({roughness:.5,metalness:.55,envMapIntensity:.7})),
     g:new THREE.MeshBasicMaterial({vertexColors:true}),
+    s:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,side:THREE.DoubleSide})),   // v134: bow strings (a mesh of their own)
     cs:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,skinning:true,side:THREE.DoubleSide})),
     ms:new THREE.MeshStandardMaterial(f({roughness:.5,metalness:.55,skinning:true}))};
-  [LGM.c,LGM.m,LGM.g,LGM.cs,LGM.ms].forEach(m=>m.userData.lps=1);return LGM}
+  [LGM.c,LGM.m,LGM.g,LGM.cs,LGM.ms,LGM.s].forEach(m=>m.userData.lps=1);return LGM}
 // P = dkKit parts; mot = mottling strength (0 = flat colour); returns fresh meshes over cached geometry
 function lgBake(P,key,mot){
   let gs=LGB[key];
@@ -104,10 +107,12 @@ function lgWpnKit(k,type,col,r){
   else if(type=='orb'){const gc=col==0x9aa2ae?0x9a7aff:col;k.p('',lgLump('orb',.12,.06,7),'g',gc,0,0,0,1,1,1);k.p('','oct','g',lgCol(gc,0xffffff,.6),0,0,0,.05);
     [0,1,2].forEach(i=>{const a=i/3*Math.PI*2;k.L('','m',W.brass,[Math.cos(a)*.05,-.15,Math.sin(a)*.05],[Math.cos(a)*.13,0,Math.sin(a)*.13],.014,.009,4);k.L('','m',W.brass,[Math.cos(a)*.13,0,Math.sin(a)*.13],[Math.cos(a)*.07,.1,Math.sin(a)*.07],.009,.003,4)});
     k.p('','cyl','m',W.brass,0,-.14,0,.065,.04,.065);k.p('','cone4','c',W.woodD,0,-.2,0,.05,.08,.05,Math.PI)}
-  else if(type=='bow'){const pts=[];for(let i=0;i<=10;i++){const a=Math.PI*(.55+i*.09),rr=.55+(i==0||i==10?.04:0),rc=(i==0||i==10)?.03:0;pts.push([Math.cos(a)*rr+rc,Math.sin(a)*rr*1.02,0])}
-    for(let i=0;i<10;i++){const g=i>3&&i<6,w=i==0||i==9?.013:i==1||i==8?.019:.024;k.L('',g?'c':'c',g?W.leather:(i%2?0x4a3018:0x3e2814),pts[i],pts[i+1],w,w,5)}
-    [pts[0],pts[10]].forEach((q,i)=>k.L('','c',W.bone,q,[q[0]+.06,q[1]+(i?-.07:.07),0],.015,.003,4));k.p('','box','m',fit,-.555,0,0,.035,.04,.035);
-    k.L('','c',0xd8d0b8,[pts[0][0]+.004,pts[0][1],0],[-.08,0,0],.004,.004,3);k.L('','c',0xd8d0b8,[-.08,0,0],[pts[10][0]+.004,pts[10][1],0],.004,.004,3);if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,-.54,s*.2,0,.01,.05,.03,0,0,s*.3))}
+  else if(type=='bow'){const pts=[],K=BOW_K,sq=(x,y)=>[-.555+(x+.555)*BOW_KX,y*K,0];   // v134: the bow is BOW_K its old height and BOW_KX its old depth, scaled about the riser (the grip point stays at -.555)
+    for(let i=0;i<=10;i++){const a=Math.PI*(.55+i*.09),rr=.55+(i==0||i==10?.04:0),rc=(i==0||i==10)?.03:0;pts.push(sq(Math.cos(a)*rr+rc,Math.sin(a)*rr*1.02))}
+    for(let i=0;i<10;i++){const g=i>3&&i<6,w=(i==0||i==9?.013:i==1||i==8?.019:.024)*(.4+.6*K);k.L('',g?'c':'c',g?W.leather:(i%2?0x4a3018:0x3e2814),pts[i],pts[i+1],w,w,5)}
+    [pts[0],pts[10]].forEach((q,i)=>k.L('','c',W.bone,q,[q[0]+.06*BOW_KX,q[1]+(i?-.07:.07)*K,0],.015*K,.003,4));k.p('','box','m',fit,-.555,0,0,.035,.04,.035);
+    // the string is its own mesh (material 's') so it can hide while the drawn string of a shot shows (two strings before v134)
+    const sm=sq(-.08,0);k.L('','s',0xd8d0b8,[pts[0][0]+.004,pts[0][1],0],sm,.004,.004,3);k.L('','s',0xd8d0b8,sm,[pts[10][0]+.004,pts[10][1],0],.004,.004,3);if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,-.54,s*.2,0,.01,.05,.03,0,0,s*.3))}
   else if(type=='crossbow'){k.p('','box','c',W.wood,0,-.22,0,.065,.62,.055);k.p('','box','c',W.woodD,0,.1,0,.055,.14,.085);k.p('','box','c',W.woodD,0,-.06,0,.07,.06,.06);k.p('','box','m',W.iron,0,-.06,.04,.025,.1,.02);
     k.p('','box','m',fit,0,-.5,0,.14,.06,.07);[-1,1].forEach(s=>{k.L('','m',lgCol(W.iron,steel,.4),[s*.05,-.5,0],[s*.33,-.44,0],.022,.014,4);k.p('','cone4','m',W.iron2,s*.335,-.44,0,.012,.03,.012,0,0,-s*1.4)});
     k.L('','c',0xd8d0b8,[-.33,-.44,0],[0,-.28,0],.004,.004,3);k.L('','c',0xd8d0b8,[.33,-.44,0],[0,-.28,0],.004,.004,3);
