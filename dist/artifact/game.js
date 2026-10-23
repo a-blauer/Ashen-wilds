@@ -31276,3 +31276,857 @@ function unqFish135(r,p){const ch=UNQ135_FISH[Math.max(0,Math.min(3,r|0))]||0;if
   const it=unqMake135(L[R(0,L.length-1)],lv);if(!it)return false;drop('gear',it,p.clone().add(V(.6,0,-.6)),it.r);
   try{banner('✦ SOMETHING RARE ON THE LINE',unqName135(it),'Fished up · '+SLOTN[itT(it).sl])}catch(_){}try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}return true}
 {const f=fishTreasure;fishTreasure=function(r,T,p){try{if(p&&unqFish135(r,p))return}catch(err){console.warn('v135 fish unique',err)}return f.apply(this,arguments)}}
+// ================= v136: gear kit — measured cloth for hoods, cowls, mantles, robes and coats =================
+// The v114/v134 hoods were the skull rings pushed out by a few centimetres: a tight helmet-like shell that hugged the head,
+// stopped at the neck and floated as a thin arc round the face. Here cloth is built the way it hangs:
+//  * gkPts / gkRows measure what is already built (body, head, ears, worn armour, cape) as horizontal sections; each row of
+//    cloth is the convex hull of its section (cloth spans hollows, it never dips between the ears or round the neck) pushed
+//    out by a clearance, so nothing underneath can poke through in the bind pose.
+//  * gkHood: rows from the shoulders to above the crown. Cloth at the back and sides falls straight down from the widest part
+//    of the head (the hanging rule), the front is cut along a curve behind the eyes (an overhanging brim at the top, open or
+//    closed under the chin), the cowl bunches into folds round the neck and spreads into a mantle over the shoulders with a
+//    dagged (cut) hem. A darker lining inside, a rolled edge, an optional point (liripipe) hanging down the back.
+//  * gkSurf: a grid of vertices (rows × columns) with per-vertex bone weights → triangles (one colour per quad).
+//  * gkLater: hoods are built after everything else of the hero (chest, cape, quiver, outfit extras), so they measure all of it.
+var GKX={late:null};
+// ---------------- surfaces ----------------
+// G[i][j] = {x,y,z,w:[[bone,weight],…]}; o: t ('c'|'m'|'g'), col (hex or fn(m)), keep(m); m = quad centre + u (columns 0..1), v (rows 0..1), i, j
+function gkSurf(B,G,o){o=o||{};const t=o.t||'c',nr=G.length;
+  const V=v=>v._mw&&v._mwB===B?v._mw:(v._mwB=B,v._mw={x:v.x,y:v.y,z:v.z,w:mdW(B,v.w)});
+  for(let i=0;i<nr-1;i++){const A=G[i],C=G[i+1],n=Math.min(A.length,C.length);
+    for(let j=0;j<n-1;j++){const a=A[j],b=A[j+1],c=C[j],d=C[j+1];if(!a||!b||!c||!d)continue;
+      const m={x:(a.x+b.x+c.x+d.x)/4,y:(a.y+b.y+c.y+d.y)/4,z:(a.z+b.z+c.z+d.z)/4,u:(j+.5)/(n-1),v:(i+.5)/(nr-1),i,j,n,nr};
+      if(o.keep&&!o.keep(m))continue;const col=mdC(typeof o.col=='function'?o.col(m):o.col);
+      mdTri(B,t,V(a),V(b),V(c),col);mdTri(B,t,V(c),V(b),V(d),col)}}}
+// a copy of the grid moved toward each row's axis (x = 0, z = cz[i]) by d (negative: outward) — linings, outer layers
+function gkInset(G,cz,d){return G.map((R,i)=>R.map(v=>{const dx=v.x,dz=v.z-(v.cz!=null?v.cz:cz[i]),L=Math.hypot(dx,dz)||1,k=Math.max(0,L-d)/L;return {x:dx*k,y:v.y,z:(v.cz!=null?v.cz:cz[i])+dz*k,w:v.w,cz:v.cz}}))}
+// a tube along points (rigid kit segments, each blended with the weights of its start)
+function gkTube(k,pts,r0,r1,col,t,sides){for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],u0=i/(pts.length-1),u1=(i+1)/(pts.length-1);
+  k.L('head',t||'c',col,[a.x,a.y,a.z],[b.x,b.y,b.z],r0+(r1-r0)*u0,r0+(r1-r0)*u1,sides||5);mdOW(k,a.w)}}
+// a smooth tube through points P (each with weights w) with radius rf(t), seg sides (lofted, frames turned along the path)
+function gkTubeS(B,P,rf,col,o){o=o||{};const n=P.length,seg=o.seg||7,V=THREE.Vector3,G=[];let U=null;
+  for(let i=0;i<n;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(n-1,i+1)],tg=new V(b.x-a.x,b.y-a.y,b.z-a.z).normalize();
+    let u=U?U.clone():new V(...(o.ref||[1,0,0]));u.sub(tg.clone().multiplyScalar(u.dot(tg)));if(u.lengthSq()<1e-8)u=new V(0,0,1).sub(tg.clone().multiplyScalar(tg.z));u.normalize();U=u;
+    const sd=new V().crossVectors(tg,u),r=rf(i/(n-1)),row=[];
+    for(let j=0;j<=seg;j++){const a2=j/seg*Math.PI*2,c=Math.cos(a2)*r,s2=Math.sin(a2)*r;row.push({x:P[i].x+u.x*c+sd.x*s2,y:P[i].y+u.y*c+sd.y*s2,z:P[i].z+u.z*c+sd.z*s2,w:P[i].w})}G.push(row)}
+  if(o.cap){const L=P[n-1];G.push(G[n-1].map(()=>({x:L.x,y:L.y,z:L.z,w:L.w})))}
+  gkSurf(B,G,{t:o.t||'c',col});return G}
+// ---------------- measuring what is already built ----------------
+// sample points of every triangle built so far whose box reaches y0..y1 (vertices, edges and the inside of big triangles)
+// exRe: bone names whose triangles are left out (by the first vertex's strongest bone), e.g. /^(a[LR]|tl|cp)/ for skirts
+function gkPts(B,y0,y1,filt,exRe){const out=[];let ex=null;if(exRe){ex=new Set();B.O.forEach((n,i)=>{if(exRe.test(n))ex.add(i)})}
+  ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;const p=L.p,si=L.si,sw=L.sw;
+  for(let i=0;i<p.length;i+=9){const ay=p[i+1],by=p[i+4],cy=p[i+7];if(Math.max(ay,by,cy)<y0||Math.min(ay,by,cy)>y1)continue;
+    if(ex){const v=i/3*4;let bj=0;for(let q=1;q<4;q++)if(sw[v+q]>sw[v+bj])bj=q;if(ex.has(si[v+bj]))continue}
+    const ax=p[i],az=p[i+2],bx=p[i+3],bz=p[i+5],cx=p[i+6],cz=p[i+8];
+    const e=Math.max(Math.hypot(ax-bx,ay-by,az-bz),Math.hypot(bx-cx,by-cy,bz-cz),Math.hypot(cx-ax,cy-ay,cz-az)),n=Math.max(1,Math.min(8,Math.ceil(e/.012)));
+    for(let u=0;u<=n;u++)for(let v=0;v<=n-u;v++){const w=n-u-v,x=(ax*u+bx*v+cx*w)/n,y=(ay*u+by*v+cy*w)/n,z=(az*u+bz*v+cz*w)/n;if(y<y0||y>y1)continue;if(!filt||filt(x,y,z))out.push(x,y,z)}}});
+  return out}
+// 2-D convex hull (x, z) — monotone chain
+function gkHull(P){if(P.length<3)return P.slice();const S=P.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]),cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),L=[],U=[];
+  for(const p of S){while(L.length>=2&&cr(L[L.length-2],L[L.length-1],p)<=0)L.pop();L.push(p)}
+  for(let i=S.length-1;i>=0;i--){const p=S[i];while(U.length>=2&&cr(U[U.length-2],U[U.length-1],p)<=0)U.pop();U.push(p)}
+  U.pop();L.pop();return L.concat(U)}
+// distance from (cx, cz) to the hull along direction θ (θ = 0 → +z, π/2 → +x); 0 when the hull is empty
+function gkHullR(H,cx,cz,th){if(!H||H.length<3)return 0;const dx=Math.sin(th),dz=Math.cos(th);let best=0;
+  for(let i=0;i<H.length;i++){const a=H[i],b=H[(i+1)%H.length],ex=b[0]-a[0],ez=b[1]-a[1],den=dx*ez-dz*ex;if(Math.abs(den)<1e-12)continue;
+    const t=((a[0]-cx)*ez-(a[1]-cz)*ex)/den,s=((a[0]-cx)*dz-(a[1]-cz)*dx)/den;if(t>0&&s>=-1e-9&&s<=1+1e-9)best=Math.max(best,t)}return best}
+// horizontal sections: rows at heights ys, each the hull of the points within ±h of it
+function gkRows(pts,ys,h){const R=ys.map(()=>[]);for(let i=0;i<pts.length;i+=3){const y=pts[i+1];for(let r=0;r<ys.length;r++)if(Math.abs(y-ys[r])<=h)R[r].push([pts[i],pts[i+2]])}
+  return R.map(p=>gkHull(p))}
+// ---------------- the hero's late builds (after chest, outfit extras and cape) ----------------
+function gkLater(B,fn){const S={on:BR.on,R:BR.R,C:BR.C,P:BR.P,feet:BR.feet,mask:BR.mask,rv:typeof RV!='undefined'?RV.helm:null};
+  const run=B2=>{const o={on:BR.on,R:BR.R,C:BR.C,P:BR.P,feet:BR.feet,mask:BR.mask};Object.assign(BR,S);try{fn(B2)}finally{Object.assign(BR,o)}};
+  if(GKX.late&&GKX.late.B===B)GKX.late.push(run);else run(B)}
+{const f=mdHeroB;mdHeroB=function(cls,Lk,E){const o=GKX.late,oE=GKX.E;let L=null;GKX.late=[];GKX.E=E;try{const B=f.apply(this,arguments);L=GKX.late;GKX.late=null;L.B=B;L.forEach(fn=>fn(B));return B}finally{GKX.late=o;GKX.E=oE}}}
+// mdB inside a hero build: remember which builder the late list belongs to (nested builds — previews — keep their own)
+{const f=mdB;mdB=function(){const B=f.apply(this,arguments);if(GKX.late&&!GKX.late.B)GKX.late.B=B;return B}}
+
+// ---------------- weights for cloth on the head, neck and shoulders ----------------
+function gkHeadW(x,y,z,o){o=o||{};const yh=o.yh||1.1,yn=o.yn||1.035,yc=o.yc||.975;let w;
+  if(y>=yh)w=[['head',1]];else if(y>=yn)w=mdWb('neck','head',(y-yn)/(yh-yn));else if(y>=yc)w=mdWb('chest','neck',(y-yc)/(yn-yc));else w=[['chest',1]];
+  // over the shoulders the mantle follows the upper arm a little (it lies on the pauldron / shoulder)
+  const ax=Math.abs(x),a=Math.max(0,Math.min(1,(ax-.1)/.12))*Math.max(0,Math.min(1,(yc+.02-y)/.06))*(o.arm==null?.45:o.arm);
+  if(a>0){const bn=x<0?'aL0':'aR0',r=[];w.forEach(q=>r.push([q[0],q[1]*(1-a)]));r.push([bn,a]);w=r}
+  return w}
+function gkSmooth(a,k,wrap){const n=a.length,o=a.slice();for(let j=0;j<n;j++){const l=a[wrap?(j-1+n)%n:Math.max(0,j-1)],r=a[wrap?(j+1)%n:Math.min(n-1,j+1)];o[j]=a[j]*(1-k)+(l+r)*.5*k}return o}
+function gkSS(e0,e1,x){const t=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return t*t*(3-2*t)}
+
+// ---------------- the hood ----------------
+// o: col, lin (lining), trim (edge band), edge (rolled edge colour), yHem (hem at the back), yHemF (hem at the front),
+//    clear (base clearance), loose (extra looseness, grows downward), crown (extra height over the crown), folds [n, amp],
+//    dag [depth] (cut teeth on the hem), open (front stays open below the jaw: angle at the hem), close (y where a closed cowl
+//    meets in front of the throat), zf (face edge z, default behind the eyes), over (how far the brim overhangs at the top),
+//    tip {len, drop, r} a hanging point at the back, N columns, pat(m,base) a pattern hook
+// returns the built rows (for the caller to place ornaments on the cloth)
+function gkHood(B,P,o){o=o||{};const D=BR.R,k=dkKit(),N=o.N||30,col=o.col,lin=o.lin==null?mdSh(col,.5):o.lin,trim=o.trim==null?mdSh(col,.78):o.trim;
+  const ez=D.EYEP[2],ey=D.EYEP[1],er=D.eyeR||.021,zf=o.zf!=null?o.zf:ez-er-.014,yJaw=o.yJaw||ey-.085,over=o.over==null?.03:o.over;
+  const yHem=o.yHem||.9,yHemF=o.yHemF==null?yHem+.05:o.yHemF,clr=o.clear==null?.02:o.clear,loose=o.loose==null?.03:o.loose;
+  // what lies in front of the face edge (eyes, muzzle, whiskers, beak) is not measured above the jaw
+  const zcut=y=>zf+.012+Math.max(0,yJaw-y)*3;
+  const reach=o.reach||.36,pts=gkPts(B,yHem-.05,1.6,(x,y,z)=>z<=zcut(y)&&x*x+z*z<reach*reach);
+  let yTop=yHem;for(let i=1;i<pts.length;i+=3)if(pts[i]>yTop)yTop=pts[i];
+  const dy=.017,ys=[];for(let y=yHem;y<=yTop+.001;y+=dy)ys.push(y);
+  const H=gkRows(pts,ys,dy*.75),nr=ys.length;
+  // row centres: the hull's middle (smoothed); radii per column
+  let cz=H.map(h=>{if(!h.length)return 0;let a=0;h.forEach(p=>a+=p[1]);return a/h.length});cz=gkSmooth(gkSmooth(cz,.6),.6);
+  const TH=j=>j/N*Math.PI*2;const R=H.map((h,i)=>{const r=[];for(let j=0;j<N;j++)r.push(gkHullR(h,0,cz[i],TH(j)));return r});
+  // clearance: a little more over the crown and at the back; looseness grows toward the hem
+  for(let i=0;i<nr;i++){const y=ys[i],dn=Math.max(0,Math.min(1,(1.1-y)/(1.1-yHem)));for(let j=0;j<N;j++){const th=TH(j),bk=Math.max(0,-Math.cos(th));
+    R[i][j]+=clr+loose*dn*(.6+.4*bk)+(o.crown||.012)*Math.max(0,Math.min(1,(y-(ey+.02))/.08))+.008*bk}}
+  // the hanging rule: at the back and the sides cloth falls straight from the widest part above
+  for(let i=nr-2;i>=0;i--)for(let j=0;j<N;j++){const hg=gkSS(.25,-.25,Math.cos(TH(j)));if(hg>0)R[i][j]=Math.max(R[i][j],R[i][j]*(1-hg)+R[i+1][j]*hg)}
+  // folds: soft vertical pleats, deeper toward the hem (the cowl bunches round the neck)
+  const fo=o.folds||[7,.012];for(let i=0;i<nr;i++){const y=ys[i],a=fo[1]*Math.max(0,Math.min(1,(1.12-y)/.14));for(let j=0;j<N;j++){const th=TH(j);R[i][j]+=a*(.5+.5*Math.sin(th*fo[0]+.7+y*9))}}
+  for(let i=0;i<nr;i++)R[i]=gkSmooth(R[i],.35,true);
+  // the face opening: per row the half-angle φ cut out round θ = 0
+  const zEdge=y=>zf+over*gkSS(ey,ey+.1,y);
+  const radAt=(i,th)=>{const f=(th/(Math.PI*2))*N,j0=Math.floor(f)%N,j1=(j0+1)%N,u=f-Math.floor(f);return R[i][j0]*(1-u)+R[i][j1]*u};
+  const phi=ys.map((y,i)=>{if(y>=yJaw){let lo=0;for(let s=0;s<=200;s++){const th=s/200*Math.PI,r=radAt(i,th);if(cz[i]+Math.cos(th)*r<=zEdge(y)){lo=th;break}}
+      // rows wholly behind the edge stay closed
+      let any=false;for(let j=0;j<N;j++){const th=TH(j);if(cz[i]+Math.cos(th)*R[i][j]>zEdge(y)+.002)any=true}return any?lo:0}
+    return null});
+  {const q=phi.slice();for(let i=1;i<nr-1;i++)if(q[i]!=null&&q[i]>0&&q[i-1]!=null&&q[i+1]!=null)phi[i]=(q[i-1]+2*q[i]+q[i+1])/4}
+  // below the jaw: blend to the hem angle (open) or close the cowl in front of the throat at o.close
+  let ja=0,jy=yJaw;for(let i=nr-1;i>=0;i--)if(phi[i]!=null&&phi[i]>0){ja=phi[i];jy=ys[i]}
+  for(let i=0;i<nr;i++){if(phi[i]!=null&&ys[i]>=jy)continue;const y=ys[i];
+    if(o.open!=null){const t=gkSS(jy,yHem,y);phi[i]=ja+(o.open-ja)*t}else{const yc=o.close||yJaw-.07,t=gkSS(jy,yc,y);phi[i]=ja*(1-t)}}
+  // the grid: columns from the left edge round the back to the right edge
+  const G=[];for(let i=0;i<nr;i++){const row=[],p=phi[i]||0;for(let j=0;j<=N;j++){const th=p+(Math.PI*2-2*p)*j/N,r=radAt(i,(th+Math.PI*2)%(Math.PI*2)),x=Math.sin(th)*r,z=cz[i]+Math.cos(th)*r;let y=ys[i];
+      if(i==0){y=yHem+(yHemF-yHem)*Math.max(0,Math.cos(th));if(o.dag&&j%2==1)y-=o.dag[0]*(.7+.3*Math.abs(Math.sin(j*1.7)))}
+      row.push({x,y,z,w:gkHeadW(x,y,z,o.w),cz:cz[i]})}G.push(row)}
+  // the top: a soft peak a little up and back from the last row
+  {const L=G[G.length-1],pk=o.peak||{h:.03,back:.03},n=3;for(let s=1;s<=n;s++){const t=s/n,sc=1-t*.92,row=L.map(v=>{const x=v.x*sc,z=cz[nr-1]+(v.z-cz[nr-1])*sc-pk.back*t,y=v.y+pk.h*Math.sin(t*Math.PI/2);return {x,y,z,w:[['head',1]],cz:cz[nr-1]-pk.back*t}});G.push(row)}}
+  const pat=o.pat;
+  const opn=i=>i<nr&&(phi[i]||0)>.03&&(phi[Math.min(nr-1,i+1)]||0)>.03,seam=o.seam==null?mdSh(col,.8):o.seam;
+  gkSurf(B,G,{t:'c',col:m=>{const ed=Math.min(m.j,m.n-2-m.j);if(ed<1&&opn(m.i))return trim;if(m.i==0)return o.hemC!=null?o.hemC:mdSh(col,.82);
+    if(seam&&Math.abs(m.j-(m.n-2)/2)<.6&&m.i>nr*.35)return seam;return pat?pat(m,col):col}});
+  gkSurf(B,gkInset(G,null,.005),{t:'c',col:lin});
+  // rolled edge round the face opening
+  if(o.edge!==false){const E=[],I=[];for(let i=1;i<nr;i++)if((phi[i]||0)>.03)I.push(i);I.forEach(i=>E.push(G[i][0]));I.slice().reverse().forEach(i=>E.push(G[i][N]));
+    const pushOut=v=>{const dx=v.x,dz=v.z-v.cz,L=Math.hypot(dx,dz)||1;return {x:v.x+dx/L*.003,y:v.y,z:v.z+dz/L*.003,w:v.w}};
+    gkTube(k,E.map(pushOut),o.er||.006,o.er||.006,o.edge==null?mdSh(trim,1.1):o.edge,'c',5)}
+  // a hanging point down the back (liripipe)
+  if(o.tip){const T=o.tip,jb=Math.round(N/2),L=T.len||.16,r0=T.r||.03,P2=[];
+    // it lies on the hood down the middle of the back, then hangs free below
+    for(let i=G.length-2;i>=0;i--){const v=G[i][jb];if(v.y<(G[G.length-1][jb].y-L*.55))break;const dz=v.z-(v.cz!=null?v.cz:0),dx=v.x,Lh=Math.hypot(dx,dz)||1;P2.push({x:v.x+dx/Lh*r0*.8,y:v.y,z:v.z+dz/Lh*r0*.8,w:v.w})}
+    if(P2.length>1){const a=P2[P2.length-1];for(let s2=1;s2<=3;s2++)P2.push({x:a.x+(T.x||0)*s2*.3,y:a.y-L*.16*s2,z:a.z-.012*s2,w:a.w});
+      gkTubeS(B,P2,t=>r0*(1-t*.85),T.col||col,{t:'c',seg:7,cap:true})}}
+  mdKit(B,k);return {G,ys,cz,phi,N,nr,R}}
+// a point on the hood's outer surface: row nearest height y, column nearest angle θ (θ = 0 front, π back)
+function gkHoodAt(Hd,y,th){let i=0,b=9;Hd.ys.forEach((yy,ii)=>{const d=Math.abs(yy-y);if(d<b){b=d;i=ii}});const p=Hd.phi[i]||0,u=Math.max(0,Math.min(1,(th-p)/(Math.PI*2-2*p)));return Hd.G[i][Math.round(u*Hd.N)]}
+// ================= v136: gear kit — skirts, coats, collars, sleeves and trinkets =================
+// gkSkirt: a robe / coat / tabard skirt that hangs from the waist. Measured like the hood (legs, hips, armour below the
+//   waist; the tail left out), the cloth never narrows going down (it hangs, it doesn't wrap the legs), flares to the hem
+//   with soft pleats, and its hem can be longer at the back, dagged, open at the front (coats) or split at the back for a
+//   tail. Weights: hips + each thigh by side (looser than the v94 skirt, so it swings instead of sticking to the legs) and, at
+//   the back, the cape bones (cp1, cp2): running lifts the back of a robe or the tails of a coat behind the hero.
+// gkCollar: a standing collar round the neck, taller at the back. gkSleeve: a sleeve widening along the forearm into a bell,
+//   with a trailing point. Trinkets: skulls, books, vials, candles, chains, scrolls, bones, feathers, runes, spikes.
+// skirt angle convention: θ = 0 front, π/2 the hero's right (+x), π back
+function gkSkW(y0,lw){return (x,y)=>{const d=Math.max(0,Math.min(1,(y0-y)/Math.max(.05,y0-.32)))*.9*lw,l=Math.max(0,Math.min(1,.5-x/.16));return d<=0?[['pelvis',1]]:[['pelvis',1-d],['lh0',d*l],['rh0',d*(1-l)]]}}
+function gkSkirt(B,P,o){o=o||{};const D=BR.on?BR.R:null,N=o.N||36,y0=o.y0||.6,hem=typeof o.hem=='function'?o.hem:(()=>o.hem||.3),clr=o.clear==null?.016:o.clear,
+    fl=o.flare||0,lw=o.legW==null?.8:o.legW,nt=o.rows||10,TH=j=>j/N*Math.PI*2;
+  let ymin=y0;for(let j=0;j<N;j++)ymin=Math.min(ymin,hem(TH(j)));ymin-=o.dag?o.dag[0]:0;
+  const pts=gkPts(B,ymin-.02,y0+.03,(x,y,z)=>x*x+z*z<.45*.45&&!(D&&D.TP&&brTailNear(D,x,y,z))&&!(o.skip&&o.skip(x,y,z)),o.exB||/^(a[LR]|tl\d|cp\d)/);
+  const dy=.015,ys=[];for(let y=y0;y>=ymin-.001;y-=dy)ys.push(y);if(ys[ys.length-1]>ymin)ys.push(ymin);
+  const H=gkRows(pts,ys,dy*.7),q0=mdTorsoAt(P,y0),cz0=(q0.z||0)+(o.dz||0);
+  // radius per bin and column, never narrower than the bin above (the cloth hangs)
+  const RB=H.map(h=>{const r=[];for(let j=0;j<N;j++)r.push(gkHullR(h,0,cz0,TH(j)));return r});
+  for(let i=1;i<RB.length;i++)for(let j=0;j<N;j++)RB[i][j]=Math.max(RB[i][j],RB[i-1][j]);
+  // the top bin: at least the torso (+ what is already worn) at the waist
+  for(let j=0;j<N;j++){const th=TH(j),c=Math.cos(th),r0=Math.hypot(Math.sin(th)*(q0.rx+(P.tOff||0)),c*((c>0?q0.f:q0.b)+(P.tOff||0)));for(let i=0;i<RB.length;i++)RB[i][j]=Math.max(RB[i][j],r0)}
+  const rAt=(y,j)=>{const f=(y0-y)/dy,i=Math.max(0,Math.min(RB.length-1,Math.floor(f))),i2=Math.min(RB.length-1,i+1),u=Math.max(0,Math.min(1,f-i));return RB[i][j]*(1-u)+RB[i2][j]*u};
+  const fo=o.folds||[9,.01],flow=o.flow==null?.35:o.flow,ph=o.ph||.4,wf=gkSkW(y0,lw);
+  const G=[];for(let i=0;i<=nt;i++){const t=i/nt,row=[];for(let j=0;j<=N;j++){const jj=j%N,th=TH(j),c=Math.cos(th);let y=y0+(hem(th)-y0)*t;
+      if(i==nt&&o.dag&&j%2==1)y-=o.dag[0]*(.65+.35*Math.abs(Math.sin(j*2.3)));
+      const tt=Math.max(0,(y0-y)/(y0-ymin+1e-6)),r=rAt(Math.max(ymin,y),jj)+clr+fl*Math.pow(tt,1.35)*(1+(o.backF||0)*Math.max(0,-c))+fo[1]*tt*(.5+.5*Math.sin(th*fo[0]+ph))*(1+.6*Math.sin(th*3+1.1));
+      const x=Math.sin(th)*r,z=cz0+c*r;let w=wf(x,y);
+      // the back of the skirt follows the cape bones (running lifts it behind)
+      const fb=flow*gkSS(-.15,-.75,c)*Math.min(1,tt*1.3);if(fb>0){const cb=y>.47?'cp1':'cp2';w=w.map(q=>[q[0],q[1]*(1-fb)]);w.push([cb,fb])}
+      row.push({x,y,z,w,cz:cz0,th,t:i/nt})}G.push(row)}
+  P.sOff=Math.max(P.sOff||0,clr);
+  const op=o.open||0,sl=o.slit||0,slY=o.slitY==null?9:o.slitY;
+  const keep=m=>{const th=m.u*Math.PI*2;if(op&&(th<op||th>Math.PI*2-op))return false;if(sl&&Math.abs(th-Math.PI)<sl&&m.y<slY)return false;
+    if(D&&D.TP&&!o.noTail&&brTailNear(D,m.x,m.y,m.z))return false;return !o.keep||o.keep(m)};
+  gkSurf(B,G,{t:o.t||'c',col:o.col,keep});
+  if(o.lin!=null)gkSurf(B,gkInset(G,G.map(()=>cz0),.004),{t:'c',col:o.lin,keep});
+  return {G,N,nt,cz:cz0,at:(t,th)=>{const j=Math.round(((th%(Math.PI*2))+Math.PI*2)%(Math.PI*2)/(Math.PI*2)*N),i=Math.round(t*nt);return G[Math.max(0,Math.min(nt,i))][j]}}}
+// a standing collar from y0 up to h(θ) (θ = 0 front), open at the front over |θ| < open; flares by fl at the top
+function gkCollar(B,P,o){o=o||{};const N=o.N||28,y0=o.y0||.94,h=typeof o.h=='function'?o.h:(()=>o.h||1.06),clr=o.clear==null?.012:o.clear,fl=o.flare==null?.03:o.flare,TH=j=>j/N*Math.PI*2,nt=o.rows||5;
+  let ymax=y0;for(let j=0;j<N;j++)ymax=Math.max(ymax,h(TH(j)));
+  const ez=BR.on&&BR.R?BR.R.EYEP[2]-.03:.05,pts=gkPts(B,y0-.01,ymax+.02,(x,y,z)=>x*x+z*z<.3*.3&&(y<1.06||z<ez));
+  const dy=.014,ys=[];for(let y=y0;y<=ymax+.001;y+=dy)ys.push(y);const H=gkRows(pts,ys,dy*.75);
+  const RB=H.map(hh=>{const r=[];for(let j=0;j<N;j++)r.push(gkHullR(hh,0,0,TH(j)));return r});
+  for(let i=RB.length-2;i>=0;i--)for(let j=0;j<N;j++)RB[i][j]=Math.max(RB[i][j],RB[i+1][j]*.92);
+  const rAt=(y,j)=>{const f=(y-y0)/dy,i=Math.max(0,Math.min(RB.length-1,Math.round(f)));return RB[i][j]};
+  const G=[];for(let i=0;i<=nt;i++){const t=i/nt,row=[];for(let j=0;j<=N;j++){const th=TH(j),jj=j%N,y=y0+(h(th)-y0)*t,r=rAt(y,jj)+clr+fl*t*t+(o.wave?o.wave*t*Math.max(0,Math.sin(th*(o.wn||6))):0);
+      const x=Math.sin(th)*r,z=Math.cos(th)*r;row.push({x,y,z,w:y>1.0?mdWb('chest','neck',Math.min(.5,(y-1.0)/.12)):[['chest',1]],cz:0})}G.push(row)}
+  const op=o.open||0,keep=m=>{const th=m.u*Math.PI*2;return !(op&&(th<op||th>Math.PI*2-op))};
+  gkSurf(B,G,{t:o.t||'c',col:o.col,keep});gkSurf(B,gkInset(G,G.map(()=>0),.004),{t:o.t||'c',col:o.lin==null?mdSh(typeof o.col=='function'?0x444444:o.col,.6):o.lin,keep});
+  return {G,N,nt}}
+// a sleeve along arm s from ring position u0 to the wrist (uw), then on past it along the forearm by ext metres, plus trail
+// metres on the side θ = ta round the arm (0 = front, π = back): a bell (extra radius bl at the end) with a trailing point;
+// off (base offset), folds, dag (metres cut off every other column at the end); weights: the arm rings, the end the forearm
+function gkSleeve(B,P,s,o){o=o||{};const R=mdArm(P,s),N=o.N||16,u0=o.u0==null?2.6:o.u0,uw=o.uw==null?5.3:o.uw,bl=o.bell||0,tr=o.trail||0,ta=o.ta==null?Math.PI:o.ta,ex=o.ext==null?.015:o.ext,
+    off=o.off==null?.012:o.off,nA=o.rowsA||5,nB=o.rowsB||4,V=THREE.Vector3;
+  const frame=u=>{const r=mdRAt(R,u),ra=mdRAt(R,Math.max(0,u-.25)),rb=mdRAt(R,u+.25),tg=new V(rb.p[0]-ra.p[0],rb.p[1]-ra.p[1],rb.p[2]-ra.p[2]).normalize(),ref=new V(0,0,1);
+    ref.sub(tg.clone().multiplyScalar(ref.dot(tg))).normalize();return {r,c:new V(...r.p),tg,ref,sd:new V().crossVectors(tg,ref)}};
+  const Fw=frame(uw),wEnd=mdRAt(R,Math.min(uw,5.15)).w,base=u=>{const r=mdRAt(R,u);return Math.max(r.rx,r.f,r.b,o.minR||0)+off},rw=base(uw);
+  const A0=new V(...mdRAt(R,u0).p),Lw=A0.distanceTo(Fw.c),end=th=>ex+tr*Math.pow(Math.max(0,Math.cos(th-ta)),2);
+  const G=[];for(let i=0;i<=nA+nB;i++){const row=[];for(let j=0;j<=N;j++){const th=j/N*Math.PI*2,c=Math.cos(th),sn=Math.sin(th)*s;let F,cp,rad,w,prog;
+      if(i<=nA){const u=u0+(uw-u0)*i/nA;F=frame(u);cp=F.c;w=F.r.w;prog=A0.distanceTo(cp)/(Lw+end(th))}
+      else{let e=end(th)*(i-nA)/nB;if(i==nA+nB&&o.dag&&j%2==1)e=Math.max(0,e-o.dag);F=Fw;cp=Fw.c.clone().add(Fw.tg.clone().multiplyScalar(e));w=wEnd;prog=(Lw+e)/(Lw+end(th))}
+      rad=(i<=nA?base(u0+(uw-u0)*i/nA):rw)+bl*Math.pow(Math.min(1,prog),1.7)+(o.folds||0)*prog*(.5+.5*Math.sin(th*5+i*.7));
+      const p=cp.clone().add(F.ref.clone().multiplyScalar(c*rad)).add(F.sd.clone().multiplyScalar(sn*rad));row.push({x:p.x,y:p.y,z:p.z,w,c:cp})}G.push(row)}
+  gkSurf(B,G,{t:o.t||'c',col:o.col});
+  if(o.lin!=null)gkSurf(B,G.map(row=>row.map(v=>{const d=new V(v.x,v.y,v.z).sub(v.c),L=d.length()||1;d.multiplyScalar(Math.max(0,L-.004)/L).add(v.c);return {x:d.x,y:d.y,z:d.z,w:v.w}})),{t:'c',col:o.lin});
+  return G}
+// ---------------- trinkets (dkKit parts; w = blended weights for the part, or null for the bone alone) ----------------
+function gkW(k,w){if(w)mdOW(k,w);return k}
+// a small skull facing +z turned ry: cranium, cheekbones, dark sockets, nose hole, jaw with teeth
+function gkSkull(k,bn,x,y,z,s,col,ry,w,t){const c=col||0xd8ccb0,dk=0x14100c,R=(dx,dy,dz)=>{const a=ry||0;return [x+dx*Math.cos(a)+dz*Math.sin(a),y+dy,z-dx*Math.sin(a)+dz*Math.cos(a)]},T=t||'c';
+  let p=R(0,.012*s,0);gkW(k.p(bn,'sph2',T,c,p[0],p[1],p[2],.032*s,.03*s,.034*s,0,ry||0,0),w);
+  p=R(0,-.012*s,.014*s);gkW(k.p(bn,'box',T,mdSh(c,.92),p[0],p[1],p[2],.04*s,.022*s,.026*s,0,ry||0,0),w);
+  [-1,1].forEach(q=>{p=R(q*.012*s,.002*s,.03*s);gkW(k.p(bn,'oct','c',dk,p[0],p[1],p[2],.008*s,.009*s,.004*s,0,ry||0,0),w)});
+  p=R(0,-.012*s,.04*s);gkW(k.p(bn,'cone4','c',dk,p[0],p[1],p[2],.004*s,.008*s,.003*s,Math.PI,ry||0,0),w);
+  p=R(0,-.03*s,.008*s);gkW(k.p(bn,'box',T,mdSh(c,.85),p[0],p[1],p[2],.03*s,.01*s,.022*s,0,ry||0,0),w);
+  for(let i=0;i<4;i++){p=R((-.009+i*.006)*s,-.024*s,.03*s);gkW(k.p(bn,'box',T,mdSh(c,1.05),p[0],p[1],p[2],.0035*s,.006*s,.003*s,0,ry||0,0),w)}return k}
+// a book (cover, pages, metal corners and clasp) standing upright, spine toward -x when ry = 0
+function gkBook(k,bn,x,y,z,s,col,T,ry,w,rz){const a=ry||0,b=rz||0;gkW(k.p(bn,'box','c',col,x,y,z,.05*s,.07*s,.022*s,0,a,b),w);
+  gkW(k.p(bn,'box','c',0xd8ccb0,x+.002*Math.cos(a),y,z-.002*Math.sin(a),.046*s,.064*s,.024*s,0,a,b),w);
+  gkW(k.p(bn,'box','m',T,x,y,z+.0125*s*Math.cos(a),.012*s,.012*s,.004,0,a,b),w);
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([q,r])=>gkW(k.p(bn,'box','m',T,x+q*.022*s*Math.cos(a)+.0115*s*Math.sin(a),y+r*.032*s,z-q*.022*s*Math.sin(a)+.0115*s*Math.cos(a),.008*s,.008*s,.003,0,a,b),w));return k}
+// a corked vial of glowing liquid
+function gkVial(k,bn,x,y,z,s,glow,T,w){gkW(k.p(bn,'cyl','g',glow,x,y,z,.011*s,.03*s,.011*s),w);gkW(k.p(bn,'sph','g',glow,x,y-.016*s,z,.014*s,.012*s,.014*s),w);
+  gkW(k.p(bn,'cyl','c',0x8a6a40,x,y+.02*s,z,.006*s,.012*s,.006*s),w);gkW(k.p(bn,'cyl','m',T,x,y+.013*s,z,.009*s,.004*s,.009*s),w);return k}
+// a candle stub with wax drips and a flame
+function gkCandle(k,bn,x,y,z,s,w,fl){gkW(k.p(bn,'cyl','c',0xe8e0c8,x,y,z,.01*s,.035*s,.01*s),w);for(let i=0;i<3;i++){const a=i*2.1;gkW(k.p(bn,'box','c',0xf0e8d4,x+Math.sin(a)*.009*s,y-.006*s-i*.004*s,z+Math.cos(a)*.009*s,.004*s,.016*s,.004*s),w)}
+  gkW(k.p(bn,'cyl','c',0x1a1410,x,y+.02*s,z,.0015,.006*s,.0015),w);gkW(k.p(bn,'cone4','g',fl||0xffb040,x,y+.03*s,z,.005*s,.016*s,.005*s),w);return k}
+// chain of links along points (each point [x,y,z]); wf(i) → weights or null
+function gkChain(k,bn,pts,r,col,wf){let n=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]),m=Math.max(1,Math.round(L/(r*2.6)));
+    for(let j=0;j<m;j++){const t=(j+.5)/m,p=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],ry=Math.atan2(b[0]-a[0],b[2]-a[2]),rx=Math.atan2(-(b[1]-a[1]),Math.hypot(b[0]-a[0],b[2]-a[2]));
+      k.p(bn,'ring','m',col,p[0],p[1],p[2],r,r*1.6,r,rx+Math.PI/2,ry,(n++%2)*Math.PI/2);if(wf)gkW(k,wf(p))}}return k}
+// a rolled scroll with end caps (horizontal along x when ry = 0)
+function gkScroll(k,bn,x,y,z,s,T,ry,w){gkW(k.p(bn,'cyl','c',0xe0d4b4,x,y,z,.012*s,.07*s,.012*s,0,ry||0,Math.PI/2),w);[-1,1].forEach(q=>gkW(k.p(bn,'cyl','m',T,x+q*.037*s*Math.cos(ry||0),y,z-q*.037*s*Math.sin(ry||0),.015*s,.006*s,.015*s,0,ry||0,Math.PI/2),w));
+  gkW(k.p(bn,'box','c',0x8a1a1a,x,y,z+.012*s,.008*s,.024*s,.003),w);return k}
+// a bone (shaft + knobs) between two points
+function gkBone(k,bn,a,b,r,col,w){const c=col||0xd8ccb0;k.L(bn,'c',c,a,b,r,r*.8,5);gkW(k,w);[a,b].forEach(p=>{gkW(k.p(bn,'sph','c',mdSh(c,1.05),p[0],p[1],p[2],r*1.6,r*1.4,r*1.6),w)});return k}
+// a feather from base along dir (flat, vane colour col, a darker shaft)
+function gkFeather(k,bn,base,dir,len,wd,col,w){const V=THREE.Vector3,d=new V(...dir).normalize(),tip=[base[0]+d.x*len,base[1]+d.y*len,base[2]+d.z*len],mid=[(base[0]+tip[0])/2,(base[1]+tip[1])/2,(base[2]+tip[2])/2];
+  const q=new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),d),e=new THREE.Euler().setFromQuaternion(q);gkW(k.p(bn,'oct','c',col,mid[0],mid[1],mid[2],wd,len*.5,.002,e.x,e.y,e.z),w);
+  gkW(k.L(bn,'c',mdSh(col,.6),base,tip,.0025,.001,3),w);return k}
+// a spike from base along dir
+function gkSpike(k,bn,base,dir,len,r,col,t,w){const tip=[base[0]+dir[0]*len,base[1]+dir[1]*len,base[2]+dir[2]*len];gkW(k.L(bn,t||'m',col,base,tip,r,r*.08,5),w);return k}
+// glowing rune marks in a strip (each a small bar or chevron)
+function gkRunes(k,bn,pts,col,w,sz){pts.forEach((p,i)=>{const s=sz||1,v=i%3;if(v==0)gkW(k.p(bn,'box','g',col,p[0],p[1],p[2],.004*s,.018*s,.003,0,p[3]||0,0),w);
+  else if(v==1){gkW(k.p(bn,'box','g',col,p[0]-.003*s,p[1],p[2],.003*s,.014*s,.003,0,p[3]||0,.5),w);gkW(k.p(bn,'box','g',col,p[0]+.003*s,p[1],p[2],.003*s,.014*s,.003,0,p[3]||0,-.5),w)}
+  else gkW(k.p(bn,'oct','g',col,p[0],p[1],p[2],.006*s,.009*s,.003,0,p[3]||0,0),w)});return k}
+// a point on the torso surface with its weights and the angle (for kit parts): {p, w, a}
+function gkTP(P,y,a,off){return {p:mdTP(P,y,a,(P.tOff||0)+(off||0)),w:mdTorsoW(y),a}}
+// ================= v136: hoods and cowls hung as cloth (every race) =================
+// Every hood-style head piece (Ranger: hood, pelt, cowl, skullhood, wind, deadeye · Assassin: ashcowl, stormhood, dusk ·
+// Mage: linen, tallcowl, star) is now a gkHood: measured round the head, ears, neck, collar and shoulder armour that are
+// already built, hanging from the crown, open round the face, gathered in folds at the neck and spread into a mantle.
+// The pieces that sit on the hood (masks, skulls, bands, charms) are built by the style itself (GK_HOOD[st].pre runs at once,
+// before the hood is measured; .post gets the built hood).
+var GK_HOOD={},GK_HELM={};
+{const f=brHelm;brHelm=function(B,P,d){const S=d&&(GK_HOOD[d.st]||GK_HELM[d.st]);if(!S||!BR.R||(S.race&&S.race!=BR.R.key))return f.apply(this,arguments);const D=BR.R,k=dkKit();
+  const X={B,P,d,k,D,st:d.st,M:d.M,A:d.A,G:d.G,T:d.T==null?MD_TRIM[d.ti|0]:d.T,lv:d.lv|0,ti:d.ti|0,r:d.r|0,cls:BR.R.cls};
+  if(S.pre)S.pre(X);mdKit(B,k);if(!S.hood)return;P.gkHoodOn=1;
+  gkLater(B,B2=>{const k2=dkKit(),X2=Object.assign({},X,{B:B2,k:k2});const Hd=gkHood(B2,P,S.hood(X2));if(S.post)S.post(X2,Hd);mdKit(B2,k2)})}}
+// shared looks
+function gkHoodBase(X,o){const D=X.D,raven=D.key=='raven',cat=D.key=='cat';return Object.assign({col:X.M,lin:mdSh(X.M,.42),trim:mdSh(X.M,.72),
+  yHem:raven?.86:.89,yHemF:raven?.93:.955,clear:.018,loose:.035,folds:[7,.014],open:raven?.42:null,close:raven?null:D.EYEP[1]-.16,over:.035,
+  dag:[.035],tip:{len:.15,r:.036}},o||{})}
+GK_HOOD.hood={hood:X=>gkHoodBase(X)};
+GK_HOOD.ashcowl={hood:X=>gkHoodBase(X,{dag:[.05],tip:false})};
+GK_HOOD.linen={hood:X=>gkHoodBase(X)};
+// ---------------- the Ranger's hoods (the weasel) ----------------
+GK_HOOD.hood={hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.38),trim:mdSh(X.M,.7),dag:[.04],tip:false,loose:.025})};
+// a wolf-pelt hood: the wolf's ears on the crown, its upper jaw over the brow, the forepaws hanging down the chest
+GK_HOOD.pelt={hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.35),trim:mdSh(X.M,.85),dag:[.06],tip:false,loose:.025,folds:[9,.018],
+    pat:(m,c)=>Math.floor(m.i*1.3+m.j*.7)%3==0?mdSh(c,1.15):Math.floor(m.i+m.j*1.7)%4==0?mdSh(c,.82):c}),
+  post:(X,Hd)=>{const {k,M}=X,fur=M,dkf=mdSh(M,.7),top=Hd.G[Hd.nr-1],fr=gkHoodAt(Hd,Hd.ys[Hd.nr-1]-.02,.0001)||top[0];
+    [-1,1].forEach(s=>{const v=gkHoodAt(Hd,Hd.ys[Math.round(Hd.nr*.85)],Math.PI*(s<0?1.62:.38));if(!v)return;k.p('head','cone4','c',fur,v.x,v.y+.035,v.z,.026,.07,.018,-.2,0,-s*.25);k.p('head','cone4','c',0x2a1a14,v.x-s*.002,v.y+.03,v.z+.008,.014,.045,.006,-.2,0,-s*.25)});
+    // the wolf's muzzle lying over the brow, teeth along its edge
+    const b=Hd.G[Math.min(Hd.nr-1,Math.round(Hd.nr*.86))],L=b[0],R2=b[b.length-1],cx=(L.x+R2.x)/2,cy=Math.max(L.y,R2.y)+.01,cz=Math.max(L.z,R2.z)+.004;
+    k.p('head','box','c',fur,cx,cy,cz+.025,.04,.026,.07,.15);k.p('head','cone4','c',dkf,cx,cy-.002,cz+.065,.03,.03,.022,Math.PI/2+.15,Math.PI/4,0);k.p('head','sph','c',0x14100c,cx,cy+.004,cz+.075,.01,.008,.008);
+    for(let i=0;i<5;i++)k.p('head','cone4','c',0xe8e0d0,cx-.024+i*.012,cy-.016,cz+.03+Math.abs(i-2)*-.004,.004,.012,.004,Math.PI);
+    [-1,1].forEach(s=>{const v=gkHoodAt(Hd,.93,s<0?Math.PI*1.86:Math.PI*.14);if(!v)return;k.L('chest','c',fur,[v.x,v.y,v.z+.005],[v.x*.8,v.y-.14,v.z+.03],.022,.016,5);mdOW(k,v.w);
+      for(let i=0;i<3;i++){k.p('chest','cone4','c',0x1a1410,v.x*.8+(i-1)*.01,v.y-.155,v.z+.035,.003,.016,.003,Math.PI);mdOW(k,v.w)}})}};
+GK_HOOD.cowl={pre:X=>asMask(X,{col:X.A,tails:false}),hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.36),trim:mdSh(X.M,.7),dag:[.04],tip:false,loose:.025})};
+// a skull hood: a horned beast's skull worn over the hood's crown
+GK_HOOD.skullhood={hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.32),trim:mdSh(X.M,.6),dag:[.06],tip:false,loose:.03}),
+  post:(X,Hd)=>{const {k}=X,bone=0xd8ccb0,i=Math.round(Hd.nr*.88),f=Hd.G[i][0],g=Hd.G[i][Hd.N],cx=(f.x+g.x)/2,top=Hd.G[Hd.G.length-2][Math.round(Hd.N/2)],cy=Math.max(f.y,top.y)+.012,cz=(f.z+g.z)/2-.03;
+    k.p('head','sph2','c',bone,cx,cy,cz,.06,.035,.075);k.p('head','box','c',mdSh(bone,.92),cx,cy-.005,cz+.075,.03,.022,.05,.25);[-1,1].forEach(s=>{k.p('head','oct','c',0x14100c,cx+s*.026,cy-.004,cz+.05,.012,.01,.008);
+      k.L('head','c',bone,[cx+s*.04,cy+.02,cz-.01],[cx+s*.1,cy+.07,cz-.05],.016,.009,6).L('head','c',mdSh(bone,.9),[cx+s*.1,cy+.07,cz-.05],[cx+s*.12,cy+.03,cz-.11],.009,.002,6)});
+    for(let q=0;q<4;q++)k.p('head','box','c',0xe8e0d0,cx-.018+q*.012,cy-.022,cz+.11,.004,.01,.004)}};
+GK_HOOD.wind={pre:X=>asMask(X,{col:mdSh(X.A,.9),tails:false}),hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.36),trim:X.A,dag:[.05],tip:false,loose:.025}),
+  post:(X,Hd)=>{const {k,A}=X;[-1,1].forEach(s=>{for(let j=0;j<4;j++){const v=gkHoodAt(Hd,Hd.ys[Math.round(Hd.nr*.7)]-j*.02,Math.PI*(s<0?1.3:.7));if(!v)continue;gkFeather(k,'head',[v.x,v.y,v.z],[s*.7,.5-j*.15,-.6],.12-j*.015,.016,j%2?A:0xe8e8f0,v.w)}})}};
+GK_HOOD.deadeye={pre:X=>{asMask(X,{col:mdSh(X.M,.6),tails:false});const {k,D,G,A}=X,V=THREE.Vector3,er=D.eyeR||.021,[x,y,z]=D.EYEP,at=zz=>brSkullAt(D,zz),ry=Math.atan2(1,-at(z).slope)*(D.eyeFw==null?1:D.eyeFw),dv=new V(Math.sin(ry),0,Math.cos(ry)),
+    c=new V(brSurfX(D,z,y)-.004-(D.eyeIns||0),y,z).add(dv.clone().multiplyScalar(er*1.05+.004)),e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),dv));
+    k.p('head','ring','m',X.T,c.x,c.y,c.z,er*1.25,.05,er*1.25,e.x,e.y,e.z);k.p('head','cyl',G?'g':'c',G||0x3a1a14,c.x,c.y,c.z,er*1.1,.002,er*1.1,e.x,e.y,e.z);
+    gkChain(k,'head',[[c.x,c.y-er,c.z],[c.x-.01,c.y-.06,c.z-.04]],.004,X.T,null)},
+  hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.34),trim:mdSh(X.M,.65),dag:[.04],tip:false,loose:.025})};
+// the quiver rides on the back over a hood's mantle: built after the hood, pushed out past it
+{const f=mdQuiver;mdQuiver=function(B,P){if(!(GKX.late&&GKX.late.B===B&&P.gkHoodOn))return f.apply(this,arguments);
+  gkLater(B,B2=>{let bk=0;gkPts(B2,.82,1.02,(x,y,z)=>Math.abs(x)<.12&&z<0).forEach((v,i,a)=>{if(i%3==2)bk=Math.max(bk,-v)});
+    const o=P.tOff;P.tOff=Math.max(o||0,bk-mdTorsoAt(P,.85).b-.035);try{f.call(this,B2,P)}finally{P.tOff=o}})}}
+// ================= v136: the Assassin's gear, redesigned (the cat) =================
+// The v95 light armour was a tight shirt with a sash. Every Assassin piece is now built for a hunter of the dark:
+//  * chest: a fitted jerkin (quilted, scaled or wrapped), an asymmetric shoulder (layered leather lames, a black-iron plate,
+//    spikes or nightglass shards) or a half-cape thrown over one shoulder, a harness of straps with throwing knives, a slung
+//    hip belt with pouches, vials and sheathed knives, bracers with a hidden blade, and below the belt either torn front and
+//    back flaps or long coat tails split for the tail (gkSkirt: they swing with the legs and lift behind when running);
+//  * the sets keep their signature: an oxblood sash with trailing tails and trophies (Cutthroat), a vial bandolier and a
+//    serpent coiled round the arm (Venomweave), a long scarf streaming behind and silver crescents (Duskdancer);
+//  * masks over the muzzle (stitched, buckled, scaled, a respirator), goggles of nightglass, a bandana knotted over the crown,
+//    and hoods (gkHood) that settle over the ears;
+//  * footwraps: the shank and the arch wrapped and strapped, toes and claws left free for silent feet.
+// palette: d.M leather, d.A accent, d.T trim metal; dark iron for blades and plates
+var AS_IRON=0x3a3c42,AS_STEEL=0xb8bec8,AS_LEA=0x2a1e18;
+var AS_ST={
+  wraps:   {jer:'wrap',  lower:'flaps', flapL:.36, sh:'none',   harness:1, belts:1, bracer:'wrap', scarf:1},
+  scale:   {jer:'scale', lower:'flaps', flapL:.33, sh:'scaleR', harness:1, belts:1, bracer:'lea',  fangs:1},
+  garb:    {jer:'quilt', lower:'flaps', flapL:.28, sh:'capeL',  harness:2, belts:2, bracer:'blade',pad:'R'},
+  shroud:  {jer:'quilt', lower:'coat',  coatL:.3,  sh:'shards', harness:1, belts:1, bracer:'blade',collar:1},
+  raiment: {jer:'quilt', lower:'coat',  coatL:.24, sh:'layerL', harness:2, belts:2, bracer:'blade2',collar:1,glow:1},
+  cutthroat:{jer:'quilt',lower:'flaps', flapL:.3,  sh:'capeR',  harness:3, belts:2, bracer:'blade',sash:1,trophy:1},
+  venom:   {jer:'scale', lower:'flaps', flapL:.3,  sh:'fangL',  harness:'vials',belts:1,bracer:'lea',serpent:1},
+  scarf:   {jer:'quilt', lower:'coat',  coatL:.32, sh:'none',   harness:1, belts:1, bracer:'blade',longScarf:1,moons:1}};
+function asAng(m){return Math.atan2(m.x,m.z)}
+mdChL=function(X){const {B,P,d,k}=X,st=AS_ST[d.st]?d.st:'wraps',S=AS_ST[st],M=d.M,A=d.A,T=d.T,G=d.G,lv=d.lv|0;
+  const off=()=>(P.tOff||0),dk=mdSh(M,.6),lt=mdSh(M,1.25),acc=st=='cutthroat'?0x6a1218:st=='venom'?0x4a8a32:st=='scarf'?0x5a4a8a:A,glow=G||(st=='venom'?0x7ae040:null);
+  const tw=y=>mdTorsoW(y),cf=y=>mdTorsoAt(P,y).f;
+  // ---- the jerkin ----
+  const jc=m=>{const a=asAng(m),fr=m.s>0&&Math.abs(m.c)<.06;if(fr&&m.y>.62)return dk;           // the front seam / lacing line
+    if(S.jer=='quilt'){const q=(Math.floor(m.y*24+a*3)+Math.floor(m.y*24-a*3))%2;return q?M:mdSh(M,.9)}
+    if(S.jer=='scale'){const q=(Math.round(m.y*40)+Math.round((a+4)*7))%2;return q?M:mdSh(M,.82)}
+    return Math.floor(m.y*26+a*1.2)%2?M:mdSh(M,.8)};                                               // diagonal bandages
+  mdTS(B,P,.5,.995,.01,{col:jc,lipT:.004});
+  // the lacing up the front
+  for(let i=0;i<6;i++){const y=.66+i*.05,z=cf(y)+off()+.004;[-1,1].forEach(s=>{k.L('chest','c',AS_LEA,[s*.018,y,z],[-s*.018,y+.026,z],.0025,.0025,3);mdOW(k,tw(y))})}
+  // collar: a low leather collar, or a high one (Nightglass, Stormshade)
+  if(S.collar)gkCollar(B,P,{y0:.94,h:th=>1.005+.06*Math.pow(Math.max(0,-Math.cos(th)*.5+.5),1.3),open:.5,flare:.025,clear:.01,col:m=>m.v>.7?(lv>=3?T:dk):M,lin:mdSh(M,.4)});
+  else if(!S.scarf&&!S.longScarf)mdTS(B,P,.95,1.0,off()+.012,{col:dk,lipT:.004});
+  // ---- arms ----
+  [-1,1].forEach(s=>{const R=mdArm(P,s),a1=s<0?'aL1':'aR1';mdAS(B,P,s,0,3,.01,{col:m=>Math.round(m.y*40)%2?M:mdSh(M,.9)});
+    if(S.bracer=='wrap'){mdAS(B,P,s,3,5,.012,{col:m=>Math.floor(m.y*44+m.c*1.5)%2?mdSh(M,.75):mdSh(M,.55)});mdLB(B,R,5.05,.006,.02,AS_LEA,{t:'c'})}
+    else{mdAS(B,P,s,4,5,.012,{col:m=>m.s>.3?mdSh(AS_LEA,1.3):AS_LEA});mdLB(B,R,4.1,.005,.018,mdSh(AS_LEA,1.6),{t:'c'});mdLB(B,R,4.95,.005,.018,mdSh(AS_LEA,1.6),{t:'c'});
+      // three straps with buckles across the bracer, a black-iron plate on top
+      for(let i=0;i<3;i++){const r=mdRAt(R,4.2+i*.26);k.p(a1,'box','m',T,r.p[0]+s*(r.rx+.015),r.p[1],r.p[2]+.006,.004,.01,.009);mdOW(k,r.w)}
+      const r=mdRAt(R,4.5);k.p(a1,'box','m',AS_IRON,r.p[0],r.p[1],r.p[2]+r.f+.016,.026,.075,.006);mdOW(k,r.w);if(lv>=2){k.p(a1,'oct','m',T,r.p[0],r.p[1]+.03,r.p[2]+r.f+.026,.008);mdOW(k,r.w)}
+      // hidden blade along the outside of the forearm, point toward the elbow
+      if(S.bracer=='blade2'||(S.bracer=='blade'&&s>0)){const r0=mdRAt(R,4.9),r1=mdRAt(R,3.6),x0=r0.p[0]+s*(r0.rx+.026),x1=r1.p[0]+s*(r1.rx+.03);
+        k.L(a1,'m',AS_STEEL,[x0,r0.p[1],r0.p[2]-.004],[x1,r1.p[1]+.02,r1.p[2]-.01],.008,.001,4);mdOW(k,r0.w);k.p(a1,'box','m',AS_IRON,x0,r0.p[1]-.008,r0.p[2]-.004,.01,.02,.016);mdOW(k,r0.w);
+        if(glow&&lv>=3){k.L(a1,'g',glow,[x0,r0.p[1]+.01,r0.p[2]-.004],[x1,r1.p[1]+.03,r1.p[2]-.01],.002,.001,3);mdOW(k,r0.w)}}}});
+  // ---- below the belt: torn flaps or coat tails ----
+  const H=mdTorsoAt(P,.6);
+  if(S.lower=='flaps'){const L=S.flapL,hem=th=>{const c=Math.cos(th);return c>0?L+.06*(1-c):L-.02+.04*(1+c)};
+    gkSkirt(B,P,{y0:.585,hem,flare:.035,clear:.02,folds:[7,.01],dag:[.045],flow:.45,lin:mdSh(M,.35),N:36,
+      keep:m=>{const th=m.u*Math.PI*2,c=Math.cos(th);return c>.8||c<-.78},col:m=>m.v>.82?(st=='cutthroat'?acc:dk):Math.floor(m.v*5+m.u*30)%7==0?mdSh(M,.75):mdSh(M,.92)});
+    // side tassets of hardened leather over the hips
+    [-1,1].forEach(s=>{const R=mdLeg(P,s),rr=[mdRAt(R,.45),mdRAt(R,1.25)];mdLoft(B,rr,{seg:8,off:.03,t:'c',col:m=>m.i>.6?dk:mdSh(AS_LEA,1.4),keep:m=>m.s>-.1});
+      const r=rr[0];k.p(s<0?'lh0':'rh0','oct','m',T,r.p[0]+s*(r.rx+.034),r.p[1]-.01,r.p[2],.008);mdOW(k,r.w)})}
+  else{const L=S.coatL;
+    gkSkirt(B,P,{y0:.6,hem:th=>L+.05*Math.max(0,Math.cos(th))-.03*Math.max(0,-Math.cos(th)),flare:.05,clear:.024,folds:[8,.012],dag:st=='shroud'?[.05]:[.025],flow:.6,backF:.3,
+      open:.36,slit:.2,lin:mdSh(M,.32),N:40,col:m=>{const th=m.u*Math.PI*2,e=Math.min(Math.abs(th-.36),Math.abs(Math.PI*2-.36-th),Math.abs(Math.abs(th-Math.PI)-.2));
+        if(e<.17)return mdSh(M,.55);if(m.v>.86)return dk;return M}})}
+  // ---- belts ----
+  const belt=(y,tilt,c,studs)=>{const pts=mdTLoop(B,P,y,tilt,Math.PI*.5,off()+.012,.034,c,{n:22});
+    for(let i=0;i<studs;i++){const q=pts[Math.round(2+i*(18/studs))];k.p('pelvis','oct','m',T,q.p[0]+q.n[0]*.006,q.p[1],q.p[2]+q.n[2]*.006,.006);mdOW(k,q.w)}return pts};
+  belt(.6,0,AS_LEA,lv>=1?8:0);mdBuckle(k,'spine',0,.6,cf(.6)+off()+.03,1,T,AS_LEA,tw(.6));
+  if(S.belts>=2){const p2=belt(.55,.035,mdSh(AS_LEA,1.3),0);const q=p2[5];mdBuckle(k,'pelvis',q.p[0]+q.n[0]*.01,q.p[1],q.p[2]+q.n[2]*.01,.9,T,AS_LEA,q.w,Math.atan2(q.n[0],q.n[2]))}
+  mdPouch(k,P,-1.1,.56,mdSh(AS_LEA,1.3),T,1);mdPouch(k,P,1.55,.56,mdSh(AS_LEA,1.1),T,.85);mdKnife(k,P,1.05,.56,AS_LEA,AS_STEEL,.3);if(lv>=2)mdKnife(k,P,-1.5,.56,AS_LEA,AS_STEEL,-.3);
+  if(lv>=1){const p=mdTP(P,.57,-.75,off()+.035);gkVial(k,'pelvis',p[0],p[1],p[2],1,glow||0x8a2020,T,null);const p2=mdTP(P,.57,-.55,off()+.035);gkVial(k,'pelvis',p2[0],p2[1],p2[2],.85,glow||0x6a6a9a,T,null)}
+  // ---- harness of straps with throwing knives ----
+  const knifeOn=(q,c)=>{const a=Math.atan2(q.n[0],q.n[2]);k.p('chest','box','c',AS_LEA,q.p[0]+q.n[0]*.008,q.p[1],q.p[2]+q.n[2]*.008,.016,.03,.008,0,a,0);mdOW(k,q.w);
+    k.p('chest','box','m',c||AS_STEEL,q.p[0]+q.n[0]*.012,q.p[1]+.03,q.p[2]+q.n[2]*.012,.008,.03,.003,0,a,0);mdOW(k,q.w);k.p('chest','cone4','m',c||AS_STEEL,q.p[0]+q.n[0]*.012,q.p[1]+.052,q.p[2]+q.n[2]*.012,.006,.014,.002,0,a+Math.PI/4,0);mdOW(k,q.w)};
+  if(S.harness=='vials'){const p1=mdTLoop(B,P,.78,.2,Math.PI/2,off()+.01,.034,AS_LEA);[1,2,3,4,5].forEach(i=>{const q=p1[i];gkVial(k,'chest',q.p[0]+q.n[0]*.018,q.p[1],q.p[2]+q.n[2]*.018,1.1,glow,T,q.w)})}
+  else if(S.harness){const p1=mdTLoop(B,P,.78,.2,Math.PI/2,off()+.01,.032,AS_LEA);mdBuckle(k,'chest',...mdTP(P,.86,.6,off()+.02),.8,T,AS_LEA,tw(.86),.6);
+    if(S.harness>=2){const p2=mdTLoop(B,P,.78,.2,-Math.PI/2,off()+.014,.032,AS_LEA);mdBuckle(k,'chest',...mdTP(P,.86,-.6,off()+.024),.8,T,AS_LEA,tw(.86),-.6);[17,18].forEach(i=>knifeOn(p2[i]))}
+    (S.harness>=3?[1,2,3,4]:S.harness>=2?[2,3]:[2]).forEach(i=>knifeOn(p1[i]))}
+  // ---- shoulders ----
+  const lames=(s,n,c,cc)=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;for(let i=0;i<n;i++){const x=sp[0]+s*(.012+i*.02),y=1.0-i*.04,rz=-s*(.3+i*.28),r=.1-i*.012;
+      k.p(a,'box','c',i%2?mdSh(c,.85):c,x,y,0,r,.018,r*1.08,0,0,rz);k.p(a,'box','m',T,x+s*.002,y-.011,0,r*1.02,.005,r*1.1,0,0,rz);
+      for(let j=0;j<3;j++){const q=mdRotZ(s*(-r*.4+j*r*.4),.011,rz);k.p(a,'oct','m',T,x+q[0],y+q[1],r*.6,.005)}}
+    if(cc)k.p(a,'hem','m',cc,sp[0]+s*.01,1.012,0,.075,.03,.08,0,0,-s*.25)};
+  if(S.sh=='scaleR'||S.sh=='fangL'){const s=S.sh=='scaleR'?1:-1,a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;for(let r=0;r<3;r++)for(let i=0;i<7;i++){const t=(i-3)/3,x=sp[0]+s*(.01+r*.022+Math.abs(t)*.01),y=1.0-r*.035-Math.abs(t)*.02,z=t*.07;
+      k.p(a,'oct','c',(r+i)%2?M:mdSh(M,1.2),x,y,z,.022,.006,.02,0,0,-s*(.4+r*.3))}
+    if(S.sh=='fangL')for(let i=0;i<3;i++)k.p(a,'cone4','c',0xe8e0d0,sp[0]+s*(.06+i*.01),.95-i*.02,-.03+i*.03,.007,.04,.007,Math.PI,0,s*.3)}
+  if(S.sh=='layerL'||S.pad=='R'){const s=S.sh=='layerL'?-1:1;lames(s,S.sh=='layerL'?4:3,mdSh(AS_LEA,1.4),S.sh=='layerL'?AS_IRON:null);
+    if(S.sh=='layerL'){const a='aL0',sp=mdArm(P,-1)[1].p;for(let i=0;i<3;i++)gkSpike(k,a,[sp[0]-.03-i*.022,1.03-i*.018,-.03+i*.03],[-.45,1,0],.05-i*.008,.008,AS_IRON,'m');
+      if(glow)k.p(a,'oct','g',glow,sp[0]-.02,1.035,.0,.012,.016,.012)}}
+  if(S.sh=='shards'){const sp=mdArm(P,1)[1].p;lames(1,2,dk,null);for(let i=0;i<6;i++)k.p('aR0','cone4',glow?'g':'m',glow||mdMix(A,0x6a5aa0,.5),sp[0]+.02+i*.012,1.03+(i%3)*.012,-.05+i*.02,.012,.06+(i%2)*.035,.008,(i%2?.2:-.2),0,-.3-i*.15)}
+  if(S.sh=='capeL'||S.sh=='capeR'){const s=S.sh=='capeL'?-1:1,cc=st=='cutthroat'?mdSh(acc,.62):mdSh(M,.75);
+    // a half-cape thrown over one shoulder, falling down the back and the arm, tied across the chest
+    gkCape(B,P,{yHem:.74,hemF:.04,dag:[.05],open:0,arm:.55,lin:mdSh(cc,.45),col:m=>m.v>.8?mdSh(cc,.7):cc,
+      keep:m=>{const th=m.u*Math.PI*2,x=Math.sin(th)*s;return x>-.25&&!(Math.cos(th)>.35)}});
+    k.L('chest','c',AS_LEA,mdTP(P,.97,s*.6,off()+.03),mdTP(P,.82,-s*.35,off()+.025),.006,.006,4);mdOW(k,tw(.9));k.p('chest','oct','m',T,...mdTP(P,.84,-s*.32,off()+.03),.012,.014,.008);mdOW(k,tw(.84))}
+  // ---- scarves and sashes ----
+  if(S.scarf||S.longScarf){const sc=S.longScarf?acc:mdSh(M,.7);mdTS(B,P,.93,1.055,off()+.026,{col:m=>Math.floor(m.y*60+asAng(m)*2)%2?sc:mdSh(sc,.8),lip:.012,lipT:.012});
+    const n=S.longScarf?5:3;[[.07,.99,-.13],[-.05,.98,-.14]].forEach((s0,j)=>{const pts=[];for(let i=0;i<n;i++){const t=i/(n-1),y=s0[1]-t*(S.longScarf?.62:.28),bn=y>.8?[['chest',1-t*2],['cp0',t*2]]:y>.55?[['cp1',1]]:[['cp2',1]];
+        pts.push({p:[s0[0]+t*.03*(j?-1:1),y,s0[2]-.03-t*.1-(S.longScarf?t*t*.12:0)],n:[0,0,-1],w:bn.filter(q=>q[1]>0)})}
+      mdRib(B,pts,(S.longScarf?.055:.042)-j*.01,.004,j?mdSh(sc,.75):sc,{capB:true})})}
+  if(S.sash){mdTS(B,P,.57,.63,off()+.02,{col:m=>Math.abs(m.y-.6)<.012?mdSh(acc,1.2):acc});
+    [0,1].forEach(j=>{const p=mdTP(P,.6,-1.15,off()+.03);mdRib(B,[{p:[p[0],.6,p[2]],n:[-.9,0,.4],w:[['pelvis',1]]},{p:[p[0]-.01,.46,p[2]+.01],n:[-.9,0,.4],w:[['pelvis',.6],['lh0',.4]]},{p:[p[0]-.02+j*.03,.3,p[2]+j*.02],n:[-.9,0,.4],w:[['pelvis',.3],['lh0',.7]]}],.045,.004,j?mdSh(acc,.75):acc,{capB:true})});
+    const p=mdTP(P,.6,-1.15,off()+.04);k.p('pelvis','sph','c',mdSh(acc,.85),p[0],.6,p[2],.03,.026,.024)}
+  if(S.trophy){// a cord of teeth and finger bones round the neck
+    for(let i=0;i<11;i++){const a=-.85+i*.17,y=.96-Math.cos(a*1.3)*.12,p=mdTP(P,Math.max(.8,y),a,off()+.02);if(i%2)k.p('chest','cone4','c',0xe8e0d0,p[0],p[1]-.012,p[2],.006,.026,.006,Math.PI);else k.p('chest','sph','c',0x3a2a1a,p[0],p[1],p[2],.006);mdOW(k,tw(p[1]))}}
+  if(S.fangs){[-1,1].forEach(s=>{const p=mdTP(P,.94,s*.22,off()+.024);k.p('chest','cone4','c',0xe8e0d0,p[0],p[1]-.024,p[2],.008,.036,.008,Math.PI);mdOW(k,tw(.94))})}
+  if(S.serpent){// a serpent coiled round the left upper arm, its head on the shoulder
+    const R=mdArm(P,-1);for(let i=0;i<16;i++){const u=1.2+i*.12,r=mdRAt(R,u),a=i*1.1,x=r.p[0]+Math.sin(a)*(r.rx+.02),z=r.p[2]+Math.cos(a)*(r.f+.02);k.p('aL0','sph','c',i%2?acc:mdSh(acc,.6),x,r.p[1],z,.016-i*.0004,.013,.016);mdOW(k,r.w)}
+    const sp=mdArm(P,-1)[1].p;k.p('aL0','oct','c',acc,sp[0]-.02,1.03,.05,.022,.016,.03,0,0,0);[-1,1].forEach(q=>k.p('aL0','box','g',glow||0xd0e040,sp[0]-.02+q*.01,1.04,.072,.004,.004,.004))}
+  if(S.moons){const moon=(x,y,z,r,bn,w)=>{for(let i=0;i<5;i++){const a=-1.1+i*.55;k.p(bn,'box','m',AS_STEEL,x+Math.cos(a)*r,y+Math.sin(a)*r,z,.008,r*.7,.004,0,0,a);if(w)mdOW(k,w)}};
+    moon(-.01,.82,cf(.82)+off()+.008,.03,'chest',tw(.82));moon(-.01,.6,cf(.6)+off()+.04,.022,'spine',tw(.6))}
+  if(glow&&d.GB)[-1,1].forEach(s=>{const p=mdTP(P,.7,s*.4,off()+.02);k.p('spine','oct','g',glow,p[0],p[1],p[2],.012);mdOW(k,tw(.7))})};
+// ---- the Assassin's class outfit (no chest piece): dark wraps of the trade ----
+{const f=mdOutfit;mdOutfit=function(cls){const O=f.apply(this,arguments);if(cls!='assassin'||!O||O.as136)return O;
+  return Object.assign({},O,{as136:1,extra:null,col:Object.assign({},O.col,{torso:0x2e2834,sleeve:0x2e2834}),
+    base:(B,P)=>mdChest(B,P,{a:'light',sl:'chest',st:'wraps',ti:0,r:0,M:0x34303a,A:0x6a3a8a,G:null,dk:mdSh(0x34303a,.6),gem:0x8a5ac0})})}}
+// ---- footwraps (toes and claws free) ----
+function asBoots(B,P,d){mdDX(d);const M=d.M,A=d.A,G=d.G,st=d.st,T=d.T==null?MD_TRIM[d.ti|0]:d.T,lv=d.lv|0,k=dkKit();brToes(B,P);
+  [-1,1].forEach(s=>{const l=s<0?'lh':'rh',L=mdLeg(P,s),F=mdFoot(P,s);
+    // the arch and heel wrapped, the toes left out
+    mdLoft(B,F.slice(0,3),{seg:8,off:.008,ref:[0,1,0],capA:true,col:m=>m.y<.02?0x14100c:Math.floor(m.z*80+m.y*40)%2?M:mdSh(M,.75)});
+    mdLS(B,P,s,st=='soft'?5:4,6,.01,{col:m=>Math.floor(m.y*44+m.c*1.4)%2?M:mdSh(M,.72)});
+    // straps crossing the shank, a buckle, an iron shin guard and a knife in the right boot
+    [4.3,4.8,5.4].forEach((u,i)=>{if(st=='soft'&&i<1)return;mdLB(B,L,u,.005,.02,AS_LEA,{t:'c'})});
+    const q=mdRAt(L,4.8);k.p(l+'1','box','m',T,q.p[0]+s*(q.rx+.022),q.p[1],q.p[2]+.01,.004,.014,.012);mdOW(k,q.w);
+    if(st!='soft'){mdLoft(B,[mdRAt(L,4.15),mdRAt(L,5.35)],{seg:8,off:.024,t:'m',col:st=='glass'||st=='storm'?mdSh(M,.9):AS_IRON,keep:m=>m.s>.4});
+      if(st=='storm'||st=='glass'){const r=mdRAt(L,4.6);k.p(l+'1','oct',G?'g':'m',G||A,r.p[0],r.p[1],r.p[2]+r.f+.03,.01,.016,.006);mdOW(k,r.w)}}
+    if(st=='wrapped'||lv>=3){mdLS(B,P,s,3,4,.012,{col:m=>Math.floor(m.y*44)%2?mdSh(M,.85):mdSh(M,.65)})}
+    if(lv>=2&&s>0){const r=mdRAt(L,4.6);k.p(l+'1','box','m',AS_STEEL,r.p[0]+(r.rx+.026),r.p[1]+.03,r.p[2]-.01,.004,.06,.01);mdOW(k,r.w);k.p(l+'1','box','c',AS_LEA,r.p[0]+(r.rx+.026),r.p[1]-.01,r.p[2]-.01,.009,.03,.014);mdOW(k,r.w)}
+    // a strap round the instep between the toes and the arch
+    mdLoft(B,[mdRAt(F,1.75),mdRAt(F,2.05)],{seg:8,off:.014,ref:[0,1,0],col:AS_LEA,keep:m=>m.y>.012});
+    if(st=='storm'||st=='glass'||lv>=4){const r=F[0];k.p(l+'2','cone4','m',AS_IRON,r.p[0],r.p[1]+.01,r.p[2]-.05,.01,.04,.01,-Math.PI/2+.3)}});
+  mdKit(B,k)}
+{const f=mdBoots;mdBoots=function(B,P,d){if(BR.on&&BR.R&&BR.R.key=='cat'&&d&&d.key&&d.a=='light')return asBoots(B,P,d);return f.apply(this,arguments)}}
+// ================= v136: the Assassin's head pieces (the cat) =================
+// Masks are shells over the lower muzzle (stitched seam, a buckle at the cheek, a strap round the back of the head with a
+// knot and trailing tails); the styles add their own pieces: a rag wrap round the brow (Cloth Mask), a scaled snout guard,
+// fangs and a crest of spines (Viper Mask), nightglass goggles (Nightglass Mask), a bandana knotted over the crown (Cutthroat),
+// respirator canisters and green lenses (Venomweave). The three hoods (Ashveil, Stormshade, Duskdancer) are gkHoods over a mask.
+function asMask(X,o){o=o||{};const {B,k,D}=X,S=D.SN,ez=D.EYEP[2],mz=D.muzzleZ==null?S[S.length-1][0]-.05:D.muzzleZ,z0=S[0][0]-.005,za=ez-.004,zb=mz+.012,c=o.col,dk=mdSh(c,.65),T=X.T;
+  brShell(B,D,.014,za,zb,m=>(m.z>ez+.03?m.s<.6:m.s<.14)&&!(D.topW&&D.topW(m)),m=>m.z>zb-.014||m.z<za+.01?dk:o.pat?o.pat(m,c):c,'c',20);
+  brShell(B,D,.009,z0+.01,za,m=>m.s<.3&&m.s>-.22&&!brEarW(D,m),dk,'c',16);
+  // the seam down the middle of the mask, a buckle on the cheek
+  const q=brSkullAt(D,(za+zb)/2),yb=q.yc-q.b*.55;for(let i=0;i<4;i++){const z=za+.012+i*(zb-za-.02)/3,qq=brSkullAt(D,z);k.p('head','box','c',mdSh(c,.45),0,qq.yc-qq.b*.2-.008-.002*i,z,.003,.006,.004)}
+  [-1,1].forEach(s=>{const z=za+.004,x=brSurfX(D,z,yb+.01)+.016;k.p('head','box','m',T,s*x,yb+.01,z,.004,.016,.014,0,s*.3,0)});
+  // the knot at the back and two tails
+  if(o.tails!==false){const q0=brSkullAt(D,z0+.012),y=q0.yc+.004,z=z0-.02;k.p('head','sph','c',dk,0,y,z,.016,.014,.012);
+    [-1,1].forEach(s=>k.L('head','c',dk,[s*.008,y,z],[s*.03,y-(o.tlen||.12),z-.05],.012,.004,4))}}
+function asGoggles(X,glass,frame){const {k,D,G}=X,er=D.eyeR||.021,gr=Math.max(.017,er*1.06),V=THREE.Vector3,at=z=>brSkullAt(D,z);
+  [-1,1].forEach(s=>{const [x,y,z]=D.EYEP,ry=s*Math.atan2(1,-at(z).slope)*(D.eyeFw==null?1:D.eyeFw),d=new V(Math.sin(ry),0,Math.cos(ry)),eye=new V(s*(brSurfX(D,z,y)-.004-(D.eyeIns||0)),y,z),h=.01+er*.3,
+      c0=eye.clone().add(d.clone().multiplyScalar(er*1.05+.003+h*.5)),e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),d));
+    k.p('head','cyl','m',frame,c0.x,c0.y,c0.z,gr,h,gr,e.x,e.y,e.z);const c1=c0.clone().add(d.clone().multiplyScalar(h*.5+.001));k.p('head','cyl','g',G||glass,c1.x,c1.y,c1.z,gr*.78,.004,gr*.78,e.x,e.y,e.z);
+    k.p('head','ring','m',mdSh(frame,1.3),c1.x,c1.y,c1.z,gr*.95,.04,gr*.95,e.x,e.y,e.z);
+    const b0=c0.clone().add(new V(s*gr*.8,0,-gr*.3)),b1=new V(s*(at(-.04).rx+.024),y+.006,-.03);k.L('head','c',0x1a1614,b0.toArray(),b1.toArray(),.006,.006,4)});
+  brShell(X.B,D,.012,-.05,-.03,m=>m.s>-.25&&!brEarW(D,m),0x1a1614,'c',16)}
+GK_HELM.wrap={race:'cat',pre:X=>{const {k,D,M}=X,rag=mdSh(M,.9);asMask(X,{col:rag,pat:(m,c)=>Math.floor(m.z*90+m.y*60)%2?c:mdSh(c,.82)});
+  // a rag wound round the brow between the ears, its ends trailing
+  brShell(X.B,D,.014,-.02,.045,m=>m.s>.05&&m.s<.62&&!brEarW(D,m),m=>Math.floor(m.z*70)%2?mdSh(rag,.8):mdSh(rag,.65),'c',18)}};
+GK_HELM.bandana={race:'cat',pre:X=>{const {k,D,M,A}=X,red=0x6a1218;asMask(X,{col:mdSh(M,.8),tlen:.08});
+  brShell(X.B,D,.016,D.SN[0][0]-.005,.04,m=>m.s>.18&&!brEarW(D,m),m=>Math.floor(m.z*60+m.x*40)%3==0?mdSh(red,.7):red,'c',20);
+  const q=brSkullAt(D,D.SN[0][0]+.01),y=q.yc+q.f*.4,z=D.SN[0][0]-.01;k.p('head','sph','c',mdSh(red,.8),0,y,z,.018,.016,.014);
+  [-1,1].forEach(s=>{k.L('head','c',red,[s*.008,y,z],[s*.04,y-.13,z-.06],.016,.006,4);k.L('head','c',mdSh(red,.8),[s*.04,y-.13,z-.06],[s*.05,y-.2,z-.05],.006,.002,4)})}};
+GK_HELM.viper={race:'cat',pre:X=>{const {k,D,M,A,G}=X,ez=D.EYEP[2],mz=D.muzzleZ;asMask(X,{col:mdSh(M,.9),pat:(m,c)=>(Math.round(m.z*120)+Math.round(m.x*120))%2?c:mdSh(c,.7)});
+  // scales down the snout, fangs at the mask's edge, a crest of spines over the crown
+  for(let r=0;r<4;r++)for(let i=-1;i<=1;i++){const z=ez-.01+r*(mz-ez+.01)/3,q=brSkullAt(D,z),x=i*q.rx*.35;k.p('head','oct','c',(r+i)%2?A:mdSh(A,.65),x,q.yc+q.f*Math.sqrt(Math.max(.1,1-(x/q.rx)**2))+.02,z,.012,.004,.012,0,0,i*.4)}
+  [-1,1].forEach(s=>{const z=mz-.012,q=brSkullAt(D,z),x=s*(q.rx*.55);k.p('head','cone4','c',0xe8e0d0,x,q.yc-q.b-.006,z+.01,.005,.026,.005,Math.PI)});
+  for(let i=0;i<6;i++){const z=-.09+i*.024,q=brSkullAt(D,z);k.p('head','cone4','c',i%2?A:mdSh(A,.7),0,q.top+.022,z,.009,.04+(i<3?i*.006:(5-i)*.006),.016,-.35)}}};
+GK_HELM.glassmask={race:'cat',pre:X=>{asMask(X,{col:mdSh(X.M,.6)});asGoggles(X,0x2a1a4a,0x2a2a30)}};
+GK_HELM.venom={race:'cat',pre:X=>{const {k,D,G}=X,gl=G||0x7ae040;asMask(X,{col:mdSh(X.M,.7)});asGoggles(X,0x1a3a1a,0x2a2a24);
+  // respirator canisters on the cheeks
+  const z=D.muzzleZ-.01,q=brSkullAt(D,z),yb=q.yc-q.b*.35;[-1,1].forEach(s=>{const x=s*(brSurfX(D,z,yb)+.028);k.p('head','cyl','m',0x3a3c36,x,yb,z,.02,.03,.02,0,0,Math.PI/2);k.p('head','cyl','g',gl,x+s*.016,yb,z,.014,.004,.014,0,0,Math.PI/2);
+    k.p('head','ring','m',0x5a5a50,x+s*.006,yb,z,.021,.05,.021,0,0,Math.PI/2)})}};
+// hoods over a mask
+function asHoodPre(X,c){asMask(X,{col:c,tails:false})}
+GK_HOOD.ashcowl={race:'cat',pre:X=>asHoodPre(X,mdSh(X.M,.7)),hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.3),trim:mdSh(X.M,.7),dag:[.05],tip:false,folds:[8,.016]}),
+  post:(X,Hd)=>{const {k}=X;// a clasp at the throat
+    const v=gkHoodAt(Hd,.99,Math.PI*.18);if(v){k.p('chest','oct','m',X.T,v.x,v.y,v.z+.006,.012,.014,.008);mdOW(k,v.w)}}};
+GK_HOOD.stormhood={race:'cat',pre:X=>asHoodPre(X,mdSh(X.M,.55)),hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.3),trim:mdSh(X.M,.5),edge:mdSh(X.A,.7),dag:[.06],tip:{len:.17,r:.032},folds:[8,.016],over:.045}),
+  post:(X,Hd)=>{const {k,G,A}=X,gl=G||mdSh(A,1.2);// a glowing seam over the crown and a clasp of two crescents
+    for(let i=Math.round(Hd.nr*.55);i<Hd.nr;i++){const v=Hd.G[i][Math.round(Hd.N/2)];k.p('head','box',G?'g':'m',gl,v.x,v.y,v.z,.004,.016,.004);mdOW(k,v.w)}
+    const v=gkHoodAt(Hd,.99,Math.PI*.16);if(v){k.p('chest','oct',G?'g':'m',gl,v.x,v.y,v.z+.006,.012,.016,.008);mdOW(k,v.w)}}};
+GK_HOOD.dusk={race:'cat',pre:X=>asHoodPre(X,mdSh(0x5a4a8a,.8)),hood:X=>gkHoodBase(X,{col:X.M,lin:mdSh(X.M,.3),trim:mdSh(X.A,.9),dag:[.045],tip:{len:.22,r:.028,drop:1},folds:[8,.014]}),
+  post:(X,Hd)=>{const {k}=X;const v=gkHoodAt(Hd,1.0,Math.PI*.2);if(v){for(let i=0;i<5;i++){const a=-1.1+i*.55;k.p('chest','box','m',AS_STEEL,v.x+Math.cos(a)*.018,v.y+Math.sin(a)*.018,v.z+.008,.006,.014,.004,0,0,a);mdOW(k,v.w)}}}};
+// ================= v136: the Mage's robes, redesigned =================
+// The v95 cloth chest was one stiff tube from shoulders to shins with flat bands. Every Mage robe is now layered cloth:
+//  * an under-robe (gkSkirt, closed) and an open-fronted over-robe whose panels hang from the waist, flare and swing (the back
+//    on the cape bones), with trims down the opening and round the hem; the hem is cut (frayed, flame tongues, tatters) per style;
+//  * bell sleeves that widen from the elbow and trail a long point behind the wrist (the raven's wing feathers stay folded
+//    inside them); a capelet (gkCape) or a standing collar (gkCollar, taller at the back) at the neck;
+//  * the dark-fantasy details of each robe: rope belt and a satchel (Novice), moss, roots and bone charms (Mossweave),
+//    charred hem, ember cracks and a censer (Pyreweave), a bone rib-cage, skull clasp, chains and melting candles (Lichsilk),
+//    layered metal mantle plates and storm runes (Tempest), patchwork and charms (Hedge-Witch), chained grimoires and seals
+//    (Spellbinder), a starfield and crescent (Starweaver).
+// While a robe is built the raven's hem remap (RV_HEM) is off: the robes are cut for him directly (hem above his talons).
+// the shoulder capelet: rows from the neck down to the hem, measured (shoulders, upper arms, collar), hanging, open in front
+function gkCape(B,P,o){o=o||{};const N=o.N||32,y1=o.y1||1.0,yH=o.yHem||.84,clr=o.clear==null?.014:o.clear,TH=j=>j/N*Math.PI*2,nt=o.rows||6;
+  const hem=typeof o.hem=='function'?o.hem:(th=>yH+(o.hemF||0)*Math.max(0,Math.cos(th)));let ymin=y1;for(let j=0;j<N;j++)ymin=Math.min(ymin,hem(TH(j)));ymin-=o.dag?o.dag[0]:0;
+  const ez=BR.on&&BR.R?BR.R.EYEP[2]-.04:.06,pts=gkPts(B,ymin-.01,y1+.02,(x,y,z)=>x*x+z*z<.38*.38&&(y<1.05||z<ez)&&!(BR.on&&BR.R&&BR.R.TP&&brTailNear(BR.R,x,y,z)));
+  const dy=.014,ys=[];for(let y=y1;y>=ymin-.001;y-=dy)ys.push(y);const H=gkRows(pts,ys,dy*.75);
+  const RB=H.map(h=>{const r=[];for(let j=0;j<N;j++)r.push(gkHullR(h,0,0,TH(j)));return r});for(let i=1;i<RB.length;i++)for(let j=0;j<N;j++)RB[i][j]=Math.max(RB[i][j],RB[i-1][j]);
+  const rAt=(y,j)=>{const f=(y1-y)/dy,i=Math.max(0,Math.min(RB.length-1,Math.round(f)));return RB[i][j]};
+  const G=[];for(let i=0;i<=nt;i++){const t=i/nt,row=[];for(let j=0;j<=N;j++){const th=TH(j);let y=y1+(hem(th)-y1)*t;if(i==nt&&o.dag&&j%2==1)y-=o.dag[0]*(.7+.3*Math.abs(Math.sin(j*1.9)));
+      const r=rAt(y,j%N)+clr+(o.flare||.02)*t*t+(o.folds||.006)*t*(.5+.5*Math.sin(th*8+.5)),x=Math.sin(th)*r,z=Math.cos(th)*r;row.push({x,y,z,w:gkHeadW(x,y,z,{arm:o.arm==null?.5:o.arm}),cz:0})}G.push(row)}
+  const op=o.open||0,keep=m=>{const th=m.u*Math.PI*2;return !(op&&(th<op||th>Math.PI*2-op))&&(!o.keep||o.keep(m))};
+  gkSurf(B,G,{t:o.t||'c',col:o.col,keep});gkSurf(B,gkInset(G,G.map(()=>0),.004),{t:'c',col:o.lin==null?0x1a1418:o.lin,keep});return {G,N,nt}}
+// pattern helpers (m from gkSurf / mdLoft): angle round the body, embroidered bands
+function mgAng(m){return Math.atan2(m.x,m.z)}
+function mgEmb(m,a,b,n){return Math.floor((mgAng(m)+Math.PI)/(Math.PI*2)*(n||16)+.5)%2?a:b}
+// the hem height of the hero (the raven's robes end above his talons, a human's near the ground)
+function mgHem(){return BR.on&&BR.R&&BR.R.key=='raven'?.2:.12}
+var MG_ST={
+  robe:  {under:.62,over:0,  hemD:[.018],ovHem:0,  sl:{bell:.05,trail:.07},cape:{yHem:.8,dag:[.025],open:.55},collar:0,belt:'rope'},
+  moss:  {under:.6, over:1,  hemD:[.04], ovHem:.06,sl:{bell:.065,trail:.12,dag:.03},cape:{yHem:.76,dag:[.05],open:.5,moss:1},collar:0,belt:'root'},
+  pyre:  {under:.4, over:1,  hemD:[.06], ovHem:.0, sl:{bell:.075,trail:.15,dag:.04},cape:0,collar:{h:1.1,hf:.99,open:.6},belt:'censer',char:1},
+  vestments:{under:.3,over:1,hemD:[.03],ovHem:-.04,sl:{bell:.08,trail:.2,dag:.04},cape:0,collar:{h:1.12,hf:1.0,open:.55,spikes:1},belt:'skull',ribs:1,candles:1},
+  regalia:{under:.45,over:1, hemD:[.02],ovHem:-.06,sl:{bell:.085,trail:.17},cape:{yHem:.8,dag:[.03],open:.6,plates:1},collar:{h:1.13,hf:1.0,open:.62,gem:1},belt:'regal',runes:1},
+  witch: {under:.6, over:1,  hemD:[.05], ovHem:.05,sl:{bell:.07,trail:.11,dag:.035},cape:{yHem:.73,dag:[.06],open:.4,patch:1},collar:0,belt:'charms',patch:1},
+  binder:{under:.4, over:1,  hemD:[.02], ovHem:-.02,sl:{bell:.065,trail:.14},cape:0,collar:{h:1.1,hf:.99,open:.55},belt:'books',chains:1},
+  star:  {under:.35,over:1,  hemD:[.02], ovHem:-.05,sl:{bell:.08,trail:.17},cape:{yHem:.79,dag:0,open:.62,stars:1},collar:{h:1.1,hf:1.0,open:.62,crescent:1},belt:'star',stars:1}};
+{const f=mdChestPre;mdChestPre=function(P,d){const r=f.apply(this,arguments);if(d&&d.a=='cloth'){mdDX(d);const S=MG_ST[d.st]||MG_ST.robe;P.col.torso=mdSh(d.M,S.under);P.col.sleeve=mdSh(d.M,S.under);P.col.pants=mdSh(d.M,S.under*.7)}return r}}
+// the raven keeps his wing feathers folded inside wide sleeves
+{const D=BRD[3];if(D&&D.wings){const f=D.wings;D.wings=function(B){if(BR.P&&BR.P.gkNoWing)return;return f.apply(this,arguments)}}}
+mdChC=function(X){const {B,P,d,k}=X,st=MG_ST[d.st]?d.st:'robe',S=MG_ST[st],M=d.M,A=d.A,T=d.T,G=d.G,lv=d.lv|0,R=d.R;
+  const rh=RV_HEM.on;RV_HEM.on=0;try{mgRobe(X,st,S,M,A,T,G,lv,R)}finally{RV_HEM.on=rh}};
+function mgRobe(X,st,S,M,A,T,G,lv,R){const {B,P,d,k}=X,hm=mgHem();if(st=='robe')M=mdSh(M,.78);const U=mdSh(M,S.under),dk=mdSh(M,.42),lin=mdSh(M,.32),tr=st=='robe'?0x5a3a22:st=='moss'?0x3a2a18:st=='witch'?0x4a3420:lv>=2?T:A,raven=BR.on&&BR.R&&BR.R.key=='raven';
+  const off=()=>(P.tOff||0),ember=0xff7a20,starC=0xe8dcb0;
+  P.gkNoWing=1;
+  // ---- the torso: a fitted bodice over the under-robe, V-necked, with a seam and a trim round the V ----
+  const vw=y=>.16+Math.max(0,y-.62)*1.1;
+  mdTS(B,P,.5,.99,.01,{col:m=>{const v=m.s>0&&Math.abs(m.c)<vw(m.y)+.07;if(v)return tr;if(st=='witch'&&(Math.floor(m.y*14)+Math.floor((mgAng(m)+4)*2.2))%3==0)return mdMix(M,0x5a4a34,.35);
+      return M},keep:m=>!(m.s>0&&Math.abs(m.c)<vw(m.y)),lipT:.004});
+  // the under-robe's chest shows inside the V: a panel with a row of buttons / a lacing
+  {const z=y=>mdTorsoAt(P,y).f+off()+.003;for(let i=0;i<5;i++){const y=.66+i*.06;k.p('chest','oct',i==2&&G?'g':'m',i==2&&G?G:T,0,y,z(y),.009,.009,.005);mdOW(k,mdTorsoW(y))}}
+  // ---- skirts ----
+  const fr=st=='pyre'?.06:st=='vestments'||st=='regalia'?.07:.06;
+  gkSkirt(B,P,{y0:.6,hem:th=>hm+(1-Math.cos(th))*.012,flare:fr,clear:.016,folds:[11,.012],dag:S.hemD,flow:.3,col:m=>{
+      if(S.char&&m.v>.7)return mdMix(U,0x140c08,(m.v-.7)/.3*.8);if(m.v>.93)return mdSh(U,.75);
+      return U}});
+  if(S.over){const ovH=th=>hm+S.ovHem+(st=='regalia'||st=='vestments'||st=='star'?-.04*Math.max(0,-Math.cos(th)):0)+(st=='witch'?.03*Math.sin(th*3):0),op=st=='witch'?.5:.42;
+    const nO=40,edge=m=>{const th=m.u*Math.PI*2,e=Math.min(th,Math.PI*2-th)-op;return e<Math.PI*2/nO*1.5};
+    const OV=gkSkirt(B,P,{y0:.62,N:nO,hem:ovH,flare:fr+.035,clear:.03,folds:[9,.016],dag:st=='pyre'?[.09]:st=='moss'||st=='witch'?[.07]:st=='vestments'?[.05]:[.02],flow:.55,backF:.35,open:op,lin,
+      col:m=>{const th=m.u*Math.PI*2;if(edge(m))return st=='witch'?0x3a2a1a:S.runes&&Math.floor(m.v*10)%3==0?mdSh(A,1.25):tr;if(m.v>.88)return st=='pyre'?mdMix(M,0x1a0a06,.75):st=='moss'?mdMix(M,0x2a3a1a,.6):st=='vestments'?mdSh(M,.55):lv>=1?mgEmb(m,tr,dk,22):tr;
+        if(S.char&&m.v>.55)return mdMix(M,0x1a0a06,(m.v-.55)/.33*.85);
+        if(st=='witch'&&(Math.floor(m.v*6)+Math.floor(m.u*14))%3==0)return mdMix(M,0x6a5030,.4);
+        if(st=='vestments'&&Math.abs(Math.cos(th))>.94)return dk;return M}});
+    // embers smouldering in the charred hem
+    if(st=='pyre')for(let i=0;i<22;i++){const t=.55+((i*29)%17)/17*.42,th=op+.1+((i*41)%37)/37*(Math.PI*2-2*op-.2),v=OV.at(t,th),dx=Math.sin(th),dz=Math.cos(th);
+      k.p('pelvis','box','g',i%3?ember:0xffc060,v.x+dx*.003,v.y,v.z+dz*.003,.004,.012+(i%3)*.006,.003,0,Math.atan2(dx,dz),(i%2?.5:-.5));mdOW(k,v.w)}
+    // the starfield: little four-point stars scattered over the over-robe (a few glow on Epic+)
+    if(S.stars)for(let i=0;i<26;i++){const t=.12+((i*37)%23)/23*.8,th=op+.15+((i*53)%31)/31*(Math.PI*2-2*op-.3),v=OV.at(t,th),dx=Math.sin(th),dz=Math.cos(th),a=Math.atan2(dx,dz);
+      const sz=i%5==0?.016:.009;k.p('pelvis','box',G&&i%6==0?'g':'m',G&&i%6==0?G:starC,v.x+dx*.003,v.y,v.z+dz*.003,sz*.3,sz*2,.003,0,a,Math.PI/4);mdOW(k,v.w);k.p('pelvis','box',G&&i%6==0?'g':'m',G&&i%6==0?G:starC,v.x+dx*.003,v.y,v.z+dz*.003,sz*2,sz*.3,.003,0,a,Math.PI/4);mdOW(k,v.w)}
+    // an embroidered back panel down the over-robe (Rare+: a sigil)
+    if(lv>=2){const z=-(mdTorsoAt(P,.82).b+off()+.012);k.p('chest','oct',G?'g':'m',G||T,0,.82,z,.03,.042,.006);mdOW(k,mdTorsoW(.82));k.p('chest','oct','c',dk,0,.82,z-.003,.018,.026,.006);mdOW(k,mdTorsoW(.82))}}
+  // ---- sleeves: fitted to the elbow, then a bell that trails a point behind the wrist ----
+  [-1,1].forEach(s=>{mdAS(B,P,s,0,3,.012,{col:M});const so=S.sl;
+    gkSleeve(B,P,s,{u0:2.7,uw:5.25,ext:.02,bell:so.bell,trail:so.trail,ta:Math.PI*.9,off:.014,folds:.008,dag:so.dag||0,lin,col:m=>m.v>.86?tr:m.v>.78&&lv>=1?mgEmb(m,tr,dk,10):S.char&&m.v>.6?mdMix(M,0x1a0a06,.5):M});
+    const Ra=mdArm(P,s);mdLB(B,Ra,2.75,.008,.026,tr,{t:lv>=2?'m':'c'});
+    if(S.runes||S.chains)for(let i=0;i<3;i++){const r=mdRAt(Ra,1.4+i*.35);k.p(s<0?'aL0':'aR0','box',G?'g':'m',G||T,r.p[0]+s*(r.rx+.016),r.p[1],r.p[2],.004,.014,.01);mdOW(k,r.w)}});
+  // ---- capelet / collar ----
+  if(S.cape){const c=S.cape,cc=st=='moss'?mdMix(M,0x3a5a2a,.4):st=='witch'?mdMix(M,0x5a4a34,.5):st=='regalia'?mdSh(M,.8):M;
+    const cp=gkCape(B,P,{yHem:c.yHem,hemF:-.03,dag:c.dag,open:c.open,lin,flare:.012,col:m=>{if(m.v>.82)return c.stars?starC:c.moss?0x3a4a22:mdSh(tr,.85);if(c.patch&&(Math.floor(m.v*4)+Math.floor(m.u*12))%3==0)return mdMix(cc,0x7a5a3a,.35);
+        if(c.moss&&(Math.floor(m.u*30)+Math.floor(m.v*5))%4==0)return mdMix(cc,0x6a8a3a,.5);return cc}});
+    if(c.moss)for(let i=0;i<20;i++){const th=.7+i/19*(Math.PI*2-1.4),v=cp.G[cp.nt][Math.round(th/(Math.PI*2)*cp.N)];k.p('chest','cone4','c',i%2?0x5a7a32:0x3e5a26,v.x,v.y-.012,v.z,.016,.04,.01,Math.PI,th,0);mdOW(k,v.w)}
+    if(c.plates)[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;for(let i=0;i<3;i++){const x=sp[0]+s*(.014+i*.02),y=1.0-i*.042;
+        k.p(a,'hem','m',i?mdSh(T,.8):T,x,y,0,.105-i*.012,.032,.11-i*.01,0,0,-s*(.35+i*.28));k.p(a,'tor','m',mdSh(T,1.2),x,y-.003,0,.108-i*.012,.008,.114-i*.01,0,0,-s*(.35+i*.28))}
+      k.p(a,'oct',G?'g':'m',G||d.gem,sp[0]+s*.03,1.035,0,.014,.02,.012)})}
+  if(S.collar){const c=S.collar,cc=st=='vestments'?mdSh(M,1.1):mdSh(M,.85);
+    const cl=gkCollar(B,P,{y0:.93,h:th=>c.hf+(c.h-c.hf)*Math.pow(Math.max(0,-Math.cos(th)*.5+.5),1.5),open:c.open,flare:.045,clear:.012,wave:c.spikes?.012:0,wn:7,col:m=>m.v>.75?tr:cc,lin:dk});
+    if(c.spikes){for(let i=0;i<9;i++){const th=c.open+.25+i/8*(Math.PI*2-2*c.open-.5),v=cl.G[cl.nt][Math.round(th/(Math.PI*2)*cl.N)],dx=Math.sin(th),dz=Math.cos(th);
+        gkSpike(k,'chest',[v.x,v.y-.01,v.z],[dx*.35,1,dz*.35],.045+(i==4?.025:0),.008,0xd8ccb0,'c',v.w)}}
+    if(c.gem){const v=cl.G[cl.nt][Math.round(cl.N/2)];k.p('chest','oct',G?'g':'m',G||d.gem,v.x,v.y-.035,v.z-.012,.016,.024,.01);mdOW(k,v.w)}
+    if(c.crescent){const z=mdTorsoAt(P,.93).f+off()+.02;for(let i=0;i<5;i++){const a=-1.1+i*.55;k.p('chest','box','m',T,Math.cos(a)*.026,.93+Math.sin(a)*.026,z,.008,.02,.005,0,0,a);mdOW(k,mdTorsoW(.93))}}}
+  else if(!S.cape)mdTS(B,P,.95,.995,off()+.012,{col:tr,lipT:.004});
+  // ---- belt and what hangs from it ----
+  const by=.6,bf=mdTorsoAt(P,by).f+off()+.016,bw=mdTorsoW(by),pw=m=>[['pelvis',1]];
+  const bc=S.belt=='rope'?0x6a5a3a:S.belt=='root'?0x4a3420:S.belt=='censer'?0x2a1410:S.belt=='skull'?0x1a1618:mdSh(A,.5);
+  mdTS(B,P,by-.022,by+.022,off()+.01,{col:m=>S.belt=='rope'&&Math.round(m.x*90+m.y*60)%2?mdSh(bc,.8):Math.abs(m.y-by)<.008&&lv>=1&&S.belt!='rope'?T:bc});
+  const hang=(x,len)=>{const z=mdTorsoAt(P,by).f+off()+.012;return [x,by-.02-len,z+.01]};
+  const cord=(x,len,c)=>{const z=mdTorsoAt(P,by).f+off()+.012;k.L('pelvis','c',c||mdSh(bc,1.2),[x,by-.015,z],[x+.004,by-.02-len,z+.012],.004,.004,4)};
+  if(S.belt=='rope'){k.p('spine','sph','c',mdSh(bc,1.1),.03,by,bf,.022,.018,.016);[[.025,.14],[.045,.18]].forEach(([x,l])=>{k.L('pelvis','c',bc,[x,by-.01,bf-.004],[x+.006,by-l,bf+.006],.007,.006,5);k.p('pelvis','cone4','c',mdSh(bc,1.2),x+.006,by-l-.018,bf+.006,.014,.036,.014)});
+    // a satchel on the hip and a little book
+    mdPouch(k,P,-1.3,by-.06,mdSh(0x5a3a22,1.05),T,1.25);const hp=mdTP(P,by-.05,1.2,off()+.04);gkBook(k,'pelvis',hp[0],hp[1],hp[2],.8,0x4a2418,T,1.2,null)}
+  else if(S.belt=='root'){for(let i=0;i<5;i++){const a=-.9+i*.45,p=mdTP(P,by,a,off()+.022);k.p('spine','cone4','c',i%2?0x5a7a32:0x3e5a26,p[0],p[1]-.02,p[2],.014,.04,.01,Math.PI,a,0);mdOW(k,bw)}
+    [[-.06,.1],[.07,.13],[.11,.09]].forEach(([x,l],i)=>{cord(x,l,0x3a2a1a);const h=hang(x,l);if(i==0)gkBone(k,'pelvis',[h[0]-.012,h[1],h[2]],[h[0]+.012,h[1]-.02,h[2]],.004,0xd8ccb0,null);
+      else if(i==1)gkSkull(k,'pelvis',h[0],h[1]-.02,h[2]+.005,.55,0xd8ccb0,0,null);else gkVial(k,'pelvis',h[0],h[1]-.012,h[2],.9,G||0x7ac83a,T,null)});
+    // mushrooms on the shoulder
+    {const sp=mdArm(P,-1)[1].p;for(let i=0;i<3;i++){const x=sp[0]+.01+i*.02,y=1.0+i*.006,z=-.03+i*.025;k.p('aL0','cyl','c',0xd8ccb0,x,y,z,.005,.022,.005);k.p('aL0','hem','c',i%2?0x8a3a1a:0xa86a30,x,y+.012,z,.016,.012,.016)}}}
+  else if(S.belt=='censer'){k.p('spine','oct','m',T,0,by,bf,.032,.032,.012);k.p('spine','oct','g',ember,0,by,bf+.008,.014);
+    // a brass censer swinging on a chain at the hip, glowing coals inside
+    const z=mdTorsoAt(P,by).f+off(),x=.12;gkChain(k,'pelvis',[[x,by-.01,z+.01],[x+.01,by-.13,z+.03]],.006,T,null);
+    k.p('pelvis','sph2','m',T,x+.01,by-.16,z+.03,.026,.022,.026);k.p('pelvis','cone4','m',mdSh(T,.8),x+.01,by-.135,z+.03,.022,.02,.022);for(let i=0;i<4;i++){const a=i*1.57;k.p('pelvis','box','g',ember,x+.01+Math.sin(a)*.022,by-.16,z+.03+Math.cos(a)*.022,.005,.01,.005,0,a,0)}
+    [[-.06,.12],[-.1,.08]].forEach(([x2,l])=>{cord(x2,l,0x3a1a10);const h=hang(x2,l);k.p('pelvis','box','c',0x2a1a14,h[0],h[1]-.02,h[2],.024,.034,.006);k.p('pelvis','box','g',ember,h[0],h[1]-.02,h[2]+.004,.008,.014,.003)})}
+  else if(S.belt=='skull'){gkSkull(k,'spine',0,by+.005,bf+.006,.85,0xd8ccb0,0,bw);
+    [[-.07,.14],[.08,.11]].forEach(([x,l])=>{const z=mdTorsoAt(P,by).f+off()+.014;gkChain(k,'pelvis',[[x,by-.01,z],[x+.004,by-l,z+.01]],.005,mdSh(T,.8),null);gkBone(k,'pelvis',[x-.016,by-l-.012,z+.012],[x+.02,by-l-.02,z+.012],.0045,0xd8ccb0,null)})}
+  else if(S.belt=='regal'){k.p('spine','box','m',T,0,by,bf,.06,.05,.012);k.p('spine','oct',G?'g':'m',G||d.gem,0,by,bf+.009,.017,.022,.01);
+    for(let i=0;i<3;i++){const x=-.05+i*.05,z=mdTorsoAt(P,by).f+off()+.014;k.p('pelvis','box','c',i==1?mdSh(A,.8):M,x,by-.12,z+.012,.034,.18,.004);k.p('pelvis','box','m',T,x,by-.215,z+.014,.036,.01,.005)}}
+  else if(S.belt=='charms'){k.p('spine','sph','c',0x5a4028,0,by,bf,.02,.018,.014);
+    [[-.12,.09,'bone'],[-.08,.13,'herb'],[-.04,.1,'vial'],[.05,.15,'skull'],[.1,.1,'feather'],[.14,.12,'herb']].forEach(([x,l,t2])=>{cord(x,l,0x3a2a1a);const h=hang(x,l);
+      if(t2=='bone')gkBone(k,'pelvis',[h[0]-.01,h[1],h[2]],[h[0]+.01,h[1]-.022,h[2]],.004,0xd8ccb0,null);else if(t2=='herb'){for(let j=0;j<3;j++)k.p('pelvis','box','c',j%2?0x6a8a3a:0x4a6a2a,h[0]+j*.004-.004,h[1]-.02,h[2],.004,.04,.004,0,0,(j-1)*.3)}
+      else if(t2=='vial')gkVial(k,'pelvis',h[0],h[1]-.012,h[2],.9,G||0x9ad0a0,T,null);else if(t2=='skull')gkSkull(k,'pelvis',h[0],h[1]-.02,h[2]+.004,.5,0xd0c4a4,0,null);
+      else gkFeather(k,'pelvis',[h[0],h[1],h[2]],[.2,-1,.2],.07,.012,0x1a1a20,null)})}
+  else if(S.belt=='books'){k.p('spine','box','m',T,0,by,bf,.05,.04,.012);
+    // grimoires chained to the belt, a scroll case across the back
+    [[-1,.14],[1,.1]].forEach(([s,l])=>{const p=mdTP(P,by,s*1.25,off()+.02),q=[p[0]+s*.03,by-l,p[2]+.02];gkChain(k,'pelvis',[[p[0],p[1],p[2]],q],.005,mdSh(T,1.1),null);gkBook(k,'pelvis',q[0],q[1]-.04,q[2],1.15,s<0?0x5a1a14:0x2a1e3a,T,s*1.25,null)});
+    const z=-(mdTorsoAt(P,.8).b+off()+.03);k.L('chest','c',0x4a2a1a,[-.13,.66,z],[.12,.96,z-.01],.03,.03,7);k.p('chest','cyl','m',T,.12,.96,z-.01,.034,.016,.034,0,0,-.68);k.p('chest','cyl','m',T,-.13,.66,z,.034,.016,.034,0,0,-.68)}
+  else{/*star*/const z=bf;for(let i=0;i<5;i++){const a=-1.1+i*.55;k.p('spine','box','m',T,Math.cos(a)*.03,by+Math.sin(a)*.03,z,.009,.024,.006,0,0,a);mdOW(k,bw)}k.p('spine','oct',G?'g':'m',G||starC,0,by,z+.004,.01);mdOW(k,bw)}
+  // ---- chest pieces of each robe ----
+  const cf=y=>mdTorsoAt(P,y).f+off();
+  if(st=='robe'){/* wooden prayer beads */for(let i=0;i<14;i++){const a=-.9+i/13*1.8,y=.97-Math.cos(a*1.6)*.17,p=mdTP(P,Math.max(.75,y),a,off()+.012);k.p('chest','sph','c',i==7?0xa87a40:0x6a4a2a,p[0],p[1],p[2],.009);mdOW(k,mdTorsoW(p[1]))}}
+  if(st=='moss'){[-1,1].forEach(s=>mdTStrap(B,P,.62,s*.3,.95,s*.55,off()+.008,.012,0x4a3420,{n:6}))}
+  if(st=='pyre'){// ember cracks up the bodice, a flame brooch
+    for(let i=0;i<7;i++){const y=.66+i*.045,a=(i%2?.28:-.28)+Math.sin(i*2.1)*.08,p=mdTP(P,y,a,off()+.002);k.p('chest','box','g',ember,p[0],p[1],p[2],.004,.03,.003,0,a,(i%2?.6:-.6));mdOW(k,mdTorsoW(y))}
+    for(let i=0;i<3;i++)k.p('chest','cone4',G?'g':'c',G||0xe06a28,-.02+i*.02,.9+(i==1?.02:0),cf(.9)+.016,.012,.05+(i==1?.02:0),.004)}
+  if(S.ribs){// a rib cage of bone strapped over the bodice
+    const z=y=>cf(y)+.012;k.L('chest','c',0xd8ccb0,[0,.92,z(.92)],[0,.68,z(.68)],.008,.006,5);mdOW(k,mdTorsoW(.8));
+    for(let i=0;i<4;i++){const y=.88-i*.055;[-1,1].forEach(s=>{const pts=[];for(let j=0;j<=4;j++){const a=s*(.06+j*.14),yy=y-j*j*.004;pts.push(mdTP(P,yy,a,off()+.012))}
+        for(let j=0;j<4;j++){k.L('chest','c',0xd8ccb0,pts[j],pts[j+1],.0055-j*.0006,.005-j*.0006,4);mdOW(k,mdTorsoW(y))}})}
+    gkSkull(k,'chest',0,.95,cf(.95)+.02,.75,0xe0d6bc,0,mdTorsoW(.95))}
+  if(S.candles){[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p,x=sp[0]+s*.02;k.p(a,'hem','c',0xd8ccb0,x,1.0,0,.07,.022,.075,0,0,-s*.3);
+    gkCandle(k,a,x+s*.012,1.035,-.01,1.1,null,G||0xffb040);gkCandle(k,a,x-s*.02,1.03,.03,.8,null,G||0xffb040);
+    for(let i=0;i<4;i++)k.p(a,'box','c',0xf0e8d4,x+s*(-.03+i*.02),1.012-i*.004,-.04+i*.025,.008,.018+i%2*.012,.008)})}
+  if(S.chains){// chains across the chest to a padlock, wax seals with ribbons
+    [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=6;i++){const t=i/6,y=.95-t*.2,a=s*(.55-t*.55);pts.push(mdTP(P,y,a,off()+.016))}gkChain(k,'chest',pts,.007,mdSh(T,1.2),p=>mdTorsoW(p[1]))});
+    k.p('chest','box','m',mdSh(T,.9),0,.73,cf(.73)+.02,.022,.026,.012);mdOW(k,mdTorsoW(.73));k.p('chest','tor','m',mdSh(T,.9),0,.755,cf(.73)+.02,.012,.016,.006,Math.PI/2);mdOW(k,mdTorsoW(.75));
+    [[-.08,.68],[.09,.64]].forEach(([x,y])=>{const z=cf(y)+.012;k.p('chest','cyl','c',0x8a1414,x,y,z,.016,.006,.016,Math.PI/2);mdOW(k,mdTorsoW(y));k.p('chest','box','c',0xe0d4b4,x,y-.04,z-.002,.012,.06,.003,0,0,.1);mdOW(k,mdTorsoW(y))})}
+  if(st=='witch'){// a shawl pin of bone and a bundle of herbs at the shoulder
+    k.p('chest','cone4','c',0xd8ccb0,-.06,.92,cf(.92)+.03,.006,.06,.006,0,0,.8);const sp=mdArm(P,1)[1].p;for(let i=0;i<4;i++)k.p('aR0','box','c',i%2?0x6a8a3a:0x5a4a2a,sp[0]+.02,1.0+i*.006,-.02+i*.012,.005,.05,.005,.3,0,-.3-i*.1)}
+  if(S.stars){[[.08,.86],[-.1,.78],[.12,.7],[-.06,.92]].forEach(([x,y],i)=>mdStar(k,'chest',G&&i<2?'g':'m',G&&i<2?G:T,x,y,cf(y)+.006,.012,mdTorsoW(y)))}
+  if(S.runes){for(let i=0;i<6;i++){const y=.66+i*.05;[-1,1].forEach(s=>{const p=mdTP(P,y,s*(vw(y)+.08),off()+.004);gkRunes(k,'chest',[[p[0],p[1],p[2],s*(vw(y)+.08)]].map(q=>q.concat()),G||mdSh(A,1.3),mdTorsoW(y),.9)})}}
+  if(R)mdTS(B,P,.965,.985,off()+.004,{col:R,t:'m',keep:m=>!(m.s>0&&Math.abs(m.c)<vw(m.y))})}
+// ================= v136: the Mage's head pieces, redesigned =================
+// Hoods (Linen Hood, Spellbinder Cowl, Starweaver Cowl) are gkHoods; hats and circlets are fitted to the raven's skull with
+// rvEll (v134) like before, but built anew:
+//  * hats: a crumpled crown that leans back and flops over at the tip, a wavy drooping brim with a cut (dagged) edge, a band
+//    with a buckle, patches and stitching, a crow feather in the band (Mossweave Hat); the Hedge-Witch's is taller and crooked,
+//    bones and a little bottle hang from its brim and a charm from its tip;
+//  * Pyre Circlet: an iron band of upswept flame blades round an ember; Lich Diadem: a band of bone with finger-bone spikes,
+//    a small skull at the brow and a ragged veil hanging behind; Tempest Crown: a jagged crown of lightning spikes with storm
+//    crystals.
+function mgHat(X,o){const {B,k,A,G,d}=X,D=BRD[3],yb=1.214,c=o.col,br=o.br,N=28,TH=j=>j/N*Math.PI*2,T=d.T==null?MD_TRIM[d.ti|0]:d.T;
+  const e0=rvEll(D,yb-.004,.014),e1=rvEll(D,yb+.016,.015);
+  const at=(e,th,r)=>{const ca=Math.cos(th);return {x:Math.sin(th)*e.rx*r,z:e.zc+ca*(ca>0?e.f:e.b)*r}};
+  // brim: rows from the head out to the rim, drooping and waving; a top and an underside (darker)
+  const BR2=[];for(let i=0;i<=4;i++){const t=i/4,row=[];for(let j=0;j<=N;j++){const th=TH(j),p=at(e0,th,1),wv=Math.sin(th*5+.6)*.012+Math.sin(th*3)*.008,rr=br+wv;
+      const L=Math.hypot(p.x,p.z-e0.zc)||1,ex=p.x/L,ez=(p.z-e0.zc)/L,R0=L,R=R0+(rr-R0)*t+(o.dag&&i==4&&j%2?-.018:0),droop=-(o.droop||.03)*t*t*(1+.5*Math.cos(th*2))+wv*t*.6;
+      row.push({x:ex*R,y:yb+droop,z:e0.zc+ez*R,w:[['head',1]]})}BR2.push(row)}
+  gkSurf(B,BR2,{t:'c',col:m=>m.i>=3?mdSh(c,.8):c});gkSurf(B,BR2.map(r=>r.map(v=>({x:v.x,y:v.y-.005,z:v.z,w:v.w}))),{t:'c',col:mdSh(c,.45)});
+  // crown: rings rising from the band, leaning back, dented, the last ones flopping over backward
+  const H=o.h,S=o.S||[[.0,1,0],[.05,.96,.01],[.1,.84,.03],[.15,.68,.06],[.2,.5,.1],[.24,.34,.15],[.27,.2,.21],[.27,.1,.27],[.24,.03,.31]];
+  const CR=[];S.forEach(([h,r,dz],i)=>{const y=yb+.014+h*H,eh=rvEll(D,y,.016),row=[];for(let j=0;j<=N;j++){const th=TH(j),dent=1-(i>1&&i<6?.07*Math.max(0,Math.cos(th-.9))+.05*Math.max(0,Math.cos(th+2.2)):0);
+      // the crown is wider than the head (it sits loose) and always clears the skull at its height
+      const p=at(e1,th,1.18*r*dent),q=at(eh,th,1),use=eh.rx>.02&&Math.hypot(q.x,q.z-eh.zc)>Math.hypot(p.x,p.z-e1.zc)?q:p,flop=i>5?(i-5)*.02*H:0;
+      row.push({x:use.x+(o.lean2||0)*h,y:y-flop,z:use.z-dz*(o.lean||1),w:[['head',1]]})}CR.push(row)});
+  {const L=CR[CR.length-1];let cx=0,cy=0,cz=0;L.forEach(v=>{cx+=v.x;cy+=v.y;cz+=v.z});const n=L.length;CR.push(L.map(()=>({x:cx/n,y:cy/n-.006,z:cz/n-.01,w:[['head',1]]})))}
+  gkSurf(B,CR,{t:'c',col:m=>m.i==0?mdSh(c,.7):o.patch&&m.i>=2&&m.i<=3&&m.j>=3&&m.j<=5?mdMix(c,0x6a5030,.45):o.patch&&m.i==4&&m.j>=18&&m.j<=20?mdMix(c,0x3a3a2a,.5):c});
+  // the band and its buckle
+  const bR=[0,1].map(q=>CR[q].map(v=>{const dx=v.x,dz=v.z-e1.zc,L=Math.hypot(dx,dz)||1,k2=(L+.005)/L;return {x:dx*k2,y:yb+.016+q*.022,z:e1.zc+dz*k2,w:v.w}}));
+  gkSurf(B,bR,{t:'c',col:o.band||0x3a2618});
+  const fp=bR[0][0];k.p('head','box','m',T,fp.x,yb+.028,fp.z+.006,.026,.024,.006);k.p('head','box','c',o.band||0x3a2618,fp.x,yb+.028,fp.z+.009,.016,.014,.004);
+  if(G)k.p('head','oct','g',G,fp.x,yb+.028,fp.z+.012,.008,.01,.005);
+  // stitches round the brim root
+  for(let j=0;j<N;j+=2){const v=BR2[1][j];k.p('head','box','c',mdSh(c,.5),v.x,v.y+.003,v.z,.003,.002,.008,0,TH(j),0)}
+  return {brim:BR2,crown:CR,band:bR,tip:CR[CR.length-2][Math.round(N/2)]}}
+function mgBand(X,o){const {B,k,G,d}=X,D=BRD[3],yb=o.y||1.222,lo=rvEll(D,yb,.005),hi=rvEll(D,yb+.018,.005),lo2=rvEll(D,yb,.013),hi2=rvEll(D,yb+.018,.013);
+  const r=(e,y)=>({p:[0,y,e.zc],rx:e.rx,f:e.f,b:e.b,w:[['head',1]]});mdLoft(B,[r(lo,yb),r(lo2,yb),r(hi2,yb+.018),r(hi,yb+.018)],{seg:24,t:o.t||'m',ref:[0,0,1],col:o.col});
+  const at=(ang,e)=>{const ca=Math.cos(ang);return [Math.sin(ang)*e.rx,e.zc+ca*(ca>0?e.f:e.b)]};return {at,hi2,lo2,yb}}
+{const D=BRD[3],f=D.helmSet.cloth;D.helmSet.cloth=function(X){const {k,st,M,A,G,d}=X,T=d.T==null?MD_TRIM[d.ti|0]:d.T;
+  if(st=='hat'){const H=mgHat(X,{col:mdSh(M,.8),br:.17,h:.95,lean:1,droop:.03,dag:1,patch:1});
+    // a crow feather tucked into the band, a bead
+    const b=H.band[1][Math.round(28*.82)];gkFeather(k,'head',[b.x,b.y,b.z],[-.5,1,-.6],.13,.016,0x14141a,null);gkFeather(k,'head',[b.x+.004,b.y-.004,b.z+.004],[-.3,1,-.75],.1,.012,0x2a2a36,null);
+    k.p('head','sph','c',0xa87a40,b.x,b.y-.01,b.z+.008,.008)}
+  else if(st=='witch'){const H=mgHat(X,{col:mdSh(M,.6),br:.215,h:1.3,lean:1.35,lean2:.15,droop:.05,dag:1,patch:1,band:0x2a1e18,
+      S:[[0,1,0],[.05,.95,.01],[.1,.82,.035],[.15,.64,.07],[.2,.46,.12],[.24,.32,.17],[.27,.2,.23],[.28,.12,.29],[.26,.06,.34],[.22,.02,.37]]});
+    // charms on cords from the brim, one from the drooping tip
+    const N=28;[[3,0xd8ccb0,'bone'],[8,0x7ac83a,'vial'],[20,0xd8ccb0,'skull'],[24,0x6a8a3a,'herb']].forEach(([j,c,t])=>{const v=H.brim[4][j],e=[v.x,v.y-.06,v.z];k.L('head','c',0x2a1e14,[v.x,v.y,v.z],e,.0025,.0025,3);
+      if(t=='bone')gkBone(k,'head',[e[0]-.01,e[1],e[2]],[e[0]+.01,e[1]-.016,e[2]],.0035,c,null);else if(t=='vial')gkVial(k,'head',e[0],e[1]-.01,e[2],.75,G||c,T,null);
+      else if(t=='skull')gkSkull(k,'head',e[0],e[1]-.016,e[2],.45,c,Math.atan2(v.x,v.z),null);else for(let q=0;q<3;q++)k.p('head','box','c',q%2?c:0x4a6a2a,e[0]+q*.004,e[1]-.016,e[2],.003,.032,.003,0,0,(q-1)*.3)});
+    const tp=H.tip;k.L('head','c',0x2a1e14,[tp.x,tp.y,tp.z],[tp.x,tp.y-.07,tp.z-.01],.0025,.0025,3);k.p('head','oct',G?'g':'c',G||0xa83a2a,tp.x,tp.y-.08,tp.z-.01,.012,.016,.012)}
+  else if(st=='circlet'){const Bd=mgBand(X,{col:mdSh(T,.75)}),ember=0xff7a20;
+    for(let i=0;i<9;i++){const ang=(i-4)*.33,[x,z]=Bd.at(ang,Bd.hi2),h=.05+(4-Math.abs(i-4))*.012;k.L('head','m',i%2?mdSh(T,.9):T,[x,Bd.yb+.012,z],[x*1.12-(i-4)*.004,Bd.yb+.018+h,z+.008],.01,.001,4);
+      if(i%2==0)k.p('head','cone4','g',ember,x*1.04,Bd.yb+.018+h*.45,z+.004,.004,h*.5,.003,0,ang,0)}
+    const [gx,gz]=Bd.at(0,Bd.hi2);k.p('head','oct','m',T,gx,Bd.yb+.01,gz+.004,.02,.024,.01);k.p('head','oct','g',G||ember,gx,Bd.yb+.01,gz+.01,.012,.015,.008)}
+  else if(st=='diadem'){const bone=0xd8ccb0,Bd=mgBand(X,{col:bone,t:'c'});
+    for(let i=0;i<11;i++){const ang=(i-5)*.3,[x,z]=Bd.at(ang,Bd.hi2),h=.035+(5-Math.abs(i-5))*.009;gkBone(k,'head',[x,Bd.yb+.022,z],[x*1.05,Bd.yb+.02+h,z+.004],.0045,i%2?bone:0xc8bca0,null)}
+    const [gx,gz]=Bd.at(0,Bd.hi2);gkSkull(k,'head',gx,Bd.yb+.006,gz+.012,.62,0xe0d6bc,0,null);if(G)[-1,1].forEach(q=>k.p('head','oct','g',G,gx+q*.0075,Bd.yb+.008,gz+.034,.004));
+    // a ragged veil hanging from the back of the band
+    const V=[];for(let i=0;i<=4;i++){const row=[];for(let j=0;j<=10;j++){const ang=Math.PI*.62+j/10*Math.PI*.76,[x,z]=Bd.at(ang,Bd.hi2),t=i/4,lw=1+t*.25;let y=Bd.yb+.01-t*.16;if(i==4&&j%2)y+=.03;
+        row.push({x:x*lw,y,z:Bd.hi2.zc+(z-Bd.hi2.zc)*lw-t*.02,w:y>1.1?[['head',1]]:mdWb('neck','head',Math.max(0,(y-1.03)/.07))})}V.push(row)}
+    gkSurf(X.B,V,{t:'c',col:m=>m.i>=3?0x2e2a3a:0x423c52})}
+  else if(st=='crown'){const Bd=mgBand(X,{col:T}),glow=G||0x9ad8ff;
+    for(let i=0;i<12;i++){const ang=i/12*Math.PI*2,[x,z]=Bd.at(ang,Bd.hi2),h=(i%3==0?.085:.05)*(Math.cos(ang)>.5?1.2:1),q=1.03;
+      // a jagged lightning spike: two kinked segments
+      const p1=[x,Bd.yb+.016,z],p2=[x*q+Math.cos(ang)*.008,Bd.yb+.016+h*.55,z*q-Math.sin(ang)*.008+Bd.hi2.zc*(1-q)],p3=[x*q*1.04,Bd.yb+.016+h,z*q*1.02+Bd.hi2.zc*(1-q)];
+      k.L('head','m',T,p1,p2,.01,.006,4).L('head','m',mdSh(T,1.15),p2,p3,.007,.001,4);if(i%3==0)k.p('head','oct','g',glow,p2[0],p2[1],p2[2],.008,.014,.008)}
+    const [gx,gz]=Bd.at(0,Bd.hi2);k.p('head','oct','g',glow,gx,Bd.yb+.012,gz+.008,.015,.022,.01);
+}
+  else return f.apply(this,arguments)}}
+// ---------------- the Mage's hoods ----------------
+GK_HOOD.linen={hood:X=>gkHoodBase(X,{col:mdSh(X.M,.8),lin:mdSh(X.M,.3),trim:mdSh(X.M,.6),dag:[.035],tip:{len:.2,r:.03,drop:1}}),
+  post:(X,Hd)=>{const {k}=X;// a rope tie at the throat
+    const a=gkHoodAt(Hd,.97,.5),b=gkHoodAt(Hd,.97,Math.PI*2-.5);if(a&&b){k.L('chest','c',0x6a5a3a,[a.x,a.y,a.z],[0,.94,(a.z+b.z)/2+.03],.005,.005,4);mdOW(k,a.w);k.L('chest','c',0x6a5a3a,[b.x,b.y,b.z],[0,.94,(a.z+b.z)/2+.03],.005,.005,4);mdOW(k,b.w);
+      k.p('chest','sph','c',0x7a6a4a,0,.94,(a.z+b.z)/2+.03,.01);[-.012,.012].forEach(x=>{k.L('chest','c',0x6a5a3a,[x*.5,.94,(a.z+b.z)/2+.03],[x,.87,(a.z+b.z)/2+.04],.004,.003,3)})}}};
+GK_HOOD.tallcowl={hood:X=>gkHoodBase(X,{col:X.M,lin:0x14101a,trim:mdSh(X.A,.8),peak:{h:.2,back:.13},crown:.02,dag:[.03],tip:false,clear:.02}),
+  post:(X,Hd)=>{const {k,A,G,d}=X,T=X.T;// runes round the face, a chain from the peak with a padlock
+    const I=[];Hd.ys.forEach((y,i)=>{if((Hd.phi[i]||0)>.05)I.push(i)});I.forEach((i,n)=>{if(n%2)return;const v=Hd.G[i][1];k.p('head','box',G?'g':'m',G||mdSh(A,1.2),v.x,v.y,v.z,.004,.012,.004,0,Math.atan2(v.x,v.z-Hd.cz[i]),0);mdOW(k,v.w)});
+    const top=Hd.G[Hd.G.length-1][0],b=gkHoodAt(Hd,1.0,Math.PI);gkChain(k,'head',[[top.x,top.y,top.z],[top.x,top.y-.06,top.z-.03],[b.x,b.y+.05,b.z-.012]],.006,mdSh(T,1.1),p=>p[1]>1.1?[['head',1]]:[['neck',1]]);
+    k.p('head','box','m',mdSh(T,.8),b.x,b.y+.04,b.z-.014,.02,.024,.01)}};
+GK_HOOD.star={hood:X=>gkHoodBase(X,{col:X.M,lin:0x0e0e1e,trim:mdSh(X.A,.9),dag:0,tip:{len:.14,r:.03},over:.045}),
+  post:(X,Hd)=>{const {k,G,A}=X,sc=0xe8dcb0;// stars on the cowl, a crescent at the brow
+    for(let i=0;i<18;i++){const y=.92+((i*37)%19)/19*.34,th=.9+((i*53)%29)/29*(Math.PI*2-1.8),v=gkHoodAt(Hd,y,th);if(!v)continue;const a=Math.atan2(v.x,v.z-(v.cz||0)),sz=i%4==0?.012:.007;
+      k.p('head','box',G&&i%5==0?'g':'m',G&&i%5==0?G:sc,v.x,v.y,v.z,sz*.3,sz*2,.003,0,a,Math.PI/4);mdOW(k,v.w);k.p('head','box',G&&i%5==0?'g':'m',G&&i%5==0?G:sc,v.x,v.y,v.z,sz*2,sz*.3,.003,0,a,Math.PI/4);mdOW(k,v.w)}
+    const I=[];Hd.ys.forEach((y,i)=>{if((Hd.phi[i]||0)>.05)I.push(i)});const it=I[I.length-1];if(it!=null){const v=Hd.G[Math.min(Hd.G.length-1,it+1)][Math.round(Hd.N/2)]||Hd.G[it][0];
+      const f=Hd.G[it][0],g=Hd.G[it][Hd.N],cx=(f.x+g.x)/2,cy=(f.y+g.y)/2+.012,cz=(f.z+g.z)/2;for(let q=0;q<5;q++){const a=-1.1+q*.55;k.p('head','box','m',sc,cx+Math.cos(a)*.02,cy+Math.sin(a)*.02,cz,.006,.016,.005,0,0,a)}
+      k.p('head','oct',G?'g':'m',G||sc,cx+.004,cy,cz+.004,.006)}}};
+// ================= v136: Warrior, Paladin and Ranger armour — hanging skirts and class details =================
+// * Every skirt of a hero's armour or outfit (mail skirts, coats, tabards — the v94 mdSkirt) is hung as cloth with gkSkirt:
+//   measured round the hips and legs, never narrowing downward, flaring, the back on the cape bones; colour and keep callbacks
+//   get the same m.y / m.s (front +1) / m.c (side) they had.
+// * Class details over the v95 armour:
+//   Warrior (rat): battle-worn and brutal — chains slung across the chest with a trophy skull, leather war-straps and buckles
+//     over the plate, scratches and dents, spikes on the shoulders, a torn red war-skirt under the faulds, a skull belt buckle.
+//   Paladin (badger): holy — purity seals (wax and parchment) on the breast and shoulders, gilded rims, a sun emblem, prayer
+//     beads, a chained holy book at the hip, a long embroidered tabard that swings.
+//   Ranger (weasel): a hunter — a fur collar, a necklace of teeth and claws, feathers and bone charms at the shoulder, a skinning
+//     knife and pouches, a torn hunting skirt.
+{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(!MD_ORN)return f.apply(this,arguments);o=o||{};const cf=o.col,kf=o.keep,m2=m=>{const th=m.u*Math.PI*2;m.s=Math.cos(th);m.c=Math.sin(th);return m};
+  return gkSkirt(B,P,{y0,hem:y1,flare:fl*1.25+.01,clear:off+.004,rows:Math.max(6,(o.n||5)*2),t:o.t,flow:.35,folds:[9,.008],N:36,
+    col:typeof cf=='function'?(m=>cf(m2(m))):cf,keep:kf?(m=>kf(m2(m))):null})}}
+function hvScratch(k,P,n,seed,y0,y1){for(let i=0;i<n;i++){const r=((seed*31+i*67)%97)/97,y=y0+(y1-y0)*((i*37+seed*7)%23)/23,a=-1.1+r*2.2+(i%2?Math.PI:0),p=mdTP(P,y,a,(P.tOff||0)+.0015);
+  k.p('chest','box','c',0x14100c,p[0],p[1],p[2],.003,.02+r*.02,.002,0,a,(r-.5)*1.6);mdOW(k,mdTorsoW(y))}}
+{const f=mdChH;mdChH=function(X){const r=f.apply(this,arguments);try{hvExtra(X)}catch(e){console.warn('v136 heavy',e)}return r}}
+{const f=mdChM;mdChM=function(X){const r=f.apply(this,arguments);try{mdExtra(X)}catch(e){console.warn('v136 medium',e)}return r}}
+function hvCls(){return BR.on&&BR.R?BR.R.cls:null}
+function hvExtra(X){const {B,P,d,k}=X,cls=hvCls(),M=d.M,T=d.T,G=d.G,lv=d.lv|0,st=d.st,off=()=>(P.tOff||0),cf=y=>mdTorsoAt(P,y).f+off(),tw=y=>mdTorsoW(y),plate=['cuirass','warplate','aegis','blood','wall','warlord'].includes(st);
+  if(cls=='warrior'){const red=0x4a1010;
+    // a torn red war-skirt hanging below the faulds, front and back
+    gkSkirt(B,P,{y0:.56,hem:th=>.29+.03*Math.cos(th*2),flare:.02,clear:Math.max(.03,(P.sOff||0)+.008),folds:[8,.012],dag:[.06],flow:.5,N:32,lin:mdSh(red,.5),
+      keep:m=>{const c=Math.cos(m.u*Math.PI*2);return c>.82||c<-.82},col:m=>m.v>.8?mdSh(red,.7):(Math.floor(m.v*6+m.u*20)%5==0?mdSh(red,.8):red)});
+    // war-straps crossing the chest with buckles
+    const p1=mdTLoop(B,P,.8,.18,Math.PI/2,off()+.01,.03,0x2a1e18,{n:22});[3,8].forEach(i=>{const q=p1[i];mdBuckle(k,'chest',q.p[0]+q.n[0]*.008,q.p[1],q.p[2]+q.n[2]*.008,.85,T,0x2a1e18,q.w,Math.atan2(q.n[0],q.n[2]))});
+    // a chain slung from the left shoulder to the right hip, a trophy skull hanging from it (T3+)
+    const pts=[];for(let i=0;i<=8;i++){const t=i/8,y=.96-t*.34,a=-.55+t*1.5;pts.push(mdTP(P,y,a,off()+.02))}gkChain(k,'chest',pts,.008,mdSh(T,.75),p=>tw(p[1]));
+    if(lv>=2){const q=pts[4];gkSkull(k,'chest',q[0]+.01,q[1]-.05,q[2]+.02,.9,0xd8ccb0,Math.atan2(q[0],q[2]),tw(q[1]))}
+    if(plate)hvScratch(k,P,10+lv*3,d.tp|0,.62,.95);
+    // spikes on both shoulders (T2+), a skull belt buckle
+    if(lv>=1)[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;for(let i=0;i<2+Math.min(2,lv>>1);i++)gkSpike(k,a,[sp[0]+s*(.04+i*.024),1.02-i*.012,-.04+i*.035],[s*.55,1,-.05],.05+lv*.008,.011,mdSh(T,.8),'m')});
+    gkSkull(k,'spine',0,.6,cf(.6)+.032,.85,mdSh(T,1.05),0,tw(.6),'m');
+    if(lv>=3&&st!='warlord'){mdFur(X,.92,1.0,0x3a2e24,12)}}
+  else if(cls=='paladin'){const tab=mdSh(mdMix(0xc8bc98,d.A,.1),.82),gold=lv>=2?0xd8b050:T,cream=0xe0d4b4;
+    // the long holy tabard (front and back panels) with an embroidered border and a sun
+    if(!['aegis','blood'].includes(st)){gkSkirt(B,P,{y0:.6,hem:.18,flare:.03,clear:Math.max(.03,(P.sOff||0)+.01),folds:[6,.01],flow:.55,N:36,lin:mdSh(tab,.5),
+      keep:m=>{const c=Math.cos(m.u*Math.PI*2);return c>.82||c<-.82},col:m=>{const th=m.u*Math.PI*2,c=Math.cos(th),a=Math.abs(Math.sin(th));if(Math.abs(c)<.86||m.v>.9)return gold;if((a<.1&&m.v>.06&&m.v<.78)||(m.v>.2&&m.v<.3&&a<.34))return 0x7a1414;return tab}});
+}
+    // purity seals: red wax with parchment strips, on the breast and both shoulders
+    const seal=(bn,x,y,z,w,ry)=>{k.p(bn,'cyl','c',0x8a1414,x,y,z,.02,.008,.02,Math.PI/2,ry||0,0);if(w)mdOW(k,w);k.p(bn,'oct','c',0x6a0c0c,x,y,z+.005,.01,.01,.003,0,ry||0,0);if(w)mdOW(k,w);
+      [-1,1].forEach(q=>{k.p(bn,'box','c',cream,x+q*.008,y-.05,z-.002,.008,.08,.002,0,ry||0,q*.12);if(w)mdOW(k,w)})};
+    seal('chest',.09,.86,cf(.86)+.014,tw(.86));if(lv>=2)seal('chest',-.1,.72,cf(.72)+.012,tw(.72));
+    [-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;seal(a,sp[0]+s*.05,.97,.07,null,s*.3)});
+    // a sun on the breast (T3+), prayer beads, a holy book chained at the hip
+    if(lv>=2){const z=cf(.8)+.02;k.p('chest','cyl',G?'g':'m',G||gold,0,.8,z,.026,.006,.026,Math.PI/2);mdOW(k,tw(.8));for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('chest','cone4','m',gold,Math.sin(a)*.04,.8+Math.cos(a)*.04,z,.008,.028,.003,0,0,-a);mdOW(k,tw(.8))}}
+    for(let i=0;i<13;i++){const a=-.8+i/12*1.6,y=.95-Math.cos(a*1.7)*.16,p=mdTP(P,Math.max(.76,y),a,off()+.014);k.p('chest','sph','c',i==6?gold:0x3a2a1a,p[0],p[1],p[2],.008);mdOW(k,tw(p[1]))}
+    const hp=mdTP(P,.58,1.25,off()+.03);gkChain(k,'pelvis',[[hp[0],.6,hp[2]],[hp[0]+.02,.5,hp[2]+.02]],.006,gold,null);gkBook(k,'pelvis',hp[0]+.02,.45,hp[2]+.03,1.3,0x5a1a14,gold,1.25,null);
+    // gilded rims along the breastplate
+    if(plate)mdTS(B,P,.6,.615,off()+.004,{t:'m',col:gold})}}
+function mdExtra(X){const {B,P,d,k}=X,M=d.M,T=d.T,lv=d.lv|0,st=d.st,off=()=>(P.tOff||0),tw=y=>mdTorsoW(y),bone=0xe0d6bc;
+  // a fur collar (T2+), a necklace of teeth and claws, feathers and bone charms on the left shoulder
+  const hd=GKX.E&&GKX.E.helm?mdGD(GKX.E.helm):null;if(lv>=1&&!['longcoat','mantle'].includes(st)&&!(hd&&GK_HOOD[hd.st]))mdFur(X,.91,1.0,mdMix(M,0x5a4a3a,.5),12);
+  for(let i=0;i<11;i++){const a=-.8+i*.16,y=.95-Math.cos(a*1.5)*.12,p=mdTP(P,Math.max(.8,y),a,off()+.022);
+    if(i%3==1)k.p('chest','cone4','c',bone,p[0],p[1]-.016,p[2],.007,.03,.007,Math.PI);else if(i%3==2)k.p('chest','cone4','c',0x2a1e18,p[0],p[1]-.012,p[2],.005,.022,.005,Math.PI,0,.3);else k.p('chest','sph','c',0x6a4a2a,p[0],p[1],p[2],.006);mdOW(k,tw(p[1]))}
+  const sp=mdArm(P,-1)[1].p;[[-.02,0x2a2a2a],[.01,0xc8c4b8],[.04,0x8a2a1a]].forEach(([dz,c],i)=>gkFeather(k,'aL0',[sp[0]-.05,.98,dz],[-.2,-1,.1*(i-1)],.11,.014,c,null));
+  gkBone(k,'aL0',[sp[0]-.06,.97,-.03],[sp[0]-.07,.92,-.02],.004,bone,null);
+  // a skinning knife on the right hip, a torn hunting skirt under the coat (short styles)
+  mdKnife(k,P,.95,.56,0x2a1e18,0xb8bec8,.25);
+  if(!['longcoat','mantle','tails'].includes(st))gkSkirt(B,P,{y0:.56,hem:.36,flare:.03,clear:Math.max(.02,(P.sOff||0)+.008),folds:[8,.01],dag:[.04],flow:.4,N:32,lin:mdSh(M,.4),
+    keep:m=>{const c=Math.cos(m.u*Math.PI*2);return Math.abs(c)<.98},col:m=>m.v>.8?mdSh(M,.6):Math.floor(m.v*4+m.u*24)%4==0?mdSh(M,.82):mdSh(M,.92)})}
+// ---- heavy helms: the Warrior's grow spikes and battle scars, the Paladin's a plume and a gilded brow cross ----
+{const f=brHelm;brHelm=function(B,P,d){const r=f.apply(this,arguments);try{if(d&&d.a=='heavy'&&BR.R&&['warrior','paladin'].includes(BR.R.cls)){const D=BR.R,k=dkKit(),cz=D.crownZ==null?-.05:D.crownZ,q=brSkullAt(D,cz),top=q.top+.03,lv=d.lv|0,T=d.T==null?MD_TRIM[d.ti|0]:d.T;
+    if(BR.R.cls=='warrior'){for(let i=0;i<3+Math.min(2,lv);i++){const z=cz-.05+i*.03;gkSpike(k,'head',[0,brSkullAt(D,z).top+.026,z],[0,1,-.25],.035+(i==1?.02:0)+lv*.004,.009,mdSh(d.M,.8),'m')}
+      for(let i=0;i<4+lv;i++){const z=cz-.02+i*.022,s=i%2?1:-1,qq=brSkullAt(D,z);k.p('head','box','c',0x14100c,s*qq.rx*.6,qq.top+.024,z,.003,.004,.022,0,s*.4,0)}}
+    else{const pl=lv>=2?0xe8e0d0:0x8a1414,gold=lv>=2?0xd8b050:T;for(let i=0;i<7;i++){const z=cz-.07+i*.02;k.p('head','cone4','c',i%2?pl:mdSh(pl,.85),0,top+.03+Math.sin(i/6*Math.PI)*.03,z-.02,.012,.09,.03,-.9+i*.12,0,0)}
+      const fz=D.SN[D.SN.length-1][0]-.06,fq=brSkullAt(D,fz>cz+.06?cz+.07:fz);k.p('head','box','m',gold,0,fq.top+.03,cz+.075,.008,.05,.006,-.5);k.p('head','box','m',gold,0,fq.top+.04,cz+.07,.03,.008,.006,-.5)}
+    mdKit(B,k)}}catch(e){console.warn('v136 helm',e)}return r}}
+// ---- boots: spiked knee cops (Warrior), gilded knee plates with a cross (Paladin), fur cuffs and a feather (Ranger) ----
+{const f=mdBoots;mdBoots=function(B,P,d){const r=f.apply(this,arguments);try{if(BR.on&&BR.R&&d&&d.key&&(d.a=='heavy'||d.a=='medium')){const cls=BR.R.cls,k=dkKit(),lv=d.lv|0,T=d.T==null?MD_TRIM[d.ti|0]:d.T;
+    [-1,1].forEach(s=>{const l=s<0?'lh':'rh',L=mdLeg(P,s),q=mdRAt(L,3),w=q.w;
+      if(cls=='warrior'){k.p(l+'1','hem','m',mdSh(d.M,1.1),q.p[0],q.p[1],q.p[2]+q.f+.02,.05,.04,.03,Math.PI/2);mdOW(k,w);gkSpike(k,l+'1',[q.p[0],q.p[1],q.p[2]+q.f+.045],[0,.25,1],.035+lv*.006,.01,mdSh(T,.8),'m',w);
+        const a=mdRAt(L,4.6);mdLB(B,L,4.6,.006,.04,0x2a1e18,{t:'c'});k.p(l+'1','box','m',T,a.p[0]+s*(a.rx+.04),a.p[1],a.p[2],.004,.014,.012);mdOW(k,a.w)}
+      else if(cls=='paladin'){const g=lv>=2?0xd8b050:T;k.p(l+'1','hem','m',g,q.p[0],q.p[1],q.p[2]+q.f+.018,.048,.036,.028,Math.PI/2);mdOW(k,w);
+        k.p(l+'1','box','m',mdSh(g,.7),q.p[0],q.p[1],q.p[2]+q.f+.05,.006,.03,.004);mdOW(k,w);k.p(l+'1','box','m',mdSh(g,.7),q.p[0],q.p[1]+.004,q.p[2]+q.f+.05,.02,.006,.004);mdOW(k,w)}
+      else if(cls=='ranger'){const top=mdRAt(L,3.7);mdLoft(B,[top,mdRAt(L,3.95)],{seg:9,off:.04,col:m=>Math.floor(m.x*120+m.z*90)%2?mdMix(d.M,0x5a4a3a,.6):mdMix(d.M,0x3a2e24,.6),keep:m=>true});
+        if(s<0)gkFeather(k,l+'1',[top.p[0]-.04,top.p[1],top.p[2]],[-.2,-1,-.2],.09,.012,0x2a2a2a,top.w)}});
+    mdKit(B,k)}}catch(e){console.warn('v136 boots',e)}return r}}
+// ================= v136: darker, more detailed weapons =================
+// Every weapon keeps the v83 model (and the v135 bow); on top of it each type gets the marks of a dark world, more with
+// rarity (r): notched and serrated edges, a fuller etched with runes, leather tassels and torn ribbons from the pommel,
+// chains and small skulls hung from guards and hafts, spikes, bone and fur wraps with feathers. The Mage's staff carries a
+// raven skull cradling its crystal and charms on cords; the wand is carved bone with a skull; the orb sits in a cage of bone.
+// All parts are added in the weapon's own frame (grip at the origin, the head down -y), so grips and animations are unchanged.
+function wpNotch(k,x0,y0,y1,z,n,s,col){for(let i=0;i<n;i++){const y=y0+(y1-y0)*(i+.5)/n;k.p('','cone4','m',col,x0,y,z,.008,.012,.004,0,0,s*Math.PI/2)}}
+function wpRibbon(k,y,col,len,sd){k.S('',col,0,y,0,.03,len,0,.2,sd||1);k.S('',mdSh(col,.7),0,y,0,.022,len*.8,1.6,.2,(sd||1)+2)}
+function wpX(k,type,col,r){const W=LGW,steel=col==0x9aa2ae?W.steel:lgCol(W.steel,col,.42),dk=0x14100c,bone=0xd8ccb0,gl=r>=3?col:null,fit=r>=2?W.brass:W.iron;
+  if(type=='sword'){wpNotch(k,.046,-.2,-.6,0,3+r,1,dk);if(r>=1)wpRibbon(k,.14,0x5a1414,.16,1);if(r>=2)gkSkull(k,'',0,.15,0,.8,bone,0,null);
+    [-1,1].forEach(s=>k.L('','m',fit,[s*.12,-.09,0],[s*.16,-.04,0],.012,.003,4))}
+  else if(type=='gs'){wpNotch(k,.07,-.35,-.9,0,4+r,1,dk);wpNotch(k,-.07,-.5,-.85,0,2+r,-1,dk);
+    // a leather-wrapped ricasso, a skull set in the guard, chains from the quillons
+    for(let i=0;i<3;i++)k.p('','box','c',i%2?W.wrap:W.leather,0,-.26-i*.025,0,.13,.02,.04);gkSkull(k,'',0,-.15,.04,1.05,r>=2?bone:W.iron2,0,null);
+    if(r>=1)[-1,1].forEach(s=>gkChain(k,'',[[s*.17,-.13,0],[s*.19,-.24,.01],[s*.18,-.3,.02]],.008,W.iron,null));if(r>=2)wpRibbon(k,.29,0x3a0c0c,.2,3)}
+  else if(type=='axe'||type=='ga'){const big=type=='ga',y=big?-.78:-.62,sc=big?1.05:.86;
+    wpNotch(k,.29*sc+.02,y-.12,y+.12,0,2+r,1,dk);if(big)wpNotch(k,-.29*sc-.02,y-.12,y+.12,0,2+r,-1,dk);
+    k.p('','cone4','m',W.iron2,0,y-.13,0,.03,.12,.03,Math.PI);
+    // fur and bone wrapped round the haft with feathers
+    k.p('','cyl','c',0x4a3a2c,0,y+.2,0,.048,.06,.048);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.p('','cone4','c',i%2?0x5a4836:0x3a2e24,Math.cos(a)*.045,y+.18,Math.sin(a)*.045,.016,.05,.01,Math.PI,a,0)}
+    gkBone(k,'',[.04,y+.24,.01],[.05,y+.16,.02],.006,bone,null);gkFeather(k,'',[-.045,y+.2,0],[-.25,-1,.1],.1,.014,0x1a1a1a,null);
+    if(r>=2)gkSkull(k,'',0,y+.02,.035,.75,bone,0,null)}
+  else if(type=='mace'){for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2;k.p('','cone4','m',W.iron2,Math.cos(a)*.08,-.73,Math.sin(a)*.08,.012,.05,.012,Math.sin(a)*1.57,0,-Math.cos(a)*1.57)}
+    gkChain(k,'',[[0,-.5,.038],[.03,-.4,.035],[0,-.3,.037],[-.03,-.2,.035]],.008,W.iron,null);if(r>=2)gkSkull(k,'',0,-.58,.045,.7,bone,0,null);if(r>=1)wpRibbon(k,.05,0xd8ccaa,.14,5)}
+  else if(type=='hammer'){gkSkull(k,'',0,-.74,.105,1.4,r>=2?bone:lgCol(W.iron,0,.3),0,null,'m');gkSkull(k,'',0,-.74,-.105,1.4,r>=2?bone:lgCol(W.iron,0,.3),Math.PI,null,'m');
+    [-1,1].forEach(s=>[-1,1].forEach(q=>k.p('','cone4','m',W.iron2,s*.22,-.74+q*.08,0,.015,.05,.015,0,0,-s*Math.PI/2)));if(r>=1)gkChain(k,'',[[0,-.62,.03],[.02,-.52,.03],[0,-.42,.03]],.008,W.iron,null)}
+  else if(type=='dagger'){// a serrated back edge, a ring pommel
+    for(let i=0;i<5+r;i++){const y=-.12-i*.035;k.p('','cone4','m',steel,-.036,y,0,.006,.014,.003,0,0,Math.PI/2+.4)}k.p('','ring','m',fit,0,.11,0,.022,.12,.022,Math.PI/2);if(r>=2)wpRibbon(k,.09,0x3a0c14,.1,7)}
+  else if(type=='claws'){k.L('','m',steel,[.06,-.06,0],[.1,-.2,.04],.01,.002,4);k.p('','cone4','c',bone,-.06,0,.04,.008,.03,.008,0,0,.4);if(gl)k.p('','box','g',gl,0,-.02,.05,.04,.01,.004)}
+  else if(type=='halberd'){wpNotch(k,.33,-1.42,-1.16,0,2+r,1,dk);k.S('',0x3a0c0c,-.03,-1.12,0,.06,.24,0,.1,9);k.S('',0x2a0808,.03,-1.12,0,.05,.2,.3,.1,11);if(r>=2)gkSkull(k,'',0,-1.2,.035,.8,bone,0,null)}
+  else if(type=='flail'){for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2;k.p('','cone4','m',W.iron2,Math.cos(a)*.1,-.76,Math.sin(a)*.1,.02,.08,.02,Math.sin(a)*1.57,0,-Math.cos(a)*1.57)}if(r>=2)gkSkull(k,'',0,-.66,0,.6,bone,0,null)}
+  else if(type=='staff'){// a raven skull cradling the crystal, charms hanging on cords, a band of runes
+    gkSkull(k,'',0,-.93,.045,1.0,bone,0,null);k.L('','c',bone,[0,-.95,.08],[0,-.99,.17],.018,.004,5);
+    [[.05,-.78,0x2a2a30,'f'],[-.05,-.8,bone,'b'],[.02,-.84,0x8a2a1a,'v']].forEach(([x,y,c,t])=>{k.L('','c',0x2a1e14,[0,-.72,0],[x,y,.02],.003,.003,3);
+      if(t=='f')gkFeather(k,'',[x,y,.02],[.1,-1,.05],.09,.013,c,null);else if(t=='b')gkBone(k,'',[x,y,.02],[x+.005,y-.03,.025],.004,c,null);else gkVial(k,'',x,y-.015,.02,.8,gl||c,W.brass,null)});
+    if(gl)for(let i=0;i<4;i++)k.p('','box','g',gl,0,-.35-i*.08,.034,.006,.03,.004,0,0,i%2?.4:-.4)}
+  else if(type=='wand'){gkSkull(k,'',0,-.36,.0,.55,bone,0,null);for(let i=0;i<3;i++)k.p('','box','c',mdSh(bone,.7),0,-.2-i*.04,.016,.012,.004,.004,0,0,.5)}
+  else if(type=='orb'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.L('','c',bone,[Math.cos(a)*.06,-.13,Math.sin(a)*.06],[Math.cos(a)*.14,-.02,Math.sin(a)*.14],.008,.006,4);k.L('','c',bone,[Math.cos(a)*.14,-.02,Math.sin(a)*.14],[Math.cos(a)*.06,.12,Math.sin(a)*.06],.006,.002,4)}
+    gkChain(k,'',[[0,-.16,.05],[.04,-.24,.04]],.007,W.brass,null)}
+  else if(type=='bow'){// feathers and bone charms tied at the limbs, carved rings on the riser
+    [-1,1].forEach(s=>{const y=s*.3*BOW_K,x=-.555+(-.08)*BOW_KX;gkFeather(k,'',[x-.02,y,0],[.1,-1,.15],.08,.012,s<0?0x1a1a1a:0x8a2a1a,null);k.L('','c',0x2a1e14,[x-.02,y+.01,0],[x-.03,y-.04,.01],.003,.003,3)});
+    for(let i=0;i<3;i++)k.p('','cyl','m',fit,-.555,-.06+i*.06,0,.028,.008,.028)}
+  else if(type=='crossbow'){gkSkull(k,'',0,.14,.0,.7,bone,0,null);[-1,1].forEach(s=>k.p('','cone4','m',W.iron2,s*.08,-.5,0,.01,.05,.01,0,0,-s*Math.PI/2))}
+  else if(type=='shield'){// a spiked boss, a skull set over it (Rare+), claw marks across the face
+    [-1,1].forEach(s=>{k.p('','cone4','m',W.iron2,0,0,s*.1,.03,.08,.03,s*Math.PI/2);if(r>=2)gkSkull(k,'',0,.24,s*.035,1.1,bone,s<0?Math.PI:0,null);
+      for(let i=0;i<3;i++)k.p('','box','c',dk,-.12+i*.04,-.12+i*.02,s*.026,.006,.18,.004,0,0,.5)})}}
+{const f=lgWpnKit;lgWpnKit=function(k,type,col,r){f.apply(this,arguments);try{wpX(k,type,col,r||0)}catch(e){console.warn('v136 weapon',type,e)}}}
+// ================= v136: item pictures of armour show it on its class's animal =================
+// Helms, chest pieces and boots are fitted to the animal of the class that wears them (hoods to the ears, robes round the
+// raven's legs, footwraps round the cat's toes), and the cloth is measured round the body. The item picture (mdItemKit, used
+// by the inventory icons and the gear lying on the ground) is built the same way: the animal's body is built first, the item
+// is built over it, then the body's triangles are dropped, so the picture is exactly the piece the hero wears.
+function mdItemRace(it){try{const t=itT(it);if(!t||!['helm','chest','boots'].includes(t.sl))return 0;const cls=t.cls||(t.arm&&ARMC[t.arm]?ARMC[t.arm][0]:null),r=cls?BR_CLS[cls]:0;return r&&BRD[r]?r:0}catch(e){return 0}}
+{const f=mdItemKit;mdItemKit=function(k,it){const r=mdItemRace(it),d=r?mdGD(it):null;if(!d)return f.apply(this,arguments);
+  const D=BRD[r],L={skin:D.fur[0],eye:D.eye[0],build:1,height:1,race:r,hairStyle:5,face:0,sex:0},o={on:BR.on,R:BR.R,C:BR.C,feet:BR.feet,P:BR.P,mask:BR.mask};
+  MD_ORN++;BR.on=true;BR.R=D;BR.C=D.cols(L);BR.feet=false;BR.mask=!!(d.sl=='helm'&&BR_MASK[d.st]);
+  try{const B=mdB(HB),P=mdP({look:mdLookN(L,D.cls),sex:0,build:1,col:{skin:BR.C.FUR}});if(d.sl=='chest')mdChestPre(P,d);if(d.sl=='boots')mdBootsPre(P,d);
+    P._T=mdTorso(P);mdBody(B,P);mdHead(B,P,{});const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;
+    if(d.sl=='chest')mdChest(B,P,d,D.cls);else if(d.sl=='helm')mdHelm(B,P,d);else mdBoots(B,P,d);
+    const oy=d.sl=='helm'?-1.15:d.sl=='chest'?-.8:0;
+    for(const t in B.L){const Lb=B.L[t],s0=n0[t]||0;if(Lb.p.length<=s0)continue;const by=new Map();
+      for(let i=s0;i<Lb.p.length;i+=9){const key=Math.round(Lb.c[i]*255)<<16|Math.round(Lb.c[i+1]*255)<<8|Math.round(Lb.c[i+2]*255);let a=by.get(key);if(!a){a=[];by.set(key,a)}
+        for(let j=0;j<9;j+=3)a.push(Lb.p[i+j],Lb.p[i+j+1]+oy,Lb.p[i+j+2])}
+      by.forEach((a,col)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(a,3));g.computeVertexNormals();k.p('',g,t=='m'?'m':t=='g'?'g':'c',col,0,0,0,1,1,1)})}
+    if(d.sl=='boots'){k.P=k.P.map(p=>{const g=p.geo,pa=g.attributes.position,a=[];for(let i=0;i<pa.count;i+=3){const x=(pa.getX(i)+pa.getX(i+1)+pa.getX(i+2))/3;if(x>0)for(let j=0;j<3;j++)a.push(pa.getX(i+j)-.1,pa.getY(i+j),pa.getZ(i+j))}
+      if(!a.length)return null;const ng=new THREE.BufferGeometry();ng.setAttribute('position',new THREE.Float32BufferAttribute(a,3));ng.computeVertexNormals();return Object.assign({},p,{geo:ng})}).filter(Boolean)}
+    return true}
+  catch(e){console.warn('v136 item picture',e);return f.apply(this,arguments)}
+  finally{Object.assign(BR,o);MD_ORN--}}}

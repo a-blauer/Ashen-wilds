@@ -86,6 +86,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v135 cat head remade (round skull, whisker pads, ruffs, `brCatEyes135` slit eyes under heavy lids, wide ears) | `2120` |
 | v135 uniques: an amulet, a ring and a weapon per zone (`UNQ135`, `it.u`, bespoke kits; weapons get the zone's ornaments `UNQ135_ORN`), 1 in 2,000 kills / 1 in 300 elites in field instances; fishing-only uniques (`src:'fish'`, `UNQ135_FISH`) | `2480-v135-zone-uniques.js`, `2490-v135-fishing-rares.js` |
 | v135 right click toggles mouse-look (middle button still turns the camera while held) | `0108` |
+| v136 gear redesign: measured cloth kit (`gkPts`/`gkRows` hulls, `gkSurf` grids, `gkHood`, `gkSkirt`, `gkCape`, `gkCollar`, `gkSleeve`, trinkets `gkSkull`/`gkBook`/`gkVial`/`gkCandle`/`gkChain`…, late builds `gkLater`), hoods for every race (`GK_HOOD`, `GK_HELM`), the Mage's robes and head pieces (`MG_ST`, `mgRobe`, `mgHat`), the Assassin's gear (`AS_ST`, `mdChL`, masks `asMask`, footwraps `asBoots`), hanging skirts + Warrior / Paladin / Ranger details (`hvExtra`, `mdExtra`), weapon details (`wpX`), item pictures on the animal (`mdItemKit`) | `2500`–`2560` (v136) |
 
 ## Conventions (read before changing code)
 
@@ -273,6 +274,35 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   `brTailNear`); footwear keeps the bird's feet (`rvBoots`: wrapped shank, straps / sock / plates / claw sheaths per style; the
   foot stays scaly). The frog's FC116 carry hold now applies to the raven (`fc116Race`, key 'raven'). Old frog saves load as
   ravens (race 3; frog colours fall back to raven black). Pictures: `raven_show.py`, `raven_gear.py` (SLOT=helm,chest,boots).
+- **Gear redesign (v136, `2500`–`2560`)**: armour is cloth and plate built round what is already there, not shells pushed off the body.
+  * Measuring (`2500`): `gkPts(B,y0,y1,filt,exRe)` samples every triangle built so far (vertices, edges and the inside of big ones;
+    `exRe` leaves out bones by name, e.g. arms / tail / cape for skirts); `gkRows` makes one convex hull per height (cloth spans hollows),
+    `gkHullR` reads the hull's radius at an angle (θ = 0 front, π/2 the hero's right). `gkSurf(B,G,o)` turns a grid of vertices with
+    weights into triangles (one colour per quad; `m.u` across, `m.v` down, `m.i`/`m.j`).
+  * Hoods (`gkHood`): rows from the shoulders to above the crown, each the hull of its section (head, ears, neck, collar, pauldrons,
+    cape) + clearance; at the back and sides cloth falls straight from the widest part above (the hanging rule); folds deepen toward
+    the neck; the face opening is cut behind the eyes (`zf`, an overhanging brim `over`), closed under the chin (`close`) or open to the
+    hem (`open`, the raven); a darker lining, a rolled edge, a dagged mantle hem, an optional point lying down the back (`tip`).
+    Hoods are built after the rest of the hero (`gkLater`: chest, outfit extras, cape first, so they measure them); outside a hero build
+    (item pictures) they are built at once. Styles: `GK_HOOD[st] = {race?, pre(X), hood(X)→options, post(X,Hd)}` (pre runs before the hood
+    is measured — masks; post decorates it with `gkHoodAt`); `GK_HELM[st]` the same without a hood. The quiver goes over a hood's mantle.
+  * Skirts (`2505`, `gkSkirt`): from the waist down, never narrower going down (it hangs), flare, pleats, hem per angle (`hem(θ)`),
+    `dag` cut teeth, `open` (front of coats), `slit` (back, for tails), a lining; weights hips + each thigh (`legW`) and the cape bones at
+    the back (`flow`): running lifts the back of robes and coat tails. Every v94 `mdSkirt` of a hero (mail skirts, coats, tabards) now
+    goes through it (`2540`). `gkCape` (capelet over the shoulders, `keep` for a half-cape), `gkCollar` (standing collar, taller at the
+    back), `gkSleeve` (fitted to the elbow, then a bell `bell` that trails a point `trail` metres behind the wrist).
+  * Mage (`2530`, `2535`): `MG_ST` per robe (under-robe, open over-robe, sleeves, capelet / collar, belt and its hanging things, chest
+    pieces); the raven's hem remap (`RV_HEM`) is off while a robe is built and his wing feathers stay inside wide sleeves (`P.gkNoWing`).
+    Hats `mgHat` (crumpled crown clear of the skull, wavy dagged brim, band, buckle, patches), circlet / diadem / crown, three hoods.
+  * Assassin (`2520`, `2525`): `AS_ST` per chest (jerkin pattern, flaps or coat, shoulder, harness, belts, bracers with hidden
+    blades, set pieces), the class outfit is the T0 Rag Wraps; masks `asMask`, goggles `asGoggles`, footwraps `asBoots` (toes free).
+  * Warrior / Paladin / Ranger (`2540`): class details over the v95 armour (`hvExtra` by `BR.R.cls`, `mdExtra`), helm details.
+  * Weapons (`2550`): `wpX` adds notches, skulls, chains, ribbons, feathers, a raven skull on the staff, a bone-caged orb.
+  * Item pictures (`2560`): helms / chests / boots are drawn on their class's animal (body built first, then dropped).
+  Tests: `v136_gear.py` (every piece on its animal at rarity 0 and 4: builds, speed, triangles, hoods built, robes on the cape bones,
+  hood clearance), `v136_icons.py` (every armour icon renders, not empty); pictures: `v136_sheet.py` (RACE=, SETS="helm:x,chest:y;…",
+  VIEWS=front,34,side,back,hf,h34,hs,hb,cf,c34,cb,legs,run,runb,windup,strike), `v136_weapons.py`; clipping as before `v114_clip.py`
+  (its `hide` count includes small parts lying on the body — read `poke`).
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -466,6 +496,10 @@ python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gat
 python3 v113_roster.py       # v113: instance creatures per field instance, camps, a free fight with each new creature
 python3 v114_beasts.py       # v114: model sheets per beast race (RACE=, PART=base,helms,gear, FURI=)
 python3 v114_clip.py         # v114: armour clipping per class item on its animal (HUMAN=1 baseline, POSED=0 bind only); dbg_clip.py RACE= ITEMS= pictures
+python3 v136_gear.py         # v136: every armour piece on its animal (builds, speed, triangles, hoods, swinging robes, hood clearance)
+python3 v136_icons.py        # v136: every armour icon renders (out/v136_icons_<arm>.jpg)
+RACE=raven SETS="helm:hat,chest:pyre;chest:star" python3 v136_sheet.py   # v136: gear pictures, VIEWS= and TAG= options in the file
+python3 v136_weapons.py      # v136: every weapon type at rarity 0, 2, 4
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
