@@ -52,7 +52,7 @@
   if(party[0]){party[0].emp=true;chqKill132(fe(),null,true);party[0].emp=false;if(CHQ132.st.k1e.s!==2)F.push('empowered kill not counted')}else F.push('no companion to empower')}
  // only counts in its own instance: leave to Kindlelight II and gather glowcaps for k1d (already done) / fish for nothing
  // a real camp clear through kill(): every creature of one camp
- {await sleep(300);const C=CAMPS.find(c=>c.ig===I0.g);out.rost=ROST&&ROST.r;const sl=(ROST.slots||[]).filter(q=>q.camp===C);out.campSlots=sl.length;let n=0;
+ {const C=CAMPS.find(c=>c.ig===I0.g);for(let w=0;w<60&&!((ROST&&ROST.r===I0.g&&(ROST.slots||[]).some(q=>q.camp===C)));w++)await sleep(250);out.rost=ROST&&ROST.r;const sl=(ROST.slots||[]).filter(q=>q.camp===C);out.campSlots=sl.length;let n=0;
   for(const q of sl){const e=q.on||enemies.find(x=>x.slot===q);if(e&&!e.dead){e.c.h=0;e.dead=1;e.hb.visible=false;kill(e);n++}}
   out.campKills=n;if(chqS132(CHQ132_ID.k1a).s!==2){F.push('camp clear not counted (kills '+n+'/'+sl.length+')');chqEv132('camp',1)}}
  const I1=PMAP[0].ins[1];insArrive(I1);await sleep(200);tick(30);
