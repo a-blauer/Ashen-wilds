@@ -25,6 +25,7 @@ def s(pg):
     print('cards shown:',t,'card now:',el,'pos:',pos)
     chk('back in Kindlelight after Continue',pos['town']<0,pos)
     chk('no Duskhold card on load in a zone',not any(x.startswith('Duskhold') for x in t),t)
-    chk('the Kindlelight card shows',bool(el) and el['on'] and el['t']!='Duskhold',el)
+    # (fast mode runs the game loop ~30x faster, so the card may already have faded by now: check the card that was shown)
+    chk('the Kindlelight card shows',bool(t) and t[-1].startswith('Kindlelight') and bool(el) and el['t']!='Duskhold',[t,el])
 play.run(s)
 print('FAILURES:',FAIL if FAIL else 'none')
