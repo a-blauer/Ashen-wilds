@@ -10,17 +10,17 @@
 var CLIP135={value:new THREE.Vector4(-1e5,-1e5,1e5,1e5)},CL135={k:null,M:new WeakSet()};
 function cl135Rect(k){const I=k>=0?INSL[k]:null;return I?[I.x0-3,I.y0-3,I.x0+I.w+3,I.y0+I.h+3]:[-1e5,-1e5,PM_X0-3,1e5]}
 function cl135Update(){const k=cvKey();if(k===CL135.k)return;CL135.k=k;const r=cl135Rect(k);CLIP135.value.set(r[0],r[1],r[2],r[3]);try{FC.t=-1e9}catch(_){}}
-const CL135_GLSL='if(vC135.x<uClip.x||vC135.z<uClip.y||vC135.x>uClip.z||vC135.z>uClip.w)discard;';
+const CL135_GLSL='if(uOn135>.5&&(vC135.x<uClip.x||vC135.z<uClip.y||vC135.x>uClip.z||vC135.z>uClip.w))discard;';
 // add the clip to a material that already has its own shader hook (terrain, wind)
 function cl135Chain(m,key){if(!m||CL135.M.has(m))return;CL135.M.add(m);const ob=m.onBeforeCompile;
-  m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uClip=CLIP135;
+  m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vC135;').replace('#include <project_vertex>',`#include <project_vertex>
     #ifdef USE_INSTANCING
     vC135=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;
     #else
     vC135=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec4 uClip;varying vec3 vC135;').replace('void main() {','void main() {\n'+CL135_GLSL)};
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec4 uClip;uniform float uOn135;varying vec3 vC135;').replace('void main() {','void main() {\n'+CL135_GLSL)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+key;m.needsUpdate=true}
 try{GTX.list.forEach((T,i)=>cl135Chain(T.mat,'trc135'))}catch(e){console.warn('v135 clip terrain',e)}
 try{VIL.forEach(v=>cl135Chain(v.material,'wc135'))}catch(e){console.warn('v135 clip plants',e)}

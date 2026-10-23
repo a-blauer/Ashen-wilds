@@ -40,6 +40,11 @@ JS=r"""async()=>{const F=[],out={},sleep=ms=>new Promise(r=>setTimeout(r,ms)),V3
  // ---- scenery fade and the instance clip ----
  {await sleep(2500);let n=0;scene.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material)&&F135.done.has(o.material)&&/f135/.test(o.material.customProgramCacheKey()))n++});out.faded=n;if(n<20)F.push('few faded scenery meshes '+n);
   const I=curIns(),c=CLIP135.value;if(!I)F.push('not in an instance');else if(Math.abs(c.x-(I.x0-3))>.01||Math.abs(c.w-(I.y0+I.h+3))>.01)F.push('clip rect not the instance');
+  // item icons and small previews are drawn outside the main view: the fade and clip must leave them alone (icons sit at the
+  // world origin, outside every instance)
+  try{if(v89Init()){const ri=ITPL.findIndex(t=>t.sl=='weapon'&&t.wt=='gs');const it={id:-5,tp:ri,lv:30,req:1,r:2,up:0,aff:[]};v89Render(it);const R_=CPIC.r.domElement,c=document.createElement('canvas');c.width=R_.width;c.height=R_.height;
+    const x=c.getContext('2d');x.drawImage(R_,0,0);const D=x.getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<D.length;i+=4)if(D[i]>20)n++;out.iconPx=n;if(n<200)F.push('item icon blank in an instance ('+n+' px)')}}catch(e){F.push('icon '+e)}
+  if(FX135ON.value!==0)F.push('fade/clip flag left on outside the main view');
   // the camera no longer climbs over rocks/walls: only the ground moves it
   out.blk=/r=='R'/.test(String(loop))?'old':'new'}
  return {F,out}}"""

@@ -26,19 +26,12 @@ def s(pg):
     ev("()=>{SLOW()}");pg.wait_for_timeout(1500)
     ev("()=>{goHome()}");pg.wait_for_timeout(2500)
     hm=P('home',"()=>[curMap(),Math.round(pl.position.x),Math.round(pl.position.z)]")
-    ev("()=>{FAST();waveStart(0)}");pg.wait_for_timeout(2500)
-    for k in range(12):
-        pg.wait_for_timeout(1800)
-        r=ev("()=>{if(!WV)return 'done';WV.foes.forEach(e=>{if(!e.dead){e.c.h=1;hurt(e,999999,1)}});return [WV.w,WV.foes.length]}")
-        print('wave',r)
-        if r=='done':break
-    ch=P('chest',"()=>[drops.length,drops.map(d=>d.kind).join(',')]")
+    # v135: Wave Trials are gone: waveStart does nothing and no trial portal is left
+    ch=P('wave',"()=>{FAST();waveStart(0);return [!!WV,RPORT.some(r=>r.k=='wave')]}")
     chk('portal prompts: first open, the rest sealed',pr and 'Enter' in (pr[0] or '') and all('Sealed' in (x or '') for x in pr[1:]),pr)
     chk('portal goes into Kindlelight',im[0]==0,im)
     chk('camp has creatures',len(cf)>0,cf)
     chk('Sovereign kill: marked done, next portal open, exit portal shown',0 in af[0] and af[1] and af[2]==1,af)
     chk('recall goes home to Duskhold',hm[0]==-1,hm)
-    chk('wave trial pays out a chest',ch[0]>0,ch)
-    ev("()=>{SLOW();const p=PMAP[0];toPos(p.wa[0],p.wa[1]+4,0);camPitch=.5;camDist=13;snapCam()}");pg.wait_for_timeout(3500)
-    pg.screenshot(path=play.TMP+'/p_wave.png',timeout=120000,animations='disabled')
+    chk('no wave trial (v135)',ch==[False,False],ch)
 play.run(s,w=1000,hh=620)
