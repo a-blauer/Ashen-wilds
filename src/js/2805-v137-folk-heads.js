@@ -85,7 +85,7 @@ function fkHooves(B,P,D,C){const k=dkKit();[-1,1].forEach(s=>{const l=(s<0?'lh':
 //    ear, skull(m, C) paint, face(k, B, D, C, P) species details, horns(k, B, D, C)
 function fkHead(D,B,P,o){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
   // the neck: from the collar line up into the skull, as thick as the species' (a bear's or an owl's head sits on a thick neck)
-  {const n=D.neck||[.066,.07,.07],q=brSkullAt(D,D.SN[0][0]*.3),yb=q.yc-q.b*.55;mdLoft(B,[{p:[0,1.0,-.008],rx:n[0]*.95,f:n[0]*.9,b:n[0]*.95,w:[['chest',.4],['neck',.6]]},{p:[0,1.035,-.012],rx:n[0],f:n[0]*.97,b:n[0]*.97,w:[['neck',.7],['head',.3]]},
+  {const n=(D.neck||[.066,.07,.07]).map((v,i)=>v*[1.3,1.24,1.16][i]),q=brSkullAt(D,D.SN[0][0]*.3),yb=q.yc-q.b*.55;mdLoft(B,[{p:[0,1.0,-.008],rx:n[0]*.95,f:n[0]*.9,b:n[0]*.95,w:[['chest',.4],['neck',.6]]},{p:[0,1.035,-.012],rx:n[0],f:n[0]*.97,b:n[0]*.97,w:[['neck',.7],['head',.3]]},
     {p:[0,Math.max(1.07,(1.035+yb)/2),-.016],rx:n[1],f:n[1]*.97,b:n[1],w:[['neck',.3],['head',.7]]},{p:[0,Math.max(1.1,yb),-.02],rx:n[2],f:n[2]*.95,b:n[2],w:[['head',1]]}],
     {seg:14,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
   brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});
