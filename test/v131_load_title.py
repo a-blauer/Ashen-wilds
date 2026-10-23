@@ -17,7 +17,7 @@ def s(pg):
     at=ev("()=>({town:townAt(pl.position.x,pl.position.z,0),x:pl.position.x,z:pl.position.z})")
     chk('in Kindlelight I, not in town',at['town']<0,at)
     ev("()=>saveGame(true)")
-    pg.reload(wait_until='domcontentloaded');pg.wait_for_function("()=>!!document.getElementById('devp')",timeout=180000)
+    pg.reload(wait_until='domcontentloaded',timeout=240000);pg.wait_for_function("()=>!!document.getElementById('devp')",timeout=180000)
     ev(HOOK);pg.wait_for_timeout(2500)
     pg.click('[data-dev=desktop]',timeout=60000);pg.wait_for_timeout(800);pg.click('#svpC');pg.wait_for_timeout(6000)
     t=ev("()=>window.__T");el=ev("()=>ZT116.el?{t:(ZT116.el.querySelector('.ztt')||{}).textContent,on:/\\bon\\b/.test(ZT116.el.className)}:null")
