@@ -12,7 +12,7 @@ COMMON=re.search(r'COMMON=r"""(.*?)"""',open(os.path.join(os.path.dirname(os.pat
 RACE={'warrior':1,'assassin':2,'mage':3,'paladin':4,'ranger':5}
 MV={'gs':'gs1','ga':'gs1','axes':'gs1','halberd':'gs1','mace':'mace1','hammer':'mace1','flail':'mace1','dagger':'dag1','claws':'dag1','knives':'dag1','bow':'sling','crossbow':'sling','sling':'sling','staff':'sword0','wand':'sword0','orb':'sword0'}
 SHEETS=COMMON+r"""(a)=>{const [mode,sel,arm,R,MV]=a,V=THREE.Vector3,out={info:[],err:null};
-  const L=[];for(let i=ITPL_V137;i<ITPL.length;i++){const t=ITPL[i];if(sel=='all'||t.sl==sel||(mode=='hand'&&t.cls==sel&&t.sl=='weapon'))if(!arm||!t.arm||t.arm==arm)L.push(i)}
+  const L=[];for(let i=ITPL_V137;i<ITPL.length;i++){const t=ITPL[i];if(mode=='jewel'?(t.sl=='amulet'||t.sl=='ring'):(sel=='all'||t.sl==sel||(mode=='hand'&&t.cls==sel&&t.sl=='weapon')))if(!arm||!t.arm||t.arm==arm)L.push(i)}
   if(mode=='hand'&&sel=='paladin')for(let i=ITPL_V137;i<ITPL.length;i++)if(ITPL[i].sl=='offhand')L.push(i);
   if(mode=='models'){const FW=300,FH=260,cols=4,{rd,sc,pc}=RT.mk(FW,FH,0x262a30);const hid=[];sc.children.forEach(o=>{if(o.isGridHelper||(o.isMesh&&o.geometry&&o.geometry.type=='PlaneGeometry')){o.visible=false;hid.push(o)}});const cnv=document.createElement('canvas');cnv.width=FW*cols;cnv.height=FH*Math.ceil(L.length*2/cols);const ctx=cnv.getContext('2d');
     L.forEach((tp,n)=>{let g;try{const it=RT.it(tp,R);g=lgGroup('T137|'+tp+'|'+R+'|'+Math.random(),k=>v89Kit(k,it),.14)}catch(e){out.err=out.err||String(e);out.info.push('ERR '+tp+' '+e);return}

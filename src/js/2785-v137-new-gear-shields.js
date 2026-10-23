@@ -34,7 +34,7 @@ SH137.sh_gorgon=(k,c)=>{const BZ=0xa8783a,P=[];for(let i=0;i<16;i++){const a=i/1
     k.p('','box','m',lgCol(BZ,0,.4),0,-.06,s*.085,.06,.012,.01);for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p0=[Math.cos(a)*.13,Math.sin(a)*.14,s*.04],p1=[Math.cos(a+.25)*.25,Math.sin(a+.25)*.25,s*.04],p2=[Math.cos(a-.05)*.36,Math.sin(a-.05)*.36,s*.035];
       k.L('','m',i%2?lgCol(BZ,0x3a6a2a,.5):lgCol(BZ,0x2a4a1e,.4),p0,p1,.018,.014,5);k.L('','m',i%2?lgCol(BZ,0x3a6a2a,.5):lgCol(BZ,0x2a4a1e,.4),p1,p2,.014,.008,5);k.p('','sph','m',lgCol(BZ,0x2a4a1e,.4),p2[0],p2[1],p2[2],.016,.014,.012)}})};
 SH137.sh_dawn=(k,c)=>{const G=0xd8b050,P=[[-.32,.46],[.32,.46],[.32,.08],[.22,-.24],[0,-.52],[-.22,-.24],[-.32,.08]];s7Board(k,'dwn',P,.06,0xe0d8c0,G,.026);
-  [-1,1].forEach(q=>{for(let i=0;i<4;i++){const y=.4-i*.07;k.p('','box','m',G,q*(.36+i*.02),y,0,.12-i*.015,.03,.03,0,0,q*(.3+i*.12))}});
+  [-1,1].forEach(q=>{for(let i=0;i<4;i++){const y=.42-i*.075,L=.16-i*.02,a=q*(.35+i*.14);k.p('','box','m',i%2?mdSh(G,.85):G,q*(.3+Math.cos(a)*L*.5-.01),y+Math.sin(Math.abs(a))*L*.5,0,L,.034,.028,0,0,a)}});
   s7Both(k,s=>{k.p('','cyl','m',G,0,.08,s*.03,.12,.012,.12,Math.PI/2);k.p('','cyl','g',c.gl||0xfff0b0,0,.08,s*.036,.07,.008,.07,Math.PI/2);
     for(let i=0;i<16;i++){const a=i/16*Math.PI*2;k.p('','cone4','m',G,Math.cos(a)*(i%2?.17:.2),.08+Math.sin(a)*(i%2?.17:.2),s*.03,.02,i%2?.06:.12,.006,0,0,a-Math.PI/2)}
     k.p('','box','m',G,0,-.25,s*.034,.025,.28,.008);k.p('','box','m',G,0,-.2,s*.034,.14,.025,.008)})};

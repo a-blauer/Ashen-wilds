@@ -4,7 +4,7 @@
 // Amulet kits: the bail at the origin, the pendant hanging down to about -.2. Ring kits: the band in x-y round the z axis
 // (radius .1), the setting on top (+y).
 var J137={};
-function j7Bail(k,col){k.p('','ring','m',col,0,.03,0,.03,.2,.03,Math.PI/2)}
+function j7Bail(k,col){k.p('','ring','m',col,0,.03,0,.03,.09,.03,Math.PI/2)}
 function j7Band(k,col,r,th){k.p('','ring','m',col,0,0,0,r||.1,th||.16,r||.1,Math.PI/2)}
 // ---- amulets ----
 J137.am_knot=(k,c)=>{const R=0xa89a70;j7Bail(k,0x5a4a32);for(let i=0;i<5;i++)k.p('','cyl','c',R,0,-.02-i*.016,0,.022,.012,.022);
@@ -23,15 +23,15 @@ J137.am_moth=(k,c)=>{const G=0xb8bec8;j7Bail(k,G);k.p('','cyl','c',0x4a3a30,0,-.
   k.p('',lgSlab('j7mw',W,.006),'c',0x8a7a6a,0,-.06,0,s,1,1);k.p('','sph','g',c.gl||0xffd080,s*.07,-.05,.006,.012,.012,.004);k.L('','c',0x3a2a20,[s*.004,-.04,0],[s*.03,.0,0],.002,.001,3)})};
 J137.am_lich=(k,c)=>{const G=0x5a5a64;j7Bail(k,G);k.p('','box','m',G,0,-.09,0,.06,.11,.04);k.p('','box','g',c.gl||0x5affd8,0,-.09,0,.046,.09,.044);[-1,1].forEach(s=>[-1,1].forEach(q=>k.p('','box','m',G,s*.03,-.09+q*.055,0,.012,.012,.046)));
   gkSkull(k,'',0,-.02,0,1.1,0xd8ccb0,0,null);for(let i=0;i<3;i++)k.p('','box','c',0x14100c,0,-.06-i*.025,.024,.03,.004,.002)};
-J137.am_moon=(k,c)=>{const S=0xc8ccd4;k.p('','ring','m',S,0,-.02,0,.08,.3,.08,0);for(let i=0;i<5;i++){const a=i/5*Math.PI-.0;k.p('','oct','m',S,Math.cos(a+Math.PI)*.08,-.02+Math.sin(a+Math.PI)*.08,0,.01)}
+J137.am_moon=(k,c)=>{const S=0xc8ccd4;k.p('','ring','m',S,0,-.02,0,.08,.1,.08,0);for(let i=0;i<5;i++){const a=i/5*Math.PI-.0;k.p('','oct','m',S,Math.cos(a+Math.PI)*.08,-.02+Math.sin(a+Math.PI)*.08,0,.01)}
   k.p('','cyl','c',0x14121a,0,-.12,0,.05,.014,.05,Math.PI/2);k.p('','ring','g',c.gl||0xb05aff,0,-.12,0,.052,.08,.052,Math.PI/2);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.L('','g',c.gl||0xb05aff,[Math.cos(a)*.055,-.12+Math.sin(a)*.055,0],[Math.cos(a)*.075,-.12+Math.sin(a)*.075,0],.005,.001,3)}};
 J137.am_king=(k,c)=>{const G=0xd8b050;j7Bail(k,G);k.p('','sph2','c',0x3a1a24,0,-.1,0,.05,.06,.04);k.p('','sph','g',c.gl||0xff2a3a,0,-.1,.02,.024,.03,.02);
   for(let i=0;i<5;i++){const x=(i-2)*.02;k.p('','cone4','m',G,x,-.03+(i%2?0:.012),0,.008,.03+(i==2?.02:0),.008)}k.p('','box','m',G,0,-.045,0,.1,.016,.03);
   [-1,1].forEach(s=>k.L('','m',G,[s*.045,-.06,0],[s*.03,-.16,0],.006,.002,4));k.p('','cone4','m',G,0,-.17,0,.014,.04,.014,Math.PI)};
 // ---- rings ----
-J137.rg_coil=(k,c)=>{for(let i=0;i<14;i++){const a=i/14*Math.PI*2;k.p('','sph','m',0x4a4a50,Math.sin(a)*.1,Math.cos(a)*.1,(i%2?.012:-.012),.022)}k.p('','box','m',0x3a3a40,0,.12,0,.08,.03,.05);for(let i=0;i<3;i++)k.p('','cone4','m',0x5a5a60,(i-1)*.03,.14,0,.008,.03,.008)};
+J137.rg_coil=(k,c)=>{k.p('','ring','m',0x3a3a40,0,0,0,.1,.12,.1,Math.PI/2);for(let i=0;i<20;i++){const a=i/20*Math.PI*2;k.p('','sph','m',0x4a4a50,Math.sin(a)*.1,Math.cos(a)*.1,(i%2?.01:-.01),.022)}k.p('','box','m',0x3a3a40,0,.12,0,.08,.03,.05);for(let i=0;i<3;i++)k.p('','cone4','m',0x5a5a60,(i-1)*.03,.14,0,.008,.03,.008)};
 J137.rg_dirt=(k,c)=>{j7Band(k,0x5a4a3a,.1,.2);k.p('','dod','c',0x3a2a1a,0,.11,0,.03,.024,.03);k.p('','oct','c',0x6a6a5a,-.012,.13,.01,.008);k.p('','cone4','c',0x3a5a22,.01,.14,0,.004,.02,.004)};
-J137.rg_snake=(k,c)=>{for(let i=0;i<16;i++){const a=i/16*Math.PI*2-.3;k.p('','sph','c',i%2?0x3a6a2a:0x2a5a1e,Math.sin(a)*.1,Math.cos(a)*.1,0,.022-i*.0006)}k.p('','sph2','c',0x3a6a2a,-.03,.105,0,.03,.022,.026);
+J137.rg_snake=(k,c)=>{for(let i=0;i<26;i++){const a=i/26*Math.PI*2-.3;k.p('','sph','c',i%2?0x3a6a2a:0x2a5a1e,Math.sin(a)*.1,Math.cos(a)*.1,0,.024-i*.0005)}k.p('','sph2','c',0x3a6a2a,-.03,.105,0,.03,.022,.026);
   k.p('','sph','g',c.gl||0xffd040,-.045,.115,.02,.007);k.p('','sph','g',c.gl||0xffd040,-.045,.115,-.02,.007)};
 J137.rg_fang=(k,c)=>{j7Band(k,0x8a8a92);[-1,1].forEach(s=>k.p('','cone4','c',0xe8e0c8,s*.025,.13,0,.012,.06,.01,0,0,s*.3));k.p('','box','m',0x5a5a60,0,.1,0,.07,.02,.03)};
 J137.rg_web=(k,c)=>{j7Band(k,0x2a2a30);const n0=k.P.length;l7Web(k,.9,0xc8c8d0,6);l7Spider(k,1.2,0x14141a,c.gl||0xff2a3a);k7Shift(k,n0,0,.11,0)};
@@ -40,7 +40,7 @@ J137.rg_skull=(k,c)=>{j7Band(k,0xc8a040);gkSkull(k,'',0,.13,0,1.4,0xd8ccb0,0,nul
 J137.rg_thorn=(k,c)=>{j7Band(k,0x2a3a1e,.1,.14);for(let i=0;i<10;i++){const a=i/10*Math.PI*2;k.p('','cone4','c',0x4a3a24,Math.sin(a)*.115,Math.cos(a)*.115,0,.006,.03,.006,0,0,-a)}k.p('','sph','c',0x8a1424,0,.12,0,.022);if(c.gl)k.p('','sph','g',c.gl,0,.12,.016,.008)};
 J137.rg_eclipse=(k,c)=>{j7Band(k,0x1a1820);k.p('','cyl','g',c.gl||0xffc060,0,.13,0,.04,.01,.04,Math.PI/2);k.p('','cyl','c',0x0a0a0e,0,.13,.008,.034,.008,.034,Math.PI/2);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.L('','g',c.gl||0xffc060,[Math.cos(a)*.042,.13+Math.sin(a)*.042,0],[Math.cos(a)*.06,.13+Math.sin(a)*.06,0],.004,.001,3)}};
 J137.rg_drown=(k,c)=>{const B=0x5a7a6a;j7Band(k,B);k.p('','box','m',B,0,.115,0,.07,.024,.06);for(let i=0;i<5;i++)k.p('','cone4','m',B,(i-2)*.016,.14,0,.007,.03,.007);k.p('','oct','g',c.gl||0x5ac8b0,0,.14,.03,.014);
-  [[.03,.09,.04],[-.04,.08,.03]].forEach(([x,y,z])=>k.p('','sph','c',0xc8c0a8,x,y,z,.008))};
+  [.5,-.6].forEach(a=>k.p('','sph','c',0xc8c0a8,Math.sin(a)*.1,Math.cos(a)*.1,.016,.009))};
 // ---------------- hooking in ----------------
 function j7C(it){return {gl:(it.r|0)>=3?v89Rc(it.r):null,r:it.r|0}}
 {const f=v89Kit;v89Kit=function(k,it){const t=v137T(it),J=t&&J137[t.v7];if(!J||it.u)return f.apply(this,arguments);try{J(k,j7C(it))}catch(e){console.warn('v137 jewel',e);k.P.length=0;return f.apply(this,arguments)}}}
