@@ -41,3 +41,4 @@ v135_bow.py
 v136_gear.py
 v136_icons.py
 v137_enemies.py
+v137_npcs.py

@@ -89,6 +89,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v136 gear redesign: measured cloth kit (`gkPts`/`gkRows` hulls, `gkSurf` grids, `gkHood`, `gkSkirt`, `gkCape`, `gkCollar`, `gkSleeve`, trinkets `gkSkull`/`gkBook`/`gkVial`/`gkCandle`/`gkChain`…, late builds `gkLater`), hoods for every race (`GK_HOOD`, `GK_HELM`), the Mage's robes and head pieces (`MG_ST`, `mgRobe`, `mgHat`), the Assassin's gear (`AS_ST`, `mdChL`, masks `asMask`, footwraps `asBoots`), hanging skirts + Warrior / Paladin / Ranger details (`hvExtra`, `mdExtra`), weapon details (`wpX`), item pictures on the animal (`mdItemKit`) | `2500`–`2560` (v136) |
 | v137 companion bodies: rig variants (`RV137`, `rv137`) — Gloomcap / Sporelord, Wispling / Lumenwisp / Soulwarden (cowl `wsp137Hood`), Gravewyrm / Venomcoil (`WY137`), Batwing / Duskwing fur | `2600`–`2630` (v137) |
 | v137 enemy bodies: toolkit (`e137B`, `e137Rows`, `e137Limb`, `e137Quad`, `e137Claws`), own bodies for Blood Hound, Bone Hound, Blood Bat (rig `BloodBat`), Mire Croaker, Basilisk, Snapper, Sun Scarab (middle legs `x.mid137`), Rimeshell Crawler, Storm Harpy, Dust Wyrm, Banshee, Fungal Shambler (rig `Shambler`); older foes rebuilt (`FOE137`, `f137Reg` into `N3.humB`), Goo / Maggot / Scorpion touch-ups | `2640`–`2665` (v137) |
+| v137 animal townsfolk: every Duskhold NPC is a warm-blooded animal (`FK137`, `fkBody` via `idlNpcBody`, parametric skulls `fkSN`, ears / horns / antlers / paws / hooves, 21 species, `FKO` costumes per keeper, citizens by trade `FK_ROLE`, tail + ear animation `fk137Anim`) | `2800`–`2830` (v137) |
 
 ## Conventions (read before changing code)
 
@@ -320,6 +321,27 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     rock plates, rags and trophies; skeletons get a soul-light. `2665`: Goo / Maggot / Scorpion touch-ups and the Shambler.
   Tests: `v137_enemies.py` (every spawnable enemy builds, finite bones through idle / walk / attack, no companion body; variant bodies
   differ; scarab legs swing). Pictures: `LIST="C:Gloomcap:0;E:bloodhound" VIEWS=front,34,side,back,face,walk,attack TAG=x python3 v137_creature.py`.
+- **Animal townsfolk (v137, `2800`–`2830`)**: every Duskhold townsperson is a warm-blooded animal.
+  * Bodies use the v114 beast engine on the town-folk skeleton `idlNB` + tail bones `tl…`, ear bones `erL`/`erR` and cape bones
+    `cp0…cp2` (`fkNB`), so the v93 idle, the v103 work stations, the citizens' walk and held tools work unchanged. `idlNpcBody(o)` →
+    `fkBody(o)`: one cached geometry per species + costume + fur (`fkKey`); meshes carry `userData.fk` = species.
+  * Heads: one parametric skull + muzzle (`fkSN(hp)`, the v114 ring format, so `brEyes` / `brNose` / `brJaw` / `brWhiskers` work),
+    ears on the ear bones (`fkEars`: tri / round / long / leaf / small / tuft), horns (`fkHornLoft`), antlers (`fkAntlers`), paws from the
+    folk wrists (`fkPaws`), hooves (`fkHooves`). Species (`fkSpecies`, 2810–2811): fox, wolf, bear, hare, stag, doe, boar, owl, mouse,
+    raccoon, lynx, otter, goat, ram, sheep, hedgehog, squirrel, beaver, mole, ferret, bat, hound.
+  * Keepers (`FK137.out`, costumes `FKO[label]` in 2825): Steward stag (navy coat, chain of office), Blacksmith bear (leather apron,
+    gloves, boots, kerchief), Trading Post Merchant raccoon (vest, purse, ledger, beret), Magic Vendor lynx (starry robe, pointed hat),
+    Innkeeper boar (waistcoat, long apron, towel, keys), Cook otter (chef's whites, toque), Alchemist goat (robe, vial bandolier,
+    goggles), Stable Master ram (dungarees, straw hat, rope), Curio Merchant fox (travel coat, pack, feathered hat), Beast Trainer wolf
+    (jerkin, fur mantle, whistle), Bard hare (slashed doublet, ruff, feathered cap), Rune Sage owl (rune robe, cowl, rune stones).
+  * Citizens: species from their trade (`FK_ROLE`) and name + look number, fur and clothes from the look (`FKO.cit`: tunic, trousers,
+    skirt / dress, apron, scarf or collar, cap / coif); the same citizen is always the same animal (co-op guests build the same).
+  * `npc()` is re-declared (hoisted) only to remember each figure (`npc.all`, `g.userData.npcO`); figures built before 2800 runs are
+    rebuilt as animals on first animation or 1.2 s after loading (`fkRebuild`). Tails sway (more when walking) and ears flick
+    (`fk137Anim`, layered on `idlNpc` and `czWalkPose103`, absolute from rest).
+  Tests: `v137_npcs.py` (every keeper and 16 citizens: sheets front / 3/4 / side / back / face / walk / work; FAIL on a human model,
+  NaN vertices, a hand / foot / head bone with no body mesh near it in idle, walk or work, a held tool off the hand, live NPCs not
+  animal). `SP=fox,bear` draws species sheets; `ONLY=keep|cit`, `PICK=Blacksmith`, `NOSHEET=1`.
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -519,6 +541,7 @@ RACE=raven SETS="helm:hat,chest:pyre;chest:star" python3 v136_sheet.py   # v136:
 python3 v136_weapons.py      # v136: every weapon type at rarity 0, 2, 4
 python3 v137_enemies.py      # v137: enemy bodies (no companion bodies), companion variant bodies, scarab legs
 LIST="C:Sporelord:3;E:basilisk" python3 v137_creature.py   # v137: creature sheets (VIEWS=, TAG=)
+python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizens, sheets and limb checks (SP=fox,bear species sheets)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
