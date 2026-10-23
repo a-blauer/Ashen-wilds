@@ -390,7 +390,7 @@ body.kv-on #kvBoot{display:none}
 </style></head><body><div id="kvBoot">Kill Quest · Animation Viewer<small>Loading the game models…</small></div>
 <div class="wrap">
 <h1>Kill Quest</h1>
-<p class="sub">WASD move · Hold right mouse + drag to rotate camera · Left click attack · 1-4 class skills · Shift dash (2 charges) · K talents · C abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
+<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-4 class skills · Shift dash (2 charges) · K talents · C abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
 <div class="stage" id="stage">
   <div id="gl"></div>
   <div id="topl" class="glass"><div class="row"><span id="lvT">Lv 1</span><span id="goldT">🪙 0</span></div><div id="areaT" style="font-size:.68rem;color:var(--mut)"></div><div id="act" class="actrow"></div><div id="buffs"></div></div>
@@ -2403,7 +2403,7 @@ function loop(now){
   compSpells(dt);
   const pt0=camPitch,cdd0=(camDist);
   let pTar=pt0,dTar=cdd0;
-  {const ox=Math.sin(camYaw),oz=Math.cos(camYaw),py=pl.position.y+1.1,blk=(p)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.2;s<=cdd0;s+=.5){const wy=py+sp*s,r=(MAP[Math.round(pl.position.z+oz*hc*s)]||[])[Math.round(pl.position.x+ox*hc*s)];const gy=GH(pl.position.x+ox*hc*s,pl.position.z+oz*hc*s);if((wy<gy+.8)||(r=='R'&&wy<gy+1.5)||(r=='W'&&wy<gy+3.8)||(r=='B'&&wy<gy+(fntN(pl.position.x+ox*hc*s,pl.position.z+oz*hc*s)?2.7:6.4)))return s}return 0};
+  {const ox=Math.sin(camYaw),oz=Math.cos(camYaw),py=pl.position.y+1.1,blk=(p)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.2;s<=cdd0;s+=.5){const wy=py+sp*s,r=(MAP[Math.round(pl.position.z+oz*hc*s)]||[])[Math.round(pl.position.x+ox*hc*s)];const gy=GH(pl.position.x+ox*hc*s,pl.position.z+oz*hc*s);if(wy<gy+.8)return s}return 0};   // v135: only the ground itself moves the camera; rocks, walls and buildings between you and it fade out instead (2410)
     const sb=blk(pt0);if(sb){let p=pt0,ok=0;for(let k=0;k<14&&p<1.25;k++){p=Math.min(1.25,p+.07);if(!blk(p)){ok=1;break}}   // v132: ground rising behind you raises the camera instead of pulling it in
     if(ok){pTar=p;const hI=typeof insAt=='function'&&insAt(Math.round(pl.position.x),Math.round(pl.position.z)),hc=Math.cos(p);   // near an instance's edge, stay in front of its rim scenery
       if(hI&&typeof v124Rim=='function')for(let s=1.2;s<=cdd0;s+=.5){const x=Math.round(pl.position.x+ox*hc*s),z=Math.round(pl.position.z+oz*hc*s),J=insAt(x,z);if(!J||J!==hI||v124Rim(x,z)){dTar=Math.max(3.4,s-.6);break}}}
@@ -2513,10 +2513,16 @@ gl.addEventListener('pointerdown',e=>{mp(e);if(e.button!=2){atkHeld=true;swing()
 gl.addEventListener('contextmenu',e=>e.preventDefault());
 gl.addEventListener('mousedown',e=>{if(e.button==0&&orb){atkHeld=true;swing()}});
 addEventListener('mouseup',e=>{if(e.button==0)atkHeld=false});
-let orb=null;gl.addEventListener('pointerdown',e=>{if(e.button==1||e.button==2){orb={x:e.clientX,y:e.clientY};e.preventDefault();atkHeld=!!(e.buttons&1);gl.style.cursor='none';try{const p=gl.requestPointerLock&&gl.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}}});
+// v135: a right click toggles mouse-look on and off (the cursor hides and the mouse turns the camera until the next right click);
+// the middle button still turns the camera only while held. Esc, losing the pointer lock, the window losing focus or a window opening ends it.
+let orb=null;const orbStart=(e,tg)=>{orb={x:e.clientX,y:e.clientY,tg};gl.style.cursor='none';try{const p=gl.requestPointerLock&&gl.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}};
+gl.addEventListener('pointerdown',e=>{if(e.button==2){e.preventDefault();atkHeld=!!(e.buttons&1);if(typeof KQS!='undefined'&&KQS.tg)return;if(orb&&orb.tg)orbEnd();else orbStart(e,1)}
+  else if(e.button==1){e.preventDefault();atkHeld=!!(e.buttons&1);if(!orb)orbStart(e,0)}});
 addEventListener('pointermove',e=>{if(orb){const lk=document.pointerLockElement==gl,cl=v=>Math.max(-70,Math.min(70,v)),dx=lk?cl(e.movementX):e.clientX-orb.x,dy=lk?cl(e.movementY):e.clientY-orb.y;camYaw-=dx*.006*SET.sens;camPitch=Math.max(.14,Math.min(1.1,camPitch+dy*.004*SET.sens*(SET.inv?-1:1)));orb.x=e.clientX;orb.y=e.clientY}});
 const orbEnd=()=>{orb=null;gl.style.cursor='';try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}};
-addEventListener('pointerup',e=>{if(e.button==1||e.button==2)orbEnd()});addEventListener('blur',()=>{if(orb)orbEnd()});
+addEventListener('pointerup',e=>{if(e.button==1&&orb&&!orb.tg)orbEnd()});addEventListener('blur',()=>{if(orb)orbEnd()});
+document.addEventListener('pointerlockchange',()=>{if(orb&&orb.tg&&document.pointerLockElement!==gl&&orb.lk)orbEnd();else if(orb&&document.pointerLockElement===gl)orb.lk=1});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&orb)orbEnd()});setInterval(()=>{try{if(orb&&orb.tg&&uiOpen())orbEnd()}catch(_){}},250);
 gl.addEventListener('wheel',e=>{camDist=Math.max(4.5,Math.min(15,camDist+e.deltaY*.008*SET.zoom));e.preventDefault()},{passive:false});
 addEventListener('pointerup',e=>{if(!(e.buttons&1))atkHeld=false;rmb=false;if(joyId==null)dp[0]=dp[1]=0});
 addEventListener('pointercancel',()=>{atkHeld=false;rmb=false;if(joyId==null)dp[0]=dp[1]=0});
@@ -2779,8 +2785,9 @@ const ITPL=[];
   ['Bone Charm','Wolf Tooth Amulet','Emberheart Pendant','Soulglass Locket','Stormeye Talisman'].forEach((n,t)=>ITPL.push({n,sl:'amulet',t}));
   ['Copper Band','Silver Signet','Cinder Loop','Hollow Ring','Storm Seal'].forEach((n,t)=>ITPL.push({n,sl:'ring',t}));
 }
-const SLOTS=['weapon','offhand','helm','chest','boots','amulet','ring'],SLOTN={weapon:'Weapon',offhand:'Shield',helm:'Head',chest:'Chest',boots:'Feet',amulet:'Amulet',ring:'Ring'};
-const SLOTIC={weapon:'⚔️',offhand:'🛡️',helm:'⛑️',chest:'🥋',boots:'👢',amulet:'📿',ring:'💍'};
+// v135: 'ring2' is a second ring slot; ring items (sl 'ring') fit either (eqSlot135 picks which)
+const SLOTS=['weapon','offhand','helm','chest','boots','amulet','ring','ring2'],SLOTN={weapon:'Weapon',offhand:'Shield',helm:'Head',chest:'Chest',boots:'Feet',amulet:'Amulet',ring:'Ring',ring2:'Ring'};
+const SLOTIC={weapon:'⚔️',offhand:'🛡️',helm:'⛑️',chest:'🥋',boots:'👢',amulet:'📿',ring:'💍',ring2:'💍'};
 const AFX={crit:['Critical chance','p',.012],cdm:['Critical damage','p',.06],as:['Attack speed','p',.025],ls:['Lifesteal','p',.008],hpP:['Max health','p',.025],paP:['Physical attack','p',.025],maP:['Magical attack','p',.025],pd:['Physical defense','n',.9],md:['Magical defense','n',.9],mp:['Max mana','n',2.2],cdr:['Cooldown reduction','p',.015],loot:['Loot find','p',.03],xp:['Experience','p',.02],mspd:['Move speed','p',.015],regen:['Health regen','p',.0006]};
 const UPM=[['Whetstone','🪨'],['Tempered Ore','⛏️'],['Cinder Steel','🔥'],['Hollow Silver','🥈'],['Storm Mithril','⚡']];
 // ---------------- creature families: 6 families x 5 tiers = 30 hatchables ----------------
@@ -3087,8 +3094,10 @@ function kill_base(e){
   if(e.boss)bossT[e.bi]=300;
   mCancel(e);e.m.pose=null;lootE(e);ui();
   if(tgt===e)setTarget(null);
-  if(e.m.isE){const b=e.m.b,sd=Math.random()<.5?1:-1;tw(380,k=>{b.rotation.z=sd*1.45*(1-Math.pow(1-k,3));b.position.y=.1*Math.sin(k*Math.PI)})}
-  (e.m._ssDead?(f=>tw(1500,()=>{},f)):(f=>setTimeout(f,260)))(()=>shrink(e.m,()=>removeE(e)));
+  // v135: the body topples onto its side (lifted so it rests on the ground, a small bounce as it lands), lies there, then fades
+  // out (death135 in 2460); it used to be thrown up in an arc and shrink away
+  if(e.m.isE&&e.m.b&&!e.m._ssDead){const b=e.m.b,sd=Math.random()<.5?1:-1,L=death135Lift(e.m);tw(640,k=>{const q=death135Ease(k);b.rotation.z=sd*1.42*q;b.position.y=L*Math.sin(1.42*q)+(k>.72?.05*Math.sin((k-.72)/.28*Math.PI):0)})}
+  (e.m._ssDead?(f=>tw(1500,()=>{},f)):(f=>setTimeout(f,1500)))(()=>death135Fade(e.m,()=>removeE(e)));
 }
 // ---------------- loot ----------------
 function rolR2(l,mn,bonus){const mx=l<6?1:l<14?2:l<26?3:4,w=[62,26,9,2.6,.4].slice(0,mx+1);let r=Math.random()*w.reduce((a,b)=>a+b,0)*(1-Math.min(.6,(bonus||0)*.15));for(let i=0;i<w.length;i++){r-=w[i];if(r<0)return Math.max(i,Math.min(mn||0,mx))}return Math.min(mn||0,mx)}
@@ -3104,7 +3113,7 @@ function genItem_base(l,o){
   for(let i=0;i<r;i++){const k=keys.splice(R(0,keys.length-1),1)[0],A_=AFX[k];it.aff.push({k,v:A_[1]=='n'?Math.round(A_[2]*(2+l)*(.8+Math.random()*.5)):+(A_[2]*(1+T*.45)*(.8+Math.random()*.5)).toFixed(4)})}
   return it;
 }
-const itT=it=>ITPL[it.tp],itName=it=>(it.lp?'★ ':'')+(it.up?'+'+it.up+' ':'')+itT(it).n+(it.set?' ◆':'');
+const itT=it=>ITPL[it.tp],itName=it=>it.u&&typeof unqName135=='function'&&unqName135(it)?'✦ '+(it.up?'+'+it.up+' ':'')+unqName135(it):(it.lp?'★ ':'')+(it.up?'+'+it.up+' ':'')+itT(it).n+(it.set?' ◆':'');   // v135: uniques (2470) have names of their own
 function itStats(it){
   const tp=itT(it),l=it.lv,rm=[1,1.15,1.32,1.55,1.85][it.r]*(1+.045*(it.up||0)),s={};
   if(tp.sl=='weapon'){const W=WTYPE[tp.wt],a=(6+2.6*l)*W.k*rm;if(tp.wt=='staff'){s.ma=a;s.mp=(6+1.6*l)*rm}else s.pa=a}
@@ -3370,7 +3379,7 @@ function idHTML_base(){
 function invAct(){
   if(!selI)return;
   if(selI.k=='e'){const k=SLOTS.find(x=>eq[x]&&eq[x].id==selI.id);if(k){gear.push(eq[k]);delete eq[k]}selI=null}
-  else{const i=gear.findIndex(g=>g.id==selI.id);if(i<0)return;const it=gear[i];if(!canUse(it))return;const sl=itT(it).sl;gear.splice(i,1);if(eq[sl])gear.push(eq[sl]);eq[sl]=it;selI={k:'e',id:it.id}}
+  else{const i=gear.findIndex(g=>g.id==selI.id);if(i<0)return;const it=gear[i];if(!canUse(it))return;const sl=eqSlot135(it);gear.splice(i,1);if(eq[sl])gear.push(eq[sl]);eq[sl]=it;selI={k:'e',id:it.id}}
   hsDirty();hero.hp=Math.min(hero.hp,heroMax());refreshGear();if(HP)refreshGear(HP);rB();hud();
 }
 function bagStats(){
@@ -4812,7 +4821,8 @@ function kill(e){
   if(e.ar!=null)bossDefeated(e);if(typeof campOnKill=='function')campOnKill(e);if(typeof onKillX=='function')onKillX(e);
   // kill-streak XP/loot multiplier removed
   if(!e.boss){const a=V().subVectors(e.m.position,pl.position).setY(0).normalize(),m=e.m,y0=m.position.y,big=e.c.h<-M(e.c)*.15;
-    tw(460,k=>{m.position.x+=a.x*.09*(big?1.6:1);m.position.z+=a.z*.09*(big?1.6:1);m.position.y=y0+Math.sin(k*Math.PI)*(big?1.4:.8);m.rotation.x=-k*1.2})}
+    // v135: a short shove back along the ground (it used to fly up in an arc, tipping over backwards)
+    const x0=m.position.x,z0=m.position.z,dd=big?.9:.5;tw(420,k=>{const q=1-Math.pow(1-k,3);m.position.x=x0+a.x*dd*q;m.position.z=z0+a.z*dd*q;m.position.y=y0})}
   if(e.trait=='Explosive'){const P=e.m.position.clone();popT(P,'💥 It’s going to blow!','#fbbf24');tele(P,3.2,1.25,()=>{burst(gY(P,.6),0xff8a3a,70,4.5,3,.8);ring(P,0xffb020,3.4,380);shake(.35);sfx('boom');if(d2(pl.position,P)<3.3)hitHero(e,2.2,'p');party.slice(0,2).forEach((c,i)=>{const f=fols[i];if(c&&c.h>0&&f&&d2(f.position,P)<3.3){c.h=Math.max(0,c.h-M(c)*.25)}})})}
   return kill_base(e);
 }
@@ -5875,11 +5885,11 @@ function portalPrompt(){
     return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
-// v106: the portal lists every instance of the zone you have reached, and the Wave Trial once the zone is cleared
+// v106: the portal lists every instance of the zone you have reached (v135: no Wave Trial any more)
 XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+(d?' · cleared ✓':'');
   const row=I=>{const ok=I.k<=R,txt=I.den?b.name+', '+b.title+(d?' (back 5 minutes after each defeat).':'.'):I.k==PMF-1?'Its road ends at the gateway to '+b.name+'’s den.':'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
     return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">Lv ${I.den?b.lvl:I.lv[0]+'–'+I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
-  const wave=d?`<div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div>`:'';
+  const wave='';   // v135: Wave Trials removed (owner's request)
   $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
 $('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target.closest('[data-pgo]');if(!b)return;const i=xwArg|0;closeX();if(b.dataset.pgo=='map')enterMap(i,+b.dataset.pk||0);else waveStart(i)});
@@ -5909,7 +5919,7 @@ function bossDefeated(e){
   if(!first){banner('👑 '+A.b.name+' falls again','Its loot is yours','It returns after 5 minutes');return}
   bossDone.add(i);const P=A.b.pw;hero.buffs.push({s:P.s,t:Infinity,n:P.n,i:P.i,d:P.d,perm:1});hsDirty();
   banner('👑 MAP CLEARED',A.b.name+' is slain','Power gained: '+P.i+' '+P.n+' ('+P.d+')');portalRefresh();rportRefresh();
-  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','The Wave Trial of '+PMAP[i].n+' is now open too');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
+  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','Its gate stands open at the end of Portal Road');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
     say('🌀 A golden portal home has opened in the arena.')},2800);
 }
 // ---- Wave Trials ----
@@ -8890,13 +8900,16 @@ Object.assign(SPEC.Centipede,{hd:[0,.17,.52],bk:[['chest',.19,.2],['spine',.19,0
 
 // ---------------- shared baking: rigid parts → 1-3 vertex-coloured meshes (cloth/wood, metal, glow), mottled ----------------
 var LGB={},LGM=null;
+// v135: bow size (scaled about the riser: BOW_K height, BOW_KX depth, a shallower C) and the string's rest points in the bow's own frame: [x of the string, y of the tips]
+var BOW_K=.66,BOW_KX=.4,BOW_T=[-.555+.493*BOW_KX,.594*BOW_K];
 function lgMats(){if(LGM)return LGM;const f=o=>Object.assign({vertexColors:true,flatShading:true},o);
   LGM={c:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,side:THREE.DoubleSide})),
     m:new THREE.MeshStandardMaterial(f({roughness:.5,metalness:.55,envMapIntensity:.7})),
     g:new THREE.MeshBasicMaterial({vertexColors:true}),
+    s:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,side:THREE.DoubleSide})),   // v135: bow strings (a mesh of their own)
     cs:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,skinning:true,side:THREE.DoubleSide})),
     ms:new THREE.MeshStandardMaterial(f({roughness:.5,metalness:.55,skinning:true}))};
-  [LGM.c,LGM.m,LGM.g,LGM.cs,LGM.ms].forEach(m=>m.userData.lps=1);return LGM}
+  [LGM.c,LGM.m,LGM.g,LGM.cs,LGM.ms,LGM.s].forEach(m=>m.userData.lps=1);return LGM}
 // P = dkKit parts; mot = mottling strength (0 = flat colour); returns fresh meshes over cached geometry
 function lgBake(P,key,mot){
   let gs=LGB[key];
@@ -8988,10 +9001,12 @@ function lgWpnKit(k,type,col,r){
   else if(type=='orb'){const gc=col==0x9aa2ae?0x9a7aff:col;k.p('',lgLump('orb',.12,.06,7),'g',gc,0,0,0,1,1,1);k.p('','oct','g',lgCol(gc,0xffffff,.6),0,0,0,.05);
     [0,1,2].forEach(i=>{const a=i/3*Math.PI*2;k.L('','m',W.brass,[Math.cos(a)*.05,-.15,Math.sin(a)*.05],[Math.cos(a)*.13,0,Math.sin(a)*.13],.014,.009,4);k.L('','m',W.brass,[Math.cos(a)*.13,0,Math.sin(a)*.13],[Math.cos(a)*.07,.1,Math.sin(a)*.07],.009,.003,4)});
     k.p('','cyl','m',W.brass,0,-.14,0,.065,.04,.065);k.p('','cone4','c',W.woodD,0,-.2,0,.05,.08,.05,Math.PI)}
-  else if(type=='bow'){const pts=[];for(let i=0;i<=10;i++){const a=Math.PI*(.55+i*.09),rr=.55+(i==0||i==10?.04:0),rc=(i==0||i==10)?.03:0;pts.push([Math.cos(a)*rr+rc,Math.sin(a)*rr*1.02,0])}
-    for(let i=0;i<10;i++){const g=i>3&&i<6,w=i==0||i==9?.013:i==1||i==8?.019:.024;k.L('',g?'c':'c',g?W.leather:(i%2?0x4a3018:0x3e2814),pts[i],pts[i+1],w,w,5)}
-    [pts[0],pts[10]].forEach((q,i)=>k.L('','c',W.bone,q,[q[0]+.06,q[1]+(i?-.07:.07),0],.015,.003,4));k.p('','box','m',fit,-.555,0,0,.035,.04,.035);
-    k.L('','c',0xd8d0b8,[pts[0][0]+.004,pts[0][1],0],[-.08,0,0],.004,.004,3);k.L('','c',0xd8d0b8,[-.08,0,0],[pts[10][0]+.004,pts[10][1],0],.004,.004,3);if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,-.54,s*.2,0,.01,.05,.03,0,0,s*.3))}
+  else if(type=='bow'){const pts=[],K=BOW_K,sq=(x,y)=>[-.555+(x+.555)*BOW_KX,y*K,0];   // v135: the bow is BOW_K its old height and BOW_KX its old depth, scaled about the riser (the grip point stays at -.555)
+    for(let i=0;i<=10;i++){const a=Math.PI*(.55+i*.09),rr=.55+(i==0||i==10?.04:0),rc=(i==0||i==10)?.03:0;pts.push(sq(Math.cos(a)*rr+rc,Math.sin(a)*rr*1.02))}
+    for(let i=0;i<10;i++){const g=i>3&&i<6,w=(i==0||i==9?.013:i==1||i==8?.019:.024)*(.4+.6*K);k.L('',g?'c':'c',g?W.leather:(i%2?0x4a3018:0x3e2814),pts[i],pts[i+1],w,w,5)}
+    [pts[0],pts[10]].forEach((q,i)=>k.L('','c',W.bone,q,[q[0]+.06*BOW_KX,q[1]+(i?-.07:.07)*K,0],.015*K,.003,4));k.p('','box','m',fit,-.555,0,0,.035,.04,.035);
+    // the string is its own mesh (material 's') so it can hide while the drawn string of a shot shows (two strings before v135)
+    const sm=sq(-.08,0);k.L('','s',0xd8d0b8,[pts[0][0]+.004,pts[0][1],0],sm,.004,.004,3);k.L('','s',0xd8d0b8,sm,[pts[10][0]+.004,pts[10][1],0],.004,.004,3);if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,-.54,s*.2,0,.01,.05,.03,0,0,s*.3))}
   else if(type=='crossbow'){k.p('','box','c',W.wood,0,-.22,0,.065,.62,.055);k.p('','box','c',W.woodD,0,.1,0,.055,.14,.085);k.p('','box','c',W.woodD,0,-.06,0,.07,.06,.06);k.p('','box','m',W.iron,0,-.06,.04,.025,.1,.02);
     k.p('','box','m',fit,0,-.5,0,.14,.06,.07);[-1,1].forEach(s=>{k.L('','m',lgCol(W.iron,steel,.4),[s*.05,-.5,0],[s*.33,-.44,0],.022,.014,4);k.p('','cone4','m',W.iron2,s*.335,-.44,0,.012,.03,.012,0,0,-s*1.4)});
     k.L('','c',0xd8d0b8,[-.33,-.44,0],[0,-.28,0],.004,.004,3);k.L('','c',0xd8d0b8,[.33,-.44,0],[0,-.28,0],.004,.004,3);
@@ -9746,7 +9761,7 @@ function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].m
   add('Clay','🧱','Stand by shallow water (not lava) and press F to wade for clay and water.');add('Shallow Water','💧',S.clay.t);
   // upgrade materials: dropped by monsters of the matching tier
   const tz=t=>zl(PMAP.map((p,i)=>p.t==t?i:-1).filter(i=>i>=0));
-  UPM.forEach((u,i)=>add(u[0],u[1],'Dropped by monsters, elites and Sovereigns in '+(tz(i+1)||'tier '+(i+1)+' zones')+'. Camp chests and wave trials give more.'));
+  UPM.forEach((u,i)=>add(u[0],u[1],'Dropped by monsters, elites and Sovereigns in '+(tz(i+1)||'tier '+(i+1)+' zones')+'. Camp chests give more.'));
   // companion materials: dropped by creatures of that family
   const fOf=k=>{try{const en=EN[k]||{};return en.fam||famOf(k)}catch(_){return ''}};
   FAMK.forEach(fk=>{const F=FAMD[fk],zs=[];PMAP.forEach((p,i)=>{const L=(BIOEN[p.n]||[]).slice();try{CAMPS.forEach(C=>{if(C.pm===i&&C.th&&C.th.mem)C.th.mem.forEach(m=>L.push(m[0]))})}catch(_){}try{const B=BOSSES[i];if(B)L.push(B.sp)}catch(_){}
@@ -10384,7 +10399,7 @@ function bowFxSet(k,g){
     if(g<=0||!pl.visible){F.g.visible=false;return}
     if(F.g.parent!==scene)scene.add(F.g);
     pl.updateMatrixWorld(true);
-    const V=THREE.Vector3,t1=new V(-.062,.594,0).applyMatrix4(W.matrixWorld),t2=new V(-.062,-.594,0).applyMatrix4(W.matrixWorld),grip=new V(-.555,0,0).applyMatrix4(W.matrixWorld);
+    const V=THREE.Vector3,t1=new V(BOW_T[0],BOW_T[1],0).applyMatrix4(W.matrixWorld),t2=new V(BOW_T[0],-BOW_T[1],0).applyMatrix4(W.matrixWorld),grip=new V(-.555,0,0).applyMatrix4(W.matrixWorld);
     const hand=new V(0,-.03,.02).applyMatrix4(pl.bones.aR2.matrixWorld);
     // the nock point sits between the string's rest line and the drawing hand
     const rest=t1.clone().add(t2).multiplyScalar(.5),nock=rest.clone().lerp(hand,Math.min(1,k));
@@ -10471,7 +10486,7 @@ function eBowFxSet(g,k,gr){const W=g.bowW;if(!W)return;const F=eBowFx(g);
     W.scale.x=u.s0*(1-.6*gr+.12*k*gr);W.position.copy(u.p0);W.position.z-=gr*.555*W.scale.x;
     if(gr<=0||!g.visible||!g.parent){F.g.visible=false;return}
     if(F.g.parent!==scene)scene.add(F.g);g.updateMatrixWorld(true);
-    const V3=THREE.Vector3,t1=new V3(-.062,.594,0).applyMatrix4(W.matrixWorld),t2=new V3(-.062,-.594,0).applyMatrix4(W.matrixWorld),grip=new V3(-.555,0,0).applyMatrix4(W.matrixWorld);
+    const V3=THREE.Vector3,t1=new V3(BOW_T[0],BOW_T[1],0).applyMatrix4(W.matrixWorld),t2=new V3(BOW_T[0],-BOW_T[1],0).applyMatrix4(W.matrixWorld),grip=new V3(-.555,0,0).applyMatrix4(W.matrixWorld);
     const hand=new V3(0,-.03,.02).applyMatrix4(g.h.bones.aR2.matrixWorld),rest=t1.clone().add(t2).multiplyScalar(.5),nock=rest.clone().lerp(hand,Math.min(1,k));
     const pa=F.str.geometry.attributes.position;pa.setXYZ(0,t1.x,t1.y,t1.z);pa.setXYZ(1,nock.x,nock.y,nock.z);pa.setXYZ(2,t2.x,t2.y,t2.z);pa.needsUpdate=true;
     const dir=grip.clone().sub(nock);if(dir.lengthSq()<1e-6){F.g.visible=false;return}dir.normalize();
@@ -13645,7 +13660,7 @@ function kqmBagInit(){if(KQM.ready)return;const bag=$('bag'),wb=bag&&bag.querySe
   const sum=document.createElement('div');sum.className='kqm-sum';sum.id='kqmSum';doll.after(sum);
   const sp=document.createElement('div');sp.className='kqm-statp kqm-tabhid';sp.id='kqmStatP';right.appendChild(sp);sp.appendChild($('hs'));
   const eqh=right.querySelector('.sec');if(eqh&&/equipped/i.test(eqh.textContent))eqh.classList.add('kqm-tabhid');$('eqrow').classList.add('kqm-tabhid')}
-function kqmDoll(){const sl=kqmSlots(),L=['helm','chest','boots'],Rr=['weapon','offhand','amulet','ring'].filter(k=>sl.includes(k));
+function kqmDoll(){const sl=kqmSlots(),L=['helm','chest','boots','ring2'],Rr=['weapon','offhand','amulet','ring'].filter(k=>sl.includes(k));
   const one=k=>{const it=eq[k];return it?kqmTile(it,'e',{eqm:0}):`<div class="kqm-slot kqm-empty" data-kqs="${k}" data-kqt="es:${k}"><span class="kqm-ic">${SLOTIC[k]}</span><span class="kqm-sn">${SLOTN[k]}</span></div>`};
   const d=document.querySelector('.kqm-dl'),r=document.querySelector('.kqm-dr');if(d)d.innerHTML=L.map(one).join('');if(r)r.innerHTML=Rr.map(one).join('');
   try{const s=HS(),kv=(l,v)=>`<div class="kv"><span>${l}</span><b>${v}</b></div>`;$('kqmSum').innerHTML=kv('Health',Math.round(s.hp))+kv('Mana',Math.round(s.mp))+kv('Phys. attack',Math.round(s.pa))+kv('Mag. attack',Math.round(s.ma))+kv('Phys. defense',Math.round(s.pd))+kv('Mag. defense',Math.round(s.md))}catch(_){}}
@@ -19017,14 +19032,15 @@ function v90Start(){let el=V90D.src;const it=V90D.it;if(!it)return v90End();
   v90Move(V90D.x,V90D.y)}
 function v90Move(x,y){const g=V90D.ghost;if(!g)return;g.style.left=x+'px';g.style.top=y+'px';
   const T=v90Target(x,y);V90D.hl.forEach(e=>e.classList.remove('v90-over'));let bad=false;
-  if(T){if(V90D.from=='g'&&(T.kind=='slot'||T.kind=='hero')){const sl=itT(V90D.it).sl;if(T.kind=='slot'&&T.sl!=sl)bad=true;else{if(!V90D.ok)bad=true;const t=v90DollEl(sl);if(t)t.classList.add('v90-over')}}
+  if(T){if(V90D.from=='g'&&(T.kind=='slot'||T.kind=='hero')){const sl=itT(V90D.it).sl,ts=T.kind=='slot'&&sl=='ring'&&T.sl=='ring2'?'ring2':sl;if(T.kind=='slot'&&T.sl!=ts)bad=true;else{if(!V90D.ok)bad=true;const t=v90DollEl(T.kind=='slot'?ts:eqSlot135(V90D.it));if(t)t.classList.add('v90-over')}}
     else if(V90D.from=='e'&&T.kind=='bag')T.el.classList.add('v90-over')}
   g.classList.toggle('bad',bad)}
 function v90Drop(x,y){const it=V90D.it,T=v90Target(x,y);if(!T||!it)return;
   if(V90D.from=='g'){if(T.kind!='slot'&&T.kind!='hero')return;const sl=itT(it).sl;
-    if(T.kind=='slot'&&T.sl!=sl){v90Flash(T.el,'That goes in the '+SLOTN[sl]+' slot, not '+SLOTN[T.sl]+'.');return}
-    const why=v90Why(it);if(why){v90Flash(T.kind=='slot'?T.el:v90DollEl(sl)||T.el,why);return}
-    if(!gear.includes(it))return;selI={k:'g',id:it.id};invAct();try{sfx('chime')}catch(_){}return}
+    if(T.kind=='slot'&&sl=='ring'&&(T.sl=='ring'||T.sl=='ring2'))RING135.to=T.sl;   // v135: a ring dropped on either ring slot goes there
+    if(T.kind=='slot'&&T.sl!=sl&&RING135.to!==T.sl){v90Flash(T.el,'That goes in the '+SLOTN[sl]+' slot, not '+SLOTN[T.sl]+'.');return}
+    const why=v90Why(it);if(why){RING135.to=null;v90Flash(T.kind=='slot'?T.el:v90DollEl(sl)||T.el,why);return}
+    if(!gear.includes(it)){RING135.to=null;return}selI={k:'g',id:it.id};try{invAct()}finally{RING135.to=null}try{sfx('chime')}catch(_){}return}
   if(V90D.from=='e'&&T.kind=='bag'){if(!SLOTS.some(s=>eq[s]===it))return;
     if(typeof BAG_MAX!='undefined'&&gear.length>=BAG_MAX){v90Flash(T.el,'Your bag is full.');return}
     selI={k:'e',id:it.id};invAct()}}
@@ -27957,27 +27973,51 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
   shear:{spine:.08,chest:.16,neck:.2},crouch:[.28,.56],pose:{sp:.08,ch:.04,shx:-.15,el:-.3},run:{sp:.14,shx:-.1},look:[.06,0],
   TR:[[1.05,1.04,1,.9,.86,.86,.9,.92,.9,.95,1.1,1.15],[1.02,1.05,1.05,1.02,1,1.02,1.05,1.02,1,1,1.1,1.12],[1.04,1.04,1.04,1.02,1.02,1.04,1.06,1.06,1.02,1,1.1,1.12]],
   armK:[.88,.88,.84,.8,.82,.76],legK:[1.22,1.26,1.12,.92,.8,.72,.68],foot:{len:1.05,w:.8,h:.75},
-  SN:[[-.1,1.158,.045,.045,.045],[-.07,1.17,.09,.082,.08],[-.035,1.178,.108,.088,.094],[0,1.178,.116,.08,.1],[.03,1.172,.118,.07,.098],[.055,1.162,.1,.058,.09],[.072,1.152,.064,.046,.07],[.095,1.146,.057,.04,.062],[.115,1.141,.046,.032,.05],[.132,1.138,.03,.022,.03]],
-  EYEP:[.06,1.18,.058],EAR:[.076,1.268,-.045],earR:.042,earE:[.076,1.268,-.045,.036,.045,.016,-.12,.1,-.26],muzzleZ:.11,hoodZ:.03,crownZ:-.04,hatZ:-.05,
+  // v135: the head remade — a rounder brain case, broad cheeks, a short blunt muzzle (14 rings, lofted with 22 sides)
+  SN:[[-.105,1.16,.04,.04,.04],[-.085,1.168,.075,.07,.068],[-.06,1.175,.098,.088,.086],[-.03,1.18,.112,.096,.096],[0,1.18,.12,.094,.1],[.025,1.176,.122,.086,.1],
+    [.045,1.17,.118,.074,.096],[.062,1.162,.1,.06,.086],[.074,1.154,.08,.048,.074],[.085,1.148,.064,.04,.062],[.095,1.144,.056,.035,.054],[.104,1.141,.05,.03,.046],[.111,1.14,.042,.025,.036],[.116,1.14,.028,.017,.022]],
+  EYEP:[.052,1.18,.07],EAR:[.074,1.272,-.04],earR:.046,earE:[.074,1.272,-.04,.044,.054,.018,-.12,.12,-.3],muzzleZ:.095,hoodZ:.03,crownZ:-.04,hatZ:-.05,
   TP:[[0,.6,-.06,.038],[0,.58,-.16,.036],[0,.55,-.27,.034],[0,.52,-.38,.032],[.01,.5,-.49,.03],[.02,.51,-.59,.029],[.03,.55,-.68,.028],[.04,.62,-.76,.027],[.05,.7,-.82,.025],[.06,.78,-.86,.022],[.07,.86,-.88,.018],[.08,.93,-.89,.012],[.09,.98,-.89,.006]],
   tailCol:(m,C)=>m.i>10?C.FURD:Math.floor(m.i)%3==2?C.FURD:C.FUR,tailSway:[.08,.08,1.2,2.4],
   paw:{n:4,len:[.02,.022,.022,.019],claw:.006,pad:true,curl:1.2,spread:.011,colOf:C=>C.FUR},handCol:C=>C.FUR,
   toes:{n:4,len:.03,claw:.008,pad:true,dew:false,colOf:C=>C.FUR},
-  earRim:(k,c,t)=>brEarRim(BRD[2],k,c,t,[1.1,1.3,1]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[2].EAR;k.p('head','cone4','c',c,s*(x+.006),y+.012,z-.004,.052,.118,.042,-.12,s*.1,-s*.26)}),
+  earRim:(k,c,t)=>brEarRim(BRD[2],k,c,t,[1.1,1.3,1]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[2].EAR;k.p('head','cone4','c',c,s*(x+.006),y+.012,z-.004,.062,.128,.044,-.12,s*.12,-s*.3)}),
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:.9,fwd:-.01};const H=P._H=mdHeadR(P);
-    brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.45&&z>-.01)return C.BELLY;if(m.s<-.15&&z>.065)return C.FURL;
-      if(m.s>.55&&z<.02&&z>-.085&&Math.abs(Math.sin(z*90))>.7)return C.FURD; // forehead stripes
-      return C.FUR});
-    brJaw(B,D,.07,.128,C.BELLY,{h:.8,w:.92});
-    // cheek tufts, a small triangular nose, the mouth's inverted Y painted under it
-    const tip=D.SN[D.SN.length-1];k.p('head','cone4','c',C.PINK,0,tip[1]+.003,tip[0]+.006,.012,.009,.008,Math.PI*.5);
-    k.p('head','box','c',C.MOUTH,0,tip[1]-.013,tip[0]-.002,.0025,.012,.003);
-    brEyes(k,D,{sz:1.2,al:1.25,tilt:.3,fw:.4,inset:.003,browY:.022,socket:mdSh(C.FURD,.9),white:0xe8e4dc,pupil:[.0035,.014],brow:C.FURD});
-    brWhiskers(k,D,.095,1.14,3,.17);
-    // tall pointed ears, pink inside, dark tips
-    [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.036,.09,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.008,z+.009,.022,.064,.009,-.12,s*.1,-s*.26);
-      k.p('head','cone4','c',C.FURD,s*(x+.013),y+.04,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
+    // v135 remade head: a round skull lofted with more sides, broad cheeks with ruffs, puffy whisker pads, a small chin, a pink
+    // triangle nose, big almond eyes set forward with slit pupils, tall wide ears with tufts of fur inside
+    brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.45&&z>-.01)return C.BELLY;if(m.s<-.15&&z>.07)return C.FURL;
+      if(m.s>.55&&z<.03&&z>-.08&&Math.abs(Math.sin(z*95))>.72)return C.FURD; // forehead stripes
+      return C.FUR},{seg:22});
+    brJaw(B,D,.064,.108,C.BELLY,{h:.7,w:.8});
+    // whisker pads (two soft lobes) and the chin under them
+    [-1,1].forEach(s=>k.p('head','sph2','c',C.FURL,s*.021,1.131,.104,.027,.022,.019,0,s*.35,0));
+    k.p('head','sph2','c',C.BELLY,0,1.111,.098,.02,.013,.014);
+    // nose: a small pink triangle on the bridge, nostril line, the mouth's inverted Y between the pads
+    const tip=D.SN[D.SN.length-1];k.p('head','cone4','c',C.PINK,0,tip[1]+.008,tip[0]+.008,.013,.01,.009,Math.PI*.5);
+    k.p('head','box','c',mdSh(C.PINK,.7),0,tip[1]+.001,tip[0]+.012,.012,.002,.002);
+    k.p('head','box','c',C.MOUTH,0,tip[1]-.011,tip[0]+.006,.0022,.012,.003);[-1,1].forEach(s=>k.p('head','box','c',C.MOUTH,s*.008,tip[1]-.02,tip[0]+.007,.011,.0022,.003,0,0,s*.5));
+    brCatEyes135(k,D,C);
+    brWhiskers(k,D,.1,1.134,4,.18);
+    // cheek ruffs: tufts of fur pointing down and back below the eyes
+    [-1,1].forEach(s=>[[.03,1.135,0,.04],[.012,1.122,-.25,.034],[-.008,1.132,-.45,.028]].forEach(([z,y,a,l])=>{const x=brSurfX(D,z,y)-.006;
+      k.p('head','cone4','c',C.FURL,s*x,y,z,.02,l,.012,Math.PI*.82+a*.3,0,s*(.9+a*.4))}));
+    // tall, wide ears: fur outside, pink inside, a fur tuft at the base inside, dark tips
+    [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.046,.1,.018,-.12,s*.12,-s*.3);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.01,z+.011,.03,.072,.008,-.12,s*.12,-s*.3);
+      k.p('head','cone4','c',C.FURL,s*(x-.004),y-.034,z+.014,.016,.04,.006,-.05,s*.12,-s*.12);
+    });
     mdKit(B,k);return H}});
+// v135: the cat's eyes, set on the skull where the muzzle starts and turned to face mostly forward: a dark rim, a large almond
+// iris that catches the light (unlit material), a tall slit pupil and a highlight, all laid along the surface normal
+function brCatEyes135(k,D,C){const [xT,ey]=D.EYEP;let ez=.02;for(let z=.02;z<.13;z+=.001){if(brSurfX(D,z,ey)<=xT){ez=z;break}}
+  const x0=brSurfX(D,ez,ey),dx=(brSurfX(D,ez+.004,ey)-brSurfX(D,ez-.004,ey))/.008,a=Math.atan2(1,-dx)*.85,rx=-.32;
+  D.eyeR=.026;D.eyeFw=.62;D.eyeIns=0;D.EYEP[2]=ez;
+  [-1,1].forEach(s=>{const nx=s*Math.sin(a)*Math.cos(rx),ny=-Math.sin(rx),nz=Math.cos(a)*Math.cos(rx),ry=s*a,tl=s*.32,at=d=>[s*x0+nx*d,ey+ny*d,ez+nz*d];
+    let p=at(.005);k.p('head','sph2','c',mdSh(C.FURD,.55),p[0],p[1],p[2],.029,.019,.012,rx,ry,tl);
+    p=at(.0105);k.p('head','sph2','g',C.EYE,p[0],p[1],p[2],.024,.0145,.007,rx,ry,tl);
+    p=at(.0165);k.p('head','box','c',0x050404,p[0],p[1],p[2],.0032,.0145,.002,rx,ry,0);
+    p=at(.0172);k.p('head','box','g',0xfff8e8,p[0]+s*.004,p[1]+.004,p[2],.0026,.0026,.0015,rx,ry,0);
+    // a heavy upper lid over the top of the eye: a hooded, narrowed, wary look rather than a round cartoon stare
+    p=at(.0125);k.p('head','sph2','c',mdSh(C.FUR,.8),p[0]-s*.002,p[1]+.0105,p[2],.028,.009,.009,rx,ry,tl+s*.18)})}
 // ======================================================== 3 · RAVEN (Mage, v134; replaced the v114 frog) ========================================================
 // A bipedal raven: a round feathered skull with a heavy curved beak (nasal bristles over its base, a hooked tip, the gape
 // line), dark side-set eyes, shaggy throat hackles and a ruffled nape; a deep keeled chest, a thick feathered neck; arms that
@@ -30929,20 +30969,34 @@ function chqTurnIn132(id){const q=CHQ132_ID[id],I=chqHere132(),S=q&&chqS132(q);i
 
 // ---------------- Cheddar's spot beside each Duskhold portal ----------------
 function chqSpot132(I){if(CHQ132.spots[I.g])return CHQ132.spots[I.g];
-  const r=RPORT.find(q=>q.k=='home'&&q.ig===I.g),n=I.path[26],e=I.en;let dx=n[0]-e[0],dz=n[1]-e[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
-  const px=r?r.x:e[0]-dx*5-dz*4,pz=r?r.z:e[1]-dz*5+dx*4,sx=-dz,sz=dx;   // s: from the road towards the portal's far side
+  // v135: he stands a few steps down the road in front of where you arrive (the camera looks down the road), a little to its side,
+  // facing the arrival spot, so he is the first thing you see; the burrow is just behind him
+  const n=I.path[26],e=I.en;let dx=n[0]-e[0],dz=n[1]-e[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;const sx=-dz,sz=dx;
   const free=(x,z,rr)=>{for(let j=-rr;j<=rr;j++)for(let i=-rr;i<=rr;i++){const X=Math.round(x)+i,Z=Math.round(z)+j;if(X<1||Z<1||X>=W-1||Z>=H-1||solid(X,Z))return false}return true};
-  // beside the portal: its far side, then its road side, then a little forward of either
-  const C=[[2.7,0],[-2.7,0],[2.9,1.6],[-2.9,1.6],[3.6,-1.2],[-3.6,-1.2],[2.2,3],[-2.2,3]];let best=null;
-  for(const [a,b] of C){const x=px+sx*a+dx*b,z=pz+sz*a+dz*b,o=Math.sign(a),bx=x+sx*o*1.15-dx*.55,bz=z+sz*o*1.15-dz*.55;
-    if(free(x,z,1)&&free(bx,bz,0)&&Math.abs(GH(x,z)-GH(bx,bz))<.6){best={x,z,bx,bz};break}}
-  if(!best){const x=px+sx*2.7,z=pz+sz*2.7;best={x,z,bx:x+sx*1.15,bz:z+sz*1.15}}
+  const C=[[4.2,1.9],[4.2,-1.9],[3.6,2.4],[3.6,-2.4],[5,2.2],[5,-2.2],[4.4,1.4],[4.4,-1.4],[3.2,3],[3.2,-3]];let best=null;
+  for(const [a,b] of C){const x=e[0]+dx*a+sx*b,z=e[1]+dz*a+sz*b,o=Math.sign(b),bx=x+dx*1.2+sx*o*.55,bz=z+dz*1.2+sz*o*.55;
+    if(free(x,z,0)&&free(bx,bz,0)&&Math.abs(GH(x,z)-GH(bx,bz))<.6&&Math.abs(GH(x,z)-GH(e[0],e[1]))<1.2){best={x,z,bx,bz};break}}
+  if(!best){const x=e[0]+dx*4.2+sx*1.9,z=e[1]+dz*4.2+sz*1.9;best={x,z,bx:x+dx*1.2,bz:z+dz*1.2}}
   best.face=Math.atan2(e[0]-best.x,e[1]-best.z);best.g=I.g;CHQ132.spots[I.g]=best;return best}
+// v135: a second Cheddar waits a few steps before the gateway at the end of every field instance (it leads to the next instance,
+// or to the Den from III), facing the road you come down, so quests can be handed in before stepping through
+CHQ132.e={end:1,spots:{},ch:null,bur:null,mk:null,mkK:'',pop:0,popB:0,wave:0,near:0};
+function chqSpotEnd135(I){const E=CHQ132.e;if(E.spots[I.g]!==undefined)return E.spots[I.g];
+  const r=RPORT.find(q=>q.k=='next'&&q.ig===I.g);if(!r||!I.fld){E.spots[I.g]=null;return null}
+  const P=I.path,q=P[Math.max(0,P.length-14)];let dx=q[0]-r.x,dz=q[1]-r.z;const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;const sx=-dz,sz=dx;
+  const free=(x,z)=>{const X=Math.round(x),Z=Math.round(z);return X>=1&&Z>=1&&X<W-1&&Z<H-1&&!solid(X,Z)};
+  const C=[[5.4,2],[5.4,-2],[6,2.4],[6,-2.4],[5.2,2.6],[5.2,-2.6],[6.6,1.8],[6.6,-1.8],[5.6,1.4],[5.6,-1.4]];   // past the gateway's own F reachlet best=null;
+  for(const [a,b] of C){const x=r.x+dx*a+sx*b,z=r.z+dz*a+sz*b,o=Math.sign(b),bx=x-dx*1.2+sx*o*.55,bz=z-dz*1.2+sz*o*.55;
+    if(free(x,z)&&free(bx,bz)&&Math.abs(GH(x,z)-GH(bx,bz))<.6){best={x,z,bx,bz};break}}
+  if(!best){const x=r.x+dx*5.4+sx*2,z=r.z+dz*5.4+sz*2;best={x,z,bx:x-dx*1.2,bz:z-dz*1.2}}
+  best.face=Math.atan2(q[0]-best.x,q[1]-best.z);best.g=I.g;E.spots[I.g]=best;return best}
+function chqPosts135(){return [CHQ132,CHQ132.e]}
+function chqPSpot135(P,I){return P.end?chqSpotEnd135(I):chqSpot132(I)}
 // a cheap collider on his tile so you don't walk through him (built once for every spot)
-try{INSL.forEach(I=>{if(I.tri)return;const s=chqSpot132(I);CBLK.add(Math.round(s.z)*W+Math.round(s.x))})}catch(err){console.warn('chq132 spots',err)}
+try{INSL.forEach(I=>{if(I.tri)return;[chqSpot132(I),chqSpotEnd135(I)].forEach(s=>{if(s)CBLK.add(Math.round(s.z)*W+Math.round(s.x))})})}catch(err){console.warn('chq132 spots',err)}
 
 // keep the grass out of the burrow's mouth and from under his feet (grass is one virtual instanced list, VIL, 4 tufts a tile)
-try{const G=typeof TUFT!='undefined'?VIL.filter(v=>v.geo===TUFT):[],P=[];INSL.forEach(I=>{if(I.tri)return;const s=CHQ132.spots[I.g];if(s)P.push([s.bx,s.bz,1.05],[s.x,s.z,.55])});
+try{const G=typeof TUFT!='undefined'?VIL.filter(v=>v.geo===TUFT):[],P=[];INSL.forEach(I=>{if(I.tri)return;[CHQ132.spots[I.g],CHQ132.e.spots[I.g]].forEach(s=>{if(s)P.push([s.bx,s.bz,1.05],[s.x,s.z,.55])})});
   const T=new Map();P.forEach(q=>{for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const k=(Math.round(q[1])+j)*W+Math.round(q[0])+i;if(!T.has(k))T.set(k,[]);T.get(k).push(q)}});
   const Z=new THREE.Matrix4().makeScale(0,0,0);G.forEach(v=>{for(let i=0;i<v.n;i++){const x=v.M[i*16+12],z=v.M[i*16+14],L=T.get(Math.round(z)*W+Math.round(x));
     if(L&&L.some(q=>Math.hypot(x-q[0],z-q[1])<q[2]))v.setMatrixAt(i,Z)}v.instanceMatrix.needsUpdate=true})}catch(err){console.warn('chq132 grass',err)}
@@ -30967,7 +31021,7 @@ function chqBurrow132(){const g=new THREE.Group();g.name='CheddarBurrow';g.userD
     const c=add(new THREE.DodecahedronGeometry(r,0),i>5?1:0);c.position.set(x,r*.5,z);c.rotation.set(i,i*2.1,i*.7)});
   [[.62,.3,.05],[-.3,.8,.04]].forEach(([x,z,r])=>{const s=add(new THREE.DodecahedronGeometry(r,0),2);s.position.set(x,r*.4,z)});
   return g}
-function chqBurrowTint132(z){const B=CHQ132.bur;if(!B||B.userData.z===z)return;B.userData.z=z;const base=CHQ132_DIRT[z]||CHQ132_DIRT[0];
+function chqBurrowTint132(z,P){const B=(P||CHQ132).bur;if(!B||B.userData.z===z)return;B.userData.z=z;const base=CHQ132_DIRT[z]||CHQ132_DIRT[0];
   const pal=[base,new THREE.Color(base).multiplyScalar(.72).getHex(),0x5a5652,0x4a3020];
   B.userData.parts.forEach(([o,k])=>{const geo=o.geometry,p=geo.attributes.position,a=geo.attributes.color,col=new THREE.Color();
     for(let i=0;i<p.count;i+=3){const h=Math.sin((p.getX(i)+p.getZ(i+1))*91.7+p.getY(i)*37.3)*43758.5,v=.8+.35*(h-Math.floor(h));col.setHex(pal[k]).multiplyScalar(v);for(let j=0;j<3;j++)a.setXYZ(i+j,col.r,col.g,col.b)}
@@ -30985,45 +31039,50 @@ function chqMarker132(){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:c
 
 // ---------------- building and ticking Cheddar ----------------
 var CHQ132_SC=1.1;   // the concept model is 0.78 tall; a hero is ~1.45, so Cheddar stands ~0.86 (about 60% of a hero)
-function chqBuild132(){if(CHQ132.ch)return;try{
+function chqBuild132(P){P=P||CHQ132;if(P.ch)return;try{
   const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC);C.root.userData.psNo=1;C.root.userData.noFarCull=1;
   C.root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  CHQ132.ch=C;CHQ132.bur=chqBurrow132();CHQ132.mk=chqMarker132();
-  [C.root,CHQ132.bur,CHQ132.mk].forEach(o=>{o.visible=false;scene.add(o)})}catch(err){console.warn('chq132 build',err);CHQ132.ch=null}}
-function chqPlace132(I){chqBuild132();const C=CHQ132.ch;if(!C)return;const show=!!I;
-  [C.root,CHQ132.bur].forEach(o=>o.visible=show);if(!show){CHQ132.mk.visible=false;return}
-  const s=chqSpot132(I);C.root.position.set(s.x,GH(s.x,s.z),s.z);C.root.rotation.y=s.face;
-  CHQ132.bur.position.set(s.bx,GH(s.bx,s.bz)+.02,s.bz);CHQ132.bur.rotation.y=Math.atan2(s.bx-s.x,s.bz-s.z);chqBurrowTint132(I.z);
-  CHQ132.pop=1;CHQ132.wave=0;CHQ132.near=0;C.setPose('idle')}
+  P.ch=C;P.bur=chqBurrow132();P.mk=chqMarker132();
+  [C.root,P.bur,P.mk].forEach(o=>{o.visible=false;scene.add(o)})}catch(err){console.warn('chq132 build',err);P.ch=null}}
+function chqPlace132(I,P){P=P||CHQ132;const s=I?chqPSpot135(P,I):null;if(!s&&!P.ch)return;chqBuild132(P);const C=P.ch;if(!C)return;const show=!!(I&&s);
+  [C.root,P.bur].forEach(o=>o.visible=show);if(!show){P.mk.visible=false;return}
+  C.root.position.set(s.x,GH(s.x,s.z),s.z);C.root.rotation.y=s.face;
+  P.bur.position.set(s.bx,GH(s.bx,s.bz)+.02,s.bz);P.bur.rotation.y=Math.atan2(s.bx-s.x,s.bz-s.z);chqBurrowTint132(I.z,P);
+  P.pop=P.end?0:1;P.wave=0;P.near=0;C.setPose('idle')}
 function chqTick132(dt,now){
   const I=chqHere132(),g=I?I.g:-1;
-  if(g!==CHQ132.g){CHQ132.g=g;chqPlace132(I);CHQ132.trkK='';chqTrk132()}
-  const C=CHQ132.ch;if(!C||!I)return;const R=C.root,s=CHQ132.spots[g];if(!s)return;
-  const P=pl.position,d=Math.hypot(P.x-s.x,P.z-s.z),st=chqState132(I),y0=GH(s.x,s.z);
-  // climbing out of the burrow when you arrive (he slides up from the hole, then hops across to his spot)
-  if(CHQ132.pop>0){CHQ132.pop=Math.max(0,CHQ132.pop-dt/1.1);const k=1-CHQ132.pop,up=Math.min(1,k/.55),hop=Math.max(0,(k-.55)/.45);
+  if(g!==CHQ132.g){CHQ132.g=g;chqPosts135().forEach(P=>chqPlace132(I,P));CHQ132.trkK='';chqTrk132()}
+  if(!I)return;const st=chqState132(I);chqPosts135().forEach(P=>chqTickP135(P,I,st,dt,now))}
+function chqTickP135(P,I,st,dt,now){
+  const C=P.ch;if(!C||!C.root.visible)return;const R=C.root,s=chqPSpot135(P,I);if(!s)return;
+  const Pp=pl.position,d=Math.hypot(Pp.x-s.x,Pp.z-s.z),y0=GH(s.x,s.z);
+  // climbing out of the burrow when you arrive (he slides up from the hole, then hops across to his spot); the gateway Cheddar
+  // climbs out when you first come near
+  if(P.end&&!P.popD&&d<16){P.popD=1;P.pop=1}
+  if(P.end&&d>40)P.popD=0;
+  if(P.pop>0){P.pop=Math.max(0,P.pop-dt/1.1);const k=1-P.pop,up=Math.min(1,k/.55),hop=Math.max(0,(k-.55)/.45);
     const e=1-Math.pow(1-up,3);R.position.set(s.bx+(s.x-s.bx)*hop,y0-.95*(1-e)+Math.sin(hop*Math.PI)*.22,s.bz+(s.z-s.bz)*hop);
-    if(CHQ132.pop===0)R.position.set(s.x,y0,s.z);
-    if(k>.05&&!CHQ132.popB){CHQ132.popB=1;try{burst(V(s.bx,GH(s.bx,s.bz)+.25,s.bz),CHQ132_DIRT[I.z]||0x5a4630,14,1.3,1.8,.55)}catch(_){}}}
-  else CHQ132.popB=0;
-  if(dt<=0&&CHQ132.pop<=0){chqMark132(I,st,now);return}
+    if(P.pop===0)R.position.set(s.x,y0,s.z);
+    if(k>.05&&!P.popB){P.popB=1;try{burst(V(s.bx,GH(s.bx,s.bz)+.25,s.bz),CHQ132_DIRT[I.z]||0x5a4630,14,1.3,1.8,.55)}catch(_){}}}
+  else P.popB=0;
+  if(dt<=0&&P.pop<=0){chqMark132(I,st,now,P);return}
   // turn towards the hero when they come close, otherwise back towards the road
-  const want=d<9?Math.atan2(P.x-R.position.x,P.z-R.position.z):s.face;let da=want-R.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));R.rotation.y+=da*Math.min(1,dt*4);
+  const want=d<9?Math.atan2(Pp.x-R.position.x,Pp.z-R.position.z):s.face;let da=want-R.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));R.rotation.y+=da*Math.min(1,dt*4);
   // a wave when you walk up and he has something for you
-  if(d<7&&!CHQ132.near){CHQ132.near=1;if(st.av||st.rd){CHQ132.wave=2.6;C.setPose('wave')}}
-  if(d>10)CHQ132.near=0;
-  if(CHQ132.wave>0){CHQ132.wave-=dt;if(CHQ132.wave<=0)C.setPose('idle')}
+  if(d<7&&!P.near){P.near=1;if(st.av||st.rd){P.wave=2.6;C.setPose('wave')}}
+  if(d>10)P.near=0;
+  if(P.wave>0){P.wave-=dt;if(P.wave<=0)C.setPose('idle')}
   if(d<40)C.update(now/1000,Math.min(.05,dt));
-  chqMark132(I,st,now)}
-function chqMark132(I,st,now){const m=CHQ132.mk,R=CHQ132.ch&&CHQ132.ch.root;if(!m||!R)return;
-  const ch=st.rd?'?':st.av?'!':'';m.visible=!!ch&&R.visible;if(!ch)return;if(CHQ132.mkK!==ch){CHQ132.mkK=ch;m.material.map=m.userData.tx[ch];m.material.needsUpdate=true}
+  chqMark132(I,st,now,P)}
+function chqMark132(I,st,now,P){P=P||CHQ132;const m=P.mk,R=P.ch&&P.ch.root;if(!m||!R)return;
+  const ch=st.rd?'?':st.av?'!':'';m.visible=!!ch&&R.visible;if(!ch)return;if(P.mkK!==ch){P.mkK=ch;m.material.map=m.userData.tx[ch];m.material.needsUpdate=true}
   const t=now/1000;m.position.set(R.position.x,R.position.y+.78*CHQ132_SC+.42+Math.sin(t*2.2)*.06,R.position.z);const k=1+.06*Math.sin(t*4.4);m.scale.set(.42*k,.52*k,1)}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{chqTick132(dt,now)}catch(err){if(!CHQ132.err){CHQ132.err=1;console.warn('chq132',err)}}
   try{if(now-CHQ132.t>400){CHQ132.t=now;chqRunes132();chqEggs132();chqTrk132();if(!$('chqt132').classList.contains('hide'))chqTrkPos132()}}catch(_){}return r}}
 
 // ---------------- talking to him ----------------
-function chqNear132(){const I=chqHere132();if(!I||!CHQ132.ch||!CHQ132.ch.root.visible)return null;const s=CHQ132.spots[I.g];if(!s)return null;
-  return Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3?I:null}
+function chqNear132(){const I=chqHere132();if(!I)return null;
+  for(const P of chqPosts135()){if(!P.ch||!P.ch.root.visible)continue;const s=chqPSpot135(P,I);if(s&&Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3)return I}return null}
 {const f=worldPrompt;worldPrompt=function(){try{const I=chqNear132();if(I){const st=chqState132(I);
     return {label:'F · Talk to Cheddar'+(st.rd?' (quest complete!)':st.av?' (new quests)':''),fn:()=>openX('chq132')}}}catch(_){}return f.apply(this,arguments)}}
 // v132.1: the window is a grid of quest cards; each card ends in a large reward panel with a "mystery" medallion per reward type
@@ -31377,6 +31436,330 @@ function rvHemOn(){return BR.on&&BR.R&&BR.R.key=='raven'}
 {const f=mdBody;mdBody=function(B,P){if(BR.on&&BR.R&&BR.R.key=='raven'&&!BR.bare){const C=BR.C,pl=P.paint.leg;P.col.pants=C.FUR;
     P.paint.leg=(m,s)=>{const pt=m.r.part;if(pt=='hip'||pt=='thigh'||pt=='knee')return C.FUR;if(!P.rvBoots&&(pt=='shin'||pt=='ankle'))return Math.floor(m.y*70)%2?C.SCALE:C.SCALED;return pl?pl(m,s):null}}
   return f.apply(this,arguments)}}
+// ================= v135: Cheddar on the minimap and the local map (N) =================
+// He stands in front of the arrival spot of every field instance and Den (chqSpot132) and, in field instances, a few steps
+// before the gateway at the end of the road (chqSpotEnd135). A small gold mouse-ear mark shows each; it carries a "!" (a quest
+// to accept) or "?" (one ready to turn in) like the sprite over his head.
+function chq135Here(){try{const I=chqHere132();if(!I)return [];const L=[];chqPosts135().forEach(P=>{if(!P.ch||!P.ch.root.visible)return;const s=chqPSpot135(P,I);if(s)L.push({I,s})});return L}catch(_){return []}}
+function chq135Mark(g,x,y,k,st){g.save();g.translate(x,y);g.scale(k,k);
+  // two round ears and a head, gold with a dark rim
+  g.fillStyle='#f4c542';g.strokeStyle='#2a1a06';g.lineWidth=1.4/k;
+  [[-3.6,-3.4,2.6],[3.6,-3.4,2.6],[0,0,4.2]].forEach(([a,b,r])=>{g.beginPath();g.arc(a,b,r,0,6.28);g.fill();g.stroke()});
+  g.fillStyle='#ffd9e0';[[-3.6,-3.4],[3.6,-3.4]].forEach(([a,b])=>{g.beginPath();g.arc(a,b,1.2,0,6.28);g.fill()});
+  if(st){g.font='900 9px Georgia,serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=2.5/k;g.strokeStyle='#1a0f06';g.strokeText(st,0,.6);g.fillStyle='#fff2b0';g.fillText(st,0,.6)}
+  g.restore()}
+function chq135St(I){try{const S=chqState132(I);return S.rd?'?':S.av?'!':''}catch(_){return ''}}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{chq135Here().forEach(H_=>{
+  const s=H_.s,x=(s.x-(cx-vw/2)+.5)*w/vw,y=(s.z-(cy-vh/2)+.5)*h/vh;if(x<-6||y<-6||x>w+6||y>h+6)return;chq135Mark(mmX,x,y,1,chq135St(H_.I))})}catch(_){}}}
+{const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{chq135Here().forEach(H_=>{const I=H_.I,s=H_.s,c=$('wmc'),g=c.getContext('2d');
+  const k=Math.min(1060/I.w,640/I.h),x=(s.x-I.x0+.5)*k,y=(s.z-I.y0+.5)*k;chq135Mark(g,x,y,1.7,chq135St(I));
+  g.font='700 12px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText('Cheddar',x,y-17);g.fillStyle='#ffe08a';g.fillText('Cheddar',x,y-17)})}catch(e){console.warn('v135 cheddar wmap',e)}return r0}}
+// ================= v135: bow — one string, a smaller bow, carried inside the bow arm =================
+// 1. The bow model's own string is now a mesh of its own (material 's' in 0780). While a shot shows the drawn string
+//    (bowFxSet for the hero, eBowFxSet for archer foes) the model's straight string hides, so there are never two strings.
+// 2. The bow is BOW_K (0780) of its old size, scaled about the riser, so the grip, shots and drawn string still line up
+//    (the drawn string reads its tips from BOW_T).
+function bow135Str(W,show){if(!W)return;const S=W.userData.bow135s||(W.userData.bow135s=(()=>{const L=[],M=lgMats().s;W.traverse(o=>{if(o.isMesh&&o.material===M)L.push(o)});return L})());
+  for(const o of S)o.visible=show}
+{const f=bowFxSet;bowFxSet=function(k,g){const r=f.apply(this,arguments);try{const W=(pl.gearG||[]).find(o=>o.userData&&o.userData.wt=='bow'&&o.parent);
+  bow135Str(W,!(BOW_FX&&BOW_FX.g.visible))}catch(_){}return r}}
+{const f=eBowFxSet;eBowFxSet=function(g,k,gr){const r=f.apply(this,arguments);try{bow135Str(g.bowW,!(g.bowFx&&g.bowFx.g.visible))}catch(_){}return r}}
+// 3. Carry (owner's reference pictures): the bow lies across the front of the hips, held low at the riser in the bow hand, its limbs
+//    pointing left-right (one across the body, one out past the hand), the string toward the body and up. Each frame, after every
+//    animation layer, the bow is turned to a fixed direction in the hero's own frame (so it stays level while the arm swings in a
+//    run) and moved so the riser stays in the hand; it blends out with the grip's carry weight during shots.
+//    x135: a = how far the string side tilts up, b = the far limb turned forward, r = the far limb tipped up.
+V100A_BOW.x135={a:.62,b:.6,r:0};Object.assign(V100A_BOW,{lx:-.1,lz:.3,le:-.1,sw:.85,an:[0,-.04,.02]});
+function bow135Q(){const X=V100A_BOW.x135,V3=THREE.Vector3;
+  // model axes: +x riser→string, +y upper limb. Hero frame: +x is across the body from the bow hand (the bow arm is on -x), +z forward
+  const Y=new V3(Math.cos(X.b),Math.sin(X.r),Math.sin(X.b)).normalize(),Xs=new V3(0,Math.sin(X.a),-Math.cos(X.a));Xs.addScaledVector(Y,-Xs.dot(Y)).normalize();
+  const Z=new V3().crossVectors(Xs,Y);return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(Xs,Y,Z))}
+{const f=V100A_bowQ;V100A_bowQ=function(){const B=V100A_BOW;if(!B.x135)return f.apply(this,arguments);const Q=THREE.Quaternion,E=THREE.Euler;
+  // the starting carry (refined every frame by bow135Carry): undo the nominal hand orientation of the relaxed carry arm
+  const qh=new Q().setFromEuler(new E(B.lx,0,B.lz)).multiply(new Q().setFromEuler(new E(-.25+B.le,0,0)));return qh.invert().multiply(bow135Q())}}
+var BOW135_T={q:null,a:null,b:null,v:null};
+function bow135Carry(h){const S=h&&h._grip;if(!S||!S.L||!V100A_BOW.x135)return;let e=null;for(const q of S.L)if(q.ty=='bow'&&q.W&&q.W.parent){e=q;break}if(!e)return;
+  const w=gripSS(S.w==null?1:S.w);if(w<=1e-3)return;const T=BOW135_T,Q=THREE.Quaternion;if(!T.q){T.q=new Q();T.a=new Q();T.b=new Q();T.v=new THREE.Vector3()}
+  const W=e.W,P=W.parent;P.updateWorldMatrix(true,false);h.getWorldQuaternion(T.a);P.getWorldQuaternion(T.b);
+  T.q.copy(T.b.invert()).multiply(T.a).multiply(bow135Q());W.quaternion.slerp(T.q,w);
+  const C=e.C,an=C.an||GRIP_AN,hd=T.v.set(C.hold[0]*W.scale.x,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(W.quaternion);
+  W.position.lerp(hd.set(an[0]-hd.x,an[1]-hd.y,an[2]-hd.z),w)}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{h=h||pl;if(h&&h.bones&&!(h===pl&&typeof riding!='undefined'&&riding))bow135Carry(h)}catch(e){}return r}}
+try{if(typeof pl!='undefined'&&pl&&pl.bones&&pl._grip)gripReg(pl)}catch(_){}
+// ================= v135: the Duskhold portal at an instance's entrance opens the travel window =================
+// Walking back to the portal at the start of a field instance or a Den used to send you straight to Duskhold. Now F there opens
+// the zone's travel window (the same list as the zone's gate in Duskhold: every instance you have reached) with the instance you are in marked, plus "Return to Duskhold". Mode 'portal135' (its own click handler).
+function port135Home(){const P=pl.position;for(const r of RPORT){if(r.k!=='home'||!r.g.visible)continue;if(Math.hypot(P.x-r.x,P.z-r.z)<2.2)return r}return null}
+{const f=worldPrompt;worldPrompt=function(){try{const r=port135Home();if(r)return {label:'F · Travel: '+PMAP[r.pi].n+' or Duskhold',fn:()=>openX('portal135',r.pi)}}catch(_){}return f.apply(this,arguments)}}
+XR.portal135=()=>{XR.portal();const i=xwArg|0,I=curIns();
+  // the instance you are standing in: no Enter button, a "you are here" tag instead
+  try{if(I&&I.z===i&&!I.tri){const b=$('xwB').querySelector(`[data-pgo="map"][data-pk="${I.k}"]`);if(b){const s=document.createElement('span');s.className='mut';s.textContent='📍 You are here';b.replaceWith(s)}}}catch(_){}
+  const R=$('xwB').querySelector('.rows');if(R)R.insertAdjacentHTML('beforeend',`<div class="rw"><span class="rn">🏰 <b>Duskhold</b><small>Return to the stronghold.</small></span><span class="ra"><button class="pri" data-p135="home">Return</button></span></div>`);
+  $('xwF').innerHTML='<span class="mut dtl">Choose where to go: another instance of this zone, or home to Duskhold.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='portal135')return;const i=xwArg|0;
+  if(e.target.closest('[data-p135="home"]')){closeX();goHome();return}
+  const b=e.target.closest('[data-pgo]');if(!b)return;closeX();if(b.dataset.pgo=='map')enterMap(i,+b.dataset.pk||0);else waveStart(i)});
+// ================= v135: the ability preview no longer moves the hero in the world =================
+// The preview (2240) lends the real hero model `pl` to its stage, and the stage uses the hero's own world coordinates. The main
+// loop kept running meanwhile and read pl.position every frame, so a dash, leap or blink on the stage moved the camera, made the
+// companions run after it, pulled monsters and could carry the hero through the world. Now each main-loop frame sees the hero at
+// the spot it stood when the preview opened (ABX.w), and the stage gets its own position back afterwards.
+var ABX135={p:null,r:0};
+{const f=loop;loop=function(now){if(!(typeof ABX!='undefined'&&ABX.on&&!ABX.ctx&&ABX.w))return f.apply(this,arguments);
+  const S=ABX135.p||(ABX135.p=new THREE.Vector3());S.copy(pl.position);ABX135.r=pl.rotation.y;
+  pl.position.copy(ABX.w.pos);pl.rotation.y=ABX.w.ry;
+  try{return f.apply(this,arguments)}finally{if(ABX.on&&ABX.w){pl.position.copy(S);pl.rotation.y=ABX135.r}}}}
+// ================= v135: scenery between the camera and the hero fades instead of pushing the camera =================
+// v132 tilted the camera up whenever anything (the ground, a rock, a wall, a building) blocked its view of the hero. Now only the
+// ground itself moves the camera (0104, blk); rocks, walls, buildings, ledge stones and other props that come between the camera
+// and the hero turn see-through around the line of sight, the same dithered fade the grass and trees use (windMat in 0060):
+// solid at the edges, ~35% inside, never near the hero and never below the hero's knees (floors, paving and
+// bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
+// (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
+// companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
+var F135={done:new WeakSet(),t:0,min:.35,on:true};
+function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
+  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
+  // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
+  const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
+  if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
+  m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135={value:F135.min};sh.uniforms.uClip=CLIP135;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
+    #ifdef USE_INSTANCING
+    vF135=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;
+    #else
+    vF135=(modelMatrix*vec4(transformed,1.)).xyz;
+    #endif`);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uF135;uniform vec4 uClip;varying vec3 vF135;').replace('void main() {',`void main() {
+    if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
+    {vec3 ab=uPl-uCam;float t=clamp(dot(vF135-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vF135-(uCam+ab*t));
+     float f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,t));f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));f=max(f,uF135);
+     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
+  m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
+function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
+  try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
+  try{drops.forEach(d=>d&&d.g&&S.add(d.g))}catch(_){}try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){const q=MP.rh[k];if(q&&q.m)S.add(q.m);if(q&&q.h)S.add(q.h)}}catch(_){}
+  return S}
+function f135Scan(){if(!F135.on)return;const S=f135Skip(),st=[scene];
+  while(st.length){const o=st.pop();if(S.has(o)||(o.userData&&o.userData.noFade135))continue;
+    if(o.isMesh&&!o.isSkinnedMesh){const M=o.material;if(Array.isArray(M))M.forEach(f135Patch);else f135Patch(M)}
+    const c=o.children;for(let i=0;i<c.length;i++)st.push(c[i])}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(now-F135.t>2000){F135.t=now;f135Scan()}}catch(e){if(!F135.err){F135.err=1;console.warn('v135 fade',e)}}return r}}
+// ================= v135: nothing from a neighbouring instance shows across the void =================
+// Instances sit 6 tiles apart on one world grid. The 32-tile terrain chunks along an edge hold ground of both neighbours, and
+// field instances II/III with cave or keep themes raise walls ~100 units high, so from instance I you saw a giant grey wall (or
+// another Den's scenery) towering in the fog, cutting the sky into odd patches. Now:
+//  1. CLIP135 = the rectangle of the instance you are in (+3 tiles, half the void; outside the zones: Duskhold and everything
+//     west of the zones), updated every frame in chunkVis.
+//  2. Terrain, the swaying plants (windMat) and the faded scenery materials (2410) discard every pixel outside it.
+//  3. The far-scenery cull (1980) also hides, while drawing, any object whose bounds lie wholly outside it (other Dens, camp
+//     set pieces, edge scenery of the neighbours).
+var CLIP135={value:new THREE.Vector4(-1e5,-1e5,1e5,1e5)},CL135={k:null,M:new WeakSet()};
+function cl135Rect(k){const I=k>=0?INSL[k]:null;return I?[I.x0-3,I.y0-3,I.x0+I.w+3,I.y0+I.h+3]:[-1e5,-1e5,PM_X0-3,1e5]}
+function cl135Update(){const k=cvKey();if(k===CL135.k)return;CL135.k=k;const r=cl135Rect(k);CLIP135.value.set(r[0],r[1],r[2],r[3]);try{FC.t=-1e9}catch(_){}}
+const CL135_GLSL='if(vC135.x<uClip.x||vC135.z<uClip.y||vC135.x>uClip.z||vC135.z>uClip.w)discard;';
+// add the clip to a material that already has its own shader hook (terrain, wind)
+function cl135Chain(m,key){if(!m||CL135.M.has(m))return;CL135.M.add(m);const ob=m.onBeforeCompile;
+  m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uClip=CLIP135;
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vC135;').replace('#include <project_vertex>',`#include <project_vertex>
+    #ifdef USE_INSTANCING
+    vC135=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;
+    #else
+    vC135=(modelMatrix*vec4(transformed,1.)).xyz;
+    #endif`);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec4 uClip;varying vec3 vC135;').replace('void main() {','void main() {\n'+CL135_GLSL)};
+  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+key;m.needsUpdate=true}
+try{GTX.list.forEach((T,i)=>cl135Chain(T.mat,'trc135'))}catch(e){console.warn('v135 clip terrain',e)}
+try{VIL.forEach(v=>cl135Chain(v.material,'wc135'))}catch(e){console.warn('v135 clip plants',e)}
+{const f=chunkVis;chunkVis=function(){try{cl135Update()}catch(_){}return f.apply(this,arguments)}}
+// the far cull also drops whole objects lying outside the instance
+{const f=fcTest;fcTest=function(o,now,R,cp,hide,d){const s=fcSphere(o,now);if(s&&!(s.r>FC.big&&d<FC.depth&&o.children.length)){const c=CLIP135.value;
+    if(s.x+s.r<c.x||s.x-s.r>c.z||s.z+s.r<c.y||s.z-s.r>c.w){hide.push(o);return 1}}
+  return f.apply(this,arguments)}}
+// ================= v135: Wave Trials are gone (owner's request) =================
+// The portal lists no Wave Trial (0510 XR.portal), the "Leave trial" portals are taken out of the world, a trial can no longer
+// start, and a save or recall spot inside a trial arena (older saves) goes home to Duskhold instead. The trial instances stay in
+// the world grid (INSL, k 4) so every other instance keeps its place and old saves load; nothing leads there.
+waveStart=function(){};
+try{for(let j=RPORT.length-1;j>=0;j--){const r=RPORT[j];if(r.k!=='wave')continue;r.g.visible=false;if(r.g.parent)r.g.parent.remove(r.g);RPORT.splice(j,1)}}catch(e){console.warn('v135 wave portals',e)}
+function wv135Out(){try{const I=curIns();if(I&&I.tri){if(typeof WV!='undefined'&&WV)try{waveEnd(false,true)}catch(_){}TWN100_home()}}catch(_){}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(INST&&INSL[INST.r]&&INSL[INST.r].tri)INST=null}catch(_){}return r}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);setTimeout(wv135Out,0);return r}}
+// ================= v135: no "Continue" needed after an egg hatches =================
+// Once the hatch show has finished ("It hatched!"), the Companions & Eggs window works again straight away: clicking a
+// companion or an egg in the list (or hatching the next ready egg) ends the reveal. Eggs still queued from the same batch are
+// already in your party, so they are simply listed instead of each playing its show. Continue / Next egg still work as before.
+function hatch135Free(){if(!CE.hat||!CE.hat.done)return false;const L=[...hq].map(h=>h.c);CE.hat=null;hq.length=0;hAct=false;
+  try{$('cvw').classList.remove('hatching')}catch(_){}if(L.length)try{say('🥚 Also hatched: '+L.map(c=>nm(c)).join(', ')+'.')}catch(_){}return true}
+{const f=$('cl').onclick;$('cl').onclick=function(e){try{if(CE.hat&&CE.hat.done&&e.target.closest('button'))hatch135Free()}catch(_){}return f.apply(this,arguments)}}
+// ================= v135: a second ring slot =================
+// SLOTS (0110) has 'ring2'; ring items (sl 'ring') fit either ring slot. Equipping a ring from the bag fills the first empty ring
+// slot (both full: it swaps with the first); dragging it onto a ring slot puts it in that one (RING135.to, 1670). Everything that
+// walks SLOTS (stats, set bonuses, tooltips, the forge tab, saves) sees the second ring; the paper doll shows it under the boots.
+var RING135={to:null};
+function eqSlot135(it){const sl=itT(it).sl;if(sl!=='ring')return sl;const to=RING135.to;RING135.to=null;if(to==='ring'||to==='ring2')return to;
+  if(!eq.ring)return 'ring';if(!eq.ring2)return 'ring2';return 'ring'}
+// ================= v135: monsters fall over and fade out when they die =================
+// kill_base (0120) topples the body onto its side over 0.64 s (death135Ease: accelerates like a fall), lifted by death135Lift so
+// it lies on the ground rather than half under it, leaves it lying 1.5 s, then death135Fade fades it out over 0.9 s and removes it.
+// The fade works on copies of the model's materials (enemy kits share theirs), freed again once the body is gone.
+function death135Ease(k){return k<1?k*k*(1.6-.6*k):1}
+function death135Lift(m){try{const b=m.userData.d135L;if(b!=null)return b;const B=new THREE.Box3().setFromObject(m.b||m),s=B.getSize(new THREE.Vector3()),sc=m.scale.x||1;
+  const L=Math.min(s.x,s.y)/sc*.32;m.userData.d135L=L;return L}catch(_){return 0}}
+function death135Fade(g,done){const L=[];
+  try{g.traverse(o=>{if(!(o.isMesh||o.isSkinnedMesh)||!o.material||o.userData.d135)return;o.userData.d135=1;o.castShadow=false;
+    const M=Array.isArray(o.material)?o.material:[o.material],C=M.map(m=>{const c=m.clone();c.userData=Object.assign({},m.userData,{d135:1});c.transparent=true;c.userData.o0=m.opacity==null?1:m.opacity;L.push(c);return c});
+    o.material=Array.isArray(o.material)?C:C[0]})}catch(e){console.warn('v135 death fade',e)}
+  const fin=()=>{try{done&&done()}finally{L.forEach(c=>{try{c.dispose()}catch(_){}})}};
+  if(!L.length){fin();return}
+  tw(900,k=>{const a=1-k*k;for(const c of L)c.opacity=c.userData.o0*a},fin)}
+// ================= v135: unique items — three per zone, very rare, each with a model of its own =================
+// Every zone has a unique amulet, a unique ring and a unique weapon. They drop very rarely from any creature in the zone's three
+// field instances (UNQ135_P: 1 in 2,000 kills, 1 in 300 for elites). A unique is an item of the base template of its slot and the
+// zone's tier (the weapon: your class's weapon of that tier) with it.u = its key: legendary rarity (four affixes, no legendary
+// power), its own name (itName, 0120), a fixed bonus on top of its stats (itStats below), a "✦ Unique" block in the tooltip, and
+// its own model (icons, the item on the ground, the weapon in the hero's hand; the worn amulet / ring take its gem colours).
+// Amulets and rings have a bespoke kit each (UNQ135[key].kit); the weapon is the class weapon rebuilt with the zone's ornaments
+// (UNQ135_ORN[zone]: wisps, scales, ice, gold, bone, thorns) and its metal tinted towards the zone's colour.
+var UNQ135_P={kill:1/2000,elite:1/300};
+var UNQ135={
+ // ---- 0 · Kindlelight ----
+ lantern:{z:0,sl:'amulet',n:'Lanternheart',fl:'A wisp of bog-light caged in black iron. It never gutters.',e:{hpP:.08,regen:.006},gem:0x7aff9a,
+   kit(k){const I=0x2a2a30,G=0x8affa8;k.p('','ring','m',I,0,.03,0,.035,.2,.035,Math.PI/2);k.p('','cone4','m',I,0,-.02,0,.055,.04,.055,0,Math.PI/4);
+     for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;k.L('','m',I,[Math.cos(a)*.05,-.035,Math.sin(a)*.05],[Math.cos(a)*.055,-.15,Math.sin(a)*.055],.006,.006,4)}
+     k.p('','cyl','m',I,0,-.16,0,.06,.015,.06);k.p('','cone4','m',I,0,-.185,0,.03,.04,.03,Math.PI,Math.PI/4);k.p('','ico','g',G,0,-.095,0,.032);k.p('','ico','g',0xe8ffe8,0,-.095,0,.016)}},
+ mirewyrm:{z:0,sl:'ring',n:'Mirewyrm Coil',fl:'A bog serpent, swallowed its own tail and set in bronze.',e:{ls:.04,crit:.03},gem:0x9aff6a,
+   kit(k){const B=0x5a6a3a,S=0x3a5a2a;k.p('','ring','m',B,0,0,0,.1,.16,.1,Math.PI/2);
+     for(let i=0;i<7;i++){const a=-.6+i*.2,r=.105;k.p('','sph','c',i%2?S:lgCol(S,0x9aff6a,.2),Math.sin(a)*r,Math.cos(a)*r+.012,0,.024-i*.0012,.022,.03)}
+     k.p('','oct','c',S,.085,.085,0,.032,.022,.03,0,0,-.6);[-1,1].forEach(s=>k.p('','sph','g',0xc8ff4a,.1,.095,s*.012,.006))}},
+ // ---- 1 · Hillside Crest ----
+ trilith:{z:1,sl:'amulet',n:'Trilith Stone',fl:'Three stones of the crest, carved with the serpent that sleeps beneath it.',e:{dr:.06,hpP:.06},gem:0x6ac850,
+   kit(k){const S=0x8a8a80,D=0x5a5a54;k.p('','ring','m',0x9a7838,0,.03,0,.03,.2,.03,Math.PI/2);k.p('','box','c',S,-.05,-.1,0,.032,.12,.03);k.p('','box','c',S,.05,-.1,0,.032,.12,.03);
+     k.p('','box','c',D,0,-.03,0,.14,.034,.034);k.L('','c',0x4a8a3a,[-.06,-.03,.019],[.06,-.03,.019],.006,.004,4);k.p('','oct','g',0x6ac850,0,-.03,.022,.012)}},
+ hydratooth:{z:1,sl:'ring',n:"Hydra's Tooth Band",fl:'Three fangs, pulled from three heads that grew back.',e:{as:.08,crit:.02},gem:0x7ac850,
+   kit(k){const B=0xb8bcc4;k.p('','ring','m',B,0,0,0,.1,.16,.1,Math.PI/2);[-.45,0,.45].forEach((a,i)=>k.p('','cone4','c',0xe8e0c8,Math.sin(a)*.12,Math.cos(a)*.12+.02,0,.014,i==1?.07:.05,.012,0,0,-a));
+     k.p('','oct','g',0x7ac850,0,.1,.02,.018)}},
+ // ---- 2 · Burningeye Summit ----
+ rimeeye:{z:2,sl:'amulet',n:'Rime Eye',fl:'It watched the summit freeze. It still watches.',e:{cdr:.08,maP:.06},gem:0x9ad8ff,
+   kit(k){const C=0xbfe8ff;k.p('','ring','m',0xc8ccd4,0,.03,0,.03,.2,.03,Math.PI/2);for(let i=0;i<7;i++){const a=i/7*Math.PI*2;k.p('','cone4',i%2?'g':'m',i%2?0xcff0ff:C,Math.cos(a)*.06,-.1+Math.sin(a)*.06,0,.014,.07,.01,0,0,a-Math.PI/2)}
+     k.p('','sph','c',0xf0f4f8,0,-.1,0,.04,.04,.025);k.p('','sph','g',0x4ab8ff,0,-.1,.018,.02,.02,.01);k.p('','box','c',0x08101a,0,-.1,.026,.004,.016,.003)}},
+ frostsignet:{z:2,sl:'ring',n:'Frostbitten Signet',fl:'The seal of a lord the Rime Wraith kept.',e:{crit:.04,cdm:.15},gem:0xbfe8ff,
+   kit(k){const B=0xa8b0bc;k.p('','ring','m',B,0,0,0,.1,.16,.1,Math.PI/2);k.p('','box','m',B,0,.11,0,.07,.02,.06);k.p('','box','g',0x9ad8ff,0,.122,0,.05,.006,.044);
+     for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4;k.p('','cone4','g',0xdff6ff,Math.cos(a)*.028,.14,Math.sin(a)*.022,.007,.045,.007,0,0,Math.cos(a)*.3)}}},
+ // ---- 3 · Searing Sands ----
+ sunscarab:{z:3,sl:'amulet',n:'Sunscarab Pectoral',fl:'Gold that remembers the sun, and the hands that buried it.',e:{xp:.1,hpP:.06},gem:0xffa030,
+   kit(k){const G=0xd8a838;k.p('','ring','m',G,0,.03,0,.03,.2,.03,Math.PI/2);k.p('','cyl','m',G,0,-.1,-.008,.085,.01,.085,Math.PI/2);k.p('','sph2','m',lgCol(G,0x2a4a8a,.55),0,-.1,.01,.034,.048,.02);
+     [-1,1].forEach(s=>k.p('','box','m',G,s*.055,-.085,.01,.06,.026,.008,0,0,s*.45));k.p('','sph','g',0xff8a20,0,-.06,.016,.016)}},
+ dustwyrm:{z:3,sl:'ring',n:'Ring of the Dust Wyrm',fl:'Segmented like the beast, and just as hungry.',e:{mspd:.06,as:.05},gem:0xe8b860,
+   kit(k){const B=0xc89a58;for(let i=0;i<10;i++){const a=i/10*Math.PI*2;k.p('','cyl','m',i%2?B:lgCol(B,0,.25),Math.sin(a)*.1,Math.cos(a)*.1,0,.03,.024,.03,0,0,-a)}
+     k.p('','cone','m',lgCol(B,0,.2),0,.125,0,.03,.04,.03);for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.p('','cone4','c',0xf0e8d0,Math.cos(a)*.022,.145,Math.sin(a)*.022,.004,.016,.004,Math.PI)}}},
+ // ---- 4 · The Dirge ----
+ drownedbell:{z:4,sl:'amulet',n:'Drowned Bell',fl:'It tolled for the crypt as the water came in. Listen closely.',e:{thorns:.3,dr:.05},gem:0x5ac8b0,
+   kit(k){const B=0x5a7a6a;k.p('','ring','m',0x3a3a40,0,.03,0,.03,.2,.03,Math.PI/2);k.p('','sph','m',B,0,-.035,0,.035,.03,.035);k.p('','skirt','m',B,0,-.095,0,.06,.1,.06);
+     k.p('','sph','m',0x3a4a44,0,-.15,0,.014);[[.04,-.08,.03],[-.03,-.11,.04],[.02,-.13,-.04],[-.045,-.07,-.02]].forEach(([x,y,z])=>k.p('','sph','c',0xc8c0a8,x,y,z,.009));k.p('','sph','g',0x5ac8b0,0,-.06,.05,.008)}},
+ knuckle:{z:4,sl:'ring',n:'Ossuary Knuckle',fl:'Carved from a knuckle of the Colossus. It still grips.',e:{killheal:.03,ls:.03},gem:0x9affd8,
+   kit(k){const B=0xe0d8c0;k.p('','ring','c',B,0,0,0,.1,.18,.1,Math.PI/2);k.p('','sph2','c',B,0,.135,0,.04,.036,.036);k.p('','box','c',B,0,.105,.012,.028,.016,.024);
+     [-1,1].forEach(s=>k.p('','sph','g',0x5affd0,s*.015,.138,.032,.007));k.p('','cone4','c',0x2a2420,0,.122,.036,.005,.008,.003,Math.PI)}},
+ // ---- 5 · The Citadel ----
+ chalice:{z:5,sl:'amulet',n:'Crimson Chalice',fl:'A thimble of the Throne Hall\'s wine. It is not wine.',e:{ls:.06,hpP:.05},gem:0xff2040,
+   kit(k){const G=0x8a6a3a;k.p('','ring','m',G,0,.03,0,.03,.2,.03,Math.PI/2);k.p('','cone','m',G,0,-.045,0,.045,.06,.045,Math.PI);k.p('','cyl','g',0xd01030,0,-.02,0,.04,.008,.04);
+     k.p('','cyl','m',G,0,-.1,0,.008,.06,.008);k.p('','cyl','m',G,0,-.135,0,.035,.01,.035);k.p('','oct','g',0xff2040,0,-.075,.012,.01)}},
+ nosferatu:{z:5,sl:'ring',n:"Nosferatu's Seal",fl:'Whoever wears it is never quite the first to bleed.',e:{first:.3,crit:.04},gem:0xff1030,
+   kit(k){const B=0x2a2228;k.p('','ring','m',B,0,0,0,.1,.16,.1,Math.PI/2);k.p('','oct','g',0xff1030,0,.12,0,.026,.034,.022);
+     [-1,1].forEach(s=>{k.p('','cone4','m',B,s*.05,.125,0,.012,.08,.006,0,0,s*1.25);k.p('','cone4','m',B,s*.045,.11,0,.01,.06,.005,0,0,s*1.7)})}},
+ // ---- the weapons (the finder's class weapon, with the zone's ornaments) ----
+ gloamfen:{z:0,sl:'weapon',n:'Gloamfen',fl:'Bog-light clings to it, and so does the moss.',e:{skillP:.1,loot:.1},gem:0x8affa8,tint:0x3a6a4a},
+ coilfang:{z:1,sl:'weapon',n:'Coilfang',fl:'Scaled like the Hydra, and it bites like one.',e:{cdm:.25,as:.05},gem:0x7ac850,tint:0x4a7a3a},
+ wraithfrost:{z:2,sl:'weapon',n:'Wraithfrost',fl:'Rime grows on it in the warmest hand.',e:{paP:.08,maP:.08,mspd:.04},gem:0x9ad8ff,tint:0x9ab8d8},
+ sunforged:{z:3,sl:'weapon',n:'Sunforged',fl:'Hammered under the sun the scarabs worship.',e:{paP:.1,maP:.1},gem:0xffa030,tint:0xd8a838},
+ dirgebone:{z:4,sl:'weapon',n:'Dirgebone',fl:'Bound with chain and ossuary bone; it grows bolder as you weaken.',e:{berserk:.2,ls:.04},gem:0x5ac8b0,tint:0x6a7a70},
+ bloodthorn:{z:5,sl:'weapon',n:'Bloodthorn',fl:'Thorns of the Citadel\'s red briar, still drinking.',e:{cdm:.3,ls:.04},gem:0xff2040,tint:0x8a1a24}};
+// the zone ornaments laid along a weapon (points picked from its own parts, away from the grip)
+var UNQ135_ORN=[
+ (k,p,i,R)=>{k.p('','ico','g',i%2?0x8affa8:0xc8ffd8,p.x+(R()-.5)*.03,p.y,p.z+.03,.018+R()*.01);if(i%2==0)k.p('','cone4','c',0x2a4a2a,p.x,p.y,p.z-.02,.02,.04,.012,R()*3,R()*3,0)},
+ (k,p,i,R)=>{[-1,1].forEach(s=>k.p('','oct','m',0x4a7a3a,p.x+s*.022,p.y,p.z,.016,.026,.006,0,s*.5,R()));if(i%3==0)k.p('','cone4','c',0xe8e0c8,p.x,p.y-.02,p.z+.025,.008,.04,.008,1.2)},
+ (k,p,i,R)=>{for(let j=0;j<2;j++)k.p('','cone4',j?'g':'m',j?0xdff6ff:0xbfe8ff,p.x+(R()-.5)*.04,p.y+(R()-.5)*.03,p.z+(R()-.5)*.04,.01,.05+R()*.04,.01,R()*2-1,0,R()*2-1)},
+ (k,p,i,R)=>{k.p('','ring','m',0xd8a838,p.x,p.y,p.z,.036,.16,.036);if(i%2==0)k.p('','oct','g',0xff9a30,p.x,p.y,p.z+.03,.012)},
+ (k,p,i,R)=>{if(i%2)k.p('','ring','m',0x3a3a40,p.x,p.y,p.z,.03,.2,.03,R()*3,0,R());else k.p('','cone4','c',0xe0d8c0,p.x+.02,p.y,p.z,.012,.06,.01,0,0,-1.2+R())},
+ (k,p,i,R)=>{for(let j=0;j<2;j++)k.p('','cone4','c',0x5a0a14,p.x+(j?.02:-.02),p.y,p.z,.008,.045,.008,0,0,j?-1.4:1.4);if(i%3==0)k.p('','oct','g',0xff2040,p.x,p.y,p.z+.02,.012)}];
+var UNQ135_ZK=(()=>{const Z=[];for(const key in UNQ135){const U=UNQ135[key];U.key=key;(Z[U.z]=Z[U.z]||[]).push(key)}return Z})();
+// ---------------- the item ----------------
+function unqOf135(it){return it&&it.u&&UNQ135[it.u]||null}
+function unqName135(it){const U=unqOf135(it);if(!U)return null;return U.sl=='weapon'?U.n+' '+String(itT(it).n).split(' ').pop():U.n}
+function unqMake135(key,lv){const U=UNQ135[key];if(!U)return null;
+  let it=null;try{it=genItem_base(Math.max(1,lv|0),{sl:U.sl,cls:hero.cls})}catch(_){return null}if(!it||!ITPL[it.tp]||itT(it).sl!==U.sl)return null;
+  it.r=4;it.u=key;delete it.lp;delete it.set;const ks=Object.keys(AFX).filter(k=>!(U.sl=='weapon'&&k=='mp')&&!it.aff.some(a=>a.k==k)),T=tierOfLv(it.lv)-1;
+  while(it.aff.length<4&&ks.length){const k=ks.splice(R(0,ks.length-1),1)[0],A_=AFX[k];it.aff.push({k,v:A_[1]=='n'?Math.round(A_[2]*(2+it.lv)*(.9+Math.random()*.4)):+(A_[2]*(1+T*.45)*(.9+Math.random()*.4)).toFixed(4)})}
+  return it}
+{const f=itStats;itStats=function(it){const s=f.apply(this,arguments);try{const U=unqOf135(it);if(U)for(const k in U.e)s[k]=(s[k]||0)+U.e[k]}catch(_){}return s}}
+Object.assign(SNM,{dr:'Damage reduction',thorns:'Thorns',berserk:'Damage below half health',first:'First-hit damage',killheal:'Health per kill',skillP:'Skill damage',compP:'Companion damage'});
+function unqTipHTML135(it){const U=unqOf135(it);if(!U)return '';const zn=PMAP[U.z]?PMAP[U.z].n:'';
+  return `<div class="kqm-tx" style="color:#ffcf6a">✦ Unique · ${kqmEsc(zn)}</div><div class="kqm-tx">${Object.keys(U.e).map(k=>fmtS(k,U.e[k])+' '+(SNM[k]||k)).join(' · ')}</div><div class="kqm-ts" style="font-style:italic">“${kqmEsc(U.fl)}”</div>`}
+{const f=kqmGearTip;kqmGearTip=function(it,o){let h=f.apply(this,arguments);try{if(unqOf135(it)){h=h.replace('>Legendary '+SLOTN[itT(it).sl],'>Unique '+SLOTN[itT(it).sl]);
+  const m='<div class="kqm-ts" style="margin-top:4px">Upgrade';const i=h.indexOf(m);h=i>=0?h.slice(0,i)+unqTipHTML135(it)+h.slice(i):h+unqTipHTML135(it)}}catch(_){}return h}}
+{const f=idHTML;idHTML=function(){let h=f.apply(this,arguments);try{const it=selI&&(selI.k=='e'?SLOTS.map(k=>eq[k]).find(x=>x&&x.id==selI.id):gear.find(x=>x.id==selI.id));if(unqOf135(it))h+=unqTipHTML135(it)}catch(_){}return h}}
+// ---------------- the drop ----------------
+function unqRoll135(e){if(!e||e.boss||e.wv||e.dprop||(e.c&&e.c.boss)||e.__abx)return;const P=e.m&&e.m.position;if(!P)return;
+  const I=insAt(Math.round(P.x),Math.round(P.z));if(!I||!I.fld)return;const L=UNQ135_ZK[I.z];if(!L||!L.length)return;
+  const p=(e.c&&e.c.al?UNQ135_P.elite:UNQ135_P.kill)*(1+Math.min(1,(HS().loot||0)));if(Math.random()>=p)return;
+  const it=unqMake135(L[R(0,L.length-1)],I.lv[1]);if(!it)return;drop('gear',it,P,it.r);
+  try{banner('✦ A UNIQUE ITEM FALLS',unqName135(it),PMAP[I.z].n+' · '+SLOTN[itT(it).sl])}catch(_){}try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}}
+{const f=lootE;lootE=function(e){const r=f.apply(this,arguments);try{unqRoll135(e)}catch(err){console.warn('v135 unique',err)}return r}}
+// ---------------- the models ----------------
+function unqWpnKit135(k,it,U){const n0=k.P.length;v89WpnKit(k,it);
+  // the metal takes the zone's colour; ornaments on points spread along the weapon, away from the grip
+  for(let i=n0;i<k.P.length;i++){const p=k.P[i];if(p.t=='m')p.col=lgCol(p.col,U.tint,.45)}
+  const V=new THREE.Vector3(),pts=[];for(let i=n0;i<k.P.length;i++){V.setFromMatrixPosition(k.P[i].m);if(V.length()>.12)pts.push(V.clone())}
+  let s=U.key.length*977;const Rr=()=>{s=(s*16807)%2147483647;return s/2147483647};
+  pts.sort((a,b)=>b.length()-a.length());const pick=[];for(const q of pts){if(pick.every(o=>o.distanceTo(q)>.09))pick.push(q);if(pick.length>=8)break}
+  const n1=k.P.length;pick.forEach((p,i)=>UNQ135_ORN[U.z](k,p,i,Rr));const S=new THREE.Vector3(1.5,1.5,1.5);for(let i=n1;i<k.P.length;i++)k.P[i].m.scale(S);
+  k.p('','oct','g',U.gem,0,-.02,.03,.024)}
+{const f=v89Kit;v89Kit=function(k,it){const U=unqOf135(it);if(!U)return f.apply(this,arguments);try{if(U.sl=='weapon')return unqWpnKit135(k,it,U);return U.kit(k)}catch(e){console.warn('v135 unique kit',e);return f.apply(this,arguments)}}}
+{const f=v89Key;v89Key=function(it){return f.apply(this,arguments)+(it&&it.u?'|u'+it.u:'')}}
+{const f=v89Wpn;v89Wpn=function(it,type){if(!unqOf135(it))return f.apply(this,arguments);const t=itT(it),g=lgGroup('LW89U|'+it.u+'|'+it.tp,k=>v89WpnKit_u135(k,it),.18);g.userData.wt=type||t.wt;return g}}
+function v89WpnKit_u135(k,it){return unqWpnKit135(k,it,unqOf135(it))}
+{const f=lgDropModel;lgDropModel=function(kind,data,r){if(kind!='gear'||!unqOf135(data))return f.apply(this,arguments);
+  try{const it={tp:data.tp,r:data.r!=null?data.r:r,u:data.u},g=new THREE.Group(),inner=lgGroup('LD89U|'+it.u+'|'+it.tp,k=>v89Kit(k,it),.14);g.add(inner);
+    inner.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(inner),sz=bb.getSize(new THREE.Vector3()),mx=Math.max(sz.x,sz.y,sz.z)||1;
+    if(mx>.62)inner.scale.setScalar(.62/mx);else if(mx<.4)inner.scale.setScalar(.4/mx);const c=bb.getCenter(new THREE.Vector3()).multiplyScalar(inner.scale.x);inner.position.sub(c);
+    if(sz.y>sz.x*1.6)g.rotation.z=.75;return g}catch(e){return f.apply(this,arguments)}}}
+// worn amulet / ring: the unique's gem colour (and a glow), and its own cache key
+{const f=mdGD;mdGD=function(it){const d=f.apply(this,arguments);try{const U=d&&unqOf135(it);if(U&&(U.sl=='amulet'||U.sl=='ring')){d.gem=U.gem;d.G=U.gem;d.key=(d.key||'')+'|u'+it.u}}catch(_){}return d}}
+// ================= v135: very rare items you can only fish up =================
+// Six uniques that never drop from monsters (src 'fish', no zone): four pieces of jewellery with their own models and one weapon
+// of your class dressed in barnacles, coral and kelp. Any catch anywhere may bring one up with the fish: 0.4% / 0.8% / 1.5% / 3%
+// for a common / uncommon / rare / legendary fish (UNQ135_FISH), at the level fishing treasure uses. They work like the zone
+// uniques (2470): legendary rarity, own name, fixed bonus, "✦ Unique · Fished up" in the tooltip.
+var UNQ135_FISH=[.004,.008,.015,.03];
+Object.assign(UNQ135,{
+ pearl:{src:'fish',sl:'amulet',n:"Leviathan's Pearl",fl:'Pried from a shell the size of a cart. It glows when the tide turns.',e:{hpP:.1,regen:.008},gem:0xdff6ff,
+   kit(k){const S=0x6a5a6a;k.p('','ring','m',0xc8ccd4,0,.03,0,.03,.2,.03,Math.PI/2);k.p('','hem','c',S,0,-.12,0,.075,.04,.06,Math.PI);k.p('','hem','c',lgCol(S,0xe8d8e0,.3),0,-.1,-.01,.075,.05,.06,-.9);
+     k.p('','sph2','g',0xeef8ff,0,-.105,.015,.034);k.p('','sph','g',0xffffff,.012,-.095,.04,.008)}},
+ lure:{src:'fish',sl:'ring',n:"Angler's Lure",fl:'The lure that caught the thing that ate the angler.',e:{loot:.15,xp:.05},gem:0xff8a30,
+   kit(k){k.p('','ring','m',0x9a7838,0,0,0,.1,.16,.1,Math.PI/2);k.L('','c',0xd8d0b8,[0,.1,0],[.03,.17,.01],.002,.002,3);k.p('','sph2','g',0xff8a30,.035,.19,.012,.016,.02,.014);
+     k.p('','cone4','m',0xc8ccd4,.04,.165,.012,.005,.02,.005,Math.PI);[-1,1].forEach(s=>k.p('','box','c',0xffd060,.035+s*.012,.195,.012,.012,.004,.006,0,0,s*.6))}},
+ conch:{src:'fish',sl:'amulet',n:'Tidecaller Conch',fl:'Hold it to your ear and the sea answers.',e:{cdr:.08,skillP:.08},gem:0x7ad8ff,
+   kit(k){const C=0xe8c8a8;k.p('','ring','m',0x9a7838,0,.03,0,.03,.2,.03,Math.PI/2);for(let i=0;i<6;i++){const t=i/5;k.p('','sph',i%2?'c':'c',lgCol(C,0xd88a6a,t*.6),.03*Math.sin(t*5),-.04-t*.13,.03*Math.cos(t*5)*.5,.05-t*.035,.04-t*.022,.045-t*.03)}
+     k.p('','cone4','c',0xf0e0d0,0,-.2,0,.012,.04,.012,Math.PI);k.p('','sph','g',0x7ad8ff,-.01,-.06,.04,.012)}},
+ sailor:{src:'fish',sl:'ring',n:"Drowned Sailor's Band",fl:'Barnacled and green, and still warm.',e:{dr:.05,ls:.03},gem:0x5ac8a0,
+   kit(k){const B=0x5a7a62;k.p('','ring','m',B,0,0,0,.1,.18,.1,Math.PI/2);[[.07,.08,.02],[-.09,.04,.01],[.02,-.1,.02],[-.05,-.08,-.01]].forEach(([x,y,z])=>k.p('','sph','c',0xd8d0c0,x,y,z,.016,.012,.016));
+     k.L('','m',0x3a4a40,[0,.11,0],[0,.18,0],.006,.006,4);k.L('','m',0x3a4a40,[-.03,.13,0],[.03,.13,0],.005,.005,4);k.p('','ring','m',0x3a4a40,0,.17,0,.03,.2,.03,0,0,Math.PI/2)}},
+ abyssal:{src:'fish',sl:'weapon',n:'Abyssal',fl:'Dredged from the deep, still crusted with the deep.',e:{as:.08,paP:.06,maP:.06},gem:0x4ab8d8,tint:0x3a6a6a,orn:6}});
+for(const k in UNQ135)UNQ135[k].key=k;
+// barnacles, coral and kelp along the weapon
+UNQ135_ORN[6]=(k,p,i,R)=>{if(i%3==0)k.p('','cone4','c',0xd86a5a,p.x,p.y,p.z+.02,.008,.05,.008,R()-.5,0,R()-.5);else if(i%3==1){for(let j=0;j<3;j++)k.p('','sph','c',0xd8d0c0,p.x+(R()-.5)*.03,p.y+(R()-.5)*.03,p.z+.01,.01)}
+  else k.L('','c',0x2a5a3a,[p.x,p.y,p.z],[p.x+.04,p.y-.07,p.z+.01],.006,.002,3)};
+// the zone ornament set a weapon uses: its own (orn) or its zone's
+{const f=unqWpnKit135;unqWpnKit135=function(k,it,U){if(U&&U.orn!=null&&U.orn!==U.z)return f.call(this,k,it,Object.assign({},U,{z:U.orn}));return f.apply(this,arguments)}}
+// monsters never drop them; the tooltip says where they come from
+for(const z in UNQ135_ZK)UNQ135_ZK[z]=UNQ135_ZK[z].filter(k=>UNQ135[k].src!=='fish');
+{const f=unqTipHTML135;unqTipHTML135=function(it){const U=unqOf135(it);if(!U||U.src!=='fish')return f.apply(this,arguments);
+  return f.apply(this,arguments).replace(/✦ Unique · [^<]*/,'✦ Unique · Fished up')}}
+function unqFish135(r,p){const ch=UNQ135_FISH[Math.max(0,Math.min(3,r|0))]||0;if(Math.random()>=ch)return false;
+  const L=Object.keys(UNQ135).filter(k=>UNQ135[k].src==='fish'),lv=Math.max(1,Math.min(MAXLV,Math.max(hero.lvl-1,(typeof zoneLv=='function'?zoneLv(p.x,p.z):hero.lvl))));
+  const it=unqMake135(L[R(0,L.length-1)],lv);if(!it)return false;drop('gear',it,p.clone().add(V(.6,0,-.6)),it.r);
+  try{banner('✦ SOMETHING RARE ON THE LINE',unqName135(it),'Fished up · '+SLOTN[itT(it).sl])}catch(_){}try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}return true}
+{const f=fishTreasure;fishTreasure=function(r,T,p){try{if(p&&unqFish135(r,p))return}catch(err){console.warn('v135 fish unique',err)}return f.apply(this,arguments)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Three tabs: Companions (every species, every evolution stage: basic attack + its 4 abilities), Monsters (every zone
