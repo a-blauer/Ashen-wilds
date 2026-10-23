@@ -32796,7 +32796,6 @@ LPR.Gravewyrm={
       k.p('head','sph','c',0x0a0908,s*.022,.392,.85,.008,.006,.008);
       // fangs
       k.p('head','cone4','c',0xf4eee0,s*.05,.312,.79,.012,ven?.085:.06,.012,Math.PI+.15,0,0);
-      if(ven)k.p('head','sph','g',0x9aff3a,s*.05,.27,.8,.006,.009,.006);
       k.p('head','cone4','c',0xf4eee0,s*.08,.322,.71,.009,.04,.009,Math.PI)});
     if(!ven){
       // skull plate over the head with bone horns sweeping back, cheek spurs
@@ -32822,10 +32821,9 @@ LPR.Gravewyrm={
       [-1,1].forEach(s=>{const e=H(s*.075,.04,-.034);k.p('neck','tor','c',dkr,e[0],e[1],e[2],.048,.014,.048,Math.PI/2+rx,0,0);
         k.p('neck','sph','c',0xe8d860,e[0],e[1],e[2]-.002,.03,.03,.006,rx,0,0);k.p('neck','sph','c',dkr,e[0],e[1],e[2]-.004,.012,.012,.004,rx,0,0)});
       {const a=H(-.075,.08,-.033),b=H(.075,.08,-.033),m=H(0,.105,-.033);k.L('neck','c',dkr,a,m,.01,.01,3).L('neck','c',dkr,m,b,.01,.01,3)}
-      // big head plates, cheek venom glands, heat pits, venom dripping from the fangs
+      // big head plates, cheek venom glands, heat pits
       [[0,.462,.6,.05,.012,.06],[-.035,.458,.68,.03,.01,.04],[.035,.458,.68,.03,.01,.04],[0,.452,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],q[1],q[2],q[3],q[4],q[5],-.08,0,0));
-      [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.05,.4,.81,.007,.006,.006);
-        k.L('head','g',0x9aff3a,[s*.05,.23,.8],[s*.05,.17,.805],.004,.002,3)});
+      [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.05,.4,.81,.007,.006,.006)});
       // a ridge of keeled scales down the back
       for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.004,z,.022,.014,.03)}
       // a crest of small scales on the head, and a rattle on the tail
