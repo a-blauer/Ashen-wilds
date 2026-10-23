@@ -145,8 +145,8 @@ var A7MOT={
   boots(c){const S=c.S(c.Y(.3),.04);if(S.ok)a7L(c,S.at(0,.004),[0,1,0],.95,u=>l7Skull(u,1,c.C.bone))}},
  // ---- Moonhunter: crescent moons and stars ----
  moon:{
-  helm(c){const S=c.S(.07,.03);if(!S.ok)return;a7L(c,S.at(0,.004),[0,1,0],1.4,u=>{l7Moon(u,1,0xd8dce0,c.C.gl);u.p('','oct','g',c.C.gl,.03,.03,.004,.005)});
-    [-1,1].forEach(s=>a7L(c,S.at(s*.9,.004),[0,1,0],1,u=>u.p('','oct','g',c.C.gl,0,0,.004,.006,.009,.003)))},
+  helm(c){const S=c.S(.03,.02);if(!S.ok)return;a7L(c,S.at(0,.004),[0,1,0],1.05,u=>{l7Moon(u,1,0xd8dce0,c.C.gl);u.p('','oct','g',c.C.gl,.03,.03,.004,.005)});
+    const S2=c.S(.05,.02);if(S2.ok)[-1,1].forEach(s=>a7L(c,S2.at(s*1.5,.004),[0,1,0],1,u=>u.p('','oct','g',c.C.gl,0,0,.004,.006,.009,.003)))},
   chest(c){const S=c.S(.86,.05);if(S.ok)a7L(c,S.at(0,.004),[0,1,0],2,u=>{l7Moon(u,1,0xd8dce0,c.C.gl);[[.03,.035],[.04,-.02],[.01,-.045]].forEach(([x,y])=>u.p('','oct','g',c.C.gl,x,y,.004,.004,.006,.002))},'chest');
     [-1,1].forEach(s=>{const q=c.sh(s);if(q)a7L(c,{p:q.p,n:[s*.3,1,0]},[0,0,1],1,u=>{u.L('','m',0xc8ccd0,[-.03,0,.006],[.03,0,.006],.008,.008,6);u.p('','oct','g',c.C.gl,0,0,.014,.007)},q.bn,[[q.bn,1]])})},
   boots(c){const S=c.S(c.Y(.18),.03);if(S.ok)a7L(c,S.at(c.s*Math.PI/2,.004),[0,1,0],1,u=>l7Moon(u,.8,0xd8dce0,c.C.gl))}},

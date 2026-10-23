@@ -4,7 +4,7 @@
 //   get the same m.y / m.s (front +1) / m.c (side) they had.
 // * Class details over the v95 armour:
 //   Warrior (rat): battle-worn and brutal — chains slung across the chest with a trophy skull, leather war-straps and buckles
-//     over the plate, scratches and dents, spikes on the shoulders, a torn red war-skirt under the faulds, a skull belt buckle.
+//     over the plate, scratches and dents, spikes on the shoulders, a narrow red war-banner from the belt, a skull belt buckle.
 //   Paladin (badger): holy — purity seals (wax and parchment) on the breast and shoulders, gilded rims, a sun emblem, prayer
 //     beads, a chained holy book at the hip, a long embroidered tabard that swings.
 //   Ranger (weasel): a hunter — a fur collar, a necklace of teeth and claws, feathers and bone charms at the shoulder, a skinning
@@ -19,9 +19,8 @@ function hvScratch(k,P,n,seed,y0,y1){for(let i=0;i<n;i++){const r=((seed*31+i*67
 function hvCls(){return BR.on&&BR.R?BR.R.cls:null}
 function hvExtra(X){const {B,P,d,k}=X,cls=hvCls(),M=d.M,T=d.T,G=d.G,lv=d.lv|0,st=d.st,off=()=>(P.tOff||0),cf=y=>mdTorsoAt(P,y).f+off(),tw=y=>mdTorsoW(y),plate=['cuirass','warplate','aegis','blood','wall','warlord'].includes(st);
   if(cls=='warrior'){const red=0x4a1010;
-    // a torn red war-skirt hanging below the faulds, front and back
-    gkSkirt(B,P,{y0:.56,hem:th=>.29+.03*Math.cos(th*2),flare:.02,clear:Math.max(.03,(P.sOff||0)+.008),folds:[8,.012],dag:[.06],flow:.5,N:32,lin:mdSh(red,.5),
-      keep:m=>{const c=Math.cos(m.u*Math.PI*2);return c>.82||c<-.82},col:m=>m.v>.8?mdSh(red,.7):(Math.floor(m.v*6+m.u*20)%5==0?mdSh(red,.8):red)});
+    // a narrow torn red war-banner hanging from the belt, front and back (v137: no longer a skirt round the hips)
+    mdTabardO(X,red,mdSh(red,.6),{lo:.33,wd:.075,top:.6});
     // war-straps crossing the chest with buckles
     const p1=mdTLoop(B,P,.8,.18,Math.PI/2,off()+.01,.03,0x2a1e18,{n:22});[3,8].forEach(i=>{const q=p1[i];mdBuckle(k,'chest',q.p[0]+q.n[0]*.008,q.p[1],q.p[2]+q.n[2]*.008,.85,T,0x2a1e18,q.w,Math.atan2(q.n[0],q.n[2]))});
     // a chain slung from the left shoulder to the right hip, a trophy skull hanging from it (T3+)
@@ -34,9 +33,10 @@ function hvExtra(X){const {B,P,d,k}=X,cls=hvCls(),M=d.M,T=d.T,G=d.G,lv=d.lv|0,st
     if(lv>=3&&st!='warlord'){mdFur(X,.92,1.0,0x3a2e24,12)}}
   else if(cls=='paladin'){const tab=mdSh(mdMix(0xc8bc98,d.A,.1),.82),gold=lv>=2?0xd8b050:T,cream=0xe0d4b4;
     // the long holy tabard (front and back panels) with an embroidered border and a sun
-    if(!['aegis','blood'].includes(st)){gkSkirt(B,P,{y0:.6,hem:.18,flare:.03,clear:Math.max(.03,(P.sOff||0)+.01),folds:[6,.01],flow:.55,N:36,lin:mdSh(tab,.5),
-      keep:m=>{const c=Math.cos(m.u*Math.PI*2);return c>.82||c<-.82},col:m=>{const th=m.u*Math.PI*2,c=Math.cos(th),a=Math.abs(Math.sin(th));if(Math.abs(c)<.86||m.v>.9)return gold;if((a<.1&&m.v>.06&&m.v<.78)||(m.v>.2&&m.v<.3&&a<.34))return 0x7a1414;return tab}});
-}
+    // (v137: a narrow tabard, front and back, with a crimson cross — no longer a skirt round the hips)
+    if(!['aegis','blood'].includes(st)){mdTabardO(X,tab,gold,{lo:.2,wd:.12,top:.6,band:.5});
+      const q=mdTorsoAt(P,.6),zf=(q.z||0)+Math.max(.135,q.f)+((P.tOff||0)+.012)*1.15+.006,wf=mdSkW(P,.6);
+      [[0,.44,.022,.14],[0,.47,.08,.022]].forEach(([x,y,w,h])=>{k.p('pelvis','box','c',0x7a1414,x,y,zf,w,h,.004);mdOW(k,wf(0,y))})}
     // purity seals: red wax with parchment strips, on the breast and both shoulders
     const seal=(bn,x,y,z,w,ry)=>{k.p(bn,'cyl','c',0x8a1414,x,y,z,.02,.008,.02,Math.PI/2,ry||0,0);if(w)mdOW(k,w);k.p(bn,'oct','c',0x6a0c0c,x,y,z+.005,.01,.01,.003,0,ry||0,0);if(w)mdOW(k,w);
       [-1,1].forEach(q=>{k.p(bn,'box','c',cream,x+q*.008,y-.05,z-.002,.008,.08,.002,0,ry||0,q*.12);if(w)mdOW(k,w)})};

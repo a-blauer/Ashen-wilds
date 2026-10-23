@@ -3,11 +3,18 @@
 // ------------------------------------------------ RACCOON ------------------------------------------------
 fkSpecies('raccoon',{n:'Raccoon',sc:.95,
   hp:{R:.098,W:1.05,H:.9,L:.98,m:{len:.075,w:.05,h:.038,b:.034,tw:.014,th:.012,tb:.01,drop:.028,y0:-.03,z0:.35}},
-  eyes:{sz:1,fw:.85,brow:false,socket:0x141010},nose:'nose',noseSz:.85,jaw:[.04,.12,{h:.6,w:.75}],whisk:[.085,1.118,3,.09,0xe8e4dc],
+  eyes:{sz:1.12,fw:.85,brow:false,socket:0x0c0909,white:0x2a1c14},nose:'nose',noseSz:.85,jaw:[.04,.12,{h:.6,w:.75}],whisk:[.085,1.118,3,.09,0xe8e4dc],
   ear:{t:'tri',z:-.03,phi:.62,len:.06,w:.048,th:.016,out:.55,back:.1,tw:.2,inner:C=>0xe8e0d6},
-  skull(m,C){const z=m.r.p[2];if(fkMask(this,m,.035))return 0x161214;if(z>.08&&m.s>.2)return 0x2a2422;if(m.s<-.2&&z>-.02)return 0xe8e4dc;if(z>-.0&&z<.08&&m.s>.3&&Math.abs(m.c)<.35)return 0xe8e4dc;
-    if(Math.abs(m.c)>.55&&z>.04&&m.s<.1)return 0xe8e4dc;return m.s>.6&&z<0?C.FURD:C.FUR},
-  cols:i=>fkCols([[0x7a7470],[0x6a645e],[0x8a8278]],i,{FURL:0xd8d4cc,BELLY:0xc8c2b8,EYE:0x1a1008}),
+  // the bandit mask round the eyes (a dark band that dips under each eye), white brows above it with a dark stripe down the
+  // bridge of the nose, a white muzzle, a grey crown
+  skull(m,C){const z=m.r.p[2],ez=this.EYEP[2],dz=z-ez,ac=Math.abs(m.c);
+    if(Math.abs(dz)<.03&&m.s>-.2&&m.s<.62&&ac>.13)return 0x141010;
+    if(dz>.02&&m.s>.45&&ac<.18)return 0x3a3230;
+    if(dz>-.05&&dz<=-.03&&m.s>.3&&ac>.13&&ac<.62)return 0xe8e4dc;
+    if(dz>.03&&m.s<.62&&m.s>-.35)return 0xe8e4dc;
+    if(m.s<-.2&&z>-.02)return 0xe8e4dc;
+    return m.s>.6&&z<0?C.FURD:C.FUR},
+  cols:i=>fkCols([[0x7a7470],[0x6a645e],[0x8a8278]],i,{FURL:0xd8d4cc,BELLY:0xc8c2b8,EYE:0x5a3418}),
   body:{build:1,af:.95,lf:.95,belly:.03},paw:{n:5,len:[.022,.028,.03,.028,.022],claw:.006,spread:.0105,pad:true,curl:1,colOf:C=>0x2a2624,padColOf:C=>0x4a4240},handCol:C=>0x2a2624,
   toes:{n:5,len:.034,claw:.008,pad:true,colOf:C=>0x2a2624},toeCol:C=>0x2a2624,
   TP:[[0,.6,-.09,.035],[0,.55,-.17,.05],[0,.47,-.26,.06],[0,.38,-.34,.062],[0,.29,-.4,.06],[0,.21,-.44,.055],[0,.15,-.47,.046],[0,.115,-.49,.03],[0,.105,-.5,.006]],
@@ -54,14 +61,16 @@ fkSpecies('goat',Object.assign({},FK_CAPRA,{n:'Goat',sc:1.0,
       fkHornLoft(B,P,t=>.022*(1-t*.82),C.HORN,1)});
     const t=D.SN[D.SN.length-1],j=[0,t[1]-.06,t[0]-.07];[[0,.1,0],[-.012,.085,.1],[.012,.085,-.1]].forEach(([dx,l])=>k.L('head','c',C.FURL,[j[0]+dx,j[1]+.015,j[2]],[j[0]+dx*1.5,j[1]-l,j[2]-.02],.018,.003,5))},
   cols:i=>fkCols([[0x8a7a66],[0xd8d0c0,{FURL:0xf0ece4,FURD:0x8a8070}],[0x5a4a3a]],i,{FURL:0xe8e2d8,BELLY:0xd0c8b8,EYE:0xc8a030,HORN:0x7a6a58})}));
-fkSpecies('ram',Object.assign({},FK_CAPRA,{n:'Ram',sc:1.04,ear:Object.assign({},FK_CAPRA.ear,{z:-.0,phi:1.3,out:1.6,back:.4}),
+fkSpecies('ram',Object.assign({},FK_CAPRA,{n:'Ram',sc:1.04,ear:Object.assign({},FK_CAPRA.ear,{z:.012,phi:1.65,len:.065,w:.04,out:1.9,back:.1}),
   skull(m,C){const z=m.r.p[2];if(z<.02||m.s>.55&&z<.05)return C.WOOL;return C.FUR},
   face(k,B,D,C){FK_CAPRA.face(k,B,D,C);
     // a woolly poll on the brow, horns curling round the ears
     for(let i=0;i<14;i++){const a=i/14*Math.PI*2,ph=.25+.6*Math.abs(Math.sin(a*1.3)),p=fkSurf(D,-.03+.05*Math.sin(a*2.1)*.5,ph*(i%2?1:-1),.002);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.026,.022,.026)}
-    [-1,1].forEach(s=>{const b=fkSurf(D,-.03,.62,-.006),c=[s*(b[0]+.04),b[1]-.03,b[2]-.03],P=[];
-      for(let i=0;i<=14;i++){const t=i/14,a=t*Math.PI*1.75-.5,r=.085*(1-t*.45);P.push([s*(b[0]+.02+t*.045),c[1]+Math.cos(a)*r+.03*(1-t),c[2]-Math.sin(a)*r+.03])}
-      fkHornLoft(B,P,t=>.034*(1-t*.72),C.HORN,1)})},
+    // horns: from the top of the head behind the eyes they sweep back, down round the ear and forward again by the cheek
+    // (the spiral turns round the ear: it starts on the crown and the first turn goes back)
+    [-1,1].forEach(s=>{const b=fkSurf(D,-.005,.5,-.008),e=fkSurf(D,.0,1.6,0),c=[0,e[1]+.012,e[2]-.022],dy=b[1]-c[1],dz=b[2]-c[2],r0=Math.hypot(dy,dz),a0=Math.atan2(-dz,dy),P=[];
+      for(let i=0;i<=18;i++){const t=i/18,a=a0+t*Math.PI*1.8,r=r0*(1-t*.5);P.push([s*(b[0]+.004+t*.055+Math.sin(t*Math.PI)*.025),c[1]+Math.cos(a)*r,c[2]-Math.sin(a)*r])}
+      fkHornLoft(B,P,t=>.032*(1-t*.7),C.HORN,1)})},
   cols:i=>fkCols([[0x3a3028,{WOOL:0xe0d8c8}],[0x2a2422,{WOOL:0xd0c8b8}],[0x8a7a66,{WOOL:0xf0ece0}]],i,{FURL:0xd8d0c0,BELLY:0xd8d0c0,EYE:0xc8a030,HORN:0xb8a888}),
   body:{build:2,af:1.05,lf:1,belly:.04},neck:[.075,.08,.08],
   paint(P,C){P.paint.torso=m=>C.WOOL;P.paint.torsoLo=m=>C.WOOL;P.col.neck=C.WOOL;P.paint.sleeve=()=>C.WOOL;P.paint.leg=(m,s)=>m.r.part=='hip'||m.r.part=='thigh'?C.WOOL:C.FUR},
@@ -75,13 +84,15 @@ fkSpecies('sheep',Object.assign({},FK_CAPRA,{n:'Sheep',cit:1,sc:.96,ear:Object.a
   tailCol:(m,C)=>C.WOOL}));
 // ------------------------------------------------ HEDGEHOG ------------------------------------------------
 fkSpecies('hedgehog',{n:'Hedgehog',cit:1,sc:.84,
-  hp:{R:.1,W:1,H:.9,L:1.05,m:{len:.1,w:.05,h:.035,b:.035,tw:.01,th:.009,tb:.008,drop:.04,y0:-.03,z0:.3}},
-  eyes:{sz:.85,fw:.8,brow:false},nose:'nose',noseSz:.75,jaw:[.05,.15,{h:.6,w:.7}],whisk:[.13,1.1,2,.06],
+  hp:{R:.1,W:1,H:.92,L:1.0,m:{len:.075,w:.05,h:.038,b:.036,tw:.016,th:.013,tb:.011,drop:.03,y0:-.03,z0:.3}},
+  eyes:{sz:.95,fw:.85,brow:false,white:0x120a08},nose:'nose',noseSz:.95,jaw:[.05,.13,{h:.6,w:.75}],whisk:[.11,1.1,3,.06],
   ear:{t:'round',z:.0,phi:1.1,len:.04,w:.026,th:.012,out:1.2,back:0},
-  skull(m,C){const z=m.r.p[2];if(z<-.0&&m.s>-.3)return C.SPINE;return C.FUR},
-  face(k,B,D,C){// spines over the crown and the back of the head, lying back
-    for(let i=0;i<46;i++){const u=fkHash('hh'+i)%1000/1000,v=fkHash('hv'+i)%1000/1000,z=-.1+u*.105,ph=(v-.5)*2.6,p=fkSurf(D,z,ph,-.006),n=fkSurf(D,z-.02,ph*1.05,.05),d=[n[0]-p[0],n[1]-p[1]+.01,n[2]-p[2]-.03];
-      fkDir(k,'head','cone4','c',i%3?C.SPINE:C.SPINEL,p,d,.07+u*.02,.012,.012)}},
+  // a soft pale face with a dark mask round the eyes; the spines start in a neat line across the brow and lie back in rows
+  skull(m,C){const z=m.r.p[2],ez=this.EYEP[2];if(z<ez-.035&&m.s>-.35)return C.SPINE;if(Math.abs(z-ez)<.022&&Math.abs(m.c)>.4&&m.s>-.2&&m.s<.6)return C.FURD;return C.FUR},
+  face(k,B,D,C){const ez=D.EYEP[2];
+    for(let row=0;row<6;row++)for(let j=0;j<13;j++){const z=ez-.045-row*.022,ph=(j/12-.5)*(2.5-row*.05)+(row%2?.1:0);if(z<D.SN[0][0]+.01)continue;
+      const p=fkSurf(D,z,ph,-.004),n=fkSurf(D,z-.03,ph*1.08,.03),d=[n[0]-p[0],n[1]-p[1]+.006,n[2]-p[2]-.02];
+      fkDir(k,'head','cone4','c',(row+j)%3?C.SPINE:C.SPINEL,p,d,.05+row*.004,.011,.011)}},
   cols:i=>fkCols([[0xb8a080,{SPINE:0x4a3a2c,SPINEL:0xd8ccb4}],[0xa89070,{SPINE:0x5a4838,SPINEL:0xe0d4bc}],[0xc8b090,{SPINE:0x3a3028,SPINEL:0xc8bca4}]],i,{FURL:0xe0d4c0,BELLY:0xd8ccb8,EYE:0x0a0606}),
   body:{build:2,af:.9,lf:.88,belly:.08},paint(P,C){P.col.neck=C.SPINE},
   paw:{n:4,len:[.02,.023,.023,.019],claw:.006,spread:.0105,pad:false,curl:1,colOf:C=>C.PINKD},handCol:C=>C.PINKD,toes:{n:4,len:.03,claw:.008,pad:false,colOf:C=>C.PINKD},toeCol:C=>C.PINKD,

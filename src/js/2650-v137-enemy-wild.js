@@ -74,66 +74,94 @@
 })();
 
 // ===================================================================== Dust Wyrm (Gravewyrm skeleton) =====================================================================
-// A sand worm: a thick, ringed body with armoured sand-plates along the back, no eyes, and a round lamprey maw at the front:
-// three great petal jaws (the lower two ride the jaw bone, so they spread when it bites) round rings of hooked teeth and a
-// glowing throat (its glass breath).
+// A sand worm: a thick, ringed body with armoured sand-plates along the back and no eyes. The front is a round lamprey maw:
+// a thick ridged lip, two rings of hooked teeth slanting into a deep throat that glows (its glass breath), and three curved
+// mandibles round the rim that hook inward (the lower two ride the jaw bone, so they spread when it bites).
 (function(){const n='DustWyrm';if(!LPR[n])return;
-  const K={sand:0xb89a62,sand2:0x8a6a3a,belly:0xd8c8a0,plate:0x9a7a48,glass:0xff9a3a,tooth:0xf0e8d0,throat:0x4a1a0a};
+  const K={sand:0xb89a62,sand2:0x8a6a3a,belly:0xd8c8a0,plate:0x9a7a48,lip:0x7a4a32,lip2:0x5a3022,glass:0xff9a3a,tooth:0xf0e8d0,throat:0x2a0a04,mand:0x4a3420};
   const RAD=z=>z<-1.5?.03+(z+1.65)*.8:z<-.9?.15+(z+1.5)*.18:z<.2?.26:.26-(z-.2)*.15;
   const LIFT=z=>z<=0?0:.12*Math.min(1,z/.35);
-  LPR[n].geo=function(C,c){const sa=new THREE.Color(K.sand),sa2=new THREE.Color(K.sand2),be=new THREE.Color(K.belly),th=new THREE.Color(K.throat),gl=new THREE.Color(K.glass);
-    const rings=[];for(let z=-1.65,i=0;z<=.5;z+=.055,i++){const r=Math.max(.012,RAD(z))*(i%2?1.06:.97);rings.push({p:[wyrmCurve(z)*.6,r*.78+.004+LIFT(z),z],rx:r,ryT:r*.9,ryB:r*.78,b:wyrmBones(z),i,z})}
-    const r0=RAD(.5);rings.push({p:[0,r0*.78+.004+LIFT(.5),.53],rx:r0*.8,ryT:r0*.72,ryB:r0*.62,b:['head','head',0],k:'maw'});rings.push({p:[0,r0*.78+.004+LIFT(.5),.5],rx:r0*.5,ryT:r0*.45,ryB:r0*.4,b:['head','head',0],k:'maw'});
-    return lpGeo('E137|'+n,n,[{rings,seg:12,capA:1,capB:1,paint:(o,r,s,cc,i)=>{if(r.k=='maw')return o.copy(th).lerp(gl,.25);
-      if(s<-.45){o.copy(be);if(r.i%2)o.multiplyScalar(.82);return}o.copy(r.i%2?sa:sa2);if(s>.7)o.lerp(sa2,.4)}}],95)};
-  LPR[n].kit=function(k,c,C,red){const r0=RAD(.5),cy=r0*.78+.004+LIFT(.5);
+  const R0=RAD(.5),CY=R0*.78+.004+LIFT(.5),MZ=.5;
+  LPR[n].geo=function(C,c){const sa=new THREE.Color(K.sand),sa2=new THREE.Color(K.sand2),be=new THREE.Color(K.belly),th=new THREE.Color(K.throat),li=new THREE.Color(K.lip),li2=new THREE.Color(K.lip2),gl=new THREE.Color(K.glass);
+    const rings=[];for(let z=-1.65,i=0;z<=MZ;z+=.055,i++){const r=Math.max(.012,RAD(z))*(i%2?1.06:.97);rings.push({p:[wyrmCurve(z)*.6,r*.78+.004+LIFT(z),z],rx:r,ryT:r*.9,ryB:r*.78,b:wyrmBones(z),i,z})}
+    // the lip rolls over the rim and turns into the throat: rim, inner lip, then a funnel back into the body
+    const M=(z,r,k)=>({p:[0,CY,z],rx:r,ryT:r,ryB:r*.96,b:['head','head',0],k});
+    rings.push(M(MZ+.03,R0*.94,'lip'),M(MZ+.05,R0*.84,'lip'));
+    // the funnel is its own loft running back into the body (one direction, so its rings never flip)
+    const fun=[M(MZ+.05,R0*.84,'lip'),M(MZ+.048,R0*.72,'lip2'),M(MZ+.03,R0*.6,'th'),M(MZ-.03,R0*.44,'th'),M(MZ-.1,R0*.28,'gl')];
+    const paint=(o,r,s,cc,i)=>{if(r.k=='lip')return o.copy(li).multiplyScalar(i%2?1:.85);if(r.k=='lip2')return o.copy(li2);if(r.k=='th')return o.copy(th);if(r.k=='gl')return o.copy(gl);
+      if(s<-.45){o.copy(be);if(r.i%2)o.multiplyScalar(.82);return}o.copy(r.i%2?sa:sa2);if(s>.7)o.lerp(sa2,.4)};
+    return lpGeo('E137b|'+n,n,[{rings,seg:16,capA:1,paint},{rings:fun,seg:16,capB:1,paint}],95);
+  };
+  LPR[n].kit=function(k,c,C,red){
     // armoured plates down the back
     for(let z=.35,i=0;z>-1.45;z-=.11,i++){const r=RAD(z),y=r*.78+.004+LIFT(z)+r*.9,bn=wyrmBones(z)[0],x=wyrmCurve(z)*.6;k.p(bn,'hem','c',i%2?K.plate:dkShade(K.plate,.85),x,y-.04,z,r*.75,.05,.07,-.2)}
-    // the three petal jaws round the maw and the teeth
-    [[0,'head'],[2.094,'jaw'],[-2.094,'jaw']].forEach(([a,bn])=>{const x=Math.sin(a)*r0*.7,y=cy+Math.cos(a)*r0*.65;
-      k.p(bn,'cone4','c',K.sand2,x,y,.62,.13,.24,.03,Math.PI/2,0,-a);k.p(bn,'cone4','c',K.plate,x*1.05,y+Math.cos(a)*.01,.6,.1,.18,.035,Math.PI/2,0,-a);
-      for(let i=0;i<4;i++){const b=a+(i-1.5)*.35;k.p(bn,'cone4','c',K.tooth,Math.sin(b)*r0*.62,cy+Math.cos(b)*r0*.56,.6,.012,.06,.012,Math.PI/2+.5*Math.cos(b),0,-b+Math.PI)}});
-    for(let i=0;i<10;i++){const b=i/10*Math.PI*2;k.p('head','cone4','c',K.tooth,Math.sin(b)*r0*.38,cy+Math.cos(b)*r0*.34,.5,.01,.05,.01,Math.PI/2+.6*Math.cos(b),0,-b+Math.PI)}
-    k.p('head','sph','g',K.glass,0,cy,.47,r0*.3,r0*.28,.03);
-    // sensory pits instead of eyes, sand dribbling from the plates' edges
-    [-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('head','sph','c',0x3a2a14,s*r0*.75,cy+.05-i*.04,.42,.012,.012,.01)})};
+    // ridges round the lip
+    for(let i=0;i<16;i++){const a=i/16*Math.PI*2;k.p('head','box','c',K.lip2,Math.sin(a)*R0*.88,CY+Math.cos(a)*R0*.88,MZ+.04,.012,.03,.012,0,0,-a)}
+    // two rings of hooked teeth slanting inward into the throat
+    [[R0*.7,MZ+.035,14,.045,.011],[R0*.5,MZ+.005,10,.035,.009]].forEach(([rr,z,nT,len,w],j)=>{for(let i=0;i<nT;i++){const a=(i+(j?.5:0))/nT*Math.PI*2,sx=Math.sin(a),cy=Math.cos(a);
+      k.L('head','c',j?dkShade(K.tooth,.9):K.tooth,[sx*rr,CY+cy*rr,z],[sx*(rr-len),CY+cy*(rr-len),z-len*.7],w,.0015,4)}});
+    k.p('head','sph','g',K.glass,0,CY,MZ-.11,R0*.24,R0*.24,.03);
+    // three curved mandibles hooking inward from the rim
+    [[0,'head'],[2.094,'jaw'],[-2.094,'jaw']].forEach(([a,bn])=>{const sx=Math.sin(a),cy=Math.cos(a),pt=(r,z)=>[sx*r,CY+cy*r,z];
+      const P=[pt(R0*.9,MZ),pt(R0*1.02,MZ+.06),pt(R0*.96,MZ+.12),pt(R0*.78,MZ+.16),pt(R0*.55,MZ+.17)];
+      for(let i=0;i<P.length-1;i++)k.L(bn,'c',i<2?K.mand:dkShade(K.mand,.75),P[i],P[i+1],.04-i*.008,.032-i*.008,5);
+      k.L(bn,'c',K.tooth,P[4],pt(R0*.42,MZ+.15),.008,.001,4);
+      k.p(bn,'hem','c',K.plate,sx*R0*.95,CY+cy*R0*.95,MZ+.03,.07,.025,.06,Math.PI/2,0,-a)});
+    // sensory pits instead of eyes
+    [-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('head','sph','c',0x3a2a14,s*R0*.95,CY+.06-i*.05,.4,.012,.012,.01)})};
   LPR[n].post=null;
 })();
 
 // ===================================================================== Wailing Banshee (Wispling skeleton) =====================================================================
-// A drowned woman's ghost: no hood — a gaunt skull-like face with hollow glowing eyes and a long gaping mouth (the jaw drops
-// when she wails), a mane of pale hair streaming down her back, bony shoulders and long skeletal arms with claw fingers,
-// a torn gown that thins into a ragged spirit tail, and chains of a grave gem at her throat.
+// A drowned noblewoman's ghost: a small gaunt face framed by long silver hair that streams down her back and falls over her
+// shoulders, hollow sunken eyes, a jaw that hangs impossibly long when she wails (it rides the jaw bone), a tarnished circlet,
+// a slender bodice laced over the ribs, torn lace at the throat, long sleeves that hang in tatters from thin arms with long
+// fingers and broken shackles, and a burial gown that unravels into trailing wisps of mist.
 (function(){const n='Banshee';if(!LPR[n])return;
-  const K={gown:0x7aa8c0,gown2:0x4a6e84,pale:0xd8f0f8,skin:0xb8c8d0,hair:0xc8d8e0,hair2:0x98aab4,dark:0x0a1418,glow:0xa8e8ff,eye:0xe8ffff};
-  LPR[n].geo=function(C,c){const g=new THREE.Color(K.gown),g2=new THREE.Color(K.gown2),pa=new THREE.Color(K.pale),sk=new THREE.Color(K.skin),h=new THREE.Color(K.hair),h2=new THREE.Color(K.hair2);
-    const paint=(o,r,s,cc,i)=>{if(r.k=='hd'||r.k=='arm')return o.copy(sk).multiplyScalar(i%2?1:.9);if(r.k=='hair')return o.copy(i%2?h:h2);o.copy(g).lerp(g2,Math.min(1,Math.max(0,(.6-r.p[1])*1.5)));if(r.p[1]>.7&&s>.3)o.lerp(pa,.25)};
+  const K={gown:0x6a8aa8,gown2:0x34465a,lace:0xd8e8f0,pale:0xd8f0f8,skin:0xc8d4dc,skin2:0x9aaab8,hair:0xd8e0e8,hair2:0xa8b4c0,dark:0x0a1018,glow:0xa8e8ff,eye:0xe8ffff,silver:0x9aa4b0};
+  LPR[n].mat={transparent:true,opacity:.82,depthWrite:true,emissive:0x0a1a28};
+  LPR[n].geo=function(C,c){const g=new THREE.Color(K.gown),g2=new THREE.Color(K.gown2),la=new THREE.Color(K.lace),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),h=new THREE.Color(K.hair),h2=new THREE.Color(K.hair2);
+    const paint=(o,r,s,cc,i)=>{if(r.k=='hd'){o.copy(sk);if(r.p[1]<1.0&&Math.abs(cc)>.5)o.copy(sk2);return}if(r.k=='jaw')return o.copy(sk2);if(r.k=='arm')return o.copy(i%2?sk:sk2);
+      if(r.k=='hair')return o.copy(i%2?h:h2);if(r.k=='wisp')return o.copy(g).lerp(la,.5);
+      o.copy(g).lerp(g2,Math.min(1,Math.max(0,(.62-r.p[1])*1.6)));if(r.p[1]>.66&&r.p[1]<.84&&s>.2&&(i%2))o.lerp(g2,.35);if(r.p[1]>.84)o.lerp(la,.4)};
     const R=(x,y,z,rx,f,b,bn,k,j)=>({p:[x,y,z],rx,ryT:f,ryB:b,b:bn,k,j});
-    const body={rings:[R(0,.9,0,.045,.045,.045,['neck','neck',0],'hd'),R(0,.85,0,.15,.07,.08,['chest','neck',.3]),R(0,.78,0,.13,.08,.08,['chest','chest',0]),R(0,.7,0,.1,.07,.07,['chest','spine',.5]),
-      R(0,.62,-.005,.095,.07,.07,['spine','spine',0]),R(0,.53,-.015,.14,.1,.1,['pelvis','pelvis',0],0,.08),R(0,.42,-.04,.18,.13,.14,['pelvis','tail0',.5],0,.16),R(0,.32,-.08,.19,.14,.15,['tail0','tail1',.3],0,.24),
-      R(0,.22,-.13,.15,.11,.12,['tail1','tail1',0],0,.3),R(0,.13,-.19,.1,.07,.08,['tail2','tail2',0],0,.3),R(0,.06,-.26,.05,.04,.04,['tail3','tail3',0],0,.25),R(0,.02,-.31,.008,.008,.008,['tail3','tail3',0])],seg:14,ref:[0,0,1],capB:1,paint};
-    const head={rings:[R(0,.92,.02,.05,.05,.05,['head','head',0],'hd'),R(0,.96,.02,.07,.075,.07,['head','head',0],'hd'),R(0,1.0,.015,.08,.085,.08,['head','head',0],'hd'),R(0,1.04,.01,.078,.08,.08,['head','head',0],'hd'),
-      R(0,1.08,0,.06,.06,.065,['head','head',0],'hd'),R(0,1.105,-.005,.025,.025,.028,['head','head',0],'hd')],seg:10,ref:[0,0,1],capA:1,capB:1,paint};
-    const hair={rings:[R(0,1.1,-.02,.07,.03,.03,['head','head',0],'hair'),R(0,1.04,-.08,.11,.035,.035,['head','head',0],'hair'),R(0,.94,-.11,.13,.04,.04,['neck','head',.4],'hair',.1),R(0,.8,-.13,.15,.04,.04,['chest','chest',0],'hair',.2),
-      R(0,.66,-.15,.14,.04,.04,['spine','spine',0],'hair',.3),R(0,.52,-.18,.12,.035,.035,['pelvis','pelvis',0],'hair',.35),R(0,.4,-.22,.08,.03,.03,['tail0','tail0',0],'hair',.4),R(0,.3,-.26,.02,.01,.01,['tail1','tail1',0],'hair')],seg:8,ref:[0,0,1],capB:1,paint};
-    const arms=[-1,1].map(s=>{const p=s<0?'fl':'fr';return e137Limb([[[s*.12,.83,0],.04,['chest',p+'0',.5],'arm'],[[s*.17,.76,.02],.028,[p+'0',p+'0',0],'arm'],[e137B(n,p+'1').map((v,i)=>i?v:v),.024,[p+'0',p+'1',.5],'arm'],
-      [[s*.21,.65,.06],.018,[p+'1',p+'1',0],'arm'],[e137B(n,p+'2'),.017,[p+'1',p+'2',.5],'arm'],[[s*.225,.56,.1],.026,[p+'2',p+'2',0],'arm'],[[s*.23,.53,.11],.012,[p+'2',p+'2',0],'arm']],paint,6)});
-    return lpGeo('E137|'+n,n,[body,head,hair].concat(arms),97)};
-  LPR[n].kit=function(k,c,C,red){
-    // the face: hollow eyes, cheekbones, a long gaping mouth on the jaw bone, a few teeth
-    [-1,1].forEach(s=>{k.p('head','box','c',K.dark,s*.032,1.018,.072,.034,.02,.02,0,s*.25,-s*.35);k.p('head','box','g',red?0xff2a2a:K.eye,s*.032,1.018,.083,.016,.006,.006,0,s*.25,-s*.35);
-      k.p('head','box','c',K.hair2,s*.05,.995,.07,.02,.01,.02,0,0,s*.3);
-      // strands of hair over the shoulders in front
-      k.L('head','c',K.hair,[s*.07,1.04,.0],[s*.1,.9,.03],.02,.012,3).L('chest','c',K.hair2,[s*.1,.9,.03],[s*.12,.74,.07],.012,.004,3);
-      // long claw fingers and tatters hanging from the forearms
-      const f=e137B(n,(s<0?'fl':'fr')+'2');for(let i=-1;i<=1;i++)k.L((s<0?'fl':'fr')+'2','c',K.skin,[f[0]+s*.005,.535,.11],[f[0]+s*.01+i*.02,.46,.14],.007,.002,3);
-      for(let i=0;i<2;i++)k.L((s<0?'fl':'fr')+'1','c',K.gown2,[s*(.19+i*.01),.7-i*.04,.04],[s*(.2+i*.01),.6-i*.05,.02],.025,.004,3)});
-    k.p('head','sph','c',K.dark,0,.955,.075,.028,.012,.012);k.p('jaw','sph','c',K.dark,0,.93,.072,.03,.04,.014);
-    k.p('jaw','box','c',K.skin,0,.895,.07,.04,.012,.025);for(let i=-1;i<=1;i++)k.p('head','cone4','c',0xe8e4d8,i*.012,.945,.08,.004,.012,.004,Math.PI);
-    // a grave-gem on a chain at her throat; wisps trailing from the hem
-    for(let i=0;i<10;i++){const a=(i/9-.5)*2.4;k.p('neck','ring','m',0x8a9aa8,Math.sin(a)*.07,.86-Math.cos(a)*.03+.03,.05+Math.cos(a)*.02,.008,.012,.008,i%2?Math.PI/2:0,a,0)}
-    k.p('chest','oct','g',K.glow,0,.82,.1,.018,.026,.012);
-    for(let i=0;i<5;i++){const a=(i/4-.5)*2.6;k.L('tail1','g',K.glow,[Math.sin(a)*.14,.24,-.13+Math.cos(a)*.08],[Math.sin(a)*.16,.12,-.16+Math.cos(a)*.06],.008,.001,3)}};
+    const body={rings:[R(0,.93,.0,.03,.03,.03,['neck','head',.5],'hd'),R(0,.89,0,.045,.04,.04,['neck','neck',0],'hd'),R(0,.85,0,.13,.055,.06,['chest','neck',.25]),R(0,.8,.005,.11,.07,.06,['chest','chest',0]),
+      R(0,.74,0,.085,.058,.052,['chest','spine',.5]),R(0,.67,-.005,.068,.05,.048,['spine','spine',0]),R(0,.6,-.01,.095,.07,.07,['spine','pelvis',.6]),R(0,.5,-.025,.15,.11,.12,['pelvis','pelvis',0],0,.04),
+      R(0,.4,-.05,.18,.13,.15,['pelvis','tail0',.5],0,.08),R(0,.3,-.09,.19,.14,.16,['tail0','tail1',.4],0,.14),R(0,.2,-.14,.16,.12,.14,['tail1','tail1',0],0,.2),R(0,.11,-.2,.11,.08,.1,['tail2','tail2',0],0,.24),
+      R(0,.05,-.27,.06,.05,.05,['tail3','tail3',0],0,.2),R(0,.02,-.32,.01,.01,.01,['tail3','tail3',0])],seg:16,ref:[0,0,1],capB:1,paint};
+    const head={rings:[R(0,.955,.03,.045,.05,.035,['head','head',0],'hd'),R(0,.985,.025,.06,.064,.058,['head','head',0],'hd'),R(0,1.02,.02,.064,.066,.066,['head','head',0],'hd'),R(0,1.055,.012,.056,.058,.062,['head','head',0],'hd'),
+      R(0,1.078,.004,.034,.036,.04,['head','head',0],'hd'),R(0,1.088,0,.008,.008,.008,['head','head',0],'hd')],seg:12,ref:[0,0,1],capA:1,capB:1,paint};
+    const jaw={rings:[R(0,.958,.04,.042,.03,.02,['head','jaw',.6],'jaw'),R(0,.925,.05,.036,.026,.018,['jaw','jaw',0],'jaw'),R(0,.89,.055,.026,.02,.014,['jaw','jaw',0],'jaw'),R(0,.872,.056,.008,.008,.008,['jaw','jaw',0],'jaw')],seg:8,ref:[0,0,1],capB:1,paint};
+    const hair={rings:[R(0,1.09,-.02,.06,.03,.03,['head','head',0],'hair'),R(0,1.05,-.075,.085,.035,.035,['head','head',0],'hair'),R(0,.95,-.1,.1,.035,.035,['neck','head',.4],'hair',.1),R(0,.82,-.11,.115,.035,.035,['chest','chest',0],'hair',.16),
+      R(0,.68,-.12,.11,.03,.03,['spine','spine',0],'hair',.25),R(0,.54,-.15,.09,.028,.028,['pelvis','pelvis',0],'hair',.3),R(0,.42,-.2,.06,.022,.022,['tail0','tail0',0],'hair',.35),R(0,.32,-.25,.012,.008,.008,['tail1','tail1',0],'hair')],seg:8,ref:[0,0,1],capB:1,paint};
+    // trailing wisps of mist from the hem
+    const wisps=[-.7,-.25,.25,.7].map((a,i)=>({rings:[R(Math.sin(a)*.13,.2,-.14+Math.cos(a)*.06,.04,.03,.03,['tail1','tail1',0],'wisp'),R(Math.sin(a)*.15,.11,-.24,.03,.022,.022,['tail2','tail2',0],'wisp',.2),
+      R(Math.sin(a)*.12,.06,-.36-i%2*.04,.016,.012,.012,['tail3','tail3',0],'wisp',.2),R(Math.sin(a)*.08,.05,-.46-i%2*.05,.003,.003,.003,['tail3','tail3',0],'wisp')],seg:6,ref:[0,0,1],capB:1,paint}));
+    const arms=[-1,1].map(s=>{const p=s<0?'fl':'fr';return e137Limb([[[s*.115,.84,0],.034,['chest',p+'0',.5],'arm'],[[s*.165,.77,.02],.024,[p+'0',p+'0',0],'arm'],[e137B(n,p+'1'),.02,[p+'0',p+'1',.5],'arm'],
+      [[s*.21,.65,.06],.016,[p+'1',p+'1',0],'arm'],[e137B(n,p+'2'),.014,[p+'1',p+'2',.5],'arm'],[[s*.225,.57,.1],.022,[p+'2',p+'2',0],'arm'],[[s*.228,.545,.11],.01,[p+'2',p+'2',0],'arm']],paint,6)});
+    return lpGeo('E137b|'+n,n,[body,head,jaw,hair].concat(wisps,arms),97)};
+  LPR[n].kit=function(k,c,C,red){const eye=red?0xff2a2a:K.eye;
+    // the face: deep sockets with a pinpoint of light, sharp cheekbones, a nose hollow, the long dark mouth between skull and jaw
+    [-1,1].forEach(s=>{k.p('head','box','c',K.dark,s*.025,1.02,.074,.024,.011,.01,0,s*.3,-s*.3);k.p('head','box','g',eye,s*.025,1.019,.08,.009,.004,.004,0,s*.3,-s*.3);k.p('head','box','c',K.skin2,s*.027,1.034,.074,.026,.006,.01,0,s*.3,-s*.42);
+      k.p('head','box','c',K.skin2,s*.042,.99,.066,.022,.008,.012,0,s*.4,s*.35);k.L('head','g',K.glow,[s*.028,1.008,.078],[s*.03,.96,.072],.003,.001,3)});
+    k.p('head','box','c',K.dark,0,.995,.084,.008,.012,.006);
+    k.p('head','sph','c',K.dark,0,.958,.07,.024,.01,.012);k.p('jaw','sph','c',K.dark,0,.93,.074,.022,.034,.012);
+    for(let i=-2;i<=2;i++)if(i)k.p('head','cone4','c',0xe8e4d8,i*.009,.952,.075,.003,.009,.003,Math.PI);
+    // a tarnished circlet with a teardrop gem
+    k.p('head','tor','m',K.silver,0,1.05,.006,.064,.008,.068,0,0,0);k.p('head','oct','g',K.glow,0,1.05,.075,.008,.014,.005);
+    // hair falling over the shoulders in front, a few loose strands
+    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.35,.965,z+.012],.0075,.007,4).L('chest','c',i%2?K.hair:K.hair2,[x*1.35,.965,z+.012],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});
+    // torn lace at the throat, a laced bodice
+    for(let i=0;i<12;i++){const a=(i/11-.5)*3.4;k.p('neck','cone4','c',K.lace,Math.sin(a)*.06,.88,Math.cos(a)*.045,.01,.03,.004,Math.PI-.3*Math.cos(a),a,0)}
+    for(let i=0;i<5;i++){const y=.79-i*.025;k.L('chest','c',K.gown2,[-.02,y,.068-i*.003],[.02,y-.012,.068-i*.003],.003,.003,3);k.L('chest','c',K.gown2,[.02,y,.068-i*.003],[-.02,y-.012,.068-i*.003],.003,.003,3)}
+    k.p('chest','oct','g',K.glow,0,.74,.03,.025,.03,.02);
+    // tattered sleeves hanging from the forearms, long fingers, broken shackles with a link or two
+    [-1,1].forEach(s=>{const f=s<0?'fl':'fr',w=e137B(n,f+'2');for(let i=0;i<4;i++)k.L(f+'1','c',i%2?K.gown:K.gown2,[s*(.19+i*.008),.69-i*.012,.03+i*.01],[s*(.2+i*.01),.56-i*.03,.02+i*.012],.022,.004,3);
+      k.p(f+'2','tor','m',K.silver,w[0],w[1]-.01,w[2],.024,.012,.024,Math.PI/2,0,0);k.p(f+'2','ring','m',K.silver,w[0]+s*.01,w[1]-.04,w[2],.012,.06,.012,0,0,0);
+      for(let i=-1;i<=2;i++)k.L(f+'2','c',K.skin2,[w[0]+s*.005+i*.008,.545,.115],[w[0]+s*.008+i*.014,.47,.14],.005,.0015,3)});
+    // mist curling up from the hem
+    for(let i=0;i<6;i++){const a=(i/5-.5)*2.6;k.L('tail1','g',K.glow,[Math.sin(a)*.15,.24,-.13+Math.cos(a)*.08],[Math.sin(a)*.17,.13,-.18+Math.cos(a)*.06],.006,.001,3)}};
   LPR[n].post=null;
 })();
 

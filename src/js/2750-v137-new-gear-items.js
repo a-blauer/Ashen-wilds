@@ -19,11 +19,11 @@ var A137L=[
  ['Abyssal','heavy',4,[0x1c1a24,0x7a3ad8,0xb0a0d0],'eye',['winged','warlord','tread'],['Visage','Carapace','Treads'],{paP:.06,hpP:.06}],
  // ---- medium (Ranger) ----
  ['Trapper','medium',0,[0x5a4630,0x8a6a40,0xa89070],'fang',['pelt','padded','trail'],['Cap','Jerkin','Boots'],{loot:.05,mspd:.02}],
- ['Crowfeather','medium',1,[0x2a2a30,0x4a4a6a,0x9a9aa8],'feather',['feather','brigandine','pelt'],['Cowl','Coat','Boots'],{as:.03,crit:.01}],
+ ['Crowfeather','medium',1,[0x2a2a30,0x4a4a6a,0x9a9aa8],'feather',['cowl','brigandine','pelt'],['Cowl','Coat','Boots'],{as:.03,crit:.01}],
  ['Bogstalker','medium',2,[0x3a4a30,0x7a8a3a,0x8a7a5a],'root',['cowl','vest','stalker'],['Hood','Vest','Waders'],{regen:.0015,mspd:.03}],
  ['Hornwood','medium',3,[0x5a3e28,0xd8c8a0,0xa88848],'horn',['deadeye','bandolier','strider'],['Hood','Harness','Striders'],{cdm:.12,paP:.04}],
  ['Gravehound','medium',3,[0x40383a,0xc8c0b0,0x8a8070],'skull',['skullhood','longcoat','pelt'],['Hood','Longcoat','Boots'],{ls:.006,crit:.02}],
- ['Moonhunter','medium',4,[0x26303e,0x9ad8ff,0xc8d4e0],'moon',['wind','tails','gale'],['Mask','Mantle','Boots'],{as:.05,crit:.03}],
+ ['Moonhunter','medium',4,[0x26303e,0x9ad8ff,0xc8d4e0],'moon',['hood','tails','gale'],['Cowl','Mantle','Boots'],{as:.05,crit:.03}],
  // ---- light (Assassin) ----
  ['Gutterblade','light',0,[0x34302e,0x6a4a3a,0x8a8278],'blade',['wrap','wraps','soft'],['Mask','Wraps','Footwraps'],{crit:.015,mspd:.02}],
  ['Widowsilk','light',1,[0x1e1c22,0x8a1a2a,0x8a8a94],'web',['viper','cutthroat','wrapped'],['Mask','Garb','Wraps'],{crit:.02,ls:.004}],

@@ -29,7 +29,7 @@ LPR.Gravewyrm={
       o.copy(main);
       if(r.hd){if(s>.35)o.lerp(back,.6);if(s<-.1)o.lerp(belly,.5);return}
       const z=r.z,bandOn=ven?(Math.floor((z+2)*7.5)%3==0):(Math.floor((z+2)*9)%2==0);
-      if(ven){if(bandOn&&z<.25)o.copy(band).lerp(main,.25);else if(s>.55)o.copy(back);else if(s<-.2)o.lerp(belly,.35)}
+      if(ven){if(bandOn&&z<.25)o.copy(band).lerp(main,.25);else if(s>.55)o.copy((Math.round(z*30)+Math.round(Math.abs(cc)*5))%3==0?back.clone().multiplyScalar(.55):back);else if(s<-.2)o.lerp(belly,.35);else if((i+Math.round(cc*4))%4==0)o.lerp(back,.5)}
       else{if(s>.62)o.copy(i%2?back:back.clone().lerp(band,.25));else if(bandOn&&s>-.4)o.copy(band).lerp(main,.45);else if(i%2==0&&s>-.3)o.copy(blot)}
     }}]);
   },
@@ -63,13 +63,24 @@ LPR.Gravewyrm={
         if(i%3==1&&z<0)k.p(bn,'dod','c',0x4a5a2a,T.x+(i%2?.05:-.05),T.top-.01,z,.03,.018,.03)}
       k.L('tail3','c',bone,[WY137.curve(-1.6),.02,-1.58],[WY137.curve(-1.72),.03,-1.74],.02,.002,4)}
     else{
-      // the hood: a broad lens flaring behind the head, the spectacle mark on its back, a pale rim
-      const T=WY137.top(.3),hz=.33,hy=T.y+.05;
-      k.p('neck','sph','c',main,0,hy,hz,.27,.24,.035,-.25,0,0);
-      k.p('neck','sph','c',dkShade(0xd8d0a0,.95),0,hy-.01,hz+.012,.22,.19,.026,-.25,0,0);
-      [-1,1].forEach(s=>{k.p('neck','tor','c',0x14140c,s*.075,hy+.04,hz-.032,.045,.012,.045,Math.PI/2-.25,0,0);
-        k.p('neck','sph','c',0xe8d860,s*.075,hy+.04,hz-.034,.028,.028,.006,-.25,0,0)});
-      k.L('neck','c',0x14140c,[-.08,hy+.06,hz-.03],[.08,hy+.06,hz-.03],.008,.008,3);
+      // the hood: a broad lens flaring behind the head; a pale front with dark throat bands, a ribbed back with the
+      // spectacle mark, a rim of small scales
+      const T=WY137.top(.3),hz=.33,hy=T.y+.05,pale=dkShade(0xd8d0a0,.95),dkr=0x14140c,rx=-.25,cr=Math.cos(rx),sr=Math.sin(rx);
+      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz-y*sr];
+      k.p('neck','sph','c',main,0,hy,hz,.27,.24,.035,rx,0,0);
+      k.p('neck','sph','c',pale,0,hy-.01,hz+.012,.22,.19,.026,rx,0,0);
+      for(let i=0;i<4;i++){const y=-.12+i*.06,w=.2*Math.sqrt(Math.max(0,1-(y/.19)**2));k.L('neck','c',0x8a7a50,H(-w,y,.04),H(w,y,.04),.006,.006,3)}
+      for(let i=0;i<20;i++){const a=i/20*Math.PI*2;const p=H(Math.sin(a)*.262,Math.cos(a)*.232,0);k.p('neck','dod','c',i%2?dk:mdSh(main,.7),p[0],p[1],p[2],.011,.011,.008)}
+      for(let i=0;i<7;i++){const a=(i/6-.5)*2.4;k.L('neck','c',dk,H(0,-.02,-.03),H(Math.sin(a)*.24,Math.cos(a)*.21-.02,-.03),.008,.003,3)}
+      [-1,1].forEach(s=>{const e=H(s*.075,.04,-.034);k.p('neck','tor','c',dkr,e[0],e[1],e[2],.048,.014,.048,Math.PI/2+rx,0,0);
+        k.p('neck','sph','c',0xe8d860,e[0],e[1],e[2]-.002,.03,.03,.006,rx,0,0);k.p('neck','sph','c',dkr,e[0],e[1],e[2]-.004,.012,.012,.004,rx,0,0)});
+      {const a=H(-.075,.08,-.033),b=H(.075,.08,-.033),m=H(0,.105,-.033);k.L('neck','c',dkr,a,m,.01,.01,3).L('neck','c',dkr,m,b,.01,.01,3)}
+      // big head plates, cheek venom glands, heat pits, venom dripping from the fangs
+      [[0,.462,.6,.05,.012,.06],[-.035,.458,.68,.03,.01,.04],[.035,.458,.68,.03,.01,.04],[0,.452,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],q[1],q[2],q[3],q[4],q[5],-.08,0,0));
+      [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.05,.4,.81,.007,.006,.006);
+        k.L('head','g',0x9aff3a,[s*.05,.23,.8],[s*.05,.17,.805],.004,.002,3)});
+      // a ridge of keeled scales down the back
+      for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.004,z,.022,.014,.03)}
       // a crest of small scales on the head, and a rattle on the tail
       for(let i=0;i<4;i++)k.p('head','cone4','c',dk,0,.45-i*.006,.62-i*.05,.02,.03,.025,-.5);
       for(let i=0;i<5;i++){const z=-1.56-i*.035,r=.03-i*.004;k.p('tail3','sph','c',i%2?0xc8b890:0xa89870,WY137.curve(z),.04,z,r,r*.8,.022)}}
