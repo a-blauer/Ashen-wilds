@@ -45,6 +45,11 @@
  if(!(gold>g0))F.push('no gold reward');if(!(hero.xp+1e6*hero.lvl>x0))F.push('no xp reward');if(gear.length!==gearN+1)F.push('no boots');if(eggs.length!==eggN+1)F.push('no egg');
  const bt=gear[gear.length-1];out.reward={boots:itT(bt).n,sl:itT(bt).sl,r:bt.r,lv:bt.lv,egg:eggs[eggs.length-1].sp+' T'+(eggs[eggs.length-1].tier+1),gold:gold-g0};
  if(itT(bt).sl!=='boots')F.push('boots reward is '+itT(bt).sl);
+ // v132.1: empower counts only while a companion empowers the hero (not buff spells); +2 forged weapons only
+ {const fe=()=>({c:{al:0,l:2,h:0,g:['x']},dead:1,lhH:nowP(),m:{position:pl.position.clone()},hb:{visible:false}});CHQ132.st.k1e={s:1,p:[0]};
+  party.forEach(c=>{if(c)c.emp=false});const sp=Object.values(CSP).find(q=>q.k=='buff');if(sp)hero.buffs.push({s:sp.buff,t:nowP()+60000,n:'',i:''});
+  chqKill132(fe(),null,true);if(CHQ132.st.k1e.p[0]!==0)F.push('companion buff spell counted as empower');
+  if(party[0]){party[0].emp=true;chqKill132(fe(),null,true);party[0].emp=false;if(CHQ132.st.k1e.s!==2)F.push('empowered kill not counted')}else F.push('no companion to empower')}
  // only counts in its own instance: leave to Kindlelight II and gather glowcaps for k1d (already done) / fish for nothing
  // a real camp clear through kill(): every creature of one camp
  {await sleep(300);const C=CAMPS.find(c=>c.ig===I0.g);out.rost=ROST&&ROST.r;const sl=(ROST.slots||[]).filter(q=>q.camp===C);out.campSlots=sl.length;let n=0;
@@ -58,6 +63,14 @@
  CHQ132.st.k2a={s:1,p:[0]};{const e={c:{al:1,l:5,h:0,g:['x']},dead:1,m:{position:pl.position.clone()},hb:{visible:false}};try{chqKill132(e,null,true)}catch(err){F.push('kill err '+err)}if(CHQ132.st.k2a.s!==2)F.push('elite kill not counted')}
  // empowered + food + bard + forged
  CHQ132.st.k2a={s:1,p:[0]};
+ // Kindlelight III: forged +2 weapon kills, ability rank 2+
+ {const I2=PMAP[0].ins[2];insArrive(I2);await sleep(150);tick(10);CHQ132.st.k3a={s:1,p:[0]};CHQ132.st.k3c={s:1,p:[0]};
+  const w=eq.weapon,u0=w&&w.up;const fe=()=>({c:{al:0,l:7,h:0,g:['x']},dead:1,lhH:nowP(),m:{position:pl.position.clone()},hb:{visible:false}});
+  if(w){w.up=1;chqKill132(fe(),null,true);if(CHQ132.st.k3a.p[0]!==0)F.push('+1 weapon counted');w.up=2;chqKill132(fe(),null,true);if(CHQ132.st.k3a.s!==2)F.push('+2 weapon kill not counted');w.up=u0}else F.push('no weapon');
+  hero.lvl=30;hsDirty();const ab=heroSkills()[0];if(ab){kqrUp(ab.n);out.abRank=kqrRank(kqsFind(hero.cls,ab.n));if(out.abRank>=2&&CHQ132.st.k3c.s!==2)F.push('rank 2 not counted');if(out.abRank<2)F.push('could not rank up '+ab.n+': '+kqrWhy(kqsFind(hero.cls,ab.n)))}}
+ // Hillside Crest II: a Tier 2+ egg found
+ {const I3=PMAP[1].ins[1];insArrive(I3);await sleep(150);tick(10);CHQ132.st.h2a={s:1,p:[0]};chqEggs132();const sp=zEggs104(1)[0];
+  eggs.push(mkEgg(sp,0,1));chqEggs132();if(CHQ132.st.h2a.p[0]!==0)F.push('tier 1 egg counted');eggs.push(mkEgg(sp,1,1));chqEggs132();if(CHQ132.st.h2a.s!==2)F.push('tier 2 egg not counted')}
  // saves
  const sv=x2Save();if(!sv.chq||!sv.chq.st.k1b||sv.chq.st.k1b.s!==3)F.push('save missing');const keep=JSON.stringify(CHQ132.st);CHQ132.st={};x2Load(JSON.parse(JSON.stringify(sv)));
  if(JSON.stringify(CHQ132.st)!==keep)F.push('load mismatch');

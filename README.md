@@ -202,7 +202,11 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   feedComp, kqrUp/kqsBuy, breakBoulder/digTreasure, hatch, mountTick, a rune poll); a co-op partner's kill only counts for camp clears.
   Hillside Crest I gets one extra secret boulder for "Under the Stone" (appended to `SECRETS`). To add quests for another zone, add
   `'z_k'` lists to `CHQD132` (kinds listed above the table). Test: `v132_cheddar_test.py` (`v132_cheddar.js`; `v132_shot.js` for
-  framed screenshots).
+  framed screenshots). v132.1: empower kills need a companion actively empowering you (E / R), not a buff spell; "New Blood" counts
+  a Tier 2+ egg arriving in the egg bag (`chqEggs132`, Cheddar's own reward eggs excluded); ability = a rank-up to 2+; forged = +2; quest
+  XP ×0.7; the window is a grid of cards with a large reward panel and an SVG "mystery" medallion per reward type (`chqIco132`).
+- **Camera on slopes (v132)**: when the ground behind the hero blocks the camera ray (`blk` in the main loop, 0104), the camera first
+  tilts up in steps (up to pitch 1.25) until the ray is clear and keeps its distance; it only pulls in (old rule) when tilting can't clear it.
 - **Beast races (v114, replaces the v112 rat)**: every hero is its class's animal, there is no human option: rat (Warrior), cat
   (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
