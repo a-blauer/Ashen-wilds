@@ -40,3 +40,4 @@ v135_uniques.py
 v135_bow.py
 v136_gear.py
 v136_icons.py
+PART=checks,cast v137_evolve.py
