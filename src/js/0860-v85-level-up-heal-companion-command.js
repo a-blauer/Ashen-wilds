@@ -36,7 +36,7 @@ function compTick(dt,now){
     f.visible=c.h>0&&!c.emp;f.position.y=GH(f.position.x,f.position.z);
     f.vel=f.vel||V();f.idleT=f.idleT||0;
     const P=pl.position,dpl=d2(f.position,P);
-    if(dpl>28){f.position.set(P.x-Math.sin(pl.rotation.y)*2+(i?-1:1),0,P.z-Math.cos(pl.rotation.y)*2);f.vel.set(0,0,0)}
+    if(dpl>28){const fy0=plFaceY();f.position.set(P.x-Math.sin(fy0)*2+(i?-1:1),0,P.z-Math.cos(fy0)*2);f.vel.set(0,0,0)}
     f.cdA=(f.cdA||0)-dt;
     if(!f.visible||dt<=0){animC(f,now,false);return}
     const spdK=FAMD[famOf(c.g[0])].spd*((c.mods||[]).includes('Swift')?1.18:1),mg=xMt(c)=='m';
@@ -51,7 +51,7 @@ function compTick(dt,now){
         if(mg){f.cdA=1.35/spdK;f.lk=1;const b=f.b;tw(220,k=>{if(b){b.position.y=Math.sin(k*Math.PI)*.12;b.rotation.x=-Math.sin(k*Math.PI)*.25}},()=>{if(b){b.position.y=0;b.rotation.x=0}f.lk=0;if(!foe.dead)compBolt(f,c,foe,()=>{if(!foe.dead)compHit(c,foe,1)})})}
         else{f.cdA=1.15/spdK;f.lk=1;lunge(f,fp,()=>{f.lk=0;if(!foe.dead)compHit(c,foe,1)})}}
     }else{
-      const fy=pl.rotation.y,sd=i?-1:1,home=V(P.x-Math.sin(fy)*2.2+Math.cos(fy)*1.6*sd,0,P.z-Math.cos(fy)*2.2-Math.sin(fy)*1.6*sd),dh=d2(f.position,home);
+      const fy=plFaceY(),sd=i?-1:1,home=V(P.x-Math.sin(fy)*2.2+Math.cos(fy)*1.6*sd,0,P.z-Math.cos(fy)*2.2-Math.sin(fy)*1.6*sd),dh=d2(f.position,home);
       if(f.fol){if(dh<1.1)f.fol=0}else if(dh>3.4||dpl>4.6)f.fol=1;
       if(f.fol){goal=home;want=Math.min(12,1.2+dh*1.9)*(riding?1.6:1)}
       else{f.idleT-=dt;if(f.idleT<=0){f.idleT=2.5+Math.random()*4;f.look=Math.random()<.5?null:fy+(Math.random()-.5)*2.4;f.sniff=Math.random()<.3?V(f.position.x+(Math.random()-.5)*2.4,0,f.position.z+(Math.random()-.5)*2.4):null}

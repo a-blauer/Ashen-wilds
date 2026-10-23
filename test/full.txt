@@ -17,6 +17,7 @@ v109_kingdom_shops.py
 TITLE=1 ABIL_ONLY=1 v114_race.py
 v117_menus.py
 v117_titles.py
+v131_load_title.py
 v117_wclip.py
 v117_xbow.py
 v117_creator.py
@@ -31,3 +32,5 @@ v120_anim.py
 NOSHOT=1 v123_camps.py
 v124_edge_test.py
 v112_instances.py
+v128_whirl.py
+v132_cheddar_test.py
