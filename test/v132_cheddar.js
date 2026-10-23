@@ -2,11 +2,18 @@
 // python3 probe.py v132_cheddar.js  (SHOT=name saves a screenshot standing near Cheddar in Kindlelight I)
 (async()=>{const F=[],sleep=ms=>new Promise(r=>setTimeout(r,ms)),out={fail:F};
  const tick=n=>{for(let i=0;i<(n||1);i++)chqTick132(.05,performance.now())};
- // every field instance and den: a spot on free ground beside its home portal, with a burrow
- const spots=[];INSL.forEach(I=>{if(I.tri)return;const s=chqSpot132(I),r=RPORT.find(q=>q.k=='home'&&q.ig===I.g);
-   const dp=r?Math.hypot(s.x-r.x,s.z-r.z):-1,db=Math.hypot(s.x-s.bx,s.z-s.bz);spots.push([I.n,+dp.toFixed(1),+db.toFixed(1)]);
-   if(!(dp>1.5&&dp<5))F.push('spot far from portal '+I.n+' '+dp);const J=insAt(Math.round(s.x),Math.round(s.z));if(!J||J.g!==I.g)F.push('spot outside instance '+I.n);
-   if(solid_old(Math.round(s.bx),Math.round(s.bz)))F.push('burrow on solid ground '+I.n)});
+ // every field instance and den: a spot on free ground in front of the arrival spot (v134: the camera looks down the road at him),
+ // facing it, with a burrow; every field instance also has a second spot before its end gateway, past the gateway's F reach
+ const spots=[];INSL.forEach(I=>{if(I.tri)return;const s=chqSpot132(I),e=I.en,n=I.path[26];
+   const de=Math.hypot(s.x-e[0],s.z-e[1]),fw=((s.x-e[0])*(n[0]-e[0])+(s.z-e[1])*(n[1]-e[1]))/(Math.hypot(n[0]-e[0],n[1]-e[1])||1),db=Math.hypot(s.x-s.bx,s.z-s.bz);
+   const fa=Math.atan2(e[0]-s.x,e[1]-s.z),dfa=Math.abs(Math.atan2(Math.sin(fa-s.face),Math.cos(fa-s.face)));spots.push([I.n,+de.toFixed(1),+fw.toFixed(1),+db.toFixed(1)]);
+   if(!(de>2.5&&de<7&&fw>2))F.push('spot not in front of the arrival '+I.n+' '+de.toFixed(2)+' fw '+fw.toFixed(2));if(dfa>.05)F.push('not facing the arrival '+I.n);
+   const J=insAt(Math.round(s.x),Math.round(s.z));if(!J||J.g!==I.g)F.push('spot outside instance '+I.n);
+   if(solid_old(Math.round(s.bx),Math.round(s.bz)))F.push('burrow on solid ground '+I.n);
+   const t=chqSpotEnd134(I),r=RPORT.find(q=>q.k=='next'&&q.ig===I.g);
+   if(I.fld){if(!t||!r)F.push('no gateway Cheddar '+I.n);else{const dg=Math.hypot(t.x-r.x,t.z-r.z);if(!(dg>5.1&&dg<9))F.push('gateway Cheddar distance '+I.n+' '+dg.toFixed(2));
+     const J2=insAt(Math.round(t.x),Math.round(t.z));if(!J2||J2.g!==I.g)F.push('gateway spot outside instance '+I.n);if(solid_old(Math.round(t.bx),Math.round(t.bz)))F.push('gateway burrow on solid ground '+I.n)}}
+   else if(t)F.push('gateway Cheddar in a den '+I.n)});
  out.spots=spots;
  // feasibility: nodes and water per Kindlelight / Hillside field instance
  const feas={};for(const z of [0,1])for(let k=0;k<3;k++){const I=PMAP[z].ins[k],c={tree:0,rock:0,iron:0,mush:0,water:0,camps:(I.cl||[]).length,secrets:0};
@@ -27,6 +34,13 @@
  const s=CHQ132.spots[I0.g];toPos(s.x+Math.sin(s.face)*1.8,s.z+Math.cos(s.face)*1.8);tick(5);
  const p=worldPrompt();out.prompt=p&&p.label;if(!p||!/Cheddar/.test(p.label))F.push('no Cheddar prompt: '+(p&&p.label));
  p.fn();await sleep(50);if(xwMode!=='chq132')F.push('window did not open');out.win=$('xwB').innerText.slice(0,400);
+ // v134: the gateway Cheddar at the end of the road: shown, talkable, same window
+ {const E=CHQ132.e,t=chqSpotEnd134(I0);if(!E.ch||!E.ch.root.visible)F.push('gateway Cheddar not shown');
+  if(!E.mk||!E.mk.visible)F.push('gateway Cheddar has no marker');
+  const back=[pl.position.x,pl.position.z];closeX();toPos(t.x+Math.sin(t.face)*1.8,t.z+Math.cos(t.face)*1.8);tick(30);const q=worldPrompt();out.prompt2=q&&q.label;
+  if(!q||!/Cheddar/.test(q.label))F.push('no prompt at the gateway Cheddar: '+(q&&q.label));
+  const r=RPORT.find(o=>o.k=='next'&&o.ig===I0.g);toPos(r.x+(t.x-r.x)*.3,r.z+(t.z-r.z)*.3);tick(2);const q2=worldPrompt();if(!q2||!/Step through/.test(q2.label))F.push('gateway prompt lost: '+(q2&&q2.label));
+  toPos(back[0],back[1]);tick(5);p.fn();await sleep(50)}
  // accept all through the window button
  const all=document.querySelector('[data-cqall]');if(!all)F.push('no accept all');else all.click();
  const L=chqList132(I0);if(!L.every(q=>chqS132(q)&&chqS132(q).s==1))F.push('not all accepted');closeX();tick(3);chqTrk132();
@@ -76,7 +90,7 @@
  if(JSON.stringify(CHQ132.st)!==keep)F.push('load mismatch');
  x2Load({});if(Object.keys(CHQ132.st).length)F.push('old save not empty');x2Load(JSON.parse(JSON.stringify(sv)));
  // Duskhold: hidden
- recallTown();await sleep(100);tick(5);if(CHQ132.ch.root.visible)F.push('Cheddar visible in town');
+ recallTown();await sleep(100);tick(5);if(CHQ132.ch.root.visible||CHQ132.e.ch.root.visible)F.push('Cheddar visible in town');
  // back to Kindlelight I for the shot
  insArrive(I0);await sleep(200);tick(30);toPos(s.x+Math.sin(s.face)*3.4,s.z+Math.cos(s.face)*3.4);camYaw=Math.atan2(Math.sin(s.face),Math.cos(s.face));snapCam&&snapCam();
  CHQ132.st.k1d={s:2,p:[5]};tick(40);

@@ -7,7 +7,7 @@
 // ---------------- shared baking: rigid parts → 1-3 vertex-coloured meshes (cloth/wood, metal, glow), mottled ----------------
 var LGB={},LGM=null;
 // v134: bow size (scaled about the riser: BOW_K height, BOW_KX depth, a shallower C) and the string's rest points in the bow's own frame: [x of the string, y of the tips]
-var BOW_K=.7,BOW_KX=.55,BOW_T=[-.555+.493*BOW_KX,.594*BOW_K];
+var BOW_K=.66,BOW_KX=.4,BOW_T=[-.555+.493*BOW_KX,.594*BOW_K];
 function lgMats(){if(LGM)return LGM;const f=o=>Object.assign({vertexColors:true,flatShading:true},o);
   LGM={c:new THREE.MeshStandardMaterial(f({roughness:.92,metalness:0,side:THREE.DoubleSide})),
     m:new THREE.MeshStandardMaterial(f({roughness:.5,metalness:.55,envMapIntensity:.7})),

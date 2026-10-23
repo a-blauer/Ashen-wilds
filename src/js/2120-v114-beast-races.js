@@ -41,27 +41,51 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
   shear:{spine:.08,chest:.16,neck:.2},crouch:[.28,.56],pose:{sp:.08,ch:.04,shx:-.15,el:-.3},run:{sp:.14,shx:-.1},look:[.06,0],
   TR:[[1.05,1.04,1,.9,.86,.86,.9,.92,.9,.95,1.1,1.15],[1.02,1.05,1.05,1.02,1,1.02,1.05,1.02,1,1,1.1,1.12],[1.04,1.04,1.04,1.02,1.02,1.04,1.06,1.06,1.02,1,1.1,1.12]],
   armK:[.88,.88,.84,.8,.82,.76],legK:[1.22,1.26,1.12,.92,.8,.72,.68],foot:{len:1.05,w:.8,h:.75},
-  SN:[[-.1,1.158,.045,.045,.045],[-.07,1.17,.09,.082,.08],[-.035,1.178,.108,.088,.094],[0,1.178,.116,.08,.1],[.03,1.172,.118,.07,.098],[.055,1.162,.1,.058,.09],[.072,1.152,.064,.046,.07],[.095,1.146,.057,.04,.062],[.115,1.141,.046,.032,.05],[.132,1.138,.03,.022,.03]],
-  EYEP:[.06,1.18,.058],EAR:[.076,1.268,-.045],earR:.042,earE:[.076,1.268,-.045,.036,.045,.016,-.12,.1,-.26],muzzleZ:.11,hoodZ:.03,crownZ:-.04,hatZ:-.05,
+  // v134: the head remade — a rounder brain case, broad cheeks, a short blunt muzzle (14 rings, lofted with 22 sides)
+  SN:[[-.105,1.16,.04,.04,.04],[-.085,1.168,.075,.07,.068],[-.06,1.175,.098,.088,.086],[-.03,1.18,.112,.096,.096],[0,1.18,.12,.094,.1],[.025,1.176,.122,.086,.1],
+    [.045,1.17,.118,.074,.096],[.062,1.162,.1,.06,.086],[.074,1.154,.08,.048,.074],[.085,1.148,.064,.04,.062],[.095,1.144,.056,.035,.054],[.104,1.141,.05,.03,.046],[.111,1.14,.042,.025,.036],[.116,1.14,.028,.017,.022]],
+  EYEP:[.052,1.18,.07],EAR:[.074,1.272,-.04],earR:.046,earE:[.074,1.272,-.04,.044,.054,.018,-.12,.12,-.3],muzzleZ:.095,hoodZ:.03,crownZ:-.04,hatZ:-.05,
   TP:[[0,.6,-.06,.038],[0,.58,-.16,.036],[0,.55,-.27,.034],[0,.52,-.38,.032],[.01,.5,-.49,.03],[.02,.51,-.59,.029],[.03,.55,-.68,.028],[.04,.62,-.76,.027],[.05,.7,-.82,.025],[.06,.78,-.86,.022],[.07,.86,-.88,.018],[.08,.93,-.89,.012],[.09,.98,-.89,.006]],
   tailCol:(m,C)=>m.i>10?C.FURD:Math.floor(m.i)%3==2?C.FURD:C.FUR,tailSway:[.08,.08,1.2,2.4],
   paw:{n:4,len:[.02,.022,.022,.019],claw:.006,pad:true,curl:1.2,spread:.011,colOf:C=>C.FUR},handCol:C=>C.FUR,
   toes:{n:4,len:.03,claw:.008,pad:true,dew:false,colOf:C=>C.FUR},
-  earRim:(k,c,t)=>brEarRim(BRD[2],k,c,t,[1.1,1.3,1]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[2].EAR;k.p('head','cone4','c',c,s*(x+.006),y+.012,z-.004,.052,.118,.042,-.12,s*.1,-s*.26)}),
+  earRim:(k,c,t)=>brEarRim(BRD[2],k,c,t,[1.1,1.3,1]),earPocket:(k,c,off)=>[-1,1].forEach(s=>{const [x,y,z]=BRD[2].EAR;k.p('head','cone4','c',c,s*(x+.006),y+.012,z-.004,.062,.128,.044,-.12,s*.12,-s*.3)}),
   head(B,P,o){const D=this,C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:.9,fwd:-.01};const H=P._H=mdHeadR(P);
-    brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.45&&z>-.01)return C.BELLY;if(m.s<-.15&&z>.065)return C.FURL;
-      if(m.s>.55&&z<.02&&z>-.085&&Math.abs(Math.sin(z*90))>.7)return C.FURD; // forehead stripes
-      return C.FUR});
-    brJaw(B,D,.07,.128,C.BELLY,{h:.8,w:.92});
-    // cheek tufts, a small triangular nose, the mouth's inverted Y painted under it
-    const tip=D.SN[D.SN.length-1];k.p('head','cone4','c',C.PINK,0,tip[1]+.003,tip[0]+.006,.012,.009,.008,Math.PI*.5);
-    k.p('head','box','c',C.MOUTH,0,tip[1]-.013,tip[0]-.002,.0025,.012,.003);
-    brEyes(k,D,{sz:1.2,al:1.25,tilt:.3,fw:.4,inset:.003,browY:.022,socket:mdSh(C.FURD,.9),white:0xe8e4dc,pupil:[.0035,.014],brow:C.FURD});
-    brWhiskers(k,D,.095,1.14,3,.17);
-    // tall pointed ears, pink inside, dark tips
-    [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.036,.09,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.008,z+.009,.022,.064,.009,-.12,s*.1,-s*.26);
-      k.p('head','cone4','c',C.FURD,s*(x+.013),y+.04,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
+    // v134 remade head: a round skull lofted with more sides, broad cheeks with ruffs, puffy whisker pads, a small chin, a pink
+    // triangle nose, big almond eyes set forward with slit pupils, tall wide ears with tufts of fur inside
+    brSkull(B,D,m=>{const z=m.r.p[2];if(m.s<-.45&&z>-.01)return C.BELLY;if(m.s<-.15&&z>.07)return C.FURL;
+      if(m.s>.55&&z<.03&&z>-.08&&Math.abs(Math.sin(z*95))>.72)return C.FURD; // forehead stripes
+      return C.FUR},{seg:22});
+    brJaw(B,D,.064,.108,C.BELLY,{h:.7,w:.8});
+    // whisker pads (two soft lobes) and the chin under them
+    [-1,1].forEach(s=>k.p('head','sph2','c',C.FURL,s*.021,1.131,.104,.027,.022,.019,0,s*.35,0));
+    k.p('head','sph2','c',C.BELLY,0,1.111,.098,.02,.013,.014);
+    // nose: a small pink triangle on the bridge, nostril line, the mouth's inverted Y between the pads
+    const tip=D.SN[D.SN.length-1];k.p('head','cone4','c',C.PINK,0,tip[1]+.008,tip[0]+.008,.013,.01,.009,Math.PI*.5);
+    k.p('head','box','c',mdSh(C.PINK,.7),0,tip[1]+.001,tip[0]+.012,.012,.002,.002);
+    k.p('head','box','c',C.MOUTH,0,tip[1]-.011,tip[0]+.006,.0022,.012,.003);[-1,1].forEach(s=>k.p('head','box','c',C.MOUTH,s*.008,tip[1]-.02,tip[0]+.007,.011,.0022,.003,0,0,s*.5));
+    brCatEyes134(k,D,C);
+    brWhiskers(k,D,.1,1.134,4,.18);
+    // cheek ruffs: tufts of fur pointing down and back below the eyes
+    [-1,1].forEach(s=>[[.03,1.135,0,.04],[.012,1.122,-.25,.034],[-.008,1.132,-.45,.028]].forEach(([z,y,a,l])=>{const x=brSurfX(D,z,y)-.006;
+      k.p('head','cone4','c',C.FURL,s*x,y,z,.02,l,.012,Math.PI*.82+a*.3,0,s*(.9+a*.4))}));
+    // tall, wide ears: fur outside, pink inside, a fur tuft at the base inside, dark tips
+    [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.046,.1,.018,-.12,s*.12,-s*.3);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.01,z+.011,.03,.072,.008,-.12,s*.12,-s*.3);
+      k.p('head','cone4','c',C.FURL,s*(x-.004),y-.034,z+.014,.016,.04,.006,-.05,s*.12,-s*.12);
+    });
     mdKit(B,k);return H}});
+// v134: the cat's eyes, set on the skull where the muzzle starts and turned to face mostly forward: a dark rim, a large almond
+// iris that catches the light (unlit material), a tall slit pupil and a highlight, all laid along the surface normal
+function brCatEyes134(k,D,C){const [xT,ey]=D.EYEP;let ez=.02;for(let z=.02;z<.13;z+=.001){if(brSurfX(D,z,ey)<=xT){ez=z;break}}
+  const x0=brSurfX(D,ez,ey),dx=(brSurfX(D,ez+.004,ey)-brSurfX(D,ez-.004,ey))/.008,a=Math.atan2(1,-dx)*.85,rx=-.32;
+  D.eyeR=.026;D.eyeFw=.62;D.eyeIns=0;D.EYEP[2]=ez;
+  [-1,1].forEach(s=>{const nx=s*Math.sin(a)*Math.cos(rx),ny=-Math.sin(rx),nz=Math.cos(a)*Math.cos(rx),ry=s*a,tl=s*.32,at=d=>[s*x0+nx*d,ey+ny*d,ez+nz*d];
+    let p=at(.005);k.p('head','sph2','c',mdSh(C.FURD,.55),p[0],p[1],p[2],.029,.019,.012,rx,ry,tl);
+    p=at(.0105);k.p('head','sph2','g',C.EYE,p[0],p[1],p[2],.024,.0145,.007,rx,ry,tl);
+    p=at(.0165);k.p('head','box','c',0x050404,p[0],p[1],p[2],.0032,.0145,.002,rx,ry,0);
+    p=at(.0172);k.p('head','box','g',0xfff8e8,p[0]+s*.004,p[1]+.004,p[2],.0026,.0026,.0015,rx,ry,0);
+    // a heavy upper lid over the top of the eye: a hooded, narrowed, wary look rather than a round cartoon stare
+    p=at(.0125);k.p('head','sph2','c',mdSh(C.FUR,.8),p[0]-s*.002,p[1]+.0105,p[2],.028,.009,.009,rx,ry,tl+s*.18)})}
 // ======================================================== 3 · FROG (Mage) ========================================================
 // A squat frog: a wide flat head with bulging eyes on top, a wide mouth, a pale throat; smooth spotted hide, no tail, no ears;
 // long webbed fingers and toes with round pads; a deep squat on bent legs.

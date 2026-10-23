@@ -30,7 +30,7 @@ function idHTML_base(){
 function invAct(){
   if(!selI)return;
   if(selI.k=='e'){const k=SLOTS.find(x=>eq[x]&&eq[x].id==selI.id);if(k){gear.push(eq[k]);delete eq[k]}selI=null}
-  else{const i=gear.findIndex(g=>g.id==selI.id);if(i<0)return;const it=gear[i];if(!canUse(it))return;const sl=itT(it).sl;gear.splice(i,1);if(eq[sl])gear.push(eq[sl]);eq[sl]=it;selI={k:'e',id:it.id}}
+  else{const i=gear.findIndex(g=>g.id==selI.id);if(i<0)return;const it=gear[i];if(!canUse(it))return;const sl=eqSlot134(it);gear.splice(i,1);if(eq[sl])gear.push(eq[sl]);eq[sl]=it;selI={k:'e',id:it.id}}
   hsDirty();hero.hp=Math.min(hero.hp,heroMax());refreshGear();if(HP)refreshGear(HP);rB();hud();
 }
 function bagStats(){

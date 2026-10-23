@@ -34,10 +34,16 @@ gl.addEventListener('pointerdown',e=>{mp(e);if(e.button!=2){atkHeld=true;swing()
 gl.addEventListener('contextmenu',e=>e.preventDefault());
 gl.addEventListener('mousedown',e=>{if(e.button==0&&orb){atkHeld=true;swing()}});
 addEventListener('mouseup',e=>{if(e.button==0)atkHeld=false});
-let orb=null;gl.addEventListener('pointerdown',e=>{if(e.button==1||e.button==2){orb={x:e.clientX,y:e.clientY};e.preventDefault();atkHeld=!!(e.buttons&1);gl.style.cursor='none';try{const p=gl.requestPointerLock&&gl.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}}});
+// v134: a right click toggles mouse-look on and off (the cursor hides and the mouse turns the camera until the next right click);
+// the middle button still turns the camera only while held. Esc, losing the pointer lock, the window losing focus or a window opening ends it.
+let orb=null;const orbStart=(e,tg)=>{orb={x:e.clientX,y:e.clientY,tg};gl.style.cursor='none';try{const p=gl.requestPointerLock&&gl.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}};
+gl.addEventListener('pointerdown',e=>{if(e.button==2){e.preventDefault();atkHeld=!!(e.buttons&1);if(typeof KQS!='undefined'&&KQS.tg)return;if(orb&&orb.tg)orbEnd();else orbStart(e,1)}
+  else if(e.button==1){e.preventDefault();atkHeld=!!(e.buttons&1);if(!orb)orbStart(e,0)}});
 addEventListener('pointermove',e=>{if(orb){const lk=document.pointerLockElement==gl,cl=v=>Math.max(-70,Math.min(70,v)),dx=lk?cl(e.movementX):e.clientX-orb.x,dy=lk?cl(e.movementY):e.clientY-orb.y;camYaw-=dx*.006*SET.sens;camPitch=Math.max(.14,Math.min(1.1,camPitch+dy*.004*SET.sens*(SET.inv?-1:1)));orb.x=e.clientX;orb.y=e.clientY}});
 const orbEnd=()=>{orb=null;gl.style.cursor='';try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}};
-addEventListener('pointerup',e=>{if(e.button==1||e.button==2)orbEnd()});addEventListener('blur',()=>{if(orb)orbEnd()});
+addEventListener('pointerup',e=>{if(e.button==1&&orb&&!orb.tg)orbEnd()});addEventListener('blur',()=>{if(orb)orbEnd()});
+document.addEventListener('pointerlockchange',()=>{if(orb&&orb.tg&&document.pointerLockElement!==gl&&orb.lk)orbEnd();else if(orb&&document.pointerLockElement===gl)orb.lk=1});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&orb)orbEnd()});setInterval(()=>{try{if(orb&&orb.tg&&uiOpen())orbEnd()}catch(_){}},250);
 gl.addEventListener('wheel',e=>{camDist=Math.max(4.5,Math.min(15,camDist+e.deltaY*.008*SET.zoom));e.preventDefault()},{passive:false});
 addEventListener('pointerup',e=>{if(!(e.buttons&1))atkHeld=false;rmb=false;if(joyId==null)dp[0]=dp[1]=0});
 addEventListener('pointercancel',()=>{atkHeld=false;rmb=false;if(joyId==null)dp[0]=dp[1]=0});

@@ -98,11 +98,25 @@ function chqSpot132(I){if(CHQ132.spots[I.g])return CHQ132.spots[I.g];
     if(free(x,z,0)&&free(bx,bz,0)&&Math.abs(GH(x,z)-GH(bx,bz))<.6&&Math.abs(GH(x,z)-GH(e[0],e[1]))<1.2){best={x,z,bx,bz};break}}
   if(!best){const x=e[0]+dx*4.2+sx*1.9,z=e[1]+dz*4.2+sz*1.9;best={x,z,bx:x+dx*1.2,bz:z+dz*1.2}}
   best.face=Math.atan2(e[0]-best.x,e[1]-best.z);best.g=I.g;CHQ132.spots[I.g]=best;return best}
+// v134: a second Cheddar waits a few steps before the gateway at the end of every field instance (it leads to the next instance,
+// or to the Den from III), facing the road you come down, so quests can be handed in before stepping through
+CHQ132.e={end:1,spots:{},ch:null,bur:null,mk:null,mkK:'',pop:0,popB:0,wave:0,near:0};
+function chqSpotEnd134(I){const E=CHQ132.e;if(E.spots[I.g]!==undefined)return E.spots[I.g];
+  const r=RPORT.find(q=>q.k=='next'&&q.ig===I.g);if(!r||!I.fld){E.spots[I.g]=null;return null}
+  const P=I.path,q=P[Math.max(0,P.length-14)];let dx=q[0]-r.x,dz=q[1]-r.z;const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;const sx=-dz,sz=dx;
+  const free=(x,z)=>{const X=Math.round(x),Z=Math.round(z);return X>=1&&Z>=1&&X<W-1&&Z<H-1&&!solid(X,Z)};
+  const C=[[5.4,2],[5.4,-2],[6,2.4],[6,-2.4],[5.2,2.6],[5.2,-2.6],[6.6,1.8],[6.6,-1.8],[5.6,1.4],[5.6,-1.4]];   // past the gateway's own F reachlet best=null;
+  for(const [a,b] of C){const x=r.x+dx*a+sx*b,z=r.z+dz*a+sz*b,o=Math.sign(b),bx=x-dx*1.2+sx*o*.55,bz=z-dz*1.2+sz*o*.55;
+    if(free(x,z)&&free(bx,bz)&&Math.abs(GH(x,z)-GH(bx,bz))<.6){best={x,z,bx,bz};break}}
+  if(!best){const x=r.x+dx*5.4+sx*2,z=r.z+dz*5.4+sz*2;best={x,z,bx:x-dx*1.2,bz:z-dz*1.2}}
+  best.face=Math.atan2(q[0]-best.x,q[1]-best.z);best.g=I.g;E.spots[I.g]=best;return best}
+function chqPosts134(){return [CHQ132,CHQ132.e]}
+function chqPSpot134(P,I){return P.end?chqSpotEnd134(I):chqSpot132(I)}
 // a cheap collider on his tile so you don't walk through him (built once for every spot)
-try{INSL.forEach(I=>{if(I.tri)return;const s=chqSpot132(I);CBLK.add(Math.round(s.z)*W+Math.round(s.x))})}catch(err){console.warn('chq132 spots',err)}
+try{INSL.forEach(I=>{if(I.tri)return;[chqSpot132(I),chqSpotEnd134(I)].forEach(s=>{if(s)CBLK.add(Math.round(s.z)*W+Math.round(s.x))})})}catch(err){console.warn('chq132 spots',err)}
 
 // keep the grass out of the burrow's mouth and from under his feet (grass is one virtual instanced list, VIL, 4 tufts a tile)
-try{const G=typeof TUFT!='undefined'?VIL.filter(v=>v.geo===TUFT):[],P=[];INSL.forEach(I=>{if(I.tri)return;const s=CHQ132.spots[I.g];if(s)P.push([s.bx,s.bz,1.05],[s.x,s.z,.55])});
+try{const G=typeof TUFT!='undefined'?VIL.filter(v=>v.geo===TUFT):[],P=[];INSL.forEach(I=>{if(I.tri)return;[CHQ132.spots[I.g],CHQ132.e.spots[I.g]].forEach(s=>{if(s)P.push([s.bx,s.bz,1.05],[s.x,s.z,.55])})});
   const T=new Map();P.forEach(q=>{for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const k=(Math.round(q[1])+j)*W+Math.round(q[0])+i;if(!T.has(k))T.set(k,[]);T.get(k).push(q)}});
   const Z=new THREE.Matrix4().makeScale(0,0,0);G.forEach(v=>{for(let i=0;i<v.n;i++){const x=v.M[i*16+12],z=v.M[i*16+14],L=T.get(Math.round(z)*W+Math.round(x));
     if(L&&L.some(q=>Math.hypot(x-q[0],z-q[1])<q[2]))v.setMatrixAt(i,Z)}v.instanceMatrix.needsUpdate=true})}catch(err){console.warn('chq132 grass',err)}
@@ -127,7 +141,7 @@ function chqBurrow132(){const g=new THREE.Group();g.name='CheddarBurrow';g.userD
     const c=add(new THREE.DodecahedronGeometry(r,0),i>5?1:0);c.position.set(x,r*.5,z);c.rotation.set(i,i*2.1,i*.7)});
   [[.62,.3,.05],[-.3,.8,.04]].forEach(([x,z,r])=>{const s=add(new THREE.DodecahedronGeometry(r,0),2);s.position.set(x,r*.4,z)});
   return g}
-function chqBurrowTint132(z){const B=CHQ132.bur;if(!B||B.userData.z===z)return;B.userData.z=z;const base=CHQ132_DIRT[z]||CHQ132_DIRT[0];
+function chqBurrowTint132(z,P){const B=(P||CHQ132).bur;if(!B||B.userData.z===z)return;B.userData.z=z;const base=CHQ132_DIRT[z]||CHQ132_DIRT[0];
   const pal=[base,new THREE.Color(base).multiplyScalar(.72).getHex(),0x5a5652,0x4a3020];
   B.userData.parts.forEach(([o,k])=>{const geo=o.geometry,p=geo.attributes.position,a=geo.attributes.color,col=new THREE.Color();
     for(let i=0;i<p.count;i+=3){const h=Math.sin((p.getX(i)+p.getZ(i+1))*91.7+p.getY(i)*37.3)*43758.5,v=.8+.35*(h-Math.floor(h));col.setHex(pal[k]).multiplyScalar(v);for(let j=0;j<3;j++)a.setXYZ(i+j,col.r,col.g,col.b)}
@@ -145,45 +159,50 @@ function chqMarker132(){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:c
 
 // ---------------- building and ticking Cheddar ----------------
 var CHQ132_SC=1.1;   // the concept model is 0.78 tall; a hero is ~1.45, so Cheddar stands ~0.86 (about 60% of a hero)
-function chqBuild132(){if(CHQ132.ch)return;try{
+function chqBuild132(P){P=P||CHQ132;if(P.ch)return;try{
   const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC);C.root.userData.psNo=1;C.root.userData.noFarCull=1;
   C.root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  CHQ132.ch=C;CHQ132.bur=chqBurrow132();CHQ132.mk=chqMarker132();
-  [C.root,CHQ132.bur,CHQ132.mk].forEach(o=>{o.visible=false;scene.add(o)})}catch(err){console.warn('chq132 build',err);CHQ132.ch=null}}
-function chqPlace132(I){chqBuild132();const C=CHQ132.ch;if(!C)return;const show=!!I;
-  [C.root,CHQ132.bur].forEach(o=>o.visible=show);if(!show){CHQ132.mk.visible=false;return}
-  const s=chqSpot132(I);C.root.position.set(s.x,GH(s.x,s.z),s.z);C.root.rotation.y=s.face;
-  CHQ132.bur.position.set(s.bx,GH(s.bx,s.bz)+.02,s.bz);CHQ132.bur.rotation.y=Math.atan2(s.bx-s.x,s.bz-s.z);chqBurrowTint132(I.z);
-  CHQ132.pop=1;CHQ132.wave=0;CHQ132.near=0;C.setPose('idle')}
+  P.ch=C;P.bur=chqBurrow132();P.mk=chqMarker132();
+  [C.root,P.bur,P.mk].forEach(o=>{o.visible=false;scene.add(o)})}catch(err){console.warn('chq132 build',err);P.ch=null}}
+function chqPlace132(I,P){P=P||CHQ132;const s=I?chqPSpot134(P,I):null;if(!s&&!P.ch)return;chqBuild132(P);const C=P.ch;if(!C)return;const show=!!(I&&s);
+  [C.root,P.bur].forEach(o=>o.visible=show);if(!show){P.mk.visible=false;return}
+  C.root.position.set(s.x,GH(s.x,s.z),s.z);C.root.rotation.y=s.face;
+  P.bur.position.set(s.bx,GH(s.bx,s.bz)+.02,s.bz);P.bur.rotation.y=Math.atan2(s.bx-s.x,s.bz-s.z);chqBurrowTint132(I.z,P);
+  P.pop=P.end?0:1;P.wave=0;P.near=0;C.setPose('idle')}
 function chqTick132(dt,now){
   const I=chqHere132(),g=I?I.g:-1;
-  if(g!==CHQ132.g){CHQ132.g=g;chqPlace132(I);CHQ132.trkK='';chqTrk132()}
-  const C=CHQ132.ch;if(!C||!I)return;const R=C.root,s=CHQ132.spots[g];if(!s)return;
-  const P=pl.position,d=Math.hypot(P.x-s.x,P.z-s.z),st=chqState132(I),y0=GH(s.x,s.z);
-  // climbing out of the burrow when you arrive (he slides up from the hole, then hops across to his spot)
-  if(CHQ132.pop>0){CHQ132.pop=Math.max(0,CHQ132.pop-dt/1.1);const k=1-CHQ132.pop,up=Math.min(1,k/.55),hop=Math.max(0,(k-.55)/.45);
+  if(g!==CHQ132.g){CHQ132.g=g;chqPosts134().forEach(P=>chqPlace132(I,P));CHQ132.trkK='';chqTrk132()}
+  if(!I)return;const st=chqState132(I);chqPosts134().forEach(P=>chqTickP134(P,I,st,dt,now))}
+function chqTickP134(P,I,st,dt,now){
+  const C=P.ch;if(!C||!C.root.visible)return;const R=C.root,s=chqPSpot134(P,I);if(!s)return;
+  const Pp=pl.position,d=Math.hypot(Pp.x-s.x,Pp.z-s.z),y0=GH(s.x,s.z);
+  // climbing out of the burrow when you arrive (he slides up from the hole, then hops across to his spot); the gateway Cheddar
+  // climbs out when you first come near
+  if(P.end&&!P.popD&&d<16){P.popD=1;P.pop=1}
+  if(P.end&&d>40)P.popD=0;
+  if(P.pop>0){P.pop=Math.max(0,P.pop-dt/1.1);const k=1-P.pop,up=Math.min(1,k/.55),hop=Math.max(0,(k-.55)/.45);
     const e=1-Math.pow(1-up,3);R.position.set(s.bx+(s.x-s.bx)*hop,y0-.95*(1-e)+Math.sin(hop*Math.PI)*.22,s.bz+(s.z-s.bz)*hop);
-    if(CHQ132.pop===0)R.position.set(s.x,y0,s.z);
-    if(k>.05&&!CHQ132.popB){CHQ132.popB=1;try{burst(V(s.bx,GH(s.bx,s.bz)+.25,s.bz),CHQ132_DIRT[I.z]||0x5a4630,14,1.3,1.8,.55)}catch(_){}}}
-  else CHQ132.popB=0;
-  if(dt<=0&&CHQ132.pop<=0){chqMark132(I,st,now);return}
+    if(P.pop===0)R.position.set(s.x,y0,s.z);
+    if(k>.05&&!P.popB){P.popB=1;try{burst(V(s.bx,GH(s.bx,s.bz)+.25,s.bz),CHQ132_DIRT[I.z]||0x5a4630,14,1.3,1.8,.55)}catch(_){}}}
+  else P.popB=0;
+  if(dt<=0&&P.pop<=0){chqMark132(I,st,now,P);return}
   // turn towards the hero when they come close, otherwise back towards the road
-  const want=d<9?Math.atan2(P.x-R.position.x,P.z-R.position.z):s.face;let da=want-R.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));R.rotation.y+=da*Math.min(1,dt*4);
+  const want=d<9?Math.atan2(Pp.x-R.position.x,Pp.z-R.position.z):s.face;let da=want-R.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));R.rotation.y+=da*Math.min(1,dt*4);
   // a wave when you walk up and he has something for you
-  if(d<7&&!CHQ132.near){CHQ132.near=1;if(st.av||st.rd){CHQ132.wave=2.6;C.setPose('wave')}}
-  if(d>10)CHQ132.near=0;
-  if(CHQ132.wave>0){CHQ132.wave-=dt;if(CHQ132.wave<=0)C.setPose('idle')}
+  if(d<7&&!P.near){P.near=1;if(st.av||st.rd){P.wave=2.6;C.setPose('wave')}}
+  if(d>10)P.near=0;
+  if(P.wave>0){P.wave-=dt;if(P.wave<=0)C.setPose('idle')}
   if(d<40)C.update(now/1000,Math.min(.05,dt));
-  chqMark132(I,st,now)}
-function chqMark132(I,st,now){const m=CHQ132.mk,R=CHQ132.ch&&CHQ132.ch.root;if(!m||!R)return;
-  const ch=st.rd?'?':st.av?'!':'';m.visible=!!ch&&R.visible;if(!ch)return;if(CHQ132.mkK!==ch){CHQ132.mkK=ch;m.material.map=m.userData.tx[ch];m.material.needsUpdate=true}
+  chqMark132(I,st,now,P)}
+function chqMark132(I,st,now,P){P=P||CHQ132;const m=P.mk,R=P.ch&&P.ch.root;if(!m||!R)return;
+  const ch=st.rd?'?':st.av?'!':'';m.visible=!!ch&&R.visible;if(!ch)return;if(P.mkK!==ch){P.mkK=ch;m.material.map=m.userData.tx[ch];m.material.needsUpdate=true}
   const t=now/1000;m.position.set(R.position.x,R.position.y+.78*CHQ132_SC+.42+Math.sin(t*2.2)*.06,R.position.z);const k=1+.06*Math.sin(t*4.4);m.scale.set(.42*k,.52*k,1)}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{chqTick132(dt,now)}catch(err){if(!CHQ132.err){CHQ132.err=1;console.warn('chq132',err)}}
   try{if(now-CHQ132.t>400){CHQ132.t=now;chqRunes132();chqEggs132();chqTrk132();if(!$('chqt132').classList.contains('hide'))chqTrkPos132()}}catch(_){}return r}}
 
 // ---------------- talking to him ----------------
-function chqNear132(){const I=chqHere132();if(!I||!CHQ132.ch||!CHQ132.ch.root.visible)return null;const s=CHQ132.spots[I.g];if(!s)return null;
-  return Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3?I:null}
+function chqNear132(){const I=chqHere132();if(!I)return null;
+  for(const P of chqPosts134()){if(!P.ch||!P.ch.root.visible)continue;const s=chqPSpot134(P,I);if(s&&Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3)return I}return null}
 {const f=worldPrompt;worldPrompt=function(){try{const I=chqNear132();if(I){const st=chqState132(I);
     return {label:'F · Talk to Cheddar'+(st.rd?' (quest complete!)':st.av?' (new quests)':''),fn:()=>openX('chq132')}}}catch(_){}return f.apply(this,arguments)}}
 // v132.1: the window is a grid of quest cards; each card ends in a large reward panel with a "mystery" medallion per reward type

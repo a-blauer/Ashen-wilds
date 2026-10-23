@@ -6,7 +6,7 @@ function kqmBagInit(){if(KQM.ready)return;const bag=$('bag'),wb=bag&&bag.querySe
   const sum=document.createElement('div');sum.className='kqm-sum';sum.id='kqmSum';doll.after(sum);
   const sp=document.createElement('div');sp.className='kqm-statp kqm-tabhid';sp.id='kqmStatP';right.appendChild(sp);sp.appendChild($('hs'));
   const eqh=right.querySelector('.sec');if(eqh&&/equipped/i.test(eqh.textContent))eqh.classList.add('kqm-tabhid');$('eqrow').classList.add('kqm-tabhid')}
-function kqmDoll(){const sl=kqmSlots(),L=['helm','chest','boots'],Rr=['weapon','offhand','amulet','ring'].filter(k=>sl.includes(k));
+function kqmDoll(){const sl=kqmSlots(),L=['helm','chest','boots','ring2'],Rr=['weapon','offhand','amulet','ring'].filter(k=>sl.includes(k));
   const one=k=>{const it=eq[k];return it?kqmTile(it,'e',{eqm:0}):`<div class="kqm-slot kqm-empty" data-kqs="${k}" data-kqt="es:${k}"><span class="kqm-ic">${SLOTIC[k]}</span><span class="kqm-sn">${SLOTN[k]}</span></div>`};
   const d=document.querySelector('.kqm-dl'),r=document.querySelector('.kqm-dr');if(d)d.innerHTML=L.map(one).join('');if(r)r.innerHTML=Rr.map(one).join('');
   try{const s=HS(),kv=(l,v)=>`<div class="kv"><span>${l}</span><b>${v}</b></div>`;$('kqmSum').innerHTML=kv('Health',Math.round(s.hp))+kv('Mana',Math.round(s.mp))+kv('Phys. attack',Math.round(s.pa))+kv('Mag. attack',Math.round(s.ma))+kv('Phys. defense',Math.round(s.pd))+kv('Mag. defense',Math.round(s.md))}catch(_){}}

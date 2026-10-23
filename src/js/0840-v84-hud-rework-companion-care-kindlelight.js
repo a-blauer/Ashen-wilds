@@ -143,7 +143,7 @@ function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].m
   add('Clay','🧱','Stand by shallow water (not lava) and press F to wade for clay and water.');add('Shallow Water','💧',S.clay.t);
   // upgrade materials: dropped by monsters of the matching tier
   const tz=t=>zl(PMAP.map((p,i)=>p.t==t?i:-1).filter(i=>i>=0));
-  UPM.forEach((u,i)=>add(u[0],u[1],'Dropped by monsters, elites and Sovereigns in '+(tz(i+1)||'tier '+(i+1)+' zones')+'. Camp chests and wave trials give more.'));
+  UPM.forEach((u,i)=>add(u[0],u[1],'Dropped by monsters, elites and Sovereigns in '+(tz(i+1)||'tier '+(i+1)+' zones')+'. Camp chests give more.'));
   // companion materials: dropped by creatures of that family
   const fOf=k=>{try{const en=EN[k]||{};return en.fam||famOf(k)}catch(_){return ''}};
   FAMK.forEach(fk=>{const F=FAMD[fk],zs=[];PMAP.forEach((p,i)=>{const L=(BIOEN[p.n]||[]).slice();try{CAMPS.forEach(C=>{if(C.pm===i&&C.th&&C.th.mem)C.th.mem.forEach(m=>L.push(m[0]))})}catch(_){}try{const B=BOSSES[i];if(B)L.push(B.sp)}catch(_){}

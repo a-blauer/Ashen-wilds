@@ -75,11 +75,11 @@ function portalPrompt(){
     return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
-// v106: the portal lists every instance of the zone you have reached, and the Wave Trial once the zone is cleared
+// v106: the portal lists every instance of the zone you have reached (v134: no Wave Trial any more)
 XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+(d?' · cleared ✓':'');
   const row=I=>{const ok=I.k<=R,txt=I.den?b.name+', '+b.title+(d?' (back 5 minutes after each defeat).':'.'):I.k==PMF-1?'Its road ends at the gateway to '+b.name+'’s den.':'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
     return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">Lv ${I.den?b.lvl:I.lv[0]+'–'+I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
-  const wave=d?`<div class="rw"><span class="rn">⚔️ <b>Wave Trial</b><small>${WV_N} waves of ${p.n} monsters at level ${p.lv[1]}+, ending with elites. Clear them all for a chest of Tier ${p.t} materials, gold and a chance at eggs. Leaving or falling forfeits the chest.${(waveBest[i]||0)?'<br>Best: '+(waveBest[i]>=WV_N?'all waves cleared ✓':'wave '+waveBest[i]):''}</small></span><span class="ra"><button class="pri" data-pgo="wave">Start</button></span></div>`:'';
+  const wave='';   // v134: Wave Trials removed (owner's request)
   $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
 $('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target.closest('[data-pgo]');if(!b)return;const i=xwArg|0;closeX();if(b.dataset.pgo=='map')enterMap(i,+b.dataset.pk||0);else waveStart(i)});
@@ -109,7 +109,7 @@ function bossDefeated(e){
   if(!first){banner('👑 '+A.b.name+' falls again','Its loot is yours','It returns after 5 minutes');return}
   bossDone.add(i);const P=A.b.pw;hero.buffs.push({s:P.s,t:Infinity,n:P.n,i:P.i,d:P.d,perm:1});hsDirty();
   banner('👑 MAP CLEARED',A.b.name+' is slain','Power gained: '+P.i+' '+P.n+' ('+P.d+')');portalRefresh();rportRefresh();
-  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','The Wave Trial of '+PMAP[i].n+' is now open too');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
+  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','Its gate stands open at the end of Portal Road');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
     say('🌀 A golden portal home has opened in the arena.')},2800);
 }
 // ---- Wave Trials ----
