@@ -91,6 +91,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v137 enemy bodies: toolkit (`e137B`, `e137Rows`, `e137Limb`, `e137Quad`, `e137Claws`), own bodies for Blood Hound, Bone Hound, Blood Bat (rig `BloodBat`), Mire Croaker, Basilisk, Snapper, Sun Scarab (middle legs `x.mid137`), Rimeshell Crawler, Storm Harpy, Dust Wyrm, Banshee, Fungal Shambler (rig `Shambler`); older foes rebuilt (`FOE137`, `f137Reg` into `N3.humB`), Goo / Maggot / Scorpion touch-ups | `2640`–`2665` (v137) |
 | v137 animal townsfolk: every Duskhold NPC is a warm-blooded animal (`FK137`, `fkBody` via `idlNpcBody`, parametric skulls `fkSN`, ears / horns / antlers / paws / hooves, 21 species, `FKO` costumes per keeper, citizens by trade `FK_ROLE`, tail + ear animation `fk137Anim`) | `2800`–`2830` (v137) |
 | v137 ability evolution: every class ability evolves at rank 5 (`EVO137` per class, `ev137Evolve`, `ev137Cost` = last rank + 4 ⚡, saved as `hero.tal['__ev:<name>']`), evolved copy cast through `cast` (`ev137Sk`), new effects (`ev137Sigil/Column/Shock/Flare/Lance/Fall/Crescent/Shards/Orbit/Rift/Impact`, projectile models `ev137Proj`), poses `ATK.evoCast/evoRaise/evoNova/evoFlex` | `2700-v137-ability-evo-core.js`, `2710-…-fx.js`, `2715-…-kit.js`, `2720`–`2740` (warrior, paladin, assassin, ranger, mage) |
+| v137 new gear: 150 templates appended to `ITPL` (`ITPL_V137`, `v7` model key, `A137L` armour lines), `genItem_base` empty-pool fix, armour motifs measured onto the built body (`a7Ring`, `a7Put`, `A7MOT`), weapon recipes (`W137`, `w7Blade`), shields (`SH137`), jewellery (`J137`, worn pendant / ring fitted with `j7Put`) | `2750`–`2790` (v137) |
 
 ## Conventions (read before changing code)
 
@@ -363,6 +364,26 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Tests: `v137_evolve.py` (PART=checks,cast,sheets · CLS= · ONLY=): coverage of all 85, Evolve rules / cost / save / reset / window,
   mechanics measured in game (projectile counts, Frost Nova reach, Chain Lightning jumps, Cleave crescent and damage), every evolved
   ability cast for every class with no errors and no scene leftovers, preview sheets `out/v137_evolve_<cls>.jpg`.
+- **New gear (v137, `2750`–`2790`)**: 150 templates appended to `ITPL` after the 200 older ones (`ITPL_V137` = 200; never insert
+  before them, saves store indices): 50 weapons (3–4 per class weapon type), 8 Paladin shields, 72 armour pieces (`A137L`: 24 lines
+  of helm + chest + boots, 6 per armour type, each with a palette in `MD_SETPAL`, a base shape per slot and a motif), 10 amulets,
+  10 rings. Fields as v78 (`nw`, `imp`) plus `v7` (model key; `V137[v7]` → template index, `v137T(it)`). Every one has its own model:
+  * Weapons (`2770`): `W137[v7](k,c,it)` builds the weapon in the usual frame (grip at the origin, head down -y, same size per type)
+    from bevelled slab blades (`w7Blade` = edge slab + inset core, `w7Wavy` for flame / kris blades), grips, hafts and trinkets;
+    bows / crossbows / slings dress the v83/v135 frame so the string and draw animations are unchanged. Hooked in `v89WpnKit`, so the
+    held weapon (`LW89|tp|r`), the picture and the drop all show it. Shields (`2785`): `SH137`, the face dressed on both sides.
+  * Armour (`2755`, `2760`): `mdGD` gives the piece its line's base shape (`d.st`) and motif (`d.mot`); after the piece (inside a
+    hero: after everything, `gkLater`) the motif is built from `A7MOT[motif].helm/chest/boots(ctx)`. Spots are measured on what is
+    built: `a7Ring(B,y,h,exRe)` = the convex hull of the triangles at that height (arms / cape / legs left out as needed), `S.at(θ,clr)`
+    a point just outside it; `ctx.sh(s)` the top of each shoulder; `ctx.path([[y,θ]…])` a line over the torso. Small pieces are built in
+    a local frame (+z out of the surface, +y up) and placed with `a7Put`. Motifs: chain, bone, thorn, candle, spike, eye, fang,
+    feather, root, horn, skull, moon, blade, web, vial, ribbon, crystal, scroll, rune.
+  * Jewellery (`2790`): `J137[v7]` kit (amulet: bail at the origin, pendant down; ring: band round z, setting on +y) for the picture
+    and drop; worn, the pendant is the same kit small on the beast chain, the ring the same kit round the paw's finger (`j7Put`).
+  * `genItem_base` is redefined (`2750`): a slot with no template of that tier and class falls back to the nearest tier (was tp -1).
+  Tests: `v137_items.py` (350 templates, every new one drops for its class, stats finite, shop offers them, every model differs
+  from every other item's, heroes build with each, save + reload keeps them); sheets: `SHEET=models SEL=weapon|offhand|helm|chest|
+  boots|amulet|ring|all`, `SHEET=worn SEL=helm|chest|boots ARM=heavy|medium|light|cloth`, `SHEET=hand SEL=<class>`, `SHEET=jewel`.
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
