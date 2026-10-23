@@ -54,7 +54,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
-| Beast races (v114: rat Warrior, cat Assassin, frog Mage (the raven since v133), badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
+| Beast races (v114: rat Warrior, cat Assassin, frog Mage (the raven since v134), badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
 | v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
 | v123 camp sites: every camp's size (`C.r`), ground shape (`cs123Plan`, `cs123Terrain` from 0045), tile paint (`cs123Map`), set pieces (`cs123Designs`), title card on entry (`cs123Card`); no signposts | `2270-v123-camp-sites.js` |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
@@ -63,8 +63,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | performance: far-scenery cull (`FC`, `fcPass`) | `1980-v111-perf-far-cull.js` |
 | v117 menus: ☰ list (no Fusion / Sovereigns; Kingdom button, B), Kingdom window tabs (Construction / Villagers `vlRender116` / Decorations), Companions ⇄ Fusion tabs (`cfTabs116`), forge only at the Blacksmith (`KQM_SMITH`), crossbow muzzle (`xbowMuzzle116`, `xbowLevel116`) | `2200-v117-menus-kingdom-villagers.js` (edits in `1880`, `1910`, `1050`, `0140`, `1010`) |
 | v117 zone title cards (`zt116Show`, `ZT116.Z` styles per zone; replace the arrival banners) | `2210-v117-zone-title-cards.js` |
-| v117 Mage carry hold (`FC116`: arm IK, upright staff, wand, orb; the frog's, since v133 the raven's) | `2220-v117-frog-carry.js` |
-| v133 raven Mage gear: cloth head pieces fitted to the beak skull (`rvHood`, `rvHat`, `rvBand`, `rvEll`), the tail fan's robe opening, bird footwear (`rvBoots`) | `2360-v133-raven-gear.js` (the raven himself is race 3 in `2120`) |
+| v117 Mage carry hold (`FC116`: arm IK, upright staff, wand, orb; the frog's, since v134 the raven's) | `2220-v117-frog-carry.js` |
+| v134 raven Mage gear: cloth head pieces fitted to the beak skull (`rvHood`, `rvHat`, `rvBand`, `rvEll`), the tail fan's robe opening, bird footwear (`rvBoots`) | `2370-v134-raven-gear.js` (the raven himself is race 3 in `2120`) |
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
 | v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
@@ -209,7 +209,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Camera on slopes (v132)**: when the ground behind the hero blocks the camera ray (`blk` in the main loop, 0104), the camera first
   tilts up in steps (up to pitch 1.25) until the ray is clear and keeps its distance; it only pulls in (old rule) when tilting can't clear it.
 - **Beast races (v114, replaces the v112 rat)**: every hero is its class's animal, there is no human option: rat (Warrior), cat
-  (Assassin), raven (Mage; the frog until v133), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
+  (Assassin), raven (Mage; the frog until v134), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
   saves and co-op partners load as animals. One engine (`2100`): `brDef(id,D)` registers a race (`BRD[id]`), `brPlan` = the v99 preset
   `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`; since v120 animated by `brTailAnim`: an integrated sway phase + one damped spring per bone, tuned in `BRT`). While a beast is built `BR.on` scales
@@ -218,7 +218,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   root on the cloth under a face mask, `BR_MASK`), `brPaws`/`brToes` grow fingers, claws, pads, webbing, `brTail` lofts `D.TP`.
   Helmets (`2110`, `brHelm`) are built over the skull: ear openings and rims from the ear ellipsoids `D.earE` (`brEarIn`, `brEarRimK`),
   eye slits at `D.EYEP`, goggles / monocle sized from the eyes (`D.eyeR`, `D.eyeFw`), hoods with the face opening behind the eyes and
-  an open underside, ear pockets (`D.earPocket`); the Mage's animal has its own cloth head pieces (`D.helmSet.cloth`, since v133 the raven's in `2360`; the frog had slouch caps, floating
+  an open underside, ear pockets (`D.earPocket`); the Mage's animal has its own cloth head pieces (`D.helmSet.cloth`, since v134 the raven's in `2370`; the frog had slouch caps, floating
   halos). Amulet on the shoulder slope and ring on the outer finger (`2115`, `brFinger`); every outfit / armour loft leaves an opening
   where the tail passes (`brTailNear`, `BR_BODY` marks body builds). Animation: posture layer (`D.pose` standing, `D.run` added at
   full run, arm hold eased out during attacks), head levelled from the chest frame (`D.look`), crouch, tail sway. All offsets go
@@ -226,12 +226,12 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Look fields: `skin` = fur/hide, `eye` = eye colour; co-op look array index 8 = race. Tests: `v114_beasts.py` (sheets per race),
   `v114_race.py` (creator → save → reload → barber, every class casts every ability; TITLE=1), `v114_clip.py` (armour clipping: every
   item of the class on its animal, bind pose + idle/run/attack; `HUMAN=1` gives the human baseline; `dbg_clip.py` marks the points).
-- **Raven Mage (v133, replaces the frog as race 3)**: built with the v114 engine in `2120`: skull + beak loft (`SN`), bristles,
+- **Raven Mage (v134, replaces the frog as race 3)**: built with the v114 engine in `2120`: skull + beak loft (`SN`), bristles,
   gape line, hackles and nape feathers (one shared low-poly blade, `rvFeather`), talon paws (3 fingers + thumb), bird feet
   (`toesB`, `toeList`: three toes forward, one back, knee fringe), a wedge tail fan on one tail bone (`tailB`, `FAN`), wing
   feathers along each forearm pointing to the elbow (`wings`: they lie on the outermost surface round the forearm, measured from
   the model's vertices by `rvArmR`, so they sit on top of any sleeve; bare models also get upper-arm coverts and a belly skirt).
-  Gear (`2360`): every cloth head piece is built for his head (hats sit over the crown on a brim above the brows, circlets ring
+  Gear (`2370`): every cloth head piece is built for his head (hats sit over the crown on a brim above the brows, circlets ring
   the head where it is at that height, hoods are a snug shell + a cowl round the back of the neck, open in front); the nape
   feathers are left off under any head piece (`RV.helm`); robes open a slot for the fan (`D.tailNear` replaces the round
   `brTailNear`); footwear keeps the bird's feet (`rvBoots`: wrapped shank, straps / sock / plates / claw sheaths per style; the
@@ -349,7 +349,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   font link). Tests: `v117_titles.py`.
 - **Weapons (v117)**: no elites in Kindlelight I (`noElite116` in `rosterBuild`). The crossbow bolt starts at the crossbow's front end
   (`xbowMuzzle116`, measured once per model from its geometry) and the crossbow is turned level along the aim while aiming
-  (`xbowLevel116`, after every animation layer). The Mage's paw (frog, since v133 raven) holds the weapon in its channel (v117.2: `fc117Frame` measures the paw from the skinned mesh: fingers, knuckle axis, curl side, grip point; staff/wand sit along the knuckle axis in every pose, the wand turns along the fingers during attacks, the orb stands in the upturned palm; frog `paw.curl` 1.05). His carry hold (`FC116`) poses his weapon arm by a two-bone IK and
+  (`xbowLevel116`, after every animation layer). The Mage's paw (frog, since v134 raven) holds the weapon in its channel (v117.2: `fc117Frame` measures the paw from the skinned mesh: fingers, knuckle axis, curl side, grip point; staff/wand sit along the knuckle axis in every pose, the wand turns along the fingers during attacks, the orb stands in the upturned palm; frog `paw.curl` 1.05). His carry hold (`FC116`) poses his weapon arm by a two-bone IK and
   orients the weapon (staff upright beside him, foot angled away from the hem; wand ahead; orb above the paw in front); it fades out
   with the beast arm hold during attacks, and every change is restored before the next frame. The Mage also spreads his shoulders
   during attacks (`D.atk.shz`). v118: his elbow bends back and a little out (`FC116.pole`; it pointed forward and in, so the arm bent backwards); the

@@ -13,8 +13,8 @@ instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosph
 sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py
 compan|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v57t.py v100_fusemenu.py v105_abil.py v122_support.py v113_roster.py
 abilit|skill|talent|class|spell|resource|helpers-new: v117_abilities.py v105_abil.py v119_abprev.py v114_race.py
-beast|race|raven|creator|look|model|humanoid|outfit|armour|equipment|helm|jewel|gear|item|md|ornate|hair|chest|boots|amulet: v133_raven.py v120_anim.py v114_race.py v117_creator.py v117_wclip.py v117_grip_atk.py v117_xbow.py
-grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|tilt|movement|mount|riding|carry: v133_raven.py v120_anim.py v117_grip_atk.py v117_xbow.py v117_wclip.py v110_fight.py v73t.py v32t.py
+beast|race|raven|creator|look|model|humanoid|outfit|armour|equipment|helm|jewel|gear|item|md|ornate|hair|chest|boots|amulet: v134_raven.py v120_anim.py v114_race.py v117_creator.py v117_wclip.py v117_grip_atk.py v117_xbow.py
+grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|tilt|movement|mount|riding|carry: v134_raven.py v120_anim.py v117_grip_atk.py v117_xbow.py v117_wclip.py v110_fight.py v73t.py v32t.py
 menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py v131_load_title.py
 signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp: v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py
 coop|co-op|net: v108_instances.py v116_slots.py

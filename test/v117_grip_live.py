@@ -1,4 +1,4 @@
-# v117: the Mage's (raven since v133) real attacks and a cast, snapshots at fixed moments (out/v117_grip_live_<wt>.jpg): paw round the weapon?
+# v117: the Mage's (raven since v134) real attacks and a cast, snapshots at fixed moments (out/v117_grip_live_<wt>.jpg): paw round the weapon?
 import os,sys,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play

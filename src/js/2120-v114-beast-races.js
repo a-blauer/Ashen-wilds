@@ -1,4 +1,4 @@
-// ================= v114: the five beasts — rat (Warrior), cat (Assassin), raven (Mage, v133), badger (Paladin), weasel (Ranger) =================
+// ================= v114: the five beasts — rat (Warrior), cat (Assassin), raven (Mage, v134), badger (Paladin), weasel (Ranger) =================
 // Each entry: proportions (`pre` v99 preset, `shear` hunch, `crouch` [hip, knee]), body ring multipliers (`TR`, `armK`, `legK`,
 // `foot`), skull rings `SN` (back → front: [z, y centre, half-width, top, underside]), eye and ear positions, the tail path
 // `TP`, paw / toe recipes, colours (`cols(look)`), and `head(B,P,o)` that builds the face. Helm fitting values: `muzzleZ`
@@ -62,7 +62,7 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
     [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.036,.09,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.008,z+.009,.022,.064,.009,-.12,s*.1,-s*.26);
       k.p('head','cone4','c',C.FURD,s*(x+.013),y+.04,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
     mdKit(B,k);return H}});
-// ======================================================== 3 · RAVEN (Mage, v133; replaced the v114 frog) ========================================================
+// ======================================================== 3 · RAVEN (Mage, v134; replaced the v114 frog) ========================================================
 // A bipedal raven: a round feathered skull with a heavy curved beak (nasal bristles over its base, a hooked tip, the gape
 // line), dark side-set eyes, shaggy throat hackles and a ruffled nape; a deep keeled chest, a thick feathered neck; arms that
 // are wings (flat feathers lie along each forearm from the wrist to the elbow, like a folded wing; bare arms also carry
@@ -70,7 +70,7 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
 // three forward toes and a back toe, all hooked claws; a stiff wedge tail of long feathers that pivots at the rump.
 // Built with the v114 beast engine (2100): same hero skeleton retargeted, one tail bone (tl0) carrying the whole fan.
 // Feathers are one shared low-poly blade (`rvFeatherG`: a flat diamond, widest near the tip, a ridge along the shaft).
-var RV_FG=null,RV={helm:null};  // RV.helm: the style of the helm being built with this raven (2360)
+var RV_FG=null,RV={helm:null};  // RV.helm: the style of the helm being built with this raven (2370)
 function rvFeatherG(){if(RV_FG)return RV_FG;const g=new THREE.BufferGeometry(),
     v=[0,0,0, 0,1,0, -1,.62,0, 1,.62,0, 0,.52,1, 0,.52,-1];
   g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex([0,3,4, 0,4,2, 0,2,5, 0,5,3, 1,4,3, 1,2,4, 1,5,2, 1,3,5]);

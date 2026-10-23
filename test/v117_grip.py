@@ -1,4 +1,4 @@
-# v117 close-ups: the Mage's (raven since v133) weapon paw (staff / wand / orb; idle, run, attack) from four sides, and the ring on every race.
+# v117 close-ups: the Mage's (raven since v134) weapon paw (staff / wand / orb; idle, run, attack) from four sides, and the ring on every race.
 #   out/v117_grip_mage.jpg   out/v117_rings.jpg      PART=grip,rings
 import os,sys,re,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))

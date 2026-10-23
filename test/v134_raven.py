@@ -1,5 +1,5 @@
-# v133 raven Mage: the race, and every piece of Mage gear fitted to him (bind pose, rest-space geometry + the v114 clip check).
-#   python3 v133_raven.py      prints ok / FAIL lines
+# v134 raven Mage: the race, and every piece of Mage gear fitted to him (bind pose, rest-space geometry + the v114 clip check).
+#   python3 v134_raven.py      prints ok / FAIL lines
 #   checks: the Mage is the raven (race 3, one tail bone); hats sit above the brows; hoods leave the eyes and beak free;
 #   circlets ring the head above the eyes; robes end at mid-shank; footwear keeps the toes; wing feathers and the tail fan
 #   never go through a robe (v114 clip pokes on the forearm / tail bones); the bare model builds.

@@ -1,5 +1,5 @@
 // ================= v114: beast races — one engine for every class's animal form =================
-// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 raven (Mage; the frog until v133) · 4 badger
+// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 raven (Mage; the frog until v134) · 4 badger
 // (Paladin) · 5 weasel (Ranger). Each class has exactly one animal; other values are dropped for that class (`lkFull`).
 // The v112 rat (1990-v112-rat-race.js) is replaced by this engine; the rat itself is rebuilt here with a proper skull.
 // Every beast uses the hero skeleton retargeted in place (rest pose moved to the beast's proportions + a hunch, tail

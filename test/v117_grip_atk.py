@@ -1,4 +1,4 @@
-# v117: the Mage's (raven since v133) weapon paw during the real attack / cast poses (ATK tracks via HACH, like the game's haPlay) at fixed moments.
+# v117: the Mage's (raven since v134) weapon paw during the real attack / cast poses (ATK tracks via HACH, like the game's haPlay) at fixed moments.
 #   out/v117_grip_atk.jpg: per weapon a row of wide 3/4 views and a row of paw close-ups
 import os,sys,re,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
