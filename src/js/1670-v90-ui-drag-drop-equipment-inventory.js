@@ -56,15 +56,15 @@ function v90Start(){let el=V90D.src;const it=V90D.it;if(!it)return v90End();
   v90Move(V90D.x,V90D.y)}
 function v90Move(x,y){const g=V90D.ghost;if(!g)return;g.style.left=x+'px';g.style.top=y+'px';
   const T=v90Target(x,y);V90D.hl.forEach(e=>e.classList.remove('v90-over'));let bad=false;
-  if(T){if(V90D.from=='g'&&(T.kind=='slot'||T.kind=='hero')){const sl=itT(V90D.it).sl,ts=T.kind=='slot'&&sl=='ring'&&T.sl=='ring2'?'ring2':sl;if(T.kind=='slot'&&T.sl!=ts)bad=true;else{if(!V90D.ok)bad=true;const t=v90DollEl(T.kind=='slot'?ts:eqSlot134(V90D.it));if(t)t.classList.add('v90-over')}}
+  if(T){if(V90D.from=='g'&&(T.kind=='slot'||T.kind=='hero')){const sl=itT(V90D.it).sl,ts=T.kind=='slot'&&sl=='ring'&&T.sl=='ring2'?'ring2':sl;if(T.kind=='slot'&&T.sl!=ts)bad=true;else{if(!V90D.ok)bad=true;const t=v90DollEl(T.kind=='slot'?ts:eqSlot135(V90D.it));if(t)t.classList.add('v90-over')}}
     else if(V90D.from=='e'&&T.kind=='bag')T.el.classList.add('v90-over')}
   g.classList.toggle('bad',bad)}
 function v90Drop(x,y){const it=V90D.it,T=v90Target(x,y);if(!T||!it)return;
   if(V90D.from=='g'){if(T.kind!='slot'&&T.kind!='hero')return;const sl=itT(it).sl;
-    if(T.kind=='slot'&&sl=='ring'&&(T.sl=='ring'||T.sl=='ring2'))RING134.to=T.sl;   // v134: a ring dropped on either ring slot goes there
-    if(T.kind=='slot'&&T.sl!=sl&&RING134.to!==T.sl){v90Flash(T.el,'That goes in the '+SLOTN[sl]+' slot, not '+SLOTN[T.sl]+'.');return}
-    const why=v90Why(it);if(why){RING134.to=null;v90Flash(T.kind=='slot'?T.el:v90DollEl(sl)||T.el,why);return}
-    if(!gear.includes(it)){RING134.to=null;return}selI={k:'g',id:it.id};try{invAct()}finally{RING134.to=null}try{sfx('chime')}catch(_){}return}
+    if(T.kind=='slot'&&sl=='ring'&&(T.sl=='ring'||T.sl=='ring2'))RING135.to=T.sl;   // v135: a ring dropped on either ring slot goes there
+    if(T.kind=='slot'&&T.sl!=sl&&RING135.to!==T.sl){v90Flash(T.el,'That goes in the '+SLOTN[sl]+' slot, not '+SLOTN[T.sl]+'.');return}
+    const why=v90Why(it);if(why){RING135.to=null;v90Flash(T.kind=='slot'?T.el:v90DollEl(sl)||T.el,why);return}
+    if(!gear.includes(it)){RING135.to=null;return}selI={k:'g',id:it.id};try{invAct()}finally{RING135.to=null}try{sfx('chime')}catch(_){}return}
   if(V90D.from=='e'&&T.kind=='bag'){if(!SLOTS.some(s=>eq[s]===it))return;
     if(typeof BAG_MAX!='undefined'&&gear.length>=BAG_MAX){v90Flash(T.el,'Your bag is full.');return}
     selI={k:'e',id:it.id};invAct()}}

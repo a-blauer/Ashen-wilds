@@ -10,7 +10,7 @@ FAIL=[]
 def chk(n,ok,info=''):
     print(('ok   ' if ok else 'FAIL ')+n,str(info)[:300],flush=True)
     if not ok:FAIL.append(n)
-RACES={'warrior':(1,'rat',31),'assassin':(2,'cat',31),'mage':(3,'frog',20),'paladin':(4,'badger',24),'ranger':(5,'weasel',30)}
+RACES={'warrior':(1,'rat',31),'assassin':(2,'cat',31),'mage':(3,'raven',21),'paladin':(4,'badger',24),'ranger':(5,'weasel',30)}
 UI=os.environ.get('UI','assassin')
 ABIL=os.environ.get('ABIL_ONLY')
 if ABIL:os.environ['TITLE']=''

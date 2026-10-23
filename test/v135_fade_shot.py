@@ -1,4 +1,4 @@
-# v134: a building between the camera and the hero in Duskhold fades (dithered) instead of pushing the camera -> out/v134_fade.png
+# v135: a building between the camera and the hero in Duskhold fades (dithered) instead of pushing the camera -> out/v135_fade.png
 import os,sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -14,8 +14,8 @@ def s(pg):
       if(!best)return null;toPos(best.x,best.z,best.yaw);camPitch=.35;return best}""")
     print('spot',r)
     pg.wait_for_timeout(5000)
-    pg.locator('#stage').screenshot(path=play.TMP+'/v134_fade.png')
+    pg.locator('#stage').screenshot(path=play.TMP+'/v135_fade.png')
     print(ev("""()=>{const rc=new THREE.Raycaster(),h=new THREE.Vector3(pl.position.x,pl.position.y+1.1,pl.position.z),d=h.clone().sub(cam.position);rc.set(cam.position.clone(),d.clone().normalize());rc.far=d.length()-1;
-      const I=rc.intersectObjects(window.__M,false).slice(0,4);return I.map(q=>{const m=q.object.material,M=Array.isArray(m)?m[0]:m;return {n:q.object.name,t:M.type,tr:M.transparent,sk:!!M.skinning,done:F134.done.has(M),obc:M.onBeforeCompile!==THREE.Material.prototype.onBeforeCompile,key:M.customProgramCacheKey&&M.customProgramCacheKey(),inScene:(()=>{let p=q.object;while(p.parent)p=p.parent;return p===scene})(),F:F134.t}})}"""))
+      const I=rc.intersectObjects(window.__M,false).slice(0,4);return I.map(q=>{const m=q.object.material,M=Array.isArray(m)?m[0]:m;return {n:q.object.name,t:M.type,tr:M.transparent,sk:!!M.skinning,done:F135.done.has(M),obc:M.onBeforeCompile!==THREE.Material.prototype.onBeforeCompile,key:M.customProgramCacheKey&&M.customProgramCacheKey(),inScene:(()=>{let p=q.object;while(p.parent)p=p.parent;return p===scene})(),F:F135.t}})}"""))
     print(ev("()=>({camDist:+camDD.toFixed(2),pitch:+camK.toFixed(2),cam:[cam.position.x,cam.position.y,cam.position.z].map(v=>+v.toFixed(1))})"))
 play.run(s,w=1000,hh=620)

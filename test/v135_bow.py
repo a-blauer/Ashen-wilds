@@ -1,4 +1,4 @@
-# v134: bow carry on the weasel Ranger, full body from four sides (idle, two run phases) -> out/v134_bow.jpg
+# v135: bow carry on the weasel Ranger, full body from four sides (idle, two run phases) -> out/v135_bow.jpg
 #   OVR='{"psi":-.5}' tries other V100A_BOW numbers; RACE= another race id; checks the bow's size and that its lower tip stays off the ground
 import os,sys,re,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -28,5 +28,5 @@ def s(pg):
         if not b: print('FAIL no bow on',f['fr']);continue
         if b['h']>1.0: print('FAIL bow still big',f['fr'],b['h'])
         if b['minY']<0.03: print('FAIL bow touches the ground',f['fr'],b['minY'])
-    open(play.TMP+'/'+os.environ.get('OUT','v134_bow')+'.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
+    open(play.TMP+'/'+os.environ.get('OUT','v135_bow')+'.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
 play.run(s,w=900,hh=600)

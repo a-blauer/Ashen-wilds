@@ -90,7 +90,7 @@ function loop(now){
   compSpells(dt);
   const pt0=camPitch,cdd0=(camDist);
   let pTar=pt0,dTar=cdd0;
-  {const ox=Math.sin(camYaw),oz=Math.cos(camYaw),py=pl.position.y+1.1,blk=(p)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.2;s<=cdd0;s+=.5){const wy=py+sp*s,r=(MAP[Math.round(pl.position.z+oz*hc*s)]||[])[Math.round(pl.position.x+ox*hc*s)];const gy=GH(pl.position.x+ox*hc*s,pl.position.z+oz*hc*s);if(wy<gy+.8)return s}return 0};   // v134: only the ground itself moves the camera; rocks, walls and buildings between you and it fade out instead (2410)
+  {const ox=Math.sin(camYaw),oz=Math.cos(camYaw),py=pl.position.y+1.1,blk=(p)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.2;s<=cdd0;s+=.5){const wy=py+sp*s,r=(MAP[Math.round(pl.position.z+oz*hc*s)]||[])[Math.round(pl.position.x+ox*hc*s)];const gy=GH(pl.position.x+ox*hc*s,pl.position.z+oz*hc*s);if(wy<gy+.8)return s}return 0};   // v135: only the ground itself moves the camera; rocks, walls and buildings between you and it fade out instead (2410)
     const sb=blk(pt0);if(sb){let p=pt0,ok=0;for(let k=0;k<14&&p<1.25;k++){p=Math.min(1.25,p+.07);if(!blk(p)){ok=1;break}}   // v132: ground rising behind you raises the camera instead of pulling it in
     if(ok){pTar=p;const hI=typeof insAt=='function'&&insAt(Math.round(pl.position.x),Math.round(pl.position.z)),hc=Math.cos(p);   // near an instance's edge, stay in front of its rim scenery
       if(hI&&typeof v124Rim=='function')for(let s=1.2;s<=cdd0;s+=.5){const x=Math.round(pl.position.x+ox*hc*s),z=Math.round(pl.position.z+oz*hc*s),J=insAt(x,z);if(!J||J!==hI||v124Rim(x,z)){dTar=Math.max(3.4,s-.6);break}}}

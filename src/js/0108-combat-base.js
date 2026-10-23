@@ -34,7 +34,7 @@ gl.addEventListener('pointerdown',e=>{mp(e);if(e.button!=2){atkHeld=true;swing()
 gl.addEventListener('contextmenu',e=>e.preventDefault());
 gl.addEventListener('mousedown',e=>{if(e.button==0&&orb){atkHeld=true;swing()}});
 addEventListener('mouseup',e=>{if(e.button==0)atkHeld=false});
-// v134: a right click toggles mouse-look on and off (the cursor hides and the mouse turns the camera until the next right click);
+// v135: a right click toggles mouse-look on and off (the cursor hides and the mouse turns the camera until the next right click);
 // the middle button still turns the camera only while held. Esc, losing the pointer lock, the window losing focus or a window opening ends it.
 let orb=null;const orbStart=(e,tg)=>{orb={x:e.clientX,y:e.clientY,tg};gl.style.cursor='none';try{const p=gl.requestPointerLock&&gl.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}};
 gl.addEventListener('pointerdown',e=>{if(e.button==2){e.preventDefault();atkHeld=!!(e.buttons&1);if(typeof KQS!='undefined'&&KQS.tg)return;if(orb&&orb.tg)orbEnd();else orbStart(e,1)}

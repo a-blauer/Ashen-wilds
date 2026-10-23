@@ -1,5 +1,5 @@
 // ================= v114: beast races — one engine for every class's animal form =================
-// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 frog (Mage) · 4 badger
+// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 raven (Mage; the frog until v134) · 4 badger
 // (Paladin) · 5 weasel (Ranger). Each class has exactly one animal; other values are dropped for that class (`lkFull`).
 // The v112 rat (1990-v112-rat-race.js) is replaced by this engine; the rat itself is rebuilt here with a proper skull.
 // Every beast uses the hero skeleton retargeted in place (rest pose moved to the beast's proportions + a hunch, tail
@@ -9,10 +9,11 @@
 //  * head: one skull+muzzle loft per race (`SN` rings back→front) plus ears, eyes, nose, jaw, whiskers of its own.
 //  * paws: a flat palm grown out of the hand rings, fingers (count, length, claws, pads, webbing per race); bare feet
 //    get toes. Equipped boots fit because they are lofted over the race's own foot rings.
-//  * tail: part of the skinned body mesh along a chain of tail bones (tl0…), swaying with movement (none for the frog).
+//  * tail: part of the skinned body mesh along a chain of tail bones (tl0…), swaying with movement (the raven's
+//    is one bone carrying a fan of feathers).
 //  * helmets: `brHelm` builds every helm style of the game over the race's skull (ear openings where the ears are,
 //    eye slits at the eyes, hoods, hats, circlets, masks), so each class's gear has its own animal version.
-//  * a crouch (hips flexed, knees bent, feet flat) layered on every animation except riding; the frog squats deep.
+//  * a crouch (hips flexed, knees bent, feet flat) layered on every animation except riding.
 // Look fields reused: skin = fur / hide colour, eye = eye colour. Hair, face and body sex are ignored.
 var BR={on:false,R:null,C:null,bare:false,feet:false,P:null,mask:false};
 var BR_MASK={cowl:1,galemask:1,wind:1,deadeye:1,wrap:1,bandana:1,viper:1,ashcowl:1,glassmask:1,stormhood:1,venom:1,dusk:1};

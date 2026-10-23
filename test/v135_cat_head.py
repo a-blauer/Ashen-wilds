@@ -1,4 +1,4 @@
-# v134: close-ups of the remade cat (Assassin) head, bare and with the class's first helm -> out/v134_cat_head.jpg
+# v135: close-ups of the remade cat (Assassin) head, bare and with the class's first helm -> out/v135_cat_head.jpg
 import os,sys,re,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -14,5 +14,5 @@ def s(pg):
     ev=pg.evaluate
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     r=ev(JS);print(r['err'])
-    open(play.TMP+'/'+os.environ.get('OUT','v134_cat_head')+'.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
+    open(play.TMP+'/'+os.environ.get('OUT','v135_cat_head')+'.jpg','wb').write(base64.b64decode(r['img'].split(',')[1]))
 play.run(s,w=900,hh=600)

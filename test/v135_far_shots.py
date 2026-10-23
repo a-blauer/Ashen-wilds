@@ -1,4 +1,4 @@
-# v134: contact sheet of views round a field instance (ZONE=2 K=0) to look for out-of-place distant objects -> out/v134_far_<z>_<k>.jpg
+# v135: contact sheet of views round a field instance (ZONE=2 K=0) to look for out-of-place distant objects -> out/v135_far_<z>_<k>.jpg
 import os,sys,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -20,5 +20,5 @@ def s(pg):
             tiles.append(Image.open(io.BytesIO(pg.locator('#stage').screenshot(type='jpeg',quality=70))).resize((360,220)))
     W=Image.new('RGB',(360*YAWS,220*PTS))
     for n,t in enumerate(tiles):W.paste(t,((n%YAWS)*360,(n//YAWS)*220))
-    W.save(play.TMP+f'/v134_far_{Z}_{K}.jpg',quality=80)
+    W.save(play.TMP+f'/v135_far_{Z}_{K}.jpg',quality=80)
 play.run(s,w=900,hh=550)

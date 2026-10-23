@@ -2,7 +2,7 @@
 // python3 probe.py v132_cheddar.js  (SHOT=name saves a screenshot standing near Cheddar in Kindlelight I)
 (async()=>{const F=[],sleep=ms=>new Promise(r=>setTimeout(r,ms)),out={fail:F};
  const tick=n=>{for(let i=0;i<(n||1);i++)chqTick132(.05,performance.now())};
- // every field instance and den: a spot on free ground in front of the arrival spot (v134: the camera looks down the road at him),
+ // every field instance and den: a spot on free ground in front of the arrival spot (v135: the camera looks down the road at him),
  // facing it, with a burrow; every field instance also has a second spot before its end gateway, past the gateway's F reach
  const spots=[];INSL.forEach(I=>{if(I.tri)return;const s=chqSpot132(I),e=I.en,n=I.path[26];
    const de=Math.hypot(s.x-e[0],s.z-e[1]),fw=((s.x-e[0])*(n[0]-e[0])+(s.z-e[1])*(n[1]-e[1]))/(Math.hypot(n[0]-e[0],n[1]-e[1])||1),db=Math.hypot(s.x-s.bx,s.z-s.bz);
@@ -10,7 +10,7 @@
    if(!(de>2.5&&de<7&&fw>2))F.push('spot not in front of the arrival '+I.n+' '+de.toFixed(2)+' fw '+fw.toFixed(2));if(dfa>.05)F.push('not facing the arrival '+I.n);
    const J=insAt(Math.round(s.x),Math.round(s.z));if(!J||J.g!==I.g)F.push('spot outside instance '+I.n);
    if(solid_old(Math.round(s.bx),Math.round(s.bz)))F.push('burrow on solid ground '+I.n);
-   const t=chqSpotEnd134(I),r=RPORT.find(q=>q.k=='next'&&q.ig===I.g);
+   const t=chqSpotEnd135(I),r=RPORT.find(q=>q.k=='next'&&q.ig===I.g);
    if(I.fld){if(!t||!r)F.push('no gateway Cheddar '+I.n);else{const dg=Math.hypot(t.x-r.x,t.z-r.z);if(!(dg>5.1&&dg<9))F.push('gateway Cheddar distance '+I.n+' '+dg.toFixed(2));
      const J2=insAt(Math.round(t.x),Math.round(t.z));if(!J2||J2.g!==I.g)F.push('gateway spot outside instance '+I.n);if(solid_old(Math.round(t.bx),Math.round(t.bz)))F.push('gateway burrow on solid ground '+I.n)}}
    else if(t)F.push('gateway Cheddar in a den '+I.n)});
@@ -34,8 +34,8 @@
  const s=CHQ132.spots[I0.g];toPos(s.x+Math.sin(s.face)*1.8,s.z+Math.cos(s.face)*1.8);tick(5);
  const p=worldPrompt();out.prompt=p&&p.label;if(!p||!/Cheddar/.test(p.label))F.push('no Cheddar prompt: '+(p&&p.label));
  p.fn();await sleep(50);if(xwMode!=='chq132')F.push('window did not open');out.win=$('xwB').innerText.slice(0,400);
- // v134: the gateway Cheddar at the end of the road: shown, talkable, same window
- {const E=CHQ132.e,t=chqSpotEnd134(I0);if(!E.ch||!E.ch.root.visible)F.push('gateway Cheddar not shown');
+ // v135: the gateway Cheddar at the end of the road: shown, talkable, same window
+ {const E=CHQ132.e,t=chqSpotEnd135(I0);if(!E.ch||!E.ch.root.visible)F.push('gateway Cheddar not shown');
   if(!E.mk||!E.mk.visible)F.push('gateway Cheddar has no marker');
   const back=[pl.position.x,pl.position.z];closeX();toPos(t.x+Math.sin(t.face)*1.8,t.z+Math.cos(t.face)*1.8);tick(30);const q=worldPrompt();out.prompt2=q&&q.label;
   if(!q||!/Cheddar/.test(q.label))F.push('no prompt at the gateway Cheddar: '+(q&&q.label));

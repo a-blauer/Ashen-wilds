@@ -1,4 +1,4 @@
-# v134: stand near each side of a field instance and look out over the edge (ZONE K) -> out/v134_edge_<z>_<k><TAG>.jpg
+# v135: stand near each side of a field instance and look out over the edge (ZONE K) -> out/v135_edge_<z>_<k><TAG>.jpg
 import os,sys,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -18,5 +18,5 @@ def s(pg):
         tiles.append(Image.open(io.BytesIO(pg.locator('#stage').screenshot(type='jpeg',quality=70))).resize((450,275)))
     W=Image.new('RGB',(900,550))
     for n,t in enumerate(tiles):W.paste(t,((n%2)*450,(n//2)*275))
-    W.save(play.TMP+f'/v134_edge_{Z}_{K}{TAG}.jpg',quality=82)
+    W.save(play.TMP+f'/v135_edge_{Z}_{K}{TAG}.jpg',quality=82)
 play.run(s,w=900,hh=550)

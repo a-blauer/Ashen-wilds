@@ -1,5 +1,5 @@
 // ================= v114: beast races in looks, saves, co-op, the creator and the barber =================
-// Every hero is its class's animal (rat Warrior, cat Assassin, frog Mage, badger Paladin, weasel Ranger); there is no human
+// Every hero is its class's animal (rat Warrior, cat Assassin, raven Mage, badger Paladin, weasel Ranger); there is no human
 // option. A look keeps its fur / eye colour only when it is one of that animal's colours; anything else (old human saves,
 // a co-op partner's human skin tone, a class change) falls back to the animal's first colour.
 LOOK_DEF.race=0;

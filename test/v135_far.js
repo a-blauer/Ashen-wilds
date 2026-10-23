@@ -1,4 +1,4 @@
-// v134: for every field instance, look round from points along its road just above the horizon and list large objects hit far away
+// v135: for every field instance, look round from points along its road just above the horizon and list large objects hit far away
 (async()=>{const out={},rc=new THREE.Raycaster();rc.camera=cam;const V3=THREE.Vector3;
  const M=[];scene.traverse(o=>{if((o.isMesh||o.isInstancedMesh)&&!o.isSkinnedMesh)M.push(o)});
  const name=o=>{const L=[];for(let p=o;p&&p!==scene;p=p.parent)L.push((p.name||p.type)+(p.userData&&Object.keys(p.userData).length?'{'+Object.keys(p.userData).slice(0,4).join(',')+'}':''));return L.slice(0,4).join('<')};

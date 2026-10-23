@@ -1,13 +1,13 @@
-// ================= v134: unique items — three per zone, very rare, each with a model of its own =================
+// ================= v135: unique items — three per zone, very rare, each with a model of its own =================
 // Every zone has a unique amulet, a unique ring and a unique weapon. They drop very rarely from any creature in the zone's three
-// field instances (UNQ134_P: 1 in 2,000 kills, 1 in 300 for elites). A unique is an item of the base template of its slot and the
+// field instances (UNQ135_P: 1 in 2,000 kills, 1 in 300 for elites). A unique is an item of the base template of its slot and the
 // zone's tier (the weapon: your class's weapon of that tier) with it.u = its key: legendary rarity (four affixes, no legendary
 // power), its own name (itName, 0120), a fixed bonus on top of its stats (itStats below), a "✦ Unique" block in the tooltip, and
 // its own model (icons, the item on the ground, the weapon in the hero's hand; the worn amulet / ring take its gem colours).
-// Amulets and rings have a bespoke kit each (UNQ134[key].kit); the weapon is the class weapon rebuilt with the zone's ornaments
-// (UNQ134_ORN[zone]: wisps, scales, ice, gold, bone, thorns) and its metal tinted towards the zone's colour.
-var UNQ134_P={kill:1/2000,elite:1/300};
-var UNQ134={
+// Amulets and rings have a bespoke kit each (UNQ135[key].kit); the weapon is the class weapon rebuilt with the zone's ornaments
+// (UNQ135_ORN[zone]: wisps, scales, ice, gold, bone, thorns) and its metal tinted towards the zone's colour.
+var UNQ135_P={kill:1/2000,elite:1/300};
+var UNQ135={
  // ---- 0 · Kindlelight ----
  lantern:{z:0,sl:'amulet',n:'Lanternheart',fl:'A wisp of bog-light caged in black iron. It never gutters.',e:{hpP:.08,regen:.006},gem:0x7aff9a,
    kit(k){const I=0x2a2a30,G=0x8affa8;k.p('','ring','m',I,0,.03,0,.035,.2,.035,Math.PI/2);k.p('','cone4','m',I,0,-.02,0,.055,.04,.055,0,Math.PI/4);
@@ -60,53 +60,53 @@ var UNQ134={
  dirgebone:{z:4,sl:'weapon',n:'Dirgebone',fl:'Bound with chain and ossuary bone; it grows bolder as you weaken.',e:{berserk:.2,ls:.04},gem:0x5ac8b0,tint:0x6a7a70},
  bloodthorn:{z:5,sl:'weapon',n:'Bloodthorn',fl:'Thorns of the Citadel\'s red briar, still drinking.',e:{cdm:.3,ls:.04},gem:0xff2040,tint:0x8a1a24}};
 // the zone ornaments laid along a weapon (points picked from its own parts, away from the grip)
-var UNQ134_ORN=[
+var UNQ135_ORN=[
  (k,p,i,R)=>{k.p('','ico','g',i%2?0x8affa8:0xc8ffd8,p.x+(R()-.5)*.03,p.y,p.z+.03,.018+R()*.01);if(i%2==0)k.p('','cone4','c',0x2a4a2a,p.x,p.y,p.z-.02,.02,.04,.012,R()*3,R()*3,0)},
  (k,p,i,R)=>{[-1,1].forEach(s=>k.p('','oct','m',0x4a7a3a,p.x+s*.022,p.y,p.z,.016,.026,.006,0,s*.5,R()));if(i%3==0)k.p('','cone4','c',0xe8e0c8,p.x,p.y-.02,p.z+.025,.008,.04,.008,1.2)},
  (k,p,i,R)=>{for(let j=0;j<2;j++)k.p('','cone4',j?'g':'m',j?0xdff6ff:0xbfe8ff,p.x+(R()-.5)*.04,p.y+(R()-.5)*.03,p.z+(R()-.5)*.04,.01,.05+R()*.04,.01,R()*2-1,0,R()*2-1)},
  (k,p,i,R)=>{k.p('','ring','m',0xd8a838,p.x,p.y,p.z,.036,.16,.036);if(i%2==0)k.p('','oct','g',0xff9a30,p.x,p.y,p.z+.03,.012)},
  (k,p,i,R)=>{if(i%2)k.p('','ring','m',0x3a3a40,p.x,p.y,p.z,.03,.2,.03,R()*3,0,R());else k.p('','cone4','c',0xe0d8c0,p.x+.02,p.y,p.z,.012,.06,.01,0,0,-1.2+R())},
  (k,p,i,R)=>{for(let j=0;j<2;j++)k.p('','cone4','c',0x5a0a14,p.x+(j?.02:-.02),p.y,p.z,.008,.045,.008,0,0,j?-1.4:1.4);if(i%3==0)k.p('','oct','g',0xff2040,p.x,p.y,p.z+.02,.012)}];
-var UNQ134_ZK=(()=>{const Z=[];for(const key in UNQ134){const U=UNQ134[key];U.key=key;(Z[U.z]=Z[U.z]||[]).push(key)}return Z})();
+var UNQ135_ZK=(()=>{const Z=[];for(const key in UNQ135){const U=UNQ135[key];U.key=key;(Z[U.z]=Z[U.z]||[]).push(key)}return Z})();
 // ---------------- the item ----------------
-function unqOf134(it){return it&&it.u&&UNQ134[it.u]||null}
-function unqName134(it){const U=unqOf134(it);if(!U)return null;return U.sl=='weapon'?U.n+' '+String(itT(it).n).split(' ').pop():U.n}
-function unqMake134(key,lv){const U=UNQ134[key];if(!U)return null;
+function unqOf135(it){return it&&it.u&&UNQ135[it.u]||null}
+function unqName135(it){const U=unqOf135(it);if(!U)return null;return U.sl=='weapon'?U.n+' '+String(itT(it).n).split(' ').pop():U.n}
+function unqMake135(key,lv){const U=UNQ135[key];if(!U)return null;
   let it=null;try{it=genItem_base(Math.max(1,lv|0),{sl:U.sl,cls:hero.cls})}catch(_){return null}if(!it||!ITPL[it.tp]||itT(it).sl!==U.sl)return null;
   it.r=4;it.u=key;delete it.lp;delete it.set;const ks=Object.keys(AFX).filter(k=>!(U.sl=='weapon'&&k=='mp')&&!it.aff.some(a=>a.k==k)),T=tierOfLv(it.lv)-1;
   while(it.aff.length<4&&ks.length){const k=ks.splice(R(0,ks.length-1),1)[0],A_=AFX[k];it.aff.push({k,v:A_[1]=='n'?Math.round(A_[2]*(2+it.lv)*(.9+Math.random()*.4)):+(A_[2]*(1+T*.45)*(.9+Math.random()*.4)).toFixed(4)})}
   return it}
-{const f=itStats;itStats=function(it){const s=f.apply(this,arguments);try{const U=unqOf134(it);if(U)for(const k in U.e)s[k]=(s[k]||0)+U.e[k]}catch(_){}return s}}
+{const f=itStats;itStats=function(it){const s=f.apply(this,arguments);try{const U=unqOf135(it);if(U)for(const k in U.e)s[k]=(s[k]||0)+U.e[k]}catch(_){}return s}}
 Object.assign(SNM,{dr:'Damage reduction',thorns:'Thorns',berserk:'Damage below half health',first:'First-hit damage',killheal:'Health per kill',skillP:'Skill damage',compP:'Companion damage'});
-function unqTipHTML134(it){const U=unqOf134(it);if(!U)return '';const zn=PMAP[U.z]?PMAP[U.z].n:'';
+function unqTipHTML135(it){const U=unqOf135(it);if(!U)return '';const zn=PMAP[U.z]?PMAP[U.z].n:'';
   return `<div class="kqm-tx" style="color:#ffcf6a">✦ Unique · ${kqmEsc(zn)}</div><div class="kqm-tx">${Object.keys(U.e).map(k=>fmtS(k,U.e[k])+' '+(SNM[k]||k)).join(' · ')}</div><div class="kqm-ts" style="font-style:italic">“${kqmEsc(U.fl)}”</div>`}
-{const f=kqmGearTip;kqmGearTip=function(it,o){let h=f.apply(this,arguments);try{if(unqOf134(it)){h=h.replace('>Legendary '+SLOTN[itT(it).sl],'>Unique '+SLOTN[itT(it).sl]);
-  const m='<div class="kqm-ts" style="margin-top:4px">Upgrade';const i=h.indexOf(m);h=i>=0?h.slice(0,i)+unqTipHTML134(it)+h.slice(i):h+unqTipHTML134(it)}}catch(_){}return h}}
-{const f=idHTML;idHTML=function(){let h=f.apply(this,arguments);try{const it=selI&&(selI.k=='e'?SLOTS.map(k=>eq[k]).find(x=>x&&x.id==selI.id):gear.find(x=>x.id==selI.id));if(unqOf134(it))h+=unqTipHTML134(it)}catch(_){}return h}}
+{const f=kqmGearTip;kqmGearTip=function(it,o){let h=f.apply(this,arguments);try{if(unqOf135(it)){h=h.replace('>Legendary '+SLOTN[itT(it).sl],'>Unique '+SLOTN[itT(it).sl]);
+  const m='<div class="kqm-ts" style="margin-top:4px">Upgrade';const i=h.indexOf(m);h=i>=0?h.slice(0,i)+unqTipHTML135(it)+h.slice(i):h+unqTipHTML135(it)}}catch(_){}return h}}
+{const f=idHTML;idHTML=function(){let h=f.apply(this,arguments);try{const it=selI&&(selI.k=='e'?SLOTS.map(k=>eq[k]).find(x=>x&&x.id==selI.id):gear.find(x=>x.id==selI.id));if(unqOf135(it))h+=unqTipHTML135(it)}catch(_){}return h}}
 // ---------------- the drop ----------------
-function unqRoll134(e){if(!e||e.boss||e.wv||e.dprop||(e.c&&e.c.boss)||e.__abx)return;const P=e.m&&e.m.position;if(!P)return;
-  const I=insAt(Math.round(P.x),Math.round(P.z));if(!I||!I.fld)return;const L=UNQ134_ZK[I.z];if(!L||!L.length)return;
-  const p=(e.c&&e.c.al?UNQ134_P.elite:UNQ134_P.kill)*(1+Math.min(1,(HS().loot||0)));if(Math.random()>=p)return;
-  const it=unqMake134(L[R(0,L.length-1)],I.lv[1]);if(!it)return;drop('gear',it,P,it.r);
-  try{banner('✦ A UNIQUE ITEM FALLS',unqName134(it),PMAP[I.z].n+' · '+SLOTN[itT(it).sl])}catch(_){}try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}}
-{const f=lootE;lootE=function(e){const r=f.apply(this,arguments);try{unqRoll134(e)}catch(err){console.warn('v134 unique',err)}return r}}
+function unqRoll135(e){if(!e||e.boss||e.wv||e.dprop||(e.c&&e.c.boss)||e.__abx)return;const P=e.m&&e.m.position;if(!P)return;
+  const I=insAt(Math.round(P.x),Math.round(P.z));if(!I||!I.fld)return;const L=UNQ135_ZK[I.z];if(!L||!L.length)return;
+  const p=(e.c&&e.c.al?UNQ135_P.elite:UNQ135_P.kill)*(1+Math.min(1,(HS().loot||0)));if(Math.random()>=p)return;
+  const it=unqMake135(L[R(0,L.length-1)],I.lv[1]);if(!it)return;drop('gear',it,P,it.r);
+  try{banner('✦ A UNIQUE ITEM FALLS',unqName135(it),PMAP[I.z].n+' · '+SLOTN[itT(it).sl])}catch(_){}try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}}
+{const f=lootE;lootE=function(e){const r=f.apply(this,arguments);try{unqRoll135(e)}catch(err){console.warn('v135 unique',err)}return r}}
 // ---------------- the models ----------------
-function unqWpnKit134(k,it,U){const n0=k.P.length;v89WpnKit(k,it);
+function unqWpnKit135(k,it,U){const n0=k.P.length;v89WpnKit(k,it);
   // the metal takes the zone's colour; ornaments on points spread along the weapon, away from the grip
   for(let i=n0;i<k.P.length;i++){const p=k.P[i];if(p.t=='m')p.col=lgCol(p.col,U.tint,.45)}
   const V=new THREE.Vector3(),pts=[];for(let i=n0;i<k.P.length;i++){V.setFromMatrixPosition(k.P[i].m);if(V.length()>.12)pts.push(V.clone())}
   let s=U.key.length*977;const Rr=()=>{s=(s*16807)%2147483647;return s/2147483647};
   pts.sort((a,b)=>b.length()-a.length());const pick=[];for(const q of pts){if(pick.every(o=>o.distanceTo(q)>.09))pick.push(q);if(pick.length>=8)break}
-  const n1=k.P.length;pick.forEach((p,i)=>UNQ134_ORN[U.z](k,p,i,Rr));const S=new THREE.Vector3(1.5,1.5,1.5);for(let i=n1;i<k.P.length;i++)k.P[i].m.scale(S);
+  const n1=k.P.length;pick.forEach((p,i)=>UNQ135_ORN[U.z](k,p,i,Rr));const S=new THREE.Vector3(1.5,1.5,1.5);for(let i=n1;i<k.P.length;i++)k.P[i].m.scale(S);
   k.p('','oct','g',U.gem,0,-.02,.03,.024)}
-{const f=v89Kit;v89Kit=function(k,it){const U=unqOf134(it);if(!U)return f.apply(this,arguments);try{if(U.sl=='weapon')return unqWpnKit134(k,it,U);return U.kit(k)}catch(e){console.warn('v134 unique kit',e);return f.apply(this,arguments)}}}
+{const f=v89Kit;v89Kit=function(k,it){const U=unqOf135(it);if(!U)return f.apply(this,arguments);try{if(U.sl=='weapon')return unqWpnKit135(k,it,U);return U.kit(k)}catch(e){console.warn('v135 unique kit',e);return f.apply(this,arguments)}}}
 {const f=v89Key;v89Key=function(it){return f.apply(this,arguments)+(it&&it.u?'|u'+it.u:'')}}
-{const f=v89Wpn;v89Wpn=function(it,type){if(!unqOf134(it))return f.apply(this,arguments);const t=itT(it),g=lgGroup('LW89U|'+it.u+'|'+it.tp,k=>v89WpnKit_u134(k,it),.18);g.userData.wt=type||t.wt;return g}}
-function v89WpnKit_u134(k,it){return unqWpnKit134(k,it,unqOf134(it))}
-{const f=lgDropModel;lgDropModel=function(kind,data,r){if(kind!='gear'||!unqOf134(data))return f.apply(this,arguments);
+{const f=v89Wpn;v89Wpn=function(it,type){if(!unqOf135(it))return f.apply(this,arguments);const t=itT(it),g=lgGroup('LW89U|'+it.u+'|'+it.tp,k=>v89WpnKit_u135(k,it),.18);g.userData.wt=type||t.wt;return g}}
+function v89WpnKit_u135(k,it){return unqWpnKit135(k,it,unqOf135(it))}
+{const f=lgDropModel;lgDropModel=function(kind,data,r){if(kind!='gear'||!unqOf135(data))return f.apply(this,arguments);
   try{const it={tp:data.tp,r:data.r!=null?data.r:r,u:data.u},g=new THREE.Group(),inner=lgGroup('LD89U|'+it.u+'|'+it.tp,k=>v89Kit(k,it),.14);g.add(inner);
     inner.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(inner),sz=bb.getSize(new THREE.Vector3()),mx=Math.max(sz.x,sz.y,sz.z)||1;
     if(mx>.62)inner.scale.setScalar(.62/mx);else if(mx<.4)inner.scale.setScalar(.4/mx);const c=bb.getCenter(new THREE.Vector3()).multiplyScalar(inner.scale.x);inner.position.sub(c);
     if(sz.y>sz.x*1.6)g.rotation.z=.75;return g}catch(e){return f.apply(this,arguments)}}}
 // worn amulet / ring: the unique's gem colour (and a glow), and its own cache key
-{const f=mdGD;mdGD=function(it){const d=f.apply(this,arguments);try{const U=d&&unqOf134(it);if(U&&(U.sl=='amulet'||U.sl=='ring')){d.gem=U.gem;d.G=U.gem;d.key=(d.key||'')+'|u'+it.u}}catch(_){}return d}}
+{const f=mdGD;mdGD=function(it){const d=f.apply(this,arguments);try{const U=d&&unqOf135(it);if(U&&(U.sl=='amulet'||U.sl=='ring')){d.gem=U.gem;d.G=U.gem;d.key=(d.key||'')+'|u'+it.u}}catch(_){}return d}}

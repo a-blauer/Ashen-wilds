@@ -1,7 +1,7 @@
 # Kill Quest (formerly Ashen Wilds)
 
 A single-file three.js (r128) action RPG: five hero classes, hatchable companions, the floating stronghold Duskhold,
-six portal zones (three field instances, a Sovereign's Den and a Wave Trial each), wave trials, mounts, fishing, crafting at town stations and online co-op.
+six portal zones (three field instances and a Sovereign's Den each; the Wave Trials were removed in v135), mounts, fishing, crafting at town stations and online co-op.
 Published as the claude.ai artifact https://claude.ai/artifact/FEvfiU5RumGQJEgpwsDobC (v114 onward, as `dist/artifact/index.html` + `game.js`; saves are per link — move a hero with Settings → Export / Import save). Older links: v113 at Aa14wfN7jNYFh5b1yN8EQu, v106–v112 at QG2zZH4KMW4zTTfaJQGots, v105 at GZsCSNZGgULRRkVLdYHPmw, v102 at CMvAWZi8x1qbMZp9SkBpGL (each stopped at that version because a single-file page is too large for a new session to re-read before republishing). (The pre-v102 link was retired.)
 
 ## Layout
@@ -54,7 +54,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
-| Beast races (v114: rat Warrior, cat Assassin, frog Mage, badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
+| Beast races (v114: rat Warrior, cat Assassin, frog Mage (the raven since v134), badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
 | v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
 | v123 camp sites: every camp's size (`C.r`), ground shape (`cs123Plan`, `cs123Terrain` from 0045), tile paint (`cs123Map`), set pieces (`cs123Designs`), title card on entry (`cs123Card`); no signposts | `2270-v123-camp-sites.js` |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
@@ -63,7 +63,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | performance: far-scenery cull (`FC`, `fcPass`) | `1980-v111-perf-far-cull.js` |
 | v117 menus: ☰ list (no Fusion / Sovereigns; Kingdom button, B), Kingdom window tabs (Construction / Villagers `vlRender116` / Decorations), Companions ⇄ Fusion tabs (`cfTabs116`), forge only at the Blacksmith (`KQM_SMITH`), crossbow muzzle (`xbowMuzzle116`, `xbowLevel116`) | `2200-v117-menus-kingdom-villagers.js` (edits in `1880`, `1910`, `1050`, `0140`, `1010`) |
 | v117 zone title cards (`zt116Show`, `ZT116.Z` styles per zone; replace the arrival banners) | `2210-v117-zone-title-cards.js` |
-| v117 frog Mage carry hold (`FC116`: arm IK, upright staff, wand, orb) | `2220-v117-frog-carry.js` |
+| v117 Mage carry hold (`FC116`: arm IK, upright staff, wand, orb; the frog's, since v134 the raven's) | `2220-v117-frog-carry.js` |
+| v134 raven Mage gear: cloth head pieces fitted to the beak skull (`rvHood`, `rvHat`, `rvBand`, `rvEll`), the tail fan's robe opening, bird footwear (`rvBoots`) | `2370-v134-raven-gear.js` (the raven himself is race 3 in `2120`) |
 | v117 creator class step (`cc116Model`: current beast + starting gear, heroic poses `CC116.P`, effects `CC116.FX`) | `2230-v117-creator-heroic.js` |
 | v119 ability preview in the Abilities window: the real ability on a training stage (`abxShow`, sandbox `abxIn`/`abxOut`, `ABX`) | `2240-v119-ability-preview.js` |
 | v122 companion heal / shield / buff spells pick their target: the hero or any companion, whoever needs it most (`supPick122`, `compSup122`; companion shields and buffs in `SUP122`, never saved) | `2260-v122-companion-support-targets.js` (edits in `0130` compCast, `0870` compSpells, `1930` recipes draw at `x.hp`) |
@@ -72,6 +73,19 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v128 Whirlwind hold: while the warrior spins, two-handed weapons (greatsword, great axe, halberd) are held out level in both hands (arm IK `fc116IK`), dual axes one in each outstretched hand, edge leading (`WW128`, `ww128Tick`, after every animation layer; visual only). Companions follow the facing from before the spin (`plFaceY`, used in `compTick`), so they no longer circle the hero | `2310-v128-whirlwind-hold.js` (edit in `0860`) |
 | v132 Cheddar, the quest-giving mouse: model (`chd132Model`, from the Cheddar NPC Model concept page, game-ready: 3 skinned meshes) and per-instance quests (`CHQD132`, state `CHQ132.st`, window `XR.chq132`, tracker `#chqt132`, events `chqEv132`) | `2340-v132-cheddar-model.js`, `2350-v132-cheddar-quests.js` |
 | v133 Sovereign footwork: sturdier posture (`POS133`), retreat after heavy damage (`RT133`), spacing plans (`PL133`, `svPlan133`) | `2360-v133-sov-spacing.js` |
+| v135 Cheddar at both ends: in front of every arrival spot (`chqSpot132`) and before every field's end gateway (`chqSpotEnd135`, posts `CHQ132` / `CHQ132.e`), marked on the minimap and the N map | `2350-v132-cheddar-quests.js`, `2380-v135-cheddar-map.js` |
+| v135 bow: one string while drawing (the model's string is material `s`, hidden while `BOW_FX` shows), a smaller shallower bow (`BOW_K`, `BOW_KX`, `BOW_T` in 0780), carried level across the front of the hips (`V100A_BOW.x135`, `bow135Carry` after every animation layer) | `0780`, `0890`, `2390-v135-bow.js` |
+| v135 the entrance portal of an instance opens the travel window (`XR.portal135`: reached instances, "you are here", Duskhold) | `2400-v135-instance-travel.js` |
+| v135 ability preview: the main loop sees the world's hero spot while a preview runs (`loop` wrapper, `ABX135`) | `2410-v135-abil-preview-pin.js` |
+| v135 camera: only the ground moves it (0104 `blk`); scenery between camera and hero fades (dithered, `F135`, `f135Patch` on plain and `txa1` materials) | `0104`, `2420-v135-camera-fade.js` |
+| v135 nothing of a neighbouring instance shows (`CLIP135` rect: terrain, plants, faded scenery discard outside it; far cull hides whole objects outside it) | `2430-v135-instance-clip.js` |
+| v135 no Wave Trials (portal row, trial portals, `waveStart` gone; old saves in a trial go home) | `0510`, `2440-v135-no-wave-trials.js` |
+| v135 hatch reveal: the list works without Continue (`hatch135Free`) | `2450-v135-hatch-no-continue.js` |
+| v135 second ring slot `ring2` (`SLOTS`, `eqSlot135`, `RING135.to` for drag and drop, paper doll under the boots) | `0110`, `0140`, `1050`, `1670`, `2460-v135-second-ring.js` |
+| v135 deaths: a short shove, the body topples onto its side, lies 1.5 s and fades (`death135Ease/Lift/Fade`) | `0120`, `0350`, `2470-v135-death-fall.js` |
+| v135 cat head remade (round skull, whisker pads, ruffs, `brCatEyes135` slit eyes under heavy lids, wide ears) | `2120` |
+| v135 uniques: an amulet, a ring and a weapon per zone (`UNQ135`, `it.u`, bespoke kits; weapons get the zone's ornaments `UNQ135_ORN`), 1 in 2,000 kills / 1 in 300 elites in field instances; fishing-only uniques (`src:'fish'`, `UNQ135_FISH`) | `2480-v135-zone-uniques.js`, `2490-v135-fishing-rares.js` |
+| v135 right click toggles mouse-look (middle button still turns the camera while held) | `0108` |
 
 ## Conventions (read before changing code)
 
@@ -206,7 +220,22 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   framed screenshots). v132.1: empower kills need a companion actively empowering you (E / R), not a buff spell; "New Blood" counts
   a Tier 2+ egg arriving in the egg bag (`chqEggs132`, Cheddar's own reward eggs excluded); ability = a rank-up to 2+; forged = +2; quest
   XP ×0.7; the window is a grid of cards with a large reward panel and an SVG "mystery" medallion per reward type (`chqIco132`).
-- **Camera on slopes (v132)**: when the ground behind the hero blocks the camera ray (`blk` in the main loop, 0104), the camera first
+- **Version 135 (owner's list, Oct 2026)**: *Cheddar* stands 4.2 tiles down the road in front of each arrival spot facing it (the camera
+  looks down the road on arrival) and a second Cheddar (`CHQ132.e`) stands 5.4+ tiles before each field's end gateway (past its F reach), so
+  quests are handed in before stepping through; both show a gold mouse mark (with ! / ?) on the minimap and the N map. *Bow*: the model's
+  straight string is its own mesh and hides while the drawn string shows; the bow is 66% tall and 40% deep (scaled about the riser, so the
+  grip and the drawn string's tips `BOW_T` still line up); carried level across the front of the hips like the owner's reference pictures.
+  *Travel*: F at an instance's entrance portal opens the zone's travel window with Duskhold as a row. *Ability preview*: the stage uses the
+  hero's world coordinates, so the main loop now sees the hero at its world spot each frame. *Camera*: rocks, walls and buildings no longer
+  tilt the camera up (only the ground does); materials of the world's scenery fade (screen-door dither, ~35% left, never below the hero's
+  knees or near the hero) around the line of sight. *Instance clip*: chunks along an instance edge hold the neighbour's terrain (cave and keep
+  themes raise walls ~100 high), seen across the void as a grey wall with a sky patch; terrain / plants / faded scenery discard pixels outside
+  the current instance (+3 tiles) and the far cull drops objects lying outside it. *Wave Trials* are removed (the trial instances stay in the
+  grid so nothing moves). *Deaths* fall over and fade (material copies, freed after). *Uniques* (`it.u`): legendary rarity, own name
+  (`itName`), fixed bonus (`itStats`), tooltip block, own models (icon `v89Kit`/`v89Key`, ground `lgDropModel`, hand `v89Wpn`, worn gem
+  colour via `mdGD`). Tests: `v135_checks.py`, `v135_uniques.py`, `v135_bow.py`, `v132_cheddar_test.py`; pictures `v135_cheddar_shot.py`,
+  `v135_fade_shot.py`, `v135_edge_look.py` (SRC= an older build for before/after), `v135_cat_head.py`, `v135_far_shots.py`, `v135_pick.py`.
+- **Camera on slopes (v132; since v135 only the ground counts, scenery fades instead)**: when the ground behind the hero blocks the camera ray (`blk` in the main loop, 0104), the camera first
   tilts up in steps (up to pitch 1.25) until the ray is clear and keeps its distance; it only pulls in (old rule) when tilting can't clear it.
 - **Sovereign footwork (v133, `2360-v133-sov-spacing.js`)**: posture now needs `POS133.mul` (2) times the damage, +15% per stagger already
   taken (max +45%), fills at half speed for 3.5 s after a stagger ends and drains a little after 2.5 s unhit. Damage of 40% of the stagger
@@ -216,7 +245,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   distance; it walks or backs off to that range (up to 3.2 s) and casts it (`S.force`, read by `svPick`). Driver-only, like the rest of the AI.
   Test: `v133_sov_spacing.py` (old vs new per boss with the hero standing still in melee: staggers, retreats, far-range casts).
 - **Beast races (v114, replaces the v112 rat)**: every hero is its class's animal, there is no human option: rat (Warrior), cat
-  (Assassin), frog (Mage), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
+  (Assassin), raven (Mage; the frog until v134), badger (Paladin), weasel (Ranger). `BR_CLS` maps class → race; `brRace` ignores the look and returns the
   class's animal, `lkFull`/`mdLookN` (2130) set `race` and keep fur/eye only when they are that animal's colours (`brFur`), so old human
   saves and co-op partners load as animals. One engine (`2100`): `brDef(id,D)` registers a race (`BRD[id]`), `brPlan` = the v99 preset
   `D.pre` + hunch shear + crouch, `brRig` retargets the hero skeleton in place (tail bones `tl0…`; since v120 animated by `brTailAnim`: an integrated sway phase + one damped spring per bone, tuned in `BRT`). While a beast is built `BR.on` scales
@@ -225,7 +254,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   root on the cloth under a face mask, `BR_MASK`), `brPaws`/`brToes` grow fingers, claws, pads, webbing, `brTail` lofts `D.TP`.
   Helmets (`2110`, `brHelm`) are built over the skull: ear openings and rims from the ear ellipsoids `D.earE` (`brEarIn`, `brEarRimK`),
   eye slits at `D.EYEP`, goggles / monocle sized from the eyes (`D.eyeR`, `D.eyeFw`), hoods with the face opening behind the eyes and
-  an open underside, ear pockets (`D.earPocket`); the frog has its own cloth head pieces (`D.helmSet.cloth`: slouch caps, floating
+  an open underside, ear pockets (`D.earPocket`); the Mage's animal has its own cloth head pieces (`D.helmSet.cloth`, since v134 the raven's in `2370`; the frog had slouch caps, floating
   halos). Amulet on the shoulder slope and ring on the outer finger (`2115`, `brFinger`); every outfit / armour loft leaves an opening
   where the tail passes (`brTailNear`, `BR_BODY` marks body builds). Animation: posture layer (`D.pose` standing, `D.run` added at
   full run, arm hold eased out during attacks), head levelled from the chest frame (`D.look`), crouch, tail sway. All offsets go
@@ -233,6 +262,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Look fields: `skin` = fur/hide, `eye` = eye colour; co-op look array index 8 = race. Tests: `v114_beasts.py` (sheets per race),
   `v114_race.py` (creator → save → reload → barber, every class casts every ability; TITLE=1), `v114_clip.py` (armour clipping: every
   item of the class on its animal, bind pose + idle/run/attack; `HUMAN=1` gives the human baseline; `dbg_clip.py` marks the points).
+- **Raven Mage (v134, replaces the frog as race 3)**: built with the v114 engine in `2120`: skull + beak loft (`SN`), bristles,
+  gape line, hackles and nape feathers (one shared low-poly blade, `rvFeather`), talon paws (3 fingers + thumb), bird feet
+  (`toesB`, `toeList`: three toes forward, one back, knee fringe), a wedge tail fan on one tail bone (`tailB`, `FAN`), wing
+  feathers along each forearm pointing to the elbow (`wings`: they lie on the outermost surface round the forearm, measured from
+  the model's vertices by `rvArmR`, so they sit on top of any sleeve; bare models also get upper-arm coverts and a belly skirt).
+  Gear (`2370`): every cloth head piece is built for his head (hats sit over the crown on a brim above the brows, circlets ring
+  the head where it is at that height, hoods are a snug shell + a cowl round the back of the neck, open in front); the nape
+  feathers are left off under any head piece (`RV.helm`); robes open a slot for the fan (`D.tailNear` replaces the round
+  `brTailNear`); footwear keeps the bird's feet (`rvBoots`: wrapped shank, straps / sock / plates / claw sheaths per style; the
+  foot stays scaly). The frog's FC116 carry hold now applies to the raven (`fc116Race`, key 'raven'). Old frog saves load as
+  ravens (race 3; frog colours fall back to raven black). Pictures: `raven_show.py`, `raven_gear.py` (SLOT=helm,chest,boots).
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -345,15 +385,15 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   font link). Tests: `v117_titles.py`.
 - **Weapons (v117)**: no elites in Kindlelight I (`noElite116` in `rosterBuild`). The crossbow bolt starts at the crossbow's front end
   (`xbowMuzzle116`, measured once per model from its geometry) and the crossbow is turned level along the aim while aiming
-  (`xbowLevel116`, after every animation layer). The frog Mage's paw holds the weapon in its channel (v117.2: `fc117Frame` measures the paw from the skinned mesh: fingers, knuckle axis, curl side, grip point; staff/wand sit along the knuckle axis in every pose, the wand turns along the fingers during attacks, the orb stands in the upturned palm; frog `paw.curl` 1.05). His carry hold (`FC116`) poses his weapon arm by a two-bone IK and
+  (`xbowLevel116`, after every animation layer). The Mage's paw (frog, since v134 raven) holds the weapon in its channel (v117.2: `fc117Frame` measures the paw from the skinned mesh: fingers, knuckle axis, curl side, grip point; staff/wand sit along the knuckle axis in every pose, the wand turns along the fingers during attacks, the orb stands in the upturned palm; frog `paw.curl` 1.05). His carry hold (`FC116`) poses his weapon arm by a two-bone IK and
   orients the weapon (staff upright beside him, foot angled away from the hem; wand ahead; orb above the paw in front); it fades out
-  with the beast arm hold during attacks, and every change is restored before the next frame. The frog also spreads his shoulders
+  with the beast arm hold during attacks, and every change is restored before the next frame. The Mage also spreads his shoulders
   during attacks (`D.atk.shz`). v118: his elbow bends back and a little out (`FC116.pole`; it pointed forward and in, so the arm bent backwards); the
   staff/wand head points toward the paw's knuckle side as it faces forward in the bind pose (`fc118Sign`; it was learned from the first
   carry frame and could come out reversed, head-down in every attack); while the hold fades in and out the shaft swings to its carry
   direction and the twist round the shaft blends separately (`H._fcth`), so the weapon cannot tumble end over end. `v117_wclip.py` measures weapon points inside the robe/armour shell (`v117_wclip_lib.js`; idle/run
   frames must be 0), `v117_wclip_live.py` the real attacks. Blacksmith keeper hammer head runs across the swing plane (face down).
-- **Rings (v117)**: the finger ring is a 6 mm band (`ring` torus y-scale .024; it was .35, an 8 cm tube). `v117_grip.py` (PART=rings) shows it on every race, PART=grip the frog's paw; `v117_grip_atk.py` the paw in the real attack / cast poses.
+- **Rings (v117)**: the finger ring is a 6 mm band (`ring` torus y-scale .024; it was .35, an 8 cm tube). `v117_grip.py` (PART=rings) shows it on every race, PART=grip the Mage's paw; `v117_grip_atk.py` the paw in the real attack / cast poses.
 - **Creator (v117)**: the class step builds each class's own model (`cc116Model`, cached per look): current beast + exactly the
   starting gear of `ccBegin`, framed on its skinned body, a heroic pose (`CC116.P`, restored every frame) and class effects
   (`CC116.FX`: embers, holy light + halo, shadow smoke, arcane rings, leaves). v119: the badger Paladin holds his shield low at his

@@ -225,10 +225,10 @@ function kill_base(e){
   if(e.boss)bossT[e.bi]=300;
   mCancel(e);e.m.pose=null;lootE(e);ui();
   if(tgt===e)setTarget(null);
-  // v134: the body topples onto its side (lifted so it rests on the ground, a small bounce as it lands), lies there, then fades
-  // out (death134 in 2460); it used to be thrown up in an arc and shrink away
-  if(e.m.isE&&e.m.b&&!e.m._ssDead){const b=e.m.b,sd=Math.random()<.5?1:-1,L=death134Lift(e.m);tw(640,k=>{const q=death134Ease(k);b.rotation.z=sd*1.42*q;b.position.y=L*Math.sin(1.42*q)+(k>.72?.05*Math.sin((k-.72)/.28*Math.PI):0)})}
-  (e.m._ssDead?(f=>tw(1500,()=>{},f)):(f=>setTimeout(f,1500)))(()=>death134Fade(e.m,()=>removeE(e)));
+  // v135: the body topples onto its side (lifted so it rests on the ground, a small bounce as it lands), lies there, then fades
+  // out (death135 in 2460); it used to be thrown up in an arc and shrink away
+  if(e.m.isE&&e.m.b&&!e.m._ssDead){const b=e.m.b,sd=Math.random()<.5?1:-1,L=death135Lift(e.m);tw(640,k=>{const q=death135Ease(k);b.rotation.z=sd*1.42*q;b.position.y=L*Math.sin(1.42*q)+(k>.72?.05*Math.sin((k-.72)/.28*Math.PI):0)})}
+  (e.m._ssDead?(f=>tw(1500,()=>{},f)):(f=>setTimeout(f,1500)))(()=>death135Fade(e.m,()=>removeE(e)));
 }
 // ---------------- loot ----------------
 function rolR2(l,mn,bonus){const mx=l<6?1:l<14?2:l<26?3:4,w=[62,26,9,2.6,.4].slice(0,mx+1);let r=Math.random()*w.reduce((a,b)=>a+b,0)*(1-Math.min(.6,(bonus||0)*.15));for(let i=0;i<w.length;i++){r-=w[i];if(r<0)return Math.max(i,Math.min(mn||0,mx))}return Math.min(mn||0,mx)}
@@ -244,7 +244,7 @@ function genItem_base(l,o){
   for(let i=0;i<r;i++){const k=keys.splice(R(0,keys.length-1),1)[0],A_=AFX[k];it.aff.push({k,v:A_[1]=='n'?Math.round(A_[2]*(2+l)*(.8+Math.random()*.5)):+(A_[2]*(1+T*.45)*(.8+Math.random()*.5)).toFixed(4)})}
   return it;
 }
-const itT=it=>ITPL[it.tp],itName=it=>it.u&&typeof unqName134=='function'&&unqName134(it)?'✦ '+(it.up?'+'+it.up+' ':'')+unqName134(it):(it.lp?'★ ':'')+(it.up?'+'+it.up+' ':'')+itT(it).n+(it.set?' ◆':'');   // v134: uniques (2470) have names of their own
+const itT=it=>ITPL[it.tp],itName=it=>it.u&&typeof unqName135=='function'&&unqName135(it)?'✦ '+(it.up?'+'+it.up+' ':'')+unqName135(it):(it.lp?'★ ':'')+(it.up?'+'+it.up+' ':'')+itT(it).n+(it.set?' ◆':'');   // v135: uniques (2470) have names of their own
 function itStats(it){
   const tp=itT(it),l=it.lv,rm=[1,1.15,1.32,1.55,1.85][it.r]*(1+.045*(it.up||0)),s={};
   if(tp.sl=='weapon'){const W=WTYPE[tp.wt],a=(6+2.6*l)*W.k*rm;if(tp.wt=='staff'){s.ma=a;s.mp=(6+1.6*l)*rm}else s.pa=a}

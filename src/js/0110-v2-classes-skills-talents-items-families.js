@@ -100,7 +100,7 @@ const ITPL=[];
   ['Bone Charm','Wolf Tooth Amulet','Emberheart Pendant','Soulglass Locket','Stormeye Talisman'].forEach((n,t)=>ITPL.push({n,sl:'amulet',t}));
   ['Copper Band','Silver Signet','Cinder Loop','Hollow Ring','Storm Seal'].forEach((n,t)=>ITPL.push({n,sl:'ring',t}));
 }
-// v134: 'ring2' is a second ring slot; ring items (sl 'ring') fit either (eqSlot134 picks which)
+// v135: 'ring2' is a second ring slot; ring items (sl 'ring') fit either (eqSlot135 picks which)
 const SLOTS=['weapon','offhand','helm','chest','boots','amulet','ring','ring2'],SLOTN={weapon:'Weapon',offhand:'Shield',helm:'Head',chest:'Chest',boots:'Feet',amulet:'Amulet',ring:'Ring',ring2:'Ring'};
 const SLOTIC={weapon:'⚔️',offhand:'🛡️',helm:'⛑️',chest:'🥋',boots:'👢',amulet:'📿',ring:'💍',ring2:'💍'};
 const AFX={crit:['Critical chance','p',.012],cdm:['Critical damage','p',.06],as:['Attack speed','p',.025],ls:['Lifesteal','p',.008],hpP:['Max health','p',.025],paP:['Physical attack','p',.025],maP:['Magical attack','p',.025],pd:['Physical defense','n',.9],md:['Magical defense','n',.9],mp:['Max mana','n',2.2],cdr:['Cooldown reduction','p',.015],loot:['Loot find','p',.03],xp:['Experience','p',.02],mspd:['Move speed','p',.015],regen:['Health regen','p',.0006]};
