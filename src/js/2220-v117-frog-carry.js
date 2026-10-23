@@ -1,4 +1,4 @@
-// ================= v117 Mage (the frog, since v127 the raven): how he holds his weapons =================
+// ================= v117 Mage (the frog, since v133 the raven): how he holds his weapons =================
 // The v93 grip lays a weapon along the fingers of a human fist (tuned on human arms, GRIP_B), so on the frog's long webbed paw the
 // shaft ran beside the fingers, the fingertips poked through it and the orb floated off the hand. Here the paw itself decides:
 //  * fc117Frame measures each paw from the final skinned mesh (the vertices that belong to the hand bone only, in that bone's own
@@ -14,11 +14,11 @@
 // Hold points are from the shoulder in the hero's frame [out, fwd, down] (m); directions are [up, out, fwd] weights.
 // test/v117_grip.py (close-ups), v117_wclip.py (robe clipping) check it.
 var FC116={on:true,
-  H:{staff:{arm:'R',hand:[.17,.1,.24],dir:[1,-.1,-.06],tilt:.28},  // v127 raven: a little further out and more upright (the frog's lean in brought the head of the staff past a crown's spikes)
+  H:{staff:{arm:'R',hand:[.17,.1,.24],dir:[1,-.1,-.06],tilt:.28},  // v133 raven: a little further out and more upright (the frog's lean in brought the head of the staff past a crown's spikes)
      wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
      orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
   pole:[.45,-.6,-1], // v118: elbow bends back and a little out [out, up, fwd] (it was [-.35,-1,.5]: forward and in, so the arm bent backwards)
-  clear:[['spine',.19],['chest',.215],['head',.14]]}; // v127: spheres (bone, radius m) the orb stays outside of during attacks / casts
+  clear:[['spine',.19],['chest',.215],['head',.14]]}; // v133: spheres (bone, radius m) the orb stays outside of during attacks / casts
 function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='raven'}
 var FC116_T={V:null};
 function fc116Tmp(){if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,Q,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()})}return FC116_T}
@@ -93,7 +93,7 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
         let th=2*Math.acos(Math.min(1,dq.w));if(dq.x*U.x+dq.y*U.y+dq.z*U.z<0)th=-th;const tk='_fcth'+s1,pv=H[tk];if(pv!=null){while(th-pv>Math.PI)th-=2*Math.PI;while(th-pv<-Math.PI)th+=2*Math.PI}H[tk]=th;
         const sw=cur.clone().slerp(Rs,w),ax2=wl.clone().applyQuaternion(sw).normalize();tgt=new Q().setFromAxisAngle(ax2,w*th).multiply(sw)}
     if(w>=.999)H['_fcth'+s1]=null;b2.quaternion.copy(pq.invert().multiply(tgt))}
-  // v127: during attacks and casts (the hold faded out) the orb floats clear of the body and head: its centre is pushed out of a
+  // v133: during attacks and casts (the hold faded out) the orb floats clear of the body and head: its centre is pushed out of a
   // sphere round the spine, the chest and the head (FC116.clear radii + the orb's own radius), along the line from that centre
   if(C.palm&&w<.999&&FC116.clear){H.updateMatrixWorld(true);const bb=fc117WB(W),ws=b2.getWorldScale(new V()).x,M=b2.matrixWorld,c0=bb.c.clone().applyQuaternion(wq).add(wp).applyMatrix4(M),c1=c0.clone();
     FC116.clear.forEach(([bn,r0])=>{const bo=B[bn];if(!bo)return;const o=bo.getWorldPosition(new V()),d=c1.clone().sub(o),R=(r0+bb.r)*ws;if(d.length()>=R)return;

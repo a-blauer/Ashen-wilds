@@ -1,4 +1,4 @@
-# v127 raven Mage gear sheets: each mage helm / chest / boots on the raven, 4 views each -> out/raven_gear_<slot>.jpg
+# v133 raven Mage gear sheets: each mage helm / chest / boots on the raven, 4 views each -> out/raven_gear_<slot>.jpg
 #   SLOT=helm,chest,boots  DIST=1.3 (helms)  ITEMS=st1,st2 (only these styles)  POSE=idle|run|windup
 import os,sys,re,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))

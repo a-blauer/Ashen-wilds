@@ -1,4 +1,4 @@
-// ================= v127: the Mage's gear fitted to the raven =================
+// ================= v133: the Mage's gear fitted to the raven =================
 // The v114 helm builder was made for furred skulls with ears; on the raven's sloping crown and beak a flat brim floated above
 // the head, hoods stood far off the skull and circlets cut through the forehead. Here every cloth head piece is built for him:
 //  * rvEll(D,y,off) measures the skull's horizontal section at height y (marching out from its centre line) and returns the

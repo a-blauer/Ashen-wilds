@@ -1,4 +1,4 @@
-# v116: the Mage's (raven since v127) real attacks (player, live animation): weapon points inside the shell during each combo hit and cast.
+# v116: the Mage's (raven since v133) real attacks (player, live animation): weapon points inside the shell during each combo hit and cast.
 #   WT=wand|orb equips that weapon first (default: the starting staff)
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))

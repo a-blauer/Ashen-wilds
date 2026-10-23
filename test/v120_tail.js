@@ -6,7 +6,7 @@
   const old=(D,t,w,i,n)=>{const ts=D.tailSway||[.06,.1,1.6,3.2],amp=ts[0]+ts[1]*w,sp=ts[2]+ts[3]*w;return amp*Math.sin(t*sp-i*.55)*(.4+i*.12*(11/Math.max(n,1)))};
   for(const id of Object.keys(BRD)){const D=BRD[id];if(!D.TB||!D.TB.length){out[id]='no tail';continue}
     brRig(H,+id);H._brT=null;const n=D.TB.length,tipB=b[D.TB[n-1]],P=new THREE.Vector3();
-    // the tail's end: the last tail ring, offset from the last tail bone (v127: the raven's one bone is its whole fan, so the bone's own origin never moves)
+    // the tail's end: the last tail ring, offset from the last tail bone (v133: the raven's one bone is its whole fan, so the bone's own origin never moves)
     const TP=D.TP,lr=TP[TP.length-1],lb=TP[n-1],off=new THREE.Vector3(lr[0]-lb[0],lr[1]-lb[1],lr[2]-lb[2]),tip={getWorldPosition:v=>{tipB.updateMatrixWorld(true);return v.copy(off).applyMatrix4(tipB.matrixWorld)}};
     let now=6e5,mxNew=0,mxOld=0,prev=null,prevO=null,y0=0;H.rotation.y=0;
     const step=(w,ry)=>{now+=16.7;if(ry!=null)H.rotation.y=ry;brTailAnim(H,D,b,now,w);
