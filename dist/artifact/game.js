@@ -33038,3 +33038,747 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
       for(let i=0;i<5;i++){const a=i*1.3;k.p('head','sph','g',K.spore,.04+Math.sin(a)*.12,.985,-.01+Math.cos(a)*.12,.012,.006,.012)}}};
   if(EN.shambler)EN.shambler.rig=n;
 })();
+// ================= v137: animal townsfolk — core =================
+// Every Duskhold townsperson is a warm-blooded animal now: keepers each have their own species and a costume of their trade
+// (2820), citizens get a species and clothes picked from their name, trade and look (2830). The bodies are built with the
+// v114 beast engine (the `BR` hooks scale the town-folk torso / arm / leg / foot rings; skulls, eyes, noses, jaws, toes and
+// the tail hole in clothes all come from there) on the town-folk skeleton `idlNB` + tail bones (tl0…), ear bones (erL, erR)
+// and cape bones (cp0…cp2, for the swing of robes), so the v93 idle, the v103 work stations, the citizens' walk and every
+// held tool keep working unchanged. Heads come from one parametric skull (2805), species from 2810.
+//  * npc() is re-declared here (hoisted, the towns are built before this file runs) only to remember each figure and its
+//    options; when this file runs, the figures built so far are rebuilt as animals (fkRebuild).
+//  * idlNpcBody(o) → the animal model (one cached geometry per species + costume + fur), marked mesh.userData.fk.
+//  * fk137Anim: tails sway (more when walking), ears flick now and then; layered on idlNpc and czWalkPose103, absolute
+//    from the rest pose every frame (no drift).
+function npc(p,x,z,o){DKBK=DKBK||{};
+  tc(p,x,z,.38);const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=o.ry||0;p.add(g);
+  let rig=null;try{rig=idlNpcBody(o)}catch(e){console.error('town folk rig',e)}
+  if(rig){rig.meshes.forEach(m=>g.add(m));g.bones=rig.bones}else huNpcBody(o).forEach(m=>g.add(m));
+  g.userData.npcO=o;const L=npc.all||(npc.all=[]);L.push(g);if(L.length>64)L.shift();
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txTex([{t:o.label,f:'700 30px'}],256,56,'rgba(10,14,20,.78)','#f4e9c8','rgba(255,214,120,.7)'),transparent:true,depthWrite:false}));
+  sp.scale.set(1.5,.33,1);sp.position.set(0,2.05,0);g.add(sp);
+  const wb=wbase(p,T_cur);
+  TANIM.push({x:wb[0]+x,z:wb[1]+z,f:rig?now=>idlNpc(g,now):now=>{g.position.y=Math.sin(now/700+x)*.012;g.rotation.y=(o.ry||0)+Math.sin(now/2300+z)*.12}});
+  return g}
+var FK137={sp:{},out:{},err:0};
+// ---------------- the skeleton of a species: town folk bones + cape + tail + ears ----------------
+function fkNB(D){if(D.NBX)return D.NBX;const N=Object.assign({},idlNB());
+  N.cp0=['chest',0,.95,-.13];N.cp1=['cp0',0,.68,-.2];N.cp2=['cp1',0,.42,-.24];
+  const TP=D.TP||[],nb=Math.max(0,TP.length-2);D.TB=[];for(let i=0;i<nb;i++){const n='tl'+i;D.TB.push(n);N[n]=[i?'tl'+(i-1):'pelvis',TP[i][0],TP[i][1],TP[i][2]]}
+  const E=fkEarBase(D);if(E){N.erR=['head',E[0],E[1],E[2]];N.erL=['head',-E[0],E[1],E[2]]}
+  return D.NBX=N}
+// ---------------- palette ----------------
+function fkPal(fur,o){const f=mdC(fur);return Object.assign({FUR:f,FURD:mdSh(f,.62),FURL:mdMix(f,0xeae2d6,.3),BELLY:mdMix(f,0xe0d6c6,.45),PINK:0xb88a86,PINKD:0x8a6460,
+  TOOTH:0xe0d8c0,CLAW:0x1e1a16,EYE:0x2a1a10,MOUTH:0x2a2220,NOSE:0x1e1818,HORN:0xb8a888,HOOF:0x2a2420},o||{})}
+// ---------------- model: species + costume + fur variant ----------------
+function fkHash(s){s=String(s);let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+// which species and costume an npc options object gets: keepers by label (2820), citizens by o.fkSp (2830), else from the look
+function fkPick(o){const K=FK137.out[o.label];if(K)return {sp:K.sp,fur:K.fur||0,out:o.label,keeper:1};
+  if(o.fkSp&&FK137.sp[o.fkSp])return {sp:o.fkSp,fur:o.fkFur|0,out:o.fkOut||'cit'};
+  const L=Object.keys(FK137.sp).filter(k=>FK137.sp[k].cit),h=fkHash((o.robe|0)+'|'+(o.trim|0)+'|'+(o.hat||'')+'|'+(o.hatC|0));
+  return {sp:L[h%L.length],fur:(h>>>8)%3,out:'cit'}}
+function fkKey(o,pk){return 'FK|'+pk.sp+'|'+pk.fur+'|'+pk.out+'|'+(o.robe|0)+'|'+(o.trim|0)+'|'+(o.hat||'')+'|'+(o.hatC|0)+'|'+(o.apron?1:0)+'|'+(o.fkV|0)}
+// build the geometry: body (fur, the costume's painted layers), head, paws, toes / hooves, tail, then the costume's cloth
+function fkBuild(D,pk,o){const NB=fkNB(D),bo={on:BR.on,R:BR.R,C:BR.C,feet:BR.feet,P:BR.P,mask:BR.mask,bare:BR.bare};
+  const C=D.cols(pk.fur),OUT=fkOutfit(pk.out,o,D,C);
+  BR.on=true;BR.R=D;BR.C=C;BR.feet=!OUT.boots;BR.mask=false;BR.bare=false;
+  try{const B=mdB(NB),pb=D.body||{};
+    const P=mdP({bones:NB,sex:0,build:pb.build==null?1:pb.build,wf:pb.wf||1,af:pb.af||1,lf:pb.lf||1,belly:pb.belly||0,look:{hair:C.FUR,hairStyle:5,face:0,eye:C.EYE,sex:0},
+      col:{skin:C.FUR,torso:C.FUR,torsoLo:C.FUR,sleeve:C.FUR,fore:C.FUR,hand:D.handCol?D.handCol(C):C.FUR,pants:C.FUR,shin:C.FUR,neck:C.FUR,belt:null,boot:D.hoof?C.HOOF:(D.toeCol?D.toeCol(C):C.FUR),sole:mdSh(D.hoof?C.HOOF:C.FUR,.7)}});
+    // bare fur: belly lighter, back darker
+    P.paint.torso=m=>m.s>.45&&m.y>.5?C.BELLY:m.s<-.6&&m.y>.8?C.FURD:C.FUR;P.paint.torsoLo=m=>m.s>.5&&m.y>.47?C.BELLY:C.FUR;
+    P.paint.leg=(m,s)=>m.r.part=='ankle'&&m.i>5.5&&D.hoof?mdMix(C.FUR,C.HOOF,.35):m.s>.5&&m.r.part=='thigh'?mdMix(C.FUR,C.BELLY,.35):C.FUR;
+    if(D.paint)D.paint(P,C);
+    if(OUT.paint)OUT.paint(P,C);
+    P._T=mdTorso(P);mdBody(B,P);
+    mdHead(B,P,{});
+    BR_BODY++;try{fkPaws(B,P,D,C);if(D.hoof)fkHooves(B,P,D,C);else if(!OUT.boots)brToes(B,P);brTail(B);if(D.tailKit){const k=dkKit();D.tailKit(k,D,C);mdKit(B,k)}}finally{BR_BODY--}
+    if(OUT.boots)OUT.boots(B,P,C);
+    if(OUT.build)OUT.build(B,P,C);
+    return B}
+  finally{Object.assign(BR,bo)}}
+function fkBody(o){const pk=fkPick(o),D=FK137.sp[pk.sp];if(!D)throw new Error('folk: no species '+pk.sp);
+  const NB=fkNB(D),key=fkKey(o,pk),G=mdGeo(key,()=>fkBuild(D,pk,o)),M=mdMats();
+  const mb=mkBones({bones:NB}),mesh=new THREE.SkinnedMesh(G.c,M.c);mesh.castShadow=true;mesh.add(mb.bones.pelvis);mesh.updateMatrixWorld(true);mesh.bind(new THREE.Skeleton(mb.arr));
+  const sc=(FK137.out[o.label]&&FK137.out[o.label].sc)||D.sc||1;if(sc!==1){mb.bones.pelvis.position.multiplyScalar(sc);mb.bones.pelvis.scale.setScalar(sc)}
+  mesh.userData.fk=D.key;mesh.userData.fkKey=key;
+  const out=[mesh];['m','g'].forEach(t=>{if(!G[t])return;const m=new THREE.SkinnedMesh(G[t],M[t]);m.castShadow=t!='g';m.bind(mesh.skeleton,mesh.bindMatrix);m.userData.fk=D.key;out.push(m)});
+  mb.bones.pelvis.userData.fkA={D,seed:fkHash(key+Math.random())%9973,TB:D.TB.map(n=>mb.bones[n]).filter(Boolean),er:[mb.bones.erL,mb.bones.erR].filter(Boolean)};
+  return {meshes:out,bones:mb.bones,fk:D}}
+// the town folk (keepers, visitors, citizens) all come through here
+{const f=idlNpcBody;idlNpcBody=function(o){try{if(Object.keys(FK137.sp).length)return fkBody(o)}catch(e){if(!FK137.err++)console.error('v137 folk',e)}return f.apply(this,arguments)}}
+// ---------------- animation layer: tails and ears ----------------
+// walk: 0 standing (idle / work), 1 walking (czWalkPose103 phase in g.userData.fkPh)
+function fk137Anim(g,now,walk){const b=g&&g.bones,A=b&&b.pelvis&&b.pelvis.userData.fkA;if(!A)return;const D=A.D,T=D.tail||{},t=now/1000+A.seed*.37,n=A.TB.length;
+  if(n){const sw=(T.sway==null?.16:T.sway)*(walk?1.6:1),fr=(T.freq||1.1)*(walk?1.5:1),lag=T.lag==null?.55:T.lag,lift=T.lift||0,stiff=T.stiff||0;
+    const ph=walk&&g.userData.fkPh!=null?g.userData.fkPh:t*fr*2;
+    for(let i=0;i<n;i++){const bn=A.TB[i],u=(i+1)/n,k=(1-stiff*(1-u)),a=Math.sin(ph-i*lag)*sw*k*(.45+u*.7),p=Math.sin(ph*.5-i*lag*.7+1.3)*sw*.35*k;
+      bn.rotation.set(-lift*(1-u)+p*(walk?.6:.3),a,a*.3)}}
+  // ears: a quick flick every few seconds (one ear or both), a little swivel toward sounds
+  if(A.er.length){const E=D.earAnim||{},cyc=E.cyc||4.7,u=((t+A.seed%5)/cyc)%1,fl=u<.08?Math.sin(u/.08*Math.PI):0,side=Math.floor((t+A.seed%5)/cyc)%3;
+    const sv=Math.sin(t*.31+A.seed)*(E.sv==null?.12:E.sv),amp=E.amp==null?.35:E.amp;
+    A.er.forEach((bn,i)=>{const s=i?1:-1,on=side==2||side==i?1:0;bn.rotation.set(-fl*amp*on*.6,s*sv,s*fl*amp*on)})}}
+{const f=idlNpc;idlNpc=function(g,now){const r=f.apply(this,arguments);try{if(g&&g.bones&&g.visible)fk137Anim(g,now,0)}catch(e){}return r}}
+{const f=czWalkPose103;czWalkPose103=function(g,ph,amp){const r=f.apply(this,arguments);try{if(g&&g.bones){g.userData.fkPh=ph;fk137Anim(g,performance.now(),1)}}catch(e){}return r}}
+// ---------------- figures built before this file: rebuild them as animals ----------------
+function fkRebuild(g){if(!g||!g.userData||!g.userData.npcO||!g.bones)return false;const o=g.userData.npcO;let rig;try{rig=idlNpcBody(o)}catch(e){console.warn('v137 rebuild',e);return false}
+  if(!rig.fk)return false;g.children.filter(m=>m.isSkinnedMesh).forEach(m=>g.remove(m));rig.meshes.forEach(m=>g.add(m));g.bones=rig.bones;g._idl=null;
+  if(g._wk)g._wk.rest=czRest103(g);g.userData.rest=czRest103(g);return true}
+function fkRebuildAll(){let n=0;(npc.all||[]).forEach(g=>{const m=g.children.find(c=>c.isSkinnedMesh);if(m&&!m.userData.fk&&fkRebuild(g))n++});return n}
+// ================= v137: animal townsfolk — heads, ears, horns, paws, hooves =================
+// One parametric skull for every species (fkSN): a brain case (ellipsoid) joined smoothly to a muzzle (tapered, dropping
+// toward a rounded tip). The rings use the v114 skull format ([z, y centre, half-width, top, underside]), so the beast
+// helpers (brSkull, brEyes, brNose, brJaw, brWhiskers, brSurfX) work on them. Ears are rigid parts on the ear bones
+// (tri / round / long / leaf / small / tuft), horns and antlers are tubes on the head, faces get species details (2810).
+var FKV=THREE.Vector3;
+// hp: {yc, zc, R (brain radius), W (width), H (height), L (length), m:{len, w, h, b, tw, th, tb, drop, y0, z0}}
+function fkSN(hp){const R=hp.R||.1,W=hp.W||1,H=hp.H||1,Ln=hp.L||1,yc=hp.yc||1.158,zc=hp.zc==null?-.01:hp.zc,m=hp.m||{},n=hp.n||16;
+  const zB=zc-R*Ln*.93,zF=zc+R*Ln,z0=zc+R*Ln*(m.z0==null?.25:m.z0),z1=zF+(m.len||0),out=[];
+  const smax=(a,b)=>Math.pow(Math.pow(Math.max(0,a),4)+Math.pow(Math.max(0,b),4),.25);
+  for(let i=0;i<n;i++){const u=i/(n-1),zz=zB+(z1-zB)*(u<.5?(u*2)**1.15/2:1-((1-u)*2)**1.15/2);
+    const t=(zz-zc)/(R*Ln),s=Math.sqrt(Math.max(0,1-t*t));let rx=R*W*s,top=yc+R*H*s,bot=yc-R*H*.94*s;
+    if(m.len&&zz>=z0){const v=Math.min(1,(zz-z0)/(z1-z0)),rnd=v>.8?Math.sqrt(Math.max(0,1-((v-.8)/.2)**2))*.85+.15:1,my=yc+(m.y0||-.02)-(m.drop||0)*Math.pow(v,1.3);
+      const mw=((m.w||.06)+((m.tw==null?.03:m.tw)-(m.w||.06))*v)*rnd,mt=((m.h||.05)+((m.th==null?.025:m.th)-(m.h||.05))*v)*rnd,mb=((m.b||.05)+((m.tb==null?.025:m.tb)-(m.b||.05))*v)*rnd;
+      rx=smax(rx,mw);top=Math.max(top,my+mt);bot=Math.min(bot,my-mb)}
+    if(i==n-1){rx*=.3}
+    const ycR=(top+bot)/2;out.push([+zz.toFixed(4),+ycR.toFixed(4),+Math.max(.004,rx).toFixed(4),+Math.max(.004,top-ycR).toFixed(4),+Math.max(.004,ycR-bot).toFixed(4)])}
+  return out}
+// point on the skull surface at z, angle phi from the top (0 top, π/2 side), pushed out by off
+function fkSurf(D,z,phi,off){const q=brSkullAt(D,z),c=Math.cos(phi),s=Math.sin(phi),r=c>=0?q.f:q.b;return [s*(q.rx+(off||0)),q.yc+c*(r+(off||0)),z]}
+function fkEarBase(D){const e=D.ear;if(!e||e.t=='none')return null;if(!D.SN)D.SN=fkSN(D.hp);return fkSurf(D,e.z,e.phi,-(e.sink==null?.006:e.sink))}
+// orient a unit part so its +y runs along d, then turn it about d by tw; returns the Euler (XYZ) as [rx,ry,rz]
+var FKQ={q:new THREE.Quaternion(),q2:new THREE.Quaternion(),e:new THREE.Euler(),up:new THREE.Vector3(0,1,0)};
+function fkRot(d,tw){const Q=FKQ,v=new FKV(d[0],d[1],d[2]).normalize();Q.q.setFromUnitVectors(Q.up,v);if(tw){Q.q2.setFromAxisAngle(v,tw);Q.q.premultiply(Q.q2)}Q.e.setFromQuaternion(Q.q,'XYZ');return [Q.e.x,Q.e.y,Q.e.z]}
+// a part from base along d: geo, size w (across), len (along), th (thickness), off = shift along its own face normal
+function fkDir(k,bn,geo,t,col,base,d,len,w,th,tw,along){const v=new FKV(d[0],d[1],d[2]).normalize(),a=along==null?.5:along,r=fkRot(d,tw);
+  k.p(bn,geo,t,col,base[0]+v.x*len*a,base[1]+v.y*len*a,base[2]+v.z*len*a,w,len,th,r[0],r[1],r[2]);return k}
+function fkV(a){return new FKV(a[0],a[1],a[2])}
+// ear direction for side s: up, tilted out by e.out, back by e.back
+function fkEarDir(e,s){const o=e.out||0,b=e.back||0;return [s*Math.sin(o),Math.cos(o)*Math.cos(b),-Math.cos(o)*Math.sin(b)]}
+// ---------------- ears ----------------
+function fkEars(k,B,D,C){const e=D.ear;if(!e||e.t=='none')return;const base=fkEarBase(D);
+  [-1,1].forEach(s=>{const bn=s<0?'erL':'erR',p=[s*base[0],base[1],base[2]],d=fkEarDir(e,s),v=fkV(d),tw=s*(e.tw||0),L=e.len,W=e.w,T=e.th||.018,fur=e.col?e.col(C):C.FUR,inn=e.inner?e.inner(C):C.PINK;
+    // the inside faces forward-out: shift the inner part toward the face side of the ear
+    const fwd=new FKV(0,0,1).applyAxisAngle(v,tw).sub(v.clone().multiplyScalar(v.z)).normalize(),io=(dv,k2)=>[p[0]+fwd.x*dv,p[1]+fwd.y*dv,p[2]+fwd.z*dv];
+    if(e.t=='tri'){fkDir(k,bn,'cone4','c',fur,p,d,L,W,T,tw+Math.PI/4);fkDir(k,bn,'cone4','c',inn,io(T*.55),d,L*.82,W*.7,T*.45,tw+Math.PI/4,.46);
+      if(e.tip)fkDir(k,bn,'cone4','c',e.tip(C),[p[0]+v.x*L*.62,p[1]+v.y*L*.62,p[2]+v.z*L*.62],d,L*.38,W*.42,T*1.05,tw+Math.PI/4);
+      if(e.tuft){const tp=[p[0]+v.x*L*.97,p[1]+v.y*L*.97,p[2]+v.z*L*.97];k.L(bn,'c',e.tuft(C),tp,[tp[0]+v.x*e.tuftL,tp[1]+v.y*e.tuftL,tp[2]+v.z*e.tuftL],.006,.001,4)}
+      k.p(bn,'cone4','c',C.FURL,io(T*.7)[0]+v.x*L*.12,io(T*.7)[1]+v.y*L*.12,io(T*.7)[2]+v.z*L*.12,W*.3,L*.3,T*.3,...fkRot(d,tw+Math.PI/4))}
+    else if(e.t=='round'){const c=[p[0]+v.x*L*.5,p[1]+v.y*L*.5,p[2]+v.z*L*.5],r=fkRot(d,tw);k.p(bn,'sph2','c',fur,c[0],c[1],c[2],W,L*.5,T,r[0],r[1],r[2]);
+      k.p(bn,'sph2','c',inn,c[0]+fwd.x*T*.55,c[1]+fwd.y*T*.55,c[2]+fwd.z*T*.55,W*.72,L*.37,T*.5,r[0],r[1],r[2])}
+    else if(e.t=='long'||e.t=='leaf'){const c=[p[0]+v.x*L*.5,p[1]+v.y*L*.5,p[2]+v.z*L*.5],r=fkRot(d,tw);k.p(bn,'sph2','c',fur,c[0],c[1],c[2],W*.5,L*.5,T,r[0],r[1],r[2]);
+      k.p(bn,'sph2','c',inn,c[0]+fwd.x*T*.5,c[1]+fwd.y*T*.5,c[2]+fwd.z*T*.5,W*.36,L*.42,T*.5,r[0],r[1],r[2]);
+      k.p(bn,'sph2','c',fur,p[0]+v.x*L*.1,p[1]+v.y*L*.1,p[2]+v.z*L*.1,W*.36,L*.16,T*1.3,r[0],r[1],r[2]);
+      if(e.tip)k.p(bn,'sph2','c',e.tip(C),p[0]+v.x*L*.86,p[1]+v.y*L*.86,p[2]+v.z*L*.86,W*.3,L*.14,T*1.06,r[0],r[1],r[2])}
+    else if(e.t=='small'){const r=fkRot(d,tw);k.p(bn,'sph2','c',fur,p[0]+v.x*L*.35,p[1]+v.y*L*.35,p[2]+v.z*L*.35,W,L*.5,T,r[0],r[1],r[2]);k.p(bn,'sph2','c',C.FURD,p[0]+v.x*L*.35+fwd.x*T*.5,p[1]+v.y*L*.35+fwd.y*T*.5,p[2]+v.z*L*.35+fwd.z*T*.5,W*.6,L*.3,T*.5,r[0],r[1],r[2])}
+    else if(e.t=='tuft'){// owl: feather tufts (three feathers fanned)
+      for(let i=0;i<3;i++){const dd=[d[0]+s*(i-1)*.18,d[1],d[2]-(i-1)*.1];fkDir(k,bn,'cone4','c',i==1?fur:C.FURD,p,dd,L*(1-.15*Math.abs(i-1)),W,T,tw+Math.PI/4)}}});
+  }
+// ---------------- horns and antlers (tubes on the head bone) ----------------
+function fkPath(pts,col,r0,r1,k,bn,sides){for(let i=0;i<pts.length-1;i++){const u0=i/(pts.length-1),u1=(i+1)/(pts.length-1);k.L(bn||'head','c',col,pts[i],pts[i+1],r0+(r1-r0)*u0,r0+(r1-r0)*u1,sides||6)}}
+// a smooth lofted horn through points (radius r(t)), ridges every few rings
+function fkHornLoft(B,pts,rf,col,ridge){const P=pts.map(p=>({x:p[0],y:p[1],z:p[2],w:[['head',1]]}));gkTubeS(B,P,t=>rf(t)*(ridge&&Math.floor(t*(pts.length-1)*1.5)%2?.93:1),col,{seg:8,cap:true})}
+// antlers: a beam rising back and out with tines toward the front
+function fkAntlers(k,D,C,o){const base=fkSurf(D,o.z,o.phi,-.004),col=C.HORN,dk=mdSh(C.HORN,.75);
+  [-1,1].forEach(s=>{const b0=[s*base[0],base[1],base[2]],pts=[b0];let p=b0.slice(),d=[s*.45,1,-.35];
+    for(let i=1;i<=o.seg;i++){const t=i/o.seg;d=[s*(.55+.25*t),1-.35*t,-.3+.45*t];const L=o.len/o.seg,n=Math.hypot(...d);p=[p[0]+d[0]/n*L,p[1]+d[1]/n*L,p[2]+d[2]/n*L];pts.push(p.slice())}
+    k.p('head','tor','c',dk,b0[0],b0[1]+.006,b0[2],.024,.016,.024,0,0,-s*.4);
+    fkPath(pts,col,o.r,o.r*.45,k);
+    o.tines.forEach(([at,len,fw])=>{const i=Math.min(pts.length-1,Math.round(at*(pts.length-1))),a=pts[i],e=[a[0]+s*len*.25,a[1]+len*.8,a[2]+len*fw];k.L('head','c',col,a,e,o.r*.75,o.r*.15,5)})})}
+// ---------------- paws (town-folk hands: from the folk skeleton's own wrists) ----------------
+function fkPaws(B,P,D,C){const pw=D.paw,k=dkKit(),pc=pw.colOf?pw.colOf(C):C.FUR,padC=pw.padColOf?pw.padColOf(C):C.PINK,clawC=pw.clawCol?pw.clawCol(C):C.CLAW;
+  [['aL1','aL2',-1],['aR1','aR2',1]].forEach(([a,b,s])=>{const A=mdV(P.bones[a]),W=mdV(P.bones[b]),d=W.clone().sub(A).normalize(),z=new FKV(0,0,1),e=z.clone().sub(d.clone().multiplyScalar(z.dot(d))).normalize(),
+      sd=new FKV().crossVectors(d,e).multiplyScalar(s),bw=[[b,1]],xo=s*((mdBuildF(P)-1)*.12+(P.armX||0)),pl=pw.plen||1,at=(t,o,l)=>W.clone().add(d.clone().multiplyScalar(t)).add(e.clone().multiplyScalar(o)).add(sd.clone().multiplyScalar(l||0)).add(new FKV(xo,0,.005));
+    const n=pw.n;
+    for(let i=0;i<n;i++){const o=(i-(n-1)/2)*(pw.spread||.0112)*(pw.palm||1),len=pw.len[i],sp=(i-(n-1)/2)*.05,R=[];let p=at(.028*pl,o),dir=d.clone().add(e.clone().multiplyScalar(sp)).normalize();
+      const rr=pw.rad||1,rad=[.0062*rr,.0056*rr,.0047*rr,.0036*rr,.0024*rr],seg=[0,.012,.012,.008,.006],curl=pw.curl==null?1:pw.curl;
+      for(let j=0;j<5;j++){if(j){const st=len*seg[j]/.038;p=p.clone().add(dir.clone().multiplyScalar(st));dir=dir.clone().add(sd.clone().multiplyScalar((.16+.1*j)*curl)).normalize()}
+        R.push({p:p.toArray(),rx:rad[j],f:rad[j],b:rad[j],w:bw})}
+      mdLoft(B,R,{seg:6,capB:true,col:m=>m.i>3.6&&pw.pad?padC:pc});
+      const t=new FKV(...R[4].p);
+      if(pw.pad)k.p(b,'sph2','c',padC,t.x,t.y,t.z,rad[4]*1.3,rad[4]*1.1,rad[4]*1.3);
+      if(pw.claw)k.L(b,'c',clawC,t.clone().sub(dir.clone().multiplyScalar(.003)).toArray(),t.clone().add(dir.clone().add(sd.clone().multiplyScalar(.6)).normalize().multiplyScalar(pw.claw)).toArray(),pw.nail?.0045:.0032,pw.nail?.003:.0004,4)}
+    if(pw.thumb!==false){const tp=at(.012*pl,.017*(pw.palm||1)),td=d.clone().multiplyScalar(.45).add(e.clone().multiplyScalar(.85)).add(sd.clone().multiplyScalar(.25)).normalize(),tl=pw.tlen||.017;
+      mdLoft(B,[{p:tp.toArray(),rx:.0068,f:.0068,b:.0068,w:bw},{p:tp.clone().add(td.clone().multiplyScalar(tl*.6)).toArray(),rx:.0058,f:.0058,b:.0058,w:bw},{p:tp.clone().add(td.clone().multiplyScalar(tl)).toArray(),rx:.0038,f:.0038,b:.0038,w:bw}],{seg:6,capB:true,col:pc});
+      const tt=tp.clone().add(td.clone().multiplyScalar(tl));if(pw.claw)k.L(b,'c',clawC,tt.toArray(),tt.clone().add(td.clone().multiplyScalar(pw.claw*.8)).toArray(),.003,.0004,4)}});
+  mdKit(B,k)}
+// ---------------- hooves: the foot rings end in a dark cloven hoof ----------------
+function fkHooves(B,P,D,C){const k=dkKit();[-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',A=mdV(P.bones[l]),F=D.foot,lf=P.lf||1,z=A.z+.1*F.len*lf;
+  [-1,1].forEach(q=>{k.p(l,'sph2','c',C.HOOF,A.x+q*.022*lf*F.w,.028,z,.026*lf*F.w,.03,.045*lf,0,q*.08,0)});
+  k.p(l,'box','c',mdSh(C.HOOF,.5),A.x,.03,z+.02,.006,.05,.06);
+  k.p(l,'tor','c',mdMix(C.FUR,C.HOOF,.5),A.x,.07,A.z+.02,.05*lf*F.w,.03,.055*lf,0,0,0)});mdKit(B,k)}
+// ---------------- the head ----------------
+// D: SN (fkSN(D.hp)), EYEP, eyes (brEyes options), nose ('nose' | 'pink' | 'snout' | 'beak' | 'none'), jaw [z0, z1, o], whisk [z, y, n, len],
+//    ear, skull(m, C) paint, face(k, B, D, C, P) species details, horns(k, B, D, C)
+function fkHead(D,B,P,o){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
+  // the neck: from the collar line up into the skull, as thick as the species' (a bear's or an owl's head sits on a thick neck)
+  {const n=(D.neck||[.066,.07,.07]).map((v,i)=>v*[1.3,1.24,1.16][i]),q=brSkullAt(D,D.SN[0][0]*.3),yb=q.yc-q.b*.55;mdLoft(B,[{p:[0,1.0,-.008],rx:n[0]*.95,f:n[0]*.9,b:n[0]*.95,w:[['chest',.4],['neck',.6]]},{p:[0,1.035,-.012],rx:n[0],f:n[0]*.97,b:n[0]*.97,w:[['neck',.7],['head',.3]]},
+    {p:[0,Math.max(1.07,(1.035+yb)/2),-.016],rx:n[1],f:n[1]*.97,b:n[1],w:[['neck',.3],['head',.7]]},{p:[0,Math.max(1.1,yb),-.02],rx:n[2],f:n[2]*.95,b:n[2],w:[['head',1]]}],
+    {seg:14,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
+  brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});
+  if(D.jaw)brJaw(B,D,D.jaw[0],D.jaw[1],D.jaw[3]?D.jaw[3](C):C.BELLY,D.jaw[2]||{});
+  const tip=D.SN[D.SN.length-1];
+  if(D.nose=='nose'||D.nose=='pink')brNose(k,D,D.nose=='pink'?C.PINK:C.NOSE,D.noseSz||1,D.noseDy||0);
+  if(D.eyes!==false)brEyes(k,D,Object.assign({sz:1,fw:.8},D.eyes||{}));
+  if(D.whisk)brWhiskers(k,D,D.whisk[0],D.whisk[1],D.whisk[2],D.whisk[3],D.whisk[4]);
+  fkEars(k,B,D,C);
+  if(D.face)D.face(k,B,D,C,P);
+  mdKit(B,k);return H}
+// register a species (2810): fills SN / EYEP from the head parameters; the beast hooks need TR / armK / legK / foot / paw
+function fkSpecies(key,D){D.key=key;D.SN=fkSN(D.hp);const s=D.SN,em=D.eyeAt||[.55,.28];
+  if(!D.EYEP){const R=D.hp.R||.1,L=D.hp.L||1,zc=D.hp.zc==null?-.01:D.hp.zc,ez=zc+R*L*em[0],q=brSkullAt(D,ez);D.EYEP=[0,q.yc+q.f*em[1],ez]}
+  D.TR=D.TR||[[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]];D.armK=D.armK||[.95,.95,.92,.9,.9,.85];D.legK=D.legK||[1.05,1.08,1.02,.95,.9,.85,.82];
+  D.foot=D.foot||{len:1.05,w:.85,h:.85};D.paw=D.paw||{n:4,len:[.026,.03,.03,.025],claw:.008,spread:.0115,pad:true,curl:1};D.toes=D.toes||{n:4,len:.04,claw:.012,pad:true};if(!D.toes.colOf)D.toes.colOf=C=>D.toeCol?D.toeCol(C):C.FUR;if(!D.paw.colOf)D.paw.colOf=C=>D.handCol?D.handCol(C):C.FUR;
+  D.tailCol=D.tailCol||((m,C)=>C.FUR);D.muzzleZ=D.muzzleZ||s[s.length-1][0]-.05;D.hoodZ=D.hoodZ==null?.03:D.hoodZ;D.crownZ=D.crownZ==null?-.04:D.crownZ;
+  D.head=function(B,P,o){return fkHead(this,B,P,o)};
+  FK137.sp[key]=D;return D}
+// the skull's front surface z at (x, y) (searching from the muzzle tip back), or null when (x, y) is outside the head
+function fkFrontZ(D,x,y){const z1=D.SN[D.SN.length-1][0],z0=D.SN[0][0];for(let z=z1;z>=z0;z-=.002){const q=brSkullAt(D,z),dy=y-q.yc,r=dy>0?q.f:q.b;if((x/q.rx)**2+(dy/r)**2<=1)return z}return null}
+// the top of the skull at z (for hats), and the widest half-width
+function fkTop(D,z){const q=brSkullAt(D,z);return q.yc+q.f}
+// ================= v137: animal townsfolk — the species =================
+// Each: hp (skull + muzzle, fkSN), eyes, nose, jaw, whiskers, ear, face details, fur colours (3 variants), body build,
+// paws / toes / hooves, tail path TP ([x, y, z, radius] in model space, from the hip out behind the clothes) and how the
+// tail moves. cit: may be picked for citizens (keepers are assigned in 2820).
+function fkCols(L,i,o){const f=L[Math.abs(i|0)%L.length];return fkPal(f[0],Object.assign({},o||{},f[1]||{}))}
+function fkTailPts(y0,pts){return pts.map(p=>[p[0],p[1],p[2],p[3]])}
+// a stripe / patch helper for skull painting: is the face point within the eye mask band
+function fkMask(D,m,w){const e=D.EYEP,z=m.r.p[2];return Math.abs(z-e[2])<w&&m.s>-.25&&m.s<.55&&Math.abs(m.c)>.35}
+// ------------------------------------------------ FOX ------------------------------------------------
+fkSpecies('fox',{n:'Fox',cit:1,sc:.98,
+  hp:{R:.094,W:.95,H:.9,L:1,m:{len:.105,w:.052,h:.042,b:.036,tw:.014,th:.012,tb:.01,drop:.03,y0:-.026,z0:.35}},
+  eyes:{sz:1,fw:.85,pupil:[.0035,.012],tilt:.18},nose:'nose',noseSz:.8,jaw:[.04,.135,{h:.7,w:.8}],whisk:[.1,1.13,3,.1,0x1a1410],
+  ear:{t:'tri',z:-.03,phi:.52,len:.105,w:.052,th:.02,out:.28,back:.12,tw:.15,tip:C=>0x1a1210},
+  skull(m,C){const z=m.r.p[2];if(m.s<-.15&&z>-.01)return C.FURL;if(m.s<.2&&z>.05&&Math.abs(m.c)>.5)return C.FURL;return m.s>.6&&z<0?C.FURD:C.FUR},
+  cols:i=>fkCols([[0xb85a22],[0xa04a1c],[0x8a6a52,{FURL:0xe8e0d6}]],i,{FURL:0xeee6da,BELLY:0xeee6da,EYE:0xd89020}),
+  body:{build:0,af:.92,lf:.95},TR:null,
+  paint(P,C){P.paint.leg=(m,s)=>m.r.part=='ankle'||m.r.part=='shin'&&m.i>4.6?0x1a1210:C.FUR;P.col.hand=0x1a1210},handCol:C=>0x1a1210,toeCol:C=>0x1a1210,
+  paw:{n:4,len:[.024,.028,.028,.023],claw:.007,spread:.011,pad:true,curl:1.1,colOf:C=>0x1a1210,padColOf:C=>0x3a2a24},
+  toes:{n:4,len:.036,claw:.01,pad:true,colOf:C=>0x1a1210},
+  TP:[[0,.6,-.09,.035],[0,.56,-.17,.055],[0,.49,-.27,.072],[0,.41,-.36,.08],[0,.32,-.44,.08],[0,.24,-.5,.074],[0,.17,-.55,.062],[0,.12,-.59,.044],[0,.095,-.62,.022],[0,.09,-.63,.006]],
+  tailCol:(m,C)=>m.i>6.6?C.FURL:m.s<-.3?mdMix(C.FUR,C.FURL,.4):C.FUR,tail:{sway:.14,freq:.9,lag:.5,stiff:.3}});
+// ------------------------------------------------ WOLF ------------------------------------------------
+fkSpecies('wolf',{n:'Wolf',cit:1,sc:1.04,
+  hp:{R:.1,W:.98,H:.92,L:1.02,m:{len:.115,w:.058,h:.05,b:.044,tw:.022,th:.018,tb:.016,drop:.028,y0:-.028,z0:.32}},
+  eyes:{sz:.95,fw:.85,tilt:.22,brow:null},nose:'nose',noseSz:1.05,jaw:[.04,.15,{h:.8,w:.85}],
+  ear:{t:'tri',z:-.04,phi:.5,len:.085,w:.05,th:.022,out:.22,back:.18,tw:.1},
+  skull(m,C){const z=m.r.p[2];if(m.s<-.25&&z>-.02)return C.FURL;if(m.s>.4&&z<.12)return C.FURD;if(Math.abs(m.c)>.75&&z>-.05&&z<.06&&m.s<.3)return C.FURL;return C.FUR},
+  cols:i=>fkCols([[0x6a6a6e],[0x4a4648],[0x8a7a66]],i,{FURL:0xd8d4cc,BELLY:0xc8c4bc,EYE:0xc8a030}),
+  body:{build:1,af:1,lf:1},
+  face(k,B,D,C){// a ruff of fur at the cheeks
+    [-1,1].forEach(s=>[[.0,1.11,.4],[-.03,1.1,.15],[-.06,1.115,-.1]].forEach(([z,y,a])=>{const x=brSurfX(D,z,y)-.008;k.p('head','cone4','c',C.FURL,s*x,y,z,.022,.05,.014,Math.PI*.8+a*.3,0,s*(.9+a*.3))}))},
+  paw:{n:4,len:[.026,.03,.03,.025],claw:.009,spread:.012,pad:true,curl:1,colOf:C=>C.FURD},handCol:C=>C.FURD,toes:{n:4,len:.04,claw:.012,pad:true,colOf:C=>C.FURD},toeCol:C=>C.FURD,
+  TP:[[0,.6,-.09,.035],[0,.55,-.18,.05],[0,.47,-.27,.058],[0,.38,-.34,.06],[0,.29,-.39,.058],[0,.21,-.42,.05],[0,.15,-.44,.038],[0,.12,-.45,.02],[0,.11,-.455,.005]],
+  tailCol:(m,C)=>m.i>6.3?C.FURD:C.FUR,tail:{sway:.1,freq:.7,lag:.45,stiff:.4}});
+// ------------------------------------------------ BEAR ------------------------------------------------
+fkSpecies('bear',{n:'Bear',cit:1,sc:1.12,
+  hp:{R:.115,W:1.16,H:.95,L:.95,yc:1.155,m:{len:.05,w:.07,h:.052,b:.05,tw:.046,th:.034,tb:.03,drop:.02,y0:-.032,z0:.32}},
+  eyes:{sz:.8,fw:.9,brow:null},nose:'nose',noseSz:1.55,noseDy:.006,jaw:[.05,.13,{h:.9,w:.9}],
+  ear:{t:'round',z:-.025,phi:.82,len:.06,w:.034,th:.018,out:.9,back:.15},
+  skull(m,C){const z=m.r.p[2];if(z>.1)return C.FURL;if(m.s<-.4&&z>.04)return C.FURL;return m.s>.55&&z<0?C.FURD:C.FUR},
+  cols:i=>fkCols([[0x5a3a24],[0x3a2a20],[0x7a5a3a]],i,{FURL:0xa88a66,BELLY:0x8a6a4a,EYE:0x1a1008}),
+  body:{build:2,af:1.25,lf:1.18,belly:.08},neck:[.085,.09,.092],armK:[1.08,1.1,1.08,1.05,1.05,1],legK:[1.12,1.15,1.1,1.05,1,.98,.96],foot:{len:1.12,w:1.05,h:.9},
+  paw:{n:5,len:[.022,.026,.027,.026,.022],claw:.014,spread:.0125,palm:1.15,pad:true,curl:.9,rad:1.25,colOf:C=>C.FURD,padColOf:C=>0x2a1e18},handCol:C=>C.FURD,
+  toes:{n:5,len:.036,claw:.016,pad:true,w:1.2,colOf:C=>C.FURD},toeCol:C=>C.FURD,
+  TP:[[0,.58,-.11,.04],[0,.56,-.155,.038],[0,.54,-.18,.022],[0,.535,-.19,.006]],tail:{sway:.05,freq:.6,lag:.3,stiff:.5},earAnim:{amp:.25}});
+// ------------------------------------------------ HARE ------------------------------------------------
+fkSpecies('hare',{n:'Hare',cit:1,sc:.96,
+  hp:{R:.09,W:.92,H:.95,L:1.08,m:{len:.06,w:.05,h:.045,b:.045,tw:.026,th:.022,tb:.022,drop:.022,y0:-.026,z0:.3}},
+  eyes:{sz:1.25,fw:.45,brow:null},nose:'pink',noseSz:.75,jaw:[.05,.1,{h:.6,w:.7}],whisk:[.085,1.125,3,.11,0xe8e0d0],
+  ear:{t:'long',z:-.035,phi:.36,len:.21,w:.062,th:.016,out:.1,back:.3,tw:.25,tip:C=>0x2a2420},
+  skull(m,C){const z=m.r.p[2];if(m.s<-.3&&z>-.02)return C.FURL;if(z>.06&&m.s<.3&&Math.abs(m.c)>.3)return C.FURL;if(Math.abs(m.c)>.8&&Math.abs(z-.045)<.02&&m.s>-.1&&m.s<.4)return C.FURL;return C.FUR},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];[-1,1].forEach(s=>k.p('head','box','c',C.TOOTH,s*.0055,t[1]-.022,t[0]-.006,.009,.018,.005,.1,0,0));
+    [-1,1].forEach(s=>k.p('head','sph2','c',C.FURL,s*.017,t[1]-.008,t[0]-.012,.022,.018,.016))},
+  cols:i=>fkCols([[0x9a8064],[0x7a6a5a],[0xb89a72]],i,{FURL:0xeae6e0,BELLY:0xe0dad0,EYE:0x3a2412}),
+  body:{build:0,af:.85,lf:1.02},legK:[1.12,1.1,1,.88,.82,.76,.72],foot:{len:1.35,w:.82,h:.8},
+  paw:{n:4,len:[.022,.026,.026,.021],claw:.006,spread:.0105,pad:false,curl:1.1},toes:{n:4,len:.05,claw:.01,pad:false},
+  TP:[[0,.56,-.1,.04],[0,.565,-.15,.055],[0,.575,-.19,.05],[0,.585,-.21,.03],[0,.59,-.22,.008]],tailCol:(m,C)=>C.FURL,tail:{sway:.08,freq:1.6,lag:.3,stiff:.3},earAnim:{amp:.22,sv:.18,cyc:3.6}});
+// ------------------------------------------------ STAG / DOE ------------------------------------------------
+var FK_DEER={hp:{R:.085,W:.9,H:.9,L:1.1,m:{len:.125,w:.046,h:.04,b:.04,tw:.021,th:.018,tb:.016,drop:.045,y0:-.03,z0:.3}},
+  eyes:{sz:1.15,fw:.45,brow:null},nose:'none',jaw:[.05,.17,{h:.65,w:.8}],
+  ear:{t:'leaf',z:-.035,phi:.95,len:.12,w:.05,th:.014,out:.95,back:.35,tw:-.5,inner:C=>mdMix(C.FURL,C.PINK,.3),tip:C=>C.FURD},
+  skull(m,C){const z=m.r.p[2];if(z>.203)return 0x2a2220;if(m.s<-.2&&z>.0)return C.FURL;if(z>.13&&m.s<.25)return C.FURL;if(Math.abs(m.c)>.7&&z>.025&&z<.065&&m.s>-.2&&m.s<.5)return C.FURL;return m.s>.5&&z<.08?C.FURD:C.FUR},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','sph2','c',0x1a1412,0,t[1]+.008,t[0]-.006,.016,.012,.011);[-1,1].forEach(s=>k.p('head','box','c',0x050404,s*.008,t[1]+.002,t[0]+.011,.004,.004,.004))},
+  body:{build:0,af:.88,lf:.92},legK:[1.02,1.02,.95,.82,.74,.66,.62],foot:{len:.75,w:.72,h:.9},hoof:1,
+  paw:{n:3,len:[.03,.034,.03],claw:.01,nail:1,spread:.0135,pad:false,curl:.7,rad:1.15,colOf:C=>C.FURD,clawCol:C=>C.HOOF},handCol:C=>C.FURD,
+  TP:[[0,.58,-.1,.035],[0,.6,-.15,.04],[0,.6,-.19,.03],[0,.59,-.21,.008]],tailCol:(m,C)=>m.s<0?C.FURL:C.FUR,tail:{sway:.1,freq:1.4,lag:.3,stiff:.2},earAnim:{amp:.3,sv:.2,cyc:3.9}};
+fkSpecies('stag',Object.assign({},FK_DEER,{n:'Stag',sc:1.06,cols:i=>fkCols([[0x8a5a36],[0x6a4a30],[0x9a6a40]],i,{FURL:0xe8e0d0,BELLY:0xd8ccb8,EYE:0x1a1008,HORN:0xb0a088}),
+  face(k,B,D,C,P){FK_DEER.face(k,B,D,C);fkAntlers(k,D,C,{z:-.035,phi:.38,len:.28,seg:5,r:.019,tines:[[.3,.09,.5],[.55,.1,.35],[.8,.08,.2],[1,.06,-.1]]})}}));
+fkSpecies('doe',Object.assign({},FK_DEER,{n:'Doe',cit:1,sc:.98,cols:i=>fkCols([[0x9a6a42],[0x8a6040],[0xa87a4e]],i,{FURL:0xeae2d2,BELLY:0xdcd0bc,EYE:0x1a1008})}));
+// ------------------------------------------------ BOAR ------------------------------------------------
+fkSpecies('boar',{n:'Boar',cit:1,sc:1.06,
+  hp:{R:.1,W:1.0,H:.95,L:1.0,m:{len:.12,w:.058,h:.05,b:.046,tw:.05,th:.042,tb:.036,drop:.034,y0:-.03,z0:.3}},
+  eyes:{sz:.72,fw:.7,brow:null},nose:'none',jaw:[.05,.17,{h:.8,w:.9}],
+  ear:{t:'tri',z:-.045,phi:.65,len:.075,w:.05,th:.016,out:.95,back:.35,tw:-.4},
+  skull(m,C){const z=m.r.p[2];if(m.s>.5&&z<.08)return C.FURD;return C.FUR},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];// the snout disc, nostrils, tusks curving up, a bristly crest
+    k.p('head','cyl','c',0x6a524a,0,t[1],t[0]+.002,.034,.012,.03,Math.PI/2,0,0);[-1,1].forEach(s=>k.p('head','sph2','c',0x3a2420,s*.016,t[1]+.002,t[0]+.012,.008,.011,.004));
+    [-1,1].forEach(s=>{const a=[s*.042,t[1]-.03,t[0]-.05];fkPath([a,[s*.056,t[1]-.012,t[0]-.035],[s*.062,t[1]+.016,t[0]-.03],[s*.058,t[1]+.032,t[0]-.04]],0xe8e0c8,.011,.003,k)});
+    for(let i=0;i<9;i++){const z=-.09+i*.022,y=fkTop(D,z);k.p('head','cone4','c',C.FURD,0,y+.006,z,.012,.04,.008,-.5,0,0)}},
+  cols:i=>fkCols([[0x4a3a30],[0x5a4434],[0x3a3230]],i,{FURL:0x7a6a5a,BELLY:0x6a5a4a,EYE:0x1a0a06}),
+  body:{build:2,af:1.12,lf:1.08,belly:.1},neck:[.08,.085,.085],legK:[1.1,1.1,1.02,.92,.86,.8,.78],foot:{len:.8,w:.85,h:.9},hoof:1,
+  paw:{n:3,len:[.026,.03,.026],claw:.01,nail:1,spread:.014,pad:false,curl:.7,rad:1.3,colOf:C=>C.FURD,clawCol:C=>C.HOOF},handCol:C=>C.FURD,
+  TP:[[0,.58,-.11,.02],[0,.56,-.16,.014],[0,.5,-.19,.012],[.01,.44,-.2,.011],[.015,.4,-.19,.014],[.015,.37,-.19,.018],[.015,.35,-.19,.004]],tailCol:(m,C)=>m.i>4.5?C.FURD:C.FUR,tail:{sway:.25,freq:2,lag:.6,stiff:0}});
+// ------------------------------------------------ OWL ------------------------------------------------
+fkSpecies('owl',{n:'Owl',sc:.98,seg:22,
+  hp:{R:.122,W:1.12,H:1.02,L:.82,yc:1.15,m:{len:.008,w:.08,h:.07,b:.07,tw:.07,th:.06,tb:.06,drop:.0,y0:-.012,z0:.6}},
+  eyeAt:[.7,.12],eyes:false,nose:'none',neck:[.1,.11,.115],
+  ear:{t:'tuft',z:-.02,phi:.6,len:.06,w:.013,th:.008,out:.75,back:.35,tw:.2,sink:.0},
+  skull(m,C){const n=Math.sin(m.x*140)*Math.cos(m.z*120+m.y*90);if(m.s<-.4)return C.FURL;return n>.65?C.FURD:C.FUR},
+  neckCol(m,C){return m.s>.3?C.FURL:C.FUR},
+  face(k,B,D,C){const e=D.EYEP,ey=e[1];// the facial disc (two pale dishes round the eyes, a dark rim), big round eyes, the hooked beak
+    [-1,1].forEach(s=>{const x=s*.046,zs=fkFrontZ(D,x,ey)||e[2];
+      k.p('head','sph2','c',C.FURL,x,ey-.006,zs-.008,.06,.066,.022,0,s*.38,0);k.p('head','ring','c',C.FURD,x*1.02,ey-.006,zs-.006,.062,.08,.068,Math.PI/2+.0,s*.38,0);
+      k.p('head','sph2','c',0x1a1008,x,ey,zs+.004,.026,.026,.014,0,s*.3,0);k.p('head','sph2','g',C.EYE,x,ey,zs+.011,.021,.021,.008,0,s*.3,0);
+      k.p('head','sph2','c',0x050404,x+s*.001,ey,zs+.017,.011,.012,.004,0,s*.3,0);k.p('head','sph2','c',0xffffff,x+.006,ey+.008,zs+.019,.004,.004,.002);
+      k.p('head','sph2','c',C.FURD,x,ey+.03,zs-.002,.032,.009,.014,0,s*.3,-s*.3)});
+    const bz=fkFrontZ(D,0,ey-.025)||e[2];k.p('head','sph2','c',C.FURL,0,ey-.06,bz-.01,.05,.035,.022);
+    k.p('head','sph2','c',0x6a5a3a,0,ey-.016,bz+.004,.013,.016,.012);k.p('head','cone4','c',0x9a8a5a,0,ey-.036,bz+.012,.012,.036,.011,2.6,0,0)},
+  cols:i=>fkCols([[0x8a6a4a],[0x7a7068],[0xb8986a]],i,{FURL:0xe8dcc8,BELLY:0xe0d4bc,FURD:0x4a3a2a,EYE:0xf0a020}),
+  body:{build:1,af:.95,lf:.82},legK:[1.1,1.05,.95,.75,.6,.5,.46],foot:{len:.55,w:.72,h:.7},
+  paint(P,C){P.paint.leg=(m,s)=>m.r.part=='ankle'||m.r.part=='shin'&&m.i>4.4?0xb8a050:C.FUR},toeCol:C=>0xb8a050,
+  paw:{n:3,len:[.036,.042,.036],claw:.014,spread:.0135,pad:false,curl:1,colOf:C=>C.FUR},
+  toes:{n:3,len:.05,claw:.022,pad:false,spread:1.3,colOf:C=>0xb8a050},
+  TP:[[0,.6,-.1,.05],[0,.54,-.17,.055],[0,.49,-.22,.045],[0,.46,-.24,.008]],tailCol:(m,C)=>Math.floor(m.i)%2?C.FURD:C.FUR,tail:{sway:.05,freq:.8,lag:.2,stiff:.4},earAnim:{amp:.2,sv:.1}});
+// ------------------------------------------------ MOUSE ------------------------------------------------
+fkSpecies('mouse',{n:'Mouse',cit:1,sc:.84,
+  hp:{R:.1,W:.98,H:.95,L:1.02,m:{len:.075,w:.046,h:.038,b:.034,tw:.012,th:.01,tb:.009,drop:.026,y0:-.026,z0:.33}},
+  eyes:{sz:1.05,fw:.75,brow:null},nose:'pink',noseSz:.8,jaw:[.05,.13,{h:.55,w:.7}],whisk:[.115,1.125,4,.12],
+  ear:{t:'round',z:-.03,phi:.62,len:.12,w:.06,th:.012,out:.75,back:.1,tw:.2},
+  cols:i=>fkCols([[0x8a7a6a],[0xa08a72],[0x6a625c]],i,{FURL:0xe0d8cc,BELLY:0xe0d8cc,EYE:0x0a0606}),
+  body:{build:0,af:.88,lf:.9},paw:{n:4,len:[.022,.026,.026,.021],claw:.005,spread:.0105,pad:false,curl:1.1,colOf:C=>C.PINK},handCol:C=>C.PINK,
+  toes:{n:4,len:.04,claw:.008,pad:false,colOf:C=>C.PINK},toeCol:C=>C.PINK,
+  TP:[[0,.58,-.09,.026],[0,.55,-.17,.022],[0,.47,-.26,.019],[.01,.36,-.33,.016],[.02,.24,-.37,.014],[.03,.12,-.4,.012],[.05,.05,-.46,.01],[.08,.04,-.55,.008],[.12,.05,-.62,.006],[.16,.07,-.66,.003]],
+  tailCol:(m,C)=>m.i<1.2?C.FUR:C.PINK,tail:{sway:.18,freq:1,lag:.6,stiff:0},earAnim:{amp:.25,cyc:3.4}});
+// ================= v137: animal townsfolk — more species =================
+// raccoon, lynx, otter, goat, ram, sheep, hedgehog, squirrel, beaver, mole, ferret, bat, hound
+// ------------------------------------------------ RACCOON ------------------------------------------------
+fkSpecies('raccoon',{n:'Raccoon',sc:.95,
+  hp:{R:.098,W:1.05,H:.9,L:.98,m:{len:.075,w:.05,h:.038,b:.034,tw:.014,th:.012,tb:.01,drop:.028,y0:-.03,z0:.35}},
+  eyes:{sz:1,fw:.85,brow:false,socket:0x141010},nose:'nose',noseSz:.85,jaw:[.04,.12,{h:.6,w:.75}],whisk:[.085,1.118,3,.09,0xe8e4dc],
+  ear:{t:'tri',z:-.03,phi:.62,len:.06,w:.048,th:.016,out:.55,back:.1,tw:.2,inner:C=>0xe8e0d6},
+  skull(m,C){const z=m.r.p[2];if(fkMask(this,m,.035))return 0x161214;if(z>.08&&m.s>.2)return 0x2a2422;if(m.s<-.2&&z>-.02)return 0xe8e4dc;if(z>-.0&&z<.08&&m.s>.3&&Math.abs(m.c)<.35)return 0xe8e4dc;
+    if(Math.abs(m.c)>.55&&z>.04&&m.s<.1)return 0xe8e4dc;return m.s>.6&&z<0?C.FURD:C.FUR},
+  cols:i=>fkCols([[0x7a7470],[0x6a645e],[0x8a8278]],i,{FURL:0xd8d4cc,BELLY:0xc8c2b8,EYE:0x1a1008}),
+  body:{build:1,af:.95,lf:.95,belly:.03},paw:{n:5,len:[.022,.028,.03,.028,.022],claw:.006,spread:.0105,pad:true,curl:1,colOf:C=>0x2a2624,padColOf:C=>0x4a4240},handCol:C=>0x2a2624,
+  toes:{n:5,len:.034,claw:.008,pad:true,colOf:C=>0x2a2624},toeCol:C=>0x2a2624,
+  TP:[[0,.6,-.09,.035],[0,.55,-.17,.05],[0,.47,-.26,.06],[0,.38,-.34,.062],[0,.29,-.4,.06],[0,.21,-.44,.055],[0,.15,-.47,.046],[0,.115,-.49,.03],[0,.105,-.5,.006]],
+  tailCol:(m,C)=>Math.floor(m.i*1.6)%2?0x1e1a18:C.FUR,tail:{sway:.12,freq:.9,lag:.5,stiff:.3}});
+// ------------------------------------------------ LYNX ------------------------------------------------
+fkSpecies('lynx',{n:'Lynx',sc:1.0,
+  hp:{R:.1,W:1.05,H:.95,L:.92,m:{len:.04,w:.06,h:.042,b:.044,tw:.034,th:.024,tb:.026,drop:.016,y0:-.03,z0:.35}},
+  eyes:{sz:1.15,fw:.95,pupil:[.0035,.013],brow:false},nose:'pink',noseSz:.7,jaw:[.05,.1,{h:.7,w:.85}],whisk:[.085,1.13,4,.14,0xf0ece4],
+  ear:{t:'tri',z:-.035,phi:.48,len:.085,w:.048,th:.016,out:.18,back:.1,tw:.1,tip:C=>0x1a1410,tuft:C=>0x1a1410,tuftL:.05},
+  skull(m,C){const z=m.r.p[2];if(m.s<-.25&&z>-.03)return C.FURL;if(z>.07&&m.s<.35)return C.FURL;if(m.s>.4&&z<.05&&Math.abs(Math.sin(m.x*90))>.8)return C.FURD;return C.FUR},
+  face(k,B,D,C){// the long cheek ruffs, barred dark at the tips
+    [-1,1].forEach(s=>[[.03,1.115,-.1],[.0,1.1,-.35],[-.03,1.105,-.6],[-.055,1.12,-.8]].forEach(([z,y,a],i)=>{const x=brSurfX(D,z,y)-.006;k.p('head','cone4','c',i%2?C.FURL:mdMix(C.FURL,0x1a1410,.6),s*x,y,z,.022,.075,.012,Math.PI*.75+a*.25,0,s*(1.1+a*.25))}))},
+  cols:i=>fkCols([[0xb08a5e],[0x9a8a72],[0xc09a6a]],i,{FURL:0xeae4d8,BELLY:0xe0d8c8,EYE:0xd8b030}),
+  body:{build:0,af:.98,lf:1.05},legK:[1.1,1.1,1.02,.92,.86,.8,.78],foot:{len:1.15,w:1,h:.85},
+  paint(P,C){P.paint.leg=(m,s)=>m.s>.4&&m.r.part=='shin'&&Math.sin(m.y*80)>.5?C.FURD:C.FUR},
+  paw:{n:4,len:[.022,.025,.025,.021],claw:.006,spread:.012,pad:true,curl:1.2,rad:1.15,colOf:C=>C.FUR},toes:{n:4,len:.034,claw:.008,pad:true,w:1.2,colOf:C=>C.FUR},
+  TP:[[0,.6,-.08,.035],[0,.58,-.13,.04],[0,.555,-.17,.038],[0,.53,-.2,.03],[0,.51,-.215,.008]],tailCol:(m,C)=>m.i>2.6?0x1a1410:C.FUR,tail:{sway:.12,freq:1.3,lag:.4,stiff:.2}});
+// ------------------------------------------------ OTTER ------------------------------------------------
+fkSpecies('otter',{n:'Otter',cit:1,sc:.95,
+  hp:{R:.092,W:1.02,H:.85,L:1.02,m:{len:.06,w:.06,h:.036,b:.04,tw:.04,th:.022,tb:.026,drop:.012,y0:-.026,z0:.3}},
+  eyes:{sz:.85,fw:.85,brow:false},nose:'nose',noseSz:1.1,noseDy:.004,jaw:[.05,.11,{h:.6,w:.85}],whisk:[.085,1.118,5,.13,0xe8e4dc],
+  ear:{t:'small',z:-.02,phi:1.0,len:.03,w:.02,th:.012,out:1.1,back:.2},
+  skull(m,C){const z=m.r.p[2];if(m.s<-.1&&z>-.04)return C.FURL;if(z>.06&&m.s<.4)return C.FURL;return C.FUR},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];[-1,1].forEach(s=>k.p('head','sph2','c',C.FURL,s*.026,t[1]-.006,t[0]-.016,.03,.022,.022))},
+  cols:i=>fkCols([[0x5a4232],[0x6a4e3a],[0x4a382c]],i,{FURL:0xc8b49a,BELLY:0xb8a48a,EYE:0x0a0606}),
+  body:{build:1,af:.92,lf:.92},neck:[.07,.075,.075],TR:[[1.06,1.08,1.06,1,1,1,1,1,1,1,1.2,1.25],[1,1,1,1,1,1,1,1,1,1,1.2,1.25],[1,1,1,1,1,1,1,1,1,1,1.2,1.25]],
+  paw:{n:5,len:[.02,.024,.025,.024,.02],claw:.005,spread:.011,pad:false,curl:1,colOf:C=>C.FURD},handCol:C=>C.FURD,
+  toes:{n:5,len:.036,claw:.007,pad:false,web:1,colOf:C=>C.FURD},toeCol:C=>C.FURD,
+  TP:[[0,.58,-.08,.06],[0,.5,-.16,.058],[0,.4,-.24,.05],[0,.3,-.3,.042],[0,.2,-.35,.034],[0,.12,-.4,.026],[0,.07,-.46,.018],[0,.05,-.52,.01],[0,.048,-.55,.003]],
+  tail:{sway:.1,freq:.8,lag:.5,stiff:.2}});
+// ------------------------------------------------ GOAT / RAM / SHEEP ------------------------------------------------
+var FK_CAPRA={hp:{R:.088,W:.92,H:.92,L:1.05,m:{len:.115,w:.044,h:.038,b:.04,tw:.026,th:.02,tb:.02,drop:.05,y0:-.03,z0:.3}},
+  eyes:{sz:1.1,fw:.4,pupil:[.011,.003],brow:false},nose:'none',jaw:[.05,.16,{h:.6,w:.8}],
+  ear:{t:'leaf',z:-.02,phi:1.1,len:.09,w:.05,th:.014,out:1.4,back:.25,tw:-.5},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','sph2','c',C.PINKD,0,t[1]+.004,t[0]-.004,.02,.014,.012);[-1,1].forEach(s=>k.p('head','box','c',0x2a1a18,s*.008,t[1]+.004,t[0]+.006,.004,.006,.004,0,0,s*.4))},
+  body:{build:1,af:.95,lf:.95},legK:[1.04,1.04,.98,.86,.78,.7,.66],foot:{len:.75,w:.75,h:.9},hoof:1,
+  paw:{n:3,len:[.028,.032,.028],claw:.009,nail:1,spread:.0135,pad:false,curl:.8,rad:1.15,colOf:C=>C.FURD,clawCol:C=>C.HOOF},handCol:C=>C.FURD,
+  TP:[[0,.58,-.1,.03],[0,.61,-.14,.035],[0,.63,-.17,.025],[0,.63,-.185,.006]],tail:{sway:.18,freq:2.2,lag:.3,stiff:.1},earAnim:{amp:.3,sv:.2,cyc:3.4}};
+fkSpecies('goat',Object.assign({},FK_CAPRA,{n:'Goat',sc:1.0,
+  skull(m,C){const z=m.r.p[2];if(m.s>.4&&z>.04&&Math.abs(m.c)<.4)return C.FURL;if(Math.abs(m.c)>.6&&m.s>-.1&&m.s<.5&&z>.0&&z<.12)return C.FURD;return C.FUR},
+  face(k,B,D,C){FK_CAPRA.face(k,B,D,C);
+    // horns sweeping back, ridged; a long beard
+    [-1,1].forEach(s=>{const b=fkSurf(D,-.035,.35,-.004),P=[[s*b[0],b[1],b[2]],[s*(b[0]+.02),b[1]+.07,b[2]-.03],[s*(b[0]+.04),b[1]+.11,b[2]-.1],[s*(b[0]+.06),b[1]+.1,b[2]-.18],[s*(b[0]+.07),b[1]+.06,b[2]-.23]];
+      fkHornLoft(B,P,t=>.022*(1-t*.82),C.HORN,1)});
+    const t=D.SN[D.SN.length-1],j=[0,t[1]-.06,t[0]-.07];[[0,.1,0],[-.012,.085,.1],[.012,.085,-.1]].forEach(([dx,l])=>k.L('head','c',C.FURL,[j[0]+dx,j[1]+.015,j[2]],[j[0]+dx*1.5,j[1]-l,j[2]-.02],.018,.003,5))},
+  cols:i=>fkCols([[0x8a7a66],[0xd8d0c0,{FURL:0xf0ece4,FURD:0x8a8070}],[0x5a4a3a]],i,{FURL:0xe8e2d8,BELLY:0xd0c8b8,EYE:0xc8a030,HORN:0x7a6a58})}));
+fkSpecies('ram',Object.assign({},FK_CAPRA,{n:'Ram',sc:1.04,ear:Object.assign({},FK_CAPRA.ear,{z:-.0,phi:1.3,out:1.6,back:.4}),
+  skull(m,C){const z=m.r.p[2];if(z<.02||m.s>.55&&z<.05)return C.WOOL;return C.FUR},
+  face(k,B,D,C){FK_CAPRA.face(k,B,D,C);
+    // a woolly poll on the brow, horns curling round the ears
+    for(let i=0;i<14;i++){const a=i/14*Math.PI*2,ph=.25+.6*Math.abs(Math.sin(a*1.3)),p=fkSurf(D,-.03+.05*Math.sin(a*2.1)*.5,ph*(i%2?1:-1),.002);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.026,.022,.026)}
+    [-1,1].forEach(s=>{const b=fkSurf(D,-.03,.62,-.006),c=[s*(b[0]+.04),b[1]-.03,b[2]-.03],P=[];
+      for(let i=0;i<=14;i++){const t=i/14,a=t*Math.PI*1.75-.5,r=.085*(1-t*.45);P.push([s*(b[0]+.02+t*.045),c[1]+Math.cos(a)*r+.03*(1-t),c[2]-Math.sin(a)*r+.03])}
+      fkHornLoft(B,P,t=>.034*(1-t*.72),C.HORN,1)})},
+  cols:i=>fkCols([[0x3a3028,{WOOL:0xe0d8c8}],[0x2a2422,{WOOL:0xd0c8b8}],[0x8a7a66,{WOOL:0xf0ece0}]],i,{FURL:0xd8d0c0,BELLY:0xd8d0c0,EYE:0xc8a030,HORN:0xb8a888}),
+  body:{build:2,af:1.05,lf:1,belly:.04},neck:[.075,.08,.08],
+  paint(P,C){P.paint.torso=m=>C.WOOL;P.paint.torsoLo=m=>C.WOOL;P.col.neck=C.WOOL;P.paint.sleeve=()=>C.WOOL;P.paint.leg=(m,s)=>m.r.part=='hip'||m.r.part=='thigh'?C.WOOL:C.FUR},
+  TP:[[0,.58,-.11,.04],[0,.57,-.16,.045],[0,.54,-.19,.035],[0,.52,-.2,.008]],tailCol:(m,C)=>C.WOOL}));
+fkSpecies('sheep',Object.assign({},FK_CAPRA,{n:'Sheep',cit:1,sc:.96,ear:Object.assign({},FK_CAPRA.ear,{z:-.0,phi:1.25,out:1.7,back:.2}),
+  skull(m,C){const z=m.r.p[2];if(z<-.02||m.s>.6&&z<.03)return C.WOOL;return C.FUR},
+  face(k,B,D,C){FK_CAPRA.face(k,B,D,C);for(let i=0;i<16;i++){const p=fkSurf(D,-.075+(i%4)*.022,(Math.floor(i/4)-1.5)*.5,.004);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.03,.026,.03)}},
+  cols:i=>fkCols([[0xe8e0d0,{WOOL:0xf0ece4,FURD:0xa89a88}],[0x2a2422,{WOOL:0xe0dad0}],[0xd0b896,{WOOL:0xeee8dc}]],i,{FURL:0xf0ece4,BELLY:0xe8e2d8,EYE:0x6a5020}),
+  body:{build:2,af:1,lf:.95,belly:.06},neck:[.075,.08,.08],
+  paint(P,C){P.paint.torso=m=>C.WOOL;P.paint.torsoLo=m=>C.WOOL;P.col.neck=C.WOOL;P.paint.sleeve=()=>C.WOOL;P.paint.leg=(m,s)=>m.r.part=='hip'||m.r.part=='thigh'?C.WOOL:C.FUR},
+  tailCol:(m,C)=>C.WOOL}));
+// ------------------------------------------------ HEDGEHOG ------------------------------------------------
+fkSpecies('hedgehog',{n:'Hedgehog',cit:1,sc:.84,
+  hp:{R:.1,W:1,H:.9,L:1.05,m:{len:.1,w:.05,h:.035,b:.035,tw:.01,th:.009,tb:.008,drop:.04,y0:-.03,z0:.3}},
+  eyes:{sz:.85,fw:.8,brow:false},nose:'nose',noseSz:.75,jaw:[.05,.15,{h:.6,w:.7}],whisk:[.13,1.1,2,.06],
+  ear:{t:'round',z:.0,phi:1.1,len:.04,w:.026,th:.012,out:1.2,back:0},
+  skull(m,C){const z=m.r.p[2];if(z<-.0&&m.s>-.3)return C.SPINE;return C.FUR},
+  face(k,B,D,C){// spines over the crown and the back of the head, lying back
+    for(let i=0;i<46;i++){const u=fkHash('hh'+i)%1000/1000,v=fkHash('hv'+i)%1000/1000,z=-.1+u*.105,ph=(v-.5)*2.6,p=fkSurf(D,z,ph,-.006),n=fkSurf(D,z-.02,ph*1.05,.05),d=[n[0]-p[0],n[1]-p[1]+.01,n[2]-p[2]-.03];
+      fkDir(k,'head','cone4','c',i%3?C.SPINE:C.SPINEL,p,d,.07+u*.02,.012,.012)}},
+  cols:i=>fkCols([[0xb8a080,{SPINE:0x4a3a2c,SPINEL:0xd8ccb4}],[0xa89070,{SPINE:0x5a4838,SPINEL:0xe0d4bc}],[0xc8b090,{SPINE:0x3a3028,SPINEL:0xc8bca4}]],i,{FURL:0xe0d4c0,BELLY:0xd8ccb8,EYE:0x0a0606}),
+  body:{build:2,af:.9,lf:.88,belly:.08},paint(P,C){P.col.neck=C.SPINE},
+  paw:{n:4,len:[.02,.023,.023,.019],claw:.006,spread:.0105,pad:false,curl:1,colOf:C=>C.PINKD},handCol:C=>C.PINKD,toes:{n:4,len:.03,claw:.008,pad:false,colOf:C=>C.PINKD},toeCol:C=>C.PINKD,
+  TP:[[0,.58,-.11,.02],[0,.56,-.15,.016],[0,.55,-.17,.005]],tail:{sway:.03}});
+// ------------------------------------------------ SQUIRREL ------------------------------------------------
+fkSpecies('squirrel',{n:'Squirrel',cit:1,sc:.84,
+  hp:{R:.096,W:.98,H:.95,L:1.02,m:{len:.06,w:.05,h:.04,b:.04,tw:.022,th:.018,tb:.018,drop:.024,y0:-.026,z0:.32}},
+  eyes:{sz:1.1,fw:.6,brow:false},nose:'pink',noseSz:.7,jaw:[.05,.1,{h:.6,w:.75}],whisk:[.08,1.13,3,.08],
+  ear:{t:'tri',z:-.03,phi:.45,len:.065,w:.036,th:.014,out:.2,back:.05,tw:.1,tuft:C=>C.FUR,tuftL:.035},
+  skull(m,C){const z=m.r.p[2];if(m.s<-.25&&z>-.02)return C.FURL;if(Math.abs(m.c)>.6&&Math.abs(z-this.EYEP[2])<.025&&m.s>-.1&&m.s<.6)return C.FURL;return C.FUR},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];[-1,1].forEach(s=>k.p('head','box','c',0xd8a040,s*.0045,t[1]-.02,t[0]-.006,.008,.016,.005,.1,0,0))},
+  cols:i=>fkCols([[0xb8582a],[0x8a5a3a],[0x7a7270]],i,{FURL:0xeee4d4,BELLY:0xeee4d4,EYE:0x0a0606}),
+  body:{build:0,af:.88,lf:.92},foot:{len:1.15,w:.85,h:.85},paw:{n:4,len:[.022,.026,.026,.021],claw:.007,spread:.0105,pad:false,curl:1.2,colOf:C=>C.FURD},handCol:C=>C.FURD,
+  toes:{n:4,len:.04,claw:.01,pad:false,colOf:C=>C.FURD},toeCol:C=>C.FURD,
+  // the big tail curls up the back and over
+  TP:[[0,.56,-.1,.04],[0,.58,-.18,.07],[0,.66,-.26,.09],[0,.78,-.3,.1],[0,.92,-.31,.1],[0,1.05,-.28,.095],[0,1.15,-.23,.085],[0,1.21,-.17,.07],[0,1.23,-.12,.05],[0,1.22,-.09,.02],[0,1.21,-.08,.005]],
+  tailCol:(m,C)=>m.s<-.5?C.FURD:C.FUR,tail:{sway:.08,freq:1.4,lag:.45,stiff:.3}});
+// ------------------------------------------------ BEAVER ------------------------------------------------
+fkSpecies('beaver',{n:'Beaver',cit:1,sc:.98,
+  hp:{R:.1,W:1.05,H:.92,L:1,m:{len:.065,w:.058,h:.044,b:.044,tw:.036,th:.026,tb:.026,drop:.024,y0:-.028,z0:.3}},
+  eyes:{sz:.75,fw:.75,brow:false},nose:'nose',noseSz:1,noseDy:.004,jaw:[.05,.12,{h:.7,w:.85}],whisk:[.09,1.12,3,.1,0x2a2420],
+  ear:{t:'small',z:-.03,phi:.95,len:.032,w:.022,th:.012,out:1.1,back:.2},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];[-1,1].forEach(s=>k.p('head','box','c',0xd88a2a,s*.0075,t[1]-.026,t[0]-.008,.013,.028,.007,.1,0,0));[-1,1].forEach(s=>k.p('head','sph2','c',C.FURL,s*.022,t[1]-.008,t[0]-.014,.026,.02,.018))},
+  cols:i=>fkCols([[0x6a4428],[0x5a3a24],[0x7a5432]],i,{FURL:0x9a7a5a,BELLY:0x8a6a4a,EYE:0x0a0606}),
+  body:{build:2,af:1,lf:.95,belly:.1},neck:[.075,.08,.08],paw:{n:5,len:[.02,.024,.025,.024,.02],claw:.008,spread:.011,pad:false,curl:1,colOf:C=>0x2a2420},handCol:C=>0x2a2420,
+  toes:{n:5,len:.04,claw:.01,pad:false,web:1,colOf:C=>0x2a2420},toeCol:C=>0x2a2420,
+  TP:[[0,.56,-.1,.04],[0,.48,-.18,.042],[0,.38,-.24,.036],[0,.28,-.29,.03],[0,.18,-.33,.026],[0,.1,-.37,.02],[0,.07,-.41,.008]],
+  tailKit(k,D,C){// the flat scaly paddle along the tail
+    [[2,.3,-.265,.07,.11],[3,.21,-.31,.075,.1],[4,.13,-.35,.065,.09]].forEach(([i,y,z,w,l])=>k.p('tl'+i,'sph2','c',i%2?0x2a2622:0x342e2a,0,y,z,w,.016,l*.6,.55,0,0))},
+  tailCol:(m,C)=>m.i>1.5?0x2a2622:C.FUR,tail:{sway:.06,freq:.7,lag:.3,stiff:.6}});
+// ------------------------------------------------ MOLE ------------------------------------------------
+fkSpecies('mole',{n:'Mole',cit:1,sc:.84,
+  hp:{R:.1,W:1.02,H:.88,L:1.02,m:{len:.1,w:.045,h:.032,b:.03,tw:.016,th:.014,tb:.012,drop:.03,y0:-.03,z0:.3}},
+  eyes:{sz:.45,fw:.8,brow:false},nose:'pink',noseSz:1.15,jaw:[.05,.14,{h:.55,w:.7}],whisk:[.12,1.105,3,.07,0xe8d8d0],
+  ear:{t:'none'},
+  cols:i=>fkCols([[0x2e2a30],[0x3a3238],[0x4a4044]],i,{FURL:0x5a5458,BELLY:0x4a4448,EYE:0x0a0606,PINK:0xd89a9a}),
+  body:{build:2,af:1.05,lf:.88,belly:.06},neck:[.075,.08,.08],
+  paw:{n:5,len:[.022,.026,.027,.026,.022],claw:.016,spread:.013,palm:1.25,pad:false,curl:.6,rad:1.15,colOf:C=>C.PINK},handCol:C=>C.PINK,
+  toes:{n:5,len:.03,claw:.012,pad:false,colOf:C=>C.PINK},toeCol:C=>C.PINK,
+  TP:[[0,.56,-.1,.022],[0,.52,-.15,.018],[0,.47,-.18,.012],[0,.45,-.19,.004]],tail:{sway:.05}});
+// ------------------------------------------------ FERRET ------------------------------------------------
+fkSpecies('ferret',{n:'Ferret',cit:1,sc:.9,
+  hp:{R:.088,W:.95,H:.85,L:1.08,m:{len:.06,w:.046,h:.034,b:.032,tw:.016,th:.013,tb:.012,drop:.02,y0:-.024,z0:.32}},
+  eyes:{sz:.85,fw:.8,brow:false},nose:'pink',noseSz:.75,jaw:[.05,.11,{h:.6,w:.75}],whisk:[.075,1.12,3,.09,0xe8e4dc],
+  ear:{t:'round',z:-.025,phi:.85,len:.04,w:.028,th:.012,out:1.0,back:.1,col:C=>C.FURL},
+  skull(m,C){const z=m.r.p[2];if(fkMask(this,m,.03))return C.FURD;if(z>.035||m.s<-.2)return C.FURL;return C.FUR},
+  cols:i=>fkCols([[0x8a6a4a],[0x6a5444],[0xd8ccb4,{FURD:0xa89880}]],i,{FURL:0xf0e8dc,BELLY:0xe8dccb,EYE:0x0a0606}),
+  body:{build:0,wf:.92,af:.82,lf:.85},
+  paw:{n:5,len:[.018,.022,.023,.022,.018],claw:.006,spread:.01,pad:true,curl:1.1,colOf:C=>C.FURD},handCol:C=>C.FURD,toes:{n:5,len:.03,claw:.008,pad:true,colOf:C=>C.FURD},toeCol:C=>C.FURD,
+  TP:[[0,.58,-.09,.03],[0,.53,-.17,.036],[0,.44,-.25,.036],[0,.34,-.31,.033],[0,.24,-.35,.029],[0,.15,-.38,.024],[0,.1,-.42,.016],[0,.085,-.45,.004]],tailCol:(m,C)=>m.i>4?C.FURD:C.FUR,tail:{sway:.14,freq:1.1,lag:.55,stiff:.1}});
+// ------------------------------------------------ BAT ------------------------------------------------
+fkSpecies('bat',{n:'Bat',cit:1,sc:.86,
+  hp:{R:.095,W:1,H:.95,L:.95,m:{len:.045,w:.04,h:.034,b:.032,tw:.02,th:.016,tb:.016,drop:.018,y0:-.026,z0:.35}},
+  eyes:{sz:.8,fw:.9,brow:false},nose:'none',jaw:[.05,.09,{h:.6,w:.75}],
+  ear:{t:'tri',z:-.025,phi:.6,len:.13,w:.065,th:.014,out:.45,back:.08,tw:.25,inner:C=>0x7a4a52},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','cone4','c',0x3a2228,0,t[1]+.016,t[0]-.004,.012,.03,.006);[-1,1].forEach(s=>{k.p('head','box','c',0x0a0606,s*.006,t[1]+.002,t[0]+.008,.004,.004,.004);k.p('head','cone4','c',0xf0ece4,s*.012,t[1]-.022,t[0]-.01,.004,.012,.004,Math.PI)})},
+  cols:i=>fkCols([[0x4a3a34],[0x3a2e2c],[0x6a5040]],i,{FURL:0x7a6458,BELLY:0x6a564a,EYE:0x0a0606,PINK:0x6a4048}),
+  body:{build:0,af:.85,lf:.82},handCol:C=>0x2a2024,
+  paw:{n:3,len:[.04,.046,.04],claw:.006,spread:.012,pad:false,curl:.8,colOf:C=>0x2a2024},toes:{n:4,len:.032,claw:.012,pad:false,colOf:C=>0x2a2024},toeCol:C=>0x2a2024,
+  TP:[[0,.56,-.1,.016],[0,.53,-.13,.01],[0,.52,-.14,.003]],tail:{sway:.02},earAnim:{amp:.3,sv:.25,cyc:3}});
+// ------------------------------------------------ HOUND ------------------------------------------------
+fkSpecies('hound',{n:'Hound',cit:1,sc:1.0,
+  hp:{R:.098,W:.95,H:.92,L:1.02,m:{len:.105,w:.054,h:.05,b:.05,tw:.036,th:.03,tb:.034,drop:.04,y0:-.03,z0:.3}},
+  eyes:{sz:.95,fw:.85},nose:'nose',noseSz:1.15,jaw:[.04,.15,{h:.9,w:.85}],
+  ear:{t:'long',z:-.035,phi:1.25,len:.13,w:.07,th:.014,out:2.75,back:-.1,tw:1.5},
+  skull(m,C){const z=m.r.p[2];if(z>.07&&(m.s<.3||Math.abs(m.c)<.3))return C.FURL;if(m.s>.5&&Math.abs(m.c)<.25&&z>-.04)return C.FURL;return C.FUR},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];[-1,1].forEach(s=>k.p('head','sph2','c',C.FUR,s*.03,t[1]-.03,t[0]-.04,.026,.03,.04))},
+  cols:i=>fkCols([[0x9a6a3a],[0x5a3a2a],[0xc8b8a0,{FURD:0x8a6a4a}]],i,{FURL:0xeee8dc,BELLY:0xe8e0d0,EYE:0x4a2a14}),
+  body:{build:1,af:.98,lf:1},paw:{n:4,len:[.024,.028,.028,.023],claw:.008,spread:.012,pad:true,curl:1,colOf:C=>C.FUR},toes:{n:4,len:.038,claw:.01,pad:true,colOf:C=>C.FUR},
+  TP:[[0,.6,-.09,.03],[0,.62,-.16,.032],[0,.66,-.23,.028],[0,.72,-.28,.022],[0,.78,-.31,.016],[0,.82,-.32,.008],[0,.83,-.32,.003]],tailCol:(m,C)=>m.i>4.5?C.FURL:C.FUR,tail:{sway:.3,freq:1.8,lag:.4,stiff:0},earAnim:{amp:.15,sv:.05}});
+// ================= v137: animal townsfolk — clothes and the keepers' costumes =================
+// Garments fit the animal body because they are built from the same (beast-scaled) torso / arm / leg rings, or measured
+// from what is already built (gkSkirt, gkCollar from the v136 kit): shirts and trousers are painted on the body rings,
+// vests / aprons / belts are thin shells over the torso, skirts and coats hang (they never wrap the legs), sleeves follow
+// the arm, hats sit on the skull between the ears. Clothes get a hole where the tail comes out (v114 mdLoft hook).
+// fkOutfit(name, o, D, C) -> {paint(P, C), build(B, P, C), boots}; FK137.out[label] = {sp, fur, sc} picks each keeper.
+var FKG={};
+// shirt + trousers painted on the body: o = {shirt, sleeve:'long'|'short'|'none', pants, legs:'long'|'knee'|'none', cuffs, patt(m) → colour or null}
+FKG.paint=function(P,C,o){const sh=o.shirt,pt=o.pants==null?sh:o.pants,sl=o.sleeve||'long',lg=o.legs||'long';
+  P.paint.torso=m=>m.y>.985?C.FUR:(o.patt&&o.patt(m))||sh;P.paint.torsoLo=m=>o.tunic&&m.y>o.tunic?((o.patt&&o.patt(m))||sh):pt;P.col.torso=sh;P.col.torsoLo=pt;P.col.pants=pt;P.col.belt=null;
+  P.paint.sleeve=()=>sl=='none'?C.FUR:sh;P.paint.fore=m=>{const p=m.r.part;if(sl=='long'||(sl=='short'&&m.i<3.7))return p=='wrist'&&o.cuffs?o.cuffs:sh;return p=='wrist'?mdMix(C.FUR,P.col.hand,.3):C.FUR};
+  const pl=P.paint.leg;P.paint.leg=(m,s)=>{const p=m.r.part;if(lg=='long'&&p!='ankle')return (o.pattL&&o.pattL(m))||pt;if(lg=='knee'&&(p=='hip'||p=='thigh'||p=='knee'&&m.i<3.5))return pt;return pl?pl(m,s):C.FUR}};
+// a band round the torso (belt, sash) with a buckle at the front
+FKG.belt=function(B,P,y,col,o){o=o||{};const k=dkKit(),off=(P.tOff||0)+(o.off||.01),h=o.h||.022;mdTS(B,P,y-h,y+h,off,{col});
+  if(o.buckle!==false){const p=mdTP(P,y,0,off+.004);k.p(n3TB(y),'box','m',o.buckle||0xb89a4a,p[0],p[1],p[2],.034,.03,.008);k.p(n3TB(y),'box','c',col,p[0],p[1],p[2]+.003,.018,.014,.006)}
+  mdKit(B,k)};
+// a torso shell (vest, jerkin, bodice) from y0 to y1, open at the front by openA (radians either side) unless 0
+FKG.shell=function(B,P,y0,y1,col,o){o=o||{};const op=o.open||0,vn=o.vneck;mdTS(B,P,y0,y1,(P.tOff||0)+(o.off||.01),{col:typeof col=='function'?col:m=>col,keep:m=>{if(op&&m.s>Math.cos(op))return false;if(vn&&m.s>.3&&m.y>vn[0]&&Math.abs(m.c)<(m.y-vn[0])*vn[1])return false;return !o.keep||o.keep(m)},lip:o.lip,lipT:o.lipT})};
+// buttons down the front (or two rows: dx)
+FKG.buttons=function(B,P,y0,y1,n,col,o){o=o||{};const k=dkKit();for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/Math.max(1,n-1);(o.dx?[-o.dx,o.dx]:[0]).forEach(dx=>{const a=dx?Math.asin(Math.max(-1,Math.min(1,dx/mdTorsoAt(P,y).rx))):0,p=mdTP(P,y,a,(P.tOff||0)+(o.off||.006));k.p(n3TB(y),'sph','m',col,p[0],p[1],p[2],.009,.009,.006)})}mdKit(B,k)};
+// a skirt / robe / coat skirt hanging from y0 (gkSkirt): hem(θ) or a number, flare, open front (coats), col / lin
+FKG.skirt=function(B,P,o){return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
+// an apron: bib (optional) + front skirt
+FKG.apron=function(B,P,col,o){o=o||{};const w=o.w||1.1,hem=o.hem||.3,y0=o.y0||.6;
+  if(o.bib!==false)mdTS(B,P,y0,o.bibTop||.93,(P.tOff||0)+.012,{col,keep:m=>m.s>.5});
+  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.02});
+  // ties at the back and (with a bib) the neck strap
+  const k=dkKit();if(o.bib!==false)[-1,1].forEach(s=>{const a=mdTP(P,o.bibTop||.93,s*.55,(P.tOff||0)+.014),b=mdTP(P,1.0,s*1.2,(P.tOff||0)+.006);k.L('chest','c',col,a,b,.008,.008,4)});
+  FKG.belt(B,P,y0+.01,mdSh(col,.85),{buckle:false,h:.012,off:.018});mdKit(B,k);return S};
+// sleeves of cloth over the arm (gkSleeve): bell / trail for robes, plain for coats
+FKG.sleeves=function(B,P,o){[-1,1].forEach(s=>gkSleeve(B,P,s,Object.assign({u0:.4,uw:5.0,off:.012,ext:.01},o)))};
+// a cuff / bracer / glove shell on the forearm and hand from ring u0 to u1 (arm ring indices)
+FKG.cuff=function(B,P,i0,i1,col,off){[-1,1].forEach(s=>mdAS(B,P,s,i0,i1,off||.012,{col,capB:i1>=7}))};
+// boots: shell over the lower leg and foot (no toes then)
+FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.off||.012,{col:m=>m.y<.03?mdSh(col,.6):col})})};
+// a standing / turned-down collar
+FKG.collar=function(B,P,col,o){return gkCollar(B,P,Object.assign({col,y0:.95,h:th=>1.0+.03*Math.max(0,-Math.cos(th)),flare:.02,open:.5},o||{}))};
+// a scarf / neckerchief: a roll round the neck and a knotted point at the front
+FKG.scarf=function(B,P,col,o){o=o||{};const k=dkKit(),y=o.y||.982,T=mdTorsoAt(P,y),n=14;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,a2=(i+1)/n*Math.PI*2,r=(c,an)=>[Math.sin(an)*(T.rx*.92+.018),y+.012*Math.cos(an),T.z+Math.cos(an)*((Math.cos(an)>0?T.f:T.b)*.92+.018)];
+    k.L('chest','c',col,r(0,a),r(0,a2),.013,.013,5)}
+  const f=[0,y-.01,T.z+T.f+.028];k.p('chest','sph2','c',mdSh(col,.9),f[0],f[1],f[2],.022,.018,.014);k.L('chest','c',col,f,[f[0]-.02,f[1]-.07,f[2]+.012],.018,.004,4);k.L('chest','c',mdSh(col,.85),f,[f[0]+.022,f[1]-.06,f[2]+.01],.016,.004,4);mdKit(B,k)};
+// a pouch / bag at the hip (angle a round the waist)
+FKG.pouch=function(k,P,y,a,col,s){s=s||1;const p=mdTP(P,y,a,(P.tOff||0)+.03*s);k.p('pelvis','box','c',col,p[0],p[1]-.02*s,p[2],.06*s,.07*s,.04*s,0,a,0);k.p('pelvis','box','c',mdSh(col,.8),p[0],p[1]+.012*s,p[2]+.004*Math.cos(a),.064*s,.024*s,.044*s,.12,a,0);k.p('pelvis','sph','m',0xb89a4a,p[0]+Math.sin(a)*.022*s,p[1]+.004,p[2]+Math.cos(a)*.022*s,.006,.006,.004)};
+// a mantle / capelet / lowered cowl draped over the shoulders: measured from what is built (torso, upper arms, collars) so it
+// hangs over everything; never narrower going down; weights: chest, and toward the upper arm at the outer lower edge (raised
+// arms lift its sides instead of poking through). o: y0 (top at the neck), hem (θ → y, or a number), col, lin, clear, flare,
+// open (front gap, radians), dag, roll (a rolled edge at the top: radius), folds [n, amp]
+FKG.mantle=function(B,P,o){o=o||{};const N=o.N||32,y0=o.y0||1.0,hem=typeof o.hem=='function'?o.hem:(()=>o.hem||.84),clr=o.clear==null?.018:o.clear,fl=o.flare||0,TH=j=>j/N*Math.PI*2,nt=o.rows||6;
+  let ymin=y0;for(let j=0;j<N;j++)ymin=Math.min(ymin,hem(TH(j)));ymin-=o.dag||0;
+  const D=BR.on?BR.R:null,pts=gkPts(B,ymin-.02,y0+.02,(x,y,z)=>x*x+z*z<.5*.5&&!(D&&D.TP&&brTailNear(D,x,y,z))&&!(y>1.0&&z>.0),/^(tl\d|cp\d|er[LR]|lh|rh)/);
+  const dy=.014,ys=[];for(let y=y0;y>=ymin-.001;y-=dy)ys.push(y);const H=gkRows(pts,ys,dy*.75);
+  const cz=ys.map(y=>{const q=mdTorsoAt(P,Math.min(.99,y));return (q.z||0)+(q.f-q.b)*.5*0});
+  const RB=H.map((h,i)=>{const r=[];for(let j=0;j<N;j++)r.push(gkHullR(h,0,cz[i],TH(j)));return r});
+  for(let i=1;i<RB.length;i++)for(let j=0;j<N;j++)RB[i][j]=Math.max(RB[i][j],RB[i-1][j]);
+  const rAt=(y,j)=>{const f=(y0-y)/dy,i=Math.max(0,Math.min(RB.length-1,Math.round(f)));return RB[i][j]},fo=o.folds||[10,.006];
+  const G=[];for(let i=0;i<=nt;i++){const t=i/nt,row=[];for(let j=0;j<=N;j++){const jj=j%N,th=TH(j);let y=y0+(hem(th)-y0)*t;if(i==nt&&o.dag&&j%2)y-=o.dag;
+      const r=rAt(Math.max(ymin,y),jj)+clr+fl*t*t+fo[1]*t*Math.sin(th*fo[0]),x=Math.sin(th)*r,zc=cz[Math.min(cz.length-1,Math.round((y0-Math.max(ymin,y))/dy))],z=zc+Math.cos(th)*r;
+      const sd=Math.abs(Math.sin(th)),a=.55*Math.max(0,sd-.35)/.65*Math.min(1,t*1.4),bn=x>0?'aR0':'aL0',w=y>1.0?mdWb('chest','neck',.3):[['chest',1-a],[bn,a]];
+      row.push({x,y,z,w,cz:zc})}G.push(row)}
+  const op=o.open||0,keep=m=>{const th=m.u*Math.PI*2;return !(op&&(th<op||th>Math.PI*2-op))};
+  gkSurf(B,G,{t:o.t||'c',col:o.col,keep});gkSurf(B,gkInset(G,G.map((r,i)=>r[0].cz),.004),{t:'c',col:o.lin==null?mdSh(typeof o.col=='function'?0x555555:o.col,.6):o.lin,keep});
+  if(o.roll){const k=dkKit(),R0=G[0];for(let j=0;j<N;j++){const a=R0[j],b=R0[j+1],th=TH(j+.5);if(op&&(th<op||th>Math.PI*2-op))continue;k.L('chest','c',o.rollCol||o.col,[a.x,a.y,a.z],[b.x,b.y,b.z],o.roll,o.roll,5)}mdKit(B,k)}
+  return {G,N,nt}};
+// ---------------- hats ----------------
+// the crown point and the room between the ears at z
+function fkCrown(D,z){const q=brSkullAt(D,z),E=fkEarBase(D),half=E&&D.ear.t!='small'&&D.ear.t!='tuft'?Math.max(.03,E[0]-.012):q.rx*1.05;return {y:q.yc+q.f,half:Math.min(half,q.rx*1.05),q}}
+// a head-hugging cap (coif, kerchief, skullcap): the skull rings pushed out, kept above yMin (and above the line yF at the front)
+function fkCoif(B,D,col,o){o=o||{};const off=o.off||.008,z0=o.z0==null?D.SN[0][0]:o.z0,z1=o.z1==null?D.EYEP[2]-.02:o.z1,R=[];
+  D.SN.forEach(q=>{if(q[0]>=z0-.001&&q[0]<=z1+.001)R.push({p:[0,q[1],q[0]],rx:q[2]+off,f:q[3]+off,b:q[4]+off,w:[['head',1]]})});
+  if(R.length<2)return;mdLoft(B,R,{seg:20,ref:[0,1,0],capA:o.capA!==false,col:typeof col=='function'?col:col,keep:m=>m.y>(o.yMin||D.EYEP[1]+.01)+(o.tilt||0)*(m.z-z0)})}
+// a soft beret / flat cap on the crown, sized between the ears; brim = peak length at the front
+function fkBeret(k,D,col,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z),r=Math.min(o.r||.09,c.half+.012),y=c.y+(o.dy||.004);
+  k.p('head','sph2','c',col,0,y,z,r,o.h||.03,r*(o.d||1.05),o.tx||-.12,0,o.tz||0);k.p('head','sph2','c',mdSh(col,.8),0,y-.012,z,r*.92,.012,r*.97,o.tx||-.12,0,o.tz||0);
+  if(o.peak){const pz=z+r*.8;k.p('head','sph2','c',mdSh(col,.75),0,y-.008,pz+.02,r*.8,.008,o.peak,-.2,0,0)}
+  if(o.btn)k.p('head','sph','c',mdSh(col,.7),0,y+(o.h||.03)*.95,z,.008,.006,.008);return {y,r,z}}
+// a broad-brimmed hat: crown + brim (the ears go through the brim)
+function fkBrimHat(k,D,col,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z),cr=Math.min(o.cr||.08,c.half+.01),y=c.y-(o.sink||.012);
+  k.p('head','cyl','c',col,0,y+.002,z,o.brim||.2,.008,o.brim||.2,o.tx||-.05,0,o.tz||0);k.p('head','tor','c',mdSh(col,.92),0,y+(o.ch||.07)/2,z,cr,o.ch||.07,cr*1.05,o.tx||-.05,0,o.tz||0);
+  k.p('head','cyl','c',o.band||mdSh(col,.55),0,y+.014,z,cr*1.03,.018,cr*1.08,o.tx||-.05,0,o.tz||0);return {y,cr,z}}
+function fkBrimHatB(B,D,col,o){}
+// a chef's toque
+function fkToque(k,D,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z),r=Math.min(.075,c.half+.006),y=c.y-.01;
+  k.p('head','cyl','c',0xe8e2d6,0,y+.06,z-.005,r,.12,r,-.1,0,0);k.p('head','sph2','c',0xf0ece2,0,y+.13,z-.012,r*1.35,.055,r*1.35,-.1,0,0);
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.p('head','sph2','c',0xf0ece2,Math.sin(a)*r*.9,y+.135,z-.012+Math.cos(a)*r*.9,r*.55,.045,r*.55)}
+  k.p('head','cyl','c',0xd8d0c2,0,y+.012,z-.004,r*1.04,.026,r*1.04,-.1,0,0)}
+// a tall pointed hat (narrow enough to stand between the ears), bent tip
+function fkPointHat(k,D,col,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z),r=Math.min(o.r||.085,c.half+.004),y=c.y-.016,h=o.h||.26;
+  k.p('head','cyl','c',col,0,y+.004,z,o.brim||r*1.9,.008,o.brim||r*1.9,-.08,0,0);
+  const P=[[0,y,z],[0,y+h*.45,z-.012],[0,y+h*.78,z-.04],[.02,y+h*.95,z-.09],[.05,y+h,z-.13]];fkPath(P,col,r,.006,k,'head',8);
+  k.p('head','tor','c',o.band||mdSh(col,.6),0,y+.016,z,r*1.02,.022,r*1.02,-.08,0,0);if(o.star)k.p('head','oct','g',o.star,0,y+h*.3,z+r*.88,.014,.018,.006);return {y,r,z}}
+// ---------------- outfits ----------------
+var FKO={};
+function fkOutfit(name,o,D,C){const f=FKO[name]||FKO.cit;return f(o,D,C)}
+// the keepers: label → species (+ fur variant, scale)
+FK137.out={'Stronghold Steward':{sp:'stag',fur:0},'Blacksmith':{sp:'bear',fur:0,sc:1.1},'Merchant':{sp:'raccoon',fur:0},'Magic Vendor':{sp:'lynx',fur:0},
+  'Innkeeper':{sp:'boar',fur:0},'Cook':{sp:'otter',fur:0},'Alchemist':{sp:'goat',fur:0},'Stable Master':{sp:'ram',fur:0},
+  'Curio Merchant':{sp:'fox',fur:0},'Wandering Merchant':{sp:'fox',fur:0},'Beast Trainer':{sp:'wolf',fur:0},'Bard':{sp:'hare',fur:2},'Traveling Bard':{sp:'hare',fur:2},'Rune Sage':{sp:'owl',fur:0}};
+// a plain citizen: tunic + trousers from the npc colours, sometimes a skirt or dress, a hat or a kerchief
+FKO.cit=function(o,D,C){const rb=mdC(o.robe||0x6a5a4a),tr=mdC(o.trim||mdSh(rb,.6)),h=fkHash(o.robe+'|'+o.trim+'|'+(o.fkV|0)),dress=(h>>>3)%4,legs=(h>>>6)%3?'long':'knee';
+  return {paint(P){FKG.paint(P,C,{shirt:rb,sleeve:(h>>>9)%3==0?'short':'long',pants:mdSh(dress==3?rb:mdMix(rb,0x3a3028,.6),.8),legs,cuffs:tr,tunic:.5})},
+    build(B,P){FKG.belt(B,P,.6,tr==rb?mdSh(rb,.5):tr,{h:.016});
+      if(dress==1)FKG.skirt(B,P,{y0:.6,hem:th=>.42+.02*Math.cos(th),col:rb,flare:.03,lin:mdSh(rb,.6)});
+      else if(dress==2)FKG.skirt(B,P,{y0:.6,hem:th=>.15+.02*Math.max(0,-Math.cos(th)),col:rb,flare:.05,lin:mdSh(rb,.6)});
+      if(o.apron)FKG.apron(B,P,0xd8d0bc,{hem:.32,bib:dress!=2});
+      if((h>>>12)%2)FKG.scarf(B,P,tr);else FKG.collar(B,P,mdSh(rb,.9),{h:th=>.995+.02*Math.max(0,-Math.cos(th)),flare:.012});
+      const k=dkKit();FKG.pouch(k,P,.58,-.9,0x5a3a22,.8);
+      const hat=o.hat||'';if(hat=='cap')fkBeret(k,D,mdC(o.hatC||0x3a2a1a),{peak:D.ear&&D.ear.t!='tri'&&D.ear.t!='long'?.05:0,btn:1});
+      else if(hat=='chef'||hat=='hood')fkCoif(B,D,mdC(o.hatC||tr),{z1:D.EYEP[2]-.035,yMin:D.EYEP[1]+.03});
+      else if(hat=='wiz')fkBeret(k,D,mdC(o.hatC||0x3a2a5a),{h:.04,btn:1});
+      mdKit(B,k)}}};
+// ================= v137: animal townsfolk — the keepers' costumes =================
+// One costume per keeper, made for their trade (and the label the game gives them). Species are set in FK137.out (2820).
+var FKC={gold:0xc9a24a,brass:0xb08a3a,leather:0x5a3a22,leatherD:0x3a2616,linen:0xd8ccb0,white:0xe8e2d6,iron:0x4a4a52};
+// a stripe / trim at the hem rows of a gkSkirt (m.v near 1) or the front edges of an open coat
+function fkTrim(col,tr,o){o=o||{};return m=>{if(m.v!=null&&m.v>(o.hem||.86))return tr;if(o.edge&&m.u!=null){const th=m.u*Math.PI*2,a=Math.min(th,Math.PI*2-th);if(Math.abs(a-o.edge)<.12)return tr}return typeof col=='function'?col(m):col}}
+// ---------------- Stronghold Steward (stag): a long navy coat, crimson waistcoat, chain of office ----------------
+FKO['Stronghold Steward']=function(o,D,C){const navy=0x23304e,crim=0x7a2228,G=FKC.gold;
+  return {paint(P){FKG.paint(P,C,{shirt:crim,sleeve:'long',pants:0x1c2030,legs:'long',cuffs:G});P.paint.sleeve=()=>navy;P.paint.fore=m=>m.r.part=='wrist'?G:navy},
+    build(B,P){FKG.buttons(B,P,.66,.9,5,G);FKG.shell(B,P,.56,.97,m=>Math.abs(m.y-.6)<.02?0x1a1a22:navy,{open:.42,off:.012,lipT:.004});
+      FKG.belt(B,P,.6,0x1a1612,{buckle:G,off:.016,h:.018});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.2+.16*Math.max(0,Math.cos(th))**2,col:fkTrim(navy,G,{hem:.88}),lin:0x14182a,open:.36,flare:.05,backF:.4});
+      FKG.collar(B,P,navy,{h:th=>1.02+.04*Math.max(0,-Math.cos(th)),flare:.03,open:.6,lin:G});
+      const k=dkKit(),pts=[];for(let i=0;i<=12;i++){const a=-1.25+i/12*2.5,y=.95-.09*Math.cos(a*1.25)**2*(1-Math.abs(a)/1.6)-.0;pts.push(mdTP(P,Math.max(.86,y-.0),a,(P.tOff||0)+.012))}
+      gkChain(k,'chest',pts,.008,G);const m=mdTP(P,.84,0,(P.tOff||0)+.018);k.p('chest','cyl','m',G,m[0],m[1],m[2],.032,.008,.032,Math.PI/2,0,0);k.p('chest','cyl','c',crim,m[0],m[1],m[2]+.005,.02,.006,.02,Math.PI/2,0,0);
+      k.p('chest','oct','m',G,m[0],m[1],m[2]+.009,.01,.014,.004);
+      gkScroll(k,'pelvis',.17,.52,.11,1.2,G,1.2);mdKit(B,k)}}};
+// ---------------- Blacksmith (bear): leather apron, heavy gloves, boots, a kerchief, tongs at the belt ----------------
+FKO['Blacksmith']=function(o,D,C){const sh=0x4a4038,ap=0x5e3c22,soot=0x2a2420;
+  return {boots(B,P){FKG.boots(B,P,0x2a1d14,{i0:4,top:0x3a2a1a})},
+    paint(P){FKG.paint(P,C,{shirt:sh,sleeve:'short',pants:0x3a3028,legs:'long'})},
+    build(B,P){FKG.cuff(B,P,4,7,FKC.leatherD,.014);FKG.cuff(B,P,4,4,0x2a1a10,.018);
+      FKG.belt(B,P,.6,FKC.leatherD,{buckle:FKC.iron,h:.02});
+      const st=m=>{const n=Math.sin(m.x*60+m.y*40)*Math.cos(m.z*55-m.y*30);return n>.55?soot:ap};
+      FKG.apron(B,P,ap,{hem:.27,w:1.25,bibTop:.94});
+      const k=dkKit(),pk=mdTP(P,.72,0,(P.tOff||0)+.02);k.p('chest','box','c',mdSh(ap,.8),pk[0],pk[1],pk[2],.11,.07,.012);
+      // tongs and a hammer loop on the belt
+      const t0=mdTP(P,.6,-.95,(P.tOff||0)+.025);k.L('pelvis','m',FKC.iron,t0,[t0[0]-.01,t0[1]-.25,t0[2]+.03],.008,.007,4).L('pelvis','m',FKC.iron,[t0[0]+.012,t0[1],t0[2]],[t0[0]+.006,t0[1]-.25,t0[2]+.04],.008,.007,4);
+      const h0=mdTP(P,.6,.95,(P.tOff||0)+.025);k.p('pelvis','ring','c',FKC.leatherD,h0[0],h0[1]-.01,h0[2],.022,.08,.022,0,0,Math.PI/2);
+      // a red kerchief over the crown, knotted at the back
+      fkCoif(B,D,0x8a2a1a,{z1:D.EYEP[2]-.04,yMin:D.EYEP[1]+.035,off:.01});const bk=fkSurf(D,-.09,0.9,.01);k.p('head','sph2','c',0x7a2418,0,bk[1],bk[2]-.004,.024,.018,.014);
+      k.L('head','c',0x8a2a1a,[0,bk[1],bk[2]-.01],[.02,bk[1]-.07,bk[2]-.03],.012,.004,4).L('head','c',0x8a2a1a,[0,bk[1],bk[2]-.01],[-.02,bk[1]-.06,bk[2]-.025],.012,.004,4);
+      mdKit(B,k)}}};
+// ---------------- Merchant / Trading Post (raccoon): a blue vest, coin purse, ledger, a beret with a feather ----------------
+FKO['Merchant']=function(o,D,C){const vest=mdC(o.robe||0x2a4a7a),hat=mdC(o.hatC||0x6a2a2a);
+  return {paint(P){FKG.paint(P,C,{shirt:FKC.linen,sleeve:'long',pants:0x3a3448,legs:'long',cuffs:mdSh(FKC.linen,.85)})},
+    build(B,P){FKG.shell(B,P,.58,.95,m=>m.y>.93?mdSh(vest,.8):vest,{open:.22,off:.012,vneck:[.8,2.2]});FKG.buttons(B,P,.62,.86,4,FKC.gold,{dx:.05,off:.016});
+      FKG.belt(B,P,.6,FKC.leather,{buckle:FKC.brass});FKG.scarf(B,P,0x8a2a2a);
+      FKG.skirt(B,P,{y0:.6,hem:th=>.47,col:vest,open:.5,flare:.02,rows:4,lin:mdSh(vest,.5)});
+      const k=dkKit();FKG.pouch(k,P,.56,.75,0x8a6a2a,1.1);const c=mdTP(P,.56,.75,(P.tOff||0)+.06);for(let i=0;i<3;i++)k.p('pelvis','cyl','m',FKC.gold,c[0]+.01*i,c[1]-.06,c[2]+.02,.012,.004,.012);
+      gkBook(k,'pelvis',-.2,.5,.0,1.3,0x5a2a1a,FKC.brass,-1.5);
+      const b=fkBeret(k,D,hat,{h:.034,btn:1,tz:.18,r:.085});gkFeather(k,'head',[.04,b.y+.01,b.z-.02],[.5,.7,-.5],.12,.018,0xe8e0c8);
+      mdKit(B,k)}}};
+// ---------------- Magic Vendor (lynx): a starry violet robe, bell sleeves, a tall pointed hat, a crystal ----------------
+FKO['Magic Vendor']=function(o,D,C){const rb=mdC(o.robe||0x5a3aa0),dk=mdSh(rb,.55),G=FKC.gold;
+  return {paint(P){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:dk,legs:'long'})},
+    build(B,P){FKG.belt(B,P,.6,G,{buckle:0x9a70ff,h:.014});
+      const S=FKG.skirt(B,P,{y0:.6,hem:th=>.07+.04*Math.max(0,-Math.cos(th)),col:fkTrim(rb,G,{hem:.9}),lin:dk,flare:.08,folds:[11,.012]});
+      FKG.sleeves(B,P,{bell:.05,trail:.08,col:m=>m.v>.85?G:rb,lin:dk,u0:2.8});
+      FKG.mantle(B,P,{y0:1.0,hem:th=>.86-.03*Math.max(0,-Math.cos(th)),col:m=>m.v>.8?G:mdSh(rb,.85),lin:dk,open:.5,dag:.02,flare:.02});
+      const k=dkKit();// little stars and moons stitched over the skirt
+      for(let j=0;j<26;j++){const t=.15+((j*37)%70)/100,th=(j*2.39)%(Math.PI*2),v=S.at(t,th);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L+.003)/L,ry=Math.atan2(v.x,v.z-S.cz);
+        gkW(k.p('pelvis',j%4?'oct':'cone4',j%4?'m':'g',j%4?0xe8c860:0xc8b8ff,v.x*f,v.y,S.cz+(v.z-S.cz)*f,.009,.012,.003,0,ry,0),v.w)}
+      const pc=mdTP(P,.84,0,(P.tOff||0)+.03);k.L('chest','c',0x2a2030,mdTP(P,.97,-.6,(P.tOff||0)+.03),pc,.003,.003,3).L('chest','c',0x2a2030,mdTP(P,.97,.6,(P.tOff||0)+.03),pc,.003,.003,3);
+      k.p('chest','oct','g',0xb890ff,pc[0],pc[1]-.02,pc[2],.018,.032,.012);
+      fkPointHat(k,D,mdC(o.hatC||0x2e2078),{h:.22,r:.08,brim:.15,band:G,star:0xf0d870});mdKit(B,k)}}};
+// ---------------- Innkeeper (boar): rolled sleeves, a maroon waistcoat, a long white apron, a towel and keys ----------------
+FKO['Innkeeper']=function(o,D,C){const wc=mdC(o.robe||0x6a3a2a);
+  return {paint(P){FKG.paint(P,C,{shirt:0xe0d4bc,sleeve:'short',pants:0x4a3a2a,legs:'long'})},
+    build(B,P){FKG.shell(B,P,.57,.95,m=>m.y<.6?mdSh(wc,.8):wc,{off:.012,vneck:[.78,3.2],lip:.004});FKG.buttons(B,P,.62,.76,4,FKC.brass,{off:.018});
+      {const k=dkKit(),a=mdTP(P,.7,-.35,(P.tOff||0)+.016),b=mdTP(P,.66,.0,(P.tOff||0)+.018),c=mdTP(P,.7,.4,(P.tOff||0)+.016);gkChain(k,'spine',[a,b,c],.005,FKC.gold);k.p('spine','cyl','m',FKC.gold,c[0],c[1]-.004,c[2]+.004,.016,.006,.016,Math.PI/2,0,0);mdKit(B,k)}
+      FKG.cuff(B,P,3,3,0xe0d4bc,.016);
+      FKG.apron(B,P,0xece6da,{hem:.17,w:1.45,bib:false,y0:.62});
+      const k=dkKit();// a towel over the left shoulder, hanging front and back
+      const s0=mdTP(P,.96,-1.2,(P.tOff||0)+.01);k.p('chest','box','c',0xe8e0d0,s0[0],s0[1]+.012,s0[2]-.01,.07,.012,.12,0,0,-.2);
+      [[.1,1],[-.11,-1]].forEach(([dz,f])=>{k.p('chest','box','c',f>0?0xe8e0d0:0xd8d0c0,s0[0]-.005,s0[1]-.07,s0[2]+dz,.06,.15,.01,f*.12,0,-.08);for(let i=0;i<2;i++)k.p('chest','box','c',0xb84a3a,s0[0]-.005,s0[1]-.12+i*.02,s0[2]+dz+f*.006,.062,.006,.004,f*.12,0,-.08)});
+      // a ring of keys at the belt
+      const r=mdTP(P,.6,.9,(P.tOff||0)+.03);k.p('pelvis','ring','m',FKC.iron,r[0],r[1]-.02,r[2],.024,.08,.024,0,0,Math.PI/2);[-1,0,1].forEach(i=>k.L('pelvis','m',FKC.brass,[r[0]+.004,r[1]-.04,r[2]+i*.012],[r[0]+.008,r[1]-.085,r[2]+i*.02],.004,.003,4));
+      mdKit(B,k)}}};
+// ---------------- Cook (otter): chef's whites, checked trousers, neckerchief, half apron, toque, a ladle ----------------
+FKO['Cook']=function(o,D,C){const W=FKC.white;
+  return {paint(P){FKG.paint(P,C,{shirt:W,sleeve:'long',pants:0x3a3a3e,legs:'long',cuffs:mdSh(W,.9),pattL:m=>(Math.floor(m.y*40)+Math.floor((m.x+m.z)*40))%2?0x2a2a2e:0xd8d4cc})},
+    build(B,P){FKG.buttons(B,P,.66,.9,4,0xd8d4cc,{dx:.05,off:.008});mdTS(B,P,.64,.95,(P.tOff||0)+.006,{col:mdSh(W,.94),keep:m=>m.s>.2&&m.c<.25&&m.c>-.6});
+      FKG.scarf(B,P,0xb83a2a);FKG.apron(B,P,0xd8d4cc,{hem:.36,w:1.3,bib:false,y0:.6});
+      const k=dkKit();fkToque(k,D);const l0=mdTP(P,.58,-.9,(P.tOff||0)+.03);k.L('pelvis','m',0x8a8a92,l0,[l0[0]-.01,l0[1]-.22,l0[2]+.02],.006,.006,4);k.p('pelvis','sph','m',0x8a8a92,l0[0]-.012,l0[1]-.24,l0[2]+.024,.03,.02,.03);
+      mdKit(B,k)}}};
+// ---------------- Alchemist (goat): a long green robe, a bandolier of vials, satchel, brass goggles ----------------
+FKO['Alchemist']=function(o,D,C){const rb=mdC(o.robe||0x2e4a3a),dk=mdSh(rb,.55),stain=m=>rb;
+  return {paint(P){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:dk,legs:'long',cuffs:FKC.leather})},
+    build(B,P){FKG.belt(B,P,.6,FKC.leather,{buckle:FKC.brass});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.12+.03*Math.max(0,-Math.cos(th)),col:fkTrim(stain,mdC(o.trim||0x8a6a2a),{hem:.9}),lin:dk,flare:.06,slit:.25,slitY:.3});
+      FKG.cuff(B,P,4,5,FKC.leather,.014);
+      const k=dkKit(),A=[],off=(P.tOff||0)+.012;// the bandolier from the right shoulder to the left hip, vials in loops
+      for(let i=0;i<=10;i++){const t=i/10,y=.97-.38*t,a=.75-1.6*t;A.push(mdTP(P,y,a,off))}fkPath(A,FKC.leather,.012,.012,k,'chest',4);
+      const gl=[0x7aff8a,0xff7a4a,0x7ab8ff,0xe8d84a,0xd87aff];[2,3,4,5,6].forEach((i,j)=>{const p=mdTP(P,.97-.38*i/10,.75-1.6*i/10,off+.016);gkVial(k,n3TB(p[1]),p[0],p[1],p[2],1.1,gl[j],FKC.brass)});
+      // satchel on the left hip with a strap over the right shoulder (behind the bandolier)
+      FKG.pouch(k,P,.52,-1.0,0x6a4a2a,1.6);
+      // goggles pushed up on the brow: two brass rims with lenses, a strap round the head
+      const e=D.EYEP,gz=e[2]-.02,gy=fkTop(D,gz)-.008;[-1,1].forEach(s=>{const x=s*.032;k.p('head','cyl','m',FKC.brass,x,gy,gz+.012,.024,.016,.024,-1.1,0,0);k.p('head','cyl','g',0x9ad8c0,x,gy+.006,gz+.016,.018,.014,.018,-1.1,0,0)});
+      fkCoif(B,D,FKC.leatherD,{z0:-.1,z1:gz,yMin:gy-.006,off:.004});
+      mdKit(B,k)}}};
+// ---------------- Stable Master (ram): linen shirt, dungarees, neckerchief, straw hat, a coil of rope ----------------
+FKO['Stable Master']=function(o,D,C){const du=0x5a4a2e;
+  return {paint(P){FKG.paint(P,C,{shirt:0xd0c4a8,sleeve:'short',pants:du,legs:'long'})},
+    build(B,P){mdTS(B,P,.58,.88,(P.tOff||0)+.01,{col:du,keep:m=>m.s>.45});FKG.belt(B,P,.6,du,{buckle:false,h:.03});
+      const k=dkKit();[-1,1].forEach(s=>{const a=mdTP(P,.87,s*.4,(P.tOff||0)+.014),b=mdTP(P,.97,s*.62,(P.tOff||0)+.008),c=mdTP(P,.6,s*2.6,(P.tOff||0)+.012);k.L('chest','c',du,a,b,.011,.011,4);k.L('chest','c',du,b,c,.011,.011,4);k.p('chest','sph','m',FKC.brass,a[0],a[1],a[2]+.004,.01,.01,.006)});
+      FKG.scarf(B,P,0x3a6a3a);
+      const r=mdTP(P,.56,1.0,(P.tOff||0)+.05);k.p('pelvis','ring','c',0xb8a070,r[0],r[1],r[2],.07,.3,.07,0,1.0,Math.PI/2);k.p('pelvis','ring','c',0xa89060,r[0],r[1],r[2],.06,.3,.06,0,1.0,Math.PI/2);
+      fkBrimHat(k,D,0xc8a860,{brim:.2,cr:.075,ch:.075,band:0x6a3a1a,sink:.0});mdKit(B,k)}}};
+// ---------------- Curio Merchant (fox): a travelling coat, a big pack with trinkets, a wide hat with a feather ----------------
+FKO['Curio Merchant']=function(o,D,C){const coat=mdC(o.robe||0x7a4a2a),hat=mdC(o.hatC||0x3a6a3a);
+  return {paint(P){FKG.paint(P,C,{shirt:0xc8b890,sleeve:'long',pants:0x3a3028,legs:'long'});P.paint.sleeve=()=>coat;P.paint.fore=m=>m.r.part=='wrist'?mdSh(coat,.7):coat},
+    build(B,P){FKG.shell(B,P,.56,.97,coat,{open:.45,off:.012});FKG.belt(B,P,.6,FKC.leatherD,{buckle:FKC.brass});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.24+.06*Math.max(0,Math.cos(th)),col:coat,lin:mdSh(coat,.5),open:.4,flare:.05,dag:[.02]});
+      FKG.collar(B,P,mdSh(coat,.85),{h:th=>1.03,flare:.04,open:.7});FKG.scarf(B,P,0x2a5a6a,{y:.975});
+      const k=dkKit();// the pack on the back: a box, a bedroll on top, a pot and a lantern hanging
+      const bz=mdTorsoAt(P,.8),z=-(bz.b+(P.tOff||0))-.08;k.p('chest','box','c',0x6a4a2a,0,.8,z,.3,.34,.15).p('chest','box','c',0x5a3a22,0,.92,z-.004,.31,.06,.155);
+      k.p('chest','cyl','c',0x8a2a2a,0,1.0,z+.01,.06,.34,.06,0,0,Math.PI/2);[-1,1].forEach(s=>k.p('chest','box','c',FKC.leatherD,s*.1,.84,z+.02,.025,.4,.16));
+      k.p('chest','sph','m',0x4a4a4a,.17,.68,z-.03,.06,.05,.06).L('chest','m',0x2a2a2a,[.17,.73,z-.03],[.17,.78,z-.03],.004,.004,3);
+      k.p('chest','box','m',0x6a5a3a,-.18,.7,z-.02,.05,.07,.05).p('chest','box','g',0xffc860,-.18,.7,z-.02,.035,.045,.035);
+      [-1,1].forEach(s=>{const a=mdTP(P,.96,s*.5,(P.tOff||0)+.01),b=mdTP(P,.66,s*.65,(P.tOff||0)+.01);k.L('chest','c',FKC.leatherD,a,[s*.12,.96,z+.05],.014,.014,4);k.L('chest','c',FKC.leatherD,a,b,.012,.012,4)});
+      FKG.pouch(k,P,.56,.8,0x6a4a2a);gkVial(k,'pelvis',.2,.53,-.06,1.2,0x7affd0,FKC.brass);
+      const h=fkBrimHat(k,D,hat,{brim:.19,cr:.065,ch:.08,tx:-.15,band:0x8a6a2a});gkFeather(k,'head',[.06,h.y+.03,h.z-.03],[.45,.8,-.6],.14,.02,0xd84a2a);mdKit(B,k)}}};
+FKO['Wandering Merchant']=FKO['Curio Merchant'];
+// ---------------- Beast Trainer (wolf): a leather jerkin, fur mantle, bracers, a whistle and treat pouches ----------------
+FKO['Beast Trainer']=function(o,D,C){const sh=mdC(o.robe||0x3a5a2a);
+  return {paint(P){FKG.paint(P,C,{shirt:sh,sleeve:'long',pants:0x4a3a28,legs:'long',pattL:m=>m.r.part=='shin'&&Math.floor(m.y*45)%2?0x8a7a5a:null})},
+    build(B,P){FKG.shell(B,P,.56,.96,m=>Math.abs(m.c)<.06&&m.s>.8?0x2a1a10:FKC.leather,{off:.012,lipT:.004});
+      const k=dkKit();for(let i=0;i<5;i++){const y=.66+i*.06;[-1,1].forEach(s=>{const p=mdTP(P,y,s*.07,(P.tOff||0)+.004);k.p('chest','sph','c',0x2a1a10,p[0],p[1],p[2],.005,.005,.004)})}
+      FKG.belt(B,P,.6,FKC.leatherD,{buckle:FKC.iron});FKG.cuff(B,P,4,5,FKC.leatherD,.016);
+      FKG.skirt(B,P,{y0:.6,hem:th=>.45+.02*Math.sin(th*6),col:FKC.leather,lin:FKC.leatherD,open:.25,flare:.03,dag:[.03],rows:4});
+      // the fur mantle round the shoulders
+      FKG.mantle(B,P,{y0:1.01,hem:th=>.84-.03*Math.max(0,-Math.cos(th)),col:m=>(m.j+m.i)%3==0?0x6e5e4a:0x8a7a62,lin:0x5a4a38,dag:.035,flare:.025,folds:[12,.008],roll:.022,rollCol:0x9a8a72,open:.25});
+      FKG.pouch(k,P,.57,.85,0x6a4a2a);FKG.pouch(k,P,.57,-.85,0x6a4a2a);FKG.pouch(k,P,.57,2.4,0x5a3a22,.8);
+      const w=mdTP(P,.86,.25,(P.tOff||0)+.03);k.L('chest','c',0x2a1a10,mdTP(P,.98,-.3,(P.tOff||0)+.004),w,.003,.003,3);k.p('chest','cyl','m',0xc8c0b0,w[0],w[1]-.02,w[2],.008,.05,.008,0,0,.2);
+      for(let i=0;i<5;i++){const a=-.5+i*.25,p=mdTP(P,.93-.03*Math.cos(a*2),a,(P.tOff||0)+.024);k.p('chest','cone4','c',0xe8e0c8,p[0],p[1]-.012,p[2],.006,.024,.006,Math.PI)}
+      mdKit(B,k)}}};
+// ---------------- Bard (hare): a slashed doublet, puffed sleeves, two-tone hose, ruff, feathered cap ----------------
+FKO['Bard']=function(o,D,C){const rb=mdC(o.robe||0x8a2a5a),y2=0xd8b040,hat=mdC(o.hatC||0x5a1a3a);
+  const slash=m=>Math.abs(Math.sin(Math.atan2(m.x,m.z)*9))>.86&&m.y<.95?y2:rb;
+  return {paint(P){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:rb,legs:'long',patt:m=>slash(m)});P.paint.leg=(m,s)=>m.r.part=='ankle'?C.FUR:s<0?rb:y2},
+    build(B,P){FKG.belt(B,P,.6,0x2a1a10,{buckle:FKC.gold,h:.016});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.5,col:m=>slash(m),lin:mdSh(rb,.5),flare:.04,rows:3,dag:[.025]});
+      [-1,1].forEach(s=>mdAS(B,P,s,0,3,.03,{col:m=>Math.floor(Math.atan2(m.x,m.z)*4)%2?y2:rb}));
+      FKG.collar(B,P,0xf0ece0,{y0:.97,h:th=>1.01,flare:.05,open:0,wave:.012,wn:14,lin:0xd8d0c0});
+      const k=dkKit(),b=fkBeret(k,D,hat,{h:.03,r:.08,tz:-.3,tx:-.25,btn:0});gkFeather(k,'head',[-.04,b.y+.015,b.z-.02],[-.4,.75,-.7],.16,.022,0xf0e8d0);gkFeather(k,'head',[-.035,b.y+.01,b.z-.025],[-.6,.6,-.6],.12,.016,0xd84a4a);
+      mdKit(B,k)}}};
+FKO['Traveling Bard']=FKO['Bard'];
+// ---------------- Rune Sage (owl): a deep blue robe with glowing runes, a cowl mantle, rune stones ----------------
+FKO['Rune Sage']=function(o,D,C){const rb=mdC(o.robe||0x2a3a7a),dk=mdSh(rb,.5),rn=0x9ac8ff;
+  return {paint(P){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:dk,legs:'long'})},
+    build(B,P){FKG.belt(B,P,.6,0x2a2030,{buckle:0x8ab8ff,h:.016});
+      const S=FKG.skirt(B,P,{y0:.6,hem:th=>.05,col:fkTrim(rb,0xc8b070,{hem:.9}),lin:dk,flare:.07,folds:[10,.012]});
+      FKG.sleeves(B,P,{bell:.045,trail:.06,col:m=>m.v>.86?0xc8b070:rb,lin:dk,u0:2.8});
+      FKG.mantle(B,P,{y0:1.02,hem:th=>.8+.03*Math.cos(th),col:m=>m.v>.78?0xc8b070:mdSh(rb,.85),lin:dk,open:.35,flare:.03,roll:.03,rollCol:mdSh(rb,.75)});
+      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L+.004)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
+        const t=j%3,s=1.3;if(t==0)gkW(k.p('pelvis','box','g',rn,p[0],p[1],p[2],.004*s,.018*s,.003,0,p[3],0),v.w);
+        else if(t==1){gkW(k.p('pelvis','box','g',rn,p[0]-.003*s*Math.cos(p[3]),p[1],p[2]+.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],.5),v.w);gkW(k.p('pelvis','box','g',rn,p[0]+.003*s*Math.cos(p[3]),p[1],p[2]-.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],-.5),v.w)}
+        else gkW(k.p('pelvis','oct','g',rn,p[0],p[1],p[2],.006*s,.009*s,.003,0,p[3],0),v.w)}
+      for(let i=0;i<7;i++){const a=-.7+i*.233,p=mdTP(P,.93-.05*Math.cos(a*1.8),a,(P.tOff||0)+.028);k.p('chest',i%2?'oct':'dod','g',i%2?rn:0xc8a0ff,p[0],p[1],p[2],.011,.013,.008)}
+      gkBook(k,'pelvis',.2,.52,.02,1.2,0x2a2050,0xc8b070,1.5);mdKit(B,k)}}};
+// ================= v137: animal townsfolk — citizens, and the switch-over =================
+// A citizen's species comes from their trade (fishers are otters, beavers, moles, bears or mice; hunters foxes, ferrets,
+// hounds, wolves or bats; egg keepers hares, sheep, hedgehogs, does or squirrels; gatherers anyone) and their look number (c.lk): the same citizen
+// is always the same animal with the same fur and clothes (co-op guests build the same, the look number is saved).
+var FK_ROLE={fish:['otter','beaver','mole','bear','mouse'],hunt:['fox','ferret','hound','wolf','bat'],egg:['hare','sheep','hedgehog','doe','squirrel'],
+  gather:['mouse','squirrel','beaver','mole','hedgehog','bat','ferret','doe','boar','bear','sheep','hound','hare','otter']};
+function fkCitSp(c){const r=czRole104(c),L=(FK_ROLE[r]||FK_ROLE.gather).filter(k=>FK137.sp[k]),A=L.length?L:Object.keys(FK137.sp).filter(k=>FK137.sp[k].cit);
+  const h=fkHash((c.n||'')+'|'+(c.lk|0));return {sp:A[h%A.length],fur:(h>>>7)%3}}
+{const f=czLook103;czLook103=function(c){const o=f.apply(this,arguments);try{const q=fkCitSp(c);o.fkSp=q.sp;o.fkFur=q.fur;o.fkV=(c.lk|0)%997}catch(e){}return o}}
+// the trade props were placed for a human head: the fisher's straw hat sits on the animal's crown instead
+{const f=czProps104;czProps104=function(g,c){const r=f.apply(this,arguments);try{const m=g.children.find(q=>q.isSkinnedMesh&&q.userData.fk),D=m&&FK137.sp[m.userData.fk];
+    if(D&&czRole104(c)=='fish'&&g.bones.head){const hd=g.bones.head,y=fkTop(D,D.crownZ)-1.04;hd.children.filter(q=>q.isMesh).forEach(q=>{q.position.y+=y-.185;q.position.z+=D.crownZ})}
+    // the hunter's fur mantle sits a little lower on an animal's shoulders (clear of the muzzle)
+    if(D&&czRole104(c)=='hunt'&&g.userData.role)g.userData.role.children.forEach(q=>{if(q.geometry&&q.geometry.type=='TorusGeometry'&&q.position.y>.08){q.position.y-=.03;q.scale.multiplyScalar(.94)}})}catch(e){}return r}}
+// everything built before this file (the first town folk): rebuilt as animals the first time they are animated, and all of
+// them shortly after loading (not during it: the page shows sooner)
+{const f=idlNpc;idlNpc=function(g,now){if(g&&!g._fkOk&&g.userData&&g.userData.npcO){g._fkOk=1;const m=g.children.find(c=>c.isSkinnedMesh);if(m&&!m.userData.fk)try{fkRebuild(g)}catch(e){}}return f.apply(this,arguments)}}
+setTimeout(()=>{try{const t=performance.now(),n=fkRebuildAll();FK137.rb=[n,Math.round(performance.now()-t)]}catch(e){console.warn('v137 folk rebuild',e)}},1200);
