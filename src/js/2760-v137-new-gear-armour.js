@@ -158,7 +158,7 @@ var A7MOT={
   boots(c){const S=c.S(c.Y(.16),.05);if(S.ok)a7L(c,S.at(c.s*Math.PI/2,.004),[0,1,0],1,u=>{u.p('','box','c',0x2a1a12,0,-.02,.008,.024,.08,.012);l7Knife(u,1)})}},
  // ---- Widowsilk: webs and a spider ----
  web:{
-  helm(c){const S=c.S(.06,.03);if(!S.ok)return;a7L(c,S.at(0,.004),[0,1,0],1,u=>{for(let i=0;i<8;i++){const a=i/8*Math.PI*2;u.p('','sph','g',0xff2a3a,Math.cos(a)*.012*(i%2?1:.6),Math.sin(a)*.01*(i%2?1:.6)+.004,.006,.0035)}});
+  helm(c){const S=c.S(.095,.015);if(!S.ok)return;a7L(c,S.at(0,.002),[0,1,0],1,u=>{for(let i=0;i<8;i++){const a=i/8*Math.PI*2;u.p('','sph','g',0xff2a3a,Math.cos(a)*.012*(i%2?1:.6),Math.sin(a)*.01*(i%2?1:.6)+.004,.006,.0035)}});
     a7L(c,c.S(.12,.02).at(.6,.003),[0,1,0],.8,u=>l7Spider(u,1,0x14141a,0xff2a3a))},
   chest(c){const S=c.S(.86,.06);if(S.ok)a7L(c,S.at(.15,.002),[0,1,0],1.35,u=>l7Web(u,1,0xc8c8d0,8),'chest');const S2=c.S(.86,.03);if(S2.ok)a7L(c,S2.at(-.2,.012),[0,1,0],1.6,u=>l7Spider(u,1,0x14141a,0xff2a3a),'chest');
     },
