@@ -27022,7 +27022,7 @@ n3Zone(5,2,{roam:[['executioner',2],['nosferatu',3],['bloodhound',1],['vampm',1]
 try{n3Camps()}catch(e){console.error('v113 camps',e)}
 Object.keys(N3.def).forEach(k=>{const D=N3.def[k];if(D.rig&&D.rig.spit)SPITC[D.rig.name]=D.rig.spit});
 // ================= v114: beast races — one engine for every class's animal form =================
-// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 raven (Mage; the frog until v133) · 4 badger
+// hero.look.race: 0 human (default, every old save) · 1 rat (Warrior) · 2 cat (Assassin) · 3 raven (Mage; the frog until v134) · 4 badger
 // (Paladin) · 5 weasel (Ranger). Each class has exactly one animal; other values are dropped for that class (`lkFull`).
 // The v112 rat (1990-v112-rat-race.js) is replaced by this engine; the rat itself is rebuilt here with a proper skull.
 // Every beast uses the hero skeleton retargeted in place (rest pose moved to the beast's proportions + a hunch, tail
@@ -27425,7 +27425,7 @@ function brTailNear(D,x,y,z){const T=D.TP;if(!T)return false;for(let i=0;i+1<T.l
     let u=((x-p[0])*dx+(y-p[1])*dy+(z-p[2])*dz)/L2;u=Math.max(0,Math.min(1,u));const r=p[3]+(q[3]-p[3])*u+.014,ex=x-(p[0]+dx*u),ey=y-(p[1]+dy*u),ez=z-(p[2]+dz*u);if(ex*ex+ey*ey+ez*ez<r*r)return true}return false}
 {const f=mdLoft;mdLoft=function(B,R,o){if(!BR.on||BR_BODY||!BR.R||!BR.R.TP)return f.apply(this,arguments);const D=BR.R,k0=o&&o.keep;
   return f.call(this,B,R,Object.assign({},o||{},{keep:m=>(!k0||k0(m))&&!brTailNear(D,m.x,m.y,m.z)}))}}
-// ================= v114: the five beasts — rat (Warrior), cat (Assassin), raven (Mage, v133), badger (Paladin), weasel (Ranger) =================
+// ================= v114: the five beasts — rat (Warrior), cat (Assassin), raven (Mage, v134), badger (Paladin), weasel (Ranger) =================
 // Each entry: proportions (`pre` v99 preset, `shear` hunch, `crouch` [hip, knee]), body ring multipliers (`TR`, `armK`, `legK`,
 // `foot`), skull rings `SN` (back → front: [z, y centre, half-width, top, underside]), eye and ear positions, the tail path
 // `TP`, paw / toe recipes, colours (`cols(look)`), and `head(B,P,o)` that builds the face. Helm fitting values: `muzzleZ`
@@ -27489,7 +27489,7 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
     [-1,1].forEach(s=>{const [x,y,z]=D.EAR;k.p('head','cone4','c',C.FUR,s*x,y,z,.036,.09,.016,-.12,s*.1,-s*.26);k.p('head','cone4','c',C.PINK,s*(x+.002),y-.008,z+.009,.022,.064,.009,-.12,s*.1,-s*.26);
       k.p('head','cone4','c',C.FURD,s*(x+.013),y+.04,z-.004,.008,.016,.006,-.12,s*.1,-s*.26)});
     mdKit(B,k);return H}});
-// ======================================================== 3 · RAVEN (Mage, v133; replaced the v114 frog) ========================================================
+// ======================================================== 3 · RAVEN (Mage, v134; replaced the v114 frog) ========================================================
 // A bipedal raven: a round feathered skull with a heavy curved beak (nasal bristles over its base, a hooked tip, the gape
 // line), dark side-set eyes, shaggy throat hackles and a ruffled nape; a deep keeled chest, a thick feathered neck; arms that
 // are wings (flat feathers lie along each forearm from the wrist to the elbow, like a folded wing; bare arms also carry
@@ -27497,7 +27497,7 @@ brDef(2,{key:'cat',n:'Cat',cls:'assassin',furN:'Fur',
 // three forward toes and a back toe, all hooked claws; a stiff wedge tail of long feathers that pivots at the rump.
 // Built with the v114 beast engine (2100): same hero skeleton retargeted, one tail bone (tl0) carrying the whole fan.
 // Feathers are one shared low-poly blade (`rvFeatherG`: a flat diamond, widest near the tip, a ridge along the shaft).
-var RV_FG=null,RV={helm:null};  // RV.helm: the style of the helm being built with this raven (2360)
+var RV_FG=null,RV={helm:null};  // RV.helm: the style of the helm being built with this raven (2370)
 function rvFeatherG(){if(RV_FG)return RV_FG;const g=new THREE.BufferGeometry(),
     v=[0,0,0, 0,1,0, -1,.62,0, 1,.62,0, 0,.52,1, 0,.52,-1];
   g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex([0,3,4, 0,4,2, 0,2,5, 0,5,3, 1,4,3, 1,2,4, 1,5,2, 1,3,5]);
@@ -28387,7 +28387,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes zt116w{0%,100%{text-shadow:0 0 18px var(--zc2),0 0 36px color-mix(in srgb,var(--zc2) 55%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}50%{text-shadow:0 0 26px var(--zc2),0 0 52px color-mix(in srgb,var(--zc2) 70%,transparent),0 3px 0 var(--zc3),0 5px 10px #000}}
 @media (max-width:640px){#ztc116{top:11%;padding:12px 14px 10px}#ztc116 .zts{font-size:.86rem}#ztc116 .ztk,#ztc116 .ztf{font-size:.62rem;letter-spacing:.18em}}
 </style>`);
-// ================= v117 Mage (the frog, since v133 the raven): how he holds his weapons =================
+// ================= v117 Mage (the frog, since v134 the raven): how he holds his weapons =================
 // The v93 grip lays a weapon along the fingers of a human fist (tuned on human arms, GRIP_B), so on the frog's long webbed paw the
 // shaft ran beside the fingers, the fingertips poked through it and the orb floated off the hand. Here the paw itself decides:
 //  * fc117Frame measures each paw from the final skinned mesh (the vertices that belong to the hand bone only, in that bone's own
@@ -28403,11 +28403,11 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // Hold points are from the shoulder in the hero's frame [out, fwd, down] (m); directions are [up, out, fwd] weights.
 // test/v117_grip.py (close-ups), v117_wclip.py (robe clipping) check it.
 var FC116={on:true,
-  H:{staff:{arm:'R',hand:[.17,.1,.24],dir:[1,-.1,-.06],tilt:.28},  // v133 raven: a little further out and more upright (the frog's lean in brought the head of the staff past a crown's spikes)
+  H:{staff:{arm:'R',hand:[.17,.1,.24],dir:[1,-.1,-.06],tilt:.28},  // v134 raven: a little further out and more upright (the frog's lean in brought the head of the staff past a crown's spikes)
      wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
      orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
   pole:[.45,-.6,-1], // v118: elbow bends back and a little out [out, up, fwd] (it was [-.35,-1,.5]: forward and in, so the arm bent backwards)
-  clear:[['spine',.19],['chest',.215],['head',.14]]}; // v133: spheres (bone, radius m) the orb stays outside of during attacks / casts
+  clear:[['spine',.19],['chest',.215],['head',.14]]}; // v134: spheres (bone, radius m) the orb stays outside of during attacks / casts
 function fc116Race(H){return H&&H._race&&BRD[H._race]&&BRD[H._race].key=='raven'}
 var FC116_T={V:null};
 function fc116Tmp(){if(!FC116_T.V){const V=THREE.Vector3,Q=THREE.Quaternion;Object.assign(FC116_T,{V,Q,q1:new Q(),q2:new Q(),q3:new Q(),qI:new Q(),m:new THREE.Matrix4(),m2:new THREE.Matrix4()})}return FC116_T}
@@ -28482,7 +28482,7 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
         let th=2*Math.acos(Math.min(1,dq.w));if(dq.x*U.x+dq.y*U.y+dq.z*U.z<0)th=-th;const tk='_fcth'+s1,pv=H[tk];if(pv!=null){while(th-pv>Math.PI)th-=2*Math.PI;while(th-pv<-Math.PI)th+=2*Math.PI}H[tk]=th;
         const sw=cur.clone().slerp(Rs,w),ax2=wl.clone().applyQuaternion(sw).normalize();tgt=new Q().setFromAxisAngle(ax2,w*th).multiply(sw)}
     if(w>=.999)H['_fcth'+s1]=null;b2.quaternion.copy(pq.invert().multiply(tgt))}
-  // v133: during attacks and casts (the hold faded out) the orb floats clear of the body and head: its centre is pushed out of a
+  // v134: during attacks and casts (the hold faded out) the orb floats clear of the body and head: its centre is pushed out of a
   // sphere round the spine, the chest and the head (FC116.clear radii + the orb's own radius), along the line from that centre
   if(C.palm&&w<.999&&FC116.clear){H.updateMatrixWorld(true);const bb=fc117WB(W),ws=b2.getWorldScale(new V()).x,M=b2.matrixWorld,c0=bb.c.clone().applyQuaternion(wq).add(wp).applyMatrix4(M),c1=c0.clone();
     FC116.clear.forEach(([bn,r0])=>{const bo=B[bn];if(!bo)return;const o=bo.getWorldPosition(new V()),d=c1.clone().sub(o),R=(r0+bb.r)*ws;if(d.length()>=R)return;
@@ -30697,7 +30697,86 @@ try{const I=PMAP[1]&&PMAP[1].ins[0];if(I){
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.chq&&s.chq.st;CHQ132.st={};
     if(q&&typeof q=='object')for(const id in q){const S=q[id],D=CHQ132_ID[id];if(!D||!S)continue;CHQ132.st[id]={s:Math.max(1,Math.min(3,S.s|0)),p:D.o.map((o,i)=>Math.max(0,+((S.p||[])[i])||0)),cj:Array.isArray(S.cj)?S.cj.slice(0,9):undefined}}
     CHQ132.trkK=''}catch(_){CHQ132.st={}}return r}}
-// ================= v133: the Mage's gear fitted to the raven =================
+// ================= v133 Sovereigns: sturdier posture, a retreat when hurt hard, and footwork that opens up their moves =================
+// 1. Posture: a stagger takes about twice as much damage as before (POS133.mul), every stagger already taken in the fight
+//    raises the next one by POS133.esc (up to POS133.escMax), and for POS133.grace ms after a stagger ends the bar fills at half
+//    speed. The bar also starts draining a little sooner when the boss is left alone.
+// 2. Retreat: when the boss takes a lot of damage in a short time (RT133.frac of its stagger threshold within RT133.win ms) it
+//    backs away fast for a moment (sliding along the den wall instead of into it), then answers quickly from the new distance —
+//    which is where its ranged and gap-closing moves live. It does this at most once every RT133.cd ms.
+// 3. Spacing plans: the move picker only offers moves whose range covers the current distance, so a hero who stands still in
+//    melee only ever saw the melee moves. Now, after a move, the boss often (more often when the hero stands still) picks a move
+//    it has not used for a while whose range does NOT cover the current distance, walks or backs off to that range and casts it
+//    there (giving up after PL133.max seconds). Moves meant for behind the boss are never planned.
+// Co-op: all of this runs only on the boss driver (svMoveFree/svPoise/svPick are driver-only); partners follow the position sync
+// and the relayed moves as before.
+var POS133={mul:2,esc:.15,escMax:.45,grace:3500,drainAfter:2500,drain:.06};
+var RT133={win:3000,frac:.4,cd:14000,cd2:10000,chance:.75,t:[1.0,1.5]};
+var PL133={p:.45,p2:.55,pStill:.8,max:3.2};
+function svPosT133(e){const S=e.sv;return M(e.c)*(S.B.poise||.075)*(S.ph>1?1.15:1)*1.5/((typeof PACE!='undefined'&&PACE.hp)||1.5)*POS133.mul*(1+Math.min(POS133.escMax,POS133.esc*(S.nStag||0)))}
+// --- 1. posture ---
+{const f=svPoise;svPoise=function(e,d){const S=e&&e.sv;if(!S)return f.apply(this,arguments);
+  let k=1/(POS133.mul*(1+Math.min(POS133.escMax,POS133.esc*(S.nStag||0))));if(performance.now()<(S.poG||0))k*=.5;return f.call(this,e,d*k)}}
+{const f=svStart;svStart=function(e,id,seed){const r=f.apply(this,arguments);const S=e&&e.sv;
+  if(r!==false&&S){S.nC=(S.nC||0)+1;(S.lu||(S.lu={}))[id]=S.nC;
+    if(id==='stagger'){S.nStag=(S.nStag||0)+1;S.poG=performance.now()+(((S.B.M.stagger||{}).dur||2.6)*1000)+POS133.grace;S.rt=null;S.plan=null}}
+  return r}}
+// --- 2. damage memory (every copy records; only the driver acts on it) ---
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(!(e&&e.sv&&!e.dead))return f.apply(this,arguments);const h0=e.c.h,r=f.apply(this,arguments),got=h0-e.c.h;
+  if(got>0){const S=e.sv,t=performance.now();(S.dl||(S.dl=[])).push([t,got]);while(S.dl.length&&t-S.dl[0][0]>RT133.win)S.dl.shift()}return r}}
+function svDmgRecent133(S,now){let s=0;if(S.dl)for(const [t,d] of S.dl)if(now-t<=RT133.win)s+=d;return s}
+// a step that slides along the den wall instead of pushing into it
+function svStep133(e,ux,uz,sp,dt){const S=e.sv,m=e.m,A=ARN[S.i];if(!A||sp<=0)return 0;const lim=ARENA_R-(S.B.edge||2);
+  const rx=m.position.x-A.cx,rz=m.position.z-A.cz,rl=Math.hypot(rx,rz)||.01;
+  if(rl>lim-2.5){const nx=rx/rl,nz=rz/rl,out=ux*nx+uz*nz;if(out>0){ux-=nx*out;uz-=nz*out;const sd=S.sd||1;ux+=-nz*sd*out;uz+=nx*sd*out;const l=Math.hypot(ux,uz)||1;ux/=l;uz/=l}}
+  walkM(m,ux*sp*dt,uz*sp*dt);return sp}
+function svFace133(e,dt){const S=e.sv,ai=S.B.ai||{},m=e.m,da=svAng(svYawTo(m,pl.position)-m.rotation.y),tr=(ai.turn||2.4)*(S.ph>1?1.2:1);m.rotation.y+=Math.max(-tr*dt,Math.min(tr*dt,da));return da}
+// --- 3. spacing plans ---
+function svSideOk133(D){const a=D.a||'f';return a==='f'||a==='fs'||a==='any'}
+function svPlan133(e,force){const S=e.sv,B=S.B,L=d2(pl.position,e.m.position),C=[];let tot=0;
+  const p=force?1:(svStill133(S)?PL133.pStill:S.ph>1?PL133.p2:PL133.p);if(Math.random()>=p){S.plan=null;return null}
+  for(const id in B.M){const D=B.M[id];if(!D.wt||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1)||!svSideOk133(D))continue;
+    if(S.last[0]===id||S.last[1]===id)continue;if((S.cd[id]||0)>(S.rest||0)+PL133.max)continue;
+    const r=D.r||[0,99];if(L>=r[0]&&L<=r[1])continue;if(r[0]>ARENA_R*1.4)continue;
+    let w=5;try{w=typeof D.wt==='function'?(+D.wt(e,(r[0]+Math.min(r[1],r[0]+5))/2,'f')||0):D.wt}catch(_){}
+    const ago=(S.nC||0)-((S.lu&&S.lu[id])||-8);w*=Math.min(8,Math.max(1,ago));if(w>0){C.push([id,w,r]);tot+=w}}
+  if(!C.length){S.plan=null;return null}
+  let u=Math.random()*tot,pick=C[C.length-1];for(const c of C){u-=c[1];if(u<=0){pick=c;break}}
+  const r=pick[2],lo=r[0],hi=Math.min(r[1],lo+5,ARENA_R*1.4);S.plan={id:pick[0],g:lo+(hi-lo)*(.35+Math.random()*.3),r,t:PL133.max};return S.plan}
+function svStill133(S){const P=S.pp;if(!P||P.length<6)return false;const a=P[0],b=P[P.length-1];return Math.hypot(a[0]-b[0],a[1]-b[1])<1.5}
+{const f=svAfterMove;svAfterMove=function(e,M){f.apply(this,arguments);const S=e&&e.sv;if(!S||e.dead||S.mv||!svAuth(e))return;
+  if(M&&M.id==='intro')return;if(M&&M.id==='stagger'){S.plan=null;return}svPlan133(e)}}
+{const f=svPick;svPick=function(e,loose){const S=e.sv;if(S&&S.force){const id=S.force;S.force=null;S.plan=null;const D=S.B.M[id];
+    if(D&&!((S.cd[id]||0)>0)&&!(D.when&&!D.when(e,d2(pl.position,e.m.position),'f')))return id}
+  return f.apply(this,arguments)}}
+{const f=svMoveFree;svMoveFree=function(e,dt,now){const S=e.sv,ai=S.B.ai||{},m=e.m;
+  if(ai.style==='root'||(!S.rt&&!S.plan))return f.apply(this,arguments);
+  const ws=(ai.walk||2.2)*(S.ph>1?(ai.ph2s||1.15):1),v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
+  // retreat: back away fast, facing the hero
+  if(S.rt){S.rt.t-=dt;svFace133(e,dt);const sp=Math.max(ai.run||0,ws*1.8)*.9;S.walkSp=svStep133(e,-v.x/L,-v.z/L,sp,dt);S.rest=Math.max(S.rest,dt+.05);
+    if(S.rt.t<=0){S.rt=null;S.rest=.25+Math.random()*.2;if(Math.random()<.5)svPlan133(e,true)}return}
+  // a plan: walk to the planned move's range, then cast it
+  const P=S.plan,D=S.B.M[P.id];P.t-=dt;if(!D||P.t<=0||(D.ph||1)>S.ph){S.plan=null;return f.apply(this,arguments)}
+  const da=svFace133(e,dt);
+  if(L>=P.r[0]&&L<=P.r[1]&&Math.abs(da)<.9&&!((S.cd[P.id]||0)>0)){S.force=P.id;S.rest=0;S.walkSp=0;return}
+  let sp=0,ux=0,uz=0;S.sdT=(S.sdT||0)-dt;if(S.sdT<=0){S.sdT=2+Math.random()*2;S.sd=Math.random()<.5?-1:1}const sd=S.sd||1;
+  if(L<P.g-.6){sp=ws*(ai.back?1.15:.95);ux=-v.x/L+(-v.z/L)*sd*.35;uz=-v.z/L+(v.x/L)*sd*.35}
+  else if(L>P.g+.6){sp=L>P.g+6&&ai.run?ai.run:ws;ux=v.x/L+(-v.z/L)*sd*.2;uz=v.z/L+(v.x/L)*sd*.2}
+  else{sp=ws*.5;ux=-v.z/L*sd;uz=v.x/L*sd}
+  const l=Math.hypot(ux,uz)||1;S.walkSp=Math.abs(da)<1.4?svStep133(e,ux/l,uz/l,sp,dt):0;S.rest=Math.max(S.rest,dt+.02)}}
+{const f=svAI;svAI=function(e,dt,now){const S=e.sv,A=arenaOf(e);
+  if(S&&A){if(!A.f||!S.on){S.plan=null;S.rt=null;S.force=null;S.nStag=0;S.dl=[];S.pp=[];S.poG=0}
+    else{// the hero's recent positions (is the hero standing still?)
+      S.ppT=(S.ppT||0)-dt;if(S.ppT<=0){S.ppT=.5;(S.pp||(S.pp=[])).push([pl.position.x,pl.position.z]);if(S.pp.length>6)S.pp.shift()}
+      if(now-S.poT>POS133.drainAfter)S.po=Math.max(0,S.po-dt*POS133.drain);
+      if(S.mv){S.rt=null}
+      else if(svAuth(e)&&!S.rt&&!e.dead&&now>=(S.rtCd||0)&&!(S.ph===1&&S.B.ph2&&e.c.h/M(e.c)<=S.B.ph2)){
+        if(svDmgRecent133(S,now)>=svPosT133(e)*RT133.frac){
+          if(Math.random()<RT133.chance){S.rt={t:RT133.t[0]+Math.random()*(RT133.t[1]-RT133.t[0])};S.plan=null;S.force=null;S.dl=[];
+            S.rtCd=now+(S.ph>1?RT133.cd2:RT133.cd);SVX.st.rt=(SVX.st.rt||0)+1;try{burst(gY(e.m.position,.3),0x8a7a66,14,2.2,1.2,.5)}catch(_){}}
+          else S.rtCd=now+3000}}}}
+  return f.apply(this,arguments)}}
+// ================= v134: the Mage's gear fitted to the raven =================
 // The v114 helm builder was made for furred skulls with ears; on the raven's sloping crown and beak a flat brim floated above
 // the head, hoods stood far off the skull and circlets cut through the forehead. Here every cloth head piece is built for him:
 //  * rvEll(D,y,off) measures the skull's horizontal section at height y (marching out from its centre line) and returns the
