@@ -87,6 +87,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v135 uniques: an amulet, a ring and a weapon per zone (`UNQ135`, `it.u`, bespoke kits; weapons get the zone's ornaments `UNQ135_ORN`), 1 in 2,000 kills / 1 in 300 elites in field instances; fishing-only uniques (`src:'fish'`, `UNQ135_FISH`) | `2480-v135-zone-uniques.js`, `2490-v135-fishing-rares.js` |
 | v135 right click toggles mouse-look (middle button still turns the camera while held) | `0108` |
 | v136 gear redesign: measured cloth kit (`gkPts`/`gkRows` hulls, `gkSurf` grids, `gkHood`, `gkSkirt`, `gkCape`, `gkCollar`, `gkSleeve`, trinkets `gkSkull`/`gkBook`/`gkVial`/`gkCandle`/`gkChain`…, late builds `gkLater`), hoods for every race (`GK_HOOD`, `GK_HELM`), the Mage's robes and head pieces (`MG_ST`, `mgRobe`, `mgHat`), the Assassin's gear (`AS_ST`, `mdChL`, masks `asMask`, footwraps `asBoots`), hanging skirts + Warrior / Paladin / Ranger details (`hvExtra`, `mdExtra`), weapon details (`wpX`), item pictures on the animal (`mdItemKit`) | `2500`–`2560` (v136) |
+| v137 companion bodies: rig variants (`RV137`, `rv137`) — Gloomcap / Sporelord, Wispling / Lumenwisp / Soulwarden (cowl `wsp137Hood`), Gravewyrm / Venomcoil (`WY137`), Batwing / Duskwing fur | `2600`–`2630` (v137) |
+| v137 enemy bodies: toolkit (`e137B`, `e137Rows`, `e137Limb`, `e137Quad`, `e137Claws`), own bodies for Blood Hound, Bone Hound, Blood Bat (rig `BloodBat`), Mire Croaker, Basilisk, Snapper, Sun Scarab (middle legs `x.mid137`), Rimeshell Crawler, Storm Harpy, Dust Wyrm, Banshee, Fungal Shambler (rig `Shambler`); older foes rebuilt (`FOE137`, `f137Reg` into `N3.humB`), Goo / Maggot / Scorpion touch-ups | `2640`–`2665` (v137) |
 
 ## Conventions (read before changing code)
 
@@ -303,6 +305,21 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   hood clearance), `v136_icons.py` (every armour icon renders, not empty); pictures: `v136_sheet.py` (RACE=, SETS="helm:x,chest:y;…",
   VIEWS=front,34,side,back,hf,h34,hs,hb,cf,c34,cb,legs,run,runb,windup,strike), `v136_weapons.py`; clipping as before `v114_clip.py`
   (its `hide` count includes small parts lying on the body — read `poke`).
+- **Companion and enemy bodies (v137, `2600`–`2665`)**: no enemy uses a companion's body any more, and species that share a
+  companion skeleton have their own bodies.
+  * Rig variants (`2600`): `RV137.var[rig]` lists the species on one skeleton (first = default). While a model builds, `RV137.cur[rig]`
+    holds the species; the colour key gets the variant index in its low bits so the body / kit / evolution caches never mix them.
+    `rv137(rig,c)` gives the species, `rv137I` its index. Evolution looks (`EVO100.D`) read `RV137.cur`.
+  * Gloomcap / Sporelord (`2600`), Wispling family with a real cowl (`2610`), Gravewyrm / Venomcoil (`2620`), Batwing / Duskwing (`2630`).
+  * Enemies (`2640`–`2650`): each v113 enemy that was a companion body (`n3Def` `rig.base`) now has `LPR[name].geo/kit/post` of its own
+    on the same skeleton, so every move still plays. The Blood Bat has its own rig (`BloodBat`), the Fungal Shambler too (`Shambler`);
+    the old v2 wild monsters point at these rigs. Toolkit: `e137Rows` (body rows along z), `e137Limb` (limb loft through points),
+    `e137Quad` (four legs from a skeleton), `e137Claws`, `e137Rib`. The Sun Scarab's middle legs are pivots that copy the opposite front
+    leg's swing (`x.mid137`, applied in a `rigAnim` wrap).
+  * Older foes (`2660`): naga, trolls, yeti, sand elemental and ghoul are rebuilt as `N3.humB` builders (`f137Reg`) with fur, scales,
+    rock plates, rags and trophies; skeletons get a soul-light. `2665`: Goo / Maggot / Scorpion touch-ups and the Shambler.
+  Tests: `v137_enemies.py` (every spawnable enemy builds, finite bones through idle / walk / attack, no companion body; variant bodies
+  differ; scarab legs swing). Pictures: `LIST="C:Gloomcap:0;E:bloodhound" VIEWS=front,34,side,back,face,walk,attack TAG=x python3 v137_creature.py`.
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -500,6 +517,8 @@ python3 v136_gear.py         # v136: every armour piece on its animal (builds, s
 python3 v136_icons.py        # v136: every armour icon renders (out/v136_icons_<arm>.jpg)
 RACE=raven SETS="helm:hat,chest:pyre;chest:star" python3 v136_sheet.py   # v136: gear pictures, VIEWS= and TAG= options in the file
 python3 v136_weapons.py      # v136: every weapon type at rarity 0, 2, 4
+python3 v137_enemies.py      # v137: enemy bodies (no companion bodies), companion variant bodies, scarab legs
+LIST="C:Sporelord:3;E:basilisk" python3 v137_creature.py   # v137: creature sheets (VIEWS=, TAG=)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble
