@@ -25,7 +25,7 @@ Object.assign(EVO137,{
   post(c){const p=c.gp.clone();ev137Sigil(p,0x8ad8ff,c.R,9000*.4,0);ev137Sigil(p,0xdff6ff,c.R*.6,9000*.3,0)}},
  'Disintegrate':{en:'Annihilation Ray',d:'Channel for 3.2s: the beam reaches 14 tiles and is 45% wider.',mod:{dur:3.2},
   run(c){kqsSnd('beam');const C=evC();kqsChan({t:c.sk.dur,iv:.2,slow:.6,tick:()=>{const d=aimDir();face(d);const o=gY(pl.position,1.15).addScaledVector(d,.6),e=o.clone().addScaledVector(d,14);
-   ev137Lance(o,e,C.c2,.16,230);ev137Flare(o.clone().addScaledVector(d,.3),C.c1,.9,200);ev137Flare(e,C.c2,.9,200);
+   ev137Lance(o,e,C.c2,.16,230);ev137Flare(o.clone().addScaledVector(d,.3),C.c1,.5,200);ev137Flare(e,C.c2,.6,200);
    kqsLine(pl.position,d,14,1.9).forEach(q=>{kqsHit(q,c.raw,c,{proc:false});burst(gY(q.m.position,1),0xc890ff,4,1,1,.3)});if(Math.random()<.4)kqsPose('cast',220)}});return true}},
  'Wall of Fire':{en:'Inferno Rampart',d:'An 11-tile wall of fire that burns for 9s.',mod:{L:11,dur:9},
   post(c){const p=c.gp.clone(),d=kqsDir(c.P,p),n=kqsV(-d.z,d.x);ev137Rift(kqsV(p.x-n.x*c.sk.L/2,p.z-n.z*c.sk.L/2),kqsV(p.x+n.x*c.sk.L/2,p.z+n.z*c.sk.L/2),0xff7a2a,9000)}},
