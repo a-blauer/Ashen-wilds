@@ -7,7 +7,7 @@
 <style>/*@@CSS@@*/</style></head><body>
 <div class="wrap">
 <h1>Kill Quest</h1>
-<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-4 class skills · Shift dash (2 charges) · K talents · C abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
+<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-4 class skills · Shift dash (2 charges) · C character · K abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
 <div class="stage" id="stage">
   <div id="gl"></div>
   <div id="topl" class="glass"><div class="row"><span id="lvT">Lv 1</span><span id="goldT">🪙 0</span></div><div id="areaT" style="font-size:.68rem;color:var(--mut)"></div><div id="act" class="actrow"></div><div id="buffs"></div></div>
@@ -17,7 +17,7 @@
   <button class="ib glass" id="sysBtn" title="Menu (M)">☰</button><button class="ib glass" id="fsBtn" title="Fullscreen">⛶</button>
   <div id="sysmenu" class="glass hide">
     <button id="bagBtn">🎒 Inventory <kbd>I</kbd></button><button id="cmpBtn">🐾 Companions <kbd>P</kbd></button><button id="incBtn">🥚 Incubators <kbd>U</kbd></button><button id="shopBtn">🛒 Shop</button><button id="fuseBtn">⚗️ Fusion <kbd>G</kbd></button>
-    <button id="bossBtn">👑 Sovereigns <kbd>J</kbd></button><button id="saveBtn">💾 Save game</button><button id="talBtn">✦ Talents <kbd>K</kbd></button><button id="mntBtn">🐎 Mounts <kbd>H</kbd></button><button id="setBtn">⚙️ Settings <kbd>O</kbd></button><button id="recallBtn">🌀 Recall to Town <kbd>T</kbd></button>
+    <button id="bossBtn">👑 Sovereigns <kbd>J</kbd></button><button id="saveBtn">💾 Save game</button><button id="talBtn">🧍 Character <kbd>C</kbd></button><button id="mntBtn">🐎 Mounts <kbd>H</kbd></button><button id="setBtn">⚙️ Settings <kbd>O</kbd></button><button id="recallBtn">🌀 Recall to Town <kbd>T</kbd></button>
   </div>
   <button id="prompt" class="pri hide"></button>
   <div id="rcb" class="glass hide"><span id="rcT"></span><div class="meter" style="margin-top:4px"><i id="rcB" style="width:0"></i></div></div>
@@ -80,7 +80,7 @@
       <button id="s_reset" style="justify-self:start">Reset to defaults</button>
     </div>
   </div></div>
-  <div id="tal" class="modal w hide"><div class="win" style="width:min(860px,100%)"><div class="wh"><h2>Talents</h2><span class="wsub" id="talSub"></span><button class="x" id="talClose" title="Close (Esc)">✕</button></div><div class="wb"><div id="talT" class="talg"></div></div><div class="wf"><span id="talInfo" class="mut dtl"></span><button id="talReset">Reset</button></div></div></div>
+  <div id="tal" class="modal w hide"><div class="win" style="width:min(860px,100%)"><div class="wh"><h2>Character</h2><span class="wsub" id="talSub"></span><button class="x" id="talClose" title="Close (Esc)">✕</button></div><div class="wb"><div id="talT" class="talg"></div></div><div class="wf"><span id="talInfo" class="mut dtl"></span><button id="talReset">Reset</button></div></div></div>
   </div></div>
   <div id="devp" class="modal"><h2>How are you playing?</h2><p class="sub">The screen and controls adjust to fit. You can switch later in Settings (O).</p><div class="devb"><button data-dev="desktop"><span>🖥️</span>Desktop<small>Keyboard and mouse<br>WASD, mouse camera</small></button><button data-dev="mobile"><span>📱</span>Mobile<small>Full-screen touch controls<br>Turn your phone sideways for the best view</small></button></div></div>
   <div id="mctl"><div id="joy"><i></i></div><div id="mbtn"><button data-m="f" title="Interact">F</button><button data-m="tgt" title="Target nearest">🎯</button><button data-m="dash" title="Dash">💨</button><button data-m="atk" title="Attack (hold)">⚔️</button></div></div>

@@ -72,7 +72,7 @@ let HSc=null,HSt=0;const hsDirty=()=>{HSc=null};
 const zones=[],traps=[];
 function talRank(id){return hero.tal[id]||0}
 function talSpent(b){const T=TAL[hero.cls];let n=0;(b==null?T:[T[b]]).forEach(br=>br.t.forEach(t=>n+=talRank(t[0])));return n}
-const tpFree=()=>Math.max(0,hero.lvl-1-talSpent());
+const tpFree=()=>atr138Unspent();   // v138: unspent attribute points (talents are gone, 2900)
 function talMods(){const o={};TAL[hero.cls].forEach(br=>br.t.forEach(t=>{const r=talRank(t[0]);if(r)for(const k in t[5])o[k]=(o[k]||0)+t[5][k]*r}));return o}
 function HS_base(){
   const now=performance.now();if(HSc&&now-HSt<80)return HSc;
@@ -206,7 +206,7 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
 // ---------------- XP / leveling ----------------
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
-  const gap=c.l-hero.lvl;xp*=gap<-5?.25:gap<-2?.7:gap>2?1.2:1;xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
+  xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
@@ -214,7 +214,7 @@ function gainXP(e){
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (C)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +'+ATR138.per+' attribute points (C) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){

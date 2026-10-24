@@ -2,7 +2,7 @@
 // ---------- the map (N) shows only the area you are in ----------
 function openWMap(){
   const c=$('wmc'),r=curMap(),I=curIns(),T=TOWNS[0];let x0,y0,w,h,title,sub; // v106: the instance you are in
-  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · Lv '+I.lv[0]+'–'+I.lv[1]:'')}
+  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · '+rpTxt138(I.lv[0]):'')}
   else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);

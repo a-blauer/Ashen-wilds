@@ -20,6 +20,7 @@ signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox
 coop|co-op|net: v108_instances.py v116_slots.py
 cheddar|quest: v132_cheddar_test.py v38t.py v114_save.py v108_instances.py v57t.py
 v135|cheddar|camera|fade|clip|wave|hatch|ring|death|kill|unique|fish|right|mouse|preview|travel: v135_checks.py
+v138|attribut|character|talent|power|flail|xp|preview|inventory: v138_checks.py
 unique|fish|loot|item|gear|icon|0780|v89|mdgd|tooltip: v135_uniques.py v137_items.py
 bow|0780|0890|grip|carry|anim: v135_bow.py
 ability-evo|coop-visuals|0130-|1000-|1010-|1090-|1230-|1240-|2240-: v137_evolve.py v119_abprev.py v117_abilities.py

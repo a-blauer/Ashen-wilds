@@ -398,7 +398,7 @@ function ia112Particles(dt,now,t){const {N,pos}=ZP,P=pl.position;if(['spore','mo
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{ia112(dt,now)}catch(err){if(!IA112.err){IA112.err=1;console.warn('v112 atmos',err)}}}}
 // ---------- 8. the arrival banner names the place ----------
 {const f=insArrive;insArrive=function(I){const r=f.apply(this,arguments);try{const t=I&&TH112&&TH112.byG[I.g];if(t){const p=PMAP[I.z];
-  banner(p.ic+' '+I.n.toUpperCase(),t.nm+' · '+t.sub,'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}}catch(_){}return r}}
+  banner(p.ic+' '+I.n.toUpperCase(),t.nm+' · '+t.sub,rpTxt138(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}}catch(_){}return r}}
 {const f=areaName;areaName=function(){const s=f.apply(this,arguments);try{const I=curIns(),t=I&&TH112&&TH112.byG[I.g];if(t&&s.indexOf(I.n)>=0&&s.indexOf('⛺')<0)return s.replace(I.n,I.n+' · '+t.nm)}catch(_){}return s}}
 // ---------- 9. saves: the tiles of II and III changed (layout 112) ----------
 // A v108 save: the reached instances stay; a position in instance I, a Den or a Trial stays (their tiles did not change);

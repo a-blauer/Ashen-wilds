@@ -102,7 +102,7 @@ function kqsMig(){const T=hero.tal;if(!T||T.__ab)return;const c=hero.cls;if(!SKB
   oldLd.forEach(n=>{const s=all.find(q=>q.n===n);if(s&&kqsUnl(c,s)&&!ld.includes(n)&&ld.length<KQS_SLOTS)ld.push(n)});
   SKB[c].forEach(s=>{if(ld.length<KQS_SLOTS&&kqsUnl(c,s)&&!ld.includes(s.n))ld.push(s.n)});
   T.__ld=ld.join('|');T.__apB=(T.__apB|0)+bonus;T.__ab=1;hsDirty&&hsDirty();
-  if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (C · Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
+  if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (K · Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
 // talent points no longer pay for skills
 {const f=talSpent;talSpent=function(b){if(b!=null)return f(b);let n=0;const T=TAL[hero.cls]||[];for(let i=0;i<T.length;i++)n+=f(i);return n}}
 // the hotbar: the equipped abilities, in slot order (packed, 1-4)
@@ -129,5 +129,5 @@ function kqsReset(){if(!apSpent())return say('You have no ability points to refu
 {const f=loadGame;loadGame=function(){kqsClear();KQS.cdn={};const r=f.apply(this,arguments);try{kqsMig();KQS.ck='';hud()}catch(err){console.warn(err)}return r}}
 {const f=ccBegin;ccBegin=function(){kqsClear();KQS.cdn={};const r=f.apply(this,arguments);try{if(hero.tal)hero.tal.__ab=1;KQS.ck='';hud()}catch(_){}return r}}
 // level up: +1 ability point (the banner text is patched in build/pV10.py)
-function kqsLvNote(){const L=kqsAll(hero.cls).filter(s=>s.lv==hero.lvl);return L.length?'New abilit'+(L.length>1?'ies':'y')+' to unlock: '+L.map(s=>s.i+' '+s.n).join(', ')+' (C · Abilities)':''}
+function kqsLvNote(){const L=kqsAll(hero.cls).filter(s=>s.lv==hero.lvl);return L.length?'New abilit'+(L.length>1?'ies':'y')+' to unlock: '+L.map(s=>s.i+' '+s.n).join(', ')+' (K · Abilities)':''}
 

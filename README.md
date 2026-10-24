@@ -27,7 +27,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | system | file(s) |
 |---|---|
 | main loop `loop()`, prompts, vendors | `0104-vendors-main-loop.js` |
-| classes, skills, talents, item templates `ITPL`, creature families | `0110-v2-*` |
+| classes, skills, talents (unused since v138), item templates `ITPL`, creature families | `0110-v2-*` |
 | enemies, damage, XP, loot (`genItem`) | `0120-v2-*`, `0410-v49-9-gear-sets*` |
 | zones (`PMAP`, `pmGen`, `pmDen`), zone instances (`INSL`, `insAt`/`rgAt`, `insG`), Sovereigns (`BOSSES`) | `0045-game-data-world-zones-bosses.js`, `1680`–`1690` (v89/v97 world), `1940` (v106/v108 instances) |
 | save / load (`gameSnapshot`, `loadGame`, `x2Save`); export / import save codes (v114, `KQSX`, `kqsxEncode/Decode`, Settings + title screen) | `0230-v36-save-load*`, `0450-shared-prompts*`, `2140-v114-save-export-import.js` |
@@ -92,6 +92,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v137 animal townsfolk: every Duskhold NPC is a warm-blooded animal (`FK137`, `fkBody` via `idlNpcBody`, parametric skulls `fkSN`, ears / horns / antlers / paws / hooves, 21 species, `FKO` costumes per keeper, citizens by trade `FK_ROLE`, tail + ear animation `fk137Anim`) | `2800`–`2830` (v137) |
 | v137 ability evolution: every class ability evolves at rank 5 (`EVO137` per class, `ev137Evolve`, `ev137Cost` = last rank + 4 ⚡, saved as `hero.tal['__ev:<name>']`), evolved copy cast through `cast` (`ev137Sk`), new effects (`ev137Sigil/Column/Shock/Flare/Lance/Fall/Crescent/Shards/Orbit/Rift/Impact`, projectile models `ev137Proj`), poses `ATK.evoCast/evoRaise/evoNova/evoFlex` | `2700-v137-ability-evo-core.js`, `2710-…-fx.js`, `2715-…-kit.js`, `2720`–`2740` (warrior, paladin, assassin, ranger, mage) |
 | v137 new gear: 150 templates appended to `ITPL` (`ITPL_V137`, `v7` model key, `A137L` armour lines), `genItem_base` empty-pool fix, armour motifs measured onto the built body (`a7Ring`, `a7Put`, `A7MOT`), weapon recipes (`W137`, `w7Blade`), shields (`SH137`), jewellery (`J137`, worn pendant / ring fitted with `j7Put`) | `2750`–`2790` (v137) |
+| v138 attributes (replace talents): `ATR138` (6 attributes, points per level, per-point stats, 10/25/50/75 bonuses, Auto mix per class), points in `hero.tal['__at:<key>']`, staged spending (`atr138Add/Apply/Undo/Auto/Reset`), `talMods`/`talRank`/`talSpent` redefined, flat level gains ×`ATR138.flat`; the inventory block under the hero | `2900-v138-attributes.js` (`tpFree` in 0120) |
+| v138 Character window (C; the old `#tal` window): hero model on `PV`, attributes, all stats with pending previews, attribute bonuses (`ch138Render`, `ch138PV`) | `2910-v138-character-window.js` (keys in `0108`, `1010`) |
+| v138 power scale (`pwr138` = 4·√old, `recPower` on the same scale, `rpTxt138` labels), flail trail at the ball's reach (`FL138`, `fl138Reach`), preview loop restart (`pvKick138`), enemy size / ground guard (`G138`, `g138Tick`) | `2920-v138-fixes.js` |
 
 ## Conventions (read before changing code)
 
@@ -112,7 +115,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Frozen matrices** (`PST`): still objects stop recomputing their matrices. Move objects as usual; only when you
   set `o.matrix` by hand on an object with `matrixAutoUpdate=false` also set `o.matrixWorldNeedsUpdate=true`.
   `userData.psNo=1` on a top-level object keeps it from ever freezing.
-- Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
+- Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked. Since v138 kill XP ignores the level gap.
 - **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
   about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
 - **Balance (v127)**: measured with `test/v127_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
@@ -479,10 +482,28 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   `SH.deco[k]` 1 shown / 0 owned but hidden, saved as `x2.kdeco`. Wall pieces (`D.wall`: banners, ivy, ravens) measure the wall
   of the current Bastion Walls level by ray casts (`dcWall104`) and are rebuilt when it changes (`PART=tiers` checks every level).
 
+- **Version 138 (owner's list, Oct 2026)**: *Attributes replace talents* (`2900`): every level gives `ATR138.per` (3) points for Intellect,
+  Strength, Dexterity, Vigor, Wisdom and Luck (`ATR138.D[k].p` per point; 10/25/50/75 points unlock a bonus each, `D[k].T`); the old
+  automatic growth per level is cut to `ATR138.flat` (55%) for health, attacks and defenses (mana keeps its growth). Talents are gone:
+  `talRank` is 0, `talMods` returns the attribute bonuses (HS_base adds them where it added talents), `tpFree` counts unspent attribute
+  points; old saves lose their talent ranks on load (`atr138Migrate`, flag `hero.tal.__at138`) and get every point of their level back
+  to spend. Companion talents are unchanged. Spending is staged (+ / − then Apply; Auto fills the free points in the class's mix,
+  `ATR138.auto`; Reset costs 40 gold per level, as does the Magic Shop's Tome, which used to wipe `hero.tal` including ability ranks).
+  With Auto, a gearless hero lands at ~1.0–1.2× the old gearless power from level 10 to 50 (warrior highest), which makes up for the
+  lost talents. *Keys*: C opens the Character window (the old `#tal` modal, `2910`: model, attributes, every stat with "→" previews of
+  pending points, bonuses), K opens Abilities. *Power* is shown on a smaller scale (`pwr138` = 4·√old: ~100 at level 1, ~600 at 50 with
+  gear); `recPower` uses the same scale. *Recommended power replaces enemy level ranges* everywhere an instance or zone was labelled
+  (location box, title cards, portal window and signs, gateway prompts, local map, treasure maps, den sign). *Kill XP* no longer has a
+  bonus or penalty for the level gap (`gainXP`). *Flail*: the sweep trail and the crash ring are drawn at the ball's measured reach
+  (~1.4 tiles; the hit area stays 3.6, v127). *Inventory preview*: reopening the bag restarts the preview's render loop, so equipment
+  changes show at once. *Giant monsters under the map* (owner's report) could not be reproduced (`v138_giant_fight.js` soak:
+  every field instance, fights, deaths, respawns; `v138_skin_check.js`: every skinned body's bone indices and weights); `g138Tick`
+  now puts a drawn monster's scale back to its size and lifts it onto the ground when either is far off, and logs it (`G138.log`).
+  Test: `v138_checks.py`; pictures: `VW=1280 VH=800 WIN=keyc,bag python3 v138_ui_shot.py` (`JS=` a setup snippet).
 - **Menus (v117)**: the ☰ list has no Fusion or Sovereigns button (both kept hidden in the markup: `ui()`, the hotkey map and later
   wrappers look them up; G still opens fusion, J does nothing; sealed portals still open the portal list). Fusion is a tab of the
   Companions & Eggs window (`cfTabs116`, a row under each window's header; closing Fusion opened from there goes back to Companions).
-  Talents (K) and Abilities (C) are separate windows: no shared tab bar, no links, no "Open Abilities" box (`skHTML` returns '').
+  Talents (K) and Abilities (C) were separate windows (v138: talents are gone, C is the Character window, K Abilities).
   **Kingdom window** (B or ☰ → 🏰 Kingdom, from anywhere; still `xwMode 'hold'`, also opened by the Steward and house doors):
   tabs `KM103.tab` = `kingdom` (🏗️ Construction: plan + shops/upgrades/houses; the citizens list moved out of it), `vill`
   (👥 Villagers: one card per villager with state, trip progress, trade buttons, job chips, rank-up, Collect; goods can be collected

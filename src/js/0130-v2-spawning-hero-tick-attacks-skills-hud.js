@@ -177,7 +177,7 @@ function hud_base(){
   $('areaT').textContent=areaName();
   $('act').innerHTML=party.slice(0,2).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
   const now=performance.now(),tp=tpFree();
-  $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend talent points">✦ ${tp} talent point${tp>1?'s':''} · K</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
+  $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
 }
 function tgtHud(){
   const e=tgt;if(!e)return;const mx=M(e.c),hp=Math.max(0,Math.ceil(e.c.h)),gap=e.c.l-hero.lvl,en=EN[e.c.en]||{};

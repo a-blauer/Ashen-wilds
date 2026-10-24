@@ -390,7 +390,7 @@ body.kv-on #kvBoot{display:none}
 </style></head><body><div id="kvBoot">Kill Quest · Animation Viewer<small>Loading the game models…</small></div>
 <div class="wrap">
 <h1>Kill Quest</h1>
-<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-4 class skills · Shift dash (2 charges) · K talents · C abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
+<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-4 class skills · Shift dash (2 charges) · C character · K abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
 <div class="stage" id="stage">
   <div id="gl"></div>
   <div id="topl" class="glass"><div class="row"><span id="lvT">Lv 1</span><span id="goldT">🪙 0</span></div><div id="areaT" style="font-size:.68rem;color:var(--mut)"></div><div id="act" class="actrow"></div><div id="buffs"></div></div>
@@ -400,7 +400,7 @@ body.kv-on #kvBoot{display:none}
   <button class="ib glass" id="sysBtn" title="Menu (M)">☰</button><button class="ib glass" id="fsBtn" title="Fullscreen">⛶</button>
   <div id="sysmenu" class="glass hide">
     <button id="bagBtn">🎒 Inventory <kbd>I</kbd></button><button id="cmpBtn">🐾 Companions <kbd>P</kbd></button><button id="incBtn">🥚 Incubators <kbd>U</kbd></button><button id="shopBtn">🛒 Shop</button><button id="fuseBtn">⚗️ Fusion <kbd>G</kbd></button>
-    <button id="bossBtn">👑 Sovereigns <kbd>J</kbd></button><button id="saveBtn">💾 Save game</button><button id="talBtn">✦ Talents <kbd>K</kbd></button><button id="mntBtn">🐎 Mounts <kbd>H</kbd></button><button id="setBtn">⚙️ Settings <kbd>O</kbd></button><button id="recallBtn">🌀 Recall to Town <kbd>T</kbd></button>
+    <button id="bossBtn">👑 Sovereigns <kbd>J</kbd></button><button id="saveBtn">💾 Save game</button><button id="talBtn">🧍 Character <kbd>C</kbd></button><button id="mntBtn">🐎 Mounts <kbd>H</kbd></button><button id="setBtn">⚙️ Settings <kbd>O</kbd></button><button id="recallBtn">🌀 Recall to Town <kbd>T</kbd></button>
   </div>
   <button id="prompt" class="pri hide"></button>
   <div id="rcb" class="glass hide"><span id="rcT"></span><div class="meter" style="margin-top:4px"><i id="rcB" style="width:0"></i></div></div>
@@ -463,7 +463,7 @@ body.kv-on #kvBoot{display:none}
       <button id="s_reset" style="justify-self:start">Reset to defaults</button>
     </div>
   </div></div>
-  <div id="tal" class="modal w hide"><div class="win" style="width:min(860px,100%)"><div class="wh"><h2>Talents</h2><span class="wsub" id="talSub"></span><button class="x" id="talClose" title="Close (Esc)">✕</button></div><div class="wb"><div id="talT" class="talg"></div></div><div class="wf"><span id="talInfo" class="mut dtl"></span><button id="talReset">Reset</button></div></div></div>
+  <div id="tal" class="modal w hide"><div class="win" style="width:min(860px,100%)"><div class="wh"><h2>Character</h2><span class="wsub" id="talSub"></span><button class="x" id="talClose" title="Close (Esc)">✕</button></div><div class="wb"><div id="talT" class="talg"></div></div><div class="wf"><span id="talInfo" class="mut dtl"></span><button id="talReset">Reset</button></div></div></div>
   </div></div>
   <div id="devp" class="modal"><h2>How are you playing?</h2><p class="sub">The screen and controls adjust to fit. You can switch later in Settings (O).</p><div class="devb"><button data-dev="desktop"><span>🖥️</span>Desktop<small>Keyboard and mouse<br>WASD, mouse camera</small></button><button data-dev="mobile"><span>📱</span>Mobile<small>Full-screen touch controls<br>Turn your phone sideways for the best view</small></button></div></div>
   <div id="mctl"><div id="joy"><i></i></div><div id="mbtn"><button data-m="f" title="Interact">F</button><button data-m="tgt" title="Target nearest">🎯</button><button data-m="dash" title="Dash">💨</button><button data-m="atk" title="Attack (hold)">⚔️</button></div></div>
@@ -2536,10 +2536,10 @@ addEventListener('keydown',e=>{
   if(e.key=='Escape'){if(closeWin())return;if(!$('sysmenu').classList.contains('hide')){$('sysmenu').classList.add('hide');return}if(tgt){setTarget(null);return}}
   const k=e.key.toLowerCase();if(k.startsWith('arrow')||k==' '||k=='tab')e.preventDefault();K[k]=1;
   if(k=='tab'&&!uiOpen()){selectTarget();return}
-  {const tw={i:'bag',p:'cmp',u:'inc',g:'fz',n:'wmap',o:'setw',k:'tal',h:'xw',j:'xw'}[k];if(tw&&!$(tw).classList.contains('hide')){$(tw).classList.add('hide');return}}
+  {const tw={i:'bag',p:'cmp',u:'inc',g:'fz',n:'wmap',o:'setw',c:'tal',h:'xw',j:'xw'}[k];if(tw&&!$(tw).classList.contains('hide')){$(tw).classList.add('hide');return}}
   if(uiOpen())return;
   if(k>='1'&&k<='4')cast(+k-1);
-  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='k')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')drink();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
+  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')drink();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
 });
 addEventListener('keyup',e=>{K[e.key.toLowerCase()]=0});
 $('wmClose').onclick=()=>$('wmap').classList.add('hide');
@@ -2941,7 +2941,7 @@ let HSc=null,HSt=0;const hsDirty=()=>{HSc=null};
 const zones=[],traps=[];
 function talRank(id){return hero.tal[id]||0}
 function talSpent(b){const T=TAL[hero.cls];let n=0;(b==null?T:[T[b]]).forEach(br=>br.t.forEach(t=>n+=talRank(t[0])));return n}
-const tpFree=()=>Math.max(0,hero.lvl-1-talSpent());
+const tpFree=()=>atr138Unspent();   // v138: unspent attribute points (talents are gone, 2900)
 function talMods(){const o={};TAL[hero.cls].forEach(br=>br.t.forEach(t=>{const r=talRank(t[0]);if(r)for(const k in t[5])o[k]=(o[k]||0)+t[5][k]*r}));return o}
 function HS_base(){
   const now=performance.now();if(HSc&&now-HSt<80)return HSc;
@@ -3075,7 +3075,7 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
 // ---------------- XP / leveling ----------------
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
-  const gap=c.l-hero.lvl;xp*=gap<-5?.25:gap<-2?.7:gap>2?1.2:1;xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
+  xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
@@ -3083,7 +3083,7 @@ function gainXP(e){
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +1 talent point (K) · +'+kqrLvAP(hero.lvl)+' ability points (C)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +'+ATR138.per+' attribute points (C) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){
@@ -3336,7 +3336,7 @@ function hud_base(){
   $('areaT').textContent=areaName();
   $('act').innerHTML=party.slice(0,2).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
   const now=performance.now(),tp=tpFree();
-  $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend talent points">✦ ${tp} talent point${tp>1?'s':''} · K</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
+  $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
 }
 function tgtHud(){
   const e=tgt;if(!e)return;const mx=M(e.c),hp=Math.max(0,Math.ceil(e.c.h)),gap=e.c.l-hero.lvl,en=EN[e.c.en]||{};
@@ -3486,14 +3486,14 @@ let mstock=null;
 function rMS(){
   const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
   const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,D=c=>shpP109('magic',c),rc=D(40*hero.lvl),xc=D(60+hero.lvl*12);
-  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Reset all your talent points</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!talSpent()?'disabled':''}>Reset</button></span></div>`+
+  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr138Spent()?'disabled':''}>Reset</button></span></div>`+
    `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
    UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(D(Math.round(UPV[i]*.9)))}<button class="pri" data-ms="u${i}" ${gold<D(Math.round(UPV[i]*.9))?'disabled':''}>Buy</button></span></div>`).join('')+
    mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(D(EGV[e.tier]))}<button class="pri" data-ms="e${i}" ${gold<D(EGV[e.tier])?'disabled':''}>Buy</button></span></div>`:'').join('');
 }
 $('mst').onclick=e=>{
   const b=e.target.closest('[data-ms]');if(!b||b.disabled)return;const k=b.dataset.ms,D=c=>shpP109('magic',c);
-  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c)return;gold-=c;hero.tal={};hsDirty();say('Your talents were reset. Press K to spend them again.')}
+  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c||!atr138Spent())return;gold-=c;atr138Clear();say('Your attribute points were returned. Press C to spend them again.')}   // v138: only attributes (it used to wipe hero.tal, abilities too)
   else if(k=='xp'){const c=D(60+hero.lvl*12);if(gold<c)return;gold-=c;rest={t:Date.now()+600000,m:.25};say('You feel insightful: +25% XP for 10 minutes.')}
   else if(k[0]=='u'){const i=+k.slice(1),c=D(Math.round(UPV[i]*.9));if(gold<c)return;gold-=c;mats[UPM[i][0]]++}
   else if(k[0]=='e'){const i=+k.slice(1),eg=mstock.eggs[i];if(!eg||gold<D(EGV[eg.tier]))return;gold-=D(EGV[eg.tier]);eggs.push(eg);mstock.eggs[i]=null}
@@ -3555,7 +3555,7 @@ function ccBegin(){
   const c=mkC(ccSp,1,0,'',{hp:1.03,a:1.03,d:1.03,pa:1.03,ma:1.03,pd:1.03,md:1.03});rollMod(c);party=[c];hsDirty();hero.hp=heroMax();hero.mp=mpMax();
   PV.run=false;$('start').classList.add('hide');refreshGear();ui();hud();
   fadeTo(()=>{banner('Welcome, '+hero.name,CLS[ccCls].i+' '+CLS[ccCls].n+' · with '+SP2[ccSp][3]+' '+ccSp+' ('+MODS[c.mods[0]].i+' '+c.mods[0]+')','Hearthvale · enemies here are Lv 1–9')});
-  say('Welcome to Hearthvale. Visit the Trading Post, Magic Shop and tavern, then head out. Press K for talents, Tab to target enemies.');
+  say('Welcome to Hearthvale. Visit the Trading Post, Magic Shop and tavern, then head out. Press C for your character, K for abilities, Tab to target enemies.');
 }
 $('start').innerHTML=`<div class="ccw"><div class="cch"><h2 id="ccT">Create your hero</h2><div class="ccst"><span id="ccS1" class="on">1 · Class</span><span id="ccS2">2 · First companion</span></div></div>
  <div class="ccb"><div id="ccList" class="ccl"></div><div class="ccm"><div id="ccPV" class="ccpv"></div></div><div id="ccInfo" class="ccr"></div></div>
@@ -3896,7 +3896,7 @@ function hud(){
     $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (Z)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">Z</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
       (mm?`<button class="hs" data-x="v" title="${riding?'Dismount':'Ride '+mm.n} (V)"><span class="ic">${riding?'⏏️':MOUNTS[mm.k].i}</span><span class="kb">V</span><span class="sb">${riding?'off':mm.spd}</span><span class="cdv" style="height:0"></span></button>`:''))}
   const now=performance.now(),tp=tpFree();
-  $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend talent points">✦ ${tp} talent point${tp>1?'s':''} · K</span>`:'')+(riding?`<span class="bf" title="Riding ${riding.n}">🐎 +${riding.spd}%</span>`:'')+hero.buffs.filter(b=>b.t>now&&!b.perm).map(b=>`<span class="bf${b.food?' fd':b.elix?' ex':''}" title="${b.n}${b.d?': '+b.d:''}">${b.i||'✨'} ${fmtT(b.t-now)}</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
+  $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+(riding?`<span class="bf" title="Riding ${riding.n}">🐎 +${riding.spd}%</span>`:'')+hero.buffs.filter(b=>b.t>now&&!b.perm).map(b=>`<span class="bf${b.food?' fd':b.elix?' ex':''}" title="${b.n}${b.d?': '+b.d:''}">${b.i||'✨'} ${fmtT(b.t-now)}</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
   bossHudX();if(bossDone.size)$('buffs').insertAdjacentHTML('afterbegin',`<span class="bf" title="Sovereign powers: ${hero.buffs.filter(b=>b.perm).map(b=>b.n+' ('+b.d+')').join(', ')}">👑 ${bossDone.size}</span>`);
 }
 // ---------- hooks: bag gets a Supplies tab ----------
@@ -5824,7 +5824,7 @@ function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
   const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
-  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n+' · Lv '+zoneLv(pl.position.x,pl.position.z)+' ('+I.lv[0]+'–'+I.lv[1]+')';
+  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n;   // v138: no level range; the recommended power sits on line 2
 }
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
@@ -5845,7 +5845,7 @@ var PORT=[];
     const disc=new THREE.Mesh(new THREE.CircleGeometry(1.1,32),new THREE.MeshBasicMaterial({color:p.col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.62,0);disc.scale.y=1.35;g.add(disc);
     const sw=new THREE.Mesh(new THREE.RingGeometry(.35,1.08,24,1,0,4),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.4,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));sw.position.set(0,1.62,.02);sw.scale.y=1.35;g.add(sw);
     const ch=new THREE.Group();[-.6,.6].forEach(r=>{const b=new THREE.Mesh(new THREE.BoxGeometry(2.6,.08,.08),sm(0x2a2a30));b.rotation.z=r;b.position.set(0,1.62,.12);ch.add(b)});g.add(ch);
-    sign(g,[{t:p.ic+' '+p.n,f:'700 40px'},{t:'Lv '+p.lv[0]+'–'+p.lv[1],f:'600 26px'}],2.4,.62,'#1a1424','#efe6ff',null,0,4.34,.0,0,512,140);
+    sign(g,[{t:p.ic+' '+p.n,f:'700 40px'},{t:rpTxt138(p.lv[0]),f:'600 26px'}],2.4,.62,'#1a1424','#efe6ff',null,0,4.34,.0,0,512,140);
     [-1.25,1.25].forEach(lx=>{const wx=x+Math.cos(ry)*lx,wz=z-Math.sin(ry)*lx;CBLK.add(Math.round(wz)*W+Math.round(wx))});
     PORT.push({i,x,z,g,disc,sw,ch})});
 }
@@ -5873,22 +5873,22 @@ function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.f
 // v106: k = the instance (0 = I); every instance starts at its own entrance
 function enterMap(i,k){if(AF)return;const p=PMAP[i],I=p.ins[k|0]||p.ins[0];fadeTo(()=>{insArrive(I)})}
 function insArrive(I){const p=PMAP[I.z],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]));
-  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
+  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:rpTxt138(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
 function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
   const P=pl.position;
   for(const Q of PORT){if(Math.hypot(P.x-Q.x,P.z-Q.z)<2.6){const p=PMAP[Q.i];if(!pUnlocked(Q.i))return {label:'🔒 Sealed · defeat '+BOSSES[Q.i-1].name+' in '+PMAP[Q.i-1].n,fn:()=>openX('bosses')};
-    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' (Lv '+p.ins[0].lv[0]+'–'+p.ins[0].lv[1]+')',fn:()=>enterMap(Q.i,0)}}}
+    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' ('+rpTxt138(p.ins[0].lv[0])+')',fn:()=>enterMap(Q.i,0)}}}
   for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<(r.k=='next'?2.8:2.2)){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};
-    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' (Lv '+N.lv[0]+'–'+N.lv[1]+')'),fn:()=>insGo(N)}}
+    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' ('+rpTxt138(N.lv[0])+')'),fn:()=>insGo(N)}}
     return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
 // v106: the portal lists every instance of the zone you have reached (v135: no Wave Trial any more)
-XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+' · Lv '+p.lv[0]+'–'+p.lv[1]+(d?' · cleared ✓':'');
+XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+(d?' · cleared ✓':'');
   const row=I=>{const ok=I.k<=R,txt=I.den?b.name+', '+b.title+(d?' (back 5 minutes after each defeat).':'.'):I.k==PMF-1?'Its road ends at the gateway to '+b.name+'’s den.':'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
-    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">Lv ${I.den?b.lvl:I.lv[0]+'–'+I.lv[1]}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
+    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">${rpTxt138(I.den?b.lvl:I.lv[0])}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
   const wave='';   // v135: Wave Trials removed (owner's request)
   $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
@@ -5896,7 +5896,7 @@ $('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target
 // the J window lists the portals and their bosses
 XR.bosses=()=>{$('xwT').textContent='🌀 The Portals';$('xwS').textContent=bossDone.size+' of '+PMAP.length+' maps cleared';
   $('xwB').innerHTML='<div class="rows">'+PMAP.map((p,i)=>{const b=BOSSES[i],u=pUnlocked(i),d=pDone(i);
-    return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">Lv ${p.lv[0]}–${p.lv[1]}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
+    return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">${rpTxt138(p.lv[0])}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Each portal has its own gate on an island round Duskhold; roads lead there from the east, west and south gates.</span>'};
 // ---- bosses ----
 function spawnBoss(i){
@@ -6447,7 +6447,7 @@ var LT={on:0};
 // ---------- the map (N) shows only the area you are in ----------
 function openWMap(){
   const c=$('wmc'),r=curMap(),I=curIns(),T=TOWNS[0];let x0,y0,w,h,title,sub; // v106: the instance you are in
-  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · Lv '+I.lv[0]+'–'+I.lv[1]:'')}
+  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · '+rpTxt138(I.lv[0]):'')}
   else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
@@ -12478,7 +12478,7 @@ function kqsMig(){const T=hero.tal;if(!T||T.__ab)return;const c=hero.cls;if(!SKB
   oldLd.forEach(n=>{const s=all.find(q=>q.n===n);if(s&&kqsUnl(c,s)&&!ld.includes(n)&&ld.length<KQS_SLOTS)ld.push(n)});
   SKB[c].forEach(s=>{if(ld.length<KQS_SLOTS&&kqsUnl(c,s)&&!ld.includes(s.n))ld.push(s.n)});
   T.__ld=ld.join('|');T.__apB=(T.__apB|0)+bonus;T.__ab=1;hsDirty&&hsDirty();
-  if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (C · Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
+  if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (K · Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
 // talent points no longer pay for skills
 {const f=talSpent;talSpent=function(b){if(b!=null)return f(b);let n=0;const T=TAL[hero.cls]||[];for(let i=0;i<T.length;i++)n+=f(i);return n}}
 // the hotbar: the equipped abilities, in slot order (packed, 1-4)
@@ -12505,7 +12505,7 @@ function kqsReset(){if(!apSpent())return say('You have no ability points to refu
 {const f=loadGame;loadGame=function(){kqsClear();KQS.cdn={};const r=f.apply(this,arguments);try{kqsMig();KQS.ck='';hud()}catch(err){console.warn(err)}return r}}
 {const f=ccBegin;ccBegin=function(){kqsClear();KQS.cdn={};const r=f.apply(this,arguments);try{if(hero.tal)hero.tal.__ab=1;KQS.ck='';hud()}catch(_){}return r}}
 // level up: +1 ability point (the banner text is patched in build/pV10.py)
-function kqsLvNote(){const L=kqsAll(hero.cls).filter(s=>s.lv==hero.lvl);return L.length?'New abilit'+(L.length>1?'ies':'y')+' to unlock: '+L.map(s=>s.i+' '+s.n).join(', ')+' (C · Abilities)':''}
+function kqsLvNote(){const L=kqsAll(hero.cls).filter(s=>s.lv==hero.lvl);return L.length?'New abilit'+(L.length>1?'ies':'y')+' to unlock: '+L.map(s=>s.i+' '+s.n).join(', ')+' (K · Abilities)':''}
 
 // ---------------- helpers for the new abilities ----------------
 var kqsV=(x,z)=>new THREE.Vector3(x,0,z);
@@ -12871,11 +12871,11 @@ function kqsTick(dt,now){
 // ---------------- HUD: empty slots, aiming highlight, ability-point chip ----------------
 {const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||!party.length)return;const L=heroSkills();
   if(L.length<KQS_SLOTS){const btns=[...A.querySelectorAll('button[data-x]')],sk=btns.filter(b=>/^\d+$/.test(b.dataset.x)),after=sk[sk.length-1]||btns.find(b=>b.dataset.x=='a');
-    let h='';for(let i=L.length;i<KQS_SLOTS;i++)h+=`<button class="hs kqs-empty" data-x="E${i}" title="Empty ability slot — open Abilities (C)"><span class="ic">＋</span><span class="kb">${i+1}</span><span class="sb">empty</span><span class="cdv" style="height:0"></span></button>`;
+    let h='';for(let i=L.length;i<KQS_SLOTS;i++)h+=`<button class="hs kqs-empty" data-x="E${i}" title="Empty ability slot — open Abilities (K)"><span class="ic">＋</span><span class="kb">${i+1}</span><span class="sb">empty</span><span class="cdv" style="height:0"></span></button>`;
     if(after)after.insertAdjacentHTML('afterend',h)}
   if(KQS.tg){const b=A.querySelector('button[data-x="'+KQS.tg.i+'"]');if(b)b.classList.add('kqs-aim')}
   L.forEach((s,i)=>{if(s.gt){const b=A.querySelector('button[data-x="'+i+'"]');if(b)b.classList.add('kqs-gt')}});
-  const ap=apFree(),B=$('buffs');if(B&&ap>0)B.insertAdjacentHTML('afterbegin',`<span class="bf kqs-apn" data-kqsopen="1" title="Spend ability points (C · Abilities)">⚡ ${ap} ability point${ap>1?'s':''} · C</span>`)}catch(err){}}}
+  const ap=apFree(),B=$('buffs');if(B&&ap>0)B.insertAdjacentHTML('afterbegin',`<span class="bf kqs-apn" data-kqsopen="1" title="Spend ability points (K · Abilities)">⚡ ${ap} ability point${ap>1?'s':''} · K</span>`)}catch(err){}}}
 $('acts').addEventListener('pointerdown',e=>{const b=e.target.closest('.kqs-empty');if(!b)return;e.preventDefault();e.stopImmediatePropagation();openAbil()},true);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-kqsopen]');if(!t)return;e.preventDefault();if(!$('tal').classList.contains('hide'))$('tal').classList.add('hide');if($('sysmenu'))$('sysmenu').classList.add('hide');if(xwMode!='abil'||$('xw').classList.contains('hide'))openAbil()});
 
@@ -12908,15 +12908,15 @@ $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.c
   if(D.kqsel!=null){KQS.sel=D.kqsel;rX()}});
 // the talents window points to the ability book (replaces the v71 skill list)
 function skHTML(){return '';const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
-// v117: Talents (K) and Abilities (C) are two separate windows with their own keys; neither links to the other.
-// C opens the Abilities window and closes it again.
-addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='c')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
+// v117: Talents and Abilities were two separate windows. v138: talents are gone; C opens the Character window (the old
+// talents window, 2910) and K opens the Abilities window and closes it again.
+addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='k')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
   if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation();return}if(!uiOpen())openAbil()},true);
 {const f=openTal;openTal=function(){if(!$('xw').classList.contains('hide')&&xwMode=='abil')closeX();KQS.tab='tal';return f.apply(this,arguments)}}
 function kqsTabs(on){const ap=apFree();return `<div class="tabs kqs-tabs"><button class="${on=='tal'?'on':''}" data-kqstal="1">✦ Talents${tpFree()?' <b class="kqs-n">'+tpFree()+'</b>':''}</button><button class="${on=='ab'?'on':''}" data-kqsopen="1">⚡ Abilities${ap?' <b class="kqs-n">'+ap+'</b>':''}</button></div>`}
 // (v117: the Talents window no longer carries a Talents | Abilities tab bar)
 document.addEventListener('click',e=>{const t=e.target.closest('#tal [data-kqstal]');if(t)e.preventDefault()});
-{const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>C</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
+{const t=$('talBtn');if(t&&!$('abBtn')){t.insertAdjacentHTML('afterend','<button id="abBtn">⚡ Abilities <kbd>K</kbd></button>');$('abBtn').onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openAbil()}}}
 document.head.insertAdjacentHTML('beforeend',`<style>
 .kqs-tg{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:10px;padding:6px 8px 6px 14px;font-size:.8rem;pointer-events:auto;border-radius:10px;white-space:nowrap;max-width:calc(100% - 32px);box-sizing:border-box}
 .kqs-tg .kqs-tgh{opacity:.8}.kqs-tg kbd{font-size:.7rem}.kqs-tg .kqs-tgx{min-width:30px;padding:3px 8px}
@@ -13716,7 +13716,7 @@ function kqmBag(){kqmBagInit();if(!KQM.ready)return;kqmMarkNew();
   $('kqmStatP').classList.toggle('kqm-tabhid',T!=KQM_STATS);bl.classList.toggle('kqm-tabhid',T==KQM_STATS);
   if(T==0)bl.innerHTML=kqmGearTab();else if(T==1)bl.innerHTML=kqmMatTab();else if(T==3)bl.innerHTML=kqmSupTab();else if(T==4)bl.innerHTML=kqmEggTab();
   else if(T==KQM_FORGE){bl.innerHTML=kqmForgeTab();$('idt').innerHTML='<span class="mut dtl">⚒️ The Blacksmith upgrades your gear here. Upgrade materials drop in the portal zones; the Trading Post sells the one for your tier. Success chance falls after +5.</span>'}
-  else if(T==KQM_STATS)$('idt').innerHTML='<span class="mut dtl">Hover any stat for where it comes from. Gear, talents, food, elixirs and Sovereign powers all add up here.</span>';
+  else if(T==KQM_STATS)$('idt').innerHTML='<span class="mut dtl">Hover any stat for where it comes from. Gear, attributes, food, elixirs and Sovereign powers all add up here.</span>';
   if(T==1||T==4)$('idt').innerHTML='<span class="mut dtl">'+(T==1?'Hover a material to see what it is for and where to find more.':'Eggs hatch on their own while you carry them. A glowing egg is ready: click it to watch it hatch.')+'</span>';
   if(T==3){const k=KQM.supSel,S=k&&SUP[k];if(S&&cnt(k)>0){const u=['food','elixir','pot'].includes(S.c);$('idt').innerHTML=`<div class="dtl"><div class="dh">${S.i} ${kqmEsc(S.n)} <small>×${cnt(k)}</small></div><div class="mut" style="font-size:.74rem">${S.d||''}</div></div>${u?`<button class="pri" data-use="${k}">${S.c=='food'?'Eat':'Drink'}</button>`:''}`}else{KQM.supSel=null;$('idt').innerHTML='<span class="mut dtl">Select a supply to see what it does. Food and potions can be used from here.</span>'}}
   // lock button next to Equip / Upgrade
@@ -15135,9 +15135,9 @@ XR.densign=()=>{const i=+xwArg,T=DSTXT[i],B=BOSSES[i];if(!T||!B)return;const L=d
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   $('xwT').textContent='📜 '+T.den;$('xwS').textContent=B.name+' · '+B.title;
   const pg=!L.pw||L.me>=L.pw,col=g=>g?'#6ee7b7':'#ff6b5b';
-  const rec=`<div class="dsg-lv"><span>Recommended level <b>Lv ${L.rec}</b></span><span>Your level <b style="color:${col(good)}">Lv ${me}</b>${good?' ✔':' ✖'}</span>
+  const rec=`<div class="dsg-lv">   <!-- v138: power only, no levels -->
     ${L.pw?`<span>Recommended power <b>${L.pw.toLocaleString()}</b></span><span>Your power <b style="color:${col(pg)}">${L.me.toLocaleString()}</b>${pg?' ✔':' ✖'}</span>`:''}
-    <small class="mut">${esc(B.name)} is Lv ${L.bl}; monsters on the road here are about Lv ${L.zl}.${good&&pg?'':' Come back stronger, or bring a co-op partner.'}${done?' You have defeated it before.':''}</small></div>`;
+    <small class="mut">${pg?'You look ready for '+esc(B.name)+'.':'Come back stronger, or bring a co-op partner.'}${done?' You have defeated it before.':''}</small></div>`;
   const atk=T.atk.map(([n,d,a])=>`<div class="rw dsg-a"><span class="rn"><b>${esc(n)}</b><small>${esc(d)}</small><small class="dsg-av">➜ ${esc(a)}</small></span></div>`).join('');
   const wk=T.weak.map(w=>`<li>${esc(w)}</li>`).join('');
   $('xwB').innerHTML=`<div class="dsg">${rec}<h4 class="dsg-h">Attacks</h4><div class="rows">${atk}</div><h4 class="dsg-h">Weaknesses &amp; counters</h4><ul class="dsg-w">${wk}</ul></div>`;
@@ -16755,7 +16755,7 @@ function lnBagRefresh(){try{if(!$('bag').classList.contains('hide'))rB0()}catch(
 function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" data-kqt="tm:${m.id}" style="--rc:#fbbf24" title=""><span class="kqm-ic">🗺️</span><span class="kqm-up">${(PMAP[m.r]?PMAP[m.r].n:'?').replace(/^The /,'').split(' ')[0]+' '+(PM_RN[m.k|0]||'')}</span></div>`}
 function tmTip(m){const p=INSL[tmG(m)],here=tmCur()===tmG(m);
   return `<div class="kqm-tn"><span>🗺️ ${tmName(m)}</span></div><div class="kqm-ts">Quest item · can't be sold</div>`+
-    `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' (Lv '+p.lv[0]+'–'+p.lv[1]+')':''}. ${tmHint(m)}</div>`+
+    `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' ('+rpTxt138(p.lv[0])+')':''}. ${tmHint(m)}</div>`+
     `<div class="kqm-th">${here?'You are there: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its zone\'s portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
 {const f=kqmTipHTML;kqmTipHTML=function(el){const k=el&&el.dataset&&el.dataset.kqt||'';if(k.slice(0,3)=='tm:'){const m=tmaps.find(q=>q.id==+k.slice(3));return m?[tmTip(m),'#fbbf24']:null}return f.apply(this,arguments)}}
 {const f=kqmBag;kqmBag=function(){const r=f.apply(this,arguments);try{if(!tmaps.length)return r;const bl=$('bl'),T=bagTab2;if(!bl)return r;
@@ -21263,7 +21263,7 @@ function TWN100_island(i){const p=TWN100_PG[i],P=PORT[i];if(!P)return;const y0=T
   [-1.45,1.45].forEach(lx=>{const q=loc(lx,0);CBLK.add(Math.round(q[1])*W+Math.round(q[0]))});
   // signpost to the right of the dais, facing the arrival spot
   {const q=loc(2.55,2.3),sg=twPostG(2.0,1.62,.62);sg.position.set(q[0],GH(q[0],q[1]),q[1]);sg.rotation.y=face;scene.add(sg);
-    sign(sg,[{t:'Portal '+['I','II','III','IV','V','VI'][i]+' · '+PMAP[i].n,f:'700 36px'},{t:PMAP[i].ic+' Enemy level '+PMAP[i].lv[0]+'–'+PMAP[i].lv[1],f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
+    sign(sg,[{t:'Portal '+['I','II','III','IV','V','VI'][i]+' · '+PMAP[i].n,f:'700 36px'},{t:PMAP[i].ic+' '+rpTxt138(PMAP[i].lv[0]),f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
     CBLK.add(Math.round(q[1])*W+Math.round(q[0]))}
   // scenery: themed WD kinds round the dais, keeping the front and every road that reaches the island clear
   const open=[face];TWN100_RD.forEach(L=>L.forEach(v=>{const d=Math.hypot(v[0]-p.x,v[1]-p.y);if(d<p.r+4&&d>1)open.push(Math.atan2(v[0]-p.x,v[1]-p.y))}));
@@ -21395,7 +21395,7 @@ function TWN101_road(){const T=TOWNS[0],X=PCOURT[0],y0=T.cy+T.sz+2,yN=TWN100_PG[
   for(let dz=0;dz<=3;dz++)CBLK.add(Math.round(AY-4.0+dz*.7)*W+Math.round(X-5.5))}
 // the board's text (which portals are open / cleared)
 function TWN101_board(){const g=TWN101.board;if(!g)return;const T=TOWNS[0],AY=PCOURT[1]+3,y0=T.cy+T.sz+2;
-  const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  Lv '+p.lv[0]+'–'+p.lv[1]+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
+  const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  '+rpTxt138(p.lv[0])+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
   // repaint only when the text changed (this runs every second); free the old board's canvas texture
   const key=L.map(l=>l.t).join('|');if(TWN101.bs&&TWN101.bk===key)return;TWN101.bk=key;
   if(TWN101.bs){const sg=TWN101.bs.parent;g.remove(sg);sg.traverse(o=>{const m=o.material,t=m&&m.map;if(!t||typeof SGNR=='undefined'||!SGNR)return;const k=SGNR.findIndex(r=>r.t===t);if(k>=0){SGNR.splice(k,1);t.dispose();m.dispose()}});TWN101.bs=null}
@@ -22798,7 +22798,7 @@ var INSW={g:-2,t:0};
   const I=curIns();INSW.g=I?I.g:-1;if(I&&I.k>INSR[I.z])INSR[I.z]=I.k}catch(err){console.warn('v106 load',err)}return r}}
 // the J window: how far into each zone you are
 {const f=XR.bosses;XR.bosses=function(){f.apply(this,arguments);try{const rows=$('xwB').querySelectorAll('.rw');PMAP.forEach((p,i)=>{const rw=rows[i];if(!rw||!pUnlocked(i))return;const sm=rw.querySelector('small');
-  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' (Lv '+I.lv[0]+'–'+I.lv[1]+')')).join(' · '))})}catch(_){}}}
+  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' ('+rpTxt138(I.lv[0])+')')).join(' · '))})}catch(_){}}}
 // ================= v107: every zone monster fights in its own way =================
 // Before: the 18 monsters of the six portal zones shared ten generic moves, and 12 of them had a lunge (charge or pounce).
 // Now each keeps one basic attack (strike / bite / spit / throw / bolt) and gets two signature moves of its own that
@@ -26248,7 +26248,7 @@ function ia112Particles(dt,now,t){const {N,pos}=ZP,P=pl.position;if(['spore','mo
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{ia112(dt,now)}catch(err){if(!IA112.err){IA112.err=1;console.warn('v112 atmos',err)}}}}
 // ---------- 8. the arrival banner names the place ----------
 {const f=insArrive;insArrive=function(I){const r=f.apply(this,arguments);try{const t=I&&TH112&&TH112.byG[I.g];if(t){const p=PMAP[I.z];
-  banner(p.ic+' '+I.n.toUpperCase(),t.nm+' · '+t.sub,'Enemy levels '+I.lv[0]+'–'+I.lv[1]+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}}catch(_){}return r}}
+  banner(p.ic+' '+I.n.toUpperCase(),t.nm+' · '+t.sub,rpTxt138(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}}catch(_){}return r}}
 {const f=areaName;areaName=function(){const s=f.apply(this,arguments);try{const I=curIns(),t=I&&TH112&&TH112.byG[I.g];if(t&&s.indexOf(I.n)>=0&&s.indexOf('⛺')<0)return s.replace(I.n,I.n+' · '+t.nm)}catch(_){}return s}}
 // ---------- 9. saves: the tiles of II and III changed (layout 112) ----------
 // A v108 save: the reached instances stay; a position in instance I, a Den or a Trial stays (their tiles did not change);
@@ -28884,7 +28884,7 @@ function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||
   else if(I.tri){kick=p.n;title='Wave Trial';sub=p.sub}
   else{kick=p.n+' · '+(['First','Second','Third'][I.k]||'')+' Reach';title=t?t.nm:p.n;sub=t?t.sub:p.sub}
   let rp=0;try{rp=recPower(I.lv[0])}catch(_){}const pw=typeof heroPower=='function'?heroPower():0;
-  const foot=`Enemies Lv ${I.lv[0]}${I.lv[1]!=I.lv[0]?'–'+I.lv[1]:''}${rp?` <span class="${pw<rp?'ztlow':''}">· ⚔ Rec. power ${rp.toLocaleString()}</span>`:''}`;
+  const foot=rp?`<span class="${pw<rp?'ztlow':''}">⚔ Rec. power ${rp.toLocaleString()}</span>`:'';   // v138: no enemy level range
   zt116Show(T,kick,title,sub,foot,'z'+I.z)}
 // the old arrival banners stay silent; the card replaces them
 {const f=banner;banner=function(t){if(ZT116.mute)return;if(t==='🏰 DUSKHOLD'){zt116Show(ZT116.town,'The Floating Stronghold','Duskhold','The last stronghold, adrift above the void','The Grand Square · the Portal Road leads south','town');return}return f.apply(this,arguments)}}
@@ -35624,6 +35624,272 @@ function fkCitSp(c){const r=czRole104(c),L=(FK_ROLE[r]||FK_ROLE.gather).filter(k
 // them shortly after loading (not during it: the page shows sooner)
 {const f=idlNpc;idlNpc=function(g,now){if(g&&!g._fkOk&&g.userData&&g.userData.npcO){g._fkOk=1;const m=g.children.find(c=>c.isSkinnedMesh);if(m&&!m.userData.fk)try{fkRebuild(g)}catch(e){}}return f.apply(this,arguments)}}
 setTimeout(()=>{try{const t=performance.now(),n=fkRebuildAll();FK137.rb=[n,Math.round(performance.now()-t)]}catch(e){console.warn('v137 folk rebuild',e)}},1200);
+// ================= v138: attributes replace talents (owner's request, Oct 2026) =================
+// Levelling up used to add a big flat amount of every stat (CLS[c].per) plus a talent point. Now:
+//  * the flat gain per level is ATR138.flat (55%) of the old health / attack / defense growth (mana keeps its old growth);
+//  * every level gives ATR138.per (3) attribute points to spend on Intellect, Strength, Dexterity, Vigor, Wisdom, Luck;
+//    each point adds a little (ATR138.D[k].p) and reaching 10 / 25 / 50 / 75 points in one attribute unlocks a bonus (D[k].T);
+//  * talents are gone: talRank() is 0 for every talent, talMods() returns the attribute bonuses instead (HS_base adds them
+//    where it added talents), tpFree() (0120) counts unspent attribute points (the hud's "✦ N points · C" chip).
+// Points live in hero.tal['__at:<key>'] (saved with the hero; '__' keys survive the ability reset). Old saves: talent ranks are
+// removed on load (they were stat bonuses only) and the hero gets every attribute point of their level to spend.
+// Spending is staged: + buttons add pending points (ATR138.pend), Apply commits them, Undo drops them, Auto fills the free
+// points in the class's usual mix (ATR138.auto). Reset (40 gold per level, also the Magic Shop's Tome) takes all of them back.
+// The Character window (C, 2910) and the block under the hero in the inventory show them.
+var ATR138={per:3,flat:.55,
+  K:['int','str','dex','vig','wis','lck'],
+  D:{
+    int:{n:'Intellect',ab:'INT',i:'🔮',col:'#8ab4ff',d:'Magical attack and mana',p:{ma:1.4,mp:1.5},
+      T:[[10,{skillP:.05},'+5% ability damage'],[25,{aoeP:.1},'Ability areas 10% larger'],[50,{maP:.08},'+8% magical attack'],[75,{skillP:.1,cdr:.05},'+10% ability damage and 5% faster cooldowns']]},
+    str:{n:'Strength',ab:'STR',i:'💪',col:'#ff8a5a',d:'Physical attack and a little physical defense',p:{pa:1.4,pd:.25},
+      T:[[10,{basicP:.05},'+5% basic attack damage'],[25,{finisher:.15},'Combo finishers deal 15% more'],[50,{paP:.08},'+8% physical attack'],[75,{exec:.15},'+15% damage to enemies under 35% health']]},
+    dex:{n:'Dexterity',ab:'DEX',i:'🏹',col:'#7ee08a',d:'Critical chance, attack speed and a little physical attack',p:{pa:.35,crit:.004,as:.004},
+      T:[[10,{as:.05},'+5% attack speed'],[25,{iframe:.1},'Dashes stay invulnerable 0.1 s longer'],[50,{crit:.05},'+5% critical hit chance'],[75,{dash:1},'+1 dash charge']]},
+    vig:{n:'Vigor',ab:'VIG',i:'❤️',col:'#ff6b7a',d:'Health and defense',p:{hp:10,pd:.5,md:.35},
+      T:[[10,{hpP:.05},'+5% max health'],[25,{regen:.004},'Regenerate 0.4% health per second in combat'],[50,{pdP:.08,mdP:.08},'+8% physical and magical defense'],[75,{lowdr:.15},'15% less damage taken below 40% health']]},
+    wis:{n:'Wisdom',ab:'WIS',i:'📖',col:'#c79bff',d:'Mana, mana regeneration, magical defense and healing received',p:{mp:3.5,md:.55,mpr:.0002,healP:.004},
+      T:[[10,{mpP:.1},'+10% max mana'],[25,{healP:.15},'Healing you receive is 15% stronger'],[50,{cdr:.06},'Abilities cool down 6% faster'],[75,{killheal:.03},'Heal 3% of max health on every kill']]},
+    lck:{n:'Luck',ab:'LCK',i:'🍀',col:'#f0cc72',d:'Critical chance, critical damage and loot find',p:{crit:.0025,cdm:.012,loot:.004},
+      T:[[10,{loot:.05},'+5% loot find'],[25,{cdm:.2},'Critical hits deal 20% more damage'],[50,{ls:.02},'Heal for 2% of the damage you deal'],[75,{crit:.05,cdm:.25},'+5% critical chance and +25% critical damage']]}
+  },
+  // Auto: the share of points each class usually puts where (ratios, not points)
+  auto:{warrior:{str:4,vig:4,dex:1.5,lck:.5},paladin:{str:3.5,vig:4,wis:1.5,int:1},assassin:{dex:3.5,str:3,vig:2,lck:1.5},ranger:{dex:3,str:3,vig:2.5,lck:1.5},mage:{int:5,wis:2.5,vig:2.5}},
+  pend:{},sel:null};
+// what one point / each bonus does, in words (for tooltips and the Character window)
+var ATR138_SN={hp:['health',0],mp:['mana',0],pa:['physical attack',0],ma:['magical attack',0],pd:['physical defense',0],md:['magical defense',0],
+  crit:['critical chance',1],cdm:['critical damage',1],as:['attack speed',1],mpr:['mana regeneration per second',1],healP:['healing received',1],loot:['loot find',1]};
+function atr138PerTxt(k){const p=ATR138.D[k].p;return Object.keys(p).map(s=>{const q=ATR138_SN[s]||[s,0];return '+'+(q[1]?+(p[s]*100).toFixed(2)+'%':+p[s].toFixed(2))+' '+q[0]}).join(', ')}
+// ---- the flat gain per level: 55% of the old health / attack / defense growth ----
+CLSK.forEach(c=>{const P=CLS[c].per;['hp','pa','ma','pd','md'].forEach(k=>{P[k]=+(P[k]*ATR138.flat).toFixed(3)})});
+// ---- points ----
+function atr138Pts(k){return (hero&&hero.tal&&hero.tal['__at:'+k])|0}
+function atr138Spent(){let n=0;ATR138.K.forEach(k=>n+=atr138Pts(k));return n}
+function atr138Earned(){return Math.max(0,((hero&&hero.lvl|0)-1)*ATR138.per)}
+function atr138Unspent(){return Math.max(0,atr138Earned()-atr138Spent())}
+function atr138PendN(){let n=0;for(const k in ATR138.pend)n+=ATR138.pend[k]|0;return n}
+function atr138Free(){return Math.max(0,atr138Unspent()-atr138PendN())}
+// the stat bonuses of a set of points (default: what is spent)
+function atr138ModsOf(P){const o={},add=(s,m)=>{for(const k in s)o[k]=(o[k]||0)+s[k]*m};
+  ATR138.K.forEach(k=>{const v=P[k]|0,D=ATR138.D[k];if(!v)return;add(D.p,v);D.T.forEach(t=>{if(v>=t[0])add(t[1],1)})});return o}
+function atr138Cur(){const P={};ATR138.K.forEach(k=>P[k]=atr138Pts(k));return P}
+// ---- talents are gone: HS_base's talent hook now carries the attributes ----
+talRank=function(){return 0};
+talMods=function(){try{return atr138ModsOf(atr138Cur())}catch(e){return {}}};
+talSpent=function(){return atr138Spent()};
+// every talent id of every class (to clear them out of old saves)
+function atr138TalIds(){const S=new Set();try{for(const c in TAL)TAL[c].forEach(b=>b.t.forEach(t=>S.add(t[0])))}catch(_){}return S}
+function atr138Migrate(){if(!hero.tal||typeof hero.tal!='object')hero.tal={};const ids=atr138TalIds();let n=0;
+  for(const k of Object.keys(hero.tal))if(ids.has(k)){n+=hero.tal[k]|0;delete hero.tal[k]}
+  const first=!hero.tal.__at138;hero.tal.__at138=1;ATR138.pend={};hsDirty();
+  if(first&&(hero.lvl|0)>1)setTimeout(()=>{try{say('✦ <b>Talents are now attributes.</b> You have <b>'+atr138Unspent()+'</b> attribute points to spend: press <b>C</b> for your character (abilities moved to <b>K</b>).')}catch(_){}},2600);
+  return n}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{atr138Migrate()}catch(e){console.warn('v138 attributes',e)}return r}}
+// a new hero starts on attributes (no 'talents are now attributes' note later)
+{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(!hero.tal||typeof hero.tal!='object')hero.tal={};hero.tal.__at138=1;ATR138.pend={}}catch(_){}return r}}
+// ---- spending ----
+function atr138Add(k,n){if(!ATR138.D[k])return 0;n=Math.min(n||1,atr138Free());if(n<=0)return 0;ATR138.pend[k]=(ATR138.pend[k]|0)+n;atr138Refresh();return n}
+function atr138Sub(k,n){const c=ATR138.pend[k]|0;if(!c)return 0;n=Math.min(n||1,c);ATR138.pend[k]=c-n;if(!ATR138.pend[k])delete ATR138.pend[k];atr138Refresh();return n}
+function atr138Undo(){ATR138.pend={};atr138Refresh()}
+function atr138Apply(){const n=atr138PendN();if(!n)return 0;const mx0=heroMax();
+  for(const k in ATR138.pend){const v=ATR138.pend[k]|0;if(v>0)hero.tal['__at:'+k]=atr138Pts(k)+v}
+  ATR138.pend={};hsDirty();const mx=heroMax();if(mx>mx0)hero.hp=Math.min(mx,hero.hp+(mx-mx0));hero.hp=Math.min(hero.hp,mx);
+  try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}try{say('✦ Spent '+n+' attribute point'+(n==1?'':'s')+'.')}catch(_){}
+  try{hud()}catch(_){}atr138Refresh();return n}
+// Auto: hand out the free points one at a time to whichever attribute is furthest below the class's usual share
+function atr138Auto(){const W=ATR138.auto[hero.cls]||ATR138.auto.warrior,tot=Object.values(W).reduce((a,b)=>a+b,0);let n=atr138Free(),g=0;
+  while(n-->0){const all=atr138Spent()+atr138PendN()+1;let best=null,bd=-1e9;
+    for(const k in W){const d=W[k]/tot*all-(atr138Pts(k)+(ATR138.pend[k]|0));if(d>bd){bd=d;best=k}}
+    if(!best)break;ATR138.pend[best]=(ATR138.pend[best]|0)+1;g++}
+  atr138Refresh();return g}
+function atr138Clear(){ATR138.K.forEach(k=>{delete hero.tal['__at:'+k]});ATR138.pend={};hsDirty();hero.hp=Math.min(hero.hp,heroMax());try{hud()}catch(_){}atr138Refresh()}
+function atr138ResetCost(){return 40*(hero.lvl|0)}
+function atr138Reset(){const c=atr138ResetCost();if(!atr138Spent())return false;if(gold<c){say('Taking back your attribute points costs '+c+' gold.');return false}
+  gold-=c;atr138Clear();say('✦ Your attribute points were returned ('+c+' gold). Spend them again.');return true}
+// stats with the pending points counted (for the "→" previews); restores everything afterwards
+function atr138Preview(){if(!atr138PendN())return null;const keep={};
+  for(const k in ATR138.pend){keep[k]=hero.tal['__at:'+k];hero.tal['__at:'+k]=atr138Pts(k)+(ATR138.pend[k]|0)}
+  let s=null;try{hsDirty();s=Object.assign({},HS());s._mx=heroMax();s._mm=typeof mpMax=='function'?mpMax():s.mp;s._pw=heroPower()}
+  finally{for(const k in keep){if(keep[k]==null)delete hero.tal['__at:'+k];else hero.tal['__at:'+k]=keep[k]}hsDirty()}
+  return s}
+// everything that shows attributes redraws through here (Character window, inventory block)
+var ATR138_R=[];
+function atr138Refresh(){ATR138_R.forEach(f=>{try{f()}catch(e){console.warn('v138 attr ui',e)}})}
+// the rows of attributes (full: Character window; compact: under the hero in the inventory)
+function atr138Rows(compact){const free=atr138Free();
+  return ATR138.K.map(k=>{const D=ATR138.D[k],v=atr138Pts(k),p=ATR138.pend[k]|0,tot=v+p,nx=D.T.find(t=>tot<t[0]);
+    const tip=D.n+': '+D.d+'. Each point: '+atr138PerTxt(k)+'.'+(nx?' Next bonus at '+nx[0]+': '+nx[2]+'.':' Every bonus unlocked.');
+    return `<div class="at138${ATR138.sel==k?' on':''}" data-at138i="${k}" title="${tip.replace(/"/g,'&quot;')}" style="--ac:${D.col}">`+
+      `<span class="at138-ic">${D.i}</span><span class="at138-n">${compact?D.ab:D.n}</span>`+
+      `<span class="at138-v">${v}${p?`<em>+${p}</em>`:''}</span>`+
+      (compact?'':`<span class="at138-pips">${D.T.map(t=>`<i class="${tot>=t[0]?(v>=t[0]?'got':'new'):''}" title="${t[0]}: ${t[2]}">${t[0]}</i>`).join('')}</span>`)+
+      `<span class="at138-b"><button data-at138m="${k}" ${p?'':'disabled'} title="Take one back">−</button><button data-at138="${k}" ${free?'':'disabled'} title="+1 (Shift: +5)">+</button></span></div>`}).join('')}
+function atr138Bar(compact){const fr=atr138Free(),pn=atr138PendN(),sp=atr138Spent();
+  return `<div class="at138-bar"><span class="at138-free"><b>${fr}</b> point${fr==1?'':'s'} to spend</span><span class="at138-act">`+
+    (fr?`<button data-at138x="auto" title="Spend the free points in your class's usual mix (you still press Apply)">Auto</button>`:'')+
+    (pn?`<button data-at138x="undo">Undo</button><button class="pri" data-at138x="apply">Apply +${pn}</button>`:'')+
+    (!compact&&sp&&!pn?`<button data-at138x="reset" title="Take back every attribute point to spend again">Reset (🪙 ${atr138ResetCost()})</button>`:'')+`</span></div>`}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-at138],[data-at138m],[data-at138x],[data-at138i]');if(!t)return;
+  if(!t.closest('#tal')&&!t.closest('#kqmAtr138'))return;const D=t.dataset;
+  if(D.at138!=null){e.stopPropagation();atr138Add(D.at138,e.shiftKey?5:1);return}
+  if(D.at138m!=null){e.stopPropagation();atr138Sub(D.at138m,e.shiftKey?5:1);return}
+  if(D.at138x){e.stopPropagation();const x=D.at138x;if(x=='auto')atr138Auto();else if(x=='undo')atr138Undo();else if(x=='apply')atr138Apply();else if(x=='reset'){if(atr138Reset())atr138Refresh()}return}
+  if(D.at138i){ATR138.sel=ATR138.sel==D.at138i?null:D.at138i;atr138Refresh()}},true);
+// ---- the inventory: the attributes sit under the hero, after the stat summary ----
+{const f=kqmDoll;kqmDoll=function(){const r=f.apply(this,arguments);try{let el=$('kqmAtr138');const sum=$('kqmSum');
+  if(!el&&sum){el=document.createElement('div');el.id='kqmAtr138';el.className='kqm-atr138';sum.after(el)}
+  if(el)el.innerHTML=`<div class="at138-h">✦ Attributes</div>`+atr138Bar(true)+`<div class="at138-g c">${atr138Rows(true)}</div>`}catch(e){console.warn('v138 bag attr',e)}return r}}
+ATR138_R.push(()=>{const b=$('bag');if(b&&!b.classList.contains('hide')&&$('kqmAtr138'))kqmDoll()});
+// a new level: the chip in the buff bar shows the points; a short hint the first few times
+{const f=heroLevelUp;heroLevelUp=function(){const r=f.apply(this,arguments);try{atr138Refresh()}catch(_){}return r}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+.at138-g{display:grid;gap:4px}.at138-g.c{grid-template-columns:1fr 1fr;gap:3px 6px}
+.at138{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:6px;padding:4px 6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(0,0,0,.22);cursor:pointer;min-width:0}
+.at138:hover,.at138.on{border-color:var(--ac,#f0cc72)}
+.at138-g.c .at138{grid-template-columns:auto 1fr auto auto;padding:2px 4px;gap:4px}
+.at138-ic{font-size:1rem;line-height:1}.at138-g.c .at138-ic{font-size:.8rem}
+.at138-n{font-weight:700;color:var(--ac,#f0cc72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.at138-g.c .at138-n{font-size:.68rem;letter-spacing:.04em}
+.at138-v{font-weight:800;color:#f4ead2;min-width:2.2em;text-align:right}.at138-g.c .at138-v{font-size:.74rem;min-width:1.6em}
+.at138-v em{font-style:normal;color:#7ef0a0;font-size:.8em;margin-left:2px}
+.at138-pips{display:flex;gap:3px}.at138-pips i{font-style:normal;font-size:.62rem;padding:1px 4px;border-radius:3px;border:1px solid rgba(255,255,255,.14);color:#8a8070}
+.at138-pips i.got{border-color:var(--ac);color:#1a1208;background:var(--ac)}.at138-pips i.new{border-color:#7ef0a0;color:#7ef0a0}
+.at138-b{display:flex;gap:2px}.at138-b button{min-width:22px;height:22px;padding:0 5px;font-size:.8rem;line-height:1}
+.at138-g.c .at138-b button{min-width:18px;height:18px;font-size:.72rem;padding:0 3px}
+.at138-b button[data-at138m]{opacity:.85}.at138-b button[data-at138m]:disabled{visibility:hidden}
+.at138-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 0;font-size:.74rem;flex-wrap:wrap}
+.at138-free b{color:#f0cc72;font-size:.9rem}.at138-act{display:flex;gap:4px;flex-wrap:wrap}.at138-act button{padding:2px 8px;font-size:.72rem}
+.kqm-atr138{margin-top:6px;border-top:1px solid rgba(240,204,114,.18);padding-top:5px}
+.at138-h{font-family:'Cinzel Decorative',serif;font-size:.7rem;letter-spacing:.12em;color:#c9a24a;text-transform:uppercase}
+</style>`);
+// ================= v138: the Character window (C) =================
+// The old Talents window (#tal) is now the Character window: on the left the hero model (the inventory's preview model HP on the
+// shared PV renderer), name, level and XP, and under it the six attributes (2900) with their 10/25/50/75 bonus marks; on the
+// right every stat of the hero in groups (with the pending points previewed as "old → new"), power, and the attribute bonuses
+// (unlocked ones lit). C opens and closes it (0108), the ☰ button "Character" too. Abilities moved to K (1010).
+var CH138={init:false};
+function ch138Init(){if(CH138.init)return;const w=$('tal');if(!w)return;CH138.init=true;
+  const win=w.querySelector('.win');if(win)win.style.width='min(1000px,100%)';
+  const wb=w.querySelector('.wb');if(wb)wb.innerHTML=`<div class="ch138"><div class="ch138-l"><div class="ch138-pvw"><div class="ch138-pv" id="ch138PV"></div></div><div class="ch138-id" id="ch138Id"></div>
+    <div class="ch138-ah"><span class="at138-h">✦ Attributes</span><span class="mut">${ATR138.per} points every level</span></div><div id="ch138Bar"></div><div class="at138-g" id="ch138At"></div><div class="ch138-info" id="ch138Info"></div></div>
+    <div class="ch138-r" id="ch138St"></div></div><div id="talT" style="display:none"></div>`;
+  const wf=w.querySelector('.wf');if(wf)wf.innerHTML=`<span class="mut dtl" id="talInfo">Spend attribute points with +, then press Apply. Reaching 10, 25, 50 and 75 points in one attribute unlocks a bonus. Shift+click adds 5.</span>`;
+  ATR138_R.push(()=>{if(!w.classList.contains('hide'))ch138Render()})}
+function ch138Fmt(v,k){if(v==null||!isFinite(v))return '—';if(k=='%')return (+(v*100).toFixed(1))+'%';if(k=='x')return '×'+(+v).toFixed(2);if(k=='+%')return '+'+(+(v*100).toFixed(1))+'%';if(k=='s')return (+v).toFixed(1)+'/s';return Math.round(v).toLocaleString()}
+function ch138Stats(){const s=HS(),n=atr138Preview(),L=hero.lvl|0,kd=KD(L),mx=heroMax(),mm=typeof mpMax=='function'?mpMax():s.mp;
+  const pdR=x=>x/(x+kd),row=(l,k,f,t,nk,opt)=>{const a=f(s,mx,mm),b=n?f(n,n._mx,n._mm):null,ch=n&&Math.abs((b||0)-(a||0))>1e-6;if(opt&&!ch&&!a)return '';
+    return `<div class="kv ch138-kv"${t?` title="${t}"`:''}><span>${l}</span><b>${ch138Fmt(a,k)}${ch?` <em class="${(nk?b<a:b>a)?'up':'dn'}">→ ${ch138Fmt(b,k)}</em>`:''}</b></div>`};
+  const sec=(t,h)=>`<div class="ch138-sec"><div class="ch138-st">${t}</div>${h}</div>`;
+  const pw=heroPower(),pwN=n?n._pw:null;
+  let h=`<div class="ch138-pw"><span>Power</span><b>${pw.toLocaleString()}${pwN!=null&&pwN!==pw?` <em class="up">→ ${pwN.toLocaleString()}</em>`:''}</b></div>`;
+  h+=sec('⚔️ Offense',row('Physical attack','',s=>s.pa)+row('Magical attack','',s=>s.ma)+row('Critical chance','%',s=>Math.min(1,s.crit))+row('Critical damage','x',s=>1+s.cdm)+
+    row('Attack speed','+%',s=>s.as)+row('Ability damage','+%',s=>s.skillP,'Bonus damage of class abilities')+row('Basic attack damage','+%',s=>s.basicP,'',0,1)+row('Combo finishers','+%',s=>s.finisher,'Extra damage of the last hit of a combo',0,1)+
+    row('Ability cooldowns','%',s=>-Math.min(.5,s.cdr||0),'Shorter cooldowns',1,1)+row('Lifesteal','%',s=>s.ls,'',0,1)+row('Execute','+%',s=>s.exec,'More damage to enemies under 35% health',0,1)+row('Ability area','+%',s=>s.aoeP,'',0,1));
+  h+=sec('🛡️ Defense',row('Health','',(s,mx)=>mx)+row('Physical defense','',s=>s.pd,'Damage cut against a monster of your level: '+ch138Fmt(pdR(s.pd),'%'))+row('Magical defense','',s=>s.md,'Damage cut against a monster of your level: '+ch138Fmt(pdR(s.md),'%'))+
+    row('Physical damage cut','%',s=>pdR(s.pd),'Against a monster of your level')+row('Magical damage cut','%',s=>pdR(s.md),'Against a monster of your level')+row('Damage reduction','%',s=>Math.min(.75,s.dr),'',0,1)+
+    row('Block chance','%',s=>s.blockC,'',0,1)+row('Health regen in combat','%',s=>s.regen,'Of max health per second',0,1)+row('Guard below 40% health','%',s=>s.lowdr,'',0,1)+row('Healing received','+%',s=>s.healP,'',0,1)+row('Heal per kill','%',s=>s.killheal,'Of max health',0,1));
+  h+=sec('✨ Utility',row('Mana','',(s,mx,mm)=>mm)+row('Mana regen','s',(s,mx,mm)=>mm*(.012+(s.mpr||0)),'Mana per second')+row('Dash charges','',s=>s.dash)+row('Dash invulnerability','',s=>(.3+(s.iframe||0))*1000,'Milliseconds')+
+    row('Move speed','+%',s=>s.mspd,'',0,1)+row('Loot find','+%',s=>s.loot,'',0,1)+row('XP bonus','+%',s=>s.xp,'',0,1));
+  // bonuses
+  const P=atr138Cur();let b='';ATR138.K.forEach(k=>{const D=ATR138.D[k],v=P[k],p=ATR138.pend[k]|0;D.T.forEach(t=>{const on=v>=t[0],nw=!on&&v+p>=t[0];
+    b+=`<div class="ch138-bn${on?' on':nw?' nw':''}" style="--ac:${D.col}"><span>${D.i} ${D.ab} ${t[0]}</span><small>${t[2]}</small></div>`})});
+  h+=sec('✦ Attribute bonuses',`<div class="ch138-bns">${b}</div>`);
+  return h}
+function ch138Render(){ch138Init();const C=CLS[hero.cls]||{};
+  $('talSub').textContent=(C.i||'')+' '+(C.n||'')+' · Lv '+hero.lvl+' · '+atr138Free()+' attribute point'+(atr138Free()==1?'':'s')+' to spend';
+  const xp=hero.lvl>=MAXLV?100:Math.min(100,100*hero.xp/needH(hero.lvl));
+  $('ch138Id').innerHTML=`<div class="ch138-nm">${String(hero.name||'Hero').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}</div><div class="mut">${C.i||''} Lv ${hero.lvl} ${C.n||''}</div>`+
+    `<div class="ch138-xp" title="${hero.lvl>=MAXLV?'Max level':hero.xp+' / '+needH(hero.lvl)+' XP'}"><i style="width:${xp}%"></i></div>`;
+  $('ch138Bar').innerHTML=atr138Bar(false);$('ch138At').innerHTML=atr138Rows(false);
+  const k=ATR138.sel,D=k&&ATR138.D[k];
+  $('ch138Info').innerHTML=D?`<b style="color:${D.col}">${D.i} ${D.n}</b> — ${D.d}. Each point: ${atr138PerTxt(k)}.<br>`+D.T.map(t=>`<span class="${atr138Pts(k)>=t[0]?'got':''}">${t[0]}: ${t[2]}</span>`).join(' · '):
+    '<span class="mut">Click an attribute to read what it does. Hover a number mark (10, 25, 50, 75) for its bonus.</span>';
+  $('ch138St').innerHTML=ch138Stats()}
+function ch138PV(){const host=$('ch138PV');if(!host||$('tal').classList.contains('hide'))return;
+  try{bagPV()}catch(_){}if(!HP||!HP.pv)return;try{refreshGear(HP)}catch(_){}
+  pvShow(host,HP.pv,now=>{HP.pv.rotation.y=Math.sin(now/1900)*.6+.25;animHero(now,false,HP)})}
+// the window itself: replaces the talents window's drawing and opening
+rTal=function(){ch138Render()};
+openTal=function(){if(!$('tal').classList.contains('hide')){$('tal').classList.add('hide');return}if(uiOpen())return;if(!party.length)return;
+  ch138Render();$('tal').classList.remove('hide');try{mSfx('open')}catch(_){}requestAnimationFrame(()=>{try{ch138PV()}catch(e){console.warn('v138 char model',e)}})};
+{const b=$('talBtn');if(b)b.onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openTal()}}
+{const b=$('talClose');if(b)b.onclick=()=>$('tal').classList.add('hide')}
+// keep it current while open (gear swaps elsewhere, level-ups, buffs)
+setInterval(()=>{try{const w=$('tal');if(!w||w.classList.contains('hide'))return;const sig=hero.lvl+'|'+hero.xp+'|'+(typeof bagSig=='function'?bagSig():'')+'|'+atr138Spent()+'|'+atr138PendN()+'|'+hero.buffs.length;
+  if(sig!==CH138.sig){CH138.sig=sig;ch138Render()}}catch(_){}},500);
+document.head.insertAdjacentHTML('beforeend',`<style>
+.ch138{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:14px;min-height:0}
+@media(max-width:760px){.ch138{grid-template-columns:1fr}}
+.ch138-pvw{position:relative;height:240px;border:1px solid rgba(240,204,114,.22);border-radius:8px;background:radial-gradient(ellipse at 50% 70%,rgba(240,204,114,.12),rgba(0,0,0,.35) 70%);overflow:hidden}
+.ch138-pv{position:absolute;inset:0}
+.ch138-id{text-align:center;margin-top:6px}
+.ch138-nm{font-family:'Cinzel Decorative',serif;font-weight:700;color:#f0cc72;font-size:1rem}
+.ch138-xp{height:4px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden}.ch138-xp i{display:block;height:100%;background:linear-gradient(90deg,#8a6a20,#f0cc72)}
+.ch138-ah{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:.72rem}
+.ch138-info{margin-top:8px;font-size:.74rem;line-height:1.45;color:#d8ccb0;min-height:3.2em}.ch138-info span.got{color:#7ef0a0}
+.ch138-r{min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;align-content:start}
+@media(max-width:560px){.ch138-r{grid-template-columns:1fr}}
+.ch138-pw{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;padding:6px 10px;border:1px solid rgba(240,204,114,.3);border-radius:8px;background:rgba(240,204,114,.06)}
+.ch138-pw span{font-family:'Cinzel Decorative',serif;color:#c9a24a;letter-spacing:.1em}.ch138-pw b{font-size:1.3rem;color:#f4ead2}
+.ch138-sec{min-width:0}.ch138-sec:last-child{grid-column:1/-1}
+.ch138-st{font-family:'Cinzel Decorative',serif;font-size:.74rem;color:#c9a24a;letter-spacing:.08em;margin:6px 0 2px;border-bottom:1px solid rgba(240,204,114,.18)}
+.ch138-kv{font-size:.76rem;padding:2px 0}.ch138-kv em,.ch138-pw em{font-style:normal;font-size:.85em}.ch138-kv em.up,.ch138-pw em.up{color:#7ef0a0}.ch138-kv em.dn{color:#ff8a7a}
+.ch138-bns{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
+.ch138-bn{padding:3px 6px;border:1px solid rgba(255,255,255,.08);border-radius:5px;font-size:.68rem;opacity:.45}
+.ch138-bn span{display:block;font-weight:700;color:var(--ac)}.ch138-bn small{color:#d8ccb0}
+.ch138-bn.on{opacity:1;border-color:var(--ac);background:rgba(0,0,0,.25)}.ch138-bn.nw{opacity:.9;border-color:#7ef0a0;border-style:dashed}
+</style>`);
+// the "✦ N attribute points · C" chip in the buff bar opens the Character window
+document.addEventListener('click',e=>{const t=e.target.closest('#buffs .tpn');if(!t)return;e.preventDefault();if($('tal').classList.contains('hide'))openTal()});
+document.head.insertAdjacentHTML('beforeend','<style>#buffs .tpn{cursor:pointer}</style>');
+// ================= v138: power on a smaller scale, power instead of level ranges, flail trail, live previews =================
+// * Power: the number shown is 4·√(the old power) rounded, so it climbs gently (about 100 at level 1, about 600 at level 50
+//   with good gear, where the old number read 650 and 23,600). recPower uses the same scale (rounded to 5); compare the two only.
+// * Places that showed an instance's enemy level range now show the recommended power (rpTxt138; edits in 0510, 0540, 1190,
+//   1350, 1830, 1940, 1981, 2210).
+// * Flail: the trail of the two sweeps is drawn where the ball really travels (measured from the weapon model each swing),
+//   not at the edge of the hit area (which v127 widened to 3.6 tiles); the overhead crash's ring is sized the same way.
+//   The hit area itself is unchanged (balance, v127).
+// * The shared 3D preview (PV): reopening the inventory left the preview frozen when its picture was already in place
+//   (bagPV returns early and the render loop had stopped when the window closed), so gear changes did not show. bagPV now
+//   restarts the loop, and the bag's 400 ms check also watches the hero's look.
+function pwr138(x){return Math.round(4*Math.sqrt(Math.max(0,x)))}
+function pwrRaw138(s){const off=Math.max(s.pa,s.ma)*(1+(s.crit||0)*(s.cdm||.75))*(1+(s.as||0)),sur=s.hp*(1+(s.pd+s.md)/2/45)*(1+(s.dr||0));return Math.sqrt(off*sur)*10}
+pwrOf=function(s){return pwr138(pwrRaw138(s))};
+function nakedRaw138(cls,L){const C=CLS[cls],st={};['hp','pa','ma','pd','md'].forEach(k=>st[k]=C.base[k]+C.per[k]*(L-1)/ATR138.flat);st.crit=C.crit;st.cdm=.75;return pwrRaw138(st)}
+nakedPwr=function(cls,L){return pwr138(nakedRaw138(cls,L))};
+recPower=function(L){let a=RECT[0],b=RECT[RECT.length-1];for(let i=0;i<RECT.length-1;i++)if(L>=RECT[i][0]&&L<=RECT[i+1][0]){a=RECT[i];b=RECT[i+1];break}
+  const v=a[1]+(b[1]-a[1])*((L-a[0])/((b[0]-a[0])||1));return Math.round(pwr138(v*nakedRaw138(hero.cls,L)/nakedRaw138('warrior',L))/5)*5};
+function rpTxt138(L){let r=0;try{r=recPower(L)}catch(_){}return r?'⚔ Rec. power '+r.toLocaleString():''}
+// ---- flail trail at the ball's real reach ----
+var FL138={r:1.3,min:.9,max:2,id:null};
+function fl138Reach(){try{const W=(pl.gearG||[])[0],id=eq.weapon?eq.weapon.id:null;if(id!==FL138.id){FL138.id=id;FL138.r=1.3}if(!W)return FL138.r;W.updateWorldMatrix(true,true);const v=new THREE.Vector3();let far=0;
+  W.traverse(o=>{if(!o.isMesh||!o.geometry||!o.geometry.attributes.position)return;const P=o.geometry.attributes.position,st=Math.max(1,P.count>>6);
+    for(let i=0;i<P.count;i+=st){v.fromBufferAttribute(P,i).applyMatrix4(o.matrixWorld);const h=Math.hypot(v.x-pl.position.x,v.z-pl.position.z);if(h>far)far=h}});
+  if(far>0)FL138.r=Math.max(FL138.min,Math.min(FL138.max,Math.max(far,FL138.r)))}catch(_){}return FL138.r}   // the furthest the ball has been seen (per weapon)
+flailFx105=function(d,st,rg){try{const col=0xfff0b0,g=new THREE.Group(),a0=Math.atan2(d.x,d.z),half=1.48,R=fl138Reach()+.08;
+    const geo=new THREE.RingGeometry(Math.max(.2,R-.38),R,28,1,0,half*2),m=new THREE.Mesh(geo,addMat(col));m.material.side=THREE.DoubleSide;g.add(m);
+    m.rotation.x=-Math.PI/2;m.rotation.z=a0-Math.PI/2-half;g.position.copy(gY(pl.position,1.05));
+    scene.add(g);const dirS=st==1?1:-1;
+    tw(260,k=>{m.material.opacity=.75*(1-k);m.rotation.z+=dirS*.012;g.scale.setScalar(1+k*.08)},()=>{scene.remove(g);geo.dispose()})}catch(_){}};
+// the crash (third blow): the default ring spans .42..1.02 of its radius, so hand it the ball's reach
+{const f=slashFx;slashFx=function(d,st,rg){if(st==2&&typeof atkWT=='function'&&atkWT()=='flail')return f.call(this,d,st,(fl138Reach()+.15)/1.02);return f.apply(this,arguments)}}
+// ---- the shared preview keeps drawing ----
+function pvKick138(){try{if(PV.r&&!PV.run&&PV.cv&&PV.cv.isConnected&&PV.cv.offsetParent){PV.run=true;PV.last=0;requestAnimationFrame(pvLoop)}}catch(_){}}
+{const f=bagPV;bagPV=function(){const r=f.apply(this,arguments);pvKick138();return r}}
+var BAGLK138='';
+setInterval(()=>{try{if(!HP||!$('bag')||$('bag').classList.contains('hide'))return;const lk=JSON.stringify(pl.mdLook||{});if(lk!==BAGLK138){const first=!BAGLK138;BAGLK138=lk;
+  if(!first){HP.mdLook=Object.assign({},pl.mdLook||{});refreshGear(HP)}}pvKick138()}catch(_){}},400);
+// ---- guard: a monster drawn far bigger than its own size, or sunk under the ground, is put right ----
+// The owner saw some monsters huge and under the map (Oct 2026). It could not be reproduced in tests (every kind, every field
+// instance, fights, deaths, respawns), so twice a second every drawn monster that is not mid-move is checked: a scale above
+// 1.6x its body size (m.bs) goes back to its size and a root more than 0.6 tiles under the ground is lifted onto it. Each fix is
+// counted in G138 and the first few are logged (kind, scale, height) so a report can say what happened.
+var G138={n:0,log:[]};
+function g138Note(e,what){G138.n++;if(G138.log.length<12){const m=e.m;G138.log.push({k:e.c&&e.c.en,what,sc:+m.scale.x.toFixed(2),bs:+(m.bs||0).toFixed(2),y:+m.position.y.toFixed(2),g:+GH(m.position.x,m.position.z).toFixed(2)});console.warn('v138 enemy guard',what,G138.log[G138.log.length-1])}}
+function g138Tick(){try{if(typeof enemies=='undefined'||(typeof ABX!='undefined'&&ABX.on&&ABX.ctx))return;
+  for(const e of enemies){if(!e||e.dead||e.boss||e.ar!=null||e.hid||e.atk||!e.m||!e.m.visible||!e.m.parent)continue;const m=e.m,bs=m.bs||1,sc=m.scale.x;
+    if(!(sc<=bs*1.6)){g138Note(e,'scale');m.scale.setScalar(bs)}
+    const g=GH(m.position.x,m.position.z);if(isFinite(g)&&m.position.y<g-.6){g138Note(e,'sunk');m.position.y=g}}}catch(_){}}
+setInterval(g138Tick,500);
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Three tabs: Companions (every species, every evolution stage: basic attack + its 4 abilities), Monsters (every zone

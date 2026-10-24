@@ -44,3 +44,4 @@ v137_enemies.py
 v137_npcs.py
 PART=checks,cast v137_evolve.py
 v137_items.py
+v138_checks.py
