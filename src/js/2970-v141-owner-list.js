@@ -86,3 +86,18 @@ function rp141Refresh(){if(typeof SGNR=='undefined'||!SGNR)return;const re=/⚔ 
     let ch=false;const nl=r.o141.map(l=>{const t=String(l.t||'');if(!re.test(t))return l;re.lastIndex=0;const nt=t.replace(re,m=>{const L=rp141Lv(t,r.o141);if(L==null)return m;ch=true;return rpTxt139(L)});return Object.assign({},l,{t:nt})});
     if(ch){r.a[0]=nl;signPaint(r.c,...r.a);r.t.needsUpdate=true}}catch(_){}})}
 setInterval(()=>{try{if(typeof hero!='undefined'&&hero&&hero.cls&&hero.cls!==RP141.cls){RP141.cls=hero.cls;rp141Refresh()}}catch(_){}},1000);
+
+// ---------------- wood and stone outside Duskhold's walls ----------------
+// The pines, dead trees and rocks scattered on the island around the walls (KF109.wsel.L, one merged kit) can be chopped and
+// mined like the zone's own nodes: they give wood / stone and train the same skills. A used one rests OUT141.rest seconds
+// (it stays where it is; the next one nearby is ready).
+var OUT141={rest:180,dep:{}};
+function out141Kind(p){return p.t=='pine'||p.t=='dead'?'tree':p.t=='rock'?'rock':null}
+{const f=gTarget;gTarget=function(){const r=f.apply(this,arguments);if(r)return r;try{if(typeof curMap=='function'&&curMap()>=0)return null;
+  const L=out141List();if(!L)return null;const now=performance.now();let best=null,bd=2.3;
+  L.forEach((p,i)=>{if(!p.kind)return;if((OUT141.dep[i]||0)>now)return;const d=Math.hypot(p.x-pl.position.x,p.z-pl.position.z)-(p.kind=='rock'?.45*(p.s||1):.15);
+    if(d<bd){bd=d;best={kind:p.kind,x:p.x,y:p.z,k:-1,o141:i}}});return best}catch(_){return null}}}
+// the list in world coordinates (the kit sits in the town group, centred on the town)
+function out141List(){const W=typeof KF109!='undefined'&&KF109&&KF109.wsel,G=KF109&&KF109.wild;if(!W||!W.L||!G)return null;if(OUT141.src===W)return OUT141.L;
+  G.updateWorldMatrix(true,false);const v=new THREE.Vector3();OUT141.L=W.L.map(p=>{v.set(p.x,0,p.z).applyMatrix4(G.matrixWorld);return {x:v.x,z:v.z,s:p.s,kind:out141Kind(p)}});OUT141.src=W;OUT141.dep={};return OUT141.L}
+{const f=gFinish;gFinish=function(tg){const r=f.apply(this,arguments);try{if(tg&&tg.o141!=null)OUT141.dep[tg.o141]=performance.now()+OUT141.rest*1000}catch(_){}return r}}

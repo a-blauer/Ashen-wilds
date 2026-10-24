@@ -103,3 +103,21 @@ function sk141Fish(dt){const F=fishing;if(!SK141.tool||SK141.kind!='rod')sk141Sh
   if(d){d.normalize();t.parent.updateWorldMatrix(true,false);const pq=t.parent.getWorldQuaternion(new Q()),wq=new Q().setFromUnitVectors(new V(0,-1,0),d);
     if(SK141.kind=='spade'){const tw=new Q().setFromAxisAngle(d,Math.atan2(fw.x,fw.z));wq.premultiply(tw)}
     t.quaternion.copy(pq.invert().multiply(wq));t.position.set(0,-.03,.03)}}}catch(e){if(!SK141.err2){SK141.err2=1;console.warn('sk141 aim',e)}}return r}}
+
+// ================= v141: the Bard holds his lute across his body and plays it =================
+// The lute was hung on the keeper at a fixed spot (in front of the face on the hare's shorter body) with the neck pointing up,
+// and the arm pose never met it. Now it is placed from the keeper's own bones every frame: the bowl in front of the belly,
+// a little to his right, the neck out to his left and up 30°; his left hand holds the neck (moving along it) and his right
+// hand strums over the bowl, both reached with the two-bone arm IK (fc116IK).
+function bard141(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis||!B.chest||!B.aL0||!B.aR0)return;const V=THREE.Vector3,t=now/1000+(S.t0||0);
+  n.updateMatrixWorld(true);const loc=b=>n.worldToLocal(b.getWorldPosition(new V()));const pv=loc(B.pelvis),ch=loc(B.chest),rs=Math.sign(loc(B.aR0).x)||-1;
+  const y=pv.y+(ch.y-pv.y)*.5,c=new V(-rs*.07,y,Math.max(pv.z,ch.z)+.2);
+  const d=new V(rs*Math.cos(.52),Math.sin(.52),.12).normalize(),fz=new V(0,0,1).addScaledVector(d,-d.z).normalize(),x=new V().crossVectors(d,fz);
+  L.position.copy(c);L.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,d,fz));L.scale.setScalar(.9);L.updateMatrixWorld(true);
+  const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),dir=v=>v.clone().transformDirection(n.matrixWorld);
+  const s=Math.sin(t*9.5),f=Math.sin(t*2.1);
+  const TL=W([0,.42+.06*f,.04]),TR=W([.02,.02+.035*s,.12]);
+  // (the town-folk rig's aR side is the figure's own left, so aR holds the neck and aL strums)
+  try{fc116IK(B.aR0.getWorldPosition(new V()),B.aR0,B.aR1,B.aR2,TL,dir(new V(rs,-1,-.4)),1);
+    fc116IK(B.aL0.getWorldPosition(new V()),B.aL0,B.aL1,B.aL2,TR,dir(new V(-rs,-1,-.5)),1)}catch(e){if(!SK141.berr){SK141.berr=1;console.warn('bard141',e)}}}
+{const f=wkAnim103;wkAnim103=function(n,now){const r=f.apply(this,arguments);try{if(n&&n._wk&&n._wk.k=='bard'&&n.visible)bard141(n,now)}catch(_){}return r}}
