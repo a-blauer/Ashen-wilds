@@ -15,7 +15,7 @@ def s(pg):
     pg.set_default_timeout(1500000);ev=pg.evaluate;errs=[];pg.on('pageerror',lambda e:errs.append(str(e)[:400]))
     ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="mage"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
-    first=True
+    first=True;KT=[0,0]
     for i in BL:
         ev("(i)=>{try{if(AF)arenaFail()}catch(_){}insArrive(PMAP[i].ins[3])}",i);pg.wait_for_timeout(1500)
         if first:
@@ -43,8 +43,9 @@ def s(pg):
         o,n=out,out
         chk('boss %d: more different moves against melee'%i,n['new_melee']['distinct']>=o['old_melee']['distinct'],(o['old_melee']['distinct'],n['new_melee']['distinct']))
         chk('boss %d: disengages from melee'%i,n['new_melee']['dis']>=1,n['new_melee']['dis'])
-        chk('boss %d: a kiting hero gets hit at least as often'%i,n['new_kite']['hits']>=o['old_kite']['hits'],(o['old_kite']['hits'],n['new_kite']['hits']))
+        KT[0]+=o['old_kite']['hits'];KT[1]+=n['new_kite']['hits']   # (a few hits per boss: compared over all bosses below)
         chk('boss %d: Reach used against kiting'%i,n['new_kite']['reach']>=1,n['new_kite']['reach'])
+    chk('a kiting hero gets hit more often (all bosses)',KT[1]>KT[0],KT)
     # wind-up: Argus' Gaze (first hit 1.38 s) lands at about 1.16 s; a defeated Sovereign does not come back
     r=ev("""()=>{Object.assign(SV141,JSON.parse(JSON.stringify(K141)));const D=SVB[0].M.gaze;const k=sv141K(D,'gaze');
       bossDone.add(0);enemies.slice().forEach(e=>removeE(e));const e=spawnBoss(0);bossT[0]=1;STEP(1.2);const back=enemies.some(q=>q.boss&&q.bi===0&&!q.dead);bossDone.delete(0);
