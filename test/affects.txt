@@ -8,7 +8,7 @@
 FULL: ^src/js/0(0\d|1[0-4])\d|^src/page|^src/style|^build\.sh|^test/(play|fast|ci_run|run_suite|mpt|v100_lib)\.py|^test/vendor/|^test/ci_known_fail\.txt
 
 save|slot|export|0230-: v38t.py v114_save.py v116_slots.py v131_load_title.py
-kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor|folk: v137_npcs.py v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
+kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor|folk: v137_npcs.py v140_folk.py v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
 instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes|edge|ledge|site: v132_cheddar_test.py v108_instances.py v112_instances.py v123_camps.py v124_edge_test.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
 sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py v133_sov_spacing.py
 compan|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v137_enemies.py v57t.py v100_fusemenu.py v105_abil.py v122_support.py v113_roster.py
