@@ -24,7 +24,7 @@ fk140Def('ram',     {hs:1.25,hz:.035,hy:-.005,lean:.04,sh:1,neck:1.2,leg:'hoof',
 fk140Def('sheep',   {hs:1.25,hz:.035,hy:-.005,lean:.03,sh:.95,neck:1.15,leg:'hoof',eye:{sz:1.05}});
 fk140Def('boar',    {hs:1.3,hz:.04,hy:-.02,lean:.08,sh:1.05,neck:1.35,leg:'hoof',eye:{sz:1}});
 fk140Def('owl',     {hs:1.15,hz:.01,hy:-.01,lean:.02,sh:.95,neck:1,leg:'bird'});
-fk140Setup();
+// (fk140Setup runs at the end of 2963, after the sculpt recipes are attached)
 // cheek ruffs (wolf, lynx): v137 placed them at fixed heights, so on the reshaped heads they stuck out under the jaw.
 // Now each tuft grows from the cheek surface behind and below the eye and lies back along the jaw.
 function fk140Ruff(k,D,C,o){const hp=D.hp,R=hp.R||.1,L=hp.L||1,zc=hp.zc==null?-.01:hp.zc,E=D.EYEP;
