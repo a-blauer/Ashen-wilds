@@ -39,11 +39,13 @@ function fk140Delta(n,A,N,D){if(n=='head'||n=='erL'||n=='erR')return {m:fk140Xf(
     D._nbPre140=N;D._nbFin140=F}
   return FK140.pre?D._nbPre140:D._nbFin140}}
 // move the built body with its bones (rest pose linear blend: every vertex by its skin weights)
-function fk140Deform(B,D,A){const N=D._nbPre140,dl=B.O.map(n=>fk140Delta(n,A,N,D)),V=new THREE.Vector3();
+// (the torso bones' share is a continuous shear by the vertex's own height, not by the bone's: buttons, chains and
+// pendants hang on one bone while the cloth under them blends two, and both must move the same)
+function fk140Deform(B,D,A){const N=D._nbPre140,dl=B.O.map(n=>/^(pelvis|spine|chest|neck|cp\d)$/.test(n)?{sh:1}:fk140Delta(n,A,N,D)),V=new THREE.Vector3();
   for(const t in B.L){const L=B.L[t],p=L.p,si=L.si,sw=L.sw,nv=p.length/3;
     for(let v=0;v<nv;v++){const px=p[3*v],py=p[3*v+1],pz=p[3*v+2];let x=0,y=0,z=0,ws=0;
       for(let j=0;j<4;j++){const w=sw[4*v+j];if(!w)continue;const d=dl[si[4*v+j]];ws+=w;
-        if(d.m){V.set(px,py,pz).applyMatrix4(d.m);x+=w*V.x;y+=w*V.y;z+=w*V.z}else{x+=w*(px+d[0]);y+=w*(py+d[1]);z+=w*(pz+d[2])}}
+        if(d.m){V.set(px,py,pz).applyMatrix4(d.m);x+=w*V.x;y+=w*V.y;z+=w*V.z}else if(d.sh){x+=w*px;y+=w*py;z+=w*(pz+fk140Lean(A,py))}else{x+=w*(px+d[0]);y+=w*(py+d[1]);z+=w*(pz+d[2])}}
       if(ws>0){p[3*v]=x/ws;p[3*v+1]=y/ws;p[3*v+2]=z/ws}}}}
 {const f=fkBuild;fkBuild=function(D,pk,o){const A=fk140A(D);if(!A)return f.apply(this,arguments);
   const c0=FK140.cur,d0=FK140.D;FK140.cur=A;FK140.D=D;FK140.pre=true;let B;

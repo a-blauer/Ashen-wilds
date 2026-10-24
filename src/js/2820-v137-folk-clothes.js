@@ -19,7 +19,9 @@ FKG.shell=function(B,P,y0,y1,col,o){o=o||{};const op=o.open||0,vn=o.vneck;mdTS(B
 // buttons down the front (or two rows: dx)
 FKG.buttons=function(B,P,y0,y1,n,col,o){o=o||{};const k=dkKit();for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/Math.max(1,n-1);(o.dx?[-o.dx,o.dx]:[0]).forEach(dx=>{const a=dx?Math.asin(Math.max(-1,Math.min(1,dx/mdTorsoAt(P,y).rx))):0,p=mdTP(P,y,a,(P.tOff||0)+(o.off||.006));k.p(n3TB(y),'sph','m',col,p[0],p[1],p[2],.009,.009,.006)})}mdKit(B,k)};
 // a skirt / robe / coat skirt hanging from y0 (gkSkirt): hem(θ) or a number, flare, open front (coats), col / lin
-FKG.skirt=function(B,P,o){return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
+// (v140: the skirt's top sits on what is worn at the waist — the v136 clearance of 16 mm left it hanging in the air above
+// the belt; the cloth flares out a little more below instead)
+FKG.skirt=function(B,P,o){o=Object.assign({},o);if(o.clear==null)o.clear=.004;o.flare=(o.flare||0)+.012;return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
 // an apron: bib (optional) + front skirt
 FKG.apron=function(B,P,col,o){o=o||{};const w=o.w||1.1,hem=o.hem||.3,y0=o.y0||.6;
   if(o.bib!==false)mdTS(B,P,y0,o.bibTop||.93,(P.tOff||0)+.012,{col,keep:m=>m.s>.5});
@@ -32,7 +34,7 @@ FKG.sleeves=function(B,P,o){[-1,1].forEach(s=>gkSleeve(B,P,s,Object.assign({u0:.
 // a cuff / bracer / glove shell on the forearm and hand from ring u0 to u1 (arm ring indices)
 FKG.cuff=function(B,P,i0,i1,col,off){[-1,1].forEach(s=>mdAS(B,P,s,i0,i1,off||.012,{col,capB:i1>=7}))};
 // boots: shell over the lower leg and foot (no toes then)
-FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.off||.012,{col:m=>m.y<.03?mdSh(col,.6):col})})};
+FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.006,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v140: a thinner foot shell, so the sole stays on the ground)
 // a standing / turned-down collar
 FKG.collar=function(B,P,col,o){return gkCollar(B,P,Object.assign({col,y0:.95,h:th=>1.0+.03*Math.max(0,-Math.cos(th)),flare:.02,open:.5},o||{}))};
 // a scarf / neckerchief: a roll round the neck and a knotted point at the front
