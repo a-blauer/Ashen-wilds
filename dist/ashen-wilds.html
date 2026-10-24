@@ -36390,7 +36390,8 @@ function bard141(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis
 //    then a spacing plan (v133) for a move it cannot use up close, which it walks to and casts. At most every SV141.disCd s.
 // 3. Kiting: every Sovereign gains "Reach" (reach141): three eruptions under the hero, each aimed where the hero will be
 //    (current position + velocity × lead), with the usual red warning. It is only picked at 8+ tiles, and it is strongly
-//    preferred once the hero has stayed that far for SV141.farT s. While the hero stays far, the boss also walks 40% faster.
+//    preferred once the hero has stayed that far for SV141.farT s, and certain after SV141.sure s whenever it is off cooldown.
+//    While the hero stays far, the boss also walks 40% faster.
 // 4. One fight each: a defeated Sovereign never comes back (no respawn timer, removed after a load); its den stays open.
 // Co-op: the timing change runs on every machine (same clock rule), the AI parts only on the boss driver like the rest of it.
 var SV141={wind:{from:1.2,base:.9,k:.55,max:1.5},close:6.5,disCd:7000,farT:2.5,far:8,lead:.5,chase:1.4};
@@ -36420,7 +36421,7 @@ function sv141Force(e){const S=e.sv,B=S.B,L=d2(pl.position,e.m.position),C=[];le
   if(S&&M&&M.id!=='intro'&&M.id!=='stagger'&&M.id!=='awaken'){const L=d2(pl.position,e.m.position);S.cl141=L<SV141.close?(S.cl141||0)+1:0}
   f.apply(this,arguments);
   try{if(!S||e.dead||S.mv||!svAuth(e)||(S.B.ai||{}).style==='root')return;const now=performance.now();
-    if((S.cl141||0)>=2&&now>=(S.dc141||0)&&!S.rt){S.cl141=0;S.dc141=now+SV141.disCd;S.plan=null;S.force=null;S.rt={t:.7+Math.random()*.35};S.dis141=1;
+    if((S.cl141||0)>=2&&now>=(S.dc141||0)&&!S.rt){S.cl141=0;S.dc141=now+SV141.disCd;S.plan=null;S.force=null;S.rt={t:.7+Math.random()*.35};S.dis141=1;SVX.st.rt=(SVX.st.rt||0)+1;
       try{burst(gY(e.m.position,.3),0x8a7a66,12,2,1.2,.45)}catch(_){}}}catch(_){}}}
 // ---- 3. faster walk while the hero keeps away ----
 {const f=svMoveFree;svMoveFree=function(e,dt,now){const S=e&&e.sv,ai=S&&S.B.ai;if(!S||!ai||!(S.far141>SV141.farT))return f.apply(this,arguments);
@@ -36440,4 +36441,7 @@ function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.b
   if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(bossDone.has(i))bossT[i]=0})}catch(_){}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);setTimeout(sv141Clear,0);return r}}
 setInterval(sv141Clear,5000);
+// a hero who has kept away for SV141.sure s gets Reach as soon as it is off cooldown (not left to the weighted pick)
+SV141.sure=4;
+{const f=svPick;svPick=function(e,loose){const S=e&&e.sv;try{if(S&&!S.force&&(S.far141||0)>=SV141.sure&&S.B.M.reach141&&!((S.cd.reach141||0)>0)&&S.last[0]!=='reach141'&&d2(pl.position,e.m.position)>=SV141.far)return 'reach141'}catch(_){}return f.apply(this,arguments)}}
 </script></body></html>
