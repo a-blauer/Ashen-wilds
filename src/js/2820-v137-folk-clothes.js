@@ -25,7 +25,7 @@ FKG.skirt=function(B,P,o){o=Object.assign({},o);if(o.clear==null)o.clear=.004;o.
 // an apron: bib (optional) + front skirt
 FKG.apron=function(B,P,col,o){o=o||{};const w=o.w||1.1,hem=o.hem||.3,y0=o.y0||.6;
   if(o.bib!==false)mdTS(B,P,y0,o.bibTop||.93,(P.tOff||0)+.012,{col,keep:m=>m.s>.5});
-  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.02});
+  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.006});
   // ties at the back and (with a bib) the neck strap
   const k=dkKit();if(o.bib!==false)[-1,1].forEach(s=>{const a=mdTP(P,o.bibTop||.93,s*.55,(P.tOff||0)+.014),b=mdTP(P,1.0,s*1.2,(P.tOff||0)+.006);k.L('chest','c',col,a,b,.008,.008,4)});
   FKG.belt(B,P,y0+.01,mdSh(col,.85),{buckle:false,h:.012,off:.018});mdKit(B,k);return S};
