@@ -35115,7 +35115,7 @@ FKO['Rune Sage']=function(o,D,C){const rb=mdC(o.robe||0x2a3a7a),dk=mdSh(rb,.5),r
       const S=FKG.skirt(B,P,{y0:.6,hem:th=>.05,col:fkTrim(rb,0xc8b070,{hem:.9}),lin:dk,flare:.07,folds:[10,.012]});
       FKG.sleeves(B,P,{bell:.045,trail:.06,col:m=>m.v>.86?0xc8b070:rb,lin:dk,u0:2.8});
       FKG.mantle(B,P,{y0:1.02,hem:th=>.8+.03*Math.cos(th),col:m=>m.v>.78?0xc8b070:mdSh(rb,.85),lin:dk,open:.35,flare:.03,roll:.03,rollCol:mdSh(rb,.75)});
-      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L-.0008)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
+      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L-.0018)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
         const t=j%3,s=1.3;if(t==0)gkW(k.p('pelvis','box','g',rn,p[0],p[1],p[2],.004*s,.018*s,.003,0,p[3],0),v.w);
         else if(t==1){gkW(k.p('pelvis','box','g',rn,p[0]-.003*s*Math.cos(p[3]),p[1],p[2]+.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],.5),v.w);gkW(k.p('pelvis','box','g',rn,p[0]+.003*s*Math.cos(p[3]),p[1],p[2]-.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],-.5),v.w)}
         else gkW(k.p('pelvis','oct','g',rn,p[0],p[1],p[2],.006*s,.009*s,.003,0,p[3],0),v.w)}
