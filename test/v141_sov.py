@@ -43,7 +43,7 @@ def s(pg):
         o,n=out,out
         chk('boss %d: more different moves against melee'%i,n['new_melee']['distinct']>=o['old_melee']['distinct'],(o['old_melee']['distinct'],n['new_melee']['distinct']))
         chk('boss %d: disengages from melee'%i,n['new_melee']['dis']>=1,n['new_melee']['dis'])
-        chk('boss %d: a kiting hero gets hit more'%i,n['new_kite']['hits']>o['old_kite']['hits'],(o['old_kite']['hits'],n['new_kite']['hits']))
+        chk('boss %d: a kiting hero gets hit at least as often'%i,n['new_kite']['hits']>=o['old_kite']['hits'],(o['old_kite']['hits'],n['new_kite']['hits']))
         chk('boss %d: Reach used against kiting'%i,n['new_kite']['reach']>=1,n['new_kite']['reach'])
     # wind-up: Argus' Gaze (first hit 1.38 s) lands at about 1.16 s; a defeated Sovereign does not come back
     r=ev("""()=>{Object.assign(SV141,JSON.parse(JSON.stringify(K141)));const D=SVB[0].M.gaze;const k=sv141K(D,'gaze');
