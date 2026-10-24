@@ -35943,11 +35943,12 @@ function fk140Eyes(k,D,o,A){const C=BR.C,E=A.eye||{},F0=D._eye140||(D._eye140=fk
     k.p('head',geo,t,col,p.x,p.y,p.z,sx,sy,sz,e.x,e.y,e.z);k.p('head',geo,t,col,-p.x,p.y,p.z,sx,sy,sz,e.x,-e.y,-e.z)};
   const iris=E.col?E.col(C):C.EYE,pc=E.pupilCol||0x070505;
   // hero style (sculpted heads): a narrow almond slanted up at the outer corner, bright iris, a dark brow line over it
-  if(D.sculpt){const sl=E.slant==null?(FK140E.prey[D.key]?.12:.32):E.slant,h=E.open||.58,brow=E.brow==null?1:E.brow;
-    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*1.4,sl);
-    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*1.2,sl);
+  // (owner, v140: brows level, so the folk look calm, not angry; E.round gives a round eye, e.g. the owl)
+  if(D.sculpt){const sl=E.slant==null?(FK140E.prey[D.key]?.06:.14):E.slant,h=E.open||.66,brow=E.brow==null?.8:E.brow,wd=E.round?h:1.2;
+    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*(wd+.2),sl);
+    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*wd,sl);
     const ph=r*h*.95;if(FK140E.slit[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph,r*.16,sl);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.3,r*.55,sl);else put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.62,r*.36,sl);
-    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.22),-r*.05,r*.4,r*.2*brow,r*1.5,sl+.22*brow);
+    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.3),-r*.02,r*.4,r*.16*brow,r*(wd+.25),0);
     put('box','c',0xf2eee6,r*.21,r*h*.42,r*.3,.0012,.0016*r/.0112,.0016*r/.0112);return}
   const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.82,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);  // dark rim: behind the iris's front, so it shows as a ring                                  // dark rim
   put('sph2','c',iris,-r*.66,0,r*.04,r,r*.93,r*1.08,tl);                                         // eye (iris fills it)
@@ -36065,7 +36066,7 @@ fk140Def('goat',    {hs:1.25,hz:.035,hy:-.005,lean:.03,sh:.95,neck:1.15,leg:'hoo
 fk140Def('ram',     {hs:1.25,hz:.035,hy:-.005,lean:.04,sh:1,neck:1.2,leg:'hoof',eye:{sz:1.05}});
 fk140Def('sheep',   {hs:1.25,hz:.035,hy:-.005,lean:.03,sh:.95,neck:1.15,leg:'hoof',eye:{sz:1.05}});
 fk140Def('boar',    {hs:1.3,hz:.04,hy:-.02,lean:.08,sh:1.05,neck:1.35,leg:'hoof',eye:{sz:1}});
-fk140Def('owl',     {hs:1.15,hz:.01,hy:-.045,lean:.02,sh:.95,neck:1.15,leg:'bird'});
+fk140Def('owl',     {hs:1.15,hz:.01,hy:-.045,lean:.02,sh:.95,neck:1.15,leg:'bird',eye:{round:1,open:1,slant:0,brow:0}});
 // (fk140Setup runs at the end of 2963, after the sculpt recipes are attached)
 // cheek ruffs (wolf, lynx): v137 placed them at fixed heights, so on the reshaped heads they stuck out under the jaw.
 // Now each tuft grows from the cheek surface behind and below the eye and lies back along the jaw.
@@ -36181,9 +36182,9 @@ function fksHead(B,D,C){const S=D.sculpt,M=fksBuild(D),C0=FKS.C0,w=mdW(B,[['head
 function fksSetup(D,A){const S=D.sculpt,C0=FKS.C0;D.SN=fksRings(S,20);D.muzzleZ=D.SN[D.SN.length-1][0]-.05;
   const R=S.R||.1;D.hp=Object.assign({},D.hp,{R,W:1,H:1,L:1,yc:C0[1],zc:C0[2]});
   const e=S.eye,n=new THREE.Vector3(...e.g).normalize();D._eye140={p:new THREE.Vector3(e.c[0]+C0[0],e.c[1]+C0[1],e.c[2]+C0[2]),n,r:e.r};D.EYEP=[0,e.c[1]+C0[1],e.c[2]+C0[2]];
-  // ear base: on the line from the brain case centre through the recipe's point, 4 mm under the surface
+  // ear base: on the line from the brain case centre through the recipe's point, 9 mm under the sculpted surface
   if(S.ear){const c=S.forms[0].c||[0,0,0],q=S.ear,at=t=>[c[0]+(q[0]-c[0])*t,c[1]+(q[1]-c[1])*t,c[2]+(q[2]-c[2])*t];let lo=0,hi=3;
-    for(let i=0;i<40;i++){const m=(lo+hi)/2;if(fksEval(S,at(m))<-.004)lo=m;else hi=m}const e=at(lo);D._earB140=[e[0]+C0[0],e[1]+C0[1],e[2]+C0[2]]}}
+    for(let i=0;i<40;i++){const m=(lo+hi)/2;if(fksEval(S,at(m))<-(S.earSink||.009))lo=m;else hi=m}const e=at(lo);D._earB140=[e[0]+C0[0],e[1]+C0[1],e[2]+C0[2]]}}
 {const f=fkEarBase;fkEarBase=function(D){if(FK140.on&&D&&D._earB140&&D.ear&&D.ear.t!='none')return D._earB140.slice();return f.apply(this,arguments)}}
 // whisker rows from the recipe: [root (head-local), count, length, colour]
 function fksWhiskers(k,D,W,C){const C0=FKS.C0,r=W.p;[-1,1].forEach(s=>{for(let i=0;i<W.n;i++){const a=[s*r[0],r[1]+C0[1]+(i-(W.n-1)/2)*.006,r[2]+C0[2]-i*.005],
@@ -36288,12 +36289,13 @@ FKH.add('hound',{R:.098,bb:[-.14,-.14,-.14,.14,.13,.2],
   forms:[FKH.E([0,.005,-.02],[.075,.075,.088]),
     FKH.E([.034,.032,.045],[.026,.016,.028],{k:.02}),
     FKH.E([.05,-.025,.015],[.034,.034,.05],{k:.025}),
-    FKH.RC([0,-.018,.055],[0,-.028,.148],.042,.032,{k:.03,sq:[1,1.1]}),
-    FKH.E([.016,-.044,.1],[.014,.014,.032],{k:.03}),                     // flews
+    FKH.RC([0,-.016,.055],[0,-.026,.15],.04,.029,{k:.03,sq:[1,1.1]}),    // long muzzle
+    FKH.RC([0,-.044,.06],[0,-.05,.138],.036,.026,{k:.03,sq:[1.12,.8]}),  // hanging upper lips: a broad square block under it
     FKH.E([0,-.016,.155],[.017,.013,.011],{k:.007}),
-    FKH.RC([0,-.062,.04],[0,-.064,.125],.026,.018,{k:.012}),
+    FKH.RC([0,-.066,.04],[0,-.066,.118],.024,.016,{k:.012}),
     FKH.SP([.042,.025,.07],.016,{sub:1,k:.007})],
   eye:{c:[.041,.025,.072],g:[.55,.04,.83],r:.0152},ear:[.06,.035,-.02],neck:[-.06,-.065,.05],
+  extra(){},   // (the v137 hound face added round jowl balls)
   paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),ym=FKH.lerpY(z,.06,-.074,.14,-.068);
     if(z>.146&&y>-.032)return C.NOSE;if(z>.08&&Math.abs(y-ym)<.003)return C.MOUTH;
     if(x<.016&&z>-.03&&y>-.03)return C.FURL;if(z>.095||y<-.04)return C.FURL;return y>.04&&z<0?C.FURD:C.FUR}});

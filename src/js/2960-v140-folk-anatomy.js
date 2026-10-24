@@ -66,11 +66,12 @@ function fk140Eyes(k,D,o,A){const C=BR.C,E=A.eye||{},F0=D._eye140||(D._eye140=fk
     k.p('head',geo,t,col,p.x,p.y,p.z,sx,sy,sz,e.x,e.y,e.z);k.p('head',geo,t,col,-p.x,p.y,p.z,sx,sy,sz,e.x,-e.y,-e.z)};
   const iris=E.col?E.col(C):C.EYE,pc=E.pupilCol||0x070505;
   // hero style (sculpted heads): a narrow almond slanted up at the outer corner, bright iris, a dark brow line over it
-  if(D.sculpt){const sl=E.slant==null?(FK140E.prey[D.key]?.12:.32):E.slant,h=E.open||.58,brow=E.brow==null?1:E.brow;
-    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*1.4,sl);
-    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*1.2,sl);
+  // (owner, v140: brows level, so the folk look calm, not angry; E.round gives a round eye, e.g. the owl)
+  if(D.sculpt){const sl=E.slant==null?(FK140E.prey[D.key]?.06:.14):E.slant,h=E.open||.66,brow=E.brow==null?.8:E.brow,wd=E.round?h:1.2;
+    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*(wd+.2),sl);
+    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*wd,sl);
     const ph=r*h*.95;if(FK140E.slit[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph,r*.16,sl);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.3,r*.55,sl);else put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.62,r*.36,sl);
-    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.22),-r*.05,r*.4,r*.2*brow,r*1.5,sl+.22*brow);
+    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.3),-r*.02,r*.4,r*.16*brow,r*(wd+.25),0);
     put('box','c',0xf2eee6,r*.21,r*h*.42,r*.3,.0012,.0016*r/.0112,.0016*r/.0112);return}
   const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.82,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);  // dark rim: behind the iris's front, so it shows as a ring                                  // dark rim
   put('sph2','c',iris,-r*.66,0,r*.04,r,r*.93,r*1.08,tl);                                         // eye (iris fills it)
