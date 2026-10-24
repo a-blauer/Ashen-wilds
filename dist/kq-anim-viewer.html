@@ -3538,7 +3538,7 @@ function ccRender(){
     const C=CLS[ccCls],S50=k=>C.base[k]+C.per[k]*49;
     $('ccInfo').innerHTML=`<h3 style="color:${C.col}">${C.i} ${C.n}</h3><p>${C.d}</p><div class="mut" style="font-size:.72rem;margin-bottom:6px">${C.st} · ${C.arm} armor · ${({melee3:'heavy 3-hit combo',melee4:'fast 4-hit combo',bow:'arrows from range',staff:'magic bolts from range'})[C.atk]}</div>`+
       statBar('Health',S50('hp'),1400)+statBar('Phys. attack',S50('pa'),200)+statBar('Magic attack',S50('ma'),215)+statBar('Phys. defense',S50('pd'),150)+statBar('Magic defense',S50('md'),125)+statBar('Speed',1/C.spd,2.8)+
-      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (C).</div>`;
+      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
   }else{
     $('ccList').innerHTML=STARTERS.map(n=>{const f=famOf(n);return `<button class="ccc${n==ccSp?' on':''}" data-s="${n}" style="--cc:#${('00000'+FAMD[f].col.toString(16)).slice(-6)}"><span class="cci">${SP2[n][3]}</span><span><b>${n}</b><small>${FAMD[f].i} ${f} family</small></span></button>`}).join('');
     const f=famOf(ccSp),F=FAMD[f],sp=CSP[SP2[ccSp][8]];
@@ -9774,10 +9774,13 @@ function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].m
   // dug soils and other realm items
   Object.keys(ITEMS||{}).forEach(k=>{if(k.slice(0,2)=='t:'){const it=ITEMS[k];if(it&&it.n&&!S[it.n.toLowerCase()])add(it.n,it.i,'Dig soil mounds in the portal zones (each zone gives its own soil).')}});
   return S}
-function msrcFind(el){if(!MSRC)MSRC=msrcBuild();const names=Object.keys(MSRC).sort((a,b)=>b.length-a.length);
+// v140: whole words only ("Stoneshell" is not "Stone"), and never in the hero / companion creator (#start)
+var MSRC_RE=null;
+function msrcFind(el){if(!MSRC)MSRC=msrcBuild();if(el&&el.closest&&el.closest('#start'))return null;
+  if(!MSRC_RE)MSRC_RE=Object.keys(MSRC).sort((a,b)=>b.length-a.length).map(n=>[n,new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])')]);
   for(let e=el,d=0;e&&d<3;e=e.parentElement,d++){if(e.id=='cmp'||e.classList&&e.classList.contains('modal'))break;
     const t=((e.getAttribute&&e.getAttribute('title'))||'')+' '+(e.textContent||'');if(t.length>60)continue;const lt=t.toLowerCase();
-    for(const n of names)if(lt.includes(n))return MSRC[n]}
+    for(const [n,re] of MSRC_RE)if(re.test(lt))return MSRC[n]}
   return null}
 function mhintShow(H,x,y){let d=$('mhint');if(!d){d=document.createElement('div');d.id='mhint';document.body.appendChild(d)}
   d.innerHTML=`<b>${H.ic} ${H.n}</b><br>${H.t}`;d.style.display='block';const w=d.offsetWidth,h=d.offsetHeight;
@@ -28990,9 +28993,9 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
     wp=Fp.grip.clone();if(C.hold)wp.sub(new V(...C.hold).applyQuaternion(wq))}
   // the carry pose, faded out during attacks like the beast arm hold
   if(w>0){H.updateMatrixWorld(true);
-    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);
+    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=fc140Fwd(H),up=new V(0,1,0),hs=fc140Scale(H);
     let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
-    const fr=a=>new V().addScaledVector(sd,a[0]).addScaledVector(up,a[1]).addScaledVector(f,a[2]),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
+    const fr=a=>new V().addScaledVector(sd,a[0]*hs).addScaledVector(up,a[1]*hs).addScaledVector(f,a[2]*hs),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
     const ws=b2.getWorldScale(new V()).x;
     // wrist rotation: the weapon (or the palm, for the orb) points along U; the roll round it keeps the paw in line with the forearm
     const wantR=Fw=>{let best=null;for(const s of (C.palm?[1]:H['_fcs'+s1]!==undefined?[sg]:[1,-1])){const a1=C.palm?Fp.c.clone():Fp.e.clone().multiplyScalar(s*Math.cos(C.tilt||0)).addScaledVector(Fp.d,Math.sin(C.tilt||0)).normalize();
@@ -29015,10 +29018,15 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   // sphere round the spine, the chest and the head (FC116.clear radii + the orb's own radius), along the line from that centre
   if(C.palm&&w<.999&&FC116.clear){H.updateMatrixWorld(true);const bb=fc117WB(W),ws=b2.getWorldScale(new V()).x,M=b2.matrixWorld,c0=bb.c.clone().applyQuaternion(wq).add(wp).applyMatrix4(M),c1=c0.clone();
     FC116.clear.forEach(([bn,r0])=>{const bo=B[bn];if(!bo)return;const o=bo.getWorldPosition(new V()),d=c1.clone().sub(o),R=(r0+bb.r)*ws;if(d.length()>=R)return;
-      if(d.lengthSq()<1e-8)d.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));c1.copy(o).addScaledVector(d.normalize(),R)});
+      if(d.lengthSq()<1e-8)d.copy(fc140Fwd(H));c1.copy(o).addScaledVector(d.normalize(),R)});
     if(!c1.equals(c0)){const inv=new THREE.Matrix4().copy(M).invert(),off=c1.applyMatrix4(inv).sub(c0.clone().applyMatrix4(inv));wp=wp.clone().addScaledVector(off,1-w)}}
   W.quaternion.copy(wq);W.position.copy(wp);
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
+// v140: the hold is worked out in the hero's own frame: which way the model faces in the world (its parents included: the creator,
+// inventory and Character previews turn the model on a pivot, and H.rotation.y alone left the arm reaching the old way while the
+// model turned) and how big it is drawn compared with the game's hero (previews are scaled to fit).
+function fc140Fwd(H){const V=THREE.Vector3,q=H.getWorldQuaternion(new THREE.Quaternion()),f=new V(0,0,1).applyQuaternion(q);f.y=0;if(f.lengthSq()<1e-8)f.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));return f.normalize()}
+function fc140Scale(H){try{const V=THREE.Vector3,a=H.getWorldScale(new V()).x,b=(H===pl?a:pl.getWorldScale(new V()).x)||1;return a/b||1}catch(_){return 1}}
 function fc118Sign(H,b,Fp){let s=1;H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const i=o.skeleton.bones.indexOf(b);if(i<0)return;
   const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().copy(o.skeleton.boneInverses[i]).invert());s=Fp.e.clone().applyQuaternion(q).z<0?-1:1});return s}
 function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.forEach(r=>{r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)});H.updateMatrixWorld(true)}
@@ -35969,6 +35977,22 @@ function g139Tick(){try{if(typeof enemies=='undefined'||(typeof ABX!='undefined'
     if(!(sc<=bs*1.6)){g139Note(e,'scale');m.scale.setScalar(bs)}
     const g=GH(m.position.x,m.position.z);if(isFinite(g)&&m.position.y<g-.6){g139Note(e,'sunk');m.position.y=g}}}catch(_){}}
 setInterval(g139Tick,500);
+// ================= v140: character creator fixes (owner's list, Oct 2026) =================
+// * Ranger: a new victory pose. The old one drew the bow across his chest while the v135 carry kept the bow level across the
+//   hips, so the bow lay sideways with its string loose in front of him. Now he raises the bow high in his bow hand, upright with the
+//   string toward him, the other fist pressed to his chest, chest out and chin up. cc140Bow turns the bow upright in the raised hand after
+//   the pose (the carry is worked out before the pose moves the arm).
+// * The Mage's arm (2220, fc140Fwd / fc140Scale) and the companion step's material hint (0840, whole words) are fixed in their files.
+var CC140={bow:{up:[0,1,0],str:[0,-.15,-1]}};   // hero frame [x across from the bow hand, y up, z forward]: the upper limb's way, the string's way
+CC116.P.ranger={set:{'aL0.x':-2.55,'aL0.z':-.55,'aL1.x':-.12,'aR0.x':.35,'aR0.z':-.5,'aR1.x':-1.5},add:{'chest.x':-.1,'head.x':-.22,'spine.y':.12}};
+function cc140Bow(h){const S=h&&h._grip;if(!S||!S.L)return;let e=null;for(const q of S.L)if(q.ty=='bow'&&q.W&&q.W.parent){e=q;break}if(!e)return;
+  const V=THREE.Vector3,Q=THREE.Quaternion,W=e.W,P=W.parent;P.updateWorldMatrix(true,false);
+  const Y=new V(...CC140.bow.up).normalize(),Xs=new V(...CC140.bow.str);Xs.addScaledVector(Y,-Xs.dot(Y)).normalize();const Z=new V().crossVectors(Xs,Y);
+  const inHero=new Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(Xs,Y,Z)),hq=h.getWorldQuaternion(new Q()),pq=P.getWorldQuaternion(new Q());
+  W.quaternion.copy(pq.invert().multiply(hq).multiply(inHero));
+  const C=e.C,an=C.an||GRIP_AN,hd=new V(C.hold[0]*W.scale.x,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(W.quaternion);W.position.set(an[0]-hd.x,an[1]-hd.y,an[2]-hd.z);
+  h.updateMatrixWorld(true)}
+{const f=cc116Pose;cc116Pose=function(h,cls){const r=f.apply(this,arguments);try{if(cls=='ranger')cc140Bow(h)}catch(e){if(!CC140.err){CC140.err=1;console.warn('v140 ranger bow',e)}}return r}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Three tabs: Companions (every species, every evolution stage: basic attack + its 4 abilities), Monsters (every zone

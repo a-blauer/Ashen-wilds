@@ -96,6 +96,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v139 attributes (replace talents): `ATR139` (6 attributes, points per level, per-point stats, 10/25/50/75 bonuses, Auto mix per class), points in `hero.tal['__at:<key>']`, staged spending (`atr139Add/Apply/Undo/Auto/Reset`), `talMods`/`talRank`/`talSpent` redefined, flat level gains ×`ATR139.flat`; the inventory block under the hero | `2930-v139-attributes.js` (`tpFree` in 0120) |
 | v139 Character window (C; the old `#tal` window): hero model on `PV`, attributes, all stats with pending previews, attribute bonuses (`ch139Render`, `ch139PV`) | `2940-v139-character-window.js` (keys in `0108`, `1010`) |
 | v139 power scale (`pwr139` = 4·√old, `recPower` on the same scale, `rpTxt139` labels), flail trail at the ball's reach (`FL139`, `fl139Reach`), preview loop restart (`pvKick139`), enemy size / ground guard (`G139`, `g139Tick`) | `2950-v139-fixes.js` |
+| v140 creator fixes: Ranger victory pose (`CC116.P.ranger`, `cc140Bow`); the Mage hold's frame (`fc140Fwd`, `fc140Scale` in 2220); whole-word material hints (0840) | `2960-v140-creator-fixes.js` |
 
 ## Conventions (read before changing code)
 
@@ -515,6 +516,12 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   every field instance, fights, deaths, respawns; `v139_skin_check.js`: every skinned body's bone indices and weights); `g139Tick`
   now puts a drawn monster's scale back to its size and lifts it onto the ground when either is far off, and logs it (`G139.log`).
   Test: `v139_checks.py`; pictures: `VW=1280 VH=800 WIN=keyc,bag python3 v139_ui_shot.py` (`JS=` a setup snippet).
+- **Version 140 (owner's list, Oct 2026), creator fixes**: picking the Stoneshell companion no longer pops the "Stone" material hint
+  (0840 `msrcFind` matches material names as whole words, never inside the creator `#start`). The raven Mage's carry hold (2220)
+  works in the model's own frame (`fc140Fwd`: facing from the world quaternion, parents included; `fc140Scale`: size against the game
+  hero), so dragging him round in the Look step / barber (and the inventory and Character previews, which turn the model on a pivot) no
+  longer swings his arm toward fixed world points. The Ranger's creator pose is new (`2960`, `CC116.P.ranger` + `cc140Bow`: bow raised
+  high and upright, other fist to his chest). The creator's ability hint says K. Test: `v140_creator.py` (`SHOT=1` pictures).
 - **Menus (v117)**: the ☰ list has no Fusion or Sovereigns button (both kept hidden in the markup: `ui()`, the hotkey map and later
   wrappers look them up; G still opens fusion, J does nothing; sealed portals still open the portal list). Fusion is a tab of the
   Companions & Eggs window (`cfTabs116`, a row under each window's header; closing Fusion opened from there goes back to Companions).

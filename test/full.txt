@@ -46,3 +46,4 @@ PART=checks,cast v137_evolve.py
 v137_items.py
 v138_abil_balance.py
 v139_checks.py
+v140_creator.py

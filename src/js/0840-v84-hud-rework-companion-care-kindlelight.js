@@ -156,10 +156,13 @@ function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].m
   // dug soils and other realm items
   Object.keys(ITEMS||{}).forEach(k=>{if(k.slice(0,2)=='t:'){const it=ITEMS[k];if(it&&it.n&&!S[it.n.toLowerCase()])add(it.n,it.i,'Dig soil mounds in the portal zones (each zone gives its own soil).')}});
   return S}
-function msrcFind(el){if(!MSRC)MSRC=msrcBuild();const names=Object.keys(MSRC).sort((a,b)=>b.length-a.length);
+// v140: whole words only ("Stoneshell" is not "Stone"), and never in the hero / companion creator (#start)
+var MSRC_RE=null;
+function msrcFind(el){if(!MSRC)MSRC=msrcBuild();if(el&&el.closest&&el.closest('#start'))return null;
+  if(!MSRC_RE)MSRC_RE=Object.keys(MSRC).sort((a,b)=>b.length-a.length).map(n=>[n,new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])')]);
   for(let e=el,d=0;e&&d<3;e=e.parentElement,d++){if(e.id=='cmp'||e.classList&&e.classList.contains('modal'))break;
     const t=((e.getAttribute&&e.getAttribute('title'))||'')+' '+(e.textContent||'');if(t.length>60)continue;const lt=t.toLowerCase();
-    for(const n of names)if(lt.includes(n))return MSRC[n]}
+    for(const [n,re] of MSRC_RE)if(re.test(lt))return MSRC[n]}
   return null}
 function mhintShow(H,x,y){let d=$('mhint');if(!d){d=document.createElement('div');d.id='mhint';document.body.appendChild(d)}
   d.innerHTML=`<b>${H.ic} ${H.n}</b><br>${H.t}`;d.style.display='block';const w=d.offsetWidth,h=d.offsetHeight;
