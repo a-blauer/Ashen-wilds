@@ -35170,7 +35170,7 @@ Object.assign(KQR_TUNE,{
   // paladin (was: Avenger's Shield 1, Beacon of Light 1.16, Blessed Hammers 1, Consecration 1, Crusader's Charge 1.6, Hammer of Light 0.9, Heaven's Wrath 1.11, Holy Smite 1, Judgment 1.39, Penance 1, Sanctuary 1.38, Shield Bash 1.11)
   "Avenger's Shield":1.005,"Beacon of Light":1.371,"Blessed Hammers":1.042,"Consecration":1.035,"Crusader's Charge":2.484,"Hammer of Light":1.328,"Heaven's Wrath":2.25,"Holy Smite":1.331,"Judgment":1.738,"Penance":2.209,"Sanctuary":2.115,"Shield Bash":1.305,
   // assassin (was: Caltrops 0.79, Death Mark 0.74, Eclipse 0.36, Envenom 1, Eviscerate 0.36, Fan of Knives 1, Garrote 0.59, Phantom Strike 0.53, Shadow Rush 0.38, Shuriken Volley 0.27, Smoke Bomb 0.93, Thousand Cuts 0.8, Venom Flask 0.55)
-  "Caltrops":0.628,"Death Mark":1.748,"Eclipse":0.34,"Envenom":1.717,"Eviscerate":0.258,"Fan of Knives":1.042,"Garrote":0.952,"Phantom Strike":0.596,"Shadow Rush":0.166,"Shuriken Volley":0.443,"Smoke Bomb":0.657,"Thousand Cuts":1.305,"Venom Flask":0.271,
+  "Caltrops":0.628,"Death Mark":1.189,"Eclipse":0.34,"Envenom":1.717,"Eviscerate":0.258,"Fan of Knives":1.042,"Garrote":0.952,"Phantom Strike":0.596,"Shadow Rush":0.166,"Shuriken Volley":0.443,"Smoke Bomb":0.657,"Thousand Cuts":1.305,"Venom Flask":0.271,
   // ranger (was: Aimed Shot 0.53, Barrage 1.2, Disengage 1.21, Entangling Roots 1, Explosive Arrow 1.05, Explosive Trap 1, Frost Trap 1, Hawk Dive 0.9, Multishot 0.7, Piercing Arrow 0.75, Rain of Arrows 0.75, Rapid Fire 0.27, Stampede 0.6)
   "Aimed Shot":0.575,"Barrage":1.246,"Disengage":1.391,"Entangling Roots":2.217,"Explosive Arrow":0.421,"Explosive Trap":0.418,"Frost Trap":1.948,"Hawk Dive":0.878,"Multishot":0.499,"Piercing Arrow":0.528,"Rain of Arrows":0.232,"Rapid Fire":0.257,"Stampede":1.189,
   // mage (was: Arcane Missiles 0.45, Blizzard 0.4, Chain Lightning 0.5, Comet Storm 1.3, Disintegrate 0.46, Dragon's Breath 0.55, Fireball 0.55, Frost Nova 1.25, Frozen Orb 1.9, Meteor 0.6, Singularity 0.43, Wall of Fire 0.55)
@@ -35194,3 +35194,23 @@ Object.assign(BAL138_EVO,{
 // (War Cry, Iron Skin, Unbreakable, War Banner, Bloodrage, Divine Barrier, Lay on Hands, Aegis, Seal of Light, Divine Intervention,
 // Vanish, Shadow Dance, Poison Blades, Snare Trap, Hunter’s Focus, Blink, Rift Gate, Mana Shield, Time Warp) and summons (Shadow
 // Clone, Call of the Wild, Wild Hunt: the pets wander off the dummy).
+
+// 4. Death Mark: its value is the mark (the target takes more damage from everything), not its strike, so the strike counts the
+//    mark as the largest extra (40%); the evolved Mark of Oblivion marks three enemies for +35% (not +50%) for 10 s (not 12):
+//    at +50% for 12 s on a ~14 s cooldown it was a near-permanent +50% to all the assassin's damage (+35% over the other classes).
+Object.assign(EVO137['Death Mark'].mod,{v:.35,dur:10});
+Object.assign(EVO137['Death Mark'],{d:'Marks your target and the 2 enemies nearest to it: they take 35% more damage for 10s.'});
+// 5. Classes after the ability changes (re-measured: every class × every weapon at levels 10–50, rank 1, and rank 5 with every
+//    ability evolved at 40–50). Ranged classes lean on their abilities in a crowd (a bow or a staff does not cleave), so the
+//    Ranger and Mage get more from them; the Assassin's extra basic-attack bonus goes (its abilities got stronger).
+KQR_CLS.assassin.basicP=0;           // was .15
+KQR_CLS.paladin.basicP=-.06;         // was 0
+KQR_CLS.ranger.skillP=.22;           // was .03 (v127)
+KQR_CLS.mage.skillP=L=>.06+.008*L;   // was −.04 + .008·level (v127)
+Object.assign(BAL138_EVOC,{warrior:1.14,paladin:1.16,mage:.95});
+// 6. Weapons that cleaved a crowd too well once the abilities changed, and the knife fan (wider, less on one target)
+Object.assign(WTYPE.ga,{k:1.1});MW.ga.m=[1,1.1,1.3];   // were 1.16, finisher 1.4 (v127)
+Object.assign(WTYPE.halberd,{k:1.12});                  // was 1.2
+Object.assign(WTYPE.mace,{k:1.02});                     // was 1.2 (v127)
+MW.flail.half=1.45;MW.gs.half=.55;                      // were 1.9 / .7 (v127)
+WB127.knife=.7;WB127.knSpread=.6;WB127.knDup=.2;        // were .68 / .45 / .3 (v127)

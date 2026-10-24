@@ -91,6 +91,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v137 enemy bodies: toolkit (`e137B`, `e137Rows`, `e137Limb`, `e137Quad`, `e137Claws`), own bodies for Blood Hound, Bone Hound, Blood Bat (rig `BloodBat`), Mire Croaker, Basilisk, Snapper, Sun Scarab (middle legs `x.mid137`), Rimeshell Crawler, Storm Harpy, Dust Wyrm, Banshee, Fungal Shambler (rig `Shambler`); older foes rebuilt (`FOE137`, `f137Reg` into `N3.humB`), Goo / Maggot / Scorpion touch-ups | `2640`–`2665` (v137) |
 | v137 animal townsfolk: every Duskhold NPC is a warm-blooded animal (`FK137`, `fkBody` via `idlNpcBody`, parametric skulls `fkSN`, ears / horns / antlers / paws / hooves, 21 species, `FKO` costumes per keeper, citizens by trade `FK_ROLE`, tail + ear animation `fk137Anim`) | `2800`–`2830` (v137) |
 | v137 ability evolution: every class ability evolves at rank 5 (`EVO137` per class, `ev137Evolve`, `ev137Cost` = last rank + 4 ⚡, saved as `hero.tal['__ev:<name>']`), evolved copy cast through `cast` (`ev137Sk`), new effects (`ev137Sigil/Column/Shock/Flare/Lance/Fall/Crescent/Shards/Orbit/Rift/Impact`, projectile models `ev137Proj`), poses `ATK.evoCast/evoRaise/evoNova/evoFlex` | `2700-v137-ability-evo-core.js`, `2710-…-fx.js`, `2715-…-kit.js`, `2720`–`2740` (warrior, paladin, assassin, ranger, mage) |
+| v138 ability balance: every damaging ability valued by delivery type, area and extras (`KQR_TUNE`), evolved forms (`BAL138_EVO`, per class `BAL138_EVOC`), spread-shot volleys (`BAL138.vol`), Death Mark, class knobs | `2900-v138-ability-balance.js` |
 | v137 new gear: 150 templates appended to `ITPL` (`ITPL_V137`, `v7` model key, `A137L` armour lines), `genItem_base` empty-pool fix, armour motifs measured onto the built body (`a7Ring`, `a7Put`, `A7MOT`), weapon recipes (`W137`, `w7Blade`), shields (`SH137`), jewellery (`J137`, worn pendant / ring fitted with `j7Put`) | `2750`–`2790` (v137) |
 
 ## Conventions (read before changing code)
@@ -115,6 +116,20 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - Loot and XP are tuned down on purpose (`ECON96`, `PACE`); don't raise them unless asked.
 - **Kill XP growth (v118)**: base kill XP in `gainXP` is `8 + 12·level` (was `8 + 6·level`): twice the growth per creature level,
   about half the kills to reach 50 (~7,400 instead of ~14,400 at your own level). Companions share it, so they level faster too.
+- **Ability balance (v138)**: measured with `test/v138_abilities/` (every ability of every class at level 50, base form at rank 1 and
+  evolved form at rank 5, on a dummy with 4 dummies close by and 4 further out; every hit logged; `abl.py` → `step.py` prints what is off
+  its target, `niche2.py` lists strictly-worse pairs). Each damaging ability is sorted by what it does in the game: single target, burst
+  area (one moment), intermittent area (2–4 pulses), constant area (5+ pulses over 2.5 s+), and by area size (small / medium: reaches
+  the close ring / large: reaches the far ring). Damage per target per second of cooldown, against attack × skill bonus, follows one
+  table for all classes: single 1.00, burst .75, intermittent .75, constant .55; × small 1.00, medium .93, large .85; × (1 − extras),
+  extras (`an2.py` `utility`): stun .12–.15, root .10, slow .05, debuff/mark .12 (Death Mark .40), pull .06, knockback .04, silence .05,
+  dash/leap .08, invulnerability / shield / big heal .12, at most .40. Cooldown does not change the rate (long = bigger hit, short =
+  steadier). Evolved forms follow the table at ×2.18 (rank 5 ×1.48, −15% cooldown, evolution ×1.25) in whatever shape the evolution
+  gives them. Every one of the 62 damaging abilities (base and evolved) lands within ~12% of its target (random-landing barrages, Comet
+  Storm and Heaven's Wrath, on average over many casts). Not tuned by the table: pure buffs, shields, heals, movement and summons.
+  Projectiles fired together by one cast hit each enemy once at full damage (`BAL138.dup` 30% for the rest; Arcane Missiles exempt).
+  Classes re-checked with `test/v127_balance/` at rank 1 (levels 10–50) and with every ability evolved at rank 5 (levels 40–50; use
+  `TUNE=` a file that wraps `V90.setup` to set rank 5 and `hero.tal['__ev:'+name]`): within ~±10% of each other.
 - **Balance (v127)**: measured with `test/v127_balance/` (every class × every weapon at levels 10–50: 30 s fights with the class's best
   four abilities against one target and against two crowd shapes (a tight pack of 3 around the target, a spread pack of 5), plus
   every companion spell; ~12 min headless: `python3 test/v127_balance/mat.py` then `python3 test/v127_balance/rep.py out/mat_x.json`).

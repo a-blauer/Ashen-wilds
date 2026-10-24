@@ -23,3 +23,4 @@ v135|cheddar|camera|fade|clip|wave|hatch|ring|death|kill|unique|fish|right|mouse
 unique|fish|loot|item|gear|icon|0780|v89|mdgd|tooltip: v135_uniques.py v137_items.py
 bow|0780|0890|grip|carry|anim: v135_bow.py
 ability-evo|coop-visuals|0130-|1000-|1010-|1090-|1230-|1240-|2240-: v137_evolve.py v119_abprev.py v117_abilities.py
+ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-new: v138_abil_balance.py
