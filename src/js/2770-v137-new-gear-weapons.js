@@ -1,4 +1,5 @@
 // ================= v137: the 50 new weapons — a recipe each =================
+// v141: the four greatsword grips reach down to the guard (they ended 0.04–0.08 above the hand, which closed on empty air).
 // Same frame as every weapon (lgWpnKit): the grip at the origin, the head / blade pointing down -y, the flat of a blade in
 // x-y, and the same footprint per type (a greatsword ~1.3 long, a dagger ~.5, a staff 1.7…), so hands, poses, attack
 // animations, the bow's drawn string and the clip tests work unchanged. Bows, crossbows and slings keep the v83/v135 frame
@@ -21,22 +22,22 @@ function w7Wavy(len,w0,w1,amp,waves,tip,y0){const L=[],R=[],n=waves*4;for(let i=
 // colours of an item: rarity picks fittings and glow
 function w7C(it,o){const r=it.r|0,t=itT(it);return Object.assign({r,ti:t.t|0,fit:r>=2?LGW.brass:LGW.iron,gl:r>=3?v89Rc(r):null,steel:LGW.steel,dark:0x2a2a30,bone:0xd8ccb0,wood:LGW.wood,woodD:LGW.woodD,leather:LGW.leather,wrap:LGW.wrap},o||{})}
 // ---------------- greatswords (grip .37….05, guard ≈ -.14, blade to ≈ -1.3) ----------------
-W137.gs_grave=(k,c)=>{w7Grip(k,.34,.3,.034,0x8a7a5a,0x6a5a40);k.p('','ring','m',c.dark,0,.37,0,.04,.25,.04,Math.PI/2);
+W137.gs_grave=(k,c)=>{w7Grip(k,.34,.45,.034,0x8a7a5a,0x6a5a40);k.p('','ring','m',c.dark,0,.37,0,.04,.25,.04,Math.PI/2);
   k.L('','m',0x4a4440,[-.2,-.13,0],[.2,-.13,0],.022,.022,5);[-1,1].forEach(s=>k.L('','m',0x4a4440,[s*.2,-.13,0],[s*.23,-.09,0],.022,.012,5));
   const P=[[-.06,-.15],[.06,-.15],[.075,-.6],[.1,-1.0],[.11,-1.12],[.09,-1.22],[.04,-1.28],[0,-1.3],[-.04,-1.28],[-.09,-1.22],[-.11,-1.12],[-.1,-1.0],[-.075,-.6]];
   w7Blade(k,'gsg',P,.024,0x6a5a4c,0x8a7a6a);for(let i=0;i<6;i++){const y=-.35-i*.14,s=i%2?1:-1;k.p('','cone4','m',0x1a1410,s*(.078+i*.004),y,0,.012,.03,.016,0,0,s*Math.PI/2)}
   k.p('','box','c',0x3a2a1a,0,-.55,0,.03,.6,.026);if(c.gl)k.p('','box','g',c.gl,0,-.9,0,.012,.2,.028)};
-W137.gs_flame=(k,c)=>{w7Grip(k,.34,.3,.033,0x6a1a1a,0x2a1010);k.p('','oct','m',c.fit,0,.39,0,.045,.055,.045);k.p('','oct','g',c.gl||0xff6a20,0,.39,.03,.018);
+W137.gs_flame=(k,c)=>{w7Grip(k,.34,.45,.033,0x6a1a1a,0x2a1010);k.p('','oct','m',c.fit,0,.39,0,.045,.055,.045);k.p('','oct','g',c.gl||0xff6a20,0,.39,.03,.018);
   k.p('','box','m',c.fit,0,-.13,0,.32,.04,.06);[-1,1].forEach(s=>{k.L('','m',c.fit,[s*.16,-.13,0],[s*.2,-.2,0],.018,.012,5);k.L('','m',c.fit,[s*.2,-.2,0],[s*.17,-.26,0],.012,.004,5);k.L('','m',c.dark,[s*.05,-.22,0],[s*.1,-.26,0],.01,.003,4)});
   k.p('','box','c',0x4a1a14,0,-.22,0,.08,.12,.034);w7Blade(k,'gsf',w7Wavy(1.0,.05,.035,.022,4,.12,-.28),.022,0x3a3438,0x8a8a92);
   k.p('','box','g',c.gl||0xff7a2a,0,-.75,0,.008,.85,.026);for(let i=0;i<4;i++)k.p('','oct','g',0xffb060,(i%2?.01:-.01),-.4-i*.2,.014,.006,.012,.004)};
-W137.gs_exec=(k,c)=>{w7Grip(k,.35,.32,.036,0x2a2a2a,0x1a1a1a);gkSkull(k,'',0,.4,0,1.1,c.bone,0,null);
+W137.gs_exec=(k,c)=>{w7Grip(k,.35,.46,.036,0x2a2a2a,0x1a1a1a);gkSkull(k,'',0,.4,0,1.1,c.bone,0,null);
   k.p('','box','m',c.dark,0,-.13,0,.4,.06,.08);k.p('','box','m',c.fit,0,-.13,0,.42,.025,.085);
   const P=[[-.1,-.16],[.1,-.16],[.12,-1.24],[-.12,-1.24]];w7Blade(k,'gse',P,.026,0x5a5e66,0x9aa0aa,0,0,0,0,.016);
   k.p('','cyl','c',0x14100c,0,-1.08,0,.035,.03,.035,Math.PI/2);k.p('','ring','m',c.steel,0,-1.08,0,.04,.2,.04,Math.PI/2);
   for(let i=0;i<3;i++)gkRunes(k,'',[[-.05,-.4-i*.18,.015,0],[.05,-.45-i*.18,.015,0]],c.gl||0x5a5e66,null,1.4);
   gkChain(k,'',[[-.11,-.2,.02],[0,-.25,.03],[.11,-.2,.02],[.1,-.32,.02],[0,-.36,.03],[-.1,-.32,.02]],.009,0x4a4a50,null)};
-W137.gs_ruin=(k,c)=>{w7Grip(k,.36,.34,.036,0x1a1418,0x3a1018);[-1,1].forEach(s=>k.L('','m',c.dark,[0,.39,0],[s*.04,.47,0],.02,.002,4));k.p('','oct','m',c.dark,0,.4,0,.045);
+W137.gs_ruin=(k,c)=>{w7Grip(k,.36,.39,.036,0x1a1418,0x3a1018);[-1,1].forEach(s=>k.L('','m',c.dark,[0,.39,0],[s*.04,.47,0],.02,.002,4));k.p('','oct','m',c.dark,0,.4,0,.045);
   // bat-wing guard with an eye
   [-1,1].forEach(s=>{const P=[[0,.02],[.1,.04],[.2,.1],[.26,.02],[.22,-.02],[.18,.0],[.14,-.04],[.1,-.01],[.06,-.05],[0,-.04]];k.p('',lgSlab('w7rw',P,.02),'m',0x1e1a20,0,-.14,0,s,1,1)});
   k.p('','sph','m',0x2a1a20,0,-.14,0,.05,.05,.04);k.p('','sph','g',c.gl||0xff2a2a,0,-.14,.03,.026,.026,.016);k.p('','box','c',0x050505,0,-.14,.045,.006,.03,.004);
@@ -80,6 +81,7 @@ W137.hb_watch=(k,c)=>{w7Haft(k,.3,-1.42,.03,c.wood,27);w7Bands(k,[.25,-.9,-1.38]
   k.p('','box','m',c.dark,0,-1.0,0,.06,.06,.05);k.p('','box','m',c.dark,0,-1.38,0,.06,.06,.05);k.L('','m',c.dark,[-.02,-1.2,0],[-.1,-1.18,0],.01,.01,4);k.p('','ring','m',c.dark,-.11,-1.2,0,.02,.2,.02);
   k.p('','cone4','m',c.steel,0,-1.5,0,.025,.16,.02,Math.PI)};
 W137.hb_reaper=(k,c)=>{// a vertebra haft and a scythe blade
+  k.p('','cyl','c',0xa89c80,0,-.48,0,.024,1.56,.024); // v141: a solid core through the vertebrae, so the hand always closes on the haft
   for(let i=0;i<14;i++){const y=.28-i*.11;k.p('','cyl','c',i%2?0xd0c4a8:0xb8ac90,0,y,0,.032,.08,.032);k.p('','cone4','c',0xc8bca0,0,y,-.03,.012,.03,.02,Math.PI/2+.4)}
   k.p('','sph2','c',c.bone,0,-1.3,0,.05,.05,.045);[-1,1].forEach(s=>k.p('','sph','g',c.gl||0x7affc8,s*.018,-1.3,.04,.009));
   const P=[[0,.03],[.1,.06],[.22,.04],[.34,-.02],[.44,-.1],[.5,-.22],[.42,-.14],[.32,-.08],[.2,-.04],[.08,-.03],[0,-.03]];w7Blade(k,'hbr',P,.024,0x4a4a54,0xb0b4bc,.03,-1.26,0,0,.01);

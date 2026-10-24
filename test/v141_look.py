@@ -14,7 +14,9 @@ def s(pg):
     for name,body in steps:
         m=re.search(r'//WAIT (\d+)',body)
         r=pg.evaluate('async()=>{'+body+'}')
-        if r is not None:print(name,json.dumps(r)[:3000])
+        if r is not None:
+            print(name,json.dumps(r)[:3000])
+            if os.environ.get('OUTF'):open(os.environ['OUTF'],'w').write(json.dumps(r))
         if m:pg.wait_for_timeout(int(m.group(1)))
         pg.screenshot(path=play.TMP+'/v141_'+name+'.png',timeout=600000)
     print('page errors',errs[:5])

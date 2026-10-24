@@ -71,3 +71,18 @@ $('xw').addEventListener('click',e=>{const t=e.target.closest('[data-cs141]');if
 {const f=toggleEmp;toggleEmp=function(i){if(i>=actN141())return say(cs141Ready()?'🔒 Learn the Companion Bond at the Beast Trainer to bring a second companion.':'🔒 A second companion joins you after two Sovereigns are defeated (Beast Trainer).');return f.apply(this,arguments)}}
 // a 2nd companion that empowered you before the slot closed (old saves) stops
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!cs141Has()&&party[1]&&party[1].emp)party[1].emp=false}catch(_){}return r}}
+
+// ---------------- signs that show a recommended power follow the hero's class ----------------
+// The portal signs (and the Portal Road board) are painted while the town is built, before the save's hero is loaded, so
+// they used the default class's power scale. Every "Rec. power" text remembers its level; when the hero's class is known
+// (load, new hero, class change) the signs that carry one are repainted from the registry of painted signs (SGNR).
+var RP141={L:{},cls:null};
+{const f=rpTxt139;rpTxt139=function(L){const t=f.apply(this,arguments);if(t)RP141.L[t]=L;return t}}
+// the level a sign's power belongs to: the zone named on that line (else on the sign) - its first level
+function rp141Lv(t,lines){const all=lines.map(l=>String(l.t||'')).join(' ');for(const src of [t,all]){const i=PMAP.findIndex(p=>p&&p.n&&src.includes(p.n));if(i>=0)return PMAP[i].lv[0]}
+  const m=t.match(/⚔ Rec\. power [\d,.]+/);return m&&RP141.L[m[0]]!=null?RP141.L[m[0]]:null}
+function rp141Refresh(){if(typeof SGNR=='undefined'||!SGNR)return;const re=/⚔ Rec\. power [\d,.]+/g;
+  SGNR.forEach(r=>{try{const lines=r.a&&r.a[0];if(!Array.isArray(lines))return;if(!r.o141)r.o141=lines.map(l=>Object.assign({},l));
+    let ch=false;const nl=r.o141.map(l=>{const t=String(l.t||'');if(!re.test(t))return l;re.lastIndex=0;const nt=t.replace(re,m=>{const L=rp141Lv(t,r.o141);if(L==null)return m;ch=true;return rpTxt139(L)});return Object.assign({},l,{t:nt})});
+    if(ch){r.a[0]=nl;signPaint(r.c,...r.a);r.t.needsUpdate=true}}catch(_){}})}
+setInterval(()=>{try{if(typeof hero!='undefined'&&hero&&hero.cls&&hero.cls!==RP141.cls){RP141.cls=hero.cls;rp141Refresh()}}catch(_){}},1000);
