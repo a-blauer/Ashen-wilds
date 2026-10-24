@@ -262,7 +262,7 @@ FKH.capra=function(o){o=o||{};const bump=o.bump||0;return {R:.088,bb:[-.13,-.13,
     if(y<ym)return C.FURL;return C.FUR}}};
 FKH.add('goat',Object.assign(FKH.capra({stripe:1}),{extra(k,B,D,C){const C0=FKS.C0,at=(x,y,z)=>[x+C0[0],y+C0[1],z+C0[2]];
   [-1,1].forEach(s=>fkHornLoft(B,[at(s*.024,.05,-.012),at(s*.036,.105,-.04),at(s*.05,.13,-.1),at(s*.066,.12,-.165),at(s*.074,.09,-.205)],t=>.02*(1-t*.8),C.HORN,1));
-  k.L('head','c',C.FURL,at(0,-.066,.13),at(0,-.13,.115),.017,.004,6);k.L('head','c',C.FURL,at(0,-.07,.118),at(0,-.118,.1),.014,.004,5)}}));
+  k.L('head','c',C.FURL,at(0,-.056,.13),at(0,-.13,.115),.017,.004,6);k.L('head','c',C.FURL,at(0,-.058,.118),at(0,-.118,.1),.014,.004,5)}}));
 FKH.add('ram',Object.assign(FKH.capra({bump:.012,len:.17,wool:[-.05,.03,.04]}),{ear:[.058,.0,-.02],extra(k,B,D,C){const C0=FKS.C0;
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=fkSurf(D,C0[2]-.06+.05*Math.sin(a*2.1)*.5,(.25+.55*Math.abs(Math.sin(a*1.3)))*(i%2?1:-1),.002);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.026,.022,.026)}
   // spiral horns: from the crown behind the eyes, back and down round the ear, forward by the cheek

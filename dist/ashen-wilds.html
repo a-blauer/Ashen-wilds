@@ -35288,7 +35288,7 @@ FKG.sleeves=function(B,P,o){[-1,1].forEach(s=>gkSleeve(B,P,s,Object.assign({u0:.
 // a cuff / bracer / glove shell on the forearm and hand from ring u0 to u1 (arm ring indices)
 FKG.cuff=function(B,P,i0,i1,col,off){[-1,1].forEach(s=>mdAS(B,P,s,i0,i1,off||.012,{col,capB:i1>=7}))};
 // boots: shell over the lower leg and foot (no toes then)
-FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.006,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v140: a thinner foot shell, so the sole stays on the ground)
+FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.004,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v140: a thinner foot shell, so the sole stays on the ground)
 // a standing / turned-down collar
 FKG.collar=function(B,P,col,o){return gkCollar(B,P,Object.assign({col,y0:.95,h:th=>1.0+.03*Math.max(0,-Math.cos(th)),flare:.02,open:.5},o||{}))};
 // a scarf / neckerchief: a roll round the neck and a knotted point at the front
@@ -35376,7 +35376,7 @@ FKO['Stronghold Steward']=function(o,D,C){const navy=0x23304e,crim=0x7a2228,G=FK
       FKG.belt(B,P,.6,0x1a1612,{buckle:G,off:.016,h:.018});
       FKG.skirt(B,P,{y0:.6,hem:th=>.2+.16*Math.max(0,Math.cos(th))**2,col:fkTrim(navy,G,{hem:.88}),lin:0x14182a,open:.36,flare:.05,backF:.4});
       FKG.collar(B,P,navy,{h:th=>1.02+.04*Math.max(0,-Math.cos(th)),flare:.03,open:.6,lin:G});
-      const k=dkKit(),pts=[];for(let i=0;i<=12;i++){const a=-1.25+i/12*2.5,y=.95-.09*Math.cos(a*1.25)**2*(1-Math.abs(a)/1.6)-.0;pts.push(mdTP(P,Math.max(.86,y-.0),a,Math.abs(a)>.46?.02:.006))}
+      const k=dkKit(),pts=[];for(let i=0;i<=12;i++){const a=-1.25+i/12*2.5,y=.95-.09*Math.cos(a*1.25)**2*(1-Math.abs(a)/1.6)-.0;pts.push(mdTP(P,Math.max(.86,y-.0),a,Math.abs(a)>.46?.016:.006))}
       gkChain(k,'chest',pts,.008,G);const m=mdTP(P,.84,0,.009);k.p('chest','cyl','m',G,m[0],m[1],m[2],.032,.008,.032,Math.PI/2,0,0);k.p('chest','cyl','c',crim,m[0],m[1],m[2]+.005,.02,.006,.02,Math.PI/2,0,0);
       k.p('chest','oct','m',G,m[0],m[1],m[2]+.009,.01,.014,.004);
       {const q=mdTP(P,.55,1.0,(P.tOff||0)+.004);gkScroll(k,'pelvis',q[0],q[1],q[2],1.2,G,1.2)}mdKit(B,k)}}};
@@ -35390,8 +35390,8 @@ FKO['Blacksmith']=function(o,D,C){const sh=0x4a4038,ap=0x5e3c22,soot=0x2a2420;
       const o0=P.tOff||0;FKG.apron(B,P,ap,{hem:.27,w:1.25,bibTop:.94});
       const k=dkKit(),pk=mdTP(P,.72,0,o0+.012+.007);k.p('chest','box','c',mdSh(ap,.8),pk[0],pk[1],pk[2],.11,.07,.012);
       // tongs and a hammer loop on the belt
-      const t0=mdTP(P,.6,-.95,(P.tOff||0)+.025);k.L('pelvis','m',FKC.iron,t0,[t0[0]-.01,t0[1]-.25,t0[2]+.03],.008,.007,4).L('pelvis','m',FKC.iron,[t0[0]+.012,t0[1],t0[2]],[t0[0]+.006,t0[1]-.25,t0[2]+.04],.008,.007,4);
-      const h0=mdTP(P,.6,.95,(P.tOff||0)+.025);k.p('pelvis','ring','c',FKC.leatherD,h0[0],h0[1]-.01,h0[2],.022,.08,.022,0,0,Math.PI/2);
+      const t0=mdTP(P,.6,-.95,(P.tOff||0)+.008);k.L('pelvis','m',FKC.iron,t0,[t0[0]-.01,t0[1]-.25,t0[2]+.03],.008,.007,4).L('pelvis','m',FKC.iron,[t0[0]+.012,t0[1],t0[2]],[t0[0]+.006,t0[1]-.25,t0[2]+.04],.008,.007,4);
+      const h0=mdTP(P,.6,.95,(P.tOff||0)+.008);k.p('pelvis','ring','c',FKC.leatherD,h0[0],h0[1]-.01,h0[2],.022,.08,.022,0,0,Math.PI/2);
       // a red kerchief over the crown, knotted at the back
       fkCoif(B,D,0x8a2a1a,{z1:D.EYEP[2]-.04,yMin:D.EYEP[1]+.035,off:.01});const bk=fkSurf(D,-.09,0.9,.01);k.p('head','sph2','c',0x7a2418,0,bk[1],bk[2]-.004,.024,.018,.014);
       k.L('head','c',0x8a2a1a,[0,bk[1],bk[2]-.01],[.02,bk[1]-.07,bk[2]-.03],.012,.004,4).L('head','c',0x8a2a1a,[0,bk[1],bk[2]-.01],[-.02,bk[1]-.06,bk[2]-.025],.012,.004,4);
@@ -35399,7 +35399,7 @@ FKO['Blacksmith']=function(o,D,C){const sh=0x4a4038,ap=0x5e3c22,soot=0x2a2420;
 // ---------------- Merchant / Trading Post (raccoon): a blue vest, coin purse, ledger, a beret with a feather ----------------
 FKO['Merchant']=function(o,D,C){const vest=mdC(o.robe||0x2a4a7a),hat=mdC(o.hatC||0x6a2a2a);
   return {paint(P){FKG.paint(P,C,{shirt:FKC.linen,sleeve:'long',pants:0x3a3448,legs:'long',cuffs:mdSh(FKC.linen,.85)})},
-    build(B,P){FKG.shell(B,P,.58,.95,m=>m.y>.93?mdSh(vest,.8):vest,{open:.22,off:.012,vneck:[.8,2.2]});FKG.buttons(B,P,.62,.86,4,FKC.gold,{dx:.05,off:.005});
+    build(B,P){FKG.shell(B,P,.58,.95,m=>m.y>.93?mdSh(vest,.8):vest,{open:.22,off:.012,vneck:[.8,2.2]});FKG.buttons(B,P,.62,.86,4,FKC.gold,{dx:.05,off:.002});
       FKG.belt(B,P,.6,FKC.leather,{buckle:FKC.brass});FKG.scarf(B,P,0x8a2a2a);
       FKG.skirt(B,P,{y0:.6,hem:th=>.47,col:vest,open:.5,flare:.02,rows:4,lin:mdSh(vest,.5)});
       const k=dkKit();FKG.pouch(k,P,.56,.75,0x8a6a2a,1.1);const c=mdTP(P,.56,.75,(P.tOff||0)+.034);for(let i=0;i<3;i++)k.p('pelvis','cyl','m',FKC.gold,c[0]+.008*i,c[1]-.058,c[2],.012,.004,.012);
@@ -35427,7 +35427,7 @@ FKO['Innkeeper']=function(o,D,C){const wc=mdC(o.robe||0x6a3a2a);
       FKG.cuff(B,P,3,3,0xe0d4bc,.016);
       FKG.apron(B,P,0xece6da,{hem:.17,w:1.45,bib:false,y0:.62});
       const k=dkKit();// a towel over the left shoulder, hanging front and back
-      const s0=mdTP(P,.96,-1.2,(P.tOff||0)+.002);k.p('chest','box','c',0xe8e0d0,s0[0],s0[1]+.012,s0[2]-.01,.07,.012,.12,0,0,-.2);
+      const s0=mdTP(P,.96,-1.0,(P.tOff||0)+.002);k.p('chest','box','c',0xe8e0d0,s0[0],s0[1]+.012,s0[2]-.01,.07,.012,.12,0,0,-.2);
       [[.1,1],[-.11,-1]].forEach(([dz,f])=>{k.p('chest','box','c',f>0?0xe8e0d0:0xd8d0c0,s0[0]-.005,s0[1]-.07,s0[2]+dz,.06,.15,.01,f*.12,0,-.08);for(let i=0;i<2;i++)k.p('chest','box','c',0xb84a3a,s0[0]-.005,s0[1]-.12+i*.02,s0[2]+dz+f*.006,.062,.006,.004,f*.12,0,-.08)});
       // a ring of keys at the belt
       const r=mdTP(P,.6,.9,(P.tOff||0)+.008);k.p('pelvis','ring','m',FKC.iron,r[0],r[1]-.02,r[2],.024,.08,.024,0,0,Math.PI/2);[-1,0,1].forEach(i=>k.L('pelvis','m',FKC.brass,[r[0]+.004,r[1]-.04,r[2]+i*.012],[r[0]+.008,r[1]-.085,r[2]+i*.02],.004,.003,4));
@@ -35435,9 +35435,9 @@ FKO['Innkeeper']=function(o,D,C){const wc=mdC(o.robe||0x6a3a2a);
 // ---------------- Cook (otter): chef's whites, checked trousers, neckerchief, half apron, toque, a ladle ----------------
 FKO['Cook']=function(o,D,C){const W=FKC.white;
   return {paint(P){FKG.paint(P,C,{shirt:W,sleeve:'long',pants:0x3a3a3e,legs:'long',cuffs:mdSh(W,.9),pattL:m=>(Math.floor(m.y*40)+Math.floor((m.x+m.z)*40))%2?0x2a2a2e:0xd8d4cc})},
-    build(B,P){mdTS(B,P,.64,.95,(P.tOff||0)+.006,{col:mdSh(W,.94),keep:m=>m.s>.2&&m.c<.25&&m.c>-.6});FKG.buttons(B,P,.66,.9,4,0xd8d4cc,{dx:.05,off:.003});
+    build(B,P){mdTS(B,P,.64,.95,(P.tOff||0)+.006,{col:mdSh(W,.94),keep:m=>m.s>.2&&m.c<.25&&m.c>-.6});FKG.buttons(B,P,.66,.9,4,0xd8d4cc,{dx:.05,off:.0001});
       FKG.scarf(B,P,0xb83a2a);FKG.apron(B,P,0xd8d4cc,{hem:.36,w:1.3,bib:false,y0:.6});
-      const k=dkKit();fkToque(k,D);const l0=mdTP(P,.58,-.9,(P.tOff||0)+.03);k.L('pelvis','m',0x8a8a92,l0,[l0[0]-.01,l0[1]-.22,l0[2]+.02],.006,.006,4);k.p('pelvis','sph','m',0x8a8a92,l0[0]-.012,l0[1]-.24,l0[2]+.024,.03,.02,.03);
+      const k=dkKit();fkToque(k,D);const l0=mdTP(P,.58,-.9,(P.tOff||0)+.008);k.L('pelvis','m',0x8a8a92,l0,[l0[0]-.01,l0[1]-.22,l0[2]+.02],.006,.006,4);k.p('pelvis','sph','m',0x8a8a92,l0[0]-.012,l0[1]-.24,l0[2]+.024,.03,.02,.03);
       mdKit(B,k)}}};
 // ---------------- Alchemist (goat): a long green robe, a bandolier of vials, satchel, brass goggles ----------------
 FKO['Alchemist']=function(o,D,C){const rb=mdC(o.robe||0x2e4a3a),dk=mdSh(rb,.55),stain=m=>rb;
@@ -35474,7 +35474,7 @@ FKO['Curio Merchant']=function(o,D,C){const coat=mdC(o.robe||0x7a4a2a),hat=mdC(o
       k.p('chest','sph','m',0x4a4a4a,.17,.68,z-.03,.06,.05,.06).L('chest','m',0x2a2a2a,[.17,.73,z-.03],[.17,.78,z-.03],.004,.004,3);
       k.p('chest','box','m',0x6a5a3a,-.168,.7,z-.02,.05,.07,.05).p('chest','box','g',0xffc860,-.168,.7,z-.02,.035,.045,.035);
       [-1,1].forEach(s=>{const a=mdTP(P,.96,s*.5,(P.tOff||0)+.01),b=mdTP(P,.66,s*.65,(P.tOff||0)+.01);k.L('chest','c',FKC.leatherD,a,[s*.12,.96,z+.05],.014,.014,4);k.L('chest','c',FKC.leatherD,a,b,.012,.012,4)});
-      FKG.pouch(k,P,.56,.8,0x6a4a2a);gkVial(k,'pelvis',.2,.53,-.06,1.2,0x7affd0,FKC.brass);
+      FKG.pouch(k,P,.56,.8,0x6a4a2a);{const q=mdTP(P,.55,2.0,(P.tOff||0)+.008);gkVial(k,'pelvis',q[0],q[1],q[2],1.2,0x7affd0,FKC.brass)}
       const h=fkBrimHat(k,D,hat,{brim:.19,cr:.065,ch:.08,tx:-.15,band:0x8a6a2a});gkFeather(k,'head',[.06,h.y+.03,h.z-.03],[.45,.8,-.6],.14,.02,0xd84a2a);mdKit(B,k)}}};
 FKO['Wandering Merchant']=FKO['Curio Merchant'];
 // ---------------- Beast Trainer (wolf): a leather jerkin, fur mantle, bracers, a whistle and treat pouches ----------------
@@ -35487,7 +35487,7 @@ FKO['Beast Trainer']=function(o,D,C){const sh=mdC(o.robe||0x3a5a2a);
       // the fur mantle round the shoulders
       FKG.mantle(B,P,{y0:1.01,hem:th=>.84-.03*Math.max(0,-Math.cos(th)),col:m=>(m.j+m.i)%3==0?0x6e5e4a:0x8a7a62,lin:0x5a4a38,dag:.035,flare:.025,folds:[12,.008],roll:.022,rollCol:0x9a8a72,open:.25});
       FKG.pouch(k,P,.57,.85,0x6a4a2a);FKG.pouch(k,P,.57,-.85,0x6a4a2a);FKG.pouch(k,P,.57,2.4,0x5a3a22,.8);
-      const w=mdTP(P,.86,.25,(P.tOff||0)+.008);k.L('chest','c',0x2a1a10,mdTP(P,.98,-.3,(P.tOff||0)+.002),w,.003,.003,3);k.p('chest','cyl','m',0xc8c0b0,w[0],w[1]-.02,w[2],.008,.05,.008,0,0,.2);
+      const w=mdTP(P,.86,.25,.02);k.L('chest','c',0x2a1a10,mdTP(P,.98,-.3,.015),mdTP(P,.93,0,.018),.003,.003,3).L('chest','c',0x2a1a10,mdTP(P,.93,0,.018),w,.003,.003,3);k.p('chest','cyl','m',0xc8c0b0,w[0],w[1]-.02,w[2],.008,.05,.008,0,0,.2);
       for(let i=0;i<5;i++){const a=-.5+i*.25,p=mdTP(P,.93-.03*Math.cos(a*2),a,(P.tOff||0)+.006);k.p('chest','cone4','c',0xe8e0c8,p[0],p[1]-.012,p[2],.006,.024,.006,Math.PI)}
       mdKit(B,k)}}};
 // ---------------- Bard (hare): a slashed doublet, puffed sleeves, two-tone hose, ruff, feathered cap ----------------
@@ -35508,7 +35508,7 @@ FKO['Rune Sage']=function(o,D,C){const rb=mdC(o.robe||0x2a3a7a),dk=mdSh(rb,.5),r
       const S=FKG.skirt(B,P,{y0:.6,hem:th=>.05,col:fkTrim(rb,0xc8b070,{hem:.9}),lin:dk,flare:.07,folds:[10,.012]});
       FKG.sleeves(B,P,{bell:.045,trail:.06,col:m=>m.v>.86?0xc8b070:rb,lin:dk,u0:2.8});
       FKG.mantle(B,P,{y0:1.02,hem:th=>.8+.03*Math.cos(th),col:m=>m.v>.78?0xc8b070:mdSh(rb,.85),lin:dk,open:.35,flare:.03,roll:.03,rollCol:mdSh(rb,.75)});
-      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L+.004)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
+      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L+.0012)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
         const t=j%3,s=1.3;if(t==0)gkW(k.p('pelvis','box','g',rn,p[0],p[1],p[2],.004*s,.018*s,.003,0,p[3],0),v.w);
         else if(t==1){gkW(k.p('pelvis','box','g',rn,p[0]-.003*s*Math.cos(p[3]),p[1],p[2]+.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],.5),v.w);gkW(k.p('pelvis','box','g',rn,p[0]+.003*s*Math.cos(p[3]),p[1],p[2]-.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],-.5),v.w)}
         else gkW(k.p('pelvis','oct','g',rn,p[0],p[1],p[2],.006*s,.009*s,.003,0,p[3],0),v.w)}
@@ -36457,7 +36457,7 @@ FKH.capra=function(o){o=o||{};const bump=o.bump||0;return {R:.088,bb:[-.13,-.13,
     if(y<ym)return C.FURL;return C.FUR}}};
 FKH.add('goat',Object.assign(FKH.capra({stripe:1}),{extra(k,B,D,C){const C0=FKS.C0,at=(x,y,z)=>[x+C0[0],y+C0[1],z+C0[2]];
   [-1,1].forEach(s=>fkHornLoft(B,[at(s*.024,.05,-.012),at(s*.036,.105,-.04),at(s*.05,.13,-.1),at(s*.066,.12,-.165),at(s*.074,.09,-.205)],t=>.02*(1-t*.8),C.HORN,1));
-  k.L('head','c',C.FURL,at(0,-.066,.13),at(0,-.13,.115),.017,.004,6);k.L('head','c',C.FURL,at(0,-.07,.118),at(0,-.118,.1),.014,.004,5)}}));
+  k.L('head','c',C.FURL,at(0,-.056,.13),at(0,-.13,.115),.017,.004,6);k.L('head','c',C.FURL,at(0,-.058,.118),at(0,-.118,.1),.014,.004,5)}}));
 FKH.add('ram',Object.assign(FKH.capra({bump:.012,len:.17,wool:[-.05,.03,.04]}),{ear:[.058,.0,-.02],extra(k,B,D,C){const C0=FKS.C0;
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=fkSurf(D,C0[2]-.06+.05*Math.sin(a*2.1)*.5,(.25+.55*Math.abs(Math.sin(a*1.3)))*(i%2?1:-1),.002);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.026,.022,.026)}
   // spiral horns: from the crown behind the eyes, back and down round the ear, forward by the cheek
