@@ -34,7 +34,7 @@ FKG.sleeves=function(B,P,o){[-1,1].forEach(s=>gkSleeve(B,P,s,Object.assign({u0:.
 // a cuff / bracer / glove shell on the forearm and hand from ring u0 to u1 (arm ring indices)
 FKG.cuff=function(B,P,i0,i1,col,off){[-1,1].forEach(s=>mdAS(B,P,s,i0,i1,off||.012,{col,capB:i1>=7}))};
 // boots: shell over the lower leg and foot (no toes then)
-FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.004,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v140: a thinner foot shell, so the sole stays on the ground)
+FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.002,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v140: a thinner foot shell, so the sole stays on the ground)
 // a standing / turned-down collar
 FKG.collar=function(B,P,col,o){return gkCollar(B,P,Object.assign({col,y0:.95,h:th=>1.0+.03*Math.max(0,-Math.cos(th)),flare:.02,open:.5},o||{}))};
 // a scarf / neckerchief: a roll round the neck and a knotted point at the front

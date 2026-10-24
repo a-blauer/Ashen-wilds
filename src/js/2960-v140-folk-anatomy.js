@@ -166,3 +166,21 @@ function fk140Whiskers(k,D,z,y,n,len,col){const q=brSkullAt(D,z);y=Math.max(q.yc
   [-1,1].forEach(s=>{for(let i=0;i<n;i++){const zi=z-i*.006,yi=y+i*.005-.004,wx=brSurfX(D,zi,yi);
     k.L('head','c',col||0x2a2420,[s*(wx-.004),yi,zi],[s*(wx+len*.62-i*.008),yi+(i-1)*.022*len/.12,zi-.008-i*.008],.0015,.0005,3)}})}
 {const f=brWhiskers;brWhiskers=function(k,D,z,y,n,len,col){if(FK140.cur&&FK140.D===D)return fk140Whiskers(k,D,z,y,n,len,col);return f.apply(this,arguments)}}
+// ---------------- a point on what is already built (for buttons, cords, chains, pendants) ----------------
+// mdTP places by the torso rings plus the running clothing offset, which floats trinkets wherever a coat is open or a mantle
+// stands off the chest. fk140Hug casts a ray at height y, angle a toward the body's axis and returns the first surface it meets
+// (the clothes already built included), pushed back out by off — so the trinket rests on whatever is really there.
+function fk140Hug(B,P,y,a,off){const q=mdTorsoAt(P,y),cz=q.z||0,dx=Math.sin(a),dz=Math.cos(a),ox=dx*.5,oz=cz+dz*.5;let best=1e9;
+  for(const t of ['c','m']){const p=B.L[t]&&B.L[t].p;if(!p)continue;
+    for(let i=0;i+8<p.length;i+=9){const ay=p[i+1],by=p[i+4],cy=p[i+7];if((ay<y&&by<y&&cy<y)||(ay>y&&by>y&&cy>y))continue;
+      // ray (ox, y, oz) + s·(−dx, 0, −dz) against the triangle (Möller–Trumbore)
+      const e1x=p[i+3]-p[i],e1y=by-ay,e1z=p[i+5]-p[i+2],e2x=p[i+6]-p[i],e2y=cy-ay,e2z=p[i+8]-p[i+2];
+      const rx=-dx,ry=0,rz=-dz,px=ry*e2z-rz*e2y,py=rz*e2x-rx*e2z,pz=rx*e2y-ry*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-12)continue;
+      const iv=1/det,tx=ox-p[i],ty=y-ay,tz=oz-p[i+2],u=(tx*px+ty*py+tz*pz)*iv;if(u<0||u>1)continue;
+      const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,v=(rx*qx+ry*qy+rz*qz)*iv;if(v<0||u+v>1)continue;
+      const s=(e2x*qx+e2y*qy+e2z*qz)*iv;if(s>0&&s<best)best=s}}
+  if(best>=1e9)return mdTP(P,y,a,(P.tOff||0)+off);const s=best-off;return [ox-dx*s,y,oz-dz*s]}
+// buttons sit on what is under them (v137 placed them by the clothing offset, so some floated off open coats)
+{const f=FKG.buttons;FKG.buttons=function(B,P,y0,y1,n,col,o){if(!FK140.cur)return f.apply(this,arguments);o=o||{};const k=dkKit();
+  for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/Math.max(1,n-1);(o.dx?[-o.dx,o.dx]:[0]).forEach(dx=>{const a=dx?Math.asin(Math.max(-1,Math.min(1,dx/mdTorsoAt(P,y).rx))):0,p=fk140Hug(B,P,y,a,.002);
+    k.p(n3TB(y),'sph','m',col,p[0],p[1],p[2],.009,.009,.006)})}mdKit(B,k)}}
