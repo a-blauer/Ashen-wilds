@@ -34,6 +34,6 @@ def s(pg):
           const E=(typeof EVO137!='undefined'&&EVO137[s.n])||{};
           out.push({n:s.n,cd:r.cd||0,hits:AL.h.map(h=>[+(h[0]-g0).toFixed(2),h[1],h[2],h[3]]),st:AL.st,heal:Math.round(AL.heal),sh:Math.round(sh),iv:+iv.toFixed(2),mv:+mv.toFixed(1),mark:+mark.toFixed(1),bf,
             k:s.k||s.x||'',stun:s.stun||0,ty:s.ty||'',d:s.d||'',en:E.en||'',ed:E.d||'',tune:KQR_TUNE[s.n]||1,err:r.err||r.fail||''})}
-        AL=null;return {c,atk0,sP,hp:heroMax(),ab:out}}""",[c,EVO])
+        AL=null;return {c,atk0,sP,hp:heroMax(),evo:evo?1:0,evoc:(evo&&typeof BAL138_EVOC!='undefined'&&BAL138_EVOC[c])||1,ab:out}}""",[c,EVO])
       res.append(r);open(OUT,'w').write(json.dumps(res));print('done',c,len(r['ab']),'t=%.0f'%(time.time()-t0),flush=True)
 play.run(s)

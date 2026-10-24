@@ -28,6 +28,7 @@ def utility(a,hp,dmg):
   if 'root' in st_ or re.search(r'\broot',d):u['root']=.10
   if ('slow' in st_ and len(st_['slow'])>=4) or re.search(r'\bslow',d):u['slow']=.05
   if 'weak' in st_ or a['mark']>=2 or re.search(r'weaken|take \d+% more|marks?\b|vulnerab',d):u['debuff']=.12
+  if a['n']=='Death Mark':u['debuff']=.40   # the mark raises all your damage: it is the ability's main value
   if re.search(r'\bpull|drag|draws? (enemies|them)|to your feet',d):u['pull']=.06
   if re.search(r'knock|shove',d):u['knock']=.04
   if re.search(r'silenc|interrupt',d):u['silence']=.05
@@ -37,7 +38,7 @@ def utility(a,hp,dmg):
 def rows(path):
   R=json.load(open(path));out=[]
   for C in R:
-    norm=C['atk0']*(1+C['sP'])
+    norm=C['atk0']*(1+C['sP'])*C.get('evoc',1)   # evolved casts: the per-class factor (BAL138_EVOC) is a class knob, not the ability's value
     for a in C['ab']:
       if a['n'] in SKIP:continue
       k=classify(a,C['hp'])

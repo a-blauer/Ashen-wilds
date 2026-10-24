@@ -22,7 +22,7 @@ def s(pg):
     r=ev("""()=>{V90.setup('ranger',50,{rank:1});V90.addX(0);const H=[];{const f=hurt;window.__h=f;hurt=function(e,d,s,c,dot){const h0=e.c.h;const r=f.apply(this,arguments);if(e===V90.dum&&!dot)H.push(h0-e.c.h);return r}}
       V90.home0();pl.position.z=V90.dum.m.position.z-1.0;V90.oneS('Multishot');hurt=window.__h;return H}""")
     ok=len(r)>=2 and max(r[1:])<=r[0]*.45
-    chk('Multishot point-blank: extra arrows on one enemy deal ~30%%',ok,r)
+    chk('Multishot point-blank: extra arrows on one enemy deal ~30%',ok,r)
     r=ev("""()=>{V90.setup('mage',50,{rank:1});V90.addX(0);const H=[];{const f=hurt;window.__h=f;hurt=function(e,d,s,c,dot){const h0=e.c.h;const r=f.apply(this,arguments);if(e===V90.dum&&!dot)H.push(h0-e.c.h);return r}}
       V90.home0();V90.oneS('Arcane Missiles');hurt=window.__h;return H}""")
     chk('Arcane Missiles exempt: every bolt hits at full damage',len(r)>=3 and min(r)>=max(r)*.6,r)
