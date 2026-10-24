@@ -13,6 +13,7 @@ v105_abil.py
 v110_fight.py
 v103_kingdom.py
 v100_fusemenu.py
+v141_consume.py
 v109_kingdom_shops.py
 TITLE=1 ABIL_ONLY=1 v114_race.py
 v117_menus.py

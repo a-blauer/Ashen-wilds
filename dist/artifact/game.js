@@ -9445,24 +9445,28 @@ $('recallBtn').onclick=()=>doRecall();
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===108?s.inst:null}catch(_){INST=null}return r}}
 
-// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
+// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to one base stat ----------------
+// v141: only the stat the eaten companion has its best roll in goes up (same amount per stat as before, when all five rose).
 var fCon=null;
 // gain from a consumed companion: its tier matters most, its level a little
 const conGainC=b=>consGain(Math.max(0,tierSp(b.g[0])-1))*(1+Math.min(.5,(b.l-1)/60))*(1+.1*(b.evo||0));
+// the stat Consume raises: the eaten companion's best roll (ties: the first in HP, PA, MA, PD, MD order)
+function conKey(b){ivFix(b);let k=IVK[0];IVK.forEach(q=>{if(ivOf(b,q)>ivOf(b,k)+1e-9)k=q});return k}
 function conHTML(a){const L=party.filter(c=>c&&c!==a);
-  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on every base stat; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
-  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
-{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion for a boost to every base stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
+  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on one base stat: the one the eaten companion has its best roll in; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
+  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
+{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion to boost its best stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
 {const f=rF;rF=function(){f.apply(this,arguments);try{const a=sel.length>=1?party[sel[0]]:null;if(fCon&&(!party.includes(fCon)||fCon===a||fCon.lock))fCon=null;const d=$('doF');
   if(a&&fOpt=='con'&&d){d.disabled=!fCon;d.textContent=fCon?'🍽️ Consume '+fCon.n:'🍽️ Consume'}}catch(_){}}}
 $('fz').addEventListener('click',e=>{const g=e.target.closest('[data-fcon]');if(g){e.stopPropagation();if(g.disabled)return;fCon=party[+g.dataset.fcon]||null;rF()}},true);
 {const f=$('doF').onclick;$('doF').onclick=function(){
   if(fOpt!='con')return f.apply(this,arguments);
   const a=party[sel[0]],b=fCon;if(!a||!b||b===a||!party.includes(b)||b.lock)return;
-  ivFix(a);const g=conGainC(b),up=[];
-  IVK.forEach(k=>{const o=ivOf(a,k),n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1])});ivSync(a);
+  ivFix(a);const g=conGainC(b),k=conKey(b),o=ivOf(a,k),up=[];
+  if(o>=1.3)return say('⚠ '+nm(a)+'’s '+IVN[k]+' is already at the maximum. '+b.n+' would be wasted.');
+  const n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1]);ivSync(a);
   if(b.emp)b.emp=false;party=party.filter(c=>c!==b);sel=[party.indexOf(a)];cmpSel=Math.max(0,party.indexOf(a));a.h=Math.min(M(a),a.h+Math.round(M(a)*.1));fCon=null;
-  say('🍽️ '+nm(a)+' absorbed '+b.n+' · every base stat +'+pctS(g)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
+  say('🍽️ '+nm(a)+' absorbed '+b.n+' · '+IVN[k]+' +'+pctS(n-o)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
 
 // ---------------- Beast Trainer: one purchase raises a companion to your level ----------------
 // each level costs about 1.9 × (level + 1.1) gold: Lv 1→20 ≈ 400, Lv 10→20 ≈ 315, Lv 1→40 ≈ 1,560
@@ -19706,7 +19710,7 @@ var FSM100_SN={hp:'Health',pa:'Phys. Attack',ma:'Magic Attack',pd:'Phys. Defense
 var FSM100_ACT={
   std:{i:'⚗️',n:'Fuse',verb:'Fuse',l:'Every level it gains from now on gives more stats.',best:'Best for a companion you will keep levelling.',rule:'same family or Universal'},
   sip:{i:'🧲',n:'Siphon',verb:'Siphon',l:'Copy one better stat grade from the partner (e.g. Phys. Attack D → A).',best:'Best when a spare has a high grade you want.',rule:'same family or Universal'},
-  con:{i:'🍽️',n:'Consume',verb:'Consume',l:'A small boost to all five stats.',best:'Best for spare companions of any family.',rule:'any family'}};
+  con:{i:'🍽️',n:'Consume',verb:'Consume',l:'A small boost to one stat: the one the eaten companion is best at.',best:'Best for spare companions of any family.',rule:'any family'}};
 var FSM100_STEPS=[['pick','Companion'],['act','Method'],['mate','Partner'],['prev','Confirm']];
 function FSM100_esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function FSM100_pc(v){const x=Math.round(v*1000)/10;return (x%1?x.toFixed(1):String(x))+'%'}
@@ -19730,7 +19734,7 @@ function FSM100_tags(c,i){const t=[];if(i<2)t.push(`<span class="fsm-tag act" ti
 function FSM100_withCat(cat,fn){const f0=fCat;fCat=cat||'';try{return fn()}finally{fCat=f0}}
 // measure a clone as if it stood in a's party slot
 function FSM100_snap(c,inSlotOf){const o=inSlotOf||c,i=party.indexOf(o);if(i>=0&&c!==o)party[i]=c;
-  try{ivFix(c);const st={},iv={};IVK.forEach(k=>{st[k]=Math.round(cStat(c,k));iv[k]=ivOf(c,k)});return {st,iv,ov:ovV(c),gs:c.gs||0,fz:c.fz||0,l:c.l,mods:(c.mods||[]).slice(),tr:c.tr||''}}
+  try{ivFix(c);const st={},iv={};const raw={};IVK.forEach(k=>{raw[k]=cStat(c,k);st[k]=Math.round(raw[k]);iv[k]=ivOf(c,k)});return {st,raw,iv,ov:ovV(c),gs:c.gs||0,fz:c.fz||0,l:c.l,mods:(c.mods||[]).slice(),tr:c.tr||''}}
   finally{if(i>=0&&c!==o)party[i]=o}}
 function FSM100_clone(c){return JSON.parse(JSON.stringify(c))}
 // can b be used up to improve a with this action? -> null (same companion) | {ok,why,need,v,gain,tag,k,warn[]}
@@ -19739,8 +19743,8 @@ function FSM100_check(a,b,act){
   if(i<2)warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
   if(b.evo)warn.push('Evolved '+'✦'.repeat(b.evo));if(b.shn)warn.push('Shiny');
   if(b.lock)return {ok:false,why:'Locked. Unlock it in the Companions window to use it up.',warn};
-  if(act=='con'){const g=conGainC(b);if(IVK.every(k=>ivOf(a,k)>=1.3))return {ok:false,why:'Wasted: every stat of '+FSM100_esc(a.n)+' is already at the maximum.',warn};
-    return {ok:true,gain:g,tag:'+'+FSM100_pc(g*.8)+'–'+FSM100_pc(g*1.2)+' all stats',warn}}
+  if(act=='con'){const g=conGainC(b),k=conKey(b);if(ivOf(a,k)>=1.3)return {ok:false,why:'Wasted: it would raise '+FSM100_SN[k]+', and '+FSM100_esc(a.n)+'’s is already at the maximum.',warn};
+    return {ok:true,gain:g,k,tag:IVS[k]+' +'+FSM100_pc(g*.8)+'–'+FSM100_pc(g*1.2),warn}}
   let need='';if(!FSM100_withCat('',()=>compat(a,b))){if((sup.c_bind||0)>0)need='c_bind';
     else return {ok:false,why:'Different family ('+famOf(b.g[0])+'). Needs a '+famOf(a.g[0])+' or a Universal companion, or Binding Salts.',warn}}
   const v=FSM100_withCat(need,()=>fuseVal(a,b)),pen=tierSp(a.g[0])>tierSp(b.g[0]);
@@ -19753,7 +19757,7 @@ function FSM100_check(a,b,act){
 // the outcome of an action, from the same formulas the confirm button runs: {lo,hi} snapshots (equal unless random)
 function FSM100_sim(a,b,act,k,cat){
   const f0=fCat;fCat=cat||'';try{ivFix(a);ivFix(b);const lo=FSM100_clone(a),hi=FSM100_clone(a),r={v:0,pen:false};
-    if(act=='con'){const g=conGainC(b);r.g=g;IVK.forEach(q=>{const o=ivOf(a,q);lo.iv[q]=Math.min(1.3,o+g*.8);hi.iv[q]=Math.min(1.3,o+g*1.2)});ivSync(lo);ivSync(hi)}
+    if(act=='con'){const g=conGainC(b),q=conKey(b),o=ivOf(a,q);r.g=g;r.k=q;lo.iv[q]=Math.min(1.3,o+g*.8);hi.iv[q]=Math.min(1.3,o+g*1.2);ivSync(lo);ivSync(hi)}
     else{const v=fuseVal(a,b);r.v=v;r.pen=tierSp(a.g[0])>tierSp(b.g[0])&&cat!='c_asc';
       if(act=='std'){lo.gs=hi.gs=(a.gs||0)+.06*v}
       else{const o=ivOf(a,k);lo.iv[k]=hi.iv[k]=o+(ivOf(b,k)-o)*Math.min(1,v);ivSync(lo);ivSync(hi)}
@@ -19901,7 +19905,7 @@ ${FSM100_grades(a)}</div></div></div>`}
 function FSM100_count(a,act){let ok=0,why='';const others=party.filter(c=>c!==a);
   others.forEach(b=>{const r=FSM100_check(a,b,act);if(r&&r.ok)ok++});
   if(!others.length)why='You have no other companion to use.';
-  else if(!ok){if(act=='con')why=IVK.every(k=>ivOf(a,k)>=1.3)?'Every stat is already at the maximum.':'Every other companion is locked.';
+  else if(!ok){if(act=='con')why=others.every(b=>b.lock)?'Every other companion is locked.':'The stats they would raise are already at the maximum.';
     else{const fam=others.filter(b=>FSM100_withCat('',()=>compat(a,b)));
       if(!fam.length)why='Needs another '+famOf(a.g[0])+' or a Universal companion.';else if(fam.every(b=>b.lock))why='Every matching partner is locked.';else why='No partner has a better stat roll to copy.'}}
   return {ok,why}}
@@ -19914,7 +19918,7 @@ function FSM100_mateHTML(){const S=FSM100,a=S.a,A=FSM100_ACT[S.act];
   const val=c=>ovV(c)*10+c.l*.05+(c.evo||0)+((c.runes||[]).length)*.5;
   const so={best:(x,y)=>y.r.gain-x.r.gain||val(x.c)-val(y.c),level:(x,y)=>x.c.l-y.c.l||y.r.gain-x.r.gain,grade:(x,y)=>ovV(x.c)-ovV(y.c),name:(x,y)=>x.c.n.localeCompare(y.c.n)}[S.sortB]||((x,y)=>y.r.gain-x.r.gain);
   ok.sort(so);no.sort((x,y)=>party.indexOf(x.c)-party.indexOf(y.c));
-  const lbl={std:'Growth',sip:'Best copy',con:'Each stat'}[S.act];
+  const lbl={std:'Growth',sip:'Best copy',con:'Raises'}[S.act];
   const row=(x,dis)=>{const r=x.r,w=r.warn.length?`<span class="fsm-w">⚠ ${r.warn.join(' · ')}</span>`:'';
     return FSM100_row(x.c,`data-fsm="b" data-i="${party.indexOf(x.c)}"`,dis?'':`<small>${lbl}</small><span class="fsm-gain">${r.tag}</span>`,dis?`<span class="fsm-why">✖ ${r.why}</span>`:w,dis)};
   return FSM100_tgtHTML(a)+`<div class="fsm-q">${A.i} ${A.n}: choose the companion to use up</div><div class="fsm-sub">${A.l} The partner you pick is <b>gone for good</b>. You see the exact result before anything happens.</div>
@@ -19923,9 +19927,15 @@ function FSM100_mateHTML(){const S=FSM100,a=S.a,A=FSM100_ACT[S.act];
    ${no.length?`<div class="fsm-sec bad">Can’t be used (${no.length})</div><div class="fsm-list">${no.map(x=>row(x,true)).join('')}</div>`:''}`}
 function FSM100_rng(lo,hi,f){f=f||(x=>x);return lo==hi?f(lo):f(lo)+'–'+f(hi)}
 function FSM100_d(d0,d1,f){f=f||(x=>x);const s=x=>(x>0?'+':x<0?'−':'±')+f(Math.abs(x));const c=d1>0?'up':d1<0||d0<0?'dn':'eq';return `<span class="${c}">${d0==d1?s(d0):s(d0)+' to '+s(d1).replace(/^\+/,'+')}</span>`}
+// v141: change for one stat. Whole numbers normally; a change under 2 points gets one decimal, because rounding would
+// show "±0" or "±0 to +1" for a real gain (48.0 → 48.4).
+function FSM100_dd(now,lo,hi,k){const b=now.st[k],x=lo.st[k],y=hi.st[k];
+  if(now.raw&&lo.raw&&hi.raw){const d0=lo.raw[k]-now.raw[k],d1=hi.raw[k]-now.raw[k],r=v=>Math.round(v*10)/10,m=Math.max(Math.abs(d0),Math.abs(d1));
+    if(m>=.05&&m<2)return FSM100_d(r(d0),r(d1),v=>v.toFixed(1))}
+  return FSM100_d(x-b,y-b)}
 function FSM100_table(now,lo,hi,hl){const gL=v=>FSM100_g(v);
   const rows=IVK.map(k=>{const b=now.st[k],x=lo.st[k],y=hi.st[k],g0=grade(now.iv[k])[1],g1=grade(lo.iv[k])[1],g2=grade(hi.iv[k])[1];
-    return `<tr class="${hl&&hl.includes(k)?'hl':''}"><td>${FSM100_SN[k]}</td><td>${b} ${gL(now.iv[k])}</td><td class="aft" data-k="${k}" data-lo="${x}" data-hi="${y}">${FSM100_rng(x,y)} ${g1==g2?gL(lo.iv[k]):gL(lo.iv[k])+'–'+gL(hi.iv[k])}</td><td>${FSM100_d(x-b,y-b)}${g1!=g0||g2!=g0?'<br><small>grade '+g0+' → '+(g1==g2?g1:g1+'–'+g2)+'</small>':''}</td></tr>`}).join('');
+    return `<tr class="${hl&&hl.includes(k)?'hl':''}"><td>${FSM100_SN[k]}</td><td>${b} ${gL(now.iv[k])}</td><td class="aft" data-k="${k}" data-lo="${x}" data-hi="${y}">${FSM100_rng(x,y)} ${g1==g2?gL(lo.iv[k]):gL(lo.iv[k])+'–'+gL(hi.iv[k])}</td><td>${FSM100_dd(now,lo,hi,k)}${g1!=g0||g2!=g0?'<br><small>grade '+g0+' → '+(g1==g2?g1:g1+'–'+g2)+'</small>':''}</td></tr>`}).join('');
   const o0=grade(now.ov)[1],o1=grade(lo.ov)[1],o2=grade(hi.ov)[1];
   return `<table class="fsm-t"><thead><tr><th>Stat</th><th>Now</th><th>After</th><th>Change</th></tr></thead><tbody>${rows}
    <tr><td>Overall grade</td><td>${gL(now.ov)}</td><td class="aft">${o1==o2?gL(lo.ov):gL(lo.ov)+'–'+gL(hi.ov)}</td><td>${o1==o0&&o2==o0?'<span class="eq">same</span>':'<span class="up">up</span>'}</td></tr></tbody></table>`}
@@ -19951,12 +19961,12 @@ function FSM100_prevHTML(){const S=FSM100,a=S.a,b=S.b,act=S.act,A=FSM100_ACT[act
     else if(own.some(k=>k!='c_bind'))h+=`<div class="fsm-sec">Catalyst (optional)</div><div class="fsm-chips"><button data-fsm="cat" data-k="" class="${!S.cat?'on':''}">None</button>${own.filter(k=>k!='c_bind').map(k=>{const dis=false;
       return `<button data-fsm="cat" data-k="${k}" class="${S.cat==k?'on':''}" ${dis?'disabled':''} title="${FSM100_esc(dis?'Not needed: they are the same family':SUP[k].d)}">${SUP[k].i} ${SUP[k].n} <small>×${sup[k]}${dis?' · not needed':''}</small></button>`}).join('')}</div>`}
   h+=`<div class="fsm-sec">Result for ${FSM100_name(a)}</div>`;
-  h+=FSM100_table(r.now,r.lo,r.hi,act=='sip'?[S.stat]:act=='con'?IVK:null);
+  h+=FSM100_table(r.now,r.lo,r.hi,act=='sip'?[S.stat]:act=='con'?[r.k]:null);
   const notes=[];
   if(act=='std'){const L=r.l50,dd=IVK.map(k=>L[1].st[k]-L[0].st[k]);
     notes.push(`<b>Growth per level: +${FSM100_pc(r.now.gs)} → <span style="color:var(--kq-good)">+${FSM100_pc(r.lo.gs)}</span></b> (no limit). ${a.l<=1?'At level 1 nothing changes yet; ':'The table shows it at level '+a.l+'; '}the gain grows with every level. At level ${L[2]}: ${IVK.map((k,i)=>FSM100_SN[k]+' +'+dd[i]).join(', ')}.`)}
   if(act=='sip')notes.push(`Copies ${r.v>=1?'all':Math.round(Math.min(1,r.v)*100)+'%'} of the gap between the two ${FSM100_SN[S.stat]} rolls.`);
-  if(act=='con')notes.push(`Every stat roll goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
+  if(act=='con')notes.push(`<b>${FSM100_SN[r.k]}</b> (the stat ${FSM100_esc(b.n)} is best at) goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). The other stats stay the same. Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
   if(act!='con'){if(r.pen)notes.push(`Half strength: ${FSM100_esc(b.n)} is a lower tier (T${fb.t}) than ${FSM100_esc(a.n)} (T${fa.t}).${(sup.c_asc||0)>0?' An Ascendant Tincture removes this.':''}`);
     notes.push(`Stars ${FSM100_stars(a)||'none'} → ${'★'.repeat(Math.min(5,r.lo.fz))}${r.lo.fz>5?'×'+r.lo.fz:''} · keeps level ${a.l} · fully healed.`);
     const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));
