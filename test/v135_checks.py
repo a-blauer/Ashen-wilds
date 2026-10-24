@@ -36,10 +36,10 @@ JS=r"""async()=>{const F=[],out={},sleep=ms=>new Promise(r=>setTimeout(r,ms)),V3
  {try{if(party.length){openCmp(false);CE.hat={c:party[0],egg:{},done:true};hAct=true;hq.length=0;rC();const b=$('cl').querySelector('button[data-i]');if(!b)F.push('no list button');else{$('cl').onclick({target:b});if(CE.hat||hAct)F.push('hatch reveal still blocks the list')}$('cmp').classList.add('hide')}}catch(e){F.push('hatch '+e)}}
  // ---- monsters fall over and fade ----
  console.log('V135 step: monsters fall over and fade');
- {let e=null;for(let i=0;i<20&&!e;i++){e=enemies.find(q=>!q.dead&&!q.boss&&q.m&&q.m.parent&&q.m.b&&!q.m._ssr);if(!e)await sleep(500)}await sleep(800);out.nEn=enemies.length;if(!e)F.push('no enemy to kill');else{const y0=e.m.position.y,s0=e.m.scale.x;e.c.h=0;kill(e);e.dead=true;await sleep(900);
+ {let e=null;for(let i=0;i<20&&!e;i++){e=enemies.find(q=>!q.dead&&!q.boss&&q.m&&q.m.parent&&q.m.b&&!q.m._ssr);if(!e)await sleep(500)}await sleep(800);out.nEn=enemies.length;if(!e)F.push('no enemy to kill');else{let nm=0;e.m.traverse(o=>{if(o.isMesh)nm++});console.log('V135 step: killing '+(e.c.ek||e.c.k||e.c.n||e.c.sp)+' '+(e.c.sp||'')+' ('+nm+' meshes)');const y0=e.m.position.y,s0=e.m.scale.x;e.c.h=0;kill(e);e.dead=true;console.log('V135 step: killed, falling');await sleep(900);console.log('V135 step: fell, waiting for the fade');
    out.deathY=+(e.m.position.y-y0).toFixed(2);out.roll=+e.m.b.rotation.z.toFixed(2);if(e.m.position.y-y0>.2)F.push('body floats up '+out.deathY);if(Math.abs(e.m.scale.x-(e.m.bs||s0))>1e-3)F.push('body shrinks '+e.m.scale.x+' vs '+e.m.bs);if(Math.abs(e.m.b.rotation.z)<1)F.push('body did not fall over '+out.roll);
    await sleep(1800);let fading=false;e.m.traverse(o=>{if(o.material&&o.material.transparent&&o.material.userData&&o.material.userData.d135&&o.material.opacity<1)fading=true});if(!fading&&e.m.parent)F.push('no fade');
-   await sleep(1500);if(e.m.parent)F.push('body not removed')}}
+   console.log('V135 step: fading');await sleep(1500);if(e.m.parent)F.push('body not removed')}}
  // ---- the ability preview pins the world's hero ----
  console.log('V135 step: the ability preview pins the worlds hero');
  {const P=pl.position.clone(),saved=ABX.on,sw=ABX.w,sc=ABX.ctx;let seen=null;const aw=abxWatch;abxWatch=()=>{};const tt=townTick;townTick=function(n,p){if(!seen)seen=p.clone();return tt.apply(this,arguments)};
