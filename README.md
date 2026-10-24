@@ -372,7 +372,18 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     bind; after the build `fk140Deform` moves every vertex with its bones (skin-weight blend): lean and shoulders are offsets,
     the head and ear bones get one matrix (`fk140Xf`: scale about the top of the neck, then forward / down), so hats and horns
     follow and the neck bends smoothly. Ear bones are moved by the same matrix.
-  * Skull: `fk140SN` (same ring format as `fkSN`): smaller lower occiput, brow ridge, stop, fuller cheeks, softer muzzle blend.
+  * Heads are sculpted per species (`2962` engine, `2963` recipes; owner's request: shaped freely, in the heroes' style).
+    A recipe (`D.sculpt`) is anatomy as distance functions — ellipsoids (`FKH.E`: brain case, brow, cheekbones, whisker pads,
+    nose pad), round cones (`FKH.RC`: muzzle, lower jaw, snout), spheres carved out (`sub`: eye sockets), smooth unions (`k`),
+    mirrored — in head-local metres from `FKS.C0` (+z forward). `fksLoft` meshes it like the heroes' skulls: rings from the back
+    of the skull to the nose (rays from each slice's centre find the surface), 14 sides, flat facets; `paint(p, n, C)` colours
+    each quad (so pattern edges follow the facets). The recipe also gives the eye (`eye.c` centre, `eye.g` gaze, `eye.r`), the ear
+    base (sunk 9 mm under the sculpt, `earSink`), the neck's attachment (`neck` [y, z, r]), whisker rows and `extra` parts
+    (teeth, tusks, horns, beards, wool; `extra(){}` drops the v137 `face`). `fksSetup` measures `D.SN` from the sculpt, so hats,
+    coifs, goggles, antlers and wool fit. `mesher:'nets'` gives the smooth surface-nets mesh instead (not used).
+    Eyes on sculpted heads (`fk140Eyes`): an almond with a bright iris and the species' pupil, a level brow line above (calm,
+    not angry, per the owner), `eye.round` for round eyes (owl), `eye.slant` / `open` / `brow` per species.
+  * Species without a recipe use `fk140SN` (same ring format as `fkSN`): lower occiput, brow ridge, stop, fuller cheeks.
   * Neck (`fk140Neck`, inside `fk140Head` which replaces `fkHead` for v140 species): from the collar to the back-lower skull,
     slimmer than the head, the throat filling up to the jaw.
   * Eyes (`fk140Eyes` replaces `brEyes` for the folk): at the stop above the muzzle line (prey further back and out), aimed
@@ -383,6 +394,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     more ring weighted to the foot bone so the foot never parts from the shin. Whiskers root per whisker (`fk140Whiskers`).
   * Fixed with it (v137 floating bits): deer nostrils, belt buckle and hip pouch now sit on the body; wolf / lynx cheek ruffs
     grow from the cheek (`fk140Ruff`).
+  * Torso lean is a shear by each vertex's height (pieces on one torso bone move with the cloth that blends two). Trinkets rest
+    on what is built: `fk140Hug(B, P, y, a, off)` casts a ray at the body and returns the first surface (clothes included) —
+    buttons (`FKG.buttons` for the folk), chains, cords, pendants, rune stones, keys. Skirts and aprons start on the waist
+    (`FKG.skirt` clearance 4 mm, apron 6 mm; they used to hang 16–20 mm off it); boots have a thin sole shell.
   * `FK140.on=false` builds the v137 models; `FK140.reset(key, A)` re-tunes a species while the game runs.
   Test: `v140_folk.py` (every species and keeper + 6 citizens; FAIL on a floating piece — any separate piece of mesh more than
   4 mm from the body that does not pierce it and is not enclosed by it — in rest, idle, two walk phases and the work pose, feet
