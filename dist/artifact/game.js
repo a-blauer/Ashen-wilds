@@ -35158,7 +35158,10 @@ var BAL138={vol:null,dup:.3,EXEMPT:{'Arcane Missiles':1}};
   try{return f.apply(this,arguments)}finally{BAL138.vol=o}}}
 {const f=launch;launch=function(pos,d,spd,s){if(BAL138.vol&&s&&typeof s=='object'&&!s.basic&&!s.cc&&!s.vol){const a=[].slice.call(arguments);a[3]=Object.assign({},s,{vol:BAL138.vol});return f.apply(this,a)}return f.apply(this,arguments)}}
 var BAL138_EVO={};
-{const f=kqrP;kqrP=function(s){const k=f.apply(this,arguments);return s&&s.ev137&&BAL138_EVO[s.n]!=null?k*BAL138_EVO[s.n]:k}}
+// per class, on every evolved cast: evolutions add the same per ability, but a class whose basic attacks carry more of its
+// damage (warrior, paladin) gains less from them in a fight; this keeps the five classes even with every ability evolved
+var BAL138_EVOC={warrior:1,paladin:1,assassin:1,ranger:1,mage:1};
+{const f=kqrP;kqrP=function(s){let k=f.apply(this,arguments);if(s&&s.ev137){if(BAL138_EVO[s.n]!=null)k*=BAL138_EVO[s.n];const c=hero&&BAL138_EVOC[hero.cls];if(c&&kqrOwn(s))k*=c}return k}}
 
 // 2. Base forms: KQR_TUNE (the v90 per-ability damage factor; it scales everything the cast does). Old values in the comment.
 Object.assign(KQR_TUNE,{
