@@ -36,7 +36,7 @@ JS=COMMON+r"""(a)=>{const [list,poses,nosheet,old]=a,V=THREE.Vector3,FW=300,FH=3
         const ctr=new V(0,.98,0);shot([0,.12,1],ctr,3.9,'front');shot([1,.1,0],ctr,3.9,'side');
         const k=g.bones.pelvis.scale.x;let hc,sz;if(D&&D._xf140){const S=D.SN,zA=S[0][0],zT=S[S.length-1][0];hc=new V(0,D.hp.yc||1.158,(zA+zT)/2).applyMatrix4(D._xf140).multiplyScalar(k);sz=(zT-zA)*it.hs*k}
         else{hc=g.bones.head.getWorldPosition(new V()).add(new V(0,.13*k,.03*k));sz=.26*k}
-        shot([.6,.12,1],hc,sz*2.9,'head 3/4');shot([1,.06,.02],hc,sz*2.9,'head side')}
+        shot([0,.1,1],hc,sz*2.9,'head front');shot([.6,.12,1],hc,sz*2.9,'head 3/4');shot([1,.06,.02],hc,sz*2.9,'head side')}
       if(poses.includes('walk')){g.userData.rest=g.userData.rest||czRest103(g);[[1.2,'walkA'],[4.3,'walkB']].forEach(([ph,nm])=>{czWalkPose103(g,ph,1);g.updateMatrixWorld(true);it.poses[nm]=geo(g)});czReset103(g)}
       if(poses.includes('work')&&q.wk&&work(g,q.wk)){tick(g,1900,T=>idlNpc(g,T));const tl=g._wk.tool;if(tl)g.remove(tl);it.poses.work=geo(g);unwork(g)}}
     catch(e){it.err='pose error '+e}
@@ -182,7 +182,7 @@ def s(pg):
                 if not nos:cells.append((lab,it['shots']))
         if not nos and cells:
             for si in range(0,len(cells),6):
-                ch=cells[si:si+6];W=300;sh=Image.new('RGB',(W*4,W*len(ch)),(38,42,48));d=ImageDraw.Draw(sh)
+                ch=cells[si:si+6];W=300;sh=Image.new('RGB',(W*max(len(c[1]) for c in ch),W*len(ch)),(38,42,48));d=ImageDraw.Draw(sh)
                 for ri,(lab,shots) in enumerate(ch):
                     for ci,(l,u) in enumerate(shots):
                         im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,(ci*W,ri*W));d.rectangle([ci*W,ri*W,ci*W+len(lab+' · '+l)*7+8,ri*W+16],fill=(0,0,0));d.text((ci*W+4,ri*W+2),(lab+' · '+l) if ci==0 else l,fill=(255,255,255))

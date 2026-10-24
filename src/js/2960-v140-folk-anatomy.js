@@ -65,10 +65,10 @@ function fk140Eyes(k,D,o,A){const C=BR.C,E=A.eye||{},F0=D._eye140||(D._eye140=fk
     const qq=q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new V(1,0,0),roll||0)),e=new THREE.Euler().setFromQuaternion(qq);
     k.p('head',geo,t,col,p.x,p.y,p.z,sx,sy,sz,e.x,e.y,e.z);k.p('head',geo,t,col,-p.x,p.y,p.z,sx,sy,sz,e.x,-e.y,-e.z)};
   const iris=E.col?E.col(C):C.EYE,pc=E.pupilCol||0x070505;
-  const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.62,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);                                  // dark rim
+  const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.82,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);  // dark rim: behind the iris's front, so it shows as a ring                                  // dark rim
   put('sph2','c',iris,-r*.66,0,r*.04,r,r*.93,r*1.08,tl);                                         // eye (iris fills it)
   const pr=r*.42;if(FK140E.slit[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*1.7,pr*.38);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*.42,pr*1.6);else put('sph2','c',pc,r*.36,0,0,.0012,pr,pr);
-  put('sph2','c',E.lidCol?E.lidCol(C):C.FUR,-r*.7,r*(E.lid==null?1.12:E.lid),0,r*1.08,r*.45,r*1.3,tl);                // upper lid
+  if(E.lid!=null||!D.sculpt)put('sph2','c',E.lidCol?E.lidCol(C):C.FUR,-r*.7,r*(E.lid==null?1.12:E.lid),0,r*1.08,r*.45,r*1.3,tl); // upper lid (sculpted heads have a socket instead)
   put('box','c',0xf2eee6,r*.38,r*.28,r*.24,.0012,.0019*r/.0112,.0019*r/.0112)}                  // glint
 {const f=brEyes;brEyes=function(k,D,o){const A=FK140.cur;if(A&&FK140.D===D)return fk140Eyes(k,D,o||{},A);return f.apply(this,arguments)}}
 // ---------------- feet: from the raised hock down to the ball of the foot ----------------
