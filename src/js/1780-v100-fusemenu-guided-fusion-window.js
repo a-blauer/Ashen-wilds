@@ -37,7 +37,7 @@ function FSM100_picPoll(){clearTimeout(FSM100.poll);if($('fz').classList.contain
   document.querySelectorAll('#fsmB .fsm-pic[data-pk]:not([data-pk=""])').forEach(el=>{const p=CPIC&&CPIC.cache[el.dataset.pk];if(p){el.innerHTML=`<img src="${p}" alt="">`;el.dataset.pk=''}else if(p!=='')left++});
   if(left)FSM100.poll=setTimeout(FSM100_picPoll,350)}
 function FSM100_grades(c){ivFix(c);return `<span class="fsm-gs">${IVK.map(k=>{const g=grade(ivOf(c,k));return `<span title="${FSM100_SN[k]}: grade ${g[1]}"><small>${IVS[k]}</small><b style="--g:${g[2]}">${g[1]}</b></span>`}).join('')}</span>`}
-function FSM100_tags(c,i){const t=[];if(i<2)t.push(`<span class="fsm-tag act" title="In your active team (slot ${i+1})">Team ${i+1}</span>`);
+function FSM100_tags(c,i){const t=[];if(i<actN141())t.push(`<span class="fsm-tag act" title="In your active team (slot ${i+1})">Team ${i+1}</span>`);
   if(c.lock)t.push('<span class="fsm-tag lk" title="Locked: it can be improved, but never used up">🔒 Locked</span>');
   if(c.tr=='Universal')t.push('<span class="fsm-tag un" title="Universal: can fuse or siphon with any family">✦ Universal</span>');
   if(c.h<=0)t.push('<span class="fsm-tag dn">Fainted</span>');return t.join('')}
@@ -50,7 +50,7 @@ function FSM100_clone(c){return JSON.parse(JSON.stringify(c))}
 // can b be used up to improve a with this action? -> null (same companion) | {ok,why,need,v,gain,tag,k,warn[]}
 function FSM100_check(a,b,act){
   if(!a||!b||a===b)return null;ivFix(a);ivFix(b);const i=party.indexOf(b),warn=[];
-  if(i<2)warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
+  if(i<actN141())warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
   if(b.evo)warn.push('Evolved '+'✦'.repeat(b.evo));if(b.shn)warn.push('Shiny');
   if(b.lock)return {ok:false,why:'Locked. Unlock it in the Companions window to use it up.',warn};
   if(act=='con'){const g=conGainC(b),k=conKey(b);if(ivOf(a,k)>=1.3)return {ok:false,why:'Wasted: it would raise '+FSM100_SN[k]+', and '+FSM100_esc(a.n)+'’s is already at the maximum.',warn};
@@ -253,7 +253,7 @@ function FSM100_lossHTML(a,b,act,cat){const it=[],i=party.indexOf(b);
   it.push(`Level ${b.l}${b.evo?', evolution '+'✦'.repeat(b.evo):''}${b.tal&&Object.keys(b.tal).length?', its talents':''}`);
   if((b.mods||[]).length)it.push('Modifiers: '+b.mods.map(m=>(MODS[m]?MODS[m].i+' ':'')+m).join(', ')+(act!='con'?' (one may pass on, see above)':''));
   if(b.runes&&b.runes.length)it.push('Socketed rune'+(b.runes.length>1?'s':'')+': '+b.runes.map(r=>RUNES[r]?RUNES[r][1]+' '+RUNES[r][0]:r).join(', ')+' (lost with it)');
-  if(i<2)it.push(`It is in your active team (slot ${i+1}); ${party.length>2?'your next reserve companion takes its place':'your team will have one companion less'}`);
+  if(i<actN141())it.push(`It is in your active team (slot ${i+1}); ${party.length>2?'your next reserve companion takes its place':'your team will have one companion less'}`);
   if(b.tr=='Universal')it.push('Its ✦ Universal trait');
   if(cat&&SUP[cat])it.push(`Also used: 1 × ${SUP[cat].i} ${SUP[cat].n} (you have ${sup[cat]||0})`);
   return `<div class="fsm-loss"><b class="h">⚠ ${FSM100_name(b)} will be used up — gone for good</b>You lose:<ul>${it.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`}

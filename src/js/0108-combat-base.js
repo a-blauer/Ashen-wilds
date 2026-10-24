@@ -59,8 +59,8 @@ addEventListener('keydown',e=>{
   if(k=='tab'&&!uiOpen()){selectTarget();return}
   {const tw={i:'bag',p:'cmp',u:'inc',g:'fz',n:'wmap',o:'setw',c:'tal',h:'xw',j:'xw'}[k];if(tw&&!$(tw).classList.contains('hide')){$(tw).classList.add('hide');return}}
   if(uiOpen())return;
-  if(k>='1'&&k<='4')cast(+k-1);
-  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')drink();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
+  if(k>='1'&&k<='6')cast(+k-1);
+  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')feedLowest141();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drink();if(k=='x'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
 });
 addEventListener('keyup',e=>{K[e.key.toLowerCase()]=0});
 $('wmClose').onclick=()=>$('wmap').classList.add('hide');

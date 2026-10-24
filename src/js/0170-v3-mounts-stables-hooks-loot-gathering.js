@@ -96,7 +96,7 @@ function gFinish(tg){
 function hud(){
   hud_base();if(!$('acts'))return;$('bbar').classList.toggle('hide',false);
   {const cd=hero.cdM||0,mm=mOf(mActive)||mounts[0];
-    $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (Z)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">Z</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
+    $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (X)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">X</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
       (mm?`<button class="hs" data-x="v" title="${riding?'Dismount':'Ride '+mm.n} (V)"><span class="ic">${riding?'⏏️':MOUNTS[mm.k].i}</span><span class="kb">V</span><span class="sb">${riding?'off':mm.spd}</span><span class="cdv" style="height:0"></span></button>`:''))}
   const now=performance.now(),tp=tpFree();
   $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+(riding?`<span class="bf" title="Riding ${riding.n}">🐎 +${riding.spd}%</span>`:'')+hero.buffs.filter(b=>b.t>now&&!b.perm).map(b=>`<span class="bf${b.food?' fd':b.elix?' ex':''}" title="${b.n}${b.d?': '+b.d:''}">${b.i||'✨'} ${fmtT(b.t-now)}</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');

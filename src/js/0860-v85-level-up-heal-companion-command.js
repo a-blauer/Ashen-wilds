@@ -8,7 +8,7 @@ function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position
   enemies.forEach(e=>{if(e.dead)return;const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z),L=v.length();if(L>=bd)return;if(L>2&&v.dot(d)/L<.2)return;bd=L;b=e});return b}
 function commandAttack(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
-  const act=party.slice(0,2).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
+  const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
   const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
@@ -119,7 +119,7 @@ const conGainC=b=>consGain(Math.max(0,tierSp(b.g[0])-1))*(1+Math.min(.5,(b.l-1)/
 function conKey(b){ivFix(b);let k=IVK[0];IVK.forEach(q=>{if(ivOf(b,q)>ivOf(b,k)+1e-9)k=q});return k}
 function conHTML(a){const L=party.filter(c=>c&&c!==a);
   return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on one base stat: the one the eaten companion has its best roll in; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
-  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
+  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<actN141();return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
 {const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion to boost its best stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
 {const f=rF;rF=function(){f.apply(this,arguments);try{const a=sel.length>=1?party[sel[0]]:null;if(fCon&&(!party.includes(fCon)||fCon===a||fCon.lock))fCon=null;const d=$('doF');
   if(a&&fOpt=='con'&&d){d.disabled=!fCon;d.textContent=fCon?'🍽️ Consume '+fCon.n:'🍽️ Consume'}}catch(_){}}}

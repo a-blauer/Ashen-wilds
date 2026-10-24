@@ -29,7 +29,7 @@ function heroTick(dt,now){
   if(hero.mp==null)hero.mp=mm;hero.mp=Math.min(mm,hero.mp+dt*mm*(.012+s.mpr));
   const inCombat=now-hero.lastHit<6000||enemies.some(e=>e.agg&&!e.dead&&d2(e.m.position,pl.position)<12);
   if(!inCombat)hero.hp=Math.min(mx,hero.hp+dt*mx*.03);else if(s.regen)hero.hp=Math.min(mx,hero.hp+dt*mx*s.regen);
-  party.slice(0,2).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em)return;
+  party.slice(0,actN141()).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em)return;
     if(em.k=='regen')hero.hp=Math.min(mx,hero.hp+dt*mx*em.v);
     else if(em.k=='shield'||em.k=='healp'||em.k=='pulse'){c.eT=(c.eT||0)-dt;if(c.eT<=0){c.eT=em.cd;
       if(em.k=='shield'){hero.sh=Math.max(hero.sh,mx*em.v*(1+s.shieldP));hero.shT=now+8000;ring(pl.position,0xc0b090,2,500)}
@@ -171,11 +171,11 @@ function hud_base(){
   $('goldT').textContent='🪙 '+gold;
   const slot=(x,ic,kb,cd,mx,sub,dim,tt)=>`<button class="hs" data-x="${x}" title="${tt||''}" ${cd>0?'disabled':''} ${dim?'style="opacity:.5"':''}><span class="ic">${ic}</span><span class="kb">${kb}</span><span class="sb">${sub||''}</span><span class="cdv" style="height:${mx?Math.min(100,100*cd/mx):0}%"></span></button>`;
   const dsh=Math.floor(hero.dc||0);
-  $('acts').innerHTML=(slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Q',hero.cdP||0,9,'×'+pots));
+  $('acts').innerHTML=(slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Z',hero.cdP||0,9,'×'+pots,0,'Health Potion (Z)'));
   const bs=enemies.find(e=>e.boss&&!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<30);
   $('boss').classList.toggle('hide',!bs||!!tgt);if(bs){$('bossN').textContent=bs.c.n+' · Lv '+bs.c.l;$('bossB').style.width=Math.max(0,100*bs.c.h/M(bs.c))+'%'}
   $('areaT').textContent=areaName();
-  $('act').innerHTML=party.slice(0,2).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
+  $('act').innerHTML=party.slice(0,actN141()).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
   const now=performance.now(),tp=tpFree();
   $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
 }

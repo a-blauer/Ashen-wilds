@@ -35,8 +35,8 @@ const FOOD=[
  ['f_feast',"Hunter's Feast",'🍱',{meat:2,fish:1,pumpkin:1,carrot:2,wheat:2},2,{hpP:.1,paP:.08,maP:.08,pdP:.08,mdP:.08},'+10% health, +8% attack and defense',25]
 ];
 const ALCH=[
- ['p_hp','Health Potion','🧪',{sunleaf:2,glowcap:1},2,null,'Heals 40% health (Q)'],
- ['p_mp','Mana Potion','🫙',{moonpetal:2,crystal:1},2,null,'Restores 50% mana (Z)'],
+ ['p_hp','Health Potion','🧪',{sunleaf:2,glowcap:1},2,null,'Heals 40% health (Z)'],
+ ['p_mp','Mana Potion','🫙',{moonpetal:2,crystal:1},2,null,'Restores 50% mana (X)'],
  ['e_might','Elixir of Might','⚗️',{emberroot:2,pepper:1,crystal:1},1,{paP:.15,maP:.15},'+15% physical & magical attack for 10 min',10],
  ['e_stone','Stoneskin Elixir','🗿',{frostcap:2,stone:4},1,{pdP:.2,mdP:.2},'+20% physical & magical defense for 10 min',10],
  ['e_swift','Swiftness Draught','💨',{sunleaf:2,petals:3},1,{mspd:.12,as:.08},'+12% move speed, +8% attack speed for 10 min',10],

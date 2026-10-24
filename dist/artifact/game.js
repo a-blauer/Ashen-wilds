@@ -1817,7 +1817,7 @@ function featTick(dt,now,al){
     else{rec.hp=hero.hp;rec.t+=dt;if(rec.t>=rec.need){rec=null;fadeTo(recallTown)}}
   }
   $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+(INSL[INST.r]?INSL[INST.r].n:'zone')+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')};
-  const emo=party.slice(0,2).some(c=>c.emp&&c.h>0);
+  const emo=party.slice(0,actN141()).some(c=>c.emp&&c.h>0);
   if(pl.mat){pl.mat.emissive.setHex(emo?0xffc04a:0);pl.mat.emissiveIntensity=emo?.28+.1*Math.sin(now/300):0}
   if(emo&&dt>0){if(Math.random()<.3)burst(V(pl.position.x+(Math.random()-.5)*.6,.2,pl.position.z+(Math.random()-.5)*.6),0xffd24a,1,.2,.9,.9);if(now%800<dt*1000)ring(pl.position,0xffd24a,1.6,600)}
 }
@@ -1835,7 +1835,7 @@ $('prompt').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
 function sync(){
   if(!party.length)return;
   for(let i=0;i<2;i++){
-    const c=party[i];
+    const c=i<actN141()?party[i]:null; // v141: the 2nd companion rests until the Companion Bond is learned
     if(!c){if(fols[i]){scene.remove(fols[i]);fols[i]=null;leadK[i]=''}continue}
     const k=c.n+c.f+c.v+c.g.join()+c.cl.join()+c.tr+'|'+(c.evo||0);if(k==leadK[i])continue;leadK[i]=k;
     const old=fols[i],g=cr(c);g.position.copy(old?old.position:V(pl.position.x-1-i,0,pl.position.z));scene.add(g);if(old)scene.remove(old);fols[i]=g;
@@ -2049,8 +2049,8 @@ addEventListener('keydown',e=>{
   if(k=='tab'&&!uiOpen()){selectTarget();return}
   {const tw={i:'bag',p:'cmp',u:'inc',g:'fz',n:'wmap',o:'setw',c:'tal',h:'xw',j:'xw'}[k];if(tw&&!$(tw).classList.contains('hide')){$(tw).classList.add('hide');return}}
   if(uiOpen())return;
-  if(k>='1'&&k<='4')cast(+k-1);
-  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')drink();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
+  if(k>='1'&&k<='6')cast(+k-1);
+  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')feedLowest141();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drink();if(k=='x'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
 });
 addEventListener('keyup',e=>{K[e.key.toLowerCase()]=0});
 $('wmClose').onclick=()=>$('wmap').classList.add('hide');
@@ -2215,7 +2215,7 @@ const CLS={
    base:{hp:88,mp:90,pa:4,ma:13,pd:4,md:9},per:{hp:15.5,mp:6,pa:.6,ma:4.1,pd:1.2,md:2.3},rng:11,spd:.72,crit:.08,cape:[40,60,130],tunic:0x3a3a7a,pants:[40,40,70],sk:[225,190,160],st:'Magic power · Mana'}
 };
 const CLSK=Object.keys(CLS);
-// ---------------- class skills (keys 1-4, unlocked by character level) ----------------
+// ---------------- class skills (keys 1-6, unlocked by character level) ----------------
 const SKL={
  warrior:[
   {n:'Cleave',i:'🪓',lv:1,k:'cone',m:2.0,cd:5,mp:8,r:3.2,col:0xffb070,d:'A wide sweeping strike in front of you.'},
@@ -2462,7 +2462,7 @@ function HS_base(){
   const add=o=>{for(const k in o){if(k in P)P[k]+=o[k];else if(k!='dash3')s[k]=(s[k]||0)+o[k]}};
   SLOTS.forEach(k=>{const it=eq[k];if(it&&canUse(it))add(itStats(it))});
   add(T);if(talRank('a14')>=3)s.dash+=1;
-  party.slice(0,2).forEach(c=>{if(!c||c.h<=0)return;
+  party.slice(0,actN141()).forEach(c=>{if(!c||c.h<=0)return;
     (c.mods||[]).forEach(m=>{const Mo=MODS[m];if(Mo.t)add(Mo.t);if(c.emp&&Mo.e)add(Mo.e)});
     if(c.emp){const k=.24*(1+(T.empP||0));s.hp+=cM(c)*k;s.pa+=cStat(c,'pa')*k;s.ma+=cStat(c,'ma')*k;s.pd+=cStat(c,'pd')*k;s.md+=cStat(c,'md')*k;
       (c.sp||[]).forEach(n=>{const sp=CSP[n];if(sp&&sp.emp&&sp.emp.k=='stat')add(sp.emp.s)})}});
@@ -2507,7 +2507,7 @@ function heroHit_base(e,raw,mt,o){
     const now=performance.now(),atk=atkOf(mt||heroMt());
     if(s.poisonOn||hero.buffs.some(b=>b.t>now&&b.s.poisonOn))eStatus(e,{poison:4},atk*.35*(1+s.poisonP));
     if(s.slowOn&&Math.random()<s.slowOn)eStatus(e,{slow:2.5},0);
-    party.slice(0,2).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em||em.k!='onhit'||Math.random()>em.ch)return;
+    party.slice(0,actN141()).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em||em.k!='onhit'||Math.random()>em.ch)return;
       if(em.fx=='zap'){chainFrom(e,atk*.5,'m',2,0xfff06a,null);return}eStatus(e,{[em.fx]:em.fx=='root'?1.5:3},atk*.3)})});
     if(o.s&&o.s.stun)eStatus(e,{stun:o.s.stun},0,'h');if(o.s&&o.s.burn)eStatus(e,{burn:4},atk*.3);
   }
@@ -2588,7 +2588,7 @@ function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
 }
 function heroLevelUp(){
@@ -2699,7 +2699,7 @@ function heroTick(dt,now){
   if(hero.mp==null)hero.mp=mm;hero.mp=Math.min(mm,hero.mp+dt*mm*(.012+s.mpr));
   const inCombat=now-hero.lastHit<6000||enemies.some(e=>e.agg&&!e.dead&&d2(e.m.position,pl.position)<12);
   if(!inCombat)hero.hp=Math.min(mx,hero.hp+dt*mx*.03);else if(s.regen)hero.hp=Math.min(mx,hero.hp+dt*mx*s.regen);
-  party.slice(0,2).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em)return;
+  party.slice(0,actN141()).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em)return;
     if(em.k=='regen')hero.hp=Math.min(mx,hero.hp+dt*mx*em.v);
     else if(em.k=='shield'||em.k=='healp'||em.k=='pulse'){c.eT=(c.eT||0)-dt;if(c.eT<=0){c.eT=em.cd;
       if(em.k=='shield'){hero.sh=Math.max(hero.sh,mx*em.v*(1+s.shieldP));hero.shT=now+8000;ring(pl.position,0xc0b090,2,500)}
@@ -2841,11 +2841,11 @@ function hud_base(){
   $('goldT').textContent='🪙 '+gold;
   const slot=(x,ic,kb,cd,mx,sub,dim,tt)=>`<button class="hs" data-x="${x}" title="${tt||''}" ${cd>0?'disabled':''} ${dim?'style="opacity:.5"':''}><span class="ic">${ic}</span><span class="kb">${kb}</span><span class="sb">${sub||''}</span><span class="cdv" style="height:${mx?Math.min(100,100*cd/mx):0}%"></span></button>`;
   const dsh=Math.floor(hero.dc||0);
-  $('acts').innerHTML=(slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Q',hero.cdP||0,9,'×'+pots));
+  $('acts').innerHTML=(slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Z',hero.cdP||0,9,'×'+pots,0,'Health Potion (Z)'));
   const bs=enemies.find(e=>e.boss&&!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<30);
   $('boss').classList.toggle('hide',!bs||!!tgt);if(bs){$('bossN').textContent=bs.c.n+' · Lv '+bs.c.l;$('bossB').style.width=Math.max(0,100*bs.c.h/M(bs.c))+'%'}
   $('areaT').textContent=areaName();
-  $('act').innerHTML=party.slice(0,2).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
+  $('act').innerHTML=party.slice(0,actN141()).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
   const now=performance.now(),tp=tpFree();
   $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
 }
@@ -3204,8 +3204,8 @@ const FOOD=[
  ['f_feast',"Hunter's Feast",'🍱',{meat:2,fish:1,pumpkin:1,carrot:2,wheat:2},2,{hpP:.1,paP:.08,maP:.08,pdP:.08,mdP:.08},'+10% health, +8% attack and defense',25]
 ];
 const ALCH=[
- ['p_hp','Health Potion','🧪',{sunleaf:2,glowcap:1},2,null,'Heals 40% health (Q)'],
- ['p_mp','Mana Potion','🫙',{moonpetal:2,crystal:1},2,null,'Restores 50% mana (Z)'],
+ ['p_hp','Health Potion','🧪',{sunleaf:2,glowcap:1},2,null,'Heals 40% health (Z)'],
+ ['p_mp','Mana Potion','🫙',{moonpetal:2,crystal:1},2,null,'Restores 50% mana (X)'],
  ['e_might','Elixir of Might','⚗️',{emberroot:2,pepper:1,crystal:1},1,{paP:.15,maP:.15},'+15% physical & magical attack for 10 min',10],
  ['e_stone','Stoneskin Elixir','🗿',{frostcap:2,stone:4},1,{pdP:.2,mdP:.2},'+20% physical & magical defense for 10 min',10],
  ['e_swift','Swiftness Draught','💨',{sunleaf:2,petals:3},1,{mspd:.12,as:.08},'+12% move speed, +8% attack speed for 10 min',10],
@@ -3404,7 +3404,7 @@ function gFinish(tg){
 function hud(){
   hud_base();if(!$('acts'))return;$('bbar').classList.toggle('hide',false);
   {const cd=hero.cdM||0,mm=mOf(mActive)||mounts[0];
-    $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (Z)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">Z</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
+    $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (X)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">X</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
       (mm?`<button class="hs" data-x="v" title="${riding?'Dismount':'Ride '+mm.n} (V)"><span class="ic">${riding?'⏏️':MOUNTS[mm.k].i}</span><span class="kb">V</span><span class="sb">${riding?'off':mm.spd}</span><span class="cdv" style="height:0"></span></button>`:''))}
   const now=performance.now(),tp=tpFree();
   $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+(riding?`<span class="bf" title="Riding ${riding.n}">🐎 +${riding.spd}%</span>`:'')+hero.buffs.filter(b=>b.t>now&&!b.perm).map(b=>`<span class="bf${b.food?' fd':b.elix?' ex':''}" title="${b.n}${b.d?': '+b.d:''}">${b.i||'✨'} ${fmtT(b.t-now)}</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
@@ -4511,7 +4511,7 @@ const runeOf=(c,f)=>(c.runes||[]).map(k=>RUNES[k]&&RUNES[k][3]).filter(Boolean);
 function runeEl(c){const r=runeOf(c).find(q=>q.el);return r?r.el:null}
 function runeMul(c,k){let m=1;runeOf(c).forEach(q=>{if(q[k])m*=q[k]});return m}
 function runeHit(c,d){const l=runeOf(c).find(q=>q.leech);if(l&&c.h>0)c.h=Math.min(M(c),c.h+d*l.leech)}
-function runeTick(dt){if(dt<=0)return;party.slice(0,2).forEach(c=>{if(!c||!c.cdm||!runeOf(c).some(q=>q.swift))return;for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*.43)})}
+function runeTick(dt){if(dt<=0)return;party.slice(0,actN141()).forEach(c=>{if(!c||!c.cdm||!runeOf(c).some(q=>q.swift))return;for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*.43)})}
 function runeHTML(c){const slots=c.runes||[],own=RUNEK.filter(k=>cnt(k)>0);
   let h=`<div class="sec">Runes (${slots.length}/2)</div><div class="runeS">`+[0,1].map(i=>{const k=slots[i];return k?`<button data-runrm="${i}" title="Remove (returns the rune)">${RUNES[k][1]} <b>${RUNES[k][0]}</b><small>${RUNES[k][2]}</small></button>`:`<div class="rempty">Empty rune slot</div>`}).join('')+'</div>';
   if(slots.length<2)h+=own.length?`<div class="runeL">`+own.map(k=>`<button data-runadd="${k}">${RUNES[k][1]} ${RUNES[k][0]} ×${cnt(k)}</button>`).join('')+'</div>':'<div class="mut dtl">No runes. Find them on elites, bosses, chests, events and rare fish, or buy them from the Rune Sage when it visits Duskhold.</div>';
@@ -5134,7 +5134,7 @@ function hatchInfo(c){ivFix(c);
   const sp=(c.sp||[]).map(n=>{const s=CSP[n];return s?`<div class="hab">${s.i} <b>${n}</b><small>${s.d} · ${s.cd}s cooldown</small></div>`:''}).join('');
   return `<b>${nm(c)}</b><br><span class="mut">${famT(c)}${c.tr=='Universal'?' · ✦ Universal (fuses with any type)':''}</span><br><span class="hov" style="--gc:${o[2]}">Overall grade <span class="ogr">${o[1]}</span></span>
    <div class="hsec">Base stats</div><div class="hgr">${gr}</div><div class="hsec">Modifiers</div>${mods}<div class="hsec">Abilities</div>${sp}`}
-function mrow(c,i,on){return `<button class="rw it${on?' on':''}" data-i="${i}" style="--rc:${c.h<=0?'#f87171':i<2?'#c9a24a':'transparent'}"><span class="rn">${c.lock?'<span class="lk" title="Locked">🔒</span> ':''}${nm(c)}<small>${famT(c)} · HP ${Math.round(c.h)}/${M(c)} · Grade ${ovTag(c)}${(c.mods||[]).length?' · '+c.mods.join(', '):''}</small></span><span class="ra"><span class="hpm"><i style="width:${100*c.h/M(c)}%"></i></span>${i<2?'<em>'+(i+1)+'</em>':''}</span></button>`}
+function mrow(c,i,on){return `<button class="rw it${on?' on':''}" data-i="${i}" style="--rc:${c.h<=0?'#f87171':i<actN141()?'#c9a24a':'transparent'}"><span class="rn">${c.lock?'<span class="lk" title="Locked">🔒</span> ':''}${nm(c)}<small>${famT(c)} · HP ${Math.round(c.h)}/${M(c)} · Grade ${ovTag(c)}${(c.mods||[]).length?' · '+c.mods.join(', '):''}</small></span><span class="ra"><span class="hpm"><i style="width:${100*c.h/M(c)}%"></i></span>${i<2?'<em>'+(i+1)+'</em>':''}</span></button>`}
 {const f=rC0;rC0=function(){f();if(!party.length)return;const c=party[cmpSel];if(!c)return;const cd=$('cd'),o=ovG(c);
   cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Potential<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Overall grade</span><b class="ogr" style="color:${o[2]}">${o[1]}</b></div>`);
   const bt=cd.querySelector('.btns');if(bt)bt.insertAdjacentHTML('afterbegin',`<button id="mkLock" title="Locked companions can't be consumed by fusion">${c.lock?'🔒 Locked':'🔓 Lock'}</button>`)}}
@@ -5178,7 +5178,7 @@ function sellables(){const L=[];gear.forEach(i=>L.push({k:'g'+i.id,ic:icoOf(i),n
   Object.keys(SUP).filter(k=>['crop','food'].includes(SUP[k].c)&&cnt(k)>0).forEach(k=>L.push({k:'s'+k,ic:SUP[k].i,n:SUP[k].n+' ×'+cnt(k),sub:'Whole stack',v:(SUP[k].c=='food'?12:4)*cnt(k),rc:'transparent'}));return L}
 function rS(){
   rS_base();const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`;
-  $('sb').insertAdjacentHTML('beforeend','<div class="sec">Potions</div>'+[['p_mp','🫙 Mana Potion','Restores 50% mana (Z)',shpP109('post',40+hero.lvl*4)]].map(r=>`<button class="rw" data-b2="${r[0]}" data-c="${r[3]}"><span class="rn">${r[1]}<small>${r[2]}</small></span><span class="ra">${P(r[3])}</span></button>`).join(''));
+  $('sb').insertAdjacentHTML('beforeend','<div class="sec">Potions</div>'+[['p_mp','🫙 Mana Potion','Restores 50% mana (X)',shpP109('post',40+hero.lvl*4)]].map(r=>`<button class="rw" data-b2="${r[0]}" data-c="${r[3]}"><span class="rn">${r[1]}<small>${r[2]}</small></span><span class="ra">${P(r[3])}</span></button>`).join(''));
   const L=sellables();[...sellSel].forEach(k=>{if(!L.some(x=>x.k==k))sellSel.delete(k)});
   const tot=L.filter(x=>sellSel.has(x.k)).reduce((s,x)=>s+x.v,0),n=sellSel.size;
   $('ss').innerHTML=(L.length?L.map(x=>`<button class="rw it${sellSel.has(x.k)?' sel':''}" data-sk="${x.k}" style="--rc:${x.rc}"><span class="rn"><span class="ck"></span>${x.ic} ${x.n}<small>${x.sub}</small></span><span class="ra"><span class="gp">${x.v} 🪙</span></span></button>`).join(''):'<div class="mut" style="padding:6px 8px">Nothing to sell.</div>')+
@@ -5933,7 +5933,7 @@ const CTAL=[
 const ctPts=c=>Math.floor((c.l||1)/4),ctUsed=c=>Object.values(c.tal||{}).reduce((a,b)=>a+(b|0),0),ctFree=c=>Math.max(0,ctPts(c)-ctUsed(c));
 {const f=compHit;compHit=function(c,e,mult,fx){const d=f.apply(this,arguments);const r=c&&c.tal&&c.tal.pre;if(r&&d>0&&e&&!e.dead&&Math.random()<.06*r){hurt(e,d,{col:0xffd24a},true);dn(e.m.position,'Double!','#ffd24a',-30,600)}return d}}
 {const f=dmgCE;dmgCE=function(a,b,k,p){const d=f.apply(this,arguments);const r=b&&b.tal&&b.tal.hid;return r&&party.includes(b)?Math.max(1,Math.round(d*(1-.05*r))):d}}
-setInterval(()=>{try{const now=Date.now();party.slice(0,2).forEach(c=>{const r=c&&c.tal&&c.tal.wnd;if(!r||c.h<=0)return;const mx=M(c);if(c.h<mx*.3&&now-(c.swT||0)>60000){c.swT=now;c.h=Math.min(mx,Math.round(c.h+mx*[0,.15,.25,.35][r]));const i=party.indexOf(c);if(fols[i])dn(fols[i].position,'Second Wind','#7ee8a0',-30,900)}})}catch(_){}},500);
+setInterval(()=>{try{const now=Date.now();party.slice(0,actN141()).forEach(c=>{const r=c&&c.tal&&c.tal.wnd;if(!r||c.h<=0)return;const mx=M(c);if(c.h<mx*.3&&now-(c.swT||0)>60000){c.swT=now;c.h=Math.min(mx,Math.round(c.h+mx*[0,.15,.25,.35][r]));const i=party.indexOf(c);if(fols[i])dn(fols[i].position,'Second Wind','#7ee8a0',-30,900)}})}catch(_){}},500);
 function ctHTML(c){const fr=ctFree(c);let h=`<div class="ctal"><div class="cth">✦ Talents <span class="mut">${fr} point${fr==1?'':'s'} to spend · 1 point every 4 levels</span>${ctUsed(c)?'<button data-ctr="1">Reset</button>':''}</div><div class="ctg">`;
   CTAL.forEach(t=>{const r=(c.tal&&c.tal[t.k])|0;h+=`<button class="ctn${r?' on':''}" data-ctal="${t.k}" ${fr&&r<t.mx?'':'disabled'} title="${t.d(Math.min(t.mx,r+1))}"><span class="cti">${t.i}</span><b>${t.n}</b><span class="ctr">${r}/${t.mx}</span><small>${r?t.d(r):t.d(1)+(r?'':' (rank 1)')}</small></button>`});
   return h+'</div></div>'}
@@ -9215,7 +9215,7 @@ function cpic(c){const k=cpicKey(c);if(CPIC.cache[k]!==undefined)return CPIC.cac
   setTimeout(()=>{try{CPIC.cache[k]=cpicMake(c)||''}catch(e){CPIC.cache[k]=''}cbarSig='';hud()},0);return null}
 var cbarSig='';
 function cbarsRender(){
-  const cb=$('cbars');if(!cb)return;const L=party.slice(0,2);
+  const cb=$('cbars');if(!cb)return;const L=party.slice(0,actN141());
   const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c)].join(':')).join('/');
   if(sig!==cbarSig){cbarSig=sig;
     cb.innerHTML=L.map((c,i)=>{const p=cpic(c),dead=c.h<=0;
@@ -9343,7 +9343,7 @@ function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position
   enemies.forEach(e=>{if(e.dead)return;const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z),L=v.length();if(L>=bd)return;if(L>2&&v.dot(d)/L<.2)return;bd=L;b=e});return b}
 function commandAttack(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
-  const act=party.slice(0,2).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
+  const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
   const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
@@ -9454,7 +9454,7 @@ const conGainC=b=>consGain(Math.max(0,tierSp(b.g[0])-1))*(1+Math.min(.5,(b.l-1)/
 function conKey(b){ivFix(b);let k=IVK[0];IVK.forEach(q=>{if(ivOf(b,q)>ivOf(b,k)+1e-9)k=q});return k}
 function conHTML(a){const L=party.filter(c=>c&&c!==a);
   return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on one base stat: the one the eaten companion has its best roll in; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
-  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
+  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<actN141();return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
 {const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion to boost its best stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
 {const f=rF;rF=function(){f.apply(this,arguments);try{const a=sel.length>=1?party[sel[0]]:null;if(fCon&&(!party.includes(fCon)||fCon===a||fCon.lock))fCon=null;const d=$('doF');
   if(a&&fOpt=='con'&&d){d.disabled=!fCon;d.textContent=fCon?'🍽️ Consume '+fCon.n:'🍽️ Consume'}}catch(_){}}}
@@ -11914,7 +11914,7 @@ cheatPortals();
 //   (L is the Bestiary, every other letter is taken, so it lives under K.)
 
 var KQS={tg:null,gp:null,fire:0,cr0:0,ch:null,objs:[],cdn:{},hist:[],histT:0,stealth:0,unbrk:0,mx:null,my:null,mIn:false,touch:null,eat:0,ret:null,sel:null,slot:0,ck:'',ca:null,rc:null};
-var KQS_SLOTS=4;
+var KQS_SLOTS=6; // v141: six ability keys (was 4)
 
 // ---------------- the 50 new abilities ----------------
 // k:'x' + x:<handler>; gt:1 ground targeted (sh circle|line|wall|cone, r radius / w width, L length, rng max range); spend:1 uses up the class resource;
@@ -12403,7 +12403,7 @@ function kqsKind(s){const t=s.ty||KQS_TY[s.k]||'';return t}
 function kqsInfo(s){const a=[];if(s.cd)a.push('⏱ '+s.cd+'s cooldown');a.push('💧 '+(s.mp||0)+' mana');if(s.gt)a.push('🎯 ground target · range '+kqsRng(s)+(s.sh=='line'?' · line '+(s.L||'')+'×'+(s.w||''):s.sh=='wall'?' · wall '+s.L:' · radius '+(s.r||1)));else if(s.r)a.push('◯ radius '+s.r);if(s.dur)a.push('⌛ '+s.dur+'s');if(s.spend)a.push(CRES[hero.cls]?CRES[hero.cls].i+' spends '+CRES[hero.cls].n:'');return a.filter(Boolean)}
 XR.abil=()=>{const c=hero.cls,C=CLS[c],all=kqsAll(c),eqd=heroSkills(),ap=apFree(),sel=kqsFind(c,KQS.sel)||eqd[0],nUn=all.filter(s=>kqsUnl(c,s)).length;
   $('xwT').textContent='⚡ Abilities';$('xwS').innerHTML=`${C.i} ${C.n} · <b class="kqs-apv">${ap}</b> ability point${ap==1?'':'s'} · ${nUn} / ${all.length} learned · +1 point every level`;
-  const slots=[0,1,2,3].slice(0,KQS_SLOTS).map(q=>{const s=eqd[q];return `<div class="kqs-slot${s?'':' empty'}${KQS.slot===q?' on':''}" data-kqslot="${q}" title="${s?s.n+' — key '+(q+1):'Empty slot '+(q+1)}"><span class="kqs-sk">${q+1}</span><span class="kqs-si">${s?s.i:'＋'}</span><span class="kqs-sn">${s?s.n:'Empty'}</span>${s&&eqd.length>1?`<button class="kqs-sx" data-kqsun="${q}" title="Remove from key ${q+1}">✕</button>`:''}</div>`}).join('');
+  const slots=[...Array(KQS_SLOTS).keys()].map(q=>{const s=eqd[q];return `<div class="kqs-slot${s?'':' empty'}${KQS.slot===q?' on':''}" data-kqslot="${q}" title="${s?s.n+' — key '+(q+1):'Empty slot '+(q+1)}"><span class="kqs-sk">${q+1}</span><span class="kqs-si">${s?s.i:'＋'}</span><span class="kqs-sn">${s?s.n:'Empty'}</span>${s&&eqd.length>1?`<button class="kqs-sx" data-kqsun="${q}" title="Remove from key ${q+1}">✕</button>`:''}</div>`}).join('');
   const row=s=>{const un=kqsUnl(c,s),q=eqd.indexOf(s),why=kqsWhy(s),def=s===kqsDef(c),cost=apCost(s);
     const st=un?(q>=0?`<span class="kqs-eqd">Key ${q+1}</span>`:`<button data-kqseq="${s.n}" title="Put on key ${(KQS.slot|0)+1}">Equip</button>`):why?`<span class="kqs-lk">🔒 ${why.replace('Reach level','Lv')}</span>`:`<button class="pri" data-kqsbuy="${s.n}">Unlock · ${cost} ⚡</button>`;
     return `<div class="rw kqs-ab${un?' un':' lk'}${s.gt?' gt':''}${sel===s?' on':''}${q>=0?' eq':''}" data-kqsel="${s.n}"><span class="rn"><span class="kqs-ic">${s.i}</span><b>${s.n}</b>${def?' <span class="kqs-tag def">Default</span>':''}${s.nw?' <span class="kqs-tag nw">New</span>':''}${s.gt?' <span class="kqs-tag gt">🎯 Ground</span>':''}<small>Lv ${s.lv} · ${kqsKind(s)}${def?'':' · '+cost+' ⚡'}</small></span><span class="ra">${st}</span></div>`};
@@ -12411,7 +12411,7 @@ XR.abil=()=>{const c=hero.cls,C=CLS[c],all=kqsAll(c),eqd=heroSkills(),ap=apFree(
   const un=kqsUnl(c,sel),why=kqsWhy(sel),q=eqd.indexOf(sel),cost=apCost(sel);
   const det=`<div class="kqs-det glass"><div class="kqs-dh"><span class="kqs-di">${sel.i}</span><div><b>${sel.n}</b><small>${kqsKind(sel)}${sel.gt?' · ground-targeted':''}</small></div></div><p>${sel.d}</p><div class="kqs-stats">${kqsInfo(sel).map(x=>`<span>${x}</span>`).join('')}</div>
     <div class="kqs-req"><span>Level ${sel.lv}${hero.lvl>=sel.lv?' ✔':' ✖'}</span>${sel.req?`<span>Requires ${sel.req}${kqsUnl(c,kqsFind(c,sel.req))?' ✔':' ✖'}</span>`:''}<span>${sel===kqsDef(c)?'Class default':'Cost '+cost+' ⚡'}</span></div>
-    ${un?`<div class="sec">Put on a key</div><div class="btns kqs-keys">${[0,1,2,3].slice(0,KQS_SLOTS).map(k=>`<button data-kqseq="${sel.n}" data-kqsk="${k}" class="${q===k?'pri':''}" ${k>eqd.length-(q>=0?1:0)?'disabled':''}>${k+1}</button>`).join('')}${q>=0&&eqd.length>1?`<button data-kqsun="${q}">Unequip</button>`:''}</div>`
+    ${un?`<div class="sec">Put on a key</div><div class="btns kqs-keys">${[...Array(KQS_SLOTS).keys()].map(k=>`<button data-kqseq="${sel.n}" data-kqsk="${k}" class="${q===k?'pri':''}" ${k>eqd.length-(q>=0?1:0)?'disabled':''}>${k+1}</button>`).join('')}${q>=0&&eqd.length>1?`<button data-kqsun="${q}">Unequip</button>`:''}</div>`
       :`<div class="btns"><button class="pri" data-kqsbuy="${sel.n}" ${why?'disabled':''}>${why?'🔒 '+why:'Unlock for '+cost+' ability point'+(cost>1?'s':'')}</button></div>`}
     ${sel.gt?'<div class="mut kqs-hint">Press its key, aim the circle with the mouse (or drag on a touch screen), then click / tap — or press the key again — to cast. Right-click or Esc cancels.</div>':''}</div>`;
   $('xwB').innerHTML=`<div class="kqs-ld"><div class="sec">Equipped · keys 1–${KQS_SLOTS}</div><div class="kqs-slots">${slots}</div></div><div class="xcols kqs-cols"><div class="kqs-list">${tiers}</div><div>${det}</div></div>`;
@@ -14076,7 +14076,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // per tick: sweep + seconds on the ⚡ button, a thin timer strip under the health bar, and live tooltips
 function emp92Hud(){
   const cb=$('cbars');if(!cb)return;
-  party.slice(0,2).forEach((c,i)=>{const el=cb.children[i];if(!el||!c)return;
+  party.slice(0,actN141()).forEach((c,i)=>{const el=cb.children[i];if(!el||!c)return;
     const b=el.querySelector('button[data-e]'),k=i?'R':'E';
     let bar=el.querySelector('.e92bar');if(!bar){const inf=el.querySelector('.cinf');if(inf){inf.insertAdjacentHTML('beforeend','<div class="e92bar"><i></i></div>');bar=inf.querySelector('.e92bar')}}
     let p=0,t='',cls='',tip,bw=0;
@@ -19727,7 +19727,7 @@ function FSM100_picPoll(){clearTimeout(FSM100.poll);if($('fz').classList.contain
   document.querySelectorAll('#fsmB .fsm-pic[data-pk]:not([data-pk=""])').forEach(el=>{const p=CPIC&&CPIC.cache[el.dataset.pk];if(p){el.innerHTML=`<img src="${p}" alt="">`;el.dataset.pk=''}else if(p!=='')left++});
   if(left)FSM100.poll=setTimeout(FSM100_picPoll,350)}
 function FSM100_grades(c){ivFix(c);return `<span class="fsm-gs">${IVK.map(k=>{const g=grade(ivOf(c,k));return `<span title="${FSM100_SN[k]}: grade ${g[1]}"><small>${IVS[k]}</small><b style="--g:${g[2]}">${g[1]}</b></span>`}).join('')}</span>`}
-function FSM100_tags(c,i){const t=[];if(i<2)t.push(`<span class="fsm-tag act" title="In your active team (slot ${i+1})">Team ${i+1}</span>`);
+function FSM100_tags(c,i){const t=[];if(i<actN141())t.push(`<span class="fsm-tag act" title="In your active team (slot ${i+1})">Team ${i+1}</span>`);
   if(c.lock)t.push('<span class="fsm-tag lk" title="Locked: it can be improved, but never used up">🔒 Locked</span>');
   if(c.tr=='Universal')t.push('<span class="fsm-tag un" title="Universal: can fuse or siphon with any family">✦ Universal</span>');
   if(c.h<=0)t.push('<span class="fsm-tag dn">Fainted</span>');return t.join('')}
@@ -19740,7 +19740,7 @@ function FSM100_clone(c){return JSON.parse(JSON.stringify(c))}
 // can b be used up to improve a with this action? -> null (same companion) | {ok,why,need,v,gain,tag,k,warn[]}
 function FSM100_check(a,b,act){
   if(!a||!b||a===b)return null;ivFix(a);ivFix(b);const i=party.indexOf(b),warn=[];
-  if(i<2)warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
+  if(i<actN141())warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
   if(b.evo)warn.push('Evolved '+'✦'.repeat(b.evo));if(b.shn)warn.push('Shiny');
   if(b.lock)return {ok:false,why:'Locked. Unlock it in the Companions window to use it up.',warn};
   if(act=='con'){const g=conGainC(b),k=conKey(b);if(ivOf(a,k)>=1.3)return {ok:false,why:'Wasted: it would raise '+FSM100_SN[k]+', and '+FSM100_esc(a.n)+'’s is already at the maximum.',warn};
@@ -19943,7 +19943,7 @@ function FSM100_lossHTML(a,b,act,cat){const it=[],i=party.indexOf(b);
   it.push(`Level ${b.l}${b.evo?', evolution '+'✦'.repeat(b.evo):''}${b.tal&&Object.keys(b.tal).length?', its talents':''}`);
   if((b.mods||[]).length)it.push('Modifiers: '+b.mods.map(m=>(MODS[m]?MODS[m].i+' ':'')+m).join(', ')+(act!='con'?' (one may pass on, see above)':''));
   if(b.runes&&b.runes.length)it.push('Socketed rune'+(b.runes.length>1?'s':'')+': '+b.runes.map(r=>RUNES[r]?RUNES[r][1]+' '+RUNES[r][0]:r).join(', ')+' (lost with it)');
-  if(i<2)it.push(`It is in your active team (slot ${i+1}); ${party.length>2?'your next reserve companion takes its place':'your team will have one companion less'}`);
+  if(i<actN141())it.push(`It is in your active team (slot ${i+1}); ${party.length>2?'your next reserve companion takes its place':'your team will have one companion less'}`);
   if(b.tr=='Universal')it.push('Its ✦ Universal trait');
   if(cat&&SUP[cat])it.push(`Also used: 1 × ${SUP[cat].i} ${SUP[cat].n} (you have ${sup[cat]||0})`);
   return `<div class="fsm-loss"><b class="h">⚠ ${FSM100_name(b)} will be used up — gone for good</b>You lose:<ul>${it.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`}
@@ -22688,10 +22688,10 @@ function kfWild109(F){const T=TOWNS[0];if(KF109.wild){T.g.remove(KF109.wild);KF1
     return !fixed.some(c=>{const dx=T.cx+p.x-c.x,dz=T.cy+p.z-c.z;return c.r!=null?dx*dx+dz*dz<(c.r+1.4)*(c.r+1.4):Math.abs(dx)<c.hx+1.4&&Math.abs(dz)<c.hz+1.4})});
   KF109.wsel={s:F.s,L:keep};const key='KFWILD|'+F.s;let k=null;
   if(!twHas(key)){k=twKit(4243+F.s);keep.forEach(p=>{const {x,z,s,ry}=p;
-    if(p.t=='pine'){k.as('bark',()=>k.L('c',0x3a2a1c,[x,0,z],[x,1.2*s,z],.14*s,'log'));[[1.0,1.15,1.5],[1.6,.9,1.25],[2.2,.62,1.0]].forEach(([y,r,h],j)=>k.p('c',[0x1e3626,0x24402a,0x2a4a30][j],'cone6',x,y*s,z,r*s,h*s,r*s,0,ry+j,0,.08))}
+    if(p.t=='pine'){k.as('bark',()=>k.L('c',0x3a2a1c,[x,0,z],[x,1.2*s,z],.14*s,'log'));k.as('leaf',()=>[[1.0,1.15,1.5],[1.6,.9,1.25],[2.2,.62,1.0]].forEach(([y,r,h],j)=>k.p('c',[0x1e3626,0x24402a,0x2a4a30][j],'cone6',x,y*s,z,r*s,h*s,r*s,0,ry+j,0,.08)))} // v141: all three layers are leaves (the dark ones were read as stone)
     else if(p.t=='dead'){k.as('bark',()=>{k.L('c',0x2e2620,[x,0,z],[x+.1*s,2.4*s,z+.05],.15*s,'log');k.L('c',0x2e2620,[x+.05,1.5*s,z],[x+.8*s*Math.cos(ry),2.2*s,z+.8*s*Math.sin(ry)],.06*s,'log');k.L('c',0x2e2620,[x+.05,1.9*s,z],[x-.6*s*Math.cos(ry),2.6*s,z-.6*s*Math.sin(ry)],.05*s,'log')})}
     else if(p.t=='rock'){k.as('stone',()=>{k.p('c',[0x5a5662,0x4e4a54,0x66626c][Math.floor(s*7)%3],'dod',x,.22*s,z,.55*s,.42*s,.5*s,0,ry,0,.18);if(s>1)k.p('c',0x4e4a54,'dod',x+.5*s,.12*s,z+.3*s,.3*s,.24*s,.3*s,0,ry*2,0,.2)})}
-    else if(p.t=='bush'){[[0,0],[.35,.2],[-.3,.25]].forEach(([a,b],j)=>k.p('c',[0x24402a,0x2e4a30,0x35502e][j],'ico',x+a*s,.3*s,z+b*s,.42*s,.34*s,.42*s,0,ry+j,0,.12))}
+    else if(p.t=='bush'){k.as('leaf',()=>[[0,0],[.35,.2],[-.3,.25]].forEach(([a,b],j)=>k.p('c',[0x24402a,0x2e4a30,0x35502e][j],'ico',x+a*s,.3*s,z+b*s,.42*s,.34*s,.42*s,0,ry+j,0,.12)))}
     else{for(let j=0;j<3;j++)k.p('c',[0x4a5a34,0x3e5030][j%2],'cone4',x+(j-1)*.15,.18*s,z+(j%2)*.12,.07,.36*s,.07,0,j,(j-1)*.2,.1)}})}
   const g=twGroup(k,key);g.name='kfwild';T.g.add(g);KF109.wild=g;g.traverse(o=>{if(o.isMesh)o.castShadow=false});
   kfColSet109(KF109.wcol,keep.filter(p=>p.t=='pine'||p.t=='dead'||p.t=='rock').map(p=>({x:T.cx+p.x,z:T.cy+p.z,r:p.t=='rock'?.4*p.s:.3})))}
@@ -30426,14 +30426,14 @@ var CHQ132={st:{},g:-2,ch:null,bur:null,mk:null,mkK:'',spots:{},t:0,pop:0,wave:0
 var CHQD132={
  '0_0':[
   {id:'k1a',t:'Smoke Them Out',d:'A camp has dug in on my best toadstool patch. Clear one out and I’ll make it worth your while.',o:[['camp',1,'Camp cleared']],rw:'weapon',w:1.2},
-  {id:'k1b',t:'Timber and Stone',d:'My burrows don’t shore themselves up. Fifteen wood from the groves and ten stone from the rocks.',o:[['wood',15,'Wood gathered'],['stone',10,'Stone gathered']],rw:'boots',w:1.2},
+  {id:'k1b',t:'Timber for the Burrows',d:'My burrows don’t shore themselves up. Fifteen wood from the groves, if you please.',o:[['wood',15,'Wood gathered']],rw:'boots',w:1.2}, // v141: wood only (was + 10 stone)
   {id:'k1c',t:'Something for the Pot',d:'Five fish from the bog water. Don’t ask what I do with them.',o:[['fish',5,'Fish caught']],rw:'egg',w:1},
   {id:'k1d',t:'Lanterns for the Dark',d:'Glow Caps light the tunnels down below. Pick me five.',o:[['glow',5,'Glow Caps picked']],rw:'helm',w:1},
   {id:'k1e',t:'Borrowed Strength',d:'Have a companion empower you (E / R), then take something down while their strength is in you.',o:[['empKill',1,'Kill while a companion empowers you']],rw:'chest',w:1}],
  '0_1':[
   {id:'k2a',t:'Bigger Game',d:'Elites stalk these hollows: bigger, meaner, and their names burn gold. Bring one down.',o:[['elite',1,'Elite slain']],rw:'weapon',w:1.5},
   {id:'k2b',t:'A Lucky Line',d:'Fish long enough and the water coughs up a gold pouch. Pull one up for me.',o:[['pouch',1,'Gold pouch fished up']],rw:'egg',w:1.3},
-  {id:'k2c',t:'Ore for the Forge',d:'Five iron ore. The veins here run rust-red through the rock.',o:[['iron',5,'Iron Ore mined']],rw:'helm',w:1.2},
+  {id:'k2c',t:'Stone and Ore for the Forge',d:'Eight stone for the hearth and five iron ore. The veins here run rust-red through the rock.',o:[['stone',8,'Stone gathered'],['iron',5,'Iron Ore mined']],rw:'helm',w:1.2}, // v141: + 8 stone
   {id:'k2d',t:'Two Become One',d:'Fuse, siphon or consume a companion. Out here the strong eat the weak.',o:[['fuse',1,'Companion fused, siphoned or consumed']],rw:'egg',w:1}],
  '0_2':[
   {id:'k3a',t:'Tempered Steel',d:'Have the Blacksmith forge your weapon to +2 or better, then kill something with it.',o:[['forgeKill',1,'Kill with a +2 forged weapon']],rw:'weapon',w:1.3},
@@ -30474,7 +30474,7 @@ function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
@@ -30730,7 +30730,7 @@ addEventListener('resize',()=>{try{chqTrkPos132()}catch(_){}})
 // ---------------- events ----------------
 function chqRemote132(){return typeof MP!='undefined'&&!!MP.rk}
 function chqBuffKind132(){const t=nowP(),B=hero.buffs||[];
-  const comp=typeof party!='undefined'&&party.slice(0,2).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
+  const comp=typeof party!='undefined'&&party.slice(0,actN141()).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
   const food=B.some(b=>b.food&&b.k&&SUP[b.k]&&SUP[b.k].c=='food'&&b.t>t),bard=B.some(b=>b.n=='Inspired'&&b.t>t);return {comp,food,bard}}
 function chqKill132(e,C,was){if(!e||e.dprop||e.wv)return;
   if(C&&!C.raid&&!was&&campCleared(C)){chqEv132('camp',1);chqEv132('allCamps',1,C.j!=null?C.j:C.i)}
@@ -35514,3 +35514,188 @@ function cc140Bow(h){const S=h&&h._grip;if(!S||!S.L)return;let e=null;for(const 
   const C=e.C,an=C.an||GRIP_AN,hd=new V(C.hold[0]*W.scale.x,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(W.quaternion);W.position.set(an[0]-hd.x,an[1]-hd.y,an[2]-hd.z);
   h.updateMatrixWorld(true)}
 {const f=cc116Pose;cc116Pose=function(h,cls){const r=f.apply(this,arguments);try{if(cls=='ranger')cc140Bow(h)}catch(e){if(!CC140.err){CC140.err=1;console.warn('v140 ranger bow',e)}}return r}}
+// ================= v141: owner's list (Oct 2026) =================
+// Keys: Q feeds the most hurt companion, Z health potion, X mana potion (0108). Hotbar: 6 ability keys (KQS_SLOTS in 0990).
+// Consume raises one stat (0860, 1780). Quests: Kindlelight I wood only, II stone + iron (2350). Outskirts pines (1960).
+// This file: Q feeding, break poise ×2, quieter effect text, level growth −60%, the second companion slot.
+
+// ---------------- Q: feed the active companion with the lowest health share ----------------
+function feedLowest141(){
+  if(!party.length)return say('You have no companion to feed.');
+  const L=party.slice(0,actN141()).map((c,i)=>({c,i})).filter(x=>x.c&&x.c.h>0);
+  if(!L.length)return say('Your companion has fainted. Revive it with 💗 first.');
+  const share=c=>(Math.max(0,c.h)+(c.fhot&&c.fhot.left>0?c.fhot.left:0))/M(c);
+  L.sort((a,b)=>share(a.c)-share(b.c));
+  if(share(L[0].c)>=1)return say(L.length>1?'Your companions are already full.':nm(L[0].c)+' is already full.');
+  feedBest(L[0].i)}
+
+// ---------------- breaks: normal enemies need twice the damage during a wind-up ----------------
+// (Sovereigns are never broken by hits.) A combo finisher no longer breaks a normal mob outright: it adds
+// KQP.fin poise damage like it always did for elites, so the break still needs the doubled damage.
+KQP.pz.n*=2;KQP.pz.el*=2;
+cbHeavy=function(e){if(!e||e.boss||e.dead)return;
+  if(cbWind(e)){e.atk.pz=(e.atk.pz||0)+M(e.c)*KQP.fin;if(cbBreakChk(e))cbBreak(e,'finisher')}
+  else if(!e.c.al){e.cd=Math.max(e.cd,.5)}};
+
+// ---------------- effect text (BREAK!, COMBUST!, MELT! ...): smaller, softer, and their sounds 45% quieter ----------------
+var FX141={t:-1e9,keep:/TREASURE|SECRET FOUND/,vol:.55,win:80};
+{const f=popT;popT=function(p,t,col,big){const r=f.apply(this,arguments);
+  try{if(!FX141.keep.test(String(t||''))){FX141.t=performance.now();const el=$('stage').lastChild;
+    if(el&&el.className=='dn'){el.style.fontSize=big?'1.02rem':'.82rem';el.style.fontWeight='800';el.style.letterSpacing='.03em';el.style.opacity='.72';el.classList.add('fx141')}}}catch(_){}
+  return r}}
+// sounds played together with that text (same moment), and the break sound itself
+function fx141Quiet(k){return k=='brk'||performance.now()-FX141.t<FX141.win}
+{const f=sfx;sfx=function(k,vol){if(fx141Quiet(k))vol=(vol||1)*FX141.vol;return f.call(this,k,vol)}}
+{const f=mSfx;mSfx=function(k,vol){if(fx141Quiet(k))vol=(vol||1)*FX141.vol;return f.call(this,k,vol)}}
+// the floating text animates its own opacity in some builds: keep it under .72
+document.head.insertAdjacentHTML('beforeend','<style id="fx141css">#stage .dn.fx141{text-shadow:0 1px 3px rgba(0,0,0,.7)!important;filter:saturate(.85)}</style>');
+
+// ---------------- levelling: 60% less of the hero's own growth per level (attribute points unchanged) ----------------
+// CLS[c].per is the flat health / attack / defense each level adds (already ×ATR139.flat since v139). Mana keeps its growth.
+var LV141={k:.4};
+CLSK.forEach(c=>{const P=CLS[c].per;['hp','pa','ma','pd','md'].forEach(k=>{P[k]=+(P[k]*LV141.k).toFixed(4)})});
+
+// ---------------- the second companion slot ----------------
+// Everyone starts able to lead ONE companion. After two Sovereigns are defeated the Beast Trainer teaches the bond
+// for a second (gold, once per hero; saved in hero.tal so it travels with the save). party[1] stays where it is but
+// rests (no follower, no fighting, no XP share) until then. Code that meant "the active team" reads actN141().
+var CS141={cost:800,need:2};
+function cs141Has(){return !!(typeof hero!='undefined'&&hero&&hero.tal&&hero.tal.__cs2)}
+function actN141(){return cs141Has()?2:1}
+function cs141Ready(){return typeof bossDone!='undefined'&&bossDone.size>=CS141.need}
+function cs141Cost(){return typeof shpP109=='function'?shpP109('trainer',CS141.cost):CS141.cost}
+// HUD: a small locked row under the companion bar (once you own a second companion, or once the trainer can teach it)
+{const f=cbarsRender;cbarsRender=function(){f.apply(this,arguments);try{const cb=$('cbars');if(!cb)return;let n=cb.querySelector('.cs141');
+  const want=!cs141Has()&&party.length&&(party.length>1||cs141Ready());if(!want){if(n)n.remove();return}
+  const r=cs141Ready(),t=r?'🔒 2nd companion · learn at the Beast Trainer':'🔒 2nd companion · after 2 Sovereigns';
+  if(!n){cb.insertAdjacentHTML('beforeend','<div class="cs141"></div>');n=cb.querySelector('.cs141')}if(n.textContent!==t)n.textContent=t;
+  n.title=r?'The Beast Trainer in Duskhold can teach the Companion Bond':'Defeat two Sovereigns, then learn the Companion Bond at the Beast Trainer'}catch(_){}}}
+document.head.insertAdjacentHTML('beforeend','<style id="cs141css">#cbars .cs141{font-size:.66rem;color:#c9b48a;background:rgba(10,8,6,.55);border:1px dashed rgba(201,162,74,.45);border-radius:6px;padding:3px 8px;margin-top:4px;width:max-content;pointer-events:auto}</style>');
+// Beast Trainer: a "Companion Bond" row on top of the training list
+{const f=XR.visitor;XR.visitor=function(){const r=f.apply(this,arguments);try{const B=$('xwB');if(!B||xwArg!='trainer')return r;
+  if(B.querySelector('.cs141row'))return r;const has=cs141Has(),rd=cs141Ready(),c=cs141Cost();
+  B.insertAdjacentHTML('afterbegin',`<div class="cs141row" style="display:flex;gap:10px;align-items:center;padding:8px 10px;margin:0 0 8px;border:1px solid rgba(201,162,74,.45);border-radius:8px;background:rgba(201,162,74,.08)">
+    <span style="font-size:1.5rem">🐾</span><div style="flex:1"><b>Companion Bond</b><div class="mut" style="font-size:.72rem">${has?'Learned: you lead two companions at once.':rd?'Learn to lead a second companion into battle.':'Defeat two Sovereigns first ('+bossDone.size+' / '+CS141.need+').'}</div></div>
+    ${has?'<span class="mut">✔ Learned</span>':`<button data-cs141="1" ${rd&&gold>=c?'':'disabled'}>Learn · 🪙 ${c}</button>`}</div>`)}catch(_){}return r}}
+$('xw').addEventListener('click',e=>{const t=e.target.closest('[data-cs141]');if(!t)return;e.stopImmediatePropagation();if(t.disabled||cs141Has()||!cs141Ready())return;
+  const c=cs141Cost();if(gold<c)return say('You need 🪙 '+c+'.');gold-=c;hero.tal.__cs2=1;leadK[1]='';
+  say('🐾 You learned the Companion Bond: your second companion now fights beside you.');try{sfx('power')}catch(_){}hsDirty();sync();ui();hud();if(XR.visitor)XR.visitor()},true);
+
+// ---------------- quest progress kept for the changed Kindlelight II quest (iron moved to the second objective) ----------------
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const S=CHQ132.st&&CHQ132.st.k2c;if(S&&S.p&&S.p.length==1&&S.s==1)S.p=[0,S.p[0]]}catch(_){}return r}}
+// R (empower with companion 2) while the second slot is locked
+{const f=toggleEmp;toggleEmp=function(i){if(i>=actN141())return say(cs141Ready()?'🔒 Learn the Companion Bond at the Beast Trainer to bring a second companion.':'🔒 A second companion joins you after two Sovereigns are defeated (Beast Trainer).');return f.apply(this,arguments)}}
+// a 2nd companion that empowered you before the slot closed (old saves) stops
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!cs141Has()&&party[1]&&party[1].emp)party[1].emp=false}catch(_){}return r}}
+// ================= v141: minimap and N map are revealed as you explore; found gathering spots; facing arrow =================
+// Fog: the zone instances start dark; everything within MF141.R tiles of the hero is revealed, in cells of MF141.C tiles.
+// Duskhold and the void between instances are never fogged. The fog is a canvas (mmFog, world size, 1 px per tile) that is
+// drawn right after the terrain image (mmB) on both maps, so enemies and markers drawn later still sit on top where revealed.
+// Saved per hero as x2.fog141 (run-length coded cells). Gathering spots (trees, rocks, ore, crystal, plants, bones, mounds)
+// show as small dots once their cell is revealed; a spot that is used up hides until it grows back.
+var MF141={C:4,R:10,cw:0,ch:0,cells:null,fog:null,fx:null,dirty:false,nodes:{},last:-1};
+function mf141Init(){if(MF141.cells)return;MF141.cw=Math.ceil(W/MF141.C);MF141.ch=Math.ceil(H/MF141.C);MF141.cells=new Uint8Array(MF141.cw*MF141.ch);
+  const c=document.createElement('canvas');c.width=W;c.height=H;MF141.fog=c;MF141.fx=c.getContext('2d');mf141Paint()}
+// which cells can be fogged at all: those inside a zone instance
+function mf141Zone(cx,cy){const x=cx*MF141.C+MF141.C/2,y=cy*MF141.C+MF141.C/2;if(typeof INSL=='undefined')return false;
+  for(const I of INSL){if(x>=I.x0&&x<I.x0+I.w&&y>=I.y0&&y<I.y0+I.h)return true}return false}
+function mf141Paint(){const g=MF141.fx,C=MF141.C;g.clearRect(0,0,W,H);g.fillStyle='rgb(9,11,15)';
+  if(typeof INSL!='undefined')INSL.forEach(I=>g.fillRect(I.x0,I.y0,I.w,I.h));
+  for(let cy=0;cy<MF141.ch;cy++)for(let cx=0;cx<MF141.cw;cx++)if(MF141.cells[cy*MF141.cw+cx])g.clearRect(cx*C,cy*C,C,C)}
+function mf141Seen(x,y){if(!MF141.cells)return true;const cx=Math.floor(x/MF141.C),cy=Math.floor(y/MF141.C);if(cx<0||cy<0||cx>=MF141.cw||cy>=MF141.ch)return true;
+  return !!MF141.cells[cy*MF141.cw+cx]||!mf141Zone(cx,cy)}
+// reveal around the hero (called with the minimap, every 200 ms)
+function mf141Reveal(){mf141Init();if(typeof curMap=='function'&&curMap()<0)return;const C=MF141.C,R=MF141.R,px=pl.position.x,pz=pl.position.z;
+  const c0x=Math.floor((px-R)/C),c1x=Math.floor((px+R)/C),c0y=Math.floor((pz-R)/C),c1y=Math.floor((pz+R)/C);let n=0;
+  for(let cy=Math.max(0,c0y);cy<=Math.min(MF141.ch-1,c1y);cy++)for(let cx=Math.max(0,c0x);cx<=Math.min(MF141.cw-1,c1x);cx++){const i=cy*MF141.cw+cx;if(MF141.cells[i])continue;
+    const dx=Math.max(0,Math.abs(cx*C+C/2-px)-C/2),dy=Math.max(0,Math.abs(cy*C+C/2-pz)-C/2);if(dx*dx+dy*dy>R*R)continue;MF141.cells[i]=1;MF141.fx.clearRect(cx*C,cy*C,C,C);n++}
+  if(n)MF141.dirty=true}
+// draw the fog right after the terrain image on a map context
+function mf141Hook(g){if(!g||g.__mf141)return;const d=g.drawImage;g.__mf141=1;g.drawImage=function(img){const r=d.apply(this,arguments);
+  if(img===mmB&&MF141.fog&&arguments.length===9){const a=[...arguments];a[0]=MF141.fog;const sm=this.imageSmoothingEnabled;this.imageSmoothingEnabled=false;d.apply(this,a);this.imageSmoothingEnabled=sm}return r}}
+{const f=mini;mini=function(){try{mf141Reveal();mf141Hook(mmX)}catch(e){}return f.apply(this,arguments)}}
+{const f=openWMap;openWMap=function(){const hid=[];try{mf141Init();mf141Reveal();mf141Hook($('wmc').getContext('2d'));
+  // camps not seen yet stay hidden: their instance id is swapped out while the map draws, then put back
+  if(typeof CAMPS!='undefined')CAMPS.forEach(C=>{if(!mf141Seen(C.x,C.z)){hid.push([C,C.ig]);C.ig=-99}})}catch(e){}let r;try{r=f.apply(this,arguments)}finally{hid.forEach(([C,g])=>C.ig=g)}try{mf141WmapNodes()}catch(e){console.warn('fog wmap',e)}return r}}
+
+// ---------------- gathering spots ----------------
+var MF141_COL={tree:'#5fbf5a',stone:'#b8b4ac',iron:'#d9824a',crystal:'#7fe3ff',fiber:'#b6d36a',berry:'#c870e0',flower:'#f39ad0',mush:'#a8f0a0',bones:'#efe8d8',mound:'#a77a4c'};
+var MF141_LAB={tree:'tree',stone:'stone',iron:'iron ore',crystal:'crystal',fiber:'fiber',berry:'berries',flower:'petals',mush:'glow caps',bones:'bones',mound:'soil mound'};
+function mf141Kind(x,y){const t=MAP[y][x],k=y*W+x,pk=PROPK[k];if(!NODE[k])return null;
+  if(t=='#')return 'tree';if(t=='r'&&(pk=='rock'||pk=='grave'||pk=='pillar'))return 'rock';
+  return ['crystal','bush','flower','mush','bones','mound'].includes(pk)?pk:null}
+// every gathering spot of an instance (cached; the tile under a used-up spot turns to '.', so the scan runs once per instance)
+function mf141Nodes(I){if(!I)return [];if(MF141.nodes[I.g])return MF141.nodes[I.g];const L=[];
+  for(let y=Math.max(2,I.y0);y<Math.min(H-2,I.y0+I.h);y++)for(let x=Math.max(2,I.x0);x<Math.min(W-2,I.x0+I.w);x++){const kind=mf141Kind(x,y);if(!kind)continue;
+    let v=kind;try{v=typeof lnV=='function'?lnV({kind,x,y}):kind}catch(_){}L.push({x,y,k:y*W+x,v})}
+  return MF141.nodes[I.g]=L}
+function mf141Here(){if(typeof curMap!='function'||curMap()<0)return null;return curIns()}
+function mf141Dot(g,x,y,col,s){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(x-s/2-1,y-s/2-1,s+2,s+2);g.fillStyle=col;g.fillRect(x-s/2,y-s/2,s,s)}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){try{const I=mf141Here();if(I){const kx=w/vw,ky=h/vh;
+  mf141Nodes(I).forEach(n=>{if(gdep[n.k])return;const x=(n.x-(cx-vw/2)+.5)*kx,y=(n.y-(cy-vh/2)+.5)*ky;if(x<-3||y<-3||x>w+3||y>h+3)return;if(!mf141Seen(n.x,n.y))return;
+    mf141Dot(mmX,x,y,MF141_COL[n.v]||'#ddd',n.v=='tree'?2:3)})}}catch(e){}return f.apply(this,arguments)}}
+function mf141WmapNodes(){const I=mf141Here();if(!I)return;const c=$('wmc'),g=c.getContext('2d'),s=Math.min(1060/I.w,640/I.h),seen={};
+  mf141Nodes(I).forEach(n=>{if(gdep[n.k]||!mf141Seen(n.x,n.y))return;seen[n.v]=1;mf141Dot(g,(n.x-I.x0+.5)*s,(n.y-I.y0+.5)*s,MF141_COL[n.v]||'#ddd',n.v=='tree'?3:5)});
+  // legend of the kinds found here, top right under the title bar
+  const ks=Object.keys(seen);if(!ks.length)return;g.font='600 11px system-ui,sans-serif';g.textAlign='left';g.textBaseline='middle';
+  const wd=ks.reduce((a,k)=>a+g.measureText(MF141_LAB[k]||k).width+20,8);let x=c.width-wd-8;const y=54;
+  g.fillStyle='rgba(0,0,0,.6)';g.fillRect(x-4,y-10,wd+4,20);ks.forEach(k=>{mf141Dot(g,x+5,y,MF141_COL[k]||'#ddd',6);g.fillStyle='#ddd';g.fillText(MF141_LAB[k]||k,x+12,y);x+=g.measureText(MF141_LAB[k]||k).width+20})}
+
+// ---------------- facing: a bigger arrow on the minimap and on the N map ----------------
+function mf141Face(){try{return typeof plFaceY=='function'?plFaceY():pl.rotation.y}catch(_){return pl.rotation.y}}
+miniArrow=function(qx,qy){const a=mf141Face(),fx=Math.sin(a),fz=Math.cos(a),ca=camYaw,vx=-Math.sin(ca),vz=-Math.cos(ca);
+  mmX.save();mmX.fillStyle='rgba(255,255,255,.13)';mmX.beginPath();mmX.moveTo(qx,qy);const sp=.55,base=Math.atan2(vz,vx);mmX.arc(qx,qy,30,base-sp,base+sp);mmX.closePath();mmX.fill();
+  mmX.translate(qx,qy);mmX.rotate(Math.atan2(fz,fx));mmX.lineJoin='round';
+  mmX.beginPath();mmX.moveTo(11,0);mmX.lineTo(-6,-7);mmX.lineTo(-2.5,0);mmX.lineTo(-6,7);mmX.closePath();mmX.lineWidth=3;mmX.strokeStyle='#08110b';mmX.stroke();mmX.lineWidth=1.4;mmX.strokeStyle='#f4fff6';mmX.stroke();mmX.fillStyle='#4ade80';mmX.fill();mmX.restore()};
+{const f=openWMap;openWMap=function(){const r=f.apply(this,arguments);try{const I=mf141Here(),c=$('wmc'),g=c.getContext('2d');let x0,y0,s;
+  if(I){x0=I.x0;y0=I.y0;s=Math.min(1060/I.w,640/I.h)}else{const T=TOWNS[0];x0=T.cx-60;y0=T.cy-30;const w=120,h=TWN100_PG[TWN100_PG.length-1].y+16-y0;s=Math.min(1060/w,640/h)}
+  const x=(pl.position.x-x0+.5)*s,y=(pl.position.z-y0+.5)*s,a=mf141Face();g.save();g.translate(x,y);g.rotate(Math.atan2(Math.cos(a),Math.sin(a)));
+  g.beginPath();g.moveTo(17,0);g.lineTo(5,-7);g.lineTo(5,7);g.closePath();g.fillStyle='#4ade80';g.fill();g.lineWidth=1.5;g.strokeStyle='#000';g.stroke();g.restore()}catch(e){}return r}}
+
+// ---------------- save / load ----------------
+function mf141Enc(){const a=MF141.cells;if(!a)return null;const out=[];let v=0,n=0;for(let i=0;i<a.length;i++){if(a[i]===v)n++;else{out.push(n.toString(36));v=a[i];n=1}}out.push(n.toString(36));return out.join('.')}
+function mf141Dec(s){mf141Init();MF141.cells.fill(0);if(!s)return mf141Paint();let i=0,v=0;String(s).split('.').forEach(t=>{const n=parseInt(t,36)||0;if(v)MF141.cells.fill(1,i,Math.min(MF141.cells.length,i+n));i+=n;v^=1});mf141Paint()}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{if(MF141.cells)o.fog141={c:MF141.C,w:MF141.cw,h:MF141.ch,r:mf141Enc()}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const F=s&&s.fog141;mf141Init();if(F&&F.c==MF141.C&&F.w==MF141.cw&&F.h==MF141.ch)mf141Dec(F.r);else mf141Dec(null);MF141.nodes={}}catch(e){console.warn('fog load',e)}return r}}
+// (the game saves every 30 s, on hide and on leaving the page, so revealed cells are kept without anything extra here)
+// ================= v141: menus keep their scroll spot; the item detail panel stays compact =================
+// Scroll: many windows rebuild their lists with innerHTML (levelling an ability rebuilds the whole Abilities list), which
+// creates new scroll boxes that start at the top. Every scroll inside a window is remembered under a key (window, its mode,
+// the box's id or class path); when a rebuild adds a box with the same key, it gets its old position back. Opening a window
+// (or switching the #xw window to another mode) starts at the top as before. Explicit resets on boxes that stay in place
+// (Fusion steps, picking another companion) are untouched.
+var KS141={mem:{},on:true};
+function ks141Win(el){for(const id of WINS){const w=$(id);if(w&&w.contains(el))return w}return null}
+function ks141Key(el,w){if(!w)return null;let p=el,path=[];
+  while(p&&p!==w){if(p.id){path.push('#'+p.id);break}const cl=(p.className&&typeof p.className=='string')?p.className.trim().split(/\s+/).filter(c=>!/^(on|sel|hide|open|active|hl|dis)$/.test(c)).sort().join('.'):'';
+    let i=0,q=p;while((q=q.previousElementSibling))if(q.tagName===p.tagName&&q.className===p.className)i++;path.push(p.tagName+(cl?'.'+cl:'')+(i?':'+i:''));p=p.parentElement}
+  return w.id+'|'+(w.id=='xw'&&typeof xwMode!='undefined'?xwMode:'')+'|'+path.reverse().join('>')}
+document.addEventListener('scroll',e=>{const el=e.target;if(!el||el.nodeType!==1)return;const w=ks141Win(el);if(!w)return;const k=ks141Key(el,w);if(k)KS141.mem[k]=el.scrollTop},true);
+function ks141Restore(root,w){const L=[root,...root.querySelectorAll('*')];for(const el of L){const k=ks141Key(el,w),v=k&&KS141.mem[k];if(!(v>0))continue;
+  if(el.scrollHeight>el.clientHeight&&Math.abs(el.scrollTop-v)>1)el.scrollTop=v}}
+WINS.forEach(id=>{const w=$(id);if(!w)return;let wasHidden=w.classList.contains('hide');
+  new MutationObserver(recs=>{if(!KS141.on)return;
+    // opened again: forget this window's old positions
+    const hid=w.classList.contains('hide');if(wasHidden&&!hid){for(const k in KS141.mem)if(k.startsWith(id+'|'))delete KS141.mem[k]}wasHidden=hid;if(hid)return;
+    const seen=new Set();recs.forEach(r=>{if(r.type!='childList')return;r.addedNodes.forEach(n=>{if(n.nodeType===1&&!seen.has(n)){seen.add(n);try{ks141Restore(n,w)}catch(_){}}});
+      // a box whose children were all replaced keeps its own position (it can clamp to 0 while the new content lays out)
+      if(r.target&&r.target.nodeType===1&&!seen.has(r.target)){seen.add(r.target);const k=ks141Key(r.target,w),v=k&&KS141.mem[k];if(v>0&&r.target.scrollTop<1)r.target.scrollTop=v}})
+  }).observe(w,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})});
+// the #xw window: a re-render in the same mode keeps the body's position (switching mode starts at the top)
+{const f=rX;rX=function(){const B=$('xwB'),m=typeof xwMode!='undefined'?xwMode:'',t=B?B.scrollTop:0;const r=f.apply(this,arguments);
+  try{if(B&&m===xwMode&&t>0&&B.scrollTop!==t)B.scrollTop=t}catch(_){}return r}}
+
+// ---------------- item detail panel (inventory footer): one compact box ----------------
+// The unique / legendary / set blocks were appended as siblings of the details in a non-wrapping flex row, so the details
+// shrank to one word per line and the extra lines ran across the whole screen. Now the panel wraps: the details take the
+// full width in two columns of stats, the buttons sit under them, and the extra blocks follow at full width, capped in height.
+document.head.insertAdjacentHTML('beforeend',`<style id="idt141">
+#bag #idt{flex-wrap:wrap;align-items:flex-start;gap:6px 10px;max-height:min(42vh,330px);overflow:auto}
+#bag #idt>.dtl{flex:1 1 100%;min-width:0}
+#bag #idt>.dtl .dfs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px 14px}
+#bag #idt>.dtl .dfs>*{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bag #idt>div:not(.dtl){flex:0 1 auto;max-width:100%}
+#bag #idt>.kqm-tx,#bag #idt>.kqm-ts,#bag #idt>.lpbox,#bag #idt>.setbox{flex:1 1 100%;margin:0}
+#bag #idt>.kqm-ts{font-size:.72rem;opacity:.8}
+#bag #idt .wsrow{display:flex;flex-wrap:wrap;gap:6px}#bag #idt .wsrow>*{flex:0 1 auto}
+</style>`);

@@ -9,7 +9,7 @@ const runeOf=(c,f)=>(c.runes||[]).map(k=>RUNES[k]&&RUNES[k][3]).filter(Boolean);
 function runeEl(c){const r=runeOf(c).find(q=>q.el);return r?r.el:null}
 function runeMul(c,k){let m=1;runeOf(c).forEach(q=>{if(q[k])m*=q[k]});return m}
 function runeHit(c,d){const l=runeOf(c).find(q=>q.leech);if(l&&c.h>0)c.h=Math.min(M(c),c.h+d*l.leech)}
-function runeTick(dt){if(dt<=0)return;party.slice(0,2).forEach(c=>{if(!c||!c.cdm||!runeOf(c).some(q=>q.swift))return;for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*.43)})}
+function runeTick(dt){if(dt<=0)return;party.slice(0,actN141()).forEach(c=>{if(!c||!c.cdm||!runeOf(c).some(q=>q.swift))return;for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*.43)})}
 function runeHTML(c){const slots=c.runes||[],own=RUNEK.filter(k=>cnt(k)>0);
   let h=`<div class="sec">Runes (${slots.length}/2)</div><div class="runeS">`+[0,1].map(i=>{const k=slots[i];return k?`<button data-runrm="${i}" title="Remove (returns the rune)">${RUNES[k][1]} <b>${RUNES[k][0]}</b><small>${RUNES[k][2]}</small></button>`:`<div class="rempty">Empty rune slot</div>`}).join('')+'</div>';
   if(slots.length<2)h+=own.length?`<div class="runeL">`+own.map(k=>`<button data-runadd="${k}">${RUNES[k][1]} ${RUNES[k][0]} ×${cnt(k)}</button>`).join('')+'</div>':'<div class="mut dtl">No runes. Find them on elites, bosses, chests, events and rare fish, or buy them from the Rune Sage when it visits Duskhold.</div>';

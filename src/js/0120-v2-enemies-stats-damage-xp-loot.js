@@ -82,7 +82,7 @@ function HS_base(){
   const add=o=>{for(const k in o){if(k in P)P[k]+=o[k];else if(k!='dash3')s[k]=(s[k]||0)+o[k]}};
   SLOTS.forEach(k=>{const it=eq[k];if(it&&canUse(it))add(itStats(it))});
   add(T);if(talRank('a14')>=3)s.dash+=1;
-  party.slice(0,2).forEach(c=>{if(!c||c.h<=0)return;
+  party.slice(0,actN141()).forEach(c=>{if(!c||c.h<=0)return;
     (c.mods||[]).forEach(m=>{const Mo=MODS[m];if(Mo.t)add(Mo.t);if(c.emp&&Mo.e)add(Mo.e)});
     if(c.emp){const k=.24*(1+(T.empP||0));s.hp+=cM(c)*k;s.pa+=cStat(c,'pa')*k;s.ma+=cStat(c,'ma')*k;s.pd+=cStat(c,'pd')*k;s.md+=cStat(c,'md')*k;
       (c.sp||[]).forEach(n=>{const sp=CSP[n];if(sp&&sp.emp&&sp.emp.k=='stat')add(sp.emp.s)})}});
@@ -127,7 +127,7 @@ function heroHit_base(e,raw,mt,o){
     const now=performance.now(),atk=atkOf(mt||heroMt());
     if(s.poisonOn||hero.buffs.some(b=>b.t>now&&b.s.poisonOn))eStatus(e,{poison:4},atk*.35*(1+s.poisonP));
     if(s.slowOn&&Math.random()<s.slowOn)eStatus(e,{slow:2.5},0);
-    party.slice(0,2).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em||em.k!='onhit'||Math.random()>em.ch)return;
+    party.slice(0,actN141()).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em||em.k!='onhit'||Math.random()>em.ch)return;
       if(em.fx=='zap'){chainFrom(e,atk*.5,'m',2,0xfff06a,null);return}eStatus(e,{[em.fx]:em.fx=='root'?1.5:3},atk*.3)})});
     if(o.s&&o.s.stun)eStatus(e,{stun:o.s.stun},0,'h');if(o.s&&o.s.burn)eStatus(e,{burn:4},atk*.3);
   }
@@ -208,7 +208,7 @@ function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
 }
 function heroLevelUp(){

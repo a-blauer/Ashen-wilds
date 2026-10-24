@@ -86,7 +86,7 @@ function cpic(c){const k=cpicKey(c);if(CPIC.cache[k]!==undefined)return CPIC.cac
   setTimeout(()=>{try{CPIC.cache[k]=cpicMake(c)||''}catch(e){CPIC.cache[k]=''}cbarSig='';hud()},0);return null}
 var cbarSig='';
 function cbarsRender(){
-  const cb=$('cbars');if(!cb)return;const L=party.slice(0,2);
+  const cb=$('cbars');if(!cb)return;const L=party.slice(0,actN141());
   const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c)].join(':')).join('/');
   if(sig!==cbarSig){cbarSig=sig;
     cb.innerHTML=L.map((c,i)=>{const p=cpic(c),dead=c.h<=0;

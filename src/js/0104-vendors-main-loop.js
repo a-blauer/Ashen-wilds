@@ -11,7 +11,7 @@ $('prompt').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
 function sync(){
   if(!party.length)return;
   for(let i=0;i<2;i++){
-    const c=party[i];
+    const c=i<actN141()?party[i]:null; // v141: the 2nd companion rests until the Companion Bond is learned
     if(!c){if(fols[i]){scene.remove(fols[i]);fols[i]=null;leadK[i]=''}continue}
     const k=c.n+c.f+c.v+c.g.join()+c.cl.join()+c.tr+'|'+(c.evo||0);if(k==leadK[i])continue;leadK[i]=k;
     const old=fols[i],g=cr(c);g.position.copy(old?old.position:V(pl.position.x-1-i,0,pl.position.z));scene.add(g);if(old)scene.remove(old);fols[i]=g;
