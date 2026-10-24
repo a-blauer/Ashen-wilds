@@ -2997,8 +2997,7 @@ let mstock=null;
 function rMS(){
   const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
   const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,D=c=>shpP109('magic',c),rc=D(40*hero.lvl),xc=D(60+hero.lvl*12);
-  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr139Spent()?'disabled':''}>Reset</button></span></div>`+
-   `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
+  $('mst').innerHTML=shpNote109('magic')+/* v141: the Tome of Unlearning (attribute reset) is no longer sold */`<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
    UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(D(Math.round(UPV[i]*.9)))}<button class="pri" data-ms="u${i}" ${gold<D(Math.round(UPV[i]*.9))?'disabled':''}>Buy</button></span></div>`).join('')+
    mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(D(EGV[e.tier]))}<button class="pri" data-ms="e${i}" ${gold<D(EGV[e.tier])?'disabled':''}>Buy</button></span></div>`:'').join('');
 }
@@ -34069,6 +34068,7 @@ var A7MOT={
     const S2=c.S(.6,.03);if(S2.ok)gkRunes(c.k,'pelvis',a7Band(S2,-1,1,8,.003).map(a=>a.p.concat([Math.atan2(a.n[0],a.n[2])])),c.C.gl,[['pelvis',1]],1)},
   boots(c){const S=c.S(c.Y(.16),.02);if(S.ok)gkRunes(c.k,c.bn,a7Band(S,-1.6,1.6,8,.003).map(a=>a.p.concat([Math.atan2(a.n[0],a.n[2])])),c.C.gl,c.nw(S.at(0,0).p),1)}}};
 // ================= v137: the 50 new weapons — a recipe each =================
+// v141: the four greatsword grips reach down to the guard (they ended 0.04–0.08 above the hand, which closed on empty air).
 // Same frame as every weapon (lgWpnKit): the grip at the origin, the head / blade pointing down -y, the flat of a blade in
 // x-y, and the same footprint per type (a greatsword ~1.3 long, a dagger ~.5, a staff 1.7…), so hands, poses, attack
 // animations, the bow's drawn string and the clip tests work unchanged. Bows, crossbows and slings keep the v83/v135 frame
@@ -34091,22 +34091,22 @@ function w7Wavy(len,w0,w1,amp,waves,tip,y0){const L=[],R=[],n=waves*4;for(let i=
 // colours of an item: rarity picks fittings and glow
 function w7C(it,o){const r=it.r|0,t=itT(it);return Object.assign({r,ti:t.t|0,fit:r>=2?LGW.brass:LGW.iron,gl:r>=3?v89Rc(r):null,steel:LGW.steel,dark:0x2a2a30,bone:0xd8ccb0,wood:LGW.wood,woodD:LGW.woodD,leather:LGW.leather,wrap:LGW.wrap},o||{})}
 // ---------------- greatswords (grip .37….05, guard ≈ -.14, blade to ≈ -1.3) ----------------
-W137.gs_grave=(k,c)=>{w7Grip(k,.34,.3,.034,0x8a7a5a,0x6a5a40);k.p('','ring','m',c.dark,0,.37,0,.04,.25,.04,Math.PI/2);
+W137.gs_grave=(k,c)=>{w7Grip(k,.34,.45,.034,0x8a7a5a,0x6a5a40);k.p('','ring','m',c.dark,0,.37,0,.04,.25,.04,Math.PI/2);
   k.L('','m',0x4a4440,[-.2,-.13,0],[.2,-.13,0],.022,.022,5);[-1,1].forEach(s=>k.L('','m',0x4a4440,[s*.2,-.13,0],[s*.23,-.09,0],.022,.012,5));
   const P=[[-.06,-.15],[.06,-.15],[.075,-.6],[.1,-1.0],[.11,-1.12],[.09,-1.22],[.04,-1.28],[0,-1.3],[-.04,-1.28],[-.09,-1.22],[-.11,-1.12],[-.1,-1.0],[-.075,-.6]];
   w7Blade(k,'gsg',P,.024,0x6a5a4c,0x8a7a6a);for(let i=0;i<6;i++){const y=-.35-i*.14,s=i%2?1:-1;k.p('','cone4','m',0x1a1410,s*(.078+i*.004),y,0,.012,.03,.016,0,0,s*Math.PI/2)}
   k.p('','box','c',0x3a2a1a,0,-.55,0,.03,.6,.026);if(c.gl)k.p('','box','g',c.gl,0,-.9,0,.012,.2,.028)};
-W137.gs_flame=(k,c)=>{w7Grip(k,.34,.3,.033,0x6a1a1a,0x2a1010);k.p('','oct','m',c.fit,0,.39,0,.045,.055,.045);k.p('','oct','g',c.gl||0xff6a20,0,.39,.03,.018);
+W137.gs_flame=(k,c)=>{w7Grip(k,.34,.45,.033,0x6a1a1a,0x2a1010);k.p('','oct','m',c.fit,0,.39,0,.045,.055,.045);k.p('','oct','g',c.gl||0xff6a20,0,.39,.03,.018);
   k.p('','box','m',c.fit,0,-.13,0,.32,.04,.06);[-1,1].forEach(s=>{k.L('','m',c.fit,[s*.16,-.13,0],[s*.2,-.2,0],.018,.012,5);k.L('','m',c.fit,[s*.2,-.2,0],[s*.17,-.26,0],.012,.004,5);k.L('','m',c.dark,[s*.05,-.22,0],[s*.1,-.26,0],.01,.003,4)});
   k.p('','box','c',0x4a1a14,0,-.22,0,.08,.12,.034);w7Blade(k,'gsf',w7Wavy(1.0,.05,.035,.022,4,.12,-.28),.022,0x3a3438,0x8a8a92);
   k.p('','box','g',c.gl||0xff7a2a,0,-.75,0,.008,.85,.026);for(let i=0;i<4;i++)k.p('','oct','g',0xffb060,(i%2?.01:-.01),-.4-i*.2,.014,.006,.012,.004)};
-W137.gs_exec=(k,c)=>{w7Grip(k,.35,.32,.036,0x2a2a2a,0x1a1a1a);gkSkull(k,'',0,.4,0,1.1,c.bone,0,null);
+W137.gs_exec=(k,c)=>{w7Grip(k,.35,.46,.036,0x2a2a2a,0x1a1a1a);gkSkull(k,'',0,.4,0,1.1,c.bone,0,null);
   k.p('','box','m',c.dark,0,-.13,0,.4,.06,.08);k.p('','box','m',c.fit,0,-.13,0,.42,.025,.085);
   const P=[[-.1,-.16],[.1,-.16],[.12,-1.24],[-.12,-1.24]];w7Blade(k,'gse',P,.026,0x5a5e66,0x9aa0aa,0,0,0,0,.016);
   k.p('','cyl','c',0x14100c,0,-1.08,0,.035,.03,.035,Math.PI/2);k.p('','ring','m',c.steel,0,-1.08,0,.04,.2,.04,Math.PI/2);
   for(let i=0;i<3;i++)gkRunes(k,'',[[-.05,-.4-i*.18,.015,0],[.05,-.45-i*.18,.015,0]],c.gl||0x5a5e66,null,1.4);
   gkChain(k,'',[[-.11,-.2,.02],[0,-.25,.03],[.11,-.2,.02],[.1,-.32,.02],[0,-.36,.03],[-.1,-.32,.02]],.009,0x4a4a50,null)};
-W137.gs_ruin=(k,c)=>{w7Grip(k,.36,.34,.036,0x1a1418,0x3a1018);[-1,1].forEach(s=>k.L('','m',c.dark,[0,.39,0],[s*.04,.47,0],.02,.002,4));k.p('','oct','m',c.dark,0,.4,0,.045);
+W137.gs_ruin=(k,c)=>{w7Grip(k,.36,.39,.036,0x1a1418,0x3a1018);[-1,1].forEach(s=>k.L('','m',c.dark,[0,.39,0],[s*.04,.47,0],.02,.002,4));k.p('','oct','m',c.dark,0,.4,0,.045);
   // bat-wing guard with an eye
   [-1,1].forEach(s=>{const P=[[0,.02],[.1,.04],[.2,.1],[.26,.02],[.22,-.02],[.18,.0],[.14,-.04],[.1,-.01],[.06,-.05],[0,-.04]];k.p('',lgSlab('w7rw',P,.02),'m',0x1e1a20,0,-.14,0,s,1,1)});
   k.p('','sph','m',0x2a1a20,0,-.14,0,.05,.05,.04);k.p('','sph','g',c.gl||0xff2a2a,0,-.14,.03,.026,.026,.016);k.p('','box','c',0x050505,0,-.14,.045,.006,.03,.004);
@@ -34150,6 +34150,7 @@ W137.hb_watch=(k,c)=>{w7Haft(k,.3,-1.42,.03,c.wood,27);w7Bands(k,[.25,-.9,-1.38]
   k.p('','box','m',c.dark,0,-1.0,0,.06,.06,.05);k.p('','box','m',c.dark,0,-1.38,0,.06,.06,.05);k.L('','m',c.dark,[-.02,-1.2,0],[-.1,-1.18,0],.01,.01,4);k.p('','ring','m',c.dark,-.11,-1.2,0,.02,.2,.02);
   k.p('','cone4','m',c.steel,0,-1.5,0,.025,.16,.02,Math.PI)};
 W137.hb_reaper=(k,c)=>{// a vertebra haft and a scythe blade
+  k.p('','cyl','c',0xa89c80,0,-.48,0,.024,1.56,.024); // v141: a solid core through the vertebrae, so the hand always closes on the haft
   for(let i=0;i<14;i++){const y=.28-i*.11;k.p('','cyl','c',i%2?0xd0c4a8:0xb8ac90,0,y,0,.032,.08,.032);k.p('','cone4','c',0xc8bca0,0,y,-.03,.012,.03,.02,Math.PI/2+.4)}
   k.p('','sph2','c',c.bone,0,-1.3,0,.05,.05,.045);[-1,1].forEach(s=>k.p('','sph','g',c.gl||0x7affc8,s*.018,-1.3,.04,.009));
   const P=[[0,.03],[.1,.06],[.22,.04],[.34,-.02],[.44,-.1],[.5,-.22],[.42,-.14],[.32,-.08],[.2,-.04],[.08,-.03],[0,-.03]];w7Blade(k,'hbr',P,.024,0x4a4a54,0xb0b4bc,.03,-1.26,0,0,.01);
@@ -35587,6 +35588,36 @@ $('xw').addEventListener('click',e=>{const t=e.target.closest('[data-cs141]');if
 {const f=toggleEmp;toggleEmp=function(i){if(i>=actN141())return say(cs141Ready()?'🔒 Learn the Companion Bond at the Beast Trainer to bring a second companion.':'🔒 A second companion joins you after two Sovereigns are defeated (Beast Trainer).');return f.apply(this,arguments)}}
 // a 2nd companion that empowered you before the slot closed (old saves) stops
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!cs141Has()&&party[1]&&party[1].emp)party[1].emp=false}catch(_){}return r}}
+
+// ---------------- signs that show a recommended power follow the hero's class ----------------
+// The portal signs (and the Portal Road board) are painted while the town is built, before the save's hero is loaded, so
+// they used the default class's power scale. Every "Rec. power" text remembers its level; when the hero's class is known
+// (load, new hero, class change) the signs that carry one are repainted from the registry of painted signs (SGNR).
+var RP141={L:{},cls:null};
+{const f=rpTxt139;rpTxt139=function(L){const t=f.apply(this,arguments);if(t)RP141.L[t]=L;return t}}
+// the level a sign's power belongs to: the zone named on that line (else on the sign) - its first level
+function rp141Lv(t,lines){const all=lines.map(l=>String(l.t||'')).join(' ');for(const src of [t,all]){const i=PMAP.findIndex(p=>p&&p.n&&src.includes(p.n));if(i>=0)return PMAP[i].lv[0]}
+  const m=t.match(/⚔ Rec\. power [\d,.]+/);return m&&RP141.L[m[0]]!=null?RP141.L[m[0]]:null}
+function rp141Refresh(){if(typeof SGNR=='undefined'||!SGNR)return;const re=/⚔ Rec\. power [\d,.]+/g;
+  SGNR.forEach(r=>{try{const lines=r.a&&r.a[0];if(!Array.isArray(lines))return;if(!r.o141)r.o141=lines.map(l=>Object.assign({},l));
+    let ch=false;const nl=r.o141.map(l=>{const t=String(l.t||'');if(!re.test(t))return l;re.lastIndex=0;const nt=t.replace(re,m=>{const L=rp141Lv(t,r.o141);if(L==null)return m;ch=true;return rpTxt139(L)});return Object.assign({},l,{t:nt})});
+    if(ch){r.a[0]=nl;signPaint(r.c,...r.a);r.t.needsUpdate=true}}catch(_){}})}
+setInterval(()=>{try{if(typeof hero!='undefined'&&hero&&hero.cls&&hero.cls!==RP141.cls){RP141.cls=hero.cls;rp141Refresh()}}catch(_){}},1000);
+
+// ---------------- wood and stone outside Duskhold's walls ----------------
+// The pines, dead trees and rocks scattered on the island around the walls (KF109.wsel.L, one merged kit) can be chopped and
+// mined like the zone's own nodes: they give wood / stone and train the same skills. A used one rests OUT141.rest seconds
+// (it stays where it is; the next one nearby is ready).
+var OUT141={rest:180,dep:{}};
+function out141Kind(p){return p.t=='pine'||p.t=='dead'?'tree':p.t=='rock'?'rock':null}
+{const f=gTarget;gTarget=function(){const r=f.apply(this,arguments);if(r)return r;try{if(typeof curMap=='function'&&curMap()>=0)return null;
+  const L=out141List();if(!L)return null;const now=performance.now();let best=null,bd=2.3;
+  L.forEach((p,i)=>{if(!p.kind)return;if((OUT141.dep[i]||0)>now)return;const d=Math.hypot(p.x-pl.position.x,p.z-pl.position.z)-(p.kind=='rock'?.45*(p.s||1):.15);
+    if(d<bd){bd=d;best={kind:p.kind,x:p.x,y:p.z,k:-1,o141:i}}});return best}catch(_){return null}}}
+// the list in world coordinates (the kit sits in the town group, centred on the town)
+function out141List(){const W=typeof KF109!='undefined'&&KF109&&KF109.wsel,G=KF109&&KF109.wild;if(!W||!W.L||!G)return null;if(OUT141.src===W)return OUT141.L;
+  G.updateWorldMatrix(true,false);const v=new THREE.Vector3();OUT141.L=W.L.map(p=>{v.set(p.x,0,p.z).applyMatrix4(G.matrixWorld);return {x:v.x,z:v.z,s:p.s,kind:out141Kind(p)}});OUT141.src=W;OUT141.dep={};return OUT141.L}
+{const f=gFinish;gFinish=function(tg){const r=f.apply(this,arguments);try{if(tg&&tg.o141!=null)OUT141.dep[tg.o141]=performance.now()+OUT141.rest*1000}catch(_){}return r}}
 // ================= v141: minimap and N map are revealed as you explore; found gathering spots; facing arrow =================
 // Fog: the zone instances start dark; everything within MF141.R tiles of the hero is revealed, in cells of MF141.C tiles.
 // Duskhold and the void between instances are never fogged. The fog is a canvas (mmFog, world size, 1 px per tile) that is
@@ -35699,3 +35730,318 @@ document.head.insertAdjacentHTML('beforeend',`<style id="idt141">
 #bag #idt>.kqm-ts{font-size:.72rem;opacity:.8}
 #bag #idt .wsrow{display:flex;flex-wrap:wrap;gap:6px}#bag #idt .wsrow>*{flex:0 1 auto}
 </style>`);
+// ================= v141: bestiary pages for every enemy (picture, stats, where it lives, drop table) =================
+// The Enemies tab is a list (grouped by the zone where each creature first appears) and a page for the selected one.
+// A creature's page opens once you have defeated it (the list keeps "Unknown enemy" before that, as it always did).
+// Stats come from enStats at the levels of the instances it lives in. Drop chances are worked out from the loot code
+// (lootE_base + meat in 0170, the 70% kept by pV6's filter in 0530, the egg rate EGG92.rate, uniques UNQ135_P) with your
+// current loot bonus. The picture is a full-body render of the real model on the companion portrait renderer (CPIC.r).
+var DEX141={sel:null,where:null,pic:{},q:[],busy:false,W:220,H:190};
+// where each enemy lives: instance list per key [{z,k,lo,hi,t,camp}]
+function dex141Where(){if(DEX141.where)return DEX141.where;const W2={};
+  INSL.forEach((I,r)=>{if(!I.fld)return;const p=PMAP[I.z];const R=typeof n3Ins=='function'&&typeof N3!='undefined'&&N3.on?n3Ins(r):null;
+    const add=(k,camp)=>{if(!EN[k])return;const L=W2[k]||(W2[k]=[]);let o=L.find(o=>o.z==I.z&&o.k==I.k);if(!o){o={z:I.z,k:I.k,lo:I.lv[0],hi:I.lv[1],t:p.t,camp:false,roam:false};L.push(o)}if(camp)o.camp=true;else o.roam=true};
+    (R?R.L:(BIOEN[p.n]||[])).forEach(k=>add(k,false));
+    CAMPS.forEach(C=>{if(C.ig!==r||!C.th||!C.th.mem)return;C.th.mem.forEach(m=>add(m[0],true))})});
+  Object.values(W2).forEach(L=>L.sort((a,b)=>a.z-b.z||a.k-b.k));return DEX141.where=W2}
+function dex141Keys(){return Object.keys(EN).filter(k=>!k.startsWith('boss'))}
+function dex141St(k,l,al){const s=enStats(EN[k],l,al,0);return {hp:Math.round(s.hp),pa:Math.round(s.pa),ma:Math.round(s.ma),pd:Math.round(s.pd),md:Math.round(s.md)}}
+function dex141Pct(p){if(p>=.995)return '100%';if(p<=0)return '—';if(p<.001)return '1 in '+Math.round(1/p).toLocaleString();const v=p*100;return (v<1?v.toFixed(2):v<10?v.toFixed(1):Math.round(v))+'%'}
+// the drop table at level l, zone tier T (normal and elite)
+function dex141Drops(k,l,T,z){const E=EN[k],fam=E.fam||'Beast',lk=1+((typeof HS=='function'&&HS().loot)||0),keep=.7,eg=typeof EGG92!='undefined'?EGG92.rate:1;
+  const gb=1+([0,.1,.2,.3][typeof shL=='function'?shL('treas'):0]||0),g0=(3+l*1.4)*.65*gb;
+  const rows=[['🪙','Gold',Math.round(g0*.7)+'–'+Math.round(g0*1.3),Math.round(g0*3*.7)+'–'+Math.round(g0*3*1.3)],
+    ['⚔️','Gear (any slot, rolled at its level)',dex141Pct(.035*lk*keep),dex141Pct(Math.min(1,.3*lk)*keep)+' <small>uncommon+</small>'],
+    ['🥚','Tier '+T+' egg (random family)',dex141Pct(.04*lk*keep*eg),dex141Pct(.12*lk*keep*eg)],
+    [UPM[T-1][1],UPM[T-1][0],dex141Pct(.1*lk*keep),dex141Pct(.5*lk*keep)+' <small>×1–3</small>'],
+    [(FAMD[fam]&&FAMD[fam].mi)||'🧩',(FAMD[fam]&&FAMD[fam].mat)||'Family part',dex141Pct(.18*lk*keep)+' <small>×1–2</small>',dex141Pct(.6*lk*keep)+' <small>×2–4</small>']];
+  if(['Beast','Sky','Dragon','Earth'].includes(fam))rows.push(['🍖','Raw meat',dex141Pct(.1*keep),dex141Pct(.25*keep)]);
+  rows.push(['🧪','Health potion',dex141Pct(.06*lk*keep),dex141Pct(.06*lk*keep)]);
+  if(z!=null&&typeof UNQ135_ZK!='undefined'&&UNQ135_ZK[z]){const lu=1+Math.min(1,((typeof HS=='function'&&HS().loot)||0));
+    rows.push(['✦','Unique of '+PMAP[z].n+': '+UNQ135_ZK[z].map(q=>UNQ135[q].n).join(', '),dex141Pct(UNQ135_P.kill*lu),dex141Pct(UNQ135_P.elite*lu)])}
+  return rows}
+// full-body picture, rendered one at a time in the background
+function dex141Pic(k){if(DEX141.pic[k]!==undefined)return DEX141.pic[k];DEX141.pic[k]=null;DEX141.q.push(k);dex141Pump();return null}
+function dex141Pump(){if(DEX141.busy||!DEX141.q.length)return;DEX141.busy=true;setTimeout(()=>{const k=DEX141.q.shift();
+  try{DEX141.pic[k]=dex141Make(k)||''}catch(e){console.warn('dex pic',k,e);DEX141.pic[k]=''}
+  DEX141.busy=false;try{const im=document.querySelectorAll('#xwB [data-dexpic="'+k+'"]');im.forEach(el=>{if(DEX141.pic[k])el.innerHTML='<img src="'+DEX141.pic[k]+'" alt="">'})}catch(_){}
+  dex141Pump()},30)}
+function dex141Make(k){if(!cpicInit())return null;const c=enemyC(k,10,{});const m=cr(c);if(!m)return null;const R=CPIC.r,W=DEX141.W,H=DEX141.H,cv=R.domElement;
+  m.position.set(0,0,0);m.rotation.set(0,0,0);CPIC.sc.add(m);
+  try{try{if(m.rig)m.rig(0,false,0)}catch(_){}m.updateMatrixWorld(true);
+    const box=new THREE.Box3().setFromObject(m),sz=box.getSize(new THREE.Vector3()),ctr=box.getCenter(new THREE.Vector3());
+    const r=Math.max(sz.y*.62,Math.hypot(sz.x,sz.z)*.5,.3),dist=r/Math.tan(15*Math.PI/180)*1.05;
+    R.setSize(W,H,false);CPIC.cam.aspect=W/H;CPIC.cam.updateProjectionMatrix();
+    CPIC.cam.position.set(ctr.x+dist*.55,ctr.y+dist*.22,ctr.z+dist*.8);CPIC.cam.lookAt(ctr);R.render(CPIC.sc,CPIC.cam);return cv.toDataURL('image/png')}
+  finally{CPIC.sc.remove(m);R.setSize(112,112,false);CPIC.cam.aspect=1;CPIC.cam.updateProjectionMatrix()}}
+function dex141Mv(n){const M=typeof MV!='undefined'&&MV[n];const nm=M&&(M.nm||M.n);return nm&&typeof nm=='string'?nm:String(n).replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase())}
+function dex141Page(k){const E=EN[k],n=kills[k]||0,Wh=dex141Where()[k]||[],F=FAMD[E.fam]||{};
+  if(!n)return `<div class="d141-page d141-unk"><div class="d141-pic">❔</div><b>Unknown enemy</b><p class="mut">Defeat one to learn its stats and what it drops.</p></div>`;
+  const pic=dex141Pic(k),w0=Wh[0],lo=w0?w0.lo:1,hi=w0?Wh.reduce((a,o)=>Math.max(a,o.hi),0):1,T=w0?w0.t:1,z=w0?w0.z:null;
+  const s0=dex141St(k,lo,0),s1=dex141St(k,hi,0),se=dex141St(k,hi,1),SN=[['hp','Health'],['pa','Phys. attack'],['ma','Magic attack'],['pd','Phys. defense'],['md','Magic defense']];
+  const wt=E.w||{},hint=q=>{const v=wt[q]||1;return v>=1.15?'<em class="hi">high</em>':v<=.75?'<em class="lo">low</em>':''};
+  const where=Wh.length?Wh.map(o=>`${PMAP[o.z].n} ${['I','II','III'][o.k]} <small>Lv ${o.lo}–${o.hi}${o.camp&&!o.roam?' · camps':o.camp?' · roams + camps':''}</small>`).join('<br>'):'<span class="mut">Not found in the zones any more.</span>';
+  const mv=(E.moves||[]).map(dex141Mv).join(' · ');
+  return `<div class="d141-page"><div class="d141-top"><div class="d141-pic" data-dexpic="${k}">${pic?`<img src="${pic}" alt="">`:`<span>${E.e||'❔'}</span>`}</div>
+   <div class="d141-id"><b>${E.e||''} ${E.n}</b><div class="mut">${F.i||''} ${E.fam||'—'} · ${E.mt=='m'?'magic':'physical'} attacks${E.ranged?' · ranged':''}</div>
+   <div class="d141-kc">${n} defeated${n>=100?' · ★ mastered':n>=25?' · ✔ studied':''}</div>${mv?`<div class="d141-mv"><small>Moves</small> ${mv}</div>`:''}<div class="d141-wh"><small>Lives in</small><br>${where}</div></div></div>
+   <div class="d141-sec">Stats</div><table class="d141-t"><thead><tr><th></th><th>Lv ${lo}</th>${hi!=lo?`<th>Lv ${hi}</th>`:''}<th>Elite Lv ${hi}</th></tr></thead><tbody>
+   ${SN.map(([q,l])=>`<tr><td>${l} ${hint(q)}</td><td>${s0[q]}</td>${hi!=lo?`<td>${s1[q]}</td>`:''}<td>${se[q]}</td></tr>`).join('')}</tbody></table>
+   <div class="d141-sec">Drops <small class="mut">per kill · Lv ${hi}${((typeof HS=='function'&&HS().loot)||0)>0?' · with your +'+Math.round(HS().loot*100)+'% loot':''}</small></div>
+   <table class="d141-t d141-d"><thead><tr><th></th><th>Normal</th><th>Elite</th></tr></thead><tbody>
+   ${dex141Drops(k,hi,T,z).map(r=>`<tr><td>${r[0]} ${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}</tbody></table></div>`}
+function dex141Tab(){const Wh=dex141Where(),keys=dex141Keys(),grp={};
+  keys.forEach(k=>{const o=(Wh[k]||[])[0],g=o?o.z:99;(grp[g]=grp[g]||[]).push(k)});
+  Object.values(grp).forEach(L=>L.sort((a,b)=>{const A=(Wh[a]||[])[0],B=(Wh[b]||[])[0];return (A?A.k*100+A.lo:999)-(B?B.k*100+B.lo:999)||EN[a].n.localeCompare(EN[b].n)}));
+  if(!DEX141.sel||!EN[DEX141.sel])DEX141.sel=keys.find(k=>kills[k])||keys[0];
+  const list=Object.keys(grp).sort((a,b)=>a-b).map(g=>`<div class="d141-g">${g==99?'Elsewhere':PMAP[g].n}</div>`+grp[g].map(k=>{const n=kills[k]||0,E=EN[k];
+    return `<button class="d141-r${DEX141.sel==k?' on':''}" data-dex141="${k}" style="--rc:${n>=100?'#fbbf24':n>=25?'#6ee7b7':'transparent'}"><span class="e">${n?E.e:'❔'}</span><span class="n">${n?E.n:'Unknown enemy'}<small>${n?n+' defeated':'not met yet'}</small></span></button>`}).join('')).join('');
+  return `<div class="d141"><div class="d141-l">${list}</div>${dex141Page(DEX141.sel)}</div>`}
+{const f=XR.dex;XR.dex=function(){const r=f.apply(this,arguments);try{if(dexTab!='en')return r;const B=$('xwB'),T=B.querySelector('.dexT');B.innerHTML=(T?T.outerHTML:'')+dex141Tab();
+  const F=$('xwF');if(F&&!/Pick an enemy/.test(F.textContent))F.insertAdjacentHTML('afterbegin','<span class="mut dtl">Pick an enemy to see its page. </span>')}catch(e){console.warn('dex141',e)}return r}}
+$('xw').addEventListener('click',e=>{if(xwMode!='dex')return;const t=e.target.closest('[data-dex141]');if(!t)return;e.stopImmediatePropagation();DEX141.sel=t.dataset.dex141;rX()},true);
+document.head.insertAdjacentHTML('beforeend',`<style id="dex141css">
+#xw .d141{display:grid;grid-template-columns:minmax(170px,230px) 1fr;gap:12px;align-items:start}
+#xw .d141-l{max-height:min(60vh,560px);overflow:auto;display:flex;flex-direction:column;gap:3px;padding-right:4px}
+#xw .d141-g{font:700 .68rem/1 var(--kq-head,serif);letter-spacing:.08em;text-transform:uppercase;color:#c9a24a;margin:8px 0 3px}
+#xw .d141-r{flex:none;height:auto;min-height:38px;line-height:1.2;white-space:normal;display:flex;gap:8px;align-items:center;text-align:left;padding:5px 8px;border-left:3px solid var(--rc);background:rgba(0,0,0,.18);border-radius:6px;min-height:0}
+#xw .d141-r.on{background:rgba(201,162,74,.18);outline:1px solid rgba(201,162,74,.55)}
+#xw .d141-r .e{font-size:1.1rem;width:1.4em;text-align:center}#xw .d141-r .n{display:flex;flex-direction:column;gap:1px;font-weight:700;font-size:.8rem}#xw .d141-r small{font-weight:500;opacity:.7;font-size:.66rem}
+#xw .d141-page{min-width:0}#xw .d141-top{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+#xw .d141-pic{width:220px;height:190px;flex:none;border-radius:10px;background:radial-gradient(ellipse at 50% 60%,rgba(201,162,74,.18),rgba(0,0,0,.45) 70%);border:1px solid rgba(201,162,74,.35);display:flex;align-items:center;justify-content:center;font-size:3rem;overflow:hidden}
+#xw .d141-pic img{width:100%;height:100%;object-fit:contain}
+#xw .d141-id{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:5px}#xw .d141-id>b{font-size:1.1rem}
+#xw .d141-id small{text-transform:uppercase;letter-spacing:.06em;font-size:.62rem;color:#c9a24a}#xw .d141-wh,#xw .d141-mv{font-size:.78rem}
+#xw .d141-sec{margin:10px 0 4px;font:700 .72rem/1 var(--kq-head,serif);letter-spacing:.08em;text-transform:uppercase;color:#c9a24a}
+#xw .d141-t{width:100%;border-collapse:collapse;font-size:.8rem}#xw .d141-t th{font-size:.66rem;text-align:right;color:#a8957a;font-weight:600;padding:2px 6px}
+#xw .d141-t td{padding:3px 6px;border-top:1px solid rgba(255,255,255,.06);text-align:right}#xw .d141-t td:first-child,#xw .d141-t th:first-child{text-align:left}
+#xw .d141-t em{font-style:normal;font-size:.62rem;padding:0 4px;border-radius:4px;margin-left:4px}#xw .d141-t em.hi{background:rgba(110,231,183,.18);color:#6ee7b7}#xw .d141-t em.lo{background:rgba(248,113,113,.15);color:#fca5a5}
+#xw .d141-unk{text-align:center;padding:30px}#xw .d141-unk .d141-pic{margin:0 auto 10px}
+@media(max-width:640px){#xw .d141{grid-template-columns:1fr}#xw .d141-l{max-height:30vh}#xw .d141-pic{width:100%;height:170px}}
+</style>`);
+
+// ---------------- Sovereigns tab: stats and drops of each defeated Sovereign ----------------
+function dex141Boss(i){const d=BOSSES[i],fam=famOf(d.sp),F=FAMD[fam]||{},T=Math.max(1,Math.min(5,(PMAP[i]&&PMAP[i].t)||tierOfLv(d.lvl)));
+  const s=enStats({w:{hp:.8,pa:1,ma:1,pd:1.05,md:1.05}},d.lvl,0,1),hp=Math.round(s.hp*(typeof PACE!='undefined'?PACE.hp:1));
+  const g0=(3+d.lvl*1.4)*13*.65;
+  return `<div class="d141-bs"><span>❤️ ${hp.toLocaleString()} health</span><span>⚔️ ${Math.round(F.mt=='m'?s.ma:s.pa)} ${F.mt=='m'?'magic':'phys.'} attack</span><span>🛡️ ${Math.round(s.pd)} / ${Math.round(s.md)} defense</span></div>
+   <div class="d141-bs d141-bd"><b>Drops</b> 🪙 ${Math.round(g0*.7)}–${Math.round(g0*1.3)} · ⚔️ 2 gear (rare or better) · 🥚 Tier ${T} egg · ${UPM[T-1][1]} ${UPM[T-1][0]} ×3–5 · ${F.mi||'🧩'} ${F.mat||'parts'} ×5–8${['Beast','Sky','Dragon','Earth'].includes(fam)?' · 🍖 meat ×2–3':''}</div>`}
+{const f=XR.dex;XR.dex=function(){const r=f.apply(this,arguments);try{if(dexTab!='boss')return r;
+  $('xwB').querySelectorAll('.rows>.rw').forEach((el,i)=>{if(!BOSSES[i]||!bossDone.has(i))return;const rn=el.querySelector('.rn');if(rn&&!rn.querySelector('.d141-bs'))rn.insertAdjacentHTML('beforeend',dex141Boss(i))})}catch(e){console.warn('dex141 boss',e)}return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="dex141b">#xw .d141-bs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.74rem;margin-top:3px;font-weight:600}#xw .d141-bd{font-weight:500;opacity:.85}#xw .d141-bd b{color:#c9a24a;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em}</style>');
+// ================= v141: the orb attack - hand held out, the orb floating over the palm, the bolt leaves the orb =================
+// The orb's basic attack used to coil the left arm and throw it forward (ATK.orb), so the Mage swung his orb like a ball.
+// Now the raven keeps his orb hold (FC116 palm hold) through the attack instead of fading it out: the arm reaches straight out in
+// front (ORB141.ext, from the shoulder: out, fwd, down), the orb lifts off the palm and bobs there while it fires, and the bolt
+// starts at the orb. The body only leans in a little (a calm ATK.orb track). Other heroes holding an orb get the same arm
+// motion from the track (left arm forward and level) without the palm hold.
+var ORB141={t0:-1e9,d:0,ext:[.15,.48,.02],lift:.035,bob:.012};
+ATK.orb=atkTrack([[0,ATK_REST],
+  [.22,atkEyes({sx:-.07,sy:-.12,lx:-1.45,lz:.12,le:-.12,lw:.2,ax:-.25,ex:-.45,hx:-.05,lk:.1,dy:-.015}),'out'],
+  [.62,atkEyes({sx:-.08,sy:-.14,lx:-1.5,lz:.1,le:-.1,lw:.25,ax:-.25,ex:-.45,hx:-.06,lk:.1,dy:-.015}),'lin'],
+  [1,ATK_REST,'io']]);
+{const f=staffAnim;staffAnim=function(ms){try{if(atkWT()=='orb'){ORB141.t0=performance.now();ORB141.d=Math.max(200,ms||600)}}catch(_){}return f.apply(this,arguments)}}
+// how far into the orb attack (0 = not attacking; the attack's own progress, HA.cur.k); ease in over the first 20%, out over the last 25%
+function orb141K(){const A=typeof HA!='undefined'&&HA.cur;if(!A||A.pose!==ATK.orb)return 0;const t=A.k;if(!(t>=0&&t<1))return 0;const e=x=>x*x*(3-2*x);return t<.2?e(t/.2):t>.75?e((1-t)/.25):1}
+{const f=fc116Apply;fc116Apply=function(H){
+  const W=H&&(H.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb'),k=H===pl&&W?orb141K():0;if(!k)return f.apply(this,arguments);
+  const C=FC116.H.orb,h0=C.hand,S=H._brS,a0=S?S.a:1;
+  try{C.hand=h0.map((v,i)=>v+(ORB141.ext[i]-v)*k);if(S)S.a=Math.max(a0,k);f.apply(this,arguments)}finally{C.hand=h0;if(S)S.a=a0}
+  // the orb floats upright a little above the palm while the attack lasts (placed in the world: whatever the wrist does)
+  try{const b2=H.bones.aL2,Fp=fc117Frame(H,'aL2');if(Fp&&W.parent===b2){const V=THREE.Vector3,Q=THREE.Quaternion;H.updateMatrixWorld(true);
+    const palm=Fp.palm.clone().addScaledVector(Fp.c,Fp.thick*.6).applyMatrix4(b2.matrixWorld),f2=fc140Fwd(H),Qw=new Q().setFromAxisAngle(new V(0,1,0),Math.atan2(f2.x,f2.z));
+    const bq=b2.getWorldQuaternion(new Q()),ws=W.getWorldScale(new V()),bb=fc117WB(W),foot=new V(bb.c.x,bb.min.y,bb.c.z).multiply(ws).applyQuaternion(Qw);
+    const up=(ORB141.lift+ORB141.bob*Math.sin(performance.now()/90))*fc140Scale(H),wpos=palm.clone().add(new V(0,up,0)).sub(foot);
+    const lq=bq.clone().invert().multiply(Qw),lp=wpos.applyMatrix4(new THREE.Matrix4().copy(b2.matrixWorld).invert());
+    W.quaternion.slerp(lq,k);W.position.lerp(lp,k);
+    if(H._fc116)H._fc116.w.forEach(r=>{if(r.o===W){r.set=W.quaternion.clone();r.ps=W.position.clone()}});H.updateMatrixWorld(true)}}catch(e){if(!ORB141.err){ORB141.err=1;console.warn('orb141',e)}}}}
+// the orb's world position (for the bolt); null when no orb is in hand
+function orb141Pos(){try{const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb');if(!W)return null;W.updateWorldMatrix(true,true);
+  const b=new THREE.Box3().setFromObject(W);if(b.isEmpty())return null;return b.getCenter(new THREE.Vector3())}catch(_){return null}}
+// the first bolt of the chain leaves the orb (a short glow there), the jumps go on from enemy to enemy as before
+orbChain=function(e0,raw){let cur=e0,from=pl.position.clone();const hit=new Set(),op=orb141Pos();
+  for(let j=0;j<4&&cur;j++){hit.add(cur);const a=j==0&&op?op:gY(from,1);if(j==0&&op){try{burst(op,0x9ad8ff,8,.6,.5,.25)}catch(_){}}
+    bolt(a,gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB127.orbJump:WB127.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
+    cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}};
+// ================= v141: gathering has its own animations and tools =================
+// Every gathering kind used to replay the equipped weapon's basic swing (featTick → swingAnim) with the weapon in hand.
+// Now each kind has its own motion and, where it fits, a tool in the hand instead of the weapon (the weapon is hidden while
+// gathering and comes back when it ends):
+//   chopping a tree   - a hatchet, a level two-handed swing into the trunk at waist height
+//   mining rock/crystal - a pickaxe, raised overhead and brought down with a bend of the knees
+//   digging a mound    - a spade, pushed down with the weight forward, then levered back
+//   foraging (fibre, berries, petals, glow caps, bones) - no tool: crouched, reaching down with one hand then the other
+//   wading for clay    - no tool: bent over, scooping with both hands
+//   fishing            - a rod: a cast, then the rod held out low, a sharp lift when a fish strikes
+// The hatchet and pickaxe ride in the hand through the v93 grip layer (weapon types axes and hammer); the spade and the rod are
+// aimed in the world every frame after the animation (spade: down into the ground ahead, rod: out ahead and up). Foraging and
+// wading put the weapon away and use bare hands. The motions are ordinary attack tracks (haPlay) with no hit.
+var SK141={tool:null,kind:null,hid:[],rod:null,line:null,fishT:0};
+// ---------------- tools ----------------
+function sk141Mat(c,r){return new THREE.MeshStandardMaterial({color:c,roughness:r==null?.75:r,metalness:r!=null&&r<.5?.5:0,flatShading:true})}
+function sk141Part(g,geo,mat,x,y,z,rx,ry,rz){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,rz||0);m.castShadow=true;g.add(m);return m}
+function sk141Tool(kind){const g=new THREE.Group(),wood=sk141Mat(0x6a4a2c),wd=sk141Mat(0x4a3220),iron=sk141Mat(0x8a8e96,.45),dark=sk141Mat(0x3a3c42,.5),leather=sk141Mat(0x3a2418);
+  const cyl=(r1,r2,h)=>new THREE.CylinderGeometry(r1,r2,h,7),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z);
+  if(kind=='hatchet'){sk141Part(g,cyl(.02,.024,.56),wood,0,-.18,0);sk141Part(g,cyl(.027,.027,.08),leather,0,.02,0);
+    sk141Part(g,box(.07,.09,.045),dark,.02,-.42,0);const b=new THREE.Shape();b.moveTo(0,-.05);b.lineTo(.13,-.085);b.quadraticCurveTo(.16,0,.13,.085);b.lineTo(0,.05);b.lineTo(0,-.05);
+    const bl=new THREE.Mesh(new THREE.ExtrudeGeometry(b,{depth:.016,bevelEnabled:false}),iron);bl.position.set(.04,-.42,-.008);g.add(bl);g.userData.wt='axes'}
+  else if(kind=='pick'){sk141Part(g,cyl(.021,.025,.66),wood,0,-.22,0);sk141Part(g,cyl(.028,.028,.1),leather,0,.04,0);
+    sk141Part(g,box(.06,.07,.06),dark,0,-.53,0);[-1,1].forEach(s=>{sk141Part(g,box(.17,.035,.035),iron,s*.11,-.53+(.02),0,0,0,s*.18);sk141Part(g,new THREE.ConeGeometry(.02,.09,5),iron,s*.235,-.49,0,0,0,-s*Math.PI/2+s*.35)});g.userData.wt='hammer'}
+  else if(kind=='spade'){sk141Part(g,cyl(.02,.022,.86),wood,0,-.34,0);sk141Part(g,box(.14,.025,.03),wd,0,.1,0);[-1,1].forEach(s=>sk141Part(g,cyl(.012,.012,.08),wd,s*.06,.06,0,0,0,s*.6));
+    sk141Part(g,box(.05,.1,.04),dark,0,-.8,0);sk141Part(g,box(.17,.22,.018),iron,0,-.94,0);sk141Part(g,new THREE.ConeGeometry(.12,.08,4,1),iron,0,-1.07,0,Math.PI,Math.PI/4,0).scale.set(1,1,.15);g.userData.aim='spade'}
+  else if(kind=='rod'){const L=1.55;sk141Part(g,cyl(.006,.017,L),wood,0,-L/2+.12,0);sk141Part(g,cyl(.022,.022,.16),leather,0,.04,0);
+    sk141Part(g,cyl(.032,.032,.03),dark,.035,-.04,0,0,0,Math.PI/2);for(let i=1;i<5;i++)sk141Part(g,new THREE.TorusGeometry(.012,.003,4,8),iron,.012,.12-L*i/5,0,0,Math.PI/2,0);
+    g.userData.tipY=.12-L}
+  g.userData.sk141=kind;return g}
+function sk141ToolOf(k){return k=='tree'?'hatchet':(k=='rock'||k=='crystal')?'pick':k=='mound'?'spade':'hands'}
+function sk141Show(kind){if(SK141.kind===kind)return;sk141Hide();if(!kind||!pl||!pl.bones||!pl.bones.aR2)return;
+  try{(pl.gearG||[]).forEach(o=>{if(o&&o.visible){o.visible=false;SK141.hid.push(o)}});if(kind=='hands'){SK141.kind=kind;return}const t=sk141Tool(kind);
+    if(kind=='rod'){t.rotation.set(-1.25,0,.12);t.position.set(0,-.03,.03)}else{t.rotation.x=-1.0;t.position.set(0,-.03,.02)}
+    pl.bones.aR2.add(t);SK141.tool=t;SK141.kind=kind;if(t.userData.wt){try{gripReg(pl)}catch(_){}}}catch(e){console.warn('sk141 tool',e)}}
+function sk141Hide(){const t=SK141.tool;SK141.tool=null;SK141.kind=null;if(t){if(t.parent)t.parent.remove(t);t.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose()}});try{gripReg(pl)}catch(_){}}
+  SK141.hid.forEach(o=>o.visible=true);SK141.hid=[];if(SK141.line){scene.remove(SK141.line);SK141.line.geometry.dispose();SK141.line.material.dispose();SK141.line=null}}
+// ---------------- motions ----------------
+const SK141E=atkEyes;
+var SK141_T={
+  chop:{ms:620,t:atkTrack([[0,ATK_REST],
+    [.34,SK141E({sy:.7,py:.3,sx:.05,ax:-1.25,az:.75,ex:-1.35,lx:-1.1,lz:-.15,le:-1.3,rw:.35,lw:.2,lk:.25,rk:.15,lh:-.1,dy:-.05}),'out'],
+    [.52,SK141E({sy:-.25,py:-.15,sx:.12,ax:-1.45,az:-.15,ex:-.35,lx:-1.35,lz:.35,le:-.45,rw:-.1,lk:.3,rk:.2,dy:-.08}),'in2'],
+    [.66,SK141E({sy:-.32,py:-.18,sx:.14,ax:-1.42,az:-.2,ex:-.38,lx:-1.32,lz:.38,le:-.48,lk:.3,rk:.2,dy:-.08}),'out'],
+    [1,SK141E({sy:.2,py:.1,ax:-.9,az:.3,ex:-1.1,lx:-.8,le:-1.0,dy:-.04}),'io']])},
+  mine:{ms:680,t:atkTrack([[0,ATK_REST],
+    [.4,SK141E({sx:-.18,hx:-.25,ax:-2.85,az:.12,ex:-1.0,lx:-2.75,lz:-.12,le:-1.05,rw:.3,lw:.3,lk:.1,rk:.1,dy:.01}),'out'],
+    [.56,SK141E({sx:.5,hx:.2,ax:-1.05,az:.05,ex:-.25,lx:-1.0,lz:-.05,le:-.3,rw:-.2,lw:-.2,lk:.45,rk:.45,lh:-.3,rh:-.3,dy:-.14}),'in'],
+    [.72,SK141E({sx:.52,hx:.22,ax:-1.0,ex:-.3,lx:-.95,le:-.35,lk:.45,rk:.45,lh:-.3,rh:-.3,dy:-.14}),'lin'],
+    [1,SK141E({sx:.15,ax:-1.3,ex:-.8,lx:-1.2,le:-.85,lk:.2,rk:.2,dy:-.05}),'io']])},
+  dig:{ms:760,t:atkTrack([[0,ATK_REST],
+    [.3,SK141E({sx:.25,ax:-1.3,ex:-.6,lx:-1.55,le:-1.2,lz:.15,lk:.35,rk:.1,lh:-.35,dy:-.08}),'out'],
+    [.5,SK141E({sx:.45,hx:.2,ax:-.95,ex:-.2,lx:-1.2,le:-.9,lz:.15,lk:.55,rk:.25,lh:-.45,rh:-.1,dy:-.16}),'in2'],
+    [.78,SK141E({sx:.05,hx:-.05,sy:.2,ax:-1.5,az:.2,ex:-1.1,lx:-1.0,le:-.5,lk:.2,rk:.1,dy:-.05}),'out'],
+    [1,SK141E({sx:.2,ax:-1.25,ex:-.7,lx:-1.4,le:-1.1,lk:.3,dy:-.08}),'io']])},
+  forage:{ms:820,t:atkTrack([[0,SK141E({sx:.55,hx:.3,dy:-.3,lk:1.15,rk:1.15,lh:-.95,rh:-.95,ax:-.6,ex:-.6,lx:-.5,le:-.6})],
+    [.3,SK141E({sx:.62,hx:.35,dy:-.32,lk:1.2,rk:1.15,lh:-1.0,rh:-.95,ax:-1.25,az:-.15,ex:-.2,rw:.3,lx:-.5,le:-.7}),'out'],
+    [.45,SK141E({sx:.6,hx:.3,dy:-.32,lk:1.2,rk:1.15,lh:-1.0,rh:-.95,ax:-.85,az:-.1,ex:-1.4,rw:-.4,lx:-.5,le:-.7}),'in2'],
+    [.72,SK141E({sx:.62,hx:.35,dy:-.32,lk:1.15,rk:1.2,lh:-.95,rh:-1.0,lx:-1.25,lz:.15,le:-.2,lw:.3,ax:-.6,ex:-.6}),'io'],
+    [.88,SK141E({sx:.6,hx:.3,dy:-.32,lk:1.15,rk:1.2,lh:-.95,rh:-1.0,lx:-.85,lz:.1,le:-1.4,lw:-.4,ax:-.6,ex:-.6}),'in2'],
+    [1,SK141E({sx:.55,hx:.3,dy:-.3,lk:1.15,rk:1.15,lh:-.95,rh:-.95,ax:-.6,ex:-.6,lx:-.5,le:-.6}),'io']])},
+  wade:{ms:900,t:atkTrack([[0,SK141E({sx:.6,hx:.25,dy:-.18,lk:.6,rk:.6,lh:-.55,rh:-.55,ax:-.9,ex:-.4,lx:-.9,le:-.4})],
+    [.4,SK141E({sx:.75,hx:.3,dy:-.22,lk:.7,rk:.7,lh:-.65,rh:-.65,ax:-1.05,az:-.25,ex:-.15,lx:-1.05,lz:.25,le:-.15,rw:.5,lw:.5}),'out'],
+    [.7,SK141E({sx:.45,hx:.15,dy:-.15,lk:.55,rk:.55,lh:-.5,rh:-.5,ax:-1.35,az:-.3,ex:-1.4,lx:-1.35,lz:.3,le:-1.4,rw:-.3,lw:-.3}),'io'],
+    [1,SK141E({sx:.6,hx:.25,dy:-.18,lk:.6,rk:.6,lh:-.55,rh:-.55,ax:-.9,ex:-.4,lx:-.9,le:-.4}),'io']])},
+  cast:{ms:900,t:atkTrack([[0,ATK_REST],
+    [.35,SK141E({sy:.35,sx:-.1,ax:-2.6,az:.25,ex:-.9,rw:.4,lx:-.6,le:-.9,lk:.15,dy:-.02}),'out'],
+    [.55,SK141E({sy:-.1,sx:.15,ax:-1.2,az:.1,ex:-.25,rw:-.3,lx:-.7,le:-.8,rk:.2,lh:-.15,dy:-.04}),'in2'],
+    [1,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03}),'io']])},
+  hold:{ms:1400,t:atkTrack([[0,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03})],
+    [.5,SK141E({sx:.08,ax:-.98,az:.08,ex:-.5,rw:-.12,lx:-.88,lz:.2,le:-1.1,dy:-.035}),'io'],
+    [1,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03}),'io']])},
+  jerk:{ms:520,t:atkTrack([[0,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03})],
+    [.3,SK141E({sx:-.12,hx:-.15,ax:-1.75,az:.12,ex:-1.15,rw:.25,lx:-1.3,lz:.25,le:-1.5,lk:.1,rk:.25,lh:.1,dy:-.01}),'out'],
+    [1,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03}),'io']])}};
+function sk141Motion(kind){return kind=='tree'?'chop':(kind=='rock'||kind=='crystal')?'mine':kind=='mound'?'dig':kind=='water'?'wade':'forage'}
+// featTick calls swingAnim every 0.5 s while gathering: play the gathering motion instead, and wait for it to finish
+{const f=swingAnim;swingAnim=function(st,ms,onHit){try{if(typeof gat!='undefined'&&gat&&gat.tg&&!onHit){const M=SK141_T[sk141Motion(gat.tg.kind)];
+    sk141Show(sk141ToolOf(gat.tg.kind));haPlay(M.ms,M.t,2,null,.2);gat.sw=M.ms/1000*.98;return}}catch(e){console.warn('sk141',e)}return f.apply(this,arguments)}}
+// the tool goes away (and the weapon comes back) as soon as gathering or fishing stops
+{const f=heroTick;heroTick=function(dt,now){const r=f.apply(this,arguments);try{
+  const gth=typeof gat!='undefined'&&gat&&gat.tg,fsh=typeof fishing!='undefined'&&fishing;
+  if(SK141.kind&&!gth&&!fsh)sk141Hide();
+  if(gth&&!SK141.kind&&sk141ToolOf(gat.tg.kind))sk141Show(sk141ToolOf(gat.tg.kind));
+  if(fsh)sk141Fish(dt)}catch(e){if(!SK141.err){SK141.err=1;console.warn('sk141 tick',e)}}return r}}
+// ---------------- fishing ----------------
+{const f=fishStart;fishStart=function(w){const was=fishing;const r=f.apply(this,arguments);try{if(!was&&fishing){sk141Show('rod');haPlay(SK141_T.cast.ms,SK141_T.cast.t,2,null,.2);SK141.fishT=SK141_T.cast.ms/1000;SK141.ph=fishing.ph}}catch(e){console.warn('sk141 fish',e)}return r}}
+function sk141Fish(dt){const F=fishing;if(!SK141.tool||SK141.kind!='rod')sk141Show('rod');
+  // a strike: a sharp lift of the rod; otherwise keep holding it out
+  if(F.ph!==SK141.ph){const bite=F.ph=='bite'||F.ph=='fight';SK141.ph=F.ph;if(bite){haPlay(SK141_T.jerk.ms,SK141_T.jerk.t,2,null,.12);SK141.fishT=SK141_T.jerk.ms/1000}}
+  SK141.fishT-=dt;if(SK141.fishT<=0&&!HA.cur){haPlay(SK141_T.hold.ms,SK141_T.hold.t,2,null,.25);SK141.fishT=SK141_T.hold.ms/1000}
+  // the line: from the rod's tip to the bobber (or straight down into the water ahead before it lands)
+  try{const t=SK141.tool;t.updateWorldMatrix(true,false);const tip=new THREE.Vector3(0,t.userData.tipY||-1.4,0).applyMatrix4(t.matrixWorld);
+    let end=null;const bob=F.bob&&(F.bob.position||F.bob.m&&F.bob.m.position);if(bob)end=bob.clone();
+    else{const d=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));end=pl.position.clone().addScaledVector(d,3);end.y=GH(end.x,end.z)+.05}
+    if(!SK141.line){const g=new THREE.BufferGeometry().setFromPoints([tip,end]);SK141.line=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xe8e4d8,transparent:true,opacity:.75}));SK141.line.frustumCulled=false;scene.add(SK141.line)}
+    const P=SK141.line.geometry.attributes.position;P.setXYZ(0,tip.x,tip.y,tip.z);P.setXYZ(1,end.x,end.y,end.z);P.needsUpdate=true}catch(_){}}
+// spade and rod: aimed in the world after every animation layer (the hand carries them, the direction is fixed)
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{const t=SK141.tool;if(t&&(h||pl)===pl&&t.parent){const V=THREE.Vector3,Q=THREE.Quaternion;
+  const fw=new V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));let d=null;
+  if(SK141.kind=='rod')d=fw.clone().multiplyScalar(Math.cos(.5)).add(new V(0,Math.sin(.5)+(HA.cur&&HA.cur.pose===SK141_T.jerk.t?.35*Math.sin(Math.PI*Math.min(1,HA.cur.k*1.6)):0),0));
+  else if(SK141.kind=='spade'){const k=HA.cur&&HA.cur.pose===SK141_T.dig.t?HA.cur.k:0,lev=k>.5?Math.sin(Math.PI*Math.min(1,(k-.5)/.5))*.55:0;d=fw.clone().multiplyScalar(.42+lev).add(new V(0,-1,0))}
+  if(d){d.normalize();t.parent.updateWorldMatrix(true,false);const pq=t.parent.getWorldQuaternion(new Q()),wq=new Q().setFromUnitVectors(new V(0,-1,0),d);
+    if(SK141.kind=='spade'){const tw=new Q().setFromAxisAngle(d,Math.atan2(fw.x,fw.z));wq.premultiply(tw)}
+    t.quaternion.copy(pq.invert().multiply(wq));t.position.set(0,-.03,.03)}}}catch(e){if(!SK141.err2){SK141.err2=1;console.warn('sk141 aim',e)}}return r}}
+
+// ================= v141: the Bard holds his lute across his body and plays it =================
+// The lute was hung on the keeper at a fixed spot (in front of the face on the hare's shorter body) with the neck pointing up,
+// and the arm pose never met it. Now it is placed from the keeper's own bones every frame: the bowl in front of the belly,
+// a little to his right, the neck out to his left and up 30°; his left hand holds the neck (moving along it) and his right
+// hand strums over the bowl, both reached with the two-bone arm IK (fc116IK).
+function bard141(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis||!B.chest||!B.aL0||!B.aR0)return;const V=THREE.Vector3,t=now/1000+(S.t0||0);
+  n.updateMatrixWorld(true);const loc=b=>n.worldToLocal(b.getWorldPosition(new V()));const pv=loc(B.pelvis),ch=loc(B.chest),rs=Math.sign(loc(B.aR0).x)||-1;
+  const y=pv.y+(ch.y-pv.y)*.5,c=new V(-rs*.07,y,Math.max(pv.z,ch.z)+.2);
+  const d=new V(rs*Math.cos(.52),Math.sin(.52),.12).normalize(),fz=new V(0,0,1).addScaledVector(d,-d.z).normalize(),x=new V().crossVectors(d,fz);
+  L.position.copy(c);L.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,d,fz));L.scale.setScalar(.9);L.updateMatrixWorld(true);
+  const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),dir=v=>v.clone().transformDirection(n.matrixWorld);
+  const s=Math.sin(t*9.5),f=Math.sin(t*2.1);
+  const TL=W([0,.42+.06*f,.04]),TR=W([.02,.02+.035*s,.12]);
+  // (the town-folk rig's aR side is the figure's own left, so aR holds the neck and aL strums)
+  try{fc116IK(B.aR0.getWorldPosition(new V()),B.aR0,B.aR1,B.aR2,TL,dir(new V(rs,-1,-.4)),1);
+    fc116IK(B.aL0.getWorldPosition(new V()),B.aL0,B.aL1,B.aL2,TR,dir(new V(-rs,-1,-.5)),1)}catch(e){if(!SK141.berr){SK141.berr=1;console.warn('bard141',e)}}}
+{const f=wkAnim103;wkAnim103=function(n,now){const r=f.apply(this,arguments);try{if(n&&n._wk&&n._wk.k=='bard'&&n.visible)bard141(n,now)}catch(_){}return r}}
+// ================= v141 Sovereigns: quicker charged attacks, footwork against melee, an answer to kiting, one fight each =================
+// 1. Charged attacks: a move whose first hit lands 1.2 s or more after it starts plays its wind-up faster (SV141.wind): the
+//    time to the hit becomes 0.9 + (t - 0.9) × 0.55 (Argus' Gaze 1.38 s → 1.16 s, Vaelric's Skyfall 3.25 s → 2.19 s). Everything in
+//    the wind-up (pose, glow, red warning, turning, root motion) runs on the same faster clock, so the tell stays honest.
+//    After the first hit the move runs at normal speed.
+// 2. Melee: after two moves in a row cast with the hero close (SV141.close tiles), the boss disengages: a quick back-step,
+//    then a spacing plan (v133) for a move it cannot use up close, which it walks to and casts. At most every SV141.disCd s.
+// 3. Kiting: every Sovereign gains "Reach" (reach141): three eruptions under the hero, each aimed where the hero will be
+//    (current position + velocity × lead), with the usual red warning. It is only picked at 8+ tiles, and it is strongly
+//    preferred once the hero has stayed that far for SV141.farT s. While the hero stays far, the boss also walks 40% faster.
+// 4. One fight each: a defeated Sovereign never comes back (no respawn timer, removed after a load); its den stays open.
+// Co-op: the timing change runs on every machine (same clock rule), the AI parts only on the boss driver like the rest of it.
+var SV141={wind:{from:1.2,base:.9,k:.55,max:1.5},close:6.5,disCd:7000,farT:2.5,far:8,lead:.5,chase:1.4};
+// ---- 1. faster wind-ups ----
+function sv141H0(D){if(D._h141!==undefined)return D._h141;let h=null;(D.hit||[]).forEach(q=>{if(q&&q.t!=null&&(h==null||q.t<h))h=q.t});return D._h141=h}
+function sv141K(D,id){if(id==='intro'||id==='awaken'||id==='stagger'||id==='reach141')return 1;const h=sv141H0(D),W=SV141.wind;if(h==null||h<W.from)return 1;
+  return Math.min(W.max,h/(W.base+(h-W.base)*W.k))}
+{const f=svTickMove;svTickMove=function(e,dt,now){const S=e&&e.sv,M=S&&S.mv;if(M&&dt>0){const k=sv141K(M.D,M.id);if(k>1){const h=sv141H0(M.D);
+    if(M.t<h){const rem=(h-M.t)/k;if(dt<=rem)dt*=k;else dt=(h-M.t)+(dt-rem)}}}return f.call(this,e,dt,now)}}
+// ---- the hero's distance and speed, per boss ----
+{const f=svAI;svAI=function(e,dt,now){const S=e&&e.sv;if(S&&dt>0){const p=pl.position;
+    if(S.hp141){const vx=(p.x-S.hp141.x)/dt,vz=(p.z-S.hp141.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv141=S.hv141||{x:0,z:0};S.hv141.x+=(vx-S.hv141.x)*a;S.hv141.z+=(vz-S.hv141.z)*a}}
+    S.hp141={x:p.x,z:p.z};const L=d2(p,e.m.position);S.far141=L>=SV141.far?(S.far141||0)+dt:0}
+  const r=f.apply(this,arguments);
+  // after the disengage back-step: plan a move for the new range
+  try{if(S&&S.dis141&&!S.rt&&!S.mv&&svAuth(e)&&!e.dead){S.dis141=0;if(!sv141Force(e))svPlan133(e,true)}}catch(_){}
+  return r}}
+// ---- 2. disengage after two close casts in a row ----
+// right after the back-step the boss commits to a move it could not use up close (its range starts beyond the hero), cast
+// at once even if the hero has followed: a gap-closer, a ranged or an area move, not used in the last two casts and off cooldown
+function sv141Force(e){const S=e.sv,B=S.B,L=d2(pl.position,e.m.position),C=[];let tot=0;
+  for(const id in B.M){const D=B.M[id];if(!D.wt||id==='reach141'||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1)||!svSideOk133(D))continue;if((S.cd[id]||0)>0)continue;
+    if(S.last[0]===id||S.last[1]===id)continue;const r=D.r||[0,99];if(r[0]<=Math.max(2.5,L*.6))continue;if(D.when&&!D.when(e,Math.max(L,r[0]),'f'))continue;
+    let w=5;try{w=typeof D.wt==='function'?(+D.wt(e,r[0]+1,'f')||0):D.wt}catch(_){}if(w>0){C.push([id,w]);tot+=w}}
+  if(!C.length)return null;let u=Math.random()*tot,id=C[C.length-1][0];for(const c of C){u-=c[1];if(u<=0){id=c[0];break}}S.force=id;S.rest=0;S.plan=null;return id}
+{const f=svAfterMove;svAfterMove=function(e,M){const S=e&&e.sv;
+  if(S&&M&&M.id!=='intro'&&M.id!=='stagger'&&M.id!=='awaken'){const L=d2(pl.position,e.m.position);S.cl141=L<SV141.close?(S.cl141||0)+1:0}
+  f.apply(this,arguments);
+  try{if(!S||e.dead||S.mv||!svAuth(e)||(S.B.ai||{}).style==='root')return;const now=performance.now();
+    if((S.cl141||0)>=2&&now>=(S.dc141||0)&&!S.rt){S.cl141=0;S.dc141=now+SV141.disCd;S.plan=null;S.force=null;S.rt={t:.7+Math.random()*.35};S.dis141=1;
+      try{burst(gY(e.m.position,.3),0x8a7a66,12,2,1.2,.45)}catch(_){}}}catch(_){}}}
+// ---- 3. faster walk while the hero keeps away ----
+{const f=svMoveFree;svMoveFree=function(e,dt,now){const S=e&&e.sv,ai=S&&S.B.ai;if(!S||!ai||!(S.far141>SV141.farT))return f.apply(this,arguments);
+  const w0=ai.walk,r0=ai.run;ai.walk=(w0||2.2)*SV141.chase;if(r0)ai.run=r0*SV141.chase*.9;try{return f.apply(this,arguments)}finally{ai.walk=w0;ai.run=r0}}}
+// ---- 3b. Reach: three eruptions aimed ahead of a running hero ----
+function sv141Aim(c,n){const S=c.S,p=pl.position,v=S.hv141||{x:0,z:0},ld=SV141.lead*(n||1);return c.inA(new THREE.Vector3(p.x+v.x*ld,0,p.z+v.z*ld),.6)}
+function sv141Reach(B){const P=B.P||{},pick=['roar','howl','rear','tpRaise','vUp','gUp','fUp','oUp','rUp'].find(k=>P[k]);const col=B.col||0xff5a2a;
+  const fx=(c,an,hit)=>{const q=new THREE.Vector3(an.x,0,an.z);try{svShock(q,col,3,.45);svDecal(q,0x140c08,2.2,2.6,.55);burst(gY(q,.4),col,24,4,2.6,.6);burst(gY(q,.3),0x3a2a20,18,3,2,.7);shake(.12);svSnd('crack',.7,.8)}catch(_){}};
+  const hit=(t,n)=>({t,s:{k:'c',r:2.4},o:c=>{const p=sv141Aim(c,n);return {x:p.x,z:p.z,a:0}},w:.62,dm:.72,fx});
+  return {wt:(e,L)=>{const S=e.sv;return L>=SV141.far?((S.far141||0)>=SV141.farT?16:3):0},cd:7.5,r:[SV141.far,60],a:'any',dur:1.95,lock:.4,trn:[[0,1.7,3]],armor:1,
+    trk:pick?[[.35,pick,'io'],[1.45,pick,'l',.02],[1.95,'','io']]:[[1.95,'','io']],
+    hit:[hit(.85,1),hit(1.2,1.2),hit(1.55,1.4)],ev:[[.08,c=>{try{svSnd('roar',.7,1.15);svShock(c.m.position,col,4,.4)}catch(_){}}]],rec:.35}}
+SVB.forEach((B,i)=>{if(!B||!B.M||B.M.reach141)return;try{B.M.reach141=sv141Reach(B);svRegMoves(i)}catch(e){console.warn('reach141',i,e)}});
+// ---- 4. one fight each ----
+{const f=spawnBoss;spawnBoss=function(i){if(typeof bossDone!='undefined'&&bossDone.has(i))return null;return f.apply(this,arguments)}}
+function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.bi!=null&&bossDone.has(e.bi)&&!(typeof AF!='undefined'&&AF&&AF.i===e.bi&&AF.f))removeE(e)});
+  if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(bossDone.has(i))bossT[i]=0})}catch(_){}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);setTimeout(sv141Clear,0);return r}}
+setInterval(sv141Clear,5000);
