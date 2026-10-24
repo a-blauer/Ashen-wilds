@@ -40,7 +40,8 @@ def s(pg):
           return Object.assign(a,{gone:!enemies.includes(e),warns:DTL.live.length,fx:KQ.fx.length,hud:$('svPo')?$('svPo').style.display:'none'})}""",i)
         print('  death',json.dumps(d))
         # respawn, start, wipe, restart
-        f=ev("""(i)=>{spawnBoss(i);STEP(.2);const e=bossEnt(i);const A=ARN[i];toPos(A.cx+5,A.cz);STEP(1.5);const st=!!AF,mv=e.sv.mv&&e.sv.mv.id;STEP(3);arenaFail();toPos(A.cx+Math.cos(1)*(ARENA_R+6),A.cz+Math.sin(1)*(ARENA_R+6));STEP(1);
+        f=ev("""(i)=>{bossDone.delete(i);spawnBoss(i);   // v141: a defeated Sovereign is not spawned again, so forget the kill first
+          STEP(.2);const e=bossEnt(i);const A=ARN[i];toPos(A.cx+5,A.cz);STEP(1.5);const st=!!AF,mv=e.sv.mv&&e.sv.mv.id;STEP(3);arenaFail();toPos(A.cx+Math.cos(1)*(ARENA_R+6),A.cz+Math.sin(1)*(ARENA_R+6));STEP(1);
           const r={started:st,intro:mv,AF:!!AF,ph:e.sv.ph,mv:e.sv.mv&&e.sv.mv.id,on:e.sv.on,hp:+(e.c.h/M(e.c)).toFixed(2),warns:DTL.live.length};toPos(A.cx+Math.cos(1)*(ARENA_R+6),A.cz+Math.sin(1)*(ARENA_R+6));STEP(2);r.home=+Math.hypot(e.m.position.x-A.cx,e.m.position.z-A.cz).toFixed(1);return r}""",i)
         print('  wipe',json.dumps(f))
         if r['ph']!=2 or d['AF'] or f['AF'] or r['warns']>12:bad.append(i)
