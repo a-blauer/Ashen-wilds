@@ -137,14 +137,14 @@ let mstock=null;
 function rMS(){
   const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
   const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,D=c=>shpP109('magic',c),rc=D(40*hero.lvl),xc=D(60+hero.lvl*12);
-  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr138Spent()?'disabled':''}>Reset</button></span></div>`+
+  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr139Spent()?'disabled':''}>Reset</button></span></div>`+
    `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
    UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(D(Math.round(UPV[i]*.9)))}<button class="pri" data-ms="u${i}" ${gold<D(Math.round(UPV[i]*.9))?'disabled':''}>Buy</button></span></div>`).join('')+
    mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(D(EGV[e.tier]))}<button class="pri" data-ms="e${i}" ${gold<D(EGV[e.tier])?'disabled':''}>Buy</button></span></div>`:'').join('');
 }
 $('mst').onclick=e=>{
   const b=e.target.closest('[data-ms]');if(!b||b.disabled)return;const k=b.dataset.ms,D=c=>shpP109('magic',c);
-  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c||!atr138Spent())return;gold-=c;atr138Clear();say('Your attribute points were returned. Press C to spend them again.')}   // v138: only attributes (it used to wipe hero.tal, abilities too)
+  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c||!atr139Spent())return;gold-=c;atr139Clear();say('Your attribute points were returned. Press C to spend them again.')}   // v139: only attributes (it used to wipe hero.tal, abilities too)
   else if(k=='xp'){const c=D(60+hero.lvl*12);if(gold<c)return;gold-=c;rest={t:Date.now()+600000,m:.25};say('You feel insightful: +25% XP for 10 minutes.')}
   else if(k[0]=='u'){const i=+k.slice(1),c=D(Math.round(UPV[i]*.9));if(gold<c)return;gold-=c;mats[UPM[i][0]]++}
   else if(k[0]=='e'){const i=+k.slice(1),eg=mstock.eggs[i];if(!eg||gold<D(EGV[eg.tier]))return;gold-=D(EGV[eg.tier]);eggs.push(eg);mstock.eggs[i]=null}

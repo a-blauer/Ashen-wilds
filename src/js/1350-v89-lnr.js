@@ -98,7 +98,7 @@ function lnBagRefresh(){try{if(!$('bag').classList.contains('hide'))rB0()}catch(
 function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" data-kqt="tm:${m.id}" style="--rc:#fbbf24" title=""><span class="kqm-ic">🗺️</span><span class="kqm-up">${(PMAP[m.r]?PMAP[m.r].n:'?').replace(/^The /,'').split(' ')[0]+' '+(PM_RN[m.k|0]||'')}</span></div>`}
 function tmTip(m){const p=INSL[tmG(m)],here=tmCur()===tmG(m);
   return `<div class="kqm-tn"><span>🗺️ ${tmName(m)}</span></div><div class="kqm-ts">Quest item · can't be sold</div>`+
-    `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' ('+rpTxt138(p.lv[0])+')':''}. ${tmHint(m)}</div>`+
+    `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' ('+rpTxt139(p.lv[0])+')':''}. ${tmHint(m)}</div>`+
     `<div class="kqm-th">${here?'You are there: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its zone\'s portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
 {const f=kqmTipHTML;kqmTipHTML=function(el){const k=el&&el.dataset&&el.dataset.kqt||'';if(k.slice(0,3)=='tm:'){const m=tmaps.find(q=>q.id==+k.slice(3));return m?[tmTip(m),'#fbbf24']:null}return f.apply(this,arguments)}}
 {const f=kqmBag;kqmBag=function(){const r=f.apply(this,arguments);try{if(!tmaps.length)return r;const bl=$('bl'),T=bagTab2;if(!bl)return r;

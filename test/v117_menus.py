@@ -46,7 +46,7 @@ def s(pg):
     # talents / abilities
     r=ev("""()=>{const o={};openTal();o.tal=!$('tal').classList.contains('hide');o.talTabs=document.querySelectorAll('#tal .kqs-tabs').length;o.talLink=document.querySelectorAll('#tal [data-kqsopen]').length;$('tal').classList.add('hide');
       document.dispatchEvent(new KeyboardEvent('keydown',{key:'k'}));o.ab=!$('xw').classList.contains('hide')&&xwMode=='abil';o.abTabs=document.querySelectorAll('#xw .kqs-tabs').length;o.abTxt=/Talent/.test($('xwB').textContent+$('xwF').textContent);
-      document.dispatchEvent(new KeyboardEvent('keydown',{key:'k'}));o.kCloses=$('xw').classList.contains('hide');return o}""")   # v138: K = Abilities, C = Character (v138_checks)
+      document.dispatchEvent(new KeyboardEvent('keydown',{key:'k'}));o.kCloses=$('xw').classList.contains('hide');return o}""")   # v139: K = Abilities, C = Character (v139_checks)
     chk('talents: no ability tabs or links',r['tal'] and r['talTabs']==0 and r['talLink']==0,r);chk('abilities: K opens and closes, no talent tabs',r['ab'] and r['abTabs']==0 and not r['abTxt'] and r['kCloses'],r)
     pg.screenshot(path=O+'/v117_abilities.png',timeout=600000)
     ev("()=>{closeWin();closeX()}")

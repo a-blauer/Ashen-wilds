@@ -90,7 +90,7 @@ XR.densign=()=>{const i=+xwArg,T=DSTXT[i],B=BOSSES[i];if(!T||!B)return;const L=d
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   $('xwT').textContent='📜 '+T.den;$('xwS').textContent=B.name+' · '+B.title;
   const pg=!L.pw||L.me>=L.pw,col=g=>g?'#6ee7b7':'#ff6b5b';
-  const rec=`<div class="dsg-lv">   <!-- v138: power only, no levels -->
+  const rec=`<div class="dsg-lv">   <!-- v139: power only, no levels -->
     ${L.pw?`<span>Recommended power <b>${L.pw.toLocaleString()}</b></span><span>Your power <b style="color:${col(pg)}">${L.me.toLocaleString()}</b>${pg?' ✔':' ✖'}</span>`:''}
     <small class="mut">${pg?'You look ready for '+esc(B.name)+'.':'Come back stronger, or bring a co-op partner.'}${done?' You have defeated it before.':''}</small></div>`;
   const atk=T.atk.map(([n,d,a])=>`<div class="rw dsg-a"><span class="rn"><b>${esc(n)}</b><small>${esc(d)}</small><small class="dsg-av">➜ ${esc(a)}</small></span></div>`).join('');

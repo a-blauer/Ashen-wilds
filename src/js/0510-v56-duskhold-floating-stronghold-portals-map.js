@@ -14,7 +14,7 @@ function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
   const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
-  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n;   // v138: no level range; the recommended power sits on line 2
+  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n;   // v139: no level range; the recommended power sits on line 2
 }
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
@@ -35,7 +35,7 @@ var PORT=[];
     const disc=new THREE.Mesh(new THREE.CircleGeometry(1.1,32),new THREE.MeshBasicMaterial({color:p.col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.62,0);disc.scale.y=1.35;g.add(disc);
     const sw=new THREE.Mesh(new THREE.RingGeometry(.35,1.08,24,1,0,4),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.4,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));sw.position.set(0,1.62,.02);sw.scale.y=1.35;g.add(sw);
     const ch=new THREE.Group();[-.6,.6].forEach(r=>{const b=new THREE.Mesh(new THREE.BoxGeometry(2.6,.08,.08),sm(0x2a2a30));b.rotation.z=r;b.position.set(0,1.62,.12);ch.add(b)});g.add(ch);
-    sign(g,[{t:p.ic+' '+p.n,f:'700 40px'},{t:rpTxt138(p.lv[0]),f:'600 26px'}],2.4,.62,'#1a1424','#efe6ff',null,0,4.34,.0,0,512,140);
+    sign(g,[{t:p.ic+' '+p.n,f:'700 40px'},{t:rpTxt139(p.lv[0]),f:'600 26px'}],2.4,.62,'#1a1424','#efe6ff',null,0,4.34,.0,0,512,140);
     [-1.25,1.25].forEach(lx=>{const wx=x+Math.cos(ry)*lx,wz=z-Math.sin(ry)*lx;CBLK.add(Math.round(wz)*W+Math.round(wx))});
     PORT.push({i,x,z,g,disc,sw,ch})});
 }
@@ -63,22 +63,22 @@ function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.f
 // v106: k = the instance (0 = I); every instance starts at its own entrance
 function enterMap(i,k){if(AF)return;const p=PMAP[i],I=p.ins[k|0]||p.ins[0];fadeTo(()=>{insArrive(I)})}
 function insArrive(I){const p=PMAP[I.z],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]));
-  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:rpTxt138(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
+  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:rpTxt139(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
 function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
   const P=pl.position;
   for(const Q of PORT){if(Math.hypot(P.x-Q.x,P.z-Q.z)<2.6){const p=PMAP[Q.i];if(!pUnlocked(Q.i))return {label:'🔒 Sealed · defeat '+BOSSES[Q.i-1].name+' in '+PMAP[Q.i-1].n,fn:()=>openX('bosses')};
-    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' ('+rpTxt138(p.ins[0].lv[0])+')',fn:()=>enterMap(Q.i,0)}}}
+    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' ('+rpTxt139(p.ins[0].lv[0])+')',fn:()=>enterMap(Q.i,0)}}}
   for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<(r.k=='next'?2.8:2.2)){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};
-    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' ('+rpTxt138(N.lv[0])+')'),fn:()=>insGo(N)}}
+    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' ('+rpTxt139(N.lv[0])+')'),fn:()=>insGo(N)}}
     return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
 // v106: the portal lists every instance of the zone you have reached (v135: no Wave Trial any more)
 XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+(d?' · cleared ✓':'');
   const row=I=>{const ok=I.k<=R,txt=I.den?b.name+', '+b.title+(d?' (back 5 minutes after each defeat).':'.'):I.k==PMF-1?'Its road ends at the gateway to '+b.name+'’s den.':'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
-    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">${rpTxt138(I.den?b.lvl:I.lv[0])}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
+    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">${rpTxt139(I.den?b.lvl:I.lv[0])}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
   const wave='';   // v135: Wave Trials removed (owner's request)
   $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
@@ -86,7 +86,7 @@ $('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target
 // the J window lists the portals and their bosses
 XR.bosses=()=>{$('xwT').textContent='🌀 The Portals';$('xwS').textContent=bossDone.size+' of '+PMAP.length+' maps cleared';
   $('xwB').innerHTML='<div class="rows">'+PMAP.map((p,i)=>{const b=BOSSES[i],u=pUnlocked(i),d=pDone(i);
-    return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">${rpTxt138(p.lv[0])}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
+    return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">${rpTxt139(p.lv[0])}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Each portal has its own gate on an island round Duskhold; roads lead there from the east, west and south gates.</span>'};
 // ---- bosses ----
 function spawnBoss(i){

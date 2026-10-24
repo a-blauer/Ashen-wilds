@@ -32,7 +32,7 @@ function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||
   else if(I.tri){kick=p.n;title='Wave Trial';sub=p.sub}
   else{kick=p.n+' · '+(['First','Second','Third'][I.k]||'')+' Reach';title=t?t.nm:p.n;sub=t?t.sub:p.sub}
   let rp=0;try{rp=recPower(I.lv[0])}catch(_){}const pw=typeof heroPower=='function'?heroPower():0;
-  const foot=rp?`<span class="${pw<rp?'ztlow':''}">⚔ Rec. power ${rp.toLocaleString()}</span>`:'';   // v138: no enemy level range
+  const foot=rp?`<span class="${pw<rp?'ztlow':''}">⚔ Rec. power ${rp.toLocaleString()}</span>`:'';   // v139: no enemy level range
   zt116Show(T,kick,title,sub,foot,'z'+I.z)}
 // the old arrival banners stay silent; the card replaces them
 {const f=banner;banner=function(t){if(ZT116.mute)return;if(t==='🏰 DUSKHOLD'){zt116Show(ZT116.town,'The Floating Stronghold','Duskhold','The last stronghold, adrift above the void','The Grand Square · the Portal Road leads south','town');return}return f.apply(this,arguments)}}

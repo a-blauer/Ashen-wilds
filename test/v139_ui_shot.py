@@ -1,4 +1,4 @@
-# v138: screenshots of windows (WIN=bag,tal,abil,char) for the attribute / character screen work
+# v139: screenshots of windows (WIN=bag,tal,abil,char) for the attribute / character screen work
 import play,os
 W=os.environ.get('WIN','bag,tal').split(',');TAG=os.environ.get('TAG','')
 def s(pg):
@@ -10,11 +10,11 @@ def s(pg):
         if w=='bag':ev("()=>{$('bagBtn').click();return 1}")
         elif w=='tal':ev("()=>{openTal();return 1}")
         elif w=='abil':ev("()=>{openAbil();return 1}")
-        elif w=='auto':ev("()=>{atr138Auto();ch138Render();return 1}")
-        elif w=='plus':ev("()=>{atr138Undo();atr138Add('str',9);atr138Add('vig',10);ATR138.sel='str';ch138Render();return 1}")
-        elif w=='apply':ev("()=>{atr138Apply();openTal();return 1}")
+        elif w=='auto':ev("()=>{atr139Auto();ch139Render();return 1}")
+        elif w=='plus':ev("()=>{atr139Undo();atr139Add('str',9);atr139Add('vig',10);ATR139.sel='str';ch139Render();return 1}")
+        elif w=='apply':ev("()=>{atr139Apply();openTal();return 1}")
         elif w.startswith('key'):pg.keyboard.press(w[3:])
         pg.wait_for_timeout(1500)
-        pg.screenshot(path=play.TMP+'/v138_ui_'+w+TAG+'.png')
+        pg.screenshot(path=play.TMP+'/v139_ui_'+w+TAG+'.png')
         print('shot',w,flush=True)
 play.run(s,w=int(os.environ.get('VW','820')),hh=int(os.environ.get('VH','520')))

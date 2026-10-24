@@ -158,8 +158,8 @@ $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.c
   if(D.kqsel!=null){KQS.sel=D.kqsel;rX()}});
 // the talents window points to the ability book (replaces the v71 skill list)
 function skHTML(){return '';const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
-// v117: Talents and Abilities were two separate windows. v138: talents are gone; C opens the Character window (the old
-// talents window, 2910) and K opens the Abilities window and closes it again.
+// v117: Talents and Abilities were two separate windows. v139: talents are gone; C opens the Character window (the old
+// talents window, 2940) and K opens the Abilities window and closes it again.
 addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='k')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
   if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation();return}if(!uiOpen())openAbil()},true);
 {const f=openTal;openTal=function(){if(!$('xw').classList.contains('hide')&&xwMode=='abil')closeX();KQS.tab='tal';return f.apply(this,arguments)}}

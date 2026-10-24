@@ -1,4 +1,4 @@
-// v138: every enemy kind (plain + elite) and every companion species/evolution: skinned meshes whose skin indices point past
+// v139: every enemy kind (plain + elite) and every companion species/evolution: skinned meshes whose skin indices point past
 // their skeleton's bones, weights that don't sum to 1, or vertices that skin to NaN. (The GPU reads garbage for those.)
 (()=>{window.requestAnimationFrame=()=>0;POST.render=()=>{};window._vt=performance.now()+1e5;
   const STEP=n=>{for(let i=0;i<n;i++){_vt+=16;loop(_vt);scene.updateMatrixWorld()}};

@@ -68,7 +68,7 @@ function TWN100_island(i){const p=TWN100_PG[i],P=PORT[i];if(!P)return;const y0=T
   [-1.45,1.45].forEach(lx=>{const q=loc(lx,0);CBLK.add(Math.round(q[1])*W+Math.round(q[0]))});
   // signpost to the right of the dais, facing the arrival spot
   {const q=loc(2.55,2.3),sg=twPostG(2.0,1.62,.62);sg.position.set(q[0],GH(q[0],q[1]),q[1]);sg.rotation.y=face;scene.add(sg);
-    sign(sg,[{t:'Portal '+['I','II','III','IV','V','VI'][i]+' · '+PMAP[i].n,f:'700 36px'},{t:PMAP[i].ic+' '+rpTxt138(PMAP[i].lv[0]),f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
+    sign(sg,[{t:'Portal '+['I','II','III','IV','V','VI'][i]+' · '+PMAP[i].n,f:'700 36px'},{t:PMAP[i].ic+' '+rpTxt139(PMAP[i].lv[0]),f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
     CBLK.add(Math.round(q[1])*W+Math.round(q[0]))}
   // scenery: themed WD kinds round the dais, keeping the front and every road that reaches the island clear
   const open=[face];TWN100_RD.forEach(L=>L.forEach(v=>{const d=Math.hypot(v[0]-p.x,v[1]-p.y);if(d<p.r+4&&d>1)open.push(Math.atan2(v[0]-p.x,v[1]-p.y))}));
@@ -200,7 +200,7 @@ function TWN101_road(){const T=TOWNS[0],X=PCOURT[0],y0=T.cy+T.sz+2,yN=TWN100_PG[
   for(let dz=0;dz<=3;dz++)CBLK.add(Math.round(AY-4.0+dz*.7)*W+Math.round(X-5.5))}
 // the board's text (which portals are open / cleared)
 function TWN101_board(){const g=TWN101.board;if(!g)return;const T=TOWNS[0],AY=PCOURT[1]+3,y0=T.cy+T.sz+2;
-  const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  '+rpTxt138(p.lv[0])+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
+  const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  '+rpTxt139(p.lv[0])+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
   // repaint only when the text changed (this runs every second); free the old board's canvas texture
   const key=L.map(l=>l.t).join('|');if(TWN101.bs&&TWN101.bk===key)return;TWN101.bk=key;
   if(TWN101.bs){const sg=TWN101.bs.parent;g.remove(sg);sg.traverse(o=>{const m=o.material,t=m&&m.map;if(!t||typeof SGNR=='undefined'||!SGNR)return;const k=SGNR.findIndex(r=>r.t===t);if(k>=0){SGNR.splice(k,1);t.dispose();m.dispose()}});TWN101.bs=null}

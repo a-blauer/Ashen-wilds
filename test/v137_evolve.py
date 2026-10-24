@@ -98,11 +98,13 @@ def s(pg):
         a,b=cmp('mage','Chain Lightning',2.5,ring)
         chk('Chain Lightning: the evolved bolt jumps between more enemies (%d → %d)'%(a['n'],b['n']),b['n']>a['n'] and b['n']>=7,(a,b))
         a,b=cmp('warrior','Cleave',1.5,[[0,2]])
-        chk('Cleave: the evolved cast hits about 25% harder (and the crescent adds a second hit)',b['dmg']>=a['dmg']*1.2,(a,b))
+        # v138: each evolution has its own damage factor (BAL138_EVO): Rending Crescent is a large area now, so it hits less per enemy than
+        # +25%; it must still out-hit the normal Cleave (the crescent adds a second hit)
+        chk('Cleave: the evolved cast still hits harder than the normal one (the crescent adds a second hit)',b['dmg']>a['dmg'],(a,b))
         a,b=cmp('warrior','Cleave',1.5,[[0,6.5]])
         chk('Cleave: the evolved crescent reaches an enemy 6.5 tiles ahead',a['n']==0 and b['n']==1,(a,b))
-        r=ev("()=>{SETCLS('mage');const s=kqsFind('mage','Meteor'),e=ev137Sk(s);hero.tal['ab:Meteor']=5;return {p:kqrP(e)/kqrP(s),r:e.r/s.r,same:e.n==s.n,ev:e.ev137}}")
-        chk('the evolved copy keeps the name (ranks, cooldowns) and hits 25% harder',abs(r['p']-1.25)<1e-6 and r['same'] and r['ev']==1,r)
+        r=ev("()=>{SETCLS('mage');const s=kqsFind('mage','Meteor'),e=ev137Sk(s);hero.tal['ab:Meteor']=5;const w=EV137.dmg*(typeof BAL138_EVO!='undefined'&&BAL138_EVO.Meteor!=null?BAL138_EVO.Meteor:1)*(typeof BAL138_EVOC!='undefined'?BAL138_EVOC.mage:1);return {p:kqrP(e)/kqrP(s),want:w,r:e.r/s.r,same:e.n==s.n,ev:e.ev137}}")
+        chk('the evolved copy keeps the name (ranks, cooldowns) and hits 25% harder × its v138 factor',abs(r['p']-r['want'])<1e-6 and r['same'] and r['ev']==1,r)
     if 'cast' in PART:
         for c in CL:
             r=ev("""async(c)=>{SETCLS(c);const sc0=scene.children.length,out=[];

@@ -26,4 +26,4 @@ var INSW={g:-2,t:0};
   const I=curIns();INSW.g=I?I.g:-1;if(I&&I.k>INSR[I.z])INSR[I.z]=I.k}catch(err){console.warn('v106 load',err)}return r}}
 // the J window: how far into each zone you are
 {const f=XR.bosses;XR.bosses=function(){f.apply(this,arguments);try{const rows=$('xwB').querySelectorAll('.rw');PMAP.forEach((p,i)=>{const rw=rows[i];if(!rw||!pUnlocked(i))return;const sm=rw.querySelector('small');
-  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' ('+rpTxt138(I.lv[0])+')')).join(' · '))})}catch(_){}}}
+  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' ('+rpTxt139(I.lv[0])+')')).join(' · '))})}catch(_){}}}

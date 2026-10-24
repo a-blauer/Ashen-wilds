@@ -2847,7 +2847,7 @@ let HSc=null,HSt=0;const hsDirty=()=>{HSc=null};
 const zones=[],traps=[];
 function talRank(id){return hero.tal[id]||0}
 function talSpent(b){const T=TAL[hero.cls];let n=0;(b==null?T:[T[b]]).forEach(br=>br.t.forEach(t=>n+=talRank(t[0])));return n}
-const tpFree=()=>atr138Unspent();   // v138: unspent attribute points (talents are gone, 2900)
+const tpFree=()=>atr139Unspent();   // v139: unspent attribute points (talents are gone, 2930)
 function talMods(){const o={};TAL[hero.cls].forEach(br=>br.t.forEach(t=>{const r=talRank(t[0]);if(r)for(const k in t[5])o[k]=(o[k]||0)+t[5][k]*r}));return o}
 function HS_base(){
   const now=performance.now();if(HSc&&now-HSt<80)return HSc;
@@ -2989,7 +2989,7 @@ function gainXP(e){
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
   const ns=SKL[hero.cls].find(k=>k.lv==hero.lvl);
-  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +'+ATR138.per+' attribute points (C) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
+  banner('LEVEL '+hero.lvl,CLS[hero.cls].n+' · +'+ATR139.per+' attribute points (C) · +'+kqrLvAP(hero.lvl)+' ability points (K)',(typeof kqsLvNote=='function'&&kqsLvNote())||'Half of your health and mana restored');
   ring(pl.position,0xffd24a,3.6,800);burst(gY(pl.position,1),0xffd24a,70,4.5,4,1.2);
 }
 function kill_base(e){
@@ -3392,14 +3392,14 @@ let mstock=null;
 function rMS(){
   const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
   const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,D=c=>shpP109('magic',c),rc=D(40*hero.lvl),xc=D(60+hero.lvl*12);
-  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr138Spent()?'disabled':''}>Reset</button></span></div>`+
+  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr139Spent()?'disabled':''}>Reset</button></span></div>`+
    `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
    UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(D(Math.round(UPV[i]*.9)))}<button class="pri" data-ms="u${i}" ${gold<D(Math.round(UPV[i]*.9))?'disabled':''}>Buy</button></span></div>`).join('')+
    mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(D(EGV[e.tier]))}<button class="pri" data-ms="e${i}" ${gold<D(EGV[e.tier])?'disabled':''}>Buy</button></span></div>`:'').join('');
 }
 $('mst').onclick=e=>{
   const b=e.target.closest('[data-ms]');if(!b||b.disabled)return;const k=b.dataset.ms,D=c=>shpP109('magic',c);
-  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c||!atr138Spent())return;gold-=c;atr138Clear();say('Your attribute points were returned. Press C to spend them again.')}   // v138: only attributes (it used to wipe hero.tal, abilities too)
+  if(k=='reset'){const c=D(40*hero.lvl);if(gold<c||!atr139Spent())return;gold-=c;atr139Clear();say('Your attribute points were returned. Press C to spend them again.')}   // v139: only attributes (it used to wipe hero.tal, abilities too)
   else if(k=='xp'){const c=D(60+hero.lvl*12);if(gold<c)return;gold-=c;rest={t:Date.now()+600000,m:.25};say('You feel insightful: +25% XP for 10 minutes.')}
   else if(k[0]=='u'){const i=+k.slice(1),c=D(Math.round(UPV[i]*.9));if(gold<c)return;gold-=c;mats[UPM[i][0]]++}
   else if(k[0]=='e'){const i=+k.slice(1),eg=mstock.eggs[i];if(!eg||gold<D(EGV[eg.tier]))return;gold-=D(EGV[eg.tier]);eggs.push(eg);mstock.eggs[i]=null}
@@ -5730,7 +5730,7 @@ function areaName(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return '🏰 Duskhold · Safe haven';
   const r=curMap();if(r<0)return '🌀 Duskhold · Outer roads';
   const p=PMAP[r];if(WV&&WV.pi==r)return '⚔️ '+p.n+' · Wave Trial '+Math.min(WV.n,WV.w)+'/'+WV.n;
-  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n;   // v138: no level range; the recommended power sits on line 2
+  const I=curIns(),C=campAt(pl.position.x,pl.position.z);if(!I.fld)return p.ic+' '+I.n;return (C?'⛺ '+C.th.n+' · ':p.ic+' ')+I.n;   // v139: no level range; the recommended power sits on line 2
 }
 function townWatch(){const ti=townAt(pl.position.x,pl.position.z,0);if(ti==curTown)return;curTown=ti;if(ti>=0){const T=TOWNS[ti];home=T;if(!T.seen){T.seen=1;banner('🏰 DUSKHOLD','The last stronghold, adrift above the void','The Grand Square · shops, tavern and the South Ward · the Portal Road leads south')}}}
 // zone recommendations follow the maps now
@@ -5751,7 +5751,7 @@ var PORT=[];
     const disc=new THREE.Mesh(new THREE.CircleGeometry(1.1,32),new THREE.MeshBasicMaterial({color:p.col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.62,0);disc.scale.y=1.35;g.add(disc);
     const sw=new THREE.Mesh(new THREE.RingGeometry(.35,1.08,24,1,0,4),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.4,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));sw.position.set(0,1.62,.02);sw.scale.y=1.35;g.add(sw);
     const ch=new THREE.Group();[-.6,.6].forEach(r=>{const b=new THREE.Mesh(new THREE.BoxGeometry(2.6,.08,.08),sm(0x2a2a30));b.rotation.z=r;b.position.set(0,1.62,.12);ch.add(b)});g.add(ch);
-    sign(g,[{t:p.ic+' '+p.n,f:'700 40px'},{t:rpTxt138(p.lv[0]),f:'600 26px'}],2.4,.62,'#1a1424','#efe6ff',null,0,4.34,.0,0,512,140);
+    sign(g,[{t:p.ic+' '+p.n,f:'700 40px'},{t:rpTxt139(p.lv[0]),f:'600 26px'}],2.4,.62,'#1a1424','#efe6ff',null,0,4.34,.0,0,512,140);
     [-1.25,1.25].forEach(lx=>{const wx=x+Math.cos(ry)*lx,wz=z-Math.sin(ry)*lx;CBLK.add(Math.round(wz)*W+Math.round(wx))});
     PORT.push({i,x,z,g,disc,sw,ch})});
 }
@@ -5779,22 +5779,22 @@ function toPos(x,z,face){pl.position.set(x,0,z);if(face!=null)camYaw=face;fols.f
 // v106: k = the instance (0 = I); every instance starts at its own entrance
 function enterMap(i,k){if(AF)return;const p=PMAP[i],I=p.ins[k|0]||p.ins[0];fadeTo(()=>{insArrive(I)})}
 function insArrive(I){const p=PMAP[I.z],n=I.path[30];toPos(I.en[0],I.en[1],Math.atan2(I.en[0]-n[0],I.en[1]-n[1]));
-  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:rpTxt138(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
+  banner(p.ic+' '+I.n.toUpperCase(),p.sub,I.den?BOSSES[I.z].name+' · '+BOSSES[I.z].title:rpTxt139(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}
 function goHome(){if(WV)waveEnd(false,true);fadeTo(()=>{TWN100_home();say('🏰 Back in Duskhold.')})}
 function recallTown(){if(WV)waveEnd(false,true);const T=TOWNS[0];home=T;toPos(T.sp[0],T.sp[1]);hud();say('🌀 You recall to Duskhold.')}
 function portalPrompt(){
   const P=pl.position;
   for(const Q of PORT){if(Math.hypot(P.x-Q.x,P.z-Q.z)<2.6){const p=PMAP[Q.i];if(!pUnlocked(Q.i))return {label:'🔒 Sealed · defeat '+BOSSES[Q.i-1].name+' in '+PMAP[Q.i-1].n,fn:()=>openX('bosses')};
-    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' ('+rpTxt138(p.ins[0].lv[0])+')',fn:()=>enterMap(Q.i,0)}}}
+    if(pDone(Q.i)||insReach(Q.i)>0)return {label:'F · '+p.n+' (choose where to go)',fn:()=>openX('portal',Q.i)};return {label:'F · Enter '+p.ins[0].n+' ('+rpTxt139(p.ins[0].lv[0])+')',fn:()=>enterMap(Q.i,0)}}}
   for(const r of RPORT){if(r.g.visible&&Math.hypot(P.x-r.x,P.z-r.z)<(r.k=='next'?2.8:2.2)){if(r.k=='wave')return {label:'F · Leave the Wave Trial',fn:()=>goHome()};
-    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' ('+rpTxt138(N.lv[0])+')'),fn:()=>insGo(N)}}
+    if(r.k=='next'){const N=r.to;return {label:'F · Step through to '+N.n+(N.den?' ('+BOSSES[N.z].name+')':' ('+rpTxt139(N.lv[0])+')'),fn:()=>insGo(N)}}
     return {label:'F · Return to Duskhold',fn:()=>goHome()}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){return portalPrompt()||f()}}
 // v106: the portal lists every instance of the zone you have reached (v135: no Wave Trial any more)
 XR.portal=()=>{const i=xwArg|0,p=PMAP[i],b=BOSSES[i],d=pDone(i),R=insReach(i);$('xwT').textContent=p.ic+' '+p.n;$('xwS').textContent=p.sub+(d?' · cleared ✓':'');
   const row=I=>{const ok=I.k<=R,txt=I.den?b.name+', '+b.title+(d?' (back 5 minutes after each defeat).':'.'):I.k==PMF-1?'Its road ends at the gateway to '+b.name+'’s den.':'Its road ends at a gateway to '+p.ins[I.k+1].n+'.';
-    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">${rpTxt138(I.den?b.lvl:I.lv[0])}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
+    return `<div class="rw" style="${ok?'':'opacity:.55'}"><span class="rn">${I.den?'👑':'🗺️'} <b>${I.n}</b> <span class="mut">${rpTxt139(I.den?b.lvl:I.lv[0])}</span><small>${txt}${ok?'':'<br>🔒 Reach it through the gateway at the end of '+p.ins[I.k-1].n+'.'}</small></span><span class="ra">${ok?`<button class="pri" data-pgo="map" data-pk="${I.k}">Enter</button>`:'🔒'}</span></div>`};
   const wave='';   // v135: Wave Trials removed (owner's request)
   $('xwB').innerHTML='<div class="rows">'+p.ins.map(row).join('')+wave+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Recall (T) brings you home to Duskhold; press T again in Duskhold to go back to the spot you left.</span>'};
@@ -5802,7 +5802,7 @@ $('xw').addEventListener('click',e=>{if(xwMode!='portal')return;const b=e.target
 // the J window lists the portals and their bosses
 XR.bosses=()=>{$('xwT').textContent='🌀 The Portals';$('xwS').textContent=bossDone.size+' of '+PMAP.length+' maps cleared';
   $('xwB').innerHTML='<div class="rows">'+PMAP.map((p,i)=>{const b=BOSSES[i],u=pUnlocked(i),d=pDone(i);
-    return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">${rpTxt138(p.lv[0])}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
+    return `<div class="rw" style="--rc:${d?'#6ee7b7':u?'#c9a24a':'#555'};${u?'':'opacity:.6'}"><span class="rn">${p.ic} <b>${p.n}</b> <span class="mut">${rpTxt139(p.lv[0])}</span><small>${p.sub}<br>Boss: ${b.name}, ${b.title} · ${d?'✓ Cleared · power gained: '+b.pw.i+' '+b.pw.n:u?'Reward: '+b.pw.i+' '+b.pw.n+' ('+b.pw.d+')':'🔒 Defeat '+BOSSES[i-1].name+' to open'}</small></span><span class="ra">${d?'✓':u?'Open':'🔒'}</span></div>`}).join('')+'</div>';
   $('xwF').innerHTML='<span class="mut dtl">Each portal has its own gate on an island round Duskhold; roads lead there from the east, west and south gates.</span>'};
 // ---- bosses ----
 function spawnBoss(i){
@@ -6353,7 +6353,7 @@ var LT={on:0};
 // ---------- the map (N) shows only the area you are in ----------
 function openWMap(){
   const c=$('wmc'),r=curMap(),I=curIns(),T=TOWNS[0];let x0,y0,w,h,title,sub; // v106: the instance you are in
-  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · '+rpTxt138(I.lv[0]):'')}
+  if(r>=0){const p=PMAP[r];x0=I.x0;y0=I.y0;w=I.w;h=I.h;title=I.n;sub=(p.sub||'')+(I.fld?' · '+rpTxt139(I.lv[0]):'')}
   else{x0=T.cx-60;y0=T.cy-30;w=120;h=TWN100_PG[TWN100_PG.length-1].y+16-y0;title='Duskhold';sub='Grand Square · Portal Road: I → VI'}
   const s=Math.min(1060/w,640/h);c.width=Math.round(w*s);c.height=Math.round(h*s);const g=c.getContext('2d');
   g.imageSmoothingEnabled=false;g.fillStyle='#0a0d12';g.fillRect(0,0,c.width,c.height);g.drawImage(mmB,x0,y0,w,h,0,0,w*s,h*s);
@@ -12814,8 +12814,8 @@ $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.c
   if(D.kqsel!=null){KQS.sel=D.kqsel;rX()}});
 // the talents window points to the ability book (replaces the v71 skill list)
 function skHTML(){return '';const ap=apFree();return `<div class="sksec kqs-link"><span>⚡ <b>Abilities</b> are learned with ability points (1 per level), separate from talent points. You have <b>${ap}</b> to spend.</span><button class="pri" data-kqsopen="1">Open Abilities</button></div>`}
-// v117: Talents and Abilities were two separate windows. v138: talents are gone; C opens the Character window (the old
-// talents window, 2910) and K opens the Abilities window and closes it again.
+// v117: Talents and Abilities were two separate windows. v139: talents are gone; C opens the Character window (the old
+// talents window, 2940) and K opens the Abilities window and closes it again.
 addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.key.toLowerCase()!='k')return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'||a.tagName=='SELECT'))return;
   if(!$('xw').classList.contains('hide')&&xwMode=='abil'){closeX();e.stopImmediatePropagation();return}if(!uiOpen())openAbil()},true);
 {const f=openTal;openTal=function(){if(!$('xw').classList.contains('hide')&&xwMode=='abil')closeX();KQS.tab='tal';return f.apply(this,arguments)}}
@@ -15041,7 +15041,7 @@ XR.densign=()=>{const i=+xwArg,T=DSTXT[i],B=BOSSES[i];if(!T||!B)return;const L=d
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   $('xwT').textContent='📜 '+T.den;$('xwS').textContent=B.name+' · '+B.title;
   const pg=!L.pw||L.me>=L.pw,col=g=>g?'#6ee7b7':'#ff6b5b';
-  const rec=`<div class="dsg-lv">   <!-- v138: power only, no levels -->
+  const rec=`<div class="dsg-lv">   <!-- v139: power only, no levels -->
     ${L.pw?`<span>Recommended power <b>${L.pw.toLocaleString()}</b></span><span>Your power <b style="color:${col(pg)}">${L.me.toLocaleString()}</b>${pg?' ✔':' ✖'}</span>`:''}
     <small class="mut">${pg?'You look ready for '+esc(B.name)+'.':'Come back stronger, or bring a co-op partner.'}${done?' You have defeated it before.':''}</small></div>`;
   const atk=T.atk.map(([n,d,a])=>`<div class="rw dsg-a"><span class="rn"><b>${esc(n)}</b><small>${esc(d)}</small><small class="dsg-av">➜ ${esc(a)}</small></span></div>`).join('');
@@ -16661,7 +16661,7 @@ function lnBagRefresh(){try{if(!$('bag').classList.contains('hide'))rB0()}catch(
 function tmTile(m){return `<div class="kqm-slot kqm-tmap" data-kqtm="${m.id}" data-kqt="tm:${m.id}" style="--rc:#fbbf24" title=""><span class="kqm-ic">🗺️</span><span class="kqm-up">${(PMAP[m.r]?PMAP[m.r].n:'?').replace(/^The /,'').split(' ')[0]+' '+(PM_RN[m.k|0]||'')}</span></div>`}
 function tmTip(m){const p=INSL[tmG(m)],here=tmCur()===tmG(m);
   return `<div class="kqm-tn"><span>🗺️ ${tmName(m)}</span></div><div class="kqm-ts">Quest item · can't be sold</div>`+
-    `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' ('+rpTxt138(p.lv[0])+')':''}. ${tmHint(m)}</div>`+
+    `<div class="kqm-td">A treasure is buried in <b>${p?p.n:'?'}</b>${p?' ('+rpTxt139(p.lv[0])+')':''}. ${tmHint(m)}</div>`+
     `<div class="kqm-th">${here?'You are there: the red ✕ is on your minimap and map (N). Stand on it and press F to dig.':'Travel to '+(p?p.n:'its zone')+' through its zone\'s portal gate outside Duskhold, then follow the ✕.'} The map is used up once you dig the treasure.</div>`}
 {const f=kqmTipHTML;kqmTipHTML=function(el){const k=el&&el.dataset&&el.dataset.kqt||'';if(k.slice(0,3)=='tm:'){const m=tmaps.find(q=>q.id==+k.slice(3));return m?[tmTip(m),'#fbbf24']:null}return f.apply(this,arguments)}}
 {const f=kqmBag;kqmBag=function(){const r=f.apply(this,arguments);try{if(!tmaps.length)return r;const bl=$('bl'),T=bagTab2;if(!bl)return r;
@@ -21169,7 +21169,7 @@ function TWN100_island(i){const p=TWN100_PG[i],P=PORT[i];if(!P)return;const y0=T
   [-1.45,1.45].forEach(lx=>{const q=loc(lx,0);CBLK.add(Math.round(q[1])*W+Math.round(q[0]))});
   // signpost to the right of the dais, facing the arrival spot
   {const q=loc(2.55,2.3),sg=twPostG(2.0,1.62,.62);sg.position.set(q[0],GH(q[0],q[1]),q[1]);sg.rotation.y=face;scene.add(sg);
-    sign(sg,[{t:'Portal '+['I','II','III','IV','V','VI'][i]+' · '+PMAP[i].n,f:'700 36px'},{t:PMAP[i].ic+' '+rpTxt138(PMAP[i].lv[0]),f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
+    sign(sg,[{t:'Portal '+['I','II','III','IV','V','VI'][i]+' · '+PMAP[i].n,f:'700 36px'},{t:PMAP[i].ic+' '+rpTxt139(PMAP[i].lv[0]),f:'600 26px'}],2.0,.62,['#1e2a16','#2a3a1a','#1a2a3a','#4a3018','#1a1e22','#2a0c10'][i],'#f4ead0','#c9a24a',0,1.62,0,0,512,150);
     CBLK.add(Math.round(q[1])*W+Math.round(q[0]))}
   // scenery: themed WD kinds round the dais, keeping the front and every road that reaches the island clear
   const open=[face];TWN100_RD.forEach(L=>L.forEach(v=>{const d=Math.hypot(v[0]-p.x,v[1]-p.y);if(d<p.r+4&&d>1)open.push(Math.atan2(v[0]-p.x,v[1]-p.y))}));
@@ -21301,7 +21301,7 @@ function TWN101_road(){const T=TOWNS[0],X=PCOURT[0],y0=T.cy+T.sz+2,yN=TWN100_PG[
   for(let dz=0;dz<=3;dz++)CBLK.add(Math.round(AY-4.0+dz*.7)*W+Math.round(X-5.5))}
 // the board's text (which portals are open / cleared)
 function TWN101_board(){const g=TWN101.board;if(!g)return;const T=TOWNS[0],AY=PCOURT[1]+3,y0=T.cy+T.sz+2;
-  const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  '+rpTxt138(p.lv[0])+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
+  const L=[{t:'THE SIX PORTALS',f:'800 40px'}].concat(PMAP.map((p,i)=>({t:TWN101_RN[i]+'  '+p.n+'  ·  '+rpTxt139(p.lv[0])+(pDone(i)?'  ✓':pUnlocked(i)?'':'  🔒'),f:'600 26px'})));
   // repaint only when the text changed (this runs every second); free the old board's canvas texture
   const key=L.map(l=>l.t).join('|');if(TWN101.bs&&TWN101.bk===key)return;TWN101.bk=key;
   if(TWN101.bs){const sg=TWN101.bs.parent;g.remove(sg);sg.traverse(o=>{const m=o.material,t=m&&m.map;if(!t||typeof SGNR=='undefined'||!SGNR)return;const k=SGNR.findIndex(r=>r.t===t);if(k>=0){SGNR.splice(k,1);t.dispose();m.dispose()}});TWN101.bs=null}
@@ -22704,7 +22704,7 @@ var INSW={g:-2,t:0};
   const I=curIns();INSW.g=I?I.g:-1;if(I&&I.k>INSR[I.z])INSR[I.z]=I.k}catch(err){console.warn('v106 load',err)}return r}}
 // the J window: how far into each zone you are
 {const f=XR.bosses;XR.bosses=function(){f.apply(this,arguments);try{const rows=$('xwB').querySelectorAll('.rw');PMAP.forEach((p,i)=>{const rw=rows[i];if(!rw||!pUnlocked(i))return;const sm=rw.querySelector('small');
-  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' ('+rpTxt138(I.lv[0])+')')).join(' · '))})}catch(_){}}}
+  if(sm)sm.insertAdjacentHTML('beforeend','<br>Instances: '+p.ins.map(I=>(I.k<=insReach(i)?'✓ ':'🔒 ')+(I.den?'Den':I.rn+' ('+rpTxt139(I.lv[0])+')')).join(' · '))})}catch(_){}}}
 // ================= v107: every zone monster fights in its own way =================
 // Before: the 18 monsters of the six portal zones shared ten generic moves, and 12 of them had a lunge (charge or pounce).
 // Now each keeps one basic attack (strike / bite / spit / throw / bolt) and gets two signature moves of its own that
@@ -26154,7 +26154,7 @@ function ia112Particles(dt,now,t){const {N,pos}=ZP,P=pl.position;if(['spore','mo
 {const f=atmos;atmos=function(dt,now){f.apply(this,arguments);try{ia112(dt,now)}catch(err){if(!IA112.err){IA112.err=1;console.warn('v112 atmos',err)}}}}
 // ---------- 8. the arrival banner names the place ----------
 {const f=insArrive;insArrive=function(I){const r=f.apply(this,arguments);try{const t=I&&TH112&&TH112.byG[I.g];if(t){const p=PMAP[I.z];
-  banner(p.ic+' '+I.n.toUpperCase(),t.nm+' · '+t.sub,rpTxt138(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}}catch(_){}return r}}
+  banner(p.ic+' '+I.n.toUpperCase(),t.nm+' · '+t.sub,rpTxt139(I.lv[0])+' · '+(I.k==PMF-1?'the way to '+BOSSES[I.z].name+'’s den waits at the end of the road':'a gateway to '+p.ins[I.k+1].n+' waits at the end of the road'))}}catch(_){}return r}}
 {const f=areaName;areaName=function(){const s=f.apply(this,arguments);try{const I=curIns(),t=I&&TH112&&TH112.byG[I.g];if(t&&s.indexOf(I.n)>=0&&s.indexOf('⛺')<0)return s.replace(I.n,I.n+' · '+t.nm)}catch(_){}return s}}
 // ---------- 9. saves: the tiles of II and III changed (layout 112) ----------
 // A v108 save: the reached instances stay; a position in instance I, a Den or a Trial stays (their tiles did not change);
@@ -28790,7 +28790,7 @@ function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||
   else if(I.tri){kick=p.n;title='Wave Trial';sub=p.sub}
   else{kick=p.n+' · '+(['First','Second','Third'][I.k]||'')+' Reach';title=t?t.nm:p.n;sub=t?t.sub:p.sub}
   let rp=0;try{rp=recPower(I.lv[0])}catch(_){}const pw=typeof heroPower=='function'?heroPower():0;
-  const foot=rp?`<span class="${pw<rp?'ztlow':''}">⚔ Rec. power ${rp.toLocaleString()}</span>`:'';   // v138: no enemy level range
+  const foot=rp?`<span class="${pw<rp?'ztlow':''}">⚔ Rec. power ${rp.toLocaleString()}</span>`:'';   // v139: no enemy level range
   zt116Show(T,kick,title,sub,foot,'z'+I.z)}
 // the old arrival banners stay silent; the card replaces them
 {const f=banner;banner=function(t){if(ZT116.mute)return;if(t==='🏰 DUSKHOLD'){zt116Show(ZT116.town,'The Floating Stronghold','Duskhold','The last stronghold, adrift above the void','The Grand Square · the Portal Road leads south','town');return}return f.apply(this,arguments)}}
@@ -30234,7 +30234,7 @@ var BAL127_HP={assassin:1.12};
 // 4. Throwing knives: one throw (a fan of 3, or 5 every 4th throw) hits each enemy with one knife at full damage; the other knives of
 //    the same throw that hit that enemy deal WB127.knDup of their damage. Before, every knife of the fan landed on a lone enemy at
 //    close range (after Eviscerate / Shadow Rush dash you in), so the fan was a point-blank shotgun: ~+50% over daggers on one target.
-{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=WB127.knDup;else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
+{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=(v.k!=null?v.k:WB127.knDup);else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
 
 // 5. Weapons. Each weapon keeps an identity; at every level 10–50 it lands within ~8% of its target against the average of all
 //    16 class + weapon pairs (30 s fights with the class's best abilities, one target / a pack of four):
@@ -35530,19 +35530,98 @@ function fkCitSp(c){const r=czRole104(c),L=(FK_ROLE[r]||FK_ROLE.gather).filter(k
 // them shortly after loading (not during it: the page shows sooner)
 {const f=idlNpc;idlNpc=function(g,now){if(g&&!g._fkOk&&g.userData&&g.userData.npcO){g._fkOk=1;const m=g.children.find(c=>c.isSkinnedMesh);if(m&&!m.userData.fk)try{fkRebuild(g)}catch(e){}}return f.apply(this,arguments)}}
 setTimeout(()=>{try{const t=performance.now(),n=fkRebuildAll();FK137.rb=[n,Math.round(performance.now()-t)]}catch(e){console.warn('v137 folk rebuild',e)}},1200);
-// ================= v138: attributes replace talents (owner's request, Oct 2026) =================
+// ================= v138: ability balance — every ability valued by how it delivers damage, what else it does, and evolutions =================
+// How it works (read this before changing it). See README "Ability balance (v138)".
+// - Measured with test/v138_abilities/ (every ability of every class at level 50, base form at rank 1 and evolved form at rank 5,
+//   on a target dummy with 4 dummies close by and 4 further out; every hit is logged). Each damaging ability is sorted by what it
+//   actually does: single target, burst area (one moment), intermittent area (2–4 pulses), constant area (5+ pulses over 2.5 s+),
+//   and by area size (small, medium: reaches the close ring, large: reaches the far ring).
+// - Damage per target per second of cooldown, against the hero's attack, is set from one table for all five classes:
+//     single 1.00 · burst .75 · intermittent .75 · constant .55   ×   small 1.00 · medium .93 · large .85
+//   and what else the ability does is paid for in damage (test/v138_abilities/an2.py `utility`: stun .12–.15, root .10,
+//   slow .05, debuff/mark .12, pull .06, knockback .04, silence .05, dash/leap .08, invulnerability/shield/heal .12; stuns, roots, slows, pulls, debuffs, heals, shields,
+//   dashes, invulnerability; at most 40%). So a large stunning zone hits less than a large zone that only burns, a dash that
+//   damages hits less than a plain strike, and of two big area spells the one without extras hits harder. Cooldown does not
+//   change the rate: a long cooldown is a bigger single hit, a short one steadier damage.
+// - Evolved forms follow the same table at ~2.2× the base form's rate (rank 5 ×1.48 and −15% cooldown, evolution ×1.25),
+//   whatever new shape the evolution gives them; BAL138_EVO is the per-ability factor applied to evolved casts only.
+// - Projectiles fired together by one cast (Multishot, Barrage, Shuriken Volley, Phoenix Barrage…) hit each enemy once at full
+//   damage; more of them on the same enemy deal BAL138.dup. Seeking bolts meant to focus one enemy (Arcane Missiles) are exempt.
+var BAL138={vol:null,dup:.3,EXEMPT:{'Arcane Missiles':1}};
+{const f=cast;cast=function(i){let n=null;try{const s=heroSkills()[+i];n=s&&s.n}catch(_){}
+  const o=BAL138.vol;BAL138.vol=n&&!BAL138.EXEMPT[n]?Object.assign(new Set(),{k:BAL138.dup}):null;
+  try{return f.apply(this,arguments)}finally{BAL138.vol=o}}}
+{const f=launch;launch=function(pos,d,spd,s){if(BAL138.vol&&s&&typeof s=='object'&&!s.basic&&!s.cc&&!s.vol){const a=[].slice.call(arguments);a[3]=Object.assign({},s,{vol:BAL138.vol});return f.apply(this,a)}return f.apply(this,arguments)}}
+var BAL138_EVO={};
+// per class, on every evolved cast: evolutions add the same per ability, but a class whose basic attacks carry more of its
+// damage (warrior, paladin) gains less from them in a fight; this keeps the five classes even with every ability evolved
+var BAL138_EVOC={warrior:1,paladin:1,assassin:1,ranger:1,mage:1};
+{const f=kqrP;kqrP=function(s){let k=f.apply(this,arguments);if(s&&s.ev137){if(BAL138_EVO[s.n]!=null)k*=BAL138_EVO[s.n];const c=hero&&BAL138_EVOC[hero.cls];if(c&&kqrOwn(s))k*=c}return k}}
+
+// 2. Base forms: KQR_TUNE (the v90 per-ability damage factor; it scales everything the cast does). Old values in the comment.
+Object.assign(KQR_TUNE,{
+  // warrior (was: Bull Rush 1.5, Chain Hook 1.47, Cleave 1, Earthshatter 0.94, Execute 0.81, Intimidating Shout 2.4, Leap Slam 1, Seismic Rupture 1, Shockwave 1, Skull Splitter 0.49, Titan's Fall 1, Whirlwind 0.4)
+  "Bull Rush":1.051,"Chain Hook":1.909,"Cleave":0.621,"Earthshatter":1.014,"Execute":0.638,"Intimidating Shout":3.877,"Leap Slam":0.705,"Seismic Rupture":1.062,"Shockwave":0.941,"Skull Splitter":0.454,"Titan's Fall":0.996,"Whirlwind":0.383,
+  // paladin (was: Avenger's Shield 1, Beacon of Light 1.16, Blessed Hammers 1, Consecration 1, Crusader's Charge 1.6, Hammer of Light 0.9, Heaven's Wrath 1.11, Holy Smite 1, Judgment 1.39, Penance 1, Sanctuary 1.38, Shield Bash 1.11)
+  "Avenger's Shield":1.005,"Beacon of Light":1.371,"Blessed Hammers":1.042,"Consecration":1.035,"Crusader's Charge":2.484,"Hammer of Light":1.328,"Heaven's Wrath":2.25,"Holy Smite":1.331,"Judgment":1.738,"Penance":2.209,"Sanctuary":2.115,"Shield Bash":1.305,
+  // assassin (was: Caltrops 0.79, Death Mark 0.74, Eclipse 0.36, Envenom 1, Eviscerate 0.36, Fan of Knives 1, Garrote 0.59, Phantom Strike 0.53, Shadow Rush 0.38, Shuriken Volley 0.27, Smoke Bomb 0.93, Thousand Cuts 0.8, Venom Flask 0.55)
+  "Caltrops":0.628,"Death Mark":1.189,"Eclipse":0.34,"Envenom":1.717,"Eviscerate":0.258,"Fan of Knives":1.042,"Garrote":0.952,"Phantom Strike":0.596,"Shadow Rush":0.166,"Shuriken Volley":0.443,"Smoke Bomb":0.657,"Thousand Cuts":1.305,"Venom Flask":0.271,
+  // ranger (was: Aimed Shot 0.53, Barrage 1.2, Disengage 1.21, Entangling Roots 1, Explosive Arrow 1.05, Explosive Trap 1, Frost Trap 1, Hawk Dive 0.9, Multishot 0.7, Piercing Arrow 0.75, Rain of Arrows 0.75, Rapid Fire 0.27, Stampede 0.6)
+  "Aimed Shot":0.575,"Barrage":1.246,"Disengage":1.391,"Entangling Roots":2.217,"Explosive Arrow":0.421,"Explosive Trap":0.418,"Frost Trap":1.948,"Hawk Dive":0.878,"Multishot":0.499,"Piercing Arrow":0.528,"Rain of Arrows":0.232,"Rapid Fire":0.257,"Stampede":1.189,
+  // mage (was: Arcane Missiles 0.45, Blizzard 0.4, Chain Lightning 0.5, Comet Storm 1.3, Disintegrate 0.46, Dragon's Breath 0.55, Fireball 0.55, Frost Nova 1.25, Frozen Orb 1.9, Meteor 0.6, Singularity 0.43, Wall of Fire 0.55)
+  "Arcane Missiles":0.404,"Blizzard":0.316,"Chain Lightning":0.353,"Comet Storm":2.072,"Disintegrate":0.396,"Dragon's Breath":0.758,"Fireball":0.314,"Frost Nova":1.051,"Frozen Orb":3.312,"Meteor":0.564,"Singularity":0.347,"Wall of Fire":0.309
+});
+// 3. Evolved forms: BAL138_EVO, on top of the base factor and the evolution bonus (1 = unchanged). Under 1: the evolution added
+//    area, duration or extra hits at full damage (Arrowstorm, Starpiercer, Earthsplitter, Final Verdict…); over 1: it was weak.
+Object.assign(BAL138_EVO,{
+  // warrior
+  "Bull Rush":0.993,"Chain Hook":0.581,"Cleave":0.577,"Earthshatter":0.904,"Execute":0.734,"Intimidating Shout":0.801,"Leap Slam":0.925,"Seismic Rupture":0.649,"Shockwave":0.337,"Skull Splitter":0.473,"Titan's Fall":1.006,"Whirlwind":0.416,
+  // paladin
+  "Avenger's Shield":0.485,"Beacon of Light":0.768,"Blessed Hammers":0.68,"Consecration":0.995,"Crusader's Charge":0.315,"Hammer of Light":0.059,"Heaven's Wrath":0.739,"Holy Smite":0.897,"Judgment":0.318,"Penance":0.484,"Sanctuary":0.71,"Shield Bash":0.421,
+  // assassin
+  "Caltrops":0.702,"Death Mark":0.858,"Eclipse":0.603,"Envenom":0.778,"Eviscerate":0.568,"Fan of Knives":0.438,"Garrote":0.753,"Phantom Strike":0.445,"Shadow Rush":0.989,"Shuriken Volley":0.629,"Smoke Bomb":1.266,"Thousand Cuts":0.477,"Venom Flask":0.712,
+  // ranger
+  "Aimed Shot":0.931,"Barrage":0.823,"Disengage":0.635,"Entangling Roots":0.994,"Explosive Arrow":1.14,"Explosive Trap":1.085,"Frost Trap":1.005,"Hawk Dive":0.395,"Multishot":1.008,"Piercing Arrow":0.34,"Rain of Arrows":0.428,"Rapid Fire":0.628,"Stampede":0.961,
+  // mage
+  "Arcane Missiles":0.643,"Blizzard":0.958,"Chain Lightning":0.83,"Comet Storm":1.088,"Disintegrate":0.564,"Dragon's Breath":0.445,"Fireball":0.692,"Frost Nova":1.021,"Frozen Orb":0.294,"Meteor":0.86,"Singularity":0.829,"Wall of Fire":0.708
+});
+// Not tuned by the table (their job is not damage, or the dummy cannot measure them): pure buffs, shields, heals and movement
+// (War Cry, Iron Skin, Unbreakable, War Banner, Bloodrage, Divine Barrier, Lay on Hands, Aegis, Seal of Light, Divine Intervention,
+// Vanish, Shadow Dance, Poison Blades, Snare Trap, Hunter’s Focus, Blink, Rift Gate, Mana Shield, Time Warp) and summons (Shadow
+// Clone, Call of the Wild, Wild Hunt: the pets wander off the dummy).
+
+// 4. Death Mark: its value is the mark (the target takes more damage from everything), not its strike, so the strike counts the
+//    mark as the largest extra (40%); the evolved Mark of Oblivion marks three enemies for +35% (not +50%) for 10 s (not 12):
+//    at +50% for 12 s on a ~14 s cooldown it was a near-permanent +50% to all the assassin's damage (+35% over the other classes).
+Object.assign(EVO137['Death Mark'].mod,{v:.35,dur:10});
+Object.assign(EVO137['Death Mark'],{d:'Marks your target and the 2 enemies nearest to it: they take 35% more damage for 10s.'});
+// 5. Classes after the ability changes (re-measured: every class × every weapon at levels 10–50, rank 1, and rank 5 with every
+//    ability evolved at 40–50). Ranged classes lean on their abilities in a crowd (a bow or a staff does not cleave), so the
+//    Ranger and Mage get more from them; the Assassin's extra basic-attack bonus goes (its abilities got stronger).
+KQR_CLS.assassin.basicP=0;           // was .15
+KQR_CLS.paladin.basicP=-.06;         // was 0
+KQR_CLS.ranger.skillP=.22;           // was .03 (v127)
+KQR_CLS.mage.skillP=L=>.06+.008*L;   // was −.04 + .008·level (v127)
+Object.assign(BAL138_EVOC,{warrior:1.14,paladin:1.16,mage:.95});
+// 6. Weapons that cleaved a crowd too well once the abilities changed, and the knife fan (wider, less on one target)
+Object.assign(WTYPE.ga,{k:1.1});MW.ga.m=[1,1.1,1.3];   // were 1.16, finisher 1.4 (v127)
+Object.assign(WTYPE.halberd,{k:1.12});                  // was 1.2
+Object.assign(WTYPE.mace,{k:1.02});                     // was 1.2 (v127)
+MW.flail.half=1.45;MW.gs.half=.55;                      // were 1.9 / .7 (v127)
+WB127.knife=.7;WB127.knSpread=.6;WB127.knDup=.2;        // were .68 / .45 / .3 (v127)
+// ================= v139: attributes replace talents (owner's request, Oct 2026) =================
 // Levelling up used to add a big flat amount of every stat (CLS[c].per) plus a talent point. Now:
-//  * the flat gain per level is ATR138.flat (55%) of the old health / attack / defense growth (mana keeps its old growth);
-//  * every level gives ATR138.per (3) attribute points to spend on Intellect, Strength, Dexterity, Vigor, Wisdom, Luck;
-//    each point adds a little (ATR138.D[k].p) and reaching 10 / 25 / 50 / 75 points in one attribute unlocks a bonus (D[k].T);
+//  * the flat gain per level is ATR139.flat (55%) of the old health / attack / defense growth (mana keeps its old growth);
+//  * every level gives ATR139.per (3) attribute points to spend on Intellect, Strength, Dexterity, Vigor, Wisdom, Luck;
+//    each point adds a little (ATR139.D[k].p) and reaching 10 / 25 / 50 / 75 points in one attribute unlocks a bonus (D[k].T);
 //  * talents are gone: talRank() is 0 for every talent, talMods() returns the attribute bonuses instead (HS_base adds them
 //    where it added talents), tpFree() (0120) counts unspent attribute points (the hud's "✦ N points · C" chip).
 // Points live in hero.tal['__at:<key>'] (saved with the hero; '__' keys survive the ability reset). Old saves: talent ranks are
 // removed on load (they were stat bonuses only) and the hero gets every attribute point of their level to spend.
-// Spending is staged: + buttons add pending points (ATR138.pend), Apply commits them, Undo drops them, Auto fills the free
-// points in the class's usual mix (ATR138.auto). Reset (40 gold per level, also the Magic Shop's Tome) takes all of them back.
-// The Character window (C, 2910) and the block under the hero in the inventory show them.
-var ATR138={per:3,flat:.55,
+// Spending is staged: + buttons add pending points (ATR139.pend), Apply commits them, Undo drops them, Auto fills the free
+// points in the class's usual mix (ATR139.auto). Reset (40 gold per level, also the Magic Shop's Tome) takes all of them back.
+// The Character window (C, 2940) and the block under the hero in the inventory show them.
+var ATR139={per:3,flat:.55,
   K:['int','str','dex','vig','wis','lck'],
   D:{
     int:{n:'Intellect',ab:'INT',i:'🔮',col:'#8ab4ff',d:'Magical attack and mana',p:{ma:1.4,mp:1.5},
@@ -35562,194 +35641,194 @@ var ATR138={per:3,flat:.55,
   auto:{warrior:{str:4,vig:4,dex:1.5,lck:.5},paladin:{str:3.5,vig:4,wis:1.5,int:1},assassin:{dex:3.5,str:3,vig:2,lck:1.5},ranger:{dex:3,str:3,vig:2.5,lck:1.5},mage:{int:5,wis:2.5,vig:2.5}},
   pend:{},sel:null};
 // what one point / each bonus does, in words (for tooltips and the Character window)
-var ATR138_SN={hp:['health',0],mp:['mana',0],pa:['physical attack',0],ma:['magical attack',0],pd:['physical defense',0],md:['magical defense',0],
+var ATR139_SN={hp:['health',0],mp:['mana',0],pa:['physical attack',0],ma:['magical attack',0],pd:['physical defense',0],md:['magical defense',0],
   crit:['critical chance',1],cdm:['critical damage',1],as:['attack speed',1],mpr:['mana regeneration per second',1],healP:['healing received',1],loot:['loot find',1]};
-function atr138PerTxt(k){const p=ATR138.D[k].p;return Object.keys(p).map(s=>{const q=ATR138_SN[s]||[s,0];return '+'+(q[1]?+(p[s]*100).toFixed(2)+'%':+p[s].toFixed(2))+' '+q[0]}).join(', ')}
+function atr139PerTxt(k){const p=ATR139.D[k].p;return Object.keys(p).map(s=>{const q=ATR139_SN[s]||[s,0];return '+'+(q[1]?+(p[s]*100).toFixed(2)+'%':+p[s].toFixed(2))+' '+q[0]}).join(', ')}
 // ---- the flat gain per level: 55% of the old health / attack / defense growth ----
-CLSK.forEach(c=>{const P=CLS[c].per;['hp','pa','ma','pd','md'].forEach(k=>{P[k]=+(P[k]*ATR138.flat).toFixed(3)})});
+CLSK.forEach(c=>{const P=CLS[c].per;['hp','pa','ma','pd','md'].forEach(k=>{P[k]=+(P[k]*ATR139.flat).toFixed(3)})});
 // ---- points ----
-function atr138Pts(k){return (hero&&hero.tal&&hero.tal['__at:'+k])|0}
-function atr138Spent(){let n=0;ATR138.K.forEach(k=>n+=atr138Pts(k));return n}
-function atr138Earned(){return Math.max(0,((hero&&hero.lvl|0)-1)*ATR138.per)}
-function atr138Unspent(){return Math.max(0,atr138Earned()-atr138Spent())}
-function atr138PendN(){let n=0;for(const k in ATR138.pend)n+=ATR138.pend[k]|0;return n}
-function atr138Free(){return Math.max(0,atr138Unspent()-atr138PendN())}
+function atr139Pts(k){return (hero&&hero.tal&&hero.tal['__at:'+k])|0}
+function atr139Spent(){let n=0;ATR139.K.forEach(k=>n+=atr139Pts(k));return n}
+function atr139Earned(){return Math.max(0,((hero&&hero.lvl|0)-1)*ATR139.per)}
+function atr139Unspent(){return Math.max(0,atr139Earned()-atr139Spent())}
+function atr139PendN(){let n=0;for(const k in ATR139.pend)n+=ATR139.pend[k]|0;return n}
+function atr139Free(){return Math.max(0,atr139Unspent()-atr139PendN())}
 // the stat bonuses of a set of points (default: what is spent)
-function atr138ModsOf(P){const o={},add=(s,m)=>{for(const k in s)o[k]=(o[k]||0)+s[k]*m};
-  ATR138.K.forEach(k=>{const v=P[k]|0,D=ATR138.D[k];if(!v)return;add(D.p,v);D.T.forEach(t=>{if(v>=t[0])add(t[1],1)})});return o}
-function atr138Cur(){const P={};ATR138.K.forEach(k=>P[k]=atr138Pts(k));return P}
+function atr139ModsOf(P){const o={},add=(s,m)=>{for(const k in s)o[k]=(o[k]||0)+s[k]*m};
+  ATR139.K.forEach(k=>{const v=P[k]|0,D=ATR139.D[k];if(!v)return;add(D.p,v);D.T.forEach(t=>{if(v>=t[0])add(t[1],1)})});return o}
+function atr139Cur(){const P={};ATR139.K.forEach(k=>P[k]=atr139Pts(k));return P}
 // ---- talents are gone: HS_base's talent hook now carries the attributes ----
 talRank=function(){return 0};
-talMods=function(){try{return atr138ModsOf(atr138Cur())}catch(e){return {}}};
-talSpent=function(){return atr138Spent()};
+talMods=function(){try{return atr139ModsOf(atr139Cur())}catch(e){return {}}};
+talSpent=function(){return atr139Spent()};
 // every talent id of every class (to clear them out of old saves)
-function atr138TalIds(){const S=new Set();try{for(const c in TAL)TAL[c].forEach(b=>b.t.forEach(t=>S.add(t[0])))}catch(_){}return S}
-function atr138Migrate(){if(!hero.tal||typeof hero.tal!='object')hero.tal={};const ids=atr138TalIds();let n=0;
+function atr139TalIds(){const S=new Set();try{for(const c in TAL)TAL[c].forEach(b=>b.t.forEach(t=>S.add(t[0])))}catch(_){}return S}
+function atr139Migrate(){if(!hero.tal||typeof hero.tal!='object')hero.tal={};const ids=atr139TalIds();let n=0;
   for(const k of Object.keys(hero.tal))if(ids.has(k)){n+=hero.tal[k]|0;delete hero.tal[k]}
-  const first=!hero.tal.__at138;hero.tal.__at138=1;ATR138.pend={};hsDirty();
-  if(first&&(hero.lvl|0)>1)setTimeout(()=>{try{say('✦ <b>Talents are now attributes.</b> You have <b>'+atr138Unspent()+'</b> attribute points to spend: press <b>C</b> for your character (abilities moved to <b>K</b>).')}catch(_){}},2600);
+  const first=!hero.tal.__at138;hero.tal.__at138=1;ATR139.pend={};hsDirty();
+  if(first&&(hero.lvl|0)>1)setTimeout(()=>{try{say('✦ <b>Talents are now attributes.</b> You have <b>'+atr139Unspent()+'</b> attribute points to spend: press <b>C</b> for your character (abilities moved to <b>K</b>).')}catch(_){}},2600);
   return n}
-{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{atr138Migrate()}catch(e){console.warn('v138 attributes',e)}return r}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{atr139Migrate()}catch(e){console.warn('v139 attributes',e)}return r}}
 // a new hero starts on attributes (no 'talents are now attributes' note later)
-{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(!hero.tal||typeof hero.tal!='object')hero.tal={};hero.tal.__at138=1;ATR138.pend={}}catch(_){}return r}}
+{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(!hero.tal||typeof hero.tal!='object')hero.tal={};hero.tal.__at138=1;ATR139.pend={}}catch(_){}return r}}
 // ---- spending ----
-function atr138Add(k,n){if(!ATR138.D[k])return 0;n=Math.min(n||1,atr138Free());if(n<=0)return 0;ATR138.pend[k]=(ATR138.pend[k]|0)+n;atr138Refresh();return n}
-function atr138Sub(k,n){const c=ATR138.pend[k]|0;if(!c)return 0;n=Math.min(n||1,c);ATR138.pend[k]=c-n;if(!ATR138.pend[k])delete ATR138.pend[k];atr138Refresh();return n}
-function atr138Undo(){ATR138.pend={};atr138Refresh()}
-function atr138Apply(){const n=atr138PendN();if(!n)return 0;const mx0=heroMax();
-  for(const k in ATR138.pend){const v=ATR138.pend[k]|0;if(v>0)hero.tal['__at:'+k]=atr138Pts(k)+v}
-  ATR138.pend={};hsDirty();const mx=heroMax();if(mx>mx0)hero.hp=Math.min(mx,hero.hp+(mx-mx0));hero.hp=Math.min(hero.hp,mx);
+function atr139Add(k,n){if(!ATR139.D[k])return 0;n=Math.min(n||1,atr139Free());if(n<=0)return 0;ATR139.pend[k]=(ATR139.pend[k]|0)+n;atr139Refresh();return n}
+function atr139Sub(k,n){const c=ATR139.pend[k]|0;if(!c)return 0;n=Math.min(n||1,c);ATR139.pend[k]=c-n;if(!ATR139.pend[k])delete ATR139.pend[k];atr139Refresh();return n}
+function atr139Undo(){ATR139.pend={};atr139Refresh()}
+function atr139Apply(){const n=atr139PendN();if(!n)return 0;const mx0=heroMax();
+  for(const k in ATR139.pend){const v=ATR139.pend[k]|0;if(v>0)hero.tal['__at:'+k]=atr139Pts(k)+v}
+  ATR139.pend={};hsDirty();const mx=heroMax();if(mx>mx0)hero.hp=Math.min(mx,hero.hp+(mx-mx0));hero.hp=Math.min(hero.hp,mx);
   try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}try{say('✦ Spent '+n+' attribute point'+(n==1?'':'s')+'.')}catch(_){}
-  try{hud()}catch(_){}atr138Refresh();return n}
+  try{hud()}catch(_){}atr139Refresh();return n}
 // Auto: hand out the free points one at a time to whichever attribute is furthest below the class's usual share
-function atr138Auto(){const W=ATR138.auto[hero.cls]||ATR138.auto.warrior,tot=Object.values(W).reduce((a,b)=>a+b,0);let n=atr138Free(),g=0;
-  while(n-->0){const all=atr138Spent()+atr138PendN()+1;let best=null,bd=-1e9;
-    for(const k in W){const d=W[k]/tot*all-(atr138Pts(k)+(ATR138.pend[k]|0));if(d>bd){bd=d;best=k}}
-    if(!best)break;ATR138.pend[best]=(ATR138.pend[best]|0)+1;g++}
-  atr138Refresh();return g}
-function atr138Clear(){ATR138.K.forEach(k=>{delete hero.tal['__at:'+k]});ATR138.pend={};hsDirty();hero.hp=Math.min(hero.hp,heroMax());try{hud()}catch(_){}atr138Refresh()}
-function atr138ResetCost(){return 40*(hero.lvl|0)}
-function atr138Reset(){const c=atr138ResetCost();if(!atr138Spent())return false;if(gold<c){say('Taking back your attribute points costs '+c+' gold.');return false}
-  gold-=c;atr138Clear();say('✦ Your attribute points were returned ('+c+' gold). Spend them again.');return true}
+function atr139Auto(){const W=ATR139.auto[hero.cls]||ATR139.auto.warrior,tot=Object.values(W).reduce((a,b)=>a+b,0);let n=atr139Free(),g=0;
+  while(n-->0){const all=atr139Spent()+atr139PendN()+1;let best=null,bd=-1e9;
+    for(const k in W){const d=W[k]/tot*all-(atr139Pts(k)+(ATR139.pend[k]|0));if(d>bd){bd=d;best=k}}
+    if(!best)break;ATR139.pend[best]=(ATR139.pend[best]|0)+1;g++}
+  atr139Refresh();return g}
+function atr139Clear(){ATR139.K.forEach(k=>{delete hero.tal['__at:'+k]});ATR139.pend={};hsDirty();hero.hp=Math.min(hero.hp,heroMax());try{hud()}catch(_){}atr139Refresh()}
+function atr139ResetCost(){return 40*(hero.lvl|0)}
+function atr139Reset(){const c=atr139ResetCost();if(!atr139Spent())return false;if(gold<c){say('Taking back your attribute points costs '+c+' gold.');return false}
+  gold-=c;atr139Clear();say('✦ Your attribute points were returned ('+c+' gold). Spend them again.');return true}
 // stats with the pending points counted (for the "→" previews); restores everything afterwards
-function atr138Preview(){if(!atr138PendN())return null;const keep={};
-  for(const k in ATR138.pend){keep[k]=hero.tal['__at:'+k];hero.tal['__at:'+k]=atr138Pts(k)+(ATR138.pend[k]|0)}
+function atr139Preview(){if(!atr139PendN())return null;const keep={};
+  for(const k in ATR139.pend){keep[k]=hero.tal['__at:'+k];hero.tal['__at:'+k]=atr139Pts(k)+(ATR139.pend[k]|0)}
   let s=null;try{hsDirty();s=Object.assign({},HS());s._mx=heroMax();s._mm=typeof mpMax=='function'?mpMax():s.mp;s._pw=heroPower()}
   finally{for(const k in keep){if(keep[k]==null)delete hero.tal['__at:'+k];else hero.tal['__at:'+k]=keep[k]}hsDirty()}
   return s}
 // everything that shows attributes redraws through here (Character window, inventory block)
-var ATR138_R=[];
-function atr138Refresh(){ATR138_R.forEach(f=>{try{f()}catch(e){console.warn('v138 attr ui',e)}})}
+var ATR139_R=[];
+function atr139Refresh(){ATR139_R.forEach(f=>{try{f()}catch(e){console.warn('v139 attr ui',e)}})}
 // the rows of attributes (full: Character window; compact: under the hero in the inventory)
-function atr138Rows(compact){const free=atr138Free();
-  return ATR138.K.map(k=>{const D=ATR138.D[k],v=atr138Pts(k),p=ATR138.pend[k]|0,tot=v+p,nx=D.T.find(t=>tot<t[0]);
-    const tip=D.n+': '+D.d+'. Each point: '+atr138PerTxt(k)+'.'+(nx?' Next bonus at '+nx[0]+': '+nx[2]+'.':' Every bonus unlocked.');
-    return `<div class="at138${ATR138.sel==k?' on':''}" data-at138i="${k}" title="${tip.replace(/"/g,'&quot;')}" style="--ac:${D.col}">`+
-      `<span class="at138-ic">${D.i}</span><span class="at138-n">${compact?D.ab:D.n}</span>`+
-      `<span class="at138-v">${v}${p?`<em>+${p}</em>`:''}</span>`+
-      (compact?'':`<span class="at138-pips">${D.T.map(t=>`<i class="${tot>=t[0]?(v>=t[0]?'got':'new'):''}" title="${t[0]}: ${t[2]}">${t[0]}</i>`).join('')}</span>`)+
-      `<span class="at138-b"><button data-at138m="${k}" ${p?'':'disabled'} title="Take one back">−</button><button data-at138="${k}" ${free?'':'disabled'} title="+1 (Shift: +5)">+</button></span></div>`}).join('')}
-function atr138Bar(compact){const fr=atr138Free(),pn=atr138PendN(),sp=atr138Spent();
-  return `<div class="at138-bar"><span class="at138-free"><b>${fr}</b> point${fr==1?'':'s'} to spend</span><span class="at138-act">`+
-    (fr?`<button data-at138x="auto" title="Spend the free points in your class's usual mix (you still press Apply)">Auto</button>`:'')+
-    (pn?`<button data-at138x="undo">Undo</button><button class="pri" data-at138x="apply">Apply +${pn}</button>`:'')+
-    (!compact&&sp&&!pn?`<button data-at138x="reset" title="Take back every attribute point to spend again">Reset (🪙 ${atr138ResetCost()})</button>`:'')+`</span></div>`}
-document.addEventListener('click',e=>{const t=e.target.closest('[data-at138],[data-at138m],[data-at138x],[data-at138i]');if(!t)return;
-  if(!t.closest('#tal')&&!t.closest('#kqmAtr138'))return;const D=t.dataset;
-  if(D.at138!=null){e.stopPropagation();atr138Add(D.at138,e.shiftKey?5:1);return}
-  if(D.at138m!=null){e.stopPropagation();atr138Sub(D.at138m,e.shiftKey?5:1);return}
-  if(D.at138x){e.stopPropagation();const x=D.at138x;if(x=='auto')atr138Auto();else if(x=='undo')atr138Undo();else if(x=='apply')atr138Apply();else if(x=='reset'){if(atr138Reset())atr138Refresh()}return}
-  if(D.at138i){ATR138.sel=ATR138.sel==D.at138i?null:D.at138i;atr138Refresh()}},true);
+function atr139Rows(compact){const free=atr139Free();
+  return ATR139.K.map(k=>{const D=ATR139.D[k],v=atr139Pts(k),p=ATR139.pend[k]|0,tot=v+p,nx=D.T.find(t=>tot<t[0]);
+    const tip=D.n+': '+D.d+'. Each point: '+atr139PerTxt(k)+'.'+(nx?' Next bonus at '+nx[0]+': '+nx[2]+'.':' Every bonus unlocked.');
+    return `<div class="at139${ATR139.sel==k?' on':''}" data-at139i="${k}" title="${tip.replace(/"/g,'&quot;')}" style="--ac:${D.col}">`+
+      `<span class="at139-ic">${D.i}</span><span class="at139-n">${compact?D.ab:D.n}</span>`+
+      `<span class="at139-v">${v}${p?`<em>+${p}</em>`:''}</span>`+
+      (compact?'':`<span class="at139-pips">${D.T.map(t=>`<i class="${tot>=t[0]?(v>=t[0]?'got':'new'):''}" title="${t[0]}: ${t[2]}">${t[0]}</i>`).join('')}</span>`)+
+      `<span class="at139-b"><button data-at139m="${k}" ${p?'':'disabled'} title="Take one back">−</button><button data-at139="${k}" ${free?'':'disabled'} title="+1 (Shift: +5)">+</button></span></div>`}).join('')}
+function atr139Bar(compact){const fr=atr139Free(),pn=atr139PendN(),sp=atr139Spent();
+  return `<div class="at139-bar"><span class="at139-free"><b>${fr}</b> point${fr==1?'':'s'} to spend</span><span class="at139-act">`+
+    (fr?`<button data-at139x="auto" title="Spend the free points in your class's usual mix (you still press Apply)">Auto</button>`:'')+
+    (pn?`<button data-at139x="undo">Undo</button><button class="pri" data-at139x="apply">Apply +${pn}</button>`:'')+
+    (!compact&&sp&&!pn?`<button data-at139x="reset" title="Take back every attribute point to spend again">Reset (🪙 ${atr139ResetCost()})</button>`:'')+`</span></div>`}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-at139],[data-at139m],[data-at139x],[data-at139i]');if(!t)return;
+  if(!t.closest('#tal')&&!t.closest('#kqmAtr139'))return;const D=t.dataset;
+  if(D.at139!=null){e.stopPropagation();atr139Add(D.at139,e.shiftKey?5:1);return}
+  if(D.at139m!=null){e.stopPropagation();atr139Sub(D.at139m,e.shiftKey?5:1);return}
+  if(D.at139x){e.stopPropagation();const x=D.at139x;if(x=='auto')atr139Auto();else if(x=='undo')atr139Undo();else if(x=='apply')atr139Apply();else if(x=='reset'){if(atr139Reset())atr139Refresh()}return}
+  if(D.at139i){ATR139.sel=ATR139.sel==D.at139i?null:D.at139i;atr139Refresh()}},true);
 // ---- the inventory: the attributes sit under the hero, after the stat summary ----
-{const f=kqmDoll;kqmDoll=function(){const r=f.apply(this,arguments);try{let el=$('kqmAtr138');const sum=$('kqmSum');
-  if(!el&&sum){el=document.createElement('div');el.id='kqmAtr138';el.className='kqm-atr138';sum.after(el)}
-  if(el)el.innerHTML=`<div class="at138-h">✦ Attributes</div>`+atr138Bar(true)+`<div class="at138-g c">${atr138Rows(true)}</div>`}catch(e){console.warn('v138 bag attr',e)}return r}}
-ATR138_R.push(()=>{const b=$('bag');if(b&&!b.classList.contains('hide')&&$('kqmAtr138'))kqmDoll()});
+{const f=kqmDoll;kqmDoll=function(){const r=f.apply(this,arguments);try{let el=$('kqmAtr139');const sum=$('kqmSum');
+  if(!el&&sum){el=document.createElement('div');el.id='kqmAtr139';el.className='kqm-atr139';sum.after(el)}
+  if(el)el.innerHTML=`<div class="at139-h">✦ Attributes</div>`+atr139Bar(true)+`<div class="at139-g c">${atr139Rows(true)}</div>`}catch(e){console.warn('v139 bag attr',e)}return r}}
+ATR139_R.push(()=>{const b=$('bag');if(b&&!b.classList.contains('hide')&&$('kqmAtr139'))kqmDoll()});
 // a new level: the chip in the buff bar shows the points; a short hint the first few times
-{const f=heroLevelUp;heroLevelUp=function(){const r=f.apply(this,arguments);try{atr138Refresh()}catch(_){}return r}}
+{const f=heroLevelUp;heroLevelUp=function(){const r=f.apply(this,arguments);try{atr139Refresh()}catch(_){}return r}}
 document.head.insertAdjacentHTML('beforeend',`<style>
-.at138-g{display:grid;gap:4px}.at138-g.c{grid-template-columns:1fr 1fr;gap:3px 6px}
-.at138{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:6px;padding:4px 6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(0,0,0,.22);cursor:pointer;min-width:0}
-.at138:hover,.at138.on{border-color:var(--ac,#f0cc72)}
-.at138-g.c .at138{grid-template-columns:auto 1fr auto auto;padding:2px 4px;gap:4px}
-.at138-ic{font-size:1rem;line-height:1}.at138-g.c .at138-ic{font-size:.8rem}
-.at138-n{font-weight:700;color:var(--ac,#f0cc72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.at138-g.c .at138-n{font-size:.68rem;letter-spacing:.04em}
-.at138-v{font-weight:800;color:#f4ead2;min-width:2.2em;text-align:right}.at138-g.c .at138-v{font-size:.74rem;min-width:1.6em}
-.at138-v em{font-style:normal;color:#7ef0a0;font-size:.8em;margin-left:2px}
-.at138-pips{display:flex;gap:3px}.at138-pips i{font-style:normal;font-size:.62rem;padding:1px 4px;border-radius:3px;border:1px solid rgba(255,255,255,.14);color:#8a8070}
-.at138-pips i.got{border-color:var(--ac);color:#1a1208;background:var(--ac)}.at138-pips i.new{border-color:#7ef0a0;color:#7ef0a0}
-.at138-b{display:flex;gap:2px}.at138-b button{min-width:22px;height:22px;padding:0 5px;font-size:.8rem;line-height:1}
-.at138-g.c .at138-b button{min-width:18px;height:18px;font-size:.72rem;padding:0 3px}
-.at138-b button[data-at138m]{opacity:.85}.at138-b button[data-at138m]:disabled{visibility:hidden}
-.at138-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 0;font-size:.74rem;flex-wrap:wrap}
-.at138-free b{color:#f0cc72;font-size:.9rem}.at138-act{display:flex;gap:4px;flex-wrap:wrap}.at138-act button{padding:2px 8px;font-size:.72rem}
-.kqm-atr138{margin-top:6px;border-top:1px solid rgba(240,204,114,.18);padding-top:5px}
-.at138-h{font-family:'Cinzel Decorative',serif;font-size:.7rem;letter-spacing:.12em;color:#c9a24a;text-transform:uppercase}
+.at139-g{display:grid;gap:4px}.at139-g.c{grid-template-columns:1fr 1fr;gap:3px 6px}
+.at139{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:6px;padding:4px 6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(0,0,0,.22);cursor:pointer;min-width:0}
+.at139:hover,.at139.on{border-color:var(--ac,#f0cc72)}
+.at139-g.c .at139{grid-template-columns:auto 1fr auto auto;padding:2px 4px;gap:4px}
+.at139-ic{font-size:1rem;line-height:1}.at139-g.c .at139-ic{font-size:.8rem}
+.at139-n{font-weight:700;color:var(--ac,#f0cc72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.at139-g.c .at139-n{font-size:.68rem;letter-spacing:.04em}
+.at139-v{font-weight:800;color:#f4ead2;min-width:2.2em;text-align:right}.at139-g.c .at139-v{font-size:.74rem;min-width:1.6em}
+.at139-v em{font-style:normal;color:#7ef0a0;font-size:.8em;margin-left:2px}
+.at139-pips{display:flex;gap:3px}.at139-pips i{font-style:normal;font-size:.62rem;padding:1px 4px;border-radius:3px;border:1px solid rgba(255,255,255,.14);color:#8a8070}
+.at139-pips i.got{border-color:var(--ac);color:#1a1208;background:var(--ac)}.at139-pips i.new{border-color:#7ef0a0;color:#7ef0a0}
+.at139-b{display:flex;gap:2px}.at139-b button{min-width:22px;height:22px;padding:0 5px;font-size:.8rem;line-height:1}
+.at139-g.c .at139-b button{min-width:18px;height:18px;font-size:.72rem;padding:0 3px}
+.at139-b button[data-at139m]{opacity:.85}.at139-b button[data-at139m]:disabled{visibility:hidden}
+.at139-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 0;font-size:.74rem;flex-wrap:wrap}
+.at139-free b{color:#f0cc72;font-size:.9rem}.at139-act{display:flex;gap:4px;flex-wrap:wrap}.at139-act button{padding:2px 8px;font-size:.72rem}
+.kqm-atr139{margin-top:6px;border-top:1px solid rgba(240,204,114,.18);padding-top:5px}
+.at139-h{font-family:'Cinzel Decorative',serif;font-size:.7rem;letter-spacing:.12em;color:#c9a24a;text-transform:uppercase}
 </style>`);
-// ================= v138: the Character window (C) =================
+// ================= v139: the Character window (C) =================
 // The old Talents window (#tal) is now the Character window: on the left the hero model (the inventory's preview model HP on the
-// shared PV renderer), name, level and XP, and under it the six attributes (2900) with their 10/25/50/75 bonus marks; on the
+// shared PV renderer), name, level and XP, and under it the six attributes (2930) with their 10/25/50/75 bonus marks; on the
 // right every stat of the hero in groups (with the pending points previewed as "old → new"), power, and the attribute bonuses
 // (unlocked ones lit). C opens and closes it (0108), the ☰ button "Character" too. Abilities moved to K (1010).
-var CH138={init:false};
-function ch138Init(){if(CH138.init)return;const w=$('tal');if(!w)return;CH138.init=true;
+var CH139={init:false};
+function ch139Init(){if(CH139.init)return;const w=$('tal');if(!w)return;CH139.init=true;
   const win=w.querySelector('.win');if(win)win.style.width='min(1000px,100%)';
-  const wb=w.querySelector('.wb');if(wb)wb.innerHTML=`<div class="ch138"><div class="ch138-l"><div class="ch138-pvw"><div class="ch138-pv" id="ch138PV"></div></div><div class="ch138-id" id="ch138Id"></div>
-    <div class="ch138-ah"><span class="at138-h">✦ Attributes</span><span class="mut">${ATR138.per} points every level</span></div><div id="ch138Bar"></div><div class="at138-g" id="ch138At"></div><div class="ch138-info" id="ch138Info"></div></div>
-    <div class="ch138-r" id="ch138St"></div></div><div id="talT" style="display:none"></div>`;
+  const wb=w.querySelector('.wb');if(wb)wb.innerHTML=`<div class="ch139"><div class="ch139-l"><div class="ch139-pvw"><div class="ch139-pv" id="ch139PV"></div></div><div class="ch139-id" id="ch139Id"></div>
+    <div class="ch139-ah"><span class="at139-h">✦ Attributes</span><span class="mut">${ATR139.per} points every level</span></div><div id="ch139Bar"></div><div class="at139-g" id="ch139At"></div><div class="ch139-info" id="ch139Info"></div></div>
+    <div class="ch139-r" id="ch139St"></div></div><div id="talT" style="display:none"></div>`;
   const wf=w.querySelector('.wf');if(wf)wf.innerHTML=`<span class="mut dtl" id="talInfo">Spend attribute points with +, then press Apply. Reaching 10, 25, 50 and 75 points in one attribute unlocks a bonus. Shift+click adds 5.</span>`;
-  ATR138_R.push(()=>{if(!w.classList.contains('hide'))ch138Render()})}
-function ch138Fmt(v,k){if(v==null||!isFinite(v))return '—';if(k=='%')return (+(v*100).toFixed(1))+'%';if(k=='x')return '×'+(+v).toFixed(2);if(k=='+%')return '+'+(+(v*100).toFixed(1))+'%';if(k=='s')return (+v).toFixed(1)+'/s';return Math.round(v).toLocaleString()}
-function ch138Stats(){const s=HS(),n=atr138Preview(),L=hero.lvl|0,kd=KD(L),mx=heroMax(),mm=typeof mpMax=='function'?mpMax():s.mp;
+  ATR139_R.push(()=>{if(!w.classList.contains('hide'))ch139Render()})}
+function ch139Fmt(v,k){if(v==null||!isFinite(v))return '—';if(k=='%')return (+(v*100).toFixed(1))+'%';if(k=='x')return '×'+(+v).toFixed(2);if(k=='+%')return '+'+(+(v*100).toFixed(1))+'%';if(k=='s')return (+v).toFixed(1)+'/s';return Math.round(v).toLocaleString()}
+function ch139Stats(){const s=HS(),n=atr139Preview(),L=hero.lvl|0,kd=KD(L),mx=heroMax(),mm=typeof mpMax=='function'?mpMax():s.mp;
   const pdR=x=>x/(x+kd),row=(l,k,f,t,nk,opt)=>{const a=f(s,mx,mm),b=n?f(n,n._mx,n._mm):null,ch=n&&Math.abs((b||0)-(a||0))>1e-6;if(opt&&!ch&&!a)return '';
-    return `<div class="kv ch138-kv"${t?` title="${t}"`:''}><span>${l}</span><b>${ch138Fmt(a,k)}${ch?` <em class="${(nk?b<a:b>a)?'up':'dn'}">→ ${ch138Fmt(b,k)}</em>`:''}</b></div>`};
-  const sec=(t,h)=>`<div class="ch138-sec"><div class="ch138-st">${t}</div>${h}</div>`;
+    return `<div class="kv ch139-kv"${t?` title="${t}"`:''}><span>${l}</span><b>${ch139Fmt(a,k)}${ch?` <em class="${(nk?b<a:b>a)?'up':'dn'}">→ ${ch139Fmt(b,k)}</em>`:''}</b></div>`};
+  const sec=(t,h)=>`<div class="ch139-sec"><div class="ch139-st">${t}</div>${h}</div>`;
   const pw=heroPower(),pwN=n?n._pw:null;
-  let h=`<div class="ch138-pw"><span>Power</span><b>${pw.toLocaleString()}${pwN!=null&&pwN!==pw?` <em class="up">→ ${pwN.toLocaleString()}</em>`:''}</b></div>`;
+  let h=`<div class="ch139-pw"><span>Power</span><b>${pw.toLocaleString()}${pwN!=null&&pwN!==pw?` <em class="up">→ ${pwN.toLocaleString()}</em>`:''}</b></div>`;
   h+=sec('⚔️ Offense',row('Physical attack','',s=>s.pa)+row('Magical attack','',s=>s.ma)+row('Critical chance','%',s=>Math.min(1,s.crit))+row('Critical damage','x',s=>1+s.cdm)+
     row('Attack speed','+%',s=>s.as)+row('Ability damage','+%',s=>s.skillP,'Bonus damage of class abilities')+row('Basic attack damage','+%',s=>s.basicP,'',0,1)+row('Combo finishers','+%',s=>s.finisher,'Extra damage of the last hit of a combo',0,1)+
     row('Ability cooldowns','%',s=>-Math.min(.5,s.cdr||0),'Shorter cooldowns',1,1)+row('Lifesteal','%',s=>s.ls,'',0,1)+row('Execute','+%',s=>s.exec,'More damage to enemies under 35% health',0,1)+row('Ability area','+%',s=>s.aoeP,'',0,1));
-  h+=sec('🛡️ Defense',row('Health','',(s,mx)=>mx)+row('Physical defense','',s=>s.pd,'Damage cut against a monster of your level: '+ch138Fmt(pdR(s.pd),'%'))+row('Magical defense','',s=>s.md,'Damage cut against a monster of your level: '+ch138Fmt(pdR(s.md),'%'))+
+  h+=sec('🛡️ Defense',row('Health','',(s,mx)=>mx)+row('Physical defense','',s=>s.pd,'Damage cut against a monster of your level: '+ch139Fmt(pdR(s.pd),'%'))+row('Magical defense','',s=>s.md,'Damage cut against a monster of your level: '+ch139Fmt(pdR(s.md),'%'))+
     row('Physical damage cut','%',s=>pdR(s.pd),'Against a monster of your level')+row('Magical damage cut','%',s=>pdR(s.md),'Against a monster of your level')+row('Damage reduction','%',s=>Math.min(.75,s.dr),'',0,1)+
     row('Block chance','%',s=>s.blockC,'',0,1)+row('Health regen in combat','%',s=>s.regen,'Of max health per second',0,1)+row('Guard below 40% health','%',s=>s.lowdr,'',0,1)+row('Healing received','+%',s=>s.healP,'',0,1)+row('Heal per kill','%',s=>s.killheal,'Of max health',0,1));
   h+=sec('✨ Utility',row('Mana','',(s,mx,mm)=>mm)+row('Mana regen','s',(s,mx,mm)=>mm*(.012+(s.mpr||0)),'Mana per second')+row('Dash charges','',s=>s.dash)+row('Dash invulnerability','',s=>(.3+(s.iframe||0))*1000,'Milliseconds')+
     row('Move speed','+%',s=>s.mspd,'',0,1)+row('Loot find','+%',s=>s.loot,'',0,1)+row('XP bonus','+%',s=>s.xp,'',0,1));
   // bonuses
-  const P=atr138Cur();let b='';ATR138.K.forEach(k=>{const D=ATR138.D[k],v=P[k],p=ATR138.pend[k]|0;D.T.forEach(t=>{const on=v>=t[0],nw=!on&&v+p>=t[0];
-    b+=`<div class="ch138-bn${on?' on':nw?' nw':''}" style="--ac:${D.col}"><span>${D.i} ${D.ab} ${t[0]}</span><small>${t[2]}</small></div>`})});
-  h+=sec('✦ Attribute bonuses',`<div class="ch138-bns">${b}</div>`);
+  const P=atr139Cur();let b='';ATR139.K.forEach(k=>{const D=ATR139.D[k],v=P[k],p=ATR139.pend[k]|0;D.T.forEach(t=>{const on=v>=t[0],nw=!on&&v+p>=t[0];
+    b+=`<div class="ch139-bn${on?' on':nw?' nw':''}" style="--ac:${D.col}"><span>${D.i} ${D.ab} ${t[0]}</span><small>${t[2]}</small></div>`})});
+  h+=sec('✦ Attribute bonuses',`<div class="ch139-bns">${b}</div>`);
   return h}
-function ch138Render(){ch138Init();const C=CLS[hero.cls]||{};
-  $('talSub').textContent=(C.i||'')+' '+(C.n||'')+' · Lv '+hero.lvl+' · '+atr138Free()+' attribute point'+(atr138Free()==1?'':'s')+' to spend';
+function ch139Render(){ch139Init();const C=CLS[hero.cls]||{};
+  $('talSub').textContent=(C.i||'')+' '+(C.n||'')+' · Lv '+hero.lvl+' · '+atr139Free()+' attribute point'+(atr139Free()==1?'':'s')+' to spend';
   const xp=hero.lvl>=MAXLV?100:Math.min(100,100*hero.xp/needH(hero.lvl));
-  $('ch138Id').innerHTML=`<div class="ch138-nm">${String(hero.name||'Hero').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}</div><div class="mut">${C.i||''} Lv ${hero.lvl} ${C.n||''}</div>`+
-    `<div class="ch138-xp" title="${hero.lvl>=MAXLV?'Max level':hero.xp+' / '+needH(hero.lvl)+' XP'}"><i style="width:${xp}%"></i></div>`;
-  $('ch138Bar').innerHTML=atr138Bar(false);$('ch138At').innerHTML=atr138Rows(false);
-  const k=ATR138.sel,D=k&&ATR138.D[k];
-  $('ch138Info').innerHTML=D?`<b style="color:${D.col}">${D.i} ${D.n}</b> — ${D.d}. Each point: ${atr138PerTxt(k)}.<br>`+D.T.map(t=>`<span class="${atr138Pts(k)>=t[0]?'got':''}">${t[0]}: ${t[2]}</span>`).join(' · '):
+  $('ch139Id').innerHTML=`<div class="ch139-nm">${String(hero.name||'Hero').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}</div><div class="mut">${C.i||''} Lv ${hero.lvl} ${C.n||''}</div>`+
+    `<div class="ch139-xp" title="${hero.lvl>=MAXLV?'Max level':hero.xp+' / '+needH(hero.lvl)+' XP'}"><i style="width:${xp}%"></i></div>`;
+  $('ch139Bar').innerHTML=atr139Bar(false);$('ch139At').innerHTML=atr139Rows(false);
+  const k=ATR139.sel,D=k&&ATR139.D[k];
+  $('ch139Info').innerHTML=D?`<b style="color:${D.col}">${D.i} ${D.n}</b> — ${D.d}. Each point: ${atr139PerTxt(k)}.<br>`+D.T.map(t=>`<span class="${atr139Pts(k)>=t[0]?'got':''}">${t[0]}: ${t[2]}</span>`).join(' · '):
     '<span class="mut">Click an attribute to read what it does. Hover a number mark (10, 25, 50, 75) for its bonus.</span>';
-  $('ch138St').innerHTML=ch138Stats()}
-function ch138PV(){const host=$('ch138PV');if(!host||$('tal').classList.contains('hide'))return;
+  $('ch139St').innerHTML=ch139Stats()}
+function ch139PV(){const host=$('ch139PV');if(!host||$('tal').classList.contains('hide'))return;
   try{bagPV()}catch(_){}if(!HP||!HP.pv)return;try{refreshGear(HP)}catch(_){}
   pvShow(host,HP.pv,now=>{HP.pv.rotation.y=Math.sin(now/1900)*.6+.25;animHero(now,false,HP)})}
 // the window itself: replaces the talents window's drawing and opening
-rTal=function(){ch138Render()};
+rTal=function(){ch139Render()};
 openTal=function(){if(!$('tal').classList.contains('hide')){$('tal').classList.add('hide');return}if(uiOpen())return;if(!party.length)return;
-  ch138Render();$('tal').classList.remove('hide');try{mSfx('open')}catch(_){}requestAnimationFrame(()=>{try{ch138PV()}catch(e){console.warn('v138 char model',e)}})};
+  ch139Render();$('tal').classList.remove('hide');try{mSfx('open')}catch(_){}requestAnimationFrame(()=>{try{ch139PV()}catch(e){console.warn('v139 char model',e)}})};
 {const b=$('talBtn');if(b)b.onclick=()=>{if($('sysmenu'))$('sysmenu').classList.add('hide');openTal()}}
 {const b=$('talClose');if(b)b.onclick=()=>$('tal').classList.add('hide')}
 // keep it current while open (gear swaps elsewhere, level-ups, buffs)
-setInterval(()=>{try{const w=$('tal');if(!w||w.classList.contains('hide'))return;const sig=hero.lvl+'|'+hero.xp+'|'+(typeof bagSig=='function'?bagSig():'')+'|'+atr138Spent()+'|'+atr138PendN()+'|'+hero.buffs.length;
-  if(sig!==CH138.sig){CH138.sig=sig;ch138Render()}}catch(_){}},500);
+setInterval(()=>{try{const w=$('tal');if(!w||w.classList.contains('hide'))return;const sig=hero.lvl+'|'+hero.xp+'|'+(typeof bagSig=='function'?bagSig():'')+'|'+atr139Spent()+'|'+atr139PendN()+'|'+hero.buffs.length;
+  if(sig!==CH139.sig){CH139.sig=sig;ch139Render()}}catch(_){}},500);
 document.head.insertAdjacentHTML('beforeend',`<style>
-.ch138{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:14px;min-height:0}
-@media(max-width:760px){.ch138{grid-template-columns:1fr}}
-.ch138-pvw{position:relative;height:240px;border:1px solid rgba(240,204,114,.22);border-radius:8px;background:radial-gradient(ellipse at 50% 70%,rgba(240,204,114,.12),rgba(0,0,0,.35) 70%);overflow:hidden}
-.ch138-pv{position:absolute;inset:0}
-.ch138-id{text-align:center;margin-top:6px}
-.ch138-nm{font-family:'Cinzel Decorative',serif;font-weight:700;color:#f0cc72;font-size:1rem}
-.ch138-xp{height:4px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden}.ch138-xp i{display:block;height:100%;background:linear-gradient(90deg,#8a6a20,#f0cc72)}
-.ch138-ah{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:.72rem}
-.ch138-info{margin-top:8px;font-size:.74rem;line-height:1.45;color:#d8ccb0;min-height:3.2em}.ch138-info span.got{color:#7ef0a0}
-.ch138-r{min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;align-content:start}
-@media(max-width:560px){.ch138-r{grid-template-columns:1fr}}
-.ch138-pw{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;padding:6px 10px;border:1px solid rgba(240,204,114,.3);border-radius:8px;background:rgba(240,204,114,.06)}
-.ch138-pw span{font-family:'Cinzel Decorative',serif;color:#c9a24a;letter-spacing:.1em}.ch138-pw b{font-size:1.3rem;color:#f4ead2}
-.ch138-sec{min-width:0}.ch138-sec:last-child{grid-column:1/-1}
-.ch138-st{font-family:'Cinzel Decorative',serif;font-size:.74rem;color:#c9a24a;letter-spacing:.08em;margin:6px 0 2px;border-bottom:1px solid rgba(240,204,114,.18)}
-.ch138-kv{font-size:.76rem;padding:2px 0}.ch138-kv em,.ch138-pw em{font-style:normal;font-size:.85em}.ch138-kv em.up,.ch138-pw em.up{color:#7ef0a0}.ch138-kv em.dn{color:#ff8a7a}
-.ch138-bns{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
-.ch138-bn{padding:3px 6px;border:1px solid rgba(255,255,255,.08);border-radius:5px;font-size:.68rem;opacity:.45}
-.ch138-bn span{display:block;font-weight:700;color:var(--ac)}.ch138-bn small{color:#d8ccb0}
-.ch138-bn.on{opacity:1;border-color:var(--ac);background:rgba(0,0,0,.25)}.ch138-bn.nw{opacity:.9;border-color:#7ef0a0;border-style:dashed}
+.ch139{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:14px;min-height:0}
+@media(max-width:760px){.ch139{grid-template-columns:1fr}}
+.ch139-pvw{position:relative;height:240px;border:1px solid rgba(240,204,114,.22);border-radius:8px;background:radial-gradient(ellipse at 50% 70%,rgba(240,204,114,.12),rgba(0,0,0,.35) 70%);overflow:hidden}
+.ch139-pv{position:absolute;inset:0}
+.ch139-id{text-align:center;margin-top:6px}
+.ch139-nm{font-family:'Cinzel Decorative',serif;font-weight:700;color:#f0cc72;font-size:1rem}
+.ch139-xp{height:4px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden}.ch139-xp i{display:block;height:100%;background:linear-gradient(90deg,#8a6a20,#f0cc72)}
+.ch139-ah{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:.72rem}
+.ch139-info{margin-top:8px;font-size:.74rem;line-height:1.45;color:#d8ccb0;min-height:3.2em}.ch139-info span.got{color:#7ef0a0}
+.ch139-r{min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;align-content:start}
+@media(max-width:560px){.ch139-r{grid-template-columns:1fr}}
+.ch139-pw{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;padding:6px 10px;border:1px solid rgba(240,204,114,.3);border-radius:8px;background:rgba(240,204,114,.06)}
+.ch139-pw span{font-family:'Cinzel Decorative',serif;color:#c9a24a;letter-spacing:.1em}.ch139-pw b{font-size:1.3rem;color:#f4ead2}
+.ch139-sec{min-width:0}.ch139-sec:last-child{grid-column:1/-1}
+.ch139-st{font-family:'Cinzel Decorative',serif;font-size:.74rem;color:#c9a24a;letter-spacing:.08em;margin:6px 0 2px;border-bottom:1px solid rgba(240,204,114,.18)}
+.ch139-kv{font-size:.76rem;padding:2px 0}.ch139-kv em,.ch139-pw em{font-style:normal;font-size:.85em}.ch139-kv em.up,.ch139-pw em.up{color:#7ef0a0}.ch139-kv em.dn{color:#ff8a7a}
+.ch139-bns{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
+.ch139-bn{padding:3px 6px;border:1px solid rgba(255,255,255,.08);border-radius:5px;font-size:.68rem;opacity:.45}
+.ch139-bn span{display:block;font-weight:700;color:var(--ac)}.ch139-bn small{color:#d8ccb0}
+.ch139-bn.on{opacity:1;border-color:var(--ac);background:rgba(0,0,0,.25)}.ch139-bn.nw{opacity:.9;border-color:#7ef0a0;border-style:dashed}
 </style>`);
 // the "✦ N attribute points · C" chip in the buff bar opens the Character window
 document.addEventListener('click',e=>{const t=e.target.closest('#buffs .tpn');if(!t)return;e.preventDefault();if($('tal').classList.contains('hide'))openTal()});
 document.head.insertAdjacentHTML('beforeend','<style>#buffs .tpn{cursor:pointer}</style>');
-// ================= v138: power on a smaller scale, power instead of level ranges, flail trail, live previews =================
+// ================= v139: power on a smaller scale, power instead of level ranges, flail trail, live previews =================
 // * Power: the number shown is 4·√(the old power) rounded, so it climbs gently (about 100 at level 1, about 600 at level 50
 //   with good gear, where the old number read 650 and 23,600). recPower uses the same scale (rounded to 5); compare the two only.
-// * Places that showed an instance's enemy level range now show the recommended power (rpTxt138; edits in 0510, 0540, 1190,
+// * Places that showed an instance's enemy level range now show the recommended power (rpTxt139; edits in 0510, 0540, 1190,
 //   1350, 1830, 1940, 1981, 2210).
 // * Flail: the trail of the two sweeps is drawn where the ball really travels (measured from the weapon model each swing),
 //   not at the edge of the hit area (which v127 widened to 3.6 tiles); the overhead crash's ring is sized the same way.
@@ -35757,43 +35836,43 @@ document.head.insertAdjacentHTML('beforeend','<style>#buffs .tpn{cursor:pointer}
 // * The shared 3D preview (PV): reopening the inventory left the preview frozen when its picture was already in place
 //   (bagPV returns early and the render loop had stopped when the window closed), so gear changes did not show. bagPV now
 //   restarts the loop, and the bag's 400 ms check also watches the hero's look.
-function pwr138(x){return Math.round(4*Math.sqrt(Math.max(0,x)))}
-function pwrRaw138(s){const off=Math.max(s.pa,s.ma)*(1+(s.crit||0)*(s.cdm||.75))*(1+(s.as||0)),sur=s.hp*(1+(s.pd+s.md)/2/45)*(1+(s.dr||0));return Math.sqrt(off*sur)*10}
-pwrOf=function(s){return pwr138(pwrRaw138(s))};
-function nakedRaw138(cls,L){const C=CLS[cls],st={};['hp','pa','ma','pd','md'].forEach(k=>st[k]=C.base[k]+C.per[k]*(L-1)/ATR138.flat);st.crit=C.crit;st.cdm=.75;return pwrRaw138(st)}
-nakedPwr=function(cls,L){return pwr138(nakedRaw138(cls,L))};
+function pwr139(x){return Math.round(4*Math.sqrt(Math.max(0,x)))}
+function pwrRaw139(s){const off=Math.max(s.pa,s.ma)*(1+(s.crit||0)*(s.cdm||.75))*(1+(s.as||0)),sur=s.hp*(1+(s.pd+s.md)/2/45)*(1+(s.dr||0));return Math.sqrt(off*sur)*10}
+pwrOf=function(s){return pwr139(pwrRaw139(s))};
+function nakedRaw139(cls,L){const C=CLS[cls],st={};['hp','pa','ma','pd','md'].forEach(k=>st[k]=C.base[k]+C.per[k]*(L-1)/ATR139.flat);st.crit=C.crit;st.cdm=.75;return pwrRaw139(st)}
+nakedPwr=function(cls,L){return pwr139(nakedRaw139(cls,L))};
 recPower=function(L){let a=RECT[0],b=RECT[RECT.length-1];for(let i=0;i<RECT.length-1;i++)if(L>=RECT[i][0]&&L<=RECT[i+1][0]){a=RECT[i];b=RECT[i+1];break}
-  const v=a[1]+(b[1]-a[1])*((L-a[0])/((b[0]-a[0])||1));return Math.round(pwr138(v*nakedRaw138(hero.cls,L)/nakedRaw138('warrior',L))/5)*5};
-function rpTxt138(L){let r=0;try{r=recPower(L)}catch(_){}return r?'⚔ Rec. power '+r.toLocaleString():''}
+  const v=a[1]+(b[1]-a[1])*((L-a[0])/((b[0]-a[0])||1));return Math.round(pwr139(v*nakedRaw139(hero.cls,L)/nakedRaw139('warrior',L))/5)*5};
+function rpTxt139(L){let r=0;try{r=recPower(L)}catch(_){}return r?'⚔ Rec. power '+r.toLocaleString():''}
 // ---- flail trail at the ball's real reach ----
-var FL138={r:1.3,min:.9,max:2,id:null};
-function fl138Reach(){try{const W=(pl.gearG||[])[0],id=eq.weapon?eq.weapon.id:null;if(id!==FL138.id){FL138.id=id;FL138.r=1.3}if(!W)return FL138.r;W.updateWorldMatrix(true,true);const v=new THREE.Vector3();let far=0;
+var FL139={r:1.3,min:.9,max:2,id:null};
+function fl139Reach(){try{const W=(pl.gearG||[])[0],id=eq.weapon?eq.weapon.id:null;if(id!==FL139.id){FL139.id=id;FL139.r=1.3}if(!W)return FL139.r;W.updateWorldMatrix(true,true);const v=new THREE.Vector3();let far=0;
   W.traverse(o=>{if(!o.isMesh||!o.geometry||!o.geometry.attributes.position)return;const P=o.geometry.attributes.position,st=Math.max(1,P.count>>6);
     for(let i=0;i<P.count;i+=st){v.fromBufferAttribute(P,i).applyMatrix4(o.matrixWorld);const h=Math.hypot(v.x-pl.position.x,v.z-pl.position.z);if(h>far)far=h}});
-  if(far>0)FL138.r=Math.max(FL138.min,Math.min(FL138.max,Math.max(far,FL138.r)))}catch(_){}return FL138.r}   // the furthest the ball has been seen (per weapon)
-flailFx105=function(d,st,rg){try{const col=0xfff0b0,g=new THREE.Group(),a0=Math.atan2(d.x,d.z),half=1.48,R=fl138Reach()+.08;
+  if(far>0)FL139.r=Math.max(FL139.min,Math.min(FL139.max,Math.max(far,FL139.r)))}catch(_){}return FL139.r}   // the furthest the ball has been seen (per weapon)
+flailFx105=function(d,st,rg){try{const col=0xfff0b0,g=new THREE.Group(),a0=Math.atan2(d.x,d.z),half=1.48,R=fl139Reach()+.08;
     const geo=new THREE.RingGeometry(Math.max(.2,R-.38),R,28,1,0,half*2),m=new THREE.Mesh(geo,addMat(col));m.material.side=THREE.DoubleSide;g.add(m);
     m.rotation.x=-Math.PI/2;m.rotation.z=a0-Math.PI/2-half;g.position.copy(gY(pl.position,1.05));
     scene.add(g);const dirS=st==1?1:-1;
     tw(260,k=>{m.material.opacity=.75*(1-k);m.rotation.z+=dirS*.012;g.scale.setScalar(1+k*.08)},()=>{scene.remove(g);geo.dispose()})}catch(_){}};
 // the crash (third blow): the default ring spans .42..1.02 of its radius, so hand it the ball's reach
-{const f=slashFx;slashFx=function(d,st,rg){if(st==2&&typeof atkWT=='function'&&atkWT()=='flail')return f.call(this,d,st,(fl138Reach()+.15)/1.02);return f.apply(this,arguments)}}
+{const f=slashFx;slashFx=function(d,st,rg){if(st==2&&typeof atkWT=='function'&&atkWT()=='flail')return f.call(this,d,st,(fl139Reach()+.15)/1.02);return f.apply(this,arguments)}}
 // ---- the shared preview keeps drawing ----
-function pvKick138(){try{if(PV.r&&!PV.run&&PV.cv&&PV.cv.isConnected&&PV.cv.offsetParent){PV.run=true;PV.last=0;requestAnimationFrame(pvLoop)}}catch(_){}}
-{const f=bagPV;bagPV=function(){const r=f.apply(this,arguments);pvKick138();return r}}
-var BAGLK138='';
-setInterval(()=>{try{if(!HP||!$('bag')||$('bag').classList.contains('hide'))return;const lk=JSON.stringify(pl.mdLook||{});if(lk!==BAGLK138){const first=!BAGLK138;BAGLK138=lk;
-  if(!first){HP.mdLook=Object.assign({},pl.mdLook||{});refreshGear(HP)}}pvKick138()}catch(_){}},400);
+function pvKick139(){try{if(PV.r&&!PV.run&&PV.cv&&PV.cv.isConnected&&PV.cv.offsetParent){PV.run=true;PV.last=0;requestAnimationFrame(pvLoop)}}catch(_){}}
+{const f=bagPV;bagPV=function(){const r=f.apply(this,arguments);pvKick139();return r}}
+var BAGLK139='';
+setInterval(()=>{try{if(!HP||!$('bag')||$('bag').classList.contains('hide'))return;const lk=JSON.stringify(pl.mdLook||{});if(lk!==BAGLK139){const first=!BAGLK139;BAGLK139=lk;
+  if(!first){HP.mdLook=Object.assign({},pl.mdLook||{});refreshGear(HP)}}pvKick139()}catch(_){}},400);
 // ---- guard: a monster drawn far bigger than its own size, or sunk under the ground, is put right ----
 // The owner saw some monsters huge and under the map (Oct 2026). It could not be reproduced in tests (every kind, every field
 // instance, fights, deaths, respawns), so twice a second every drawn monster that is not mid-move is checked: a scale above
 // 1.6x its body size (m.bs) goes back to its size and a root more than 0.6 tiles under the ground is lifted onto it. Each fix is
-// counted in G138 and the first few are logged (kind, scale, height) so a report can say what happened.
-var G138={n:0,log:[]};
-function g138Note(e,what){G138.n++;if(G138.log.length<12){const m=e.m;G138.log.push({k:e.c&&e.c.en,what,sc:+m.scale.x.toFixed(2),bs:+(m.bs||0).toFixed(2),y:+m.position.y.toFixed(2),g:+GH(m.position.x,m.position.z).toFixed(2)});console.warn('v138 enemy guard',what,G138.log[G138.log.length-1])}}
-function g138Tick(){try{if(typeof enemies=='undefined'||(typeof ABX!='undefined'&&ABX.on&&ABX.ctx))return;
+// counted in G139 and the first few are logged (kind, scale, height) so a report can say what happened.
+var G139={n:0,log:[]};
+function g139Note(e,what){G139.n++;if(G139.log.length<12){const m=e.m;G139.log.push({k:e.c&&e.c.en,what,sc:+m.scale.x.toFixed(2),bs:+(m.bs||0).toFixed(2),y:+m.position.y.toFixed(2),g:+GH(m.position.x,m.position.z).toFixed(2)});console.warn('v139 enemy guard',what,G139.log[G139.log.length-1])}}
+function g139Tick(){try{if(typeof enemies=='undefined'||(typeof ABX!='undefined'&&ABX.on&&ABX.ctx))return;
   for(const e of enemies){if(!e||e.dead||e.boss||e.ar!=null||e.hid||e.atk||!e.m||!e.m.visible||!e.m.parent)continue;const m=e.m,bs=m.bs||1,sc=m.scale.x;
-    if(!(sc<=bs*1.6)){g138Note(e,'scale');m.scale.setScalar(bs)}
-    const g=GH(m.position.x,m.position.z);if(isFinite(g)&&m.position.y<g-.6){g138Note(e,'sunk');m.position.y=g}}}catch(_){}}
-setInterval(g138Tick,500);
+    if(!(sc<=bs*1.6)){g139Note(e,'scale');m.scale.setScalar(bs)}
+    const g=GH(m.position.x,m.position.z);if(isFinite(g)&&m.position.y<g-.6){g139Note(e,'sunk');m.position.y=g}}}catch(_){}}
+setInterval(g139Tick,500);
 </script></body></html>
