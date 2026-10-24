@@ -50,7 +50,7 @@ var BAL127_HP={assassin:1.12};
 // 4. Throwing knives: one throw (a fan of 3, or 5 every 4th throw) hits each enemy with one knife at full damage; the other knives of
 //    the same throw that hit that enemy deal WB127.knDup of their damage. Before, every knife of the fan landed on a lone enemy at
 //    close range (after Eviscerate / Shadow Rush dash you in), so the fan was a point-blank shotgun: ~+50% over daggers on one target.
-{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=WB127.knDup;else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
+{const f=heroHit;heroHit=function(e,raw,mt,o){const v=o&&o.s&&o.s.vol;if(v&&e&&!e.dead){if(v.has(e))raw*=(v.k!=null?v.k:WB127.knDup);else v.add(e)}return f.apply(this,[e,raw,mt,o].concat([].slice.call(arguments,4)))}}
 
 // 5. Weapons. Each weapon keeps an identity; at every level 10–50 it lands within ~8% of its target against the average of all
 //    16 class + weapon pairs (30 s fights with the class's best abilities, one target / a pack of four):
