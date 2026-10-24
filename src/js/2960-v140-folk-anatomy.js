@@ -65,6 +65,13 @@ function fk140Eyes(k,D,o,A){const C=BR.C,E=A.eye||{},F0=D._eye140||(D._eye140=fk
     const qq=q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new V(1,0,0),roll||0)),e=new THREE.Euler().setFromQuaternion(qq);
     k.p('head',geo,t,col,p.x,p.y,p.z,sx,sy,sz,e.x,e.y,e.z);k.p('head',geo,t,col,-p.x,p.y,p.z,sx,sy,sz,e.x,-e.y,-e.z)};
   const iris=E.col?E.col(C):C.EYE,pc=E.pupilCol||0x070505;
+  // hero style (sculpted heads): a narrow almond slanted up at the outer corner, bright iris, a dark brow line over it
+  if(D.sculpt){const sl=E.slant==null?(FK140E.prey[D.key]?.12:.32):E.slant,h=E.open||.58,brow=E.brow==null?1:E.brow;
+    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*1.4,sl);
+    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*1.2,sl);
+    const ph=r*h*.95;if(FK140E.slit[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph,r*.16,sl);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.3,r*.55,sl);else put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.62,r*.36,sl);
+    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.22),-r*.05,r*.4,r*.2*brow,r*1.5,sl+.22*brow);
+    put('box','c',0xf2eee6,r*.21,r*h*.42,r*.3,.0012,.0016*r/.0112,.0016*r/.0112);return}
   const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.82,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);  // dark rim: behind the iris's front, so it shows as a ring                                  // dark rim
   put('sph2','c',iris,-r*.66,0,r*.04,r,r*.93,r*1.08,tl);                                         // eye (iris fills it)
   const pr=r*.42;if(FK140E.slit[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*1.7,pr*.38);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*.42,pr*1.6);else put('sph2','c',pc,r*.36,0,0,.0012,pr,pr);
@@ -138,7 +145,7 @@ function fk140Neck(B,D,A,C){const hp=D.hp,R=hp.R||.1,L=hp.L||1,W=hp.W||1,H=hp.H|
     {p:[0,yb,zb],rx:r3,f:r3*1.25,b:r3,w:[['head',1]]},{p:[0,yb+R*.25,zb+R*.3],rx:r3*.75,f:r3*.9,b:r3*.7,w:[['head',1]]}],
     {seg:14,capB:true,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
 function fk140Head(D,B,P,o,A){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
-  if(!D.sculpt)fk140Neck(B,D,A,C);
+  if(!D.sculpt||D.sculpt.mesher!='nets')fk140Neck(B,D,A,C);
   if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk140Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);fkEars(k,B,D,C);
     if(S.extra)S.extra(k,B,D,C,P);else if(D.face&&!S.noFace)D.face(k,B,D,C,P);mdKit(B,k);return H}
   brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});

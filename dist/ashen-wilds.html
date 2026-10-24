@@ -35942,6 +35942,13 @@ function fk140Eyes(k,D,o,A){const C=BR.C,E=A.eye||{},F0=D._eye140||(D._eye140=fk
     const qq=q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new V(1,0,0),roll||0)),e=new THREE.Euler().setFromQuaternion(qq);
     k.p('head',geo,t,col,p.x,p.y,p.z,sx,sy,sz,e.x,e.y,e.z);k.p('head',geo,t,col,-p.x,p.y,p.z,sx,sy,sz,e.x,-e.y,-e.z)};
   const iris=E.col?E.col(C):C.EYE,pc=E.pupilCol||0x070505;
+  // hero style (sculpted heads): a narrow almond slanted up at the outer corner, bright iris, a dark brow line over it
+  if(D.sculpt){const sl=E.slant==null?(FK140E.prey[D.key]?.12:.32):E.slant,h=E.open||.58,brow=E.brow==null?1:E.brow;
+    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*1.4,sl);
+    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*1.2,sl);
+    const ph=r*h*.95;if(FK140E.slit[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph,r*.16,sl);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.3,r*.55,sl);else put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.62,r*.36,sl);
+    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.22),-r*.05,r*.4,r*.2*brow,r*1.5,sl+.22*brow);
+    put('box','c',0xf2eee6,r*.21,r*h*.42,r*.3,.0012,.0016*r/.0112,.0016*r/.0112);return}
   const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.82,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);  // dark rim: behind the iris's front, so it shows as a ring                                  // dark rim
   put('sph2','c',iris,-r*.66,0,r*.04,r,r*.93,r*1.08,tl);                                         // eye (iris fills it)
   const pr=r*.42;if(FK140E.slit[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*1.7,pr*.38);else if(FK140E.bar[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*.42,pr*1.6);else put('sph2','c',pc,r*.36,0,0,.0012,pr,pr);
@@ -36015,7 +36022,7 @@ function fk140Neck(B,D,A,C){const hp=D.hp,R=hp.R||.1,L=hp.L||1,W=hp.W||1,H=hp.H|
     {p:[0,yb,zb],rx:r3,f:r3*1.25,b:r3,w:[['head',1]]},{p:[0,yb+R*.25,zb+R*.3],rx:r3*.75,f:r3*.9,b:r3*.7,w:[['head',1]]}],
     {seg:14,capB:true,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
 function fk140Head(D,B,P,o,A){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
-  if(!D.sculpt)fk140Neck(B,D,A,C);
+  if(!D.sculpt||D.sculpt.mesher!='nets')fk140Neck(B,D,A,C);
   if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk140Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);fkEars(k,B,D,C);
     if(S.extra)S.extra(k,B,D,C,P);else if(D.face&&!S.noFace)D.face(k,B,D,C,P);mdKit(B,k);return H}
   brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});
@@ -36121,6 +36128,29 @@ function fksMesh(S,h){const bb=S.bb,x0=bb[0],y0=bb[1],z0=bb[2],nx=Math.ceil((bb[
   T.forEach(t=>{const a=V[t[0]],b=V[t[1]],c=V[t[2]],u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],w=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],
     m=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],g=grad(m);if(n[0]*g[0]+n[1]*g[1]+n[2]*g[2]<0){const x=t[1];t[1]=t[2];t[2]=x}});
   return {V,T}}
+// ---------------- hero-style mesh: rings of flat facets ----------------
+// The heroes' skulls are lofts (rings back → front, ~14 sides) with big flat facets. The sculpt is meshed the same way:
+// z slices from the back of the skull to the nose; in each, rays from the slice's centre find the surface (from the outside
+// in, so the outer form counts), giving one ring; rings are joined into quads and capped at both ends.
+function fksLoft(S){const bb=S.bb,M=S.seg||14,n=S.rings||17,st=.0015,ins=(x,y,z)=>fksEval(S,[x,y,z])<0;
+  let zA=bb[2],zB=bb[5];for(let z=bb[2];z<bb[5];z+=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zA=z;break}}
+  for(let z=bb[5];z>bb[2];z-=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zB=z;break}}
+  const R=[];for(let i=0;i<n;i++){const u=i/(n-1),z=zA+.004+(zB-zA-.008)*(u<.5?Math.pow(u*2,1.1)/2:1-Math.pow((1-u)*2,1.25)/2);
+    let top=null,bot=null;for(let y=bb[4];y>bb[1];y-=st)if(ins(0,y,z)){top=y;break}for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){bot=y;break}if(top==null)continue;
+    const yc=(top+bot)/2,ring=[];for(let j=0;j<M;j++){const a=j/M*Math.PI*2,dx=Math.sin(a),dy=Math.cos(a);let r=.24;while(r>0&&!ins(dx*r,yc+dy*r,z))r-=st;
+      let lo=Math.max(0,r),hi=r+st;for(let k=0;k<7;k++){const m=(lo+hi)/2;if(ins(dx*m,yc+dy*m,z))lo=m;else hi=m}const rr=Math.max(.003,lo);ring.push([dx*rr,yc+dy*rr,z])}
+    R.push({z,yc,ring})}
+  const V=[],T=[];R.forEach(q=>q.ring.forEach(p=>V.push(p)));const id=(i,j)=>i*M+(j%M);
+  // both triangles of a quad carry the quad's centre (q), so colour boundaries follow the rings and seams like the heroes' paint
+  const qc=(i,j)=>{const P=[id(i,j),id(i,j+1),id(i+1,j+1),id(i+1,j)].map(k=>V[k]);return [0,1,2].map(c=>(P[0][c]+P[1][c]+P[2][c]+P[3][c])/4)};
+  for(let i=0;i+1<R.length;i++)for(let j=0;j<M;j++){const q=qc(i,j),t1=[id(i,j),id(i,j+1),id(i+1,j+1)],t2=[id(i,j),id(i+1,j+1),id(i+1,j)];t1.q=q;t2.q=q;T.push(t1,t2)}
+  const b=V.length;V.push([0,R[0].yc,zA]);const f=V.length;V.push([0,R[R.length-1].yc,zB]);const L=R.length-1;
+  for(let j=0;j<M;j++){T.push([b,id(0,j+1),id(0,j)]);T.push([f,id(L,j),id(L,j+1)])}
+  const grad=p=>{const e=.002;return [fksEval(S,[p[0]+e,p[1],p[2]])-fksEval(S,[p[0]-e,p[1],p[2]]),fksEval(S,[p[0],p[1]+e,p[2]])-fksEval(S,[p[0],p[1]-e,p[2]]),fksEval(S,[p[0],p[1],p[2]+e])-fksEval(S,[p[0],p[1],p[2]-e])]};
+  T.forEach(t=>{const a=V[t[0]],bq=V[t[1]],c=V[t[2]],u=[bq[0]-a[0],bq[1]-a[1],bq[2]-a[2]],w=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],nn=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],
+    m=[(a[0]+bq[0]+c[0])/3,(a[1]+bq[1]+c[1])/3,(a[2]+bq[2]+c[2])/3],cc=[0,m[1],m[2]],g=[m[0]-cc[0],m[1]-(R.find(q=>Math.abs(q.z-m[2])<.03)||R[0]).yc,0];
+    const gr=grad(m),gg=Math.hypot(...gr)>1e-6?gr:g;if(nn[0]*gg[0]+nn[1]*gg[1]+nn[2]*gg[2]<0){const x=t[1];t[1]=t[2];t[2]=x}});
+  return {V,T}}
 // ---------------- skull rings measured from the sculpt (for hats, coifs, horns, antlers, wool…) ----------------
 function fksRings(S,n){const bb=S.bb,z0=bb[2]+.004,z1=bb[5]-.004,out=[],st=.002,ins=(x,y,z)=>fksEval(S,[x,y,z])<0;
   // find the real front / back along the centre line
@@ -36139,12 +36169,12 @@ function fksRings(S,n){const bb=S.bb,z0=bb[2]+.004,z1=bb[5]-.004,out=[],st=.002,
 function fksPrep(S){if(S._prep)return;S._prep=1;const q=S.neck;if(!q)return;
   // the whole neck: from inside the back of the skull down to the collar (head-local y −.17 is the torso's neck ring)
   S.forms.unshift(FKH.RC([0,q[0]+.03,q[1]+.01],[0,-.168,.004],q[2]*.92,Math.max(.064,q[2]*1.05),{k:0,sq:[1.04,.96]}));S.forms[1].k=Math.max(S.forms[1].k||0,.035);S.bb[1]=Math.min(S.bb[1],-.21)}
-function fksBuild(D){const S=D.sculpt;fksPrep(S);if(!S._mesh)S._mesh=fksMesh(S,S.h||FKS.h);return S._mesh}
+function fksBuild(D){const S=D.sculpt;if(!S._mesh)S._mesh=S.mesher=='nets'?(fksPrep(S),fksMesh(S,S.h||FKS.h)):fksLoft(S);return S._mesh}
 // weights: head above the neck's attachment, blending to the neck bone going down, and to the chest at the collar
 function fksHead(B,D,C){const S=D.sculpt,M=fksBuild(D),C0=FKS.C0,w=mdW(B,[['head',1]]),y0=S.neck?S.neck[0]+.01:-1,cl=(v)=>Math.max(0,Math.min(1,v)),
     V=M.V.map(p=>{const t1=cl((y0-p[1])/.06),t2=cl((-.12-p[1])/.045);return {x:p[0]+C0[0],y:p[1]+C0[1],z:p[2]+C0[2],
       w:t1>0?mdW(B,[['head',1-t1],['neck',t1*(1-t2)],['chest',t1*t2]].filter(q=>q[1]>1e-4)):w}});
-  for(const t of M.T){const a=M.V[t[0]],b=M.V[t[1]],c=M.V[t[2]],m=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
+  for(const t of M.T){const a=M.V[t[0]],b=M.V[t[1]],c=M.V[t[2]],m=t.q||[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
     const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(n[0],n[1],n[2])||1;
     mdTri(B,'c',V[t[0]],V[t[1]],V[t[2]],S.paint(m,[n[0]/l,n[1]/l,n[2]/l],C))}}
 // set a species up from its recipe: skull rings, eye frame, ear base, size
@@ -36152,7 +36182,7 @@ function fksSetup(D,A){const S=D.sculpt,C0=FKS.C0;D.SN=fksRings(S,20);D.muzzleZ=
   const R=S.R||.1;D.hp=Object.assign({},D.hp,{R,W:1,H:1,L:1,yc:C0[1],zc:C0[2]});
   const e=S.eye,n=new THREE.Vector3(...e.g).normalize();D._eye140={p:new THREE.Vector3(e.c[0]+C0[0],e.c[1]+C0[1],e.c[2]+C0[2]),n,r:e.r};D.EYEP=[0,e.c[1]+C0[1],e.c[2]+C0[2]];
   // ear base: on the line from the brain case centre through the recipe's point, 4 mm under the surface
-  if(S.ear){fksPrep(S);const c=S.forms[1].c||[0,0,0],q=S.ear,at=t=>[c[0]+(q[0]-c[0])*t,c[1]+(q[1]-c[1])*t,c[2]+(q[2]-c[2])*t];let lo=0,hi=3;
+  if(S.ear){const c=S.forms[0].c||[0,0,0],q=S.ear,at=t=>[c[0]+(q[0]-c[0])*t,c[1]+(q[1]-c[1])*t,c[2]+(q[2]-c[2])*t];let lo=0,hi=3;
     for(let i=0;i<40;i++){const m=(lo+hi)/2;if(fksEval(S,at(m))<-.004)lo=m;else hi=m}const e=at(lo);D._earB140=[e[0]+C0[0],e[1]+C0[1],e[2]+C0[2]]}}
 {const f=fkEarBase;fkEarBase=function(D){if(FK140.on&&D&&D._earB140&&D.ear&&D.ear.t!='none')return D._earB140.slice();return f.apply(this,arguments)}}
 // whisker rows from the recipe: [root (head-local), count, length, colour]
