@@ -97,6 +97,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v139 Character window (C; the old `#tal` window): hero model on `PV`, attributes, all stats with pending previews, attribute bonuses (`ch139Render`, `ch139PV`) | `2940-v139-character-window.js` (keys in `0108`, `1010`) |
 | v139 power scale (`pwr139` = 4·√old, `recPower` on the same scale, `rpTxt139` labels), flail trail at the ball's reach (`FL139`, `fl139Reach`), preview loop restart (`pvKick139`), enemy size / ground guard (`G139`, `g139Tick`) | `2950-v139-fixes.js` |
 | v140 creator fixes: Ranger victory pose (`CC116.P.ranger`, `cc140Bow`); the Mage hold's frame (`fc140Fwd`, `fc140Scale` in 2220); whole-word material hints (0840) | `2960-v140-creator-fixes.js` |
+| v141 owner's list: Q feeds the most hurt companion (`feedLowest141`), Z / X potions, 6 ability keys (`KQS_SLOTS`), the second companion slot (`actN141`, `cs141*`, Beast Trainer "Companion Bond", `hero.tal.__cs2`), break poise ×2 (`KQP.pz`, `cbHeavy`), quieter effect text (`FX141`), level growth −60% (`LV141`), power signs repainted (`rp141Refresh`), outskirts wood / stone (`OUT141`) | `2970-v141-owner-list.js` (edits in 0104, 0108, 0130, 0170, 0990, 1010, 2350 quests, 1960 pines) |
+| v141 minimap: fog of war per instance (`MF141`, `mmFog` drawn after `mmB`, saved as `x2.fog141`), found gathering spots, facing arrow (`miniArrow`), N-map arrow | `2975-v141-minimap-explore.js` |
+| v141 menus keep their scroll (`KS141`, MutationObserver per window, `rX` wrapper); compact item panel (`#idt` CSS) | `2980-v141-menus.js` |
+| v141 bestiary pages: picture (`dex141Make` on `CPIC.r`), stats (`enStats`), where it lives (`dex141Where`), drop table (`dex141Drops`), Sovereign stats | `2985-v141-bestiary.js` |
+| v141 orb attack: hand out, orb floating over the palm (`ORB141`, `orb141K` from `HA.cur.k`), bolt from the orb (`orbChain`) | `2990-v141-orb-cast.js` |
+| v141 gathering motions and tools (`SK141`, `SK141_T`: chop / mine / dig / forage / wade / cast / hold / jerk; hatchet, pickaxe, spade, rod with line); the Bard's lute (`bard141`) | `2995-v141-skilling.js` |
+| v141 Sovereigns: quicker charged wind-ups (`sv141K`), disengage from melee (`sv141Force`), Reach eruptions + chase vs kiting (`reach141`), fought once (`spawnBoss` wrapper, `sv141Clear`) | `3000-v141-sovereigns.js` |
 
 ## Conventions (read before changing code)
 
@@ -260,6 +267,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`itName`), fixed bonus (`itStats`), tooltip block, own models (icon `v89Kit`/`v89Key`, ground `lgDropModel`, hand `v89Wpn`, worn gem
   colour via `mdGD`). Tests: `v135_checks.py`, `v135_uniques.py`, `v135_bow.py`, `v132_cheddar_test.py`; pictures `v135_cheddar_shot.py`,
   `v135_fade_shot.py`, `v135_edge_look.py` (SRC= an older build for before/after), `v135_cat_head.py`, `v135_far_shots.py`, `v135_pick.py`.
+- **Version 141 (owner's list, Oct 2026)**: *Consume* raises only the eaten companion's best stat (same amount per stat as before;
+  refused when that stat is maxed); the Fusion preview shows gains under 2 points with one decimal. *Keys*: Q feeds the most hurt
+  active companion, Z health potion, X mana potion, 1–6 abilities. *Companions*: one active companion until the Beast Trainer teaches
+  the Companion Bond (800 gold, after two Sovereigns); party[1] rests until then (no follower, XP or spells; code that means "the active
+  team" reads `actN141()`). *Balance*: hero level growth ×0.4 (attribute points unchanged); normal enemies need twice the poise damage to
+  break, and a finisher adds poise instead of breaking outright. *Sovereigns*: wind-ups of 1.2 s+ play faster (0.9 + (t−0.9)×0.55),
+  two close casts in a row → a back-step and an out-of-range move, Reach (3 aimed eruptions) and a 40% faster walk once the hero has kept
+  8+ tiles away for 2.5 s, and a defeated Sovereign never respawns. *Gear*: the four new greatswords' grips reach the hand, the Glaive
+  has a solid core (`test/v141_grips.py` slices every weapon at the grip). *Quests*: Kindlelight I wood only; II 8 stone + 5 iron ore
+  (old progress moved to the iron objective). *Shop*: the Tome of Unlearning is gone (the Character window's Reset stays).
+  Tests: `v141_consume.py`, `v141_sov.py`; pictures `v141_look.py <file.js>` (parts split at `//SHOT name`), `v141_grips.py` (CLS=…).
 - **Camera on slopes (v132; since v135 only the ground counts, scenery fades instead)**: when the ground behind the hero blocks the camera ray (`blk` in the main loop, 0104), the camera first
   tilts up in steps (up to pitch 1.25) until the ray is clear and keeps its distance; it only pulls in (old rule) when tilting can't clear it.
 - **Sovereign footwork (v133, `2360-v133-sov-spacing.js`)**: posture now needs `POS133.mul` (2) times the damage, +15% per stagger already
