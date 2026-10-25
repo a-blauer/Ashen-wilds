@@ -30,14 +30,14 @@ const gl=$('gl');
 function mp(e){const r=gl.getBoundingClientRect();mnd.x=(e.clientX-r.left)/r.width*2-1;mnd.y=-((e.clientY-r.top)/r.height)*2+1;rc.setFromCamera(mnd,cam);rc.ray.intersectPlane(pln,mg);mOn=true}
 gl.addEventListener('pointermove',mp);
 gl.addEventListener('pointerleave',()=>{mOn=false;atkHeld=false;rmb=false});
-gl.addEventListener('pointerdown',e=>{mp(e);if(e.button!=2){atkHeld=true;swing()}});
+gl.addEventListener('pointerdown',e=>{mp(e);if(e.button===0){atkHeld=true;swing()}}); // v148: only the left button (or a touch) attacks; the middle button only turns the camera
 gl.addEventListener('contextmenu',e=>e.preventDefault());
 gl.addEventListener('mousedown',e=>{if(e.button==0&&orb){atkHeld=true;swing()}});
 addEventListener('mouseup',e=>{if(e.button==0)atkHeld=false});
 // v135: a right click toggles mouse-look on and off (the cursor hides and the mouse turns the camera until the next right click);
 // the middle button still turns the camera only while held. Esc, losing the pointer lock, the window losing focus or a window opening ends it.
 let orb=null;const orbStart=(e,tg)=>{orb={x:e.clientX,y:e.clientY,tg};gl.style.cursor='none';try{const p=gl.requestPointerLock&&gl.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}};
-gl.addEventListener('pointerdown',e=>{if(e.button==2){e.preventDefault();atkHeld=!!(e.buttons&1);if(typeof KQS!='undefined'&&KQS.tg)return;if(orb&&orb.tg)orbEnd();else orbStart(e,1)}
+gl.addEventListener('pointerdown',e=>{if(e.button==2){e.preventDefault();atkHeld=!!(e.buttons&1);if(typeof KQS!='undefined'&&(KQS.tg||KQS.rcT===e.timeStamp))return;if(orb&&orb.tg)orbEnd();else orbStart(e,1)}
   else if(e.button==1){e.preventDefault();atkHeld=!!(e.buttons&1);if(!orb)orbStart(e,0)}});
 addEventListener('pointermove',e=>{if(orb){const lk=document.pointerLockElement==gl,cl=v=>Math.max(-70,Math.min(70,v)),dx=lk?cl(e.movementX):e.clientX-orb.x,dy=lk?cl(e.movementY):e.clientY-orb.y;camYaw-=dx*.006*SET.sens;camPitch=Math.max(.14,Math.min(1.1,camPitch+dy*.004*SET.sens*(SET.inv?-1:1)));orb.x=e.clientX;orb.y=e.clientY}});
 const orbEnd=()=>{orb=null;gl.style.cursor='';try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}};

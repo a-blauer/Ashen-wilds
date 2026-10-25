@@ -97,7 +97,7 @@ function kqsTgFire(){const T=KQS.tg;if(!T)return;try{kqsRetUpd(performance.now()
 addEventListener('pointermove',e=>{if(e.pointerType=='mouse'||!e.pointerType){KQS.mx=e.clientX;KQS.my=e.clientY;KQS.mIn=kqsOnGl(e.target)}
   if(KQS.tg&&KQS.touch!=null&&e.pointerId===KQS.touch){const p=kqsPick(e.clientX,e.clientY);if(p)KQS.tg.p=kqsClamp(KQS.tg.sk,p);e.stopImmediatePropagation()}},true);
 function kqsOnGl(t){return !!t&&(t===gl||gl.contains(t))}
-addEventListener('pointerdown',e=>{if(!KQS.tg||!kqsOnGl(e.target))return;if(e.button==2){kqsTgEnd();return}if(e.button!==0&&e.pointerType=='mouse')return;e.stopImmediatePropagation();e.preventDefault();
+addEventListener('pointerdown',e=>{if(!KQS.tg||!kqsOnGl(e.target))return;if(e.button==2){KQS.rcT=e.timeStamp;kqsTgEnd();return}if(e.button!==0&&e.pointerType=='mouse')return;e.stopImmediatePropagation();e.preventDefault();
   if(e.pointerType&&e.pointerType!='mouse'){KQS.touch=e.pointerId;const p=kqsPick(e.clientX,e.clientY);if(p)KQS.tg.p=kqsClamp(KQS.tg.sk,p);return}
   KQS.mx=e.clientX;KQS.my=e.clientY;KQS.mIn=true;KQS.eat=1;kqsTgFire()},true);
 addEventListener('pointerup',e=>{if(KQS.touch!=null&&e.pointerId===KQS.touch){KQS.touch=null;e.stopImmediatePropagation();if(KQS.tg){const p=kqsPick(e.clientX,e.clientY);if(p)KQS.tg.p=kqsClamp(KQS.tg.sk,p);kqsTgFire()}}if(e.button==0)setTimeout(()=>KQS.eat=0,0)},true);
