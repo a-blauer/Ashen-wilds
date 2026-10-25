@@ -35496,7 +35496,7 @@ FKO['Curio Merchant']=function(o,D,C){const coat=mdC(o.robe||0x7a4a2a),hat=mdC(o
       k.p('chest','box','m',0x6a5a3a,-.168,.7,z-.02,.05,.07,.05).p('chest','box','g',0xffc860,-.168,.7,z-.02,.035,.045,.035);
       [-1,1].forEach(s=>{const a=mdTP(P,.96,s*.5,(P.tOff||0)+.01),b=mdTP(P,.66,s*.65,(P.tOff||0)+.01);k.L('chest','c',FKC.leatherD,a,[s*.12,.96,z+.05],.014,.014,4);k.L('chest','c',FKC.leatherD,a,b,.012,.012,4)});
       FKG.pouch(k,P,.56,.8,0x6a4a2a);{const q=mdTP(P,.55,2.0,(P.tOff||0)+.008);gkVial(k,'pelvis',q[0],q[1],q[2],1.2,0x7affd0,FKC.brass)}
-      const h=fkBrimHat(k,D,hat,{brim:.19,cr:.065,ch:.08,tx:-.15,band:0x8a6a2a});gkFeather(k,'head',[.052,h.y+.008,h.z-.03],[.45,.8,-.6],.14,.02,0xd84a2a);mdKit(B,k)}}};
+      const h=fkBrimHat(k,D,hat,{brim:.19,cr:.065,ch:.08,tx:-.15,band:0x8a6a2a});gkFeather(k,'head',[h.cr*.92,h.y+.016,h.z-h.cr*.3],[.45,.8,-.6],.14,.02,0xd84a2a)  /* (v142: rooted in the hat band) */;mdKit(B,k)}}};
 FKO['Wandering Merchant']=FKO['Curio Merchant'];
 // ---------------- Beast Trainer (wolf): a leather jerkin, fur mantle, bracers, a whistle and treat pouches ----------------
 FKO['Beast Trainer']=function(o,D,C){const sh=mdC(o.robe||0x3a5a2a);
