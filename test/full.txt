@@ -50,3 +50,4 @@ v138_abil_balance.py
 v139_checks.py
 v140_creator.py
 SEC=30 v141_sov.py
+v143_lantern_road.py

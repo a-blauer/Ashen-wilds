@@ -18,7 +18,7 @@ grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|t
 menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py v131_load_title.py
 signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp|companion-|foes|old-creatures|v137_creature: v137_enemies.py v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py
 coop|co-op|net: v108_instances.py v116_slots.py
-cheddar|quest: v132_cheddar_test.py v38t.py v114_save.py v108_instances.py v57t.py
+cheddar|quest: v143_lantern_road.py v132_cheddar_test.py v38t.py v114_save.py v108_instances.py v57t.py
 v135|cheddar|camera|fade|clip|wave|hatch|ring|death|kill|unique|fish|right|mouse|preview|travel: v135_checks.py
 v139|attribut|character|talent|power|flail|xp|preview|inventory: v139_checks.py
 v140|creator|frog-carry|carry|hud-rework|creator-heroic|look: v140_creator.py v117_creator.py
@@ -26,3 +26,4 @@ unique|fish|loot|item|gear|icon|0780|v89|mdgd|tooltip: v135_uniques.py v137_item
 bow|0780|0890|grip|carry|anim: v135_bow.py
 ability-evo|coop-visuals|0130-|1000-|1010-|1090-|1230-|1240-|2240-: v137_evolve.py v119_abprev.py v117_abilities.py
 ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-new: v138_abil_balance.py
+lantern|v143|1680-|ripper|warden: v143_lantern_road.py v108_instances.py v124_edge_test.py v132_cheddar_test.py v113_roster.py v38t.py v114_save.py v142_folk.py

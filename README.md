@@ -105,6 +105,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v141 orb attack: hand out, orb floating over the palm (`ORB141`, `orb141K` from `HA.cur.k`), bolt from the orb (`orbChain`) | `2990-v141-orb-cast.js` |
 | v141 gathering motions and tools (`SK141`, `SK141_T`: chop / mine / dig / forage / wade / cast / hold / jerk; hatchet, pickaxe, spade, rod with line); the Bard's lute (`bard141`) | `2995-v141-skilling.js` |
 | v141 Sovereigns: quicker charged wind-ups (`sv141K`), disengage from melee (`sv141Force`), Reach eruptions + chase vs kiting (`reach141`), fought once (`spawnBoss` wrapper, `sv141Clear`) | `3000-v141-sovereigns.js` |
+| v143 The Lantern Road (Kindlelight I main quest): outpost layout `mq143Plan` / decoration keep-out `mq143Keep` (called from 1680 `place`), the Lantern Wardens (`MQW143`, `mqw143Make`, `mqw143Anim`, helms `mqw143Helm`), models (`MQM143`: `mqm143Ripper`, `mqm143Lamp`, outpost pieces, `mqm143Bulb`), quest state `MQ143` (glowbulb drops, lampposts, the Ripper's roll and fire-up, dormant gateway, tracker `#mqt143`, window `XR.mq143`, map marks) | `3020`–`3023` (edit in 1680) |
 
 ## Conventions (read before changing code)
 
@@ -468,6 +469,30 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Tests: `v137_items.py` (350 templates, every new one drops for its class, stats finite, shop offers them, every model differs
   from every other item's, heroes build with each, save + reload keeps them); sheets: `SHEET=models SEL=weapon|offhand|helm|chest|
   boots|amulet|ring|all`, `SHEET=worn SEL=helm|chest|boots ARM=heavy|medium|light|cloth`, `SHEET=hand SEL=<class>`, `SHEET=jewel`.
+- **The Lantern Road (v143, Kindlelight I main quest, `3020`–`3023`)**: the first chapter of a main quest line per zone (one chapter per
+  field instance; only Kindlelight I so far). Kindlelight I's gateway to II is dormant until the quest is done: its F prompt is locked by a
+  `portalPrompt` wrapper (`insGo` itself is not gated, so travel from the portal window, co-op joins and tests still work).
+  * Layout (`3020`, `mq143Plan`, a pure function of the map data, cached): the outpost on the road's last straight, `N-52` steps before the
+    gateway; 8 lampposts from `A+8` to `N-10`, alternating sides 2.7 off the road; the Ripper starts on the road at `A+2` and parks beside
+    the gateway on the side away from Cheddar's gateway spot. `mq143Keep` keeps decorations out of the outpost, the lampposts and the
+    parking spot: 1680's `place` returns true without placing (counted as placed, so the seeded stream and every other decoration are
+    unchanged). Roaming groups whose home is within 17 of the outpost are dropped (`rosterBuild` wrapper).
+  * Wardens (`3021`): 7 armoured animals (wolf captain, boar, bear, hound, fox, lynx, beaver engineer) built as town folk
+    (`FK137.out` / `FKO` labels `Lantern Warden · <key>`) wearing the heroes' heavy chest armour (`mdChestO` with a hand-made design:
+    aegis / warplate / wall / hauberk / cuirass / mail), greaves, a tabard, the lantern sigil and a steel helm lofted over the folk skull
+    (`mqw143Helm`: cap, kettle brim, crest, cheek guards, the captain's plume, the engineer's goggles). Weapons and shields are rigid kits
+    mounted on the paw bones in the guard pose (`MQW143_POSE`); `mqw143Anim` = folk rest + guard pose + v93 idle, or the folk walk.
+  * Quest (`3023`): `MQ143.st` 0 not met · 1 met · 2 rolling · 3 done; done also when II is reached (`mq143Done`). Glowbulbs are a quest item
+    (`MQ143.b`, not a material, no other use): every Kindlelight I kill drops one at `MQ143.drop` (55%) while more are needed (`mq143Need`:
+    dark lamps × 3 − carried − on the ground); kind `mq143` drops go through `take`. F at a lamppost with 3+ lights it; the last lamp
+    starts the roll (`MQ143.speed` 1.9 tiles/s along a Catmull-Rom route, wheels spin, chimney smoke, two escorts walk beside it), then the
+    fire-up (jacks, claws open, coil charges, arcs to the arch, flash) opens the gateway (st 3). Leaving the instance mid-roll finishes it;
+    a mid-roll save loads as done. Saved as `x2.mq143 {st,b,lit[8],seen}`; saves without it start at 0 (or done if II was reached).
+    The scene is built lazily the first time the hero is in Kindlelight I and hidden elsewhere (its pooled point lights go to 0).
+  * UI: tracker `#mqt143` sits above Cheddar's (`chqTrkPos132` wrapper), captain window `XR.mq143`, minimap / N-map marks, the bag's
+    Materials tab lists glowbulbs under Quest items (`kqmMatTab` wrapper), icon `KQI.glowbulb` (emoji 🪔).
+  Tests: `v143_lantern_road.py` (plan, keep-out, drops, pickup, bag, scene, prompts, window, lighting, tracker, saves, roll, fire-up,
+  roster); pictures `v143_look.py` (`WHO=captain,...` warden sheets, `PROPS=ripper,lamp,lampOn,tent,...` model sheets, `VIEWS=`).
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -692,6 +717,7 @@ python3 v136_weapons.py      # v136: every weapon type at rarity 0, 2, 4
 python3 v137_enemies.py      # v137: enemy bodies (no companion bodies), companion variant bodies, scarab legs
 LIST="C:Sporelord:3;E:basilisk" python3 v137_creature.py   # v137: creature sheets (VIEWS=, TAG=)
 python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizens, sheets and limb checks (SP=fox,bear species sheets)
+python3 v143_lantern_road.py  # v143: The Lantern Road (Kindlelight I main quest): drops, lampposts, the Ripper, the gateway, saves
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots

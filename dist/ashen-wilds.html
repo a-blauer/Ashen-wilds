@@ -19201,6 +19201,7 @@ function wdDeco(){const T0=performance.now();
     const big=[],zstat={};let zn=0;
     const free=(x,y,r0)=>big.every(b=>Math.hypot(b[0]-x,b[1]-y)>b[2]+r0+2.6);
     const place=(S,x,y,ry,s,bank)=>{
+      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true; // v143: the Lantern Road outpost, lampposts and the Ripper's parking spot stay clear (counted as placed: the seeded stream is unchanged)
       const it={k:S.k,x,z:y,ry,s,col:0};
       // collider tiles: every tile whose centre is within the radius of a collider point
       const cp=bank?null:S.cp?S.cp:S.col?[[0,0,S.col]]:null;
@@ -37113,4 +37114,648 @@ FKH.add('owl',{R:.12,bb:[-.15,-.14,-.14,.15,.14,.14],
 FK137.sp.owl.eyes={};FK137.sp.owl.eyeAt=null;
 FK137.sp.hedgehog.face0=FK137.sp.hedgehog.face;
 fk142Setup();
+// ================= v143 The Lantern Road — where everything stands (Kindlelight I) =================
+// The main quest of Kindlelight I (3021 wardens, 3022 models, 3023 the quest and the world). This file only lays out the spots:
+// mq143Plan() is a hoisted function of the map data alone (INSL[0].path, MAP tiles, MAP.DW), so it gives the same answer on every
+// machine and at any time — wdDeco (0070, long before this file runs) calls mq143Keep through 1680's place() so no decoration
+// lands in the outpost, on a lamppost or where the Ripper parks (the kept decoration still counts as placed, so the seeded
+// stream and every other decoration in the world stay exactly as they were).
+// Layout: the outpost sits on the last straight of the road, 52 steps before the gateway (just past the hairpin). In the road's
+// frame at the anchor (a along the road toward the gateway, b to the side: + west, − east here), the Ripper waits on the road,
+// tents and the palisade stand on the wide east side, the captain's map table on the west. Eight lampposts line the road from
+// the outpost to ~10 steps before the gateway, alternating sides. The Ripper parks beside the gateway, on the side away from
+// Cheddar's gateway spot, facing the arch.
+function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
+  const I=INSL[0],P=I.path,N=P.length,DW=MAP.DW;
+  const props=new Set();try{MAP.props.forEach(q=>props.add(q[1]*W+q[0]))}catch(_){}
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];
+    if(!t||t=='#'||t=='r'||t=='~'||t=='H'||props.has(Z*W+X))return false;return DW[Z*W+X]<-(m==null?1.2:m)};
+  const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
+  const A=Math.max(30,N-52),C=P[A],f=tan(A),s=[-f[1],f[0]];
+  const at=(a,b)=>[C[0]+f[0]*a+s[0]*b,C[1]+f[1]*a+s[1]*b];
+  const ALT=[[0,0],[0,.7],[0,-.7],[.7,0],[-.7,0],[0,1.4],[0,-1.4],[1.4,0],[-1.4,0],[1.2,1.2],[-1.2,-1.2],[1.2,-1.2],[-1.2,1.2]];
+  // a spot: the first offset where the centre (and the footprint points fp, in the road frame) are walkable
+  const pick=(a,b,m,fp)=>{for(const [da,db] of ALT){const q=at(a+da,b+db);if(!ok(q[0],q[1],m))continue;
+      if(fp&&!fp.every(([u,v])=>{const r=at(a+da+u,b+db+v);return ok(r[0],r[1],.6)}))continue;return {x:q[0],z:q[1],a:a+da,b:b+db}}return null};
+  const yawTo=(x,z,tx,tz)=>Math.atan2(tx-x,tz-z),R={A,C,f,s,N,lamps:[],props:[],war:{},stakes:[],keep:[],ok};
+  // the Ripper starts on the road; it rolls from road index A+2
+  R.start=A+2;
+  // the wardens (key → spot + facing)
+  const face=(o,a,b)=>{if(!o)return o;const t=at(a,b);o.ry=yawTo(o.x,o.z,t[0],t[1]);return o};
+  R.war.captain=face(pick(.6,2.7,1),-6,0);R.war.rook=face(pick(-5.8,1.7,1),-12,1.7);R.war.thistle=face(pick(-5.8,-1.7,1),-12,-1.7);
+  R.war.sergeant=face(pick(-2.6,-4.6,1),-1.8,-3.2);R.war.ironpaw=face(pick(5.4,1.9,1),-2,0);R.war.gearwick=face(pick(-.4,1.55,.9),3,0);
+  R.war.vesk=face(pick(-3.4,-8.2,1),8,-8.2);R.patrol=[pick(-3.4,-8.2,1),pick(7.2,-8.2,1)];
+  // the outpost pieces: [kind, a, b, turn (radians, added to the road heading), footprint]
+  const road=Math.atan2(f[0],f[1]),tentFp=[[-.7,-1.3],[.7,-1.3],[-.7,1.3],[.7,1.3]];
+  [['table',.9,3.95,0,null],['banner',-5.6,2.7,Math.PI,null],['banner',-5.6,-2.7,Math.PI,null],['brazier',-1.8,-3.2,0,null],['rack',2.7,-3.7,-Math.PI/2,null],
+   ['tent',-1.4,-6.7,Math.PI,tentFp],['tent',4.6,-6.5,Math.PI,tentFp],['crate0',7.1,-4.4,.3,null],['crate1',7.7,-3.6,-.2,null],['barrel',6.7,-5.4,0,null],
+   ['bulbcrate',4.3,2.4,.4,null],['barrel',-4.2,3.4,0,null],['crate1',-1.6,3.6,.9,null]].forEach(([k,a,b,tr,fp])=>{
+    const o=pick(a,b,1,fp);if(!o)return;o.k=k;o.ry=road+tr;R.props.push(o)});
+  // the palisade: sections of stakes along the east edge, a short screen on the west
+  for(let a=-4.6;a<=8.6;a+=1.55){const o=pick(a,-9.7,.5);if(o){o.ry=road+Math.PI/2;o.n=6;R.stakes.push(o)}}
+  [-2.2,-.7].forEach(a=>{const o=pick(a,5.6,.5);if(o){o.ry=road-Math.PI/2;o.n=5;R.stakes.push(o)}});
+  // the lampposts: eight from A+8 to N-10, alternating sides 2.7 off the road centre, the arm over the road
+  const L0=A+8,L1=N-10,n=8;for(let i=0;i<n;i++){const ix=Math.round(L0+(L1-L0)*i/(n-1)),q=P[ix],t=tan(ix),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
+    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)){o={x,z,i:ix};break}}
+    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:ix};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
+  // the gateway and where the Ripper parks: beside the arch, away from Cheddar's gateway spot (2350 picks +side first)
+  const G=I.ba,q=P[Math.max(0,N-14)];let dx=q[0]-G[0],dz=q[1]-G[1];const Lg=Math.hypot(dx,dz)||1;dx/=Lg;dz/=Lg;const sx=-dz,sz=dx;
+  const chq=[[5.4,2],[5.4,-2],[6,2.4],[6,-2.4]].find(([a,b])=>ok(G[0]+dx*a+sx*b,G[1]+dz*a+sz*b,.3)),cs=chq?Math.sign(chq[1]):1;
+  R.gate={x:G[0],z:G[1],dx,dz};
+  for(const [a,b] of [[3.7,-3.1],[4.3,-3.4],[3.3,-3.7],[4.8,-3.0],[3.7,-2.6]]){const x=G[0]+dx*a+sx*b*cs,z=G[1]+dz*a+sz*b*cs;if(ok(x,z,.9)){R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs};break}}
+  if(!R.park){const x=G[0]+dx*3.7-sx*3.1*cs,z=G[1]+dz*3.7-sz*3.1*cs;R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs}}
+  // the route: the road from the start to ~12 steps before the gateway, then a curve to the parking spot
+  const rt=[];for(let i=R.start;i<=N-13;i+=2)rt.push([P[i][0],P[i][1]]);
+  {const e=P[N-13],m=[(e[0]+R.park.x)/2+sx*cs*-.8,(e[1]+R.park.z)/2+sz*cs*-.8];rt.push(m);
+    const b=[R.park.x-Math.sin(R.park.ry)*1.6,R.park.z-Math.cos(R.park.ry)*1.6];rt.push(b);rt.push([R.park.x,R.park.z])}
+  R.route=rt;
+  // keep-out rings [x, z, r]: decorations (1680) and roaming groups (3023) stay clear
+  {const c=at(1.5,-2.8);R.keep.push([c[0],c[1],12.5]);const w=at(1,2.8);R.keep.push([w[0],w[1],6.5])}
+  R.lamps.forEach(o=>R.keep.push([o.x,o.z,1.7]));R.keep.push([R.park.x,R.park.z,3.4]);
+  R.center=at(1,-1);R.at=at;
+  return mq143Plan.c=R}
+// 1680 place(): true = keep this decoration out (it is counted as placed so the seeded stream is unchanged)
+function mq143Keep(g,x,z){if(g!==0)return false;try{const K=mq143Plan().keep;for(const k of K)if(Math.hypot(x-k[0],z-k[1])<k[2])return true}catch(e){if(!mq143Keep.e){mq143Keep.e=1;console.warn('v143 keep',e)}}return false}
+// ================= v143 The Lantern Road (Kindlelight I main quest) — the Lantern Wardens =================
+// Seven armoured animal warriors hold a small outpost on the road and guard the Portal Ripper (3022, 3023). They are town-folk
+// bodies (2800: the v114 beast engine on the town-folk skeleton, v142 anatomy) wearing the heroes' heavy armour: mdChestO builds
+// the plate (cuirass, warplate, wall, hauberk, aegis …) straight onto the folk body's rings, so it fits every species. On top:
+//  * mqw143Helm: a steel helm loft over the sculpted skull (ears come out through it), brow band, rivets, nasal, crest, cheek
+//    guards, a kettle brim for small-eared species, a plume for the captain; leather cap + goggles for the engineer
+//  * mqw143Sigil: the Wardens' lantern sigil (brass cage, glowing heart) on the chest
+//  * greaves / vambraces of the hero kit, a teal tabard where the style has none
+// Weapons are rigid kits (lgGroup) parented to a bone: a planted polearm / a sword point-down in front / a shield on the forearm;
+// slung on the back while walking (the escorts walk beside the Ripper with czWalkPose103).
+// Every warden: MQW143.D[key] = {lab (FK137.out label), sp, fur, sc, st (heavy chest style), helm, wpn, sh (shield), pose, n (name)}.
+// mqw143Make(key) → THREE.Group with g.bones, g.userData.rest (folk rest), g.userData.mq = {D, pose, wpn, sh, mode}.
+// mqw143Anim(g, now, walkPh) poses it every frame: folk rest + guard pose + v93 idle (+ tail and ears), or the walk.
+var MQW143={
+  steel:0x6e737c,steelD:0x4a4e56,brass:0xb8933e,teal:0x2a6a64,tealD:0x173c3a,leather:0x4a3222,leatherD:0x2e1e14,glow:0xd8ff7a,
+  D:{
+    captain:{n:'Warden-Captain Harrow',sp:'wolf',fur:1,sc:1.16,st:'aegis',helm:'plume',wpn:'sword',pose:'pommel',shirt:0x2a2e34},
+    sergeant:{n:'Sergeant Bristleback',sp:'boar',fur:1,sc:1.14,st:'warplate',helm:'kettle',wpn:'halberd',pose:'pole',shirt:0x3a2e24},
+    ironpaw:{n:'Ironpaw',sp:'bear',fur:2,sc:1.2,st:'wall',helm:'kettle',wpn:'maul',pose:'pole',shirt:0x2e2a26},
+    rook:{n:'Rook',sp:'hound',fur:1,sc:1.1,st:'hauberk',helm:'cap',wpn:'spear',sh:'round',pose:'pole',shirt:0x34302a},
+    thistle:{n:'Thistle',sp:'fox',fur:0,sc:1.06,st:'cuirass',helm:'cap',wpn:'spear',pose:'pole',shirt:0x2e3236},
+    vesk:{n:'Vesk',sp:'lynx',fur:0,sc:1.08,st:'cuirass',helm:'cap',wpn:'glaive',sh:'kite',pose:'pole',shirt:0x2a2e2a},
+    gearwick:{n:'Old Gearwick',sp:'beaver',fur:0,sc:1.02,st:'mail',helm:'goggles',wpn:'wrench',pose:'tinker',shirt:0x3a3026}}};
+// labels for the folk system (species, fur, scale) and the costumes
+Object.keys(MQW143.D).forEach(k=>{const D=MQW143.D[k];D.key=k;D.lab='Lantern Warden · '+k;FK137.out[D.lab]={sp:D.sp,fur:D.fur,sc:D.sc};
+  FKO[D.lab]=function(o,S,C){return mqw143Outfit(D,S,C)}});
+
+// ---------------- the costume ----------------
+function mqw143Outfit(W,S,C){const Q=MQW143,M=Q.steel,A=Q.teal,T=Q.brass;
+  const quilt=m=>(Math.floor(m.y*38)+(m.c>0?0:1))%2?W.shirt:mdSh(W.shirt,.82);
+  return {
+    paint(P){FKG.paint(P,C,{shirt:W.shirt,sleeve:'long',pants:mdSh(W.shirt,.8),legs:'long',patt:quilt,cuffs:Q.leatherD})},
+    build(B,P){
+      // the heroes' heavy chest on the folk body (plate, pauldrons, faulds, tassets, arm plates)
+      const d={a:W.st=='mail'?'heavy':'heavy',sl:'chest',st:W.st,M:W.st=='mail'?0x5a5e66:M,A,T,dk:mdSh(M,.6),lv:2,ti:2,r:1,G:null,R:null};
+      try{mdChestO(B,P,d,'warrior')}catch(e){console.warn('v143 warden chest',W.key,e)}
+      const k=dkKit();
+      // greaves over the shins, sabaton plates over plantigrade feet, knee cops
+      try{const legT=S.hoof||(typeof FK142!='undefined'&&FK142.sp&&FK142.sp[S.key]&&FK142.sp[S.key].leg=='digi');
+        [-1,1].forEach(s=>{mdLS(B,P,s,3,5,.016,{t:'m',col:m=>m.i<3.3?T:mdSh(M,m.c*s>0?1.05:.85)});
+          const L=mdLeg(P,s),kn=L[3]||L[2];k.p(s<0?'lh1':'rh1','hem','m',mdSh(M,1.08),kn.p[0],kn.p[1]+.01,kn.p[2]+(kn.f||kn.rx)*.85,.05,.045,.034,1.35,0,0);
+          if(!legT)mdFS(B,P,s,.008,{t:'m',col:m=>m.y<.03?Q.steelD:M})})}catch(e){console.warn('v143 warden legs',W.key,e)}
+      // the tabard: teal, brass hem (aegis brings its own)
+      if(W.st!='aegis'&&W.st!='mail')try{FKG.skirt(B,P,{y0:.585,hem:th=>.3+.03*Math.cos(th*2),col:fkTrim(Q.tealD,T,{hem:.88}),lin:mdSh(Q.tealD,.6),
+          keep:m=>{const th=m.u*Math.PI*2,a=Math.min(th,Math.PI*2-th);return a<.5||Math.abs(th-Math.PI)<.5},flare:.03,folds:[6,.006],rows:5,clear:.012})}catch(e){console.warn('v143 tabard',e)}
+      // the engineer: a leather apron over the mail, tool loops, heavy gloves
+      if(W.key=='gearwick'){FKG.apron(B,P,Q.leather,{hem:.3,w:1.2,bibTop:.9});FKG.cuff(B,P,4,7,Q.leatherD,.02);
+        FKG.pouch(k,P,.57,.9,Q.leatherD);FKG.pouch(k,P,.57,-.9,Q.leatherD);
+        const t0=mdTP(P,.58,-.6,(P.tOff||0)+.01);k.L('pelvis','m',0x8a8070,t0,[t0[0]-.01,t0[1]-.16,t0[2]+.02],.008,.006,4)}
+      mqw143Sigil(B,P,k,W);
+      mqw143Helm(B,P,k,S,W);
+      mdKit(B,k)}}}
+
+// the Wardens' sigil: a small brass lantern with a glowing heart, on the chest plate
+function mqw143Sigil(B,P,k,W){const y=W.key=='gearwick'?.86:.8,f=mdTorsoAt(P,y).f+(P.tOff||0)+.014,w=mdTorsoW(y),Q=MQW143,E=(g,t,c,x,yy,z,a,b,cc,r1,r2,r3)=>{k.p('chest',g,t,c,x,yy,z,a,b,cc,r1,r2,r3);mdOW(k,w)};
+  E('box','m',Q.steelD,0,y,f-.004,.05,.062,.008);E('tor','m',Q.brass,0,y+.04,f,.014,.012,.008,Math.PI/2,0,0);
+  E('cone4','m',Q.brass,0,y+.026,f+.002,.024,.014,.01,0,Math.PI/4,0);E('box','m',Q.brass,0,y-.024,f+.002,.03,.008,.012);
+  [-1,1].forEach(s=>E('box','m',Q.brass,s*.016,y,f+.004,.005,.044,.006));E('oct','g',Q.glow,0,y,f+.006,.012,.018,.006)}
+
+// ---------------- helms ----------------
+// a shell loft over the folk skull rings (D.SN, measured from the v142 sculpt), from the back of the skull to the brow
+function mqw143Helm(B,P,k,D,W){const Q=MQW143,st=W.helm;if(!st||!D.SN||!D.EYEP)return;const S=D.SN,E=D.EYEP,z0=S[0][0],z1=E[2]-.012;
+  const yMin=E[1]+(st=='goggles'?.012:-.004),tilt=.55,off=st=='goggles'?.007:.011,col=st=='goggles'?Q.leather:Q.steel;
+  const R=[];S.forEach(q=>{if(q[0]>=z0-.001&&q[0]<=z1+.001)R.push({p:[0,q[1],q[0]],rx:q[2]+off,f:q[3]+off,b:q[4]+off,w:[['head',1]]})});
+  if(R.length<2)return;{const q=R[0];R.unshift({p:[0,q.p[1]+.004,q.p[2]-.012],rx:q.rx*.55,f:q.f*.55,b:q.b*.55,w:q.w})}   // close the dome at the back
+  const edge=m=>yMin+tilt*(m.z-z1);
+  mdLoft(B,R,{seg:20,ref:[0,1,0],capA:true,t:st=='goggles'?'c':'m',col:m=>{if(m.y<edge(m)+.016)return st=='goggles'?Q.leatherD:Q.brass;if(st!='goggles'&&m.s>.93)return mdSh(col,1.18);return col},keep:m=>m.y>edge(m)});
+  const surf=(z,phi,o)=>fkSurf(D,z,phi,o),zm=(z0+z1)/2;
+  if(st=='goggles'){// a leather cap with brass goggles pushed up on the brow
+    const z=z1-.01,c=surf(z,0,.012);[-1,1].forEach(s=>{const p=surf(z,s*.62,.016);k.p('head','cyl','m',Q.brass,p[0],p[1],p[2]+.004,.024,.012,.024,-.9,0,s*-.55);k.p('head','cyl','g',0x9ad8c8,p[0],p[1]+.004,p[2]+.009,.017,.004,.017,-.9,0,s*-.55)});
+    k.p('head','box','c',Q.leatherD,c[0],c[1]-.006,c[2]-.004,.018,.01,.012);return}
+  // rivets along the band, a nasal guard, a crest ridge
+  for(let i=0;i<9;i++){const ph=-1.45+i*(2.9/8),zz=z1-.01-Math.abs(ph)*.035,p=surf(zz,ph*1.0,off+.002);if(p[1]<edge({z:zz})+.004)continue;k.p('head','sph','m',0xd8c890,p[0],p[1]-.002,p[2],.0045)}
+  {const p=surf(z1-.004,.05,off+.004);k.p('head','box','m',mdSh(Q.steel,1.1),0,p[1]-.03,p[2]+.004,.012,.06,.008,.32,0,0)}
+  for(let z=z0+.02;z<z1-.01;z+=.014){const p=surf(z,0,off);k.p('head','box','m',st=='plume'?Q.brass:mdSh(Q.steel,1.15),0,p[1]+.004,p[2],.008,.012,.016)}
+  // cheek guards hanging below the band (not for the boar's tusks)
+  if(D.key!='boar')[-1,1].forEach(s=>{const p=surf(zm+.01,s*1.75,off+.002),n=new THREE.Vector3(p[0],p[1]-brSkullAt(D,zm).yc,0).normalize();
+    const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n),e=new THREE.Euler().setFromQuaternion(q);
+    k.p('head','box','m',Q.steel,p[0],p[1]-.024,p[2],.036,.05,.006,e.x,e.y,e.z)});
+  if(st=='kettle'){// a broad brim (bears and boars have small ears)
+    const q=brSkullAt(D,zm),y=yMin+tilt*(zm-z1)+.004;k.p('head','cyl','m',Q.steel,0,y,zm+.006,(q.rx+off)*1.3,.008,(Math.max(q.f,q.b)+off)*1.24,-.1,0,0);
+    k.p('head','tor','m',Q.brass,0,y-.002,zm+.006,(q.rx+off)*1.32,.006,(Math.max(q.f,q.b)+off)*1.26,-.1,0,0)}
+  if(st=='plume'){// the captain's horsehair plume falls back from the crest
+    const zc=(z0+z1)/2+.01,top=surf(zc,0,off+.01);
+    for(let j=-1;j<=1;j++){const pts=[];for(let i=0;i<=6;i++){const u=i/6,z=zc-u*.2,y=top[1]+.03*Math.sin(u*Math.PI*.9)-u*u*.16;pts.push([j*.009,y,z])}
+      for(let i=0;i<6;i++)k.L('head','c',j?0x7a1414:0x9a2020,pts[i],pts[i+1],.016*(1-i/8),.016*(1-(i+1)/8),5)}
+    k.p('head','box','m',Q.brass,0,top[1]-.002,zc,.016,.014,.03)}}
+
+// ---------------- weapons and shields (rigid kits; the grip is at the origin, the shaft along +y) ----------------
+function mqw143Weapon(kind){const Q=MQW143,wood=0x3a2a1c,iron=0x5a5e66,dk=0x2a2a2e;
+  return lgGroup('MQW143|'+kind,k=>{
+    if(kind=='spear'||kind=='glaive'||kind=='halberd'){const L=kind=='halberd'?2.1:1.95;k.L('','c',wood,[0,-.75,0],[0,L-.75,0],.022,.02,6);
+      k.p('','tor','m',Q.brass,0,L-.78,0,.03,.04,.03);k.p('','cone4','m',dk,0,-.77,0,.026,.05,.026,Math.PI);
+      for(let i=0;i<3;i++)k.p('','ring','c',Q.leatherD,0,-.05+i*.035,0,.026,.3,.026);
+      if(kind=='spear'){k.p('','oct','m',iron,0,L-.6,0,.045,.17,.012);k.p('','box','m',Q.brass,0,L-.73,0,.06,.014,.02);k.S('',Q.teal,.012,L-.76,0,.03,.16,0,0,3)}
+      if(kind=='glaive'){const t=L-.75;k.p('','box','m',iron,.03,t+.16,0,.07,.3,.008,0,0,-.12);k.p('','cone4','m',iron,.012,t+.36,0,.04,.12,.008,0,0,-.2);k.p('','box','m',Q.brass,0,t+.02,0,.05,.03,.026)}
+      if(kind=='halberd'){const t=L-.75;k.p('','oct','m',iron,0,t+.12,0,.03,.16,.01);k.p('','box','m',iron,.1,t-.02,0,.16,.18,.008);k.p('','box','m',mdSh(iron,1.2),.18,t-.02,0,.02,.2,.01);
+        k.p('','cone4','m',iron,-.07,t-.02,0,.025,.1,.008,0,0,Math.PI/2);k.p('','box','m',Q.brass,0,t-.1,0,.04,.04,.03)}}
+    if(kind=='maul'){k.L('','c',wood,[0,-.7,0],[0,.75,0],.026,.024,6);k.p('','box','m',iron,0,.82,0,.32,.16,.16);[-1,1].forEach(s=>k.p('','box','m',mdSh(iron,.8),s*.17,.82,0,.03,.18,.18));
+      k.p('','box','m',Q.brass,0,.82,0,.1,.17,.17);k.p('','cone4','m',dk,0,.92,0,.04,.08,.04);for(let i=0;i<4;i++)k.p('','ring','c',Q.leatherD,0,-.1+i*.04,0,.03,.3,.03)}
+    if(kind=='sword'){// point down: pommel at the top
+      k.p('','oct','m',Q.brass,0,.13,0,.03,.035,.03);k.L('','c',Q.leatherD,[0,-.06,0],[0,.11,0],.017,.017,6);k.p('','box','m',Q.brass,0,-.07,0,.2,.03,.035);
+      k.p('','box','m',iron,0,-.46,0,.06,.76,.012);k.p('','box','m',mdSh(iron,1.25),0,-.46,0,.012,.74,.016);k.p('','cone4','m',iron,0,-.86,0,.03,.07,.008,Math.PI,Math.PI/4,0);
+      k.p('','oct','g',Q.glow,0,-.07,.02,.012,.016,.008)}
+    if(kind=='wrench'){k.L('','m',iron,[0,-.18,0],[0,.32,0],.016,.014,6);k.p('','box','m',iron,0,.37,0,.1,.06,.026);k.p('','box','c',0x14100c,.02,.39,0,.04,.04,.03);
+      for(let i=0;i<3;i++)k.p('','ring','c',Q.leatherD,0,-.12+i*.04,0,.02,.3,.02)}
+    if(kind=='round'){k.p('','cyl','c',wood,0,0,0,.27,.03,.27,Math.PI/2,0,0);k.p('','tor','m',iron,0,0,.002,.28,.035,.28,Math.PI/2,0,0);
+      k.p('','cyl','c',Q.teal,0,0,.017,.23,.006,.23,Math.PI/2,0,0);k.p('','hem','m',Q.brass,0,0,.02,.06,.04,.06,Math.PI/2,0,0);
+      for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('','sph','m',0xd8c890,Math.cos(a)*.2,Math.sin(a)*.2,.022,.008)}}
+    if(kind=='kite'){const sh=lgGeoC('mqKite',()=>{const s=new THREE.Shape();s.moveTo(0,.34);s.quadraticCurveTo(.22,.32,.21,.12);s.quadraticCurveTo(.18,-.16,0,-.38);s.quadraticCurveTo(-.18,-.16,-.21,.12);s.quadraticCurveTo(-.22,.32,0,.34);
+        const g=new THREE.ExtrudeGeometry(s,{depth:.03,bevelEnabled:false,curveSegments:5});g.translate(0,0,-.015);return g});
+      k.p('',sh,'c',wood,0,0,0,1,1,1);k.p('',sh,'c',Q.teal,0,.01,.012,.86,.86,.5);k.p('','box','m',Q.brass,0,.02,.03,.02,.44,.01);k.p('','box','m',Q.brass,0,.12,.03,.24,.02,.01);
+      k.p('','oct','g',Q.glow,0,.12,.036,.018,.024,.008)}
+  },.12)}
+
+// ---------------- the figure ----------------
+// pose offsets added to the folk rest (radians, per bone [x, y, z]); 'pole' holds a planted polearm at the right side,
+// 'pommel' rests both paws on a sword planted point-down in front, 'tinker' carries a wrench low in the right paw
+var MQW143_POSE={
+  pole:{aL0:[0,0,.05],aL1:[-.3,0,-.62],aR0:[.18,0,-.06],aR1:[-.1,.1,.34],aR2:[0,0,0],head:[.04,0,0]},
+  pommel:{aL0:[0,0,0],aR0:[0,0,0],aL1:[.05,0,.06],aR1:[.05,0,-.06],head:[.02,0,0]},
+  tinker:{aL0:[0,0,.04],aL1:[-.25,0,-.55],aR0:[.05,0,-.04],aR1:[-.08,0,.3],head:[.08,0,0]}};
+function mqw143Pose(g,pose){const P=MQW143_POSE[pose]||MQW143_POSE.pole;for(const b in P){const B=g.bones[b];if(!B)continue;B.rotation.x+=P[b][0];B.rotation.y+=P[b][1];B.rotation.z+=P[b][2]}}
+// put a rigid kit on a bone so that, in the current pose, it sits at world transform (pos, quat) relative to the figure's group
+function mqw143Mount(g,bone,obj,pos,quat){g.updateMatrixWorld(true);const B=g.bones[bone]||g,W=new THREE.Matrix4().compose(pos.clone().applyMatrix4(g.matrixWorld),
+    new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().extractRotation(g.matrixWorld)).multiply(quat),new THREE.Vector3(1,1,1));
+  const L=new THREE.Matrix4().copy(B.matrixWorld).invert().multiply(W);L.decompose(obj.position,obj.quaternion,obj.scale);B.add(obj);return obj}
+function mqw143Make(key,o){o=o||{};const W=MQW143.D[key];if(!W)throw new Error('v143: no warden '+key);
+  const opt={label:W.lab},rig=idlNpcBody(opt),g=new THREE.Group();rig.meshes.forEach(m=>{m.castShadow=true;g.add(m)});g.bones=rig.bones;g.userData.npcO=opt;g.userData.psNo=1;
+  g.userData.rest=czRest103(g);const mq={D:W,pose:W.pose,mode:'stand',wpn:null,sh:null,ph:0};g.userData.mq=mq;
+  // weapons: placed with the guard pose on, measured from the paws
+  mqw143Pose(g,W.pose);g.updateMatrixWorld(true);const V=THREE.Vector3,inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),hp=n=>g.bones[n].getWorldPosition(new V()).applyMatrix4(inv),sc=g.bones.pelvis.scale.x;
+  if(W.wpn){const w=mqw143Weapon(W.wpn);mq.wpn=w;
+    if(W.pose=='pole'){const h=hp('aR2');h.y-=.02*sc;h.z+=.035*sc;h.x+=.01*sc;mqw143Mount(g,'aR2',w,h,new THREE.Quaternion())}
+    else if(W.pose=='pommel'){const a=hp('aL2'),b=hp('aR2'),m=a.add(b).multiplyScalar(.5);m.y+=.04*sc;m.z+=.04*sc;mqw143Mount(g,'aR2',w,m,new THREE.Quaternion())}
+    else{const h=hp('aR2');h.y-=.06*sc;h.z+=.03*sc;mqw143Mount(g,'aR2',w,h,new THREE.Quaternion().setFromEuler(new THREE.Euler(.15,0,.25)))}}
+  if(W.sh){const s=mqw143Weapon(W.sh);mq.sh=s;const a=hp('aL1'),b=hp('aL2'),m=a.lerp(b,.55);m.x-=.075*sc;m.z+=.03*sc;
+    mqw143Mount(g,'aL2',s,m,new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-1.25,0)))}
+  czReset103(g);return g}
+// every frame: rest → guard pose → idle (stand), or the folk walk with the weapon on the shoulder (walkPh != null)
+function mqw143Anim(g,now,walkPh,amp){const mq=g.userData.mq;if(!mq)return;
+  if(walkPh!=null){if(mq.mode!='walk'){mq.mode='walk';g._idl=null}czWalkPose103(g,walkPh,amp==null?1:amp);mqw143Pose(g,'walkHold');return}
+  if(mq.mode!='stand'){mq.mode='stand';g._idl=null}
+  czReset103(g);mqw143Pose(g,mq.pose);try{idlNpc(g,now)}catch(_){}}
+// while walking the right paw stays on the weapon (elbow bent, held upright at the side); the left arm swings
+MQW143_POSE.walkHold={aR0:[.12,0,-.02],aR1:[.2,.1,-.28]};
+// ================= v143 The Lantern Road — models: the Portal Ripper, glowbulb lampposts, the Wardens' outpost, glowbulbs =================
+// All rigid kits (dkKit parts baked by lgGroup into 1–3 shared meshes: cloth/wood, metal, glow), the same chunky flat-shaded
+// low-poly look as the camps and the heroes' gear. Frame: +z forward, +y up, the origin on the ground.
+//  * mqm143Ripper() → {g, body, wheels[4], clawL, clawR, lamps (on-glow group), core (charge-glow group), fireP, chimP, coreP,
+//    jacks[2]}: a four-wheeled iron siege-engine with a glowbulb furnace and chimney at the back, a copper coil mast with a caged
+//    glowbulb capacitor in the middle and two great ripping claws folded up at the front (they swing open to tear the gateway).
+//  * mqm143Lamp() → {g, on (lit glow group), bulbP}: a tall iron lamppost with a hanging cage lantern and a glowbulb socket
+//  * outpost pieces: tent, stakes (palisade section), banner, brazier (+flame group), table, rack, crate, barrel, bulbcrate
+//  * mqm143Bulb(): the glowbulb itself (ground drop): a pale glowing bulb with a dark leaf cap
+var MQM143={iron:0x34343a,ironL:0x50525a,ironD:0x222226,brass:0xa8843a,copper:0xa05a2c,wood:0x3e2c1c,woodL:0x56402a,woodD:0x2a1c12,
+  rust:0x6a3a22,canvas:0x6a604c,canvasD:0x4e463a,teal:0x2a6a64,tealD:0x173c3a,glass:0x26342a,glow:0xd8ff7a,glowW:0xf4ffd0,fire:0xffa040,sheet:{}};
+
+// ---------------- the Portal Ripper ----------------
+function mqm143Wheel(){const C=MQM143;return lgGroup('MQM143|wheel',k=>{const R=.56,Wd=.24;
+  const rim=lgGeoC('mqRim',()=>new THREE.CylinderGeometry(1,1,1,16,1,true));
+  k.p('',rim,'m',C.iron,0,0,0,R,Wd,R,0,0,Math.PI/2);k.p('',rim,'m',C.ironD,0,0,0,R-.05,Wd*.9,R-.05,0,0,Math.PI/2);
+  [-1,1].forEach(s=>k.p('','ring','m',C.ironL,s*Wd*.5,0,0,R*.98,R*.5,R*.98,0,0,Math.PI/2));
+  k.p('','cyl','m',C.ironD,0,0,0,.13,.34,.13,0,0,Math.PI/2);k.p('','cyl','m',C.brass,0,0,0,.08,.38,.08,0,0,Math.PI/2);
+  [-1,1].forEach(s=>k.p('','cone4','m',C.ironL,s*.2,0,0,.05,.06,.05,0,0,-s*Math.PI/2));
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('','box','c',C.woodL,0,Math.cos(a)*.27,Math.sin(a)*.27,.06,.42,.07,a,0,0)}
+  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;k.p('','box','m',C.ironL,0,Math.cos(a)*(R+.02),Math.sin(a)*(R+.02),Wd*1.05,.06,.1,a,0,0)}},.14)}
+function mqm143Claw(side){const C=MQM143;return lgGroup('MQM143|claw',k=>{
+  const pts=[[0,0,0],[0,.32,.5],[0,.52,1.02],[0,.42,1.36],[0,.16,1.52]],r=[.11,.095,.075,.055,.012];
+  for(let i=0;i<pts.length-1;i++)k.L('','m',i<2?C.iron:C.ironL,pts[i],pts[i+1],r[i],r[i+1],6);
+  for(let i=0;i<3;i++)k.p('','sph','m',C.brass,pts[i][0],pts[i][1],pts[i][2],r[i]*1.08);
+  // serrations along the inside (underside) of the claw and a second smaller talon
+  for(let i=0;i<5;i++){const u=.25+i*.15,a=pts[1],b=pts[2],p=[0,a[1]+(b[1]-a[1])*u-.075,a[2]+(b[2]-a[2])*u];k.p('','cone4','m',C.ironL,p[0],p[1],p[2],.03,.08,.02,Math.PI,0,0)}
+  k.L('','m',C.ironL,[0,.5,1.0],[0,.18,1.18],.05,.01,5);
+  k.p('','box','m',C.ironD,0,.2,.25,.16,.14,.24,-.55,0,0);k.p('','box','m',C.copper,0,.16,.26,.17,.03,.2,-.55,0,0)},.12)}
+function mqm143Ripper(){const C=MQM143,root=new THREE.Group();root.name='PortalRipper';root.userData.psNo=1;
+  const body=lgGroup('MQM143|ripper',k=>{
+    // chassis: two rails, cross beams, an iron deck with plank boards and straps, axle beams with leaf springs
+    [-1,1].forEach(s=>{k.p('','box','m',C.iron,s*.72,.78,0,.14,.24,3.3);for(let i=0;i<11;i++)k.p('','sph','m',C.ironL,s*.8,.84,-1.5+i*.3,.022)});
+    [-1.5,-.5,.5,1.5].forEach(z=>k.p('','box','m',C.ironD,0,.72,z,1.58,.14,.16));
+    k.p('','box','m',C.ironD,0,.94,0,1.62,.08,3.1);
+    for(let i=0;i<6;i++)k.p('','box','c',i%2?C.wood:C.woodL,-.66+i*.264,1.0,0,.25,.05,3.0);
+    [-1.3,0,1.3].forEach(z=>k.p('','box','m',C.ironL,0,1.03,z,1.66,.025,.08));
+    [-1.15,1.15].forEach(z=>{k.p('','cyl','m',C.ironD,0,.56,z,.07,2.0,.07,0,0,Math.PI/2);[-1,1].forEach(s=>{for(let j=0;j<3;j++)k.p('','box','m',C.ironL,s*.72,.64+j*.035,z,.12,.03,.7-j*.18)})});
+    // the furnace / boiler at the back: riveted drum, brass bands, dome, chimney, firebox door with a glowbulb grate
+    k.p('','cyl','m',C.iron,0,1.56,-.95,.52,1.05,.52);[1.12,1.56,2.0].forEach(y=>k.p('','ring','m',C.brass,0,y,-.95,.54,.5,.54));
+    for(let i=0;i<12;i++){const a=i/12*Math.PI*2;[1.3,1.82].forEach(y=>k.p('','sph','m',C.ironL,Math.sin(a)*.53,y,-.95+Math.cos(a)*.53,.018))}
+    k.p('','hem','m',C.ironL,0,2.08,-.95,.5,.24,.5);k.p('','cyl','m',C.iron,0,2.58,-1.0,.12,1.0,.12);k.p('','ring','m',C.brass,0,2.4,-1.0,.14,.6,.14);
+    k.p('','tor','m',C.ironD,0,3.12,-1.0,.22,.16,.22);k.p('','tor','m',C.ironL,0,3.0,-1.0,.16,.1,.16,Math.PI,0,0);
+    k.p('','box','m',C.ironD,0,1.32,-1.47,.46,.4,.06);k.p('','box','c',C.glass,0,1.32,-1.49,.34,.24,.02);for(let i=0;i<4;i++)k.p('','box','m',C.ironL,-.12+i*.08,1.32,-1.505,.02,.26,.02);
+    k.p('','box','m',C.brass,0,1.56,-1.5,.12,.04,.04);
+    // pressure gauges and a crank wheel on the right, the Wardens' lantern sigil plate on the left
+    [[.5,1.62,-.7],[.5,1.4,-.56]].forEach(p=>{k.p('','cyl','m',C.brass,p[0],p[1],p[2],.07,.035,.07,0,0,Math.PI/2);k.p('','cyl','c',0xd8d0b0,p[0]+.02,p[1],p[2],.055,.01,.055,0,0,Math.PI/2);k.p('','box','c',0x8a1a1a,p[0]+.026,p[1]+.02,p[2],.006,.045,.006,.6,0,0)});
+    k.p('','ring','m',C.ironL,.86,1.3,-.2,.2,.5,.2,0,0,Math.PI/2);k.p('','box','m',C.ironL,.86,1.3,-.2,.04,.38,.04);k.p('','box','m',C.ironL,.86,1.3,-.2,.04,.04,.38);k.p('','cyl','c',C.woodL,.92,1.48,-.2,.03,.12,.03,0,0,Math.PI/2);
+    k.p('','cyl','m',C.brass,-.5,1.56,-.85,.17,.04,.17,0,0,Math.PI/2);k.p('','cyl','c',C.tealD,-.53,1.56,-.85,.13,.02,.13,0,0,Math.PI/2);
+    k.p('','box','m',C.brass,-.56,1.6,-.85,.02,.07,.07);k.p('','cone4','m',C.brass,-.56,1.65,-.85,.02,.04,.04,0,0,Math.PI/2);
+    // copper pipes from the boiler to the coil housing
+    [-1,1].forEach(s=>{k.L('','m',C.copper,[s*.42,1.3,-.6],[s*.42,1.2,-.1],.04,.04,6);k.L('','m',C.copper,[s*.42,1.2,-.1],[s*.3,1.28,.1],.04,.04,6)});
+    // the coil mast in the middle: housing, mast, three copper coils, the caged capacitor socket on top
+    k.p('','box','m',C.ironD,0,1.24,.25,.92,.44,.82);k.p('','box','m',C.ironL,0,1.47,.25,.96,.04,.86);for(let i=0;i<5;i++)[-1,1].forEach(s=>k.p('','sph','m',C.brass,s*.47,1.3,-.1+i*.18,.02));
+    k.p('','cyl','m',C.iron,0,2.12,.25,.07,1.34,.07);[1.75,2.05,2.35].forEach((y,i)=>{k.p('','ring','m',C.copper,0,y,.25,.36-i*.05,.85,.36-i*.05);k.p('','ring','m',mdSh(C.copper,.8),0,y+.05,.25,.33-i*.05,.6,.33-i*.05)});
+    k.p('','cyl','m',C.ironD,0,2.78,.25,.18,.06,.18);k.p('','sph2','c',C.glass,0,2.98,.25,.15,.17,.15);
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;k.L('','m',C.brass,[Math.sin(a)*.18,2.8,.25+Math.cos(a)*.18],[Math.sin(a)*.17,3.17,.25+Math.cos(a)*.17],.014,.014,4)}
+    k.p('','cone4','m',C.ironD,0,3.22,.25,.2,.12,.2,0,Math.PI/4,0);k.p('','sph','m',C.brass,0,3.3,.25,.035);
+    // the front: claw pivots, piston rams, a spiked ram plate, two headlamps (dark glass)
+    [-1,1].forEach(s=>{k.p('','box','m',C.ironD,s*.42,1.17,1.2,.26,.34,.3);k.p('','cyl','m',C.brass,s*.42,1.25,1.2,.09,.34,.09,0,0,Math.PI/2);
+      k.L('','m',C.ironL,[s*.42,1.0,.7],[s*.42,1.25,1.05],.05,.05,6);k.p('','box','m',C.iron,s*.62,1.08,1.62,.12,.14,.12);k.p('','sph2','c',C.glass,s*.62,1.08,1.69,.07,.07,.04)});
+    k.p('','box','m',C.iron,0,.74,1.72,1.5,.46,.12);k.p('','box','m',C.ironL,0,.97,1.72,1.54,.05,.14);[-.5,0,.5].forEach(x=>k.p('','cone4','m',C.ironL,x,.72,1.84,.07,.22,.07,Math.PI/2,0,0));
+    // stabiliser jacks (folded) at the front corners, a tow hitch, hanging chains, a lantern hook, a toolbox
+    k.p('','box','m',C.ironD,0,.7,-1.68,.3,.1,.2);k.p('','ring','m',C.ironL,0,.7,-1.82,.08,.4,.08);
+    [-1,1].forEach(s=>{for(let i=0;i<7;i++){const u=i/6,z=-1.2+u*1.6,y=.82-Math.sin(u*Math.PI)*.18;k.p('','ring','m',C.ironL,s*.82,y,z,.035,.35,.035,0,i%2?Math.PI/2:0,Math.PI/2)}});
+    k.p('','box','c',C.woodD,-.55,1.14,1.0,.34,.2,.26);k.p('','box','m',C.ironL,-.55,1.25,1.0,.36,.03,.28);k.p('','box','m',C.brass,-.55,1.18,1.13,.05,.05,.02)},.15);
+  root.add(body);
+  // wheels (spun by the world tick), claws on pivots, the glow groups toggled on when the engine runs / charges
+  const wheels=[];[[-.98,-1.15],[.98,-1.15],[-.98,1.15],[.98,1.15]].forEach(([x,z])=>{const w=mqm143Wheel();w.position.set(x,.56,z);root.add(w);wheels.push(w)});
+  const claws=[-1,1].map(s=>{const p=new THREE.Group();p.position.set(s*.42,1.25,1.2);const c=mqm143Claw(s);c.position.x=s*.04;p.add(c);p.rotation.x=-1.05;root.add(p);return p});
+  const lamps=lgGroup('MQM143|ripperLamps',k=>{[-1,1].forEach(s=>k.p('','sph2','g',C.glowW,s*.62,1.08,1.7,.06,.06,.03));k.p('','box','g',C.glow,0,1.32,-1.5,.33,.23,.02)},0);
+  const core=lgGroup('MQM143|ripperCore',k=>{k.p('','sph2','g',C.glowW,0,2.98,.25,.14,.16,.14);[1.75,2.05,2.35].forEach((y,i)=>k.p('','ring','g',C.glow,0,y+.02,.25,.37-i*.05,.3,.37-i*.05))},0);
+  lamps.visible=false;core.visible=false;root.add(lamps,core);
+  const jacks=[-1,1].map(s=>{const j=lgGroup('MQM143|jack',k=>{k.p('','cyl','m',MQM143.ironL,0,-.25,0,.05,.5,.05);k.p('','cyl','m',MQM143.ironD,0,-.52,0,.13,.05,.13)},.1);j.position.set(s*.62,.95,1.5);j.scale.y=.2;root.add(j);return j});
+  return {g:root,body,wheels,clawL:claws[0],clawR:claws[1],lamps,core,jacks,fireP:new THREE.Vector3(0,1.32,-1.55),chimP:new THREE.Vector3(0,3.2,-1.0),coreP:new THREE.Vector3(0,2.98,.25),clawTip:new THREE.Vector3(0,1.6,2.7)}}
+MQM143.sheet.ripper=()=>{const R=mqm143Ripper();R.lamps.visible=R.core.visible=true;R.clawL.rotation.set(.1,-.35,0);R.clawR.rotation.set(.1,.35,0);return R.g};
+MQM143.sheet.ripperRest=()=>mqm143Ripper().g;
+
+// ---------------- the glowbulb lamppost ----------------
+// lantern hangs at bulbP; the socket on the post (bulb plate at y 1.25) is where the hero feeds it
+function mqm143Lamp(){const C=MQM143,g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('MQM143|lamp',k=>{
+    k.p('','box','c',0x4a4a50,0,.11,0,.58,.22,.58);k.p('','box','c',0x56565c,0,.3,0,.44,.18,.44);k.p('','box','c',0x3e3e44,0,.43,0,.3,.1,.3);
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;k.p('','cone4','m',C.ironD,Math.sin(a)*.12,.54,Math.cos(a)*.12,.05,.16,.05,0,a,0)}
+    k.L('','m',C.ironD,[0,.48,0],[0,3.05,0],.075,.055,6);[.62,1.62,2.92].forEach(y=>k.p('','ring','m',C.brass,0,y,0,.1,.45,.1));
+    // a twisted collar and the glowbulb socket plate
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.L('','m',C.ironL,[Math.sin(a)*.07,2.2,Math.cos(a)*.07],[Math.sin(a+1)*.065,2.5,Math.cos(a+1)*.065],.012,.012,4)}
+    k.p('','box','m',C.ironL,0,1.25,.07,.16,.2,.04);k.p('','cyl','m',C.brass,0,1.27,.095,.05,.03,.05,Math.PI/2,0,0);k.p('','cyl','c',0x101410,0,1.27,.11,.035,.01,.035,Math.PI/2,0,0);
+    k.p('','cone4','m',C.brass,0,1.12,.09,.035,.05,.02,Math.PI,Math.PI/4,0);
+    // the crook arm and finial
+    const arm=[[0,2.98,0],[.2,3.14,0],[.42,3.18,0],[.6,3.1,0],[.66,2.94,0]];for(let i=0;i<arm.length-1;i++)k.L('','m',C.ironD,arm[i],arm[i+1],.03,.028,5);
+    k.L('','m',C.ironD,[0,2.7,0],[.3,3.08,0],.018,.018,4);k.p('','cone4','m',C.ironD,0,3.16,0,.06,.16,.06,0,Math.PI/4,0);k.p('','sph','m',C.brass,0,3.27,0,.03);
+    // the cage lantern
+    const lx=.66,ly=2.58;k.L('','m',C.ironL,[lx,2.94,0],[lx,2.82,0],.008,.008,3);k.p('','cone4','m',C.ironD,lx,2.78,0,.19,.12,.19,0,Math.PI/4,0);k.p('','box','m',C.ironD,lx,2.71,0,.24,.025,.24);
+    [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>k.L('','m',C.ironL,[lx+a*.11,2.4,b*.11],[lx+a*.11,2.71,b*.11],.012,.012,4));
+    k.p('','box','m',C.ironD,lx,2.39,0,.25,.03,.25);k.p('','cone4','m',C.ironD,lx,2.33,0,.12,.1,.12,Math.PI,Math.PI/4,0);
+    k.p('','cyl','m',C.brass,lx,2.67,0,.045,.04,.045);k.p('','sph2','c',C.glass,lx,ly,0,.085,.11,.085);
+    // a teal pennant tied below the arm
+    k.L('','m',C.ironD,[0,2.36,0],[-.24,2.36,0],.012,.012,4);k.S('',MQM143.teal,-.13,2.36,0,.18,.4,0,0,4);k.p('','box','m',C.brass,-.13,2.24,.006,.05,.06,.004)},.12));
+  const on=lgGroup('MQM143|lampOn',k=>{k.p('','sph2','g',C.glowW,.66,2.58,0,.075,.1,.075);k.p('','sph2','g',C.glow,.66,2.58,0,.095,.12,.095);k.p('','cyl','g',C.glow,0,1.27,.115,.03,.006,.03,Math.PI/2,0,0)},0);
+  on.visible=false;g.add(on);return {g,on,bulbP:new THREE.Vector3(.66,2.58,0),plateP:new THREE.Vector3(0,1.27,.12)}}
+MQM143.sheet.lamp=()=>mqm143Lamp().g;
+MQM143.sheet.lampOn=()=>{const L=mqm143Lamp();L.on.visible=true;return L.g};
+
+// ---------------- the outpost ----------------
+function mqm143Tent(){const C=MQM143;return lgGroup('MQM143|tent',k=>{const L=2.4,H=1.75,Wd=1.15;
+  const slope=Math.atan2(H,Wd),sl=Math.hypot(H,Wd);
+  [-1,1].forEach(s=>{k.p('','box','c',s<0?C.canvas:C.canvasD,0,H/2,s*Wd/2,L,.03,sl,s*(Math.PI/2-slope),0,0);k.p('','box','c',C.tealD,0,.07,s*Wd*.97,L*1.002,.03,.14,s*(Math.PI/2-slope),0,0)});
+  const tri=lgGeoC('mqTri',()=>{const s=new THREE.Shape();s.moveTo(-1,0);s.lineTo(1,0);s.lineTo(0,1);s.lineTo(-1,0);return new THREE.ShapeGeometry(s)});
+  k.p('',tri,'c',C.canvasD,-L/2,0,0,Wd,H,1,0,Math.PI/2,0);
+  k.p('',tri,'c',0x1a1610,-L/2+.06,0,0,Wd*.96,H*.96,1,0,Math.PI/2,0);[-1,1].forEach(s=>k.L('','c',C.canvasD,[L/2+.02,H*.62,s*Wd*.36],[L/2+.02,H*.2,s*Wd*.86],.05,.05,6));
+  k.L('','c',C.woodD,[-L/2-.15,H+.04,0],[L/2+.15,H+.04,0],.035,.035,5);[-1,1].forEach(s=>{k.L('','c',C.woodD,[s*(L/2+.08),0,0],[s*(L/2+.08),H+.1,0],.04,.035,5);
+    [-1,1].forEach(q=>{k.L('','c',0x8a7a5a,[s*(L/2+.08),H,0],[s*(L/2+.7),0,q*.6],.008,.008,3);k.p('','box','c',C.woodD,s*(L/2+.7),.06,q*.6,.04,.14,.04)})});
+  k.p('','box','c',0x4a3a2a,0,.06,0,L*.8,.04,Wd*1.3);k.p('','box','c',C.woodD,-.6,.18,.2,.5,.28,.34);k.p('','box','m',C.ironL,-.6,.3,.2,.52,.03,.36)},.14)}
+function mqm143Stakes(n,seed){const C=MQM143;return lgGroup('MQM143|stakes'+n+'|'+seed,k=>{const R=dkRng(seed);
+  for(let i=0;i<n;i++){const x=(i-(n-1)/2)*.27,h=1.35+R()*.35,lean=(R()-.5)*.12;k.L('','c',i%2?C.wood:C.woodL,[x,0,0],[x+lean*.4,h,lean],.11,.1,6);k.p('','cone4','c',0x7a6248,x+lean*.42,h+.1,lean*1.05,.1,.22,.1,lean,0,0)}
+  [.45,1.0].forEach(y=>k.p('','box','c',0x5a4a32,0,y,-.1,n*.27,.06,.04))},.16)}
+function mqm143Banner(){const C=MQM143;return lgGroup('MQM143|banner',k=>{
+  k.L('','c',C.woodD,[0,0,0],[0,3.4,0],.06,.05,6);k.p('','box','c',C.woodD,0,3.15,0,.9,.06,.06);k.p('','cone4','m',C.brass,0,3.5,0,.06,.18,.06,0,Math.PI/4,0);
+  k.S('',C.teal,-.22,3.12,.02,.44,1.5,0,0,5);k.S('',C.tealD,.22,3.12,.02,.44,1.45,0,0,6);
+  // the lantern sigil on the cloth
+  k.p('','box','m',C.brass,0,2.62,.06,.22,.3,.01);k.p('','box','c',C.tealD,0,2.62,.065,.17,.24,.01);k.p('','box','g',C.glow,0,2.6,.072,.08,.13,.008);
+  k.p('','cone4','m',C.brass,0,2.82,.06,.14,.1,.01,0,Math.PI/4,0);k.p('','box','m',C.brass,0,2.44,.06,.18,.04,.012);
+  k.p('','box','m',C.ironD,0,.12,0,.32,.24,.32)},.12)}
+function mqm143Brazier(){const C=MQM143,g=new THREE.Group();g.add(lgGroup('MQM143|brazier',k=>{
+  for(let i=0;i<3;i++){const a=i/3*Math.PI*2;k.L('','m',C.ironD,[Math.sin(a)*.38,0,Math.cos(a)*.38],[Math.sin(a)*.18,.72,Math.cos(a)*.18],.03,.025,5)}
+  k.p('','hem','m',C.iron,0,.9,0,.4,.26,.4,Math.PI,0,0);k.p('','ring','m',C.brass,0,.9,0,.41,.4,.41);k.p('','dod','c',0x2a1410,0,.86,0,.3,.1,.3);
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.p('','dod','g',0xff6a20,Math.sin(a)*.17,.92,Math.cos(a)*.17,.06)}},.12));
+  const fl=lgGroup('MQM143|brazierFlame',k=>{k.p('','cone','g',0xffa040,0,1.15,0,.22,.5,.22);k.p('','cone','g',0xffe08a,0,1.08,0,.12,.32,.12);[-1,1].forEach(s=>k.p('','cone','g',0xff7a2a,s*.12,1.06,s*.05,.09,.28,.09))},0);
+  g.add(fl);g.userData.flame=fl;return g}
+function mqm143Table(){const C=MQM143;return lgGroup('MQM143|table',k=>{
+  k.p('','box','c',C.woodL,0,.78,0,1.25,.06,.82);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>k.p('','box','c',C.woodD,a*.55,.38,b*.34,.07,.76,.07));
+  k.p('','box','c',0xc8b48a,0,.815,0,.9,.012,.6,0,.08,0);for(let i=0;i<7;i++)k.p('','box','c',0x3a2a1a,-.3+i*.1,.823,-.12+Math.sin(i)*.12,.08,.004,.012,0,i*.5,0);
+  k.p('','box','c',0x8a1a1a,.18,.825,.08,.03,.004,.03);k.p('','box','m',C.ironL,-.2,.86,.15,.02,.12,.04,.3,0,.2);
+  [[-.5,-.3],[.52,.28]].forEach(([x,z])=>{k.p('','cyl','c',0xd8d0b8,x,.88,z,.025,.12,.025);k.p('','cone4','g',0xffd890,x,.96,z,.014,.04,.014)});
+  k.p('','cyl','m',C.brass,.4,.83,-.2,.06,.04,.06)},.12)}
+function mqm143Rack(){const C=MQM143;return lgGroup('MQM143|rack',k=>{
+  [-1,1].forEach(s=>k.p('','box','c',C.woodD,s*.6,.6,0,.08,1.2,.08));k.p('','box','c',C.wood,0,1.05,0,1.3,.07,.08);k.p('','box','c',C.wood,0,.2,.1,1.3,.06,.1);
+  for(let i=0;i<4;i++){const x=-.45+i*.3;k.L('','c',C.woodL,[x,.1,.12],[x,1.85,-.08],.02,.02,5);k.p('','oct','m',C.ironL,x,1.98,-.1,.035,.13,.01)}
+  k.p('','cyl','c',C.wood,.5,.5,.2,.26,.03,.26,Math.PI/2,0,0);k.p('','tor','m',C.ironL,.5,.5,.21,.27,.03,.27,Math.PI/2,0,0);k.p('','cyl','c',C.teal,.5,.5,.23,.2,.006,.2,Math.PI/2,0,0)},.14)}
+function mqm143Crate(v){const C=MQM143;return lgGroup('MQM143|crate'+(v|0),k=>{const s=v?.58:.7;
+  k.p('','box','c',v?C.woodL:C.wood,0,s/2,0,s,s,s);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>k.p('','box','m',C.ironL,a*s/2,s/2,b*s/2,.05,s*1.01,.05));
+  [0,s].forEach(y=>k.p('','box','m',C.ironL,0,y,0,s*1.02,.04,s*1.02));k.p('','box','c',C.woodD,0,s/2,s/2+.005,s*.9,.06,.01,0,0,.78)},.16)}
+function mqm143Barrel(){const C=MQM143;return lgGroup('MQM143|barrel',k=>{k.p('','cyl','c',C.wood,0,.45,0,.3,.9,.3);k.p('','cyl','c',C.woodL,0,.45,0,.33,.5,.33);
+  [.12,.78].forEach(y=>k.p('','ring','m',C.ironL,0,y,0,.315,.4,.315));k.p('','cyl','c',C.woodD,0,.905,0,.28,.01,.28)},.16)}
+// an open crate of empty glowbulb husks: the Wardens are out of fuel
+function mqm143BulbCrate(){const C=MQM143;return lgGroup('MQM143|bulbcrate',k=>{const s=.7;
+  [[0,-1],[0,1]].forEach(([a,b])=>k.p('','box','c',C.woodL,0,s*.35,b*s/2,s,s*.7,.05));[-1,1].forEach(a=>k.p('','box','c',C.wood,a*s/2,s*.35,0,.05,s*.7,s));k.p('','box','c',C.woodD,0,.04,0,s,.05,s);
+  for(let i=0;i<6;i++)k.p('','sph2','c',0x5a6a4a,-.2+(i%3)*.2,.18,-.12+Math.floor(i/3)*.22,.085,.1,.085,.3*i,0,.2);
+  k.p('','sph2','g',C.glow,.12,.3,.1,.07,.09,.07);k.p('','cone4','c',0x2a3a20,.12,.4,.1,.05,.05,.05);k.p('','box','c',C.woodL,.1,.62,-.3,.75,.04,.3,.5,0,0)},.16)}
+MQM143.sheet.tent=mqm143Tent;MQM143.sheet.stakes=()=>mqm143Stakes(6,3);MQM143.sheet.banner=mqm143Banner;MQM143.sheet.brazier=mqm143Brazier;MQM143.sheet.table=mqm143Table;
+MQM143.sheet.rack=mqm143Rack;MQM143.sheet.props=()=>{const g=new THREE.Group();[[mqm143Crate(0),0,0],[mqm143Crate(1),.75,.1],[mqm143Barrel(),-.8,0],[mqm143BulbCrate(),0,.95]].forEach(([o,x,z])=>{o.position.set(x,0,z);g.add(o)});return g};
+
+// ---------------- the glowbulb ----------------
+function mqm143Bulb(){const C=MQM143;return lgGroup('MQM143|bulb',k=>{k.p('','sph2','g',C.glowW,0,0,0,.08,.1,.08);k.p('','sph2','g',C.glow,0,-.01,0,.1,.115,.1);
+  for(let i=0;i<3;i++){const a=i/3*Math.PI*2;k.p('','cone4','c',0x2e4a22,Math.sin(a)*.04,.1,Math.cos(a)*.04,.035,.07,.015,Math.cos(a)*.7,a,-Math.sin(a)*.7)}
+  k.L('','c',0x3a2a1a,[0,.1,0],[.02,.17,0],.01,.006,4)},0)}
+MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
+// ================= v143 The Lantern Road — Kindlelight I main quest =================
+// The first chapter of Kindlelight's main quest line (a chapter per field instance; II and III come later). In Kindlelight I the
+// gateway to II is dormant. The Lantern Wardens (3021) hold an outpost on the road (3020 plan) with the Portal Ripper (3022), a
+// machine that can tear the gateway open, but it will not roll through the dark: eight lampposts line the road from the outpost to
+// the gateway and each needs 3 glowbulbs. Glowbulbs are a quest item (no other use) that every Kindlelight I creature drops
+// (MQ143.drop chance per kill, only while more are needed: lamps still dark × 3 − carried − lying on the ground).
+// State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
+// instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {st, b (bulbs), lit[8], seen}.
+//  * F at an unlit lamppost with 3+ bulbs lights it (any state; the captain explains the quest). The last lamp starts the roll:
+//    the Ripper rolls the road (furnace lit, chimney smoking, two wardens escorting it), parks beside the gateway, drops its
+//    jacks, opens its claws, charges its coil and tears the gateway open (arcs, a flash): st 3. Leaving the instance mid-way
+//    finishes it at once; a save made mid-roll loads as done.
+//  * The gateway's F prompt is locked until then (0510 portalPrompt wrapper); insGo itself is not gated (tests, co-op joins).
+//  * Tracker #mqt143 above Cheddar's (only in Kindlelight I), the captain's window XR.mq143, minimap / N map marks (lamps,
+//    the Ripper, the captain with "!"), the bulbs in the bag's Materials tab (Quest items), the glowbulb icon (KQI.glowbulb, 🪔).
+// Co-op: local to each player like Cheddar's quests (each player lights their own road; a partner's kill near you drops a bulb
+// for you too, as loot does). The scene is built the first time you are in Kindlelight I.
+var MQ143={st:0,b:0,lit:[0,0,0,0,0,0,0,0],seen:0,per:3,drop:.55,speed:1.9,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
+  name:'The Lantern Road',cap:'Warden-Captain Harrow'};
+function mq143N(){return mq143Plan().lamps.length}
+function mq143Lit(){return MQ143.lit.reduce((a,b)=>a+(b?1:0),0)}
+function mq143Done(){return MQ143.st>=3||insReach(0)>=1}
+function mq143Here(){try{const I=curIns();return !!I&&I.g===0}catch(_){return false}}
+function mq143Next(){try{const t=typeof TH112!='undefined'&&TH112&&TH112.byG&&TH112.byG[1];return t&&t.nm?t.nm:PMAP[0].ins[1].n}catch(_){return 'the next reach'}}
+function mq143Pend(){let n=0;try{drops.forEach(d=>{if(d.kind=='mq143')n+=d.data.n|0})}catch(_){}return n}
+function mq143Need(){if(mq143Done()||MQ143.st>=2)return 0;return Math.max(0,(mq143N()-mq143Lit())*MQ143.per-MQ143.b-mq143Pend())}
+
+// ---------------- the glowbulb: icon, drop, pickup, the bag ----------------
+try{KQI.glowbulb=['slime','M16 6.2c5.4 0 9 4.6 9 10.4 0 6-4 10.6-9 10.6s-9-4.6-9-10.6C7 10.8 10.6 6.2 16 6.2Z','-M16 10.4c3 0 5 2.8 5 6.2s-2.2 6.4-5 6.4-5-3-5-6.4 2-6.2 5-6.2Z',
+  'M16 13.4c1.7 0 2.8 1.6 2.8 3.4S17.7 20.4 16 20.4s-2.8-1.8-2.8-3.6 1.1-3.4 2.8-3.4Z','M12.6 6.8L16 2.4l3.4 4.4-3.4 1.6Z',['s','M16 2.6v4',1.4]];
+  KQE['🪔']=['glowbulb','slime']}catch(e){console.warn('v143 icon',e)}
+var MQ143_G=null;
+function mq143Drop(p){MQ143_G=MQ143_G||{b:new THREE.CylinderGeometry(.05,.05,1.6,8),m:new THREE.MeshBasicMaterial({color:0xd8ff7a,transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false})};
+  const g=new THREE.Group(),gem=mqm143Bulb(),beam=new THREE.Mesh(MQ143_G.b,MQ143_G.m);gem.position.y=.5;beam.position.y=.8;beam.scale.set(.75,1,.75);g.add(gem,beam);
+  const a=Math.random()*6.28,d=.5+Math.random()*.8;g.position.set(p.x+Math.cos(a)*d,0,p.z+Math.sin(a)*d);scene.add(g);drops.push({g,gem,kind:'mq143',data:{n:1},t:90});
+  try{burst(gY(g.position,.45),0xd8ff7a,10,1.6,2,.6)}catch(_){}}
+{const f=lootE;lootE=function(e){const r=f.apply(this,arguments);try{if(e&&e.m&&!e.boss&&!e.dprop&&!e.wv&&mq143Need()>0){const P=e.m.position,I=insAt(Math.round(P.x),Math.round(P.z));
+    if(I&&I.g===0&&I.fld&&Math.random()<MQ143.drop)mq143Drop(P)}}catch(err){console.warn('v143 drop',err)}return r}}
+{const f=take;take=function(d){if(d&&d.kind=='mq143'){MQ143.b+=d.data.n|0;MQ143.trkK='';
+    pickup({ic:'🪔',t:'+'+(d.data.n|0)+' Glowbulb',col:'#d8ff7a',sub:'Quest item · '+MQ143.b+' carried · feed them to the lampposts on the road'});return}return f.apply(this,arguments)}}
+{const f=kqmMatTab;kqmMatTab=function(){const h=f.apply(this,arguments);if(!(MQ143.b>0))return h;
+  const t=`<div class="kqm-slot mi" title="Glowbulb · quest item for The Lantern Road. Every creature of Kindlelight I carries one; three light a lamppost on the road to the gateway."><span class="kqm-ic">🪔</span><span class="kqm-ct">${MQ143.b}</span><span class="kqm-hold">Glowbulb</span></div>`;
+  return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
+
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:143,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq143;MQ143.st=0;MQ143.b=0;MQ143.lit=new Array(mq143N()).fill(0);MQ143.seen=0;
+    if(q&&typeof q=='object'){MQ143.st=Math.max(0,Math.min(3,q.st|0));if(MQ143.st==2)MQ143.st=3;MQ143.b=Math.max(0,Math.min(99,q.b|0));MQ143.seen=q.seen|0;
+      if(Array.isArray(q.lit))q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0})}
+    MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(MQ143.S)mq143Sync()}catch(err){console.warn('v143 load',err)}return r}}
+
+// ---------------- talking, lighting, the gateway ----------------
+function mq143Light(i){const S=MQ143.S;if(!S||MQ143.lit[i]||MQ143.b<MQ143.per||mq143Done()||MQ143.st>=2)return;
+  MQ143.b-=MQ143.per;MQ143.lit[i]=1;MQ143.trkK='';const L=S.lamps[i];if(MQ143.st<1)MQ143.st=1;
+  try{const pp=L.plateW.clone();burst(pp,0xd8ff7a,18,1.2,1.2,.6);sfx('chime')}catch(_){}
+  setTimeout(()=>{try{L.on.visible=true;L.halo.visible=true;L.k=Math.max(L.k,.05);burst(L.bulbW,0xf4ffd0,26,2.2,1.6,.9);ring(new THREE.Vector3(L.x,0,L.z),0xd8ff7a,2.2,700);mSfx('rare')}catch(_){}},420);
+  const n=mq143Lit(),N=mq143N();
+  if(n>=N){say('🪔 The last lamppost flares. Down the road the Portal Ripper’s furnace roars to life.');setTimeout(()=>mq143RollStart(),1600)}
+  else say('🪔 Lamppost lit · '+n+' of '+N+(MQ143.b>=MQ143.per?' · you carry enough for another':''))}
+function mq143Prompt(){if(!MQ143.S||!mq143Here())return null;const P=pl.position,S=MQ143.S;
+  const c=S.war.captain;if(c&&Math.hypot(P.x-c.g.position.x,P.z-c.g.position.z)<2.4)return {label:'F · Talk to '+MQ143.cap+(MQ143.st==0&&!mq143Done()?' (quest)':''),fn:()=>openX('mq143')};
+  if(mq143Done()||MQ143.st>=2)return null;
+  for(let i=0;i<S.lamps.length;i++){const L=S.lamps[i];if(MQ143.lit[i])continue;if(Math.hypot(P.x-L.x,P.z-L.z)<2.3){
+    if(MQ143.b>=MQ143.per)return {label:'F · Light the lamppost (3 🪔 glowbulbs · you carry '+MQ143.b+')',fn:()=>mq143Light(i)};
+    return {label:'🪔 The lamppost needs 3 glowbulbs · you carry '+MQ143.b,fn:()=>say('🪔 Every creature of '+PMAP[0].ins[0].n+' carries a glowbulb. Hunt them, then feed three to each lamppost.')}}}
+  return null}
+{const f=worldPrompt;worldPrompt=function(){try{const r=mq143Prompt();if(r)return r}catch(e){if(!MQ143.err++)console.warn('v143 prompt',e)}return f.apply(this,arguments)}}
+function mq143AtGate(){const P=pl.position;for(const r of RPORT)if(r.k=='next'&&r.ig===0&&Math.hypot(P.x-r.x,P.z-r.z)<2.8)return true;return false}
+{const f=portalPrompt;portalPrompt=function(){const r=f.apply(this,arguments);try{if(r&&!mq143Done()&&mq143AtGate()){const n=mq143Lit(),N=mq143N();
+    return {label:'🔒 The gateway is dormant · '+n+'/'+N+' lampposts lit',fn:()=>say('🌀 The arch is cold and dead. The Lantern Wardens up the road have a machine that can tear it open, once their road is lit.')}}}catch(_){}return r}}
+
+// ---------------- the captain's window ----------------
+XR.mq143=()=>{const st=mq143Done()?3:MQ143.st,n=mq143Lit(),N=mq143N(),nx=mq143Next();
+  $('xwT').textContent='⚜ '+MQ143.cap;$('xwS').textContent='The Lantern Wardens · '+PMAP[0].ins[0].n;
+  const L=st==0?['Hold there. You walk a dead road. We are the Lantern Wardens, and the iron beast behind me is the Portal Ripper. It can tear open the way to '+nx+', but it will not roll through this dark. The bog swallows anything that leaves the light.',
+      'The lampposts down to the gateway burn glowbulbs, and every creature of this reach carries one in its gut. Take them. Three to a lamp. When the last lamp burns, we roll.']
+    :st==1?['Lamps lit: '+n+' of '+N+'. The beasts carry the bulbs, so take them from the beasts. Three to a lamp. The posts run down the road to the gateway.']
+    :st==2?['She’s moving! Follow her down to the gateway, and keep those things off my wardens.']
+    :['The way to '+nx+' stands open, and the Ripper holds it. Go, before the bog remembers us.'];
+  const lamp=i=>`<span class="mq143lp${MQ143.lit[i]||st>=2?' on':''}" title="Lamppost ${i+1}">🪔</span>`;
+  let b=`<div class="cq132say"><span class="cq132who">${MQ143.cap}</span>${L.map(t=>'“'+t+'”').join('<br><br>')}</div>`;
+  b+=`<div class="mq143q"><div class="mq143h"><span>Main quest</span><b>${MQ143.name}</b></div>`+
+    `<div class="mq143o${st>=2?' full':''}"><span>Lampposts lit</span><span>${st>=2?N:n} / ${N}</span></div><div class="mq143lps">${MQ143.lit.map((v,i)=>lamp(i)).join('')}</div>`+
+    `<div class="mq143o"><span>Glowbulbs carried</span><span>${MQ143.b}${st<2?' · 3 per lamp':''}</span></div>`+
+    `<div class="mq143o${st>=3?' full':''}"><span>The gateway to ${nx}</span><span>${st>=3?'open':st==2?'opening…':'dormant'}</span></div></div>`;
+  $('xwB').innerHTML=b;
+  $('xwF').innerHTML=st==0?'<button class="pri" data-mq143="go">I’ll light the road</button> <span class="mut dtl">Glowbulbs drop from the creatures of '+PMAP[0].ins[0].n+'.</span>':'<span class="mut dtl">'+(st>=3?'Step through the gateway at the end of the road.':'Feed three glowbulbs to each lamppost (F beside it).')+'</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='mq143')return;const t=e.target.closest('[data-mq143]');if(!t)return;
+  if(t.dataset.mq143=='go'&&MQ143.st==0){MQ143.st=1;MQ143.trkK='';say('⚜ Quest: <b>'+MQ143.name+'</b> · light the '+mq143N()+' lampposts down to the gateway.');try{sfx('chime')}catch(_){}}rX()});
+
+// ---------------- the tracker (above Cheddar's) ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#mqt143{position:fixed;right:12px;top:300px;z-index:6;width:220px;max-width:44vw;pointer-events:none;font-size:12px;line-height:1.35;color:#e9e6cf;
+  background:linear-gradient(270deg,rgba(8,14,8,.85),rgba(8,14,8,.4));border-right:2px solid #b8d86a;border-radius:4px 0 0 4px;text-align:right;padding:6px 9px 7px;text-shadow:0 1px 2px #000}
+#mqt143.hide{display:none}
+#mqt143 .k{font-family:Cinzel,Georgia,serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#9ab86a}
+#mqt143 .h{font-family:'IM Fell English SC',Georgia,serif;color:#e6ff9a;font-size:13px;letter-spacing:.03em;margin-bottom:2px}
+#mqt143 .o{display:flex;justify-content:flex-end;gap:8px;color:#c8c8a8;font-size:11.5px}
+#mqt143 .o b{color:#f0ffc0;font-weight:600}
+#mqt143 .d{color:#d8ff7a}
+body.mob #mqt143{width:176px;font-size:11px}
+#xw .mq143q{margin-top:4px;border:1px solid rgba(184,216,106,.3);background:linear-gradient(180deg,rgba(22,30,18,.92),rgba(10,14,8,.92));border-radius:6px;padding:10px 12px 11px;display:flex;flex-direction:column;gap:7px}
+#xw .mq143h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+#xw .mq143h span{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#9ab86a}
+#xw .mq143h b{font-family:Cinzel,Georgia,serif;font-size:1rem;color:#e6ff9a}
+#xw .mq143o{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:4px;background:rgba(255,255,255,.035);font-size:.82rem}
+#xw .mq143o span:last-child{font-variant-numeric:tabular-nums;color:#e0e0c0}
+#xw .mq143o.full{color:#b8e88f}
+#xw .mq143lps{display:flex;gap:6px;justify-content:center;padding:2px 0}
+#xw .mq143lp{font-size:1.25rem;opacity:.3;filter:grayscale(1)}
+#xw .mq143lp.on{opacity:1;filter:drop-shadow(0 0 6px #d8ff7a)}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='mqt143';d.className='hide';document.body.appendChild(d)})();
+function mq143Trk(){const el=$('mqt143');if(!el)return;const here=mq143Here(),hide=!here||(typeof uiOpen=='function'&&uiOpen())||(mq143Done()&&insReach(0)>=1);
+  const st=mq143Done()?3:MQ143.st,n=mq143Lit(),N=mq143N(),key=(hide?'h':'s')+st+'|'+n+'|'+MQ143.b+'|'+MQ143.seen;if(key===MQ143.trkK)return;MQ143.trkK=key;
+  if(hide){el.classList.add('hide');mq143TrkPos();return}
+  const o=(a,b)=>`<div class="o"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest</div><div class="h">'+MQ143.name+'</div>';
+  if(st==0)h+=o(MQ143.seen?'Speak to '+MQ143.cap:'Find the Lantern Wardens down the road')+o('Glowbulbs carried',MQ143.b);
+  else if(st==1)h+=o('Light the lampposts',n+'/'+N)+o('Glowbulbs (3 per lamp)',MQ143.b);
+  else if(st==2)h+='<div class="o d"><span>The Portal Ripper rolls to the gateway…</span></div>';
+  else h+='<div class="o d"><span>Step through the gateway to '+mq143Next()+'</span></div>';
+  el.innerHTML=h;el.classList.remove('hide');mq143TrkPos()}
+function mq143TrkPos(){const el=$('mqt143'),m=$('mini'),c=$('chqt132');if(!el||!m||!m.offsetParent)return;const mr=m.getBoundingClientRect();let b=mr.bottom;
+  ['locBox','fsBtn','sysBtn','sysmenu','mbtn'].forEach(id=>{const e=$(id);if(!e||!e.offsetParent)return;const r=e.getBoundingClientRect();if(r.width&&r.right>mr.left-40&&r.left<mr.right+40)b=Math.max(b,r.bottom)});
+  if(b+140>innerHeight)b=Math.max(mr.bottom,innerHeight*.35);const top=Math.round(b+10),right=Math.max(8,Math.round(innerWidth-mr.right))+'px';
+  const on=!el.classList.contains('hide');if(on){el.style.top=top+'px';el.style.right=right}
+  if(c&&!c.classList.contains('hide'))c.style.top=(on?top+el.offsetHeight+8:top)+'px'}
+{const f=chqTrkPos132;chqTrkPos132=function(){const r=f.apply(this,arguments);try{mq143TrkPos()}catch(_){}return r}}
+addEventListener('resize',()=>{try{mq143TrkPos()}catch(_){}});
+
+// ---------------- the minimap and the N map ----------------
+function mq143Marks(g,P,k){const S=MQ143.S;if(!S||!mq143Here())return;const done=mq143Done();
+  S.lamps.forEach((L,i)=>{const q=P(L.x,L.z);if(!q)return;const on=done||MQ143.st>=2||MQ143.lit[i];g.save();g.translate(q[0],q[1]);g.scale(k,k);
+    g.beginPath();g.arc(0,0,on?3.2:2.6,0,6.28);g.fillStyle=on?'#e6ff9a':'#4a5240';g.fill();g.lineWidth=1.2/k;g.strokeStyle=on?'#3a5a1a':'#1a1e16';g.stroke();
+    if(on){g.beginPath();g.arc(0,0,5.4,0,6.28);g.strokeStyle='rgba(216,255,122,.45)';g.stroke()}g.restore()});
+  const R=S.rip.g.position,q=P(R.x,R.z);if(q){g.save();g.translate(q[0],q[1]);g.scale(k,k);g.fillStyle='#c9a24a';g.strokeStyle='#1a1206';g.lineWidth=1.3/k;
+    g.beginPath();for(let i=0;i<16;i++){const a=i/16*Math.PI*2,r=i%2?3.4:5;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fill();g.stroke();g.beginPath();g.arc(0,0,1.6,0,6.28);g.fillStyle='#1a1206';g.fill();g.restore()}
+  const c=S.war.captain;if(c){const p=P(c.g.position.x,c.g.position.z);if(p){g.save();g.translate(p[0],p[1]);g.scale(k,k);g.fillStyle='#2a6a64';g.strokeStyle='#e6ff9a';g.lineWidth=1.4/k;
+    g.beginPath();g.moveTo(0,-5);g.lineTo(4.2,-2.4);g.lineTo(3.4,3);g.lineTo(0,5.4);g.lineTo(-3.4,3);g.lineTo(-4.2,-2.4);g.closePath();g.fill();g.stroke();
+    if(MQ143.st==0&&!done){g.font='900 9px Georgia,serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=2.5/k;g.strokeStyle='#1a0f06';g.strokeText('!',0,.6);g.fillStyle='#fff2b0';g.fillText('!',0,.6)}g.restore()}}}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{mq143Marks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}
+{const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{const I=INSL[0];if(mq143Here()){const c=$('wmc'),g=c.getContext('2d'),k=Math.min(1060/I.w,640/I.h);
+  mq143Marks(g,(x,z)=>[(x-I.x0+.5)*k,(z-I.y0+.5)*k],1.5);const C=MQ143.S&&MQ143.S.war.captain;if(C){const x=(C.g.position.x-I.x0+.5)*k,y=(C.g.position.z-I.y0+.5)*k;
+    g.font='700 12px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText('Lantern Wardens',x,y-17);g.fillStyle='#e6ff9a';g.fillText('Lantern Wardens',x,y-17)}}}catch(e){console.warn('v143 wmap',e)}return r0}}
+
+// ---------------- roaming creatures keep out of the outpost ----------------
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{if(r===0&&ROST.r===0){const R=mq143Plan(),c=R.center,pk=R.park;
+    ROST.slots=ROST.slots.filter(s=>!(s.wild&&(Math.hypot((s.hx==null?s.x:s.hx)-c[0],(s.hz==null?s.z:s.hz)-c[1])<17||Math.hypot(s.x-pk.x,s.z-pk.z)<7)))}}catch(e){console.warn('v143 roster',e)}return o}}
+
+// ---------------- the world: build, sync to the state, tick ----------------
+function mq143Grass(P){try{const G=typeof TUFT!='undefined'?VIL.filter(v=>v.geo===TUFT):[];const T=new Map();
+  P.forEach(q=>{const r=Math.ceil(q[2])+1;for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){const k=(Math.round(q[1])+j)*W+Math.round(q[0])+i;if(!T.has(k))T.set(k,[]);T.get(k).push(q)}});
+  const Z=new THREE.Matrix4().makeScale(0,0,0);G.forEach(v=>{let ch=0;for(let i=0;i<v.n;i++){const x=v.M[i*16+12],z=v.M[i*16+14],L=T.get(Math.round(z)*W+Math.round(x));
+    if(L&&L.some(q=>Math.hypot(x-q[0],z-q[1])<q[2])){v.setMatrixAt(i,Z);ch=1}}if(ch)v.instanceMatrix.needsUpdate=true})}catch(e){console.warn('v143 grass',e)}}
+// collider tiles under a rectangle (centre, yaw, half sizes along the local x / z axes)
+function mq143Blk(x,z,ry,hx,hz,add){const c=Math.cos(ry),s=Math.sin(ry),r=Math.ceil(Math.hypot(hx,hz))+1,out=[];
+  for(let j=Math.floor(z-r);j<=Math.ceil(z+r);j++)for(let i=Math.floor(x-r);i<=Math.ceil(x+r);i++){const dx=i-x,dz=j-z,lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<=hx&&Math.abs(lz)<=hz)out.push(j*W+i)}
+  out.forEach(k=>add?CBLK.add(k):CBLK.delete(k));return out}
+function mq143Halo(col,s){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:SPR,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));m.scale.set(s,s,1);m.userData.psNo=1;return m}
+function mq143Label(t){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txTex([{t,f:'700 30px'}],440,56,'rgba(8,16,12,.8)','#e6ff9a','rgba(184,216,106,.75)'),transparent:true,depthWrite:false}));sp.scale.set(2.6,.33,1);return sp}
+function mq143Build(){if(MQ143.S)return MQ143.S;const R=mq143Plan(),root=new THREE.Group();root.name='LanternRoad';scene.add(root);
+  const S={R,root,lamps:[],war:{},props:[],lights:[],grass:[],t:0,smk:0,rip:null,gate:null};MQ143.S=S;
+  const put=(o,x,z,ry)=>{o.position.set(x,GH(x,z),z);o.rotation.y=ry||0;root.add(o);return o};
+  // lampposts (+ a halo and a pooled point light each)
+  R.lamps.forEach((o,i)=>{const L=mqm143Lamp();put(L.g,o.x,o.z,o.ry);L.g.updateMatrixWorld(true);const bw=L.bulbP.clone().applyMatrix4(L.g.matrixWorld),pw=L.plateP.clone().applyMatrix4(L.g.matrixWorld);
+    const halo=mq143Halo(0xd8ff7a,1.7);halo.position.copy(bw);halo.visible=false;root.add(halo);
+    const lt=new THREE.PointLight(0xd8ff8a,0,14,1.4);lt.position.copy(bw);scene.add(lt);S.lights.push(lt);
+    S.lamps.push({x:o.x,z:o.z,g:L.g,on:L.on,halo,lt,bulbW:bw,plateW:pw,k:0});CBLK.add(Math.round(o.z)*W+Math.round(o.x));S.grass.push([o.x,o.z,.6])});
+  // the outpost pieces
+  const mk={tent:mqm143Tent,banner:mqm143Banner,brazier:mqm143Brazier,table:mqm143Table,rack:mqm143Rack,crate0:()=>mqm143Crate(0),crate1:()=>mqm143Crate(1),barrel:mqm143Barrel,bulbcrate:mqm143BulbCrate};
+  const sz={tent:[1.45,1.35],banner:[.3,.3],brazier:[.45,.45],table:[.7,.5],rack:[.75,.3],crate0:[.4,.4],crate1:[.35,.35],barrel:[.35,.35],bulbcrate:[.4,.4]};
+  R.props.forEach(o=>{const m=mk[o.k]&&mk[o.k]();if(!m)return;put(m,o.x,o.z,o.ry);const z2=sz[o.k]||[.4,.4];mq143Blk(o.x,o.z,o.ry,z2[0],z2[1],true);S.grass.push([o.x,o.z,Math.max(z2[0],z2[1])+.3]);S.props.push({o,m});
+    if(o.k=='brazier'){const lt=new THREE.PointLight(0xff9a40,1.5,10,1.6);lt.position.set(o.x,GH(o.x,o.z)+1.3,o.z);scene.add(lt);S.lights.push(lt);S.braz={m,lt}}});
+  R.stakes.forEach(o=>{const m=mqm143Stakes(o.n,Math.round(o.x*7+o.z*13));put(m,o.x,o.z,o.ry);mq143Blk(o.x,o.z,o.ry,o.n*.135,.18,true)});
+  // the Portal Ripper
+  const rp=mqm143Ripper();rp.g.rotation.order='YXZ';root.add(rp.g);S.rip=rp;S.ripBlk=[];
+  const coreL=new THREE.PointLight(0xd8ff8a,0,12,1.6);scene.add(coreL);S.lights.push(coreL);S.coreL=coreL;S.coreHalo=mq143Halo(0xe6ff9a,1.6);S.coreHalo.visible=false;root.add(S.coreHalo);
+  // the route as a fine polyline with cumulative length (Catmull-Rom through the plan's points)
+  {const p=R.route,pts=[];for(let i=0;i<p.length-1;i++){const a=p[Math.max(0,i-1)],b=p[i],c=p[i+1],d=p[Math.min(p.length-1,i+2)];
+      for(let t=0;t<1;t+=.125){const t2=t*t,t3=t2*t,f=(q,j)=>.5*((2*b[j])+(-a[j]+c[j])*t+(2*a[j]-5*b[j]+4*c[j]-d[j])*t2+(-a[j]+3*b[j]-3*c[j]+d[j])*t3);pts.push([f(0,0),f(0,1)])}}
+    pts.push(p[p.length-1].slice());const cl=[0];for(let i=1;i<pts.length;i++)cl.push(cl[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));S.path=pts;S.cl=cl;S.len=cl[cl.length-1]}
+  // the wardens
+  Object.keys(R.war).forEach(k=>{const o=R.war[k];if(!o)return;let g;try{g=mqw143Make(k)}catch(e){console.warn('v143 warden',k,e);return}
+    g.position.set(o.x,GH(o.x,o.z),o.z);g.rotation.y=o.ry;root.add(g);S.war[k]={g,o,ry:o.ry,ph:Math.random()*6,pat:0,wait:2+Math.random()*3}});
+  {const c=S.war.captain;if(c){const lb=mq143Label(MQ143.cap);lb.position.set(0,1.95,0);c.g.add(lb);const mk=new THREE.Sprite(new THREE.SpriteMaterial({map:chqMarkTex132('!'),transparent:true,depthWrite:false,fog:false}));
+    mk.scale.set(.62,.76,1);mk.position.set(0,2.5,0);mk.renderOrder=5;c.g.add(mk);S.mark=mk}}
+  ['captain','rook','thistle','sergeant'].forEach(k=>{const w=S.war[k];if(w)CBLK.add(Math.round(w.o.z)*W+Math.round(w.o.x))});
+  // the gateway
+  S.gate=RPORT.find(r=>r.k=='next'&&r.ig===0)||null;
+  if(S.gate){const tx=document.createElement('canvas');tx.width=tx.height=128;const x=tx.getContext('2d'),gr=x.createRadialGradient(64,64,4,64,64,62);
+    gr.addColorStop(0,'rgba(255,255,230,1)');gr.addColorStop(.35,'rgba(200,255,140,.8)');gr.addColorStop(.7,'rgba(90,200,80,.35)');gr.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gr;x.fillRect(0,0,128,128);
+    x.strokeStyle='rgba(240,255,200,.55)';x.lineWidth=3;for(let i=0;i<5;i++){x.beginPath();for(let a=0;a<5.5;a+=.1){const r=6+a*9.5;x.lineTo(64+Math.cos(a+i*1.26)*r,64+Math.sin(a+i*1.26)*r)}x.stroke()}
+    const sw=new THREE.Mesh(new THREE.CircleGeometry(.78,24),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(tx),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    sw.position.set(0,1.2,.03);sw.scale.y=1.3;sw.visible=false;S.gate.g.add(sw);S.swirl=sw;S.gateCol=S.gate.disc.material.color.getHex();S.gate.g.userData.psNo=1;
+    const gl=new THREE.PointLight(0x9aff6a,0,10,1.6);gl.position.set(S.gate.x,GH(S.gate.x,S.gate.z)+1.4,S.gate.z);scene.add(gl);S.lights.push(gl);S.gateL=gl}
+  // lightning arcs (two jagged lines, reused) for the fire-up and the beam that holds the gateway open
+  S.arcs=[0,1].map(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(14*3),3));
+    const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xeaffb0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));l.frustumCulled=false;l.visible=false;root.add(l);return l});
+  mq143Grass(S.grass.concat(R.keep.slice(0,2).map(k=>[k[0],k[1],0])));
+  mq143Sync();return S}
+// put everything where the state says (load, a new save, done from elsewhere)
+function mq143Sync(){const S=MQ143.S;if(!S)return;const done=mq143Done(),R=S.R;
+  S.lamps.forEach((L,i)=>{const on=done||MQ143.st>=2||!!MQ143.lit[i];L.on.visible=on;L.halo.visible=on;L.k=on?1:0});
+  MQ143.roll=null;MQ143.fire=null;
+  if(done)mq143Park();else mq143PlaceAt(0);
+  mq143Gate(done?1:0);S.rip.lamps.visible=done;S.rip.core.visible=done;S.coreHalo.visible=done;S.coreL.intensity=done?.9:0;
+  const cl=done?[.12,.38]:[-1.05,0];S.rip.clawL.rotation.set(cl[0],-cl[1],0);S.rip.clawR.rotation.set(cl[0],cl[1],0);S.rip.jacks.forEach(j=>j.scale.y=done?1:.2);
+  ['ironpaw','gearwick'].forEach(k=>{const w=S.war[k];if(!w)return;if(done)mq143Escort(w,k,0,true);else{w.g.position.set(w.o.x,GH(w.o.x,w.o.z),w.o.z);w.g.rotation.y=w.o.ry;w.esc=0}})}
+function mq143PlaceAt(d){const S=MQ143.S,P=S.path,cl=S.cl;d=Math.max(0,Math.min(S.len,d));let i=1;while(i<cl.length-1&&cl[i]<d)i++;
+  const a=P[i-1],b=P[i],t=(d-cl[i-1])/Math.max(1e-6,cl[i]-cl[i-1]),x=a[0]+(b[0]-a[0])*t,z=a[1]+(b[1]-a[1])*t;
+  const ah=P[Math.min(P.length-1,i+1)],bh=P[Math.max(0,i-2)];let ry=Math.atan2(ah[0]-bh[0],ah[1]-bh[1]);
+  if(d>=S.len-.01)ry=S.R.park.ry;mq143Pose(x,z,ry);return {x,z,ry}}
+function mq143Pose(x,z,ry){const S=MQ143.S,g=S.rip.g,s=Math.sin(ry),c=Math.cos(ry),h=(lx,lz)=>GH(x+c*lx+s*lz,z-s*lx+c*lz);
+  const fl=h(-.98,1.15),fr=h(.98,1.15),bl=h(-.98,-1.15),br=h(.98,-1.15);g.position.set(x,(fl+fr+bl+br)/4,z);
+  g.rotation.set(Math.atan2((bl+br)/2-(fl+fr)/2,2.3),ry,Math.atan2((fr+br)/2-(fl+bl)/2,1.96));
+  S.coreHalo.position.copy(S.rip.coreP.clone().applyMatrix4(g.matrixWorld.compose(g.position,g.quaternion.setFromEuler(g.rotation),g.scale)));S.coreL.position.copy(S.coreHalo.position)}
+function mq143Park(){const S=MQ143.S;mq143PlaceAt(S.len);mq143RipBlk(true)}
+function mq143RipBlk(on){const S=MQ143.S;S.ripBlk.forEach(k=>CBLK.delete(k));S.ripBlk=[];if(!on)return;const g=S.rip.g.position;S.ripBlk=mq143Blk(g.x,g.z,S.rip.g.rotation.y,.95,1.75,true)}
+// k 0 dormant → 1 open (the disc dark and faint, then its colour back, a swirl and a light)
+function mq143Gate(k){const S=MQ143.S;if(!S||!S.gate)return;const m=S.gate.disc.material,dk=new THREE.Color(0x141a12);m.color.copy(dk).lerp(new THREE.Color(S.gateCol),k);m.opacity=.3+.5*k;
+  S.swirl.visible=k>0;S.swirl.material.opacity=k;if(S.gateL)S.gateL.intensity=1.3*k}
+// an escort's spot beside the Ripper (ironpaw on the right, gearwick on the left), walking or standing guard at the park
+function mq143Escort(w,k,ph,stand){const S=MQ143.S,g=S.rip.g,ry=g.rotation.y,s=Math.sin(ry),c=Math.cos(ry),o=k=='ironpaw'?[1.55,.5]:[-1.5,-.2];
+  const x=g.position.x+c*o[0]+s*o[1],z=g.position.z-s*o[0]+c*o[1];w.g.position.set(x,GH(x,z),z);w.g.rotation.y=stand?ry+(k=='ironpaw'?-.5:.5):ry;w.esc=stand?2:1;w.ph=ph}
+function mq143RollStart(){const S=MQ143.S;if(!S||mq143Done())return;MQ143.st=2;MQ143.trkK='';MQ143.roll={d:0};mq143RipBlk(false);S.rip.lamps.visible=true;
+  try{burst(S.rip.g.position.clone().add(new THREE.Vector3(0,3.2,0)),0x8a8a7a,30,1.2,2.5,1.2);sfx('power')}catch(_){}
+  try{zt116Show(ZT116.Z[0],'Kindlelight · Main Quest','The Lantern Road','The road is lit. The Portal Ripper rolls for the gateway.','Follow it down the road','z0')}catch(_){}}
+function mq143Finish(){const S=MQ143.S;MQ143.st=3;MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(S)mq143Sync();try{hud()}catch(_){}}
+// the arc: a jagged line between two points, redrawn each call
+function mq143Arc(l,a,b,j){const p=l.geometry.attributes.position,n=p.count;for(let i=0;i<n;i++){const t=i/(n-1),e=Math.sin(t*Math.PI)*j;
+    p.setXYZ(i,a.x+(b.x-a.x)*t+(Math.random()-.5)*e,a.y+(b.y-a.y)*t+(Math.random()-.5)*e+Math.sin(t*Math.PI)*.4,a.z+(b.z-a.z)*t+(Math.random()-.5)*e)}p.needsUpdate=true;l.visible=true}
+function mq143Tick(dt,now){
+  const here=mq143Here();if(here&&!MQ143.S){try{mq143Build()}catch(e){console.error('v143 build',e);MQ143.S=null;MQ143.err++;return}}
+  const S=MQ143.S;if(!S)return;S.root.visible=here;
+  if(!here){S.lights.forEach(l=>{if(l.userData.v143==null)l.userData.v143=l.intensity;l.intensity=0});
+    if(MQ143.st==2)mq143Finish();return}
+  S.lights.forEach(l=>{if(l.userData.v143!=null){l.intensity=l.userData.v143;l.userData.v143=null}});
+  const t=now/1000,P=pl.position,done=mq143Done();
+  // the first look at the outpost
+  if(!MQ143.seen&&Math.hypot(P.x-S.R.center[0],P.z-S.R.center[1])<15){MQ143.seen=1;if(!done)try{zt116Show(ZT116.Z[0],'Kindlelight · Main Quest','The Lantern Road','The Lantern Wardens guard the Portal Ripper','Speak to '+MQ143.cap,'z0')}catch(_){}}
+  // lamps ease up to full light and flicker gently
+  S.lamps.forEach((L,i)=>{const want=L.on.visible?1:0;L.k+=(want-L.k)*Math.min(1,dt*2.2);const fl=.92+.08*Math.sin(t*7.1+i*1.7)*Math.sin(t*3.3+i);
+    L.lt.intensity=2.3*L.k*fl;if(L.halo.visible){const s=1.5+.2*Math.sin(t*2.2+i);L.halo.scale.set(s,s,1);L.halo.material.opacity=.75*L.k}});
+  if(S.braz){const fl=S.braz.m.userData.flame;fl.scale.set(1+.08*Math.sin(t*9),1+.18*Math.sin(t*13.3)*Math.sin(t*5.1),1+.08*Math.cos(t*8.2));S.braz.lt.intensity=1.3+.35*Math.sin(t*11)*Math.sin(t*4.7)}
+  if(S.mark){S.mark.visible=MQ143.st==0&&!done;if(S.mark.visible){S.mark.position.y=2.5+Math.sin(t*2.2)*.07}}
+  const R=S.rip;
+  // rolling
+  if(MQ143.roll){const r=MQ143.roll,v=Math.min(MQ143.speed,(r.d+1)*.9);r.d+=v*dt;const q=mq143PlaceAt(r.d);
+    R.wheels.forEach(w=>w.rotation.x+=v*dt/.56);R.g.position.y+=Math.abs(Math.sin(r.d*3.1))*.02;
+    if((S.smk-=dt)<=0){S.smk=.22;try{const c=R.chimP.clone().applyMatrix4(R.g.matrixWorld);burst(c,0x5a5a4a,4,.35,1.8,1.4);if(Math.random()<.4)burst(c,0xd8ff7a,2,.3,1.4,.5)}catch(_){}}
+    ['ironpaw','gearwick'].forEach(k=>{const w=S.war[k];if(w)mq143Escort(w,k,r.d*2.7,false)});
+    if(r.d>=S.len){MQ143.roll=null;mq143RipBlk(true);MQ143.fire={t:0,arc:0}}}
+  // the fire-up at the gateway (7.5 s)
+  if(MQ143.fire&&S.gate){const F=MQ143.fire,t0=F.t;F.t+=dt;const T=F.t,e=x=>x<0?0:x>1?1:x*x*(3-2*x),gp=new THREE.Vector3(S.gate.x,GH(S.gate.x,S.gate.z)+1.25,S.gate.z);
+    R.jacks.forEach(j=>j.scale.y=.2+.8*e(T/.8));if(t0<.8&&T>=.8){try{shake(.15);burst(R.g.position,0x6a5a4a,20,1.6,.8,.8);sfx('brk')}catch(_){}}
+    const ck=e((T-.6)/1.4);R.clawL.rotation.set(-1.05+1.17*ck,-.38*ck,0);R.clawR.rotation.set(-1.05+1.17*ck,.38*ck,0);
+    if(T>1.2){R.core.visible=Math.random()<.35+.6*e((T-1.2)/2.8);S.coreHalo.visible=R.core.visible;S.coreL.intensity=2.2*e((T-1.2)/2.8)*(R.core.visible?1:.3);
+      if((F.arc-=dt)<=0){F.arc=.14;try{burst(S.coreHalo.position,0xeaffb0,6,1,1.5,.4);if(Math.random()<.5)sfx('zap')}catch(_){}}}
+    if(T>3&&T<6.2){R.g.updateMatrixWorld(true);[R.clawL,R.clawR].forEach((c,i)=>{const tip=new THREE.Vector3(0,.16,1.52).applyMatrix4(c.children[0].matrixWorld);mq143Arc(S.arcs[i],tip,gp,.55)});
+      mq143Gate(.15*Math.random()*e((T-3)/3))}else S.arcs.forEach(l=>l.visible=false);
+    if(t0<6.2&&T>=6.2){try{mq143Gate(1);ring(new THREE.Vector3(S.gate.x,0,S.gate.z),0xd8ff7a,5,900);burst(gp,0xf4ffd0,70,4,3,1.1);shake(.32);sfx('boom');mSfx('warp')}catch(_){}}
+    if(T>=7.6){mq143Finish();try{zt116Show(ZT116.Z[0],'Kindlelight · Main Quest','The Way Is Open','The Portal Ripper has torn open the gateway to '+mq143Next(),'The Lantern Road · complete','z0');mSfx('victory')}catch(_){}
+      say('🌀 The gateway to <b>'+mq143Next()+'</b> is open.')}}
+  // the open gateway: the swirl turns, the Ripper's coil hums and now and then throws an arc into the arch
+  if(done&&S.swirl&&!MQ143.fire){S.swirl.rotation.z-=dt*1.6;S.swirl.material.opacity=.75+.2*Math.sin(t*2.3);S.coreL.intensity=.8+.3*Math.sin(t*5);
+    if(S.gate&&Math.hypot(P.x-S.gate.x,P.z-S.gate.z)<40){if(Math.random()<dt*1.4){const gp=new THREE.Vector3(S.gate.x,GH(S.gate.x,S.gate.z)+1.25,S.gate.z);mq143Arc(S.arcs[0],S.coreHalo.position,gp,.4);S.arcT=.09}
+      if(S.arcT>0){S.arcT-=dt;if(S.arcT<=0)S.arcs[0].visible=false}}}
+  // the wardens: face the hero when close, the lynx walks the palisade, the escorts walk beside the Ripper
+  for(const k in S.war){const w=S.war[k],g=w.g,d=Math.hypot(P.x-g.position.x,P.z-g.position.z);if(d>50)continue;
+    if(w.esc==1){mqw143Anim(g,now,w.ph,1);continue}
+    if(k=='vesk'&&!w.esc&&S.R.patrol[0]&&S.R.patrol[1]){const A=S.R.patrol[w.pat];const dx=A.x-g.position.x,dz=A.z-g.position.z,L=Math.hypot(dx,dz);
+      if(L>.25&&w.wait<=0){const st=Math.min(L,1.15*dt);g.position.x+=dx/L*st;g.position.z+=dz/L*st;g.position.y=GH(g.position.x,g.position.z);
+        let da=Math.atan2(dx,dz)-g.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));g.rotation.y+=da*Math.min(1,dt*5);w.ph+=dt*4.2;mqw143Anim(g,now,w.ph,.85);continue}
+      if(L<=.25&&w.wait<=0){w.wait=3+Math.random()*4;w.pat=1-w.pat}w.wait-=dt}
+    const want=d<6&&k!='gearwick'?Math.atan2(P.x-g.position.x,P.z-g.position.z):(w.esc==2?g.rotation.y:w.ry);let da=want-g.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));g.rotation.y+=da*Math.min(1,dt*3);
+    mqw143Anim(g,now)}
+  if(now-MQ143.t>400){MQ143.t=now;mq143Trk()}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq143Tick(dt,now)}catch(err){if(!MQ143.err++)console.warn('v143 tick',err)}
+  try{if(!mq143Here()&&now-MQ143.t>400){MQ143.t=now;mq143Trk()}}catch(_){}return r}}
 </script></body></html>
