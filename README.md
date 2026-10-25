@@ -381,6 +381,11 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     base (sunk 9 mm under the sculpt, `earSink`), the neck's attachment (`neck` [y, z, r]), whisker rows and `extra` parts
     (teeth, tusks, horns, beards, wool; `extra(){}` drops the v137 `face`). `fksSetup` measures `D.SN` from the sculpt, so hats,
     coifs, goggles, antlers and wool fit. `mesher:'nets'` gives the smooth surface-nets mesh instead (not used).
+    Ears (`fksEars`, owner's request: no edge off the head, both ears alike): a loft of 8-sided rings root → tip shaped per type
+    (`FKS_EAR`: tri / leaf / round / small / long); every root vertex is pushed down the ear's axis until 5 mm inside the
+    skull; the root ring is weighted to the head and the next ring half to the ear bone (flicks bend the ear at the root);
+    built once on the right and mirrored, so both ears are identical; an inner-ear loft on the front face; tufts from the tip.
+    The owl keeps its feather tufts (`fkEars`).
     Eyes on sculpted heads (`fk140Eyes`): an almond with a bright iris and the species' pupil, a level brow line above (calm,
     not angry, per the owner), `eye.round` for round eyes (owl), `eye.slant` / `open` / `brow` per species.
   * Species without a recipe use `fk140SN` (same ring format as `fkSN`): lower occiput, brow ridge, stop, fuller cheeks.

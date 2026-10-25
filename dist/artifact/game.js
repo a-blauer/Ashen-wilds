@@ -35635,7 +35635,7 @@ function fk140Neck(B,D,A,C){const hp=D.hp,R=hp.R||.1,L=hp.L||1,W=hp.W||1,H=hp.H|
     {seg:14,capB:true,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
 function fk140Head(D,B,P,o,A){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
   if(!D.sculpt||D.sculpt.mesher!='nets')fk140Neck(B,D,A,C);
-  if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk140Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);fkEars(k,B,D,C);
+  if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk140Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);if(D.ear&&D.ear.t=='tuft')fkEars(k,B,D,C);else fksEars(B,D,C);
     if(S.extra)S.extra(k,B,D,C,P);else if(D.face&&!S.noFace)D.face(k,B,D,C,P);mdKit(B,k);return H}
   brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});
   if(D.jaw)brJaw(B,D,D.jaw[0],D.jaw[1],D.jaw[3]?D.jaw[3](C):C.BELLY,D.jaw[2]||{});
@@ -35818,6 +35818,40 @@ function fksSetup(D,A){const S=D.sculpt,C0=FKS.C0;D.SN=fksRings(S,20);D.muzzleZ=
 // whisker rows from the recipe: [root (head-local), count, length, colour]
 function fksWhiskers(k,D,W,C){const C0=FKS.C0,r=W.p;[-1,1].forEach(s=>{for(let i=0;i<W.n;i++){const a=[s*r[0],r[1]+C0[1]+(i-(W.n-1)/2)*.006,r[2]+C0[2]-i*.005],
     b=[s*(r[0]+W.len*.75),a[1]+(i-(W.n-1)/2)*.016-.006,a[2]-W.len*.45];k.L('head','c',W.col||0x2a2420,a,b,.0016,.0005,3)}})}
+// ---------------- ears: lofted on the skull ----------------
+// (owner, v140: the v137 pointed ear was a four-sided pyramid poked into the head — on a curved skull its flat base corners
+// stood off the surface, and the left one was twisted differently from the right.) Each ear is now a loft of 8-sided rings
+// from its root to its tip, shaped per type (tri / round / long / leaf / small); the root ring is pressed onto the sculpt
+// (every root vertex is moved down the ear's axis until it is 5 mm inside the skull), so no edge can stand off the head.
+// The root ring is weighted to the head and the next ring half to the ear bone, so a flick bends the ear at the root instead
+// of lifting its base out. The right ear is built once and mirrored for the left, so the two are identical.
+var FKS_EAR={tri:t=>Math.pow(Math.max(0,1-t),.85),leaf:t=>t<.25?.5+.5*Math.sin(t/.25*Math.PI/2)*.6:Math.pow(Math.sin(Math.PI*(.12+.88*t)),.7),
+  round:t=>t<.5?.82+.18*Math.sin(Math.PI*t):Math.sqrt(Math.max(0,1-((t-.5)/.5)**2)),small:t=>t<.45?.85+.15*Math.sin(Math.PI*t):Math.sqrt(Math.max(0,1-((t-.45)/.55)**2)),
+  long:t=>t<.55?.55+.45*Math.sin(t/.55*Math.PI/2):Math.sqrt(Math.max(0,1-((t-.55)/.45)**2))};
+function fksEars(B,D,C){const e=D.ear,S=D.sculpt;if(!e||e.t=='none')return;if(!FKS_EAR[e.t]){const k=dkKit();fkEars(k,B,D,C);mdKit(B,k);return}
+  const C0=FKS.C0,V3=THREE.Vector3,ev=p=>fksEval(S,[p.x-C0[0],p.y-C0[1],p.z-C0[2]]),d=new V3(...fkEarDir(e,1)).normalize(),tw=e.tw||0;
+  const f0=new V3(0,0,1).applyAxisAngle(d,tw),fwd=f0.sub(d.clone().multiplyScalar(d.dot(f0))).normalize(),side=new V3().crossVectors(d,fwd).normalize();
+  // the root on the surface: from the bone point along the ear's axis until outside
+  const b0=new V3(...D._earB140);let s=0;while(s<.06&&ev(b0.clone().addScaledVector(d,s))<0)s+=.001;const base=b0.clone().addScaledVector(d,s);
+  const L=e.len,W=e.w*(e.t=='long'?.62:.85),T=Math.max(.006,(e.th||.016)*.55),wf=FKS_EAR[e.t],pointed=e.t=='tri'||e.t=='leaf',M=8,ts=[0,.12,.3,.5,.7,.86,1];
+  const fur=e.col?e.col(C):C.FUR,inn=e.inner?e.inner(C):(e.t=='small'?C.FURD:C.PINK),tip=e.tip?e.tip(C):fur,tipT=e.t=='tri'?.62:.8;
+  const rings=ts.map((t,ri)=>{const c=base.clone().addScaledVector(d,L*t),w=W*Math.max(t==1&&pointed?0:.08,wf(t)),th=T*(1-.6*t);const R=[];
+    for(let j=0;j<M;j++){const a=j/M*Math.PI*2;let p=c.clone().addScaledVector(side,w*Math.cos(a)).addScaledVector(fwd,th*Math.sin(a));
+      if(ri==0){let k=0;while(k<40&&ev(p)>-.005){p.addScaledVector(d,-.002);k++}}R.push(p)}return {t,c,R}});
+  const tipP=pointed?base.clone().addScaledVector(d,L):null;
+  const tris=[],in_=[];const W8=(ri)=>ri==0?[['head',1]]:ri==1?[['head',.5],['ER',.5]]:[['ER',1]];
+  for(let i=0;i+1<rings.length;i++){const A=rings[i],Bq=rings[i+1];if(pointed&&i+1==rings.length-1){for(let j=0;j<M;j++)tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[tipP,i+1],A.t>=tipT?tip:fur]);break}
+    for(let j=0;j<M;j++){const col=A.t>=tipT?tip:fur;tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[Bq.R[(j+1)%M],i+1],col],[[A.R[j],i],[Bq.R[(j+1)%M],i+1],[Bq.R[j],i+1],col])}}
+  if(!pointed){const Lr=rings[rings.length-1];for(let j=0;j<M;j++)tris.push([[Lr.R[j],ts.length-1],[Lr.R[(j+1)%M],ts.length-1],[Lr.c,ts.length-1],fur])}
+  // the inner ear: a thinner loft on the front face, from near the root to near the tip
+  const iT=[.1,.3,.5,.7,.84],ir=iT.map(t=>{const c=base.clone().addScaledVector(d,L*t),w=W*wf(t)*.7,th=T*(1-.6*t);const cc=c.clone().addScaledVector(fwd,th*.72);
+    const R=[];for(let j=0;j<M;j++){const a=j/M*Math.PI*2;R.push(cc.clone().addScaledVector(side,w*Math.cos(a)).addScaledVector(fwd,th*.4*Math.sin(a)))}return {c:cc,R}});
+  for(let i=0;i+1<ir.length;i++)for(let j=0;j<M;j++){const A=ir[i],Bq=ir[i+1];in_.push([[A.R[j],2],[A.R[(j+1)%M],2],[Bq.R[(j+1)%M],2],inn],[[A.R[j],2],[Bq.R[(j+1)%M],2],[Bq.R[j],2],inn])}
+  {const A=ir[0],Z=ir[ir.length-1];for(let j=0;j<M;j++){in_.push([[A.R[j],2],[A.R[(j+1)%M],2],[A.c,2],inn]);in_.push([[Z.R[j],2],[Z.R[(j+1)%M],2],[Z.c,2],inn])}}
+  [1,-1].forEach(sg=>{const er=sg>0?'erR':'erL',wc={};const vx=(q)=>{const [p,ri]=q,key=ri;const w=wc[key]||(wc[key]=mdW(B,W8(ri).map(x=>[x[0]=='ER'?er:x[0],x[1]])));return {x:p.x*sg,y:p.y,z:p.z,w}};
+    for(const t of tris.concat(in_)){const a=vx(t[0]),b=vx(t[1]),c=vx(t[2]);if(sg>0)mdTri(B,'c',a,b,c,t[3]);else mdTri(B,'c',a,c,b,t[3])}});
+  // lynx / squirrel tufts from the tip
+  if(e.tuft){const k=dkKit(),tp=base.clone().addScaledVector(d,L*.97);[1,-1].forEach(sg=>{const a=[tp.x*sg,tp.y,tp.z],b=[(tp.x+d.x*e.tuftL)*sg,tp.y+d.y*e.tuftL,tp.z+d.z*e.tuftL];k.L(sg>0?'erR':'erL','c',e.tuft(C),a,b,.006,.001,4)});mdKit(B,k)}}
 // ================= v140: townsfolk head recipes (sculpted from each animal's anatomy) =================
 // Head-local metres from FKS.C0 (+z forward, +y up, x mirrored). Forms: E ellipsoid (centre, radii), RC round cone (a, b,
 // radius at a, radius at b), SP sphere; k = blend width, sub = carve. Proportions follow the real skulls: muzzle length

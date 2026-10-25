@@ -149,7 +149,7 @@ function fk140Neck(B,D,A,C){const hp=D.hp,R=hp.R||.1,L=hp.L||1,W=hp.W||1,H=hp.H|
     {seg:14,capB:true,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
 function fk140Head(D,B,P,o,A){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
   if(!D.sculpt||D.sculpt.mesher!='nets')fk140Neck(B,D,A,C);
-  if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk140Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);fkEars(k,B,D,C);
+  if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk140Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);if(D.ear&&D.ear.t=='tuft')fkEars(k,B,D,C);else fksEars(B,D,C);
     if(S.extra)S.extra(k,B,D,C,P);else if(D.face&&!S.noFace)D.face(k,B,D,C,P);mdKit(B,k);return H}
   brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});
   if(D.jaw)brJaw(B,D,D.jaw[0],D.jaw[1],D.jaw[3]?D.jaw[3](C):C.BELLY,D.jaw[2]||{});
