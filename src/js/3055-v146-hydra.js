@@ -55,7 +55,7 @@ function hyd146Gland(){const g=new THREE.Group(),m=new THREE.MeshStandardMateria
   for(let k=0;k<5;k++){const v=new THREE.Mesh(svG('h46gv',()=>svTube([[0,0,0],[.3,.25,.1],[.5,.55,0]],.03,4)),vm);v.position.y=.25;v.rotation.y=k/5*6.283;g.add(v)}
   const gl=kqSpr(HYD146.ven,1.6);gl.position.y=.7;g.add(gl);return {g,sac,gl,mats:[m,vm]}}
 function hyd146SeverStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D=sk146Den(A);
-  const L=['L','C','R'].map((s,k)=>{const p=svWP(e,'h'+s,0,-.3,.6),m0=e.m.position,dx=p.x-m0.x,dz=p.z-m0.z,dl=Math.hypot(dx,dz)||1,ang=dl>.3?Math.atan2(dx,dz):e.m.rotation.y+(k-1)*.9,dd=Math.max(4.6,dl),q=c.inA(new THREE.Vector3(m0.x+Math.sin(ang)*dd,0,m0.z+Math.cos(ang)*dd),1.2),Gl=hyd146Gland();   // never inside the coils: reachablelet t=0;
+  const L=['L','C','R'].map((s,k)=>{const p=svWP(e,'h'+s,0,-.3,.6),m0=e.m.position,dx=p.x-m0.x,dz=p.z-m0.z,dl=Math.hypot(dx,dz)||1,ang=dl>.3?Math.atan2(dx,dz):e.m.rotation.y+(k-1)*.9,dd=Math.max(4.6,dl),q=c.inA(new THREE.Vector3(m0.x+Math.sin(ang)*dd,0,m0.z+Math.cos(ang)*dd),1.2),Gl=hyd146Gland();/* never inside the coils: reachable */let t=0;
     return {x:q.x,z:q.z,n:'Venom Gland',frac:.017,mesh:Gl.g,hbY:2,hbS:.8,cupY:.7,side:s,
       tick(pe,dt,now){t+=dt;Gl.sac.scale.set(1+.12*Math.sin(now/160+k),.8+.15*Math.sin(now/160+k+1),1+.12*Math.cos(now/160+k));Gl.g.scale.setScalar(Math.min(1,t/.5));if(Math.random()<dt*5)burst(gY(pe.m.position,.8),HYD146.ven,1,.3,.6,.5)},
       die(pe,killed){if(killed){const p=gY(pe.m.position,.7);sk146Drops(p,HYD146.ven,26,4,4,{splats:6,dc:0x2a4a10});burst(p,HYD146.ven,40,3,3,.7);popT(pe.m.position,'⚔ SEVERED','#d8ff9a');svSnd('squelch',1.3,.9);svSnd('roar',.6,1.6);hyd146Sever(e,s,true)}Gl.mats.forEach(m=>m.dispose())}}});
