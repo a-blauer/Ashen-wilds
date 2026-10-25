@@ -13,7 +13,7 @@ sha=$(git rev-parse HEAD)
 br=$(git rev-parse --abbrev-ref HEAD); [ "$br" = HEAD ] && br=detached
 ref="ci/${br#ci/}"; [ "$suite" = full ] || ref="$ref-$suite"
 git fetch -q origin main || true   # a fresh main makes the push a small (thin) pack
-git push -q -f origin "HEAD:refs/heads/$ref"
+pl=$(git push -q -f origin "HEAD:refs/heads/$ref" 2>&1) || { echo "$pl"; exit 1; }   # quiet unless the push fails
 if [ "$suite" != full ]; then gh workflow run tests.yml --ref "$ref" -f suite="$suite"; ev=workflow_dispatch; else ev=push; fi
 echo "testing $suite on ${sha:0:9} (branch $ref) ..."
 id=
