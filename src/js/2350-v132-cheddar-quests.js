@@ -112,14 +112,9 @@ function chqSpotEnd135(I){const E=CHQ132.e;if(E.spots[I.g]!==undefined)return E.
   best.face=Math.atan2(q[0]-best.x,q[1]-best.z);best.g=I.g;E.spots[I.g]=best;return best}
 function chqPosts135(){return [CHQ132,CHQ132.e]}
 function chqPSpot135(P,I){return P.end?chqSpotEnd135(I):chqSpot132(I)}
-// a cheap collider on his tile so you don't walk through him (built once for every spot)
-try{INSL.forEach(I=>{if(I.tri)return;[chqSpot132(I),chqSpotEnd135(I)].forEach(s=>{if(s)CBLK.add(Math.round(s.z)*W+Math.round(s.x))})})}catch(err){console.warn('chq132 spots',err)}
+// v148: Cheddar no longer stands in the zone instances (he keeps the quest board in Duskhold, 3075), so no colliders on his old spots
 
-// keep the grass out of the burrow's mouth and from under his feet (grass is one virtual instanced list, VIL, 4 tufts a tile)
-try{const G=typeof TUFT!='undefined'?VIL.filter(v=>v.geo===TUFT):[],P=[];INSL.forEach(I=>{if(I.tri)return;[CHQ132.spots[I.g],CHQ132.e.spots[I.g]].forEach(s=>{if(s)P.push([s.bx,s.bz,1.05],[s.x,s.z,.55])})});
-  const T=new Map();P.forEach(q=>{for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const k=(Math.round(q[1])+j)*W+Math.round(q[0])+i;if(!T.has(k))T.set(k,[]);T.get(k).push(q)}});
-  const Z=new THREE.Matrix4().makeScale(0,0,0);G.forEach(v=>{for(let i=0;i<v.n;i++){const x=v.M[i*16+12],z=v.M[i*16+14],L=T.get(Math.round(z)*W+Math.round(x));
-    if(L&&L.some(q=>Math.hypot(x-q[0],z-q[1])<q[2]))v.setMatrixAt(i,Z)}v.instanceMatrix.needsUpdate=true})}catch(err){console.warn('chq132 grass',err)}
+// v148: (the grass round his old spots is no longer cleared)
 
 // ---------------- the burrow hole ----------------
 const CHQ132_DIRT=[0x3a2a1c,0x5a4630,0x4a4448,0xa88c5c,0x3c3a34,0x3a2c2a];
