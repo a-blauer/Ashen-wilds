@@ -85,7 +85,7 @@ function spawn(init){
 const campOnKill=e=>{const C=e&&e.camp;if(!C)return;
   if(e.leader===C){campChest(C);return}
   if(C.raid||campAlive(C)>0)return;
-  say('⛺ '+C.th.n+' cleared!');C.kt=performance.now()};
+  C.kt=performance.now()};   // v148: the "cleared" line (with its XP and chest) comes from 3071
 // ---------- outpost visuals (built lazily when the player comes near) ----------
 const CG={tent:new THREE.ConeGeometry(1,1,4),disc:new THREE.CircleGeometry(1,22),ring:new THREE.RingGeometry(.86,1,32),tor:new THREE.TorusGeometry(1,.16,6,18),arc:new THREE.TorusGeometry(1,.07,5,10,Math.PI),dod:new THREE.DodecahedronGeometry(1,0)};
 const tMat={};const tm=(c,o)=>{const k=c+'|'+o;return tMat[k]||(tMat[k]=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false,side:THREE.DoubleSide}))};
