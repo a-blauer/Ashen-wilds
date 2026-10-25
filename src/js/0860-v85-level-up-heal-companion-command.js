@@ -8,7 +8,7 @@ function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position
   enemies.forEach(e=>{if(e.dead)return;const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z),L=v.length();if(L>=bd)return;if(L>2&&v.dot(d)/L<.2)return;bd=L;b=e});return b}
 function commandAttack(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
-  const act=party.slice(0,2).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
+  const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
   const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
@@ -110,24 +110,28 @@ $('recallBtn').onclick=()=>doRecall();
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===108?s.inst:null}catch(_){INST=null}return r}}
 
-// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
+// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to one base stat ----------------
+// v141: only the stat the eaten companion has its best roll in goes up (same amount per stat as before, when all five rose).
 var fCon=null;
 // gain from a consumed companion: its tier matters most, its level a little
 const conGainC=b=>consGain(Math.max(0,tierSp(b.g[0])-1))*(1+Math.min(.5,(b.l-1)/60))*(1+.1*(b.evo||0));
+// the stat Consume raises: the eaten companion's best roll (ties: the first in HP, PA, MA, PD, MD order)
+function conKey(b){ivFix(b);let k=IVK[0];IVK.forEach(q=>{if(ivOf(b,q)>ivOf(b,k)+1e-9)k=q});return k}
 function conHTML(a){const L=party.filter(c=>c&&c!==a);
-  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on every base stat; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
-  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
-{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion for a boost to every base stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
+  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on one base stat: the one the eaten companion has its best roll in; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
+  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<actN141();return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
+{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion to boost its best stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
 {const f=rF;rF=function(){f.apply(this,arguments);try{const a=sel.length>=1?party[sel[0]]:null;if(fCon&&(!party.includes(fCon)||fCon===a||fCon.lock))fCon=null;const d=$('doF');
   if(a&&fOpt=='con'&&d){d.disabled=!fCon;d.textContent=fCon?'🍽️ Consume '+fCon.n:'🍽️ Consume'}}catch(_){}}}
 $('fz').addEventListener('click',e=>{const g=e.target.closest('[data-fcon]');if(g){e.stopPropagation();if(g.disabled)return;fCon=party[+g.dataset.fcon]||null;rF()}},true);
 {const f=$('doF').onclick;$('doF').onclick=function(){
   if(fOpt!='con')return f.apply(this,arguments);
   const a=party[sel[0]],b=fCon;if(!a||!b||b===a||!party.includes(b)||b.lock)return;
-  ivFix(a);const g=conGainC(b),up=[];
-  IVK.forEach(k=>{const o=ivOf(a,k),n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1])});ivSync(a);
+  ivFix(a);const g=conGainC(b),k=conKey(b),o=ivOf(a,k),up=[];
+  if(o>=1.3)return say('⚠ '+nm(a)+'’s '+IVN[k]+' is already at the maximum. '+b.n+' would be wasted.');
+  const n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1]);ivSync(a);
   if(b.emp)b.emp=false;party=party.filter(c=>c!==b);sel=[party.indexOf(a)];cmpSel=Math.max(0,party.indexOf(a));a.h=Math.min(M(a),a.h+Math.round(M(a)*.1));fCon=null;
-  say('🍽️ '+nm(a)+' absorbed '+b.n+' · every base stat +'+pctS(g)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
+  say('🍽️ '+nm(a)+' absorbed '+b.n+' · '+IVN[k]+' +'+pctS(n-o)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
 
 // ---------------- Beast Trainer: one purchase raises a companion to your level ----------------
 // each level costs about 1.9 × (level + 1.1) gold: Lv 1→20 ≈ 400, Lv 10→20 ≈ 315, Lv 1→40 ≈ 1,560

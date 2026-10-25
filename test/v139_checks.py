@@ -24,7 +24,7 @@ CHK=r"""(()=>{const R={},ok=(k,v,why)=>{R[k]={ok:!!v,why:why===undefined?null:wh
   // reset costs gold and returns every point
   gold=0;ok('reset_needs_gold',!atr139Reset()&&atr139Spent()===st);gold=99999;ok('reset',atr139Reset()&&atr139Spent()===0&&gold===99999-atr139ResetCost());
   // flat gains halved-ish: level 30 naked warrior has less health than before (55% of the old growth)
-  ok('flat_per',Math.abs(CLS.warrior.per.hp-24*ATR139.flat)<.01&&CLS.warrior.per.mp===1.5,CLS.warrior.per);
+  ok('flat_per',Math.abs(CLS.warrior.per.hp-24*ATR139.flat*(typeof LV141!='undefined'?LV141.k:1))<.01&&CLS.warrior.per.mp===1.5,CLS.warrior.per);
   // --- power scale ---
   hero.lvl=1;hsDirty();const p1=heroPower();hero.lvl=50;hsDirty();atr139Auto();atr139Apply();const p50=heroPower();
   ok('power_small',p1>=60&&p1<=140&&p50<1000,[p1,p50]);ok('rec_small',recPower(1)<=150&&recPower(50)<=900&&recPower(50)%5===0,[recPower(1),recPower(50)]);

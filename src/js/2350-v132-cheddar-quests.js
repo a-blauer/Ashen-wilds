@@ -17,14 +17,14 @@ var CHQ132={st:{},g:-2,ch:null,bur:null,mk:null,mkK:'',spots:{},t:0,pop:0,wave:0
 var CHQD132={
  '0_0':[
   {id:'k1a',t:'Smoke Them Out',d:'A camp has dug in on my best toadstool patch. Clear one out and I’ll make it worth your while.',o:[['camp',1,'Camp cleared']],rw:'weapon',w:1.2},
-  {id:'k1b',t:'Timber and Stone',d:'My burrows don’t shore themselves up. Fifteen wood from the groves and ten stone from the rocks.',o:[['wood',15,'Wood gathered'],['stone',10,'Stone gathered']],rw:'boots',w:1.2},
+  {id:'k1b',t:'Timber for the Burrows',d:'My burrows don’t shore themselves up. Fifteen wood from the groves, if you please.',o:[['wood',15,'Wood gathered']],rw:'boots',w:1.2}, // v141: wood only (was + 10 stone)
   {id:'k1c',t:'Something for the Pot',d:'Five fish from the bog water. Don’t ask what I do with them.',o:[['fish',5,'Fish caught']],rw:'egg',w:1},
   {id:'k1d',t:'Lanterns for the Dark',d:'Glow Caps light the tunnels down below. Pick me five.',o:[['glow',5,'Glow Caps picked']],rw:'helm',w:1},
   {id:'k1e',t:'Borrowed Strength',d:'Have a companion empower you (E / R), then take something down while their strength is in you.',o:[['empKill',1,'Kill while a companion empowers you']],rw:'chest',w:1}],
  '0_1':[
   {id:'k2a',t:'Bigger Game',d:'Elites stalk these hollows: bigger, meaner, and their names burn gold. Bring one down.',o:[['elite',1,'Elite slain']],rw:'weapon',w:1.5},
   {id:'k2b',t:'A Lucky Line',d:'Fish long enough and the water coughs up a gold pouch. Pull one up for me.',o:[['pouch',1,'Gold pouch fished up']],rw:'egg',w:1.3},
-  {id:'k2c',t:'Ore for the Forge',d:'Five iron ore. The veins here run rust-red through the rock.',o:[['iron',5,'Iron Ore mined']],rw:'helm',w:1.2},
+  {id:'k2c',t:'Stone and Ore for the Forge',d:'Eight stone for the hearth and five iron ore. The veins here run rust-red through the rock.',o:[['stone',8,'Stone gathered'],['iron',5,'Iron Ore mined']],rw:'helm',w:1.2}, // v141: + 8 stone
   {id:'k2d',t:'Two Become One',d:'Fuse, siphon or consume a companion. Out here the strong eat the weak.',o:[['fuse',1,'Companion fused, siphoned or consumed']],rw:'egg',w:1}],
  '0_2':[
   {id:'k3a',t:'Tempered Steel',d:'Have the Blacksmith forge your weapon to +2 or better, then kill something with it.',o:[['forgeKill',1,'Kill with a +2 forged weapon']],rw:'weapon',w:1.3},
@@ -65,7 +65,7 @@ function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
@@ -321,7 +321,7 @@ addEventListener('resize',()=>{try{chqTrkPos132()}catch(_){}})
 // ---------------- events ----------------
 function chqRemote132(){return typeof MP!='undefined'&&!!MP.rk}
 function chqBuffKind132(){const t=nowP(),B=hero.buffs||[];
-  const comp=typeof party!='undefined'&&party.slice(0,2).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
+  const comp=typeof party!='undefined'&&party.slice(0,actN141()).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
   const food=B.some(b=>b.food&&b.k&&SUP[b.k]&&SUP[b.k].c=='food'&&b.t>t),bard=B.some(b=>b.n=='Inspired'&&b.t>t);return {comp,food,bard}}
 function chqKill132(e,C,was){if(!e||e.dprop||e.wv)return;
   if(C&&!C.raid&&!was&&campCleared(C)){chqEv132('camp',1);chqEv132('allCamps',1,C.j!=null?C.j:C.i)}

@@ -20,7 +20,7 @@
 //   (L is the Bestiary, every other letter is taken, so it lives under K.)
 
 var KQS={tg:null,gp:null,fire:0,cr0:0,ch:null,objs:[],cdn:{},hist:[],histT:0,stealth:0,unbrk:0,mx:null,my:null,mIn:false,touch:null,eat:0,ret:null,sel:null,slot:0,ck:'',ca:null,rc:null};
-var KQS_SLOTS=4;
+var KQS_SLOTS=6; // v141: six ability keys (was 4)
 
 // ---------------- the 50 new abilities ----------------
 // k:'x' + x:<handler>; gt:1 ground targeted (sh circle|line|wall|cone, r radius / w width, L length, rng max range); spend:1 uses up the class resource;

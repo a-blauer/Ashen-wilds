@@ -7,7 +7,8 @@ fails=[]
 def s(pg):
     L.start(pg);ev=pg.evaluate
     r=ev("""()=>{const R={};const ok=(k,v)=>{R[k]=v};
-      const p=PMAP[0].path[60];toPos(p[0],p[1]);hero.lvl=50;STEP(.5);
+      const p=PMAP[0].path[60];toPos(p[0],p[1]);hero.lvl=50;hero.tal.__cs2=1;STEP(.5);   // v141: two companions in the team need the Companion Bond
+      
       const SPF=n=>{for(const k of SPK){if(SP2[k][8]==n)return k}for(const f in EVSP)if(EVSP[f].includes(n))return famTier(f,1);return 'Foxlet'};
       const mk=n=>{const c=hatch(Object.assign(mkEgg(SPF(n),0,1),{basic:true}));c.l=50;c.h=M(c);c.sp=[n];c.cdm={};c.emp=false;return c};
       const A=mk('Mend'),B=mk('Hamstring Bite');party=[A,B].concat(party.filter(q=>q!==A&&q!==B)).slice(0,3);cmpSel=0;ui();STEP(.1);

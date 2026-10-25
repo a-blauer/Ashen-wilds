@@ -22,7 +22,7 @@
      if(t=='~'&&!BIOMES[MAP.bio[y][x]].lava)c.water++}
    c.secrets=SECRETS.filter(S=>{const J=insAt(S.x,S.z);return J&&J.g===I.g}).length;feas[I.n]=c}
  out.feas=feas;
- [['Kindlelight I','water'],['Kindlelight I','mush'],['Kindlelight I','tree'],['Kindlelight I','rock'],['Kindlelight II','water'],['Kindlelight II','iron'],['Hillside Crest I','secrets']].forEach(([n,k])=>{if(!(feas[n]&&feas[n][k]>0))F.push('nothing for '+k+' in '+n)});
+ [['Kindlelight I','water'],['Kindlelight I','mush'],['Kindlelight I','tree'],['Kindlelight I','rock'],['Kindlelight II','water'],['Kindlelight II','iron'],['Kindlelight II','rock'],['Hillside Crest I','secrets']].forEach(([n,k])=>{if(!(feas[n]&&feas[n][k]>0))F.push('nothing for '+k+' in '+n)});
  if(feas['Hillside Crest I'].camps!==3)F.push('Hillside I camps '+feas['Hillside Crest I'].camps);
  // go to Kindlelight I
  const I0=PMAP[0].ins[0];insArrive(I0);await sleep(300);tick(40);
@@ -47,7 +47,7 @@
  if($('chqt132').classList.contains('hide'))F.push('tracker hidden');out.trk=$('chqt132').innerText;
  // events: gathering, fishing, camp, empowered kill
  chqEv132('wood',25);chqEv132('stone',9);chqEv132('fish',5);chqEv132('glow',5);
- if(chqS132(CHQ132_ID.k1b).s!==1)F.push('k1b done early');chqEv132('stone',1);if(chqS132(CHQ132_ID.k1b).s!==2)F.push('k1b not ready');
+ if(chqS132(CHQ132_ID.k1b).s!==2)F.push('k1b not ready');   // v141: wood only (15), the 25 wood above complete it
  if(chqS132(CHQ132_ID.k1c).s!==2)F.push('fish not ready');
  // a real gather through gFinish: find a tree in the instance
  {const t0=chqS132(CHQ132_ID.k1b);CHQ132.st.k1b={s:1,p:[0,0]};let tree=null;for(let y=I0.y0;y<I0.y0+I0.h&&!tree;y++)for(let x=I0.x0;x<I0.x0+I0.w;x++){if(MAP[y][x]=='#'&&NODE[y*W+x]&&insAt(x,y)&&insAt(x,y).g===I0.g){tree={kind:'tree',x,y,k:y*W+x};break}}

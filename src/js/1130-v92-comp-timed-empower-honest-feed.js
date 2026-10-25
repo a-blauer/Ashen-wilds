@@ -74,7 +74,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // per tick: sweep + seconds on the ⚡ button, a thin timer strip under the health bar, and live tooltips
 function emp92Hud(){
   const cb=$('cbars');if(!cb)return;
-  party.slice(0,2).forEach((c,i)=>{const el=cb.children[i];if(!el||!c)return;
+  party.slice(0,actN141()).forEach((c,i)=>{const el=cb.children[i];if(!el||!c)return;
     const b=el.querySelector('button[data-e]'),k=i?'R':'E';
     let bar=el.querySelector('.e92bar');if(!bar){const inf=el.querySelector('.cinf');if(inf){inf.insertAdjacentHTML('beforeend','<div class="e92bar"><i></i></div>');bar=inf.querySelector('.e92bar')}}
     let p=0,t='',cls='',tip,bw=0;

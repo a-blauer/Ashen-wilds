@@ -296,7 +296,7 @@ body.psx #wmap canvas{filter:saturate(.9) brightness(.9)}
 </style></head><body>
 <div class="wrap">
 <h1>Kill Quest</h1>
-<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-4 class skills · Shift dash (2 charges) · C character · K abilities · B kingdom · Tab target · Q potion · Z mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
+<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-6 class skills · Shift dash (2 charges) · C character · K abilities · B kingdom · Tab target · Q feed the most hurt companion · Z health potion · X mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
 <div class="stage" id="stage">
   <div id="gl"></div>
   <div id="topl" class="glass"><div class="row"><span id="lvT">Lv 1</span><span id="goldT">🪙 0</span></div><div id="areaT" style="font-size:.68rem;color:var(--mut)"></div><div id="act" class="actrow"></div><div id="buffs"></div></div>
@@ -2212,7 +2212,7 @@ function featTick(dt,now,al){
     else{rec.hp=hero.hp;rec.t+=dt;if(rec.t>=rec.need){rec=null;fadeTo(recallTown)}}
   }
   $('rcb').classList.toggle('hide',!rec);if(rec){$('rcB').style.width=(100*rec.t/rec.need)+'%';$('rcT').textContent=(typeof RECBACK!='undefined'&&RECBACK&&INST?'🌀 Returning to your '+(INSL[INST.r]?INSL[INST.r].n:'zone')+' run...':'🌀 Recalling to '+(home||TOWNS[0]).n+'...')};
-  const emo=party.slice(0,2).some(c=>c.emp&&c.h>0);
+  const emo=party.slice(0,actN141()).some(c=>c.emp&&c.h>0);
   if(pl.mat){pl.mat.emissive.setHex(emo?0xffc04a:0);pl.mat.emissiveIntensity=emo?.28+.1*Math.sin(now/300):0}
   if(emo&&dt>0){if(Math.random()<.3)burst(V(pl.position.x+(Math.random()-.5)*.6,.2,pl.position.z+(Math.random()-.5)*.6),0xffd24a,1,.2,.9,.9);if(now%800<dt*1000)ring(pl.position,0xffd24a,1.6,600)}
 }
@@ -2230,7 +2230,7 @@ $('prompt').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
 function sync(){
   if(!party.length)return;
   for(let i=0;i<2;i++){
-    const c=party[i];
+    const c=i<actN141()?party[i]:null; // v141: the 2nd companion rests until the Companion Bond is learned
     if(!c){if(fols[i]){scene.remove(fols[i]);fols[i]=null;leadK[i]=''}continue}
     const k=c.n+c.f+c.v+c.g.join()+c.cl.join()+c.tr+'|'+(c.evo||0);if(k==leadK[i])continue;leadK[i]=k;
     const old=fols[i],g=cr(c);g.position.copy(old?old.position:V(pl.position.x-1-i,0,pl.position.z));scene.add(g);if(old)scene.remove(old);fols[i]=g;
@@ -2444,8 +2444,8 @@ addEventListener('keydown',e=>{
   if(k=='tab'&&!uiOpen()){selectTarget();return}
   {const tw={i:'bag',p:'cmp',u:'inc',g:'fz',n:'wmap',o:'setw',c:'tal',h:'xw',j:'xw'}[k];if(tw&&!$(tw).classList.contains('hide')){$(tw).classList.add('hide');return}}
   if(uiOpen())return;
-  if(k>='1'&&k<='4')cast(+k-1);
-  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')drink();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
+  if(k>='1'&&k<='6')cast(+k-1);
+  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')feedLowest141();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drink();if(k=='x'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
 });
 addEventListener('keyup',e=>{K[e.key.toLowerCase()]=0});
 $('wmClose').onclick=()=>$('wmap').classList.add('hide');
@@ -2610,7 +2610,7 @@ const CLS={
    base:{hp:88,mp:90,pa:4,ma:13,pd:4,md:9},per:{hp:15.5,mp:6,pa:.6,ma:4.1,pd:1.2,md:2.3},rng:11,spd:.72,crit:.08,cape:[40,60,130],tunic:0x3a3a7a,pants:[40,40,70],sk:[225,190,160],st:'Magic power · Mana'}
 };
 const CLSK=Object.keys(CLS);
-// ---------------- class skills (keys 1-4, unlocked by character level) ----------------
+// ---------------- class skills (keys 1-6, unlocked by character level) ----------------
 const SKL={
  warrior:[
   {n:'Cleave',i:'🪓',lv:1,k:'cone',m:2.0,cd:5,mp:8,r:3.2,col:0xffb070,d:'A wide sweeping strike in front of you.'},
@@ -2857,7 +2857,7 @@ function HS_base(){
   const add=o=>{for(const k in o){if(k in P)P[k]+=o[k];else if(k!='dash3')s[k]=(s[k]||0)+o[k]}};
   SLOTS.forEach(k=>{const it=eq[k];if(it&&canUse(it))add(itStats(it))});
   add(T);if(talRank('a14')>=3)s.dash+=1;
-  party.slice(0,2).forEach(c=>{if(!c||c.h<=0)return;
+  party.slice(0,actN141()).forEach(c=>{if(!c||c.h<=0)return;
     (c.mods||[]).forEach(m=>{const Mo=MODS[m];if(Mo.t)add(Mo.t);if(c.emp&&Mo.e)add(Mo.e)});
     if(c.emp){const k=.24*(1+(T.empP||0));s.hp+=cM(c)*k;s.pa+=cStat(c,'pa')*k;s.ma+=cStat(c,'ma')*k;s.pd+=cStat(c,'pd')*k;s.md+=cStat(c,'md')*k;
       (c.sp||[]).forEach(n=>{const sp=CSP[n];if(sp&&sp.emp&&sp.emp.k=='stat')add(sp.emp.s)})}});
@@ -2902,7 +2902,7 @@ function heroHit_base(e,raw,mt,o){
     const now=performance.now(),atk=atkOf(mt||heroMt());
     if(s.poisonOn||hero.buffs.some(b=>b.t>now&&b.s.poisonOn))eStatus(e,{poison:4},atk*.35*(1+s.poisonP));
     if(s.slowOn&&Math.random()<s.slowOn)eStatus(e,{slow:2.5},0);
-    party.slice(0,2).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em||em.k!='onhit'||Math.random()>em.ch)return;
+    party.slice(0,actN141()).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em||em.k!='onhit'||Math.random()>em.ch)return;
       if(em.fx=='zap'){chainFrom(e,atk*.5,'m',2,0xfff06a,null);return}eStatus(e,{[em.fx]:em.fx=='root'?1.5:3},atk*.3)})});
     if(o.s&&o.s.stun)eStatus(e,{stun:o.s.stun},0,'h');if(o.s&&o.s.burn)eStatus(e,{burn:4},atk*.3);
   }
@@ -2983,7 +2983,7 @@ function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
 }
 function heroLevelUp(){
@@ -3094,7 +3094,7 @@ function heroTick(dt,now){
   if(hero.mp==null)hero.mp=mm;hero.mp=Math.min(mm,hero.mp+dt*mm*(.012+s.mpr));
   const inCombat=now-hero.lastHit<6000||enemies.some(e=>e.agg&&!e.dead&&d2(e.m.position,pl.position)<12);
   if(!inCombat)hero.hp=Math.min(mx,hero.hp+dt*mx*.03);else if(s.regen)hero.hp=Math.min(mx,hero.hp+dt*mx*s.regen);
-  party.slice(0,2).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em)return;
+  party.slice(0,actN141()).forEach(c=>{if(!c||!c.emp||c.h<=0)return;(c.sp||[]).forEach(n=>{const em=CSP[n]&&CSP[n].emp;if(!em)return;
     if(em.k=='regen')hero.hp=Math.min(mx,hero.hp+dt*mx*em.v);
     else if(em.k=='shield'||em.k=='healp'||em.k=='pulse'){c.eT=(c.eT||0)-dt;if(c.eT<=0){c.eT=em.cd;
       if(em.k=='shield'){hero.sh=Math.max(hero.sh,mx*em.v*(1+s.shieldP));hero.shT=now+8000;ring(pl.position,0xc0b090,2,500)}
@@ -3236,11 +3236,11 @@ function hud_base(){
   $('goldT').textContent='🪙 '+gold;
   const slot=(x,ic,kb,cd,mx,sub,dim,tt)=>`<button class="hs" data-x="${x}" title="${tt||''}" ${cd>0?'disabled':''} ${dim?'style="opacity:.5"':''}><span class="ic">${ic}</span><span class="kb">${kb}</span><span class="sb">${sub||''}</span><span class="cdv" style="height:${mx?Math.min(100,100*cd/mx):0}%"></span></button>`;
   const dsh=Math.floor(hero.dc||0);
-  $('acts').innerHTML=(slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Q',hero.cdP||0,9,'×'+pots));
+  $('acts').innerHTML=(slot('a',{melee3:'⚔️',melee4:'🗡️',bow:'🏹',staff:'🪄'}[C.atk],'LMB',0,0,'')+heroSkills().map((k,i)=>{const lk=hero.lvl<k.lv,c=hero.cd['s'+i]||0;return slot(i,lk?'🔒':k.i,i+1,c,k.cd,lk?'Lv'+k.lv:k.mp+'mp',lk||hero.mp<k.mp,k.n+' — '+k.d)}).join('')+slot('d','💨','Shift',dsh<1?1-((hero.dc||0)%1):0,1,'×'+dsh)+slot('p','🧪','Z',hero.cdP||0,9,'×'+pots,0,'Health Potion (Z)'));
   const bs=enemies.find(e=>e.boss&&!e.dead&&e.agg&&e.m.position.distanceTo(pl.position)<30);
   $('boss').classList.toggle('hide',!bs||!!tgt);if(bs){$('bossN').textContent=bs.c.n+' · Lv '+bs.c.l;$('bossB').style.width=Math.max(0,100*bs.c.h/M(bs.c))+'%'}
   $('areaT').textContent=areaName();
-  $('act').innerHTML=party.slice(0,2).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
+  $('act').innerHTML=party.slice(0,actN141()).map((c,i)=>`<div class="ach${c.emp?' emp':''}"><span class="ic">${em(c)}</span><div class="ai"><b>${(c.tr=='Universal'?'✦ ':'')+c.n} Lv${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</b><span class="meter sm"><i style="width:${Math.max(0,100*c.h/M(c))}%"></i><span>${Math.max(0,Math.round(c.h))}/${M(c)}</span></span></div>${c.h<=0?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" title="Empower (${i?'R':'E'})">⚡</button>`}</div>`).join('');
   const now=performance.now(),tp=tpFree();
   $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+hero.buffs.filter(b=>b.t>now).map(b=>`<span class="bf" title="${b.n}">${b.i||'✨'} ${Math.ceil((b.t-now)/1000)}s</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
 }
@@ -3392,8 +3392,7 @@ let mstock=null;
 function rMS(){
   const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
   const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`,D=c=>shpP109('magic',c),rc=D(40*hero.lvl),xc=D(60+hero.lvl*12);
-  $('mst').innerHTML=shpNote109('magic')+`<div class="rw"><span class="rn">🔄 <b>Tome of Unlearning</b><small>Take back all your attribute points to spend again</small></span><span class="ra">${P(rc)}<button class="pri" data-ms="reset" ${gold<rc||!atr139Spent()?'disabled':''}>Reset</button></span></div>`+
-   `<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
+  $('mst').innerHTML=shpNote109('magic')+/* v141: the Tome of Unlearning (attribute reset) is no longer sold */`<div class="rw"><span class="rn">📜 <b>Elixir of Insight</b><small>+25% XP for 10 minutes</small></span><span class="ra">${P(xc)}<button class="pri" data-ms="xp" ${gold<xc?'disabled':''}>Buy</button></span></div>`+
    UPM.slice(0,T).map((u,i)=>`<div class="rw"><span class="rn">${u[1]} <b>${u[0]}</b><small>Upgrade material · ${TIERN[i]}</small></span><span class="ra">${P(D(Math.round(UPV[i]*.9)))}<button class="pri" data-ms="u${i}" ${gold<D(Math.round(UPV[i]*.9))?'disabled':''}>Buy</button></span></div>`).join('')+
    mstock.eggs.map((e,i)=>e?`<div class="rw"><span class="rn">${en(e)}<small>${FAMD[e.tag].d}</small></span><span class="ra">${P(D(EGV[e.tier]))}<button class="pri" data-ms="e${i}" ${gold<D(EGV[e.tier])?'disabled':''}>Buy</button></span></div>`:'').join('');
 }
@@ -3444,7 +3443,7 @@ function ccRender(){
     const C=CLS[ccCls],S50=k=>C.base[k]+C.per[k]*49;
     $('ccInfo').innerHTML=`<h3 style="color:${C.col}">${C.i} ${C.n}</h3><p>${C.d}</p><div class="mut" style="font-size:.72rem;margin-bottom:6px">${C.st} · ${C.arm} armor · ${({melee3:'heavy 3-hit combo',melee4:'fast 4-hit combo',bow:'arrows from range',staff:'magic bolts from range'})[C.atk]}</div>`+
       statBar('Health',S50('hp'),1400)+statBar('Phys. attack',S50('pa'),200)+statBar('Magic attack',S50('ma'),215)+statBar('Phys. defense',S50('pd'),150)+statBar('Magic defense',S50('md'),125)+statBar('Speed',1/C.spd,2.8)+
-      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (C).</div>`;
+      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
   }else{
     $('ccList').innerHTML=STARTERS.map(n=>{const f=famOf(n);return `<button class="ccc${n==ccSp?' on':''}" data-s="${n}" style="--cc:#${('00000'+FAMD[f].col.toString(16)).slice(-6)}"><span class="cci">${SP2[n][3]}</span><span><b>${n}</b><small>${FAMD[f].i} ${f} family</small></span></button>`}).join('');
     const f=famOf(ccSp),F=FAMD[f],sp=CSP[SP2[ccSp][8]];
@@ -3599,8 +3598,8 @@ const FOOD=[
  ['f_feast',"Hunter's Feast",'🍱',{meat:2,fish:1,pumpkin:1,carrot:2,wheat:2},2,{hpP:.1,paP:.08,maP:.08,pdP:.08,mdP:.08},'+10% health, +8% attack and defense',25]
 ];
 const ALCH=[
- ['p_hp','Health Potion','🧪',{sunleaf:2,glowcap:1},2,null,'Heals 40% health (Q)'],
- ['p_mp','Mana Potion','🫙',{moonpetal:2,crystal:1},2,null,'Restores 50% mana (Z)'],
+ ['p_hp','Health Potion','🧪',{sunleaf:2,glowcap:1},2,null,'Heals 40% health (Z)'],
+ ['p_mp','Mana Potion','🫙',{moonpetal:2,crystal:1},2,null,'Restores 50% mana (X)'],
  ['e_might','Elixir of Might','⚗️',{emberroot:2,pepper:1,crystal:1},1,{paP:.15,maP:.15},'+15% physical & magical attack for 10 min',10],
  ['e_stone','Stoneskin Elixir','🗿',{frostcap:2,stone:4},1,{pdP:.2,mdP:.2},'+20% physical & magical defense for 10 min',10],
  ['e_swift','Swiftness Draught','💨',{sunleaf:2,petals:3},1,{mspd:.12,as:.08},'+12% move speed, +8% attack speed for 10 min',10],
@@ -3799,7 +3798,7 @@ function gFinish(tg){
 function hud(){
   hud_base();if(!$('acts'))return;$('bbar').classList.toggle('hide',false);
   {const cd=hero.cdM||0,mm=mOf(mActive)||mounts[0];
-    $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (Z)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">Z</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
+    $('acts').insertAdjacentHTML('beforeend',`<button class="hs" data-x="z" title="Mana Potion (X)" ${cd>0?'disabled':''} ${(sup.p_mp||0)?'':'style="opacity:.5"'}><span class="ic">🫙</span><span class="kb">X</span><span class="sb">×${sup.p_mp||0}</span><span class="cdv" style="height:${Math.min(100,100*cd/6)}%"></span></button>`+
       (mm?`<button class="hs" data-x="v" title="${riding?'Dismount':'Ride '+mm.n} (V)"><span class="ic">${riding?'⏏️':MOUNTS[mm.k].i}</span><span class="kb">V</span><span class="sb">${riding?'off':mm.spd}</span><span class="cdv" style="height:0"></span></button>`:''))}
   const now=performance.now(),tp=tpFree();
   $('buffs').innerHTML=(tp?`<span class="bf tpn" title="Spend attribute points (Character, C)">✦ ${tp} attribute point${tp>1?'s':''} · C</span>`:'')+(riding?`<span class="bf" title="Riding ${riding.n}">🐎 +${riding.spd}%</span>`:'')+hero.buffs.filter(b=>b.t>now&&!b.perm).map(b=>`<span class="bf${b.food?' fd':b.elix?' ex':''}" title="${b.n}${b.d?': '+b.d:''}">${b.i||'✨'} ${fmtT(b.t-now)}</span>`).join('')+(hero.sh>0?`<span class="bf" title="Shield">🛡️ ${Math.round(hero.sh)}</span>`:'')+(restBonus()>0?`<span class="bf" title="Well Rested">🛏️ +${Math.round(restBonus()*100)}% XP</span>`:'');
@@ -4906,7 +4905,7 @@ const runeOf=(c,f)=>(c.runes||[]).map(k=>RUNES[k]&&RUNES[k][3]).filter(Boolean);
 function runeEl(c){const r=runeOf(c).find(q=>q.el);return r?r.el:null}
 function runeMul(c,k){let m=1;runeOf(c).forEach(q=>{if(q[k])m*=q[k]});return m}
 function runeHit(c,d){const l=runeOf(c).find(q=>q.leech);if(l&&c.h>0)c.h=Math.min(M(c),c.h+d*l.leech)}
-function runeTick(dt){if(dt<=0)return;party.slice(0,2).forEach(c=>{if(!c||!c.cdm||!runeOf(c).some(q=>q.swift))return;for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*.43)})}
+function runeTick(dt){if(dt<=0)return;party.slice(0,actN141()).forEach(c=>{if(!c||!c.cdm||!runeOf(c).some(q=>q.swift))return;for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*.43)})}
 function runeHTML(c){const slots=c.runes||[],own=RUNEK.filter(k=>cnt(k)>0);
   let h=`<div class="sec">Runes (${slots.length}/2)</div><div class="runeS">`+[0,1].map(i=>{const k=slots[i];return k?`<button data-runrm="${i}" title="Remove (returns the rune)">${RUNES[k][1]} <b>${RUNES[k][0]}</b><small>${RUNES[k][2]}</small></button>`:`<div class="rempty">Empty rune slot</div>`}).join('')+'</div>';
   if(slots.length<2)h+=own.length?`<div class="runeL">`+own.map(k=>`<button data-runadd="${k}">${RUNES[k][1]} ${RUNES[k][0]} ×${cnt(k)}</button>`).join('')+'</div>':'<div class="mut dtl">No runes. Find them on elites, bosses, chests, events and rare fish, or buy them from the Rune Sage when it visits Duskhold.</div>';
@@ -5529,7 +5528,7 @@ function hatchInfo(c){ivFix(c);
   const sp=(c.sp||[]).map(n=>{const s=CSP[n];return s?`<div class="hab">${s.i} <b>${n}</b><small>${s.d} · ${s.cd}s cooldown</small></div>`:''}).join('');
   return `<b>${nm(c)}</b><br><span class="mut">${famT(c)}${c.tr=='Universal'?' · ✦ Universal (fuses with any type)':''}</span><br><span class="hov" style="--gc:${o[2]}">Overall grade <span class="ogr">${o[1]}</span></span>
    <div class="hsec">Base stats</div><div class="hgr">${gr}</div><div class="hsec">Modifiers</div>${mods}<div class="hsec">Abilities</div>${sp}`}
-function mrow(c,i,on){return `<button class="rw it${on?' on':''}" data-i="${i}" style="--rc:${c.h<=0?'#f87171':i<2?'#c9a24a':'transparent'}"><span class="rn">${c.lock?'<span class="lk" title="Locked">🔒</span> ':''}${nm(c)}<small>${famT(c)} · HP ${Math.round(c.h)}/${M(c)} · Grade ${ovTag(c)}${(c.mods||[]).length?' · '+c.mods.join(', '):''}</small></span><span class="ra"><span class="hpm"><i style="width:${100*c.h/M(c)}%"></i></span>${i<2?'<em>'+(i+1)+'</em>':''}</span></button>`}
+function mrow(c,i,on){return `<button class="rw it${on?' on':''}" data-i="${i}" style="--rc:${c.h<=0?'#f87171':i<actN141()?'#c9a24a':'transparent'}"><span class="rn">${c.lock?'<span class="lk" title="Locked">🔒</span> ':''}${nm(c)}<small>${famT(c)} · HP ${Math.round(c.h)}/${M(c)} · Grade ${ovTag(c)}${(c.mods||[]).length?' · '+c.mods.join(', '):''}</small></span><span class="ra"><span class="hpm"><i style="width:${100*c.h/M(c)}%"></i></span>${i<2?'<em>'+(i+1)+'</em>':''}</span></button>`}
 {const f=rC0;rC0=function(){f();if(!party.length)return;const c=party[cmpSel];if(!c)return;const cd=$('cd'),o=ovG(c);
   cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Potential<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Overall grade</span><b class="ogr" style="color:${o[2]}">${o[1]}</b></div>`);
   const bt=cd.querySelector('.btns');if(bt)bt.insertAdjacentHTML('afterbegin',`<button id="mkLock" title="Locked companions can't be consumed by fusion">${c.lock?'🔒 Locked':'🔓 Lock'}</button>`)}}
@@ -5573,7 +5572,7 @@ function sellables(){const L=[];gear.forEach(i=>L.push({k:'g'+i.id,ic:icoOf(i),n
   Object.keys(SUP).filter(k=>['crop','food'].includes(SUP[k].c)&&cnt(k)>0).forEach(k=>L.push({k:'s'+k,ic:SUP[k].i,n:SUP[k].n+' ×'+cnt(k),sub:'Whole stack',v:(SUP[k].c=='food'?12:4)*cnt(k),rc:'transparent'}));return L}
 function rS(){
   rS_base();const P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`;
-  $('sb').insertAdjacentHTML('beforeend','<div class="sec">Potions</div>'+[['p_mp','🫙 Mana Potion','Restores 50% mana (Z)',shpP109('post',40+hero.lvl*4)]].map(r=>`<button class="rw" data-b2="${r[0]}" data-c="${r[3]}"><span class="rn">${r[1]}<small>${r[2]}</small></span><span class="ra">${P(r[3])}</span></button>`).join(''));
+  $('sb').insertAdjacentHTML('beforeend','<div class="sec">Potions</div>'+[['p_mp','🫙 Mana Potion','Restores 50% mana (X)',shpP109('post',40+hero.lvl*4)]].map(r=>`<button class="rw" data-b2="${r[0]}" data-c="${r[3]}"><span class="rn">${r[1]}<small>${r[2]}</small></span><span class="ra">${P(r[3])}</span></button>`).join(''));
   const L=sellables();[...sellSel].forEach(k=>{if(!L.some(x=>x.k==k))sellSel.delete(k)});
   const tot=L.filter(x=>sellSel.has(x.k)).reduce((s,x)=>s+x.v,0),n=sellSel.size;
   $('ss').innerHTML=(L.length?L.map(x=>`<button class="rw it${sellSel.has(x.k)?' sel':''}" data-sk="${x.k}" style="--rc:${x.rc}"><span class="rn"><span class="ck"></span>${x.ic} ${x.n}<small>${x.sub}</small></span><span class="ra"><span class="gp">${x.v} 🪙</span></span></button>`).join(''):'<div class="mut" style="padding:6px 8px">Nothing to sell.</div>')+
@@ -6328,7 +6327,7 @@ const CTAL=[
 const ctPts=c=>Math.floor((c.l||1)/4),ctUsed=c=>Object.values(c.tal||{}).reduce((a,b)=>a+(b|0),0),ctFree=c=>Math.max(0,ctPts(c)-ctUsed(c));
 {const f=compHit;compHit=function(c,e,mult,fx){const d=f.apply(this,arguments);const r=c&&c.tal&&c.tal.pre;if(r&&d>0&&e&&!e.dead&&Math.random()<.06*r){hurt(e,d,{col:0xffd24a},true);dn(e.m.position,'Double!','#ffd24a',-30,600)}return d}}
 {const f=dmgCE;dmgCE=function(a,b,k,p){const d=f.apply(this,arguments);const r=b&&b.tal&&b.tal.hid;return r&&party.includes(b)?Math.max(1,Math.round(d*(1-.05*r))):d}}
-setInterval(()=>{try{const now=Date.now();party.slice(0,2).forEach(c=>{const r=c&&c.tal&&c.tal.wnd;if(!r||c.h<=0)return;const mx=M(c);if(c.h<mx*.3&&now-(c.swT||0)>60000){c.swT=now;c.h=Math.min(mx,Math.round(c.h+mx*[0,.15,.25,.35][r]));const i=party.indexOf(c);if(fols[i])dn(fols[i].position,'Second Wind','#7ee8a0',-30,900)}})}catch(_){}},500);
+setInterval(()=>{try{const now=Date.now();party.slice(0,actN141()).forEach(c=>{const r=c&&c.tal&&c.tal.wnd;if(!r||c.h<=0)return;const mx=M(c);if(c.h<mx*.3&&now-(c.swT||0)>60000){c.swT=now;c.h=Math.min(mx,Math.round(c.h+mx*[0,.15,.25,.35][r]));const i=party.indexOf(c);if(fols[i])dn(fols[i].position,'Second Wind','#7ee8a0',-30,900)}})}catch(_){}},500);
 function ctHTML(c){const fr=ctFree(c);let h=`<div class="ctal"><div class="cth">✦ Talents <span class="mut">${fr} point${fr==1?'':'s'} to spend · 1 point every 4 levels</span>${ctUsed(c)?'<button data-ctr="1">Reset</button>':''}</div><div class="ctg">`;
   CTAL.forEach(t=>{const r=(c.tal&&c.tal[t.k])|0;h+=`<button class="ctn${r?' on':''}" data-ctal="${t.k}" ${fr&&r<t.mx?'':'disabled'} title="${t.d(Math.min(t.mx,r+1))}"><span class="cti">${t.i}</span><b>${t.n}</b><span class="ctr">${r}/${t.mx}</span><small>${r?t.d(r):t.d(1)+(r?'':' (rank 1)')}</small></button>`});
   return h+'</div></div>'}
@@ -9610,7 +9609,7 @@ function cpic(c){const k=cpicKey(c);if(CPIC.cache[k]!==undefined)return CPIC.cac
   setTimeout(()=>{try{CPIC.cache[k]=cpicMake(c)||''}catch(e){CPIC.cache[k]=''}cbarSig='';hud()},0);return null}
 var cbarSig='';
 function cbarsRender(){
-  const cb=$('cbars');if(!cb)return;const L=party.slice(0,2);
+  const cb=$('cbars');if(!cb)return;const L=party.slice(0,actN141());
   const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c)].join(':')).join('/');
   if(sig!==cbarSig){cbarSig=sig;
     cb.innerHTML=L.map((c,i)=>{const p=cpic(c),dead=c.h<=0;
@@ -9680,10 +9679,13 @@ function msrcBuild(){const S={},zn=i=>PMAP[i].n,zl=a=>{const u=[...new Set(a)].m
   // dug soils and other realm items
   Object.keys(ITEMS||{}).forEach(k=>{if(k.slice(0,2)=='t:'){const it=ITEMS[k];if(it&&it.n&&!S[it.n.toLowerCase()])add(it.n,it.i,'Dig soil mounds in the portal zones (each zone gives its own soil).')}});
   return S}
-function msrcFind(el){if(!MSRC)MSRC=msrcBuild();const names=Object.keys(MSRC).sort((a,b)=>b.length-a.length);
+// v140: whole words only ("Stoneshell" is not "Stone"), and never in the hero / companion creator (#start)
+var MSRC_RE=null;
+function msrcFind(el){if(!MSRC)MSRC=msrcBuild();if(el&&el.closest&&el.closest('#start'))return null;
+  if(!MSRC_RE)MSRC_RE=Object.keys(MSRC).sort((a,b)=>b.length-a.length).map(n=>[n,new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])')]);
   for(let e=el,d=0;e&&d<3;e=e.parentElement,d++){if(e.id=='cmp'||e.classList&&e.classList.contains('modal'))break;
     const t=((e.getAttribute&&e.getAttribute('title'))||'')+' '+(e.textContent||'');if(t.length>60)continue;const lt=t.toLowerCase();
-    for(const n of names)if(lt.includes(n))return MSRC[n]}
+    for(const [n,re] of MSRC_RE)if(re.test(lt))return MSRC[n]}
   return null}
 function mhintShow(H,x,y){let d=$('mhint');if(!d){d=document.createElement('div');d.id='mhint';document.body.appendChild(d)}
   d.innerHTML=`<b>${H.ic} ${H.n}</b><br>${H.t}`;d.style.display='block';const w=d.offsetWidth,h=d.offsetHeight;
@@ -9735,7 +9737,7 @@ function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position
   enemies.forEach(e=>{if(e.dead)return;const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z),L=v.length();if(L>=bd)return;if(L>2&&v.dot(d)/L<.2)return;bd=L;b=e});return b}
 function commandAttack(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
-  const act=party.slice(0,2).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
+  const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
   const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
@@ -9837,24 +9839,28 @@ $('recallBtn').onclick=()=>doRecall();
 {const f=x2Save;x2Save=function(){const s=f.apply(this,arguments);try{if(INST)s.inst=INST}catch(_){}return s}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{INST=s&&s.inst&&s.inst.slots&&s.inst.v===108?s.inst:null}catch(_){INST=null}return r}}
 
-// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to every base stat ----------------
+// ---------------- Consume: a companion absorbs another companion (not an egg) for a boost to one base stat ----------------
+// v141: only the stat the eaten companion has its best roll in goes up (same amount per stat as before, when all five rose).
 var fCon=null;
 // gain from a consumed companion: its tier matters most, its level a little
 const conGainC=b=>consGain(Math.max(0,tierSp(b.g[0])-1))*(1+Math.min(.5,(b.l-1)/60))*(1+.1*(b.evo||0));
+// the stat Consume raises: the eaten companion's best roll (ties: the first in HP, PA, MA, PD, MD order)
+function conKey(b){ivFix(b);let k=IVK[0];IVK.forEach(q=>{if(ivOf(b,q)>ivOf(b,k)+1e-9)k=q});return k}
 function conHTML(a){const L=party.filter(c=>c&&c!==a);
-  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on every base stat; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
-  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<2;return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
-{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion for a boost to every base stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
+  return `<div class="fdet">🍽️ ${a.n} absorbs another companion and gains about <b>+${pctS(consGain(0))}</b> (Tier 1) to <b>+${pctS(consGain(4))}</b> (Tier 5) on one base stat: the one the eaten companion has its best roll in; higher level and evolved companions give a little more. <b>The eaten companion is gone for good.</b>
+  <div class="fstats" style="flex-wrap:wrap">${L.length?L.map(c=>{const i=party.indexOf(c),lk=c.lock,act=i<actN141();return `<button data-fcon="${i}" class="${fCon===c?'on':''}" ${lk?'disabled title="Locked: unlock it in the Companions window first"':act?'title="Active companion"':''}>${lk?'🔒 ':''}${em(c)} ${c.n} Lv ${c.l}${act&&!lk?' <small style="color:#fbbf24">active</small>':''} <small class="mut">T${tierSp(c.g[0])} · ${IVS[conKey(c)]} +${pctS(conGainC(c))}</small></button>`}).join(''):'<span class="mut">You need a second companion to consume. Hatch one from an egg.</span>'}</div></div>`}
+{const f=fuseOpts;fuseOpts=function(a,b){return f.apply(this,arguments).replace(/Feed [^<]* an egg for a small boost to every base stat/,'Absorb another companion to boost its best stat').replace(/Feed [^<]* an egg instead/,'Absorb a companion instead').replace(/or choose Consume to feed it an egg\./,'or choose Consume to have it absorb another companion.').replace('<span class="fi">🥚</span>','<span class="fi">🍽️</span>')}}
 {const f=rF;rF=function(){f.apply(this,arguments);try{const a=sel.length>=1?party[sel[0]]:null;if(fCon&&(!party.includes(fCon)||fCon===a||fCon.lock))fCon=null;const d=$('doF');
   if(a&&fOpt=='con'&&d){d.disabled=!fCon;d.textContent=fCon?'🍽️ Consume '+fCon.n:'🍽️ Consume'}}catch(_){}}}
 $('fz').addEventListener('click',e=>{const g=e.target.closest('[data-fcon]');if(g){e.stopPropagation();if(g.disabled)return;fCon=party[+g.dataset.fcon]||null;rF()}},true);
 {const f=$('doF').onclick;$('doF').onclick=function(){
   if(fOpt!='con')return f.apply(this,arguments);
   const a=party[sel[0]],b=fCon;if(!a||!b||b===a||!party.includes(b)||b.lock)return;
-  ivFix(a);const g=conGainC(b),up=[];
-  IVK.forEach(k=>{const o=ivOf(a,k),n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1])});ivSync(a);
+  ivFix(a);const g=conGainC(b),k=conKey(b),o=ivOf(a,k),up=[];
+  if(o>=1.3)return say('⚠ '+nm(a)+'’s '+IVN[k]+' is already at the maximum. '+b.n+' would be wasted.');
+  const n=Math.min(1.3,o+g*(.8+Math.random()*.4));a.iv[k]=n;if(grade(n)[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(n)[1]);ivSync(a);
   if(b.emp)b.emp=false;party=party.filter(c=>c!==b);sel=[party.indexOf(a)];cmpSel=Math.max(0,party.indexOf(a));a.h=Math.min(M(a),a.h+Math.round(M(a)*.1));fCon=null;
-  say('🍽️ '+nm(a)+' absorbed '+b.n+' · every base stat +'+pctS(g)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
+  say('🍽️ '+nm(a)+' absorbed '+b.n+' · '+IVN[k]+' +'+pctS(n-o)+(up.length?' ('+up.join(', ')+')':''));if(typeof sfx=='function')sfx('chime');hsDirty();ui();rF()}}
 
 // ---------------- Beast Trainer: one purchase raises a companion to your level ----------------
 // each level costs about 1.9 × (level + 1.1) gold: Lv 1→20 ≈ 400, Lv 10→20 ≈ 315, Lv 1→40 ≈ 1,560
@@ -12302,7 +12308,7 @@ cheatPortals();
 //   (L is the Bestiary, every other letter is taken, so it lives under K.)
 
 var KQS={tg:null,gp:null,fire:0,cr0:0,ch:null,objs:[],cdn:{},hist:[],histT:0,stealth:0,unbrk:0,mx:null,my:null,mIn:false,touch:null,eat:0,ret:null,sel:null,slot:0,ck:'',ca:null,rc:null};
-var KQS_SLOTS=4;
+var KQS_SLOTS=6; // v141: six ability keys (was 4)
 
 // ---------------- the 50 new abilities ----------------
 // k:'x' + x:<handler>; gt:1 ground targeted (sh circle|line|wall|cone, r radius / w width, L length, rng max range); spend:1 uses up the class resource;
@@ -12791,7 +12797,7 @@ function kqsKind(s){const t=s.ty||KQS_TY[s.k]||'';return t}
 function kqsInfo(s){const a=[];if(s.cd)a.push('⏱ '+s.cd+'s cooldown');a.push('💧 '+(s.mp||0)+' mana');if(s.gt)a.push('🎯 ground target · range '+kqsRng(s)+(s.sh=='line'?' · line '+(s.L||'')+'×'+(s.w||''):s.sh=='wall'?' · wall '+s.L:' · radius '+(s.r||1)));else if(s.r)a.push('◯ radius '+s.r);if(s.dur)a.push('⌛ '+s.dur+'s');if(s.spend)a.push(CRES[hero.cls]?CRES[hero.cls].i+' spends '+CRES[hero.cls].n:'');return a.filter(Boolean)}
 XR.abil=()=>{const c=hero.cls,C=CLS[c],all=kqsAll(c),eqd=heroSkills(),ap=apFree(),sel=kqsFind(c,KQS.sel)||eqd[0],nUn=all.filter(s=>kqsUnl(c,s)).length;
   $('xwT').textContent='⚡ Abilities';$('xwS').innerHTML=`${C.i} ${C.n} · <b class="kqs-apv">${ap}</b> ability point${ap==1?'':'s'} · ${nUn} / ${all.length} learned · +1 point every level`;
-  const slots=[0,1,2,3].slice(0,KQS_SLOTS).map(q=>{const s=eqd[q];return `<div class="kqs-slot${s?'':' empty'}${KQS.slot===q?' on':''}" data-kqslot="${q}" title="${s?s.n+' — key '+(q+1):'Empty slot '+(q+1)}"><span class="kqs-sk">${q+1}</span><span class="kqs-si">${s?s.i:'＋'}</span><span class="kqs-sn">${s?s.n:'Empty'}</span>${s&&eqd.length>1?`<button class="kqs-sx" data-kqsun="${q}" title="Remove from key ${q+1}">✕</button>`:''}</div>`}).join('');
+  const slots=[...Array(KQS_SLOTS).keys()].map(q=>{const s=eqd[q];return `<div class="kqs-slot${s?'':' empty'}${KQS.slot===q?' on':''}" data-kqslot="${q}" title="${s?s.n+' — key '+(q+1):'Empty slot '+(q+1)}"><span class="kqs-sk">${q+1}</span><span class="kqs-si">${s?s.i:'＋'}</span><span class="kqs-sn">${s?s.n:'Empty'}</span>${s&&eqd.length>1?`<button class="kqs-sx" data-kqsun="${q}" title="Remove from key ${q+1}">✕</button>`:''}</div>`}).join('');
   const row=s=>{const un=kqsUnl(c,s),q=eqd.indexOf(s),why=kqsWhy(s),def=s===kqsDef(c),cost=apCost(s);
     const st=un?(q>=0?`<span class="kqs-eqd">Key ${q+1}</span>`:`<button data-kqseq="${s.n}" title="Put on key ${(KQS.slot|0)+1}">Equip</button>`):why?`<span class="kqs-lk">🔒 ${why.replace('Reach level','Lv')}</span>`:`<button class="pri" data-kqsbuy="${s.n}">Unlock · ${cost} ⚡</button>`;
     return `<div class="rw kqs-ab${un?' un':' lk'}${s.gt?' gt':''}${sel===s?' on':''}${q>=0?' eq':''}" data-kqsel="${s.n}"><span class="rn"><span class="kqs-ic">${s.i}</span><b>${s.n}</b>${def?' <span class="kqs-tag def">Default</span>':''}${s.nw?' <span class="kqs-tag nw">New</span>':''}${s.gt?' <span class="kqs-tag gt">🎯 Ground</span>':''}<small>Lv ${s.lv} · ${kqsKind(s)}${def?'':' · '+cost+' ⚡'}</small></span><span class="ra">${st}</span></div>`};
@@ -12799,7 +12805,7 @@ XR.abil=()=>{const c=hero.cls,C=CLS[c],all=kqsAll(c),eqd=heroSkills(),ap=apFree(
   const un=kqsUnl(c,sel),why=kqsWhy(sel),q=eqd.indexOf(sel),cost=apCost(sel);
   const det=`<div class="kqs-det glass"><div class="kqs-dh"><span class="kqs-di">${sel.i}</span><div><b>${sel.n}</b><small>${kqsKind(sel)}${sel.gt?' · ground-targeted':''}</small></div></div><p>${sel.d}</p><div class="kqs-stats">${kqsInfo(sel).map(x=>`<span>${x}</span>`).join('')}</div>
     <div class="kqs-req"><span>Level ${sel.lv}${hero.lvl>=sel.lv?' ✔':' ✖'}</span>${sel.req?`<span>Requires ${sel.req}${kqsUnl(c,kqsFind(c,sel.req))?' ✔':' ✖'}</span>`:''}<span>${sel===kqsDef(c)?'Class default':'Cost '+cost+' ⚡'}</span></div>
-    ${un?`<div class="sec">Put on a key</div><div class="btns kqs-keys">${[0,1,2,3].slice(0,KQS_SLOTS).map(k=>`<button data-kqseq="${sel.n}" data-kqsk="${k}" class="${q===k?'pri':''}" ${k>eqd.length-(q>=0?1:0)?'disabled':''}>${k+1}</button>`).join('')}${q>=0&&eqd.length>1?`<button data-kqsun="${q}">Unequip</button>`:''}</div>`
+    ${un?`<div class="sec">Put on a key</div><div class="btns kqs-keys">${[...Array(KQS_SLOTS).keys()].map(k=>`<button data-kqseq="${sel.n}" data-kqsk="${k}" class="${q===k?'pri':''}" ${k>eqd.length-(q>=0?1:0)?'disabled':''}>${k+1}</button>`).join('')}${q>=0&&eqd.length>1?`<button data-kqsun="${q}">Unequip</button>`:''}</div>`
       :`<div class="btns"><button class="pri" data-kqsbuy="${sel.n}" ${why?'disabled':''}>${why?'🔒 '+why:'Unlock for '+cost+' ability point'+(cost>1?'s':'')}</button></div>`}
     ${sel.gt?'<div class="mut kqs-hint">Press its key, aim the circle with the mouse (or drag on a touch screen), then click / tap — or press the key again — to cast. Right-click or Esc cancels.</div>':''}</div>`;
   $('xwB').innerHTML=`<div class="kqs-ld"><div class="sec">Equipped · keys 1–${KQS_SLOTS}</div><div class="kqs-slots">${slots}</div></div><div class="xcols kqs-cols"><div class="kqs-list">${tiers}</div><div>${det}</div></div>`;
@@ -14464,7 +14470,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // per tick: sweep + seconds on the ⚡ button, a thin timer strip under the health bar, and live tooltips
 function emp92Hud(){
   const cb=$('cbars');if(!cb)return;
-  party.slice(0,2).forEach((c,i)=>{const el=cb.children[i];if(!el||!c)return;
+  party.slice(0,actN141()).forEach((c,i)=>{const el=cb.children[i];if(!el||!c)return;
     const b=el.querySelector('button[data-e]'),k=i?'R':'E';
     let bar=el.querySelector('.e92bar');if(!bar){const inf=el.querySelector('.cinf');if(inf){inf.insertAdjacentHTML('beforeend','<div class="e92bar"><i></i></div>');bar=inf.querySelector('.e92bar')}}
     let p=0,t='',cls='',tip,bw=0;
@@ -20098,7 +20104,7 @@ var FSM100_SN={hp:'Health',pa:'Phys. Attack',ma:'Magic Attack',pd:'Phys. Defense
 var FSM100_ACT={
   std:{i:'⚗️',n:'Fuse',verb:'Fuse',l:'Every level it gains from now on gives more stats.',best:'Best for a companion you will keep levelling.',rule:'same family or Universal'},
   sip:{i:'🧲',n:'Siphon',verb:'Siphon',l:'Copy one better stat grade from the partner (e.g. Phys. Attack D → A).',best:'Best when a spare has a high grade you want.',rule:'same family or Universal'},
-  con:{i:'🍽️',n:'Consume',verb:'Consume',l:'A small boost to all five stats.',best:'Best for spare companions of any family.',rule:'any family'}};
+  con:{i:'🍽️',n:'Consume',verb:'Consume',l:'A small boost to one stat: the one the eaten companion is best at.',best:'Best for spare companions of any family.',rule:'any family'}};
 var FSM100_STEPS=[['pick','Companion'],['act','Method'],['mate','Partner'],['prev','Confirm']];
 function FSM100_esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function FSM100_pc(v){const x=Math.round(v*1000)/10;return (x%1?x.toFixed(1):String(x))+'%'}
@@ -20115,24 +20121,24 @@ function FSM100_picPoll(){clearTimeout(FSM100.poll);if($('fz').classList.contain
   document.querySelectorAll('#fsmB .fsm-pic[data-pk]:not([data-pk=""])').forEach(el=>{const p=CPIC&&CPIC.cache[el.dataset.pk];if(p){el.innerHTML=`<img src="${p}" alt="">`;el.dataset.pk=''}else if(p!=='')left++});
   if(left)FSM100.poll=setTimeout(FSM100_picPoll,350)}
 function FSM100_grades(c){ivFix(c);return `<span class="fsm-gs">${IVK.map(k=>{const g=grade(ivOf(c,k));return `<span title="${FSM100_SN[k]}: grade ${g[1]}"><small>${IVS[k]}</small><b style="--g:${g[2]}">${g[1]}</b></span>`}).join('')}</span>`}
-function FSM100_tags(c,i){const t=[];if(i<2)t.push(`<span class="fsm-tag act" title="In your active team (slot ${i+1})">Team ${i+1}</span>`);
+function FSM100_tags(c,i){const t=[];if(i<actN141())t.push(`<span class="fsm-tag act" title="In your active team (slot ${i+1})">Team ${i+1}</span>`);
   if(c.lock)t.push('<span class="fsm-tag lk" title="Locked: it can be improved, but never used up">🔒 Locked</span>');
   if(c.tr=='Universal')t.push('<span class="fsm-tag un" title="Universal: can fuse or siphon with any family">✦ Universal</span>');
   if(c.h<=0)t.push('<span class="fsm-tag dn">Fainted</span>');return t.join('')}
 function FSM100_withCat(cat,fn){const f0=fCat;fCat=cat||'';try{return fn()}finally{fCat=f0}}
 // measure a clone as if it stood in a's party slot
 function FSM100_snap(c,inSlotOf){const o=inSlotOf||c,i=party.indexOf(o);if(i>=0&&c!==o)party[i]=c;
-  try{ivFix(c);const st={},iv={};IVK.forEach(k=>{st[k]=Math.round(cStat(c,k));iv[k]=ivOf(c,k)});return {st,iv,ov:ovV(c),gs:c.gs||0,fz:c.fz||0,l:c.l,mods:(c.mods||[]).slice(),tr:c.tr||''}}
+  try{ivFix(c);const st={},iv={};const raw={};IVK.forEach(k=>{raw[k]=cStat(c,k);st[k]=Math.round(raw[k]);iv[k]=ivOf(c,k)});return {st,raw,iv,ov:ovV(c),gs:c.gs||0,fz:c.fz||0,l:c.l,mods:(c.mods||[]).slice(),tr:c.tr||''}}
   finally{if(i>=0&&c!==o)party[i]=o}}
 function FSM100_clone(c){return JSON.parse(JSON.stringify(c))}
 // can b be used up to improve a with this action? -> null (same companion) | {ok,why,need,v,gain,tag,k,warn[]}
 function FSM100_check(a,b,act){
   if(!a||!b||a===b)return null;ivFix(a);ivFix(b);const i=party.indexOf(b),warn=[];
-  if(i<2)warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
+  if(i<actN141())warn.push('In your active team');if(b.runes&&b.runes.length)warn.push(b.runes.length+' rune'+(b.runes.length>1?'s':'')+' lost');
   if(b.evo)warn.push('Evolved '+'✦'.repeat(b.evo));if(b.shn)warn.push('Shiny');
   if(b.lock)return {ok:false,why:'Locked. Unlock it in the Companions window to use it up.',warn};
-  if(act=='con'){const g=conGainC(b);if(IVK.every(k=>ivOf(a,k)>=1.3))return {ok:false,why:'Wasted: every stat of '+FSM100_esc(a.n)+' is already at the maximum.',warn};
-    return {ok:true,gain:g,tag:'+'+FSM100_pc(g*.8)+'–'+FSM100_pc(g*1.2)+' all stats',warn}}
+  if(act=='con'){const g=conGainC(b),k=conKey(b);if(ivOf(a,k)>=1.3)return {ok:false,why:'Wasted: it would raise '+FSM100_SN[k]+', and '+FSM100_esc(a.n)+'’s is already at the maximum.',warn};
+    return {ok:true,gain:g,k,tag:IVS[k]+' +'+FSM100_pc(g*.8)+'–'+FSM100_pc(g*1.2),warn}}
   let need='';if(!FSM100_withCat('',()=>compat(a,b))){if((sup.c_bind||0)>0)need='c_bind';
     else return {ok:false,why:'Different family ('+famOf(b.g[0])+'). Needs a '+famOf(a.g[0])+' or a Universal companion, or Binding Salts.',warn}}
   const v=FSM100_withCat(need,()=>fuseVal(a,b)),pen=tierSp(a.g[0])>tierSp(b.g[0]);
@@ -20145,7 +20151,7 @@ function FSM100_check(a,b,act){
 // the outcome of an action, from the same formulas the confirm button runs: {lo,hi} snapshots (equal unless random)
 function FSM100_sim(a,b,act,k,cat){
   const f0=fCat;fCat=cat||'';try{ivFix(a);ivFix(b);const lo=FSM100_clone(a),hi=FSM100_clone(a),r={v:0,pen:false};
-    if(act=='con'){const g=conGainC(b);r.g=g;IVK.forEach(q=>{const o=ivOf(a,q);lo.iv[q]=Math.min(1.3,o+g*.8);hi.iv[q]=Math.min(1.3,o+g*1.2)});ivSync(lo);ivSync(hi)}
+    if(act=='con'){const g=conGainC(b),q=conKey(b),o=ivOf(a,q);r.g=g;r.k=q;lo.iv[q]=Math.min(1.3,o+g*.8);hi.iv[q]=Math.min(1.3,o+g*1.2);ivSync(lo);ivSync(hi)}
     else{const v=fuseVal(a,b);r.v=v;r.pen=tierSp(a.g[0])>tierSp(b.g[0])&&cat!='c_asc';
       if(act=='std'){lo.gs=hi.gs=(a.gs||0)+.06*v}
       else{const o=ivOf(a,k);lo.iv[k]=hi.iv[k]=o+(ivOf(b,k)-o)*Math.min(1,v);ivSync(lo);ivSync(hi)}
@@ -20293,7 +20299,7 @@ ${FSM100_grades(a)}</div></div></div>`}
 function FSM100_count(a,act){let ok=0,why='';const others=party.filter(c=>c!==a);
   others.forEach(b=>{const r=FSM100_check(a,b,act);if(r&&r.ok)ok++});
   if(!others.length)why='You have no other companion to use.';
-  else if(!ok){if(act=='con')why=IVK.every(k=>ivOf(a,k)>=1.3)?'Every stat is already at the maximum.':'Every other companion is locked.';
+  else if(!ok){if(act=='con')why=others.every(b=>b.lock)?'Every other companion is locked.':'The stats they would raise are already at the maximum.';
     else{const fam=others.filter(b=>FSM100_withCat('',()=>compat(a,b)));
       if(!fam.length)why='Needs another '+famOf(a.g[0])+' or a Universal companion.';else if(fam.every(b=>b.lock))why='Every matching partner is locked.';else why='No partner has a better stat roll to copy.'}}
   return {ok,why}}
@@ -20306,7 +20312,7 @@ function FSM100_mateHTML(){const S=FSM100,a=S.a,A=FSM100_ACT[S.act];
   const val=c=>ovV(c)*10+c.l*.05+(c.evo||0)+((c.runes||[]).length)*.5;
   const so={best:(x,y)=>y.r.gain-x.r.gain||val(x.c)-val(y.c),level:(x,y)=>x.c.l-y.c.l||y.r.gain-x.r.gain,grade:(x,y)=>ovV(x.c)-ovV(y.c),name:(x,y)=>x.c.n.localeCompare(y.c.n)}[S.sortB]||((x,y)=>y.r.gain-x.r.gain);
   ok.sort(so);no.sort((x,y)=>party.indexOf(x.c)-party.indexOf(y.c));
-  const lbl={std:'Growth',sip:'Best copy',con:'Each stat'}[S.act];
+  const lbl={std:'Growth',sip:'Best copy',con:'Raises'}[S.act];
   const row=(x,dis)=>{const r=x.r,w=r.warn.length?`<span class="fsm-w">⚠ ${r.warn.join(' · ')}</span>`:'';
     return FSM100_row(x.c,`data-fsm="b" data-i="${party.indexOf(x.c)}"`,dis?'':`<small>${lbl}</small><span class="fsm-gain">${r.tag}</span>`,dis?`<span class="fsm-why">✖ ${r.why}</span>`:w,dis)};
   return FSM100_tgtHTML(a)+`<div class="fsm-q">${A.i} ${A.n}: choose the companion to use up</div><div class="fsm-sub">${A.l} The partner you pick is <b>gone for good</b>. You see the exact result before anything happens.</div>
@@ -20315,9 +20321,15 @@ function FSM100_mateHTML(){const S=FSM100,a=S.a,A=FSM100_ACT[S.act];
    ${no.length?`<div class="fsm-sec bad">Can’t be used (${no.length})</div><div class="fsm-list">${no.map(x=>row(x,true)).join('')}</div>`:''}`}
 function FSM100_rng(lo,hi,f){f=f||(x=>x);return lo==hi?f(lo):f(lo)+'–'+f(hi)}
 function FSM100_d(d0,d1,f){f=f||(x=>x);const s=x=>(x>0?'+':x<0?'−':'±')+f(Math.abs(x));const c=d1>0?'up':d1<0||d0<0?'dn':'eq';return `<span class="${c}">${d0==d1?s(d0):s(d0)+' to '+s(d1).replace(/^\+/,'+')}</span>`}
+// v141: change for one stat. Whole numbers normally; a change under 2 points gets one decimal, because rounding would
+// show "±0" or "±0 to +1" for a real gain (48.0 → 48.4).
+function FSM100_dd(now,lo,hi,k){const b=now.st[k],x=lo.st[k],y=hi.st[k];
+  if(now.raw&&lo.raw&&hi.raw){const d0=lo.raw[k]-now.raw[k],d1=hi.raw[k]-now.raw[k],r=v=>Math.round(v*10)/10,m=Math.max(Math.abs(d0),Math.abs(d1));
+    if(m>=.05&&m<2)return FSM100_d(r(d0),r(d1),v=>v.toFixed(1))}
+  return FSM100_d(x-b,y-b)}
 function FSM100_table(now,lo,hi,hl){const gL=v=>FSM100_g(v);
   const rows=IVK.map(k=>{const b=now.st[k],x=lo.st[k],y=hi.st[k],g0=grade(now.iv[k])[1],g1=grade(lo.iv[k])[1],g2=grade(hi.iv[k])[1];
-    return `<tr class="${hl&&hl.includes(k)?'hl':''}"><td>${FSM100_SN[k]}</td><td>${b} ${gL(now.iv[k])}</td><td class="aft" data-k="${k}" data-lo="${x}" data-hi="${y}">${FSM100_rng(x,y)} ${g1==g2?gL(lo.iv[k]):gL(lo.iv[k])+'–'+gL(hi.iv[k])}</td><td>${FSM100_d(x-b,y-b)}${g1!=g0||g2!=g0?'<br><small>grade '+g0+' → '+(g1==g2?g1:g1+'–'+g2)+'</small>':''}</td></tr>`}).join('');
+    return `<tr class="${hl&&hl.includes(k)?'hl':''}"><td>${FSM100_SN[k]}</td><td>${b} ${gL(now.iv[k])}</td><td class="aft" data-k="${k}" data-lo="${x}" data-hi="${y}">${FSM100_rng(x,y)} ${g1==g2?gL(lo.iv[k]):gL(lo.iv[k])+'–'+gL(hi.iv[k])}</td><td>${FSM100_dd(now,lo,hi,k)}${g1!=g0||g2!=g0?'<br><small>grade '+g0+' → '+(g1==g2?g1:g1+'–'+g2)+'</small>':''}</td></tr>`}).join('');
   const o0=grade(now.ov)[1],o1=grade(lo.ov)[1],o2=grade(hi.ov)[1];
   return `<table class="fsm-t"><thead><tr><th>Stat</th><th>Now</th><th>After</th><th>Change</th></tr></thead><tbody>${rows}
    <tr><td>Overall grade</td><td>${gL(now.ov)}</td><td class="aft">${o1==o2?gL(lo.ov):gL(lo.ov)+'–'+gL(hi.ov)}</td><td>${o1==o0&&o2==o0?'<span class="eq">same</span>':'<span class="up">up</span>'}</td></tr></tbody></table>`}
@@ -20325,7 +20337,7 @@ function FSM100_lossHTML(a,b,act,cat){const it=[],i=party.indexOf(b);
   it.push(`Level ${b.l}${b.evo?', evolution '+'✦'.repeat(b.evo):''}${b.tal&&Object.keys(b.tal).length?', its talents':''}`);
   if((b.mods||[]).length)it.push('Modifiers: '+b.mods.map(m=>(MODS[m]?MODS[m].i+' ':'')+m).join(', ')+(act!='con'?' (one may pass on, see above)':''));
   if(b.runes&&b.runes.length)it.push('Socketed rune'+(b.runes.length>1?'s':'')+': '+b.runes.map(r=>RUNES[r]?RUNES[r][1]+' '+RUNES[r][0]:r).join(', ')+' (lost with it)');
-  if(i<2)it.push(`It is in your active team (slot ${i+1}); ${party.length>2?'your next reserve companion takes its place':'your team will have one companion less'}`);
+  if(i<actN141())it.push(`It is in your active team (slot ${i+1}); ${party.length>2?'your next reserve companion takes its place':'your team will have one companion less'}`);
   if(b.tr=='Universal')it.push('Its ✦ Universal trait');
   if(cat&&SUP[cat])it.push(`Also used: 1 × ${SUP[cat].i} ${SUP[cat].n} (you have ${sup[cat]||0})`);
   return `<div class="fsm-loss"><b class="h">⚠ ${FSM100_name(b)} will be used up — gone for good</b>You lose:<ul>${it.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`}
@@ -20343,12 +20355,12 @@ function FSM100_prevHTML(){const S=FSM100,a=S.a,b=S.b,act=S.act,A=FSM100_ACT[act
     else if(own.some(k=>k!='c_bind'))h+=`<div class="fsm-sec">Catalyst (optional)</div><div class="fsm-chips"><button data-fsm="cat" data-k="" class="${!S.cat?'on':''}">None</button>${own.filter(k=>k!='c_bind').map(k=>{const dis=false;
       return `<button data-fsm="cat" data-k="${k}" class="${S.cat==k?'on':''}" ${dis?'disabled':''} title="${FSM100_esc(dis?'Not needed: they are the same family':SUP[k].d)}">${SUP[k].i} ${SUP[k].n} <small>×${sup[k]}${dis?' · not needed':''}</small></button>`}).join('')}</div>`}
   h+=`<div class="fsm-sec">Result for ${FSM100_name(a)}</div>`;
-  h+=FSM100_table(r.now,r.lo,r.hi,act=='sip'?[S.stat]:act=='con'?IVK:null);
+  h+=FSM100_table(r.now,r.lo,r.hi,act=='sip'?[S.stat]:act=='con'?[r.k]:null);
   const notes=[];
   if(act=='std'){const L=r.l50,dd=IVK.map(k=>L[1].st[k]-L[0].st[k]);
     notes.push(`<b>Growth per level: +${FSM100_pc(r.now.gs)} → <span style="color:var(--kq-good)">+${FSM100_pc(r.lo.gs)}</span></b> (no limit). ${a.l<=1?'At level 1 nothing changes yet; ':'The table shows it at level '+a.l+'; '}the gain grows with every level. At level ${L[2]}: ${IVK.map((k,i)=>FSM100_SN[k]+' +'+dd[i]).join(', ')}.`)}
   if(act=='sip')notes.push(`Copies ${r.v>=1?'all':Math.round(Math.min(1,r.v)*100)+'%'} of the gap between the two ${FSM100_SN[S.stat]} rolls.`);
-  if(act=='con')notes.push(`Every stat roll goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
+  if(act=='con')notes.push(`<b>${FSM100_SN[r.k]}</b> (the stat ${FSM100_esc(b.n)} is best at) goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). The other stats stay the same. Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
   if(act!='con'){if(r.pen)notes.push(`Half strength: ${FSM100_esc(b.n)} is a lower tier (T${fb.t}) than ${FSM100_esc(a.n)} (T${fa.t}).${(sup.c_asc||0)>0?' An Ascendant Tincture removes this.':''}`);
     notes.push(`Stars ${FSM100_stars(a)||'none'} → ${'★'.repeat(Math.min(5,r.lo.fz))}${r.lo.fz>5?'×'+r.lo.fz:''} · keeps level ${a.l} · fully healed.`);
     const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));
@@ -23070,10 +23082,10 @@ function kfWild109(F){const T=TOWNS[0];if(KF109.wild){T.g.remove(KF109.wild);KF1
     return !fixed.some(c=>{const dx=T.cx+p.x-c.x,dz=T.cy+p.z-c.z;return c.r!=null?dx*dx+dz*dz<(c.r+1.4)*(c.r+1.4):Math.abs(dx)<c.hx+1.4&&Math.abs(dz)<c.hz+1.4})});
   KF109.wsel={s:F.s,L:keep};const key='KFWILD|'+F.s;let k=null;
   if(!twHas(key)){k=twKit(4243+F.s);keep.forEach(p=>{const {x,z,s,ry}=p;
-    if(p.t=='pine'){k.as('bark',()=>k.L('c',0x3a2a1c,[x,0,z],[x,1.2*s,z],.14*s,'log'));[[1.0,1.15,1.5],[1.6,.9,1.25],[2.2,.62,1.0]].forEach(([y,r,h],j)=>k.p('c',[0x1e3626,0x24402a,0x2a4a30][j],'cone6',x,y*s,z,r*s,h*s,r*s,0,ry+j,0,.08))}
+    if(p.t=='pine'){k.as('bark',()=>k.L('c',0x3a2a1c,[x,0,z],[x,1.2*s,z],.14*s,'log'));k.as('leaf',()=>[[1.0,1.15,1.5],[1.6,.9,1.25],[2.2,.62,1.0]].forEach(([y,r,h],j)=>k.p('c',[0x1e3626,0x24402a,0x2a4a30][j],'cone6',x,y*s,z,r*s,h*s,r*s,0,ry+j,0,.08)))} // v141: all three layers are leaves (the dark ones were read as stone)
     else if(p.t=='dead'){k.as('bark',()=>{k.L('c',0x2e2620,[x,0,z],[x+.1*s,2.4*s,z+.05],.15*s,'log');k.L('c',0x2e2620,[x+.05,1.5*s,z],[x+.8*s*Math.cos(ry),2.2*s,z+.8*s*Math.sin(ry)],.06*s,'log');k.L('c',0x2e2620,[x+.05,1.9*s,z],[x-.6*s*Math.cos(ry),2.6*s,z-.6*s*Math.sin(ry)],.05*s,'log')})}
     else if(p.t=='rock'){k.as('stone',()=>{k.p('c',[0x5a5662,0x4e4a54,0x66626c][Math.floor(s*7)%3],'dod',x,.22*s,z,.55*s,.42*s,.5*s,0,ry,0,.18);if(s>1)k.p('c',0x4e4a54,'dod',x+.5*s,.12*s,z+.3*s,.3*s,.24*s,.3*s,0,ry*2,0,.2)})}
-    else if(p.t=='bush'){[[0,0],[.35,.2],[-.3,.25]].forEach(([a,b],j)=>k.p('c',[0x24402a,0x2e4a30,0x35502e][j],'ico',x+a*s,.3*s,z+b*s,.42*s,.34*s,.42*s,0,ry+j,0,.12))}
+    else if(p.t=='bush'){k.as('leaf',()=>[[0,0],[.35,.2],[-.3,.25]].forEach(([a,b],j)=>k.p('c',[0x24402a,0x2e4a30,0x35502e][j],'ico',x+a*s,.3*s,z+b*s,.42*s,.34*s,.42*s,0,ry+j,0,.12)))}
     else{for(let j=0;j<3;j++)k.p('c',[0x4a5a34,0x3e5030][j%2],'cone4',x+(j-1)*.15,.18*s,z+(j%2)*.12,.07,.36*s,.07,0,j,(j-1)*.2,.1)}})}
   const g=twGroup(k,key);g.name='kfwild';T.g.add(g);KF109.wild=g;g.traverse(o=>{if(o.isMesh)o.castShadow=false});
   kfColSet109(KF109.wcol,keep.filter(p=>p.t=='pine'||p.t=='dead'||p.t=='rock').map(p=>({x:T.cx+p.x,z:T.cy+p.z,r:p.t=='rock'?.4*p.s:.3})))}
@@ -28896,9 +28908,9 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
     wp=Fp.grip.clone();if(C.hold)wp.sub(new V(...C.hold).applyQuaternion(wq))}
   // the carry pose, faded out during attacks like the beast arm hold
   if(w>0){H.updateMatrixWorld(true);
-    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);
+    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=fc140Fwd(H),up=new V(0,1,0),hs=fc140Scale(H);
     let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
-    const fr=a=>new V().addScaledVector(sd,a[0]).addScaledVector(up,a[1]).addScaledVector(f,a[2]),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
+    const fr=a=>new V().addScaledVector(sd,a[0]*hs).addScaledVector(up,a[1]*hs).addScaledVector(f,a[2]*hs),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
     const ws=b2.getWorldScale(new V()).x;
     // wrist rotation: the weapon (or the palm, for the orb) points along U; the roll round it keeps the paw in line with the forearm
     const wantR=Fw=>{let best=null;for(const s of (C.palm?[1]:H['_fcs'+s1]!==undefined?[sg]:[1,-1])){const a1=C.palm?Fp.c.clone():Fp.e.clone().multiplyScalar(s*Math.cos(C.tilt||0)).addScaledVector(Fp.d,Math.sin(C.tilt||0)).normalize();
@@ -28921,10 +28933,15 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   // sphere round the spine, the chest and the head (FC116.clear radii + the orb's own radius), along the line from that centre
   if(C.palm&&w<.999&&FC116.clear){H.updateMatrixWorld(true);const bb=fc117WB(W),ws=b2.getWorldScale(new V()).x,M=b2.matrixWorld,c0=bb.c.clone().applyQuaternion(wq).add(wp).applyMatrix4(M),c1=c0.clone();
     FC116.clear.forEach(([bn,r0])=>{const bo=B[bn];if(!bo)return;const o=bo.getWorldPosition(new V()),d=c1.clone().sub(o),R=(r0+bb.r)*ws;if(d.length()>=R)return;
-      if(d.lengthSq()<1e-8)d.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));c1.copy(o).addScaledVector(d.normalize(),R)});
+      if(d.lengthSq()<1e-8)d.copy(fc140Fwd(H));c1.copy(o).addScaledVector(d.normalize(),R)});
     if(!c1.equals(c0)){const inv=new THREE.Matrix4().copy(M).invert(),off=c1.applyMatrix4(inv).sub(c0.clone().applyMatrix4(inv));wp=wp.clone().addScaledVector(off,1-w)}}
   W.quaternion.copy(wq);W.position.copy(wp);
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
+// v140: the hold is worked out in the hero's own frame: which way the model faces in the world (its parents included: the creator,
+// inventory and Character previews turn the model on a pivot, and H.rotation.y alone left the arm reaching the old way while the
+// model turned) and how big it is drawn compared with the game's hero (previews are scaled to fit).
+function fc140Fwd(H){const V=THREE.Vector3,q=H.getWorldQuaternion(new THREE.Quaternion()),f=new V(0,0,1).applyQuaternion(q);f.y=0;if(f.lengthSq()<1e-8)f.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));return f.normalize()}
+function fc140Scale(H){try{const V=THREE.Vector3,a=H.getWorldScale(new V()).x,b=(H===pl?a:pl.getWorldScale(new V()).x)||1;return a/b||1}catch(_){return 1}}
 function fc118Sign(H,b,Fp){let s=1;H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const i=o.skeleton.bones.indexOf(b);if(i<0)return;
   const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().copy(o.skeleton.boneInverses[i]).invert());s=Fp.e.clone().applyQuaternion(q).z<0?-1:1});return s}
 function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.forEach(r=>{r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)});H.updateMatrixWorld(true)}
@@ -30803,14 +30820,14 @@ var CHQ132={st:{},g:-2,ch:null,bur:null,mk:null,mkK:'',spots:{},t:0,pop:0,wave:0
 var CHQD132={
  '0_0':[
   {id:'k1a',t:'Smoke Them Out',d:'A camp has dug in on my best toadstool patch. Clear one out and I’ll make it worth your while.',o:[['camp',1,'Camp cleared']],rw:'weapon',w:1.2},
-  {id:'k1b',t:'Timber and Stone',d:'My burrows don’t shore themselves up. Fifteen wood from the groves and ten stone from the rocks.',o:[['wood',15,'Wood gathered'],['stone',10,'Stone gathered']],rw:'boots',w:1.2},
+  {id:'k1b',t:'Timber for the Burrows',d:'My burrows don’t shore themselves up. Fifteen wood from the groves, if you please.',o:[['wood',15,'Wood gathered']],rw:'boots',w:1.2}, // v141: wood only (was + 10 stone)
   {id:'k1c',t:'Something for the Pot',d:'Five fish from the bog water. Don’t ask what I do with them.',o:[['fish',5,'Fish caught']],rw:'egg',w:1},
   {id:'k1d',t:'Lanterns for the Dark',d:'Glow Caps light the tunnels down below. Pick me five.',o:[['glow',5,'Glow Caps picked']],rw:'helm',w:1},
   {id:'k1e',t:'Borrowed Strength',d:'Have a companion empower you (E / R), then take something down while their strength is in you.',o:[['empKill',1,'Kill while a companion empowers you']],rw:'chest',w:1}],
  '0_1':[
   {id:'k2a',t:'Bigger Game',d:'Elites stalk these hollows: bigger, meaner, and their names burn gold. Bring one down.',o:[['elite',1,'Elite slain']],rw:'weapon',w:1.5},
   {id:'k2b',t:'A Lucky Line',d:'Fish long enough and the water coughs up a gold pouch. Pull one up for me.',o:[['pouch',1,'Gold pouch fished up']],rw:'egg',w:1.3},
-  {id:'k2c',t:'Ore for the Forge',d:'Five iron ore. The veins here run rust-red through the rock.',o:[['iron',5,'Iron Ore mined']],rw:'helm',w:1.2},
+  {id:'k2c',t:'Stone and Ore for the Forge',d:'Eight stone for the hearth and five iron ore. The veins here run rust-red through the rock.',o:[['stone',8,'Stone gathered'],['iron',5,'Iron Ore mined']],rw:'helm',w:1.2}, // v141: + 8 stone
   {id:'k2d',t:'Two Become One',d:'Fuse, siphon or consume a companion. Out here the strong eat the weak.',o:[['fuse',1,'Companion fused, siphoned or consumed']],rw:'egg',w:1}],
  '0_2':[
   {id:'k3a',t:'Tempered Steel',d:'Have the Blacksmith forge your weapon to +2 or better, then kill something with it.',o:[['forgeKill',1,'Kill with a +2 forged weapon']],rw:'weapon',w:1.3},
@@ -30851,7 +30868,7 @@ function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,2).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
@@ -31107,7 +31124,7 @@ addEventListener('resize',()=>{try{chqTrkPos132()}catch(_){}})
 // ---------------- events ----------------
 function chqRemote132(){return typeof MP!='undefined'&&!!MP.rk}
 function chqBuffKind132(){const t=nowP(),B=hero.buffs||[];
-  const comp=typeof party!='undefined'&&party.slice(0,2).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
+  const comp=typeof party!='undefined'&&party.slice(0,actN141()).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
   const food=B.some(b=>b.food&&b.k&&SUP[b.k]&&SUP[b.k].c=='food'&&b.t>t),bard=B.some(b=>b.n=='Inspired'&&b.t>t);return {comp,food,bard}}
 function chqKill132(e,C,was){if(!e||e.dprop||e.wv)return;
   if(C&&!C.raid&&!was&&campCleared(C)){chqEv132('camp',1);chqEv132('allCamps',1,C.j!=null?C.j:C.i)}
@@ -34446,6 +34463,7 @@ var A7MOT={
     const S2=c.S(.6,.03);if(S2.ok)gkRunes(c.k,'pelvis',a7Band(S2,-1,1,8,.003).map(a=>a.p.concat([Math.atan2(a.n[0],a.n[2])])),c.C.gl,[['pelvis',1]],1)},
   boots(c){const S=c.S(c.Y(.16),.02);if(S.ok)gkRunes(c.k,c.bn,a7Band(S,-1.6,1.6,8,.003).map(a=>a.p.concat([Math.atan2(a.n[0],a.n[2])])),c.C.gl,c.nw(S.at(0,0).p),1)}}};
 // ================= v137: the 50 new weapons — a recipe each =================
+// v141: the four greatsword grips reach down to the guard (they ended 0.04–0.08 above the hand, which closed on empty air).
 // Same frame as every weapon (lgWpnKit): the grip at the origin, the head / blade pointing down -y, the flat of a blade in
 // x-y, and the same footprint per type (a greatsword ~1.3 long, a dagger ~.5, a staff 1.7…), so hands, poses, attack
 // animations, the bow's drawn string and the clip tests work unchanged. Bows, crossbows and slings keep the v83/v135 frame
@@ -34468,22 +34486,22 @@ function w7Wavy(len,w0,w1,amp,waves,tip,y0){const L=[],R=[],n=waves*4;for(let i=
 // colours of an item: rarity picks fittings and glow
 function w7C(it,o){const r=it.r|0,t=itT(it);return Object.assign({r,ti:t.t|0,fit:r>=2?LGW.brass:LGW.iron,gl:r>=3?v89Rc(r):null,steel:LGW.steel,dark:0x2a2a30,bone:0xd8ccb0,wood:LGW.wood,woodD:LGW.woodD,leather:LGW.leather,wrap:LGW.wrap},o||{})}
 // ---------------- greatswords (grip .37….05, guard ≈ -.14, blade to ≈ -1.3) ----------------
-W137.gs_grave=(k,c)=>{w7Grip(k,.34,.3,.034,0x8a7a5a,0x6a5a40);k.p('','ring','m',c.dark,0,.37,0,.04,.25,.04,Math.PI/2);
+W137.gs_grave=(k,c)=>{w7Grip(k,.34,.45,.034,0x8a7a5a,0x6a5a40);k.p('','ring','m',c.dark,0,.37,0,.04,.25,.04,Math.PI/2);
   k.L('','m',0x4a4440,[-.2,-.13,0],[.2,-.13,0],.022,.022,5);[-1,1].forEach(s=>k.L('','m',0x4a4440,[s*.2,-.13,0],[s*.23,-.09,0],.022,.012,5));
   const P=[[-.06,-.15],[.06,-.15],[.075,-.6],[.1,-1.0],[.11,-1.12],[.09,-1.22],[.04,-1.28],[0,-1.3],[-.04,-1.28],[-.09,-1.22],[-.11,-1.12],[-.1,-1.0],[-.075,-.6]];
   w7Blade(k,'gsg',P,.024,0x6a5a4c,0x8a7a6a);for(let i=0;i<6;i++){const y=-.35-i*.14,s=i%2?1:-1;k.p('','cone4','m',0x1a1410,s*(.078+i*.004),y,0,.012,.03,.016,0,0,s*Math.PI/2)}
   k.p('','box','c',0x3a2a1a,0,-.55,0,.03,.6,.026);if(c.gl)k.p('','box','g',c.gl,0,-.9,0,.012,.2,.028)};
-W137.gs_flame=(k,c)=>{w7Grip(k,.34,.3,.033,0x6a1a1a,0x2a1010);k.p('','oct','m',c.fit,0,.39,0,.045,.055,.045);k.p('','oct','g',c.gl||0xff6a20,0,.39,.03,.018);
+W137.gs_flame=(k,c)=>{w7Grip(k,.34,.45,.033,0x6a1a1a,0x2a1010);k.p('','oct','m',c.fit,0,.39,0,.045,.055,.045);k.p('','oct','g',c.gl||0xff6a20,0,.39,.03,.018);
   k.p('','box','m',c.fit,0,-.13,0,.32,.04,.06);[-1,1].forEach(s=>{k.L('','m',c.fit,[s*.16,-.13,0],[s*.2,-.2,0],.018,.012,5);k.L('','m',c.fit,[s*.2,-.2,0],[s*.17,-.26,0],.012,.004,5);k.L('','m',c.dark,[s*.05,-.22,0],[s*.1,-.26,0],.01,.003,4)});
   k.p('','box','c',0x4a1a14,0,-.22,0,.08,.12,.034);w7Blade(k,'gsf',w7Wavy(1.0,.05,.035,.022,4,.12,-.28),.022,0x3a3438,0x8a8a92);
   k.p('','box','g',c.gl||0xff7a2a,0,-.75,0,.008,.85,.026);for(let i=0;i<4;i++)k.p('','oct','g',0xffb060,(i%2?.01:-.01),-.4-i*.2,.014,.006,.012,.004)};
-W137.gs_exec=(k,c)=>{w7Grip(k,.35,.32,.036,0x2a2a2a,0x1a1a1a);gkSkull(k,'',0,.4,0,1.1,c.bone,0,null);
+W137.gs_exec=(k,c)=>{w7Grip(k,.35,.46,.036,0x2a2a2a,0x1a1a1a);gkSkull(k,'',0,.4,0,1.1,c.bone,0,null);
   k.p('','box','m',c.dark,0,-.13,0,.4,.06,.08);k.p('','box','m',c.fit,0,-.13,0,.42,.025,.085);
   const P=[[-.1,-.16],[.1,-.16],[.12,-1.24],[-.12,-1.24]];w7Blade(k,'gse',P,.026,0x5a5e66,0x9aa0aa,0,0,0,0,.016);
   k.p('','cyl','c',0x14100c,0,-1.08,0,.035,.03,.035,Math.PI/2);k.p('','ring','m',c.steel,0,-1.08,0,.04,.2,.04,Math.PI/2);
   for(let i=0;i<3;i++)gkRunes(k,'',[[-.05,-.4-i*.18,.015,0],[.05,-.45-i*.18,.015,0]],c.gl||0x5a5e66,null,1.4);
   gkChain(k,'',[[-.11,-.2,.02],[0,-.25,.03],[.11,-.2,.02],[.1,-.32,.02],[0,-.36,.03],[-.1,-.32,.02]],.009,0x4a4a50,null)};
-W137.gs_ruin=(k,c)=>{w7Grip(k,.36,.34,.036,0x1a1418,0x3a1018);[-1,1].forEach(s=>k.L('','m',c.dark,[0,.39,0],[s*.04,.47,0],.02,.002,4));k.p('','oct','m',c.dark,0,.4,0,.045);
+W137.gs_ruin=(k,c)=>{w7Grip(k,.36,.39,.036,0x1a1418,0x3a1018);[-1,1].forEach(s=>k.L('','m',c.dark,[0,.39,0],[s*.04,.47,0],.02,.002,4));k.p('','oct','m',c.dark,0,.4,0,.045);
   // bat-wing guard with an eye
   [-1,1].forEach(s=>{const P=[[0,.02],[.1,.04],[.2,.1],[.26,.02],[.22,-.02],[.18,.0],[.14,-.04],[.1,-.01],[.06,-.05],[0,-.04]];k.p('',lgSlab('w7rw',P,.02),'m',0x1e1a20,0,-.14,0,s,1,1)});
   k.p('','sph','m',0x2a1a20,0,-.14,0,.05,.05,.04);k.p('','sph','g',c.gl||0xff2a2a,0,-.14,.03,.026,.026,.016);k.p('','box','c',0x050505,0,-.14,.045,.006,.03,.004);
@@ -34527,6 +34545,7 @@ W137.hb_watch=(k,c)=>{w7Haft(k,.3,-1.42,.03,c.wood,27);w7Bands(k,[.25,-.9,-1.38]
   k.p('','box','m',c.dark,0,-1.0,0,.06,.06,.05);k.p('','box','m',c.dark,0,-1.38,0,.06,.06,.05);k.L('','m',c.dark,[-.02,-1.2,0],[-.1,-1.18,0],.01,.01,4);k.p('','ring','m',c.dark,-.11,-1.2,0,.02,.2,.02);
   k.p('','cone4','m',c.steel,0,-1.5,0,.025,.16,.02,Math.PI)};
 W137.hb_reaper=(k,c)=>{// a vertebra haft and a scythe blade
+  k.p('','cyl','c',0xa89c80,0,-.48,0,.024,1.56,.024); // v141: a solid core through the vertebrae, so the hand always closes on the haft
   for(let i=0;i<14;i++){const y=.28-i*.11;k.p('','cyl','c',i%2?0xd0c4a8:0xb8ac90,0,y,0,.032,.08,.032);k.p('','cone4','c',0xc8bca0,0,y,-.03,.012,.03,.02,Math.PI/2+.4)}
   k.p('','sph2','c',c.bone,0,-1.3,0,.05,.05,.045);[-1,1].forEach(s=>k.p('','sph','g',c.gl||0x7affc8,s*.018,-1.3,.04,.009));
   const P=[[0,.03],[.1,.06],[.22,.04],[.34,-.02],[.44,-.1],[.5,-.22],[.42,-.14],[.32,-.08],[.2,-.04],[.08,-.03],[0,-.03]];w7Blade(k,'hbr',P,.024,0x4a4a54,0xb0b4bc,.03,-1.26,0,0,.01);
@@ -35879,6 +35898,556 @@ function g139Tick(){try{if(typeof enemies=='undefined'||(typeof ABX!='undefined'
     if(!(sc<=bs*1.6)){g139Note(e,'scale');m.scale.setScalar(bs)}
     const g=GH(m.position.x,m.position.z);if(isFinite(g)&&m.position.y<g-.6){g139Note(e,'sunk');m.position.y=g}}}catch(_){}}
 setInterval(g139Tick,500);
+// ================= v140: character creator fixes (owner's list, Oct 2026) =================
+// * Ranger: a new victory pose. The old one drew the bow across his chest while the v135 carry kept the bow level across the
+//   hips, so the bow lay sideways with its string loose in front of him. Now he raises the bow high in his bow hand, upright with the
+//   string toward him, the other fist pressed to his chest, chest out and chin up. cc140Bow turns the bow upright in the raised hand after
+//   the pose (the carry is worked out before the pose moves the arm).
+// * The Mage's arm (2220, fc140Fwd / fc140Scale) and the companion step's material hint (0840, whole words) are fixed in their files.
+var CC140={bow:{up:[0,1,0],str:[0,-.15,-1]}};   // hero frame [x across from the bow hand, y up, z forward]: the upper limb's way, the string's way
+CC116.P.ranger={set:{'aL0.x':-2.55,'aL0.z':-.55,'aL1.x':-.12,'aR0.x':.35,'aR0.z':-.5,'aR1.x':-1.5},add:{'chest.x':-.1,'head.x':-.22,'spine.y':.12}};
+function cc140Bow(h){const S=h&&h._grip;if(!S||!S.L)return;let e=null;for(const q of S.L)if(q.ty=='bow'&&q.W&&q.W.parent){e=q;break}if(!e)return;
+  const V=THREE.Vector3,Q=THREE.Quaternion,W=e.W,P=W.parent;P.updateWorldMatrix(true,false);
+  const Y=new V(...CC140.bow.up).normalize(),Xs=new V(...CC140.bow.str);Xs.addScaledVector(Y,-Xs.dot(Y)).normalize();const Z=new V().crossVectors(Xs,Y);
+  const inHero=new Q().setFromRotationMatrix(new THREE.Matrix4().makeBasis(Xs,Y,Z)),hq=h.getWorldQuaternion(new Q()),pq=P.getWorldQuaternion(new Q());
+  W.quaternion.copy(pq.invert().multiply(hq).multiply(inHero));
+  const C=e.C,an=C.an||GRIP_AN,hd=new V(C.hold[0]*W.scale.x,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(W.quaternion);W.position.set(an[0]-hd.x,an[1]-hd.y,an[2]-hd.z);
+  h.updateMatrixWorld(true)}
+{const f=cc116Pose;cc116Pose=function(h,cls){const r=f.apply(this,arguments);try{if(cls=='ranger')cc140Bow(h)}catch(e){if(!CC140.err){CC140.err=1;console.warn('v140 ranger bow',e)}}return r}}
+// ================= v141: owner's list (Oct 2026) =================
+// Keys: Q feeds the most hurt companion, Z health potion, X mana potion (0108). Hotbar: 6 ability keys (KQS_SLOTS in 0990).
+// Consume raises one stat (0860, 1780). Quests: Kindlelight I wood only, II stone + iron (2350). Outskirts pines (1960).
+// This file: Q feeding, break poise ×2, quieter effect text, level growth −60%, the second companion slot.
+
+// ---------------- Q: feed the active companion with the lowest health share ----------------
+function feedLowest141(){
+  if(!party.length)return say('You have no companion to feed.');
+  const L=party.slice(0,actN141()).map((c,i)=>({c,i})).filter(x=>x.c&&x.c.h>0);
+  if(!L.length)return say('Your companion has fainted. Revive it with 💗 first.');
+  const share=c=>(Math.max(0,c.h)+(c.fhot&&c.fhot.left>0?c.fhot.left:0))/M(c);
+  L.sort((a,b)=>share(a.c)-share(b.c));
+  if(share(L[0].c)>=1)return say(L.length>1?'Your companions are already full.':nm(L[0].c)+' is already full.');
+  feedBest(L[0].i)}
+
+// ---------------- breaks: normal enemies need twice the damage during a wind-up ----------------
+// (Sovereigns are never broken by hits.) A combo finisher no longer breaks a normal mob outright: it adds
+// KQP.fin poise damage like it always did for elites, so the break still needs the doubled damage.
+KQP.pz.n*=2;KQP.pz.el*=2;
+cbHeavy=function(e){if(!e||e.boss||e.dead)return;
+  if(cbWind(e)){e.atk.pz=(e.atk.pz||0)+M(e.c)*KQP.fin;if(cbBreakChk(e))cbBreak(e,'finisher')}
+  else if(!e.c.al){e.cd=Math.max(e.cd,.5)}};
+
+// ---------------- effect text (BREAK!, COMBUST!, MELT! ...): smaller, softer, and their sounds 45% quieter ----------------
+var FX141={t:-1e9,keep:/TREASURE|SECRET FOUND/,vol:.55,win:80};
+{const f=popT;popT=function(p,t,col,big){const r=f.apply(this,arguments);
+  try{if(!FX141.keep.test(String(t||''))){FX141.t=performance.now();const el=$('stage').lastChild;
+    if(el&&el.className=='dn'){el.style.fontSize=big?'1.02rem':'.82rem';el.style.fontWeight='800';el.style.letterSpacing='.03em';el.style.opacity='.72';el.classList.add('fx141')}}}catch(_){}
+  return r}}
+// sounds played together with that text (same moment), and the break sound itself
+function fx141Quiet(k){return k=='brk'||performance.now()-FX141.t<FX141.win}
+{const f=sfx;sfx=function(k,vol){if(fx141Quiet(k))vol=(vol||1)*FX141.vol;return f.call(this,k,vol)}}
+{const f=mSfx;mSfx=function(k,vol){if(fx141Quiet(k))vol=(vol||1)*FX141.vol;return f.call(this,k,vol)}}
+// the floating text animates its own opacity in some builds: keep it under .72
+document.head.insertAdjacentHTML('beforeend','<style id="fx141css">#stage .dn.fx141{text-shadow:0 1px 3px rgba(0,0,0,.7)!important;filter:saturate(.85)}</style>');
+
+// ---------------- levelling: 60% less of the hero's own growth per level (attribute points unchanged) ----------------
+// CLS[c].per is the flat health / attack / defense each level adds (already ×ATR139.flat since v139). Mana keeps its growth.
+var LV141={k:.4};
+CLSK.forEach(c=>{const P=CLS[c].per;['hp','pa','ma','pd','md'].forEach(k=>{P[k]=+(P[k]*LV141.k).toFixed(4)})});
+
+// ---------------- the second companion slot ----------------
+// Everyone starts able to lead ONE companion. After two Sovereigns are defeated the Beast Trainer teaches the bond
+// for a second (gold, once per hero; saved in hero.tal so it travels with the save). party[1] stays where it is but
+// rests (no follower, no fighting, no XP share) until then. Code that meant "the active team" reads actN141().
+var CS141={cost:800,need:2};
+function cs141Has(){return !!(typeof hero!='undefined'&&hero&&hero.tal&&hero.tal.__cs2)}
+function actN141(){return cs141Has()?2:1}
+function cs141Ready(){return typeof bossDone!='undefined'&&bossDone.size>=CS141.need}
+function cs141Cost(){return typeof shpP109=='function'?shpP109('trainer',CS141.cost):CS141.cost}
+// HUD: a small locked row under the companion bar (once you own a second companion, or once the trainer can teach it)
+{const f=cbarsRender;cbarsRender=function(){f.apply(this,arguments);try{const cb=$('cbars');if(!cb)return;let n=cb.querySelector('.cs141');
+  const want=!cs141Has()&&party.length&&(party.length>1||cs141Ready());if(!want){if(n)n.remove();return}
+  const r=cs141Ready(),t=r?'🔒 2nd companion · learn at the Beast Trainer':'🔒 2nd companion · after 2 Sovereigns';
+  if(!n){cb.insertAdjacentHTML('beforeend','<div class="cs141"></div>');n=cb.querySelector('.cs141')}if(n.textContent!==t)n.textContent=t;
+  n.title=r?'The Beast Trainer in Duskhold can teach the Companion Bond':'Defeat two Sovereigns, then learn the Companion Bond at the Beast Trainer'}catch(_){}}}
+document.head.insertAdjacentHTML('beforeend','<style id="cs141css">#cbars .cs141{font-size:.66rem;color:#c9b48a;background:rgba(10,8,6,.55);border:1px dashed rgba(201,162,74,.45);border-radius:6px;padding:3px 8px;margin-top:4px;width:max-content;pointer-events:auto}</style>');
+// Beast Trainer: a "Companion Bond" row on top of the training list
+{const f=XR.visitor;XR.visitor=function(){const r=f.apply(this,arguments);try{const B=$('xwB');if(!B||xwArg!='trainer')return r;
+  if(B.querySelector('.cs141row'))return r;const has=cs141Has(),rd=cs141Ready(),c=cs141Cost();
+  B.insertAdjacentHTML('afterbegin',`<div class="cs141row" style="display:flex;gap:10px;align-items:center;padding:8px 10px;margin:0 0 8px;border:1px solid rgba(201,162,74,.45);border-radius:8px;background:rgba(201,162,74,.08)">
+    <span style="font-size:1.5rem">🐾</span><div style="flex:1"><b>Companion Bond</b><div class="mut" style="font-size:.72rem">${has?'Learned: you lead two companions at once.':rd?'Learn to lead a second companion into battle.':'Defeat two Sovereigns first ('+bossDone.size+' / '+CS141.need+').'}</div></div>
+    ${has?'<span class="mut">✔ Learned</span>':`<button data-cs141="1" ${rd&&gold>=c?'':'disabled'}>Learn · 🪙 ${c}</button>`}</div>`)}catch(_){}return r}}
+$('xw').addEventListener('click',e=>{const t=e.target.closest('[data-cs141]');if(!t)return;e.stopImmediatePropagation();if(t.disabled||cs141Has()||!cs141Ready())return;
+  const c=cs141Cost();if(gold<c)return say('You need 🪙 '+c+'.');gold-=c;hero.tal.__cs2=1;leadK[1]='';
+  say('🐾 You learned the Companion Bond: your second companion now fights beside you.');try{sfx('power')}catch(_){}hsDirty();sync();ui();hud();if(XR.visitor)XR.visitor()},true);
+
+// ---------------- quest progress kept for the changed Kindlelight II quest (iron moved to the second objective) ----------------
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const S=CHQ132.st&&CHQ132.st.k2c;if(S&&S.p&&S.p.length==1&&S.s==1)S.p=[0,S.p[0]]}catch(_){}return r}}
+// R (empower with companion 2) while the second slot is locked
+{const f=toggleEmp;toggleEmp=function(i){if(i>=actN141())return say(cs141Ready()?'🔒 Learn the Companion Bond at the Beast Trainer to bring a second companion.':'🔒 A second companion joins you after two Sovereigns are defeated (Beast Trainer).');return f.apply(this,arguments)}}
+// a 2nd companion that empowered you before the slot closed (old saves) stops
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!cs141Has()&&party[1]&&party[1].emp)party[1].emp=false}catch(_){}return r}}
+
+// ---------------- signs that show a recommended power follow the hero's class ----------------
+// The portal signs (and the Portal Road board) are painted while the town is built, before the save's hero is loaded, so
+// they used the default class's power scale. Every "Rec. power" text remembers its level; when the hero's class is known
+// (load, new hero, class change) the signs that carry one are repainted from the registry of painted signs (SGNR).
+var RP141={L:{},cls:null};
+{const f=rpTxt139;rpTxt139=function(L){const t=f.apply(this,arguments);if(t)RP141.L[t]=L;return t}}
+// the level a sign's power belongs to: the zone named on that line (else on the sign) - its first level
+function rp141Lv(t,lines){const all=lines.map(l=>String(l.t||'')).join(' ');for(const src of [t,all]){const i=PMAP.findIndex(p=>p&&p.n&&src.includes(p.n));if(i>=0)return PMAP[i].lv[0]}
+  const m=t.match(/⚔ Rec\. power [\d,.]+/);return m&&RP141.L[m[0]]!=null?RP141.L[m[0]]:null}
+function rp141Refresh(){if(typeof SGNR=='undefined'||!SGNR)return;const re=/⚔ Rec\. power [\d,.]+/g;
+  SGNR.forEach(r=>{try{const lines=r.a&&r.a[0];if(!Array.isArray(lines))return;if(!r.o141)r.o141=lines.map(l=>Object.assign({},l));
+    let ch=false;const nl=r.o141.map(l=>{const t=String(l.t||'');if(!re.test(t))return l;re.lastIndex=0;const nt=t.replace(re,m=>{const L=rp141Lv(t,r.o141);if(L==null)return m;ch=true;return rpTxt139(L)});return Object.assign({},l,{t:nt})});
+    if(ch){r.a[0]=nl;signPaint(r.c,...r.a);r.t.needsUpdate=true}}catch(_){}})}
+setInterval(()=>{try{if(typeof hero!='undefined'&&hero&&hero.cls&&hero.cls!==RP141.cls){RP141.cls=hero.cls;rp141Refresh()}}catch(_){}},1000);
+
+// ---------------- wood and stone outside Duskhold's walls ----------------
+// The pines, dead trees and rocks scattered on the island around the walls (KF109.wsel.L, one merged kit) can be chopped and
+// mined like the zone's own nodes: they give wood / stone and train the same skills. A used one rests OUT141.rest seconds
+// (it stays where it is; the next one nearby is ready).
+var OUT141={rest:180,dep:{}};
+function out141Kind(p){return p.t=='pine'||p.t=='dead'?'tree':p.t=='rock'?'rock':null}
+{const f=gTarget;gTarget=function(){const r=f.apply(this,arguments);if(r)return r;try{if(typeof curMap=='function'&&curMap()>=0)return null;
+  const L=out141List();if(!L)return null;const now=performance.now();let best=null,bd=2.3;
+  L.forEach((p,i)=>{if(!p.kind)return;if((OUT141.dep[i]||0)>now)return;const d=Math.hypot(p.x-pl.position.x,p.z-pl.position.z)-(p.kind=='rock'?.45*(p.s||1):.15);
+    if(d<bd){bd=d;best={kind:p.kind,x:p.x,y:p.z,k:-1,o141:i}}});return best}catch(_){return null}}}
+// the list in world coordinates (the kit sits in the town group, centred on the town)
+function out141List(){const W=typeof KF109!='undefined'&&KF109&&KF109.wsel,G=KF109&&KF109.wild;if(!W||!W.L||!G)return null;if(OUT141.src===W)return OUT141.L;
+  G.updateWorldMatrix(true,false);const v=new THREE.Vector3();OUT141.L=W.L.map(p=>{v.set(p.x,0,p.z).applyMatrix4(G.matrixWorld);return {x:v.x,z:v.z,s:p.s,kind:out141Kind(p)}});OUT141.src=W;OUT141.dep={};return OUT141.L}
+{const f=gFinish;gFinish=function(tg){const r=f.apply(this,arguments);try{if(tg&&tg.o141!=null)OUT141.dep[tg.o141]=performance.now()+OUT141.rest*1000}catch(_){}return r}}
+// ================= v141: minimap and N map are revealed as you explore; found gathering spots; facing arrow =================
+// Fog: the zone instances start dark; everything within MF141.R tiles of the hero is revealed, in cells of MF141.C tiles.
+// Duskhold and the void between instances are never fogged. The fog is a canvas (mmFog, world size, 1 px per tile) that is
+// drawn right after the terrain image (mmB) on both maps, so enemies and markers drawn later still sit on top where revealed.
+// Saved per hero as x2.fog141 (run-length coded cells). Gathering spots (trees, rocks, ore, crystal, plants, bones, mounds)
+// show as small dots once their cell is revealed; a spot that is used up hides until it grows back.
+var MF141={C:4,R:10,cw:0,ch:0,cells:null,fog:null,fx:null,dirty:false,nodes:{},last:-1};
+function mf141Init(){if(MF141.cells)return;MF141.cw=Math.ceil(W/MF141.C);MF141.ch=Math.ceil(H/MF141.C);MF141.cells=new Uint8Array(MF141.cw*MF141.ch);
+  const c=document.createElement('canvas');c.width=W;c.height=H;MF141.fog=c;MF141.fx=c.getContext('2d');mf141Paint()}
+// which cells can be fogged at all: those inside a zone instance
+function mf141Zone(cx,cy){const x=cx*MF141.C+MF141.C/2,y=cy*MF141.C+MF141.C/2;if(typeof INSL=='undefined')return false;
+  for(const I of INSL){if(x>=I.x0&&x<I.x0+I.w&&y>=I.y0&&y<I.y0+I.h)return true}return false}
+function mf141Paint(){const g=MF141.fx,C=MF141.C;g.clearRect(0,0,W,H);g.fillStyle='rgb(9,11,15)';
+  if(typeof INSL!='undefined')INSL.forEach(I=>g.fillRect(I.x0,I.y0,I.w,I.h));
+  for(let cy=0;cy<MF141.ch;cy++)for(let cx=0;cx<MF141.cw;cx++)if(MF141.cells[cy*MF141.cw+cx])g.clearRect(cx*C,cy*C,C,C)}
+function mf141Seen(x,y){if(!MF141.cells)return true;const cx=Math.floor(x/MF141.C),cy=Math.floor(y/MF141.C);if(cx<0||cy<0||cx>=MF141.cw||cy>=MF141.ch)return true;
+  return !!MF141.cells[cy*MF141.cw+cx]||!mf141Zone(cx,cy)}
+// reveal around the hero (called with the minimap, every 200 ms)
+function mf141Reveal(){mf141Init();if(typeof curMap=='function'&&curMap()<0)return;const C=MF141.C,R=MF141.R,px=pl.position.x,pz=pl.position.z;
+  const c0x=Math.floor((px-R)/C),c1x=Math.floor((px+R)/C),c0y=Math.floor((pz-R)/C),c1y=Math.floor((pz+R)/C);let n=0;
+  for(let cy=Math.max(0,c0y);cy<=Math.min(MF141.ch-1,c1y);cy++)for(let cx=Math.max(0,c0x);cx<=Math.min(MF141.cw-1,c1x);cx++){const i=cy*MF141.cw+cx;if(MF141.cells[i])continue;
+    const dx=Math.max(0,Math.abs(cx*C+C/2-px)-C/2),dy=Math.max(0,Math.abs(cy*C+C/2-pz)-C/2);if(dx*dx+dy*dy>R*R)continue;MF141.cells[i]=1;MF141.fx.clearRect(cx*C,cy*C,C,C);n++}
+  if(n)MF141.dirty=true}
+// draw the fog right after the terrain image on a map context
+function mf141Hook(g){if(!g||g.__mf141)return;const d=g.drawImage;g.__mf141=1;g.drawImage=function(img){const r=d.apply(this,arguments);
+  if(img===mmB&&MF141.fog&&arguments.length===9){const a=[...arguments];a[0]=MF141.fog;const sm=this.imageSmoothingEnabled;this.imageSmoothingEnabled=false;d.apply(this,a);this.imageSmoothingEnabled=sm}return r}}
+{const f=mini;mini=function(){try{mf141Reveal();mf141Hook(mmX)}catch(e){}return f.apply(this,arguments)}}
+{const f=openWMap;openWMap=function(){const hid=[];try{mf141Init();mf141Reveal();mf141Hook($('wmc').getContext('2d'));
+  // camps not seen yet stay hidden: their instance id is swapped out while the map draws, then put back
+  if(typeof CAMPS!='undefined')CAMPS.forEach(C=>{if(!mf141Seen(C.x,C.z)){hid.push([C,C.ig]);C.ig=-99}})}catch(e){}let r;try{r=f.apply(this,arguments)}finally{hid.forEach(([C,g])=>C.ig=g)}try{mf141WmapNodes()}catch(e){console.warn('fog wmap',e)}return r}}
+
+// ---------------- gathering spots ----------------
+var MF141_COL={tree:'#5fbf5a',stone:'#b8b4ac',iron:'#d9824a',crystal:'#7fe3ff',fiber:'#b6d36a',berry:'#c870e0',flower:'#f39ad0',mush:'#a8f0a0',bones:'#efe8d8',mound:'#a77a4c'};
+var MF141_LAB={tree:'tree',stone:'stone',iron:'iron ore',crystal:'crystal',fiber:'fiber',berry:'berries',flower:'petals',mush:'glow caps',bones:'bones',mound:'soil mound'};
+function mf141Kind(x,y){const t=MAP[y][x],k=y*W+x,pk=PROPK[k];if(!NODE[k])return null;
+  if(t=='#')return 'tree';if(t=='r'&&(pk=='rock'||pk=='grave'||pk=='pillar'))return 'rock';
+  return ['crystal','bush','flower','mush','bones','mound'].includes(pk)?pk:null}
+// every gathering spot of an instance (cached; the tile under a used-up spot turns to '.', so the scan runs once per instance)
+function mf141Nodes(I){if(!I)return [];if(MF141.nodes[I.g])return MF141.nodes[I.g];const L=[];
+  for(let y=Math.max(2,I.y0);y<Math.min(H-2,I.y0+I.h);y++)for(let x=Math.max(2,I.x0);x<Math.min(W-2,I.x0+I.w);x++){const kind=mf141Kind(x,y);if(!kind)continue;
+    let v=kind;try{v=typeof lnV=='function'?lnV({kind,x,y}):kind}catch(_){}L.push({x,y,k:y*W+x,v})}
+  return MF141.nodes[I.g]=L}
+function mf141Here(){if(typeof curMap!='function'||curMap()<0)return null;return curIns()}
+function mf141Dot(g,x,y,col,s){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(x-s/2-1,y-s/2-1,s+2,s+2);g.fillStyle=col;g.fillRect(x-s/2,y-s/2,s,s)}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){try{const I=mf141Here();if(I){const kx=w/vw,ky=h/vh;
+  mf141Nodes(I).forEach(n=>{if(gdep[n.k])return;const x=(n.x-(cx-vw/2)+.5)*kx,y=(n.y-(cy-vh/2)+.5)*ky;if(x<-3||y<-3||x>w+3||y>h+3)return;if(!mf141Seen(n.x,n.y))return;
+    mf141Dot(mmX,x,y,MF141_COL[n.v]||'#ddd',n.v=='tree'?2:3)})}}catch(e){}return f.apply(this,arguments)}}
+function mf141WmapNodes(){const I=mf141Here();if(!I)return;const c=$('wmc'),g=c.getContext('2d'),s=Math.min(1060/I.w,640/I.h),seen={};
+  mf141Nodes(I).forEach(n=>{if(gdep[n.k]||!mf141Seen(n.x,n.y))return;seen[n.v]=1;mf141Dot(g,(n.x-I.x0+.5)*s,(n.y-I.y0+.5)*s,MF141_COL[n.v]||'#ddd',n.v=='tree'?3:5)});
+  // legend of the kinds found here, top right under the title bar
+  const ks=Object.keys(seen);if(!ks.length)return;g.font='600 11px system-ui,sans-serif';g.textAlign='left';g.textBaseline='middle';
+  const wd=ks.reduce((a,k)=>a+g.measureText(MF141_LAB[k]||k).width+20,8);let x=c.width-wd-8;const y=54;
+  g.fillStyle='rgba(0,0,0,.6)';g.fillRect(x-4,y-10,wd+4,20);ks.forEach(k=>{mf141Dot(g,x+5,y,MF141_COL[k]||'#ddd',6);g.fillStyle='#ddd';g.fillText(MF141_LAB[k]||k,x+12,y);x+=g.measureText(MF141_LAB[k]||k).width+20})}
+
+// ---------------- facing: a bigger arrow on the minimap and on the N map ----------------
+function mf141Face(){try{return typeof plFaceY=='function'?plFaceY():pl.rotation.y}catch(_){return pl.rotation.y}}
+miniArrow=function(qx,qy){const a=mf141Face(),fx=Math.sin(a),fz=Math.cos(a),ca=camYaw,vx=-Math.sin(ca),vz=-Math.cos(ca);
+  mmX.save();mmX.fillStyle='rgba(255,255,255,.13)';mmX.beginPath();mmX.moveTo(qx,qy);const sp=.55,base=Math.atan2(vz,vx);mmX.arc(qx,qy,30,base-sp,base+sp);mmX.closePath();mmX.fill();
+  mmX.translate(qx,qy);mmX.rotate(Math.atan2(fz,fx));mmX.lineJoin='round';
+  mmX.beginPath();mmX.moveTo(11,0);mmX.lineTo(-6,-7);mmX.lineTo(-2.5,0);mmX.lineTo(-6,7);mmX.closePath();mmX.lineWidth=3;mmX.strokeStyle='#08110b';mmX.stroke();mmX.lineWidth=1.4;mmX.strokeStyle='#f4fff6';mmX.stroke();mmX.fillStyle='#4ade80';mmX.fill();mmX.restore()};
+{const f=openWMap;openWMap=function(){const r=f.apply(this,arguments);try{const I=mf141Here(),c=$('wmc'),g=c.getContext('2d');let x0,y0,s;
+  if(I){x0=I.x0;y0=I.y0;s=Math.min(1060/I.w,640/I.h)}else{const T=TOWNS[0];x0=T.cx-60;y0=T.cy-30;const w=120,h=TWN100_PG[TWN100_PG.length-1].y+16-y0;s=Math.min(1060/w,640/h)}
+  const x=(pl.position.x-x0+.5)*s,y=(pl.position.z-y0+.5)*s,a=mf141Face();g.save();g.translate(x,y);g.rotate(Math.atan2(Math.cos(a),Math.sin(a)));
+  g.beginPath();g.moveTo(17,0);g.lineTo(5,-7);g.lineTo(5,7);g.closePath();g.fillStyle='#4ade80';g.fill();g.lineWidth=1.5;g.strokeStyle='#000';g.stroke();g.restore()}catch(e){}return r}}
+
+// ---------------- save / load ----------------
+function mf141Enc(){const a=MF141.cells;if(!a)return null;const out=[];let v=0,n=0;for(let i=0;i<a.length;i++){if(a[i]===v)n++;else{out.push(n.toString(36));v=a[i];n=1}}out.push(n.toString(36));return out.join('.')}
+function mf141Dec(s){mf141Init();MF141.cells.fill(0);if(!s)return mf141Paint();let i=0,v=0;String(s).split('.').forEach(t=>{const n=parseInt(t,36)||0;if(v)MF141.cells.fill(1,i,Math.min(MF141.cells.length,i+n));i+=n;v^=1});mf141Paint()}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{if(MF141.cells)o.fog141={c:MF141.C,w:MF141.cw,h:MF141.ch,r:mf141Enc()}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const F=s&&s.fog141;mf141Init();if(F&&F.c==MF141.C&&F.w==MF141.cw&&F.h==MF141.ch)mf141Dec(F.r);else mf141Dec(null);MF141.nodes={}}catch(e){console.warn('fog load',e)}return r}}
+// (the game saves every 30 s, on hide and on leaving the page, so revealed cells are kept without anything extra here)
+// ================= v141: menus keep their scroll spot; the item detail panel stays compact =================
+// Scroll: many windows rebuild their lists with innerHTML (levelling an ability rebuilds the whole Abilities list), which
+// creates new scroll boxes that start at the top. Every scroll inside a window is remembered under a key (window, its mode,
+// the box's id or class path); when a rebuild adds a box with the same key, it gets its old position back. Opening a window
+// (or switching the #xw window to another mode) starts at the top as before. Explicit resets on boxes that stay in place
+// (Fusion steps, picking another companion) are untouched.
+var KS141={mem:{},on:true};
+function ks141Win(el){for(const id of WINS){const w=$(id);if(w&&w.contains(el))return w}return null}
+function ks141Key(el,w){if(!w)return null;let p=el,path=[];
+  while(p&&p!==w){if(p.id){path.push('#'+p.id);break}const cl=(p.className&&typeof p.className=='string')?p.className.trim().split(/\s+/).filter(c=>!/^(on|sel|hide|open|active|hl|dis)$/.test(c)).sort().join('.'):'';
+    let i=0,q=p;while((q=q.previousElementSibling))if(q.tagName===p.tagName&&q.className===p.className)i++;path.push(p.tagName+(cl?'.'+cl:'')+(i?':'+i:''));p=p.parentElement}
+  return w.id+'|'+(w.id=='xw'&&typeof xwMode!='undefined'?xwMode:'')+'|'+path.reverse().join('>')}
+document.addEventListener('scroll',e=>{const el=e.target;if(!el||el.nodeType!==1)return;const w=ks141Win(el);if(!w)return;const k=ks141Key(el,w);if(k)KS141.mem[k]=el.scrollTop},true);
+function ks141Restore(root,w){const L=[root,...root.querySelectorAll('*')];for(const el of L){const k=ks141Key(el,w),v=k&&KS141.mem[k];if(!(v>0))continue;
+  if(el.scrollHeight>el.clientHeight&&Math.abs(el.scrollTop-v)>1)el.scrollTop=v}}
+WINS.forEach(id=>{const w=$(id);if(!w)return;let wasHidden=w.classList.contains('hide');
+  new MutationObserver(recs=>{if(!KS141.on)return;
+    // opened again: forget this window's old positions
+    const hid=w.classList.contains('hide');if(wasHidden&&!hid){for(const k in KS141.mem)if(k.startsWith(id+'|'))delete KS141.mem[k]}wasHidden=hid;if(hid)return;
+    const seen=new Set();recs.forEach(r=>{if(r.type!='childList')return;r.addedNodes.forEach(n=>{if(n.nodeType===1&&!seen.has(n)){seen.add(n);try{ks141Restore(n,w)}catch(_){}}});
+      // a box whose children were all replaced keeps its own position (it can clamp to 0 while the new content lays out)
+      if(r.target&&r.target.nodeType===1&&!seen.has(r.target)){seen.add(r.target);const k=ks141Key(r.target,w),v=k&&KS141.mem[k];if(v>0&&r.target.scrollTop<1)r.target.scrollTop=v}})
+  }).observe(w,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})});
+// the #xw window: a re-render in the same mode keeps the body's position (switching mode starts at the top)
+{const f=rX;rX=function(){const B=$('xwB'),m=typeof xwMode!='undefined'?xwMode:'',t=B?B.scrollTop:0;const r=f.apply(this,arguments);
+  try{if(B&&m===xwMode&&t>0&&B.scrollTop!==t)B.scrollTop=t}catch(_){}return r}}
+
+// ---------------- item detail panel (inventory footer): one compact box ----------------
+// The unique / legendary / set blocks were appended as siblings of the details in a non-wrapping flex row, so the details
+// shrank to one word per line and the extra lines ran across the whole screen. Now the panel wraps: the details take the
+// full width in two columns of stats, the buttons sit under them, and the extra blocks follow at full width, capped in height.
+document.head.insertAdjacentHTML('beforeend',`<style id="idt141">
+#bag #idt{flex-wrap:wrap;align-items:flex-start;gap:6px 10px;max-height:min(42vh,330px);overflow:auto}
+#bag #idt>.dtl{flex:1 1 100%;min-width:0}
+#bag #idt>.dtl .dfs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px 14px}
+#bag #idt>.dtl .dfs>*{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bag #idt>div:not(.dtl){flex:0 1 auto;max-width:100%}
+#bag #idt>.kqm-tx,#bag #idt>.kqm-ts,#bag #idt>.lpbox,#bag #idt>.setbox{flex:1 1 100%;margin:0}
+#bag #idt>.kqm-ts{font-size:.72rem;opacity:.8}
+#bag #idt .wsrow{display:flex;flex-wrap:wrap;gap:6px}#bag #idt .wsrow>*{flex:0 1 auto}
+</style>`);
+// ================= v141: bestiary pages for every enemy (picture, stats, where it lives, drop table) =================
+// The Enemies tab is a list (grouped by the zone where each creature first appears) and a page for the selected one.
+// A creature's page opens once you have defeated it (the list keeps "Unknown enemy" before that, as it always did).
+// Stats come from enStats at the levels of the instances it lives in. Drop chances are worked out from the loot code
+// (lootE_base + meat in 0170, the 70% kept by pV6's filter in 0530, the egg rate EGG92.rate, uniques UNQ135_P) with your
+// current loot bonus. The picture is a full-body render of the real model on the companion portrait renderer (CPIC.r).
+var DEX141={sel:null,where:null,pic:{},q:[],busy:false,W:220,H:190};
+// where each enemy lives: instance list per key [{z,k,lo,hi,t,camp}]
+function dex141Where(){if(DEX141.where)return DEX141.where;const W2={};
+  INSL.forEach((I,r)=>{if(!I.fld)return;const p=PMAP[I.z];const R=typeof n3Ins=='function'&&typeof N3!='undefined'&&N3.on?n3Ins(r):null;
+    const add=(k,camp)=>{if(!EN[k])return;const L=W2[k]||(W2[k]=[]);let o=L.find(o=>o.z==I.z&&o.k==I.k);if(!o){o={z:I.z,k:I.k,lo:I.lv[0],hi:I.lv[1],t:p.t,camp:false,roam:false};L.push(o)}if(camp)o.camp=true;else o.roam=true};
+    (R?R.L:(BIOEN[p.n]||[])).forEach(k=>add(k,false));
+    CAMPS.forEach(C=>{if(C.ig!==r||!C.th||!C.th.mem)return;C.th.mem.forEach(m=>add(m[0],true))})});
+  Object.values(W2).forEach(L=>L.sort((a,b)=>a.z-b.z||a.k-b.k));return DEX141.where=W2}
+function dex141Keys(){return Object.keys(EN).filter(k=>!k.startsWith('boss'))}
+function dex141St(k,l,al){const s=enStats(EN[k],l,al,0);return {hp:Math.round(s.hp),pa:Math.round(s.pa),ma:Math.round(s.ma),pd:Math.round(s.pd),md:Math.round(s.md)}}
+function dex141Pct(p){if(p>=.995)return '100%';if(p<=0)return '—';if(p<.001)return '1 in '+Math.round(1/p).toLocaleString();const v=p*100;return (v<1?v.toFixed(2):v<10?v.toFixed(1):Math.round(v))+'%'}
+// the drop table at level l, zone tier T (normal and elite)
+function dex141Drops(k,l,T,z){const E=EN[k],fam=E.fam||'Beast',lk=1+((typeof HS=='function'&&HS().loot)||0),keep=.7,eg=typeof EGG92!='undefined'?EGG92.rate:1;
+  const gb=1+([0,.1,.2,.3][typeof shL=='function'?shL('treas'):0]||0),g0=(3+l*1.4)*.65*gb;
+  const rows=[['🪙','Gold',Math.round(g0*.7)+'–'+Math.round(g0*1.3),Math.round(g0*3*.7)+'–'+Math.round(g0*3*1.3)],
+    ['⚔️','Gear (any slot, rolled at its level)',dex141Pct(.035*lk*keep),dex141Pct(Math.min(1,.3*lk)*keep)+' <small>uncommon+</small>'],
+    ['🥚','Tier '+T+' egg (random family)',dex141Pct(.04*lk*keep*eg),dex141Pct(.12*lk*keep*eg)],
+    [UPM[T-1][1],UPM[T-1][0],dex141Pct(.1*lk*keep),dex141Pct(.5*lk*keep)+' <small>×1–3</small>'],
+    [(FAMD[fam]&&FAMD[fam].mi)||'🧩',(FAMD[fam]&&FAMD[fam].mat)||'Family part',dex141Pct(.18*lk*keep)+' <small>×1–2</small>',dex141Pct(.6*lk*keep)+' <small>×2–4</small>']];
+  if(['Beast','Sky','Dragon','Earth'].includes(fam))rows.push(['🍖','Raw meat',dex141Pct(.1*keep),dex141Pct(.25*keep)]);
+  rows.push(['🧪','Health potion',dex141Pct(.06*lk*keep),dex141Pct(.06*lk*keep)]);
+  if(z!=null&&typeof UNQ135_ZK!='undefined'&&UNQ135_ZK[z]){const lu=1+Math.min(1,((typeof HS=='function'&&HS().loot)||0));
+    rows.push(['✦','Unique of '+PMAP[z].n+': '+UNQ135_ZK[z].map(q=>UNQ135[q].n).join(', '),dex141Pct(UNQ135_P.kill*lu),dex141Pct(UNQ135_P.elite*lu)])}
+  return rows}
+// full-body picture, rendered one at a time in the background
+function dex141Pic(k){if(DEX141.pic[k]!==undefined)return DEX141.pic[k];DEX141.pic[k]=null;DEX141.q.push(k);dex141Pump();return null}
+function dex141Pump(){if(DEX141.busy||!DEX141.q.length)return;DEX141.busy=true;setTimeout(()=>{const k=DEX141.q.shift();
+  try{DEX141.pic[k]=dex141Make(k)||''}catch(e){console.warn('dex pic',k,e);DEX141.pic[k]=''}
+  DEX141.busy=false;try{const im=document.querySelectorAll('#xwB [data-dexpic="'+k+'"]');im.forEach(el=>{if(DEX141.pic[k])el.innerHTML='<img src="'+DEX141.pic[k]+'" alt="">'})}catch(_){}
+  dex141Pump()},30)}
+function dex141Make(k){if(!cpicInit())return null;const c=enemyC(k,10,{});const m=cr(c);if(!m)return null;const R=CPIC.r,W=DEX141.W,H=DEX141.H,cv=R.domElement;
+  m.position.set(0,0,0);m.rotation.set(0,0,0);CPIC.sc.add(m);
+  try{try{if(m.rig)m.rig(0,false,0)}catch(_){}m.updateMatrixWorld(true);
+    const box=new THREE.Box3().setFromObject(m),sz=box.getSize(new THREE.Vector3()),ctr=box.getCenter(new THREE.Vector3());
+    const r=Math.max(sz.y*.62,Math.hypot(sz.x,sz.z)*.5,.3),dist=r/Math.tan(15*Math.PI/180)*1.05;
+    R.setSize(W,H,false);CPIC.cam.aspect=W/H;CPIC.cam.updateProjectionMatrix();
+    CPIC.cam.position.set(ctr.x+dist*.55,ctr.y+dist*.22,ctr.z+dist*.8);CPIC.cam.lookAt(ctr);R.render(CPIC.sc,CPIC.cam);return cv.toDataURL('image/png')}
+  finally{CPIC.sc.remove(m);R.setSize(112,112,false);CPIC.cam.aspect=1;CPIC.cam.updateProjectionMatrix()}}
+function dex141Mv(n){const M=typeof MV!='undefined'&&MV[n];const nm=M&&(M.nm||M.n);return nm&&typeof nm=='string'?nm:String(n).replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase())}
+function dex141Page(k){const E=EN[k],n=kills[k]||0,Wh=dex141Where()[k]||[],F=FAMD[E.fam]||{};
+  if(!n)return `<div class="d141-page d141-unk"><div class="d141-pic">❔</div><b>Unknown enemy</b><p class="mut">Defeat one to learn its stats and what it drops.</p></div>`;
+  const pic=dex141Pic(k),w0=Wh[0],lo=w0?w0.lo:1,hi=w0?Wh.reduce((a,o)=>Math.max(a,o.hi),0):1,T=w0?w0.t:1,z=w0?w0.z:null;
+  const s0=dex141St(k,lo,0),s1=dex141St(k,hi,0),se=dex141St(k,hi,1),SN=[['hp','Health'],['pa','Phys. attack'],['ma','Magic attack'],['pd','Phys. defense'],['md','Magic defense']];
+  const wt=E.w||{},hint=q=>{const v=wt[q]||1;return v>=1.15?'<em class="hi">high</em>':v<=.75?'<em class="lo">low</em>':''};
+  const where=Wh.length?Wh.map(o=>`${PMAP[o.z].n} ${['I','II','III'][o.k]} <small>Lv ${o.lo}–${o.hi}${o.camp&&!o.roam?' · camps':o.camp?' · roams + camps':''}</small>`).join('<br>'):'<span class="mut">Not found in the zones any more.</span>';
+  const mv=(E.moves||[]).map(dex141Mv).join(' · ');
+  return `<div class="d141-page"><div class="d141-top"><div class="d141-pic" data-dexpic="${k}">${pic?`<img src="${pic}" alt="">`:`<span>${E.e||'❔'}</span>`}</div>
+   <div class="d141-id"><b>${E.e||''} ${E.n}</b><div class="mut">${F.i||''} ${E.fam||'—'} · ${E.mt=='m'?'magic':'physical'} attacks${E.ranged?' · ranged':''}</div>
+   <div class="d141-kc">${n} defeated${n>=100?' · ★ mastered':n>=25?' · ✔ studied':''}</div>${mv?`<div class="d141-mv"><small>Moves</small> ${mv}</div>`:''}<div class="d141-wh"><small>Lives in</small><br>${where}</div></div></div>
+   <div class="d141-sec">Stats</div><table class="d141-t"><thead><tr><th></th><th>Lv ${lo}</th>${hi!=lo?`<th>Lv ${hi}</th>`:''}<th>Elite Lv ${hi}</th></tr></thead><tbody>
+   ${SN.map(([q,l])=>`<tr><td>${l} ${hint(q)}</td><td>${s0[q]}</td>${hi!=lo?`<td>${s1[q]}</td>`:''}<td>${se[q]}</td></tr>`).join('')}</tbody></table>
+   <div class="d141-sec">Drops <small class="mut">per kill · Lv ${hi}${((typeof HS=='function'&&HS().loot)||0)>0?' · with your +'+Math.round(HS().loot*100)+'% loot':''}</small></div>
+   <table class="d141-t d141-d"><thead><tr><th></th><th>Normal</th><th>Elite</th></tr></thead><tbody>
+   ${dex141Drops(k,hi,T,z).map(r=>`<tr><td>${r[0]} ${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}</tbody></table></div>`}
+function dex141Tab(){const Wh=dex141Where(),keys=dex141Keys(),grp={};
+  keys.forEach(k=>{const o=(Wh[k]||[])[0],g=o?o.z:99;(grp[g]=grp[g]||[]).push(k)});
+  Object.values(grp).forEach(L=>L.sort((a,b)=>{const A=(Wh[a]||[])[0],B=(Wh[b]||[])[0];return (A?A.k*100+A.lo:999)-(B?B.k*100+B.lo:999)||EN[a].n.localeCompare(EN[b].n)}));
+  if(!DEX141.sel||!EN[DEX141.sel])DEX141.sel=keys.find(k=>kills[k])||keys[0];
+  const list=Object.keys(grp).sort((a,b)=>a-b).map(g=>`<div class="d141-g">${g==99?'Elsewhere':PMAP[g].n}</div>`+grp[g].map(k=>{const n=kills[k]||0,E=EN[k];
+    return `<button class="d141-r${DEX141.sel==k?' on':''}" data-dex141="${k}" style="--rc:${n>=100?'#fbbf24':n>=25?'#6ee7b7':'transparent'}"><span class="e">${n?E.e:'❔'}</span><span class="n">${n?E.n:'Unknown enemy'}<small>${n?n+' defeated':'not met yet'}</small></span></button>`}).join('')).join('');
+  return `<div class="d141"><div class="d141-l">${list}</div>${dex141Page(DEX141.sel)}</div>`}
+{const f=XR.dex;XR.dex=function(){const r=f.apply(this,arguments);try{if(dexTab!='en')return r;const B=$('xwB'),T=B.querySelector('.dexT');B.innerHTML=(T?T.outerHTML:'')+dex141Tab();
+  const F=$('xwF');if(F&&!/Pick an enemy/.test(F.textContent))F.insertAdjacentHTML('afterbegin','<span class="mut dtl">Pick an enemy to see its page. </span>')}catch(e){console.warn('dex141',e)}return r}}
+$('xw').addEventListener('click',e=>{if(xwMode!='dex')return;const t=e.target.closest('[data-dex141]');if(!t)return;e.stopImmediatePropagation();DEX141.sel=t.dataset.dex141;rX()},true);
+document.head.insertAdjacentHTML('beforeend',`<style id="dex141css">
+#xw .d141{display:grid;grid-template-columns:minmax(170px,230px) 1fr;gap:12px;align-items:start}
+#xw .d141-l{max-height:min(60vh,560px);overflow:auto;display:flex;flex-direction:column;gap:3px;padding-right:4px}
+#xw .d141-g{font:700 .68rem/1 var(--kq-head,serif);letter-spacing:.08em;text-transform:uppercase;color:#c9a24a;margin:8px 0 3px}
+#xw .d141-r{flex:none;height:auto;min-height:38px;line-height:1.2;white-space:normal;display:flex;gap:8px;align-items:center;text-align:left;padding:5px 8px;border-left:3px solid var(--rc);background:rgba(0,0,0,.18);border-radius:6px;min-height:0}
+#xw .d141-r.on{background:rgba(201,162,74,.18);outline:1px solid rgba(201,162,74,.55)}
+#xw .d141-r .e{font-size:1.1rem;width:1.4em;text-align:center}#xw .d141-r .n{display:flex;flex-direction:column;gap:1px;font-weight:700;font-size:.8rem}#xw .d141-r small{font-weight:500;opacity:.7;font-size:.66rem}
+#xw .d141-page{min-width:0}#xw .d141-top{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+#xw .d141-pic{width:220px;height:190px;flex:none;border-radius:10px;background:radial-gradient(ellipse at 50% 60%,rgba(201,162,74,.18),rgba(0,0,0,.45) 70%);border:1px solid rgba(201,162,74,.35);display:flex;align-items:center;justify-content:center;font-size:3rem;overflow:hidden}
+#xw .d141-pic img{width:100%;height:100%;object-fit:contain}
+#xw .d141-id{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:5px}#xw .d141-id>b{font-size:1.1rem}
+#xw .d141-id small{text-transform:uppercase;letter-spacing:.06em;font-size:.62rem;color:#c9a24a}#xw .d141-wh,#xw .d141-mv{font-size:.78rem}
+#xw .d141-sec{margin:10px 0 4px;font:700 .72rem/1 var(--kq-head,serif);letter-spacing:.08em;text-transform:uppercase;color:#c9a24a}
+#xw .d141-t{width:100%;border-collapse:collapse;font-size:.8rem}#xw .d141-t th{font-size:.66rem;text-align:right;color:#a8957a;font-weight:600;padding:2px 6px}
+#xw .d141-t td{padding:3px 6px;border-top:1px solid rgba(255,255,255,.06);text-align:right}#xw .d141-t td:first-child,#xw .d141-t th:first-child{text-align:left}
+#xw .d141-t em{font-style:normal;font-size:.62rem;padding:0 4px;border-radius:4px;margin-left:4px}#xw .d141-t em.hi{background:rgba(110,231,183,.18);color:#6ee7b7}#xw .d141-t em.lo{background:rgba(248,113,113,.15);color:#fca5a5}
+#xw .d141-unk{text-align:center;padding:30px}#xw .d141-unk .d141-pic{margin:0 auto 10px}
+@media(max-width:640px){#xw .d141{grid-template-columns:1fr}#xw .d141-l{max-height:30vh}#xw .d141-pic{width:100%;height:170px}}
+</style>`);
+
+// ---------------- Sovereigns tab: stats and drops of each defeated Sovereign ----------------
+function dex141Boss(i){const d=BOSSES[i],fam=famOf(d.sp),F=FAMD[fam]||{},T=Math.max(1,Math.min(5,(PMAP[i]&&PMAP[i].t)||tierOfLv(d.lvl)));
+  const s=enStats({w:{hp:.8,pa:1,ma:1,pd:1.05,md:1.05}},d.lvl,0,1),hp=Math.round(s.hp*(typeof PACE!='undefined'?PACE.hp:1));
+  const g0=(3+d.lvl*1.4)*13*.65;
+  return `<div class="d141-bs"><span>❤️ ${hp.toLocaleString()} health</span><span>⚔️ ${Math.round(F.mt=='m'?s.ma:s.pa)} ${F.mt=='m'?'magic':'phys.'} attack</span><span>🛡️ ${Math.round(s.pd)} / ${Math.round(s.md)} defense</span></div>
+   <div class="d141-bs d141-bd"><b>Drops</b> 🪙 ${Math.round(g0*.7)}–${Math.round(g0*1.3)} · ⚔️ 2 gear (rare or better) · 🥚 Tier ${T} egg · ${UPM[T-1][1]} ${UPM[T-1][0]} ×3–5 · ${F.mi||'🧩'} ${F.mat||'parts'} ×5–8${['Beast','Sky','Dragon','Earth'].includes(fam)?' · 🍖 meat ×2–3':''}</div>`}
+{const f=XR.dex;XR.dex=function(){const r=f.apply(this,arguments);try{if(dexTab!='boss')return r;
+  $('xwB').querySelectorAll('.rows>.rw').forEach((el,i)=>{if(!BOSSES[i]||!bossDone.has(i))return;const rn=el.querySelector('.rn');if(rn&&!rn.querySelector('.d141-bs'))rn.insertAdjacentHTML('beforeend',dex141Boss(i))})}catch(e){console.warn('dex141 boss',e)}return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="dex141b">#xw .d141-bs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.74rem;margin-top:3px;font-weight:600}#xw .d141-bd{font-weight:500;opacity:.85}#xw .d141-bd b{color:#c9a24a;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em}</style>');
+// ================= v141: the orb attack - hand held out, the orb floating over the palm, the bolt leaves the orb =================
+// The orb's basic attack used to coil the left arm and throw it forward (ATK.orb), so the Mage swung his orb like a ball.
+// Now the raven keeps his orb hold (FC116 palm hold) through the attack instead of fading it out: the arm reaches straight out in
+// front (ORB141.ext, from the shoulder: out, fwd, down), the orb lifts off the palm and bobs there while it fires, and the bolt
+// starts at the orb. The body only leans in a little (a calm ATK.orb track). Other heroes holding an orb get the same arm
+// motion from the track (left arm forward and level) without the palm hold.
+var ORB141={t0:-1e9,d:0,ext:[.15,.48,.02],lift:.035,bob:.012};
+ATK.orb=atkTrack([[0,ATK_REST],
+  [.22,atkEyes({sx:-.07,sy:-.12,lx:-1.45,lz:.12,le:-.12,lw:.2,ax:-.25,ex:-.45,hx:-.05,lk:.1,dy:-.015}),'out'],
+  [.62,atkEyes({sx:-.08,sy:-.14,lx:-1.5,lz:.1,le:-.1,lw:.25,ax:-.25,ex:-.45,hx:-.06,lk:.1,dy:-.015}),'lin'],
+  [1,ATK_REST,'io']]);
+{const f=staffAnim;staffAnim=function(ms){try{if(atkWT()=='orb'){ORB141.t0=performance.now();ORB141.d=Math.max(200,ms||600)}}catch(_){}return f.apply(this,arguments)}}
+// how far into the orb attack (0 = not attacking; the attack's own progress, HA.cur.k); ease in over the first 20%, out over the last 25%
+function orb141K(){const A=typeof HA!='undefined'&&HA.cur;if(!A||A.pose!==ATK.orb)return 0;const t=A.k;if(!(t>=0&&t<1))return 0;const e=x=>x*x*(3-2*x);return t<.2?e(t/.2):t>.75?e((1-t)/.25):1}
+{const f=fc116Apply;fc116Apply=function(H){
+  const W=H&&(H.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb'),k=H===pl&&W?orb141K():0;if(!k)return f.apply(this,arguments);
+  const C=FC116.H.orb,h0=C.hand,S=H._brS,a0=S?S.a:1;
+  try{C.hand=h0.map((v,i)=>v+(ORB141.ext[i]-v)*k);if(S)S.a=Math.max(a0,k);f.apply(this,arguments)}finally{C.hand=h0;if(S)S.a=a0}
+  // the orb floats upright a little above the palm while the attack lasts (placed in the world: whatever the wrist does)
+  try{const b2=H.bones.aL2,Fp=fc117Frame(H,'aL2');if(Fp&&W.parent===b2){const V=THREE.Vector3,Q=THREE.Quaternion;H.updateMatrixWorld(true);
+    const palm=Fp.palm.clone().addScaledVector(Fp.c,Fp.thick*.6).applyMatrix4(b2.matrixWorld),f2=fc140Fwd(H),Qw=new Q().setFromAxisAngle(new V(0,1,0),Math.atan2(f2.x,f2.z));
+    const bq=b2.getWorldQuaternion(new Q()),ws=W.getWorldScale(new V()),bb=fc117WB(W),foot=new V(bb.c.x,bb.min.y,bb.c.z).multiply(ws).applyQuaternion(Qw);
+    const up=(ORB141.lift+ORB141.bob*Math.sin(performance.now()/90))*fc140Scale(H),wpos=palm.clone().add(new V(0,up,0)).sub(foot);
+    const lq=bq.clone().invert().multiply(Qw),lp=wpos.applyMatrix4(new THREE.Matrix4().copy(b2.matrixWorld).invert());
+    W.quaternion.slerp(lq,k);W.position.lerp(lp,k);
+    if(H._fc116)H._fc116.w.forEach(r=>{if(r.o===W){r.set=W.quaternion.clone();r.ps=W.position.clone()}});H.updateMatrixWorld(true)}}catch(e){if(!ORB141.err){ORB141.err=1;console.warn('orb141',e)}}}}
+// the orb's world position (for the bolt); null when no orb is in hand
+function orb141Pos(){try{const W=(pl.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb');if(!W)return null;W.updateWorldMatrix(true,true);
+  const b=new THREE.Box3().setFromObject(W);if(b.isEmpty())return null;return b.getCenter(new THREE.Vector3())}catch(_){return null}}
+// the first bolt of the chain leaves the orb (a short glow there), the jumps go on from enemy to enemy as before
+orbChain=function(e0,raw){let cur=e0,from=pl.position.clone();const hit=new Set(),op=orb141Pos();
+  for(let j=0;j<4&&cur;j++){hit.add(cur);const a=j==0&&op?op:gY(from,1);if(j==0&&op){try{burst(op,0x9ad8ff,8,.6,.5,.25)}catch(_){}}
+    bolt(a,gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB127.orbJump:WB127.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
+    cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}};
+// ================= v141: gathering has its own animations and tools =================
+// Every gathering kind used to replay the equipped weapon's basic swing (featTick → swingAnim) with the weapon in hand.
+// Now each kind has its own motion and, where it fits, a tool in the hand instead of the weapon (the weapon is hidden while
+// gathering and comes back when it ends):
+//   chopping a tree   - a hatchet, a level two-handed swing into the trunk at waist height
+//   mining rock/crystal - a pickaxe, raised overhead and brought down with a bend of the knees
+//   digging a mound    - a spade, pushed down with the weight forward, then levered back
+//   foraging (fibre, berries, petals, glow caps, bones) - no tool: crouched, reaching down with one hand then the other
+//   wading for clay    - no tool: bent over, scooping with both hands
+//   fishing            - a rod: a cast, then the rod held out low, a sharp lift when a fish strikes
+// The hatchet and pickaxe ride in the hand through the v93 grip layer (weapon types axes and hammer); the spade and the rod are
+// aimed in the world every frame after the animation (spade: down into the ground ahead, rod: out ahead and up). Foraging and
+// wading put the weapon away and use bare hands. The motions are ordinary attack tracks (haPlay) with no hit.
+var SK141={tool:null,kind:null,hid:[],rod:null,line:null,fishT:0};
+// ---------------- tools ----------------
+function sk141Mat(c,r){return new THREE.MeshStandardMaterial({color:c,roughness:r==null?.75:r,metalness:r!=null&&r<.5?.5:0,flatShading:true})}
+function sk141Part(g,geo,mat,x,y,z,rx,ry,rz){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,rz||0);m.castShadow=true;g.add(m);return m}
+function sk141Tool(kind){const g=new THREE.Group(),wood=sk141Mat(0x6a4a2c),wd=sk141Mat(0x4a3220),iron=sk141Mat(0x8a8e96,.45),dark=sk141Mat(0x3a3c42,.5),leather=sk141Mat(0x3a2418);
+  const cyl=(r1,r2,h)=>new THREE.CylinderGeometry(r1,r2,h,7),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z);
+  if(kind=='hatchet'){sk141Part(g,cyl(.02,.024,.56),wood,0,-.18,0);sk141Part(g,cyl(.027,.027,.08),leather,0,.02,0);
+    sk141Part(g,box(.07,.09,.045),dark,.02,-.42,0);const b=new THREE.Shape();b.moveTo(0,-.05);b.lineTo(.13,-.085);b.quadraticCurveTo(.16,0,.13,.085);b.lineTo(0,.05);b.lineTo(0,-.05);
+    const bl=new THREE.Mesh(new THREE.ExtrudeGeometry(b,{depth:.016,bevelEnabled:false}),iron);bl.position.set(.04,-.42,-.008);g.add(bl);g.userData.wt='axes'}
+  else if(kind=='pick'){sk141Part(g,cyl(.021,.025,.66),wood,0,-.22,0);sk141Part(g,cyl(.028,.028,.1),leather,0,.04,0);
+    sk141Part(g,box(.06,.07,.06),dark,0,-.53,0);[-1,1].forEach(s=>{sk141Part(g,box(.17,.035,.035),iron,s*.11,-.53+(.02),0,0,0,s*.18);sk141Part(g,new THREE.ConeGeometry(.02,.09,5),iron,s*.235,-.49,0,0,0,-s*Math.PI/2+s*.35)});g.userData.wt='hammer'}
+  else if(kind=='spade'){sk141Part(g,cyl(.02,.022,.86),wood,0,-.34,0);sk141Part(g,box(.14,.025,.03),wd,0,.1,0);[-1,1].forEach(s=>sk141Part(g,cyl(.012,.012,.08),wd,s*.06,.06,0,0,0,s*.6));
+    sk141Part(g,box(.05,.1,.04),dark,0,-.8,0);sk141Part(g,box(.17,.22,.018),iron,0,-.94,0);sk141Part(g,new THREE.ConeGeometry(.12,.08,4,1),iron,0,-1.07,0,Math.PI,Math.PI/4,0).scale.set(1,1,.15);g.userData.aim='spade'}
+  else if(kind=='rod'){const L=1.55;sk141Part(g,cyl(.006,.017,L),wood,0,-L/2+.12,0);sk141Part(g,cyl(.022,.022,.16),leather,0,.04,0);
+    sk141Part(g,cyl(.032,.032,.03),dark,.035,-.04,0,0,0,Math.PI/2);for(let i=1;i<5;i++)sk141Part(g,new THREE.TorusGeometry(.012,.003,4,8),iron,.012,.12-L*i/5,0,0,Math.PI/2,0);
+    g.userData.tipY=.12-L}
+  g.userData.sk141=kind;return g}
+function sk141ToolOf(k){return k=='tree'?'hatchet':(k=='rock'||k=='crystal')?'pick':k=='mound'?'spade':'hands'}
+function sk141Show(kind){if(SK141.kind===kind)return;sk141Hide();if(!kind||!pl||!pl.bones||!pl.bones.aR2)return;
+  try{(pl.gearG||[]).forEach(o=>{if(o&&o.visible){o.visible=false;SK141.hid.push(o)}});if(kind=='hands'){SK141.kind=kind;return}const t=sk141Tool(kind);
+    if(kind=='rod'){t.rotation.set(-1.25,0,.12);t.position.set(0,-.03,.03)}else{t.rotation.x=-1.0;t.position.set(0,-.03,.02)}
+    pl.bones.aR2.add(t);SK141.tool=t;SK141.kind=kind;if(t.userData.wt){try{gripReg(pl)}catch(_){}}}catch(e){console.warn('sk141 tool',e)}}
+function sk141Hide(){const t=SK141.tool;SK141.tool=null;SK141.kind=null;if(t){if(t.parent)t.parent.remove(t);t.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose()}});try{gripReg(pl)}catch(_){}}
+  SK141.hid.forEach(o=>o.visible=true);SK141.hid=[];if(SK141.line){scene.remove(SK141.line);SK141.line.geometry.dispose();SK141.line.material.dispose();SK141.line=null}}
+// ---------------- motions ----------------
+const SK141E=atkEyes;
+var SK141_T={
+  chop:{ms:620,t:atkTrack([[0,ATK_REST],
+    [.34,SK141E({sy:.7,py:.3,sx:.05,ax:-1.25,az:.75,ex:-1.35,lx:-1.1,lz:-.15,le:-1.3,rw:.35,lw:.2,lk:.25,rk:.15,lh:-.1,dy:-.05}),'out'],
+    [.52,SK141E({sy:-.25,py:-.15,sx:.12,ax:-1.45,az:-.15,ex:-.35,lx:-1.35,lz:.35,le:-.45,rw:-.1,lk:.3,rk:.2,dy:-.08}),'in2'],
+    [.66,SK141E({sy:-.32,py:-.18,sx:.14,ax:-1.42,az:-.2,ex:-.38,lx:-1.32,lz:.38,le:-.48,lk:.3,rk:.2,dy:-.08}),'out'],
+    [1,SK141E({sy:.2,py:.1,ax:-.9,az:.3,ex:-1.1,lx:-.8,le:-1.0,dy:-.04}),'io']])},
+  mine:{ms:680,t:atkTrack([[0,ATK_REST],
+    [.4,SK141E({sx:-.18,hx:-.25,ax:-2.85,az:.12,ex:-1.0,lx:-2.75,lz:-.12,le:-1.05,rw:.3,lw:.3,lk:.1,rk:.1,dy:.01}),'out'],
+    [.56,SK141E({sx:.5,hx:.2,ax:-1.05,az:.05,ex:-.25,lx:-1.0,lz:-.05,le:-.3,rw:-.2,lw:-.2,lk:.45,rk:.45,lh:-.3,rh:-.3,dy:-.14}),'in'],
+    [.72,SK141E({sx:.52,hx:.22,ax:-1.0,ex:-.3,lx:-.95,le:-.35,lk:.45,rk:.45,lh:-.3,rh:-.3,dy:-.14}),'lin'],
+    [1,SK141E({sx:.15,ax:-1.3,ex:-.8,lx:-1.2,le:-.85,lk:.2,rk:.2,dy:-.05}),'io']])},
+  dig:{ms:760,t:atkTrack([[0,ATK_REST],
+    [.3,SK141E({sx:.25,ax:-1.3,ex:-.6,lx:-1.55,le:-1.2,lz:.15,lk:.35,rk:.1,lh:-.35,dy:-.08}),'out'],
+    [.5,SK141E({sx:.45,hx:.2,ax:-.95,ex:-.2,lx:-1.2,le:-.9,lz:.15,lk:.55,rk:.25,lh:-.45,rh:-.1,dy:-.16}),'in2'],
+    [.78,SK141E({sx:.05,hx:-.05,sy:.2,ax:-1.5,az:.2,ex:-1.1,lx:-1.0,le:-.5,lk:.2,rk:.1,dy:-.05}),'out'],
+    [1,SK141E({sx:.2,ax:-1.25,ex:-.7,lx:-1.4,le:-1.1,lk:.3,dy:-.08}),'io']])},
+  forage:{ms:820,t:atkTrack([[0,SK141E({sx:.55,hx:.3,dy:-.3,lk:1.15,rk:1.15,lh:-.95,rh:-.95,ax:-.6,ex:-.6,lx:-.5,le:-.6})],
+    [.3,SK141E({sx:.62,hx:.35,dy:-.32,lk:1.2,rk:1.15,lh:-1.0,rh:-.95,ax:-1.25,az:-.15,ex:-.2,rw:.3,lx:-.5,le:-.7}),'out'],
+    [.45,SK141E({sx:.6,hx:.3,dy:-.32,lk:1.2,rk:1.15,lh:-1.0,rh:-.95,ax:-.85,az:-.1,ex:-1.4,rw:-.4,lx:-.5,le:-.7}),'in2'],
+    [.72,SK141E({sx:.62,hx:.35,dy:-.32,lk:1.15,rk:1.2,lh:-.95,rh:-1.0,lx:-1.25,lz:.15,le:-.2,lw:.3,ax:-.6,ex:-.6}),'io'],
+    [.88,SK141E({sx:.6,hx:.3,dy:-.32,lk:1.15,rk:1.2,lh:-.95,rh:-1.0,lx:-.85,lz:.1,le:-1.4,lw:-.4,ax:-.6,ex:-.6}),'in2'],
+    [1,SK141E({sx:.55,hx:.3,dy:-.3,lk:1.15,rk:1.15,lh:-.95,rh:-.95,ax:-.6,ex:-.6,lx:-.5,le:-.6}),'io']])},
+  wade:{ms:900,t:atkTrack([[0,SK141E({sx:.6,hx:.25,dy:-.18,lk:.6,rk:.6,lh:-.55,rh:-.55,ax:-.9,ex:-.4,lx:-.9,le:-.4})],
+    [.4,SK141E({sx:.75,hx:.3,dy:-.22,lk:.7,rk:.7,lh:-.65,rh:-.65,ax:-1.05,az:-.25,ex:-.15,lx:-1.05,lz:.25,le:-.15,rw:.5,lw:.5}),'out'],
+    [.7,SK141E({sx:.45,hx:.15,dy:-.15,lk:.55,rk:.55,lh:-.5,rh:-.5,ax:-1.35,az:-.3,ex:-1.4,lx:-1.35,lz:.3,le:-1.4,rw:-.3,lw:-.3}),'io'],
+    [1,SK141E({sx:.6,hx:.25,dy:-.18,lk:.6,rk:.6,lh:-.55,rh:-.55,ax:-.9,ex:-.4,lx:-.9,le:-.4}),'io']])},
+  cast:{ms:900,t:atkTrack([[0,ATK_REST],
+    [.35,SK141E({sy:.35,sx:-.1,ax:-2.6,az:.25,ex:-.9,rw:.4,lx:-.6,le:-.9,lk:.15,dy:-.02}),'out'],
+    [.55,SK141E({sy:-.1,sx:.15,ax:-1.2,az:.1,ex:-.25,rw:-.3,lx:-.7,le:-.8,rk:.2,lh:-.15,dy:-.04}),'in2'],
+    [1,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03}),'io']])},
+  hold:{ms:1400,t:atkTrack([[0,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03})],
+    [.5,SK141E({sx:.08,ax:-.98,az:.08,ex:-.5,rw:-.12,lx:-.88,lz:.2,le:-1.1,dy:-.035}),'io'],
+    [1,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03}),'io']])},
+  jerk:{ms:520,t:atkTrack([[0,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03})],
+    [.3,SK141E({sx:-.12,hx:-.15,ax:-1.75,az:.12,ex:-1.15,rw:.25,lx:-1.3,lz:.25,le:-1.5,lk:.1,rk:.25,lh:.1,dy:-.01}),'out'],
+    [1,SK141E({sx:.06,ax:-.95,az:.08,ex:-.55,rw:-.1,lx:-.85,lz:.2,le:-1.15,dy:-.03}),'io']])}};
+function sk141Motion(kind){return kind=='tree'?'chop':(kind=='rock'||kind=='crystal')?'mine':kind=='mound'?'dig':kind=='water'?'wade':'forage'}
+// featTick calls swingAnim every 0.5 s while gathering: play the gathering motion instead, and wait for it to finish
+{const f=swingAnim;swingAnim=function(st,ms,onHit){try{if(typeof gat!='undefined'&&gat&&gat.tg&&!onHit){const M=SK141_T[sk141Motion(gat.tg.kind)];
+    sk141Show(sk141ToolOf(gat.tg.kind));haPlay(M.ms,M.t,2,null,.2);gat.sw=M.ms/1000*.98;return}}catch(e){console.warn('sk141',e)}return f.apply(this,arguments)}}
+// the tool goes away (and the weapon comes back) as soon as gathering or fishing stops
+{const f=heroTick;heroTick=function(dt,now){const r=f.apply(this,arguments);try{
+  const gth=typeof gat!='undefined'&&gat&&gat.tg,fsh=typeof fishing!='undefined'&&fishing;
+  if(SK141.kind&&!gth&&!fsh)sk141Hide();
+  if(gth&&!SK141.kind&&sk141ToolOf(gat.tg.kind))sk141Show(sk141ToolOf(gat.tg.kind));
+  if(fsh)sk141Fish(dt)}catch(e){if(!SK141.err){SK141.err=1;console.warn('sk141 tick',e)}}return r}}
+// ---------------- fishing ----------------
+{const f=fishStart;fishStart=function(w){const was=fishing;const r=f.apply(this,arguments);try{if(!was&&fishing){sk141Show('rod');haPlay(SK141_T.cast.ms,SK141_T.cast.t,2,null,.2);SK141.fishT=SK141_T.cast.ms/1000;SK141.ph=fishing.ph}}catch(e){console.warn('sk141 fish',e)}return r}}
+function sk141Fish(dt){const F=fishing;if(!SK141.tool||SK141.kind!='rod')sk141Show('rod');
+  // a strike: a sharp lift of the rod; otherwise keep holding it out
+  if(F.ph!==SK141.ph){const bite=F.ph=='bite'||F.ph=='fight';SK141.ph=F.ph;if(bite){haPlay(SK141_T.jerk.ms,SK141_T.jerk.t,2,null,.12);SK141.fishT=SK141_T.jerk.ms/1000}}
+  SK141.fishT-=dt;if(SK141.fishT<=0&&!HA.cur){haPlay(SK141_T.hold.ms,SK141_T.hold.t,2,null,.25);SK141.fishT=SK141_T.hold.ms/1000}
+  // the line: from the rod's tip to the bobber (or straight down into the water ahead before it lands)
+  try{const t=SK141.tool;t.updateWorldMatrix(true,false);const tip=new THREE.Vector3(0,t.userData.tipY||-1.4,0).applyMatrix4(t.matrixWorld);
+    let end=null;const bob=F.bob&&(F.bob.position||F.bob.m&&F.bob.m.position);if(bob)end=bob.clone();
+    else{const d=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));end=pl.position.clone().addScaledVector(d,3);end.y=GH(end.x,end.z)+.05}
+    if(!SK141.line){const g=new THREE.BufferGeometry().setFromPoints([tip,end]);SK141.line=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xe8e4d8,transparent:true,opacity:.75}));SK141.line.frustumCulled=false;scene.add(SK141.line)}
+    const P=SK141.line.geometry.attributes.position;P.setXYZ(0,tip.x,tip.y,tip.z);P.setXYZ(1,end.x,end.y,end.z);P.needsUpdate=true}catch(_){}}
+// spade and rod: aimed in the world after every animation layer (the hand carries them, the direction is fixed)
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{const t=SK141.tool;if(t&&(h||pl)===pl&&t.parent){const V=THREE.Vector3,Q=THREE.Quaternion;
+  const fw=new V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));let d=null;
+  if(SK141.kind=='rod')d=fw.clone().multiplyScalar(Math.cos(.5)).add(new V(0,Math.sin(.5)+(HA.cur&&HA.cur.pose===SK141_T.jerk.t?.35*Math.sin(Math.PI*Math.min(1,HA.cur.k*1.6)):0),0));
+  else if(SK141.kind=='spade'){const k=HA.cur&&HA.cur.pose===SK141_T.dig.t?HA.cur.k:0,lev=k>.5?Math.sin(Math.PI*Math.min(1,(k-.5)/.5))*.55:0;d=fw.clone().multiplyScalar(.42+lev).add(new V(0,-1,0))}
+  if(d){d.normalize();t.parent.updateWorldMatrix(true,false);const pq=t.parent.getWorldQuaternion(new Q()),wq=new Q().setFromUnitVectors(new V(0,-1,0),d);
+    if(SK141.kind=='spade'){const tw=new Q().setFromAxisAngle(d,Math.atan2(fw.x,fw.z));wq.premultiply(tw)}
+    t.quaternion.copy(pq.invert().multiply(wq));t.position.set(0,-.03,.03)}}}catch(e){if(!SK141.err2){SK141.err2=1;console.warn('sk141 aim',e)}}return r}}
+
+// ================= v141: the Bard holds his lute across his body and plays it =================
+// The lute was hung on the keeper at a fixed spot (in front of the face on the hare's shorter body) with the neck pointing up,
+// and the arm pose never met it. Now it is placed from the keeper's own bones every frame: the bowl in front of the belly,
+// a little to his right, the neck out to his left and up 30°; his left hand holds the neck (moving along it) and his right
+// hand strums over the bowl, both reached with the two-bone arm IK (fc116IK).
+function bard141(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis||!B.chest||!B.aL0||!B.aR0)return;const V=THREE.Vector3,t=now/1000+(S.t0||0);
+  n.updateMatrixWorld(true);const loc=b=>n.worldToLocal(b.getWorldPosition(new V()));const pv=loc(B.pelvis),ch=loc(B.chest),rs=Math.sign(loc(B.aR0).x)||-1;
+  const y=pv.y+(ch.y-pv.y)*.5,c=new V(-rs*.07,y,Math.max(pv.z,ch.z)+.2);
+  const d=new V(rs*Math.cos(.52),Math.sin(.52),.12).normalize(),fz=new V(0,0,1).addScaledVector(d,-d.z).normalize(),x=new V().crossVectors(d,fz);
+  L.position.copy(c);L.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,d,fz));L.scale.setScalar(.9);L.updateMatrixWorld(true);
+  const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),dir=v=>v.clone().transformDirection(n.matrixWorld);
+  const s=Math.sin(t*9.5),f=Math.sin(t*2.1);
+  const TL=W([0,.42+.06*f,.04]),TR=W([.02,.02+.035*s,.12]);
+  // (the town-folk rig's aR side is the figure's own left, so aR holds the neck and aL strums)
+  try{fc116IK(B.aR0.getWorldPosition(new V()),B.aR0,B.aR1,B.aR2,TL,dir(new V(rs,-1,-.4)),1);
+    fc116IK(B.aL0.getWorldPosition(new V()),B.aL0,B.aL1,B.aL2,TR,dir(new V(-rs,-1,-.5)),1)}catch(e){if(!SK141.berr){SK141.berr=1;console.warn('bard141',e)}}}
+{const f=wkAnim103;wkAnim103=function(n,now){const r=f.apply(this,arguments);try{if(n&&n._wk&&n._wk.k=='bard'&&n.visible)bard141(n,now)}catch(_){}return r}}
+// ================= v141 Sovereigns: quicker charged attacks, footwork against melee, an answer to kiting, one fight each =================
+// 1. Charged attacks: a move whose first hit lands 1.2 s or more after it starts plays its wind-up faster (SV141.wind): the
+//    time to the hit becomes 0.9 + (t - 0.9) × 0.55 (Argus' Gaze 1.38 s → 1.16 s, Vaelric's Skyfall 3.25 s → 2.19 s). Everything in
+//    the wind-up (pose, glow, red warning, turning, root motion) runs on the same faster clock, so the tell stays honest.
+//    After the first hit the move runs at normal speed.
+// 2. Melee: after two moves in a row cast with the hero close (SV141.close tiles), the boss disengages: a quick back-step,
+//    then a spacing plan (v133) for a move it cannot use up close, which it walks to and casts. At most every SV141.disCd s.
+// 3. Kiting: every Sovereign gains "Reach" (reach141): three eruptions under the hero, each aimed where the hero will be
+//    (current position + velocity × lead), with the usual red warning. It is only picked at 8+ tiles, and it is strongly
+//    preferred once the hero has stayed that far for SV141.farT s, and certain after SV141.sure s whenever it is off cooldown.
+//    While the hero stays far, the boss also walks 40% faster.
+// 4. One fight each: a defeated Sovereign never comes back (no respawn timer, removed after a load); its den stays open.
+// Co-op: the timing change runs on every machine (same clock rule), the AI parts only on the boss driver like the rest of it.
+var SV141={wind:{from:1.2,base:.9,k:.55,max:1.5},close:6.5,disCd:7000,farT:2.5,far:8,lead:.5,chase:1.4};
+// ---- 1. faster wind-ups ----
+function sv141H0(D){if(D._h141!==undefined)return D._h141;let h=null;(D.hit||[]).forEach(q=>{if(q&&q.t!=null&&(h==null||q.t<h))h=q.t});return D._h141=h}
+function sv141K(D,id){if(id==='intro'||id==='awaken'||id==='stagger'||id==='reach141')return 1;const h=sv141H0(D),W=SV141.wind;if(h==null||h<W.from)return 1;
+  return Math.min(W.max,h/(W.base+(h-W.base)*W.k))}
+{const f=svTickMove;svTickMove=function(e,dt,now){const S=e&&e.sv,M=S&&S.mv;if(M&&dt>0){const k=sv141K(M.D,M.id);if(k>1){const h=sv141H0(M.D);
+    if(M.t<h){const rem=(h-M.t)/k;if(dt<=rem)dt*=k;else dt=(h-M.t)+(dt-rem)}}}return f.call(this,e,dt,now)}}
+// ---- the hero's distance and speed, per boss ----
+{const f=svAI;svAI=function(e,dt,now){const S=e&&e.sv;if(S&&dt>0){const p=pl.position;
+    if(S.hp141){const vx=(p.x-S.hp141.x)/dt,vz=(p.z-S.hp141.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv141=S.hv141||{x:0,z:0};S.hv141.x+=(vx-S.hv141.x)*a;S.hv141.z+=(vz-S.hv141.z)*a}}
+    S.hp141={x:p.x,z:p.z};const L=d2(p,e.m.position);S.far141=L>=SV141.far?(S.far141||0)+dt:0}
+  const r=f.apply(this,arguments);
+  // after the disengage back-step: plan a move for the new range
+  try{if(S&&S.dis141&&!S.rt&&!S.mv&&svAuth(e)&&!e.dead){S.dis141=0;if(!sv141Force(e))svPlan133(e,true)}}catch(_){}
+  return r}}
+// ---- 2. disengage after two close casts in a row ----
+// right after the back-step the boss commits to a move it could not use up close (its range starts beyond the hero), cast
+// at once even if the hero has followed: a gap-closer, a ranged or an area move, not used in the last two casts and off cooldown
+function sv141Force(e){const S=e.sv,B=S.B,L=d2(pl.position,e.m.position),C=[];let tot=0;
+  for(const id in B.M){const D=B.M[id];if(!D.wt||id==='reach141'||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1)||!svSideOk133(D))continue;if((S.cd[id]||0)>0)continue;
+    if(S.last[0]===id||S.last[1]===id)continue;const r=D.r||[0,99];if(r[0]<=Math.max(2.5,L*.6))continue;if(D.when&&!D.when(e,Math.max(L,r[0]),'f'))continue;
+    let w=5;try{w=typeof D.wt==='function'?(+D.wt(e,r[0]+1,'f')||0):D.wt}catch(_){}if(w>0){C.push([id,w]);tot+=w}}
+  if(!C.length)return null;let u=Math.random()*tot,id=C[C.length-1][0];for(const c of C){u-=c[1];if(u<=0){id=c[0];break}}S.force=id;S.rest=0;S.plan=null;return id}
+{const f=svAfterMove;svAfterMove=function(e,M){const S=e&&e.sv;
+  if(S&&M&&M.id!=='intro'&&M.id!=='stagger'&&M.id!=='awaken'){const L=d2(pl.position,e.m.position);S.cl141=L<SV141.close?(S.cl141||0)+1:0}
+  f.apply(this,arguments);
+  try{if(!S||e.dead||S.mv||!svAuth(e)||(S.B.ai||{}).style==='root')return;const now=performance.now();
+    if((S.cl141||0)>=2&&now>=(S.dc141||0)&&!S.rt){S.cl141=0;S.dc141=now+SV141.disCd;S.plan=null;S.force=null;S.rt={t:.7+Math.random()*.35};S.dis141=1;SVX.st.rt=(SVX.st.rt||0)+1;
+      try{burst(gY(e.m.position,.3),0x8a7a66,12,2,1.2,.45)}catch(_){}}}catch(_){}}}
+// ---- 3. faster walk while the hero keeps away ----
+{const f=svMoveFree;svMoveFree=function(e,dt,now){const S=e&&e.sv,ai=S&&S.B.ai;if(!S||!ai||!(S.far141>SV141.farT))return f.apply(this,arguments);
+  const w0=ai.walk,r0=ai.run;ai.walk=(w0||2.2)*SV141.chase;if(r0)ai.run=r0*SV141.chase*.9;try{return f.apply(this,arguments)}finally{ai.walk=w0;ai.run=r0}}}
+// ---- 3b. Reach: three eruptions aimed ahead of a running hero ----
+function sv141Aim(c,n){const S=c.S,p=pl.position,v=S.hv141||{x:0,z:0},ld=SV141.lead*(n||1);return c.inA(new THREE.Vector3(p.x+v.x*ld,0,p.z+v.z*ld),.6)}
+function sv141Reach(B){const P=B.P||{},pick=['roar','howl','rear','tpRaise','vUp','gUp','fUp','oUp','rUp'].find(k=>P[k]);const col=B.col||0xff5a2a;
+  const fx=(c,an,hit)=>{const q=new THREE.Vector3(an.x,0,an.z);try{svShock(q,col,3,.45);svDecal(q,0x140c08,2.2,2.6,.55);burst(gY(q,.4),col,24,4,2.6,.6);burst(gY(q,.3),0x3a2a20,18,3,2,.7);shake(.12);svSnd('crack',.7,.8)}catch(_){}};
+  const hit=(t,n)=>({t,s:{k:'c',r:2.4},o:c=>{const p=sv141Aim(c,n);return {x:p.x,z:p.z,a:0}},w:.62,dm:.72,fx});
+  return {wt:(e,L)=>{const S=e.sv;return L>=SV141.far?((S.far141||0)>=SV141.farT?16:3):0},cd:7.5,r:[SV141.far,60],a:'any',dur:1.95,lock:.4,trn:[[0,1.7,3]],armor:1,
+    trk:pick?[[.35,pick,'io'],[1.45,pick,'l',.02],[1.95,'','io']]:[[1.95,'','io']],
+    hit:[hit(.85,1),hit(1.2,1.2),hit(1.55,1.4)],ev:[[.08,c=>{try{svSnd('roar',.7,1.15);svShock(c.m.position,col,4,.4)}catch(_){}}]],rec:.35}}
+SVB.forEach((B,i)=>{if(!B||!B.M||B.M.reach141)return;try{B.M.reach141=sv141Reach(B);svRegMoves(i)}catch(e){console.warn('reach141',i,e)}});
+// ---- 4. one fight each ----
+{const f=spawnBoss;spawnBoss=function(i){if(typeof bossDone!='undefined'&&bossDone.has(i))return null;return f.apply(this,arguments)}}
+function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.bi!=null&&bossDone.has(e.bi)&&!(typeof AF!='undefined'&&AF&&AF.i===e.bi&&AF.f))removeE(e)});
+  if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(bossDone.has(i))bossT[i]=0})}catch(_){}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);setTimeout(sv141Clear,0);return r}}
+setInterval(sv141Clear,5000);
+// a hero who has kept away for SV141.sure s gets Reach as soon as it is off cooldown (not left to the weighted pick)
+SV141.sure=4;
+{const f=svPick;svPick=function(e,loose){const S=e&&e.sv;try{if(S&&!S.force&&(S.far141||0)>=SV141.sure&&S.B.M.reach141&&!((S.cd.reach141||0)>0)&&S.last[0]!=='reach141'&&d2(pl.position,e.m.position)>=SV141.far)return 'reach141'}catch(_){}return f.apply(this,arguments)}}
 // ================= v142: townsfolk anatomy — animal heads on animal necks, natural eyes, animal legs =================
 // The v137 townsfolk were a human body with a small animal head on a tall, straight neck. This layer reshapes every
 // species without touching the clothes, tools or animations (they all keep working because the skeleton keeps its bones):

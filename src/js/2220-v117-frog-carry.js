@@ -72,9 +72,9 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
     wp=Fp.grip.clone();if(C.hold)wp.sub(new V(...C.hold).applyQuaternion(wq))}
   // the carry pose, faded out during attacks like the beast arm hold
   if(w>0){H.updateMatrixWorld(true);
-    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=new V(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y)),up=new V(0,1,0);
+    const S=b0.getWorldPosition(new V()),sp=(B.chest||B.spine).getWorldPosition(new V()),f=fc140Fwd(H),up=new V(0,1,0),hs=fc140Scale(H);
     let sd=new V(S.x-sp.x,0,S.z-sp.z);sd.addScaledVector(f,-sd.dot(f));if(sd.lengthSq()<1e-6)sd.set(f.z,0,-f.x);sd.normalize();
-    const fr=a=>new V().addScaledVector(sd,a[0]).addScaledVector(up,a[1]).addScaledVector(f,a[2]),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
+    const fr=a=>new V().addScaledVector(sd,a[0]*hs).addScaledVector(up,a[1]*hs).addScaledVector(f,a[2]*hs),G=S.clone().add(fr([C.hand[0],-C.hand[2],C.hand[1]])),P=fr(FC116.pole);
     const ws=b2.getWorldScale(new V()).x;
     // wrist rotation: the weapon (or the palm, for the orb) points along U; the roll round it keeps the paw in line with the forearm
     const wantR=Fw=>{let best=null;for(const s of (C.palm?[1]:H['_fcs'+s1]!==undefined?[sg]:[1,-1])){const a1=C.palm?Fp.c.clone():Fp.e.clone().multiplyScalar(s*Math.cos(C.tilt||0)).addScaledVector(Fp.d,Math.sin(C.tilt||0)).normalize();
@@ -97,10 +97,15 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
   // sphere round the spine, the chest and the head (FC116.clear radii + the orb's own radius), along the line from that centre
   if(C.palm&&w<.999&&FC116.clear){H.updateMatrixWorld(true);const bb=fc117WB(W),ws=b2.getWorldScale(new V()).x,M=b2.matrixWorld,c0=bb.c.clone().applyQuaternion(wq).add(wp).applyMatrix4(M),c1=c0.clone();
     FC116.clear.forEach(([bn,r0])=>{const bo=B[bn];if(!bo)return;const o=bo.getWorldPosition(new V()),d=c1.clone().sub(o),R=(r0+bb.r)*ws;if(d.length()>=R)return;
-      if(d.lengthSq()<1e-8)d.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));c1.copy(o).addScaledVector(d.normalize(),R)});
+      if(d.lengthSq()<1e-8)d.copy(fc140Fwd(H));c1.copy(o).addScaledVector(d.normalize(),R)});
     if(!c1.equals(c0)){const inv=new THREE.Matrix4().copy(M).invert(),off=c1.applyMatrix4(inv).sub(c0.clone().applyMatrix4(inv));wp=wp.clone().addScaledVector(off,1-w)}}
   W.quaternion.copy(wq);W.position.copy(wp);
   rec.b.forEach(r=>r.set=r.o.quaternion.clone());rec.w.forEach(r=>{r.set=r.o.quaternion.clone();r.ps=r.o.position.clone()});H._fc116=rec;H.updateMatrixWorld(true)}
+// v140: the hold is worked out in the hero's own frame: which way the model faces in the world (its parents included: the creator,
+// inventory and Character previews turn the model on a pivot, and H.rotation.y alone left the arm reaching the old way while the
+// model turned) and how big it is drawn compared with the game's hero (previews are scaled to fit).
+function fc140Fwd(H){const V=THREE.Vector3,q=H.getWorldQuaternion(new THREE.Quaternion()),f=new V(0,0,1).applyQuaternion(q);f.y=0;if(f.lengthSq()<1e-8)f.set(Math.sin(H.rotation.y),0,Math.cos(H.rotation.y));return f.normalize()}
+function fc140Scale(H){try{const V=THREE.Vector3,a=H.getWorldScale(new V()).x,b=(H===pl?a:pl.getWorldScale(new V()).x)||1;return a/b||1}catch(_){return 1}}
 function fc118Sign(H,b,Fp){let s=1;H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const i=o.skeleton.bones.indexOf(b);if(i<0)return;
   const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().copy(o.skeleton.boneInverses[i]).invert());s=Fp.e.clone().applyQuaternion(q).z<0?-1:1});return s}
 function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.forEach(r=>{r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)});H.updateMatrixWorld(true)}

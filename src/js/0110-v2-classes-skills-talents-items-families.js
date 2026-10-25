@@ -19,7 +19,7 @@ const CLS={
    base:{hp:88,mp:90,pa:4,ma:13,pd:4,md:9},per:{hp:15.5,mp:6,pa:.6,ma:4.1,pd:1.2,md:2.3},rng:11,spd:.72,crit:.08,cape:[40,60,130],tunic:0x3a3a7a,pants:[40,40,70],sk:[225,190,160],st:'Magic power · Mana'}
 };
 const CLSK=Object.keys(CLS);
-// ---------------- class skills (keys 1-4, unlocked by character level) ----------------
+// ---------------- class skills (keys 1-6, unlocked by character level) ----------------
 const SKL={
  warrior:[
   {n:'Cleave',i:'🪓',lv:1,k:'cone',m:2.0,cd:5,mp:8,r:3.2,col:0xffb070,d:'A wide sweeping strike in front of you.'},

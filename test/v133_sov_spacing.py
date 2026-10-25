@@ -16,11 +16,11 @@ def s(pg):
             first=False
             ev("""()=>{window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;window.__pr=POST.render;
             window.STEP=(sec)=>{const n=Math.max(1,Math.round(sec/.016));POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();try{loop(VT)}catch(err){window.LERR=String(err&&err.stack||err).slice(0,400)}}POST.render=__pr};
-            window.__down=down;down=function(){hero.hp=heroMax()};window.KN0={pm:POS133.mul,pe:POS133.esc,pg:POS133.grace,dr:POS133.drain,rc:RT133.chance,p:PL133.p,p2:PL133.p2,ps:PL133.pStill};return 1}""")
+            window.__down=down;down=function(){hero.hp=heroMax()};window.KN0={pm:POS133.mul,pe:POS133.esc,pg:POS133.grace,dr:POS133.drain,rc:RT133.chance,p:PL133.p,p2:PL133.p2,ps:PL133.pStill,s141:typeof SV141!='undefined'?JSON.stringify(SV141):null};return 1}""")
         out={}
         for mode in ('old','new'):
-            r=ev("""([i,SEC,mode])=>{const K=KN0;if(mode==='old'){POS133.mul=1;POS133.esc=0;POS133.grace=0;POS133.drain=0;RT133.chance=0;PL133.p=PL133.p2=PL133.pStill=0}
-              else{POS133.mul=K.pm;POS133.esc=K.pe;POS133.grace=K.pg;POS133.drain=K.dr;RT133.chance=K.rc;PL133.p=K.p;PL133.p2=K.p2;PL133.pStill=K.ps}
+            r=ev("""([i,SEC,mode])=>{const K=KN0;if(mode==='old'){POS133.mul=1;POS133.esc=0;POS133.grace=0;POS133.drain=0;RT133.chance=0;PL133.p=PL133.p2=PL133.pStill=0;if(K.s141){SV141.close=-1;SV141.far=999;SV141.sure=999;SV141.chase=1}}   // v141's footwork is off in the baseline too
+              else{POS133.mul=K.pm;POS133.esc=K.pe;POS133.grace=K.pg;POS133.drain=K.dr;RT133.chance=K.rc;PL133.p=K.p;PL133.p2=K.p2;PL133.pStill=K.ps;if(K.s141)Object.assign(SV141,JSON.parse(K.s141))}
               try{if(AF)arenaFail()}catch(_){}enemies.slice().forEach(e=>removeE(e));spawnBoss(i);STEP(.2);const A=ARN[i];const P=PMAP[i].ins[3].en,a=Math.atan2(P[1]-A.cz,P[0]-A.cx);
               toPos(A.cx+Math.cos(a)*8,A.cz+Math.sin(a)*8);STEP(.5);const e=bossEnt(i),S=e.sv;const st0=SVX.st.stag,rt0=SVX.st.rt||0;
               let t=0,dmgT=0,maxL=0,sumL=0,n=0;const seen={};let lastMv='';

@@ -13,6 +13,7 @@ v105_abil.py
 v110_fight.py
 v103_kingdom.py
 v100_fusemenu.py
+v141_consume.py
 v109_kingdom_shops.py
 TITLE=1 ABIL_ONLY=1 v114_race.py
 v117_menus.py
@@ -47,3 +48,5 @@ PART=checks,cast v137_evolve.py
 v137_items.py
 v138_abil_balance.py
 v139_checks.py
+v140_creator.py
+SEC=30 v141_sov.py

@@ -23,7 +23,7 @@ SEED=r"""()=>{
   let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;const R0=Math.random;Math.random=rnd;
   try{
   const mk=(sp,l,iv,o)=>{const c=mkC(sp,l,0,'',{hp:1,a:1,d:1,pa:1,ma:1,pd:1,md:1});Object.assign(c.iv,iv||{});ivSync(c);c.mods=[];Object.assign(c,o||{});c.h=M(c);party.push(c);return c};
-  party.length=0;
+  party.length=0;hero.tal.__cs2=1;   // v141: the second team slot is learned (Companion Bond), so slot 2 is in the active team
   const A=mk('Ashwolf',18,{hp:1.02,pa:.97,ma:.9,pd:1.03,md:.95},{n:'Cinderfang'});              // tier 2 Beast: the one we improve
   mk('Skyhawk',12,{hp:1.0,pa:1.05,ma:1.0,pd:.98,md:1.0},{n:'Galewing'});                          // tier 2 Sky (team slot 2)
   mk('Foxlet',9,{hp:.9,pa:1.22,ma:.95,pd:.9,md:.92},{n:'Ember Foxlet',mods:['Swift']});           // tier 1 Beast, S attack roll -> siphon (half strength)
