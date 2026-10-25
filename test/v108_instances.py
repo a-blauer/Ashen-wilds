@@ -23,7 +23,9 @@ def s(pg):
     pg.wait_for_timeout(1500)
     T('levels II/III',"()=>[1,2].map(k=>{const I=PMAP[0].ins[k];return [zoneLv(I.en[0],I.en[1]),zoneLv(I.ba[0],I.ba[1]),I.lv]})",lambda r:all(q[2][0]<=q[0]<=q[1]<=q[2][1] for q in r))
     # respawn: kill one spawned creature, it stays down, then comes back 50 s later (v112), never while a hero is within RESP_NEAR (14) tiles (time skipped by moving its timer)
-    T('kill',"()=>{const I=curIns();const e=enemies.find(e=>e.slot&&!e.dead);if(!e)return null;window._s=e.slot;e.c.h=1;hurt(e,1e7,null);return [_s.dead,Math.round((_s.rt-nowP())/1000)]}",lambda r:r and r[0] and 49<=r[1]<=50)
+    T('kill',"()=>{const I=curIns();const e=enemies.find(e=>e.slot&&!e.slot.camp&&!e.dead);if(!e)return null;window._s=e.slot;e.c.h=1;hurt(e,1e7,null);return [_s.dead,Math.round((_s.rt-nowP())/1000)]}",lambda r:r and r[0] and 49<=r[1]<=50)
+    # v148: a camp's creatures wait 5 minutes instead
+    T('camp kill waits 5 min',"()=>{const e=enemies.find(e=>e.slot&&e.slot.camp&&!e.dead);if(!e)return 'none';const s=e.slot;e.c.h=1;hurt(e,1e7,null);return Math.round((s.rt-nowP())/1000)}",lambda r:r=='none' or 295<=r<=300)
     pg.wait_for_timeout(800)
     T('still dead',"()=>{rosterTick();return _s.dead}",lambda r:r is True)
     T('not while near',"()=>{_s.rt=nowP()-1;toPos(_s.x+10,_s.z);rosterTick();return _s.dead}",lambda r:r is True)
