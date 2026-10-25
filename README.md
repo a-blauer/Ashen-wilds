@@ -52,7 +52,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
 | v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new) | `3070`–`3076` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
-| v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3077-v149-ssithra-body.js` |
+| v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3078-v149-ssithra-body.js` |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -277,7 +277,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Version 149 (owner's request, Oct 25 2026): Ssith'ra's body is one creature.** The owner: "he clips into himself and the
   segments of his body do not seem like one whole creature". The v112 layout followed the path the head had taken, so turning
   around, circling the hero or the burrow chain folded the body through itself and the head (up to 1.1 deep; the neck bent 180°),
-  and the barrel-shaped segments opened gaps at bends. `3077` replaces `B.post` (keeps v146's sand) and adds to `B.build`:
+  and the barrel-shaped segments opened gaps at bends. `3078` replaces `B.post` (keeps v146's sand) and adds to `B.build`:
   *Chain*: the path is the body itself (last frame) plus where the neck has gone, so it still slithers; heights first with a fixed
   3D spacing; the neck bends at most 60° from the head, every joint 22° (14 segments can't close a ring); a segment that would sink
   into the head or a segment 2+ ahead is pushed out sideways; the body leans into turns. *Rearing* is one smooth curve (steep under
