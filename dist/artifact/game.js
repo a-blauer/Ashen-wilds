@@ -37769,8 +37769,8 @@ function mb144Hatch(){const M=mb144Mats(),g=new THREE.Group();g.userData.psNo=1;
     k.p('','tor','g',0x9aff3a,0,.075,.95,.32,.01,.32);k.p('','oct','g',0xb8ff3a,0,.08,.95,.08,.02,.12)},.12);hinge.add(lid);
   return {g,hinge,glo}}
 function mb144Crystal(){const M=mb144Mats(),g=new THREE.Group();g.userData.psNo=1;
-  const main=new THREE.Mesh(svG('mb_cr',()=>{const q=new THREE.OctahedronGeometry(.42,0);q.scale(1,2.1,1);return q.toNonIndexed()}),M.crys);g.add(main);
-  const core=kqSpr(0xd8ff7a,2.4);g.add(core);const sh=[];for(let i=0;i<5;i++){const o=new THREE.Mesh(svG('mb_cs',()=>{const q=new THREE.OctahedronGeometry(.13,0);q.scale(1,2.2,1);return q.toNonIndexed()}),M.crys);g.add(o);sh.push(o)}
+  const main=new THREE.Mesh(svG('mb_cr',()=>{const q=new THREE.OctahedronGeometry(.42,0);q.scale(1,2.1,1);return q}),M.crys);g.add(main);
+  const core=kqSpr(0xd8ff7a,2.4);g.add(core);const sh=[];for(let i=0;i<5;i++){const o=new THREE.Mesh(svG('mb_cs',()=>{const q=new THREE.OctahedronGeometry(.13,0);q.scale(1,2.2,1);return q}),M.crys);g.add(o);sh.push(o)}
   return {g,main,core,sh}}
 // the lair dressing: floor, walls, stalagmites, ooze falls and pools, fungus, husks, the dais and the ladder
 function mb144LairBuild(){if(MQ144.LS)return MQ144.LS;const L=MB144L,M=mb144Mats(),root=new THREE.Group();root.name='SeepingLair';scene.add(root);const LS={root,lights:[],falls:[],t:0};MQ144.LS=LS;
