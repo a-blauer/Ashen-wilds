@@ -11,12 +11,13 @@ import play
 from playwright.sync_api import Page as _Pg
 _go=_Pg.goto;_Pg.goto=lambda self,url,**k:_go(self,url,**dict(k,timeout=max(k.get('timeout',0),900000)))
 SHOT=os.environ.get('SHOT','1')!='0'
-DONE=[5,2,4,0,1]
+DONE=[5,2,4,0,1,3]
 CFG={5:{'sig':'covenant','props':4,'env':"!!(A.s146&&A.s146.tide)",'name':'vaelric'},
      2:{'sig':'heart','props':3,'env':"!!(A.s146&&A.s146.wo)",'name':'wraith'},
      4:{'sig':'feast','props':3,'env':"!!(A.s146&&A.s146.rot)",'name':'bloated'},
      0:{'sig':'hundred','props':4,'env':"!!(A.s146&&A.s146.fog)",'name':'argus'},
-     1:{'sig':'sever','props':3,'env':"!!(A.s146&&A.s146.mere)",'name':'hydra'}}
+     1:{'sig':'sever','props':3,'env':"!!(A.s146&&A.s146.mere)",'name':'hydra'},
+     3:{'sig':'scars','props':3,'env':"!!(A.s146&&A.s146.sinks)",'name':'ssithra'}}
 BOSSES=[int(x) for x in os.environ.get('BOSS',','.join(str(b) for b in DONE)).split(',')]
 fails=[]
 def F(m):fails.append(m);print('FAIL',m)
