@@ -34,17 +34,17 @@ function ssr146SandsTick(A,e,dt){const D=A.s146,K=D&&D.sinks;if(!K)return;K.t-=d
   B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)ssr146Sands(A,e);ssr146SandsTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 sands',err)}};
   B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
 // ---------------- the signature: The Rune Scars ----------------
-function ssr146Scar(){const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:0xffc060,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
-  const r=new THREE.Mesh(svG('s46sr',()=>new THREE.TorusGeometry(.5,.07,5,20)),m);r.rotation.x=Math.PI/2;g.add(r);
+function ssr146Scar(){const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:0xfff0b0,fog:false});   // solid: additive glow washes out on the bright sand
+  const r=new THREE.Mesh(svG('s46sr',()=>new THREE.TorusGeometry(.5,.07,5,20)),m);r.rotation.x=Math.PI/2;g.add(r);const rk=new THREE.Mesh(svG('s46sk',()=>new THREE.TorusGeometry(.5,.12,5,20)),new THREE.MeshBasicMaterial({color:0x5a1a04,fog:false}));rk.rotation.x=Math.PI/2;rk.scale.setScalar(1.08);g.add(rk);g.userData.rkm=rk.material;
   const c=new THREE.Mesh(svG('s46sc',()=>new THREE.OctahedronGeometry(.32,0)),m);c.scale.set(1,1.6,1);g.add(c);const gl=kqSpr(0xffa040,2.2);g.add(gl);
   const sh=[];for(let k=0;k<4;k++){const s=new THREE.Mesh(svG('s46ss',()=>new THREE.BoxGeometry(.08,.5,.04)),m);s.position.set(Math.cos(k*1.57)*.7,0,Math.sin(k*1.57)*.7);s.rotation.y=-k*1.57;g.add(s);sh.push(s)}
-  return {g,r,c,gl,sh,m}}
+  return {g,r,c,gl,sh,m,rkm:g.userData.rkm}}
 function ssr146ScarsStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D=sk146Den(A);
   const L=[3,7,11].map((k,i)=>{const W=svWP(e,'s'+k,0,0,0),Sc=ssr146Scar();let t=0;
     return {x:W.x,z:W.z,n:'Rune Scar',frac:.017,mesh:Sc.g,hbY:2.4,hbS:.8,cupY:1,
       tick(pe,dt,now){t+=dt;const P=svWP(e,'s'+k,0,.55,0);pe.m.position.set(P.x,GH(P.x,P.z),P.z);Sc.g.position.y=P.y-GH(P.x,P.z)+.2;Sc.g.rotation.y+=dt*2;Sc.c.rotation.y-=dt*3;
         Sc.gl.scale.setScalar(2+.5*Math.sin(now/110+i));Sc.g.scale.setScalar(Math.min(1,t/.4));Sc.sh.forEach((s,q)=>{s.position.y=.25*Math.sin(now/200+q)});if(Math.random()<dt*8)burst(gY(pe.m.position,Sc.g.position.y),0xffa040,1,.6,.8,.5)},
-      die(pe,killed){if(killed){const p=gY(pe.m.position,Sc.g.position.y);burst(p,0xffc060,50,3.5,3,.7);sk146Debris(p,ssr146SandMat(),8,.08,4,5,1.3);sk146Flash(p,0xffa040,4,10,500);popT(pe.m.position,'✸ SCAR BROKEN','#ffd8a0');svSnd('crack',1.2,1.2);svSnd('bell',.5,1.4)}Sc.m.dispose()}}});
+      die(pe,killed){if(killed){const p=gY(pe.m.position,Sc.g.position.y);burst(p,0xffc060,50,3.5,3,.7);sk146Debris(p,ssr146SandMat(),8,.08,4,5,1.3);sk146Flash(p,0xffa040,4,10,500);popT(pe.m.position,'✸ SCAR BROKEN','#ffd8a0');svSnd('crack',1.2,1.2);svSnd('bell',.5,1.4)}Sc.m.dispose();Sc.rkm&&Sc.rkm.dispose()}}});
   const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);svSnd('roar',1,.8);svSnd('hum',1,.5);sk146Wall(e.m.position,SSR146.col,6,3,.7);
   try{banner('✸ THE RUNE SCARS','Ssith’ra coils and chants — three rune scars blaze on its body','Break all three before the chant completes!')}catch(_){}say("✸ Ssith'ra chants: break the three blazing rune scars on its body!")}
 function ssr146ScarsCleanup(c){const S=c.S,M=c.M;S.dr=0;if(!M)return;(M.an.props||[]).forEach(p=>{if(!p._gone)dqPropGone(p,false)})}
