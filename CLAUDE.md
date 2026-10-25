@@ -1,6 +1,8 @@
 # Kill Quest — standing instructions for every session
 
 - Read README.md first (layout, conventions, publishing).
+- **New bosses and mini bosses:** follow `docs/BOSS_RECIPE.md` (the Vorraxis standard, v144: the owner's favourite fight). Read it and
+  the three Vorraxis files (3031–3033) before designing or building any boss fight.
 - **Testing (owner's request, Oct 2026): no GitHub Actions.** The Actions minutes ran out, so the workflow no longer runs on
   push; don't dispatch it unless the owner asks. Run suites in the session workspace, in the background, with `test/run_suite.py`:
   - after a change: `python3 run_suite.py changed` (smoke + the tests `test/affects.txt` maps the changed files to; the whole full

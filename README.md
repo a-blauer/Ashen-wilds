@@ -495,6 +495,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     Materials tab lists glowbulbs under Quest items (`kqmMatTab` wrapper), icon `KQI.glowbulb` (emoji 🪔).
   Tests: `v143_lantern_road.py` (plan, keep-out, drops, pickup, bag, scene, prompts, window, lighting, tracker, saves, roll, fire-up,
   roster); pictures `v143_look.py` (`WHO=captain,...` warden sheets, `PROPS=ripper,lamp,lampOn,tent,...` model sheets, `VIEWS=`).
+- **Boss fights:** `docs/BOSS_RECIPE.md` is the standard for new bosses (how Vorraxis was designed, modelled, animated, scripted and tested).
 - **The Glowmire Crystal (v144, Kindlelight II main quest, `3031`–`3033`)**: chapter 2. Kindlelight II's gateway to III is sealed (its F
   prompt is locked by a `portalPrompt` wrapper) until the Glowmire Crystal is claimed.
   * Clearing the Glowmire Warren (II's camp furthest from the entrance, `mq144Camp`) opens a hatch in it (`MQ144.st` 1). F at the hatch:
