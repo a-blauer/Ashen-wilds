@@ -5,15 +5,15 @@
 //    time): one sigil off the road at 30%, 56% and 82% of III's road, alternating sides, 9–18 tiles out, on open ground with room for
 //    a fight around it, away from the entrance, the gateway, the camps and each other. A faint pillar of light over each shows from afar.
 //  * Coming within MQ145.see of a sigil finds it (title card, map mark). F at a found, dark sigil starts the essence charging ritual:
-//    ghost wolves (dark, shadowy Ashwolves, EN.ghostwolf) rise round it in MQ145.waves waves MQ145.gap seconds apart, MQ145.total in all
-//    (split evenly over the waves: 25 a wave). Their level is MQ145.lv0 + the number of sigils already attuned (4 · 5 · 6, in the order you do them).
-//    Each wolf's essence streams into the sigil as it dies; when every wolf of every wave is dead the sigil is attuned.
+//    ghost wolves (dark, shadowy Ashwolves, EN.ghostwolf) rise round it: v148: MQ145.alive (12) at once, and each one that falls is
+//    replaced by a new one until MQ145.total (100) have been slain (until v148: MQ145.waves waves of 25, MQ145.gap seconds apart). Their level is MQ145.lv0 + the number of sigils already attuned (4 · 5 · 6, in the order you do them).
+//    Each wolf's essence streams into the sigil as it dies; when the 100th wolf is dead the sigil is attuned.
 //  * The ritual fails if you fall, wander more than MQ145.leash from the sigil or leave the instance: the wolves dissolve and the sigil
 //    goes dark again (try again any time).
 //  * All three attuned: the pillars flare, the gateway at the end of III opens to the Den (its F prompt is locked until then).
 // State MQ145: at[3] (0 dark, 1 attuned), fd[3] (found). Done when all attuned, or the Den has been reached (mq145Done). Saved as
 // x2.mq145 {at, fd}. Co-op: local to each player (the wolves are minions: never shared).
-var MQ145={name:'The Three Sigils',at:[0,0,0],fd:[0,0,0],total:100,waves:4,gap:5,first:2,lv0:4,see:22,leash:30,R:null,S:null,trkK:'',t:0,err:0,fin:0,
+var MQ145={name:'The Three Sigils',at:[0,0,0],fd:[0,0,0],total:100,alive:12,waves:4,gap:5,first:2,lv0:4,see:22,leash:30,R:null,S:null,trkK:'',t:0,err:0,fin:0,
   names:['the Fang Sigil','the Moon Sigil','the Howl Sigil']};
 function mq145N(){return MQ145.at.filter(Boolean).length}
 function mq145Done(){return mq145N()>=3||insReach(0)>=3}
@@ -162,24 +162,25 @@ function mq145Tick(dt,now){const in3=mq145In3(),t=now/1000;
 function mq145Start(i){if(MQ145.R||MQ145.at[i]||!MQ145.S)return;const M=MQ145.S.sig[i],lv=MQ145.lv0+mq145N();
   MQ145.R={i,t:0,w:0,lv,live:[],n:0,dead:0,tot:MQ145.total,nextT:MQ145.first};MQ145.trkK='';mq145Sync();
   svShock(new THREE.Vector3(M.x,0,M.z),MS145C.live,5,.6);burst(new THREE.Vector3(M.x,M.y+2,M.z),MS145C.live,50,3,3,.9);shake(.18);svSnd('charge',1,.6);svSnd('hum',1,.6);
-  try{zt116Show(ZT116.Z[0],'Kindlelight · '+MQ145.names[i].replace(/^the /,'The '),'Essence Charging','The sigil drinks the dark. Ghost wolves rise to stop it.',MQ145.waves+' waves · '+MQ145.total+' ghost wolves · Lv '+lv,'z0')}catch(_){}
+  try{zt116Show(ZT116.Z[0],'Kindlelight · '+MQ145.names[i].replace(/^the /,'The '),'Essence Charging','The sigil drinks the dark. Ghost wolves rise to stop it.',MQ145.total+' ghost wolves, '+MQ145.alive+' at a time · Lv '+lv,'z0')}catch(_){}
   say('🐺 The essence charging ritual begins at '+MQ145.names[i]+'. Hold the sigil until every ghost wolf has fallen.')}
 function mq145Spawn(R,n){const M=MQ145.S.sig[R.i],ok=mq145Plan().ok,P=pl.position;let made=0;
-  svSnd('roar',.6,1.6);
+  if(n>=3)svSnd('roar',.6,1.6);
   for(let k=0;k<n;k++){let x=M.x,z=M.z;for(let tr=0;tr<12;tr++){const a=Math.random()*6.283,r=6.5+Math.random()*4;const qx=M.x+Math.cos(a)*r,qz=M.z+Math.sin(a)*r;if(ok(qx,qz,.4)&&Math.hypot(qx-P.x,qz-P.z)>3){x=qx;z=qz;break}}
     const at=k*70;setTimeout(()=>{if(MQ145.R!==R)return;let e=null;try{e=spawnEnemy('ghostwolf',x,z,R.lv,{agg:1,minion:1})}catch(err){console.error('v145 wolf',err)}
-      if(!e){R.tot--;return}e.gw145=1;e.mq145=R;e.agg=1;e.wx=M.x;e.wz=M.z;e.m.rotation.y=Math.atan2(P.x-x,P.z-z);R.live.push(e);
+      if(!e){R.n--;return}e.gw145=1;e.mq145=R;e.agg=1;e.wx=M.x;e.wz=M.z;e.m.rotation.y=Math.atan2(P.x-x,P.z-z);R.live.push(e);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x1a1030,1.3,2.2,.8);svShock(p,0x7a5aff,1.6,.4);burst(gY(p,.3),0x3a2a6a,16,1.2,2,.8)},at);made++}
   R.n+=made}
 function mq145RTick(dt,now){const R=MQ145.R,M=MQ145.S&&MQ145.S.sig[R.i];if(!M){MQ145.R=null;return}R.t+=dt;
   const P=pl.position,far=Math.hypot(P.x-M.x,P.z-M.z)>MQ145.leash;
   if(hero.hp<=0||!mq145In3()||far)return mq145Fail(far?'far':hero.hp<=0?'dead':'left');
-  while(R.w<MQ145.waves&&R.t>=R.nextT){mq145Spawn(R,mq145Per(R.w));R.w++;R.nextT+=MQ145.gap;MQ145.trkK='';
-    if(R.w>1)try{banner('🐺 Wave '+R.w+' of '+MQ145.waves,'More ghost wolves rise round the sigil','')}catch(_){}}
+  // v148: MQ145.alive (12) wolves at a time: each one that falls is replaced by a new one until MQ145.total (100) have been slain
+  // (was MQ145.waves waves of 25, MQ145.gap s apart)
+  if(R.t>=MQ145.first){if(!R.w){R.w=1;MQ145.trkK=''}const up=Math.min(MQ145.alive-(R.n-R.dead),R.tot-R.n);if(up>0){mq145Spawn(R,up);MQ145.trkK=''}}
   // the dead feed the sigil
   for(let k=R.live.length-1;k>=0;k--){const e=R.live[k];if(e.dead||!enemies.includes(e)){R.live.splice(k,1);if(e.dead){R.dead++;MQ145.trkK='';mq145Wisp(e.m.position.clone(),M)}}}
   const prog=R.tot>0?R.dead/R.tot:0;if(R.prog!==prog){R.prog=prog;const g=new THREE.RingGeometry(3.1,3.45,64,1,0,Math.max(.001,prog*Math.PI*2));g.rotateX(-Math.PI/2);M.fill.geometry.dispose&&M.fill.geometry.userData.s145&&M.fill.geometry.dispose();g.userData.s145=1;M.fill.geometry=g}
-  if(R.w>=MQ145.waves&&R.dead>=R.tot&&!R.live.length&&R.t>MQ145.first+(MQ145.waves-1)*MQ145.gap+1.2)mq145Attune(R.i)}
+  if(R.w&&R.dead>=R.tot&&!R.live.length&&R.n>=R.tot)mq145Attune(R.i)}
 function mq145Wisp(p,M){const s=kqSpr(MS145C.live,.6);s.position.copy(gY(p,.7));scene.add(s);const a=s.position.clone(),b=new THREE.Vector3(M.x,M.y+2.2,M.z),mid=a.clone().lerp(b,.5);mid.y+=2.5;let t=0;
   kqFx({tick(dt){t+=(dt||.016)/.7;const k=Math.min(1,t),u=1-k;s.position.set(u*u*a.x+2*u*k*mid.x+k*k*b.x,u*u*a.y+2*u*k*mid.y+k*k*b.y,u*u*a.z+2*u*k*mid.z+k*k*b.z);if(Math.random()<.5)burst(s.position.clone(),MS145C.live,1,.1,.2,.4);
     if(k>=1){scene.remove(s);burst(b,MS145C.live,8,1,1,.5);return false}return true},end(){if(s.parent)scene.remove(s)}})}
@@ -216,7 +217,7 @@ function mq145Trk(){const el=$('mqt143');if(!el)return;const hide=(typeof uiOpen
   if(hide){el.classList.add('hide');mq143TrkPos();return}
   const o=(a,b)=>`<div class="o"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest</div><div class="h">'+MQ145.name+'</div>';
   if(mq145Done())h+='<div class="o d"><span>Step through the gateway to '+mq145Den()+'</span></div>';
-  else if(R){h+=o('Essence charging · '+MQ145.names[R.i].replace(/^the /,''))+o('Wave',Math.max(1,R.w)+'/'+MQ145.waves)+o('Ghost wolves slain',R.dead+'/'+R.tot);
+  else if(R){h+=o('Essence charging · '+MQ145.names[R.i].replace(/^the /,''))+o('Ghost wolves hunting',Math.max(0,R.n-R.dead))+o('Ghost wolves slain',R.dead+'/'+R.tot);
     h+=`<div style="height:4px;margin-top:3px;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden"><i style="display:block;height:100%;width:${(R.tot?R.dead/R.tot*100:0).toFixed(1)}%;background:linear-gradient(90deg,#8a6aff,#d0b8ff)"></i></div>`}
   else h+=o('Attune the rune sigils',n+'/3')+o(fd<3?'Sigils found (look for pillars of light)':'Sigils found',fd+'/3');
   el.innerHTML=h;el.classList.remove('hide');mq143TrkPos()}

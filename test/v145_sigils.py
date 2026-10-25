@@ -1,5 +1,5 @@
 # v145: The Three Sigils (Kindlelight III main quest): the plan (three sigils on open ground of III, decorations kept off), the sealed
-# Den gateway, the ghost wolf look, finding a sigil, the ritual (waves of 25 = 100, levels 4/5/6 by order, wave timing, the charge,
+# Den gateway, the ghost wolf look, finding a sigil, the ritual (v148: 12 at a time, each replaced until 100 are slain; levels 4/5/6 by order, the charge,
 # attuning), a failed ritual (wandering off), all three attuned opens the gateway, the tracker, saves. NOSHOT=1 skips the pictures.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -15,7 +15,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms));let clk=
   out.sep=Math.min(...R.sig.map((a,i)=>Math.min(...R.sig.filter((b,j)=>j!==i).map(b=>Math.hypot(a.x-b.x,a.z-b.z)))));
   out.decoIn=WD.list.filter(d=>mq145Keep(2,d.x,d.z)&&!/^e_/.test(d.k)&&R.ok(d.x,d.z,.5)).length;
   out.propsIn=R.sig.reduce((n,o)=>n+(MAP.props||[]).filter(q=>Math.hypot(q[0]-o.x,q[1]-o.z)<4.6).length,0);
-  out.per=[0,1,2,3].map(mq145Per).join(',');
+  out.alive=MQ145.alive;out.total=MQ145.total;
   // the ghost wolf
   const gm=cr(enemyC('ghostwolf',4,{}));let mats=0,gw=0;gm.traverse(o=>{if(o.isMesh){mats++;if(o.material.userData.gw145)gw++}});out.ghostLook=mats>0&&gw===mats&&!!gm.eyes145;
   // fresh: nothing attuned, the gateway sealed
@@ -24,13 +24,15 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms));let clk=
   const s0=R.sig[0];toPos(s0.x+12,s0.z);await wait(200);tick(.3);out.scene=!!MQ145.S;out.found0=MQ145.fd[0];
   // a full ritual: waves on time, wolf levels, the charge, attuning
   const run=async(i,stopAt)=>{const s=R.sig[i];toPos(s.x+1.8,s.z+1.2);tick(.2);const pr=((worldPrompt()||{}).label||'');(worldPrompt()||{fn(){}}).fn();const Rr=MQ145.R;
-    const info={pr,lv:Rr?Rr.lv:0,waves:[],lvls:[],look:1};if(!Rr)return info;
-    for(let w=0;w<4;w++){while(MQ145.R===Rr&&Rr.w<=w)tick(.25);await wait(2300);tick(.1);
-      info.waves.push(Rr.live.length);Rr.live.forEach(e=>{info.lvls.push(e.c.l);if(!e.gw145||!e.m.eyes145)info.look=0});
-      if(stopAt===w)return info;
-      Rr.live.slice().forEach(e=>hurt(e,1e8,null,false));tick(.2)}
+    const info={pr,lv:Rr?Rr.lv:0,lvls:[],look:1};if(!Rr)return info;
+    // v148: 12 alive at a time, each fallen wolf replaced until 100 have been slain
+    while(MQ145.R===Rr&&!Rr.w)tick(.25);await wait(1200);tick(.1);info.first=Rr.live.length;
+    Rr.live.forEach(e=>{info.lvls.push(e.c.l);if(!e.gw145||!e.m.eyes145)info.look=0});if(stopAt===0)return info;
+    let mx=0,mn=99,it=0;while(MQ145.R===Rr&&it++<200){const L=Rr.live.filter(e=>!e.dead);mx=Math.max(mx,L.length);if(Rr.n<Rr.tot&&it>1)mn=Math.min(mn,Rr.n-Rr.dead);
+      L.forEach(e=>{info.lvls.push(e.c.l);if(!e.gw145)info.look=0});L.slice(0,5).forEach(e=>hurt(e,1e8,null,false));tick(.1);await wait(60);tick(.1)}
+    info.max=mx;info.minUp=mn;
     tick(1.5);info.tot=Rr.tot;info.dead=Rr.dead;info.after=MQ145.R;info.at=MQ145.at[i];return info};
-  const r0=await run(0);out.r0={pr:r0.pr,lv:r0.lv,waves:r0.waves.join(','),lv0:[...new Set(r0.lvls)].join(','),look:r0.look,tot:r0.tot,dead:r0.dead,at:r0.at,cleared:r0.after===null};
+  const r0=await run(0);out.r0={pr:r0.pr,lv:r0.lv,first:r0.first,max:r0.max,minUp:r0.minUp,lv0:[...new Set(r0.lvls)].join(','),look:r0.look,tot:r0.tot,dead:r0.dead,at:r0.at,cleared:r0.after===null};
   MQ145.trkK='';mq143Trk();out.trkA=$('mqt143').textContent;
   // a failed ritual: start sigil 1, wander off
   const r1=await run(1,0);out.lv1=r1.lv;MQ145.trkK='';mq143Trk();out.trkR=$('mqt143').textContent;
@@ -52,12 +54,12 @@ def s(pg):
     exp=lambda c,m:(None if c else F(m))
     exp(r['sig']==3 and r['fb']==0,'three sigils planned without fallbacks (%s, %s fallback)'%(r['sig'],r['fb']))
     exp(r['badSpots']==0,'sigils on open ground of III (%s bad)'%r['badSpots']);exp(r['sep']>=12,'sigils spread out (closest %.1f)'%r['sep'])
-    exp(r['propsIn']==0,'no map props on the sigils (%s)'%r['propsIn']);exp(r['decoIn']==0,'no decorations on the sigils (%s)'%r['decoIn']);exp(r['per']=='25,25,25,25','100 wolves over 4 waves (%s)'%r['per'])
+    exp(r['propsIn']==0,'no map props on the sigils (%s)'%r['propsIn']);exp(r['decoIn']==0,'no decorations on the sigils (%s)'%r['decoIn']);exp(r['alive']==12 and r['total']==100,'12 wolves at a time, 100 in all (%s / %s)'%(r['alive'],r['total']))
     exp(r['ghostLook'],'ghost wolves get the shadow look')
     exp(not r['done0'] and 'sealed' in r['gate0'],'the Den gateway is sealed at first (%s)'%r['gate0'])
     exp(r['scene'] and r['found0']==1,'coming near finds a sigil')
     a=r['r0'];exp('Begin the essence' in a['pr'],'ritual prompt (%s)'%a['pr'])
-    exp(a['waves']=='25,25,25,25','waves of 25 (%s)'%a['waves']);exp(a['lv']==4 and a['lv0']=='4','first sigil: level 4 wolves (%s / %s)'%(a['lv'],a['lv0']))
+    exp(a['first']==12 and a['max']==12,'12 wolves rise and never more (%s first, %s most)'%(a['first'],a['max']));exp(a['minUp']>=12-5,'fallen wolves are replaced (fewest hunting before the last ones: %s)'%a['minUp']);exp(a['lv']==4 and a['lv0']=='4','first sigil: level 4 wolves (%s / %s)'%(a['lv'],a['lv0']))
     exp(a['look']==1,'spawned wolves are ghost wolves');exp(a['tot']==100 and a['dead']==100,'100 wolves slain (%s/%s)'%(a['dead'],a['tot']))
     exp(a['at']==1 and a['cleared'],'the sigil is attuned when all are slain')
     exp('1/3' in r['trkA'],'tracker counts attuned sigils (%s)'%r['trkA']);exp('Essence charging' in r['trkR'],'tracker during a ritual (%s)'%r['trkR'])
