@@ -29,3 +29,4 @@ ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-n
 lantern|v143|1680-|ripper|warden: v143_lantern_road.py v145_sigils.py v108_instances.py v124_edge_test.py v132_cheddar_test.py v113_roster.py v38t.py v114_save.py v142_folk.py
 glowmire|v144|vorraxis|lair|1970-|2440-: v144_glowmire.py v143_lantern_road.py v108_instances.py v141_sov.py v114_save.py
 sigil|v145|ghostwolf|rune: v145_sigils.py v143_lantern_road.py v144_glowmire.py v108_instances.py v113_roster.py v114_save.py
+v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-: v146_sovs.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py

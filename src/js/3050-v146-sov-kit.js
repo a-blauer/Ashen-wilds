@@ -16,6 +16,10 @@
 // Co-op: like the moves themselves, the effects run on every player's screen from the relayed move; props are local (each
 // player breaks their own copies), the outcome on the driver decides the boss's health (synced).
 var SK146={lt:[],fl:0,ck:{},sw:{},on:true,err:0};
+// fluid strikes: the strike ease 's' was 1-(1-k)^5 — it covered ~43% of a 0.15 s swing in the first frame (a visible pop at
+// 60 fps). 1-(1-k)^2.6 still front-loads the swing (it reads as a snap) but spreads it over the frames; the timings, and so
+// every hit, are unchanged.
+svEase.s=k=>1-Math.pow(1-k,2.6);
 // ---------------- 1. secondary motion ----------------
 function sk146Spring(e,dt){const S=e.sv,B=S.B,sp=B.spr;if(!sp||!S.R)return;const J=S.R.J,m=e.m;
   if(!S.sk)S.sk={};const st=S.sk;

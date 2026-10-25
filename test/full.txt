@@ -53,3 +53,4 @@ SEC=30 v141_sov.py
 v143_lantern_road.py
 v144_glowmire.py
 v145_sigils.py
+v146_sovs.py

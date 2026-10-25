@@ -106,6 +106,13 @@ ph, ph1only, nx, rec, mel}`.
   stagger; the shield works), reset on a wipe, the kill, the reward, saves (round trip, old saves, saves made inside).
   Add it to `test/full.txt` and `test/affects.txt`.
 
+## 6b. The shared kit (v146)
+
+The six Sovereigns were brought to this standard in v146 with a shared kit, `src/js/3050-v146-sov-kit.js`: springs for
+follow-through (`B.spr`), richer effects (`sk146Debris`, `sk146Drops`, `sk146Flash`, `sk146Crack`, `sk146Wall`, `sk146Column`, `sk146Beam`,
+`sk146Swarm`, `sk146Weather`), den props for mechanics (`sk146Props`), ring waves, the generic `broken` stagger and den state
+(`A.s146`). Use it for new bosses too; see `3051`–`3056` for one worked example per boss.
+
 ## 7. Checklist for the next boss
 
 1. Theme, the 6 + Phase II moves, the signature mechanic, the weakness, all written as the moves file's header comment.

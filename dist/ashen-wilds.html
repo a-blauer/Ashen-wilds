@@ -38673,4 +38673,1025 @@ function mq145Marks(g,P,k){if(!mq145In3())return;mq145Plan().sig.forEach((o,i)=>
 {const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq145={v:145,at:MQ145.at.slice(),fd:MQ145.fd.slice()}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq145,arr=(a)=>[0,1,2].map(i=>a&&a[i]?1:0);if(MQ145.R)mq145Fail('left');
     MQ145.at=arr(q&&q.at);MQ145.fd=arr(q&&q.fd);MQ145.trkK='';MQ145.fin=0;mq145Sync();mq145GateSync()}catch(err){console.warn('v145 load',err)}return r}}
+// ================= v146 Sovereigns to the Vorraxis standard — the shared kit =================
+// The v146 overhaul (3051–3056, one file per Sovereign) brings every Sovereign up to the v144 Vorraxis standard
+// (docs/BOSS_RECIPE.md): a Phase II that changes the den, one signature mechanic with a success and a failure outcome, richer
+// ability effects, more detailed models and fluid secondary motion. This file is the shared part:
+//  1. Secondary motion (sk146Spring): joints listed in B.spr = {joint:[stiffness, damping, inertia]} follow their animated
+//     rotation through a damped spring instead of snapping to it, and lag behind the body's turning and acceleration. Cloth,
+//     capes, hair, tails, wings, chains and heads get follow-through and overlap: the boss reads as weight, not keyframes.
+//  2. Effects (sk146*): debris chunks with gravity and bounce, liquid droplets that splat, flash lights (two pooled point
+//     lights reused), branching ground cracks, vertical shock walls, swarms (bats, crows, flies, ice shards, embers), weather
+//     over a den (rain, snow, ash, spores, fog), columns, a beam between two points. Blade trails also throw sparks at the tip.
+//  3. Signature mechanics: damage reduction while channelling (e.sv.dr), den props players must break (sk146Props, built on
+//     the v86 dqProp toolkit: targetable, no XP or loot, cleared with the den), tethers from props to the boss, an expanding
+//     ring wave to dash through, the generic "broken" stagger move and a heal pop.
+//  4. Den state (sk146Den): A.s146 holds each fight's extra scenery and hazards; sk146DenClear removes all of it when the fight
+//     ends (win, wipe or leaving), so a reset den is the same as a fresh one.
+// Co-op: like the moves themselves, the effects run on every player's screen from the relayed move; props are local (each
+// player breaks their own copies), the outcome on the driver decides the boss's health (synced).
+var SK146={lt:[],fl:0,ck:{},sw:{},on:true,err:0};
+// fluid strikes: the strike ease 's' was 1-(1-k)^5 — it covered ~43% of a 0.15 s swing in the first frame (a visible pop at
+// 60 fps). 1-(1-k)^2.6 still front-loads the swing (it reads as a snap) but spreads it over the frames; the timings, and so
+// every hit, are unchanged.
+svEase.s=k=>1-Math.pow(1-k,2.6);
+// ---------------- 1. secondary motion ----------------
+function sk146Spring(e,dt){const S=e.sv,B=S.B,sp=B.spr;if(!sp||!S.R)return;const J=S.R.J,m=e.m;
+  if(!S.sk)S.sk={};const st=S.sk;
+  // the body's turning (yaw rate) and acceleration (forward), for inertia
+  const y=m.rotation.y,yr=dt>0?svAng(y-(S.skY==null?y:S.skY))/dt:0;S.skY=y;const sp0=S.spd||0,ac=dt>0?(sp0-(S.skS==null?sp0:S.skS))/dt:0;S.skS=sp0;
+  S.skYr=(S.skYr||0)+(Math.max(-6,Math.min(6,yr))-(S.skYr||0))*Math.min(1,dt*10);S.skAc=(S.skAc||0)+(Math.max(-20,Math.min(20,ac))-(S.skAc||0))*Math.min(1,dt*8);
+  for(const k in sp){const g=J[k];if(!g)continue;const [kk,dd,inr]=sp[k],q=st[k]||(st[k]={x:g.rotation.x,y:g.rotation.y,z:g.rotation.z,vx:0,vy:0,vz:0});
+    if(!(dt>0)||dt>.25){q.x=g.rotation.x;q.y=g.rotation.y;q.z=g.rotation.z;q.vx=q.vy=q.vz=0;continue}
+    // the target: the animated rotation, pushed by inertia (turning swings it sideways, acceleration drags it back)
+    const i=inr||0,tx=g.rotation.x+S.skAc*.012*i,ty=g.rotation.y-S.skYr*.06*i,tz=g.rotation.z-S.skYr*.05*i;
+    const ax=kk*(tx-q.x)-dd*q.vx,ay=kk*(ty-q.y)-dd*q.vy,az=kk*(tz-q.z)-dd*q.vz;q.vx+=ax*dt;q.vy+=ay*dt;q.vz+=az*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;
+    // never further than ~.9 rad from the animation (no wild flailing)
+    const cl=(a,b)=>Math.max(b-.9,Math.min(b+.9,a));q.x=cl(q.x,tx);q.y=cl(q.y,ty);q.z=cl(q.z,tz);g.rotation.set(q.x,q.y,q.z)}}
+{const f=svApply;svApply=function(e,dt,now){const r=f.apply(this,arguments);try{if(e&&e.sv&&SK146.on)sk146Spring(e,dt||0)}catch(err){if(!SK146.err++)console.error('v146 spring',err)}return r}}
+// a loft along +Y like svLoft, with cloth folds: o.fn folds round, o.fa amplitude (share of the radius, growing toward
+// the last ring when o.grow), o.rag (ragged last ring: share of the ring spacing), o.seed, o.cap (default false)
+function sk146Loft(rings,n,o){o=o||{};const rn=svRng(o.seed||7),fn=o.fn||8,fa=o.fa||.08,pos=[],N=rings.length;
+  const R=rings.map(([y,rx,rz,ox,oz],j)=>{const a=[],v=j/Math.max(1,N-1),amp=fa*(o.grow?v:1);for(let i=0;i<n;i++){const t=(i/n)*Math.PI*2+(o.rot||0),w=1+amp*Math.sin(t*fn+v*1.7)+amp*.4*Math.sin(t*fn*2.3+j);
+      let yy=y;if(j===N-1&&o.rag)yy+=(i%2?-1:-.3)*o.rag*(.4+rn()*.8)*Math.abs(rings[N-1][0]-rings[N-2][0]);a.push([(ox||0)+Math.sin(t)*rx*w,yy,(oz||0)+Math.cos(t)*rz*w])}return a});
+  const dsc=rings[N-1][0]<rings[0][0],tri=(a,b,c)=>{if(dsc){const q=b;b=c;c=q}pos.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2])};
+  for(let r=0;r<N-1;r++)for(let i=0;i<n;i++){const j=(i+1)%n,a=R[r][i],b=R[r][j],c=R[r+1][j],d=R[r+1][i];tri(a,b,c);tri(a,c,d)}
+  if(o.cap){const c0=[0,rings[0][0],0];for(let i=0;i<n;i++){const j=(i+1)%n;tri(c0,R[0][j],R[0][i])}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
+// a sculpted skull/head from a sphere: f(x,y,z) returns the displaced [x,y,z] for each vertex of a unit sphere
+function sk146Sculpt(key,ws,hs,f){return svG(key,()=>{const g=new THREE.SphereGeometry(1,ws||18,hs||14),P=g.attributes.position;for(let i=0;i<P.count;i++){const q=f(P.getX(i),P.getY(i),P.getZ(i));P.setXYZ(i,q[0],q[1],q[2])}const n=g.toNonIndexed();n.computeVertexNormals();return n})}
+function sk146Gs(x,y,cx,cy,sx,sy){return Math.exp(-((x-cx)*(x-cx))/(sx*sx)-((y-cy)*(y-cy))/(sy*sy))}
+// swap the geometry of every mesh built from cache key `key` (an earlier builder's part) / remove those meshes
+function sk146Swap(R,key,geo){const G=SVX.gc[key];if(!G)return 0;let n=0;R.root.traverse(o=>{if(o.isMesh&&o.geometry===G){o.geometry=geo;n++}});return n}
+function sk146Drop(R,key){const G=SVX.gc[key];if(!G)return;const L=[];R.root.traverse(o=>{if(o.isMesh&&o.geometry===G)L.push(o)});L.forEach(o=>o.parent.remove(o))}
+function sk146Mat(R,hex){return R.mats.find(m=>m.color.getHex()===hex)}
+// ---------------- 2. effects ----------------
+// two flash lights, reused (they are pooled sources: the nearest 4 lights in the scene are drawn)
+function sk146Flash(p,col,I,dist,ms){let L=SK146.lt.find(l=>!l.userData.busy);if(!L){if(SK146.lt.length<2){L=new THREE.PointLight(0xffffff,0,8,1.6);scene.add(L);SK146.lt.push(L)}else L=SK146.lt[(SK146.fl++)%2]}
+  L.userData.busy=1;L.color.setHex(col);L.distance=dist||9;L.position.set(p.x,(p.y||GH(p.x,p.z))+1.2,p.z);const I0=I||3,T=(ms||420)/1000;let t=0;L.userData.tok=(L.userData.tok||0)+1;const tok=L.userData.tok;
+  kqFx({tick(dt){t+=dt||0;if(L.userData.tok!==tok)return false;const k=t/T;L.intensity=I0*(k<.12?k/.12:Math.pow(1-(k-.12)/.88,2));if(k>=1){L.intensity=0;L.userData.busy=0;return false}return true},end(){}})}
+// debris: n chunks (mat, size s) thrown from p with speed v and lift up; they spin, bounce once and shrink away
+function sk146Debris(p,mat,n,s,v,up,life){const g=svG('sk_db',()=>svLump(1,0,.5,146)),y0=GH(p.x,p.z),L=[];for(let k=0;k<n;k++){const o=new THREE.Mesh(g,mat),a=Math.random()*6.283,sp=v*(.4+Math.random()*.8),sz=s*(.5+Math.random()*.8);
+    o.position.set(p.x,(p.y!=null&&p.y>y0?p.y:y0+.3),p.z);o.scale.setScalar(sz);o.castShadow=true;o.userData.lpsSkip=1;scene.add(o);L.push({o,vx:Math.cos(a)*sp,vz:Math.sin(a)*sp,vy:up*(.6+Math.random()*.7),rx:(Math.random()-.5)*14,rz:(Math.random()-.5)*14,sz,b:0})}
+  let t=0;const T=life||1.4;
+  kqFx({tick(dt){dt=Math.min(.05,dt||0);t+=dt;for(const q of L){q.vy-=22*dt;q.o.position.x+=q.vx*dt;q.o.position.y+=q.vy*dt;q.o.position.z+=q.vz*dt;q.o.rotation.x+=q.rx*dt;q.o.rotation.z+=q.rz*dt;
+      const gy=GH(q.o.position.x,q.o.position.z)+q.sz*.5;if(q.o.position.y<gy){q.o.position.y=gy;if(q.b<1&&q.vy<-2){q.vy*=-.35;q.vx*=.5;q.vz*=.5;q.b++}else{q.vy=0;q.vx*=.85;q.vz*=.85;q.rx*=.8;q.rz*=.8}}
+      const k=t>T-.4?Math.max(.01,(T-t)/.4):1;q.o.scale.setScalar(q.sz*k)}return t<T},end(){L.forEach(q=>scene.remove(q.o))}})}
+// droplets of a liquid (blood, ooze, water, magma): stretched along their velocity, they fall and leave small splats
+function sk146Drops(p,col,n,v,up,o){o=o||{};const g=svG('sk_dr',()=>{const q=new THREE.SphereGeometry(1,5,4);return q}),m=new THREE.MeshBasicMaterial({color:col,fog:false}),y0=GH(p.x,p.z),L=[];
+  for(let k=0;k<n;k++){const ms=new THREE.Mesh(g,m),a=Math.random()*6.283,sp=v*(.3+Math.random()*.9);ms.position.set(p.x+(Math.random()-.5)*.3,(p.y!=null?p.y:y0+.5),p.z+(Math.random()-.5)*.3);ms.userData.lpsSkip=1;ms.renderOrder=19;scene.add(ms);
+    L.push({ms,vx:Math.cos(a)*sp,vz:Math.sin(a)*sp,vy:up*(.5+Math.random()*.8),s:(o.s||.07)*(.6+Math.random()*.8),on:true})}
+  let t=0,splat=0;
+  kqFx({tick(dt){dt=Math.min(.05,dt||0);t+=dt;let alive=0;for(const q of L){if(!q.on)continue;alive++;q.vy-=20*dt;q.ms.position.x+=q.vx*dt;q.ms.position.y+=q.vy*dt;q.ms.position.z+=q.vz*dt;
+      const v=Math.hypot(q.vx,q.vy,q.vz),st=Math.min(3,1+v*.12);q.ms.scale.set(q.s,q.s*st,q.s);q.ms.lookAt(q.ms.position.x+q.vx,q.ms.position.y+q.vy,q.ms.position.z+q.vz);q.ms.rotateX(Math.PI/2);
+      if(q.ms.position.y<GH(q.ms.position.x,q.ms.position.z)+.05){q.on=false;q.ms.visible=false;if(splat<(o.splats==null?6:o.splats)){splat++;svDecal(q.ms.position,o.dc||col,.18+Math.random()*.22,o.dl||2.4,.7)}}}
+    return alive>0&&t<3},end(){L.forEach(q=>scene.remove(q.ms));m.dispose()}})}
+// a branching ground crack that glows (col) and fades
+function sk146CrackTex(seed){const k='c'+(seed%6);if(SK146.ck[k])return SK146.ck[k];const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d'),rn=svRng(900+seed%6);g.translate(128,128);
+  g.strokeStyle='#fff';g.lineCap='round';const br=(x,y,a,len,w,d)=>{if(d>4||len<6)return;let px=x,py=y;g.lineWidth=w;g.beginPath();g.moveTo(px,py);const n=4;for(let i=0;i<n;i++){a+=(rn()-.5)*.7;px+=Math.cos(a)*len/n;py+=Math.sin(a)*len/n;g.lineTo(px,py)}g.stroke();
+    br(px,py,a+(rn()-.5)*.6,len*.72,w*.7,d+1);if(rn()<.65)br(x+(px-x)*.5,y+(py-y)*.5,a+(rn()<.5?1:-1)*(.6+rn()*.6),len*.55,w*.6,d+1)};
+  const N=5+(rn()*3|0);for(let i=0;i<N;i++)br(0,0,i/N*6.283+rn()*.5,60+rn()*50,5,0);const gr=g.createRadialGradient(0,0,0,0,0,30);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(-30,-30,60,60);
+  return SK146.ck[k]=new THREE.CanvasTexture(cv)}
+function sk146Crack(p,col,r,life){const g=svG('sk_ck',()=>new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2)),m=new THREE.MeshBasicMaterial({color:col,map:sk146CrackTex((Math.random()*6)|0),transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-4}),
+    dk=new THREE.MeshBasicMaterial({color:0x000000,map:m.map,transparent:true,opacity:.6,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-3});
+  const a=new THREE.Mesh(g,dk),b=new THREE.Mesh(g,m),y=GH(p.x,p.z);[a,b].forEach((o,i)=>{o.position.set(p.x,y+.13+i*.01,p.z);o.scale.setScalar(r);o.rotation.y=Math.random()*6.283;o.userData.lpsSkip=1;o.renderOrder=18+i;scene.add(o)});b.rotation.y=a.rotation.y;
+  let t=0;const T=life||2.4;kqFx({tick(dt){t+=dt||0;const k=t/T;m.opacity=.95*(k<.15?1:Math.max(0,1-(k-.15)/.85))*(1+.15*Math.sin(t*20));dk.opacity=.6*Math.min(1,(1-k)*2);return k<1},end(){scene.remove(a);scene.remove(b);m.dispose();dk.dispose()}})}
+// a vertical shock wall: an open cylinder that expands and fades (the air of a big impact)
+function sk146Wall(p,col,r,h,dur){const g=svG('sk_wl',()=>{const q=new THREE.CylinderGeometry(1,1,1,40,1,true);q.translate(0,.5,0);return q}),m=new THREE.MeshBasicMaterial({color:col,map:SPR,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  const o=new THREE.Mesh(g,m);o.position.set(p.x,GH(p.x,p.z),p.z);o.userData.lpsSkip=1;o.renderOrder=22;scene.add(o);let t=0;const T=dur||.5;
+  kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/T),s=.4+r*svEase.o(k);o.scale.set(s,(h||2)*(1-k*.6),s);m.opacity=.6*(1-k);return k<1},end(){scene.remove(o);m.dispose()}})}
+// a column (geyser of blood / pillar of frost / fire / light): an inner core, an outer twisting sleeve and a crown
+function sk146Column(p,col,core,r,h,life){const y0=GH(p.x,p.z),mk=(k,rt,rb)=>svG(k,()=>{const q=new THREE.CylinderGeometry(rt,rb,1,12,4,true);q.translate(0,.5,0);const P=q.attributes.position;for(let i=0;i<P.count;i++){const y=P.getY(i),a=Math.atan2(P.getZ(i),P.getX(i)),w=1+.18*Math.sin(a*3+y*7);P.setX(i,P.getX(i)*w);P.setZ(i,P.getZ(i)*w)}q.computeVertexNormals();return q});
+  const m1=new THREE.MeshBasicMaterial({color:core,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),m2=new THREE.MeshBasicMaterial({color:col,map:SPR,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  const a=new THREE.Mesh(mk('sk_c1',.35,.55),m1),b=new THREE.Mesh(mk('sk_c2',.7,1.0),m2),cr=kqSpr(col,1);cr.material=cr.material.clone();[a,b,cr].forEach(o=>{o.position.set(p.x,y0,p.z);o.userData.lpsSkip=1;o.renderOrder=21;scene.add(o)});
+  let t=0;const T=life||.9;
+  kqFx({tick(dt){t+=dt||0;const k=t/T,up=Math.sin(Math.min(1,k)*Math.PI),H=h*(k<.3?svEase.o(k/.3):1)*(k>.6?Math.max(.05,1-(k-.6)/.4):1);a.scale.set(r,H,r);b.scale.set(r*(1+.3*k),H*.92,r*(1+.3*k));b.rotation.y+=dt*6;a.rotation.y-=dt*4;
+    cr.position.y=y0+H;cr.scale.setScalar(r*3.2*(.5+up));m1.opacity=.9*up;m2.opacity=.7*up;cr.material.opacity=up;if(Math.random()<.6)burst(new THREE.Vector3(p.x,y0+H*Math.random(),p.z),col,1,.8,1.2,.5);return k<1},
+    end(){[a,b,cr].forEach(o=>scene.remove(o));m1.dispose();m2.dispose();cr.material.dispose()}})}
+// a beam between two points (getters a(), b()) for T seconds (tethers, drains); returns {stop()}
+function sk146Beam(a,b,col,w,T){const g=svG('sk_bm',()=>{const q=new THREE.CylinderGeometry(1,1,1,8,1,true);q.translate(0,.5,0);q.rotateX(Math.PI/2);return q}),m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),
+    m2=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  const o=new THREE.Mesh(g,m),c=new THREE.Mesh(g,m2);o.userData.lpsSkip=1;c.userData.lpsSkip=1;o.renderOrder=22;c.renderOrder=23;o.frustumCulled=c.frustumCulled=false;scene.add(o);scene.add(c);let t=0,on=true;
+  kqFx({tick(dt){t+=dt||0;if(!on||(T&&t>T))return false;const A=a(),B=b();if(!A||!B)return false;const d=B.distanceTo(A);o.position.copy(A);o.lookAt(B);c.position.copy(A);c.lookAt(B);
+    const fl=1+.35*Math.sin(t*23)+.2*Math.sin(t*37);o.scale.set(w*fl,w*fl,d);c.scale.set(w*.3,w*.3,d);m.opacity=.55+.2*Math.sin(t*17);
+    if(Math.random()<.5){const q=A.clone().lerp(B,Math.random());burst(q,col,1,.3,.3,.4)}return true},end(){scene.remove(o);scene.remove(c);m.dispose();m2.dispose()}});
+  return {stop(){on=false}}}
+// a swarm: n small flappers (type 'bat' | 'crow' | 'fly' | 'shard' | 'ember') from a to b over T seconds, wobbling
+function sk146SwarmGeo(type){if(SK146.sw[type])return SK146.sw[type];let g;
+  if(type==='shard'){g=new THREE.OctahedronGeometry(.5,0);g.scale(.35,1,.35)}else if(type==='ember'||type==='fly'){g=new THREE.OctahedronGeometry(.25,0)}
+  else{const P=[0,0,.25, -1,.05,-.1, -.35,0,-.25, 0,0,.25, -.35,0,-.25, 0,0,-.2, 0,0,.25, 1,.05,-.1, .35,0,-.25, 0,0,.25, .35,0,-.25, 0,0,-.2];g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.computeVertexNormals()}
+  return SK146.sw[type]=g}
+function sk146Swarm(a,b,n,col,type,T,o){o=o||{};const g=sk146SwarmGeo(type),m=type==='ember'||type==='shard'?new THREE.MeshBasicMaterial({color:col,fog:false}):new THREE.MeshStandardMaterial({color:col,roughness:.8,side:THREE.DoubleSide,flatShading:true,emissive:o.em||0});const L=[];
+  for(let k=0;k<n;k++){const ms=new THREE.Mesh(g,m),sc=(o.s||.35)*(.7+Math.random()*.6);ms.scale.setScalar(sc);ms.userData.lpsSkip=1;scene.add(ms);L.push({ms,ph:Math.random()*6.283,off:new THREE.Vector3((Math.random()-.5)*(o.spread||2.5),(Math.random()-.5)*(o.spread||2.5)*.6,(Math.random()-.5)*(o.spread||2.5)),d:Math.random()*.25,sc})}
+  let t=0;const A=a.clone?a.clone():a,B=b.clone?b.clone():b,P=new THREE.Vector3(),prev=new THREE.Vector3();
+  kqFx({tick(dt){t+=dt||0;let any=false;for(const q of L){const k=Math.max(0,Math.min(1,(t-q.d)/T));if(k<1)any=true;prev.copy(q.ms.position);P.lerpVectors(A,B,svEase.io(k));P.y+=Math.sin(k*Math.PI)*(o.arc||1.5);
+      const w=Math.sin(k*Math.PI);P.x+=q.off.x*w+Math.sin(t*5+q.ph)*.3;P.y+=q.off.y*w+Math.sin(t*7+q.ph)*.2;P.z+=q.off.z*w+Math.cos(t*5+q.ph)*.3;q.ms.position.copy(P);
+      if(prev.distanceToSquared(P)>1e-6)q.ms.lookAt(P.clone().add(P.clone().sub(prev)));if(type==='bat'||type==='crow'){const f=Math.sin(t*(type==='bat'?28:18)+q.ph);q.ms.scale.set(q.sc*(.4+.6*Math.abs(f)),q.sc,q.sc)}else q.ms.rotation.z+=dt*8;
+      q.ms.visible=k>0&&k<1}return any},end(){L.forEach(q=>scene.remove(q.ms));m.dispose()}})}
+// weather over a den: 'rain' | 'snow' | 'ash' | 'spores' | 'embers' (points falling inside the den radius); returns {stop(), o}
+function sk146Weather(A,kind,col,n){const N=n||600,R=ARENA_R+2,pos=new Float32Array(N*3),vel=new Float32Array(N),y0=GH(A.cx,A.cz);for(let i=0;i<N;i++){const a=Math.random()*6.283,r=Math.sqrt(Math.random())*R;pos[i*3]=A.cx+Math.cos(a)*r;pos[i*3+1]=y0+Math.random()*12;pos[i*3+2]=A.cz+Math.sin(a)*r;vel[i]=.7+Math.random()*.6}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const sz={rain:.09,snow:.16,ash:.12,spores:.14,embers:.14}[kind]||.12,sp={rain:16,snow:2.2,ash:1.4,spores:.7,embers:-1.6}[kind]||2;
+  const m=new THREE.PointsMaterial({color:col,size:sz,map:SPR,transparent:true,opacity:0,depthWrite:false,blending:kind==='ash'?THREE.NormalBlending:THREE.AdditiveBlending,fog:false});
+  const o=new THREE.Points(g,m);o.frustumCulled=false;o.userData.lpsSkip=1;o.renderOrder=17;scene.add(o);let on=true,t=0,op=0;
+  kqFx({tick(dt){dt=Math.min(.05,dt||0);t+=dt;op+=((on?1:0)-op)*Math.min(1,dt*1.5);m.opacity=.85*op;const P=g.attributes.position.array;
+    for(let i=0;i<N;i++){P[i*3+1]-=sp*vel[i]*dt;P[i*3]+=Math.sin(t*.7+i)*dt*(kind==='rain'?0:.4);if(sp>0?P[i*3+1]<y0:P[i*3+1]>y0+12){P[i*3+1]=sp>0?y0+12:y0;}}
+    g.attributes.position.needsUpdate=true;if(!on&&op<.02)return false;return true},end(){scene.remove(o);g.dispose();m.dispose()}});
+  return {stop(){on=false},o}}
+// blade trails throw sparks off the tip while they draw
+{const f=svTrail;svTrail=function(e,j,a,b,col,life){const T=f.apply(this,arguments);try{if(T&&e&&e.sv){let on=true,t=0;const st=T.stop;T.stop=function(){on=false;return st.apply(this,arguments)};const v=new THREE.Vector3(),J=e.sv.R.J[j];
+    kqFx({tick(dt){t+=dt||0;if(!on||e.dead||!J)return false;if(Math.random()<.85){v.set(a[0],a[1],a[2]);e.m.updateMatrixWorld(true);J.localToWorld(v);burst(v,col,1,1.4,.5,.3)}return t<3},end(){}})}}catch(_){}return T}}
+// impacts for every hit that has no effect of its own: a spray of the boss's liquid (or sparks) and a flash where it lands on
+// the hero, a puff of debris/sparks along the swing's reach when it misses. o: {liq: droplet colour, sp: spark colour, dust}
+function sk146AutoFx(M,o){for(const id in M){const D=M[id];if(!D||!D.hit)continue;D.hit.forEach(h=>{if(h.fx||h.nohit||!(h.dm>0))return;
+  h.fx=(c,an,hit)=>{try{const S=h.s,a=an.a||0,fw=S.k==='a'?S.r*.6:S.k==='l'?Math.min(4,S.l*.5):S.k==='r'?(S.r0+S.r)/2:S.r*.5,p=new THREE.Vector3(an.x+Math.sin(a)*fw,0,an.z+Math.cos(a)*fw);
+    if(hit){const q=gY(pl.position,1.1);if(o.liq!=null)sk146Drops(q,o.liq,10,3.5,4,{splats:3});burst(q,o.sp||0xffffff,14,3,2,.4);sk146Flash(q,o.sp||0xffffff,2.2,7,260)}
+    else{burst(gY(p,.9),o.sp||0xffffff,8,2.2,1,.35);if(o.dust!=null&&(S.k==='c'||S.k==='r'))burst(gY(p,.2),o.dust,10,2,1.2,.6)}}catch(_){}}})}}
+// ---------------- 3. signature mechanics ----------------
+// damage reduction while channelling (S.dr = share of the damage that still lands); Vorraxis keeps his own (3033)
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.sv&&!e.mb144&&!e.dead&&e.sv.dr>0&&e.sv.dr<1){d=Math.max(1,Math.round(d*e.sv.dr));if(nowP()-(e.sv.drT||0)>700){e.sv.drT=nowP();dn(e.m.position,'Warded','#ffd0a0',-30,600)}}return f.call(this,e,d,s,crit,dot)}}
+// den props for a mechanic: list of {x,z,n,frac,mesh,hbY,tick,die}; returns the props (in enemies; dqProp handles kill/clear)
+function sk146Props(A,list){const out=[];list.forEach(o=>{try{out.push(dqProp(A,o.x,o.z,o))}catch(err){console.error('v146 prop',err)}});return out}
+function sk146Alive(L){return (L||[]).filter(p=>p&&!p.dead&&!p._gone)}
+// a tether from a prop to the boss's joint j (stops when either is gone)
+function sk146Tether(p,e,j,col,w){return sk146Beam(()=>p.dead||p._gone?null:gY(p.m.position,p.dprop&&p.dprop.cupY||1.6),()=>e.dead?null:svWP(e,j||'chest',0,0,0),col,w||.09)}
+// an expanding ring wave (dash through it): from p, radius r0 → r1 over T, band width bw; hits once; returns nothing
+function sk146RingWave(e,p,r0,r1,T,bw,dm,col,o){o=o||{};const g=svG('sk_rw',()=>{const q=new THREE.CylinderGeometry(1,1,1,64,1,true);q.translate(0,.5,0);return q}),m=new THREE.MeshBasicMaterial({color:col,map:SPR,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),
+    fl=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),fg=new THREE.Mesh(svG('sk_rf',()=>new THREE.RingGeometry(.9,1,64,1).rotateX(-Math.PI/2)),fl);
+  const o1=new THREE.Mesh(g,m);o1.position.set(p.x,GH(p.x,p.z),p.z);fg.position.set(p.x,GH(p.x,p.z)+.16,p.z);[o1,fg].forEach(q=>{q.userData.lpsSkip=1;q.renderOrder=22;scene.add(q)});let t=0,hit=false;svSnd('whoosh',1.2,.6);
+  kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/T),r=r0+(r1-r0)*k;o1.scale.set(r,(o.h||1.8)*(1-k*.3),r);fg.scale.set(r,1,r);m.opacity=.85*(1-k*.5);fl.opacity=.35*(1-k);
+      if(Math.random()<.9){const a=Math.random()*6.283;burst(new THREE.Vector3(p.x+Math.cos(a)*r,GH(p.x,p.z)+.5,p.z+Math.sin(a)*r),col,2,1,1.5,.4)}
+      if(!hit&&!e.dead&&hero.hp>0){const d=Math.hypot(pl.position.x-p.x,pl.position.z-p.z);if(Math.abs(d-r)<bw/2+.3){hit=true;svHitNow(e,{k:'c',r:99},{x:p.x,z:p.z,a:0},dm,{flash:false,on:o.on})}}
+      return k<1&&!e.dead},end(){scene.remove(o1);scene.remove(fg);m.dispose();fl.dispose()}})}
+// the generic "torn out of the channel" stagger (a long one); B = the boss def, pose names from its table
+function sk146Broken(B,dur,down,up){return {dur,inv:null,trk:[[.3,down,'o'],[dur-.6,down,'l',.03],[dur,up||'cRec','io']],go(c){const S=c.S;S.stg=c.M.D.dur;S.dr=0;svSnd('stag',1.2,.8);popT(c.m.position,'BROKEN!','#ffd860',true);
+    burst(gY(c.m.position,2),0xffe08a,60,4,3,.8);svShock(c.m.position,0xffd860,6,.6);sk146Flash(c.m.position,0xffe0a0,4,12,600);shake(.4)},
+  tk(c,dt){c.S.stg=Math.max(0,c.M.D.dur-c.M.t);if(Math.random()<dt*8){const p=svWP(c.e,c.B.headJ||'root',0,0,0);burst(p,0xffe08a,1,.5,.6,.5)}},end(c){c.S.stg=0}}}
+// a heal pop (a channel that completed)
+function sk146Heal(e,f,col){if(!e||e.dead)return 0;const h=Math.round(M(e.c)*f);e.c.h=Math.min(M(e.c),e.c.h+h);dn(e.m.position,'+'+h,'#ff9a9a',-20,1400);burst(gY(e.m.position,1.8),col||0xff6a6a,50,3,2.5,.8);sk146Flash(e.m.position,col||0xff6a6a,3,12,700);return h}
+// ---------------- 4. den state ----------------
+function sk146Den(A){return A.s146||(A.s146={objs:[],fx:[],props:[],t:0,ph2:0})}
+function sk146DenAdd(A,o){const D=sk146Den(A);D.objs.push(o);if(o.isObject3D&&!o.parent)scene.add(o);return o}
+function sk146DenClear(A){const D=A.s146;if(!D)return;D.objs.forEach(o=>{try{if(o.stop)o.stop();else if(o.isObject3D&&o.parent)o.parent.remove(o);if(o.kill)o.kill()}catch(_){}});D.objs=[];
+  (D.props||[]).forEach(p=>{try{if(!p._gone)dqPropGone(p,false)}catch(_){}});D.props=[];D.ph2=0;D.t=0;D.sig=null;
+  try{dqUndebuff&&D.deb&&dqUndebuff(D.deb)}catch(_){}
+  A.s146=null}   // a fresh state for the next fight (every boss's own den objects live in it)
+// the boss entity of a den
+function sk146Boss(A){try{return bossEnt(A.i)}catch(_){return null}}
+// is the hero standing in a den's fight
+function sk146In(A){return !!(A&&A.f&&AF===A&&hero.hp>0)}
+// ================= v146 Lord Vaelric to the Vorraxis standard (model, Phase II den, signature mechanic, effects) =================
+// Builds on 1976 (his v110/v112 model, poses and moves stay; this file adds to them).
+//  * Model (vlrBuild wrapper, about 2× the triangles): a sculpted face (brow, sockets, cheekbones, nose bridge, lips, chin)
+//    instead of the plain head loft; long white hair on three chained joints that sway (springs); gold filigree along the
+//    pauldron edges, a plackart with a blood sigil, a chain-mail skirt, engraved rune lines on the greaves, a rune-etched
+//    blade that drips blood; a heavier cape (24 folds a panel, tattered hem strips, an embroidered gold hem band); Phase II
+//    adds a blood halo over the crown and a slowly turning blood glyph under his feet.
+//  * Motion: cape panels, tabard, hair and wings follow through on springs (3050 sk146Spring) — they swing out on his spins
+//    and trail his lunges.
+//  * Phase II den change, "The Crimson Tide": blood rain falls over the hall and three wide channels of blood sweep slowly
+//    round the floor (the middle stays dry). Standing in a channel bleeds you (damage over time, slowed). Keep moving round.
+//  * Signature mechanic, Blood Covenant (Phase II): he rises over the hall, arms wide, and four golden chalices rise on the
+//    pedestals, each tethered to him by a stream of blood — he is warded (80% less damage). Shatter all four and the covenant
+//    breaks: he crashes down, BROKEN (a long stagger). If any chalice still stands when the rite ends he drinks (heals 12%) and
+//    unleashes Exsanguinate: two rings of blood sweep out across the whole hall — dash through each one.
+//  * Effects: Blood Wave crescents layered with a dark core and spray, Skyfall spears that crack the floor, Sanguine Nova
+//    throws up a ring of blood geysers, Bat Step is a real swarm of bats, every sword hit sprays blood.
+var VLR146={col:0xff2040,dk:0x5a0010,on:1};
+function vlr146Head(){return svG('v46hd',()=>{const g=new THREE.SphereGeometry(1,20,16),P=g.attributes.position,G=(x,y,cx,cy,sx,sy)=>Math.exp(-((x-cx)*(x-cx))/(sx*sx)-((y-cy)*(y-cy))/(sy*sy));
+  for(let i=0;i<P.count;i++){let x=P.getX(i)*.152,y=P.getY(i)*.25+.125,z=P.getZ(i)*.158;
+    if(y<.07){const k=Math.min(1,(.07-y)/.18);x*=1-.28*k;z*=1-.08*k}                                  // the jaw narrows to the chin
+    if(z>0){const f=z/.158;z+=f*(.028*G(x,y,0,.11,.022,.07)                                           // nose bridge
+      +.02*G(x,y,0,-.07,.05,.03)                                                                    // chin
+      +.012*G(Math.abs(x),y,.09,.085,.03,.03)                                                        // cheekbones
+      +.018*G(x,y,0,.19,.11,.025)                                                                    // brow ridge
+      -.032*G(Math.abs(x),y,.06,.152,.026,.022)                                                      // eye sockets
+      -.012*G(x,y,0,.045,.04,.012)                                                                   // the mouth line
+      -.016*G(Math.abs(x),y,.1,.04,.03,.05));                                                        // hollow cheeks
+      x+=Math.sign(x)*.01*G(Math.abs(x),y,.09,.085,.03,.03)}
+    if(y>.3)z-=.02*(y-.3)/.07;                                                                        // a high, sloped forehead
+    P.setXYZ(i,x,y,z)}
+  const n=g.toNonIndexed();n.computeVertexNormals();return n})}
+// a heavy cape panel: cols folds across, rows down, ragged hem
+function vlr146Cloth(w0,w1,h,rag,seed,dz){const r=svRng(seed),cols=24,rows=4,pos=[],V=[];
+  for(let j=0;j<=rows;j++){const v=j/rows,row=[];for(let i=0;i<=cols;i++){const u=i/cols,w=w0+(w1-w0)*v,x=-w+2*w*u,f=Math.sin(u*Math.PI*6+v*1.3)*(.03+.05*v),c=-.07*Math.sin(u*Math.PI)*(.5+v);
+      let y=.06-h*v;if(j===rows&&rag)y-=(i%2?.08+r()*.22:r()*.06);row.push([x,y,c+f+(dz||0)])}V.push(row)}
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const a=V[j][i],b=V[j][i+1],c=V[j+1][i+1],d=V[j+1][i];pos.push(...a,...c,...b,...a,...d,...c)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
+function vlr146Swap(R,key,geo){const G=SVX.gc[key];if(!G)return 0;let n=0;R.root.traverse(o=>{if(o.isMesh&&o.geometry===G){o.geometry=geo;n++}});return n}
+function vlr146Hide(R,key){const G=SVX.gc[key];if(!G)return;const L=[];R.root.traverse(o=>{if(o.isMesh&&o.geometry===G)L.push(o)});L.forEach(o=>o.parent.remove(o))}
+{const f=vlrBuild;vlrBuild=function(R,e){f.apply(this,arguments);try{vlr146Add(R)}catch(err){console.error('v146 vaelric model',err)}}}
+if(SVB[5])SVB[5].build=vlrBuild;   // the registry holds the function itself
+function vlr146Add(R){const J=R.J,G=(k,fn)=>svG('v46'+k,fn),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const mats=R.mats,find=hex=>mats.find(m=>m.color.getHex()===hex),plate=find(0x1c1418),plate2=find(0x4a0c18),gold=find(0xb08a3a),skin=find(0xc4b8c2),hair=find(0xe8e4ec),cape=find(0x3e0610),capeIn=find(0x1a0a10),leath=find(0x24140f);
+  const rune=R.rune,eye=R.glow.find(m=>m.userData.c0===0xff3050)||rune,mail=svMat(R,0x2a2a30,{roughness:.45,metalness:.7}),blood=svMat(R,0x6a0012,{roughness:.15,metalness:.2,emissive:0x2a0006});
+  // ---- the face ----
+  vlr146Hide(R,'v2hd');Mm('head',vlr146Head(),skin);
+  [-1,1].forEach(s=>{Mm('head',G('lid',()=>svLump(.03,0,.1,147)),skin,s*.06,.168,.15,0,0,0,1.25,.45,.7);          // heavy lids
+    Mm('head',G('sk',()=>new THREE.SphereGeometry(.03,6,5)),plate,s*.06,.15,.135,0,0,0,1,1,.5)});  // the dark of the socket
+  Mm('head',G('lip',()=>svLump(.03,0,.12,148)),blood,0,.055,.15,0,0,0,1.7,.35,.5);
+  [-1,1].forEach(s=>Mm('head',G('fg2',()=>svHorn(.009,.045,0,0,4,1)),hair,s*.014,.05,.152,Math.PI/2,0,0));
+  // ---- the hair: a fitted cap swept back from a widow's peak (the old loft read as a bucket), smaller eye glows ----
+  vlr146Hide(R,'v2hr');
+  Mm('head',G('hcap',()=>{const g=new THREE.SphereGeometry(1,22,14),P=g.attributes.position;for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const a=Math.atan2(x,z),w=1+.06*Math.sin(a*9)*(1-Math.abs(y));
+      x*=.168*w;y=y*.25+.15;z=z*.18*w-.015;const fr=z>.04;if(fr){const peak=.27-.05*Math.exp(-x*x/.0016);if(y<peak){y=peak;z=Math.min(z,.12)}}if(!fr&&y<.0)y=.0+(y-.0)*.3;P.setXYZ(i,x,y,z)}
+    const n=g.toNonIndexed();n.computeVertexNormals();return n}),hair);
+  R.root.traverse(o=>{if(o.isSprite&&o.userData.s0===.2&&o.parent===J.head){o.scale.setScalar(.09);o.userData.s0=.09}});
+  // ---- long hair on a chain of three joints behind the head (they sway) ----
+  J.head&&svJ(R,'hr0','head',0,.22,-.12,.25);svJ(R,'hr1','hr0',0,-.34,-.02,.08);svJ(R,'hr2','hr1',0,-.32,-.02,.06);
+  for(let k=0;k<13;k++){const u=(k-6)/6,w=.035+.01*(k%3);['hr0','hr1','hr2'].forEach((j,q)=>Mm(j,G('lk'+q+(k%3),()=>svBlade([[-w,0],[w,0],[w*.85,-.36],[0,-.42+(q==2?-.06:0)],[-w*.85,-.36]],.012)),hair,u*(.15-q*.02),-.02,-Math.abs(u)*.04+q*-.01,.08+q*.04,u*.35,-u*.06*(q+1)))}
+  // ---- gold filigree along the pauldron edges, scrollwork and studs ----
+  ['L','R'].forEach((L,si)=>{const s=L==='L'?1:-1,j='sh'+L,P=[];for(let k=0;k<=14;k++){const a=-1.3+k/14*2.6;P.push([s*(.1+.24*Math.cos(a)*.9),-.24+.06*Math.sin(a*2),Math.sin(a)*.26])}
+    Mm(j,G('fil'+L,()=>svTube(P,.016,4)),gold);
+    for(let k=0;k<3;k++){const C=[];for(let q=0;q<=8;q++){const a=q/8*Math.PI*1.6;C.push([s*(.22+.04*Math.cos(a)),.02+k*.07+.035*Math.sin(a),-.1+k*.1+.02*Math.cos(a)])}Mm(j,G('scr'+L+k,()=>svTube(C,.009,4)),gold)}
+    for(let k=0;k<6;k++)Mm(j,G('std',()=>new THREE.IcosahedronGeometry(.022,0)),gold,s*(.28+.02*Math.sin(k)),-.12+k*.05,-.16+k*.06);
+    Mm(j,G('pr'+L,()=>svTube([[s*.27,.12,-.12],[s*.3,.0,0],[s*.27,-.12,.12]],.01,4)),rune);
+    // a fourth, flared lame and two more spikes
+    Mm(j,G('pd4',()=>svLump(.2,1,.1,149)),plate,s*.15,-.27,0,0,0,s*.45,.95,.35,.92);
+    [-1,1].forEach(q=>Mm(j,G('ps2',()=>svHorn(.035,.22,0,-.06,4,3)),gold,s*.18,.18,q*.15,-1.1,0,s*-.55))});
+  // ---- a plackart over the breastplate: gold-edged, a blood sigil in a ring ----
+  Mm('chest',G('plk',()=>svLoft([[-.08,.36,.24],[.12,.42,.29],[.28,.38,.27]],12,{cap:false})),plate2,0,0,.035);
+  Mm('chest',G('plt',()=>svLoft([[.27,.385,.272],[.3,.39,.276]],12,{cap:false})),gold,0,0,.035);
+  Mm('chest',G('sgr',()=>new THREE.TorusGeometry(.085,.012,5,18)),gold,0,.13,vlrCS(0,.13)[2]+.04);
+  Mm('chest',G('sgg',()=>new THREE.OctahedronGeometry(.05,0)),rune,0,.13,vlrCS(0,.13)[2]+.05,0,0,0,1,1.4,.5);
+  for(let k=0;k<6;k++){const a=k/6*6.283;Mm('chest',G('sgs',()=>svHorn(.012,.06,0,0,3,1)),gold,Math.sin(a)*.1,.13+Math.cos(a)*.1,vlrCS(0,.13)[2]+.045,-Math.cos(a)*1.57,0,0)}
+  // ---- a chain-mail skirt under the tassets, a riveted hem ----
+  Mm('hips',G('mail',()=>svLoft([[.02,.37,.28],[-.2,.42,.33],[-.44,.46,.36]],16,{cap:false})),mail);
+  for(let k=0;k<16;k++){const a=k/16*6.283;Mm('hips',G('mr',()=>new THREE.IcosahedronGeometry(.018,0)),gold,Math.sin(a)*.46,-.44,Math.cos(a)*.36)}
+  // ---- engraved rune lines on the greaves and vambraces, knee spikes ----
+  ['L','R'].forEach(L=>{Mm('kn'+L,G('gr',()=>svTube([[-.05,-.2,.112],[0,-.4,.118],[.05,-.6,.1]],.008,4)),rune);Mm('kn'+L,G('gr2',()=>svTube([[.05,-.2,.112],[0,-.4,.118],[-.05,-.6,.1]],.008,4)),rune);
+    Mm('kn'+L,G('ksp',()=>svHorn(.03,.16,0,.04,4,2)),plate,0,.06,.15,-.4,0,0);Mm('el'+L,G('vr',()=>svTube([[.06,-.1,.09],[.07,-.25,.1],[.05,-.42,.09]],.008,4)),rune)});
+  // ---- the blade: rune glyphs down the fuller, a second edge bevel ----
+  for(let k=0;k<6;k++)Mm('swd',G('bg',()=>new THREE.OctahedronGeometry(.028,0)),rune,0,.095,.35+k*.24,0,0,0,1,.4,1.6);
+  Mm('swd',G('be',()=>svBlade([[-.006,.1],[.006,.1],[.004,2.25],[-.004,2.25]],.06)),gold,.07,.06,0,Math.PI/2,0,0);
+  // ---- the cape: heavier panels, tatters, an embroidered hem ----
+  [['cp0',.5,.64,0],['cp1',.64,.76,0],['cp2',.76,.86,1]].forEach(([n,w0,w1,rg],q)=>{vlr146Swap(R,'v2c'+n,G('c'+n,()=>vlr146Cloth(w0,w1,.92,rg,5+q,0)));vlr146Swap(R,'v2ci'+n,G('ci'+n,()=>vlr146Cloth(w0-.02,w1-.02,.9,rg,5+q,.025)))});
+  for(let k=0;k<9;k++){const u=(k-4)/4;Mm('cp2',G('tt'+(k%3),()=>svBlade([[-.03,0],[.03,0],[.02,-.32-(k%3)*.08],[0,-.38-(k%3)*.08],[-.02,-.3]],.01)),cape,u*.78,-.9,-.04,0,0,u*.08)}
+  {const P=[];for(let k=0;k<=16;k++){const u=k/16;P.push([-.84+1.68*u,-.62,-.05-.06*Math.sin(u*Math.PI)])}Mm('cp2',G('hem',()=>svTube(P,.02,4)),gold)}
+  for(let k=0;k<5;k++){const u=(k-2)/2;Mm('cp1',G('emb',()=>svBlade([[0,.06],[.05,0],[0,-.08],[-.05,0]],.01)),gold,u*.5,-.5,-.08,0,Math.PI,0)}
+  // ---- Phase II: a halo of blood over the crown, a blood glyph under his feet ----
+  const halo=Mm('head',G('hal',()=>new THREE.TorusGeometry(.26,.018,5,32)),rune,0,.5,0,Math.PI/2,0,0);halo.visible=false;halo.userData.noMerge=1;R.v146halo=halo;
+  {const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.translate(128,128);g.strokeStyle='#fff';g.lineWidth=4;[120,100,60].forEach(r=>{g.beginPath();g.arc(0,0,r,0,6.283);g.stroke()});
+    g.lineWidth=3;g.beginPath();for(let k=0;k<6;k++){const a=k*2/6*6.283;g[k?'lineTo':'moveTo'](Math.cos(a)*100,Math.sin(a)*100)}g.closePath();g.stroke();for(let k=0;k<12;k++){g.save();g.rotate(k/12*6.283);g.fillStyle='#fff';g.fillRect(-3,-116,6,12);g.restore()}
+    const gl=new THREE.Mesh(G('gly',()=>new THREE.PlaneGeometry(4.4,4.4).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:VLR146.col,map:new THREE.CanvasTexture(cv),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    gl.position.y=.06;gl.userData.noMerge=1;gl.userData.lpsSkip=1;gl.renderOrder=17;R.root.add(gl);R.v146gly=gl}}
+// springs: cape panels, tabard, hair, wings
+{const B=SVB[5];if(B){B.spr={cp0:[55,9,1.4],cp1:[42,7,1.9],cp2:[34,6,2.4],tab:[70,11,1],hr0:[60,10,1.3],hr1:[45,8,1.6],hr2:[36,7,1.9],wgL:[48,8,.7],wgR:[48,8,.7],wfL:[40,7,.8],wfR:[40,7,.8]};
+  // post: the halo, the glyph, blood dripping from the blade
+  const p0=B.post;B.post=function(e,S,dt,now){p0&&p0.apply(this,arguments);try{const R=S.R,on=S.ph>1;if(R.v146halo){R.v146halo.visible=on;R.v146halo.rotation.z+=dt*.8}
+    if(R.v146gly){const m=R.v146gly.material;m.opacity+=((on?.55:0)-m.opacity)*Math.min(1,dt*2);R.v146gly.rotation.y+=dt*.35;R.v146gly.visible=m.opacity>.01}
+    if(Math.random()<dt*(on?3:1.2)&&!S.gone){const p=svWP(e,'swd',0,.06,2.3);sk146Drops(p,0x8a0018,1,.2,.1,{s:.05,splats:1,dc:0x3a0008})}}catch(_){}}}}
+// ---------------- new poses ----------------
+Object.assign(VLRP,{
+  covRise:{root:[0,0,0,0,1.5,0],hips:[-.1,0,0],spine:[-.12,0,0],chest:[-.3,0,0],head:[-.45,0,0],shR:[-.35,0,-1.35],elR:[-.25,0,0],hdR:[1.0,0,0],shL:[-.35,0,1.35],elL:[-.25,0,0],hdL:[-.2,0,0],
+    thL:[.15,0,.05],knL:[.5,0,0],ftL:[.4,0,0],thR:[.05,0,-.05],knR:[.35,0,0],ftR:[.4,0,0],cp0:[.5,0,0],cp1:[.2,0,0],tab:[.15,0,0],wgL:[0,-.5,.35],wgR:[0,.5,-.35]},
+  covDrink:{root:[0,0,0,0,1.3,0],hips:[.15,0,0],spine:[.15,0,0],chest:[.25,0,0],head:[.35,0,0],shR:[-1.2,0,-.5],elR:[-1.3,0,0],hdR:[.8,0,0],shL:[-1.2,0,.5],elL:[-1.3,0,0],hdL:[.3,0,0],
+    thL:[-.3,0,0],knL:[.9,0,0],thR:[-.2,0,0],knR:[.8,0,0],cp0:[.2,0,0],wgL:[0,.3,.6],wgR:[0,-.3,-.6]},
+  crash:{hips:[.18,0,.12,0,-.8,0],spine:[.22,0,.08],chest:[.28,0,0],head:[.4,0,.22],shR:[.35,0,-.25],elR:[-.25,0,0],hdR:[1.3,0,0],shL:[.3,0,.35],elL:[-.35,0,0],thL:[-1.5,0,0],knL:[1.9,0,0],thR:[-.9,0,0],knR:[2.0,0,0],ftR:[-.35,0,0],cp0:[.45,0,0],cp1:[.15,0,0],wgL:[0,.4,.6],wgR:[0,-.4,-.6]}});
+// ---------------- the den: Phase II "The Crimson Tide" ----------------
+function vlr146TideTex(){if(VLR146.tt)return VLR146.tt;const cv=document.createElement('canvas');cv.width=128;cv.height=256;const g=cv.getContext('2d');g.fillStyle='#5a0010';g.fillRect(0,0,128,256);
+  for(let k=0;k<90;k++){const x=Math.random()*128,y=Math.random()*256,l=20+Math.random()*60;g.strokeStyle=`rgba(${150+Math.random()*80|0},${Math.random()*20|0},${20+Math.random()*20|0},${.3+Math.random()*.4})`;g.lineWidth=1+Math.random()*3;g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()-.5)*8,y+l);g.stroke()}
+  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;return VLR146.tt=t}
+function vlr146TideStart(A,e){const D=sk146Den(A);if(D.ph2)return;D.ph2=1;const y0=GH(A.cx,A.cz),grp=new THREE.Group();grp.position.set(A.cx,y0+.13,A.cz);grp.userData.lpsSkip=1;
+  const tex=vlr146TideTex(),m=new THREE.MeshStandardMaterial({color:0x8a0a1c,map:tex,emissive:0x3a0008,emissiveMap:tex,roughness:.12,metalness:.35,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3});m.userData.noFade135=1;
+  const W=.46;D.tide={grp,m,a:0,W,n:3,r0:3.2,r1:ARENA_R-.4,dT:0};for(let k=0;k<3;k++){const s=new THREE.Mesh(svG('v46td',()=>new THREE.RingGeometry(3.2,ARENA_R-.4,40,3,-W/2,W).rotateX(-Math.PI/2)),m);s.rotation.y=k/3*6.283;s.renderOrder=16;grp.add(s);
+    // bright edges so the channel reads on the red marble
+    [-W/2,W/2].forEach(th=>{const d=new THREE.Vector3(Math.cos(th),0,-Math.sin(th)),ed=new THREE.Mesh(svG('v46te',()=>new THREE.PlaneGeometry(.14,ARENA_R-.4-3.2).rotateX(-Math.PI/2)),D.tide.em||(D.tide.em=new THREE.MeshBasicMaterial({color:0xff2a40,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false})));
+      ed.position.copy(d.multiplyScalar((3.2+ARENA_R-.4)/2));ed.position.y=.02;ed.rotation.y=Math.atan2(d.x,d.z);ed.renderOrder=17;s.add(ed)})}
+  sk146DenAdd(A,grp);D.rain=sk146DenAdd(A,sk146Weather(A,'rain',0xff3048,700));
+  try{banner('🩸 THE CRIMSON TIDE','Blood rains on the hall — channels of blood sweep the floor','Keep out of the blood')}catch(_){}
+  svSnd('splash',1.2,.5);sk146Flash(new THREE.Vector3(A.cx,y0,A.cz),VLR146.col,4,24,1200)}
+function vlr146TideTick(A,e,dt){const D=A.s146,T=D&&D.tide;if(!T)return;T.m.opacity=Math.min(.9,T.m.opacity+dt*.5);if(T.em)T.em.opacity=T.m.opacity*(.7+.3*Math.sin(nowP()/180));T.a+=dt*.16;T.grp.rotation.y=T.a;const tex=T.m.map;tex.offset.y-=dt*.25;
+  if(Math.random()<dt*14){const k=(Math.random()*3)|0,an=Math.PI/2+T.a+k/3*6.283+(Math.random()-.5)*T.W,r=T.r0+Math.random()*(T.r1-T.r0);burst(new THREE.Vector3(A.cx+Math.sin(an)*r,GH(A.cx,A.cz)+.25,A.cz+Math.cos(an)*r),0xc0102a,1,.4,.6,.5)}
+  if(!sk146In(A)||!e||e.dead)return;const P=pl.position,dx=P.x-A.cx,dz=P.z-A.cz,d=Math.hypot(dx,dz);if(d<T.r0||d>T.r1)return;
+  // the channel's angle in the world: the group turns by +a about y; a point's local angle = atan2(x,z) − a
+  let inC=false;const pa=Math.atan2(dx,dz);for(let k=0;k<3;k++){if(Math.abs(svAng(pa-(Math.PI/2+T.a+k/3*6.283)))<T.W/2){inC=true;break}}
+  T.dT-=dt;if(inC&&T.dT<=0&&!(hero.iv>0)){T.dT=.8;hitHero(e,.14,'m');dqDebuff('Bleeding','🩸',{mspd:-.15},1400,'Standing in blood: bleeding, −15% move speed');D.deb='Bleeding';sk146Drops(gY(P,.3),0xa0101e,6,1.5,2.5,{splats:1})}}
+{const B=SVB[5];if(B){const t0=B.denTick,c0=B.denClear;
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)vlr146TideStart(A,e);vlr146TideTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 tide',err)}};
+  B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
+// ---------------- the signature: Blood Covenant ----------------
+function vlr146Chalice(){const g=new THREE.Group(),gm=new THREE.MeshStandardMaterial({color:0xd8a840,metalness:.8,roughness:.28,flatShading:true,emissive:0x2a1406});gm.userData.lps=1;
+  const prof=[[.0,0],[.24,0],[.26,.04],[.12,.08],[.06,.16],[.05,.36],[.09,.42],[.06,.48],[.08,.52],[.24,.62],[.34,.78],[.36,.92],[.33,.94],[.3,.8],[0,.66]].map(([x,y])=>new THREE.Vector2(x,y));
+  const cup=new THREE.Mesh(svG('v46ch',()=>new THREE.LatheGeometry(prof,12).toNonIndexed()),gm);cup.scale.setScalar(1.15);cup.castShadow=true;g.add(cup);
+  for(let k=0;k<4;k++){const a=k/4*6.283,j=new THREE.Mesh(svG('v46cj',()=>new THREE.OctahedronGeometry(.045,0)),new THREE.MeshBasicMaterial({color:0xff2040}));j.position.set(Math.sin(a)*.36,.86,Math.cos(a)*.36);g.add(j)}
+  const bl=new THREE.Mesh(svG('v46cb',()=>new THREE.CircleGeometry(.36,14).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x8a0018,emissive:0x5a0010,roughness:.1,metalness:.3}));bl.position.y=1.02;g.add(bl);
+  const gl=kqSpr(0xff2040,1.4);gl.position.y=1.1;g.add(gl);return {g,gm,bl,gl}}
+function vlr146CovStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D=sk146Den(A),ped=(typeof D5!='undefined'&&D5.ped&&D5.ped.length===4)?D5.ped:[0,1,2,3].map(k=>{const a=k/4*6.283+.78;return [A.cx+Math.cos(a)*8.4,A.cz+Math.sin(a)*8.4]});
+  const L=ped.map(([x,z],k)=>{const C=vlr146Chalice();C.g.position.y=-1.4;let t=0;
+    return {x,z,n:'Blood Chalice',frac:.016,mesh:C.g,hbY:2.6,hbS:.8,cupY:2.2,
+      tick(pe,dt,now){t+=dt;C.g.position.y=-1.4+(1.13+1.4)*svEase.o(Math.min(1,t/.9));C.g.rotation.y+=dt*.7;C.gl.scale.setScalar(1.2+.35*Math.sin(now/140+k));if(Math.random()<dt*6)burst(gY(pe.m.position,2.2),0xff2040,1,.3,.8,.5)},
+      die(pe,killed){if(killed){const p=gY(pe.m.position,2);sk146Debris(p,C.gm,10,.07,4,5,1.6);sk146Drops(p,0xa0101e,22,4,5,{splats:5});burst(p,0xff2040,40,3,3,.7);sk146Flash(p,0xff3048,3.5,9,500);popT(pe.m.position,'🩸 SHATTERED','#ffb0c0');svSnd('crack',1,1.3);svSnd('bell',.5,1.6)}C.gm.dispose()}}});
+  const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);c.M.an.teth=P.map(p=>sk146Tether(p,e,'chest',0xff2040,.1));
+  svSnd('bell',1,.7);svSnd('charge',.8,.5);sk146Wall(c.m.position,VLR146.col,6,4,.8);sk146Flash(c.m.position,VLR146.col,5,16,900);
+  try{banner('🩸 BLOOD COVENANT','Four chalices feed him — he is warded','Shatter all four before the rite ends!')}catch(_){}say('🩸 Lord Vaelric binds himself to the chalices: shatter all four!')}
+function vlr146CovCleanup(c){const S=c.S,M=c.M;S.dr=0;(M&&M.an.teth||[]).forEach(t=>t.stop());if(M)M.an.teth=[];(M&&M.an.props||[]).forEach(p=>{if(!p._gone){burst(gY(p.m.position,2),0x5a0010,14,1.5,1.5,.6);dqPropGone(p,false)}})}
+function vlr146CovEnd(c,broken){const e=c.e,M=c.M;if(M.an.done2)return;M.an.done2=1;
+  if(broken){vlr146CovCleanup(c);svEndMove(e,true);svCast(e,'broken');try{banner('💔 THE COVENANT BREAKS','Lord Vaelric crashes down','Strike now!')}catch(_){}return}
+  // the rite completes: he drinks, then Exsanguinate
+  sk146Heal(e,.12,0xff3048);vlr146CovCleanup(c);const p=c.m.position.clone();svSnd('roar',1,.9);shake(.4);
+  [0,.95].forEach((d,k)=>setTimeout(()=>{if(e.dead||!AF)return;sk146RingWave(e,p,1,ARENA_R+1,1.7,1.3,1.6,VLR146.col,{h:2.2,on:()=>dqDebuff('Bleeding','🩸',{mspd:-.15},3000,'Exsanguinate: bleeding, −15% move speed')});sk146Flash(p,VLR146.col,4,16,500)},d*1000))}
+Object.assign(VLRM,{
+  covenant:{wt:(e,L)=>e.sv.cvN?9:30,cd:30,ph:2,r:[0,40],a:'any',armor:1,dur:11.8,inv:[0,1.2],trn:[[0,.4,2]],
+    trk:[[.5,'kneel','io'],[1.4,'covRise','o'],[9.9,'covRise','l',.012],[10.3,'covDrink','io'],[10.9,'covDrink','l'],[11.4,'kneel','i'],[11.8,'cRec','io']],
+    go(c){c.S.cvN=(c.S.cvN||0)+1;svSnd('whoosh',1,.6);if(c.S.gone)vlrGone(c.e,false)},
+    ev:[[.9,c=>vlr146CovStart(c)],[10.3,c=>vlr146CovEnd(c,false)],[11.4,c=>{sk146Wall(c.m.position,VLR146.col,4,2,.4);burst(gY(c.m.position,.3),VLR.blood,40,4,2,.6);svSnd('heavy',1,1)}]],
+    tk(c,dt){const M=c.M;if(Math.random()<dt*10)burst(svWP(c.e,'chest',0,0,0),VLR.blood,1,.8,.4,.6);if(M.an.props&&c.t>1.6&&c.t<10.3&&!M.an.done2&&!sk146Alive(M.an.props).length)vlr146CovEnd(c,true)},
+    end(c){vlr146CovCleanup(c)},rec:.6},
+  broken:sk146Broken(SVB[5],4.8,'crash','cRec')});
+// ---------------- richer effects ----------------
+// Blood Wave: a dark core under the bright crescent, spray and cracks along the way
+{const f=vlrWave;vlrWave=function(c,a0,spd,L,dm){f.apply(this,arguments);try{const o=c.m.position.clone(),a=c.m.rotation.y+a0,T=L/spd;let t=0,k=0;sk146Flash(gY(o,1),VLR146.col,2.5,9,350);
+  const g=svG('vl_cres2',()=>{const q=new THREE.RingGeometry(.8,1.8,14,1,-1.2+Math.PI/2,2.4);q.rotateX(-Math.PI/2);return q}),m=new THREE.MeshBasicMaterial({color:0x2a0006,transparent:true,opacity:.75,depthWrite:false,side:THREE.DoubleSide,fog:false}),ms=new THREE.Mesh(g,m);ms.renderOrder=23;ms.userData.lpsSkip=1;scene.add(ms);
+  kqFx({tick(dt){t+=dt||0;const d=1+spd*t,p=new THREE.Vector3(o.x+Math.sin(a)*d,0,o.z+Math.cos(a)*d);ms.position.set(p.x,GH(p.x,p.z)+.95,p.z);ms.rotation.y=a+Math.PI;ms.scale.set(1.25,1,1);
+    while(k<Math.floor(t/.14)){k++;sk146Drops(gY(p,1),0xa0101e,3,2.5,2,{splats:1});if(k%2)svDecal(p,0x3a0008,.9,2.2,.5)}return t<T&&!c.e.dead},end(){scene.remove(ms);m.dispose()}})}catch(_){}}}
+// Skyfall spears: the floor cracks where they land, a spray of blood
+{const f=vlrSpear;vlrSpear=function(c,q,T){f.apply(this,arguments);try{const p=new THREE.Vector3(q.x,0,q.z);setTimeout(()=>{if(c.e.dead||!AF)return;sk146Crack(p,0xff2040,1.4,2.2);sk146Drops(gY(p,.4),0xa0101e,8,3,4,{splats:2});sk146Debris(p,vlrSpkMat(),4,.08,3,4,1)},T*1000)}catch(_){}}}
+// Bat Step: a real swarm of bats leaves him and returns
+{const f=vlrGone;vlrGone=function(e,on){const r=f.apply(this,arguments);try{const p=e.m.position,a=gY(p,1.6);if(on){const b=gY(p,7).add(new THREE.Vector3((Math.random()-.5)*6,0,(Math.random()-.5)*6));sk146Swarm(a,b,26,0x1a0a10,'bat',.9,{spread:3,s:.4,arc:2})}
+  else{const b=gY(p,8).add(new THREE.Vector3((Math.random()-.5)*6,0,(Math.random()-.5)*6));sk146Swarm(b,a,22,0x1a0a10,'bat',.45,{spread:3,s:.4,arc:.5});sk146Flash(a,VLR146.col,2.5,8,300)}}catch(_){}return r}}
+// Sanguine Nova: a ring of blood geysers and a shock wall
+{const N=VLRM.nova,h=N&&N.hit&&N.hit[0];if(h){const f=h.fx;h.fx=function(c,an,hit){f&&f.apply(this,arguments);try{const p=c.m.position;sk146Wall(p,VLR146.col,7.5,3,.6);sk146Flash(p,VLR146.col,5,14,600);for(let k=0;k<8;k++){const a=k/8*6.283,q=new THREE.Vector3(p.x+Math.cos(a)*5.2,0,p.z+Math.sin(a)*5.2);setTimeout(()=>sk146Column(q,0xc0102a,0xff8090,.55,3.4,.8),k*35)}
+  sk146Crack(p,0xff2040,3.5,3);sk146Drops(gY(p,1),0xa0101e,30,6,6,{splats:6})}catch(_){}}}}
+// Thorned Procession and Danse Macabre: cracks and walls
+{const f=vlrThorns;vlrThorns=function(c,an,dm){f.apply(this,arguments);try{sk146Crack(new THREE.Vector3(an.x+Math.sin(an.a)*1.5,0,an.z+Math.cos(an.a)*1.5),0xff2040,1.8,2.4)}catch(_){}}}
+{const S=VLRM.spin;if(S&&S.hit&&S.hit[1]){const f=S.hit[1].fx;S.hit[1].fx=function(c){f&&f.apply(this,arguments);try{sk146Wall(c.m.position,VLR146.col,7,2.4,.5);sk146Flash(c.m.position,VLR146.col,3,10,400)}catch(_){}}}}
+// the awakening: a burst of bats and a shock wall as the wings tear free
+{const W=VLRM.awaken;if(W){W.ev=(W.ev||[]).concat([[1.25,c=>{try{const p=gY(c.m.position,2);for(let k=0;k<3;k++)sk146Swarm(p,p.clone().add(new THREE.Vector3(Math.cos(k*2.1)*10,5,Math.sin(k*2.1)*10)),14,0x1a0a10,'bat',1.2,{spread:2.5,s:.4});sk146Wall(c.m.position,VLR146.col,10,4,.9);sk146Flash(c.m.position,VLR146.col,6,20,1000)}catch(_){}}]])}}
+// every sword hit sprays blood
+sk146AutoFx(VLRM,{liq:0xa0101e,sp:0xff5060});
+// the moves are registered (relayed in co-op) under their names: register the new ones too
+try{svRegMoves(5)}catch(_){}
+// the den sign
+try{DSTXT[5].atk.push(['🩸 Blood Covenant','Phase II: he rises over the hall, warded, while four golden chalices feed him through streams of blood.','Shatter all four chalices before the rite ends: he crashes down BROKEN. If one survives he heals and two rings of blood sweep the hall — dash through each.'],
+  ['🌊 The Crimson Tide','Phase II: blood rains and three wide channels of blood sweep slowly round the floor; the middle stays dry.','Stay out of the channels — standing in blood bleeds you and slows you.'])}catch(_){}
+// ================= v146 The Rime Wraith to the Vorraxis standard (model, Phase II den, signature mechanic, effects) =================
+// Builds on 1973 (its v110/v112 model, solved scythe aims, poses and moves stay; this file adds to them).
+//  * Model (rwrBuild wrapper): the robes are rebuilt as heavy folded cloth (a 24-fold inner bell, a ragged over-robe and a
+//    torn outer shroud), ice grows through them in clusters (hem, shoulders, back, crown of the hood), frost rime crusts the
+//    hem; the skull is sculpted (a domed cranium, deep sockets with the eyes burning inside, cheek arches, a nasal hollow);
+//    the hood has a black void inside so the skull floats in darkness; two soul lanterns hang from the belt on chains.
+//  * Motion: the fourteen hem strips, the robe, the lanterns and the jaw follow through on springs.
+//  * Phase II den change, "The Whiteout": a blizzard (driving snow, drifting banks of fog that hide the far side of the den)
+//    and the floor freezes into a sheet of ice — you slide: you keep moving a moment after you stop and turn wide; a steady
+//    wind pushes you about. Plan your dodges early.
+//  * Signature mechanic, Frozen Heart (Phase II): it sinks into a shell of ice in the middle of the den (warded: 90% less
+//    damage) and frost creeps in from the walls. Three frozen braziers rise; break the ice on each to light it. Light all
+//    three and their heat shatters the shell: the wraith drops, BROKEN. If the frost reaches the middle first, Absolute Zero
+//    freezes the whole den — only the warmth beside a lit brazier is safe — and the shell mends it (heals 10%).
+//  * Effects: icicles shatter into shards and crack the floor, Frost Nova and Glacial Prison throw up ice and frost walls,
+//    Winter's Step is a storm of ice shards, every scythe hit throws frost.
+var RWR146={col:0x9ad8ff,ice:0xd8f4ff};
+function rw146IceMat(){return RWR146.im||(RWR146.im=new THREE.MeshStandardMaterial({color:0xbfe6ff,emissive:0x2a6aa0,emissiveIntensity:.6,roughness:.1,metalness:.1,flatShading:true,transparent:true,opacity:.9}))}
+{const f=rwrBuild;rwrBuild=function(R,e){f.apply(this,arguments);try{rw146Add(R)}catch(err){console.error('v146 wraith model',err)}};if(SVB[2])SVB[2].build=rwrBuild}
+function rw146Add(R){const G=(k,fn)=>svG('w46'+k,fn),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz),
+    MY=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>{const o=svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);o.rotation.order='YXZ';return o};
+  const robe=sk146Mat(R,0x1a2232),robe2=sk146Mat(R,0x2a3850),bone=sk146Mat(R,0xd8dce4),ice=R.iceM,ice2=sk146Mat(R,0x8ac8f0),iron=sk146Mat(R,0x3a404c),
+    voidM=svMat(R,0x020306,{roughness:1,emissive:0x000000}),rime=svMat(R,0xe8f4ff,{roughness:.9,emissive:0x1a2a3a}),eye=R.glow.find(m=>m.userData.c0===0x9ae8ff),shroud=svMat(R,0x10161f,{roughness:1,side:THREE.DoubleSide,emissive:0x03050a});
+  // ---- the robes: folded cloth ----
+  sk146Swap(R,'rw_rb',G('rb',()=>sk146Loft([[.18,.5,.44],[-.3,.68,.6],[-.8,.86,.78],[-1.3,1.04,.94],[-1.92,1.26,1.12]],24,{fn:9,fa:.07,grow:1,seed:3})));
+  sk146Swap(R,'rw_rb2',G('rb2',()=>sk146Loft([[.24,.57,.51],[-.3,.8,.72],[-.8,.98,.88],[-1.12,1.12,1.01]],20,{fn:7,fa:.09,grow:1,rag:.5,seed:4,rot:.35})));
+  Mm('robe',G('shr',()=>sk146Loft([[.3,.62,.56],[-.2,.9,.8],[-.6,1.05,.94]],18,{fn:5,fa:.12,grow:1,rag:.9,seed:5,rot:.9})),shroud);
+  // frost rime crusted on the hem, ice clusters growing through the robe
+  for(let k=0;k<22;k++){const a=k/22*6.283+.1;Mm('robe',G('rm',()=>svLump(.09,0,.5,31)),rime,Math.sin(a)*1.2,-1.84+.05*Math.sin(k*3),Math.cos(a)*1.07,0,a,0,1.3,.6,1)}
+  const clus=(j,x,y,z,ry,s,n)=>{for(let q=0;q<(n||3);q++){const t=(q-1)*.45;MY(j,G('ic'+(q%2),()=>svHorn(.07,.5+.25*(q%2),0,.06,5,2)),ice,x,y,z,-1.0+Math.abs(t)*.6,ry+t,0,s,s,s*(1.1-.2*q))}};
+  [[1.15,-1.6,.3],[-1.1,-1.5,-.2],[.3,-1.7,1.1],[-.5,-1.65,-1.0],[.9,-.9,.6],[-.85,-1.0,.55]].forEach(([x,y,z],k)=>clus('robe',x,y,z,Math.atan2(x,z),.9+.2*(k%2)));
+  ['shL','shR'].forEach((j,k)=>clus(j,(k?-1:1)*.3,.35,-.1,Math.PI,.8,4));clus('chest',0,1.1,-.55,Math.PI,1,4);
+  // ---- the skull, sculpted; the void inside the hood ----
+  sk146Drop(R,'rw_sk');
+  Mm('head',sk146Sculpt('w46sk',18,14,(x,y,z)=>{let X=x*.28,Y=y*.31+.3,Z=z*.31+.27;const fz=Math.max(0,z);
+    Y+=.06*Math.max(0,y)*Math.max(0,1-Math.abs(x));                                                   // the dome
+    if(y<-.2){const k=Math.min(1,(-.2-y)/.8);X*=1-.35*k;Z-=.05*k}                                       // the face narrows to the teeth
+    Z-=fz*(.13*sk146Gs(Math.abs(x),y,.4,.05,.2,.18)+.06*sk146Gs(x,y,0,-.3,.08,.12));                   // deep sockets, the nasal hollow
+    X+=Math.sign(x)*.03*sk146Gs(Math.abs(x),y,.75,-.25,.2,.15);                                        // cheek arches
+    Z+=fz*.04*sk146Gs(x,y,0,.3,.6,.12);return [X,Y,Z]}),bone);
+  {const ey=SVX.gc['rw_ey'];R.J.head.children.forEach(o=>{if(o.isMesh&&o.geometry===ey)o.position.z=.5;if(o.isSprite&&o.userData.s0===.5){o.position.z=.55;o.scale.setScalar(.36)}})}
+  [-1,1].forEach(s=>Mm('head',G('sok',()=>new THREE.SphereGeometry(.075,6,5).toNonIndexed()),voidM,s*.11,.31,.45));
+  Mm('head',G('nas',()=>new THREE.SphereGeometry(.04,5,4).toNonIndexed()),voidM,0,.2,.45,0,0,0,1,1.4,.8);
+  Mm('head',G('vd',()=>new THREE.SphereGeometry(.47,12,8,Math.PI,Math.PI).toNonIndexed()),voidM,0,.34,.02,0,0,0,1,1.05,.9);   // the back half only: the skull sits in front of it
+  // the hood, the sleeves and the mantle as folded cloth
+  sk146Swap(R,'rw_hd',G('hd',()=>sk146Loft([[-.22,.5,.5,0,-.1],[.2,.56,.58,0,-.06],[.6,.5,.52,0,-.13],[.95,.24,.28,0,-.32],[1.25,.04,.05,0,-.6]],18,{fn:5,fa:.05,seed:8})));
+  sk146Swap(R,'rw_sl',G('sl',()=>sk146Loft([[-.3,.27,.26],[-.5,.33,.31],[-.72,.4,.37],[-.92,.46,.43]],16,{fn:5,fa:.1,grow:1,rag:.6,seed:9})));
+  sk146Swap(R,'rw_mt',G('mt',()=>sk146Loft([[.92,.9,.66],[1.06,.95,.7],[1.2,.98,.73],[1.46,.62,.5]],18,{fn:7,fa:.06,seed:10})));
+  // ---- two soul lanterns on chains (their own joints: they swing) ----
+  [[.62,-.05,.36,1],[-.55,-.1,.42,-1]].forEach(([x,y,z,s],k)=>{const j=svJ(R,'lan'+k,'robe',x,y,z);
+    Mm(j,G('lch',()=>svTube([[0,0,0],[.02,-.18,.02],[0,-.34,0]],.016,4)),iron);
+    Mm(j,G('lcg',()=>svLoft([[-.38,.06,.06],[-.46,.11,.11],[-.62,.11,.11],[-.7,.05,.05]],6,{cap:false})),iron);
+    for(let q=0;q<4;q++){const a=q/4*6.283;Mm(j,G('lcb',()=>svTube([[0,-.4,0],[0,-.66,0]],.012,3)),iron,Math.sin(a)*.11,0,Math.cos(a)*.11)}
+    Mm(j,G('lcs',()=>svLump(.07,0,.2,33)),ice2,0,-.54,0);svSpr(R,j,0x9ae8ff,.55,0,-.54,0)});
+  // ---- frost on the ribs, torn strips on the sleeves ----
+  for(let k=0;k<8;k++){const s=k%2?1:-1;Mm('chest',G('rf',()=>svLump(.05,0,.4,34)),rime,s*(.55-.03*k),.5+k*.09,.1+.04*k,0,0,0,1.2,.5,1)}
+  ['shL','shR'].forEach(j=>{for(let k=0;k<6;k++){const a=k/6*6.283;Mm(j,G('st'+(k%2),()=>svBlade([[-.08,0],[.08,0],[.04,-.5-.12*(k%2)],[-.05,-.36]],.015)),shroud,Math.sin(a)*.46,-1.0,Math.cos(a)*.43,0,a,0)}})}
+// springs: hem strips, robe, lanterns, jaw
+{const B=SVB[2];if(B){const s={robe:[40,8,.5],lan0:[26,3.5,1.6],lan1:[26,3.5,1.6],jaw:[90,12,0]};for(let k=0;k<14;k++)s['tt'+k]=[30,5,1.4];B.spr=s}}
+// ---------------- new poses (aims are solved at the first build, like the others) ----------------
+Object.assign(RWRP,{
+  hEnc:{body:[.2,0,0,0,.4,0],chest:[.25,0,0],shR:[-0.76,0.68,-2.15],elR:[-1.39,0.01,0.05],shL:[-1.3,0,-.6],elL:[-1.6,0,0],hdL:[.3,0,0],head:[.55,0,0],jaw:[.1,0,0],robe:[-.15,0,0],aim:[1,.15,0, 0,1,0]},
+  hRoar:{body:[-.25,0,0,0,.9,0],chest:[-.3,0,0],shR:[-0.76,0.68,-2.15],elR:[-1.39,0.01,0.05],shL:[-2.6,0,.9],elL:[-.2,0,0],head:[-.6,0,0],jaw:[.6,0,0],robe:[.35,0,0],aim:[1,.15,0, 0,1,0]}});
+// ---------------- Phase II: "The Whiteout" ----------------
+function rw146IceTex(){if(RWR146.it)return RWR146.it;const cv=document.createElement('canvas');cv.width=cv.height=512;const g=cv.getContext('2d');g.fillStyle='#9ad0f0';g.fillRect(0,0,512,512);
+  for(let k=0;k<160;k++){g.strokeStyle=`rgba(255,255,255,${.15+Math.random()*.35})`;g.lineWidth=.5+Math.random()*1.5;g.beginPath();let x=Math.random()*512,y=Math.random()*512;g.moveTo(x,y);for(let q=0;q<4;q++){x+=(Math.random()-.5)*70;y+=(Math.random()-.5)*70;g.lineTo(x,y)}g.stroke()}
+  for(let k=0;k<40;k++){const x=Math.random()*512,y=Math.random()*512,r=20+Math.random()*60,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.25)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r)}
+  return RWR146.it=new THREE.CanvasTexture(cv)}
+function rw146Whiteout(A,e){const D=sk146Den(A);if(D.ph2)return;D.ph2=1;const y0=GH(A.cx,A.cz);
+  const m=new THREE.MeshStandardMaterial({color:0xd8f0ff,map:rw146IceTex(),roughness:.05,metalness:.35,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});m.userData.noFade135=1;
+  const fl=new THREE.Mesh(svG('w46fl',()=>new THREE.CircleGeometry(ARENA_R-.2,48).rotateX(-Math.PI/2)),m);fl.position.set(A.cx,y0+.11,A.cz);fl.renderOrder=15;fl.userData.lpsSkip=1;sk146DenAdd(A,fl);
+  const fog=[];for(let k=0;k<22;k++){const s=kqSpr(0xe8f4ff,7+Math.random()*5);s.material=s.material.clone();s.material.blending=THREE.NormalBlending;s.material.opacity=0;const a=Math.random()*6.283,r=4+Math.random()*(ARENA_R-3);
+    s.position.set(A.cx+Math.cos(a)*r,y0+1.2+Math.random()*1.6,A.cz+Math.sin(a)*r);s.userData.a=a;s.userData.r=r;s.userData.w=.05+Math.random()*.08;s.renderOrder=25;sk146DenAdd(A,s);fog.push(s)}
+  D.wo={fl,m,fog,wa:Math.random()*6.283,v:{x:0,z:0},last:null,t:0};D.snow=sk146DenAdd(A,sk146Weather(A,'snow',0xffffff,1100));
+  try{banner('❄ THE WHITEOUT','A blizzard howls and the floor freezes over','You slide on the ice — dodge early')}catch(_){}svSnd('hiss',1.2,.5);svSnd('ice',1,.6)}
+function rw146WhiteoutTick(A,e,dt){const D=A.s146,W=D&&D.wo;if(!W)return;W.t+=dt;W.m.opacity=Math.min(.55,W.m.opacity+dt*.3);W.wa+=dt*.12;
+  W.fog.forEach(s=>{s.userData.a+=dt*s.userData.w;s.position.x=A.cx+Math.cos(s.userData.a)*s.userData.r;s.position.z=A.cz+Math.sin(s.userData.a)*s.userData.r;s.material.opacity=Math.min(.32,s.material.opacity+dt*.12)});
+  if(!sk146In(A)||!e||e.dead){W.last=null;return}
+  // ice: the hero keeps sliding (the velocity follows the input slowly), a wind pushes; both only on the den floor
+  const P=pl.position;if(W.last&&dt>0&&dt<.1){const ux=(P.x-W.last.x)/dt,uz=(P.z-W.last.z)/dt;if(Math.hypot(ux,uz)<14&&!pl.step){const k=Math.min(1,dt*2.4);W.v.x+=(ux-W.v.x)*k;W.v.z+=(uz-W.v.z)*k;
+      const ex=(W.v.x-ux)*dt*.9,ez=(W.v.z-uz)*dt*.9;if(Math.hypot(ex,ez)>.0005)walk(pl,ex,ez)}else{W.v.x=W.v.z=0}}
+  const ws=.55;walk(pl,Math.cos(W.wa)*ws*dt,Math.sin(W.wa)*ws*dt);W.last={x:P.x,z:P.z}}
+{const B=SVB[2];if(B){const t0=B.denTick,c0=B.denClear;
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)rw146Whiteout(A,e);rw146WhiteoutTick(A,e,dt);rw146HeartTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 whiteout',err)}};
+  B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
+// ---------------- the signature: Frozen Heart ----------------
+function rw146Brazier(){const g=new THREE.Group(),iron=new THREE.MeshStandardMaterial({color:0x3a404c,roughness:.45,metalness:.65,flatShading:true}),im=rw146IceMat();
+  for(let k=0;k<3;k++){const a=k/3*6.283,l=new THREE.Mesh(svG('w46bl',()=>svTube([[0,0,0],[.12,.6,0],[.05,1.0,0]],.04,4)),iron);l.position.set(Math.sin(a)*.4,0,Math.cos(a)*.4);l.rotation.y=a+Math.PI/2;g.add(l)}
+  const bowl=new THREE.Mesh(svG('w46bw',()=>new THREE.CylinderGeometry(.55,.32,.35,10,1,true).toNonIndexed()),iron);bowl.position.y=1.1;g.add(bowl);
+  const coal=new THREE.Mesh(svG('w46cl',()=>svLump(.4,0,.4,35)),new THREE.MeshStandardMaterial({color:0x2a1a14,roughness:.9,flatShading:true}));coal.position.y=1.15;coal.scale.set(1,.4,1);g.add(coal);
+  const blk=new THREE.Mesh(svG('w46ib',()=>svLump(.85,1,.25,36)),im);blk.position.y=1.0;blk.scale.set(1,1.35,1);g.add(blk);
+  for(let k=0;k<5;k++){const a=k/5*6.283,s=new THREE.Mesh(svG('w46is',()=>{const q=new THREE.ConeGeometry(.14,.8,5);q.translate(0,.4,0);return q.toNonIndexed()}),im);s.position.set(Math.sin(a)*.6,.3,Math.cos(a)*.6);s.rotation.set(Math.cos(a)*.5,0,-Math.sin(a)*.5);g.add(s)}
+  return {g,iron}}
+function rw146Fire(A,p){const g=new THREE.Group(),y0=GH(p.x,p.z);g.position.set(p.x,y0,p.z);const F=[];
+  const fm=new THREE.MeshBasicMaterial({color:0xff9a3a,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),fm2=new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+  for(let k=0;k<5;k++){const c=new THREE.Mesh(svG('w46fc',()=>{const q=new THREE.ConeGeometry(.22,1,6,1,true);q.translate(0,.5,0);return q}),k<3?fm:fm2);c.position.set((Math.random()-.5)*.4,1.2,(Math.random()-.5)*.4);c.userData.ph=Math.random()*6;F.push(c);g.add(c)}
+  const gl=kqSpr(0xff9a3a,3.2);gl.position.y=1.8;g.add(gl);const L=new THREE.PointLight(0xff9a3a,2.2,9,1.6);L.position.set(p.x,y0+2,p.z);sk146DenAdd(A,L);   // a pooled source: added to the scene itself
+  const ring=new THREE.Mesh(svG('w46wr',()=>new THREE.RingGeometry(2.6,2.8,40).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0xffb060,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));ring.position.y=.14;g.add(ring);
+  g.userData.lpsSkip=1;sk146DenAdd(A,g);let t=0;const o={g,x:p.x,z:p.z,r:2.7,on:true,stop(){o.on=false}};
+  kqFx({tick(dt){t+=dt||0;if(!o.on||!g.parent){if(g.parent)g.parent.remove(g);if(L.parent)L.parent.remove(L);fm.dispose();fm2.dispose();return false}F.forEach((c,k)=>{c.scale.set(1,1+.35*Math.sin(t*9+c.userData.ph),1);c.rotation.y+=dt*3});gl.scale.setScalar(3+.4*Math.sin(t*11));L.intensity=2+.5*Math.sin(t*13);
+    ring.material.opacity=.4+.2*Math.sin(t*4);if(Math.random()<.5)burst(gY(p,1.6+Math.random()),0xffb060,1,.4,1.5,.6);return true},end(){if(g.parent)g.parent.remove(g)}});
+  const D=sk146Den(A);(D.fires=D.fires||[]).push(o);return o}
+function rw146HeartStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.1;const D=sk146Den(A),y0=GH(A.cx,A.cz),a0=Math.random()*6.283;D.fires=[];
+  // the shell
+  const sh=new THREE.Group(),im=rw146IceMat();const core=new THREE.Mesh(svG('w46sh',()=>svLump(1.6,1,.3,37)),im);core.scale.set(1,1.7,1);core.position.y=2.6;sh.add(core);
+  for(let k=0;k<10;k++){const a=k/10*6.283,s=new THREE.Mesh(svG('w46ss',()=>{const q=new THREE.ConeGeometry(.3,2,5);q.translate(0,1,0);return q.toNonIndexed()}),im);s.position.set(Math.sin(a)*1.2,1+.4*(k%3),Math.cos(a)*1.2);s.rotation.set(Math.cos(a)*.7,0,-Math.sin(a)*.7);s.scale.setScalar(.7+.4*(k%2));sh.add(s)}
+  sh.scale.setScalar(.01);sh.userData.lpsSkip=1;sk146DenAdd(A,sh);c.M.an.shell=sh;let st=0;
+  kqFx({tick(dt){st+=dt||0;if(!sh.parent)return false;sh.position.copy(e.m.position);sh.position.y=GH(e.m.position.x,e.m.position.z);sh.scale.setScalar(Math.min(1,st/.7));return true},end(){}});
+  // frost creeping in from the walls (the timer you can see)
+  const fm=new THREE.MeshBasicMaterial({color:0xd8f4ff,transparent:true,opacity:.0,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-3}),fr=new THREE.Mesh(svG('w46fr',()=>new THREE.RingGeometry(.9,1,64,1).rotateX(-Math.PI/2)),fm);
+  fr.position.set(A.cx,y0+.15,A.cz);fr.renderOrder=16;sk146DenAdd(A,fr);c.M.an.frost={fr,fm,t:0,T:9};
+  // three frozen braziers
+  const L=[0,1,2].map(k=>{const a=a0+k/3*6.283,x=A.cx+Math.cos(a)*9,z=A.cz+Math.sin(a)*9,B=rw146Brazier();B.g.position.y=-1.4;let t=0;
+    return {x,z,n:'Frozen Brazier',frac:.017,mesh:B.g,hbY:2.6,hbS:.8,cupY:1.3,
+      tick(pe,dt,now){t+=dt;B.g.position.y=-1.4*Math.max(0,1-t/.8);if(Math.random()<dt*4)burst(gY(pe.m.position,1.2),0xd8f4ff,1,.3,.5,.6)},
+      die(pe,killed){if(killed){const p=pe.m.position.clone();sk146Debris(gY(p,1.2),rw146IceMat(),14,.12,4.5,5,1.6);burst(gY(p,1.4),0xffb060,40,3,3,.7);sk146Flash(p,0xff9a3a,4,10,600);popT(p,'🔥 LIT','#ffd0a0');svSnd('crack',1,1.1);svSnd('charge',.5,1.3);rw146Fire(A,p)}B.iron.dispose()}}});
+  const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);
+  svSnd('ice',1.2,.5);svSnd('hiss',1,.5);sk146Wall(e.m.position,RWR146.col,5,4,.8);sk146Flash(e.m.position,RWR146.col,5,16,900);
+  try{banner('❄ FROZEN HEART','It sinks into a shell of ice — the den is freezing','Break the ice on all three braziers to light them!')}catch(_){}say('❄ The Rime Wraith encases itself in ice: light all three braziers before the frost takes the den!')}
+function rw146HeartTick(A,e,dt){}
+function rw146HeartCleanup(c){const S=c.S,M=c.M;S.dr=0;if(!M)return;const A=c.A;if(M.an.shell){const sh=M.an.shell;if(sh.parent)sh.parent.remove(sh);M.an.shell=null}
+  if(M.an.frost){const f=M.an.frost;if(f.fr.parent)f.fr.parent.remove(f.fr);f.fm.dispose();M.an.frost=null}
+  (M.an.props||[]).forEach(p=>{if(!p._gone)dqPropGone(p,false)});
+  // the fires burn on a little, then die down
+  const D=A&&A.s146;if(D&&D.fires){const L=D.fires;D.fires=[];setTimeout(()=>L.forEach(o=>o.stop()),3500)}}
+function rw146HeartEnd(c,broken){const e=c.e,M=c.M,A=c.A;if(M.an.done2)return;M.an.done2=1;const p=e.m.position.clone();
+  if(M.an.shell){sk146Debris(gY(p,2.4),rw146IceMat(),26,.2,7,6,2);sk146Wall(p,RWR146.col,7,4,.6);sk146Flash(p,RWR146.col,6,16,800);svSnd('ice',1.4,.6);svSnd('crack',1.2,.7)}
+  if(broken){rw146HeartCleanup(c);svEndMove(e,true);svCast(e,'broken');try{banner('💔 THE SHELL SHATTERS','The heat of the braziers breaks the ice','Strike now!')}catch(_){}return}
+  // Absolute Zero: the whole den freezes except beside a lit brazier
+  const D=A&&A.s146,safe=((D&&D.fires)||[]).some(o=>Math.hypot(pl.position.x-o.x,pl.position.z-o.z)<o.r);
+  sk146Heal(e,.1,RWR146.col);flash('rgba(220,245,255,.55)');shake(.5);svSnd('ice',1.6,.4);
+  if(A){for(let k=0;k<26;k++){const a=Math.random()*6.283,r=Math.random()*ARENA_R;const q=new THREE.Vector3(A.cx+Math.cos(a)*r,0,A.cz+Math.sin(a)*r);setTimeout(()=>svSpike(q,rw146IceMat(),1.4+Math.random()*1.4,.35,1.4,.5),k*20)}}
+  if(!safe&&hero.hp>0&&!(hero.iv>0)){bossHit(e,2.2);dqDebuff('Frozen','🧊',{mspd:-.6},2500,'Absolute Zero: frozen, −60% move speed')}else if(safe)dn(pl.position,'Warm!','#ffd0a0',-20,1200);
+  rw146HeartCleanup(c)}
+Object.assign(RWRM,{
+  heart:{wt:(e,L)=>e.sv.hrN?9:30,cd:30,ph:2,r:[0,40],a:'any',armor:1,dur:11.2,inv:[0,.9],trn:[[0,.4,2]],
+    trk:[[.6,'hEnc','io'],[9.6,'hEnc','l',.01],[10.1,'hRoar','o'],[10.7,'hRoar','l',.02],[11.2,'rRec','io']],
+    go(c){c.S.hrN=(c.S.hrN||0)+1;if(c.S.gone)rwrGone(c.e,false);svSnd('whoosh',1,.5)},
+    ev:[[.7,c=>rw146HeartStart(c)],[10.1,c=>rw146HeartEnd(c,false)]],
+    tk(c,dt){const M=c.M,F=M.an.frost;if(F){F.t+=dt;const k=Math.min(1,F.t/F.T),r=ARENA_R*(1-.85*k);F.fr.scale.set(r,1,r);F.fm.opacity=Math.min(.5,F.t*.3);
+        if(Math.random()<dt*20){const a=Math.random()*6.283;burst(new THREE.Vector3(c.A.cx+Math.cos(a)*r,GH(c.A.cx,c.A.cz)+.3,c.A.cz+Math.sin(a)*r),0xffffff,1,.3,.6,.6)}}
+      if(Math.random()<dt*8)burst(svWP(c.e,'chest',0,.8,0),0xe8f8ff,1,.6,.4,.8);
+      if(M.an.props&&c.t>1.4&&c.t<10.1&&!M.an.done2&&!sk146Alive(M.an.props).length)rw146HeartEnd(c,true)},
+    end(c){rw146HeartCleanup(c)},rec:.6},
+  broken:sk146Broken(SVB[2],4.6,'stag','rRec')});
+// ---------------- richer effects ----------------
+// icicles: shards, a crack and a cold flash where each lands
+{const f=rwrIcicle;rwrIcicle=function(c,i){const S=c.S,L=S.icc||[],o=L[i];f.apply(this,arguments);try{if(!o)return;const q=c.inA(pl.position.clone(),.8),p=new THREE.Vector3(q.x,0,q.z);
+  setTimeout(()=>{if(c.e.dead||!AF)return;sk146Debris(gY(p,.4),rw146IceMat(),7,.08,3.5,4,1.1);sk146Crack(p,0x9ad8ff,1.3,2);sk146Flash(p,0x9ad8ff,2,7,300)},600)}catch(_){}}}
+// spike lines and rings: ice debris and a frost wall
+{const f=rwrSpikes;rwrSpikes=function(c,an,L,w,dm){f.apply(this,arguments);try{for(let d=2;d<L;d+=3){const p=new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d);sk146Debris(gY(p,.5),rw146IceMat(),3,.07,2.5,4,1)}}catch(_){}}}
+{const f=rwrRing;rwrRing=function(c,an,r0,r1,n,dm){f.apply(this,arguments);try{const p=new THREE.Vector3(an.x,0,an.z);sk146Wall(p,0xd8f4ff,r1+.5,2.6,.55);sk146Flash(p,0x9ad8ff,3.5,12,500);sk146Crack(p,0x9ad8ff,Math.max(2,r1*.55),2.6);sk146Debris(gY(p,.6),rw146IceMat(),10,.1,r1*.8,5,1.4)}catch(_){}}}
+// Winter's Step: a storm of ice shards carries it
+{const f=rwrGone;rwrGone=function(e,on){const r=f.apply(this,arguments);try{const a=gY(e.m.position,2);if(on)sk146Swarm(a,a.clone().add(new THREE.Vector3((Math.random()-.5)*5,4,(Math.random()-.5)*5)),24,0xd8f4ff,'shard',.8,{spread:3,s:.3});
+  else{sk146Swarm(a.clone().add(new THREE.Vector3(0,5,0)),a,20,0xd8f4ff,'shard',.4,{spread:3,s:.3});sk146Flash(a,0x9ad8ff,2.5,8,300)}}catch(_){}return r}}
+sk146AutoFx(RWRM,{sp:0xd8f4ff,dust:0xffffff});
+try{svRegMoves(2)}catch(_){}
+try{DSTXT[2].atk.push(['🧊 Frozen Heart','Phase II: it sinks into a shell of ice (warded) and frost creeps in from the walls; three frozen braziers rise.','Break the ice on all three braziers to light them: the heat shatters the shell and it drops BROKEN. If the frost reaches the middle, only the warmth beside a lit brazier is safe from Absolute Zero.'],
+  ['🌨 The Whiteout','Phase II: a blizzard hides the far side of the den and the floor turns to ice: you slide, and the wind pushes you.','Dodge early and steer wide — you keep moving a moment after you stop.'])}catch(_){}
+// ================= v146 The Bloated One to the Vorraxis standard (model, Phase II den, signature mechanic, effects) =================
+// Builds on 1975 (his v110/v112 model, poses and moves stay; this file adds to them).
+//  * Model (bloBuild wrapper): the belly and chest are rebuilt as sagging flesh — rolls of fat that overhang one another,
+//    lumps and dimples, 28 sides instead of 13–14 — with sewn-on hide patches, open sores and hanging strips of rotten skin;
+//    the head is sculpted (a low heavy brow, small sunken eyes, a broad flat nose, a wide lipless mouth, a double chin);
+//    fat rolls on the arms and neck, more glowing pustules across the back, a bile drool, a cloud of flies that follows him.
+//  * Motion: the belly jiggles and swings after every step and slam (a soft spring), the jaw and head follow through.
+//  * Phase II den change, "The Rot Spills": pools of rot well up across the charnel pit and spread, one after another (the
+//    oldest dry out). Standing in rot slows you and eats at you. The open floor shrinks and shifts all fight.
+//  * Signature mechanic, The Feast (Phase II): three carcasses drop on hooks from the dark. He lumbers from one to the next
+//    to gorge on them — while he feeds his gorged hide shrugs off blows (70% less damage). Cut all three down before he eats
+//    them and he collapses in a starving rage, BROKEN. Each carcass he reaches heals him and bursts rot around him.
+//  * Effects: cleaver chops and stomps crack the floor and throw up gore and bone, the flop lands in a wall of rot,
+//    vomit splatters, every hit sprays rot.
+var BLO146={col:0x9aff6a,rot:0x6ad020};
+function blo146RotMat(){return BLO146.rm||(BLO146.rm=new THREE.MeshStandardMaterial({color:0x4a5a1a,emissive:0x1a2a06,roughness:.3,flatShading:true}))}
+function blo146BoneMat(){return BLO146.bm||(BLO146.bm=new THREE.MeshStandardMaterial({color:0xd8ccb0,roughness:.6,flatShading:true}))}
+// refine a ring list (insert rings between, with fat rolls: the radius dips just above each roll and bulges at it)
+function blo146Rolls(R0,rolls,n){const out=[];for(let i=0;i<R0.length-1;i++){const A=R0[i],B=R0[i+1];for(let s=0;s<n;s++){const k=s/n,L=(u,v)=>(u||0)+((v||0)-(u||0))*k,y=L(A[0],B[0]);
+    let m=1;rolls.forEach(([ry,d,w])=>{const q=(y-ry)/w;m+=d*(Math.exp(-q*q*4)-.9*Math.exp(-(q-.7)*(q-.7)*10))});out.push([y,L(A[1],B[1])*m,L(A[2],B[2])*m,L(A[3],B[3]),L(A[4],B[4])])}}
+  out.push(R0[R0.length-1]);return out}
+{const f=bloBuild;bloBuild=function(R,e){f.apply(this,arguments);try{blo146Add(R)}catch(err){console.error('v146 bloated model',err)}};if(SVB[4])SVB[4].build=bloBuild}
+function blo146Add(R){const G=(k,fn)=>svG('b46'+k,fn),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const fl=sk146Mat(R,0x6e6c4c),fl2=sk146Mat(R,0x50563a),bruise=sk146Mat(R,0x4a3448),leath=sk146Mat(R,0x2a1e16),cloth=sk146Mat(R,0x3a3028),blood=sk146Mat(R,0x4a0c08),bone=sk146Mat(R,0xd8ccb0),pus=R.pus,
+    sore=svMat(R,0x6a1a10,{roughness:.25,emissive:0x2a0804}),rot=svMat(R,0x4a5a1a,{roughness:.3,emissive:0x1a2a06});
+  // ---- the belly: rolls of fat, 28 sides, lumps ----
+  const BR=blo146Rolls(BLO_BR,[[-.55,.06,.22],[.15,.05,.2],[.75,.04,.18]],3);
+  sk146Swap(R,'b2_bl',G('bl',()=>sk146Loft(BR,28,{fn:5,fa:.035,seed:11,cap:true})));
+  const CR=blo146Rolls(BLO_CR,[[.05,.04,.2],[.6,.035,.2]],3);sk146Swap(R,'b2_ch',G('ch',()=>sk146Loft(CR,24,{fn:4,fa:.03,seed:12,cap:true})));
+  // sewn-on hide patches with stitches, open sores, rotten skin strips
+  [[.35,-.6],[-.3,.9],[.6,1.5],[-.8,-1.3]].forEach(([y,a],k)=>{const p=bloSrf(BLO_BR,y,a,.03);const m=Mm('belly',G('pt'+(k%2),()=>svBlade([[-.22,-.18],[.24,-.2],[.26,.16],[-.2,.22]],.02)),k%2?leath:cloth,p[0],p[1],p[2],0,a,0);
+    for(let q=0;q<6;q++){const t=q/6*6.283;Mm('belly',G('sn',()=>new THREE.BoxGeometry(.02,.08,.02)),leath,p[0]+Math.cos(a)*Math.cos(t)*.24,p[1]+Math.sin(t)*.2,p[2]-Math.sin(a)*Math.cos(t)*.24,0,a,t)}});
+  [[-.1,.5,.16],[.55,-1.2,.12],[-.9,.6,.14],[.9,1.9,.1],[.2,2.6,.13]].forEach(([y,a,r],k)=>{const p=bloSrf(BLO_BR,y,a,.0);Mm('belly',G('so'+k,()=>svLump(r,0,.3,70+k)),sore,p[0],p[1],p[2],0,a,0,1,1,.3);Mm('belly',G('sp',()=>new THREE.IcosahedronGeometry(.05,0)),pus,p[0],p[1],p[2]+.0)});
+  for(let k=0;k<7;k++){const a=-1.6+k*.55,p=bloSrf(BLO_BR,-.95,a,.02);Mm('belly',G('rs'+(k%3),()=>svBlade([[-.06,0],[.06,0],[.04,-.4-(k%3)*.1],[0,-.48-(k%3)*.1],[-.04,-.36]],.012)),k%2?rot:fl2,p[0],p[1],p[2],-.15,a,0)}
+  // ---- the head, sculpted ----
+  sk146Drop(R,'b2_hd');
+  Mm('head',sk146Sculpt('b46hd',20,16,(x,y,z)=>{let X=x*.5,Y=y*.5+.15,Z=z*.48;const fz=Math.max(0,z);
+    if(y<-.1){const k=Math.min(1,(-.1-y)/.9);X*=1+.18*k;Z+=.06*k*fz}                                                // jowls and a double chin
+    Z+=fz*(.08*sk146Gs(x,y,0,.38,.7,.12)                                                                              // the heavy brow
+      -.07*sk146Gs(Math.abs(x),y,.34,.2,.14,.1)                                                                      // sunken eye pits
+      +.05*sk146Gs(x,y,0,0,.25,.18)                                                                                  // a broad flat nose
+      -.05*sk146Gs(x,y,0,-.32,.5,.07)                                                                                // the wide mouth line
+      +.04*sk146Gs(x,y,0,-.62,.35,.12));                                                                             // the chin roll
+    if(y>.5)Y-=.08*(y-.5);return [X,Y,Z]}),fl,0,0,0);
+  [-1,1].forEach(s=>{Mm('head',G('lid',()=>svLump(.06,0,.2,80)),fl2,s*.17,.29,.41,0,0,0,1.5,.5,.8)});
+  // bile drool
+  Mm('head',G('dr',()=>svTube([[0,0,0],[.02,-.15,.02],[0,-.32,.05],[-.02,-.45,.06]],[.04,.03,.025,.015],4)),rot,.08,-.06,.43);
+  // ---- fat rolls on the neck and arms, pustules on the back ----
+  Mm('neck',G('nr',()=>svLoft([[-.1,.55,.5],[.05,.62,.56],[.15,.55,.5]],16,{cap:false})),fl,0,0,0);
+  ['L','R'].forEach(L=>{[[-.25,.36],[-.55,.32]].forEach(([y,r],k)=>Mm('sh'+L,G('ar'+k,()=>svLoft([[y-.08,r*.9,r*.9],[y,r*1.05,r*1.05],[y+.08,r*.9,r*.9]],12,{cap:false})),fl));Mm('el'+L,G('er',()=>svLoft([[-.1,.27,.27],[-.02,.31,.31],[.06,.27,.27]],12,{cap:false})),fl)});
+  for(let k=0;k<14;k++){const a=Math.PI+(k%7-3)*.32,y=.1+Math.floor(k/7)*.5+(k%2)*.12,p=bloSrf(BLO_CR,y,a,.02);Mm('chest',G('bp'+(k%3),()=>svLump(.07+.025*(k%3),0,.2,90+k%3)),pus,p[0],p[1],p[2])}
+  // ---- the flies ----
+  const fz=svJ(R,'flies','chest',0,1.2,0);fz.userData.flies=1;R.v146fly=[];
+  for(let k=0;k<26;k++){const o=new THREE.Mesh(G('fly',()=>new THREE.OctahedronGeometry(.03,0)),leath);o.userData.noMerge=1;o.userData.ph=Math.random()*6.283;o.userData.r=.8+Math.random()*1.4;o.userData.h=(Math.random()-.5)*1.6;o.userData.w=1.5+Math.random()*2;fz.add(o);R.v146fly.push(o)}}
+// springs: the belly jiggles, the jaw and head follow through
+{const B=SVB[4];if(B){B.spr={belly:[22,3.2,1.5],jaw:[70,8,.2],head:[55,9,.4],neck:[60,10,.3]};
+  const p0=B.post;B.post=function(e,S,dt,now){p0&&p0.apply(this,arguments);try{const t=now/1000;(S.R.v146fly||[]).forEach(o=>{const u=o.userData,a=t*u.w+u.ph;o.position.set(Math.cos(a)*u.r,u.h+.25*Math.sin(a*1.7),Math.sin(a*1.3)*u.r)});
+    if(Math.random()<dt*2){const p=svWP(e,'head',.08,-.5,.48);sk146Drops(p,0x8aa030,1,.2,.1,{s:.05,splats:1,dc:0x3a4a10})}}catch(_){}}}}
+// ---------------- new poses: lumbering with arms reaching, gorging ----------------
+Object.assign(BLOP,{
+  lumber:{spine:[.3,0,0],chest:[.25,0,0],head:[.15,0,0],jaw:[.45,0,0],shL:[-1.2,0,.25],elL:[-.5,0,0],hdL:[.3,0,0],shR:[-1.0,0,-.3],elR:[-.4,.4,0],hdR:[.6,.1,.2]},
+  eat:{hips:[0,0,0,0,-.35,0],spine:[.55,0,0],chest:[.5,0,0],head:[.5,0,0],jaw:[.9,0,0],shL:[-1.5,0,.35],elL:[-1.3,0,0],hdL:[.5,0,0],shR:[-1.4,0,-.4],elR:[-1.2,.5,0],hdR:[.9,.1,.2],thL:[-.5,0,0],knL:[.7,0,0],thR:[-.5,0,0],knR:[.7,0,0]},
+  starve:{hips:[.15,0,.2,0,-.9,0],spine:[.45,0,.15],chest:[.35,0,0],head:[.6,0,.3],jaw:[.6,0,0],shL:[.4,0,.6],elL:[-.3,0,0],shR:[.4,0,-.6],elR:[-.3,.4,0],thL:[-1.5,0,.2],knL:[1.9,0,0],thR:[-1.4,0,-.2],knR:[1.9,0,0]}});
+// ---------------- Phase II: "The Rot Spills" ----------------
+function blo146RotTex(){if(BLO146.rt)return BLO146.rt;const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d'),gr=g.createRadialGradient(128,128,10,128,128,128);
+  gr.addColorStop(0,'rgba(90,110,30,1)');gr.addColorStop(.6,'rgba(70,85,20,.95)');gr.addColorStop(.85,'rgba(50,60,15,.6)');gr.addColorStop(1,'rgba(40,40,10,0)');g.fillStyle=gr;g.fillRect(0,0,256,256);
+  for(let k=0;k<60;k++){const x=40+Math.random()*176,y=40+Math.random()*176,r=3+Math.random()*12;g.fillStyle=`rgba(${120+Math.random()*60|0},${150+Math.random()*60|0},40,.5)`;g.beginPath();g.arc(x,y,r,0,6.283);g.fill()}
+  return BLO146.rt=new THREE.CanvasTexture(cv)}
+function blo146Spill(A,e){const D=sk146Den(A);if(D.ph2)return;D.ph2=1;D.rot={pools:[],t:3,dT:0,n:0};D.flies=sk146DenAdd(A,sk146Weather(A,'spores',0x3a3a20,260));
+  try{banner('🦠 THE ROT SPILLS','Pools of rot well up across the pit','Keep out of the rot')}catch(_){}svSnd('squelch',1.2,.6)}
+function blo146SpillTick(A,e,dt){const D=A.s146,Rt=D&&D.rot;if(!Rt)return;Rt.t-=dt;
+  if(Rt.t<=0&&sk146In(A)){Rt.t=6.5;// a new pool where the hero is not standing (but near enough to matter)
+    let x,z,tr=0;do{const a=Math.random()*6.283,r=3+Math.random()*(ARENA_R-4.5);x=A.cx+Math.cos(a)*r;z=A.cz+Math.sin(a)*r;tr++}while(tr<8&&Math.hypot(x-pl.position.x,z-pl.position.z)<3.5);
+    const m=new THREE.MeshStandardMaterial({color:0xffffff,map:blo146RotTex(),transparent:true,opacity:.95,roughness:.15,metalness:.2,emissive:0x1a2a06,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3});m.userData.noFade135=1;
+    const o=new THREE.Mesh(svG('b46pl',()=>new THREE.CircleGeometry(1,28).rotateX(-Math.PI/2)),m);o.position.set(x,GH(x,z)+.12+Rt.n*.002,z);o.scale.setScalar(.2);o.renderOrder=16;o.userData.lpsSkip=1;sk146DenAdd(A,o);
+    Rt.pools.push({o,m,x,z,r:.2,R:2.6+Math.random()*1.2,age:0});Rt.n++;svSnd('squelch',.8,.8);burst(gY(new THREE.Vector3(x,0,z),.3),BLO146.rot,20,2,2,.6);
+    if(Rt.pools.length>6){const q=Rt.pools.shift();q.dry=1;Rt.dry=(Rt.dry||[]).concat([q])}}
+  Rt.pools.forEach(q=>{q.age+=dt;q.r=Math.min(q.R,q.r+dt*.35);q.o.scale.setScalar(q.r);q.o.rotation.y+=dt*.05;if(Math.random()<dt*q.r*1.2){const a=Math.random()*6.283,r=Math.random()*q.r;burst(new THREE.Vector3(q.x+Math.cos(a)*r,GH(q.x,q.z)+.2,q.z+Math.sin(a)*r),0x9ab040,1,.2,.6,.5)}});
+  (Rt.dry||[]).forEach(q=>{q.m.opacity-=dt*.4;q.o.scale.setScalar(q.r*(.9+.1*q.m.opacity));if(q.m.opacity<=0){if(q.o.parent)q.o.parent.remove(q.o);q.m.dispose();q.gone=1}});if(Rt.dry)Rt.dry=Rt.dry.filter(q=>!q.gone);
+  if(!sk146In(A)||!e||e.dead)return;const P=pl.position;Rt.dT-=dt;const inP=Rt.pools.some(q=>Math.hypot(P.x-q.x,P.z-q.z)<q.r*.92);
+  if(inP){dqDebuff('Rotting','🦠',{mspd:-.25},700,'Standing in rot: −25% move speed, it eats at you');D.deb='Rotting';if(Rt.dT<=0&&!(hero.iv>0)){Rt.dT=.85;hitHero(e,.12,'m')}}}
+{const B=SVB[4];if(B){const t0=B.denTick,c0=B.denClear;
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)blo146Spill(A,e);blo146SpillTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 rot',err)}};
+  B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
+// ---------------- the signature: The Feast ----------------
+function blo146Carcass(){const g=new THREE.Group(),meat=new THREE.MeshStandardMaterial({color:0x6a1a14,roughness:.55,flatShading:true,emissive:0x1a0402}),fat=new THREE.MeshStandardMaterial({color:0xc8b890,roughness:.7,flatShading:true}),
+    iron=new THREE.MeshStandardMaterial({color:0x4a4440,roughness:.5,metalness:.55,flatShading:true}),bm=blo146BoneMat();
+  const body=new THREE.Mesh(svG('b46cb',()=>svLump(.55,1,.25,95)),meat);body.scale.set(.85,1.5,.6);body.position.y=1.6;g.add(body);
+  const f2=new THREE.Mesh(svG('b46cf',()=>svLump(.4,0,.3,96)),fat);f2.scale.set(.9,1.2,.5);f2.position.set(0,1.55,.12);g.add(f2);
+  for(let k=0;k<5;k++){const r=new THREE.Mesh(svG('b46cr',()=>svTube([[-.4,0,0],[-.3,.05,.28],[0,.06,.36],[.3,.05,.28],[.4,0,0]],.03,4)),bm);r.position.set(0,1.1+k*.18,.05);g.add(r)}
+  const hk=new THREE.Mesh(svG('b46ch',()=>svTube([[0,0,0],[0,-.3,0],[0,-.45,.12],[0,-.36,.25]],.04,4)),iron);hk.position.y=2.75;g.add(hk);
+  for(let k=0;k<10;k++){const l=new THREE.Mesh(svG('b46cl',()=>new THREE.TorusGeometry(.08,.025,4,6)),iron);l.position.y=2.8+k*.17;l.rotation.y=k%2?Math.PI/2:0;g.add(l)}
+  return {g,body,meat,fat,iron}}
+function blo146FeastStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.3;const D=sk146Den(A),a0=svYawTo(e.m,pl.position)+Math.PI+(Math.random()-.5);
+  const L=[0,1,2].map(k=>{const a=a0+(k-1)*1.6,x=A.cx+Math.sin(a)*9.5,z=A.cz+Math.cos(a)*9.5,C=blo146Carcass();C.g.position.y=6;let t=0;
+    return {x,z,n:'Carcass',frac:.018,mesh:C.g,hbY:3.4,hbS:.8,cupY:1.6,
+      tick(pe,dt,now){t+=dt;C.g.position.y=6*Math.max(0,1-svEase.o(Math.min(1,t/.9)));C.g.rotation.y=.3*Math.sin(now/900+k);C.body.rotation.z=.08*Math.sin(now/700+k);if(Math.random()<dt*3)sk146Drops(gY(pe.m.position,1.1),0x6a1a14,1,.2,.1,{s:.05,splats:1})},
+      die(pe,killed){if(killed){const p=gY(pe.m.position,1.5);sk146Drops(p,0x8a1a14,24,4,4,{splats:6});sk146Debris(p,blo146BoneMat(),8,.08,4,5,1.4);sk146Debris(p,C.meat,6,.12,3,4,1.4);burst(p,0x6a1a14,40,3,3,.7);popT(pe.m.position,'🪓 CUT DOWN','#ffd0a0');svSnd('squelch',1.2,.9);svSnd('crack',.8,1)}
+        [C.meat,C.fat,C.iron].forEach(m=>m.dispose())}}});
+  const P=sk146Props(A,L);c.M.an.props=P;c.M.an.eaten=0;D.props=(D.props||[]).concat(P);
+  svSnd('roar',1.1,.7);shake(.3);try{banner('🍖 THE FEAST','Three carcasses drop from the dark — he lumbers to gorge on them','Cut them down before he eats them!')}catch(_){}say('🍖 The Bloated One hungers: cut the carcasses down before he reaches them!')}
+function blo146FeastCleanup(c){const S=c.S,M=c.M;S.dr=0;if(!M)return;(M.an.props||[]).forEach(p=>{if(!p._gone)dqPropGone(p,false)})}
+function blo146Eat(c,p){const e=c.e,M=c.M;M.an.eaten++;const q=gY(p.m.position,1.5);sk146Drops(q,0x8a1a14,30,4,4,{splats:6});burst(q,0x6a1a14,50,3,3,.8);svSnd('squelch',1.4,.6);svSnd('roar',.8,1.1);
+  sk146Heal(e,.05,0x9aff6a);dqPropGone(p,false);M.an.eatT=1.4;M.an.tgt=null;
+  // a burst of rot around him
+  const pos=e.m.position.clone();sk146Wall(pos,BLO146.rot,5,2,.5);for(let k=0;k<6;k++){const a=k/6*6.283;sk146Column(new THREE.Vector3(pos.x+Math.cos(a)*3,0,pos.z+Math.sin(a)*3),0x6ad020,0xc8ff80,.45,2.4,.7)}
+  svHitNow(e,{k:'c',r:4.2},{x:pos.x,z:pos.z,a:0},1.2,{col:BLO146.col,on:()=>dqDebuff('Rotting','🦠',{mspd:-.25},2500,'Rot burst: −25% move speed')})}
+function blo146FeastEnd(c,broken){const e=c.e,M=c.M;if(M.an.done2)return;M.an.done2=1;
+  if(broken){blo146FeastCleanup(c);svEndMove(e,true);svCast(e,'broken');try{banner('💔 STARVED','The Bloated One collapses in a starving rage','Strike now!')}catch(_){}return}
+  blo146FeastCleanup(c)}
+Object.assign(BLOM,{
+  feast:{wt:(e,L)=>e.sv.fsN?9:30,cd:30,ph:2,r:[0,40],a:'any',armor:1,dur:13,inv:[0,1.1],trn:[[0,1.2,2.2]],
+    trk:[[.5,'roar','io'],[1.3,'roar','l',.02],[1.8,'lumber','io'],[12.4,'lumber','l'],[13,'stand','io']],
+    go(c){c.S.fsN=(c.S.fsN||0)+1},
+    ev:[[.9,c=>blo146FeastStart(c)],[12.6,c=>blo146FeastEnd(c,false)]],
+    tk(c,dt){const M=c.M,e=c.e,m=e.m;if(!M.an.props||c.t<1.8||M.an.done2)return;const live=sk146Alive(M.an.props);
+      if(!live.length){if(M.an.eaten===0||c.t<12.4)blo146FeastEnd(c,M.an.eaten===0);return}
+      if(M.an.eatT>0){M.an.eatT-=dt;c.S.trk=[[0,'eat','io'],[.9,'eat','l',.02],[1.4,'lumber','io']];c.S.tt=1.4-M.an.eatT;if(M.an.eatT<=0){c.S.trk=c.M.D.trk;c.S.tt=c.t}return}
+      // lumber to the nearest carcass
+      let t=M.an.tgt;if(!t||t.dead||t._gone){t=live.slice().sort((a,b)=>Math.hypot(a.m.position.x-m.position.x,a.m.position.z-m.position.z)-Math.hypot(b.m.position.x-m.position.x,b.m.position.z-m.position.z))[0];M.an.tgt=t}
+      const dx=t.m.position.x-m.position.x,dz=t.m.position.z-m.position.z,d=Math.hypot(dx,dz);m.rotation.y+=svAng(Math.atan2(dx,dz)-m.rotation.y)*Math.min(1,dt*4);
+      if(d>2.4){const sp=2.2*dt;walkM(m,dx/d*sp,dz/d*sp)}else blo146Eat(c,t);
+      if(Math.random()<dt*3)svSnd('step',.8,.6)},
+    end(c){blo146FeastCleanup(c)},rec:.6},
+  broken:sk146Broken(SVB[4],4.8,'starve','stand')});
+// ---------------- richer effects ----------------
+{const f=bloSplat;bloSplat=function(p,n,r){f.apply(this,arguments);try{sk146Drops(gY(p,.4),0x6a8a20,Math.min(24,(n||30)/2),(r||3)*1.2,4,{splats:4,dc:0x2a3a08});sk146Debris(p,blo146BoneMat(),4,.07,(r||3),4,1.2);sk146Crack(p,0x9aff6a,(r||3)*.6,2.4)}catch(_){}}}
+for(const id of ['chop','stomp','flop','flop2','burst','hookChop']){const D=BLOM[id];if(!D||!D.hit)continue;D.hit.forEach(h=>{const f=h.fx;h.fx=function(c,an,hit){f&&f.apply(this,arguments);try{
+  const S=h.s,a=an.a||0,fw=S.k==='l'?Math.min(4,S.l*.5):0,p=new THREE.Vector3(an.x+Math.sin(a)*fw,0,an.z+Math.cos(a)*fw);
+  sk146Crack(p,0x9aff6a,S.k==='c'?Math.min(4,S.r*.6):2.2,2.6);sk146Debris(p,blo146RotMat(),6,.09,4,5,1.3);sk146Flash(p,0xb8ff60,2.5,10,350);if(S.k==='c'&&S.r>3)sk146Wall(p,BLO146.rot,S.r+.5,2.4,.5)}catch(_){}}})}
+sk146AutoFx(BLOM,{liq:0x6a8a20,sp:0xc8ff80,dust:0x5a4a30});
+try{svRegMoves(4)}catch(_){}
+try{DSTXT[4].atk.push(['🍖 The Feast','Phase II: three carcasses drop on hooks; he lumbers from one to the next to gorge on them (his gorged hide shrugs off 70% of the damage).','Cut all three down before he reaches them: he collapses BROKEN. Each one he eats heals him and bursts rot around him.'],
+  ['🦠 The Rot Spills','Phase II: pools of rot well up across the pit and spread; the oldest dry out.','Keep out of the rot — it slows you and eats at you.'])}catch(_){}
+// ================= v146 Argus, the Hundred-Eyed — a new model, and the fight to the Vorraxis standard =================
+// The owner asked for Argus' model to be redone completely (same idea: a giant bog-wolf covered in eyes). argBuild146
+// replaces argBuild (1971) and builds every part anew on the same skeleton (the joint names and rest positions stay, so
+// the v110/v112 poses and moves keep working).
+//  * Silhouette: a hulking, hunched bog-wolf — a deep chest and shoulder hump, a gaunt waist, heavy haunches, long gaunt legs,
+//    a long skull-like muzzle under a pair of branching bog-elk antlers, a bony tail.
+//  * Coat: ~340 shingled fur tufts laid in rows over the body (dark on the back, mossy-grey on the flanks, pale on the belly),
+//    each turned to the surface and lifted at the tip; a torn window in the hide on each flank shows the ribs, a dark
+//    membrane and glowing amber veins; a shaggy mane of long tufts and bone quills; bog moss, hanging weed, glowing
+//    mushrooms and roots tangled round the legs.
+//  * Bone: vertebrae and spurs along the spine, exposed tendons on the forelegs, elbow and hock spurs, long black claws.
+//  * The eyes: more than fifty lidded eyes with slit pupils over the flanks, neck, legs, tail and face (a cluster of six
+//    along each side of the muzzle, the great brow eye in the forehead) — they blink, half-shut in Phase I, staring in II.
+//  * Trophies: the riveted iron collar with its broken chain and skull, a trophy belt, three broken spears with rags.
+//  * Motion: ears, jaw, tail, the mane and the hanging weed follow through on springs.
+// The fight (all Phase II):
+//  * Den change, "The Drowned Fog": a low bog fog fills the hollow and will-o'-wisps drift through it toward you; touching
+//    one bursts it (damage, Hexed: slowed).
+//  * Signature mechanic, The Hundred Eyes: Argus sinks into the fog (only his eyes show; warded) and four great Watcher Eyes
+//    open on the walls of the hollow, each firing at you. Shut all four and he is dragged out of the fog, BROKEN. If any
+//    still watch when the gaze completes he heals (10%) and every eye fires at once: a storm of bolts on your trail.
+//  * Effects: eye bolts streak and crack the floor, the gaze beam scorches a trail, the furrow spikes burst into amber
+//    shards, the pounce lands in a wall of mud and shards, every claw hit throws sparks and blood.
+var ARG146={col:0xffd040,tor:[[-2.6,.28,.32,0,.32],[-2.3,.62,.66,0,.18],[-1.85,.84,.86,0,.06],[-1.3,.8,.8,0,.0],[-.7,.58,.64,0,.02],[-.15,.62,.7,0,-.06],[.4,.86,1.0,0,-.16],[.95,1.04,1.14,0,-.18],[1.45,1.08,1.14,0,-.02],[1.9,.96,1.02,0,.26],[2.25,.68,.74,0,.48],[2.5,.44,.52,0,.6]]};
+function argBuild146(R,e){const T0=ARG.TOR;ARG.TOR=ARG146.tor;try{arg146Body(R)}finally{ARG.TOR=T0}}
+function arg146Body(R){
+  const fur=svMat(R,0x1e1a16,{roughness:.96,emissive:0x0e0a08}),furM=svMat(R,0x3a4236,{roughness:.95,emissive:0x0a0c08}),furP=svMat(R,0x6a6a5a,{roughness:.95,emissive:0x0c0c08}),
+    hide=svMat(R,0x3a2c26,{roughness:.8,emissive:0x0a0604}),mem=svMat(R,0x4a1820,{roughness:.6,emissive:0x1a0408}),bark=svMat(R,0x2e2418,{roughness:.9,emissive:0x080604}),
+    bone=svMat(R,0xc8b898,{roughness:.6,emissive:0x302818}),claw=svMat(R,0x0e0c10,{roughness:.35,metalness:.25}),gum=svMat(R,0x6a1c24,{roughness:.55,emissive:0x200408}),
+    moss=svMat(R,0x4a6a30,{roughness:.95,emissive:0x0c1406}),iron=svMat(R,0x3a3430,{roughness:.5,metalness:.65,emissive:0x0a0806}),rag=svMat(R,0x4a4030,{roughness:1,side:THREE.DoubleSide}),
+    iris=svGlowMat(R,ARG.dim),vein=svGlowMat(R,ARG.vein),cap=svGlowMat(R,0x9aff8a);R.iris=iris;R.vein=vein;R.eyes=[];
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),V3=THREE.Vector3,Z=new V3(0,0,1),G=(k,f)=>svG('a46'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const aim=(m,d,roll)=>{m.quaternion.setFromUnitVectors(Z,new V3(d[0],d[1],d[2]).normalize());if(roll)m.rotateZ(roll);return m};
+  const tuftG=G('tuft',()=>{const g=svHorn(.15,.62,0,-.16,4,2);g.scale(1.75,.45,1);return g}),tuftL=G('tufL',()=>{const g=svHorn(.15,1.0,0,-.35,4,3);g.scale(1.55,.45,1);return g}),
+    ball=G('ball',()=>svLump(1,0,.12,21)),gClaw=G('cl',()=>svHorn(.065,.5,0,-.22,5,4)),gToe=G('toe',()=>svLump(.1,0,.25,8));
+  // ---- skeleton (same names and rest positions as 1971) ----
+  J('root',null,0,0,0);J('body','root',0,2.55,0);J('chest','body',0,0,.6);J('hips','body',0,0,-.9);
+  // ---- the torso under the coat ----
+  Mm('body',G('tor',()=>svLoftZ(ARG146.tor,18)),hide);
+  Mm('body',G('hmp',()=>svLump(.85,1,.2,11)),fur,0,.8,1.5,0,0,0,1.1,.75,1.2);
+  // the coat: rows of tufts, skipping the torn windows on the flanks (z -.6..1.1, th .75..2.05)
+  const tuft=(j,p,d,roll,m,s,L)=>{const o=Mm(j,L?tuftL:tuftG,m,p[0],p[1],p[2]);aim(o,d,roll);if(s)o.scale.multiplyScalar(s);return o};
+  const win=(z,th)=>z>-.6&&z<1.1&&th>.75&&th<2.05;
+  for(let z=-2.45,row=0;z<2.35;z+=.26,row++){const [rx,ry]=argTor(z);const nTh=Math.max(4,Math.round(rx*8));for(let q=0;q<=nTh;q++){const th=q/nTh*2.95+(row%2?.09:0);[1,-1].forEach(sd=>{if(sd<0&&q===0)return;if(win(z,th))return;
+      const p=argTS(z,th,1.0,sd),n=[sd*Math.sin(th)/rx,Math.cos(th)/ry,0],nl=Math.hypot(n[0],n[1])||1,d=[n[0]/nl*.38,n[1]/nl*.38-.12,-1];
+      const m=th<.9?fur:th<2.1?(((q+row)%4===0)?furP:furM):furP;tuft('body',p,d,-sd*th,m,(.85+.25*((q*7+row*3)%3)/2)*(1+.25*Math.sin(z*1.3)))})}}
+  // the torn windows: ribs, the dark membrane, veins, ragged hide edges
+  [1,-1].forEach(sd=>{for(let z=-.45;z<1.0;z+=.3){const P=[];for(let q=0;q<7;q++){const th=.78+q*.2;P.push(argTS(z+Math.sin(q*.5)*.05,th,1.04+.02*Math.sin(q*.9),sd))}Mm('body',G('rb'+Math.round(z*10)+sd,()=>svTube(P,.065,5)),bone)}
+    {const P=[];for(let q=0;q<=6;q++){const th=.8+q*.2;P.push(argTS(.25,th,.96,sd))}Mm('body',G('mb'+sd,()=>svTube(P,[.7,.72,.72,.72,.7,.6,.5].map(r=>[.05,r]),5)),mem)}
+    [-.3,.0,.3,.6,.9].forEach((z,k)=>{const P=[];for(let q=0;q<7;q++){const th=.85+q*.18;P.push(argTS(z+.13+Math.sin(q*1.7+k)*.05,th,1.0,sd))}Mm('body',G('vn'+k+sd,()=>svTube(P,.028,4)),vein)});
+    for(let k=0;k<10;k++){const z=-.6+k*.18;[.75,2.05].forEach(th=>{const p=argTS(z,th,1.02,sd);tuft('body',p,[sd*Math.sin(th)*.6,Math.cos(th)*.6-.3,-.4],-sd*th,hide,.7)})}});
+  // the spine: vertebrae and spurs, the mane of long tufts and bone quills on the hump
+  for(let z=-2.3;z<2.1;z+=.3){const p=argTS(z,0,1.02,1);Mm('body',G('vt',()=>svLump(.11,0,.2,12)),bone,p[0],p[1],p[2],0,0,0,1,.7,1.2);if(Math.round(z*10)%6===0)aim(Mm('body',G('vs',()=>svHorn(.06,.34,0,-.1,4,2)),bone,p[0],p[1]+.05,p[2]),[0,1,-.6])}
+  for(let k=0;k<26;k++){const z=1.0+(k%13)*.12,th=(k<13?-1:1)*(.15+(k%4)*.22),p=argTS(z,Math.abs(th),1.05,Math.sign(th)||1);tuft('body',[p[0],p[1]+.1,p[2]],[Math.sign(th)*.4,.5,-1],-th,k%3?fur:furM,1.1,1)}
+  const QS=[[2.1,1.2,1.3],[1.85,1.3,1.45],[1.6,1.28,1.55],[1.35,1.2,1.4],[1.1,1.06,1.2],[.8,.98,1.0],[.45,.9,.8]];
+  QS.forEach(([z,y,h],k)=>[0,1,-1].forEach(sd=>{if(sd&&k%2)return;Mm('body',G('q'+(k%3),()=>svHorn(.11,1,0,-.42-.1*(k%3),5,5)),bone,sd*.3,y-(sd?.1:0),z,-1.25+(sd?.2:0)-.04*k,sd*.35,sd*.25,1,1,h*(sd?.7:1))}));
+  // bog: moss on the back and haunches, hanging weed, glowing mushrooms
+  [[-1.9,.3],[-1.4,.5],[.2,.25],[1.3,.4],[-2.2,.9],[-.9,.4]].forEach(([z,th],k)=>[1,-1].forEach(sd=>{if((k+(sd>0?0:1))%2)return;const p=argTS(z,th,1.06,sd);Mm('body',G('ms'+(k%3),()=>svLump(.3,1,.4,40+k%3)),moss,p[0],p[1],p[2],0,0,0,1.2,.35,1.1)}));
+  for(let k=0;k<14;k++){const sd=k%2?1:-1,z=-2.0+(k>>1)*.55,p=argTS(z,2.65,.98,sd);Mm('body',G('wd'+(k%3),()=>svBlade([[-.04,0],[.04,0],[.03,-.5-(k%3)*.15],[0,-.6-(k%3)*.15],[-.02,-.45]],.01)),moss,p[0],p[1],p[2],0,sd*.3,0)}
+  [[-1.6,.2],[.0,.15],[1.2,.3],[-1.0,.6]].forEach(([z,th],k)=>{const p=argTS(z,th,1.05,k%2?1:-1);for(let q=0;q<3;q++){Mm('body',G('mst',()=>new THREE.CylinderGeometry(.02,.03,.16,4).toNonIndexed()),furP,p[0]+q*.08,p[1]+.08,p[2]+q*.05);Mm('body',G('mcp',()=>new THREE.SphereGeometry(.07,6,3,0,Math.PI*2,0,Math.PI/2).toNonIndexed()),cap,p[0]+q*.08,p[1]+.16,p[2]+q*.05)}});
+  // the trophy belt
+  {const P=[];for(let q=0;q<=18;q++){const th=q/18*Math.PI*2;const [x,y]=argTS(-.7,th,1.1,1);P.push([x,y,-.7+.05*Math.cos(th)])}Mm('body',G('belt',()=>svTube(P,.08,5,{cap:false})),hide);
+    for(let q=0;q<10;q++){const th=.3+q*.29;[-1,1].forEach(sd=>{const [x,y]=argTS(-.7,th,1.16,sd);Mm('body',G('riv',()=>svLump(.07,0,.15,5)),iron,x,y,-.7)})}
+    [[1,1.8],[-1,2.1]].forEach(([sd,th],k)=>{const [x,y]=argTS(-.7,th,1.15,sd);Mm('body',G('cd',()=>svTube([[0,0,0],[0,-.2,.02],[0,-.38,0]],.02,3)),hide,x,y,-.7);
+      Mm('body',G('sk',()=>svLump(.16,1,.12,31)),bone,x,y-.5,-.78,0,sd,0,1,.85,1.15)})}
+  // three broken spears with rags
+  [[.42,.75,-.55,.6,1,-.5,1.1],[-.5,.66,.25,-.8,.9,.25,.85],[.3,1.0,-1.55,.35,1,-.2,.95]].forEach(([x,y,z,dx,dy,dz,l],k)=>{aim(Mm('body',G('sp'+k,()=>svLoftZ([[-.5,.05,.05],[l*.8,.045,.045],[l,.03,.05,.02,.01]],5)),bark,x,y,z),[dx,dy,dz]);
+    aim(Mm('body',G('spr',()=>svBlade([[0,0],[.25,-.05],[.3,-.45],[.12,-.38],[.02,-.5]],.01)),rag,x+dx*.75*l,y+dy*.75*l,z+dz*.75*l),[dx,dy,dz])});
+  // ---- the neck: coat, iron collar with a broken chain and a skull, mane ----
+  J('neck','chest',0,.45,1.55,-.42);Mm('neck',G('nk',()=>svLoftZ([[-.1,.55,.6],[.55,.46,.5,0,.1],[1.2,.36,.4,0,.18],[1.45,.3,.34,0,.2]],14)),hide);
+  for(let z=0;z<1.4;z+=.23)for(let q=0;q<=6;q++){const th=q/6*2.9;[1,-1].forEach(sd=>{if(sd<0&&q===0)return;const k=1-z/1.6,rx=.55*k+.05,ry=.6*k+.05,oy=.12*z/1.4;const p=[sd*Math.sin(th)*rx,oy+Math.cos(th)*ry,z];tuft('neck',p,[sd*Math.sin(th)*.4,Math.cos(th)*.4,-1],-sd*th,th<1.2?fur:furM,1.1,z<.5)})}
+  {const ring=(z,k)=>{const P=[];for(let q=0;q<=18;q++){const t=q/18*Math.PI*2,rx=.55-(.09*(z+.1)/.65),ry=.6-(.1*(z+.1)/.65),oy=.1*(z+.1)/.65;P.push([Math.sin(t)*rx*k,oy+Math.cos(t)*ry*k,z])}return P};
+    Mm('neck',G('col',()=>svTube(ring(.18,1.12),.09,6,{cap:false})),iron);Mm('neck',G('col2',()=>svTube(ring(.36,1.1),.05,5,{cap:false})),iron);
+    for(let q=0;q<12;q++){const t=q/12*Math.PI*2;Mm('neck',G('riv',()=>svLump(.07,0,.15,5)),iron,Math.sin(t)*.63,.04+Math.cos(t)*.69,.18)}
+    const g=G('lk',()=>new THREE.TorusGeometry(.085,.03,4,6).toNonIndexed());let px=.12,py=-.62,pz=.12;for(let q=0;q<6;q++){Mm('neck',g,iron,px,py,pz,q%2?0:Math.PI/2,0,1.15);py-=.12;pz-=.05;px+=.01}
+    Mm('neck',G('sk',()=>svLump(.16,1,.12,31)),bone,px,py-.12,pz-.06,0,0,0,1,.85,1.15)}
+  // ---- the head: a long skull-like muzzle, brow ridges, cheek bones, antlers, torn ears, eyes ----
+  J('head','neck',0,.2,1.2,.42);
+  Mm('head',G('hd',()=>svLoftZ([[-.45,.42,.44,0,.08],[-.2,.48,.48,0,.1],[.1,.45,.43,0,.07],[.4,.34,.33,0,.02],[.7,.26,.25,0,-.03],[.98,.2,.19,0,-.06],[1.22,.15,.14,0,-.08],[1.42,.1,.09,0,-.1]],14)),hide);
+  Mm('head',G('nos',()=>svLump(.14,1,.15,2)),claw,0,-.03,1.42,0,0,0,1.1,.8,.9);
+  [-1,1].forEach(s=>{Mm('head',G('brw',()=>svTube([[0,0,-.1],[.06,.06,.15],[.04,.04,.45]],[.07,.08,.05],5)),bone,s*.22,.32,.15);
+    Mm('head',G('chb',()=>svTube([[0,0,0],[.04,-.02,.3],[0,-.04,.6]],[.06,.05,.03],5)),bone,s*.32,.0,.1);
+    for(let k=0;k<5;k++)Mm('head',G('tu',()=>svHorn(.04,.24,0,0,4,2)),bone,s*(.16-.015*k),-.15,.6+k*.15,1.6,0,0);
+    Mm('head',G('fg',()=>svHorn(.065,.46,0,.06,5,3)),bone,s*.15,-.12,1.0,1.62,0,0);
+    // antlers: a curving beam with four tines
+    const A=svJ(R,'ant'+(s>0?'L':'R'),'head',s*.26,.4,-.12,0,0,0),beam=[[0,0,0],[s*.25,.45,-.15],[s*.55,.85,-.2],[s*.75,1.3,-.1],[s*.85,1.7,.1]];
+    Mm(A,G('ab'+s,()=>svTube(beam,[.09,.08,.065,.05,.035],6)),bone);
+    [[1,s*.25,.55,.55],[2,s*.15,.5,.6],[3,s*.3,.35,.5],[3,-s*.1,.55,.45]].forEach(([i,dx,dy,l],k)=>{const p=beam[i],o=Mm(A,G('at',()=>svHorn(.045,1,0,.15,5,3)),bone,p[0],p[1],p[2]);aim(o,[dx,dy,.3]);o.scale.set(1,1,l)});
+    for(let k=0;k<3;k++)Mm(A,G('amo',()=>svBlade([[-.03,0],[.03,0],[.02,-.35],[0,-.42],[-.02,-.3]],.008)),moss,beam[1+k][0],beam[1+k][1],beam[1+k][2],0,s*.5,0);
+    for(let k=0;k<5;k++)tuft('head',[s*.36,.25-.08*k,-.25+.06*k],[s*.6,.2,-1],-s,fur,.9);
+    for(let k=0;k<3;k++)Mm('head',G('run',()=>new THREE.BoxGeometry(.035,.035,.16)),vein,s*(.11+.07*k),.47-.035*k,.3-.06*k,-.2,s*(.5+.25*k),0)});
+  for(let z=-.4;z<.5;z+=.22)for(let q=0;q<=3;q++){const th=q/3*1.4;[1,-1].forEach(sd=>{if(sd<0&&q===0)return;tuft('head',[sd*Math.sin(th)*.46,.1+Math.cos(th)*.48,z],[sd*Math.sin(th)*.3,.35,-1],-sd*th,fur,.8)})}
+  R.J.head.scale.setScalar(1.25);
+  // ears (their own joints: they twitch), torn
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.3,.36,-.18,-.55,0,-s*.45);
+    Mm('ear'+L,G('ear',()=>svLoft([[-.05,.15,.06],[.2,.13,.05,0,.02],[.32,.1,.04,0,.03],[.45,.05,.03,0,.04],[.62,.015,.015,0,.06]],5)),fur);
+    Mm('ear'+L,G('ein',()=>svLoft([[0,.09,.02,0,.04],[.38,.04,.015,0,.06]],4)),gum);if(s>0)Mm('ear'+L,G('er',()=>new THREE.TorusGeometry(.06,.016,4,8).toNonIndexed()),iron,.08,.22,0,0,Math.PI/2,0)});
+  J('jaw','head',0,-.18,.05);
+  Mm('jaw',G('jw',()=>svLoftZ([[-.05,.32,.12],[.35,.26,.11,0,-.02],[.75,.18,.09,0,-.03],[1.15,.12,.07,0,0]],10)),hide);
+  Mm('jaw',G('tg',()=>svLoftZ([[.1,.18,.04,0,.08],[.9,.08,.03,0,.07]],6)),gum);
+  for(let k=0;k<5;k++)[-1,1].forEach(s=>Mm('jaw',G('tl',()=>svHorn(.035,.2,0,0,4,2)),bone,s*(.17-.018*k),.07,.4+k*.15,-1.55,0,0));
+  [-1,1].forEach(s=>{Mm('jaw',G('fg2',()=>svHorn(.045,.3,0,-.04,5,3)),bone,s*.12,.06,.95,-1.55,0,0);for(let k=0;k<3;k++)tuft('jaw',[s*.2,-.08,.1+.25*k],[s*.3,-.6,-1],0,furM,.75)});
+  Mm('jaw',G('drl',()=>svTube([[0,0,0],[.02,-.2,.02],[0,-.42,.04]],[.025,.018,.01],4)),gum,.08,-.02,.9);
+  // the great brow eye
+  J('brow','head',0,.38,.42);Mm('brow',G('bl',()=>svLump(.27,1,.15,9)),fur,0,0,0,0,0,0,1.15,.8,.8);
+  R.big=Mm('brow',G('be',()=>new THREE.SphereGeometry(.2,12,10)),iris,0,.02,.12);Mm('brow',G('bs',()=>new THREE.BoxGeometry(.05,.3,.02)),claw,0,.02,.32);R.bigSpr=svSpr(R,'brow',ARG.col,.01,0,.02,.35);
+  // ---- legs ----
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';
+    J('sh'+L,'chest',s*.74,-.25,.7);Mm('sh'+L,G('ua',()=>svLoft([[.35,.46,.52],[-.15,.48,.54,0,.04],[-.65,.33,.37,0,-.02],[-1.22,.2,.24]],12)),hide);
+    for(let y=.25;y>-1.1;y-=.22){const k=1-(.35-y)/1.6,n=6;for(let q=0;q<n;q++){const t=q/n*Math.PI*2;tuft('sh'+L,[Math.sin(t)*.48*k,y,Math.cos(t)*.52*k],[Math.sin(t)*.35,-1,Math.cos(t)*.35],t,(q+Math.round(y*6))%3?fur:furM,.8,y>-.2)}}
+    Mm('sh'+L,G('pd',()=>svLump(.5,1,.25,52)),bark,s*.36,.12,0,0,0,0,.55,.35,.6);
+    aim(Mm('sh'+L,G('ps',()=>svHorn(.075,.46,0,.12,5,3)),bone,s*.6,.3,-.1),[s,.6,-.4]);
+    J('el'+L,'sh'+L,0,-1.2,0);Mm('el'+L,G('fa',()=>svLoft([[.08,.22,.25],[-.45,.19,.21,0,.03],[-1.08,.13,.15]],10)),hide);Mm('el'+L,ball,hide,0,0,0,0,0,0,.24,.26,.26);
+    Mm('el'+L,G('es',()=>svHorn(.085,.52,0,.18,5,3)),bone,0,.02,-.18,-.3,Math.PI,0);Mm('el'+L,G('tdn',()=>svTube([[0,-.1,-.17],[0,-.5,-.16],[0,-.95,-.11]],.035,4)),bone);
+    for(let y=-.1;y>-.9;y-=.26)for(let q=0;q<4;q++){const t=q/4*Math.PI*2+.4;tuft('el'+L,[Math.sin(t)*.2,y,Math.cos(t)*.22],[Math.sin(t)*.3,-1,Math.cos(t)*.3],t,fur,.6)}
+    Mm('el'+L,G('vn',()=>svTube([[.1,-.2,.16],[.12,-.5,.13],[.08,-.85,.12]],.022,4)),vein);
+    // roots wound round the shin
+    {const P=[];for(let q=0;q<=10;q++){const t=q/10*Math.PI*4;P.push([Math.sin(t)*.19,-.25-q*.07,Math.cos(t)*.21])}Mm('el'+L,G('rt',()=>svTube(P,.025,4)),bark)}
+    J('pw'+L,'el'+L,0,-1.1,0);Mm('pw'+L,G('pw',()=>svLump(.26,1,.25,4)),hide,0,-.06,.12,0,0,0,1,.6,1.4);Mm('pw'+L,ball,hide,0,.02,0,0,0,0,.16,.17,.16);
+    for(let c=0;c<5;c++){const x=(c-2)*.09;Mm('pw'+L,gToe,hide,x,-.08,.3-Math.abs(c-2)*.04);Mm('pw'+L,gClaw,claw,x,-.08,.36-Math.abs(c-2)*.04,.25,0,0)}
+    J('hp'+L,'hips',s*.6,-.2,-.45);Mm('hp'+L,G('th',()=>svLoft([[.35,.52,.64,0,-.05],[-.3,.48,.58,0,.1],[-.75,.31,.37,0,.22],[-1.08,.19,.22,0,.32]],12)),hide);
+    for(let y=.25;y>-1.0;y-=.22){const k=1-(.35-y)/1.7;for(let q=0;q<7;q++){const t=q/7*Math.PI*2;tuft('hp'+L,[Math.sin(t)*.52*k,y,Math.cos(t)*.62*k+.1*(.35-y)],[Math.sin(t)*.35,-1,Math.cos(t)*.35],t,(q+Math.round(y*6))%3?fur:furM,.85,y>-.3)}}
+    Mm('hp'+L,G('hpd',()=>svLump(.45,1,.25,53)),bark,s*.42,0,.02,0,0,0,.5,.32,.6);
+    J('kn'+L,'hp'+L,0,-1.05,.34);Mm('kn'+L,G('shn',()=>svLoft([[.05,.17,.2],[-.85,.12,.14,0,-.4]],8)),hide);Mm('kn'+L,ball,hide,0,0,0,0,0,0,.2,.21,.22);
+    for(let y=-.1;y>-.8;y-=.26)for(let q=0;q<4;q++){const t=q/4*Math.PI*2;tuft('kn'+L,[Math.sin(t)*.16,y,Math.cos(t)*.18+y*.45],[Math.sin(t)*.3,-1,Math.cos(t)*.3],t,fur,.55)}
+    J('hk'+L,'kn'+L,0,-.85,-.42);Mm('hk'+L,G('hk',()=>svLoft([[.05,.12,.13],[-.55,.1,.12,0,.08]],6)),hide);Mm('hk'+L,ball,hide,0,0,0,0,0,0,.14,.15,.15);
+    Mm('hk'+L,G('hs',()=>svHorn(.065,.4,0,.1,5,3)),bone,0,.02,-.1,-.25,Math.PI,0);Mm('hk'+L,G('pw',()=>svLump(.26,1,.25,4)),hide,0,-.62,.18,0,0,0,.85,.55,1.25);
+    for(let c=0;c<4;c++){const x=(c-1.5)*.1;Mm('hk'+L,gToe,hide,x,-.66,.34);Mm('hk'+L,gClaw,claw,x,-.66,.4,.25,0,0)}});
+  // ---- tail: four segments, coat, spurs, a barbed tip ----
+  J('t0','hips',0,.22,-1.4,.5);let pp='t0';[.55,.5,.45].forEach((l,k)=>{J('t'+(k+1),pp,0,0,-l);pp='t'+(k+1)});
+  ['t0','t1','t2','t3'].forEach((n,k)=>{const r=.25-.045*k;Mm(n,G('t'+k,()=>svLoftZ([[0,r,r],[-.6,r*.8,r*.8]],10)),hide);Mm(n,ball,hide,0,0,0,0,0,0,r*1.02);
+    for(let z=-.05;z>-.6;z-=.2)for(let q=0;q<5;q++){const t=q/5*Math.PI*2;tuft(n,[Math.sin(t)*r,Math.cos(t)*r,z],[Math.sin(t)*.3,Math.cos(t)*.3,-1],-t,q%3?fur:furM,.75-.08*k)}
+    Mm(n,G('ts',()=>svHorn(.07,.4,0,-.12,5,3)),bone,0,r*.9,-.2,-1.1,Math.PI,0,1-.12*k)});
+  [[0,0],[1,.5],[-1,.5],[0,-1]].forEach(([x,y])=>Mm('t3',G('tb',()=>svHorn(.07,.5,0,.1,5,3)),bone,x*.06,y*.05,-.62,y*.5,Math.PI+x*.45,0));
+  // ---- the hundred eyes: a lid, an iris, a slit (the iris on its own so it can blink) ----
+  const eye=(jn,x,y,z,dx,dy,dz,sc)=>{const g=new THREE.Group();g.position.set(x,y,z);g.quaternion.setFromUnitVectors(Z,new V3(dx,dy,dz).normalize());g.updateMatrix();
+    const J0=R.J[jn],m1=svM(R,J0,G('lid',()=>svLump(1,1,.15,5)),fur,0,0,0,0,0,0,sc*1.2,sc*.95,sc*.7),ir=svM(R,J0,G('eye',()=>new THREE.SphereGeometry(1,10,8)),iris,0,0,sc*.42,0,0,0,sc*.85,sc*.62,sc*.5),
+      m3=svM(R,J0,G('slit',()=>new THREE.BoxGeometry(.18,1,.1)),claw,0,0,sc*.88,0,0,0,sc,sc*.85,sc);
+    [m1,ir,m3].forEach(m=>{m.updateMatrix();m.applyMatrix4(g.matrix)});ir.userData.noMerge=1;R.eyes.push({ir,s:sc,b:((R.eyes.length*2.39)%6)})};
+  // flanks and haunches (in the coat), around the windows
+  const fl=[[-2.0,1.3],[-1.6,1.0],[-1.7,1.7],[-1.2,1.3],[-.9,.7],[-.9,2.2],[1.3,1.0],[1.5,1.6],[1.8,1.25],[1.25,2.2],[.7,.6],[-.35,.55],[.25,2.3],[2.1,.8],[-2.3,1.2]];
+  fl.forEach(([z,th],k)=>[1,-1].forEach(sd=>{if(sd<0&&k%4===3)return;const p=argTS(z,th,1.08,sd),sc=.1+.05*((k*7)%3);eye('body',p[0],p[1],p[2],sd*Math.sin(th),Math.cos(th)*.8,.15,sc)}));
+  [['neck',.5,.1,.55],['neck',.42,.25,1.0],['neck',.45,-.2,.3],['shL',.4,-.3,.12],['shL',.36,-.7,.1],['hpL',.47,-.25,.1],['hpL',.4,-.6,.2],['elL',.2,-.55,.05]].forEach(([j,x,y,z],k)=>[-1,1].forEach(s=>{const jn=s<0?j.replace(/L$/,'R'):j;eye(jn,s*x,y,z,s,y*.6,.15,(.11+.03*(k%3))*(j==='elL'?.7:1))}));
+  // the face: six along each side of the muzzle
+  for(let k=0;k<6;k++)[-1,1].forEach(s=>{const z=.2+k*.17,[rx]=[.4-.18*k/5];eye('head',s*(rx+.02),.18-.03*k,z,s,.5,.6,.07+.012*(k%2))});
+  eye('t1',0,.22,-.25,0,1,-.3,.12);eye('t3',0,0,-.55,0,.2,-1,.13);eye('neck',0,-.5,.7,0,-1,.3,.12);
+  R.root.traverse(o=>{if(o.isMesh)o.castShadow=true})}
+if(SVB[0]){SVB[0].build=argBuild146;
+  SVB[0].spr={earL:[60,8,.6],earR:[60,8,.6],jaw:[80,10,.2],t0:[40,6,1.2],t1:[32,5,1.5],t2:[26,4,1.8],t3:[22,3.5,2],antL:[120,16,0],antR:[120,16,0]}}
+// ---------------- Phase II: "The Drowned Fog" ----------------
+function arg146Fog(A,e){const D=sk146Den(A);if(D.ph2)return;D.ph2=1;const y0=GH(A.cx,A.cz),fog=[];
+  for(let k=0;k<30;k++){const s=kqSpr(0x8a9a7a,6+Math.random()*5);s.material=s.material.clone();s.material.blending=THREE.NormalBlending;s.material.opacity=0;const a=Math.random()*6.283,r=Math.random()*(ARENA_R-1);
+    s.position.set(A.cx+Math.cos(a)*r,y0+.6+Math.random()*1.1,A.cz+Math.sin(a)*r);s.userData.a=a;s.userData.r=r;s.userData.w=(Math.random()-.5)*.08;s.renderOrder=25;sk146DenAdd(A,s);fog.push(s)}
+  D.fog={fog,wisps:[],t:2,dT:0};D.spores=sk146DenAdd(A,sk146Weather(A,'spores',0xc8ff8a,240));
+  try{banner('🌫 THE DROWNED FOG','Bog fog fills the hollow — will-o’-wisps drift toward you','Keep clear of the wisps')}catch(_){}svSnd('hiss',1,.4)}
+function arg146Wisp(A){const D=A.s146,y0=GH(A.cx,A.cz),a=Math.random()*6.283,r=ARENA_R-1.5,o=kqSpr(0x9aff8a,1.1),c=kqSpr(0xffffff,.4);o.add(c);o.position.set(A.cx+Math.cos(a)*r,y0+1.1,A.cz+Math.sin(a)*r);sk146DenAdd(A,o);
+  const w={o,t:0,life:14,ph:Math.random()*6};D.fog.wisps.push(w);return w}
+function arg146FogTick(A,e,dt){const D=A.s146,F=D&&D.fog;if(!F)return;F.fog.forEach(s=>{s.userData.a+=dt*s.userData.w;s.position.x=A.cx+Math.cos(s.userData.a)*s.userData.r;s.position.z=A.cz+Math.sin(s.userData.a)*s.userData.r;s.material.opacity=Math.min(.38,s.material.opacity+dt*.12)});
+  F.t-=dt;if(F.t<=0&&F.wisps.length<5&&sk146In(A)){F.t=3.5;arg146Wisp(A)}
+  const P=pl.position;F.wisps.slice().forEach(w=>{w.t+=dt;const o=w.o,dx=P.x-o.position.x,dz=P.z-o.position.z,d=Math.hypot(dx,dz)||1,sp=1.1;o.position.x+=dx/d*sp*dt+Math.sin(w.t*1.7+w.ph)*dt*.8;o.position.z+=dz/d*sp*dt+Math.cos(w.t*1.3+w.ph)*dt*.8;
+    o.position.y=GH(o.position.x,o.position.z)+1.0+.25*Math.sin(w.t*2.3+w.ph);o.scale.setScalar(1.1*(1+.15*Math.sin(w.t*9)));if(Math.random()<dt*6)burst(o.position.clone(),0x9aff8a,1,.2,.3,.5);
+    const hit=sk146In(A)&&e&&!e.dead&&d<1.0&&!(hero.iv>0);if(hit||w.t>w.life){if(hit){hitHero(e,.35,'m');dqDebuff('Hexed','👁',{mspd:-.3},2200,'A will-o’-wisp burst on you: −30% move speed');D.deb='Hexed';burst(o.position.clone(),0x9aff8a,30,3,2,.6);sk146Flash(o.position,0x9aff8a,3,8,400);svSnd('crack',.8,1.5)}
+      if(o.parent)o.parent.remove(o);F.wisps.splice(F.wisps.indexOf(w),1)}})}
+{const B=SVB[0];if(B){const t0=B.denTick,c0=B.denClear;
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)arg146Fog(A,e);arg146FogTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 fog',err)}};
+  B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A);const e=sk146Boss(A);if(e&&e.sv&&e.sv.gone146){e.sv.gone146=0;e.sv.ghost=0;e.m.visible=true}}}}
+// ---------------- the signature: The Hundred Eyes ----------------
+function arg146Watcher(){const g=new THREE.Group(),flesh=new THREE.MeshStandardMaterial({color:0x3a2a2a,roughness:.7,flatShading:true,emissive:0x0a0404}),bk=new THREE.MeshStandardMaterial({color:0x2e2418,roughness:.9,flatShading:true}),
+    irm=new THREE.MeshBasicMaterial({color:0xffd040}),wh=new THREE.MeshStandardMaterial({color:0xd8ccb0,roughness:.35,emissive:0x2a2414});
+  const mound=new THREE.Mesh(svG('a46wm',()=>svLump(1.2,1,.35,60)),flesh);mound.scale.set(1,1.1,.6);mound.position.y=1.8;g.add(mound);
+  const ball=new THREE.Mesh(svG('a46wb',()=>new THREE.SphereGeometry(.75,14,10)),wh);ball.position.set(0,1.9,.45);g.add(ball);
+  const ir=new THREE.Mesh(svG('a46wi',()=>new THREE.SphereGeometry(.42,12,8)),irm);ir.position.set(0,1.9,.85);ir.scale.set(1,1,.4);g.add(ir);
+  const sl=new THREE.Mesh(svG('a46ws',()=>new THREE.BoxGeometry(.12,.6,.05)),new THREE.MeshBasicMaterial({color:0x0a0806}));sl.position.set(0,1.9,1.0);g.add(sl);
+  [-1,1].forEach(s=>{const l=new THREE.Mesh(svG('a46wl',()=>svLump(.8,1,.2,61)),bk);l.scale.set(1.15,.4,.6);l.position.set(0,1.9+s*.62,.4);l.userData.s=s;g.add(l);(g.userData.lids=g.userData.lids||[]).push(l)});
+  for(let k=0;k<6;k++){const a=k/6*6.283,v=new THREE.Mesh(svG('a46wv',()=>svTube([[0,0,0],[.4,.2,.1],[.9,.1,.2]],.04,4)),new THREE.MeshBasicMaterial({color:0xa06a1c}));v.position.set(0,1.9,.3);v.rotation.z=a;g.add(v)}
+  const gl=kqSpr(0xffd040,1.8);gl.position.set(0,1.9,1.05);g.add(gl);return {g,ir,gl,mats:[flesh,bk,irm,wh,sl.material]}}
+function arg146EyesStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D=sk146Den(A),a0=Math.random()*6.283;
+  // he sinks into the fog: the body fades, only the eyes show
+  S.gone146=1;S.ghost=1;c.M.an.ghost=kqSpr(0xffd040,2.2);c.M.an.ghost.position.copy(gY(e.m.position,2.6));sk146DenAdd(A,c.M.an.ghost);
+  for(let k=0;k<20;k++)burst(gY(e.m.position,1+Math.random()*2),0x8a9a7a,3,2,1.5,1);
+  const L=[0,1,2,3].map(k=>{const a=a0+k/4*6.283,x=A.cx+Math.cos(a)*(ARENA_R-1.2),z=A.cz+Math.sin(a)*(ARENA_R-1.2),W=arg146Watcher();W.g.rotation.y=Math.atan2(A.cx-x,A.cz-z);W.g.scale.setScalar(.01);let t=0,ft=1.2+k*.45;
+    return {x,z,n:'Watcher Eye',frac:.016,mesh:W.g,hbY:3.6,hbS:.8,cupY:1.9,
+      tick(pe,dt,now){t+=dt;W.g.scale.setScalar(Math.min(1,t/.6));const P=pl.position,p=pe.m.position;W.ir.lookAt(P.x,GH(P.x,P.z)+1.2,P.z);W.gl.scale.setScalar(1.6+.4*Math.sin(now/120+k));
+        W.g.userData.lids.forEach(l=>{l.position.y=1.9+l.userData.s*(.62+.06*Math.sin(now/300+k))});
+        ft-=dt;if(ft<=0&&AF&&!e.dead){ft=2.2;const from=gY(p,1.9),q=new THREE.Vector3(P.x,0,P.z),S2={k:'c',r:1.6},an={x:q.x,z:q.z,a:0};c.M.warn.push(svWarn(S2,an,.8));
+          svShot(from,new THREE.Vector3(q.x,GH(q.x,q.z)+.3,q.z),.8,ARG.col,1.2,2.5,Pp=>{if(e.dead||!AF)return;burst(Pp,ARG.col,16,2.4,2,.5);sk146Crack(Pp,0xffb030,1.2,1.8);svHitNow(e,S2,an,.7,{})});svSnd('crack',.5,1.7)}},
+      die(pe,killed){if(killed){const p=gY(pe.m.position,1.9);sk146Drops(p,0xd8ccb0,16,3.5,3,{splats:4,dc:0x3a2a08});sk146Drops(p,0x6a1c24,14,3,3,{splats:4});burst(p,ARG.col,40,3,3,.7);sk146Flash(p,ARG.col,3.5,10,500);popT(pe.m.position,'👁 SHUT','#ffe08a');svSnd('squelch',1.2,1);svSnd('stag',.5,1.4)}W.mats.forEach(m=>m.dispose())}}});
+  const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);svSnd('roar',.9,.6);
+  try{banner('👁 THE HUNDRED EYES','Argus sinks into the fog — four great eyes open on the walls','Shut all four before the gaze completes!')}catch(_){}say('👁 Argus hides in the fog: shut the four Watcher Eyes on the walls!')}
+function arg146EyesCleanup(c){const S=c.S,M=c.M,e=c.e;S.dr=0;if(S.gone146){S.gone146=0;S.ghost=0;e.m.visible=true;for(let k=0;k<14;k++)burst(gY(e.m.position,1+Math.random()*2),0x8a9a7a,3,2,1.5,.8)}
+  if(!M)return;if(M.an.ghost&&M.an.ghost.parent)M.an.ghost.parent.remove(M.an.ghost);(M.an.props||[]).forEach(p=>{if(!p._gone)dqPropGone(p,false)})}
+function arg146EyesEnd(c,broken){const e=c.e,M=c.M;if(M.an.done2)return;M.an.done2=1;
+  if(broken){arg146EyesCleanup(c);svEndMove(e,true);svCast(e,'broken');sk146Wall(e.m.position,0x8a9a7a,6,3,.6);try{banner('💔 DRAGGED FROM THE FOG','Every Watcher Eye is shut','Strike now!')}catch(_){}return}
+  // the gaze completes: he heals and every eye fires at once, on your trail
+  const live=sk146Alive(M.an.props);sk146Heal(e,.1,ARG.col);arg146EyesCleanup(c);svSnd('roar',1.1,.8);shake(.4);
+  for(let k=0;k<12;k++)setTimeout(()=>{if(e.dead||!AF)return;const d=pl.mvd&&nowP()-pl.mvd.t<300?pl.mvd:{x:0,z:0},q=new THREE.Vector3(pl.position.x+d.x*1.6+(Math.random()-.5)*2,0,pl.position.z+d.z*1.6+(Math.random()-.5)*2),S2={k:'c',r:1.7},an={x:q.x,z:q.z,a:0};
+    const from=live.length&&!live[k%live.length]._gone?gY(live[k%live.length].m.position,1.9):gY(e.m.position,3);svWarn(S2,an,.7);svShot(from,new THREE.Vector3(q.x,GH(q.x,q.z)+.3,q.z),.7,ARG.col,1.2,3,Pp=>{if(e.dead||!AF)return;burst(Pp,ARG.col,16,2.4,2,.5);sk146Crack(Pp,0xffb030,1.3,1.8);svHitNow(e,S2,an,.8,{})})},k*170)}
+Object.assign(ARGP,{sink:{body:[.35,0,0,0,-1.1,0],neck:[.5,0,0],head:[.2,0,0],jaw:[.2,0,0],shL:[.5,0,.5],shR:[.5,0,-.5],elL:[-.3,0,0],elR:[-.3,0,0],hpL:[-.6,0,.3],hpR:[-.6,0,-.3],knL:[1.0,0,0],knR:[1.0,0,0],hkL:[-.5,0,0],hkR:[-.5,0,0],t0:[.6,0,0],earL:[-.8,0,0],earR:[-.8,0,0]}});
+Object.assign(ARGM,{
+  hundred:{wt:(e,L)=>e.sv.heN?9:30,cd:30,ph:2,r:[0,40],a:'any',armor:1,dur:11.4,inv:[0,1.0],trn:[[0,.4,2]],
+    trk:[[.7,'sink','io'],[10.2,'sink','l',.01],[10.8,'howl','o'],[11.4,'cRec','io']],
+    go(c){c.S.heN=(c.S.heN||0)+1;svSnd('whoosh',1,.5)},
+    ev:[[.8,c=>arg146EyesStart(c)],[10.3,c=>arg146EyesEnd(c,false)]],
+    tk(c,dt){const M=c.M,e=c.e;if(c.S.gone146){e.m.visible=false;if(M.an.ghost){M.an.ghost.position.copy(gY(e.m.position,2.4+.2*Math.sin(c.t*2)));M.an.ghost.scale.setScalar(2.2*(1+.1*Math.sin(c.t*6)))}}
+      if(M.an.props&&c.t>1.4&&c.t<10.3&&!M.an.done2&&!sk146Alive(M.an.props).length)arg146EyesEnd(c,true)},
+    end(c){arg146EyesCleanup(c)},rec:.6},
+  broken:sk146Broken(SVB[0],4.6,'stag','cRec')});
+// ---------------- richer effects ----------------
+{const f=argEyeBolt;argEyeBolt=function(c,i){f.apply(this,arguments);try{const q=c.inA(pl.position.clone().add(new THREE.Vector3(((pl.mvd&&pl.mvd.x)||0)*.9,0,((pl.mvd&&pl.mvd.z)||0)*.9)),.8),p=new THREE.Vector3(q.x,0,q.z);
+  setTimeout(()=>{if(c.e.dead||!AF)return;sk146Crack(p,0xffb030,1.3,2);sk146Flash(p,ARG.col,2,7,260)},720)}catch(_){}}}
+{const f=argSpikeAt;argSpikeAt=function(c,an,k,li){const r=f.apply(this,arguments);try{if(k%2===0)sk146Debris(new THREE.Vector3(an.x,0,an.z),argSpikeMat(),3,.08,2.5,4,1)}catch(_){}return r}}
+{const P=ARGM.pounce;if(P&&P.hit)P.hit.forEach(h=>{const f=h.fx;h.fx=function(c,an,hit){f&&f.apply(this,arguments);try{const p=c.m.position;sk146Wall(p,0x8a9a7a,5,2.4,.5);sk146Crack(p,0xffb030,3,2.6);sk146Debris(p,argSpikeMat(),8,.1,4,5,1.3);sk146Flash(p,ARG.col,3,10,400)}catch(_){}}})}
+{const W=ARGM.whirl;if(W&&W.hit)W.hit.forEach(h=>{const f=h.fx;h.fx=function(c,an,hit){f&&f.apply(this,arguments);try{sk146Wall(c.m.position,ARG.col,5.5,2,.45)}catch(_){}}})}
+sk146AutoFx(ARGM,{liq:0x6a1c24,sp:0xffd060,dust:0x5a5040});
+try{svRegMoves(0)}catch(_){}
+try{DSTXT[0].atk.push(['👁 The Hundred Eyes','Phase II: Argus sinks into the fog (warded; only his eyes show) and four great Watcher Eyes open on the walls, each firing at you.','Shut all four: he is dragged out of the fog BROKEN. If any still watch when the gaze completes he heals and every eye fires on your trail — keep moving.'],
+  ['🌫 The Drowned Fog','Phase II: bog fog fills the hollow and will-o’-wisps drift toward you.','Keep clear of the wisps: one bursting on you slows you.'])}catch(_){}
+// ================= v146 The Crest Hydra to the Vorraxis standard (Phase II den, signature mechanic, effects, motion) =================
+// Builds on 1972 (its v112 model — already detailed — poses and moves stay).
+//  * Model: barnacle crusts and weed on the coils, a second row of spines down each neck, venom dripping from the fangs.
+//  * Motion: the neck tips, heads, tongues, crests and the tail follow through on springs: strikes whip, the tail trails.
+//  * Phase II den change, "The Mere Rises": the water floods the shore of the mere; only a handful of sandbars stay dry.
+//    Wading through the deep water slows you (Wading) — fight from the sandbars, cross the water when you must.
+//  * Signature mechanic, Sever and Sear (Phase II): the Hydra slams all three heads down onto the shore, pinning them, and
+//    its regrowth begins (warded: 80% less damage to the body). Each pinned head bares a swollen venom gland at its throat:
+//    burst a gland and that head is severed, its stump seared shut. Sever all three and the Hydra collapses, BROKEN. If any
+//    head is still whole when the regrowth completes it heals (10%) and unleashes Hydra's Wrath: two rings of venom sweep
+//    out across the mere — dash through each.
+//  * Effects: venom globs splash and leave droplets, geysers rise as venom columns with spray, the tail slam throws up a
+//    wall of water and rock, every bite sprays venom.
+var HYD146={col:0x7ac850,ven:0x9aff4a};
+{const f=hydBuild;hydBuild=function(R,e){f.apply(this,arguments);try{hyd146Add(R)}catch(err){console.error('v146 hydra model',err)}};if(SVB[1])SVB[1].build=hydBuild}
+function hyd146Add(R){const G=(k,fn)=>svG('h46'+k,fn),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const barn=svMat(R,0xb8b0a0,{roughness:.8,emissive:0x101008}),weed=svMat(R,0x2a4a1a,{roughness:.95,side:THREE.DoubleSide}),spine=svMat(R,0xd8d0b8,{roughness:.55}),ven=svGlowMat(R,HYD146.ven);
+  // barnacles and weed on the coils (body joint, along the coil spiral)
+  for(let k=0;k<36;k++){const u=.05+k/36*.85,F=hydCoilF(u),th=1.2+Math.sin(k*2.3)*.9,p=hydCoilS(F,th,1.02);const m=Mm('body',G('bn'+(k%3),()=>svLump(.09+.03*(k%3),0,.4,120+k%3)),barn,p.x,p.y,p.z);m.scale.set(1,.6,1);
+    if(k%3===0){const q=hydCoilS(F,1.8,1.0);Mm('body',G('wd'+(k%2),()=>svBlade([[-.06,0],[.06,0],[.04,-.6-(k%2)*.2],[0,-.7-(k%2)*.2],[-.03,-.5]],.01)),weed,q.x,q.y,q.z,0,Math.random()*6,0)}}
+  // a second row of spines down each neck, venom on the fangs
+  ['C','L','R'].forEach(s=>{for(let k=1;k<5;k++){const j='n'+k+s;if(!R.J[j])continue;[-1,1].forEach(q=>Mm(j,G('ns',()=>svHorn(.04,.28,0,-.08,4,2)),spine,q*.22,.18,0,-1.1,q*.5,0))}
+    const h=R.J['h'+s];if(h){[-1,1].forEach(q=>Mm('h'+s,G('vd',()=>new THREE.OctahedronGeometry(.035,0)),ven,q*.15,-.22,1.05,0,0,0,1,1.6,1))}})}
+{const B=SVB[1];if(B){const s={};['C','L','R'].forEach(q=>{s['n3'+q]=[80,11,.3];s['n4'+q]=[70,10,.4];s['h'+q]=[75,10,.3];s['tn'+q]=[45,5,.8];s['cr'+q]=[60,7,.6];s['j'+q]=[90,11,0]});for(let k=1;k<6;k++)s['t'+k]=[40-4*k,6,1+.2*k];B.spr=s;
+  const p0=B.post;B.post=function(e,S,dt,now){p0&&p0.apply(this,arguments);try{if(Math.random()<dt*2.5){const q=['C','L','R'][(Math.random()*3)|0];if(!(S.sv146&&S.sv146[q])){const p=svWP(e,'h'+q,.15*(Math.random()<.5?-1:1),-.25,1.05);sk146Drops(p,HYD146.ven,1,.2,.1,{s:.04,splats:1,dc:0x2a4a10})}}}catch(_){}}}}
+// ---------------- Phase II: "The Mere Rises" ----------------
+function hyd146WaterTex(){if(HYD146.wt)return HYD146.wt;const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.fillStyle='#2a6a6a';g.fillRect(0,0,256,256);
+  for(let k=0;k<120;k++){g.strokeStyle=`rgba(${150+Math.random()*80|0},230,220,${.1+Math.random()*.25})`;g.lineWidth=1+Math.random()*2;g.beginPath();const x=Math.random()*256,y=Math.random()*256;g.moveTo(x,y);g.bezierCurveTo(x+20,y-10,x+40,y+10,x+60,y);g.stroke()}
+  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);return HYD146.wt=t}
+function hyd146Flood(A,e){const D=sk146Den(A);if(D.ph2)return;D.ph2=1;const y0=GH(A.cx,A.cz);
+  const m=new THREE.MeshStandardMaterial({color:0x5ab0a8,map:hyd146WaterTex(),roughness:.08,metalness:.4,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});m.userData.noFade135=1;
+  const w=new THREE.Mesh(svG('h46w',()=>new THREE.CircleGeometry(ARENA_R-.2,56).rotateX(-Math.PI/2)),m);w.position.set(A.cx,y0+.05,A.cz);w.renderOrder=15;w.userData.lpsSkip=1;sk146DenAdd(A,w);
+  // the sandbars: raised, ringed with foam (they stay dry)
+  const bars=[],a0=Math.random()*6.283,sand=new THREE.MeshStandardMaterial({color:0xb8a878,roughness:.95,flatShading:true});
+  for(let k=0;k<5;k++){const a=a0+k/5*6.283+(Math.random()-.5)*.4,r=6.5+Math.random()*4.5,x=A.cx+Math.cos(a)*r,z=A.cz+Math.sin(a)*r,R0=2.3+Math.random()*.8;
+    const b=new THREE.Mesh(svG('h46b',()=>svLump(1,1,.15,130)),sand);b.scale.set(R0,.28,R0);b.position.set(x,GH(x,z)-.05,z);b.userData.lpsSkip=1;sk146DenAdd(A,b);
+    const f=new THREE.Mesh(svG('h46f',()=>new THREE.RingGeometry(.96,1.08,40).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0xe8fff8,transparent:true,opacity:.6,depthWrite:false,fog:false}));f.scale.setScalar(R0);f.position.set(x,y0+.42,z);f.userData.lpsSkip=1;sk146DenAdd(A,f);
+    bars.push({x,z,r:R0,f})}
+  D.mere={w,m,bars,t:0,lvl:0};try{banner('🌊 THE MERE RISES','The water floods the shore — only the sandbars stay dry','Wading slows you')}catch(_){}svSnd('splash',1.4,.5);hydSplash(new THREE.Vector3(A.cx,0,A.cz),80)}
+function hyd146FloodTick(A,e,dt){const D=A.s146,W=D&&D.mere;if(!W)return;W.t+=dt;W.lvl=Math.min(1,W.lvl+dt*.4);W.m.opacity=.75*W.lvl;W.w.position.y=GH(A.cx,A.cz)+.05+.32*svEase.o(W.lvl);W.m.map.offset.x+=dt*.02;W.m.map.offset.y+=dt*.013;
+  W.bars.forEach((b,k)=>{b.f.material.opacity=.4+.25*Math.sin(W.t*2+k)});
+  if(Math.random()<dt*8){const a=Math.random()*6.283,r=Math.random()*ARENA_R;burst(new THREE.Vector3(A.cx+Math.cos(a)*r,W.w.position.y+.05,A.cz+Math.sin(a)*r),0xcfeee0,1,.3,.4,.5)}
+  if(!sk146In(A)||!e||e.dead||W.lvl<.5)return;const P=pl.position,dry=W.bars.some(b=>Math.hypot(P.x-b.x,P.z-b.z)<b.r*.95);
+  if(!dry){dqDebuff('Wading','🌊',{mspd:-.3},500,'Wading through the risen mere: −30% move speed');D.deb='Wading';if(Math.random()<dt*6)burst(gY(P,.4),0xcfeee0,2,1,1,.4)}}
+{const B=SVB[1];if(B){const t0=B.denTick,c0=B.denClear;
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)hyd146Flood(A,e);hyd146FloodTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 mere',err)}};
+  B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A);const e=sk146Boss(A);if(e&&e.sv)hyd146Regrow(e)}}}
+// ---------------- the signature: Sever and Sear ----------------
+function hyd146Sever(e,s,on){const S=e.sv,R=S.R,h=R.J['h'+s];if(!h)return;S.sv146=S.sv146||{};S.sv146[s]=on?1:0;h.visible=!on;
+  const n=R.J['n4'+s];if(on&&n){const st=svSpr(R,n,0xffa040,1.1,0,.1,.3);st.userData.v146stump=1;const c=svWP(e,'n4'+s,0,0,.3);burst(c,0xffa040,40,3,2,.7);sk146Drops(c,HYD146.ven,20,4,3,{splats:5});sk146Flash(c,0xffa040,4,10,500)}
+  if(!on&&n){n.children.slice().forEach(o=>{if(o.userData&&o.userData.v146stump)n.remove(o)})}}
+function hyd146Regrow(e){['C','L','R'].forEach(s=>{if(e.sv.sv146&&e.sv.sv146[s])hyd146Sever(e,s,false)})}
+function hyd146Gland(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:0x6ab030,emissive:0x4a9a10,emissiveIntensity:.9,roughness:.2,flatShading:true}),vm=new THREE.MeshBasicMaterial({color:0x2a5a10});
+  const sac=new THREE.Mesh(svG('h46gs',()=>svLump(.55,1,.25,131)),m);sac.position.y=.6;sac.scale.set(1,.8,1);g.add(sac);
+  for(let k=0;k<5;k++){const v=new THREE.Mesh(svG('h46gv',()=>svTube([[0,0,0],[.3,.25,.1],[.5,.55,0]],.03,4)),vm);v.position.y=.25;v.rotation.y=k/5*6.283;g.add(v)}
+  const gl=kqSpr(HYD146.ven,1.6);gl.position.y=.7;g.add(gl);return {g,sac,gl,mats:[m,vm]}}
+function hyd146SeverStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D=sk146Den(A);
+  const L=['L','C','R'].map((s,k)=>{const p=svWP(e,'h'+s,0,-.3,.6),m0=e.m.position,dx=p.x-m0.x,dz=p.z-m0.z,dl=Math.hypot(dx,dz)||1,ang=dl>.3?Math.atan2(dx,dz):e.m.rotation.y+(k-1)*.9,dd=Math.max(4.6,dl),q=c.inA(new THREE.Vector3(m0.x+Math.sin(ang)*dd,0,m0.z+Math.cos(ang)*dd),1.2),Gl=hyd146Gland();   // never inside the coils: reachablelet t=0;
+    return {x:q.x,z:q.z,n:'Venom Gland',frac:.017,mesh:Gl.g,hbY:2,hbS:.8,cupY:.7,side:s,
+      tick(pe,dt,now){t+=dt;Gl.sac.scale.set(1+.12*Math.sin(now/160+k),.8+.15*Math.sin(now/160+k+1),1+.12*Math.cos(now/160+k));Gl.g.scale.setScalar(Math.min(1,t/.5));if(Math.random()<dt*5)burst(gY(pe.m.position,.8),HYD146.ven,1,.3,.6,.5)},
+      die(pe,killed){if(killed){const p=gY(pe.m.position,.7);sk146Drops(p,HYD146.ven,26,4,4,{splats:6,dc:0x2a4a10});burst(p,HYD146.ven,40,3,3,.7);popT(pe.m.position,'⚔ SEVERED','#d8ff9a');svSnd('squelch',1.3,.9);svSnd('roar',.6,1.6);hyd146Sever(e,s,true)}Gl.mats.forEach(m=>m.dispose())}}});
+  const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);c.M.an.teth=P.map((p,k)=>sk146Beam(()=>p.dead||p._gone?null:gY(p.m.position,.7),()=>e.dead?null:svWP(e,'n2'+['L','C','R'][k],0,0,0),HYD146.ven,.07));
+  svSnd('heavy',1.3,.6);shake(.5);hydSplash(e.m.position,70);try{banner('🐍 SEVER AND SEAR','The Hydra pins its heads to the shore — its regrowth begins','Burst the three venom glands to sever its heads!')}catch(_){}say('🐍 The Hydra pins its heads: burst the glands at their throats to sever them!')}
+function hyd146SeverCleanup(c){const S=c.S,M=c.M;S.dr=0;if(!M)return;(M.an.teth||[]).forEach(t=>t.stop());M.an.teth=[];(M.an.props||[]).forEach(p=>{if(!p._gone)dqPropGone(p,false)})}
+function hyd146SeverEnd(c,broken){const e=c.e,M=c.M;if(M.an.done2)return;M.an.done2=1;
+  if(broken){hyd146SeverCleanup(c);svEndMove(e,true);svCast(e,'broken');try{banner('💔 ALL HEADS SEVERED','The Hydra collapses into the mere','Strike now!')}catch(_){}return}
+  sk146Heal(e,.1,HYD146.ven);hyd146SeverCleanup(c);hyd146Regrow(e);const p=e.m.position.clone();svSnd('roar',1.1,.8);shake(.4);
+  [0,1].forEach(k=>setTimeout(()=>{if(e.dead||!AF)return;sk146RingWave(e,p,2,ARENA_R+1,1.8,1.3,1.5,HYD146.ven,{h:1.6,on:()=>dqDebuff('Envenomed','🐍',{mspd:-.2},3000,"Hydra's Wrath: envenomed, −20% move speed")})},k*950))}
+Object.assign(HYDM,{
+  sever:{wt:(e,L)=>e.sv.seN?9:30,cd:30,ph:2,r:[0,40],a:'any',armor:1,dur:11.6,inv:[0,1.2],trn:[[0,.5,1.5]],
+    trk:[[.5,'gyUp','io'],[.9,'gyUp','l',.02],[1.2,'gyDn','s'],[10.2,'gyDn','l',.008],[10.8,'roar','o'],[11.6,'rest','io']],
+    go(c){c.S.seN=(c.S.seN||0)+1},
+    ev:[[1.25,c=>hyd146SeverStart(c)],[10.3,c=>hyd146SeverEnd(c,false)]],
+    tk(c,dt){const M=c.M;if(Math.random()<dt*6){const s=['C','L','R'][(Math.random()*3)|0];if(!(c.S.sv146&&c.S.sv146[s]))burst(svWP(c.e,'h'+s,0,0,.6),HYD146.ven,1,.6,.6,.5)}
+      if(M.an.props&&c.t>1.6&&c.t<10.3&&!M.an.done2&&!sk146Alive(M.an.props).length)hyd146SeverEnd(c,true)},
+    end(c){hyd146SeverCleanup(c)},rec:.6},
+  broken:Object.assign(sk146Broken(SVB[1],4.6,'stag','recC'),{end(c){c.S.stg=0;hyd146Regrow(c.e);try{hydSplash(c.m.position,50)}catch(_){}}})});
+// ---------------- richer effects ----------------
+{const f=hydSplash;hydSplash=function(p,n){f.apply(this,arguments);try{sk146Drops(gY(p,.3),0xcfeee0,Math.min(28,(n||30)/2),4,5,{splats:0});sk146Wall(p,0xcfeee0,4,2.2,.5)}catch(_){}}}
+{const f=hydGeyser;hydGeyser=function(c,P,S2,an){f.apply(this,arguments);try{sk146Column(P,HYD146.ven,0xe8ffc0,.7,6,1.1);sk146Drops(gY(P,2),HYD146.ven,20,4,6,{splats:5,dc:0x2a4a10});sk146Crack(P,HYD146.ven,1.8,2.4)}catch(_){}}}
+{const f=hydGlob;hydGlob=function(c,from,q,T,big){f.apply(this,arguments);try{const p=q.clone?q.clone():new THREE.Vector3(q.x,0,q.z);setTimeout(()=>{if(c.e.dead||!AF)return;sk146Drops(gY(p,.4),HYD146.ven,14,3,4,{splats:4,dc:0x2a4a10});sk146Flash(p,HYD146.ven,2.5,8,300)},T*1000)}catch(_){}}}
+{const T=HYDM.tail;if(T&&T.hit)T.hit.forEach(h=>{const f=h.fx;h.fx=function(c,an,hit){f&&f.apply(this,arguments);try{const a=an.a||0,p=new THREE.Vector3(an.x+Math.sin(a)*4,0,an.z+Math.cos(a)*4);sk146Wall(p,0xcfeee0,4,2.6,.5);sk146Crack(p,0xd8ff9a,2.5,2.4);sk146Debris(p,HYD146.rk||(HYD146.rk=new THREE.MeshStandardMaterial({color:0x6a6a5a,roughness:.9,flatShading:true})),6,.1,4,5,1.3)}catch(_){}}})}
+sk146AutoFx(HYDM,{liq:HYD146.ven,sp:0xe8ffc0,dust:0xcfeee0});
+try{svRegMoves(1)}catch(_){}
+try{DSTXT[1].atk.push(['⚔ Sever and Sear','Phase II: it pins all three heads to the shore (its body is warded) and bares a swollen venom gland at each throat.','Burst all three glands to sever its heads: it collapses BROKEN. If a head is still whole when the regrowth completes it heals and two rings of venom sweep the mere — dash through each.'],
+  ['🌊 The Mere Rises','Phase II: the water floods the shore; only a few sandbars stay dry.','Fight from the sandbars: wading through the deep water slows you.'])}catch(_){}
+// ================= v146 Ssith'ra the Endless to the Vorraxis standard (Phase II den, signature mechanic, effects, motion) =================
+// Builds on 1974 (its v112 model — already detailed — the slithering body chain, poses and moves stay).
+//  * Model: sand pours from the seams of the body (particles), the rune scars on the tergites smoulder brighter.
+//  * Motion: antennae, palps and mandibles follow through on springs.
+//  * Phase II den change, "The Sinking Sands": sinkholes open in the pit one after another — sand vortices that drag you
+//    toward their middle (and slow you); the middle swallows (damage). Walk out against the pull, or dash.
+//  * Signature mechanic, The Rune Scars (Phase II): Ssith'ra coils and rears high, chanting; three rune scars on its body blaze
+//    (they move with the body) and it is warded (80% less damage elsewhere). Break all three and the chant shatters:
+//    it crashes down, BROKEN. If any scar still burns when the chant completes it heals (10%), dives, and bursts out of the
+//    sand under you (a red circle — get out), then the sand ripples out in two rings.
+//  * Effects: sand bursts throw debris and grit, globs and quills crack the floor, every snap sprays acid.
+var SSR146={col:0xff7a30,acid:0xc8ff40,sand:0xd8b070};
+function ssr146SandMat(){return SSR146.sm||(SSR146.sm=new THREE.MeshStandardMaterial({color:0xc8a060,roughness:.95,flatShading:true}))}
+{const B=SVB[3];if(B){const s={};['L','R'].forEach(q=>{s['an'+q]=[40,5,1];s['an2'+q]=[32,4,1.2];s['p'+q]=[50,6,.6];s['p2'+q]=[40,5,.8];s['md'+q]=[90,11,.2]});B.spr=s;
+  const p0=B.post;B.post=function(e,S,dt,now){p0&&p0.apply(this,arguments);try{if(!S.gone&&Math.random()<dt*7){const k=(Math.random()*SSR.N)|0,p=svWP(e,'s'+k,(Math.random()-.5)*.8,.2,0);burst(p,SSR146.sand,1,.4,.3,.8)}}catch(_){}}}}
+// ---------------- Phase II: "The Sinking Sands" ----------------
+function ssr146VxTex(){if(SSR146.vt)return SSR146.vt;const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.translate(128,128);
+  const gr=g.createRadialGradient(0,0,4,0,0,128);gr.addColorStop(0,'rgba(40,24,10,1)');gr.addColorStop(.25,'rgba(120,80,40,.95)');gr.addColorStop(.8,'rgba(200,160,100,.7)');gr.addColorStop(1,'rgba(200,160,100,0)');g.fillStyle=gr;g.beginPath();g.arc(0,0,128,0,6.283);g.fill();
+  g.strokeStyle='rgba(60,36,14,.6)';g.lineWidth=3;for(let k=0;k<7;k++){g.beginPath();for(let q=0;q<=40;q++){const u=q/40,r=8+u*118,a=k/7*6.283+u*4.2;g[q?'lineTo':'moveTo'](Math.cos(a)*r,Math.sin(a)*r)}g.stroke()}
+  return SSR146.vt=new THREE.CanvasTexture(cv)}
+function ssr146Sands(A,e){const D=sk146Den(A);if(D.ph2)return;D.ph2=1;D.sinks={L:[],t:2,dT:0};D.dust=sk146DenAdd(A,sk146Weather(A,'ash',0xd8b070,320));
+  try{banner('🏜 THE SINKING SANDS','Sinkholes open in the pit and drag you down','Walk out against the pull, or dash')}catch(_){}svSnd('heavy',1,.5)}
+function ssr146SandsTick(A,e,dt){const D=A.s146,K=D&&D.sinks;if(!K)return;K.t-=dt;
+  if(K.t<=0&&K.L.length<2&&sk146In(A)){K.t=8;let x,z,tr=0;do{const a=Math.random()*6.283,r=3.5+Math.random()*(ARENA_R-6);x=A.cx+Math.cos(a)*r;z=A.cz+Math.sin(a)*r;tr++}while(tr<10&&Math.hypot(x-pl.position.x,z-pl.position.z)<4);
+    const m=new THREE.MeshBasicMaterial({color:0xffffff,map:ssr146VxTex(),transparent:true,opacity:0,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-3}),o=new THREE.Mesh(svG('s46vx',()=>new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2)),m);
+    o.position.set(x,GH(x,z)+.13,z);o.scale.setScalar(4.6);o.renderOrder=16;o.userData.lpsSkip=1;sk146DenAdd(A,o);K.L.push({o,m,x,z,r:4.6,t:0,life:13});svSnd('heavy',.9,.6);sk146Crack(new THREE.Vector3(x,0,z),0xffa040,2.5,2)}
+  K.L.slice().forEach(s=>{s.t+=dt;s.o.rotation.y+=dt*1.4;s.m.opacity=Math.min(.9,s.t*.8)*(s.t>s.life-1?Math.max(0,s.life-s.t):1);if(Math.random()<dt*10){const a=Math.random()*6.283,r=Math.random()*s.r;burst(new THREE.Vector3(s.x+Math.cos(a)*r,GH(s.x,s.z)+.2,s.z+Math.sin(a)*r),SSR146.sand,1,.3,.4,.6)}
+    if(s.t>s.life){if(s.o.parent)s.o.parent.remove(s.o);s.m.dispose();K.L.splice(K.L.indexOf(s),1)}});
+  if(!sk146In(A)||!e||e.dead)return;const P=pl.position;K.dT-=dt;
+  for(const s of K.L){if(s.t<.8)continue;const dx=s.x-P.x,dz=s.z-P.z,d=Math.hypot(dx,dz);if(d>s.r)continue;
+    const pull=(1-d/s.r)*1.8+.6;if(d>.3&&!pl.step)walk(pl,dx/d*pull*dt,dz/d*pull*dt);dqDebuff('Sinking','🏜',{mspd:-.25},500,'Caught in a sinkhole: −25% move speed');D.deb='Sinking';
+    if(d<1.3&&K.dT<=0&&!(hero.iv>0)){K.dT=.7;hitHero(e,.3,'m');burst(gY(P,.3),SSR146.sand,14,2,2,.6)}break}}
+{const B=SVB[3];if(B){const t0=B.denTick,c0=B.denClear;
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)ssr146Sands(A,e);ssr146SandsTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 sands',err)}};
+  B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
+// ---------------- the signature: The Rune Scars ----------------
+function ssr146Scar(){const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:0xffc060,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+  const r=new THREE.Mesh(svG('s46sr',()=>new THREE.TorusGeometry(.5,.07,5,20)),m);r.rotation.x=Math.PI/2;g.add(r);
+  const c=new THREE.Mesh(svG('s46sc',()=>new THREE.OctahedronGeometry(.32,0)),m);c.scale.set(1,1.6,1);g.add(c);const gl=kqSpr(0xffa040,2.2);g.add(gl);
+  const sh=[];for(let k=0;k<4;k++){const s=new THREE.Mesh(svG('s46ss',()=>new THREE.BoxGeometry(.08,.5,.04)),m);s.position.set(Math.cos(k*1.57)*.7,0,Math.sin(k*1.57)*.7);s.rotation.y=-k*1.57;g.add(s);sh.push(s)}
+  return {g,r,c,gl,sh,m}}
+function ssr146ScarsStart(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D=sk146Den(A);
+  const L=[3,7,11].map((k,i)=>{const W=svWP(e,'s'+k,0,0,0),Sc=ssr146Scar();let t=0;
+    return {x:W.x,z:W.z,n:'Rune Scar',frac:.017,mesh:Sc.g,hbY:2.4,hbS:.8,cupY:1,
+      tick(pe,dt,now){t+=dt;const P=svWP(e,'s'+k,0,.55,0);pe.m.position.set(P.x,GH(P.x,P.z),P.z);Sc.g.position.y=P.y-GH(P.x,P.z)+.2;Sc.g.rotation.y+=dt*2;Sc.c.rotation.y-=dt*3;
+        Sc.gl.scale.setScalar(2+.5*Math.sin(now/110+i));Sc.g.scale.setScalar(Math.min(1,t/.4));Sc.sh.forEach((s,q)=>{s.position.y=.25*Math.sin(now/200+q)});if(Math.random()<dt*8)burst(gY(pe.m.position,Sc.g.position.y),0xffa040,1,.6,.8,.5)},
+      die(pe,killed){if(killed){const p=gY(pe.m.position,Sc.g.position.y);burst(p,0xffc060,50,3.5,3,.7);sk146Debris(p,ssr146SandMat(),8,.08,4,5,1.3);sk146Flash(p,0xffa040,4,10,500);popT(pe.m.position,'✸ SCAR BROKEN','#ffd8a0');svSnd('crack',1.2,1.2);svSnd('bell',.5,1.4)}Sc.m.dispose()}}});
+  const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);svSnd('roar',1,.8);svSnd('hum',1,.5);sk146Wall(e.m.position,SSR146.col,6,3,.7);
+  try{banner('✸ THE RUNE SCARS','Ssith’ra coils and chants — three rune scars blaze on its body','Break all three before the chant completes!')}catch(_){}say("✸ Ssith'ra chants: break the three blazing rune scars on its body!")}
+function ssr146ScarsCleanup(c){const S=c.S,M=c.M;S.dr=0;if(!M)return;(M.an.props||[]).forEach(p=>{if(!p._gone)dqPropGone(p,false)})}
+function ssr146ScarsEnd(c,broken){const e=c.e,M=c.M;if(M.an.done2)return;M.an.done2=1;
+  if(broken){ssr146ScarsCleanup(c);svEndMove(e,true);svCast(e,'broken');try{banner('💔 THE CHANT SHATTERS',"Ssith'ra crashes into the sand",'Strike now!')}catch(_){}return}
+  sk146Heal(e,.1,SSR146.col);ssr146ScarsCleanup(c);svSnd('roar',1.1,.7);
+  // it bursts out of the sand under you
+  const q=c.inA(pl.position.clone(),.8),S2={k:'c',r:3.4},an={x:q.x,z:q.z,a:0};svWarn(S2,an,1.0);
+  setTimeout(()=>{if(e.dead||!AF)return;const p=new THREE.Vector3(q.x,0,q.z);ssrSand(p,120,3.6);sk146Column(p,SSR146.sand,0xffe0a0,1.4,7,1.1);sk146Debris(p,ssr146SandMat(),18,.14,6,7,1.6);sk146Crack(p,0xffa040,4,3);shake(.55);svSnd('heavy',1.4,.6);
+    svHitNow(e,S2,an,1.8,{col:SSR146.col});[0,1].forEach(k=>setTimeout(()=>{if(!e.dead&&AF)sk146RingWave(e,p,2,12,1.4,1.2,1.1,SSR146.sand,{h:1.3})},400+k*650))},1000)}
+Object.assign(SSRM,{
+  scars:{wt:(e,L)=>e.sv.scN?9:30,cd:30,ph:2,r:[0,40],a:'any',armor:1,dur:11.2,inv:[0,1.0],trn:[[0,.6,2]],
+    trk:[[.6,'roar','io'],[1.1,'coil','io'],[9.8,'coil','l',.012],[10.4,'roar','o'],[11.2,'sRec','io']],
+    go(c){c.S.scN=(c.S.scN||0)+1;if(c.S.gone)ssrGone(c.e,false)},
+    ev:[[1.0,c=>ssr146ScarsStart(c)],[10.0,c=>ssr146ScarsEnd(c,false)]],
+    tk(c,dt){const M=c.M;if(Math.random()<dt*8)burst(svWP(c.e,'head',0,0,.8),0xffa040,1,.8,.6,.5);if(M.an.props&&c.t>1.4&&c.t<10&&!M.an.done2&&!sk146Alive(M.an.props).length)ssr146ScarsEnd(c,true)},
+    end(c){ssr146ScarsCleanup(c)},rec:.6},
+  broken:sk146Broken(SVB[3],4.6,'stag','sRec')});
+// ---------------- richer effects ----------------
+{const f=ssrSand;ssrSand=function(p,n,r){f.apply(this,arguments);try{sk146Debris(p,ssr146SandMat(),Math.min(12,((n||40)/8)|0),.08,(r||4)*.9,5,1.2);sk146Wall(p,SSR146.sand,(r||4)+.5,2.2,.5)}catch(_){}}}
+{const f=ssrGlob;ssrGlob=function(c,q,T){f.apply(this,arguments);try{const p=new THREE.Vector3(q.x,0,q.z);setTimeout(()=>{if(c.e.dead||!AF)return;sk146Drops(gY(p,.4),SSR146.acid,12,3,4,{splats:4,dc:0x4a5a10});sk146Crack(p,SSR146.acid,1.4,2)},T*1000)}catch(_){}}}
+{const f=ssrQuill;ssrQuill=function(c,from,q,T,i){f.apply(this,arguments);try{const p=new THREE.Vector3(q.x,0,q.z);setTimeout(()=>{if(c.e.dead||!AF)return;sk146Crack(p,0xffc060,1.1,2.2);sk146Debris(p,ssr146SandMat(),3,.06,2.5,4,1)},T*1000)}catch(_){}}}
+sk146AutoFx(SSRM,{liq:SSR146.acid,sp:0xffc060,dust:SSR146.sand});
+try{svRegMoves(3)}catch(_){}
+try{DSTXT[3].atk.push(['✸ The Rune Scars',"Phase II: Ssith'ra coils and chants (warded) while three rune scars blaze on its body, moving with it.",'Break all three before the chant ends: it crashes down BROKEN. If one still burns it heals, dives and bursts out under you — get out of the red circle, then dash the rings.'],
+  ['🏜 The Sinking Sands','Phase II: sinkholes open one after another and drag you toward their middle.','Walk out against the pull or dash — the middle swallows.'])}catch(_){}
 </script></body></html>

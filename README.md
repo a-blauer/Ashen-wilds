@@ -108,6 +108,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v143 The Lantern Road (Kindlelight I main quest): outpost layout `mq143Plan` / decoration keep-out `mq143Keep` (called from 1680 `place`), the Lantern Wardens (`MQW143`, `mqw143Make`, `mqw143Anim`, helms `mqw143Helm`), models (`MQM143`: `mqm143Ripper`, `mqm143Lamp`, outpost pieces, `mqm143Bulb`), quest state `MQ143` (glowbulb drops, lampposts, the Ripper's roll and fire-up, dormant gateway, tracker `#mqt143`, window `XR.mq143`, map marks) | `3020`–`3023` (edit in 1680) |
 | v144 The Glowmire Crystal (Kindlelight II main quest): Vorraxis model (`MB144`, `mb144Build`, poses `MB144P`, `mb144Loco`/`mb144Post`), his moves (`MB144M`, lair arena `MB144A`, `svCtx`/`svHitNow` wrappers), the hatch, the Seeping Lair (INSL[4]), the fight controller `mb144AI`, quest state `MQ144`, crystal, sealed II→III gateway | `3031`–`3033` |
 | v145 The Three Sigils (Kindlelight III main quest): sigil layout `mq145Plan` / keep-out `mq145Keep` (called from 1680 `place`), sigil model `ms145Sigil`, ghost wolves (`EN.ghostwolf`, look `gw145Look` via a `cr` wrapper), the essence charging ritual (`MQ145.R`, `mq145Start`/`mq145RTick`/`mq145Attune`/`mq145Fail`), sealed Den gateway, tracker, map marks | `3040` (edit in 1680) |
+| v146 Sovereigns to the Vorraxis standard: shared kit (`sk146*`: springs `B.spr`, effects, props, ring waves, den state `A.s146`, smoother strike ease), Argus rebuilt (`argBuild146`), and per boss a Phase II den change + signature mechanic + model/effect upgrades | `3050` kit, `3051` Vaelric, `3052` Rime Wraith, `3053` Bloated One, `3054` Argus, `3055` Hydra, `3056` Ssith'ra |
 
 ## Conventions (read before changing code)
 
@@ -530,6 +531,28 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     puffs), spawned as minions (local in co-op).
   * Saved as `x2.mq145 {at[3], fd[3]}`; done also when the Den was reached (`mq145Done`). Tracker uses `#mqt143` in III.
   Tests: `v145_sigils.py`.
+- **Sovereigns to the Vorraxis standard (v146, `3050`–`3056`)**: every Sovereign follows `docs/BOSS_RECIPE.md` now. Each keeps its
+  v110/v112 poses and moves and gains (all in Phase II): a den change and a signature mechanic with a success and a failure outcome.
+  | Boss | Den change (Phase II) | Signature (props → BROKEN / failure) |
+  |---|---|---|
+  | Argus (model rebuilt, `argBuild146`) | The Drowned Fog: fog, will-o'-wisps that burst on you (Hexed) | The Hundred Eyes: 4 Watcher Eyes on the walls fire at you; fail = heal + bolt storm |
+  | Hydra | The Mere Rises: water floods the shore, sandbars stay dry (Wading) | Sever and Sear: 3 venom glands on pinned heads (bursting one severs a head); fail = heal + 2 venom rings |
+  | Rime Wraith | The Whiteout: blizzard, fog banks, ice floor (you slide), wind | Frozen Heart: 3 frozen braziers to light; fail = heal + Absolute Zero (safe only by a lit brazier) |
+  | Ssith'ra | The Sinking Sands: sinkholes that pull you in | The Rune Scars: 3 scars moving with the body; fail = heal + it bursts out under you + 2 sand rings |
+  | Bloated One | The Rot Spills: spreading rot pools (Rotting) | The Feast: 3 carcasses he walks to and eats (each heals + rot burst); cut them all down first |
+  | Vaelric | The Crimson Tide: blood rain, 3 blood channels sweeping the floor (Bleeding) | Blood Covenant: 4 chalices tethered to him; fail = heal + Exsanguinate (2 blood rings) |
+  * While channelling a signature the boss is warded (`e.sv.dr`, a `hurt` wrapper in 3050). Props are v86 `dqProp` den props (targetable,
+    no XP/loot). Breaking all of them casts the generic `broken` move (`sk146Broken`, ~4.6 s). Moves are registered with `svRegMoves`.
+  * Den state lives in `A.s146` (`sk146Den`); `sk146DenClear` (from each boss's `denClear`) removes every object and resets it.
+    Phase II scenery starts only while a fight is on (`A.f`).
+  * Models: Vaelric (sculpted face, fitted hair, heavier cape, filigree, mail skirt, halo/glyph in Phase II), Rime Wraith (folded robes,
+    sculpted skull, ice clusters, soul lanterns), Bloated One (fat rolls, sculpted head, sores, flies), Argus rebuilt from scratch
+    (~340 shingled fur tufts, rib windows, antlers, 50+ eyes), Hydra (barnacles, weed, spines, venom drips), Ssith'ra (sand from the seams).
+  * Motion: `B.spr` springs give follow-through to capes, hair, robes, tails, ears, jaws, tongues and wings (`sk146Spring`, a `svApply`
+    wrapper); the strike ease `svEase.s` is now `1-(1-k)^2.6` (it was `^5`, a one-frame pop) — the same timings and hits.
+  * Effects kit: debris, droplets, flash lights (2 pooled), ground cracks, shock walls, columns, beams, swarms, weather; `sk146AutoFx`
+    gives every hit without its own effect a liquid spray / sparks.
+  Tests: `v146_sovs.py` (BOSS=0..5): model, springs, every move runs, the den change, the signature both ways, the den clean afterwards.
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -757,6 +780,7 @@ python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizen
 python3 v143_lantern_road.py  # v143: The Lantern Road (Kindlelight I main quest): drops, lampposts, the Ripper, the gateway, saves
 python3 v144_glowmire.py      # v144: The Glowmire Crystal (Kindlelight II main quest): hatch, lair, Vorraxis, crystal, gateway, saves
 python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main quest): sigils, ghost wolf waves, attuning, the Den gateway, saves
+python3 v146_sovs.py          # v146: Sovereigns: den changes, signature mechanics, springs, every move, clean dens (BOSS=0..5)
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
