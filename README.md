@@ -848,10 +848,22 @@ if they must be re-declared: `{"room":{"topics":{"es":"interact","ev":"interact"
 
 ## Animation viewer (separate artifact)
 
-`viewer/` builds `dist/kq-anim-viewer.html`: the game build plus a viewer that shows every companion (all 4 evolution
-looks, basic attack and its 4 abilities), every zone monster and each of its attack moves, and every hero class and
-weapon (each combo hit, full combo, class skills) on a quiet stage, using the real game code. Speed (1×–⅒×), pause,
-frame step, camera presets, loop. `viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame /
-setTimeout on a virtual clock (`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh`,
-check with `cd test && python3 kv_viewer.py` (SHOT=1 for contact sheets). Rebuild and republish it after changing
-models or attacks.
+`viewer/` builds `dist/kq-anim-viewer.html`, published on its own as the claude.ai artifact
+https://claude.ai/artifact/QE5i4p6m1KaMduTUe453Qm (one file). It is the game build plus a viewer panel that plays the real
+game code on a quiet stage (Hillside Crest I's road; natural spawns off). Four tabs:
+* **Companions**: every species, its 4 evolution looks, basic attack and its 4 abilities.
+* **Monsters**: every creature that can spawn, grouped by the zone it lives in (the bestiary's `dex141Where`), plus quest
+  creatures (the ghost wolf), and each of its moves (basic + signature moves, red warnings shown).
+* **Bosses**: the six Sovereigns, each in its own den with the real fight started, and Vorraxis in the Seeping Lair.
+  Every move by name (`BOSSN` maps the move ids to the names in each den's guide `DSTXT`; follow-ups marked), Phase II moves
+  (turn Phase II and the den change on), the signature move, entrance, stagger, broken, Reach and a defeat preview (the fall
+  track on the living boss). The AI is held still while the viewer runs: `svPick` returns nothing, `svMoveFree` /
+  `mb144Move` only walk back to the mark, retreats and plans are cleared after each move; the boss keeps full health.
+* **Hero**: every class (as its beast), every weapon type (each combo hit, full combo) and all 17 class abilities, base
+  form (rank 1) or evolved form (rank 5, v137), cast for real through `cast(0)` with the loadout holding only that ability.
+Speed (1×–⅒×), pause, frame step, camera presets (relative to the boss's facing in the Bosses tab), loop, Play all.
+`viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame / setTimeout on a virtual clock
+(`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh` (the build is committed), check with
+`cd test && python3 kv_viewer.py` (`TABS=comp,mon,boss,hero,abil`, `ONLY=`, `SHOT=1` for contact sheets; in the full suite).
+Rebuild and republish it after changing models, attacks, abilities or bosses: publish `dist/kq-anim-viewer.html` to the
+URL above (read the live page first).

@@ -21,8 +21,8 @@ body.kv-on #gl,body.kv-on #gl canvas{width:100%!important;height:100%!important}
 #kvPanel button,#kvPanel select{font:inherit;color:var(--kv-ink);background:var(--kv-btn);border:1px solid var(--kv-line);border-radius:8px;cursor:pointer}
 #kvPanel button:hover{border-color:#6a4a30}
 #kvPanel button.on{background:var(--kv-on);border-color:var(--kv-acc);color:#fff}
-#kvTabs{display:flex;gap:6px;padding:0 16px 10px}
-#kvTabs button{flex:1;padding:7px 4px;font-weight:600;font-size:.78rem}
+#kvTabs{display:flex;gap:5px;padding:0 16px 10px}
+#kvTabs button{flex:1;padding:7px 2px;font-weight:600;font-size:.72rem;white-space:nowrap}
 #kvList{flex:0 1 auto;max-height:34vh;overflow:auto;padding:0 16px 8px;border-bottom:1px solid var(--kv-line)}
 .grp{font:600 .68rem Inter,sans-serif;color:var(--kv-mut);text-transform:uppercase;letter-spacing:.1em;margin:8px 0 5px}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
@@ -42,6 +42,8 @@ body.kv-on #gl,body.kv-on #gl canvas{width:100%!important;height:100%!important}
 .seg.wide button{flex:1}
 .seg.wrapb{flex-wrap:wrap}.seg.wrapb button{flex:1 1 45%}
 .acts{display:flex;flex-direction:column;gap:5px}
+.acts .sub{font:600 .64rem Inter,sans-serif;color:var(--kv-acc);text-transform:uppercase;letter-spacing:.1em;margin:8px 0 1px}
+.acts .sub:first-child{margin-top:0}
 .kv-act{display:flex;align-items:center;gap:10px;text-align:left;padding:7px 10px}
 .kv-act i{font-style:normal;font-size:1.15rem;width:24px;text-align:center}
 .kv-act span{flex:1;min-width:0}
@@ -54,7 +56,6 @@ body.kv-on #gl,body.kv-on #gl canvas{width:100%!important;height:100%!important}
 #kvCtl .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 #kvCtl .lbl{width:44px;color:var(--kv-mut);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
 #kvCtl #kvPause,#kvCtl #kvStep{padding:4px 9px}
-#kvSpdT{color:var(--kv-acc);font-size:.72rem;margin-left:2px}
 #kvCtl select{padding:4px 6px;flex:1}
 .chk{display:flex;align-items:center;gap:4px;color:var(--kv-mut);font-size:.74rem;margin-left:auto}
 #kvBoot{position:fixed;inset:0;z-index:999;background:var(--kv-bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;font:600 1rem Cinzel,serif;color:var(--kv-acc)}
