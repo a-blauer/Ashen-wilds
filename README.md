@@ -739,17 +739,21 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 
 ## Testing
 
-**How to test (owner's standing request; since Oct 2026 off GitHub Actions, whose minutes ran out):**
-1. **After a change:** `cd test && python3 run_suite.py changed` — the smoke suite plus the tests that `test/affects.txt` maps the
-   changed files to (compared with `origin/main`, committed or not); core engine files or test tools run the full suite.
-   `--list` only prints the choice; `changed HEAD~3` compares with another base.
-2. **Before a publish:** `python3 run_suite.py full` (`test/full.txt`). Publish only when it is green.
-   `python3 run_suite.py full v57t.py v60t.py` re-runs just those lines after a fix.
+**How to test (owner's standing request; back on GitHub Actions since Oct 25 2026, the repo is public so minutes are free):**
+1. **After a change:** commit, then `tools/ci.sh changed` — the smoke suite plus the tests that `test/affects.txt` maps the changed
+   files to (compared with `main`); core engine files or test tools run the full suite. `python3 test/run_suite.py changed --list`
+   only prints the choice.
+2. **Before a publish:** `tools/ci.sh` (full suite, `test/full.txt`, on the exact commit). Publish only when it is green.
+`tools/ci.sh` pushes HEAD to a scratch branch `ci/<branch>` (a push there starts `.github/workflows/tests.yml`; smoke / changed are
+started by hand on it), waits, prints a PASS / FAIL line per test and saves it to `test/out/suite/gh-<suite>.summary.txt`. Every test
+is its own parallel job in **fast mode**; the run's last job, Summary, lists the results. Failed test logs: `gh run view <id>
+--log-failed`; screenshots: `gh run download <id> -p 'out-*'`. The same workflow can be started from the Actions tab (Run workflow).
+**Local fallback** (and for re-running one test while fixing it): `cd test && python3 run_suite.py changed|full [test.py …]`.
 `run_suite.py` snapshots `dist/` first, runs one test at a time in **fast mode** (`test/fast.py`: the main game view skips drawing
 except right before each screenshot, which still gets a full-quality frame; the game loop runs ~14 fps instead of ~0.5), stops
 each test's browser afterwards, and writes `test/out/suite/<suite>.log` and `.summary.txt`. `FAST=0` before a suite line turns fast
 mode off for that test; `python3 fast.py <test.py>` runs any single test fast by hand. Don't run two suites at once on the 2-core
-session machine (helper agents share it too). `.github/workflows/tests.yml` is kept only as a manual fallback.
+session machine (helper agents share it too).
 Each test runs through `test/ci_run.py`, which fails on any `FAIL …` line or crash except the stale checks listed in
 `test/ci_known_fail.txt`; screenshots are uploaded per test. Locally, still run one test at a time while developing the change.
 New tests for a feature go into `full.txt` (and into `smoke.txt` only if they are short and cover something central).

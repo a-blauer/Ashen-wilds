@@ -1,4 +1,4 @@
-# Run a test suite on this machine instead of GitHub Actions (owner's request, Oct 2026: Actions minutes ran out).
+# Run a test suite on this machine. (GitHub Actions is the faster way since Oct 25 2026: tools/ci.sh; see CLAUDE.md.)
 #   python3 run_suite.py smoke        # test/smoke.txt
 #   python3 run_suite.py full         # test/full.txt
 #   python3 run_suite.py full v57t.py v60t.py   # only these lines of the suite
@@ -35,6 +35,10 @@ def changed_lines(base):
             elif re.search(k,f,re.I):want.update(ts);why.append('%s -> %s'%(f,' '.join(ts)))
         if f.startswith('test/') and os.path.basename(f) in byname:want.add(os.path.basename(f))
     return [l for l in full if l.split()[-1] in want],files,why
+if '--json' in only:   # the GitHub workflow's test list: the suite's lines as a JSON array, nothing else
+    import json;only=[a for a in only if a!='--json']
+    lines=changed_lines(only[0] if only else 'origin/main')[0] if suite=='changed' else suite_lines(suite)
+    print(json.dumps(lines));sys.exit(0)
 if suite=='changed':
     lst='--list' in only;only=[a for a in only if a!='--list']
     lines,files,why=changed_lines(only[0] if only else 'origin/main');only=[]
