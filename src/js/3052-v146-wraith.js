@@ -81,7 +81,7 @@ function rw146WhiteoutTick(A,e,dt){const D=A.s146,W=D&&D.wo;if(!W)return;W.t+=dt
       const ex=(W.v.x-ux)*dt*.9,ez=(W.v.z-uz)*dt*.9;if(Math.hypot(ex,ez)>.0005)walk(pl,ex,ez)}else{W.v.x=W.v.z=0}}
   const ws=.55;walk(pl,Math.cos(W.wa)*ws*dt,Math.sin(W.wa)*ws*dt);W.last={x:P.x,z:P.z}}
 {const B=SVB[2];if(B){const t0=B.denTick,c0=B.denClear;
-  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)rw146Whiteout(A,e);rw146WhiteoutTick(A,e,dt);rw146HeartTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 whiteout',err)}};
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)rw146Whiteout(A,e);rw146WhiteoutTick(A,e,dt);rw146HeartTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 whiteout',err)}};
   B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
 // ---------------- the signature: Frozen Heart ----------------
 function rw146Brazier(){const g=new THREE.Group(),iron=new THREE.MeshStandardMaterial({color:0x3a404c,roughness:.45,metalness:.65,flatShading:true}),im=rw146IceMat();

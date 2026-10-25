@@ -155,7 +155,8 @@ function sk146Den(A){return A.s146||(A.s146={objs:[],fx:[],props:[],t:0,ph2:0})}
 function sk146DenAdd(A,o){const D=sk146Den(A);D.objs.push(o);if(o.isObject3D&&!o.parent)scene.add(o);return o}
 function sk146DenClear(A){const D=A.s146;if(!D)return;D.objs.forEach(o=>{try{if(o.stop)o.stop();else if(o.isObject3D&&o.parent)o.parent.remove(o);if(o.kill)o.kill()}catch(_){}});D.objs=[];
   (D.props||[]).forEach(p=>{try{if(!p._gone)dqPropGone(p,false)}catch(_){}});D.props=[];D.ph2=0;D.t=0;D.sig=null;
-  try{dqUndebuff&&D.deb&&dqUndebuff(D.deb)}catch(_){}}
+  try{dqUndebuff&&D.deb&&dqUndebuff(D.deb)}catch(_){}
+  A.s146=null}   // a fresh state for the next fight (every boss's own den objects live in it)
 // the boss entity of a den
 function sk146Boss(A){try{return bossEnt(A.i)}catch(_){return null}}
 // is the hero standing in a den's fight

@@ -126,7 +126,7 @@ function vlr146TideTick(A,e,dt){const D=A.s146,T=D&&D.tide;if(!T)return;T.m.opac
   let inC=false;const pa=Math.atan2(dx,dz);for(let k=0;k<3;k++){if(Math.abs(svAng(pa-(Math.PI/2+T.a+k/3*6.283)))<T.W/2){inC=true;break}}
   T.dT-=dt;if(inC&&T.dT<=0&&!(hero.iv>0)){T.dT=.8;hitHero(e,.14,'m');dqDebuff('Bleeding','🩸',{mspd:-.15},1400,'Standing in blood: bleeding, −15% move speed');D.deb='Bleeding';sk146Drops(gY(P,.3),0xa0101e,6,1.5,2.5,{splats:1})}}
 {const B=SVB[5];if(B){const t0=B.denTick,c0=B.denClear;
-  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)vlr146TideStart(A,e);vlr146TideTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 tide',err)}};
+  B.denTick=function(A,e,dt,now){try{t0&&t0.apply(this,arguments)}catch(_){}try{if(A.f&&e&&e.sv&&e.sv.ph>1&&!sk146Den(A).ph2)vlr146TideStart(A,e);vlr146TideTick(A,e,dt)}catch(err){if(!SK146.err++)console.error('v146 tide',err)}};
   B.denClear=function(A,won){try{c0&&c0.apply(this,arguments)}catch(_){}sk146DenClear(A)}}}
 // ---------------- the signature: Blood Covenant ----------------
 function vlr146Chalice(){const g=new THREE.Group(),gm=new THREE.MeshStandardMaterial({color:0xd8a840,metalness:.8,roughness:.28,flatShading:true,emissive:0x2a1406});gm.userData.lps=1;
