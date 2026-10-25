@@ -29,8 +29,8 @@ def s(pg):
     T('not while near',"()=>{_s.rt=nowP()-1;toPos(_s.x+10,_s.z);rosterTick();return _s.dead}",lambda r:r is True)
     T('respawn',"()=>{_s.rt=nowP()-1;const P=pl.position;toPos(_s.x+20,_s.z);rosterTick();return [_s.dead,!!_s.on,_s.on&&!_s.on.dead,Math.round(Math.hypot(P.x-_s.x,P.z-_s.z))]}",lambda r:r[0] is False and r[1] and r[2])
     T('not on top of you',"()=>{const e=_s.on;e.c.h=1;hurt(e,1e7,null);_s.rt=nowP()-1;toPos(_s.x+.5,_s.z);rosterTick();return _s.dead}",lambda r:r is True)
-    # gateway at the end of I
-    T('gateway',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===0);toPos(g.x,g.z+1);const p=portalPrompt();return [p&&p.label,g.to.n]}",lambda r:r[0] and 'Kindlelight II' in r[0])
+    # gateway at the end of I (v143-v145: the zone's main quest seals the gateways; mark it done first)
+    T('gateway',"()=>{if(typeof MQ143!='undefined')MQ143.st=3;if(typeof MQ144!='undefined')MQ144.st=3;if(typeof MQ145!='undefined')MQ145.at=[1,1,1];const g=RPORT.find(r=>r.k=='next'&&r.ig===0);toPos(g.x,g.z+1);const p=portalPrompt();return [p&&p.label,g.to.n]}",lambda r:r[0] and 'Kindlelight II' in r[0])
     T('through',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===0);insArrive(g.to);insMark(g.to);rosterTick();const I=curIns();return [I.g,INSR[0],ROST.r,enemies.filter(e=>e.slot&&!e.dead&&rgAt(Math.round(e.m.position.x),Math.round(e.m.position.z))!==1).length]}",
       lambda r:r[0]==1 and r[1]==1 and r[2]==1 and r[3]==0)
     # recall from a spot in II, then T again from Duskhold: back to that same spot
@@ -56,7 +56,7 @@ def s(pg):
     # save + reload keeps the reached instances and the recall spot
     T('save',"()=>{const q=curIns().path[100];toPos(q[0],q[1]);recallTown();saveGame&&saveGame();const s=JSON.parse(localStorage.getItem(SAVE_KEY));return [s.x2.insr,s.x2.inst&&s.x2.inst.r,s.x2.wl]}",lambda r:r[0][0]==1 and r[1]==1 and r[2]==112)
     # III ends in the gateway to the den; the den has no roaming creatures, a way home at its entrance, and recall works there
-    T('III gateway',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(0,2));toPos(g.x,g.z+1);const p=portalPrompt();return [p&&p.label,g.to.den]}",lambda r:r[0] and 'Den' in r[0] and r[1])
+    T('III gateway',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(0,2));toPos(g.x,g.z+1);const p=portalPrompt();return [p&&p.label,g.to.den]}",lambda r:r[0] and 'Den' in r[0] and 'sealed' not in r[0] and r[1])
     T('into den',"()=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(0,2));insArrive(g.to);insMark(g.to);rosterTick();const I=curIns();return [I.g,I.den,INSR[0],ROST.r,ROST.slots.length,RPORT.some(r=>r.k=='home'&&r.ig===I.g),zoneLv(I.en[0],I.en[1])]}",
       lambda r:r[0]==3 and r[1] and r[2]==3 and r[3]==3 and r[4]==0 and r[5])
     T('den fight starts',"()=>{const A=ARN[0];toPos(A.cx,A.cz+ARENA_R-4);arenaTick(.016,performance.now());return [!!AF,AF&&AF.i]}",lambda r:r[0] and r[1]==0)
