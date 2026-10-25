@@ -61,3 +61,5 @@ v148_mouse.py
 v148_camps.py
 v148_outskirts.py
 v148_deco.py
+TIMES=4,20,27,40,53,57.5 v149_intro.py
+v149_intro_live.py
