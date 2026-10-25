@@ -26,13 +26,13 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms));let clk=
   const run=async(i,stopAt)=>{const s=R.sig[i];toPos(s.x+1.8,s.z+1.2);tick(.2);const pr=((worldPrompt()||{}).label||'');(worldPrompt()||{fn(){}}).fn();const Rr=MQ145.R;
     const info={pr,lv:Rr?Rr.lv:0,lvls:[],look:1};if(!Rr)return info;
     // v148: 12 alive at a time, each fallen wolf replaced until 100 have been slain
-    while(MQ145.R===Rr&&!Rr.w)tick(.25);await wait(1200);tick(.1);info.first=Rr.live.length;
+    while(MQ145.R===Rr&&!Rr.w)tick(.25);await wait(1200);tick(.1);info.first=Rr.live.length;info.hunt=Rr.live.length>0&&Rr.live.every(e=>e.hunt&&e.agg&&eTarget(e,e.m,5)===pl);
     Rr.live.forEach(e=>{info.lvls.push(e.c.l);if(!e.gw145||!e.m.eyes145)info.look=0});if(stopAt===0)return info;
     let mx=0,mn=99,it=0;while(MQ145.R===Rr&&it++<200){const L=Rr.live.filter(e=>!e.dead);mx=Math.max(mx,L.length);if(Rr.n<Rr.tot&&it>1)mn=Math.min(mn,Rr.n-Rr.dead);
       L.forEach(e=>{info.lvls.push(e.c.l);if(!e.gw145)info.look=0});L.slice(0,5).forEach(e=>hurt(e,1e8,null,false));tick(.1);await wait(60);tick(.1)}
     info.max=mx;info.minUp=mn;
     tick(1.5);info.tot=Rr.tot;info.dead=Rr.dead;info.after=MQ145.R;info.at=MQ145.at[i];return info};
-  const r0=await run(0);out.r0={pr:r0.pr,lv:r0.lv,first:r0.first,max:r0.max,minUp:r0.minUp,lv0:[...new Set(r0.lvls)].join(','),look:r0.look,tot:r0.tot,dead:r0.dead,at:r0.at,cleared:r0.after===null};
+  const r0=await run(0);out.r0={pr:r0.pr,lv:r0.lv,first:r0.first,hunt:r0.hunt,max:r0.max,minUp:r0.minUp,lv0:[...new Set(r0.lvls)].join(','),look:r0.look,tot:r0.tot,dead:r0.dead,at:r0.at,cleared:r0.after===null};
   MQ145.trkK='';mq143Trk();out.trkA=$('mqt143').textContent;
   // a failed ritual: start sigil 1, wander off
   const r1=await run(1,0);out.lv1=r1.lv;MQ145.trkK='';mq143Trk();out.trkR=$('mqt143').textContent;
@@ -60,7 +60,7 @@ def s(pg):
     exp(r['scene'] and r['found0']==1,'coming near finds a sigil')
     a=r['r0'];exp('Begin the essence' in a['pr'],'ritual prompt (%s)'%a['pr'])
     exp(a['first']==12 and a['max']==12,'12 wolves rise and never more (%s first, %s most)'%(a['first'],a['max']));exp(a['minUp']>=12-5,'fallen wolves are replaced (fewest hunting before the last ones: %s)'%a['minUp']);exp(a['lv']==4 and a['lv0']=='4','first sigil: level 4 wolves (%s / %s)'%(a['lv'],a['lv0']))
-    exp(a['look']==1,'spawned wolves are ghost wolves');exp(a['tot']==100 and a['dead']==100,'100 wolves slain (%s/%s)'%(a['dead'],a['tot']))
+    exp(a['look']==1,'spawned wolves are ghost wolves');exp(a['hunt'],'v148: every new ghost wolf hunts the hero at once');exp(a['tot']==100 and a['dead']==100,'100 wolves slain (%s/%s)'%(a['dead'],a['tot']))
     exp(a['at']==1 and a['cleared'],'the sigil is attuned when all are slain')
     exp('1/3' in r['trkA'],'tracker counts attuned sigils (%s)'%r['trkA']);exp('Essence charging' in r['trkR'],'tracker during a ritual (%s)'%r['trkR'])
     exp(r['lv1']==5,'second sigil: level 5 (%s)'%r['lv1']);exp(r['failed'] and r['leftover']==0,'wandering off fails the ritual and clears the wolves (%s left)'%r['leftover'])

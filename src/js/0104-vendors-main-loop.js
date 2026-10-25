@@ -70,7 +70,7 @@ function loop(now){
     const v=V().subVectors(tg.position,m.position).setY(0),L=v.length();
     e.cd-=dt;e.ch=Math.max(0,e.ch-dt);
     if(e.boss){bossAI(e,dt,now,tg,L,v);return}
-    if(e.wv&&!safeP)e.agg=1;else if(safeP){e.agg=0;if(e.atk)mCancel(e)}else if(L<(e.c.al?6:4.5)&&seeTg(m.position,tg.position))e.agg=1;else if(L>11&&!e.atk)e.agg=0;
+    if((e.wv||e.hunt)&&!safeP)e.agg=1;else if(safeP){e.agg=0;if(e.atk)mCancel(e)}else if(L<(e.c.al?6:4.5)&&seeTg(m.position,tg.position))e.agg=1;else if(L>11&&!e.atk)e.agg=0;
     if(e.atk){if(dt>0)mTick(e,dt,now);animC(m,now,!!(e.atk&&e.atk.ph==1&&(e.atk.n=='charge'||e.atk.n=='pounce')),3);return}
     let ux=0,uz=0,sp=0;
     if(e.agg){if(e.ip){m.pose=null;e.ip=0}

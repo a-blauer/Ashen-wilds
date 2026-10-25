@@ -168,7 +168,7 @@ function mq145Spawn(R,n){const M=MQ145.S.sig[R.i],ok=mq145Plan().ok,P=pl.positio
   if(n>=3)svSnd('roar',.6,1.6);
   for(let k=0;k<n;k++){let x=M.x,z=M.z;for(let tr=0;tr<12;tr++){const a=Math.random()*6.283,r=6.5+Math.random()*4;const qx=M.x+Math.cos(a)*r,qz=M.z+Math.sin(a)*r;if(ok(qx,qz,.4)&&Math.hypot(qx-P.x,qz-P.z)>3){x=qx;z=qz;break}}
     const at=k*70;setTimeout(()=>{if(MQ145.R!==R)return;let e=null;try{e=spawnEnemy('ghostwolf',x,z,R.lv,{agg:1,minion:1})}catch(err){console.error('v145 wolf',err)}
-      if(!e){R.n--;return}e.gw145=1;e.mq145=R;e.agg=1;e.wx=M.x;e.wz=M.z;e.m.rotation.y=Math.atan2(P.x-x,P.z-z);R.live.push(e);
+      if(!e){R.n--;return}e.gw145=1;e.mq145=R;e.agg=1;e.hunt=1;e.wx=M.x;e.wz=M.z;e.m.rotation.y=Math.atan2(pl.position.x-x,pl.position.z-z);R.live.push(e);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x1a1030,1.3,2.2,.8);svShock(p,0x7a5aff,1.6,.4);burst(gY(p,.3),0x3a2a6a,16,1.2,2,.8)},at);made++}
   R.n+=made}
 function mq145RTick(dt,now){const R=MQ145.R,M=MQ145.S&&MQ145.S.sig[R.i];if(!M){MQ145.R=null;return}R.t+=dt;
@@ -235,3 +235,7 @@ function mq145Marks(g,P,k){if(!mq145In3())return;mq145Plan().sig.forEach((o,i)=>
 {const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq145={v:145,at:MQ145.at.slice(),fd:MQ145.fd.slice()}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq145,arr=(a)=>[0,1,2].map(i=>a&&a[i]?1:0);if(MQ145.R)mq145Fail('left');
     MQ145.at=arr(q&&q.at);MQ145.fd=arr(q&&q.fd);MQ145.trkK='';MQ145.fin=0;mq145Sync();mq145GateSync()}catch(err){console.warn('v145 load',err)}return r}}
+// v148: the ghost wolves go straight for the hero the moment they rise (e.hunt keeps them aggressive at any distance in the
+// main loop; here they target the hero rather than a companion, and the far-AI sleep never parks them)
+{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.hunt&&e.gw145&&!e.dead)return pl;return f.apply(this,arguments)}}
+{const f=aiLod;aiLod=function(e,dpl,dt){if(e&&e.hunt)return dt;return f.apply(this,arguments)}}
