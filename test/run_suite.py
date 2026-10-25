@@ -37,7 +37,9 @@ def changed_lines(base):
     return [l for l in full if l.split()[-1] in want],files,why
 if '--json' in only:   # the GitHub workflow's test list: the suite's lines as a JSON array, nothing else
     import json;only=[a for a in only if a!='--json']
-    lines=changed_lines(only[0] if only else 'origin/main')[0] if suite=='changed' else suite_lines(suite)
+    if suite=='changed':lines=changed_lines('origin/main')[0]
+    else:lines=suite_lines(suite)
+    if only:lines=[l for l in lines if l.split()[-1] in only]   # only these test files
     print(json.dumps(lines));sys.exit(0)
 if suite=='changed':
     lst='--list' in only;only=[a for a in only if a!='--list']

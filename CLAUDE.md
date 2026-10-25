@@ -11,9 +11,11 @@
   - after a change: `tools/ci.sh changed` (smoke + the tests `test/affects.txt` maps the changed files to vs `main`; the whole full
     suite when core files or the test tools change). `python3 test/run_suite.py changed --list` shows what it would run.
   - before every publish: `tools/ci.sh` (full suite on the exact commit you will publish). Publish only when it is green.
-  - failed test: its log is in the run (`gh run view <id> --log-failed`), screenshots in the run's `out-*` artifacts
-    (`gh run download <id> -p 'out-*'`). Reproduce and fix locally with `cd test && python3 run_suite.py full <test>.py`.
-  - `ci/*` branches are scratch: never merge from them; `main` stays the source of truth (push to it as before).
+  - failed test: `tools/ci.sh` prints its `FAIL …` lines (up to 10, read from the run's annotations: this workspace can't download
+    Actions logs or artifacts, so `gh run view --log` / `gh run download` fail with Forbidden; the owner can see them in the Actions
+    tab). Reproduce and fix locally with `cd test && python3 run_suite.py full <test>.py`, then re-check on GitHub with
+    `tools/ci.sh full <test>.py`.
+  - `ci/*` and `ci-run/*` branches are scratch: never merge from them; `main` stays the source of truth (push to it as before).
   - fallback when GitHub is unreachable: the same suites locally with `cd test && python3 run_suite.py changed|full` (one suite at
     a time: 2 cores, and helper agents run on this same machine).
   Tests run in fast mode (`test/fast.py`: the game view only draws for screenshots, ~30x faster game loop), on GitHub too; put

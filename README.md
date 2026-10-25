@@ -746,8 +746,9 @@ Everything removed is in git history: branch `claude/v100-integrate` is the last
 2. **Before a publish:** `tools/ci.sh` (full suite, `test/full.txt`, on the exact commit). Publish only when it is green.
 `tools/ci.sh` pushes HEAD to a scratch branch `ci/<branch>` (a push there starts `.github/workflows/tests.yml`; smoke / changed are
 started by hand on it), waits, prints a PASS / FAIL line per test and saves it to `test/out/suite/gh-<suite>.summary.txt`. Every test
-is its own parallel job in **fast mode**; the run's last job, Summary, lists the results. Failed test logs: `gh run view <id>
---log-failed`; screenshots: `gh run download <id> -p 'out-*'`. The same workflow can be started from the Actions tab (Run workflow).
+is its own parallel job in **fast mode**; the run's last job, Summary, lists the results. It also prints the `FAIL …` lines of
+failed tests (from the run's annotations; this workspace can't download Actions logs or artifacts, the Actions tab shows them).
+`tools/ci.sh full v57t.py v60t.py` re-runs only those tests (branch `ci-run/…`). The Actions tab's Run workflow does the same by hand.
 **Local fallback** (and for re-running one test while fixing it): `cd test && python3 run_suite.py changed|full [test.py …]`.
 `run_suite.py` snapshots `dist/` first, runs one test at a time in **fast mode** (`test/fast.py`: the main game view skips drawing
 except right before each screenshot, which still gets a full-quality frame; the game loop runs ~14 fps instead of ~0.5), stops

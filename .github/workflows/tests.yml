@@ -1,8 +1,10 @@
 # Tests on GitHub Actions (back on since Oct 25 2026: the repo is public, so Actions minutes are free).
 # Every test of the suite runs as its own job, in parallel, in fast mode (test/fast.py), same pass/fail rules as run_suite.py.
 #   - push to a branch named ci/<anything>  -> full suite on that commit (tools/ci.sh does this and waits for the result)
-#   - Actions -> Tests -> Run workflow      -> pick smoke, changed (vs main) or full, on any branch
-# The last job ("Summary") lists every test as PASS / FAIL; tools/ci.sh prints it.
+#   - Actions -> Tests -> Run workflow      -> pick smoke, changed (vs main) or full, on any branch; optionally only some tests
+# The last job ("summary") lists every test as PASS / FAIL in one annotation titled "Results", which tools/ci.sh prints
+# (the session workspace can't download Actions logs or artifacts, only read annotations through the API).
+# Runners are pinned to ubuntu-24.04: ubuntu-latest moves to Ubuntu 26 from Oct 2026, which may break the browser install.
 name: Tests
 on:
   push:
@@ -14,6 +16,9 @@ on:
         default: full
         type: choice
         options: [smoke, changed, full]
+      only:
+        description: optional test files to run from that suite, space separated (e.g. v57t.py v60t.py)
+        default: ''
 concurrency:
   group: tests-${{ github.ref }}-${{ github.event.inputs.suite || 'full' }}
   cancel-in-progress: true
@@ -21,20 +26,21 @@ env:
   SUITE: ${{ github.event.inputs.suite || 'full' }}
 jobs:
   list:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       tests: ${{ steps.l.outputs.tests }}
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}
       - id: l
+        env: {ONLY: '${{ github.event.inputs.only }}'}
         run: |
           git fetch -q origin main || true
-          echo "tests=$(python3 test/run_suite.py "$SUITE" --json)" >> "$GITHUB_OUTPUT"
+          echo "tests=$(python3 test/run_suite.py "$SUITE" --json $ONLY)" >> "$GITHUB_OUTPUT"
   test:
     needs: list
     if: needs.list.outputs.tests != '[]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -83,7 +89,7 @@ jobs:
   summary:
     needs: [list, test]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with: {pattern: res-*, merge-multiple: true, path: res}
@@ -95,5 +101,6 @@ jobs:
           head="$SUITE: $pass/$total passed"
           { echo "## $head"; echo '```'; cat all.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           echo "$head"; cat all.txt
+          python3 -c 'import sys;t=sys.stdin.read().strip().replace("%","%25").replace("\r","").replace("\n","%0A");print("::notice title=Results::"+t)' < all.txt
           if [ "$pass" != "$total" ]; then echo "::error title=Suite $SUITE::$head"; exit 1; fi
           echo "::notice title=Suite $SUITE::$head"
