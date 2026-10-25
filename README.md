@@ -51,6 +51,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Sovereign dens (scenery, seal, colliders; their v86 hazards are off since v110) | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
+| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new) | `3070`–`3076` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -272,6 +273,25 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`itName`), fixed bonus (`itStats`), tooltip block, own models (icon `v89Kit`/`v89Key`, ground `lgDropModel`, hand `v89Wpn`, worn gem
   colour via `mdGD`). Tests: `v135_checks.py`, `v135_uniques.py`, `v135_bow.py`, `v132_cheddar_test.py`; pictures `v135_cheddar_shot.py`,
   `v135_fade_shot.py`, `v135_edge_look.py` (SRC= an older build for before/after), `v135_cat_head.py`, `v135_far_shots.py`, `v135_pick.py`.
+- **Version 148 (owner's list, Oct 25 2026)**: *Tools*: the hatchet and pickaxe are aimed in the world after the animation
+  (`SK148` key directions in the hero's frame; the pick's head lies in the swing plane, the hatchet's edge leads its motion) and the off
+  hand takes the handle (two-bone IK, bones put back before the next frame). *Weapon edges* (1270 `gripEdge`): only frames at least 40%
+  as fast as the swing's peak turn the edge, and for the hero only until the hit moment + .1, so the recovery never flips the edge round
+  (the halberd's finishing sweep showed its blade backwards in the follow-through); the hammer's faces lead like a double edge. Test
+  `v148_edges.py`. *Mouse*: only the left button attacks (the middle one turns the camera); an aimed ability started with mouse-look on
+  turns it off for the aim and back on after the cast or a right-click / ✕ cancel (not after Esc) (`3072`). *Camps*: a camp's creatures
+  wait 300 s and the whole camp returns 5 minutes after its clear; a clear gives `CAMP148.xp` (2.5) kills' XP and a chest of 2-3 different
+  kinds from the area's loot table (`camp148Loot`). *Sigils*: 12 ghost wolves at once, each one that falls replaced until 100 are slain;
+  they hunt the hero on rising (`e.hunt`, 0104). *Footprints*: a shop / house marks only the tiles where downward rays meet its model
+  (yards are walkable); a door turned to face the town wall counts as blocked (`3073`). *Outskirts*: every pine, dead tree, rock and
+  bush of the wild kit can be gathered once (wood, stone, fibre) and is gone for good: its mesh part collapses (per-item vertex ranges in
+  the baked kit), its collider goes, saved by candidate index (`3074`). *Cheddar*: gone from the instances (no burrows, colliders or
+  grass clearings); one Cheddar on a crate beside a quest board east of the plaza (`CHQ148.at`); a tab per open zone, quests count in
+  every instance of their zone (menu kinds anywhere, `CHQ148_ANY`), four difficulties `CHQ148_DF` (XP/gold ×1/1.8/3/5, gear rarity and
+  count, an egg on Heroic), v132 quests keep their ids; turning in only at the board (`3075`). *Decorations*: cheaper, many material-only
+  (`DC148_COST`), and six new big ones: Duskhold Obelisk, Plaza Torches, Lantern Pavilion, Elder Oak, Moonflower Gardens, Great Beacon
+  (the four square pieces appear as the kingdom grows over their square) (`3076`). Tests: `v148_tools.py`, `v148_edges.py`, `v148_mouse.py`,
+  `v148_camps.py`, `v148_outskirts.py`, `v148_cheddar.py` (replaces `v132_cheddar_test.py`), `v148_deco.py`.
 - **Version 141 (owner's list, Oct 2026)**: *Consume* raises only the eaten companion's best stat (same amount per stat as before;
   refused when that stat is maxed); the Fusion preview shows gains under 2 points with one decimal. *Keys*: Q feeds the most hurt
   active companion, Z health potion, X mana potion, 1–6 abilities. *Companions*: one active companion until the Beast Trainer teaches

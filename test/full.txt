@@ -34,7 +34,7 @@ NOSHOT=1 v123_camps.py
 v124_edge_test.py
 v112_instances.py
 v128_whirl.py
-v132_cheddar_test.py
+v148_cheddar.py
 v133_sov_spacing.py
 v135_checks.py
 v135_uniques.py
@@ -55,3 +55,9 @@ v144_glowmire.py
 v145_sigils.py
 v146_sovs.py
 kv_viewer.py
+v148_tools.py
+v148_edges.py
+v148_mouse.py
+v148_camps.py
+v148_outskirts.py
+v148_deco.py

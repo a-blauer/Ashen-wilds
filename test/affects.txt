@@ -9,7 +9,7 @@ FULL: ^src/js/0(0\d|1[0-4])\d|^src/page|^src/style|^build\.sh|^test/(play|fast|c
 
 save|slot|export|0230-: v38t.py v114_save.py v116_slots.py v131_load_title.py
 kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor|folk: v137_npcs.py v142_folk.py v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
-instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes|edge|ledge|site: v132_cheddar_test.py v108_instances.py v112_instances.py v123_camps.py v124_edge_test.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
+instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes|edge|ledge|site: v148_cheddar.py v108_instances.py v112_instances.py v123_camps.py v124_edge_test.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
 sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py v133_sov_spacing.py v141_sov.py
 compan|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v137_enemies.py v57t.py v100_fusemenu.py v141_consume.py v105_abil.py v122_support.py v113_roster.py
 abilit|skill|talent|class|spell|resource|helpers-new: v117_abilities.py v105_abil.py v119_abprev.py v114_race.py v137_evolve.py
@@ -18,7 +18,7 @@ grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|t
 menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py v131_load_title.py
 signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp|companion-|foes|old-creatures|v137_creature: v137_enemies.py v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py
 coop|co-op|net: v108_instances.py v116_slots.py
-cheddar|quest: v143_lantern_road.py v144_glowmire.py v145_sigils.py v132_cheddar_test.py v38t.py v114_save.py v108_instances.py v57t.py
+cheddar|quest: v143_lantern_road.py v144_glowmire.py v145_sigils.py v148_cheddar.py v38t.py v114_save.py v108_instances.py v57t.py
 v135|cheddar|camera|fade|clip|wave|hatch|ring|death|kill|unique|fish|right|mouse|preview|travel: v135_checks.py
 v139|attribut|character|talent|power|flail|xp|preview|inventory: v139_checks.py
 v140|creator|frog-carry|carry|hud-rework|creator-heroic|look: v140_creator.py v117_creator.py
@@ -26,9 +26,16 @@ unique|fish|loot|item|gear|icon|0780|v89|mdgd|tooltip: v135_uniques.py v137_item
 bow|0780|0890|grip|carry|anim: v135_bow.py
 ability-evo|coop-visuals|0130-|1000-|1010-|1090-|1230-|1240-|2240-: v137_evolve.py v119_abprev.py v117_abilities.py
 ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-new: v138_abil_balance.py
-lantern|v143|1680-|ripper|warden: v143_lantern_road.py v145_sigils.py v108_instances.py v124_edge_test.py v132_cheddar_test.py v113_roster.py v38t.py v114_save.py v142_folk.py
+lantern|v143|1680-|ripper|warden: v143_lantern_road.py v145_sigils.py v108_instances.py v124_edge_test.py v148_cheddar.py v113_roster.py v38t.py v114_save.py v142_folk.py
 glowmire|v144|vorraxis|lair|1970-|2440-: v144_glowmire.py v143_lantern_road.py v108_instances.py v141_sov.py v114_save.py
 sigil|v145|ghostwolf|rune: v145_sigils.py v143_lantern_road.py v144_glowmire.py v108_instances.py v113_roster.py v114_save.py
 v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-: v146_sovs.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py
 # The animation viewer (viewer/, a separate artifact built from the game): every subject and action still plays
 ^viewer/|sov|boss|vorraxis|lair|abilit|evo-|signature|monster|compan|2240-: kv_viewer.py
+# v148
+skilling|gather|grip|1270|2995|3070|anim|weapon|0900|1700: v148_tools.py v148_edges.py
+0108|1010|3072|mouse|aim|target: v148_mouse.py
+camp|3071|0250|0360|chest|loot|kill|roster|0550: v148_camps.py
+outskirt|3074|1960|kingdom|gather|0102: v148_outskirts.py
+cheddar|3075|quest|board|2350|2380: v148_cheddar.py
+deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.py v109_kingdom_shops.py
