@@ -25,7 +25,7 @@ var GRIP={
   axes:   {t:.15, el:-.45,sp:GRIP_H,edge:1},
   mace:   {t:.15, el:-.45,sp:0},
   club:   {t:.12, el:-.45,sp:0},
-  hammer: {t:.15, el:-.45,sp:-GRIP_H},
+  hammer: {t:.15, el:-.45,sp:-GRIP_H,edge:2},                         // v148: a face (±x) leads the blow, like a double edge
   dagger: {t:.6,  el:-.4, sp:-GRIP_H,edge:2},
   knives: {t:.6,  el:-.4, sp:-GRIP_H,edge:2},
   gs:     {t:-.3, el:-.75,sp:-GRIP_H,rl:.12,hold:[0,.02,0],edge:2},    // resting on the shoulder
@@ -106,7 +106,8 @@ function gripTick(h,now,el,att){
     if(now!=null)S.t=now}
   const w=gripSS(S.w),b=h.bones;
   // the edge only follows the blade through the strike itself (not the wind-up or the return)
-  const edgeOK=h===pl?!!(HA.cur&&HA.cur.k>=.22&&HA.cur.k<=.58):h._grHum?!!h._grAct:true;
+  // v148: for the hero it ends just after contact (hit moment + .1), so the recovery never turns the edge round
+  const edgeOK=h===pl?!!(HA.cur&&HA.cur.k>=.22&&HA.cur.k<=Math.min(.58,(HA.cur.hitAt<=1?HA.cur.hitAt:.42)+.1)):h._grHum?!!h._grAct:true;
   let elR=0,elL=0;
   for(const e of S.L){const W=e.W;if(!W.parent)continue;
     const C=e.C,sx=W.scale.x;
@@ -128,8 +129,12 @@ var GRIP_TQ=new THREE.Quaternion(),GRIP_TQ2=new THREE.Quaternion();
 function gripEdge(h,e,dt){
   const W=e.W,bn=W.parent;bn.updateWorldMatrix(true,false);
   const tip=new THREE.Vector3(0,-.6,0).applyQuaternion(e.S.q).add(new THREE.Vector3(...e.S.p)).applyMatrix4(bn.matrixWorld);h.worldToLocal(tip);
-  const prev=e.tip;e.tip=tip;if(!prev)return;
+  const prev=e.tip;e.tip=tip;if(!prev){e.pk=0;return}
   const v=tip.clone().sub(prev).divideScalar(dt);
+  // v148: only the blow itself turns the edge: frames slower than half the swing's fastest so far (the wind-up settling, the
+  // swing slowing and reversing into the recovery) keep the spin, so after a sweep the edge still faces the way it cut
+  // (the halberd's finishing sweep flipped round with the return and looked backwards in the follow-through)
+  const vs=v.length();e.pk=Math.max(e.pk||0,vs);if(vs<e.pk*.4)return;
   // velocity → the strike frame before the spin: inverse(body→hand rotation × strike rotation)
   h.getWorldQuaternion(GRIP_TQ);bn.getWorldQuaternion(GRIP_TQ2);GRIP_TQ.invert().multiply(GRIP_TQ2).multiply(e.S.q).invert();v.applyQuaternion(GRIP_TQ);
   const sp=Math.hypot(v.x,v.z);if(sp<1.6||sp<Math.abs(v.y)*.35)return;
