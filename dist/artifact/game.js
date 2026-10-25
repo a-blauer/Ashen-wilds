@@ -37877,7 +37877,7 @@ function mb144SiphonStart(e){const L=MB144L,LS=MQ144.LS;mb144ClearExtras();MQ144
   MQ144.sacN=MQ144.sacs.length;say('🟢 Vorraxis drinks from the crystal! Burst the three ooze sacs before the siphon completes.');svSnd('charge',.8,.5)}
 function mb144SiphonEnd(e,interrupted){const LS=MQ144.LS;if(LS&&LS.beam){LS.beam.parent&&LS.beam.parent.remove(LS.beam);LS.beam.material.dispose();LS.beam=null}
   MQ144.sacs.slice().forEach(s=>{if(!s.dead){burst(gY(s.m.position,.6),0x6a8a3a,20,1.5,1.5,.6);try{removeE(s)}catch(_){}}});MQ144.sacs=[]}
-function mb144SacPop(s){if(s.dead)return;s.dead=1;s.c.h=0;try{s.hb.visible=false}catch(_){}if(typeof tgt!='undefined'&&tgt===s)try{setTarget(null)}catch(_){}
+function mb144SacPop(s){if(s.popped)return;s.popped=1;s.dead=1;s.c.h=0;try{s.hb.visible=false}catch(_){}if(typeof tgt!='undefined'&&tgt===s)try{setTarget(null)}catch(_){}
   const p=s.m.position.clone();burst(gY(p,.6),0xb8ff3a,50,3,3,.8);svShock(p,0xb8ff3a,3,.4);svDecal(p,0x2a5a10,1.8,3,.6);svSnd('squelch',1,1);setTimeout(()=>{try{removeE(s)}catch(_){}},60);
   const i=MQ144.sacs.indexOf(s);if(i>=0)MQ144.sacs.splice(i,1);const e=MQ144.e;
   if(e&&!e.dead){const d=Math.round(M(e.c)*.04);e.c.h=Math.max(1,e.c.h-d);dn(e.m.position,d,'#d8ff7a',-20,1200);
