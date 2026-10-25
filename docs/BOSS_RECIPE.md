@@ -3,7 +3,11 @@
 The owner's reference for every new boss and mini boss: **Vorraxis, the Seeping King** (v144, Kindlelight II, the Seeping Lair).
 Files: `src/js/3031-v144-vorraxis-model.js` (model, poses, animation), `3032-v144-vorraxis-moves.js` (moves),
 `3033-v144-glowmire-lair.js` (lair, fight controller, mechanics, quest). Read those three files before building a new boss: copy
-their structure and change the content. The fight should match this standard: a readable pattern, telegraphed moves, a phase change
+their structure and change the content.
+
+**Copy the method, not the theme.** Everything about ooze, acid, scales, the crystal, the flood and the goo cave belongs to Vorraxis
+only: it is the worked example. Every new boss gets its own theme (from the owner's request and the zone), its own look, moves,
+debuff, arena and signature mechanic, built with the same structure and to the same standard of polish. The fight should match this standard: a readable pattern, telegraphed moves, a phase change
 that changes the arena, one signature mechanic the player must answer, and a model and animations polished enough to sell it.
 
 ## 1. Design the fight on paper first
