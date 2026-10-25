@@ -61,20 +61,23 @@ def s(pg):
         if SHOT:
             ev("()=>{const e=BE,p=e.m.position;cam.position.set(p.x+9,GH(p.x,p.z)+9,p.z+9);cam.lookAt(p.x,GH(p.x,p.z)+1,p.z);POST.render();return 1}");pg.screenshot(path=play.TMP+'/v146_%s_ph2.png'%tag)
         # the signature: break every prop → BROKEN
-        sig=ev("""(o)=>{const e=BE,S=e.sv;(%s)({d:6,ph:2});svStart(e,o.sig);STEP(2.6);const an=S.mv&&S.mv.an,P=(an&&an.props)||[];const r={mv:S.mv&&S.mv.id,props:P.filter(p=>!p.dead).length,dr:S.dr};
-            const h0=e.c.h;hurt(e,1000,null,false);r.took=h0-e.c.h;window.SHOTSIG=1;return r}"""%PLACE,{'sig':C['sig']})
+        sig=ev("""(o)=>{const e=BE,S=e.sv;(%s)({d:6,ph:2});window.LERR='';svStart(e,o.sig);STEP(2.6);const an=S.mv&&S.mv.an,P=(an&&an.props)||[];const r={mv:S.mv&&S.mv.id,props:P.filter(p=>!p.dead).length,dr:S.dr};
+            const h0=e.c.h;hurt(e,1000,null,false);r.took=h0-e.c.h;r.err=window.LERR||'';return r}"""%PLACE,{'sig':C['sig']})
         print(tag,'sig',json.dumps(sig))
+        if sig.get('err'):F('%s: game loop error during the signature: %s'%(tag,sig['err'][:300]))
         if sig['props']!=C['props']:F('%s: %s props, expected %s'%(tag,sig['props'],C['props']))
         if not (sig['dr']>0 and sig['dr']<1 and sig['took']<500):F('%s: not warded during the signature (dr %s, took %s of 1000)'%(tag,sig['dr'],sig['took']))
         if SHOT:
             ev("()=>{const e=BE,p=e.m.position;cam.position.set(p.x+11,GH(p.x,p.z)+8,p.z+11);cam.lookAt(p.x,GH(p.x,p.z)+1.5,p.z);POST.render();return 1}");pg.screenshot(path=play.TMP+'/v146_%s_sig.png'%tag)
-        br=ev("""()=>{const e=BE,S=e.sv,P=(S.mv&&S.mv.an&&S.mv.an.props)||[];P.slice().forEach(p=>{if(!p.dead)hurt(p,1e9,null,false)});STEP(.4);return {mv:S.mv&&S.mv.id,dr:S.dr,stg:S.stg}}""")
+        br=ev("""()=>{const e=BE,S=e.sv,P=(S.mv&&S.mv.an&&S.mv.an.props)||[];P.slice().forEach(p=>{if(!p.dead)hurt(p,1e9,null,false)});STEP(.4);return {mv:S.mv&&S.mv.id,dr:S.dr,stg:S.stg,err:window.LERR||''}}""")
         print(tag,'broken',json.dumps(br))
+        if br.get('err'):F('%s: game loop error after breaking the props: %s'%(tag,br['err'][:300]))
         if br['mv']!='broken' or br['dr']!=0:F('%s: breaking every prop did not BREAK him %s'%(tag,br))
         # the signature again, left alone: the fail outcome (he heals)
         fl=ev("""(o)=>{const e=BE,S=e.sv;(%s)({d:6,ph:2,hp:.4});const h0=e.c.h;S.cd={};svStart(e,o.sig);let t=0;while(S.mv&&S.mv.id===o.sig&&t<20){STEP(.2);t+=.2}STEP(3);
-            return {healed:e.c.h-h0,left:(XA.s146&&XA.s146.props||[]).filter(p=>!p.dead&&!p._gone).length,dr:S.dr}}"""%PLACE,{'sig':C['sig']})
+            return {err:window.LERR||'',healed:e.c.h-h0,left:(XA.s146&&XA.s146.props||[]).filter(p=>!p.dead&&!p._gone).length,dr:S.dr}}"""%PLACE,{'sig':C['sig']})
         print(tag,'fail',json.dumps(fl))
+        if fl.get('err'):F('%s: game loop error in the failed signature: %s'%(tag,fl['err'][:300]))
         if not fl['healed']>0:F('%s: the completed signature did not heal (%s)'%(tag,fl['healed']))
         if fl['left']!=0 or fl['dr']!=0:F('%s: props/ward left after the signature %s'%(tag,fl))
         # the fight ends: the den is clean
