@@ -3,3 +3,4 @@ __pycache__/
 .claude/
 dist/web/
 dist/kill-quest-web.zip
+dist/viewer/

@@ -848,8 +848,9 @@ if they must be re-declared: `{"room":{"topics":{"es":"interact","ev":"interact"
 
 ## Animation viewer (separate artifact)
 
-`viewer/` builds `dist/kq-anim-viewer.html`, published on its own as the claude.ai artifact
-https://claude.ai/artifact/QE5i4p6m1KaMduTUe453Qm (one file). It is the game build plus a viewer panel that plays the real
+`viewer/` builds `dist/kq-anim-viewer.html` (one file, what the tests load) and `dist/viewer/index.html` + `dist/viewer/game.js`
+(not committed), published on its own as the claude.ai artifact https://claude.ai/artifact/CFMkqW7fCZR1DhZoRZ5Qxk since Oct 25 2026
+(the old single-file link QE5i4p6m1KaMduTUe453Qm stopped there: too large to re-read before republishing). It is the game build plus a viewer panel that plays the real
 game code on a quiet stage (Hillside Crest I's road; natural spawns off). Four tabs:
 * **Companions**: every species, its 4 evolution looks, basic attack and its 4 abilities.
 * **Monsters**: every creature that can spawn, grouped by the zone it lives in (the bestiary's `dex141Where`), plus quest
@@ -865,5 +866,5 @@ Speed (1×–⅒×), pause, frame step, camera presets (relative to the boss's f
 `viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame / setTimeout on a virtual clock
 (`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh` (the build is committed), check with
 `cd test && python3 kv_viewer.py` (`TABS=comp,mon,boss,hero,abil`, `ONLY=`, `SHOT=1` for contact sheets; in the full suite).
-Rebuild and republish it after changing models, attacks, abilities or bosses: publish `dist/kq-anim-viewer.html` to the
-URL above (read the live page first).
+Rebuild and republish it after changing models, attacks, abilities or bosses: read the live page (~90 KB, Artifact `read`
+with no `path`), then publish `dist/viewer/index.html` with `files: {"game.js": "dist/viewer/game.js"}` and `url` = the URL above.
