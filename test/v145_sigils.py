@@ -14,6 +14,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms));let clk=
   out.badSpots=R.sig.filter(o=>{const J=insAt(Math.round(o.x),Math.round(o.z));return !J||J.g!==2||!R.ok(o.x,o.z,1)}).length;
   out.sep=Math.min(...R.sig.map((a,i)=>Math.min(...R.sig.filter((b,j)=>j!==i).map(b=>Math.hypot(a.x-b.x,a.z-b.z)))));
   out.decoIn=WD.list.filter(d=>mq145Keep(2,d.x,d.z)&&!/^e_/.test(d.k)&&R.ok(d.x,d.z,.5)).length;
+  out.propsIn=R.sig.reduce((n,o)=>n+(MAP.props||[]).filter(q=>Math.hypot(q[0]-o.x,q[1]-o.z)<4.6).length,0);
   out.per=[0,1,2,3].map(mq145Per).join(',');
   // the ghost wolf
   const gm=cr(enemyC('ghostwolf',4,{}));let mats=0,gw=0;gm.traverse(o=>{if(o.isMesh){mats++;if(o.material.userData.gw145)gw++}});out.ghostLook=mats>0&&gw===mats&&!!gm.eyes145;
@@ -51,7 +52,7 @@ def s(pg):
     exp=lambda c,m:(None if c else F(m))
     exp(r['sig']==3 and r['fb']==0,'three sigils planned without fallbacks (%s, %s fallback)'%(r['sig'],r['fb']))
     exp(r['badSpots']==0,'sigils on open ground of III (%s bad)'%r['badSpots']);exp(r['sep']>=12,'sigils spread out (closest %.1f)'%r['sep'])
-    exp(r['decoIn']==0,'no decorations on the sigils (%s)'%r['decoIn']);exp(r['per']=='7,6,6,6','25 wolves over 4 waves (%s)'%r['per'])
+    exp(r['propsIn']==0,'no map props on the sigils (%s)'%r['propsIn']);exp(r['decoIn']==0,'no decorations on the sigils (%s)'%r['decoIn']);exp(r['per']=='7,6,6,6','25 wolves over 4 waves (%s)'%r['per'])
     exp(r['ghostLook'],'ghost wolves get the shadow look')
     exp(not r['done0'] and 'sealed' in r['gate0'],'the Den gateway is sealed at first (%s)'%r['gate0'])
     exp(r['scene'] and r['found0']==1,'coming near finds a sigil')

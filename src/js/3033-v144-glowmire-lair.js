@@ -193,6 +193,8 @@ function mq144Claim(){if(MQ144.st!==2)return;MQ144.st=3;MQ144.trkK='';const LS=M
 function mq144Enter(){fadeTo(()=>{const L=MB144L;toPos(L.ent.x,L.ent.z,0);
   setTimeout(()=>{try{zt116Show(ZT116.Z[0],'Kindlelight · '+PMAP[0].ins[1].n,'The Seeping Lair',MQ144.st<2?'Something vast breathes in the dark beneath the Warren':'The lair is quiet now','','z0')}catch(_){}},300)})}
 function mq144Leave(){const h=mq144HatchSpot();if(!h)return;fadeTo(()=>{toPos(h.x+1.8,h.z+.4,Math.PI/2)})}
+// the old Wave Trial's "Leave trial" portal stands where the lair's ladder is: gone (the ladder is the way out)
+try{RPORT.forEach(r=>{if(r.k=='wave'&&r.pi===0)r.g.visible=false})}catch(_){}
 // a save made in the lair loads at the hatch (2440 would send it home)
 {const f=wv135Out;wv135Out=function(){try{if(mq144InLair()){const h=mq144HatchSpot();if(h){toPos(h.x+1.8,h.z+.4,Math.PI/2);return}}}catch(_){}return f.apply(this,arguments)}}
 {const f=doRecall;doRecall=function(){if(MB144A&&MB144A.f&&mq144InLair())return say('🦂 The ooze has sealed the lair. There is no escape.');return f.apply(this,arguments)}}

@@ -31,14 +31,15 @@ function mq145Plan(){if(mq145Plan.c)return mq145Plan.c;
     if(!t||t=='#'||t=='r'||t=='~'||t=='H'||props.has(Z*W+X))return false;const J=insAt(X,Z);if(!J||J.g!==2)return false;return DW[Z*W+X]<-(m==null?1.2:m)};
   const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
   const ring=(x,z,r,need)=>{let n=0;for(let k=0;k<12;k++){const a=k/12*6.283;if(ok(x+Math.cos(a)*r,z+Math.sin(a)*r,.5))n++}return n>=need};
+  const PR=(MAP.props||[]).filter(q=>Math.abs(q[0]-I.x0-I.w/2)<I.w&&Math.abs(q[1]-I.y0-I.h/2)<I.h),clear=(x,z)=>!PR.some(q=>Math.hypot(q[0]-x,q[1]-z)<5.4);
   const roadD=(x,z)=>{let d=1e9;for(let i=0;i<N;i+=2){const q=P[i];d=Math.min(d,Math.hypot(x-q[0],z-q[1]))}return d};
   const avoid=[[I.en[0],I.en[1],22],[I.ba[0],I.ba[1],18]].concat((I.cl||[]).map(c=>[c[0],c[1],15]));
   const R={sig:[null,null,null],keep:[],ok},fr=[.3,.56,.82];
-  const tries=[{m:3,ring:10,road:8,sep:30,av:1},{m:2.2,ring:9,road:7,sep:24,av:1},{m:1.6,ring:8,road:6,sep:18,av:.7},{m:1.2,ring:6,road:5,sep:12,av:.5}];
+  const tries=[{m:3,ring:10,road:8,sep:30,av:1,cl:1},{m:2.2,ring:9,road:7,sep:24,av:1,cl:1},{m:1.6,ring:8,road:6,sep:18,av:.7,cl:1},{m:1.2,ring:6,road:5,sep:12,av:.5}];
   for(const T of tries)for(let j=0;j<3;j++){if(R.sig[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
     for(const b of [12,10,14,16,9,18,7])for(const side of [sd,-sd])for(const da of [0,5,-5,10,-10,15,-15]){if(got)break;
       const k=Math.max(0,Math.min(N-1,ix+da)),q=P[k],t=tan(k),x=q[0]-t[1]*b*side,z=q[1]+t[0]*b*side;
-      if(!ok(x,z,T.m)||!ring(x,z,7,T.ring)||roadD(x,z)<T.road)continue;
+      if(!ok(x,z,T.m)||!ring(x,z,7,T.ring)||roadD(x,z)<T.road||(T.cl&&!clear(x,z)))continue;
       if(!avoid.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r*T.av))continue;
       if(!R.sig.every(o=>!o||Math.hypot(x-o.x,z-o.z)>=T.sep))continue;
       got={x:Math.round(x*2)/2,z:Math.round(z*2)/2,i:j,ix:k,ry:Math.atan2(q[0]-x,q[1]-z)}}
