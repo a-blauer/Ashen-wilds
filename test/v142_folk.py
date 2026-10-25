@@ -1,8 +1,8 @@
-# v140: townsfolk anatomy. Builds every species (plain outfit) and every keeper, then
+# v142: townsfolk anatomy. Builds every species (plain outfit) and every keeper, then
 #  * checks (FAIL lines): build errors, floating parts (any separate piece of mesh more than FLOAT_MM from the rest of the
 #    model) in the rest pose, idle, two walk phases and the keeper's work pose; feet on the ground (lowest foot vertex in the
 #    idle pose between -1 and +2.5 cm; nothing below -2 cm); the animal body (not the human fallback)
-#  * sheets: out/v140_folk_<set><n>.jpg — full body front / side, head 3/4 / side close-ups
+#  * sheets: out/v142_folk_<set><n>.jpg — full body front / side, head 3/4 / side close-ups
 # SP=fox,bear (species only)  KEEP=0 (no keepers)  NOSHEET=1 (checks only)  POSES=rest,idle,walk (fewer)  V137=1 (old models)
 import os,sys,re,base64,json,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +14,7 @@ COMMON=re.search(r'COMMON=r"""(.*?)"""',open(os.path.join(os.path.dirname(os.pat
 ALL='fox,wolf,hound,lynx,bear,raccoon,otter,beaver,mole,hedgehog,ferret,bat,mouse,squirrel,hare,stag,doe,goat,ram,sheep,boar,owl'
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'))
 JS=COMMON+r"""(a)=>{const [list,poses,nosheet,old]=a,V=THREE.Vector3,FW=300,FH=300,out={items:[],fails:[]};
-  if(old)FK140.on=false;
+  if(old)FK142.on=false;
   const mk=o=>{const rig=idlNpcBody(o),g=new THREE.Group();rig.meshes.forEach(m=>g.add(m));g.bones=rig.bones;g.userData.rest=czRest103(g);g.userData.npcO=o;return g};
   const animal=g=>{let a=null;g.traverse(m=>{if(m.isSkinnedMesh&&m.userData&&m.userData.fk)a=m.userData.fk});return a};
   const geo=g=>{g.updateMatrixWorld(true);const P=[];g.traverse(m=>{if(!m.isSkinnedMesh)return;m.skeleton.update();const pa=m.geometry.attributes.position,v=new V(),ix=m.geometry.index;
@@ -28,7 +28,7 @@ JS=COMMON+r"""(a)=>{const [list,poses,nosheet,old]=a,V=THREE.Vector3,FW=300,FH=3
   const camO=cam.position.clone();cam.position.set(0,3,6);
   list.forEach(q=>{const it={lab:q.lab,poses:{},shots:[],err:null,sp:null};out.items.push(it);let g;
     try{g=mk(q.o)}catch(e){it.err='build error '+e;return}
-    it.sp=animal(g);const D=it.sp&&FK137.sp[it.sp],A=D&&typeof fk140A=='function'?fk140A(D):null;it.hs=A?A.hs||1:1;
+    it.sp=animal(g);const D=it.sp&&FK137.sp[it.sp],A=D&&typeof fk142A=='function'?fk142A(D):null;it.hs=A?A.hs||1:1;
     sc.add(g);g.position.set(0,0,0);g.rotation.y=0;
     try{if(poses.includes('rest')){czReset103(g);it.poses.rest=geo(g)}
       IDL.on=true;tick(g,700,T=>idlNpc(g,T));if(poses.includes('idle'))it.poses.idle=geo(g);
@@ -186,8 +186,8 @@ def s(pg):
                 for ri,(lab,shots) in enumerate(ch):
                     for ci,(l,u) in enumerate(shots):
                         im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,(ci*W,ri*W));d.rectangle([ci*W,ri*W,ci*W+len(lab+' · '+l)*7+8,ri*W+16],fill=(0,0,0));d.text((ci*W+4,ri*W+2),(lab+' · '+l) if ci==0 else l,fill=(255,255,255))
-                nm='%s/v140_folk_%s%d.jpg'%(O,name,si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
+                nm='%s/v142_folk_%s%d.jpg'%(O,name,si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])
-    print('==== v140_folk: %d fails'%(len(fails)+len(errs[:6])))
+    print('==== v142_folk: %d fails'%(len(fails)+len(errs[:6])))
 play.run(s)

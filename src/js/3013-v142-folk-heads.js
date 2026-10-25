@@ -1,4 +1,4 @@
-// ================= v140: townsfolk head recipes (sculpted from each animal's anatomy) =================
+// ================= v142: townsfolk head recipes (sculpted from each animal's anatomy) =================
 // Head-local metres from FKS.C0 (+z forward, +y up, x mirrored). Forms: E ellipsoid (centre, radii), RC round cone (a, b,
 // radius at a, radius at b), SP sphere; k = blend width, sub = carve. Proportions follow the real skulls: muzzle length
 // against the brain case, where the stop sits, eye position (forward for hunters, to the side for prey), cheekbone width.
@@ -7,7 +7,7 @@ var FKH={};
 FKH.E=(c,r,o)=>Object.assign({t:'ell',c,r},o||{});FKH.RC=(a,b,ra,rb,o)=>Object.assign({t:'rcone',a,b,ra,rb},o||{});FKH.SP=(c,r,o)=>Object.assign({t:'sph',c,r},o||{});
 // the line where the upper muzzle meets the lower jaw (for painting the mouth): y at z between two points
 FKH.lerpY=(z,z0,y0,z1,y1)=>y0+(y1-y0)*Math.max(0,Math.min(1,(z-z0)/(z1-z0)));
-FKH.add=function(key,S,A){const D=FK137.sp[key];if(!D)return;D.sculpt=S;const F=FK140.sp[key];if(F){F.hs=1;Object.assign(F,A||{})}};
+FKH.add=function(key,S,A){const D=FK137.sp[key];if(!D)return;D.sculpt=S;const F=FK142.sp[key];if(F){F.hs=1;Object.assign(F,A||{})}};
 // ------------------------------------------------ FOX ------------------------------------------------
 // red fox: long narrow muzzle (half the head's length), steep forehead, eyes set forward and up, white cheeks and jaw
 FKH.add('fox',{R:.094,bb:[-.13,-.12,-.14,.13,.12,.2],
@@ -298,4 +298,4 @@ FKH.add('owl',{R:.12,bb:[-.15,-.14,-.14,.15,.14,.14],
     const nn=Math.sin(p[0]*140)*Math.cos(z*120+y*90);return y<-.05?C.FURL:nn>.6?C.FURD:C.FUR}},{});
 FK137.sp.owl.eyes={};FK137.sp.owl.eyeAt=null;
 FK137.sp.hedgehog.face0=FK137.sp.hedgehog.face;
-fk140Setup();
+fk142Setup();

@@ -90,7 +90,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v137 companion bodies: rig variants (`RV137`, `rv137`) — Gloomcap / Sporelord, Wispling / Lumenwisp / Soulwarden (cowl `wsp137Hood`), Gravewyrm / Venomcoil (`WY137`), Batwing / Duskwing fur | `2600`–`2630` (v137) |
 | v137 enemy bodies: toolkit (`e137B`, `e137Rows`, `e137Limb`, `e137Quad`, `e137Claws`), own bodies for Blood Hound, Bone Hound, Blood Bat (rig `BloodBat`), Mire Croaker, Basilisk, Snapper, Sun Scarab (middle legs `x.mid137`), Rimeshell Crawler, Storm Harpy, Dust Wyrm, Banshee, Fungal Shambler (rig `Shambler`); older foes rebuilt (`FOE137`, `f137Reg` into `N3.humB`), Goo / Maggot / Scorpion touch-ups | `2640`–`2665` (v137) |
 | v137 animal townsfolk: every Duskhold NPC is a warm-blooded animal (`FK137`, `fkBody` via `idlNpcBody`, parametric skulls `fkSN`, ears / horns / antlers / paws / hooves, 21 species, `FKO` costumes per keeper, citizens by trade `FK_ROLE`, tail + ear animation `fk137Anim`) | `2800`–`2830` (v137) |
-| v140 townsfolk anatomy: per-species head scale / carriage, lean, digitigrade / hoofed / bird legs, new skulls, necks, natural eyes (`FK140`, `fk140Deform`, `fk140SN`, `fk140Eyes`) | `2960`–`2961` (v140) |
+| v142 townsfolk anatomy: sculpted heads per species (`FKH` recipes, `fksLoft`, `fksEars`), carriage, lean, digitigrade / hoofed / bird legs, necks, eyes, trinkets on clothes (`FK142`, `fk142Deform`, `fk142Eyes`, `fk142Hug`) | `3010`–`3013` (v142) |
 | v137 ability evolution: every class ability evolves at rank 5 (`EVO137` per class, `ev137Evolve`, `ev137Cost` = last rank + 4 ⚡, saved as `hero.tal['__ev:<name>']`), evolved copy cast through `cast` (`ev137Sk`), new effects (`ev137Sigil/Column/Shock/Flare/Lance/Fall/Crescent/Shards/Orbit/Rift/Impact`, projectile models `ev137Proj`), poses `ATK.evoCast/evoRaise/evoNova/evoFlex` | `2700-v137-ability-evo-core.js`, `2710-…-fx.js`, `2715-…-kit.js`, `2720`–`2740` (warrior, paladin, assassin, ranger, mage) |
 | v138 ability balance: every damaging ability valued by delivery type, area and extras (`KQR_TUNE`), evolved forms (`BAL138_EVO`, per class `BAL138_EVOC`), spread-shot volleys (`BAL138.vol`), Death Mark, class knobs | `2900-v138-ability-balance.js` |
 | v137 new gear: 150 templates appended to `ITPL` (`ITPL_V137`, `v7` model key, `A137L` armour lines), `genItem_base` empty-pool fix, armour motifs measured onto the built body (`a7Ring`, `a7Put`, `A7MOT`), weapon recipes (`W137`, `w7Blade`), shields (`SH137`), jewellery (`J137`, worn pendant / ring fitted with `j7Put`) | `2750`–`2790` (v137) |
@@ -363,16 +363,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Tests: `v137_npcs.py` (every keeper and 16 citizens: sheets front / 3/4 / side / back / face / walk / work; FAIL on a human model,
   NaN vertices, a hand / foot / head bone with no body mesh near it in idle, walk or work, a held tool off the hand, live NPCs not
   animal). `SP=fox,bear` draws species sheets; `ONLY=keep|cit`, `PICK=Blacksmith`, `NOSHEET=1`.
-- **Townsfolk anatomy (v140, `2960`–`2961`)**: a layer over the v137 folk (owner's request: heads, necks, proportions and posture
-  that read as the animal, natural eyes, no floating parts). `FK140.sp[key]` per species (2961): `hs` head scale, `hz`/`hy` head
+- **Townsfolk anatomy (v142, `3010`–`3013`)**: a layer over the v137 folk (owner's request: heads, necks, proportions and posture
+  that read as the animal, natural eyes, no floating parts). `FK142.sp[key]` per species (3011): `hs` head scale, `hz`/`hy` head
   forward / up, `pitch`, `lean` (upper body forward per metre above the hips), `sh` shoulder width, `neck` thickness, `leg`
   ('plant' flat feet · 'digi' on the toes, heel raised: fox, wolf, lynx, hound · 'hoof': deer, goat, sheep, ram, boar · 'bird': owl),
-  `eye` {sz, back, up, g gaze, lid, rim}, `hp` overrides of the v137 head numbers. How it works (2960):
+  `eye` {sz, back, up, g gaze, lid, rim}, `hp` overrides of the v137 head numbers. How it works (3010):
   * `fkNB` returns a *pre* skeleton (legs moved: knee forward, hock raised) while `fkBuild` builds, and a *final* one for the
-    bind; after the build `fk140Deform` moves every vertex with its bones (skin-weight blend): lean and shoulders are offsets,
-    the head and ear bones get one matrix (`fk140Xf`: scale about the top of the neck, then forward / down), so hats and horns
+    bind; after the build `fk142Deform` moves every vertex with its bones (skin-weight blend): lean and shoulders are offsets,
+    the head and ear bones get one matrix (`fk142Xf`: scale about the top of the neck, then forward / down), so hats and horns
     follow and the neck bends smoothly. Ear bones are moved by the same matrix.
-  * Heads are sculpted per species (`2962` engine, `2963` recipes; owner's request: shaped freely, in the heroes' style).
+  * Heads are sculpted per species (`3012` engine, `3013` recipes; owner's request: shaped freely, in the heroes' style).
     A recipe (`D.sculpt`) is anatomy as distance functions — ellipsoids (`FKH.E`: brain case, brow, cheekbones, whisker pads,
     nose pad), round cones (`FKH.RC`: muzzle, lower jaw, snout), spheres carved out (`sub`: eye sockets), smooth unions (`k`),
     mirrored — in head-local metres from `FKS.C0` (+z forward). `fksLoft` meshes it like the heroes' skulls: rings from the back
@@ -387,27 +387,27 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     built once on the right and mirrored, so both ears are identical; the front is cupped and the inner ear is painted on those
     faces (a separate inner piece stuck out past the edges); the dark tip is part of the same loft; tufts start inside the tip.
     The owl keeps its feather tufts (`fkEars`).
-    Eyes on sculpted heads (`fk140Eyes`): an almond with a bright iris and the species' pupil, a level brow line above (calm,
+    Eyes on sculpted heads (`fk142Eyes`): an almond with a bright iris and the species' pupil, a level brow line above (calm,
     not angry, per the owner), `eye.round` for round eyes (owl), `eye.slant` / `open` / `brow` per species.
-  * Species without a recipe use `fk140SN` (same ring format as `fkSN`): lower occiput, brow ridge, stop, fuller cheeks.
-  * Neck (`fk140Neck`, inside `fk140Head` which replaces `fkHead` for v140 species): from the collar to the back-lower skull,
+  * Species without a recipe use `fk142SN` (same ring format as `fkSN`): lower occiput, brow ridge, stop, fuller cheeks.
+  * Neck (`fk142Neck`, inside `fk142Head` which replaces `fkHead` for v140 species): from the collar to the back-lower skull,
     slimmer than the head, the throat filling up to the jaw.
-  * Eyes (`fk140Eyes` replaces `brEyes` for the folk): at the stop above the muzzle line (prey further back and out), aimed
+  * Eyes (`fk142Eyes` replaces `brEyes` for the folk): at the stop above the muzzle line (prey further back and out), aimed
     (`g`), iris fills the eye, slit pupils (fox, lynx), bar pupils (deer, goat, sheep, ram), dark rim, fur lid; size from the
     skull (`R`) × `eye.sz`. `D.EYEP` is moved there, so face masks and coifs follow.
-  * Feet: `mdFoot` for digi / hoof / bird runs from the hock down to the ball; `fk140Toes` roots toes on the actual foot rings
+  * Feet: `mdFoot` for digi / hoof / bird runs from the hock down to the ball; `fk142Toes` roots toes on the actual foot rings
     (plantigrade too: v137 toes of big species stood past the foot); `fkHooves` puts cloven hooves at the ball; `mdLeg` gets one
-    more ring weighted to the foot bone so the foot never parts from the shin. Whiskers root per whisker (`fk140Whiskers`).
+    more ring weighted to the foot bone so the foot never parts from the shin. Whiskers root per whisker (`fk142Whiskers`).
   * Fixed with it (v137 floating bits): deer nostrils, belt buckle and hip pouch now sit on the body; wolf / lynx cheek ruffs
-    grow from the cheek (`fk140Ruff`).
+    grow from the cheek (`fk142Ruff`).
   * Torso lean is a shear by each vertex's height (pieces on one torso bone move with the cloth that blends two). Trinkets rest
-    on what is built: `fk140Hug(B, P, y, a, off)` casts a ray at the body and returns the first surface (clothes included) —
+    on what is built: `fk142Hug(B, P, y, a, off)` casts a ray at the body and returns the first surface (clothes included) —
     buttons (`FKG.buttons` for the folk), chains, cords, pendants, rune stones, keys. Skirts and aprons start on the waist
     (`FKG.skirt` clearance 4 mm, apron 6 mm; they used to hang 16–20 mm off it); boots have a thin sole shell.
-  * `FK140.on=false` builds the v137 models; `FK140.reset(key, A)` re-tunes a species while the game runs.
-  Test: `v140_folk.py` (every species and keeper + 6 citizens; FAIL on a floating piece — any separate piece of mesh more than
+  * `FK142.on=false` builds the v137 models; `FK142.reset(key, A)` re-tunes a species while the game runs.
+  Test: `v142_folk.py` (every species and keeper + 6 citizens; FAIL on a floating piece — any separate piece of mesh more than
   4 mm from the body that does not pierce it and is not enclosed by it — in rest, idle, two walk phases and the work pose, feet
-  off the ground in idle, NaN, a human model; sheets `out/v140_folk_sp*.jpg` / `keep*.jpg`: front, side, head 3/4, head side).
+  off the ground in idle, NaN, a human model; sheets `out/v142_folk_sp*.jpg` / `keep*.jpg`: front, side, head 3/4, head side).
   `SP=fox,bear`, `KEEP=0`, `NOSHEET=1`, `POSES=rest,idle`, `V137=1` (old models, for comparison).
 - **Ability evolution (v137, `2700`–`2740`)**: when an ability reaches rank 5, the Abilities window offers to evolve it into a
   stronger form with a new name (Fireball → Phoenix Barrage, Cleave → Rending Crescent…). Cost: the last rank's cost + 4 ability points
@@ -667,7 +667,7 @@ python3 v136_weapons.py      # v136: every weapon type at rarity 0, 2, 4
 python3 v137_enemies.py      # v137: enemy bodies (no companion bodies), companion variant bodies, scarab legs
 LIST="C:Sporelord:3;E:basilisk" python3 v137_creature.py   # v137: creature sheets (VIEWS=, TAG=)
 python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizens, sheets and limb checks (SP=fox,bear species sheets)
-python3 v140_folk.py         # v140: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
+python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
 python3 probe.py v115_review.js # v115 review pass: save-import checks, portal board kept, slow cleanse, root+slow, shared ring/bar shapes, uiOpen, legendary powers, 4 point lights, shadow pass, boss tremble

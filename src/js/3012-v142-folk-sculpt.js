@@ -1,12 +1,12 @@
-// ================= v140: townsfolk heads sculpted from anatomy =================
+// ================= v142: townsfolk heads sculpted from anatomy =================
 // The v137 heads were one parametric loft (a ball with a tube for a muzzle), so no amount of tuning gave them a brow,
 // cheekbones, sockets or a jaw. Each species now has a sculpt recipe (2963): anatomical forms written as signed distance
 // functions — ellipsoids (cranium, brow ridges, cheekbones, whisker pads, nose pad), round cones (muzzle, lower jaw, snout)
 // joined with smooth unions and carved with smooth subtractions (eye sockets, nostrils) — mirrored left / right. The shape
 // is turned into one faceted mesh by surface nets (cell FKS.h), coloured per face by the recipe's paint(p) (muzzle, mask,
 // nose, inner ear…), all on the head bone. Coordinates are head-local: metres from FKS.C0 (the old skull centre),
-// +z forward, +y up; the v140 head transform then carries the head forward (A.hz / A.hy, hs = 1).
-// The recipe also gives: eye sockets (eye centre, gaze, size → fk140Eyes), ear bases (→ ear bones and fkEars), whisker
+// +z forward, +y up; the v142 head transform then carries the head forward (A.hz / A.hy, hs = 1).
+// The recipe also gives: eye sockets (eye centre, gaze, size → fk142Eyes), ear bases (→ ear bones and fkEars), whisker
 // rows, the neck's attachment, and extras (teeth, tusks, horns) as kit parts. Skull rings (D.SN) are measured from the
 // sculpt, so every v137 helper that reads the skull (hats, coifs, goggles, antlers, horns, wool) fits the new head.
 var FKS={C0:[0,1.16,-.01],h:.0092,cache:{}};
@@ -108,12 +108,12 @@ function fksSetup(D,A){const S=D.sculpt,C0=FKS.C0;D.SN=fksRings(S,20);D.muzzleZ=
   // ear base: on the line from the brain case centre through the recipe's point, 9 mm under the sculpted surface
   if(S.ear){const c=S.forms[0].c||[0,0,0],q=S.ear,at=t=>[c[0]+(q[0]-c[0])*t,c[1]+(q[1]-c[1])*t,c[2]+(q[2]-c[2])*t];let lo=0,hi=3;
     for(let i=0;i<40;i++){const m=(lo+hi)/2;if(fksEval(S,at(m))<-(S.earSink||.009))lo=m;else hi=m}const e=at(lo);D._earB140=[e[0]+C0[0],e[1]+C0[1],e[2]+C0[2]]}}
-{const f=fkEarBase;fkEarBase=function(D){if(FK140.on&&D&&D._earB140&&D.ear&&D.ear.t!='none')return D._earB140.slice();return f.apply(this,arguments)}}
+{const f=fkEarBase;fkEarBase=function(D){if(FK142.on&&D&&D._earB140&&D.ear&&D.ear.t!='none')return D._earB140.slice();return f.apply(this,arguments)}}
 // whisker rows from the recipe: [root (head-local), count, length, colour]
 function fksWhiskers(k,D,W,C){const C0=FKS.C0,r=W.p;[-1,1].forEach(s=>{for(let i=0;i<W.n;i++){const a=[s*r[0],r[1]+C0[1]+(i-(W.n-1)/2)*.006,r[2]+C0[2]-i*.005],
     b=[s*(r[0]+W.len*.75),a[1]+(i-(W.n-1)/2)*.016-.006,a[2]-W.len*.45];k.L('head','c',W.col||0x2a2420,a,b,.0016,.0005,3)}})}
 // ---------------- ears: lofted on the skull ----------------
-// (owner, v140: the v137 pointed ear was a four-sided pyramid poked into the head — on a curved skull its flat base corners
+// (owner, v142: the v137 pointed ear was a four-sided pyramid poked into the head — on a curved skull its flat base corners
 // stood off the surface, and the left one was twisted differently from the right.) Each ear is now a loft of 8-sided rings
 // from its root to its tip, shaped per type (tri / round / long / leaf / small); the root ring is pressed onto the sculpt
 // (every root vertex is moved down the ear's axis until it is 5 mm inside the skull), so no edge can stand off the head.
