@@ -297,7 +297,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   *Companion splash* (`3077`, `SPL148.k`=.3): an enemy area attack aimed at the hero also hits each active companion standing in its
   red shape (downward ray at the companion vs. `a.tel`/`a.xt`), once per attack, at 30% — when the hero is hit, or when the strike ends
   after the hero dodged out. Projectiles are left out. Test: `v148_splash.py`.
-  *Boss splash* (`3078`): the same 30% for the six Sovereigns and Vorraxis — every strike (`svHitNow` / `mb144HitNow`, shape vs. each
+  *Boss splash* (`3079`): the same 30% for the six Sovereigns and Vorraxis — every strike (`svHitNow` / `mb144HitNow`, shape vs. each
   active companion, hero hit or not), the v146 ring waves (`sk146RingWave`), Vorraxis's Deluge (companions off the islands) and the
   Wraith's Absolute Zero (companions away from a lit brazier). Catch-all hits (shape r 99: spines, blood drops) and lingering ground
   hazards stay hero-only. Test: `v148_boss_splash.py` (`BL=`, `SEC=`).
