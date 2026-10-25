@@ -11,8 +11,9 @@ import play
 from playwright.sync_api import Page as _Pg
 _go=_Pg.goto;_Pg.goto=lambda self,url,**k:_go(self,url,**dict(k,timeout=max(k.get('timeout',0),900000)))
 SHOT=os.environ.get('SHOT','1')!='0'
-DONE=[5]
-CFG={5:{'sig':'covenant','props':4,'env':"!!(A.s146&&A.s146.tide)",'name':'vaelric'}}
+DONE=[5,2]
+CFG={5:{'sig':'covenant','props':4,'env':"!!(A.s146&&A.s146.tide)",'name':'vaelric'},
+     2:{'sig':'heart','props':3,'env':"!!(A.s146&&A.s146.wo)",'name':'wraith'}}
 BOSSES=[int(x) for x in os.environ.get('BOSS',','.join(str(b) for b in DONE)).split(',')]
 fails=[]
 def F(m):fails.append(m);print('FAIL',m)

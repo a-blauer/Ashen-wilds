@@ -30,6 +30,22 @@ function sk146Spring(e,dt){const S=e.sv,B=S.B,sp=B.spr;if(!sp||!S.R)return;const
     // never further than ~.9 rad from the animation (no wild flailing)
     const cl=(a,b)=>Math.max(b-.9,Math.min(b+.9,a));q.x=cl(q.x,tx);q.y=cl(q.y,ty);q.z=cl(q.z,tz);g.rotation.set(q.x,q.y,q.z)}}
 {const f=svApply;svApply=function(e,dt,now){const r=f.apply(this,arguments);try{if(e&&e.sv&&SK146.on)sk146Spring(e,dt||0)}catch(err){if(!SK146.err++)console.error('v146 spring',err)}return r}}
+// a loft along +Y like svLoft, with cloth folds: o.fn folds round, o.fa amplitude (share of the radius, growing toward
+// the last ring when o.grow), o.rag (ragged last ring: share of the ring spacing), o.seed, o.cap (default false)
+function sk146Loft(rings,n,o){o=o||{};const rn=svRng(o.seed||7),fn=o.fn||8,fa=o.fa||.08,pos=[],N=rings.length;
+  const R=rings.map(([y,rx,rz,ox,oz],j)=>{const a=[],v=j/Math.max(1,N-1),amp=fa*(o.grow?v:1);for(let i=0;i<n;i++){const t=(i/n)*Math.PI*2+(o.rot||0),w=1+amp*Math.sin(t*fn+v*1.7)+amp*.4*Math.sin(t*fn*2.3+j);
+      let yy=y;if(j===N-1&&o.rag)yy+=(i%2?-1:-.3)*o.rag*(.4+rn()*.8)*Math.abs(rings[N-1][0]-rings[N-2][0]);a.push([(ox||0)+Math.sin(t)*rx*w,yy,(oz||0)+Math.cos(t)*rz*w])}return a});
+  const dsc=rings[N-1][0]<rings[0][0],tri=(a,b,c)=>{if(dsc){const q=b;b=c;c=q}pos.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2])};
+  for(let r=0;r<N-1;r++)for(let i=0;i<n;i++){const j=(i+1)%n,a=R[r][i],b=R[r][j],c=R[r+1][j],d=R[r+1][i];tri(a,b,c);tri(a,c,d)}
+  if(o.cap){const c0=[0,rings[0][0],0];for(let i=0;i<n;i++){const j=(i+1)%n;tri(c0,R[0][j],R[0][i])}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
+// a sculpted skull/head from a sphere: f(x,y,z) returns the displaced [x,y,z] for each vertex of a unit sphere
+function sk146Sculpt(key,ws,hs,f){return svG(key,()=>{const g=new THREE.SphereGeometry(1,ws||18,hs||14),P=g.attributes.position;for(let i=0;i<P.count;i++){const q=f(P.getX(i),P.getY(i),P.getZ(i));P.setXYZ(i,q[0],q[1],q[2])}const n=g.toNonIndexed();n.computeVertexNormals();return n})}
+function sk146Gs(x,y,cx,cy,sx,sy){return Math.exp(-((x-cx)*(x-cx))/(sx*sx)-((y-cy)*(y-cy))/(sy*sy))}
+// swap the geometry of every mesh built from cache key `key` (an earlier builder's part) / remove those meshes
+function sk146Swap(R,key,geo){const G=SVX.gc[key];if(!G)return 0;let n=0;R.root.traverse(o=>{if(o.isMesh&&o.geometry===G){o.geometry=geo;n++}});return n}
+function sk146Drop(R,key){const G=SVX.gc[key];if(!G)return;const L=[];R.root.traverse(o=>{if(o.isMesh&&o.geometry===G)L.push(o)});L.forEach(o=>o.parent.remove(o))}
+function sk146Mat(R,hex){return R.mats.find(m=>m.color.getHex()===hex)}
 // ---------------- 2. effects ----------------
 // two flash lights, reused (they are pooled sources: the nearest 4 lights in the scene are drawn)
 function sk146Flash(p,col,I,dist,ms){let L=SK146.lt.find(l=>!l.userData.busy);if(!L){if(SK146.lt.length<2){L=new THREE.PointLight(0xffffff,0,8,1.6);scene.add(L);SK146.lt.push(L)}else L=SK146.lt[(SK146.fl++)%2]}
