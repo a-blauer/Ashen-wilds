@@ -54,6 +54,7 @@ v143_lantern_road.py
 v144_glowmire.py
 v145_sigils.py
 v146_sovs.py
+v149_ssithra.py
 kv_viewer.py
 v148_tools.py
 v148_edges.py

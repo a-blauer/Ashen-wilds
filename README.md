@@ -52,6 +52,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
 | v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new) | `3070`–`3076` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
+| v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3077-v149-ssithra-body.js` |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -273,6 +274,21 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`itName`), fixed bonus (`itStats`), tooltip block, own models (icon `v89Kit`/`v89Key`, ground `lgDropModel`, hand `v89Wpn`, worn gem
   colour via `mdGD`). Tests: `v135_checks.py`, `v135_uniques.py`, `v135_bow.py`, `v132_cheddar_test.py`; pictures `v135_cheddar_shot.py`,
   `v135_fade_shot.py`, `v135_edge_look.py` (SRC= an older build for before/after), `v135_cat_head.py`, `v135_far_shots.py`, `v135_pick.py`.
+- **Version 149 (owner's request, Oct 25 2026): Ssith'ra's body is one creature.** The owner: "he clips into himself and the
+  segments of his body do not seem like one whole creature". The v112 layout followed the path the head had taken, so turning
+  around, circling the hero or the burrow chain folded the body through itself and the head (up to 1.1 deep; the neck bent 180°),
+  and the barrel-shaped segments opened gaps at bends. `3077` replaces `B.post` (keeps v146's sand) and adds to `B.build`:
+  *Chain*: the path is the body itself (last frame) plus where the neck has gone, so it still slithers; heights first with a fixed
+  3D spacing; the neck bends at most 60° from the head, every joint 22° (14 segments can't close a ring); a segment that would sink
+  into the head or a segment 2+ ahead is pushed out sideways; the body leans into turns. *Rearing* is one smooth curve (steep under
+  the neck, landing flat, longer the higher it rears). *Diving*: once the neck is under, the body slides along its path into the hole
+  and down it (`SSR149.pour`, all under before v112's vanish at 1.45 s; the `dive` pose plunges a little deeper). *Model*: a flesh
+  core (a tube rebuilt each frame along a curve from inside the skull to the stinger, glowing at the seams, brighter in Phase II)
+  replaces the rigid neck sleeves; each segment wears a domed dorsal shield instead of a full barrel, narrow at the front where it
+  tucks under the one ahead, one pattern down the back (dark shield, bronze rim and keel); studs, runes, veins, trophies, rings,
+  rags, side plates and belly plates moved onto the new shapes. Moves, timings and hit boxes are unchanged. Test `v149_ssithra.py`
+  (self-clipping depth, sharpest bend and chain gaps while turning round, spinning, circling, every move and a free fight; studio
+  pictures `out/v149ss_<TAG>_*.png`).
 - **Version 148 (owner's list, Oct 25 2026)**: *Tools*: the hatchet and pickaxe are aimed in the world after the animation
   (`SK148` key directions in the hero's frame; the pick's head lies in the swing plane, the hatchet's edge leads its motion) and the off
   hand takes the handle (two-bone IK, bones put back before the next frame). *Weapon edges* (1270 `gripEdge`): only frames at least 40%

@@ -29,9 +29,11 @@ ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-n
 lantern|v143|1680-|ripper|warden: v143_lantern_road.py v145_sigils.py v108_instances.py v124_edge_test.py v148_cheddar.py v113_roster.py v38t.py v114_save.py v142_folk.py
 glowmire|v144|vorraxis|lair|1970-|2440-: v144_glowmire.py v143_lantern_road.py v108_instances.py v141_sov.py v114_save.py
 sigil|v145|ghostwolf|rune: v145_sigils.py v143_lantern_road.py v144_glowmire.py v108_instances.py v113_roster.py v114_save.py
-v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-: v146_sovs.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py
+v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-|3077-: v146_sovs.py v149_ssithra.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py
 # The animation viewer (viewer/, a separate artifact built from the game): every subject and action still plays
 ^viewer/|sov|boss|vorraxis|lair|abilit|evo-|signature|monster|compan|2240-: kv_viewer.py
+# v149
+ssith|1974-|3056-|3077-|v149: v149_ssithra.py v112_ssithra.py v146_sovs.py kv_viewer.py
 # v148
 skilling|gather|grip|1270|2995|3070|anim|weapon|0900|1700: v148_tools.py v148_edges.py
 0108|1010|3072|mouse|aim|target: v148_mouse.py
