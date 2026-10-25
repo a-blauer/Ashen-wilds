@@ -1,4 +1,4 @@
-# v143 picture helper for the Lantern Road models: python3 v143_look.py
+# v143/v144 picture helper for the Lantern Road and Glowmire models (PROPS=boss, bossP:<pose> for Vorraxis): python3 v143_look.py
 #   WHO=captain,boar,...   wardens to draw (keys of MQW143; default all)      VIEWS=front,34,side,back,head
 #   PROPS=ripper,lamp,lampOn,tent,...  static models (keys of MQM143.sheet; default none unless WHO is empty)
 #   JS=<file>  extra setup code run first (e.g. to define a test costume)   TAG=name  (out/v143_look_<tag>.jpg)
@@ -25,7 +25,7 @@ JS=COMMON+r"""(a)=>{const [who,props,views,FW,FH]=a,V=THREE.Vector3,out={items:[
     }catch(e){it.err=String(e)+' '+(e.stack||'').slice(0,600)}
     if(g)sc.remove(g)});
   props.split(',').filter(Boolean).forEach(k=>{const it={lab:k,shots:[],err:null};out.items.push(it);let g;
-    try{g=MQM143.sheet[k]();sc.add(g);g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),sz=bb.getSize(new V()),c=bb.getCenter(new V()),R=Math.max(sz.x,sz.y,sz.z);
+    try{if(k.startsWith('bossP:')){const R=svRig();mb144Build(R,null);svRest(R);MB144.pose(null,R,k.slice(6));svMerge(R);g=R.root}else g=(MQM143.sheet[k]||(typeof MB144!='undefined'&&MB144.sheet[k]))();sc.add(g);g.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g),sz=bb.getSize(new V()),c=bb.getCenter(new V()),R=Math.max(sz.x,sz.y,sz.z);
       [['front',[0,.25,1]],['3/4',[.9,.45,1]],['side',[1,.2,0]],['back',[-.7,.4,-1]],['top',[.2,1.6,.5]]].forEach(([l,d])=>it.shots.push([l,shot(g,d,c,R*2.1+.4)]));
     }catch(e){it.err=String(e)+' '+(e.stack||'').slice(0,600)}
     if(g)sc.remove(g)});

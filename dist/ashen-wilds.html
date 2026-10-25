@@ -37758,4 +37758,681 @@ function mq143Tick(dt,now){
   if(now-MQ143.t>400){MQ143.t=now;mq143Trk()}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq143Tick(dt,now)}catch(err){if(!MQ143.err++)console.warn('v143 tick',err)}
   try{if(!mq143Here()&&now-MQ143.t>400){MQ143.t=now;mq143Trk()}}catch(_){}return r}}
+// ================= v144 Vorraxis, the Seeping King — the model, poses and procedural animation =================
+// The mini boss under the Glowmire Warren (Kindlelight II; the fight and the lair are in 3033, the moves in 3032). An Akorror
+// grown huge and old: a hunched mantis-backed predator on digitigrade legs, ~1.5× an Akorror's height, built like a Sovereign
+// (rigid parts hung on named joints, the v110 engine's svRig / svJ / svM kit, merged per joint and material by svMerge).
+//  * Body: a glowing caustic-ooze core (emissive, it pulses with his breathing) wrapped in overlapping chitin scales (mb144Cover:
+//    rows of curved shield-scales shingled down the body, each turned to the surface). The gaps between them show the ooze: it seeps
+//    between his scales. Scale pattern: black chitin, dark olive, and pale bone scales laid out as chevron bands down the back, rings
+//    on the limbs and a tiger-stripe on the tail (MB144.pat), with bone-tipped dorsal spikes along the spine.
+//  * Head: a long armoured skull with a crest of swept-back horns, glowing compound eyes, two hooked mandibles on their own joints,
+//    fangs and ooze drooling from the maw. Arms: layered pauldrons, plated forearms with great serrated scythe blades and four-taloned
+//    hands. Legs: muscled scaled thighs, plated shins, hock spurs, three toes and a dewclaw. Tail: six joints of banded plates and
+//    spikes ending in a swollen ooze sac and a barbed stinger.
+//  * About 2× the triangles of a normal Akorror (~4.8k → ~9.7k; MB144.tris is measured on the first build).
+// Joints (L = +x, the model's left): root · hips · spine · chest · neck · head · jawL/R · shL/R · elL/R · blL/R (scythe) · wrL/R · thL/R · knL/R ·
+// hkL/R · ftL/R · tail0..tail5. Poses (MB144P) are offsets from the rest pose, mirrored with '~' (svPose).
+var MB144={col:0x9aff2a,ooze:0x3a9a12,acid:0xb8ff3a,tris:0,pat:null,sheet:{}};
+// a curved shield-scale: outline in the plate's plane (x across, y along the body, the tip at -y), a raised centre ridge, a thin
+// underside; +z is the surface normal
+function mb144ScaleGeo(){return svG('mb_sc',()=>{const o=[[0,.5],[.42,.22],[.46,-.12],[.26,-.4],[0,-.62],[-.26,-.4],[-.46,-.12],[-.42,.22]],th=.16,pos=[];
+  const top=o.map(([x,y])=>[x,y,(1-Math.hypot(x*1.3,y))*.06+(y<-.3?.05:0)]),bot=o.map(([x,y])=>[x*.86,y*.86,-th*.5]),c=[0,-.05,th],cb=[0,0,-th*.5];
+  const T=(a,b,d)=>pos.push(a[0],a[1],a[2],b[0],b[1],b[2],d[0],d[1],d[2]);
+  for(let i=0;i<o.length;i++){const j=(i+1)%o.length;T(c,top[i],top[j]);T(cb,bot[j],bot[i]);T(top[i],bot[i],bot[j]);T(top[i],bot[j],top[j])}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g})}
+// cover a loft (rings [y, rx, rz, ox, oz] along the joint's +Y, like svLoft) with shingled scales. o: n (scales per row), rows,
+// size (scale length), lift (tip tilt out), skip(t, u) (t = angle, 0 front · u = 0..1 along), mat(t, u, row, k) → material,
+// dir (+1: tips point down the rings, toward the first ring; -1: toward the last), out (extra offset), jitter
+function mb144Cover(R,j,rings,o){const V3=THREE.Vector3,n=o.n||10,rows=o.rows||5,sz=o.size||.2,lift=o.lift==null?.32:o.lift,dir=o.dir||1,y0=rings[0][0],y1=rings[rings.length-1][0];
+  const at=y=>{let i=0;while(i<rings.length-2&&y>rings[i+1][0])i++;const a=rings[i],b=rings[i+1],k=Math.max(0,Math.min(1,(y-a[0])/((b[0]-a[0])||1))),L=(p,q)=>(p||0)+((q||0)-(p||0))*k;return [L(a[1],b[1]),L(a[2],b[2]),L(a[3],b[3]),L(a[4],b[4])]};
+  const geo=mb144ScaleGeo(),rn=svRng(o.seed||7),M=new THREE.Matrix4(),X=new V3(),Y=new V3(),Z=new V3(),out=[];
+  for(let r=0;r<rows;r++){const u=rows>1?r/(rows-1):.5,y=y0+(y1-y0)*(.06+.88*u),[rx,rz,ox,oz]=at(y);
+    for(let k=0;k<n;k++){const t=(k+(r%2?.5:0))/n*Math.PI*2+(o.rot||0);if(o.skip&&o.skip(t,u,r,k))continue;
+      const s=Math.sin(t),c=Math.cos(t),px=(ox||0)+s*rx,pz=(oz||0)+c*rz;
+      // normal of the ellipse (and the slope of the loft), tangent along the body
+      Z.set(s/Math.max(.01,rx),0,c/Math.max(.01,rz)).normalize();
+      Y.set(0,dir,0);Y.addScaledVector(Z,-Y.dot(Z)).normalize();X.crossVectors(Y,Z).normalize();
+      M.makeBasis(X,Y,Z);const q=new THREE.Quaternion().setFromRotationMatrix(M).multiply(new THREE.Quaternion().setFromAxisAngle(new V3(1,0,0),-lift));
+      const w=sz*(o.w||1)*(.9+rn()*.2)*(o.wk?o.wk(t,u):1),l=sz*(.9+rn()*.2)*(o.wk?o.wk(t,u):1),off=(o.out||.0)+sz*.05;
+      const m=new THREE.Mesh(geo,o.mat(t,u,r,k));m.position.set(px+Z.x*off,y+Z.y*off,pz+Z.z*off);m.quaternion.copy(q);m.scale.set(w,l,sz*.9);m.castShadow=true;
+      (typeof j=='string'?R.J[j]:j).add(m);m.userData.lpsSkip=1;out.push(m)}}
+  return out}
+// the pattern: chevrons down the back (pale where the angle from the spine is about the height band), rings on limbs
+MB144.pat={back:(t,u)=>{const a=Math.abs(Math.atan2(Math.sin(t),Math.cos(t)));const b=Math.PI-a;const v=(u*3.2+b*.55)%1;return b<1.25&&v<.24?2:b<.35?1:(Math.round(u*9+a*1.7)%3==0?1:0)},
+  ring:(u,n)=>{const v=(u*(n||3))%1;return v<.28?2:v<.5?1:0},tiger:(t,u)=>{const a=Math.abs(Math.atan2(Math.sin(t),Math.cos(t)));return ((u*6+Math.sin(a*2)*.4)%1)<.3&&a>1.2?2:a<1.0?3:0}};
+function mb144Build(R,e){
+  const chit=svMat(R,0x13140d,{roughness:.36,metalness:.28}),chit2=svMat(R,0x23251a,{roughness:.45,metalness:.18}),pale=svMat(R,0x8e8a66,{roughness:.55,metalness:.08}),
+    belly=svMat(R,0x3a4026,{roughness:.6}),dark=svMat(R,0x08080a,{roughness:.5,metalness:.2}),fang=svMat(R,0xe2dcc4,{roughness:.45}),claw=svMat(R,0x1a1820,{roughness:.3,metalness:.45}),
+    blade=svMat(R,0x262820,{roughness:.32,metalness:.5}),edge=svMat(R,0xb4ae8a,{roughness:.25,metalness:.55}),
+    ooze=svMat(R,0x0d2406,{roughness:.3,metalness:.05,emissive:MB144.ooze,emissiveIntensity:.5}),eye=svGlowMat(R,0xd0ff4a),drip=svGlowMat(R,0xa8ff3a,.85);
+  ooze.userData.e0=MB144.ooze;R.ooze=ooze;R.eyeM=eye;R.dripM=drip;const SM=[chit,chit2,pale,belly];
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),G=(k,f)=>svG('mb'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const horn=(k,r,l,bx,by,n,seg)=>G('h'+k,()=>svHorn(r,l,bx,by,n||5,seg||4)),ball=(k,r,det)=>G('b'+k,()=>svLump(r,det==null?1:det,.12,40+k));
+  // ---------------- the skeleton ----------------
+  J('root',null,0,0,0);J('hips','root',0,1.85,0);J('spine','hips',0,.22,.06,.34);J('chest','spine',0,.5,0,.22);J('neck','chest',0,.6,.2,-.62);J('head','neck',0,.34,.04,-.12);R.J.head.scale.setScalar(1.25);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';
+    J('sh'+L,'chest',s*.64,.36,.04,-.78,0,s*-.12);J('el'+L,'sh'+L,0,-.76,.02,-.85);J('wr'+L,'el'+L,0,-.7,.06,.35);
+    J('th'+L,'hips',s*.36,-.08,-.02,-.12,0,s*-.04);J('kn'+L,'th'+L,0,-.78,.28,.0);J('hk'+L,'kn'+L,0,-.72,-.32,.0);J('ft'+L,'hk'+L,0,-.29,.06,.0);
+    J('jaw'+L,'head',s*.11,-.07,.3,0,s*.15,0)});
+  J('tail0','hips',0,.04,-.42,-.42);for(let i=1;i<6;i++)J('tail'+i,'tail'+(i-1),0,0,-.46+i*.025,i<4?.05:.3);
+  // ---------------- hips and belly ----------------
+  const hipR=[[-.3,.34,.32],[-.05,.46,.42],[.2,.44,.4],[.34,.36,.34]];Mm('hips',G('hc',()=>svLoft(hipR,12)),ooze);
+  mb144Cover(R,'hips',hipR.map(q=>[q[0],q[1]*1.0,q[2]*1.0]),{n:14,rows:5,size:.29,seed:11,mat:(t,u,r,k)=>SM[MB144.pat.ring(u+(k%2)*.1,2)]});
+  for(let k=0;k<3;k++)Mm('hips',G('bp',()=>svLoft([[-.06,.3,.08],[.06,.32,.09]],8)),belly,0,-.18+k*.15,.36,0,0,0,1-k*.05,1,1);
+  // ---------------- spine / waist ----------------
+  const spR=[[-.08,.42,.38,0,-.02],[.2,.38,.33,0,-.04],[.5,.46,.38,0,-.06]];Mm('spine',G('sc',()=>svLoft(spR,12)),ooze);
+  mb144Cover(R,'spine',spR,{n:13,rows:4,size:.29,seed:12,skip:t=>Math.cos(t)>.72,mat:(t,u)=>SM[MB144.pat.back(t,u*.4)]});
+  for(let k=0;k<3;k++)Mm('spine',G('vp',()=>svLoft([[-.07,.24,.07],[.07,.26,.08]],8)),k%2?belly:chit2,0,.02+k*.15,.31+k*.015,-.1,0,0);
+  // ---------------- chest and back (the hump), dorsal spikes ----------------
+  const chR=[[-.12,.5,.42,0,-.04],[.12,.6,.48,0,-.08],[.36,.64,.5,0,-.12],[.56,.52,.42,0,-.1],[.72,.3,.28,0,-.02]];Mm('chest',G('cc',()=>svLoft(chR,14)),ooze);
+  mb144Cover(R,'chest',chR,{n:17,rows:7,size:.32,seed:13,skip:t=>Math.cos(t)>.78,mat:(t,u)=>SM[MB144.pat.back(t,.4+u*.6)]});
+  for(let k=0;k<4;k++)Mm('chest',G('cp',()=>svLoft([[-.08,.3,.1],[.08,.33,.11]],8)),k%2?belly:pale,0,-.02+k*.15,.4+k*.03,-.18-k*.04,0,0,1-k*.06,1,1);
+  for(let k=0;k<6;k++){const y=-.05+k*.14,h=.34+Math.sin(k/5*Math.PI)*.22;Mm('chest',horn('ds',.07,1,0,.0,5,3),dark,0,y,-.5+Math.sin(k*.6)*.04-.02*k,-2.25+k*.08,0,0,1,1,h);
+    Mm('chest',horn('dt',.045,1,0,0,5,3),pale,0,y+Math.cos(-2.25)*h*.75,-.5-.02*k+Math.sin(-2.25)*h*-.2,-2.25+k*.08,0,0,1,1,h*.45)}
+  [-1,1].forEach(s=>{for(let k=0;k<3;k++)Mm('chest',horn('sd',.05,1,0,0,4,3),pale,s*(.42-k*.05),.3+k*.14,-.44+k*.02,-2.0,s*.5,s*.3,1,1,.26-k*.04)});
+  // ooze welling in the seams of the back and dripping
+  for(let k=0;k<9;k++){const a=Math.PI+(k-4)*.32,y=.1+(k%3)*.18;Mm('chest',G('dr',()=>svHorn(.035,.14,0,0,5,2)),drip,Math.sin(a)*.6,y-.05,Math.cos(a)*.48-.08,Math.PI/2,0,0,1,1,.6+((k*3)%4)*.25)}
+  // ---------------- neck and head ----------------
+  const nkR=[[-.05,.24,.24],[.18,.2,.2],[.38,.18,.17]];Mm('neck',G('nc',()=>svLoft(nkR,10)),ooze);
+  mb144Cover(R,'neck',nkR,{n:11,rows:4,size:.2,seed:14,skip:t=>Math.cos(t)>.6,mat:(t,u,r)=>SM[r%2?2:0]});
+  Mm('neck',G('nb',()=>svLoft([[-.0,.18,.06],[.32,.15,.05]],7)),belly,0,0,.18);
+  // the skull: a long armoured head along +z, a heavy brow, the crest of horns
+  const hdR=[[-.2,.16,.13,0,.02],[-.05,.25,.2,0,.04],[.12,.25,.19,0,.02],[.28,.19,.14,0,-.02],[.42,.11,.08,0,-.05],[.5,.05,.04,0,-.06]];
+  Mm('head',G('hd',()=>svLoftZ(hdR,12)),chit);Mm('head',G('hdo',()=>svLoftZ(hdR.map(q=>[q[0],q[1]*.94,q[2]*.94,q[3],q[4]-.02]),10)),ooze,0,-.015,0);
+  // armour plates laid by hand on the skull: a ridge of brow plates down the snout, cheek plates, plates over the eyes
+  const sc=mb144ScaleGeo(),hp=(m,x,y,z,rx,ry,rz,w,l)=>Mm('head',sc,m,x,y,z,rx,ry,rz,w,l,(w+l)*.4);
+  for(let k=0;k<6;k++){const z=-.12+k*.1,w=.2-k*.018;hp(k%2?chit2:chit,0,.24-k*.02+(k>2?-.02*(k-2):0),z,-1.38-k*.05,0,0,w,w*1.15)}
+  [-1,1].forEach(s=>{for(let k=0;k<4;k++){const z=-.08+k*.11;hp(k==1?pale:chit,s*(.2-k*.02),.08-k*.01,z,-.2,s*1.25,s*-.3,.12,.15)}
+    for(let k=0;k<3;k++)hp(chit2,s*(.14-k*.02),.17-k*.015,.02+k*.12,-1.0,s*.55,0,.1,.12)});
+  Mm('head',G('brw',()=>svLump(.13,1,.12,71)),chit2,0,.16,.16,0,0,0,1.9,.42,.9);
+  // crest: five horns swept back off the crown (the middle one longest), bone tips
+  [[-1,.75],[-.5,.9],[0,1.05],[.5,.9],[1,.75]].forEach(([u,l],i)=>{Mm('head',horn('cr',.065,1,0,.18,6,5),chit,u*.11,.22-Math.abs(u)*.03,-.06,-.2-Math.abs(u)*.1,u*.42+Math.PI,0,1,1,l*.62);
+    Mm('head',horn('ct',.04,1,0,.1,5,3),pale,u*.11+Math.sin(u*.42)*-l*.3,.22+l*.16,-.06-l*.5,.05,u*.42+Math.PI,0,1,1,l*.3)});
+  [-1,1].forEach(s=>Mm('head',horn('ch',.045,.34,0,.1,5,4),chit2,s*.21,.03,-.12,-.3,Math.PI+s*.6,0));
+  // compound eyes (glowing, faceted) set into dark sockets, and two small ones above
+  [-1,1].forEach(s=>{Mm('head',ball(5,.085,1),dark,s*.19,.1,.2,0,0,0,1,.85,1.1);Mm('head',G('ey',()=>new THREE.IcosahedronGeometry(.072,1)),eye,s*.2,.105,.215,0,0,0,1,.85,1.05);
+    svSpr(R,'head',MB144.col,.32,s*.23,.1,.24);Mm('head',G('ey2',()=>new THREE.IcosahedronGeometry(.032,0)),eye,s*.1,.2,.33);
+    for(let k=0;k<3;k++)Mm('head',G('ef',()=>new THREE.BoxGeometry(.004,.11,.004)),dark,s*(.25+k*.004),.105,.17+k*.035,0,0,s*.1)});
+  // the maw: fangs, a glowing gullet, ooze drool
+  Mm('head',G('mw',()=>svLoftZ([[.2,.11,.05],[.44,.07,.03]],8)),drip,0,-.08,0);
+  [-1,1].forEach(s=>{for(let k=0;k<4;k++)Mm('head',horn('fg',.022,1,0,-.02,4,2),fang,s*(.03+k*.025),-.08,.44-k*.05,Math.PI/2+.25,0,s*.15,1,1,.14-k*.02);
+    Mm('head',horn('fl',.034,.22,0,-.06,5,3),fang,s*.07,-.1,.42,Math.PI/2+.4,s*.2,0)});
+  for(let k=0;k<3;k++)Mm('head',G('dl',()=>svTube([[0,0,0],[.01,-.12,.02],[0,-.26,.03]],[.016,.01,.004],5)),drip,-.04+k*.04,-.12,.42-k*.03);
+  // mandibles on their joints: a hooked, serrated pincer each
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';Mm('jaw'+L,G('md',()=>svTube([[0,0,0],[.04,-.04,.12],[.03,-.06,.24],[-.04,-.05,.33],[-.1,-.03,.36]],[.04,.036,.03,.02,.006],6)),chit2,0,0,0,0,0,0,s,1,1);
+    for(let k=0;k<3;k++)Mm('jaw'+L,horn('mt',.012,1,0,0,4,2),fang,s*(.02-k*.02),-.06,.16+k*.07,Math.PI/2,s*-1.2,0,1,1,.05);
+    Mm('jaw'+L,G('mdg',()=>new THREE.IcosahedronGeometry(.02,0)),drip,s*-.08,-.05,.35)});
+  // ---------------- arms: pauldrons, upper arm, plated forearm with the great scythe, four-taloned hand ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',sh='sh'+L,el='el'+L,wr='wr'+L;
+    Mm(sh,ball(1,.24),ooze);
+    for(let k=0;k<3;k++){Mm(sh,G('pd'+k,()=>svLump(.3-k*.04,1,.18,72+k)),k==1?pale:chit,s*(.04+k*.06),.12-k*.13,-.02,0,0,s*(.2+k*.35),1.15,.5,1.05);
+      for(let q=0;q<2;q++)Mm(sh,horn('ps',.05,1,0,-.04,5,3),k==0?pale:dark,s*(.1+k*.07),.2-k*.1,-.14+q*.18,-1.2,0,s*(-.5-k*.25),1,1,.3-k*.06)}
+    const uaR=[[.0,.18,.18],[-.36,.17,.16],[-.68,.13,.13]];Mm(sh,G('uc',()=>svLoft(uaR,10)),ooze);
+    mb144Cover(R,sh,uaR,{n:10,rows:5,size:.2,seed:20+s,mat:(t,u)=>SM[MB144.pat.ring(u,2)]});
+    Mm(el,ball(2,.14),ooze);Mm(el,G('ep',()=>svHorn(.07,.3,0,-.1,5,3)),chit,0,0,-.12,Math.PI*.95,0,0);
+    const faR=[[.04,.14,.14],[-.3,.17,.16],[-.62,.12,.11]];Mm(el,G('fc',()=>svLoft(faR,10)),chit2);
+    for(let k=0;k<4;k++)Mm(el,G('fp',()=>svLoft([[-.08,.18,.17],[.08,.19,.18]],9,{cap:false})),k%2?chit:pale,0,-.06-k*.15,0,0,0,0,1-k*.08,1,1-k*.08);
+    // the scythe: a long curved blade from the back of the forearm sweeping forward and down past the paw, pale serrated edge
+    const B=G('bl',()=>svBlade([[0,0],[.12,-.05],[.26,-.3],[.34,-.62],[.32,-.98],[.22,-1.3],[.06,-1.52],[-.02,-1.42],[.08,-1.18],[.12,-.84],[.08,-.5],[-.02,-.2]],.04)),
+      BE=G('be',()=>svBlade([[.33,-.62],[.36,-.66],[.34,-1.0],[.24,-1.33],[.07,-1.56],[.05,-1.5],[.21,-1.29],[.3,-.98]],.05));
+    // the blade lies in the forearm's YZ plane and curves down and back like a sickle (same turn on both arms)
+    const bg=svJ(R,'bl'+L,el,s*.02,-.1,-.14,-.2,Math.PI/2,0);bg.scale.set(1.02,1.02,1);   // its own joint: trails are drawn along it
+    Mm(bg,B,blade);Mm(bg,BE,edge);
+    [[.36,-.62],[.36,-.86],[.31,-1.1],[.22,-1.32]].forEach(([x,y],k)=>Mm(bg,horn('sr',.022,1,0,0,4,2),edge,x,y,0,0,Math.PI/2,0,1,1,.08-k*.008));
+    Mm(wr,ball(3,.1),chit2,0,-.04,.02,0,0,0,1.2,1,1.2);
+    for(let f=0;f<3;f++){const a=(f-1)*.38;Mm(wr,horn('tl',.04,1,0,-.08,5,4),claw,Math.sin(a)*.08,-.08,.06,Math.PI/2+.5,a,0,1,1,.3+(f==1?.08:0))}
+    Mm(wr,horn('tm',.035,.22,0,-.05,5,3),claw,s*-.09,-.04,0,Math.PI/2+.3,s*-.9,0)});
+  // ---------------- legs ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',th='th'+L,kn='kn'+L,hk='hk'+L,ft='ft'+L;
+    const tR=[[.04,.24,.22],[-.3,.26,.25,0,.06],[-.62,.17,.16,0,.12],[-.78,.12,.12,0,.16]];Mm(th,G('tc',()=>svLoft(tR,10)),ooze);
+    mb144Cover(R,th,tR,{n:11,rows:6,size:.22,seed:30+s,mat:(t,u)=>SM[MB144.pat.ring(u+.15,2.5)]});
+    Mm(kn,ball(4,.12),chit2);Mm(kn,horn('ks',.06,.3,0,.1,5,3),pale,0,.04,.1,-.6,0,0);
+    const sR=[[0,.11,.11],[-.36,.09,.1,0,-.16],[-.7,.08,.08,0,-.32]];Mm(kn,G('shc',()=>svLoft(sR,8)),chit);
+    for(let k=0;k<3;k++)Mm(kn,G('sp',()=>svLoft([[-.07,.12,.12],[.07,.13,.12]],8,{cap:false})),k==1?pale:chit2,0,-.15-k*.2,-.06-k*.1,-.42,0,0);
+    Mm(hk,ball(6,.085),chit2);Mm(hk,horn('hs',.045,.32,0,.12,5,3),dark,0,0,-.06,Math.PI*.82,0,0);
+    Mm(hk,G('mt',()=>svLoft([[0,.075,.07],[-.3,.07,.08,0,.06]],8)),chit2);
+    Mm(ft,G('fo',()=>svLump(.12,1,.12,74)),chit,0,.02,.06,0,0,0,1.3,.55,1.4);
+    for(let f=0;f<3;f++){const a=(f-1)*.42;Mm(ft,horn('to',.045,1,0,-.03,5,3),chit2,Math.sin(a)*.1,.0,.1,.0,a,0,1,1,.26);Mm(ft,horn('tc2',.03,1,0,-.06,5,3),claw,Math.sin(a)*.1+Math.sin(a)*.24,-.0,.1+Math.cos(a)*.24,.25,a,0,1,1,.16)}
+    Mm(ft,horn('dw',.03,.18,0,.05,5,3),claw,0,.04,-.08,Math.PI+.4,0,0)});
+  // ---------------- the tail: banded plates, spikes, the ooze sac and the stinger ----------------
+  for(let i=0;i<6;i++){const r0=.3-i*.042,r1=.3-(i+1)*.042,j='tail'+i,tR=[[0,r0,r0*.92],[-.48,r1,r1*.92]];
+    Mm(j,G('tl'+i,()=>svLoftZ(tR.map(q=>[q[0],q[1],q[2]]),10)),ooze);
+    mb144Cover(R,j,[[0,r0*1.0,r0*.92],[.46,r1*1.0,r1*.92]],{n:9,rows:3,size:.14+r0*.42,seed:40+i,dir:1,skip:t=>Math.cos(t)>.85,mat:(t,u)=>SM[MB144.pat.tiger(t,(i+u)/6)]}).forEach(m=>{
+      // the cover is authored along +Y: turn it to lie along -Z
+      const p=m.position.clone(),q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);m.position.set(p.x,p.z,-p.y);m.quaternion.premultiply(q)});
+    Mm(j,horn('tsp',.05,1,0,-.02,5,3),i%2?pale:dark,0,r0*.9,-.2,-1.1,0,0,1,1,.22-i*.02)}
+  Mm('tail5',G('sac',()=>svLump(.17,1,.15,75)),ooze,0,-.04,-.58,0,0,0,1,1,1.35);
+  Mm('tail5',G('sk',()=>svLump(.14,1,.15,76)),chit,0,.06,-.5,0,0,0,1.15,.7,1.2);
+  Mm('tail5',horn('stg',.06,.5,0,.22,6,5),fang,0,0,-.76,Math.PI,0,0);
+  for(let k=0;k<4;k++){const a=k/4*6.283;Mm('tail5',horn('sb',.03,.16,0,0,4,2),edge,Math.sin(a)*.12,Math.cos(a)*.1,-.62,-Math.PI/2+Math.cos(a)*.8,0,-Math.sin(a)*.8)}
+  // count the triangles once (the brief: about twice a normal Akorror)
+  if(!MB144.tris){let n=0;R.root.traverse(o=>{if(o.isMesh){const g=o.geometry;n+=g.index?g.index.count/3:g.attributes.position.count/3}});MB144.tris=Math.round(n)}
+  R.headJ='head'}
+// ---------------- poses (offsets from rest: [rx, ry, rz, px, py, pz]) ----------------
+var MB144P={
+  idle:{},
+  // Scythe Rend: right scythe up and back, the diagonal cut, left cut, both raised high, the crossing double cut
+  rUp:{hips:[0,-.35,0],spine:[0,-.25,0],chest:[-.1,-.35,0],shR:[-1.5,0,-.9],elR:[-.3,0,0],shL:[.2,0,.3],elL:[-.2,0,0],head:[0,.25,0],thL:[-.45,0,0],knL:[.4,0,0],tail0:[0,.3,0],tail1:[0,.2,0]},
+  rCut:{hips:[.05,.4,0,0,-.08,.3],spine:[.1,.3,0],chest:[.2,.45,0],shR:[.35,0,.55],elR:[.1,0,0],shL:[-.5,0,.2],head:[.1,-.3,0],thL:[-.65,0,0],knL:[.55,0,0],hkL:[-.2,0,0],thR:[.35,0,0],tail0:[0,-.4,0],tail1:[0,-.3,0]},
+  lUp:{hips:[0,.35,0],spine:[0,.25,0],chest:[-.1,.35,0],shL:[-1.5,0,.9],elL:[-.3,0,0],shR:[.2,0,-.3],elR:[-.2,0,0],head:[0,-.25,0],thR:[-.45,0,0],knR:[.4,0,0],tail0:[0,-.3,0]},
+  lCut:{hips:[.05,-.4,0,0,-.08,.3],spine:[.1,-.3,0],chest:[.2,-.45,0],shL:[.35,0,-.55],elL:[.1,0,0],shR:[-.5,0,-.2],head:[.1,.3,0],thR:[-.65,0,0],knR:[.55,0,0],hkR:[-.2,0,0],thL:[.35,0,0],tail0:[0,.4,0],tail1:[0,.3,0]},
+  xUp:{hips:[-.15,0,0,0,.12,-.15],spine:[-.25,0,0],chest:[-.35,0,0],neck:[-.2,0,0],head:[-.35,0,0],shL:[-2.2,0,.35],elL:[-.5,0,0],shR:[-2.2,0,-.35],elR:[-.5,0,0],thL:[-.25,0,0],knL:[.3,0,0],thR:[.15,0,0],tail0:[.35,0,0],tail1:[.2,0,0],tail2:[.15,0,0],jawL:[0,.4,0],jawR:[0,-.4,0]},
+  xCut:{hips:[.25,0,0,0,-.35,.55],spine:[.35,0,0],chest:[.35,0,0],neck:[.1,0,0],head:[.25,0,0],shL:[.45,0,-.65],elL:[.15,0,0],shR:[.45,0,.65],elR:[.15,0,0],thL:[-.9,0,0],knL:[.85,0,0],hkL:[-.35,0,0],thR:[.5,0,0],knR:[.3,0,0],tail0:[-.4,0,0],tail1:[-.2,0,0]},
+  cRec:{hips:[0,0,0,0,-.04,0],shL:[-.2,0,.1],shR:[-.2,0,-.1]},
+  // Caustic Lunge: low, scythes swept back, the dash with jaws wide
+  luLow:{hips:[.3,0,0,0,-.45,-.25],spine:[.25,0,0],chest:[.15,0,0],neck:[.15,0,0],head:[-.25,0,0],shL:[1.1,0,.5],elL:[-.4,0,0],shR:[1.1,0,-.5],elR:[-.4,0,0],thL:[-.7,0,0],knL:[1.05,0,0],hkL:[-.5,0,0],thR:[-.35,0,0],knR:[.9,0,0],hkR:[-.45,0,0],tail0:[.3,0,0],tail1:[.25,0,0],tail2:[.2,0,0],jawL:[0,.3,0],jawR:[0,-.3,0]},
+  luGo:{hips:[.45,0,0,0,-.25,.4],spine:[.3,0,0],chest:[.2,0,0],neck:[-.1,0,0],head:[-.2,0,0],shL:[-.9,0,.6],elL:[-.2,0,0],shR:[-.9,0,-.6],elR:[-.2,0,0],thL:[-1.1,0,0],knL:[.6,0,0],thR:[.75,0,0],knR:[.25,0,0],hkR:[.3,0,0],tail0:[-.25,0,0],tail1:[-.15,0,0],jawL:[0,.75,0],jawR:[0,-.75,0]},
+  luBite:{hips:[.4,0,0,0,-.3,.45],spine:[.3,0,0],chest:[.25,0,0],neck:[.25,0,0],head:[.35,0,0],shL:[-.4,0,.7],shR:[-.4,0,-.7],thL:[-1.0,0,0],knL:[.7,0,0],thR:[.6,0,0],knR:[.3,0,0],jawL:[0,-.25,0],jawR:[0,.25,0]},
+  // Tail Lash: he winds the tail to one side, then whips round
+  tlWind:{hips:[0,.6,0,0,-.15,0],spine:[0,.35,0],chest:[0,.25,0],head:[0,-.5,0],shL:[-.4,0,.6],shR:[-.4,0,-.6],thL:[-.3,0,0],knL:[.45,0,0],thR:[-.1,0,0],knR:[.4,0,0],tail0:[-.15,1.0,0],tail1:[0,.55,0],tail2:[0,.4,0],tail3:[0,.3,0]},
+  tlWhip:{hips:[0,-.8,0,0,-.2,0],spine:[0,-.4,0],chest:[0,-.3,0],head:[0,.6,0],shL:[-.4,0,.7],shR:[-.4,0,-.7],thL:[-.1,0,0],knL:[.5,0,0],thR:[-.35,0,0],knR:[.5,0,0],tail0:[-.1,-1.2,0],tail1:[0,-.6,0],tail2:[0,-.45,0],tail3:[0,-.35,0]},
+  // Ooze Geyser: rears up, scythes raised, then stabs both into the floor
+  gUp:{hips:[-.25,0,0,0,.18,-.1],spine:[-.3,0,0],chest:[-.3,0,0],neck:[-.3,0,0],head:[-.5,0,0],shL:[-2.4,0,.5],elL:[.1,0,0],shR:[-2.4,0,-.5],elR:[.1,0,0],thL:[-.2,0,0],thR:[.1,0,0],tail0:[.45,0,0],tail1:[.25,0,0],jawL:[0,.55,0],jawR:[0,-.55,0]},
+  gStab:{hips:[.45,0,0,0,-.55,.2],spine:[.4,0,0],chest:[.35,0,0],neck:[.2,0,0],head:[.1,0,0],shL:[-.2,0,-.25],elL:[.35,0,0],wrL:[.3,0,0],shR:[-.2,0,.25],elR:[.35,0,0],wrR:[.3,0,0],thL:[-.85,0,0],knL:[1.0,0,0],hkL:[-.4,0,0],thR:[-.5,0,0],knR:[1.0,0,0],hkR:[-.45,0,0],tail0:[-.2,0,0]},
+  // Spine Volley: arches back, dorsal spines bristle, snaps forward
+  vArch:{hips:[-.2,0,0,0,.05,-.15],spine:[-.35,0,0],chest:[-.4,0,0],neck:[.1,0,0],head:[.2,0,0],shL:[.6,0,.9],elL:[-.6,0,0],shR:[.6,0,-.9],elR:[-.6,0,0],tail0:[.5,0,0],tail1:[.3,0,0],tail2:[.25,0,0]},
+  vSnap:{hips:[.2,0,0,0,-.12,.15],spine:[.3,0,0],chest:[.35,0,0],neck:[-.1,0,0],head:[-.1,0,0],shL:[-.4,0,.8],shR:[-.4,0,-.8],jawL:[0,.5,0],jawR:[0,-.5,0],tail0:[-.2,0,0]},
+  // Carapace Burst: curls in on himself, trembling, then flings everything open
+  curl:{hips:[.35,0,0,0,-.6,0],spine:[.45,0,0],chest:[.45,0,0],neck:[.3,0,0],head:[.4,0,0],shL:[-.3,0,-.75],elL:[-1.0,0,0],shR:[-.3,0,.75],elR:[-1.0,0,0],thL:[-.9,0,0],knL:[1.15,0,0],hkL:[-.5,0,0],thR:[-.9,0,0],knR:[1.15,0,0],hkR:[-.5,0,0],tail0:[.6,0,0],tail1:[.5,0,0],tail2:[.4,0,0],tail3:[.3,0,0]},
+  burst:{hips:[-.25,0,0,0,.08,0],spine:[-.35,0,0],chest:[-.45,0,0],neck:[-.35,0,0],head:[-.55,0,0],shL:[-1.2,0,1.25],elL:[.05,0,0],shR:[-1.2,0,-1.25],elR:[.05,0,0],thL:[.15,0,0],thR:[.15,0,0],tail0:[-.3,0,0],tail1:[-.2,0,0],jawL:[0,.85,0],jawR:[0,-.85,0]},
+  // Phase II: the awakening roar; the siphon crouch (scythes sunk into the dais); frenzy
+  roar:{hips:[-.15,0,0,0,.1,0],spine:[-.3,0,0],chest:[-.35,0,0],neck:[-.4,0,0],head:[-.6,0,0],shL:[-1.6,0,1.1],elL:[-.3,0,0],shR:[-1.6,0,-1.1],elR:[-.3,0,0],jawL:[0,.9,0],jawR:[0,-.9,0],tail0:[.4,0,0],tail1:[.3,0,0]},
+  siph:{hips:[.35,0,0,0,-.5,0],spine:[.3,0,0],chest:[.2,0,0],neck:[-.2,0,0],head:[-.35,0,0],shL:[-.5,0,-.3],elL:[.3,0,0],wrL:[.4,0,0],shR:[-.5,0,.3],elR:[.3,0,0],wrR:[.4,0,0],thL:[-.8,0,0],knL:[1.0,0,0],hkL:[-.4,0,0],thR:[-.8,0,0],knR:[1.0,0,0],hkR:[-.4,0,0],jawL:[0,.5,0],jawR:[0,-.5,0],tail0:[.35,0,0],tail1:[.3,0,0]},
+  leap:{hips:[-.3,0,0,0,1.2,0],spine:[-.2,0,0],chest:[-.2,0,0],shL:[-2,0,.6],shR:[-2,0,-.6],thL:[-.9,0,0],knL:[1.3,0,0],thR:[-.9,0,0],knR:[1.3,0,0],tail0:[.6,0,0],tail1:[.4,0,0]},
+  stag:{hips:[.2,.2,.15,0,-.55,0],spine:[.35,0,.1],chest:[.3,0,.1],neck:[.3,0,0],head:[.55,.3,.3],shL:[.4,0,.5],elL:[-.3,0,0],shR:[.6,0,-.3],elR:[-.2,0,0],thL:[-1.1,0,0],knL:[1.3,0,0],thR:[-.4,0,0],knR:[1.0,0,0],tail0:[-.3,.4,0],tail1:[0,.3,0],jawL:[0,.5,0],jawR:[0,-.2,0]},
+  dead:{root:[0,0,0,0,-1.3,0],hips:[-.4,0,.5,0,0,0],spine:[-.2,0,.2],chest:[-.3,0,.2],neck:[-.3,0,0],head:[-.4,.5,0],shL:[-.4,0,1.2],shR:[.2,0,-.9],thL:[-1.4,0,0],knL:[1.6,0,0],thR:[-1.2,0,0],knR:[1.7,0,0],tail0:[0,.5,0],tail1:[0,.4,0],jawL:[0,.6,0],jawR:[0,-.6,0]}};
+// ---------------- procedural base layer: breathing, the digitigrade walk, tail undulation, head tracking, mandibles ----------------
+function mb144Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/2.4);S.gp=(S.gp||0)+dt*(1.6+sp*2.1);const g=S.gp,br=Math.sin(t*1.25);
+  O.hips[4]+=.035*br+.07*Math.abs(Math.sin(g))*a;O.hips[0]+=.06*a;O.chest[0]+=.03*br;O.neck[0]+=-.02*br;
+  // walk: digitigrade legs (thigh swing, knee lift, hock flick), the body rolls with each step, arms sway with the scythes held ready
+  ['L','R'].forEach((s,j)=>{const ph=g+j*Math.PI,sw=Math.sin(ph),lf=Math.max(0,Math.cos(ph));
+    O['th'+s][0]+=-sw*.55*a;O['kn'+s][0]+=lf*.55*a;O['hk'+s][0]+=-lf*.35*a+sw*.1*a;O['ft'+s][0]+=lf*.3*a;
+    O['sh'+s][0]+=(j?1:-1)*sw*.12*a+.03*br;O['el'+s][0]+=-.04*br-.05*a});
+  O.hips[2]+=Math.sin(g)*.05*a;O.hips[1]+=Math.sin(g)*.06*a;O.chest[1]+=-Math.sin(g)*.06*a;
+  // tail: a wave travels down it, wider when walking
+  for(let i=0;i<6;i++){const w=Math.sin(t*1.6-i*.75)*(.08+.06*a)*(1+i*.18),l=Math.sin(t*1.1-i*.6)*.04;O['tail'+i][1]+=w;O['tail'+i][0]+=l}
+  // the head follows the hero (out of moves), the mandibles twitch
+  const m=e.m,hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,yaw=svAng(Math.atan2(hx,hz)-m.rotation.y),k=S.mv?0:Math.min(1,Math.abs(yaw)<1.6?1:0);
+  S.hy=(S.hy||0)+((Math.max(-.7,Math.min(.7,yaw))*k)-(S.hy||0))*Math.min(1,dt*3);O.head[1]+=S.hy*.6;O.neck[1]+=S.hy*.4;
+  const tw=Math.max(0,Math.sin(t*3.1)*Math.sin(t*1.7))*.25;O.jawL[1]+=tw+.05*br;O.jawR[1]-=tw+.05*br}
+// after the pose: the ooze pulses (brighter in Phase II and while charging), drips fall, the eyes flare
+function mb144Post(e,S,dt,now){const R=S.R,t=now/1000,ph2=S.ph>1,ch=S.chg||0;
+  const k=(ph2?.85:.5)+.18*Math.sin(t*1.25)+ch*1.3;R.ooze.emissiveIntensity=k;if(ph2)R.ooze.emissive.setHex(0x5ad01a);
+  R.eyeM.color.setHex(ch>.3?0xf4ffb0:0xd0ff4a);
+  if(!S.dieM&&Math.random()<dt*(ph2?14:7)){const js=['chest','spine','hips','shL','shR','thL','thR','tail1','tail3'],j=js[Math.floor(Math.random()*js.length)];
+    const p=svWP(e,j,(Math.random()-.5)*.6,(Math.random()-.5)*.4,(Math.random()-.5)*.5);burst(p,MB144.acid,1,.15,-.6,.8)}
+  if(!S.dieM&&Math.random()<dt*2.2){const p=svWP(e,'head',0,-.12,.42);burst(p,MB144.acid,1,.05,-1.2,.7)}}
+// preview (v143_look PROPS=boss / bossP:<pose>): the merged model, optionally in a pose
+MB144.sheet.boss=()=>{const R=svRig();mb144Build(R,null);svRest(R);svMerge(R);return R.root};
+MB144.pose=(root,R,name)=>{const P=svPose({P:MB144P},name);for(const k in P){const g=R.J[k],o=P[k];if(!g)continue;const r0=g.userData.r0,p0=g.userData.p0;g.rotation.set(r0.x+o[0],r0.y+o[1],r0.z+o[2]);g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}};
+// ================= v144 Vorraxis — the moves (Sovereign move format, v110 engine) and the engine glue =================
+// He runs on the v110 timeline engine (svStart / svTickMove / svApply / svCast / svAfterMove / svPoise and the stagger, death and
+// hit-flash hooks), but not in a Sovereign den: the lair (3033) is his arena. Two small wrappers point the engine at it: svCtx
+// gives his moves the lair's clamp (c.inA) and hit test, svHitNow checks hits without the den flag (AF). He never sets e.ar, so his
+// death is not a Sovereign defeat, and e.boss keeps him out of co-op sharing (each player fights their own copy; see 3033).
+// Pattern (learnable; cooldowns, no repeats, combo strings):
+//  close, front ── Scythe Rend: right cut, left cut, a pause… then he rears and drops a crossing double cut down a line (late).
+//  mid, front   ── Caustic Lunge: low, scythes swept back, then a long dash through you with jaws wide; acid pools on his path.
+//  behind/side  ── Tail Lash: he winds the tail to one side and whips it round: a ring around him (stand close in, or far out).
+//  any          ── Ooze Geyser: rears, stabs both scythes into the floor; three geysers erupt under you, each aimed ahead of you.
+//  far, front   ── Spine Volley: arches back, the dorsal spines bristle, five spines fly out in a fan. Stand in a gap.
+//  close, any   ── Carapace Burst: he curls up and trembles, the ooze in his seams flares; a close blast, then his scales fire out
+//                  along eight lanes, then eight more in the gaps. Step into a gap, then shift.
+//  Phase II (55%) "The Seeping": a roar, his seams split and the edge of the lair floods with ooze (3033); he rests less and gains
+//                  Frenzied Rend (five cuts and a leaping double cut), Caustic Eruption (a ring of geysers closing on you), a double
+//                  Spine Volley, and Crystal Siphon: he leaps to the crystal and drinks from it (80% less damage). Three ooze sacs swell
+//                  around the lair; burst all three and he is torn out of it, staggered for a long time. If the siphon completes he
+//                  heals and floods the whole floor: only the three stone islands that rise out of it are safe.
+// Weakness: posture (the yellow bar); every break staggers him (+35% damage). Big moves have armour.
+var MB144A=null;   // the lair arena while he exists: {cx, cz, r (his reach), hr (the hero's), y}
+{const f=svCtx;svCtx=function(e){const c=f.apply(this,arguments);if(e&&e.mb144){c.A=MB144A;c.inA=(p,mg)=>mb144Clamp(p,mg==null?1.2:mg);c.hit=(s,an,dm,o)=>mb144HitNow(e,s,an,dm,o||{})}return c}}
+{const f=svHitNow;svHitNow=function(e,s,an,dm,o){if(e&&e.mb144)return mb144HitNow(e,s,an,dm,o||{});return f.apply(this,arguments)}}
+function mb144Clamp(p,mg){const A=MB144A;if(!A)return p;const dx=p.x-A.cx,dz=p.z-A.cz,d=Math.hypot(dx,dz),lim=A.r-(mg||0);if(d>lim){p.x=A.cx+dx/d*lim;p.z=A.cz+dz/d*lim}return p}
+function mb144HitNow(e,s,an,dm,o){if(!MB144A||!MB144A.f||e.dead)return false;let hit=false;if(o.flash!==false)svFlash(s,an,o.col||MB144.col,o.fms);
+  if(hero.hp>0&&svIn(s,an,pl.position,o.pad)){hit=true;SVX.st.hits++;if(o.pre)try{o.pre()}catch(_){}const iv=hero.iv>0;bossHit(e,dm);
+    if(!iv&&hero.hp>0){if(o.kb){const dx=pl.position.x-an.x,dz=pl.position.z-an.z,l=Math.hypot(dx,dz)||1,q=mb144HeroIn(pl.position.clone().add(new THREE.Vector3(dx/l*o.kb,0,dz/l*o.kb)));
+        pl.step={x:(q.x-pl.position.x)/(o.kb||1),z:(q.z-pl.position.z)/(o.kb||1),t:.22,sp:(o.kb||1)/.22}}
+      if(o.on)try{o.on()}catch(err){console.error('mb on hit',err)}}}
+  return hit}
+function mb144HeroIn(p){const A=MB144A;if(!A)return p;const dx=p.x-A.cx,dz=p.z-A.cz,d=Math.hypot(dx,dz);if(d>A.hr){p.x=A.cx+dx/d*A.hr;p.z=A.cz+dz/d*A.hr}return p}
+// ---------------- effects ----------------
+var MB144X={m:null};
+function mb144OozeMat(){return MB144X.m||(MB144X.m=new THREE.MeshStandardMaterial({color:0x2a6a14,emissive:0x5ad01a,emissiveIntensity:.9,roughness:.25,flatShading:true}))}
+function mb144ChitMat(){return MB144X.c||(MB144X.c=new THREE.MeshStandardMaterial({color:0x1a1c12,roughness:.35,metalness:.3,flatShading:true}))}
+const MB144_DEB=['Caustic','🧪',{pdP:-.15,mspd:-.2},'Caustic ooze: −15% physical defence, −20% move speed'];
+function mb144Pool(e,p,r,ms){if(!MB144A||!MB144A.f)return;const q=mb144Clamp(p.clone(),.3);s6Pool(e,q,r,0x8ae82a,ms||3500,.16,MB144_DEB)}
+// a geyser: a column of ooze bursting out of the floor, chunks of chitin thrown up, a pool left behind
+function mb144Geyser(e,p,big){const s=big?1.25:1,col=new THREE.Mesh(svG('mb_gy',()=>{const g=new THREE.CylinderGeometry(.5,.9,1,9,1,true);g.translate(0,.5,0);return g}),
+    new THREE.MeshBasicMaterial({color:0xa8ff3a,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+  const y0=GH(p.x,p.z);col.position.set(p.x,y0,p.z);col.userData.lpsSkip=1;col.renderOrder=21;scene.add(col);let t=0;
+  for(let k=0;k<5;k++){const a=k/5*6.283+Math.random(),r=.5+Math.random()*.6;svSpike(new THREE.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r),k%2?mb144OozeMat():mb144ChitMat(),(1.0+Math.random()*.7)*s,.22*s,1.1,.6)}
+  burst(gY(p,.5),0xb8ff3a,40,2.4,5.5,.9);burst(gY(p,.3),0x2a2a1c,14,2,3,.7);svDecal(p,0x2a5a10,1.9*s,3.4,.6);svShock(p,0xb8ff3a,2.4*s,.4);svSnd('splash',1,1.1);
+  kqFx({tick(dt){t+=dt||0;const k=t/.75;col.scale.set(s*(1+.3*k),s*(4.5*Math.sin(Math.min(1,k)*Math.PI)+.01),s*(1+.3*k));col.material.opacity=.85*(1-k*.6);return k<1},end(){scene.remove(col);col.material.dispose()}});
+  mb144Pool(e,p,1.3*s,3500)}
+// a spine flying along a line from the boss; hits once
+function mb144Spine(c,an,dm,spd){const e=c.e,a=an.a,L=15,o=new THREE.Vector3(an.x,0,an.z);
+  const ms=new THREE.Mesh(svG('mb_spn',()=>{const g=new THREE.ConeGeometry(.09,1.1,5);g.rotateX(Math.PI/2);return g}),mb144ChitMat()),gl=kqSpr(0xb8ff3a,.9);ms.add(gl);ms.userData.lpsSkip=1;scene.add(ms);
+  let t=0,hit=false;const T=L/(spd||17);
+  kqFx({tick(dt){t+=dt||0;const d=(spd||17)*t,p=new THREE.Vector3(o.x+Math.sin(a)*d,0,o.z+Math.cos(a)*d);ms.position.set(p.x,GH(p.x,p.z)+1.3,p.z);ms.rotation.y=a;
+    if(Math.random()<.8)burst(ms.position,0xb8ff3a,1,.2,.1,.35);
+    if(!hit&&!e.dead&&svIn({k:'l',w:1.1,l:1.2,b:.6},{x:p.x,z:p.z,a},pl.position,.25)){hit=true;mb144HitNow(e,{k:'c',r:99},{x:p.x,z:p.z,a},dm,{flash:false,on:()=>dqDebuff(MB144_DEB[0],MB144_DEB[1],MB144_DEB[2],3000,MB144_DEB[3])});burst(ms.position,0xb8ff3a,16,1.6,1,.4)}
+    const A=MB144A;if(A&&Math.hypot(p.x-A.cx,p.z-A.cz)>A.r+1.2)return false;return t<T&&!hit&&!e.dead},end(){scene.remove(ms);if(gl.parent)gl.parent.remove(gl)}})}
+// a lane of scale-spikes erupting outward from the boss (Carapace Burst); hits once per lane
+function mb144Lane(c,an,dm){const e=c.e,N=10,step=1.05,sa=Math.sin(an.a),ca=Math.cos(an.a);let t=0,k=0,hit=false;
+  kqFx({tick(dt){t+=dt||0;while(k<N&&t>=k*.045){const d=1.2+k*step,x=an.x+sa*d,z=an.z+ca*d;k++;const A=MB144A;if(A&&Math.hypot(x-A.cx,z-A.cz)>A.r+.8){k=N;break}
+      const p=new THREE.Vector3(x,0,z);svSpike(p,k%3?mb144ChitMat():mb144OozeMat(),1.1+(k%3)*.25,.24,.85,.5);if(k%2)burst(gY(p,.4),0xb8ff3a,4,1.2,1.6,.4);if(k%3===1)svSnd('crack',.45,1.2+k*.04);
+      if(!hit&&!e.dead&&svIn({k:'c',r:.72},{x,z,a:0},pl.position,.25)){hit=true;mb144HitNow(e,{k:'c',r:99},{x,z,a:0},dm,{flash:false})}}
+    return k<N&&!e.dead},end(){}})}
+// where the hero will be (lead seconds ahead), inside the lair
+function mb144Aim(c,lead){const v=c.S.hv||{x:0,z:0};return mb144HeroIn(new THREE.Vector3(pl.position.x+v.x*lead,0,pl.position.z+v.z*lead))}
+// trails along the scythes: [t0, t1, joint, a, b, colour, life]
+const MB144_TR=(t0,t1,j)=>[t0,t1,j,[.28,-.62,0],[.08,-1.48,0],0xc8ff5a,.16];
+const MB144_NO141=D=>{D._h141=null;return D};   // keep the v141 wind-up speed-up off: these timings are designed as they are
+// ---------------- the moves ----------------
+var MB144M={
+  intro:MB144_NO141({dur:3.4,inv:[0,3.4],armor:1,trn:[[0,3.4,1.5]],trk:[[.6,'curl','io'],[1.35,'curl','l',.02],[1.65,'roar','o'],[2.9,'roar','l',.025],[3.4,'cRec','io']],
+    ev:[[.3,c=>{svSnd('hiss',.8,.7);c.S.chg=0}],[.6,c=>{c.S.chgT=.8}],[1.6,c=>{svSnd('roar',1.1,.75);svSnd('shriek',.6,.8);shake(.4);svShock(c.m.position,MB144.col,9,.8);burst(gY(c.m.position,2),0xb8ff3a,60,5,3,1);c.S.chgT=0}]]}),
+  // Scythe Rend (Phase I): right, left, the late crossing cut down a line
+  combo:MB144_NO141({wt:10,cd:2.6,r:[0,5.4],a:'f',mel:1,dur:2.55,lock:.4,trn:[[0,.4,5],[.82,.94,5],[1.36,1.62,3.6]],
+    trk:[[.4,'rUp','io'],[.52,'rUp','l',.012],[.64,'rCut','s'],[.88,'rCut','l'],[1.0,'lUp','io'],[1.1,'lCut','s'],[1.38,'xUp','io'],[1.64,'xUp','l',.016],[1.78,'xCut','s'],[2.15,'cRec','io'],[2.55,'cRec','l']],
+    rm:[[.56,.66,.8,'o'],[1.02,1.12,.7,'o'],[1.68,1.8,1.6,'o']],
+    hit:[{t:.63,s:{k:'a',r:4.3,h:1.1},f:.3,dm:.9},{t:1.09,s:{k:'a',r:4.3,h:1.1},f:.3,dm:.9},
+      {t:1.78,s:{k:'l',w:2.4,l:5.6,b:0},f:.4,dm:1.35,w:.42,fx:c=>{const p=c.at(2.6);svShock(p,MB144.col,3,.35);burst(gY(p,.3),0xb8ff3a,30,3,2,.5);svDecal(p,0x2a5a10,2,3,.55);shake(.25);svSnd('heavy',1,1.15);mb144Pool(c.e,p,1.4,3000)}}],
+    tr:[MB144_TR(.55,.72,'blR'),MB144_TR(1.0,1.16,'blL'),MB144_TR(1.68,1.84,'blL'),MB144_TR(1.68,1.84,'blR')],
+    ev:[[.56,c=>svSnd('swing',.85,1.15)],[1.02,c=>svSnd('swing',.85,1.25)],[1.4,c=>svSnd('hiss',.5,1.2)],[1.7,c=>svSnd('whoosh',.95,1.0)]],nx:[['lunge',.25,11],['tail',.3,6]],rec:.3}),
+  // Caustic Lunge: the dash through you; acid pools along the path
+  lunge:MB144_NO141({wt:8,cd:6,r:[3.6,12],a:'f',armor:1,dur:2.15,lock:.78,trn:[[0,.78,4.5]],
+    trk:[[.6,'luLow','io'],[.88,'luLow','l',.014],[1.0,'luGo','s'],[1.24,'luBite','o'],[1.62,'luBite','l'],[2.15,'cRec','io']],
+    rm:[[.96,1.22,'tgt','o',-1.4,11.5]],hit:[{t:1.2,s:{k:'l',w:2.6,l:12,b:0},f:0,dm:1.3,w:.75}],
+    tr:[MB144_TR(.96,1.25,'blL'),MB144_TR(.96,1.25,'blR')],
+    ev:[[.35,c=>{svSnd('hiss',.7,.9);burst(gY(c.m.position,.3),0x3a3428,14,2,1,.5)}],[.96,c=>{svSnd('whoosh',1.2,.9);burst(gY(c.m.position,.6),0xb8ff3a,30,3,1.2,.6)}],
+      [1.24,c=>{svSnd('crack',1,.7);svSnd('squelch',.8,.9);burst(c.wp('head',0,-.1,.5),0xb8ff3a,24,2,1.5,.5)}]],
+    tk(c){const M=c.M;if(c.t<.96||c.t>1.3)return;M.an.pd=(M.an.pd||0);const p=c.m.position;if(!M.an.lp)M.an.lp=p.clone();if(p.distanceTo(M.an.lp)>1.6){M.an.lp=p.clone();mb144Pool(c.e,p.clone(),.95,4200)}},rec:.35}),
+  // Tail Lash: a ring around him (only from behind or the side)
+  tail:MB144_NO141({wt:(e,L,side)=>side==='b'?14:side==='s'?6:0,cd:5,r:[0,5.8],a:'sb',dur:1.95,lock:.55,trn:[[0,.5,2]],
+    trk:[[.55,'tlWind','io'],[.82,'tlWind','l',.015],[1.0,'tlWhip','s'],[1.36,'tlWhip','l'],[1.95,'cRec','io']],
+    hit:[{t:1.0,s:{k:'r',r0:1.1,r:5.8},dm:1.1,kb:3,w:.8,fx:c=>{svShock(c.m.position,MB144.col,6,.4);burst(gY(c.m.position,.6),0xb8ff3a,30,5,1,.5);svSnd('whoosh',1.1,.75);svSnd('heavy',.7,1.3)}}],
+    tr:[[.88,1.2,'tail5',[0,0,-.4],[0,0,-1.0],0xc8ff5a,.22]],ev:[[.4,c=>svSnd('hiss',.6,1.1)]],rec:.35}),
+  // Ooze Geyser: three eruptions under you, aimed ahead
+  geyser:MB144_NO141({wt:8,cd:7,r:[2.5,30],a:'any',armor:1,dur:2.95,lock:.7,trn:[[0,.7,3.5]],
+    trk:[[.6,'gUp','io'],[.95,'gUp','l',.016],[1.1,'gStab','s'],[2.45,'gStab','l',.006],[2.95,'cRec','io']],
+    hit:[1.5,1.88,2.26].map((t,i)=>({t,s:{k:'c',r:1.9},o:c=>{const p=mb144Aim(c,.45+i*.1);return {x:p.x,z:p.z,a:0}},w:.68,dm:1.0,fx:(c,an)=>mb144Geyser(c.e,new THREE.Vector3(an.x,0,an.z))})),
+    ev:[[.5,c=>{svSnd('hiss',.8,.8);svCharge(c.e,'head',MB144.col,.8,.5,0,-.08,.4)}],[1.1,c=>{const p=c.at(1.8);svShock(p,MB144.col,4,.4);burst(gY(p,.3),0x3a3428,24,2.5,2,.6);shake(.3);svSnd('heavy',1.1,.9)}]],rec:.4}),
+  // Spine Volley: five spines in a fan (Phase II: two fans)
+  volley:MB144_NO141({wt:(e,L)=>L>6?9:3,cd:6.5,r:[4,30],a:'f',dur:2.2,lock:.95,trn:[[0,.95,4]],ph1only:1,
+    trk:[[.75,'vArch','io'],[1.0,'vArch','l',.012],[1.12,'vSnap','s'],[1.6,'vSnap','l'],[2.2,'cRec','io']],
+    hit:[-.5,-.25,0,.25,.5].map(ay=>({t:1.14,s:{k:'l',w:1.1,l:14,b:0},f:.8,ay,nohit:1,w:.8,fx:(c,an)=>mb144Spine(c,an,.85)})),
+    ev:[[.4,c=>{svSnd('crack',.6,.7);svSnd('hiss',.6,1.3)}],[1.12,c=>svSnd('whoosh',1,1.3)]],rec:.35}),
+  // Carapace Burst: a close blast, eight lanes, eight more in the gaps
+  burst:MB144_NO141({wt:(e,L)=>L<5?9:2,cd:9,r:[0,6.5],a:'any',armor:1,dur:3.15,trn:[[0,.5,2]],
+    trk:[[.7,'curl','io'],[1.78,'curl','l',.022],[1.9,'burst','s'],[2.6,'burst','l'],[3.15,'cRec','io']],
+    hit:[{t:1.9,s:{k:'c',r:3.2},dm:1.3,w:1.3,kb:3,fx:c=>{svShock(c.m.position,MB144.col,4,.35);burst(gY(c.m.position,1.5),0xb8ff3a,60,5,3,.7);svDecal(c.m.position,0x2a5a10,3.5,3,.55);shake(.35);svSnd('heavy',1.2,.9);svSnd('crack',.8,.8)}}]
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.12,s:{k:'l',w:1.4,l:10.6,b:-1.2},f:0,ay:k*Math.PI/4,nohit:1,w:.75,fx:(c,an)=>mb144Lane(c,an,1.0)})))
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.55,s:{k:'l',w:1.4,l:10.6,b:-1.2},f:0,ay:k*Math.PI/4+Math.PI/8,nohit:1,w:.6,fx:(c,an)=>mb144Lane(c,an,1.0)}))),
+    ev:[[.5,c=>{svSnd('charge',.7,.6);c.S.chgT=1.4}],[1.1,c=>svSnd('hiss',.8,.9)],[1.9,c=>{c.S.chgT=0}]],rec:.45}),
+  // ---------------- Phase II ----------------
+  awaken:MB144_NO141({dur:3.7,inv:[0,3.7],armor:1,trn:[[0,3.5,1.2]],trk:[[.6,'curl','io'],[1.25,'curl','l',.025],[1.6,'roar','o'],[3.1,'roar','l',.03],[3.7,'cRec','io']],
+    hit:[{t:1.62,s:{k:'c',r:7},dm:.55,kb:6,w:1.2,fx:c=>{svShock(c.m.position,MB144.col,11,.85);burst(gY(c.m.position,2),0xb8ff3a,100,6,4,1.1);svDecal(c.m.position,0x2a5a10,6,5,.55)}}],
+    ev:[[.05,c=>{try{zt116Show(ZT116.Z[0],'Vorraxis · Phase II','The Seeping','His seams split and the lair floods with ooze','Stay off the edge','z0')}catch(_){}svSnd('hiss',1,.6);c.S.chgT=1.2}],
+      [1.6,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.chgT=0;try{flash('rgba(120,220,40,.3)')}catch(_){}svSnd('roar',1.2,.65);svSnd('shriek',.8,.7);shake(.55);try{mb144Flood(true)}catch(err){console.error('mb flood',err)}}]]}),
+  combo5:MB144_NO141({wt:9,cd:3.6,ph:2,r:[0,5.6],a:'f',mel:1,dur:3.45,lock:.32,trn:[[0,.32,5],[.66,.74,5],[1.02,1.1,5],[1.38,1.46,5],[2.0,2.3,3.6]],
+    trk:[[.3,'rUp','io'],[.44,'rCut','s'],[.62,'lUp','io'],[.78,'lCut','s'],[.96,'rUp','io'],[1.12,'rCut','s'],[1.32,'lUp','io'],[1.48,'lCut','s'],[1.95,'leap','o'],[2.28,'xUp','io'],[2.42,'xCut','s'],[2.95,'cRec','io'],[3.45,'cRec','l']],
+    rm:[[.38,.46,.7,'o'],[.72,.8,.6,'o'],[1.06,1.14,.6,'o'],[1.42,1.5,.6,'o'],[1.9,2.42,'tgt','io',.4,7]],
+    hit:[{t:.44,s:{k:'a',r:4.3,h:1.1},f:.3,dm:.8},{t:.78,s:{k:'a',r:4.3,h:1.1},f:.3,dm:.8},{t:1.12,s:{k:'a',r:4.3,h:1.1},f:.3,dm:.8},{t:1.48,s:{k:'a',r:4.3,h:1.1},f:.3,dm:.8},
+      {t:2.42,s:{k:'c',r:3.0},o:'tgt',dm:1.45,w:.5,fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);svShock(p,MB144.col,4.5,.45);burst(gY(p,.4),0xb8ff3a,50,4,3,.7);svDecal(p,0x2a5a10,3,3,.55);shake(.4);svSnd('heavy',1.2,1);mb144Pool(c.e,p,1.6,3500)}}],
+    tr:[MB144_TR(.36,.5,'blR'),MB144_TR(.7,.84,'blL'),MB144_TR(1.04,1.18,'blR'),MB144_TR(1.4,1.54,'blL'),MB144_TR(2.32,2.46,'blL'),MB144_TR(2.32,2.46,'blR')],
+    ev:[[.38,c=>svSnd('swing',.8,1.2)],[.72,c=>svSnd('swing',.8,1.3)],[1.06,c=>svSnd('swing',.8,1.25)],[1.42,c=>svSnd('swing',.8,1.35)],[1.9,c=>svSnd('whoosh',1.1,.8)]],rec:.4}),
+  eruption:MB144_NO141({wt:8,cd:9,ph:2,r:[0,30],a:'any',armor:1,dur:3.0,lock:.6,trn:[[0,.6,3]],
+    trk:[[.6,'gUp','io'],[.95,'gUp','l',.018],[1.1,'gStab','s'],[2.5,'gStab','l',.006],[3.0,'cRec','io']],
+    hit:[0,1,2,3,4,5].map(k=>({t:1.6,s:{k:'c',r:1.6},o:c=>{if(!c.M.an.er){const p=pl.position.clone();c.M.an.er=p}const P=c.M.an.er,a=k/6*Math.PI*2,q=mb144Clamp(new THREE.Vector3(P.x+Math.sin(a)*3.2,0,P.z+Math.cos(a)*3.2),.5);return {x:q.x,z:q.z,a:0}},w:.8,dm:.9,fx:(c,an)=>mb144Geyser(c.e,new THREE.Vector3(an.x,0,an.z))}))
+      .concat([{t:2.15,s:{k:'c',r:2.2},o:c=>{const P=c.M.an.er||pl.position;return {x:P.x,z:P.z,a:0}},w:.6,dm:1.2,fx:(c,an)=>mb144Geyser(c.e,new THREE.Vector3(an.x,0,an.z),true)}]),
+    ev:[[.5,c=>{svSnd('hiss',.9,.7);c.S.chgT=.8}],[1.1,c=>{c.S.chgT=0;const p=c.at(1.8);svShock(p,MB144.col,4,.4);shake(.3);svSnd('heavy',1.1,.85)}]],rec:.4}),
+  volley2:MB144_NO141({wt:(e,L)=>L>5?10:4,cd:7,ph:2,r:[3.5,30],a:'f',dur:2.6,lock:.95,trn:[[0,.95,4],[1.35,1.45,3]],
+    trk:[[.75,'vArch','io'],[1.0,'vArch','l',.012],[1.12,'vSnap','s'],[1.3,'vArch','io'],[1.5,'vSnap','s'],[1.95,'vSnap','l'],[2.6,'cRec','io']],
+    hit:[-.5,-.25,0,.25,.5].map(ay=>({t:1.14,s:{k:'l',w:1.1,l:14,b:0},f:.8,ay,nohit:1,w:.8,fx:(c,an)=>mb144Spine(c,an,.8,18)}))
+      .concat([-.62,-.37,-.12,.12,.37,.62].map(ay=>({t:1.52,s:{k:'l',w:1.1,l:14,b:0},f:.8,ay,nohit:1,w:.4,fx:(c,an)=>mb144Spine(c,an,.8,18)}))),
+    ev:[[.4,c=>{svSnd('crack',.7,.7);svSnd('hiss',.7,1.3)}],[1.12,c=>svSnd('whoosh',1,1.3)],[1.5,c=>svSnd('whoosh',1,1.45)]],rec:.4}),
+  // Crystal Siphon: he leaps to the crystal and drinks; burst the three sacs, or the floor floods (stand on an island)
+  siphon:MB144_NO141({wt:(e,L)=>e.sv.sipN?12:30,cd:26,ph:2,r:[0,40],a:'any',armor:1,dur:12.8,inv:[0,1.2],trn:[[0,.3,2]],
+    trk:[[.35,'luLow','io'],[.6,'leap','o'],[1.05,'siph','i'],[1.3,'siph','l'],[9.9,'siph','l',.012],[10.3,'roar','o'],[11.6,'roar','l',.02],[12.2,'gStab','s'],[12.8,'cRec','io']],
+    ev:[[.3,c=>{svSnd('hiss',.9,.6);c.M.an.from=c.m.position.clone();c.M.an.to=mb144DaisSpot()}],
+      [1.05,c=>{const p=c.m.position;svShock(p,MB144.col,5,.45);burst(gY(p,.3),0x3a3428,30,3,2,.6);shake(.35);svSnd('heavy',1.1,.8);c.S.dr=.2;c.e.sv.sipN=(c.e.sv.sipN||0)+1;try{mb144SiphonStart(c.e)}catch(err){console.error('mb siphon',err)}}],
+      [9.9,c=>{try{mb144SiphonEnd(c.e,false)}catch(err){console.error('mb siphon end',err)}c.S.dr=0;mb144Heal(c.e,.12);svSnd('roar',1,.8);try{mb144Islands(c.e)}catch(err){console.error('mb islands',err)}}]],
+    hit:[{t:12.2,s:{k:'c',r:99},nohit:1,w:0,show:false,fx:c=>{try{mb144Deluge(c.e)}catch(err){console.error('mb deluge',err)}}}],
+    tk(c,dt){const M=c.M;if(c.t<1.05&&M.an.from&&M.an.to){const k=svEase.io(Math.min(1,Math.max(0,(c.t-.35)/.7)));c.m.position.x=M.an.from.x+(M.an.to.x-M.an.from.x)*k;c.m.position.z=M.an.from.z+(M.an.to.z-M.an.from.z)*k;
+        if(c.t>.35)c.m.rotation.y+=svAng(svYawTo(c.m,{x:MB144A.cx,z:MB144A.cz})-c.m.rotation.y)*Math.min(1,dt*6)}
+      if(c.t>1.05&&c.t<9.9)c.S.chg=.5+.5*Math.sin(c.t*6)},
+    end(c,silent){c.S.dr=0;c.S.chg=0;try{mb144SiphonEnd(c.e,true)}catch(_){}},rec:.5}),
+  // torn out of the siphon: a long stagger
+  broken:MB144_NO141({dur:4.6,trk:[[.3,'stag','o'],[4.0,'stag','l',.03],[4.6,'cRec','io']],
+    go(c){c.S.stg=4.6;svSnd('stag',1.2,.8);svSnd('shriek',.8,.9);popT(c.m.position,'TORN FROM THE CRYSTAL','#d8ff7a',true);burst(gY(c.m.position,2),0xb8ff3a,60,4,3,.8);svShock(c.m.position,0xd8ff7a,5,.5)},
+    tk(c,dt){c.S.stg=Math.max(0,4.6-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'head',0,0,0);burst(p,0xffe08a,1,.5,.6,.5)}},end(c){c.S.stg=0}})};
+// Frenzied Rend and the second volley take over from their Phase I versions
+MB144M.combo.ph1only=1;
+// ================= v144 The Glowmire Crystal — Kindlelight II main quest: the hatch, the Seeping Lair, Vorraxis, the crystal =================
+// Chapter 2 of Kindlelight's main quest line (chapter 1, The Lantern Road, is v143). In Kindlelight II the gateway to III is sealed.
+//  * Clear the Glowmire Warren (the camp of instance II furthest from its entrance) and a hatch grinds open in the middle of it; it
+//    stays open from then on. F at the hatch: down into the Seeping Lair.
+//  * The Seeping Lair is Kindlelight's unused Wave Trial instance (INSL[4], k 4: a sealed round arena ~14 tiles across in radius, half
+//    the Den's arena), dressed as a caustic goo cave: a wet rock floor veined with glowing ooze, boulder walls, stalagmites, ooze falls,
+//    glowing fungus, Akidon husks, a ladder up to the hatch, and at the back a dais with the floating Glowmire Crystal.
+//  * Vorraxis, the Seeping King (model 3031, moves 3032) waits in front of the crystal. Walking close starts the fight: the ladder seals
+//    with ooze (and recall is blocked) until he falls or you do. A wipe resets him. Fought once (MQ144.st ≥ 2: he never returns).
+//  * When he dies the ooze shell around the crystal bursts; F at the dais claims the Glowmire Crystal (st 3): the gateway at the end
+//    of Kindlelight II wakes (its F prompt is locked until then; the crystal floats above the arch afterwards).
+// State MQ144.st: 0 · 1 hatch open · 2 Vorraxis slain · 3 crystal claimed. Done also when III has been reached (mq144Done). Saved as
+// x2.mq144 {st, seen}. A save made in the lair loads at the hatch. Co-op: local to each player (e.boss is never shared, so each
+// player in the lair fights their own Vorraxis); partners' kills still clear the camp for you.
+var MQ144={st:0,seen:0,name:'The Glowmire Crystal',boss:'Vorraxis',title:'the Seeping King',lv:7,S:null,LS:null,e:null,trkK:'',t:0,err:0,flood:0,floodT:0,ft:0,isl:[],sacs:[]};
+function mq144Done(){return MQ144.st>=3||insReach(0)>=2}
+function mq144In2(){try{const I=curIns();return !!I&&I.g===1}catch(_){return false}}
+function mq144InLair(){try{const I=curIns();return !!I&&I.g===4}catch(_){return false}}
+function mq144Next(){try{const t=typeof TH112!='undefined'&&TH112&&TH112.byG&&TH112.byG[2];return t&&t.nm?t.nm:PMAP[0].ins[2].n}catch(_){return 'the Rotwood'}}
+// the lair: Kindlelight's Wave Trial instance becomes the Seeping Lair (name and level only; it keeps its grid place)
+var MB144L=(()=>{const T=INSL[4];try{T.n='The Seeping Lair';T.rn='The Seeping Lair';T.lv=[MQ144.lv,MQ144.lv]}catch(_){}
+  const cx=T.wa[0],cz=T.wa[1];return {T,cx,cz,y:GH(cx,cz),ent:{x:cx,z:cz+10.2},lad:{x:cx,z:cz+12.4},home:{x:cx,z:cz-2.2},dais:{x:cx,z:cz-10.6},r:11.6,hr:12.6}})();
+function mb144DaisSpot(){return new THREE.Vector3(MB144L.dais.x,0,MB144L.dais.z+2.1)}
+// the camp with the hatch: Kindlelight II's camp furthest from the entrance
+function mq144Camp(){if(MQ144.C!==undefined)return MQ144.C;const I=INSL[1];let b=null,bd=-1;try{CAMPS.forEach(C=>{if(C.ig!==1)return;const d=Math.hypot(C.x-I.en[0],C.z-I.en[1]);if(d>bd){bd=d;b=C}})}catch(_){}return MQ144.C=b}
+function mq144HatchSpot(){if(MQ144.hs)return MQ144.hs;const C=mq144Camp();if(!C)return null;let best=null;
+  for(let r=0;r<=4&&!best;r+=.5)for(let a=0;a<6.28&&!best;a+=.35){const x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r;if(!solid(Math.round(x),Math.round(z))&&!solid(Math.round(x+1),Math.round(z))&&!solid(Math.round(x),Math.round(z+1))&&!solid(Math.round(x-1),Math.round(z))&&!solid(Math.round(x),Math.round(z-1)))best={x,z}}
+  return MQ144.hs=best||{x:C.x,z:C.z}}
+
+// ---------------- models: the hatch, the lair, the crystal ----------------
+var MB144G={};
+function mb144Mats(){return MB144G.m||(MB144G.m={rock:new THREE.MeshStandardMaterial({color:0x2c2c27,roughness:.85,flatShading:true}),rock2:new THREE.MeshStandardMaterial({color:0x3a3830,roughness:.9,flatShading:true}),
+  wet:new THREE.MeshStandardMaterial({color:0x1b1d16,roughness:.32,metalness:.22,flatShading:true}),bone:new THREE.MeshStandardMaterial({color:0xb8ae8c,roughness:.7,flatShading:true}),
+  chit:new THREE.MeshStandardMaterial({color:0x17180f,roughness:.38,metalness:.25,flatShading:true}),ooze:new THREE.MeshStandardMaterial({color:0x1e4a0e,emissive:0x5ad01a,emissiveIntensity:.8,roughness:.25,flatShading:true}),
+  glow:new THREE.MeshBasicMaterial({color:0xb8ff3a}),cap:new THREE.MeshBasicMaterial({color:0x9aff4a}),wood:new THREE.MeshStandardMaterial({color:0x3e2c1c,roughness:.9,flatShading:true}),
+  iron:new THREE.MeshStandardMaterial({color:0x34343a,roughness:.5,metalness:.55,flatShading:true}),crys:new THREE.MeshStandardMaterial({color:0x7aff4a,emissive:0x5aff2a,emissiveIntensity:1.1,roughness:.15,metalness:.1,flatShading:true,transparent:true,opacity:.92})})}
+function mb144Hatch(){const M=mb144Mats(),g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('MB144|hatchRim',k=>{for(let i=0;i<12;i++){const a=i/12*Math.PI*2;k.p('','dod','c',i%2?0x3a3830:0x2c2c27,Math.sin(a)*1.25,.08,Math.cos(a)*1.25,.32,.22,.26,i,a,0)}
+    k.p('','tor','m',0x34343a,0,.12,0,1.05,.16,1.05);k.p('','ring','m',0x50525a,0,.2,0,1.06,.5,1.06);
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.2;k.p('','cone4','c',0x17180f,Math.sin(a)*1.45,.15,Math.cos(a)*1.45,.12,.4,.08,-.5*Math.cos(a),a,.5*Math.sin(a))}
+    k.p('','box','m',0x222226,0,.2,-1.0,.5,.12,.18)},.14));
+  // the shaft: a dark mouth, a green glow from below, the top rungs of a ladder
+  const mouth=new THREE.Mesh(svG('mb_hm',()=>new THREE.CircleGeometry(.95,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0x050806}));mouth.position.y=.13;g.add(mouth);
+  const glo=new THREE.Mesh(svG('mb_hg',()=>new THREE.CircleGeometry(.8,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0x5ad01a,map:SPR,transparent:true,opacity:.0,blending:THREE.AdditiveBlending,depthWrite:false}));glo.position.y=.15;g.add(glo);
+  const lad=lgGroup('MB144|hatchLad',k=>{[-1,1].forEach(s=>k.p('','box','c',0x3e2c1c,s*.28,-.3,.3,.06,1.0,.06));for(let i=0;i<3;i++)k.p('','box','c',0x56402a,0,-.05-i*.28,.3,.58,.05,.05)},.12);g.add(lad);
+  // the lid on its hinge (at -z): iron, riveted, crusted with chitin, an ooze rune
+  const hinge=new THREE.Group();hinge.position.set(0,.2,-.95);g.add(hinge);
+  const lid=lgGroup('MB144|hatchLid',k=>{k.p('','cyl','m',0x34343a,0,0,.95,.95,.1,.95);k.p('','ring','m',0x50525a,0,.06,.95,.8,.4,.8);
+    for(let i=0;i<10;i++){const a=i/10*Math.PI*2;k.p('','sph','m',0xa8a090,Math.sin(a)*.82,.06,.95+Math.cos(a)*.82,.03)}
+    k.p('','box','m',0x222226,0,.07,.95,1.6,.04,.12);k.p('','box','m',0x222226,0,.07,.95,.12,.04,1.6);k.p('','ring','m',0x50525a,0,.09,1.65,.12,.6,.12,Math.PI/2,0,0);
+    for(let i=0;i<5;i++){const a=i*1.3,r=.3+i*.09;k.p('','dod','c',0x17180f,Math.sin(a)*r,.08,.95+Math.cos(a)*r,.14,.06,.12,0,a,0)}
+    k.p('','tor','g',0x9aff3a,0,.075,.95,.32,.01,.32);k.p('','oct','g',0xb8ff3a,0,.08,.95,.08,.02,.12)},.12);hinge.add(lid);
+  return {g,hinge,glo}}
+function mb144Crystal(){const M=mb144Mats(),g=new THREE.Group();g.userData.psNo=1;
+  const main=new THREE.Mesh(svG('mb_cr',()=>{const q=new THREE.OctahedronGeometry(.42,0);q.scale(1,2.1,1);return q.toNonIndexed()}),M.crys);g.add(main);
+  const core=kqSpr(0xd8ff7a,2.4);g.add(core);const sh=[];for(let i=0;i<5;i++){const o=new THREE.Mesh(svG('mb_cs',()=>{const q=new THREE.OctahedronGeometry(.13,0);q.scale(1,2.2,1);return q.toNonIndexed()}),M.crys);g.add(o);sh.push(o)}
+  return {g,main,core,sh}}
+// the lair dressing: floor, walls, stalagmites, ooze falls and pools, fungus, husks, the dais and the ladder
+function mb144LairBuild(){if(MQ144.LS)return MQ144.LS;const L=MB144L,M=mb144Mats(),root=new THREE.Group();root.name='SeepingLair';scene.add(root);const LS={root,lights:[],falls:[],t:0};MQ144.LS=LS;
+  const rn=svRng(1441),y=(x,z)=>GH(x,z);
+  // the floor: wet dark rock, cracks, glowing ooze veins (painted), soft edge
+  {const cv=document.createElement('canvas');cv.width=cv.height=512;const c=cv.getContext('2d');c.fillStyle='#1c1d17';c.fillRect(0,0,512,512);
+    for(let i=0;i<1400;i++){const g=20+rn()*28|0;c.fillStyle=`rgba(${g},${g+3},${g-4},.5)`;c.beginPath();c.arc(rn()*512,rn()*512,2+rn()*10,0,6.283);c.fill()}
+    c.strokeStyle='rgba(0,0,0,.55)';c.lineWidth=2;for(let i=0;i<40;i++){c.beginPath();let x=rn()*512,z=rn()*512;c.moveTo(x,z);for(let k=0;k<6;k++){x+=(rn()-.5)*60;z+=(rn()-.5)*60;c.lineTo(x,z)}c.stroke()}
+    const em=document.createElement('canvas');em.width=em.height=512;const e2=em.getContext('2d');e2.fillStyle='#000';e2.fillRect(0,0,512,512);
+    for(let i=0;i<22;i++){e2.strokeStyle=`rgba(${90+rn()*60|0},255,${40+rn()*40|0},${.5+rn()*.4})`;e2.lineWidth=1.5+rn()*3;e2.beginPath();let x=256+(rn()-.5)*460,z=256+(rn()-.5)*460;e2.moveTo(x,z);
+      for(let k=0;k<8;k++){x+=(rn()-.5)*70;z+=(rn()-.5)*70;e2.lineTo(x,z)}e2.stroke()}
+    for(let i=0;i<18;i++){const x=256+(rn()-.5)*440,z=256+(rn()-.5)*440,r=6+rn()*18,gr=e2.createRadialGradient(x,z,0,x,z,r);gr.addColorStop(0,'rgba(170,255,70,.9)');gr.addColorStop(1,'rgba(0,0,0,0)');e2.fillStyle=gr;e2.beginPath();e2.arc(x,z,r,0,6.283);e2.fill()}
+    const al=document.createElement('canvas');al.width=al.height=128;const a2=al.getContext('2d'),gr=a2.createRadialGradient(64,64,48,64,64,64);gr.addColorStop(0,'#fff');gr.addColorStop(1,'#000');a2.fillStyle=gr;a2.fillRect(0,0,128,128);
+    const R0=15.5,geo=new THREE.PlaneGeometry(R0*2,R0*2,44,44);geo.rotateX(-Math.PI/2);const P=geo.attributes.position;for(let k=0;k<P.count;k++){const x=P.getX(k)+L.cx,z=P.getZ(k)+L.cz;P.setXYZ(k,x,y(x,z)+.04,z)}geo.computeVertexNormals();
+    const fm=new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(cv),emissiveMap:new THREE.CanvasTexture(em),emissive:0x6ae02a,emissiveIntensity:.55,roughness:.42,metalness:.18,transparent:true,alphaMap:new THREE.CanvasTexture(al),polygonOffset:true,polygonOffsetFactor:-2});
+    fm.userData.noFade135=1;const fl=new THREE.Mesh(geo,fm);fl.receiveShadow=true;fl.userData.noFade135=1;root.add(fl);LS.floorM=fm}
+  // the walls: overlapping boulders on the slope round the arena, wet ones near the ooze falls
+  const lump=(k,r,det,j)=>svG('mbl'+k,()=>svLump(r,det,j||.35,90+k));
+  for(let i=0;i<34;i++){const a=i/34*Math.PI*2+rn()*.12;if(Math.abs(Math.atan2(Math.sin(a),Math.cos(a))-Math.PI/2)<.12)continue;   // the ladder's gap (south, +z)
+    const r=14.4+rn()*1.6,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,s=1.6+rn()*1.6,o=new THREE.Mesh(lump(i%6,1,1),i%5==0?M.wet:i%2?M.rock:M.rock2);
+    o.position.set(x,y(x,z)+s*.25,z);o.scale.set(s*1.3,s*(1.4+rn()*.8),s*1.2);o.rotation.set(rn()*.5,rn()*6.28,rn()*.5);o.castShadow=true;o.receiveShadow=true;root.add(o)}
+  for(let i=0;i<22;i++){const a=rn()*Math.PI*2,r=12.6+rn()*2.4,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r;if(Math.hypot(x-L.lad.x,z-L.lad.z)<2.4)continue;
+    const h=1.4+rn()*2.6,o=new THREE.Mesh(svG('mb_sg',()=>{const q=new THREE.ConeGeometry(1,1,6,2);q.translate(0,.5,0);return q.toNonIndexed()}),i%4==0?M.wet:M.rock2);
+    o.position.set(x,y(x,z)-.1,z);o.scale.set(.32+h*.12,h,.32+h*.12);o.rotation.set((rn()-.5)*.2,rn()*6,(rn()-.5)*.2);o.castShadow=true;root.add(o);
+    if(i%3==0){const t=new THREE.Mesh(svG('mb_sg2',()=>{const q=new THREE.ConeGeometry(1,1,6,1);q.translate(0,.5,0);return q.toNonIndexed()}),M.ooze);t.position.set(x+.3,y(x,z)-.1,z+.2);t.scale.set(.18,h*.5,.18);root.add(t)}}
+  // ooze falls down the walls into glowing pools (decorative: the pools at the edge only hurt in Phase II, see the flood)
+  [0.6,2.3,3.9,5.4].forEach((a,i)=>{const r=14.2,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,yy=y(x,z),fall=new THREE.Mesh(svG('mb_fl',()=>new THREE.PlaneGeometry(1.1,5.2,1,6)),
+      new THREE.MeshBasicMaterial({color:0x9aff3a,map:SPR,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+    fall.position.set(x,yy+2.4,z);fall.rotation.y=a;fall.userData.lpsSkip=1;root.add(fall);LS.falls.push({m:fall,x,z,yy,ph:i*1.7});
+    const pool=new THREE.Mesh(svG('mb_pl',()=>new THREE.CircleGeometry(1,22).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x1e4a0e,emissive:0x5ad01a,emissiveIntensity:.9,roughness:.15,transparent:true,opacity:.9,polygonOffset:true,polygonOffsetFactor:-3}));
+    const px=L.cx+Math.sin(a)*12.8,pz=L.cz+Math.cos(a)*12.8;pool.position.set(px,y(px,pz)+.06,pz);pool.scale.set(1.8,1,1.3);pool.rotation.y=a;pool.userData.noFade135=1;pool.material.userData.noFade135=1;root.add(pool);
+    if(i%2==0){const lt=new THREE.PointLight(0x7aff3a,1.1,9,1.7);lt.position.set(px,y(px,pz)+.8,pz);scene.add(lt);LS.lights.push(lt)}});
+  // glowing fungus clusters and Akidon husks, bones
+  for(let i=0;i<14;i++){const a=rn()*Math.PI*2,r=11.4+rn()*2.4,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r;if(Math.hypot(x-L.lad.x,z-L.lad.z)<2.2||Math.hypot(x-L.dais.x,z-L.dais.z)<2.6)continue;
+    const g=lgGroup('MB144|fung'+(i%3),k=>{const n=3+(i%3);for(let q=0;q<n;q++){const ax=(q-n/2)*.18,h=.18+q%2*.14;k.p('','cyl','c',0xc8c0a0,ax,h/2,(q%2)*.12,.03,h,.03);k.p('','hem','g',q%2?0x9aff4a:0xc8ff6a,ax,h,(q%2)*.12,.1-.01*q,.06,.1-.01*q)}},.1);
+    g.position.set(x,y(x,z),z);g.rotation.y=rn()*6;root.add(g)}
+  for(let i=0;i<7;i++){const a=rn()*Math.PI*2,r=8.5+rn()*4,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r;if(Math.hypot(x-L.lad.x,z-L.lad.z)<2.4||Math.hypot(x-L.dais.x,z-L.dais.z)<2.8)continue;
+    const g=lgGroup('MB144|husk'+(i%2),k=>{k.p('','sph2','c',0x1a1b12,0,.18,0,.42,.22,.3);for(let q=0;q<4;q++)k.p('','hem','c',q%2?0x2a2c1e:0x1a1b12,0,.3,-.2+q*.14,.3-.03*q,.08,.08,-1.2,0,0);
+      for(let q=0;q<4;q++){const s=q%2?1:-1;k.L('','c',0x14150e,[s*.25,.12,-.1+q*.08],[s*.6,0,-.2+q*.14],.025,.01,4)}k.p('','box','c',0xb8ae8c,.5,.03,.3,.4,.04,.04,0,.6,0);k.p('','box','c',0xb8ae8c,.3,.03,.45,.3,.04,.04,0,-.4,0)},.12);
+    g.position.set(x,y(x,z),z);g.rotation.y=rn()*6;root.add(g)}
+  // the dais: stacked rock, ooze running down it, bones round its foot
+  {const d=L.dais,dy=y(d.x,d.z);[[0,0,0,2.1,.55,1.8,0],[0,.5,0,1.6,.5,1.4,1],[0,.95,0,1.1,.4,1.0,2]].forEach(([ox,oy,oz,sx,sy,sz,k])=>{const o=new THREE.Mesh(lump(10+k,1,1,.25),k==1?M.wet:M.rock);
+      o.position.set(d.x+ox,dy+oy+sy*.5,d.z+oz);o.scale.set(sx,sy,sz);o.castShadow=true;o.receiveShadow=true;root.add(o)});
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3,o=new THREE.Mesh(svG('mb_dr',()=>new THREE.PlaneGeometry(.18,1.3)),M.ooze);o.position.set(d.x+Math.sin(a)*1.25,dy+.75,d.z+Math.cos(a)*1.1);o.rotation.set(0,a,-.15);root.add(o)}
+    for(let i=0;i<5;i++){const a=rn()*6.28,o=new THREE.Mesh(svG('mb_bn',()=>new THREE.CylinderGeometry(.04,.05,.6,5).toNonIndexed()),M.bone);o.position.set(d.x+Math.sin(a)*2.1,dy+.05,d.z+Math.cos(a)*1.8);o.rotation.set(Math.PI/2,0,rn()*6);root.add(o)}
+    for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++)if(Math.hypot(i,j)<=1.8)CBLK.add(Math.round(d.z+j)*W+Math.round(d.x+i));
+    const C=mb144Crystal();C.g.position.set(d.x,dy+2.55,d.z);root.add(C.g);LS.cr=C;LS.crY=dy+2.55;
+    const lt=new THREE.PointLight(0x9aff4a,1.8,14,1.5);lt.position.set(d.x,dy+2.6,d.z);scene.add(lt);LS.lights.push(lt);LS.crL=lt;
+    const shell=new THREE.Mesh(svG('mb_shl',()=>new THREE.IcosahedronGeometry(1.15,1)),new THREE.MeshStandardMaterial({color:0x3a8a1a,emissive:0x2a7a10,emissiveIntensity:.6,roughness:.2,transparent:true,opacity:.42,depthWrite:false,flatShading:true}));
+    shell.material.userData.noFade135=1;shell.position.copy(C.g.position);shell.scale.set(1,1.45,1);root.add(shell);LS.shell=shell}
+  // the ladder up to the hatch, a faint light from the shaft, the ooze seal (shown in the fight)
+  {const l=L.lad,ly=y(l.x,l.z),g=lgGroup('MB144|ladder',k=>{[-1,1].forEach(s=>k.L('','c',0x3e2c1c,[s*.32,0,0],[s*.32,5.6,1.5],.05,.05,5));for(let i=0;i<11;i++){const u=i/10;k.p('','box','c',0x56402a,0,.3+u*5.1,u*1.38,.7,.06,.07)}
+      k.p('','box','m',0x34343a,0,5.5,1.45,.9,.05,.05)},.12);g.position.set(l.x,ly,l.z);root.add(g);
+    const sky=kqSpr(0xd0e8c0,3.5);sky.position.set(l.x,ly+6.2,l.z+1.6);root.add(sky);
+    const seal=new THREE.Mesh(svG('mb_seal',()=>new THREE.SphereGeometry(1.4,14,8,0,Math.PI*2,0,Math.PI/2)),new THREE.MeshStandardMaterial({color:0x2a6a14,emissive:0x4ac018,emissiveIntensity:.7,transparent:true,opacity:.6,roughness:.2,depthWrite:false,flatShading:true}));
+    seal.material.userData.noFade135=1;seal.position.set(l.x,ly,l.z+.2);seal.scale.set(1.2,1.6,.9);seal.visible=false;root.add(seal);LS.seal=seal}
+  // the Phase II flood ring and the deluge sheet (hidden until used)
+  {const ring=new THREE.Mesh(svG('mb_fr',()=>new THREE.RingGeometry(10.6,15.5,64,2).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x2a6a10,emissive:0x5ad01a,emissiveIntensity:.8,transparent:true,opacity:0,roughness:.12,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4}));
+    ring.material.userData.noFade135=1;ring.position.set(L.cx,L.y+.12,L.cz);ring.visible=false;root.add(ring);LS.flood=ring;
+    const sheet=new THREE.Mesh(svG('mb_fs',()=>new THREE.CircleGeometry(15,64).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x2a6a10,emissive:0x5ad01a,emissiveIntensity:.9,transparent:true,opacity:0,roughness:.12,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4}));
+    sheet.material.userData.noFade135=1;sheet.position.set(L.cx,L.y+.1,L.cz);sheet.visible=false;root.add(sheet);LS.sheet=sheet}
+  mb144LairSync();return LS}
+function mb144LairSync(){const LS=MQ144.LS;if(!LS)return;const alive=MQ144.st<2;LS.shell.visible=alive;LS.cr.g.visible=MQ144.st<3;LS.crL.intensity=MQ144.st<3?1.8:.4;LS.seal.visible=!!(MB144A&&MB144A.f)}
+
+// ---------------- the fight ----------------
+var MB144B={name:'Vorraxis',col:MB144.col,body:1.55,ph2:.55,poise:.1,headJ:'head',turnA:3.5,edge:1.5,
+  ai:{pref:3.4,walk:2.3,run:3.8,turn:2.7,rest:[.75,1.35],ph2r:.68,strafe:.5},
+  build:mb144Build,loco:mb144Loco,post:mb144Post,P:MB144P,M:MB144M,
+  stag:[[.25,'stag','o'],[2.2,'stag','l',.025],[2.75,'cRec','io']],stagT:2.75,
+  die:[[.4,'stag','o'],[1.3,'dead','i'],[2.1,'dead','l']]};
+MB144B.M.stagger=svStagDef(MB144B);
+function mb144Spawn(){if(MQ144.e&&!MQ144.e.dead&&enemies.includes(MQ144.e))return MQ144.e;if(MQ144.st>=2)return null;const L=MB144L,key='vorraxis';
+  if(!EN[key])EN[key]=Object.assign({},EN.akorror,{n:'Vorraxis',e:'🦂'});try{MSET[key]=[]}catch(_){}
+  const c=enemyC(key,MQ144.lv,{boss:1});c.n='Vorraxis';const m=cr(c);m.position.set(L.home.x,0,L.home.z);m.rotation.y=0;scene.add(m);
+  const hb=bar(true);hb.scale.setScalar(3);
+  const e={c,m,hb,boss:1,mb144:1,tier:4,home:[L.home.x,L.home.z],cd:1,ch:0,vx:0,vz:0,agg:0,bs:{t:99,lock:0,ph:1,last:'',ult:99,pb:99},wx:L.home.x,wz:L.home.z,wt:0,dots:[]};enemies.push(e);
+  m.children.forEach(o=>{o.visible=false});const R=svRig();mb144Build(R,e);svRest(R);try{svMerge(R)}catch(err){console.error('mb merge',err)}const bs=m.bs||m.scale.x||1;R.root.scale.setScalar(1/bs);R.root.name='svmb';m.add(R.root);
+  const O={};for(const k in R.J)O[k]=[0,0,0,0,0,0];
+  e.sv={i:'mb',B:MB144B,R,O,P:{},snap:{},aw:0,trk:null,tt:0,mv:null,ph:1,rest:1.5,last:[],cd:{},po:0,poT:0,stg:0,inv:0,spd:0,lp:m.position.clone(),hero:1,body:MB144B.body,on:false,wait:0,act:0,fl:0,chg:0,dr:0};
+  MB144A={cx:L.cx,cz:L.cz,r:L.r,hr:L.hr,y:L.y,f:false};svApply(e,0,performance.now());MQ144.e=e;return e}
+function mb144Start(e){const S=e.sv,A=MB144A;if(!A||A.f)return;A.f=true;e.agg=1;S.on=false;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;MQ144.ft=0;mb144LairSync();
+  if(riding)try{dismount()}catch(_){}try{setTarget(e)}catch(_){}
+  try{zt116Show(ZT116.Z[0],'The Seeping Lair','Vorraxis','the Seeping King · guardian of the Glowmire Crystal','The ooze has sealed the way out','z0')}catch(_){}
+  svSnd('hiss',1,.6)}
+// back to the start (a wipe, or the hero left the lair): full health, home, Phase I, the flood and every leftover gone
+function mb144Reset(why){const e=MQ144.e,A=MB144A;if(A)A.f=false;mb144Flood(false);mb144ClearExtras();mb144LairSync();if(!e||e.dead)return;const S=e.sv;
+  svEndMove(e,true);S.stgM=null;S.on=false;S.ph=1;e.bs.ph=1;S.po=0;S.stg=0;S.inv=0;S.cd={};S.dr=0;S.chg=0;S.chgT=0;S.last=[];S.sipN=0;e.agg=0;e.c.h=M(e.c);
+  e.m.position.set(MB144L.home.x,0,MB144L.home.z);e.m.rotation.y=0;if(why)setTimeout(()=>say('🦂 Vorraxis sinks back into the ooze before his crystal. He waits.'),900)}
+function mb144ClearExtras(){MQ144.sacs.slice().forEach(s=>{try{if(!s.dead)removeE(s)}catch(_){}});MQ144.sacs=[];MQ144.isl.forEach(o=>{try{if(o.g.parent)o.g.parent.remove(o.g);if(o.ring&&o.ring.parent)o.ring.parent.remove(o.ring)}catch(_){}});MQ144.isl=[];
+  const LS=MQ144.LS;if(LS){LS.sheet.visible=false;LS.sheet.material.opacity=0;if(LS.beam){LS.beam.parent&&LS.beam.parent.remove(LS.beam);LS.beam=null}}}
+function mb144Heal(e,f){if(!e||e.dead)return;const h=Math.round(M(e.c)*f);e.c.h=Math.min(M(e.c),e.c.h+h);dn(e.m.position,'+'+h,'#9aff6a',-20,1400);burst(gY(e.m.position,1.5),0xb8ff3a,40,3,2,.7)}
+// Phase II: the edge of the lair floods (stand inside the ring or take caustic damage)
+function mb144Flood(on){MQ144.flood=on?1:0;const LS=MQ144.LS;if(!LS)return;LS.flood.visible=true;const m=LS.flood.material,o0=m.opacity;
+  tw(on?1400:700,k=>{m.opacity=on?.82*k:o0*(1-k)},()=>{if(!on)LS.flood.visible=false})}
+// Crystal Siphon: three sacs swell round the lair, a beam runs from the crystal into him
+function mb144SiphonStart(e){const L=MB144L,LS=MQ144.LS;mb144ClearExtras();MQ144.sacs=[];const hp=Math.max(60,Math.round(M(e.c)*.016)),a0=Math.random()*Math.PI*2;
+  for(let i=0;i<3;i++){const a=a0+i*Math.PI*2/3,r=7.4+Math.random()*1.4,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r;let s=null;try{s=spawnEnemy('goo',x,z,MQ144.lv,{minion:1})}catch(err){console.error('mb sac',err)}
+    if(!s)continue;s.mbSac=1;s.agg=0;s.c.n='Ooze Sac';s.c.st.hp=hp;s.c.h=hp;s.m.children.forEach(o=>{o.visible=false});const bs=s.m.bs||s.m.scale.x||1;
+    const g=new THREE.Group();g.scale.setScalar(1/bs);const M2=mb144Mats(),body=new THREE.Mesh(svG('mb_sac',()=>svLump(.55,1,.25,121)),M2.ooze),crust=new THREE.Mesh(svG('mb_sacc',()=>svLump(.5,1,.3,122)),M2.chit);
+    body.position.y=.55;crust.position.y=.25;crust.scale.set(1.25,.55,1.25);g.add(body,crust);for(let k=0;k<5;k++){const sp=new THREE.Mesh(svG('mb_sacs',()=>svHorn(.05,.32,0,.05,4,2)),M2.chit);const aa=k/5*6.28;sp.position.set(Math.sin(aa)*.5,.35,Math.cos(aa)*.5);sp.rotation.set(-.6,aa,0);g.add(sp)}
+    s.m.add(g);s.sacG=body;MQ144.sacs.push(s);burst(gY(s.m.position,.6),0xb8ff3a,30,2,2,.6);svShock(s.m.position,0xb8ff3a,2.4,.4)}
+  if(LS){const beam=new THREE.Mesh(svG('mb_bm',()=>{const g=new THREE.CylinderGeometry(.12,.2,1,8,1,true);g.translate(0,.5,0);g.rotateX(Math.PI/2);return g}),new THREE.MeshBasicMaterial({color:0xb8ff3a,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+    beam.userData.lpsSkip=1;beam.renderOrder=22;LS.root.add(beam);LS.beam=beam}
+  MQ144.sacN=MQ144.sacs.length;say('🟢 Vorraxis drinks from the crystal! Burst the three ooze sacs before the siphon completes.');svSnd('charge',.8,.5)}
+function mb144SiphonEnd(e,interrupted){const LS=MQ144.LS;if(LS&&LS.beam){LS.beam.parent&&LS.beam.parent.remove(LS.beam);LS.beam.material.dispose();LS.beam=null}
+  MQ144.sacs.slice().forEach(s=>{if(!s.dead){burst(gY(s.m.position,.6),0x6a8a3a,20,1.5,1.5,.6);try{removeE(s)}catch(_){}}});MQ144.sacs=[]}
+function mb144SacPop(s){if(s.dead)return;s.dead=1;s.c.h=0;try{s.hb.visible=false}catch(_){}if(typeof tgt!='undefined'&&tgt===s)try{setTarget(null)}catch(_){}
+  const p=s.m.position.clone();burst(gY(p,.6),0xb8ff3a,50,3,3,.8);svShock(p,0xb8ff3a,3,.4);svDecal(p,0x2a5a10,1.8,3,.6);svSnd('squelch',1,1);setTimeout(()=>{try{removeE(s)}catch(_){}},60);
+  const i=MQ144.sacs.indexOf(s);if(i>=0)MQ144.sacs.splice(i,1);const e=MQ144.e;
+  if(e&&!e.dead){const d=Math.round(M(e.c)*.04);e.c.h=Math.max(1,e.c.h-d);dn(e.m.position,d,'#d8ff7a',-20,1200);
+    if(!MQ144.sacs.length&&e.sv.mv&&e.sv.mv.id==='siphon'){svEndMove(e,true);svCast(e,'broken')}
+    else popT(p,MQ144.sacs.length+' sac'+(MQ144.sacs.length==1?'':'s')+' left','#d8ff7a')}}
+// the deluge (siphon complete): three stone islands rise, then the whole floor floods
+function mb144Islands(e){const L=MB144L,LS=MQ144.LS,M2=mb144Mats();MQ144.isl.forEach(o=>{if(o.g.parent)o.g.parent.remove(o.g)});MQ144.isl=[];const a0=Math.random()*Math.PI*2;
+  for(let i=0;i<3;i++){const a=a0+i*Math.PI*2/3+(Math.random()-.5)*.5,r=4.5+Math.random()*3.6,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,g=new THREE.Group(),y0=GH(x,z);
+    const top=new THREE.Mesh(svG('mb_is',()=>svLump(1.0,1,.2,131)),M2.rock2);top.scale.set(1.8,.55,1.8);top.position.y=.2;g.add(top);
+    const ring=new THREE.Mesh(svG('mb_isr',()=>new THREE.RingGeometry(1.75,1.95,32).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0x8ae8ff,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    ring.position.y=.62;g.add(ring);g.position.set(x,y0-.6,z);LS.root.add(g);tw(900,k=>g.position.y=y0-.6+.6*svEase.o(k));MQ144.isl.push({g,x,z,ring})}
+  LS.sheet.visible=true;tw(2200,k=>LS.sheet.material.opacity=.0+.55*k);
+  say('⚠ The lair floods! Get onto a stone island!');try{banner('⚠ DELUGE','Get onto a glowing stone island!','')}catch(_){}}
+function mb144Deluge(e){const LS=MQ144.LS,P=pl.position;const safe=MQ144.isl.some(o=>Math.hypot(P.x-o.x,P.z-o.z)<1.95);
+  LS.sheet.material.opacity=.85;svShock(new THREE.Vector3(MB144L.cx,0,MB144L.cz),0xb8ff3a,14,.9);shake(.45);svSnd('splash',1.4,.6);svSnd('roar',.8,1.1);
+  for(let i=0;i<40;i++){const a=Math.random()*6.283,r=Math.random()*12.5;burst(gY(new THREE.Vector3(MB144L.cx+Math.cos(a)*r,0,MB144L.cz+Math.sin(a)*r),.3),0xb8ff3a,3,1.5,3,.7)}
+  if(!safe&&hero.hp>0&&!(hero.iv>0)){bossHit(e,2.6);dqDebuff(MB144_DEB[0],MB144_DEB[1],MB144_DEB[2],5000,MB144_DEB[3])}else if(safe)dn(P,'Safe!','#9ae8ff',-20,1200);
+  setTimeout(()=>{if(!LS)return;tw(1400,k=>LS.sheet.material.opacity=.85*(1-k),()=>{LS.sheet.visible=false});MQ144.isl.forEach(o=>{const y1=o.g.position.y;tw(1200,k=>o.g.position.y=y1-.7*k,()=>{if(o.g.parent)o.g.parent.remove(o.g)})});MQ144.isl=[]},1300)}
+// he falls: the crystal's shell bursts
+function mb144Won(e){const A=MB144A;if(A)A.f=false;MQ144.st=Math.max(MQ144.st,2);MQ144.trkK='';mb144Flood(false);mb144ClearExtras();
+  const LS=MQ144.LS;setTimeout(()=>{if(!LS)return;const p=LS.shell.position;burst(p,0xb8ff3a,80,4,3,1);svShock(new THREE.Vector3(p.x,0,p.z),0xd8ff7a,6,.7);svSnd('crack',1,.7);svSnd('bell',.8,1);mb144LairSync()},1800);
+  setTimeout(()=>{try{zt116Show(ZT116.Z[0],'The Seeping Lair','Vorraxis Falls','The ooze shell around the Glowmire Crystal bursts','Claim the crystal on its dais','z0');mSfx('victory')}catch(_){}say('🦂 Vorraxis, the Seeping King, is slain. Claim the Glowmire Crystal.')},2300);
+  try{hud()}catch(_){}}
+function mq144Claim(){if(MQ144.st!==2)return;MQ144.st=3;MQ144.trkK='';const LS=MQ144.LS,p=LS?LS.cr.g.position.clone():pl.position.clone();
+  if(LS){const g=LS.cr.g,s=g.position.clone();tw(900,k=>{g.position.lerpVectors(s,gY(pl.position,1.4),svEase.io(k));g.scale.setScalar(1-k*.7)},()=>{g.visible=false;g.scale.setScalar(1);g.position.copy(s);mb144LairSync()})}
+  burst(p,0xd8ff7a,60,3,3,1);try{mSfx('rare');sfx('chime')}catch(_){}try{pickup({ic:'💠',t:'The Glowmire Crystal',col:'#d8ff7a',sub:'The gateway to '+mq144Next()+' answers it',r:4})}catch(_){}
+  setTimeout(()=>{try{zt116Show(ZT116.Z[0],'Kindlelight · Main Quest','The Glowmire Crystal','The gateway to '+mq144Next()+' answers the crystal’s call','The Glowmire Crystal · complete','z0')}catch(_){}say('🌀 The gateway at the end of '+PMAP[0].ins[1].n+' is awake.')},1000);mq144GateSync()}
+
+// ---------------- moving between the hatch and the lair ----------------
+function mq144Enter(){fadeTo(()=>{const L=MB144L;toPos(L.ent.x,L.ent.z,0);
+  setTimeout(()=>{try{zt116Show(ZT116.Z[0],'Kindlelight · '+PMAP[0].ins[1].n,'The Seeping Lair',MQ144.st<2?'Something vast breathes in the dark beneath the Warren':'The lair is quiet now','','z0')}catch(_){}},300)})}
+function mq144Leave(){const h=mq144HatchSpot();if(!h)return;fadeTo(()=>{toPos(h.x+1.8,h.z+.4,Math.PI/2)})}
+// a save made in the lair loads at the hatch (2440 would send it home)
+{const f=wv135Out;wv135Out=function(){try{if(mq144InLair()){const h=mq144HatchSpot();if(h){toPos(h.x+1.8,h.z+.4,Math.PI/2);return}}}catch(_){}return f.apply(this,arguments)}}
+{const f=doRecall;doRecall=function(){if(MB144A&&MB144A.f&&mq144InLair())return say('🦂 The ooze has sealed the lair. There is no escape.');return f.apply(this,arguments)}}
+
+// ---------------- prompts ----------------
+function mq144Prompt(){const P=pl.position;
+  if(mq144In2()&&MQ144.st>=1){const h=mq144HatchSpot();if(h&&Math.hypot(P.x-h.x,P.z-h.z)<1.9)return {label:'F · Descend into the hatch',fn:()=>mq144Enter()}}
+  if(mq144InLair()){const L=MB144L;if(MB144A&&MB144A.f)return null;
+    if(Math.hypot(P.x-L.lad.x,P.z-L.lad.z)<2.2)return {label:'F · Climb back up to the '+((mq144Camp()&&mq144Camp().th&&mq144Camp().th.n)||'Warren'),fn:()=>mq144Leave()};
+    if(MQ144.st===2&&Math.hypot(P.x-L.dais.x,P.z-L.dais.z)<3.4)return {label:'F · Claim the Glowmire Crystal',fn:()=>mq144Claim()}}
+  return null}
+{const f=worldPrompt;worldPrompt=function(){try{const r=mq144Prompt();if(r)return r}catch(e){if(!MQ144.err++)console.warn('v144 prompt',e)}return f.apply(this,arguments)}}
+function mq144AtGate(){const P=pl.position;for(const r of RPORT)if(r.k=='next'&&r.ig===1&&Math.hypot(P.x-r.x,P.z-r.z)<2.8)return true;return false}
+{const f=portalPrompt;portalPrompt=function(){const r=f.apply(this,arguments);try{if(r&&!mq144Done()&&mq144AtGate())return {label:'🔒 The gateway is sealed · it answers only to the Glowmire Crystal',fn:()=>say('🌀 The arch is choked with hardened ooze. Something beneath the '+((mq144Camp()&&mq144Camp().th&&mq144Camp().th.n)||'furthest camp')+' holds the key.')}}catch(_){}return r}}
+// the gateway of II: dormant until the crystal is claimed; then the crystal floats over the arch
+function mq144GateSync(){const r=RPORT.find(q=>q.k=='next'&&q.ig===1);if(!r)return;if(!MQ144.gc)MQ144.gc=r.disc.material.color.getHex();const on=mq144Done(),m=r.disc.material;
+  m.color.copy(new THREE.Color(0x141a12).lerp(new THREE.Color(MQ144.gc),on?1:0));m.opacity=on?.8:.3;
+  if(on&&!MQ144.gcr){const C=mb144Crystal();C.g.scale.setScalar(.55);C.g.position.set(0,3.6,0);r.g.add(C.g);MQ144.gcr=C}if(MQ144.gcr)MQ144.gcr.g.visible=on}
+
+// ---------------- the tracker (chapter 2 in the main-quest box, in Kindlelight II and the lair) ----------------
+{const f=mq143Trk;mq143Trk=function(){const r=f.apply(this,arguments);try{mq144Trk()}catch(err){if(!MQ144.err++)console.warn('v144 trk',err)}return r}}
+function mq144Trk(){const el=$('mqt143');if(!el)return;const here=mq144In2()||mq144InLair();if(!here){if(MQ144.trkK){MQ144.trkK='';MQ143.trkK=''}return}
+  const hide=(typeof uiOpen=='function'&&uiOpen())||(mq144Done()&&insReach(0)>=2);MQ143.trkK='x';
+  const st=mq144Done()?3:MQ144.st,lair=mq144InLair(),fight=!!(MB144A&&MB144A.f),key=(hide?'h':'s')+st+lair+fight;if(key===MQ144.trkK)return;MQ144.trkK=key;
+  if(hide){el.classList.add('hide');mq143TrkPos();return}
+  const C=mq144Camp(),cn=(C&&C.th&&C.th.n)||'the furthest camp',o=(a,b)=>`<div class="o"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;
+  let h='<div class="k">⚜ Main quest</div><div class="h">'+MQ144.name+'</div>';
+  if(st==0)h+=o('Clear the '+cn+(lair?'':' (the furthest camp)'));
+  else if(st==1)h+=lair?o(fight?'Slay Vorraxis, the Seeping King':'Face Vorraxis before the crystal'):o('Descend through the hatch beneath the '+cn);
+  else if(st==2)h+=o(lair?'Claim the Glowmire Crystal on its dais':'Claim the crystal in the Seeping Lair');
+  else h+='<div class="o d"><span>Step through the gateway to '+mq144Next()+'</span></div>';
+  el.innerHTML=h;el.classList.remove('hide');mq143TrkPos()}
+
+// ---------------- the minimap and the N map: the hatch ----------------
+function mq144Marks(g,P,k){if(!mq144In2()||MQ144.st<1)return;const h=mq144HatchSpot();if(!h)return;const q=P(h.x,h.z);if(!q)return;g.save();g.translate(q[0],q[1]);g.scale(k,k);
+  g.beginPath();g.arc(0,0,5,0,6.28);g.fillStyle='#34343a';g.fill();g.lineWidth=1.6/k;g.strokeStyle='#d8ff7a';g.stroke();g.beginPath();g.arc(0,0,2.2,0,6.28);g.fillStyle='#9aff3a';g.fill();g.restore()}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{mq144Marks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}
+{const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{const I=INSL[1];if(mq144In2()&&MQ144.st>=1){const c=$('wmc'),g=c.getContext('2d'),k=Math.min(1060/I.w,640/I.h),h=mq144HatchSpot();
+  mq144Marks(g,(x,z)=>[(x-I.x0+.5)*k,(z-I.y0+.5)*k],1.5);g.font='700 12px system-ui,sans-serif';g.textAlign='center';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';const x=(h.x-I.x0+.5)*k,y=(h.z-I.y0+.5)*k;g.strokeText('Hatch',x,y-14);g.fillStyle='#d8ff7a';g.fillText('Hatch',x,y-14)}}catch(e){console.warn('v144 wmap',e)}return r0}}
+
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq144={v:144,st:MQ144.st,seen:MQ144.seen|0}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq144;MQ144.st=q&&typeof q=='object'?Math.max(0,Math.min(3,q.st|0)):0;MQ144.seen=q&&q.seen|0;MQ144.trkK='';
+    if(MB144A&&MB144A.f)mb144Reset();if(MQ144.e&&MQ144.st>=2&&!MQ144.e.dead){try{removeE(MQ144.e)}catch(_){}MQ144.e=null}mb144LairSync();mq144GateSync()}catch(err){console.warn('v144 load',err)}return r}}
+
+// ---------------- hooks: his AI instead of the enemy loop, the sacs, damage reduction, his death, the HUD ----------------
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.mb144){try{mb144AI(e,dt,now)}catch(err){if(!MQ144.err++)console.error('v144 ai',err)}return true}
+  if(e&&e.mbSac){try{if(e.hb)e.hb.visible=!e.dead;if(e.sacG){const t=now/1000+e.m.position.x;e.sacG.scale.set(1+.08*Math.sin(t*5),1+.12*Math.sin(t*5+1),1+.08*Math.cos(t*5))}
+      if(Math.random()<dt*4)burst(gY(e.m.position,.8),0xb8ff3a,1,.3,.6,.6)}catch(_){}return true}
+  return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){if(e&&e.mbSac){try{mb144SacPop(e)}catch(err){console.error('mb sac pop',err)}return}const r=f.apply(this,arguments);if(e&&e.mb144)try{mb144Won(e)}catch(err){console.error('v144 won',err)}return r}}
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.mb144&&e.sv&&!e.dead){if(!(MB144A&&MB144A.f)&&mq144InLair()&&hero.hp>0)mb144Start(e);
+    if(e.sv.dr>0){d=Math.max(1,Math.round(d*e.sv.dr));if(nowP()-(e.sv.drT||0)>700){e.sv.drT=nowP();dn(e.m.position,'Shielded','#9aff6a',-30,600)}}}
+  return f.call(this,e,d,s,crit,dot)}}
+function mb144Hud(){const e=MQ144.e,on=!!(e&&!e.dead&&MB144A&&MB144A.f&&mq144InLair());let p=document.getElementById('mbPo');if(!on){if(p)p.style.display='none';return}
+  const b=$('boss');if(!b)return;b.classList.remove('hide');$('bossN').textContent='🦂 Vorraxis · the Seeping King · Phase '+(e.sv.ph>1?'II':'I');$('bossB').style.width=Math.max(0,100*e.c.h/M(e.c))+'%';
+  if(!p){p=document.createElement('div');p.id='mbPo';p.style.cssText='height:5px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.6);border:1px solid rgba(255,216,96,.35);border-radius:2px;overflow:hidden';p.innerHTML='<i style="display:block;height:100%;width:0;background:linear-gradient(90deg,#c89020,#ffe080);transition:width .12s"></i>';const mt=b.querySelector('.meter');if(mt)mt.after(p);else b.appendChild(p)}
+  const S=e.sv;
+  p.style.display='block';p.firstChild.style.width=(S.stg>0?100:Math.min(100,S.po*100)).toFixed(1)+'%';p.firstChild.style.background=S.stg>0?'#fff4c0':'linear-gradient(90deg,#c89020,#ffe080)'}
+{const f=hud;hud=function(){const r=f.apply(this,arguments);try{mb144Hud()}catch(_){}return r}}
+// his AI: the Sovereign engine's moves, picks and rests; his own footwork and arena
+function mb144AI(e,dt,now){const S=e.sv,A=MB144A,m=e.m;if(!A)return;if(e.hb)e.hb.visible=false;m.visible=mq144InLair();
+  const dx=m.position.x-S.lp.x,dz=m.position.z-S.lp.z;S.lp.copy(m.position);const ms=dt>0?Math.hypot(dx,dz)/dt:0;S.spd+=((ms>12?0:ms)-S.spd)*Math.min(1,dt*8);
+  for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.inv=Math.max(0,S.inv-dt);
+  if(!(S.mv&&S.mv.id==='siphon'))S.chg=(S.chg||0)+((S.chgT||0)-(S.chg||0))*Math.min(1,dt*3);
+  // the hero's velocity (aimed geysers)
+  {const p=pl.position;if(S.hp0&&dt>0){const vx=(p.x-S.hp0.x)/dt,vz=(p.z-S.hp0.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv=S.hv||{x:0,z:0};S.hv.x+=(vx-S.hv.x)*a;S.hv.z+=(vz-S.hv.z)*a}}S.hp0={x:p.x,z:p.z}}
+  if(!A.f){// waiting before his crystal: breathe, face the entrance, heal; the fight starts when you come close
+    if(S.mv)svEndMove(e,true);e.agg=0;const hx=MB144L.home.x-m.position.x,hz=MB144L.home.z-m.position.z,hl=Math.hypot(hx,hz);
+    if(hl>.6){walkM(m,hx/hl*2*dt,hz/hl*2*dt);m.rotation.y=Math.atan2(hx,hz)}else m.rotation.y+=svAng(0-m.rotation.y)*Math.min(1,dt*2);
+    e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.2);S.po=0;
+    if(mq144InLair()&&hero.hp>0&&MQ144.st<2&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<9.5)mb144Start(e);
+    svApply(e,dt,now);return}
+  // the fight ends if the hero falls or leaves
+  if(hero.hp<=0||!mq144InLair()||(typeof AWD!='undefined'&&AWD.dead)){mb144Reset(true);svApply(e,dt,now);return}
+  MQ144.ft+=dt;e.agg=1;
+  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;svCast(e,'intro')}
+  if(now-S.poT>3500)S.po=Math.max(0,S.po-dt*.1);
+  if(S.mv)svTickMove(e,dt,now);
+  else if(S.ph===1&&e.c.h/M(e.c)<=MB144B.ph2)svCast(e,'awaken');
+  else{mb144Move(e,dt);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}
+  mb144Clamp(m.position,MB144B.edge);
+  // keep the hero in the lair and out of his body
+  {const p=pl.position,hx=p.x-A.cx,hz=p.z-A.cz,hd=Math.hypot(hx,hz);if(hd>A.hr){p.x=A.cx+hx/hd*A.hr;p.z=A.cz+hz/hd*A.hr}}
+  if(!S.ghost&&!S.rmOn&&hero.hp>0){const hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,hl=Math.hypot(hx,hz),R0=S.body;if(hl<R0&&hl>.001){const k=R0-hl;pl.position.x+=hx/hl*k;pl.position.z+=hz/hl*k}}
+  // Phase II: the flooded edge burns
+  if(MQ144.flood&&hero.hp>0){const d=Math.hypot(pl.position.x-A.cx,pl.position.z-A.cz);MQ144.floodT-=dt;if(d>10.6&&MQ144.floodT<=0&&!(hero.iv>0)){MQ144.floodT=.6;hitHero(e,.2,'m');dqDebuff(MB144_DEB[0],MB144_DEB[1],MB144_DEB[2],1200,MB144_DEB[3]);burst(gY(pl.position,.4),0xb8ff3a,8,.8,1,.5)}}
+  svApply(e,dt,now)}
+// footwork: close to his preferred range, circle when there, a short back-off when crowded; slides along the lair's edge
+function mb144Move(e,dt){const S=e.sv,ai=MB144B.ai,m=e.m,v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
+  const da=svAng(Math.atan2(v.x,v.z)-m.rotation.y),tr=ai.turn*(S.ph>1?1.2:1);m.rotation.y+=Math.max(-tr*dt,Math.min(tr*dt,da));
+  let sp=0,ux=0,uz=0;const ws=ai.walk*(S.ph>1?1.15:1);
+  if(L>ai.pref+1.2){sp=L>ai.pref+7?ai.run:ws;ux=v.x/L;uz=v.z/L}else if(L<1.8){sp=ws*.6;ux=-v.x/L;uz=-v.z/L}
+  else{S.sdT=(S.sdT||0)-dt;if(S.sdT<=0){S.sdT=1.8+Math.random()*2.2;S.sd=Math.random()<.5?-1:1}sp=ws*ai.strafe;ux=-v.z/L*(S.sd||1);uz=v.x/L*(S.sd||1)}
+  const A=MB144A,rx=m.position.x-A.cx,rz=m.position.z-A.cz,rl=Math.hypot(rx,rz)||.01;if(rl>A.r-2.5){const nx=rx/rl,nz=rz/rl,out=ux*nx+uz*nz;if(out>0){ux-=nx*out;uz-=nz*out}}
+  if(sp>0&&Math.abs(da)<1.4)walkM(m,ux*sp*dt,uz*sp*dt);else sp=0;S.walkSp=sp}
+
+// ---------------- the world tick: the hatch, the lair, the gateway ----------------
+function mq144Tick(dt,now){const in2=mq144In2(),lair=mq144InLair(),t=now/1000;
+  // Kindlelight II: the hatch appears once the Glowmire Warren is cleared
+  if(in2){const C=mq144Camp();if(!MQ144.H&&MQ144.st>=1)mq144HatchBuild(false);
+    if(MQ144.st===0&&C&&typeof campCleared=='function'&&campCleared(C)){MQ144.st=1;MQ144.trkK='';mq144HatchBuild(true)}
+    if(!MQ144.gs){MQ144.gs=1;mq144GateSync()}
+    if(MQ144.H){const H=MQ144.H;H.glo.material.opacity=.45+.15*Math.sin(t*2.2);if(Math.random()<dt*2.5){const h=mq144HatchSpot();burst(new THREE.Vector3(h.x,GH(h.x,h.z)+.3,h.z),0x9aff3a,1,.2,1.2,.7)}}
+    if(MQ144.gcr){const g=MQ144.gcr.g;g.rotation.y+=dt*.8;g.position.y=3.6+.12*Math.sin(t*1.6)}}
+  if(MQ144.H)MQ144.H.g.visible=in2;
+  // the lair
+  if(lair){if(!MQ144.LS)try{mb144LairBuild()}catch(err){console.error('v144 lair',err);MQ144.err++}
+    if(MQ144.st<2&&!(MQ144.e&&enemies.includes(MQ144.e)))try{mb144Spawn()}catch(err){console.error('v144 spawn',err);MQ144.err++}
+    if(!MQ144.seen){MQ144.seen=1}}
+  const LS=MQ144.LS;if(LS){LS.root.visible=lair;LS.lights.forEach(l=>{if(!lair){if(l.userData.v144==null)l.userData.v144=l.intensity;l.intensity=0}else if(l.userData.v144!=null){l.intensity=l.userData.v144;l.userData.v144=null}});
+    if(lair){const C=LS.cr;C.g.rotation.y+=dt*.6;C.g.position.y=LS.crY+.15*Math.sin(t*1.3);C.sh.forEach((o,i)=>{const a=t*.9+i*1.257;o.position.set(Math.sin(a)*.75,Math.sin(t*1.7+i)*.35,Math.cos(a)*.75);o.rotation.y=-a});
+      const e=MQ144.e,sip=!!(e&&e.sv&&e.sv.mv&&e.sv.mv.id==='siphon'&&e.sv.mv.t>1.05&&e.sv.mv.t<9.9);C.core.scale.setScalar((sip?3.4:2.4)*(1+.08*Math.sin(t*(sip?9:2))));
+      LS.crL.intensity=MQ144.st<3?(sip?2.8+.8*Math.sin(t*9):1.6+.3*Math.sin(t*1.3)):.35;if(LS.shell.visible)LS.shell.rotation.y-=dt*.2;
+      LS.falls.forEach(f=>{f.m.material.opacity=.45+.15*Math.sin(t*3+f.ph);if(Math.random()<dt*3)burst(new THREE.Vector3(f.x,f.yy+.2,f.z),0x9aff3a,2,.5,1.4,.5)});
+      LS.floorM.emissiveIntensity=.5+.1*Math.sin(t*.9)+(MQ144.flood?.15:0);if(LS.flood.visible)LS.flood.rotation.y+=dt*.05;
+      // the siphon beam: crystal → his chest
+      if(LS.beam&&e&&!e.dead){const a=C.g.position,b=svWP(e,'chest',0,.3,.2),d=b.clone().sub(a);LS.beam.position.copy(a);LS.beam.lookAt(b);LS.beam.scale.set(1+.3*Math.sin(t*20),1+.3*Math.sin(t*17),d.length());LS.beam.material.opacity=.55+.25*Math.sin(t*23);
+        if(Math.random()<dt*20){const q=a.clone().lerp(b,Math.random());burst(q,0xd8ff7a,1,.2,.2,.4)}}
+      if(MQ144.isl.length)MQ144.isl.forEach(o=>{o.ring.material.opacity=.55+.3*Math.sin(t*8)})}}
+  if(now-MQ144.t>400){MQ144.t=now;try{mq144Trk()}catch(_){}}}
+function mq144HatchBuild(reveal){const h=mq144HatchSpot();if(!h)return;if(!MQ144.H){const H=mb144Hatch();H.g.position.set(h.x,GH(h.x,h.z),h.z);H.g.rotation.y=Math.atan2(INSL[1].en[0]-h.x,INSL[1].en[1]-h.z);scene.add(H.g);MQ144.H=H;
+    for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(i||j)CBLK.add(Math.round(h.z+j)*W+Math.round(h.x+i))}
+  const H=MQ144.H;if(!reveal){H.hinge.rotation.x=-1.95;return}
+  // the reveal: the ground shudders, the lid bursts up and falls open
+  H.hinge.rotation.x=0;const p=new THREE.Vector3(h.x,GH(h.x,h.z),h.z);shake(.3);svSnd('heavy',1,.7);burst(gY(p,.3),0x3a3428,40,3,2,.7);svShock(p,0x9aff3a,4,.6);
+  setTimeout(()=>{svSnd('crack',1,.6);burst(gY(p,.5),0x9aff3a,50,2.5,4,.9);tw(900,k=>{H.hinge.rotation.x=-1.95*svEase.b(k)})},500);
+  setTimeout(()=>{try{zt116Show(ZT116.Z[0],'Kindlelight · Main Quest',MQ144.name,'Beneath the '+((mq144Camp()&&mq144Camp().th&&mq144Camp().th.n)||'Warren')+' a hatch grinds open','Descend into the dark','z0')}catch(_){}
+    say('🕳 A hatch has opened in the middle of the camp. Something below holds the key to the sealed gateway.')},900)}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq144Tick(dt,now)}catch(err){if(!MQ144.err++)console.warn('v144 tick',err)}return r}}
 </script></body></html>

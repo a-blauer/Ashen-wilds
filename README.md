@@ -106,6 +106,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v141 gathering motions and tools (`SK141`, `SK141_T`: chop / mine / dig / forage / wade / cast / hold / jerk; hatchet, pickaxe, spade, rod with line); the Bard's lute (`bard141`) | `2995-v141-skilling.js` |
 | v141 Sovereigns: quicker charged wind-ups (`sv141K`), disengage from melee (`sv141Force`), Reach eruptions + chase vs kiting (`reach141`), fought once (`spawnBoss` wrapper, `sv141Clear`) | `3000-v141-sovereigns.js` |
 | v143 The Lantern Road (Kindlelight I main quest): outpost layout `mq143Plan` / decoration keep-out `mq143Keep` (called from 1680 `place`), the Lantern Wardens (`MQW143`, `mqw143Make`, `mqw143Anim`, helms `mqw143Helm`), models (`MQM143`: `mqm143Ripper`, `mqm143Lamp`, outpost pieces, `mqm143Bulb`), quest state `MQ143` (glowbulb drops, lampposts, the Ripper's roll and fire-up, dormant gateway, tracker `#mqt143`, window `XR.mq143`, map marks) | `3020`–`3023` (edit in 1680) |
+| v144 The Glowmire Crystal (Kindlelight II main quest): Vorraxis model (`MB144`, `mb144Build`, poses `MB144P`, `mb144Loco`/`mb144Post`), his moves (`MB144M`, lair arena `MB144A`, `svCtx`/`svHitNow` wrappers), the hatch, the Seeping Lair (INSL[4]), the fight controller `mb144AI`, quest state `MQ144`, crystal, sealed II→III gateway | `3031`–`3033` |
 
 ## Conventions (read before changing code)
 
@@ -493,6 +494,25 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     Materials tab lists glowbulbs under Quest items (`kqmMatTab` wrapper), icon `KQI.glowbulb` (emoji 🪔).
   Tests: `v143_lantern_road.py` (plan, keep-out, drops, pickup, bag, scene, prompts, window, lighting, tracker, saves, roll, fire-up,
   roster); pictures `v143_look.py` (`WHO=captain,...` warden sheets, `PROPS=ripper,lamp,lampOn,tent,...` model sheets, `VIEWS=`).
+- **The Glowmire Crystal (v144, Kindlelight II main quest, `3031`–`3033`)**: chapter 2. Kindlelight II's gateway to III is sealed (its F
+  prompt is locked by a `portalPrompt` wrapper) until the Glowmire Crystal is claimed.
+  * Clearing the Glowmire Warren (II's camp furthest from the entrance, `mq144Camp`) opens a hatch in it (`MQ144.st` 1). F at the hatch:
+    down into the Seeping Lair = Kindlelight's unused Wave Trial instance `INSL[4]` (renamed, Lv 7; round arena, `MB144L`), dressed as a
+    goo cave (`mb144LairBuild`: painted ooze-veined floor, boulder walls, stalagmites, ooze falls and pools, fungus, husks, ladder, dais with
+    the floating crystal inside an ooze shell). Built lazily, hidden outside the lair. A save made in the lair loads at the hatch
+    (`wv135Out` wrapper); recall is blocked mid-fight.
+  * Vorraxis, the Seeping King (`3031`): a bigger Akorror built with about twice the triangles (`MB144.tris`), shield scales laid in
+    patterns (`mb144Cover`, `MB144.pat`), glowing ooze between them, scythe forearms, a stinger tail. He runs on the Sovereign engine
+    (`svRig`/moves/poses/stagger/poise/die) with his own controller (`mb144AI` from an `eTick` wrapper, not a den: `e.mb144`, `e.sv.i='mb'`).
+  * Moves (`3032`): intro, scythe combo, lunge (leaves pools), tail sweep, aimed geysers, spine volley, close burst + ooze lanes; at 55%
+    `awaken` → Phase II (the edge floods and burns: `mb144Flood`), five-hit combo, eruption ring, bigger volley, and Crystal Siphon (he
+    leaps to the dais, takes 80% less damage, a beam heals him; burst the three Ooze Sacs to break it → 4.6 s stagger, else he heals 12%,
+    stone islands rise and the Deluge hits everyone not standing on one). Caustic debuff: −15% phys def, −20% speed.
+  * The fight starts when you come within 9.5 or hit him; the ladder seals. A wipe or leaving resets him. When he dies (`MQ144.st` 2) the
+    shell bursts; F at the dais claims the crystal (st 3): the II gateway wakes and the crystal floats over its arch.
+  * Saved as `x2.mq144 {st,seen}`; done also when III was reached (`mq144Done`). Co-op: each player fights their own copy. Tracker uses
+    `#mqt143` in II and the lair; minimap / N-map mark the hatch.
+  Tests: `v144_glowmire.py`; pictures `v143_look.py` (`PROPS=` with MB144 sheet keys, `bossP:<pose>`).
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -718,6 +738,7 @@ python3 v137_enemies.py      # v137: enemy bodies (no companion bodies), compani
 LIST="C:Sporelord:3;E:basilisk" python3 v137_creature.py   # v137: creature sheets (VIEWS=, TAG=)
 python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizens, sheets and limb checks (SP=fox,bear species sheets)
 python3 v143_lantern_road.py  # v143: The Lantern Road (Kindlelight I main quest): drops, lampposts, the Ripper, the gateway, saves
+python3 v144_glowmire.py      # v144: The Glowmire Crystal (Kindlelight II main quest): hatch, lair, Vorraxis, crystal, gateway, saves
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots
