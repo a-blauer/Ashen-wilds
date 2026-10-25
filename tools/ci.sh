@@ -11,7 +11,7 @@ cd "$(git rev-parse --show-toplevel)"
 suite=${1:-full}; shift || true; only="$*"
 case $suite in smoke|changed|full) ;; *) echo "suite must be smoke, changed or full"; exit 2;; esac
 [ -z "$(git status --porcelain -- src test viewer build.sh .github)" ] || echo "note: uncommitted changes are NOT tested"
-repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+repo=$(gh api 'repos/{owner}/{repo}' --jq .full_name)   # REST only: GraphQL (gh repo view) is blocked here
 sha=$(git rev-parse HEAD)
 br=$(git rev-parse --abbrev-ref HEAD); [ "$br" = HEAD ] && br=detached
 br=${br#ci/}; br=${br#ci-run/}; ref="ci/$br"   # a push to ci/* starts the full suite by itself
