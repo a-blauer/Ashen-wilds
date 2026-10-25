@@ -38050,21 +38050,21 @@ function mq144HatchBuild(reveal){const h=mq144HatchSpot();if(!h)return;if(!MQ144
 //    a fight around it, away from the entrance, the gateway, the camps and each other. A faint pillar of light over each shows from afar.
 //  * Coming within MQ145.see of a sigil finds it (title card, map mark). F at a found, dark sigil starts the essence charging ritual:
 //    ghost wolves (dark, shadowy Ashwolves, EN.ghostwolf) rise round it in MQ145.waves waves MQ145.gap seconds apart, MQ145.total in all
-//    (split evenly over the waves). Their level is MQ145.lv0 + the number of sigils already attuned (4 · 5 · 6, in the order you do them).
+//    (split evenly over the waves: 25 a wave). Their level is MQ145.lv0 + the number of sigils already attuned (4 · 5 · 6, in the order you do them).
 //    Each wolf's essence streams into the sigil as it dies; when every wolf of every wave is dead the sigil is attuned.
 //  * The ritual fails if you fall, wander more than MQ145.leash from the sigil or leave the instance: the wolves dissolve and the sigil
 //    goes dark again (try again any time).
 //  * All three attuned: the pillars flare, the gateway at the end of III opens to the Den (its F prompt is locked until then).
 // State MQ145: at[3] (0 dark, 1 attuned), fd[3] (found). Done when all attuned, or the Den has been reached (mq145Done). Saved as
 // x2.mq145 {at, fd}. Co-op: local to each player (the wolves are minions: never shared).
-var MQ145={name:'The Three Sigils',at:[0,0,0],fd:[0,0,0],total:25,waves:4,gap:5,first:2,lv0:4,see:22,leash:30,R:null,S:null,trkK:'',t:0,err:0,fin:0,
+var MQ145={name:'The Three Sigils',at:[0,0,0],fd:[0,0,0],total:100,waves:4,gap:5,first:2,lv0:4,see:22,leash:30,R:null,S:null,trkK:'',t:0,err:0,fin:0,
   names:['the Fang Sigil','the Moon Sigil','the Howl Sigil']};
 function mq145N(){return MQ145.at.filter(Boolean).length}
 function mq145Done(){return mq145N()>=3||insReach(0)>=3}
 function mq145In3(){try{const I=curIns();return !!I&&I.g===2}catch(_){return false}}
 function mq145Den(){try{return PMAP[0].ins[3].n}catch(_){return 'the Den'}}
 function mq145Boss(){try{return BOSSES[0].name}catch(_){return 'the Sovereign'}}
-// wolves per wave: MQ145.total split over the waves, the remainder to the first ones (25 over 4 → 7 6 6 6)
+// wolves per wave: MQ145.total split over the waves, the remainder to the first ones (100 over 4 → 25 each)
 function mq145Per(w){const T=MQ145.total,n=MQ145.waves,b=Math.floor(T/n);return b+(w<T-b*n?1:0)}
 
 // ---------------- where the sigils stand (hoisted: 1680 place() calls mq145Keep while the world is decorated) ----------------
@@ -38211,7 +38211,7 @@ function mq145Start(i){if(MQ145.R||MQ145.at[i]||!MQ145.S)return;const M=MQ145.S.
 function mq145Spawn(R,n){const M=MQ145.S.sig[R.i],ok=mq145Plan().ok,P=pl.position;let made=0;
   svSnd('roar',.6,1.6);
   for(let k=0;k<n;k++){let x=M.x,z=M.z;for(let tr=0;tr<12;tr++){const a=Math.random()*6.283,r=6.5+Math.random()*4;const qx=M.x+Math.cos(a)*r,qz=M.z+Math.sin(a)*r;if(ok(qx,qz,.4)&&Math.hypot(qx-P.x,qz-P.z)>3){x=qx;z=qz;break}}
-    const at=k*90;setTimeout(()=>{if(MQ145.R!==R)return;let e=null;try{e=spawnEnemy('ghostwolf',x,z,R.lv,{agg:1,minion:1})}catch(err){console.error('v145 wolf',err)}
+    const at=k*70;setTimeout(()=>{if(MQ145.R!==R)return;let e=null;try{e=spawnEnemy('ghostwolf',x,z,R.lv,{agg:1,minion:1})}catch(err){console.error('v145 wolf',err)}
       if(!e){R.tot--;return}e.gw145=1;e.mq145=R;e.agg=1;e.wx=M.x;e.wz=M.z;e.m.rotation.y=Math.atan2(P.x-x,P.z-z);R.live.push(e);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x1a1030,1.3,2.2,.8);svShock(p,0x7a5aff,1.6,.4);burst(gY(p,.3),0x3a2a6a,16,1.2,2,.8)},at);made++}
   R.n+=made}

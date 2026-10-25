@@ -523,7 +523,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     plinth with a floating glyph (Fang / Moon / Howl) and halo, a charge ring, and a pillar of light (faint while dark so it can be found).
     Violet while dark, bright violet while charging, green once attuned.
   * Coming within `MQ145.see` (22) finds a sigil (title card, map mark). F starts the essence charging ritual: `MQ145.waves` (4) waves
-    `MQ145.gap` (5 s) apart, `MQ145.total` (25) ghost wolves split 7/6/6/6 (`mq145Per`), level `MQ145.lv0` (4) + sigils already attuned.
+    `MQ145.gap` (5 s) apart, `MQ145.total` (100) ghost wolves, 25 a wave (`mq145Per`), level `MQ145.lv0` (4) + sigils already attuned.
     Dying wolves stream essence into the sigil; all slain → attuned. Falling, straying past `MQ145.leash` (30) or leaving fails it (wolves
     dissolve; retry any time). Ghost wolves: `EN.ghostwolf` (Ashwolf rig, dark translucent cloned materials, glowing eyes, aura, shadow
     puffs), spawned as minions (local in co-op).
