@@ -12,18 +12,20 @@ FKG.paint=function(P,C,o){const sh=o.shirt,pt=o.pants==null?sh:o.pants,sl=o.slee
   const pl=P.paint.leg;P.paint.leg=(m,s)=>{const p=m.r.part;if(lg=='long'&&p!='ankle')return (o.pattL&&o.pattL(m))||pt;if(lg=='knee'&&(p=='hip'||p=='thigh'||p=='knee'&&m.i<3.5))return pt;return pl?pl(m,s):C.FUR}};
 // a band round the torso (belt, sash) with a buckle at the front
 FKG.belt=function(B,P,y,col,o){o=o||{};const k=dkKit(),off=(P.tOff||0)+(o.off||.01),h=o.h||.022;mdTS(B,P,y-h,y+h,off,{col});
-  if(o.buckle!==false){const p=mdTP(P,y,0,off+.004);k.p(n3TB(y),'box','m',o.buckle||0xb89a4a,p[0],p[1],p[2],.034,.03,.008);k.p(n3TB(y),'box','c',col,p[0],p[1],p[2]+.003,.018,.014,.006)}
+  if(o.buckle!==false){const p=mdTP(P,y,0,off-.002);k.p(n3TB(y),'box','m',o.buckle||0xb89a4a,p[0],p[1],p[2],.034,.03,.008);k.p(n3TB(y),'box','c',col,p[0],p[1],p[2]+.003,.018,.014,.006)}
   mdKit(B,k)};
 // a torso shell (vest, jerkin, bodice) from y0 to y1, open at the front by openA (radians either side) unless 0
 FKG.shell=function(B,P,y0,y1,col,o){o=o||{};const op=o.open||0,vn=o.vneck;mdTS(B,P,y0,y1,(P.tOff||0)+(o.off||.01),{col:typeof col=='function'?col:m=>col,keep:m=>{if(op&&m.s>Math.cos(op))return false;if(vn&&m.s>.3&&m.y>vn[0]&&Math.abs(m.c)<(m.y-vn[0])*vn[1])return false;return !o.keep||o.keep(m)},lip:o.lip,lipT:o.lipT})};
 // buttons down the front (or two rows: dx)
 FKG.buttons=function(B,P,y0,y1,n,col,o){o=o||{};const k=dkKit();for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/Math.max(1,n-1);(o.dx?[-o.dx,o.dx]:[0]).forEach(dx=>{const a=dx?Math.asin(Math.max(-1,Math.min(1,dx/mdTorsoAt(P,y).rx))):0,p=mdTP(P,y,a,(P.tOff||0)+(o.off||.006));k.p(n3TB(y),'sph','m',col,p[0],p[1],p[2],.009,.009,.006)})}mdKit(B,k)};
 // a skirt / robe / coat skirt hanging from y0 (gkSkirt): hem(θ) or a number, flare, open front (coats), col / lin
-FKG.skirt=function(B,P,o){return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
+// (v142: the skirt's top sits on what is worn at the waist — the v136 clearance of 16 mm left it hanging in the air above
+// the belt; the cloth flares out a little more below instead)
+FKG.skirt=function(B,P,o){o=Object.assign({},o);if(o.clear==null)o.clear=.004;o.flare=(o.flare||0)+.012;return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
 // an apron: bib (optional) + front skirt
 FKG.apron=function(B,P,col,o){o=o||{};const w=o.w||1.1,hem=o.hem||.3,y0=o.y0||.6;
   if(o.bib!==false)mdTS(B,P,y0,o.bibTop||.93,(P.tOff||0)+.012,{col,keep:m=>m.s>.5});
-  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.02});
+  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.006});
   // ties at the back and (with a bib) the neck strap
   const k=dkKit();if(o.bib!==false)[-1,1].forEach(s=>{const a=mdTP(P,o.bibTop||.93,s*.55,(P.tOff||0)+.014),b=mdTP(P,1.0,s*1.2,(P.tOff||0)+.006);k.L('chest','c',col,a,b,.008,.008,4)});
   FKG.belt(B,P,y0+.01,mdSh(col,.85),{buckle:false,h:.012,off:.018});mdKit(B,k);return S};
@@ -32,7 +34,7 @@ FKG.sleeves=function(B,P,o){[-1,1].forEach(s=>gkSleeve(B,P,s,Object.assign({u0:.
 // a cuff / bracer / glove shell on the forearm and hand from ring u0 to u1 (arm ring indices)
 FKG.cuff=function(B,P,i0,i1,col,off){[-1,1].forEach(s=>mdAS(B,P,s,i0,i1,off||.012,{col,capB:i1>=7}))};
 // boots: shell over the lower leg and foot (no toes then)
-FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.off||.012,{col:m=>m.y<.03?mdSh(col,.6):col})})};
+FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.002,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v142: a thinner foot shell, so the sole stays on the ground)
 // a standing / turned-down collar
 FKG.collar=function(B,P,col,o){return gkCollar(B,P,Object.assign({col,y0:.95,h:th=>1.0+.03*Math.max(0,-Math.cos(th)),flare:.02,open:.5},o||{}))};
 // a scarf / neckerchief: a roll round the neck and a knotted point at the front
@@ -40,7 +42,7 @@ FKG.scarf=function(B,P,col,o){o=o||{};const k=dkKit(),y=o.y||.982,T=mdTorsoAt(P,
     k.L('chest','c',col,r(0,a),r(0,a2),.013,.013,5)}
   const f=[0,y-.01,T.z+T.f+.028];k.p('chest','sph2','c',mdSh(col,.9),f[0],f[1],f[2],.022,.018,.014);k.L('chest','c',col,f,[f[0]-.02,f[1]-.07,f[2]+.012],.018,.004,4);k.L('chest','c',mdSh(col,.85),f,[f[0]+.022,f[1]-.06,f[2]+.01],.016,.004,4);mdKit(B,k)};
 // a pouch / bag at the hip (angle a round the waist)
-FKG.pouch=function(k,P,y,a,col,s){s=s||1;const p=mdTP(P,y,a,(P.tOff||0)+.03*s);k.p('pelvis','box','c',col,p[0],p[1]-.02*s,p[2],.06*s,.07*s,.04*s,0,a,0);k.p('pelvis','box','c',mdSh(col,.8),p[0],p[1]+.012*s,p[2]+.004*Math.cos(a),.064*s,.024*s,.044*s,.12,a,0);k.p('pelvis','sph','m',0xb89a4a,p[0]+Math.sin(a)*.022*s,p[1]+.004,p[2]+Math.cos(a)*.022*s,.006,.006,.004)};
+FKG.pouch=function(k,P,y,a,col,s){s=s||1;const p=mdTP(P,y,a,(P.tOff||0)+.017*s);k.p('pelvis','box','c',col,p[0],p[1]-.02*s,p[2],.06*s,.07*s,.04*s,0,a,0);k.p('pelvis','box','c',mdSh(col,.8),p[0],p[1]+.012*s,p[2]+.004*Math.cos(a),.064*s,.024*s,.044*s,.12,a,0);k.p('pelvis','sph','m',0xb89a4a,p[0]+Math.sin(a)*.022*s,p[1]+.004,p[2]+Math.cos(a)*.022*s,.006,.006,.004)};
 // a mantle / capelet / lowered cowl draped over the shoulders: measured from what is built (torso, upper arms, collars) so it
 // hangs over everything; never narrower going down; weights: chest, and toward the upper arm at the outer lower edge (raised
 // arms lift its sides instead of poking through). o: y0 (top at the neck), hem (θ → y, or a number), col, lin, clear, flare,

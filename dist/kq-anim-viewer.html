@@ -35148,7 +35148,7 @@ var FK_DEER={hp:{R:.085,W:.9,H:.9,L:1.1,m:{len:.125,w:.046,h:.04,b:.04,tw:.021,t
   eyes:{sz:1.15,fw:.45,brow:null},nose:'none',jaw:[.05,.17,{h:.65,w:.8}],
   ear:{t:'leaf',z:-.035,phi:.95,len:.12,w:.05,th:.014,out:.95,back:.35,tw:-.5,inner:C=>mdMix(C.FURL,C.PINK,.3),tip:C=>C.FURD},
   skull(m,C){const z=m.r.p[2];if(z>.203)return 0x2a2220;if(m.s<-.2&&z>.0)return C.FURL;if(z>.13&&m.s<.25)return C.FURL;if(Math.abs(m.c)>.7&&z>.025&&z<.065&&m.s>-.2&&m.s<.5)return C.FURL;return m.s>.5&&z<.08?C.FURD:C.FUR},
-  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','sph2','c',0x1a1412,0,t[1]+.008,t[0]-.006,.016,.012,.011);[-1,1].forEach(s=>k.p('head','box','c',0x050404,s*.008,t[1]+.002,t[0]+.011,.004,.004,.004))},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','sph2','c',0x1a1412,0,t[1]+.008,t[0]-.006,.016,.012,.011);[-1,1].forEach(s=>k.p('head','box','c',0x050404,s*.008,t[1]+.002,t[0]+.0045,.004,.004,.004))},
   body:{build:0,af:.88,lf:.92},legK:[1.02,1.02,.95,.82,.74,.66,.62],foot:{len:.75,w:.72,h:.9},hoof:1,
   paw:{n:3,len:[.03,.034,.03],claw:.01,nail:1,spread:.0135,pad:false,curl:.7,rad:1.15,colOf:C=>C.FURD,clawCol:C=>C.HOOF},handCol:C=>C.FURD,
   TP:[[0,.58,-.1,.035],[0,.6,-.15,.04],[0,.6,-.19,.03],[0,.59,-.21,.008]],tailCol:(m,C)=>m.s<0?C.FURL:C.FUR,tail:{sway:.1,freq:1.4,lag:.3,stiff:.2},earAnim:{amp:.3,sv:.2,cyc:3.9}};
@@ -35379,18 +35379,20 @@ FKG.paint=function(P,C,o){const sh=o.shirt,pt=o.pants==null?sh:o.pants,sl=o.slee
   const pl=P.paint.leg;P.paint.leg=(m,s)=>{const p=m.r.part;if(lg=='long'&&p!='ankle')return (o.pattL&&o.pattL(m))||pt;if(lg=='knee'&&(p=='hip'||p=='thigh'||p=='knee'&&m.i<3.5))return pt;return pl?pl(m,s):C.FUR}};
 // a band round the torso (belt, sash) with a buckle at the front
 FKG.belt=function(B,P,y,col,o){o=o||{};const k=dkKit(),off=(P.tOff||0)+(o.off||.01),h=o.h||.022;mdTS(B,P,y-h,y+h,off,{col});
-  if(o.buckle!==false){const p=mdTP(P,y,0,off+.004);k.p(n3TB(y),'box','m',o.buckle||0xb89a4a,p[0],p[1],p[2],.034,.03,.008);k.p(n3TB(y),'box','c',col,p[0],p[1],p[2]+.003,.018,.014,.006)}
+  if(o.buckle!==false){const p=mdTP(P,y,0,off-.002);k.p(n3TB(y),'box','m',o.buckle||0xb89a4a,p[0],p[1],p[2],.034,.03,.008);k.p(n3TB(y),'box','c',col,p[0],p[1],p[2]+.003,.018,.014,.006)}
   mdKit(B,k)};
 // a torso shell (vest, jerkin, bodice) from y0 to y1, open at the front by openA (radians either side) unless 0
 FKG.shell=function(B,P,y0,y1,col,o){o=o||{};const op=o.open||0,vn=o.vneck;mdTS(B,P,y0,y1,(P.tOff||0)+(o.off||.01),{col:typeof col=='function'?col:m=>col,keep:m=>{if(op&&m.s>Math.cos(op))return false;if(vn&&m.s>.3&&m.y>vn[0]&&Math.abs(m.c)<(m.y-vn[0])*vn[1])return false;return !o.keep||o.keep(m)},lip:o.lip,lipT:o.lipT})};
 // buttons down the front (or two rows: dx)
 FKG.buttons=function(B,P,y0,y1,n,col,o){o=o||{};const k=dkKit();for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/Math.max(1,n-1);(o.dx?[-o.dx,o.dx]:[0]).forEach(dx=>{const a=dx?Math.asin(Math.max(-1,Math.min(1,dx/mdTorsoAt(P,y).rx))):0,p=mdTP(P,y,a,(P.tOff||0)+(o.off||.006));k.p(n3TB(y),'sph','m',col,p[0],p[1],p[2],.009,.009,.006)})}mdKit(B,k)};
 // a skirt / robe / coat skirt hanging from y0 (gkSkirt): hem(θ) or a number, flare, open front (coats), col / lin
-FKG.skirt=function(B,P,o){return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
+// (v142: the skirt's top sits on what is worn at the waist — the v136 clearance of 16 mm left it hanging in the air above
+// the belt; the cloth flares out a little more below instead)
+FKG.skirt=function(B,P,o){o=Object.assign({},o);if(o.clear==null)o.clear=.004;o.flare=(o.flare||0)+.012;return gkSkirt(B,P,Object.assign({N:32,rows:8,flow:.3,folds:[9,.01],legW:.85},o))};
 // an apron: bib (optional) + front skirt
 FKG.apron=function(B,P,col,o){o=o||{};const w=o.w||1.1,hem=o.hem||.3,y0=o.y0||.6;
   if(o.bib!==false)mdTS(B,P,y0,o.bibTop||.93,(P.tOff||0)+.012,{col,keep:m=>m.s>.5});
-  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.02});
+  const S=gkSkirt(B,P,{y0,hem:()=>hem,col,keep:m=>{const th=m.u*Math.PI*2;return th<w||th>Math.PI*2-w},flare:.03,folds:[7,.006],rows:7,N:32,flow:0,clear:.006});
   // ties at the back and (with a bib) the neck strap
   const k=dkKit();if(o.bib!==false)[-1,1].forEach(s=>{const a=mdTP(P,o.bibTop||.93,s*.55,(P.tOff||0)+.014),b=mdTP(P,1.0,s*1.2,(P.tOff||0)+.006);k.L('chest','c',col,a,b,.008,.008,4)});
   FKG.belt(B,P,y0+.01,mdSh(col,.85),{buckle:false,h:.012,off:.018});mdKit(B,k);return S};
@@ -35399,7 +35401,7 @@ FKG.sleeves=function(B,P,o){[-1,1].forEach(s=>gkSleeve(B,P,s,Object.assign({u0:.
 // a cuff / bracer / glove shell on the forearm and hand from ring u0 to u1 (arm ring indices)
 FKG.cuff=function(B,P,i0,i1,col,off){[-1,1].forEach(s=>mdAS(B,P,s,i0,i1,off||.012,{col,capB:i1>=7}))};
 // boots: shell over the lower leg and foot (no toes then)
-FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.off||.012,{col:m=>m.y<.03?mdSh(col,.6):col})})};
+FKG.boots=function(B,P,col,o){o=o||{};[-1,1].forEach(s=>{mdLS(B,P,s,o.i0||4,6,o.off||.012,{col:m=>m.i<(o.i0||4)+.6&&o.top?o.top:col});mdFS(B,P,s,o.offF||.002,{col:m=>m.y<.03?mdSh(col,.6):col})})};  // (v142: a thinner foot shell, so the sole stays on the ground)
 // a standing / turned-down collar
 FKG.collar=function(B,P,col,o){return gkCollar(B,P,Object.assign({col,y0:.95,h:th=>1.0+.03*Math.max(0,-Math.cos(th)),flare:.02,open:.5},o||{}))};
 // a scarf / neckerchief: a roll round the neck and a knotted point at the front
@@ -35407,7 +35409,7 @@ FKG.scarf=function(B,P,col,o){o=o||{};const k=dkKit(),y=o.y||.982,T=mdTorsoAt(P,
     k.L('chest','c',col,r(0,a),r(0,a2),.013,.013,5)}
   const f=[0,y-.01,T.z+T.f+.028];k.p('chest','sph2','c',mdSh(col,.9),f[0],f[1],f[2],.022,.018,.014);k.L('chest','c',col,f,[f[0]-.02,f[1]-.07,f[2]+.012],.018,.004,4);k.L('chest','c',mdSh(col,.85),f,[f[0]+.022,f[1]-.06,f[2]+.01],.016,.004,4);mdKit(B,k)};
 // a pouch / bag at the hip (angle a round the waist)
-FKG.pouch=function(k,P,y,a,col,s){s=s||1;const p=mdTP(P,y,a,(P.tOff||0)+.03*s);k.p('pelvis','box','c',col,p[0],p[1]-.02*s,p[2],.06*s,.07*s,.04*s,0,a,0);k.p('pelvis','box','c',mdSh(col,.8),p[0],p[1]+.012*s,p[2]+.004*Math.cos(a),.064*s,.024*s,.044*s,.12,a,0);k.p('pelvis','sph','m',0xb89a4a,p[0]+Math.sin(a)*.022*s,p[1]+.004,p[2]+Math.cos(a)*.022*s,.006,.006,.004)};
+FKG.pouch=function(k,P,y,a,col,s){s=s||1;const p=mdTP(P,y,a,(P.tOff||0)+.017*s);k.p('pelvis','box','c',col,p[0],p[1]-.02*s,p[2],.06*s,.07*s,.04*s,0,a,0);k.p('pelvis','box','c',mdSh(col,.8),p[0],p[1]+.012*s,p[2]+.004*Math.cos(a),.064*s,.024*s,.044*s,.12,a,0);k.p('pelvis','sph','m',0xb89a4a,p[0]+Math.sin(a)*.022*s,p[1]+.004,p[2]+Math.cos(a)*.022*s,.006,.006,.004)};
 // a mantle / capelet / lowered cowl draped over the shoulders: measured from what is built (torso, upper arms, collars) so it
 // hangs over everything; never narrower going down; weights: chest, and toward the upper arm at the outer lower edge (raised
 // arms lift its sides instead of poking through). o: y0 (top at the neck), hem (θ → y, or a number), col, lin, clear, flare,
@@ -35487,10 +35489,10 @@ FKO['Stronghold Steward']=function(o,D,C){const navy=0x23304e,crim=0x7a2228,G=FK
       FKG.belt(B,P,.6,0x1a1612,{buckle:G,off:.016,h:.018});
       FKG.skirt(B,P,{y0:.6,hem:th=>.2+.16*Math.max(0,Math.cos(th))**2,col:fkTrim(navy,G,{hem:.88}),lin:0x14182a,open:.36,flare:.05,backF:.4});
       FKG.collar(B,P,navy,{h:th=>1.02+.04*Math.max(0,-Math.cos(th)),flare:.03,open:.6,lin:G});
-      const k=dkKit(),pts=[];for(let i=0;i<=12;i++){const a=-1.25+i/12*2.5,y=.95-.09*Math.cos(a*1.25)**2*(1-Math.abs(a)/1.6)-.0;pts.push(mdTP(P,Math.max(.86,y-.0),a,(P.tOff||0)+.012))}
-      gkChain(k,'chest',pts,.008,G);const m=mdTP(P,.84,0,(P.tOff||0)+.018);k.p('chest','cyl','m',G,m[0],m[1],m[2],.032,.008,.032,Math.PI/2,0,0);k.p('chest','cyl','c',crim,m[0],m[1],m[2]+.005,.02,.006,.02,Math.PI/2,0,0);
+      const k=dkKit(),pts=[];for(let i=0;i<=12;i++){const a=-1.25+i/12*2.5,y=.95-.09*Math.cos(a*1.25)**2*(1-Math.abs(a)/1.6)-.0;pts.push(fk142Hug(B,P,Math.max(.86,y-.0),a,.006))}
+      gkChain(k,'chest',pts,.008,G);const m=fk142Hug(B,P,.84,0,.006);k.p('chest','cyl','m',G,m[0],m[1],m[2],.032,.008,.032,Math.PI/2,0,0);k.p('chest','cyl','c',crim,m[0],m[1],m[2]+.005,.02,.006,.02,Math.PI/2,0,0);
       k.p('chest','oct','m',G,m[0],m[1],m[2]+.009,.01,.014,.004);
-      gkScroll(k,'pelvis',.17,.52,.11,1.2,G,1.2);mdKit(B,k)}}};
+      {const q=mdTP(P,.55,1.0,(P.tOff||0)+.004);gkScroll(k,'pelvis',q[0],q[1],q[2],1.2,G,1.2)}mdKit(B,k)}}};
 // ---------------- Blacksmith (bear): leather apron, heavy gloves, boots, a kerchief, tongs at the belt ----------------
 FKO['Blacksmith']=function(o,D,C){const sh=0x4a4038,ap=0x5e3c22,soot=0x2a2420;
   return {boots(B,P){FKG.boots(B,P,0x2a1d14,{i0:4,top:0x3a2a1a})},
@@ -35498,11 +35500,11 @@ FKO['Blacksmith']=function(o,D,C){const sh=0x4a4038,ap=0x5e3c22,soot=0x2a2420;
     build(B,P){FKG.cuff(B,P,4,7,FKC.leatherD,.014);FKG.cuff(B,P,4,4,0x2a1a10,.018);
       FKG.belt(B,P,.6,FKC.leatherD,{buckle:FKC.iron,h:.02});
       const st=m=>{const n=Math.sin(m.x*60+m.y*40)*Math.cos(m.z*55-m.y*30);return n>.55?soot:ap};
-      FKG.apron(B,P,ap,{hem:.27,w:1.25,bibTop:.94});
-      const k=dkKit(),pk=mdTP(P,.72,0,(P.tOff||0)+.02);k.p('chest','box','c',mdSh(ap,.8),pk[0],pk[1],pk[2],.11,.07,.012);
+      const o0=P.tOff||0;FKG.apron(B,P,ap,{hem:.27,w:1.25,bibTop:.94});
+      const k=dkKit(),pk=mdTP(P,.72,0,o0+.012+.007);k.p('chest','box','c',mdSh(ap,.8),pk[0],pk[1],pk[2],.11,.07,.012);
       // tongs and a hammer loop on the belt
-      const t0=mdTP(P,.6,-.95,(P.tOff||0)+.025);k.L('pelvis','m',FKC.iron,t0,[t0[0]-.01,t0[1]-.25,t0[2]+.03],.008,.007,4).L('pelvis','m',FKC.iron,[t0[0]+.012,t0[1],t0[2]],[t0[0]+.006,t0[1]-.25,t0[2]+.04],.008,.007,4);
-      const h0=mdTP(P,.6,.95,(P.tOff||0)+.025);k.p('pelvis','ring','c',FKC.leatherD,h0[0],h0[1]-.01,h0[2],.022,.08,.022,0,0,Math.PI/2);
+      const t0=mdTP(P,.6,-.95,(P.tOff||0)+.004);k.L('pelvis','m',FKC.iron,t0,[t0[0]-.01,t0[1]-.25,t0[2]+.03],.008,.007,4).L('pelvis','m',FKC.iron,[t0[0]+.012,t0[1],t0[2]],[t0[0]+.006,t0[1]-.25,t0[2]+.04],.008,.007,4);
+      const h0=mdTP(P,.6,.95,(P.tOff||0)+.004);k.p('pelvis','ring','c',FKC.leatherD,h0[0],h0[1]-.01,h0[2],.022,.08,.022,0,0,Math.PI/2);
       // a red kerchief over the crown, knotted at the back
       fkCoif(B,D,0x8a2a1a,{z1:D.EYEP[2]-.04,yMin:D.EYEP[1]+.035,off:.01});const bk=fkSurf(D,-.09,0.9,.01);k.p('head','sph2','c',0x7a2418,0,bk[1],bk[2]-.004,.024,.018,.014);
       k.L('head','c',0x8a2a1a,[0,bk[1],bk[2]-.01],[.02,bk[1]-.07,bk[2]-.03],.012,.004,4).L('head','c',0x8a2a1a,[0,bk[1],bk[2]-.01],[-.02,bk[1]-.06,bk[2]-.025],.012,.004,4);
@@ -35510,10 +35512,10 @@ FKO['Blacksmith']=function(o,D,C){const sh=0x4a4038,ap=0x5e3c22,soot=0x2a2420;
 // ---------------- Merchant / Trading Post (raccoon): a blue vest, coin purse, ledger, a beret with a feather ----------------
 FKO['Merchant']=function(o,D,C){const vest=mdC(o.robe||0x2a4a7a),hat=mdC(o.hatC||0x6a2a2a);
   return {paint(P){FKG.paint(P,C,{shirt:FKC.linen,sleeve:'long',pants:0x3a3448,legs:'long',cuffs:mdSh(FKC.linen,.85)})},
-    build(B,P){FKG.shell(B,P,.58,.95,m=>m.y>.93?mdSh(vest,.8):vest,{open:.22,off:.012,vneck:[.8,2.2]});FKG.buttons(B,P,.62,.86,4,FKC.gold,{dx:.05,off:.016});
+    build(B,P){FKG.shell(B,P,.58,.95,m=>m.y>.93?mdSh(vest,.8):vest,{open:.22,off:.012,vneck:[.8,2.2]});FKG.buttons(B,P,.62,.86,4,FKC.gold,{dx:.05,off:.002});
       FKG.belt(B,P,.6,FKC.leather,{buckle:FKC.brass});FKG.scarf(B,P,0x8a2a2a);
       FKG.skirt(B,P,{y0:.6,hem:th=>.47,col:vest,open:.5,flare:.02,rows:4,lin:mdSh(vest,.5)});
-      const k=dkKit();FKG.pouch(k,P,.56,.75,0x8a6a2a,1.1);const c=mdTP(P,.56,.75,(P.tOff||0)+.06);for(let i=0;i<3;i++)k.p('pelvis','cyl','m',FKC.gold,c[0]+.01*i,c[1]-.06,c[2]+.02,.012,.004,.012);
+      const k=dkKit();FKG.pouch(k,P,.56,.75,0x8a6a2a,1.1);const c=mdTP(P,.56,.75,(P.tOff||0)+.034);for(let i=0;i<3;i++)k.p('pelvis','cyl','m',FKC.gold,c[0]+.008*i,c[1]-.058,c[2],.012,.004,.012);
       gkBook(k,'pelvis',-.2,.5,.0,1.3,0x5a2a1a,FKC.brass,-1.5);
       const b=fkBeret(k,D,hat,{h:.034,btn:1,tz:.18,r:.085});gkFeather(k,'head',[.04,b.y+.01,b.z-.02],[.5,.7,-.5],.12,.018,0xe8e0c8);
       mdKit(B,k)}}};
@@ -35527,28 +35529,30 @@ FKO['Magic Vendor']=function(o,D,C){const rb=mdC(o.robe||0x5a3aa0),dk=mdSh(rb,.5
       const k=dkKit();// little stars and moons stitched over the skirt
       for(let j=0;j<26;j++){const t=.15+((j*37)%70)/100,th=(j*2.39)%(Math.PI*2),v=S.at(t,th);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L+.003)/L,ry=Math.atan2(v.x,v.z-S.cz);
         gkW(k.p('pelvis',j%4?'oct':'cone4',j%4?'m':'g',j%4?0xe8c860:0xc8b8ff,v.x*f,v.y,S.cz+(v.z-S.cz)*f,.009,.012,.003,0,ry,0),v.w)}
-      const pc=mdTP(P,.84,0,(P.tOff||0)+.03);k.L('chest','c',0x2a2030,mdTP(P,.97,-.6,(P.tOff||0)+.03),pc,.003,.003,3).L('chest','c',0x2a2030,mdTP(P,.97,.6,(P.tOff||0)+.03),pc,.003,.003,3);
+      const pc=fk142Hug(B,P,.84,0,.011);k.L('chest','c',0x2a2030,fk142Hug(B,P,.97,-.6,.002),fk142Hug(B,P,.9,-.3,.002),.003,.003,3).L('chest','c',0x2a2030,fk142Hug(B,P,.9,-.3,.002),pc,.003,.003,3).L('chest','c',0x2a2030,fk142Hug(B,P,.97,.6,.002),fk142Hug(B,P,.9,.3,.002),.003,.003,3).L('chest','c',0x2a2030,fk142Hug(B,P,.9,.3,.002),pc,.003,.003,3);
       k.p('chest','oct','g',0xb890ff,pc[0],pc[1]-.02,pc[2],.018,.032,.012);
       fkPointHat(k,D,mdC(o.hatC||0x2e2078),{h:.22,r:.08,brim:.15,band:G,star:0xf0d870});mdKit(B,k)}}};
 // ---------------- Innkeeper (boar): rolled sleeves, a maroon waistcoat, a long white apron, a towel and keys ----------------
 FKO['Innkeeper']=function(o,D,C){const wc=mdC(o.robe||0x6a3a2a);
   return {paint(P){FKG.paint(P,C,{shirt:0xe0d4bc,sleeve:'short',pants:0x4a3a2a,legs:'long'})},
-    build(B,P){FKG.shell(B,P,.57,.95,m=>m.y<.6?mdSh(wc,.8):wc,{off:.012,vneck:[.78,3.2],lip:.004});FKG.buttons(B,P,.62,.76,4,FKC.brass,{off:.018});
-      {const k=dkKit(),a=mdTP(P,.7,-.35,(P.tOff||0)+.016),b=mdTP(P,.66,.0,(P.tOff||0)+.018),c=mdTP(P,.7,.4,(P.tOff||0)+.016);gkChain(k,'spine',[a,b,c],.005,FKC.gold);k.p('spine','cyl','m',FKC.gold,c[0],c[1]-.004,c[2]+.004,.016,.006,.016,Math.PI/2,0,0);mdKit(B,k)}
+    build(B,P){FKG.shell(B,P,.57,.95,m=>m.y<.6?mdSh(wc,.8):wc,{off:.012,vneck:[.78,3.2],lip:.004});FKG.buttons(B,P,.62,.76,4,FKC.brass,{off:.005});
+      {const k=dkKit(),a=fk142Hug(B,P,.7,-.35,.004),b=fk142Hug(B,P,.66,.0,.004),c=fk142Hug(B,P,.7,.4,.004);gkChain(k,'spine',[a,b,c],.005,FKC.gold);k.p('spine','cyl','m',FKC.gold,c[0],c[1]-.004,c[2]+.004,.016,.006,.016,Math.PI/2,0,0);mdKit(B,k)}
       FKG.cuff(B,P,3,3,0xe0d4bc,.016);
       FKG.apron(B,P,0xece6da,{hem:.17,w:1.45,bib:false,y0:.62});
       const k=dkKit();// a towel over the left shoulder, hanging front and back
-      const s0=mdTP(P,.96,-1.2,(P.tOff||0)+.01);k.p('chest','box','c',0xe8e0d0,s0[0],s0[1]+.012,s0[2]-.01,.07,.012,.12,0,0,-.2);
-      [[.1,1],[-.11,-1]].forEach(([dz,f])=>{k.p('chest','box','c',f>0?0xe8e0d0:0xd8d0c0,s0[0]-.005,s0[1]-.07,s0[2]+dz,.06,.15,.01,f*.12,0,-.08);for(let i=0;i<2;i++)k.p('chest','box','c',0xb84a3a,s0[0]-.005,s0[1]-.12+i*.02,s0[2]+dz+f*.006,.062,.006,.004,f*.12,0,-.08)});
+      // (v142: the hanging ends lie on the chest and back instead of fixed offsets from the shoulder)
+      const s0=mdTP(P,.97,-1.2,(P.tOff||0)+.002);k.p('chest','box','c',0xe8e0d0,s0[0],s0[1]+.008,s0[2]-.01,.07,.012,.12,0,0,-.2);
+      [[-.72,1],[-2.45,-1]].forEach(([a,f])=>{const q=fk142Hug(B,P,.885,a,.006);k.p('chest','box','c',f>0?0xe8e0d0:0xd8d0c0,q[0],q[1],q[2],.06,.15,.01,0,a,0);
+        for(let i=0;i<2;i++)k.p('chest','box','c',0xb84a3a,q[0]+Math.sin(a)*.006,q[1]-.05+i*.02,q[2]+Math.cos(a)*.006,.062,.006,.004,0,a,0)});
       // a ring of keys at the belt
-      const r=mdTP(P,.6,.9,(P.tOff||0)+.03);k.p('pelvis','ring','m',FKC.iron,r[0],r[1]-.02,r[2],.024,.08,.024,0,0,Math.PI/2);[-1,0,1].forEach(i=>k.L('pelvis','m',FKC.brass,[r[0]+.004,r[1]-.04,r[2]+i*.012],[r[0]+.008,r[1]-.085,r[2]+i*.02],.004,.003,4));
+      const r=fk142Hug(B,P,.6,.9,.004);k.p('pelvis','ring','m',FKC.iron,r[0],r[1]-.02,r[2],.024,.08,.024,0,0,Math.PI/2);[-1,0,1].forEach(i=>k.L('pelvis','m',FKC.brass,[r[0]+.004,r[1]-.04,r[2]+i*.012],[r[0]+.008,r[1]-.085,r[2]+i*.02],.004,.003,4));
       mdKit(B,k)}}};
 // ---------------- Cook (otter): chef's whites, checked trousers, neckerchief, half apron, toque, a ladle ----------------
 FKO['Cook']=function(o,D,C){const W=FKC.white;
   return {paint(P){FKG.paint(P,C,{shirt:W,sleeve:'long',pants:0x3a3a3e,legs:'long',cuffs:mdSh(W,.9),pattL:m=>(Math.floor(m.y*40)+Math.floor((m.x+m.z)*40))%2?0x2a2a2e:0xd8d4cc})},
-    build(B,P){FKG.buttons(B,P,.66,.9,4,0xd8d4cc,{dx:.05,off:.008});mdTS(B,P,.64,.95,(P.tOff||0)+.006,{col:mdSh(W,.94),keep:m=>m.s>.2&&m.c<.25&&m.c>-.6});
+    build(B,P){mdTS(B,P,.64,.95,(P.tOff||0)+.006,{col:mdSh(W,.94),keep:m=>m.s>.2&&m.c<.25&&m.c>-.6});FKG.buttons(B,P,.66,.9,4,0xd8d4cc,{dx:.05,off:-.002});
       FKG.scarf(B,P,0xb83a2a);FKG.apron(B,P,0xd8d4cc,{hem:.36,w:1.3,bib:false,y0:.6});
-      const k=dkKit();fkToque(k,D);const l0=mdTP(P,.58,-.9,(P.tOff||0)+.03);k.L('pelvis','m',0x8a8a92,l0,[l0[0]-.01,l0[1]-.22,l0[2]+.02],.006,.006,4);k.p('pelvis','sph','m',0x8a8a92,l0[0]-.012,l0[1]-.24,l0[2]+.024,.03,.02,.03);
+      const k=dkKit();fkToque(k,D);const l0=mdTP(P,.58,-.9,(P.tOff||0)+.004);k.L('pelvis','m',0x8a8a92,l0,[l0[0]-.01,l0[1]-.22,l0[2]+.02],.006,.006,4);k.p('pelvis','sph','m',0x8a8a92,l0[0]-.012,l0[1]-.24,l0[2]+.024,.03,.02,.03);
       mdKit(B,k)}}};
 // ---------------- Alchemist (goat): a long green robe, a bandolier of vials, satchel, brass goggles ----------------
 FKO['Alchemist']=function(o,D,C){const rb=mdC(o.robe||0x2e4a3a),dk=mdSh(rb,.55),stain=m=>rb;
@@ -35583,23 +35587,23 @@ FKO['Curio Merchant']=function(o,D,C){const coat=mdC(o.robe||0x7a4a2a),hat=mdC(o
       const bz=mdTorsoAt(P,.8),z=-(bz.b+(P.tOff||0))-.08;k.p('chest','box','c',0x6a4a2a,0,.8,z,.3,.34,.15).p('chest','box','c',0x5a3a22,0,.92,z-.004,.31,.06,.155);
       k.p('chest','cyl','c',0x8a2a2a,0,1.0,z+.01,.06,.34,.06,0,0,Math.PI/2);[-1,1].forEach(s=>k.p('chest','box','c',FKC.leatherD,s*.1,.84,z+.02,.025,.4,.16));
       k.p('chest','sph','m',0x4a4a4a,.17,.68,z-.03,.06,.05,.06).L('chest','m',0x2a2a2a,[.17,.73,z-.03],[.17,.78,z-.03],.004,.004,3);
-      k.p('chest','box','m',0x6a5a3a,-.18,.7,z-.02,.05,.07,.05).p('chest','box','g',0xffc860,-.18,.7,z-.02,.035,.045,.035);
+      k.p('chest','box','m',0x6a5a3a,-.168,.7,z-.02,.05,.07,.05).p('chest','box','g',0xffc860,-.168,.7,z-.02,.035,.045,.035);
       [-1,1].forEach(s=>{const a=mdTP(P,.96,s*.5,(P.tOff||0)+.01),b=mdTP(P,.66,s*.65,(P.tOff||0)+.01);k.L('chest','c',FKC.leatherD,a,[s*.12,.96,z+.05],.014,.014,4);k.L('chest','c',FKC.leatherD,a,b,.012,.012,4)});
-      FKG.pouch(k,P,.56,.8,0x6a4a2a);gkVial(k,'pelvis',.2,.53,-.06,1.2,0x7affd0,FKC.brass);
-      const h=fkBrimHat(k,D,hat,{brim:.19,cr:.065,ch:.08,tx:-.15,band:0x8a6a2a});gkFeather(k,'head',[.06,h.y+.03,h.z-.03],[.45,.8,-.6],.14,.02,0xd84a2a);mdKit(B,k)}}};
+      FKG.pouch(k,P,.56,.8,0x6a4a2a);{const q=mdTP(P,.55,2.0,(P.tOff||0)+.008);gkVial(k,'pelvis',q[0],q[1],q[2],1.2,0x7affd0,FKC.brass)}
+      const h=fkBrimHat(k,D,hat,{brim:.19,cr:.065,ch:.08,tx:-.15,band:0x8a6a2a});gkFeather(k,'head',[.052,h.y+.008,h.z-.03],[.45,.8,-.6],.14,.02,0xd84a2a);mdKit(B,k)}}};
 FKO['Wandering Merchant']=FKO['Curio Merchant'];
 // ---------------- Beast Trainer (wolf): a leather jerkin, fur mantle, bracers, a whistle and treat pouches ----------------
 FKO['Beast Trainer']=function(o,D,C){const sh=mdC(o.robe||0x3a5a2a);
   return {paint(P){FKG.paint(P,C,{shirt:sh,sleeve:'long',pants:0x4a3a28,legs:'long',pattL:m=>m.r.part=='shin'&&Math.floor(m.y*45)%2?0x8a7a5a:null})},
     build(B,P){FKG.shell(B,P,.56,.96,m=>Math.abs(m.c)<.06&&m.s>.8?0x2a1a10:FKC.leather,{off:.012,lipT:.004});
-      const k=dkKit();for(let i=0;i<5;i++){const y=.66+i*.06;[-1,1].forEach(s=>{const p=mdTP(P,y,s*.07,(P.tOff||0)+.004);k.p('chest','sph','c',0x2a1a10,p[0],p[1],p[2],.005,.005,.004)})}
+      const k=dkKit();for(let i=0;i<5;i++){const y=.66+i*.06;[-1,1].forEach(s=>{const p=mdTP(P,y,s*.07,(P.tOff||0)+.001);k.p('chest','sph','c',0x2a1a10,p[0],p[1],p[2],.005,.005,.004)})}
       FKG.belt(B,P,.6,FKC.leatherD,{buckle:FKC.iron});FKG.cuff(B,P,4,5,FKC.leatherD,.016);
       FKG.skirt(B,P,{y0:.6,hem:th=>.45+.02*Math.sin(th*6),col:FKC.leather,lin:FKC.leatherD,open:.25,flare:.03,dag:[.03],rows:4});
       // the fur mantle round the shoulders
       FKG.mantle(B,P,{y0:1.01,hem:th=>.84-.03*Math.max(0,-Math.cos(th)),col:m=>(m.j+m.i)%3==0?0x6e5e4a:0x8a7a62,lin:0x5a4a38,dag:.035,flare:.025,folds:[12,.008],roll:.022,rollCol:0x9a8a72,open:.25});
       FKG.pouch(k,P,.57,.85,0x6a4a2a);FKG.pouch(k,P,.57,-.85,0x6a4a2a);FKG.pouch(k,P,.57,2.4,0x5a3a22,.8);
-      const w=mdTP(P,.86,.25,(P.tOff||0)+.03);k.L('chest','c',0x2a1a10,mdTP(P,.98,-.3,(P.tOff||0)+.004),w,.003,.003,3);k.p('chest','cyl','m',0xc8c0b0,w[0],w[1]-.02,w[2],.008,.05,.008,0,0,.2);
-      for(let i=0;i<5;i++){const a=-.5+i*.25,p=mdTP(P,.93-.03*Math.cos(a*2),a,(P.tOff||0)+.024);k.p('chest','cone4','c',0xe8e0c8,p[0],p[1]-.012,p[2],.006,.024,.006,Math.PI)}
+      const w=fk142Hug(B,P,.86,.25,.009),w1=fk142Hug(B,P,.93,0,.002);k.L('chest','c',0x2a1a10,fk142Hug(B,P,.98,-.3,.002),w1,.003,.003,3).L('chest','c',0x2a1a10,w1,w,.003,.003,3);k.p('chest','cyl','m',0xc8c0b0,w[0],w[1]-.02,w[2],.008,.05,.008,0,0,.2);
+      for(let i=0;i<5;i++){const a=-.5+i*.25,p=fk142Hug(B,P,.93-.03*Math.cos(a*2),a,.004);k.p('chest','cone4','c',0xe8e0c8,p[0],p[1]-.012,p[2],.006,.024,.006,Math.PI)}
       mdKit(B,k)}}};
 // ---------------- Bard (hare): a slashed doublet, puffed sleeves, two-tone hose, ruff, feathered cap ----------------
 FKO['Bard']=function(o,D,C){const rb=mdC(o.robe||0x8a2a5a),y2=0xd8b040,hat=mdC(o.hatC||0x5a1a3a);
@@ -35619,11 +35623,11 @@ FKO['Rune Sage']=function(o,D,C){const rb=mdC(o.robe||0x2a3a7a),dk=mdSh(rb,.5),r
       const S=FKG.skirt(B,P,{y0:.6,hem:th=>.05,col:fkTrim(rb,0xc8b070,{hem:.9}),lin:dk,flare:.07,folds:[10,.012]});
       FKG.sleeves(B,P,{bell:.045,trail:.06,col:m=>m.v>.86?0xc8b070:rb,lin:dk,u0:2.8});
       FKG.mantle(B,P,{y0:1.02,hem:th=>.8+.03*Math.cos(th),col:m=>m.v>.78?0xc8b070:mdSh(rb,.85),lin:dk,open:.35,flare:.03,roll:.03,rollCol:mdSh(rb,.75)});
-      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L+.004)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
+      const k=dkKit();for(let j=0;j<22;j++){const v=S.at(.86,j/22*Math.PI*2+.1);if(!v)continue;const L=Math.hypot(v.x,v.z-S.cz)||1,f=(L-.0018)/L,p=[v.x*f,v.y+.03,S.cz+(v.z-S.cz)*f,Math.atan2(v.x,v.z-S.cz)];
         const t=j%3,s=1.3;if(t==0)gkW(k.p('pelvis','box','g',rn,p[0],p[1],p[2],.004*s,.018*s,.003,0,p[3],0),v.w);
         else if(t==1){gkW(k.p('pelvis','box','g',rn,p[0]-.003*s*Math.cos(p[3]),p[1],p[2]+.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],.5),v.w);gkW(k.p('pelvis','box','g',rn,p[0]+.003*s*Math.cos(p[3]),p[1],p[2]-.003*s*Math.sin(p[3]),.003*s,.014*s,.003,0,p[3],-.5),v.w)}
         else gkW(k.p('pelvis','oct','g',rn,p[0],p[1],p[2],.006*s,.009*s,.003,0,p[3],0),v.w)}
-      for(let i=0;i<7;i++){const a=-.7+i*.233,p=mdTP(P,.93-.05*Math.cos(a*1.8),a,(P.tOff||0)+.028);k.p('chest',i%2?'oct':'dod','g',i%2?rn:0xc8a0ff,p[0],p[1],p[2],.011,.013,.008)}
+      for(let i=0;i<7;i++){const a=-.7+i*.233,p=fk142Hug(B,P,.93-.05*Math.cos(a*1.8),a,.006);k.p('chest',i%2?'oct':'dod','g',i%2?rn:0xc8a0ff,p[0],p[1],p[2],.011,.013,.008)}
       gkBook(k,'pelvis',.2,.52,.02,1.2,0x2a2050,0xc8b070,1.5);mdKit(B,k)}}};
 // ================= v137: animal townsfolk — citizens, and the switch-over =================
 // A citizen's species comes from their trade (fishers are otters, beavers, moles, bears or mice; hunters foxes, ferrets,
@@ -36538,6 +36542,671 @@ setInterval(sv141Clear,5000);
 // a hero who has kept away for SV141.sure s gets Reach as soon as it is off cooldown (not left to the weighted pick)
 SV141.sure=4;
 {const f=svPick;svPick=function(e,loose){const S=e&&e.sv;try{if(S&&!S.force&&(S.far141||0)>=SV141.sure&&S.B.M.reach141&&!((S.cd.reach141||0)>0)&&S.last[0]!=='reach141'&&d2(pl.position,e.m.position)>=SV141.far)return 'reach141'}catch(_){}return f.apply(this,arguments)}}
+// ================= v142: townsfolk anatomy — animal heads on animal necks, natural eyes, animal legs =================
+// The v137 townsfolk were a human body with a small animal head on a tall, straight neck. This layer reshapes every
+// species without touching the clothes, tools or animations (they all keep working because the skeleton keeps its bones):
+//  * Posture by bone offsets: the upper body leans forward over the hips (A.lean), shoulders narrow / widen (A.sh). The body
+//    is built on the old ("pre") bone positions and then moved with its bones (each vertex by its skin weights), so the torso
+//    shears smoothly, arms ride their shoulders, and clothes built from the body rings follow.
+//  * Head: the whole head (skull, face, ears, horns, hats) is scaled up (A.hs) about the top of the neck and carried
+//    forward / down (A.hz / A.hy, A.pitch), as an animal carries it; the neck rings blend between body and head, so the
+//    neck leans forward and joins the back of the skull. The ear bones move with the head.
+//  * Natural eyes (fk142Eyes): set into a socket where the brow meets the muzzle (prey animals further back and to the
+//    side), aimed forward (predators) or out (prey), iris filling the eye, the species' pupil (slit / bar / round), a dark
+//    rim, a fur lid over the top; sized from the skull, so big heads get big eyes (A.eye.sz tunes it).
+//  * Legs (A.leg): 'plant' (flat feet: bear, raccoon, beaver…), 'digi' (on the toes, heel raised: fox, wolf, lynx, hound),
+//    'hoof' (on hooves: deer, goat, sheep, ram, boar), 'bird' (scaled shanks and talons: owl). The knee / hock bones move
+//    (fkNB), the foot rings run from the raised hock down to the ball of the foot (mdFoot), toes and hooves sit at the ball.
+// FK142.on = false gives the v137 models back (tests compare both).
+var FK142={on:true,sp:{},cur:null,D:null,pre:false,
+  // legs: knee [y, z], hock [y, z], metatarsus reach mt (ball of the foot = hock z + mt)
+  legs:{digi:{k:[.33,.065],h:[.135,-.07],mt:.11},hoof:{k:[.34,.06],h:[.165,-.065],mt:.085},bird:{k:[.35,.05],h:[.15,-.03],mt:.07}}};
+function fk142A(D){return FK142.on&&D&&D.key?FK142.sp[D.key]||null:null}
+function fk142Def(k,A){FK142.sp[k]=A;return A}
+function fk142Leg(A){return A&&A.leg&&A.leg!='plant'?Object.assign({},FK142.legs[A.leg],A.legP||{}):null}
+// ---------------- bone offsets (lean, shoulders) and the head transform ----------------
+function fk142Lean(A,y){return (A.lean||0)*Math.max(0,y-.55)}
+function fk142Xf(D,A){if(D._xf140)return D._xf140;const hs=A.hs||1,pv=new THREE.Vector3(0,A.pvy||1.075,A.pvz==null?-.01:A.pvz);
+  const T=new THREE.Vector3(0,A.hy||0,fk142Lean(A,1.04)+(A.hz||0)).add(pv),Q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),A.pitch||0);
+  return D._xf140=new THREE.Matrix4().compose(T,Q,new THREE.Vector3(hs,hs,hs)).multiply(new THREE.Matrix4().makeTranslation(-pv.x,-pv.y,-pv.z))}
+// what each bone does: {m: matrix} (head, ears) or [dx, dy, dz]
+function fk142Delta(n,A,N,D){if(n=='head'||n=='erL'||n=='erR')return {m:fk142Xf(D,A)};
+  if(/^(spine|chest|neck)$/.test(n))return [0,0,fk142Lean(A,N[n][2])];
+  if(/^cp\d/.test(n))return [0,0,fk142Lean(A,N.chest[2])];
+  const a=/^a([LR])\d/.exec(n);if(a){const s=a[1]=='L'?-1:1,sh=A.sh||1;return [s*Math.abs(N.aL0[1])*(sh-1),0,fk142Lean(A,N[a[1]=='L'?'aL0':'aR0'][2])]}
+  return [0,0,0]}
+// ---------------- the skeleton: pre (legs moved; the body is built on it) and final (+ lean, shoulders, head) ----------------
+{const f=fkNB;fkNB=function(D){const A=fk142A(D);if(!A)return f.apply(this,arguments);
+  if(!D._nbPre140){const N0=f.apply(this,arguments),N={};for(const k in N0)N[k]=N0[k].slice();const G=fk142Leg(A);
+    if(G)['lh','rh'].forEach(l=>{const x=N[l+'0'][1];N[l+'1']=[l+'0',x,G.k[0],G.k[1]];N[l+'2']=[l+'1',x,G.h[0],G.h[1]]});
+    const F={};for(const k in N){const d=fk142Delta(k,A,N,D),p=N[k];if(d.m){const v=new THREE.Vector3(p[1],p[2],p[3]);if(k=='head')F[k]=[p[0],p[1],p[2],p[3]+fk142Lean(A,p[2])];else{v.applyMatrix4(d.m);F[k]=[p[0],v.x,v.y,v.z]}}else F[k]=[p[0],p[1]+d[0],p[2]+d[1],p[3]+d[2]]}
+    D._nbPre140=N;D._nbFin140=F}
+  return FK142.pre?D._nbPre140:D._nbFin140}}
+// move the built body with its bones (rest pose linear blend: every vertex by its skin weights)
+// (the torso bones' share is a continuous shear by the vertex's own height, not by the bone's: buttons, chains and
+// pendants hang on one bone while the cloth under them blends two, and both must move the same)
+function fk142Deform(B,D,A){const N=D._nbPre140,dl=B.O.map(n=>/^(pelvis|spine|chest|neck|cp\d)$/.test(n)?{sh:1}:fk142Delta(n,A,N,D)),V=new THREE.Vector3();
+  for(const t in B.L){const L=B.L[t],p=L.p,si=L.si,sw=L.sw,nv=p.length/3;
+    for(let v=0;v<nv;v++){const px=p[3*v],py=p[3*v+1],pz=p[3*v+2];let x=0,y=0,z=0,ws=0;
+      for(let j=0;j<4;j++){const w=sw[4*v+j];if(!w)continue;const d=dl[si[4*v+j]];ws+=w;
+        if(d.m){V.set(px,py,pz).applyMatrix4(d.m);x+=w*V.x;y+=w*V.y;z+=w*V.z}else if(d.sh){x+=w*px;y+=w*py;z+=w*(pz+fk142Lean(A,py))}else{x+=w*(px+d[0]);y+=w*(py+d[1]);z+=w*(pz+d[2])}}
+      if(ws>0){p[3*v]=x/ws;p[3*v+1]=y/ws;p[3*v+2]=z/ws}}}}
+{const f=fkBuild;fkBuild=function(D,pk,o){const A=fk142A(D);if(!A)return f.apply(this,arguments);
+  const c0=FK142.cur,d0=FK142.D;FK142.cur=A;FK142.D=D;FK142.pre=true;let B;
+  try{B=f.apply(this,arguments)}finally{FK142.pre=false;FK142.cur=c0;FK142.D=d0}
+  fk142Deform(B,D,A);return B}}
+{const f=fkKey;fkKey=function(o,pk){return f.apply(this,arguments)+(fk142A(FK137.sp[pk.sp])?'|v142':'')}}
+// ---------------- natural eyes ----------------
+var FK142E={slit:{fox:1,lynx:1},bar:{goat:1,ram:1,sheep:1,stag:1,doe:1},prey:{hare:1,goat:1,ram:1,sheep:1,stag:1,doe:1,mouse:1,squirrel:1}};
+// where the eye sits: at the stop (where the brain case turns into the muzzle), just above the muzzle's top line
+function fk142EyeAt(D,A){const S=D.SN,R=(D.hp&&D.hp.R)||.1,E=A.eye||{},pr=FK142E.prey[D.key],mx=Math.max(...S.map(s=>s[2]));
+  let i=S.findIndex((s,j)=>j>2&&s[0]>0&&s[2]<mx*.62);if(i<0)i=S.length-4;
+  const zs=S[i][0],top=S[i][1]+S[i][3];let ez=zs-R*(E.back==null?(pr?.42:.3):E.back),ey=top+R*(E.up==null?(pr?.08:.05):E.up);
+  const q=brSkullAt(D,ez);ey=Math.min(ey,q.yc+q.f*.82);
+  const g=E.g||(pr?[.88,.06,.48]:[.62,.08,.78]),n=new THREE.Vector3(g[0],g[1],g[2]).normalize();
+  return {p:new THREE.Vector3(brSurfX(D,ez,ey)+(E.dx||0),ey,ez),n,r:.0142*(R/.094)*(E.sz||1)}}
+function fk142Eyes(k,D,o,A){const C=BR.C,E=A.eye||{},F0=D._eye140||(D._eye140=fk142EyeAt(D,A)),F=Object.assign({},F0,{p:F0.p.clone().addScaledVector(F0.n,E.out==null?F0.r*.3:E.out)}),r=F.r,tl=-(o.tilt||0)*.7-.06+(E.roll||0);
+  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1,0,0),F.n),up=new THREE.Vector3(0,1,0).applyQuaternion(q),fd=new THREE.Vector3(0,0,1).applyQuaternion(q),V=THREE.Vector3;
+  const put=(geo,t,col,d,u,v,sx,sy,sz,roll)=>{const p=F.p.clone().addScaledVector(F.n,d).addScaledVector(up,u).addScaledVector(fd,v);
+    const qq=q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new V(1,0,0),roll||0)),e=new THREE.Euler().setFromQuaternion(qq);
+    k.p('head',geo,t,col,p.x,p.y,p.z,sx,sy,sz,e.x,e.y,e.z);k.p('head',geo,t,col,-p.x,p.y,p.z,sx,sy,sz,e.x,-e.y,-e.z)};
+  const iris=E.col?E.col(C):C.EYE,pc=E.pupilCol||0x070505;
+  // hero style (sculpted heads): a narrow almond slanted up at the outer corner, bright iris, a dark brow line over it
+  // (owner, v142: brows level, so the folk look calm, not angry; E.round gives a round eye, e.g. the owl)
+  if(D.sculpt){const sl=E.slant==null?(FK142E.prey[D.key]?.06:.14):E.slant,h=E.open||.66,brow=E.brow==null?.8:E.brow,wd=E.round?h:1.2;
+    put('sph2','c',0x0e0a08,-r*.45,0,0,r*.55,r*(h+.14),r*(wd+.2),sl);
+    put('sph2',E.glow?'g':'c',iris,-r*.3,0,r*.02,r*.5,r*h,r*wd,sl);
+    const ph=r*h*.95;if(FK142E.slit[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph,r*.16,sl);else if(FK142E.bar[D.key])put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.3,r*.55,sl);else put('sph2','c',pc,r*.19,0,r*.02,.0012,ph*.62,r*.36,sl);
+    if(brow)put('sph2','c',E.browCol?E.browCol(C):C.FURD,-r*.15,r*(h+.3),-r*.02,r*.4,r*.16*brow,r*(wd+.25),0);
+    put('box','c',0xf2eee6,r*.21,r*h*.42,r*.3,.0012,.0016*r/.0112,.0016*r/.0112);return}
+  const rm=E.rim||1.05;put('sph2','c',0x140e0a,-r*.82,0,0,r*rm,r*(rm-.06),r*(rm+.08),tl);  // dark rim: behind the iris's front, so it shows as a ring                                  // dark rim
+  put('sph2','c',iris,-r*.66,0,r*.04,r,r*.93,r*1.08,tl);                                         // eye (iris fills it)
+  const pr=r*.42;if(FK142E.slit[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*1.7,pr*.38);else if(FK142E.bar[D.key])put('sph2','c',pc,r*.36,0,0,.0012,pr*.42,pr*1.6);else put('sph2','c',pc,r*.36,0,0,.0012,pr,pr);
+  if(E.lid!=null||!D.sculpt)put('sph2','c',E.lidCol?E.lidCol(C):C.FUR,-r*.7,r*(E.lid==null?1.12:E.lid),0,r*1.08,r*.45,r*1.3,tl); // upper lid (sculpted heads have a socket instead)
+  put('box','c',0xf2eee6,r*.38,r*.28,r*.24,.0012,.0019*r/.0112,.0019*r/.0112)}                  // glint
+{const f=brEyes;brEyes=function(k,D,o){const A=FK142.cur;if(A&&FK142.D===D)return fk142Eyes(k,D,o||{},A);return f.apply(this,arguments)}}
+// ---------------- feet: from the raised hock down to the ball of the foot ----------------
+function fk142Foot(P,s,A,G){const l=(s<0?'lh':'rh')+'2',H=mdV(P.bones[l]),F=BR.R.foot||{w:1},lf=P.lf||1,w=(F.w||1)*lf,bz=H.z+G.mt,x=H.x,W=[[l,1]];
+  const r=(p,rx,f,b,part)=>({p,rx:rx*w,f:f*lf,b:b*lf,w:W,part});
+  if(A.leg=='hoof')return [r([x,H.y-.006,H.z],.036,.034,.036,'heel'),r([x,(H.y+.08)/2,(H.z+bz)/2-.004],.026,.024,.026,'foot'),r([x,.078,bz-.012],.03,.028,.03,'foot'),
+    r([x,.055,bz-.002],.026,.022,.024,'toe'),r([x,.04,bz+.006],.03,.016,.02,'toe')];
+  if(A.leg=='bird')return [r([x,H.y-.006,H.z],.03,.03,.03,'heel'),r([x,(H.y+.04)/2,(H.z+bz)/2],.022,.02,.02,'foot'),r([x,.04,bz-.004],.026,.02,.022,'foot'),r([x,.03,bz+.008],.02,.012,.014,'toe')];
+  return [r([x,H.y-.008,H.z],.042,.04,.04,'heel'),r([x,H.y*.55+.02,H.z+(bz-H.z)*.45],.032,.03,.03,'foot'),r([x,.045,bz],.04,.03,.034,'foot'),r([x,.032,bz+.04],.042,.022,.028,'toe'),r([x,.022,bz+.068],.03,.014,.02,'toe')]}
+{const f=mdFoot;mdFoot=function(P,s){const A=FK142.cur,G=BR.on&&fk142Leg(A);return G?fk142Foot(P,s,A,G):f.apply(this,arguments)}}
+// toes at the ball of the foot (digi / bird); owls get a back toe too
+function fk142Toes(B,P,A,G){const C=BR.C,D=BR.R,T=D.toes,k=dkKit(),tc=T.colOf?T.colOf(C):C.PINK,tpc=T.padColOf?T.padColOf(C):tc,lf=P.lf||1,F=D.foot||{w:1};
+  [-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',H=mdV(P.bones[l]),FR=mdFoot(P,s),tr=FR[FR.length-2],bz=G?H.z+G.mt:tr.p[2]-.03,n=T.n,bird=A.leg=='bird';
+    for(let i=0;i<n;i++){const o=(i-(n-1)/2)*.019*lf*(F.w||1)*(T.spread||1)*(bird?1.5:1),x=H.x+o,ln=(bird?T.len*.9:T.len*.75)*(1-.18*Math.abs(i-(n-1)/2)/((n-1)/2||1))*lf,dx=o*(bird?.9:.4),
+        a=[H.x+o*(bird?.15:.55),.024,bz+(bird?.004:.02)],b=[x+dx,.012,bz+.02+ln],c=[x+dx*1.15,.004,bz+.02+ln+(T.claw||.012)*lf];
+      k.L(l,'c',tc,a,b,.011*lf*(T.w||1)*(bird?.7:1),.008*lf*(T.w||1)*(bird?.7:1),5);if(T.pad&&!bird)k.p(l,'sph2','c',tpc,b[0],b[1]-.002,b[2]-.004,.011*lf,.008*lf,.012*lf);
+      if(T.claw)k.L(l,'c',C.CLAW,b,c,.006*lf,.0008,4)}
+    if(bird){const a=[H.x,.03,bz],b=[H.x,.012,bz-.04*lf],c=[H.x,.004,bz-.055*lf];k.L(l,'c',tc,a,b,.008*lf,.006*lf,5);if(T.claw)k.L(l,'c',C.CLAW,b,c,.005*lf,.0008,4)}});
+  mdKit(B,k)}
+// (plantigrade feet too: the v137 toes were placed by a formula that left big species' toes past the end of the foot)
+{const f=brToes;brToes=function(B,P){const A=FK142.cur,G=BR.on&&fk142Leg(A);if(A&&BR.on&&A.leg!='hoof')return fk142Toes(B,P,A,G);return f.apply(this,arguments)}}
+// hooves: two cloven halves at the ball, a dark sole line, a fetlock band above
+{const f=fkHooves;fkHooves=function(B,P,D,C){const A=FK142.cur,G=fk142Leg(A);if(!G||A.leg!='hoof')return f.apply(this,arguments);const k=dkKit(),lf=P.lf||1,F=D.foot||{w:1};
+  [-1,1].forEach(s=>{const l=(s<0?'lh':'rh')+'2',H=mdV(P.bones[l]),bz=H.z+G.mt,w=(F.w||1)*lf;
+    [-1,1].forEach(q=>k.p(l,'sph2','c',C.HOOF,H.x+q*.0155*w,.026,bz+.012,.02*w,.028,.034*lf,-.15,q*.1,0));
+    k.p(l,'box','c',mdSh(C.HOOF,.5),H.x,.026,bz+.03,.004,.04,.034);
+    k.p(l,'tor','c',mdMix(C.FUR,C.HOOF,.45),H.x,.062,bz-.004,.034*w,.024,.034*lf,.25,0,0)});mdKit(B,k)}}
+// ---------------- species setup: eye position (skull masks follow it), thicker necks ----------------
+// the skull: the v137 brain case was a ball with a tube for a muzzle. Now (fk142SN, same ring format): the back of the
+// skull is smaller and lower (occ), a brow ridge rises over the eyes (brow) with a stop in front of it where the muzzle
+// starts lower (stop), the cheeks are fuller under the eyes (cheek). A.hp overrides the v137 head numbers per species.
+function fk142SN(hp){const R=hp.R||.1,W=hp.W||1,H=hp.H||1,Ln=hp.L||1,yc=hp.yc||1.158,zc=hp.zc==null?-.01:hp.zc,m=hp.m||{},n=hp.n||20;
+  const zB=zc-R*Ln*.93,zF=zc+R*Ln,z0=zc+R*Ln*(m.z0==null?.25:m.z0),z1=zF+(m.len||0),out=[];
+  const brow=hp.brow==null?.045:hp.brow,stop=hp.stop==null?.05:hp.stop,cheek=hp.cheek==null?.06:hp.cheek,occ=hp.occ==null?.14:hp.occ;
+  const zb=zc+R*Ln*(hp.browZ==null?.5:hp.browZ),zs=zb+R*(hp.stopD==null?.38:hp.stopD),zk=zc+R*Ln*(hp.cheekZ==null?.3:hp.cheekZ),g=(z,c,w)=>Math.exp(-(((z-c)/w)**2));
+  const pw=hp.blend||2.6,smax=(a,b)=>Math.pow(Math.pow(Math.max(0,a),pw)+Math.pow(Math.max(0,b),pw),1/pw);
+  for(let i=0;i<n;i++){const u=i/(n-1),zz=zB+(z1-zB)*(u<.5?(u*2)**1.15/2:1-((1-u)*2)**1.15/2);
+    const t=(zz-zc)/(R*Ln),s=Math.sqrt(Math.max(0,1-t*t));let rx=R*W*s,top=yc+R*H*s,bot=yc-R*H*.94*s;
+    if(t<0){const q=t*t;rx*=1-occ*q;top=yc+(top-yc)*(1-occ*1.4*q)}
+    rx+=cheek*R*g(zz,zk,R*.35)*s;
+    if(m.len&&zz>=z0){const v=Math.min(1,(zz-z0)/(z1-z0)),rnd=v>.8?Math.sqrt(Math.max(0,1-((v-.8)/.2)**2))*.85+.15:1,my=yc+(m.y0||-.02)-(m.drop||0)*Math.pow(v,1.3);
+      const mw=((m.w||.06)+((m.tw==null?.03:m.tw)-(m.w||.06))*v)*rnd,mt=((m.h||.05)+((m.th==null?.025:m.th)-(m.h||.05))*v)*rnd,mb=((m.b||.05)+((m.tb==null?.025:m.tb)-(m.b||.05))*v)*rnd;
+      rx=smax(rx,mw);top=Math.max(top,my+mt);bot=Math.min(bot,my-mb)}
+    if(i<n-1)top+=brow*R*g(zz,zb,R*.26)-stop*R*g(zz,zs,R*.2);
+    if(i==n-1){rx*=.3}
+    const ycR=(top+bot)/2;out.push([+zz.toFixed(4),+ycR.toFixed(4),+Math.max(.004,rx).toFixed(4),+Math.max(.004,top-ycR).toFixed(4),+Math.max(.004,ycR-bot).toFixed(4)])}
+  return out}
+function fk142Setup(only){for(const key in FK142.sp){if(only&&key!=only)continue;const D=FK137.sp[key],A=FK142.sp[key];if(!D)continue;
+  if(D.sculpt){D.sculpt._mesh=null;fksSetup(D,A);['NBX','_nbPre140','_nbFin140','_xf140'].forEach(k=>delete D[k]);continue}
+  if(!D._hp137)D._hp137=D.hp;const h0=D._hp137,ah=A.hp||{};D.hp=Object.assign({},h0,ah,{m:Object.assign({},h0.m||{},ah.m||{})});
+  D.SN=fk142SN(D.hp);D.muzzleZ=D.SN[D.SN.length-1][0]-.05;['NBX','_nbPre140','_nbFin140','_xf140','_eye140'].forEach(k=>delete D[k]);
+  if(D.eyes!==false){const E=fk142EyeAt(D,A);D._eye140=E;D.EYEP=[0,E.p.y,E.p.z]}
+  else if(D.eyeAt){const R=D.hp.R||.1,L=D.hp.L||1,zc=D.hp.zc==null?-.01:D.hp.zc,ez=zc+R*L*D.eyeAt[0],q=brSkullAt(D,ez);D.EYEP=[0,q.yc+q.f*D.eyeAt[1],ez]}}}
+// re-tune a species while the game runs (tests / tuning): new numbers, caches dropped, models rebuilt on the next build
+FK142.reset=function(key,A){if(A)FK142.sp[key]=A;fk142Setup(key);const S=mdS();for(const k of [...S.G.keys()])if(k.indexOf('FK|'+key+'|')==0){const e=S.G.get(k);for(const t in e.g)e.g[t].dispose();S.G.delete(k)}};
+// the leg tube runs on into the foot (weighted to the foot bone), so the foot never parts from the leg however the ankle bends
+{const f=mdLeg;mdLeg=function(P,s){const R=f.apply(this,arguments),A=FK142.cur;if(!A||!BR.on)return R;const l=(s<0?'lh':'rh')+'2',H=mdV(P.bones[l]),G=fk142Leg(A),e=R[R.length-1];
+  const p=G?[H.x,H.y-(H.y-.04)*.3,H.z+G.mt*.3]:[H.x,H.y-.025,H.z+.012];return R.concat([{p,rx:e.rx*.85,f:e.f*.85,b:e.b*.85,w:[[l,1]],part:'ankle'}])}}
+// ---------------- the head with a real neck ----------------
+// The v137 neck was a vertical column as wide as the skull, ending under it. The animal neck rises from the collar to the
+// back of the skull (the head is carried forward of it by the head transform), slimmer than the head, the throat lighter.
+function fk142Neck(B,D,A,C){const hp=D.hp,R=hp.R||.1,L=hp.L||1,W=hp.W||1,H=hp.H||1,yc=hp.yc||1.158,zc=hp.zc==null?-.01:hp.zc,nm=A.neck||1;
+  let zb=zc-R*L*(A.nzb==null?.3:A.nzb),yb=yc-R*H*(A.nyb==null?.35:A.nyb),r3=R*W*.58*nm;
+  if(D.sculpt&&D.sculpt.neck){const q=D.sculpt.neck;yb=FKS.C0[1]+q[0];zb=FKS.C0[2]+q[1];r3=q[2]*nm}
+  mdLoft(B,[{p:[0,.975,-.014],rx:.074*nm,f:.064*nm,b:.07*nm,w:[['chest',.6],['neck',.4]]},{p:[0,1.012,-.014],rx:.066*nm,f:.06*nm,b:.064*nm,w:[['neck',1]]},
+    {p:[0,(1.012+yb)/2,(zb-.014)/2],rx:(.064*nm+r3)/2,f:(.06*nm+r3*.9)/2,b:(.064*nm+r3)/2,w:[['neck',.5],['head',.5]]},
+    {p:[0,yb,zb],rx:r3,f:r3*1.25,b:r3,w:[['head',1]]},{p:[0,yb+R*.25,zb+R*.3],rx:r3*.75,f:r3*.9,b:r3*.7,w:[['head',1]]}],
+    {seg:14,capB:true,col:m=>D.neckCol?D.neckCol(m,C):m.s>.45?C.BELLY:C.FUR})}
+function fk142Head(D,B,P,o,A){const C=BR.C,k=dkKit();P.head={w:1,jaw:.9,top:1,len:1,fwd:0};const H=P._H=mdHeadR(P);
+  if(!D.sculpt||D.sculpt.mesher!='nets')fk142Neck(B,D,A,C);
+  if(D.sculpt){const S=D.sculpt;fksHead(B,D,C);if(D.eyes!==false)fk142Eyes(k,D,Object.assign({},D.eyes||{},{tilt:0}),A);if(S.whisk)fksWhiskers(k,D,S.whisk,C);if(D.ear&&D.ear.t=='tuft')fkEars(k,B,D,C);else fksEars(B,D,C);
+    if(S.extra)S.extra(k,B,D,C,P);else if(D.face&&!S.noFace)D.face(k,B,D,C,P);mdKit(B,k);return H}
+  brSkull(B,D,m=>D.skull?D.skull(m,C):(m.s<-.5&&m.r.p[2]>-.02?C.BELLY:m.s>.55&&m.r.p[2]<.0?C.FURD:C.FUR),{seg:D.seg||18,noNeck:true});
+  if(D.jaw)brJaw(B,D,D.jaw[0],D.jaw[1],D.jaw[3]?D.jaw[3](C):C.BELLY,D.jaw[2]||{});
+  if(D.nose=='nose'||D.nose=='pink')brNose(k,D,D.nose=='pink'?C.PINK:C.NOSE,D.noseSz||1,D.noseDy||0);
+  if(D.eyes!==false)brEyes(k,D,Object.assign({sz:1,fw:.8},D.eyes||{}));
+  if(D.whisk)brWhiskers(k,D,D.whisk[0],D.whisk[1],D.whisk[2],D.whisk[3],D.whisk[4]);
+  fkEars(k,B,D,C);
+  if(D.face)D.face(k,B,D,C,P);
+  mdKit(B,k);return H}
+{const f=fkHead;fkHead=function(D,B,P,o){const A=FK142.cur;if(A&&FK142.D===D)return fk142Head(D,B,P,o,A);return f.apply(this,arguments)}}
+// whiskers root in the muzzle: each whisker starts just under the surface where it grows (v137 rows started from one
+// point's surface, so the upper / back whiskers began in the air), and the row is kept inside the muzzle's height
+function fk142Whiskers(k,D,z,y,n,len,col){const q=brSkullAt(D,z);y=Math.max(q.yc-q.b*.45,Math.min(q.yc+q.f*.35,y));
+  [-1,1].forEach(s=>{for(let i=0;i<n;i++){const zi=z-i*.006,yi=y+i*.005-.004,wx=brSurfX(D,zi,yi);
+    k.L('head','c',col||0x2a2420,[s*(wx-.004),yi,zi],[s*(wx+len*.62-i*.008),yi+(i-1)*.022*len/.12,zi-.008-i*.008],.0015,.0005,3)}})}
+{const f=brWhiskers;brWhiskers=function(k,D,z,y,n,len,col){if(FK142.cur&&FK142.D===D)return fk142Whiskers(k,D,z,y,n,len,col);return f.apply(this,arguments)}}
+// ---------------- a point on what is already built (for buttons, cords, chains, pendants) ----------------
+// mdTP places by the torso rings plus the running clothing offset, which floats trinkets wherever a coat is open or a mantle
+// stands off the chest. fk142Hug casts a ray at height y, angle a toward the body's axis and returns the first surface it meets
+// (the clothes already built included), pushed back out by off — so the trinket rests on whatever is really there.
+function fk142Hug(B,P,y,a,off){const q=mdTorsoAt(P,y),cz=q.z||0,dx=Math.sin(a),dz=Math.cos(a),ox=dx*.5,oz=cz+dz*.5;let best=1e9;
+  for(const t of ['c','m']){const p=B.L[t]&&B.L[t].p;if(!p)continue;
+    for(let i=0;i+8<p.length;i+=9){const ay=p[i+1],by=p[i+4],cy=p[i+7];if((ay<y&&by<y&&cy<y)||(ay>y&&by>y&&cy>y))continue;
+      // ray (ox, y, oz) + s·(−dx, 0, −dz) against the triangle (Möller–Trumbore)
+      const e1x=p[i+3]-p[i],e1y=by-ay,e1z=p[i+5]-p[i+2],e2x=p[i+6]-p[i],e2y=cy-ay,e2z=p[i+8]-p[i+2];
+      const rx=-dx,ry=0,rz=-dz,px=ry*e2z-rz*e2y,py=rz*e2x-rx*e2z,pz=rx*e2y-ry*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-12)continue;
+      const iv=1/det,tx=ox-p[i],ty=y-ay,tz=oz-p[i+2],u=(tx*px+ty*py+tz*pz)*iv;if(u<0||u>1)continue;
+      const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,v=(rx*qx+ry*qy+rz*qz)*iv;if(v<0||u+v>1)continue;
+      const s=(e2x*qx+e2y*qy+e2z*qz)*iv;if(s>0&&s<best)best=s}}
+  if(best>=1e9)return mdTP(P,y,a,(P.tOff||0)+off);const s=best-off;return [ox-dx*s,y,oz-dz*s]}
+// buttons sit on what is under them (v137 placed them by the clothing offset, so some floated off open coats)
+{const f=FKG.buttons;FKG.buttons=function(B,P,y0,y1,n,col,o){if(!FK142.cur)return f.apply(this,arguments);o=o||{};const k=dkKit();
+  for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/Math.max(1,n-1);(o.dx?[-o.dx,o.dx]:[0]).forEach(dx=>{const a=dx?Math.asin(Math.max(-1,Math.min(1,dx/mdTorsoAt(P,y).rx))):0,p=fk142Hug(B,P,y,a,.002);
+    k.p(n3TB(y),'sph','m',col,p[0],p[1],p[2],.009,.009,.006)})}mdKit(B,k)}}
+// ================= v142: townsfolk anatomy — per species =================
+// hs head scale, hz / hy head forward / up (m), pitch (rad, + = nose down), lean (upper body forward per m of height above
+// the hips), sh shoulder width, neck thickness, leg ('plant' | 'digi' | 'hoof' | 'bird', legP overrides), eye {sz, back, up,
+// g (gaze), dx, roll, col(C)}.
+fk142Def('fox',     {hs:1.32,hz:.03,hy:-.012,lean:.05,sh:.92,neck:1.15,leg:'digi',eye:{sz:1.05}});
+fk142Def('wolf',    {hs:1.3,hz:.035,hy:-.014,lean:.06,sh:1,neck:1.25,leg:'digi',eye:{sz:1}});
+fk142Def('hound',   {hs:1.3,hz:.035,hy:-.014,lean:.05,sh:.98,neck:1.2,leg:'digi',eye:{sz:1.1}});
+fk142Def('lynx',    {hs:1.3,hz:.03,hy:-.012,lean:.05,sh:.95,neck:1.2,leg:'digi',eye:{sz:1.15}});
+fk142Def('bear',    {hs:1.3,hz:.03,hy:-.02,lean:.08,sh:1.05,neck:1.3,leg:'plant',eye:{sz:1.15}});
+fk142Def('raccoon', {hs:1.32,hz:.03,hy:-.012,lean:.05,sh:.95,neck:1.15,leg:'plant',eye:{sz:1.1}});
+fk142Def('otter',   {hs:1.3,hz:.03,hy:-.012,lean:.05,sh:.95,neck:1.3,leg:'plant',eye:{sz:1}});
+fk142Def('beaver',  {hs:1.32,hz:.03,hy:-.015,lean:.06,sh:1,neck:1.3,leg:'plant',eye:{sz:1}});
+fk142Def('mole',    {hs:1.3,hz:.04,hy:-.02,lean:.08,sh:1,neck:1.3,leg:'plant',eye:{sz:.55}});
+fk142Def('hedgehog',{hs:1.35,hz:.03,hy:-.015,lean:.06,sh:.95,neck:1.2,leg:'plant',eye:{sz:1}});
+fk142Def('ferret',  {hs:1.3,hz:.03,hy:-.01,lean:.04,sh:.88,neck:1.0,leg:'plant',eye:{sz:1}});
+fk142Def('bat',     {hs:1.32,hz:.02,hy:-.01,lean:.03,sh:.9,neck:1.05,leg:'plant',eye:{sz:1}});
+fk142Def('mouse',   {hs:1.38,hz:.02,hy:-.01,lean:.03,sh:.88,neck:1.1,leg:'plant',eye:{sz:1.15}});
+fk142Def('squirrel',{hs:1.36,hz:.02,hy:-.01,lean:.04,sh:.9,neck:1.1,leg:'plant',eye:{sz:1.15}});
+fk142Def('hare',    {hs:1.3,hz:.02,hy:-.005,lean:.02,sh:.9,neck:1.1,leg:'plant',eye:{sz:1.15}});
+fk142Def('stag',    {hs:1.25,hz:.035,hy:0,lean:.03,sh:.92,neck:1.1,leg:'hoof',eye:{sz:1.1}});
+fk142Def('doe',     {hs:1.25,hz:.035,hy:0,lean:.03,sh:.9,neck:1.1,leg:'hoof',eye:{sz:1.15}});
+fk142Def('goat',    {hs:1.25,hz:.035,hy:-.005,lean:.03,sh:.95,neck:1.15,leg:'hoof',eye:{sz:1.05}});
+fk142Def('ram',     {hs:1.25,hz:.035,hy:-.005,lean:.04,sh:1,neck:1.2,leg:'hoof',eye:{sz:1.05}});
+fk142Def('sheep',   {hs:1.25,hz:.035,hy:-.005,lean:.03,sh:.95,neck:1.15,leg:'hoof',eye:{sz:1.05}});
+fk142Def('boar',    {hs:1.3,hz:.04,hy:-.02,lean:.08,sh:1.05,neck:1.35,leg:'hoof',eye:{sz:1}});
+fk142Def('owl',     {hs:1.15,hz:.01,hy:-.045,lean:.02,sh:.95,neck:1.15,leg:'bird',eye:{round:1,open:1,slant:0,brow:0}});
+// (fk142Setup runs at the end of 2963, after the sculpt recipes are attached)
+// cheek ruffs (wolf, lynx): v137 placed them at fixed heights, so on the reshaped heads they stuck out under the jaw.
+// Now each tuft grows from the cheek surface behind and below the eye and lies back along the jaw.
+function fk142Ruff(k,D,C,o){const hp=D.hp,R=hp.R||.1,L=hp.L||1,zc=hp.zc==null?-.01:hp.zc,E=D.EYEP;
+  o.z.forEach((zf,i)=>{const z=E[2]-R*L*zf,q=brSkullAt(D,z),y=q.yc-q.b*(o.dy==null?.25:o.dy)-i*R*.04,x=brSurfX(D,z,y)-.004,col=o.col(i,C),len=o.len*(1-i*.08);
+    [-1,1].forEach(s=>fkDir(k,'head','cone4','c',col,[s*x,y,z],[s*.55,-.45,-.7],len,o.w,o.th,s*.4,.42))})}
+FK137.sp.wolf.face=function(k,B,D,C){fk142Ruff(k,D,C,{z:[.3,.6],len:.042,w:.022,th:.012,dy:.2,col:()=>mdMix(C.FUR,C.FURL,.6)})};
+FK137.sp.lynx.face=function(k,B,D,C){fk142Ruff(k,D,C,{z:[.25,.5,.75],len:.05,w:.022,th:.012,dy:.15,col:i=>i%2?C.FURL:mdMix(C.FURL,0x1a1410,.6)})};
+// ================= v142: townsfolk heads sculpted from anatomy =================
+// The v137 heads were one parametric loft (a ball with a tube for a muzzle), so no amount of tuning gave them a brow,
+// cheekbones, sockets or a jaw. Each species now has a sculpt recipe (2963): anatomical forms written as signed distance
+// functions — ellipsoids (cranium, brow ridges, cheekbones, whisker pads, nose pad), round cones (muzzle, lower jaw, snout)
+// joined with smooth unions and carved with smooth subtractions (eye sockets, nostrils) — mirrored left / right. The shape
+// is turned into one faceted mesh by surface nets (cell FKS.h), coloured per face by the recipe's paint(p) (muzzle, mask,
+// nose, inner ear…), all on the head bone. Coordinates are head-local: metres from FKS.C0 (the old skull centre),
+// +z forward, +y up; the v142 head transform then carries the head forward (A.hz / A.hy, hs = 1).
+// The recipe also gives: eye sockets (eye centre, gaze, size → fk142Eyes), ear bases (→ ear bones and fkEars), whisker
+// rows, the neck's attachment, and extras (teeth, tusks, horns) as kit parts. Skull rings (D.SN) are measured from the
+// sculpt, so every v137 helper that reads the skull (hats, coifs, goggles, antlers, horns, wool) fits the new head.
+var FKS={C0:[0,1.16,-.01],h:.0092,cache:{}};
+// ---------------- distance functions ----------------
+var FKSD={
+  ell(p,c,r){const x=(p[0]-c[0])/r[0],y=(p[1]-c[1])/r[1],z=(p[2]-c[2])/r[2],k0=Math.sqrt(x*x+y*y+z*z),
+    x1=x/r[0],y1=y/r[1],z1=z/r[2],k1=Math.sqrt(x1*x1+y1*y1+z1*z1);return k1>1e-9?k0*(k0-1)/k1:-Math.min(r[0],r[1],r[2])},
+  // round cone from a (radius ra) to b (radius rb); sq = [sx, sy] squash of the cross-section (x wider / y taller)
+  rcone(p,a,b,ra,rb,sq){let px=p[0],py=p[1],pz=p[2],ax=a[0],ay=a[1],az=a[2],bx=b[0],by=b[1],bz=b[2],m=1;
+    if(sq){const sx=sq[0],sy=sq[1];px/=sx;ax/=sx;bx/=sx;py/=sy;ay/=sy;by/=sy;m=Math.min(sx,sy)}
+    const bax=bx-ax,bay=by-ay,baz=bz-az,l2=bax*bax+bay*bay+baz*baz,rr=ra-rb,a2=l2-rr*rr,il2=1/l2,pax=px-ax,pay=py-ay,paz=pz-az,
+      y=pax*bax+pay*bay+paz*baz,z=y-l2,xx=Math.pow(pax*l2-bax*y,2)+Math.pow(pay*l2-bay*y,2)+Math.pow(paz*l2-baz*y,2),y2=y*y*l2,z2=z*z*l2,k=Math.sign(rr)*rr*rr*xx;
+    let d;if(Math.sign(z)*a2*z2>k)d=Math.sqrt(xx+z2)*il2-rb;else if(Math.sign(y)*a2*y2<k)d=Math.sqrt(xx+y2)*il2-ra;else d=(Math.sqrt(xx*a2*il2)+y*rr)*il2-ra;
+    return d*m},
+  sph(p,c,r){return Math.hypot(p[0]-c[0],p[1]-c[1],p[2]-c[2])-r},
+  smin(a,b,k){if(k<=0)return Math.min(a,b);const h=Math.max(k-Math.abs(a-b),0)/k;return Math.min(a,b)-h*h*k*.25},
+  smax(a,b,k){return -FKSD.smin(-a,-b,k)}};
+// a recipe's shape: S.forms = [{t:'ell'|'rcone'|'sph', …, k (blend), sub (carve), mir (mirror to the other side)}]
+function fksEval(S,p){const D=FKSD,q=[Math.abs(p[0]),p[1],p[2]];let d=1e9;
+  for(const f of S.forms){const P=f.mir===false?p:q;let v;
+    if(f.t=='ell')v=D.ell(P,f.c,f.r);else if(f.t=='rcone')v=D.rcone(P,f.a,f.b,f.ra,f.rb,f.sq);else v=D.sph(P,f.c,f.r);
+    d=f.sub?D.smax(d,-v,f.k||0):D.smin(d,v,f.k||0)}
+  return d}
+// ---------------- surface nets ----------------
+function fksMesh(S,h){const bb=S.bb,x0=bb[0],y0=bb[1],z0=bb[2],nx=Math.ceil((bb[3]-x0)/h)+2,ny=Math.ceil((bb[4]-y0)/h)+2,nz=Math.ceil((bb[5]-z0)/h)+2;
+  const G=new Float32Array(nx*ny*nz),I=(i,j,k)=>i+nx*(j+ny*k),P=[0,0,0];
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){P[0]=x0+i*h;P[1]=y0+j*h;P[2]=z0+k*h;G[I(i,j,k)]=fksEval(S,P)}
+  const VI=new Int32Array(nx*ny*nz).fill(-1),V=[],E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],cor=[[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]];
+  const grad=p=>{const e=h*.25,a=[p[0]+e,p[1],p[2]],b=[p[0]-e,p[1],p[2]],c=[p[0],p[1]+e,p[2]],d=[p[0],p[1]-e,p[2]],f=[p[0],p[1],p[2]+e],g=[p[0],p[1],p[2]-e];
+    return [fksEval(S,a)-fksEval(S,b),fksEval(S,c)-fksEval(S,d),fksEval(S,f)-fksEval(S,g)]};
+  for(let k=0;k<nz-1;k++)for(let j=0;j<ny-1;j++)for(let i=0;i<nx-1;i++){const v=cor.map(c=>G[I(i+c[0],j+c[1],k+c[2])]);let m=0;v.forEach((x,n)=>{if(x<0)m|=1<<n});if(m==0||m==255)continue;
+    let sx=0,sy=0,sz=0,n=0;for(const [a,b] of E){if((v[a]<0)==(v[b]<0))continue;const t=v[a]/(v[a]-v[b]),A=cor[a],B=cor[b];sx+=A[0]+(B[0]-A[0])*t;sy+=A[1]+(B[1]-A[1])*t;sz+=A[2]+(B[2]-A[2])*t;n++}
+    let p=[x0+(i+sx/n)*h,y0+(j+sy/n)*h,z0+(k+sz/n)*h];
+    // pull the vertex onto the surface (one Newton step), so the facets follow the form, not the grid
+    const d=fksEval(S,p),g=grad(p),gl=g[0]*g[0]+g[1]*g[1]+g[2]*g[2];if(gl>1e-14){const s=d*(h*.5)/gl;p=[p[0]-g[0]*s,p[1]-g[1]*s,p[2]-g[2]*s]}
+    VI[I(i,j,k)]=V.length;V.push(p)}
+  const T=[],quad=(a,b,c,d,flip)=>{if(a<0||b<0||c<0||d<0)return;if(flip)T.push([a,d,c],[a,c,b]);else T.push([a,b,c],[a,c,d])};
+  for(let k=1;k<nz-1;k++)for(let j=1;j<ny-1;j++)for(let i=1;i<nx-1;i++){const s0=G[I(i,j,k)]<0;
+    if(i<nx-1&&(G[I(i+1,j,k)]<0)!=s0)quad(VI[I(i,j-1,k-1)],VI[I(i,j,k-1)],VI[I(i,j,k)],VI[I(i,j-1,k)],s0);
+    if(j<ny-1&&(G[I(i,j+1,k)]<0)!=s0)quad(VI[I(i-1,j,k-1)],VI[I(i-1,j,k)],VI[I(i,j,k)],VI[I(i,j,k-1)],s0);
+    if(k<nz-1&&(G[I(i,j,k+1)]<0)!=s0)quad(VI[I(i-1,j-1,k)],VI[I(i,j-1,k)],VI[I(i,j,k)],VI[I(i-1,j,k)],s0)}
+  // winding by the field's gradient (outward = front)
+  T.forEach(t=>{const a=V[t[0]],b=V[t[1]],c=V[t[2]],u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],w=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],
+    m=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],g=grad(m);if(n[0]*g[0]+n[1]*g[1]+n[2]*g[2]<0){const x=t[1];t[1]=t[2];t[2]=x}});
+  return {V,T}}
+// ---------------- hero-style mesh: rings of flat facets ----------------
+// The heroes' skulls are lofts (rings back → front, ~14 sides) with big flat facets. The sculpt is meshed the same way:
+// z slices from the back of the skull to the nose; in each, rays from the slice's centre find the surface (from the outside
+// in, so the outer form counts), giving one ring; rings are joined into quads and capped at both ends.
+function fksLoft(S){const bb=S.bb,M=S.seg||14,n=S.rings||17,st=.0015,ins=(x,y,z)=>fksEval(S,[x,y,z])<0;
+  let zA=bb[2],zB=bb[5];for(let z=bb[2];z<bb[5];z+=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zA=z;break}}
+  for(let z=bb[5];z>bb[2];z-=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zB=z;break}}
+  const R=[];for(let i=0;i<n;i++){const u=i/(n-1),z=zA+.004+(zB-zA-.008)*(u<.5?Math.pow(u*2,1.1)/2:1-Math.pow((1-u)*2,1.25)/2);
+    let top=null,bot=null;for(let y=bb[4];y>bb[1];y-=st)if(ins(0,y,z)){top=y;break}for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){bot=y;break}if(top==null)continue;
+    const yc=(top+bot)/2,ring=[];for(let j=0;j<M;j++){const a=j/M*Math.PI*2,dx=Math.sin(a),dy=Math.cos(a);let r=.24;while(r>0&&!ins(dx*r,yc+dy*r,z))r-=st;
+      let lo=Math.max(0,r),hi=r+st;for(let k=0;k<7;k++){const m=(lo+hi)/2;if(ins(dx*m,yc+dy*m,z))lo=m;else hi=m}const rr=Math.max(.003,lo);ring.push([dx*rr,yc+dy*rr,z])}
+    R.push({z,yc,ring})}
+  const V=[],T=[];R.forEach(q=>q.ring.forEach(p=>V.push(p)));const id=(i,j)=>i*M+(j%M);
+  // both triangles of a quad carry the quad's centre (q), so colour boundaries follow the rings and seams like the heroes' paint
+  const qc=(i,j)=>{const P=[id(i,j),id(i,j+1),id(i+1,j+1),id(i+1,j)].map(k=>V[k]);return [0,1,2].map(c=>(P[0][c]+P[1][c]+P[2][c]+P[3][c])/4)};
+  for(let i=0;i+1<R.length;i++)for(let j=0;j<M;j++){const q=qc(i,j),t1=[id(i,j),id(i,j+1),id(i+1,j+1)],t2=[id(i,j),id(i+1,j+1),id(i+1,j)];t1.q=q;t2.q=q;T.push(t1,t2)}
+  const b=V.length;V.push([0,R[0].yc,zA]);const f=V.length;V.push([0,R[R.length-1].yc,zB]);const L=R.length-1;
+  for(let j=0;j<M;j++){T.push([b,id(0,j+1),id(0,j)]);T.push([f,id(L,j),id(L,j+1)])}
+  const grad=p=>{const e=.002;return [fksEval(S,[p[0]+e,p[1],p[2]])-fksEval(S,[p[0]-e,p[1],p[2]]),fksEval(S,[p[0],p[1]+e,p[2]])-fksEval(S,[p[0],p[1]-e,p[2]]),fksEval(S,[p[0],p[1],p[2]+e])-fksEval(S,[p[0],p[1],p[2]-e])]};
+  T.forEach(t=>{const a=V[t[0]],bq=V[t[1]],c=V[t[2]],u=[bq[0]-a[0],bq[1]-a[1],bq[2]-a[2]],w=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],nn=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],
+    m=[(a[0]+bq[0]+c[0])/3,(a[1]+bq[1]+c[1])/3,(a[2]+bq[2]+c[2])/3],cc=[0,m[1],m[2]],g=[m[0]-cc[0],m[1]-(R.find(q=>Math.abs(q.z-m[2])<.03)||R[0]).yc,0];
+    const gr=grad(m),gg=Math.hypot(...gr)>1e-6?gr:g;if(nn[0]*gg[0]+nn[1]*gg[1]+nn[2]*gg[2]<0){const x=t[1];t[1]=t[2];t[2]=x}});
+  return {V,T}}
+// ---------------- skull rings measured from the sculpt (for hats, coifs, horns, antlers, wool…) ----------------
+function fksRings(S,n){const bb=S.bb,z0=bb[2]+.004,z1=bb[5]-.004,out=[],st=.002,ins=(x,y,z)=>fksEval(S,[x,y,z])<0;
+  // find the real front / back along the centre line
+  let zA=z0,zB=z1;for(let z=z0;z<z1;z+=st){let hit=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){hit=true;break}if(hit){zA=z;break}}
+  for(let z=z1;z>z0;z-=st){let hit=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){hit=true;break}if(hit){zB=z;break}}
+  for(let i=0;i<n;i++){const z=zA+(zB-zA)*(i/(n-1))*(i==n-1?.995:1)+(i==0?.002:0);let top=null,bot=null;
+    for(let y=bb[4];y>bb[1];y-=st)if(ins(0,y,z)){top=y;break}
+    for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){bot=y;break}
+    if(top==null){top=bot=0}const yc=(top+bot)/2;let rx=.004;
+    for(const yy of [yc,yc+(top-yc)*.4,yc-(yc-bot)*.4])for(let x=bb[3];x>0;x-=st)if(ins(x,yy,z)){rx=Math.max(rx,x);break}
+    const C=FKS.C0;out.push([+(z+C[2]).toFixed(4),+(yc+C[1]).toFixed(4),+rx.toFixed(4),+Math.max(.004,top-yc).toFixed(4),+Math.max(.004,yc-bot).toFixed(4)])}
+  return out}
+// ---------------- building the head ----------------
+// the mesh in model space (C0 added), cached per species; faces coloured by the recipe's paint(p (head-local), n, C)
+// the top of the neck is part of the sculpt (so the head flows into it), weighted from head to neck going down
+function fksPrep(S){if(S._prep)return;S._prep=1;const q=S.neck;if(!q)return;
+  // the whole neck: from inside the back of the skull down to the collar (head-local y −.17 is the torso's neck ring)
+  S.forms.unshift(FKH.RC([0,q[0]+.03,q[1]+.01],[0,-.168,.004],q[2]*.92,Math.max(.064,q[2]*1.05),{k:0,sq:[1.04,.96]}));S.forms[1].k=Math.max(S.forms[1].k||0,.035);S.bb[1]=Math.min(S.bb[1],-.21)}
+function fksBuild(D){const S=D.sculpt;if(!S._mesh)S._mesh=S.mesher=='nets'?(fksPrep(S),fksMesh(S,S.h||FKS.h)):fksLoft(S);return S._mesh}
+// weights: head above the neck's attachment, blending to the neck bone going down, and to the chest at the collar
+function fksHead(B,D,C){const S=D.sculpt,M=fksBuild(D),C0=FKS.C0,w=mdW(B,[['head',1]]),y0=S.neck?S.neck[0]+.01:-1,cl=(v)=>Math.max(0,Math.min(1,v)),
+    V=M.V.map(p=>{const t1=cl((y0-p[1])/.06),t2=cl((-.12-p[1])/.045);return {x:p[0]+C0[0],y:p[1]+C0[1],z:p[2]+C0[2],
+      w:t1>0?mdW(B,[['head',1-t1],['neck',t1*(1-t2)],['chest',t1*t2]].filter(q=>q[1]>1e-4)):w}});
+  for(const t of M.T){const a=M.V[t[0]],b=M.V[t[1]],c=M.V[t[2]],m=t.q||[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
+    const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(n[0],n[1],n[2])||1;
+    mdTri(B,'c',V[t[0]],V[t[1]],V[t[2]],S.paint(m,[n[0]/l,n[1]/l,n[2]/l],C))}}
+// set a species up from its recipe: skull rings, eye frame, ear base, size
+function fksSetup(D,A){const S=D.sculpt,C0=FKS.C0;D.SN=fksRings(S,20);D.muzzleZ=D.SN[D.SN.length-1][0]-.05;
+  const R=S.R||.1;D.hp=Object.assign({},D.hp,{R,W:1,H:1,L:1,yc:C0[1],zc:C0[2]});
+  const e=S.eye,n=new THREE.Vector3(...e.g).normalize();D._eye140={p:new THREE.Vector3(e.c[0]+C0[0],e.c[1]+C0[1],e.c[2]+C0[2]),n,r:e.r};D.EYEP=[0,e.c[1]+C0[1],e.c[2]+C0[2]];
+  // ear base: on the line from the brain case centre through the recipe's point, 9 mm under the sculpted surface
+  if(S.ear){const c=S.forms[0].c||[0,0,0],q=S.ear,at=t=>[c[0]+(q[0]-c[0])*t,c[1]+(q[1]-c[1])*t,c[2]+(q[2]-c[2])*t];let lo=0,hi=3;
+    for(let i=0;i<40;i++){const m=(lo+hi)/2;if(fksEval(S,at(m))<-(S.earSink||.009))lo=m;else hi=m}const e=at(lo);D._earB140=[e[0]+C0[0],e[1]+C0[1],e[2]+C0[2]]}}
+{const f=fkEarBase;fkEarBase=function(D){if(FK142.on&&D&&D._earB140&&D.ear&&D.ear.t!='none')return D._earB140.slice();return f.apply(this,arguments)}}
+// whisker rows from the recipe: [root (head-local), count, length, colour]
+function fksWhiskers(k,D,W,C){const C0=FKS.C0,r=W.p;[-1,1].forEach(s=>{for(let i=0;i<W.n;i++){const a=[s*r[0],r[1]+C0[1]+(i-(W.n-1)/2)*.006,r[2]+C0[2]-i*.005],
+    b=[s*(r[0]+W.len*.75),a[1]+(i-(W.n-1)/2)*.016-.006,a[2]-W.len*.45];k.L('head','c',W.col||0x2a2420,a,b,.0016,.0005,3)}})}
+// ---------------- ears: lofted on the skull ----------------
+// (owner, v142: the v137 pointed ear was a four-sided pyramid poked into the head — on a curved skull its flat base corners
+// stood off the surface, and the left one was twisted differently from the right.) Each ear is now a loft of 8-sided rings
+// from its root to its tip, shaped per type (tri / round / long / leaf / small); the root ring is pressed onto the sculpt
+// (every root vertex is moved down the ear's axis until it is 5 mm inside the skull), so no edge can stand off the head.
+// The root ring is weighted to the head and the next ring half to the ear bone, so a flick bends the ear at the root instead
+// of lifting its base out. The right ear is built once and mirrored for the left, so the two are identical.
+var FKS_EAR={tri:t=>Math.pow(Math.max(0,1-t),.85),leaf:t=>t<.25?.5+.5*Math.sin(t/.25*Math.PI/2)*.6:Math.pow(Math.sin(Math.PI*(.12+.88*t)),.7),
+  round:t=>t<.5?.82+.18*Math.sin(Math.PI*t):Math.sqrt(Math.max(0,1-((t-.5)/.5)**2)),small:t=>t<.45?.85+.15*Math.sin(Math.PI*t):Math.sqrt(Math.max(0,1-((t-.45)/.55)**2)),
+  long:t=>t<.55?.55+.45*Math.sin(t/.55*Math.PI/2):Math.sqrt(Math.max(0,1-((t-.55)/.45)**2))};
+function fksEars(B,D,C){const e=D.ear,S=D.sculpt;if(!e||e.t=='none')return;if(!FKS_EAR[e.t]){const k=dkKit();fkEars(k,B,D,C);mdKit(B,k);return}
+  const C0=FKS.C0,V3=THREE.Vector3,ev=p=>fksEval(S,[p.x-C0[0],p.y-C0[1],p.z-C0[2]]),d=new V3(...fkEarDir(e,1)).normalize(),tw=e.tw||0;
+  const f0=new V3(0,0,1).applyAxisAngle(d,tw),fwd=f0.sub(d.clone().multiplyScalar(d.dot(f0))).normalize(),side=new V3().crossVectors(d,fwd).normalize();
+  // the root on the surface: from the bone point along the ear's axis until outside
+  const b0=new V3(...D._earB140);let s=0;while(s<.06&&ev(b0.clone().addScaledVector(d,s))<0)s+=.001;const base=b0.clone().addScaledVector(d,s);
+  const L=e.len,W=e.w*(e.t=='long'?.62:.85),T=Math.max(.006,(e.th||.016)*.55),wf=FKS_EAR[e.t],pointed=e.t=='tri'||e.t=='leaf',M=8,ts=[0,.12,.3,.5,.7,.86,1];
+  const fur=e.col?e.col(C):C.FUR,inn=e.inner?e.inner(C):(e.t=='small'?C.FURD:C.PINK),tip=e.tip?e.tip(C):fur,tipT=e.t=='tri'?.62:.8;
+  const rings=ts.map((t,ri)=>{const c=base.clone().addScaledVector(d,L*t),w=W*Math.max(t==1&&pointed?0:.08,wf(t)),th=T*(1-.6*t);const R=[];
+    for(let j=0;j<M;j++){const a=j/M*Math.PI*2,cup=(j==2&&ri>0&&t<.8)?-.9:0;let p=c.clone().addScaledVector(side,w*Math.cos(a)).addScaledVector(fwd,th*(Math.sin(a)+cup));
+      if(ri==0){let k=0;while(k<40&&ev(p)>-.005){p.addScaledVector(d,-.002);k++}}R.push(p)}return {t,c,R}});
+  const tipP=pointed?base.clone().addScaledVector(d,L):null;
+  const tris=[],in_=[];const W8=(ri)=>ri==0?[['head',1]]:ri==1?[['head',.5],['ER',.5]]:[['ER',1]];
+  for(let i=0;i+1<rings.length;i++){const A=rings[i],Bq=rings[i+1];if(pointed&&i+1==rings.length-1){for(let j=0;j<M;j++)tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[tipP,i+1],A.t>=tipT?tip:fur]);break}
+    for(let j=0;j<M;j++){const col=A.t>=tipT?tip:(j==1||j==2)&&A.t>=.1&&Bq.t<=Math.min(.86,tipT+.1)?inn:fur;tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[Bq.R[(j+1)%M],i+1],col],[[A.R[j],i],[Bq.R[(j+1)%M],i+1],[Bq.R[j],i+1],col])}}
+  if(!pointed){const Lr=rings[rings.length-1];for(let j=0;j<M;j++)tris.push([[Lr.R[j],ts.length-1],[Lr.R[(j+1)%M],ts.length-1],[Lr.c,ts.length-1],fur])}
+  // (the inner ear is the cupped front of the ear itself, painted — a separate inner piece stuck out past the edges)
+  [1,-1].forEach(sg=>{const er=sg>0?'erR':'erL',wc={};const vx=(q)=>{const [p,ri]=q,key=ri;const w=wc[key]||(wc[key]=mdW(B,W8(ri).map(x=>[x[0]=='ER'?er:x[0],x[1]])));return {x:p.x*sg,y:p.y,z:p.z,w}};
+    for(const t of tris){const a=vx(t[0]),b=vx(t[1]),c=vx(t[2]);if(sg>0)mdTri(B,'c',a,b,c,t[3]);else mdTri(B,'c',a,c,b,t[3])}});
+  // lynx / squirrel tufts from the tip
+  if(e.tuft){const k=dkKit(),tp=base.clone().addScaledVector(d,L*.88);[1,-1].forEach(sg=>{const a=[tp.x*sg,tp.y,tp.z],b=[(tp.x+d.x*e.tuftL)*sg,tp.y+d.y*e.tuftL,tp.z+d.z*e.tuftL];k.L(sg>0?'erR':'erL','c',e.tuft(C),a,b,.007,.001,4)});mdKit(B,k)}}
+// ================= v142: townsfolk head recipes (sculpted from each animal's anatomy) =================
+// Head-local metres from FKS.C0 (+z forward, +y up, x mirrored). Forms: E ellipsoid (centre, radii), RC round cone (a, b,
+// radius at a, radius at b), SP sphere; k = blend width, sub = carve. Proportions follow the real skulls: muzzle length
+// against the brain case, where the stop sits, eye position (forward for hunters, to the side for prey), cheekbone width.
+// eye {c centre (in the socket), g gaze, r radius}, ear base, neck [y, z, r] (where the neck meets the skull), whisk.
+var FKH={};
+FKH.E=(c,r,o)=>Object.assign({t:'ell',c,r},o||{});FKH.RC=(a,b,ra,rb,o)=>Object.assign({t:'rcone',a,b,ra,rb},o||{});FKH.SP=(c,r,o)=>Object.assign({t:'sph',c,r},o||{});
+// the line where the upper muzzle meets the lower jaw (for painting the mouth): y at z between two points
+FKH.lerpY=(z,z0,y0,z1,y1)=>y0+(y1-y0)*Math.max(0,Math.min(1,(z-z0)/(z1-z0)));
+FKH.add=function(key,S,A){const D=FK137.sp[key];if(!D)return;D.sculpt=S;const F=FK142.sp[key];if(F){F.hs=1;Object.assign(F,A||{})}};
+// ------------------------------------------------ FOX ------------------------------------------------
+// red fox: long narrow muzzle (half the head's length), steep forehead, eyes set forward and up, white cheeks and jaw
+FKH.add('fox',{R:.094,bb:[-.13,-.12,-.14,.13,.12,.2],
+  forms:[FKH.E([0,0,-.02],[.074,.068,.088]),
+    FKH.E([.05,-.022,.02],[.034,.03,.05],{k:.025}),                      // cheekbones
+    FKH.E([.032,.03,.045],[.026,.016,.03],{k:.02}),                      // brow
+    FKH.E([.062,-.042,-.012],[.028,.034,.04],{k:.03}),                   // cheek fur
+    FKH.RC([0,-.012,.055],[0,-.03,.16],.036,.014,{k:.03,sq:[1,.92]}),    // muzzle
+    FKH.E([0,-.024,.163],[.014,.011,.011],{k:.006}),                     // nose pad
+    FKH.RC([0,-.045,.03],[0,-.047,.13],.026,.011,{k:.012}),              // lower jaw
+    FKH.SP([.04,.024,.07],.017,{sub:1,k:.008})],                         // eye socket
+  eye:{c:[.039,.024,.072],g:[.62,.08,.78],r:.0135},ear:[.042,.058,-.03],neck:[-.055,-.06,.044],whisk:{p:[.018,-.034,.13],n:3,len:.08,col:0x1a1410},
+  paint(p,n,C){const z=p[2],y=p[1],ym=FKH.lerpY(z,.05,-.05,.15,-.043);
+    if(z>.152&&y>-.04)return C.NOSE;
+    if(z>.06&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(y<ym||y<-.022&&z>-.03||(Math.abs(p[0])>.045&&y<-.008&&z>-.04))return C.FURL;
+    return C.FUR}});
+// ------------------------------------------------ BEAR ------------------------------------------------
+// brown bear: broad domed skull, wide cheeks, short blunt muzzle, big nose pad, small eyes set wide, round ears high
+FKH.add('bear',{R:.11,bb:[-.16,-.14,-.15,.16,.14,.2],
+  forms:[FKH.E([0,.005,-.02],[.102,.088,.098]),
+    FKH.E([0,.04,.03],[.07,.05,.06],{k:.03}),                            // forehead
+    FKH.E([.074,-.03,.01],[.048,.045,.06],{k:.04}),                      // jowls
+    FKH.RC([0,-.02,.06],[0,-.028,.148],.048,.031,{k:.035,sq:[1.05,.9]}), // muzzle
+    FKH.E([0,-.012,.162],[.026,.019,.016],{k:.008}),                     // nose pad
+    FKH.RC([0,-.058,.04],[0,-.058,.13],.034,.021,{k:.015}),              // lower jaw
+    FKH.SP([.05,.03,.074],.017,{sub:1,k:.008})],
+  eye:{c:[.049,.031,.078],g:[.5,.06,.86],r:.0145},ear:[.074,.074,-.03],neck:[-.07,-.06,.066],
+  paint(p,n,C){const z=p[2],y=p[1],ym=FKH.lerpY(z,.06,-.065,.14,-.05);
+    if(z>.148&&y>-.032)return C.NOSE;
+    if(z>.07&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(z>.075&&y<.0||y<ym)return C.FURL;
+    return C.FUR}});
+// ------------------------------------------------ HARE ------------------------------------------------
+// brown hare: long head, big eyes high on the sides, blunt rounded muzzle, puffy whisker pads, split lip, pink nose
+FKH.add('hare',{R:.088,bb:[-.12,-.11,-.12,.12,.12,.16],
+  forms:[FKH.E([0,0,-.015],[.06,.065,.082]),
+    FKH.E([.04,-.02,.025],[.03,.035,.045],{k:.025}),                     // cheeks
+    FKH.RC([0,-.008,.04],[0,-.022,.108],.038,.027,{k:.03}),              // muzzle
+    FKH.E([.016,-.034,.104],[.018,.016,.016],{k:.008}),                  // whisker pads
+    FKH.E([0,-.018,.123],[.009,.007,.006],{k:.004}),                     // nose
+    FKH.RC([0,-.044,.02],[0,-.048,.09],.022,.012,{k:.012}),              // lower jaw
+    FKH.SP([.052,.022,.036],.017,{sub:1,k:.006})],
+  eye:{c:[.05,.022,.04],g:[.92,.08,.38],r:.0162},ear:[.03,.058,-.035],neck:[-.05,-.06,.04],whisk:{p:[.026,-.033,.104],n:3,len:.09,col:0xe8e0d0},
+  extra(k,B,D,C){const C0=FKS.C0;[-1,1].forEach(s=>k.p('head','box','c',C.TOOTH,s*.0042,C0[1]-.052,C0[2]+.108,.0075,.014,.004,.1,0,0))},
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]);
+    if(z>.115&&y>-.026)return C.PINK;
+    if(z>.1&&x<.0025&&y<-.022)return C.MOUTH;
+    if(z>.08&&y<-.012||y<-.045)return C.FURL;
+    return C.FUR}});
+// ------------------------------------------------ STAG / DOE ------------------------------------------------
+// red deer: long tapering face, eyes on the sides under a bony rim, narrow muzzle ending in a dark moist nose
+FKH.deer={R:.085,bb:[-.12,-.12,-.13,.12,.12,.24],
+  forms:[FKH.E([0,.01,-.03],[.062,.062,.074]),
+    FKH.RC([0,-.004,.03],[0,-.034,.2],.045,.021,{k:.035,sq:[.95,1.05]}),  // face
+    FKH.E([.04,-.026,.04],[.024,.03,.05],{k:.025}),                      // cheek
+    FKH.E([.044,.024,.03],[.02,.02,.026],{k:.015}),                      // orbit rim
+    FKH.E([0,-.028,.205],[.022,.018,.014],{k:.01}),                      // nose
+    FKH.RC([0,-.05,0],[0,-.057,.18],.03,.014,{k:.015}),                  // lower jaw
+    FKH.SP([.052,.022,.05],.015,{sub:1,k:.006})],
+  eye:{c:[.051,.022,.053],g:[.9,.06,.42],r:.0152},ear:[.04,.05,-.04],neck:[-.05,-.06,.046],
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),ym=FKH.lerpY(z,.02,-.06,.19,-.05);
+    if(z>.19&&y>-.045)return 0x1a1412;
+    if(z>.165&&z<=.19)return C.FURL;
+    if(z>.05&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(y<ym)return C.FURL;
+    return y>.03&&z<.02?C.FURD:C.FUR}};
+FKH.add('stag',Object.assign({},FKH.deer,{extra(k,B,D,C,P){fkAntlers(k,D,C,{z:-.04,phi:.38,len:.28,seg:5,r:.019,tines:[[.3,.09,.5],[.55,.1,.35],[.8,.08,.2],[1,.06,-.1]]})}}));
+FKH.add('doe',Object.assign({},FKH.deer,{extra(){}}));
+// ------------------------------------------------ WOLF ------------------------------------------------
+// grey wolf: heavier than the fox, broad cheekbones and a cheek ruff, long deep muzzle, small eyes set forward
+FKH.add('wolf',{R:.1,bb:[-.15,-.13,-.15,.15,.13,.22],
+  forms:[FKH.E([0,0,-.025],[.082,.074,.095]),
+    FKH.E([.058,-.02,.015],[.04,.034,.055],{k:.028}),
+    FKH.E([.036,.034,.05],[.03,.018,.032],{k:.02}),
+    FKH.E([.072,-.045,-.02],[.034,.042,.046],{k:.032}),
+    FKH.RC([0,-.012,.06],[0,-.03,.175],.042,.02,{k:.032,sq:[1,.95]}),
+    FKH.E([0,-.022,.18],[.017,.013,.012],{k:.006}),
+    FKH.RC([0,-.05,.03],[0,-.05,.15],.03,.014,{k:.013}),
+    FKH.SP([.044,.026,.075],.018,{sub:1,k:.008})],
+  eye:{c:[.043,.026,.077],g:[.6,.08,.8],r:.0138},ear:[.045,.064,-.035],neck:[-.06,-.065,.05],
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),ym=FKH.lerpY(z,.06,-.058,.17,-.048);
+    if(z>.168&&y>-.04)return C.NOSE;if(z>.07&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(y<ym||(y<-.02&&z>.04)||(x>.06&&y<-.02))return C.FURL;if(y>.05&&z<.03)return C.FURD;return C.FUR}});
+// ------------------------------------------------ HOUND ------------------------------------------------
+// scent hound: domed skull, clear stop, square muzzle with hanging lips, big nose, kind eyes, long drop ears
+FKH.add('hound',{R:.098,bb:[-.14,-.14,-.14,.14,.13,.2],
+  forms:[FKH.E([0,.005,-.02],[.075,.075,.088]),
+    FKH.E([.034,.032,.045],[.026,.016,.028],{k:.02}),
+    FKH.E([.05,-.025,.015],[.034,.034,.05],{k:.025}),
+    FKH.RC([0,-.016,.055],[0,-.026,.15],.04,.029,{k:.03,sq:[1,1.1]}),    // long muzzle
+    FKH.RC([0,-.044,.06],[0,-.05,.138],.036,.026,{k:.03,sq:[1.12,.8]}),  // hanging upper lips: a broad square block under it
+    FKH.E([0,-.016,.155],[.017,.013,.011],{k:.007}),
+    FKH.RC([0,-.066,.04],[0,-.066,.118],.024,.016,{k:.012}),
+    FKH.SP([.042,.025,.07],.016,{sub:1,k:.007})],
+  eye:{c:[.041,.025,.072],g:[.55,.04,.83],r:.0152},ear:[.06,.035,-.02],neck:[-.06,-.065,.05],
+  extra(){},   // (the v137 hound face added round jowl balls)
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),ym=FKH.lerpY(z,.06,-.074,.14,-.068);
+    if(z>.146&&y>-.032)return C.NOSE;if(z>.08&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(x<.016&&z>-.03&&y>-.03)return C.FURL;if(z>.095||y<-.04)return C.FURL;return y>.04&&z<0?C.FURD:C.FUR}});
+// ------------------------------------------------ LYNX ------------------------------------------------
+// lynx: round face framed by a barred ruff, short muzzle with full whisker pads, big forward eyes, small chin
+FKH.add('lynx',{R:.1,bb:[-.15,-.15,-.14,.15,.13,.15],
+  forms:[FKH.E([0,.005,-.02],[.08,.075,.082]),
+    FKH.E([.064,-.035,-.005],[.036,.045,.045],{k:.03}),                  // ruff
+    FKH.E([.074,-.066,-.02],[.024,.032,.03],{k:.03}),
+    FKH.E([.034,.034,.045],[.026,.016,.026],{k:.018}),
+    FKH.RC([0,-.015,.05],[0,-.025,.098],.036,.026,{k:.028}),
+    FKH.E([.016,-.034,.09],[.016,.014,.015],{k:.008}),                  // whisker pads
+    FKH.E([0,-.016,.102],[.009,.007,.006],{k:.004}),
+    FKH.E([0,-.054,.07],[.016,.012,.016],{k:.01}),                      // chin
+    FKH.RC([0,-.05,.02],[0,-.052,.075],.024,.015,{k:.012}),
+    FKH.SP([.04,.024,.066],.018,{sub:1,k:.008})],
+  eye:{c:[.039,.024,.069],g:[.45,.06,.89],r:.0162},ear:[.05,.06,-.03],neck:[-.06,-.065,.05],whisk:{p:[.022,-.036,.092],n:4,len:.1,col:0xf0ece4},
+  extra(){},
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]);
+    if(z>.098&&y>-.024)return C.PINK;if(x<.0025&&z>.09&&y<-.024)return C.MOUTH;
+    if(x>.06&&y<-.03)return y<-.06?mdMix(C.FURL,0x1a1410,.35):C.FURL;
+    if(z>.07&&y<-.02&&x<.03||y<-.05&&x<.03)return C.FURL;return C.FUR}});
+// ------------------------------------------------ RACCOON ------------------------------------------------
+// raccoon: wide cheeks, pointed muzzle, rounded ears; the black mask, white brows and muzzle, dark stripe down the nose
+FKH.add('raccoon',{R:.098,bb:[-.14,-.13,-.14,.14,.12,.18],
+  forms:[FKH.E([0,.005,-.02],[.08,.07,.085]),
+    FKH.E([.06,-.02,.01],[.042,.036,.05],{k:.028}),
+    FKH.E([.032,.03,.045],[.026,.015,.028],{k:.018}),
+    FKH.RC([0,-.015,.055],[0,-.03,.135],.033,.014,{k:.028}),
+    FKH.E([0,-.024,.14],[.013,.011,.01],{k:.006}),
+    FKH.RC([0,-.045,.03],[0,-.046,.11],.024,.01,{k:.012}),
+    FKH.SP([.04,.022,.068],.017,{sub:1,k:.008})],
+  eye:{c:[.039,.022,.07],g:[.6,.07,.8],r:.0148},ear:[.048,.055,-.03],neck:[-.055,-.062,.046],whisk:{p:[.016,-.032,.11],n:3,len:.07,col:0xe8e4dc},
+  extra(){},
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),ym=FKH.lerpY(z,.05,-.05,.13,-.04);
+    if(z>.13&&y>-.035)return C.NOSE;if(z>.07&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(x<.012&&y>-.012&&z>.02&&z<.13)return 0x3a3230;
+    const my=.02-Math.max(0,1-Math.abs(x-.04)/.03)*.012;if(Math.abs(y-my)<.02&&z>.0&&z<.1&&x>.012)return 0x141010;
+    if(y>.038&&y<.058&&z>.0&&z<.09&&x>.012)return 0xe8e4dc;
+    if(z>.085&&y<.0||y<ym)return 0xe8e4dc;return y>.05&&z<0?C.FURD:C.FUR}});
+// ------------------------------------------------ OTTER ------------------------------------------------
+// otter: flat broad skull, short wide muzzle with big whisker pads, small eyes high and forward, tiny ears low
+FKH.add('otter',{R:.092,bb:[-.14,-.14,-.14,.14,.11,.16],
+  forms:[FKH.E([0,0,-.02],[.08,.062,.09]),
+    FKH.RC([0,-.018,.05],[0,-.022,.112],.042,.034,{k:.03,sq:[1.15,.85]}),
+    FKH.E([.026,-.03,.1],[.026,.02,.022],{k:.01}),
+    FKH.E([0,-.006,.128],[.016,.011,.009],{k:.006}),
+    FKH.RC([0,-.045,.03],[0,-.046,.1],.026,.018,{k:.012}),
+    FKH.SP([.04,.03,.06],.014,{sub:1,k:.006})],
+  eye:{c:[.039,.03,.062],g:[.55,.15,.82],r:.0128},ear:[.07,.02,-.03],neck:[-.05,-.065,.058],whisk:{p:[.036,-.03,.105],n:5,len:.1,col:0xe8e4dc},
+  extra(){},
+  paint(p,n,C){const z=p[2],y=p[1];if(z>.124&&y>-.012&&Math.abs(p[0])<.019)return C.NOSE;if(z>.06&&y<-.026||y<-.04)return C.FURL;return C.FUR}});
+// ------------------------------------------------ BEAVER ------------------------------------------------
+// beaver: big round head, blunt muzzle, orange incisors, small eyes high, small ears
+FKH.add('beaver',{R:.1,bb:[-.15,-.14,-.14,.15,.13,.16],
+  forms:[FKH.E([0,.005,-.02],[.088,.08,.09]),
+    FKH.E([.06,-.03,.02],[.045,.04,.05],{k:.03}),
+    FKH.RC([0,-.02,.05],[0,-.026,.115],.045,.034,{k:.03,sq:[1.1,.95]}),
+    FKH.E([.024,-.034,.105],[.024,.02,.02],{k:.01}),
+    FKH.E([0,-.008,.128],[.016,.011,.009],{k:.006}),
+    FKH.RC([0,-.055,.03],[0,-.056,.1],.03,.02,{k:.012}),
+    FKH.SP([.045,.035,.055],.013,{sub:1,k:.006})],
+  eye:{c:[.044,.035,.057],g:[.7,.1,.7],r:.0125},ear:[.07,.04,-.03],neck:[-.06,-.068,.062],whisk:{p:[.034,-.032,.11],n:3,len:.09,col:0x2a2420},
+  extra(k,B,D,C){const C0=FKS.C0;[-1,1].forEach(s=>k.p('head','box','c',0xd88a2a,s*.0072,C0[1]-.052,C0[2]+.12,.012,.026,.007,.1,0,0))},
+  paint(p,n,C){const z=p[2],y=p[1];if(z>.124&&y>-.012&&Math.abs(p[0])<.019)return 0x1e1818;if(z>.07&&y<-.012)return C.FURL;return C.FUR}});
+// ------------------------------------------------ MOLE ------------------------------------------------
+// mole: velvet head with no outer ears, pin-prick eyes, a long naked pink snout
+FKH.add('mole',{R:.1,bb:[-.14,-.13,-.14,.14,.11,.22],
+  forms:[FKH.E([0,-.005,-.015],[.08,.065,.095]),
+    FKH.RC([0,-.02,.06],[0,-.025,.18],.04,.014,{k:.03}),
+    FKH.E([0,-.024,.185],[.016,.013,.01],{k:.006}),
+    FKH.RC([0,-.045,.02],[0,-.046,.12],.025,.01,{k:.012})],
+  eye:{c:[.046,.006,.07],g:[.7,.1,.7],r:.0055},neck:[-.05,-.062,.06],whisk:{p:[.014,-.028,.16],n:3,len:.06,col:0xe8d8d0},
+  extra(){},
+  paint(p,n,C){const z=p[2];if(z>.14)return C.PINK;return C.FUR}});
+// ------------------------------------------------ HEDGEHOG ------------------------------------------------
+// hedgehog: soft pale face with a pointed snout and dark eye patches; the spines start across the brow
+FKH.add('hedgehog',{R:.1,bb:[-.14,-.13,-.14,.14,.12,.18],
+  forms:[FKH.E([0,0,-.02],[.08,.072,.088]),
+    FKH.E([.05,-.03,.02],[.035,.035,.045],{k:.025}),
+    FKH.RC([0,-.02,.05],[0,-.03,.15],.036,.012,{k:.028}),
+    FKH.E([0,-.028,.155],[.011,.009,.008],{k:.005}),
+    FKH.RC([0,-.048,.03],[0,-.048,.12],.024,.01,{k:.012}),
+    FKH.SP([.042,.018,.06],.013,{sub:1,k:.006})],
+  eye:{c:[.041,.018,.062],g:[.6,.05,.8],r:.0118},ear:[.055,.04,-.02],neck:[-.05,-.062,.05],whisk:{p:[.012,-.03,.13],n:3,len:.05},
+  extra(k,B,D,C){FK137.sp.hedgehog.face0(k,B,D,C)},
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]);if(z>.148)return C.NOSE;if(Math.hypot(x-.042,y-.018,z-.06)<.024)return C.FURD;return y>.01&&z<.02?C.SPINE:C.FUR}});
+// ------------------------------------------------ FERRET ------------------------------------------------
+// ferret: long narrow head, short muzzle, small round ears; the dark mask band through the eyes
+FKH.add('ferret',{R:.088,bb:[-.13,-.12,-.14,.13,.11,.16],
+  forms:[FKH.E([0,0,-.02],[.07,.06,.09]),
+    FKH.RC([0,-.012,.05],[0,-.022,.12],.034,.016,{k:.028}),
+    FKH.E([.016,-.03,.105],[.016,.014,.016],{k:.008}),
+    FKH.E([0,-.018,.125],[.011,.009,.008],{k:.005}),
+    FKH.RC([0,-.04,.03],[0,-.04,.105],.022,.01,{k:.012}),
+    FKH.SP([.036,.02,.062],.014,{sub:1,k:.006})],
+  eye:{c:[.035,.02,.064],g:[.6,.08,.8],r:.0128},ear:[.055,.04,-.03],neck:[-.05,-.058,.042],whisk:{p:[.02,-.03,.105],n:3,len:.07,col:0xe8e4dc},
+  extra(){},
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]);if(z>.118&&y>-.026)return C.PINK;
+    if(Math.abs(y-.02)<.018&&z>.02&&z<.09&&x>.012)return C.FURD;if(z>.07||y<-.025)return C.FURL;return C.FUR}});
+// ------------------------------------------------ BAT ------------------------------------------------
+// bat: short snout with a leaf nose, small eyes, fangs, the huge ears
+FKH.add('bat',{R:.095,bb:[-.13,-.12,-.13,.13,.12,.14],
+  forms:[FKH.E([0,.005,-.02],[.075,.07,.08]),
+    FKH.RC([0,-.012,.045],[0,-.022,.098],.034,.02,{k:.026}),
+    FKH.E([0,-.01,.1],[.009,.012,.006],{k:.006}),
+    FKH.RC([0,-.042,.02],[0,-.044,.09],.024,.012,{k:.012}),
+    FKH.SP([.034,.018,.058],.012,{sub:1,k:.006})],
+  eye:{c:[.033,.018,.06],g:[.55,.05,.83],r:.0112},ear:[.045,.05,-.02],neck:[-.05,-.06,.046],
+  extra(k,B,D,C){const C0=FKS.C0;[-1,1].forEach(s=>k.p('head','cone4','c',0xf0ece4,s*.012,C0[1]-.05,C0[2]+.086,.004,.012,.004,Math.PI))},
+  paint(p,n,C){const z=p[2],y=p[1];if(z>.097&&y>-.022&&Math.abs(p[0])<.012)return 0x3a2228;if(z>.06&&y<-.03)return mdSh(C.FUR,.8);return C.FUR}});
+// ------------------------------------------------ MOUSE ------------------------------------------------
+// mouse: round head, pointed muzzle, very big dark eyes, pink nose, the huge round ears
+FKH.add('mouse',{R:.1,bb:[-.13,-.12,-.13,.13,.12,.16],
+  forms:[FKH.E([0,0,-.02],[.075,.07,.085]),
+    FKH.E([.045,-.025,.03],[.03,.03,.04],{k:.022}),
+    FKH.RC([0,-.012,.045],[0,-.022,.13],.034,.012,{k:.028}),
+    FKH.E([.014,-.028,.115],[.015,.013,.016],{k:.008}),
+    FKH.E([0,-.019,.134],[.009,.008,.007],{k:.004}),
+    FKH.RC([0,-.04,.03],[0,-.042,.11],.02,.009,{k:.012}),
+    FKH.SP([.042,.02,.05],.018,{sub:1,k:.007})],
+  eye:{c:[.041,.02,.053],g:[.7,.08,.7],r:.0178},ear:[.04,.06,-.03],neck:[-.05,-.06,.042],whisk:{p:[.022,-.028,.115],n:4,len:.1},
+  extra(){},
+  paint(p,n,C){const z=p[2],y=p[1];if(z>.128&&y>-.026)return C.PINK;if(y<-.03)return C.FURL;return C.FUR}});
+// ------------------------------------------------ SQUIRREL ------------------------------------------------
+// red squirrel: round head, short muzzle, big eyes set to the side, tufted ears, pale cheeks, incisors
+FKH.add('squirrel',{R:.096,bb:[-.13,-.12,-.13,.13,.12,.14],
+  forms:[FKH.E([0,.005,-.02],[.074,.072,.08]),
+    FKH.E([.045,-.025,.025],[.032,.032,.04],{k:.022}),
+    FKH.RC([0,-.012,.045],[0,-.022,.108],.034,.018,{k:.028}),
+    FKH.E([.015,-.03,.1],[.016,.014,.014],{k:.008}),
+    FKH.E([0,-.016,.112],[.009,.007,.006],{k:.004}),
+    FKH.RC([0,-.042,.02],[0,-.044,.09],.02,.01,{k:.012}),
+    FKH.SP([.045,.022,.045],.017,{sub:1,k:.007})],
+  eye:{c:[.044,.022,.048],g:[.8,.08,.6],r:.0168},ear:[.035,.06,-.03],neck:[-.05,-.06,.042],whisk:{p:[.022,-.03,.1],n:3,len:.08},
+  extra(k,B,D,C){const C0=FKS.C0;[-1,1].forEach(s=>k.p('head','box','c',0xd8a040,s*.0042,C0[1]-.05,C0[2]+.098,.0075,.014,.004,.1,0,0))},
+  paint(p,n,C){const z=p[2],y=p[1];if(z>.107&&y>-.022)return C.PINK;if(y<-.022&&z>-.02)return C.FURL;return C.FUR}});
+// ------------------------------------------------ GOAT / RAM / SHEEP ------------------------------------------------
+// caprids: long face, eyes high on the sides (bar pupils), mobile lips; goat: straight profile, beard, swept horns;
+// ram: Roman nose, wool poll, spiral horns round the ears; sheep: shorter face under a wool cap
+FKH.capra=function(o){o=o||{};const bump=o.bump||0;return {R:.088,bb:[-.13,-.13,-.13,.13,.12,.22],
+  forms:[FKH.E([0,.012,-.03],[.058,.06,.07]),
+    FKH.RC([0,.0,.02],[0,-.035,o.len||.18],.042,.024,{k:.032,sq:[.92,1.05]}),
+    FKH.E([.036,-.03,.04],[.022,.03,.05],{k:.022}),
+    FKH.E([.042,.024,.02],[.02,.018,.024],{k:.015}),
+    FKH.E([0,.002+bump*.3,.1],[.02,.026+bump,.05],{k:.02}),
+    FKH.E([0,-.04,(o.len||.18)+.008],[.022,.02,.016],{k:.01}),
+    FKH.RC([0,-.05,0],[0,-.062,(o.len||.18)-.01],.026,.014,{k:.013}),
+    FKH.SP([.048,.025,.035],.014,{sub:1,k:.006})],
+  eye:{c:[.047,.025,.038],g:[.92,.08,.38],r:.015},ear:[.05,.03,-.03],neck:[-.05,-.062,.044],
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),L=o.len||.18,ym=FKH.lerpY(z,.02,-.066,L,-.058);
+    if(z>L-.004&&y>-.05)return C.PINKD;if(z>.06&&Math.abs(y-ym)<.003)return C.MOUTH;
+    if(o.wool&&(z<o.wool[0]||(y>o.wool[1]&&z<o.wool[2])))return C.WOOL;
+    if(o.stripe&&x>.02&&Math.abs(y-(.025-.4*(z-.035)))<.012&&z>.04&&z<L-.03)return C.FURD;
+    if(y<ym)return C.FURL;return C.FUR}}};
+FKH.add('goat',Object.assign(FKH.capra({stripe:1}),{extra(k,B,D,C){const C0=FKS.C0,at=(x,y,z)=>[x+C0[0],y+C0[1],z+C0[2]];
+  [-1,1].forEach(s=>fkHornLoft(B,[at(s*.024,.05,-.012),at(s*.036,.105,-.04),at(s*.05,.13,-.1),at(s*.066,.12,-.165),at(s*.074,.09,-.205)],t=>.02*(1-t*.8),C.HORN,1));
+  k.L('head','c',C.FURL,at(0,-.05,.13),at(0,-.13,.115),.017,.004,6);k.L('head','c',C.FURL,at(0,-.052,.118),at(0,-.118,.1),.014,.004,5)}}));
+FKH.add('ram',Object.assign(FKH.capra({bump:.012,len:.17,wool:[-.05,.03,.04]}),{ear:[.058,.0,-.02],extra(k,B,D,C){const C0=FKS.C0;
+  for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=fkSurf(D,C0[2]-.06+.05*Math.sin(a*2.1)*.5,(.25+.55*Math.abs(Math.sin(a*1.3)))*(i%2?1:-1),.002);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.026,.022,.026)}
+  // spiral horns: from the crown behind the eyes, back and down round the ear, forward by the cheek
+  [-1,1].forEach(s=>{const c=[.07,-.005,-.04],P=[];for(let i=0;i<=18;i++){const t=i/18,a=-.2+t*Math.PI*1.75,r=.05*(1-t*.45);P.push([s*(c[0]+t*.03+Math.sin(t*Math.PI)*.012)+C0[0],c[1]+Math.cos(a)*r+C0[1],c[2]+Math.sin(a)*r*1.05+C0[2]])}
+    fkHornLoft(B,P,t=>.03*(1-t*.65),C.HORN,1)})}}));
+FKH.add('sheep',Object.assign(FKH.capra({len:.16,wool:[-.04,.025,.05]}),{ear:[.055,.005,-.02],extra(k,B,D,C){const C0=FKS.C0;
+  for(let i=0;i<16;i++){const p=fkSurf(D,C0[2]-.075+(i%4)*.024,(Math.floor(i/4)-1.5)*.5,.004);k.p('head','dod','c',C.WOOL,p[0],p[1],p[2],.03,.026,.03)}}}));
+// ------------------------------------------------ BOAR ------------------------------------------------
+// wild boar: wedge-shaped head, long snout ending in a flat disc, small eyes high, tusks, a bristly crest
+FKH.add('boar',{R:.1,bb:[-.15,-.15,-.15,.15,.14,.22],
+  forms:[FKH.E([0,.01,-.03],[.075,.075,.085]),
+    FKH.RC([0,.0,.02],[0,-.03,.17],.055,.036,{k:.035,sq:[.95,1.05]}),
+    FKH.E([.055,-.04,.02],[.04,.045,.06],{k:.03}),
+    FKH.E([0,-.032,.178],[.035,.03,.012],{k:.008}),
+    FKH.RC([0,-.06,.02],[0,-.06,.15],.034,.02,{k:.014}),
+    FKH.SP([.048,.035,.04],.012,{sub:1,k:.006})],
+  eye:{c:[.047,.035,.043],g:[.85,.1,.5],r:.0115},ear:[.05,.062,-.045],neck:[-.065,-.07,.066],
+  extra(k,B,D,C){const C0=FKS.C0,at=(x,y,z)=>[x+C0[0],y+C0[1],z+C0[2]];
+    [-1,1].forEach(s=>{const q=at(s*.015,-.03,.19);k.p('head','sph2','c',0x2a1a18,q[0],q[1],q[2],.008,.011,.004);
+      fkPath([at(s*.026,-.058,.13),at(s*.046,-.05,.142),at(s*.056,-.026,.146),at(s*.054,-.008,.136)],0xe8e0c8,.009,.003,k)});
+    for(let i=0;i<9;i++){const z=C0[2]-.1+i*.024,y=fkTop(D,z);k.p('head','cone4','c',C.FURD,0,y+.004,z,.012,.04,.008,-.5,0,0)}},
+  paint(p,n,C){const z=p[2],y=p[1];if(z>.17)return 0x6a524a;return y>.04&&z<.06?C.FURD:C.FUR}});
+// ------------------------------------------------ OWL ------------------------------------------------
+// tawny owl: one round head with a dished facial disc, huge forward eyes, hooked beak, ear tufts
+FKH.add('owl',{R:.12,bb:[-.15,-.14,-.14,.15,.14,.14],
+  forms:[FKH.E([0,0,-.01],[.098,.092,.09]),
+    FKH.SP([.042,.0,.13],.06,{sub:1,k:.025}),                            // facial disc dishes
+    FKH.RC([0,.0,.076],[0,-.032,.094],.012,.004,{k:.006})],               // beak
+  eye:{c:[.04,.004,.066],g:[.25,.02,.97],r:.025},ear:[.06,.075,-.005],neck:[-.065,-.04,.075],
+  extra(){},
+  paint(p,n,C){const z=p[2],y=p[1],x=Math.abs(p[0]),dd=Math.hypot(x-.042,y,z-.13);
+    if(z>.07&&x<.012&&y<.0)return 0x9a8a5a;if(dd<.072)return C.FURL;if(dd<.082)return C.FURD;
+    const nn=Math.sin(p[0]*140)*Math.cos(z*120+y*90);return y<-.05?C.FURL:nn>.6?C.FURD:C.FUR}},{});
+FK137.sp.owl.eyes={};FK137.sp.owl.eyeAt=null;
+FK137.sp.hedgehog.face0=FK137.sp.hedgehog.face;
+fk142Setup();
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Three tabs: Companions (every species, every evolution stage: basic attack + its 4 abilities), Monsters (every zone

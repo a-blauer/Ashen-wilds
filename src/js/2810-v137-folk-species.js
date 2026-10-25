@@ -60,7 +60,7 @@ var FK_DEER={hp:{R:.085,W:.9,H:.9,L:1.1,m:{len:.125,w:.046,h:.04,b:.04,tw:.021,t
   eyes:{sz:1.15,fw:.45,brow:null},nose:'none',jaw:[.05,.17,{h:.65,w:.8}],
   ear:{t:'leaf',z:-.035,phi:.95,len:.12,w:.05,th:.014,out:.95,back:.35,tw:-.5,inner:C=>mdMix(C.FURL,C.PINK,.3),tip:C=>C.FURD},
   skull(m,C){const z=m.r.p[2];if(z>.203)return 0x2a2220;if(m.s<-.2&&z>.0)return C.FURL;if(z>.13&&m.s<.25)return C.FURL;if(Math.abs(m.c)>.7&&z>.025&&z<.065&&m.s>-.2&&m.s<.5)return C.FURL;return m.s>.5&&z<.08?C.FURD:C.FUR},
-  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','sph2','c',0x1a1412,0,t[1]+.008,t[0]-.006,.016,.012,.011);[-1,1].forEach(s=>k.p('head','box','c',0x050404,s*.008,t[1]+.002,t[0]+.011,.004,.004,.004))},
+  face(k,B,D,C){const t=D.SN[D.SN.length-1];k.p('head','sph2','c',0x1a1412,0,t[1]+.008,t[0]-.006,.016,.012,.011);[-1,1].forEach(s=>k.p('head','box','c',0x050404,s*.008,t[1]+.002,t[0]+.0045,.004,.004,.004))},
   body:{build:0,af:.88,lf:.92},legK:[1.02,1.02,.95,.82,.74,.66,.62],foot:{len:.75,w:.72,h:.9},hoof:1,
   paw:{n:3,len:[.03,.034,.03],claw:.01,nail:1,spread:.0135,pad:false,curl:.7,rad:1.15,colOf:C=>C.FURD,clawCol:C=>C.HOOF},handCol:C=>C.FURD,
   TP:[[0,.58,-.1,.035],[0,.6,-.15,.04],[0,.6,-.19,.03],[0,.59,-.21,.008]],tailCol:(m,C)=>m.s<0?C.FURL:C.FUR,tail:{sway:.1,freq:1.4,lag:.3,stiff:.2},earAnim:{amp:.3,sv:.2,cyc:3.9}};
