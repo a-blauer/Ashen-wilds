@@ -215,7 +215,7 @@ function wdDeco(){const T0=performance.now();
     const big=[],zstat={};let zn=0;
     const free=(x,y,r0)=>big.every(b=>Math.hypot(b[0]-x,b[1]-y)>b[2]+r0+2.6);
     const place=(S,x,y,ry,s,bank)=>{
-      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true; // v143: the Lantern Road outpost, lampposts and the Ripper's parking spot stay clear (counted as placed: the seeded stream is unchanged)
+      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true;if(typeof mq145Keep=='function'&&mq145Keep(I.g,x,y))return true; // v143: the Lantern Road outpost, lampposts and the Ripper's parking spot stay clear (counted as placed: the seeded stream is unchanged)
       const it={k:S.k,x,z:y,ry,s,col:0};
       // collider tiles: every tile whose centre is within the radius of a collider point
       const cp=bank?null:S.cp?S.cp:S.col?[[0,0,S.col]]:null;

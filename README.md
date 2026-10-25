@@ -107,6 +107,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v141 Sovereigns: quicker charged wind-ups (`sv141K`), disengage from melee (`sv141Force`), Reach eruptions + chase vs kiting (`reach141`), fought once (`spawnBoss` wrapper, `sv141Clear`) | `3000-v141-sovereigns.js` |
 | v143 The Lantern Road (Kindlelight I main quest): outpost layout `mq143Plan` / decoration keep-out `mq143Keep` (called from 1680 `place`), the Lantern Wardens (`MQW143`, `mqw143Make`, `mqw143Anim`, helms `mqw143Helm`), models (`MQM143`: `mqm143Ripper`, `mqm143Lamp`, outpost pieces, `mqm143Bulb`), quest state `MQ143` (glowbulb drops, lampposts, the Ripper's roll and fire-up, dormant gateway, tracker `#mqt143`, window `XR.mq143`, map marks) | `3020`–`3023` (edit in 1680) |
 | v144 The Glowmire Crystal (Kindlelight II main quest): Vorraxis model (`MB144`, `mb144Build`, poses `MB144P`, `mb144Loco`/`mb144Post`), his moves (`MB144M`, lair arena `MB144A`, `svCtx`/`svHitNow` wrappers), the hatch, the Seeping Lair (INSL[4]), the fight controller `mb144AI`, quest state `MQ144`, crystal, sealed II→III gateway | `3031`–`3033` |
+| v145 The Three Sigils (Kindlelight III main quest): sigil layout `mq145Plan` / keep-out `mq145Keep` (called from 1680 `place`), sigil model `ms145Sigil`, ghost wolves (`EN.ghostwolf`, look `gw145Look` via a `cr` wrapper), the essence charging ritual (`MQ145.R`, `mq145Start`/`mq145RTick`/`mq145Attune`/`mq145Fail`), sealed Den gateway, tracker, map marks | `3040` (edit in 1680) |
 
 ## Conventions (read before changing code)
 
@@ -513,6 +514,21 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   * Saved as `x2.mq144 {st,seen}`; done also when III was reached (`mq144Done`). Co-op: each player fights their own copy. Tracker uses
     `#mqt143` in II and the lair; minimap / N-map mark the hatch.
   Tests: `v144_glowmire.py`; pictures `v143_look.py` (`PROPS=` with MB144 sheet keys, `bossP:<pose>`).
+- **The Three Sigils (v145, Kindlelight III main quest, `3040`)**: chapter 3. Kindlelight III's gateway to the Den is sealed (F prompt locked
+  by a `portalPrompt` wrapper; three dark glyphs hang in the arch) until three rune sigils are attuned.
+  * Layout (`mq145Plan`, pure function of the map data, cached): one sigil off the road at 30% / 56% / 82% of III's road, alternating
+    sides, 9–18 tiles out, on open ground with room for a fight, away from the entrance, gateway, camps and each other (constraints relax
+    in steps if nothing fits). `mq145Keep` keeps decorations off them (1680 `place`, like v143); roaming groups within 15 are dropped.
+  * Sigil (`ms145Sigil`): flagstone disc with a carved rune circle and a glow layer, six leaning standing stones with glowing runes, a
+    plinth with a floating glyph (Fang / Moon / Howl) and halo, a charge ring, and a pillar of light (faint while dark so it can be found).
+    Violet while dark, bright violet while charging, green once attuned.
+  * Coming within `MQ145.see` (22) finds a sigil (title card, map mark). F starts the essence charging ritual: `MQ145.waves` (4) waves
+    `MQ145.gap` (5 s) apart, `MQ145.total` (25) ghost wolves split 7/6/6/6 (`mq145Per`), level `MQ145.lv0` (4) + sigils already attuned.
+    Dying wolves stream essence into the sigil; all slain → attuned. Falling, straying past `MQ145.leash` (30) or leaving fails it (wolves
+    dissolve; retry any time). Ghost wolves: `EN.ghostwolf` (Ashwolf rig, dark translucent cloned materials, glowing eyes, aura, shadow
+    puffs), spawned as minions (local in co-op).
+  * Saved as `x2.mq145 {at[3], fd[3]}`; done also when the Den was reached (`mq145Done`). Tracker uses `#mqt143` in III.
+  Tests: `v145_sigils.py`.
 - **Character slots (v116)**: three saves, `KQSL.keys` = `et_save_v1` (the old single save, so it becomes slot 1), `et_save_v1_s2`,
   `et_save_v1_s3`; the last slot used is `localStorage.kq_slot`. `SAVE_KEY` is a `var` that follows the slot (`kqSlotSet`), so all save code
   is unchanged. The title lists the slots (filled → Continue, empty → New, 🗑 twice to delete) plus "Join a friend". From the in-game main
@@ -739,6 +755,7 @@ LIST="C:Sporelord:3;E:basilisk" python3 v137_creature.py   # v137: creature shee
 python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizens, sheets and limb checks (SP=fox,bear species sheets)
 python3 v143_lantern_road.py  # v143: The Lantern Road (Kindlelight I main quest): drops, lampposts, the Ripper, the gateway, saves
 python3 v144_glowmire.py      # v144: The Glowmire Crystal (Kindlelight II main quest): hatch, lair, Vorraxis, crystal, gateway, saves
+python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main quest): sigils, ghost wolf waves, attuning, the Den gateway, saves
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)
 python3 v114_save.py         # v114: save export / import, the split publish build boots

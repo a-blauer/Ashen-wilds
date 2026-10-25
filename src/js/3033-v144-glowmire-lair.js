@@ -213,9 +213,9 @@ function mq144GateSync(){const r=RPORT.find(q=>q.k=='next'&&q.ig===1);if(!r)retu
   if(on&&!MQ144.gcr){const C=mb144Crystal();C.g.scale.setScalar(.55);C.g.position.set(0,3.6,0);r.g.add(C.g);MQ144.gcr=C}if(MQ144.gcr)MQ144.gcr.g.visible=on}
 
 // ---------------- the tracker (chapter 2 in the main-quest box, in Kindlelight II and the lair) ----------------
-{const f=mq143Trk;mq143Trk=function(){const r=f.apply(this,arguments);try{mq144Trk()}catch(err){if(!MQ144.err++)console.warn('v144 trk',err)}return r}}
-function mq144Trk(){const el=$('mqt143');if(!el)return;const here=mq144In2()||mq144InLair();if(!here){if(MQ144.trkK){MQ144.trkK='';MQ143.trkK=''}return}
-  const hide=(typeof uiOpen=='function'&&uiOpen())||(mq144Done()&&insReach(0)>=2);MQ143.trkK='x';
+{const f=mq143Trk;mq143Trk=function(){try{if(mq144In2()||mq144InLair()){MQ143.trkK='';return mq144Trk()}}catch(err){if(!MQ144.err++)console.warn('v144 trk',err)}MQ144.trkK='';return f.apply(this,arguments)}}
+function mq144Trk(){const el=$('mqt143');if(!el)return;
+  const hide=(typeof uiOpen=='function'&&uiOpen())||(mq144Done()&&insReach(0)>=2);
   const st=mq144Done()?3:MQ144.st,lair=mq144InLair(),fight=!!(MB144A&&MB144A.f),key=(hide?'h':'s')+st+lair+fight;if(key===MQ144.trkK)return;MQ144.trkK=key;
   if(hide){el.classList.add('hide');mq143TrkPos();return}
   const C=mq144Camp(),cn=(C&&C.th&&C.th.n)||'the furthest camp',o=(a,b)=>`<div class="o"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;
@@ -313,7 +313,7 @@ function mq144Tick(dt,now){const in2=mq144In2(),lair=mq144InLair(),t=now/1000;
       if(LS.beam&&e&&!e.dead){const a=C.g.position,b=svWP(e,'chest',0,.3,.2),d=b.clone().sub(a);LS.beam.position.copy(a);LS.beam.lookAt(b);LS.beam.scale.set(1+.3*Math.sin(t*20),1+.3*Math.sin(t*17),d.length());LS.beam.material.opacity=.55+.25*Math.sin(t*23);
         if(Math.random()<dt*20){const q=a.clone().lerp(b,Math.random());burst(q,0xd8ff7a,1,.2,.2,.4)}}
       if(MQ144.isl.length)MQ144.isl.forEach(o=>{o.ring.material.opacity=.55+.3*Math.sin(t*8)})}}
-  if(now-MQ144.t>400){MQ144.t=now;try{mq144Trk()}catch(_){}}}
+  if(now-MQ144.t>400){MQ144.t=now;try{mq143Trk()}catch(_){}}}
 function mq144HatchBuild(reveal){const h=mq144HatchSpot();if(!h)return;if(!MQ144.H){const H=mb144Hatch();H.g.position.set(h.x,GH(h.x,h.z),h.z);H.g.rotation.y=Math.atan2(INSL[1].en[0]-h.x,INSL[1].en[1]-h.z);scene.add(H.g);MQ144.H=H;
     for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(i||j)CBLK.add(Math.round(h.z+j)*W+Math.round(h.x+i))}
   const H=MQ144.H;if(!reveal){H.hinge.rotation.x=-1.95;return}
