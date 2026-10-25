@@ -384,7 +384,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     Ears (`fksEars`, owner's request: no edge off the head, both ears alike): a loft of 8-sided rings root → tip shaped per type
     (`FKS_EAR`: tri / leaf / round / small / long); every root vertex is pushed down the ear's axis until 5 mm inside the
     skull; the root ring is weighted to the head and the next ring half to the ear bone (flicks bend the ear at the root);
-    built once on the right and mirrored, so both ears are identical; an inner-ear loft on the front face; tufts from the tip.
+    built once on the right and mirrored, so both ears are identical; the front is cupped and the inner ear is painted on those
+    faces (a separate inner piece stuck out past the edges); the dark tip is part of the same loft; tufts start inside the tip.
     The owl keeps its feather tufts (`fkEars`).
     Eyes on sculpted heads (`fk140Eyes`): an almond with a bright iris and the species' pupil, a level brow line above (calm,
     not angry, per the owner), `eye.round` for round eyes (owl), `eye.slant` / `open` / `brow` per species.

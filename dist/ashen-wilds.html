@@ -36231,22 +36231,18 @@ function fksEars(B,D,C){const e=D.ear,S=D.sculpt;if(!e||e.t=='none')return;if(!F
   const L=e.len,W=e.w*(e.t=='long'?.62:.85),T=Math.max(.006,(e.th||.016)*.55),wf=FKS_EAR[e.t],pointed=e.t=='tri'||e.t=='leaf',M=8,ts=[0,.12,.3,.5,.7,.86,1];
   const fur=e.col?e.col(C):C.FUR,inn=e.inner?e.inner(C):(e.t=='small'?C.FURD:C.PINK),tip=e.tip?e.tip(C):fur,tipT=e.t=='tri'?.62:.8;
   const rings=ts.map((t,ri)=>{const c=base.clone().addScaledVector(d,L*t),w=W*Math.max(t==1&&pointed?0:.08,wf(t)),th=T*(1-.6*t);const R=[];
-    for(let j=0;j<M;j++){const a=j/M*Math.PI*2;let p=c.clone().addScaledVector(side,w*Math.cos(a)).addScaledVector(fwd,th*Math.sin(a));
+    for(let j=0;j<M;j++){const a=j/M*Math.PI*2,cup=(j==2&&ri>0&&t<.8)?-.9:0;let p=c.clone().addScaledVector(side,w*Math.cos(a)).addScaledVector(fwd,th*(Math.sin(a)+cup));
       if(ri==0){let k=0;while(k<40&&ev(p)>-.005){p.addScaledVector(d,-.002);k++}}R.push(p)}return {t,c,R}});
   const tipP=pointed?base.clone().addScaledVector(d,L):null;
   const tris=[],in_=[];const W8=(ri)=>ri==0?[['head',1]]:ri==1?[['head',.5],['ER',.5]]:[['ER',1]];
   for(let i=0;i+1<rings.length;i++){const A=rings[i],Bq=rings[i+1];if(pointed&&i+1==rings.length-1){for(let j=0;j<M;j++)tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[tipP,i+1],A.t>=tipT?tip:fur]);break}
-    for(let j=0;j<M;j++){const col=A.t>=tipT?tip:fur;tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[Bq.R[(j+1)%M],i+1],col],[[A.R[j],i],[Bq.R[(j+1)%M],i+1],[Bq.R[j],i+1],col])}}
+    for(let j=0;j<M;j++){const col=A.t>=tipT?tip:(j==1||j==2)&&A.t>=.1&&Bq.t<=Math.min(.86,tipT+.1)?inn:fur;tris.push([[A.R[j],i],[A.R[(j+1)%M],i],[Bq.R[(j+1)%M],i+1],col],[[A.R[j],i],[Bq.R[(j+1)%M],i+1],[Bq.R[j],i+1],col])}}
   if(!pointed){const Lr=rings[rings.length-1];for(let j=0;j<M;j++)tris.push([[Lr.R[j],ts.length-1],[Lr.R[(j+1)%M],ts.length-1],[Lr.c,ts.length-1],fur])}
-  // the inner ear: a thinner loft on the front face, from near the root to near the tip
-  const iT=[.1,.3,.5,.7,.84],ir=iT.map(t=>{const c=base.clone().addScaledVector(d,L*t),w=W*wf(t)*.7,th=T*(1-.6*t);const cc=c.clone().addScaledVector(fwd,th*.72);
-    const R=[];for(let j=0;j<M;j++){const a=j/M*Math.PI*2;R.push(cc.clone().addScaledVector(side,w*Math.cos(a)).addScaledVector(fwd,th*.4*Math.sin(a)))}return {c:cc,R}});
-  for(let i=0;i+1<ir.length;i++)for(let j=0;j<M;j++){const A=ir[i],Bq=ir[i+1];in_.push([[A.R[j],2],[A.R[(j+1)%M],2],[Bq.R[(j+1)%M],2],inn],[[A.R[j],2],[Bq.R[(j+1)%M],2],[Bq.R[j],2],inn])}
-  {const A=ir[0],Z=ir[ir.length-1];for(let j=0;j<M;j++){in_.push([[A.R[j],2],[A.R[(j+1)%M],2],[A.c,2],inn]);in_.push([[Z.R[j],2],[Z.R[(j+1)%M],2],[Z.c,2],inn])}}
+  // (the inner ear is the cupped front of the ear itself, painted — a separate inner piece stuck out past the edges)
   [1,-1].forEach(sg=>{const er=sg>0?'erR':'erL',wc={};const vx=(q)=>{const [p,ri]=q,key=ri;const w=wc[key]||(wc[key]=mdW(B,W8(ri).map(x=>[x[0]=='ER'?er:x[0],x[1]])));return {x:p.x*sg,y:p.y,z:p.z,w}};
-    for(const t of tris.concat(in_)){const a=vx(t[0]),b=vx(t[1]),c=vx(t[2]);if(sg>0)mdTri(B,'c',a,b,c,t[3]);else mdTri(B,'c',a,c,b,t[3])}});
+    for(const t of tris){const a=vx(t[0]),b=vx(t[1]),c=vx(t[2]);if(sg>0)mdTri(B,'c',a,b,c,t[3]);else mdTri(B,'c',a,c,b,t[3])}});
   // lynx / squirrel tufts from the tip
-  if(e.tuft){const k=dkKit(),tp=base.clone().addScaledVector(d,L*.97);[1,-1].forEach(sg=>{const a=[tp.x*sg,tp.y,tp.z],b=[(tp.x+d.x*e.tuftL)*sg,tp.y+d.y*e.tuftL,tp.z+d.z*e.tuftL];k.L(sg>0?'erR':'erL','c',e.tuft(C),a,b,.006,.001,4)});mdKit(B,k)}}
+  if(e.tuft){const k=dkKit(),tp=base.clone().addScaledVector(d,L*.88);[1,-1].forEach(sg=>{const a=[tp.x*sg,tp.y,tp.z],b=[(tp.x+d.x*e.tuftL)*sg,tp.y+d.y*e.tuftL,tp.z+d.z*e.tuftL];k.L(sg>0?'erR':'erL','c',e.tuft(C),a,b,.007,.001,4)});mdKit(B,k)}}
 // ================= v140: townsfolk head recipes (sculpted from each animal's anatomy) =================
 // Head-local metres from FKS.C0 (+z forward, +y up, x mirrored). Forms: E ellipsoid (centre, radii), RC round cone (a, b,
 // radius at a, radius at b), SP sphere; k = blend width, sub = carve. Proportions follow the real skulls: muzzle length
