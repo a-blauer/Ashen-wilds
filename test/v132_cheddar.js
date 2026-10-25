@@ -39,6 +39,7 @@
   if(!E.mk||!E.mk.visible)F.push('gateway Cheddar has no marker');
   const back=[pl.position.x,pl.position.z];closeX();toPos(t.x+Math.sin(t.face)*1.8,t.z+Math.cos(t.face)*1.8);tick(30);const q=worldPrompt();out.prompt2=q&&q.label;
   if(!q||!/Cheddar/.test(q.label))F.push('no prompt at the gateway Cheddar: '+(q&&q.label));
+  if(typeof MQ143!='undefined')MQ143.st=3;if(typeof MQ144!='undefined')MQ144.st=3;if(typeof MQ145!='undefined')MQ145.at=[1,1,1];   // v143-v145: the main quest seals the gateways until done
   const r=RPORT.find(o=>o.k=='next'&&o.ig===I0.g);toPos(r.x+(t.x-r.x)*.3,r.z+(t.z-r.z)*.3);tick(2);const q2=worldPrompt();if(!q2||!/Step through/.test(q2.label))F.push('gateway prompt lost: '+(q2&&q2.label));
   toPos(back[0],back[1]);tick(5);p.fn();await sleep(50)}
  // accept all through the window button
