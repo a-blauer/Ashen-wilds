@@ -62,3 +62,4 @@ v148_mouse.py
 v148_camps.py
 v148_outskirts.py
 v148_deco.py
+v148_splash.py

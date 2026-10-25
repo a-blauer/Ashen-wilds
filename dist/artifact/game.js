@@ -39571,6 +39571,7 @@ try{kfWild109(kf109())}catch(e){console.warn('v148 outskirts',e)}
 var CHQ148={at:[6.3,5.4],ry:0,P:null,board:null,col:[],tab:null,mk:'',t:0,v:148};
 var CHQ148_DF={1:{n:'Easy',s:'★',w:1,r:1,n2:1},2:{n:'Medium',s:'★★',w:1.8,r:2,n2:1},3:{n:'Hard',s:'★★★',w:3,r:2,n2:2},4:{n:'Heroic',s:'★★★★',w:5,r:3,n2:2,egg:1}};
 // objective kinds that count anywhere (the rest only inside the quest's zone)
+var CHQ148_PAY=.35;   // v148.1: quest XP and gold cut by 65%
 var CHQ148_ANY={fuse:1,catFuse:1,feed:1,ability:1,rune:1,mount:1};
 var CHQD148={};
 (function(){const O=CHQ132_ID;
@@ -39581,16 +39582,14 @@ var CHQD148={};
      {id:'c0a',t:'Spoils of the Hollow',d:'Those camps sit on hoards. Clear them and crack the chests at their hearts. Four will do.',o:[['chest',4,'Camp chests opened']],df:2,rw:'gear'},
      old('k3a',3),
      {id:'c0b',t:'The Long Night',d:'Kindlelight never sleeps, and neither should you. Sixty of the things that crawl about out there. Any of them.',o:[['kill',60,'Creatures slain in Kindlelight']],df:3,rw:'weapon'},
-     {id:'c0c',t:'Every Fire Put Out',d:'Nine camps across the three roads. Clear every single one. I’ll know if you skip one.',o:[['allCamps',9,'Kindlelight camps cleared']],df:3,rw:'chest'},
-     {id:'c0d',t:'The Hundred Eyes',d:'Argus watches the whole forest from his den. Close his eyes for good. Then do it again, to be sure.',o:[['boss',2,'Argus defeated']],df:4,rw:'weapon'}],
+     {id:'c0c',t:'Every Fire Put Out',d:'Nine camps across the three roads. Clear every single one. I’ll know if you skip one.',o:[['allCamps',9,'Kindlelight camps cleared']],df:3,rw:'chest'}],
   1:[old('h1b',1),old('h2c',1),
      {id:'c1a',t:'Fibre for the Ropes',d:'My pulley ropes are fraying. Twenty bundles of plant fibre from the plains bushes.',o:[['fiber',20,'Plant Fibre gathered']],df:1,rw:'boots'},
      old('h1c',2),old('h2a',2),old('h2b',2),old('h3a',2),old('h3b',2),
      {id:'c1b',t:'Rust-Red Seams',d:'The forge eats ore faster than I can steal it. Fifteen iron ore from the crest rocks.',o:[['iron',15,'Iron Ore mined']],df:2,rw:'helm'},
      old('h1a',3),
      {id:'c1c',t:'Crowns of the Crest',d:'The elites up here strut about like kings. Topple three of them.',o:[['elite',3,'Elites slain on the Crest']],df:3,rw:'weapon'},
-     {id:'c1d',t:'Grass Fire',d:'Eighty of the beasts that roam these hills. That should thin them out a little.',o:[['kill',80,'Creatures slain on the Crest']],df:3,rw:'chest'},
-     {id:'c1e',t:'Mother of Serpents',d:'The Crest Hydra lays her eggs in my favourite cave. Put her down. Twice. Heads grow back.',o:[['boss',2,'The Crest Hydra defeated']],df:4,rw:'weapon'}],
+     {id:'c1d',t:'Grass Fire',d:'Eighty of the beasts that roam these hills. That should thin them out a little.',o:[['kill',80,'Creatures slain on the Crest']],df:3,rw:'chest'}],
   2:[{id:'c2a',t:'Stone for the Hearths',d:'Summit stone holds heat like nothing else. Twenty pieces, if your arms still work in the cold.',o:[['stone',20,'Stone gathered']],df:1,rw:'boots'},
      {id:'c2b',t:'Ice Fishing',d:'Six fish from the summit’s water. Bring them before they freeze solid in your pack.',o:[['fish',6,'Fish caught']],df:1,rw:'egg'},
      {id:'c2c',t:'Frostbitten',d:'Thirty of the frozen things up there. Mind the cliffs.',o:[['kill',30,'Creatures slain on the Summit']],df:1,rw:'helm'},
@@ -39598,31 +39597,27 @@ var CHQD148={};
      {id:'c2e',t:'Three Cold Camps',d:'Three camps, any three. Burn them out and warm your hands on the ashes.',o:[['camp',3,'Summit camps cleared']],df:2,rw:'weapon'},
      {id:'c2f',t:'Plunder on the Ice',d:'Open five camp chests on the summit. Whatever is inside is yours; the chests are mine. Just kidding.',o:[['chest',5,'Camp chests opened']],df:2,rw:'gear'},
      {id:'c2g',t:'Kings of the Cold',d:'Five elites. They burn gold even in the snow, you can’t miss them.',o:[['elite',5,'Elites slain on the Summit']],df:3,rw:'weapon'},
-     {id:'c2h',t:'The Whole Mountain',d:'Every camp on the summit, all nine. Then we talk about the wraith.',o:[['allCamps',9,'Summit camps cleared']],df:3,rw:'chest'},
-     {id:'c2i',t:'The Rime Wraith',d:'A ghost that freezes the breath in your chest. Lay it to rest twice and I’ll stop having nightmares.',o:[['boss',2,'The Rime Wraith defeated']],df:4,rw:'weapon'}],
+     {id:'c2h',t:'The Whole Mountain',d:'Every camp on the summit, all nine. Then we talk about the wraith.',o:[['allCamps',9,'Summit camps cleared']],df:3,rw:'chest'}],
   3:[{id:'c3a',t:'Shade Money',d:'Thirty-five of whatever crawls out of the dunes. Bring water.',o:[['kill',35,'Creatures slain in the Sands']],df:1,rw:'boots'},
      {id:'c3b',t:'Oasis Catch',d:'Six fish from the oasis pools. Yes, there are fish in the desert. Don’t think about it.',o:[['fish',6,'Fish caught']],df:1,rw:'egg'},
      {id:'c3c',t:'Sandstone',d:'Twenty-five stone from the Searing Sands. The good stuff, sun-baked.',o:[['stone',25,'Stone gathered']],df:1,rw:'helm'},
      {id:'c3d',t:'Gold in the Water',d:'Fish up two gold pouches from the oasis. People drop the strangest things when they’re thirsty.',o:[['pouch',2,'Gold pouches fished up']],df:2,rw:'gear'},
      {id:'c3e',t:'Three Burning Tents',d:'Three camps. The ones with the most banners, ideally. Show-offs.',o:[['camp',3,'Sands camps cleared']],df:2,rw:'weapon'},
      {id:'c3f',t:'Sun-Gilded Hunters',d:'Six elites. The sun makes them proud; make them humble.',o:[['elite',6,'Elites slain in the Sands']],df:3,rw:'chest'},
-     {id:'c3g',t:'Desert Sweep',d:'Every camp of the Sands, all nine of them, and a hundred and twenty creatures besides.',o:[['allCamps',9,'Sands camps cleared'],['kill',120,'Creatures slain in the Sands']],df:3,rw:'weapon'},
-     {id:'c3h',t:'The Endless',d:'Ssith’ra coils under the dunes and swallows caravans whole. Bring it down twice.',o:[['boss',2,'Ssith’ra defeated']],df:4,rw:'weapon'}],
+     {id:'c3g',t:'Desert Sweep',d:'Every camp of the Sands, all nine of them, and a hundred and twenty creatures besides.',o:[['allCamps',9,'Sands camps cleared'],['kill',120,'Creatures slain in the Sands']],df:3,rw:'weapon'}],
   4:[{id:'c4a',t:'Bog Lanterns',d:'Glow caps from the Dirge. Ten. They glow brighter there, it’s the rot.',o:[['glow',10,'Glow Caps picked']],df:1,rw:'boots'},
      {id:'c4b',t:'Mud and Bones',d:'Forty of the things in the mire. Count them, I won’t.',o:[['kill',40,'Creatures slain in the Dirge']],df:1,rw:'helm'},
      {id:'c4c',t:'Swamp Supper',d:'Eight fish from the black water. Ugly ones. The uglier the tastier.',o:[['fish',8,'Fish caught']],df:1,rw:'egg'},
      {id:'c4d',t:'Rotten Hoards',d:'Six camp chests from the Dirge. Hold your nose when you open them.',o:[['chest',6,'Camp chests opened']],df:2,rw:'gear'},
      {id:'c4e',t:'Torches in the Fog',d:'Four camps. The fog hides them; follow the smell of smoke.',o:[['camp',4,'Dirge camps cleared']],df:2,rw:'chest'},
      {id:'c4f',t:'Gilded Rot',d:'Seven elites. Rot looks very fancy in gold.',o:[['elite',7,'Elites slain in the Dirge']],df:3,rw:'weapon'},
-     {id:'c4g',t:'Drain the Dirge',d:'All nine camps of the Dirge and a hundred and forty creatures. Then the swamp can breathe.',o:[['allCamps',9,'Dirge camps cleared'],['kill',140,'Creatures slain in the Dirge']],df:3,rw:'chest'},
-     {id:'c4h',t:'The Rot-King',d:'The Bloated One squats on his throne of muck. Burst him twice. Stand well back.',o:[['boss',2,'The Bloated One defeated']],df:4,rw:'weapon'}],
+     {id:'c4g',t:'Drain the Dirge',d:'All nine camps of the Dirge and a hundred and forty creatures. Then the swamp can breathe.',o:[['allCamps',9,'Dirge camps cleared'],['kill',140,'Creatures slain in the Dirge']],df:3,rw:'chest'}],
   5:[{id:'c5a',t:'Embers and Ash',d:'Forty-five of the Citadel’s guards and beasts. They won’t miss a few.',o:[['kill',45,'Creatures slain in the Citadel']],df:1,rw:'helm'},
      {id:'c5b',t:'Crimson Stone',d:'Thirty stone from the Citadel’s ruins. It still smells of smoke.',o:[['stone',30,'Stone gathered']],df:1,rw:'boots'},
      {id:'c5c',t:'The King’s Treasury',d:'Seven camp chests inside the Citadel. A king’s soldiers carry a king’s pay.',o:[['chest',7,'Camp chests opened']],df:2,rw:'gear'},
      {id:'c5d',t:'Breach the Barracks',d:'Five camps of the Crimson King’s soldiers. Kick the doors in.',o:[['camp',5,'Citadel camps cleared']],df:2,rw:'weapon'},
      {id:'c5e',t:'The Royal Guard',d:'Eight elites. The king’s finest. Prove they aren’t.',o:[['elite',8,'Elites slain in the Citadel']],df:3,rw:'chest'},
-     {id:'c5f',t:'Siege of the Citadel',d:'Every camp of the Citadel, all nine, and a hundred and sixty of its defenders.',o:[['allCamps',9,'Citadel camps cleared'],['kill',160,'Creatures slain in the Citadel']],df:3,rw:'weapon'},
-     {id:'c5g',t:'The Crimson King',d:'Lord Vaelric. The end of every road. Beat him three times and I’ll tell everyone you’re my favourite.',o:[['boss',3,'Lord Vaelric defeated']],df:4,rw:'weapon'}]};
+     {id:'c5f',t:'Siege of the Citadel',d:'Every camp of the Citadel, all nine, and a hundred and sixty of its defenders.',o:[['allCamps',9,'Citadel camps cleared'],['kill',160,'Creatures slain in the Citadel']],df:3,rw:'weapon'}]};
   for(const z in CHQD148)CHQD148[z]=CHQD148[z].filter(Boolean).map(q=>{q.z=+z;q.ik='z'+z;if(!q.rw)q.rw='gear';CHQ132_ID[q.id]=q;return q})})();
 
 // ---------------- where and what ----------------
@@ -39630,8 +39625,12 @@ function chq148Zones(){return PMAP.map((p,z)=>z).filter(z=>typeof pUnlocked=='fu
 function chq148Town(){try{return townAt(pl.position.x,pl.position.z,0)===0}catch(_){return false}}
 function chq148Zone(){const I=chqHere132();return I?I.z:-1}
 chqList132=function(I){return I?(CHQD148[I.z]||[]):[]};
-function chq148State(z){const L=z==null?[].concat(...chq148Zones().map(q=>CHQD148[q]||[])):(CHQD148[z]||[]);let av=0,rd=0,ac=0,dn=0;
-  L.forEach(q=>{const S=chqS132(q),s=S?S.s:0;if(!s)av++;else if(s==1)ac++;else if(s==2)rd++;else dn++});return {n:L.length,av,rd,ac,dn}}
+// v148.1: a zone's difficulties open one after another: Medium once every Easy quest of that zone is done (turned in), Hard once
+// every Medium one is. Quests accepted before this rule keep going.
+function chq148Open(q){return !(CHQD148[q.z]||[]).some(o=>(o.df||1)<(q.df||1)&&!(chqS132(o)&&chqS132(o).s===3))}
+function chq148Tier(z){const L=CHQD148[z]||[];let t=1;for(const q of L)if(chq148Open(q))t=Math.max(t,q.df||1);return t}
+function chq148State(z){const L=z==null?[].concat(...chq148Zones().map(q=>CHQD148[q]||[])):(CHQD148[z]||[]);let av=0,rd=0,ac=0,dn=0,lk=0;
+  L.forEach(q=>{const S=chqS132(q),s=S?S.s:0;if(!s){if(chq148Open(q))av++;else lk++}else if(s==1)ac++;else if(s==2)rd++;else dn++});return {n:L.length,av,rd,ac,dn,lk}}
 chqState132=function(I){return chq148State(I?I.z:null)};
 function chq148Need(q,o){return o[0]=='allCamps'?Math.max(1,(PMAP[q.z]&&PMAP[q.z].cl&&PMAP[q.z].cl.length)||o[1]):o[1]}
 chqNeed132=function(I,o){return o[1]};
@@ -39662,8 +39661,8 @@ chqKill132=function(e,C,was){if(!e||e.dprop||e.wv)return;
 {const f=openChest;openChest=function(c){const live=CHESTS.includes(c),C=c&&c.camp;const r=f.apply(this,arguments);try{if(live&&C)chqEv132('chest',1,null,INSL[C.ig].z)}catch(_){}return r}}
 
 // ---------------- rewards ----------------
-function chq148XP(q){const L=chq148Lv(q.z),D=CHQ148_DF[q.df]||CHQ148_DF[1];return Math.max(5,Math.round((8+12*L)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(14+L)*.7*D.w*(q.w||1)))}
-function chq148Gold(q){const L=chq148Lv(q.z),D=CHQ148_DF[q.df]||CHQ148_DF[1];return Math.max(10,Math.round((3+1.4*L)*.65*(16+L)*D.w*(q.w||1)))}
+function chq148XP(q){const L=chq148Lv(q.z),D=CHQ148_DF[q.df]||CHQ148_DF[1];return Math.max(5,Math.round((8+12*L)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(14+L)*.7*D.w*(q.w||1)*CHQ148_PAY))}
+function chq148Gold(q){const L=chq148Lv(q.z),D=CHQ148_DF[q.df]||CHQ148_DF[1];return Math.max(10,Math.round((3+1.4*L)*.65*(16+L)*D.w*(q.w||1)*CHQ148_PAY))}
 function chq148ILv(q){return Math.max(1,Math.min(chq148Lv(q.z)+(q.df>=4?1:0),hero.lvl+(q.df>=4?3:2)))}
 function chq148Gear(q,sl){const D=CHQ148_DF[q.df]||CHQ148_DF[1],lv=chq148ILv(q);let it=null;
   for(let i=0;i<12&&!it;i++){try{const o={cls:hero.cls,minR:D.r};if(sl)o.sl=sl;const c=genItem(lv,o);if(c&&(!sl||itT(c).sl===sl)&&(sl!='weapon'||fitsCls(itT(c),hero.cls)))it=c}catch(_){}}
@@ -39682,7 +39681,7 @@ function chq148RwInfo(q){const D=CHQ148_DF[q.df]||CHQ148_DF[1],R=RAR[D.r]||['Unc
 
 // ---------------- accepting and turning in (at the board) ----------------
 function chq148AtBoard(){const s=chq148Spot();if(!s||!chq148Town())return false;return Math.hypot(pl.position.x-s.cx,pl.position.z-s.cz)<4.2||Math.hypot(pl.position.x-s.bx,pl.position.z-s.bz)<4.2}
-chqAccept132=function(id){const q=CHQ132_ID[id];if(!q||q.z==null||chqS132(q)||!chq148Zones().includes(q.z))return;
+chqAccept132=function(id){const q=CHQ132_ID[id];if(!q||q.z==null||chqS132(q)||!chq148Zones().includes(q.z)||!chq148Open(q))return;
   CHQ132.st[id]={s:1,p:q.o.map(()=>0)};say('🐭 Quest accepted: <b>'+q.t+'</b>');try{sfx('chime')}catch(_){}CHQ132.trkK=''};
 chqTurnIn132=function(id){const q=CHQ132_ID[id],S=q&&chqS132(q);if(!q||!S||S.s!==2||!chq148AtBoard())return;
   S.s=3;chqReward132(null,q);try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}CHQ132.trkK='';try{hud()}catch(_){}};
@@ -39751,30 +39750,30 @@ CHQ132_SAY.board='Psst. Down here, on the crate. Cheddar. Every portal you open,
 CHQ132_SAY.zone='Pick a job. Anything you do anywhere in that zone counts, whichever stretch of road you’re on.';
 XR.chq132=()=>{$('xwT').textContent='🐭 Cheddar’s Quest Board';const Z=chq148Zones();
   if(CHQ148.tab==null||!Z.includes(CHQ148.tab)){const r=Z.find(z=>chq148State(z).rd);CHQ148.tab=r!=null?r:Z.find(z=>chq148State(z).av)!=null?Z.find(z=>chq148State(z).av):Z[Z.length-1]}
-  const z=CHQ148.tab,st=chq148State(),zs=chq148State(z);$('xwS').textContent=PMAP[z].ic+' '+PMAP[z].n+' · '+zs.dn+' of '+zs.n+' done';
+  const z=CHQ148.tab,st=chq148State(),zs=chq148State(z);$('xwS').textContent=PMAP[z].ic+' '+PMAP[z].n+' · '+zs.dn+' of '+zs.n+' done · '+(CHQ148_DF[chq148Tier(z)]||CHQ148_DF[1]).n+' open';
   const line=st.rd?CHQ132_SAY.ready:zs.av?CHQ132_SAY.board:zs.ac?CHQ132_SAY.busy:CHQ132_SAY.zone;
   let b='<div class="cq132say"><span class="cq132who">Cheddar</span>“'+line+'”</div><div class="tabs cq148t">';
   PMAP.forEach((p,i)=>{const u=Z.includes(i),S=u?chq148State(i):null,dot=S&&S.rd?'<i class="rd">?</i>':S&&S.av?'<i>!</i>':'';
     b+='<button class="'+(i==z?'on':'')+(u?'':' lk')+'" '+(u?'data-cq8z="'+i+'"':'disabled title="Opens with its portal"')+'>'+(u?p.ic:'🔒')+' '+p.n+dot+'</button>'});
   b+='</div><div class="cq132g">';
-  const rk=q=>{const S=chqS132(q),s=S?S.s:0;return (s==2?0:s==0?1:s==1?2:3)*10+(q.df||1)};
+  const rk=q=>{const S=chqS132(q),s=S?S.s:0;return (s==2?0:s==0?(chq148Open(q)?1:4):s==1?2:3)*10+(q.df||1)};
   (CHQD148[z]||[]).slice().sort((a,c)=>rk(a)-rk(c)).forEach(q=>{const S=chqS132(q),s=S?S.s:0,D=CHQ148_DF[q.df]||CHQ148_DF[1];
     const obj=q.o.map((o,i)=>{const need=chq148Need(q,o),have=S?Math.min(need,S.p[i]||0):0,pc=Math.round(have/need*100);
       return '<div class="cq132o'+(s&&have>=need?' full':'')+'"><div class="cq132ot"><span>'+o[2]+(CHQ148_ANY[o[0]]?' <small class="mut">(anywhere)</small>':'')+'</span><span class="cq132n">'+(s?have+' / '+need:need>1?'× '+need:'')+'</span></div>'+
         (s?'<div class="cq132ob"><i style="width:'+pc+'%"></i></div>':'')+'</div>'}).join('');
-    const tag=['New','In progress','Ready','Done'][s],btn=!s?'<button class="pri cq132bt" data-cq8a="'+q.id+'">Accept quest</button>':s==1?'<button class="cq132bt" disabled>In progress…</button>':
+    const lock=!s&&!chq148Open(q),tag=lock?'Locked':['New','In progress','Ready','Done'][s],btn=lock?'<button class="cq132bt" disabled>🔒 Finish every '+(CHQ148_DF[(q.df||1)-1]||CHQ148_DF[1]).n+' quest here first</button>':!s?'<button class="pri cq132bt" data-cq8a="'+q.id+'">Accept quest</button>':s==1?'<button class="cq132bt" disabled>In progress…</button>':
       s==2?'<button class="pri cq132bt cq132go" data-cq8t="'+q.id+'">Claim reward</button>':'';
     const r=chq148RwInfo(q);
     const rw='<div class="cq132rw'+(s==2?' glow':'')+'">'+chqIco132(r.ic,r.col,s==3)+'<div class="cq132ri"><div class="cq132rl">'+(s==3?'Claimed':'Reward')+'</div><div class="cq132rn">'+r.n+'</div><div class="cq132rs">'+r.sub+'</div>'+
       '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+chq148XP(q)+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chq148Gold(q)+'</b> gold</span></div></div></div>';
-    b+='<div class="cq132 s'+s+' df'+(q.df||1)+'"><div class="cq132h"><b>'+q.t+'</b><span class="cq148d" title="'+D.n+'">'+D.s+' '+D.n+'</span><span class="cq132tag">'+tag+'</span></div><div class="cq132d">'+q.d+'</div>'+obj+rw+btn+'</div>'});
+    b+='<div class="cq132 s'+s+' df'+(q.df||1)+(lock?' lk8':'')+'"><div class="cq132h"><b>'+q.t+'</b><span class="cq148d" title="'+D.n+'">'+D.s+' '+D.n+'</span><span class="cq132tag">'+tag+'</span></div><div class="cq132d">'+q.d+'</div>'+obj+rw+btn+'</div>'});
   $('xwB').innerHTML=b+'</div>';
   $('xwF').innerHTML=(zs.av>1?'<button class="pri" data-cq8all="'+z+'">Accept all in '+PMAP[z].n+'</button> ':'')+'<span class="mut dtl">New zones join the board as their portals open. Turn finished quests in here.</span>'};
 $('xw').addEventListener('click',e=>{if(xwMode!='chq132')return;const t=e.target.closest('[data-cq8a],[data-cq8t],[data-cq8all],[data-cq8z]');if(!t||t.disabled)return;const ds=t.dataset;
   if(ds.cq8z!=null)CHQ148.tab=+ds.cq8z;
   if(ds.cq8a)chqAccept132(ds.cq8a);
   if(ds.cq8t)chqTurnIn132(ds.cq8t);
-  if(ds.cq8all!=null)(CHQD148[+ds.cq8all]||[]).forEach(q=>{if(!chqS132(q))chqAccept132(q.id)});
+  if(ds.cq8all!=null)(CHQD148[+ds.cq8all]||[]).forEach(q=>{if(!chqS132(q)&&chq148Open(q))chqAccept132(q.id)});
   try{hud()}catch(_){}chqTrk132();rX()});
 document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .cq148t{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px}
@@ -39785,6 +39784,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .cq148d{flex:none;margin-left:auto;font-size:.66rem;letter-spacing:.06em;color:#d8b860;white-space:nowrap}
 #xw .df3 .cq148d{color:#e8a04a}#xw .df4 .cq148d{color:#ff7a5a}
 #xw .cq132.df4{border-color:rgba(255,122,90,.35)}
+#xw .cq132.lk8{opacity:.5;filter:grayscale(.5)}
 </style>`);
 
 // ---------------- the tracker ----------------
@@ -39906,6 +39906,32 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #xw .dct em{display:block;color:#d8b860;font-style:normal}
 </style>`);
 try{dc103Sync()}catch(e){console.warn('v148 decorations',e)}
+// ================= v148.1: enemy area attacks aimed at the hero also catch companions =================
+// A creature's telegraphed attack (the red ground shapes: a.tel, and the extra ones of signature moves, a.xt) only ever tested
+// its own target, so a companion standing in the shape took nothing when the creature was after the hero. Now, when the
+// attacker's target is the hero, every active companion inside one of that attack's shapes takes SPL148.k (30%) of the hit:
+//  - at the moment the hero is hit by it, or
+//  - when the attack's strike phase ends without having hit the hero (the hero dodged out, the companion did not).
+// Each companion is caught once per attack. Projectiles (spit, bolts, throws) are left out: they still hit what they meet.
+// "Inside" means a downward ray at the companion meets one of the attack's ground shapes. Sovereign fights are not changed.
+var SPL148={k:.3,rc:null};
+function spl148Shapes(a){const L=[];if(!a)return L;if(a.tel)L.push(a.tel);(a.xt||[]).forEach(t=>{if(t)L.push(t)});return L}
+function spl148In(L,p){if(!L.length)return false;const rc=SPL148.rc||(SPL148.rc=new THREE.Raycaster()),M=[];
+  L.forEach(g=>g.traverse(o=>{if(o.isMesh)M.push(o)}));if(!M.length)return false;
+  rc.set(new THREE.Vector3(p.x,p.y+6,p.z),new THREE.Vector3(0,-1,0));rc.far=14;return rc.intersectObjects(M,false).length>0}
+function spl148Ranged(a){const M=a&&a.M;return !!(a&&(a.n=='spit'||a.n=='throw'||a.n=='bolt'||(M&&M.proj)||(typeof KQR!='undefined'&&KQR[a.n]&&!(M&&M.sh))))}
+function spl148Hit(e,a,L,mult,mt){if(!e||e.dead||!a||spl148Ranged(a))return;const seen=a.spl148||(a.spl148=new Set());
+  const n=typeof actN141=='function'?actN141():party.length;
+  for(let i=0;i<Math.min(n,fols.length);i++){const f=fols[i],c=party[i];if(!f||!c||c.h<=0||seen.has(f)||!f.visible)continue;
+    if(!spl148In(L,f.position))continue;seen.add(f);
+    SPL148.on=1;try{hitTarget(e,f,(mult||1)*SPL148.k,mt)}catch(err){console.warn('v148 splash',err)}finally{SPL148.on=0}}}
+// the hero is hit by an area attack: companions inside its shapes too
+{const f=hitTarget;hitTarget=function(e,tg,mult,mt){const r=f.apply(this,arguments);
+  try{if(!SPL148.on&&tg===pl&&e&&e.atk&&e.atk.tg===pl){const a=e.atk;a.spl148h=1;spl148Hit(e,a,spl148Shapes(a),mult,mt)}}catch(_){}return r}}
+// the strike phase ends without hitting the hero: companions still inside the shapes get caught
+{const f=mTick;mTick=function(e,dt,now){const a=e&&e.atk,ph0=a&&a.ph,L=a&&a.tg===pl?spl148Shapes(a):null;
+  if(L&&L.length)L.forEach(g=>g.updateMatrixWorld(true));const r=f.apply(this,arguments);
+  try{if(L&&L.length&&ph0===1&&(e.atk!==a||a.ph>=2)&&!a.spl148h){const M=a.M||{};spl148Hit(e,a,L,M.dmg||1,M.mt||e.c.mt)}}catch(err){console.warn('v148 splash',err)}return r}}
 // ================= v149 Ssith'ra's body: one creature, never through itself =================
 // The v112 body was fourteen rigid armour blocks that each tried to sit on the path the head had taken. Turning around
 // in place, circling the hero or a burrow chain folded that path back on itself, so the body passed through itself and
