@@ -148,7 +148,8 @@ function co170WindTick(dt){if(typeof MP=='undefined'||!MP.on)return;for(const id
       // Gorthrak
       if(t==='g1h'){if(gb180Auth()&&MQ151.e&&!MQ151.e.dead){const dm=Math.max(0,Math.min(1e6,+q[1]||0));if(dm){CO151.ap=1;try{hurt(MQ151.e,dm,{col:0xc8d0ff},false,true)}finally{CO151.ap=0}MQ151.e.agg=1}}}
       else if(t==='g1k')gb180OnKill();
-      else if(msg.peer===gb180Drv()||(t==='g1s'&&!gb180Has())){
+      // the driver's word: from whoever drives while I do not (presence can lag a moment on who that is; when two drive, the lower id wins)
+      else if(msg.peer===gb180Drv()||!gb180Auth()&&(gb180Has()||t==='g1s')||(t==='g1s'&&!gb180Has())){
         if(t==='g1c')gb180OnCast(q);else if(t==='g1s')gb180OnSync(q);
         else if(t==='g1st'){const e=MQ151.e;if(e&&!e.dead&&!(GB151A&&GB151A.f))co151Rx(()=>gb151Start(e))}
         else if(t==='g1r'){if(GB151A&&GB151A.f)co151Rx(()=>gb151Reset(true))}
