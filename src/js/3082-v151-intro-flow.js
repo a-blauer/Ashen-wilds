@@ -28,10 +28,17 @@ function ic151BuildP2(W, H) {
   return S
 }
 
+// v151d: from the moment a new game starts until part one is on screen, a black cover hides the hero creator (it sits
+// under the title, the layout picker and the save prompt, which keep working; part one builds for a moment)
+function ic151Cover(on) {
+  let c = $('ic151cv'); if (!on) { if (c) c.remove(); return }
+  if (!c && ic151Want()) { c = document.createElement('div'); c.id = 'ic151cv'; c.style.cssText = 'position:fixed;inset:0;z-index:40;background:#000;pointer-events:none'; document.body.appendChild(c) }
+  IC151.cvT = performance.now()
+}
 // what marks a new game
-{ const f = awTitleGo; awTitleGo = function (mode) { const r = f.apply(this, arguments); try { const T = $('awT'); if (mode === 'new' && T && T.classList.contains('out')) IC151.newGame = true } catch (_) {} return r } }
-try { $('devp').addEventListener('click', e => { if (e.target.closest('[data-dev]') && !saveInfo()) IC151.newGame = true }) } catch (_) {}
-try { const b = $('svpN'), f = b.onclick; b.onclick = function () { const r = f && f.apply(this, arguments); if ($('svp').classList.contains('hide')) IC151.newGame = true; return r } } catch (_) {}
+{ const f = awTitleGo; awTitleGo = function (mode) { const r = f.apply(this, arguments); try { const T = $('awT'); if (mode === 'new' && T && T.classList.contains('out')) { IC151.newGame = true; ic151Cover(true) } } catch (_) {} return r } }
+try { $('devp').addEventListener('click', e => { if (e.target.closest('[data-dev]') && !saveInfo()) { IC151.newGame = true; ic151Cover(true) } }) } catch (_) {}
+try { const b = $('svpN'), f = b.onclick; b.onclick = function () { const r = f && f.apply(this, arguments); if ($('svp').classList.contains('hide')) { IC151.newGame = true; ic151Cover(true) } return r } } catch (_) {}
 
 // part one starts when the creator is the screen in front (title, layout picker and save prompt gone)
 function ic151P1Ready() {
@@ -39,8 +46,9 @@ function ic151P1Ready() {
   return !!(st && !st.classList.contains('hide') && st.offsetParent !== null && !$('awT') && hid('devp') && hid('svp') && hid('kqj'))
 }
 setInterval(() => {
+  if ($('ic151cv') && (IC151.run || !IC151.newGame || performance.now() - IC151.cvT > 20000)) ic151Cover(false);   // the intro is up (or never came)
   if (!IC151.newGame || IC151.run) return;
   if (!ic151Want()) { IC151.newGame = false; return }
   if (!ic151P1Ready()) return;
-  IC151.newGame = false; try { ic151Play(null, 'p1') } catch (e) { console.warn('intro part one', e) }
-}, 250);
+  IC151.newGame = false; try { ic151Play(null, 'p1') } catch (e) { console.warn('intro part one', e) } ic151Cover(false)
+}, 120);

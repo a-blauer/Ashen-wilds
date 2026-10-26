@@ -18,8 +18,12 @@ def wait(pg,js,ms):
 def s(pg):
     ev=pg.evaluate
     ev("()=>{window.KQ_INTRO=1;window._bt=[];const e=document.getElementById('banner');if(e)new MutationObserver(()=>{if(e.textContent&&!IC151.run)window._bt.push(e.textContent.slice(0,70))}).observe(e,{childList:true,subtree:true,characterData:true})}")
+    # v151d: from the click on, no frame may show the hero creator uncovered before part one (a check before every paint)
+    ev("()=>{window._exposed=0;const f=()=>{if(window._stopX)return;const st=document.getElementById('start'),dv=document.getElementById('devp');"
+       "if(st&&!st.classList.contains('hide')&&dv&&dv.classList.contains('hide')&&!document.getElementById('ic151cv')&&!document.getElementById('ic151'))window._exposed++;requestAnimationFrame(f)};requestAnimationFrame(f)}")
     pg.click('[data-dev=desktop]',timeout=60000)
     ok=wait(pg,"()=>IC151.run&&IC151.mode==='p1'&&!!document.getElementById('ic151')",8000)
+    x=ev("()=>{window._stopX=1;return window._exposed}");chk('the creator is not seen before part one starts',x==0,x)
     st=ev("()=>({run:IC151.run,mode:IC151.mode,el:!!document.getElementById('ic151'),start:!document.getElementById('start').classList.contains('hide'),party:party.length})");print(st)
     chk('part one plays when the new game starts, before the creator',ok and st['start'] and st['party']==0,st)
     pg.wait_for_timeout(2500)

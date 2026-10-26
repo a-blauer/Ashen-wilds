@@ -40918,7 +40918,9 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
       const cy=Math.PI,cp=typeof camPitch!='undefined'?camPitch:.3,cd=typeof camDist!='undefined'?camDist:9.5,p1=new V(H.x+Math.sin(cy)*Math.cos(cp)*cd,H.y+1.1+Math.sin(cp)*cd,H.z+Math.cos(cy)*Math.cos(cp)*cd),l1=H.clone().add(up(1));
       p=p0.lerp(p1,k);l=l0.lerp(l1,k);fov=50+(58-50)*k}}
   else if(t>=IV.ched[0]&&t<IV.ched[1]){const C=new V(D.ched[0],D.chY0!=null?D.chY0-.45:gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
-    p=H.clone().addScaledVector(dr,-1.8+.35*k).addScaledVector(sv,1.0).add(up(1.45-.1*k));l=C.clone().add(up(.75));fov=44}
+    // v151d: beside the hero on his left, a little back: his weapon hand (the right) is on the far side, so nothing he carries
+    // comes between the camera and Cheddar
+    p=H.clone().addScaledVector(dr,-.55+.25*k).addScaledVector(sv,1.75).add(up(1.32-.06*k));l=C.clone().add(up(.62)).addScaledVector(sv,.25);fov=46}
   else{let done=false;for(let i=0;i<D.npc.length;i++){const n=D.npc[i];if(t>=IV.walks[i][0]&&t<n.mt[0]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0),dd=dr.length();dr.normalize();const sv=new V(dr.z,0,-dr.x),k=Sm(K(dd,1.9,6));
         if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,-1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
         else{// locked-off cameras on open ground that pan with him: the tavern corner → the smithy front, the lane → the Trading Post
@@ -41036,10 +41038,17 @@ function ic151BuildP2(W, H) {
   return S
 }
 
+// v151d: from the moment a new game starts until part one is on screen, a black cover hides the hero creator (it sits
+// under the title, the layout picker and the save prompt, which keep working; part one builds for a moment)
+function ic151Cover(on) {
+  let c = $('ic151cv'); if (!on) { if (c) c.remove(); return }
+  if (!c && ic151Want()) { c = document.createElement('div'); c.id = 'ic151cv'; c.style.cssText = 'position:fixed;inset:0;z-index:40;background:#000;pointer-events:none'; document.body.appendChild(c) }
+  IC151.cvT = performance.now()
+}
 // what marks a new game
-{ const f = awTitleGo; awTitleGo = function (mode) { const r = f.apply(this, arguments); try { const T = $('awT'); if (mode === 'new' && T && T.classList.contains('out')) IC151.newGame = true } catch (_) {} return r } }
-try { $('devp').addEventListener('click', e => { if (e.target.closest('[data-dev]') && !saveInfo()) IC151.newGame = true }) } catch (_) {}
-try { const b = $('svpN'), f = b.onclick; b.onclick = function () { const r = f && f.apply(this, arguments); if ($('svp').classList.contains('hide')) IC151.newGame = true; return r } } catch (_) {}
+{ const f = awTitleGo; awTitleGo = function (mode) { const r = f.apply(this, arguments); try { const T = $('awT'); if (mode === 'new' && T && T.classList.contains('out')) { IC151.newGame = true; ic151Cover(true) } } catch (_) {} return r } }
+try { $('devp').addEventListener('click', e => { if (e.target.closest('[data-dev]') && !saveInfo()) { IC151.newGame = true; ic151Cover(true) } }) } catch (_) {}
+try { const b = $('svpN'), f = b.onclick; b.onclick = function () { const r = f && f.apply(this, arguments); if ($('svp').classList.contains('hide')) { IC151.newGame = true; ic151Cover(true) } return r } } catch (_) {}
 
 // part one starts when the creator is the screen in front (title, layout picker and save prompt gone)
 function ic151P1Ready() {
@@ -41047,11 +41056,12 @@ function ic151P1Ready() {
   return !!(st && !st.classList.contains('hide') && st.offsetParent !== null && !$('awT') && hid('devp') && hid('svp') && hid('kqj'))
 }
 setInterval(() => {
+  if ($('ic151cv') && (IC151.run || !IC151.newGame || performance.now() - IC151.cvT > 20000)) ic151Cover(false);   // the intro is up (or never came)
   if (!IC151.newGame || IC151.run) return;
   if (!ic151Want()) { IC151.newGame = false; return }
   if (!ic151P1Ready()) return;
-  IC151.newGame = false; try { ic151Play(null, 'p1') } catch (e) { console.warn('intro part one', e) }
-}, 250);
+  IC151.newGame = false; try { ic151Play(null, 'p1') } catch (e) { console.warn('intro part one', e) } ic151Cover(false)
+}, 120);
 // ================= v148.2: co-op revive =================
 // In co-op, a hero who drops to 0 HP while a partner is still standing in the same map is DOWNED instead of dying:
 //  * they lie on the ground for RV148.T seconds (bleeding out), cannot move, attack or cast, and nothing can hit them;

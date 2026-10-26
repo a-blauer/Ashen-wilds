@@ -20,7 +20,7 @@ WAV=r"""async()=>{const sr=44100,len=IC151.len+.5,ac=new OfflineAudioContext(2,M
   let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return {b64:btoa(s),peak:pk}}"""
 def s(pg):
     ev=pg.evaluate
-    pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
+    pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="%s"]'%os.environ.get('CLS','warrior'),timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     chk('intro not played under automation',ev("()=>!IC151.run&&!document.getElementById('ic151')"))
     info=ev("([w,h])=>ic151Cap(w,h)",[W,H]);print('cap',info)
     chk('the quake splits the middle into plates',info['split']==5,info['split']);chk('rat slab found',info['rat'] and 3.5<info['edge']<6.5,info['edge']);chk('upright rat built',info['hero'])
@@ -52,6 +52,13 @@ def s(pg):
           const m=n.mt;return {work:spread(m[0]-4.6,m[0]-2.2),greet:spread(m[0]+.2,m[1]-.25)}}""")
         print('smith arm swing (rad)',sm)
         chk('the blacksmith stops hammering when he is greeted',sm is not None and sm['work']>.4 and sm['greet']<.05,sm)
+        # v151d: during Cheddar's introduction nothing of the hero (body, weapon, shield) is between the camera and Cheddar
+        oc=ev("""()=>{const D=IC151.S.D,C=D.ch,rc=new THREE.Raycaster(),V=THREE.Vector3,hm=[];if(!C)return null;pl.traverse(o=>{if(o.isMesh&&o.visible)hm.push(o)});let hits=[],n=0;
+          for(let t=IC151D.ched[0]+.3;t<IC151D.ched[1]-.2;t+=.3){ic151Seek(t);cam.updateMatrixWorld();pl.updateMatrixWorld(true);C.root.updateMatrixWorld(true);const B=new THREE.Box3().setFromObject(C.root);
+            for(const f of [.1,.3,.5,.7,.9])for(const g of [.1,.5,.9]){const p=new V(B.min.x+(B.max.x-B.min.x)*g,B.min.y+(B.max.y-B.min.y)*f,B.min.z+(B.max.z-B.min.z)*g),d=p.clone().sub(cam.position),L=d.length();rc.set(cam.position,d.normalize());rc.far=L;n++;
+              if(rc.intersectObjects(hm,true).length)hits.push([+t.toFixed(1),f])}}return {n,hits:hits.slice(0,6),nh:hits.length}}""")
+        print('cheddar view',oc)
+        chk('nothing of the hero blocks the view of Cheddar in his introduction',oc is not None and oc['nh']==0,oc)
         # v151: no floating name tags over the town folk in the cinematic (they come back afterwards: checked at the end)
         TAGS="()=>{let n=0;const w=new THREE.Vector3();scene.traverse(o=>{if(!o.isSprite||!o.material||!o.material.map||!o.material.map.isCanvasTexture)return;let v=true,q=o;while(q){if(q.visible===false)v=false;q=q.parent}o.getWorldPosition(w);if(v&&Math.hypot(w.x-40,w.z-305)<80)n++});return n}"
         ev("()=>ic151Seek(65)");pg.wait_for_timeout(600);ev("()=>ic151Seek(65.05)")

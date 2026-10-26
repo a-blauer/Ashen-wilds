@@ -113,7 +113,9 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
       const cy=Math.PI,cp=typeof camPitch!='undefined'?camPitch:.3,cd=typeof camDist!='undefined'?camDist:9.5,p1=new V(H.x+Math.sin(cy)*Math.cos(cp)*cd,H.y+1.1+Math.sin(cp)*cd,H.z+Math.cos(cy)*Math.cos(cp)*cd),l1=H.clone().add(up(1));
       p=p0.lerp(p1,k);l=l0.lerp(l1,k);fov=50+(58-50)*k}}
   else if(t>=IV.ched[0]&&t<IV.ched[1]){const C=new V(D.ched[0],D.chY0!=null?D.chY0-.45:gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
-    p=H.clone().addScaledVector(dr,-1.8+.35*k).addScaledVector(sv,1.0).add(up(1.45-.1*k));l=C.clone().add(up(.75));fov=44}
+    // v151d: beside the hero on his left, a little back: his weapon hand (the right) is on the far side, so nothing he carries
+    // comes between the camera and Cheddar
+    p=H.clone().addScaledVector(dr,-.55+.25*k).addScaledVector(sv,1.75).add(up(1.32-.06*k));l=C.clone().add(up(.62)).addScaledVector(sv,.25);fov=46}
   else{let done=false;for(let i=0;i<D.npc.length;i++){const n=D.npc[i];if(t>=IV.walks[i][0]&&t<n.mt[0]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0),dd=dr.length();dr.normalize();const sv=new V(dr.z,0,-dr.x),k=Sm(K(dd,1.9,6));
         if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,-1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
         else{// locked-off cameras on open ground that pan with him: the tavern corner → the smithy front, the lane → the Trading Post
