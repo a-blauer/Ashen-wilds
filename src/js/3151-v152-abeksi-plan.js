@@ -36,6 +36,7 @@ function ab152Plan(){if(ab152Plan.c)return ab152Plan.c;
   row(28,32,20,28,2);
   // ---------------- B · The Market (v 32..70): stalls round a serpent fountain, an arcade on the north side ----------------
   for(let u=32;u<=132;u+=6)c('pillar',u,35);                    // the arcade: pillars, a shaded walk behind them (v 33..35)
+  [41,53,65,89,101,113,125].forEach((u,i)=>c(i%2?'barrels':'crate',u,33.6));   // goods stacked in the arcade: somewhere to wait while its guard walks by
   c('awning',40,33);c('awning',64,33);c('awning',100,33);
   [[38,43],[50,43],[62,43],[96,43],[108,43],[120,43],[38,51],[50,51],[108,51],[120,51],[38,59],[50,59],[62,59],[96,59],[108,59],[120,59]].forEach(([u,v],i)=>{c('stall',u,v,(i%2)*Math.PI);c('awning',u,v-.5)});
   c('fountain',78,49);c('cart',70,63);c('cart',88,41.4);c('barrels',27,48);c('crate',26,56);c('crate',27,57);c('sacks',134,47);c('barrels',134,57);
@@ -43,6 +44,7 @@ function ab152Plan(){if(ab152Plan.c)return ab152Plan.c;
   l('brazier',78,46);l('brazier',78,56);l('lantern',44,47);l('lantern',114,47);l('lantern',44,55);l('lantern',114,55);l('torch',24,40);l('torch',136,62);l('torch',60,36);l('torch',104,36);
   N.push(['b1','w','patrol',30,40,0,{path:[[30,39,2],[132,39,3],[132,66,2],[30,66,3]],spd:1.25}]);
   N.push(['b2','w','sentry',80,46.2,Math.PI,{arc:Math.PI,per:16,rng:10}]);          // on the fountain steps, turning slowly all round
+  N.push(['b15','w','patrol',34,36.4,0,{path:[[34,36.4,3],[130,36.4,3]],spd:1.1}]);   // walks the arcade end to end
   N.push(['b3','a','work',38,41.4,0,{pose:'haggle'}]);N.push(['b4','s','work',50,44.6,Math.PI,{pose:'haggle'}]);
   N.push(['b5','a','work',96,44.6,Math.PI,{pose:'hammer'}]);N.push(['b6','s','work',108,41.4,0,{pose:'haggle'}]);
   N.push(['b7','a','work',38,57.4,0,{pose:'haggle'}]);N.push(['b8','s','work',120,60.6,Math.PI,{pose:'eatStand'}]);
@@ -104,13 +106,14 @@ function ab152Plan(){if(ab152Plan.c)return ab152Plan.c;
   // ---------------- F · The Gate Yard (v 182..194): the city gate, its tower, and the drain under the wall ----------------
   b(66,188,84,194,4,'tower');                                    // the gatehouse (the gate itself faces the yard)
   c('gate',75,187);c('wagon',44,186);c('crate',56,190);c('cstack',57,190);c('barrels',94,188);c('cart',106,188.6);c('crate',116,190);c('hay',120,186);c('crate',126,188);c('drain',129,193);
+  c('cstack',70,186);c('cstack',80,186);c('crate',69,187);c('barrel',81,187);c('table',74,183.2);c('rack',62,183.6);   // stacks beside the gate to duck behind; the guards' dice table; their spear rack
   l('brazier',62,186);l('brazier',88,186);l('torch',40,192);l('torch',112,192);
-  N.push(['f1','w','sentry',70,186,Math.PI,{arc:.9,per:7,rng:10}]);N.push(['f2','w','sentry',80,186,Math.PI,{arc:.9,per:8,rng:10,ph:.5}]);
-  N.push(['f3','w','lantern',75,187,Math.PI,{sweep:1,arc:1.35,per:6,rng:15,lift:3.8}]);  // the tower lamp sweeps the yard
-  N.push(['f4','w','patrol',30,184,0,{path:[[30,184,2],[124,184,2],[124,191,3],[96,191,1]],spd:1.3}]);
+  N.push(['f1','w','sit',72.2,183.2,Math.PI/2,{pose:'sit',seat:1}]);N.push(['f2','w','sit',75.8,183.2,-Math.PI/2,{pose:'sit',seat:1}]);   // the gate guards at their dice
+  N.push(['f3','w','lantern',75,187,Math.PI,{sweep:1,arc:1.25,per:9,rng:15,lift:3.8}]);  // the tower lamp sweeps the yard
+  N.push(['f4','w','patrol',30,183.6,0,{path:[[30,183.6,2],[124,183.6,3],[124,190.5,3],[90,190.5,2],[90,183.6,0]],spd:1.3}]);
   const CP=[[14,10,.7,'The Breach'],[24,34,.8,'The Market'],[122,76,-.7,'The Dwellings'],[24,120,.8,'The Rat Warrens'],[122,156,-.8,'The Great Kitchen'],[24,184,1.4,'The Gate Yard']];
   const EXIT=[129,192.6];
-  return ab152Plan.c={W:150,H:200,B,C,L,N,PEN,CP,EXIT,D:[[6,28],[32,70],[74,114],[118,150],[154,178],[182,194]],IN:[8,6,142,194]}}
+  return ab152Plan.c={W:150,H:200,B,C,L,N,PEN,CP,EXIT,D:[[6,28],[32,70],[74,114],[118,150],[154,178],[182,194]],IN:[8,6,141,193]}}
 // v152: the city's ground, called from 0045 (sp152Map) before anything is built from the map: every tile inside the walls is open
 // ground (streets 'a', yards '.'), the building footprints are solid 'r' tiles (no mesh of their own), the rest of the rectangle is
 // void. DW inside is negative (flat ground at 1.6 where 0045 makes the heights), so the city sits level on its own plateau.

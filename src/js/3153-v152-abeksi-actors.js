@@ -29,7 +29,10 @@ function ab152Grid(P,I){const Wd=P.W,Hd=P.H,cls=new Uint8Array(Wd*Hd),sol=new Ui
   // yards: open tiles enclosed between houses of one block (the street texture skips them): tiles next to a building on two
   // opposite sides within 3 tiles count as yard
   for(let v=b0;v<=b1;v++)for(let u=a0;u<=a1;u++){const i=v*Wd+u;if(cls[i]==2)continue;let n=0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([du,dv])=>{for(let s=1;s<=3;s++){const j=(v+dv*s)*Wd+u+du*s;if(cls[j]==2&&sol[j]){n++;break}}});if(n>=3)yard[i]=1}
-  return {W:Wd,H:Hd,cls,sol,yard,fp}}
+  // roof heights (world y) for the camera: buildings and the outer wall
+  const top=new Float32Array(Wd*Hd);for(let i=0;i<Wd*Hd;i++)if(cls[i]==2&&sol[i])top[i]=1.6+7.8;
+  P.B.forEach(([u0,v0,u1,v1,st,sty])=>{const h=1.6+(sty=='tower'?2.3*st+.8:sty=='hall'?3.4:sty=='barn'?4.4:sty=='ruin'?2.6:2.3*st)+.55;for(let v=v0;v<v1;v++)for(let u=u0;u<u1;u++)top[v*Wd+u]=h});
+  return {W:Wd,H:Hd,cls,sol,yard,fp,top}}
 function ab152Cls(G,u,v){const x=Math.round(u),z=Math.round(v);if(x<0||z<0||x>=G.W||z>=G.H)return 2;return G.cls[z*G.W+x]}
 // line of sight from (au,av) to (bu,bv) in plan coordinates; low cover blocks only a crouching target
 function ab152LOS(G,au,av,bu,bv,cr){const L=Math.hypot(bu-au,bv-av);if(L<.8)return true;const n=Math.ceil(L/.3);
@@ -47,12 +50,13 @@ function ab152MakeActor(sp,I){const [id,look,role,u,v,ry,o0]=sp,o=o0||{},key=loo
   const pose=o.pose||(role=='talk'?'talk':role=='sentry'?'guard':role=='sit'?'sit':'idle'),tk=o.carry||(o.chef?'cleaver':{stir:'ladle',chop:'cleaver',sweep:'broom',fork:'fork',hammer:'hammer',sitEat:'bone',eatStand:'bone'}[pose])||(role=='lantern'?'lantern':null);
   if(tk){const t=ab152Tool(tk);if(t){const hand=tk=='lantern'?h.bones.aL2:h.bones.aR2;t.rotation.x=tk=='cage'||tk=='platter'?0:-1.0;t.position.set(0,-.03,.02);if(tk=='cage'){t.position.set(.18,-.05,.22);t.rotation.set(0,0,Math.PI/2)}hand.add(t);g.userData.tool=t}}
   const [x,z]=[I.x0+u,I.y0+v];g.position.set(x,1.6,z);g.rotation.y=ry;
-  const a={id,role,look,o,g,h,pose,home:{u,v,ry},u,v,yaw:ry,hy:0,ht:0,st:'routine',sus:0,unseen:9,seen:0,t:Math.random()*20,tph:Math.random()*8,pi:0,wait:o.path?(o.path[0][2]||0):0,
-    path:o.path?o.path.map(q=>[q[0],q[1],q[2]||0]):null,spd:o.spd||1.2,lamp:role=='lantern',mv:0,mark:null,cone:null,glT:2+Math.random()*4,gl:0,tgt:null,inv:0,ear:0};
+  const sd=[...id].reduce((h,c)=>h*31+c.charCodeAt(0),7)%100000+11,rnd=ab152R(sd);
+  const a={id,role,look,o,g,h,pose,sd,rnd,home:{u,v,ry},u,v,yaw:ry,hy:0,ht:0,st:'routine',sus:0,unseen:9,seen:0,t:rnd()*20,tph:rnd()*8,pi:0,wait:o.path?(o.path[0][2]||0):0,
+    path:o.path?o.path.map(q=>[q[0],q[1],q[2]||0]):null,spd:o.spd||1.2,lamp:role=='lantern',mv:0,mark:null,cone:null,glT:2+rnd()*4,gl:0,tgt:null,inv:0,ear:0};
   if(o.with)a.tph=(id.charCodeAt(id.length-1)%2)*3.2;
   return a}
 // reset to the start of its routine (a checkpoint restart)
-function ab152ResetActor(a){a.u=a.home.u;a.v=a.home.v;a.yaw=a.home.ry;a.hy=0;a.st='routine';a.sus=0;a.unseen=9;a.seen=0;a.pi=0;a.wait=a.path?(a.path[0][2]||0):0;a.tgt=null;a.inv=0;a.ear=0;a.t=0;a.mv=0;
+function ab152ResetActor(a){a.rnd=ab152R(a.sd);a.t=a.rnd()*20;a.tph=a.rnd()*8;a.glT=2+a.rnd()*4;a.gl=0;a.ht=0;a.u=a.home.u;a.v=a.home.v;a.yaw=a.home.ry;a.hy=0;a.st='routine';a.sus=0;a.unseen=9;a.seen=0;a.pi=0;a.wait=a.path?(a.path[0][2]||0):0;a.tgt=null;a.inv=0;a.ear=0;a.mv=0;
   if(a.path){a.u=a.path[0][0];a.v=a.path[0][1]}}
 // ---------------- the brain ----------------
 function ab152Turn(a,want,rate,dt){let d=want-a.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));a.yaw+=Math.max(-rate*dt,Math.min(rate*dt,d));return Math.abs(d)}
@@ -68,7 +72,7 @@ function ab152Routine(a,dt){const o=a.o;a.mv=0;
   if(a.role=='sentry'||o.sweep){const w=(Math.PI*2)/(o.per||10),s=Math.sin(a.t*w+(o.ph||0)*6.283);ab152Turn(a,H.ry+(o.arc||1)*s,3,dt);a.ht=.25*Math.sin(a.t*w*2.3);return}
   ab152Turn(a,H.ry,3,dt);
   // busy and chatting snakes glance around now and then: that is when they can catch you
-  a.glT-=dt;if(a.glT<=0){a.gl=a.gl?0:(Math.random()<.5?-1:1)*(.7+Math.random()*.6);a.glT=a.gl?1.2+Math.random()*1.4:3+Math.random()*5}
+  a.glT-=dt;if(a.glT<=0){const R=a.rnd;a.gl=a.gl?0:(R()<.5?-1:1)*(.7+R()*.6);a.glT=a.gl?1.2+R()*1.4:3+R()*5}
   a.ht+=((a.gl||0)-a.ht)*Math.min(1,dt*3)}
 // the hero is in the city's frame (u, v); cr = crouching; returns how fast suspicion rises (0 = not seen)
 function ab152Sees(a,hu,hv,cr,lit){const kind=ab152Kind(a),du=hu-a.u,dv=hv-a.v,d=Math.hypot(du,dv);if(d>16)return 0;const G=AB152.S.G;
@@ -115,16 +119,20 @@ function ab152Apply(h,name,t,a,overlay){const f=AB152P[name]||AB152P.idle,B=h.bo
   const S={ht:a.ht2!=null?a.ht2:a.ht,tph:a.tph};f(P,t,S)}
 // ---------------- what the hero sees of the snakes: view cones, "?" and "!" ----------------
 var AB152CN={N:22};
-function ab152ConeMake(){const N=AB152CN.N,g=new THREE.BufferGeometry(),pos=new Float32Array((N+2)*3),idx=[];for(let i=1;i<=N;i++)idx.push(0,i,i+1);
-  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(idx);
-  const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xfff0a0,transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide,fog:false}));m.frustumCulled=false;m.renderOrder=3;m.userData.psNo=1;return m}
+// a fan on the ground, brightest near the eyes and fading out to its rim (f: 0 at the snake, 1 at the rim)
+function ab152ConeMat(){return new THREE.ShaderMaterial({uniforms:{col:{value:new THREE.Color(0xfff0a0)},op:{value:.16}},transparent:true,depthWrite:false,side:THREE.DoubleSide,
+  vertexShader:'attribute float f;varying float vF;void main(){vF=f;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform vec3 col;uniform float op;varying float vF;void main(){float a=op*(1.-vF*vF*.75)*smoothstep(0.,.08,vF);gl_FragColor=vec4(col,a);}'})}
+function ab152ConeMake(){const N=AB152CN.N,g=new THREE.BufferGeometry(),pos=new Float32Array((N+2)*3),f=new Float32Array(N+2).fill(1),idx=[];f[0]=0;for(let i=1;i<=N;i++)idx.push(0,i,i+1);
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('f',new THREE.BufferAttribute(f,1));g.setIndex(idx);
+  const m=new THREE.Mesh(g,ab152ConeMat());m.frustumCulled=false;m.renderOrder=3;m.userData.psNo=1;return m}
 function ab152ConeTick(a,I,G,cr){const c=a.cone;if(!c)return;const kind=ab152Kind(a),N=AB152CN.N;let R=AB152V.rng[kind]*(cr?AB152V.crouchK:1);if(a.st!='routine')R*=1.25;
   const half=AB152V.half[kind],fy=a.yaw+a.hy,p=c.geometry.attributes.position,y=GH(I.x0+a.u,I.y0+a.v)+.06;p.setXYZ(0,I.x0+a.u,y,I.y0+a.v);
   for(let i=0;i<=N;i++){const an=fy-half+2*half*i/N,su=Math.sin(an),sv=Math.cos(an);let L=R;
     for(let s=.5;s<=R;s+=.5){const c2=ab152Cls(G,a.u+su*s,a.v+sv*s);if(c2>=2){L=s-.25;break}}
     p.setXYZ(i+1,I.x0+a.u+su*L,y,I.y0+a.v+sv*L)}
-  p.needsUpdate=true;const col=a.st=='caught'?0xff3020:a.sus>=AB152V.go?0xff8a2a:a.sus>=AB152V.look?0xffd040:0xfff0a0;c.material.color.setHex(col);
-  c.material.opacity=a.st=='caught'?.32:a.sus>8?.2+.14*a.sus/100:.13}
+  p.needsUpdate=true;const col=a.st=='caught'?0xff3020:a.sus>=AB152V.go?0xff8a2a:a.sus>=AB152V.look?0xffd040:0xfff0a0,U=c.material.uniforms;U.col.value.setHex(col);
+  U.op.value=a.st=='caught'?.42:a.sus>8?.26+.16*a.sus/100:.2}
 function ab152MarkTex(ch,col){const k=ch+col;AB152CN.tx=AB152CN.tx||{};if(AB152CN.tx[k])return AB152CN.tx[k];const c=document.createElement('canvas');c.width=64;c.height=80;const x=c.getContext('2d');
   x.font='900 66px Georgia,serif';x.textAlign='center';x.textBaseline='middle';x.lineWidth=8;x.strokeStyle='#120a04';x.strokeText(ch,32,42);x.fillStyle=col;x.fillText(ch,32,42);return AB152CN.tx[k]=new THREE.CanvasTexture(c)}
 function ab152MarkTick(a,now){if(!a.mark){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ab152MarkTex('?','#ffe060'),transparent:true,depthWrite:false,fog:false}));sp.scale.set(.42,.52,1);sp.renderOrder=6;sp.userData.psNo=1;AB152.S.root.add(sp);a.mark=sp}

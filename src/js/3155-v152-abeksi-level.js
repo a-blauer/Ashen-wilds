@@ -22,7 +22,12 @@ function ab152Build(){if(AB152.S)return AB152.S;const I=sp152I('abeksi'),P=ab152
   root.children.forEach(m=>m.traverse(o=>{if(o.isMesh)o.castShadow=false}));
   root.add(ab152Streets(P,I,G));
   // props, their colliders (CBLK), the animated ones
-  P.C.forEach(([k,u,v,r])=>{const m=ab152Kit(k);if(!m)return;put(m,u,v,r);if(m.userData.flame)S.anim.push({k:'flame',m:m.userData.flame,ph:Math.random()*6});if(m.userData.bar)S.anim.push({k:'bar',m:m.userData.bar})});
+  // static props are baked into one mesh set per district; the moving ones (fires, spits, cloth) stay objects of their own
+  const bake=P.D.map(()=>[]),dOf=v=>{let i=0;P.D.forEach(([a],j)=>{if(v>=a-4)i=j});return i};
+  P.C.forEach(([k,u,v,r])=>{const kk=k=='crate'?'crate0':k,[x,z]=at(u,v);
+    if(k=='hearth'||k=='spit'||k=='laundry'||AB152KM[kk]){const m=ab152Kit(k);if(!m)return;put(m,u,v,r);if(m.userData.flame)S.anim.push({k:'flame',m:m.userData.flame,ph:Math.random()*6});if(m.userData.bar)S.anim.push({k:'bar',m:m.userData.bar});return}
+    bake[dOf(v)].push([kk,x,GH(x,z),z,r])});
+  bake.forEach((L,i)=>{if(L.length)root.add(lgGroup('AB152|props'+i,k=>ab152BakeProps(k,L),0))});
   G.fp.forEach(i=>{const u=i%G.W,v=Math.floor(i/G.W);CBLK.add((I.y0+v)*W+I.x0+u)});S.blk=G.fp.length;
   // lights: a flame, a pooled light, a pool of light on the ground
   P.L.forEach(([k,u,v])=>{const D=AB152L[k]||AB152L.torch;let m=null;if(k=='brazier')m=mqm143Brazier();else if(k=='torch')m=ab152Torch();else if(k=='lantern')m=ab152Lantern();
@@ -108,7 +113,8 @@ function ab152Caught(a){if(AB152H.cau)return;AB152H.cau={a,t:0};AB152H.frz=1;a.s
   setTimeout(()=>{fadeTo(()=>{ab152Restart(false);try{say('✦ Checkpoint · '+ab152Spot(AB152Q.cp).name)}catch(_){}})},1500)}
 // ---------------- each frame in the city ----------------
 function ab152Tick(dt,now){if(!ab152In()){if(AB152.S){AB152.S.root.visible=false;AB152.S.lights.forEach(L=>L.lt.intensity=0);AB152.S.acts.forEach(a=>{if(a.lt)a.lt.intensity=0})}
-    if(AB152H.cr)ab152SetCrouch(false);AB152H.crK=Math.max(0,AB152H.crK-dt*4);return}
+    if(AB152H.cr)ab152SetCrouch(false);AB152H.crK=Math.max(0,AB152H.crK-dt*4);if(!AB152H.off){AB152H.off=1;try{ab152Hud()}catch(_){}}return}
+  AB152H.off=0;
   const S=ab152Build(),I=S.I,P=pl.position,H=AB152H;S.root.visible=true;
   H.u=P.x-I.x0;H.v=P.z-I.y0;H.crK+=((H.cr?1:0)-H.crK)*Math.min(1,dt*7);H.lit=ab152Light(H.u,H.v);H.live=!H.cau&&!H.frz&&dt>0;
   if(riding)try{dismount(true)}catch(_){}
@@ -130,6 +136,17 @@ function ab152Tick(dt,now){if(!ab152In()){if(AB152.S){AB152.S.root.visible=false
   if(now-(H.hT||0)>150){H.hT=now;ab152Hud()}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{ab152Tick(dt,now)}catch(e){if(!AB152.err++)console.error('v152 abeksi',e)}return r}}
 {const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{if(ab152In()){torch.intensity*=.3;if(typeof LANT!='undefined'&&LANT)LANT.visible=false}}catch(_){}return r}}
+// ---------------- the camera in the streets ----------------
+// Houses stand close on every side, so a camera behind the hero would often sit inside one (and the scenery fade would fill the
+// screen with see-through wall). Each frame in the city the camera first tilts up over the roofs (a stealth view from above), and
+// only if that is not enough comes in closer. The player's own zoom and tilt are kept and put back right after the frame.
+function ab152CamFit(){const S=AB152.S;if(!S)return null;const G=S.G,I=S.I,P=pl.position,yw=camYaw,ox=Math.sin(yw),oz=Math.cos(yw),hy=P.y+1.1;
+  const clear=(p,d)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.0;s<=d;s+=.35){const u=Math.round(P.x+ox*hc*s-I.x0),v=Math.round(P.z+oz*hc*s-I.y0);if(u<0||v<0||u>=G.W||v>=G.H)return s;const t=G.top[v*G.W+u];if(t&&hy+sp*s<t+.6)return s}return 0};
+  const d0=camDist,p0=camPitch;if(!clear(p0,d0))return null;
+  for(let p=p0+.08;p<=1.22;p+=.08)if(!clear(p,d0))return [p,d0];
+  const s=clear(1.22,d0);return [1.22,Math.max(3.2,s-.4)]}
+{const f=loop;loop=function(now){let keep=null;try{if(ab152In()&&AB152.S&&!(typeof uiOpen=='function'&&uiOpen())){const r=ab152CamFit();if(r){keep=[camPitch,camDist];camPitch=r[0];camDist=r[1]}}}catch(_){}
+  try{return f.apply(this,arguments)}finally{if(keep){camPitch=keep[0];camDist=keep[1]}}}}
 // ---------------- prompts inside: the drain out, the breach back ----------------
 {const f=worldPrompt;worldPrompt=function(){try{if(ab152In()&&AB152.S&&!AB152H.cau){const P=pl.position,S=AB152.S;
     if(Math.hypot(P.x-S.drain[0],P.z-S.drain[1])<2.4)return {label:'F · Slip through the drain (leave Abeksi for '+INSL[6].n+')',fn:()=>ab152Finish()};
@@ -139,23 +156,27 @@ SP152.R.abeksi={park:1,noMount:'🐍 No mount in Abeksi: hooves on the cobbles w
   noRecall:'🐍 The serpent wards block your recall. Find the drain under the south wall, or climb back out at the breach.',onLoad(){AB152Q.st=Math.max(1,AB152Q.st);ab152Restart(false)}};
 // ---------------- the cleft in Hillside Crest I ----------------
 function ab152GateModel(s){const C=AB152C,g=new THREE.Group();g.userData.psNo=1;
-  g.add(lgGroup('AB152|cleft',k=>{const R=ab152R(5511);
-    // two great rock shoulders with a narrow dark gap between them, steps going down into it, a fallen carved lintel
-    [-1,1].forEach(sd=>{for(let i=0;i<6;i++){const x=sd*(1.6+R()*1.8),z=-.8-R()*2.6,s=1.3+R()*1.2;k.p('','dod','c',[0x8a8478,0x7a7468,0x9a9488][i%3],x,s*.8+R()*1.4,z,s,s*1.3,s,R()*3,R()*3,R()*3)}
-      k.p('','dod','c',0x6e685c,sd*1.25,2.2,-1.4,1.0,2.6,1.6,0,sd*.2,0)});
-    k.p('','box','c',0x050404,0,1.3,-1.9,1.3,2.6,.2);k.p('','box','c',0x0a0806,0,.6,-1.2,1.2,.04,1.6,-.5,0,0);
-    for(let i=0;i<5;i++)k.p('','box','c',0x6a6458,0,.32-i*.12,-.3-i*.38,1.2,.14,.38);
-    k.p('','box','c',AB152C.stoneL,.2,2.75,-1.0,3.4,.5,.6,0,0,.08);for(let i=0;i<6;i++)k.p('','box','c',C.trimD,-1.2+i*.5,2.75,-.69,.3,.08,.04,0,0,i%2?.6:-.6);
-    k.p('','dod','c',0x8a8478,1.8,.4,.9,.6,.4,.5);k.p('','dod','c',0x7a7468,-2.0,.3,.6,.5,.3,.5);
-    // a toppled serpent statue beside the way down, its hood cracked
-    k.L('','c',C.jade,[-1.6,.25,1.0],[-.4,.35,1.9],.28,.2,7);k.p('','hood','c',lgCol(C.jade,0x3a3a30,.4),-.3,.5,2.1,.8,.9,.4,1.3,0,.2);k.p('','tor','c',C.jade,-1.9,.3,.5,.7,.35,.7);
-    // the serpent-city banner on a spear stuck in the rock
-    k.L('','c',C.woodD,[1.3,0,.6],[1.4,2.8,.4],.04,.035,5);k.S('',C.cloth[0],1.38,2.7,.42,.5,1.2,0,0,3);k.p('','box','m',C.brass,1.4,2.2,.46,.2,.2,.02,0,0,Math.PI/4)},0));
-  // a faint warm glow from the depths
-  const gl=ab152Pool(1.6,0xff9a40);gl.position.set(0,.06,-1.0);g.add(gl);
-  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry+Math.PI;scene.add(g);
-  // block the rocks (not the steps: the F prompt is in front of them)
-  [-2.6,-2,2,2.6].forEach(o=>{for(let d=-3;d<=-.8;d+=.7){const x=s.x+Math.cos(s.ry+Math.PI)*o-Math.sin(s.ry+Math.PI)*d,z=s.z-Math.sin(s.ry+Math.PI)*o-Math.cos(s.ry+Math.PI)*d;CBLK.add(Math.round(z)*W+Math.round(x))}});
+  g.add(lgGroup('AB152|cleft3',k=>{const R=ab152R(5511),rock=[0x4e4a44,0x5a554c,0x46423c,0x615a50];
+    // a rock outcrop with a carved archway set into it; stairs go down into the dark between the posts
+    [-1,1].forEach(sd=>{for(let i=0;i<7;i++){const s0=.8+R()*1.0,x=sd*(2.0+s0+R()*1.6),z=-1.3-R()*2.4;k.p('','dod','c',rock[i%4],x,s0*.7+R()*1.5,z,s0,s0*1.25,s0,R()*3,R()*3,R()*3)}});
+    for(let i=0;i<6;i++)k.p('','dod','c',rock[i%4],(R()-.5)*4.4,4.0+R()*1.2,-2.0-R()*1.6,1.1+R()*.6,.8+R()*.4,1.1,R()*3,R()*3,R()*3);
+    k.p('','box','c',rock[2],0,2.0,-2.4,4.8,4.4,1.6);
+    // the posts and the lintel, sandstone of the city, a serpent carved across the top
+    [-1,1].forEach(sd=>{k.p('','box','c',C.stoneL,sd*1.25,1.45,-.2,.55,2.9,.7);k.p('','box','c',C.stone,sd*1.25,.12,-.2,.75,.24,.9);
+      for(let y=.5;y<2.7;y+=.42)k.p('','box','c',C.trimD,sd*1.25,y,.02,.36,.06,.04,0,0,sd*.5)});
+    k.p('','box','c',C.stoneL,0,3.05,-.35,3.3,.5,.85);k.p('','box','c',C.trim,0,2.78,-.35,3.1,.08,.9);
+    for(let i=0;i<9;i++){const x=-1.4+i*.35;k.p('','sph','c',C.jade,x,3.06+Math.sin(i*1.1)*.12,.12,.14,.12,.1)}k.p('','sph','c',C.jade,1.62,3.1,.14,.2,.16,.16);k.p('','box','g',0xff4020,1.7,3.14,.28,.05,.04,.02);
+    // the dark way down: a black opening, stairs sinking into it
+    k.p('','box','c',0x040303,0,1.35,-.75,2.0,2.7,.1);for(let i=0;i<6;i++)k.p('','box','c',lgCol(0x6a6458,0x0a0806,i/6),0,.06-i*.16,-.05-i*.32,1.9,.12,.36);
+    // a toppled serpent statue beside the way down, the city's banner on a spear stuck in the rock
+    k.L('','c',C.jade,[-2.6,.25,1.1],[-1.6,.35,2.0],.28,.2,7);k.p('','hood','c',lgCol(C.jade,0x3a3a30,.4),-1.5,.5,2.2,.8,.9,.4,1.3,0,.2);k.p('','tor','c',C.jade,-2.9,.3,.6,.7,.35,.7);
+    k.L('','c',C.woodD,[2.4,0,.6],[2.5,2.9,.4],.04,.035,5);k.S('',C.cloth[0],2.48,2.8,.42,.5,1.2,0,0,3);k.p('','box','m',C.brass,2.5,2.3,.46,.2,.2,.02,0,0,Math.PI/4);
+    for(let i=0;i<4;i++)k.p('','dod','c',rock[i],(R()-.5)*5,.2,.6+R()*1.2,.3+R()*.3,.22,.3)},0));
+  const gl=ab152Pool(1.3,0xff9a40);gl.position.set(0,.05,-.4);g.add(gl);
+  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);   // local +z faces the clearing
+  // block the rock (the archway's steps stay open in front: the F prompt is there)
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.2;o<=4.2;o+=.6)for(let d=-3.6;d<=-.4;d+=.6){if(Math.abs(o)<1.0&&d>-1.2)continue;
+    const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
   return g}
 sp152Gate('abeksi',{ig:5,r:3.4,build:ab152GateModel,
   prompt(s){if(!ab152Done())return {label:'F · Sneak through Abeksi city',fn:()=>ab152Enter()};const N=INSL[6];return {label:'F · Travel on to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}});
@@ -168,4 +189,4 @@ SP152.trk.abeksi=I=>{if(I.g===5&&!ab152Done())return {name:'The Serpent City',li
   if(I.sp==='abeksi'){const P=ab152Plan(),c=AB152Q.cp;return {name:'The Serpent City',lines:[['District',P.CP[c][3]],['Checkpoint',(c+1)+' / '+P.CP.length],['Reach the drain under the south wall',null,1]]}}
   return null};
 // ---------------- the atmosphere: night in the serpent city ----------------
-sp152Theme('abeksi',{nm:'The Serpent City',sub:'Its streets belong to the serpent folk',a:{fog:.04,fc:0x0c0e18,fcA:.92,sun:.16,hemi:.34,env:'dark',ex:.94,sat:1.06,vig:1.7,sky:.3,pt:'ash',pc:0xffb070,po:.45}});
+sp152Theme('abeksi',{nm:'The Serpent City',sub:'Its streets belong to the serpent folk',a:{fog:.034,fc:0x141a2a,fcA:.9,sun:.24,hemi:.55,env:'dark',ex:1.0,sat:1.0,vig:1.6,sky:.35,pt:'ash',pc:0xffb070,po:.45}});
