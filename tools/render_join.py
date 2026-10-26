@@ -7,10 +7,11 @@ n = int(os.environ['N']); nseg = int(os.environ['NSEG'])
 os.makedirs('segs', exist_ok=True); os.makedirs('out', exist_ok=True)
 new = sorted(f for f in os.listdir('new') if f.endswith('.mp4')) if os.path.isdir('new') else []
 for f in new: shutil.copy('new/' + f, 'segs/' + f)
-miss = [i for i in range(nseg) if not os.path.exists('segs/s%03d.mp4' % i)]
-if miss: sys.exit('render_join: pieces missing: %s' % miss)
-json.dump({'fps': fps, 'w': os.environ.get('W'), 'h': os.environ.get('H'), 'seg': seg, 'n': n, 'have': list(range(nseg))},
-          open('segs/manifest.json', 'w'))
+have = [i for i in range(nseg) if os.path.exists('segs/s%03d.mp4' % i)]
+json.dump({'fps': fps, 'w': os.environ.get('W'), 'h': os.environ.get('H'), 'seg': seg, 'n': n, 'have': have},
+          open('segs/manifest.json', 'w'))   # saved even when pieces are missing: the next render draws only those
+miss = [i for i in range(nseg) if i not in have]
+if miss: print('pieces missing: %s (kept the other %d for the next render)' % (miss, len(have))); sys.exit(1)
 with open('list.txt', 'w') as f:
     for i in range(nseg): f.write("file 'segs/s%03d.mp4'\n" % i)
 def dur(p):

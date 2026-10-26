@@ -57,11 +57,20 @@ jobs:
       - name: Draw piece ${{ matrix.seg }}
         run: |
           f0=$(( ${{ matrix.seg }} * SEG )); f1=$(( f0 + SEG )); n=${{ needs.plan.outputs.n }}; [ $f1 -gt $n ] && f1=$n
-          cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 python3 v151_intro.py 2>&1 | grep -vE '^frame ' | tail -40
-          got=$(ls out/v151_frames | wc -l); echo "frames $got of $((f1-f0))"; [ "$got" -eq $((f1-f0)) ]
-          mkdir -p ../piece
-          ffmpeg -y -loglevel error -framerate $FPS -start_number $f0 -i out/v151_frames/f%05d.jpg -frames:v $((f1-f0)) \
-            -c:v libx264 -pix_fmt yuv420p -crf 20 -preset medium -g 48 -r $FPS ../piece/s$(printf %03d ${{ matrix.seg }}).mp4
+          # a piece that comes out short is drawn once more; the last lines of what went wrong come back as an annotation
+          # (this workspace can't read Actions logs, only annotations)
+          got=0
+          for try in 1 2; do
+            rm -rf test/out/v151_frames
+            (cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 timeout 100m python3 v151_intro.py > ../draw.log 2>&1) || true
+            got=$(ls test/out/v151_frames 2>/dev/null | wc -l); echo "try $try: frames $got of $((f1-f0))"; grep -vE '^frame ' draw.log | tail -25
+            [ "$got" -eq $((f1-f0)) ] && break
+            echo "::warning title=piece ${{ matrix.seg }} try $try::frames $got of $((f1-f0)) | $(grep -vE '^frame |^ok ' draw.log | tail -14 | tr '\n' '|' | cut -c1-1500)"
+          done
+          [ "$got" -eq $((f1-f0)) ] || { echo "::error title=piece ${{ matrix.seg }}::frames $got of $((f1-f0))"; exit 1; }
+          mkdir -p piece
+          ffmpeg -y -loglevel error -framerate $FPS -start_number $f0 -i test/out/v151_frames/f%05d.jpg -frames:v $((f1-f0)) \
+            -c:v libx264 -pix_fmt yuv420p -crf 20 -preset medium -g 48 -r $FPS piece/s$(printf %03d ${{ matrix.seg }}).mp4
       - uses: actions/upload-artifact@v4
         with: {name: 'piece-${{ matrix.seg }}', path: piece/*.mp4, retention-days: 3}
   sound:
@@ -84,7 +93,7 @@ jobs:
         with: {name: sound, path: test/out/v151_sound.wav, retention-days: 3}
   join:
     needs: [plan, render, sound]
-    if: always() && needs.plan.result == 'success' && needs.sound.result == 'success' && (needs.render.result == 'success' || needs.render.result == 'skipped')
+    if: always() && needs.plan.result == 'success' && needs.sound.result == 'success'   # also after failed pieces: it keeps the good ones
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -95,16 +104,23 @@ jobs:
       - uses: actions/download-artifact@v4
         with: {name: sound, path: snd}
       - name: Join
+        id: j
         env: {N: '${{ needs.plan.outputs.n }}', NSEG: '${{ needs.plan.outputs.nseg }}'}
         run: |
           command -v ffmpeg >/dev/null || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
-          msg=$(python3 tools/render_join.py | tail -1); echo "$msg"
-          echo "::notice title=Render::$msg; drew pieces ${{ needs.plan.outputs.segs }}"
+          python3 tools/render_join.py > join.txt 2>&1 || true; cat join.txt; msg=$(tail -1 join.txt)
+          if [ -s out/intro.mp4 ]; then echo "ok=1" >> "$GITHUB_OUTPUT"; echo "::notice title=Render::$msg; drew pieces ${{ needs.plan.outputs.segs }}"
+          else echo "::error title=Render::$msg"; fi
       - uses: actions/cache/save@v4
-        with: {path: segs, key: 'intro-segs-${{ github.run_id }}'}
+        if: always()
+        with: {path: segs, key: 'intro-segs-${{ github.run_id }}-${{ github.run_attempt }}'}
       - name: Send the video back (branch render-out/intro)
+        if: steps.j.outputs.ok == '1'
         run: |
           cd out && cp ../.render-request req.json 2>/dev/null || true
           git init -q && git checkout -q -b r && git add intro.mp4 req.json
           git -c user.name=render-bot -c user.email=actions@github.com commit -qm "intro render of ${{ github.sha }}"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" r:refs/heads/render-out/intro
+      - name: Not all pieces drawn
+        if: steps.j.outputs.ok != '1'
+        run: exit 1
