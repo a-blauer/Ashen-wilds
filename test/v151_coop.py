@@ -131,7 +131,7 @@ H.evaluate("()=>dr170Set(2,'smashed')")
 both(2000,700)
 g=G.evaluate("()=>MQ170.E.box[2].s")
 chk('a smashed box shows on the guest\'s screen',g=='smashed',g)
-G.evaluate("()=>{dr170Open(2,'smashed');dr170Win(MQ170.W)}")
+G.evaluate("()=>{dr170Open(2,'rebuild');dr170Win(MQ170.W)}")
 both(2500,700)
 r=[pg.evaluate("()=>MQ170.E.box[2].s") for pg in (H,G)]
 chk('the guest\'s repair fixes the box for the host',r==['on','on'],json.dumps(r))
