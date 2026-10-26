@@ -51,7 +51,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Sovereign dens (scenery, seal, colliders; their v86 hazards are off since v110) | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
-| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new); v148.1 board tiers and companion splash (`SPL148`) | `3070`–`3077` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
+| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new); v148.1 board tiers and companion and boss splash (`SPL148`, `BSPL148`) | `3070`–`3079` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
 | v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3078-v149-ssithra-body.js` |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
@@ -312,7 +312,11 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   before it there is turned in (`chq148Open`); gold and XP are 35% of before (`CHQ148_PAY`); the Sovereign-kill quests are gone.
   *Companion splash* (`3077`, `SPL148.k`=.3): an enemy area attack aimed at the hero also hits each active companion standing in its
   red shape (downward ray at the companion vs. `a.tel`/`a.xt`), once per attack, at 30% — when the hero is hit, or when the strike ends
-  after the hero dodged out. Projectiles are left out; Sovereign fights unchanged. Test: `v148_splash.py`.
+  after the hero dodged out. Projectiles are left out. Test: `v148_splash.py`.
+  *Boss splash* (`3079`): the same 30% for the six Sovereigns and Vorraxis — every strike (`svHitNow` / `mb144HitNow`, shape vs. each
+  active companion, hero hit or not), the v146 ring waves (`sk146RingWave`), Vorraxis's Deluge (companions off the islands) and the
+  Wraith's Absolute Zero (companions away from a lit brazier). Catch-all hits (shape r 99: spines, blood drops) and lingering ground
+  hazards stay hero-only. Test: `v148_boss_splash.py` (`BL=`, `SEC=`).
 - **Version 141 (owner's list, Oct 2026)**: *Consume* raises only the eaten companion's best stat (same amount per stat as before;
   refused when that stat is maxed); the Fusion preview shows gains under 2 points with one decimal. *Keys*: Q feeds the most hurt
   active companion, Z health potion, X mana potion, 1–6 abilities. *Companions*: one active companion until the Beast Trainer teaches
