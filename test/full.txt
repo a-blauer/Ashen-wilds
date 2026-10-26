@@ -63,3 +63,4 @@ v148_outskirts.py
 v148_deco.py
 v148_splash.py
 v148_boss_splash.py
+v148_revive.py

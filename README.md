@@ -51,7 +51,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Sovereign dens (scenery, seal, colliders; their v86 hazards are off since v110) | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
-| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new); v148.1 board tiers and companion and boss splash (`SPL148`, `BSPL148`) | `3070`–`3079` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
+| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new); v148.1 board tiers and companion and boss splash (`SPL148`, `BSPL148`); v148.2 co-op revive (`RV148`) and boss credit (`BC148`) | `3070`–`3079`, `3085`–`3086` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -301,6 +301,15 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   active companion, hero hit or not), the v146 ring waves (`sk146RingWave`), Vorraxis's Deluge (companions off the islands) and the
   Wraith's Absolute Zero (companions away from a lit brazier). Catch-all hits (shape r 99: spines, blood drops) and lingering ground
   hazards stay hero-only. Test: `v148_boss_splash.py` (`BL=`, `SEC=`).
+- **Version 148.2 (co-op)**: *Revive* (`3085`, `RV148`): at 0 HP with a partner still standing in the same map you are downed, not dead:
+  `RV148.T` (30) s to bleed out, no moving / attacking / casting, nothing hits you (monsters turn to partners, a standing partner drives
+  the Sovereign). A partner beside you gets "F · Revive …" and stays close `RV148.need` (3) s; you rise with 40% health and 2.5 s of
+  safety. Bleed-out, "Give up" or nobody standing in the map = the normal death (`rv148Die` → `arenaFail` → `down_base`); an arena is
+  only lost when everyone in it is down. Phoenix Heart, Unbreakable and the god cheat still come first; solo is unchanged. Presence
+  carries `dn`/`bt`; the revive is the `ev` entry `['rv', peer]`. *Boss credit* (`3086`, `BC148`): whoever kills a Sovereign (or
+  Vorraxis, `'v144'`) sends `['bk', id, name]`; every other player in the game gets the one-time progress wherever they are
+  (`bossDefeated({ar:i})`: map cleared, power, next portal, kingdom; Vorraxis: `MQ144.st` 2, the crystal waits in the lair). Players in
+  that same fight still get the kill and its loot (0520). Test: `v148_revive.py` (two windows, fake signaling, real WebRTC).
 - **Version 141 (owner's list, Oct 2026)**: *Consume* raises only the eaten companion's best stat (same amount per stat as before;
   refused when that stat is maxed); the Fusion preview shows gains under 2 points with one decimal. *Keys*: Q feeds the most hurt
   active companion, Z health potion, X mana potion, 1–6 abilities. *Companions*: one active companion until the Beast Trainer teaches
