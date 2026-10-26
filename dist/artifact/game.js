@@ -42561,6 +42561,11 @@ function mq151Gate(){if(mq151Gate.c)return mq151Gate.c;const I=INSL[insG(2,0)],P
   return mq151Gate.c={x,z,ry,fx:Math.sin(ry),fz:Math.cos(ry)}}
 function mq151Keep(g,x,z){if(g!==insG(2,0))return false;try{const G=mq151Gate(),bx=G.x-G.fx*3,bz=G.z-G.fz*3;return Math.hypot(x-bx,z-bz)<10.5}catch(_){return false}}
 
+// the rock of the cave mouth is solid from the start (so Cheddar's gateway spot and the roaming creatures see it): every tile under the
+// mound and the arch except the throat
+function mq151Solid(){const G=mq151Gate(),ca=Math.cos(G.ry),sa=Math.sin(G.ry);for(let lz=-9;lz<=0;lz++)for(let lx=-8;lx<=8;lx++){const inTh=Math.abs(lx)<=1&&lz>=-1;if(inTh)continue;const rr=Math.hypot(lx/8.2,(lz+4)/5.4);if(rr>1&&!(lz<=-2&&Math.abs(lx)<=7))continue;
+  const wx=G.x+lx*ca+lz*sa,wz=G.z-lx*sa+lz*ca;CBLK.add(Math.round(wz)*W+Math.round(wx))}}
+try{mq151Solid()}catch(e){console.warn('v151 mouth tiles',e)}
 // ---------------- materials and the build kit ----------------
 var GB151G={};
 function gb151Mats(){return GB151G.m||(GB151G.m={rock:new THREE.MeshStandardMaterial({color:0x3e444e,roughness:.9,flatShading:true}),rock2:new THREE.MeshStandardMaterial({color:0x545c66,roughness:.9,flatShading:true}),
@@ -42606,9 +42611,6 @@ function gb151CaveMouth(){const M=gb151Mats(),k=gb151Kit(),rn=svRng(1511);
   const glow=kqSpr(0x5ab8ff,3.2);glow.material=glow.material.clone();glow.material.opacity=.45;glow.position.set(0,1.6,-4.5);g.add(glow);
   return {g,glow}}
 function gb151MouthBuild(){if(MQ151.CM)return MQ151.CM;const G=mq151Gate(),C=gb151CaveMouth();C.g.position.set(G.x,GH(G.x,G.z),G.z);C.g.rotation.y=G.ry;scene.add(C.g);MQ151.CM=C;
-  // the rock is solid: every tile under the mound and the arch except the throat
-  const ca=Math.cos(G.ry),sa=Math.sin(G.ry);for(let lz=-9;lz<=0;lz++)for(let lx=-8;lx<=8;lx++){const inTh=Math.abs(lx)<=1&&lz>=-1;if(inTh)continue;const rr=Math.hypot(lx/8.2,(lz+4)/5.4);if(rr>1&&!(lz<=-2&&Math.abs(lx)<=7))continue;
-    const wx=G.x+lx*ca+lz*sa,wz=G.z-lx*sa+lz*ca;CBLK.add(Math.round(wz)*W+Math.round(wx))}
   // the old gateway: gone (its record stays for older code; the cave mouth is the way on)
   try{const r=RPORT.find(q=>q.k=='next'&&q.ig===insG(2,0));if(r){r.g.visible=false;MQ151.rp=r}}catch(_){}
   return C}
@@ -42618,7 +42620,7 @@ function gb151PillarModel(i){const M=gb151Mats(),g=new THREE.Group(),rn=svRng(15
   const sn=new THREE.Mesh(svG('gbp_s',()=>svLump(1,1,.2,1522)),M.snow);sn.scale.set(.85,.16,.8);sn.position.y=.36;g.add(sn);
   const top=new THREE.Group();g.add(top);const big=new THREE.Mesh(gb151Crys(1,6,.82),M.ice);big.scale.set(.56,3.5,.56);big.position.y=.3;big.rotation.y=rn()*3;top.add(big);
   for(let k=0;k<4;k++){const a=k/4*6.28+rn(),o=new THREE.Mesh(gb151Crys(k%3,6,.7),k%2?M.ice2:M.ice);o.scale.set(.24,1.1+rn()*.9,.24);o.position.set(Math.sin(a)*.5,.2,Math.cos(a)*.5);o.rotation.set(Math.cos(a)*.35,0,-Math.sin(a)*.35);top.add(o)}
-  const core=kqSpr(0x7ad8ff,2.2);core.material=core.material.clone();core.material.opacity=.35;core.position.y=1.7;top.add(core);
+  const core=kqSpr(0x7ad8ff,1.1);core.material=core.material.clone();core.material.opacity=.3;core.position.y=1.7;top.add(core);
   const stump=new THREE.Mesh(gb151Crys(2,6,.5),M.ice2);stump.scale.set(.8,.9,.8);stump.position.y=.25;stump.visible=false;g.add(stump);
   return {g,top,core,stump}}
 function gb151LairBuild(){if(MQ151.LS)return MQ151.LS;const L=GB151L,M=gb151Mats(),root=new THREE.Group();root.name='FrozenMaw';scene.add(root);const LS={root,lights:[],falls:[],t:0};MQ151.LS=LS;
@@ -42690,7 +42692,7 @@ function gb151LairBuild(){if(MQ151.LS)return MQ151.LS;const L=GB151L,M=gb151Mats
   // the throne's cold light
   {const tl=new THREE.PointLight(0x8ad0ff,1.4,15,1.5);tl.position.set(L.throne.x,y(L.throne.x,L.throne.z)+3,L.throne.z+1);scene.add(tl);LS.lights.push(tl)}
   gb151LairSync();return LS}
-function gb151LairSync(){const LS=MQ151.LS;if(!LS)return;const open=MQ151.st>=2;LS.twall.visible=!open;LS.tglo.material.opacity=open?.55:0;LS.tlt.userData.on=open?1.4:0;LS.seal.visible=!!(GB151A&&GB151A.f)}
+function gb151LairSync(){const LS=MQ151.LS;if(!LS)return;const open=MQ151.st>=2||mq151Done();LS.twall.visible=!open;LS.tglo.material.opacity=open?.55:0;LS.tlt.userData.on=open?1.4:0;LS.seal.visible=!!(GB151A&&GB151A.f)}
 // ---------------- pillars ----------------
 function gb151PillarAt(x,z,rad){for(const P of MQ151.pil)if(P.ok&&Math.hypot(x-P.x,z-P.z)<rad)return P;return null}
 function gb151PillarBreak(P){if(!P||!P.ok)return;P.ok=0;P.top.visible=false;P.stump.visible=true;const p=new THREE.Vector3(P.x,0,P.z);
@@ -42765,7 +42767,7 @@ function mq151Through(){MQ151.st=3;MQ151.trkK='';try{insGo(PMAP[2].ins[1])}catch
 // ---------------- prompts ----------------
 function mq151Prompt(){const P=pl.position;if(!mq151InCave())return null;const L=GB151L;if(GB151A&&GB151A.f)return null;
   if(Math.hypot(P.x-L.mouth.x,P.z-L.mouth.z)<2.6)return {label:'F · Leave the cave (back to '+PMAP[2].ins[0].n+')',fn:()=>mq151Leave()};
-  if(Math.hypot(P.x-L.tunIn.x,P.z-L.tunIn.z)<2.8)return MQ151.st>=2?{label:'F · Take the frozen passage to '+mq151Next(),fn:()=>mq151Through()}:{label:'🔒 The passage is sealed by a wall of ice',fn:()=>say('🧊 A wall of ancient ice seals the passage. The troll who sits on that throne keeps it shut.')};
+  if(Math.hypot(P.x-L.tunIn.x,P.z-L.tunIn.z)<2.8)return MQ151.st>=2||mq151Done()?{label:'F · Take the frozen passage to '+mq151Next(),fn:()=>mq151Through()}:{label:'🔒 The passage is sealed by a wall of ice',fn:()=>say('🧊 A wall of ancient ice seals the passage. The troll who sits on that throne keeps it shut.')};
   return null}
 {const f=worldPrompt;worldPrompt=function(){try{const r=mq151Prompt();if(r)return r}catch(e){if(!MQ151.err++)console.warn('v151 prompt',e)}return f.apply(this,arguments)}}
 function mq151AtGate(){if(!mq151In1())return false;const G=mq151Gate(),P=pl.position;return Math.hypot(P.x-(G.x+G.fx*.8),P.z-(G.z+G.fz*.8))<3.2}
@@ -42852,3 +42854,665 @@ function mq151Tick(dt,now){const in1=mq151In1(),cave=mq151InCave(),t=now/1000;
       if(LS.seal.visible)LS.seal.material.opacity=.45+.08*Math.sin(t*2)}}
   if(now-MQ151.t>400){MQ151.t=now;try{if(in1||cave)mq143Trk()}catch(_){}}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq151Tick(dt,now)}catch(err){if(!MQ151.err++)console.warn('v151 tick',err)}return r}}
+// ================= v151 The Frozen Gate — Burningeye Summit II main quest: the flamespitter, the workbench, melting the gate =================
+// Chapter 2 of Burningeye Summit's main quest line (1 The Frozen Maw is 3152, 3 The Mountain Drill is 3170). The gateway at the end
+// of The Rimecaverns (Burningeye II) is gone: in its place stands a great stone gate filled with a wall of ancient ice.
+//  * The parts: three pieces of an essence-charged flamespitter lie in salvage caches around II (Essence Core, Ember Nozzle, Bellows
+//    Tank; mq160Plan puts them off the road at 28%, 52% and 76% of II's road). An elite stands guard over each (a Frost Wendigo, a
+//    Frost Troll, a Rimeshell Crawler); kill it and F at the cache takes the part. A faint orange beacon over each shows from afar.
+//  * The workbench beside the gate: F with all three parts assembles the flamespitter (it rests on the bench).
+//  * F at the bench (or the gate) with the flamespitter assembled starts the melt, a special event that cannot be stopped: the
+//    hero is held in the gate yard (no recall, no walking out) until the gate is melted or the hero falls (then the gate freezes
+//    over again, the flamespitter goes back on the bench and it can be tried again).
+//      C (or F, or tapping the prompt) picks the flamespitter up / drops it. Carrying it you are slower and cannot swing or cast.
+//      Hold the left mouse button to spray flame where you aim. On the gate it melts the ice (MQ160.melt, 60 s of flame in all).
+//      The flamespitter heats while it fires: 5 s of spraying (MQ160.heatT) and it overheats, and must cool right down (MQ160.coolT)
+//      before it fires again. Drop it to fight while it cools.
+//      Ice spiders come from all round the yard all the time, faster as the melt goes on, and always run at you. The flame kills a
+//      spider at once, but each kill burns MQ160.kc of the flamespitter's essence charge (MQ160.charge): spend it when you are
+//      surrounded. With the charge spent the flame still melts, but no longer kills.
+//  * Melted: the ice bursts, the gate opens on a road of cold light; F at it goes to Stormcrown (Burningeye III).
+// State MQ160.st: 0 finding parts · 1 all three parts · 2 assembled · 3 the gate is open. p[3] the parts taken. Done also when III has
+// been reached (mq160Done). Saved as x2.mq160 {st, p}. A save made mid-melt loads with the flamespitter on the bench. Co-op: local to each
+// player (the spiders are minions, never shared; each player melts their own gate).
+var MQ160={name:'The Frozen Gate',st:0,p:[0,0,0],gk:[0,0,0],fd:[0,0,0],S:null,E:null,err:0,t:0,trkK:'',melt:60,heatT:5,coolT:4,charge:100,kc:8,lv:22,gl:24,see:28,leash:15.5,
+  parts:[{k:'core',n:'Essence Core',ic:'🔮',g:'wendigo'},{k:'nozzle',n:'Ember Nozzle',ic:'🔥',g:'troll'},{k:'tank',n:'Bellows Tank',ic:'🛢️',g:'rimecrawler'}]};
+function mq160Ins(){try{return curIns()}catch(_){return null}}
+function mq160In2(){const I=mq160Ins();return !!I&&I.g===insG(2,1)}
+function mq160N(){return MQ160.p.filter(Boolean).length}
+function mq160Done(){return MQ160.st>=3||insReach(2)>=2}
+function mq160Next(){try{const t=typeof TH112!='undefined'&&TH112&&TH112.byG&&TH112.byG[insG(2,2)];return t&&t.nm?t.nm:PMAP[2].ins[2].n}catch(_){return 'Stormcrown'}}
+// ---------------- where things stand (a pure function of the map data: 1680's place() keeps decorations off them) ----------------
+function mq160Plan(){if(mq160Plan.c)return mq160Plan.c;const I=INSL[insG(2,1)],P=I.path,N=P.length,q=P[Math.max(0,N-14)],gx=I.ba[0],gz=I.ba[1],ry=Math.atan2(q[0]-gx,q[1]-gz);
+  const fx=Math.sin(ry),fz=Math.cos(ry),sx=Math.cos(ry),sz=-Math.sin(ry),DW=MAP.DW;
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='~'||t=='H')return false;const J=insAt(X,Z);if(!J||J.g!==I.g)return false;return DW[Z*W+X]<-(m==null?1:m)};
+  const R={gate:{x:gx,z:gz,ry,fx,fz,sx,sz},ok,cache:[null,null,null],keep:[]};
+  // the workbench: beside the gate on whichever side is open, a little toward the road
+  let bs=1;for(const s of [1,-1]){const x=gx+sx*s*7+fx*2,z=gz+sz*s*7+fz*2;if(ok(x,z,1.5)){bs=s;break}}R.bench={x:gx+sx*bs*7+fx*2,z:gz+sz*bs*7+fz*2,ry,s:bs};
+  R.yard={x:gx+fx*6,z:gz+fz*6};
+  // the caches: off the road at 28 / 52 / 76% of II's road, alternating sides, on open ground away from camps and each other
+  const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
+  const avoid=[[I.en[0],I.en[1],20],[gx,gz,22]].concat((I.cl||[]).map(c=>[c[0],c[1],16])),fr=[.28,.52,.76];
+  for(const T of [{m:2.4,sep:30,av:1},{m:1.6,sep:22,av:.75},{m:1.1,sep:14,av:.5}])for(let j=0;j<3;j++){if(R.cache[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
+    for(const b of [12,10,14,9,16,7])for(const side of [sd,-sd])for(const da of [0,6,-6,12,-12]){if(got)break;const k=Math.max(0,Math.min(N-1,ix+da)),p=P[k],t=tan(k),x=p[0]-t[1]*b*side,z=p[1]+t[0]*b*side;
+      if(!ok(x,z,T.m)||!avoid.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r*T.av)||!R.cache.every(o=>!o||Math.hypot(x-o.x,z-o.z)>=T.sep))continue;got={x:Math.round(x*2)/2,z:Math.round(z*2)/2,i:j,ry:Math.atan2(p[0]-x,p[1]-z)}}
+    if(got)R.cache[j]=got}
+  for(let j=0;j<3;j++)if(!R.cache[j]){const ix=Math.round((N-1)*fr[j]),p=P[ix],t=tan(ix);R.cache[j]={x:p[0]-t[1]*5,z:p[1]+t[0]*5,i:j,ry:0,fb:1}}
+  R.keep.push([gx-fx*1.5,gz-fz*1.5,8.5],[R.bench.x,R.bench.z,3.8]);R.cache.forEach(o=>R.keep.push([o.x,o.z,4.5]));
+  return mq160Plan.c=R}
+function mq160Keep(g,x,z){if(g!==insG(2,1))return false;try{for(const k of mq160Plan().keep)if(Math.hypot(x-k[0],z-k[1])<k[2])return true}catch(e){if(!mq160Keep.e){mq160Keep.e=1;console.warn('v151 gate keep',e)}}return false}
+// roaming groups stay out of the gate yard and away from the caches (the guards are the fight there)
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{if(r===insG(2,1)&&ROST.r===r){const R=mq160Plan(),L=[[R.yard.x,R.yard.z,24]].concat(R.cache.map(c=>[c.x,c.z,14]));
+    ROST.slots=ROST.slots.filter(s=>!(s.wild&&L.some(q=>Math.hypot((s.hx==null?s.x:s.hx)-q[0],(s.hz==null?s.z:s.hz)-q[1])<q[2])))}}catch(e){console.warn('v151 gate roster',e)}return o}}
+
+// the gate's stone and the workbench are solid from the start; the opening is solid ice until it melts (mq160Sync frees it)
+function mq160Solid(){const R=mq160Plan(),G=R.gate,B=R.bench,W2=(lx,lz)=>[G.x+lx*G.sx+lz*G.fx,G.z+lx*G.sz+lz*G.fz];MQ160.iceT=[];
+  for(let lz=-2;lz<=0;lz++)for(let lx=-5;lx<=5;lx++){const [wx,wz]=W2(lx,lz),key=Math.round(wz)*W+Math.round(wx);if(Math.abs(lx)<=3)MQ160.iceT.push(key);CBLK.add(key)}
+  for(let lz=-1;lz<=0;lz++)for(let lx=-1;lx<=1;lx++){const x=B.x+lx*G.sx+lz*G.fx,z=B.z+lx*G.sz+lz*G.fz;CBLK.add(Math.round(z)*W+Math.round(x))}}
+try{mq160Solid()}catch(e){console.warn('v151 gate tiles',e)}
+// ---------------- the ice spider ----------------
+SPEC.Iceskitter=Object.assign({},SPEC.Cryptspider);
+LPR.Iceskitter=Object.assign({},LPR.Cryptspider,{geo(C,c){return n3Recolor('isk|'+C,LPR.Cryptspider.geo(C,c),0x7a1410,0xcfeeff,.25)},
+  kit(k,c,C,red){LPR.Cryptspider.kit(k,c,C,red);
+    // a spine of ice crystals along the abdomen, frost-blue eyes, icicle fangs
+    [[0,.7,-.3,.05,.26,0,0],[.07,.67,-.36,.04,.2,.35,-.5],[-.07,.67,-.24,.04,.21,-.35,.5],[0,.66,-.44,.035,.18,0,-.3],[.05,.64,-.18,.03,.14,.3,.6]].forEach((q,i)=>{const bn=q[2]<-.4?'tail1':q[2]<-.28?'tail0':'pelvis';
+      k.p(bn,'cone4','g',i%2?0xbfeaff:0x7ad8ff,q[0],q[1]+q[4]*.35,q[2],q[3],q[4],q[3],q[5],0,q[6])});
+    for(let i=0;i<6;i++)k.p('head','sph','g',red?0xff2a2a:0xbff4ff,(i%3-1)*.035,.52+(i>2?.03:0),.5,.013);
+    [-1,1].forEach(s=>k.p('head','cone4','c',0xe8f8ff,s*.04,.44,.55,.012,.08,.012,Math.PI*.6,0,s*.2))}});
+EN.icespider={n:'Ice Spider',e:'🕷️',rig:'Iceskitter',col:0x9ac8e8,sc:.82,w:{hp:.42,pa:.85,ma:.5,pd:.55,md:.7},mt:'p',moves:['bite','pounce'],fam:'Swarm'};
+try{S.icespider=S.icespider||{e:'🕷️',c:0x9ac8e8,h:'X',t:'x',hp:20,a:8,d:5};MSET.icespider=EN.icespider.moves}catch(_){}
+{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.fs160sp&&!e.dead)return pl;return f.apply(this,arguments)}}
+
+// ---------------- models ----------------
+var FS160={m:null,obj:null,held:null,tmp:null};
+function fs160Mats(){if(FS160.m)return FS160.m;const S=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,flatShading:true},o||{}));
+  return FS160.m={stone:S(0x5c6068,{roughness:.92}),stone2:S(0x40444c,{roughness:.95}),carve:S(0x2c3036),snow:S(0xe6eef4,{roughness:.95}),
+    ice:S(0x9ad8ff,{emissive:0x1a5a8a,emissiveIntensity:.5,roughness:.08,metalness:.15,transparent:true,opacity:.86}),ice2:S(0x6aa8e0,{emissive:0x0e3a6a,emissiveIntensity:.5,roughness:.12,metalness:.12,transparent:true,opacity:.9}),
+    glass:S(0xbfe8ff,{emissive:0x2a6aa0,emissiveIntensity:.4,roughness:.04,metalness:.2,transparent:true,opacity:.62}),
+    rune:new THREE.MeshBasicMaterial({color:0x5ab8ff}),bone:S(0xcfc4a4,{roughness:.7}),horn:S(0x3a3024,{roughness:.6}),
+    wood:S(0x5a3e26,{roughness:.9}),wood2:S(0x3e2a18,{roughness:.92}),iron:S(0x3a3d44,{roughness:.42,metalness:.65}),iron2:S(0x24262c,{roughness:.5,metalness:.6}),
+    brass:S(0xb08a3a,{roughness:.35,metalness:.75}),copper:S(0xb0643a,{roughness:.4,metalness:.7}),leath:S(0x4a3420,{roughness:.85}),
+    ember:new THREE.MeshBasicMaterial({color:0xff8a2a}),core:S(0xffa040,{emissive:0xff6a10,emissiveIntensity:1.3,roughness:.2,transparent:true,opacity:.92}),
+    coal:S(0x2a1a14,{emissive:0xff4a10,emissiveIntensity:.9}),cloth:S(0x6a2a1a,{roughness:.95}),void:new THREE.MeshBasicMaterial({color:0x050608,fog:false})}}
+// a kit like the cave's: meshes under one joint, merged per material
+function fs160Kit(){return gb151Kit()}
+// the great gate: two carved pillars, a lintel with a horned skull, steps; a wall of ice in the opening (its own group, it melts)
+function fs160Gate(){const M=fs160Mats(),k=fs160Kit(),rn=svRng(1601);
+  [-1,1].forEach(s=>{const x=s*3.7;k.m(svG('fg_p',()=>svLoft([[0,.95,.95],[.3,.9,.9],[6.6,.82,.82],[7.0,.95,.95]],8,{rot:Math.PI/8})),M.stone,x,0,0);
+    k.m(svG('fg_c',()=>svLoft([[0,1.15,1.15],[.5,1.1,1.1]],8,{rot:Math.PI/8})),M.stone2,x,6.9,0);k.m(svG('fg_b',()=>svLoft([[0,1.2,1.2],[.6,1.05,1.05]],8,{rot:Math.PI/8})),M.stone2,x,0,0);
+    for(let i=0;i<4;i++){k.m(svG('fg_band',()=>svLoft([[0,.86,.86],[.12,.86,.86]],8,{cap:false,rot:Math.PI/8})),M.carve,x,1.6+i*1.35,0);k.m(svG('fg_rn',()=>new THREE.BoxGeometry(.22,.5,.04)),M.rune,x,2.2+i*1.35,.85,0,0,(i%2?.3:-.3))}
+    k.lump(1+(s>0?0:1),1610+s,M.snow,x,7.55,0,1.0,.28,1.0,0,.2);
+    for(let i=0;i<5;i++)k.icl(i%2?M.ice:M.ice2,x+(rn()-.5)*1.4,6.85,.95+(rn()-.5)*.2,.08+rn()*.05,.5+rn()*.7)});
+  // the lintel and the horned skull over the opening
+  k.m(svG('fg_l',()=>new THREE.BoxGeometry(9.6,1.3,1.6)),M.stone,0,7.55,0);k.m(svG('fg_l2',()=>new THREE.BoxGeometry(10.2,.3,1.9)),M.stone2,0,8.3,0);k.lump(3,1612,M.snow,0,8.55,0,4.4,.26,.9,0,.15);
+  k.lump(4,1613,M.bone,0,7.55,.85,.62,.55,.42,0,.15);[-1,1].forEach(s=>{k.m(svG('fg_h',()=>svHorn(.16,1,0,.8,6,6)),M.horn,s*.45,7.8,.9,-.4,s*1.1,0,1,1,1.4);k.m(svG('fg_e',()=>new THREE.IcosahedronGeometry(.1,0)),M.rune,s*.2,7.65,1.22)});
+  for(let i=0;i<16;i++)k.icl(i%2?M.ice:M.ice2,-3.0+i*.4+(rn()-.5)*.1,6.85,.55+rn()*.3,.1+rn()*.06,.6+rn()*1.0);
+  // the steps
+  k.m(svG('fg_s1',()=>new THREE.BoxGeometry(9,.3,2.2)),M.stone2,0,.15,1.4);k.m(svG('fg_s2',()=>new THREE.BoxGeometry(8,.3,1.2)),M.stone,0,.42,.9);
+  // the road beyond: dark until the gate opens, then a road of cold light
+  k.m(svG('fg_v',()=>new THREE.PlaneGeometry(5.8,6.7)),M.void,0,3.4,-.6);
+  const g=k.done();g.userData.psNo=1;
+  // the ice wall (melts: it sinks and thins from the top, drips and steams)
+  const ice=new THREE.Group();g.add(ice);const kk=fs160Kit();
+  kk.m(svG('fg_iw',()=>{const q=new THREE.BoxGeometry(5.9,6.7,1.5,5,6,2),P=q.attributes.position,r=svRng(1620);for(let i=0;i<P.count;i++){P.setX(i,P.getX(i)+(r()-.5)*.25);P.setZ(i,P.getZ(i)+(r()-.5)*.35)}q.translate(0,3.35,0);return q.toNonIndexed()}),M.glass,0,0,.1);
+  for(let i=0;i<14;i++){const x=-2.6+rn()*5.2,y=.2+rn()*5.6;kk.crys(i,i%2?M.ice:M.ice2,x,y,.55+rn()*.3,(rn()-.5)*.8,(rn()-.5)*.5+.2,1,.18+rn()*.14,.5+rn()*.9)}
+  for(let i=0;i<8;i++)kk.crys(20+i,M.ice,-2.8+i*.8,0,.4,(rn()-.5)*.4,1,.3,.35+rn()*.2,1.4+rn()*1.8);
+  kk.lump(5,1621,M.carve,-.6,2.4,-.1,.5,.9,.4,0,.25);kk.lump(6,1622,M.carve,.9,1.6,-.2,.4,.55,.35,0,.3);   // shapes frozen deep in the ice
+  const iw=kk.done();ice.add(iw);
+  const glow=kqSpr(0x7ad8ff,5);glow.material=glow.material.clone();glow.material.opacity=0;glow.position.set(0,3.2,-.8);g.add(glow);
+  const hot=kqSpr(0xff8a3a,1.6);hot.material=hot.material.clone();hot.material.opacity=0;g.add(hot);
+  const pud=new THREE.Mesh(svG('fg_pd',()=>new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x8ab8d8,roughness:.05,metalness:.4,transparent:true,opacity:.7,polygonOffset:true,polygonOffsetFactor:-3}));
+  pud.position.set(0,.6,1.6);pud.scale.set(.01,1,.01);pud.material.userData.noFade135=1;g.add(pud);
+  return {g,ice,glow,hot,pud}}
+// the parts and the flamespitter (built along +z, the nozzle forward; origin at the rear grip)
+function fs160PartModel(i,k,o){const M=fs160Mats();o=o||{x:0,y:0,z:0};const X=o.x,Y=o.y,Z=o.z;
+  if(i===0){// the Essence Core: a glowing crystal in an iron cage with brass caps
+    k.m(svG('fp_c',()=>{const q=new THREE.OctahedronGeometry(.11,0);q.scale(1,1.5,1);return q}),M.core,X,Y,Z);
+    [-1,1].forEach(s=>k.m(svG('fp_cc',()=>new THREE.CylinderGeometry(.13,.13,.05,8)),M.brass,X,Y+s*.17,Z));
+    for(let q=0;q<6;q++){const a=q/6*6.283;k.m(svG('fp_cb',()=>new THREE.CylinderGeometry(.012,.012,.34,4)),M.iron,X+Math.sin(a)*.12,Y,Z+Math.cos(a)*.12)}}
+  else if(i===1){// the Ember Nozzle: an iron barrel, cooling fins, a flared mouth, a brass collar
+    k.m(svG('fp_n',()=>{const q=new THREE.CylinderGeometry(.05,.06,.5,8);q.rotateX(Math.PI/2);return q}),M.iron2,X,Y,Z);
+    k.m(svG('fp_nm',()=>{const q=new THREE.CylinderGeometry(.1,.055,.12,10,1,true);q.rotateX(Math.PI/2);return q}),M.iron,X,Y,Z+.3);
+    for(let q=0;q<3;q++)k.m(svG('fp_nf',()=>{const g=new THREE.CylinderGeometry(.085,.085,.02,10);g.rotateX(Math.PI/2);return g}),M.iron,X,Y,Z-.12+q*.09);
+    k.m(svG('fp_nc',()=>{const g=new THREE.CylinderGeometry(.075,.075,.06,10);g.rotateX(Math.PI/2);return g}),M.brass,X,Y,Z-.24)}
+  else{// the Bellows Tank: a copper tank with iron bands, a gauge and a valve wheel
+    k.m(svG('fp_t',()=>{const q=new THREE.CylinderGeometry(.11,.11,.36,10);q.rotateX(Math.PI/2);return q}),M.copper,X,Y,Z);
+    [-1,1].forEach(s=>k.m(svG('fp_te',()=>new THREE.SphereGeometry(.11,10,6,0,6.283,0,Math.PI/2)),M.copper,X,Y,Z+s*.18,s*Math.PI/2,0,0));
+    [-1,0,1].forEach(s=>k.m(svG('fp_tb',()=>{const g=new THREE.TorusGeometry(.115,.012,4,12);return g}),M.iron,X,Y,Z+s*.12));
+    k.m(svG('fp_tg',()=>new THREE.CylinderGeometry(.04,.04,.02,10)),M.brass,X+.08,Y+.08,Z,0,0,-.8);k.m(svG('fp_tv',()=>new THREE.TorusGeometry(.04,.008,4,8)),M.iron,X,Y+.14,Z+.05,Math.PI/2,0,0)}}
+function fs160Spitter(){const M=fs160Mats(),k=fs160Kit();
+  fs160PartModel(2,k,{x:0,y:.05,z:-.02});fs160PartModel(0,k,{x:0,y:.06,z:.27});fs160PartModel(1,k,{x:0,y:.06,z:.64});
+  // the frame: a spine bar, the rear grip, the fore grip, straps
+  k.m(svG('fs_sp',()=>new THREE.BoxGeometry(.03,.03,.92)),M.iron,0,-.06,.32);
+  k.m(svG('fs_g',()=>new THREE.CylinderGeometry(.025,.025,.16,6)),M.leath,0,-.12,0,.25,0,0);k.m(svG('fs_g2',()=>new THREE.CylinderGeometry(.025,.025,.14,6)),M.leath,0,-.11,.46,.1,0,0);
+  k.m(svG('fs_tr',()=>new THREE.TorusGeometry(.05,.008,4,8)),M.brass,0,-.1,.06,Math.PI/2,0,0);
+  const g=k.done();const pil=kqSpr(0x6ad8ff,.18);pil.position.set(0,.06,.98);g.add(pil);
+  // the grip points for the hero's hands
+  const gR=new THREE.Object3D();gR.position.set(0,-.12,0);g.add(gR);const gL=new THREE.Object3D();gL.position.set(0,-.11,.46);g.add(gL);const tip=new THREE.Object3D();tip.position.set(0,.06,1.0);g.add(tip);
+  g.userData={gR,gL,tip,pil,psNo:1};return g}
+// the workbench: timbers, a vise, tools, a brazier of coals, crates and a rack
+function fs160Bench(){const M=fs160Mats(),k=fs160Kit(),rn=svRng(1630);
+  k.m(svG('fb_t',()=>new THREE.BoxGeometry(2.6,.16,1.1)),M.wood,0,1.0,0);k.m(svG('fb_t2',()=>new THREE.BoxGeometry(2.7,.06,1.2)),M.wood2,0,.92,0);
+  [[-1.15,-.42],[1.15,-.42],[-1.15,.42],[1.15,.42]].forEach(([x,z])=>k.m(svG('fb_l',()=>new THREE.BoxGeometry(.16,.92,.16)),M.wood2,x,.46,z));
+  k.m(svG('fb_sh',()=>new THREE.BoxGeometry(2.4,.06,.9)),M.wood2,0,.32,0);
+  // the vise, a hammer, tongs, a file, scrap
+  k.m(svG('fb_v',()=>new THREE.BoxGeometry(.24,.2,.2)),M.iron,1.0,1.18,.36);k.m(svG('fb_vs',()=>new THREE.CylinderGeometry(.02,.02,.4,5)),M.iron,1.0,1.18,.58,Math.PI/2,0,0);
+  k.m(svG('fb_hh',()=>new THREE.CylinderGeometry(.025,.025,.42,5)),M.wood2,-.7,1.1,.25,0,0,Math.PI/2);k.m(svG('fb_hd',()=>new THREE.BoxGeometry(.1,.12,.16)),M.iron2,-.9,1.12,.25);
+  k.m(svG('fb_tg',()=>new THREE.BoxGeometry(.5,.025,.04)),M.iron,-.3,1.1,-.3,0,.4,0);k.m(svG('fb_tg2',()=>new THREE.BoxGeometry(.5,.025,.04)),M.iron,-.3,1.1,-.26,0,.5,0);
+  for(let i=0;i<5;i++)k.m(svG('fb_sc',()=>new THREE.BoxGeometry(.12,.03,.08)),i%2?M.brass:M.iron,-.2+rn()*.8,1.1,-.4+rn()*.3,0,rn()*3,0);
+  // the rack at the back with hanging tools, a lantern hook
+  [-1,1].forEach(s=>k.m(svG('fb_r',()=>new THREE.BoxGeometry(.1,1.6,.1)),M.wood2,s*1.2,1.8,-.62));k.m(svG('fb_rb',()=>new THREE.BoxGeometry(2.5,.1,.1)),M.wood2,0,2.55,-.62);
+  for(let i=0;i<4;i++)k.m(svG('fb_ht',()=>new THREE.BoxGeometry(.05,.5,.05)),M.iron,-.8+i*.5,2.2,-.6,0,0,(i%2?.1:-.1));
+  // an anvil on a stump, a brazier of glowing coals on iron legs, crates
+  k.m(svG('fb_st',()=>new THREE.CylinderGeometry(.35,.42,.7,8)),M.wood2,-2.0,.35,.4);k.m(svG('fb_an',()=>new THREE.BoxGeometry(.6,.25,.28)),M.iron2,-2.0,.82,.4);k.m(svG('fb_ah',()=>new THREE.ConeGeometry(.12,.32,4)),M.iron2,-2.4,.86,.4,0,0,Math.PI/2);
+  k.m(svG('fb_br',()=>new THREE.CylinderGeometry(.42,.28,.3,10,1,true)),M.iron,2.0,1.0,.5);for(let i=0;i<3;i++){const a=i/3*6.283;k.m(svG('fb_bl',()=>new THREE.CylinderGeometry(.03,.03,.9,4)),M.iron,2.0+Math.sin(a)*.3,.45,.5+Math.cos(a)*.3,Math.cos(a)*.2,0,-Math.sin(a)*.2)}
+  for(let i=0;i<7;i++)k.lump(7,1631+i,M.coal,2.0+(rn()-.5)*.5,1.08,.5+(rn()-.5)*.5,.1,.07,.1,rn()*3,.3);
+  k.m(svG('fb_cr',()=>new THREE.BoxGeometry(.7,.6,.6)),M.wood,-1.6,.3,-1.0,0,.3,0);k.m(svG('fb_cr2',()=>new THREE.BoxGeometry(.5,.45,.5)),M.wood2,-1.5,.82,-1.0,0,.6,0);
+  k.lump(8,1638,M.snow,0,1.1,-.45,1.1,.06,.2,0,.2);
+  const g=k.done();g.userData.psNo=1;const fl=kqSpr(0xff7a2a,1.3);fl.position.set(2.0,1.35,.5);g.add(fl);g.userData.fl=fl;return g}
+// a salvage cache: a broken sled, a split crate, a barrel; the part sits on top under an orange beacon
+function fs160Cache(i){const M=fs160Mats(),k=fs160Kit(),rn=svRng(1640+i);
+  [-1,1].forEach(s=>k.m(svG('fc_ru',()=>svTube([[0,.05,-1.0],[0,.03,.6],[0,.25,.95]],.04,5)),M.iron,s*.5,0,0));
+  k.m(svG('fc_bd',()=>new THREE.BoxGeometry(1.2,.08,1.6)),M.wood,0,.32,0,0,0,.08);for(let q=0;q<4;q++)k.m(svG('fc_bp',()=>new THREE.BoxGeometry(.06,.3,.06)),M.wood2,(q%2?.55:-.55),.18,q<2?-.6:.6);
+  k.m(svG('fc_cr',()=>new THREE.BoxGeometry(.6,.5,.6)),M.wood,.1,.62,-.3,0,.3,.05);k.m(svG('fc_cr2',()=>new THREE.BoxGeometry(.5,.08,.6)),M.wood2,.75,.06,.6,0,.9,.3);
+  k.m(svG('fc_ba',()=>new THREE.CylinderGeometry(.26,.24,.6,10)),M.wood2,-.9,.3,.8,0,0,1.4);k.m(svG('fc_bb',()=>new THREE.TorusGeometry(.26,.02,4,12)),M.iron,-.9,.3,.6,0,Math.PI/2,0);
+  k.lump(9,1645+i,M.snow,.0,.42,.4,.6,.08,.5,0,.2);k.lump(10,1648+i,M.snow,-.4,.05,-.9,.9,.12,.6,0,.25);
+  fs160PartModel(i,k,{x:.1,y:1.07,z:-.3});
+  const g=k.done();g.userData.psNo=1;
+  const bc=new THREE.Mesh(svG('fc_bm',()=>{const q=new THREE.CylinderGeometry(.22,.4,26,10,1,true);q.translate(0,13,0);return q}),new THREE.MeshBasicMaterial({color:0xff9a3a,map:SPR,transparent:true,opacity:.12,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+  bc.position.y=1;bc.userData.lpsSkip=1;bc.renderOrder=20;g.add(bc);const gl=kqSpr(0xff9a3a,1.1);gl.material=gl.material.clone();gl.position.set(.1,1.1,-.3);g.add(gl);
+  g.userData.bc=bc;g.userData.gl=gl;return g}
+KQSH151.fgate=()=>fs160Gate().g;KQSH151.fbench=()=>{const g=fs160Bench(),s=fs160Spitter();s.position.set(0,1.25,0);s.rotation.y=Math.PI/2;s.scale.setScalar(1.25);g.add(s);return g};
+KQSH151.fspitter=()=>{const g=fs160Spitter();g.scale.setScalar(2);return g};KQSH151.fcache=()=>fs160Cache(0);
+
+// ---------------- the world: build, sync ----------------
+function mq160Build(){if(MQ160.S)return MQ160.S;const R=mq160Plan(),G=R.gate,S={cache:[]};MQ160.S=S;
+  const gt=fs160Gate();gt.g.position.set(G.x,GH(G.x,G.z),G.z);gt.g.rotation.y=G.ry;scene.add(gt.g);S.gate=gt;
+  S.iceT=MQ160.iceT||[];
+  S.bench=fs160Bench();const B=R.bench;S.bench.position.set(B.x,GH(B.x,B.z),B.z);S.bench.rotation.y=B.ry;scene.add(S.bench);
+  S.blt=new THREE.PointLight(0xff8a3a,1.1,8,1.6);S.blt.position.set(B.x+G.sx*2,GH(B.x,B.z)+1.6,B.z+G.sz*2);scene.add(S.blt);
+  R.cache.forEach((c,i)=>{const g=fs160Cache(i);g.position.set(c.x,GH(c.x,c.z),c.z);g.rotation.y=c.ry;scene.add(g);S.cache.push({g,x:c.x,z:c.z,i})});
+  S.sp=fs160Spitter();S.sp.scale.setScalar(1.25);scene.add(S.sp);
+  try{const r=RPORT.find(q=>q.k=='next'&&q.ig===insG(2,1));if(r){r.g.visible=false;MQ160.rp=r}}catch(_){}
+  mq160Sync();return S}
+function mq160BenchSpot(){const R=mq160Plan(),B=R.bench,G=R.gate;return new THREE.Vector3(B.x,GH(B.x,B.z)+1.25,B.z)}
+// where the flamespitter is: carried (on the hero), on the ground (dropped in the yard), on the bench, or nowhere (not assembled)
+function mq160Sync(){const S=MQ160.S;if(!S)return;const E=MQ160.E,open=MQ160.st>=3||mq160Done();
+  S.iceT.forEach(k=>{if(open)CBLK.delete(k);else CBLK.add(k)});S.gate.ice.visible=!open;S.gate.glow.material.opacity=open?.5:0;
+  S.cache.forEach(c=>{c.g.visible=!MQ160.p[c.i]||false;c.g.userData.gl.visible=!MQ160.p[c.i];c.g.userData.bc.visible=!MQ160.p[c.i]});
+  const sp=S.sp;if(E&&E.carry){if(sp.parent!==pl){pl.add(sp);sp.position.set(0,.66,.18);sp.rotation.set(0,0,0);sp.scale.setScalar(1/(pl.scale.x||1))}}
+  else{if(sp.parent!==scene)scene.add(sp);sp.scale.setScalar(1.25);
+    if(E&&E.gp){sp.position.copy(E.gp);sp.rotation.set(0,E.gry||0,.35)}else{const b=mq160BenchSpot(),R=mq160Plan();sp.position.copy(b);sp.rotation.set(0,R.bench.ry+Math.PI/2,0)}}
+  sp.visible=MQ160.st>=2&&!open||!!E;
+  if(!E)S.gate.ice.scale.set(1,1,1)}
+
+// ---------------- the guards and the parts ----------------
+function mq160Guard(i){const R=mq160Plan(),c=R.cache[i],P=MQ160.parts[i];let e=null;
+  try{e=spawnEnemy(P.g,c.x+Math.sin(c.ry)*2.4,c.z+Math.cos(c.ry)*2.4,MQ160.gl,{al:1})}catch(err){console.error('v151 guard',err)}
+  if(!e)return null;e.fs160g=i;e.wx=c.x;e.wz=c.z;e.ev=1;e.c.n=(e.trait?e.trait+' ':'')+'Warden of the '+P.n;MQ160['g'+i]=e;
+  svDecal(new THREE.Vector3(e.m.position.x,0,e.m.position.z),0x2a3a5a,1.4,2,.6);return e}
+function mq160Take(i){if(MQ160.p[i])return;MQ160.p[i]=1;MQ160.trkK='';const P=MQ160.parts[i],c=MQ160.S&&MQ160.S.cache[i];
+  if(c){burst(new THREE.Vector3(c.x,GH(c.x,c.z)+1.1,c.z),0xffa040,40,2,2,.8);svShock(new THREE.Vector3(c.x,0,c.z),0xffa040,3,.4)}
+  try{mSfx('rare');sfx('chime')}catch(_){}try{pickup({ic:P.ic,t:P.n,col:'#ffb060',sub:'A part of the essence-charged flamespitter ('+mq160N()+'/3)',r:4})}catch(_){}
+  if(mq160N()>=3&&MQ160.st<1)MQ160.st=1;mq160Sync();
+  say(mq160N()>=3?'🔧 You have every part. Assemble the flamespitter at the workbench beside the frozen gate.':'🔧 '+P.n+' recovered ('+mq160N()+'/3).')}
+function mq160Assemble(){if(MQ160.st!==1)return;MQ160.st=2;MQ160.trkK='';const S=MQ160.S,b=mq160BenchSpot();mq160Sync();
+  burst(b,0xffa040,60,2,2,.8);svShock(new THREE.Vector3(b.x,0,b.z),0xffd080,3,.5);svSnd('heavy',.8,1.6);setTimeout(()=>svSnd('heavy',.7,1.8),250);setTimeout(()=>{svSnd('charge',.8,1.2);burst(b,0x6ad8ff,30,1,1.5,.6)},600);
+  try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','The Flamespitter','Essence core, ember nozzle and bellows tank, bolted into one','F at the bench to begin melting the gate','z2')}catch(_){}
+  say('🔥 The essence-charged flamespitter is assembled. When you are ready, F at the bench to begin melting the frozen gate: once it starts there is no turning back.')}
+
+// ---------------- the melt (the special event) ----------------
+function mq160Start(){if(MQ160.E||MQ160.st!==2)return;const R=mq160Plan();
+  if(riding)try{dismount()}catch(_){}
+  MQ160.E={t:0,melt:0,heat:0,ovh:0,charge:MQ160.charge,carry:0,fire:0,spT:3,live:[],kills:0,burned:0,gp:null,gry:0,hint:0};MQ160.trkK='';mq160Sync();
+  shake(.2);svSnd('charge',1,.6);svShock(new THREE.Vector3(R.yard.x,0,R.yard.z),0xffa040,MQ160.leash,.8);
+  try{zt116Show(ZT116.Z[2],'The Frozen Gate','Melt the Gate','The ice cracks and the spiders wake','C picks up the flamespitter · hold left click to spray','z2')}catch(_){}
+  say('🔥 The melt begins! Pick up the flamespitter (C), hold the left mouse button on the gate. It overheats after 5 s: drop it (C) and fight while it cools.');fs160Hud()}
+function mq160Fail(why){const E=MQ160.E;if(!E)return;MQ160.E=null;MQ160.trkK='';
+  enemies.slice().forEach(e=>{if(e.fs160sp&&!e.dead){burst(gY(e.m.position,.4),0xbfe8ff,14,1.4,1.2,.6);try{removeE(e)}catch(_){}}});
+  mq160Sync();const S=MQ160.S;if(S){S.gate.ice.scale.set(1,1,1);S.gate.pud.scale.set(.01,1,.01);S.gate.hot.material.opacity=0}fs160Hud();svSnd('crack',1,.6);
+  say(why==='dead'?'🧊 You fall, and the gate freezes over again. The flamespitter is back on the bench: try again.':'🧊 The gate freezes over again.')}
+function mq160Win(){const E=MQ160.E;MQ160.E=null;MQ160.st=3;MQ160.trkK='';const S=MQ160.S,R=mq160Plan(),G=R.gate,p=new THREE.Vector3(G.x+G.fx*.5,0,G.z+G.fz*.5);
+  enemies.slice().forEach(e=>{if(e.fs160sp&&!e.dead){burst(gY(e.m.position,.4),0xbfe8ff,14,1.4,1.2,.6);try{removeE(e)}catch(_){}}});
+  try{sk146Debris(gY(p,3),fs160Mats().ice,24,.32,7,8,1.8)}catch(_){}burst(gY(p,3),0xd8f4ff,120,4,4,1.1);svShock(p,0xbfe8ff,8,.8);shake(.5);svSnd('crack',1.4,.5);svSnd('bell',1,.8);
+  mq160Sync();fs160Hud();
+  setTimeout(()=>{try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','The Gate Is Open','The ancient ice bursts from the gate','The road to '+mq160Next()+' lies beyond','z2');mSfx('victory')}catch(_){}
+    say('🔥 The frozen gate is melted through. The road to '+mq160Next()+' lies beyond it.')},700)}
+// the flamespitter: picked up, dropped
+function mq160Carry(on){const E=MQ160.E;if(!E)return;if(on){E.carry=1;E.gp=null;svSnd('heavy',.6,1.5);try{if(tgt)setTarget(null)}catch(_){}}
+  else{E.carry=0;E.fire=0;const f=V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));E.gp=new THREE.Vector3(pl.position.x+f.x*.7,GH(pl.position.x+f.x*.7,pl.position.z+f.z*.7)+.18,pl.position.z+f.z*.7);E.gry=pl.rotation.y+Math.PI/2;svSnd('heavy',.6,1.3)}
+  mq160Sync();fs160Hud()}
+function mq160NearSpit(){const E=MQ160.E;if(!E||E.carry)return false;const p=E.gp||mq160BenchSpot();return Math.hypot(pl.position.x-p.x,pl.position.z-p.z)<2.4}
+function mq160Toggle(){const E=MQ160.E;if(!E)return false;if(E.carry){mq160Carry(false);return true}if(mq160NearSpit()){mq160Carry(true);return true}say('🔥 The flamespitter is out of reach: walk over to it to pick it up.');return true}
+// the aim: the mouse on the ground (or the facing)
+function fs160Aim(){try{if(typeof orb!='undefined'&&orb)return camFwd().setY(0).normalize()}catch(_){}const f=V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
+  if(typeof mOn=='undefined'||!mOn)return f;const d=V().subVectors(mg,pl.position);d.y=0;return d.lengthSq()>.05?d.normalize():f}
+function fs160Flame(d,live){const S=MQ160.S,tip=S&&S.sp.userData.tip;if(!tip)return;const p=new THREE.Vector3();tip.getWorldPosition(p);
+  if(!FS160.fl){const g=svG('fs_flc',()=>{const q=new THREE.ConeGeometry(1,1,10,1,true);q.translate(0,-.5,0);q.rotateX(-Math.PI/2);return q});
+    FS160.fl=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xff7a1a,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));FS160.fl.userData.lpsSkip=1;FS160.fl.renderOrder=22;scene.add(FS160.fl);
+    FS160.fl2=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffd07a,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));FS160.fl2.userData.lpsSkip=1;FS160.fl2.renderOrder=23;scene.add(FS160.fl2)}
+  const F=FS160.fl,F2=FS160.fl2;F.visible=F2.visible=!!live;if(!live)return;const t=nowP()/1000,L=5.6+.5*Math.sin(t*23);
+  F.position.copy(p);F.lookAt(p.clone().add(d));F.scale.set(1.25+.2*Math.sin(t*31),1.0+.2*Math.cos(t*27),L);F2.position.copy(p);F2.lookAt(p.clone().add(d));F2.scale.set(.5,.45,L*.6);
+  F.material.opacity=.36+.12*Math.sin(t*41);F2.material.opacity=.42+.12*Math.cos(t*37);for(let k=0;k<5;k++){const u=Math.random(),q=p.clone().addScaledVector(d,.4+u*L*.95);q.x+=(Math.random()-.5)*(.2+u*1.4);q.z+=(Math.random()-.5)*(.2+u*1.4);q.y+=(Math.random()-.3)*(.2+u*.8);burst(q,k%3?0xff6a1a:0xffd07a,1,.5+u,.9,.3+u*.2)}}
+function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(!E||!S)return;E.t+=dt;
+  if(hero.hp<=0||!mq160In2())return mq160Fail(hero.hp<=0?'dead':'left');
+  // held in the gate yard
+  {const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ160.leash){p.x=R.yard.x+dx/d*MQ160.leash;p.z=R.yard.z+dz/d*MQ160.leash;if(now-(E.lw||0)>2500){E.lw=now;say('🧊 The cold holds you in the gate yard: melt the gate!')}}}
+  // carrying: slower, no swings or spells (see the swing / cast wrappers)
+  if(E.carry)dqDebuff('Hauling the flamespitter','🔥',{mspd:-.15},400,'Carrying the flamespitter: −15% move speed, no attacks or spells');
+  // spraying
+  const want=E.carry&&!E.ovh&&typeof atkHeld!='undefined'&&atkHeld&&!(typeof uiOpen=='function'&&uiOpen());
+  if(want){E.fire=1;E.heat=Math.min(1,E.heat+dt/MQ160.heatT);if(E.heat>=1){E.ovh=1;E.fire=0;svSnd('hiss',1.1,.7);popT(pl.position,'OVERHEATED','#ff7a3a',true);say('♨️ The flamespitter has overheated! Drop it (C) and fight while it cools.')}}
+  else{E.fire=0;E.heat=Math.max(0,E.heat-dt/MQ160.coolT);if(E.ovh&&E.heat<=0){E.ovh=0;svSnd('bell',.5,1.6);dn(pl.position,'Cooled','#ffd080',-30,900)}}
+  const d=fs160Aim();if(E.fire){face(d);fs160Flame(d,true);if(Math.random()<dt*6)svSnd('whoosh',.35,.6+Math.random()*.2)}else fs160Flame(d,false);
+  if(E.carry&&E.ovh&&Math.random()<dt*10){const tip=new THREE.Vector3();S.sp.userData.tip.getWorldPosition(tip);burst(tip,0xd8d8d8,1,.3,1.2,.8)}
+  // the flame on the gate melts it
+  const gp=new THREE.Vector3(G.x+G.fx*.9,0,G.z+G.fz*.9);let onGate=false;
+  if(E.fire){const hx=gp.x-pl.position.x,hz=gp.z-pl.position.z,hd=Math.hypot(hx,hz),ca=(hx*d.x+hz*d.z)/(hd||1);if(hd<7.4&&(ca>.82||hd<2.2)){onGate=true;E.melt=Math.min(MQ160.melt,E.melt+dt);MQ160.trkK=''}}
+  {const k=E.melt/MQ160.melt,ice=S.gate.ice;ice.scale.set(1-.12*k,Math.max(.05,1-.85*k),1-.35*k);S.gate.pud.scale.set(.5+3.2*k,1,.4+1.4*k);
+    const hot=S.gate.hot;hot.material.opacity=onGate?.7+.2*Math.sin(now/40):Math.max(0,hot.material.opacity-dt*2);if(onGate){const y=Math.max(.6,6*Math.max(.05,1-.85*k)*.55);hot.position.set((Math.random()-.5)*.2,y,1.0);
+      if(Math.random()<dt*20){const w=new THREE.Vector3();hot.getWorldPosition(w);burst(w,0xf0f4f8,1,.5,1.6,1.1);burst(w,0x8ad0ff,1,.4,-1.2,.6)}if(Math.random()<dt*2)svSnd('hiss',.5,1.3)}}
+  // the flame burns spiders: each kill spends essence charge
+  if(E.fire){const R2=6.2;for(const e of enemies){if(!e.fs160sp||e.dead)continue;const hx=e.m.position.x-pl.position.x,hz=e.m.position.z-pl.position.z,hd=Math.hypot(hx,hz);if(hd>R2)continue;const ca=(hx*d.x+hz*d.z)/(hd||1);if(ca<.86&&hd>1.4)continue;
+    if(E.charge>=MQ160.kc){E.charge-=MQ160.kc;E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6);try{hurt(e,1e9,{col:'#ff9a3a'},false)}catch(_){}if(!e.dead)try{removeE(e)}catch(_){}}
+    else if(!E.spent){E.spent=1;popT(pl.position,'CHARGE SPENT','#ffb060',true);say('💠 The essence charge is spent: the flame still melts the gate, but it will not kill spiders any more.')}}}
+  // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at you
+  E.spT-=dt;const live=enemies.filter(e=>e.fs160sp&&!e.dead).length;
+  if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004);let n=1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0);n=Math.min(n,16-live);
+    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<14&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
+        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8){x=qx;z=qz;okp=true}}
+      if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:1})}catch(err){console.error('v151 spider',err)}
+      if(!e)continue;e.fs160sp=1;e.hunt=1;e.agg=1;e.wx=pl.position.x;e.wz=pl.position.z;e.m.rotation.y=Math.atan2(pl.position.x-x,pl.position.z-z);
+      const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}
+  if(E.melt>=MQ160.melt)mq160Win();
+  if(now-(E.hu||0)>120){E.hu=now;fs160Hud()}}
+// no swings or spells while carrying; C toggles the flamespitter during the melt (instead of the Character window)
+{const f=swing;swing=function(){if(MQ160.E&&MQ160.E.carry)return;return f.apply(this,arguments)}}
+{const f=cast;cast=function(){if(MQ160.E&&MQ160.E.carry){if(nowP()-(FS160.ct||0)>1500){FS160.ct=nowP();say('🔥 Drop the flamespitter (C) to use your abilities.')}return}return f.apply(this,arguments)}}
+{const f=openTal;openTal=function(){if(MQ160.E&&$('tal').classList.contains('hide')){mq160Toggle();return}return f.apply(this,arguments)}}
+{const f=doRecall;doRecall=function(){if(MQ160.E)return say('🧊 The cold holds you in the gate yard. Melt the gate, or fall trying.');return f.apply(this,arguments)}}
+{const f=toggleMount;toggleMount=function(){if(MQ160.E)return say('🧊 No mount will come into the gate yard now.');return f.apply(this,arguments)}}
+// the hero's hands on the grips while carrying (arm IK after every animation layer); the held weapon is put away
+function fs160Hold(){const E=MQ160.E,S=MQ160.S;const G=pl._grip;const on=!!(E&&E.carry&&S&&S.sp.parent===pl);
+  if(G&&G.L)G.L.forEach(q=>{if(q.W){if(on){if(q.W.userData.fs160v==null)q.W.userData.fs160v=q.W.visible;q.W.visible=false}else if(q.W.userData.fs160v!=null){q.W.visible=q.W.userData.fs160v;q.W.userData.fs160v=null}}});
+  if(!on)return;const b=pl.bones;if(!b||!b.aR0||!b.aR1||!b.aR2||!b.aL0||!b.aL1||!b.aL2||typeof fc116IK!='function')return;
+  pl.updateMatrixWorld(true);const V3=THREE.Vector3,sp=S.sp,gR=sp.userData.gR.getWorldPosition(new V3()),gL=sp.userData.gL.getWorldPosition(new V3());
+  const sR=b.aR0.getWorldPosition(new V3()),sL=b.aL0.getWorldPosition(new V3()),rt=new V3(sR.x-sL.x,0,sR.z-sL.z).normalize(),dn=new V3(0,-1,0);
+  fc116IK(sR,b.aR0,b.aR1,b.aR2,gR,rt.clone().multiplyScalar(.7).add(dn),1);fc116IK(sL,b.aL0,b.aL1,b.aL2,gL,rt.clone().multiplyScalar(-.7).add(dn),1)}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{if(!h||h===pl)fs160Hold()}catch(e){if(!FS160.he){FS160.he=1;console.warn('v151 hold',e)}}return r}}
+// ---------------- the event HUD ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#fs160{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:7;width:300px;max-width:70vw;pointer-events:none;padding:6px 10px 7px;border-radius:8px;
+  background:linear-gradient(180deg,rgba(12,20,34,.86),rgba(8,12,22,.9));border:1px solid rgba(140,200,255,.35);box-shadow:0 4px 18px rgba(0,0,0,.5);font:12px/1.35 system-ui,sans-serif;color:#d8e8f4}
+#fs160.hide{display:none}#fs160 .t{font-family:Cinzel,Georgia,serif;letter-spacing:.12em;font-size:10px;text-transform:uppercase;color:#8ac8e8;display:flex;justify-content:space-between}
+#fs160 .bar{height:6px;margin:2px 0 4px;background:rgba(0,0,0,.55);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}#fs160 .bar i{display:block;height:100%}
+#fs160 .m i{background:linear-gradient(90deg,#5ab8ff,#d8f4ff)}#fs160 .h i{background:linear-gradient(90deg,#ffb040,#ff4a1a)}#fs160 .h.ov i{background:#ff2a1a;animation:fs160b .4s infinite alternate}
+#fs160 .c i{background:linear-gradient(90deg,#ff8a2a,#ffd07a)}#fs160 .k{color:#9ab0c4;font-size:11px;margin-top:2px}#fs160 b{color:#fff}
+@keyframes fs160b{from{opacity:.45}to{opacity:1}}`;document.head.appendChild(st)})();
+function fs160Hud(){let el=document.getElementById('fs160');const E=MQ160.E;if(!E){if(el)el.classList.add('hide');return}
+  if(!el){el=document.createElement('div');el.id='fs160';($('stage')||document.body).appendChild(el)}el.classList.remove('hide');
+  const m=E.melt/MQ160.melt,live=enemies.filter(e=>e.fs160sp&&!e.dead).length;
+  el.innerHTML=`<div class="t"><span>🔥 Melting the Frozen Gate</span><span>${Math.round(m*100)}%</span></div><div class="bar m"><i style="width:${(m*100).toFixed(1)}%"></i></div>
+  <div class="t"><span>${E.ovh?'♨️ Overheated · cooling':'Heat'}</span><span>${E.carry?(E.fire?'spraying':'held'):'on the ground'}</span></div><div class="bar h${E.ovh?' ov':''}"><i style="width:${(E.heat*100).toFixed(1)}%"></i></div>
+  <div class="t"><span>💠 Essence charge</span><span>${Math.round(E.charge)}</span></div><div class="bar c"><i style="width:${(E.charge/MQ160.charge*100).toFixed(1)}%"></i></div>
+  <div class="k"><b>C</b> ${E.carry?'drop':'pick up'} the flamespitter · <b>hold left click</b> to spray · ice spiders: <b>${live}</b></div>`}
+
+// ---------------- prompts ----------------
+function mq160Prompt(){if(!mq160In2()||!MQ160.S)return null;const P=pl.position,R=mq160Plan(),E=MQ160.E;
+  if(E){if(!E.carry&&mq160NearSpit())return {label:'C · Pick up the flamespitter',fn:()=>mq160Carry(true)};return {label:E.carry?'🔥 Hold left click to spray · C to drop':'🔥 The melt is under way',fn:()=>{if(E.carry)mq160Carry(false)}}}
+  for(const c of MQ160.S.cache){if(MQ160.p[c.i])continue;if(Math.hypot(P.x-c.x,P.z-c.z)>2.8)continue;const g=MQ160['g'+c.i],P2=MQ160.parts[c.i];
+    if(g&&!g.dead&&enemies.includes(g))return {label:'⚔️ The '+P2.n+' is guarded · defeat its warden',fn:()=>say('⚔️ Its warden will not let you take the '+P2.n+'.')};
+    return {label:'F · Take the '+P2.n,fn:()=>mq160Take(c.i)}}
+  const B=R.bench;if(Math.hypot(P.x-B.x,P.z-B.z)<2.9){if(MQ160.st===0){const miss=MQ160.parts.filter((q,i)=>!MQ160.p[i]).map(q=>q.n);return {label:'🔧 The workbench · flamespitter parts '+mq160N()+'/3',fn:()=>say('🔧 Still missing: '+miss.join(', ')+'. Look for the orange beacons around '+PMAP[2].ins[1].n+'.')}}
+    if(MQ160.st===1)return {label:'F · Assemble the flamespitter',fn:()=>mq160Assemble()};if(MQ160.st===2)return {label:'F · Begin melting the frozen gate (no turning back)',fn:()=>mq160Start()}}
+  const G=R.gate;if(Math.hypot(P.x-(G.x+G.fx*2),P.z-(G.z+G.fz*2))<3.2){if(mq160Done())return {label:'F · Through the gate to '+mq160Next(),fn:()=>mq160Through()};
+    if(MQ160.st===2)return {label:'F · Begin melting the frozen gate (no turning back)',fn:()=>mq160Start()};return {label:'🔒 A wall of ancient ice seals the gate',fn:()=>say('🧊 Ancient ice fills the gate. Something hot enough could melt it: the workbench beside it has plans for a flamespitter ('+mq160N()+'/3 parts).')}}
+  return null}
+function mq160Through(){MQ160.st=3;MQ160.trkK='';try{insGo(PMAP[2].ins[2])}catch(err){console.error('v151 gate',err)}}
+{const f=worldPrompt;worldPrompt=function(){try{const r=mq160Prompt();if(r)return r}catch(e){if(!MQ160.err++)console.warn('v151 gate prompt',e)}return f.apply(this,arguments)}}
+{const f=portalPrompt;portalPrompt=function(){try{if(mq160In2()&&MQ160.S){const R=mq160Plan(),G=R.gate,P=pl.position;if(MQ160.E||Math.hypot(P.x-G.x,P.z-G.z)<4)return null}}catch(_){}return f.apply(this,arguments)}}
+// ---------------- the world tick ----------------
+function mq160Tick(dt,now){const in2=mq160In2(),t=now/1000;
+  if(in2&&!MQ160.S)try{mq160Build()}catch(err){console.error('v151 gate build',err);MQ160.err++}
+  const S=MQ160.S;if(!S)return;[S.gate.g,S.bench,S.sp].forEach(o=>{if(o.parent===scene)o.visible=in2&&(o!==S.sp||MQ160.st>=2&&!mq160Done()||!!MQ160.E)});S.cache.forEach(c=>c.g.visible=in2&&!MQ160.p[c.i]);S.blt.intensity=in2?1.1+.25*Math.sin(t*7)+.15*Math.sin(t*13):0;
+  if(in2){const P=pl.position;
+    // the caches: found when you come close, their warden rises; the beacons pulse
+    S.cache.forEach(c=>{if(MQ160.p[c.i])return;const d=Math.hypot(P.x-c.x,P.z-c.z);c.g.userData.bc.material.opacity=.1+.04*Math.sin(t*1.5+c.i);c.g.userData.gl.scale.setScalar(1.1*(1+.12*Math.sin(t*3+c.i)));
+      if(d<MQ160.see){if(!MQ160.fd[c.i]){MQ160.fd[c.i]=1;MQ160.trkK='';try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','A Salvage Cache','The '+MQ160.parts[c.i].n+' lies here, and something guards it','Defeat its warden, then take the part','z2')}catch(_){}}
+        const g=MQ160['g'+c.i];if(!MQ160.gk[c.i]&&!(g&&!g.dead&&enemies.includes(g)))mq160Guard(c.i)}});
+    // the gate: steam off the ice while it melts, the open road glows
+    if(mq160Done()){S.gate.glow.material.opacity=.45+.1*Math.sin(t*2);if(Math.random()<dt*4){const R=mq160Plan(),G=R.gate;burst(new THREE.Vector3(G.x+(Math.random()-.5)*4,GH(G.x,G.z)+1+Math.random()*4,G.z),0x9ad8ff,1,.2,.6,1)}}
+    S.bench.userData.fl.scale.setScalar(1.2+.3*Math.sin(t*11));if(S.sp.userData.pil)S.sp.userData.pil.visible=!!MQ160.E}
+  if(MQ160.E)try{mq160ETick(dt,now)}catch(err){if(!MQ160.err++)console.error('v151 melt',err)}
+  if(now-MQ160.t>400){MQ160.t=now;try{if(in2)mq143Trk()}catch(_){}}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq160Tick(dt,now)}catch(err){if(!MQ160.err++)console.warn('v151 gate tick',err)}return r}}
+// a guard's death frees its part
+{const f=kill;kill=function(e){const r=f.apply(this,arguments);try{if(e&&e.fs160g!=null){MQ160.gk[e.fs160g]=1;MQ160.trkK='';const P=MQ160.parts[e.fs160g];setTimeout(()=>say('🔧 The warden falls. Take the '+P.n+' from the cache.'),600)}}catch(_){}return r}}
+// ---------------- the tracker (chapter 2 in the main-quest box, in Burningeye II) ----------------
+{const f=mq143Trk;mq143Trk=function(){try{if(mq160In2()){MQ143.trkK='';return mq160Trk()}}catch(err){if(!MQ160.err++)console.warn('v151 gate trk',err)}MQ160.trkK='';return f.apply(this,arguments)}}
+function mq160Trk(){const el=$('mqt143');if(!el)return;const hide=(typeof uiOpen=='function'&&uiOpen())||(mq160Done()&&insReach(2)>=2),E=MQ160.E;
+  const key=(hide?'h':'s')+MQ160.st+'|'+MQ160.p.join('')+MQ160.gk.join('')+MQ160.fd.join('')+'|'+(E?Math.round(E.melt):'-')+mq160Done();if(key===MQ160.trkK)return;MQ160.trkK=key;
+  if(hide){el.classList.add('hide');mq143TrkPos();return}
+  const o=(a,b,d)=>`<div class="o${d?' d':''}"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest · Burningeye Summit</div><div class="h">'+MQ160.name+'</div>';
+  if(mq160Done())h+=o('Go through the gate to '+mq160Next(),null,1);
+  else if(E)h+=o('Melt the gate with the flamespitter',Math.round(E.melt/MQ160.melt*100)+'%');
+  else if(MQ160.st===2)h+=o('Begin the melt at the workbench');
+  else if(MQ160.st===1)h+=o('Assemble the flamespitter at the workbench');
+  else{h+=o('Recover the flamespitter parts',mq160N()+'/3');MQ160.parts.forEach((P,i)=>{h+=o((MQ160.p[i]?'✓ ':MQ160.fd[i]?'• ':'· ')+P.n+(MQ160.p[i]?'':MQ160.fd[i]?(MQ160.gk[i]?' (unguarded)':' (guarded)'):''),null,MQ160.p[i])});if(MQ160.fd.filter(Boolean).length<3)h+=o('Look for the orange beacons')}
+  el.innerHTML=h;el.classList.add('z2');el.classList.remove('hide');mq143TrkPos()}
+// ---------------- the minimap and the N map: caches, the workbench ----------------
+function mq160Marks(g,P,k){if(!mq160In2())return;const R=mq160Plan();R.cache.forEach((c,i)=>{if(!MQ160.fd[i]||MQ160.p[i])return;const q=P(c.x,c.z);if(!q)return;g.save();g.translate(q[0],q[1]);g.scale(k,k);
+    g.beginPath();g.rect(-4,-4,8,8);g.fillStyle='#2a1a0c';g.fill();g.lineWidth=1.6/k;g.strokeStyle='#ffa040';g.stroke();g.beginPath();g.arc(0,0,1.8,0,6.283);g.fillStyle='#ffd07a';g.fill();g.restore()});
+  const q=P(R.bench.x,R.bench.z);if(q){g.save();g.translate(q[0],q[1]);g.scale(k,k);g.beginPath();g.arc(0,0,4.5,0,6.283);g.fillStyle='#1a1410';g.fill();g.lineWidth=1.6/k;g.strokeStyle='#ff8a3a';g.stroke();g.beginPath();g.moveTo(-2,2);g.lineTo(2,-2);g.strokeStyle='#ffd07a';g.stroke();g.restore()}}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{mq160Marks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}
+{const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{const I=INSL[insG(2,1)];if(mq160In2()){const c=$('wmc'),g=c.getContext('2d'),k=Math.min(1060/I.w,640/I.h),T=(x,z)=>[(x-I.x0+.5)*k,(z-I.y0+.5)*k],R=mq160Plan();
+  mq160Marks(g,T,1.5);g.font='700 12px system-ui,sans-serif';g.textAlign='center';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';
+  const lab=(x,z,t,c)=>{const [X,Y]=T(x,z);g.strokeText(t,X,Y-14);g.fillStyle=c;g.fillText(t,X,Y-14)};lab(R.bench.x,R.bench.z,'Workbench','#ffb060');lab(R.gate.x,R.gate.z,mq160Done()?'Gate (open)':'Frozen Gate','#bfe8ff');
+  R.cache.forEach((c,i)=>{if(MQ160.fd[i]&&!MQ160.p[i])lab(c.x,c.z,MQ160.parts[i].n,'#ffd07a')})}}catch(e){console.warn('v151 gate wmap',e)}return r0}}
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq160={v:151,st:MQ160.st,p:MQ160.p.slice(),fd:MQ160.fd.slice()}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq160,arr=a=>[0,1,2].map(i=>a&&a[i]?1:0);if(MQ160.E)mq160Fail('left');
+    MQ160.p=arr(q&&q.p);MQ160.fd=arr(q&&q.fd);MQ160.gk=MQ160.p.slice();MQ160.st=q&&typeof q=='object'?Math.max(0,Math.min(3,q.st|0)):0;if(MQ160.st<1&&mq160N()>=3)MQ160.st=1;MQ160.trkK='';
+    [0,1,2].forEach(i=>{const g=MQ160['g'+i];if(g&&!g.dead)try{removeE(g)}catch(_){}MQ160['g'+i]=null});mq160Sync()}catch(err){console.warn('v151 gate load',err)}return r}}
+// ================= v151 The Mountain Drill — Burningeye Summit III main quest: drill through the mountain into the Sovereign's Den =================
+// Chapter 3 of Burningeye Summit's main quest line (1 The Frozen Maw 3152 · 2 The Frozen Gate 3160). The gateway to the Den at the end of
+// Stormcrown (Burningeye III) is gone: the road ends at a sheer face of the mountain, and before it stands a great essence drill, its bit
+// against the rock, wired to four control boxes round the yard.
+//  * F at the drill's console starts the drill: a special event that cannot be stopped (the hero is held in the drill yard, no recall)
+//    until the mountain is bored through (MQ170.need, 90 s of drilling) or the hero falls (the drill winds down and the bore is lost).
+//  * The drill only turns while all four control boxes are lit and running. Each box starts dark: F switches it on. Running boxes fail
+//    on their own: one FREEZES (F opens the Thaw window: hold the heater and keep the needle in the green band until the ice is gone) or
+//    MALFUNCTIONS (the Rewire window: drag each loose wire to the socket of its colour).
+//  * Frost Trolls come up the road and out of the snow and go for the boxes, not for you: a troll that reaches a box raises its fists
+//    (a warning ring) and SMASHES it (the Rebuild window: drag each broken piece back into its place). Hit a troll and it turns on you.
+//  * The repair windows do not pause the game: the drill and the trolls keep going while you work, you cannot move, and a hit knocks
+//    you away from the box (the window closes).
+//  * Bored through: the rock face bursts open on a tunnel; F at it goes to the Sovereign's Den.
+// State MQ170.st: 0 · 1 the tunnel is open. Done also when the Den has been reached (mq170Done). Saved as x2.mq170 {st}. A save made
+// mid-drill loads with the drill at rest. Co-op: local to each player (the trolls are minions, never shared).
+var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,
+  bn:['North-west box','North-east box','South-west box','South-east box'],
+  stN:{off:'dark',on:'running',frozen:'frozen',fault:'malfunctioning',smashed:'smashed'},
+  stC:{off:'#5a6470',on:'#7aff8a',frozen:'#8ad8ff',fault:'#ffb040',smashed:'#ff5a4a'}};
+function mq170Ins(){try{return curIns()}catch(_){return null}}
+function mq170In3(){const I=mq170Ins();return !!I&&I.g===insG(2,2)}
+function mq170Done(){return MQ170.st>=1||insReach(2)>=3}
+function mq170Den(){try{return PMAP[2].ins[3].n}catch(_){return 'the Den'}}
+// ---------------- where things stand (a pure function of the map data: 1680's place() keeps decorations off them) ----------------
+function mq170Plan(){if(mq170Plan.c)return mq170Plan.c;const I=INSL[insG(2,2)],P=I.path,N=P.length,q=P[Math.max(0,N-14)],gx=I.ba[0],gz=I.ba[1],ry=Math.atan2(q[0]-gx,q[1]-gz);
+  const fx=Math.sin(ry),fz=Math.cos(ry),sx=Math.cos(ry),sz=-Math.sin(ry),DW=MAP.DW,L=(lx,lz)=>({x:gx+lx*sx+lz*fx,z:gz+lx*sz+lz*fz});
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='~'||t=='H')return false;const J=insAt(X,Z);if(!J||J.g!==I.g)return false;return DW[Z*W+X]<-(m==null?1:m)};
+  // the cliff face 3 tiles behind the old gateway; the drill's bit against it; the console at the drill's back; four boxes round the yard
+  const R={g:{x:gx,z:gz,ry,fx,fz,sx,sz},L,ok,face:L(0,-1.9),drill:L(0,2.6),con:L(0,8.8),yard:L(0,6),tun:L(0,-1.2),
+    box:[L(-8.5,1.5),L(8.5,1.5),L(-7,11),L(7,11)],keep:[]};
+  R.keep.push([L(0,-6).x,L(0,-6).z,12],[R.drill.x,R.drill.z,6.5],[R.con.x,R.con.z,3]);R.box.forEach(b=>R.keep.push([b.x,b.z,2.6]));
+  return mq170Plan.c=R}
+function mq170Keep(g,x,z){if(g!==insG(2,2))return false;try{for(const k of mq170Plan().keep)if(Math.hypot(x-k[0],z-k[1])<k[2])return true}catch(e){if(!mq170Keep.e){mq170Keep.e=1;console.warn('v151 drill keep',e)}}return false}
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{if(r===insG(2,2)&&ROST.r===r){const R=mq170Plan();
+    ROST.slots=ROST.slots.filter(s=>!(s.wild&&Math.hypot((s.hx==null?s.x:s.hx)-R.yard.x,(s.hz==null?s.z:s.hz)-R.yard.z)<26))}}catch(e){console.warn('v151 drill roster',e)}return o}}
+
+// solid from the start: the cliff, the drill's body (the boxes and the console are small: you walk round them); the bore (tunT) opens
+function mq170Solid(){const R=mq170Plan();MQ170.tunT=[];for(let lz=-12;lz<=-2;lz++)for(let lx=-16;lx<=16;lx++){const p=R.L(lx,lz),k=Math.round(p.z)*W+Math.round(p.x);CBLK.add(k);if(lz>=-3&&Math.abs(lx)<=1)MQ170.tunT.push(k)}
+  for(let lz=0;lz<=6;lz++)for(let lx=-2;lx<=2;lx++){const p=R.L(lx,lz);CBLK.add(Math.round(p.z)*W+Math.round(p.x))}}
+try{mq170Solid()}catch(e){console.warn('v151 drill tiles',e)}
+// ---------------- models ----------------
+var DR170={m:null};
+function dr170Mats(){if(DR170.m)return DR170.m;const S=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85,flatShading:true},o||{}));
+  return DR170.m={rock:S(0x4a4e58,{roughness:.92}),rock2:S(0x5e636c,{roughness:.9}),dark:S(0x24272e,{roughness:.95}),snow:S(0xe8eef4,{roughness:.95}),
+    iron:S(0x3c3f46,{roughness:.42,metalness:.65}),iron2:S(0x26282e,{roughness:.5,metalness:.6}),steel:S(0xb4bcc6,{roughness:.25,metalness:.7}),brass:S(0xb08a3a,{roughness:.35,metalness:.75}),
+    copper:S(0xa8603a,{roughness:.4,metalness:.7}),wood:S(0x5a3e26,{roughness:.9}),rubber:S(0x1a1a1e,{roughness:.8}),glass:S(0xbfe8ff,{emissive:0x2a6aa0,emissiveIntensity:.4,roughness:.04,metalness:.2,transparent:true,opacity:.6}),
+    core:S(0x7ad8ff,{emissive:0x2aa8ff,emissiveIntensity:1.2,roughness:.2}),hot:S(0xff9a3a,{emissive:0xff5a10,emissiveIntensity:1.0}),void:new THREE.MeshBasicMaterial({color:0x040508,fog:false}),
+    lampOff:S(0x2a3038,{roughness:.3}),panel:S(0x2e343c,{roughness:.6,metalness:.4})}}
+// the mountain face: a wall of great rocks with snow on every ledge (local +z is toward the road)
+function dr170Cliff(){const M=dr170Mats(),k=gb151Kit(),rn=svRng(1701);
+  for(let row=0;row<3;row++)for(let i=0;i<9;i++){const x=(i-4)*3.4+(rn()-.5)*1.2,z=-1.5-row*2.4-rn()*1.2-Math.abs(i-4)*.35,y=1.4+row*3.4+rn()*.8,s=2.2+rn()*1.2-row*.2;
+    k.lump(i%6,1710+row*10+i,(i+row)%3?M.rock:M.rock2,x,y,z,s*1.2,s*(1.15+rn()*.5),s,rn()*6,.3);if(rn()<.7)k.lump(10+i%3,1750+row*10+i,M.snow,x+(rn()-.5),y+s*.95,z+.3,s*.8,s*.22,s*.7,rn()*6,.2)}
+  for(let i=0;i<7;i++){const x=(i-3)*4.2+(rn()-.5)*1.5;k.lump(20+i%4,1790+i,M.rock2,x,11.5+rn()*1.5,-8-rn()*2,3.4,2.6,2.6,rn()*6,.3);k.lump(24,1800+i,M.snow,x,13.6+rn(),-8,2.8,.6,2.2,rn()*6,.2)}
+  // where the bit bites: a scarred, cracked patch; the tunnel behind (shown when bored through)
+  k.lump(30,1810,M.dark,0,2.2,-1.1,1.9,1.9,.9,0,.25);
+  const g=k.done();g.userData.psNo=1;
+  const tun=new THREE.Group();g.add(tun);const kt=gb151Kit();kt.m(svG('dr_tun',()=>{const q=new THREE.CylinderGeometry(2.2,2.2,7,14,3,true);q.rotateX(Math.PI/2);q.translate(0,0,-3.5);return q}),new THREE.MeshBasicMaterial({color:0x0a0c12,side:THREE.BackSide,fog:false}),0,2.3,-.6,0,0,0,1,1.05,1);
+  kt.m(svG('dr_tv',()=>new THREE.CircleGeometry(1,20)),M.void,0,2.3,-7.4,0,0,0,2.4,2.5,1);for(let i=0;i<8;i++){const a=i/8*6.283;kt.lump(31+i%3,1820+i,M.rock2,Math.cos(a)*2.6,2.3+Math.sin(a)*2.6,-.3,.8,.7,.7,a,.35)}
+  for(let i=0;i<9;i++)kt.lump(35+i%3,1830+i,i%2?M.rock:M.rock2,(rn()-.5)*5,.25,1+rn()*2.5,.5+rn()*.4,.35,.5+rn()*.3,rn()*6,.35);
+  tun.add(kt.done());tun.visible=false;const gl=kqSpr(0x7ad8ff,3.6);gl.material=gl.material.clone();gl.material.opacity=.5;gl.position.set(0,2.3,-5);tun.add(gl);
+  // the bore growing in the rock while the drill turns
+  const bore=new THREE.Mesh(svG('dr_bore',()=>new THREE.CircleGeometry(1,20)),M.void);bore.position.set(0,2.3,-.05);bore.scale.set(.01,.01,1);g.add(bore);
+  return {g,tun,bore,gl}}
+// the drill: a sled chassis, a copper boiler and chimney, an essence core, gears and pistons, the great fluted bit on its shaft
+function dr170Drill(){const M=dr170Mats(),k=gb151Kit();
+  // chassis: two runners, a deck, the operator's railing
+  [-1,1].forEach(s=>{k.m(svG('dd_ru',()=>svTube([[0,.25,-3.2],[0,.15,-2.6],[0,.15,3.4],[0,.55,3.9]],.18,6)),M.iron2,s*1.7,0,0);for(let i=0;i<5;i++)k.m(svG('dd_rv',()=>new THREE.IcosahedronGeometry(.08,0)),M.brass,s*1.7,.38,-2.4+i*1.4)});
+  k.m(svG('dd_dk',()=>new THREE.BoxGeometry(3.8,.35,7)),M.iron,0,.6,.3);k.m(svG('dd_dk2',()=>new THREE.BoxGeometry(4,.12,7.2)),M.wood,0,.82,.3);
+  for(let i=0;i<6;i++)k.m(svG('dd_rp',()=>new THREE.CylinderGeometry(.04,.04,1.0,5)),M.iron,i<3?-1.8:1.8,1.35,2.6+(i%3)*.5);[-1,1].forEach(s=>k.m(svG('dd_rr',()=>new THREE.CylinderGeometry(.04,.04,1.2,5)),M.iron,s*1.8,1.85,3.1,Math.PI/2,0,0));
+  // the boiler (copper drum, iron bands), the chimney, gauges
+  k.m(svG('dd_bo',()=>{const q=new THREE.CylinderGeometry(1.2,1.2,3.4,14);q.rotateX(Math.PI/2);return q}),M.copper,0,2.1,.9);for(let i=0;i<4;i++)k.m(svG('dd_bb',()=>new THREE.TorusGeometry(1.22,.07,4,16)),M.iron2,0,2.1,-.5+i*.95);
+  k.m(svG('dd_ch',()=>new THREE.CylinderGeometry(.28,.35,2.4,10)),M.iron2,.6,4.1,1.8);k.m(svG('dd_cc',()=>new THREE.CylinderGeometry(.42,.3,.35,10)),M.iron,.6,5.4,1.8);
+  [-1,1].forEach(s=>{k.m(svG('dd_ga',()=>new THREE.CylinderGeometry(.22,.22,.08,12)),M.brass,s*.8,2.6,2.65,Math.PI/2,0,0);k.m(svG('dd_gf',()=>new THREE.CircleGeometry(.18,12)),M.snow,s*.8,2.6,2.7)});
+  // the essence core in a cage on top
+  k.m(svG('dd_cr',()=>{const q=new THREE.OctahedronGeometry(.42,0);q.scale(1,1.6,1);return q}),M.core,-.6,3.75,.3);for(let i=0;i<6;i++){const a=i/6*6.283;k.m(svG('dd_cb',()=>new THREE.CylinderGeometry(.03,.03,1.4,4)),M.iron,-.6+Math.sin(a)*.5,3.75,.3+Math.cos(a)*.5)}
+  // gears and pistons along the sides
+  [-1,1].forEach(s=>{k.m(svG('dd_gr',()=>{const q=new THREE.CylinderGeometry(.7,.7,.16,16);q.rotateZ(Math.PI/2);return q}),M.brass,s*1.95,1.6,-1.4);k.m(svG('dd_pi',()=>new THREE.CylinderGeometry(.12,.12,2.2,8)),M.steel,s*1.4,1.5,-2.1,Math.PI/2-.2,0,0)});
+  // the front: a collar, the shaft
+  k.m(svG('dd_co',()=>{const q=new THREE.CylinderGeometry(1.05,1.25,.8,14);q.rotateX(Math.PI/2);return q}),M.iron2,0,2.1,-1.3);
+  const g=k.done();g.userData.psNo=1;
+  // the bit spins on its own group: a fluted cone of steel with spiral cutting edges
+  const bit=new THREE.Group();bit.position.set(0,2.1,-1.7);g.add(bit);const kb=gb151Kit();
+  kb.m(svG('dd_bt',()=>{const q=new THREE.ConeGeometry(1.1,2.8,14,4);q.rotateX(-Math.PI/2);q.translate(0,0,-1.4);return q}),M.steel);kb.m(svG('dd_btp',()=>{const q=new THREE.ConeGeometry(.22,.5,8);q.rotateX(-Math.PI/2);q.translate(0,0,-2.75);return q}),M.hot);
+  for(let i=0;i<4;i++)for(let j=0;j<6;j++){const t=j/6,a=i/4*6.283+t*3.2,r=1.0*(1-t)+.06;kb.m(svG('dd_bf',()=>new THREE.BoxGeometry(.08,.12,.45)),M.iron2,Math.cos(a)*r,Math.sin(a)*r,-t*2.5-.15,0,0,a)}
+  bit.add(kb.done());
+  const glow=kqSpr(0x7ad8ff,1.6);glow.material=glow.material.clone();glow.position.set(-.6,3.75,.3);g.add(glow);
+  return {g,bit,glow}}
+// a control box: an iron cabinet with a lever, gauges and a status lamp; an ice crust (frozen), sparks (fault), broken pieces (smashed)
+function dr170Box(i){const M=dr170Mats(),k=gb151Kit(),g=new THREE.Group();g.userData.psNo=1;
+  k.m(svG('db_c',()=>new THREE.BoxGeometry(1.0,1.3,.7)),M.iron,0,.8,0);k.m(svG('db_b',()=>new THREE.BoxGeometry(1.2,.16,.9)),M.iron2,0,.08,0);k.m(svG('db_p',()=>new THREE.BoxGeometry(.8,.9,.04)),M.panel,0,.85,.36);
+  for(let q=0;q<2;q++){k.m(svG('db_g',()=>new THREE.CylinderGeometry(.12,.12,.04,12)),M.brass,-.2+q*.4,1.1,.39,Math.PI/2,0,0);k.m(svG('db_gf',()=>new THREE.CircleGeometry(.09,10)),M.snow,-.2+q*.4,1.1,.41)}
+  k.m(svG('db_l',()=>new THREE.CylinderGeometry(.03,.03,.45,6)),M.steel,.25,.65,.5,.5,0,0);k.m(svG('db_lk',()=>new THREE.SphereGeometry(.07,8,6)),M.rubber,.25,.85,.62);
+  k.m(svG('db_cb',()=>svTube([[0,.1,-.35],[0,.05,-.9],[0,.04,-1.6]],.07,6)),M.rubber,0,0,0);k.m(svG('db_ro',()=>new THREE.BoxGeometry(1.1,.12,.8)),M.iron2,0,1.5,0);
+  const body=k.done();g.add(body);
+  const lamp=new THREE.Mesh(svG('db_lm',()=>new THREE.SphereGeometry(.16,10,8)),new THREE.MeshBasicMaterial({color:0x5a6470}));lamp.position.set(0,1.7,0);g.add(lamp);
+  const halo=kqSpr(0x7aff8a,1.1);halo.material=halo.material.clone();halo.position.copy(lamp.position);g.add(halo);
+  // the frozen crust
+  const ice=new THREE.Group();g.add(ice);const ki=gb151Kit();ki.lump(1,1850+i,M.glass,0,.8,0,.8,.95,.6,0,.2);for(let q=0;q<5;q++)ki.crys(q,dr170Mats().glass,(q-2)*.22,1.45,.1,(q-2)*.3,1,.3,.07,.3+q%2*.2);ice.add(ki.done());ice.visible=false;
+  // the broken pieces (smashed): the panel torn off, a gauge, the lever lying in the snow
+  const brk=new THREE.Group();g.add(brk);const kp=gb151Kit();kp.m(svG('db_p',()=>new THREE.BoxGeometry(.8,.9,.04)),M.panel,.5,.05,.9,-Math.PI/2+.2,.4,0);kp.m(svG('db_g',()=>new THREE.CylinderGeometry(.12,.12,.04,12)),M.brass,-.6,.03,.7);
+  kp.m(svG('db_l',()=>new THREE.CylinderGeometry(.03,.03,.45,6)),M.steel,-.3,.03,1.1,Math.PI/2,0,.7);brk.add(kp.done());brk.visible=false;
+  return {g,body,lamp,halo,ice,brk,i}}
+// the console at the drill's back: a lectern of levers and a big wheel
+function dr170Console(){const M=dr170Mats(),k=gb151Kit();k.m(svG('dc_b',()=>new THREE.BoxGeometry(1.4,1.1,.7)),M.iron,0,.55,0);k.m(svG('dc_t',()=>new THREE.BoxGeometry(1.5,.12,.9)),M.iron2,0,1.15,0,-.3,0,0);
+  for(let i=0;i<3;i++)k.m(svG('dc_lv',()=>new THREE.CylinderGeometry(.03,.03,.5,6)),M.steel,-.4+i*.4,1.4,.1,-.3,0,0);k.m(svG('dc_w',()=>new THREE.TorusGeometry(.32,.04,5,14)),M.brass,0,1.55,-.25,.2,0,0);
+  const g=k.done();g.userData.psNo=1;return g}
+KQSH151.ddrill2=()=>dr170Drill().g;KQSH151.ddrill=()=>{const g=new THREE.Group(),c=dr170Cliff(),d=dr170Drill();g.add(c.g);d.g.position.z=4.4;g.add(d.g);return g};KQSH151.dbox=()=>{const b=dr170Box(0);b.ice.visible=true;return b.g};KQSH151.dbox2=()=>{const b=dr170Box(1);b.brk.visible=true;b.body.rotation.z=.35;return b.g};
+
+// ---------------- the world ----------------
+function mq170Build(){if(MQ170.S)return MQ170.S;const R=mq170Plan(),G=R.g,S={box:[]};MQ170.S=S;const y=(p)=>GH(p.x,p.z);
+  S.cliff=dr170Cliff();S.cliff.g.position.set(R.face.x,y(R.face),R.face.z);S.cliff.g.rotation.y=G.ry;scene.add(S.cliff.g);
+  S.drill=dr170Drill();S.drill.g.position.set(R.drill.x,y(R.drill),R.drill.z);S.drill.g.rotation.y=G.ry;scene.add(S.drill.g);S.d0=S.drill.g.position.clone();
+  S.con=dr170Console();S.con.position.set(R.con.x,y(R.con),R.con.z);S.con.rotation.y=G.ry;scene.add(S.con);
+  R.box.forEach((b,i)=>{const B=dr170Box(i);B.g.position.set(b.x,y(b),b.z);B.g.rotation.y=Math.atan2(R.drill.x-b.x,R.drill.z-b.z);scene.add(B.g);B.x=b.x;B.z=b.z;S.box.push(B)});
+  S.tunT=MQ170.tunT||[];
+  S.lt=new THREE.PointLight(0x7ad8ff,0,10,1.6);S.lt.position.set(R.drill.x,y(R.drill)+4,R.drill.z);scene.add(S.lt);
+  try{const r=RPORT.find(q=>q.k=='next'&&q.ig===insG(2,2));if(r){r.g.visible=false;MQ170.rp=r}}catch(_){}
+  mq170Sync();return S}
+function mq170Sync(){const S=MQ170.S;if(!S)return;const open=mq170Done(),E=MQ170.E;S.cliff.tun.visible=open;S.cliff.bore.visible=!open;
+  S.tunT.forEach(k=>{if(open)CBLK.delete(k);else CBLK.add(k)});
+  if(!E){S.cliff.bore.scale.set(open?.01:.01,open?.01:.01,1);S.drill.g.position.copy(S.d0)}
+  S.box.forEach((B,i)=>dr170BoxLook(B,E?E.box[i].s:(open?'on':'off')))}
+function dr170BoxLook(B,st){const c={off:0x3a4048,on:0x7aff8a,frozen:0x8ad8ff,fault:0xffb040,smashed:0x2a2020}[st]||0x3a4048;B.lamp.material.color.setHex(c);B.halo.material.color.setHex(st=='smashed'?0xff3a2a:c);
+  B.halo.visible=st!='off';B.ice.visible=st=='frozen';B.brk.visible=st=='smashed';B.body.rotation.set(st=='smashed'?.25:0,0,st=='smashed'?.3:0);B.body.position.y=st=='smashed'?-.12:0}
+
+// ---------------- the event ----------------
+function mq170Start(){if(MQ170.E||mq170Done())return;const R=mq170Plan();if(riding)try{dismount()}catch(_){}
+  MQ170.E={t:0,prog:0,box:[0,1,2,3].map(i=>({s:'off',tf:9+Math.random()*8+i*2})),trT:6,live:[],run:0,hint:0};MQ170.trkK='';mq170Sync();
+  shake(.25);svSnd('heavy',1.1,.6);setTimeout(()=>svSnd('charge',1,.5),300);svShock(new THREE.Vector3(R.yard.x,0,R.yard.z),0x7ad8ff,MQ170.leash,.8);
+  try{zt116Show(ZT116.Z[2],'Stormcrown','The Mountain Drill','The drill wakes, and the trolls hear it','Keep all four control boxes running','z2')}catch(_){}
+  say('⚙️ The drill wakes! Switch on all four control boxes (F at each). Keep them running: the drill only bores while every box is lit.');dr170Hud()}
+function mq170Fail(why){const E=MQ170.E;if(!E)return;MQ170.E=null;MQ170.trkK='';dr170Close(false);
+  enemies.slice().forEach(e=>{if(e.dr170t&&!e.dead){burst(gY(e.m.position,1),0xe8f0f8,20,1.6,1.4,.6);try{removeE(e)}catch(_){}}});mq170Sync();dr170Hud();svSnd('heavy',.9,.5);
+  say(why==='dead'?'⚙️ You fall, and the drill grinds to a halt. The bore collapses: start the drill again.':'⚙️ The drill grinds to a halt.')}
+function mq170Win(){const E=MQ170.E;MQ170.E=null;MQ170.st=1;MQ170.trkK='';dr170Close(false);const R=mq170Plan(),p=new THREE.Vector3(R.face.x,0,R.face.z);
+  enemies.slice().forEach(e=>{if(e.dr170t&&!e.dead){burst(gY(e.m.position,1),0xe8f0f8,20,1.6,1.4,.6);try{removeE(e)}catch(_){}}});
+  try{sk146Debris(gY(p,2.5),dr170Mats().rock,26,.4,8,8,2)}catch(_){}burst(gY(p,2.5),0xd8d8d8,120,5,4,1.2);svShock(p,0xbfe8ff,9,.8);shake(.6);svSnd('crack',1.4,.4);svSnd('heavy',1.4,.5);svSnd('bell',1,.7);
+  mq170Sync();dr170Hud();
+  setTimeout(()=>{try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','Through the Mountain','The drill bursts through the rock','A tunnel leads to '+mq170Den(),'z2');mSfx('victory')}catch(_){}
+    say('⚙️ The drill has bored through the mountain! The tunnel leads to '+mq170Den()+'.')},800)}
+function mq170Through(){MQ170.st=1;MQ170.trkK='';try{insGo(PMAP[2].ins[3])}catch(err){console.error('v151 tunnel',err)}}
+// a box changes state (with its effect and a line in the log)
+function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;b.s=s;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
+  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}
+  else if(s==='frozen'){burst(gY(p,1),0xd8f4ff,30,1.5,1.5,.7);svSnd('crack',.9,1.2);popT(gY(p,2),'❄ FROZEN','#8ad8ff',true)}
+  else if(s==='fault'){burst(gY(p,1.4),0xffd07a,30,2,2,.4);svSnd('zap',1,1);popT(gY(p,2),'⚡ MALFUNCTION','#ffb040',true)}
+  else if(s==='smashed'){try{sk146Debris(gY(p,1),dr170Mats().iron,8,.15,4,5,1.3)}catch(_){}burst(gY(p,1),0xffa07a,30,2,2,.5);shake(.25);svSnd('heavy',1.1,.9);svSnd('crack',.8,1.4);popT(gY(p,2),'💥 SMASHED','#ff5a4a',true)}
+  if(was==='on'&&s!=='on')say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': the drill stops!');
+  const W=MQ170.W;if(W&&W.i===i&&s==='smashed'&&W.k!=='rebuild')dr170Close(false)}
+function mq170ETick(dt,now){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
+  if(hero.hp<=0||!mq170In3())return mq170Fail(hero.hp<=0?'dead':'left');
+  {const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ170.leash){p.x=R.yard.x+dx/d*MQ170.leash;p.z=R.yard.z+dz/d*MQ170.leash;if(now-(E.lw||0)>2500){E.lw=now;say('⚙️ You cannot leave the drill now!')}}}
+  // drilling: only with all four boxes running
+  const run=E.box.every(b=>b.s==='on');if(run!==!!E.run){E.run=run?1:0;MQ170.trkK='';svSnd(run?'charge':'hiss',.8,run?.7:.9)}
+  if(run){E.prog=Math.min(MQ170.need,E.prog+dt);E.box.forEach((b,i)=>{b.tf-=dt;if(b.tf<=0)dr170Set(i,Math.random()<.55?'frozen':'fault')})}
+  const k=E.prog/MQ170.need;S.drill.bit.rotation.z+=dt*(run?14:Math.max(0,(S.drill.bitV||0)));S.drill.bitV=run?14:Math.max(0,(S.drill.bitV||0)-dt*10);
+  S.drill.g.position.copy(S.d0).add(new THREE.Vector3(-R.g.fx*k*1.6,0,-R.g.fz*k*1.6));S.cliff.bore.scale.set(.2+1.9*k,.2+1.9*k,1);S.lt.intensity=run?1.2+.4*Math.sin(now/60):.3;
+  S.drill.glow.material.opacity=run?.9:.35;if(run&&Math.random()<dt*24){const p=new THREE.Vector3(R.face.x+(Math.random()-.5)*2.4,GH(R.face.x,R.face.z)+1.2+Math.random()*2.2,R.face.z);p.x+=R.g.fx*.6;p.z+=R.g.fz*.6;burst(p,Math.random()<.5?0xffd07a:0x9aa0a8,2,2.4,2,.5)}
+  if(run&&Math.random()<dt*3)shake(.05);if(run&&Math.random()<dt*2){const c=new THREE.Vector3();S.drill.g.localToWorld(c.set(.6,5.6,1.8));burst(c,0xd8d8d8,3,.4,2,1.4)}
+  // Frost Trolls for the boxes: more as the bore deepens
+  E.trT-=dt;const live=enemies.filter(e=>e.dr170t&&!e.dead).length;
+  if(E.trT<=0){E.trT=Math.max(5.5,10-k*4.5)+Math.random()*2;const n=Math.min(1+(k>.35?1:0)+(k>.75&&Math.random()<.5?1:0),6-live);
+    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<16&&!okp;tr++){const a=Math.random()*6.283,r=17+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
+        if((Math.sin(a)*R.g.fx+Math.cos(a)*R.g.fz)<-.15)continue;if(R.ok(qx,qz,.6)&&!solid(Math.round(qx),Math.round(qz))){x=qx;z=qz;okp=true}}
+      if(!okp)continue;let e=null;try{e=spawnEnemy('troll',x,z,MQ170.lv,{minion:1})}catch(err){console.error('v151 troll',err)}if(!e)continue;
+      e.dr170t=1;e.agg=0;e.c.n='Frost Troll Wrecker';e.dr={ph:'go',b:-1,t:0};const p=new THREE.Vector3(x,0,z);burst(gY(p,.5),0xe8f0f8,30,2,1.5,.8);svDecal(p,0xc8d8e8,1.6,2,.6)}
+    if(n>0&&!E.hint){E.hint=1;say('🧌 Frost Trolls are going for the control boxes! Hit one and it will come for you instead.')}}
+  if(E.prog>=MQ170.need)mq170Win();
+  dr170WTick(dt,now);if(now-(E.hu||0)>150){E.hu=now;dr170Hud()}}
+// a wrecker troll: walks to a box, raises its fists over it (a warning ring), smashes it; once hit it fights you instead
+function dr170Troll(e,dt,now){const E=MQ170.E,S=MQ170.S;if(!E||!S){try{removeE(e)}catch(_){}return}const D=e.dr,m=e.m;
+  const pick=()=>{const L=E.box.map((b,i)=>({i,b})).filter(q=>q.b.s!=='smashed'),on=L.filter(q=>q.b.s==='on'),C=on.length?on:L;if(!C.length)return -1;
+    let best=C[0].i,bd=1e9;C.forEach(q=>{const B=S.box[q.i],d=Math.hypot(B.x-m.position.x,B.z-m.position.z)+Math.random()*6;if(d<bd){bd=d;best=q.i}});return best};
+  if(D.b<0||E.box[D.b].s==='smashed'&&D.ph==='go'){D.b=pick();if(D.b<0){animC(m,now,false,0);return}}
+  const B=S.box[D.b],dx=B.x-m.position.x,dz=B.z-m.position.z,L=Math.hypot(dx,dz);
+  if(D.ph==='go'){m.ak=null;if(L>1.9){const sp=1.9;walkM(m,dx/L*sp*dt,dz/L*sp*dt);m.rotation.y=Math.atan2(dx,dz);animC(m,now,true,sp)}
+    else{D.ph='wind';D.t=1.5;m.rotation.y=Math.atan2(dx,dz);try{D.w=svWarn({k:'c',r:1.3},{x:B.x,z:B.z,a:0},1.5,{col:0xff6a2a})}catch(_){}popT(gY(B.g.position,2.4),'⚠ A TROLL IS SMASHING A BOX','#ff9a5a')}}
+  else if(D.ph==='wind'){D.t-=dt;m.ak={n:'slam',ph:0,k:Math.min(1,1-D.t/1.5)};animC(m,now,false,0);if(D.t<=0){D.ph='hit';D.t=.25}}
+  else if(D.ph==='hit'){D.t-=dt;m.ak={n:'slam',ph:1,k:Math.min(1,1-D.t/.25)};animC(m,now,false,0);if(D.t<=0){if(E.box[D.b].s!=='smashed')dr170Set(D.b,'smashed');D.ph='rec';D.t=.8}}
+  else{D.t-=dt;m.ak={n:'slam',ph:2,k:Math.max(0,D.t/.8)};animC(m,now,false,0);if(D.t<=0){m.ak=null;D.ph='go';D.b=-1}}}
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.dr170t&&!e.angry&&!e.dead){if(dt>0)try{dr170Troll(e,dt,now)}catch(err){if(!MQ170.err++)console.error('v151 wrecker',err)}return true}return f.apply(this,arguments)}}
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.dr170t&&!e.angry&&!e.dead&&d>0){e.angry=1;e.agg=1;e.hunt=1;e.m.ak=null;if(e.dr&&e.dr.w&&e.dr.w.kill)try{e.dr.w.kill()}catch(_){}dn(e.m.position,'!','#ff6a3a',-40,800)}return f.apply(this,arguments)}}
+// the boxes' prompts and the console's
+function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,R=mq170Plan(),E=MQ170.E;
+  if(E){if(MQ170.W)return {label:'🔧 Repairing · Esc to step away',fn:()=>{}};
+    for(const B of MQ170.S.box){if(Math.hypot(P.x-B.x,P.z-B.z)>2.3)continue;const b=E.box[B.i],n=MQ170.bn[B.i];
+      if(b.s==='off')return {label:'F · Switch on the '+n.toLowerCase(),fn:()=>dr170Set(B.i,'on')};if(b.s==='on')return {label:'✅ The '+n.toLowerCase()+' is running',fn:()=>{}};
+      if(b.s==='frozen')return {label:'F · Thaw the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'thaw')};if(b.s==='fault')return {label:'F · Rewire the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'wire')};
+      return {label:'F · Rebuild the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'rebuild')}}
+    return {label:'⚙️ The drill: '+Math.round(E.prog/MQ170.need*100)+'% · boxes running '+E.box.filter(b=>b.s==='on').length+'/4',fn:()=>{}}}
+  if(Math.hypot(P.x-R.con.x,P.z-R.con.z)<2.6)return mq170Done()?{label:'F · Into the tunnel to '+mq170Den(),fn:()=>mq170Through()}:{label:'F · Start the drill (no turning back)',fn:()=>mq170Start()};
+  const T=R.L(0,-.6);if(Math.hypot(P.x-T.x,P.z-T.z)<4.6){if(mq170Done())return {label:'F · Into the tunnel to '+mq170Den(),fn:()=>mq170Through()};return {label:'🔒 Sheer rock: the way to the Den is through the mountain',fn:()=>say('⚙️ The drill at the end of the road could bore through. Its console is at the back.')}}
+  return null}
+{const f=worldPrompt;worldPrompt=function(){try{const r=mq170Prompt();if(r)return r}catch(e){if(!MQ170.err++)console.warn('v151 drill prompt',e)}return f.apply(this,arguments)}}
+{const f=portalPrompt;portalPrompt=function(){try{if(mq170In3()&&MQ170.S){const R=mq170Plan(),P=pl.position;if(MQ170.E||Math.hypot(P.x-R.g.x,P.z-R.g.z)<5)return null}}catch(_){}return f.apply(this,arguments)}}
+{const f=doRecall;doRecall=function(){if(MQ170.E)return say('⚙️ You cannot leave the drill now. Bore through, or fall trying.');return f.apply(this,arguments)}}
+{const f=toggleMount;toggleMount=function(){if(MQ170.E)return say('⚙️ No mount will come near the roaring drill.');return f.apply(this,arguments)}}
+
+// ---------------- the repair windows (they do not pause the game) ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#dr170w{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:380px;max-width:92%;padding:10px 12px 12px;border-radius:10px;user-select:none;touch-action:none;
+  background:linear-gradient(180deg,#2a3038,#1a1e24);border:2px solid #6a7480;box-shadow:0 10px 40px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.06);font:13px/1.35 system-ui,sans-serif;color:#e0e6ec}
+#dr170w .hd{display:flex;justify-content:space-between;align-items:center;font-family:Cinzel,Georgia,serif;letter-spacing:.08em;font-size:13px;color:#ffd07a;margin-bottom:6px}
+#dr170w .x{cursor:pointer;background:#3a2020;border:1px solid #8a4040;color:#ffb0a0;border-radius:4px;padding:0 7px;font:700 13px system-ui}
+#dr170w .tip{color:#9aa8b4;font-size:11.5px;margin-bottom:8px}#dr170w .pane{position:relative;height:230px;border-radius:6px;background:#11151a;border:1px solid #3a424c;overflow:hidden}
+#dr170w svg{position:absolute;inset:0;width:100%;height:100%}#dr170w .pc{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:grab;
+  background:#3a424c;border:2px solid #8a96a4;box-shadow:0 3px 8px rgba(0,0,0,.6)}#dr170w .sl{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:8px;border:2px dashed #5a6470;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.35}
+#dr170w .ok{color:#7aff8a}#dr170w .hb{position:absolute;right:18px;bottom:16px;width:120px;height:54px;border-radius:8px;background:linear-gradient(180deg,#8a3a1a,#5a2410);border:2px solid #ff9a5a;color:#ffe0c0;font:700 14px system-ui;cursor:pointer}
+#dr170w .hb.on{background:linear-gradient(180deg,#ff7a2a,#c04a10)}`;document.head.appendChild(st)})();
+function dr170Open(i,kind){if(!MQ170.E||MQ170.W)return;const st=document.getElementById('stage')||document.body;let el=document.getElementById('dr170w');if(!el){el=document.createElement('div');el.id='dr170w';st.appendChild(el)}
+  const W={i,kind,el,hp:hero.hp,lock:pl.position.clone(),done:0,t:0};MQ170.W=W;try{if(typeof orbEnd=='function'&&typeof orb!='undefined'&&orb)orbEnd()}catch(_){}atkHeld=false;
+  const ttl={thaw:'❄ Thaw the box',wire:'⚡ Rewire the box',rebuild:'🔩 Rebuild the box'}[kind],tip={thaw:'Hold the heater (or Space) and keep the needle in the green band until the ice is gone. Too hot and the ice refreezes.',
+    wire:'Drag each loose wire on the left to the socket of its colour on the right.',rebuild:'Drag each broken piece back into its place on the panel.'}[kind];
+  el.innerHTML=`<div class="hd"><span>${ttl} · ${MQ170.bn[i]}</span><span class="x">✕</span></div><div class="tip">${tip}</div><div class="pane"></div>`;el.style.display='block';
+  el.querySelector('.x').onclick=()=>dr170Close(false);W.pane=el.querySelector('.pane');({thaw:dr170Thaw,wire:dr170Wire,rebuild:dr170Rebuild})[kind](W);svSnd('click',.6,1)}
+function dr170Close(ok){const W=MQ170.W;if(!W)return;MQ170.W=null;try{W.off&&W.off()}catch(_){}const el=document.getElementById('dr170w');if(el){el.style.display='none';el.innerHTML=''}
+  const E=MQ170.E;if(ok&&E){dr170Set(W.i,'on');say('🔧 The '+MQ170.bn[W.i].toLowerCase()+' is running again.')}}
+function dr170Win(W){if(W.done)return;W.done=1;svSnd('bell',.8,1.4);setTimeout(()=>{if(MQ170.W===W)dr170Close(true)},350)}
+function dr170WTick(dt,now){const W=MQ170.W;if(!W)return;W.t+=dt;
+  // you stay at the box; a hit knocks you away from it
+  pl.position.x=W.lock.x;pl.position.z=W.lock.z;pl.step=null;
+  if(hero.hp<W.hp-.5){dr170Close(false);say('💢 Knocked away from the box!');return}W.hp=Math.max(W.hp,hero.hp);
+  const b=MQ170.E&&MQ170.E.box[W.i];if(!b||b.s==='on'){dr170Close(false);return}
+  if(W.tick)W.tick(dt)}
+addEventListener('keydown',e=>{if(MQ170.W&&e.key==='Escape'){dr170Close(false);e.stopImmediatePropagation()}},true);
+// Thaw: a heat gauge; holding the heater raises the needle, letting go lowers it; time in the green band melts the ice
+function dr170Thaw(W){const lo=46+Math.random()*24,hi=lo+18;W.temp=10;W.melt=0;W.hold=0;
+  W.pane.innerHTML=`<svg viewBox="0 0 380 230"><rect x="30" y="20" width="44" height="190" rx="8" fill="#1e252c" stroke="#5a6470"/><rect x="32" y="${210-hi*1.9}" width="40" height="${(hi-lo)*1.9}" fill="#2aff6a" opacity=".35"/>
+    <rect x="32" y="${210-100*1.9}" width="40" height="${(100-92)*1.9}" fill="#ff3a2a" opacity=".35"/><rect class="nd" x="26" y="200" width="52" height="5" rx="2" fill="#ffd07a"/>
+    <rect x="110" y="40" width="160" height="150" rx="10" fill="#9ad8ff" class="ic" opacity=".85"/><text x="190" y="120" text-anchor="middle" font-size="44">🧊</text>
+    <rect x="110" y="200" width="160" height="10" rx="4" fill="#0a0e12" stroke="#3a424c"/><rect class="pg" x="110" y="200" width="0" height="10" rx="4" fill="#7ad8ff"/></svg><button class="hb">HOLD TO HEAT</button>`;
+  const btn=W.pane.querySelector('.hb'),nd=W.pane.querySelector('.nd'),pg=W.pane.querySelector('.pg'),ic=W.pane.querySelector('.ic'),on=v=>{W.hold=v;btn.classList.toggle('on',!!v)};
+  btn.onpointerdown=e=>{e.preventDefault();on(1)};btn.onpointerup=btn.onpointerleave=()=>on(0);
+  const kd=e=>{if(e.key===' '){on(1);e.preventDefault();e.stopImmediatePropagation()}},ku=e=>{if(e.key===' ')on(0)};addEventListener('keydown',kd,true);addEventListener('keyup',ku,true);W.off=()=>{removeEventListener('keydown',kd,true);removeEventListener('keyup',ku,true)};
+  W.lo=lo;W.hi=hi;W.tick=dt=>{W.temp=Math.max(0,Math.min(100,W.temp+(W.hold?48:-32)*dt));if(W.temp>=92){W.melt=Math.max(0,W.melt-dt*.6)}else if(W.temp>=lo&&W.temp<=hi)W.melt=Math.min(1,W.melt+dt/2.4);
+    nd.setAttribute('y',(210-W.temp*1.9-2).toFixed(1));pg.setAttribute('width',(160*W.melt).toFixed(1));ic.setAttribute('opacity',(.85*(1-W.melt)+.05).toFixed(2));if(W.melt>=1)dr170Win(W)}}
+// Rewire: four coloured wire ends on the left, the four sockets on the right in another order; drag each to its colour
+function dr170Wire(W){const C=['#ff4a4a','#4a9aff','#ffd040','#d05aff'],ord=[0,1,2,3].sort(()=>Math.random()-.5),y=k=>36+k*52;W.con=[0,0,0,0];
+  W.pane.innerHTML=`<svg viewBox="0 0 380 230">${C.map((c,k)=>`<rect x="6" y="${y(k)-9}" width="40" height="18" rx="4" fill="${c}"/><circle class="w" data-k="${k}" cx="52" cy="${y(k)}" r="11" fill="${c}" stroke="#fff" stroke-width="2"/>`).join('')}
+    ${ord.map((k,j)=>`<rect x="334" y="${y(j)-9}" width="40" height="18" rx="4" fill="${C[k]}"/><circle class="s" data-k="${k}" data-j="${j}" cx="328" cy="${y(j)}" r="12" fill="#11151a" stroke="${C[k]}" stroke-width="3"/>`).join('')}<g class="ln"></g></svg>`;
+  const sv=W.pane.querySelector('svg'),ln=W.pane.querySelector('.ln'),pt=e=>{const r=sv.getBoundingClientRect();return [(e.clientX-r.left)/r.width*380,(e.clientY-r.top)/r.height*230]};let drag=null;
+  const line=(k,x2,y2,keep)=>{const L=document.createElementNS('http://www.w3.org/2000/svg','line');L.setAttribute('x1',52);L.setAttribute('y1',y(k));L.setAttribute('x2',x2);L.setAttribute('y2',y2);L.setAttribute('stroke',C[k]);L.setAttribute('stroke-width',9);L.setAttribute('stroke-linecap','round');if(!keep)L.setAttribute('opacity',.85);ln.appendChild(L);return L};
+  sv.querySelectorAll('.w').forEach(c=>c.onpointerdown=e=>{const k=+c.dataset.k;if(W.con[k])return;e.preventDefault();try{sv.setPointerCapture(e.pointerId)}catch(_){}const [x,yy]=pt(e);drag={k,L:line(k,x,yy)}});
+  sv.onpointermove=e=>{if(!drag)return;const [x,yy]=pt(e);drag.L.setAttribute('x2',x);drag.L.setAttribute('y2',yy)};
+  sv.onpointerup=e=>{if(!drag)return;const [x,yy]=pt(e);let hit=null;sv.querySelectorAll('.s').forEach(s=>{const j=+s.dataset.j;if(Math.hypot(x-328,yy-y(j))<24)hit=s});const k=drag.k;
+    if(hit&&+hit.dataset.k===k)dr170WireSet(W,k);else{drag.L.remove();if(hit)svSnd('zap',.4,1.6)}drag=null};
+  W.setK=k=>{const j=ord.indexOf(k);line(k,328,y(j),1);W.con[k]=1;svSnd('click',.6,1.4);if(W.con.every(Boolean))dr170Win(W)}}
+function dr170WireSet(W,k){if(W.con[k])return;W.pane.querySelectorAll('line').forEach(L=>{if(L.getAttribute('opacity'))L.remove()});W.setK(k)}
+// Rebuild: four broken pieces scattered; drag each into its outlined place on the panel
+function dr170Rebuild(W){const P=[['⚙️',120,70],['🔩',250,70],['🎚️',120,165],['🧭',250,165]],put=[0,0,0,0];W.put=put;
+  W.pane.innerHTML=`<svg viewBox="0 0 380 230"><rect x="70" y="20" width="240" height="195" rx="12" fill="#232a32" stroke="#5a6470" stroke-width="2"/></svg>`+P.map((p,k)=>`<div class="sl" data-k="${k}" style="left:${p[1]/380*100}%;top:${p[2]/230*100}%">${p[0]}</div>`).join('')
+    +P.map((p,k)=>{const x=k<2?28+Math.random()*16:338-Math.random()*16,yy=40+k%2*80+Math.random()*60;return `<div class="pc" data-k="${k}" style="left:${x/380*100}%;top:${yy/230*100}%;transform:rotate(${(Math.random()-.5)*60}deg)">${p[0]}</div>`}).join('');
+  const pane=W.pane;let drag=null;
+  pane.querySelectorAll('.pc').forEach(el=>el.onpointerdown=e=>{const k=+el.dataset.k;if(put[k])return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}drag={k,el};el.style.cursor='grabbing';el.style.zIndex=5});
+  pane.onpointermove=e=>{if(!drag)return;const r=pane.getBoundingClientRect();drag.el.style.left=((e.clientX-r.left)/r.width*100)+'%';drag.el.style.top=((e.clientY-r.top)/r.height*100)+'%'};
+  pane.onpointerup=e=>{if(!drag)return;const r=pane.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*380,yy=(e.clientY-r.top)/r.height*230,k=drag.k,p=P[k];
+    if(Math.hypot(x-p[1],yy-p[2])<36)dr170Put(W,k);else{const sl=P.findIndex(q=>Math.hypot(x-q[1],yy-q[2])<36);if(sl>=0)svSnd('zap',.4,1.6)}drag.el.style.cursor='grab';drag.el.style.zIndex='';drag=null};
+  W.P=P}
+function dr170Put(W,k){if(W.put[k])return;W.put[k]=1;const el=W.pane.querySelector('.pc[data-k="'+k+'"]'),p=W.P[k];if(el){el.style.left=p[1]/380*100+'%';el.style.top=p[2]/230*100+'%';el.style.transform='none';el.style.borderColor='#7aff8a';el.style.cursor='default'}
+  const sl=W.pane.querySelector('.sl[data-k="'+k+'"]');if(sl)sl.style.opacity=0;svSnd('heavy',.4,1.8);if(W.put.every(Boolean))dr170Win(W)}
+// tests: finish the open window as a player would
+function dr170Solve(){const W=MQ170.W;if(!W)return false;if(W.kind==='thaw'){W.melt=1;W.tick&&W.tick(0)}else if(W.kind==='wire')[0,1,2,3].forEach(k=>dr170WireSet(W,k));else [0,1,2,3].forEach(k=>dr170Put(W,k));return true}
+// no swings or spells while repairing
+{const f=swing;swing=function(){if(MQ170.W)return;return f.apply(this,arguments)}}
+{const f=cast;cast=function(){if(MQ170.W)return;return f.apply(this,arguments)}}
+// ---------------- the event HUD ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#dr170h{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:7;width:320px;max-width:72vw;pointer-events:none;padding:6px 10px 8px;border-radius:8px;
+  background:linear-gradient(180deg,rgba(20,24,30,.88),rgba(10,12,16,.92));border:1px solid rgba(255,208,122,.35);box-shadow:0 4px 18px rgba(0,0,0,.5);font:12px/1.35 system-ui,sans-serif;color:#e0e6ec}
+#dr170h.hide{display:none}#dr170h .t{font-family:Cinzel,Georgia,serif;letter-spacing:.12em;font-size:10px;text-transform:uppercase;color:#ffd07a;display:flex;justify-content:space-between}
+#dr170h .bar{height:7px;margin:3px 0 6px;background:rgba(0,0,0,.55);border-radius:3px;overflow:hidden}#dr170h .bar i{display:block;height:100%;background:linear-gradient(90deg,#c88a3a,#ffe0a0)}
+#dr170h .bx{display:flex;gap:6px;justify-content:space-between}#dr170h .b{flex:1;text-align:center;padding:3px 2px;border-radius:5px;background:rgba(0,0,0,.4);font-size:10.5px;border:1px solid rgba(255,255,255,.08)}
+#dr170h .b i{display:block;width:10px;height:10px;border-radius:50%;margin:0 auto 2px}`;document.head.appendChild(st)})();
+function dr170Hud(){let el=document.getElementById('dr170h');const E=MQ170.E;if(!E){if(el)el.classList.add('hide');return}if(!el){el=document.createElement('div');el.id='dr170h';($('stage')||document.body).appendChild(el)}el.classList.remove('hide');
+  const k=E.prog/MQ170.need,run=E.box.every(b=>b.s==='on'),live=enemies.filter(e=>e.dr170t&&!e.dead).length;
+  el.innerHTML=`<div class="t"><span>⚙️ ${run?'Drilling':'The drill has stopped'}</span><span>${Math.round(k*100)}%</span></div><div class="bar"><i style="width:${(k*100).toFixed(1)}%"></i></div>
+  <div class="bx">${E.box.map((b,i)=>`<div class="b"><i style="background:${MQ170.stC[b.s]};box-shadow:0 0 6px ${MQ170.stC[b.s]}"></i>${['NW','NE','SW','SE'][i]} · ${MQ170.stN[b.s]}</div>`).join('')}</div>
+  <div class="t" style="margin-top:4px"><span>Frost Trolls: ${live}</span><span>${run?'':'switch on / repair every box'}</span></div>`}
+// ---------------- the world tick ----------------
+function mq170Tick(dt,now){const in3=mq170In3(),t=now/1000;
+  if(in3&&!MQ170.S)try{mq170Build()}catch(err){console.error('v151 drill build',err);MQ170.err++}
+  const S=MQ170.S;if(!S)return;[S.cliff.g,S.drill.g,S.con].concat(S.box.map(b=>b.g)).forEach(o=>o.visible=in3);if(!in3)S.lt.intensity=0;
+  if(in3){S.box.forEach((B,i)=>{const s=MQ170.E?MQ170.E.box[i].s:mq170Done()?'on':'off';B.halo.scale.setScalar(1.1*(1+.15*Math.sin(t*(s=='on'?3:8)+i)));
+      if(s==='fault'&&Math.random()<dt*14){const p=new THREE.Vector3(B.x,GH(B.x,B.z)+.9+Math.random()*.6,B.z);burst(p,0xffd07a,3,2.2,1.6,.3)}if(s==='frozen'&&Math.random()<dt*3)burst(new THREE.Vector3(B.x,GH(B.x,B.z)+1.5,B.z),0xd8f4ff,1,.2,.4,1)});
+    if(mq170Done()){S.cliff.gl.material.opacity=.45+.12*Math.sin(t*2)}}
+  if(MQ170.E)try{mq170ETick(dt,now)}catch(err){if(!MQ170.err++)console.error('v151 drill',err)}
+  if(now-MQ170.t>400){MQ170.t=now;try{if(in3)mq143Trk()}catch(_){}}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq170Tick(dt,now)}catch(err){if(!MQ170.err++)console.warn('v151 drill tick',err)}return r}}
+// ---------------- the tracker (chapter 3 in the main-quest box, in Burningeye III) ----------------
+{const f=mq143Trk;mq143Trk=function(){try{if(mq170In3()){MQ143.trkK='';return mq170Trk()}}catch(err){if(!MQ170.err++)console.warn('v151 drill trk',err)}MQ170.trkK='';return f.apply(this,arguments)}}
+function mq170Trk(){const el=$('mqt143');if(!el)return;const hide=(typeof uiOpen=='function'&&uiOpen())||(mq170Done()&&insReach(2)>=3),E=MQ170.E;
+  const key=(hide?'h':'s')+mq170Done()+'|'+(E?Math.round(E.prog)+E.box.map(b=>b.s[0]).join(''):'-');if(key===MQ170.trkK)return;MQ170.trkK=key;
+  if(hide){el.classList.add('hide');mq143TrkPos();return}
+  const o=(a,b,d)=>`<div class="o${d?' d':''}"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest · Burningeye Summit</div><div class="h">'+MQ170.name+'</div>';
+  if(mq170Done())h+=o('Enter the tunnel to '+mq170Den(),null,1);
+  else if(E)h+=o('Keep all four control boxes running',E.box.filter(b=>b.s==='on').length+'/4')+o('Bore through the mountain',Math.round(E.prog/MQ170.need*100)+'%');
+  else h+=o('Start the great drill at the end of the road');
+  el.innerHTML=h;el.classList.add('z2');el.classList.remove('hide');mq143TrkPos()}
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq170={v:151,st:MQ170.st}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq170;if(MQ170.E)mq170Fail('left');MQ170.st=q&&typeof q=='object'?Math.max(0,Math.min(1,q.st|0)):0;MQ170.trkK='';mq170Sync()}catch(err){console.warn('v151 drill load',err)}return r}}

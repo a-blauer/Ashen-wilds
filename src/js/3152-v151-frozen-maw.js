@@ -37,6 +37,11 @@ function mq151Gate(){if(mq151Gate.c)return mq151Gate.c;const I=INSL[insG(2,0)],P
   return mq151Gate.c={x,z,ry,fx:Math.sin(ry),fz:Math.cos(ry)}}
 function mq151Keep(g,x,z){if(g!==insG(2,0))return false;try{const G=mq151Gate(),bx=G.x-G.fx*3,bz=G.z-G.fz*3;return Math.hypot(x-bx,z-bz)<10.5}catch(_){return false}}
 
+// the rock of the cave mouth is solid from the start (so Cheddar's gateway spot and the roaming creatures see it): every tile under the
+// mound and the arch except the throat
+function mq151Solid(){const G=mq151Gate(),ca=Math.cos(G.ry),sa=Math.sin(G.ry);for(let lz=-9;lz<=0;lz++)for(let lx=-8;lx<=8;lx++){const inTh=Math.abs(lx)<=1&&lz>=-1;if(inTh)continue;const rr=Math.hypot(lx/8.2,(lz+4)/5.4);if(rr>1&&!(lz<=-2&&Math.abs(lx)<=7))continue;
+  const wx=G.x+lx*ca+lz*sa,wz=G.z-lx*sa+lz*ca;CBLK.add(Math.round(wz)*W+Math.round(wx))}}
+try{mq151Solid()}catch(e){console.warn('v151 mouth tiles',e)}
 // ---------------- materials and the build kit ----------------
 var GB151G={};
 function gb151Mats(){return GB151G.m||(GB151G.m={rock:new THREE.MeshStandardMaterial({color:0x3e444e,roughness:.9,flatShading:true}),rock2:new THREE.MeshStandardMaterial({color:0x545c66,roughness:.9,flatShading:true}),
@@ -82,9 +87,6 @@ function gb151CaveMouth(){const M=gb151Mats(),k=gb151Kit(),rn=svRng(1511);
   const glow=kqSpr(0x5ab8ff,3.2);glow.material=glow.material.clone();glow.material.opacity=.45;glow.position.set(0,1.6,-4.5);g.add(glow);
   return {g,glow}}
 function gb151MouthBuild(){if(MQ151.CM)return MQ151.CM;const G=mq151Gate(),C=gb151CaveMouth();C.g.position.set(G.x,GH(G.x,G.z),G.z);C.g.rotation.y=G.ry;scene.add(C.g);MQ151.CM=C;
-  // the rock is solid: every tile under the mound and the arch except the throat
-  const ca=Math.cos(G.ry),sa=Math.sin(G.ry);for(let lz=-9;lz<=0;lz++)for(let lx=-8;lx<=8;lx++){const inTh=Math.abs(lx)<=1&&lz>=-1;if(inTh)continue;const rr=Math.hypot(lx/8.2,(lz+4)/5.4);if(rr>1&&!(lz<=-2&&Math.abs(lx)<=7))continue;
-    const wx=G.x+lx*ca+lz*sa,wz=G.z-lx*sa+lz*ca;CBLK.add(Math.round(wz)*W+Math.round(wx))}
   // the old gateway: gone (its record stays for older code; the cave mouth is the way on)
   try{const r=RPORT.find(q=>q.k=='next'&&q.ig===insG(2,0));if(r){r.g.visible=false;MQ151.rp=r}}catch(_){}
   return C}
@@ -166,7 +168,7 @@ function gb151LairBuild(){if(MQ151.LS)return MQ151.LS;const L=GB151L,M=gb151Mats
   // the throne's cold light
   {const tl=new THREE.PointLight(0x8ad0ff,1.4,15,1.5);tl.position.set(L.throne.x,y(L.throne.x,L.throne.z)+3,L.throne.z+1);scene.add(tl);LS.lights.push(tl)}
   gb151LairSync();return LS}
-function gb151LairSync(){const LS=MQ151.LS;if(!LS)return;const open=MQ151.st>=2;LS.twall.visible=!open;LS.tglo.material.opacity=open?.55:0;LS.tlt.userData.on=open?1.4:0;LS.seal.visible=!!(GB151A&&GB151A.f)}
+function gb151LairSync(){const LS=MQ151.LS;if(!LS)return;const open=MQ151.st>=2||mq151Done();LS.twall.visible=!open;LS.tglo.material.opacity=open?.55:0;LS.tlt.userData.on=open?1.4:0;LS.seal.visible=!!(GB151A&&GB151A.f)}
 // ---------------- pillars ----------------
 function gb151PillarAt(x,z,rad){for(const P of MQ151.pil)if(P.ok&&Math.hypot(x-P.x,z-P.z)<rad)return P;return null}
 function gb151PillarBreak(P){if(!P||!P.ok)return;P.ok=0;P.top.visible=false;P.stump.visible=true;const p=new THREE.Vector3(P.x,0,P.z);
@@ -241,7 +243,7 @@ function mq151Through(){MQ151.st=3;MQ151.trkK='';try{insGo(PMAP[2].ins[1])}catch
 // ---------------- prompts ----------------
 function mq151Prompt(){const P=pl.position;if(!mq151InCave())return null;const L=GB151L;if(GB151A&&GB151A.f)return null;
   if(Math.hypot(P.x-L.mouth.x,P.z-L.mouth.z)<2.6)return {label:'F · Leave the cave (back to '+PMAP[2].ins[0].n+')',fn:()=>mq151Leave()};
-  if(Math.hypot(P.x-L.tunIn.x,P.z-L.tunIn.z)<2.8)return MQ151.st>=2?{label:'F · Take the frozen passage to '+mq151Next(),fn:()=>mq151Through()}:{label:'🔒 The passage is sealed by a wall of ice',fn:()=>say('🧊 A wall of ancient ice seals the passage. The troll who sits on that throne keeps it shut.')};
+  if(Math.hypot(P.x-L.tunIn.x,P.z-L.tunIn.z)<2.8)return MQ151.st>=2||mq151Done()?{label:'F · Take the frozen passage to '+mq151Next(),fn:()=>mq151Through()}:{label:'🔒 The passage is sealed by a wall of ice',fn:()=>say('🧊 A wall of ancient ice seals the passage. The troll who sits on that throne keeps it shut.')};
   return null}
 {const f=worldPrompt;worldPrompt=function(){try{const r=mq151Prompt();if(r)return r}catch(e){if(!MQ151.err++)console.warn('v151 prompt',e)}return f.apply(this,arguments)}}
 function mq151AtGate(){if(!mq151In1())return false;const G=mq151Gate(),P=pl.position;return Math.hypot(P.x-(G.x+G.fx*.8),P.z-(G.z+G.fz*.8))<3.2}
