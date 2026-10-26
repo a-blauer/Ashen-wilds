@@ -53,6 +53,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
 | v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new); v148.1 board tiers and companion and boss splash (`SPL148`, `BSPL148`); v148.2 co-op revive (`RV148`) and boss credit (`BC148`) | `3070`–`3079`, `3085`–`3086` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
 | v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3078-v149-ssithra-body.js` |
+| v150 owner's co-op list: partners' effects clean up and mounts show (`V150`, `3090`), monsters go for partners' companions (`AG150`, `3091`), shared progress (kills, camp clears `['cc']`, lamps `['m143']`, sigils `['m145']`, instance reach `ir`, rituals fought together `['r145']`/`['p145']`, `CP150`, `3092`), sigil rituals 50 wolves, ¼ XP / loot, stuck wolves blink (`GW150`, `3093`), the host's Duskhold for guests (`DK150`, `['ks']` / `['kd']` / `['kdo']`, `3094`), Sovereign moves start from the driver's pose (`BS150`, `3096`), Tab in boss fights, chests off the hatch, raven robes follow the legs (`FX150`, `RV150`, `3097`); bats keep only hind legs (0630, 2640); the hatchet's edge keeps one side (3070) | `3090`–`3097` |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -253,7 +254,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   `CHQ132.st[id]={s:1 active|2 ready|3 done,p:[...],cj}` saved as `x2.chq`. Rewards (`chqReward132`): XP and gold from the instance's
   top level (≈ (14+L)×a kill's XP, (16+L)×a kill's gold, × `w`), gear from `genItem` at min(top level, hero+2) (uncommon+, rare+ in III)
   or a zone egg. Objective kinds come from wrappers at the end of 2330 (kill, gFinish, fishCatch, fishTreasure, the fusion button,
-  feedComp, kqrUp/kqsBuy, breakBoulder/digTreasure, hatch, mountTick, a rune poll); a co-op partner's kill only counts for camp clears.
+  feedComp, kqrUp/kqsBuy, breakBoulder/digTreasure, hatch, mountTick, a rune poll); since v150 a co-op partner's kills count too (3092).
   Hillside Crest I gets one extra secret boulder for "Under the Stone" (appended to `SECRETS`). To add quests for another zone, add
   `'z_k'` lists to `CHQD132` (kinds listed above the table). Test: `v132_cheddar_test.py` (`v132_cheddar.js`; `v132_shot.js` for
   framed screenshots). v132.1: empower kills need a companion actively empowering you (E / R), not a buff spell; "New Blood" counts
@@ -274,6 +275,39 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`itName`), fixed bonus (`itStats`), tooltip block, own models (icon `v89Kit`/`v89Key`, ground `lgDropModel`, hand `v89Wpn`, worn gem
   colour via `mdGD`). Tests: `v135_checks.py`, `v135_uniques.py`, `v135_bow.py`, `v132_cheddar_test.py`; pictures `v135_cheddar_shot.py`,
   `v135_fade_shot.py`, `v135_edge_look.py` (SRC= an older build for before/after), `v135_cat_head.py`, `v135_far_shots.py`, `v135_pick.py`.
+- **Version 150 (owner's co-op list, Oct 25 2026)**: *Effects*: a replayed ground decal (Venom Flask cloud, Caltrops, warning
+  circles) was never removed on the partner's screen (its `D.rm` is a method the replay never got): the caster now tags each
+  recorded decal (extra argument) and sends `['D', id, ms]` when it is removed; replayed decals and the mesh stand-ins (`mpvStub`)
+  also time out (`V150.decT` 15 s, `V150.stubT` 4 s). *Mounts*: presence carries `mt` [kind, speed]; partners build the mount
+  model under the rider, walk it and seat the hero (`v150MtTick` after `mpTick`). *Aggro*: a host monster weighs partners'
+  companions (the 2170 copies) like your own (only when clearly closer, two per companion); the attack target is relayed as
+  `"peer#slot"` and played on the owner's `fols[slot]` (`3091`). *Shared progress* (`3092`): every kill of a shared monster you
+  are near counts for your Cheddar quests (`chqKill132` redefined: copies and partner kills count); the region host sends
+  `['cc', camp]` on a camp clear and each player near it gets the XP, its own chest, the camp quests and the clear (the Glowmire
+  hatch opens for guests too); a lit lamppost (`['m143', i]`) and an attuned sigil (`['m145', i]`) are shared; presence carries
+  `ir` (INSR) and everyone reaches as far as the furthest partner; a sigil ritual is run by the region host (a guest's F sends
+  `['r145', i]`), its ghost wolves are shared monsters (not minions) that hunt the nearest hero, it holds while any hero stays
+  near (the host's checks run with the nearest partner's spot lent) and the host sends `['p145', i, slain, total]` for the
+  partners' tracker / prompt. *Sigils* (`3093`): `MQ145.total` 50; ghost wolves and their co-op copies give ¼ XP (`gw150X` in
+  `gainXP`) and drop loot one kill in four; a hunting wolf that moved < 0.6 tiles in 2.5 s while > 2.6 tiles from its hero
+  blinks to free ground 3–5 tiles from that hero. *Duskhold* (`3094`): the kingdom host (join-code host; on the artifact room
+  the lowest peer id) sends its kingdom (`dk150Pack`: shops, upgrades, lots, turns, houses + citizens, decorations, stage, shop
+  levels, harvested outskirts) as `['ks', id, part, n, text]` on `ev` with `r` −7; a guest keeps its own kingdom aside
+  (`DK150.stash`, what its saves keep: an outer `x2Save` wrapper) and shows the host's (`dk150Apply` = the kingdom parts of the
+  save loaders + `shApply` / `lotSync103` / `dc103Sync` / `kfApply109`; `kfStage109` returns the host's stage); leaving brings its
+  own back. A guest's Steward builds (shop, upgrade, house, decoration, shop level) are paid by the guest and sent as
+  `['kd', what, key, lot]`; the host builds them free (`dk150Do`: gold and every cost material lent, then put back; saves
+  deferred); outskirts gathered by a guest are taken from the host's too (`['kdo', ci]`); moving, turning, decoration switches
+  and villagers stay with the host; the guest's own citizens rest. *Sovereigns* (`3096`): a relayed cast carries the boss's
+  spot and facing (extra fields 4–6 of the `'b'` entry); a partner's copy starts the move from there; between moves it turns to
+  the driver's facing and glides to the synced spot; the spot sync runs every 120 ms. *Tab* (`3097`): in a boss fight (v31 arena
+  or the Seeping Lair) Tab cycles every live visible target within 34 tiles; outside fights, with nothing in front, the nearest
+  enemy within 20. *Hatch*: a chest that would stand within 2.8 of the Kindlelight II hatch moves just beyond it (`makeChest`).
+  *Raven robes*: for race 3 the skirt takes the thigh's swing fully by the knee and blends into the shin below it (`gkSkW`
+  wrapper, `RV150`), so the long bird legs stay inside. *Bats* (Batwing, Duskwing, Blood Bat): only the hind legs are built (the
+  wings are the forelimbs; the front-leg bones stay unused). *Hatchet*: the edge keeps the side that leads the down-swing all
+  through the chop (it flipped round during the wind-up). Tests: `v150_checks.py`, `v150_coop.py` and `v150_ritual.py` (two
+  windows over the fake room; run directly, they start `mpt.py` themselves).
 - **Version 149 (owner's request, Oct 25 2026): Ssith'ra's body is one creature.** The owner: "he clips into himself and the
   segments of his body do not seem like one whole creature". The v112 layout followed the path the head had taken, so turning
   around, circling the hero or the burrow chain folded the body through itself and the head (up to 1.1 deep; the neck bent 180°),

@@ -26,3 +26,16 @@ function fx150Hatch(x,z){try{const I=insAt(Math.round(x),Math.round(z));if(!I||I
     for(let r=FX150.hatchR+.4;r<FX150.hatchR+5;r+=.5)for(let k=0;k<12;k++){const a=a0+(k%2?1:-1)*Math.ceil(k/2)*.52,qx=h.x+Math.cos(a)*r,qz=h.z+Math.sin(a)*r;
       if(!solid(Math.round(qx),Math.round(qz))&&!(typeof CBLK!='undefined'&&CBLK.has(Math.round(qz)*W+Math.round(qx))))return [Math.round(qx),Math.round(qz)]}}catch(_){}return null}
 {const f=makeChest;makeChest=function(x,z){const q=fx150Hatch(x,z);if(q){const a=Array.prototype.slice.call(arguments);a[0]=q[0];a[1]=q[1];return f.apply(this,a)}return f.apply(this,arguments)}}
+
+// ---------- 3) the raven's legs stay inside his robes ----------
+// A robe's skirt (gkSkirt, 2505) hangs from the hips and follows each thigh (lh0 / rh0) toward the hem. The raven (race 3)
+// walks on long bird legs whose shank swings well forward of the thigh at every step, so below the knee his shins and
+// boots came through the front of the skirt (and out of its sides in the dagged robes). For the raven, the skirt below the
+// knee now follows the shin (lh1 / rh1, which carries the thigh too) more and more toward the hem (RV150.shin at the hem),
+// and above the knee it takes the whole swing of the thigh by the knee (RV150.thigh) instead of easing in down to y .32.
+var RV150={knee:.354,band:.2,shin:.7,thigh:.95};
+{const f=gkSkW;gkSkW=function(y0,lw){if(!(typeof BR!='undefined'&&BR.on&&BR.R&&BR.R===BRD[3]))return f.apply(this,arguments);
+  // the raven: the cloth takes the thigh's swing fully by the knee (his thighs swing far), then more and more of the shin
+  return (x,y)=>{const d=Math.max(0,Math.min(1,(y0-y)/Math.max(.05,y0-RV150.knee)))*RV150.thigh,l=Math.max(0,Math.min(1,.5-x/.16));if(d<=0)return [['pelvis',1]];
+    const k=y>RV150.knee+.08?0:Math.min(1,(RV150.knee+.08-y)/RV150.band)*RV150.shin;
+    return [['pelvis',1-d],['lh0',d*l*(1-k)],['lh1',d*l*k],['rh0',d*(1-l)*(1-k)],['rh1',d*(1-l)*k]].filter(q=>q[1]>0)}}}

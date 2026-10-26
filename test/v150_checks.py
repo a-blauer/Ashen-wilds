@@ -26,7 +26,7 @@ def s(pg):
     # 2) bats: no vertex hangs on a front-leg bone
     r=ev("""()=>{const out={};[['Batwing',{g:['Batwing'],cl:[0x5a4a6a],v:'',tr:'',f:0,z:1,evo:0,mods:[]}],['Duskwing',{g:['Duskwing'],cl:[0x6a5a8a],v:'',tr:'',f:0,z:1,evo:0,mods:[]}],['bloodbat',enemyC('bloodbat',10,{})]].forEach(([n,c])=>{
         const g=cr(c);let front=0,all=0;g.traverse(o=>{if(!o.isSkinnedMesh)return;const B=o.skeleton.bones.map(b=>b.name),SI=o.geometry.attributes.skinIndex,SW=o.geometry.attributes.skinWeight;
-          for(let v=0;v<SI.count;v++){all++;let w=0;for(let j=0;j<4;j++){const nm=B[SI.getComponent(v,j)]||'';if(/^f[lr][0-2]$/.test(nm))w+=SW.getComponent(v,j)}if(w>.5)front++}});out[n]=[front,all]});return out}""")
+          for(let v=0;v<SI.count;v++){all++;let w=0;for(let j=0;j<4;j++){const nm=B[SI.array[v*SI.itemSize+j]]||'';if(/^f[lr][0-2]$/.test(nm))w+=SW.array[v*SW.itemSize+j]}if(w>.5)front++}});out[n]=[front,all]});return out}""")
     chk('bats are built with no front legs',all(v[1]>0 and v[0]==0 for v in r.values()),r)
     # 3) Tab in a den fight reaches a spawned object far from the den's centre
     ev("()=>{insArrive(PMAP[0].ins[3])}");pg.wait_for_timeout(800)
