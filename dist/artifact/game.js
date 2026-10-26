@@ -40924,7 +40924,7 @@ function ic149DCam(D,t,h){const V=THREE.Vector3,K=ic149K,Sm=ic149Sm,Io=ic149Io,g
   else if(t>=IV.ched[0]){const C=new V(D.ched[0],gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
     p=H.clone().addScaledVector(dr,-1.7+.35*k).addScaledVector(sv,1.0).add(up(1.35-.1*k));l=C.clone().add(up(.6));fov=44}
   else{let done=false;for(let i=0;i<D.npc.length;i++){const n=D.npc[i];if(t>=IV.walks[i][0]&&t<n.mt[0]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0),dd=dr.length();dr.normalize();const sv=new V(dr.z,0,-dr.x),k=Sm(K(dd,1.9,6));
-        if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,(i%2?-1:1)*1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
+        if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,-1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
         else{// locked-off cameras on open ground that pan with him: the tavern corner → the smithy front, the lane → the Trading Post
           const P=i===2?[26.0,283.6,2.3]:[43.7,274.7,2.0];p=new V(P[0],gy(P[0],P[1])+P[2],P[1]);l=H.clone().add(up(1.15));fov=i===2?40:46}
         done=true;break}
