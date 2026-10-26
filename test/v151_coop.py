@@ -96,7 +96,8 @@ chk('the flamespitter hangs on the guest\'s hero on the host\'s screen',H.evalua
 # the guest sprays the gate: the host's melt rises and the guest sees it
 H.evaluate("()=>{MQ160.E.spT=99}")
 G.evaluate("()=>{const R=mq160Plan(),Gt=R.gate;window.__aim=setInterval(()=>{toPos(Gt.x+Gt.fx*3.5,Gt.z+Gt.fz*3.5);pl.rotation.y=Math.atan2(Gt.x-pl.position.x,Gt.z-pl.position.z);mOn=false;atkHeld=true},50)}")
-both(3500,700)
+until(H,"()=>MQ160.E&&MQ160.E.melt>1.3",15000)
+both(1400,700)
 m=[H.evaluate("()=>[MQ160.E.melt,MQ160.E.heat]"),G.evaluate("()=>[MQ160.E.melt,MQ160.E.heat]")]
 chk('the guest\'s flame melts the host\'s gate (heat too) and both see it',m[0][0]>1 and m[0][1]>.2 and abs(m[0][0]-m[1][0])<1.2,json.dumps(m))
 G.evaluate("()=>{clearInterval(__aim);atkHeld=false}")
