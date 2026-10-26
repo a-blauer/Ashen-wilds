@@ -23,4 +23,10 @@
   New tests: add to `full.txt` and to the matching rules in `test/affects.txt`; every test must print `FAIL …` lines on a wrong result.
   **Small tweaks (owner's request):** for a balance number or similar one-line tuning change, skip the full suite: a focused
   local test plus a green `changed` run is enough to publish.
+- **Videos (owner's request, Oct 26 2026): render on GitHub, and only what changed.** The intro cinematic's video is made with
+  `tools/render.sh <from-to> ...` (seconds; `end` = to the end): it pushes a render request, GitHub draws the 5 s pieces those
+  ranges touch (all at the same time) and reuses the rest from the last render, then the script downloads `test/out/intro.mp4`.
+  Give exactly the time ranges your change affects (a change that shifts later shots in time affects everything after it);
+  `tools/render.sh all` only when every frame changed or the cache is gone (it also fills itself in when pieces are missing).
+  Don't render the full video locally.
 - The owner is a beginner programmer: short, plain explanations.

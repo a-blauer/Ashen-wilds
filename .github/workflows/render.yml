@@ -1,0 +1,110 @@
+# Renders the intro cinematic video on GitHub Actions (owner's request, Oct 26 2026): tools/render.sh starts it and fetches
+# the result. The video is drawn in 5-second pieces, all at the same time, each by its own job; only the pieces asked for
+# are drawn again, the rest come from the last render (kept in the Actions cache, so nothing big lands in the repo).
+#   - push to render/intro (tools/render.sh does it, with a .render-request file naming the time ranges to draw)
+#   - result: out/intro.mp4 pushed to the short-lived branch render-out/intro (tools/render.sh downloads it, then deletes
+#     the branch); the session workspace can't download Actions artifacts, only git and annotations.
+# Runners are pinned to ubuntu-24.04 like tests.yml.
+name: Render intro
+on:
+  push:
+    branches: ['render/**']
+concurrency:
+  group: render-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: write
+env:
+  FPS: '24'
+  W: '1280'
+  H: '720'
+  SEG: '120'
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      segs: ${{ steps.p.outputs.segs }}
+      n: ${{ steps.p.outputs.n }}
+      nseg: ${{ steps.p.outputs.nseg }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with: {path: segs, key: intro-segs-none, restore-keys: intro-segs-}
+      - id: p
+        run: python3 tools/render_plan.py >> "$GITHUB_OUTPUT"
+  render:
+    needs: plan
+    if: needs.plan.outputs.segs != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        seg: ${{ fromJSON(needs.plan.outputs.segs) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/render.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium + ffmpeg
+        run: |
+          pip install playwright pillow numpy scipy && python -m playwright install --with-deps chromium
+          command -v ffmpeg >/dev/null || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
+      - name: Build
+        run: ./build.sh
+      - name: Draw piece ${{ matrix.seg }}
+        run: |
+          f0=$(( ${{ matrix.seg }} * SEG )); f1=$(( f0 + SEG )); n=${{ needs.plan.outputs.n }}; [ $f1 -gt $n ] && f1=$n
+          cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 python3 v151_intro.py 2>&1 | grep -vE '^frame ' | tail -40
+          got=$(ls out/v151_frames | wc -l); echo "frames $got of $((f1-f0))"; [ "$got" -eq $((f1-f0)) ]
+          mkdir -p ../piece
+          ffmpeg -y -loglevel error -framerate $FPS -start_number $f0 -i out/v151_frames/f%05d.jpg -frames:v $((f1-f0)) \
+            -c:v libx264 -pix_fmt yuv420p -crf 20 -preset medium -g 48 -r $FPS ../piece/s$(printf %03d ${{ matrix.seg }}).mp4
+      - uses: actions/upload-artifact@v4
+        with: {name: 'piece-${{ matrix.seg }}', path: piece/*.mp4, retention-days: 3}
+  sound:
+    needs: plan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/render.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium
+        run: pip install playwright pillow numpy scipy && python -m playwright install --with-deps chromium
+      - name: Build
+        run: ./build.sh
+      - name: Sound
+        run: cd test && VIDEO=1 NOENC=1 F0=0 F1=0 python3 v151_intro.py 2>&1 | tail -20 && test -s out/v151_sound.wav
+      - uses: actions/upload-artifact@v4
+        with: {name: sound, path: test/out/v151_sound.wav, retention-days: 3}
+  join:
+    needs: [plan, render, sound]
+    if: always() && needs.plan.result == 'success' && needs.sound.result == 'success' && (needs.render.result == 'success' || needs.render.result == 'skipped')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with: {path: segs, key: intro-segs-none, restore-keys: intro-segs-}
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'piece-*', merge-multiple: true, path: new}
+      - uses: actions/download-artifact@v4
+        with: {name: sound, path: snd}
+      - name: Join
+        env: {N: '${{ needs.plan.outputs.n }}', NSEG: '${{ needs.plan.outputs.nseg }}'}
+        run: |
+          command -v ffmpeg >/dev/null || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
+          msg=$(python3 tools/render_join.py | tail -1); echo "$msg"
+          echo "::notice title=Render::$msg; drew pieces ${{ needs.plan.outputs.segs }}"
+      - uses: actions/cache/save@v4
+        with: {path: segs, key: 'intro-segs-${{ github.run_id }}'}
+      - name: Send the video back (branch render-out/intro)
+        run: |
+          cd out && cp ../.render-request req.json 2>/dev/null || true
+          git init -q && git checkout -q -b r && git add intro.mp4 req.json
+          git -c user.name=render-bot -c user.email=actions@github.com commit -qm "intro render of ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" r:refs/heads/render-out/intro
