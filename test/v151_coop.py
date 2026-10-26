@@ -20,6 +20,12 @@ def both(ms,step=1500):
     t=0;k=0
     while t<ms:
         (A if k%2==0 else B).bring_to_front();A.wait_for_timeout(min(step,ms-t));t+=step;k+=1
+def until(pg,js,ms=12000):
+    t=0;k=0
+    while t<ms:
+        if pg.evaluate(js):return True
+        (A if k%2==0 else B).bring_to_front();A.wait_for_timeout(700);t+=700;k+=1
+    return bool(pg.evaluate(js))
 for pg in (A,B):pg.evaluate("()=>{INSR[2]=0;hero.lv=Math.max(hero.lv,24);window.__hp=setInterval(()=>{hero.hp=heroMax();if(typeof RV148!='undefined')RV148.down=0},100)}")
 
 # ---------------- 1 The Frozen Maw ----------------
@@ -78,7 +84,7 @@ r=[pg.evaluate("()=>!!MQ160.E") for pg in (H,G)]
 chk('the guest starts the melt: it runs for both',r[0] and r[1],json.dumps(r))
 # the guest picks it up; the host's C is refused
 G.evaluate("()=>{const B=mq160BenchSpot();toPos(B.x,B.z+.5);document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'c',bubbles:true}))}")
-both(2000,700)
+until(G,"()=>!!(MQ160.E&&MQ160.E.carry)")
 H.evaluate("()=>{const B=mq160BenchSpot();toPos(B.x+.6,B.z);document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'c',bubbles:true}))}")
 both(1500,700)
 r=[H.evaluate("()=>MQ160.E?[MQ160.E.carry,MQ160.E.carrier]:[null,null]"),G.evaluate("()=>MQ160.E?[MQ160.E.carry,MP.me]:[null,'']")]
