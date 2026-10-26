@@ -129,6 +129,7 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
 function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000,dt=Math.max(0,Math.min(.1,D.lt==null?0:t-D.lt)),K=ic151K,Sm=ic151Sm;D.lt=t;
   const h=ic151DHero(D,t);pl.position.set(h.x,GH(h.x,h.z),h.z);pl.rotation.y=h.yaw;pl.visible=true;try{animHero(now,h.mv)}catch(e){}
   // the town folk turn to greet him
+  D.npc.forEach(n=>{if(n.g._wk)n.g._wk.ic151H=Sm(K(t,n.mt[0]-.8,n.mt[0]-.15))*(1-Sm(K(t,n.mt[1]-.1,n.mt[1]+.5)));});   // v151c: a greeted keeper stops working
   D.npc.forEach(n=>{const k=Sm(K(t,n.mt[0]-.5,n.mt[0]+.4))*(1-Sm(K(t,n.mt[1]-.1,n.mt[1]+.7)));let a=Math.atan2(h.x-n.w.x,h.z-n.w.z)-n.ry0;a=Math.atan2(Math.sin(a),Math.cos(a));n.g.rotation.y=n.ry0+a*k});
   // Cheddar: pops up as the hero comes down the road, waves while they meet
   // Cheddar on his crate: looks up as the hero comes down the square, hops, waves, then back to his board
@@ -162,7 +163,7 @@ function ic151DTags(D,back){if(back){(D.tags||[]).forEach(x=>{x.o.visible=x.v});
   D.tags.forEach(x=>{x.o.visible=false})}
 function ic151DuskDone(S){const D=S&&S.D;if(!D||D.done)return;D.done=true;try{document.body.classList.remove('ic151d');
     if(D.on){const P=D.end;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=0;camYaw=Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
-    ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0});if(D.ch){if(D.chOwn){if(D.ch.root.parent)D.ch.root.parent.remove(D.ch.root)}else{D.ch.root.position.y=D.chY0;D.ch.root.rotation.y=D.chR0;try{D.ch.setPose('idle')}catch(_){}}}if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
+    ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0;if(n.g._wk)n.g._wk.ic151H=0});if(D.ch){if(D.chOwn){if(D.ch.root.parent)D.ch.root.parent.remove(D.ch.root)}else{D.ch.root.position.y=D.chY0;D.ch.root.rotation.y=D.chR0;try{D.ch.setPose('idle')}catch(_){}}}if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
     if(D.ch&&D.chOwn)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
 // part one ends at IC151.cut; part two runs to IC151.dEnd, then the game resumes; the intro ends at IC151.len
 ic151Seek=function(t){const S=IC151.S;if(!S)return;
@@ -170,7 +171,7 @@ ic151Seek=function(t){const S=IC151.S;if(!S)return;
   else if(t<IC151.dEnd&&S.D&&!S.D.done){IC151.on=true;try{ic151Dusk(S,t)}catch(e){console.warn('intro town',e);IC151.err=String(e&&e.stack||e);ic151DuskDone(S);t=Math.max(t,IC151.dEnd)}}
   if(t>=IC151.cut&&(t>=IC151.dEnd||!S.D||S.D.done)){if(IC151.on){IC151.on=false;try{ic151DuskDone(S)}catch(_){}try{if(IC151.live&&IC151.live.mu&&typeof muVol=='function')muVol()}catch(_){}try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}}}
   ic151Dom(S,t);if(t>=IC151.len)ic151End()};
-{const f=ic151Build;ic151Build=function(){const S=f.apply(this,arguments);try{ic151DuskInit(S)}catch(e){console.warn('intro town set-up',e);S.D=null}if(!S.D){IC151.len=59.4;IC151.dEnd=IC151.cut;IC151.skipT=55;IC151.lbA=56.6;IC151.lbB=58.4}return S}}
+{const f=ic151Build;ic151Build=function(){const S=f.apply(this,arguments);if(IC151.mode==='p1')return S;try{ic151DuskInit(S)}catch(e){console.warn('intro town set-up',e);S.D=null}if(!S.D){IC151.len=59.4;IC151.dEnd=IC151.cut;IC151.skipT=55;IC151.lbA=56.6;IC151.lbB=58.4}return S}}
 {const f=ic151End;ic151End=function(){try{if(IC151.S)ic151DuskDone(IC151.S)}catch(_){}return f.apply(this,arguments)}}
 // the score goes on: a warm town theme for the walk, the voice's low drone and choir, a toll for every portal, the resolve
 {const f=ic151Score;ic151Score=function(ac,out,T0){f.apply(this,arguments);try{ic151ScoreD(ac,out,T0)}catch(e){console.warn('intro score 2',e)}}}
@@ -194,3 +195,9 @@ function ic151ScoreD(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.
   for(let i=0;i<6;i++){const a=IC151D.v3+i*IC151D.v3d+.05;osc('sine',[98,92.5,87.3,82.4,73.4,65.4][i],a,2.4,.22,.01,2.3,{wet:.8});osc('sine',[392,370,349,330,294,262][i],a,2,.03,.02,1.9,{wet:1})}
   // the resolve: "your quest starts now"
   [146.83,220,293.66,369.99,440,587.33].forEach((f,i)=>osc('triangle',f,125.8+i*.12,4.6,.024,1.2,2.6,{lp:2400,wet:1,dry:.6}))}
+
+// v151c: a shopkeeper greeted in the cinematic stops working (the smith stops hammering): the work pose eases out to his
+// rest pose and back afterwards (_wk.ic151H 0..1); no sparks while he holds still
+if(typeof wkAnim103=='function'&&typeof WK103!='undefined'){const f0=wkAnim103;wkAnim103=function(n,now){const S=n&&n._wk,h=S&&S.ic151H||0,W0=S&&WK103[S.k];if(!h||!W0)return f0.apply(this,arguments);
+  const wf=W0.f;W0.f=function(P,t,S1){if(h<.999){const g=S1.g;S1.g=null;try{wf.call(this,(k,x,y,z)=>P(k,(x||0)*(1-h),(y||0)*(1-h),(z||0)*(1-h)),t,S1)}finally{S1.g=g}}
+    if(h>.5)S1.td=null;P('head',.07*h,0,0)};try{return f0.apply(this,arguments)}finally{W0.f=wf}}}

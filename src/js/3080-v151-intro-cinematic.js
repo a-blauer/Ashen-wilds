@@ -585,11 +585,11 @@ function ic151Css(){if(document.getElementById('ic151css'))return;const s=docume
   '#ic151 .sub{position:absolute;left:6%;right:6%;bottom:17vh;text-align:center;z-index:5;pointer-events:none;font-family:"IM Fell English SC","Cinzel Decorative",Georgia,serif;font-size:clamp(20px,3.2vw,44px);letter-spacing:.06em;color:#ffffff;line-height:1.2}'+
   '#ic151 .sub span{display:inline-block;white-space:pre;text-shadow:0 0 3px rgba(10,16,50,.95),0 0 14px rgba(14,24,70,.85),-2px 0 rgba(90,200,255,.6),2px 0 rgba(255,120,220,.5)}'+
   '#ic151 .skip{position:absolute;right:22px;bottom:calc(11vh + 14px);z-index:6;cursor:pointer;background:rgba(10,8,16,.45);color:#e8e0d0;border:1px solid rgba(232,224,208,.35);border-radius:4px;font:600 13px/1 "Cinzel Decorative",Georgia,serif;letter-spacing:.08em;padding:8px 14px;opacity:.7}'+
-  '#ic151 .skip:hover{opacity:1;background:rgba(30,24,40,.7)}#ic151.rv{background:transparent;cursor:default}#ic151.rv canvas,#ic151.rv .skip{display:none}';document.head.appendChild(s)}
+  '#ic151 .skip:hover{opacity:1;background:rgba(30,24,40,.7)}#ic151.rv{background:transparent;cursor:default}#ic151.rv canvas,#ic151.rv .skip{display:none}#ic151.p2 .skip{display:block}';document.head.appendChild(s)}
 function ic151Dom(S,t){const D=S.dom;if(!D)return;const lb=(11*(1-ic151Sm(ic151K(t,IC151.lbA||56.6,IC151.lbB||58.4))))+'vh';D.lt.style.height=lb;D.lb.style.height=lb;
   const w=Math.max(ic151K(t,34.0,35.0)*(1-ic151K(t,35.05,36.4)),ic151K(t,51.4,51.85)*.92*(1-ic151K(t,51.9,52.8)),ic151K(t,54.6,55.7)*(1-ic151K(t,56.0,58.9)));D.fw.style.opacity=w.toFixed(3);
   D.fk.style.opacity=(1-ic151K(t,0,1.8)+ (t>14.93&&t<15.0?1:0)).toFixed(3);
-  const rv=t>=IC151.cut;if(D.rv!==rv){D.rv=rv;D.el.classList.toggle('rv',rv);S.rd.domElement.style.display=rv?'none':'block';D.skip.style.visibility=rv?'hidden':'';D.el.style.background=rv?'transparent':'#000'}
+  const rv=t>=IC151.cut;if(D.rv!==rv){D.rv=rv;D.el.classList.toggle('rv',rv);S.rd.domElement.style.display=rv?'none':'block';D.skip.style.visibility=rv&&IC151.mode!=='p2'?'hidden':'';D.el.style.background=rv?'transparent':'#000'}
   if(typeof ren!='undefined'&&ren.domElement){const g=ren.domElement;g.style.transition='none';if(rv&&t<59.3){const k=ic151Oc(ic151K(t,56.0,59.2));g.style.filter='blur('+((1-k)*14).toFixed(2)+'px) brightness('+(1+(1-k)*.9).toFixed(3)+') saturate('+(.6+k*.4).toFixed(3)+')'}else g.style.filter=''}
   // subtitles: letters drift in out of a blur, the line breathes and glitches like a voice through deep water
   const L=IC151.lines.find(x=>t>=x.a-.1&&t<x.b+.6);if(L!==D.cur){D.cur=L;D.sub.innerHTML='';if(L){D.sp=[];L.s.split(/( )/).forEach(w=>{if(!w)return;let box=D.sub;if(w!==' '){box=document.createElement('span');box.className='w';D.sub.appendChild(box)}for(const ch of w){const e=document.createElement('span');e.textContent=ch;box.appendChild(e);D.sp.push(e)}})}}
@@ -653,21 +653,23 @@ function ic151Speak(t0){if(IC151.voiceUrl){const a=new Audio(IC151.voiceUrl);IC1
 
 // ---------------- play / skip / finish ----------------
 function ic151Want(){if(window.KQ_INTRO)return true;if(window.AW_NOTITLE||navigator.webdriver)return false;try{if(typeof SET!='undefined'&&SET.intro===0)return false}catch(_){}return true}
-function ic151Play(done){if(IC151.run)return;let S;try{S=ic151Build(innerWidth,innerHeight)}catch(e){console.warn('intro build',e);if(done)done();return}
-  IC151.S=S;IC151.run=true;IC151.on=true;IC151.done=done;ic151Layer(S);const L=IC151.live={t0:performance.now(),off:0,timers:[],ac:null,raf:0};
-  try{const AC=window.AudioContext||window.webkitAudioContext,ac=L.ac=new AC(),out=ac.createGain(),cp=ac.createDynamicsCompressor();out.gain.value=.9;out.connect(cp);cp.connect(ac.destination);L.out=out;if(ac.resume)ac.resume();ic151Score(ac,out,ac.currentTime+.05)}catch(e){console.warn('intro sound',e)}
+// v151c: mode 'p1' = part one only (a new game: the woodland → the change, then the hero creator), 'p2' = part two only
+// (after "Begin your journey": the light clears on Duskhold), 'all' = the whole film (tests and the video)
+function ic151Play(done,mode){if(IC151.run)return;mode=mode||'all';IC151.mode=mode;let S;try{S=mode==='p2'?ic151BuildP2(innerWidth,innerHeight):ic151Build(innerWidth,innerHeight)}catch(e){console.warn('intro build',e);IC151.mode='all';if(done)done();return}
+  IC151.S=S;IC151.run=true;IC151.on=true;IC151.done=done;ic151Layer(S);if(mode==='p2')S.dom.el.classList.add('p2');const L=IC151.live={t0:performance.now(),off:mode==='p2'?IC151.cut:0,timers:[],ac:null,raf:0};
+  try{const AC=window.AudioContext||window.webkitAudioContext,ac=L.ac=new AC(),out=ac.createGain(),cp=ac.createDynamicsCompressor();out.gain.value=.9;out.connect(cp);cp.connect(ac.destination);L.out=out;if(ac.resume)ac.resume();if(mode==='p2'){if(typeof ic151ScoreD=='function')ic151ScoreD(ac,out,ac.currentTime+.05-IC151.cut)}else ic151Score(ac,out,ac.currentTime+.05)}catch(e){console.warn('intro sound',e)}
   try{if(typeof MU!='undefined'&&MU.g&&MU.a){L.mu=1;MU.g.gain.setTargetAtTime(0,MU.a.currentTime,.1)}}catch(_){}
   if(IC151.speak)try{ic151Speak(0)}catch(_){}  // text only for now (IC151.speak=true turns the browser voice back on)
   const onKey=e=>{if(!IC151.run)return;if(IC151.on){e.stopImmediatePropagation();e.preventDefault();if(e.type=='keydown'&&/^(Escape|Enter| |Spacebar)$/.test(e.key))ic151Skip()}};L.onKey=onKey;
   addEventListener('keydown',onKey,true);addEventListener('keyup',onKey,true);S.dom.skip.onclick=e=>{e.stopPropagation();ic151Skip()};
   S.dom.el.addEventListener('mousemove',()=>{S.dom.el.style.cursor='default';clearTimeout(L.cur);L.cur=setTimeout(()=>{if(S.dom)S.dom.el.style.cursor=''},1500)});
   L.rs=()=>{try{S.rd.setSize(innerWidth,innerHeight);S.cam.aspect=innerWidth/innerHeight;S.cam.updateProjectionMatrix()}catch(_){}};addEventListener('resize',L.rs);
-  const tick=now=>{if(!IC151.run)return;L.raf=requestAnimationFrame(tick);const t=(now-L.t0)/1000+L.off;if(S.phys&&!S.phys.done)try{ic151PhysRun(S,t>18.9?1e9:6)}catch(e){console.warn('intro physics',e);S.phys.done=true}ic151Seek(t)};L.raf=requestAnimationFrame(tick)}
+  const tick=now=>{if(!IC151.run)return;L.raf=requestAnimationFrame(tick);const t=Math.max(L.off,(now-L.t0)/1000+L.off);if(mode==='p1'&&t>=IC151.p1End){ic151P1Out();return}if(S.phys&&!S.phys.done)try{ic151PhysRun(S,t>18.9?1e9:6)}catch(e){console.warn('intro physics',e);S.phys.done=true}ic151Seek(t)};L.raf=requestAnimationFrame(tick)}
 // render/apply time t (live play and tests). Past the cut the game runs again under the clearing light.
 function ic151Seek(t){const S=IC151.S;if(!S)return;if(t<IC151.cut){IC151.on=true;try{ic151Frame(S,t)}catch(e){console.warn('intro frame',e);IC151.err=String(e&&e.stack||e);t=IC151.cut}}
   if(t>=IC151.cut&&IC151.on){IC151.on=false;try{if(IC151.live&&IC151.live.mu&&typeof muVol=='function')muVol()}catch(_){}try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}}
   ic151Dom(S,t);if(t>=IC151.len)ic151End()}
-function ic151Skip(){const L=IC151.live;if(!L||!IC151.on)return;const t=(performance.now()-L.t0)/1000+L.off;if(t>=IC151.skipT)return;L.off+=IC151.skipT-t;
+function ic151Skip(){const L=IC151.live;if(!L||!IC151.on)return;const t=(performance.now()-L.t0)/1000+L.off,to=IC151.mode==='p1'?IC151.p1End:IC151.skipT;if(t>=to)return;L.off+=to-t;
   L.timers.forEach(clearTimeout);L.timers=[];try{speechSynthesis.cancel()}catch(_){}try{if(L.voice)L.voice.pause()}catch(_){}
   try{if(L.out){L.out.gain.cancelScheduledValues(L.ac.currentTime);L.out.gain.setTargetAtTime(0,L.ac.currentTime,.12)}}catch(_){}}
 function ic151End(){if(!IC151.run)return;IC151.run=false;IC151.on=false;const S=IC151.S,L=IC151.live;IC151.S=null;
@@ -675,15 +677,15 @@ function ic151End(){if(!IC151.run)return;IC151.run=false;IC151.on=false;const S=
     if(L.ac){const ac=L.ac;try{L.out.gain.setTargetAtTime(0,ac.currentTime,.3)}catch(_){}setTimeout(()=>{try{ac.close()}catch(_){}},1500)}if(L.mu&&typeof muVol=='function')muVol()}}catch(_){}
   try{if(typeof ren!='undefined'){ren.domElement.style.filter='';const g=ren.domElement;requestAnimationFrame(()=>{g.style.transition=''})}}catch(_){}
   try{if(S){if(S.hero&&S.hero.parent)S.hero.parent.remove(S.hero);S.dom.el.remove();
-    [S.sc,S.cs].forEach(sc=>sc.traverse(o=>{if(o===S.hero||(S.hero&&isDesc(o,S.hero)))return;if(o.geometry)o.geometry.dispose();if(o.material)[].concat(o.material).forEach(m=>{if(m.map)m.map.dispose();m.dispose()})}));
+    [S.sc,S.cs].forEach(sc=>sc&&sc.traverse(o=>{if(o===S.hero||(S.hero&&isDesc(o,S.hero)))return;if(o.geometry)o.geometry.dispose();if(o.material)[].concat(o.material).forEach(m=>{if(m.map)m.map.dispose();m.dispose()})}));
     S.dot.dispose();S.rd.dispose();S.rd.forceContextLoss()}}catch(e){console.warn('intro end',e)}
   function isDesc(o,p){for(;o;o=o.parent)if(o===p)return true;return false}
-  const q=IC151.q||[];IC151.q=[];q.forEach(f=>{try{f()}catch(_){}});const d=IC151.done;IC151.done=null;if(d)try{d()}catch(_){}}
+  IC151.mode='all';const q=IC151.q||[];IC151.q=[];q.forEach(f=>{try{f()}catch(_){}});const d=IC151.done;IC151.done=null;if(d)try{d()}catch(_){}}
 // capture mode for tests: build at a fixed size, no sound, no clock; then call ic151Seek(t) per frame
 function ic151Cap(w,h){IC151.cap=true;const T0=performance.now(),S=ic151Build(w,h);S.buildMs=Math.round(performance.now()-T0);IC151.S=S;IC151.run=true;IC151.on=true;ic151Layer(S);S.dom.skip.style.display='none';const P=S.phys;return {cells:S.cells.length,split:S.cells.filter(c=>c.grip>=0).length,rat:!!S.rcell,edge:S.rEdgeR,hero:!!S.hero,hand:!!(S.hand||S.hand2||S.giant),quake:!!(S.quakeU&&S.birds&&S.leaves&&S.hops),rtrk:S.rtrk?S.rtrk.N:0,ms:S.buildMs,phys:{done:P.done,ev:P.ev.length,moved:P.dyn.filter(b=>b.rec[(b.nr-1)*7+1]<-5).length,dyn:P.dyn.length}}}
 // the welcome banner waits until the light has cleared
 {const f=banner;banner=function(){if(IC151.run){const a=arguments,s=this;(IC151.q=IC151.q||[]).push(()=>f.apply(s,a));return}return f.apply(this,arguments)}}
 // the main loop waits while the cinematic plays
 {const f=loop;loop=function(now){if(IC151.on){requestAnimationFrame(loop);last=now;return}return f.apply(this,arguments)}}
-// new characters get the intro
-{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(ic151Want())ic151Play()}catch(e){console.warn('intro',e)}return r}}
+// new characters: part one plays when a new game starts (3082), part two after "Begin your journey"
+{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(IC151.run&&IC151.mode==='p1')ic151End();if(ic151Want())ic151Play(null,'p2')}catch(e){console.warn('intro',e)}return r}}

@@ -46,6 +46,12 @@ def s(pg):
         chk('meets Steward, Innkeeper, Blacksmith, Merchant in order',dk['npc']==['steward','inn','smith','merchant'],dk['npc'])
         chk('six portals with a Sovereign face each',dk['gates']==6 and dk['faces']==6,(dk['gates'],dk['faces']))
         chk('the walk stays clear of buildings',dk['nh']==0,dk['hit'])
+        # v151c: the blacksmith stops hammering while he is greeted (his hammer arm holds still), and hammers before that
+        sm=ev("""()=>{const D=IC151.S.D,n=D.npc.find(n=>n.k==='smith');if(!n||!n.g._wk)return null;const b=n.g.bones&&n.g.bones.aR0;if(!b)return null;
+          const spread=(a,c)=>{const v=[];for(let t=a;t<c;t+=1/24){ic151Seek(t);v.push(b.rotation.x)}return Math.max(...v)-Math.min(...v)};
+          const m=n.mt;return {work:spread(m[0]-4.6,m[0]-2.2),greet:spread(m[0]+.2,m[1]-.25)}}""")
+        print('smith arm swing (rad)',sm)
+        chk('the blacksmith stops hammering when he is greeted',sm is not None and sm['work']>.4 and sm['greet']<.05,sm)
         # v151: no floating name tags over the town folk in the cinematic (they come back afterwards: checked at the end)
         TAGS="()=>{let n=0;const w=new THREE.Vector3();scene.traverse(o=>{if(!o.isSprite||!o.material||!o.material.map||!o.material.map.isCanvasTexture)return;let v=true,q=o;while(q){if(q.visible===false)v=false;q=q.parent}o.getWorldPosition(w);if(v&&Math.hypot(w.x-40,w.z-305)<80)n++});return n}"
         ev("()=>ic151Seek(65)");pg.wait_for_timeout(600);ev("()=>ic151Seek(65.05)")
