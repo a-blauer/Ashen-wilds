@@ -26,7 +26,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),tick=(se
   const rp=R.lamps[0];for(let i=0;i<5;i++)lootE(fake(rp.x,rp.z));out.dropHere=drops.filter(d=>d.kind=='mq143').length;
   // take them all (walk-over pickup goes through take)
   drops.filter(d=>d.kind=='mq143').forEach(d=>{take(d);scene.remove(d.g);drops.splice(drops.indexOf(d),1)});out.b1=MQ143.b;
-  MQ143.b=mq143N()*3;out.need=mq143Need();lootE(fake(rp.x,rp.z));out.dropFull=drops.filter(d=>d.kind=='mq143').length;MQ143.drop=.55;MQ143.b=0;
+  MQ143.b=mq143N()*3;out.need=mq143Need();lootE(fake(rp.x,rp.z));out.dropFull=drops.filter(d=>d.kind=='mq143').length;MQ143.drop=1;MQ143.b=0;
   // the bag shows the bulbs
   MQ143.b=4;bagTab2=1;out.bag=/Quest items[\s\S]*Glowbulb/.test(kqmMatTab());MQ143.b=0;
   // the scene builds when the hero is in Kindlelight I

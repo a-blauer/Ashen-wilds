@@ -37504,7 +37504,7 @@ MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
 // gateway to II is dormant. The Lantern Wardens (3021) hold an outpost near the entrance (3020 plan) with the Portal Ripper (3022),
 // a machine that can tear the gateway open, but it will not roll through the dark: lampposts line the whole road from the outpost
 // to the gateway (v151: ~47, one glowbulb each; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
-// that every Kindlelight I creature drops (MQ143.drop chance per kill, only while more are needed: lamps still dark × MQ143.per
+// that every Kindlelight I creature drops on top of its normal loot (MQ143.drop chance per kill, 100% since v151, only while more are needed: lamps still dark × MQ143.per
 // − carried − lying on the ground).
 // State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
 // instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {v, st, b (bulbs), lit[one per lamp], seen}; saves before v151
@@ -37518,9 +37518,9 @@ MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
 //    the Ripper, the captain with "!"), the bulbs in the bag's Materials tab (Quest items), the glowbulb icon (KQI.glowbulb, 🪔).
 // Co-op: local to each player like Cheddar's quests (each player lights their own road; a partner's kill near you drops a bulb
 // for you too, as loot does). The scene is built the first time you are in Kindlelight I.
-var MQ143={st:0,b:0,lit:[],seen:0,per:1,drop:.55,speed:3,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
+var MQ143={st:0,b:0,lit:[],seen:0,per:1,drop:1,speed:3,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
   name:'The Lantern Road',cap:'Warden-Captain Harrow'};
-// v151: per 3 → 1 (a bulb a lamp, ~47 lamps); speed 1.9 → 3 tiles/s (the roll now covers the whole ~330-tile road, ~2 minutes)
+// v151: per 3 → 1 (a bulb a lamp, ~47 lamps); drop .55 → 1 (every kill drops one, on top of its normal loot, until enough are carried); speed 1.9 → 3 tiles/s (the roll now covers the whole ~330-tile road, ~2 minutes)
 function mq143N(){return mq143Plan().lamps.length}
 try{MQ143.lit=new Array(mq143N()).fill(0)}catch(e){console.warn('v151 lamps',e)}
 function mq143Lit(){return MQ143.lit.reduce((a,b)=>a+(b?1:0),0)}
