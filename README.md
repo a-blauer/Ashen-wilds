@@ -309,7 +309,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   carries `dn`/`bt`; the revive is the `ev` entry `['rv', peer]`. *Boss credit* (`3086`, `BC148`): whoever kills a Sovereign (or
   Vorraxis, `'v144'`) sends `['bk', id, name]`; every other player in the game gets the one-time progress wherever they are
   (`bossDefeated({ar:i})`: map cleared, power, next portal, kingdom; Vorraxis: `MQ144.st` 2, the crystal waits in the lair). Players in
-  that same fight still get the kill and its loot (0520). Test: `v148_revive.py` (two windows, fake signaling, real WebRTC).
+  that same fight still get the kill and its loot (0520). Fix: in co-op the world runs behind the death screen, so a dead hero lying in
+  an arena used to restart the fight (and the arena wall pulled them back after "Rise Again"); `arenaTick` now starts no fight while
+  the hero is dead. Test: `v148_revive.py` (two windows, fake signaling, real WebRTC; includes the arena case). The random v141_sov
+  check "boss 3: Reach used against kiting" is in `test/ci_known_fail.txt` (owner's request).
 - **Version 141 (owner's list, Oct 2026)**: *Consume* raises only the eaten companion's best stat (same amount per stat as before;
   refused when that stat is maxed); the Fusion preview shows gains under 2 points with one decimal. *Keys*: Q feeds the most hurt
   active companion, Z health potion, X mana potion, 1–6 abilities. *Companions*: one active companion until the Beast Trainer teaches

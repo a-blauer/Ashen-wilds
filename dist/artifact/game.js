@@ -40086,6 +40086,9 @@ function rv148Tick(dt){
 {const f=homeTick;homeTick=function(dt){const r=f.apply(this,arguments);try{rv148Tick(Math.max(0,Math.min(.1,+dt||0)))}catch(err){console.warn('v148 revive',err)}return r}}
 // leaving co-op while down: nobody can help any more
 {const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);try{if(RV148.ch)rv148Cancel('');}catch(_){}return r}}
+// a dead hero lying inside an arena (the world keeps running behind the death screen in co-op) must not start the fight
+// again: it would seal them in, and after "Rise Again" the arena wall would pull them back from Duskhold
+{const f=arenaTick;arenaTick=function(){if(!AF&&(hero.hp<=0||(typeof AWD!='undefined'&&AWD.dead)))return;return f.apply(this,arguments)}}
 // ================= v148.2: co-op boss credit =================
 // A Sovereign's first defeat (map cleared, its power, the next portal) and Vorraxis's defeat are one-time progress. In co-op,
 // when anyone in the game kills one, every other player in it gets that credit too, wherever they are: in the arena, downed,
