@@ -37,7 +37,7 @@ function mq170Keep(g,x,z){if(g!==insG(2,2))return false;try{for(const k of mq170
 
 // solid from the start: the cliff, the drill's body (the boxes and the console are small: you walk round them); the bore (tunT) opens
 function mq170Solid(){const R=mq170Plan();MQ170.tunT=[];for(let lz=-12;lz<=-2;lz++)for(let lx=-16;lx<=16;lx++){const p=R.L(lx,lz),k=Math.round(p.z)*W+Math.round(p.x);CBLK.add(k);if(lz>=-3&&Math.abs(lx)<=1)MQ170.tunT.push(k)}
-  for(let lz=0;lz<=6;lz++)for(let lx=-2;lx<=2;lx++){const p=R.L(lx,lz);CBLK.add(Math.round(p.z)*W+Math.round(p.x))}}
+  for(let lz=0;lz<=6;lz++)for(let lx=-1;lx<=1;lx++){const p=R.L(lx,lz);CBLK.add(Math.round(p.z)*W+Math.round(p.x))}}
 try{mq170Solid()}catch(e){console.warn('v151 drill tiles',e)}
 // ---------------- models ----------------
 var DR170={m:null};

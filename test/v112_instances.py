@@ -61,8 +61,9 @@ def s(pg):
        const rib=ST112.filter(s=>s.m.visible).map(s=>s.g);out.push([t.g,curIns().g,Math.round(scene.fog.density*1000),IA112.k>.5,rib.join(','),ROST.slots.length,ZP.type,SKY.visible])}return out}""",
       lambda r:all(q[0]==q[1] and q[3] and q[5]>15 for q in r))
     T('instance I unchanged look',"()=>{const I=PMAP[0].ins[0];insArrive(I);window._vt=window._vt||performance.now()+1e5;for(let i=0;i<20;i++){_vt+=16;loop(_vt)}return [IA112.t,ST112.some(s=>s.m.visible),ZP.type]}",lambda r:r[0] is None and r[1] is False)
-    # the gateways still lead on (v143-v145: Kindlelight's main quest seals its gateways until done; mark it done)
-    T('gateways',"()=>{if(typeof MQ143!='undefined')MQ143.st=3;if(typeof MQ144!='undefined')MQ144.st=3;if(typeof MQ145!='undefined')MQ145.at=[1,1,1];return PMAP.map((p,z)=>[1,2].map(k=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(z,k));toPos(g.x,g.z+1);const pp=portalPrompt();return !!pp&&pp.label.includes(g.to.n)}))}",lambda r:all(all(x) for x in r))
+    # the gateways still lead on (v143-v145: Kindlelight's main quest seals its gateways until done; mark it done; v151: Burningeye's II
+    # and III gateways are the melted gate and the drilled tunnel: their own prompts)
+    T('gateways',"()=>{if(typeof MQ143!='undefined')MQ143.st=3;if(typeof MQ144!='undefined')MQ144.st=3;if(typeof MQ145!='undefined')MQ145.at=[1,1,1];if(typeof MQ160!='undefined')MQ160.st=3;if(typeof MQ170!='undefined')MQ170.st=1;return PMAP.map((p,z)=>[1,2].map(k=>{const g=RPORT.find(r=>r.k=='next'&&r.ig===insG(z,k));toPos(g.x,g.z+1);for(let i=0;i<3;i++)homeTick(1/30,performance.now(),0);const pp=z===2?worldPrompt():portalPrompt();return !!pp&&(pp.label.includes(g.to.n)||z===2&&pp.label.includes(g.to.n.replace(/^Burningeye Summit /,''))||z===2&&/Through the gate|Into the tunnel/.test(pp.label))}))}",lambda r:all(all(x) for x in r))
     # co-op region and local map in a themed instance
     T('co-op region / map',"()=>{insArrive(PMAP[2].ins[1]);openWMap();const ok=!$('wmap').classList.contains('hide');$('wmap').classList.add('hide');return [mpCurRg(),mpLoc(mpCurRg()),ok,areaName()]}",lambda r:r[0]==11 and 'Burningeye Summit II' in r[1] and r[2])
     # save + old save (v108) in instance II -> moved to its entrance, reached instances kept
