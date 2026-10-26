@@ -56,6 +56,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v150 owner's co-op list: partners' effects clean up and mounts show (`V150`, `3090`), monsters go for partners' companions (`AG150`, `3091`), shared progress (kills, camp clears `['cc']`, lamps `['m143']`, sigils `['m145']`, instance reach `ir`, rituals fought together `['r145']`/`['p145']`, `CP150`, `3092`), sigil rituals 50 wolves, ¼ XP / loot, stuck wolves blink (`GW150`, `3093`), the host's Duskhold for guests (`DK150`, `['ks']` / `['kd']` / `['kdo']`, `3094`), Sovereign moves start from the driver's pose (`BS150`, `3096`), Tab in boss fights, chests off the hatch, raven robes follow the legs (`FX150`, `RV150`, `3097`); bats keep only hind legs (0630, 2640); the hatchet's edge keeps one side (3070) | `3090`–`3097` |
 | v151 The Lantern Road rework (owner): the outpost by Kindlelight I's entrance (`mq151Cfg().A` 36 steps down the road), lampposts along the whole road ~7 apart (`mq151Cfg().gap`, 47) at 1 glowbulb each (`MQ143.per`), every kill drops one until enough are carried (`MQ143.drop` 1), the Ripper rolls at 3 tiles/s, pre-v151 saves refunded; the entrance camp moves to the nearest open side field (`mq151MoveCamp`, called from 0045 after every seeded map step) | `3020`, `3023` (hook in `0045`) |
 | v151 Armored trait look: a riveted war harness (leather blanket, overlapping iron spine plates, rivets, flank flaps, `lpArmor151`) replaces the grey back domes that read as stones; picture sheet `test/v151_armor_look.py` | `0610` (`lpExtras`) |
+| v152–v154 Hillside Crest main quest: special instances (`SP152`, `3150`), Abeksi city stealth level (`3151`–`3155`), the Hilltop Ascent chase (`3160`–`3162`), the Gate of the Hydra puzzle (`HD154`, `3170`) | `3150`–`3170` (hooks in `0045`) |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -640,6 +641,30 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     puffs), spawned as minions (local in co-op).
   * Saved as `x2.mq145 {at[3], fd[3]}`; done also when the Den was reached (`mq145Done`). Tracker uses `#mqt143` in III.
   Tests: `v145_sigils.py`.
+- **Hillside Crest main quest (v152–v154)**: three chapters, one per field instance; none of its gateways is a portal.
+  * Special instances (`3150`, `SP152`): one-time levels with their own instance records (`sp152Defs`, painted by `sp152Map` /
+    `sp152Terrain` from 0045; `insAt` falls back to `spIns` for rows below the zone grid). `sp152Gate(key,{ig,where,build,prompt,r})`
+    hides an instance's 'next' portal and puts the level's own entrance there (`sp152GateSpot`: the gateway clearing's far edge).
+    `SP152.R[key]` rules while inside: `park` (companions hidden), `noMount` / `forceMount`, `noFight`, `noRecall`, `onLoad`.
+    Tracker `#mqt152` (`SP152.trk[key]`), atmosphere `sp152Theme`.
+  * **Abeksi city (v152, I → II, `3151`–`3155`)**: "F · Sneak through Abeksi city" at a carved archway in I. Pure stealth through a
+    snake city in six districts (Breach, Market, Dwellings, Rat Warrens, Great Kitchen, Gate Yard), 6 checkpoints; seen = caught →
+    back to the last checkpoint. Ctrl (tap, toggles; holding Ctrl+W would close the tab) or C crouches: quieter, smaller to see.
+    Sight and hearing numbers `AB152V`; actors (`ab152MakeActor`, routines, poses `AB152P`) sit, eat, talk, work, patrol, investigate.
+    Plan `ab152Plan`, models `3152`, actors `3153`, poses `3154`, the level `3155`. Saved `x2.ab152`; done when II was reached.
+    Tests `v152_abeksi.py`, `v152_route.py` (an unseen route through every district), pictures `v152_look.py`.
+  * **The Hilltop Ascent (v153, II → III, `3160`–`3162`)**: "F · Ascend to the hilltops" at a hill road in II (a mount needed). A mounted
+    chase up a spiral trail (`ch153Path`, `ch153Course`: boulders, logs, spikes, gaps, rockslides, a plank bridge, a tunnel); Space jumps;
+    every mount runs at `CH153V.spd`; Skarrith (`ch153Snake`) chases on a rubber band, spits venom (phases in the course) and strikes from
+    the side; 3 hits or a swallow = start again. The crack at the summit leads to III. Saved `x2.ch153`. Tests `v153_ascent.py`
+    (an autopilot rides the whole trail: about 110 s), pictures `v153_look.py`.
+  * **The Gate of the Hydra (v154, III → Den, `3170`)**: a great carved stone door in the mountain replaces the Den portal
+    (`sp152Gate('hydra')`), five Hydra heads on its lintel. Five Wind Stones (`hd154Plan`: off the road at 12/30/48/66/84 %, open
+    ground, apart) each with a bronze serpent vane: F turns it an eighth; facing the door (`want`) its wind ribbon flows and a head
+    lights. With five winds, the Song of the Mother: the heads sing 3, 4, then 5 notes; strike the five chime stones before the door in
+    the same order (a wrong one hisses and the verse is sung again). Then the doors open (`hd154Open`) and F enters the Den (INSL[8]).
+    State `HD154` saved `x2.hd154 {st,vane,on,vs}`; done also when the Den was reached. The cheat "All quests complete" finishes all
+    three chapters. Tests `v154_hydra.py`, pictures `v154_look.py`.
 - **Sovereigns to the Vorraxis standard (v146, `3050`–`3056`)**: every Sovereign follows `docs/BOSS_RECIPE.md` now. Each keeps its
   v110/v112 poses and moves and gains (all in Phase II): a den change and a signature mechanic with a success and a failure outcome.
   | Boss | Den change (Phase II) | Signature (props → BROKEN / failure) |
