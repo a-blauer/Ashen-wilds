@@ -44119,7 +44119,7 @@ function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,lead=MP.host=
   if(co&&R.ph=='dead'&&R.dead.t+Math.max(0,dt)>=2.0&&!R.dead.fade&&!R.dead.co){R.dead.co=1;const al=cs155Alive();
     if(al.length){R.ph='spec';R.spec={t:0,wait:0};const n=al.map(q=>mpName(q.peer)).join(', ');say('👁 You fell. Watch '+mpEsc(n)+' ride on — if they get through, they can revive you on the other side.')}
     else if(cs155Won()){cs155Out();return}
-    else{CS155.reT=nowP();cl155Send(['cs','re'])}}
+    else{CS155.reT=nowP();cl155Send(['cs','re']);[500,1100].forEach(t=>setTimeout(()=>cl155Send(['cs','re']),t))}}
   if(R.ph=='spec'){cs155Spec(dt,now);cs155Tell(now);return}
   const r=f.apply(this,arguments);if(co)cs155Tell(now);return r}}
 function cs155Tell(now){const R=CH153.R;if(!R||now-CS155.tP<100)return;CS155.tP=now;const ph=R.ph=='intro'?1:R.ph=='run'?2:R.ph=='win'?4:3;
@@ -44131,7 +44131,10 @@ function cs155Spec(dt,now){const R=CH153.R,S=CH153.S,P=S.P,K=S.K;R.t+=dt;R.spec.
   if(!al.length){if(cs155Won()){cs155Out();return}if(!R.spec.wait)R.spec.wait=nowP();
     if(nowP()-R.spec.wait>1600&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
   else R.spec.wait=0;
-  const fo=al.length?al.reduce((a,b)=>b.s>a.s?b:a):null;if(fo){R.s=fo.s;R.o=fo.o;R.v=fo.v;R.spec.who=fo.peer}R.y=0;
+  const fo=al.length?al.reduce((a,b)=>b.s>a.s?b:a):null;
+  // the rider I watch is suddenly far back down the trail: the chase started again for them, so it does for me
+  if(fo&&R.spec.lastS!=null&&fo.s<R.spec.lastS-25&&!R.spec.fade){R.spec.fade=1;CS155.won={};fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}
+  if(fo){R.s=fo.s;R.o=fo.o;R.v=fo.v;R.spec.who=fo.peer;R.spec.lastS=fo.s}R.y=0;
   pl.visible=false;if(typeof mModel!='undefined'&&mModel)mModel.visible=false;
   const [x,z,h]=P.at(R.s,R.o);pl.position.set(x,h,z);pl.rotation.y=P.yaw(R.s);if(mModel)mModel.position.copy(pl.position);
   ch153SnakeTick(dt,now);ch153FxTick(dt,now);
