@@ -109,11 +109,11 @@ function co160Apply(q){if(!mq160In2()||co151Host())return;const R=mq160Plan();le
   if(!E){if(Math.hypot(pl.position.x-R.yard.x,pl.position.z-R.yard.z)>MQ160.leash+12)return;if(MQ160.st<2){MQ160.st=2;MQ160.p=[1,1,1];MQ160.gk=[1,1,1]}co151Rx(()=>mq160Start());E=MQ160.E;if(!E)return}
   const [_,melt,heat,ovh,charge,carrier,gx,gz,gry,fire,spent]=q;E.melt=Math.max(0,Math.min(MQ160.melt,(melt|0)/10));E.heat=Math.max(0,Math.min(1,(heat|0)/100));E.ovh=ovh?1:0;E.charge=Math.max(0,charge|0);E.spent=spent|0;MQ160.trkK='';
   const c=typeof carrier==='string'?carrier:'',was=E.carrier||'';E.carrier=c;
-  if(c===MP.me&&!E.carry){E.carry=1;E.gp=null;svSnd('heavy',.6,1.5)}else if(c!==MP.me&&E.carry&&c){E.carry=0}
+  if(c===MP.me&&!E.carry){E.carry=1;E.gp=null;E.want=0;svSnd('heavy',.6,1.5)}else if(c)E.want=0;else if(c!==MP.me&&E.carry&&c){E.carry=0}
   if(!c&&isFinite(gx)&&isFinite(gz)&&gx!==null){E.gp=new THREE.Vector3(+gx,GH(+gx,+gz)+.18,+gz);E.gry=+gry||0}
   if(!E.carry)E.fire=fire?1:0;if(c!==was||!c)mq160Sync()}
 function co160OnAsk(q,peer){const E=MQ160.E;if(!E||!co151Host())return;const r=MP.rh[peer],p=r&&r.pr;if(!p)return;
-  if(q[1]===1){if(E.carrier||E.carry)return;const sp=E.gp||mq160BenchSpot();if(Math.hypot(p.x-sp.x,p.z-sp.z)>3.4)return;E.carrier=peer;E.gp=null;E.rfire=0;mq160Sync();CO151.tS=0}
+  if(q[1]===1){if(E.carrier||E.carry)return;const sp=E.gp||mq160BenchSpot();if(Math.hypot(p.x-sp.x,p.z-sp.z)>4.5)return;E.carrier=peer;E.gp=null;E.rfire=0;mq160Sync();CO151.tS=0}
   else if(E.carrier===peer){E.carrier='';E.rfire=0;const x=+q[2],z=+q[3];E.gp=new THREE.Vector3(isFinite(x)?x:p.x,GH(isFinite(x)?x:p.x,isFinite(z)?z:p.z)+.18,isFinite(z)?z:p.z);E.gry=+q[4]||0;mq160Sync();CO151.tS=0}}
 function co160OnBurn(id){const E=MQ160.E;if(!E||!co151Host())return;const e=enemies.find(q=>q.nid===id&&!q.mir&&!q.dead);if(!e||!(e.fs160sp||e.c.en==='icespider'))return;
   if(E.charge<MQ160.kc)return;E.charge-=MQ160.kc;E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6);try{hurt(e,1e9,{col:'#ff9a3a'},false)}catch(_){}if(!e.dead)try{removeE(e)}catch(_){}}
@@ -178,6 +178,8 @@ function co170WindTick(dt){if(typeof MP=='undefined'||!MP.on)return;for(const id
 // ---------------- the tick: hits to the driver, the driver's sync, presence, credit, wind-ups ----------------
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(typeof MP!='undefined'&&MP.on){const t=performance.now();
     if(CO151.hq>0&&t-CO151.tH>150){CO151.tH=t;co151Send(['g1h',CO151.hq]);CO151.hq=0}
-    gb180Sync(t);co151Flush(t);co170WindTick(Math.max(0,Math.min(.1,+dt||0)));
+    gb180Sync(t);co151Flush(t);
+    // a partner's pick-up request: asked again until the host answers (a message can be lost or arrive before my position)
+    {const E=MQ160.E;if(E&&E.want>nowP()&&!E.carry&&!E.carrier&&co151On()&&!co151Host()&&nowP()-(E.rq||0)>500){E.rq=nowP();co151Send(['f2c',1])}}co170WindTick(Math.max(0,Math.min(.1,+dt||0)));
     const g=gb180Has()?1:0;if(g!==CO151.g1){CO151.g1=g;MP.lastPres=''}}}catch(err){if(!CO151.err++)console.warn('v151 co-op tick',err)}return r}}
 {const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);CO151.got={};CO151.cq=[];CO151.hq=0;return r}}

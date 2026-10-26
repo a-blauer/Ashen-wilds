@@ -227,7 +227,7 @@ function mq160Win(){const E=MQ160.E;MQ160.E=null;MQ160.st=3;MQ160.trkK='';const 
 function mq160Carry(on){const E=MQ160.E;if(!E)return;const co=co151On();
   if(on){if(co&&E.carrier&&E.carrier!==MP.me)return say('🔥 '+mpName(E.carrier)+' is carrying the flamespitter.');
     // co-op: a partner asks the host, who hands it over (3180 co160Apply)
-    if(co&&!co151Host()){if(nowP()-(E.rq||0)>400){E.rq=nowP();co151Send(['f2c',1])}return}
+    if(co&&!co151Host()){E.want=nowP()+3000;if(nowP()-(E.rq||0)>400){E.rq=nowP();co151Send(['f2c',1])}return}
     E.carry=1;E.carrier=co?MP.me:'';E.gp=null;svSnd('heavy',.6,1.5);try{if(tgt)setTarget(null)}catch(_){}}
   else{E.carry=0;E.fire=0;const f=V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));E.gp=new THREE.Vector3(pl.position.x+f.x*.7,GH(pl.position.x+f.x*.7,pl.position.z+f.z*.7)+.18,pl.position.z+f.z*.7);E.gry=pl.rotation.y+Math.PI/2;svSnd('heavy',.6,1.3);
     if(co){E.carrier='';if(!co151Host())co151Send(['f2c',0,mpR2(E.gp.x),mpR2(E.gp.z),mpR2(E.gry)])}}

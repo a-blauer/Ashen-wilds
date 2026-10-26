@@ -87,7 +87,8 @@ r=[pg.evaluate("()=>!!MQ160.E") for pg in (H,G)]
 chk('the guest starts the melt: it runs for both',r[0] and r[1],json.dumps(r))
 # the guest picks it up; the host's C is refused
 G.evaluate("()=>{const B=mq160BenchSpot();toPos(B.x,B.z+.5);document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'c',bubbles:true}))}")
-until(G,"()=>!!(MQ160.E&&MQ160.E.carry)")
+if not until(G,"()=>!!(MQ160.E&&MQ160.E.carry)"):
+    print('pick-up debug host',H.evaluate("()=>{const E=MQ160.E,sp=E&&(E.gp||mq160BenchSpot());const o={E:!!E,carrier:E&&E.carrier,carry:E&&E.carry};for(const k in MP.rh){const p=MP.rh[k].pr;if(p)o[k]=[p.rg,MP.rg,sp?Math.hypot(p.x-sp.x,p.z-sp.z).toFixed(2):-1]}return o}"),'guest',G.evaluate("()=>{const E=MQ160.E;return E?{carry:E.carry,carrier:E.carrier,want:E.want,rq:E.rq,host:MP.host,me:MP.me,near:mq160NearSpit()}:null}"))
 H.evaluate("()=>{const B=mq160BenchSpot();toPos(B.x+.6,B.z);document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'c',bubbles:true}))}")
 both(1500,700)
 r=[H.evaluate("()=>MQ160.E?[MQ160.E.carry,MQ160.E.carrier]:[null,null]"),G.evaluate("()=>MQ160.E?[MQ160.E.carry,MP.me]:[null,'']")]
