@@ -38,7 +38,13 @@ def s(pg):
         const b=new THREE.Box3().setFromObject(o);if(b.max.x<14||b.min.x>66||b.max.z<255||b.min.z>360)return;const sx=b.max.x-b.min.x,sz=b.max.z-b.min.z,g=GH((b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2);
         if(sx>30||sz>30||sx*sz<.15||b.min.y>g+.6||b.max.y<g+1.2)return;bx.push(b)});
       for(const L of D.legs)for(let t=L.a;t<=L.b;t+=.1){const p=ic151DPos(D,t);for(const b of bx)if(p[0]>b.min.x+.05&&p[0]<b.max.x-.05&&p[1]>b.min.z+.05&&p[1]<b.max.z-.05){hit.push([+t.toFixed(1),+p[0].toFixed(1),+p[1].toFixed(1)]);break}}
-      return {npc:D.npc.map(n=>n.k),gates:D.gates.length,faces:(IC151.SF||[]).filter(x=>x).length,legs:D.legs.length,end:D.end,ch:!!D.ch,own:!!D.chOwn,ched:D.ched,spot:(typeof chq148Spot=='function'&&chq148Spot())?[chq148Spot().cx,chq148Spot().cz]:null,hit:hit.slice(0,8),nh:hit.length}}""")
+      // v151e: the town wall and gate are one big mesh (skipped above): rays along the walk, at his middle and 0.3 m to each side,
+      // must not cross it (he goes out through the gate's opening, not through a post)
+      const WL=[];scene.traverse(o=>{const nm=o.name||(o.parent&&o.parent.name)||'';if(o.isMesh&&/^kdWalls/.test(nm))WL.push(o)});const rw=new THREE.Raycaster(),wh=[];
+      for(const L of D.legs){let p0=null;for(let t=L.a;t<=L.b+1e-6;t+=.05){const p=ic151DPos(D,t);if(p0){const dx=p[0]-p0[0],dz=p[1]-p0[1],dl=Math.hypot(dx,dz);if(dl>1e-4&&dl<3){const nx=-dz/dl,nz=dx/dl;
+        for(const sd of [-.3,0,.3])for(const hy of [.5,1.2]){const a=new V(p0[0]+nx*sd,GH(p0[0],p0[1])+hy,p0[1]+nz*sd),b=new V(p[0]+nx*sd,GH(p[0],p[1])+hy,p[1]+nz*sd),d=b.clone().sub(a),len=d.length();
+          rw.set(a,d.normalize());rw.far=len;if(rw.intersectObjects(WL,true).length){wh.push([+t.toFixed(2),+p[0].toFixed(1),+p[1].toFixed(1),sd]);break}}}}p0=p}}
+      return {walls:WL.length,wall:wh.slice(0,6),nw:wh.length,npc:D.npc.map(n=>n.k),gates:D.gates.length,faces:(IC151.SF||[]).filter(x=>x).length,legs:D.legs.length,end:D.end,ch:!!D.ch,own:!!D.chOwn,ched:D.ched,spot:(typeof chq148Spot=='function'&&chq148Spot())?[chq148Spot().cx,chq148Spot().cz]:null,hit:hit.slice(0,8),nh:hit.length}}""")
     print('duskhold',dk)
     chk('Duskhold part built',dk is not None and dk['legs']==7 and dk['ch'],dk)
     if dk:chk('Cheddar met at his quest board (the game\'s own Cheddar, v148 spot)',not dk['own'] and dk['spot'] and abs(dk['ched'][0]-dk['spot'][0])+abs(dk['ched'][1]-dk['spot'][1])<.5,(dk['own'],dk['ched'],dk['spot']))
@@ -46,6 +52,7 @@ def s(pg):
         chk('meets Steward, Innkeeper, Blacksmith, Merchant in order',dk['npc']==['steward','inn','smith','merchant'],dk['npc'])
         chk('six portals with a Sovereign face each',dk['gates']==6 and dk['faces']==6,(dk['gates'],dk['faces']))
         chk('the walk stays clear of buildings',dk['nh']==0,dk['hit'])
+        chk('the walk goes out through the gate opening, never through the town wall',dk['walls']>0 and dk['nw']==0,(dk['walls'],dk['wall']))
         # v151c: the blacksmith stops hammering while he is greeted (his hammer arm holds still), and hammers before that
         sm=ev("""()=>{const D=IC151.S.D,n=D.npc.find(n=>n.k==='smith');if(!n||!n.g._wk)return null;const b=n.g.bones&&n.g.bones.aR0;if(!b)return null;
           const spread=(a,c)=>{const v=[];for(let t=a;t<c;t+=1/24){ic151Seek(t);v.push(b.rotation.x)}return Math.max(...v)-Math.min(...v)};

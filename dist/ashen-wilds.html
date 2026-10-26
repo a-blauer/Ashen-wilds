@@ -41227,10 +41227,6 @@ function ic151DCss(){if(document.getElementById('ic151dcss'))return;const s=docu
   '#ic151 .nc{position:absolute;left:5vw;bottom:calc(11vh + 4vh);z-index:5;pointer-events:none;opacity:0;font-family:"Cinzel",Georgia,serif;color:#f6e7c4;text-shadow:0 2px 8px #000,0 0 18px rgba(0,0,0,.8)}'+
   '#ic151 .nc b{display:block;font:700 clamp(18px,2.4vw,30px)/1.1 "Cinzel",Georgia,serif;letter-spacing:.06em}#ic151 .nc i{display:block;margin-top:4px;font:italic clamp(13px,1.4vw,18px)/1.2 Georgia,serif;color:#e8dcc4}'+
   '#ic151 .nc:before{content:"";display:block;width:52px;height:2px;margin-bottom:8px;background:linear-gradient(90deg,#fb923c,transparent)}'+
-  '#ic151 .zc{position:absolute;left:0;right:0;top:calc(11vh + 3vh);z-index:5;text-align:center;pointer-events:none;opacity:0}'+
-  '#ic151 .zc .zk{font:600 clamp(11px,1.1vw,14px)/1 "Cinzel",Georgia,serif;letter-spacing:.32em;text-transform:uppercase;color:#f4ecdc;opacity:.85;text-shadow:0 2px 6px #000}'+
-  '#ic151 .zc .zt{margin-top:8px;font-size:clamp(28px,4.8vw,62px);line-height:1.05;letter-spacing:.04em}'+
-  '#ic151 .zc .zs{margin-top:8px;font:italic clamp(13px,1.4vw,18px)/1.2 Georgia,serif;color:#f4ecdc;text-shadow:0 2px 6px #000}'+
   '#ic151 .sov{position:absolute;left:50%;top:50%;width:min(62vh,52vw);height:min(62vh,52vw);transform:translate(-50%,-46%);z-index:4;pointer-events:none;opacity:0;mix-blend-mode:screen;filter:blur(.6px) saturate(1.2)}'+
   '#ic151 .sov img{width:100%;height:100%;object-fit:contain;-webkit-mask-image:radial-gradient(circle at 50% 46%,#000 32%,transparent 70%);mask-image:radial-gradient(circle at 50% 46%,#000 32%,transparent 70%)}';document.head.appendChild(s)}
 
@@ -41250,7 +41246,7 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
     if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=C.root.rotation.y}else D.ched=[45.32,287.93];
     const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
   const CS=D.chSt;
-  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.4,277.6],[43.2,285.0],CS],[CS,[41.4,294.8],[40.2,301.5]],[[40,334],[40,349.4]]];
+  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.4,277.6],[43.2,285.0],CS],[CS,[41.2,290.8],[40.05,292.6],[40.0,295.6],[40.2,301.5]],[[40,334],[40,349.4]]];
   for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=[40,349.4];
   // the hero's track at 60 Hz: position, heading (spring-damped, snapped at the cut), moving or not
   const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.ched[0]-.2&&t<IC151D.ched[1])return Math.atan2(D.ched[0]-ic151DPos(D,t)[0],D.ched[1]-ic151DPos(D,t)[1]);if(t>=IC151D.walks[6][1]-.3)return 0;return null};
@@ -41296,8 +41292,8 @@ function ic151SovFaces(){if(IC151.SF)return IC151.SF;const out=[];let rd=null;
 function ic151DStart(S){const D=S.D;if(!D||D.on)return D;D.on=true;ic151DCss();document.body.classList.add('ic151d');D.fov0=cam.fov;
   if(D.ch&&D.chOwn)scene.add(D.ch.root);if(D.pil){D.pil.position.set(START[0],GH(START[0],START[1]),START[1]);scene.add(D.pil)}
   if(!IC151.SF)ic151SovFaces();
-  const el=S.dom&&S.dom.el;if(el&&!S.dom.nc){el.insertAdjacentHTML('beforeend','<div class="nc"><b></b><i></i></div><div class="sov"><img alt=""></div><div class="zc"><div class="zk"></div><div class="zt"></div><div class="zs"></div></div>');
-    S.dom.nc=el.querySelector('.nc');S.dom.sov=el.querySelector('.sov');S.dom.zc=el.querySelector('.zc')}
+  const el=S.dom&&S.dom.el;if(el&&!S.dom.nc){el.insertAdjacentHTML('beforeend','<div class="nc"><b></b><i></i></div><div class="sov"><img alt=""></div>');
+    S.dom.nc=el.querySelector('.nc');S.dom.sov=el.querySelector('.sov')}
   return D}
 function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,gy=(x,z)=>GH(x,z),H=new V(h.x,gy(h.x,h.z),h.z),fw=new V(Math.sin(h.yaw),0,Math.cos(h.yaw)),sd=new V(fw.z,0,-fw.x),up=y=>new V(0,y,0);
   let p,l,fov=50,F=H.clone(),z=-1;const IV=IC151D;
@@ -41352,12 +41348,10 @@ function ic151DDom(S,D,t,c){const M=S.dom;if(!M||!M.nc)return;const K=ic151K,Sm=
   {const k=Sm(K(t,IC151D.ched[0]+.3,IC151D.ched[0]+.85))*(1-Sm(K(t,IC151D.ched[1]-.6,IC151D.ched[1]-.1)));if(k>nk){nk=k;nn={n:'Cheddar',r:'Keeps the quest board in the Grand Square'}}}
   if(nn&&M.nc.dataset.n!==nn.n){M.nc.dataset.n=nn.n;M.nc.querySelector('b').textContent=nn.n;M.nc.querySelector('i').textContent=nn.r}M.nc.style.opacity=nk.toFixed(3);M.nc.style.transform='translateX('+((1-nk)*-14).toFixed(1)+'px)';
   const z=c.z,G=z>=0?D.gates[z]:null;if(G){const u=t-IC151D.v3-z*IC151D.v3d,k=Sm(K(u,.15,.65))*(1-Sm(K(u,IC151D.v3d-.45,IC151D.v3d-.05)));
-    if(M.zc.dataset.i!=z){M.zc.dataset.i=z;const Z=G.Z||{c1:'#f6dc98',c2:'#fb923c',c3:'#1a1008',f:'Cinzel Decorative'},tt=M.zc.querySelector('.zt');
-      M.zc.querySelector('.zk').textContent='Gate '+['I','II','III','IV','V','VI'][z];tt.textContent=G.zone;tt.style.fontFamily="'"+Z.f+"','Cinzel',Georgia,serif";tt.style.color=Z.c1;
-      tt.style.textShadow='0 0 18px '+Z.c2+',0 0 36px '+Z.c2+'88,0 3px 0 '+Z.c3+',0 5px 10px #000';M.zc.querySelector('.zs').textContent=G.boss?G.boss.name+' · '+G.boss.title:'';
+    if(M.sov.dataset.i!=z){M.sov.dataset.i=z;const Z=G.Z||{c2:'#fb923c'};   // v151e: no text on the portal shots, only the faint face
       const img=M.sov.querySelector('img'),src=(IC151.SF||[])[z];if(src)img.src=src;else img.removeAttribute('src');M.sov.style.filter='blur(.6px) saturate(1.2) drop-shadow(0 0 40px '+Z.c2+')'}
-    M.zc.style.opacity=k.toFixed(3);M.zc.style.letterSpacing=((1-k)*.12).toFixed(3)+'em';const fk=Sm(K(u,.1,.9))*(1-Sm(K(u,IC151D.v3d-.7,IC151D.v3d)));M.sov.style.opacity=(fk*.42).toFixed(3);M.sov.style.transform='translate(-50%,-46%) scale('+(1.04-.04*Sm(K(u,0,IC151D.v3d))).toFixed(3)+')'}
-  else{M.zc.style.opacity='0';M.sov.style.opacity='0'}}
+    const fk=Sm(K(u,.1,.9))*(1-Sm(K(u,IC151D.v3d-.7,IC151D.v3d)));M.sov.style.opacity=(fk*.42).toFixed(3);M.sov.style.transform='translate(-50%,-46%) scale('+(1.04-.04*Sm(K(u,0,IC151D.v3d))).toFixed(3)+')'}
+  else{M.sov.style.opacity='0'}}
 // hand the town back: the hero at the crossroads facing down Portal Road, the camera behind him, nothing of ours left
 // the floating name tags and markers (text sprites) over the town folk: hidden while the cinematic runs, put back after
 function ic151DTags(D,back){if(back){(D.tags||[]).forEach(x=>{x.o.visible=x.v});D.tags=null;return}
