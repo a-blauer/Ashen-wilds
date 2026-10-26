@@ -52,3 +52,4 @@ deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.p
 3150|315[1-5]|abeksi|special|stealth|crouch|0045|1940|instance|portal|gate|mount|recall|compan: v152_abeksi.py v152_route.py v153_ascent.py v154_hydra.py
 316[0-2]|ascent|chase|mount|riding|jump|3150|0045|terrain|0060: v153_ascent.py v154_hydra.py
 3170|hydra|wind|chime|3150|3060|cheat|quest|0045|1940|insReach: v154_hydra.py v152_abeksi.py
+3180|315[0-5]|316[0-2]|3170|coop|co-op|0520|3085|3090|revive|abeksi|ascent|hydra: v155_coop_levels.py

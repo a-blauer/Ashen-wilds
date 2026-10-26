@@ -103,14 +103,20 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
     const [x,z,h]=slope(s,o);let px=x,py=h+r*.82+.12*Math.sin(t*4-i*.6)+(i<3?(hy-1.2)*(1-i/3):0),pz=z;pts.push([px,py,pz,r])}
   ch153SnakeLay(M,pts)}
 // venom: n globs from the mouth to where you will be (leading you), each warned on the ground, each leaving a puddle
-function ch153Spit(n){const S=CH153.S,P=S.P,R=CH153.R,M=S.sn,T=1.05,from=M.head.position.clone().add(new THREE.Vector3(0,-.4,0));try{svSnd('hiss',1,1.3)}catch(_){}
+// (v155: split in two so in co-op the lead player plans the volley at a rider and everyone spawns the same globs)
+function ch153Spit(n){const R=CH153.R;ch153SpitSpawn(ch153SpitPlan(n,R.s,R.o,R.v),n)}
+function ch153SpitPlan(n,s,o,v){const S=CH153.S,P=S.P,T=1.05;
   // fairness: venom never lands on or right beside an obstacle (no boulder-or-puddle choices)
-  const clear=v=>{for(let k=0;k<4;k++){const o=S.obs.find(q=>Math.abs(q.s-v)<3+(q.l||0)/2);if(!o)return v;v=o.s+(v>=o.s?1:-1)*(3.4+(o.l||0)/2)}return v};
+  const clear=v=>{for(let k=0;k<4;k++){const q=S.obs.find(q=>Math.abs(q.s-v)<3+(q.l||0)/2);if(!q)return v;v=q.s+(v>=q.s?1:-1)*(3.4+(q.l||0)/2)}return v};
   // one glob: at you · two: one behind the other on your line (step aside) · three: a wall across the trail (jump it)
+  const L=[];for(let i=0;i<n;i++){const ls=clear(s+Math.max(4,v)*T+(n==2?i*2.6:0)+(n>=3?(Math.random()-.5)*.6:0)),hw=P.hw(ls),lo=Math.max(-hw+.6,Math.min(hw-.6,n>=3?(i-(n-1)/2)*1.75:o+(Math.random()-.5)*.4));L.push([ls,lo])}
+  return L}
+function ch153SpitSpawn(L,n){const S=CH153.S,P=S.P,M=S.sn,T=1.05,from=M.head.position.clone().add(new THREE.Vector3(0,-.4,0));try{svSnd('hiss',1,1.3)}catch(_){}
   if(n>=3&&!CH153.wallHint){CH153.wallHint=1;setTimeout(()=>{try{pickup({ic:'🦘',t:'JUMP the venom wall!',col:'#9aff40',sub:'Space'})}catch(_){}},250)}
-  for(let i=0;i<n;i++){const ls=clear(R.s+Math.max(4,R.v)*T+(n==2?i*2.6:0)+(n>=3?(Math.random()-.5)*.6:0)),hw=P.hw(ls),lo=Math.max(-hw+.6,Math.min(hw-.6,n>=3?(i-(n-1)/2)*1.75:R.o+(Math.random()-.5)*.4));
-    const [x,z,h]=P.at(ls,lo),g=ch153Glob(),w=ch153Warn();g.position.copy(from);w.position.set(x,h+.08,z);w.scale.setScalar(1.35);S.root.add(g);S.root.add(w);
-    S.globs.push({m:g,w,a:from.clone(),b:new THREE.Vector3(x,h,z),s:ls,o:lo,t:0,T:T+i*.08})}}
+  L.forEach(([ls,lo],i)=>{const [x,z,h]=P.at(ls,lo),g=ch153Glob(),w=ch153Warn();g.position.copy(from);w.position.set(x,h+.08,z);w.scale.setScalar(1.35);S.root.add(g);S.root.add(w);
+    S.globs.push({m:g,w,a:from.clone(),b:new THREE.Vector3(x,h,z),s:ls,o:lo,t:0,T:T+i*.08})})}
+// the furthest rider up the trail (co-op: 3180 sets CH153.lead to the leading partner's spot): rockslides start from it
+function ch153LeadS(){const R=CH153.R;return Math.max(R&&R.ph=='run'?R.s:-1e9,CH153.lead!=null?CH153.lead:-1e9)}
 function ch153FxTick(dt,now){const S=CH153.S,P=S.P,R=CH153.R;
   // globs fly and land
   for(let i=S.globs.length-1;i>=0;i--){const G=S.globs[i];G.t+=dt;const k=Math.min(1,G.t/G.T);G.m.position.lerpVectors(G.a,G.b,k);G.m.position.y+=Math.sin(k*Math.PI)*5;G.w.material.uniforms.k.value=k;
@@ -122,9 +128,10 @@ function ch153FxTick(dt,now){const S=CH153.S,P=S.P,R=CH153.R;
     if(!Q.hit&&R.ph=='run'&&Math.abs(R.s-Q.s)<1.1&&Math.abs(R.o-Q.o)<1.1&&R.y<.3){Q.hit=1;ch153Hit('pool')}
     if(Q.t<=0){S.root.remove(Q.m);S.pools.splice(i,1)}}
   // rockslides: a rumble and dust on the wall above, then boulders bounce down and roll across the trail
-  S.K.slides.forEach(q=>{if(q.done||R.ph!='run'||R.s<q[0]-34)return;q.done=1;try{svSnd('crack',1.2,.7);shake(.2)}catch(_){}
-    for(let i=0;i<q[1];i++){const s=q[0]+i*5.5+(Math.random()-.5)*2,hw=P.hw(s),[x,z,h]=P.at(s,-hw-7);try{burst(new THREE.Vector3(x,h+5,z),0xa89878,22,2.4,2,1.4)}catch(_){}
-      const m=ch153Ob('slide');m.position.set(x,h+6,z);S.root.add(m);S.slides.push({m,s,o:-hw-7,y:6,vo:4.6+Math.random()*1.2,vy:0,t:-.9-i*.55,sp:Math.random()*4})}});
+  // (seeded, so co-op partners see the same boulders)
+  S.K.slides.forEach((q,qi)=>{if(q.done||ch153LeadS()<q[0]-34)return;q.done=1;try{svSnd('crack',1.2,.7);shake(.2)}catch(_){}const rn=ab152R(1530+qi*71);
+    for(let i=0;i<q[1];i++){const s=q[0]+i*5.5+(rn()-.5)*2,hw=P.hw(s),[x,z,h]=P.at(s,-hw-7);try{burst(new THREE.Vector3(x,h+5,z),0xa89878,22,2.4,2,1.4)}catch(_){}
+      const m=ch153Ob('slide');m.position.set(x,h+6,z);S.root.add(m);S.slides.push({m,s,o:-hw-7,y:6,vo:4.6+rn()*1.2,vy:0,t:-.9-i*.55,sp:rn()*4})}});
   for(let i=S.slides.length-1;i>=0;i--){const b=S.slides[i];b.t+=dt;if(b.t<0)continue;b.o+=b.vo*dt;b.vy-=22*dt;b.y+=b.vy*dt;const hw=P.hw(b.s);const ground=b.o>hw+1.2?-(b.o-hw-1.2)*2.2:0;
     if(b.y<ground+1.0){b.y=ground+1.0;b.vy=Math.abs(b.vy)*.42;if(Math.abs(b.o)<hw+2)try{shake(.06)}catch(_){}}
     const [x,z,h]=P.at(b.s,b.o);b.m.position.set(x,h+b.y,z);b.m.rotation.x+=b.vo*dt*.9;b.m.rotation.z+=dt*b.sp;
