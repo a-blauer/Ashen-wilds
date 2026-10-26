@@ -15,11 +15,11 @@ IC151.lines=IC151.lines.concat([
   {a:120.2,b:125.2,s:'Succeed, and the bounty is eternal — as well as the mountains of treasure you’ll gain along the way.'},
   {a:125.8,b:129,s:'Go forth, Upright… your quest starts now.'}]);
 // the shot list (start times); the portal shots are 6 × 2.1 s from 103.2
-var IC151D={arr:[55.9,60.2],meets:[[63.6,66.2],[70.2,72.8],[76.0,78.6],[81.6,84.2]],walks:[[60.2,63.6],[66.2,70.2],[72.8,76.0],[78.6,81.6],[84.2,87.8],[87.8,91.2]],ched:[91.2,95],
+var IC151D={arr:[55.9,60.2],meets:[[63.6,66.2],[70.2,72.8],[76.0,78.6],[81.6,84.2]],walks:[[60.2,63.6],[66.2,70.2],[72.8,76.0],[78.6,81.6],[84.2,87.2],[90.6,92.6],[92.6,95]],ched:[87.2,90.6],
   v1:[95,99.1],v2:[99.1,103.2],v3:103.2,v3d:2.1,v4:[115.8,120],v5:[120,125.7],v6:[125.7,129.8],
   npc:[{k:'steward',n:'The Stronghold Steward',r:'Builds and grows Duskhold'},{k:'inn',n:'The Innkeeper',r:'Rest and a hot meal at The Last Lantern'},
     {k:'smith',n:'The Blacksmith',r:'Forges and upgrades your gear'},{k:'merchant',n:'The Merchant',r:'Buys and sells at the Trading Post'}],
-  ched:[91.2,95]};
+  ched:[87.2,90.6]};   // v151b: Cheddar is met at his quest board in the Grand Square (where the game keeps him since v148)
 
 function ic151DCss(){if(document.getElementById('ic151dcss'))return;const s=document.createElement('style');s.id='ic151dcss';s.textContent=
   'body.ic151d #stage{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;border:0!important;border-radius:0!important;z-index:2147482000!important;max-width:none!important;max-height:none!important;aspect-ratio:auto!important}'+
@@ -45,19 +45,24 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
   if(D.npc.some(n=>!n))D.npc=D.npc.filter(n=>n);
   // the path: walk legs between the stops (eased in and out), a cut from outside the south gate to Portal Road
   const sp=[START[0],START[1]],npcSt=D.npc.map(n=>n.st),M=D.npc,W=IC151D.walks,legs=[];
-  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.6,277.4],[43.65,288.4],[41.3,294.8],[40.2,301.5]],[[40,334],[40,349.4]]];
-  for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.ched=[40,353.5];D.end=[40,349.4];
+  // v151b: the game's own Cheddar on his crate by the quest board (CHQ148); the hero stops 2 m in front of him
+  D.ref=[40,353.5];{let C=null,sp2=null;try{if(typeof chq148Build=='function'&&!CHQ148.board)chq148Build();C=CHQ148.P&&CHQ148.P.ch;sp2=chq148Spot()}catch(_){}
+    if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=C.root.rotation.y}else D.ched=[45.32,287.93];
+    const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
+  const CS=D.chSt;
+  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.4,277.6],[43.2,285.0],CS],[CS,[41.4,294.8],[40.2,301.5]],[[40,334],[40,349.4]]];
+  for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=[40,349.4];
   // the hero's track at 60 Hz: position, heading (spring-damped, snapped at the cut), moving or not
-  const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.walks[5][1]-.3)return 0;return null};
+  const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.ched[0]-.2&&t<IC151D.ched[1])return Math.atan2(D.ched[0]-ic151DPos(D,t)[0],D.ched[1]-ic151DPos(D,t)[1]);if(t>=IC151D.walks[6][1]-.3)return 0;return null};
   const DT=1/60,TA=IC151D.arr[0],TB=IC151.dEnd+.2,N=Math.ceil((TB-TA)/DT)+1,A=new Float32Array(N*4);let yaw=Math.PI,yv=0,lp=ic151DPos(D,TA),ad=a=>Math.atan2(Math.sin(a),Math.cos(a));
   for(let i=0;i<N;i++){const t=TA+i*DT,p=ic151DPos(D,t),vx=(p[0]-lp[0])/DT,vz=(p[1]-lp[1])/DT,spd=i?Math.hypot(vx,vz):0;lp=p;let tg=look(t);
     if(tg==null)tg=spd>.15?Math.atan2(vx,vz):(t<IC151D.walks[0][0]?Math.PI+.35*Math.sin((t-TA)*.9)*ic151Sm(ic151K(t,57,58.5)):yaw);
-    if(Math.abs(t-IC151D.walks[5][0])<DT*.6){yaw=0;yv=0}
+    if(Math.abs(t-IC151D.walks[6][0])<DT*.6){yaw=0;yv=0}
     yv+=(81*ad(tg-yaw)-2*.95*9*yv)*DT;yaw+=yv*DT;A.set([p[0],p[1],yaw,spd>.12?1:0],i*4)}
   D.trk={TA,DT,N,A};
-  // a Cheddar for the crossroads (the game's own two stay in the field instances)
-  try{const ch=chd132Model({game:true});ch.root.scale.setScalar(typeof CHQ132_SC!='undefined'?CHQ132_SC:1.1);ch.root.userData.psNo=1;ch.root.userData.noFarCull=1;ch.root.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false}});
-    ch.root.position.set(D.ched[0],GH(D.ched[0],D.ched[1]),D.ched[1]);ch.root.rotation.y=Math.PI;D.ch=ch}catch(e){console.warn('intro cheddar',e)}
+  // a stand-in Cheddar only when the game has none at his board
+  if(!D.ch)try{const ch=chd132Model({game:true});ch.root.scale.setScalar(typeof CHQ132_SC!='undefined'?CHQ132_SC:1.1);ch.root.userData.psNo=1;ch.root.userData.noFarCull=1;ch.root.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false}});
+    ch.root.position.set(D.ched[0],GH(D.ched[0],D.ched[1])+.56,D.ched[1]);ch.root.rotation.y=-1.03;D.ch=ch;D.chOwn=true;D.chY0=ch.root.position.y;D.chR0=-1.03}catch(e){console.warn('intro cheddar',e)}
   // the pillar of light he arrives in
   {const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,uniforms:{uA:{value:0},uT:{value:0}},
       vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
@@ -89,7 +94,7 @@ function ic151SovFaces(){if(IC151.SF)return IC151.SF;const out=[];let rd=null;
 
 // ---------------- each frame ----------------
 function ic151DStart(S){const D=S.D;if(!D||D.on)return D;D.on=true;ic151DCss();document.body.classList.add('ic151d');D.fov0=cam.fov;
-  if(D.ch)scene.add(D.ch.root);if(D.pil){D.pil.position.set(START[0],GH(START[0],START[1]),START[1]);scene.add(D.pil)}
+  if(D.ch&&D.chOwn)scene.add(D.ch.root);if(D.pil){D.pil.position.set(START[0],GH(START[0],START[1]),START[1]);scene.add(D.pil)}
   if(!IC151.SF)ic151SovFaces();
   const el=S.dom&&S.dom.el;if(el&&!S.dom.nc){el.insertAdjacentHTML('beforeend','<div class="nc"><b></b><i></i></div><div class="sov"><img alt=""></div><div class="zc"><div class="zk"></div><div class="zt"></div><div class="zs"></div></div>');
     S.dom.nc=el.querySelector('.nc');S.dom.sov=el.querySelector('.sov');S.dom.zc=el.querySelector('.zc')}
@@ -103,12 +108,12 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
       if(G){const P=new V(G.x,gy(G.x,G.z),G.z),a=new V(G.a[0],0,G.a[1]),dr=a.clone().sub(P).setY(0).normalize(),sv=new V(dr.z,0,-dr.x);p=P.clone().addScaledVector(dr,10.5-1.8*k).addScaledVector(sv,(i%2?-1:1)*2.6).add(up(3.0+.5*k));l=P.clone().add(up(2.5));F=P.clone().addScaledVector(dr,4)}
       else{p=H.clone().add(up(5));l=H.clone()}fov=48}
     else if(t<IV.v4[1]){const k=Sm(K(t,IV.v4[0],IV.v4[1]));p=H.clone().add(new V(.9+.4*k,.75+.15*k,2.9-.4*k));l=H.clone().add(up(1.35));fov=46}
-    else if(t<IV.v5[1]){const k=Sm(K(t,IV.v5[0],IV.v5[1])),a=.95-1.6*k,c=H.clone().lerp(new V(D.ched[0],H.y,D.ched[1]),.35);p=c.clone().add(new V(Math.sin(a)*5.4,2.0+.4*k,Math.cos(a)*5.4));l=c.add(up(.9));fov=48}
-    else{const k=Io(K(t,IV.v6[0],IV.v6[1]-.8)),a=.95-1.6,c=H.clone().lerp(new V(D.ched[0],H.y,D.ched[1]),.35),p0=c.clone().add(new V(Math.sin(a)*5.4,2.4,Math.cos(a)*5.4)),l0=c.clone().add(up(.9));
+    else if(t<IV.v5[1]){const k=Sm(K(t,IV.v5[0],IV.v5[1])),a=.95-1.6*k,c=H.clone().lerp(new V(D.ref[0],H.y,D.ref[1]),.35);p=c.clone().add(new V(Math.sin(a)*5.4,2.0+.4*k,Math.cos(a)*5.4));l=c.add(up(.9));fov=48}
+    else{const k=Io(K(t,IV.v6[0],IV.v6[1]-.8)),a=.95-1.6,c=H.clone().lerp(new V(D.ref[0],H.y,D.ref[1]),.35),p0=c.clone().add(new V(Math.sin(a)*5.4,2.4,Math.cos(a)*5.4)),l0=c.clone().add(up(.9));
       const cy=Math.PI,cp=typeof camPitch!='undefined'?camPitch:.3,cd=typeof camDist!='undefined'?camDist:9.5,p1=new V(H.x+Math.sin(cy)*Math.cos(cp)*cd,H.y+1.1+Math.sin(cp)*cd,H.z+Math.cos(cy)*Math.cos(cp)*cd),l1=H.clone().add(up(1));
       p=p0.lerp(p1,k);l=l0.lerp(l1,k);fov=50+(58-50)*k}}
-  else if(t>=IV.ched[0]){const C=new V(D.ched[0],gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
-    p=H.clone().addScaledVector(dr,-1.7+.35*k).addScaledVector(sv,1.0).add(up(1.35-.1*k));l=C.clone().add(up(.6));fov=44}
+  else if(t>=IV.ched[0]&&t<IV.ched[1]){const C=new V(D.ched[0],D.chY0!=null?D.chY0-.45:gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
+    p=H.clone().addScaledVector(dr,-1.8+.35*k).addScaledVector(sv,1.0).add(up(1.45-.1*k));l=C.clone().add(up(.75));fov=44}
   else{let done=false;for(let i=0;i<D.npc.length;i++){const n=D.npc[i];if(t>=IV.walks[i][0]&&t<n.mt[0]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0),dd=dr.length();dr.normalize();const sv=new V(dr.z,0,-dr.x),k=Sm(K(dd,1.9,6));
         if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,-1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
         else{// locked-off cameras on open ground that pan with him: the tavern corner → the smithy front, the lane → the Trading Post
@@ -116,8 +121,9 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
         done=true;break}
       if(t>=n.mt[0]&&t<n.mt[1]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,n.mt[0],n.mt[1]));
         p=H.clone().addScaledVector(dr,-1.9+.3*k).addScaledVector(sv,(i%2?-1:1)*1.15).add(up(1.75));l=N.clone().add(up(1.45));fov=44;done=true;break}}
-    if(!done){const w=IV.walks;if(t>=w[4][0]+2.1&&t<w[4][1]){p=new V(44.6,gy(44.6,309)+2.4,309);l=H.clone().add(up(1.1));fov=48}
-      else if(t>=w[5][0]&&t<w[5][1]){p=new V(41.4,gy(41.4,356.5)+1.0,356.5);l=H.clone().add(up(1.05));fov=46}
+    if(!done){const w=IV.walks;if(t>=w[5][0]+1.05&&t<w[5][1]){p=new V(44.6,gy(44.6,309)+2.4,309);l=H.clone().add(up(1.1));fov=48}
+      else if(t>=w[5][0]&&t<w[5][1]){p=new V(37.6,gy(37.6,290.2)+1.9,290.2);l=H.clone().add(up(1.15));fov=50}   // in the square, as he heads for the gate
+      else if(t>=w[6][0]&&t<w[6][1]){p=new V(41.4,gy(41.4,356.5)+1.0,356.5);l=H.clone().add(up(1.05));fov=46}
       else{p=H.clone().addScaledVector(fw,-3.4).addScaledVector(sd,.9).add(up(2.0));l=H.clone().addScaledVector(fw,3).add(up(1.1));fov=50}}}
   p.y=Math.max(p.y,gy(p.x,p.z)+.5);return {p,l,fov,F,z,nf:z>=0||(t>=IV.v2[0]&&t<IV.v2[1])}}
 function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000,dt=Math.max(0,Math.min(.1,D.lt==null?0:t-D.lt)),K=ic151K,Sm=ic151Sm;D.lt=t;
@@ -125,8 +131,10 @@ function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000
   // the town folk turn to greet him
   D.npc.forEach(n=>{const k=Sm(K(t,n.mt[0]-.5,n.mt[0]+.4))*(1-Sm(K(t,n.mt[1]-.1,n.mt[1]+.7)));let a=Math.atan2(h.x-n.w.x,h.z-n.w.z)-n.ry0;a=Math.atan2(Math.sin(a),Math.cos(a));n.g.rotation.y=n.ry0+a*k});
   // Cheddar: pops up as the hero comes down the road, waves while they meet
-  if(D.ch){const C=D.ch,ps=t>=IC151D.ched[0]&&t<IC151D.ched[0]+2.6?'wave':t>=IC151D.walks[5][0]+1.8&&t<IC151D.ched[0]?'alert':'idle';if(ps!==D.chp){try{C.setPose(ps)}catch(_){}D.chp=ps}
-    const y=GH(D.ched[0],D.ched[1]),hop=Math.max(0,Math.sin(ic151K(t,IC151D.walks[5][0]+1.6,IC151D.walks[5][0]+2.1)*Math.PI))*.25;C.root.position.y=y+hop;C.root.rotation.y=Math.atan2(h.x-D.ched[0],h.z-D.ched[1]);try{C.update(t,dt)}catch(_){}}
+  // Cheddar on his crate: looks up as the hero comes down the square, hops, waves, then back to his board
+  if(D.ch){const C=D.ch,I=IC151D,a0=I.walks[4][1]-1.0,ps=t>=I.ched[0]&&t<I.ched[0]+2.6?'wave':t>=a0&&t<I.ched[0]?'alert':'idle';if(ps!==D.chp){try{C.setPose(ps)}catch(_){}D.chp=ps}
+    const hop=Math.max(0,Math.sin(ic151K(t,a0+.1,a0+.6)*Math.PI))*.22,kf=Sm(K(t,a0-.3,a0+.3))*(1-Sm(K(t,I.ched[1],I.ched[1]+.6))),r0=D.chR0||0;let da=Math.atan2(h.x-D.ched[0],h.z-D.ched[1])-r0;da=Math.atan2(Math.sin(da),Math.cos(da));
+    C.root.position.y=(D.chY0!=null?D.chY0:GH(D.ched[0],D.ched[1]))+hop;C.root.rotation.y=r0+da*kf;try{C.update(t,dt)}catch(_){}}
   const c=ic151DCam(D,t,h);cam.position.copy(c.p);cam.up.set(0,1,0);cam.lookAt(c.l);cam.fov=c.fov;cam.updateProjectionMatrix();if(typeof look!='undefined')look.copy(c.l);
   try{compTick(dt,now)}catch(_){}
   const F=c.F;try{townTick(now,F);townLights(F)}catch(_){}ic151DTags(D,false);WIND.t.value=now/1000;
@@ -134,11 +142,11 @@ function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000
   try{torch.position.set(pl.position.x,pl.position.y+2.2,pl.position.z+.3);pln.constant=-pl.position.y}catch(_){}
   FADE.cam.value.copy(cam.position);if(c.nf)FADE.pl.value.copy(cam.position);else FADE.pl.value.set(h.x,GH(h.x,h.z)+1.1,h.z);try{fxStep(dt)}catch(_){}
   if(D.pil){const a=(1-Sm(K(t,56.4,59.2)));D.pil.visible=a>.01;D.pil.material.uniforms.uA.value=a*.85;D.pil.material.uniforms.uT.value=t}
-  ic151DDom(S,D,t,c);POST.render()}
+  ic151DDom(S,D,t,c);if(!IC151.noDraw)POST.render()}   // noDraw: the GitHub render replays the town up to a piece's start without drawing
 // cards: the folk's names, the zone cards, the Sovereigns' faces
 function ic151DDom(S,D,t,c){const M=S.dom;if(!M||!M.nc)return;const K=ic151K,Sm=ic151Sm;let nk=0,nn=null;
   D.npc.forEach(n=>{const k=Sm(K(t,n.mt[0]+.25,n.mt[0]+.8))*(1-Sm(K(t,n.mt[1]-.6,n.mt[1]-.1)));if(k>nk){nk=k;nn=n}});
-  {const k=Sm(K(t,IC151D.ched[0]+.3,IC151D.ched[0]+.85))*(1-Sm(K(t,IC151D.ched[1]-.6,IC151D.ched[1]-.1)));if(k>nk){nk=k;nn={n:'Cheddar',r:'A curious mouse with work for brave paws'}}}
+  {const k=Sm(K(t,IC151D.ched[0]+.3,IC151D.ched[0]+.85))*(1-Sm(K(t,IC151D.ched[1]-.6,IC151D.ched[1]-.1)));if(k>nk){nk=k;nn={n:'Cheddar',r:'Keeps the quest board in the Grand Square'}}}
   if(nn&&M.nc.dataset.n!==nn.n){M.nc.dataset.n=nn.n;M.nc.querySelector('b').textContent=nn.n;M.nc.querySelector('i').textContent=nn.r}M.nc.style.opacity=nk.toFixed(3);M.nc.style.transform='translateX('+((1-nk)*-14).toFixed(1)+'px)';
   const z=c.z,G=z>=0?D.gates[z]:null;if(G){const u=t-IC151D.v3-z*IC151D.v3d,k=Sm(K(u,.15,.65))*(1-Sm(K(u,IC151D.v3d-.45,IC151D.v3d-.05)));
     if(M.zc.dataset.i!=z){M.zc.dataset.i=z;const Z=G.Z||{c1:'#f6dc98',c2:'#fb923c',c3:'#1a1008',f:'Cinzel Decorative'},tt=M.zc.querySelector('.zt');
@@ -154,8 +162,8 @@ function ic151DTags(D,back){if(back){(D.tags||[]).forEach(x=>{x.o.visible=x.v});
   D.tags.forEach(x=>{x.o.visible=false})}
 function ic151DuskDone(S){const D=S&&S.D;if(!D||D.done)return;D.done=true;try{document.body.classList.remove('ic151d');
     if(D.on){const P=D.end;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=0;camYaw=Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
-    ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0});if(D.ch&&D.ch.root.parent)D.ch.root.parent.remove(D.ch.root);if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
-    if(D.ch)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
+    ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0});if(D.ch){if(D.chOwn){if(D.ch.root.parent)D.ch.root.parent.remove(D.ch.root)}else{D.ch.root.position.y=D.chY0;D.ch.root.rotation.y=D.chR0;try{D.ch.setPose('idle')}catch(_){}}}if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
+    if(D.ch&&D.chOwn)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
 // part one ends at IC151.cut; part two runs to IC151.dEnd, then the game resumes; the intro ends at IC151.len
 ic151Seek=function(t){const S=IC151.S;if(!S)return;
   if(t<IC151.cut){IC151.on=true;try{ic151Frame(S,t)}catch(e){console.warn('intro frame',e);IC151.err=String(e&&e.stack||e);t=IC151.cut}}

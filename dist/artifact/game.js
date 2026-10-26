@@ -40113,8 +40113,8 @@ function bspl148Hit(e,L,dm){if(!e||e.dead||!L.length)return;const mt=e.c&&e.c.mt
   try{let t=0;const seen=new Set();kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/T),R=r0+(r1-r0)*k;if(!e||e.dead||!AF)return false;
       const L=bspl148Fols(q=>Math.abs(Math.hypot(q.x-p.x,q.z-p.z)-R)<bw/2+.3).filter(f=>!seen.has(f));L.forEach(f=>seen.add(f));bspl148Hit(e,L,dm);return k<1},end(){}})}catch(err){console.warn('v148 ring splash',err)}return r}}
 // ================= v151: intro cinematic (plays once for every new character, after "Begin your journey") =================
-// A woodland at golden hour → a rat sniffing the forest floor → a celestial titan hand comes down from the sky, grips the
-// ground and tears it open → the rat clings to the edge, it crumbles and he falls into the glowing core → a distorted voice
+// A woodland at golden hour → a rat sniffing the forest floor → a violent earthquake: the trees thrash, cracks race out, the
+// meadow caves in and splits open (v151b) → the rat clings to the edge, it crumbles and he falls into the glowing core → a voice
 // speaks to him → he jolts and becomes the upright rat → the light clears into focus on Duskhold and the game begins.
 // It has its own canvas + renderer over the page (#ic151). While it plays (IC151.on) the main loop only re-arms itself,
 // so the world, tweens and timers wait; it resumes for the last 3 s while the white light clears off the real game view.
@@ -40234,13 +40234,17 @@ function ic151World(S){const sc=S.sc,R=ic151Rng(1337),GR=[0x4f6e34,0x56763a,0x47
 // ---------------- the earth breaking: fracture pieces ----------------
 // One slab of earth from a polygon [[x,z],...]: grass on top, soil and rock strata down the sides, roots underneath.
 // Built in world rest coordinates; its physics proxy (contact points, spheres, mass, inertia) is in c.body.
-function ic151Trees(S,extra){const sc=S.sc,mat=S.mat,R=ic151Rng(1338),TF=S.TF;
+function ic151Trees(S,extra){const sc=S.sc,R=ic151Rng(1338),TF=S.TF;
+  // v151b: the trees and undergrowth thrash in the quake (S.quakeU.uQ = how hard, from ic151Q): the higher up, the more they swing
+  S.quakeU={uQ:{value:0},uT:{value:0}};const mat=S.matT=ic151Mat();mat.onBeforeCompile=sh=>{sh.uniforms.uQ=S.quakeU.uQ;sh.uniforms.uT=S.quakeU.uT;
+    sh.vertexShader='uniform float uQ,uT;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n{float hh=max(0.,position.y-.12),ph=position.x*.31+position.z*.27;'+
+      'transformed.x+=uQ*(hh*.034*sin(uT*13.+ph)+hh*hh*.0035*sin(uT*7.3+ph*1.7));transformed.z+=uQ*(hh*.03*cos(uT*11.+ph*1.3)+hh*hh*.003*sin(uT*6.1+ph));}')};
   // trees and undergrowth: a dense treeline all round; the view lanes the shots look down are kept open
   {const k=ic151Kit(),lane=(x,z,dx,dz,w)=>{const L=Math.hypot(dx,dz),u=dx/L,v=dz/L,p=x*u+z*v,q=Math.abs(-x*v+z*u);return p>-2&&q<w+p*.12};
     const free=(x,z)=>!(lane(x,z,.66,.75,8.5)||lane(x,z,.42,.9,5)||lane(x,z,.92,-.39,6.5)||(extra||[]).some(e=>lane(x,z,e[0],e[1],e[2]))),OAK=[[0x3f6a2e,0x4a7a36,0x365e2a,0x557f3a],[0x4a7a36,0x5b8a3a,0x6a8a34,0x3f6a2e],[0x7a8a34,0x8a9a3a,0x5b7a32,0xa08a3a]];
     for(let n=0;n<420;n++){const a=R()*6.283,r=11.5+Math.pow(R(),1.25)*68,x=Math.cos(a)*r,z=Math.sin(a)*r;if(!free(x,z))continue;
       const s=.9+R()*.75,q=R();if(q<.42)ic151Pine(k,x,z,s*1.25,R);else if(q<.82)ic151Oak(k,x,z,s,R,OAK[(R()*3)|0]);else ic151Birch(k,x,z,s,R)}
-    for(let n=0;n<260;n++){const a=R()*6.283,r=10.2+R()*45,x=Math.cos(a)*r,z=Math.sin(a)*r,q=R();
+    for(let n=0;n<260;n++){const a=R()*6.283,r=10.2+R()*45,x=Math.cos(a)*r,z=Math.sin(a)*r,q=R();if((extra||[]).some(e=>lane(x,z,e[0],e[1],e[2]*.6)))continue;
       if(q<.35)ic151Bush(k,x,z,.8+R()*.8,R);else if(q<.55)ic151Rock(k,x,z,.25+R()*.6,R);else if(q<.8)ic151Fern(k,x,z,.8+R()*.6,R);else ic151Mush(k,x,z,.9+R()*.6,R)}
     ic151Log(k,13.5,-4.5,1,.6);ic151Log(k,-6,12.5,.9,2.1);ic151Rock(k,11.2,6.8,.9,R);ic151Rock(k,-10.8,-3,1.2,R);
     for(let n=0;n<1600;n++){const a=R()*6.283,r=9.7+Math.pow(R(),1.6)*34,x=Math.cos(a)*r,z=Math.sin(a)*r;const q=R();
@@ -40276,7 +40280,7 @@ function ic151Piece(S,pts,idx,R,taper){taper=taper||0;const n=pts.length,GR=S.GR
 // rests on the meadow's lip, and Poisson-scattered seeds for the rest (smaller rubble towards the middle)
 function ic151Shatter(S){const V=THREE.Vector3,R=ic151Rng(2024),NB=140,B=[];for(let a=0;a<NB;a++){const th=a/NB*Math.PI*2,r=ic151Rb(4,th);B.push([Math.cos(th)*r,Math.sin(th)*r])}
   const TP=S.tip0.map(m=>[m.elements[12],m.elements[14]]),th=S.thR,ray=(r,a)=>[Math.cos(a)*r,Math.sin(a)*r],seeds=[];
-  seeds.push({p:[0,0],chunk:1});for(let k=0;k<5;k++)seeds.push({p:ray(2.5,th+k*Math.PI*.4),chunk:1});TP.forEach((p,f)=>seeds.push({p,grip:f,chunk:1}));seeds.push({p:ray(7.1,th),rat:1});
+  seeds.push({p:[0,0]});for(let k=0;k<5;k++)seeds.push({p:ray(2.5,th+k*Math.PI*.4)});TP.forEach((p,f)=>seeds.push({p,grip:f}));seeds.push({p:ray(7.1,th),rat:1});
   for(let n=0;n<5000&&seeds.length<64;n++){const r=Math.sqrt(R())*9.1,a=R()*6.283,p=ray(r,a),md=r<4?1.85:2.3;let ok=true;
     if(r<4.8){continue}for(const q of seeds){const dd=Math.hypot(p[0]-q.p[0],p[1]-q.p[1]);if(dd<(q.rat?2.8:q.grip!=null?2.4:md)){ok=false;break}}if(ok)seeds.push({p})}
   const clip=(P,nx,nz,c)=>{const o=[];for(let i=0;i<P.length;i++){const A=P[i],Bp=P[(i+1)%P.length],da=A[0]*nx+A[1]*nz-c,db=Bp[0]*nx+Bp[1]*nz-c;if(da<=0)o.push(A);if((da<=0)!=(db<=0)){const t=da/(da-db);o.push([A[0]+(Bp[0]-A[0])*t,A[1]+(Bp[1]-A[1])*t])}}return o};
@@ -40289,8 +40293,8 @@ function ic151Shatter(S){const V=THREE.Vector3,R=ic151Rng(2024),NB=140,B=[];for(
   {const c=S.rcell,rr=ic151Rb(4,th),dx=Math.cos(th),dz=Math.sin(th);c.qo=new V(dx*rr,0,dz*rr);c.tg=new V(-dz,0,dx);let best=1e9;
     for(let i=0;i<c.pts.length;i++){const A=c.pts[i],Bp=c.pts[(i+1)%c.pts.length],ex=Bp[0]-A[0],ez=Bp[1]-A[1],den=dx*ez-dz*ex;if(Math.abs(den)<1e-9)continue;
       const r=(A[0]*ez-A[1]*ex)/den,u=(A[0]*dz-A[1]*dx)/den;if(u>=0&&u<=1&&r>.5&&r<rr-.8)best=Math.min(best,r)}S.rEdgeR=best<1e8?best:4.8}
-  // glowing crack lines along every break, spreading out from the fingers
-  {const L=[],a=[],dt=(x,z)=>Math.min(...TP.map(p=>Math.hypot(x-p[0],z-p[1])));S.cells.forEach(c=>{const p=c.pts;for(let i=0;i<p.length;i++){const q=p[(i+1)%p.length];
+  // glowing crack lines along every break, spreading out from the middle (v151b: the quake)
+  {const L=[],a=[],dt=(x,z)=>Math.hypot(x,z);S.cells.forEach(c=>{const p=c.pts;for(let i=0;i<p.length;i++){const q=p[(i+1)%p.length];
       L.push(p[i][0],ic151Y(p[i][0],p[i][1])+.03,p[i][1],q[0],ic151Y(q[0],q[1])+.03,q[1]);a.push(dt(p[i][0],p[i][1]),dt(q[0],q[1]))}});
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(L,3));g.setAttribute('ar',new THREE.Float32BufferAttribute(a,1));S.crackU={uR:{value:0},uA:{value:0}};
     const m=new THREE.ShaderMaterial({uniforms:S.crackU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
@@ -40311,7 +40315,7 @@ function ic151Env(x,y,z,t){const r=Math.sqrt(x*x+z*z),th=Math.atan2(z,x),rb=ic15
   if(y<-2.6){if(y<=-96)f=.6;else for(let i=0;i<6;i++)if(y<=IC151FY[i]&&y>IC151FY[i+1]){f=IC151FF[i]+(IC151FF[i+1]-IC151FF[i])*(IC151FY[i]-y)/(IC151FY[i]-IC151FY[i+1]);break}}
   const d=Math.max(rb*f-r,y-ic151Y(x,z)),ro=ic151Ropen(th,t);return ro>rb+1?d:Math.min(d,Math.max(y+2.62,-(y+7),ro-r))}
 function ic151Qr(q,x,y,z,o){const qx=q[0],qy=q[1],qz=q[2],qw=q[3],tx=2*(qy*z-qz*y),ty=2*(qz*x-qx*z),tz=2*(qx*y-qy*x);o[0]=x+qw*tx+qy*tz-qz*ty;o[1]=y+qw*ty+qz*tx-qx*tz;o[2]=z+qw*tz+qx*ty-qy*tx;return o}
-function ic151PhysKin(S,b,t,M){const c=b.c;if(c===S.rcell)ic151RatCellM(S,t,M);else ic151ChunkM(S,t,M);return M}
+function ic151PhysKin(S,b,t,M){ic151RatCellM(S,t,M);return M}   // the rat's slab is the only one the story moves
 function ic151PhysInit(S){const P=S.phys={T0:IC151G.imp,T1:34.9,dt:1/240,n:0,done:false,ev:[],B:[],M:new THREE.Matrix4(),Q:new THREE.Quaternion(),Vv:new THREE.Vector3(),Vs:new THREE.Vector3()};
   P.t=P.T0;P.nF=Math.ceil((P.T1-P.T0)*60)+2;
   S.cells.forEach(c=>{const b=c.body;b.c=c;b.kin=c.chunk||c===S.rcell;b.tr=c.chunk?c.tr:null;b.sleep=!b.kin;b.x=b.x0.slice();b.q=[0,0,0,1];b.v=[0,0,0];b.w=[0,0,0];b.still=0;b.lastEv=-9;
@@ -40326,7 +40330,6 @@ function ic151PhysStep(S){const P=S.phys,dt=P.dt,t=P.t+dt,G=12.2,B=P.B,o=[0,0,0]
   const push=(b,r,J)=>{if(b.kin||b.sleep)return;b.v[0]+=J[0]*b.im;b.v[1]+=J[1]*b.im;b.v[2]+=J[2]*b.im;const a=Iw(b,cr(r,J));b.w[0]+=a[0];b.w[1]+=a[1];b.w[2]+=a[2]};
   const kn=(b,r,n)=>{if(b.kin||b.sleep)return 0;const a=cr(Iw(b,cr(r,n)),r);return b.im+dot(n,a)};
   // the story-driven slabs
-  if(t>IC151G.g0-.02){ic151HandAt(S,S.hand,t);S.hand.g.updateMatrixWorld(true)}
   B.forEach(b=>{if(b.kin&&b.tr!=null&&t>=b.tr){b.kin=false;b.sleep=false;b.tr=null}});P.dyn=B.filter(b=>!b.kin);
   B.forEach(b=>{if(!b.kin)return;ic151PhysKin(S,b,t,P.M);const x=P.Vv.set(b.x0[0],b.x0[1],b.x0[2]).applyMatrix4(P.M);P.Q.setFromRotationMatrix(P.M);
     const q=[P.Q.x,P.Q.y,P.Q.z,P.Q.w],dq=[q[3]*-b.q[0]+q[0]*b.q[3]+q[1]*-b.q[2]-q[2]*-b.q[1],q[3]*-b.q[1]+q[1]*b.q[3]+q[2]*-b.q[0]-q[0]*-b.q[2],q[3]*-b.q[2]+q[2]*b.q[3]+q[0]*-b.q[1]-q[1]*-b.q[0],q[3]*b.q[3]-q[0]*-b.q[0]-q[1]*-b.q[1]-q[2]*-b.q[2]],sg=dq[3]<0?-1:1;
@@ -40375,183 +40378,6 @@ function ic151RatCellM(S,t,out){const c=S.rcell,qo=c.qo,K=ic151K;let a=0;
   let fall=0;if(t>29.55){const k=K(t,29.55,31.3);a+=.45*k*k;if(t>31.3){fall=t-31.3;a+=.51*fall}}
   out.makeTranslation(qo.x,0,qo.z).multiply(S.tmp.m2.makeRotationAxis(c.tg,a)).multiply(S.tmp.m.makeTranslation(-qo.x,0,-qo.z));
   if(fall){const n=S.nin0;out.premultiply(S.tmp.m.makeTranslation(n.x*1.5*fall,-6.1*fall*fall,n.z*1.5*fall))}return out}
-// ---------------- the celestial hand ----------------
-// One seamless, smooth skinned surface: a signed-distance hand (cupped palm, thumb mound, knuckles, tendons, veins, creased
-// joints, nails) meshed once with surface nets in the open rest pose, skinned to the finger bones the poses drive.
-// Built once per page (IC151.HG) and shared by both hands. Rest space: wrist at z=0, knuckles z≈8.4, palm faces -y.
-var IC151FD=[{x:3.3,L:[4.2,2.8,2.1],r:.95,sp:.16},{x:1.1,L:[4.7,3.1,2.3],r:1.02,sp:.05},{x:-1.1,L:[4.4,2.9,2.1],r:.96,sp:-.06},{x:-3.2,L:[3.4,2.3,1.7],r:.82,sp:-.2},
-  {x:4.7,y:-.3,z:2.8,L:[3.8,2.9],r:1.15,sp:.95,thumb:1}];
-var IC151DIR=[0,1.35,-1];
-function ic151HandVS(){return '#include <common>\n#include <skinning_pars_vertex>\nattribute vec3 aD;uniform float uPush;varying vec3 vW,vV,vL,vN,vD;\nvoid main(){\n#include <skinbase_vertex>\n#include <beginnormal_vertex>\n#include <skinnormal_vertex>\n#include <begin_vertex>\n#include <skinning_vertex>\n'+
-  'transformed+=normalize(objectNormal)*uPush;vec4 w=modelMatrix*vec4(transformed,1.);vW=w.xyz;vL=position;vV=cameraPosition-w.xyz;vN=normalize(mat3(modelMatrix)*objectNormal);vD=aD;gl_Position=projectionMatrix*viewMatrix*w;}'}
-// smoky celestial black: domain-warped smoke, nebula colours, spiral galaxies, stars; the edges dissolve into wisps.
-// o.sp = up to 3 spirals [cx,cy,cz,R, ax,ay,az] in the mesh's rest space; o.vague (0..1) = faint outline;
-// o.s = smoke scale; o.fh = fade out high up (the hand's arm). Shared code for the hand and the arm.
-var IC151GLSL='float h3(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}'+
-  'float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}'+
-  'float fbm(vec3 p){return n3(p)*.5+n3(p*2.03+3.1)*.27+n3(p*4.01+7.7)*.15+n3(p*8.1+1.3)*.08;}';
-function ic151HandMat(glow,skin,o){o=o||{};const sp=(o.sp||[]).slice(0,3);while(sp.length<3)sp.push([0,0,0,1e-3,0,1,0]);
-  const U={uT:{value:0},uG:{value:1},uA:{value:1},uPush:{value:glow?(o.push||.24):0},uV:{value:o.vague||0},uS:{value:o.s||.32},uFH:{value:o.fh==null?1:o.fh},uTB:{value:new THREE.Vector2(o.tb?o.tb[0]:0,o.tb?o.tb[1]:0)},
-    uSp:{value:sp.map(q=>new THREE.Vector4(q[0],q[1],q[2],q[3]))},uAx:{value:sp.map(q=>new THREE.Vector3(q[4],q[5],q[6]).normalize())}};
-  return new THREE.ShaderMaterial({uniforms:U,skinning:!!skin,transparent:true,depthWrite:!glow&&!o.vague,side:glow?THREE.BackSide:THREE.FrontSide,blending:glow?THREE.AdditiveBlending:THREE.NormalBlending,
-  vertexShader:ic151HandVS(),
-  fragmentShader:glow
-    ?'uniform float uT,uG,uA,uS,uFH,uV;uniform vec2 uTB;varying vec3 vW,vV,vL,vN,vD;'+IC151GLSL+'void main(){vec3 v=normalize(vV);float f=pow(1.-abs(dot(normalize(vN),v)),2.2),w=fbm(vL*uS*1.3+vec3(0.,uT*.12,uT*.05));'+
-      'float fa=mix(1.,smoothstep(175.,70.,vW.y),uFH),tb=uTB.y>0.?mix(.25,1.,1.-smoothstep(uTB.x,uTB.y,vL.y)):1.,fb=uV>.5?smoothstep(-300.,-120.,vL.y):1.;gl_FragColor=vec4(mix(vec3(.16,.07,.34),vec3(.1,.22,.55),w)*f*(.35+1.1*w)*uG*uA*fa*tb*fb*(1.-uV*.3),1.);}'
-    :'uniform float uT,uG,uA,uV,uS,uFH;uniform vec2 uTB;uniform vec4 uSp[3];uniform vec3 uAx[3];varying vec3 vW,vV,vL,vN,vD;'+IC151GLSL+
-     'vec3 spiral(vec3 p,vec4 s,vec3 ax){vec3 d=p-s.xyz;d-=ax*dot(d,ax);float r=length(d)/s.w;if(r>1.5)return vec3(0.);vec3 b1=normalize(cross(ax,abs(ax.y)<.9?vec3(0.,1.,0.):vec3(1.,0.,0.))),b2=cross(ax,b1);'+
-       'float a=atan(dot(d,b2),dot(d,b1)),arm=pow(.5+.5*cos(2.*(a-3.4*log(r+.04))-uT*.22),4.),fl=exp(-r*2.1),cr=exp(-r*r*45.);'+
-       'return vec3(.5,.26,.9)*arm*fl*1.15+vec3(.25,.5,1.)*arm*fl*smoothstep(.25,.9,r)*.7+vec3(1.,.82,.95)*cr*1.5+vec3(.6,.4,1.)*fl*.12;}'+
-     'void main(){vec3 n=normalize(vN),v=normalize(vV);if(!gl_FrontFacing)n=-n;float f=1.-abs(dot(n,v));vec3 q=vL*uS;'+
-     'vec3 w=vec3(fbm(q+vec3(0.,uT*.07,0.)),fbm(q+vec3(5.2,1.3,uT*.05)),fbm(q+vec3(1.7,9.2,-uT*.045)));float sm=fbm(q*1.6+w*2.5+vec3(0.,-uT*.09,0.));'+
-     'vec3 c=vec3(.012,.008,.026);c+=mix(vec3(.24,.05,.4),vec3(.05,.15,.5),w.x)*smoothstep(.42,.84,sm)*.95;'+
-     'c+=vec3(.68,.12,.44)*smoothstep(.6,.9,fbm(q*2.7+w*1.3))*.5;c+=vec3(.05,.42,.5)*smoothstep(.64,.92,fbm(q*2.1-w*1.7+3.3))*.35;'+
-     'for(int i=0;i<3;i++)c+=spiral(vL,uSp[i],uAx[i]);'+
-     'vec3 s1=vL*2.2,ci=floor(s1),fr=fract(s1)-.5,of=vec3(h3(ci+1.3),h3(ci+2.7),h3(ci+4.1))-.5;float r=h3(ci);c+=vec3(1.,.95,.9)*smoothstep(.07,.0,length(fr-of*.6))*step(.82,r)*(.5+.5*sin(uT*2.6+r*60.))*2.2;'+
-     'vec3 s2=vL*6.;c+=vec3(.75,.8,1.)*step(.962,h3(floor(s2)))*smoothstep(.2,.0,length(fract(s2)-.5))*.8;'+
-     'c+=vec3(.5,.36,1.)*vD.x*(.45+.55*sin(uT*1.7-vL.z*.35+vL.x*.2))*.75+vec3(.55,.45,1.)*vD.z*.25;c=mix(c,vec3(.14,.11,.24)+vec3(.5,.45,.8)*pow(f,2.)*.4,vD.y*.55);'+
-     'vec3 L=normalize(vec3(.3,1.,.45)),hv=normalize(L+v);c+=vec3(.55,.5,.85)*pow(max(0.,dot(n,hv)),40.)*.3+vec3(.42,.26,.9)*pow(f,2.6)*.7;'+
-     'float edge=smoothstep(.38,.97,f+(sm-.5)*.6),a=uA*(1.-edge*.92);a*=mix(1.,.3+.7*pow(f,1.4)*smoothstep(.25,.7,sm+.25),uV);'+
-     'if(uTB.y>0.)a*=mix(.16,1.,1.-smoothstep(uTB.x,uTB.y,vL.y));if(uV>.5)a*=smoothstep(-300.,-120.,vL.y);'+
-     'float fa=mix(1.,smoothstep(175.,70.,vW.y),uFH);gl_FragColor=vec4(c*uG,a*fa);}'})}
-// the rest-pose skeleton (also gives the joint positions the surface is built around)
-function ic151HandBones(){const P=new THREE.Bone(),F=[],B=[P];IC151FD.forEach(d=>{const root=new THREE.Bone();root.position.set(d.x,d.y||0,d.z==null?8.4:d.z);P.add(root);B.push(root);
-    let par=root,r=d.r;const s=[];d.L.forEach((L,si)=>{const sg=new THREE.Bone();if(si)sg.position.z=d.L[si-1];par.add(sg);B.push(sg);s.push(sg);par=sg;r*=.86});
-    const tip=new THREE.Object3D();tip.position.z=d.L[d.L.length-1]+r*.3;par.add(tip);root.rotation.set(0,d.sp,d.thumb?-.5:0);F.push({root,s,tip,d})});
-  P.updateMatrixWorld(true);return {P,F,B}}
-function ic151HandGeo(){if(IC151.HG)return IC151.HG;const T0=performance.now(),V=THREE.Vector3,{P,F,B}=ic151HandBones(),bi=new Map();B.forEach((b,i)=>bi.set(b,i));
-  // chains: joint points, radii, directions, up vectors (rest pose)
-  const CH=F.map(Fi=>{const d=Fi.d,J=Fi.s.map(b=>b.getWorldPosition(new V()));const last=Fi.s[Fi.s.length-1],end=new V(0,0,d.L[d.L.length-1]).applyMatrix4(last.matrixWorld);J.push(end);
-    const dir=end.clone().sub(J[0]).normalize(),up=new V(0,1,0).applyQuaternion(Fi.root.getWorldQuaternion(new THREE.Quaternion())),R=[];let r=d.r;for(let i=0;i<J.length;i++){R.push(r);r*=.86}
-    const S=[0];for(let i=1;i<J.length;i++)S.push(S[i-1]+J[i].distanceTo(J[i-1]));return {d,J,R,dir,up,side:new V().crossVectors(dir,up).normalize(),S,bones:Fi.s.map(b=>bi.get(b))}});
-  const dir=new V(...IC151DIR).normalize(),wa=new V(0,.05,1.6),wb=new V(0,.2,.6).addScaledVector(dir,3.2);
-  // primitives: [type, ...]  rc = round cone (a,b,r1,r2), el = ellipsoid (c,r)
-  const rc=(a,b,r1,r2)=>{const bx=b.x-a.x,by=b.y-a.y,bz=b.z-a.z,l2=bx*bx+by*by+bz*bz,rr=r1-r2;return [a.x,a.y,a.z,bx,by,bz,l2,rr,l2-rr*rr,1/l2,r1,r2]};
-  const RC=(q,px,py,pz)=>{const pax=px-q[0],pay=py-q[1],paz=pz-q[2],y=pax*q[3]+pay*q[4]+paz*q[5],z=y-q[6],l2=q[6],ux=pax*l2-q[3]*y,uy=pay*l2-q[4]*y,uz=paz*l2-q[5]*y,x2=ux*ux+uy*uy+uz*uz,y2=y*y*l2,z2=z*z*l2,rr=q[7],a2=q[8],il2=q[9],k=Math.sign(rr)*rr*rr*x2;
-    if(Math.sign(z)*a2*z2>k)return Math.sqrt(x2+z2)*il2-q[11];if(Math.sign(y)*a2*y2<k)return Math.sqrt(x2+y2)*il2-q[10];return (Math.sqrt(x2*a2*il2)+y*rr)*il2-q[10]};
-  const EL=(px,py,pz,cx,cy,cz,rx,ry,rz)=>{const ax=(px-cx)/rx,ay=(py-cy)/ry,az=(pz-cz)/rz,k0=Math.sqrt(ax*ax+ay*ay+az*az),k1=Math.sqrt(ax*ax/(rx*rx)+ay*ay/(ry*ry)+az*az/(rz*rz));return k1<1e-9?-Math.min(rx,ry,rz):k0*(k0-1)/k1};
-  const SM=(a,b,k)=>{const h=Math.max(k-Math.abs(a-b),0)/k;return Math.min(a,b)-h*h*k*.25},SX=(a,b,k)=>-SM(-a,-b,k);
-  const FG=CH.map(c=>{const segs=[];for(let i=0;i<c.J.length-1;i++)segs.push(rc(c.J[i],c.J[i+1],c.R[i],c.R[i+1]));
-    const dl=c.d.L.length-1,nl=c.J[dl].clone().lerp(c.J[dl+1],.62).addScaledVector(c.up,c.R[dl+1]*.86);
-    return {c,segs,joints:c.J.slice(1,-1).map((j,i)=>[j,c.R[i+1]*1.07]),nail:nl,nr:[c.R[dl+1]*.74,c.R[dl+1]*.2,c.d.L[dl]*.42],bound:rc(c.J[0],c.J[c.J.length-1],c.R[0]+.6,c.R[c.R.length-1]+.6)}});
-  const TEN=CH.slice(0,4).map(c=>rc(new V(c.J[0].x*.45,1.05,1.3),new V(c.J[0].x,1.02,7.7),.26,.3));
-  const VEIN=[[[-1.4,1.25,.4],[-.9,1.3,2.6],[-1.8,1.25,4.6]],[[1.2,1.25,.2],[1.6,1.3,2.4],[2.4,1.25,4.4]],[[.1,1.3,1.6],[.5,1.35,3.2],[.2,1.3,4.8]]].flatMap(q=>[rc(new V(...q[0]),new V(...q[1]),.15,.14),rc(new V(...q[1]),new V(...q[2]),.14,.12)]);
-  const THB=rc(new V(2.0,-.35,.9),CH[4].J[0],1.25,1.12),WR=rc(new V(wa.x/1.45,wa.y,wa.z),new V(wb.x/1.45,wb.y,wb.z),2.0,2.0);
-  const palm=(x,y,z)=>{const tp=.8+.2*Math.min(1,Math.max(0,z/8)),qx=Math.abs((x-.15)/tp)-3.3,qy=Math.abs(y)-.25,qz=Math.abs(z-4.55)-3.05;
-    const o=Math.sqrt(Math.max(qx,0)**2+Math.max(qy,0)**2+Math.max(qz,0)**2)+Math.min(Math.max(qx,qy,qz),0)-1.0;return o*tp};
-  const sdf=(x,y,z)=>{let d=palm(x,y,z);d=SM(d,EL(x,y,z,.1,.55,4.6,3.6,.85,3.6),.6);d=SX(d,-EL(x,y,z,.3,-1.75,4.9,2.4,.75,2.8),.6);
-    d=SM(d,EL(x,y,z,3.3,-.55,3.0,1.7,1.05,2.5),.7);d=SM(d,EL(x,y,z,-3.2,-.45,3.8,1.25,.9,3.2),.6);d=SM(d,RC(WR,x/1.45,y,z),1.3);d=SM(d,RC(THB,x,y,z),.8);
-    for(const q of TEN)d=SM(d,RC(q,x,y,z),.3);for(const q of VEIN)d=SM(d,RC(q,x,y,z),.16);
-    for(const g of FG){if(RC(g.bound,x,y,z)>d+.8)continue;let e=1e9;for(const q of g.segs)e=SM(e,RC(q,x,y,z),.22);for(const [j,r] of g.joints)e=SM(e,Math.hypot(x-j.x,y-j.y,z-j.z)-r,.16);
-      const k0=g.c.J[0];e=SM(e,Math.hypot(x-k0.x,y-(k0.y+.3),z-(k0.z-.15))-g.c.R[0]*.98,.4);
-      const nl=g.nail,u=g.c.up,sd=g.c.side,dr=g.c.dir,ox=x-nl.x,oy=y-nl.y,oz=z-nl.z;e=SM(e,EL(ox*sd.x+oy*sd.y+oz*sd.z,ox*u.x+oy*u.y+oz*u.z,ox*dr.x+oy*dr.y+oz*dr.z,0,0,0,g.nr[0],g.nr[1],g.nr[2]),.06);
-      d=SM(d,e,g.c.d.thumb?.9:.75)}return d};
-  // grid: coarse pass first, the fine pass only evaluates near the surface
-  const h=.15,X0=-6.4,Y0=-2.4,Z0=-4.6,NX=Math.ceil((11.8-X0)/h)+1,NY=Math.ceil((4.5-Y0)/h)+1,NZ=Math.ceil((20-Z0)/h)+1,G=new Float32Array(NX*NY*NZ),C=4;
-  const CX=Math.ceil(NX/C)+1,CY=Math.ceil(NY/C)+1,CZ=Math.ceil(NZ/C)+1,CG=new Float32Array(CX*CY*CZ),cd=h*C*1.75;
-  for(let k=0;k<CZ;k++)for(let j=0;j<CY;j++)for(let i=0;i<CX;i++)CG[i+CX*(j+CY*k)]=sdf(X0+i*C*h,Y0+j*C*h,Z0+k*C*h);
-  for(let k=0;k<NZ;k++){const ck=Math.min(CZ-2,(k/C)|0);for(let j=0;j<NY;j++){const cj=Math.min(CY-2,(j/C)|0);for(let i=0;i<NX;i++){const ci=Math.min(CX-2,(i/C)|0);
-    let mn=1e9,v0=0;for(let c=0;c<8;c++){const v=CG[(ci+(c&1))+CX*((cj+(c>>1&1))+CY*(ck+(c>>2&1)))];if(Math.abs(v)<mn){mn=Math.abs(v);v0=v}}
-    G[i+NX*(j+NY*k)]=mn>cd?v0:sdf(X0+i*h,Y0+j*h,Z0+k*h)}}}
-  // surface nets
-  const VI=new Int32Array(NX*NY*NZ).fill(-1),pos=[],E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],cv=new Float32Array(8);
-  for(let k=0;k<NZ-1;k++)for(let j=0;j<NY-1;j++)for(let i=0;i<NX-1;i++){let m=0;for(let c=0;c<8;c++){const v=G[(i+(c&1))+NX*((j+(c>>1&1))+NY*(k+(c>>2&1)))];cv[c]=v;if(v<0)m|=1<<c}
-    if(m==0||m==255)continue;let sx=0,sy=0,sz=0,n=0;for(const [a,b] of E){const va=cv[a],vb=cv[b];if((va<0)==(vb<0))continue;const t=va/(va-vb);
-      sx+=(a&1)+((b&1)-(a&1))*t;sy+=(a>>1&1)+((b>>1&1)-(a>>1&1))*t;sz+=(a>>2&1)+((b>>2&1)-(a>>2&1))*t;n++}
-    VI[i+NX*(j+NY*k)]=pos.length/3;pos.push(X0+(i+sx/n)*h,Y0+(j+sy/n)*h,Z0+(k+sz/n)*h)}
-  const nv=pos.length/3,nor=new Float32Array(nv*3),e=.04,grad=(x,y,z)=>{const gx=sdf(x+e,y,z)-sdf(x-e,y,z),gy=sdf(x,y+e,z)-sdf(x,y-e,z),gz=sdf(x,y,z+e)-sdf(x,y,z-e),l=Math.hypot(gx,gy,gz)||1;return [gx/l,gy/l,gz/l]};
-  for(let v=0;v<nv;v++){let x=pos[v*3],y=pos[v*3+1],z=pos[v*3+2];const g=grad(x,y,z),d=sdf(x,y,z);x-=g[0]*d;y-=g[1]*d;z-=g[2]*d;pos[v*3]=x;pos[v*3+1]=y;pos[v*3+2]=z;const g2=grad(x,y,z);nor[v*3]=g2[0];nor[v*3+1]=g2[1];nor[v*3+2]=g2[2]}
-  const idx=[],quad=(a,b,c,d)=>{if(a<0||b<0||c<0||d<0)return;for(const [p,q,r] of [[a,b,c],[a,c,d]]){const ux=pos[q*3]-pos[p*3],uy=pos[q*3+1]-pos[p*3+1],uz=pos[q*3+2]-pos[p*3+2],wx=pos[r*3]-pos[p*3],wy=pos[r*3+1]-pos[p*3+1],wz=pos[r*3+2]-pos[p*3+2];
-    const cx=uy*wz-uz*wy,cy=uz*wx-ux*wz,cz=ux*wy-uy*wx,s=cx*(nor[p*3]+nor[q*3]+nor[r*3])+cy*(nor[p*3+1]+nor[q*3+1]+nor[r*3+1])+cz*(nor[p*3+2]+nor[q*3+2]+nor[r*3+2]);if(s>=0)idx.push(p,q,r);else idx.push(p,r,q)}};
-  const at=(i,j,k)=>VI[i+NX*(j+NY*k)];
-  for(let k=1;k<NZ-1;k++)for(let j=1;j<NY-1;j++)for(let i=1;i<NX-1;i++){const g0=G[i+NX*(j+NY*k)]<0;
-    if((G[i+1+NX*(j+NY*k)]<0)!=g0)quad(at(i,j-1,k-1),at(i,j,k-1),at(i,j,k),at(i,j-1,k));
-    if((G[i+NX*(j+1+NY*k)]<0)!=g0)quad(at(i-1,j,k-1),at(i,j,k-1),at(i,j,k),at(i-1,j,k));
-    if((G[i+NX*(j+NY*(k+1))]<0)!=g0)quad(at(i-1,j-1,k),at(i,j-1,k),at(i,j,k),at(i-1,j,k))}
-  // skin weights (palm + the nearest finger's bones, blended along the finger) and detail marks (veins, nails, joint seams)
-  const SI=new Uint16Array(nv*4),SW=new Float32Array(nv*4),AD=new Float32Array(nv*3),bw=.55,ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)},tmp=new V();
-  for(let v=0;v<nv;v++){const x=pos[v*3],y=pos[v*3+1],z=pos[v*3+2];let bf=-1,bd=1e9,bs=0,bc=null;
-    CH.forEach((c,fi)=>{for(let i=0;i<c.J.length-1;i++){const A=c.J[i],Bj=c.J[i+1],abx=Bj.x-A.x,aby=Bj.y-A.y,abz=Bj.z-A.z,L2=abx*abx+aby*aby+abz*abz;let t=((x-A.x)*abx+(y-A.y)*aby+(z-A.z)*abz)/L2;
-      const tr=t;t=Math.max(0,Math.min(1,t));const qx=A.x+abx*t-x,qy=A.y+aby*t-y,qz=A.z+abz*t-z,dd=Math.sqrt(qx*qx+qy*qy+qz*qz)-c.R[i];if(dd<bd){bd=dd;bf=fi;bs=c.S[i]+(i==0?tr:t)*Math.sqrt(L2);bc=[A.x+abx*t,A.y+aby*t,A.z+abz*t]}}});
-    const c=CH[bf],w=[1,0,0,0];let near=bd<.9&&bs>-bw;
-    if(near){const n=c.bones.length,hs=[];for(let b=0;b<n;b++)hs.push(ss(c.S[b]-bw,c.S[b]+bw,bs));w[0]=1-hs[0];for(let b=0;b<n;b++)w[b+1]=hs[b]-(b+1<n?hs[b+1]:0)}
-    SI[v*4]=0;for(let b=0;b<3;b++)SI[v*4+1+b]=c.bones[Math.min(b,c.bones.length-1)];if(c.bones.length<3)w[3]=0;const sw=w[0]+w[1]+w[2]+w[3];for(let b=0;b<4;b++)SW[v*4+b]=w[b]/sw;
-    // marks
-    let vein=0,nail=0,jt=0;if(near&&bs>.3){const ox=x-bc[0],oy=y-bc[1],oz=z-bc[2],u=ox*c.up.x+oy*c.up.y+oz*c.up.z,sd=ox*c.side.x+oy*c.side.y+oz*c.side.z;
-      if(u>0)vein=Math.exp(-((sd/.085)**2))*.75*ss(.3,1.2,bs)*(1-ss(c.S[c.S.length-1]-1.6,c.S[c.S.length-1]-.8,bs));
-      for(let b=1;b<c.J.length-1;b++){const ax=(bs-c.S[b])/.075;jt=Math.max(jt,Math.exp(-ax*ax)*ss(-.3*c.R[b],.2*c.R[b],u))}
-      const g=FG[bf],nl=g.nail,qx=x-nl.x,qy=y-nl.y,qz=z-nl.z,dn=EL(qx*c.side.x+qy*c.side.y+qz*c.side.z,qx*c.up.x+qy*c.up.y+qz*c.up.z,qx*c.dir.x+qy*c.dir.y+qz*c.dir.z,0,0,0,g.nr[0],g.nr[1],g.nr[2]);nail=ss(.07,-.02,dn)}
-    else{const kn=(bs+bw)/bw;jt=y>.6&&bs>-bw*2&&bs<0?Math.exp(-((kn+.6)**2)*4)*.6:0}
-    for(const q of VEIN){vein=Math.max(vein,ss(.12,-.02,RC(q,x,y,z))*1.1)}
-    AD[v*3]=vein;AD[v*3+1]=nail;AD[v*3+2]=jt}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
-  g.setAttribute('aD',new THREE.BufferAttribute(AD,3));g.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SI,4));g.setAttribute('skinWeight',new THREE.BufferAttribute(SW,4));g.setIndex(idx);g.computeBoundingSphere();
-  // the forearm: a smooth tube from inside the wrist up into the sky, a glowing cuff at the wrist, veins and muscle along it
-  const fp=[],fn=[],fd=[],fi=[],NA=56,base=new V(0,.2,.6),ux=new V(1,0,0),uw=new V().crossVectors(dir,ux).negate().normalize(),SS=[];
-  for(let q=1.5;q<4.4;q+=.12)SS.push(q);for(let q=4.4;q<=7.2;q+=.4)SS.push(q);
-  SS.forEach((q,ri)=>{const w0=ss(4,28,q),cuff=ss(2.05,2.2,q)*(1-ss(3.75,3.9,q)),rim=Math.exp(-(((q-2.2)/.08)**2))+Math.exp(-(((q-3.75)/.08)**2)),mus=ss(6,12,q)*(1-ss(16,26,q));
-    const rx=2.98+(4.4-2.98)*w0+q*.005+cuff*.22+rim*.08,ry=2.06+(4.4-2.06)*ss(3,30,q)+q*.005+cuff*.22+rim*.08;
-    for(let a=0;a<=NA;a++){const th=a/NA*Math.PI*2,ca=Math.cos(th),sa=Math.sin(th),bul=mus*(.42*Math.max(0,Math.sin(th-.2))**2+.25*Math.max(0,Math.cos(th*2+1))),
-      c=base.clone().addScaledVector(dir,q).addScaledVector(ux,ca*(rx+bul*.6)).addScaledVector(uw,sa*(ry+bul));fp.push(c.x,c.y,c.z);
-      let vein=0;[[.7,.035],[1.7,-.028],[2.6,.02],[4.1,-.03]].forEach(([a0,k])=>{let dth=th-a0-k*q;dth=Math.atan2(Math.sin(dth),Math.cos(dth));vein=Math.max(vein,Math.exp(-((dth*(rx+ry)*.5/.11)**2))*ss(4.5,9,q)*(1-ss(60,110,q)))});
-      const rune=cuff*(Math.sin(th*24)>.6?1:0)*(Math.abs(q-2.97)<.38?1:0);fd.push(Math.max(vein*.8,rune*.9),0,Math.max(rim,cuff*.18))}});
-  for(let r=0;r<SS.length-1;r++)for(let a=0;a<NA;a++){const i0=r*(NA+1)+a,i1=i0+1,i2=i0+NA+1,i3=i2+1;fi.push(i0,i2,i1,i1,i2,i3)}
-  const fg=new THREE.BufferGeometry();fg.setAttribute('position',new THREE.Float32BufferAttribute(fp,3));fg.setAttribute('aD',new THREE.Float32BufferAttribute(fd,3));fg.setIndex(fi);fg.computeVertexNormals();
-  {const nm=fg.attributes.normal.array,pp=fg.attributes.position.array;for(let v=0;v<nm.length;v+=3){const px=pp[v]-base.x,py=pp[v+1]-base.y,pz=pp[v+2]-base.z,q=px*dir.x+py*dir.y+pz*dir.z,rx=px-dir.x*q,ry=py-dir.y*q,rz=pz-dir.z*q;if(nm[v]*rx+nm[v+1]*ry+nm[v+2]*rz<0){nm[v]=-nm[v];nm[v+1]=-nm[v+1];nm[v+2]=-nm[v+2]}}}
-  fg.computeBoundingSphere();
-  IC151.HG={g,fg,dir,nv,nt:idx.length/3,ms:Math.round(performance.now()-T0)};return IC151.HG}
-function ic151Hand(S){const HG=ic151HandGeo(),SPH=[[.3,1.4,4.4,3.4,0,1,0],[.2,-1.4,5.0,2.9,0,-1,0],[3.4,-.6,2.9,1.6,.4,-1,-.2]],M=ic151HandMat(false,true,{sp:SPH}),Gm=ic151HandMat(true,true),Mf=ic151HandMat(false,false,{sp:[[0,3.6,-1.6,2.6,0,.83,.55]]}),Gf=ic151HandMat(true,false);
-  const H={g:new THREE.Group(),root:new THREE.Group(),f:[],mats:[M,Gm,Mf,Gf],dir:HG.dir};H.g.add(H.root);
-  const {P,F,B}=ic151HandBones();H.root.add(P);H.f=F;H.g.updateMatrixWorld(true);
-  const sk=new THREE.Skeleton(B),m=new THREE.SkinnedMesh(HG.g,M),gm=new THREE.SkinnedMesh(HG.g,Gm);H.root.add(m,gm);H.g.updateMatrixWorld(true);m.bind(sk);gm.bind(sk,m.bindMatrix);
-  [m,gm].forEach(o=>{o.frustumCulled=false});m.castShadow=true;H.mesh=m;
-  const fa=new THREE.Mesh(HG.fg,Mf),fg=new THREE.Mesh(HG.fg,Gf);fa.frustumCulled=fg.frustumCulled=false;H.root.add(fa,fg);
-  // star motes trailing off the hand
-  const N=260,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));H.mote={g,d:Array.from({length:N},(_,i)=>[ic151H(i*1.1),ic151H(i*2.3),ic151H(i*3.7),ic151H(i*4.9)]),
-    m:new THREE.PointsMaterial({map:S.dot,size:.5,color:0xd8c8ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false})};
-  H.mote.o=new THREE.Points(g,H.mote.m);H.mote.o.frustumCulled=false;
-  H.light=new THREE.PointLight(0xa890ff,0,90,1);H.light.position.set(0,-4,6);H.root.add(H.light);
-  {const N=320,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));const B=[];H.f.forEach(F=>{B.push(F.root,...F.s,F.tip)});B.push(H.root.children[0]);
-    H.smoke={g,B,d:Array.from({length:N},(_,i)=>[(ic151H(i*1.7)*B.length)|0,ic151H(i*2.9)-.5,ic151H(i*3.3)-.5,ic151H(i*4.1)-.5,ic151H(i*5.3),.7+ic151H(i*6.1)*.9]),
-      m:new THREE.PointsMaterial({map:S.dot,size:3.2,color:0x241438,transparent:true,opacity:.32,depthWrite:false,fog:false})};H.smoke.o=new THREE.Points(g,H.smoke.m);H.smoke.o.frustumCulled=false}
-  return H}
-// pose: k = 0 open … 1 the fitted grip (each finger's own bend, ic151HandFit), spread fans the fingers out (the tear)
-function ic151HandPose(H,k,spread){H.f.forEach(F=>{const d=F.d,ga=F.ga==null?.22:F.ga,gc=F.gc==null?1:F.gc;
-  if(d.thumb){const tc=.1+(ga-.1)*k,y=d.sp+((F.gy==null?d.sp:F.gy)-d.sp)*k+.3*spread;F.root.rotation.set(tc*.6,y,-.5);F.s[0].rotation.x=.55*tc;F.s[1].rotation.x=.75*tc;return}
-  const a=ga*k,c=.12+(gc-.12)*k;F.root.rotation.set(a,d.sp*(1+spread*1.6),0);F.s[0].rotation.x=.78*c;F.s[1].rotation.x=1.0*c;F.s[2].rotation.x=.8*c})}
-function ic151HandT(H,t){H.mats.forEach(m=>m.uniforms.uT.value=t)}
-// fit the hand once: palm over the tear's centre, each finger bent so its tip plunges just under the ground on a ring
-// around the rat (ring 3 of the plates), the index tip at the rat's angle so the plate it grabs walls him in
-function ic151HandFit(S,H){const V=THREE.Vector3,sc=1.2;H.sc=sc;H.g.rotation.set(0,0,0);H.g.position.set(0,0,0);H.root.scale.setScalar(sc);
-  const place=(h,p)=>{H.root.rotation.set(p,0,0);H.root.position.set(0,0,0);H.g.updateMatrixWorld(true);const pc=new V(0,0,4.6).applyMatrix4(H.root.matrixWorld);H.root.position.set(-pc.x,h-pc.y,-pc.z);H.g.updateMatrixWorld(true);return H.root.position.clone()};
-  const pose=k=>ic151HandPoseF(H,[k,k,k,k,k],[k,k,k,k,k],[0,0,0,0,0]),w=new V(),j1=new V(),j2=new V();H.pI=.14;H.pG=.04;
-  const fit=(F,k,cost,A,B,da,db,set)=>{let best=1e9,ba=A[0],bb=B[0];for(let a=A[0];a<=A[1];a+=da)for(let b=B[0];b<=B[1];b+=db){set(a,b);pose(k);F.root.updateMatrixWorld(true);const c=cost();if(c<best){best=c;ba=a;bb=b}}set(ba,bb);return best};
-  const tipCost=(F,T,wy,extra)=>()=>{F.tip.getWorldPosition(w);let c=(w.x-T.x)**2+(w.z-T.z)**2+wy*(w.y-T.y)**2;return c+(extra?extra():0)};
-  H.impI=place(4.6,H.pI);const dirs=H.f.map(F=>{const p=(F.d.thumb?F.root:F.root).getWorldPosition(new V());p.y=0;const r=p.length();return {u:p.normalize(),r}});
-  H.f.forEach((F,i)=>{const {u,r}=dirs[i],T=u.clone().multiplyScalar(Math.max(5.4,Math.min(7,r+1.2))).setY(-.6),last=F.s[F.s.length-1];
-    const down=()=>{last.getWorldPosition(j1);F.tip.getWorldPosition(j2);const dy=(j2.y-j1.y)/(j2.distanceTo(j1)||1);return 2*Math.max(0,dy+.75)**2};
-    if(F.d.thumb)fit(F,1,tipCost(F,T,3,down),[0,1.8],[-.5,2.8],.05,.05,(a,b)=>{F.tI=a;F.yI=b});else fit(F,1,tipCost(F,T,3,()=>down()+.02*(F.aI*F.aI+F.cI*F.cI)),[-.6,1.6],[0,1.6],.05,.04,(a,b)=>{F.aI=a;F.cI=b})});
-  H.impG=place(2.3,H.pG);
-  H.f.forEach((F,i)=>{const {u}=dirs[i],T=u.clone().multiplyScalar(F.d.thumb?2.4:2.3).setY(F.d.thumb?-3.0:-3.4),mid=F.s[1];
-    const wrap=()=>{mid.getWorldPosition(j1);const r=Math.hypot(j1.x,j1.z);return 3*Math.max(0,(F.d.thumb?4.2:4.4)-r)**2+Math.max(0,-1.2-j1.y)**2};
-    if(F.d.thumb)fit(F,2,tipCost(F,T,2,wrap),[0,2.2],[-.6,3],.05,.05,(a,b)=>{F.tG=a;F.yG=b});else fit(F,2,tipCost(F,T,2,()=>wrap()+.01*(F.aG*F.aG+F.cG*F.cG)),[-.4,2.2],[.3,2.0],.05,.04,(a,b)=>{F.aG=a;F.cG=b})});
-  H.impI=place(4.6,H.pI);pose(1);H.g.updateMatrixWorld(true);H.imp=H.impI;
-  // turn so the pierce points keep clear of the rat's line
-  const th=H.f.map(F=>{F.tip.getWorldPosition(w);return Math.atan2(w.z,w.x)}),thR=Math.atan2(1.1,5.6),ad=a=>Math.abs(Math.atan2(Math.sin(a),Math.cos(a)));let bY=0,bv=-1;
-  for(let Y=0;Y<6.283;Y+=.02){const m=Math.min(...th.map(a=>ad(a-Y-thR)));if(m>bv+1e-6){bv=m;bY=Y}}H.g.rotation.y=bY;H.yaw=bY;H.g.updateMatrixWorld(true)}
-
-// ---------------- the arm ----------------
-// the arm reaching down from the sky: one long tube from the hand's cuff up along the hand's own line, dissolving into smoke
-function ic151Giant(S){const H=S.hand,G={g:new THREE.Group()};H.g.add(G.g);
-  const tube=(L,r0,r1)=>{const g=new THREE.CylinderGeometry(1,1,L,44,40,true);g.translate(0,L/2,0);const a=g.attributes.position.array;for(let i=0;i<a.length;i+=3){const u=a[i+1]/L,r=r0+(r1-r0)*Math.pow(u,.9)+.9*Math.sin(Math.PI*Math.min(1,u*5))*(.6+.4*Math.max(0,a[i+2]));a[i]*=r;a[i+2]*=r}
-    g.computeVertexNormals();g.setAttribute('aD',new THREE.Float32BufferAttribute(new Float32Array(a.length),3));return g};
-  G.L=300;const geo=tube(G.L,3.05,9);G.arm=new THREE.Mesh(geo,ic151HandMat(false,false,{s:.06,fh:0,tb:[40,230],sp:[[0,40,6,6,0,0,1],[0,105,8,9,.3,0,1]]}));G.armG=new THREE.Mesh(geo,ic151HandMat(true,false,{s:.06,fh:0,push:1.2,tb:[40,230]}));
-  [G.arm,G.armG].forEach(o=>{o.frustumCulled=false;G.g.add(o)});G.mats=[G.arm.material,G.armG.material];S.giant=G;return G}
-function ic151GiantAt(S,t){const G=S.giant,H=S.hand,V=S.V;if(!G)return;const vis=t>14.2&&t<35;G.g.visible=vis;if(!vis)return;
-  const q=new THREE.Quaternion().setFromEuler(H.root.rotation),W=new V(0,.2,.6).addScaledVector(H.dir,4.6).multiplyScalar(H.sc).applyQuaternion(q).add(H.root.position),fwd=H.dir.clone().applyQuaternion(q).normalize();
-  [G.arm,G.armG].forEach(o=>{o.position.copy(W);o.quaternion.setFromUnitVectors(new V(0,1,0),fwd)});G.mats.forEach(m=>{m.uniforms.uT.value=t;m.uniforms.uA.value=1})}
-
-// ---------------- the rat (a real, four-legged rat) ----------------
 function ic151Rat(S,fur){const M=ic151Mat({roughness:.85}),G=()=>new THREE.Group(),FC=new THREE.Color(fur),BL=FC.clone().lerp(new THREE.Color(0xd8c8b8),.45).getHex(),PK=0xd8988e,FU=FC.getHex();
   const mesh=(list,par)=>{const k=ic151Kit();list.forEach(a=>k.add(a[0],a[1],a[2],a[3]==null?.05:a[3]));const m=new THREE.Mesh(k.geo(),M);m.castShadow=true;par.add(m);return m};
   const sph=(r,w,h)=>ic151Jit(new THREE.SphereGeometry(r,w||8,h||6),r*.12,r*100);
@@ -40650,9 +40476,7 @@ function ic151Core(S){const sc=S.cs=new THREE.Scene(),R=ic151Rng(4242);
   const N=900,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));S.cm={d:Array.from({length:N},()=>[R()*6.283,1+R()*9,(R()-.5)*8,R()*10,.3+R()]),g,m:new THREE.PointsMaterial({map:S.dot,size:.06,color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.9})};
   S.cm.o=new THREE.Points(g,S.cm.m);S.cm.o.frustumCulled=false;sc.add(S.cm.o);
   S.cAmb=new THREE.HemisphereLight(0xdce8ff,0x3a4a80,.7);sc.add(S.cAmb);S.cKey=new THREE.DirectionalLight(0xfff4e8,.85);S.cKey.position.set(1.5,3,2.5);sc.add(S.cKey);
-  S.cPt=new THREE.PointLight(0xdfeeff,0,8,1.4);S.cPt.position.set(0,.2,.8);sc.add(S.cPt);
-  // the open celestial palm far below him, cradling the light
-  const H=S.hand2=ic151Hand(S);H.g.position.set(0,-7.5,-2);H.g.rotation.set(0,0,0);H.root.rotation.set(-.15,Math.PI,Math.PI);H.root.scale.setScalar(.75);H.root.position.set(0,0,3.6);ic151HandPose(H,.32,.15);sc.add(H.g)}
+  S.cPt=new THREE.PointLight(0xdfeeff,0,8,1.4);S.cPt.position.set(0,.2,.8);sc.add(S.cPt);}
 
 // ---------------- the upright rat (the game's own rat hero model, bare) ----------------
 function ic151Hero(S){try{const D=BRD[1],L=(typeof hero!='undefined'&&hero.cls=='warrior'&&hero.look)||{};BR.bare=true;let h;
@@ -40684,10 +40508,9 @@ function ic151Build(W,Hh){const S={W,H:Hh};S.dot=ic151Dot();
   rd.shadowMap.enabled=true;rd.shadowMap.type=THREE.PCFSoftShadowMap;rd.toneMapping=THREE.NoToneMapping; // the game's own colour pipeline
   S.sc=new THREE.Scene();S.cam=new THREE.PerspectiveCamera(45,W/Hh,.03,1100);
   ic151World(S);
-  S.hand=ic151Hand(S);S.sc.add(S.hand.g,S.hand.mote.o,S.hand.smoke.o);ic151HandFit(S,S.hand);ic151Track(S.hand);
-  // which plates the fingertips grab, and the rat's plate
   S.V=THREE.Vector3;S.tmp={m:new THREE.Matrix4(),m2:new THREE.Matrix4(),q:new THREE.Quaternion(),v:new THREE.Vector3(),v2:new THREE.Vector3()};
-  S.hand.g.updateMatrixWorld(true);S.tip0=S.hand.f.map(F=>F.tip.matrixWorld.clone());
+  // v151b: no hand. Five points round the middle where the quake first splits the meadow (plates, cracks, rocks and dust start there)
+  {const a0=Math.atan2(1.1,5.6)+.628;S.tip0=[0,1,2,3,4].map(k=>{const a=a0+k*1.2566+(k%2?.15:-.1),r=3.7+(k%3)*.3;return new THREE.Matrix4().makeTranslation(Math.cos(a)*r,0,Math.sin(a)*r)})}
   {const A=S.tip0[0],ai=Math.atan2(A.elements[14],A.elements[12])+.62;ic151Trees(S,[[Math.cos(ai),Math.sin(ai),7]])}
   S.thR=Math.atan2(1.1,5.6);S.nin0=new THREE.Vector3(-Math.cos(S.thR),0,-Math.sin(S.thR));ic151Shatter(S);
   ic151Tear(S);
@@ -40698,37 +40521,20 @@ function ic151Build(W,Hh){const S={W,H:Hh};S.dot=ic151Dot();
   {const k=ic151Kit();k.add(ic151Jit(new THREE.DodecahedronGeometry(.13,0),.05,3),0x4a3424,ic151M(0,-.05,0,0,0,0,1.5,.8,1));k.add(ic151Jit(new THREE.DodecahedronGeometry(.07,0),.03,4),0x5a4030,ic151M(.14,-.03,.02));
     k.add(new THREE.ConeGeometry(.02,.15,3),0x5b7d36,ic151M(-.05,.04,0,.3,0,.2));S.lump=new THREE.Mesh(k.geo(),S.mat);S.lump.castShadow=true;S.sc.add(S.lump);
     const N=40,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));S.peb={g,m:new THREE.PointsMaterial({color:0x4a3a2a,size:.035,transparent:true,opacity:1})};S.peb.o=new THREE.Points(g,S.peb.m);S.peb.o.frustumCulled=false;S.sc.add(S.peb.o)}
-  ic151Giant(S);ic151Core(S);S.hero=ic151Hero(S);if(S.hero){S.cs.add(S.hero);S.hero.visible=false}
+  ic151Quake(S);ic151Core(S);S.hero=ic151Hero(S);if(S.hero){S.cs.add(S.hero);S.hero.visible=false}
   ic151PhysInit(S);if(IC151.cap)while(!ic151PhysRun(S,1e9));
   return S}
-// the tear: grip/drag set-up and its effects (dirt mounds at the fingers, flying rocks, cracks across the meadow, dirt pouring
-// off the lifted slabs). Everything is a function of t.
-function ic151Tear(S){const V=THREE.Vector3,H=S.hand,R=ic151Rng(515);
-  ic151HandAt(S,H,IC151G.g1);H.g.updateMatrixWorld(true);S.R1i=H.root.matrixWorld.clone().invert();
+// the quake's set-up and its effects (rocks thrown up, cracks running out across the meadow, dust where pieces strike).
+// Everything is a function of t.
+function ic151Tear(S){const V=THREE.Vector3,R=ic151Rng(515);
   const TP=S.tip0.map(m=>new V().setFromMatrixPosition(m)),ang=TP.map(p=>Math.atan2(p.z,p.x));
-  // the lump of earth the fist closes round: soil, stones and roots under the centre slabs (it rises with the hand)
-  {const core=S.cells.filter(c=>c.chunk&&c.grip<0),inC=(x,z)=>core.some(c=>{const p=c.pts,n=p.length;let ins=false;for(let a=0,b=n-1;a<n;b=a++){const pa=p[a],pb=p[b];if((pa[1]>z)!=(pb[1]>z)&&x<(pb[0]-pa[0])*(z-pa[1])/(pb[1]-pa[1])+pa[0])ins=!ins}return ins});
-    const NA=40,RC=[];for(let a=0;a<NA;a++){const th=a/NA*6.283;let r=.2;while(r<7&&inC(Math.cos(th)*r,Math.sin(th)*r))r+=.05;RC.push(r-.15)}
-    const LV=[[-2.2,.97],[-2.9,.93],[-3.7,.8],[-4.5,.6],[-5.2,.36],[-5.7,.12]],COL=[0x4a3424,0x3e2c1e,0x352619,0x2e2016,0x281c12,0x22180f],k=ic151Kit(),P=LV.map(([y,f],i)=>RC.map((r,a)=>{const th=a/NA*6.283,j=1+(ic151H(a*3.1+i*7.7)-.5)*.16;return [Math.cos(th)*r*f*j,y+(ic151H(a+i*13)-.5)*.35,Math.sin(th)*r*f*j]}));
-    for(let i=0;i<LV.length-1;i++)for(let a=0;a<NA;a++){const b=(a+1)%NA,c=COL[i+(ic151H(a*1.3+i)<.2?1:0)];k.tri(P[i][a],P[i+1][b],P[i][b],c,.16);k.tri(P[i][a],P[i+1][a],P[i+1][b],c,.16)}
-    const L=LV.length-1;for(let a=0;a<NA;a++)k.tri([0,-5.95,0],P[L][(a+1)%NA],P[L][a],COL[5],.12);
-    for(let i=0;i<26;i++){const th=R()*6.283,lv=1+(R()*3|0),r=RC[(th/6.283*NA|0)%NA]*LV[lv][1],sz=.18+R()*.35;k.add(ic151Jit(new THREE.DodecahedronGeometry(sz,0),sz*.3,i),[0x6a655e,0x55504a,0x7a6a5a][i%3],ic151M(Math.cos(th)*r,LV[lv][0],Math.sin(th)*r,R()*3,R()*3,R()*3),.12)}
-    for(let i=0;i<40;i++){const th=R()*6.283,lv=2+(R()*3|0),r=RC[(th/6.283*NA|0)%NA]*LV[lv][1]*.95,L2=.6+R()*1.8;k.add(new THREE.ConeGeometry(.05+R()*.05,L2,4,1),R()<.5?0x7a5a3a:0x5e4630,ic151M(Math.cos(th)*r,LV[lv][0]-L2*.4,Math.sin(th)*r,Math.PI+(R()-.5)*.9,R()*6,(R()-.5)*.9),.14)}
-    const m=new THREE.Mesh(k.geo(),S.mat);m.matrixAutoUpdate=false;m.castShadow=true;S.sc.add(m);S.bulb={m,c:new V(0,0,0),bulb:true}}
-  S.lift=S.cells.filter(c=>c.chunk).concat([S.bulb]);
-  // dirt mounds heaped round each finger where it went in (they move with the plate it holds)
-  S.mounds=TP.map((p,f)=>{const k=ic151Kit(),Rm=ic151Rng(90+f),y=ic151Y(p.x,p.z);for(let i=0;i<14;i++){const a=i/14*6.283+Rm()*.4,r=1.05+Rm()*.55,s=.22+Rm()*.3;
-      k.add(ic151Jit(new THREE.DodecahedronGeometry(s,0),s*.3,i+f*20),[0x3d2c1e,0x4a3424,0x5a4030,0x33261a][i%4],ic151M(Math.cos(a)*r,s*.35,Math.sin(a)*r,Rm()*3,Rm()*3,Rm()*3,1,.6,1),.12)}
-    for(let i=0;i<5;i++){const a=Rm()*6.283,r=1.3+Rm()*.5;k.add(new THREE.ConeGeometry(.12,.5,3),0x4f7a36,ic151M(Math.cos(a)*r,.35,Math.sin(a)*r,(Rm()-.5)*1.4,0,(Rm()-.5)*1.4))}
-    k.add(ic151Jit(new THREE.CylinderGeometry(1.25,1.6,.3,14,1,true),.12,f),0x2e2018,ic151M(0,.1,0));
-    const m=new THREE.Mesh(k.geo(),S.mat);m.matrixAutoUpdate=false;m.castShadow=true;m.receiveShadow=true;S.sc.add(m);return {m,p:new V(p.x,y,p.z),cell:ic151CellAt(S,p.x,p.z)}});
-  // rocks thrown up by the impact, more as the slab tears
+  // rocks thrown up by the big jolt, more as the ground caves in
   {const N=170,g=ic151Jit(new THREE.DodecahedronGeometry(1,0),.3,7),mt=new THREE.MeshStandardMaterial({flatShading:true,roughness:.95}),im=new THREE.InstancedMesh(g,mt,N),C=new THREE.Color();
     S.rocks={m:im,d:[]};for(let i=0;i<N;i++){const f=i%5,b=i<110,o=TP[f],a=ang[f]+(R()-.5)*1.4,sp=b?2+R()*5:1+R()*3;
       S.rocks.d.push({o:new V(o.x,ic151Y(o.x,o.z)+.2,o.z),v:new V(Math.cos(a)*sp,b?4+R()*8:2+R()*4,Math.sin(a)*sp),t0:b?19.38+R()*.3:21.0+R()*1.4,s:.06+Math.pow(R(),2)*.32,sp:new V(R()*9,R()*9,R()*9)});
       im.setColorAt(i,C.set([0x4a3424,0x3a2a1c,0x6a655e,0x5a4030,0x4f6e34][(R()*5)|0]))}
     im.castShadow=true;im.frustumCulled=false;S.sc.add(im)}
-  // cracks running out across the meadow from every finger: a dark split with a blue light in it, growing outward
+  // cracks running out across the meadow from the split: a dark split with a blue light in it, growing outward
   {const dk=[],gl=[],du=[],gu=[];TP.forEach((p,f)=>{const a0=ang[f],Rc=ic151Rng(300+f);
       const run=(x,z,a,len,w,u0,dep)=>{let u=u0;for(let n=0;n<len;n++){const L=.45+Rc()*.5,na=a+(Rc()-.5)*.9,nx=x+Math.cos(na)*L,nz=z+Math.sin(na)*L,ww=w*(1-n/len*.7);
         [[dk,du,ww],[gl,gu,ww*.38]].forEach(([P,U,W])=>{const px=-Math.sin(na)*W,pz=Math.cos(na)*W,y0=ic151Y(x,z)+.035,y1=ic151Y(nx,nz)+.035;
@@ -40743,79 +40549,54 @@ function ic151Tear(S){const V=THREE.Vector3,H=S.hand,R=ic151Rng(515);
     S.crk={d:mk(dk,du,false),g:mk(gl,gu,true)}}
   // dust and chips where falling pieces strike the walls and each other (the simulation records the impacts)
   {const mk=(N,sz,col,op,map)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));const m=new THREE.PointsMaterial({map:map||null,size:sz,color:col,transparent:true,opacity:op,depthWrite:false});
-      const o=new THREE.Points(g,m);o.frustumCulled=false;S.sc.add(o);return {g,m,o,N}};S.efx={pu:mk(1800,1.0,0x7a6a56,.45,S.dot),ch:mk(1500,.09,0x2a1e14,1)}}
-  // dirt pouring off the undersides of the lifted slabs
-  {const N=700,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));const L=S.lift;
-    S.pour={g,d:Array.from({length:N},()=>{const c=R()<.45?S.bulb:L[(R()*L.length)|0];return {c,p:c.bulb?new V((R()-.5)*5,-3.6-R()*2.2,(R()-.5)*5):new V(c.c.x+(R()-.5)*2.4,-1.4-R()*1.1,c.c.z+(R()-.5)*2.4),ph:R()*1.6,s:R()}}),
-      m:new THREE.PointsMaterial({color:0x3a2a1c,size:.11,transparent:true,opacity:.95,depthWrite:false})};S.pour.o=new THREE.Points(g,S.pour.m);S.pour.o.frustumCulled=false;S.sc.add(S.pour.o)}}
+      const o=new THREE.Points(g,m);o.frustumCulled=false;S.sc.add(o);return {g,m,o,N}};S.efx={pu:mk(1800,1.0,0x7a6a56,.45,S.dot),ch:mk(1500,.09,0x2a1e14,1)}}}
 function ic151TearAt(S,t){const V=S.V,T=S.tmp,q=new THREE.Quaternion(),e=new THREE.Euler(),sv=new V();
-  S.mounds.forEach(M=>{const g=ic151Oc(ic151K(t,19.36,19.62)),m=M.m.matrix;if(M.cell)m.copy(M.cell.m.matrix);else m.identity();
-    m.multiply(T.m2.compose(M.p,q.set(0,0,0,1),sv.set(.3+.7*g,.2+.8*g+Math.max(0,Math.sin(ic151K(t,19.36,19.7)*Math.PI))*.35,.3+.7*g)));M.m.matrixWorldNeedsUpdate=true;M.m.visible=t>19.35&&t<35});
   const R=S.rocks,on=t>19.35&&t<34;R.m.visible=on;if(on){R.d.forEach((d,i)=>{const u=t-d.t0;let s=d.s;const p=sv.copy(d.o);
       if(u<0){s=0}else{p.addScaledVector(d.v,u);p.y-=4.9*u*u;const rr=Math.hypot(p.x,p.z),gy=ic151Y(p.x,p.z);if(rr>ic151Rb(4,Math.atan2(p.z,p.x))&&p.y<gy){const vy=d.v.y,ul=(vy+Math.sqrt(vy*vy+19.6*(d.o.y-gy)))/9.8;p.copy(d.o).addScaledVector(d.v,ul);p.y=gy+s*.5;if(u-ul>1.5)s*=Math.max(0,1-(u-ul-1.5))}
         if(p.y<-60)s=0}
       T.m.compose(p,q.setFromEuler(e.set(d.sp.x*Math.max(u,0),d.sp.y*Math.max(u,0),d.sp.z*Math.max(u,0))),new V(s,s*.8,s));R.m.setMatrixAt(i,T.m)});R.m.instanceMatrix.needsUpdate=true}
-  const cr=ic151K(t,19.4,21.6);S.crk.d.material.uniforms.uR.value=S.crk.g.material.uniforms.uR.value=Math.pow(cr,.7)*9;S.crk.g.material.uniforms.uA.value=1.4-ic151K(t,21,24)*1.05;S.crk.d.visible=S.crk.g.visible=t>19.38&&t<35;
+  const cr=ic151K(t,17.3,21.6);S.crk.d.material.uniforms.uR.value=S.crk.g.material.uniforms.uR.value=Math.pow(cr,.7)*9;S.crk.g.material.uniforms.uA.value=1.4-ic151K(t,21,24)*1.05;S.crk.d.visible=S.crk.g.visible=t>17.3&&t<35;
   {const E=S.phys?S.phys.ev:[],pu=S.efx.pu.g.attributes.position.array,ch=S.efx.ch.g.attributes.position.array;pu.fill(-999);ch.fill(-999);
     E.forEach((e,i)=>{const u=t-e.t;if(u<0||u>1.9)return;for(let k=0;k<6;k++){const j=(i*6+k)*3;if(j>=pu.length)break;const h=ic151H(i*7.3+k*1.7),a=h*6.283,rr=(.4+1.7*Math.sqrt(u))*(.5+e.s);
         pu[j]=e.x+Math.cos(a)*rr;pu[j+1]=e.y+.2+.45*u+(ic151H(k+i)-.5)*.6;pu[j+2]=e.z+Math.sin(a)*rr}
       if(u<1.6)for(let k=0;k<5;k++){const j=(i*5+k)*3;if(j>=ch.length)break;const h=ic151H(i*3.1+k*5.3),a=h*6.283,sp=(2+3*ic151H(k*9.1+i))*(.5+e.s),vy=2+3*ic151H(k+i*2.2);
         ch[j]=e.x+Math.cos(a)*sp*u;ch[j+1]=e.y+vy*u-6.1*u*u;ch[j+2]=e.z+Math.sin(a)*sp*u}});
-    S.efx.pu.g.attributes.position.needsUpdate=S.efx.ch.g.attributes.position.needsUpdate=true;S.efx.pu.o.visible=S.efx.ch.o.visible=t>19.35&&t<35}
-  const pa=S.pour.g.attributes.position.array,po=t>21.0&&t<34;S.pour.o.visible=po;if(po)S.pour.d.forEach((d,i)=>{const c=d.c,brk=c.tr!=null&&t>c.tr+.3,u=(t+d.ph)%1.6,w=sv.copy(d.p).applyMatrix4(c.m.matrix);
-    if(brk||u>1.5-d.s*.4){pa[i*3+1]=-999;return}pa[i*3]=w.x;pa[i*3+1]=w.y-4.9*u*u;pa[i*3+2]=w.z});S.pour.g.attributes.position.needsUpdate=true;S.pour.m.opacity=.95*ic151K(t,21,21.6)}
+    S.efx.pu.g.attributes.position.needsUpdate=S.efx.ch.g.attributes.position.needsUpdate=true;S.efx.pu.o.visible=S.efx.ch.o.visible=t>19.35&&t<35}}
+// v151b: the quake's extras, built once: birds bursting from the far treeline, leaves shaken loose, pebbles hopping on the meadow
+function ic151Quake(S){const R=ic151Rng(4141),V=THREE.Vector3;
+  {const g=new THREE.BufferGeometry(),P=[0,0,.1, 0,0,-.08, -.36,.1,-.04, 0,0,.1, .36,.1,-.04, 0,0,-.08];g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.computeVertexNormals();
+    const N=46,m=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:0x1d1a22,side:THREE.DoubleSide}),N);m.frustumCulled=false;S.sc.add(m);
+    S.birds={m,d:Array.from({length:N},(_,i)=>{const a=3.75+(R()-.5)*1.7,r=13+R()*10,v=new V(Math.cos(a)*(1+R()*2),2.4+R()*2.2,Math.sin(a)*(1+R()*2)).normalize().multiplyScalar(5+R()*3);
+      return {o:new V(Math.cos(a)*r,4.5+R()*4,Math.sin(a)*r),v,t0:15.05+Math.pow(R(),1.6)*2.2+(i%9==0?3.6:0),ph:R()*6.283,s:1.5+R()*.8,wob:R()*6.283}})}}
+  {const N=520,g=new THREE.BufferGeometry(),C=new Float32Array(N*3),c=new THREE.Color();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));
+    for(let i=0;i<N;i++){c.set([0x4a7a36,0x6a8a34,0x8a9a3a,0xa08a3a,0x3f6a2e][i%5]);C.set([c.r,c.g,c.b],i*3)}g.setAttribute('color',new THREE.BufferAttribute(C,3));
+    const o=new THREE.Points(g,new THREE.PointsMaterial({size:.12,vertexColors:true,transparent:true,opacity:.95,depthWrite:false}));o.frustumCulled=false;S.sc.add(o);
+    S.leaves={g,o,d:Array.from({length:N},()=>{const a=R()*6.283,r=12+R()*16;return {x:Math.cos(a)*r,z:Math.sin(a)*r,y:3+R()*5.5,t0:14.4+R()*6.5+(R()<.3?2.5:0),f:.7+R()*.8,ph:R()*6.283}})}}
+  {const N=90,im=new THREE.InstancedMesh(ic151Jit(new THREE.DodecahedronGeometry(1,0),.3,11),new THREE.MeshStandardMaterial({flatShading:true,roughness:.95}),N),C=new THREE.Color();im.castShadow=true;im.frustumCulled=false;
+    S.hops={m:im,d:Array.from({length:N},(_,i)=>{const a=R()*6.283,r=Math.sqrt(R())*15+.8;im.setColorAt(i,C.set([0x5a4030,0x6a655e,0x4a3424,0x77706a][i%4]));return {x:Math.cos(a)*r,z:Math.sin(a)*r,s:.03+R()*.06,w:13+R()*9,ph:R()*6.283,sp:new V(R()*6,R()*6,R()*6)}})};S.sc.add(im)}}
+function ic151QuakeAt(S,t){const V=S.V,T=S.tmp,q=ic151Q(t),qu=new THREE.Quaternion(),e=new THREE.Euler(),v=new V(),sc=new V();S.quakeU.uQ.value=t<34?q:0;S.quakeU.uT.value=t;
+  const B=S.birds,on=t>15&&t<26;B.m.visible=on;if(on){B.d.forEach((d,i)=>{const u=t-d.t0;if(u<0){T.m.makeScale(0,0,0)}else{v.copy(d.o).addScaledVector(d.v,u);v.y+=Math.sin(u*2+d.wob)*.3;
+      const fl=Math.sin(t*19+d.ph);T.m.compose(v,qu.setFromEuler(e.set(0,Math.atan2(d.v.x,d.v.z),Math.sin(u+d.wob)*.2)),sc.set(d.s,d.s*fl,d.s))}B.m.setMatrixAt(i,T.m)});B.m.instanceMatrix.needsUpdate=true}
+  const Lf=S.leaves,la=Lf.g.attributes.position.array,lo=t>14.3&&t<30;Lf.o.visible=lo;if(lo)Lf.d.forEach((d,i)=>{const u=t-d.t0;if(u<0||u>7){la[i*3+1]=-999;return}
+    la[i*3]=d.x+Math.sin(u*1.7+d.ph)*.7+u*.25;la[i*3+1]=Math.max(.03,d.y-d.f*u);la[i*3+2]=d.z+Math.cos(u*1.3+d.ph)*.6});Lf.g.attributes.position.needsUpdate=true;
+  const H=S.hops,ho=t>14&&t<24;H.m.visible=ho;if(ho){const a=Math.min(1,q);H.d.forEach((d,i)=>{const r=Math.hypot(d.x,d.z);let s=d.s;
+      if(t>21.1&&r<ic151Ropen(Math.atan2(d.z,d.x),t)+.2)s=0;const y=ic151Y(d.x,d.z)+s*.6+Math.abs(Math.sin(t*d.w+d.ph))*(.02+.1*d.s/.09)*a;
+      T.m.compose(v.set(d.x,y,d.z),qu.setFromEuler(e.set(d.sp.x*t*a,d.sp.y*t*a,d.sp.z*t*a)),sc.set(s,s*.8,s));H.m.setMatrixAt(i,T.m)});H.m.instanceMatrix.needsUpdate=true}}
 // piece transform at time t
-function ic151ChunkM(S,t,out){if(t<=IC151G.g1)return out.makeTranslation(0,.16*ic151Sm(ic151K(t,IC151G.g0,IC151G.g1)),0);return out.copy(S.hand.root.matrixWorld).multiply(S.R1i).premultiply(S.tmp.m.makeTranslation(0,.16,0))}
-function ic151CellM(S,c,t,out){if(c.chunk){if(c.tr!=null&&t>=c.tr)return ic151PhysM(S,c,t,out);return ic151ChunkM(S,t,out)}
-  if(c===S.rcell)return ic151RatCellM(S,t,out);return ic151PhysM(S,c,t,out)}
-// ---------------- the hand's motion ----------------
-// A motion track computed once at 240 Hz: the main path is a smooth spline (arcing descent, a hover and wind-up, an
-// accelerating strike, a hard stop as the fingers punch into the soil with a small recoil, then a heavy heave that dips,
-// strains, breaks free, overshoots and settles); wrist angles and every finger joint follow their targets through damped
-// springs, so they lag, overshoot and settle on their own (fingers cascade one after another, tips trail the knuckles).
+// v151b: how hard the ground shakes at time t (0 = still; ~1 = violent; spikes at the jolt, the cave-in and when the edge breaks)
+function ic151Q(t){const K=ic151K,Sm=ic151Sm,ex=(a,h,d)=>t>a?h*Math.exp(-(t-a)*d):0;
+  let q=.34*Sm(K(t,14,15.2))+.32*Sm(K(t,16.4,19.2))-.36*K(t,24.4,26.5)-.3*K(t,30,33.5);q=Math.max(0,q)*(1+.3*Math.sin(t*2.3)*Math.sin(t*.9+1));
+  return q+ex(19.35,1.1,2.6)+ex(21.1,.45,2)+ex(24.4,.3,2.5)+ex(27.45,.28,3)+ex(29.55,.5,2.2)}
+// v151b: before the ground gives way every plate heaves and rocks on its own (a few cm, a big lurch at the jolt), easing
+// out by 21.1 s when the physics takes over from rest
+function ic151Heave(S,c,t,out){const K=ic151K,A=(.012*ic151Sm(K(t,14,15.2))+.018*ic151Sm(K(t,16.4,19.2))+(t>19.35?.14*Math.exp(-(t-19.35)*3.2):0))*(1-K(t,20.5,21.1));if(A<1e-5)return out;
+  const sd=c.seed||[0,0],ph=ic151H(sd[0]*3.1+sd[1]*1.7)*6.283,w=10+ic151H(sd[0]+sd[1]*2.3)*7,dy=A*Math.sin(t*w+ph),an=A*.2*Math.sin(t*w*.8+ph*2),T=S.tmp;
+  const m=T.mh||(T.mh=new THREE.Matrix4()),q=T.qh||(T.qh=new THREE.Quaternion()),v=T.vh||(T.vh=new THREE.Vector3()),C=c.c;
+  q.setFromAxisAngle(v.set(Math.sin(ph*1.3),0,Math.cos(ph*1.7)).normalize(),an);m.makeRotationFromQuaternion(q);
+  m.premultiply(T.m.makeTranslation(C.x,C.y+dy,C.z)).multiply(T.m2.makeTranslation(-C.x,-C.y,-C.z));return out.premultiply(m)}
+function ic151CellM(S,c,t,out){if(c===S.rcell)ic151RatCellM(S,t,out);else ic151PhysM(S,c,t,out);return t>14&&t<21.1?ic151Heave(S,c,t,out):out}
+// v151b: the quake times (the old impact time is the big jolt; the physics starts there)
 var IC151G={imp:19.35,g0:19.62,g1:20.6,off:.6};
-function ic151Herm(K,t){const n=K.length;if(t<=K[0][0])return K[0][1];if(t>=K[n-1][0])return K[n-1][1];let i=0;while(t>K[i+1][0])i++;
-  const a=K[i],b=K[i+1],h=b[0]-a[0],s=(t-a[0])/h,s2=s*s,s3=s2*s;return (2*s3-3*s2+1)*a[1]+(s3-2*s2+s)*a[2]*h+(-2*s3+3*s2)*b[1]+(s3-s2)*b[2]*h}
-function ic151Bump(t,a,m,b){return t<=a||t>=b?0:t<m?ic151Sm((t-a)/(m-a)):1-ic151Sm((t-m)/(b-m))}
-function ic151S5(k){return k*k*k*(k*(k*6-15)+10)}
-var IC151DK=[[14,330,-80],[16.6,70,-42],[17.7,33,-9],[18.25,30.8,0],[18.55,31.8,0],[19.35,0,-82]];
-var IC151PK=[[14,.62,0],[16.8,.4,-.05],[17.7,.3,-.1],[18.25,.1,0],[18.5,.07,0],[18.95,.24,0],[19.35,.22,0],[20.9,.1,0]];
-function ic151HandPrim(t,dirY){const K=ic151K,Sm=ic151Sm,imp=IC151G.imp;let d,lift;
-  if(t<imp){d=ic151Herm(IC151DK,t);lift=.35*Math.sin(t*1.25)*(1-Sm(K(t,17.6,18.6)))}
-  else{d=0;const v=-82*dirY,P=1.0,td=2*P/-v,u=t-imp;lift=u<td?v*u+(v*v/(2*P))*u*u/2:-.85-.15*Math.exp(-7*(u-td))*Math.cos(16*(u-td));
-    lift+=-.3*ic151Bump(t,20.62,20.8,21.0)+.5*Sm(K(t,20.8,21.4))+7.0*ic151S5(K(t,21.1,22.6))+.35*ic151Bump(t,22.3,22.75,23.6)+3*Sm(K(t,23,33))}
-  const lat=.9*Math.sin(t*.37+.5)*(1-Sm(K(t,17.6,19.0)))+.2*Math.sin(t*.8+1)*Sm(K(t,21.8,23.5));return [d,lift,lat]}
-function ic151HandTgt(t,o){const K=ic151K,Sm=ic151Sm,imp=IC151G.imp;
-  o[3]=ic151Herm(IC151PK,t)-.2-.12*Sm(K(t,21.2,22.8))+.04*Sm(K(t,24,33));
-  o[4]=.07*Math.sin(t*.5+.4)*(1-Sm(K(t,17.8,19)))+.08*Sm(K(t,21.6,23.4))*(1-Sm(K(t,26,32)))+.03*Math.sin(t*.7)*Sm(K(t,23,26));
-  o[5]=.07*Math.sin(t*.31+1.2)*(1-Sm(K(t,17.6,19)))+.04*Sm(K(t,21.5,23.5));
-  for(let f=0;f<5;f++){const ord=f==4?1.5:f,cas=f==4?2:3-f;let k=.28+.07*Math.sin(t*1.15+f*.9);
-    const op=Sm(K(t,16.7+ord*.07,17.9+ord*.07));k+=(-.08+.03*Math.sin(t*2+f)-k)*op;
-    k-=.08*Sm(K(t,17.95,18.22))*(1-Sm(K(t,18.25+ord*.03,18.5)));const st=Sm(K(t,18.28+ord*.03,18.7+ord*.02));k+=(1-k)*st;
-    if(t>imp)k+=.05*Sm(K(t,imp,imp+.05));k+=.95*ic151Io(K(t,19.62+cas*.1,20.45+cas*.1))+.03*Sm(K(t,21.4,22.4));
-    k+=.012*Math.sin(t*27+f*2)*Sm(K(t,19.6,20))*(1-Sm(K(t,24,26)));o[6+f]=k;o[11+f]=k;
-    let sp=.1+.05*Math.sin(t*.9+f);sp+=(.5-sp)*Sm(K(t,17.0+ord*.06,18.1+ord*.06));sp+=(.06-sp)*Sm(K(t,18.35,18.85));sp+=.04*Sm(K(t,21.35+ord*.07,23.4+ord*.07));o[16+f]=sp}}
-function ic151Track(H){const DT=1/240,T0=14,T1=35.3,N=Math.ceil((T1-T0)/DT)+1,C=21,A=new Float32Array(N*C),o=new Float32Array(C),x=new Float32Array(C),v=new Float32Array(C),dy=H.dir.y;
-  const SP=[];for(let c=0;c<C;c++)SP.push(c==3?[7,.55]:c==4?[6,.5]:c==5?[5,.6]:c>=6&&c<11?(c==10?[12,.5]:[15,.42]):c>=11&&c<16?(c==15?[9,.45]:[9,.38]):c>=16?[8,.62]:null);
-  ic151HandTgt(T0,o);for(let c=3;c<C;c++)x[c]=o[c];
-  for(let i=0;i<N;i++){const t=T0+i*DT;ic151HandTgt(t,o);const pr=ic151HandPrim(t,dy);x[0]=pr[0];x[1]=pr[1];x[2]=pr[2];
-    for(let c=3;c<C;c++){const [w,z]=SP[c];v[c]+=(w*w*(o[c]-x[c])-2*z*w*v[c])*DT;x[c]+=v[c]*DT}A.set(x,i*C)}
-  H.trk={T0,DT,N,C,A}}
-function ic151HandP(H,t){const T=H.trk,f=Math.max(0,Math.min(T.N-1.001,(t-T.T0)/T.DT)),i=f|0,u=f-i,A=T.A,C=T.C,g=c=>A[i*C+c]*(1-u)+A[(i+1)*C+c]*u;
-  const K=[],KD=[],SP=[];for(let q=0;q<5;q++){K.push(g(6+q));KD.push(g(11+q));SP.push(g(16+q))}
-  const imp=IC151G.imp,Sm=ic151Sm,KK=ic151K,amp=(t>imp?.12*Math.exp(-(t-imp)*7):0)+.045*Sm(KK(t,19.7,20.2))*(1-Sm(KK(t,23.6,25)))+.02*Sm(KK(t,23.5,24))*(1-Sm(KK(t,30,33))),
-    nz=(a,b,c)=>amp*(Math.sin(t*a)+.6*Math.sin(t*b+1)+.4*Math.sin(t*c+2))*.5;
-  const gK=ic151Io(KK(t,IC151G.g0,IC151G.g1-.05)),base=H.impI.clone().lerp(H.impG,gK);
-  return {pos:base.addScaledVector(H.dir,g(0)).add(new THREE.Vector3(g(2)+nz(31.7,47.3,67.1),g(1)+nz(29.3,43.9,71.3),nz(33.1,51.7,61.9))),pitch:H.pI+(H.pG-H.pI)*gK+g(3),roll:g(4),yaw:g(5),K,KD,SP}}
-function ic151FingerAC(F,k){const d=F.d;if(d.thumb){const tI=F.tI==null?.5:F.tI,yI=F.yI==null?d.sp:F.yI,tG=F.tG==null?tI:F.tG,yG=F.yG==null?yI:F.yG;
-    if(k<=1)return [.1+(tI-.1)*k,d.sp+(yI-d.sp)*k];const u=k-1;return [tI+(tG-tI)*u,yI+(yG-yI)*u]}
-  const aI=F.aI==null?.2:F.aI,cI=F.cI==null?.9:F.cI,aG=F.aG==null?aI:F.aG,cG=F.cG==null?cI:F.cG;if(k<=1)return [aI*k,.12+(cI-.12)*k];const u=k-1;return [aI+(aG-aI)*u,cI+(cG-cI)*u]}
-function ic151HandPoseF(H,K,KD,SP){H.f.forEach((F,i)=>{const d=F.d,s=SP[i],A=ic151FingerAC(F,K[i]),B=ic151FingerAC(F,KD[i]);
-  if(d.thumb){F.root.rotation.set(A[0]*.6,A[1]+.3*s,-.5);F.s[0].rotation.x=.55*A[0];F.s[1].rotation.x=.75*B[0];return}
-  F.root.rotation.set(A[0],d.sp*(1+s*1.6),0);F.s[0].rotation.x=.78*A[1];F.s[1].rotation.x=1.0*B[1];F.s[2].rotation.x=.8*B[1]})}
-function ic151HandAt(S,H,t){const P=ic151HandP(H,t),imp=IC151G.imp;H.root.position.copy(P.pos);H.root.rotation.set(P.pitch,P.yaw,P.roll);ic151HandPoseF(H,P.K,P.KD,P.SP);
-  const vis=t>14.2&&t<35;H.g.visible=vis;H.mote.o.visible=vis;H.light.intensity=vis?ic151K(t,16,19.4)*1.3:0;H.mats.forEach(m=>{m.uniforms.uG.value=1+(t>imp?Math.max(0,1-(t-imp)*1.5)*.35:0)})}
-// the rat's world placement at time t (or null after he has fallen out of the world scene)
 function ic151RatAt(S,t){const R=S.rat,T=S.tmp,V=S.V,th=S.thR,cs=Math.cos(th),sn=Math.sin(th),P={};
   const onR=(r,lat,yaw,hy)=>{const x=cs*r-sn*lat,z=sn*r+cs*lat;return {x,z,y:ic151Y(x,z),yaw}};
   let q,local=true;const IN=Math.atan2(-cs,-sn),OUT=Math.atan2(cs,sn); // yaw that faces the centre / away from it
@@ -40844,11 +40625,13 @@ function ic151Cam(S,t){const V=S.V,L=(a,b,k)=>a.clone().lerp(b,k);let p,l,fov=45
   const rp=S.rat.root.position;
   if(t<15){const k=ic151Io(ic151K(t,.3,7.4));p=L(new V(7.2,8.6,15.5),new V(6.4,.62,5.0),k);l=L(new V(-3,10.5,-30),new V(4.6,.25,1.2),k);
     if(t>6.5){const f=ic151Sm(ic151K(t,6.5,8.8)),f2=ic151Sm(ic151K(t,9,14));p=L(p,new V(6.25,.6,2.8),f2);l=L(l,rp.clone().add(new V(0,.16+ic151Sm(ic151K(t,13.5,14.5))*.3,0)),f*.85)}fov=46}
-  else if(t<17.4){const k=ic151K(t,15,17.4);p=L(new V(15.5,1.5,17.5),new V(14.6,1.7,16.6),k);l=S.palmW.clone().lerp(new V(0,8,0),.25);fov=56}
-  else if(t<18.95){const k=ic151K(t,17.4,19.4);p=L(new V(6.6,.2,2.1),new V(6.5,.19,2.02),k);const pw=S.palmW.clone();pw.y=Math.max(4,pw.y);l=pw.lerp(rp,.32);fov=66;roll=-.06}
-  else if(t<20.6){const k=ic151Sm(ic151K(t,18.95,20.6)),A=S.tip0[0],B=S.tip0[1],ai=Math.atan2(A.elements[14],A.elements[12])+.62,r=19+k*1.8,c=new V(A.elements[12]+B.elements[12],0,A.elements[14]+B.elements[14]).multiplyScalar(.5);
-    p=new V(Math.cos(ai)*r,2.6+k*.8,Math.sin(ai)*r);l=c.setY(2.6+k*.6);fov=52}
-  else if(t<22.6){const k=ic151Sm(ic151K(t,20.6,22.6));p=L(new V(25,10.5,-9.5),new V(27.5,9.5,-10.5),k);l=L(new V(.5,2.6,0),new V(.8,8.5,.3),k);fov=52}
+  // v151b, the quake: the forest thrashing and birds bursting up (wide) → low by the rat as the cracks race out and the jolt hits →
+  // across the meadow as the plates heave → high and wide as the middle caves in and splits open into the glow
+  else if(t<17.4){const k=ic151Sm(ic151K(t,15,17.4));p=L(new V(15.8,3.1,14.4),new V(14.4,2.7,13.1),k);l=L(new V(-4.5,4.4,-6.5),new V(-3.2,3.2,-5.2),k);fov=50}
+  else if(t<19.6){const k=ic151K(t,17.4,19.6);p=L(new V(7.6,.95,2.7),new V(7.35,.88,2.55),k);l=rp.clone().add(new V(0,.12,0)).lerp(new V(0,-.2,0),.38+.12*k);fov=56;roll=-.04}
+  else if(t<21.0){const k=ic151Sm(ic151K(t,19.6,21.0)),A=S.tip0[0],B=S.tip0[1],ai=Math.atan2(A.elements[14],A.elements[12])+.62,r=19+k*1.4,c=new V(A.elements[12]+B.elements[12],0,A.elements[14]+B.elements[14]).multiplyScalar(.5);
+    p=new V(Math.cos(ai)*r,2.4+k*.6,Math.sin(ai)*r);l=c.setY(.7+k*.2);fov=52}
+  else if(t<22.6){const k=ic151Sm(ic151K(t,21.0,22.6));p=L(new V(25,10.5,-9.5),new V(27.5,9.6,-10.5),k);l=L(new V(.5,.8,0),new V(.3,-2.4,.2),k);fov=52}
   else if(t<23.7){const k=ic151Sm(ic151K(t,22.6,23.7)),n=S.nin,tg=new V(-n.z,0,n.x);p=rp.clone().addScaledVector(n,-2.6+.5*k).addScaledVector(tg,.9).add(new V(0,.75+.1*k,0));l=rp.clone().addScaledVector(n,1.8).add(new V(0,-.35,0));fov=52}
   else if(t<25.45){const k=ic151Sm(ic151K(t,23.7,25.45)),n=S.nin,tg=new V(-n.z,0,n.x),c=rp.clone().lerp(S.edge,.25*k);p=c.clone().addScaledVector(tg,2.9-.4*k).addScaledVector(n,.5+.5*k).add(new V(0,1.0-.35*k,0));l=c.addScaledVector(n,-.3+.6*k).add(new V(0,.1-.2*k,0));fov=47}
   else if(t<27.6){const E=S.edge,n=S.nin,tg=new V(-n.z,0,n.x),k=ic151K(t,25.45,27.6);p=E.clone().addScaledVector(tg,1.25+k*.15).addScaledVector(n,.95).add(new V(0,-.25+k*.05,0));l=E.clone().addScaledVector(n,.05).add(new V(0,-.28,0));fov=42}
@@ -40856,33 +40639,29 @@ function ic151Cam(S,t){const V=S.V,L=(a,b,k)=>a.clone().lerp(b,k);let p,l,fov=45
   else{if(!S.anc){const th=S.thR,re=S.rEdgeR,M=ic151RatCellM(S,29.62,new THREE.Matrix4());S.anc=new V(Math.cos(th)*re,ic151Y(Math.cos(th)*re,Math.sin(th)*re),Math.sin(th)*re).applyMatrix4(M)}
     const n=S.nin,k=ic151Sm(ic151K(t,29.75,34.5));p=S.anc.clone().addScaledVector(n,.6+k*.9).add(new V(.05,.85-k*1.6,0));
     const rr=Math.hypot(p.x,p.z),lim=.62*ic151Rb(4,Math.atan2(p.z,p.x));if(rr>lim){p.x*=lim/rr;p.z*=lim/rr}l=rp.clone();fov=50+k*6}
-  const shk=t>19.35&&t<30?(t<20.4?.12:.035)*(1-ic151K(t,19.35,21))+.02*ic151K(t,21,22)*(1-ic151K(t,28,30)):0;
-  if(shk){p=p.clone().add(new V(Math.sin(t*61)*shk,Math.sin(t*53+1)*shk,Math.sin(t*47+2)*shk*.6))}
+  // v151b: the camera shakes with the quake (less in the close shots at the edge, where it is a hand's width away)
+  const shk=t<34?ic151Q(t)*(t>25.45&&t<29.75?.018:.045):0;
+  if(shk>1e-4){p=p.clone().add(new V(Math.sin(t*61)*shk+Math.sin(t*23.7)*shk*.6,Math.sin(t*53+1)*shk+Math.sin(t*17.3+2)*shk*.5,Math.sin(t*47+2)*shk*.6));roll+=Math.sin(t*29+.5)*shk*.12}
   return {p,l,fov,roll}}
 // one frame of the cinematic: positions everything for time t and renders it
 function ic151Frame(S,t){const V=S.V,cam=S.cam,core=t>=35;
   if(!core){
-    // light: golden hour → the dark the hand brings → blue from below
-    const dk=ic151Sm(ic151K(t,13.6,17.5)),bl=ic151K(t,20,24),C=(a,b,k)=>new THREE.Color(a).lerp(new THREE.Color(b),k);
-    S.skyU.top.value.copy(C(0x5a86c8,0x140f2a,dk));S.skyU.mid.value.copy(C(0xf2c98a,0x3a2a5a,dk));S.skyU.bot.value.copy(C(0xb89a6a,0x1a1424,dk));S.skyU.sunK.value=1-dk;S.skyU.hole.value=ic151K(t,15,18.5)*(1-ic151K(t,26,30)*.5);
+    // light: golden hour → the quake darkens it (dust and a strange dusk) → blue from below
+    const dk=.88*ic151Sm(ic151K(t,13.6,17.5)),bl=ic151K(t,20,24),C=(a,b,k)=>new THREE.Color(a).lerp(new THREE.Color(b),k);
+    S.skyU.top.value.copy(C(0x5a86c8,0x140f2a,dk));S.skyU.mid.value.copy(C(0xf2c98a,0x3a2a5a,dk));S.skyU.bot.value.copy(C(0xb89a6a,0x1a1424,dk));S.skyU.sunK.value=1-dk;S.skyU.hole.value=0;
     S.sc.fog.color.copy(C(0xc8b88a,0x2a2448,dk).lerp(new THREE.Color(0x203a5a),bl*.5));S.sc.fog.density=.016-dk*.004;
     S.sun.intensity=1.35*(1-dk*.85);S.hemi.intensity=.75-dk*.35;S.hemi.color.copy(C(0xcfe0ff,0x8a90c8,dk));S.hemi.groundColor.copy(C(0x4a3a24,0x2a2a40,dk).lerp(new THREE.Color(0x2a5080),bl));
     S.moon.intensity=dk*.9;S.blue.intensity=ic151K(t,19.8,23)*1.5;S.blue2.intensity=ic151K(t,22,26)*2.2;S.cloudM.color.copy(C(0xffffff,0x8a86b8,dk));S.cloudM.emissive.copy(C(0x8a7a70,0x2e2a58,dk));
     S.shaftM.opacity=.14*(1-dk);S.shafts.visible=dk<1;S.shafts.children.forEach(s=>s.material.opacity=S.shaftM.opacity);
     S.pollen.m.opacity=.8*(1-dk);const pa=S.pollen.g.attributes.position.array;S.pollen.d.forEach((d,i)=>{pa[i*3]=d[0]+Math.sin(t*d[4]+d[3])*.6;pa[i*3+1]=d[1]+Math.sin(t*d[4]*.7+d[3]*2)*.4;pa[i*3+2]=d[2]+Math.cos(t*d[4]*.8+d[3])*.6});S.pollen.g.attributes.position.needsUpdate=true;
-    // clouds part around the descending hand
-    const op=ic151Sm(ic151K(t,14.4,18.4));S.clouds.forEach(c=>{const b=c.userData.b,h=Math.hypot(b.x-0,b.z+30);c.position.set(b.x+Math.sin(t*.03+b.z)*2,b.y,b.z);if(h<90){const s=(90-h)/90*op*40;c.position.x+=(b.x)/(h+1)*s;c.position.z+=(b.z+30)/(h+1)*s}});
-    ic151HandAt(S,S.hand,t);ic151HandT(S.hand,t);ic151GiantAt(S,t);S.hand.g.updateMatrixWorld(true);S.palmW=new V(0,0,4.6).applyMatrix4(S.hand.root.matrixWorld);
+    S.clouds.forEach(c=>{const b=c.userData.b;c.position.set(b.x+Math.sin(t*.03+b.z)*2,b.y,b.z)});
     S.cells.forEach(c=>{ic151CellM(S,c,t,c.m.matrix);c.m.matrixWorldNeedsUpdate=true;c.m.visible=c.c.clone().applyMatrix4(c.m.matrix).y>-90});
-    ic151ChunkM(S,t,S.bulb.m.matrix);S.bulb.m.matrixWorldNeedsUpdate=true;S.bulb.m.visible=t>19.35&&t<35;ic151TearAt(S,t);
-    S.crackU.uR.value=ic151K(t,19.45,21.2)*13;S.crackU.uA.value=ic151K(t,19.5,19.8)*(1-ic151K(t,21.4,22.4))*1.6;S.cracks.visible=t>19.4&&t<22.5;
-    // dust, rising light, hand motes
+    ic151TearAt(S,t);ic151QuakeAt(S,t);
+    S.crackU.uR.value=ic151K(t,17.2,20.9)*13;S.crackU.uA.value=ic151K(t,17.2,17.6)*(1-ic151K(t,21.4,22.4))*1.6;S.cracks.visible=t>17.2&&t<22.5;
+    // dust, rising light
     const da=S.dust.g.attributes.position.array,tp=S.tip0;S.dust.d.forEach((d,i)=>{const p=new V().setFromMatrixPosition(tp[d.k]);const e=t-d.t0;if(e<0||e>4){da[i*3+1]=-999;return}
       da[i*3]=p.x+d.v[0]*e;da[i*3+1]=Math.max(-.1,.2+d.v[1]*e-4.9*e*e*.6);da[i*3+2]=p.z+d.v[2]*e});S.dust.g.attributes.position.needsUpdate=true;S.dust.m.opacity=.75*(1-ic151K(t,23,25.5));S.dust.o.visible=t>19.4&&t<25.6;
     const ra=S.rise.g.attributes.position.array;S.rise.d.forEach((d,i)=>{const y=-60+((d[2]+t*d[3]*4)%64);ra[i*3]=Math.cos(d[0]+t*.1)*d[1];ra[i*3+1]=y;ra[i*3+2]=Math.sin(d[0]+t*.1)*d[1]});S.rise.g.attributes.position.needsUpdate=true;S.rise.m.opacity=ic151K(t,21.5,24)*.9;
-    const H=S.hand,ma=H.mote.g.attributes.position.array,pc=new V(0,0,4.6).applyMatrix4(H.root.matrixWorld);H.mote.d.forEach((d,i)=>{const e=(t*.25+d[3])%1;ma[i*3]=pc.x+(d[0]-.5)*16*H.sc+Math.sin(t+d[1]*9)*2;ma[i*3+1]=pc.y+8*H.sc*(d[1]-.2)+e*14;ma[i*3+2]=pc.z+(d[2]-.5)*16*H.sc});H.mote.g.attributes.position.needsUpdate=true;H.mote.m.opacity=.6*(1-ic151K(t,30,34));
-    {const Sm=H.smoke,sa=Sm.g.attributes.position.array,wp=new V();Sm.o.visible=H.g.visible;if(Sm.o.visible)Sm.d.forEach((d,i)=>{const age=(t*.45/d[5]+d[4])%1;Sm.B[d[0]].getWorldPosition(wp);
-      const sw=age*6.283*.5+i;sa[i*3]=wp.x+d[1]*3+Math.sin(sw)*age*3;sa[i*3+1]=wp.y+d[2]*2+age*age*9;sa[i*3+2]=wp.z+d[3]*3+Math.cos(sw)*age*3});Sm.g.attributes.position.needsUpdate=true;Sm.m.opacity=.32*ic151K(t,14.5,16)*(1-ic151K(t,31,34))}
     // the rat, the lump under his paws, pebbles
     if(S.rat.root.parent!==S.sc)S.sc.add(S.rat.root);ic151RatAt(S,t);S.rat.root.visible=t>6&&t<34.8;
     const E=S.edge,n=S.nin;if(t<29.62){S.lump.position.copy(E).addScaledVector(n,-.02);S.lump.rotation.set(0,Math.atan2(n.x,n.z),0)}else{const d=t-29.62;S.lump.position.copy(S.hangP||E).add(new V(0,-.5*7.6*d*d,0)).addScaledVector(n,Math.min(d,4)*.68);S.lump.rotation.set(d*2,d,d*1.5)}
@@ -40894,7 +40673,7 @@ function ic151Frame(S,t){const V=S.V,cam=S.cam,core=t>=35;
     S.sky.position.copy(cam.position);S.rd.render(S.sc,cam);return}
   // ---- the core ----
   const R=S.rat;if(R.root.parent!==S.cs){S.cs.add(R.root)}
-  S.coreU.uT.value=t;S.coreU.uB.value=1+ic151K(t,47,51.9)*.3-ic151K(t,52,53.5)*.15;ic151HandT(S.hand2,t);
+  S.coreU.uT.value=t;S.coreU.uB.value=1+ic151K(t,47,51.9)*.3-ic151K(t,52,53.5)*.15;
   const jolt=[48.2,48.75,49.2,49.6,49.95,50.25,50.55,50.8,51.02,51.22],jk=jolt.reduce((s,j)=>s+(t>j?Math.exp(-(t-j)*9):0),0);
   const sq=ic151K(t,48,51.4),swap=t>=51.9;
   if(!swap){const bob=Math.sin(t*.7)*.04,P={out:1-.35*ic151Sm(sq),eye:1,tw:.2,hp:.08+Math.sin(t*.5)*.05,sp:Math.min(1.2,jk*.9)*sq,rear:ic151Sm(ic151K(t,50,51.4))*.9,hx:0};
@@ -40955,12 +40734,16 @@ function ic151Score(ac,out,T0){const NB=ac.createBuffer(1,ac.sampleRate*2,ac.sam
   // the rat: sniffs and squeaks
   [7.4,7.9,8.5,9.8,10.05,10.3,11.15,11.4,12.4,12.6,12.8,13.0].forEach(a=>noise(a,.07,.09,.01,.05,'bandpass',5200,2.2,{pan:.25}));
   [[13.65,3600,4300,.12],[20.35,4200,5200,.16],[22.65,4600,3900,.22],[23.6,4300,5400,.14],[25.45,5000,3600,.3],[27.5,4600,5600,.18],[28.6,4800,4200,.14],[29.68,5200,3000,.6]].forEach(([a,f,f2,d])=>{osc('sine',f,a,d,.05,.01,d*.4,{f2,wet:.4,pan:.2});osc('square',f/2,a,d,.006,.01,d*.4,{f2:f2/2,lp:3000})});
-  // the dark arrives: drone, a choir of light, the descent
+  // v151b, the quake: a drone, a rumble that builds from deep below, tremor thuds, creaking trunks, leaves, birds bursting off, the ground cracking
   osc('sawtooth',41.2,13.6,18,.12,5,4,{lp:70,lp2:520,det:-6});osc('sawtooth',41.7,13.6,18,.1,5,4,{lp:70,lp2:480,det:7});
-  [329.63,392,493.88,659.25,987.77].forEach((f,i)=>osc('sine',f,14.6+i*.35,6.5,.022,2.8,1.5,{wet:1,dry:.6,det:(i%2?5:-5)}));
-  [1318.5,1975.5,2637].forEach((f,i)=>osc('sine',f,15.5+i*.4,5,.006,2,1,{wet:1,dry:.3}));
-  noise(17.0,2.45,.32,2.3,.05,'bandpass',220,1.2,{f2:2600,wet:.5});
-  // impact and the tearing of the earth
+  noise(14.0,5.6,.3,2.4,.3,'lowpass',80,.9,{f2:170,wet:.3});noise(14.2,5.3,.06,2,.4,'bandpass',260,.8,{f2:520,wet:.4});
+  [14.3,14.95,15.6,16.15,16.8,17.35,17.9,18.4,18.8,19.1].forEach((a,i)=>osc('sine',34+R()*10,a,.55,.16+i*.025,.01,.5,{f2:24,ft:.45}));
+  for(let i=0;i<9;i++){const a=15+R()*4.2;noise(a,.35+R()*.4,.05+R()*.04,.05,.25,'bandpass',300+R()*350,4,{f2:200+R()*200,pan:R()*1.6-.8,wet:.4})}
+  noise(14.6,6,.04,1.6,2,'highpass',3000,.5,{wet:.3});
+  for(let i=0;i<34;i++){const a=15.05+Math.pow(R(),1.4)*1.9,f=2800+R()*1700;osc('sine',f,a,.06,.03,.008,.04,{f2:f*(1.2+R()*.3),ft:.05,pan:R()*1.6-.8,wet:.5})}
+  noise(15.1,1.4,.05,.1,1.1,'highpass',1800,.6,{pan:-.2,wet:.3});
+  for(let i=0;i<30;i++){const a=16.9+Math.pow(R(),.8)*2.4;noise(a,.04+R()*.07,.12+R()*.16,.002,.05,'bandpass',1100+R()*2600,1.6,{pan:R()*1.6-.8,wet:.35})}
+  // the jolt and the ground caving in
   osc('sine',72,19.35,2.6,.75,.005,2.4,{f2:26,ft:2});noise(19.35,3,.6,.005,2.9,'lowpass',500,.7,{wet:.6});noise(19.35,.25,.45,.002,.22,'highpass',1800,.7);
   noise(19.4,12,.3,.4,3,'lowpass',130,.9,{wet:.3});noise(20.5,10,.08,1,2,'bandpass',700,.8,{wet:.4});
   for(let i=0;i<70;i++){const a=19.6+R()*11.5;noise(a,.05+R()*.08,.1+R()*.14,.003,.05,'bandpass',900+R()*2600,1.5,{pan:R()*1.6-.8,wet:.3})}
@@ -41011,7 +40794,7 @@ function ic151End(){if(!IC151.run)return;IC151.run=false;IC151.on=false;const S=
   function isDesc(o,p){for(;o;o=o.parent)if(o===p)return true;return false}
   const q=IC151.q||[];IC151.q=[];q.forEach(f=>{try{f()}catch(_){}});const d=IC151.done;IC151.done=null;if(d)try{d()}catch(_){}}
 // capture mode for tests: build at a fixed size, no sound, no clock; then call ic151Seek(t) per frame
-function ic151Cap(w,h){IC151.cap=true;const T0=performance.now(),S=ic151Build(w,h);S.buildMs=Math.round(performance.now()-T0);IC151.S=S;IC151.run=true;IC151.on=true;ic151Layer(S);S.dom.skip.style.display='none';const P=S.phys;return {cells:S.cells.length,grips:S.cells.filter(c=>c.grip>=0).map(c=>c.grip),rat:!!S.rcell,edge:S.rEdgeR,hs:S.hand.sc,hero:!!S.hero,arm:!!(S.giant&&S.giant.arm),giant:!!(S.giant&&S.giant.body),rtrk:S.rtrk?S.rtrk.N:0,chunk:S.cells.filter(c=>c.chunk).length,ms:S.buildMs,phys:{done:P.done,ev:P.ev.length,moved:P.dyn.filter(b=>b.rec[(b.nr-1)*7+1]<-5).length,dyn:P.dyn.length}}}
+function ic151Cap(w,h){IC151.cap=true;const T0=performance.now(),S=ic151Build(w,h);S.buildMs=Math.round(performance.now()-T0);IC151.S=S;IC151.run=true;IC151.on=true;ic151Layer(S);S.dom.skip.style.display='none';const P=S.phys;return {cells:S.cells.length,split:S.cells.filter(c=>c.grip>=0).length,rat:!!S.rcell,edge:S.rEdgeR,hero:!!S.hero,hand:!!(S.hand||S.hand2||S.giant),quake:!!(S.quakeU&&S.birds&&S.leaves&&S.hops),rtrk:S.rtrk?S.rtrk.N:0,ms:S.buildMs,phys:{done:P.done,ev:P.ev.length,moved:P.dyn.filter(b=>b.rec[(b.nr-1)*7+1]<-5).length,dyn:P.dyn.length}}}
 // the welcome banner waits until the light has cleared
 {const f=banner;banner=function(){if(IC151.run){const a=arguments,s=this;(IC151.q=IC151.q||[]).push(()=>f.apply(s,a));return}return f.apply(this,arguments)}}
 // the main loop waits while the cinematic plays
@@ -41035,11 +40818,11 @@ IC151.lines=IC151.lines.concat([
   {a:120.2,b:125.2,s:'Succeed, and the bounty is eternal — as well as the mountains of treasure you’ll gain along the way.'},
   {a:125.8,b:129,s:'Go forth, Upright… your quest starts now.'}]);
 // the shot list (start times); the portal shots are 6 × 2.1 s from 103.2
-var IC151D={arr:[55.9,60.2],meets:[[63.6,66.2],[70.2,72.8],[76.0,78.6],[81.6,84.2]],walks:[[60.2,63.6],[66.2,70.2],[72.8,76.0],[78.6,81.6],[84.2,87.8],[87.8,91.2]],ched:[91.2,95],
+var IC151D={arr:[55.9,60.2],meets:[[63.6,66.2],[70.2,72.8],[76.0,78.6],[81.6,84.2]],walks:[[60.2,63.6],[66.2,70.2],[72.8,76.0],[78.6,81.6],[84.2,87.2],[90.6,92.6],[92.6,95]],ched:[87.2,90.6],
   v1:[95,99.1],v2:[99.1,103.2],v3:103.2,v3d:2.1,v4:[115.8,120],v5:[120,125.7],v6:[125.7,129.8],
   npc:[{k:'steward',n:'The Stronghold Steward',r:'Builds and grows Duskhold'},{k:'inn',n:'The Innkeeper',r:'Rest and a hot meal at The Last Lantern'},
     {k:'smith',n:'The Blacksmith',r:'Forges and upgrades your gear'},{k:'merchant',n:'The Merchant',r:'Buys and sells at the Trading Post'}],
-  ched:[91.2,95]};
+  ched:[87.2,90.6]};   // v151b: Cheddar is met at his quest board in the Grand Square (where the game keeps him since v148)
 
 function ic151DCss(){if(document.getElementById('ic151dcss'))return;const s=document.createElement('style');s.id='ic151dcss';s.textContent=
   'body.ic151d #stage{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;margin:0!important;border:0!important;border-radius:0!important;z-index:2147482000!important;max-width:none!important;max-height:none!important;aspect-ratio:auto!important}'+
@@ -41065,19 +40848,24 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
   if(D.npc.some(n=>!n))D.npc=D.npc.filter(n=>n);
   // the path: walk legs between the stops (eased in and out), a cut from outside the south gate to Portal Road
   const sp=[START[0],START[1]],npcSt=D.npc.map(n=>n.st),M=D.npc,W=IC151D.walks,legs=[];
-  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.6,277.4],[43.65,288.4],[41.3,294.8],[40.2,301.5]],[[40,334],[40,349.4]]];
-  for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.ched=[40,353.5];D.end=[40,349.4];
+  // v151b: the game's own Cheddar on his crate by the quest board (CHQ148); the hero stops 2 m in front of him
+  D.ref=[40,353.5];{let C=null,sp2=null;try{if(typeof chq148Build=='function'&&!CHQ148.board)chq148Build();C=CHQ148.P&&CHQ148.P.ch;sp2=chq148Spot()}catch(_){}
+    if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=C.root.rotation.y}else D.ched=[45.32,287.93];
+    const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
+  const CS=D.chSt;
+  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.4,277.6],[43.2,285.0],CS],[CS,[41.4,294.8],[40.2,301.5]],[[40,334],[40,349.4]]];
+  for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=[40,349.4];
   // the hero's track at 60 Hz: position, heading (spring-damped, snapped at the cut), moving or not
-  const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.walks[5][1]-.3)return 0;return null};
+  const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.ched[0]-.2&&t<IC151D.ched[1])return Math.atan2(D.ched[0]-ic151DPos(D,t)[0],D.ched[1]-ic151DPos(D,t)[1]);if(t>=IC151D.walks[6][1]-.3)return 0;return null};
   const DT=1/60,TA=IC151D.arr[0],TB=IC151.dEnd+.2,N=Math.ceil((TB-TA)/DT)+1,A=new Float32Array(N*4);let yaw=Math.PI,yv=0,lp=ic151DPos(D,TA),ad=a=>Math.atan2(Math.sin(a),Math.cos(a));
   for(let i=0;i<N;i++){const t=TA+i*DT,p=ic151DPos(D,t),vx=(p[0]-lp[0])/DT,vz=(p[1]-lp[1])/DT,spd=i?Math.hypot(vx,vz):0;lp=p;let tg=look(t);
     if(tg==null)tg=spd>.15?Math.atan2(vx,vz):(t<IC151D.walks[0][0]?Math.PI+.35*Math.sin((t-TA)*.9)*ic151Sm(ic151K(t,57,58.5)):yaw);
-    if(Math.abs(t-IC151D.walks[5][0])<DT*.6){yaw=0;yv=0}
+    if(Math.abs(t-IC151D.walks[6][0])<DT*.6){yaw=0;yv=0}
     yv+=(81*ad(tg-yaw)-2*.95*9*yv)*DT;yaw+=yv*DT;A.set([p[0],p[1],yaw,spd>.12?1:0],i*4)}
   D.trk={TA,DT,N,A};
-  // a Cheddar for the crossroads (the game's own two stay in the field instances)
-  try{const ch=chd132Model({game:true});ch.root.scale.setScalar(typeof CHQ132_SC!='undefined'?CHQ132_SC:1.1);ch.root.userData.psNo=1;ch.root.userData.noFarCull=1;ch.root.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false}});
-    ch.root.position.set(D.ched[0],GH(D.ched[0],D.ched[1]),D.ched[1]);ch.root.rotation.y=Math.PI;D.ch=ch}catch(e){console.warn('intro cheddar',e)}
+  // a stand-in Cheddar only when the game has none at his board
+  if(!D.ch)try{const ch=chd132Model({game:true});ch.root.scale.setScalar(typeof CHQ132_SC!='undefined'?CHQ132_SC:1.1);ch.root.userData.psNo=1;ch.root.userData.noFarCull=1;ch.root.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false}});
+    ch.root.position.set(D.ched[0],GH(D.ched[0],D.ched[1])+.56,D.ched[1]);ch.root.rotation.y=-1.03;D.ch=ch;D.chOwn=true;D.chY0=ch.root.position.y;D.chR0=-1.03}catch(e){console.warn('intro cheddar',e)}
   // the pillar of light he arrives in
   {const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,uniforms:{uA:{value:0},uT:{value:0}},
       vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
@@ -41109,7 +40897,7 @@ function ic151SovFaces(){if(IC151.SF)return IC151.SF;const out=[];let rd=null;
 
 // ---------------- each frame ----------------
 function ic151DStart(S){const D=S.D;if(!D||D.on)return D;D.on=true;ic151DCss();document.body.classList.add('ic151d');D.fov0=cam.fov;
-  if(D.ch)scene.add(D.ch.root);if(D.pil){D.pil.position.set(START[0],GH(START[0],START[1]),START[1]);scene.add(D.pil)}
+  if(D.ch&&D.chOwn)scene.add(D.ch.root);if(D.pil){D.pil.position.set(START[0],GH(START[0],START[1]),START[1]);scene.add(D.pil)}
   if(!IC151.SF)ic151SovFaces();
   const el=S.dom&&S.dom.el;if(el&&!S.dom.nc){el.insertAdjacentHTML('beforeend','<div class="nc"><b></b><i></i></div><div class="sov"><img alt=""></div><div class="zc"><div class="zk"></div><div class="zt"></div><div class="zs"></div></div>');
     S.dom.nc=el.querySelector('.nc');S.dom.sov=el.querySelector('.sov');S.dom.zc=el.querySelector('.zc')}
@@ -41123,12 +40911,12 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
       if(G){const P=new V(G.x,gy(G.x,G.z),G.z),a=new V(G.a[0],0,G.a[1]),dr=a.clone().sub(P).setY(0).normalize(),sv=new V(dr.z,0,-dr.x);p=P.clone().addScaledVector(dr,10.5-1.8*k).addScaledVector(sv,(i%2?-1:1)*2.6).add(up(3.0+.5*k));l=P.clone().add(up(2.5));F=P.clone().addScaledVector(dr,4)}
       else{p=H.clone().add(up(5));l=H.clone()}fov=48}
     else if(t<IV.v4[1]){const k=Sm(K(t,IV.v4[0],IV.v4[1]));p=H.clone().add(new V(.9+.4*k,.75+.15*k,2.9-.4*k));l=H.clone().add(up(1.35));fov=46}
-    else if(t<IV.v5[1]){const k=Sm(K(t,IV.v5[0],IV.v5[1])),a=.95-1.6*k,c=H.clone().lerp(new V(D.ched[0],H.y,D.ched[1]),.35);p=c.clone().add(new V(Math.sin(a)*5.4,2.0+.4*k,Math.cos(a)*5.4));l=c.add(up(.9));fov=48}
-    else{const k=Io(K(t,IV.v6[0],IV.v6[1]-.8)),a=.95-1.6,c=H.clone().lerp(new V(D.ched[0],H.y,D.ched[1]),.35),p0=c.clone().add(new V(Math.sin(a)*5.4,2.4,Math.cos(a)*5.4)),l0=c.clone().add(up(.9));
+    else if(t<IV.v5[1]){const k=Sm(K(t,IV.v5[0],IV.v5[1])),a=.95-1.6*k,c=H.clone().lerp(new V(D.ref[0],H.y,D.ref[1]),.35);p=c.clone().add(new V(Math.sin(a)*5.4,2.0+.4*k,Math.cos(a)*5.4));l=c.add(up(.9));fov=48}
+    else{const k=Io(K(t,IV.v6[0],IV.v6[1]-.8)),a=.95-1.6,c=H.clone().lerp(new V(D.ref[0],H.y,D.ref[1]),.35),p0=c.clone().add(new V(Math.sin(a)*5.4,2.4,Math.cos(a)*5.4)),l0=c.clone().add(up(.9));
       const cy=Math.PI,cp=typeof camPitch!='undefined'?camPitch:.3,cd=typeof camDist!='undefined'?camDist:9.5,p1=new V(H.x+Math.sin(cy)*Math.cos(cp)*cd,H.y+1.1+Math.sin(cp)*cd,H.z+Math.cos(cy)*Math.cos(cp)*cd),l1=H.clone().add(up(1));
       p=p0.lerp(p1,k);l=l0.lerp(l1,k);fov=50+(58-50)*k}}
-  else if(t>=IV.ched[0]){const C=new V(D.ched[0],gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
-    p=H.clone().addScaledVector(dr,-1.7+.35*k).addScaledVector(sv,1.0).add(up(1.35-.1*k));l=C.clone().add(up(.6));fov=44}
+  else if(t>=IV.ched[0]&&t<IV.ched[1]){const C=new V(D.ched[0],D.chY0!=null?D.chY0-.45:gy(D.ched[0],D.ched[1]),D.ched[1]),dr=C.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,IV.ched[0],IV.ched[1]));
+    p=H.clone().addScaledVector(dr,-1.8+.35*k).addScaledVector(sv,1.0).add(up(1.45-.1*k));l=C.clone().add(up(.75));fov=44}
   else{let done=false;for(let i=0;i<D.npc.length;i++){const n=D.npc[i];if(t>=IV.walks[i][0]&&t<n.mt[0]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0),dd=dr.length();dr.normalize();const sv=new V(dr.z,0,-dr.x),k=Sm(K(dd,1.9,6));
         if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,-1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
         else{// locked-off cameras on open ground that pan with him: the tavern corner → the smithy front, the lane → the Trading Post
@@ -41136,8 +40924,9 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
         done=true;break}
       if(t>=n.mt[0]&&t<n.mt[1]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,n.mt[0],n.mt[1]));
         p=H.clone().addScaledVector(dr,-1.9+.3*k).addScaledVector(sv,(i%2?-1:1)*1.15).add(up(1.75));l=N.clone().add(up(1.45));fov=44;done=true;break}}
-    if(!done){const w=IV.walks;if(t>=w[4][0]+2.1&&t<w[4][1]){p=new V(44.6,gy(44.6,309)+2.4,309);l=H.clone().add(up(1.1));fov=48}
-      else if(t>=w[5][0]&&t<w[5][1]){p=new V(41.4,gy(41.4,356.5)+1.0,356.5);l=H.clone().add(up(1.05));fov=46}
+    if(!done){const w=IV.walks;if(t>=w[5][0]+1.05&&t<w[5][1]){p=new V(44.6,gy(44.6,309)+2.4,309);l=H.clone().add(up(1.1));fov=48}
+      else if(t>=w[5][0]&&t<w[5][1]){p=new V(37.6,gy(37.6,290.2)+1.9,290.2);l=H.clone().add(up(1.15));fov=50}   // in the square, as he heads for the gate
+      else if(t>=w[6][0]&&t<w[6][1]){p=new V(41.4,gy(41.4,356.5)+1.0,356.5);l=H.clone().add(up(1.05));fov=46}
       else{p=H.clone().addScaledVector(fw,-3.4).addScaledVector(sd,.9).add(up(2.0));l=H.clone().addScaledVector(fw,3).add(up(1.1));fov=50}}}
   p.y=Math.max(p.y,gy(p.x,p.z)+.5);return {p,l,fov,F,z,nf:z>=0||(t>=IV.v2[0]&&t<IV.v2[1])}}
 function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000,dt=Math.max(0,Math.min(.1,D.lt==null?0:t-D.lt)),K=ic151K,Sm=ic151Sm;D.lt=t;
@@ -41145,8 +40934,10 @@ function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000
   // the town folk turn to greet him
   D.npc.forEach(n=>{const k=Sm(K(t,n.mt[0]-.5,n.mt[0]+.4))*(1-Sm(K(t,n.mt[1]-.1,n.mt[1]+.7)));let a=Math.atan2(h.x-n.w.x,h.z-n.w.z)-n.ry0;a=Math.atan2(Math.sin(a),Math.cos(a));n.g.rotation.y=n.ry0+a*k});
   // Cheddar: pops up as the hero comes down the road, waves while they meet
-  if(D.ch){const C=D.ch,ps=t>=IC151D.ched[0]&&t<IC151D.ched[0]+2.6?'wave':t>=IC151D.walks[5][0]+1.8&&t<IC151D.ched[0]?'alert':'idle';if(ps!==D.chp){try{C.setPose(ps)}catch(_){}D.chp=ps}
-    const y=GH(D.ched[0],D.ched[1]),hop=Math.max(0,Math.sin(ic151K(t,IC151D.walks[5][0]+1.6,IC151D.walks[5][0]+2.1)*Math.PI))*.25;C.root.position.y=y+hop;C.root.rotation.y=Math.atan2(h.x-D.ched[0],h.z-D.ched[1]);try{C.update(t,dt)}catch(_){}}
+  // Cheddar on his crate: looks up as the hero comes down the square, hops, waves, then back to his board
+  if(D.ch){const C=D.ch,I=IC151D,a0=I.walks[4][1]-1.0,ps=t>=I.ched[0]&&t<I.ched[0]+2.6?'wave':t>=a0&&t<I.ched[0]?'alert':'idle';if(ps!==D.chp){try{C.setPose(ps)}catch(_){}D.chp=ps}
+    const hop=Math.max(0,Math.sin(ic151K(t,a0+.1,a0+.6)*Math.PI))*.22,kf=Sm(K(t,a0-.3,a0+.3))*(1-Sm(K(t,I.ched[1],I.ched[1]+.6))),r0=D.chR0||0;let da=Math.atan2(h.x-D.ched[0],h.z-D.ched[1])-r0;da=Math.atan2(Math.sin(da),Math.cos(da));
+    C.root.position.y=(D.chY0!=null?D.chY0:GH(D.ched[0],D.ched[1]))+hop;C.root.rotation.y=r0+da*kf;try{C.update(t,dt)}catch(_){}}
   const c=ic151DCam(D,t,h);cam.position.copy(c.p);cam.up.set(0,1,0);cam.lookAt(c.l);cam.fov=c.fov;cam.updateProjectionMatrix();if(typeof look!='undefined')look.copy(c.l);
   try{compTick(dt,now)}catch(_){}
   const F=c.F;try{townTick(now,F);townLights(F)}catch(_){}ic151DTags(D,false);WIND.t.value=now/1000;
@@ -41154,11 +40945,11 @@ function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000
   try{torch.position.set(pl.position.x,pl.position.y+2.2,pl.position.z+.3);pln.constant=-pl.position.y}catch(_){}
   FADE.cam.value.copy(cam.position);if(c.nf)FADE.pl.value.copy(cam.position);else FADE.pl.value.set(h.x,GH(h.x,h.z)+1.1,h.z);try{fxStep(dt)}catch(_){}
   if(D.pil){const a=(1-Sm(K(t,56.4,59.2)));D.pil.visible=a>.01;D.pil.material.uniforms.uA.value=a*.85;D.pil.material.uniforms.uT.value=t}
-  ic151DDom(S,D,t,c);POST.render()}
+  ic151DDom(S,D,t,c);if(!IC151.noDraw)POST.render()}   // noDraw: the GitHub render replays the town up to a piece's start without drawing
 // cards: the folk's names, the zone cards, the Sovereigns' faces
 function ic151DDom(S,D,t,c){const M=S.dom;if(!M||!M.nc)return;const K=ic151K,Sm=ic151Sm;let nk=0,nn=null;
   D.npc.forEach(n=>{const k=Sm(K(t,n.mt[0]+.25,n.mt[0]+.8))*(1-Sm(K(t,n.mt[1]-.6,n.mt[1]-.1)));if(k>nk){nk=k;nn=n}});
-  {const k=Sm(K(t,IC151D.ched[0]+.3,IC151D.ched[0]+.85))*(1-Sm(K(t,IC151D.ched[1]-.6,IC151D.ched[1]-.1)));if(k>nk){nk=k;nn={n:'Cheddar',r:'A curious mouse with work for brave paws'}}}
+  {const k=Sm(K(t,IC151D.ched[0]+.3,IC151D.ched[0]+.85))*(1-Sm(K(t,IC151D.ched[1]-.6,IC151D.ched[1]-.1)));if(k>nk){nk=k;nn={n:'Cheddar',r:'Keeps the quest board in the Grand Square'}}}
   if(nn&&M.nc.dataset.n!==nn.n){M.nc.dataset.n=nn.n;M.nc.querySelector('b').textContent=nn.n;M.nc.querySelector('i').textContent=nn.r}M.nc.style.opacity=nk.toFixed(3);M.nc.style.transform='translateX('+((1-nk)*-14).toFixed(1)+'px)';
   const z=c.z,G=z>=0?D.gates[z]:null;if(G){const u=t-IC151D.v3-z*IC151D.v3d,k=Sm(K(u,.15,.65))*(1-Sm(K(u,IC151D.v3d-.45,IC151D.v3d-.05)));
     if(M.zc.dataset.i!=z){M.zc.dataset.i=z;const Z=G.Z||{c1:'#f6dc98',c2:'#fb923c',c3:'#1a1008',f:'Cinzel Decorative'},tt=M.zc.querySelector('.zt');
@@ -41174,8 +40965,8 @@ function ic151DTags(D,back){if(back){(D.tags||[]).forEach(x=>{x.o.visible=x.v});
   D.tags.forEach(x=>{x.o.visible=false})}
 function ic151DuskDone(S){const D=S&&S.D;if(!D||D.done)return;D.done=true;try{document.body.classList.remove('ic151d');
     if(D.on){const P=D.end;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=0;camYaw=Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
-    ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0});if(D.ch&&D.ch.root.parent)D.ch.root.parent.remove(D.ch.root);if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
-    if(D.ch)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
+    ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0});if(D.ch){if(D.chOwn){if(D.ch.root.parent)D.ch.root.parent.remove(D.ch.root)}else{D.ch.root.position.y=D.chY0;D.ch.root.rotation.y=D.chR0;try{D.ch.setPose('idle')}catch(_){}}}if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
+    if(D.ch&&D.chOwn)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
 // part one ends at IC151.cut; part two runs to IC151.dEnd, then the game resumes; the intro ends at IC151.len
 ic151Seek=function(t){const S=IC151.S;if(!S)return;
   if(t<IC151.cut){IC151.on=true;try{ic151Frame(S,t)}catch(e){console.warn('intro frame',e);IC151.err=String(e&&e.stack||e);t=IC151.cut}}

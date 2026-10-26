@@ -3,7 +3,8 @@
 #   TIMES=3,9.5,19.6 python3 v151_intro.py     -> just those stills
 #   VIDEO=1 FPS=24 W=1280 H=720 python3 v151_intro.py  -> every frame to test/out/v151_frames/ + sound to v151_sound.wav,
 #                                                  then test/out/v151_intro.mp4 (needs ffmpeg). FROM=/TO= limit the range.
-import os,sys,base64,json,subprocess
+#   F0=/F1= limit it by frame number; NOENC=1 skips the mp4. GitHub renders it in pieces: tools/render.sh (only what changed).
+import os,sys,base64,json,subprocess,math
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP;W=int(os.environ.get('W','960'));H=int(os.environ.get('H','540'))
@@ -22,8 +23,8 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     chk('intro not played under automation',ev("()=>!IC151.run&&!document.getElementById('ic151')"))
     info=ev("([w,h])=>ic151Cap(w,h)",[W,H]);print('cap',info)
-    chk('hand grips plates',len(info['grips'])==5,info['grips']);chk('rat slab found',info['rat'] and 3.5<info['edge']<6.5,info['edge']);chk('upright rat built',info['hero'])
-    chk('arm reaching down, no giant figure',info['arm'] and not info['giant'],(info['arm'],info['giant']));chk('rat path track',info['rtrk']>1000,info['rtrk']);chk('fistful of earth (centre + pierced slabs)',info['chunk']>=8,info['chunk'])
+    chk('the quake splits the middle into plates',info['split']==5,info['split']);chk('rat slab found',info['rat'] and 3.5<info['edge']<6.5,info['edge']);chk('upright rat built',info['hero'])
+    chk('an earthquake, no hand (v151b)',info['quake'] and not info['hand'],(info['quake'],info['hand']));chk('rat path track',info['rtrk']>1000,info['rtrk'])
     ph=info['phys'];chk('earth simulation finished',ph['done'],ph);chk('most pieces fall into the chasm',ph['moved']>=ph['dyn']*.7,ph);chk('impacts recorded',ph['ev']>=10,ph['ev'])
     chk('main loop paused',ev("()=>IC151.on"))
     # v151b: the upright rat's pose is a pure function of t (no drift from the game's animation layers), the voice is off
@@ -37,9 +38,10 @@ def s(pg):
         const b=new THREE.Box3().setFromObject(o);if(b.max.x<14||b.min.x>66||b.max.z<255||b.min.z>360)return;const sx=b.max.x-b.min.x,sz=b.max.z-b.min.z,g=GH((b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2);
         if(sx>30||sz>30||sx*sz<.15||b.min.y>g+.6||b.max.y<g+1.2)return;bx.push(b)});
       for(const L of D.legs)for(let t=L.a;t<=L.b;t+=.1){const p=ic151DPos(D,t);for(const b of bx)if(p[0]>b.min.x+.05&&p[0]<b.max.x-.05&&p[1]>b.min.z+.05&&p[1]<b.max.z-.05){hit.push([+t.toFixed(1),+p[0].toFixed(1),+p[1].toFixed(1)]);break}}
-      return {npc:D.npc.map(n=>n.k),gates:D.gates.length,faces:(IC151.SF||[]).filter(x=>x).length,legs:D.legs.length,end:D.end,ch:!!D.ch,hit:hit.slice(0,8),nh:hit.length}}""")
+      return {npc:D.npc.map(n=>n.k),gates:D.gates.length,faces:(IC151.SF||[]).filter(x=>x).length,legs:D.legs.length,end:D.end,ch:!!D.ch,own:!!D.chOwn,ched:D.ched,spot:(typeof chq148Spot=='function'&&chq148Spot())?[chq148Spot().cx,chq148Spot().cz]:null,hit:hit.slice(0,8),nh:hit.length}}""")
     print('duskhold',dk)
-    chk('Duskhold part built',dk is not None and dk['legs']==6 and dk['ch'],dk)
+    chk('Duskhold part built',dk is not None and dk['legs']==7 and dk['ch'],dk)
+    if dk:chk('Cheddar met at his quest board (the game\'s own Cheddar, v148 spot)',not dk['own'] and dk['spot'] and abs(dk['ched'][0]-dk['spot'][0])+abs(dk['ched'][1]-dk['spot'][1])<.5,(dk['own'],dk['ched'],dk['spot']))
     if dk:
         chk('meets Steward, Innkeeper, Blacksmith, Merchant in order',dk['npc']==['steward','inn','smith','merchant'],dk['npc'])
         chk('six portals with a Sovereign face each',dk['gates']==6 and dk['faces']==6,(dk['gates'],dk['faces']))
@@ -52,11 +54,22 @@ def s(pg):
         ev("()=>ic151Seek(122.5)")
         wb=ev("""()=>{const W=[...document.querySelectorAll('#ic151 .sub .w')];return {n:W.length,split:W.filter(w=>{const c=[...w.children];return c.length&&c.some(e=>Math.abs(e.offsetTop-c[0].offsetTop)>2)}).map(w=>w.textContent)}}""")
         chk('subtitle words never split over two lines',wb['n']>5 and not wb['split'],wb)
-    hg=ev("()=>({nv:IC151.HG.nv,nt:IC151.HG.nt,ms:IC151.HG.ms})");print('hand mesh',hg);chk('detailed hand mesh',hg['nt']>30000,hg)
+    # v151b: the trees thrash and the plates heave in the quake; still before it starts
+    qk=ev("()=>{const S=IC151.S,c=S.cells.find(c=>c!==S.rcell),M=new THREE.Matrix4(),y=t=>{ic151CellM(S,c,t,M);return M.elements[13]};ic151Seek(12);const q0=S.quakeU.uQ.value;ic151Seek(17.5);const q1=S.quakeU.uQ.value;ic151Seek(19.45);const q2=S.quakeU.uQ.value;"
+       "let hv=0;for(let t=19.36;t<19.8;t+=.02)hv=Math.max(hv,Math.abs(y(t)));return {q0,q1,q2,hv,still:Math.abs(y(12)),after:Math.abs(y(21.05))}}")
+    print('quake',qk);chk('the quake builds and jolts',qk['q0']==0 and qk['q1']>.2 and qk['q2']>qk['q1'],qk);chk('plates heave in the quake, still before and when the ground gives way',qk['hv']>.02 and qk['still']<1e-6 and qk['after']<.006,qk)
     if os.environ.get('VIDEO'):
         fps=float(os.environ.get('FPS','24'));d=O+'/v151_frames';os.makedirs(d,exist_ok=True)
         a=float(os.environ.get('FROM','0'));b=float(os.environ.get('TO',str(ev('()=>IC151.len'))))
         i0=int(round(a*fps));i1=int(round(b*fps))
+        if os.environ.get('F0'):i0=int(os.environ['F0'])   # frame numbers (the GitHub render works in 5 s pieces)
+        if os.environ.get('F1'):i1=int(os.environ['F1'])
+        print('frames',i0,i1,'of',int(round(ev('()=>IC151.len')*fps)),flush=True)
+        k0=int(math.ceil(ev('()=>IC151.cut')*fps))
+        if i0>k0:   # the town part runs the real game (companions, smoke...): replay it from its first frame without drawing, so a piece matches a full render
+            ev("([a,b,f])=>{IC151.noDraw=1;try{for(let k=a;k<b;k++)ic151Seek(k/f)}finally{IC151.noDraw=0}}",[k0,i0,fps])
+        if i1>i0:   # warm-up: the first frame drawn on a fresh page can come out black (shaders, the town's first draw)
+            ev("t=>ic151Seek(t)",i0/fps);pg.wait_for_timeout(1500);ev("t=>ic151Seek(t)",i0/fps);pg.wait_for_timeout(300)
         for i in range(i0,i1):
             t=i/fps;ev("t=>ic151Seek(t)",t)
             if t>=55.9:pg.wait_for_timeout(60)
@@ -72,15 +85,15 @@ def s(pg):
         if t>=55.9:pg.wait_for_timeout(1500);ev("t=>ic151Seek(t)",t)
         pg.screenshot(path=O+'/v151_shot_%05.1f.jpg'%t,type='jpeg',quality=85);print('shot',t,flush=True)
     chk('no frame errors',not ev("()=>IC151.err||null"),ev("()=>IC151.err||''")[:300])
-    ev("()=>ic151Seek(IC151.len+.1)")
+    ev("()=>{window._icD=IC151.S&&IC151.S.D;ic151Seek(IC151.len+.1)}")
     chk('cleaned up',ev("()=>!IC151.run&&!IC151.on&&!document.getElementById('ic151')&&!ren.domElement.style.filter"))
     if dk:
-        ho=ev("()=>({p:[pl.position.x,pl.position.z],cls:document.body.classList.contains('ic151d'),ch:!!(IC151.S&&IC151.S.D&&IC151.S.D.ch&&IC151.S.D.ch.root.parent)})")
-        chk('game starts on the Portal Road in Duskhold',abs(ho['p'][0]-40)<.3 and abs(ho['p'][1]-349.4)<.3 and not ho['cls'] and not ho['ch'],ho)
+        ho=ev("()=>({p:[pl.position.x,pl.position.z],cls:document.body.classList.contains('ic151d'),ch:(()=>{const D=window._icD,C=D&&D.ch;if(!C)return 'none';if(D.chOwn)return C.root.parent?'left':'ok';return C.root.parent===scene&&Math.abs(C.root.rotation.y-D.chR0)<1e-6&&Math.abs(C.root.position.y-D.chY0)<1e-6?'ok':'moved'})()})")
+        chk('game starts on the Portal Road in Duskhold',abs(ho['p'][0]-40)<.3 and abs(ho['p'][1]-349.4)<.3 and not ho['cls'] and ho['ch']=='ok',ho)
         chk('name tags back after the cinematic',ev(TAGS)>=3,ev(TAGS))
 play.run(s,w=W,hh=H)
 if FAIL:print('FAILED',FAIL)
-if os.environ.get('VIDEO') and not FAIL:
+if os.environ.get('VIDEO') and not FAIL and not os.environ.get('NOENC'):
     fps=os.environ.get('FPS','24');a=os.environ.get('FROM','0')
     cmd=['ffmpeg','-y','-loglevel','error','-framerate',fps,'-start_number',str(int(round(float(a)*float(fps)))),'-i',O+'/v151_frames/f%05d.jpg']
     if os.path.exists(O+'/v151_sound.wav') and not os.environ.get('NOSOUND'):cmd+=['-ss',a,'-i',O+'/v151_sound.wav','-c:a','aac','-b:a','160k','-shortest']
