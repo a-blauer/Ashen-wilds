@@ -49,9 +49,12 @@ jobs:
         uses: actions/cache@v4
         with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
       - name: Install Playwright + Chromium + ffmpeg
+        timeout-minutes: 25
         run: |
-          pip install playwright pillow numpy scipy && python -m playwright install --with-deps chromium
-          command -v ffmpeg >/dev/null || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
+          pip install playwright pillow numpy scipy imageio-ffmpeg
+          # the system installer can wait a long time for a lock on a fresh runner: give each try 8 minutes, three tries
+          for i in 1 2 3; do timeout 8m python -m playwright install --with-deps chromium && break; echo "::warning::browser install try $i timed out"; sleep 5; done
+          mkdir -p ~/bin && ln -sf "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" ~/bin/ffmpeg && echo "$HOME/bin" >> "$GITHUB_PATH"
       - name: Build
         run: ./build.sh
       - name: Draw piece ${{ matrix.seg }}
@@ -84,7 +87,10 @@ jobs:
         uses: actions/cache@v4
         with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
       - name: Install Playwright + Chromium
-        run: pip install playwright pillow numpy scipy && python -m playwright install --with-deps chromium
+        timeout-minutes: 25
+        run: |
+          pip install playwright pillow numpy scipy
+          for i in 1 2 3; do timeout 8m python -m playwright install --with-deps chromium && break; echo "::warning::browser install try $i timed out"; sleep 5; done
       - name: Build
         run: ./build.sh
       - name: Sound
@@ -107,7 +113,7 @@ jobs:
         id: j
         env: {N: '${{ needs.plan.outputs.n }}', NSEG: '${{ needs.plan.outputs.nseg }}'}
         run: |
-          command -v ffmpeg >/dev/null || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
+          command -v ffprobe >/dev/null || (timeout 10m sudo apt-get update -q && timeout 10m sudo apt-get install -yq ffmpeg)
           python3 tools/render_join.py > join.txt 2>&1 || true; cat join.txt; msg=$(tail -1 join.txt)
           if [ -s out/intro.mp4 ]; then echo "ok=1" >> "$GITHUB_OUTPUT"; echo "::notice title=Render::$msg; drew pieces ${{ needs.plan.outputs.segs }}"
           else echo "::error title=Render::$msg"; fi
