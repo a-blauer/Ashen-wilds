@@ -952,7 +952,8 @@ if they must be re-declared: `{"room":{"topics":{"es":"interact","ev":"interact"
 (not committed), published on its own as the claude.ai artifact https://claude.ai/artifact/CFMkqW7fCZR1DhZoRZ5Qxk since Oct 25 2026
 (the old single-file link QE5i4p6m1KaMduTUe453Qm stopped there: too large to re-read before republishing). It is the game build plus a viewer panel that plays the real
 game code on a quiet stage (Hillside Crest I's road; natural spawns off). Four tabs:
-* **Companions**: every species, its 4 evolution looks, basic attack and its 4 abilities.
+* **Companions**: every species, its 4 evolution looks, basic attack and its 4 abilities. Since v150 the 14 higher-tier species that used to be
+  recoloured lower tiers show their own bodies (3110–3140), and the bats (Batwing, Duskwing, Blood Bat) have wings and hind legs only.
 * **Monsters**: every creature that can spawn, grouped by the zone it lives in (the bestiary's `dex141Where`), plus quest
   creatures (the ghost wolf), and each of its moves (basic + signature moves, red warnings shown).
 * **Bosses**: the six Sovereigns, each in its own den with the real fight started, and Vorraxis in the Seeping Lair.
