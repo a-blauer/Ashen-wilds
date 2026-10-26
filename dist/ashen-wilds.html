@@ -2981,7 +2981,7 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
 // ---------------- XP / leveling ----------------
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
-  xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1);xp=Math.max(1,Math.round(xp));
+  xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1)*(typeof gw150X=='function'?gw150X(e):1);xp=Math.max(1,Math.round(xp));
   if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return xp;
@@ -7598,6 +7598,7 @@ var BAT_BODY=[
   [.47,.392,.082,.072,.065,['head','head',0],0],
   [.5,.384,.05,.045,.04,['head','head',0],2],
   [.515,.38,.03,.026,.024,['head','head',0],2]];
+// v150: only the hind pair (index 1) is built: a bat's forelimbs are its wings (the front-leg bones stay in the skeleton, unused)
 function batLegs(s){const f=(x,y,z,r,b)=>[s*x,y,z,r,r,b];return [
   [f(.07,.24,.15,.04,['chest',s<0?'fl0':'fr0',.4]),f(.075,.15,.17,.025,[s<0?'fl0':'fr0',s<0?'fl1':'fr1',.6]),f(.075,.07,.165,.018,[s<0?'fl1':'fr1',s<0?'fl2':'fr2',.7]),f(.075,.035,.17,.016,[s<0?'fl2':'fr2',s<0?'fl2':'fr2',0])],
   [f(.08,.24,-.19,.05,['pelvis',s<0?'hl0':'hr0',.4]),f(.083,.16,-.16,.03,[s<0?'hl0':'hr0',s<0?'hl1':'hr1',.6]),f(.083,.08,-.2,.02,[s<0?'hl1':'hr1',s<0?'hl2':'hr2',.7]),f(.083,.04,-.21,.018,[s<0?'hl2':'hr2',s<0?'hl2':'hr2',0])]]}
@@ -7609,7 +7610,7 @@ LPR.Batwing={
     return lpGeo('Batwing|'+C,'Batwing',[
       {rings:BAT_BODY.map(r=>({p:[0,r[1],r[0]],rx:r[2],ryT:r[3],ryB:r[4],b:r[5],k:r[6],j:r[6]==2?0:.14})),seg:8,capA:1,capB:1,paint:(o,r,s)=>{
         if(r.k==2)return o.copy(nose);o.copy(main);if(s>.55)o.lerp(back,.7);if(s<-.3)o.lerp(bel,.8);if(r.k==1&&s<.6)o.lerp(ruff,.6)}}]
-      .concat([].concat(...[-1,1].map(s=>batLegs(s).map(L=>({rings:L.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[4],ryB:r[4],b:r[5]})),seg:5,ref:[0,0,1],capB:1,paint:(o,r)=>{o.copy(r.p[1]<.12?dark:back)}}))))),61);
+      .concat([].concat(...[-1,1].map(s=>batLegs(s).slice(1).map(L=>({rings:L.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[4],ryB:r[4],b:r[5]})),seg:5,ref:[0,0,1],capB:1,paint:(o,r)=>{o.copy(r.p[1]<.12?dark:back)}}))))),61);
   },
   kit(k,c,C,red){
     const dark=0x150f18,eye=red?0xff2a2a:0xff3a2a,back=dkShade(lpMain(C,.12).getHex(),.5);
@@ -7627,7 +7628,7 @@ LPR.Batwing={
     // shaggy chest ruff
     [-2,-1,0,1,2].forEach(i=>k.L('chest','c',dkShade(lpMain(C,.12).lerp(new THREE.Color(0xb0a090),.35).getHex(),.9),[i*.045,.26,.27],[i*.055,.17,.22],.04,.004,4));
     // hooked claws on the feet
-    [['fl2',-.075,.17],['fr2',.075,.17],['hl2',-.083,-.21],['hr2',.083,-.21]].forEach(f=>[-1,1].forEach(i=>k.p(f[0],'cone4','c',dark,f[1]+i*.012,.02,f[2]+.02,.007,.035,.007,Math.PI*.75)));
+    [['hl2',-.083,-.21],['hr2',.083,-.21]].forEach(f=>[-1,1].forEach(i=>k.p(f[0],'cone4','c',dark,f[1]+i*.012,.02,f[2]+.02,.007,.035,.007,Math.PI*.75)));
   },
   post(x,c,C,mat){
     const main=lpMain(C,.12),mem=main.clone().multiplyScalar(.55).lerp(new THREE.Color(0x3a2a34),.4),edge=main.clone().multiplyScalar(.3);
@@ -32995,7 +32996,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       const body=e137Rows([[-.42,.32,.012,.012,.012,['tail1','tail1',0]],[-.34,.305,.04,.035,.035,['tail0','tail1',.3]],[-.26,.29,.1,.09,.1,['pelvis','tail0',.2]],[-.16,.28,.15,.12,.17,['pelvis','spine',.4]],
         [-.04,.285,.17,.13,.19,['spine','spine',0]],[.07,.295,.16,.13,.17,['spine','chest',.5]],[.16,.31,.13,.12,.13,['chest','chest',0]],[.24,.33,.11,.11,.1,['chest','neck',.6]],
         [.3,.36,.11,.11,.1,['neck','head',.5]],[.36,.395,.125,.12,.1,['head','head',0],'hd'],[.42,.395,.11,.1,.085,['head','head',0],'hd'],[.46,.385,.08,.07,.06,['head','head',0],'hd'],[.49,.38,.05,.045,.04,['head','head',0],'hd'],[.5,.378,.02,.02,.02,['head','head',0],'hd']]);
-      return lpGeo('E137|'+n,n,[{rings:body,seg:9,capA:1,capB:1,paint}].concat(e137Quad(n,[.035,.022,.016,.016],[.04,.024,.016,.016],paint,{toe:.04,lift:.02,foot:.02})),79)},
+      return lpGeo('E137|'+n,n,[{rings:body,seg:9,capA:1,capB:1,paint}].concat(e137Quad(n,[.035,.022,.016,.016],[.04,.024,.016,.016],paint,{toe:.04,lift:.02,foot:.02}).slice(2)),79)} /* v150: hind legs only, the wings are its forelimbs */,
     kit(k,c,C,red){
       // nose leaf, eyes, wrinkles, fangs
       k.p('head','sph','c',K.skin2,0,.4,.505,.05,.045,.025);k.L('head','c',K.skin,[0,.42,.51],[0,.48,.5],.03,.006,4);
@@ -33010,7 +33011,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       // a bristly black mane over the shoulders and down the back
       for(let i=0;i<9;i++){const z=.3-i*.06,bn=z>.25?'neck':z>.1?'chest':z>-.1?'spine':'pelvis',y=z>.2?.47:.43-(.2-z)*.15;[-1,0,1].forEach(j=>k.L(bn,'c',0x0a0606,[j*.04,y-.02,z],[j*.07,y+.06,z-.07],.018,.002,3))}
       [-1,1].forEach(s=>{k.L('chest','c',K.skin2,[s*.06,.43,.2],[s*.12,.4,.12],.02,.012,4);k.L('chest','c',K.skin2,[s*.12,.4,.12],[s*.1,.33,.08],.012,.008,4)});
-      ['fl2','fr2','hl2','hr2'].forEach(b=>e137Claws(k,n,b,K.dark,.03,.006,3))},
+      ['hl2','hr2'].forEach(b=>e137Claws(k,n,b,K.dark,.03,.006,3))},
     post(x,c,C,mat){
       const og=lpSpikeGeo(K.skin2,K.dark,3),ig=lpSpikeGeo(0x9a3a44,0x3a0a10,3);
       [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.07,.47,.38,.1,.27,.045,-.25,-s*.5,s*.1);const m=new THREE.Mesh(ig,mat);m.scale.set(.62,.78,.5);m.position.set(0,.03,.5);p.children[0].add(m);p.userData={rz:-s*.45,sd:s};x.ears.push(p)});
@@ -39791,9 +39792,12 @@ function sk148Aim(){const t=SK141.tool,kind=SK141.kind;if(!t||!t.parent||(kind!=
   // the head's long axis: pick - across the handle inside the swing plane; hatchet - the edge leads where the head is going
   let x;
   if(kind=='pick')x=new V().crossVectors(u,s).normalize();
-  else{const d=sk148Dir(K,Math.min(1,k+.03),f,s,up).sub(sk148Dir(K,Math.max(0,k-.03),f,s,up));d.addScaledVector(u,-d.dot(u));
-    x=d.lengthSq()>1e-4?d.normalize():f.clone().addScaledVector(u,-f.dot(u)).normalize();
-    if(SK148.edge&&SK148.k>=0){const e=SK148.edge.clone().addScaledVector(u,-SK148.edge.dot(u));if(e.lengthSq()>1e-4){e.normalize();x.lerp(e,.35).addScaledVector(u,-x.dot(u)).normalize()}}}
+  else{// v150: the edge keeps one side of the handle all through the swing (a hatchet does not turn in the hand): the side
+    // that leads the down-swing. Following the motion of each moment (v148) flipped the edge round during the wind-up, so
+    // the blade faced the hero at the start of every chop.
+    const a=sk148Dir(K,.42,f,s,up),b=sk148Dir(K,.54,f,s,up),n=new V().crossVectors(a,b);
+    if(n.lengthSq()<1e-6)n.copy(s);n.normalize();const mid=sk148Dir(K,.48,f,s,up);if(new V().crossVectors(n,mid).dot(b.clone().sub(a))<0)n.negate();
+    x=new V().crossVectors(n,u);if(x.lengthSq()<1e-6)x=f.clone().addScaledVector(u,-f.dot(u));x.normalize()}
   if(SK148.edge&&kind=='pick'&&x.dot(SK148.edge)<0)x.negate();
   SK148.edge=x.clone();SK148.k=k;
   const y=u.clone().negate(),z=new V().crossVectors(x,y).normalize();x.crossVectors(y,z).normalize();
@@ -40672,4 +40676,373 @@ function bc148Vorraxis(by){if(typeof MQ144=='undefined'||MQ144.st>=2)return true
 {const f=homeTick;homeTick=function(){const r=f.apply(this,arguments);try{const now=performance.now();bc148Flush(now);bc148Apply(now)}catch(err){console.warn('v148 credit',err)}return r}}
 // a fresh co-op game: forget which kills were already applied (each one is still applied only once: bossDone / MQ144.st)
 {const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);BC148.got={};BC148.q=[];return r}}
+// ================= v150 (owner's co-op list, Oct 25 2026): partners' effects clean up, partners' mounts show =================
+// 1) Ground circles left behind. A replayed effect (2170) is drawn on the partner's screen from the recorded call, but a ground
+//    decal (kqsDecal: the Venom Flask cloud, Caltrops, warning circles…) is taken away later through the object it returns
+//    (D.rm), which the replay never got, so the partner kept the circle on the ground for good. Now the caster gives every
+//    decal it records an id (an extra argument kqsDecal ignores) and sends ['D', id, ms] when it is removed; the partner
+//    removes its copy then. A replayed decal that hears nothing goes after V150.decT seconds anyway.
+//    The small glow stand-ins a replay makes for mesh / monster arguments (mpvStub) also go after V150.stubT seconds.
+// 2) Partners' mounts. Presence carries the mount you ride (mt: [kind, speed]); a partner builds the same mount model under
+//    your hero, walks it with its own gait and sits your hero in the saddle (the v78 seat and leg pose).
+var V150={decT:15,stubT:4,dn:0,dec:{},mt:{}};
+
+// ---------- 1) decals and stand-ins ----------
+{const f=kqsDecal;kqsDecal=function(p,R,col,op,edge,id){
+  if(MPV.rep){const D=f.apply(this,arguments);try{const key=typeof id=='string'&&id.length<40?id:null;if(key)V150.dec[key]=D;
+      setTimeout(()=>{try{if(key&&V150.dec[key]===D)delete V150.dec[key];D.rm(400)}catch(_){}},V150.decT*1000)}catch(_){}return D}
+  if(MPV.cap&&!MPV.dep&&mpvLive()){const key=(MP.me||'p')+'#'+(++V150.dn).toString(36);const D=f.call(this,p,R,col,op,edge,key);
+    try{const rm=D.rm;let done=0;D.rm=function(ms){if(!done){done=1;try{if(mpvLive())mpvPush(['D',key,Math.round(ms||350)])}catch(_){}}return rm.apply(this,arguments)}}catch(_){}return D}
+  return f.apply(this,arguments)}}
+{const f=mpvPlay;mpvPlay=function(r,e){if(e&&e[0]==='D'){const key=e[2],D=typeof key=='string'?V150.dec[key]:null;if(D){delete V150.dec[key];try{D.rm(Math.max(50,Math.min(3000,+e[3]||350)))}catch(_){}}return}
+  return f.apply(this,arguments)}}
+// mpOnEV (2170) only replays the entry letters it knows: D rides along as its own pass
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)&&d.r===MP.rg){const r=mpvRH(msg.peer);
+    if(r)for(const e of d.l.slice(0,80)){if(!Array.isArray(e)||e[0]!=='D')continue;const t=Math.max(0,Math.min(3000,+e[1]||0));setTimeout(()=>{const r2=mpvRH(msg.peer);if(r2)mpvPlay(r2,e)},t)}}}catch(err){console.warn('v150 decal',err)}
+  return f.apply(this,arguments)}}
+{const f=mpvStub;mpvStub=function(){const m=f.apply(this,arguments);setTimeout(()=>{try{if(m.parent)m.parent.remove(m)}catch(_){}},V150.stubT*1000);return m}}
+
+// ---------- 2) mounts ----------
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.mt=riding&&mModel?[String(riding.k).slice(0,24),Math.round(riding.spd||0)]:0}catch(_){p.mt=0}}return f.apply(this,arguments)}}
+function v150MtDrop(r){if(r&&r.mt150){scene.remove(r.mt150.g);r.mt150=null;try{const h=r.m&&r.m.children[0];if(h){h.position.y=0;h.position.z=0}const b=r.m&&r.m.bones;if(b){b.lh0.rotation.z=0;b.rh0.rotation.z=0}}catch(_){}}}
+function v150MtTick(now){
+  for(const k in MP.rh){const r=MP.rh[k],pr=r.pr,m=r.m;
+    const mt=pr&&Array.isArray(pr.mt)&&typeof pr.mt[0]=='string'&&MOUNTS[pr.mt[0]]?pr.mt[0]:null;
+    if(!m||!m.visible||!mt||pr.hp<=0){if(r.mt150)v150MtDrop(r);continue}
+    if(!r.mt150||r.mt150.k!==mt){v150MtDrop(r);let g=null;try{g=mountModel(mt)}catch(err){console.warn('v150 mount',err)}if(!g)continue;g.userData.mpMt=1;scene.add(g);r.mt150={k:mt,g}}
+    const g=r.mt150.g,mv=!!pr.mv,sp=mv?2.4+(+pr.mt[1]||0)/30:0;g.position.copy(m.position);g.rotation.y=m.rotation.y;
+    try{if(g.r.rig)g.r.rig(now,mv,sp)}catch(_){}
+    const B=g.r.b,bob=B?B.position.y*g.r.scale.y:0,h=m.children[0];
+    if(h){h.position.y=g.seat[0]+bob-.5;h.position.z=g.seat[1]}if(g.sd)g.sd.position.y=g.seat[0]-.06+bob;
+    const b=m.bones;if(b&&b.lh0){b.lh0.rotation.x=-1.3;b.rh0.rotation.x=-1.3;b.lh0.rotation.z=-.42;b.rh0.rotation.z=.42;b.lh1.rotation.x=1.45;b.rh1.rotation.x=1.45;
+      if(!m.sw&&b.aL0){b.aL0.rotation.x=-.75;b.aR0.rotation.x=-.75;b.aL1.rotation.x=-.8;b.aR1.rotation.x=-.8;b.spine.rotation.x=mv?.12:0}}}}
+{const f=mpTick;mpTick=function(){const r=f.apply(this,arguments);try{if(MP.on)v150MtTick(performance.now())}catch(err){if(!V150.mtErr){V150.mtErr=1;console.warn('v150 mounts',err)}}return r}}
+{const f=mpDropRH;mpDropRH=function(k){try{v150MtDrop(MP.rh[k])}catch(_){}return f.apply(this,arguments)}}
+// ================= v150: co-op monsters also go for partners' companions =================
+// The region host runs the shared monsters (0520). Its monsters picked between its own hero, its own companions and the
+// partners' heroes, but never a partner's companion, so a guest's companion could bite a monster all day and never be
+// fought back. Now a host monster also weighs each partner's active companion (the copy 2170 shows, r.fl[i]) by the same
+// rule as your own (only when clearly closer than the hero it would go for, at most two monsters on one companion). The
+// attack is relayed with the target "peer#slot"; the owner plays it against its own companion (fols[slot]), which is where
+// the hit lands. Older pages read an unknown target as a spot on the ground (harmless).
+var AG150={pref:2.5,cap:2};
+{const f=eTarget;eTarget=function(e,m,dpl){const tg=f.apply(this,arguments);
+  try{if(!MP.on||!MP.others||e.mir||MP.host!==MP.me)return tg;
+    if(tg&&tg.mpFolOf)return tg; // already on one
+    let bd=tg===pl?dpl:m.position.distanceTo(tg.position);bd-=AG150.pref;let best=null;
+    // stay on the companion it already chose while it is close and still shown
+    if(e.tg150){const g=e.tg150;if(g.parent&&g.visible&&m.position.distanceTo(g.position)<6)return g;e.tg150=null}
+    const cnt=new Map();enemies.forEach(o=>{if(o!==e&&!o.dead&&o.agg&&o.tg150)cnt.set(o.tg150,(cnt.get(o.tg150)||0)+1)});
+    for(const k in MP.rh){const r=MP.rh[k];if(!r.act||!r.fl)continue;
+      for(let i=0;i<2;i++){const g=r.fl[i];if(!g||!g.visible||!g.parent)continue;if((cnt.get(g)||0)>=AG150.cap)continue;
+        const d=m.position.distanceTo(g.position);if(d<bd){bd=d;best=g;g.mpFolOf=k+'#'+i}}}
+    if(best){e.tg150=best;return best}}catch(err){if(!AG150.err){AG150.err=1;console.warn('v150 aggro',err)}}
+  return tg}}
+// the relayed attack names the companion: "peer#slot"
+{const f=mStart;mStart=function(e,tg,n){if(tg&&tg.mpFolOf&&MP.on&&MP.others&&e.nid&&!e.mir&&MP.host===MP.me){const id=tg.mpFolOf;tg.mpPeer=id;try{return f.apply(this,arguments)}finally{delete tg.mpPeer}}return f.apply(this,arguments)}}
+// the owner: an attack on one of my companions plays against it here
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)&&d.r===MP.rg&&msg.peer===MP.host){
+    const pre=(MP.me||'')+'#';const keep=[];let mine=0;
+    for(const q of d.l){if(Array.isArray(q)&&q[0]==='a'&&typeof q[3]==='string'&&q[3].indexOf('#')>0){mine++;
+        if(q[3].indexOf(pre)===0){const i=+q[3].slice(pre.length),e=MP.emap[q[1]],fo=typeof fols!='undefined'?fols[i]:null,c=party[i];
+          if(e&&!e.dead&&e.mir&&typeof q[2]==='string'&&MV[q[2]]&&fo&&c&&c.h>0&&fo.visible){if(e.atk)mCancel(e);if(isFinite(q[4])&&isFinite(q[5])){e.m.position.x=q[4];e.m.position.z=q[5]}try{mStart(e,fo,q[2])}catch(_){}}}
+        continue}
+      keep.push(q)}
+    if(mine)msg={...msg,data:{...d,l:keep}}}}catch(err){console.warn('v150 aggro ev',err)}
+  return f.call(this,msg)}}
+// ================= v150: co-op progress is shared =================
+// Owner: "I didn't get progress when clearing camp, or empowered kills when in co-op. Need co-op to be shared progress and
+// instance." Playing together, everybody in the instance now moves forward together:
+//  · Kills: every kill of a shared monster you are near counts for your own Cheddar quests (kills, elites, empowered / food /
+//    bard kills, forged-weapon kills), whoever landed the last hit. Before, a guest's monsters are copies of the host's, and
+//    a copy's death came from the host, so a guest never counted anything but camp clears.
+//  · Camps: the region host's world clears a camp (it runs the camp's creatures) and tells the others (['cc', camp]); each
+//    player near it gets the clear: the XP, their own chest, the camp quests, and the camp counts as cleared for them (the
+//    Glowmire Warren's hatch opens for everyone).
+//  · Main quests: a lamppost lit on the Lantern Road (['m143', i]) and a rune sigil attuned (['m145', i]) are lit / attuned
+//    for every partner in that instance too.
+//  · Instances: presence carries how far you have reached in each zone (ir); playing together, each player reaches as far
+//    as the furthest of them (the portal window lists those instances, and the main quests that end at a reached gateway
+//    count as done), so a guest can always follow the host.
+//  · Rune sigil rituals are fought together: the region host runs the ritual (a guest's F at a sigil asks the host,
+//    ['r145', i]), its ghost wolves are shared monsters that hunt every hero, the ritual holds while any hero stays near the
+//    sigil, and the host sends the count (['p145', i, slain, total]) for everyone's tracker.
+var CP150={near:60,lastP:'',tP:0,RR:null};
+function cp150Peer(msg){try{const r=MP.rh[msg.peer];return !!(r&&r.pr&&r.pr.rg===MP.rg&&MP.rg>=0)}catch(_){return false}}
+function cp150Send(e){try{if(MP.on&&MP.others&&MP.rg>=0)MP.evq.push(e)}catch(_){}}
+
+// ---------- kills ----------
+chqKill132=function(e,C,was){if(!e||e.dprop||e.wv)return;
+  if(C&&!C.raid&&!was&&campCleared(C)){let z=null;try{z=INSL[C.ig].z}catch(_){}chqEv132('camp',1,null,z);chqEv132('allCamps',1,C.i,z)}
+  if(e.minion&&!(e.c&&e.c.en==='ghostwolf'))return;
+  chqEv132('kill',1);if(e.c&&e.c.al)chqEv132('elite',1);
+  const b=chqBuffKind132();if(b.comp)chqEv132('empKill',1);if(b.food)chqEv132('foodKill',1);if(b.bard)chqEv132('bardKill',1);
+  const w=typeof eq!='undefined'&&eq.weapon;if(w&&w.up>=2&&e.lhH&&nowP()-e.lhH<3000)chqEv132('forgeKill',1)};
+
+// ---------- camps ----------
+{const f=camp148Clear;camp148Clear=function(C){const r=f.apply(this,arguments);try{if(!CP150.rx&&MP.on&&MP.host===MP.me&&C&&C.ig===MP.rg)cp150Send(['cc',CAMPS.indexOf(C)])}catch(_){}return r}}
+function cp150Camp(j){const C=CAMPS[j];if(!C||C.ig!==MP.rg||hero.hp<=0)return;if(Math.hypot(pl.position.x-C.x,pl.position.z-C.z)>CP150.near)return;
+  const was=campCleared(C);const now=nowP();
+  try{if(typeof ROST!='undefined'&&ROST.slots)ROST.slots.forEach(s=>{if(s.camp===C){s.dead=1;s.rt=Math.max(s.rt||0,now+CAMP148.resp*1000)}})}catch(_){}
+  C.clr=true;if(was)return;
+  CP150.rx=1;try{camp148Clear(C)}finally{CP150.rx=0}
+  let z=null;try{z=INSL[C.ig].z}catch(_){}chqEv132('camp',1,null,z);chqEv132('allCamps',1,C.i,z)}
+
+// ---------- main quests ----------
+{const f=mq143Light;mq143Light=function(i){const was=!!MQ143.lit[i];const r=f.apply(this,arguments);try{if(!was&&MQ143.lit[i]&&!CP150.rx)cp150Send(['m143',i])}catch(_){}return r}}
+function cp150Lamp(i){if(!MQ143.S||MQ143.lit[i]||mq143Done()||MQ143.st>=2)return;CP150.rx=1;const b0=MQ143.b;MQ143.b+=MQ143.per;
+  try{mq143Light(i)}finally{CP150.rx=0;if(!MQ143.lit[i])MQ143.b=b0}say('🪔 A partner lit a lamppost on the road.')}
+function cp150Sigil(i){if(MQ145.at[i])return;
+  if(MQ145.R&&MQ145.R.i!==i)mq145Fail('left');
+  if(MQ145.S&&mq145In3()){CP150.rx=1;try{if(!MQ145.R)MQ145.R={i,live:[],n:0,dead:0,tot:0};mq145Attune(i)}finally{CP150.rx=0}}
+  else{MQ145.at[i]=1;MQ145.trkK='';mq145Sync();if(mq145N()>=3)mq145GateSync()}
+  CP150.RR=null}
+{const f=mq145Attune;mq145Attune=function(i){const r=f.apply(this,arguments);try{if(!CP150.rx)cp150Send(['m145',i])}catch(_){}return r}}
+
+// ---------- the ritual together ----------
+function cp150Co(){return typeof MP!='undefined'&&MP.on&&MP.others>0&&MP.rg>=0}
+{const f=mq145Start;mq145Start=function(i){
+  if(cp150Co()&&MP.host!==MP.me&&!CP150.rx){if(MQ145.at[i])return;cp150Send(['r145',i]);say('🐺 The ritual begins: the ghost wolves rise round '+MQ145.names[i]+'. Fight them together.');return}
+  return f.apply(this,arguments)}}
+// the host's wolves are shared monsters (not minions) that hunt every hero
+{const f=spawnEnemy;spawnEnemy=function(k,x,z,l,o){const e=f.apply(this,arguments);try{if(e&&k==='ghostwolf'&&o&&o.minion&&MQ145.R&&cp150Co()&&MP.host===MP.me)e.minion=0}catch(_){}return e}}
+{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.gw145&&e.hunt&&!e.dead&&cp150Co()){let tg=hero.hp>0?pl:null,bd=tg?dpl:1e9;
+    for(const k in MP.rh){const r=MP.rh[k];if(!r.act)continue;const d=m.position.distanceTo(r.m.position);if(d<bd){bd=d;tg=r.m}}return tg||pl}
+  return f.apply(this,arguments)}}
+// the ritual holds while any hero is near the sigil and standing
+{const f=mq145RTick;mq145RTick=function(dt,now){const R=MQ145.R;if(!R||!cp150Co()||MP.host!==MP.me)return f.apply(this,arguments);
+  const M=MQ145.S&&MQ145.S.sig[R.i];let lend=null;
+  try{if(M){let best=null,bd=Math.hypot(pl.position.x-M.x,pl.position.z-M.z);const meOk=hero.hp>0;if(!meOk)bd=1e9;
+    for(const k in MP.rh){const r=MP.rh[k];if(!r.act||!r.m)continue;const d=Math.hypot(r.m.position.x-M.x,r.m.position.z-M.z);if(d<bd){bd=d;best=r}}
+    if(best&&(bd<Math.hypot(pl.position.x-M.x,pl.position.z-M.z)||!meOk))lend=best}}catch(_){}
+  if(!lend){const r=f.apply(this,arguments);cp150Prog(now);return r}
+  const P=pl.position,ox=P.x,oz=P.z,hp=hero.hp;P.x=lend.m.position.x;P.z=lend.m.position.z;if(hero.hp<=0)hero.hp=1;
+  try{return f.apply(this,arguments)}finally{P.x=ox;P.z=oz;hero.hp=hp;cp150Prog(now)}}}
+function cp150Prog(now){const R=MQ145.R;if(!R||!cp150Co()||MP.host!==MP.me)return;const k=R.i+'|'+R.dead+'|'+R.tot;if(k===CP150.lastP&&now-CP150.tP<2500)return;CP150.lastP=k;CP150.tP=now;cp150Send(['p145',R.i,R.dead,R.tot])}
+{const f=mq145Fail;mq145Fail=function(why){const R=MQ145.R;const r=f.apply(this,arguments);try{if(R&&cp150Co()&&MP.host===MP.me)cp150Send(['f145',R.i])}catch(_){}return r}}
+// a partner's tracker shows the host's count
+{const f=mq145Trk;mq145Trk=function(){const RR=CP150.RR;if(MQ145.R||!RR||nowP()-RR.t>6000||MQ145.at[RR.i])return f.apply(this,arguments);
+  MQ145.R={i:RR.i,w:1,dead:RR.dead,tot:RR.tot,n:Math.min(RR.tot,RR.dead+MQ145.alive),live:[]};try{return f.apply(this,arguments)}finally{MQ145.R=null}}}
+
+// ---------- instance reach ----------
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.ir=INSR.slice(0,PMAP.length)}catch(_){}}return f.apply(this,arguments)}}
+function cp150Reach(){if(typeof MP=='undefined'||!MP.on)return;let up=0;
+  for(const k in MP.rh){const pr=MP.rh[k].pr;if(!pr||!Array.isArray(pr.ir))continue;
+    pr.ir.slice(0,PMAP.length).forEach((v,z)=>{v=Math.max(0,Math.min(PMI-1,v|0));if(v>(INSR[z]|0)){INSR[z]=v;up=1}})}
+  if(up){MP.lastPres='';try{mq144GateSync()}catch(_){}try{mq145GateSync()}catch(_){}try{if(typeof mq143Sync=='function')mq143Sync()}catch(_){}say('👥 Playing together: you can now travel as far as your partners have reached.')}}
+
+// ---------- messages ----------
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)&&d.r===MP.rg&&cp150Peer(msg)){
+    for(const q of d.l.slice(0,60)){if(!Array.isArray(q))continue;const t=q[0];
+      if(t==='cc'&&msg.peer===MP.host&&Number.isInteger(q[1]))cp150Camp(q[1]);
+      else if(t==='m143'&&Number.isInteger(q[1])&&MQ143.lit&&q[1]>=0&&q[1]<MQ143.lit.length)cp150Lamp(q[1]);
+      else if(t==='m145'&&Number.isInteger(q[1])&&q[1]>=0&&q[1]<3)cp150Sigil(q[1]);
+      else if(t==='r145'&&Number.isInteger(q[1])&&q[1]>=0&&q[1]<3&&MP.host===MP.me){
+        if(MQ145.at[q[1]])cp150Send(['m145',q[1]]);else if(!MQ145.R&&mq145In3()&&MQ145.S){CP150.rx=1;try{mq145Start(q[1])}finally{CP150.rx=0}}}
+      else if(t==='p145'&&msg.peer===MP.host&&Number.isInteger(q[1])&&q[1]>=0&&q[1]<3){CP150.RR={i:q[1],dead:Math.max(0,q[2]|0),tot:Math.max(1,q[3]|0),t:nowP()};MQ145.trkK=''}
+      else if(t==='f145'&&msg.peer===MP.host){CP150.RR=null;MQ145.trkK=''}}}}catch(err){console.warn('v150 progress',err)}
+  return f.apply(this,arguments)}}
+{const f=homeTick;homeTick=function(){const r=f.apply(this,arguments);try{if(typeof MP!='undefined'&&MP.on&&nowP()-(CP150.tR||0)>2000){CP150.tR=nowP();cp150Reach()}}catch(err){if(!CP150.err){CP150.err=1;console.warn('v150 reach',err)}}return r}}
+{const f=mq145Prompt;mq145Prompt=function(){const RR=CP150.RR;if(MQ145.R||!RR||nowP()-RR.t>6000||MQ145.at[RR.i])return f.apply(this,arguments);
+  MQ145.R={i:RR.i,w:1,dead:RR.dead,tot:RR.tot,n:0,live:[]};try{return f.apply(this,arguments)}finally{MQ145.R=null}}}
+// ================= v150: the rune sigil rituals are shorter, leaner and the wolves don't get stuck =================
+// Owner: "way too many wolves for rune sigil and they got stuck often. Reduce count to 50 kills. Also gave too much xp and
+// drops - cut by 75%."
+//  · A ritual ends after MQ145.total = 50 ghost wolves (was 100), still 12 at a time.
+//  · A ghost wolf gives a quarter of its XP (gw150X, used in gainXP) and drops loot only one kill in four (GW150.loot), the
+//    same for co-op copies of the host's wolves.
+//  · Stuck wolves: a hunting wolf that has gone less than GW150.move tiles in GW150.wait seconds while still more than
+//    GW150.gap tiles from the hero it hunts (snagged on a rune stone, a tree or a ledge) melts into shadow and rises again
+//    on free ground GW150.r tiles from that hero (the region host's world, or yours alone).
+var GW150={xp:.25,loot:.25,wait:2.5,move:.6,gap:2.6,r:[3,5]};
+MQ145.total=50;
+function gw150Is(e){return !!(e&&(e.gw145||(e.c&&e.c.en==='ghostwolf')))}
+function gw150X(e){return gw150Is(e)?GW150.xp:1}
+{const f=lootE;lootE=function(e){if(gw150Is(e)&&Math.random()>=GW150.loot)return;return f.apply(this,arguments)}}
+function gw150Tick(now){const R=MQ145.R;if(!R||!R.live||!R.live.length)return;if(typeof MP!='undefined'&&MP.on&&MP.others>0&&MP.host!==MP.me)return;
+  let ok=null;try{ok=mq145Plan().ok}catch(_){}
+  for(const e of R.live){if(e.dead||!e.m||e.mir)continue;const m=e.m,p=m.position;
+    let tg=null;try{tg=eTarget(e,m,m.position.distanceTo(pl.position))}catch(_){tg=pl}if(!tg||!tg.position)tg=pl;const d=Math.hypot(tg.position.x-p.x,tg.position.z-p.z);
+    const S=e.st150;if(!S||e.atk||d<=GW150.gap){e.st150={x:p.x,z:p.z,t:now};continue}
+    if(Math.hypot(p.x-S.x,p.z-S.z)>GW150.move){e.st150={x:p.x,z:p.z,t:now};continue}
+    if(now-S.t<GW150.wait*1000)continue;
+    // blink: free ground near the hunted hero, on the wolf's side first
+    const a0=Math.atan2(p.z-tg.position.z,p.x-tg.position.x);let spot=null;
+    for(let k=0;k<16&&!spot;k++){const a=a0+(k%2?1:-1)*Math.ceil(k/2)*.45,r=GW150.r[0]+Math.random()*(GW150.r[1]-GW150.r[0]),x=tg.position.x+Math.cos(a)*r,z=tg.position.z+Math.sin(a)*r;
+      if(ok?ok(x,z,.4):!solid(Math.round(x),Math.round(z)))spot=[x,z]}
+    e.st150={x:p.x,z:p.z,t:now};if(!spot)continue;
+    try{burst(gY(p,.5),0x3a2a6a,16,1.2,1.4,.6)}catch(_){}
+    p.x=spot[0];p.z=spot[1];p.y=GH(p.x,p.z);e.vx=e.vz=0;m.rotation.y=Math.atan2(tg.position.x-p.x,tg.position.z-p.z);e.st150={x:p.x,z:p.z,t:now};
+    try{burst(gY(p,.4),0x6a4ab8,18,1.2,1.6,.6)}catch(_){}}}
+{const f=homeTick;homeTick=function(){const r=f.apply(this,arguments);try{gw150Tick(performance.now())}catch(err){if(!GW150.err){GW150.err=1;console.warn('v150 wolves',err)}}return r}}
+// ================= v150: in co-op, Duskhold is the host's =================
+// Owner: "Duskhold should be a single instance of the host's. Co-op players should be able to put their resources towards
+// upgrading the host's kingdom."
+// Every player used to walk round their own Duskhold, so partners stood in each other's buildings. Now, playing together,
+// everybody's Duskhold is the kingdom host's: the join-code host (the one who made the code), or on the shared artifact
+// room the player with the lowest id.
+//  · The host's page sends its kingdom (buildings and their lots and turns, upgrade levels, houses and citizens, decorations,
+//    shop levels, the kingdom's stage, the harvested outskirts) as ['ks', id, part, parts, text] on the 'ev' topic
+//    (r -7: no zone instance), whenever it changes and every DK150.keep seconds.
+//  · A guest keeps its own kingdom aside (DK150.stash, still what its saves write) and shows the host's instead: same walls,
+//    same buildings, same shops (their levels give their discounts), same citizens. Leaving the game or the host leaving
+//    brings the guest's own kingdom back.
+//  · Building with the Steward as a guest pays from your own gold and materials, and the build goes to the host's kingdom
+//    (['kd', what, key, lot]): a shop, an upgrade, a house, a decoration or a shop level. The host's page builds it without
+//    charging the host (the checks against Sovereigns, lots and levels still apply) and everyone gets the new kingdom.
+//    Gathering in the outskirts as a guest takes that tree or rock from the host's outskirts too (['kdo', candidate]).
+//  · Moving or turning buildings, switching decorations off and on and managing the villagers stay with the host.
+//  · A guest's own citizens rest while the host's kingdom is shown (no trips are paid out by the host's citizens).
+var DK150={on:false,host:'',stash:null,st:0,last:'',sent:'',sentT:0,peers:'',parts:{},free:0,saveLater:0,keep:15,tick:0,
+  KEYS:['sh','shp','kpos','krot','khs','kcit','kdeco','kst','shpu','out148']};
+function dk150Host(){try{if(typeof MP=='undefined'||!MP.on||!MPX.be)return '';
+    if(typeof KQNET!='undefined'&&KQNET.cur&&KQNET.cur.room===MPX.be){const h=KQNET.cur.host?MP.me:KQNET.pre+kqnClean(KQNET.cur.code);return h===MP.me||MP.rh[h]?h:''}
+    let h=MP.me;for(const k in MP.rh)if(MP.rh[k].pr&&k<h)h=k;return h}catch(_){return ''}}
+function dk150Peers(){try{return Object.keys(MP.rh).filter(k=>MP.rh[k].pr).length}catch(_){return 0}}
+function dk150Name(){try{return DK150.host===MP.me?(hero.name||'You'):mpName(DK150.host)}catch(_){return 'the host'}}
+// the kingdom as data (what x2Save keeps of it)
+function dk150Pack(full){
+  if(full){const o=x2Save()||{},s={};DK150.KEYS.forEach(k=>{if(o[k]!==undefined)s[k]=JSON.parse(JSON.stringify(o[k]))});return s}
+  return {sh:Object.assign({},SH.lv),shp:Object.assign({},SH.shop),kpos:Object.assign({},SH.pos),krot:Object.assign({},SH.rot),
+    khs:HS103.h.map(h=>({nm:h.nm,v:h.v})),kcit:HS103.cit.map(c=>({n:c.n,h:c.h,r:czRole104(c),rk:czRank105(c),lk:c.lk|0})),
+    kdeco:Object.assign({},SH.deco),kst:kf109().s,shpu:Object.assign({},SHP109.lv),out148:[...OUT148.h]}}
+// shows a kingdom: the kingdom parts of the save loaders (0530, 1860, 1870, 1910, 1960, 3074), then the same rebuilds
+function dk150Apply(s){s=s||{};const ob=v=>v&&typeof v=='object'&&!Array.isArray(v)?v:{};
+  for(const i in HS103.g)hsDrop103(+i);HS103.h=[];HS103.cit=[];czClear103();
+  (Array.isArray(s.khs)?s.khs:[]).slice(0,HS103_MAX).forEach(h=>{if(h&&typeof h.nm=='string')HS103.h.push({nm:h.nm.slice(0,40),v:Math.max(0,Math.min(2,h.v|0))})});
+  (Array.isArray(s.kcit)?s.kcit:[]).forEach(c=>{if(c&&typeof c.n=='string'&&HS103.h[c.h|0]&&HS103.cit.length<HS103_MAX*2)HS103.cit.push({n:c.n.slice(0,24),h:c.h|0,r:CZR104[c.r]?c.r:'gather',rk:Math.max(1,Math.min(5,c.rk|0||1)),task:typeof c.task=='string'?c.task.slice(0,40):'',t0:+c.t0||0,lk:c.lk|0,bag:Array.isArray(c.bag)?c.bag.slice(0,12):null})});
+  SH.lv={};SH.shop={};const sh=ob(s.sh),shp=ob(s.shp);SHU.forEach(u=>{const v=sh[u.k]|0;if(v>0)SH.lv[u.k]=Math.min(3,v)});SHOPS.forEach(o=>{if(shp[o.k])SH.shop[o.k]=1});
+  SH.pos={};SH.rot={};const kr=ob(s.krot),kp=ob(s.kpos);for(const k in kr){const v=kr[k]|0;if(v>0&&v<4)SH.rot[k]=v}for(const k in kp){const v=kp[k];if(typeof v=='string'&&LOTM103[v]&&!Object.values(SH.pos).includes(v))SH.pos[k]=v}
+  SH.deco={};const kd=ob(s.kdeco);DECO103.forEach(D=>{const v=kd[D.k];if(v===0||v===1)SH.deco[D.k]=v});
+  SHP109.lv={};const su=ob(s.shpu);SHPU109.forEach(u=>{const v=su[u.k]|0;if(v>0)SHP109.lv[u.k]=Math.min(SHP109_MAX,v)});try{stock2=null}catch(_){}try{mstock=null}catch(_){}
+  OUT148.h=new Set(Array.isArray(s.out148)?s.out148.filter(n=>Number.isInteger(n)&&n>=0):[]);
+  DK150.st=Math.max(0,Math.min(5,s.kst|0));
+  KF109.s=-1;KF109.fresh={};
+  try{shApply()}catch(e){console.warn('v150 kingdom shops',e)}try{lotSync103()}catch(e){console.warn('v150 kingdom lots',e)}
+  try{dc103Sync()}catch(e){console.warn('v150 kingdom deco',e)}try{kfApply109(true)}catch(e){console.warn('v150 kingdom size',e)}
+  try{hud();ui()}catch(_){}}
+// the guest's own kingdom while the host's is shown: stage, saves
+{const f=kfStage109;kfStage109=function(){if(DK150.on)return DK150.st;return f.apply(this,arguments)}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};if(DK150.on&&DK150.stash)DK150.KEYS.forEach(k=>{if(DK150.stash[k]!==undefined)o[k]=DK150.stash[k];else delete o[k]});return o}}
+{const f=czTick103;czTick103=function(){if(DK150.on)return;return f.apply(this,arguments)}}
+function dk150Borrow(s){if(!DK150.on){DK150.stash=dk150Pack(true);DK150.on=true;DK150.told=0}dk150Apply(s)}
+function dk150Return(){if(!DK150.on)return;const s=DK150.stash;DK150.on=false;DK150.stash=null;DK150.last='';DK150.host='';dk150Apply(s);
+  if(typeof MP!='undefined'&&MP.rg===-1)say('🏰 You are back in your own Duskhold.')}
+
+// ---------- the host sends ----------
+function dk150Send(now){const peers=Object.keys(MP.rh).sort().join(',');const txt=JSON.stringify(dk150Pack(false));
+  if(txt===DK150.sent&&peers===DK150.peers&&now-DK150.sentT<DK150.keep*1000)return;DK150.sent=txt;DK150.peers=peers;DK150.sentT=now;
+  const id=Math.random().toString(36).slice(2,8),N=2800,n=Math.max(1,Math.ceil(txt.length/N));
+  for(let i=0;i<n;i++)MP.room.emit('ev',{r:-7,l:[['ks',id,i,n,txt.slice(i*N,(i+1)*N)]]}).catch(()=>{})}
+// ---------- per frame ----------
+function dk150Tick(now){if(now-DK150.tick<1500)return;DK150.tick=now;
+  const h=dk150Host();
+  if(!h||h===MP.me||!dk150Peers()){if(DK150.on)dk150Return();if(h===MP.me&&dk150Peers())dk150Send(now);return}
+  if(DK150.on&&DK150.host&&DK150.host!==h)dk150Return();
+  if(DK150.on&&MP.rg===-1&&!DK150.told){DK150.told=1;say('🏰 You are in '+mpEsc(dk150Name())+'\'s Duskhold. What you build with the Steward goes to their kingdom.')}}
+{const f=homeTick;homeTick=function(){const r=f.apply(this,arguments);try{if(typeof MP!='undefined'&&MP.on&&party.length)dk150Tick(performance.now());else if(DK150.on)dk150Return()}catch(err){if(!DK150.err){DK150.err=1;console.warn('v150 duskhold',err)}}return r}}
+{const f=mpUse;mpUse=function(){const r=f.apply(this,arguments);try{if(!MP.on&&DK150.on)dk150Return()}catch(_){}return r}}
+
+// ---------- guests build for the host ----------
+function dk150Fwd(what,k,lot){try{MP.room.emit('ev',{r:-7,l:[['kd',what,String(k).slice(0,40),lot?String(lot).slice(0,12):'']]}).catch(()=>{})}catch(_){}
+  say('🏰 Sent to '+mpEsc(dk150Name())+'\'s kingdom.')}
+{const f=shopBuy;shopBuy=function(k){if(!DK150.on||DK150.free)return f.apply(this,arguments);const b=shopBuilt(k);const r=f.apply(this,arguments);if(!b&&shopBuilt(k))dk150Fwd('shop',k,SH.pos[k]);return r}}
+{const f=shBuy;shBuy=function(k){if(!DK150.on||DK150.free)return f.apply(this,arguments);const b=kdLv(k);const r=f.apply(this,arguments);if(kdLv(k)>b)dk150Fwd('up',k,SH.pos['u:'+k]);return r}}
+{const f=hsBuy103;hsBuy103=function(id){if(!DK150.on||DK150.free)return f.apply(this,arguments);const n=HS103.h.length;const r=f.apply(this,arguments);if(HS103.h.length>n)dk150Fwd('house',id,id);return r}}
+{const f=dcBuy103;dcBuy103=function(k){if(!DK150.on||DK150.free)return f.apply(this,arguments);const b=SH.deco[k];const r=f.apply(this,arguments);if(b==null&&SH.deco[k]!=null)dk150Fwd('deco',k);return r}}
+{const f=shpBuy109;shpBuy109=function(k){if(!DK150.on||DK150.free)return f.apply(this,arguments);const b=shpL109(k);const r=f.apply(this,arguments);if(shpL109(k)>b)dk150Fwd('shpu',k);return r}}
+{const f=out148Take;out148Take=function(i){const W=KF109.wsel,p=W&&W.L&&W.L[i],had=p&&OUT148.h.has(p.ci);const r=f.apply(this,arguments);
+  try{if(DK150.on&&p&&!had&&OUT148.h.has(p.ci))MP.room.emit('ev',{r:-7,l:[['kdo',p.ci|0]]}).catch(()=>{})}catch(_){}return r}}
+// what stays with the host
+['lotPut103','kfRotate109','dcToggle103','czTask103','czTrain104','czRankUp105','czCollectHouse105','vlCollect116'].forEach(n=>{const f=window[n];if(typeof f!='function')return;
+  window[n]=function(){if(DK150.on){say('🏰 This is '+mpEsc(dk150Name())+'\'s Duskhold: only they can do that.');return false}return f.apply(this,arguments)}});
+// the host builds what a guest paid for, free of charge
+{const f=dc148Has;dc148Has=function(){if(DK150.free)return true;return f.apply(this,arguments)}}
+{const f=saveGame;saveGame=function(){if(DK150.free){DK150.saveLater=1;return false}return f.apply(this,arguments)}}
+// every material any kingdom cost names (shHas is a constant, so the checks are passed by lending plenty of each)
+function dk150Mats(){const s=new Set(),add=L=>{(Array.isArray(L)?L:[]).forEach(q=>{if(Array.isArray(q))s.add(q[0])})};
+  try{SHU.forEach(u=>{for(let l=1;l<=3;l++)try{add(shCost(u,l))}catch(_){}})}catch(_){}try{SHOPS.forEach(o=>add(o.m))}catch(_){}
+  try{for(let n=0;n<HS103_MAX;n++)add(hsCost103(n).m)}catch(_){}try{SHPU109.forEach(u=>{for(let l=1;l<=SHP109_MAX;l++)try{add(shpCost109(u,l).m)}catch(_){}})}catch(_){}
+  try{DECO103.forEach(D=>{for(const k in D.m||{})s.add(k)})}catch(_){}return [...s]}
+function dk150Do(what,k,lot,from){const g0=gold,m0=Object.assign({},mats);let set=null;DK150.free=1;gold+=1e12;dk150Mats().forEach(q=>{mats[q]=(mats[q]||0)+1e9});const before=JSON.stringify(dk150Pack(false));
+  try{if(what==='shop'&&SHOPS.some(o=>o.k===k)&&!shopBuilt(k)){if(lot&&LOTM103[lot]&&lotFree103(lot)){SH.pos[k]=lot;set=k}shopBuy(k);if(set&&!shopBuilt(k))delete SH.pos[set]}
+    else if(what==='up'&&SHU.some(u=>u.k===k)){const key='u:'+k;if(!kdLv(k)&&!SH.pos[key]&&lot&&LOTM103[lot]&&lotFree103(lot)){SH.pos[key]=lot;set=key}shBuy(k);if(set&&!(kdLv(k)>0))delete SH.pos[set]}
+    else if(what==='house'&&LOTM103[k])hsBuy103(k);
+    else if(what==='deco'&&DECO103.some(D=>D.k===k))dcBuy103(k);
+    else if(what==='shpu'&&SHPU109.some(u=>u.k===k))shpBuy109(k)}
+  catch(err){console.warn('v150 kingdom build',err)}
+  finally{DK150.free=0;gold=g0;for(const q in mats)if(!(q in m0))delete mats[q];for(const q in m0)mats[q]=m0[q]}
+  const done=JSON.stringify(dk150Pack(false))!==before;
+  if(done){say('🏰 '+mpEsc(mpName(from))+' paid for a new build in your kingdom.');try{sfx('power')}catch(_){}}
+  if(DK150.saveLater||done){DK150.saveLater=0;try{saveGame(true)}catch(_){}}
+  DK150.sentT=0;try{hud();ui();if(typeof xwMode!='undefined'&&(xwMode=='hold'||xwMode=='kingdom'))rX()}catch(_){}}
+// ---------- messages ----------
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&d.r===-7&&Array.isArray(d.l)){
+    for(const q of d.l.slice(0,8)){if(!Array.isArray(q))continue;
+      if(q[0]==='ks'&&typeof q[1]==='string'&&Number.isInteger(q[2])&&Number.isInteger(q[3])&&q[3]>0&&q[3]<40&&typeof q[4]==='string'){
+        const h=dk150Host();if(!h||msg.peer!==h||h===MP.me)continue;const P=DK150.parts[q[1]]||(DK150.parts[q[1]]={n:q[3],p:[],t:nowP()});P.p[q[2]]=q[4];
+        for(const id in DK150.parts)if(nowP()-DK150.parts[id].t>30000)delete DK150.parts[id];
+        if(P.p.filter(x=>typeof x==='string').length===P.n){delete DK150.parts[q[1]];const txt=P.p.join('');if(txt===DK150.last&&DK150.on)continue;
+          let s=null;try{s=JSON.parse(txt)}catch(_){}if(!s||typeof s!=='object')continue;DK150.last=txt;DK150.host=h;dk150Borrow(s)}}
+      else if(q[0]==='kd'&&typeof q[1]==='string'&&typeof q[2]==='string'&&dk150Host()===MP.me&&MP.rh[msg.peer])dk150Do(q[1],q[2],typeof q[3]==='string'?q[3]:'',msg.peer);
+      else if(q[0]==='kdo'&&Number.isInteger(q[1])&&dk150Host()===MP.me&&MP.rh[msg.peer]){const W=KF109.wsel,i=W&&W.L?W.L.findIndex(p=>p.ci===q[1]):-1;if(i>=0&&!OUT148.h.has(q[1])){out148Take(i);DK150.sentT=0;try{saveGame(true)}catch(_){}}}}
+    return}}catch(err){console.warn('v150 duskhold ev',err)}
+  return f.apply(this,arguments)}}
+// ================= v150: co-op Sovereigns stay in step =================
+// v110 relays every move the boss driver picks (BMV 'sv<i>_<move>' with its seed) and the boss's spot every 200 ms; each
+// partner plays the move on its own copy. The copies drifted apart: between moves a partner's boss turned to face that
+// partner (not where the driver's boss faced), and a move started from wherever the copy happened to stand, so a lunge or
+// a leap ended somewhere else on each screen and the next move began from there.
+//  · Every relayed cast now carries the boss's spot and facing at the start of the move (extra fields, older pages ignore
+//    them); the partner's copy starts the move from exactly there (moved straight there when it is within BS150.snap tiles,
+//    otherwise it already jumps through the regular sync).
+//  · Between moves a partner's copy faces the way the driver's boss faces (BS150.turn rad/s) and glides to the synced spot.
+//  · The spot sync runs every BS150.ms ms (was 200).
+var BS150={snap:14,turn:5,ms:120};
+function bs150Co(e){try{return typeof MP!='undefined'&&MP.on&&MP.others>0&&e&&e.sv&&AF&&AF.i===e.ar}catch(_){return false}}
+// the driver: stamp the boss's pose on the relayed cast
+{const f=svCast;svCast=function(e,id,seed){const n0=MP.evq.length;const r=f.apply(this,arguments);
+  try{if(bs150Co(e)&&svAuth(e)){const m=e.m;for(let j=n0;j<MP.evq.length;j++){const q=MP.evq[j];if(Array.isArray(q)&&q[0]==='b'&&q[1]===e.sv.i&&q.length<=4){q[4]=mpR2(m.position.x);q[5]=mpR2(m.position.z);q[6]=mpR2(m.rotation.y)}}}}catch(_){}
+  return r}}
+// a partner: start the relayed move from the driver's pose
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l))for(const q of d.l.slice(0,60)){
+    if(!Array.isArray(q)||q[0]!=='b'||!isFinite(q[4])||!isFinite(q[5]))continue;const i=q[1];if(!(AF&&AF.i===i)||msg.peer!==mpBossAuth(i))continue;
+    const e=bossEnt(i);if(!e||e.dead||!e.sv)continue;const m=e.m,dd=Math.hypot(m.position.x-q[4],m.position.z-q[5]);
+    if(dd<BS150.snap){m.position.x=+q[4];m.position.z=+q[5];if(isFinite(q[6]))m.rotation.y=+q[6];e.nx=+q[4];e.nz=+q[5];if(isFinite(q[6]))e.nry=+q[6]}}}catch(err){console.warn('v150 boss sync',err)}
+  return f.apply(this,arguments)}}
+// a partner between moves: the driver's facing and spot
+{const f=svAI;svAI=function(e,dt,now){if(!bs150Co(e)||svAuth(e))return f.apply(this,arguments);const m=e.m,ry0=m.rotation.y;const r=f.apply(this,arguments);
+  try{const S=e.sv;if(!S.mv&&!S.rmOn&&e.nry!=null&&!e.dead){m.rotation.y=ry0;const da=svAng(e.nry-ry0),t=BS150.turn*dt;m.rotation.y+=Math.max(-t,Math.min(t,da));
+      if(e.nx!=null){const dx=e.nx-m.position.x,dz=e.nz-m.position.z,l=Math.hypot(dx,dz);if(l>10){m.position.x=e.nx;m.position.z=e.nz}else if(dt>0){const k=Math.min(1,dt*6);m.position.x+=dx*k;m.position.z+=dz*k}}}}catch(_){}
+  return r}}
+// a quicker spot sync
+{const f=mpSendBS;mpSendBS=function(now){if(AF&&now-MP.tB>=BS150.ms)MP.tB=Math.min(MP.tB,now-200);return f.apply(this,arguments)}}
+// ================= v150: small fixes from the owner's list =================
+// 1) Tab finds what a boss fight spawns. In a den fight Tab only cycled through what stood within the v31 arena radius
+//    of the den's centre, and in the Seeping Lair (Vorraxis, which is not a v31 arena) only through what stood in front of
+//    you within 20 tiles: pustules, chalices, totems, ooze and the like spawned off to the side or further out could not be
+//    picked. Now in any boss fight Tab cycles through every live, visible target within 34 tiles (nearest first, a short
+//    memory so repeated presses walk the list), and outside fights, when nothing is in front of you, the nearest enemy within
+//    20 tiles is picked instead of "No enemy in front of you".
+// 2) Kindlelight II: nothing lands on the hatch. A chest (the camp-clear chest of the Glowmire Warren, a cache, a buried
+//    treasure) that would stand within FX150.hatchR tiles of the hatch is moved to free ground just beyond it.
+var FX150={hatchR:2.8,cyc:null,cycT:0};
+function fx150Fight(){try{return !!((typeof AF!='undefined'&&AF&&AF.f)||(typeof MB144A!='undefined'&&MB144A&&MB144A.f))}catch(_){return false}}
+function fx150Ok(e){return e&&!e.dead&&!e._gone&&!e.hid&&e.m&&e.m.visible!==false&&!e.mpGhost}
+{const f=selectTarget;selectTarget=function(){const p=pl.position;
+  if(fx150Fight()){const C=enemies.filter(e=>fx150Ok(e)&&d2(e.m.position,p)<34),now=nowP(),byD=(a,b)=>d2(a.m.position,p)-d2(b.m.position,p);
+    if(!C.length){if(tgt)setTarget(null);return}
+    let L=FX150.cyc;if(!L||now-FX150.cycT>3000)L=C.slice().sort(byD);else{L=L.filter(e=>C.includes(e));L=L.concat(C.filter(e=>!L.includes(e)).sort(byD))}
+    FX150.cyc=L;FX150.cycT=now;const i=L.indexOf(tgt);setTarget(L[(i+1)%L.length]);return}
+  const fw=camFwd(),front=enemies.some(e=>{if(!fx150Ok(e))return false;const v=V(e.m.position.x-p.x,0,e.m.position.z-p.z),L=v.length()||.01;return L<20&&(L<3||Math.acos(Math.max(-1,Math.min(1,v.dot(fw)/L)))<1.3)});
+  if(front)return f.apply(this,arguments);
+  const C=enemies.filter(e=>fx150Ok(e)&&d2(e.m.position,p)<20).sort((a,b)=>d2(a.m.position,p)-d2(b.m.position,p));
+  if(!C.length)return f.apply(this,arguments);const i=C.indexOf(tgt);setTarget(C[(i+1)%C.length])}}
+
+// ---------- 2) the hatch stays clear ----------
+function fx150Hatch(x,z){try{const I=insAt(Math.round(x),Math.round(z));if(!I||I.g!==1)return null;const h=mq144HatchSpot();if(!h)return null;
+    if(Math.hypot(x-h.x,z-h.z)>=FX150.hatchR)return null;const a0=Math.atan2(z-h.z,x-h.x)||0;
+    for(let r=FX150.hatchR+.4;r<FX150.hatchR+5;r+=.5)for(let k=0;k<12;k++){const a=a0+(k%2?1:-1)*Math.ceil(k/2)*.52,qx=h.x+Math.cos(a)*r,qz=h.z+Math.sin(a)*r;
+      if(!solid(Math.round(qx),Math.round(qz))&&!(typeof CBLK!='undefined'&&CBLK.has(Math.round(qz)*W+Math.round(qx))))return [Math.round(qx),Math.round(qz)]}}catch(_){}return null}
+{const f=makeChest;makeChest=function(x,z){const q=fx150Hatch(x,z);if(q){const a=Array.prototype.slice.call(arguments);a[0]=q[0];a[1]=q[1];return f.apply(this,a)}return f.apply(this,arguments)}}
 </script></body></html>
