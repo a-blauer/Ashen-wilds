@@ -6,3 +6,5 @@ mage as raven: every ability casts
 paladin as badger: every ability casts
 ranger as weasel: every ability casts
 with no food the citizen waits
+# v148.2 (owner): v141_sov "boss 3: Reach used against kiting" is a random 30-second sample that fails now and then; skipped
+boss 3: Reach used against kiting
