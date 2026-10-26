@@ -65,3 +65,6 @@ v148_deco.py
 v148_splash.py
 v148_boss_splash.py
 v148_revive.py
+v150_checks.py
+v150_coop.py
+v150_ritual.py

@@ -44,3 +44,7 @@ deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.p
 3077|splash|compan|0095|0120|hit|enemy-move|moves: v148_splash.py v107_ai.py v85_combat.py
 3079|splash|sov|boss|1970|197[1-6]|305[0-6]|303[23]|vorraxis: v148_boss_splash.py v141_sov.py
 3085|3086|revive|coop|co-op|0520|215[0-9]|216[0-9]|2170|0560|kill|bossDefeated|0510|3033: v148_revive.py
+# v150
+3090|3091|3092|3094|coop|co-op|0520|2170|215[0-9]|216[0-9]|3071|camp|cheddar|quest|duskhold|kingdom|1860|1870|1910|1960|3074|3076|aggro|eTarget|mount: v150_coop.py
+3092|3093|3040|sigil|ritual|wolf|coop|co-op|0520|0120: v150_ritual.py v145_sigils.py
+3093|3096|3097|0630|2640|bat|tab|target|chest|hatch|3033|sov|boss|1970|0520|0380|v150: v150_checks.py

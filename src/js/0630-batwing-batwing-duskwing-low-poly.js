@@ -37,6 +37,7 @@ var BAT_BODY=[
   [.47,.392,.082,.072,.065,['head','head',0],0],
   [.5,.384,.05,.045,.04,['head','head',0],2],
   [.515,.38,.03,.026,.024,['head','head',0],2]];
+// v150: only the hind pair (index 1) is built: a bat's forelimbs are its wings (the front-leg bones stay in the skeleton, unused)
 function batLegs(s){const f=(x,y,z,r,b)=>[s*x,y,z,r,r,b];return [
   [f(.07,.24,.15,.04,['chest',s<0?'fl0':'fr0',.4]),f(.075,.15,.17,.025,[s<0?'fl0':'fr0',s<0?'fl1':'fr1',.6]),f(.075,.07,.165,.018,[s<0?'fl1':'fr1',s<0?'fl2':'fr2',.7]),f(.075,.035,.17,.016,[s<0?'fl2':'fr2',s<0?'fl2':'fr2',0])],
   [f(.08,.24,-.19,.05,['pelvis',s<0?'hl0':'hr0',.4]),f(.083,.16,-.16,.03,[s<0?'hl0':'hr0',s<0?'hl1':'hr1',.6]),f(.083,.08,-.2,.02,[s<0?'hl1':'hr1',s<0?'hl2':'hr2',.7]),f(.083,.04,-.21,.018,[s<0?'hl2':'hr2',s<0?'hl2':'hr2',0])]]}
@@ -48,7 +49,7 @@ LPR.Batwing={
     return lpGeo('Batwing|'+C,'Batwing',[
       {rings:BAT_BODY.map(r=>({p:[0,r[1],r[0]],rx:r[2],ryT:r[3],ryB:r[4],b:r[5],k:r[6],j:r[6]==2?0:.14})),seg:8,capA:1,capB:1,paint:(o,r,s)=>{
         if(r.k==2)return o.copy(nose);o.copy(main);if(s>.55)o.lerp(back,.7);if(s<-.3)o.lerp(bel,.8);if(r.k==1&&s<.6)o.lerp(ruff,.6)}}]
-      .concat([].concat(...[-1,1].map(s=>batLegs(s).map(L=>({rings:L.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[4],ryB:r[4],b:r[5]})),seg:5,ref:[0,0,1],capB:1,paint:(o,r)=>{o.copy(r.p[1]<.12?dark:back)}}))))),61);
+      .concat([].concat(...[-1,1].map(s=>batLegs(s).slice(1).map(L=>({rings:L.map(r=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[4],ryB:r[4],b:r[5]})),seg:5,ref:[0,0,1],capB:1,paint:(o,r)=>{o.copy(r.p[1]<.12?dark:back)}}))))),61);
   },
   kit(k,c,C,red){
     const dark=0x150f18,eye=red?0xff2a2a:0xff3a2a,back=dkShade(lpMain(C,.12).getHex(),.5);
@@ -66,7 +67,7 @@ LPR.Batwing={
     // shaggy chest ruff
     [-2,-1,0,1,2].forEach(i=>k.L('chest','c',dkShade(lpMain(C,.12).lerp(new THREE.Color(0xb0a090),.35).getHex(),.9),[i*.045,.26,.27],[i*.055,.17,.22],.04,.004,4));
     // hooked claws on the feet
-    [['fl2',-.075,.17],['fr2',.075,.17],['hl2',-.083,-.21],['hr2',.083,-.21]].forEach(f=>[-1,1].forEach(i=>k.p(f[0],'cone4','c',dark,f[1]+i*.012,.02,f[2]+.02,.007,.035,.007,Math.PI*.75)));
+    [['hl2',-.083,-.21],['hr2',.083,-.21]].forEach(f=>[-1,1].forEach(i=>k.p(f[0],'cone4','c',dark,f[1]+i*.012,.02,f[2]+.02,.007,.035,.007,Math.PI*.75)));
   },
   post(x,c,C,mat){
     const main=lpMain(C,.12),mem=main.clone().multiplyScalar(.55).lerp(new THREE.Color(0x3a2a34),.4),edge=main.clone().multiplyScalar(.3);

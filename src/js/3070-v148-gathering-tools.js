@@ -27,9 +27,12 @@ function sk148Aim(){const t=SK141.tool,kind=SK141.kind;if(!t||!t.parent||(kind!=
   // the head's long axis: pick - across the handle inside the swing plane; hatchet - the edge leads where the head is going
   let x;
   if(kind=='pick')x=new V().crossVectors(u,s).normalize();
-  else{const d=sk148Dir(K,Math.min(1,k+.03),f,s,up).sub(sk148Dir(K,Math.max(0,k-.03),f,s,up));d.addScaledVector(u,-d.dot(u));
-    x=d.lengthSq()>1e-4?d.normalize():f.clone().addScaledVector(u,-f.dot(u)).normalize();
-    if(SK148.edge&&SK148.k>=0){const e=SK148.edge.clone().addScaledVector(u,-SK148.edge.dot(u));if(e.lengthSq()>1e-4){e.normalize();x.lerp(e,.35).addScaledVector(u,-x.dot(u)).normalize()}}}
+  else{// v150: the edge keeps one side of the handle all through the swing (a hatchet does not turn in the hand): the side
+    // that leads the down-swing. Following the motion of each moment (v148) flipped the edge round during the wind-up, so
+    // the blade faced the hero at the start of every chop.
+    const a=sk148Dir(K,.42,f,s,up),b=sk148Dir(K,.54,f,s,up),n=new V().crossVectors(a,b);
+    if(n.lengthSq()<1e-6)n.copy(s);n.normalize();const mid=sk148Dir(K,.48,f,s,up);if(new V().crossVectors(n,mid).dot(b.clone().sub(a))<0)n.negate();
+    x=new V().crossVectors(n,u);if(x.lengthSq()<1e-6)x=f.clone().addScaledVector(u,-f.dot(u));x.normalize()}
   if(SK148.edge&&kind=='pick'&&x.dot(SK148.edge)<0)x.negate();
   SK148.edge=x.clone();SK148.k=k;
   const y=u.clone().negate(),z=new V().crossVectors(x,y).normalize();x.crossVectors(y,z).normalize();

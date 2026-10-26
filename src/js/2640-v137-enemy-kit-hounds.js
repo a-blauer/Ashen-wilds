@@ -117,7 +117,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       const body=e137Rows([[-.42,.32,.012,.012,.012,['tail1','tail1',0]],[-.34,.305,.04,.035,.035,['tail0','tail1',.3]],[-.26,.29,.1,.09,.1,['pelvis','tail0',.2]],[-.16,.28,.15,.12,.17,['pelvis','spine',.4]],
         [-.04,.285,.17,.13,.19,['spine','spine',0]],[.07,.295,.16,.13,.17,['spine','chest',.5]],[.16,.31,.13,.12,.13,['chest','chest',0]],[.24,.33,.11,.11,.1,['chest','neck',.6]],
         [.3,.36,.11,.11,.1,['neck','head',.5]],[.36,.395,.125,.12,.1,['head','head',0],'hd'],[.42,.395,.11,.1,.085,['head','head',0],'hd'],[.46,.385,.08,.07,.06,['head','head',0],'hd'],[.49,.38,.05,.045,.04,['head','head',0],'hd'],[.5,.378,.02,.02,.02,['head','head',0],'hd']]);
-      return lpGeo('E137|'+n,n,[{rings:body,seg:9,capA:1,capB:1,paint}].concat(e137Quad(n,[.035,.022,.016,.016],[.04,.024,.016,.016],paint,{toe:.04,lift:.02,foot:.02})),79)},
+      return lpGeo('E137|'+n,n,[{rings:body,seg:9,capA:1,capB:1,paint}].concat(e137Quad(n,[.035,.022,.016,.016],[.04,.024,.016,.016],paint,{toe:.04,lift:.02,foot:.02}).slice(2)),79)} /* v150: hind legs only, the wings are its forelimbs */,
     kit(k,c,C,red){
       // nose leaf, eyes, wrinkles, fangs
       k.p('head','sph','c',K.skin2,0,.4,.505,.05,.045,.025);k.L('head','c',K.skin,[0,.42,.51],[0,.48,.5],.03,.006,4);
@@ -132,7 +132,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       // a bristly black mane over the shoulders and down the back
       for(let i=0;i<9;i++){const z=.3-i*.06,bn=z>.25?'neck':z>.1?'chest':z>-.1?'spine':'pelvis',y=z>.2?.47:.43-(.2-z)*.15;[-1,0,1].forEach(j=>k.L(bn,'c',0x0a0606,[j*.04,y-.02,z],[j*.07,y+.06,z-.07],.018,.002,3))}
       [-1,1].forEach(s=>{k.L('chest','c',K.skin2,[s*.06,.43,.2],[s*.12,.4,.12],.02,.012,4);k.L('chest','c',K.skin2,[s*.12,.4,.12],[s*.1,.33,.08],.012,.008,4)});
-      ['fl2','fr2','hl2','hr2'].forEach(b=>e137Claws(k,n,b,K.dark,.03,.006,3))},
+      ['hl2','hr2'].forEach(b=>e137Claws(k,n,b,K.dark,.03,.006,3))},
     post(x,c,C,mat){
       const og=lpSpikeGeo(K.skin2,K.dark,3),ig=lpSpikeGeo(0x9a3a44,0x3a0a10,3);
       [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.07,.47,.38,.1,.27,.045,-.25,-s*.5,s*.1);const m=new THREE.Mesh(ig,mat);m.scale.set(.62,.78,.5);m.position.set(0,.03,.5);p.children[0].add(m);p.userData={rz:-s*.45,sd:s};x.ears.push(p)});
