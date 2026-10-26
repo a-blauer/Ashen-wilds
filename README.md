@@ -112,6 +112,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v144 The Glowmire Crystal (Kindlelight II main quest): Vorraxis model (`MB144`, `mb144Build`, poses `MB144P`, `mb144Loco`/`mb144Post`), his moves (`MB144M`, lair arena `MB144A`, `svCtx`/`svHitNow` wrappers), the hatch, the Seeping Lair (INSL[4]), the fight controller `mb144AI`, quest state `MQ144`, crystal, sealed II→III gateway | `3031`–`3033` |
 | v145 The Three Sigils (Kindlelight III main quest): sigil layout `mq145Plan` / keep-out `mq145Keep` (called from 1680 `place`), sigil model `ms145Sigil`, ghost wolves (`EN.ghostwolf`, look `gw145Look` via a `cr` wrapper), the essence charging ritual (`MQ145.R`, `mq145Start`/`mq145RTick`/`mq145Attune`/`mq145Fail`), sealed Den gateway, tracker, map marks | `3040` (edit in 1680) |
 | v146 Sovereigns to the Vorraxis standard: shared kit (`sk146*`: springs `B.spr`, effects, props, ring waves, den state `A.s146`, smoother strike ease), Argus rebuilt (`argBuild146`), and per boss a Phase II den change + signature mechanic + model/effect upgrades | `3050` kit, `3051` Vaelric, `3052` Rime Wraith, `3053` Bloated One, `3054` Argus, `3055` Hydra, `3056` Ssith'ra |
+| v151 Burningeye Summit main quest (the ice zone): I The Frozen Maw (cave mouth `gb151CaveMouth`, the cave = Burningeye's unused Wave Trial `INSL[14]` `GB151L`, Gorthrak the Glacierback: model `gb151Build` / poses `GB151P` / moves `GB151M`, Frostbite `gb151Frost`, ice pillars, Glacial Rampage, quest `MQ151`); II The Frozen Gate (`mq160Plan`, caches + elite wardens, workbench, flamespitter `fs160Spitter`, the melt event `MQ160.E`, ice spiders `EN.icespider`); III The Mountain Drill (`mq170Plan`, cliff / drill / 4 control boxes, the drill event `MQ170.E`, repair windows `dr170Open` thaw / wire / rebuild, Frost Troll wreckers `dr170Troll`) | `3150`–`3152`, `3160`, `3170` (edit in 1680) |
 
 ## Conventions (read before changing code)
 
@@ -630,6 +631,48 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     puffs), spawned as minions (local in co-op).
   * Saved as `x2.mq145 {at[3], fd[3]}`; done also when the Den was reached (`mq145Done`). Tracker uses `#mqt143` in III.
   Tests: `v145_sigils.py`.
+- **Burningeye Summit main quest (v151, `3150`–`3170`)**: the ice zone's three chapters, one per field instance. Each replaces the
+  instance's end gateway (the old `RPORT` record stays, its model is hidden and its prompt replaced) and is done also when the next
+  instance has been reached (`insReach(2)`), so heroes who are already further on are never blocked. Every scene is built lazily the
+  first time the hero is in its instance and hidden elsewhere; the solid tiles (`CBLK`) are registered at load (`mq151Solid`,
+  `mq160Solid`, `mq170Solid`) so Cheddar's gateway spot and the roaming creatures see them; `mq151Keep` / `mq160Keep` / `mq170Keep` keep
+  1680's decorations off them. Trackers use `#mqt143` (class `z2`). Co-op: local to each player, like v144/v145.
+  * **I · The Frozen Maw** (`3150` model, `3151` moves, `3152` cave and quest): the road ends at an ice cave mouth (`gb151CaveMouth`: a
+    cliff of rocks, an arch hung with icicles, a dark throat, a troll totem). F: into the Frozen Maw = Burningeye's Wave Trial instance
+    (`INSL[14]`, renamed, Lv 21, its own dim blue atmosphere `TH112.byG[14]`; the old trial's war-camp dressing `ARK_TRIAL[2]` is
+    removed): frozen floor with ice veins, rock and crystal walls, icicles, frozen falls, a mammoth in a block of ice, the throne of ice
+    and bone, six ice pillars, the passage at the back sealed by a wall of ice. **Gorthrak the Glacierback**: a towering warlord troll,
+    nothing like the zone's blue Frost Trolls (dark umber hide, red war paint, white mane, a glacier of crystals on his back, a mammoth
+    skull pauldron, the Glacier Maul and the Rime Fist; ~34k triangles, `GB151.tris`). Built and fought like Vorraxis
+    (`docs/BOSS_RECIPE.md`): Sovereign engine moves (Skullbreaker, Glacier Charge, Wrecking Whirl, Cave-in Roar, Glacier Hurl,
+    Permafrost Slam; Phase II at 55% Glacial Fury: the ceiling keeps dropping icicles (`gb151Quake`), Warlord's Fury, Avalanche Hurl,
+    Icefall Storm), springs on ears and loincloth, posture bar. **Frostbite** (`gb151Frost`): frost hits stack on the hero; the third
+    freezes you solid for 1.3 s (dash out). **Ice pillars**: a charge that runs into one shatters it and dazes him (`gb151Crash`).
+    **Glacial Rampage** (signature): 85% damage reduction while his shell holds and his troll blood heals him; three charges; each that
+    hits a pillar cracks the shell; three cracks = SHATTERED (long stagger); fewer = he heals 12% and the ceiling comes down
+    (Avalanche: only the three rock shelters at the wall are safe). When he dies the ice over the passage bursts: F takes you to II.
+    `MQ151.st` 0 · 1 entered · 2 slain · 3 through; saved as `x2.mq151 {st,seen}`; a save in the cave loads at the cave mouth.
+  * **II · The Frozen Gate** (`3160`): a great stone gate filled with ancient ice stands where the gateway was, a workbench beside it.
+    Three flamespitter parts (Essence Core, Ember Nozzle, Bellows Tank) lie in salvage caches off II's road (`mq160Plan`, orange
+    beacons), each guarded by an elite warden (Frost Wendigo, Frost Troll, Rimeshell Crawler, Lv 24) that rises when you come near.
+    F at the bench assembles the **essence-charged flamespitter**; F again starts **the melt** (`MQ160.E`), which cannot be stopped: the
+    hero is held in the gate yard (leash 15.5), recall and mounts are blocked, and a death ends it (the gate freezes over, the
+    flamespitter goes back on the bench). C (the Character key during the melt, or F / tapping the prompt) picks it up and drops it;
+    carrying it you are slower and cannot swing or cast, and both hands hold its grips (arm IK `fs160Hold`). Hold the left button to
+    spray where you aim: on the gate it melts (60 s of flame); 5 s of spraying overheats it and it must cool right down (4 s). Ice
+    spiders (`EN.icespider`, rig `Iceskitter`) come from all round the yard all the time, faster as the melt goes on, and always hunt
+    you; the flame kills one at once for 8 of its 100 essence charge (with the charge spent it only melts). HUD `#fs160`.
+    `MQ160.st` 0 parts · 1 all parts · 2 assembled · 3 open; saved as `x2.mq160 {st,p,fd}`.
+  * **III · The Mountain Drill** (`3170`): the road to the Den ends at a sheer cliff with a great essence drill against it, wired to
+    four control boxes. F at the console starts **the drill** (`MQ170.E`; held in the yard, no recall, a death ends it): it bores only
+    while all four boxes are lit (90 s). Boxes start dark (F switches each on); running boxes **freeze** or **malfunction** on their
+    own, and **Frost Troll wreckers** (`dr170Troll`) walk to a box, raise their fists over it (a warning ring) and **smash** it (hit one
+    and it turns on you). Each fix is a repair window (`dr170Open`, `#dr170w`) that does not pause the game: **Thaw** (hold the heater
+    or Space and keep the needle in the green band), **Rewire** (drag each wire to the socket of its colour), **Rebuild** (drag each
+    broken piece into its place). You stay at the box while you work, and a hit knocks you away (the window closes). Bored through,
+    the cliff bursts open on a tunnel to the Den. HUD `#dr170h`. `MQ170.st` 0 · 1 open; saved as `x2.mq170 {st}`.
+  Tests: `v151_frozen_maw.py`, `v160_frozen_gate.py`, `v170_mountain_drill.py`; model sheets `v143_look.py PROPS=gorthrak,gorthrakShell,
+  fgate,fbench,fspitter,fcache,ddrill2,dbox,dbox2` and `PROPS=gbP:<pose>` (a trailing `+` shows the Rampage shell).
 - **Sovereigns to the Vorraxis standard (v146, `3050`–`3056`)**: every Sovereign follows `docs/BOSS_RECIPE.md` now. Each keeps its
   v110/v112 poses and moves and gains (all in Phase II): a den change and a signature mechanic with a success and a failure outcome.
   | Boss | Den change (Phase II) | Signature (props → BROKEN / failure) |
@@ -884,6 +927,9 @@ python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizen
 python3 v143_lantern_road.py  # v143: The Lantern Road (Kindlelight I main quest): drops, lampposts, the Ripper, the gateway, saves
 python3 v144_glowmire.py      # v144: The Glowmire Crystal (Kindlelight II main quest): hatch, lair, Vorraxis, crystal, gateway, saves
 python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main quest): sigils, ghost wolf waves, attuning, the Den gateway, saves
+python3 v151_frozen_maw.py    # v151: The Frozen Maw (Burningeye I): the cave mouth, Gorthrak, pillars, Frostbite, Phase II, the Rampage both ways, the passage, saves
+python3 v160_frozen_gate.py   # v151: The Frozen Gate (Burningeye II): caches and wardens, the flamespitter, the melt (carry, spray, overheat, spiders, charge), saves
+python3 v170_mountain_drill.py # v151: The Mountain Drill (Burningeye III): boxes, failures, the three repair windows, troll wreckers, the bore, the tunnel, saves
 python3 v146_sovs.py          # v146: Sovereigns: den changes, signature mechanics, springs, every move, clean dens (BOSS=0..5)
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)

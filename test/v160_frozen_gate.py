@@ -34,7 +34,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   let msg='';const s0=say;say=m=>{msg=String(m)};doRecall();say=s0;out.recall=msg;
   out.evPrompt=((worldPrompt()||{}).label||'');
   // C picks it up (the Character window does not open)
-  openTal();out.carry=E.carry;out.talHidden=$('tal').classList.contains('hide');out.onHero=MQ160.S.sp.parent===pl;
+  document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'c',bubbles:true}));out.carry=E.carry;out.talHidden=$('tal').classList.contains('hide');out.onHero=MQ160.S.sp.parent===pl;
   // held in the yard
   toPos(R.yard.x+G.fx*30,R.yard.z+G.fz*30);tick(.05);out.clamp=Math.hypot(pl.position.x-R.yard.x,pl.position.z-R.yard.z);
   // spray at the gate: it melts; 5 s and it overheats
@@ -50,7 +50,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   E.charge=3;const sp2=spawnEnemy('icespider',pl.position.x+Math.sin(pl.rotation.y)*3,pl.position.z+Math.cos(pl.rotation.y)*3,22,{agg:1,minion:1});sp2.fs160sp=1;sp2.hunt=1;
   for(let i=0;i<4;i++){clk+=33;god();mq160Tick(1/30,clk)}out.sp2Alive=!sp2.dead&&enemies.includes(sp2);out.spent=E.spent;atkHeld=false;
   // C drops it
-  openTal();out.dropped=!E.carry&&!!E.gp&&MQ160.S.sp.parent===scene;
+  document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));out.dropped=!E.carry&&!!E.gp&&MQ160.S.sp.parent===scene;
   // a death resets the melt
   hero.hp=0;mq160Tick(1/30,clk+=33);out.failEv=!MQ160.E;out.failSt=MQ160.st;out.spidersGone=!enemies.some(e=>e.fs160sp&&!e.dead);out.onBench=MQ160.S.sp.position.distanceTo(mq160BenchSpot())<.1;god();
   // again, to the end

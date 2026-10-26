@@ -270,10 +270,10 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}
   if(E.melt>=MQ160.melt)mq160Win();
   if(now-(E.hu||0)>120){E.hu=now;fs160Hud()}}
-// no swings or spells while carrying; C toggles the flamespitter during the melt (instead of the Character window)
+// no swings or spells while carrying; the C key toggles the flamespitter during the melt (instead of opening the Character window)
 {const f=swing;swing=function(){if(MQ160.E&&MQ160.E.carry)return;return f.apply(this,arguments)}}
 {const f=cast;cast=function(){if(MQ160.E&&MQ160.E.carry){if(nowP()-(FS160.ct||0)>1500){FS160.ct=nowP();say('🔥 Drop the flamespitter (C) to use your abilities.')}return}return f.apply(this,arguments)}}
-{const f=openTal;openTal=function(){if(MQ160.E&&$('tal').classList.contains('hide')){mq160Toggle();return}return f.apply(this,arguments)}}
+addEventListener('keydown',e=>{try{if(MQ160.E&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='c'||e.key==='C')){const t=$('tal');if(t&&!t.classList.contains('hide'))return;e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)mq160Toggle()}}catch(err){console.warn('v151 C',err)}},true);
 {const f=doRecall;doRecall=function(){if(MQ160.E)return say('🧊 The cold holds you in the gate yard. Melt the gate, or fall trying.');return f.apply(this,arguments)}}
 {const f=toggleMount;toggleMount=function(){if(MQ160.E)return say('🧊 No mount will come into the gate yard now.');return f.apply(this,arguments)}}
 // the hero's hands on the grips while carrying (arm IK after every animation layer); the held weapon is put away

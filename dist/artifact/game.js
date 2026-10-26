@@ -42333,8 +42333,8 @@ var KQSH151=Object.assign(window.KQSH151||{},GB151.sheet);
 // Pattern (learnable; cooldowns, no repeats, combo strings):
 //  close, front ── Skullbreaker: a diagonal maul smash, a Rime Fist backhand, a pause… then both hands up and an overhead slam
 //                  down a line (late: it punishes an early dodge).
-//  mid, front   ── Glacier Charge: drops his shoulder, then runs straight through you; frost patches on his path. Into a pillar
-//                  he crashes and reels (Dazed).
+//  mid, front   ── Glacier Charge: drops his shoulder and fixes on you (the lane shows where he will run), then runs straight
+//                  through; frost patches on his path. Into a pillar he crashes and reels (Dazed).
 //  behind/side  ── Wrecking Whirl: winds the maul out behind him and spins a full turn: a ring around him (hug him, or be far out).
 //  any          ── Cave-in Roar: beats his chest and roars at the ceiling; four icicles fall on you, each aimed ahead of you.
 //  far, front   ── Glacier Hurl: tears a boulder of ice out of the floor and lobs it at you; it bursts into shards.
@@ -42429,9 +42429,9 @@ var GB151M={
     ev:[[.6,c=>svSnd('swing',.9,.85)],[1.14,c=>svSnd('swing',.8,1.1)],[1.55,c=>svSnd('roar',.5,1.1)],[1.9,c=>svSnd('whoosh',1.1,.75)],[.72,c=>{burst(c.wp('maul',0,-2.3,0),0xd8f4ff,20,2,1.5,.4);svSnd('heavy',.8,1.1);shake(.12)}]],
     nx:[['charge',.25,12],['spin',.3,6]],rec:.3}),
   // Glacier Charge: the run through you; frost patches; a pillar in the way: crash
-  charge:GB151_NO141({wt:8,cd:6.5,r:[4,14],a:'f',armor:1,dur:2.4,lock:.85,trn:[[0,.85,4.2]],
+  charge:GB151_NO141({wt:8,cd:6.5,r:[4,14],a:'f',armor:1,dur:2.4,lock:.5,trn:[[0,.5,4.2]],
     trk:[[.55,'chLow','io'],[.85,'chLow','l',.016],[.95,'chGo','s'],[1.7,'chGo','l'],[2.4,'rec','io']],
-    hit:[{t:.95,s:{k:'l',w:2.8,l:11,b:0},nohit:1,w:.8}],
+    hit:[{t:.95,s:{k:'l',w:2.8,l:11,b:0},nohit:1,w:.45}],
     ev:[[.3,c=>{svSnd('roar',.7,1.0);burst(gY(c.m.position,.3),0x6a6e76,14,2,1,.5)}],[.95,c=>{svSnd('whoosh',1.2,.7);shake(.15)}]],
     tk(c,dt){gb151Run(c,dt,.95,1.65,15,false);if(c.t>.95&&c.t<1.7&&Math.random()<dt*6)shake(.06)},rec:.35}),
   // the crash into a pillar (cast by gb151Crash): reels, dazed
@@ -42494,9 +42494,9 @@ var GB151M={
     tk(c,dt){c.S.shell=Math.min(1,Math.max(c.S.shell||0,(c.t-.4)/1.4));c.S.chg=.5+.5*Math.sin(c.t*8)},
     ev:[[.9,c=>{svSnd('roar',1.2,.65);svSnd('crack',1,.5);shake(.4);svShock(c.m.position,0xbfe8ff,6,.6);burst(gY(c.m.position,2),0xd8f4ff,70,3,3,1)}]],end(c){c.S.chg=0}}),
   // one Rampage charge: a long wind-up (stand in front of a pillar), then the run
-  rcharge:GB151_NO141({dur:2.5,armor:1,lock:1.05,trn:[[0,1.05,4.6]],
+  rcharge:GB151_NO141({dur:2.5,armor:1,lock:.5,trn:[[0,.5,4.6]],
     trk:[[.5,'chLow','io'],[1.05,'chLow','l',.02],[1.15,'chGo','s'],[2.0,'chGo','l'],[2.5,'rec','io']],
-    hit:[{t:1.15,s:{k:'l',w:3,l:14,b:0},nohit:1,w:1.0}],
+    hit:[{t:1.15,s:{k:'l',w:3,l:14,b:0},nohit:1,w:.65}],
     ev:[[.25,c=>{svSnd('roar',.9,.8)}],[1.15,c=>{svSnd('whoosh',1.3,.6);shake(.2)}]],
     tk(c,dt){gb151Run(c,dt,1.15,2.0,16,true);if(c.t>1.15&&c.t<2.0&&Math.random()<dt*8)shake(.07)}}),
   // the shell holds: he heals and brings the ceiling down; only the shelters are safe (cast by the controller)
@@ -43126,10 +43126,10 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}
   if(E.melt>=MQ160.melt)mq160Win();
   if(now-(E.hu||0)>120){E.hu=now;fs160Hud()}}
-// no swings or spells while carrying; C toggles the flamespitter during the melt (instead of the Character window)
+// no swings or spells while carrying; the C key toggles the flamespitter during the melt (instead of opening the Character window)
 {const f=swing;swing=function(){if(MQ160.E&&MQ160.E.carry)return;return f.apply(this,arguments)}}
 {const f=cast;cast=function(){if(MQ160.E&&MQ160.E.carry){if(nowP()-(FS160.ct||0)>1500){FS160.ct=nowP();say('🔥 Drop the flamespitter (C) to use your abilities.')}return}return f.apply(this,arguments)}}
-{const f=openTal;openTal=function(){if(MQ160.E&&$('tal').classList.contains('hide')){mq160Toggle();return}return f.apply(this,arguments)}}
+addEventListener('keydown',e=>{try{if(MQ160.E&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='c'||e.key==='C')){const t=$('tal');if(t&&!t.classList.contains('hide'))return;e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)mq160Toggle()}}catch(err){console.warn('v151 C',err)}},true);
 {const f=doRecall;doRecall=function(){if(MQ160.E)return say('🧊 The cold holds you in the gate yard. Melt the gate, or fall trying.');return f.apply(this,arguments)}}
 {const f=toggleMount;toggleMount=function(){if(MQ160.E)return say('🧊 No mount will come into the gate yard now.');return f.apply(this,arguments)}}
 // the hero's hands on the grips while carrying (arm IK after every animation layer); the held weapon is put away
