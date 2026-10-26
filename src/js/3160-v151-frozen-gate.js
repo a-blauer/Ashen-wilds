@@ -233,8 +233,8 @@ function fs160Aim(){try{if(typeof orb!='undefined'&&orb)return camFwd().setY(0).
   if(typeof mOn=='undefined'||!mOn)return f;const d=V().subVectors(mg,pl.position);d.y=0;return d.lengthSq()>.05?d.normalize():f}
 function fs160Flame(d,live){const S=MQ160.S,tip=S&&S.sp.userData.tip;if(!tip)return;const p=new THREE.Vector3();tip.getWorldPosition(p);
   if(!FS160.fl){const g=svG('fs_flc',()=>{const q=new THREE.ConeGeometry(1,1,10,1,true);q.translate(0,-.5,0);q.rotateX(-Math.PI/2);return q});
-    FS160.fl=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xff7a1a,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));FS160.fl.userData.lpsSkip=1;FS160.fl.renderOrder=22;scene.add(FS160.fl);
-    FS160.fl2=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffd07a,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));FS160.fl2.userData.lpsSkip=1;FS160.fl2.renderOrder=23;scene.add(FS160.fl2)}
+    FS160.fl=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xff5010,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));FS160.fl.userData.lpsSkip=1;FS160.fl.renderOrder=22;scene.add(FS160.fl);
+    FS160.fl2=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));FS160.fl2.userData.lpsSkip=1;FS160.fl2.renderOrder=23;scene.add(FS160.fl2)}
   const F=FS160.fl,F2=FS160.fl2;F.visible=F2.visible=!!live;if(!live)return;const t=nowP()/1000,L=5.6+.5*Math.sin(t*23);
   F.position.copy(p);F.lookAt(p.clone().add(d));F.scale.set(1.25+.2*Math.sin(t*31),1.0+.2*Math.cos(t*27),L);F2.position.copy(p);F2.lookAt(p.clone().add(d));F2.scale.set(.5,.45,L*.6);
   F.material.opacity=.36+.12*Math.sin(t*41);F2.material.opacity=.42+.12*Math.cos(t*37);for(let k=0;k<5;k++){const u=Math.random(),q=p.clone().addScaledVector(d,.4+u*L*.95);q.x+=(Math.random()-.5)*(.2+u*1.4);q.z+=(Math.random()-.5)*(.2+u*1.4);q.y+=(Math.random()-.3)*(.2+u*.8);burst(q,k%3?0xff6a1a:0xffd07a,1,.5+u,.9,.3+u*.2)}}

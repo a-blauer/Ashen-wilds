@@ -48,3 +48,4 @@ deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.p
 3090|3091|3092|3094|coop|co-op|0520|2170|215[0-9]|216[0-9]|3071|camp|cheddar|quest|duskhold|kingdom|1860|1870|1910|1960|3074|3076|aggro|eTarget|mount: v150_coop.py
 3092|3093|3040|sigil|ritual|wolf|coop|co-op|0520|0120: v150_ritual.py v145_sigils.py
 3093|3096|3097|0630|2640|bat|tab|target|chest|hatch|3033|sov|boss|1970|0520|0380|v150: v150_checks.py
+v151|315[0-9]|31[67][0-9]|gorthrak|frozen-maw|frozen-gate|mountain-drill|flamespitter|1680-: v151_frozen_maw.py v160_frozen_gate.py v170_mountain_drill.py v108_instances.py v148_cheddar.py v113_roster.py v114_save.py v144_glowmire.py v145_sigils.py
