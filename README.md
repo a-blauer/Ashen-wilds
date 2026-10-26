@@ -51,8 +51,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Sovereign dens (scenery, seal, colliders; their v86 hazards are off since v110) | `0910`–`0970` (v86 dens 0–5), `1100` (boss fx), `1180`–`1200` (v89 dens), `1650` (Ssith'ra) |
 | abilities (points, ranks, effects) | `0990`–`1000` (v88), `1090` (v90 ranks), `1230`–`1240` (v91 fx) |
 | cheats | `0980-v87-cheats*`, `1370-v89-misc*`, `1660-v90-ui*` (password), `3060-v147-cheats*` (all quests complete `cheatQuests147`, Max Duskhold `cheatDusk147`) |
-| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new) | `3070`–`3076` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
-| v149 intro cinematic for new characters (`ic149Play` after `ccBegin`; own canvas/renderer `#ic149`; the main loop waits while `IC149.on`; every shot is `ic149Frame(S,t)`; score `ic149Score`; narration is text only (`IC149.lines`; `IC149.speak` / `IC149.voiceUrl` for a voice later); smoky galaxy material `ic149HandMat` (spirals `o.sp`); the titan hand is one smooth skinned surface meshed once from a distance field (`ic149HandGeo`, cached `IC149.HG`); it is fitted in two poses (`ic149HandFit`: the impact claw piercing a ring round the centre, k=1, and the fist closed under the centre, k=2) and moved by a 240 Hz track (`ic149Track`, `ic149HandP`, `ic149HandPoseF`; key times `IC149G`); the arm reaching down from the sky is one long dissolving tube along the hand's line (`ic149Giant`/`ic149GiantAt`); the ground breaks into Voronoi pieces (`ic149Shatter`); the fist carries the centre slabs, the pierced slabs and a soil bulb (`ic149ChunkM`, `S.bulb`; pieces crumble off at `c.tr`); the rest is a small rigid-body simulation run once (`ic149PhysInit`/`ic149PhysStep`, time-sliced live; support gives way via `ic149Ropen`, walls `ic149Env`, impacts → dust `S.efx`); the rat's slab hinges on the meadow lip (`ic149RatCellM`); the rat walks on a precomputed path (`ic149RatTrack`, idle keys `IC149RK`) with IK legs (`ic149RatPoseIK`); floating spread out with closed eyes (`P.out`, `R.eye`); the upright rat is the game's bare rat posed from a settled base (`ic149HeroPose`); skip = button/Esc/Enter/Space; not played under automation unless `window.KQ_INTRO`); part 2 from 55.9 s in the real Duskhold scene (`ic149Dusk`, 3081): the hero walks a precomputed route (`ic149DuskInit` legs, `ic149DPos`) to the Steward → Innkeeper → Blacksmith → Merchant (name cards), meets a Cheddar on the Portal Road, then the voice lines over portal cuts (zone font from `ZT116`, faint Sovereign face `IC149.SF`); shot list and timings in `IC149D`; cameras `ic149DCam`; name tags over the town folk hidden (`ic149DTags`); subtitles break only between words; the game starts on the Portal Road (40, 349.4) | `3080-v149-intro-cinematic.js`, `3081-v149-intro-duskhold.js`; test/preview video: `v149_intro.py` (`VIDEO=1` renders an MP4 with sound), `v149_intro_live.py` |
+| v148 owner's list: gathering tools aimed (`SK148`), camp clears (`CAMP148`: 5-min return, XP, chest), aimed spells during mouse-look, building footprints only where the model stands (`fp148Filter`), Duskhold outskirts one-time harvest (`OUT148`, saved `x2.out148`), Cheddar's quest board (`CHQ148`, `CHQD148`), decorations (`DC148_COST`, six new); v148.1 board tiers and companion and boss splash (`SPL148`, `BSPL148`); v148.2 co-op revive (`RV148`) and boss credit (`BC148`) | `3070`–`3079`, `3085`–`3086` (edits in `0104`, `0108`, `1010`, `1270`, `0250`, `2350`, `3040`) |
+| v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3078-v149-ssithra-body.js` |
+| v150 owner's co-op list: partners' effects clean up and mounts show (`V150`, `3090`), monsters go for partners' companions (`AG150`, `3091`), shared progress (kills, camp clears `['cc']`, lamps `['m143']`, sigils `['m145']`, instance reach `ir`, rituals fought together `['r145']`/`['p145']`, `CP150`, `3092`), sigil rituals 50 wolves, ¼ XP / loot, stuck wolves blink (`GW150`, `3093`), the host's Duskhold for guests (`DK150`, `['ks']` / `['kd']` / `['kdo']`, `3094`), Sovereign moves start from the driver's pose (`BS150`, `3096`), Tab in boss fights, chests off the hatch, raven robes follow the legs (`FX150`, `RV150`, `3097`); bats keep only hind legs (0630, 2640); the hatchet's edge keeps one side (3070) | `3090`–`3097` |
+| v151 intro cinematic for new characters (`ic151Play` after `ccBegin`; own canvas/renderer `#ic151`; the main loop waits while `IC151.on`; every shot is `ic151Frame(S,t)`; score `ic151Score`; narration is text only (`IC151.lines`; `IC151.speak` / `IC151.voiceUrl` for a voice later); smoky galaxy material `ic151HandMat` (spirals `o.sp`); the titan hand is one smooth skinned surface meshed once from a distance field (`ic151HandGeo`, cached `IC151.HG`); it is fitted in two poses (`ic151HandFit`: the impact claw piercing a ring round the centre, k=1, and the fist closed under the centre, k=2) and moved by a 240 Hz track (`ic151Track`, `ic151HandP`, `ic151HandPoseF`; key times `IC151G`); the arm reaching down from the sky is one long dissolving tube along the hand's line (`ic151Giant`/`ic151GiantAt`); the ground breaks into Voronoi pieces (`ic151Shatter`); the fist carries the centre slabs, the pierced slabs and a soil bulb (`ic151ChunkM`, `S.bulb`; pieces crumble off at `c.tr`); the rest is a small rigid-body simulation run once (`ic151PhysInit`/`ic151PhysStep`, time-sliced live; support gives way via `ic151Ropen`, walls `ic151Env`, impacts → dust `S.efx`); the rat's slab hinges on the meadow lip (`ic151RatCellM`); the rat walks on a precomputed path (`ic151RatTrack`, idle keys `IC151RK`) with IK legs (`ic151RatPoseIK`); floating spread out with closed eyes (`P.out`, `R.eye`); the upright rat is the game's bare rat posed from a settled base (`ic151HeroPose`); skip = button/Esc/Enter/Space; not played under automation unless `window.KQ_INTRO`); part 2 from 55.9 s in the real Duskhold scene (`ic151Dusk`, 3081): the hero walks a precomputed route (`ic151DuskInit` legs, `ic151DPos`) to the Steward → Innkeeper → Blacksmith → Merchant (name cards), meets a Cheddar on the Portal Road, then the voice lines over portal cuts (zone font from `ZT116`, faint Sovereign face `IC151.SF`); shot list and timings in `IC151D`; cameras `ic151DCam`; name tags over the town folk hidden (`ic151DTags`); subtitles break only between words; the game starts on the Portal Road (40, 349.4) | `3080-v151-intro-cinematic.js`, `3081-v151-intro-duskhold.js`; test/preview video: `v151_intro.py` (`VIDEO=1` renders an MP4 with sound), `v151_intro_live.py` |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -253,7 +255,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   `CHQ132.st[id]={s:1 active|2 ready|3 done,p:[...],cj}` saved as `x2.chq`. Rewards (`chqReward132`): XP and gold from the instance's
   top level (≈ (14+L)×a kill's XP, (16+L)×a kill's gold, × `w`), gear from `genItem` at min(top level, hero+2) (uncommon+, rare+ in III)
   or a zone egg. Objective kinds come from wrappers at the end of 2330 (kill, gFinish, fishCatch, fishTreasure, the fusion button,
-  feedComp, kqrUp/kqsBuy, breakBoulder/digTreasure, hatch, mountTick, a rune poll); a co-op partner's kill only counts for camp clears.
+  feedComp, kqrUp/kqsBuy, breakBoulder/digTreasure, hatch, mountTick, a rune poll); since v150 a co-op partner's kills count too (3092).
   Hillside Crest I gets one extra secret boulder for "Under the Stone" (appended to `SECRETS`). To add quests for another zone, add
   `'z_k'` lists to `CHQD132` (kinds listed above the table). Test: `v132_cheddar_test.py` (`v132_cheddar.js`; `v132_shot.js` for
   framed screenshots). v132.1: empower kills need a companion actively empowering you (E / R), not a buff spell; "New Blood" counts
@@ -274,6 +276,62 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`itName`), fixed bonus (`itStats`), tooltip block, own models (icon `v89Kit`/`v89Key`, ground `lgDropModel`, hand `v89Wpn`, worn gem
   colour via `mdGD`). Tests: `v135_checks.py`, `v135_uniques.py`, `v135_bow.py`, `v132_cheddar_test.py`; pictures `v135_cheddar_shot.py`,
   `v135_fade_shot.py`, `v135_edge_look.py` (SRC= an older build for before/after), `v135_cat_head.py`, `v135_far_shots.py`, `v135_pick.py`.
+- **Version 150 (owner's co-op list, Oct 25 2026)**: *Effects*: a replayed ground decal (Venom Flask cloud, Caltrops, warning
+  circles) was never removed on the partner's screen (its `D.rm` is a method the replay never got): the caster now tags each
+  recorded decal (extra argument) and sends `['D', id, ms]` when it is removed; replayed decals and the mesh stand-ins (`mpvStub`)
+  also time out (`V150.decT` 15 s, `V150.stubT` 4 s). *Mounts*: presence carries `mt` [kind, speed]; partners build the mount
+  model under the rider, walk it and seat the hero (`v150MtTick` after `mpTick`). *Aggro*: a host monster weighs partners'
+  companions (the 2170 copies) like your own (only when clearly closer, two per companion); the attack target is relayed as
+  `"peer#slot"` and played on the owner's `fols[slot]` (`3091`). *Shared progress* (`3092`): every kill of a shared monster you
+  are near counts for your Cheddar quests (`chqKill132` redefined: copies and partner kills count); the region host sends
+  `['cc', camp]` on a camp clear and each player near it gets the XP, its own chest, the camp quests and the clear (the Glowmire
+  hatch opens for guests too); a lit lamppost (`['m143', i]`) and an attuned sigil (`['m145', i]`) are shared; presence carries
+  `ir` (INSR) and everyone reaches as far as the furthest partner; a sigil ritual is run by the region host (a guest's F sends
+  `['r145', i]`), its ghost wolves are shared monsters (not minions) that hunt the nearest hero, it holds while any hero stays
+  near (the host's checks run with the nearest partner's spot lent) and the host sends `['p145', i, slain, total]` for the
+  partners' tracker / prompt. *Sigils* (`3093`): `MQ145.total` 50; ghost wolves and their co-op copies give ¼ XP (`gw150X` in
+  `gainXP`) and drop loot one kill in four; a hunting wolf that moved < 0.6 tiles in 2.5 s while > 2.6 tiles from its hero
+  blinks to free ground 3–5 tiles from that hero. *Duskhold* (`3094`): the kingdom host (join-code host; on the artifact room
+  the lowest peer id) sends its kingdom (`dk150Pack`: shops, upgrades, lots, turns, houses + citizens, decorations, stage, shop
+  levels, harvested outskirts) as `['ks', id, part, n, text]` on `ev` with `r` −7; a guest keeps its own kingdom aside
+  (`DK150.stash`, what its saves keep: an outer `x2Save` wrapper) and shows the host's (`dk150Apply` = the kingdom parts of the
+  save loaders + `shApply` / `lotSync103` / `dc103Sync` / `kfApply109`; `kfStage109` returns the host's stage); leaving brings its
+  own back. A guest's Steward builds (shop, upgrade, house, decoration, shop level) are paid by the guest and sent as
+  `['kd', what, key, lot]`; the host builds them free (`dk150Do`: gold and every cost material lent, then put back; saves
+  deferred); outskirts gathered by a guest are taken from the host's too (`['kdo', ci]`); moving, turning, decoration switches
+  and villagers stay with the host; the guest's own citizens rest. *Sovereigns* (`3096`): a relayed cast carries the boss's
+  spot and facing (extra fields 4–6 of the `'b'` entry); a partner's copy starts the move from there; between moves it turns to
+  the driver's facing and glides to the synced spot; the spot sync runs every 120 ms. *Tab* (`3097`): in a boss fight (v31 arena
+  or the Seeping Lair) Tab cycles every live visible target within 34 tiles; outside fights, with nothing in front, the nearest
+  enemy within 20. *Hatch*: a chest that would stand within 2.8 of the Kindlelight II hatch moves just beyond it (`makeChest`).
+  *Raven robes*: for race 3 the skirt takes the thigh's swing fully by the knee and blends into the shin below it (`gkSkW`
+  wrapper, `RV150`), so the long bird legs stay inside. *Bats* (Batwing, Duskwing, Blood Bat): only the hind legs are built (the
+  wings are the forelimbs; the front-leg bones stay unused). *Hatchet*: the edge keeps the side that leads the down-swing all
+  through the chop (it flipped round during the wind-up). Tests: `v150_checks.py`, `v150_coop.py` and `v150_ritual.py` (two
+  windows over the fake room; run directly, they start `mpt.py` themselves).
+- **Version 150 companions**: the higher tiers that reused a lower species' body in another colour now have their own bodies on
+  the same skeletons (RV137 rig variants, each with its own evolution looks and trait anchors; enemies and mounts on these rigs
+  keep the base bodies): `3110` Direfang (sabre-toothed dire wolf), Skollmaw (long-jawed eclipse wolf), Emberlynx (lynx);
+  `3120` Pyrewing (lava-cracked fire wyvern), Elderdrake (ancient armoured dragon, club tail), Stormtalon (storm eagle with a
+  lightning crest), Rocsovereign (crowned golden roc); `3130` Cragback (bladed crag tortoise), Titanshell (titan turtle carrying a
+  ruined fortress), Bogmaw (angler-lured swamp maw toad); `3140` Widowqueen (crowned black widow), Hivemother (brood-mother with a
+  swollen egg sac and spiderlings), Lichbone (robed, crowned lich hound with a phylactery and soul-fire). Pictures:
+  `v137_creature.py` with `LIST=C:<species>:<evo>`.
+- **Version 149 (owner's request, Oct 25 2026): Ssith'ra's body is one creature.** The owner: "he clips into himself and the
+  segments of his body do not seem like one whole creature". The v112 layout followed the path the head had taken, so turning
+  around, circling the hero or the burrow chain folded the body through itself and the head (up to 1.1 deep; the neck bent 180°),
+  and the barrel-shaped segments opened gaps at bends. `3078` replaces `B.post` (keeps v146's sand) and adds to `B.build`:
+  *Chain*: the path is the body itself (last frame) plus where the neck has gone, so it still slithers; heights first with a fixed
+  3D spacing; the neck bends at most 60° from the head, every joint 22° (14 segments can't close a ring); a segment that would sink
+  into the head or a segment 2+ ahead is pushed out sideways; the body leans into turns. *Rearing* is one smooth curve (steep under
+  the neck, landing flat, longer the higher it rears). *Diving*: once the neck is under, the body slides along its path into the hole
+  and down it (`SSR149.pour`, all under before v112's vanish at 1.45 s; the `dive` pose plunges a little deeper). *Model*: a flesh
+  core (a tube rebuilt each frame along a curve from inside the skull to the stinger, glowing at the seams, brighter in Phase II)
+  replaces the rigid neck sleeves; each segment wears a domed dorsal shield instead of a full barrel, narrow at the front where it
+  tucks under the one ahead, one pattern down the back (dark shield, bronze rim and keel); studs, runes, veins, trophies, rings,
+  rags, side plates and belly plates moved onto the new shapes. Moves, timings and hit boxes are unchanged. Test `v149_ssithra.py`
+  (self-clipping depth, sharpest bend and chain gaps while turning round, spinning, circling, every move and a free fight; studio
+  pictures `out/v149ss_<TAG>_*.png`).
 - **Version 148 (owner's list, Oct 25 2026)**: *Tools*: the hatchet and pickaxe are aimed in the world after the animation
   (`SK148` key directions in the hero's frame; the pick's head lies in the swing plane, the hatchet's edge leads its motion) and the off
   hand takes the handle (two-bone IK, bones put back before the next frame). *Weapon edges* (1270 `gripEdge`): only frames at least 40%
@@ -293,6 +351,27 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (`DC148_COST`), and six new big ones: Duskhold Obelisk, Plaza Torches, Lantern Pavilion, Elder Oak, Moonflower Gardens, Great Beacon
   (the four square pieces appear as the kingdom grows over their square) (`3076`). Tests: `v148_tools.py`, `v148_edges.py`, `v148_mouse.py`,
   `v148_camps.py`, `v148_outskirts.py`, `v148_cheddar.py` (replaces `v132_cheddar_test.py`), `v148_deco.py`.
+- **Version 148.1**: *Cheddar's board*: each tier (Easy → Medium → Hard → Heroic) of a zone opens only once every quest of the tier
+  before it there is turned in (`chq148Open`); gold and XP are 35% of before (`CHQ148_PAY`); the Sovereign-kill quests are gone.
+  *Companion splash* (`3077`, `SPL148.k`=.3): an enemy area attack aimed at the hero also hits each active companion standing in its
+  red shape (downward ray at the companion vs. `a.tel`/`a.xt`), once per attack, at 30% — when the hero is hit, or when the strike ends
+  after the hero dodged out. Projectiles are left out. Test: `v148_splash.py`.
+  *Boss splash* (`3079`): the same 30% for the six Sovereigns and Vorraxis — every strike (`svHitNow` / `mb144HitNow`, shape vs. each
+  active companion, hero hit or not), the v146 ring waves (`sk146RingWave`), Vorraxis's Deluge (companions off the islands) and the
+  Wraith's Absolute Zero (companions away from a lit brazier). Catch-all hits (shape r 99: spines, blood drops) and lingering ground
+  hazards stay hero-only. Test: `v148_boss_splash.py` (`BL=`, `SEC=`).
+- **Version 148.2 (co-op)**: *Revive* (`3085`, `RV148`): at 0 HP with a partner still standing in the same map you are downed, not dead:
+  `RV148.T` (30) s to bleed out, no moving / attacking / casting, nothing hits you (monsters turn to partners, a standing partner drives
+  the Sovereign). A partner beside you gets "F · Revive …" and stays close `RV148.need` (3) s; you rise with 40% health and 2.5 s of
+  safety. Bleed-out, "Give up" or nobody standing in the map = the normal death (`rv148Die` → `arenaFail` → `down_base`); an arena is
+  only lost when everyone in it is down. Phoenix Heart, Unbreakable and the god cheat still come first; solo is unchanged. Presence
+  carries `dn`/`bt`; the revive is the `ev` entry `['rv', peer]`. *Boss credit* (`3086`, `BC148`): whoever kills a Sovereign (or
+  Vorraxis, `'v144'`) sends `['bk', id, name]`; every other player in the game gets the one-time progress wherever they are
+  (`bossDefeated({ar:i})`: map cleared, power, next portal, kingdom; Vorraxis: `MQ144.st` 2, the crystal waits in the lair). Players in
+  that same fight still get the kill and its loot (0520). Fix: in co-op the world runs behind the death screen, so a dead hero lying in
+  an arena used to restart the fight (and the arena wall pulled them back after "Rise Again"); `arenaTick` now starts no fight while
+  the hero is dead. Test: `v148_revive.py` (two windows, fake signaling, real WebRTC; includes the arena case). The random v141_sov
+  check "boss 3: Reach used against kiting" is in `test/ci_known_fail.txt` (owner's request).
 - **Version 141 (owner's list, Oct 2026)**: *Consume* raises only the eaten companion's best stat (same amount per stat as before;
   refused when that stat is maxed); the Fusion preview shows gains under 2 points with one decimal. *Keys*: Q feeds the most hurt
   active companion, Z health potion, X mana potion, 1–6 abilities. *Companions*: one active companion until the Beast Trainer teaches

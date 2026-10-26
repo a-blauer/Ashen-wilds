@@ -29,9 +29,11 @@ ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-n
 lantern|v143|1680-|ripper|warden: v143_lantern_road.py v145_sigils.py v108_instances.py v124_edge_test.py v148_cheddar.py v113_roster.py v38t.py v114_save.py v142_folk.py
 glowmire|v144|vorraxis|lair|1970-|2440-: v144_glowmire.py v143_lantern_road.py v108_instances.py v141_sov.py v114_save.py
 sigil|v145|ghostwolf|rune: v145_sigils.py v143_lantern_road.py v144_glowmire.py v108_instances.py v113_roster.py v114_save.py
-v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-: v146_sovs.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py
+v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-|3078-: v146_sovs.py v149_ssithra.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py
 # The animation viewer (viewer/, a separate artifact built from the game): every subject and action still plays
 ^viewer/|sov|boss|vorraxis|lair|abilit|evo-|signature|monster|compan|2240-: kv_viewer.py
+# v149
+ssith|1974-|3056-|3078-|v149: v149_ssithra.py v112_ssithra.py v146_sovs.py kv_viewer.py
 # v148
 skilling|gather|grip|1270|2995|3070|anim|weapon|0900|1700: v148_tools.py v148_edges.py
 0108|1010|3072|mouse|aim|target: v148_mouse.py
@@ -39,4 +41,11 @@ camp|3071|0250|0360|chest|loot|kill|roster|0550: v148_camps.py
 outskirt|3074|1960|kingdom|gather|0102: v148_outskirts.py
 cheddar|3075|quest|board|2350|2380: v148_cheddar.py
 deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.py v109_kingdom_shops.py
-intro|cinematic: v149_intro.py v149_intro_live.py v117_creator.py v131_load_title.py v73t.py
+3077|splash|compan|0095|0120|hit|enemy-move|moves: v148_splash.py v107_ai.py v85_combat.py
+3079|splash|sov|boss|1970|197[1-6]|305[0-6]|303[23]|vorraxis: v148_boss_splash.py v141_sov.py
+3085|3086|revive|coop|co-op|0520|215[0-9]|216[0-9]|2170|0560|kill|bossDefeated|0510|3033: v148_revive.py
+# v150
+3090|3091|3092|3094|coop|co-op|0520|2170|215[0-9]|216[0-9]|3071|camp|cheddar|quest|duskhold|kingdom|1860|1870|1910|1960|3074|3076|aggro|eTarget|mount: v150_coop.py
+3092|3093|3040|sigil|ritual|wolf|coop|co-op|0520|0120: v150_ritual.py v145_sigils.py
+3093|3096|3097|0630|2640|bat|tab|target|chest|hatch|3033|sov|boss|1970|0520|0380|v150: v150_checks.py
+intro|cinematic: v151_intro.py v151_intro_live.py v117_creator.py v131_load_title.py v73t.py
