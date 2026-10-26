@@ -25,6 +25,8 @@ function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Obj
     const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
 // 0045: a level's own heights (after every other height pass)
 function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
+// 0070: trees inside a level are scenery, not harvest nodes (hoisted: 0070 runs long before this file)
+function sp152NoNode(x,y){try{return sp152Defs().some(I=>x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)}catch(_){return false}}
 function spIns(x,y){if(!SPI||!SPI.on)return null;const L=SPI.L;for(let i=0;i<L.length;i++){const I=L[i];if(x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)return I}return null}
 
 // ---------------- the records (registered here, after every load-time INSL loop) ----------------

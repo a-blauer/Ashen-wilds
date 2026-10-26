@@ -166,7 +166,7 @@ function hd154OpenTick(dt){const O=HD154.op,S=HD154.S;if(!O)return;O.t+=dt;const
     if(!hd154Done()&&HD154.song&&HD154.song.mode=='play')for(let j=0;j<5;j++){const c=S.chimes[j].c;if(Math.hypot(P.x-c.x,P.z-c.z)<1.9)return {label:'F · Strike the '+['jade','sky','sun','ember','dusk'][j]+' chime stone',fn:()=>hd154Strike(j)}}}}catch(e){if(!HD154.err++)console.warn('v154 prompt',e)}
   return f.apply(this,arguments)}}
 sp152Gate('hydra',{ig:7,r:5.2,where:()=>sp152GateSpot(7,10.5),build:s=>{HD154.S=null;const S=hd154Build();return S.root},
-  prompt(s){if(hd154Done()&&!HD154.op){const N=INSL[8];return {label:'F · Enter the Hydra’s Oasis ('+BOSSES[1].name+')',fn:()=>insGo(N)}}
+  prompt(s){if(hd154Done()&&!HD154.op){const N=INSL[8];return {label:'F · Enter '+N.n+' · the Hydra’s Oasis',fn:()=>insGo(N)}}
     if(HD154.op)return null;const n=hd154N();
     if(n<5)return {label:'🔒 The Gate of the Hydra · '+n+'/5 winds reach it',fn:()=>say('🐍 Carved on the door: “Five winds from the five stones; sing them as the Mother wakes.” Five Wind Stones stand on the plateau (marked on your map). Turn each serpent to face this door.')};
     if(!HD154.song)return {label:'F · Listen to the Hydra’s song (verse '+(HD154.v+1)+' of 3)',fn:()=>hd154SongStart()};

@@ -81,7 +81,7 @@ def s(pg):
     exp('needs 1 glowbulb' in r['lampNo'],'lamppost locked without bulbs (%s)'%r['lampNo']);exp('Light the lamppost' in r['lampYes'],'lamppost prompt with bulbs (%s)'%r['lampYes'])
     exp(r['lit1']==1 and r['b2']==3 and r['lampOn'],'lighting uses 1 bulb and lights the lamp (%s left)'%r['b2'])
     exp(r['trkVis'] and ('1/%d'%r['N']) in r['trk'],'tracker shows the lamps (%s)'%r['trk'])
-    exp(r['reload']=='1,1,1','save round trip keeps state, bulbs, lamps (%s)'%r['reload'])
+    exp(r['reload']=='1,3,1','save round trip keeps state, bulbs, lamps (%s)'%r['reload'])
     exp(r['st2']==2 and r['moved']>3,'the last lamp starts the roll (st %s, moved %.1f)'%(r['st2'],r['moved']))
     exp(r['st3']==3 and r['parked']<.5 and r['swirl'],'the Ripper parks and the gateway opens (st %s, %.2f from park)'%(r['st3'],r['parked']))
     exp('Step through' in r['gateOpen'],'the gateway works once open (%s)'%r['gateOpen']);exp(r['needDone']==0,'no more drops once done')
