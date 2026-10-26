@@ -1,4 +1,4 @@
-# v143: The Lantern Road (Kindlelight I main quest): the outpost plan, decorations and roaming creatures kept clear, the scene
+# v143: The Lantern Road (Kindlelight I main quest; v151: the outpost by the entrance, ~47 lamps along the whole road at 1 bulb, the entrance camp moved): the outpost plan, decorations and roaming creatures kept clear, the scene
 # (lampposts, Ripper, wardens), glowbulb drops (only in Kindlelight I, only while needed), pickup, the bag, lighting lampposts,
 # prompts (captain, lamppost, the dormant gateway), the captain's window, the roll and the fire-up to done, saves (round trip,
 # mid-roll, old saves without the field, saves that already reached II), the tracker. NOSHOT=1 skips the pictures.
@@ -15,6 +15,9 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),tick=(se
   // no decoration in the keep-out rings; the route ends at the parking spot beside the gateway
   out.decoIn=WD.list.filter(d=>mq143Keep(0,d.x,d.z)&&!/^e_/.test(d.k)&&R.ok(d.x,d.z,.5)).length;   // rim scenery on the edge slope is not in the way
   out.parkGate=Math.hypot(R.park.x-I.ba[0],R.park.z-I.ba[1]);
+  // v151: the outpost near the entrance, no camp on it, lamps along the whole road a little further apart
+  out.entD=Math.hypot(R.C[0]-I.en[0],R.C[1]-I.en[1]);out.campNear=CAMPS.filter(C=>C.ig===0&&Math.hypot(C.x-R.C[0],C.z-R.C[1])<30).length;out.camps0=CAMPS.filter(C=>C.ig===0).length;
+  out.lampSpan=R.lamps.length?R.lamps[R.lamps.length-1].i-R.lamps[0].i:0;out.lampStep=R.lamps.length>1?out.lampSpan/(R.lamps.length-1):0;out.roadN=I.path.length;
   // a fresh hero: state 0, gateway locked
   out.st0=MQ143.st;out.done0=mq143Done();
   // drops: none outside Kindlelight I, some inside, none once enough are carried
@@ -45,9 +48,11 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),tick=(se
   // light the rest: the Ripper rolls, parks, fires up; the gateway opens
   MQ143.b=99;S.lamps.forEach((l,i)=>{if(!MQ143.lit[i])mq143Light(i)});await wait(2200);out.st2=MQ143.st;const p0=S.rip.g.position.clone();tick(5);out.moved=S.rip.g.position.distanceTo(p0);
   const s2=x2Save();out.midSave=s2.mq143.st;
-  tick(40);out.fire=!!MQ143.fire||MQ143.st==3;tick(9);out.st3=MQ143.st;out.parked=Math.hypot(S.rip.g.position.x-R.park.x,S.rip.g.position.z-R.park.z);out.swirl=S.swirl&&S.swirl.visible;
+  tick(Math.ceil(S.len/MQ143.speed)+3);out.len=S.len;out.fire=!!MQ143.fire||MQ143.st==3;tick(9);out.st3=MQ143.st;out.parked=Math.hypot(S.rip.g.position.x-R.park.x,S.rip.g.position.z-R.park.z);out.swirl=S.swirl&&S.swirl.visible;
   toPos(I.ba[0]+R.gate.dx*1.2,I.ba[1]+R.gate.dz*1.2);tick(.2);out.gateOpen=((worldPrompt()||{}).label||'');
   out.needDone=mq143Need();
+  // v151: a save from the 8-lamp road gets 3 bulbs back for each lamp it had lit and starts the new road dark
+  const pre=JSON.parse(JSON.stringify(s1));pre.mq143={v:143,st:1,b:2,lit:[1,1,0,0,0,0,0,0],seen:1};x2Load(pre);out.preB=MQ143.b;out.preLit=mq143Lit();out.preSt=MQ143.st;
   // a save made mid-roll loads as done; an old save without the field starts at 0 (II not reached) or done (II reached)
   x2Load(s2);out.midLoad=MQ143.st;
   const old=JSON.parse(JSON.stringify(s2));delete old.mq143;old.insr=[0,0,0,0,0,0];x2Load(old);out.oldSt=MQ143.st;out.oldDone=mq143Done();
@@ -60,25 +65,28 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     r=pg.evaluate(JS);print(json.dumps(r,indent=0)[:4000])
     exp=lambda c,m:(None if c else F(m))
-    exp(r['N']==8,'8 lampposts planned (%s)'%r['N']);exp(r['props']>=10,'outpost props planned (%s)'%r['props']);exp(r['war']==7,'7 warden spots (%s)'%r['war'])
+    exp(r['N']>=30,'lampposts along the whole road (%s)'%r['N']);exp(r['props']>=10,'outpost props planned (%s)'%r['props']);exp(r['war']==7,'7 warden spots (%s)'%r['war'])
     exp(r['badSpots']==0,'planned spots on walkable ground of Kindlelight I (%s bad)'%r['badSpots']);exp(r['decoIn']==0,'no decoration in the keep-out rings (%s)'%r['decoIn'])
     exp(r['parkGate']<7,'the Ripper parks beside the gateway (%.1f)'%r['parkGate'])
+    exp(r['entD']<45,'the outpost is near the entrance (%.1f)'%r['entD']);exp(r['campNear']==0 and r['camps0']==3,'no camp on the outpost, still 3 camps (%s near, %s)'%(r['campNear'],r['camps0']))
+    exp(r['lampSpan']>r['roadN']*.75 and 6<=r['lampStep']<=8,'lamps span the road about 7 apart (span %s of %s, step %.1f)'%(r['lampSpan'],r['roadN'],r['lampStep']))
     exp(r['st0']==0 and not r['done0'],'fresh hero: quest not started, gateway not open')
     exp(r['dropOther']==0,'no glowbulbs outside Kindlelight I');exp(r['dropHere']==5,'glowbulbs drop in Kindlelight I (%s/5)'%r['dropHere'])
     exp(r['b1']==5,'picking up adds the bulbs (%s)'%r['b1']);exp(r['need']==0 and r['dropFull']==0,'no drops once enough bulbs are carried')
     exp(r['bag'],'the bag shows glowbulbs under Quest items')
-    exp(r['scene'] and r['lampsBuilt']==8 and r['wardens']==7,'the scene builds (lamps %s, wardens %s)'%(r['lampsBuilt'],r['wardens']))
+    exp(r['scene'] and r['lampsBuilt']==r['N'] and r['wardens']==7,'the scene builds (lamps %s, wardens %s)'%(r['lampsBuilt'],r['wardens']))
     exp(r['wardenAnimal'],'wardens are animal folk bodies');exp(r['wardenWpn']==7,'every warden holds a weapon (%s)'%r['wardenWpn'])
     exp('dormant' in r['gateLocked'],'the gateway prompt is locked before the quest (%s)'%r['gateLocked'])
     exp('Talk to' in r['capPrompt'],'captain prompt (%s)'%r['capPrompt']);exp(r['win'],'the captain window opens');exp(r['st1']==1,'accepting the quest sets state 1')
-    exp('needs 3' in r['lampNo'],'lamppost locked without bulbs (%s)'%r['lampNo']);exp('Light the lamppost' in r['lampYes'],'lamppost prompt with bulbs (%s)'%r['lampYes'])
-    exp(r['lit1']==1 and r['b2']==1 and r['lampOn'],'lighting uses 3 bulbs and lights the lamp')
-    exp(r['trkVis'] and '1/8' in r['trk'],'tracker shows the lamps (%s)'%r['trk'])
+    exp('needs 1 glowbulb' in r['lampNo'],'lamppost locked without bulbs (%s)'%r['lampNo']);exp('Light the lamppost' in r['lampYes'],'lamppost prompt with bulbs (%s)'%r['lampYes'])
+    exp(r['lit1']==1 and r['b2']==3 and r['lampOn'],'lighting uses 1 bulb and lights the lamp (%s left)'%r['b2'])
+    exp(r['trkVis'] and ('1/%d'%r['N']) in r['trk'],'tracker shows the lamps (%s)'%r['trk'])
     exp(r['reload']=='1,1,1','save round trip keeps state, bulbs, lamps (%s)'%r['reload'])
     exp(r['st2']==2 and r['moved']>3,'the last lamp starts the roll (st %s, moved %.1f)'%(r['st2'],r['moved']))
     exp(r['st3']==3 and r['parked']<.5 and r['swirl'],'the Ripper parks and the gateway opens (st %s, %.2f from park)'%(r['st3'],r['parked']))
     exp('Step through' in r['gateOpen'],'the gateway works once open (%s)'%r['gateOpen']);exp(r['needDone']==0,'no more drops once done')
     exp(r['midSave']==2 and r['midLoad']==3,'a mid-roll save loads as done')
+    exp(r['preB']==8 and r['preLit']==0 and r['preSt']==1,'an 8-lamp save gets its bulbs back and starts the new road dark (b %s, lit %s)'%(r['preB'],r['preLit']))
     exp(r['oldSt']==0 and not r['oldDone'],'an old save without the field starts the quest fresh');exp(r['oldReached'],'a save that reached II counts the quest as done')
     exp(r['rosterIn']==0,'no roaming creatures in the outpost (%s)'%r['rosterIn'])
     if SHOT:

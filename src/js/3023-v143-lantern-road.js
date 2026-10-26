@@ -1,12 +1,14 @@
 // ================= v143 The Lantern Road — Kindlelight I main quest =================
 // The first chapter of Kindlelight's main quest line (a chapter per field instance; II and III come later). In Kindlelight I the
-// gateway to II is dormant. The Lantern Wardens (3021) hold an outpost on the road (3020 plan) with the Portal Ripper (3022), a
-// machine that can tear the gateway open, but it will not roll through the dark: eight lampposts line the road from the outpost to
-// the gateway and each needs 3 glowbulbs. Glowbulbs are a quest item (no other use) that every Kindlelight I creature drops
-// (MQ143.drop chance per kill, only while more are needed: lamps still dark × 3 − carried − lying on the ground).
+// gateway to II is dormant. The Lantern Wardens (3021) hold an outpost near the entrance (3020 plan) with the Portal Ripper (3022),
+// a machine that can tear the gateway open, but it will not roll through the dark: lampposts line the whole road from the outpost
+// to the gateway (v151: ~47, one glowbulb each; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
+// that every Kindlelight I creature drops (MQ143.drop chance per kill, only while more are needed: lamps still dark × MQ143.per
+// − carried − lying on the ground).
 // State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
-// instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {st, b (bulbs), lit[8], seen}.
-//  * F at an unlit lamppost with 3+ bulbs lights it (any state; the captain explains the quest). The last lamp starts the roll:
+// instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {v, st, b (bulbs), lit[one per lamp], seen}; saves before v151
+// (8 lamps at 3 bulbs) get their bulbs back for lamps they had lit (the lamps stand elsewhere now) and start the new road dark.
+//  * F at an unlit lamppost with a bulb lights it (any state; the captain explains the quest). The last lamp starts the roll:
 //    the Ripper rolls the road (furnace lit, chimney smoking, two wardens escorting it), parks beside the gateway, drops its
 //    jacks, opens its claws, charges its coil and tears the gateway open (arcs, a flash): st 3. Leaving the instance mid-way
 //    finishes it at once; a save made mid-roll loads as done.
@@ -15,9 +17,11 @@
 //    the Ripper, the captain with "!"), the bulbs in the bag's Materials tab (Quest items), the glowbulb icon (KQI.glowbulb, 🪔).
 // Co-op: local to each player like Cheddar's quests (each player lights their own road; a partner's kill near you drops a bulb
 // for you too, as loot does). The scene is built the first time you are in Kindlelight I.
-var MQ143={st:0,b:0,lit:[0,0,0,0,0,0,0,0],seen:0,per:3,drop:.55,speed:1.9,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
+var MQ143={st:0,b:0,lit:[],seen:0,per:1,drop:.55,speed:3,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
   name:'The Lantern Road',cap:'Warden-Captain Harrow'};
+// v151: per 3 → 1 (a bulb a lamp, ~47 lamps); speed 1.9 → 3 tiles/s (the roll now covers the whole ~330-tile road, ~2 minutes)
 function mq143N(){return mq143Plan().lamps.length}
+try{MQ143.lit=new Array(mq143N()).fill(0)}catch(e){console.warn('v151 lamps',e)}
 function mq143Lit(){return MQ143.lit.reduce((a,b)=>a+(b?1:0),0)}
 function mq143Done(){return MQ143.st>=3||insReach(0)>=1}
 function mq143Here(){try{const I=curIns();return !!I&&I.g===0}catch(_){return false}}
@@ -39,14 +43,15 @@ function mq143Drop(p){MQ143_G=MQ143_G||{b:new THREE.CylinderGeometry(.05,.05,1.6
 {const f=take;take=function(d){if(d&&d.kind=='mq143'){MQ143.b+=d.data.n|0;MQ143.trkK='';
     pickup({ic:'🪔',t:'+'+(d.data.n|0)+' Glowbulb',col:'#d8ff7a',sub:'Quest item · '+MQ143.b+' carried · feed them to the lampposts on the road'});return}return f.apply(this,arguments)}}
 {const f=kqmMatTab;kqmMatTab=function(){const h=f.apply(this,arguments);if(!(MQ143.b>0))return h;
-  const t=`<div class="kqm-slot mi" title="Glowbulb · quest item for The Lantern Road. Every creature of Kindlelight I carries one; three light a lamppost on the road to the gateway."><span class="kqm-ic">🪔</span><span class="kqm-ct">${MQ143.b}</span><span class="kqm-hold">Glowbulb</span></div>`;
+  const t=`<div class="kqm-slot mi" title="Glowbulb · quest item for The Lantern Road. Every creature of Kindlelight I carries one; each lights a lamppost on the road to the gateway."><span class="kqm-ic">🪔</span><span class="kqm-ct">${MQ143.b}</span><span class="kqm-hold">Glowbulb</span></div>`;
   return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
 
 // ---------------- saves ----------------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:143,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:151,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq143;MQ143.st=0;MQ143.b=0;MQ143.lit=new Array(mq143N()).fill(0);MQ143.seen=0;
     if(q&&typeof q=='object'){MQ143.st=Math.max(0,Math.min(3,q.st|0));if(MQ143.st==2)MQ143.st=3;MQ143.b=Math.max(0,Math.min(99,q.b|0));MQ143.seen=q.seen|0;
-      if(Array.isArray(q.lit))q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0})}
+      if(Array.isArray(q.lit)){if((q.v|0)>=151)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+        else if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+3*q.lit.filter(v=>v).length)}} // v151: the old 8 lamps cost 3 each and stood elsewhere: refund, start dark
     MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(MQ143.S)mq143Sync()}catch(err){console.warn('v143 load',err)}return r}}
 
 // ---------------- talking, lighting, the gateway ----------------
@@ -55,36 +60,37 @@ function mq143Light(i){const S=MQ143.S;if(!S||MQ143.lit[i]||MQ143.b<MQ143.per||m
   try{const pp=L.plateW.clone();burst(pp,0xd8ff7a,18,1.2,1.2,.6);sfx('chime')}catch(_){}
   setTimeout(()=>{try{L.on.visible=true;L.halo.visible=true;L.k=Math.max(L.k,.05);burst(L.bulbW,0xf4ffd0,26,2.2,1.6,.9);ring(new THREE.Vector3(L.x,0,L.z),0xd8ff7a,2.2,700);mSfx('rare')}catch(_){}},420);
   const n=mq143Lit(),N=mq143N();
-  if(n>=N){say('🪔 The last lamppost flares. Down the road the Portal Ripper’s furnace roars to life.');setTimeout(()=>mq143RollStart(),1600)}
+  if(n>=N){say('🪔 The last lamppost flares. Back at the outpost the Portal Ripper’s furnace roars to life.');setTimeout(()=>mq143RollStart(),1600)}
   else say('🪔 Lamppost lit · '+n+' of '+N+(MQ143.b>=MQ143.per?' · you carry enough for another':''))}
+function mq143Bulbs(n,plain){return n+(plain?' ':' 🪔 ')+'glowbulb'+(n==1?'':'s')}
 function mq143Prompt(){if(!MQ143.S||!mq143Here())return null;const P=pl.position,S=MQ143.S;
   const c=S.war.captain;if(c&&Math.hypot(P.x-c.g.position.x,P.z-c.g.position.z)<2.4)return {label:'F · Talk to '+MQ143.cap+(MQ143.st==0&&!mq143Done()?' (quest)':''),fn:()=>openX('mq143')};
   if(mq143Done()||MQ143.st>=2)return null;
   for(let i=0;i<S.lamps.length;i++){const L=S.lamps[i];if(MQ143.lit[i])continue;if(Math.hypot(P.x-L.x,P.z-L.z)<2.3){
-    if(MQ143.b>=MQ143.per)return {label:'F · Light the lamppost (3 🪔 glowbulbs · you carry '+MQ143.b+')',fn:()=>mq143Light(i)};
-    return {label:'🪔 The lamppost needs 3 glowbulbs · you carry '+MQ143.b,fn:()=>say('🪔 Every creature of '+PMAP[0].ins[0].n+' carries a glowbulb. Hunt them, then feed three to each lamppost.')}}}
+    if(MQ143.b>=MQ143.per)return {label:'F · Light the lamppost ('+mq143Bulbs(MQ143.per)+' · you carry '+MQ143.b+')',fn:()=>mq143Light(i)};
+    return {label:'🪔 The lamppost needs '+mq143Bulbs(MQ143.per,1)+' · you carry '+MQ143.b,fn:()=>say('🪔 Every creature of '+PMAP[0].ins[0].n+' carries a glowbulb. Hunt them, then feed one to each lamppost.')}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){try{const r=mq143Prompt();if(r)return r}catch(e){if(!MQ143.err++)console.warn('v143 prompt',e)}return f.apply(this,arguments)}}
 function mq143AtGate(){const P=pl.position;for(const r of RPORT)if(r.k=='next'&&r.ig===0&&Math.hypot(P.x-r.x,P.z-r.z)<2.8)return true;return false}
 {const f=portalPrompt;portalPrompt=function(){const r=f.apply(this,arguments);try{if(r&&!mq143Done()&&mq143AtGate()){const n=mq143Lit(),N=mq143N();
-    return {label:'🔒 The gateway is dormant · '+n+'/'+N+' lampposts lit',fn:()=>say('🌀 The arch is cold and dead. The Lantern Wardens up the road have a machine that can tear it open, once their road is lit.')}}}catch(_){}return r}}
+    return {label:'🔒 The gateway is dormant · '+n+'/'+N+' lampposts lit',fn:()=>say('🌀 The arch is cold and dead. The Lantern Wardens back by the entrance have a machine that can tear it open, once their road is lit.')}}}catch(_){}return r}}
 
 // ---------------- the captain's window ----------------
 XR.mq143=()=>{const st=mq143Done()?3:MQ143.st,n=mq143Lit(),N=mq143N(),nx=mq143Next();
   $('xwT').textContent='⚜ '+MQ143.cap;$('xwS').textContent='The Lantern Wardens · '+PMAP[0].ins[0].n;
   const L=st==0?['Hold there. You walk a dead road. We are the Lantern Wardens, and the iron beast behind me is the Portal Ripper. It can tear open the way to '+nx+', but it will not roll through this dark. The bog swallows anything that leaves the light.',
-      'The lampposts down to the gateway burn glowbulbs, and every creature of this reach carries one in its gut. Take them. Three to a lamp. When the last lamp burns, we roll.']
-    :st==1?['Lamps lit: '+n+' of '+N+'. The beasts carry the bulbs, so take them from the beasts. Three to a lamp. The posts run down the road to the gateway.']
+      'Every lamppost from here down to the gateway burns a glowbulb, and every creature of this reach carries one in its gut. Take them. One to a lamp, all the way down. When the last lamp burns, we roll.']
+    :st==1?['Lamps lit: '+n+' of '+N+'. The beasts carry the bulbs, so take them from the beasts. One to a lamp. The posts run the whole road, down to the gateway.']
     :st==2?['She’s moving! Follow her down to the gateway, and keep those things off my wardens.']
     :['The way to '+nx+' stands open, and the Ripper holds it. Go, before the bog remembers us.'];
   const lamp=i=>`<span class="mq143lp${MQ143.lit[i]||st>=2?' on':''}" title="Lamppost ${i+1}">🪔</span>`;
   let b=`<div class="cq132say"><span class="cq132who">${MQ143.cap}</span>${L.map(t=>'“'+t+'”').join('<br><br>')}</div>`;
   b+=`<div class="mq143q"><div class="mq143h"><span>Main quest</span><b>${MQ143.name}</b></div>`+
-    `<div class="mq143o${st>=2?' full':''}"><span>Lampposts lit</span><span>${st>=2?N:n} / ${N}</span></div><div class="mq143lps">${MQ143.lit.map((v,i)=>lamp(i)).join('')}</div>`+
-    `<div class="mq143o"><span>Glowbulbs carried</span><span>${MQ143.b}${st<2?' · 3 per lamp':''}</span></div>`+
+    `<div class="mq143o${st>=2?' full':''}"><span>Lampposts lit</span><span>${st>=2?N:n} / ${N}</span></div><div class="mq143lps">${Array.from({length:N},(v,i)=>lamp(i)).join('')}</div>`+
+    `<div class="mq143o"><span>Glowbulbs carried</span><span>${MQ143.b}${st<2?' · '+MQ143.per+' per lamp':''}</span></div>`+
     `<div class="mq143o${st>=3?' full':''}"><span>The gateway to ${nx}</span><span>${st>=3?'open':st==2?'opening…':'dormant'}</span></div></div>`;
   $('xwB').innerHTML=b;
-  $('xwF').innerHTML=st==0?'<button class="pri" data-mq143="go">I’ll light the road</button> <span class="mut dtl">Glowbulbs drop from the creatures of '+PMAP[0].ins[0].n+'.</span>':'<span class="mut dtl">'+(st>=3?'Step through the gateway at the end of the road.':'Feed three glowbulbs to each lamppost (F beside it).')+'</span>'};
+  $('xwF').innerHTML=st==0?'<button class="pri" data-mq143="go">I’ll light the road</button> <span class="mut dtl">Glowbulbs drop from the creatures of '+PMAP[0].ins[0].n+'.</span>':'<span class="mut dtl">'+(st>=3?'Step through the gateway at the end of the road.':'Feed a glowbulb to each lamppost (F beside it).')+'</span>'};
 $('xw').addEventListener('click',e=>{if(xwMode!='mq143')return;const t=e.target.closest('[data-mq143]');if(!t)return;
   if(t.dataset.mq143=='go'&&MQ143.st==0){MQ143.st=1;MQ143.trkK='';say('⚜ Quest: <b>'+MQ143.name+'</b> · light the '+mq143N()+' lampposts down to the gateway.');try{sfx('chime')}catch(_){}}rX()});
 
@@ -106,16 +112,16 @@ body.mob #mqt143{width:176px;font-size:11px}
 #xw .mq143o{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:4px;background:rgba(255,255,255,.035);font-size:.82rem}
 #xw .mq143o span:last-child{font-variant-numeric:tabular-nums;color:#e0e0c0}
 #xw .mq143o.full{color:#b8e88f}
-#xw .mq143lps{display:flex;gap:6px;justify-content:center;padding:2px 0}
-#xw .mq143lp{font-size:1.25rem;opacity:.3;filter:grayscale(1)}
+#xw .mq143lps{display:flex;flex-wrap:wrap;gap:2px 3px;justify-content:center;padding:2px 0}
+#xw .mq143lp{font-size:.95rem;opacity:.3;filter:grayscale(1)}
 #xw .mq143lp.on{opacity:1;filter:drop-shadow(0 0 6px #d8ff7a)}`;document.head.appendChild(st);
   const d=document.createElement('div');d.id='mqt143';d.className='hide';document.body.appendChild(d)})();
 function mq143Trk(){const el=$('mqt143');if(!el)return;const here=mq143Here(),hide=!here||(typeof uiOpen=='function'&&uiOpen())||(mq143Done()&&insReach(0)>=1);
   const st=mq143Done()?3:MQ143.st,n=mq143Lit(),N=mq143N(),key=(hide?'h':'s')+st+'|'+n+'|'+MQ143.b+'|'+MQ143.seen;if(key===MQ143.trkK)return;MQ143.trkK=key;
   if(hide){el.classList.add('hide');mq143TrkPos();return}
   const o=(a,b)=>`<div class="o"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest</div><div class="h">'+MQ143.name+'</div>';
-  if(st==0)h+=o(MQ143.seen?'Speak to '+MQ143.cap:'Find the Lantern Wardens down the road')+o('Glowbulbs carried',MQ143.b);
-  else if(st==1)h+=o('Light the lampposts',n+'/'+N)+o('Glowbulbs (3 per lamp)',MQ143.b);
+  if(st==0)h+=o(MQ143.seen?'Speak to '+MQ143.cap:'Find the Lantern Wardens near the entrance')+o('Glowbulbs carried',MQ143.b);
+  else if(st==1)h+=o('Light the lampposts',n+'/'+N)+o('Glowbulbs ('+MQ143.per+' per lamp)',MQ143.b);
   else if(st==2)h+='<div class="o d"><span>The Portal Ripper rolls to the gateway…</span></div>';
   else h+='<div class="o d"><span>Step through the gateway to '+mq143Next()+'</span></div>';
   el.innerHTML=h;el.classList.remove('hide');mq143TrkPos()}
