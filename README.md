@@ -112,7 +112,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v144 The Glowmire Crystal (Kindlelight II main quest): Vorraxis model (`MB144`, `mb144Build`, poses `MB144P`, `mb144Loco`/`mb144Post`), his moves (`MB144M`, lair arena `MB144A`, `svCtx`/`svHitNow` wrappers), the hatch, the Seeping Lair (INSL[4]), the fight controller `mb144AI`, quest state `MQ144`, crystal, sealed II→III gateway | `3031`–`3033` |
 | v145 The Three Sigils (Kindlelight III main quest): sigil layout `mq145Plan` / keep-out `mq145Keep` (called from 1680 `place`), sigil model `ms145Sigil`, ghost wolves (`EN.ghostwolf`, look `gw145Look` via a `cr` wrapper), the essence charging ritual (`MQ145.R`, `mq145Start`/`mq145RTick`/`mq145Attune`/`mq145Fail`), sealed Den gateway, tracker, map marks | `3040` (edit in 1680) |
 | v146 Sovereigns to the Vorraxis standard: shared kit (`sk146*`: springs `B.spr`, effects, props, ring waves, den state `A.s146`, smoother strike ease), Argus rebuilt (`argBuild146`), and per boss a Phase II den change + signature mechanic + model/effect upgrades | `3050` kit, `3051` Vaelric, `3052` Rime Wraith, `3053` Bloated One, `3054` Argus, `3055` Hydra, `3056` Ssith'ra |
-| v151 Burningeye Summit main quest (the ice zone): I The Frozen Maw (cave mouth `gb151CaveMouth`, the cave = Burningeye's unused Wave Trial `INSL[14]` `GB151L`, Gorthrak the Glacierback: model `gb151Build` / poses `GB151P` / moves `GB151M`, Frostbite `gb151Frost`, ice pillars, Glacial Rampage, quest `MQ151`); II The Frozen Gate (`mq160Plan`, caches + elite wardens, workbench, flamespitter `fs160Spitter`, the melt event `MQ160.E`, ice spiders `EN.icespider`); III The Mountain Drill (`mq170Plan`, cliff / drill / 4 control boxes, the drill event `MQ170.E`, repair windows `dr170Open` thaw / wire / rebuild, Frost Troll wreckers `dr170Troll`) | `3150`–`3152`, `3160`, `3170` (edit in 1680) |
+| v151 Burningeye Summit main quest (the ice zone): I The Frozen Maw (cave mouth `gb151CaveMouth`, the cave = Burningeye's unused Wave Trial `INSL[14]` `GB151L`, Gorthrak the Glacierback: model `gb151Build` / poses `GB151P` / moves `GB151M`, Frostbite `gb151Frost`, ice pillars, Glacial Rampage, quest `MQ151`); II The Frozen Gate (`mq160Plan`, caches + elite wardens, workbench, flamespitter `fs160Spitter`, the melt event `MQ160.E`, ice spiders `EN.icespider`); III The Mountain Drill (`mq170Plan`, cliff / drill / 4 control boxes, the drill event `MQ170.E`, repair windows `dr170Open` thaw / wire / rebuild, Frost Troll wreckers `dr170Troll`) | `3150`–`3152`, `3160`, `3170`, co-op `3180` (edit in 1680) |
 
 ## Conventions (read before changing code)
 
@@ -636,7 +636,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   instance has been reached (`insReach(2)`), so heroes who are already further on are never blocked. Every scene is built lazily the
   first time the hero is in its instance and hidden elsewhere; the solid tiles (`CBLK`) are registered at load (`mq151Solid`,
   `mq160Solid`, `mq170Solid`) so Cheddar's gateway spot and the roaming creatures see them; `mq151Keep` / `mq160Keep` / `mq170Keep` keep
-  1680's decorations off them. Trackers use `#mqt143` (class `z2`). Co-op: local to each player, like v144/v145.
+  1680's decorations off them. Trackers use `#mqt143` (class `z2`). Co-op (`3180`, `CO151`): shared. Gorthrak is one troll: the
+  driver `gb180Drv()` (lowest peer id among the standing heroes in the cave who have him, presence `g1`) runs his AI and relays
+  each cast with its seed (`['g1c',…]`) and his health / phase / spot every 120 ms (`['g1s',…]`); partners play the same moves on
+  their copy, glide to his spot between moves (`gb180Glide`) and send their damage to the driver (`['g1h',dmg]`); his kill is
+  everyone's (`['g1k']`), a partner whose own Gorthrak is slain fights a visiting copy (`e.gbV`). The gate melt and the drill
+  run on the region host (`co151Host()`): partners ask to start (`f2rq` / `d3rq`), one hero carries the flamespitter at a time
+  (`f2c`), the carrier's flame goes to the host (`f2f`, spider burns `f2k`), the host sends the state (`f2e` / `d3e`); anyone
+  switches on or repairs any box (`d3o`); spiders and wreckers are the host's shared monsters and hunt the nearest hero. An
+  event is lost only when every hero in the instance is down. Progress (a slain Gorthrak, each part, the assembly, the gate,
+  the drill) is credited to every player in the game (`['bq151',key]`, sent 3×).
   * **I · The Frozen Maw** (`3150` model, `3151` moves, `3152` cave and quest): the road ends at an ice cave mouth (`gb151CaveMouth`: a
     cliff of rocks, an arch hung with icicles, a dark throat, a troll totem). F: into the Frozen Maw = Burningeye's Wave Trial instance
     (`INSL[14]`, renamed, Lv 21, its own dim blue atmosphere `TH112.byG[14]`; the old trial's war-camp dressing `ARK_TRIAL[2]` is
@@ -671,7 +680,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     or Space and keep the needle in the green band), **Rewire** (drag each wire to the socket of its colour), **Rebuild** (drag each
     broken piece into its place). You stay at the box while you work, and a hit knocks you away (the window closes). Bored through,
     the cliff bursts open on a tunnel to the Den. HUD `#dr170h`. `MQ170.st` 0 · 1 open; saved as `x2.mq170 {st}`.
-  Tests: `v151_frozen_maw.py`, `v160_frozen_gate.py`, `v170_mountain_drill.py`; model sheets `v143_look.py PROPS=gorthrak,gorthrakShell,
+  Tests: `v151_frozen_maw.py`, `v160_frozen_gate.py`, `v170_mountain_drill.py`, `v151_coop.py` (two windows); model sheets `v143_look.py PROPS=gorthrak,gorthrakShell,
   fgate,fbench,fspitter,fcache,ddrill2,dbox,dbox2` and `PROPS=gbP:<pose>` (a trailing `+` shows the Rampage shell).
 - **Sovereigns to the Vorraxis standard (v146, `3050`–`3056`)**: every Sovereign follows `docs/BOSS_RECIPE.md` now. Each keeps its
   v110/v112 poses and moves and gains (all in Phase II): a den change and a signature mechanic with a success and a failure outcome.
@@ -930,6 +939,7 @@ python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main que
 python3 v151_frozen_maw.py    # v151: The Frozen Maw (Burningeye I): the cave mouth, Gorthrak, pillars, Frostbite, Phase II, the Rampage both ways, the passage, saves
 python3 v160_frozen_gate.py   # v151: The Frozen Gate (Burningeye II): caches and wardens, the flamespitter, the melt (carry, spray, overheat, spiders, charge), saves
 python3 v170_mountain_drill.py # v151: The Mountain Drill (Burningeye III): boxes, failures, the three repair windows, troll wreckers, the bore, the tunnel, saves
+python3 v151_coop.py          # v151: the three chapters with two players (shared Gorthrak, shared melt and carrier, shared drill and repairs, credit)
 python3 v146_sovs.py          # v146: Sovereigns: den changes, signature mechanics, springs, every move, clean dens (BOSS=0..5)
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)

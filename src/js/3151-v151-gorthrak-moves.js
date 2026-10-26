@@ -85,7 +85,7 @@ function gb151Slam(c,p,r,pool){svShock(p,GB151.col,r,.4);burst(gY(p,.3),0xd8f4ff
 // the charge: runs along the facing at sp tiles/s from t0 to t1; a pillar in the way stops it (crash), the wall stops it (stumble)
 function gb151Run(c,dt,t0,t1,sp,rampage){const M=c.M,e=c.e;if(c.t<t0||M.an.stop)return;if(c.t>t1){M.an.stop=1;return}
   const a=c.m.rotation.y,d=sp*dt,x=c.m.position.x+Math.sin(a)*d,z=c.m.position.z+Math.cos(a)*d,A=GB151A;
-  const P=typeof gb151PillarAt=='function'?gb151PillarAt(x,z,e.sv.body+.8):null;
+  const P=typeof gb151PillarAt=='function'&&gb180Auth()?gb151PillarAt(x,z,e.sv.body+.8):null;   // co-op: only the driver's run crashes (3180 relays it)
   if(P){M.an.stop=1;try{gb151Crash(e,P,rampage)}catch(err){console.error('gb crash',err)}return}
   if(A&&Math.hypot(x-A.cx,z-A.cz)>A.r-1.6){M.an.stop=1;shake(.25);svSnd('heavy',1,.7);burst(gY(c.m.position,.6),0x6a6e76,30,3,2,.6);return}
   c.m.position.x=x;c.m.position.z=z;e.sv.rmOn=1;

@@ -198,7 +198,7 @@ function gb151Avalanche(e){const P=pl.position,safe=MQ151.sh.some(o=>Math.hypot(
   setTimeout(()=>{MQ151.sh.forEach(o=>{const y1=o.g.position.y;tw(1200,k=>o.g.position.y=y1-1.3*k,()=>{if(o.g.parent)o.g.parent.remove(o.g)})});MQ151.sh=[]},1800)}
 // Phase II: the Maw groans; icicles keep falling near you (a warning, then the fall)
 function gb151Quake(on){MQ151.quake=on?1:0;MQ151.qT=1.5}
-function gb151QuakeTick(e,dt){if(!MQ151.quake||!GB151A||!GB151A.f)return;const S=e.sv;if(S.rp||(S.mv&&(S.mv.id==='rfail'||S.mv.id==='rampage')))return;MQ151.qT-=dt;if(MQ151.qT>0)return;MQ151.qT=1.4+Math.random()*1.0;
+function gb151QuakeTick(e,dt){if(!MQ151.quake||!GB151A||!GB151A.f||hero.hp<=0)return;const S=e.sv;if(S.rp||(S.shell||0)>.05||(S.mv&&(S.mv.id==='rfail'||S.mv.id==='rampage')))return;MQ151.qT-=dt;if(MQ151.qT>0)return;MQ151.qT=1.4+Math.random()*1.0;
   const v=S.hv||{x:0,z:0},a=Math.random()*6.283,r=Math.random()*2.6,p=gb151HeroIn(new THREE.Vector3(pl.position.x+v.x*.6+Math.cos(a)*r,0,pl.position.z+v.z*.6+Math.sin(a)*r));
   const an={x:p.x,z:p.z,a:0},W=svWarn({k:'c',r:1.3},an,.95,{});setTimeout(()=>{if(GB151A&&GB151A.f)gb151Icicle(p,false,.32)},630);
   setTimeout(()=>{if(!GB151A||!GB151A.f||e.dead)return;if(svIn({k:'c',r:1.3},an,pl.position,.25)&&hero.hp>0&&!(hero.iv>0)){bossHit(e,.6);gb151Frost(1)}},950)}
@@ -210,7 +210,7 @@ var GB151B={name:'Gorthrak',col:GB151.col,body:1.9,ph2:.55,poise:.1,headJ:'head'
   stag:[[.25,'stag','o'],[2.2,'stag','l',.025],[2.75,'rec','io']],stagT:2.75,
   die:[[.4,'stag','o'],[1.4,'dead','i'],[2.3,'dead','l']]};
 GB151B.M.stagger=svStagDef(GB151B);
-function gb151Spawn(){if(MQ151.e&&!MQ151.e.dead&&enemies.includes(MQ151.e))return MQ151.e;if(MQ151.st>=2)return null;const L=GB151L,key='gorthrak';
+function gb151Spawn(force){if(MQ151.e&&!MQ151.e.dead&&enemies.includes(MQ151.e))return MQ151.e;if(MQ151.st>=2&&!force)return null;const L=GB151L,key='gorthrak';
   if(!EN[key])EN[key]=Object.assign({},EN.troll,{n:'Gorthrak',e:'🧌'});try{MSET[key]=[]}catch(_){}
   const c=enemyC(key,MQ151.lv,{boss:1});c.n='Gorthrak';const m=cr(c);m.position.set(L.home.x,0,L.home.z);m.rotation.y=0;scene.add(m);
   const hb=bar(true);hb.scale.setScalar(3);
@@ -272,7 +272,7 @@ function mq151Trk(){const el=$('mqt143');if(!el)return;const hide=(typeof uiOpen
 // ---------------- hooks: his AI, his death, starting the fight, the HUD ----------------
 {const f=eTick;eTick=function(e,dt,now){if(e&&e.gb151){try{gb151AI(e,dt,now)}catch(err){if(!MQ151.err++)console.error('v151 ai',err)}return true}return f.apply(this,arguments)}}
 {const f=kill;kill=function(e){const r=f.apply(this,arguments);if(e&&e.gb151)try{gb151Won(e)}catch(err){console.error('v151 won',err)}return r}}
-{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.gb151&&e.sv&&!e.dead&&!(GB151A&&GB151A.f)&&mq151InCave()&&hero.hp>0)gb151Start(e);return f.apply(this,arguments)}}
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.gb151&&e.sv&&!e.dead&&!(GB151A&&GB151A.f)&&mq151InCave()&&gb180Auth()&&(hero.hp>0||CO151.ap))gb151Start(e);return f.apply(this,arguments)}}
 function gb151Hud(){const e=MQ151.e,on=!!(e&&!e.dead&&GB151A&&GB151A.f&&mq151InCave());let p=document.getElementById('gbPo');if(!on){if(p)p.style.display='none';return}
   const b=$('boss');if(!b)return;b.classList.remove('hide');const S=e.sv;$('bossN').textContent='🧌 Gorthrak · the Glacierback · Phase '+(S.ph>1?'II':'I')+(S.shell>0?' · ice shell '+(S.crk||0)+'/3 cracked':'');$('bossB').style.width=Math.max(0,100*e.c.h/M(e.c))+'%';
   if(!p){p=document.createElement('div');p.id='gbPo';p.style.cssText='height:5px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.6);border:1px solid rgba(255,216,96,.35);border-radius:2px;overflow:hidden';p.innerHTML='<i style="display:block;height:100%;width:0;background:linear-gradient(90deg,#c89020,#ffe080);transition:width .12s"></i>';const mt=b.querySelector('.meter');if(mt)mt.after(p);else b.appendChild(p)}
@@ -289,15 +289,18 @@ function gb151AI(e,dt,now){const S=e.sv,A=GB151A,m=e.m;if(!A)return;if(e.hb)e.hb
     if(S.mv)svEndMove(e,true);e.agg=0;const hx=GB151L.home.x-m.position.x,hz=GB151L.home.z-m.position.z,hl=Math.hypot(hx,hz);
     if(hl>.6){walkM(m,hx/hl*2*dt,hz/hl*2*dt);m.rotation.y=Math.atan2(hx,hz)}else m.rotation.y+=svAng(0-m.rotation.y)*Math.min(1,dt*2);
     e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.2);S.po=0;
-    if(mq151InCave()&&hero.hp>0&&MQ151.st<2&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<9.5)gb151Start(e);
+    // co-op (3180): only the driver starts it, when any hero comes close
+    if(gb180Auth()&&mq151InCave()&&(hero.hp>0&&!e.gbV&&MQ151.st<2&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<9.5||gb180Near(e,9.5)))gb151Start(e);
+    if(!gb180Auth())gb180Glide(e,dt);
     svApply(e,dt,now);return}
-  if(hero.hp<=0||!mq151InCave()||(typeof AWD!='undefined'&&AWD.dead)){gb151Reset(true);svApply(e,dt,now);return}
+  if(gb180End()){gb151Reset(true);gb180Ended();svApply(e,dt,now);return}
   MQ151.ft=(MQ151.ft||0)+dt;e.agg=1;
-  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;svCast(e,'intro')}
+  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(gb180Auth())svCast(e,'intro')}
   if(now-S.poT>3500)S.po=Math.max(0,S.po-dt*.1);
   // troll blood: he heals while his Rampage shell holds
-  if(S.rp&&S.dr>0)e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.006);
+  if(S.rp&&S.dr>0&&gb180Auth())e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.006);
   if(S.mv)svTickMove(e,dt,now);
+  else if(!gb180Auth())gb180Glide(e,dt);
   else if(S.rp&&gb151RampNext(e)){}
   else if(S.ph===1&&e.c.h/M(e.c)<=GB151B.ph2)svCast(e,'awaken');
   else{gb151Move(e,dt);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}

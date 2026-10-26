@@ -184,7 +184,8 @@ function mq160BenchSpot(){const R=mq160Plan(),B=R.bench,G=R.gate;return new THRE
 function mq160Sync(){const S=MQ160.S;if(!S)return;const E=MQ160.E,open=MQ160.st>=3||mq160Done();
   S.iceT.forEach(k=>{if(open)CBLK.delete(k);else CBLK.add(k)});S.gate.ice.visible=!open;S.gate.glow.material.opacity=open?.5:0;
   S.cache.forEach(c=>{c.g.visible=!MQ160.p[c.i]||false;c.g.userData.gl.visible=!MQ160.p[c.i];c.g.userData.bc.visible=!MQ160.p[c.i]});
-  const sp=S.sp;if(E&&E.carry){if(sp.parent!==pl){pl.add(sp);sp.position.set(0,.66,.18);sp.rotation.set(0,0,0);sp.scale.setScalar(1/(pl.scale.x||1))}}
+  const sp=S.sp,hm=E?(E.carry?pl:E.carrier&&typeof MP!='undefined'&&MP.rh[E.carrier]&&MP.rh[E.carrier].m||null):null;
+  if(hm){if(sp.parent!==hm){hm.add(sp);sp.position.set(0,.66,.18);sp.rotation.set(0,0,0);sp.scale.setScalar(1/(hm.scale.x||1))}}
   else{if(sp.parent!==scene)scene.add(sp);sp.scale.setScalar(1.25);
     if(E&&E.gp){sp.position.copy(E.gp);sp.rotation.set(0,E.gry||0,.35)}else{const b=mq160BenchSpot(),R=mq160Plan();sp.position.copy(b);sp.rotation.set(0,R.bench.ry+Math.PI/2,0)}}
   sp.visible=MQ160.st>=2&&!open||!!E;
@@ -193,7 +194,7 @@ function mq160Sync(){const S=MQ160.S;if(!S)return;const E=MQ160.E,open=MQ160.st>
 // ---------------- the guards and the parts ----------------
 function mq160Guard(i){const R=mq160Plan(),c=R.cache[i],P=MQ160.parts[i];let e=null;
   try{e=spawnEnemy(P.g,c.x+Math.sin(c.ry)*2.4,c.z+Math.cos(c.ry)*2.4,MQ160.gl,{al:1})}catch(err){console.error('v151 guard',err)}
-  if(!e)return null;e.fs160g=i;e.wx=c.x;e.wz=c.z;e.ev=1;e.c.n=(e.trait?e.trait+' ':'')+'Warden of the '+P.n;MQ160['g'+i]=e;
+  if(!e)return null;e.fs160g=i;e.wx=c.x;e.wz=c.z;e.c.n=(e.trait?e.trait+' ':'')+'Warden of the '+P.n;MQ160['g'+i]=e;
   svDecal(new THREE.Vector3(e.m.position.x,0,e.m.position.z),0x2a3a5a,1.4,2,.6);return e}
 function mq160Take(i){if(MQ160.p[i])return;MQ160.p[i]=1;MQ160.trkK='';const P=MQ160.parts[i],c=MQ160.S&&MQ160.S.cache[i];
   if(c){burst(new THREE.Vector3(c.x,GH(c.x,c.z)+1.1,c.z),0xffa040,40,2,2,.8);svShock(new THREE.Vector3(c.x,0,c.z),0xffa040,3,.4)}
@@ -223,10 +224,15 @@ function mq160Win(){const E=MQ160.E;MQ160.E=null;MQ160.st=3;MQ160.trkK='';const 
   setTimeout(()=>{try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','The Gate Is Open','The ancient ice bursts from the gate','The road to '+mq160Next()+' lies beyond','z2');mSfx('victory')}catch(_){}
     say('🔥 The frozen gate is melted through. The road to '+mq160Next()+' lies beyond it.')},700)}
 // the flamespitter: picked up, dropped
-function mq160Carry(on){const E=MQ160.E;if(!E)return;if(on){E.carry=1;E.gp=null;svSnd('heavy',.6,1.5);try{if(tgt)setTarget(null)}catch(_){}}
-  else{E.carry=0;E.fire=0;const f=V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));E.gp=new THREE.Vector3(pl.position.x+f.x*.7,GH(pl.position.x+f.x*.7,pl.position.z+f.z*.7)+.18,pl.position.z+f.z*.7);E.gry=pl.rotation.y+Math.PI/2;svSnd('heavy',.6,1.3)}
+function mq160Carry(on){const E=MQ160.E;if(!E)return;const co=co151On();
+  if(on){if(co&&E.carrier&&E.carrier!==MP.me)return say('🔥 '+mpName(E.carrier)+' is carrying the flamespitter.');
+    // co-op: a partner asks the host, who hands it over (3180 co160Apply)
+    if(co&&!co151Host()){if(nowP()-(E.rq||0)>400){E.rq=nowP();co151Send(['f2c',1])}return}
+    E.carry=1;E.carrier=co?MP.me:'';E.gp=null;svSnd('heavy',.6,1.5);try{if(tgt)setTarget(null)}catch(_){}}
+  else{E.carry=0;E.fire=0;const f=V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));E.gp=new THREE.Vector3(pl.position.x+f.x*.7,GH(pl.position.x+f.x*.7,pl.position.z+f.z*.7)+.18,pl.position.z+f.z*.7);E.gry=pl.rotation.y+Math.PI/2;svSnd('heavy',.6,1.3);
+    if(co){E.carrier='';if(!co151Host())co151Send(['f2c',0,mpR2(E.gp.x),mpR2(E.gp.z),mpR2(E.gry)])}}
   mq160Sync();fs160Hud()}
-function mq160NearSpit(){const E=MQ160.E;if(!E||E.carry)return false;const p=E.gp||mq160BenchSpot();return Math.hypot(pl.position.x-p.x,pl.position.z-p.z)<2.4}
+function mq160NearSpit(){const E=MQ160.E;if(!E||E.carry||E.carrier&&co151On()&&E.carrier!==MP.me)return false;const p=E.gp||mq160BenchSpot();return Math.hypot(pl.position.x-p.x,pl.position.z-p.z)<2.4}
 function mq160Toggle(){const E=MQ160.E;if(!E)return false;if(E.carry){mq160Carry(false);return true}if(mq160NearSpit()){mq160Carry(true);return true}say('🔥 The flamespitter is out of reach: walk over to it to pick it up.');return true}
 // the aim: the mouse on the ground (or the facing)
 function fs160Aim(){try{if(typeof orb!='undefined'&&orb)return camFwd().setY(0).normalize()}catch(_){}const f=V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
@@ -239,36 +245,50 @@ function fs160Flame(d,live){const S=MQ160.S,tip=S&&S.sp.userData.tip;if(!tip)ret
   F.position.copy(p);F.lookAt(p.clone().add(d));F.scale.set(1.25+.2*Math.sin(t*31),1.0+.2*Math.cos(t*27),L);F2.position.copy(p);F2.lookAt(p.clone().add(d));F2.scale.set(.5,.45,L*.6);
   F.material.opacity=.36+.12*Math.sin(t*41);F2.material.opacity=.42+.12*Math.cos(t*37);for(let k=0;k<5;k++){const u=Math.random(),q=p.clone().addScaledVector(d,.4+u*L*.95);q.x+=(Math.random()-.5)*(.2+u*1.4);q.z+=(Math.random()-.5)*(.2+u*1.4);q.y+=(Math.random()-.3)*(.2+u*.8);burst(q,k%3?0xff6a1a:0xffd07a,1,.5+u,.9,.3+u*.2)}}
 function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(!E||!S)return;E.t+=dt;
-  if(hero.hp<=0||!mq160In2())return mq160Fail(hero.hp<=0?'dead':'left');
+  // co-op (3180): the region host runs the melt (heat, melt, charge, spiders, the end); partners send what they do with it
+  const co=co151On(),host=co151Host();
+  if(!mq160In2())return mq160Fail('left');
+  if(!co&&hero.hp<=0)return mq160Fail('dead');
+  if(co&&host&&!co151Standing())return mq160Fail('dead');
   // held in the gate yard
-  {const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ160.leash){p.x=R.yard.x+dx/d*MQ160.leash;p.z=R.yard.z+dz/d*MQ160.leash;if(now-(E.lw||0)>2500){E.lw=now;say('🧊 The cold holds you in the gate yard: melt the gate!')}}}
+  if(hero.hp>0){const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ160.leash){p.x=R.yard.x+dx/d*MQ160.leash;p.z=R.yard.z+dz/d*MQ160.leash;if(now-(E.lw||0)>2500){E.lw=now;say('🧊 The cold holds you in the gate yard: melt the gate!')}}}
+  if(E.carry&&hero.hp<=0)mq160Carry(false);
   // carrying: slower, no swings or spells (see the swing / cast wrappers)
   if(E.carry)dqDebuff('Hauling the flamespitter','🔥',{mspd:-.15},400,'Carrying the flamespitter: −15% move speed, no attacks or spells');
-  // spraying
-  const want=E.carry&&!E.ovh&&typeof atkHeld!='undefined'&&atkHeld&&!(typeof uiOpen=='function'&&uiOpen());
-  if(want){E.fire=1;E.heat=Math.min(1,E.heat+dt/MQ160.heatT);if(E.heat>=1){E.ovh=1;E.fire=0;svSnd('hiss',1.1,.7);popT(pl.position,'OVERHEATED','#ff7a3a',true);say('♨️ The flamespitter has overheated! Drop it (C) and fight while it cools.')}}
-  else{E.fire=0;E.heat=Math.max(0,E.heat-dt/MQ160.coolT);if(E.ovh&&E.heat<=0){E.ovh=0;svSnd('bell',.5,1.6);dn(pl.position,'Cooled','#ffd080',-30,900)}}
-  const d=fs160Aim();if(E.fire){face(d);fs160Flame(d,true);if(Math.random()<dt*6)svSnd('whoosh',.35,.6+Math.random()*.2)}else fs160Flame(d,false);
-  if(E.carry&&E.ovh&&Math.random()<dt*10){const tip=new THREE.Vector3();S.sp.userData.tip.getWorldPosition(tip);burst(tip,0xd8d8d8,1,.3,1.2,.8)}
-  // the flame on the gate melts it
-  const gp=new THREE.Vector3(G.x+G.fx*.9,0,G.z+G.fz*.9);let onGate=false;
-  if(E.fire){const hx=gp.x-pl.position.x,hz=gp.z-pl.position.z,hd=Math.hypot(hx,hz),ca=(hx*d.x+hz*d.z)/(hd||1);if(hd<7.4&&(ca>.82||hd<2.2)){onGate=true;E.melt=Math.min(MQ160.melt,E.melt+dt);MQ160.trkK=''}}
+  // spraying: my own hands (the carrier), or a partner's (the host integrates what they send)
+  const want=E.carry&&!E.ovh&&typeof atkHeld!='undefined'&&atkHeld&&!(typeof uiOpen=='function'&&uiOpen())&&hero.hp>0;
+  const remote=co&&!E.carry&&!!E.carrier&&E.carrier!==MP.me;
+  if(host){const firing=E.carry?want:remote&&!!E.rfire&&!E.ovh;
+    if(firing){E.fire=1;E.heat=Math.min(1,E.heat+dt/MQ160.heatT);if(E.heat>=1){E.ovh=1;E.fire=0;svSnd('hiss',1.1,.7);if(E.carry){popT(pl.position,'OVERHEATED','#ff7a3a',true);say('♨️ The flamespitter has overheated! Drop it (C) and fight while it cools.')}}}
+    else{E.fire=0;E.heat=Math.max(0,E.heat-dt/MQ160.coolT);if(E.ovh&&E.heat<=0){E.ovh=0;svSnd('bell',.5,1.6);if(E.carry)dn(pl.position,'Cooled','#ffd080',-30,900)}}}
+  else if(E.carry)E.fire=want?1:0;
+  const d=fs160Aim(),gp=new THREE.Vector3(G.x+G.fx*.9,0,G.z+G.fz*.9);let onGate=false;
+  if(E.carry){if(E.fire){face(d);fs160Flame(d,true);if(Math.random()<dt*6)svSnd('whoosh',.35,.6+Math.random()*.2)}else fs160Flame(d,false);
+    if(E.ovh&&Math.random()<dt*10){const tip=new THREE.Vector3();S.sp.userData.tip.getWorldPosition(tip);burst(tip,0xd8d8d8,1,.3,1.2,.8)}
+    if(E.fire){const hx=gp.x-pl.position.x,hz=gp.z-pl.position.z,hd=Math.hypot(hx,hz),ca=(hx*d.x+hz*d.z)/(hd||1);if(hd<7.4&&(ca>.82||hd<2.2))onGate=true}
+    if(!host)co160Input(E.fire,onGate,now)}
+  else if(remote){const r=MP.rh[E.carrier];if(r&&r.m&&E.fire){const a=r.m.rotation.y;fs160Flame(V(Math.sin(a),0,Math.cos(a)),true);onGate=!!E.rgate}else fs160Flame(d,false)}
+  else fs160Flame(d,false);
+  // the flame on the gate melts it (the host counts it)
+  if(host&&E.fire&&onGate){E.melt=Math.min(MQ160.melt,E.melt+dt);MQ160.trkK=''}
   {const k=E.melt/MQ160.melt,ice=S.gate.ice;ice.scale.set(1-.12*k,Math.max(.05,1-.85*k),1-.35*k);S.gate.pud.scale.set(.5+3.2*k,1,.4+1.4*k);
-    const hot=S.gate.hot;hot.material.opacity=onGate?.7+.2*Math.sin(now/40):Math.max(0,hot.material.opacity-dt*2);if(onGate){const y=Math.max(.6,6*Math.max(.05,1-.85*k)*.55);hot.position.set((Math.random()-.5)*.2,y,1.0);
+    const hot=S.gate.hot;hot.material.opacity=onGate&&E.fire?.7+.2*Math.sin(now/40):Math.max(0,hot.material.opacity-dt*2);if(onGate&&E.fire){const y=Math.max(.6,6*Math.max(.05,1-.85*k)*.55);hot.position.set((Math.random()-.5)*.2,y,1.0);
       if(Math.random()<dt*20){const w=new THREE.Vector3();hot.getWorldPosition(w);burst(w,0xf0f4f8,1,.5,1.6,1.1);burst(w,0x8ad0ff,1,.4,-1.2,.6)}if(Math.random()<dt*2)svSnd('hiss',.5,1.3)}}
-  // the flame burns spiders: each kill spends essence charge
-  if(E.fire){const R2=6.2;for(const e of enemies){if(!e.fs160sp||e.dead)continue;const hx=e.m.position.x-pl.position.x,hz=e.m.position.z-pl.position.z,hd=Math.hypot(hx,hz);if(hd>R2)continue;const ca=(hx*d.x+hz*d.z)/(hd||1);if(ca<.86&&hd>1.4)continue;
-    if(E.charge>=MQ160.kc){E.charge-=MQ160.kc;E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6);try{hurt(e,1e9,{col:'#ff9a3a'},false)}catch(_){}if(!e.dead)try{removeE(e)}catch(_){}}
+  // the flame burns spiders: each kill spends essence charge (a partner's flame asks the host)
+  if(E.carry&&E.fire){const R2=6.2;for(const e of enemies){if(!(e.fs160sp||e.c&&e.c.en==='icespider')||e.dead)continue;const hx=e.m.position.x-pl.position.x,hz=e.m.position.z-pl.position.z,hd=Math.hypot(hx,hz);if(hd>R2)continue;const ca=(hx*d.x+hz*d.z)/(hd||1);if(ca<.86&&hd>1.4)continue;
+    if(E.charge>=MQ160.kc){if(host){E.charge-=MQ160.kc;E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6);try{hurt(e,1e9,{col:'#ff9a3a'},false)}catch(_){}if(!e.dead)try{removeE(e)}catch(_){}}
+      else if(e.nid&&!(e.fs160b>now)){e.fs160b=now+600;co151Send(['f2k',e.nid]);burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6)}}
     else if(!E.spent){E.spent=1;popT(pl.position,'CHARGE SPENT','#ffb060',true);say('💠 The essence charge is spent: the flame still melts the gate, but it will not kill spiders any more.')}}}
-  // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at you
-  E.spT-=dt;const live=enemies.filter(e=>e.fs160sp&&!e.dead).length;
-  if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004);let n=1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0);n=Math.min(n,16-live);
+  // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at the nearest hero (the host spawns them)
+  if(host){E.spT-=dt;const live=enemies.filter(e=>(e.fs160sp||e.c&&e.c.en==='icespider')&&!e.dead&&!e.mir).length;
+  if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004)*(co?.85:1);let n=1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0)+(co&&Math.random()<.4?1:0);n=Math.min(n,(co?20:16)-live);
     for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<14&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
         if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8){x=qx;z=qz;okp=true}}
-      if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:1})}catch(err){console.error('v151 spider',err)}
+      if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:co?0:1})}catch(err){console.error('v151 spider',err)}
       if(!e)continue;e.fs160sp=1;e.hunt=1;e.agg=1;e.wx=pl.position.x;e.wz=pl.position.z;e.m.rotation.y=Math.atan2(pl.position.x-x,pl.position.z-z);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}
-  if(E.melt>=MQ160.melt)mq160Win();
+  if(E.melt>=MQ160.melt)return mq160Win()}
+  if(co&&host)co160Sync(now);
   if(now-(E.hu||0)>120){E.hu=now;fs160Hud()}}
 // no swings or spells while carrying; the C key toggles the flamespitter during the melt (instead of opening the Character window)
 {const f=swing;swing=function(){if(MQ160.E&&MQ160.E.carry)return;return f.apply(this,arguments)}}
@@ -277,13 +297,13 @@ addEventListener('keydown',e=>{try{if(MQ160.E&&!e.ctrlKey&&!e.metaKey&&!e.altKey
 {const f=doRecall;doRecall=function(){if(MQ160.E)return say('🧊 The cold holds you in the gate yard. Melt the gate, or fall trying.');return f.apply(this,arguments)}}
 {const f=toggleMount;toggleMount=function(){if(MQ160.E)return say('🧊 No mount will come into the gate yard now.');return f.apply(this,arguments)}}
 // the hero's hands on the grips while carrying (arm IK after every animation layer); the held weapon is put away
-function fs160Hold(){const E=MQ160.E,S=MQ160.S;const G=pl._grip;const on=!!(E&&E.carry&&S&&S.sp.parent===pl);
+function fs160Hold(h){h=h||pl;const E=MQ160.E,S=MQ160.S;const G=h._grip;const on=!!(E&&S&&S.sp.parent===h);
   if(G&&G.L)G.L.forEach(q=>{if(q.W){if(on){if(q.W.userData.fs160v==null)q.W.userData.fs160v=q.W.visible;q.W.visible=false}else if(q.W.userData.fs160v!=null){q.W.visible=q.W.userData.fs160v;q.W.userData.fs160v=null}}});
-  if(!on)return;const b=pl.bones;if(!b||!b.aR0||!b.aR1||!b.aR2||!b.aL0||!b.aL1||!b.aL2||typeof fc116IK!='function')return;
-  pl.updateMatrixWorld(true);const V3=THREE.Vector3,sp=S.sp,gR=sp.userData.gR.getWorldPosition(new V3()),gL=sp.userData.gL.getWorldPosition(new V3());
+  if(!on)return;const b=h.bones;if(!b||!b.aR0||!b.aR1||!b.aR2||!b.aL0||!b.aL1||!b.aL2||typeof fc116IK!='function')return;
+  h.updateMatrixWorld(true);const V3=THREE.Vector3,sp=S.sp,gR=sp.userData.gR.getWorldPosition(new V3()),gL=sp.userData.gL.getWorldPosition(new V3());
   const sR=b.aR0.getWorldPosition(new V3()),sL=b.aL0.getWorldPosition(new V3()),rt=new V3(sR.x-sL.x,0,sR.z-sL.z).normalize(),dn=new V3(0,-1,0);
   fc116IK(sR,b.aR0,b.aR1,b.aR2,gR,rt.clone().multiplyScalar(.7).add(dn),1);fc116IK(sL,b.aL0,b.aL1,b.aL2,gL,rt.clone().multiplyScalar(-.7).add(dn),1)}
-{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{if(!h||h===pl)fs160Hold()}catch(e){if(!FS160.he){FS160.he=1;console.warn('v151 hold',e)}}return r}}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);try{if(MQ160.E||!h||h===pl)fs160Hold(h||pl)}catch(e){if(!FS160.he){FS160.he=1;console.warn('v151 hold',e)}}return r}}
 // ---------------- the event HUD ----------------
 (function(){const st=document.createElement('style');st.textContent=`
 #fs160{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:7;width:300px;max-width:70vw;pointer-events:none;padding:6px 10px 7px;border-radius:8px;
@@ -305,7 +325,7 @@ function fs160Hud(){let el=document.getElementById('fs160');const E=MQ160.E;if(!
 function mq160Prompt(){if(!mq160In2()||!MQ160.S)return null;const P=pl.position,R=mq160Plan(),E=MQ160.E;
   if(E){if(!E.carry&&mq160NearSpit())return {label:'C · Pick up the flamespitter',fn:()=>mq160Carry(true)};return {label:E.carry?'🔥 Hold left click to spray · C to drop':'🔥 The melt is under way',fn:()=>{if(E.carry)mq160Carry(false)}}}
   for(const c of MQ160.S.cache){if(MQ160.p[c.i])continue;if(Math.hypot(P.x-c.x,P.z-c.z)>2.8)continue;const g=MQ160['g'+c.i],P2=MQ160.parts[c.i];
-    if(g&&!g.dead&&enemies.includes(g))return {label:'⚔️ The '+P2.n+' is guarded · defeat its warden',fn:()=>say('⚔️ Its warden will not let you take the '+P2.n+'.')};
+    if(g&&!g.dead&&enemies.includes(g)||!MQ160.gk[c.i]&&co151On()&&!co151Host())return {label:'⚔️ The '+P2.n+' is guarded · defeat its warden',fn:()=>say('⚔️ Its warden will not let you take the '+P2.n+'.')};
     return {label:'F · Take the '+P2.n,fn:()=>mq160Take(c.i)}}
   const B=R.bench;if(Math.hypot(P.x-B.x,P.z-B.z)<2.9){if(MQ160.st===0){const miss=MQ160.parts.filter((q,i)=>!MQ160.p[i]).map(q=>q.n);return {label:'🔧 The workbench · flamespitter parts '+mq160N()+'/3',fn:()=>say('🔧 Still missing: '+miss.join(', ')+'. Look for the orange beacons around '+PMAP[2].ins[1].n+'.')}}
     if(MQ160.st===1)return {label:'F · Assemble the flamespitter',fn:()=>mq160Assemble()};if(MQ160.st===2)return {label:'F · Begin melting the frozen gate (no turning back)',fn:()=>mq160Start()}}
@@ -322,8 +342,9 @@ function mq160Tick(dt,now){const in2=mq160In2(),t=now/1000;
   if(in2){const P=pl.position;
     // the caches: found when you come close, their warden rises; the beacons pulse
     S.cache.forEach(c=>{if(MQ160.p[c.i])return;const d=Math.hypot(P.x-c.x,P.z-c.z);c.g.userData.bc.material.opacity=.1+.04*Math.sin(t*1.5+c.i);c.g.userData.gl.scale.setScalar(1.1*(1+.12*Math.sin(t*3+c.i)));
-      if(d<MQ160.see){if(!MQ160.fd[c.i]){MQ160.fd[c.i]=1;MQ160.trkK='';try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','A Salvage Cache','The '+MQ160.parts[c.i].n+' lies here, and something guards it','Defeat its warden, then take the part','z2')}catch(_){}}
-        const g=MQ160['g'+c.i];if(!MQ160.gk[c.i]&&!(g&&!g.dead&&enemies.includes(g)))mq160Guard(c.i)}});
+      if(d<MQ160.see&&!MQ160.fd[c.i]){MQ160.fd[c.i]=1;MQ160.trkK='';try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','A Salvage Cache','The '+MQ160.parts[c.i].n+' lies here, and something guards it','Defeat its warden, then take the part','z2')}catch(_){}}
+      // its warden rises when any hero comes near (co-op: the host's world raises it and everyone sees it)
+      if((d<MQ160.see||co151PartnerNear(c.x,c.z,MQ160.see))&&co151Host()){const g=MQ160['g'+c.i];if(!MQ160.gk[c.i]&&!(g&&!g.dead&&enemies.includes(g)))mq160Guard(c.i)}});
     // the gate: steam off the ice while it melts, the open road glows
     if(mq160Done()){S.gate.glow.material.opacity=.45+.1*Math.sin(t*2);if(Math.random()<dt*4){const R=mq160Plan(),G=R.gate;burst(new THREE.Vector3(G.x+(Math.random()-.5)*4,GH(G.x,G.z)+1+Math.random()*4,G.z),0x9ad8ff,1,.2,.6,1)}}
     S.bench.userData.fl.scale.setScalar(1.2+.3*Math.sin(t*11));if(S.sp.userData.pil)S.sp.userData.pil.visible=!!MQ160.E}

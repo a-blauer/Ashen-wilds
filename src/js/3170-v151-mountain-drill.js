@@ -140,6 +140,8 @@ function mq170Win(){const E=MQ170.E;MQ170.E=null;MQ170.st=1;MQ170.trkK='';dr170C
   setTimeout(()=>{try{zt116Show(ZT116.Z[2],'Burningeye Summit · Main Quest','Through the Mountain','The drill bursts through the rock','A tunnel leads to '+mq170Den(),'z2');mSfx('victory')}catch(_){}
     say('⚙️ The drill has bored through the mountain! The tunnel leads to '+mq170Den()+'.')},800)}
 function mq170Through(){MQ170.st=1;MQ170.trkK='';try{insGo(PMAP[2].ins[3])}catch(err){console.error('v151 tunnel',err)}}
+// a box is switched on or repaired: here, or (a co-op partner) on the host's world too
+function dr170Fix(i){if(co151On()&&!co151Host())co151Send(['d3o',i]);dr170Set(i,'on')}
 // a box changes state (with its effect and a line in the log)
 function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;b.s=s;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
   if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}
@@ -149,24 +151,29 @@ function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170
   if(was==='on'&&s!=='on')say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': the drill stops!');
   const W=MQ170.W;if(W&&W.i===i&&s==='smashed'&&W.k!=='rebuild')dr170Close(false)}
 function mq170ETick(dt,now){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
-  if(hero.hp<=0||!mq170In3())return mq170Fail(hero.hp<=0?'dead':'left');
-  {const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ170.leash){p.x=R.yard.x+dx/d*MQ170.leash;p.z=R.yard.z+dz/d*MQ170.leash;if(now-(E.lw||0)>2500){E.lw=now;say('⚙️ You cannot leave the drill now!')}}}
+  // co-op (3180): the region host runs the drill (progress, failures, trolls, the end); partners switch on and repair boxes
+  const co=co151On(),host=co151Host();
+  if(!mq170In3())return mq170Fail('left');
+  if(!co&&hero.hp<=0)return mq170Fail('dead');
+  if(co&&host&&!co151Standing())return mq170Fail('dead');
+  if(hero.hp>0){const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ170.leash){p.x=R.yard.x+dx/d*MQ170.leash;p.z=R.yard.z+dz/d*MQ170.leash;if(now-(E.lw||0)>2500){E.lw=now;say('⚙️ You cannot leave the drill now!')}}}
   // drilling: only with all four boxes running
   const run=E.box.every(b=>b.s==='on');if(run!==!!E.run){E.run=run?1:0;MQ170.trkK='';svSnd(run?'charge':'hiss',.8,run?.7:.9)}
-  if(run){E.prog=Math.min(MQ170.need,E.prog+dt);E.box.forEach((b,i)=>{b.tf-=dt;if(b.tf<=0)dr170Set(i,Math.random()<.55?'frozen':'fault')})}
+  if(run&&host){E.prog=Math.min(MQ170.need,E.prog+dt);E.box.forEach((b,i)=>{b.tf-=dt;if(b.tf<=0)dr170Set(i,Math.random()<.55?'frozen':'fault')})}
   const k=E.prog/MQ170.need;S.drill.bit.rotation.z+=dt*(run?14:Math.max(0,(S.drill.bitV||0)));S.drill.bitV=run?14:Math.max(0,(S.drill.bitV||0)-dt*10);
   S.drill.g.position.copy(S.d0).add(new THREE.Vector3(-R.g.fx*k*1.6,0,-R.g.fz*k*1.6));S.cliff.bore.scale.set(.2+1.9*k,.2+1.9*k,1);S.lt.intensity=run?1.2+.4*Math.sin(now/60):.3;
   S.drill.glow.material.opacity=run?.9:.35;if(run&&Math.random()<dt*24){const p=new THREE.Vector3(R.face.x+(Math.random()-.5)*2.4,GH(R.face.x,R.face.z)+1.2+Math.random()*2.2,R.face.z);p.x+=R.g.fx*.6;p.z+=R.g.fz*.6;burst(p,Math.random()<.5?0xffd07a:0x9aa0a8,2,2.4,2,.5)}
   if(run&&Math.random()<dt*3)shake(.05);if(run&&Math.random()<dt*2){const c=new THREE.Vector3();S.drill.g.localToWorld(c.set(.6,5.6,1.8));burst(c,0xd8d8d8,3,.4,2,1.4)}
   // Frost Trolls for the boxes: more as the bore deepens
-  E.trT-=dt;const live=enemies.filter(e=>e.dr170t&&!e.dead).length;
-  if(E.trT<=0){E.trT=Math.max(5.5,10-k*4.5)+Math.random()*2;const n=Math.min(1+(k>.35?1:0)+(k>.75&&Math.random()<.5?1:0),6-live);
+  if(host){E.trT-=dt;const live=enemies.filter(e=>e.dr170t&&!e.dead).length;
+  if(E.trT<=0){E.trT=Math.max(5.5,10-k*4.5)+Math.random()*2;const n=Math.min(1+(k>.35?1:0)+(k>.75&&Math.random()<.5?1:0)+(co&&k>.2?1:0),(co?8:6)-live);
     for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<16&&!okp;tr++){const a=Math.random()*6.283,r=17+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
         if((Math.sin(a)*R.g.fx+Math.cos(a)*R.g.fz)<-.15)continue;if(R.ok(qx,qz,.6)&&!solid(Math.round(qx),Math.round(qz))){x=qx;z=qz;okp=true}}
-      if(!okp)continue;let e=null;try{e=spawnEnemy('troll',x,z,MQ170.lv,{minion:1})}catch(err){console.error('v151 troll',err)}if(!e)continue;
+      if(!okp)continue;let e=null;try{e=spawnEnemy('troll',x,z,MQ170.lv,{minion:co?0:1})}catch(err){console.error('v151 troll',err)}if(!e)continue;
       e.dr170t=1;e.agg=0;e.c.n='Frost Troll Wrecker';e.dr={ph:'go',b:-1,t:0};const p=new THREE.Vector3(x,0,z);burst(gY(p,.5),0xe8f0f8,30,2,1.5,.8);svDecal(p,0xc8d8e8,1.6,2,.6)}
     if(n>0&&!E.hint){E.hint=1;say('🧌 Frost Trolls are going for the control boxes! Hit one and it will come for you instead.')}}
-  if(E.prog>=MQ170.need)mq170Win();
+  if(E.prog>=MQ170.need)return mq170Win()}
+  if(co&&host)co170Sync(now);
   dr170WTick(dt,now);if(now-(E.hu||0)>150){E.hu=now;dr170Hud()}}
 // a wrecker troll: walks to a box, raises its fists over it (a warning ring), smashes it; once hit it fights you instead
 function dr170Troll(e,dt,now){const E=MQ170.E,S=MQ170.S;if(!E||!S){try{removeE(e)}catch(_){}return}const D=e.dr,m=e.m;
@@ -175,7 +182,7 @@ function dr170Troll(e,dt,now){const E=MQ170.E,S=MQ170.S;if(!E||!S){try{removeE(e
   if(D.b<0||E.box[D.b].s==='smashed'&&D.ph==='go'){D.b=pick();if(D.b<0){animC(m,now,false,0);return}}
   const B=S.box[D.b],dx=B.x-m.position.x,dz=B.z-m.position.z,L=Math.hypot(dx,dz);
   if(D.ph==='go'){m.ak=null;if(L>1.9){const sp=1.9;walkM(m,dx/L*sp*dt,dz/L*sp*dt);m.rotation.y=Math.atan2(dx,dz);animC(m,now,true,sp)}
-    else{D.ph='wind';D.t=1.5;m.rotation.y=Math.atan2(dx,dz);try{D.w=svWarn({k:'c',r:1.3},{x:B.x,z:B.z,a:0},1.5,{col:0xff6a2a})}catch(_){}popT(gY(B.g.position,2.4),'⚠ A TROLL IS SMASHING A BOX','#ff9a5a')}}
+    else{D.ph='wind';D.t=1.5;m.rotation.y=Math.atan2(dx,dz);if(co151On()&&e.nid)co151Send(['d3w',e.nid,D.b]);try{D.w=svWarn({k:'c',r:1.3},{x:B.x,z:B.z,a:0},1.5,{col:0xff6a2a})}catch(_){}popT(gY(B.g.position,2.4),'⚠ A TROLL IS SMASHING A BOX','#ff9a5a')}}
   else if(D.ph==='wind'){D.t-=dt;m.ak={n:'slam',ph:0,k:Math.min(1,1-D.t/1.5)};animC(m,now,false,0);if(D.t<=0){D.ph='hit';D.t=.25}}
   else if(D.ph==='hit'){D.t-=dt;m.ak={n:'slam',ph:1,k:Math.min(1,1-D.t/.25)};animC(m,now,false,0);if(D.t<=0){if(E.box[D.b].s!=='smashed')dr170Set(D.b,'smashed');D.ph='rec';D.t=.8}}
   else{D.t-=dt;m.ak={n:'slam',ph:2,k:Math.max(0,D.t/.8)};animC(m,now,false,0);if(D.t<=0){m.ak=null;D.ph='go';D.b=-1}}}
@@ -185,7 +192,7 @@ function dr170Troll(e,dt,now){const E=MQ170.E,S=MQ170.S;if(!E||!S){try{removeE(e
 function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,R=mq170Plan(),E=MQ170.E;
   if(E){if(MQ170.W)return {label:'🔧 Repairing · Esc to step away',fn:()=>{}};
     for(const B of MQ170.S.box){if(Math.hypot(P.x-B.x,P.z-B.z)>2.3)continue;const b=E.box[B.i],n=MQ170.bn[B.i];
-      if(b.s==='off')return {label:'F · Switch on the '+n.toLowerCase(),fn:()=>dr170Set(B.i,'on')};if(b.s==='on')return {label:'✅ The '+n.toLowerCase()+' is running',fn:()=>{}};
+      if(b.s==='off')return {label:'F · Switch on the '+n.toLowerCase(),fn:()=>dr170Fix(B.i)};if(b.s==='on')return {label:'✅ The '+n.toLowerCase()+' is running',fn:()=>{}};
       if(b.s==='frozen')return {label:'F · Thaw the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'thaw')};if(b.s==='fault')return {label:'F · Rewire the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'wire')};
       return {label:'F · Rebuild the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'rebuild')}}
     return {label:'⚙️ The drill: '+Math.round(E.prog/MQ170.need*100)+'% · boxes running '+E.box.filter(b=>b.s==='on').length+'/4',fn:()=>{}}}
@@ -215,7 +222,7 @@ function dr170Open(i,kind){if(!MQ170.E||MQ170.W)return;const st=document.getElem
   el.innerHTML=`<div class="hd"><span>${ttl} · ${MQ170.bn[i]}</span><span class="x">✕</span></div><div class="tip">${tip}</div><div class="pane"></div>`;el.style.display='block';
   el.querySelector('.x').onclick=()=>dr170Close(false);W.pane=el.querySelector('.pane');({thaw:dr170Thaw,wire:dr170Wire,rebuild:dr170Rebuild})[kind](W);svSnd('click',.6,1)}
 function dr170Close(ok){const W=MQ170.W;if(!W)return;MQ170.W=null;try{W.off&&W.off()}catch(_){}const el=document.getElementById('dr170w');if(el){el.style.display='none';el.innerHTML=''}
-  const E=MQ170.E;if(ok&&E){dr170Set(W.i,'on');say('🔧 The '+MQ170.bn[W.i].toLowerCase()+' is running again.')}}
+  const E=MQ170.E;if(ok&&E){dr170Fix(W.i);say('🔧 The '+MQ170.bn[W.i].toLowerCase()+' is running again.')}}
 function dr170Win(W){if(W.done)return;W.done=1;svSnd('bell',.8,1.4);setTimeout(()=>{if(MQ170.W===W)dr170Close(true)},350)}
 function dr170WTick(dt,now){const W=MQ170.W;if(!W)return;W.t+=dt;
   // you stay at the box; a hit knocks you away from it
