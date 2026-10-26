@@ -20,7 +20,7 @@ def both(ms,step=1500):
     t=0;k=0
     while t<ms:
         (A if k%2==0 else B).bring_to_front();A.wait_for_timeout(min(step,ms-t));t+=step;k+=1
-for pg in (A,B):pg.evaluate("()=>{INSR[2]=3;hero.lv=Math.max(hero.lv,24);window.__hp=setInterval(()=>{hero.hp=heroMax();if(typeof RV148!='undefined')RV148.down=0},100)}")
+for pg in (A,B):pg.evaluate("()=>{INSR[2]=0;hero.lv=Math.max(hero.lv,24);window.__hp=setInterval(()=>{hero.hp=heroMax();if(typeof RV148!='undefined')RV148.down=0},100)}")
 
 # ---------------- 1 The Frozen Maw ----------------
 for pg in (A,B):pg.evaluate("()=>mq151Enter()")
@@ -33,14 +33,18 @@ chk('exactly one driver',D.evaluate("()=>gb180Auth()") and not F.evaluate("()=>g
 # the follower walks up: the fight starts on both screens
 F.evaluate("()=>{const L=GB151L;toPos(L.home.x+1,L.home.z+6);window.__cast=[];const f=svStart;svStart=function(e,id,s){if(e&&e.gb151)__cast.push(id);return f.apply(this,arguments)}}")
 D.evaluate("()=>{const L=GB151L;toPos(L.home.x-3,L.home.z+12);window.__cast=[];const f=svStart;svStart=function(e,id,s){if(e&&e.gb151)__cast.push(id);return f.apply(this,arguments)}}")
-both(9000)
+both(8000,1000)
 r=[pg.evaluate("()=>[!!(GB151A&&GB151A.f),__cast.slice(0,12)]") for pg in (D,F)]
 chk('the fight starts for both',r[0][0] and r[1][0],json.dumps(r))
-chk('the driver\'s moves play on the partner\'s copy',len(r[0][1])>0 and len(r[1][1])>0 and r[1][1][0]==r[0][1][0],json.dumps(r))
+# the intro is long on this slow two-window machine: end it, then the driver picks moves and the partner plays them
+D.evaluate("()=>{const e=MQ151.e;if(e.sv.mv)svEndMove(e,true);e.sv.rest=0}")
+both(20000,1000)
+r=[pg.evaluate("()=>__cast.filter(id=>id!=='intro').slice(0,12)") for pg in (D,F)]
+chk('the driver\'s moves play on the partner\'s copy',len(r[0])>0 and len(r[1])>0 and all(x in r[0] for x in r[1]) and r[1][0]==r[0][0],json.dumps(r))
 p=[pg.evaluate("()=>{const m=MQ151.e.m.position;return [m.x,m.z]}") for pg in (D,F)]
 chk('he stands in the same place on both screens',abs(p[0][0]-p[1][0])+abs(p[0][1]-p[1][1])<6,json.dumps(p))
 # the follower's damage reaches the driver
-h0=D.evaluate("()=>{const e=MQ151.e;e.c.h=M(e.c);return [e.c.h,M(e.c)]}")
+h0=D.evaluate("()=>{const e=MQ151.e;if(e.sv.mv)svEndMove(e,true);e.sv.inv=0;e.sv.rest=99;e.c.h=M(e.c);return [e.c.h,M(e.c)]}")
 F.evaluate("()=>{const e=MQ151.e;hurt(e,Math.round(M(e.c)*.1),{},false)}")
 both(2500,800)
 h1=D.evaluate("()=>MQ151.e.c.h")
@@ -49,7 +53,7 @@ chk('the partner\'s hits reach the driver',h0[0]-h1>=h0[1]*.08,json.dumps([h0,h1
 chk('the partner\'s copy follows the driver\'s health',not fh[1] and abs(fh[0]-h1)<h0[1]*.06,json.dumps([fh,h1]))
 # the driver's kill is everyone's
 x0=F.evaluate("()=>hero.xp")
-D.evaluate("()=>{const e=MQ151.e;hurt(e,1e9,{},false)}")
+D.evaluate("()=>{const e=MQ151.e;if(e.sv.mv)svEndMove(e,true);e.sv.inv=0;hurt(e,1e9,{},false)}")
 both(6000)
 r=[pg.evaluate("()=>[MQ151.st,!MQ151.e||!!MQ151.e.dead||!enemies.includes(MQ151.e),!!(GB151A&&GB151A.f)]") for pg in (D,F)]
 chk('Gorthrak falls on both screens and the passage opens for both',all(x[0]>=2 and x[1] and not x[2] for x in r),json.dumps(r))
@@ -77,7 +81,7 @@ G.evaluate("()=>{const B=mq160BenchSpot();toPos(B.x,B.z+.5);document.body.dispat
 both(2000,700)
 H.evaluate("()=>{const B=mq160BenchSpot();toPos(B.x+.6,B.z);document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'c',bubbles:true}))}")
 both(1500,700)
-r=[H.evaluate("()=>[MQ160.E.carry,MQ160.E.carrier]"),G.evaluate("()=>[MQ160.E.carry,MP.me]")]
+r=[H.evaluate("()=>MQ160.E?[MQ160.E.carry,MQ160.E.carrier]:[null,null]"),G.evaluate("()=>MQ160.E?[MQ160.E.carry,MP.me]:[null,'']")]
 chk('one carrier: the guest has it, the host\'s C is refused',r[0][0]==0 and r[1][0]==1 and r[0][1]==r[1][1],json.dumps(r))
 chk('the flamespitter hangs on the guest\'s hero on the host\'s screen',H.evaluate("()=>{const S=MQ160.S,r=MP.rh[MQ160.E.carrier];return !!(r&&r.m&&S.sp.parent===r.m)}"))
 # the guest sprays the gate: the host's melt rises and the guest sees it

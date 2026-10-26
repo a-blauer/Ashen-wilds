@@ -43622,18 +43622,21 @@ function gb180Glide(e,dt){const m=e.m,S=e.sv;if(e.nry!=null){const da=svAng(e.nr
 {const f=kill;kill=function(e){const r=f.apply(this,arguments);try{if(e&&e.gb151&&co151On()&&!CO151.rk){co151Send(['g1k']);co151Send(['g1k'])}}catch(_){}return r}}
 function gb180Visit(){const e=gb151Spawn(true);if(e)e.gbV=1;return e}
 function gb180Sync(now){const e=MQ151.e;if(!co151On()||!gb180Auth()||!gb180Has()||now-CO151.tS<120)return;CO151.tS=now;const S=e.sv,m=e.m;
-  co151Send(['g1s',Math.round(e.c.h),S.ph|0,mpR2(m.position.x),mpR2(m.position.z),mpR2(m.rotation.y),Math.round((S.po||0)*100),Math.round((S.shell||0)*100),S.crk|0,GB151A&&GB151A.f?1:0,Math.round((S.stg||0)*10),MQ151.quake|0])}
+  co151Send(['g1s',Math.round(e.c.h),S.ph|0,mpR2(m.position.x),mpR2(m.position.z),mpR2(m.rotation.y),Math.round((S.po||0)*100),Math.round((S.shell||0)*100),S.crk|0,GB151A&&GB151A.f?1:0,Math.round((S.stg||0)*10),MQ151.quake|0,S.mv?S.mv.id:'',S.mv?S.mv.seed|0:0,S.mv?Math.round(S.mv.t*100):0])}
 function gb180OnSync(q){if(!mq151InCave()||gb180Auth())return;let e=MQ151.e;if(!e||e.dead||!enemies.includes(e)){if(MQ151.st>=2||!e)e=gb180Visit();if(!e)return}
   const S=e.sv,now=performance.now(),[_,h,ph,x,z,ry,po,sh,crk,on,stg,qk]=q;if(!isFinite(x)||!isFinite(z))return;
   e.nx=+x;e.nz=+z;e.nry=+ry||0;const hh=Math.max(1,Math.min(M(e.c),+h||1));e.c.h=now-(e.lhT||0)<600?Math.min(e.c.h,hh):hh;
   if((ph|0)===2&&S.ph!==2&&!(S.mv&&S.mv.id==='awaken')){S.ph=2;e.bs.ph=2}S.po=Math.max(0,Math.min(1,(po|0)/100));S.shell=Math.max(0,Math.min(1,(sh|0)/100));S.crk=crk|0;
   if(!S.mv)S.stg=Math.max(0,(stg|0)/10);if(qk&&!MQ151.quake)gb151Quake(true);
   if(on&&!(GB151A&&GB151A.f)){co151Rx(()=>gb151Start(e));S.on=true}
+  // a move whose start message was lost: catch it while it is young
+  {const id=q[12],sd=q[13]|0,mt=(q[14]|0)/100;if(typeof id==='string'&&GB151M[id]&&sd&&mt<.6&&e.g1sd!==sd&&!(S.mv&&S.mv.seed===sd)){e.g1sd=sd;co151Rx(()=>{svEndMove(e,true);svStart(e,id,sd)})}}
   if(Math.hypot(e.m.position.x-x,e.m.position.z-z)>14){e.m.position.x=+x;e.m.position.z=+z}}
 function gb180OnCast(q){if(!mq151InCave())return;const e=MQ151.e;if(!e||e.dead||!e.sv)return;const [_,id,seed,x,z,ry,ph]=q;if(typeof id!=='string'||!GB151M[id])return;
   const m=e.m;if(isFinite(x)&&isFinite(z)&&Math.hypot(m.position.x-x,m.position.z-z)<14){m.position.x=+x;m.position.z=+z;if(isFinite(ry))m.rotation.y=+ry}
   e.nx=+x;e.nz=+z;e.nry=+ry||0;if(ph===2&&e.sv.ph!==2&&id!=='awaken'){e.sv.ph=2;e.bs.ph=2}
   if(!(GB151A&&GB151A.f))co151Rx(()=>gb151Start(e));e.sv.on=true;
+  if(e.g1sd===(seed|0)&&e.sv.mv&&e.sv.mv.id===id)return;e.g1sd=seed|0;
   co151Rx(()=>{svEndMove(e,true);svStart(e,id,Math.max(1,seed|0))})}
 function gb180OnKill(){const e=MQ151.e;if(!e||e.dead||!mq151InCave())return;CO151.rk=1;MP.rk=1;try{e.c.h=0;e.dead=1;if(e.hb)e.hb.visible=false;kill(e)}finally{CO151.rk=0;MP.rk=0}}
 // presence: whether I have Gorthrak here (the driver is chosen among those who do)
@@ -43641,7 +43644,7 @@ function gb180OnKill(){const e=MQ151.e;if(!e||e.dead||!mq151InCave())return;CO15
 
 // ---------------- The Frozen Gate: the host runs the melt ----------------
 {const f=mq160Start;mq160Start=function(){
-  if(co151On()&&!co151Host()&&!CO151.rx){if(MQ160.E||MQ160.st!==2)return;if(nowP()-(CO151.tRq||0)>800){CO151.tRq=nowP();co151Send(['f2rq'])}say('🔥 The melt begins…');return}
+  if(co151On()&&!co151Host()&&!CO151.rx){if(MQ160.E||MQ160.st!==2)return;if(nowP()-(CO151.tRq||0)>800){CO151.tRq=nowP();co151Send(['f2rq'])}return}
   const was=!!MQ160.E;const r=f.apply(this,arguments);try{if(!was&&MQ160.E&&co151On()&&co151Host()&&!CO151.rx){MQ160.E.carrier='';co151Send(['f2st'])}}catch(_){}return r}}
 {const f=mq160Fail;mq160Fail=function(why){const had=!!MQ160.E;const r=f.apply(this,arguments);try{if(had&&why==='dead'&&co151On()&&co151Host()&&!CO151.rx)co151Send(['f2x'])}catch(_){}return r}}
 {const f=mq160Win;mq160Win=function(){const had=!!MQ160.E;const r=f.apply(this,arguments);try{if(had&&co151On()&&co151Host()&&!CO151.rx)co151Send(['f2w']);co151Credit('gate')}catch(_){}return r}}
@@ -43670,7 +43673,7 @@ function co160OnBurn(id){const E=MQ160.E;if(!E||!co151Host())return;const e=enem
 
 // ---------------- The Mountain Drill: the host runs the drill ----------------
 {const f=mq170Start;mq170Start=function(){
-  if(co151On()&&!co151Host()&&!CO151.rx){if(MQ170.E||mq170Done())return;if(nowP()-(CO151.tRq||0)>800){CO151.tRq=nowP();co151Send(['d3rq'])}say('⚙️ The drill wakes…');return}
+  if(co151On()&&!co151Host()&&!CO151.rx){if(MQ170.E||mq170Done())return;if(nowP()-(CO151.tRq||0)>800){CO151.tRq=nowP();co151Send(['d3rq'])}return}
   const was=!!MQ170.E;const r=f.apply(this,arguments);try{if(!was&&MQ170.E&&co151On()&&co151Host()&&!CO151.rx)co151Send(['d3st'])}catch(_){}return r}}
 {const f=mq170Fail;mq170Fail=function(why){const had=!!MQ170.E;const r=f.apply(this,arguments);try{if(had&&why==='dead'&&co151On()&&co151Host()&&!CO151.rx)co151Send(['d3x'])}catch(_){}return r}}
 {const f=mq170Win;mq170Win=function(){const had=!!MQ170.E;const r=f.apply(this,arguments);try{if(had&&co151On()&&co151Host()&&!CO151.rx)co151Send(['d3v']);co151Credit('drill')}catch(_){}return r}}
