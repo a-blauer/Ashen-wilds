@@ -73,7 +73,12 @@ def s(pg):
         for i in range(i0,i1):
             t=i/fps;ev("t=>ic151Seek(t)",t)
             if t>=55.9:pg.wait_for_timeout(60)
-            pg.screenshot(path=d+'/f%05d.jpg'%i,type='jpeg',quality=90)
+            for k in range(3):   # a slow software-drawn town frame: a long time limit, and two more tries
+                try:pg.screenshot(path=d+'/f%05d.jpg'%i,type='jpeg',quality=90,timeout=120000);break
+                except Exception as e:
+                    print('screenshot try',k+1,'frame',i,'failed:',str(e).split('\n')[0][:300],flush=True)
+                    if k==2:raise
+                    pg.wait_for_timeout(3000)
             if i%48==0:print('frame',i,'t=%.2f'%t,flush=True)
         chk('no frame errors',not ev("()=>IC151.err||null"),ev("()=>IC151.err||''")[:300])
         if not os.environ.get('NOSOUND'):

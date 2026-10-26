@@ -68,7 +68,7 @@ jobs:
             (cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 timeout 100m python3 v151_intro.py > ../draw.log 2>&1) || true
             got=$(ls test/out/v151_frames 2>/dev/null | wc -l); echo "try $try: frames $got of $((f1-f0))"; grep -vE '^frame ' draw.log | tail -25
             [ "$got" -eq $((f1-f0)) ] && break
-            echo "::warning title=piece ${{ matrix.seg }} try $try::frames $got of $((f1-f0)) | $(grep -vE '^frame |^ok ' draw.log | tail -14 | tr '\n' '|' | cut -c1-1500)"
+            echo "::warning title=piece ${{ matrix.seg }} try $try::frames $got of $((f1-f0)) | $( (grep -iE 'error|timeout|crash|closed|killed|failed' draw.log | grep -v '^ok ' | tail -8; tail -3 draw.log) | tr '\n' '|' | cut -c1-1800)"
           done
           [ "$got" -eq $((f1-f0)) ] || { echo "::error title=piece ${{ matrix.seg }}::frames $got of $((f1-f0))"; exit 1; }
           mkdir -p piece
