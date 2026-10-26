@@ -42522,7 +42522,7 @@ function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
   {key:'abeksi',g:30,z:1,k:0,x0:116,y0:1452,w:150,h:200,n:'Abeksi',rn:'Abeksi',lv:[11,11],
     bio:{n:'Abeksi',sp:'Foxlet',x:0,y:0,t:2,gnd:[96,84,66],grs:[70,84,54],acc:[104,98,90],frs:[40,34,28],wat:[40,70,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x3a2a20,0x3a4a2a,0x4a5a34],amp:.1}},
   {key:'ascent',g:31,z:1,k:1,x0:280,y0:1452,w:420,h:380,n:'The Hilltop Ascent',rn:'Ascent',lv:[14,14],
-    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[122,112,92],grs:[118,124,70],acc:[136,128,112],frs:[50,62,42],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
+    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
 // 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
 function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
     const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
@@ -43378,4 +43378,397 @@ SP152.trk.abeksi=I=>{if(I.g===5&&!ab152Done())return {name:'The Serpent City',li
   return null};
 // ---------------- the atmosphere: night in the serpent city ----------------
 sp152Theme('abeksi',{nm:'The Serpent City',sub:'Its streets belong to the serpent folk',a:{fog:.034,fc:0x141a2a,fcA:.9,sun:.24,hemi:.55,env:'dark',ex:1.0,sat:1.0,vig:1.6,sky:.35,pt:'ash',pc:0xffb070,po:.45}});
+// ================= v153 The Hilltop Ascent — the trail up the mountain =================
+// The main quest's second chapter (between Hillside Crest II and III, its own instance g 31; 3150). A narrow trail spirals up a cone
+// of a mountain, ~1.3 turns from the foot (radius 165) to the summit crack (radius 62), climbing 88: about 930 tiles, two minutes at
+// the chase's fixed mount speed. Everything is in the trail's own frame: s along the trail (0 at the foot), o across it (+ = outward,
+// the drop; − = inward, the mountain). ch153Path() is hoisted and cached because 0045 (sp152Map / sp152Terrain) paints the ground
+// and the heights from it long before this file runs.
+//  * Width: CH153.hw (half width) per stretch (the bridge is the narrowest).
+//  * The mountain: a cone (height falls 0.85 per tile of radius) with the trail cut into it as a flat ledge; the inward side rises
+//    as a rock wall, the outward side falls away. Rocks ('R') line the wall, pines ('#') dot the slopes.
+//  * Course (CH153C): the obstacles and set pieces by s — boulders, logs, spikes, gaps, rockslides, the bridge, the tunnel, venom
+//    phases — see 3162 for how each one plays.
+var CH153;
+function ch153Cfg(){return {R0:165,R1:62,turns:1.3,rise:88,h0:2,th0:-Math.PI*.15,cx:210,cy:190}}
+function ch153Path(){if(ch153Path.c)return ch153Path.c;const C=ch153Cfg(),I=sp152Defs().find(d=>d.key=='ascent'),cx=I.x0+C.cx,cz=I.y0+C.cy;
+  // the spiral, sampled finely, then resampled every tile of arc length
+  const N0=6000,fx=[],fz=[],ft=[];for(let i=0;i<=N0;i++){const t=i/N0,th=C.th0-C.turns*Math.PI*2*t,r=C.R0-(C.R0-C.R1)*Math.pow(t,.92);fx.push(cx+Math.cos(th)*r);fz.push(cz+Math.sin(th)*r);ft.push(t)}
+  const L=[0];for(let i=1;i<=N0;i++)L.push(L[i-1]+Math.hypot(fx[i]-fx[i-1],fz[i]-fz[i-1]));const S=Math.floor(L[N0]);
+  const X=new Float32Array(S+1),Z=new Float32Array(S+1),H=new Float32Array(S+1),TX=new Float32Array(S+1),TZ=new Float32Array(S+1),HW=new Float32Array(S+1);
+  let j=0;for(let s=0;s<=S;s++){while(j<N0-1&&L[j+1]<s)j++;const a=(s-L[j])/Math.max(1e-6,L[j+1]-L[j]);X[s]=fx[j]+(fx[j+1]-fx[j])*a;Z[s]=fz[j]+(fz[j+1]-fz[j])*a;const t=ft[j]+(ft[j+1]-ft[j])*a;H[s]=C.h0+C.rise*t}
+  for(let s=0;s<=S;s++){const a=Math.max(0,s-2),b=Math.min(S,s+2),dx=X[b]-X[a],dz=Z[b]-Z[a],l=Math.hypot(dx,dz)||1;TX[s]=dx/l;TZ[s]=dz/l}
+  // the outward side (+o): the trail curls round the centre, so outward is away from it
+  const R=[],sgn=(()=>{const s=10,nx=-TZ[s],nz=TX[s];return (nx*(X[s]-cx)+nz*(Z[s]-cz))>0?1:-1})();
+  for(let s=0;s<=S;s++)HW[s]=ch153HW(s,S);
+  const P={X,Z,H,TX,TZ,HW,S,sgn,cx,cz,C};
+  // position at (s, o): world x, z, trail height
+  P.at=(s,o)=>{s=Math.max(0,Math.min(S,s));const i=Math.min(S-1,Math.floor(s)),f=s-i,x=X[i]+(X[i+1]-X[i])*f,z=Z[i]+(Z[i+1]-Z[i])*f,tx=TX[i]+(TX[i+1]-TX[i])*f,tz=TZ[i]+(TZ[i+1]-TZ[i])*f,
+    nx=-tz*sgn,nz=tx*sgn;return [x+nx*(o||0),z+nz*(o||0),H[i]+(H[i+1]-H[i])*f]};
+  P.hw=s=>HW[Math.max(0,Math.min(S,Math.round(s)))];P.yaw=s=>{const i=Math.max(0,Math.min(S,Math.round(s)));return Math.atan2(TX[i],TZ[i])};
+  return ch153Path.c=P}
+// the trail's half width: 2.6 (5.2 wide), narrower in places, the bridge 1.6
+function ch153HW(s,S){const B=ch153Course().bridge;if(s>=B[0]&&s<=B[1])return 1.65;if(s>=270&&s<=380)return 2.1;if(s>=S-40)return 2.2+Math.max(0,(S-12-s)/28)*.4;return 2.7}
+// the course: everything by s (the gaps, the bridge, the tunnel, rockslides, venom phases, the snake's lunge spots)
+function ch153Course(){if(ch153Course.c)return ch153Course.c;
+  const O=[];const ob=(k,s,o,ex)=>O.push(Object.assign({k,s,o},ex||{}));
+  // A · the ledge: boulders on alternate sides, two logs to jump, a first spike
+  [52,74,96,118,140,162,186,208].forEach((s,i)=>ob('boulder',s,(i%2?1:-1)*1.25));ob('log',128,0);ob('log',198,0);ob('spike',150,0);
+  // B · the narrows: spikes and a broken stretch to jump
+  [282,300,318,356,372].forEach((s,i)=>ob('spike',s,(i%2?-1:1)*.9));ob('gap',336,0,{len:3.0});ob('log',364,0);
+  // the bridge: two missing planks
+  ob('gap',425,0,{len:2.6,plank:1});ob('gap',452,0,{len:2.6,plank:1});
+  // C · the high ledge: logs, boulders, faster curves
+  [492,516,540,566,590].forEach((s,i)=>ob(i%2?'log':'boulder',s,i%2?0:(i%4?1:-1)*1.2));
+  // the tunnel: stalactite pillars to weave between
+  [622,634,646,658,670].forEach((s,i)=>ob('pillar',s,(i%2?1:-1)*1.3));
+  // D · the final climb: gaps, boulders, logs
+  ob('gap',760,0,{len:3.0});[778,796].forEach((s,i)=>ob('boulder',s,(i%2?-1:1)*1.3));ob('log',812,0);ob('gap',830,0,{len:3.2});[848,866].forEach((s,i)=>ob('spike',s,(i%2?1:-1)*1.0));ob('log',882,0);
+  return ch153Course.c={O,bridge:[400,470],tunnel:[606,684],slides:[[230,3],[700,5]],venom:[[70,4.2,1],[260,3.4,1],[480,3.0,2],[690,2.6,2],[750,2.2,3]],start:6,crack:12}}
+// ---------------- 0045: the ground and the heights ----------------
+function ch153Hash(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
+function ch153Map(m,bio,DW,I,bi){const P=ch153Path();
+  for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(!m[y])continue;m[y][x]='';bio[y][x]=bi;DW[y*W+x]=6}
+  // the trail (and a little run-off before its foot)
+  for(let s=-8;s<=P.S+6;s+=.5){const hw=P.hw(Math.max(0,Math.min(P.S,s)));for(let o=-hw-3;o<=hw+3;o+=.5){const [x,z]=P.at(s,o),X=Math.round(x),Z=Math.round(z);if(!m[Z])continue;const k=Z*W+X,d=Math.abs(o)-hw;
+      if(d<DW[k])DW[k]=d;if(d<=.3)m[Z][X]=(ch153Hash(X,Z)<.12?'a':'.');else if(d>.3&&d<3&&o>0&&m[Z][X]===''&&ch153Hash(X,Z+7)<.35)m[Z][X]='g'}}   // grass tufts along the outer lip
+  // rocks along the mountain wall, pines on the slopes (never on the trail)
+  for(let s=0;s<=P.S;s+=1.6){const hw=P.hw(s),o=-(hw+1.6+ch153Hash(s,7)*1.4),[x,z]=P.at(s,o),X=Math.round(x),Z=Math.round(z);if(m[Z]&&m[Z][X]===''&&ch153Hash(s,3)<.5)m[Z][X]='R'}
+  for(let i=0;i<900;i++){const x=I.x0+4+Math.floor(ch153Hash(i,1)*(I.w-8)),z=I.y0+4+Math.floor(ch153Hash(i,2)*(I.h-8));if(m[z]&&m[z][x]===''&&DW[z*W+x]>3)m[z][x]='#'}}
+function ch153Terrain(I){const P=ch153Path(),C=P.C,best=new Float32Array(I.w*I.h).fill(99),ph=new Float32Array(I.w*I.h),sg=new Float32Array(I.w*I.h);
+  for(let s=-8;s<=P.S+6;s+=.4){const sc=Math.max(0,Math.min(P.S,s)),hw=P.hw(sc);for(let o=-hw-5;o<=hw+5;o+=.4){const [x,z,h]=P.at(sc,o),X=Math.round(x)-I.x0,Z=Math.round(z)-I.y0;if(X<0||Z<0||X>=I.w||Z>=I.h)continue;const k=Z*I.w+X,d=Math.abs(o)-hw;
+      if(d<best[k]){best[k]=d;ph[k]=h-(s<0?(-s)*.6:0);sg[k]=o<0?-1:1}}}
+  const cone=(i,j)=>{const r=Math.hypot(i-P.cx,j-P.cz);let h=C.h0+C.rise*(C.R0-r)/(C.R0-C.R1);if(r<C.R1)h+=(C.R1-r)*1.4;if(r>C.R0)h=C.h0-(r-C.R0)*1.6-(r>C.R0+6?30:0);return h+(fbm2(i*.08,j*.08,3)-.5)*3.2};
+  for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const X=i-I.x0,Z=j-I.y0,inn=X>=0&&Z>=0&&X<I.w&&Z<I.h,k=inn?Z*I.w+X:-1;let h=cone(i,j);
+    if(k>=0&&best[k]<5){const d=best[k],w=d<=.6?1:1-((d-.6)/4.4)*((d-.6)/4.4)*(3-2*(d-.6)/4.4);const wall=sg[k]<0?Math.min(4,Math.max(0,d-.6)*1.6):-Math.max(0,d-.6)*.9;h=ph[k]*w+(Math.max(h,ph[k]+wall)*(sg[k]<0?1:0)+Math.min(h,ph[k]+wall)*(sg[k]<0?0:1))*(1-w)}
+    HF[(j+HPD)*HW+i+HPD]=h}}
+// ================= v153 The Hilltop Ascent — models =================
+//  * Skarrith, the Mountain Coil (ch153Snake): a serpent ~60 tiles long. The head is a rigid group (skull, snout, brow ridges, glowing
+//    eyes, a hinged lower jaw with fangs and a forked tongue, a spread cobra hood with eye-spots, a horn crest). The body is 46
+//    instanced segments (two band patterns, tapering to the tail) laid along the trail behind the head each frame (3162).
+//  * The course: boulders, logs, spikes, tunnel pillars, gap edges, the plank bridge with ropes, the tunnel arches, the summit
+//    crack, rolling rockslide boulders, venom globs, landing warnings and puddles.
+//  * The uphill road at the far edge of Mistmere (Hillside Crest II), which replaces its gateway to III.
+var CH153M={col:{sk:0x2e3a22,skD:0x1c2416,belly:0xb8a870,band:0x5a6a2a,hood:0x3a4a28,spot:0xd8c060,eye:0xf0ff60,fang:0xf0e8d0,mouth:0x6a1a1a,tongue:0xc02030,horn:0x3a3020},
+  rock:[0x6a645a,0x7a7266,0x5a554c,0x8a8274],wood:0x5a4028,woodD:0x3a2818,woodL:0x7a5a38,rope:0x9a8a5a,venom:0x8aff3a,venomD:0x3a8a12};
+function ch153R(seed){return ab152R(seed)}
+// ---------------- the serpent ----------------
+function ch153SnakeHead(){const C=CH153M.col,g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('CH153|head',k=>{
+    k.p('','sph2','c',C.sk,0,.1,0,1.15,.72,1.55);k.p('','sph2','c',C.skD,0,.42,-.1,1.0,.42,1.35);           // skull, dark crown
+    k.p('','box','c',C.sk,0,-.05,1.35,1.2,.62,1.4,.12,0,0);k.p('','box','c',C.skD,0,.26,1.4,1.0,.18,1.3,.12,0,0);   // snout
+    [-1,1].forEach(s=>{k.p('','box','c',C.skD,s*.62,.42,.55,.4,.22,1.1,0,s*.25,s*.25);                        // brow ridges
+      k.p('','sph','g',C.eye,s*.72,.36,.75,.2,.16,.26);k.p('','box','c',0x080806,s*.78,.36,.83,.04,.2,.12);      // eyes, slit pupils
+      k.p('','sph','c',0x0a0806,s*.25,.18,2.02,.08,.06,.06);                                                   // nostrils
+      for(let i=0;i<4;i++)k.p('','cone4','c',C.horn,s*(.3+i*.12),.62-i*.06,-.2-i*.42,.12,.5-i*.07,.12,-1.1,0,s*.3)});   // horn crest
+    for(let i=0;i<6;i++)k.p('','box','c',i%2?C.band:C.skD,0,.55,-.4-i*.32,.5,.1,.24,0,0,0);
+    // upper fangs and teeth
+    [-1,1].forEach(s=>{k.p('','cone','c',C.fang,s*.45,-.48,1.85,.09,.55,.09,Math.PI,0,0);for(let i=0;i<5;i++)k.p('','cone4','c',C.fang,s*(.52-i*.02),-.36,.6+i*.25,.05,.18,.05,Math.PI,0,0)});
+    k.p('','box','c',C.mouth,0,-.33,.9,1.0,.05,1.9)},0));
+  // the lower jaw hinges at the back of the head
+  const jaw=new THREE.Group();jaw.position.set(0,-.25,-.35);g.add(jaw);
+  jaw.add(lgGroup('CH153|jaw',k=>{k.p('','box','c',C.sk,0,-.18,1.2,1.1,.28,2.4,0,0,0);k.p('','box','c',C.belly,0,-.3,1.2,.9,.06,2.2);k.p('','box','c',C.mouth,0,-.03,1.2,.9,.04,2.2);
+    [-1,1].forEach(s=>{for(let i=0;i<5;i++)k.p('','cone4','c',C.fang,s*(.42-i*.02),0,.6+i*.38,.05,.2,.05)});
+    k.L('','c',C.tongue,[0,-.02,.3],[0,-.04,2.0],.07,.05,5);[-1,1].forEach(s=>k.L('','c',C.tongue,[0,-.04,2.0],[s*.16,-.02,2.5],.04,.01,4))},0));
+  g.userData.jaw=jaw;
+  // the hood: two great fans behind the head, eye-spots on their backs
+  const hood=lgGroup('CH153|hood',k=>{[-1,1].forEach(s=>{k.p('','sph2','c',C.hood,s*1.25,.15,-.85,1.1,1.25,.18,0,s*.5,s*.15);k.p('','sph2','c',C.belly,s*1.24,.1,-.75,.9,1.05,.12,0,s*.5,s*.15);
+    k.p('','sph','c',C.spot,s*1.35,.35,-1.0,.32,.32,.06,0,s*.5,0);k.p('','sph','c',0x101008,s*1.36,.35,-1.03,.16,.16,.06,0,s*.5,0);
+    for(let i=0;i<4;i++)k.L('','c',C.skD,[s*.4,0,-.8],[s*(1.6+i*.15),.9-i*.55,-1.0],.05,.03,4)})},0);
+  hood.scale.set(.72,.85,1);g.add(hood);g.userData.hood=hood;
+  g.scale.setScalar(1.35);return g}
+function ch153SegGeo(v){return lgBake((()=>{const C=CH153M.col,k=dkKit();
+  k.p('','sph2','c',v?C.band:C.sk,0,0,0,1,.86,1.05);k.p('','sph2','c',C.belly,0,-.28,0,.82,.6,.92);
+  k.p('','sph2','c',v?C.skD:C.band,0,.5,0,.55,.36,.95);for(let i=0;i<3;i++)k.p('','cone4','c',C.horn,0,.78,-.4+i*.4,.1,.3-i*.03,.1,-.5,0,0);
+  [-1,1].forEach(s=>k.p('','sph','c',C.skD,s*.7,.25,0,.3,.42,.8));return k.P})(),'CH153|seg'+v,0)}
+function ch153Snake(parent,n){const g=new THREE.Group();g.userData.psNo=1;parent.add(g);const head=ch153SnakeHead();g.add(head);
+  const segs=[0,1].map(v=>{const ms=ch153SegGeo(v);return ms.map(m=>{const q=new THREE.InstancedMesh(m.geometry,m.material,Math.ceil(n/2));q.frustumCulled=false;q.castShadow=true;q.userData.psNo=1;g.add(q);return q})});
+  // its own copies of the materials (the shared scenery ones carry the see-through fade, 2420) and kept out of the fade's scan:
+  // the serpent must stay solid when it strikes past the camera
+  g.userData.noFade135=1;const MC=new Map();g.traverse(o=>{if(o.isMesh&&o.material){if(!MC.has(o.material)){const c=o.material.clone();c.onBeforeCompile=THREE.Material.prototype.onBeforeCompile;
+    c.customProgramCacheKey=THREE.Material.prototype.customProgramCacheKey;c.userData={noFade135:1};MC.set(o.material,c)}o.material=MC.get(o.material)}});
+  return {g,head,jaw:head.userData.jaw,hood:head.userData.hood,segs,n,m:new THREE.Matrix4(),q:new THREE.Quaternion(),e:new THREE.Euler(0,0,0,'YXZ'),p:new THREE.Vector3(),sc:new THREE.Vector3()}}
+// lay the body: pts[i] = [x,y,z,radius] from the neck back to the tail tip
+function ch153SnakeLay(S,pts){for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[Math.min(pts.length-1,i+1)],c=pts[Math.max(0,i-1)],dx=c[0]-b[0],dy=c[1]-b[1],dz=c[2]-b[2];
+    S.e.set(-Math.atan2(dy,Math.hypot(dx,dz)),Math.atan2(dx,dz),0);S.q.setFromEuler(S.e);S.p.set(a[0],a[1],a[2]);const r=a[3];S.sc.set(r,r,r*1.12);S.m.compose(S.p,S.q,S.sc);
+    S.segs[i%2].forEach(q=>q.setMatrixAt(i>>1,S.m))}
+  S.segs.forEach(L=>L.forEach(q=>q.instanceMatrix.needsUpdate=true))}
+// ---------------- the course ----------------
+function ch153Ob(k){const C=CH153M;switch(k){
+  case 'boulder':return lgGroup('CH153|boulder',q=>{const R=ch153R(41);q.p('','dod','c',C.rock[0],0,.95,0,1.25,1.05,1.15,.3,.5,.2);q.p('','dod','c',C.rock[1],.5,.5,.6,.6,.5,.55,1,2,0);q.p('','dod','c',C.rock[2],-.6,.35,-.5,.5,.4,.5,2,1,1);
+    for(let i=0;i<5;i++)q.p('','dod','c',C.rock[i%4],(R()-.5)*2.6,.1,(R()-.5)*2.2,.2+R()*.2,.15,.2)},0);
+  case 'log':return lgGroup('CH153|log',q=>{q.p('','cyl','c',C.wood,0,.42,0,.42,6.6,.42,0,0,Math.PI/2);q.p('','cyl','c',C.woodL,3.32,.42,0,.36,.04,.36,0,0,Math.PI/2);q.p('','cyl','c',C.woodL,-3.32,.42,0,.36,.04,.36,0,0,Math.PI/2);
+    for(let i=0;i<4;i++){const x=-2.2+i*1.4;q.L('','c',C.woodD,[x,.6,0],[x+.4,1.3,(i%2-.5)*.8],.08,.03,4)}for(let i=0;i<8;i++)q.p('','box','c',0x4a5a2a,-2.8+i*.8,.84,(i%2-.5)*.2,.3,.06,.24,0,i,0)},0);
+  case 'spike':return lgGroup('CH153|spike',q=>{q.p('','cone','c',C.rock[2],0,1.2,0,.7,2.4,.7);q.p('','cone','c',C.rock[0],.35,.6,.2,.35,1.2,.35);q.p('','dod','c',C.rock[1],0,.1,0,.9,.25,.9)},0);
+  case 'pillar':return lgGroup('CH153|pillar',q=>{q.p('','cone','c',C.rock[2],0,1.6,0,.75,3.2,.75);q.p('','cone','c',C.rock[0],0,4.6,0,.75,3.2,.75,Math.PI,0,0);q.p('','cyl','c',C.rock[3],0,3.15,0,.32,.9,.32)},0);
+  case 'gapEdge':return lgGroup('CH153|gapEdge',q=>{const R=ch153R(9);for(let i=0;i<7;i++)q.p('','dod','c',C.rock[i%4],-2.6+i*.86,-.05,(R()-.5)*.4,.35,.25,.3,R(),R(),R())},0);
+  case 'slide':return lgGroup('CH153|slide',q=>{q.p('','dod','c',C.rock[1],0,0,0,1.0,.95,1.0,.4,.2,.7);q.p('','dod','c',C.rock[2],.3,.35,.2,.45,.4,.45,1,0,0)},0)}
+  return null}
+function ch153Plank(){return lgGroup('CH153|plank',q=>{const C=CH153M;q.p('','box','c',C.woodL,0,0,0,3.6,.1,.55);q.p('','box','c',C.woodD,0,.02,-.2,3.62,.04,.06);q.p('','box','c',C.woodD,0,.02,.2,3.62,.04,.06)},0)}
+function ch153Post(){return lgGroup('CH153|post',q=>{const C=CH153M;q.p('','cyl','c',C.woodD,0,.6,0,.09,1.9,.09);q.p('','cyl','c',C.rope,0,1.2,0,.12,.12,.12)},0)}
+function ch153Arch(){return lgGroup('CH153|arch',q=>{const C=CH153M,R=ch153R(77);[-1,1].forEach(s=>{q.p('','box','c',C.rock[2],s*3.6,2.4,0,1.6,5.2,2.6);for(let i=0;i<3;i++)q.p('','dod','c',C.rock[i],s*(3.4+R()*.6),1+i*1.5,(R()-.5)*1.6,.9,.8,.9,R(),R(),R())});
+  q.p('','box','c',C.rock[0],0,5.4,0,8.6,1.4,2.7);for(let i=0;i<4;i++)q.p('','cone','c',C.rock[3],-2.4+i*1.6,4.5,(R()-.5)*1.2,.22,.8,.22,Math.PI,0,0)},0)}
+function ch153Crack(){return lgGroup('CH153|crack',q=>{const C=CH153M,R=ch153R(1313);
+  [-1,1].forEach(s=>{for(let i=0;i<6;i++){const sz=1.6+R()*1.4;q.p('','dod','c',C.rock[i%4],s*(1.7+sz*.7+R()*.6),sz*.8+R()*3,(R()-.5)*2,sz,sz*1.4,sz,R()*3,R()*3,R()*3)}
+    q.p('','box','c',C.rock[2],s*2.6,3.6,-1.0,2.6,7.2,3.6,0,0,s*.06)});
+  q.p('','box','c',C.rock[0],0,7.6,-1,7.6,1.8,4);q.p('','box','c',0x050404,0,1.8,-.5,1.5,3.6,.1);
+  for(let i=0;i<5;i++)q.p('','dod','c',C.rock[3],(R()-.5)*1.4,4.0+i*.5,.2,.25,.4,.25,R(),R(),R())},0)}
+// venom: the glob, the warning on the ground, the puddle
+function ch153Glob(){const m=new THREE.Mesh(ch153Glob.g||(ch153Glob.g=new THREE.SphereGeometry(.42,10,8)),ch153Glob.m||(ch153Glob.m=new THREE.MeshBasicMaterial({color:CH153M.venom,fog:false})));m.userData.psNo=1;return m}
+function ch153WarnMat(){return new THREE.ShaderMaterial({uniforms:{k:{value:0},col:{value:new THREE.Color(0x9aff40)}},transparent:true,depthWrite:false,
+  vertexShader:'varying vec2 vU;void main(){vU=uv*2.-1.;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform float k;uniform vec3 col;varying vec2 vU;void main(){float r=length(vU);if(r>1.)discard;float ring=smoothstep(.86,.94,r)*(1.-smoothstep(.97,1.,r));float fill=step(r,k)*.32;gl_FragColor=vec4(col,max(ring*.9,fill));}'})}
+function ch153Warn(){const m=new THREE.Mesh(ch153Warn.g||(ch153Warn.g=new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2)),ch153WarnMat());m.renderOrder=4;m.userData.psNo=1;return m}
+function ch153Pool(){const m=new THREE.Mesh(ch153Pool.g||(ch153Pool.g=new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0x6adf20,transparent:true,opacity:.72,depthWrite:false}));m.renderOrder=3;m.userData.psNo=1;return m}
+// ---------------- the uphill road at the far edge of Mistmere ----------------
+function ch153GateModel(s){const C=CH153M,g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('CH153|road',q=>{const R=ch153R(808);
+    // a worn road climbing away out of the clearing between two rising shoulders of rock, stone steps, a waymarker, a carved serpent
+    for(let i=0;i<9;i++){const z=-.6-i*.9,y=.08+i*.42;q.p('','box','c',i%2?0x8a7a5e:0x7a6c52,0,y,z,2.6,.24,1.0,-.42,0,0);q.p('','box','c',0x5a5040,0,y-.5,z,2.8,.8,1.0)}
+    [-1,1].forEach(sd=>{for(let i=0;i<8;i++){const sz=.8+R()*1.1;q.p('','dod','c',C.rock[i%4],sd*(2.1+sz*.6+R()*.8),sz*.6+i*.45+R()*.8,-.8-i*1.0,sz,sz*1.25,sz,R()*3,R()*3,R()*3)}});
+    for(let i=0;i<4;i++)q.p('','cone','c',0x2f5a32,(i%2?1:-1)*(3.6+R()),2.6+i*.9,-3-i*1.6,.8,2.2,.8);
+    q.L('','c',C.woodD,[1.5,0,.6],[1.5,1.6,.6],.06,.05,5);q.p('','box','c',C.woodL,1.5,1.45,.62,.9,.3,.06,0,0,-.12);q.p('','box','c',0x2a2018,1.52,1.45,.66,.7,.06,.02,0,0,-.12);
+    q.L('','c',0x3a6a4a,[-1.8,.25,.7],[-1.2,.35,1.6],.24,.18,7);q.p('','hood','c',0x2a5a3a,-1.1,.5,1.75,.7,.8,.35,1.3,0,.2)},0));
+  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.6;o<=4.6;o+=.6)for(let d=-7;d<=-.6;d+=.6){if(Math.abs(o)<1.2&&d>-1.6)continue;const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
+  return g}
+// ================= v153 The Hilltop Ascent — the chase =================
+// Mistmere's (Hillside Crest II) gateway to III is gone: at the far edge of its gateway clearing a worn road climbs away into the
+// hills (F · "Ascend to the hilltops"; a mount is needed). Riding up it starts the main quest's second chapter, played once:
+// Skarrith, the Mountain Coil, comes down the mountain behind you and you race it up the trail to a crack in the summit rock too
+// narrow for it. Through the crack lies The Galecliffs (III); from then on the road leads straight there.
+//  * Riding: the mount runs on by itself at one speed for everyone (CH153V.spd: no mount bonuses here); A / D (← →, the stick)
+//    steer, Space jumps (the 🦘 button on touch screens). The camera rides behind, along the trail.
+//  * Three hits and you are done (CH153V.hp): a crash (boulders, spikes, tunnel pillars, logs you did not jump, rolling rockslide
+//    boulders, a gap you did not jump), a venom glob landing on you, a venom puddle, a strike of its head. A crash also slows you
+//    for a moment (CH153V.stumT); after any hit you are safe for CH153V.inv s.
+//  * The snake (ch153SnakeTick): it follows the trail; it closes in when far behind and eases off when right on you (CH153V.band),
+//    so a crash costs ground but never decides the run alone. It spits venom (phases by s: CH153C.venom), lunges with its head
+//    (telegraphed: steer away), and if it reaches you it swallows you whole. Rockslides roll across the trail (telegraphed: rumble,
+//    dust on the wall above). On the bridge the planks fall away behind you; in the tunnel only its eyes show.
+//  * Losing: swallowed or out of hits → a short scene, then the chase starts again at the foot of the trail.
+//  * Inside: companions wait, you stay mounted, no fighting, no recall (a 🏳 button gives up and rides back down to Mistmere).
+var CH153Q={st:0};
+var CH153V={spd:8.2,lat:6.6,stumT:.9,stumV:2.3,inv:1.3,jumpT:.74,jumpH:2.05,hp:3,gap0:16,band:[11,.14,-1.0,2.6],slow0:6.4,catch:2.6,strike:[22,15,9]};
+var CH153={S:null,R:null,err:0,jumpQ:0,btn:null};
+function ch153Done(){return CH153Q.st>=2||insReach(1)>=2}
+function ch153In(){return sp152Here('ascent')}
+function ch153Run(){return ch153In()&&!!CH153.R}
+// ---------------- the world ----------------
+function ch153Build(){if(CH153.S)return CH153.S;const P=ch153Path(),K=ch153Course(),root=new THREE.Group();root.name='HilltopAscent';scene.add(root);
+  const S={P,K,root,obs:[],planks:[],arches:[],slides:[],globs:[],pools:[],t:0};CH153.S=S;
+  const put=(m,s,o,y,turn)=>{const [x,z,h]=P.at(s,o);m.position.set(x,h+(y||0),z);m.rotation.y=P.yaw(s)+(turn||0);root.add(m);return m};
+  // obstacles (collision sizes: w across, l along, h height you must clear by jumping; Infinity = no jumping over it)
+  const SZ={boulder:[2.5,2.2,99],log:[99,.9,.85],spike:[1.35,1.2,99],pillar:[1.6,1.5,99],gap:[99,0,0]};
+  K.O.forEach(q=>{const sz=SZ[q.k];const o={k:q.k,s:q.s,o:q.o,w:sz[0],l:q.len||sz[1],h:sz[2],plank:!!q.plank};S.obs.push(o);
+    if(q.k=='gap'){if(!q.plank){[-1,1].forEach(e=>put(ch153Ob('gapEdge'),q.s+e*(q.len/2+.2),0,0,0))}return}
+    const m=ch153Ob(q.k);if(m)o.m=put(m,q.s,q.o,0,q.k=='log'?Math.PI/2:Math.random()*6)});
+  // the bridge: planks every .6 along it (none where the plank gaps are), posts and ropes on both sides
+  const B=K.bridge,gaps=S.obs.filter(o=>o.plank);for(let s=B[0];s<=B[1];s+=.6){if(gaps.some(g=>Math.abs(s-g.s)<g.l/2))continue;const m=put(ch153Plank(),s,0,-.05,0);m.scale.x=(P.hw(s)*2+.4)/3.6;S.planks.push({s,m,f:0,vy:0})}
+  for(let s=B[0];s<=B[1];s+=3)[-1,1].forEach(e=>put(ch153Post(),s,e*(P.hw(s)+.3),-.05,0));
+  {const pts=[[],[]];for(let s=B[0];s<=B[1];s+=1)[-1,1].forEach((e,i)=>{const [x,z,h]=P.at(s,e*(P.hw(s)+.3));pts[i].push(new THREE.Vector3(x,h+1.2-.25*Math.sin((s-B[0])/(B[1]-B[0])*Math.PI),z))});
+    pts.forEach(p=>{const c=new THREE.CatmullRomCurve3(p),g=new THREE.TubeGeometry(c,140,.05,5,false),m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:CH153M.rope}));m.userData.psNo=1;root.add(m)})}
+  // the tunnel: rock arches
+  for(let s=K.tunnel[0];s<=K.tunnel[1];s+=6)S.arches.push(put(ch153Arch(),s,0,-.1,0));
+  // the summit crack, facing the trail
+  S.crack=put(ch153Crack(),P.S-3.5,0,-.1,Math.PI);
+  // the serpent
+  S.sn=ch153Snake(root,46);
+  // venom pool / warning pools (made on demand), dust
+  return S}
+// ---------------- the run ----------------
+function ch153Reset(first){const S=ch153Build(),P=S.P,K=S.K;
+  CH153.R={s:K.start,o:0,v:0,y:0,jt:-1,hp:CH153V.hp,inv:0,stum:0,ph:'intro',t:first?0:1.4,vT:0,slide:0,
+    sn:{s:-21,v:0,o:0,lift:0,rear:0,jaw:.2,st:'intro',t:0,spit:0,strike:null,next:0,eye:1},hit:0,dead:null,win:null,fx:0,warned:{}};
+  S.globs.forEach(g=>{root(g.m);root(g.w)});S.globs.length=0;S.pools.forEach(p=>root(p.m));S.pools.length=0;S.slides.forEach(b=>root(b.m));S.slides.length=0;
+  S.planks.forEach(q=>{q.f=0;q.vy=0;q.m.visible=true;const [x,z,h]=P.at(q.s,0);q.m.position.set(x,h-.05,z);q.m.rotation.set(0,P.yaw(q.s),0)});
+  K.slides.forEach(q=>q.done=0);
+  function root(m){if(m&&m.parent)m.parent.remove(m)}
+  try{if(!riding)ch153Mount()}catch(e){console.warn('v153 mount',e)}
+  ch153Place()}
+// mount the active mount whatever the usual checks say (the chase is mounted only)
+function ch153Mount(){if(riding||!mounts.length)return;const m=mOf(mActive)||mounts[0];mActive=m.id;riding=m;mModel=mountModel(m.k);mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y;scene.add(mModel);hud()}
+function ch153Place(){const R=CH153.R,P=CH153.S.P;const [x,z,h]=P.at(R.s,R.o);pl.position.set(x,h+R.y,z);pl.rotation.y=P.yaw(R.s)-(R.steer||0)*.35;
+  if(typeof mModel!='undefined'&&mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}
+function ch153Hit(why){const R=CH153.R;if(!R||R.inv>0||R.ph!='run')return false;R.hp--;(R.log||(R.log=[])).push([why,Math.round(R.s),+R.o.toFixed(1),+R.y.toFixed(1)]);R.inv=CH153V.inv;R.hit=.5;
+  try{flash(why=='venom'||why=='pool'?'rgba(120,255,40,.75)':'rgba(255,80,30,.7)');shake(why=='crash'||why=='strike'?.32:.18);svSnd(why=='venom'||why=='pool'?'splash':'heavy',1,1.1)}catch(_){}
+  if(why=='crash'){R.stum=CH153V.stumT}
+  if(R.hp<=0)ch153Die('hits');else{try{pickup({ic:'💔',t:R.hp+' left',col:'#ff7a5a',sub:{crash:'You crashed',venom:'Venom!',pool:'You rode through venom',strike:'Its fangs caught you'}[why]||'Hit'})}catch(_){}}
+  return true}
+function ch153Die(why){const R=CH153.R;if(R.ph!='run')return;R.ph='dead';R.dead={why,t:0};R.v=0;
+  try{svSnd(why=='swallow'?'roar':'hiss',1.2,why=='swallow'?.8:1);shake(.5)}catch(_){}
+  say(why=='swallow'?'🐍 <b>Skarrith swallowed you whole.</b> The chase starts again.':'🐍 <b>The serpent wore you down.</b> The chase starts again.')}
+function ch153Win(){const R=CH153.R;if(R.ph!='run')return;R.ph='win';R.win={t:0};try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Through!','Skarrith slams into the rock behind you','The Galecliffs lie beyond','z1');svSnd('roar',1.2,.75)}catch(_){}}
+// the snake: speed, venom, strikes, and laying the model
+function ch153SnakeTick(dt,now){const S=CH153.S,P=S.P,K=S.K,R=CH153.R,N=R.sn,gap=R.s-N.s;
+  if(R.ph=='intro'){N.st='intro';N.t+=dt;const k=Math.min(1,Math.max(0,(R.t-.6)/1.9));N.s=-21+9*k*k;N.rear=1.2*(1-k);if(R.t>2.4&&!N.slam){N.slam=1;try{shake(.55);svSnd('heavy',1.3,.7);svSnd('roar',1.2,.85);const [x,z,h]=P.at(0,0);burst(new THREE.Vector3(x,h+.5,z),0x9a8a6a,40,3,2.6,1.4)}catch(_){}}}
+  else if(R.ph=='run'){const B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
+    if(gap<CH153V.catch){ch153Die('swallow');return}
+    // venom: the current phase sets how often and how many
+    const ph=K.venom.filter(q=>R.s>=q[0]).pop();if(ph&&!N.strike){N.spit-=dt;if(N.spit<=0){N.spit=ph[1]*(.85+Math.random()*.3);N.rear=1;N.spitAt=.42;N.spitN=ph[2]}}
+    if(N.spitAt!=null){N.spitAt-=dt;if(N.spitAt<=0){N.spitAt=null;ch153Spit(N.spitN)}}
+    // strikes: every so often when close enough, telegraphed, the head shoots forward to where you were
+    const sk=CH153V.strike;N.next-=dt;const busy=S.obs.some(q=>q.k!='gap'&&q.k!='log'&&q.s>R.s-2&&q.s<R.s+R.v*1.1+5);   // never a strike while you are dodging rocks
+    if(!N.strike&&N.next<=0&&gap<sk[0]&&R.s>110&&!busy){N.next=R.s>600?sk[2]:sk[1];N.strike={t:0,o:R.o,s0:N.s};try{svSnd('hiss',1.2,.8)}catch(_){}}
+    if(N.strike){const T=N.strike;T.t+=dt;if(T.t<.75)T.o+=(R.o-T.o)*Math.min(1,dt*3.2);   // it tracks you while it draws back, then commits
+      if(T.t>=1.05&&!T.hit){T.hit=1;if(Math.abs(R.o-T.o)<1.25&&R.y<1.2)ch153Hit('strike');else try{pickup({ic:'💨',t:'Dodged!',col:'#c8ff90'})}catch(_){}}
+      if(T.t>1.6)N.strike=null}}
+  else if(R.ph=='win'){N.s=Math.min(N.s+N.v*dt,P.S-13);N.v*=.9}
+  N.rear=Math.max(0,N.rear-dt*1.6);N.o+=((R.ph=='run'?R.o*.5:0)-N.o)*Math.min(1,dt*1.5);
+  ch153SnakeAnim(now)}
+function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now/1000;
+  const slope=(s,o)=>{if(s>=0)return P.at(s,o);const [x0,z0,h0]=P.at(0,0),tx=P.TX[0],tz=P.TZ[0],nx=-tz*P.sgn,nz=tx*P.sgn,d=-s;return [x0-tx*d*.45-nx*d*.85,z0-tz*d*.45-nz*d*.85,h0+d*1.05+2.5*Math.min(1,d/4)]};   // down the mountainside, clear of the slope
+  // the head: raised, rearing back to spit, lunging on a strike, over you when it swallows
+  let hs=N.s,ho=N.o,hy=2.4+N.rear*1.8,jaw=.18+.12*Math.sin(t*3),pitch=.12;
+  // a strike comes from the side: the neck swings out over the drop beside you (the wind-up), then the head lunges across the
+  // trail at your lane, and draws back
+  let face=null;if(N.strike){const T=N.strike,hw=P.hw(R.s),side=hw+3.4,A=[N.s,N.o,hy],Bw=[R.s-3.6,side,3.6],C=[R.s-.5,T.o,1.25];
+    const e=x=>x*x*(3-2*x),L=(p,q,k)=>[p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k,p[2]+(q[2]-p[2])*k];let p;
+    if(T.t<.75){p=L(A,Bw,e(T.t/.75));jaw=.35+.4*T.t/.75}else if(T.t<1.05){p=L(Bw,C,e((T.t-.75)/.3));jaw=.95}else{p=L(C,A,e(Math.min(1,(T.t-1.05)/.55)));jaw=.6}
+    hs=p[0];ho=p[1];hy=p[2];face=T.t<1.05?[R.s-.5,T.o]:null;pitch=T.t<1.05?.15:.05}
+  if(R.ph=='dead'&&R.dead.why=='swallow'){const k=Math.min(1,R.dead.t/.6);hs=N.s+(R.s-N.s)*k;ho=N.o+(R.o-N.o)*k;hy=2.4-1.0*k;jaw=R.dead.t<.55?1:Math.max(.1,1-(R.dead.t-.55)*3);pitch=.35}
+  if(R.ph=='win'&&R.win.t>.5){jaw=.9;hy=1.6;pitch=-.1}
+  if(N.rear>.05){jaw=Math.max(jaw,.35+.5*N.rear);pitch=-.25*N.rear}
+  const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);let ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);if(face){const [fx,fz]=P.at(face[0],face[1]);ya=Math.atan2(fx-hx,fz-hz)}
+  M.head.rotation.set(pitch,ya+(face?0:.12*Math.sin(t*1.7)),.06*Math.sin(t*2.3),'YXZ');
+  M.jaw.rotation.x=jaw*.9;M.hood.scale.set(1+.15*N.rear,1,1);
+  // the body along the trail behind it, slithering
+  const pts=[];for(let i=0;i<M.n;i++){const s=N.s-1.9-i*1.32,r=1.55*(1-Math.pow(i/M.n,1.6)*.82),hw=P.hw(Math.max(0,s)),o=Math.max(-hw+.4,Math.min(hw-.4,N.o*Math.max(0,1-i/8)+.95*Math.sin(t*3.1-i*.42)));
+    const [x,z,h]=slope(s,o);let px=x,py=h+r*.82+.12*Math.sin(t*4-i*.6)+(i<3?(hy-1.2)*(1-i/3):0),pz=z;pts.push([px,py,pz,r])}
+  ch153SnakeLay(M,pts)}
+// venom: n globs from the mouth to where you will be (leading you), each warned on the ground, each leaving a puddle
+function ch153Spit(n){const S=CH153.S,P=S.P,R=CH153.R,M=S.sn,T=1.05,from=M.head.position.clone().add(new THREE.Vector3(0,-.4,0));try{svSnd('hiss',1,1.3)}catch(_){}
+  // fairness: venom never lands on or right beside an obstacle (no boulder-or-puddle choices)
+  const clear=v=>{for(let k=0;k<4;k++){const o=S.obs.find(q=>Math.abs(q.s-v)<3+(q.l||0)/2);if(!o)return v;v=o.s+(v>=o.s?1:-1)*(3.4+(o.l||0)/2)}return v};
+  // one glob: at you · two: one behind the other on your line (step aside) · three: a wall across the trail (jump it)
+  if(n>=3&&!CH153.wallHint){CH153.wallHint=1;setTimeout(()=>{try{pickup({ic:'🦘',t:'JUMP the venom wall!',col:'#9aff40',sub:'Space'})}catch(_){}},250)}
+  for(let i=0;i<n;i++){const ls=clear(R.s+Math.max(4,R.v)*T+(n==2?i*2.6:0)+(n>=3?(Math.random()-.5)*.6:0)),hw=P.hw(ls),lo=Math.max(-hw+.6,Math.min(hw-.6,n>=3?(i-(n-1)/2)*1.75:R.o+(Math.random()-.5)*.4));
+    const [x,z,h]=P.at(ls,lo),g=ch153Glob(),w=ch153Warn();g.position.copy(from);w.position.set(x,h+.08,z);w.scale.setScalar(1.35);S.root.add(g);S.root.add(w);
+    S.globs.push({m:g,w,a:from.clone(),b:new THREE.Vector3(x,h,z),s:ls,o:lo,t:0,T:T+i*.08})}}
+function ch153FxTick(dt,now){const S=CH153.S,P=S.P,R=CH153.R;
+  // globs fly and land
+  for(let i=S.globs.length-1;i>=0;i--){const G=S.globs[i];G.t+=dt;const k=Math.min(1,G.t/G.T);G.m.position.lerpVectors(G.a,G.b,k);G.m.position.y+=Math.sin(k*Math.PI)*5;G.w.material.uniforms.k.value=k;
+    if(k>=1){try{burst(G.b.clone().add(new THREE.Vector3(0,.3,0)),CH153M.venom,18,1.6,2.2,.6)}catch(_){}
+      if(R.ph=='run'&&Math.abs(R.s-G.s)<1.35&&Math.abs(R.o-G.o)<1.35&&R.y<.6)ch153Hit('venom');
+      const pm=ch153Pool();pm.position.set(G.b.x,G.b.y+.05,G.b.z);pm.scale.setScalar(1.15);S.root.add(pm);S.pools.push({m:pm,s:G.s,o:G.o,t:4.5,hit:0});
+      S.root.remove(G.m);S.root.remove(G.w);S.globs.splice(i,1)}}
+  for(let i=S.pools.length-1;i>=0;i--){const Q=S.pools[i];Q.t-=dt;Q.m.material.opacity=.72*Math.min(1,Q.t/1.2);Q.m.scale.setScalar(1.15*(1+.04*Math.sin(now/120+i)));
+    if(!Q.hit&&R.ph=='run'&&Math.abs(R.s-Q.s)<1.1&&Math.abs(R.o-Q.o)<1.1&&R.y<.3){Q.hit=1;ch153Hit('pool')}
+    if(Q.t<=0){S.root.remove(Q.m);S.pools.splice(i,1)}}
+  // rockslides: a rumble and dust on the wall above, then boulders bounce down and roll across the trail
+  S.K.slides.forEach(q=>{if(q.done||R.ph!='run'||R.s<q[0]-34)return;q.done=1;try{svSnd('crack',1.2,.7);shake(.2)}catch(_){}
+    for(let i=0;i<q[1];i++){const s=q[0]+i*5.5+(Math.random()-.5)*2,hw=P.hw(s),[x,z,h]=P.at(s,-hw-7);try{burst(new THREE.Vector3(x,h+5,z),0xa89878,22,2.4,2,1.4)}catch(_){}
+      const m=ch153Ob('slide');m.position.set(x,h+6,z);S.root.add(m);S.slides.push({m,s,o:-hw-7,y:6,vo:4.6+Math.random()*1.2,vy:0,t:-.9-i*.55,sp:Math.random()*4})}});
+  for(let i=S.slides.length-1;i>=0;i--){const b=S.slides[i];b.t+=dt;if(b.t<0)continue;b.o+=b.vo*dt;b.vy-=22*dt;b.y+=b.vy*dt;const hw=P.hw(b.s);const ground=b.o>hw+1.2?-(b.o-hw-1.2)*2.2:0;
+    if(b.y<ground+1.0){b.y=ground+1.0;b.vy=Math.abs(b.vy)*.42;if(Math.abs(b.o)<hw+2)try{shake(.06)}catch(_){}}
+    const [x,z,h]=P.at(b.s,b.o);b.m.position.set(x,h+b.y,z);b.m.rotation.x+=b.vo*dt*.9;b.m.rotation.z+=dt*b.sp;
+    if(R.ph=='run'&&Math.abs(R.s-b.s)<1.3&&Math.abs(R.o-b.o)<1.35&&R.y<b.y+.2)ch153Hit('crash');
+    if(b.o>hw+14){S.root.remove(b.m);S.slides.splice(i,1)}}
+  // the bridge: planks fall away under and behind the snake
+  const sn=R.sn.s;S.planks.forEach(q=>{if(!q.f&&q.s<sn+1.5&&R.ph=='run'){q.f=1;q.vy=0}if(q.f&&q.m.visible){q.vy-=18*dt;q.m.position.y+=q.vy*dt;q.m.rotation.x+=dt*2;q.m.rotation.z+=dt*1.3;if(q.vy<-30)q.m.visible=false}})}
+// ---------------- each frame on the trail ----------------
+function ch153Tick(dt,now){const S=CH153.S,P=S.P,R=CH153.R,K=S.K;if(!R)return;R.t+=dt;
+  if(R.ph=='intro'){R.v=0;if(R.t>3.0){R.ph='run';R.t=0;R.sn.spit=3;R.sn.next=8;try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','RUN!','Skarrith, the Mountain Coil','Space · jump   A / D · steer','z1')}catch(_){}}}
+  else if(R.ph=='run'){
+    // speed: one for every mount; a crash slows you for a moment
+    const want=R.stum>0?CH153V.stumV:CH153V.spd;R.v+=(want-R.v)*Math.min(1,dt*(want>R.v?2.2:9));R.stum=Math.max(0,R.stum-dt);R.inv=Math.max(0,R.inv-dt);
+    // steering (A/D, arrows, the stick)
+    const st=(K_d()?1:0)-(K_a()?1:0)+(typeof dp!='undefined'?dp[0]:0);R.steer=(R.steer||0)+((st)-(R.steer||0))*Math.min(1,dt*10);
+    const hw=P.hw(R.s);R.o=Math.max(-hw+.55,Math.min(hw-.55,R.o+R.steer*P.sgn*CH153V.lat*dt*(R.stum>0?.5:1)));   // +o is the screen's right when P.sgn is 1
+    // the jump
+    if(CH153.jumpQ>0){CH153.jumpQ-=dt;if(R.jt<0&&R.y<.05){R.jt=0;CH153.jumpQ=0;try{svSnd('whoosh',.8,1.2)}catch(_){}}}
+    if(R.jt>=0){R.jt+=dt;const k=R.jt/CH153V.jumpT;R.y=k>=1?0:CH153V.jumpH*Math.sin(k*Math.PI);if(k>=1){R.jt=-1;R.y=0;try{burst(gY(pl.position,.2),0xa89878,10,1,1,.4)}catch(_){}}}
+    const s0=R.s;R.s+=R.v*dt;
+    // obstacles: a crash unless you are high enough over them (or still safe after the last hit)
+    for(const o of S.obs){if(Math.abs(R.s-o.s)>o.l/2+.6)continue;
+      if(o.k=='gap'){if(R.y<.15&&R.inv<=0&&s0<o.s+o.l/2-.25&&R.s>o.s-o.l/2+.25){if(ch153Hit('crash')){R.s=o.s+o.l/2+.4;R.jt=-1;R.y=0;try{pickup({ic:'🕳',t:'You fell short!',col:'#ff9a5a',sub:'Your mount scrambles up the far side'})}catch(_){}}}continue}
+      if(Math.abs(R.o-o.o)<o.w/2+.42&&R.y<o.h)ch153Hit('crash')}
+    if(R.s>=P.S-6.5)ch153Win()}
+  else if(R.ph=='dead'){const D=R.dead;D.t+=dt;R.v=0;if(D.why=='swallow'&&D.t>.55){pl.visible=false;if(mModel)mModel.visible=false}
+    if(D.t>2.2&&!D.fade){D.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
+  else if(R.ph=='win'){const W2=R.win;W2.t+=dt;R.v=Math.max(2.5,R.v*.97);R.s=Math.min(P.S-.5,R.s+R.v*dt);R.o*=.9;
+    if(W2.t>.5&&!W2.slam){W2.slam=1;try{shake(.7);svSnd('heavy',1.4,.6);svSnd('crack',1.2,.7);const [x,z,h]=P.at(P.S-13,0);burst(new THREE.Vector3(x,h+3,z),0x9a8a6a,60,4,3,1.6)}catch(_){}}
+    if(W2.t>2.0&&!W2.fade){W2.fade=1;ch153Finish()}}
+  R.hit=Math.max(0,R.hit-dt);
+  ch153SnakeTick(dt,now);ch153FxTick(dt,now);ch153Place();
+  // the mount blinks while you are safe after a hit
+  if(typeof mModel!='undefined'&&mModel&&R.ph=='run')mModel.visible=!(R.inv>0&&Math.floor(now/90)%2);
+  // in the tunnel the light drops and the snake's eyes glow
+  const tn=R.s>K.tunnel[0]-4&&R.s<K.tunnel[1]+4;R.dark=(R.dark||0)+((tn?1:0)-(R.dark||0))*Math.min(1,dt*2)}
+function K_a(){return !!(K.a||K.arrowleft)}function K_d(){return !!(K.d||K.arrowright)}
+// ---------------- getting in and out ----------------
+function ch153Enter(){if(AF)return;if(!mounts.length)return say('🐎 You need a mount to ride the hill path. Build the Stable at the Stronghold Steward in Duskhold and buy one.');
+  CH153Q.st=Math.max(1,CH153Q.st);CH153.lv=0;fadeTo(()=>{const S=ch153Build();const [x,z]=S.P.at(S.K.start,0);toPos(x,z,S.P.yaw(S.K.start)+Math.PI);ch153Reset(true);
+    setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','The Hilltop Ascent','A narrow trail up the mountain','','z1')}catch(_){}},200)})}
+function ch153Leave(){CH153.R=null;CH153.lv=1;fadeTo(()=>{const G=SP152.gates.ascent,s=G&&G.spot;if(s)toPos(s.x+s.ux*-2.5,s.z+s.uz*-2.5,s.ry);else insArrive(INSL[6])})}
+function ch153Finish(){CH153Q.st=2;CH153.lv=1;fadeTo(()=>{CH153.R=null;const N=INSL[7];insArrive(N);insMark(N);
+  setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','The Hilltops','You squeeze through the crack and out onto the high plains','Onward through '+N.n,'z1');mSfx('victory')}catch(_){}},400);
+  say('🐍 You escaped Skarrith. <b>'+N.n+'</b> lies ahead.')})}
+// ---------------- input: Space jumps (and nothing else does) ----------------
+addEventListener('keydown',e=>{if(!ch153Run())return;const k=(e.key||'').toLowerCase(),tg=e.target&&e.target.tagName;if(tg=='INPUT'||tg=='TEXTAREA')return;
+  if(k==' '){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)CH153.jumpQ=.18}
+  else if(k=='shift'||k=='v'||k=='t'){e.stopImmediatePropagation();e.preventDefault()}},{capture:true});
+{const f=walk;walk=function(o,dx,dz){if(o===pl&&ch153Run())return;return f.apply(this,arguments)}}
+{const f=dodge;dodge=function(){if(ch153Run())return;return f.apply(this,arguments)}}
+// the mount gallops whatever the keys (it runs on its own) at one pace for everyone
+{const f=mountTick;mountTick=function(dt,now,al){if(ch153Run()&&riding){const R=CH153.R,s0=riding.spd;riding.spd=45;try{return f.call(this,dt,now,R.v>.5?1:0)}finally{riding.spd=s0;if(mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}}return f.apply(this,arguments)}}
+// the camera rides behind along the trail (a look back at the snake during the intro)
+{const f=loop;loop=function(now){let keep=null;try{if(ch153Run()&&CH153.S){const R=CH153.R,P=CH153.S.P,yw=P.yaw(R.s);keep=[camPitch,camDist];
+    const intro=R.ph=='intro'&&R.t<2.7,dead=R.ph=='dead',want=intro?yw-.25*P.sgn:dead&&R.dead.why=='swallow'?yw+.9:yw+Math.PI;let d=want-camYaw;d=Math.atan2(Math.sin(d),Math.cos(d));camYaw+=d*Math.min(1,(intro?.08:.12)+0*(R.v));
+    // when the snake is close the camera rises over its head, so its jaws loom at the bottom of the screen
+    // as the snake closes in, the camera comes in close behind you, staying in front of its head (it bursts into view when it strikes)
+    const gap=R.s-R.sn.s,dh=Math.max(3.8,Math.min(8.8,gap-5.6));camPitch=intro?.16:dead?.45:.34;camDist=intro?22:dead?8:dh/Math.cos(.34)}}catch(_){}
+  try{return f.apply(this,arguments)}finally{if(keep){camPitch=keep[0];camDist=keep[1]}}}}
+// ---------------- the HUD ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#ch153h{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:7;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px;color:#f0ead2;font:600 12px system-ui,sans-serif;text-shadow:0 1px 2px #000}
+#ch153h.hide{display:none}#ch153h .hp{display:flex;gap:6px;font-size:22px;filter:drop-shadow(0 1px 2px #000)}#ch153h .hp span.off{opacity:.22;filter:grayscale(1)}
+#ch153h .gap{position:relative;width:300px;height:12px;border-radius:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,220,140,.4);overflow:hidden}
+#ch153h .gap i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ff3a20,#ffb040 55%,#6adf60);transition:width .15s}
+#ch153h .gap b{position:absolute;top:-6px;font-size:18px;line-height:1}#ch153h .gap b.sn{left:-2px}#ch153h .k{font-size:11px;color:#d8d0b0}
+#ch153h .warn{font:800 15px Cinzel,Georgia,serif;letter-spacing:.12em;color:#ff5a3a;opacity:0;transition:opacity .1s}
+#ch153v{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;box-shadow:inset 0 -120px 160px -40px rgba(255,30,10,.75)}
+#ch153g{position:fixed;right:14px;top:92px;z-index:7;pointer-events:auto;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,220,140,.35);background:rgba(10,8,6,.7);color:#e8e0c8;font:600 12px system-ui,sans-serif;cursor:pointer}
+#ch153g.hide{display:none}#mbtn button.ch153j{font-size:20px}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='ch153h';d.className='hide';d.innerHTML='<div class="hp"></div><div class="gap"><i></i><b class="sn">🐍</b></div><div class="k">Space · jump &nbsp; A / D · steer</div><div class="warn">⚠ STRIKE — swerve!</div>';document.body.appendChild(d);
+  const v=document.createElement('div');v.id='ch153v';document.body.appendChild(v);
+  const g=document.createElement('button');g.id='ch153g';g.className='hide';g.textContent='🏳 Ride back down';g.addEventListener('click',()=>{if(ch153Run())ch153Leave()});document.body.appendChild(g)})();
+function ch153Hud(){const el=$('ch153h');const on=ch153Run()&&!(typeof uiOpen=='function'&&uiOpen());el.classList.toggle('hide',!on);$('ch153g').classList.toggle('hide',!on);$('ch153v').style.opacity=0;
+  try{const mb=$('mbtn');if(on&&mb&&!CH153.btn){const b=document.createElement('button');b.className='ch153j';b.textContent='🦘';b.title='Jump';mb.appendChild(b);CH153.btn=b;b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();CH153.jumpQ=.18})}
+    if(CH153.btn)CH153.btn.style.display=on?'':'none'}catch(_){}
+  if(!on)return;const R=CH153.R,gap=Math.max(0,R.s-R.sn.s);el.querySelector('.hp').innerHTML=[0,1,2].map(i=>'<span class="'+(i<R.hp?'':'off')+'">💚</span>').join('');
+  el.querySelector('.gap i').style.width=Math.min(100,gap/26*100)+'%';el.querySelector('.warn').style.opacity=R.sn.strike&&R.sn.strike.t<1.05?1:0;
+  $('ch153v').style.opacity=R.ph=='run'?Math.max(0,Math.min(1,(9-gap)/6)):R.ph=='dead'?1:0}
+// ---------------- wiring ----------------
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{
+    if(ch153In()){const S=ch153Build();S.root.visible=true;if(!CH153.R&&!CH153.lv)ch153Reset(true);ch153Tick(dt,now);if(now-(CH153.hT||0)>100){CH153.hT=now;ch153Hud()}}
+    else{CH153.lv=0;if(CH153.S)CH153.S.root.visible=false;if(CH153.R)CH153.R=null;if(!CH153.off){CH153.off=1;try{ch153Hud()}catch(_){}}}
+    if(ch153In())CH153.off=0}catch(e){if(!CH153.err++)console.error('v153 ascent',e)}return r}}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{if(ch153Run()&&CH153.R.dark>.01){const k=1-.72*CH153.R.dark;sun.intensity*=k;hemi.intensity*=k}}catch(_){}return r}}
+SP152.R.ascent={park:1,forceMount:'🐎 Not now — it is right behind you!',noFight:'🐍 No time to fight — ride!',noRecall:'🐍 No time — ride for the summit (or 🏳 ride back down).',
+  onLoad(){CH153.R=null;const G=SP152.gates.ascent;setTimeout(()=>{try{const I=INSL[6];toPos(I.ba[0],I.ba[1])}catch(_){}},0)}};
+// ---------------- the road out of Mistmere ----------------
+sp152Gate('ascent',{ig:6,r:3.6,build:ch153GateModel,
+  prompt(s){if(ch153Done()){const N=INSL[7];return {label:'F · Ride up to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
+    if(!mounts.length)return {label:'🐎 Ascend to the hilltops · you need a mount for the hill path',fn:()=>say('🐎 The hill path is too long and steep on foot. Build the Stable at the Stronghold Steward in Duskhold and buy a mount.')};
+    return {label:'F · Ascend to the hilltops',fn:()=>ch153Enter()}}});
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.ch153={v:153,st:CH153Q.st}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.ch153;CH153Q.st=q&&typeof q=='object'?Math.max(0,Math.min(2,q.st|0)):0;CH153.R=null}catch(e){console.warn('v153 load',e)}return r}}
+// ---------------- the tracker ----------------
+SP152.trk.ascent=I=>{if(I.g===6&&!ch153Done())return {name:'The Hilltop Ascent',lines:[['Find the hill road at the end of '+INSL[6].n],[mounts.length?'Ascend to the hilltops (mounted)':'You will need a mount',null,!mounts.length]]};
+  if(I.sp==='ascent'&&CH153.R){const R=CH153.R,P=CH153.S.P;return {name:'The Hilltop Ascent',lines:[['Reach the crack in the summit'],['Climbed',Math.round(Math.max(0,R.s)/P.S*100)+'%']]}}
+  return null};
+// ---------------- the atmosphere: late sun and wind on the heights ----------------
+sp152Theme('ascent',{nm:'Serpent’s Spine',sub:'A trail up the mountain to the hilltops',a:{fog:.0055,fc:0xc8a888,fcA:.35,sun:1.0,hemi:.85,ex:1.0,sat:1.1,vig:1.35,sky:1,pt:'gust',pc:0xffffff,po:.45}});
+// ---------------- the terrain's snow line ----------------
+// The ground shader (0060) paints snow on flat ground above ~10–14 (the zones never climb higher). The trail climbs to ~90, so
+// inside the ascent's rectangle the snow line is raised by CH153SN.up: only the summit keeps a dusting.
+var CH153SN={r:{value:new THREE.Vector4()},up:{value:66}};
+try{const I=sp152I('ascent');CH153SN.r.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);
+  GTX.list.forEach(T=>{const m=T.mat;if(!m)return;const ob=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);
+      if(sh.fragmentShader.indexOf('float sn=smoothstep(9.5,14.,yc')<0)return;sh.uniforms.uSnR=CH153SN.r;sh.uniforms.uSnU=CH153SN.up;
+      sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec4 uSnR;uniform float uSnU;\nvoid main() {')
+        .replace('float sn=smoothstep(9.5,14.,yc','float inA=step(uSnR.x,vWP.x)*step(vWP.x,uSnR.z)*step(uSnR.y,vWP.z)*step(vWP.z,uSnR.w),sLo=9.5+inA*uSnU;float sn=smoothstep(sLo,sLo+4.5,yc')};
+    const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'sn153';m.needsUpdate=true})}catch(e){console.warn('v153 snow line',e)}
 </script></body></html>

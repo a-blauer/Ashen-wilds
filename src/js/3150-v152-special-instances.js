@@ -19,7 +19,7 @@ function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
   {key:'abeksi',g:30,z:1,k:0,x0:116,y0:1452,w:150,h:200,n:'Abeksi',rn:'Abeksi',lv:[11,11],
     bio:{n:'Abeksi',sp:'Foxlet',x:0,y:0,t:2,gnd:[96,84,66],grs:[70,84,54],acc:[104,98,90],frs:[40,34,28],wat:[40,70,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x3a2a20,0x3a4a2a,0x4a5a34],amp:.1}},
   {key:'ascent',g:31,z:1,k:1,x0:280,y0:1452,w:420,h:380,n:'The Hilltop Ascent',rn:'Ascent',lv:[14,14],
-    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[122,112,92],grs:[118,124,70],acc:[136,128,112],frs:[50,62,42],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
+    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
 // 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
 function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
     const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
