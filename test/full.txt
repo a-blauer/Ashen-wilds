@@ -49,7 +49,7 @@ v137_items.py
 v138_abil_balance.py
 v139_checks.py
 v140_creator.py
-SEC=30 v141_sov.py
+SEC=60 v141_sov.py
 v143_lantern_road.py
 v144_glowmire.py
 v145_sigils.py
