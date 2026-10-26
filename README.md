@@ -308,6 +308,14 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   wings are the forelimbs; the front-leg bones stay unused). *Hatchet*: the edge keeps the side that leads the down-swing all
   through the chop (it flipped round during the wind-up). Tests: `v150_checks.py`, `v150_coop.py` and `v150_ritual.py` (two
   windows over the fake room; run directly, they start `mpt.py` themselves).
+- **Version 150 companions**: the higher tiers that reused a lower species' body in another colour now have their own bodies on
+  the same skeletons (RV137 rig variants, each with its own evolution looks and trait anchors; enemies and mounts on these rigs
+  keep the base bodies): `3110` Direfang (sabre-toothed dire wolf), Skollmaw (long-jawed eclipse wolf), Emberlynx (lynx);
+  `3120` Pyrewing (lava-cracked fire wyvern), Elderdrake (ancient armoured dragon, club tail), Stormtalon (storm eagle with a
+  lightning crest), Rocsovereign (crowned golden roc); `3130` Cragback (bladed crag tortoise), Titanshell (titan turtle carrying a
+  ruined fortress), Bogmaw (angler-lured swamp maw toad); `3140` Widowqueen (crowned black widow), Hivemother (brood-mother with a
+  swollen egg sac and spiderlings), Lichbone (robed, crowned lich hound with a phylactery and soul-fire). Pictures:
+  `v137_creature.py` with `LIST=C:<species>:<evo>`.
 - **Version 149 (owner's request, Oct 25 2026): Ssith'ra's body is one creature.** The owner: "he clips into himself and the
   segments of his body do not seem like one whole creature". The v112 layout followed the path the head had taken, so turning
   around, circling the hero or the burrow chain folded the body through itself and the head (up to 1.1 deep; the neck bent 180°),
