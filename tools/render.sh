@@ -3,14 +3,19 @@
 # Owner's request (Oct 26 2026): render on GitHub, and only draw again what changed.
 #   tools/render.sh 13.5-35 84-103.2 115.8-end   # time ranges in seconds that changed ("end" = the end of the video)
 #   tools/render.sh all                          # everything (first render, or a change that shows in every frame)
+#   tools/render.sh --resume                     # wait for the newest render already started and download it
 # Commit first: only committed work is rendered. The video is drawn in 5 s pieces at the same time; a range redraws every
 # piece it touches, the rest come from the last render (Actions cache). Pieces the cache doesn't have (first run, unused
 # for 7 days, a longer video) are drawn too. A change that moves later shots in time (a longer walk, say) changes every
 # frame after it: give the range to the end. Output: test/out/intro.mp4 (with sound).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-[ $# -ge 1 ] || { sed -n 2,9p "$0"; exit 2; }
+[ $# -ge 1 ] || { sed -n 2,10p "$0"; exit 2; }
 [ -z "$(git status --porcelain -- src test build.sh .github tools)" ] || echo "note: uncommitted changes are NOT rendered"
+if [ "$1" = --resume ]; then
+  c=$(gh run list -b render/intro -L 1 --json headSha --jq '.[0].headSha // empty'); [ -n "$c" ] || { echo 'no render run to resume'; exit 1; }
+  echo "waiting for the newest render (${c:0:9}) ..."
+else
 req=$(python3 - "$@" <<'P'
 import sys, json
 a = sys.argv[1:]
@@ -21,19 +26,20 @@ for x in a:
 print(json.dumps({'ranges': R}))
 P
 )
-# a commit on top of HEAD that only adds .render-request (the workflow reads it); HEAD itself is not changed
-blob=$(printf '%s\n' "$req" | git hash-object -w --stdin)
-ix=$(mktemp); rm -f "$ix"
-GIT_INDEX_FILE=$ix git read-tree HEAD
-GIT_INDEX_FILE=$ix git update-index --add --cacheinfo "100644,$blob,.render-request"
-tree=$(GIT_INDEX_FILE=$ix git write-tree); rm -f "$ix"
-c=$(git commit-tree "$tree" -p HEAD -m "render request: $*")
-git fetch -q origin main || true
-git push -q -f origin "$c:refs/heads/render/intro"
-echo "rendering ($req) of $(git rev-parse --short HEAD) ..."
+  # a commit on top of HEAD that only adds .render-request (the workflow reads it); HEAD itself is not changed
+  blob=$(printf '%s\n' "$req" | git hash-object -w --stdin)
+  ix=$(mktemp); rm -f "$ix"
+  GIT_INDEX_FILE=$ix git read-tree HEAD
+  GIT_INDEX_FILE=$ix git update-index --add --cacheinfo "100644,$blob,.render-request"
+  tree=$(GIT_INDEX_FILE=$ix git write-tree); rm -f "$ix"
+  c=$(git commit-tree "$tree" -p HEAD -m "render request: $*")
+  git fetch -q origin main || true
+  git push -q -f origin "$c:refs/heads/render/intro"
+  echo "rendering ($req) of $(git rev-parse --short HEAD) ..."
+fi
 id=
 for i in $(seq 60); do
-  id=$(gh run list -w render.yml -b render/intro -e push -L 5 --json databaseId,headSha --jq "[.[]|select(.headSha==\"$c\")][0].databaseId // empty")
+  id=$(gh run list -b render/intro -L 10 --json databaseId,headSha,workflowName --jq "[.[]|select(.headSha==\"$c\" and .workflowName==\"Render intro\")][0].databaseId // empty" || true)
   [ -n "$id" ] && break; sleep 5
 done
 [ -n "$id" ] || { echo "no render run started for $c"; exit 1; }
