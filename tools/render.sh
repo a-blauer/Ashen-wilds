@@ -55,8 +55,8 @@ echo "$jobs" | awk -F'\t' '$2=="failure"{print "  FAILED job: "$3}'
 echo "result: $concl (waited $(( ($(date +%s)-t0)/60 )) min)"
 [ "$concl" = success ] || exit 1
 mkdir -p test/out
-git fetch -q origin "+refs/heads/render-out/intro:refs/remotes/origin/render-out/intro"
-git show origin/render-out/intro:intro.mp4 > test/out/intro.mp4
-git push -q origin --delete render-out/intro || true
-git update-ref -d refs/remotes/origin/render-out/intro || true
+# download through a throw-away repo, so the big video never lands in this repo's history
+tmp=$(mktemp -d); git -C "$tmp" init -q; git -C "$tmp" fetch -q --depth=1 "$(git remote get-url origin)" render-out/intro
+git -C "$tmp" show FETCH_HEAD:intro.mp4 > test/out/intro.mp4; rm -rf -- "$tmp"
+git push -q origin --delete render-out/intro 2>/dev/null || true   # may be refused; the next render overwrites it anyway
 ls -la test/out/intro.mp4
