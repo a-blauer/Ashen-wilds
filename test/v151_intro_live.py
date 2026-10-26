@@ -21,7 +21,11 @@ def s(pg):
     pg.screenshot(path=play.TMP+'/v151_live_play.jpg',type='jpeg')
     pg.click('#ic151 .skip');pg.wait_for_timeout(500)
     st=ev("()=>({t:(performance.now()-IC151.live.t0)/1000+IC151.live.off})");chk('skip jumps to the light',st['t']>=54.9,st)
-    pg.wait_for_timeout(5600)
+    # the town part and the hand-back take a few seconds after the skip (more on a slow machine): wait for it, up to 30 s
+    for _ in range(60):
+        pg.wait_for_timeout(500)
+        if not ev("()=>IC151.run"):break
+    pg.wait_for_timeout(1200)
     st=ev("()=>({run:IC151.run,on:IC151.on,el:!!document.getElementById('ic151'),filt:ren.domElement.style.filter,ban:document.getElementById('banner')&&document.getElementById('banner').textContent})");print(st)
     chk('cleaned up and the game runs',not st['run'] and not st['on'] and not st['el'] and not st['filt'],st)
     chk('welcome banner shown after the intro','Welcome' in (st['ban'] or ''),st['ban'])
