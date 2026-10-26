@@ -103,6 +103,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
       - uses: actions/cache/restore@v4
         with: {path: segs, key: intro-segs-none, restore-keys: intro-segs-}
       - uses: actions/download-artifact@v4
@@ -113,7 +115,7 @@ jobs:
         id: j
         env: {N: '${{ needs.plan.outputs.n }}', NSEG: '${{ needs.plan.outputs.nseg }}'}
         run: |
-          command -v ffprobe >/dev/null || (timeout 10m sudo apt-get update -q && timeout 10m sudo apt-get install -yq ffmpeg)
+          pip install -q imageio-ffmpeg && mkdir -p ~/bin && ln -sf "$(python3 -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" ~/bin/ffmpeg && export PATH=$HOME/bin:$PATH
           python3 tools/render_join.py > join.txt 2>&1 || true; cat join.txt; msg=$(tail -1 join.txt)
           if [ -s out/intro.mp4 ]; then echo "ok=1" >> "$GITHUB_OUTPUT"; echo "::notice title=Render::$msg; drew pieces ${{ needs.plan.outputs.segs }}"
           else echo "::error title=Render::$msg"; fi

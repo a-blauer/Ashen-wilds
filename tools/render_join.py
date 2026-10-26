@@ -14,9 +14,10 @@ miss = [i for i in range(nseg) if i not in have]
 if miss: print('pieces missing: %s (kept the other %d for the next render)' % (miss, len(have))); sys.exit(1)
 with open('list.txt', 'w') as f:
     for i in range(nseg): f.write("file 'segs/s%03d.mp4'\n" % i)
-def dur(p):
-    return float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', p],
-                                capture_output=True, text=True).stdout.strip() or 0)
+def dur(p):   # seconds, read from ffmpeg's own report (no ffprobe needed)
+    import re
+    m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', subprocess.run(['ffmpeg', '-i', p], capture_output=True, text=True).stderr)
+    return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3)) if m else 0.0
 ok = subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', 'video.mp4']).returncode == 0
 if not ok or abs(dur('video.mp4') - n / fps) > .5:   # pieces from different encoder versions: encode the whole video again
     print('join: re-encoding the joined video', flush=True)
