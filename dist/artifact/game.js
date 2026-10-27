@@ -47147,6 +47147,10 @@ function ab157Alarm(){if(AB157A.on||!ab152In()||!AB152.S)return;const H=AB152H;A
   try{ab158Bell(3);ab157Horn(true);flash('rgba(255,40,20,.55)');shake(.3)}catch(_){}
   try{zt116Show(ZT116.Z[1],'Abeksi','The Bell Tolls!','The serpents nearby are hunting you through the streets','Fight your way to the city gate · or flee through the drain','z1')}catch(_){}
   say('🔔 <b>The alarm bell tolls!</b> The Abeksi nearby are coming for you. Fight your way to the <b>city gate</b> — or flee through the drain.')}
+// v158: a few seconds' grace after the city calms (a restart at the checkpoint): nobody can be caught yet. In co-op the partner who died
+// still lies where they fell (often in a guard's view) until they rise, and the host's snakes look at every hero: without the grace that
+// body rang the bell again the moment the city had calmed.
+{const f=ab152Caught;ab152Caught=function(a){if(AB157A.calmT&&performance.now()-AB157A.calmT<AB158.grace*1000)return;return f.apply(this,arguments)}}
 // what being seen leads to now: a moment of "!" (3155's hiss and flash), then the alarm
 ab152AfterCaught=function(a){say('👁 <b>Spotted!</b>');setTimeout(()=>{try{if(ab152In()&&AB152.S)ab157Alarm()}catch(e){console.error('v157 alarm',e)}},900)};
 // the city calm again: the fighting residents leave the field, every resident is back at their post (restore: the dead rise too)
@@ -47170,7 +47174,7 @@ function ab157Rouse(a){const S=AB152.S,I=S.I,lv=(INSL[30]&&INSL[30].lv)||I.lv||[
   if(a.hpK!=null&&a.hpK<1){const c=e.c;c.h=Math.max(1,Math.round(M(c)*a.hpK))}a.hpK=null;a.hunt=0;
   a.e=e;a.st='look';return e}
 // ---------------- v158: the bell and the hunt ----------------
-var AB158={bell:{r:44,n:16,re:24,rn:5},eng:7,drop:14,hold:4,spd:{g:4.4,c:3.7},fl:null,flT:0};
+var AB158={bell:{r:44,n:16,re:24,rn:5},eng:7,drop:14,hold:4,grace:4,spd:{g:4.4,c:3.7},fl:null,flT:0};
 // a heavy bronze bell: inharmonic partials with long decays, and the clang of the strike
 function ab158Bell(n){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
   try{for(let i=0;i<n;i++){const t=t0+i*2.1,f0=104;
