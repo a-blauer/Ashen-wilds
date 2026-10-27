@@ -81,3 +81,5 @@ v153_ascent.py
 v154_hydra.py
 v155_coop_levels.py
 v157_cam.py
+v158_keys.py
+v158_mobile_shot.py
