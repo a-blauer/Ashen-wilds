@@ -26,7 +26,7 @@ def until(pg,js,ms=12000):
         if pg.evaluate(js):return True
         (A if k%2==0 else B).bring_to_front();A.wait_for_timeout(700);t+=700;k+=1
     return bool(pg.evaluate(js))
-for pg in (A,B):pg.evaluate("()=>{INSR[2]=0;hero.lv=Math.max(hero.lv,24);window.__hp=setInterval(()=>{hero.hp=heroMax();if(typeof RV148!='undefined')RV148.down=0},100)}")
+for pg in (A,B):pg.evaluate("()=>{INSR[2]=0;hero.lv=Math.max(hero.lv,24);window.__hp=setInterval(()=>{hero.hp=heroMax();hero.iv=1e9;if(typeof RV148!='undefined')RV148.down=0},100)}")
 
 # ---------------- 1 The Frozen Maw ----------------
 for pg in (A,B):pg.evaluate("()=>mq151Enter()")
@@ -82,6 +82,8 @@ G.evaluate("()=>{MQ160.gk[1]=1;MQ160.gk[2]=1;mq160Take(1);mq160Take(2);mq160Asse
 both(3000,800)
 chk('the guest assembles: the host has it too',H.evaluate("()=>MQ160.st")==2 and G.evaluate("()=>MQ160.st")==2,json.dumps([H.evaluate("()=>[MQ160.st,MQ160.p.join('')]"),G.evaluate("()=>[MQ160.st,MQ160.p.join('')]")]))
 G.evaluate("()=>mq160Start()")
+until(H,"()=>!!MQ160.E")
+H.evaluate("()=>{if(MQ160.E)MQ160.E.spT=99}")
 both(3000,800)
 r=[pg.evaluate("()=>!!MQ160.E") for pg in (H,G)]
 chk('the guest starts the melt: it runs for both',r[0] and r[1],json.dumps(r))
