@@ -1,4 +1,4 @@
-# v143: The Lantern Road (Kindlelight I main quest; v151: the outpost by the entrance, ~47 lamps along the whole road at 1 bulb, the entrance camp moved; v158: 34 lamps along the smoothed lantern line): the outpost plan, decorations and roaming creatures kept clear, the scene
+# v143: The Lantern Road (Kindlelight I main quest; v151: the outpost by the entrance, ~47 lamps along the whole road at 1 bulb, the entrance camp moved; v159: 34 lamps along the smoothed lantern line): the outpost plan, decorations and roaming creatures kept clear, the scene
 # (lampposts, Ripper, wardens), glowbulb drops (only in Kindlelight I, only while needed), pickup, the bag, lighting lampposts,
 # prompts (captain, lamppost, the dormant gateway), the captain's window, the roll and the fire-up to done, saves (round trip,
 # mid-roll, old saves without the field, saves that already reached II), the tracker. NOSHOT=1 skips the pictures.
@@ -18,7 +18,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),tick=(se
   // v151: the outpost near the entrance, no camp on it, lamps along the whole road a little further apart
   out.entD=Math.hypot(R.C[0]-I.en[0],R.C[1]-I.en[1]);out.campNear=CAMPS.filter(C=>C.ig===0&&Math.hypot(C.x-R.C[0],C.z-R.C[1])<30).length;out.camps0=CAMPS.filter(C=>C.ig===0).length;
   out.lampSpan=R.lamps.length?R.lamps[R.lamps.length-1].i-R.lamps[0].i:0;out.lampStep=R.lamps.length>1?out.lampSpan/(R.lamps.length-1):0;out.roadN=I.path.length;out.lineLen=R.lineLen;
-  // v158: the lantern line: no two lamps crowd each other, the route has no switchbacks and is shorter than the raw road
+  // v159: the lantern line: no two lamps crowd each other, the route has no switchbacks and is shorter than the raw road
   {let m=1e9;R.lamps.forEach((a,i)=>R.lamps.forEach((b,j)=>{if(i<j)m=Math.min(m,Math.hypot(a.x-b.x,a.z-b.z))}));out.lampMin=m;
    const rt=R.route;let sh=0,len=0;for(let i=1;i<rt.length;i++)len+=Math.hypot(rt[i][0]-rt[i-1][0],rt[i][1]-rt[i-1][1]);
    for(let i=3;i<rt.length-6;i+=1){const a=rt[i-3],b=rt[i],c=rt[i+3];const u=Math.atan2(b[1]-a[1],b[0]-a[0]),v=Math.atan2(c[1]-b[1],c[0]-b[0]);let d=Math.abs(v-u);if(d>Math.PI)d=2*Math.PI-d;if(d>Math.PI/3)sh++}
@@ -59,9 +59,9 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),tick=(se
   out.needDone=mq143Need();
   // v151: a save from the 8-lamp road gets 3 bulbs back for each lamp it had lit and starts the new road dark
   const pre=JSON.parse(JSON.stringify(s1));pre.mq143={v:143,st:1,b:2,lit:[1,1,0,0,0,0,0,0],seen:1};x2Load(pre);out.preB=MQ143.b;out.preLit=mq143Lit();out.preSt=MQ143.st;
-  // v158: a save from the ~47-lamp road gets one bulb back for each lamp it had lit and starts the lantern line dark
+  // v159: a save from the ~47-lamp road gets one bulb back for each lamp it had lit and starts the lantern line dark
   const p151=JSON.parse(JSON.stringify(s1));p151.mq143={v:151,st:1,b:4,lit:new Array(47).fill(0).map((_,i)=>i<5?1:0),seen:1};x2Load(p151);out.p151B=MQ143.b;out.p151Lit=mq143Lit();out.p151St=MQ143.st;
-  const p158=JSON.parse(JSON.stringify(s1));p158.mq143={v:158,st:1,b:2,lit:new Array(mq143N()).fill(0).map((_,i)=>i<3?1:0),seen:1};x2Load(p158);out.p158B=MQ143.b;out.p158Lit=mq143Lit();
+  const p159=JSON.parse(JSON.stringify(s1));p159.mq143={v:159,st:1,b:2,lit:new Array(mq143N()).fill(0).map((_,i)=>i<3?1:0),seen:1};x2Load(p159);out.p159B=MQ143.b;out.p159Lit=mq143Lit();
   // a save made mid-roll loads as done; an old save without the field starts at 0 (II not reached) or done (II reached)
   x2Load(s2);out.midLoad=MQ143.st;
   const old=JSON.parse(JSON.stringify(s2));delete old.mq143;old.insr=[0,0,0,0,0,0];x2Load(old);out.oldSt=MQ143.st;out.oldDone=mq143Done();
@@ -100,7 +100,7 @@ def s(pg):
     exp(r['midSave']==2 and r['midLoad']==3,'a mid-roll save loads as done')
     exp(r['preB']==8 and r['preLit']==0 and r['preSt']==1,'an 8-lamp save gets its bulbs back and starts the new road dark (b %s, lit %s)'%(r['preB'],r['preLit']))
     exp(r['p151B']==9 and r['p151Lit']==0 and r['p151St']==1,'a ~47-lamp save gets a bulb back per lit lamp and starts the lantern line dark (b %s, lit %s)'%(r['p151B'],r['p151Lit']))
-    exp(r['p158B']==2 and r['p158Lit']==3,'a v158 save keeps its lit lamps (b %s, lit %s)'%(r['p158B'],r['p158Lit']))
+    exp(r['p159B']==2 and r['p159Lit']==3,'a v159 save keeps its lit lamps (b %s, lit %s)'%(r['p159B'],r['p159Lit']))
     exp(r['oldSt']==0 and not r['oldDone'],'an old save without the field starts the quest fresh');exp(r['oldReached'],'a save that reached II counts the quest as done')
     exp(r['rosterIn']==0,'no roaming creatures in the outpost (%s)'%r['rosterIn'])
     if SHOT:
