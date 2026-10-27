@@ -38,8 +38,14 @@ sj=$(echo "$jobs" | awk -F'\t' '$3=="summary"{print $1}')
 {
   note "$sj" '^Suite ' | head -1
   note "$sj" '^Results$'
-  echo "$jobs" | awk -F'\t' '$2=="failure" && $3!="summary"{print $1"\t"$3}' | while IFS=$'\t' read -r j n; do
-    echo "--- $n"; note "$j" '\.py' | head -10 | cut -c1-300 | sed 's/^/  FAIL /'
+  echo "$jobs" | awk -F'\t' '($2=="failure"||$2=="cancelled") && $3!="summary"{print $1"\t"$3}' | while IFS=$'\t' read -r j n; do
+    echo "--- $n"; f=$(note "$j" '\.py' | head -10 | cut -c1-300 | sed 's/^/  FAIL /')
+    if [ -n "$f" ]; then echo "$f"
+    else   # no test output: the job stopped before or around the test (e.g. a setup step hung until the job's time limit)
+      st=$(gh api "repos/$repo/actions/jobs/$j" --jq '[.steps[]|select(.conclusion=="failure" or .conclusion=="cancelled")|.name]|join(", ")' 2>/dev/null || true)
+      echo "  (no test output; step that failed or was stopped: ${st:-unknown})"
+      gh api "repos/$repo/check-runs/$j/annotations" --jq '.[]|select(.annotation_level=="failure")|.message' 2>/dev/null | head -3 | cut -c1-300 | sed 's/^/  /' || true
+    fi
   done
 } > "$out"
 cat "$out"
