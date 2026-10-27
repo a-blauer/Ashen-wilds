@@ -15,7 +15,7 @@
 //  * Losing: swallowed or out of hits → a short scene, then the chase starts again at the foot of the trail.
 //  * Inside: companions wait, you stay mounted, no fighting, no recall (a 🏳 button gives up and rides back down to Mistmere).
 var CH153Q={st:0};
-var CH153V={spd:8.2,lat:6.6,stumT:.9,stumV:2.3,inv:1.3,jumpT:.74,jumpH:2.05,hp:3,gap0:16,band:[11,.14,-1.0,2.6],slow0:6.4,catch:2.6,strike:[22,15,9]};
+var CH153V={hole:1,spd:8.2,lat:6.6,stumT:.9,stumV:2.3,inv:1.3,jumpT:.74,jumpH:2.05,hp:3,gap0:16,band:[11,.14,-1.0,2.6],slow0:6.4,catch:2.6,strike:[22,15,9]};
 var CH153={S:null,R:null,err:0,jumpQ:0,btn:null};
 function ch153Done(){return CH153Q.st>=2||insReach(1)>=2}
 function ch153In(){return sp152Here('ascent')}
@@ -44,8 +44,8 @@ function ch153Build(){if(CH153.S)return CH153.S;const P=ch153Path(),K=ch153Cours
   return S}
 // ---------------- the run ----------------
 function ch153Reset(first){const S=ch153Build(),P=S.P,K=S.K;
-  CH153.R={s:K.start,o:0,v:0,y:0,jt:-1,hp:CH153V.hp,inv:0,stum:0,ph:'intro',t:first?0:1.4,vT:0,slide:0,
-    sn:{s:-21,v:0,o:0,lift:0,rear:0,jaw:.2,st:'intro',t:0,spit:0,strike:null,next:0,eye:1},hit:0,dead:null,win:null,fx:0,warned:{}};
+  CH153.R={s:K.start,o:0,v:0,y:0,jt:-1,hp:CH153V.hp,inv:0,stum:0,ph:'intro',t:first?0:1.1,t0:first?0:1.1,vT:0,slide:0,
+    sn:{s:CH153V.hole,v:0,o:0,lift:0,rear:0,jaw:.2,st:'intro',t:0,spit:0,strike:null,next:0,eye:1,em:0,drop:0},hit:0,dead:null,win:null,fx:0,warned:{}};
   S.globs.forEach(g=>{root(g.m);root(g.w)});S.globs.length=0;S.pools.forEach(p=>root(p.m));S.pools.length=0;S.slides.forEach(b=>root(b.m));S.slides.length=0;
   S.planks.forEach(q=>{q.f=0;q.vy=0;q.m.visible=true;const [x,z,h]=P.at(q.s,0);q.m.position.set(x,h-.05,z);q.m.rotation.set(0,P.yaw(q.s),0)});
   K.slides.forEach(q=>q.done=0);
@@ -67,7 +67,11 @@ function ch153Die(why){const R=CH153.R;if(R.ph!='run')return;R.ph='dead';R.dead=
 function ch153Win(){const R=CH153.R;if(R.ph!='run')return;R.ph='win';R.win={t:0};try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Through!','Skarrith slams into the rock behind you','The Galecliffs lie beyond','z1');svSnd('roar',1.2,.75)}catch(_){}}
 // the snake: speed, venom, strikes, and laying the model
 function ch153SnakeTick(dt,now){const S=CH153.S,P=S.P,K=S.K,R=CH153.R,N=R.sn,gap=R.s-N.s;
-  if(R.ph=='intro'){N.st='intro';N.t+=dt;const k=Math.min(1,Math.max(0,(R.t-.6)/1.9));N.s=-21+9*k*k;N.rear=1.2*(1-k);if(R.t>2.4&&!N.slam){N.slam=1;try{shake(.55);svSnd('heavy',1.3,.7);svSnd('roar',1.2,.85);const [x,z,h]=P.at(0,0);burst(new THREE.Vector3(x,h+.5,z),0x9a8a6a,40,3,2.6,1.4)}catch(_){}}}
+  // v157: it bursts out of the ground on the trail behind you (CH153V.hole), towers over you, then drops onto the trail
+  // (N.em: risen 0..1 from ch153EmT, N.drop: lowered 0..1; the debris, cracks, roar and the camera are 3192's)
+  if(R.ph=='intro'){N.st='intro';N.t+=dt;const te=R.t-ch153EmT(R);N.s=CH153V.hole;N.o=0;N.v=0;N.rear=0;
+    N.em=te<0?0:Math.min(1,te/.55);N.drop=Math.max(0,Math.min(1,(R.t-2.35)/.6));
+    if(R.t>2.8&&!N.slam){N.slam=1;try{shake(.35);svSnd('heavy',1.1,.8);const [x,z,h]=ch153Ext(P,CH153V.hole+2.5,0);burst(new THREE.Vector3(x,h+.5,z),0x9a8a6a,30,3,2.2,1.2)}catch(_){}}}
   else if(R.ph=='run'){const B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
     if(gap<CH153V.catch){ch153Die('swallow');return}
     // venom: the current phase sets how often and how many
@@ -82,8 +86,14 @@ function ch153SnakeTick(dt,now){const S=CH153.S,P=S.P,K=S.K,R=CH153.R,N=R.sn,gap
   else if(R.ph=='win'){N.s=Math.min(N.s+N.v*dt,P.S-13);N.v*=.9}
   N.rear=Math.max(0,N.rear-dt*1.6);N.o+=((R.ph=='run'?R.o*.5:0)-N.o)*Math.min(1,dt*1.5);
   ch153SnakeAnim(now)}
-function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now/1000;
-  const slope=(s,o)=>{if(s>=0)return P.at(s,o);const [x0,z0,h0]=P.at(0,0),tx=P.TX[0],tz=P.TZ[0],nx=-tz*P.sgn,nz=tx*P.sgn,d=-s;return [x0-tx*d*.45-nx*d*.85,z0-tz*d*.45-nz*d*.85,h0+d*1.05+2.5*Math.min(1,d/4)]};   // down the mountainside, clear of the slope
+// when Skarrith erupts in the intro (s of R.t): a restart (t starts at 1.4) gets a quicker version
+function ch153EmT(R){return R&&R.t0>0?R.t0+.3:.75}
+// a spot on the trail, or (s < 0) on the ground of the run-off below its foot, straight on along the trail's first heading
+function ch153Ext(P,s,o){if(s>=0)return P.at(s,o);const [x0,z0]=P.at(0,o),d=-s,x=x0-P.TX[0]*d,z=z0-P.TZ[0]*d;return [x,z,GH(x,z)]}
+function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now/1000,HO=CH153V.hole;
+  // v157: before the foot of the trail the body lies on the real ground (it used to float 10–16 above the slope, out of the
+  // intro camera's view: the 'missing' serpent); behind the hole it dives back into the ground it came out of
+  const slope=(s,o)=>ch153Ext(P,s,o);
   // the head: raised, rearing back to spit, lunging on a strike, over you when it swallows
   let hs=N.s,ho=N.o,hy=2.4+N.rear*1.8,jaw=.18+.12*Math.sin(t*3),pitch=.12;
   // a strike comes from the side: the neck swings out over the drop beside you (the wind-up), then the head lunges across the
@@ -95,12 +105,24 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
   if(R.ph=='dead'&&R.dead.why=='swallow'){const k=Math.min(1,R.dead.t/.6);hs=N.s+(R.s-N.s)*k;ho=N.o+(R.o-N.o)*k;hy=2.4-1.0*k;jaw=R.dead.t<.55?1:Math.max(.1,1-(R.dead.t-.55)*3);pitch=.35}
   if(R.ph=='win'&&R.win.t>.5){jaw=.9;hy=1.6;pitch=-.1}
   if(N.rear>.05){jaw=Math.max(jaw,.35+.5*N.rear);pitch=-.25*N.rear}
+  // v157 the emergence: the head shoots up out of the ground (roaring at the sky), towers and sways, glares down at you, then
+  // lowers to its chase height (4.2 = 2.4 + a full rear, which the run starts with)
+  const emg=R.ph=='intro',lx=-P.TZ[0]*P.sgn,lz=P.TX[0]*P.sgn;let em=0;
+  if(emg){em=N.em||0;const d=N.drop||0,eo=1-Math.pow(1-em,3),dd=d*d*(3-2*d),top=-2.5+11.5*eo+.35*Math.sin(t*2.1)*em,k2=Math.max(0,Math.min(1,(R.t-ch153EmT(R)-.55)/.35));
+    hs=HO;ho=.45*Math.sin(t*1.9)*em*(1-dd);hy=top+(4.2-top)*dd;
+    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.75+.18*Math.sin(t*7)}
+  M.head.visible=!(emg&&em<=0);if(emg)M.hood.scale.set(1+.12*em,1,1);
   const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);let ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);if(face){const [fx,fz]=P.at(face[0],face[1]);ya=Math.atan2(fx-hx,fz-hz)}
   M.head.rotation.set(pitch,ya+(face?0:.12*Math.sin(t*1.7)),.06*Math.sin(t*2.3),'YXZ');
-  M.jaw.rotation.x=jaw*.9;M.hood.scale.set(1+.15*N.rear,1,1);
+  M.jaw.rotation.x=jaw*.9;if(!emg)M.hood.scale.set(1+.15*N.rear,1,1);
   // the body along the trail behind it, slithering
-  const pts=[];for(let i=0;i<M.n;i++){const s=N.s-1.9-i*1.32,r=1.55*(1-Math.pow(i/M.n,1.6)*.82),hw=P.hw(Math.max(0,s)),o=Math.max(-hw+.4,Math.min(hw-.4,N.o*Math.max(0,1-i/8)+.95*Math.sin(t*3.1-i*.42)));
-    const [x,z,h]=slope(s,o);let px=x,py=h+r*.82+.12*Math.sin(t*4-i*.6)+(i<3?(hy-1.2)*(1-i/3):0),pz=z;pts.push([px,py,pz,r])}
+  const pts=[],[Hx,Hz,Hh]=slope(HO,0),bx=-P.TX[0],bz=-P.TZ[0];
+  for(let i=0;i<M.n;i++){let r=1.55*(1-Math.pow(i/M.n,1.6)*.82);
+    if(emg){const l=1.9+i*1.32,py=hh+hy-l*.95,sw=Math.sin(l*.45-t*2.4)*.55*em*Math.min(1,l/4)+ho*Math.max(0,1-l/5);if(py<Hh-r*1.3||em<=0)r=0;pts.push([Hx+lx*sw+bx*.15*l*0,py,Hz+lz*sw,r]);continue}   // a coiling column out of the hole
+    const s=N.s-1.9-i*1.32,hw=P.hw(Math.max(0,s)),near=Math.max(0,Math.min(1,(s-HO)/3)),o=Math.max(-hw+.4,Math.min(hw-.4,(N.o*Math.max(0,1-i/8)+.95*Math.sin(t*3.1-i*.42))*(s<HO+3?near:1)));
+    const neck=i<3?(hy-1.2)*(1-i/3):0;
+    if(s<HO){const py=Hh+r*.82-(HO-s)*1.1+neck;if(py<Hh-r*1.3)r=0;pts.push([Hx,py,Hz,r]);continue}   // still coming out of the hole
+    const [x,z,h]=slope(s,o);let px=x,py=h+r*.82+.12*Math.sin(t*4-i*.6)+neck,pz=z;pts.push([px,py,pz,r])}
   ch153SnakeLay(M,pts)}
 // venom: n globs from the mouth to where you will be (leading you), each warned on the ground, each leaving a puddle
 // (v155: split in two so in co-op the lead player plans the volley at a rider and everyone spawns the same globs)
@@ -141,10 +163,11 @@ function ch153FxTick(dt,now){const S=CH153.S,P=S.P,R=CH153.R;
   const sn=R.sn.s;S.planks.forEach(q=>{if(!q.f&&q.s<sn+1.5&&R.ph=='run'){q.f=1;q.vy=0}if(q.f&&q.m.visible){q.vy-=18*dt;q.m.position.y+=q.vy*dt;q.m.rotation.x+=dt*2;q.m.rotation.z+=dt*1.3;if(q.vy<-30)q.m.visible=false}})}
 // ---------------- each frame on the trail ----------------
 function ch153Tick(dt,now){const S=CH153.S,P=S.P,R=CH153.R,K=S.K;if(!R)return;R.t+=dt;
-  if(R.ph=='intro'){R.v=0;if(R.t>3.0){R.ph='run';R.t=0;R.sn.spit=3;R.sn.next=8;try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','RUN!','Skarrith, the Mountain Coil','Space · jump   A / D · steer','z1')}catch(_){}}}
+  if(R.ph=='intro'){R.v=0;if(R.t>3.0){R.ph='run';R.t=0;R.sn.spit=3;R.sn.next=8;R.sn.rear=1;try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','RUN!','Skarrith, the Mountain Coil','Space · jump   A / D · steer   '+(document.body.classList.contains('mob')?'💨':'Shift')+' · boost','z1')}catch(_){}}}
   else if(R.ph=='run'){
     // speed: one for every mount; a crash slows you for a moment
-    const want=R.stum>0?CH153V.stumV:CH153V.spd;R.v+=(want-R.v)*Math.min(1,dt*(want>R.v?2.2:9));R.stum=Math.max(0,R.stum-dt);R.inv=Math.max(0,R.inv-dt);
+    // v157: a boost (Shift / the dash button, 3192) spurs the mount on: ch157Mul gives the speed factor
+    const bm=typeof ch157Mul=='function'?ch157Mul(R):1,want=R.stum>0?CH153V.stumV:CH153V.spd*bm;R.v+=(want-R.v)*Math.min(1,dt*(want>R.v?(bm>1?7:2.2):(R.stum>0?9:2.6)));R.stum=Math.max(0,R.stum-dt);R.inv=Math.max(0,R.inv-dt);
     // steering (A/D, arrows, the stick)
     const st=(K_d()?1:0)-(K_a()?1:0)+(typeof dp!='undefined'?dp[0]:0);R.steer=(R.steer||0)+((st)-(R.steer||0))*Math.min(1,dt*10);
     const hw=P.hw(R.s);R.o=Math.max(-hw+.55,Math.min(hw-.55,R.o+R.steer*P.sgn*CH153V.lat*dt*(R.stum>0?.5:1)));   // +o is the screen's right when P.sgn is 1
@@ -180,17 +203,23 @@ function ch153Finish(){CH153Q.st=2;CH153.lv=1;fadeTo(()=>{CH153.R=null;const N=I
 // ---------------- input: Space jumps (and nothing else does) ----------------
 addEventListener('keydown',e=>{if(!ch153Run())return;const k=(e.key||'').toLowerCase(),tg=e.target&&e.target.tagName;if(tg=='INPUT'||tg=='TEXTAREA')return;
   if(k==' '){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)CH153.jumpQ=.18}
-  else if(k=='shift'||k=='v'||k=='t'){e.stopImmediatePropagation();e.preventDefault()}},{capture:true});
+  else if(k=='shift'){e.stopImmediatePropagation();e.preventDefault();if(!e.repeat&&typeof ch157Boost=='function')ch157Boost()}   // v157: Shift (the dash key) boosts
+  else if(k=='v'||k=='t'){e.stopImmediatePropagation();e.preventDefault()}},{capture:true});
 {const f=walk;walk=function(o,dx,dz){if(o===pl&&ch153Run())return;return f.apply(this,arguments)}}
-{const f=dodge;dodge=function(){if(ch153Run())return;return f.apply(this,arguments)}}
+{const f=dodge;dodge=function(){if(ch153Run()){if(typeof ch157Boost=='function')ch157Boost();return}return f.apply(this,arguments)}}   // v157: the dash button boosts
 // the mount gallops whatever the keys (it runs on its own) at one pace for everyone
 {const f=mountTick;mountTick=function(dt,now,al){if(ch153Run()&&riding){const R=CH153.R,s0=riding.spd;riding.spd=45;try{return f.call(this,dt,now,R.v>.5?1:0)}finally{riding.spd=s0;if(mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}}return f.apply(this,arguments)}}
-// the camera rides behind along the trail (a look back at the snake during the intro)
+// the camera rides behind along the trail (a look back at the snake during the intro: CH153CAM, v157)
+var CH153CAM={yaw:.38,pitch:.26,dist:13};
 {const f=loop;loop=function(now){let keep=null;try{if(ch153Run()&&CH153.S){const R=CH153.R,P=CH153.S.P,yw=P.yaw(R.s);keep=[camPitch,camDist];
-    const intro=R.ph=='intro'&&R.t<2.7,dead=R.ph=='dead',want=intro?yw-.25*P.sgn:dead&&R.dead.why=='swallow'?yw+.9:yw+Math.PI;let d=want-camYaw;d=Math.atan2(Math.sin(d),Math.cos(d));camYaw+=d*Math.min(1,(intro?.08:.12)+0*(R.v));
+    const intro=R.ph=='intro'&&R.t<2.75,dead=R.ph=='dead',want=intro?yw-CH153CAM.yaw*P.sgn:dead&&R.dead.why=='swallow'?yw+.9:yw+Math.PI;let d=want-camYaw;d=Math.atan2(Math.sin(d),Math.cos(d));camYaw+=d*Math.min(1,(intro?.08:.12)+0*(R.v));
+    // v157: the intro starts with the camera already in front of you, looking back down the trail where Skarrith bursts out
+    if(intro&&!R.camSnap){R.camSnap=1;camYaw=want;camPitch=CH153CAM.pitch;camDist=CH153CAM.dist;snapCam();camK=camPitch;camDD=camDist}
     // when the snake is close the camera rises over its head, so its jaws loom at the bottom of the screen
     // as the snake closes in, the camera comes in close behind you, staying in front of its head (it bursts into view when it strikes)
-    const gap=R.s-R.sn.s,dh=Math.max(3.8,Math.min(8.8,gap-5.6));camPitch=intro?.16:dead?.45:.34;camDist=intro?22:dead?8:dh/Math.cos(.34)}}catch(_){}
+    // v157: closer than ~10 tiles the camera climbs over its head (the following camera lags ~2 tiles behind, so at a short
+    // distance it used to sit inside Skarrith's head)
+    const gap=R.s-R.sn.s,dh=Math.max(3.8,Math.min(8.8,gap-5.6)),near=R.ph=='run'?Math.max(0,Math.min(1,(10-gap)/6)):0;camPitch=intro?CH153CAM.pitch:dead?.45:Math.min(.95,.34+.75*near);camDist=intro?CH153CAM.dist:dead?8:dh/Math.cos(.34)}}catch(_){}
   try{return f.apply(this,arguments)}finally{if(keep){camPitch=keep[0];camDist=keep[1]}}}}
 // ---------------- the HUD ----------------
 (function(){const st=document.createElement('style');st.textContent=`
