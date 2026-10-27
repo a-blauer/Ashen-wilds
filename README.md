@@ -676,6 +676,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     (`ab157FluteTick`, `AB157V.flR`); coloured smoke `ab157FxTick` (two shared particle objects). *Torches*: flames used to flicker by stretching
     from the ground, so they floated above tall torches; `ab157Pivot` scales each flame from its own base, and `ab157FixLights` turns the six
     torches/lanterns standing inside Dwellings walls into wall sconces (`ab157Sconce`). Pictures `v157_look.py`.
+  * **The alarm bell and the hunt (v158, `3193`; owner: "players don't have to kill every single abeksi - they can just fight their way to
+    the gate if seen ... a substantial amount of abeksi in the immediate area actively look for you and attack")**: the alarm is a bell
+    (`ab158Bell`: three tolls, bronze partials, over the drums of `ab157Horn(true)`). It calls up to `AB158.bell.n` (16) of the nearest
+    residents by street distance (within `AB158.bell.r` 44 steps; roof folk excluded) to hunt: `ab158Flow` is a breadth-first flow field
+    from the heroes over the city grid (`ab158Ok`: not `G.sol`, `G.cls`<2), rebuilt every 0.35 s; `ab158Step` runs a hunter down it
+    (guards `AB158.spd.g` 4.4, townsfolk 3.7 tiles/s; every client moves them, the host's `rs` states mark them `3`). Within `AB158.eng`
+    (7) steps a hunter, or any standing resident, becomes one of the game's enemies (`ab157Rouse`, nearest first, up to `AB157K.cap` 10
+    fighting); with the fight full the others wait in a ring `AB158.hold` (4) steps out. A fighter cut off more than `AB158.drop` (14)
+    steps away by walls goes back to the streets as a hunter, keeping its wounds (`a.hpK`). Every `AB158.bell.re` (24) s the bell tolls
+    again and calls `AB158.bell.rn` (5) more. The city gate is open as soon as the bell rings ("F · Escape through the city gate"):
+    killing everyone is no longer needed. Banner `#ab157al` and tracker: "Hunting you" (`AB157A.hunt`). Test `v157_abeksi_alarm.py`.
   * **Assassinate and the city alarm (v157, `3193`)**: "F · Assassinate" (`ab157Target`) within `AB157K.r` (1.6) behind a calm Abeksi
     (inside `AB157K.back`, not on a roof), red ring on the target; `ab157Assassinate` lunges, the snake falls and its body stays.
     `ab157Witness`: a snake that sees the kill (or a nearby townsperson facing it) = caught; `ab157Bodies`: a calm guard who finds a body goes
@@ -684,7 +695,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     hostile: `ab157Rouse` turns them into nagaw/nagaa/nagas enemies (`e.ab157`) nearest first, up to `AB157K.cap` (8) within `AB157K.act`
     (24) tiles of a hero, at city levels; townsfolk ×`AB157K.civ` (55% HP, 60% damage, cleavers); XP / loot rate ×`AB157K.xp` / `.loot`
     (guards 0.6 / 45%, townsfolk 0.3 / 15%, on top of ECON96/PACE). `AB157A.left` feeds the tracker and the `#ab157al` banner. The gate
-    (`AB157K.gate`) is barred while any resident stands; then F leaves like the drain (`ab152Finish('gate')`); the drain works during the
+    (`AB157K.gate`) was barred while any resident stood (v158: open as soon as the bell rings); F leaves like the drain (`ab152Finish('gate')`); the drain works during the
     alarm too. Death during the alarm: `ab157Rise` → `ab152Restart` + `ab157Calm(true)` (calm at the last checkpoint, everyone alive).
     Co-op: the host spawns the hostile residents; `['ab','x',i,u,v,hu,hv]` knife kill (the host checks witnesses), `['ab','d',i,u,v]` a
     resident fell, `['ab','rs',states]` resident states every 0.6 s, `['ab','calm']`, `['ab','out',gate]`. Test `v157_abeksi_alarm.py`.
