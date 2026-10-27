@@ -12,14 +12,16 @@ FIND=r"""(gk)=>{try{const I=INSL[gk];const P0=[];const step=.55;
   for(let i=0;i<pts.length;i+=2){const p=pts[i];if(!p||!ok(p[0],p[1]))continue;
     for(let a=0;a<32;a++){const yw=a/32*Math.PI*2,w=wall(p[0],p[1],yw,9);if(w>2.5&&w<6){const sc=Math.abs(w-4);if(!best||sc<best.sc)best={x:p[0],z:p[1],yw,w,sc}}}}
   return best}catch(e){return {err:String(e.stack).slice(0,300)}}}"""
-SWEEP=r"""async(q)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));toPos(q.x,q.z,q.yw+Math.PI);camYaw=q.yw;camPitch=.3;camDist=9.5;try{snapCam()}catch(_){}
-  await sl(2500);const tilt=()=>{const c=cam.position,P=pl.position,h=Math.hypot(c.x-P.x,c.z-P.z);return Math.atan2(c.y-(P.y+1.1),h)*180/Math.PI};
+SWEEP=r"""async(q)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));if(window.__lf==null){window.__lf=0;const f=loop;loop=function(n){window.__lf++;return f.apply(this,arguments)}}
+  const fr=async(n)=>{const f0=window.__lf,t0=performance.now();while(window.__lf<f0+n&&performance.now()-t0<20000)await sl(15)};   // wait for game frames, not ms: the same on a slow machine (GitHub) as here
+  toPos(q.x,q.z,q.yw+Math.PI);camYaw=q.yw;camPitch=.3;camDist=9.5;try{snapCam()}catch(_){}
+  await fr(90);const tilt=()=>{const c=cam.position,P=pl.position,h=Math.hypot(c.x-P.x,c.z-P.z);return Math.atan2(c.y-(P.y+1.1),h)*180/Math.PI};
   const out={start:+tilt().toFixed(1),max:-99,min:99,jump:0,steps:48};let prev=cam.position.clone().sub(pl.position);const h0=pl.position.clone();out.hero=0;
-  for(let i=1;i<=48;i++){camYaw=q.yw+i/48*Math.PI*2;await sl(180);const t=tilt();out.max=Math.max(out.max,t);out.min=Math.min(out.min,t);
+  for(let i=1;i<=48;i++){camYaw=q.yw+i/48*Math.PI*2;await fr(8);const t=tilt();out.max=Math.max(out.max,t);out.min=Math.min(out.min,t);
     out.hero=Math.max(out.hero,+pl.position.distanceTo(h0).toFixed(2));const rel=cam.position.clone().sub(pl.position),d=rel.distanceTo(prev);prev.copy(rel);
     // the camera is meant to turn round the hero: subtract the arc it should move per step
     const arc=2*Math.PI/48*Math.hypot(cam.position.x-pl.position.x,cam.position.z-pl.position.z);out.jump=Math.max(out.jump,d-arc)}
-  camYaw=q.yw;await sl(2500);out.end=+tilt().toFixed(1);out.max=+out.max.toFixed(1);out.min=+out.min.toFixed(1);out.jump=+out.jump.toFixed(2);return out}"""
+  camYaw=q.yw;await fr(90);out.end=+tilt().toFixed(1);out.max=+out.max.toFixed(1);out.min=+out.min.toFixed(1);out.jump=+out.jump.toFixed(2);return out}"""
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
