@@ -53,7 +53,7 @@ chk('Abeksi: the partner counts the residents left too',ok,json.dumps([p.evaluat
 [p.evaluate("()=>{window.__cw=[];const f=ab152Caught;ab152Caught=function(a){window.__cw.push([Math.round(performance.now()-(AB157A.calmT||0)),a&&a.id,a&&a.cBy,hero.hp,typeof RV148!='undefined'&&RV148.down,AB157A.on]);return f.apply(this,arguments)};const g=ab157Alarm;ab157Alarm=function(){window.__cw.push(['AL',Math.round(performance.now()-(AB157A.calmT||0))]);return g.apply(this,arguments)};return 1}") for p in (H,G)]
 H.evaluate("()=>{hero.hp=1;down();return 1}")   # v158: the host lies downed (waiting for a revive) when the partner dies: the whole party wakes at the checkpoint
 dn0=until("()=>typeof RV148!='undefined'&&!!RV148.down",4000,[H])
-G.evaluate("()=>{hero.hp=1;down();if(typeof RV148!='undefined'&&RV148.down)rv148Die();setTimeout(()=>{try{AWD.ready=1;awRise()}catch(_){}},400);return 1}")
+G.evaluate("()=>{hero.hp=0;down();if(typeof RV148!='undefined'&&RV148.down)rv148Die();setTimeout(()=>{try{AWD.ready=1;awRise()}catch(_){}},400);return 1}")
 ok=until("()=>!AB157A.on&&!AB152H.cau&&!AB152H.frz&&!(typeof AWD!='undefined'&&AWD.dead)",12000)
 d=A.evaluate("()=>{const c=ab152Spot(AB152Q.cp);return Math.hypot(pl.position.x-c.x,pl.position.z-c.z)}"),B.evaluate("()=>{const c=ab152Spot(AB152Q.cp);return Math.hypot(pl.position.x-c.x,pl.position.z-c.z)}")
 dd=[p.evaluate("()=>[AB157A.on,!!AB152H.cau,AB152H.frz,typeof AWD!='undefined'&&AWD.dead,hero.hp,ab157Res().filter(a=>a.hunt).length,enemies.filter(e=>!e.dead&&/^naga/.test(e.c.en)).length]") for p in (H,G)]

@@ -94,8 +94,14 @@ function ab157Alarm(){if(AB157A.on||!ab152In()||!AB152.S)return;const H=AB152H;A
 {const f=ab152Caught;ab152Caught=function(a){if(AB157A.calmT&&performance.now()-AB157A.calmT<AB158.grace*1000)return;return f.apply(this,arguments)}}
 // v158: only heroes on their feet can be seen: not one lying dead or downed (waiting for a revive), mine or a partner's
 function ab158Up(){try{return hero.hp>0&&!(typeof RV148!='undefined'&&RV148.down)&&!(typeof AWD!='undefined'&&AWD.dead)}catch(_){return true}}
+// each hero has AB158.grace s of not being seen from the moment they are back on their feet or were moved far at once (a restart at the
+// checkpoint, a rise): however long the death screen took on that player's machine
+function ab158Fresh(k,u,v,up){const P=AB158.pv||(AB158.pv={}),now=performance.now();let q=P[k];
+  if(!q){q=P[k]={u,v,up,t:-1e9}}if((up&&!q.up)||Math.hypot(u-q.u,v-q.v)>6)q.t=now;q.u=u;q.v=v;q.up=up;return up&&now-q.t>=AB158.grace*1000}
 if(typeof ab155Heroes=='function'){const f=ab155Heroes;ab155Heroes=function(){const L=f.apply(this,arguments);try{const M2=cl155Mates(MP.rg);
-  return L.map(h=>{if(h===AB152H)return ab158Up()?h:Object.assign({},h,{live:false});const r=M2.find(q=>q.peer===h.peer),p=r&&r.pr;return p&&(p.dn||!(p.hp>0))?Object.assign({},h,{live:false}):h})}catch(_){return L}}}
+  if(AB158.pv)for(const k in AB158.pv)if(k!=='me'&&!L.some(h=>h.peer===k))AB158.pv[k].up=false;   // a partner missing from the list (dead) is not standing
+  return L.map(h=>{if(h===AB152H)return ab158Fresh('me',h.u,h.v,ab158Up())?h:Object.assign({},h,{live:false});
+    const r=M2.find(q=>q.peer===h.peer),p=r&&r.pr,up=!(p&&(p.dn||!(p.hp>0)));return ab158Fresh(h.peer,h.u,h.v,up)?h:Object.assign({},h,{live:false})})}catch(_){return L}}}
 // what being seen leads to now: a moment of "!" (3155's hiss and flash), then the alarm
 ab152AfterCaught=function(a){say('👁 <b>Spotted!</b>');setTimeout(()=>{try{if(ab152In()&&AB152.S)ab157Alarm()}catch(e){console.error('v157 alarm',e)}},900)};
 // the city calm again: the fighting residents leave the field, every resident is back at their post (restore: the dead rise too)
@@ -119,7 +125,7 @@ function ab157Rouse(a){const S=AB152.S,I=S.I,lv=(INSL[30]&&INSL[30].lv)||I.lv||[
   if(a.hpK!=null&&a.hpK<1){const c=e.c;c.h=Math.max(1,Math.round(M(c)*a.hpK))}a.hpK=null;a.hunt=0;
   a.e=e;a.st='look';return e}
 // ---------------- v158: the bell and the hunt ----------------
-var AB158={bell:{r:44,n:16,re:24,rn:5},eng:7,drop:14,hold:4,grace:4,spd:{g:4.4,c:3.7},fl:null,flT:0};
+var AB158={bell:{r:44,n:16,re:24,rn:5},eng:7,drop:14,hold:4,grace:4,pv:null,spd:{g:4.4,c:3.7},fl:null,flT:0};
 // a heavy bronze bell: inharmonic partials with long decays, and the clang of the strike
 function ab158Bell(n){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
   try{for(let i=0;i<n;i++){const t=t0+i*2.1,f0=104;
