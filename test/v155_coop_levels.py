@@ -50,10 +50,15 @@ chk('Abeksi: the host owns the roused residents, the partner sees them mirrored'
 ok=until("()=>AB157A.left>0",6000,[G])
 chk('Abeksi: the partner counts the residents left too',ok,json.dumps([p.evaluate("()=>AB157A.left") for p in (A,B)]))
 # a death in the alarm: everyone back at the party's checkpoint, the city calm
+[p.evaluate("()=>{window.__al=[];const f=ab157Alarm;ab157Alarm=function(){window.__al.push([Math.round(performance.now()),AB157A.on,new Error().stack.split('\\n').slice(2,6).join(' | ').replace(/file:[^ )]*live.html:/g,'')]);return f.apply(this,arguments)};const g=ab155On;ab155On=function(q,peer){if(q[1]=='calm'||q[1]=='rs'&&!AB157A.on)window.__al.push([Math.round(performance.now()),'msg',q[1]]);return g.apply(this,arguments)};const c=ab157Calm;ab157Calm=function(r){window.__al.push([Math.round(performance.now()),'calm',r]);return c.apply(this,arguments)};return 1}") for p in (H,G)]
+H.evaluate("()=>{window.__keep158=setInterval(()=>{if(hero.hp>0)hero.hp=heroMax()},80);return 1}")   # v158: the bell's hunters reach the host who stands still: keep the host alive while the partner's death is checked
 G.evaluate("()=>{hero.hp=1;down();if(typeof RV148!='undefined'&&RV148.down)rv148Die();setTimeout(()=>{try{AWD.ready=1;awRise()}catch(_){}},400);return 1}")
 ok=until("()=>!AB157A.on&&!AB152H.cau&&!AB152H.frz&&!(typeof AWD!='undefined'&&AWD.dead)",12000)
 d=A.evaluate("()=>{const c=ab152Spot(AB152Q.cp);return Math.hypot(pl.position.x-c.x,pl.position.z-c.z)}"),B.evaluate("()=>{const c=ab152Spot(AB152Q.cp);return Math.hypot(pl.position.x-c.x,pl.position.z-c.z)}")
-chk('Abeksi: a death in the alarm = both back at the checkpoint, calm',ok and max(d)<3,json.dumps(d))
+dd=[p.evaluate("()=>[AB157A.on,!!AB152H.cau,AB152H.frz,typeof AWD!='undefined'&&AWD.dead,hero.hp,ab157Res().filter(a=>a.hunt).length,enemies.filter(e=>!e.dead&&/^naga/.test(e.c.en)).length]") for p in (H,G)]
+chk('Abeksi: a death in the alarm = both back at the checkpoint, calm',ok and max(d)<3,json.dumps([d,dd]))
+print('AL158',json.dumps([p.evaluate("()=>window.__al.slice(0,14)") for p in (H,G)])[:3000])
+H.evaluate("()=>{clearInterval(window.__keep158);return 1}")
 # a knife kill by the partner is seen in the host's city (the same resident falls)
 k=G.evaluate("()=>{const S=AB152.S;const a=S.acts.find(x=>x.role=='sit');if(!a)return null;ab157Res();ab157Assassinate(a);return a.ri}")
 ok=k is not None and until("()=>{const a=ab157Res()[%d];return !!(a&&a.dead)}"%k,6000)
