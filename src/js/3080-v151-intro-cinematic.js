@@ -284,14 +284,15 @@ function ic151Rat(S,fur){const M=ic151Mat({roughness:.85}),G=()=>new THREE.Group
   [['FL',.062,-.05,.25,.05,.038,0],['FR',-.062,-.05,.25,.05,.038,0],['HL',.078,-.02,.0,.065,.05,1],['HR',-.078,-.02,.0,.065,.05,1]].forEach(([n,x,y,z,u,l,hind])=>{
     const p=G();p.position.set(x,y,z);R.hip.add(p);const lo=G();lo.position.y=-u;p.add(lo);
     mesh([[new THREE.CylinderGeometry(.026,hind?.034:.022,u,6),FU,ic151M(0,-u/2,0)],hind?[sph(.055),FU,ic151M(0,-.005,-.01,0,0,0,.6,1,1)]:[sph(.028),FU,ic151M(0,0,0)]],p);
-    mesh([[new THREE.CylinderGeometry(.014,.018,l,5),hind?FU:PK,ic151M(0,-l/2,hind?-.01:0,hind?.25:0,0,0)],[sph(.022),PK,ic151M(0,-l,hind?.02:.012,0,0,0,1,.45,hind?2:1.5)]],lo);
-    const paw=G();paw.position.set(0,-l,.02);lo.add(paw);R.L[n]={p,lo,paw,u,l,hind:!!hind,x,y,z}});
+    mesh([[new THREE.CylinderGeometry(.014,.018,l,5),hind?FU:PK,ic151M(0,-l/2,hind?-.01:0,hind?.25:0,0,0)]],lo);
+    // v157: the paw has its own ankle (ic151PawLevel keeps it flat on the ground; it used to follow the shin: toes up in front, tiptoe behind)
+    const paw=G();paw.position.set(0,-l,0);lo.add(paw);mesh([[sph(.022),PK,ic151M(0,0,hind?.03:.014,0,0,0,1,.45,hind?2:1.5)]],paw);R.L[n]={p,lo,paw,u,l,hind:!!hind,x,y,z}});
   // tail: 12 links
   let par=R.hip;for(let i=0;i<12;i++){const g=G();g.position.z=i?-.042:-.13;g.position.y=i?0:.0;par.add(g);const r=.022*(1-i/13)+.004;
     const c=new THREE.CylinderGeometry(r*.85,r,.046,5);c.rotateX(Math.PI/2);c.translate(0,0,-.021);mesh([[c,i<1?FU:PK,null,.06]],g);R.tail.push(g);par=g}
   return R}
 // pose: P = {ph gait phase, g gait 0..1, rear, hy, hp head yaw/pitch, sn sniff, cr crouch, tr tremble, hang, fl flail, curl, sp spasm}
-function ic151RatPose(R,P,t){if(P.ik)return ic151RatPoseIK(R,P,t);const g=P.g||0,ph=P.ph||0,rear=P.rear||0,hang=P.hang||0,fl=P.fl||0,curl=P.curl||0,cr=P.cr||0,tr=P.tr||0,sp=P.sp||0,out=P.out||0;if(R.eye)R.eye(P.eye||0);
+function ic151RatPose(R,P,t){if(P.ik)return ic151RatPoseIK(R,P,t);for(const k in R.L)R.L[k].paw.quaternion.identity();const g=P.g||0,ph=P.ph||0,rear=P.rear||0,hang=P.hang||0,fl=P.fl||0,curl=P.curl||0,cr=P.cr||0,tr=P.tr||0,sp=P.sp||0,out=P.out||0;if(R.eye)R.eye(P.eye||0);
   const n=(a,b)=>Math.sin(t*a+b)*.6+Math.sin(t*a*1.7+b*2.1)*.4;
   R.hip.position.y=.13-cr*.045+Math.abs(Math.sin(ph))*.014*g+(tr?n(55,1)*.004*tr:0);R.hip.rotation.set(-rear*1.05+(P.hx||0)+sp*n(31,2)*.3,sp*n(27,5)*.3,(tr?n(47,3)*.03*tr:0)+sp*n(23,1)*.25);
   const legs={FL:0,FR:Math.PI,HL:Math.PI,HR:0};for(const k in legs){const L=R.L[k],f=ph+legs[k],hind=k[0]=='H';
@@ -305,6 +306,11 @@ function ic151RatPose(R,P,t){if(P.ik)return ic151RatPoseIK(R,P,t);const g=P.g||0
 
 // legs on the ground: a distance-driven gait (trot when walking, bound when running) with planted feet, each leg a
 // two-bone IK (elbows back, knees forward); the body bobs, sways and leans into turns, the head steadies, the tail lags
+// v157: turn the paw so it lies level in the rat's own frame, tipped toe-down by `toe` (rad: heel lift at push-off, toes trailing in
+// the swing); with ga (gait amount) 0 the paw is simply flat
+var IC151PQ={a:new THREE.Quaternion(),b:new THREE.Quaternion(),e:new THREE.Euler()};
+function ic151PawLevel(R,L,toe,ga){const Q=IC151PQ;Q.a.copy(R.hip.quaternion).multiply(L.p.quaternion).multiply(L.lo.quaternion).invert();
+  Q.e.set((toe||0)*Math.min(1,ga||0),0,0);Q.b.setFromEuler(Q.e);L.paw.quaternion.copy(Q.a).multiply(Q.b)}
 var IC151GO={trot:{FL:0,HR:0,FR:.5,HL:.5},bound:{FL:0,FR:.08,HL:.5,HR:.58}};
 function ic151RatPoseIK(R,P,t){if(R.eye)R.eye(P.eye||0);const gp=P.gph||0,ga=P.gamp||0,bd=P.bound||0,rear=P.rear||0,cr=P.cr||0,tr=P.tr||0,turn=Math.max(-3,Math.min(3,P.turn||0)),T2=Math.PI*2;
   const jit=(a,b)=>Math.sin(t*a+b)*.6+Math.sin(t*a*1.7+b*2.1)*.4,bob=ga*(1-bd)*.007*(1-Math.cos(2*T2*gp))/2+ga*bd*.012*(1-Math.cos(T2*gp))/2;
@@ -318,7 +324,8 @@ function ic151RatPoseIK(R,P,t){if(R.eye)R.eye(P.eye||0);const gp=P.gph||0,ga=P.g
     if(!hind&&rear>0){const tk=new THREE.Vector3(L.x*.8,L.y-.035,L.z+.05).applyMatrix4(R.hip.matrix);v.lerp(tk,Math.min(1,rear*1.3))}
     v.applyMatrix4(HI);const dx=v.x-L.x,dyy=v.y-L.y,dzz=v.z-L.z,Dl=Math.hypot(dyy,dzz),u=L.u,l=L.l,D=Math.max(Math.abs(u-l)+1e-3,Math.min(u+l-1e-4,Dl)),phi=Math.atan2(-dzz,-dyy);
     const A=Math.acos(Math.max(-1,Math.min(1,(u*u+D*D-l*l)/(2*u*D)))),Bk=Math.acos(Math.max(-1,Math.min(1,(u*u+l*l-D*D)/(2*u*l))));
-    L.p.rotation.set(hind?phi-A:phi+A,0,Math.asin(Math.max(-.5,Math.min(.5,dx/Math.max(.02,Math.hypot(dx,Dl))))));L.lo.rotation.x=hind?Math.PI-Bk:-(Math.PI-Bk);L.p.scale.set(1,1,1)}
+    L.p.rotation.set(hind?phi-A:phi+A,0,Math.asin(Math.max(-.5,Math.min(.5,dx/Math.max(.02,Math.hypot(dx,Dl))))));L.lo.rotation.x=hind?Math.PI-Bk:-(Math.PI-Bk);L.p.scale.set(1,1,1);
+    ic151PawLevel(R,L,ph<duty?(ph>duty*.7?(ph/duty-.7)/.3*(hind?.55:.35):0):Math.sin(Math.PI*Math.min(1,(ph-duty)/(1-duty)*1.15))*(hind?.45:.3),ga)}
   const sn=P.sn||0;R.head.rotation.set((P.hp||0)+rear*.75-bd*ga*.13*Math.sin(T2*gp)+sn*Math.sin(t*9)*.05+tr*jit(37,4)*.02,(P.hy||0)-ga*(1-bd)*.04*Math.sin(T2*gp)+turn*.06,0);
   R.snout.rotation.x=sn*Math.sin(t*42)*.09;R.snout.scale.z=1+sn*Math.max(0,Math.sin(t*42))*.07;
   const tw=P.tw==null?.6:P.tw,tk=P.tuck||0;R.tail.forEach((s,i)=>{s.rotation.y=Math.sin(t*2.2-i*.5)*.12*tw*(1-ga*.6)+ga*.12*Math.sin(T2*gp-i*.45)*(1-bd)-turn*.035*(i/6)+(P.ty||0);

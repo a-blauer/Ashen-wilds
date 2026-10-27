@@ -108,6 +108,8 @@ def s(pg):
     for t in T:
         ev("t=>ic151Seek(t)",t)
         if t>=55.9:pg.wait_for_timeout(1500);ev("t=>ic151Seek(t)",t)
+        if os.environ.get('CLOSE'):   # v157: a close side view of the rat's legs (CLOSE=side angle in rad)
+            ev("a=>{const S=IC151.S,R=S.rat;R.root.updateMatrixWorld(true);const p=R.root.getWorldPosition(new THREE.Vector3()),y=R.root.rotation.y+(+a);S.cam.position.set(p.x+Math.sin(y)*.62,p.y+.1,p.z+Math.cos(y)*.62);S.cam.lookAt(p.x,p.y+.05,p.z);S.rd.render(S.sc,S.cam);return 1}",os.environ['CLOSE'])
         pg.screenshot(path=O+'/v151_shot_%05.1f.jpg'%t,type='jpeg',quality=85);print('shot',t,flush=True)
     chk('no frame errors',not ev("()=>IC151.err||null"),ev("()=>IC151.err||''")[:300])
     ev("()=>{window._icD=IC151.S&&IC151.S.D;ic151Seek(IC151.len+.1)}")
