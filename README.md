@@ -684,7 +684,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     (guards `AB158.spd.g` 4.4, townsfolk 3.7 tiles/s; every client moves them, the host's `rs` states mark them `3`). Within `AB158.eng`
     (7) steps a hunter, or any standing resident, becomes one of the game's enemies (`ab157Rouse`, nearest first, up to `AB157K.cap` 10
     fighting); with the fight full the others wait in a ring `AB158.hold` (4) steps out. A fighter cut off more than `AB158.drop` (14)
-    steps away by walls goes back to the streets as a hunter, keeping its wounds (`a.hpK`). Every `AB158.bell.re` (24) s the bell tolls
+    steps away by walls for 2 s in a row (`e.ab158far`) goes back to the streets as a hunter, keeping its wounds (`a.hpK`). Every `AB158.bell.re` (24) s the bell tolls
     again and calls `AB158.bell.rn` (5) more. The city gate is open as soon as the bell rings ("F · Escape through the city gate"):
     killing everyone is no longer needed. Banner `#ab157al` and tracker: "Hunting you" (`AB157A.hunt`). For `AB158.grace` (4) s after the
     city calms (`AB157A.calmT`) nobody can be caught: in co-op a partner who died still lay in a guard's view until rising, and the host's

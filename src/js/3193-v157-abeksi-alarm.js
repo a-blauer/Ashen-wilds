@@ -169,7 +169,8 @@ function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res(),B
       for(const [,a] of C){if(n>=AB157K.cap)break;if(ab157Rouse(a))n++}}
     // a fighter cut off behind a wall goes back to the streets (keeping its wounds)
     for(const a of R){const e=a.e;if(!e||e.dead||e.atk)continue;const I=S.I,u=e.m.position.x-I.x0,v=e.m.position.z-I.y0;
-      if(ab158Du(u,v)>AB158.drop){try{a.hpK=e.c.h/M(e.c)}catch(_){a.hpK=null}a.e=null;try{removeE(e)}catch(_){}a.u=u;a.v=v;a.yaw=e.m.rotation.y;a.hunt=1;a.halt=1}}}
+      if(ab158Du(u,v)<=AB158.drop){e.ab158far=0;continue}e.ab158far=(e.ab158far||0)+.25;   // cut off for 2 s in a row (not a passing jump of the hero)
+      if(e.ab158far>=2){try{a.hpK=e.c.h/M(e.c)}catch(_){a.hpK=null}a.e=null;try{removeE(e)}catch(_){}a.u=u;a.v=v;a.yaw=e.m.rotation.y;a.hunt=1;a.halt=1}}}
   A.left=R.filter(a=>!a.dead).length;A.hunt=R.filter(a=>!a.dead&&(a.e||a.hunt||a.net1)).length;
   if(ab157Lead()&&ab157Co()&&now-A.tS>600){A.tS=now;try{cl155Send(['ab','rs',R.map(a=>a.dead?2:a.e?1:a.hunt?3:0).join('')])}catch(_){}}}
 // the snakes of the plan: a fallen one does nothing; in the alarm the ones not fighting yet stand and glare at the hero
