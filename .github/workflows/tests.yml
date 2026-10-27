@@ -1,5 +1,6 @@
 # Tests on GitHub Actions (back on since Oct 25 2026: the repo is public, so Actions minutes are free).
 # Every test of the suite runs as its own job, in parallel, in fast mode (test/fast.py), same pass/fail rules as run_suite.py.
+# A failed test runs once more (ci_run.py, CI_RETRY=1): a pass on the second try counts, listed as "PASS (retry)" (a flaky test).
 #   - push to a branch named ci/<anything>  -> full suite on that commit (tools/ci.sh does this and waits for the result)
 #   - Actions -> Tests -> Run workflow      -> pick smoke, changed (vs main) or full, on any branch; optionally only some tests
 # The last job ("summary") lists every test as PASS / FAIL in one annotation titled "Results", which tools/ci.sh prints
@@ -41,7 +42,7 @@ jobs:
     needs: list
     if: needs.list.outputs.tests != '[]'
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 100   # a failed test runs once more (ci_run.py, CI_RETRY)
     strategy:
       fail-fast: false
       matrix:
@@ -71,7 +72,8 @@ jobs:
         run: |
           mkdir -p res && n=$(echo "${{ matrix.t }}" | awk '{print $NF}')
           tail=$(grep -E '^(====|  FAIL)' test/out/ci_log.txt 2>/dev/null | head -8 | tr '\n' ' ' | cut -c1-500)
-          echo "${{ steps.run.outcome == 'success' && 'PASS' || 'FAIL' }} ${{ matrix.t }}  ${tail}" > res/$n.txt
+          r="${{ steps.run.outcome == 'success' && 'PASS' || 'FAIL' }}"; grep -q 'passed on retry' test/out/ci_log.txt 2>/dev/null && r="PASS (retry)"
+          echo "$r ${{ matrix.t }}  ${tail}" > res/$n.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -98,7 +100,8 @@ jobs:
           total=$(echo '${{ needs.list.outputs.tests }}' | python3 -c 'import sys,json;print(len(json.load(sys.stdin)))')
           cat res/*.txt 2>/dev/null | sort > all.txt || true
           pass=$(grep -c '^PASS' all.txt || true); bad=$(grep '^FAIL' all.txt || true)
-          head="$SUITE: $pass/$total passed"
+          rt=$(grep -c '^PASS (retry)' all.txt || true)
+          head="$SUITE: $pass/$total passed"; [ "$rt" -gt 0 ] && head="$head ($rt only on a second try)"
           { echo "## $head"; echo '```'; cat all.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           echo "$head"; cat all.txt
           python3 -c 'import sys;t=sys.stdin.read().strip().replace("%","%25").replace("\r","").replace("\n","%0A");print("::notice title=Results::"+t)' < all.txt
