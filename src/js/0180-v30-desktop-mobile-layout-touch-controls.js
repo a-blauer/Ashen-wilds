@@ -9,9 +9,12 @@ $('devp').addEventListener('click',e=>{const b=e.target.closest('[data-dev]');if
 {const pre=SET.dev||((matchMedia('(pointer:coarse)').matches||innerWidth<760)?'mobile':'desktop');document.querySelectorAll('#devp [data-dev]').forEach(b=>b.classList.toggle('pri',b.dataset.dev==pre))}
 if($('s_dev')){$('s_dev').value=SET.dev||'desktop';$('s_dev').onchange=e=>applyDev(e.target.value)}
 // ---------- virtual joystick ----------
-{const J=$('joy'),K0=J.querySelector('i'),R0=46;
-  const set=(e)=>{const r=J.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const L=Math.hypot(dx,dy);if(L>R0){dx*=R0/L;dy*=R0/L}
-    K0.style.transform=`translate(${dx}px,${dy}px)`;const k=Math.hypot(dx,dy)/R0;dp[0]=k>.18?dx/R0:0;dp[1]=k>.18?dy/R0:0};
+{const J=$('joy'),K0=J.querySelector('i');
+  // v161: the pad may be zoomed (UI size): the reach is measured on screen (37% of the pad's width, 46px on the old 124px pad)
+  // and the knob's own offset is in the pad's unzoomed pixels
+  const set=(e)=>{const r=J.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=Math.max(8,r.width*.37),z=r.width/Math.max(1,J.offsetWidth||r.width)||1;
+    let dx=e.clientX-cx,dy=e.clientY-cy;const L=Math.hypot(dx,dy);if(L>R0){dx*=R0/L;dy*=R0/L}
+    K0.style.transform=`translate(${dx/z}px,${dy/z}px)`;const k=Math.hypot(dx,dy)/R0;dp[0]=k>.18?dx/R0:0;dp[1]=k>.18?dy/R0:0};
   J.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();joyId=e.pointerId;try{J.setPointerCapture(e.pointerId)}catch(_){}set(e)});
   J.addEventListener('pointermove',e=>{if(e.pointerId===joyId){e.preventDefault();set(e)}});
   const end=e=>{if(e.pointerId!==joyId)return;joyId=null;dp[0]=dp[1]=0;K0.style.transform=''};
