@@ -47546,6 +47546,10 @@ function ab157Alarm(){if(AB157A.on||!ab152In()||!AB152.S)return;const H=AB152H;A
 // still lies where they fell (often in a guard's view) until they rise, and the host's snakes look at every hero: without the grace that
 // body rang the bell again the moment the city had calmed.
 {const f=ab152Caught;ab152Caught=function(a){if(AB157A.calmT&&performance.now()-AB157A.calmT<AB158.grace*1000)return;return f.apply(this,arguments)}}
+// v158: only heroes on their feet can be seen: not one lying dead or downed (waiting for a revive), mine or a partner's
+function ab158Up(){try{return hero.hp>0&&!(typeof RV148!='undefined'&&RV148.down)&&!(typeof AWD!='undefined'&&AWD.dead)}catch(_){return true}}
+if(typeof ab155Heroes=='function'){const f=ab155Heroes;ab155Heroes=function(){const L=f.apply(this,arguments);try{const M2=cl155Mates(MP.rg);
+  return L.map(h=>{if(h===AB152H)return ab158Up()?h:Object.assign({},h,{live:false});const r=M2.find(q=>q.peer===h.peer),p=r&&r.pr;return p&&(p.dn||!(p.hp>0))?Object.assign({},h,{live:false}):h})}catch(_){return L}}}
 // what being seen leads to now: a moment of "!" (3155's hiss and flash), then the alarm
 ab152AfterCaught=function(a){say('👁 <b>Spotted!</b>');setTimeout(()=>{try{if(ab152In()&&AB152.S)ab157Alarm()}catch(e){console.error('v157 alarm',e)}},900)};
 // the city calm again: the fighting residents leave the field, every resident is back at their post (restore: the dead rise too)
