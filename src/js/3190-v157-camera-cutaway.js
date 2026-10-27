@@ -28,3 +28,5 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}
+// the intro's Duskhold shots (3081) keep the v135 look: the old tube fade for scenery, no terrain cut
+{const f=POST.render;POST.render=function(){const io=typeof IC151!='undefined'&&IC151.on;M157.value=io?0:1;CAM157U.value=io?0:1;return f.apply(this,arguments)}}
