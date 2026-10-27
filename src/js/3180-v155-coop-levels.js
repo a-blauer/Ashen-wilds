@@ -77,7 +77,7 @@ const AB155ST=['routine','look','investigate','return','caught'];
       for(const off of [o0,-o0,o0*.5]){const x=c.x+Math.cos(c.ry)*off,z=c.z-Math.sin(c.ry)*off,u=Math.round(x-I.x0),v=Math.round(z-I.y0);
         if(u>=0&&v>=0&&u<G.W&&v<G.H&&!G.sol[v*G.W+u]&&G.cls[v*G.W+u]<2){pl.position.x=x;pl.position.z=z;pl.position.y=GH(x,z);break}}}}}catch(_){}return r}}
 // out through the drain together
-{const f=ab152Finish;ab152Finish=function(){const co=ab155Co()&&!AB155.rx;if(co&&!AB152H.cau)cl155Send(['ab','out']);return f.apply(this,arguments)}}
+{const f=ab152Finish;ab152Finish=function(){const co=ab155Co()&&!AB155.rx;if(co&&!AB152H.cau)cl155Send(['ab','out',arguments[0]==='gate'?1:0]);return f.apply(this,arguments)}}
 function ab155On(q,peer){const k=q[1],S=AB152.S,nm=mpEsc(mpName(peer));
   if(k==='go'){let g=-1;try{g=curIns().g}catch(_){}if(g!==5||ab152In()||AF||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;
     AB152Q.cp=Math.max(0,Math.min(5,q[2]|0));say('👥 '+nm+' leads the way into Abeksi — you follow.');AB155.rx=1;try{ab152Enter()}finally{AB155.rx=0}}
@@ -88,7 +88,7 @@ function ab155On(q,peer){const k=q[1],S=AB152.S,nm=mpEsc(mpName(peer));
   else if(k==='n'&&ab155Lead()){AB155.rx=1;try{ab152Hear(+q[2],+q[3],Math.min(12,+q[4]||0),String(q[5]||'noise'))}finally{AB155.rx=0}}
   else if(k==='c'&&peer===MP.host){const a=S.acts[q[2]|0];if(!a||AB152H.cau)return;AB155.rx=1;try{ab152Caught(a)}finally{AB155.rx=0}
     if(q[3]&&q[3]!==MP.me)say('👁 '+mpEsc(mpName(q[3]))+' was seen! The whole party goes back.')}
-  else if(k==='out'){AB155.rx=1;try{if(AB152H.cau){AB152H.cau=null;AB152H.frz=0}say('👥 '+nm+' found the drain — you slip out together.');ab152Finish()}finally{AB155.rx=0}}}
+  else if(k==='out'){AB155.rx=1;try{if(AB152H.cau){AB152H.cau=null;AB152H.frz=0}say(q[2]===1?'👥 '+nm+' throws open the city gate — you walk out together.':'👥 '+nm+' found the drain — you slip out together.');ab152Finish(q[2]===1?'gate':undefined)}finally{AB155.rx=0}}}
 // partners crouch on screen (an exact undo each frame, like the hero's own crouch layer)
 function ab155CrPose(r,on){const U=AB155.U[r.peer]||(AB155.U[r.peer]=[]);for(let i=U.length-1;i>=0;i--){const u=U[i];if(u[0][u[1]]===u[3])u[0][u[1]]=u[2]}U.length=0;
   if(!on||!r.m||!r.m.bones)return;const B=r.m.bones,add=(b,ax,v)=>{if(!b)return;const R=ax=='py'?b.position:b.rotation,a=ax=='py'?'y':ax,p=R[a];R[a]=p+v;U.push([R,a,p,R[a]])};

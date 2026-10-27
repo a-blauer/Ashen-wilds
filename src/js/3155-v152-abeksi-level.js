@@ -103,13 +103,15 @@ function ab152Enter(){if(AF)return;try{if(riding)dismount(true)}catch(_){}const 
     if(first)setTimeout(()=>{say('🐍 <b>Crouch</b> (a tap of <b>Ctrl</b>, or <b>C</b>): slow and silent, and low cover hides you. Standing, your steps can be heard.');
       setTimeout(()=>say('👁 Every snake sees in a cone on the ground. Stay out of the cones and the light; if one turns towards you, get behind something.'),5200)},1400)})}
 function ab152Leave(){const G=SP152.gates.abeksi;fadeTo(()=>{ab152SetCrouch(false);AB152H.crK=0;const s=G&&G.spot;if(s){toPos(s.x+s.ux*-2.2,s.z+s.uz*-2.2,s.ry)}else insArrive(INSL[5])})}
-function ab152Finish(){if(AB152H.cau)return;AB152Q.st=2;AB152H.frz=1;try{svSnd('splash',1,1)}catch(_){}
+function ab152Finish(how){if(AB152H.cau)return;const gate=how==='gate';AB152Q.st=2;AB152H.frz=1;try{svSnd(gate?'heavy':'splash',1,1)}catch(_){}
   fadeTo(()=>{ab152SetCrouch(false);AB152H.crK=0;AB152H.frz=0;const N=INSL[6];insArrive(N);insMark(N);
-    setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Abeksi Escaped','You crawl out of the drain into the mists beyond the city','Onward through '+N.n,'z1');mSfx('victory')}catch(_){}},400);
-    say('🐍 You slipped through Abeksi unseen. <b>'+N.n+'</b> lies ahead.')})}
+    setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest',gate?'Abeksi Has Fallen':'Abeksi Escaped',gate?'The great gate grinds open on a silent city':'You crawl out of the drain into the mists beyond the city','Onward through '+N.n,'z1');mSfx('victory')}catch(_){}},400);
+    say(gate?'⚔ Not one serpent is left to stop you. You walk out through the city gate; <b>'+N.n+'</b> lies ahead.':'🐍 You slipped through Abeksi unseen. <b>'+N.n+'</b> lies ahead.')})}
 function ab152Caught(a){if(AB152H.cau)return;AB152H.cau={a,t:0};AB152H.frz=1;a.st='caught';
   try{const p=a.g.position,P=pl.position;a.yaw=Math.atan2(P.x-p.x,P.z-p.z);svSnd('hiss',1.1,1);flash('rgba(255,40,20,.8)');shake(.25)}catch(_){}
-  say('👁 <b>Spotted!</b> Back to the last checkpoint.');
+  ab152AfterCaught(a)}
+// what being seen leads to (v157: the city's alarm, 3192; this was the v152 rule: back to the last checkpoint)
+function ab152AfterCaught(a){say('👁 <b>Spotted!</b> Back to the last checkpoint.');
   setTimeout(()=>{fadeTo(()=>{ab152Restart(false);try{say('✦ Checkpoint · '+ab152Spot(AB152Q.cp).name)}catch(_){}})},1500)}
 // ---------------- each frame in the city ----------------
 function ab152Tick(dt,now){if(!ab152In()){if(AB152.S){AB152.S.root.visible=false;AB152.S.lights.forEach(L=>L.lt.intensity=0);AB152.S.acts.forEach(a=>{if(a.lt)a.lt.intensity=0})}

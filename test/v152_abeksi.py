@@ -1,6 +1,6 @@
 # v152: Abeksi, the serpent city (Hillside Crest main quest, chapter 1): the instance record, the cleft in Hillside I, entering,
 # crouch (keys, speed buff, HUD), the snakes' eyes (cone, range, crouch, dark, line of sight through low/tall cover), ears (steps,
-# rats), suspicion → look / investigate / caught → back to the checkpoint, checkpoints by district, the rules inside (companions
+# rats), suspicion → look / investigate / caught → the city's alarm (v157), checkpoints by district, the rules inside (companions
 # parked, no fighting, no mount, no recall), the drain out to II (done: the cleft leads straight on), saves.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +16,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   // party for the companion rule
   out.fols=fols.filter(Boolean).length;
   // enter: at the breach, crouched, companions parked
-  ab152Enter();await wait(900);tick(.5);out.here=ab152In();const H=AB152H;out.cr=H.cr;out.buff=hero.buffs.some(b=>b.ab152);out.folsHidden=fols.every(f=>!f||!f.visible);
+  ab152Enter();await wait(900);tick(.5);out.here=ab152In();const H=AB152H;out.cr=H.cr;out.buff=hero.buffs.some(b=>b.ab152);for(let i=0;i<24&&!fols.every(f=>!f||!f.visible);i++)await wait(250);out.folsHidden=fols.every(f=>!f||!f.visible);
   out.pos0=[Math.round(pl.position.x-I.x0),Math.round(pl.position.z-I.y0)];
   // crouch keys: a tap of Ctrl toggles, Ctrl+W does not, C toggles and does not open the talents window
   const kd=(k,o)=>document.body.dispatchEvent(new KeyboardEvent('keydown',Object.assign({key:k,bubbles:true},o||{}))),ku=(k,o)=>document.body.dispatchEvent(new KeyboardEvent('keyup',Object.assign({key:k,bubbles:true},o||{})));
@@ -35,10 +35,12 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   // a sentry: standing in front of it in the light → caught; crouched in its cone in the dark further out → slower
   const b2=AB152.S.acts.find(a=>a.id=='b2');const sees=(u,v,cr)=>{b2.yaw=Math.atan2(u-b2.u,v-b2.v);b2.hy=0;return ab152Sees(b2,u,v,cr,ab152Light(u,v))};
   out.seeStand=sees(80,41,false);out.seeCr=sees(80,41,true);out.seeFar=sees(80,36.5,true);out.seeBehind=(()=>{b2.yaw=Math.atan2(0,1);return ab152Sees(b2,80,41,false,1)})();
-  // caught: stand in front of the fountain sentry → "!" → back to the market checkpoint
+  // caught: stand in front of the fountain sentry → "!" → the city's alarm (v157), then a death → back to the market checkpoint, calm
   AB152.S.acts.forEach(ab152ResetActor);{const [x,z]=W2(80,42.5);toPos(x,z);ab152SetCrouch(false)}tick(.3);
   b2.yaw=Math.PI;b2.t=0;let caught=0;tick(3,()=>{if(H.cau)caught=1});out.caught=caught;out.cp=AB152Q.cp;await wait(2400);tick(.3);
-  out.posCp=[Math.round(pl.position.x-I.x0),Math.round(pl.position.z-I.y0)];out.cauClear=!H.cau&&!H.frz;out.crAfter=H.cr;
+  out.alarmOn=AB157A.on;out.alarmCr=H.cr;tick(1.2);out.alarmFoes=enemies.filter(e=>e.ab157&&!e.dead).length;
+  hero.hp=1;down();await wait(300);try{AWD.ready=1;awRise()}catch(_){}await wait(900);tick(.3);
+  out.posCp=[Math.round(pl.position.x-I.x0),Math.round(pl.position.z-I.y0)];out.cauClear=!H.cau&&!H.frz&&!AB157A.on;out.crAfter=H.cr;
   // ears: walking upright right behind a calm snake makes it turn; crouched it does not
   AB152.S.acts.forEach(ab152ResetActor);const a2=AB152.S.acts.find(a=>a.id=='b6');{const [x,z]=W2(a2.u-.2,a2.v-3.0);toPos(x,z)}ab152SetCrouch(true);
   tick(1.2,t=>{pl.mvd={x:1,z:0,t}});out.heardCr=a2.st;ab152SetCrouch(false);tick(.5,t=>{pl.mvd={x:1,z:0,t}});out.heardSt=a2.st;out.heardSus=Math.round(a2.sus);
@@ -52,7 +54,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   const s1=x2Save();out.saved=JSON.stringify(s1.ab152);
   // the drain: out to Hillside Crest II
   {const [x,z]=W2(P.EXIT[0],P.EXIT[1]);toPos(x,z)}tick(.2);out.drainPrompt=(worldPrompt()||{}).label||'';(worldPrompt()||{fn(){}}).fn();await wait(1100);tick(.6);
-  const c=curIns();out.arrived=c&&c.g;out.insr=INSR[1];out.st=AB152Q.st;out.done=ab152Done();out.crOff=!H.cr&&!hero.buffs.some(b=>b.ab152);out.folsBack=fols.filter(f=>f&&f.visible).length;
+  const c=curIns();out.arrived=c&&c.g;out.insr=INSR[1];out.st=AB152Q.st;out.done=ab152Done();out.crOff=!H.cr&&!hero.buffs.some(b=>b.ab152);for(let i=0;i<20&&!fols.some(f=>f&&f.visible);i++)await wait(250);out.folsBack=fols.filter(f=>f&&f.visible).length;
   {const G5=INSL[5];toPos(G5.ba[0],G5.ba[1]);tick(.2);const s=SP152.gates.abeksi.spot;toPos(s.x,s.z);tick(.1);out.cleftAfter=(worldPrompt()||{}).label||''}
   // old saves: no ab152 field → not started (II not reached); a save that reached II counts as done
   const old=JSON.parse(JSON.stringify(s1));delete old.ab152;old.insr=[0,0,0,0,0,0];x2Load(old);out.oldSt=AB152Q.st;out.oldDone=ab152Done();
@@ -77,7 +79,8 @@ def s(pg):
     exp(not r['losLowCr'] and r['losLowSt'],'sight: low cover hides a crouched hero, not a standing one')
     exp(r['seeStand']>r['seeCr']>0 and r['seeBehind']==0,'eyes: standing is seen faster than crouched, nothing behind (%s %s %s)'%(r['seeStand'],r['seeCr'],r['seeBehind']))
     exp(r['caught'] and r['cp']==1,'standing in front of a sentry gets you caught (market checkpoint %s)'%r['cp'])
-    exp(r['posCp']==[24,34] and r['cauClear'] and r['crAfter'],'caught → back at the checkpoint, crouched (%s)'%r['posCp'])
+    exp(r['alarmOn'] and not r['alarmCr'] and r['alarmFoes']>0,'caught → the city is roused: crouch off, residents hostile (%s %s %s)'%(r['alarmOn'],r['alarmCr'],r['alarmFoes']))
+    exp(r['posCp']==[24,34] and r['cauClear'] and r['crAfter'],'death in the alarm → back at the checkpoint, crouched, calm (%s)'%r['posCp'])
     exp(r['heardCr']=='routine' and r['heardSt'] in ('look','investigate','caught'),'ears: crouched steps are silent, upright steps are heard (%s / %s)'%(r['heardCr'],r['heardSt']))
     exp(r['ratPanic'] and r['ratHeard']>0,'rats squeal when you walk upright past their pen (%s heard)'%r['ratHeard'])
     exp(r['cpGate']==5,'checkpoint by district (%s)'%r['cpGate'])
