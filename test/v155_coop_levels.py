@@ -77,6 +77,19 @@ H.evaluate("()=>ch153Die('hits')")
 ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.hp==3&&CH153.R.s<40",12000)
 chk('Ascent: everyone fallen = the chase starts again for both',ok,json.dumps([p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s)]") for p in (A,B)]))
 until("()=>CH153.R&&CH153.R.ph=='run'",8000)
+# v156: the same, but the last rider's game runs behind (lag, a slow or background window): the watcher has already started
+# again and is riding when the last rider decides. Before v156 the last rider took them for a partner still on the old try,
+# watched them and stayed stuck watching.
+G.evaluate("()=>ch153Die('hits')")
+until("()=>CH153.R&&CH153.R.ph=='spec'",6000,[G])
+H.evaluate("""()=>{window.__pin=1;if(!window.__pinW){window.__pinW=1;const f=ch153Tick;ch153Tick=function(){const R=CH153.R;if(window.__pin&&R&&R.ph=='dead')R.dead.t=Math.min(R.dead.t,1);return f.apply(this,arguments)}}
+  ch153Die('hits');return 1}""")
+ok1=until("()=>CH153.R&&CH153.R.ph=='run'&&CH153.R.s>12",12000,[G])
+H.evaluate("()=>{window.__pin=0;return 1}")
+ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.hp==3",9000,[H])
+st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s),CS155.rd]") for p in (H,G)]
+chk('Ascent: the last rider to fall starts again even when the other already has (no stuck watcher)',ok1 and ok and st[0][3]==st[1][3],json.dumps(st))
+until("()=>CH153.R&&CH153.R.ph=='run'",8000)
 # the partner falls again, the host gets through: the partner lies downed in III, and the host revives them
 G.evaluate("()=>ch153Die('hits')")
 until("()=>CH153.R&&CH153.R.ph=='spec'",6000,[G])

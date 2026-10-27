@@ -58,7 +58,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v151 The Lantern Road rework (owner): the outpost by Kindlelight I's entrance (`mq151Cfg().A` 36 steps down the road), lampposts along the whole road ~7 apart (`mq151Cfg().gap`, 47) at 1 glowbulb each (`MQ143.per`), every kill drops one until enough are carried (`MQ143.drop` 1), the Ripper rolls at 3 tiles/s, pre-v151 saves refunded; the entrance camp moves to the nearest open side field (`mq151MoveCamp`, called from 0045 after every seeded map step) | `3020`, `3023` (hook in `0045`) |
 | v151 Armored trait look: a riveted war harness (leather blanket, overlapping iron spine plates, rivets, flank flaps, `lpArmor151`) replaces the grey back domes that read as stones; picture sheet `test/v151_armor_look.py` | `0610` (`lpExtras`) |
 | v152–v155 Hillside Crest main quest (v155: played together in co-op, `3180`): special instances (`SP152`, `3150`), Abeksi city stealth level (`3151`–`3155`), the Hilltop Ascent chase (`3160`–`3162`), the Gate of the Hydra puzzle (`HD154`, `3170`) | `3150`–`3170` (hooks in `0045`) |
-| Published together (Oct 26 2026): the v151 intro, the Burningeye Summit main quest (v151) and the Hillside Crest main quest (v152–v155). Known issue at publish: in co-op, when every rider falls in the Hilltop Ascent, one restarts and the other can stay spectating (`v155_coop_levels.py` "everyone fallen = the chase starts again for both"; fails on its own branch too). Full suite otherwise green (`v119_abprev.py` and `v150_coop.py` failed on GitHub once each and pass on a re-run / locally). | `3180-v155-coop-levels.js` |
+| Published together (Oct 26 2026): the v151 intro, the Burningeye Summit main quest (v151) and the Hillside Crest main quest (v152–v155). The co-op Ascent restart issue known at that publish (when every rider fell, one restarted and the other could stay spectating) is fixed in v156 (numbered tries, `CS155.rd`). Full suite otherwise green (`v119_abprev.py` and `v150_coop.py` failed on GitHub once each and pass on a re-run / locally). | `3180-v155-coop-levels.js` |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -677,7 +677,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     after the rearmost rider (`cs155Snake`: `['cs','n',s,v]`; venom `ch153SpitPlan` / `ch153SpitSpawn` → `['cs','v',…]`; strikes
     `['cs','k',peer,lane]`); each rider's own world checks its hits; riders send `['cs','p',s,o,y,ph,hp,v]` and are drawn on the
     trail; rockslides start from the leading rider (`ch153LeadS`) and are seeded. A fallen rider spectates (`R.ph` 'spec': hero
-    hidden, the camera on the leading rider); all fallen → `['cs','re']`, everyone starts again; a rider through the crack
+    hidden, the camera on the leading rider); all fallen → `['cs','re',rd]`, everyone starts again (v156: tries are numbered, `CS155.rd`, sent in `p`; a fallen rider
+    whose partner is already on a later try starts again with them instead of watching them, the cause of the old stuck watcher); a rider through the crack
     (`['cs','w']`) → the fallen arrive in III downed (3085 revive, `RV155.T` 180 s). *Hydra*: stone turns, song starts, chime
     strikes and the opening are sent (`['hd',…]`), plus the whole state every 3 s (`hd155Merge` keeps the most progress).
     Test `v155_coop_levels.py` (two windows, `mpt.py`).

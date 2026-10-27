@@ -46618,7 +46618,7 @@ function co170WindTick(dt){if(typeof MP=='undefined'||!MP.on)return;for(const id
 //    (['cs','p',…]: partners are drawn exactly on the trail, jumps too). A rider who falls (three hits or swallowed) watches the
 //    others ride on (spectating: the camera follows the leading rider, their hero hidden). If a rider gets through the crack
 //    (['cs','w']) the fallen arrive in Hillside Crest III too, lying downed beside the entrance (3085's revive, with a long
-//    timer) for their partner to revive. If everyone falls, the chase starts again for all (['cs','re']).
+//    timer) for their partner to revive. If everyone falls, the chase starts again for all (['cs','re',try]; v156: tries are numbered, CS155.rd).
 //  · The Gate of the Hydra (3170): the Wind Stones' serpents, the song's verses and the opening are shared (['hd',…]); partners
 //    also swap their whole state every few seconds and keep the most progress, so a partner who arrives later catches up.
 // Presence carries cr (crouching in Abeksi), af (frozen: caught), hm (owns a mount), cs (chase: 1 intro · 2 riding · 3 fallen /
@@ -46699,11 +46699,19 @@ function ab155CrPose(r,on){const U=AB155.U[r.peer]||(AB155.U[r.peer]=[]);for(let
   [['lh0',-.95],['rh0',-.95],['lh1',1.35],['rh1',1.35],['lh2',-.42],['rh2',-.42],['spine',.38],['chest',.14],['head',-.3],['aL0',-.3],['aR0',-.3],['aL1',-.35],['aR1',-.35]].forEach(([n,v])=>add(B[n],'x',v));add(B.pelvis,'py',-.2)}
 
 // ================= the Hilltop Ascent together =================
-var CS155={p:{},won:{},n:null,tP:0,tN:0,rx:0,out:0,reT:0};
+// rd (v156): the try number. Everyone starts on try 0; each time the whole party falls the chase starts again on the next try.
+// Riders send theirs with their spot, so a fallen rider can tell a partner still on this try (watch them) from one who already
+// started the next try (start again with them). Before v156 a rider who fell last could see a partner who had already started
+// again as "still riding", watch them, and stay stuck watching.
+var CS155={p:{},won:{},n:null,tP:0,tN:0,rx:0,out:0,reT:0,rd:0};
 function cs155Co(){return ch153In()&&cl155Co()}
 function cs155Rider(peer){const q=CS155.p[peer];if(!q)return null;const age=Math.min(.35,(nowP()-q.t)/1000);return {peer,s:q.s+(q.ph==2?q.v*age:0),o:q.o,y:q.y,v:q.v,ph:q.ph,hp:q.hp}}
-// partners still riding (in this chase, heard from in the last 2.5 s)
-function cs155Alive(){const out=[];for(const r of cl155Mates(MP.rg)){const q=CS155.p[r.peer];if(!q||nowP()-q.t>2500)continue;if(q.ph==1||q.ph==2)out.push(cs155Rider(r.peer))}return out}
+// partners still riding on my try (in this chase, heard from in the last 2.5 s)
+function cs155Alive(){const out=[];for(const r of cl155Mates(MP.rg)){const q=CS155.p[r.peer];if(!q||nowP()-q.t>2500||(q.rd|0)!==CS155.rd)continue;if(q.ph==1||q.ph==2)out.push(cs155Rider(r.peer))}return out}
+// a partner already on a later try: that try's number, else -1
+function cs155Ahead(){let m=-1;for(const r of cl155Mates(MP.rg)){const q=CS155.p[r.peer];if(q&&nowP()-q.t<=2500&&(q.rd|0)>CS155.rd)m=Math.max(m,q.rd|0)}return m}
+// a watcher starts again (on try rd)
+function cs155Again(rd){const R=CH153.R;CS155.rd=rd;CS155.won={};if(R&&R.ph=='spec'&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
 function cs155Riders(){const R=CH153.R,L=cs155Alive();if(R&&(R.ph=='run'||R.ph=='intro'))L.push({peer:MP.me,s:R.s,o:R.o,y:R.y,v:R.v,ph:R.ph=='run'?2:1,me:1});return L}
 function cs155Won(){return Object.keys(CS155.won).length>0}
 // the one Skarrith: the host's world drives it, the others follow; everyone animates it and checks their own hits
@@ -46732,20 +46740,23 @@ function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,lead=MP.host=
 // falling with partners still riding: watch them; when nobody rides any more, either follow the winners to III or start again
 {const f=ch153Tick;ch153Tick=function(dt,now){const R=CH153.R;if(!R)return f.apply(this,arguments);const co=cs155Co();
   try{if(co){let m=null;cs155Alive().forEach(q=>{if(q.ph==2&&(m==null||q.s>m))m=q.s});CH153.lead=m}else CH153.lead=null}catch(_){}
-  if(co&&R.ph=='dead'&&R.dead.t+Math.max(0,dt)>=2.0&&!R.dead.fade&&!R.dead.co){R.dead.co=1;const al=cs155Alive();
-    if(al.length){R.ph='spec';R.spec={t:0,wait:0};const n=al.map(q=>mpName(q.peer)).join(', ');say('👁 You fell. Watch '+mpEsc(n)+' ride on — if they get through, they can revive you on the other side.')}
+  if(co&&R.ph=='dead'&&R.dead.t+Math.max(0,dt)>=2.0&&!R.dead.fade&&!R.dead.co){R.dead.co=1;const up=cs155Ahead(),al=cs155Alive();
+    if(up>=0){CS155.rd=up;CS155.won={}}   // my partners already started again: so do I (my own fall's fade, ch153Tick)
+    else if(al.length){R.ph='spec';R.spec={t:0,wait:0};const n=al.map(q=>mpName(q.peer)).join(', ');say('👁 You fell. Watch '+mpEsc(n)+' ride on — if they get through, they can revive you on the other side.')}
     else if(cs155Won()){cs155Out();return}
-    else{CS155.reT=nowP();cl155Send(['cs','re']);[500,1100].forEach(t=>setTimeout(()=>cl155Send(['cs','re']),t))}}
+    else{CS155.rd++;CS155.reT=nowP();const rd=CS155.rd;cl155Send(['cs','re',rd]);[500,1100].forEach(t=>setTimeout(()=>cl155Send(['cs','re',rd]),t))}}
   if(R.ph=='spec'){cs155Spec(dt,now);cs155Tell(now);return}
   const r=f.apply(this,arguments);if(co)cs155Tell(now);return r}}
 function cs155Tell(now){const R=CH153.R;if(!R||now-CS155.tP<100)return;CS155.tP=now;const ph=R.ph=='intro'?1:R.ph=='run'?2:R.ph=='win'?4:3;
-  cl155Send(['cs','p',cl155R1(R.ph=='spec'?-99:R.s),cl155R2(R.o),cl155R2(R.y||0),ph,R.hp|0,cl155R1(R.v||0)])}
+  cl155Send(['cs','p',cl155R1(R.ph=='spec'?-99:R.s),cl155R2(R.o),cl155R2(R.y||0),ph,R.hp|0,cl155R1(R.v||0),CS155.rd])}
 function cs155Spec(dt,now){const R=CH153.R,S=CH153.S,P=S.P,K=S.K;R.t+=dt;R.spec.t+=dt;
-  const al=cs155Alive();
+  const al=cs155Alive(),up=cs155Ahead();
+  // a partner already on the next try (everyone fell and the chase started again for them): start again with them
+  if(up>=0)cs155Again(up);
   // a partner back at the foot of the trail (the chase started again for them): start again with them
   if(al.some(q=>q.ph==1)&&!R.spec.fade&&R.spec.t>.5){R.spec.fade=1;CS155.won={};fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}
   if(!al.length){if(cs155Won()){cs155Out();return}if(!R.spec.wait)R.spec.wait=nowP();
-    if(nowP()-R.spec.wait>1600&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
+    if(nowP()-R.spec.wait>1600&&!R.spec.fade){R.spec.fade=1;CS155.rd++;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
   else R.spec.wait=0;
   const fo=al.length?al.reduce((a,b)=>b.s>a.s?b:a):null;
   // the rider I watch is suddenly far back down the trail: the chase started again for them, so it does for me
@@ -46769,7 +46780,7 @@ var RV155={T:180};
 {const f=rv148Die;rv148Die=function(){const r=f.apply(this,arguments);if(RV148.long){RV148.long=0;RV148.T=30}return r}}
 {const f=ch153Win;ch153Win=function(){const R=CH153.R,was=R&&R.ph;const r=f.apply(this,arguments);if(was=='run'&&CH153.R&&CH153.R.ph=='win'&&cs155Co())cl155Send(['cs','w']);return r}}
 // riding up together: every partner in Mistmere comes too (they all need a mount)
-{const f=ch153Enter;ch153Enter=function(){CS155.won={};CS155.p={};CS155.n=null;if(!CS155.rx&&cl155Co()&&!AF&&mounts.length){const lack=cl155Mates(MP.rg).filter(r=>!r.pr.hm).map(r=>mpName(r.peer));
+{const f=ch153Enter;ch153Enter=function(){CS155.won={};CS155.p={};CS155.n=null;CS155.rd=0;if(!CS155.rx&&cl155Co()&&!AF&&mounts.length){const lack=cl155Mates(MP.rg).filter(r=>!r.pr.hm).map(r=>mpName(r.peer));
     if(lack.length)return say('🐎 '+mpEsc(lack.join(', '))+(lack.length>1?' need':' needs')+' a mount first — the whole party rides up together.');
     cl155Send(['cs','go'])}
   return f.apply(this,arguments)}}
@@ -46783,12 +46794,15 @@ function cs155On(q,peer){const k=q[1],R=CH153.R,nm=mpEsc(mpName(peer));
     say('👥 '+nm+' rides up the hill path — you ride with them!');CS155.rx=1;try{ch153Enter()}finally{CS155.rx=0}return}
   if(k==='dn'){say('🤝 '+nm+' fell on the mountain — they lie here. Press F beside them to revive them.');return}
   if(!ch153In())return;
-  if(k==='p'){CS155.p[peer]={s:+q[2]||0,o:+q[3]||0,y:+q[4]||0,ph:q[5]|0,hp:q[6]|0,v:+q[7]||0,t:nowP()}}
+  if(k==='p'){CS155.p[peer]={s:+q[2]||0,o:+q[3]||0,y:+q[4]||0,ph:q[5]|0,hp:q[6]|0,v:+q[7]||0,rd:q[8]|0,t:nowP()}}
   else if(k==='n'&&peer===MP.host){CS155.n={s:+q[2]||0,v:+q[3]||0,t:nowP()}}
   else if(k==='w'){CS155.won[peer]=1;say('🐍 '+nm+' squeezed through the crack!')}
   else if(!R||!CH153.S)return;
   else if(k==='v'&&peer===MP.host&&Array.isArray(q[3])){const L=q[3].filter(a=>Array.isArray(a)).slice(0,5).map(a=>[+a[0]||0,+a[1]||0]);R.sn.rear=1;ch153SpitSpawn(L,q[2]|0)}
   else if(k==='k'&&peer===MP.host&&typeof q[2]=='string'){if(!R.sn.strike){R.sn.strike={t:0,o:+q[3]||0,s0:R.sn.s,tg:q[2]};try{svSnd('hiss',1.2,.8)}catch(_){}}}
+  else if(k==='re'&&q.length>2){const rd=q[2]|0;if(R.ph=='run'||R.ph=='intro'||rd<=CS155.rd)return;CS155.reT=nowP();
+    if(R.ph=='dead'){CS155.rd=rd;CS155.won={};R.dead.co=1;return}   // my own fall's fade restarts me anyway (ch153Tick)
+    cs155Again(rd)}
   else if(k==='re'){if(R.ph=='run'||R.ph=='intro'||nowP()-CS155.reT<2500)return;CS155.reT=nowP();CS155.won={};
     if(R.ph=='dead'){R.dead.co=1;return}   // my own fall's fade restarts me anyway (ch153Tick)
     if(R.ph=='spec'&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}}
