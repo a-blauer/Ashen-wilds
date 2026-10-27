@@ -53,6 +53,10 @@ SEC=60 v141_sov.py
 v143_lantern_road.py
 v144_glowmire.py
 v145_sigils.py
+v151_frozen_maw.py
+v160_frozen_gate.py
+v170_mountain_drill.py
+v151_coop.py
 v146_sovs.py
 v149_ssithra.py
 kv_viewer.py

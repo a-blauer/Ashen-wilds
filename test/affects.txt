@@ -54,3 +54,5 @@ intro|cinematic: v151_intro.py v151_intro_live.py v117_creator.py v131_load_titl
 316[0-2]|ascent|chase|mount|riding|jump|3150|0045|terrain|0060: v153_ascent.py v154_hydra.py
 3170|hydra|wind|chime|3150|3060|cheat|quest|0045|1940|insReach: v154_hydra.py v152_abeksi.py
 3180|315[0-5]|316[0-2]|3170|coop|co-op|0520|3085|3090|revive|abeksi|ascent|hydra: v155_coop_levels.py
+v151|315[0-9]|31[678][0-9]|coop-burningeye|gorthrak|frozen-maw|frozen-gate|mountain-drill|flamespitter|1680-: v151_frozen_maw.py v160_frozen_gate.py v170_mountain_drill.py v108_instances.py v148_cheddar.py v113_roster.py v114_save.py v144_glowmire.py v145_sigils.py v151_coop.py
+3180|coop-burningeye|0520|3085|3086|3092|3096|1970-: v151_coop.py
