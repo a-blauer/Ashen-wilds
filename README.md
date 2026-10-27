@@ -668,6 +668,16 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     every mount runs at `CH153V.spd`; Skarrith (`ch153Snake`) chases on a rubber band, spits venom (phases in the course) and strikes from
     the side; 3 hits or a swallow = start again. The crack at the summit leads to III. Saved `x2.ch153`. Tests `v153_ascent.py`
     (an autopilot rides the whole trail: about 110 s), pictures `v153_look.py`.
+  * **Ascent boost and danger (v157, `3192`)**: Shift (desktop) or the 💨 dash button gives `ch157Boost()`: ×`CH157.mul` 1.55 for `CH157.T` 0.9 s,
+    `CH157.n` 2 charges each refilling in `CH157.refill` 5 s (not while boosting); it cancels a stumble and carries through a jump; 3162's
+    speed reads `ch157Mul(R)`; co-op: each rider boosts themselves. Effects `ch157Fx`/`ch157Hud`: speed FOV, wind streaks (`#ch157c`), hoof
+    dust, pulsing red edge (`#ch157e`), surge thuds and shake, a looping rumble/hiss (`ch157Snd`), side strike arrows (`#ch157sL/R`), the VENOM
+    warning; `ch157Calm()` (Screen shake off or reduced motion) tones them down. *Emergence*: Skarrith bursts from the trail behind the rider at
+    `CH153V.hole` (1; `ch153Course().start` 15) at `ch153EmT(R)` s into the intro (3162 poses it via `N.em`/`N.drop`; 3192 adds the crack
+    `ch157CrackMesh`, debris `ch157Erupt`, dust); intro camera `CH153CAM`; off-trail spots follow the ground (`ch153Ext`). Old bug: before the
+    trail's foot the serpent was placed 10–30 above the slope, out of the intro camera's view. Under ~10 tiles the chase camera's pitch rises
+    (up to 0.95) so it stays above Skarrith's head instead of inside it. Tests: `v153_ascent.py` (emergence, boost; the autopilot boosts),
+    `v155_coop_levels.py` (a co-op boost).
   * **The Gate of the Hydra (v154, III → Den, `3170`)**: a great carved stone door in the mountain replaces the Den portal
     (`sp152Gate('hydra')`), five Hydra heads on its lintel. Five Wind Stones (`hd154Plan`: off the road at 12/30/48/66/84 %, open
     ground, apart) each with a bronze serpent vane: F turns it an eighth; facing the door (`want`) its wind ribbon flows and a head
