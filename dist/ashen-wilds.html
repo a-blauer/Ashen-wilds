@@ -46956,10 +46956,10 @@ function ch157CrackTex(){if(ch157CrackTex.t)return ch157CrackTex.t;const c=docum
   const t=new THREE.CanvasTexture(c);return ch157CrackTex.t=t}
 function ch157Hole(){const S=CH153.S,P=S.P,[x,z,h]=ch153Ext(P,CH153V.hole,0);return new THREE.Vector3(x,h,z)}
 function ch157CrackMesh(){if(CH157.crack&&CH157.crack.parent===CH153.S.root)return CH157.crack;
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(8,8).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:ch157CrackTex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,opacity:0}));
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(6.4,6.4).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:ch157CrackTex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,opacity:0}));
   m.material.userData.noFade135=1;m.userData.noFade135=1;m.userData.psNo=1;m.renderOrder=2;CH153.S.root.add(m);
-  const p=ch157Hole(),hx=GH(p.x+1,p.z)-GH(p.x-1,p.z),hz=GH(p.x,p.z+1)-GH(p.x,p.z-1),n=new THREE.Vector3(-hx/2,1,-hz/2).normalize();
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),n);m.position.set(p.x,Math.max(GH(p.x,p.z),GH(p.x+2,p.z),GH(p.x-2,p.z),GH(p.x,p.z+2),GH(p.x,p.z-2))+.3,p.z);return CH157.crack=m}
+  const p=ch157Hole(),P=CH153.S.P;m.rotation.y=P.yaw(Math.max(0,CH153V.hole));m.position.set(p.x,(CH153V.hole>=0?P.at(CH153V.hole,0)[2]:p.y)+.07,p.z);   // the trail is a flat ledge: lie on it
+  return CH157.crack=m}
 function ch157Rock(){if(!ch157Rock.g){ch157Rock.g=new THREE.DodecahedronGeometry(.42,0);ch157Rock.m=[0x6a645a,0x5a554c,0x7a7266].map(c=>{const m=new THREE.MeshLambertMaterial({color:c,flatShading:true});m.userData.noFade135=1;return m})}
   const m=new THREE.Mesh(ch157Rock.g,ch157Rock.m[(Math.random()*3)|0]);m.castShadow=true;m.userData.psNo=1;m.userData.noFade135=1;return m}
 function ch157Erupt(){const S=CH153.S,p=ch157Hole();
