@@ -61,16 +61,18 @@ def s(pg):
     press('i');ck(not hidden('bag'),'I opens the inventory again after reset');closeAll()
     ck(E("()=>JSON.parse(localStorage.getItem('et_set')).keys")=={},'saved bindings cleared')
     # 7. UI size: the HUD slider scales the HUD, the bar and the minimap; Reset brings 100% back
+    # sizes are auto fit × the slider, so compare with the size at 100% (the window here may be smaller than 1280x760)
+    h0=E("()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kqHud'))");m0=E("()=>parseFloat(getComputedStyle(document.querySelector('#setw .win')).zoom)")
     z0=E("()=>document.getElementById('bbar').getBoundingClientRect().width")
     E("()=>{const i=document.getElementById('s161_hud');i.value=1.4;i.dispatchEvent(new Event('input'));i.dispatchEvent(new Event('change'))}");pg.wait_for_timeout(200)
     z1=E("()=>document.getElementById('bbar').getBoundingClientRect().width")
-    ck(E("()=>Math.abs(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kqHud'))-1.4)<.01"),'HUD 140%% sets the HUD size: %s'%E("()=>getComputedStyle(document.documentElement).getPropertyValue('--kqHud')"))
+    h1=E("()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kqHud'))");ck(abs(h1-h0*1.4)<.01,'HUD 140%% sets the HUD size: %s (100%% = %s)'%(h1,h0))
     ck(z1>z0*1.05 or E("()=>UI161.bar")<1.39,'the bottom bar grows with the HUD size (or is held to the window): %s → %s'%(z0,z1))
     ck(E("()=>SET.ui161&&SET.ui161.hud==1.4"),'HUD size saved')
     E("()=>{const i=document.getElementById('s161_menu');i.value=.8;i.dispatchEvent(new Event('input'));i.dispatchEvent(new Event('change'))}");pg.wait_for_timeout(200)
-    ck(E("()=>Math.abs(parseFloat(getComputedStyle(document.querySelector('#setw .win')).zoom)-.8)<.02"),'Menus 80%% shrinks the windows: %s'%E("()=>getComputedStyle(document.querySelector('#setw .win')).zoom"))
+    m1=E("()=>parseFloat(getComputedStyle(document.querySelector('#setw .win')).zoom)");ck(abs(m1-m0*.8)<.02,'Menus 80%% shrinks the windows: %s (100%% = %s)'%(m1,m0))
     E("()=>document.getElementById('s161_reset').click()");pg.wait_for_timeout(200)
-    ck(E("()=>Math.abs(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kqHud'))-1)<.01"),'Reset interface size → 100%')
+    h2=E("()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kqHud'))");ck(abs(h2-h0)<.01,'Reset interface size → 100%%: %s (expected %s)'%(h2,h0))
     # the location box and menu buttons stay under the minimap at every HUD size
     for v in [.6,1,1.5]:
         E("()=>{SET.ui161={hud:%s};ui161Lay(true)}"%v);pg.wait_for_timeout(100)
