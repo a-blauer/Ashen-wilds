@@ -47694,5 +47694,8 @@ function ab157Rise(){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=
   else if(k==='d'){const a=R[q[2]|0];if(!a||a.dead||!isFinite(+q[3])||!isFinite(+q[4]))return;ab157Fall(a,+q[3],+q[4],false,1500)}
   else if(k==='rs'&&typeof q[2]==='string'&&peer===MP.host&&!ab157Lead()){if(!AB157A.on){if(performance.now()-(AB157A.calmT||-1e9)<3000)return;ab157Alarm()}const s=q[2];for(let i=0;i<R.length&&i<s.length;i++){const a=R[i],c=s[i];
       if(c==='2'&&!a.dead)ab157Fall(a,null,null,false,0);a.net1=c==='1'?1:0;if(c==='3'&&!a.dead&&!a.hunt){a.hunt=1;a.halt=1}else if(c!=='3'&&a.hunt&&!a.e)a.hunt=0}}
-  else if(k==='calm'){if(AB157A.on){say('👥 '+mpEsc(mpName(peer))+' fell — the whole party wakes at the checkpoint, the city calm again.');ab152Restart(false)}}}}
+  else if(k==='calm'){if(AB157A.on){say('👥 '+mpEsc(mpName(peer))+' fell — the whole party wakes at the checkpoint, the city calm again.');ab158Wake();ab152Restart(false)}}}}
+// v158: the whole party wakes at the checkpoint: a partner lying downed (waiting for a revive) gets up too, healed, instead of lying in a
+// guard's view at the checkpoint (which rang the bell again)
+function ab158Wake(){try{if(typeof RV148!='undefined'&&RV148.down){const s0=say;say=()=>{};try{rv148Up('')}finally{say=s0}}}catch(_){}if(hero.hp>0){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}try{ui()}catch(_){}}}
 </script></body></html>
