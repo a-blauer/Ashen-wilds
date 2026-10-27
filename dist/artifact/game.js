@@ -1,15 +1,15 @@
-// ================= v158: custom key bindings (desktop) =================
+// ================= v161: custom key bindings (desktop) =================
 // Every keyboard check in the game reads e.key (the key's default letter, e.g. 'w', ' ', 'shift'). Rather than change each
 // of them, this file runs FIRST (window capture listener, registered before any other key listener) and rewrites e.key on
 // the event: a key the player bound to an action becomes that action's default key, and an action's default key that the
 // player moved elsewhere becomes 'Unidentified' (does nothing). With no custom bindings nothing is touched.
-//  * KB158.A: the actions [id, label, default key, group, context]; bindings live in SET.keys {id: key} (only changed ones),
-//    saved with the other settings ('et_set'). Keys are stored the way kb158Norm() names them: lower-case e.key, digits by
+//  * KB161.A: the actions [id, label, default key, group, context]; bindings live in SET.keys {id: key} (only changed ones),
+//    saved with the other settings ('et_set'). Keys are stored the way kb161Norm() names them: lower-case e.key, digits by
 //    their key position (so Shift+1 is still '1'), ' ' for Space.
 //  * context 'ab': Crouch only works in the Abeksi stealth level (ab152In), so it may share a key with a normal action.
-//  * KB158.cap: while the Settings window waits for a key, the next key press goes to this callback and nowhere else.
+//  * KB161.cap: while the Settings window waits for a key, the next key press goes to this callback and nowhere else.
 //  * Skipped: typing in text boxes, Ctrl/Alt/Cmd shortcuts, the title screen and the intro film.
-var KB158={A:[
+var KB161={A:[
   ['up','Move forward','w','Movement'],['down','Move back','s','Movement'],['left','Move left','a','Movement'],['right','Move right','d','Movement'],
   ['dash','Dash','shift','Combat'],['cmd','Command companions to attack (jump in a chase)',' ','Combat'],['tgt','Target nearest enemy','tab','Combat'],
   ['a1','Ability 1','1','Combat'],['a2','Ability 2','2','Combat'],['a3','Ability 3','3','Combat'],['a4','Ability 4','4','Combat'],['a5','Ability 5','5','Combat'],['a6','Ability 6','6','Combat'],
@@ -22,47 +22,47 @@ var KB158={A:[
   ['mnt','Mounts','h','Windows'],['dex','Bestiary','l','Windows'],['coop','Co-op','y','Windows'],['menu','Menu','m','Windows'],['set','Settings','o','Windows'],
   ['crouch','Crouch (stealth level)','c','Special','ab']],
   on:false,map:{},mapX:{},def:{},cap:null,rev:0};
-var KB158_BAD={escape:1,meta:1,os:1,contextmenu:1,unidentified:1,dead:1,process:1,f11:1,f12:1};
-function kb158Norm(e){let k=String(e.key||'').toLowerCase();const c=e.code||'';
+var KB161_BAD={escape:1,meta:1,os:1,contextmenu:1,unidentified:1,dead:1,process:1,f11:1,f12:1};
+function kb161Norm(e){let k=String(e.key||'').toLowerCase();const c=e.code||'';
   if(/^Digit\d$/.test(c))k=c.slice(5);else if(/^Numpad\d$/.test(c)&&k.length==1&&!/\d/.test(k))k=c.slice(6);
   if(k=='spacebar')k=' ';if(k=='esc')k='escape';return k}
-function kb158Label(k){if(k==null||k==='')return '—';const L={' ':'Space',shift:'Shift',tab:'Tab',control:'Ctrl',alt:'Alt',enter:'Enter',backspace:'Backspace',
+function kb161Label(k){if(k==null||k==='')return '—';const L={' ':'Space',shift:'Shift',tab:'Tab',control:'Ctrl',alt:'Alt',enter:'Enter',backspace:'Backspace',
   capslock:'Caps Lock',arrowup:'↑',arrowdown:'↓',arrowleft:'←',arrowright:'→',delete:'Del',insert:'Ins',home:'Home',end:'End',pageup:'PgUp',pagedown:'PgDn'};
   if(L[k])return L[k];return k.length==1?k.toUpperCase():k.charAt(0).toUpperCase()+k.slice(1)}
-function kb158Get(id){const s=(typeof SET!='undefined'?SET:KB158.boot)||{},K=s.keys||{};const a=KB158.A.find(x=>x[0]==id);if(!a)return '';return (id in K)?K[id]:a[2]}
+function kb161Get(id){const s=(typeof SET!='undefined'?SET:KB161.boot)||{},K=s.keys||{};const a=KB161.A.find(x=>x[0]==id);if(!a)return '';return (id in K)?K[id]:a[2]}
 // rebuild the translation tables from the saved bindings
-function kb158Build(keys){keys=keys||{};const map={},mapX={},def={};let on=false;
-  KB158.A.forEach(a=>{def[a[2]]=1;const b=(a[0] in keys)?keys[a[0]]:a[2];if(b!==a[2])on=true;if(b==='')return;(a[4]?mapX:map)[b]=a[2]});
-  KB158.on=on;KB158.map=map;KB158.mapX=mapX;KB158.def=def;KB158.rev++}
-KB158.boot=(()=>{try{return JSON.parse(localStorage.getItem('et_set')||'{}')||{}}catch(_){return {}}})();
-kb158Build(KB158.boot.keys);
-function kb158Skip(e){const t=e.target;if(t&&(t.tagName=='INPUT'||t.tagName=='TEXTAREA'||t.tagName=='SELECT'||t.isContentEditable))return true;
+function kb161Build(keys){keys=keys||{};const map={},mapX={},def={};let on=false;
+  KB161.A.forEach(a=>{def[a[2]]=1;const b=(a[0] in keys)?keys[a[0]]:a[2];if(b!==a[2])on=true;if(b==='')return;(a[4]?mapX:map)[b]=a[2]});
+  KB161.on=on;KB161.map=map;KB161.mapX=mapX;KB161.def=def;KB161.rev++}
+KB161.boot=(()=>{try{return JSON.parse(localStorage.getItem('et_set')||'{}')||{}}catch(_){return {}}})();
+kb161Build(KB161.boot.keys);
+function kb161Skip(e){const t=e.target;if(t&&(t.tagName=='INPUT'||t.tagName=='TEXTAREA'||t.tagName=='SELECT'||t.isContentEditable))return true;
   try{if(typeof IC151!='undefined'&&IC151.on)return true}catch(_){}
   try{const T=document.getElementById('awT');if(T&&!T.classList.contains('out'))return true}catch(_){}
   return false}
-function kb158Key(d,sh){return d==' '?' ':d=='shift'?'Shift':d=='tab'?'Tab':d=='control'?'Control':(sh&&d.length==1?d.toUpperCase():d)}
-function kb158H(e){
-  if(KB158.cap){e.preventDefault();e.stopImmediatePropagation();if(e.type!='keydown'||e.repeat)return;
-    const k=kb158Norm(e);if(k=='meta'||k=='os')return;const f=KB158.cap;KB158.cap=null;try{f(k)}catch(_){}return}
-  if(!KB158.on)return;
-  const p=kb158Norm(e);
+function kb161Key(d,sh){return d==' '?' ':d=='shift'?'Shift':d=='tab'?'Tab':d=='control'?'Control':(sh&&d.length==1?d.toUpperCase():d)}
+function kb161H(e){
+  if(KB161.cap){e.preventDefault();e.stopImmediatePropagation();if(e.type!='keydown'||e.repeat)return;
+    const k=kb161Norm(e);if(k=='meta'||k=='os')return;const f=KB161.cap;KB161.cap=null;try{f(k)}catch(_){}return}
+  if(!KB161.on)return;
+  const p=kb161Norm(e);
   if((e.ctrlKey&&p!='control')||(e.metaKey&&p!='meta')||(e.altKey&&p!='alt'))return;
-  if(kb158Skip(e))return;
+  if(kb161Skip(e))return;
   let d;
   // the stealth level's crouch key
   let ab=false;try{ab=typeof ab152In=='function'&&ab152In()&&AB152.S}catch(_){}
-  if(ab&&(p in KB158.mapX))d=KB158.mapX[p];
-  else if(p in KB158.map){d=KB158.map[p];
+  if(ab&&(p in KB161.mapX))d=KB161.mapX[p];
+  else if(p in KB161.map){d=KB161.map[p];
     // the Character key in the stealth level when Crouch moved off 'c': open Character here (the level's own 'c' handler would crouch)
-    if(ab&&d=='c'&&kb158Get('crouch')!=='c'){e.preventDefault();e.stopImmediatePropagation();
+    if(ab&&d=='c'&&kb161Get('crouch')!=='c'){e.preventDefault();e.stopImmediatePropagation();
       if(e.type=='keydown'&&!e.repeat){try{if(!$('tal').classList.contains('hide'))$('tal').classList.add('hide');else if(!uiOpen())openTal()}catch(_){}}return}}
-  else if(KB158.def[p])d='';
+  else if(KB161.def[p])d='';
   else return;
-  const v=d===''?'Unidentified':kb158Key(d,e.shiftKey);
+  const v=d===''?'Unidentified':kb161Key(d,e.shiftKey);
   if(v===e.key)return;
   try{Object.defineProperty(e,'key',{value:v,configurable:true})}catch(_){}
   if(d===''||d==' '||d=='tab'||p.length>1)e.preventDefault()}
-addEventListener('keydown',kb158H,true);addEventListener('keyup',kb158H,true);
+addEventListener('keydown',kb161H,true);addEventListener('keyup',kb161H,true);
 
 // ================= v99 (model track): realistic humanoid proportions =================
 // Every humanoid (hero, co-op heroes, bag / creator previews, humanoid foes, humanoid Sovereigns, town folk) is built in
@@ -3516,7 +3516,7 @@ $('devp').addEventListener('click',e=>{const b=e.target.closest('[data-dev]');if
 if($('s_dev')){$('s_dev').value=SET.dev||'desktop';$('s_dev').onchange=e=>applyDev(e.target.value)}
 // ---------- virtual joystick ----------
 {const J=$('joy'),K0=J.querySelector('i');
-  // v158: the pad may be zoomed (UI size): the reach is measured on screen (37% of the pad's width, 46px on the old 124px pad)
+  // v161: the pad may be zoomed (UI size): the reach is measured on screen (37% of the pad's width, 46px on the old 124px pad)
   // and the knob's own offset is in the pad's unzoomed pixels
   const set=(e)=>{const r=J.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=Math.max(8,r.width*.37),z=r.width/Math.max(1,J.offsetWidth||r.width)||1;
     let dx=e.clientX-cx,dy=e.clientY-cy;const L=Math.hypot(dx,dy);if(L>R0){dx*=R0/L;dy*=R0/L}
@@ -36823,8 +36823,38 @@ fk142Setup();
 // the captain's map table on the south. The lampposts line the whole road from the outpost to ~10 steps before the gateway,
 // alternating sides, about mq151Cfg().gap (7) tiles apart (~47 of them; v143 had 8 on the last 50 steps). The Ripper parks beside
 // the gateway, on the side away from Cheddar's gateway spot, facing the arch.
+// v160, the lantern line (owner): the raw road path zigzags inside wide open ground (Kindlelight I's middle: a V and a W), so lamps
+// counted 7 path steps apart stood side by side on two legs of a zag (12 within 5 tiles, two pairs under 2) and the Ripper drove
+// every zag. mq160Line cuts each zag: a straight shortcut is kept while every point on it stays mq151Cfg().clr tiles inside open
+// ground, within .dev tiles of the raw path (so it never leaves the road's corridor), .wat (2.6) tiles clear of ponds and rock and
+// .obs (1.6) clear of bushes, then the corners are rounded (Catmull-Rom). Lamps go evenly along that line at least .gap tiles apart
+// and 1.5 clear of those clumps (34 in Kindlelight I, ~7.2 apart along the line, no two closer than ~7.6), and the Ripper rides it.
+// The map itself (tiles, camps, decorations' seeded stream) is untouched; only the lamps, the route and their keep-out rings move.
 // (hoisted functions, not a var: 0045 and 0070 call into this file long before its own lines run)
-function mq151Cfg(){return {A:36,gap:7}}
+function mq151Cfg(){return {A:36,gap:7,clr:5,dev:6,obs:1.6,wat:2.6}}
+// the road from path index s0 to s1 with the zigzags cut and the corners rounded: [[x,z],...] about a tile apart
+function mq160Line(P,s0,s1){const c=mq151Cfg(),DW=MAP.DW,near=new Set(),raw=new Set(),wide=new Set(),r=c.dev,R2=r+c.wat+4;
+  P.forEach(p=>{for(let z=Math.floor(p[1]-R2);z<=Math.ceil(p[1]+R2);z++)for(let x=Math.floor(p[0]-R2);x<=Math.ceil(p[0]+R2);x++){const d=Math.hypot(x-p[0],z-p[1]);
+    if(d<=r)near.add(z*W+x);if(d<=1.2)raw.add(z*W+x);if(d<=R2)wide.add(z*W+x)}});
+  // ponds and rocks (water / rock tiles) and bushes (MAP.props) near the road: a shortcut keeps mq151Cfg().wat tiles clear of water and
+  // rock, .obs of bushes, except on the raw road itself (it already threads past them), so by a clump the line follows the road
+  const ob=[],pr=new Set(),blk=new Set();try{MAP.props.forEach(q=>pr.add(q[1]*W+q[0]))}catch(_){}
+  wide.forEach(k=>{const x=k%W,z=(k-x)/W,t=MAP[z]&&MAP[z][x];const bu=pr.has(k);if(!(bu||t=='~'||t=='r'||t=='H'))return;const rd=bu?c.obs:c.wat;ob.push([x,z,rd]);
+    for(let v=z-4;v<=z+4;v++)for(let u=x-4;u<=x+4;u++)if(Math.hypot(u-x,v-z)<=rd&&!raw.has(v*W+u))blk.add(v*W+u)});
+  const inL=(x,z)=>{const X=Math.round(x),Z=Math.round(z),k=Z*W+X;return X>0&&Z>0&&X<W-1&&Z<H-1&&(raw.has(k)||DW[k]<-c.clr&&near.has(k))&&!blk.has(k)};
+  const see=(a,b)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1]))+1;for(let t=0;t<=n;t++)if(!inL(a[0]+(b[0]-a[0])*t/n,a[1]+(b[1]-a[1])*t/n))return false;return true};
+  const kn=[s0];for(let i=s0;i<s1;){let j=s1;while(j>i+1&&!see(P[i],P[j]))j--;kn.push(j);i=j}
+  const K=kn.map(i=>P[i]),out=[];
+  for(let i=0;i<K.length-1;i++){const a=K[Math.max(0,i-1)],b=K[i],q=K[i+1],d=K[Math.min(K.length-1,i+2)],n=Math.max(2,Math.ceil(Math.hypot(q[0]-b[0],q[1]-b[1])));
+    for(let s=0;s<n;s++){const t=s/n,t2=t*t,t3=t2*t;out.push([0,1].map(k=>.5*(2*b[k]+(q[k]-a[k])*t+(2*a[k]-5*b[k]+4*q[k]-d[k])*t2+(3*b[k]-a[k]-3*q[k]+d[k])*t3)))}}
+  out.push([K[K.length-1][0],K[K.length-1][1]]);mq160Line.kn=kn;
+  // rounding the corners can bow a little toward a clump: push points inside a clump's margin back out, then relax the line
+  // (each point toward its neighbours' middle) so the push is a smooth bend, not a kink; repeat, ending on a push
+  const push=()=>{let m=0;for(let i=1;i<out.length-1;i++){const q=out[i];for(const [x,z,rd] of ob){const dx=q[0]-x,dz=q[1]-z,d=Math.hypot(dx,dz);
+    if(d<rd){const k=(rd-d)/(d||1);q[0]+=dx*k;q[1]+=dz*k;m=1}}}return m};
+  for(let it=0;it<10&&push();it++)for(let i=2;i<out.length-2;i++){const a=out[i-1],b=out[i+1];out[i]=[out[i][0]*.5+(a[0]+b[0])*.25,out[i][1]*.5+(a[1]+b[1])*.25]}
+  push();mq160Line.ob=ob;
+  return out}
 function mq151A(N){return Math.max(10,Math.min(mq151Cfg().A,N-60))}
 function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   const I=INSL[0],P=I.path,N=P.length,DW=MAP.DW;
@@ -36855,10 +36885,18 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   // the palisade: sections of stakes along the east edge, a short screen on the west
   for(let a=-4.6;a<=8.6;a+=1.55){const o=pick(a,-9.7,.5);if(o){o.ry=road+Math.PI/2;o.n=6;R.stakes.push(o)}}
   [-2.2,-.7].forEach(a=>{const o=pick(a,5.6,.5);if(o){o.ry=road-Math.PI/2;o.n=5;R.stakes.push(o)}});
-  // the lampposts: from A+8 to N-10, about mq151Cfg().gap apart (at least 8), alternating sides 2.7 off the road centre, the arm over the road
-  const L0=A+8,L1=N-10,n=Math.max(8,Math.round((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const ix=Math.round(L0+(L1-L0)*i/(n-1)),q=P[ix],t=tan(ix),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
-    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)){o={x,z,i:ix};break}}
-    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:ix};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
+  // v160: the lantern line from the outpost to the gateway: the raw path up to the Ripper's start, the cut-and-rounded line to 13 steps
+  // before the gateway (where the Ripper turns off to park), then the raw path's last steps; RD.d = distance along it in tiles
+  const S1=N-13,LN=mq160Line(P,R.start,S1),RD=P.slice(A,R.start).map(p=>[p[0],p[1]]).concat(LN,P.slice(S1+1).map(p=>[p[0],p[1]]));
+  const Dd=[0];for(let i=1;i<RD.length;i++)Dd.push(Dd[i-1]+Math.hypot(RD[i][0]-RD[i-1][0],RD[i][1]-RD[i-1][1]));R.line=RD;R.lineD=Dd;R.lineLen=Dd[Dd.length-1];
+  const atD=s=>{let i=1;while(i<RD.length-1&&Dd[i]<s)i++;const a=RD[i-1],b=RD[i],k=(s-Dd[i-1])/Math.max(1e-6,Dd[i]-Dd[i-1]),
+      p=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k],u=RD[Math.max(0,i-4)],v=RD[Math.min(RD.length-1,i+3)];let dx=v[0]-u[0],dz=v[1]-u[1];const L=Math.hypot(dx,dz)||1;return [p,[dx/L,dz/L]]};
+  // the lampposts: from 8 tiles past the outpost to 10 before the gateway, evenly spaced at least mq151Cfg().gap tiles apart along the line (at least 8 lamps),
+  // alternating sides 2.7 off the line, the arm over the road; .i = the distance along the line (tiles from the outpost)
+  const OB=mq160Line.ob||[],clear=(x,z)=>OB.every(([u,v])=>Math.hypot(x-u,z-v)>=1.5); // a lamp stands 1.5 clear of water, rock and bushes
+  const L0=8,L1=R.lineLen-10,n=Math.max(8,Math.floor((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const s=L0+(L1-L0)*i/(n-1),[q,t]=atD(s),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
+    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)&&clear(x,z)){o={x,z,i:s};break}}
+    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:s};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
   // the gateway and where the Ripper parks: beside the arch, away from Cheddar's gateway spot (2350 picks +side first)
   const G=I.ba,q=P[Math.max(0,N-14)];let dx=q[0]-G[0],dz=q[1]-G[1];const Lg=Math.hypot(dx,dz)||1;dx/=Lg;dz/=Lg;const sx=-dz,sz=dx;
   const chq=[[5.4,2],[5.4,-2],[6,2.4],[6,-2.4]].find(([a,b])=>ok(G[0]+dx*a+sx*b,G[1]+dz*a+sz*b,.3)),cs=chq?Math.sign(chq[1]):1;
@@ -36866,7 +36904,7 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   for(const [a,b] of [[3.7,-3.1],[4.3,-3.4],[3.3,-3.7],[4.8,-3.0],[3.7,-2.6]]){const x=G[0]+dx*a+sx*b*cs,z=G[1]+dz*a+sz*b*cs;if(ok(x,z,.9)){R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs};break}}
   if(!R.park){const x=G[0]+dx*3.7-sx*3.1*cs,z=G[1]+dz*3.7-sz*3.1*cs;R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs}}
   // the route: the road from the start to ~12 steps before the gateway, then a curve to the parking spot
-  const rt=[];for(let i=R.start;i<=N-13;i+=2)rt.push([P[i][0],P[i][1]]);
+  const rt=[];for(let i=0;i<LN.length;i+=2)rt.push(LN[i].slice());if(rt.length&&(LN.length-1)%2)rt.push(LN[LN.length-1].slice()); // v160: along the lantern line
   {const e=P[N-13],m=[(e[0]+R.park.x)/2+sx*cs*-.8,(e[1]+R.park.z)/2+sz*cs*-.8];rt.push(m);
     const b=[R.park.x-Math.sin(R.park.ry)*1.6,R.park.z-Math.cos(R.park.ry)*1.6];rt.push(b);rt.push([R.park.x,R.park.z])}
   R.route=rt;
@@ -37198,12 +37236,13 @@ MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
 // The first chapter of Kindlelight's main quest line (a chapter per field instance; II and III come later). In Kindlelight I the
 // gateway to II is dormant. The Lantern Wardens (3021) hold an outpost near the entrance (3020 plan) with the Portal Ripper (3022),
 // a machine that can tear the gateway open, but it will not roll through the dark: lampposts line the whole road from the outpost
-// to the gateway (v151: ~47, one glowbulb each; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
+// to the gateway (v160: 34 along the smoothed lantern line, one glowbulb each; v151 had ~47 on the raw zigzag road; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
 // that every Kindlelight I creature drops on top of its normal loot (MQ143.drop chance per kill, 100% since v151, only while more are needed: lamps still dark × MQ143.per
 // − carried − lying on the ground).
 // State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
 // instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {v, st, b (bulbs), lit[one per lamp], seen}; saves before v151
-// (8 lamps at 3 bulbs) get their bulbs back for lamps they had lit (the lamps stand elsewhere now) and start the new road dark.
+// (8 lamps at 3 bulbs) and saves before v160 (~47 lamps at 1 bulb) get their bulbs back for lamps they had lit (the lamps stand
+// elsewhere now) and start the new road dark.
 //  * F at an unlit lamppost with a bulb lights it (any state; the captain explains the quest). The last lamp starts the roll:
 //    the Ripper rolls the road (furnace lit, chimney smoking, two wardens escorting it), parks beside the gateway, drops its
 //    jacks, opens its claws, charges its coil and tears the gateway open (arcs, a flash): st 3. Leaving the instance mid-way
@@ -37243,10 +37282,12 @@ function mq143Drop(p){MQ143_G=MQ143_G||{b:new THREE.CylinderGeometry(.05,.05,1.6
   return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
 
 // ---------------- saves ----------------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:151,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:160,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq143;MQ143.st=0;MQ143.b=0;MQ143.lit=new Array(mq143N()).fill(0);MQ143.seen=0;
     if(q&&typeof q=='object'){MQ143.st=Math.max(0,Math.min(3,q.st|0));if(MQ143.st==2)MQ143.st=3;MQ143.b=Math.max(0,Math.min(99,q.b|0));MQ143.seen=q.seen|0;
-      if(Array.isArray(q.lit)){if((q.v|0)>=151)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+      if(Array.isArray(q.lit)){if((q.v|0)>=160)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+        else if((q.v|0)>=151){if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+q.lit.filter(v=>v).length)} // v160: the ~47 lamps moved onto the lantern line (34): refund a bulb each, start dark
+
         else if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+3*q.lit.filter(v=>v).length)}} // v151: the old 8 lamps cost 3 each and stood elsewhere: refund, start dark
     MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(MQ143.S)mq143Sync()}catch(err){console.warn('v143 load',err)}return r}}
 
@@ -41177,6 +41218,258 @@ setInterval(() => {
   if (!ic151P1Ready()) return;
   IC151.newGame = false; try { ic151Play(null, 'p1') } catch (e) { console.warn('intro part one', e) } ic151Cover(false)
 }, 120);
+// ================= v159: the intro preview page (owner's request) =================
+// A separate private page (tools/build_preview.sh → dist/preview/) where the owner plays and scrubs the intro on his own
+// computer instead of waiting for a video render. Everything here runs only when the page sets window.KQ_PREVIEW; the
+// game itself never runs it. It makes a hero (the class and companion picked in the panel), builds the whole intro in
+// capture mode (ic151Cap: part one is a pure function of t, the town part drives the real game scene) and draws the
+// frame for the current time. Controls: Space play/pause, ←/→ one frame (Shift: 1 s), [ ] previous/next shot,
+// L loop the shot, M sound, H hide the panel. "Copy time" copies the time and shot name, to send in a message.
+var KQPV = { on: false, t: 0, play: false, spd: 1, loop: false, snd: false, buf: null, src: null, ac: null, ex: null, tok: 0, drag: false, a0: null };
+// part one's shots (times as in 3080's camera); the town's come from IC151D so they follow any retiming there
+function kqpvShots() {
+  const D = IC151D, P = [[0, 'Treeline: the rat'], [15, 'The forest shakes'], [17.4, 'Low by the rat'], [19.6, 'Across the meadow'], [21, 'The cave-in'],
+    [22.6, 'The rat flees'], [25.45, 'Clinging on'], [29.6, 'The fall'], [35, 'The core'], [47.6, 'The change'], [51.9, 'The upright']];
+  const N = ['Steward', 'Innkeeper', 'Blacksmith', 'Merchant'];
+  P.push([D.arr[0], 'Duskhold: arrival']);
+  D.walks.slice(0, 4).forEach((w, i) => { P.push([w[0], 'Walk to the ' + N[i]]); P.push([D.meets[i][0], 'The ' + N[i]]) });
+  P.push([D.walks[4][0], 'Walk to Cheddar'], [D.ched[0], 'Cheddar'], [D.walks[5][0], 'Through the gate'], [D.walks[6][0], 'Down Portal Road'],
+    [D.v1[0], 'Voice: greetings'], [D.v2[0], 'Voice: rebuild']);
+  for (let i = 0; i < 6; i++) P.push([D.v3 + i * D.v3d, 'Portal ' + (i + 1)]);
+  P.push([D.v4[0], 'Voice: claim the essence'], [D.v5[0], 'Voice: the bounty'], [D.v6[0], 'Go forth']);
+  return P.sort((a, b) => a[0] - b[0])
+}
+function kqpvEnd() { return IC151.dEnd - .01 }   // never reach the hand-back to the game
+function kqpvShot(t) { const P = KQPV.shots; let i = 0; while (i + 1 < P.length && t >= P[i + 1][0] - 1e-6) i++; return i }
+function kqpvFmt(t) { const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(2) }
+function kqpvGet() { try { return JSON.parse(localStorage.getItem('kqpv') || '{}') || {} } catch (_) { return {} } }
+function kqpvPut(o) { try { localStorage.setItem('kqpv', JSON.stringify(Object.assign(kqpvGet(), o))) } catch (_) {} }
+
+// the town part runs the real game (companions follow, smoke drifts): a jump there replays it without drawing, from the
+// cut (or from the last exact time when moving forward), so the frame matches what the video and the game show
+function kqpvFols(save) {
+  try {
+    if (save) KQPV.fs = (typeof fols != 'undefined' ? fols : []).map(f => f ? [f, f.position.clone(), f.rotation.y] : null);
+    else (KQPV.fs || []).forEach(x => { if (x) { x[0].position.copy(x[1]); x[0].rotation.y = x[2] } })
+  } catch (_) {}
+}
+function kqpvGo(t, exact) {
+  t = Math.max(0, Math.min(kqpvEnd(), t)); KQPV.t = t; const S = IC151.S; if (!S) return;
+  const tok = ++KQPV.tok;
+  if (t < IC151.cut || !exact) {   // a direct seek (part one, or dragging): the town keeps its state, good enough close to the last exact time
+    ic151Seek(t); KQPV.ex = t >= IC151.cut && KQPV.ex != null && Math.abs(t - KQPV.ex) < .5 ? t : null; kqpvUi(); return }
+  // exact town frame: replay
+  const f = 24, k1 = Math.floor(t * f);
+  let k = Math.ceil(IC151.cut * f);
+  if (KQPV.ex != null && KQPV.ex <= t) k = Math.ceil(KQPV.ex * f) + 1;
+  else { kqpvFols(false); if (S.D) S.D.lt = null }
+  const k0 = k, n = Math.max(1, k1 - k0);
+  const step = () => {
+    if (tok !== KQPV.tok) { IC151.noDraw = 0; return }
+    const t0 = performance.now(); IC151.noDraw = 1;
+    try { while (k < k1 && performance.now() - t0 < 24) ic151Seek(k++ / f) } finally { IC151.noDraw = 0 }
+    if (k < k1) { kqpvBusy('Catching up the town… ' + Math.round((k - k0) / n * 100) + '%'); requestAnimationFrame(step); return }
+    kqpvBusy(''); ic151Seek(t); KQPV.ex = t; kqpvUi()
+  };
+  step()
+}
+
+// sound: the whole score rendered once (the same score the game plays), then played from the current time
+async function kqpvSound() {
+  if (KQPV.buf || KQPV.mk) return; KQPV.mk = 1; kqpvBusy('Preparing the sound…');
+  try {
+    const sr = 44100, ac = new OfflineAudioContext(2, Math.ceil(sr * (IC151.len + .5)), sr), out = ac.createGain(), cp = ac.createDynamicsCompressor();
+    out.gain.value = .9; out.connect(cp); cp.connect(ac.destination); ic151Score(ac, out, 0); KQPV.buf = await ac.startRendering()
+  } catch (e) { console.warn('preview sound', e); KQPV.sndErr = String(e) }
+  KQPV.mk = 0; kqpvBusy(''); kqpvAudio()
+}
+function kqpvAudio() {
+  try { if (KQPV.src) { KQPV.src.onended = null; KQPV.src.stop() } } catch (_) {} KQPV.src = null;
+  if (!KQPV.snd || !KQPV.play || !KQPV.buf || !KQPV.ac) return;
+  const s = KQPV.ac.createBufferSource(); s.buffer = KQPV.buf; s.playbackRate.value = KQPV.spd; s.connect(KQPV.ac.destination);
+  try { s.start(0, Math.min(KQPV.t, KQPV.buf.duration - .01)) } catch (_) { return } KQPV.src = s
+}
+
+function kqpvPlay(on) {
+  KQPV.play = on == null ? !KQPV.play : on; KQPV.a0 = null;
+  if (KQPV.play && KQPV.t >= kqpvEnd() - .02) kqpvGo(0, true);
+  if (KQPV.play && KQPV.t >= IC151.cut && KQPV.ex == null) kqpvGo(KQPV.t, true);   // start from an exact town state
+  kqpvAudio(); kqpvUi()
+}
+function kqpvLoop(now) {
+  requestAnimationFrame(kqpvLoop);
+  if (!KQPV.play || KQPV.drag || KQPV.busy) { KQPV.a0 = null; return }
+  if (KQPV.a0 == null || KQPV.at !== KQPV.t) { KQPV.a0 = now; KQPV.aT = KQPV.t }   // (re)anchor after a jump, a pause or a speed change
+  // the film keeps real time, like the game: a slow frame skips ahead instead of slowing the film (and the sound) down
+  let t = KQPV.aT + (now - KQPV.a0) / 1000 * KQPV.spd; const P = KQPV.shots, i = kqpvShot(KQPV.t);
+  if (KQPV.loop) { const a = P[i][0], b = i + 1 < P.length ? P[i + 1][0] : kqpvEnd(); if (t >= b) { kqpvGo(a, true); kqpvAudio(); return } }
+  if (t >= kqpvEnd()) { kqpvGo(kqpvEnd(), false); kqpvPlay(false); return }
+  const t0 = KQPV.t; KQPV.t = t;
+  if (t0 < IC151.cut && t >= IC151.cut) { kqpvFols(false); if (IC151.S.D) IC151.S.D.lt = null; KQPV.ex = t }   // into the town from its start
+  ic151Seek(t); if (t >= IC151.cut && KQPV.ex != null) KQPV.ex = t; KQPV.at = t; kqpvUi()
+}
+
+// ---------------- the panel ----------------
+function kqpvCss() {
+  const s = document.createElement('style'); s.id = 'kqpvcss'; s.textContent = `
+#ic151{cursor:default!important}
+#kqpv{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2147483600;
+  background:rgba(14,11,9,.86);border:1px solid rgba(236,200,130,.22);border-radius:10px;padding:10px 12px 12px;color:#eadfc6;font:13px/1.35 Inter,system-ui,sans-serif;
+  box-shadow:0 10px 30px rgba(0,0,0,.55);backdrop-filter:blur(6px);user-select:none}
+#kqpv.hid{display:none}
+#kqpv .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#kqpv .now{font:600 15px/1.2 Cinzel,Georgia,serif;letter-spacing:.04em;color:#f0cc72;min-width:0;flex:1}
+#kqpv .now small{font:12px Inter,system-ui,sans-serif;color:#a39378;letter-spacing:0;margin-left:8px}
+#kqpv .tc{font:20px VT323,ui-monospace,monospace;color:#eadfc6;letter-spacing:.04em}
+#kqpv button,#kqpv select{background:rgba(34,26,18,.95);color:#eadfc6;border:1px solid rgba(236,200,130,.25);border-radius:6px;font:600 12px/1 Inter,system-ui,sans-serif;padding:7px 10px;cursor:pointer}
+#kqpv button:hover{border-color:#c9a24a;color:#f0cc72}#kqpv button.on{background:#c9a24a;color:#1a120a;border-color:#f0cc72}
+#kqpv button.big{font-size:15px;padding:7px 14px;min-width:46px}
+#kqpv label{color:#a39378;font-size:12px;display:flex;align-items:center;gap:5px}
+#kqpv .tl{position:relative;height:34px;margin:10px 0 8px;cursor:pointer;touch-action:none}
+#kqpv .tl .seg{position:absolute;top:8px;height:18px;border-right:1px solid rgba(14,11,9,.9);background:rgba(201,162,74,.18)}
+#kqpv .tl .seg.p2{background:rgba(120,150,200,.18)}#kqpv .tl .seg.cur{background:rgba(240,204,114,.45)}
+#kqpv .tl .seg:hover{background:rgba(240,204,114,.32)}
+#kqpv .tl .cut{position:absolute;top:2px;bottom:2px;width:2px;background:#eadfc6;opacity:.7}
+#kqpv .tl .cut i{position:absolute;bottom:100%;left:4px;white-space:nowrap;font:10px Inter,system-ui,sans-serif;color:#a39378;font-style:normal;transform:translateY(10px)}
+#kqpv .tl .ph{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #f0cc72;pointer-events:none}
+#kqpv .tl .tip{position:absolute;bottom:100%;transform:translateX(-50%);background:#000;color:#eadfc6;padding:3px 6px;border-radius:4px;font-size:11px;white-space:nowrap;pointer-events:none;display:none}
+#kqpv .msg{color:#f0cc72;font-size:12px}#kqpv .err{color:#ff8a7a;font:11px ui-monospace,monospace;white-space:pre-wrap;max-height:5em;overflow:auto}
+#kqpv .help{color:#a39378;font-size:11px}
+#kqpvB{position:fixed;inset:0;z-index:2147483500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:#07060a;color:#f0cc72;font:600 20px Cinzel,Georgia,serif;letter-spacing:.06em}
+#kqpvB small{font:13px Inter,system-ui,sans-serif;color:#a39378;letter-spacing:0}
+#kqpvShow{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483600;display:none;background:rgba(14,11,9,.7);color:#eadfc6;border:1px solid rgba(236,200,130,.25);border-radius:6px;font:600 12px Inter,system-ui,sans-serif;padding:7px 10px;cursor:pointer}
+@media (max-width:700px){#kqpv .help{display:none}#kqpv .now{flex-basis:100%}}`;
+  document.head.appendChild(s)
+}
+function kqpvPanel() {
+  const el = document.createElement('div'); el.id = 'kqpv';
+  const C = (typeof CLSK != 'undefined' ? CLSK : ['warrior']).map(k => `<option value="${k}">${(CLS[k] && CLS[k].n) || k}</option>`).join('');
+  const PO = (typeof STARTERS != 'undefined' ? STARTERS : ['Foxlet']).map(k => `<option value="${k}">${k}</option>`).join('');
+  el.innerHTML = `<div class="row"><div class="now"><span class="sn"></span><small class="sk"></small></div><span class="tc"></span></div>
+<div class="tl"><div class="tip"></div><div class="ph"></div></div>
+<div class="row">
+ <button class="b-ps" title="Previous shot ( [ )">‹ Shot</button><button class="b-s1" title="Back 1 s (Shift+←)">−1s</button><button class="b-f1" title="Back 1 frame (←)">◀︎</button>
+ <button class="big b-pl" title="Play / pause (Space)">▶︎</button>
+ <button class="b-f2" title="Forward 1 frame (→)">▶︎|</button><button class="b-s2" title="Forward 1 s (Shift+→)">+1s</button><button class="b-ns" title="Next shot ( ] )">Shot ›</button>
+ <label>Speed <select class="b-sp"><option value=".25">¼×</option><option value=".5">½×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+ <button class="b-lp" title="Play the current shot over and over (L)">Loop shot</button>
+ <button class="b-snd" title="Sound on / off (M)">Sound off</button>
+ <button class="b-cp" title="Copy the time and shot name">Copy time</button>
+ <span style="flex:1"></span>
+ <label>Hero <select class="b-cls">${C}</select></label><label>Companion <select class="b-com">${PO}</select></label>
+ <button class="b-hd" title="Hide this panel (H)">Hide</button>
+</div>
+<div class="row"><span class="msg"></span><span class="help">Space play · ←/→ frame (Shift: 1 s) · [ ] shot · L loop · M sound · H hide</span></div>
+<div class="err"></div>`;
+  document.body.appendChild(el); KQPV.el = el;
+  const sh = document.createElement('button'); sh.id = 'kqpvShow'; sh.textContent = 'Show controls (H)'; sh.onclick = () => kqpvHide(false); document.body.appendChild(sh);
+  const q = c => el.querySelector(c), F = 1 / 24, ex = t => kqpvGo(t, true);
+  q('.b-pl').onclick = () => kqpvPlay();
+  q('.b-f1').onclick = () => { kqpvPlay(false); kqpvGo(KQPV.t - F, false) }; q('.b-f2').onclick = () => { kqpvPlay(false); kqpvGo(KQPV.t + F, true) };
+  q('.b-s1').onclick = () => { kqpvPlay(false); ex(KQPV.t - 1) }; q('.b-s2').onclick = () => { kqpvPlay(false); ex(KQPV.t + 1) };
+  q('.b-ps').onclick = () => kqpvJumpShot(-1); q('.b-ns').onclick = () => kqpvJumpShot(1);
+  q('.b-sp').onchange = e => { KQPV.spd = +e.target.value; KQPV.a0 = null; kqpvAudio() };
+  q('.b-lp').onclick = () => { KQPV.loop = !KQPV.loop; kqpvUi() };
+  q('.b-snd').onclick = () => kqpvSnd();
+  q('.b-cp').onclick = () => kqpvCopy();
+  q('.b-hd').onclick = () => kqpvHide(true);
+  const st = kqpvGet(); q('.b-cls').value = st.cls || 'warrior'; q('.b-com').value = st.sp || (typeof STARTERS != 'undefined' && STARTERS[0]) || 'Foxlet';
+  const re = () => { kqpvPut({ cls: q('.b-cls').value, sp: q('.b-com').value, t: KQPV.t }); kqpvMsg('Making the new hero…'); setTimeout(() => { try { location.reload() } catch (_) { kqpvMsg('Reload the page to see the new hero.') } }, 60) };
+  q('.b-cls').onchange = re; q('.b-com').onchange = re;
+  // the timeline: one block per shot, the cut to Duskhold marked (in the game the hero creator comes there)
+  const tl = q('.tl'), E = kqpvEnd(), P = KQPV.shots;
+  P.forEach((s, i) => {
+    const b = document.createElement('div'), a = s[0], z = i + 1 < P.length ? P[i + 1][0] : E;
+    b.className = 'seg' + (a >= IC151.cut - .01 ? ' p2' : ''); b.style.left = (a / E * 100) + '%'; b.style.width = ((z - a) / E * 100) + '%'; b.dataset.i = i; tl.appendChild(b)
+  });
+  const cut = document.createElement('div'); cut.className = 'cut'; cut.style.left = (IC151.p1End / E * 100) + '%'; cut.innerHTML = '<i>hero creator</i>'; tl.appendChild(cut);
+  KQPV.segs = [...tl.querySelectorAll('.seg')];
+  const tAt = e => { const r = tl.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * E }, tip = q('.tip');
+  tl.addEventListener('pointerdown', e => { tl.setPointerCapture(e.pointerId); KQPV.drag = true; KQPV.wasPlay = KQPV.play; kqpvPlay(false); kqpvGo(tAt(e), false) });
+  tl.addEventListener('pointermove', e => {
+    const t = tAt(e), r = tl.getBoundingClientRect(); tip.style.display = 'block'; tip.style.left = (e.clientX - r.left) + 'px'; tip.textContent = kqpvFmt(t) + ' · ' + P[kqpvShot(t)][1];
+    if (KQPV.drag) kqpvGo(t, false)
+  });
+  tl.addEventListener('pointerleave', () => { tip.style.display = 'none' });
+  const up = e => { if (!KQPV.drag) return; KQPV.drag = false; kqpvGo(tAt(e), true); if (KQPV.wasPlay) kqpvPlay(true) };
+  tl.addEventListener('pointerup', up); tl.addEventListener('pointercancel', up);
+  ['pointerdown', 'click', 'mousedown', 'wheel', 'touchstart'].forEach(ev => el.addEventListener(ev, e => e.stopPropagation()));
+}
+function kqpvJumpShot(d) {
+  const P = KQPV.shots; let i = kqpvShot(KQPV.t);
+  if (d < 0 && KQPV.t - P[i][0] > .4) d = 0;   // first press goes back to the start of this shot
+  i = Math.max(0, Math.min(P.length - 1, i + d)); kqpvGo(P[i][0] + 1e-4, true); kqpvAudio()
+}
+function kqpvSnd() {
+  KQPV.snd = !KQPV.snd;
+  if (KQPV.snd) { try { if (!KQPV.ac) KQPV.ac = new (window.AudioContext || window.webkitAudioContext)(); if (KQPV.ac.resume) KQPV.ac.resume() } catch (_) {} kqpvSound() }
+  kqpvAudio(); kqpvUi()
+}
+function kqpvCopy() {
+  const s = 't = ' + KQPV.t.toFixed(2) + ' s (' + kqpvFmt(KQPV.t) + ') · ' + KQPV.shots[kqpvShot(KQPV.t)][1] + ' · ' + ((CLS[hero.cls] && CLS[hero.cls].n) || hero.cls) + ' with ' + ((party[0] && party[0].n) || '');
+  const ok = () => kqpvMsg('Copied: ' + s), no = () => kqpvMsg(s + '  (select and copy this)');
+  try { navigator.clipboard.writeText(s).then(ok, no) } catch (_) { no() }
+}
+function kqpvHide(h) { KQPV.el.classList.toggle('hid', h); $('kqpvShow').style.display = h ? 'block' : 'none' }
+function kqpvMsg(s) { const m = KQPV.el && KQPV.el.querySelector('.msg'); if (m) m.textContent = s; clearTimeout(KQPV.mt); if (s) KQPV.mt = setTimeout(() => { if (m) m.textContent = KQPV.busy || '' }, 4000) }
+function kqpvBusy(s) { KQPV.busy = s || ''; const m = KQPV.el && KQPV.el.querySelector('.msg'); if (m) m.textContent = s || '' }
+function kqpvUi() {
+  const el = KQPV.el; if (!el) return; const q = c => el.querySelector(c), t = KQPV.t, i = kqpvShot(t), P = KQPV.shots;
+  q('.sn').textContent = P[i][1]; q('.sk').textContent = 'shot ' + (i + 1) + ' of ' + P.length + (t >= IC151.cut ? ' · part two (after the hero creator)' : ' · part one');
+  q('.tc').textContent = kqpvFmt(t) + ' / ' + kqpvFmt(kqpvEnd()) + '  ·  ' + t.toFixed(2) + ' s';
+  q('.ph').style.left = (t / kqpvEnd() * 100) + '%';
+  if (KQPV.ci !== i) { KQPV.segs.forEach((b, k) => b.classList.toggle('cur', k === i)); KQPV.ci = i }
+  q('.b-pl').textContent = KQPV.play ? 'II' : '▶︎'; q('.b-lp').classList.toggle('on', KQPV.loop);
+  q('.b-snd').classList.toggle('on', KQPV.snd); q('.b-snd').textContent = KQPV.snd ? 'Sound on' : 'Sound off';
+  const e = IC151.err || KQPV.sndErr || ''; if (q('.err').textContent !== e) q('.err').textContent = e ? 'Frame error: ' + e.slice(0, 600) : ''
+}
+function kqpvKeys(e) {
+  if (!KQPV.on) return; const tg = e.target; if (tg && /^(SELECT|INPUT|TEXTAREA)$/.test(tg.tagName)) return;
+  e.stopImmediatePropagation(); if (e.type !== 'keydown') return; const k = e.key, F = 1 / 24;
+  if (k === ' ' || k === 'Spacebar') { e.preventDefault(); kqpvPlay() }
+  else if (k === 'ArrowLeft') { e.preventDefault(); kqpvPlay(false); e.shiftKey ? kqpvGo(KQPV.t - 1, true) : kqpvGo(KQPV.t - F, false) }
+  else if (k === 'ArrowRight') { e.preventDefault(); kqpvPlay(false); kqpvGo(KQPV.t + (e.shiftKey ? 1 : F), true) }
+  else if (k === '[') kqpvJumpShot(-1); else if (k === ']') kqpvJumpShot(1);
+  else if (k === 'l' || k === 'L') { KQPV.loop = !KQPV.loop; kqpvUi() }
+  else if (k === 'm' || k === 'M') kqpvSnd();
+  else if (k === 'h' || k === 'H') kqpvHide(!KQPV.el.classList.contains('hid'))
+}
+
+// ---------------- start-up: make the hero, then build the film ----------------
+function kqpvBoot() {
+  const B = document.createElement('div'); B.id = 'kqpvB'; B.innerHTML = 'Kill Quest · intro preview<small class="s">Making the hero…</small>'; kqpvCss(); document.body.appendChild(B);
+  const say = s => { B.querySelector('.s').textContent = s }, st = kqpvGet();
+  const vis = id => { const e = $(id); return e && !e.classList.contains('hide') };
+  const wait = (f, ms) => new Promise((res, rej) => { const t0 = performance.now(), k = () => { let v = false; try { v = f() } catch (_) {} if (v) return res(); if (performance.now() - t0 > ms) return rej(new Error('timed out')); setTimeout(k, 100) }; k() });
+  (async () => {
+    try {
+      await wait(() => vis('devp'), 30000); document.querySelector('#devp [data-dev=desktop]').click();
+      await wait(() => vis('start'), 20000);
+      const c = CLSK.includes(st.cls) ? st.cls : 'warrior', sp = STARTERS.includes(st.sp) ? st.sp : STARTERS[0];
+      const cb = document.querySelector('#ccList [data-c="' + c + '"]'); if (cb) cb.click(); else ccCls = c;
+      $('ccNext').click(); await new Promise(r => setTimeout(r, 300));
+      const sb = document.querySelector('#ccList [data-s="' + sp + '"]'); if (sb) sb.click(); else ccSp = sp;
+      await new Promise(r => setTimeout(r, 200)); $('ccNext').click();
+      await wait(() => typeof party != 'undefined' && party.length > 0 && !vis('start'), 20000);
+      say('Building the intro… (a few seconds: the earthquake is simulated first)'); await new Promise(r => setTimeout(r, 1600));
+      KQPV.cap = ic151Cap(innerWidth, innerHeight); const S = IC151.S;
+      try { S.rd.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); S.rd.setSize(innerWidth, innerHeight) } catch (_) {}
+      kqpvFols(true); KQPV.shots = kqpvShots(); KQPV.on = true;
+      if (!window.KQPV_K) { addEventListener('keydown', kqpvKeys, true); addEventListener('keyup', kqpvKeys, true) }   // the page normally adds it first (tools/preview_page.py)
+      addEventListener('resize', () => { try { S.rd.setSize(innerWidth, innerHeight); S.cam.aspect = innerWidth / innerHeight; S.cam.updateProjectionMatrix() } catch (_) {} setTimeout(() => ic151Seek(KQPV.t), 50) });
+      kqpvPanel(); ic151Seek(0); B.remove();
+      const t0 = Math.max(0, Math.min(kqpvEnd(), +st.t || 0)); kqpvPut({ t: 0 }); kqpvGo(t0, true);
+      requestAnimationFrame(kqpvLoop);
+      window.KQPV_READY = 1
+    } catch (e) { console.warn('preview', e); say('Could not start the preview: ' + (e && e.message || e)); window.KQPV_ERR = String(e && e.stack || e) }
+  })()
+}
+if (window.KQ_PREVIEW) {
+  try { localStorage.removeItem(SAVE_KEY) } catch (_) {}   // the preview never keeps or loads a game
+  { const f = saveGame; saveGame = function () { if (window.KQ_PREVIEW) return false; return f.apply(this, arguments) } }
+  try { document.title = 'Kill Quest Intro Preview' } catch (_) {}
+  if (document.readyState === 'complete') setTimeout(kqpvBoot, 0); else addEventListener('load', () => setTimeout(kqpvBoot, 0))
+}
 // ================= v148.2: co-op revive =================
 // In co-op, a hero who drops to 0 HP while a partner is still standing in the same map is DOWNED instead of dying:
 //  * they lie on the ground for RV148.T seconds (bleeding out), cannot move, attack or cast, and nothing can hit them;
@@ -47142,10 +47435,18 @@ document.addEventListener('visibilitychange',()=>{try{if(document.hidden&&CH157.
 //    AB157K.cap at once, nearest first; the rest stand and stare. XP and loot are scaled down (AB157K.xp, .loot). The tracker counts
 //    "Abeksi left"; with none left, F at the city gate (Gate Yard) leaves the city: ab152Finish('gate') (same as the drain, which keeps
 //    working). Death during the alarm: after "Rise Again" the city is calm again from the last checkpoint, every resident back.
+//  * v158 (owner: "players don't have to kill every single abeksi - they can just fight their way to the gate if seen. When the bell is
+//    rung when you're spotted a substantial amount of abeksi in the immediate area actively look for you and attack"): the alarm is a
+//    BELL (ab158Bell, three tolls over drums). It calls up to AB158.bell.n of the nearest residents by street distance (within
+//    AB158.bell.r steps) to hunt the hero: they run through the streets on a flow field from the heroes (ab158Flow, rebuilt every
+//    0.35 s; ab158Step) and turn into the game's enemies when they are AB158.eng steps away (any standing resident that close joins too),
+//    at most AB157K.cap fighting at once. An enemy left AB158.drop steps behind (cut off by a wall) becomes a street hunter again, with the
+//    health it had. Every AB158.bell.re s the bell tolls again and calls AB158.bell.rn more. The city gate opens as soon as the alarm
+//    sounds: F there leaves the city (ab152Finish('gate')); killing everyone is no longer needed. Tracker / banner: "Hunting you".
 //  * Co-op (3180): the map's host owns the alarm's enemies (spawning, AI; the game's monster sync shows them to the others); kills and
 //    assassinations are sent (['ab','x',i,u,v] a knife kill: the host checks for witnesses; ['ab','d',i,u,v] a resident fell;
 //    ['ab','rs',states] the host's residents every 0.6 s: 0 standing, 1 fighting, 2 dead; ['ab','calm'] someone died: everyone back).
-var AB157K={r:1.6,back:1.05,act:24,cap:8,civ:{hp:.55,atk:.6},xp:{g:.6,c:.3},loot:{g:.45,c:.15},gate:[75,185.6],gateR:3.2};
+var AB157K={r:1.6,back:1.05,act:24,cap:10,civ:{hp:.55,atk:.6},xp:{g:.6,c:.3},loot:{g:.45,c:.15},gate:[75,185.6],gateR:3.2};
 var AB157A={on:0,R:null,bodies:[],tg:null,kill:null,ring:null,tA:0,tB:0,tS:0,left:0,pool:null};
 function ab157Lead(){try{return typeof ab155Lead!='function'||ab155Lead()}catch(_){return true}}
 function ab157Co(){try{return typeof ab155Co=='function'&&ab155Co()}catch(_){return false}}
@@ -47193,8 +47494,8 @@ function ab157Assassinate(a,remote){const S=AB152.S,I=S.I,H=AB152H;if(!a||a.dead
     ab152CrAdd(B.spine,'y',.45*w-.3*s)}}}catch(_){}return r}}
 // ---------------- the alarm ----------------
 // a war horn (three long blasts) over drums
-function ab157Horn(){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
-  try{[0,1.5,3.0].forEach((d,i)=>{const t=t0+d,len=i==2?2.2:1.2,lp=a.createBiquadFilter(),g=a.createGain();lp.type='lowpass';lp.frequency.setValueAtTime(380,t);lp.frequency.linearRampToValueAtTime(900,t+.25);lp.connect(g);g.connect(out);
+function ab157Horn(drumsOnly){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
+  try{if(!drumsOnly)[0,1.5,3.0].forEach((d,i)=>{const t=t0+d,len=i==2?2.2:1.2,lp=a.createBiquadFilter(),g=a.createGain();lp.type='lowpass';lp.frequency.setValueAtTime(380,t);lp.frequency.linearRampToValueAtTime(900,t+.25);lp.connect(g);g.connect(out);
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.2,t+.18);g.gain.setValueAtTime(.18,t+len-.2);g.gain.exponentialRampToValueAtTime(.0005,t+len+.4);
       [[98,'sawtooth'],[147,'sawtooth'],[49,'square']].forEach(([f,ty],j)=>{const o=a.createOscillator();o.type=ty;o.frequency.setValueAtTime(f*(i==2?1.06:1)*.94,t);o.frequency.linearRampToValueAtTime(f*(i==2?1.06:1),t+.2);
         const og=a.createGain();og.gain.value=j==2?.35:j?.5:.8;o.connect(og);og.connect(lp);o.start(t);o.stop(t+len+.5)})});
@@ -47203,14 +47504,29 @@ function ab157Horn(){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||S
       o.type='sine';o.frequency.setValueAtTime(75,t);o.frequency.exponentialRampToValueAtTime(38,t+.25);og.gain.setValueAtTime(i%4==0?.45:.25,t);og.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(og);og.connect(out);o.start(t);o.stop(t+.35)}}catch(_){}}
 function ab157Alarm(){if(AB157A.on||!ab152In()||!AB152.S)return;const H=AB152H;AB157A.on=1;AB157A.t0=performance.now();H.cau=null;H.frz=0;AB157A.kill=null;ab152SetCrouch(false);H.crK=0;
   ab157Res().forEach(a=>{if(!a.dead){a.halt=0;a.st='look';a.sus=0}});
-  try{ab157Horn();flash('rgba(255,40,20,.55)');shake(.3)}catch(_){}
-  try{zt116Show(ZT116.Z[1],'Abeksi','The City Is Roused!','Horns sound from every wall · every serpent is hunting you','Kill them all and leave by the city gate · or flee through the drain','z1')}catch(_){}
-  say('📯 <b>The city is roused!</b> Every Abeksi in the city is coming for you. Kill them all and leave through the <b>city gate</b> — or flee through the drain.')}
+  AB157A.called=0;AB157A.tollT=performance.now();AB158.fl=null;AB158.flT=0;
+  try{ab158Bell(3);ab157Horn(true);flash('rgba(255,40,20,.55)');shake(.3)}catch(_){}
+  try{zt116Show(ZT116.Z[1],'Abeksi','The Bell Tolls!','The serpents nearby are hunting you through the streets','Fight your way to the city gate · or flee through the drain','z1')}catch(_){}
+  say('🔔 <b>The alarm bell tolls!</b> The Abeksi nearby are coming for you. Fight your way to the <b>city gate</b> — or flee through the drain.')}
+// v158: a few seconds' grace after the city calms (a restart at the checkpoint): nobody can be caught yet. In co-op the partner who died
+// still lies where they fell (often in a guard's view) until they rise, and the host's snakes look at every hero: without the grace that
+// body rang the bell again the moment the city had calmed.
+{const f=ab152Caught;ab152Caught=function(a){if(AB157A.calmT&&performance.now()-AB157A.calmT<AB158.grace*1000)return;return f.apply(this,arguments)}}
+// v158: only heroes on their feet can be seen: not one lying dead or downed (waiting for a revive), mine or a partner's
+function ab158Up(){try{return hero.hp>0&&!(typeof RV148!='undefined'&&RV148.down)&&!(typeof AWD!='undefined'&&AWD.dead)}catch(_){return true}}
+// each hero has AB158.grace s of not being seen from the moment they are back on their feet or were moved far at once (a restart at the
+// checkpoint, a rise): however long the death screen took on that player's machine
+function ab158Fresh(k,u,v,up){const P=AB158.pv||(AB158.pv={}),now=performance.now();let q=P[k];
+  if(!q){q=P[k]={u,v,up,t:-1e9}}if((up&&!q.up)||Math.hypot(u-q.u,v-q.v)>6)q.t=now;q.u=u;q.v=v;q.up=up;return up&&now-q.t>=AB158.grace*1000}
+if(typeof ab155Heroes=='function'){const f=ab155Heroes;ab155Heroes=function(){const L=f.apply(this,arguments);try{const M2=cl155Mates(MP.rg);
+  if(AB158.pv)for(const k in AB158.pv)if(k!=='me'&&!L.some(h=>h.peer===k))AB158.pv[k].up=false;   // a partner missing from the list (dead) is not standing
+  return L.map(h=>{if(h===AB152H)return ab158Fresh('me',h.u,h.v,ab158Up())?h:Object.assign({},h,{live:false});
+    const r=M2.find(q=>q.peer===h.peer),p=r&&r.pr,up=!(p&&(p.dn||!(p.hp>0)));return ab158Fresh(h.peer,h.u,h.v,up)?h:Object.assign({},h,{live:false})})}catch(_){return L}}}
 // what being seen leads to now: a moment of "!" (3155's hiss and flash), then the alarm
 ab152AfterCaught=function(a){say('👁 <b>Spotted!</b>');setTimeout(()=>{try{if(ab152In()&&AB152.S)ab157Alarm()}catch(e){console.error('v157 alarm',e)}},900)};
 // the city calm again: the fighting residents leave the field, every resident is back at their post (restore: the dead rise too)
-function ab157Calm(restore){const A=AB157A;A.on=0;A.kill=null;A.tg=null;if(restore)A.calmT=performance.now();
-  for(const a of ab157Res()){if(a.e){const e=a.e;a.e=null;try{if(!e.dead&&enemies.indexOf(e)>=0)removeE(e)}catch(_){}}a.net1=0;if(restore&&a.dead)ab157Unfall(a);
+function ab157Calm(restore){const A=AB157A;A.on=0;A.kill=null;A.tg=null;A.called=0;A.hunt=0;AB158.fl=null;if(restore)A.calmT=performance.now();
+  for(const a of ab157Res()){a.hunt=0;a.hpK=null;if(a.e){const e=a.e;a.e=null;try{if(!e.dead&&enemies.indexOf(e)>=0)removeE(e)}catch(_){}}a.net1=0;if(restore&&a.dead)ab157Unfall(a);
     if(restore&&a.folk){a.halt=0;a.hid=0;ab152ResetActor(a)}}
   try{enemies.slice().forEach(e=>{if(e.ab157&&!e.dead)removeE(e)})}catch(_){}
   if(restore){A.bodies.forEach(b=>{if(b.p&&b.p.parent)b.p.parent.remove(b.p)});A.bodies=[]}
@@ -47226,21 +47542,70 @@ function ab157Rouse(a){const S=AB152.S,I=S.I,lv=(INSL[30]&&INSL[30].lv)||I.lv||[
   if(a.pose=='spar')e.ab157.g=true;
   if(!e.ab157.g){const c=e.c,K=AB157K.civ;c.st.hp*=K.hp;c.st.pa*=K.atk;c.st.ma*=K.atk;c.h=Math.round(c.st.hp);
     try{const h=e.m.h;['aR2','aL2'].forEach(b=>{const bn=h.bones[b];if(bn)bn.children.slice().forEach(o=>{if(!o.isBone)bn.remove(o)})});const t=ab152Tool(a.pose=='chop'||a.pose=='skin'?'cleaver':'cleaver');if(t){t.rotation.x=-1;t.position.set(0,-.03,.02);h.bones.aR2.add(t)}}catch(_){}}
+  if(a.hpK!=null&&a.hpK<1){const c=e.c;c.h=Math.max(1,Math.round(M(c)*a.hpK))}a.hpK=null;a.hunt=0;
   a.e=e;a.st='look';return e}
-// one frame of the alarm (the host's world rouses and counts; everyone keeps the residents' looks in step)
-function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res();H.nT=1e9;
+// ---------------- v158: the bell and the hunt ----------------
+var AB158={bell:{r:44,n:16,re:24,rn:5},eng:7,drop:14,hold:4,grace:4,pv:null,spd:{g:4.4,c:3.7},fl:null,flT:0};
+// a heavy bronze bell: inharmonic partials with long decays, and the clang of the strike
+function ab158Bell(n){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
+  try{for(let i=0;i<n;i++){const t=t0+i*2.1,f0=104;
+    [[.5,.5,7],[1,.9,5],[1.19,.55,3.5],[1.5,.4,3],[2,.45,2.6],[2.51,.25,2],[2.67,.22,1.8],[3.01,.18,1.5],[4.1,.1,1]].forEach(([r,amp,dec])=>{const o=a.createOscillator(),g=a.createGain();
+      o.type='sine';o.frequency.value=f0*r*(1+(Math.random()-.5)*.003);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp*.17,t+.008);g.gain.exponentialRampToValueAtTime(.0003,t+dec);o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.05)});
+    if(typeof NOISE!='undefined'&&NOISE){const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;f.type='bandpass';f.frequency.value=2300;f.Q.value=2;
+      g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);s.connect(f);f.connect(g);g.connect(out);s.start(t,Math.random()*.5);s.stop(t+.15)}}}catch(_){}}
+function ab158Ok(G,x,y){return x>=0&&y>=0&&x<G.W&&y<G.H&&!G.sol[y*G.W+x]&&G.cls[y*G.W+x]<2}
+function ab158Heroes(){const S=AB152.S,H=AB152H,hs=[[H.u,H.v]];try{if(ab157Co()){const I=S.I;cl155Mates(MP.rg).forEach(r=>{if(r.pr&&r.pr.hp>0)hs.push([r.pr.x-I.x0,r.pr.z-I.y0])})}}catch(_){}return hs}
+// steps through the streets to the nearest hero, for every open tile (breadth first from the heroes' tiles)
+function ab158Flow(){const S=AB152.S,G=S.G,W=G.W,N=W*G.H;let D=AB158.fl;if(!D||D.length!==N)D=AB158.fl=new Uint16Array(N);D.fill(65535);
+  const q=AB158.q&&AB158.q.length===N?AB158.q:(AB158.q=new Int32Array(N));let h=0,t=0;
+  for(const [u,v] of ab158Heroes()){let x=Math.round(u),y=Math.round(v);if(!ab158Ok(G,x,y)){const o=ab157Open(S,u,v);x=Math.round(o[0]);y=Math.round(o[1])}
+    if(!ab158Ok(G,x,y))continue;const k=y*W+x;if(D[k]){D[k]=0;q[t++]=k}}
+  while(h<t){const k=q[h++],x=k%W,y=(k-x)/W,d=D[k]+1;
+    if(x>0&&D[k-1]>d&&ab158Ok(G,x-1,y)){D[k-1]=d;q[t++]=k-1}if(x<W-1&&D[k+1]>d&&ab158Ok(G,x+1,y)){D[k+1]=d;q[t++]=k+1}
+    if(y>0&&D[k-W]>d&&ab158Ok(G,x,y-1)){D[k-W]=d;q[t++]=k-W}if(y<G.H-1&&D[k+W]>d&&ab158Ok(G,x,y+1)){D[k+W]=d;q[t++]=k+W}}
+  return D}
+// a spot's street distance to the nearest hero (65535: no way through)
+function ab158Du(u,v){const S=AB152.S,G=S.G,D=AB158.fl;if(!D)return 65535;let x=Math.round(u),y=Math.round(v);
+  if(!ab158Ok(G,x,y)){const o=ab157Open(S,u,v);x=Math.round(o[0]);y=Math.round(o[1]);if(!ab158Ok(G,x,y))return 65535}return D[y*G.W+x]}
+function ab158D(a){return (a.o.lift||0)>=1?65535:ab158Du(a.u,a.v)}
+var AB158N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+// a hunter runs one step down the flow toward the heroes
+function ab158Step(a,dt){const S=AB152.S,G=S.G,D=AB158.fl;if(!D)return;let x=Math.round(a.u),y=Math.round(a.v);
+  if(!ab158Ok(G,x,y)){const o=ab157Open(S,a.u,a.v);x=Math.round(o[0]);y=Math.round(o[1]);if(!ab158Ok(G,x,y)){a.mv=0;return}}
+  let best=D[y*G.W+x],bx=x,by=y;const H0=AB152H;
+  if(best<=AB158.hold&&AB157A.nf>=AB157K.cap){a.mv=0;ab152Turn(a,Math.atan2(H0.u-a.u,H0.v-a.v),5,dt);a.t+=dt;return}   // the fight is full: wait in a ring, glaring
+  for(const [dx,dy] of AB158N8){const nx=x+dx,ny=y+dy;if(!ab158Ok(G,nx,ny))continue;if(dx&&dy&&(!ab158Ok(G,x+dx,y)||!ab158Ok(G,x,y+dy)))continue;
+    const d=D[ny*G.W+nx]+(dx&&dy?.45:0);if(d<best){best=d;bx=nx;by=ny}}
+  const H=AB152H;if(bx===x&&by===y){const du=x-a.u,dv=y-a.v;if(Math.hypot(du,dv)>.06){bx=x;by=y}else{a.mv=0;ab152Turn(a,Math.atan2(H.u-a.u,H.v-a.v),5,dt);return}}
+  const sp=ab157Guard(a)?AB158.spd.g:AB158.spd.c,du=bx-a.u,dv=by-a.v,L=Math.hypot(du,dv)||1,st=Math.min(L,sp*dt);
+  a.u+=du/L*st;a.v+=dv/L*st;a.mv=sp;a.hy=0;a.t+=dt;ab152Turn(a,Math.atan2(du,dv),7,dt)}
+// the bell calls the n nearest residents (by street) within r steps to hunt
+function ab158Call(n,r){const C=[];for(const a of ab157Res()){if(a.dead||a.e||a.hunt||a.net1)continue;const d=ab158D(a);if(d<=r)C.push([d,a])}
+  C.sort((p,q)=>p[0]-q[0]);let k=0;for(const [,a] of C){if(k>=n)break;a.hunt=1;a.halt=1;a.st='look';a.sus=0;k++}return k}
+// one frame of the alarm (the host's world calls, rouses and counts; every client runs the hunters through the streets)
+function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res(),B=AB158.bell;H.nT=1e9;
   // the fallen: a fighting resident whose enemy died lies where it fell
   for(const a of R){if(!a.e)continue;const e=a.e;if(e.dead){const I=S.I,u=e.m.position.x-I.x0,v=e.m.position.z-I.y0;a.yaw=e.m.rotation.y;ab157Fall(a,u,v,false,1500);
       try{if(ab157Co())cl155Send(['ab','d',a.ri,cl155R1(u),cl155R1(v)])}catch(_){}}
-    else if(enemies.indexOf(e)<0){a.e=null;const I=S.I,[u,v]=[e.m.position.x-I.x0,e.m.position.z-I.y0];if(!(a.o.lift>.9)){a.u=u;a.v=v}}}   // left the field (too far): stands again
-  if(ab157Lead()&&now-A.tA>250){A.tA=now;let n=R.filter(a=>a.e).length;if(n<AB157K.cap){
-      let hs=[[H.u,H.v]];try{if(ab157Co()){const I=S.I;cl155Mates(MP.rg).forEach(r=>{if(r.pr&&r.pr.hp>0)hs.push([r.pr.x-I.x0,r.pr.z-I.y0])})}}catch(_){}
-      const C=R.filter(a=>!a.dead&&!a.e).map(a=>[Math.min(...hs.map(h=>Math.hypot(h[0]-a.u,h[1]-a.v))),a]).filter(q=>q[0]<AB157K.act).sort((p,q)=>p[0]-q[0]);
-      for(const [,a] of C){if(n>=AB157K.cap)break;if(ab157Rouse(a))n++}}}
-  A.left=R.filter(a=>!a.dead).length;
-  if(ab157Lead()&&ab157Co()&&now-A.tS>600){A.tS=now;try{cl155Send(['ab','rs',R.map(a=>a.dead?2:a.e?1:0).join('')])}catch(_){}}}
+    else if(enemies.indexOf(e)<0){a.e=null;const I=S.I,[u,v]=[e.m.position.x-I.x0,e.m.position.z-I.y0];if(!(a.o.lift>.9)){a.u=u;a.v=v;a.hunt=1;a.halt=1}}}   // left the field: hunts on foot again
+  if(!AB158.fl||now-AB158.flT>350){AB158.flT=now;ab158Flow()}
+  if(ab157Lead()){if(!A.called){A.called=1;A.tollT=now;ab158Call(B.n,B.r)}
+    else if(now-A.tollT>B.re*1000){A.tollT=now;try{ab158Bell(1);shake(.12)}catch(_){}if(ab158Call(B.rn,B.r*1.4))say('🔔 The bell tolls again · more serpents join the hunt')}}
+  A.nf=R.filter(a=>a.e||a.net1).length;
+  for(const a of R)if(a.hunt&&!a.dead&&!a.e&&!a.net1)ab158Step(a,dt);
+  if(ab157Lead()&&now-A.tA>250){A.tA=now;let n=R.filter(a=>a.e).length;
+    // close by street (hunters that arrived, and anyone standing near): they join the fight, nearest first
+    if(n<AB157K.cap){const C=R.filter(a=>!a.dead&&!a.e).map(a=>[(a.o.lift||0)>=1?(Math.hypot(H.u-a.u,H.v-a.v)<6?0:65535):ab158D(a),a]).filter(q=>q[0]<=AB158.eng).sort((p,q)=>p[0]-q[0]);
+      for(const [,a] of C){if(n>=AB157K.cap)break;if(ab157Rouse(a))n++}}
+    // a fighter cut off behind a wall goes back to the streets (keeping its wounds)
+    for(const a of R){const e=a.e;if(!e||e.dead||e.atk)continue;const I=S.I,u=e.m.position.x-I.x0,v=e.m.position.z-I.y0;
+      if(ab158Du(u,v)<=AB158.drop){e.ab158far=0;continue}e.ab158far=(e.ab158far||0)+.25;   // cut off for 2 s in a row (not a passing jump of the hero)
+      if(e.ab158far>=2){try{a.hpK=e.c.h/M(e.c)}catch(_){a.hpK=null}a.e=null;try{removeE(e)}catch(_){}a.u=u;a.v=v;a.yaw=e.m.rotation.y;a.hunt=1;a.halt=1}}}
+  A.left=R.filter(a=>!a.dead).length;A.hunt=R.filter(a=>!a.dead&&(a.e||a.hunt||a.net1)).length;
+  if(ab157Lead()&&ab157Co()&&now-A.tS>600){A.tS=now;try{cl155Send(['ab','rs',R.map(a=>a.dead?2:a.e?1:a.hunt?3:0).join('')])}catch(_){}}}
 // the snakes of the plan: a fallen one does nothing; in the alarm the ones not fighting yet stand and glare at the hero
-{const f=ab152ActTick;ab152ActTick=function(a,dt,now,H){if(a.dead||a.e||a.halt){a.sus=0;a.seen=0;a.mv=0;return null}
+{const f=ab152ActTick;ab152ActTick=function(a,dt,now,H){if(a.hunt&&!a.dead&&!a.e){a.sus=0;a.seen=0;return null}
+  if(a.dead||a.e||a.halt){a.sus=0;a.seen=0;a.mv=0;return null}
   if(AB157A.on){a.t+=dt;a.mv=0;a.sus=0;a.st='look';ab152Turn(a,Math.atan2(AB152H.u-a.u,AB152H.v-a.v),2.6,dt);a.hy*=.9;return null}
   return f.apply(this,arguments)}}
 {const f=ab152ActPose;ab152ActPose=function(a,now,dt,vis){if(a.e||a.net1){a.g.visible=false;return}
@@ -47252,17 +47617,17 @@ function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res();H
 // crouch is gone while the city hunts you; the HUD with it
 {const f=ab152SetCrouch;ab152SetCrouch=function(on){if(on&&AB157A.on)return;return f.apply(this,arguments)}}
 {const f=ab152Hud;ab152Hud=function(){const r=f.apply(this,arguments);try{const on=AB157A.on&&ab152In();if(on){$('ab152h').classList.add('hide');$('ab152cv').style.opacity=0;if(AB152H.btn)AB152H.btn.style.display='none'}
-    const el=$('ab157al');if(el){el.classList.toggle('hide',!on);if(on)el.querySelector('b').textContent=AB157A.left}}catch(_){}return r}}
+    const el=$('ab157al');if(el){el.classList.toggle('hide',!on);if(on)el.querySelector('b').textContent=AB157A.hunt||0}}catch(_){}return r}}
 (function(){const st=document.createElement('style');st.textContent=`#ab157al{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:6;pointer-events:none;padding:6px 16px;border-radius:20px;
   background:linear-gradient(180deg,rgba(60,6,4,.85),rgba(30,4,2,.7));border:1px solid rgba(255,90,60,.55);color:#ffd8c8;font:700 12.5px system-ui,sans-serif;text-shadow:0 1px 2px #000;letter-spacing:.03em}
   #ab157al.hide{display:none}#ab157al b{color:#fff;font-size:14px}body.mob #ab157al{top:8px}`;document.head.appendChild(st);
-  const d=document.createElement('div');d.id='ab157al';d.className='hide';d.innerHTML='📯 The city is roused · Abeksi left: <b>0</b>';document.body.appendChild(d)})();
+  const d=document.createElement('div');d.id='ab157al';d.className='hide';d.innerHTML='🔔 The bell tolls · hunting you: <b>0</b> · reach the city gate';document.body.appendChild(d)})();
 // fighting allowed while the city is roused
 {const R0=SP152.R.abeksi,m=R0.noFight;R0.noFight=()=>AB157A.on?null:m}
 // ---------------- each frame ----------------
 function ab157KnifeTick(dt,now){const S=AB152.S,A=AB157A,R=ab157Res();
   // the folk follow the alarm too: standing ones turn to the hero, fighting ones are hidden (their enemy shows them)
-  try{if(AB157.S)for(const a of AB157.S.folk){a.hid=(a.e||a.net1)?1:0;if(AB157A.on&&!a.dead&&!a.e){a.halt=1;a.st='look';ab152Turn(a,Math.atan2(AB152H.u-a.u,AB152H.v-a.v),2.6,dt)}else if(!AB157A.on&&!a.dead&&a.halt&&a.st=='look'){a.halt=0;a.st='routine'}}}catch(_){}
+  try{if(AB157.S)for(const a of AB157.S.folk){a.hid=(a.e||a.net1)?1:0;if(AB157A.on&&!a.dead&&!a.e&&!a.hunt){a.halt=1;a.st='look';ab152Turn(a,Math.atan2(AB152H.u-a.u,AB152H.v-a.v),2.6,dt)}else if(!AB157A.on&&!a.dead&&a.halt&&a.st=='look'){a.halt=0;a.st='routine'}}}catch(_){}
   // the knife's target, marked with a red ring
   A.tg=ab157Target();if(!A.ring){const m=new THREE.Mesh(new THREE.RingGeometry(.5,.66,28).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xff2a1a,transparent:true,opacity:.75,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
     m.renderOrder=5;m.userData.psNo=1;S.root.add(m);A.ring=m}
@@ -47280,13 +47645,11 @@ function ab157KnifeTick(dt,now){const S=AB152.S,A=AB157A,R=ab157Res();
 {const f=ab152Restart;ab152Restart=function(){try{if(AB152.S)ab157Calm(true)}catch(e){console.warn('v157 calm',e)}return f.apply(this,arguments)}}
 // ---------------- prompts: the knife, the gate ----------------
 {const f=worldPrompt;worldPrompt=function(){try{if(ab152In()&&AB152.S&&!AB152H.cau){const H=AB152H;
-    if(AB157A.on&&Math.hypot(H.u-AB157K.gate[0],H.v-AB157K.gate[1])<AB157K.gateR){const n=AB157A.left;
-      if(n<=0)return {label:'F · Leave through the city gate ('+INSL[6].n+')',fn:()=>ab152Finish('gate')};
-      return {label:'⛓ The gate is barred · '+n+' Abeksi still stand',fn:()=>say('⛓ The gate will not open while '+n+' Abeksi still stand. Kill them all — or flee through the drain.')}}
+    if(AB157A.on&&Math.hypot(H.u-AB157K.gate[0],H.v-AB157K.gate[1])<AB157K.gateR)return {label:'F · Escape through the city gate ('+INSL[6].n+')',fn:()=>ab152Finish('gate')};   // v158: open the moment the bell tolls
     if(AB157A.tg&&!AB157A.kill){const a=AB157A.tg;return {label:'F · Assassinate',fn:()=>{const t=ab157Target();if(t===a)ab157Assassinate(a)}}}}}catch(_){}return f.apply(this,arguments)}}
 // ---------------- the tracker ----------------
 {const f=SP152.trk.abeksi;SP152.trk.abeksi=I=>{if(I&&I.sp==='abeksi'&&AB157A.on){const n=AB157A.left;
-    return {name:'The Serpent City',lines:[['📯 The city is roused'],['Abeksi left',n],[n>0?'Kill them all, then leave by the city gate':'The gate is free: leave the city',null,n>0?0:1],['Or flee through the drain']]}}return f(I)}}
+    return {name:'The Serpent City',lines:[['🔔 The alarm bell tolls'],['Hunting you',AB157A.hunt||0],['Fight your way to the city gate (Gate Yard)'],['Or flee through the drain']]}}return f(I)}}
 // ---------------- XP and loot from the city's residents: kept low ----------------
 // (a partner's copy of a resident, mirrored from the host, has no tag: any serpent enemy inside the city counts, as a guard)
 function ab157Kind(e){if(!e)return null;if(e.ab157)return e.ab157.g?'g':'c';try{if(e.c&&/^naga[was]$/.test(e.c.en)&&ab152In())return 'g'}catch(_){}return null}
@@ -47306,49 +47669,52 @@ function ab157Rise(){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=
         if(w&&!AB152H.cau){w.cBy=peer;say('👁 '+mpEsc(mpName(peer))+'’s kill was seen!');ab152Caught(w)}}catch(_){}},340)}}
   else if(k==='d'){const a=R[q[2]|0];if(!a||a.dead||!isFinite(+q[3])||!isFinite(+q[4]))return;ab157Fall(a,+q[3],+q[4],false,1500)}
   else if(k==='rs'&&typeof q[2]==='string'&&peer===MP.host&&!ab157Lead()){if(!AB157A.on){if(performance.now()-(AB157A.calmT||-1e9)<3000)return;ab157Alarm()}const s=q[2];for(let i=0;i<R.length&&i<s.length;i++){const a=R[i],c=s[i];
-      if(c==='2'&&!a.dead)ab157Fall(a,null,null,false,0);a.net1=c==='1'?1:0}}
-  else if(k==='calm'){if(AB157A.on){say('👥 '+mpEsc(mpName(peer))+' fell — the whole party wakes at the checkpoint, the city calm again.');ab152Restart(false)}}}}
-// ================= v158: UI size (desktop + mobile), phone layout for upright and sideways play, key binding settings =================
+      if(c==='2'&&!a.dead)ab157Fall(a,null,null,false,0);a.net1=c==='1'?1:0;if(c==='3'&&!a.dead&&!a.hunt){a.hunt=1;a.halt=1}else if(c!=='3'&&a.hunt&&!a.e)a.hunt=0}}
+  else if(k==='calm'){if(AB157A.on){say('👥 '+mpEsc(mpName(peer))+' fell — the whole party wakes at the checkpoint, the city calm again.');ab158Wake();ab152Restart(false)}}}}
+// v158: the whole party wakes at the checkpoint: a partner lying downed (waiting for a revive) gets up too, healed, instead of lying in a
+// guard's view at the checkpoint (which rang the bell again)
+function ab158Wake(){try{if(typeof RV148!='undefined'&&RV148.down){const s0=say;say=()=>{};try{rv148Up('')}finally{say=s0}}}catch(_){}if(hero.hp>0){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}try{ui()}catch(_){}}}
+// ================= v161: UI size (desktop + mobile), phone layout for upright and sideways play, key binding settings =================
 // Owner (Oct 27 2026): the mobile UI was far too large by default; fit it to phones held upright and sideways; add UI size
 // options for desktop and mobile; let desktop players change their keys.
 //
 // 1. UI size. Each group of the interface is scaled with CSS zoom from a variable on <html>:
 //      --kqHud   the HUD: companion panel, target / boss frames, location box, menu buttons, log, prompt, trackers, banners
-//      --kqBar   the bottom bar (orbs, hotbar, XP): the HUD size, shrunk further when it would not fit (UI158.bar)
+//      --kqBar   the bottom bar (orbs, hotbar, XP): the HUD size, shrunk further when it would not fit (UI161.bar)
 //      --kqMap   the minimap        --kqTouch  the joystick and touch buttons        --kqMenu  every window (.win)
-//    Size = auto fit × the player's sliders (SET.ui158: all, hud, map, menu, touch; 1 = 100%). Auto fit (ui158Base):
+//    Size = auto fit × the player's sliders (SET.ui161: all, hud, map, menu, touch; 1 = 100%). Auto fit (ui161Base):
 //    mobile: the short side of the screen / 430 (0.62–1.3: a phone ≈ 0.85–0.95, a tablet 1.3); desktop: min(w/1280, h/760),
-//    0.7–1 (a normal window keeps the old size). Windows use their own fit (ui158MenuBase). CSS zoom also scales px offsets,
-//    so everything that is placed by script goes through ui158Pos (screen px ÷ the element's own zoom).
+//    0.7–1 (a normal window keeps the old size). Windows use their own fit (ui161MenuBase). CSS zoom also scales px offsets,
+//    so everything that is placed by script goes through ui161Pos (screen px ÷ the element's own zoom).
 // 2. Phone layout (body.mob; body.kqP upright / body.kqL sideways): smaller pieces, the hotbar without the attack and dash
 //    slots (the touch buttons do those; the dash charges show on the dash button), the touch buttons in an arc around the
-//    big attack button, and ui158Lay() places everything so nothing overlaps: upright the bar spans the bottom (abilities in
+//    big attack button, and ui161Lay() places everything so nothing overlaps: upright the bar spans the bottom (abilities in
 //    two rows) with the joystick and buttons above it; sideways the joystick and buttons take the bottom corners and the bar
 //    sits between them (one row; it shrinks, then drops the Power box, when the screen is narrow). Left-handed mode swaps
 //    the joystick and the buttons. The location box / ☰ / fullscreen follow the minimap (replaces v90Lay, 1660).
 // 3. Settings → Interface size (sliders, touch-button opacity, left-handed) and Settings → Keyboard (desktop): every action
-//    with its key; click, press a new key; a key another action uses is swapped with it. Keys: KB158 (0005-v158-keymap.js).
+//    with its key; click, press a new key; a key another action uses is swapped with it. Keys: KB161 (0005-v161-keymap.js).
 //    Hotbar slots, the ☰ menu and the help line show the chosen keys.
-var UI158={d:{all:1,hud:1,map:1,menu:1,touch:1,alpha:1,lh:0},last:{},bar:1,hold:null};
-function ui158S(){return Object.assign({},UI158.d,(typeof SET!='undefined'&&SET.ui158)||{})}
-function ui158Mob(){return document.body.classList.contains('mob')}
+var UI161={d:{all:1,hud:1,map:1,menu:1,touch:1,alpha:1,lh:0},last:{},bar:1,hold:null};
+function ui161S(){return Object.assign({},UI161.d,(typeof SET!='undefined'&&SET.ui161)||{})}
+function ui161Mob(){return document.body.classList.contains('mob')}
 // (desktop: the browser window's size, the stage sits under the page title)
-function ui158Base(W,H,mob){if(!mob){W=innerWidth;H=innerHeight}return mob?Math.max(.62,Math.min(1.3,Math.min(W,H)/430)):Math.max(.7,Math.min(1,Math.min(W/1280,H/760)))}
-function ui158MenuBase(W,H,mob){if(!mob){W=innerWidth;H=innerHeight}return mob?Math.max(.62,Math.min(1.15,Math.min(W,H)/470)):Math.max(.75,Math.min(1,Math.min(W/1280,H/760)))}
-function ui158Var(k,v){v=String(Math.round(v*1000)/1000);if(UI158.last[k]===v)return;UI158.last[k]=v;document.documentElement.style.setProperty(k,v)}
+function ui161Base(W,H,mob){if(!mob){W=innerWidth;H=innerHeight}return mob?Math.max(.62,Math.min(1.3,Math.min(W,H)/430)):Math.max(.7,Math.min(1,Math.min(W/1280,H/760)))}
+function ui161MenuBase(W,H,mob){if(!mob){W=innerWidth;H=innerHeight}return mob?Math.max(.62,Math.min(1.15,Math.min(W,H)/470)):Math.max(.75,Math.min(1,Math.min(W/1280,H/760)))}
+function ui161Var(k,v){v=String(Math.round(v*1000)/1000);if(UI161.last[k]===v)return;UI161.last[k]=v;document.documentElement.style.setProperty(k,v)}
 // the element's own zoom, measured (screen size ÷ layout size)
-function ui158Z(e){if(!e)return 1;const w=e.offsetWidth;if(!w)return parseFloat(getComputedStyle(e).zoom)||1;const r=e.getBoundingClientRect().width;return r>0?r/w:1}
+function ui161Z(e){if(!e)return 1;const w=e.offsetWidth;if(!w)return parseFloat(getComputedStyle(e).zoom)||1;const r=e.getBoundingClientRect().width;return r>0?r/w:1}
 // set left/top/right/bottom/width/maxHeight in screen px (numbers) or raw strings; null clears
-function ui158Pos(e,o){if(!e)return;const z=ui158Z(e);for(const k in o){const v=o[k];const s=v==null?'':typeof v=='number'?(Math.round(v/z*10)/10)+'px':v;if(e.style[k]!==s)e.style[k]=s}}
-function ui158Vis(e){if(!e||e.classList.contains('hide'))return false;const r=e.getBoundingClientRect();return r.width>1&&r.height>1}
-var UI158_HUD=['topl','tgt','boss','locBox','sysBtn','fsBtn','sysmenu','prompt','rcb','glog','pk','banner','strk','kqsTg','rv148r','ztc116','fishui',
+function ui161Pos(e,o){if(!e)return;const z=ui161Z(e);for(const k in o){const v=o[k];const s=v==null?'':typeof v=='number'?(Math.round(v/z*10)/10)+'px':v;if(e.style[k]!==s)e.style[k]=s}}
+function ui161Vis(e){if(!e||e.classList.contains('hide'))return false;const r=e.getBoundingClientRect();return r.width>1&&r.height>1}
+var UI161_HUD=['topl','tgt','boss','locBox','sysBtn','fsBtn','sysmenu','prompt','rcb','glog','pk','banner','strk','kqsTg','rv148r','ztc116','fishui',
   'ch157sL','ch157sR','mpBtnH','chqt132','mqt143','mqt152','ab152h','ch153h','ch153g','ab157al','evtk','fs160','dr170h','mpToast','btrk'];
-var UI158_TRK=['chqt132','mqt143','mqt152','fs160','dr170h'];
-document.head.insertAdjacentHTML('beforeend',`<style id="ui158css">
-${UI158_HUD.map(i=>'#'+i).join(',')}{zoom:var(--kqHud,1)}
+var UI161_TRK=['chqt132','mqt143','mqt152','fs160','dr170h'];
+document.head.insertAdjacentHTML('beforeend',`<style id="ui161css">
+${UI161_HUD.map(i=>'#'+i).join(',')}{zoom:var(--kqHud,1)}
 #bbar{zoom:var(--kqBar,1)}#mini{zoom:var(--kqMap,1)}#joy,#mbtn{zoom:var(--kqTouch,1)}
 .modal .win,#hatch>div,#svp .svpw{zoom:var(--kqMenu,1)}
-#ui158sa{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+#ui161sa{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 /* ---- phones and tablets (body.mob) ---- */
 body.mob #topl{transform:none!important;left:8px;top:8px;zoom:calc(var(--kqHud,1)*.85)}
 body.mob #mini{width:120px;height:90px;right:8px;top:8px}
@@ -47377,9 +47743,9 @@ body.mob.kqLH #mbtn [data-m=dash]{right:auto;left:113px}
 body.mob.kqLH #mbtn [data-m=cmd]{right:auto;left:100px}
 body.mob.kqLH #mbtn [data-m=tgt]{right:auto;left:63px}
 body.mob.kqLH #mbtn [data-m=f]{right:auto;left:13px}
-#mbtn .ui158c{position:absolute;right:-3px;bottom:-3px;min-width:16px;padding:0 3px;border-radius:8px;background:#1a110a;border:1px solid #a8742c;font:800 10px/14px system-ui,sans-serif;color:#f6d98a;pointer-events:none}
-#mbtn .ui158c:empty{display:none}
-#mbtn button.ui158cd{filter:grayscale(.7) brightness(.75)}
+#mbtn .ui161c{position:absolute;right:-3px;bottom:-3px;min-width:16px;padding:0 3px;border-radius:8px;background:#1a110a;border:1px solid #a8742c;font:800 10px/14px system-ui,sans-serif;color:#f6d98a;pointer-events:none}
+#mbtn .ui161c:empty{display:none}
+#mbtn button.ui161cd{filter:grayscale(.7) brightness(.75)}
 /* upright phone (no room for one row): abilities in rows of five, the Power box a thin strip above them */
 body.mob.kqRows #hot{flex-direction:column;align-items:center}
 body.mob.kqRows #acts{flex-wrap:wrap;width:236px;max-width:236px}
@@ -47387,37 +47753,37 @@ body.mob.kqRows #pwrB{flex-direction:row;align-items:center;justify-content:cent
 body.mob.kqRows #pwrB b{display:inline;font-size:.95rem}
 body.mob.kqL.kqTight #pwrB{display:none}
 /* the Settings window: preview the HUD while dragging a size slider */
-#setw.ui158pv{background:rgba(5,3,2,.25)!important}#setw.ui158pv .win{opacity:.92}
-body:not(.mob) .ui158mob,body.mob .ui158desk{display:none!important}
-#kb158 summary{cursor:pointer;font-weight:700;padding:4px 0}
-#kb158 .kbh{font:700 .66rem/1 Cinzel,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#c9a466;margin:10px 0 4px}
-#kb158 .kbr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.8rem}
-#kb158 .kbr button{min-width:84px;padding:4px 8px;font-weight:700}
-#kb158 .kbr button.kbw{border-color:#f0cc72;color:#f0cc72;animation:kb158p 1s ease-in-out infinite}
-#kb158 .kbr.kbc button{color:#9ae6b4}
-@keyframes kb158p{50%{opacity:.55}}
-#kb158 .kbn{font-size:.72rem;color:#f0cc72;min-height:1em;margin:6px 0}
+#setw.ui161pv{background:rgba(5,3,2,.25)!important}#setw.ui161pv .win{opacity:.92}
+body:not(.mob) .ui161mob,body.mob .ui161desk{display:none!important}
+#kb161 summary{cursor:pointer;font-weight:700;padding:4px 0}
+#kb161 .kbh{font:700 .66rem/1 Cinzel,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#c9a466;margin:10px 0 4px}
+#kb161 .kbr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.8rem}
+#kb161 .kbr button{min-width:84px;padding:4px 8px;font-weight:700}
+#kb161 .kbr button.kbw{border-color:#f0cc72;color:#f0cc72;animation:kb161p 1s ease-in-out infinite}
+#kb161 .kbr.kbc button{color:#9ae6b4}
+@keyframes kb161p{50%{opacity:.55}}
+#kb161 .kbn{font-size:.72rem;color:#f0cc72;min-height:1em;margin:6px 0}
 </style>`);
-document.body.insertAdjacentHTML('beforeend','<div id="ui158sa"></div>');
-function ui158SA(){const e=$('ui158sa');if(!e)return {t:0,r:0,b:0,l:0};const c=getComputedStyle(e);return {t:parseFloat(c.paddingTop)||0,r:parseFloat(c.paddingRight)||0,b:parseFloat(c.paddingBottom)||0,l:parseFloat(c.paddingLeft)||0}}
+document.body.insertAdjacentHTML('beforeend','<div id="ui161sa"></div>');
+function ui161SA(){const e=$('ui161sa');if(!e)return {t:0,r:0,b:0,l:0};const c=getComputedStyle(e);return {t:parseFloat(c.paddingTop)||0,r:parseFloat(c.paddingRight)||0,b:parseFloat(c.paddingBottom)||0,l:parseFloat(c.paddingLeft)||0}}
 // ---------- sizes ----------
-function ui158Sizes(W,H,mob){const s=ui158S(),b=ui158Base(W,H,mob),cl=v=>Math.max(.4,Math.min(2.2,v));
+function ui161Sizes(W,H,mob){const s=ui161S(),b=ui161Base(W,H,mob),cl=v=>Math.max(.4,Math.min(2.2,v));
   const hud=cl(b*s.all*s.hud);
-  return {hud,map:cl(hud*s.map),touch:cl(b*s.all*s.touch),menu:Math.max(.5,Math.min(1.8,ui158MenuBase(W,H,mob)*s.all*s.menu)),alpha:Math.max(.25,Math.min(1,+s.alpha||1)),lh:!!s.lh}}
+  return {hud,map:cl(hud*s.map),touch:cl(b*s.all*s.touch),menu:Math.max(.5,Math.min(1.8,ui161MenuBase(W,H,mob)*s.all*s.menu)),alpha:Math.max(.25,Math.min(1,+s.alpha||1)),lh:!!s.lh}}
 // ---------- layout ----------
-function ui158Lay(force){const st=$('stage'),m=$('mini');if(!st||!m)return;
-  const mob=ui158Mob(),pr=st.getBoundingClientRect(),W=pr.width,H=pr.height;if(W<50||H<50)return;
-  const S=ui158Sizes(W,H,mob),land=W>H,bd=document.body;
+function ui161Lay(force){const st=$('stage'),m=$('mini');if(!st||!m)return;
+  const mob=ui161Mob(),pr=st.getBoundingClientRect(),W=pr.width,H=pr.height;if(W<50||H<50)return;
+  const S=ui161Sizes(W,H,mob),land=W>H,bd=document.body;
   bd.classList.toggle('kqP',mob&&!land);bd.classList.toggle('kqL',mob&&land);bd.classList.toggle('kqLH',mob&&S.lh);bd.classList.remove('v90s');
-  ui158Var('--kqHud',S.hud);ui158Var('--kqMap',S.map);ui158Var('--kqTouch',S.touch);ui158Var('--kqMenu',UI158.hold!=null?+UI158.hold:S.menu);ui158Var('--kqTouchA',S.alpha);
-  if(m.offsetParent===null){ui158Var('--kqBar',S.hud);return}
-  const sa=mob?ui158SA():{t:0,r:0,b:0,l:0},g=6*S.hud;
-  const P=(e,o)=>ui158Pos(e,o),X=x=>x-pr.left,Y=y=>y-pr.top;   // stage-relative
+  ui161Var('--kqHud',S.hud);ui161Var('--kqMap',S.map);ui161Var('--kqTouch',S.touch);ui161Var('--kqMenu',UI161.hold!=null?+UI161.hold:S.menu);ui161Var('--kqTouchA',S.alpha);
+  if(m.offsetParent===null){ui161Var('--kqBar',S.hud);return}
+  const sa=mob?ui161SA():{t:0,r:0,b:0,l:0},g=6*S.hud;
+  const P=(e,o)=>ui161Pos(e,o),X=x=>x-pr.left,Y=y=>y-pr.top;   // stage-relative
   // the bottom bar: as big as the HUD unless it would not fit
   const bb=$('bbar'),joy=$('joy'),mb=$('mbtn');
-  let bar=S.hud;if(!(bb&&bb.offsetWidth))ui158Var('--kqBar',bar);
+  let bar=S.hud;if(!(bb&&bb.offsetWidth))ui161Var('--kqBar',bar);
   else{
-    const natW=()=>bb.getBoundingClientRect().width/ui158Z(bb);
+    const natW=()=>bb.getBoundingClientRect().width/ui161Z(bb);
     let avail;
     // sideways: the bar sits centred in the room between the joystick and the touch buttons
     let cx=null;if(mob&&land){const jw=116*S.touch,mw=164*S.touch,e=14*S.touch,a=sa.l+e+(S.lh?mw:jw),b=sa.r+e+(S.lh?jw:mw);avail=W-a-b-24;cx=(a+W-b)/2}
@@ -47425,9 +47791,9 @@ function ui158Lay(force){const st=$('stage'),m=$('mini');if(!st||!m)return;
     bd.classList.remove('kqTight');bd.classList.remove('kqRows');let nw=natW(),fit=avail/nw;
     if(mob&&!land&&fit<S.hud){bd.classList.add('kqRows');nw=natW();fit=avail/nw}
     if(mob&&land&&fit<S.hud*.85){bd.classList.add('kqTight');nw=natW();fit=avail/nw}
-    bar=Math.max(.45,Math.min(S.hud,fit));ui158Var('--kqBar',bar);UI158.bar=bar;
+    bar=Math.max(.45,Math.min(S.hud,fit));ui161Var('--kqBar',bar);UI161.bar=bar;
     P(bb,{bottom:(mob?sa.b+6:8),left:cx==null?null:cx})}
-  if(!mob){ui158Desk(pr,S,g);return}
+  if(!mob){ui161Desk(pr,S,g);return}
   const br=bb&&bb.offsetWidth?bb.getBoundingClientRect():null,barH=br?pr.bottom-br.top:0;
   // corners
   P($('topl'),{left:sa.l+8,top:sa.t+8});P(m,{right:sa.r+8,top:sa.t+8});
@@ -47442,123 +47808,123 @@ function ui158Lay(force){const st=$('stage'),m=$('mini');if(!st||!m)return;
   let rowB;
   if(!land){
     if(lb){P(lb,{left:X(mr.left-kq),top:Y(mr.bottom+kq+g),width:mr.width+2*kq,right:'auto',transform:'none'});try{v90Fit()}catch(_){}}
-    const lr=lb&&ui158Vis(lb)?lb.getBoundingClientRect():null,rt=lr?lr.bottom+g:mr.bottom+kq+g;
+    const lr=lb&&ui161Vis(lb)?lb.getBoundingClientRect():null,rt=lr?lr.bottom+g:mr.bottom+kq+g;
     let x=pr.right-(sa.r+8);[sy,fs].forEach(e=>{if(!e)return;const w=e.getBoundingClientRect().width||38*S.hud;P(e,{top:Y(rt),right:pr.right-x});x-=w+4*S.hud});
     rowB=rt+(sy?sy.getBoundingClientRect().height:38*S.hud);
   }else{
     const Wb=Math.min(220*S.hud,W*.26),Rb=mr.left-kq-g;
     if(lb){P(lb,{left:X(Rb-Wb),top:Y(mr.top-kq),width:Wb,right:'auto',transform:'none'});try{v90Fit()}catch(_){}}
     let x=Rb-Wb-g;[sy,fs].forEach(e=>{if(!e)return;const w=e.getBoundingClientRect().width||38*S.hud;P(e,{top:Y(mr.top-kq),right:pr.right-x});x-=w+4*S.hud});
-    const lr=lb&&ui158Vis(lb)?lb.getBoundingClientRect():null;
+    const lr=lb&&ui161Vis(lb)?lb.getBoundingClientRect():null;
     rowB=Math.max(mr.bottom+kq,lr?lr.bottom:0,sy?sy.getBoundingClientRect().bottom:0);
-    UI158.rowL=x;UI158.rowB=Math.max(lr?lr.bottom:0,sy?sy.getBoundingClientRect().bottom:0,fs?fs.getBoundingClientRect().bottom:0);
+    UI161.rowL=x;UI161.rowB=Math.max(lr?lr.bottom:0,sy?sy.getBoundingClientRect().bottom:0,fs?fs.getBoundingClientRect().bottom:0);
   }
   if(sm)P(sm,{top:Y(rowB+g),right:pr.right-(sy?sy.getBoundingClientRect().right:pr.right-8),maxHeight:Math.max(120,(br?br.top:pr.bottom)-rowB-2*g)});
   // target frame / boss bar
   const tl=$('topl'),tlr=tl?tl.getBoundingClientRect():{bottom:pr.top+50,right:pr.left+180},bo=$('boss'),tg=$('tgt');
   if(!land){const L=sa.l+8,w=Math.max(160,mr.left-kq-g-pr.left-L);let top=Y(tlr.bottom+g);
-    [bo,tg].forEach(e=>{if(!e)return;P(e,{left:L,top,width:w,transform:'none'});if(ui158Vis(e))top=Y(e.getBoundingClientRect().bottom+g)})}
-  else{const w=Math.min(300*S.hud,W*.36),cx=pr.left+W/2,free=cx-w/2>tlr.right+g&&cx+w/2<UI158.rowL-g;
-    let top=Y(free?pr.top+sa.t+8:Math.max(tlr.bottom,UI158.rowB)+g);
-    [bo,tg].forEach(e=>{if(!e)return;P(e,{left:'50%',top,width:w,transform:'translateX(-50%)'});if(ui158Vis(e))top=Y(e.getBoundingClientRect().bottom+g)})}
+    [bo,tg].forEach(e=>{if(!e)return;P(e,{left:L,top,width:w,transform:'none'});if(ui161Vis(e))top=Y(e.getBoundingClientRect().bottom+g)})}
+  else{const w=Math.min(300*S.hud,W*.36),cx=pr.left+W/2,free=cx-w/2>tlr.right+g&&cx+w/2<UI161.rowL-g;
+    let top=Y(free?pr.top+sa.t+8:Math.max(tlr.bottom,UI161.rowB)+g);
+    [bo,tg].forEach(e=>{if(!e)return;P(e,{left:'50%',top,width:w,transform:'translateX(-50%)'});if(ui161Vis(e))top=Y(e.getBoundingClientRect().bottom+g)})}
   // interaction prompt, message log
   const pt=$('prompt'),gl=$('glog');
   let pB;if(land)pB=barH+g;else pB=pr.bottom-ctlTop+g;
   if(pt)P(pt,{bottom:pB});
   if(gl){if(land){const top=jr&&!lh?jr.top:(br?br.top:pr.bottom);P(gl,{left:sa.l+8,bottom:pr.bottom-top+g,width:Math.min(260*S.hud,W*.3)})}
-    else{const pr2=pt&&ui158Vis(pt)?pt.getBoundingClientRect():null;P(gl,{left:sa.l+8,bottom:pr.bottom-(pr2?pr2.top:ctlTop)+g,width:Math.min(260*S.hud,W*.62)})}}
+    else{const pr2=pt&&ui161Vis(pt)?pt.getBoundingClientRect():null;P(gl,{left:sa.l+8,bottom:pr.bottom-(pr2?pr2.top:ctlTop)+g,width:Math.min(260*S.hud,W*.62)})}}
   // quest trackers: under the minimap column, stacked, never over the touch buttons
   let ty=land?mr.bottom+kq+g*1.5:rowB+g*1.5;const tmax=land?(mr2?mr2.top:pr.bottom)-g:(ctlTop-g);
-  UI158_TRK.forEach(id=>{const e=$(id);if(!e)return;if(!ui158Vis(e)){return}
+  UI161_TRK.forEach(id=>{const e=$(id);if(!e)return;if(!ui161Vis(e)){return}
     P(e,{right:sa.r+8,top:ty,left:'auto',maxHeight:Math.max(40,tmax-ty),overflow:'hidden'});ty=e.getBoundingClientRect().bottom+g});
 }
 // desktop: the old v90 layout (location box under the minimap, ☰ / fullscreen / menu under it), zoom-aware
-function ui158Desk(pr,S,g){const m=$('mini'),lb=$('locBox'),sy=$('sysBtn'),fs=$('fsBtn'),sm=$('sysmenu'),ev=$('evtk');
-  const P=(e,o)=>ui158Pos(e,o),X=x=>x-pr.left,Y=y=>y-pr.top;
+function ui161Desk(pr,S,g){const m=$('mini'),lb=$('locBox'),sy=$('sysBtn'),fs=$('fsBtn'),sm=$('sysmenu'),ev=$('evtk');
+  const P=(e,o)=>ui161Pos(e,o),X=x=>x-pr.left,Y=y=>y-pr.top;
   // clear anything the phone layout set
   [['topl',['left','top']],['mini',['right','top']],['joy',['left','right','bottom']],['mbtn',['left','right','bottom']],['prompt',['bottom']],['glog',['left','bottom','width']],
    ['tgt',['left','top','width','transform']],['boss',['left','top','width','transform']]].forEach(([id,ks])=>{const e=$(id);if(e)ks.forEach(k=>{if(e.style[k])e.style[k]=''})});
-  UI158_TRK.forEach(id=>{const e=$(id);if(e){['right','top','left','maxHeight','overflow'].forEach(k=>{if(e.style[k])e.style[k]=''})}});
+  UI161_TRK.forEach(id=>{const e=$(id);if(e){['right','top','left','maxHeight','overflow'].forEach(k=>{if(e.style[k])e.style[k]=''})}});
   const mr=m.getBoundingClientRect(),kq=document.body.classList.contains('kq')?4*S.map:0;
   if(lb){P(lb,{left:X(mr.left-kq),top:Y(mr.bottom+kq+g),width:mr.width+2*kq,right:'auto',transform:'none'});try{v90Fit()}catch(_){}}
-  const lr=lb&&ui158Vis(lb)?lb.getBoundingClientRect():null,rt=(lr?lr.bottom:mr.bottom+kq)+g;
+  const lr=lb&&ui161Vis(lb)?lb.getBoundingClientRect():null,rt=(lr?lr.bottom:mr.bottom+kq)+g;
   let x=pr.right-10*S.hud;[sy,fs].forEach(e=>{if(!e)return;const w=e.getBoundingClientRect().width||42*S.hud;P(e,{top:Y(rt),right:pr.right-x});x-=w+6*S.hud});
   const rowB=rt+(sy?sy.getBoundingClientRect().height:42*S.hud);
   if(sm)P(sm,{top:Y(rowB+g),right:10*S.hud,maxHeight:null});
   if(ev)P(ev,{top:Y(rowB+g),right:null})}
-// v90Lay (1660) is replaced: its job is part of ui158Lay
-v90Lay=function(force){try{ui158Lay(force)}catch(_){}};
-{let q=0;const later=()=>{if(q)return;q=1;setTimeout(()=>{q=0;try{ui158Lay(true)}catch(_){}},80)};
+// v90Lay (1660) is replaced: its job is part of ui161Lay
+v90Lay=function(force){try{ui161Lay(force)}catch(_){}};
+{let q=0;const later=()=>{if(q)return;q=1;setTimeout(()=>{q=0;try{ui161Lay(true)}catch(_){}},80)};
   addEventListener('resize',later);addEventListener('orientationchange',()=>{later();setTimeout(later,400)});document.addEventListener('fullscreenchange',later);
   if(window.visualViewport)visualViewport.addEventListener('resize',later)}
-setInterval(()=>{try{ui158Lay()}catch(_){}},400);
-{const f=applyDev;applyDev=function(){const r=f.apply(this,arguments);setTimeout(()=>{try{ui158Lay(true);ui158Sync()}catch(_){}},70);return r}}
+setInterval(()=>{try{ui161Lay()}catch(_){}},400);
+{const f=applyDev;applyDev=function(){const r=f.apply(this,arguments);setTimeout(()=>{try{ui161Lay(true);ui161Sync()}catch(_){}},70);return r}}
 // the dash button shows the dash charges (the hotbar's dash slot is hidden on phones)
-setInterval(()=>{try{if(!ui158Mob())return;const d=document.querySelector('#acts .hs[data-x=d]'),b=document.querySelector('#mbtn [data-m=dash]');if(!b)return;
-  let c=b.querySelector('.ui158c');if(!c){c=document.createElement('span');c.className='ui158c';b.appendChild(c)}
-  const t=d?(d.querySelector('.sb')||{}).textContent||'':'';if(c.textContent!==t)c.textContent=t;b.classList.toggle('ui158cd',!!(d&&d.disabled))}catch(_){}},250);
+setInterval(()=>{try{if(!ui161Mob())return;const d=document.querySelector('#acts .hs[data-x=d]'),b=document.querySelector('#mbtn [data-m=dash]');if(!b)return;
+  let c=b.querySelector('.ui161c');if(!c){c=document.createElement('span');c.className='ui161c';b.appendChild(c)}
+  const t=d?(d.querySelector('.sb')||{}).textContent||'':'';if(c.textContent!==t)c.textContent=t;b.classList.toggle('ui161cd',!!(d&&d.disabled))}catch(_){}},250);
 // ---------- Settings → Interface size ----------
-var UI158_ROWS=[['all','Overall size','',.5,1.6],['hud','HUD (bars, hotbar, frames)','',.5,1.6],['map','Minimap','',.5,2],['menu','Menus and windows','',.5,1.6],
-  ['touch','Touch controls','ui158mob',.5,1.6],['alpha','Touch controls opacity','ui158mob',.25,1]];
+var UI161_ROWS=[['all','Overall size','',.5,1.6],['hud','HUD (bars, hotbar, frames)','',.5,1.6],['map','Minimap','',.5,2],['menu','Menus and windows','',.5,1.6],
+  ['touch','Touch controls','ui161mob',.5,1.6],['alpha','Touch controls opacity','ui161mob',.25,1]];
 {const row=$('s_dev')&&$('s_dev').closest('.setr');
   const h='<div class="setg">Interface size</div><span class="mut" style="font-size:.74rem">100% fits your screen automatically. Drag a slider to see the game behind this window.</span>'+
-    UI158_ROWS.map(r=>`<label class="setr ${r[2]}"><span>${r[1]} <b id="sv158_${r[0]}"></b></span><input type="range" id="s158_${r[0]}" min="${r[3]}" max="${r[4]}" step="0.05"></label>`).join('')+
-    '<label class="setc ui158mob"><input type="checkbox" id="s158_lh"> Left-handed (joystick on the right)</label>'+
-    '<button id="s158_reset" style="justify-self:start">Reset interface size</button>'+
-    '<div class="setg ui158desk">Keyboard</div><div class="ui158desk" id="kb158w"></div>';
+    UI161_ROWS.map(r=>`<label class="setr ${r[2]}"><span>${r[1]} <b id="sv161_${r[0]}"></b></span><input type="range" id="s161_${r[0]}" min="${r[3]}" max="${r[4]}" step="0.05"></label>`).join('')+
+    '<label class="setc ui161mob"><input type="checkbox" id="s161_lh"> Left-handed (joystick on the right)</label>'+
+    '<button id="s161_reset" style="justify-self:start">Reset interface size</button>'+
+    '<div class="setg ui161desk">Keyboard</div><div class="ui161desk" id="kb161w"></div>';
   if(row)row.insertAdjacentHTML('afterend',h)}
-function ui158Sync(){const s=ui158S();UI158_ROWS.forEach(r=>{const i=$('s158_'+r[0]),v=$('sv158_'+r[0]);if(!i)return;if(document.activeElement!==i)i.value=s[r[0]];if(v)v.textContent=Math.round(s[r[0]]*100)+'%'});
-  const lh=$('s158_lh');if(lh)lh.checked=!!s.lh;kb158Render()}
-function ui158Set(k,v){SET.ui158=Object.assign({},ui158S(),{[k]:v});saveSet();ui158Lay(true);const o=$('sv158_'+k);if(o&&typeof v=='number')o.textContent=Math.round(v*100)+'%'}
-UI158_ROWS.forEach(r=>{const i=$('s158_'+r[0]);if(!i)return;
+function ui161Sync(){const s=ui161S();UI161_ROWS.forEach(r=>{const i=$('s161_'+r[0]),v=$('sv161_'+r[0]);if(!i)return;if(document.activeElement!==i)i.value=s[r[0]];if(v)v.textContent=Math.round(s[r[0]]*100)+'%'});
+  const lh=$('s161_lh');if(lh)lh.checked=!!s.lh;kb161Render()}
+function ui161Set(k,v){SET.ui161=Object.assign({},ui161S(),{[k]:v});saveSet();ui161Lay(true);const o=$('sv161_'+k);if(o&&typeof v=='number')o.textContent=Math.round(v*100)+'%'}
+UI161_ROWS.forEach(r=>{const i=$('s161_'+r[0]);if(!i)return;
   // the window's own size changes when the slider is let go (it would move under the finger); the rest change while dragging
-  // (UI158.hold keeps the windows' size while a slider is held)
-  i.addEventListener('input',()=>{if(r[0]=='menu'&&UI158.hold!=null){const o=$('sv158_menu');if(o)o.textContent=Math.round(i.value*100)+'%';return}ui158Set(r[0],+i.value)});
-  i.addEventListener('change',()=>{UI158.hold=null;ui158Set(r[0],+i.value);$('setw').classList.remove('ui158pv')});
-  i.addEventListener('pointerdown',()=>{UI158.hold=UI158.last['--kqMenu']||null;if(r[0]!='menu')$('setw').classList.add('ui158pv')});
-  ['pointerup','pointercancel','blur'].forEach(ev=>i.addEventListener(ev,()=>{$('setw').classList.remove('ui158pv');setTimeout(()=>{if(UI158.hold!=null){UI158.hold=null;ui158Set(r[0],+i.value)}},60)}))});
-if($('s158_lh'))$('s158_lh').onchange=e=>ui158Set('lh',e.target.checked?1:0);
-if($('s158_reset'))$('s158_reset').onclick=()=>{SET.ui158=Object.assign({},UI158.d);saveSet();ui158Lay(true);ui158Sync()};
-if($('s_reset'))$('s_reset').addEventListener('click',()=>{SET.ui158=Object.assign({},UI158.d);delete SET.keys;saveSet();kb158Apply();ui158Lay(true);ui158Sync()});
-{const f=openSet;openSet=function(){const r=f.apply(this,arguments);try{ui158Sync()}catch(_){}return r}}
+  // (UI161.hold keeps the windows' size while a slider is held)
+  i.addEventListener('input',()=>{if(r[0]=='menu'&&UI161.hold!=null){const o=$('sv161_menu');if(o)o.textContent=Math.round(i.value*100)+'%';return}ui161Set(r[0],+i.value)});
+  i.addEventListener('change',()=>{UI161.hold=null;ui161Set(r[0],+i.value);$('setw').classList.remove('ui161pv')});
+  i.addEventListener('pointerdown',()=>{UI161.hold=UI161.last['--kqMenu']||null;if(r[0]!='menu')$('setw').classList.add('ui161pv')});
+  ['pointerup','pointercancel','blur'].forEach(ev=>i.addEventListener(ev,()=>{$('setw').classList.remove('ui161pv');setTimeout(()=>{if(UI161.hold!=null){UI161.hold=null;ui161Set(r[0],+i.value)}},60)}))});
+if($('s161_lh'))$('s161_lh').onchange=e=>ui161Set('lh',e.target.checked?1:0);
+if($('s161_reset'))$('s161_reset').onclick=()=>{SET.ui161=Object.assign({},UI161.d);saveSet();ui161Lay(true);ui161Sync()};
+if($('s_reset'))$('s_reset').addEventListener('click',()=>{SET.ui161=Object.assign({},UI161.d);delete SET.keys;saveSet();kb161Apply();ui161Lay(true);ui161Sync()});
+{const f=openSet;openSet=function(){const r=f.apply(this,arguments);try{ui161Sync()}catch(_){}return r}}
 // ---------- Settings → Keyboard ----------
-var KB158W={open:false,wait:null,note:''};
-function kb158Render(){const w=$('kb158w');if(!w)return;const K=SET.keys||{},groups=[];KB158.A.forEach(a=>{if(!groups.includes(a[3]))groups.push(a[3])});
-  let h=`<details id="kb158"${KB158W.open?' open':''}><summary>Change key bindings</summary><div class="kbn" id="kb158n">${KB158W.note||'Click a key, then press the new key (Esc cancels). A key that is already used swaps places.'}</div>`;
-  groups.forEach(gn=>{h+=`<div class="kbh">${gn}</div>`;KB158.A.filter(a=>a[3]==gn).forEach(a=>{const b=kb158Get(a[0]),ch=b!==a[2];
-    h+=`<div class="kbr${ch?' kbc':''}"><span>${a[1]}</span><button data-kb="${a[0]}" class="${KB158W.wait==a[0]?'kbw':''}" title="${ch?'Default: '+kb158Label(a[2]):''}">${KB158W.wait==a[0]?'Press a key…':kb158Label(b)}</button></div>`})});
-  h+='<div class="kbh"></div><span class="mut" style="font-size:.72rem">Left click attacks, right click turns mouse-look on or off and Esc closes windows; those stay as they are.</span><br><button id="kb158r" style="margin-top:8px">Reset all keys</button></details>';
-  w.innerHTML=h;const d=$('kb158');d.addEventListener('toggle',()=>{KB158W.open=d.open})}
-function kb158Apply(){kb158Build(SET.keys||{});try{for(const k in K)K[k]=0}catch(_){}try{kb158Labels()}catch(_){}}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#kb158 [data-kb]');
-  if(b){e.preventDefault();const id=b.dataset.kb;if(KB158W.wait==id){KB158W.wait=null;KB158.cap=null;KB158W.note='';kb158Render();return}
-    KB158W.wait=id;KB158W.note='';kb158Render();
-    KB158.cap=k=>{KB158W.wait=null;
-      if(k=='escape'||KB158_BAD[k]){KB158W.note=k=='escape'?'':'That key can’t be used.';kb158Render();return}
-      const A=KB158.A.find(a=>a[0]==id),old=kb158Get(id),keys=Object.assign({},SET.keys||{});
+var KB161W={open:false,wait:null,note:''};
+function kb161Render(){const w=$('kb161w');if(!w)return;const K=SET.keys||{},groups=[];KB161.A.forEach(a=>{if(!groups.includes(a[3]))groups.push(a[3])});
+  let h=`<details id="kb161"${KB161W.open?' open':''}><summary>Change key bindings</summary><div class="kbn" id="kb161n">${KB161W.note||'Click a key, then press the new key (Esc cancels). A key that is already used swaps places.'}</div>`;
+  groups.forEach(gn=>{h+=`<div class="kbh">${gn}</div>`;KB161.A.filter(a=>a[3]==gn).forEach(a=>{const b=kb161Get(a[0]),ch=b!==a[2];
+    h+=`<div class="kbr${ch?' kbc':''}"><span>${a[1]}</span><button data-kb="${a[0]}" class="${KB161W.wait==a[0]?'kbw':''}" title="${ch?'Default: '+kb161Label(a[2]):''}">${KB161W.wait==a[0]?'Press a key…':kb161Label(b)}</button></div>`})});
+  h+='<div class="kbh"></div><span class="mut" style="font-size:.72rem">Left click attacks, right click turns mouse-look on or off and Esc closes windows; those stay as they are.</span><br><button id="kb161r" style="margin-top:8px">Reset all keys</button></details>';
+  w.innerHTML=h;const d=$('kb161');d.addEventListener('toggle',()=>{KB161W.open=d.open})}
+function kb161Apply(){kb161Build(SET.keys||{});try{for(const k in K)K[k]=0}catch(_){}try{kb161Labels()}catch(_){}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#kb161 [data-kb]');
+  if(b){e.preventDefault();const id=b.dataset.kb;if(KB161W.wait==id){KB161W.wait=null;KB161.cap=null;KB161W.note='';kb161Render();return}
+    KB161W.wait=id;KB161W.note='';kb161Render();
+    KB161.cap=k=>{KB161W.wait=null;
+      if(k=='escape'||KB161_BAD[k]){KB161W.note=k=='escape'?'':'That key can’t be used.';kb161Render();return}
+      const A=KB161.A.find(a=>a[0]==id),old=kb161Get(id),keys=Object.assign({},SET.keys||{});
       // swap with the action that already has this key (actions of another context may share it)
-      const other=KB158.A.find(a=>a[0]!=id&&kb158Get(a[0])===k&&!!a[4]===!!A[4]);
-      keys[id]=k;if(other){keys[other[0]]=old;KB158W.note='Swapped: '+other[1]+' is now '+kb158Label(old)+'.'}else KB158W.note=A[1]+' is now '+kb158Label(k)+'.';
-      KB158.A.forEach(a=>{if(keys[a[0]]===a[2])delete keys[a[0]]});
-      SET.keys=keys;saveSet();kb158Apply();kb158Render()};
+      const other=KB161.A.find(a=>a[0]!=id&&kb161Get(a[0])===k&&!!a[4]===!!A[4]);
+      keys[id]=k;if(other){keys[other[0]]=old;KB161W.note='Swapped: '+other[1]+' is now '+kb161Label(old)+'.'}else KB161W.note=A[1]+' is now '+kb161Label(k)+'.';
+      KB161.A.forEach(a=>{if(keys[a[0]]===a[2])delete keys[a[0]]});
+      SET.keys=keys;saveSet();kb161Apply();kb161Render()};
     return}
-  if(e.target.id=='kb158r'){SET.keys={};saveSet();kb158Apply();KB158W.note='All keys are back to their defaults.';kb158Render()}});
+  if(e.target.id=='kb161r'){SET.keys={};saveSet();kb161Apply();KB161W.note='All keys are back to their defaults.';kb161Render()}});
 // closing Settings stops waiting for a key
-setInterval(()=>{if(KB158.cap&&$('setw').classList.contains('hide')){KB158.cap=null;KB158W.wait=null}},300);
+setInterval(()=>{if(KB161.cap&&$('setw').classList.contains('hide')){KB161.cap=null;KB161W.wait=null}},300);
 // ---------- the chosen keys on the hotbar, the ☰ menu and the help line ----------
-function kb158Lbl(def){const a=KB158.A.find(x=>x[2]===def&&!x[4]);return a?kb158Label(kb158Get(a[0])):null}
-function kb158Fix(el,attr){if(!el)return;const o=el.dataset.kb0||(el.dataset.kb0=el.textContent.trim());const d=o.toLowerCase()=='space'?' ':o.toLowerCase();const n=kb158Lbl(d);const t=n||o;if(el.textContent!==t)el.textContent=t}
-function kb158Labels(){
+function kb161Lbl(def){const a=KB161.A.find(x=>x[2]===def&&!x[4]);return a?kb161Label(kb161Get(a[0])):null}
+function kb161Fix(el,attr){if(!el)return;const o=el.dataset.kb0||(el.dataset.kb0=el.textContent.trim());const d=o.toLowerCase()=='space'?' ':o.toLowerCase();const n=kb161Lbl(d);const t=n||o;if(el.textContent!==t)el.textContent=t}
+function kb161Labels(){
   document.querySelectorAll('#acts .hs .kb').forEach(s=>{const b=s.closest('.hs'),x=b&&b.dataset.x||'';let d=null;
     if(/^E?\d$/.test(x))d=String(+x.replace('E','')+1);else d={d:'shift',p:'z',z:'x',v:'v'}[x];
-    const t=d?kb158Lbl(d):null;const want=t||s.dataset.kb0||s.textContent;if(!s.dataset.kb0)s.dataset.kb0=s.textContent;if(s.textContent!==want)s.textContent=want;
+    const t=d?kb161Lbl(d):null;const want=t||s.dataset.kb0||s.textContent;if(!s.dataset.kb0)s.dataset.kb0=s.textContent;if(s.textContent!==want)s.textContent=want;
     if(b&&t&&b.title){const nt=b.title.replace(/\((?:[^()]{1,9})\)\s*$/,'('+t+')');if(nt!==b.title)b.title=nt}});
-  document.querySelectorAll('#sysmenu kbd').forEach(k=>kb158Fix(k));
-  const sb=$('sysBtn');if(sb){const t=kb158Lbl('m')||'M';sb.title='Menu ('+t+')'}
+  document.querySelectorAll('#sysmenu kbd').forEach(k=>kb161Fix(k));
+  const sb=$('sysBtn');if(sb){const t=kb161Lbl('m')||'M';sb.title='Menu ('+t+')'}
   const sub=document.querySelector('.wrap>.sub');if(sub){if(!sub.dataset.kb0)sub.dataset.kb0=sub.innerHTML;
-    if(!KB158.on){if(sub.innerHTML!==sub.dataset.kb0)sub.innerHTML=sub.dataset.kb0}
-    else{const L=id=>kb158Label(kb158Get(id));
+    if(!KB161.on){if(sub.innerHTML!==sub.dataset.kb0)sub.innerHTML=sub.dataset.kb0}
+    else{const L=id=>kb161Label(kb161Get(id));
       sub.textContent=`${L('up')}${L('left')}${L('down')}${L('right')} move · Right click turns mouse-look on / off · Left click attack · ${['a1','a2','a3','a4','a5','a6'].map(L).join(' ')} abilities · ${L('dash')} dash · ${L('cmd')} command companions · ${L('tgt')} target · ${L('char')} character · ${L('abil')} abilities · ${L('king')} kingdom · ${L('feed')} feed companion · ${L('hp')} / ${L('mp')} potions · ${L('emp1')} / ${L('emp2')} empower · ${L('act')} interact · ${L('inv')} inventory · ${L('comp')} companions · ${L('eggs')} eggs · ${L('menu')} menu · ${L('recall')} recall · ${L('set')} settings · ${L('coop')} co-op · ${L('mount')} mount · Mouse wheel zoom · keys can be changed in Settings`}}}
-{const a=$('acts');if(a)new MutationObserver(()=>{if(KB158.on)try{kb158Labels()}catch(_){}}).observe(a,{childList:true})}
-setTimeout(()=>{try{kb158Labels()}catch(_){}},0);
-try{ui158Lay(true)}catch(_){}
+{const a=$('acts');if(a)new MutationObserver(()=>{if(KB161.on)try{kb161Labels()}catch(_){}}).observe(a,{childList:true})}
+setTimeout(()=>{try{kb161Labels()}catch(_){}},0);
+try{ui161Lay(true)}catch(_){}

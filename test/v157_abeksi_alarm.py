@@ -3,7 +3,8 @@
 #  (no floating), the torches that stood in walls are sconces now. Knife: the prompt shows only close behind a calm Abeksi; the kill
 #  is silent when nobody sees it, and a witness raises the alarm; a body found by a calm guard makes it come to look (no alarm).
 #  Alarm: crouch off, the stealth HUD hidden, fighting allowed, residents become the game's enemies (capped, nearest first), the
-#  tracker counts "Abeksi left", the gate is barred while any stand and leads to Hillside Crest II once none do; a death in the alarm
+#  v158: the bell calls hunters who run in through the streets and join the fight; the gate is open during the alarm (no need to kill
+#  everyone) and leads to Hillside Crest II; a death in the alarm
 #  brings the city back calm at the last checkpoint with every resident alive.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -42,8 +43,14 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   out.fightOk=(()=>{const g=$('glog').textContent.length;swing();return !/Not here/.test($('glog').textContent.slice(g))})();
   tick(1.5);const E=enemies.filter(e=>e.ab157&&!e.dead);out.foes=E.length;out.cap=AB157K.cap;out.keys=[...new Set(E.map(e=>e.c.en))];
   out.hostile=E.every(e=>e.agg&&e.hunt);out.left=AB157A.left;out.trk=JSON.stringify(SP152.trk.abeksi(I));
+  // v158: the bell calls a crowd of hunters who run to the hero through the streets
+  {const R=ab157Res(),hs=()=>R.filter(a=>a.hunt&&!a.dead&&!a.e),md=()=>{const L=hs();return L.length?L.reduce((t,a)=>t+Math.min(999,ab158D(a)),0)/L.length:0};
+   out.hunters=R.filter(a=>!a.dead&&(a.hunt||a.e)).length;out.hd0=+md().toFixed(1);out.hn0=hs().length;const f0=enemies.filter(e=>e.ab157&&!e.dead).length;
+   hero.hp=heroMax();const keep=setInterval(()=>{hero.hp=heroMax()},50);tick(4,()=>{hero.hp=heroMax()});clearInterval(keep);
+   out.hd1=+md().toFixed(1);out.hn1=hs().length;out.foes1=enemies.filter(e=>e.ab157&&!e.dead).length;out.foes0=f0;
+   out.inWall=R.filter(a=>a.hunt&&!a.dead&&!a.e&&!ab158Ok(G,Math.round(a.u),Math.round(a.v))).length}
   const e0=E[0],L0=AB157A.left;if(e0)hurt(e0,1e9,{col:0xffffff},false);tick(.5);out.killCount=AB157A.left===L0-1;
-  {const [x,z]=W2(75,185.6);toPos(x,z)}tick(.1);out.gateBar=(worldPrompt()||{}).label||'';
+  {const [x,z]=W2(75,185.6);toPos(x,z)}tick(.1);out.gateBar=(worldPrompt()||{}).label||'';out.leftAtGate=AB157A.left;
   // ---- a death in the alarm: calm again, at the checkpoint, every resident alive ----
   hero.hp=1;down();await wait(300);out.awd=typeof AWD!='undefined'&&!!AWD.dead;try{AWD.ready=1;awRise()}catch(_){}await wait(900);tick(.3);
   out.after={alarm:AB157A.on,left:ab157Left(),res:ab157Res().length,hp:hero.hp>0,ins:ab152In(),foes:enemies.filter(e=>e.ab157&&!e.dead).length,bodies:AB157A.bodies.length,cr:H.cr};
@@ -69,9 +76,13 @@ def s(pg):
     exp(r['alarm'] and not r['cr'] and r['stealthHud'] and r['alHud'] and r['crouchBlocked']==0,'the alarm: crouch off and blocked, the stealth HUD hidden, the alarm banner shown')
     exp(r['fightOk'],'fighting is allowed while the city is roused')
     exp(0<r['foes']<=r['cap'] and r['hostile'] and len(r['keys'])>=2,'residents near the hero become hostile enemies (%s of cap %s, %s)'%(r['foes'],r['cap'],r['keys']))
-    exp(r['left']==r['res']-2 and 'Abeksi left' in r['trk'],'the tracker counts the residents left (%s)'%r['left'])
+    exp('Hunting you' in r['trk'] and 'city gate' in r['trk'],'the tracker: hunting you, fight to the city gate (%s)'%r['trk'][:160])
+    exp(r['hunters']>=10,'the bell calls a crowd of hunters (%s)'%r['hunters'])
+    exp(r['hn0']==0 or r['hd1']<r['hd0'] or r['hn1']<r['hn0'],'the hunters close in through the streets (mean steps %s -> %s, %s -> %s on foot)'%(r['hd0'],r['hd1'],r['hn0'],r['hn1']))
+    exp(r['foes1']>=min(r['cap'],6),'the hunters join the fight (%s fighting, cap %s)'%(r['foes1'],r['cap']))
+    exp(r['inWall']==0,'no hunter stands inside a wall (%s)'%r['inWall'])
     exp(r['killCount'],'killing a roused resident lowers the count')
-    exp('barred' in r['gateBar'],'the gate is barred while any stand (%s)'%r['gateBar'])
+    exp('city gate' in r['gateBar'] and 'barred' not in r['gateBar'] and r['leftAtGate']>50,'v158: the gate opens during the alarm, with most residents still standing (%s, %s left)'%(r['gateBar'],r['leftAtGate']))
     a=r['after'];exp(r['awd'] and not a['alarm'] and a['left']==a['res'] and a['hp'] and a['ins'] and a['foes']==0 and a['bodies']==0 and a['cr'],'a death in the alarm: calm again at the checkpoint, every resident back (%s)'%a)
     exp(r['left0']==0 and r['gateOpen'] and 'city gate' in r['gateOpen'],'with none left the gate opens (%s)'%r['gateOpen'])
     exp(r['arrived']==6 and r['st']==2 and r['done'] and not r['alarmAfter'] and r['foesAfter']==0,'the gate leads to Hillside Crest II and finishes the chapter (%s %s)'%(r['arrived'],r['st']))

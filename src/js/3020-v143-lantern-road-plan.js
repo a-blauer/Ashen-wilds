@@ -10,8 +10,38 @@
 // the captain's map table on the south. The lampposts line the whole road from the outpost to ~10 steps before the gateway,
 // alternating sides, about mq151Cfg().gap (7) tiles apart (~47 of them; v143 had 8 on the last 50 steps). The Ripper parks beside
 // the gateway, on the side away from Cheddar's gateway spot, facing the arch.
+// v160, the lantern line (owner): the raw road path zigzags inside wide open ground (Kindlelight I's middle: a V and a W), so lamps
+// counted 7 path steps apart stood side by side on two legs of a zag (12 within 5 tiles, two pairs under 2) and the Ripper drove
+// every zag. mq160Line cuts each zag: a straight shortcut is kept while every point on it stays mq151Cfg().clr tiles inside open
+// ground, within .dev tiles of the raw path (so it never leaves the road's corridor), .wat (2.6) tiles clear of ponds and rock and
+// .obs (1.6) clear of bushes, then the corners are rounded (Catmull-Rom). Lamps go evenly along that line at least .gap tiles apart
+// and 1.5 clear of those clumps (34 in Kindlelight I, ~7.2 apart along the line, no two closer than ~7.6), and the Ripper rides it.
+// The map itself (tiles, camps, decorations' seeded stream) is untouched; only the lamps, the route and their keep-out rings move.
 // (hoisted functions, not a var: 0045 and 0070 call into this file long before its own lines run)
-function mq151Cfg(){return {A:36,gap:7}}
+function mq151Cfg(){return {A:36,gap:7,clr:5,dev:6,obs:1.6,wat:2.6}}
+// the road from path index s0 to s1 with the zigzags cut and the corners rounded: [[x,z],...] about a tile apart
+function mq160Line(P,s0,s1){const c=mq151Cfg(),DW=MAP.DW,near=new Set(),raw=new Set(),wide=new Set(),r=c.dev,R2=r+c.wat+4;
+  P.forEach(p=>{for(let z=Math.floor(p[1]-R2);z<=Math.ceil(p[1]+R2);z++)for(let x=Math.floor(p[0]-R2);x<=Math.ceil(p[0]+R2);x++){const d=Math.hypot(x-p[0],z-p[1]);
+    if(d<=r)near.add(z*W+x);if(d<=1.2)raw.add(z*W+x);if(d<=R2)wide.add(z*W+x)}});
+  // ponds and rocks (water / rock tiles) and bushes (MAP.props) near the road: a shortcut keeps mq151Cfg().wat tiles clear of water and
+  // rock, .obs of bushes, except on the raw road itself (it already threads past them), so by a clump the line follows the road
+  const ob=[],pr=new Set(),blk=new Set();try{MAP.props.forEach(q=>pr.add(q[1]*W+q[0]))}catch(_){}
+  wide.forEach(k=>{const x=k%W,z=(k-x)/W,t=MAP[z]&&MAP[z][x];const bu=pr.has(k);if(!(bu||t=='~'||t=='r'||t=='H'))return;const rd=bu?c.obs:c.wat;ob.push([x,z,rd]);
+    for(let v=z-4;v<=z+4;v++)for(let u=x-4;u<=x+4;u++)if(Math.hypot(u-x,v-z)<=rd&&!raw.has(v*W+u))blk.add(v*W+u)});
+  const inL=(x,z)=>{const X=Math.round(x),Z=Math.round(z),k=Z*W+X;return X>0&&Z>0&&X<W-1&&Z<H-1&&(raw.has(k)||DW[k]<-c.clr&&near.has(k))&&!blk.has(k)};
+  const see=(a,b)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1]))+1;for(let t=0;t<=n;t++)if(!inL(a[0]+(b[0]-a[0])*t/n,a[1]+(b[1]-a[1])*t/n))return false;return true};
+  const kn=[s0];for(let i=s0;i<s1;){let j=s1;while(j>i+1&&!see(P[i],P[j]))j--;kn.push(j);i=j}
+  const K=kn.map(i=>P[i]),out=[];
+  for(let i=0;i<K.length-1;i++){const a=K[Math.max(0,i-1)],b=K[i],q=K[i+1],d=K[Math.min(K.length-1,i+2)],n=Math.max(2,Math.ceil(Math.hypot(q[0]-b[0],q[1]-b[1])));
+    for(let s=0;s<n;s++){const t=s/n,t2=t*t,t3=t2*t;out.push([0,1].map(k=>.5*(2*b[k]+(q[k]-a[k])*t+(2*a[k]-5*b[k]+4*q[k]-d[k])*t2+(3*b[k]-a[k]-3*q[k]+d[k])*t3)))}}
+  out.push([K[K.length-1][0],K[K.length-1][1]]);mq160Line.kn=kn;
+  // rounding the corners can bow a little toward a clump: push points inside a clump's margin back out, then relax the line
+  // (each point toward its neighbours' middle) so the push is a smooth bend, not a kink; repeat, ending on a push
+  const push=()=>{let m=0;for(let i=1;i<out.length-1;i++){const q=out[i];for(const [x,z,rd] of ob){const dx=q[0]-x,dz=q[1]-z,d=Math.hypot(dx,dz);
+    if(d<rd){const k=(rd-d)/(d||1);q[0]+=dx*k;q[1]+=dz*k;m=1}}}return m};
+  for(let it=0;it<10&&push();it++)for(let i=2;i<out.length-2;i++){const a=out[i-1],b=out[i+1];out[i]=[out[i][0]*.5+(a[0]+b[0])*.25,out[i][1]*.5+(a[1]+b[1])*.25]}
+  push();mq160Line.ob=ob;
+  return out}
 function mq151A(N){return Math.max(10,Math.min(mq151Cfg().A,N-60))}
 function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   const I=INSL[0],P=I.path,N=P.length,DW=MAP.DW;
@@ -42,10 +72,18 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   // the palisade: sections of stakes along the east edge, a short screen on the west
   for(let a=-4.6;a<=8.6;a+=1.55){const o=pick(a,-9.7,.5);if(o){o.ry=road+Math.PI/2;o.n=6;R.stakes.push(o)}}
   [-2.2,-.7].forEach(a=>{const o=pick(a,5.6,.5);if(o){o.ry=road-Math.PI/2;o.n=5;R.stakes.push(o)}});
-  // the lampposts: from A+8 to N-10, about mq151Cfg().gap apart (at least 8), alternating sides 2.7 off the road centre, the arm over the road
-  const L0=A+8,L1=N-10,n=Math.max(8,Math.round((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const ix=Math.round(L0+(L1-L0)*i/(n-1)),q=P[ix],t=tan(ix),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
-    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)){o={x,z,i:ix};break}}
-    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:ix};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
+  // v160: the lantern line from the outpost to the gateway: the raw path up to the Ripper's start, the cut-and-rounded line to 13 steps
+  // before the gateway (where the Ripper turns off to park), then the raw path's last steps; RD.d = distance along it in tiles
+  const S1=N-13,LN=mq160Line(P,R.start,S1),RD=P.slice(A,R.start).map(p=>[p[0],p[1]]).concat(LN,P.slice(S1+1).map(p=>[p[0],p[1]]));
+  const Dd=[0];for(let i=1;i<RD.length;i++)Dd.push(Dd[i-1]+Math.hypot(RD[i][0]-RD[i-1][0],RD[i][1]-RD[i-1][1]));R.line=RD;R.lineD=Dd;R.lineLen=Dd[Dd.length-1];
+  const atD=s=>{let i=1;while(i<RD.length-1&&Dd[i]<s)i++;const a=RD[i-1],b=RD[i],k=(s-Dd[i-1])/Math.max(1e-6,Dd[i]-Dd[i-1]),
+      p=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k],u=RD[Math.max(0,i-4)],v=RD[Math.min(RD.length-1,i+3)];let dx=v[0]-u[0],dz=v[1]-u[1];const L=Math.hypot(dx,dz)||1;return [p,[dx/L,dz/L]]};
+  // the lampposts: from 8 tiles past the outpost to 10 before the gateway, evenly spaced at least mq151Cfg().gap tiles apart along the line (at least 8 lamps),
+  // alternating sides 2.7 off the line, the arm over the road; .i = the distance along the line (tiles from the outpost)
+  const OB=mq160Line.ob||[],clear=(x,z)=>OB.every(([u,v])=>Math.hypot(x-u,z-v)>=1.5); // a lamp stands 1.5 clear of water, rock and bushes
+  const L0=8,L1=R.lineLen-10,n=Math.max(8,Math.floor((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const s=L0+(L1-L0)*i/(n-1),[q,t]=atD(s),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
+    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)&&clear(x,z)){o={x,z,i:s};break}}
+    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:s};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
   // the gateway and where the Ripper parks: beside the arch, away from Cheddar's gateway spot (2350 picks +side first)
   const G=I.ba,q=P[Math.max(0,N-14)];let dx=q[0]-G[0],dz=q[1]-G[1];const Lg=Math.hypot(dx,dz)||1;dx/=Lg;dz/=Lg;const sx=-dz,sz=dx;
   const chq=[[5.4,2],[5.4,-2],[6,2.4],[6,-2.4]].find(([a,b])=>ok(G[0]+dx*a+sx*b,G[1]+dz*a+sz*b,.3)),cs=chq?Math.sign(chq[1]):1;
@@ -53,7 +91,7 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   for(const [a,b] of [[3.7,-3.1],[4.3,-3.4],[3.3,-3.7],[4.8,-3.0],[3.7,-2.6]]){const x=G[0]+dx*a+sx*b*cs,z=G[1]+dz*a+sz*b*cs;if(ok(x,z,.9)){R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs};break}}
   if(!R.park){const x=G[0]+dx*3.7-sx*3.1*cs,z=G[1]+dz*3.7-sz*3.1*cs;R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs}}
   // the route: the road from the start to ~12 steps before the gateway, then a curve to the parking spot
-  const rt=[];for(let i=R.start;i<=N-13;i+=2)rt.push([P[i][0],P[i][1]]);
+  const rt=[];for(let i=0;i<LN.length;i+=2)rt.push(LN[i].slice());if(rt.length&&(LN.length-1)%2)rt.push(LN[LN.length-1].slice()); // v160: along the lantern line
   {const e=P[N-13],m=[(e[0]+R.park.x)/2+sx*cs*-.8,(e[1]+R.park.z)/2+sz*cs*-.8];rt.push(m);
     const b=[R.park.x-Math.sin(R.park.ry)*1.6,R.park.z-Math.cos(R.park.ry)*1.6];rt.push(b);rt.push([R.park.x,R.park.z])}
   R.route=rt;

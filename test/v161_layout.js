@@ -1,5 +1,5 @@
 ()=>{
-  // v158 layout check: key HUD pieces must be on screen, the touch controls must not cover each other or the hotbar.
+  // v161 layout check: key HUD pieces must be on screen, the touch controls must not cover each other or the hotbar.
   const fail=[],info={vw:innerWidth,vh:innerHeight};
   const R=id=>{const e=document.getElementById(id);if(!e)return null;const cs=getComputedStyle(e);if(cs.display=='none'||cs.visibility=='hidden'||e.classList.contains('hide'))return null;
     const r=e.getBoundingClientRect();if(r.width<1||r.height<1)return null;return {l:Math.round(r.left),t:Math.round(r.top),r:Math.round(r.right),b:Math.round(r.bottom),w:Math.round(r.width),h:Math.round(r.height)}};

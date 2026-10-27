@@ -10,7 +10,7 @@ $('devp').addEventListener('click',e=>{const b=e.target.closest('[data-dev]');if
 if($('s_dev')){$('s_dev').value=SET.dev||'desktop';$('s_dev').onchange=e=>applyDev(e.target.value)}
 // ---------- virtual joystick ----------
 {const J=$('joy'),K0=J.querySelector('i');
-  // v158: the pad may be zoomed (UI size): the reach is measured on screen (37% of the pad's width, 46px on the old 124px pad)
+  // v161: the pad may be zoomed (UI size): the reach is measured on screen (37% of the pad's width, 46px on the old 124px pad)
   // and the knob's own offset is in the pad's unzoomed pixels
   const set=(e)=>{const r=J.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=Math.max(8,r.width*.37),z=r.width/Math.max(1,J.offsetWidth||r.width)||1;
     let dx=e.clientX-cx,dy=e.clientY-cy;const L=Math.hypot(dx,dy);if(L>R0){dx*=R0/L;dy*=R0/L}
