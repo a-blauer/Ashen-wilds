@@ -46716,7 +46716,9 @@ function cs155Riders(){const R=CH153.R,L=cs155Alive();if(R&&(R.ph=='run'||R.ph==
 function cs155Won(){return Object.keys(CS155.won).length>0}
 // the one Skarrith: the host's world drives it, the others follow; everyone animates it and checks their own hits
 {const f=ch153SnakeTick;ch153SnakeTick=function(dt,now){const R=CH153.R;if(!R||!cs155Co()||R.ph=='intro'||R.ph=='win')return f.apply(this,arguments);return cs155Snake(dt,now)}}
-function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,lead=MP.host===MP.me||!MP.host;N.st='run';
+// v156: the host's serpent is followed only while it is on my try and still heard from; otherwise (the host still lies fallen on
+// the last try, or has gone quiet) my world runs it, so a rider who started again is not swallowed by the last try's serpent
+function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,hn=CS155.n,lead=MP.host===MP.me||!MP.host||!!hn&&(hn.rd!==CS155.rd||nowP()-hn.t>1500);N.st='run';
   const run=cs155Riders().filter(q=>q.ph==2),tg=run.length?run.reduce((a,b)=>b.s<a.s?b:a):null;
   if(lead){
     if(tg){const gap=tg.s-N.s,B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.ph=='run'&&R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
@@ -46726,7 +46728,7 @@ function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,lead=MP.host=
       const sk=CH153V.strike;N.next-=dt;const busy=S.obs.some(q=>q.k!='gap'&&q.k!='log'&&q.s>tg.s-2&&q.s<tg.s+tg.v*1.1+5);
       if(!N.strike&&N.next<=0&&gap<sk[0]&&tg.s>110&&!busy){N.next=tg.s>600?sk[2]:sk[1];N.strike={t:0,o:tg.o,s0:N.s,tg:tg.peer};cl155Send(['cs','k',tg.peer,cl155R2(tg.o)]);try{svSnd('hiss',1.2,.8)}catch(_){}}}
     else{N.v*=Math.max(0,1-dt*2);N.s+=N.v*dt}
-    if(now-CS155.tN>100){CS155.tN=now;cl155Send(['cs','n',cl155R1(N.s),cl155R1(N.v)])}}
+    if(now-CS155.tN>100){CS155.tN=now;cl155Send(['cs','n',cl155R1(N.s),cl155R1(N.v),CS155.rd])}}
   else{const n=CS155.n;if(n){const want=n.s+n.v*Math.min(.4,(nowP()-n.t)/1000);N.v=n.v;N.s+=N.v*dt;if(Math.abs(want-N.s)>8)N.s=want;else N.s+=(want-N.s)*Math.min(1,dt*5)}}
   // the strike: it tracks its rider while it draws back; that rider's own world checks the hit
   if(N.strike){const T=N.strike,me=T.tg===MP.me,tr=me?(R.ph=='run'?R:null):cs155Rider(T.tg);T.t+=dt;if(T.t<.75&&tr)T.o+=(tr.o-T.o)*Math.min(1,dt*3.2);
@@ -46795,7 +46797,7 @@ function cs155On(q,peer){const k=q[1],R=CH153.R,nm=mpEsc(mpName(peer));
   if(k==='dn'){say('🤝 '+nm+' fell on the mountain — they lie here. Press F beside them to revive them.');return}
   if(!ch153In())return;
   if(k==='p'){CS155.p[peer]={s:+q[2]||0,o:+q[3]||0,y:+q[4]||0,ph:q[5]|0,hp:q[6]|0,v:+q[7]||0,rd:q[8]|0,t:nowP()}}
-  else if(k==='n'&&peer===MP.host){CS155.n={s:+q[2]||0,v:+q[3]||0,t:nowP()}}
+  else if(k==='n'&&peer===MP.host){CS155.n={s:+q[2]||0,v:+q[3]||0,rd:q[4]|0,t:nowP()}}
   else if(k==='w'){CS155.won[peer]=1;say('🐍 '+nm+' squeezed through the crack!')}
   else if(!R||!CH153.S)return;
   else if(k==='v'&&peer===MP.host&&Array.isArray(q[3])){const L=q[3].filter(a=>Array.isArray(a)).slice(0,5).map(a=>[+a[0]||0,+a[1]||0]);R.sn.rear=1;ch153SpitSpawn(L,q[2]|0)}
