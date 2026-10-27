@@ -41235,6 +41235,9 @@ function rv148Tick(dt){
 {const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);try{if(RV148.ch)rv148Cancel('');}catch(_){}return r}}
 // a dead hero lying inside an arena (the world keeps running behind the death screen in co-op) must not start the fight
 // again: it would seal them in, and after "Rise Again" the arena wall would pull them back from Duskhold
+// v158: no health comes back while the death screen is up (in co-op the world keeps running behind it): the dead hero's health
+// regrew to 1% within a few frames, and partners took them for a hero still standing (a downed partner then never died)
+{const f=heroTick;heroTick=function(){const r=f.apply(this,arguments);if(typeof AWD!='undefined'&&AWD.dead&&hero.hp>0)hero.hp=0;return r}}
 {const f=arenaTick;arenaTick=function(){if(!AF&&(hero.hp<=0||(typeof AWD!='undefined'&&AWD.dead)))return;return f.apply(this,arguments)}}
 // ================= v148.2: co-op boss credit =================
 // A Sovereign's first defeat (map cleared, its power, the next portal) and Vorraxis's defeat are one-time progress. In co-op,
