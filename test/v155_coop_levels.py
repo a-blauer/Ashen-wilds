@@ -89,6 +89,10 @@ H.evaluate("()=>{window.__pin=0;return 1}")
 ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.hp==3",9000,[H])
 st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s),CS155.rd]") for p in (H,G)]
 chk('Ascent: the last rider to fall starts again even when the other already has (no stuck watcher)',ok1 and ok and st[0][3]==st[1][3],json.dumps(st))
+# ... and the one who started first is not swallowed by the last try's serpent meanwhile
+W(2500)
+st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s),CS155.rd,Math.round(CH153.R.sn.s)]") for p in (H,G)]
+chk('Ascent: the rider who started again first keeps riding (no serpent from the last try)',st[1][0]=='run' and st[0][0]=='run' and st[1][3]==st[0][3],json.dumps(st))
 until("()=>CH153.R&&CH153.R.ph=='run'",8000)
 # the partner falls again, the host gets through: the partner lies downed in III, and the host revives them
 G.evaluate("()=>ch153Die('hits')")

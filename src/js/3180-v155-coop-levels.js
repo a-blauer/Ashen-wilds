@@ -109,12 +109,18 @@ function cs155Ahead(){let m=-1;for(const r of cl155Mates(MP.rg)){const q=CS155.p
 // a watcher starts again (on try rd)
 function cs155Again(rd){const R=CH153.R;CS155.rd=rd;CS155.won={};if(R&&R.ph=='spec'&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
 function cs155Riders(){const R=CH153.R,L=cs155Alive();if(R&&(R.ph=='run'||R.ph=='intro'))L.push({peer:MP.me,s:R.s,o:R.o,y:R.y,v:R.v,ph:R.ph=='run'?2:1,me:1});return L}
+// every chase (a start or a start again) belongs to the try it was started on
+{const f=ch153Reset;ch153Reset=function(){const r=f.apply(this,arguments);if(CH153.R)CH153.R.rd=CS155.rd;return r}}
 function cs155Won(){return Object.keys(CS155.won).length>0}
 // the one Skarrith: the host's world drives it, the others follow; everyone animates it and checks their own hits
 {const f=ch153SnakeTick;ch153SnakeTick=function(dt,now){const R=CH153.R;if(!R||!cs155Co()||R.ph=='intro'||R.ph=='win')return f.apply(this,arguments);return cs155Snake(dt,now)}}
 // v156: the host's serpent is followed only while it is on my try and still heard from; otherwise (the host still lies fallen on
 // the last try, or has gone quiet) my world runs it, so a rider who started again is not swallowed by the last try's serpent
-function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,hn=CS155.n,lead=MP.host===MP.me||!MP.host||!!hn&&(hn.rd!==CS155.rd||nowP()-hn.t>1500);N.st='run';
+function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn;
+  // my chase is still the last try's (I have joined the next try but my fade has not started me again yet): its serpent is drawn
+  // but neither driven nor sent, or it would hunt the riders who already started again from far up the trail
+  if((R.rd|0)!==CS155.rd){try{ch153SnakeAnim(now)}catch(_){}return}
+  const hn=CS155.n,lead=MP.host===MP.me||!MP.host||!!hn&&(hn.rd!==CS155.rd||nowP()-hn.t>1500);N.st='run';
   const run=cs155Riders().filter(q=>q.ph==2),tg=run.length?run.reduce((a,b)=>b.s<a.s?b:a):null;
   if(lead){
     if(tg){const gap=tg.s-N.s,B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.ph=='run'&&R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
