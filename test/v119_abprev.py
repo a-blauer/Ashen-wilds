@@ -39,9 +39,18 @@ JS=r"""async(a)=>{const [c,rid,only,CAPS]=a;
         x.drawImage(PV.cv,((i%2)*NC+shots.length)*FW,Math.floor(i/2)*FH);shots.push(1)}
       if(shots.length>=caps.length&&t>ABX.lead+1.2&&(ABX.hits>0||t>ABX.lead+3.2))break;
       if(t>9)break}
+    // abilities that scatter their hits at random (Comet Storm: 8 comets anywhere in a 5-tile circle) can miss the dummy in one
+    // loop by bad luck (~1 in 6); such an ability gets up to 4 more loops of the preview to land a hit (one that never hits still fails)
+    const wantHit=!/Buff|Shield|Heal|Stealth|Defensive|Time|Mobility|Teleport|Summon|Banner|Beacon|Ward|Trap|Seal|Invulnerable|Portal/.test((s.ty||KQS_TY[s.k]||'')+'');
+    let loops=1;
+    // (a loop counts once its cast has happened: the preview may restart once more right after abxCycle before casting)
+    while(wantHit&&!ABX.hits&&!err&&ABX.on&&loops<5){loops++;abxCycle(performance.now());let t1=ABX.t0,cs=false;last=performance.now();const w0=last;
+      while(performance.now()-w0<30000){await new Promise(r=>setTimeout(r,16));const now=performance.now();try{PV.upd(now,Math.min(.05,(now-last)/1000))}catch(e){err=String(e);break}last=now;
+        if(ABX.cast)cs=true;if(ABX.hits>0||ABX.gt>9)break;if(ABX.t0!==t1){if(cs)break;t1=ABX.t0}}}
+    if(loops>1)out.info.push(s.n+': '+loops+' loops');
     x.fillStyle='rgba(0,0,0,.6)';x.fillRect((i%2)*NC*FW,Math.floor(i/2)*FH,FW*NC,16);x.fillStyle='#fff';x.font='11px sans-serif';x.fillText(s.n+' · hits '+ABX.hits,(i%2)*NC*FW+4,Math.floor(i/2)*FH+12);
     out.info.push(s.n+':'+ABX.hits);if(err)out.fail.push(s.n+': '+err);if(!casted)out.fail.push(s.n+': no cast');
-    if(!ABX.hits&&!/Buff|Shield|Heal|Stealth|Defensive|Time|Mobility|Teleport|Summon|Banner|Beacon|Ward|Trap|Seal|Invulnerable|Portal/.test((s.ty||KQS_TY[s.k]||'')+''))out.nohit.push(s.n)}
+    if(!ABX.hits&&wantHit)out.nohit.push(s.n)}
   out.img=cv.toDataURL('image/jpeg',.85);
   abxStop();const aft=snap();out.inScene=pl.parent===scene;KQS.sel=all[0].n;XR.abil();PV.run=false;out.restart=ABX.on;
   closeX();await new Promise(r=>setTimeout(r,400));

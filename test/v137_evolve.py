@@ -97,7 +97,14 @@ def s(pg):
         ring=[[0,3]]+[[round(2.2*__import__('math').cos(k*.7),2),round(3+2.2*__import__('math').sin(k*.7),2)] for k in range(1,9)]
         a,b=cmp('mage','Chain Lightning',2.5,ring)
         chk('Chain Lightning: the evolved bolt jumps between more enemies (%d → %d)'%(a['n'],b['n']),b['n']>a['n'] and b['n']>=7,(a,b))
-        a,b=cmp('warrior','Cleave',1.5,[[0,2]])
+        # (damage rolls without luck here: no random crit and no ±8% spread, so one lucky crit on the normal cast can't win the comparison)
+        ev("()=>{window.__rh=rollHero;window.__rhN=0;rollHero=function(){__rhN++;const R=Math.random;Math.random=()=>.999;try{return __rh.apply(this,arguments)}finally{Math.random=R}}}")
+        try:
+            ev("(c)=>SETCLS(c)",'warrior')
+            a=ev("async()=>{__rhN=0;const r=await CASTN('Cleave',false,1.5,[[0,2]]);r.rolls=__rhN;return r}")
+            b=ev("async()=>{__rhN=0;const r=await CASTN('Cleave',true,1.5,[[0,2]]);r.rolls=__rhN;return r}")
+        finally:ev("()=>{rollHero=__rh}")
+        print('Cleave damage, normal vs evolved: %s (%s hits) vs %s (%s hits)'%(a['dmg'],a['rolls'],b['dmg'],b['rolls']))
         # v138: each evolution has its own damage factor (BAL138_EVO): Rending Crescent is a large area now, so it hits less per enemy than
         # +25%; it must still out-hit the normal Cleave (the crescent adds a second hit)
         chk('Cleave: the evolved cast still hits harder than the normal one (the crescent adds a second hit)',b['dmg']>a['dmg'],(a,b))
