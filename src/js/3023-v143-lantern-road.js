@@ -2,12 +2,12 @@
 // The first chapter of Kindlelight's main quest line (a chapter per field instance; II and III come later). In Kindlelight I the
 // gateway to II is dormant. The Lantern Wardens (3021) hold an outpost near the entrance (3020 plan) with the Portal Ripper (3022),
 // a machine that can tear the gateway open, but it will not roll through the dark: lampposts line the whole road from the outpost
-// to the gateway (v159: 34 along the smoothed lantern line, one glowbulb each; v151 had ~47 on the raw zigzag road; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
+// to the gateway (v160: 34 along the smoothed lantern line, one glowbulb each; v151 had ~47 on the raw zigzag road; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
 // that every Kindlelight I creature drops on top of its normal loot (MQ143.drop chance per kill, 100% since v151, only while more are needed: lamps still dark × MQ143.per
 // − carried − lying on the ground).
 // State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
 // instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {v, st, b (bulbs), lit[one per lamp], seen}; saves before v151
-// (8 lamps at 3 bulbs) and saves before v159 (~47 lamps at 1 bulb) get their bulbs back for lamps they had lit (the lamps stand
+// (8 lamps at 3 bulbs) and saves before v160 (~47 lamps at 1 bulb) get their bulbs back for lamps they had lit (the lamps stand
 // elsewhere now) and start the new road dark.
 //  * F at an unlit lamppost with a bulb lights it (any state; the captain explains the quest). The last lamp starts the roll:
 //    the Ripper rolls the road (furnace lit, chimney smoking, two wardens escorting it), parks beside the gateway, drops its
@@ -48,11 +48,11 @@ function mq143Drop(p){MQ143_G=MQ143_G||{b:new THREE.CylinderGeometry(.05,.05,1.6
   return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
 
 // ---------------- saves ----------------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:159,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:160,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq143;MQ143.st=0;MQ143.b=0;MQ143.lit=new Array(mq143N()).fill(0);MQ143.seen=0;
     if(q&&typeof q=='object'){MQ143.st=Math.max(0,Math.min(3,q.st|0));if(MQ143.st==2)MQ143.st=3;MQ143.b=Math.max(0,Math.min(99,q.b|0));MQ143.seen=q.seen|0;
-      if(Array.isArray(q.lit)){if((q.v|0)>=159)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
-        else if((q.v|0)>=151){if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+q.lit.filter(v=>v).length)} // v159: the ~47 lamps moved onto the lantern line (34): refund a bulb each, start dark
+      if(Array.isArray(q.lit)){if((q.v|0)>=160)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+        else if((q.v|0)>=151){if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+q.lit.filter(v=>v).length)} // v160: the ~47 lamps moved onto the lantern line (34): refund a bulb each, start dark
 
         else if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+3*q.lit.filter(v=>v).length)}} // v151: the old 8 lamps cost 3 each and stood elsewhere: refund, start dark
     MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(MQ143.S)mq143Sync()}catch(err){console.warn('v143 load',err)}return r}}
