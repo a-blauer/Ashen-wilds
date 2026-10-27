@@ -22,8 +22,10 @@ def setup(pg,cls,name):
     pg.wait_for_function("()=>!!document.querySelector('[data-dev=desktop]')",timeout=120000)
     ev("()=>{document.querySelector('[data-dev=desktop]').click();const d=document.getElementById('svp');if(d)d.classList.add('hide')}");pg.wait_for_timeout(800)
     ev("c=>document.querySelector('[data-c=\"'+c+'\"]').click()",cls);pg.wait_for_timeout(500)
-    ev("()=>$('ccNext').click()");pg.wait_for_timeout(1200);ev("()=>{if(!party.length)$('ccNext').click()}")
-    pg.wait_for_function('party.length>0',timeout=120000);pg.wait_for_timeout(1500)
+    ev("()=>{ren.render=()=>{};POST.render=()=>{}}")   # no drawing (also while the hero is made: much faster on a slow machine)
+    ev("()=>$('ccNext').click()");pg.wait_for_function("()=>ccStep==1||party.length>0",timeout=60000);pg.wait_for_timeout(300)
+    ev("()=>{if(!party.length)$('ccNext').click()}")
+    pg.wait_for_function('party.length>0&&hero.hp>0',timeout=180000);pg.wait_for_timeout(1500)
     ev("()=>{hero.name='%s';ren.render=()=>{};POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}"%name)
 # steady on slow machines (Oct 27 2026): every wait polls its condition with SLACK times the time it was written for (a slow
 # machine runs few frames per second, and the game's own time (at most 0.05 s per frame) falls behind the clock)
@@ -118,7 +120,8 @@ try:
     check('arena: A drives the boss now',until(A,"()=>mpBossAuth(0)===MP.me",10))
     A.evaluate("()=>{hero.hp=0;down()}")
     check('arena: A down with nobody standing = death',until(A,"()=>AWD.dead==1&&!RV148.down",10))
-    check('arena: B dies too',until(B,"()=>AWD.dead==1&&!RV148.down",15))
+    DIAG="()=>JSON.stringify({me:MP.me,rg:MP.rg,dn:RV148.down,t:Math.round(RV148.t),dead:AWD.dead,hp:hero.hp,AF:AF&&AF.i,others:MP.others,rh:Object.entries(MP.rh).map(([k,r])=>[k,r.pr&&[r.pr.rg,r.pr.hp,r.pr.dn,r.pr.ar]])})"
+    check('arena: B dies too',until(B,"()=>AWD.dead==1&&!RV148.down",15),'B '+B.evaluate(DIAG)+' A '+A.evaluate(DIAG))
     A.wait_for_timeout(2000)
     check('arena: lost for both, no new fight behind the death screen',A.evaluate("()=>!AF") and B.evaluate("()=>!AF"),(A.evaluate("()=>AF&&AF.i"),B.evaluate("()=>AF&&AF.i")))
     for pg in (A,B): until(pg,RISE,20)
