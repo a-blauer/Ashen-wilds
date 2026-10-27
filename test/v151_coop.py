@@ -146,7 +146,9 @@ both(2000,700)
 g=G.evaluate("()=>MQ170.E.box[2].s")
 chk('a smashed box shows on the guest\'s screen',g=='smashed',g)
 G.evaluate("()=>{dr170Open(2,'rebuild');dr170Win(MQ170.W)}")
-both(2500,700)
+if not until(H,"()=>MQ170.E&&MQ170.E.box[2].s==='on'",10000):
+    print('repair debug host',H.evaluate("()=>MQ170.E&&MQ170.E.box.map(b=>b.s).join(',')"),'guest',G.evaluate("()=>({W:!!MQ170.W,box:MQ170.E&&MQ170.E.box.map(b=>b.s).join(','),fq:MQ170.E&&JSON.stringify(MQ170.E.fq||{}),hp:hero.hp})"))
+both(1400,700)
 r=[pg.evaluate("()=>MQ170.E.box[2].s") for pg in (H,G)]
 chk('the guest\'s repair fixes the box for the host',r==['on','on'],json.dumps(r))
 # a wrecker's wind-up shows on the guest's screen

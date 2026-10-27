@@ -141,7 +141,7 @@ function mq170Win(){const E=MQ170.E;MQ170.E=null;MQ170.st=1;MQ170.trkK='';dr170C
     say('⚙️ The drill has bored through the mountain! The tunnel leads to '+mq170Den()+'.')},800)}
 function mq170Through(){MQ170.st=1;MQ170.trkK='';try{insGo(PMAP[2].ins[3])}catch(err){console.error('v151 tunnel',err)}}
 // a box is switched on or repaired: here, or (a co-op partner) on the host's world too
-function dr170Fix(i){if(co151On()&&!co151Host())co151Send(['d3o',i]);dr170Set(i,'on')}
+function dr170Fix(i){if(co151On()&&!co151Host()){co151Send(['d3o',i]);const E=MQ170.E;if(E){E.fq=E.fq||{};E.fq[i]=nowP()+4000}}dr170Set(i,'on')}
 // a box changes state (with its effect and a line in the log)
 function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;b.s=s;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
   if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}

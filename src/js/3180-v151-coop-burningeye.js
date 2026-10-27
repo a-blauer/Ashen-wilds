@@ -132,7 +132,11 @@ const CO170_ST={off:'o',on:'n',frozen:'f',fault:'m',smashed:'s'},CO170_SR={o:'of
 function co170Sync(now){const E=MQ170.E;if(!E||now-CO151.tS<150)return;CO151.tS=now;co151Send(['d3e',Math.round(E.prog*10),E.box.map(b=>CO170_ST[b.s]||'o').join('')])}
 function co170Apply(q){if(!mq170In3()||co151Host())return;const R=mq170Plan();let E=MQ170.E;
   if(!E){if(Math.hypot(pl.position.x-R.yard.x,pl.position.z-R.yard.z)>MQ170.leash+12)return;co151Rx(()=>mq170Start());E=MQ170.E;if(!E)return;E.trT=1e9}
-  E.prog=Math.max(0,Math.min(MQ170.need,(q[1]|0)/10));const st=String(q[2]||'');for(let i=0;i<4;i++){const s=CO170_SR[st[i]];if(s&&E.box[i].s!==s)co151Rx(()=>dr170Set(i,s))}MQ170.trkK=''}
+  E.prog=Math.max(0,Math.min(MQ170.need,(q[1]|0)/10));const st=String(q[2]||''),fq=E.fq||{},t=nowP();
+  for(let i=0;i<4;i++){const s=CO170_SR[st[i]];if(s==='on'&&fq[i])delete fq[i];
+    // a repair of mine the host has not heard yet: keep it lit and ask again
+    if(fq[i]&&fq[i]>t){if(t-(E.fT||0)>500){E.fT=t;co151Send(['d3o',i])}continue}
+    if(s&&E.box[i].s!==s)co151Rx(()=>dr170Set(i,s))}MQ170.trkK=''}
 // a wrecker's wind-up on a partner's screen: the fists rise over the box, the ring shows
 function co170Wind(id,b){const e=MP.emap&&MP.emap[id],S=MQ170.S;if(!e||e.dead||!S||!S.box[b])return;e.d3w={t:1.5,b};const B=S.box[b];
   try{svWarn({k:'c',r:1.3},{x:B.x,z:B.z,a:0},1.5,{col:0xff6a2a})}catch(_){}popT(gY(B.g.position,2.4),'⚠ A TROLL IS SMASHING A BOX','#ff9a5a')}
