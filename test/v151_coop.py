@@ -20,6 +20,9 @@ def both(ms,step=1500):
     t=0;k=0
     while t<ms:
         (A if k%2==0 else B).bring_to_front();A.wait_for_timeout(min(step,ms-t));t+=step;k+=1
+# what each window knows of the other (for FAIL messages): its own region and the partner's presence (region, spot, age in s)
+SEEN="()=>[MP.rg,MP.others,Object.entries(MP.rh).map(([k,r])=>r.pr?[r.pr.rg,Math.round(r.pr.x),Math.round(r.pr.z)]:null),MP.room.peers().map(p=>p.isMe?'me':Math.round((Date.now()-p.updatedAt)/1000))]"
+LASTLOG=lambda:[[l[:160] for l in logs[k] if not l.startswith('verbose') and '404' not in l and 'guard sunk' not in l and 'Canvas2D' not in l][-4:] for k in 'AB']
 # steady on slow machines (Oct 27 2026): steps wait for their condition (generous deadlines, wall clock) instead of fixed times;
 # on a slow machine the game runs few frames per second and its game time (0.05 s at most per frame) falls behind the clock
 def until(pg,js,ms=30000,arg=None):
@@ -89,7 +92,7 @@ for pg in (A,B):pg.evaluate("()=>{const R=mq160Plan(),G=R.gate;toPos(R.bench.x+G
 until2("()=>mq160In2()",60000)
 H,G=mp_roles(60000)
 r=[pg.evaluate("()=>[MP.rg,MP.others,mq160In2()]") for pg in (H,G)]
-chk('both in Burningeye II',r[0][0]==r[1][0] and r[0][2] and r[1][2] and r[0][1]>0,json.dumps(r))
+chk('both in Burningeye II',r[0][0]==r[1][0] and r[0][2] and r[1][2] and r[0][1]>0,json.dumps(r)+(' seen '+json.dumps([pg.evaluate(SEEN) for pg in (H,G)])+' log '+json.dumps(LASTLOG()) if not r[0][1]>0 else ''))
 # a part taken by the host counts for the guest; the guest takes the other two
 H.evaluate("()=>{MQ160.gk[0]=1;mq160Take(0)}")
 until(G,"()=>MQ160.p[0]==1",20000)
@@ -153,7 +156,7 @@ for pg in (A,B):pg.evaluate("()=>{const R=mq170Plan();toPos(R.yard.x,R.yard.z)}"
 until2("()=>mq170In3()",60000)
 H,G=mp_roles(60000)
 r=[pg.evaluate("()=>[MP.rg,MP.others,mq170In3()]") for pg in (H,G)]
-chk('both in Burningeye III',r[0][0]==r[1][0] and r[0][2] and r[1][2] and r[0][1]>0,json.dumps(r))
+chk('both in Burningeye III',r[0][0]==r[1][0] and r[0][2] and r[1][2] and r[0][1]>0,json.dumps(r)+(' seen '+json.dumps([pg.evaluate(SEEN) for pg in (H,G)])+' log '+json.dumps(LASTLOG()) if not r[0][1]>0 else ''))
 G.evaluate("()=>mq170Start()")
 until2("()=>!!MQ170.E",20000)
 r=[pg.evaluate("()=>!!MQ170.E") for pg in (H,G)]
