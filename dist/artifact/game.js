@@ -587,7 +587,8 @@ function pmGen(p,i,seed,nw){let sd=seed;const rnd=()=>(sd=sd*16807%2147483647)/2
   let clr=1e9;const chk=(x,y,r)=>{clr=Math.min(clr,Math.hypot(x-WA[0],y-WA[1])-r)},seg=(a,b,r)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let q=0;q<=n;q++){const t=q/n;chk(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,r)}};
   for(let k=0;k<N;k++)seg(wp[k],wp[k+1],21);br.forEach(l=>{for(let k=0;k<l.length-1;k++)seg(l[k],l[k+1],12)});fd.forEach(f=>chk(f[0],f[1],f[2]*1.2));cls.forEach(c=>chk(c[0],c[1],16));
   return {out,clr,pts:wp.concat(...br,fd.map(f=>[f[0]-f[2],f[1]-f[2]]),fd.map(f=>[f[0]+f[2],f[1]+f[2]]))}}
-const insAt=(x,y)=>{const r=Math.floor((y-PM_Y0)/PM_PY);if(r<0||r>=PMAP.length||x<PM_X0)return null;let c=PMG-1;while(c>0&&x<PM_CX[c])c--;const I=INSL[insG(r,c)];return x<I.x0+I.w&&y<I.y0+I.h?I:null};
+const insAt=(x,y)=>{const r=Math.floor((y-PM_Y0)/PM_PY);if(r>=PMAP.length&&typeof spIns=='function')return spIns(x,y);if(r<0||r>=PMAP.length||x<PM_X0)return null; // v152: special instances below the grid (3150 spIns, off until registered)
+  let c=PMG-1;while(c>0&&x<PM_CX[c])c--;const I=INSL[insG(r,c)];return x<I.x0+I.w&&y<I.y0+I.h?I:null};
 const regionAt=(x,y)=>{const I=insAt(x,y);return I?I.z:-1};
 const rgAt=(x,y)=>{const I=insAt(x,y);return I?I.g:-1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
@@ -710,6 +711,8 @@ const MAP=(()=>{
    TWN100_PG.forEach((p,i)=>{const b=PMAP[i].bi;for(let y=Math.floor(p.y-p.r*1.5);y<=p.y+p.r*1.5;y++)for(let x=Math.floor(p.x-p.r*1.5);x<=p.x+p.r*1.5;x++){if(!m[y]||m[y][x]==='')continue;
      const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
      if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
+  if(typeof mq151MoveCamp=='function')mq151MoveCamp(m,props); // v151: Kindlelight I's entrance camp moves off the Lantern Road outpost (3020); after every seeded step above
+  if(typeof sp152Map=='function')sp152Map(m,bio,DW); // v152: the special instances' ground (3150; no seeded draws)
   if(typeof v112Map=='function')v112Map(m,bio,DW,props,stamp); // v112: the themed instances II and III get their own ground (1981)
   if(typeof cs123Map=='function')cs123Map(m); // v123: the ground under each camp (2270)
   m.bio=bio;m.DW=DW;
@@ -750,6 +753,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     HF[(j+HPD)*HW+i+HPD]=h;
   }
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
+  if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
 }
 
 let party=[],inv={},gear=[],eggs=[],incS={},eq={},px=2,py=2,foe=null,busy=false,lines=[],sel=[];
@@ -1133,7 +1137,7 @@ Object.keys(TL).forEach(ty=>{
   const L=TL[ty],P=TT[ty].map(pt=>{const m=inst(pt[0],L.length,true);if(pt[6])m.material=new THREE.MeshBasicMaterial();m.material.vertexColors=!!pt[0].attributes.color;if(pt[9]){m.sway=pt[9];m.off=pt[1]*.9}return m});
   L.forEach((q,i)=>{
     const sc=(ty=='pine'?1.05+Math.random()*.9:ty=='oak'?.95+Math.random()*.7:.85+Math.random()*.6),X=q[0]+(Math.random()-.5)*.35,Z=q[1]+(Math.random()-.5)*.35,tc=q[2].tc,ry=Math.random()*6.28,tl=(Math.random()-.5)*.1,tz=(Math.random()-.5)*.1;
-    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);regN(q[0],q[1],P[j],i)});
+    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
     d0.rotation.set(0,0,0);AOL.push([X,Z,sc*(ty=='pine'?1.15:ty=='oak'?1.4:.8)]);
   });
 });
@@ -7025,9 +7029,22 @@ function lpExtras(k,c,D){
   if(c.v=='Golden'&&hd)k.p(hd[0],'ring','g',0xffd84a,hd[1],hd[2]+.1,hd[3],.1,.12,.1);
   if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
   if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
-  if(c.tr=='Armored'){const w=D.armor||.17;bk.slice(0,4).forEach((q,i)=>{k.p(q[0],'hem','m',0x4a4c54,q[1],q[2]-.03,q[3],w,.035,.07,-.15);k.p(q[0],'box','m',0x7a6a3a,q[1],q[2]+.004,q[3]+.05,w*.5,.012,.014,-.15)})}
+  if(c.tr=='Armored')lpArmor151(k,bk,D.armor||.17); // v151: a riveted war harness (was grey domes that read as stones)
   if(c.tr=='Universal'&&hd){k.p(hd[0],'ring','g',0x7cf0ff,hd[1],hd[2]+.15,hd[3],.13,.1,.13);[0,1,2].forEach(i=>k.p(hd[0],'sph','g',[0xff6a9a,0x7cf0ff,0xffe36a][i],hd[1]+Math.cos(i*2.1)*.13,hd[2]+.13,hd[3]+Math.sin(i*2.1)*.13,.018))}
 }
+// v151 Armored trait: a war harness over the shoulders and back, following the back line (front → rear): a dark leather
+// blanket, overlapping iron spine plates (each tilted to the slope of the back, the next one tucked under), a raised spine
+// ridge, brass rivets and leather flaps hanging down both flanks. w = the species' armour width (D.armor).
+function lpArmor151(k,bk,w){const B=bk.slice(0,4),n=B.length;if(!n)return;
+  const LE=0x3e2a1c,LD=0x2a1c12,IR=0x5e646e,RG=0x8c929c,BR=0xa8823a;
+  B.forEach((q,i)=>{const a=B[Math.max(0,i-1)],b=B[Math.min(n-1,i+1)],dz=(a[3]-b[3])||.1,dy=a[2]-b[2],st=Math.max(.06,Math.min(.16,Math.hypot(dy,dz)/(i>0&&i<n-1?2:1)));
+    const rx=-Math.atan2(dy,Math.abs(dz))-.06,y=q[2]+.004,x=q[1],z=q[3];
+    k.p(q[0],'box','c',LE,x,y-.012,z,w*1.22,.016,st*1.15,rx);                       // leather blanket
+    [-1,1].forEach(s=>{k.p(q[0],'box','c',LD,x+s*w*.6,y-.045,z,.014,.07,st*1.05,rx,0,s*.32); // flank flap
+      k.p(q[0],'sph','m',BR,x+s*w*.36,y+.012,z+st*.32,.011,.007,.011,rx)});        // rivets
+    k.p(q[0],'box','m',IR,x,y+.004,z,w*.86,.016,st*.98,rx-.1);                     // iron plate (the rear edge lifts over the next)
+    k.p(q[0],'box','m',RG,x,y+.017,z,.022,.016,st*.9,rx-.1)});                     // spine ridge
+  const f=B[0];k.p(f[0],'box','m',BR,f[1],f[2]+.006,f[3]+.035,w*.9,.012,.016,-.1)} // brass trim on the front edge
 // The generic rig. D = LPR[n]:
 //   geo(C,c)            → skinned BufferGeometry (cache it with lpGeo, keyed by colour)
 //   kit(k,c,C,red)      → add rigid detail parts to dkKit k (eyes, teeth, claws …); positions in model space
@@ -36726,18 +36743,22 @@ fk142Setup();
 // machine and at any time — wdDeco (0070, long before this file runs) calls mq143Keep through 1680's place() so no decoration
 // lands in the outpost, on a lamppost or where the Ripper parks (the kept decoration still counts as placed, so the seeded
 // stream and every other decoration in the world stay exactly as they were).
-// Layout: the outpost sits on the last straight of the road, 52 steps before the gateway (just past the hairpin). In the road's
-// frame at the anchor (a along the road toward the gateway, b to the side: + west, − east here), the Ripper waits on the road,
-// tents and the palisade stand on the wide east side, the captain's map table on the west. Eight lampposts line the road from
-// the outpost to ~10 steps before the gateway, alternating sides. The Ripper parks beside the gateway, on the side away from
-// Cheddar's gateway spot, facing the arch.
+// Layout (v151): the outpost sits near the entrance, mq151Cfg().A (36) steps down the road, in the clearing the entrance camp used to
+// hold (that camp moves to a side field, mq151MoveCamp below). In the road's frame at the anchor (a along the road toward the
+// gateway, b to the side: + south, − north here), the Ripper waits on the road, tents and the palisade stand on the north side,
+// the captain's map table on the south. The lampposts line the whole road from the outpost to ~10 steps before the gateway,
+// alternating sides, about mq151Cfg().gap (7) tiles apart (~47 of them; v143 had 8 on the last 50 steps). The Ripper parks beside
+// the gateway, on the side away from Cheddar's gateway spot, facing the arch.
+// (hoisted functions, not a var: 0045 and 0070 call into this file long before its own lines run)
+function mq151Cfg(){return {A:36,gap:7}}
+function mq151A(N){return Math.max(10,Math.min(mq151Cfg().A,N-60))}
 function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   const I=INSL[0],P=I.path,N=P.length,DW=MAP.DW;
   const props=new Set();try{MAP.props.forEach(q=>props.add(q[1]*W+q[0]))}catch(_){}
   const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];
     if(!t||t=='#'||t=='r'||t=='~'||t=='H'||props.has(Z*W+X))return false;return DW[Z*W+X]<-(m==null?1.2:m)};
   const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
-  const A=Math.max(30,N-52),C=P[A],f=tan(A),s=[-f[1],f[0]];
+  const A=mq151A(N),C=P[A],f=tan(A),s=[-f[1],f[0]];
   const at=(a,b)=>[C[0]+f[0]*a+s[0]*b,C[1]+f[1]*a+s[1]*b];
   const ALT=[[0,0],[0,.7],[0,-.7],[.7,0],[-.7,0],[0,1.4],[0,-1.4],[1.4,0],[-1.4,0],[1.2,1.2],[-1.2,-1.2],[1.2,-1.2],[-1.2,1.2]];
   // a spot: the first offset where the centre (and the footprint points fp, in the road frame) are walkable
@@ -36760,8 +36781,8 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   // the palisade: sections of stakes along the east edge, a short screen on the west
   for(let a=-4.6;a<=8.6;a+=1.55){const o=pick(a,-9.7,.5);if(o){o.ry=road+Math.PI/2;o.n=6;R.stakes.push(o)}}
   [-2.2,-.7].forEach(a=>{const o=pick(a,5.6,.5);if(o){o.ry=road-Math.PI/2;o.n=5;R.stakes.push(o)}});
-  // the lampposts: eight from A+8 to N-10, alternating sides 2.7 off the road centre, the arm over the road
-  const L0=A+8,L1=N-10,n=8;for(let i=0;i<n;i++){const ix=Math.round(L0+(L1-L0)*i/(n-1)),q=P[ix],t=tan(ix),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
+  // the lampposts: from A+8 to N-10, about mq151Cfg().gap apart (at least 8), alternating sides 2.7 off the road centre, the arm over the road
+  const L0=A+8,L1=N-10,n=Math.max(8,Math.round((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const ix=Math.round(L0+(L1-L0)*i/(n-1)),q=P[ix],t=tan(ix),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
     for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)){o={x,z,i:ix};break}}
     if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:ix};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
   // the gateway and where the Ripper parks: beside the arch, away from Cheddar's gateway spot (2350 picks +side first)
@@ -36782,6 +36803,19 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   return mq143Plan.c=R}
 // 1680 place(): true = keep this decoration out (it is counted as placed so the seeded stream is unchanged)
 function mq143Keep(g,x,z){if(g!==0)return false;try{const K=mq143Plan().keep;for(const k of K)if(Math.hypot(x-k[0],z-k[1])<k[2])return true}catch(e){if(!mq143Keep.e){mq143Keep.e=1;console.warn('v143 keep',e)}}return false}
+// v151: Kindlelight I's camp beside the entrance stood where the outpost goes now. It moves to the nearest open side field
+// (a branch-end clearing off the road, away from the entrance, the gateway and the other camps). Called from 0045 after every
+// seeded step of the map (tiles, water, harvest nodes), so nothing else in the world moves; its old clearing stays open ground
+// for the outpost. The camp keeps its number (design, theme, saves); its tiles lose water and harvest nodes like any camp site.
+function mq151MoveCamp(m,props){try{const I=INSL[0];if(!I||!I.fld||!I.cl||!I.path)return;const P=I.path,N=P.length,C=P[mq151A(N)],d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  const j=I.cl.findIndex(c=>d(c,C)<26);if(j<0)return;
+  const roadD=q=>{let b=1e9;for(let i=0;i<N;i+=2)b=Math.min(b,d(P[i],q));return b};
+  const fits=(I.fd||[]).filter(f=>f[2]>=15&&roadD(f)>=24&&d(f,C)>=30&&d(f,I.en)>=45&&d(f,I.ba)>=40&&I.cl.every((c,k)=>k===j||d(c,f)>=40));
+  if(!fits.length)return;const old=I.cl[j];fits.sort((a,b)=>d(a,old)-d(b,old));const f=fits[0],cx=Math.round(f[0]),cy=Math.round(f[1]);
+  mq151MoveCamp.r={j,from:[old[0],old[1]],to:[cx,cy]};old[0]=cx;old[1]=cy; // in place: PMAP[0].cl holds the same record
+  for(let y=cy-14;y<=cy+14;y++)for(let x=cx-14;x<=cx+14;x++)if(m[y]&&m[y][x]=='~'&&Math.hypot(x-cx,y-cy)<14)m[y][x]='a';
+  for(let i=props.length-1;i>=0;i--){const q=props[i];if(Math.hypot(q[0]-cx,q[1]-cy)<14){if(m[q[1]][q[0]]=='r')m[q[1]][q[0]]='.';props.splice(i,1)}}
+}catch(e){console.warn('v151 camp',e)}}
 // ================= v143 The Lantern Road (Kindlelight I main quest) — the Lantern Wardens =================
 // Seven armoured animal warriors hold a small outpost on the road and guard the Portal Ripper (3022, 3023). They are town-folk
 // bodies (2800: the v114 beast engine on the town-folk skeleton, v142 anatomy) wearing the heroes' heavy armour: mdChestO builds
@@ -37088,13 +37122,15 @@ function mqm143Bulb(){const C=MQM143;return lgGroup('MQM143|bulb',k=>{k.p('','sp
 MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
 // ================= v143 The Lantern Road — Kindlelight I main quest =================
 // The first chapter of Kindlelight's main quest line (a chapter per field instance; II and III come later). In Kindlelight I the
-// gateway to II is dormant. The Lantern Wardens (3021) hold an outpost on the road (3020 plan) with the Portal Ripper (3022), a
-// machine that can tear the gateway open, but it will not roll through the dark: eight lampposts line the road from the outpost to
-// the gateway and each needs 3 glowbulbs. Glowbulbs are a quest item (no other use) that every Kindlelight I creature drops
-// (MQ143.drop chance per kill, only while more are needed: lamps still dark × 3 − carried − lying on the ground).
+// gateway to II is dormant. The Lantern Wardens (3021) hold an outpost near the entrance (3020 plan) with the Portal Ripper (3022),
+// a machine that can tear the gateway open, but it will not roll through the dark: lampposts line the whole road from the outpost
+// to the gateway (v151: ~47, one glowbulb each; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
+// that every Kindlelight I creature drops on top of its normal loot (MQ143.drop chance per kill, 100% since v151, only while more are needed: lamps still dark × MQ143.per
+// − carried − lying on the ground).
 // State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
-// instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {st, b (bulbs), lit[8], seen}.
-//  * F at an unlit lamppost with 3+ bulbs lights it (any state; the captain explains the quest). The last lamp starts the roll:
+// instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {v, st, b (bulbs), lit[one per lamp], seen}; saves before v151
+// (8 lamps at 3 bulbs) get their bulbs back for lamps they had lit (the lamps stand elsewhere now) and start the new road dark.
+//  * F at an unlit lamppost with a bulb lights it (any state; the captain explains the quest). The last lamp starts the roll:
 //    the Ripper rolls the road (furnace lit, chimney smoking, two wardens escorting it), parks beside the gateway, drops its
 //    jacks, opens its claws, charges its coil and tears the gateway open (arcs, a flash): st 3. Leaving the instance mid-way
 //    finishes it at once; a save made mid-roll loads as done.
@@ -37103,9 +37139,11 @@ MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
 //    the Ripper, the captain with "!"), the bulbs in the bag's Materials tab (Quest items), the glowbulb icon (KQI.glowbulb, 🪔).
 // Co-op: local to each player like Cheddar's quests (each player lights their own road; a partner's kill near you drops a bulb
 // for you too, as loot does). The scene is built the first time you are in Kindlelight I.
-var MQ143={st:0,b:0,lit:[0,0,0,0,0,0,0,0],seen:0,per:3,drop:.55,speed:1.9,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
+var MQ143={st:0,b:0,lit:[],seen:0,per:1,drop:1,speed:3,S:null,trkK:'',t:0,roll:null,fire:null,err:0,
   name:'The Lantern Road',cap:'Warden-Captain Harrow'};
+// v151: per 3 → 1 (a bulb a lamp, ~47 lamps); drop .55 → 1 (every kill drops one, on top of its normal loot, until enough are carried); speed 1.9 → 3 tiles/s (the roll now covers the whole ~330-tile road, ~2 minutes)
 function mq143N(){return mq143Plan().lamps.length}
+try{MQ143.lit=new Array(mq143N()).fill(0)}catch(e){console.warn('v151 lamps',e)}
 function mq143Lit(){return MQ143.lit.reduce((a,b)=>a+(b?1:0),0)}
 function mq143Done(){return MQ143.st>=3||insReach(0)>=1}
 function mq143Here(){try{const I=curIns();return !!I&&I.g===0}catch(_){return false}}
@@ -37127,14 +37165,15 @@ function mq143Drop(p){MQ143_G=MQ143_G||{b:new THREE.CylinderGeometry(.05,.05,1.6
 {const f=take;take=function(d){if(d&&d.kind=='mq143'){MQ143.b+=d.data.n|0;MQ143.trkK='';
     pickup({ic:'🪔',t:'+'+(d.data.n|0)+' Glowbulb',col:'#d8ff7a',sub:'Quest item · '+MQ143.b+' carried · feed them to the lampposts on the road'});return}return f.apply(this,arguments)}}
 {const f=kqmMatTab;kqmMatTab=function(){const h=f.apply(this,arguments);if(!(MQ143.b>0))return h;
-  const t=`<div class="kqm-slot mi" title="Glowbulb · quest item for The Lantern Road. Every creature of Kindlelight I carries one; three light a lamppost on the road to the gateway."><span class="kqm-ic">🪔</span><span class="kqm-ct">${MQ143.b}</span><span class="kqm-hold">Glowbulb</span></div>`;
+  const t=`<div class="kqm-slot mi" title="Glowbulb · quest item for The Lantern Road. Every creature of Kindlelight I carries one; each lights a lamppost on the road to the gateway."><span class="kqm-ic">🪔</span><span class="kqm-ct">${MQ143.b}</span><span class="kqm-hold">Glowbulb</span></div>`;
   return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
 
 // ---------------- saves ----------------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:143,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:151,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq143;MQ143.st=0;MQ143.b=0;MQ143.lit=new Array(mq143N()).fill(0);MQ143.seen=0;
     if(q&&typeof q=='object'){MQ143.st=Math.max(0,Math.min(3,q.st|0));if(MQ143.st==2)MQ143.st=3;MQ143.b=Math.max(0,Math.min(99,q.b|0));MQ143.seen=q.seen|0;
-      if(Array.isArray(q.lit))q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0})}
+      if(Array.isArray(q.lit)){if((q.v|0)>=151)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+        else if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+3*q.lit.filter(v=>v).length)}} // v151: the old 8 lamps cost 3 each and stood elsewhere: refund, start dark
     MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(MQ143.S)mq143Sync()}catch(err){console.warn('v143 load',err)}return r}}
 
 // ---------------- talking, lighting, the gateway ----------------
@@ -37143,36 +37182,37 @@ function mq143Light(i){const S=MQ143.S;if(!S||MQ143.lit[i]||MQ143.b<MQ143.per||m
   try{const pp=L.plateW.clone();burst(pp,0xd8ff7a,18,1.2,1.2,.6);sfx('chime')}catch(_){}
   setTimeout(()=>{try{L.on.visible=true;L.halo.visible=true;L.k=Math.max(L.k,.05);burst(L.bulbW,0xf4ffd0,26,2.2,1.6,.9);ring(new THREE.Vector3(L.x,0,L.z),0xd8ff7a,2.2,700);mSfx('rare')}catch(_){}},420);
   const n=mq143Lit(),N=mq143N();
-  if(n>=N){say('🪔 The last lamppost flares. Down the road the Portal Ripper’s furnace roars to life.');setTimeout(()=>mq143RollStart(),1600)}
+  if(n>=N){say('🪔 The last lamppost flares. Back at the outpost the Portal Ripper’s furnace roars to life.');setTimeout(()=>mq143RollStart(),1600)}
   else say('🪔 Lamppost lit · '+n+' of '+N+(MQ143.b>=MQ143.per?' · you carry enough for another':''))}
+function mq143Bulbs(n,plain){return n+(plain?' ':' 🪔 ')+'glowbulb'+(n==1?'':'s')}
 function mq143Prompt(){if(!MQ143.S||!mq143Here())return null;const P=pl.position,S=MQ143.S;
   const c=S.war.captain;if(c&&Math.hypot(P.x-c.g.position.x,P.z-c.g.position.z)<2.4)return {label:'F · Talk to '+MQ143.cap+(MQ143.st==0&&!mq143Done()?' (quest)':''),fn:()=>openX('mq143')};
   if(mq143Done()||MQ143.st>=2)return null;
   for(let i=0;i<S.lamps.length;i++){const L=S.lamps[i];if(MQ143.lit[i])continue;if(Math.hypot(P.x-L.x,P.z-L.z)<2.3){
-    if(MQ143.b>=MQ143.per)return {label:'F · Light the lamppost (3 🪔 glowbulbs · you carry '+MQ143.b+')',fn:()=>mq143Light(i)};
-    return {label:'🪔 The lamppost needs 3 glowbulbs · you carry '+MQ143.b,fn:()=>say('🪔 Every creature of '+PMAP[0].ins[0].n+' carries a glowbulb. Hunt them, then feed three to each lamppost.')}}}
+    if(MQ143.b>=MQ143.per)return {label:'F · Light the lamppost ('+mq143Bulbs(MQ143.per)+' · you carry '+MQ143.b+')',fn:()=>mq143Light(i)};
+    return {label:'🪔 The lamppost needs '+mq143Bulbs(MQ143.per,1)+' · you carry '+MQ143.b,fn:()=>say('🪔 Every creature of '+PMAP[0].ins[0].n+' carries a glowbulb. Hunt them, then feed one to each lamppost.')}}}
   return null}
 {const f=worldPrompt;worldPrompt=function(){try{const r=mq143Prompt();if(r)return r}catch(e){if(!MQ143.err++)console.warn('v143 prompt',e)}return f.apply(this,arguments)}}
 function mq143AtGate(){const P=pl.position;for(const r of RPORT)if(r.k=='next'&&r.ig===0&&Math.hypot(P.x-r.x,P.z-r.z)<2.8)return true;return false}
 {const f=portalPrompt;portalPrompt=function(){const r=f.apply(this,arguments);try{if(r&&!mq143Done()&&mq143AtGate()){const n=mq143Lit(),N=mq143N();
-    return {label:'🔒 The gateway is dormant · '+n+'/'+N+' lampposts lit',fn:()=>say('🌀 The arch is cold and dead. The Lantern Wardens up the road have a machine that can tear it open, once their road is lit.')}}}catch(_){}return r}}
+    return {label:'🔒 The gateway is dormant · '+n+'/'+N+' lampposts lit',fn:()=>say('🌀 The arch is cold and dead. The Lantern Wardens back by the entrance have a machine that can tear it open, once their road is lit.')}}}catch(_){}return r}}
 
 // ---------------- the captain's window ----------------
 XR.mq143=()=>{const st=mq143Done()?3:MQ143.st,n=mq143Lit(),N=mq143N(),nx=mq143Next();
   $('xwT').textContent='⚜ '+MQ143.cap;$('xwS').textContent='The Lantern Wardens · '+PMAP[0].ins[0].n;
   const L=st==0?['Hold there. You walk a dead road. We are the Lantern Wardens, and the iron beast behind me is the Portal Ripper. It can tear open the way to '+nx+', but it will not roll through this dark. The bog swallows anything that leaves the light.',
-      'The lampposts down to the gateway burn glowbulbs, and every creature of this reach carries one in its gut. Take them. Three to a lamp. When the last lamp burns, we roll.']
-    :st==1?['Lamps lit: '+n+' of '+N+'. The beasts carry the bulbs, so take them from the beasts. Three to a lamp. The posts run down the road to the gateway.']
+      'Every lamppost from here down to the gateway burns a glowbulb, and every creature of this reach carries one in its gut. Take them. One to a lamp, all the way down. When the last lamp burns, we roll.']
+    :st==1?['Lamps lit: '+n+' of '+N+'. The beasts carry the bulbs, so take them from the beasts. One to a lamp. The posts run the whole road, down to the gateway.']
     :st==2?['She’s moving! Follow her down to the gateway, and keep those things off my wardens.']
     :['The way to '+nx+' stands open, and the Ripper holds it. Go, before the bog remembers us.'];
   const lamp=i=>`<span class="mq143lp${MQ143.lit[i]||st>=2?' on':''}" title="Lamppost ${i+1}">🪔</span>`;
   let b=`<div class="cq132say"><span class="cq132who">${MQ143.cap}</span>${L.map(t=>'“'+t+'”').join('<br><br>')}</div>`;
   b+=`<div class="mq143q"><div class="mq143h"><span>Main quest</span><b>${MQ143.name}</b></div>`+
-    `<div class="mq143o${st>=2?' full':''}"><span>Lampposts lit</span><span>${st>=2?N:n} / ${N}</span></div><div class="mq143lps">${MQ143.lit.map((v,i)=>lamp(i)).join('')}</div>`+
-    `<div class="mq143o"><span>Glowbulbs carried</span><span>${MQ143.b}${st<2?' · 3 per lamp':''}</span></div>`+
+    `<div class="mq143o${st>=2?' full':''}"><span>Lampposts lit</span><span>${st>=2?N:n} / ${N}</span></div><div class="mq143lps">${Array.from({length:N},(v,i)=>lamp(i)).join('')}</div>`+
+    `<div class="mq143o"><span>Glowbulbs carried</span><span>${MQ143.b}${st<2?' · '+MQ143.per+' per lamp':''}</span></div>`+
     `<div class="mq143o${st>=3?' full':''}"><span>The gateway to ${nx}</span><span>${st>=3?'open':st==2?'opening…':'dormant'}</span></div></div>`;
   $('xwB').innerHTML=b;
-  $('xwF').innerHTML=st==0?'<button class="pri" data-mq143="go">I’ll light the road</button> <span class="mut dtl">Glowbulbs drop from the creatures of '+PMAP[0].ins[0].n+'.</span>':'<span class="mut dtl">'+(st>=3?'Step through the gateway at the end of the road.':'Feed three glowbulbs to each lamppost (F beside it).')+'</span>'};
+  $('xwF').innerHTML=st==0?'<button class="pri" data-mq143="go">I’ll light the road</button> <span class="mut dtl">Glowbulbs drop from the creatures of '+PMAP[0].ins[0].n+'.</span>':'<span class="mut dtl">'+(st>=3?'Step through the gateway at the end of the road.':'Feed a glowbulb to each lamppost (F beside it).')+'</span>'};
 $('xw').addEventListener('click',e=>{if(xwMode!='mq143')return;const t=e.target.closest('[data-mq143]');if(!t)return;
   if(t.dataset.mq143=='go'&&MQ143.st==0){MQ143.st=1;MQ143.trkK='';say('⚜ Quest: <b>'+MQ143.name+'</b> · light the '+mq143N()+' lampposts down to the gateway.');try{sfx('chime')}catch(_){}}rX()});
 
@@ -37194,16 +37234,16 @@ body.mob #mqt143{width:176px;font-size:11px}
 #xw .mq143o{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:4px;background:rgba(255,255,255,.035);font-size:.82rem}
 #xw .mq143o span:last-child{font-variant-numeric:tabular-nums;color:#e0e0c0}
 #xw .mq143o.full{color:#b8e88f}
-#xw .mq143lps{display:flex;gap:6px;justify-content:center;padding:2px 0}
-#xw .mq143lp{font-size:1.25rem;opacity:.3;filter:grayscale(1)}
+#xw .mq143lps{display:flex;flex-wrap:wrap;gap:2px 3px;justify-content:center;padding:2px 0}
+#xw .mq143lp{font-size:.95rem;opacity:.3;filter:grayscale(1)}
 #xw .mq143lp.on{opacity:1;filter:drop-shadow(0 0 6px #d8ff7a)}`;document.head.appendChild(st);
   const d=document.createElement('div');d.id='mqt143';d.className='hide';document.body.appendChild(d)})();
 function mq143Trk(){const el=$('mqt143');if(!el)return;const here=mq143Here(),hide=!here||(typeof uiOpen=='function'&&uiOpen())||(mq143Done()&&insReach(0)>=1);
   const st=mq143Done()?3:MQ143.st,n=mq143Lit(),N=mq143N(),key=(hide?'h':'s')+st+'|'+n+'|'+MQ143.b+'|'+MQ143.seen;if(key===MQ143.trkK)return;MQ143.trkK=key;
   if(hide){el.classList.add('hide');mq143TrkPos();return}
   const o=(a,b)=>`<div class="o"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest</div><div class="h">'+MQ143.name+'</div>';
-  if(st==0)h+=o(MQ143.seen?'Speak to '+MQ143.cap:'Find the Lantern Wardens down the road')+o('Glowbulbs carried',MQ143.b);
-  else if(st==1)h+=o('Light the lampposts',n+'/'+N)+o('Glowbulbs (3 per lamp)',MQ143.b);
+  if(st==0)h+=o(MQ143.seen?'Speak to '+MQ143.cap:'Find the Lantern Wardens near the entrance')+o('Glowbulbs carried',MQ143.b);
+  else if(st==1)h+=o('Light the lampposts',n+'/'+N)+o('Glowbulbs ('+MQ143.per+' per lamp)',MQ143.b);
   else if(st==2)h+='<div class="o d"><span>The Portal Ripper rolls to the gateway…</span></div>';
   else h+='<div class="o d"><span>Step through the gateway to '+mq143Next()+'</span></div>';
   el.innerHTML=h;el.classList.remove('hide');mq143TrkPos()}
@@ -43010,3 +43050,1717 @@ function lb150Evo(E,L,P){const B=boneP,hb={bn:'head'},nb={bn:'neck'};
   if(L>=5){// spectral flames wreathing the ribcage and the legs
     [-1,1].forEach(s=>{[.2,.06,-.06].forEach(z=>{const p=B([s*.19,.5,z]);E.L(p,E.add(p,[s*.03,.11,-.05]),.022,.002,'g',P.glow,4)});
       [[s<0?'fl1':'fr1',.105,.24,.22],[s<0?'hl1':'hr1',.114,.28,-.2]].forEach(q=>{const p=B([s*q[1],q[2],q[3]]);E.L(p,E.add(p,[s*.03,.09,-.04]),.016,.002,'g',P.glow2,4,{bn:q[0]})})})}}
+// ================= v152 Special instances: mini levels outside the zone grid =================
+// Hillside Crest's main quest puts two one-time levels between its field instances: Abeksi, the serpent city (a stealth level
+// between I and II, 3151–3154) and the Hilltop Ascent (a mounted chase between II and III, 3160–). They live in the free map space
+// below the zone grid (rows y ≥ 1448), each with its own instance record (INSL[30], INSL[31]) so everything that asks "where am I"
+// (curIns, chunk visibility, the clip shader, atmosphere, the co-op region, the minimap fog) treats them as places of their own.
+//  * Records: sp152Defs() (hoisted, pure). k is 0 for the city and 1 for the ascent: never more than the field instance the level
+//    follows (1940's load bump raises INSR to I.k), and openWMap names p.ins[k+1] as "the way on" (II, III), which is right.
+//  * insAt (0045) asks spIns(x,y) for rows below the grid; spIns answers only once this file has registered the records (SPI.on),
+//    so nothing during the world build (0045–2999) ever sees them: no harvest nodes, decorations, rosters or rims are made there.
+//  * Ground: sp152Map (called from 0045 after every seeded step) lets each level paint its tiles, DW and biome; sp152Terrain (0045,
+//    after the heights) lets a level write its own heights. Each level's painter is a hoisted function of plain numbers.
+//  * Rules while inside (SP152.R[key]): park (companions wait outside: hidden, no AI, no spells), noMount / forceMount, noFight
+//    (no attacks, abilities or potions), noRecall (T is refused with the level's message), onLoad (where a save made inside loads).
+//  * Gateways: a level replaces the RPORT 'next' gateway of the field instance before it (hidden; its record stays for Cheddar and
+//    old code) with its own entrance and F prompt (sp152GateSpot finds a spot at the gateway clearing's far edge).
+//  * The tracker #mqt152 (Hillside Crest main quest) sits where Kindlelight's #mqt143 does; each chapter adds its lines (SP152.trk).
+var SPI;
+function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
+  {key:'abeksi',g:30,z:1,k:0,x0:116,y0:1452,w:150,h:200,n:'Abeksi',rn:'Abeksi',lv:[11,11],
+    bio:{n:'Abeksi',sp:'Foxlet',x:0,y:0,t:2,gnd:[96,84,66],grs:[70,84,54],acc:[104,98,90],frs:[40,34,28],wat:[40,70,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x3a2a20,0x3a4a2a,0x4a5a34],amp:.1}},
+  {key:'ascent',g:31,z:1,k:1,x0:280,y0:1452,w:420,h:380,n:'The Hilltop Ascent',rn:'Ascent',lv:[14,14],
+    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
+// 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
+function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
+    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
+// 0045: a level's own heights (after every other height pass)
+function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
+// 0070: trees inside a level are scenery, not harvest nodes (hoisted: 0070 runs long before this file)
+function sp152NoNode(x,y){try{return sp152Defs().some(I=>x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)}catch(_){return false}}
+function spIns(x,y){if(!SPI||!SPI.on)return null;const L=SPI.L;for(let i=0;i<L.length;i++){const I=L[i];if(x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)return I}return null}
+
+// ---------------- the records (registered here, after every load-time INSL loop) ----------------
+var SP152={R:{},trk:{},gates:{},err:0,park:0,parkN:0};
+SPI={L:[],on:false,by:{}};
+try{sp152Defs().forEach(D=>{const I={z:D.z,k:D.k,g:D.g,x0:D.x0,y0:D.y0,w:D.w,h:D.h,fld:false,den:false,tri:false,sp:D.key,lv:D.lv.slice(),n:D.n,rn:D.rn,
+    cl:[],br:[],fd:[],wp:[],wa:null,bi:D.bi};
+    const c=[D.x0+Math.round(D.w/2),D.y0+Math.round(D.h/2)];I.en=c.slice();I.ba=c.slice();I.path=[c.slice(),c.slice()];
+    INSL[D.g]=I;SPI.L.push(I);SPI.by[D.key]=I});SPI.on=true}catch(e){console.error('v152 records',e)}
+function sp152I(key){return SPI&&SPI.by[key]||null}
+function sp152Here(key){try{const I=curIns();return !!I&&I.sp===key}catch(_){return false}}
+function sp152Cur(){try{const I=curIns();return I&&I.sp?I.sp:null}catch(_){return null}}
+function sp152Rule(n){const k=sp152Cur();if(!k)return null;const R=SP152.R[k];return R&&R[n]!=null?(typeof R[n]=='function'?R[n]():R[n]):null}
+
+// ---------------- the atmosphere of each level (on top of the zone's, 1981 ia112) ----------------
+function sp152Theme(key,t){try{if(!TH112||!TH112.byG)return;const I=sp152I(key);if(I)TH112.byG[I.g]=Object.assign({g:I.g,z:I.z,k:I.k},t)}catch(e){console.warn('v152 theme',e)}}
+
+// ---------------- gateways: replace a field instance's 'next' portal with a level's own entrance ----------------
+// the spot at the gateway clearing's far edge (away from where the road comes in), on open ground, facing the clearing
+function sp152GateSpot(ig,out){const I=INSL[ig];if(!I||!I.path)return null;const P=I.path,G=I.ba,q=P[Math.max(0,P.length-16)];let dx=G[0]-q[0],dz=G[1]-q[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
+  const free=(x,z)=>{const X=Math.round(x),Z=Math.round(z),t=MAP[Z]&&MAP[Z][X];return !!t&&!solid(X,Z)&&MAP.DW[Z*W+X]<-.6};
+  for(const d of [out||10.5,10,9.5,9,8.5,8,7,6])for(const a of [0,.25,-.25,.5,-.5,.8,-.8]){const c=Math.cos(a),s=Math.sin(a),ux=dx*c-dz*s,uz=dx*s+dz*c,x=G[0]+ux*d,z=G[1]+uz*d;
+    if(free(x,z)&&free(x+ux*1.2,z+uz*1.2)&&free(x-uz*1.6,z+ux*1.6)&&free(x+uz*1.6,z-ux*1.6))return {x,z,ry:Math.atan2(-ux,-uz),ux,uz}}
+  return {x:G[0]+dx*6,z:G[1]+dz*6,ry:Math.atan2(-dx,-dz),ux:dx,uz:dz}}
+// hide the old portal arch (the record stays: Cheddar's gateway spot and older code read it)
+function sp152HidePortal(ig){try{const r=RPORT.find(q=>q.k=='next'&&q.ig===ig);if(r){r.g.visible=false;r.sp152=1}return r}catch(_){return null}}
+// a gateway record: {ig, spot, build(spot) → group, prompt(spot) → {label, fn} | null, r (reach)}
+function sp152Gate(key,G){SP152.gates[key]=G}
+{const f=worldPrompt;worldPrompt=function(){try{const P=pl.position;for(const k in SP152.gates){const G=SP152.gates[k];if(!G.spot)continue;
+      const I=curIns();if(!I||I.g!==G.ig)continue;if(Math.hypot(P.x-G.spot.x,P.z-G.spot.z)<(G.r||3.2)){const r=G.prompt(G.spot);if(r)return r}}}catch(e){if(!SP152.err++)console.warn('v152 gate prompt',e)}
+  return f.apply(this,arguments)}}
+// build each gateway once, the first time its instance is visited (the portal arch is hidden right away)
+function sp152GateTick(){const I=curIns();for(const k in SP152.gates){const G=SP152.gates[k];
+    if(!G.hid){G.hid=1;sp152HidePortal(G.ig)}
+    if(!G.spot&&I&&I.g===G.ig){try{G.spot=G.where?G.where():sp152GateSpot(G.ig);G.g=G.build(G.spot);G.spot.built=1}catch(e){console.error('v152 gate build',k,e);G.spot=G.spot||{x:0,z:0};G.err=1}}
+    if(G.g)G.g.visible=!!I&&I.g===G.ig;if(G.tick&&G.g&&G.g.visible)try{G.tick(G.spot)}catch(_){}}}
+
+// ---------------- rules while inside a level ----------------
+// companions wait outside: hidden, no follow, no AI, no spells; they come back beside the hero when the level is left
+{const f=compTick;compTick=function(dt,now){if(sp152Rule('park')){SP152.park=1;try{fols.forEach(m=>{if(m){m.visible=false;m.position.set(pl.position.x,-60,pl.position.z)}})}catch(_){}return}
+  if(SP152.park){SP152.park=0;try{fols.forEach((m,k)=>{if(m){m.position.set(pl.position.x+(k?1.4:-1.4),GH(pl.position.x,pl.position.z),pl.position.z+1)}})}catch(_){}}
+  return f.apply(this,arguments)}}
+{const f=compSpells;compSpells=function(){if(sp152Rule('park'))return;return f.apply(this,arguments)}}
+// mounts: refused (the city) or held (the ascent)
+{const f=toggleMount;toggleMount=function(){const no=sp152Rule('noMount'),hold=sp152Rule('forceMount');
+  if(no&&!riding)return say(no);if(hold&&riding)return say(hold);return f.apply(this,arguments)}}
+// no fighting: attacks, abilities and potions do nothing (a short reminder at most every 4 s)
+function sp152NoFight(){const m=sp152Rule('noFight');if(!m)return false;const t=performance.now();if(!(t-(SP152.nfT||0)<4000)){SP152.nfT=t;say(m)}return true}
+{const f=swing;swing=function(){if(sp152NoFight())return;return f.apply(this,arguments)}}
+{const f=cast;cast=function(){if(sp152NoFight())return;return f.apply(this,arguments)}}
+{const f=drink;drink=function(){if(sp152NoFight())return;return f.apply(this,arguments)}}
+{const f=drinkMana;drinkMana=function(){if(sp152NoFight())return;return f.apply(this,arguments)}}
+// recall: refused with the level's message
+{const f=doRecall;doRecall=function(){const m=sp152Rule('noRecall');if(m)return say(m);return f.apply(this,arguments)}}
+// a save made inside a level: the level decides where it loads (its checkpoint, or back outside)
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{const k=sp152Cur();if(k&&SP152.R[k]&&SP152.R[k].onLoad)SP152.R[k].onLoad()}catch(e){console.warn('v152 load',e)}return r}}
+
+// ---------------- the Hillside Crest main quest tracker (#mqt152) ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#mqt152{position:fixed;right:12px;top:300px;z-index:6;width:224px;max-width:44vw;pointer-events:none;font-size:12px;line-height:1.35;color:#ece6d2;
+  background:linear-gradient(270deg,rgba(14,12,6,.85),rgba(14,12,6,.4));border-right:2px solid #d8c060;border-radius:4px 0 0 4px;text-align:right;padding:6px 9px 7px;text-shadow:0 1px 2px #000}
+#mqt152.hide{display:none}
+#mqt152 .k{font-family:Cinzel,Georgia,serif;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#c8a860}
+#mqt152 .h{font-family:'IM Fell English SC',Georgia,serif;color:#ffe9a0;font-size:13px;letter-spacing:.03em;margin-bottom:2px}
+#mqt152 .o{display:flex;justify-content:flex-end;gap:8px;color:#d0c8b0;font-size:11.5px}
+#mqt152 .o b{color:#fff4c8;font-weight:600}
+#mqt152 .d{color:#ffe07a}
+body.mob #mqt152{width:180px;font-size:11px}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='mqt152';d.className='hide';document.body.appendChild(d)})();
+SP152.tk='';SP152.tt=0;
+function sp152Trk(){const el=$('mqt152');if(!el)return;let I=null;try{I=curIns()}catch(_){}
+  let out=null;if(I&&!(typeof uiOpen=='function'&&uiOpen()))for(const k in SP152.trk){try{const r=SP152.trk[k](I);if(r){out=r;break}}catch(_){}}
+  const key=out?JSON.stringify(out):'h';if(key===SP152.tk)return;SP152.tk=key;
+  if(!out){el.classList.add('hide');sp152TrkPos();return}
+  let h='<div class="k">⚜ Main quest</div><div class="h">'+out.name+'</div>';(out.lines||[]).forEach(q=>{h+=q[2]?'<div class="o d"><span>'+q[0]+'</span></div>':'<div class="o"><span>'+q[0]+'</span>'+(q[1]!=null?'<b>'+q[1]+'</b>':'')+'</div>'});
+  el.innerHTML=h;el.classList.remove('hide');sp152TrkPos()}
+function sp152TrkPos(){const el=$('mqt152'),m=$('mini'),c=$('chqt132');if(!el||!m||!m.offsetParent)return;const mr=m.getBoundingClientRect();let b=mr.bottom;
+  ['locBox','fsBtn','sysBtn','sysmenu','mbtn'].forEach(id=>{const e=$(id);if(!e||!e.offsetParent)return;const r=e.getBoundingClientRect();if(r.width&&r.right>mr.left-40&&r.left<mr.right+40)b=Math.max(b,r.bottom)});
+  if(b+140>innerHeight)b=Math.max(mr.bottom,innerHeight*.35);const top=Math.round(b+10),right=Math.max(8,Math.round(innerWidth-mr.right))+'px';
+  const on=!el.classList.contains('hide');if(on){el.style.top=top+'px';el.style.right=right}
+  if(on&&c&&!c.classList.contains('hide'))c.style.top=(top+el.offsetHeight+8)+'px'}
+{const f=chqTrkPos132;chqTrkPos132=function(){const r=f.apply(this,arguments);try{sp152TrkPos()}catch(_){}return r}}
+addEventListener('resize',()=>{try{sp152TrkPos()}catch(_){}});
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{sp152GateTick()}catch(e){if(!SP152.err++)console.warn('v152 gates',e)}
+  try{if(now-SP152.tt>400){SP152.tt=now;sp152Trk()}}catch(_){}return r}}
+// ================= v152 Abeksi, the serpent city — where everything stands =================
+// A stealth level between Hillside Crest I and II (its own instance, g 30; 3150). The hero comes in through a breach in the north
+// wall and has to cross six districts unseen to the drain under the south wall: The Breach → the Market → the Dwellings → the Rat
+// Warrens → the Great Kitchen → the Gate Yard. Each district is closed off by a row of buildings with one opening, on alternate
+// sides, so the route zig-zags across the city (~550 tiles; ~10 minutes crouched, with the waiting).
+// Everything here is in the city's own frame (u across 0..150 west → east, v along 0..200 north → south; world = x0+u, y0+v) and is
+// a pure function of the numbers below: ab152Plan() is hoisted and cached, because 0045 (sp152Map) paints the ground from it long
+// before this file runs.
+//  * B: buildings [u0,v0,u1,v1, storeys, style] — solid ('r' tiles) and tall cover (they block every line of sight).
+//  * C: cover and props [kind,u,v,turn] — kinds in AB152_K: footprint (w × d tiles), sight class (1 low: hides a crouched hero,
+//    2 tall: hides everyone, 3 cloth: hides everyone but can be walked through) and whether it is solid.
+//  * L: lights [kind,u,v] — torches, braziers, lanterns, the hearth. The light level at the hero (ab152Light) sets how far snakes see.
+//  * N: the snakes [id, look, role, u, v, turn, options] — roles and poses in 3153/3154.
+//  * CP: checkpoints [u,v,turn, name], one per district; EXIT: the drain.
+var AB152_K={
+  crate:[1,1,1,1],cstack:[1,1,2,1],barrel:[1,1,1,1],barrels:[2,1,1,1],cart:[3,2,1,1],wagon:[4,2,2,1],stall:[4,2,1,1],rubble:[2,2,1,1],
+  hay:[2,1,1,1],pillar:[1,1,2,1],fountain:[5,5,2,1],table:[3,1,1,1],trough:[2,1,1,1],hearth:[16,2,2,1],cauldron:[2,2,1,1],block:[2,1,1,1],
+  laundry:[4,1,3,0],planter:[1,1,1,1],statue:[2,2,2,1],sacks:[2,1,1,1],hutch:[3,1,1,1],cage:[1,1,1,1],spit:[3,1,1,1],rack:[3,1,2,1],
+  well:[2,2,1,1],fence:[2,1,1,1],fenceV:[1,2,1,1],bench:[2,1,0,1],stool:[1,1,0,0],awning:[4,3,0,0],platform:[3,3,1,1],gate:[6,1,2,1],drain:[2,1,0,0]};
+function ab152Plan(){if(ab152Plan.c)return ab152Plan.c;
+  const B=[],C=[],L=[],N=[],PEN=[];
+  const b=(u0,v0,u1,v1,s,st)=>B.push([u0,v0,u1,v1,s||2,st||'house']);
+  const c=(k,u,v,r)=>C.push([k,u,v,r||0]);
+  const l=(k,u,v)=>L.push([k,u,v]);
+  // a row of buildings across the city with one opening [o0,o1) (the district wall), broken into house fronts
+  const row=(v0,v1,o0,o1,s)=>{const cut=(a,z)=>{for(let u=a;u<z;){const w=Math.min(z-u,8+((u*7+v0*3)%5));b(u,v0,u+w,v1,s+((u+v0)%3==0?1:0),'house');u+=w}};cut(8,o0);cut(o1,142)};
+  // ---------------- the outer wall (built as its own pieces in 3152; here only the ring of solid tiles) ----------------
+  // ---------------- A · The Breach (v 6..28): a ruined courtyard behind the north wall ----------------
+  b(62,6,142,28,3,'barracks');                                    // the old barracks fill the east half
+  b(40,6,52,12,2,'ruin');                                         // a collapsed guardhouse
+  c('rubble',16,13);c('rubble',19,18);c('crate',12,20);c('crate',13,21);c('barrels',30,9);c('rubble',34,20);c('cstack',28,24);
+  c('crate',45,18);c('hay',52,22);c('rubble',56,14);c('cart',36,25);c('barrel',18,25);
+  l('brazier',32,15);l('torch',46,13);l('torch',58,26);
+  N.push(['a1','w','sentry',44,22,Math.PI*1.1,{arc:1.2,per:9,rng:9}]);           // watches the courtyard from the ruin's step
+  N.push(['a2','w','sit',32,17,Math.PI,{pose:'sitEat',seat:1}]);                 // a guard eating by the brazier, his back to the way through
+  row(28,32,20,28,2);
+  // ---------------- B · The Market (v 32..70): stalls round a serpent fountain, an arcade on the north side ----------------
+  for(let u=32;u<=132;u+=6)c('pillar',u,35);                    // the arcade: pillars, a shaded walk behind them (v 33..35)
+  [41,53,65,89,101,113,125].forEach((u,i)=>c(i%2?'barrels':'crate',u,33.6));   // goods stacked in the arcade: somewhere to wait while its guard walks by
+  c('awning',40,33);c('awning',64,33);c('awning',100,33);
+  [[38,43],[50,43],[62,43],[96,43],[108,43],[120,43],[38,51],[50,51],[108,51],[120,51],[38,59],[50,59],[62,59],[96,59],[108,59],[120,59]].forEach(([u,v],i)=>{c('stall',u,v,(i%2)*Math.PI);c('awning',u,v-.5)});
+  c('fountain',78,49);c('cart',70,63);c('cart',88,41.4);c('barrels',27,48);c('crate',26,56);c('crate',27,57);c('sacks',134,47);c('barrels',134,57);
+  c('cstack',90,63);c('cstack',91,63);c('planter',75,44);c('planter',85,44);c('planter',75,56);c('planter',85,56);c('crate',128,68);c('crate',129,68.4);
+  l('brazier',78,46);l('brazier',78,56);l('lantern',44,47);l('lantern',114,47);l('lantern',44,55);l('lantern',114,55);l('torch',24,40);l('torch',136,62);l('torch',60,36);l('torch',104,36);
+  N.push(['b1','w','patrol',30,40,0,{path:[[30,39,2],[132,39,3],[132,66,2],[30,66,3]],spd:1.25}]);
+  N.push(['b2','w','sentry',80,46.2,Math.PI,{arc:Math.PI,per:16,rng:10}]);          // on the fountain steps, turning slowly all round
+  N.push(['b15','w','patrol',34,36.4,0,{path:[[34,36.4,3],[130,36.4,3]],spd:1.1}]);   // walks the arcade end to end
+  N.push(['b3','a','work',38,41.4,0,{pose:'haggle'}]);N.push(['b4','s','work',50,44.6,Math.PI,{pose:'haggle'}]);
+  N.push(['b5','a','work',96,44.6,Math.PI,{pose:'hammer'}]);N.push(['b6','s','work',108,41.4,0,{pose:'haggle'}]);
+  N.push(['b7','a','work',38,57.4,0,{pose:'haggle'}]);N.push(['b8','s','work',120,60.6,Math.PI,{pose:'eatStand'}]);
+  N.push(['b9','a','walker',44,48,0,{path:[[44,48,4],[70,48,1],[70,55,3],[100,55,2],[100,48,4],[70,48,0]],spd:1.1}]);
+  N.push(['b10','s','walker',115,55,0,{path:[[115,55,3],[115,64.8,2],[56,64.8,4],[56,55,2]],spd:1.0}]);
+  N.push(['b11','a','talk',106,47.4,-Math.PI/2,{with:'b12'}]);N.push(['b12','s','talk',104.2,47.4,Math.PI/2,{with:'b11'}]);
+  N.push(['b13','a','talk',58,67,Math.PI*.25,{with:'b14'}]);N.push(['b14','w','talk',59.6,68.4,Math.PI*1.25,{with:'b13'}]);
+  row(70,74,118,126,2);
+  // ---------------- C · The Dwellings (v 74..114): house blocks and narrow lanes ----------------
+  // lanes: north v 74..78, middle v 89..92 and 101..104, south v 110..114; north-south u 30..34, 58..62, 86..90, 114..118
+  [[8,78,30,89],[34,78,58,89],[62,78,86,89],[90,78,114,89],[118,78,142,89],
+   [8,92,30,101],[34,92,58,101],[62,92,86,101],[90,92,114,101],[118,92,142,101],
+   [8,104,30,110],[34,104,58,110],[62,104,86,110],[90,104,114,110],[118,104,142,110]].forEach(([u0,v0,u1,v1],i)=>{
+    // each block: two or three houses with a small yard cut out on one side (yards are open ground with clutter)
+    const yard=i%3,m=Math.floor((u0+u1)/2);
+    if(yard==0){b(u0,v0,m-1,v1,2,'house');b(m+2,v0,u1,v1,3,'house');c('barrel',m,v0+2);c('planter',m+1,v1-2)}
+    else if(yard==1){b(u0,v0,u1,v1-3,2,'house');c('laundry',u0+3,v1-2);c('crate',u1-3,v1-2);c('barrel',u1-2,v1-2)}
+    else{b(u0,v0,m-3,v1,3,'house');b(m,v0,u1,v1,2,'house');c('cstack',m-2,v0+3);c('sacks',m-2,v1-3)}});
+  c('well',74,99.4);c('laundry',44,90.5);c('laundry',96,102.5);c('cart',126,76);c('barrels',36,111);c('crate',64,111);
+  l('torch',29.4,80);l('torch',85.4,80);l('torch',117.6,95);l('torch',57.4,95);l('lantern',72,91.6);l('torch',29.4,107);l('torch',85.4,108);l('brazier',124,112);
+  N.push(['c1','w','patrol',34,90.5,0,{path:[[34,90.5,2],[114,90.5,3]],spd:1.2}]);
+  N.push(['c2','w','patrol',114,102.5,0,{path:[[114,102.5,3],[34,102.5,2]],spd:1.2}]);
+  N.push(['c3','w','lantern',60,78,0,{path:[[60,78,3],[60,112,3]],spd:.9,rng:12}]);
+  N.push(['c4','a','sit',76,77.2,Math.PI,{pose:'sitEat',seat:1}]);N.push(['c5','s','sit',104,111.6,0,{pose:'sit',seat:1}]);
+  N.push(['c6','a','talk',87,96,Math.PI/2,{with:'c7'}]);N.push(['c7','s','talk',88.8,96,-Math.PI/2,{with:'c6'}]);
+  N.push(['c8','s','work',131,92.6,0,{pose:'sweep'}]);N.push(['c9','a','walker',116,76,0,{path:[[116,76,2],[140,76,3]],spd:1.0}]);
+  N.push(['c10','s','sit',50,101.6,0,{pose:'sitEat',seat:1}]);
+  row(114,118,20,28,2);
+  // ---------------- D · The Rat Warrens (v 118..150): barns, breeding hutches and pens of rats ----------------
+  b(36,120,64,128,2,'barn');b(88,120,118,128,2,'barn');
+  [[32,132,54,144],[62,132,84,144],[94,132,116,144]].forEach(([u0,v0,u1,v1],i)=>{PEN.push([u0,v0,u1,v1]);
+    // fences (low cover, solid) with a gate gap on the south side; the pen inside is the rats' (walking in makes them squeal)
+    for(let u=u0;u<=u1;u+=2){c('fence',u,v0);if(Math.abs(u-(u0+u1)/2)>2)c('fence',u,v1)}for(let v=v0+2;v<v1;v+=2){c('fenceV',u0,v);c('fenceV',u1,v)}
+    c('trough',u0+5,v0+3);c('trough',u1-6,v1-3)});
+  c('hutch',70,129.5);c('hutch',76,129.5);c('hutch',124,130.5);c('hay',28,126);c('hay',28,128);c('hay',124,138);c('hay',124,141);c('sacks',88,148.8);c('cage',58,148.8);c('cage',59.2,149);
+  c('cart',70,148.6);c('barrels',100,148.8);c('cstack',114,148.8);c('crate',56,131);
+  l('lantern',50,129);l('lantern',102,129);l('torch',30,140);l('torch',88,138);l('torch',58,148);l('brazier',120,145);
+  N.push(['d1','w','sentry',73,138,Math.PI,{arc:1.6,per:12,rng:11,lift:.6}]);   // the overseer on a platform between the pens
+  N.push(['d2','a','work',43,136,0,{pose:'feed'}]);N.push(['d3','s','work',104,140,Math.PI,{pose:'feed'}]);N.push(['d4','a','work',66,141,Math.PI/2,{pose:'fork'}]);
+  N.push(['d5','w','patrol',26,148,0,{path:[[26,146.5,2],[126,146.5,3]],spd:1.15}]);
+  N.push(['d6','s','walker',119,124,0,{path:[[119,124,3],[119,150,1],[122,153,0],[122,156,4],[122,150,0]],spd:1.0,carry:'cage'}]);   // carries rats to the kitchen
+  N.push(['d7','a','work',75,128.4,0,{pose:'feed'}]);
+  row(150,154,118,126,2);
+  // ---------------- E · The Great Kitchen (v 154..178): the hearth, spits of rats, cauldrons, the long tables ----------------
+  b(40,154,112,156,1,'hall');
+  c('hearth',52,157);c('hearth',76,157);c('spit',58,159);c('spit',70,159);c('spit',84,159);c('cauldron',96,159);c('cauldron',46,159.5);
+  c('block',104,161);c('rack',112,158);c('table',52,166);c('table',64,166);c('table',76,166);c('table',88,166);
+  for(const u of [51,53,63,65,75,77,87,89]){c('stool',u,165);c('stool',u,167)}
+  c('sacks',30,174);c('barrels',34,175);c('cstack',40,175);c('crate',46,175);c('cstack',58,175);c('barrels',70,175);c('crate',82,175);c('cstack',94,175);c('sacks',104,175);c('crate',116,174);c('cage',124,160);c('cage',125,161);
+  l('hearth',60,157.5);l('hearth',84,157.5);l('lantern',58,166);l('lantern',82,166);l('torch',128,166);l('torch',24,170);
+  N.push(['e1','w','spit',58,160.6,Math.PI,{pose:'spit'}]);N.push(['e2','a','work',84,160.6,Math.PI,{pose:'spit'}]);
+  N.push(['e3','s','work',96,161.6,Math.PI,{pose:'stir'}]);N.push(['e4','a','work',104,162.4,Math.PI,{pose:'chop'}]);
+  N.push(['e5','w','patrol',40,170,0,{path:[[40,170,3],[118,170,3]],spd:1.0,chef:1}]);    // the head cook walks the hall
+  N.push(['e6','s','walker',70,161,0,{path:[[70,161,2],[64,164.6,2],[90,161,2],[88,164.6,2]],spd:1.2,carry:'platter'}]);
+  N.push(['e7','a','sit',52,164.4,0,{pose:'sitEat',seat:1}]);N.push(['e8','s','sit',65,167.6,Math.PI,{pose:'sitEat',seat:1}]);
+  N.push(['e9','a','sit',77,164.4,0,{pose:'sitEat',seat:1}]);N.push(['e10','w','sit',88,167.6,Math.PI,{pose:'sitEat',seat:1}]);
+  N.push(['e11','s','work',46,161.4,Math.PI,{pose:'stir'}]);
+  row(178,182,20,28,2);
+  // ---------------- F · The Gate Yard (v 182..194): the city gate, its tower, and the drain under the wall ----------------
+  b(66,188,84,194,4,'tower');                                    // the gatehouse (the gate itself faces the yard)
+  c('gate',75,187);c('wagon',44,186);c('crate',56,190);c('cstack',57,190);c('barrels',94,188);c('cart',106,188.6);c('crate',116,190);c('hay',120,186);c('crate',126,188);c('drain',129,193);
+  c('cstack',70,186);c('cstack',80,186);c('crate',69,187);c('barrel',81,187);c('table',74,183.2);c('rack',62,183.6);   // stacks beside the gate to duck behind; the guards' dice table; their spear rack
+  l('brazier',62,186);l('brazier',88,186);l('torch',40,192);l('torch',112,192);
+  N.push(['f1','w','sit',72.2,183.2,Math.PI/2,{pose:'sit',seat:1}]);N.push(['f2','w','sit',75.8,183.2,-Math.PI/2,{pose:'sit',seat:1}]);   // the gate guards at their dice
+  N.push(['f3','w','lantern',75,187,Math.PI,{sweep:1,arc:1.25,per:9,rng:15,lift:3.8}]);  // the tower lamp sweeps the yard
+  N.push(['f4','w','patrol',30,183.6,0,{path:[[30,183.6,2],[124,183.6,3],[124,190.5,3],[90,190.5,2],[90,183.6,0]],spd:1.3}]);
+  const CP=[[14,10,.7,'The Breach'],[24,34,.8,'The Market'],[122,76,-.7,'The Dwellings'],[24,120,.8,'The Rat Warrens'],[122,156,-.8,'The Great Kitchen'],[24,184,1.4,'The Gate Yard']];
+  const EXIT=[129,192.6];
+  return ab152Plan.c={W:150,H:200,B,C,L,N,PEN,CP,EXIT,D:[[6,28],[32,70],[74,114],[118,150],[154,178],[182,194]],IN:[8,6,141,193]}}
+// v152: the city's ground, called from 0045 (sp152Map) before anything is built from the map: every tile inside the walls is open
+// ground (streets 'a', yards '.'), the building footprints are solid 'r' tiles (no mesh of their own), the rest of the rectangle is
+// void. DW inside is negative (flat ground at 1.6 where 0045 makes the heights), so the city sits level on its own plateau.
+function ab152Map(m,bio,DW,I,bi){const P=ab152Plan(),[a0,b0,a1,b1]=P.IN,X=I.x0,Y=I.y0;
+  for(let v=0;v<I.h;v++)for(let u=0;u<I.w;u++){const x=X+u,y=Y+v,k=y*W+x,inn=u>=a0&&u<=a1&&v>=b0&&v<=b1;if(!m[y])continue;bio[y][x]=bi;
+    if(inn){m[y][x]=(u+v)%9==0?'a':'.';DW[k]=-Math.max(1,Math.min(u-a0,a1-u,v-b0,b1-v)+1)}else{m[y][x]='';DW[k]=Math.max(1,Math.max(a0-u,u-a1,b0-v,v-b1))}}
+  // the streets: every open tile that is not in a yard reads as worn paving
+  P.B.forEach(([u0,v0,u1,v1])=>{for(let v=v0;v<v1;v++)for(let u=u0;u<u1;u++){const x=X+u,y=Y+v;if(m[y]&&m[y][x]!=='')m[y][x]='r'}});
+  // the breach in the north wall and the drain stay open; the rest of the inner edge is the wall (solid)
+}
+// ================= v152 Abeksi — the city's models =================
+// Built once, the first time the hero is in the city (ab152Build), and hidden everywhere else. Static pieces are baked with lgGroup
+// (merged by material: plaster/wood 'c', iron 'm', glow 'g'), one group per district for the buildings and one per prop kind; the
+// moving pieces (flames, spits, laundry, rats, the fountain's water) are animated by ab152WorldTick.
+//  * Buildings (plan B): sandstone houses with plaster bands, parapets, protruding roof beams, arched doors, shuttered or lit
+//    windows, awnings, roof clutter and a carved serpent frieze; styles barracks / ruin / barn / hall / tower.
+//  * The outer wall (with the breach, the gate and the drain) and a skyline of tall houses, domes and the Serpent Temple beyond it.
+//  * Props (plan C): every kind in AB152_K; rats are instanced (pens, cages, the carrier's cage) and scurry on their own.
+//  * Lights (plan L): flames + a pooled PointLight each + a soft light pool on the ground, so the lit areas the snakes see you in
+//    are the lit areas you see.
+//  * Streets: a cobble texture on the open ground; yards keep the packed earth.
+var AB152C={plaster:[0xb89a6e,0xa8885c,0xc2a676,0x9a7a52,0xb08a60,0xa07a58],trim:0x6e5638,trimD:0x4e3c26,roof:0x7a6448,beam:0x3e2c1a,dark:0x120c08,
+  glow:0xffb860,glowD:0xd88a3a,cloth:[0x2a6a64,0x8a2a24,0xb8862a,0x4a3a6a,0x2a4a6a],stone:0x8a8070,stoneD:0x5e564a,stoneL:0xa89c88,wood:0x5a4028,woodL:0x7a5a38,woodD:0x3a2818,
+  iron:0x3a3a40,ironL:0x6a6a70,brass:0xb8923a,jade:0x3ac890,rat:0x5a4a40,ratD:0x3a2e28,ratP:0xc89a8a,meat:0x9a4a32,meatD:0x6a2a1a,fire:0xff7a28,fireL:0xffd080};
+var AB152={S:null,err:0};
+function ab152R(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return ()=>(s=s*16807%2147483647)/2147483647}
+// plan (u, v) → world (x, z)
+function ab152W(u,v){const I=sp152I('abeksi');return [I.x0+u,I.y0+v]}
+
+// ---------------- buildings ----------------
+// one face of a house: windows per storey, a door on the ground floor, a frieze; n = outward normal (unit, in x/z), t = along
+function ab152Face(k,R,cx,cz,len,H,n,t,door,st){const C=AB152C,S=Math.max(1,Math.round(H/2.3)),y0=1.6;
+  const at=(a,y,o)=>[cx+t[0]*a+n[0]*(o||0),y,cz+t[1]*a+n[1]*(o||0)],ry=Math.atan2(n[0],n[1]);
+  // the carved frieze below the parapet: a band with a zig-zag serpent
+  {const p=at(0,y0+H-.32,.02);k.p('','box','c',C.trim,p[0],p[1],p[2],len,.22,.06,0,ry,0);
+    for(let a=-len/2+.4;a<len/2-.3;a+=.6){const q=at(a,y0+H-.32,.05);k.p('','box','c',C.trimD,q[0],q[1],q[2],.32,.05,.03,0,ry,(Math.floor(a/.6)%2?.6:-.6))}}
+  for(let s=0;s<S;s++){const fy=y0+s*2.3;
+    if(s>0){const p=at(0,fy-.06,.02);k.p('','box','c',C.trim,p[0],p[1],p[2],len,.1,.05,0,ry,0)}   // a plaster band between floors
+    const nW=Math.max(1,Math.floor(len/2.6));for(let i=0;i<nW;i++){const a=-len/2+(i+.5)*len/nW;if(s==0&&door&&Math.abs(a)<1.3)continue;
+      const lit=R()<(st=='barracks'?.35:.28),p=at(a,fy+1.25,.03);
+      k.p('',lit?'box':'box',lit?'g':'c',lit?(R()<.5?C.glow:C.glowD):C.dark,p[0],p[1],p[2],.5,.7,.04,0,ry,0);
+      const q=at(a,fy+.86,.07);k.p('','box','c',C.trimD,q[0],q[1],q[2],.66,.07,.1,0,ry,0);                  // sill
+      if(!lit&&R()<.5){[-1,1].forEach(sd=>{const w=at(a+sd*.42,fy+1.25,.05);k.p('','box','c',C.wood,w[0],w[1],w[2],.26,.72,.04,0,ry+sd*.35,0)})}  // open shutters
+      if(R()<.12){const b=at(a,fy+.95,.18);k.p('','cyl','c',0x7a4a2a,b[0],b[1],b[2],.12,.16,.12);k.p('','sph','c',0x3a5a2a,b[0],b[1]+.14,b[2],.14,.1,.14)}}}   // a pot on the sill
+  if(door){const p=at(0,y0+.85,.02);k.p('','box','c',C.dark,p[0],p[1],p[2],1.0,1.7,.05,0,ry,0);
+    const a=at(0,y0+1.7,.0);k.p('','cyl','c',C.dark,a[0],a[1],a[2],.5,.05,.5,Math.PI/2,ry,0);
+    const f=at(0,y0+1.72,.04);k.p('','cyl','c',C.trim,f[0],f[1],f[2],.62,.06,.62,Math.PI/2,ry,0);
+    if(R()<.5){const c=at(0,y0+1.0,.08);k.S('',C.cloth[(R()*5)|0],c[0]-n[0]*.02,y0+1.68,c[2],.95,1.55,ry,0,(R()*9)|0)}             // a door curtain
+    if(R()<.35){const s=at(.9,y0+.3,.45);k.p('','box','c',C.stoneD,s[0],s[1],s[2],.55,.3,.4,0,ry,0)}}}                     // a step / bench
+// a building from the plan: B = [u0,v0,u1,v1,storeys,style]
+function ab152House(k,Bk,R,I){const C=AB152C,[u0,v0,u1,v1,s,st]=Bk,x0=I.x0+u0-.5,z0=I.y0+v0-.5,x1=I.x0+u1-.5,z1=I.y0+v1-.5,cx=(x0+x1)/2,cz=(z0+z1)/2,w=x1-x0,d=z1-z0,y0=1.6;
+  const H=st=='tower'?2.3*s+.8:st=='hall'?3.4:st=='barn'?3.0:2.3*s,col=C.plaster[(R()*C.plaster.length)|0];
+  if(st=='ruin'){ // a collapsed guardhouse: broken walls of uneven height, fallen blocks, a burnt beam
+    [[0,-1],[0,1],[-1,0],[1,0]].forEach(([a,b],i)=>{const L=a?d:w;for(let j=0;j<5;j++){const t=(j+.5)/5-.5,h=.6+R()*2.4;if(R()<.25)continue;
+      const x=cx+(a?a*w/2:t*L),z=cz+(b?b*d/2:t*L);k.p('','box','c',lgCol(col,0x6a5a48,.3),x,y0+h/2,z,a?.5:L/5+.05,h,a?L/5+.05:.5)}});
+    for(let j=0;j<7;j++)k.p('','dod','c',C.stoneD,cx+(R()-.5)*w*.8,y0+.2,cz+(R()-.5)*d*.8,.35+R()*.3,.25,.35+R()*.3,R(),R(),R());
+    k.L('','c',0x1e1610,[cx-w*.3,y0+.2,cz-d*.2],[cx+w*.25,y0+1.6,cz+d*.1],.12,.1,5);return}
+  const bw=st=='barn'?C.wood:col;
+  k.p('','box','c',bw,cx,y0+H/2,cz,w,H,d);                                                              // the body
+  if(st=='barn'){ // planks, a pitched roof, a big door on the yard side
+    for(let i=0;i<Math.floor(w/.5);i++)k.p('','box','c',i%2?C.woodD:C.woodL,x0+.25+i*.5,y0+H/2,z1+.02,.04,H,.02);
+    const rs=Math.atan2(1.4,d/2);[-1,1].forEach(sd=>k.p('','box','c',C.roof,cx,y0+H+.7,cz+sd*d/4,w+.4,.12,Math.hypot(d/2,1.4)+.2,-sd*rs,0,0));
+    k.p('','box','c',C.dark,cx,y0+1.2,z1+.03,2.4,2.4,.04);k.p('','box','c',C.woodD,cx,y0+1.2,z1+.06,.1,2.4,.04);
+    [-1,1].forEach(sd=>k.p('','box','c',C.woodD,cx+sd*1.25,y0+1.2,z1+.06,.1,2.5,.06));return}
+  // parapet with crenels, the flat roof, roof beams sticking out under it
+  k.p('','box','c',lgCol(col,0x000000,.12),cx,y0+H+.05,cz,w-.3,.1,d-.3);
+  [[w,0,0,-d/2],[w,0,0,d/2],[d,1,-w/2,0],[d,1,w/2,0]].forEach(([L,rot,ox,oz])=>{const n=Math.round(L/.8);for(let i=0;i<n;i++){if(st!='barracks'&&st!='tower'&&i%2)continue;const a=-L/2+(i+.5)*L/n;
+    k.p('','box','c',col,cx+(rot?ox:a),y0+H+.25,cz+(rot?a:oz),rot?.3:L/n*(st=='barracks'||st=='tower'?.55:1.02),.5,rot?L/n*(st=='barracks'||st=='tower'?.55:1.02):.3)}});
+  for(let a=-w/2+.5;a<w/2;a+=1.1)[-1,1].forEach(sd=>k.p('','box','c',C.beam,cx+a,y0+H-.6,cz+sd*(d/2+.18),.12,.12,.4));
+  // the faces (doors on the long sides)
+  const fz=(sd)=>ab152Face(k,R,cx,cz+sd*d/2,w,H,[0,sd],[1,0],w>=3&&R()<.8,st),fx=(sd)=>ab152Face(k,R,cx+sd*w/2,cz,d,H,[sd,0],[0,-sd],d>=6&&R()<.4,st);
+  fz(-1);fz(1);fx(-1);fx(1);
+  // awnings, roof clutter (water jars, a ladder, a little roof hut), a hanging serpent banner on big buildings
+  if(R()<.45&&st=='house'){const sd=R()<.5?-1:1,aw=Math.min(3,w-.8),c=C.cloth[(R()*5)|0];k.p('','box','c',c,cx+(R()-.5)*(w-aw),y0+2.05,cz+sd*(d/2+.55),aw,.04,1.1,sd*.35,0,0);
+    for(let i=0;i<4;i++)k.p('','box','c',i%2?c:lgCol(c,0xffffff,.35),cx-aw/2+(i+.5)*aw/4,y0+2.05,cz+sd*(d/2+.56),aw/4*.98,.05,1.05,sd*.35,0,0)}
+  for(let i=0;i<Math.floor(w*d/14);i++){const x=cx+(R()-.5)*(w-1.2),z=cz+(R()-.5)*(d-1.2);const r=R();
+    if(r<.4){k.p('','cyl','c',0x8a5a32,x,y0+H+.35,z,.22,.5,.22);k.p('','cyl','c',0x6a4222,x,y0+H+.62,z,.12,.06,.12)}
+    else if(r<.55){k.p('','box','c',col,x,y0+H+.55,z,1.2,1.0,1.1);k.p('','box','c',C.dark,x,y0+H+.45,z+.56,.4,.7,.02)}
+    else if(r<.7)k.S('',C.cloth[(R()*5)|0],x,y0+H+1.0,z,.9,.8,R()*6,0,(R()*9)|0)}
+  if(st=='barracks'||st=='tower'){for(let a=-w/2+2;a<w/2-1;a+=5){const x=cx+a,z=cz+d/2+.06;k.S('',C.cloth[0],x,y0+H-.1,z,.8,2.2,0,0,(a*3)|0);
+      k.p('','box','m',C.brass,x,y0+H-.95,z+.04,.4,.4,.02,0,0,Math.PI/4);k.p('','box','c',C.jade,x,y0+H-.95,z+.05,.24,.24,.02,0,0,Math.PI/4)}}
+  if(st=='hall'){ // the kitchen's back wall: smoke hoods over the hearths and a row of hanging pots
+    [52,76].forEach(u=>{const x=I.x0+u+7.5,z=z1;k.p('','box','c',C.stoneD,x,y0+H-.2,z+.9,14,.5,1.9);k.p('','box','c',0x2a2420,x,y0+H+1.2,z+.4,3,2.4,1.2)});
+    for(let u=44;u<110;u+=3){const x=I.x0+u,z=z1+.12;k.p('','cyl','m',C.iron,x,y0+2.2,z,.16,.2,.16);k.L('','m',C.iron,[x,y0+2.3,z],[x,y0+2.7,z],.01,.01,3)}}}
+// the outer wall round the city: a tall crenellated wall, towers at the corners and along it, the breach, the gate, the drain
+function ab152Walls(k,P,I){const C=AB152C,[a0,b0,a1,b1]=P.IN,y0=1.6,H=5.2,X=I.x0,Y=I.y0,R=ab152R(1527);
+  const seg=(x0,z0,x1,z1,th)=>{const L=Math.hypot(x1-x0,z1-z0),cx=(x0+x1)/2,cz=(z0+z1)/2,ry=Math.atan2(x1-x0,z1-z0);
+    k.p('','box','c',C.stone,cx,y0+H/2,cz,th,H,L,0,ry,0);const n=Math.floor(L/1.1);
+    for(let i=0;i<n;i+=2){const t=(i+.5)/n-.5;k.p('','box','c',C.stoneL,cx+Math.sin(ry)*t*L,y0+H+.3,cz+Math.cos(ry)*t*L,th+.1,.6,L/n,0,ry,0)}
+    for(let t=-L/2+1;t<L/2;t+=2.2+R()*2)k.p('','box','c',C.stoneD,cx+Math.sin(ry)*t,y0+.4+R()*H*.8,cz+Math.cos(ry)*t,th+.06,.18,.5+R()*.8,0,ry,0)};   // patched blocks
+  const xA=X+a0-1.2,xB=X+a1+1.2,zA=Y+b0-1.2,zB=Y+b1+1.2;
+  // north wall with the breach at u 11..17
+  seg(xA,zA,X+10.5,zA,1.6);seg(X+17.5,zA,xB,zA,1.6);
+  for(let j=0;j<9;j++)k.p('','dod','c',j%2?C.stone:C.stoneD,X+11+R()*6,y0+.3+R()*.8,zA+(R()-.3)*2.4,.5+R()*.5,.4+R()*.3,.5+R()*.4,R()*3,R()*3,0);
+  [[10.5,0],[17.5,0]].forEach(([u])=>k.p('','box','c',C.stoneD,X+u,y0+H*.55,zA,1.0,H*1.1,1.8));
+  // south wall: the gatehouse (plan B) stands in it; the drain at u 128..130
+  seg(xA,zB,X+66,zB,1.6);seg(X+84,zB,xB,zB,1.6);
+  k.p('','box','c',C.dark,X+129,y0+.55,zB-.82,2.0,1.1,.05);for(let i=0;i<6;i++)k.p('','box','m',C.iron,X+128.2+i*.32,y0+.55,zB-.86,.05,1.1,.05);k.p('','box','m',C.iron,X+129,y0+.85,zB-.86,2.0,.06,.06);
+  seg(xA,zA,xA,zB,1.6);seg(xB,zA,xB,zB,1.6);
+  [[xA,zA],[xB,zA],[xA,zB],[xB,zB],[xA,(zA+zB)/2],[xB,(zA+zB)/2],[(xA+xB)/2,zA]].forEach(([x,z])=>{k.p('','box','c',C.stoneL,x,y0+(H+1.6)/2,z,3,H+1.6,3);
+    for(let i=0;i<4;i++){const a=i*Math.PI/2;k.p('','box','c',C.stone,x+Math.sin(a)*1.3,y0+H+1.9,z+Math.cos(a)*1.3,1.0,.7,.5,0,a,0)}})}
+// beyond the wall: tall houses, domes, towers and the Serpent Temple (a stepped pyramid with a great coiled serpent on top)
+function ab152Skyline(k,I){const C=AB152C,R=ab152R(9157),y0=1.6,X=I.x0,Y=I.y0,W0=I.w,H0=I.h;
+  const blk=(x,z,w,d,h,col)=>{k.p('','box','c',col,x,y0+h/2,z,w,h,d);for(let i=0;i<Math.floor(h/2.3);i++)if(R()<.5)k.p('','box','g',R()<.5?C.glow:C.glowD,x+(R()-.5)*w*.6,y0+1.3+i*2.3,z+d/2+.02,.45,.6,.03)};
+  for(let i=0;i<70;i++){const side=i%4;let x,z;if(side==0){x=X+4+R()*(W0-8);z=Y+R()*3}else if(side==1){x=X+4+R()*(W0-8);z=Y+H0-R()*3}else if(side==2){x=X+R()*4;z=Y+6+R()*(H0-12)}else{x=X+W0-R()*4;z=Y+6+R()*(H0-12)}
+    const h=6+R()*7,col=C.plaster[(R()*6)|0];blk(x,z,2.5+R()*3,2.5+R()*3,h,lgCol(col,0x2a2020,.25));
+    if(R()<.25){k.p('','hem','c',lgCol(col,0x3a5a5a,.3),x,y0+h,z,1.4,1.2,1.4);k.p('','cone','m',C.brass,x,y0+h+1.3,z,.12,.6,.12)}}
+  // the temple north-east, outside the wall corner
+  const tx=X+W0-3,tz=Y+2;for(let i=0;i<5;i++){const s=12-i*2.2;k.p('','box','c',lgCol(C.stoneL,0x2a2018,i*.08),tx,y0+3+i*2.6,tz,s,2.6,s)}
+  k.p('','tor','c',C.jade,tx,y0+17.2,tz,2.4,.8,2.4);k.p('','tor','c',lgCol(C.jade,0,.2),tx,y0+18,tz,1.8,.8,1.8);k.L('','c',C.jade,[tx,y0+18,tz],[tx+.3,y0+21.5,tz+.6],.6,.4,7);
+  k.p('','sph','c',C.jade,tx+.35,y0+21.8,tz+.9,.75,.55,1.1);k.p('','box','g',0xff4020,tx+.1,y0+21.9,tz+1.8,.12,.08,.06);k.p('','box','g',0xff4020,tx+.6,y0+21.9,tz+1.8,.12,.08,.06);
+  k.p('','hood','c',lgCol(C.jade,0,.25),tx+.3,y0+21.3,tz+.5,1.9,2.2,1,0,0,0)}
+
+// ---------------- props (plan C), each kind baked once, origin on the ground, +z = front ----------------
+// kit builders, one per prop kind (k = a dkKit); AB152KM = wind sway for the kinds that keep their own mesh (cloth, leaves)
+var AB152KB={},AB152KM={laundry:.6,planter:.25,awning:.1,rack:.05};
+AB152KB.crate0=(k,C)=>{const s=.7;k.p('','box','c',C.wood,0,s/2,0,s,s,s);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>k.p('','box','m',C.ironL,a*s/2,s/2,b*s/2,.05,s*1.01,.05));[0,s].forEach(y=>k.p('','box','m',C.ironL,0,y,0,s*1.02,.04,s*1.02))};
+AB152KB.barrel=(k,C)=>{k.p('','cyl','c',C.wood,0,.45,0,.3,.9,.3);k.p('','cyl','c',C.woodL,0,.45,0,.33,.5,.33);[.12,.78].forEach(y=>k.p('','ring','m',C.ironL,0,y,0,.315,.4,.315));k.p('','cyl','c',C.woodD,0,.905,0,.28,.01,.28)};
+AB152KB.cstack=(k,C)=>{[[0,0,0,.72],[.05,.72,.04,.6]].forEach(([x,y,z,s],i)=>{k.p('','box','c',i?C.woodL:C.wood,x,y+s/2,z,s,s,s,0,i*.3,0);k.p('','box','m',C.ironL,x,y+s/2,z,s*1.02,.04,s*1.02,0,i*.3,0)});k.p('','box','c',0xc8b890,.04,1.34,.04,.4,.04,.3)};
+AB152KB.barrels=(k,C)=>{[-.38,.38].forEach((x,i)=>{k.p('','cyl','c',C.wood,x,.45,0,.32,.9,.32);[.12,.78].forEach(y=>k.p('','ring','m',C.ironL,x,y,0,.33,.4,.33))});k.p('','cyl','c',C.wood,0,1.08,-.05,.28,.7,.28,Math.PI/2,.3,0)};
+AB152KB.cart=(k,C)=>{k.p('','box','c',C.woodL,0,.65,0,2.4,.1,1.4);[-1,1].forEach(s=>{k.p('','box','c',C.wood,0,.85,s*.68,2.4,.35,.06);k.p('','cyl','c',C.woodD,-.4,.42,s*.78,.42,.08,.42,Math.PI/2,0,0);k.p('','cyl','m',C.iron,-.4,.42,s*.81,.1,.06,.1,Math.PI/2,0,0)});
+      k.L('','c',C.wood,[1.2,.7,-.4],[2.2,.5,-.45],.04,.04,4);k.L('','c',C.wood,[1.2,.7,.4],[2.2,.5,.45],.04,.04,4);
+      for(let i=0;i<5;i++)k.p('','sph','c',[0xc8b480,0xa8905a][i%2],-.8+i*.4,.95,(i%2-.5)*.4,.3,.28,.3);k.p('','cyl','c',0x9a5a32,.5,1.05,.2,.18,.36,.18);k.p('','cyl','c',0x8a4a2a,.85,1.0,-.25,.16,.3,.16)};
+AB152KB.wagon=(k,C)=>{k.p('','box','c',C.wood,0,.8,0,3.6,.12,1.6);[-1,1].forEach(s=>[-1.1,1.1].forEach(x=>{k.p('','cyl','c',C.woodD,x,.55,s*.88,.55,.1,.55,Math.PI/2,0,0)}));
+      for(let i=0;i<5;i++){const x=-1.5+i*.75;k.p('','tor','c',C.woodD,x,1.5,0,.85,.05,.85,0,0,Math.PI/2)}k.p('','cyl','c',0xc8b89a,0,1.45,0,.86,3.4,.86,0,0,Math.PI/2);k.p('','box','c',0xb8a888,0,.95,0,3.4,.3,1.6)};
+AB152KB.stall=(k,C)=>{k.p('','box','c',C.woodL,0,.5,0,3.4,.9,1.1);k.p('','box','c',C.woodD,0,.97,0,3.6,.06,1.25);
+      [-1.7,1.7].forEach(x=>[-.55,.55].forEach(z=>k.p('','box','c',C.woodD,x,1.3,z,.1,2.6,.1)));
+      // goods: pottery, cloth bolts, baskets of eggs, a cage with rats, hanging dried rats
+      for(let i=0;i<6;i++){const x=-1.4+i*.55,r=i%3;if(r==0){k.p('','cyl','c',0x9a5a32,x,1.18,.1,.16,.38,.16);k.p('','cyl','c',0x7a4222,x,1.4,.1,.09,.06,.09)}
+        else if(r==1){k.p('','cyl','c',C.cloth[i%5],x,1.1,-.1,.14,.5,.14,0,0,Math.PI/2)}else{k.p('','cyl','c',0x8a6a3a,x,1.08,.05,.22,.16,.22);for(let j=0;j<4;j++)k.p('','sph','c',0xe8e0c8,x+(j%2-.5)*.12,1.18,.05+(j>1?.08:-.08),.06,.075,.06)}}
+      for(let i=0;i<4;i++){const x=-1.2+i*.8;k.L('','c',0x8a7a5a,[x,2.45,.55],[x,2.1,.55],.006,.006,3);k.p('','sph','c',C.meatD,x,2.0,.55,.07,.13,.06);k.L('','c',C.meatD,[x,1.88,.55],[x+.02,1.7,.56],.012,.004,3)}};
+AB152KB.awning=(k,C)=>{const c=C.cloth[1],c2=C.cloth[2];for(let i=0;i<6;i++)k.p('','box','c',i%2?c:c2,-1.75+(i+.5)*3.5/6,2.62,0,3.5/6*.99,.04,2.0,.12,0,0);k.p('','box','c',C.woodD,0,2.6,1.0,3.5,.05,.05,.12,0,0)};
+AB152KB.rubble=(k,C)=>{const R=ab152R(77);for(let i=0;i<9;i++)k.p('','dod','c',[C.stone,C.stoneD,C.stoneL][i%3],(R()-.5)*1.6,.2+R()*.5,(R()-.5)*1.6,.35+R()*.35,.3+R()*.3,.35+R()*.3,R()*3,R()*3,R()*3);
+      k.p('','box','c',C.stoneL,.2,.7,-.2,1.2,.3,.5,.2,.6,.15);k.L('','c',C.woodD,[-.8,.1,.5],[.7,.9,-.4],.08,.07,5)};
+AB152KB.hay=(k,C)=>{k.p('','box','c',0xb8a058,0,.42,0,1.8,.84,.9);[-.5,.5].forEach(x=>k.p('','box','c',0x6a5a2a,x,.42,0,.04,.86,.92));k.p('','box','c',0xc8b068,0,.86,0,1.7,.04,.8)};
+AB152KB.pillar=(k,C)=>{k.p('','box','c',C.stoneL,0,.2,0,.9,.4,.9);k.p('','cyl','c',C.stone,0,2.0,0,.34,3.3,.34);k.p('','box','c',C.stoneL,0,3.75,0,.9,.3,.9);
+      k.L('','c',C.jade,[0,3.5,.32],[0,1.2,.35],.07,.05,5);k.p('','sph','c',C.jade,0,3.55,.4,.11,.08,.14)};
+AB152KB.fountain=(k,C)=>{k.p('','cyl','c',C.stoneL,0,.35,0,2.4,.7,2.4);k.p('','cyl','c',0x2a4a5a,0,.66,0,2.15,.04,2.15);k.p('','cyl','c',C.stone,0,1.3,0,.6,1.9,.6);
+      // a cobra rearing from a coil, its hood spread, water from its mouth (the water moves: ab152WorldTick)
+      k.p('','tor','c',C.jade,0,2.3,0,.8,.4,.8);k.p('','tor','c',C.jade,0,2.65,0,.55,.4,.55);k.L('','c',C.jade,[0,2.7,0],[0,4.4,.25],.28,.2,7);k.p('','hood','c',lgCol(C.jade,0,.2),0,4.1,.05,1.1,1.4,.6);
+      k.p('','sph','c',C.jade,0,4.55,.45,.26,.2,.36);k.p('','box','g',0xff5030,-.1,4.62,.74,.05,.04,.03);k.p('','box','g',0xff5030,.1,4.62,.74,.05,.04,.03)};
+AB152KB.table=(k,C)=>{k.p('','box','c',C.woodL,0,.74,0,2.8,.08,.9);[-1.25,1.25].forEach(x=>k.p('','box','c',C.woodD,x,.36,0,.12,.72,.75));
+      for(let i=0;i<4;i++){const x=-1.05+i*.7;[-1,1].forEach(s=>{k.p('','cyl','c',0x8a6a4a,x,.8,s*.25,.18,.03,.18);k.p('','sph','c',C.meat,x,.86,s*.25,.12,.06,.07);k.L('','c',C.meatD,[x+.1,.86,s*.25],[x+.22,.83,s*.27],.015,.004,3)});
+        k.p('','cyl','c',0x6a4a2a,x+.3,.84,0,.05,.12,.05)}k.p('','cyl','c',0x9a5a32,0,.92,0,.14,.3,.14)};
+AB152KB.trough=(k,C)=>{k.p('','box','c',C.wood,0,.25,0,1.8,.5,.6);k.p('','box','c',0x8a7a4a,0,.48,0,1.6,.04,.45)};
+AB152KB.cauldron=(k,C)=>{for(let i=0;i<3;i++){const a=i/3*Math.PI*2;k.L('','m',C.iron,[Math.sin(a)*.8,0,Math.cos(a)*.8],[0,1.6,0],.03,.03,4)}
+      k.p('','sph','m',C.iron,0,.62,0,.62,.5,.62);k.p('','ring','m',C.ironL,0,.95,0,.6,.4,.6);k.p('','cyl','c',0x6a4a22,0,.98,0,.52,.02,.52);for(let i=0;i<5;i++)k.p('','dod','g',0xff6a20,(Math.random()-.5)*.7,.1,(Math.random()-.5)*.7,.12)};
+AB152KB.block=(k,C)=>{k.p('','cyl','c',C.woodL,0,.4,0,.55,.8,.55);k.p('','cyl','c',0x6a2a1a,0,.81,0,.5,.02,.5);
+      for(let i=0;i<3;i++){k.p('','sph','c',C.ratP,(i-1)*.25,.88,0,.08,.06,.16,0,i,0);k.L('','c',C.ratP,[(i-1)*.25,.86,-.14],[(i-1)*.25+.05,.83,-.34],.012,.004,3)}
+      k.p('','box','m',C.ironL,.3,.95,.2,.2,.02,.12,0,.4,.5);k.p('','box','c',C.woodD,.42,1.0,.28,.03,.03,.14,0,.4,.5)};
+AB152KB.planter=(k,C)=>{k.p('','cyl','c',0x8a4a2a,0,.3,0,.32,.6,.28);for(let i=0;i<6;i++)k.L('','c',0x3a6a2a,[0,.55,0],[Math.sin(i)*.4,1.1+(i%2)*.2,Math.cos(i)*.4],.05,.01,3)};
+AB152KB.statue=(k,C)=>{k.p('','box','c',C.stoneL,0,.5,0,1.6,1,1.6);k.L('','c',C.jade,[0,1,0],[0,3.2,.2],.32,.22,7);k.p('','hood','c',C.jade,0,2.9,.05,.9,1.1,.5);k.p('','sph','c',C.jade,0,3.3,.35,.22,.18,.3)};
+AB152KB.sacks=(k,C)=>{for(let i=0;i<4;i++)k.p('','sph','c',[0xc8b480,0xa8905a,0xb8a070][i%3],(i%2-.5)*.7,.3+(i>1?.42:0),(i>1?0:(i-.5)*.1),.38,.33,.32)};
+AB152KB.hutch=(k,C)=>{for(let r=0;r<2;r++)for(let i=0;i<3;i++){const x=-1+i,y=.45+r*.7;k.p('','box','c',C.wood,x,y,0,.92,.62,.7);k.p('','box','c',C.dark,x,y,.355,.7,.45,.02);
+      for(let j=0;j<4;j++)k.p('','box','m',C.ironL,x-.27+j*.18,y,.37,.02,.45,.02)}k.p('','box','c',C.woodD,0,1.48,0,3.1,.08,.8)};
+AB152KB.cage=(k,C)=>{k.p('','box','c',C.woodD,0,.05,0,.7,.1,.6);k.p('','box','c',C.woodD,0,.7,0,.72,.06,.62);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.p('','box','m',C.ironL,Math.sin(a)*.32,.38,Math.cos(a)*.27,.02,.62,.02)}
+      k.L('','m',C.iron,[-.2,.75,0],[0,.95,0],.01,.01,3);k.L('','m',C.iron,[.2,.75,0],[0,.95,0],.01,.01,3)};
+AB152KB.rack=(k,C)=>{[-1.3,1.3].forEach(x=>k.p('','box','c',C.woodD,x,1.1,0,.1,2.2,.1));k.p('','box','c',C.wood,0,2.1,0,2.8,.08,.08);
+      for(let i=0;i<8;i++){const x=-1.15+i*.33;k.L('','c',0x8a7a5a,[x,2.08,0],[x,1.8,0],.005,.005,3);k.p('','sph','c',i%2?C.ratP:C.meat,x,1.68,0,.07,.14,.06);k.L('','c',C.ratP,[x,1.54,0],[x+.02,1.3,.01],.012,.004,3)}};
+AB152KB.well=(k,C)=>{k.p('','cyl','c',C.stone,0,.45,0,.9,.9,.9);k.p('','cyl','c',C.dark,0,.91,0,.72,.02,.72);[-1,1].forEach(s=>k.p('','box','c',C.woodD,s*.85,1.2,0,.1,1.6,.1));
+      k.p('','box','c',C.roof,0,2.05,0,2.0,.08,1.2,0,0,0);k.p('','cyl','c',C.wood,0,1.65,0,.08,1.6,.08,0,0,Math.PI/2);k.L('','c',0x8a7a5a,[0,1.6,0],[0,1.0,0],.008,.008,3);k.p('','cyl','c',C.wood,0,.95,0,.14,.18,.14)};
+AB152KB.bench=(k,C)=>{k.p('','box','c',C.woodL,0,.45,0,1.8,.08,.45);[-.75,.75].forEach(x=>k.p('','box','c',C.woodD,x,.22,0,.1,.44,.4))};
+AB152KB.stool=(k,C)=>{k.p('','cyl','c',C.woodL,0,.44,0,.22,.06,.22);for(let i=0;i<3;i++){const a=i/3*Math.PI*2;k.L('','c',C.woodD,[Math.sin(a)*.16,0,Math.cos(a)*.16],[Math.sin(a)*.08,.42,Math.cos(a)*.08],.025,.02,4)}};
+AB152KB.platform=(k,C)=>{k.p('','box','c',C.woodL,0,.6,0,2.6,.12,2.6);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>k.p('','box','c',C.woodD,a*1.2,.3,b*1.2,.14,.6,.14));
+      for(let i=0;i<3;i++)k.p('','box','c',C.wood,0,.1+i*.18,1.45+i*.15,1,.06,.3)};
+AB152KB.gate=(k,C)=>{k.p('','box','c',C.woodD,0,1.8,0,5.4,3.6,.3);k.p('','box','c',C.stoneL,0,3.75,.5,6.2,.3,1.6);for(let i=0;i<7;i++)k.p('','box','c',C.stone,-2.9+i*.97,4.1,1.25,.5,.45,.18);for(let i=0;i<9;i++)k.p('','box','c',i%2?C.wood:C.woodL,-2.4+i*.6,1.8,.17,.5,3.5,.04);
+      [.6,1.8,3.0].forEach(y=>k.p('','box','m',C.iron,0,y,.2,5.4,.16,.05));for(let i=0;i<14;i++)k.p('','sph','m',C.ironL,-2.6+i*.4,1.8+(i%2?1.2:-1.2),.24,.05);k.p('','cyl','m',C.brass,0,1.8,.25,.35,.05,.35,Math.PI/2,0,0)};
+AB152KB.drain=(k,C)=>{k.p('','box','g',0x1a2a1a,0,.04,0,1.2,.02,.6)};
+AB152KB.fenceV=(k,C)=>{[-.95,.95].forEach(z=>k.p('','box','c',C.woodD,0,.5,z,.1,1.0,.1));[.35,.75].forEach(y=>k.p('','box','c',C.wood,0,y,0,.05,.08,2.0))};
+AB152KB.fence=(k,C)=>{[-.95,.95].forEach(x=>k.p('','box','c',C.woodD,x,.5,0,.1,1.0,.1));[.35,.75].forEach(y=>k.p('','box','c',C.wood,0,y,0,2.0,.08,.05))};
+// a prop as its own object (stools under seated snakes, the overseer's platform; anything with moving parts)
+function ab152Kit(kind){const C=AB152C;
+  if(kind=='hearth')return ab152Hearth();if(kind=='spit')return ab152Spit();if(kind=='laundry')return ab152Laundry();if(kind=='crate')kind='crate0';
+  const f=AB152KB[kind];if(!f)return null;return lgGroup('AB152|'+kind,k=>f(k,C),AB152KM[kind]||0)}
+// the parts of a kind, built once (for baking many of them into one district mesh)
+var AB152PC={};
+function ab152PartsOf(kind){if(AB152PC[kind])return AB152PC[kind];const f=AB152KB[kind];if(!f)return null;const k=dkKit();f(k,AB152C);return AB152PC[kind]=k.P}
+// bake props into a kit at world spots: list of [kind,x,y,z,ry]
+function ab152BakeProps(k,list){const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),V=new THREE.Vector3(),S1=new THREE.Vector3(1,1,1);
+  list.forEach(([kind,x,y,z,ry])=>{const P=ab152PartsOf(kind);if(!P)return;E.set(0,ry,0);Q.setFromEuler(E);V.set(x,y,z);M.compose(V,Q,S1);
+    P.forEach(q=>k.P.push({bn:'',geo:q.geo,t:q.t,col:q.col,m:M.clone().multiply(q.m)}))})}
+// the long hearth: a stone base, a bed of coals, a row of fires (animated flame cones), iron fire dogs
+function ab152Hearth(){const C=AB152C,g=new THREE.Group();g.add(lgGroup('AB152|hearth',k=>{k.p('','box','c',C.stone,0,.35,0,14,.7,1.8);k.p('','box','c',0x2a1410,0,.71,0,13.2,.04,1.3);
+  for(let i=0;i<28;i++)k.p('','dod','g',i%3?0xff5a18:0xffa040,-6.4+i*.47,.76,(i%2-.5)*.6,.14,.07,.14);for(let i=0;i<7;i++)k.p('','box','m',C.iron,-6+i*2,.9,0,.06,.3,1.5)},0));
+  const fl=lgGroup('AB152|hearthFlame',k=>{for(let i=0;i<9;i++){const x=-6+i*1.5;k.p('','cone','g',0xff8a30,x,1.05,0,.32,.65,.32);k.p('','cone','g',0xffe08a,x,.98,.05,.16,.4,.16)}},0);g.add(fl);g.userData.flame=fl;return g}
+// a spit of rats over coals: the bar turns (animated), the rats roast on it
+function ab152Spit(){const C=AB152C,g=new THREE.Group();g.add(lgGroup('AB152|spitBase',k=>{[-1.2,1.2].forEach(x=>{k.L('','m',C.iron,[x,0,-.3],[x,1.05,0],.03,.03,4);k.L('','m',C.iron,[x,0,.3],[x,1.05,0],.03,.03,4)});
+  k.p('','box','c',0x2a1410,0,.06,0,2.2,.1,.8);for(let i=0;i<10;i++)k.p('','dod','g',i%2?0xff5a18:0xffa040,-.9+i*.2,.14,(i%2-.5)*.3,.12,.06,.12);
+  k.L('','m',C.iron,[1.2,1.05,0],[1.4,.8,0],.02,.02,3);k.L('','m',C.iron,[1.4,.8,0],[1.4,.8,.25],.02,.02,3)},0));
+  const bar=lgGroup('AB152|spitBar',k=>{k.p('','cyl','m',C.ironL,0,0,0,.025,2.5,.025,0,0,Math.PI/2);for(let i=0;i<4;i++){const x=-.8+i*.53;
+    k.p('','sph','c',i%2?C.meat:0x8a5a3a,x,0,0,.24,.12,.13);k.p('','sph','c',C.meatD,x+.2,0,0,.08,.07,.07);k.L('','c',C.meatD,[x-.22,0,0],[x-.5,-.04,0],.02,.005,3);
+    [-1,1].forEach(s=>k.L('','c',C.meatD,[x+.05,-.06,s*.08],[x+.08,-.16,s*.1],.015,.008,3))}},0);
+  bar.position.y=1.0;g.add(bar);g.userData.bar=bar;return g}
+// laundry: two posts, a line, sheets that sway (k.S strips, cloth material)
+function ab152Laundry(){const C=AB152C;return lgGroup('AB152|laundry',k=>{[-1.9,1.9].forEach(x=>k.p('','box','c',C.woodD,x,1.2,0,.08,2.4,.08));k.L('','c',0x8a7a5a,[-1.9,2.3,0],[1.9,2.25,0],.006,.006,3);
+  [[-1.4,0xd8d0b8],[-.6,C.cloth[0]],[.2,0xc8b898],[1.0,C.cloth[2]],[1.5,0xe0d8c8]].forEach(([x,c],i)=>k.S('',c,x,2.26,0,.7,1.55-(i%2)*.3,0,0,i))},.6)}
+
+// ---------------- rats (instanced) ----------------
+function ab152RatGeo(){if(ab152RatGeo.g)return ab152RatGeo.g;const C=AB152C,k=dkKit();
+  k.p('','sph2','c',C.rat,0,.11,0,.11,.09,.19);k.p('','sph2','c',C.rat,0,.13,.17,.07,.065,.09);k.p('','cone','c',C.ratP,0,.12,.27,.03,.07,.03,Math.PI/2,0,0);
+  [-1,1].forEach(s=>{k.p('','sph','c',C.ratP,s*.05,.2,.16,.03,.035,.012);k.p('','sph','c',0x080606,s*.035,.15,.235,.012);k.p('','box','c',C.ratD,s*.07,.03,.08,.03,.06,.04);k.p('','box','c',C.ratD,s*.07,.03,-.1,.03,.06,.05)});
+  k.L('','c',C.ratP,[0,.1,-.17],[0,.05,-.48],.02,.006,4);k.p('','sph','c',C.ratD,0,.16,-.05,.09,.05,.12);
+  const gs=lgBake(k.P,'AB152|ratGeo',0);ab152RatGeo.g=gs;return gs}
+// a herd of n rats inside a rectangle [x0,z0,x1,z1] (world): they wander, stop to sniff, sometimes bolt
+function ab152Rats(n,box,seed,parent){const meshes=ab152RatGeo(),R=ab152R(seed),list=[];
+  const im=meshes.map(m=>{const q=new THREE.InstancedMesh(m.geometry,m.material,n);q.castShadow=false;q.frustumCulled=false;q.userData.psNo=1;parent.add(q);return q});
+  for(let i=0;i<n;i++){const x=box[0]+R()*(box[2]-box[0]),z=box[1]+R()*(box[3]-box[1]);list.push({x,z,a:R()*6.28,t:R()*3,s:0,ph:R()*6,sz:.8+R()*.45})}
+  return {im,list,box,y:1.6,m:new THREE.Matrix4(),q:new THREE.Quaternion(),e:new THREE.Euler(),p:new THREE.Vector3(),sc:new THREE.Vector3(),panic:0}}
+function ab152RatsTick(H,dt,now){const B=H.box,y=H.y;for(let i=0;i<H.list.length;i++){const r=H.list[i];r.t-=dt;
+    if(r.t<=0){if(H.panic>0||Math.random()<.35){r.s=H.panic>0?2.2+Math.random():.9+Math.random()*.8;r.a+=(Math.random()-.5)*2.4;r.t=.5+Math.random()*1.4}else{r.s=0;r.t=.6+Math.random()*2.2}}
+    if(r.s>0){let nx=r.x+Math.sin(r.a)*r.s*dt,nz=r.z+Math.cos(r.a)*r.s*dt;if(nx<B[0]||nx>B[2]){r.a=-r.a;nx=r.x}if(nz<B[1]||nz>B[3]){r.a=Math.PI-r.a;nz=r.z}r.x=nx;r.z=nz}
+    const bob=r.s>0?Math.abs(Math.sin(now/55+r.ph))*.02:0,sn=r.s>0?0:Math.sin(now/180+r.ph)*.12;
+    H.e.set(sn*.5,r.a+(r.s>0?0:Math.sin(now/700+r.ph)*.4),0);H.q.setFromEuler(H.e);H.p.set(r.x,y+bob,r.z);H.sc.setScalar(r.sz);H.m.compose(H.p,H.q,H.sc);H.im.forEach(m=>m.setMatrixAt(i,H.m))}
+  H.im.forEach(m=>m.instanceMatrix.needsUpdate=true);if(H.panic>0)H.panic-=dt}
+
+// ---------------- lights ----------------
+var AB152L={brazier:[6,1.6,0xffa050],torch:[4.5,1.2,0xffa860],lantern:[4,1.0,0xffc070],hearth:[8,2.2,0xff8a40]};
+function ab152Torch(){const C=AB152C,g=new THREE.Group();g.add(lgGroup('AB152|torch',k=>{k.L('','c',C.woodD,[0,0,0],[0,2.1,0],.05,.04,5);k.p('','cyl','m',C.iron,0,2.15,0,.09,.2,.09);k.p('','dod','c',0x2a1a10,0,2.28,0,.08)},0));
+  const fl=lgGroup('AB152|torchFlame',k=>{k.p('','cone','g',0xffa040,0,2.5,0,.13,.4,.13);k.p('','cone','g',0xffe08a,0,2.44,0,.07,.25,.07)},0);g.add(fl);g.userData.flame=fl;return g}
+function ab152Lantern(){const C=AB152C,g=new THREE.Group();g.add(lgGroup('AB152|lantern',k=>{k.L('','c',C.woodD,[0,0,0],[0,2.6,0],.05,.045,5);k.L('','c',C.woodD,[0,2.55,0],[.6,2.6,0],.03,.03,4);
+  k.L('','m',C.iron,[.6,2.6,0],[.6,2.35,0],.006,.006,3);k.p('','box','m',C.brass,.6,2.13,0,.2,.04,.2);k.p('','box','g',C.glow,.6,2.0,0,.15,.22,.15);k.p('','cone4','m',C.brass,.6,2.29,0,.15,.12,.15,0,Math.PI/4,0)},0));
+  g.userData.flame=null;return g}
+// a soft pool of light on the ground (additive), shared texture
+function ab152Pool(r,col){const t=ab152Pool.t||(ab152Pool.t=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),gr=x.createRadialGradient(64,64,2,64,64,63);
+    gr.addColorStop(0,'rgba(255,255,255,.55)');gr.addColorStop(.45,'rgba(255,255,255,.22)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)})());
+  const m=new THREE.Mesh(ab152Pool.g||(ab152Pool.g=new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({map:t,color:col,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));
+  m.scale.set(r,1,r);m.renderOrder=1;m.userData.psNo=1;return m}
+
+// ---------------- the streets: a cobble texture over the open ground ----------------
+function ab152Cobble(){if(ab152Cobble.t)return ab152Cobble.t;const N=256,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),R=ab152R(4411);
+  x.fillStyle='#3a342c';x.fillRect(0,0,N,N);
+  for(let j=0;j<16;j++)for(let i=0;i<16;i++){const ox=(j%2)*8,px=i*16+ox+(R()-.5)*3,py=j*16+(R()-.5)*3,w=13+R()*2,h=13+R()*2,v=70+R()*36|0;
+    x.fillStyle=`rgb(${v+18},${v+10},${v})`;x.beginPath();x.ellipse(px+8,py+8,w/2,h/2,R()*.5,0,Math.PI*2);x.fill();x.fillStyle='rgba(255,240,210,.08)';x.beginPath();x.ellipse(px+6,py+6,w/3,h/4,0,0,Math.PI*2);x.fill()}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return ab152Cobble.t=t}
+// one cobble mesh over every open tile that is not a yard (tiles at least 1 from a building), built from quads per row run
+function ab152Streets(P,I,G){const pos=[],uv=[],idx=[];let n=0;const y=1.62,[a0,b0,a1,b1]=P.IN;
+  for(let v=b0;v<=b1;v++){let s=-1;for(let u=a0;u<=a1+1;u++){const ok=u<=a1&&G.cls[v*P.W+u]!==2&&!G.yard[v*P.W+u];
+      if(ok&&s<0)s=u;if(!ok&&s>=0){const x0=I.x0+s-.5,x1=I.x0+u-.5,z0=I.y0+v-.5,z1=z0+1;pos.push(x0,y,z0,x1,y,z0,x1,y,z1,x0,y,z1);uv.push(x0/4,z0/4,x1/4,z0/4,x1/4,z1/4,x0/4,z1/4);idx.push(n,n+2,n+1,n,n+3,n+2);n+=4;s=-1}}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();
+  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:ab152Cobble(),color:0xc8bca8}));m.receiveShadow=true;m.userData.psNo=1;return m}
+// ================= v152 Abeksi — the snakes: routines, eyes, ears =================
+// Each snake of the plan (3151 N) is an actor: a Naga model (3154 poses) with a routine, a pair of eyes and a pair of ears.
+// They are not enemies (nothing to fight, nothing in `enemies`), and each player sneaks through their own copy (co-op safe).
+//  * Routines: sentry (stands, turns its head and body through an arc), patrol (a loop of waypoints, a look-round at each stop),
+//    lantern (a slow patrol carrying a lantern: sees further, lights what it looks at; the tower lamp only sweeps), walker
+//    (a citizen's errands, maybe carrying a cage or a platter), talk (pairs: one talks, one listens, they swap), sit / work
+//    (busy: eating, haggling, stirring, chopping, turning spits, feeding rats, sweeping, forking hay; busy eyes see less).
+//  * Eyes (ab152Sees): a cone (AB152V.half by kind) out to a range (AB152V.rng) that shrinks when the hero crouches (crouchK) and
+//    in the dark (darkK, from the light level at the hero, ab152Light); a ring right round them (near); line of sight on the
+//    city grid: buildings, tall cover and cloth (laundry) block everything, low cover blocks a crouching hero.
+//  * Suspicion (0..100, AB152V.rate per second while seen, closer = faster; it fades after AB152V.hold s unseen): 30 → stop and
+//    look (yellow "?"), 60 → walk over to look (investigate, orange "?"), 100 → caught (red "!"; 3155 sends the hero back).
+//  * Ears (ab152Hear): walking upright makes noise (AB152V.noise.walk tiles), a dash more, walking upright past a rat pen sets the
+//    rats squealing (noise at the pen). A snake that hears turns to the sound; hearing again sends it to investigate.
+//  * The view cones are drawn on the ground (fans clipped by what blocks sight), so the hero can read every pair of eyes.
+var AB152V={rng:{guard:10,lantern:12.5,civ:7,busy:5,tower:15},half:{guard:.87,civ:.72,busy:.55,tower:.32},near:{stand:2.0,crouch:1.05},crouchK:.7,darkK:.6,
+  rate:[48,150],hold:.9,decay:26,look:30,go:60,catch:100,noise:{walk:4.2,dash:8,rats:6.5},spd:{inv:1.55,ret:1.25}};
+function ab152Busy(a){return a.role=='sit'||a.role=='work'||a.role=='spit'}
+function ab152Kind(a){return a.o.sweep?'tower':a.role=='lantern'?'lantern':a.role=='sentry'||a.role=='patrol'?'guard':ab152Busy(a)&&a.st=='routine'?'busy':'civ'}
+// ---------------- the city grid ----------------
+// cls: 0 open, 1 low cover, 2 tall (buildings, stacks), 3 cloth (hides, walkable); sol: solid for walking
+function ab152Grid(P,I){const Wd=P.W,Hd=P.H,cls=new Uint8Array(Wd*Hd),sol=new Uint8Array(Wd*Hd),yard=new Uint8Array(Wd*Hd),[a0,b0,a1,b1]=P.IN;
+  for(let v=0;v<Hd;v++)for(let u=0;u<Wd;u++)if(u<a0||u>a1||v<b0||v>b1){cls[v*Wd+u]=2;sol[v*Wd+u]=1}
+  P.B.forEach(([u0,v0,u1,v1])=>{for(let v=v0;v<v1;v++)for(let u=u0;u<u1;u++){cls[v*Wd+u]=2;sol[v*Wd+u]=1}
+    for(let v=v0-1;v<=v1;v++)for(let u=u0-1;u<=u1;u++)if(u>=0&&v>=0&&u<Wd&&v<Hd&&cls[v*Wd+u]!==2)yard[v*Wd+u]=0});
+  const fp=[];P.C.forEach(([k,u,v,r])=>{const K=AB152_K[k];if(!K)return;let [w,d,c,so]=K;if(Math.abs(Math.sin(r))>.7){const t=w;w=d;d=t}
+    const x0=u-w/2+.5,z0=v-d/2+.5;for(let z=Math.floor(z0+.01);z<Math.ceil(z0+d-.01);z++)for(let x=Math.floor(x0+.01);x<Math.ceil(x0+w-.01);x++){if(x<0||z<0||x>=Wd||z>=Hd)continue;const i=z*Wd+x;
+      if(c)cls[i]=Math.max(cls[i],c==3?3:c);if(so){sol[i]=1;fp.push(i)}}});
+  // yards: open tiles enclosed between houses of one block (the street texture skips them): tiles next to a building on two
+  // opposite sides within 3 tiles count as yard
+  for(let v=b0;v<=b1;v++)for(let u=a0;u<=a1;u++){const i=v*Wd+u;if(cls[i]==2)continue;let n=0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([du,dv])=>{for(let s=1;s<=3;s++){const j=(v+dv*s)*Wd+u+du*s;if(cls[j]==2&&sol[j]){n++;break}}});if(n>=3)yard[i]=1}
+  // roof heights (world y) for the camera: buildings and the outer wall
+  const top=new Float32Array(Wd*Hd);for(let i=0;i<Wd*Hd;i++)if(cls[i]==2&&sol[i])top[i]=1.6+7.8;
+  P.B.forEach(([u0,v0,u1,v1,st,sty])=>{const h=1.6+(sty=='tower'?2.3*st+.8:sty=='hall'?3.4:sty=='barn'?4.4:sty=='ruin'?2.6:2.3*st)+.55;for(let v=v0;v<v1;v++)for(let u=u0;u<u1;u++)top[v*Wd+u]=h});
+  return {W:Wd,H:Hd,cls,sol,yard,fp,top}}
+function ab152Cls(G,u,v){const x=Math.round(u),z=Math.round(v);if(x<0||z<0||x>=G.W||z>=G.H)return 2;return G.cls[z*G.W+x]}
+// line of sight from (au,av) to (bu,bv) in plan coordinates; low cover blocks only a crouching target
+function ab152LOS(G,au,av,bu,bv,cr){const L=Math.hypot(bu-au,bv-av);if(L<.8)return true;const n=Math.ceil(L/.3);
+  for(let i=1;i<n;i++){const t=i/n;if(t*L<.55||(1-t)*L<.45)continue;const c=ab152Cls(G,au+(bu-au)*t,av+(bv-av)*t);if(c>=2)return false;if(c==1&&cr&&(1-t)*L<4.5)return false}return true}
+// how lit a spot is (0 dark .. 1 bright): the city's lights, a little moonlight, and the lanterns the snakes carry
+function ab152Light(u,v){const S=AB152.S;if(!S)return 1;let L=.12;for(const q of S.lights){const d=Math.hypot(u-q.u,v-q.v);if(d<q.r)L=Math.max(L,1-d/q.r*.85)}
+  for(const a of S.acts)if(a.lamp&&a.g){const d=Math.hypot(u-a.u,v-a.v);if(d<5)L=Math.max(L,1-d/5*.7)}return Math.min(1,L)}
+// ---------------- building the actors ----------------
+function ab152MakeActor(sp,I){const [id,look,role,u,v,ry,o0]=sp,o=o0||{},key=look=='w'?'nagaw':look=='a'?'nagaa':'nagas';
+  const g=mkHumanoid(key);g.userData.psNo=1;g.userData.ab152=id;const h=g.h;h.userData.rest=czRest103(h);
+  const guard=role=='sentry'||role=='patrol'||(role=='lantern'&&!o.sweep);
+  // civilians put their weapons away; tools in their hands instead
+  if(!guard||o.chef){['aR2','aL2'].forEach(b=>{const bn=h.bones[b];if(bn)bn.children.slice().forEach(c=>{if(!c.isBone)bn.remove(c)})})}
+  else if(role=='lantern'){const bn=h.bones.aL2;bn.children.slice().forEach(c=>{if(!c.isBone)bn.remove(c)})}
+  const pose=o.pose||(role=='talk'?'talk':role=='sentry'?'guard':role=='sit'?'sit':'idle'),tk=o.carry||(o.chef?'cleaver':{stir:'ladle',chop:'cleaver',sweep:'broom',fork:'fork',hammer:'hammer',sitEat:'bone',eatStand:'bone'}[pose])||(role=='lantern'?'lantern':null);
+  if(tk){const t=ab152Tool(tk);if(t){const hand=tk=='lantern'?h.bones.aL2:h.bones.aR2;t.rotation.x=tk=='cage'||tk=='platter'?0:-1.0;t.position.set(0,-.03,.02);if(tk=='cage'){t.position.set(.18,-.05,.22);t.rotation.set(0,0,Math.PI/2)}hand.add(t);g.userData.tool=t}}
+  const [x,z]=[I.x0+u,I.y0+v];g.position.set(x,1.6,z);g.rotation.y=ry;
+  const sd=[...id].reduce((h,c)=>h*31+c.charCodeAt(0),7)%100000+11,rnd=ab152R(sd);
+  const a={id,role,look,o,g,h,pose,sd,rnd,home:{u,v,ry},u,v,yaw:ry,hy:0,ht:0,st:'routine',sus:0,unseen:9,seen:0,t:rnd()*20,tph:rnd()*8,pi:0,wait:o.path?(o.path[0][2]||0):0,
+    path:o.path?o.path.map(q=>[q[0],q[1],q[2]||0]):null,spd:o.spd||1.2,lamp:role=='lantern',mv:0,mark:null,cone:null,glT:2+rnd()*4,gl:0,tgt:null,inv:0,ear:0};
+  if(o.with)a.tph=(id.charCodeAt(id.length-1)%2)*3.2;
+  return a}
+// reset to the start of its routine (a checkpoint restart)
+function ab152ResetActor(a){a.rnd=ab152R(a.sd);a.t=a.rnd()*20;a.tph=a.rnd()*8;a.glT=2+a.rnd()*4;a.gl=0;a.ht=0;a.u=a.home.u;a.v=a.home.v;a.yaw=a.home.ry;a.hy=0;a.st='routine';a.sus=0;a.unseen=9;a.seen=0;a.pi=0;a.wait=a.path?(a.path[0][2]||0):0;a.tgt=null;a.inv=0;a.ear=0;a.mv=0;
+  if(a.path){a.u=a.path[0][0];a.v=a.path[0][1]}}
+// ---------------- the brain ----------------
+function ab152Turn(a,want,rate,dt){let d=want-a.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));a.yaw+=Math.max(-rate*dt,Math.min(rate*dt,d));return Math.abs(d)}
+function ab152Step(a,tu,tv,sp,dt){const G=AB152.S.G,du=tu-a.u,dv=tv-a.v,L=Math.hypot(du,dv);if(L<.08){a.mv=0;return true}
+  ab152Turn(a,Math.atan2(du,dv),4.2,dt);const s=Math.min(L,sp*dt),nu=a.u+du/L*s,nv=a.v+dv/L*s,c=G.sol[Math.round(nv)*G.W+Math.round(nu)];
+  if(c&&a.st!='routine'){a.mv=0;return true}a.u=nu;a.v=nv;a.mv=sp;return L-s<.08}
+function ab152Routine(a,dt){const o=a.o;a.mv=0;
+  if(a.path){const q=a.path[a.pi];if(a.wait>0){a.wait-=dt;a.ht=a.role=='walker'?.35*Math.sin(a.t*.9):.9*Math.sin(a.t*1.3);return}
+    if(ab152Step(a,q[0],q[1],a.spd,dt)){a.pi=(a.pi+1)%a.path.length;a.wait=a.path[a.pi][2]||0;const n=a.path[a.pi];if(Math.hypot(n[0]-a.u,n[1]-a.v)<.1){}}
+    a.ht=a.role=='lantern'?.55*Math.sin(a.t*.8):0;return}
+  // standing roles go back to their post if moved
+  const H=a.home;if(Math.hypot(H.u-a.u,H.v-a.v)>.12){ab152Step(a,H.u,H.v,AB152V.spd.ret,dt);return}
+  if(a.role=='sentry'||o.sweep){const w=(Math.PI*2)/(o.per||10),s=Math.sin(a.t*w+(o.ph||0)*6.283);ab152Turn(a,H.ry+(o.arc||1)*s,3,dt);a.ht=.25*Math.sin(a.t*w*2.3);return}
+  ab152Turn(a,H.ry,3,dt);
+  // busy and chatting snakes glance around now and then: that is when they can catch you
+  a.glT-=dt;if(a.glT<=0){const R=a.rnd;a.gl=a.gl?0:(R()<.5?-1:1)*(.7+R()*.6);a.glT=a.gl?1.2+R()*1.4:3+R()*5}
+  a.ht+=((a.gl||0)-a.ht)*Math.min(1,dt*3)}
+// the hero is in the city's frame (u, v); cr = crouching; returns how fast suspicion rises (0 = not seen)
+function ab152Sees(a,hu,hv,cr,lit){const kind=ab152Kind(a),du=hu-a.u,dv=hv-a.v,d=Math.hypot(du,dv);if(d>16)return 0;const G=AB152.S.G;
+  const near=cr?AB152V.near.crouch:AB152V.near.stand;
+  if(kind!='tower'&&d<near&&ab152LOS(G,a.u,a.v,hu,hv,false))return AB152V.rate[1]*1.4;
+  let R=AB152V.rng[kind]*(cr?AB152V.crouchK:1);const half=AB152V.half[kind];
+  if(kind!='tower'&&kind!='lantern')R*=1-(1-AB152V.darkK)*(1-Math.min(1,lit/.6));
+  if(a.st!='routine')R*=1.25;
+  if(d>R)return 0;const fy=a.yaw+a.hy;let df=Math.atan2(du,dv)-fy;df=Math.atan2(Math.sin(df),Math.cos(df));if(Math.abs(df)>half)return 0;
+  if(!ab152LOS(G,a.u,a.v,hu,hv,cr&&!a.o.lift))return 0;   // raised watchers see over low cover
+  return AB152V.rate[0]+AB152V.rate[1]*(1-d/R)}
+// a sound at (u, v) with radius r (tiles): every calm snake in reach turns to it, a suspicious one comes to look
+function ab152Hear(u,v,r,why){const S=AB152.S;if(!S)return;for(const a of S.acts){if(a.st=='caught')continue;const d=Math.hypot(a.u-u,a.v-v);if(d>r)continue;
+    if(a.sus<AB152V.look+5){a.sus=Math.max(a.sus,AB152V.look+8);a.st='look';a.tgt=[u,v];a.unseen=0;a.ear=why||'noise'}else{a.sus=Math.max(a.sus,AB152V.go+5);a.st='investigate';a.tgt=[u,v];a.inv=0;a.unseen=0}}}
+// one actor, one frame: senses → suspicion → behaviour → pose/model
+function ab152ActTick(a,dt,now,H){a.t+=dt;const o=a.o;
+  // perception (only while the hero is free to be caught)
+  let rate=0;if(H.live)rate=ab152Sees(a,H.u,H.v,H.cr,H.lit);
+  if(rate>0){a.sus=Math.min(100,a.sus+rate*dt);a.unseen=0;a.seen=1;a.last=[H.u,H.v]}else{a.seen=0;a.unseen+=dt;if(a.unseen>AB152V.hold)a.sus=Math.max(0,a.sus-AB152V.decay*dt)}
+  if(a.sus>=AB152V.catch&&H.live){a.st='caught';return 'caught'}
+  if(a.st=='routine'||a.st=='return'){if(a.sus>=AB152V.go){a.st='investigate';a.tgt=a.last||[H.u,H.v];a.inv=0}else if(a.sus>=AB152V.look){a.st='look';a.tgt=a.last||[H.u,H.v]}}
+  else if(a.st=='look'){if(a.seen&&a.last)a.tgt=a.last;if(a.sus>=AB152V.go){a.st='investigate';a.inv=0}else if(a.sus<=4&&a.unseen>1.5)a.st='return'}
+  else if(a.st=='investigate'&&a.seen&&a.last)a.tgt=a.last;
+  // behaviour
+  if(a.st=='routine')ab152Routine(a,dt);
+  else if(a.st=='look'){a.mv=0;const T=a.tgt;if(T&&!o.sweep)ab152Turn(a,Math.atan2(T[0]-a.u,T[1]-a.v),2.6,dt);a.ht*=.9}
+  else if(a.st=='investigate'){const T=a.tgt;if(o.sweep||a.role=='sit'){a.mv=0;if(T)ab152Turn(a,Math.atan2(T[0]-a.u,T[1]-a.v),2.6,dt)}   // the tower lamp and seated folk only stare
+    else if(T&&Math.hypot(T[0]-a.u,T[1]-a.v)>1.4&&a.inv<8){a.inv+=dt;ab152Step(a,T[0],T[1],AB152V.spd.inv,dt)}
+    else{a.mv=0;a.inv+=dt;a.ht=1.1*Math.sin(a.inv*1.9);if(a.inv>5.5&&!a.seen){a.st='return';a.sus=Math.min(a.sus,AB152V.look-6)}}}
+  else if(a.st=='return'){const H0=a.home,q=a.path?a.path[a.pi]:[H0.u,H0.v];if(ab152Step(a,q[0],q[1],AB152V.spd.ret,dt)){a.st='routine';if(!a.path)a.yaw=a.yaw}a.ht*=.9}
+  // head turn follows a.ht smoothly (and the yaw offset used by the eyes)
+  a.hy+=((a.st=='look'||a.st=='investigate'?0:a.ht)*.6-a.hy)*Math.min(1,dt*4);
+  return null}
+// the model: place it, pick walk or pose, write the bones
+function ab152ActPose(a,now,dt,vis){const g=a.g,I=AB152.S.I;g.visible=vis;if(!vis)return;const x=I.x0+a.u,z=I.y0+a.v;g.position.set(x,GH(x,z)+(a.o.lift||0),z);g.rotation.y=a.yaw;
+  const h=a.h;czReset103(h);h._idl=null;const st=a.st;
+  if(a.mv>0){g.rig(now,true,a.mv);const ov=a.o.carry||(a.lamp?'lantern':null);if(ov&&AB152P[ov])ab152Apply(h,ov,a.t,a,true);return}
+  const name=st=='caught'?'caught':(st=='look'||st=='investigate')?(ab152Busy(a)&&a.role=='sit'?a.pose:'alert'):a.path?(a.role=='walker'?'idle':'look'):a.pose;
+  a.ht2=st=='routine'?a.ht:a.hy;ab152Apply(h,name,a.t,a,false)}
+function ab152Apply(h,name,t,a,overlay){const f=AB152P[name]||AB152P.idle,B=h.bones,R=h.userData.rest;
+  const P=(bn,rx,ry,rz)=>{const b=B[bn];if(!b)return;b.rotation.x+=rx||0;b.rotation.y+=ry||0;b.rotation.z+=rz||0};
+  P.dy=v=>{const p=B.pelvis;if(p)p.position.y+=v};
+  if(overlay){['aL0','aL1','aL2','aR0','aR1','aR2','head'].forEach(k=>{const r=R[k],b=B[k];if(r&&b)b.rotation.set(r[0],r[1],r[2])})}
+  const S={ht:a.ht2!=null?a.ht2:a.ht,tph:a.tph};f(P,t,S)}
+// ---------------- what the hero sees of the snakes: view cones, "?" and "!" ----------------
+var AB152CN={N:22};
+// a fan on the ground, brightest near the eyes and fading out to its rim (f: 0 at the snake, 1 at the rim)
+function ab152ConeMat(){return new THREE.ShaderMaterial({uniforms:{col:{value:new THREE.Color(0xfff0a0)},op:{value:.16}},transparent:true,depthWrite:false,side:THREE.DoubleSide,
+  vertexShader:'attribute float f;varying float vF;void main(){vF=f;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform vec3 col;uniform float op;varying float vF;void main(){float a=op*(1.-vF*vF*.75)*smoothstep(0.,.08,vF);gl_FragColor=vec4(col,a);}'})}
+function ab152ConeMake(){const N=AB152CN.N,g=new THREE.BufferGeometry(),pos=new Float32Array((N+2)*3),f=new Float32Array(N+2).fill(1),idx=[];f[0]=0;for(let i=1;i<=N;i++)idx.push(0,i,i+1);
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('f',new THREE.BufferAttribute(f,1));g.setIndex(idx);
+  const m=new THREE.Mesh(g,ab152ConeMat());m.frustumCulled=false;m.renderOrder=3;m.userData.psNo=1;return m}
+function ab152ConeTick(a,I,G,cr){const c=a.cone;if(!c)return;const kind=ab152Kind(a),N=AB152CN.N;let R=AB152V.rng[kind]*(cr?AB152V.crouchK:1);if(a.st!='routine')R*=1.25;
+  const half=AB152V.half[kind],fy=a.yaw+a.hy,p=c.geometry.attributes.position,y=GH(I.x0+a.u,I.y0+a.v)+.06;p.setXYZ(0,I.x0+a.u,y,I.y0+a.v);
+  for(let i=0;i<=N;i++){const an=fy-half+2*half*i/N,su=Math.sin(an),sv=Math.cos(an);let L=R;
+    for(let s=.5;s<=R;s+=.5){const c2=ab152Cls(G,a.u+su*s,a.v+sv*s);if(c2>=2){L=s-.25;break}}
+    p.setXYZ(i+1,I.x0+a.u+su*L,y,I.y0+a.v+sv*L)}
+  p.needsUpdate=true;const col=a.st=='caught'?0xff3020:a.sus>=AB152V.go?0xff8a2a:a.sus>=AB152V.look?0xffd040:0xfff0a0,U=c.material.uniforms;U.col.value.setHex(col);
+  U.op.value=a.st=='caught'?.42:a.sus>8?.26+.16*a.sus/100:.2}
+function ab152MarkTex(ch,col){const k=ch+col;AB152CN.tx=AB152CN.tx||{};if(AB152CN.tx[k])return AB152CN.tx[k];const c=document.createElement('canvas');c.width=64;c.height=80;const x=c.getContext('2d');
+  x.font='900 66px Georgia,serif';x.textAlign='center';x.textBaseline='middle';x.lineWidth=8;x.strokeStyle='#120a04';x.strokeText(ch,32,42);x.fillStyle=col;x.fillText(ch,32,42);return AB152CN.tx[k]=new THREE.CanvasTexture(c)}
+function ab152MarkTick(a,now){if(!a.mark){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ab152MarkTex('?','#ffe060'),transparent:true,depthWrite:false,fog:false}));sp.scale.set(.42,.52,1);sp.renderOrder=6;sp.userData.psNo=1;AB152.S.root.add(sp);a.mark=sp}
+  const m=a.mark,show=a.g.visible&&(a.sus>3||a.st=='caught');m.visible=show;if(!show)return;
+  const ch=a.st=='caught'?'!':'?',col=a.st=='caught'?'#ff3a20':a.sus>=AB152V.go?'#ff9a30':'#ffe060';m.material.map=ab152MarkTex(ch,col);
+  const s=a.st=='caught'?.6:.3+.25*a.sus/100;m.scale.set(s*.82,s,1);m.material.opacity=a.st=='caught'?1:.45+.55*a.sus/100;
+  m.position.set(a.g.position.x,a.g.position.y+2.0+.06*Math.sin(now/180),a.g.position.z)}
+// ================= v152 Abeksi — how the snake folk move =================
+// The citizens and guards are Naga models (mkHumanoid 'nagaw' / 'nagaa' / 'nagas', the hero skeleton HB). Walking uses the
+// model's own gait (g.rig, driven by its real movement); everything else is a pose from this table, written from the rest
+// pose every frame (czReset103, then P(bone, rx, ry, rz) adds to the rest rotation, P.dy drops the pelvis), with a breath and
+// small head movements so nobody ever freezes. HB axes: shoulder/hip x − = forward, elbow x − = bend, knee x + = bend,
+// shoulder z + = out (right arm; the left is mirrored), spine/head x + = forward/down, y = turn.
+// AB152P[name] = f(P, t, S): t seconds (each actor has its own phase), S the actor (S.ht = head turn wanted by the brain).
+// Tools in the right hand (AB152T): ladle, cleaver, broom, fork, hammer, cup, bone (a rat leg to eat), lantern (left hand),
+// cage (both hands), platter, staff (shaman's), spear.
+function ab152SS(a,b,x){const t=x<=a?0:x>=b?1:(x-a)/(b-a);return t*t*(3-2*t)}
+var AB152P={
+  idle(P,t,S){const b=Math.sin(t*1.6);P('chest',.02*b,0,0);P('head',.04+.02*b,S.ht||0,0);P('aR0',-.08,0,.06);P('aL0',-.08,0,-.06);P('aR1',-.15);P('aL1',-.15)},
+  look(P,t,S){const b=Math.sin(t*1.4);P('spine',.04,0,0);P('chest',.02*b,(S.ht||0)*.35,0);P('neck',0,(S.ht||0)*.3,0);P('head',.02,(S.ht||0)*.4,.04*Math.sin(t*.7));
+    P('aR0',-.25,0,.08);P('aR1',-.55);P('aL0',-.2,0,-.1);P('aL1',-.5)},
+  // guarding a post: weapon held across the body, slow menace
+  guard(P,t,S){const b=Math.sin(t*1.3);P('spine',.05,0,0);P('chest',.02*b,(S.ht||0)*.35,0);P('neck',0,(S.ht||0)*.3,0);P('head',.05,(S.ht||0)*.4,0);
+    P('aR0',-.55,0,.12);P('aR1',-.85);P('aR2',.2);P('aL0',-.35,0,-.12);P('aL1',-.7);P('lh0',-.06);P('rh0',.06);P('lh1',.08);P('rh1',.08)},
+  talk(P,t,S){const T=t+(S.tph||0),turn=(Math.floor(T/3.2)%2)==0,w=turn?1:0,a=T*3.1,g=Math.sin(a),h=Math.sin(a*.5);
+    // speaking: the right hand rises and turns with the words, the head nods; listening: arms folded, head tilted
+    P('aR0',-.35-.55*w+.18*g*w,0,.12+.12*w);P('aR1',-.6-.5*w+.25*g*w);P('aR2',.3*g*w);
+    P('aL0',-.25-.3*(1-w),0,-.1-.1*(1-w));P('aL1',-.55-1.2*(1-w));P('chest',.03*h,.08*g*w,0);P('head',.08*Math.abs(h)*w-.06*(1-w),(S.ht||0)*.3,.12*(1-w));
+    P('spine',.04*w,0,0)},
+  sit(P,t,S){const b=Math.sin(t*1.2);P.dy(-.13);P('lh0',-1.42);P('rh0',-1.42);P('lh1',1.42);P('rh1',1.42);P('lh2',-.05);P('rh2',-.05);
+    P('spine',.14,0,0);P('chest',.04+.02*b,0,0);P('head',.12,(S.ht||0)*.5,0);P('aR0',-.6,0,.1);P('aR1',-.55);P('aL0',-.6,0,-.1);P('aL1',-.55)},
+  // sitting at the table, tearing at a roast rat: the bite comes up to the mouth, the head dips to meet it, a chew, a pause
+  sitEat(P,t,S){const T=4.2,u=((t+(S.tph||0))/T)%1,up=ab152SS(.05,.3,u)*(1-ab152SS(.55,.75,u)),chew=up*Math.max(0,Math.sin(t*14))*.06;
+    P.dy(-.13);P('lh0',-1.42);P('rh0',-1.42);P('lh1',1.42);P('rh1',1.42);P('spine',.22,0,0);P('chest',.06,0,0);P('head',.18+.12*up+chew,(S.ht||0)*.4*(1-up),0);
+    P('aR0',-.75-.55*up,0,.12);P('aR1',-.7-1.0*up);P('aR2',-.2*up);P('aL0',-.75,0,-.15);P('aL1',-.65)},
+  eatStand(P,t,S){const T=4.6,u=((t+(S.tph||0))/T)%1,up=ab152SS(.05,.3,u)*(1-ab152SS(.55,.75,u));
+    P('aR0',-.45-.75*up,0,.1);P('aR1',-.6-1.15*up);P('aL0',-.25,0,-.08);P('aL1',-.4);P('head',.08+.12*up,(S.ht||0)*.4*(1-up),0);P('spine',.04,0,0)},
+  // a merchant over the counter: palms up, a shrug, a lean in, a point at the goods
+  haggle(P,t,S){const T=6,u=((t+(S.tph||0))/T)%1,a=t*2.6,sh=ab152SS(.2,.3,u)*(1-ab152SS(.38,.48,u)),pt=ab152SS(.6,.68,u)*(1-ab152SS(.82,.9,u));
+    P('aR0',-.7-.35*pt+.08*Math.sin(a),0,.22+.25*sh);P('aR1',-.9+.6*pt);P('aR2',.25*sh);P('aL0',-.65+.05*Math.cos(a),0,-.22-.25*sh);P('aL1',-.9);P('aL2',.25*sh);
+    P('spine',.12+.08*pt,0,0);P('chest',-.05*sh,0,.04*Math.sin(a*.5));P('head',.12-.1*sh,(S.ht||0)*.4,.12*sh)},
+  hammer(P,t,S){const T=1.3,u=((t+(S.tph||0))/T)%1,up=u<.55?ab152SS(0,.55,u):1-ab152SS(.55,.68,u);
+    P('aR0',-.85-1.15*up,0,.16);P('aR1',-.45-.85*up);P('aR2',-.1+.3*up);P('aL0',-.75,0,-.1);P('aL1',-.85);P('spine',.14,.1,0);P('head',.3,-.1,0)},
+  stir(P,t,S){const a=(t+(S.tph||0))*2.2;P('aR0',-1.15+.15*Math.sin(a),0,.12+.16*Math.cos(a));P('aR1',-.45+.15*Math.cos(a));P('aL0',-.9+.1*Math.sin(a),0,-.15+.1*Math.cos(a));P('aL1',-.55);
+    P('spine',.16,.08*Math.sin(a),0);P('chest',.05,.06*Math.sin(a),0);P('head',.35,.08*Math.sin(a*.5),0)},
+  // turning the spit crank: the right arm circles, the left hand on the bar, a glance over the shoulder now and then
+  spit(P,t,S){const a=(t+(S.tph||0))*2.0,gl=ab152SS(.0,.1,(t%11)/11)*(1-ab152SS(.2,.3,(t%11)/11));
+    P('aR0',-1.05+.32*Math.sin(a),0,.08+.12*Math.cos(a));P('aR1',-.3+.3*Math.cos(a));P('aL0',-.95,0,-.22);P('aL1',-.4);P('spine',.14,0,0);P('head',.25,.9*gl+(S.ht||0)*.3,0);P('rh0',-.12);P('rh1',.18)},
+  chop(P,t,S){const T=1.05,u=((t+(S.tph||0))/T)%1,up=u<.6?ab152SS(0,.6,u):1-ab152SS(.6,.7,u);
+    P('aR0',-.6-1.55*up,0,.2);P('aR1',-.3-.6*up);P('aR2',.4*up);P('aL0',-.75,0,-.05);P('aL1',-.75);P('spine',.22-.06*up,.08,0);P('head',.4,0,0)},
+  // feeding the rats: a bucket on the left hip, the right hand scatters handfuls in a sweep
+  feed(P,t,S){const T=2.4,u=((t+(S.tph||0))/T)%1,dip=ab152SS(0,.3,u)*(1-ab152SS(.3,.4,u)),sw=ab152SS(.4,.62,u)*(1-ab152SS(.75,1,u));
+    P('aL0',-.35,0,-.18);P('aL1',-1.25);P('aR0',-.4-.7*sw+.4*dip,0,.1+.6*sw);P('aR1',-.9+.6*sw-.3*dip);P('aR2',-.4*sw);P('spine',.12+.12*dip,-.2*sw,0);P('head',.3,-.3*sw,0)},
+  fork(P,t,S){const T=2.6,u=((t+(S.tph||0))/T)%1,dig=u<.45?ab152SS(0,.45,u):1-ab152SS(.5,.85,u),toss=ab152SS(.5,.7,u)*(1-ab152SS(.75,.95,u));
+    P('aR0',-.55-.6*toss+.25*dig,0,.2);P('aR1',-.6-.4*toss);P('aL0',-.95-.5*toss+.3*dig,0,-.1);P('aL1',-.35);P('spine',.25*dig-.08*toss,.15*toss,0);P('chest',.15*dig,0,0);P('head',.1*dig,0,0);
+    P('lh0',-.25*dig);P('lh1',.35*dig);P('rh1',.2*dig)},
+  sweep(P,t,S){const a=(t+(S.tph||0))*1.9,s=Math.sin(a);P('aR0',-.55,0,.1+.12*s);P('aR1',-.5);P('aL0',-.95,0,-.05+.12*s);P('aL1',-.35);P('spine',.18,.22*s,0);P('chest',.05,.1*s,0);P('head',.3,.1*s,0);
+    P('lh0',.06*s);P('rh0',-.06*s)},
+  // overlays while walking (only the arms and head; the legs keep the gait)
+  carry(P,t,S){P('aR0',-.95,0,.18);P('aR1',-.85);P('aL0',-.95,0,-.18);P('aL1',-.85);P('head',.1,(S.ht||0)*.4,0)},
+  lantern(P,t,S){P('aL0',-1.25,0,-.15);P('aL1',-.35);P('aL2',.2);P('head',.05,(S.ht||0)*.6,0)},
+  platter(P,t,S){P('aR0',-.75,0,.28);P('aR1',-1.35);P('aR2',-.2);P('aL0',-.75,0,-.28);P('aL1',-1.35);P('head',.08,(S.ht||0)*.4,0)},
+  // suspicious: lean in, head forward, weapon up; caught: strike pose, mouth wide
+  alert(P,t,S){const q=Math.sin(t*9)*.02;P('spine',.18,0,0);P('chest',.08,(S.ht||0)*.3,0);P('neck',-.1,(S.ht||0)*.3,0);P('head',-.12+q,(S.ht||0)*.35,0);
+    P('aR0',-1.0,0,.2);P('aR1',-1.0);P('aL0',-.6,0,-.25);P('aL1',-.8);P('lh0',-.2);P('lh1',.3);P('rh0',.15);P('rh1',.15)},
+  caught(P,t,S){P('spine',.22,0,0);P('neck',-.25,0,0);P('head',-.3,0,0);P('aR0',-1.7,0,.3);P('aR1',-.4);P('aL0',-1.2,0,-.3);P('aL1',-.5);P('lh0',-.35);P('lh1',.45);P('rh0',.2)}};
+// tools (rigid, hung on a hand bone)
+var AB152T={};
+function ab152Tool(k){const C=AB152C;switch(k){
+  case 'ladle':return lgGroup('AB152T|ladle',q=>{q.L('','c',C.woodL,[0,0,0],[0,-.75,.0],.018,.015,4);q.p('','hem','m',C.ironL,0,-.78,.02,.07,.05,.07,Math.PI,0,0)},0);
+  case 'cleaver':return lgGroup('AB152T|cleaver',q=>{q.L('','c',C.woodD,[0,.02,0],[0,-.12,0],.02,.02,4);q.p('','box','m',C.ironL,0,-.24,.05,.02,.2,.14)},0);
+  case 'broom':return lgGroup('AB152T|broom',q=>{q.L('','c',C.woodL,[0,.25,0],[0,-.95,.15],.018,.018,4);q.p('','cone','c',0xa89058,0,-1.08,.18,.12,.3,.08,Math.PI,0,0)},0);
+  case 'fork':return lgGroup('AB152T|fork',q=>{q.L('','c',C.woodL,[0,.3,0],[0,-1.0,.0],.02,.02,4);for(let i=0;i<3;i++)q.L('','m',C.ironL,[(i-1)*.05,-1.0,0],[(i-1)*.06,-1.25,.03],.01,.006,3)},0);
+  case 'hammer':return lgGroup('AB152T|hammer',q=>{q.L('','c',C.woodD,[0,0,0],[0,-.35,0],.02,.02,4);q.p('','box','m',C.iron,0,-.38,0,.07,.07,.16)},0);
+  case 'cup':return lgGroup('AB152T|cup',q=>{q.p('','cyl','c',0x8a5a32,0,-.05,.05,.05,.1,.05)},0);
+  case 'bone':return lgGroup('AB152T|bone',q=>{q.p('','sph','c',C.meat,0,-.05,.06,.05,.09,.05);q.L('','c',0xd8ccb0,[0,-.12,.06],[0,-.2,.07],.012,.01,3)},0);
+  case 'lantern':return lgGroup('AB152T|lantern',q=>{q.L('','m',C.iron,[0,0,0],[0,-.12,0],.006,.006,3);q.p('','box','m',C.brass,0,-.18,0,.14,.03,.14);q.p('','box','g',C.glow,0,-.28,0,.11,.17,.11);q.p('','box','m',C.brass,0,-.38,0,.13,.03,.13)},0);
+  case 'cage':return lgGroup('AB152T|cage',q=>{q.p('','box','c',C.woodD,0,-.2,.25,.5,.05,.36);q.p('','box','c',C.woodD,0,.22,.25,.5,.05,.36);for(let i=0;i<6;i++)q.p('','box','m',C.ironL,-.22+(i%3)*.22,0,.25+(i>2?.16:-.16),.015,.42,.015);
+    for(let i=0;i<3;i++)q.p('','sph2','c',C.rat,-.12+i*.12,-.13,.25+(i%2-.5)*.1,.06,.05,.09)},0);
+  case 'platter':return lgGroup('AB152T|platter',q=>{q.p('','cyl','m',C.brass,0,.02,.2,.32,.02,.22);for(let i=0;i<3;i++)q.p('','sph','c',C.meat,-.12+i*.12,.08,.2,.08,.05,.11)},0);
+  case 'spear':return lgGroup('AB152T|spear',q=>{q.L('','c',C.woodD,[0,.9,0],[0,-.9,0],.02,.02,4);q.p('','oct','m',C.ironL,0,1.05,0,.04,.16,.015)},0)}
+  return null}
+// ================= v152 Abeksi — the level: getting in, sneaking through, getting out =================
+// Hillside Crest I's gateway to II is gone: in its place, at the edge of the gateway clearing, a cleft in the rocks leads down into
+// Abeksi (F · "Sneak through Abeksi city"). The city is the main quest's first chapter, played once: when the hero slips out through
+// the drain under the south wall they arrive in Hillside Crest II, and from then on the cleft simply leads on to II.
+//  * State AB152Q.st: 0 never entered · 1 inside / started · 2 escaped (done also when II was reached, ab152Done). AB152Q.cp is the
+//    last checkpoint (0..5, one per district, reached by crossing into it). Saved as x2.ab152 {st,cp}.
+//  * Crouch: Ctrl (a tap: Ctrl+W would close the browser tab if Ctrl had to be held while walking) or C toggles it; the 🐍 button
+//    on touch screens. Crouched = half speed, silent, low (hidden by low cover), seen at 70% of the range.
+//  * Caught: the snake's "!", a hiss, a red flash, then back to the last checkpoint with every snake back on its routine.
+//  * Inside: companions wait outside, no mount, no fighting (it is a stealth level), no recall (the breach is the way back out).
+//  * HUD: #ab152h (eye: hidden / lit / seen, crouch state, the highest suspicion as a bar) and the #mqt152 tracker lines.
+var AB152Q={st:0,cp:0};
+function ab152Done(){return AB152Q.st>=2||insReach(1)>=1}
+function ab152In(){return sp152Here('abeksi')}
+// ---------------- the world, built the first time the hero is in the city ----------------
+function ab152Build(){if(AB152.S)return AB152.S;const I=sp152I('abeksi'),P=ab152Plan(),G=ab152Grid(P,I),root=new THREE.Group();root.name='Abeksi';scene.add(root);
+  const S={I,P,G,root,acts:[],lights:[],anim:[],rats:[],pens:[],t:0};AB152.S=S;
+  const at=(u,v)=>[I.x0+u,I.y0+v],put=(o,u,v,ry,y)=>{const [x,z]=at(u,v);o.position.set(x,y==null?GH(x,z):y,z);o.rotation.y=ry||0;root.add(o);return o};
+  // buildings, one baked group per district; the wall and the skyline
+  P.D.forEach(([a,b],i)=>{const R=ab152R(3100+i*977);root.add(lgGroup('AB152|bld'+i,k=>{P.B.forEach(B=>{const cv=(B[1]+B[3])/2;if(cv>=a-4&&cv<(P.D[i+1]?P.D[i+1][0]-4:999))ab152House(k,B,R,I)})},0))});
+  root.add(lgGroup('AB152|walls',k=>ab152Walls(k,P,I),0));root.add(lgGroup('AB152|sky',k=>ab152Skyline(k,I),0));
+  root.children.forEach(m=>m.traverse(o=>{if(o.isMesh)o.castShadow=false}));
+  root.add(ab152Streets(P,I,G));
+  // props, their colliders (CBLK), the animated ones
+  // static props are baked into one mesh set per district; the moving ones (fires, spits, cloth) stay objects of their own
+  const bake=P.D.map(()=>[]),dOf=v=>{let i=0;P.D.forEach(([a],j)=>{if(v>=a-4)i=j});return i};
+  P.C.forEach(([k,u,v,r])=>{const kk=k=='crate'?'crate0':k,[x,z]=at(u,v);
+    if(k=='hearth'||k=='spit'||k=='laundry'||AB152KM[kk]){const m=ab152Kit(k);if(!m)return;put(m,u,v,r);if(m.userData.flame)S.anim.push({k:'flame',m:m.userData.flame,ph:Math.random()*6});if(m.userData.bar)S.anim.push({k:'bar',m:m.userData.bar});return}
+    bake[dOf(v)].push([kk,x,GH(x,z),z,r])});
+  bake.forEach((L,i)=>{if(L.length)root.add(lgGroup('AB152|props'+i,k=>ab152BakeProps(k,L),0))});
+  G.fp.forEach(i=>{const u=i%G.W,v=Math.floor(i/G.W);CBLK.add((I.y0+v)*W+I.x0+u)});S.blk=G.fp.length;
+  // lights: a flame, a pooled light, a pool of light on the ground
+  P.L.forEach(([k,u,v])=>{const D=AB152L[k]||AB152L.torch;let m=null;if(k=='brazier')m=mqm143Brazier();else if(k=='torch')m=ab152Torch();else if(k=='lantern')m=ab152Lantern();
+    if(m){put(m,u,v,0);if(m.userData.flame)S.anim.push({k:'flame',m:m.userData.flame,ph:Math.random()*6})}
+    const [x,z]=at(u,v),lt=new THREE.PointLight(D[2],D[1],D[0]*1.6,1.5);lt.position.set(x,GH(x,z)+(k=='hearth'?1.2:k=='lantern'?2.1:k=='torch'?2.5:1.3),z);scene.add(lt);
+    const pool=ab152Pool(D[0]*.95,D[2]);pool.position.set(x+(k=='lantern'?.6:0),GH(x,z)+.04,z);root.add(pool);S.lights.push({u,v,r:D[0],lt,i0:D[1],pool,ph:Math.random()*6})});
+  // rats: a herd in each pen, a few in each cage
+  P.PEN.forEach(([u0,v0,u1,v1],i)=>{const a=at(u0+1,v0+1),b=at(u1-1,v1-1);const H=ab152Rats(22,[a[0],a[1],b[0],b[1]],700+i*37,root);S.rats.push(H);S.pens.push([u0,v0,u1,v1,H])});
+  P.C.forEach(([k,u,v])=>{if(k!='cage')return;const [x,z]=at(u,v),H=ab152Rats(3,[x-.22,z-.18,x+.22,z+.18],900+u*7+v,root);H.y=GH(x,z)+.1;H.list.forEach(r=>r.sz=.55);S.rats.push(H)});
+  // the snakes
+  P.N.forEach(sp=>{let a;try{a=ab152MakeActor(sp,I)}catch(e){console.error('v152 actor',sp[0],e);return}root.add(a.g);a.cone=ab152ConeMake();root.add(a.cone);S.acts.push(a);
+    if(a.o.seat){const st=ab152Kit('stool');put(st,a.u-Math.sin(a.yaw)*.12,a.v-Math.cos(a.yaw)*.12,0)}
+    if(a.o.lift&&!a.o.sweep){put(ab152Kit('platform'),a.u,a.v,a.yaw,null);a.o.lift=.72}
+    if(a.lamp){const L=new THREE.PointLight(0xffc070,a.o.sweep?2.2:1.1,a.o.sweep?16:7,1.4);scene.add(L);a.lt=L}});
+  // the tower lamp's beam
+  const tw=S.acts.find(a=>a.o.sweep);if(tw){const m=new THREE.Mesh(new THREE.ConeGeometry(2.6,15,18,1,true).translate(0,-7.5,0).rotateX(-Math.PI/2+.22),new THREE.MeshBasicMaterial({color:0xffe0a0,transparent:true,opacity:.07,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+    m.userData.psNo=1;root.add(m);S.beam=m}
+  S.drain=at(P.EXIT[0],P.EXIT[1]);S.breach=at(P.CP[0][0],P.CP[0][1]);
+  return S}
+function ab152WorldTick(dt,now){const S=AB152.S,t=now/1000,P=pl.position;
+  S.anim.forEach(q=>{if(q.k=='flame'){const s=1+.12*Math.sin(t*11+q.ph)*Math.sin(t*4.3+q.ph);q.m.scale.set(1+.06*Math.sin(t*9+q.ph),s,1+.06*Math.cos(t*8+q.ph))}else if(q.k=='bar')q.m.rotation.x+=dt*1.4});
+  S.lights.forEach(L=>{L.lt.intensity=L.i0*(.86+.14*Math.sin(t*7.3+L.ph)*Math.sin(t*3.1+L.ph))});
+  S.rats.forEach(H=>{const r=H.list[0];if(Math.hypot(r.x-P.x,r.z-P.z)<45)ab152RatsTick(H,dt,now)})}
+// ---------------- the hero: crouch, light, noise ----------------
+var AB152H={u:0,v:0,cr:0,lit:1,live:false,crK:0,nT:0,frz:0,cau:null,U:[],btn:null,ctrl:0,ctrlX:0,chk:0,maxS:0,hint:0};
+function ab152SetCrouch(on){on=!!on;if(on===!!AB152H.cr)return;AB152H.cr=on?1:0;try{hero.buffs=hero.buffs.filter(b=>!b.ab152);if(on)hero.buffs.push({s:{mspd:-.5},t:1e15,n:'Crouching',i:'🐾',perm:true,ab152:1});hsDirty()}catch(_){}
+  try{if(AB152H.btn)AB152H.btn.classList.toggle('on',on)}catch(_){}}
+// keys: C toggles (in the city C is crouch, not the talents window); a tap of Ctrl toggles too (a Ctrl+key combination does not)
+addEventListener('keydown',e=>{if(!ab152In()||!AB152.S)return;const k=(e.key||'').toLowerCase(),tg=e.target&&e.target.tagName;if(tg=='INPUT'||tg=='TEXTAREA')return;
+  if(k=='control'){if(!e.repeat){AB152H.ctrl=1;AB152H.ctrlX=0}return}if(AB152H.ctrl)AB152H.ctrlX=1;
+  if(k=='c'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!(typeof uiOpen=='function'&&uiOpen())){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)ab152SetCrouch(!AB152H.cr)}},{capture:true});
+addEventListener('keyup',e=>{const k=(e.key||'').toLowerCase();if(k!='control')return;const tap=AB152H.ctrl&&!AB152H.ctrlX;AB152H.ctrl=0;
+  if(tap&&ab152In()&&AB152.S&&!(typeof uiOpen=='function'&&uiOpen()))ab152SetCrouch(!AB152H.cr)},{capture:true});
+addEventListener('blur',()=>{AB152H.ctrl=0});
+// the hero's crouch pose: hips and knees bent, the body low and leaning forward (exact undo each frame, like 2100's layer)
+function ab152CrAdd(b,ax,v){if(!b||!v)return;const R=b.rotation,p=R[ax];R[ax]=p+v;AB152H.U.push([R,ax,p,R[ax]])}
+function ab152CrUndo(){const U=AB152H.U;for(let i=U.length-1;i>=0;i--){const u=U[i];if(u[0][u[1]]===u[3])u[0][u[1]]=u[2]}U.length=0}
+{const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H!==pl)return f.apply(this,arguments);ab152CrUndo();const r=f.apply(this,arguments);
+  try{const k=AB152H.crK;if(k>.005&&!(typeof riding!='undefined'&&riding)){const B=pl.bones;if(B){const w=mv?1:0;
+    [['lh0',-.95],['rh0',-.95],['lh1',1.35],['rh1',1.35],['lh2',-.42],['rh2',-.42],['spine',.38],['chest',.14],['head',-.3],['aL0',-.3],['aR0',-.3],['aL1',-.35],['aR1',-.35]].forEach(([n,v])=>ab152CrAdd(B[n],'x',v*k));
+    if(B.pelvis)B.pelvis.position.y-=.2*k}}}catch(_){}return r}}
+// frozen while caught or fading
+{const f=walk;walk=function(o,dx,dz){if(o===pl&&AB152H.frz&&ab152In())return;return f.apply(this,arguments)}}
+// ---------------- the HUD ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#ab152h{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:6;pointer-events:none;display:flex;align-items:center;gap:10px;padding:6px 12px 6px 8px;border-radius:20px;
+  background:linear-gradient(180deg,rgba(10,10,16,.78),rgba(6,6,10,.62));border:1px solid rgba(216,192,96,.35);color:#e8e2cc;font:600 12px system-ui,sans-serif;text-shadow:0 1px 2px #000}
+#ab152h.hide{display:none}
+#ab152h .eye{width:30px;height:20px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#111 0 28%,var(--ec,#5a6a5a) 30% 62%,#101010 64%);box-shadow:0 0 var(--eg,0px) var(--ec,#5a6a5a);transition:box-shadow .25s}
+#ab152h .tx{min-width:112px;text-align:left;line-height:1.15}#ab152h .tx small{display:block;font-weight:500;color:#b8b098;font-size:10.5px}
+#ab152h .bar{width:90px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}#ab152h .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffe060,#ff9a30,#ff3a20)}
+#ab152cv{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .25s;box-shadow:inset 0 0 140px 40px rgba(255,140,40,.55)}
+body.mob #ab152h{top:8px;transform:translateX(-50%) scale(.9)}
+#mbtn button.ab152cr{grid-area:auto}#mbtn button.ab152cr.on{background:#5a4a1a;border-color:#ffd060}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='ab152h';d.className='hide';d.innerHTML='<div class="eye"></div><div class="tx"><span class="s">Hidden</span><small class="c">Standing · Ctrl or C to crouch</small></div><div class="bar"><i></i></div>';document.body.appendChild(d);
+  const v=document.createElement('div');v.id='ab152cv';document.body.appendChild(v)})();
+function ab152Hud(){const el=$('ab152h');if(!el)return;const on=ab152In()&&!!AB152.S&&!(typeof uiOpen=='function'&&uiOpen());el.classList.toggle('hide',!on);$('ab152cv').style.opacity=0;
+  try{const mb=$('mbtn');if(on&&mb&&!AB152H.btn){const b=document.createElement('button');b.className='ab152cr';b.textContent='🐍';b.title='Crouch';mb.appendChild(b);AB152H.btn=b;
+      b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();ab152SetCrouch(!AB152H.cr)})}
+    if(AB152H.btn)AB152H.btn.style.display=on?'':'none'}catch(_){}
+  if(!on)return;const H=AB152H,m=H.maxS,seen=H.cau||m>=AB152V.look,lit=H.lit;
+  const ec=H.cau?'#ff3a20':m>=AB152V.go?'#ff9a30':m>=AB152V.look?'#ffe060':lit>.5?'#d8c890':'#4a5a4a';
+  el.querySelector('.eye').style.setProperty('--ec',ec);el.querySelector('.eye').style.setProperty('--eg',(seen?14:lit>.5?8:0)+'px');
+  el.querySelector('.s').textContent=H.cau?'Seen!':m>=AB152V.go?'They are coming to look':m>=AB152V.look?'Something heard you…':m>3?'Watched…':lit>.5?'In the light':'Hidden in shadow';
+  el.querySelector('.c').textContent=H.cr?'Crouching · silent':'Standing · Ctrl or C to crouch';el.querySelector('.bar i').style.width=Math.min(100,m)+'%';
+  $('ab152cv').style.opacity=H.cau?1:m>=AB152V.go?.55:m>=AB152V.look?.25:0}
+// ---------------- entering, restarting, getting out ----------------
+function ab152Spot(i){const P=ab152Plan(),I=sp152I('abeksi'),c=P.CP[Math.max(0,Math.min(P.CP.length-1,i|0))];return {x:I.x0+c[0],z:I.y0+c[1],ry:c[2],name:c[3]}}
+function ab152Restart(first){const S=ab152Build();S.acts.forEach(ab152ResetActor);const c=ab152Spot(AB152Q.cp);toPos(c.x,c.z,c.ry+Math.PI);try{pl.rotation.y=c.ry}catch(_){}
+  AB152H.cau=null;AB152H.frz=0;ab152SetCrouch(true);AB152H.crK=1;AB152H.maxS=0;try{if(riding)dismount(true)}catch(_){}hud()}
+function ab152Enter(){if(AF)return;try{if(riding)dismount(true)}catch(_){}const first=AB152Q.st<1;AB152Q.st=Math.max(1,AB152Q.st);
+  fadeTo(()=>{ab152Restart(first);setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Abeksi','The serpent city · cross it unseen',first?'Ctrl or C to crouch · stay in the shadows':'Checkpoint · '+ab152Spot(AB152Q.cp).name,'z1')}catch(_){}},350);
+    if(first)setTimeout(()=>{say('🐍 <b>Crouch</b> (a tap of <b>Ctrl</b>, or <b>C</b>): slow and silent, and low cover hides you. Standing, your steps can be heard.');
+      setTimeout(()=>say('👁 Every snake sees in a cone on the ground. Stay out of the cones and the light; if one turns towards you, get behind something.'),5200)},1400)})}
+function ab152Leave(){const G=SP152.gates.abeksi;fadeTo(()=>{ab152SetCrouch(false);AB152H.crK=0;const s=G&&G.spot;if(s){toPos(s.x+s.ux*-2.2,s.z+s.uz*-2.2,s.ry)}else insArrive(INSL[5])})}
+function ab152Finish(){if(AB152H.cau)return;AB152Q.st=2;AB152H.frz=1;try{svSnd('splash',1,1)}catch(_){}
+  fadeTo(()=>{ab152SetCrouch(false);AB152H.crK=0;AB152H.frz=0;const N=INSL[6];insArrive(N);insMark(N);
+    setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Abeksi Escaped','You crawl out of the drain into the mists beyond the city','Onward through '+N.n,'z1');mSfx('victory')}catch(_){}},400);
+    say('🐍 You slipped through Abeksi unseen. <b>'+N.n+'</b> lies ahead.')})}
+function ab152Caught(a){if(AB152H.cau)return;AB152H.cau={a,t:0};AB152H.frz=1;a.st='caught';
+  try{const p=a.g.position,P=pl.position;a.yaw=Math.atan2(P.x-p.x,P.z-p.z);svSnd('hiss',1.1,1);flash('rgba(255,40,20,.8)');shake(.25)}catch(_){}
+  say('👁 <b>Spotted!</b> Back to the last checkpoint.');
+  setTimeout(()=>{fadeTo(()=>{ab152Restart(false);try{say('✦ Checkpoint · '+ab152Spot(AB152Q.cp).name)}catch(_){}})},1500)}
+// ---------------- each frame in the city ----------------
+function ab152Tick(dt,now){if(!ab152In()){if(AB152.S){AB152.S.root.visible=false;AB152.S.lights.forEach(L=>L.lt.intensity=0);AB152.S.acts.forEach(a=>{if(a.lt)a.lt.intensity=0})}
+    if(AB152H.cr)ab152SetCrouch(false);AB152H.crK=Math.max(0,AB152H.crK-dt*4);if(!AB152H.off){AB152H.off=1;try{ab152Hud()}catch(_){}}return}
+  AB152H.off=0;
+  const S=ab152Build(),I=S.I,P=pl.position,H=AB152H;S.root.visible=true;
+  H.u=P.x-I.x0;H.v=P.z-I.y0;H.crK+=((H.cr?1:0)-H.crK)*Math.min(1,dt*7);H.lit=ab152Light(H.u,H.v);H.live=!H.cau&&!H.frz&&dt>0;
+  if(riding)try{dismount(true)}catch(_){}
+  // checkpoints: crossing into a district
+  const D=S.P.D;for(let i=D.length-1;i>AB152Q.cp;i--)if(H.v>=D[i][0]&&H.v<=D[i][1]+1){AB152Q.cp=i;try{pickup({ic:'✦',t:'Checkpoint',col:'#ffe07a',sub:S.P.CP[i][3]})}catch(_){}break}
+  // noise: walking upright, dashing, and the rats when you walk upright past their pen
+  const mov=pl.mvd&&now-pl.mvd.t<120;H.nT-=dt;
+  if(H.live&&H.nT<=0&&(hero.dash||(mov&&!H.cr))){H.nT=.45;const r=hero.dash?AB152V.noise.dash:AB152V.noise.walk;ab152Hear(H.u,H.v,r,'steps');try{ring(new THREE.Vector3(P.x,GH(P.x,P.z),P.z),0xffe8c0,r*.5,450)}catch(_){}}
+  if(H.live&&mov&&!H.cr)S.pens.forEach(q=>{if(H.u>q[0]-2.2&&H.u<q[2]+2.2&&H.v>q[1]-2.2&&H.v<q[3]+2.2&&!(q.t>now)){q.t=now+3500;q[4].panic=2.5;ab152Hear((q[0]+q[2])/2,(q[1]+q[3])/2,AB152V.noise.rats,'rats');say('🐀 The rats squeal and scatter!')}});
+  // the snakes
+  let mx=0;for(const a of S.acts){const d=Math.hypot(a.u-H.u,a.v-H.v),near=d<40;
+    if(ab152ActTick(a,dt,now,H)=='caught'&&!H.cau)ab152Caught(a);
+    if(a.sus>mx&&a.st!='caught')mx=a.sus;
+    ab152ActPose(a,now,dt,near);if(a.cone){a.cone.visible=near&&d<24;if(a.cone.visible)ab152ConeTick(a,I,S.G,!!H.cr)}ab152MarkTick(a,now);
+    if(a.lt){const x=I.x0+a.u,z=I.y0+a.v,fy=a.yaw+a.hy;a.lt.position.set(x+Math.sin(fy)*(a.o.sweep?6:1.2),GH(x,z)+(a.o.sweep?1.5:2.0),z+Math.cos(fy)*(a.o.sweep?6:1.2));a.lt.intensity=a.o.sweep?2.2:1.1}}
+  if(H.cau)mx=100;H.maxS=mx;
+  if(S.beam){const a=S.acts.find(q=>q.o.sweep),x=I.x0+a.u,z=I.y0+a.v;S.beam.position.set(x,GH(x,z)+(a.o.lift||0)+2.2,z);S.beam.rotation.y=a.yaw+a.hy;S.beam.material.color.setHex(a.sus>=AB152V.look?0xffa040:0xffe0a0)}
+  ab152WorldTick(dt,now);
+  if(now-(H.hT||0)>150){H.hT=now;ab152Hud()}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{ab152Tick(dt,now)}catch(e){if(!AB152.err++)console.error('v152 abeksi',e)}return r}}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{if(ab152In()){torch.intensity*=.3;if(typeof LANT!='undefined'&&LANT)LANT.visible=false}}catch(_){}return r}}
+// ---------------- the camera in the streets ----------------
+// Houses stand close on every side, so a camera behind the hero would often sit inside one (and the scenery fade would fill the
+// screen with see-through wall). Each frame in the city the camera first tilts up over the roofs (a stealth view from above), and
+// only if that is not enough comes in closer. The player's own zoom and tilt are kept and put back right after the frame.
+function ab152CamFit(){const S=AB152.S;if(!S)return null;const G=S.G,I=S.I,P=pl.position,yw=camYaw,ox=Math.sin(yw),oz=Math.cos(yw),hy=P.y+1.1;
+  const clear=(p,d)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.0;s<=d;s+=.35){const u=Math.round(P.x+ox*hc*s-I.x0),v=Math.round(P.z+oz*hc*s-I.y0);if(u<0||v<0||u>=G.W||v>=G.H)return s;const t=G.top[v*G.W+u];if(t&&hy+sp*s<t+.6)return s}return 0};
+  const d0=camDist,p0=camPitch;if(!clear(p0,d0))return null;
+  for(let p=p0+.08;p<=1.22;p+=.08)if(!clear(p,d0))return [p,d0];
+  const s=clear(1.22,d0);return [1.22,Math.max(3.2,s-.4)]}
+{const f=loop;loop=function(now){let keep=null;try{if(ab152In()&&AB152.S&&!(typeof uiOpen=='function'&&uiOpen())){const r=ab152CamFit();if(r){keep=[camPitch,camDist];camPitch=r[0];camDist=r[1]}}}catch(_){}
+  try{return f.apply(this,arguments)}finally{if(keep){camPitch=keep[0];camDist=keep[1]}}}}
+// ---------------- prompts inside: the drain out, the breach back ----------------
+{const f=worldPrompt;worldPrompt=function(){try{if(ab152In()&&AB152.S&&!AB152H.cau){const P=pl.position,S=AB152.S;
+    if(Math.hypot(P.x-S.drain[0],P.z-S.drain[1])<2.4)return {label:'F · Slip through the drain (leave Abeksi for '+INSL[6].n+')',fn:()=>ab152Finish()};
+    if(Math.hypot(P.x-S.breach[0],P.z-S.breach[1])<2.6)return {label:'F · Climb back out through the breach ('+INSL[5].n+')',fn:()=>ab152Leave()}}}catch(_){}return f.apply(this,arguments)}}
+// ---------------- the rules while inside ----------------
+SP152.R.abeksi={park:1,noMount:'🐍 No mount in Abeksi: hooves on the cobbles would wake the whole city.',noFight:'🐍 Not here: one blow and the whole city would be on you. Stay hidden.',
+  noRecall:'🐍 The serpent wards block your recall. Find the drain under the south wall, or climb back out at the breach.',onLoad(){AB152Q.st=Math.max(1,AB152Q.st);ab152Restart(false)}};
+// ---------------- the cleft in Hillside Crest I ----------------
+function ab152GateModel(s){const C=AB152C,g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('AB152|cleft3',k=>{const R=ab152R(5511),rock=[0x4e4a44,0x5a554c,0x46423c,0x615a50];
+    // a rock outcrop with a carved archway set into it; stairs go down into the dark between the posts
+    [-1,1].forEach(sd=>{for(let i=0;i<7;i++){const s0=.8+R()*1.0,x=sd*(2.0+s0+R()*1.6),z=-1.3-R()*2.4;k.p('','dod','c',rock[i%4],x,s0*.7+R()*1.5,z,s0,s0*1.25,s0,R()*3,R()*3,R()*3)}});
+    for(let i=0;i<6;i++)k.p('','dod','c',rock[i%4],(R()-.5)*4.4,4.0+R()*1.2,-2.0-R()*1.6,1.1+R()*.6,.8+R()*.4,1.1,R()*3,R()*3,R()*3);
+    k.p('','box','c',rock[2],0,2.0,-2.4,4.8,4.4,1.6);
+    // the posts and the lintel, sandstone of the city, a serpent carved across the top
+    [-1,1].forEach(sd=>{k.p('','box','c',C.stoneL,sd*1.25,1.45,-.2,.55,2.9,.7);k.p('','box','c',C.stone,sd*1.25,.12,-.2,.75,.24,.9);
+      for(let y=.5;y<2.7;y+=.42)k.p('','box','c',C.trimD,sd*1.25,y,.02,.36,.06,.04,0,0,sd*.5)});
+    k.p('','box','c',C.stoneL,0,3.05,-.35,3.3,.5,.85);k.p('','box','c',C.trim,0,2.78,-.35,3.1,.08,.9);
+    for(let i=0;i<9;i++){const x=-1.4+i*.35;k.p('','sph','c',C.jade,x,3.06+Math.sin(i*1.1)*.12,.12,.14,.12,.1)}k.p('','sph','c',C.jade,1.62,3.1,.14,.2,.16,.16);k.p('','box','g',0xff4020,1.7,3.14,.28,.05,.04,.02);
+    // the dark way down: a black opening, stairs sinking into it
+    k.p('','box','c',0x040303,0,1.35,-.75,2.0,2.7,.1);for(let i=0;i<6;i++)k.p('','box','c',lgCol(0x6a6458,0x0a0806,i/6),0,.06-i*.16,-.05-i*.32,1.9,.12,.36);
+    // a toppled serpent statue beside the way down, the city's banner on a spear stuck in the rock
+    k.L('','c',C.jade,[-2.6,.25,1.1],[-1.6,.35,2.0],.28,.2,7);k.p('','hood','c',lgCol(C.jade,0x3a3a30,.4),-1.5,.5,2.2,.8,.9,.4,1.3,0,.2);k.p('','tor','c',C.jade,-2.9,.3,.6,.7,.35,.7);
+    k.L('','c',C.woodD,[2.4,0,.6],[2.5,2.9,.4],.04,.035,5);k.S('',C.cloth[0],2.48,2.8,.42,.5,1.2,0,0,3);k.p('','box','m',C.brass,2.5,2.3,.46,.2,.2,.02,0,0,Math.PI/4);
+    for(let i=0;i<4;i++)k.p('','dod','c',rock[i],(R()-.5)*5,.2,.6+R()*1.2,.3+R()*.3,.22,.3)},0));
+  const gl=ab152Pool(1.3,0xff9a40);gl.position.set(0,.05,-.4);g.add(gl);
+  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);   // local +z faces the clearing
+  // block the rock (the archway's steps stay open in front: the F prompt is there)
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.2;o<=4.2;o+=.6)for(let d=-3.6;d<=-.4;d+=.6){if(Math.abs(o)<1.0&&d>-1.2)continue;
+    const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
+  return g}
+sp152Gate('abeksi',{ig:5,r:3.4,build:ab152GateModel,
+  prompt(s){if(!ab152Done())return {label:'F · Sneak through Abeksi city',fn:()=>ab152Enter()};const N=INSL[6];return {label:'F · Travel on to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}});
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.ab152={v:152,st:AB152Q.st,cp:AB152Q.cp}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.ab152;AB152Q.st=0;AB152Q.cp=0;if(q&&typeof q=='object'){AB152Q.st=Math.max(0,Math.min(2,q.st|0));AB152Q.cp=Math.max(0,Math.min(5,q.cp|0))}
+  AB152H.cau=null;AB152H.frz=0}catch(e){console.warn('v152 load',e)}return r}}
+// ---------------- the tracker ----------------
+SP152.trk.abeksi=I=>{if(I.g===5&&!ab152Done())return {name:'The Serpent City',lines:[[AB152Q.st?'Return to the cleft at the end of the road':'Follow the road to its end'],['Sneak through Abeksi city']]};
+  if(I.sp==='abeksi'){const P=ab152Plan(),c=AB152Q.cp;return {name:'The Serpent City',lines:[['District',P.CP[c][3]],['Checkpoint',(c+1)+' / '+P.CP.length],['Reach the drain under the south wall',null,1]]}}
+  return null};
+// ---------------- the atmosphere: night in the serpent city ----------------
+sp152Theme('abeksi',{nm:'The Serpent City',sub:'Its streets belong to the serpent folk',a:{fog:.034,fc:0x141a2a,fcA:.9,sun:.24,hemi:.55,env:'dark',ex:1.0,sat:1.0,vig:1.6,sky:.35,pt:'ash',pc:0xffb070,po:.45}});
+// ================= v153 The Hilltop Ascent — the trail up the mountain =================
+// The main quest's second chapter (between Hillside Crest II and III, its own instance g 31; 3150). A narrow trail spirals up a cone
+// of a mountain, ~1.3 turns from the foot (radius 165) to the summit crack (radius 62), climbing 88: about 930 tiles, two minutes at
+// the chase's fixed mount speed. Everything is in the trail's own frame: s along the trail (0 at the foot), o across it (+ = outward,
+// the drop; − = inward, the mountain). ch153Path() is hoisted and cached because 0045 (sp152Map / sp152Terrain) paints the ground
+// and the heights from it long before this file runs.
+//  * Width: CH153.hw (half width) per stretch (the bridge is the narrowest).
+//  * The mountain: a cone (height falls 0.85 per tile of radius) with the trail cut into it as a flat ledge; the inward side rises
+//    as a rock wall, the outward side falls away. Rocks ('R') line the wall, pines ('#') dot the slopes.
+//  * Course (CH153C): the obstacles and set pieces by s — boulders, logs, spikes, gaps, rockslides, the bridge, the tunnel, venom
+//    phases — see 3162 for how each one plays.
+var CH153;
+function ch153Cfg(){return {R0:165,R1:62,turns:1.3,rise:88,h0:2,th0:-Math.PI*.15,cx:210,cy:190}}
+function ch153Path(){if(ch153Path.c)return ch153Path.c;const C=ch153Cfg(),I=sp152Defs().find(d=>d.key=='ascent'),cx=I.x0+C.cx,cz=I.y0+C.cy;
+  // the spiral, sampled finely, then resampled every tile of arc length
+  const N0=6000,fx=[],fz=[],ft=[];for(let i=0;i<=N0;i++){const t=i/N0,th=C.th0-C.turns*Math.PI*2*t,r=C.R0-(C.R0-C.R1)*Math.pow(t,.92);fx.push(cx+Math.cos(th)*r);fz.push(cz+Math.sin(th)*r);ft.push(t)}
+  const L=[0];for(let i=1;i<=N0;i++)L.push(L[i-1]+Math.hypot(fx[i]-fx[i-1],fz[i]-fz[i-1]));const S=Math.floor(L[N0]);
+  const X=new Float32Array(S+1),Z=new Float32Array(S+1),H=new Float32Array(S+1),TX=new Float32Array(S+1),TZ=new Float32Array(S+1),HW=new Float32Array(S+1);
+  let j=0;for(let s=0;s<=S;s++){while(j<N0-1&&L[j+1]<s)j++;const a=(s-L[j])/Math.max(1e-6,L[j+1]-L[j]);X[s]=fx[j]+(fx[j+1]-fx[j])*a;Z[s]=fz[j]+(fz[j+1]-fz[j])*a;const t=ft[j]+(ft[j+1]-ft[j])*a;H[s]=C.h0+C.rise*t}
+  for(let s=0;s<=S;s++){const a=Math.max(0,s-2),b=Math.min(S,s+2),dx=X[b]-X[a],dz=Z[b]-Z[a],l=Math.hypot(dx,dz)||1;TX[s]=dx/l;TZ[s]=dz/l}
+  // the outward side (+o): the trail curls round the centre, so outward is away from it
+  const R=[],sgn=(()=>{const s=10,nx=-TZ[s],nz=TX[s];return (nx*(X[s]-cx)+nz*(Z[s]-cz))>0?1:-1})();
+  for(let s=0;s<=S;s++)HW[s]=ch153HW(s,S);
+  const P={X,Z,H,TX,TZ,HW,S,sgn,cx,cz,C};
+  // position at (s, o): world x, z, trail height
+  P.at=(s,o)=>{s=Math.max(0,Math.min(S,s));const i=Math.min(S-1,Math.floor(s)),f=s-i,x=X[i]+(X[i+1]-X[i])*f,z=Z[i]+(Z[i+1]-Z[i])*f,tx=TX[i]+(TX[i+1]-TX[i])*f,tz=TZ[i]+(TZ[i+1]-TZ[i])*f,
+    nx=-tz*sgn,nz=tx*sgn;return [x+nx*(o||0),z+nz*(o||0),H[i]+(H[i+1]-H[i])*f]};
+  P.hw=s=>HW[Math.max(0,Math.min(S,Math.round(s)))];P.yaw=s=>{const i=Math.max(0,Math.min(S,Math.round(s)));return Math.atan2(TX[i],TZ[i])};
+  return ch153Path.c=P}
+// the trail's half width: 2.6 (5.2 wide), narrower in places, the bridge 1.6
+function ch153HW(s,S){const B=ch153Course().bridge;if(s>=B[0]&&s<=B[1])return 1.65;if(s>=270&&s<=380)return 2.1;if(s>=S-40)return 2.2+Math.max(0,(S-12-s)/28)*.4;return 2.7}
+// the course: everything by s (the gaps, the bridge, the tunnel, rockslides, venom phases, the snake's lunge spots)
+function ch153Course(){if(ch153Course.c)return ch153Course.c;
+  const O=[];const ob=(k,s,o,ex)=>O.push(Object.assign({k,s,o},ex||{}));
+  // A · the ledge: boulders on alternate sides, two logs to jump, a first spike
+  [52,74,96,118,140,162,186,208].forEach((s,i)=>ob('boulder',s,(i%2?1:-1)*1.25));ob('log',128,0);ob('log',198,0);ob('spike',150,0);
+  // B · the narrows: spikes and a broken stretch to jump
+  [282,300,318,356,372].forEach((s,i)=>ob('spike',s,(i%2?-1:1)*.9));ob('gap',336,0,{len:3.0});ob('log',364,0);
+  // the bridge: two missing planks
+  ob('gap',425,0,{len:2.6,plank:1});ob('gap',452,0,{len:2.6,plank:1});
+  // C · the high ledge: logs, boulders, faster curves
+  [492,516,540,566,590].forEach((s,i)=>ob(i%2?'log':'boulder',s,i%2?0:(i%4?1:-1)*1.2));
+  // the tunnel: stalactite pillars to weave between
+  [622,634,646,658,670].forEach((s,i)=>ob('pillar',s,(i%2?1:-1)*1.3));
+  // D · the final climb: gaps, boulders, logs
+  ob('gap',760,0,{len:3.0});[778,796].forEach((s,i)=>ob('boulder',s,(i%2?-1:1)*1.3));ob('log',812,0);ob('gap',830,0,{len:3.2});[848,866].forEach((s,i)=>ob('spike',s,(i%2?1:-1)*1.0));ob('log',882,0);
+  return ch153Course.c={O,bridge:[400,470],tunnel:[606,684],slides:[[230,3],[700,5]],venom:[[70,4.2,1],[260,3.4,1],[480,3.0,2],[690,2.6,2],[750,2.2,3]],start:6,crack:12}}
+// ---------------- 0045: the ground and the heights ----------------
+function ch153Hash(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
+function ch153Map(m,bio,DW,I,bi){const P=ch153Path();
+  for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(!m[y])continue;m[y][x]='';bio[y][x]=bi;DW[y*W+x]=6}
+  // the trail (and a little run-off before its foot)
+  for(let s=-8;s<=P.S+6;s+=.5){const hw=P.hw(Math.max(0,Math.min(P.S,s)));for(let o=-hw-3;o<=hw+3;o+=.5){const [x,z]=P.at(s,o),X=Math.round(x),Z=Math.round(z);if(!m[Z])continue;const k=Z*W+X,d=Math.abs(o)-hw;
+      if(d<DW[k])DW[k]=d;if(d<=.3)m[Z][X]=(ch153Hash(X,Z)<.12?'a':'.');else if(d>.3&&d<3&&o>0&&m[Z][X]===''&&ch153Hash(X,Z+7)<.35)m[Z][X]='g'}}   // grass tufts along the outer lip
+  // rocks along the mountain wall, pines on the slopes (never on the trail)
+  for(let s=0;s<=P.S;s+=1.6){const hw=P.hw(s),o=-(hw+1.6+ch153Hash(s,7)*1.4),[x,z]=P.at(s,o),X=Math.round(x),Z=Math.round(z);if(m[Z]&&m[Z][X]===''&&ch153Hash(s,3)<.5)m[Z][X]='R'}
+  for(let i=0;i<900;i++){const x=I.x0+4+Math.floor(ch153Hash(i,1)*(I.w-8)),z=I.y0+4+Math.floor(ch153Hash(i,2)*(I.h-8));if(m[z]&&m[z][x]===''&&DW[z*W+x]>3)m[z][x]='#'}}
+function ch153Terrain(I){const P=ch153Path(),C=P.C,best=new Float32Array(I.w*I.h).fill(99),ph=new Float32Array(I.w*I.h),sg=new Float32Array(I.w*I.h);
+  for(let s=-8;s<=P.S+6;s+=.4){const sc=Math.max(0,Math.min(P.S,s)),hw=P.hw(sc);for(let o=-hw-5;o<=hw+5;o+=.4){const [x,z,h]=P.at(sc,o),X=Math.round(x)-I.x0,Z=Math.round(z)-I.y0;if(X<0||Z<0||X>=I.w||Z>=I.h)continue;const k=Z*I.w+X,d=Math.abs(o)-hw;
+      if(d<best[k]){best[k]=d;ph[k]=h-(s<0?(-s)*.6:0);sg[k]=o<0?-1:1}}}
+  const cone=(i,j)=>{const r=Math.hypot(i-P.cx,j-P.cz);let h=C.h0+C.rise*(C.R0-r)/(C.R0-C.R1);if(r<C.R1)h+=(C.R1-r)*1.4;if(r>C.R0)h=C.h0-(r-C.R0)*1.6-(r>C.R0+6?30:0);return h+(fbm2(i*.08,j*.08,3)-.5)*3.2};
+  for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const X=i-I.x0,Z=j-I.y0,inn=X>=0&&Z>=0&&X<I.w&&Z<I.h,k=inn?Z*I.w+X:-1;let h=cone(i,j);
+    if(k>=0&&best[k]<5){const d=best[k],w=d<=.6?1:1-((d-.6)/4.4)*((d-.6)/4.4)*(3-2*(d-.6)/4.4);const wall=sg[k]<0?Math.min(4,Math.max(0,d-.6)*1.6):-Math.max(0,d-.6)*.9;h=ph[k]*w+(Math.max(h,ph[k]+wall)*(sg[k]<0?1:0)+Math.min(h,ph[k]+wall)*(sg[k]<0?0:1))*(1-w)}
+    HF[(j+HPD)*HW+i+HPD]=h}}
+// ================= v153 The Hilltop Ascent — models =================
+//  * Skarrith, the Mountain Coil (ch153Snake): a serpent ~60 tiles long. The head is a rigid group (skull, snout, brow ridges, glowing
+//    eyes, a hinged lower jaw with fangs and a forked tongue, a spread cobra hood with eye-spots, a horn crest). The body is 46
+//    instanced segments (two band patterns, tapering to the tail) laid along the trail behind the head each frame (3162).
+//  * The course: boulders, logs, spikes, tunnel pillars, gap edges, the plank bridge with ropes, the tunnel arches, the summit
+//    crack, rolling rockslide boulders, venom globs, landing warnings and puddles.
+//  * The uphill road at the far edge of Mistmere (Hillside Crest II), which replaces its gateway to III.
+var CH153M={col:{sk:0x2e3a22,skD:0x1c2416,belly:0xb8a870,band:0x5a6a2a,hood:0x3a4a28,spot:0xd8c060,eye:0xf0ff60,fang:0xf0e8d0,mouth:0x6a1a1a,tongue:0xc02030,horn:0x3a3020},
+  rock:[0x6a645a,0x7a7266,0x5a554c,0x8a8274],wood:0x5a4028,woodD:0x3a2818,woodL:0x7a5a38,rope:0x9a8a5a,venom:0x8aff3a,venomD:0x3a8a12};
+function ch153R(seed){return ab152R(seed)}
+// ---------------- the serpent ----------------
+function ch153SnakeHead(){const C=CH153M.col,g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('CH153|head',k=>{
+    k.p('','sph2','c',C.sk,0,.1,0,1.15,.72,1.55);k.p('','sph2','c',C.skD,0,.42,-.1,1.0,.42,1.35);           // skull, dark crown
+    k.p('','box','c',C.sk,0,-.05,1.35,1.2,.62,1.4,.12,0,0);k.p('','box','c',C.skD,0,.26,1.4,1.0,.18,1.3,.12,0,0);   // snout
+    [-1,1].forEach(s=>{k.p('','box','c',C.skD,s*.62,.42,.55,.4,.22,1.1,0,s*.25,s*.25);                        // brow ridges
+      k.p('','sph','g',C.eye,s*.72,.36,.75,.2,.16,.26);k.p('','box','c',0x080806,s*.78,.36,.83,.04,.2,.12);      // eyes, slit pupils
+      k.p('','sph','c',0x0a0806,s*.25,.18,2.02,.08,.06,.06);                                                   // nostrils
+      for(let i=0;i<4;i++)k.p('','cone4','c',C.horn,s*(.3+i*.12),.62-i*.06,-.2-i*.42,.12,.5-i*.07,.12,-1.1,0,s*.3)});   // horn crest
+    for(let i=0;i<6;i++)k.p('','box','c',i%2?C.band:C.skD,0,.55,-.4-i*.32,.5,.1,.24,0,0,0);
+    // upper fangs and teeth
+    [-1,1].forEach(s=>{k.p('','cone','c',C.fang,s*.45,-.48,1.85,.09,.55,.09,Math.PI,0,0);for(let i=0;i<5;i++)k.p('','cone4','c',C.fang,s*(.52-i*.02),-.36,.6+i*.25,.05,.18,.05,Math.PI,0,0)});
+    k.p('','box','c',C.mouth,0,-.33,.9,1.0,.05,1.9)},0));
+  // the lower jaw hinges at the back of the head
+  const jaw=new THREE.Group();jaw.position.set(0,-.25,-.35);g.add(jaw);
+  jaw.add(lgGroup('CH153|jaw',k=>{k.p('','box','c',C.sk,0,-.18,1.2,1.1,.28,2.4,0,0,0);k.p('','box','c',C.belly,0,-.3,1.2,.9,.06,2.2);k.p('','box','c',C.mouth,0,-.03,1.2,.9,.04,2.2);
+    [-1,1].forEach(s=>{for(let i=0;i<5;i++)k.p('','cone4','c',C.fang,s*(.42-i*.02),0,.6+i*.38,.05,.2,.05)});
+    k.L('','c',C.tongue,[0,-.02,.3],[0,-.04,2.0],.07,.05,5);[-1,1].forEach(s=>k.L('','c',C.tongue,[0,-.04,2.0],[s*.16,-.02,2.5],.04,.01,4))},0));
+  g.userData.jaw=jaw;
+  // the hood: two great fans behind the head, eye-spots on their backs
+  const hood=lgGroup('CH153|hood',k=>{[-1,1].forEach(s=>{k.p('','sph2','c',C.hood,s*1.25,.15,-.85,1.1,1.25,.18,0,s*.5,s*.15);k.p('','sph2','c',C.belly,s*1.24,.1,-.75,.9,1.05,.12,0,s*.5,s*.15);
+    k.p('','sph','c',C.spot,s*1.35,.35,-1.0,.32,.32,.06,0,s*.5,0);k.p('','sph','c',0x101008,s*1.36,.35,-1.03,.16,.16,.06,0,s*.5,0);
+    for(let i=0;i<4;i++)k.L('','c',C.skD,[s*.4,0,-.8],[s*(1.6+i*.15),.9-i*.55,-1.0],.05,.03,4)})},0);
+  hood.scale.set(.72,.85,1);g.add(hood);g.userData.hood=hood;
+  g.scale.setScalar(1.35);return g}
+function ch153SegGeo(v){return lgBake((()=>{const C=CH153M.col,k=dkKit();
+  k.p('','sph2','c',v?C.band:C.sk,0,0,0,1,.86,1.05);k.p('','sph2','c',C.belly,0,-.28,0,.82,.6,.92);
+  k.p('','sph2','c',v?C.skD:C.band,0,.5,0,.55,.36,.95);for(let i=0;i<3;i++)k.p('','cone4','c',C.horn,0,.78,-.4+i*.4,.1,.3-i*.03,.1,-.5,0,0);
+  [-1,1].forEach(s=>k.p('','sph','c',C.skD,s*.7,.25,0,.3,.42,.8));return k.P})(),'CH153|seg'+v,0)}
+function ch153Snake(parent,n){const g=new THREE.Group();g.userData.psNo=1;parent.add(g);const head=ch153SnakeHead();g.add(head);
+  const segs=[0,1].map(v=>{const ms=ch153SegGeo(v);return ms.map(m=>{const q=new THREE.InstancedMesh(m.geometry,m.material,Math.ceil(n/2));q.frustumCulled=false;q.castShadow=true;q.userData.psNo=1;g.add(q);return q})});
+  // its own copies of the materials (the shared scenery ones carry the see-through fade, 2420) and kept out of the fade's scan:
+  // the serpent must stay solid when it strikes past the camera
+  g.userData.noFade135=1;const MC=new Map();g.traverse(o=>{if(o.isMesh&&o.material){if(!MC.has(o.material)){const c=o.material.clone();c.onBeforeCompile=THREE.Material.prototype.onBeforeCompile;
+    c.customProgramCacheKey=THREE.Material.prototype.customProgramCacheKey;c.userData={noFade135:1};MC.set(o.material,c)}o.material=MC.get(o.material)}});
+  return {g,head,jaw:head.userData.jaw,hood:head.userData.hood,segs,n,m:new THREE.Matrix4(),q:new THREE.Quaternion(),e:new THREE.Euler(0,0,0,'YXZ'),p:new THREE.Vector3(),sc:new THREE.Vector3()}}
+// lay the body: pts[i] = [x,y,z,radius] from the neck back to the tail tip
+function ch153SnakeLay(S,pts){for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[Math.min(pts.length-1,i+1)],c=pts[Math.max(0,i-1)],dx=c[0]-b[0],dy=c[1]-b[1],dz=c[2]-b[2];
+    S.e.set(-Math.atan2(dy,Math.hypot(dx,dz)),Math.atan2(dx,dz),0);S.q.setFromEuler(S.e);S.p.set(a[0],a[1],a[2]);const r=a[3];S.sc.set(r,r,r*1.12);S.m.compose(S.p,S.q,S.sc);
+    S.segs[i%2].forEach(q=>q.setMatrixAt(i>>1,S.m))}
+  S.segs.forEach(L=>L.forEach(q=>q.instanceMatrix.needsUpdate=true))}
+// ---------------- the course ----------------
+function ch153Ob(k){const C=CH153M;switch(k){
+  case 'boulder':return lgGroup('CH153|boulder',q=>{const R=ch153R(41);q.p('','dod','c',C.rock[0],0,.95,0,1.25,1.05,1.15,.3,.5,.2);q.p('','dod','c',C.rock[1],.5,.5,.6,.6,.5,.55,1,2,0);q.p('','dod','c',C.rock[2],-.6,.35,-.5,.5,.4,.5,2,1,1);
+    for(let i=0;i<5;i++)q.p('','dod','c',C.rock[i%4],(R()-.5)*2.6,.1,(R()-.5)*2.2,.2+R()*.2,.15,.2)},0);
+  case 'log':return lgGroup('CH153|log',q=>{q.p('','cyl','c',C.wood,0,.42,0,.42,6.6,.42,0,0,Math.PI/2);q.p('','cyl','c',C.woodL,3.32,.42,0,.36,.04,.36,0,0,Math.PI/2);q.p('','cyl','c',C.woodL,-3.32,.42,0,.36,.04,.36,0,0,Math.PI/2);
+    for(let i=0;i<4;i++){const x=-2.2+i*1.4;q.L('','c',C.woodD,[x,.6,0],[x+.4,1.3,(i%2-.5)*.8],.08,.03,4)}for(let i=0;i<8;i++)q.p('','box','c',0x4a5a2a,-2.8+i*.8,.84,(i%2-.5)*.2,.3,.06,.24,0,i,0)},0);
+  case 'spike':return lgGroup('CH153|spike',q=>{q.p('','cone','c',C.rock[2],0,1.2,0,.7,2.4,.7);q.p('','cone','c',C.rock[0],.35,.6,.2,.35,1.2,.35);q.p('','dod','c',C.rock[1],0,.1,0,.9,.25,.9)},0);
+  case 'pillar':return lgGroup('CH153|pillar',q=>{q.p('','cone','c',C.rock[2],0,1.6,0,.75,3.2,.75);q.p('','cone','c',C.rock[0],0,4.6,0,.75,3.2,.75,Math.PI,0,0);q.p('','cyl','c',C.rock[3],0,3.15,0,.32,.9,.32)},0);
+  case 'gapEdge':return lgGroup('CH153|gapEdge',q=>{const R=ch153R(9);for(let i=0;i<7;i++)q.p('','dod','c',C.rock[i%4],-2.6+i*.86,-.05,(R()-.5)*.4,.35,.25,.3,R(),R(),R())},0);
+  case 'slide':return lgGroup('CH153|slide',q=>{q.p('','dod','c',C.rock[1],0,0,0,1.0,.95,1.0,.4,.2,.7);q.p('','dod','c',C.rock[2],.3,.35,.2,.45,.4,.45,1,0,0)},0)}
+  return null}
+function ch153Plank(){return lgGroup('CH153|plank',q=>{const C=CH153M;q.p('','box','c',C.woodL,0,0,0,3.6,.1,.55);q.p('','box','c',C.woodD,0,.02,-.2,3.62,.04,.06);q.p('','box','c',C.woodD,0,.02,.2,3.62,.04,.06)},0)}
+function ch153Post(){return lgGroup('CH153|post',q=>{const C=CH153M;q.p('','cyl','c',C.woodD,0,.6,0,.09,1.9,.09);q.p('','cyl','c',C.rope,0,1.2,0,.12,.12,.12)},0)}
+function ch153Arch(){return lgGroup('CH153|arch',q=>{const C=CH153M,R=ch153R(77);[-1,1].forEach(s=>{q.p('','box','c',C.rock[2],s*3.6,2.4,0,1.6,5.2,2.6);for(let i=0;i<3;i++)q.p('','dod','c',C.rock[i],s*(3.4+R()*.6),1+i*1.5,(R()-.5)*1.6,.9,.8,.9,R(),R(),R())});
+  q.p('','box','c',C.rock[0],0,5.4,0,8.6,1.4,2.7);for(let i=0;i<4;i++)q.p('','cone','c',C.rock[3],-2.4+i*1.6,4.5,(R()-.5)*1.2,.22,.8,.22,Math.PI,0,0)},0)}
+function ch153Crack(){return lgGroup('CH153|crack',q=>{const C=CH153M,R=ch153R(1313);
+  [-1,1].forEach(s=>{for(let i=0;i<6;i++){const sz=1.6+R()*1.4;q.p('','dod','c',C.rock[i%4],s*(1.7+sz*.7+R()*.6),sz*.8+R()*3,(R()-.5)*2,sz,sz*1.4,sz,R()*3,R()*3,R()*3)}
+    q.p('','box','c',C.rock[2],s*2.6,3.6,-1.0,2.6,7.2,3.6,0,0,s*.06)});
+  q.p('','box','c',C.rock[0],0,7.6,-1,7.6,1.8,4);q.p('','box','c',0x050404,0,1.8,-.5,1.5,3.6,.1);
+  for(let i=0;i<5;i++)q.p('','dod','c',C.rock[3],(R()-.5)*1.4,4.0+i*.5,.2,.25,.4,.25,R(),R(),R())},0)}
+// venom: the glob, the warning on the ground, the puddle
+function ch153Glob(){const m=new THREE.Mesh(ch153Glob.g||(ch153Glob.g=new THREE.SphereGeometry(.42,10,8)),ch153Glob.m||(ch153Glob.m=new THREE.MeshBasicMaterial({color:CH153M.venom,fog:false})));m.userData.psNo=1;return m}
+function ch153WarnMat(){return new THREE.ShaderMaterial({uniforms:{k:{value:0},col:{value:new THREE.Color(0x9aff40)}},transparent:true,depthWrite:false,
+  vertexShader:'varying vec2 vU;void main(){vU=uv*2.-1.;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform float k;uniform vec3 col;varying vec2 vU;void main(){float r=length(vU);if(r>1.)discard;float ring=smoothstep(.86,.94,r)*(1.-smoothstep(.97,1.,r));float fill=step(r,k)*.32;gl_FragColor=vec4(col,max(ring*.9,fill));}'})}
+function ch153Warn(){const m=new THREE.Mesh(ch153Warn.g||(ch153Warn.g=new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2)),ch153WarnMat());m.renderOrder=4;m.userData.psNo=1;return m}
+function ch153Pool(){const m=new THREE.Mesh(ch153Pool.g||(ch153Pool.g=new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0x6adf20,transparent:true,opacity:.72,depthWrite:false}));m.renderOrder=3;m.userData.psNo=1;return m}
+// ---------------- the uphill road at the far edge of Mistmere ----------------
+function ch153GateModel(s){const C=CH153M,g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('CH153|road',q=>{const R=ch153R(808);
+    // a worn road climbing away out of the clearing between two rising shoulders of rock, stone steps, a waymarker, a carved serpent
+    for(let i=0;i<9;i++){const z=-.6-i*.9,y=.08+i*.42;q.p('','box','c',i%2?0x8a7a5e:0x7a6c52,0,y,z,2.6,.24,1.0,-.42,0,0);q.p('','box','c',0x5a5040,0,y-.5,z,2.8,.8,1.0)}
+    [-1,1].forEach(sd=>{for(let i=0;i<8;i++){const sz=.8+R()*1.1;q.p('','dod','c',C.rock[i%4],sd*(2.1+sz*.6+R()*.8),sz*.6+i*.45+R()*.8,-.8-i*1.0,sz,sz*1.25,sz,R()*3,R()*3,R()*3)}});
+    for(let i=0;i<4;i++)q.p('','cone','c',0x2f5a32,(i%2?1:-1)*(3.6+R()),2.6+i*.9,-3-i*1.6,.8,2.2,.8);
+    q.L('','c',C.woodD,[1.5,0,.6],[1.5,1.6,.6],.06,.05,5);q.p('','box','c',C.woodL,1.5,1.45,.62,.9,.3,.06,0,0,-.12);q.p('','box','c',0x2a2018,1.52,1.45,.66,.7,.06,.02,0,0,-.12);
+    q.L('','c',0x3a6a4a,[-1.8,.25,.7],[-1.2,.35,1.6],.24,.18,7);q.p('','hood','c',0x2a5a3a,-1.1,.5,1.75,.7,.8,.35,1.3,0,.2)},0));
+  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.6;o<=4.6;o+=.6)for(let d=-7;d<=-.6;d+=.6){if(Math.abs(o)<1.2&&d>-1.6)continue;const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
+  return g}
+// ================= v153 The Hilltop Ascent — the chase =================
+// Mistmere's (Hillside Crest II) gateway to III is gone: at the far edge of its gateway clearing a worn road climbs away into the
+// hills (F · "Ascend to the hilltops"; a mount is needed). Riding up it starts the main quest's second chapter, played once:
+// Skarrith, the Mountain Coil, comes down the mountain behind you and you race it up the trail to a crack in the summit rock too
+// narrow for it. Through the crack lies The Galecliffs (III); from then on the road leads straight there.
+//  * Riding: the mount runs on by itself at one speed for everyone (CH153V.spd: no mount bonuses here); A / D (← →, the stick)
+//    steer, Space jumps (the 🦘 button on touch screens). The camera rides behind, along the trail.
+//  * Three hits and you are done (CH153V.hp): a crash (boulders, spikes, tunnel pillars, logs you did not jump, rolling rockslide
+//    boulders, a gap you did not jump), a venom glob landing on you, a venom puddle, a strike of its head. A crash also slows you
+//    for a moment (CH153V.stumT); after any hit you are safe for CH153V.inv s.
+//  * The snake (ch153SnakeTick): it follows the trail; it closes in when far behind and eases off when right on you (CH153V.band),
+//    so a crash costs ground but never decides the run alone. It spits venom (phases by s: CH153C.venom), lunges with its head
+//    (telegraphed: steer away), and if it reaches you it swallows you whole. Rockslides roll across the trail (telegraphed: rumble,
+//    dust on the wall above). On the bridge the planks fall away behind you; in the tunnel only its eyes show.
+//  * Losing: swallowed or out of hits → a short scene, then the chase starts again at the foot of the trail.
+//  * Inside: companions wait, you stay mounted, no fighting, no recall (a 🏳 button gives up and rides back down to Mistmere).
+var CH153Q={st:0};
+var CH153V={spd:8.2,lat:6.6,stumT:.9,stumV:2.3,inv:1.3,jumpT:.74,jumpH:2.05,hp:3,gap0:16,band:[11,.14,-1.0,2.6],slow0:6.4,catch:2.6,strike:[22,15,9]};
+var CH153={S:null,R:null,err:0,jumpQ:0,btn:null};
+function ch153Done(){return CH153Q.st>=2||insReach(1)>=2}
+function ch153In(){return sp152Here('ascent')}
+function ch153Run(){return ch153In()&&!!CH153.R}
+// ---------------- the world ----------------
+function ch153Build(){if(CH153.S)return CH153.S;const P=ch153Path(),K=ch153Course(),root=new THREE.Group();root.name='HilltopAscent';scene.add(root);
+  const S={P,K,root,obs:[],planks:[],arches:[],slides:[],globs:[],pools:[],t:0};CH153.S=S;
+  const put=(m,s,o,y,turn)=>{const [x,z,h]=P.at(s,o);m.position.set(x,h+(y||0),z);m.rotation.y=P.yaw(s)+(turn||0);root.add(m);return m};
+  // obstacles (collision sizes: w across, l along, h height you must clear by jumping; Infinity = no jumping over it)
+  const SZ={boulder:[2.5,2.2,99],log:[99,.9,.85],spike:[1.35,1.2,99],pillar:[1.6,1.5,99],gap:[99,0,0]};
+  K.O.forEach(q=>{const sz=SZ[q.k];const o={k:q.k,s:q.s,o:q.o,w:sz[0],l:q.len||sz[1],h:sz[2],plank:!!q.plank};S.obs.push(o);
+    if(q.k=='gap'){if(!q.plank){[-1,1].forEach(e=>put(ch153Ob('gapEdge'),q.s+e*(q.len/2+.2),0,0,0))}return}
+    const m=ch153Ob(q.k);if(m)o.m=put(m,q.s,q.o,0,q.k=='log'?Math.PI/2:Math.random()*6)});
+  // the bridge: planks every .6 along it (none where the plank gaps are), posts and ropes on both sides
+  const B=K.bridge,gaps=S.obs.filter(o=>o.plank);for(let s=B[0];s<=B[1];s+=.6){if(gaps.some(g=>Math.abs(s-g.s)<g.l/2))continue;const m=put(ch153Plank(),s,0,-.05,0);m.scale.x=(P.hw(s)*2+.4)/3.6;S.planks.push({s,m,f:0,vy:0})}
+  for(let s=B[0];s<=B[1];s+=3)[-1,1].forEach(e=>put(ch153Post(),s,e*(P.hw(s)+.3),-.05,0));
+  {const pts=[[],[]];for(let s=B[0];s<=B[1];s+=1)[-1,1].forEach((e,i)=>{const [x,z,h]=P.at(s,e*(P.hw(s)+.3));pts[i].push(new THREE.Vector3(x,h+1.2-.25*Math.sin((s-B[0])/(B[1]-B[0])*Math.PI),z))});
+    pts.forEach(p=>{const c=new THREE.CatmullRomCurve3(p),g=new THREE.TubeGeometry(c,140,.05,5,false),m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:CH153M.rope}));m.userData.psNo=1;root.add(m)})}
+  // the tunnel: rock arches
+  for(let s=K.tunnel[0];s<=K.tunnel[1];s+=6)S.arches.push(put(ch153Arch(),s,0,-.1,0));
+  // the summit crack, facing the trail
+  S.crack=put(ch153Crack(),P.S-3.5,0,-.1,Math.PI);
+  // the serpent
+  S.sn=ch153Snake(root,46);
+  // venom pool / warning pools (made on demand), dust
+  return S}
+// ---------------- the run ----------------
+function ch153Reset(first){const S=ch153Build(),P=S.P,K=S.K;
+  CH153.R={s:K.start,o:0,v:0,y:0,jt:-1,hp:CH153V.hp,inv:0,stum:0,ph:'intro',t:first?0:1.4,vT:0,slide:0,
+    sn:{s:-21,v:0,o:0,lift:0,rear:0,jaw:.2,st:'intro',t:0,spit:0,strike:null,next:0,eye:1},hit:0,dead:null,win:null,fx:0,warned:{}};
+  S.globs.forEach(g=>{root(g.m);root(g.w)});S.globs.length=0;S.pools.forEach(p=>root(p.m));S.pools.length=0;S.slides.forEach(b=>root(b.m));S.slides.length=0;
+  S.planks.forEach(q=>{q.f=0;q.vy=0;q.m.visible=true;const [x,z,h]=P.at(q.s,0);q.m.position.set(x,h-.05,z);q.m.rotation.set(0,P.yaw(q.s),0)});
+  K.slides.forEach(q=>q.done=0);
+  function root(m){if(m&&m.parent)m.parent.remove(m)}
+  try{if(!riding)ch153Mount()}catch(e){console.warn('v153 mount',e)}
+  ch153Place()}
+// mount the active mount whatever the usual checks say (the chase is mounted only)
+function ch153Mount(){if(riding||!mounts.length)return;const m=mOf(mActive)||mounts[0];mActive=m.id;riding=m;mModel=mountModel(m.k);mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y;scene.add(mModel);hud()}
+function ch153Place(){const R=CH153.R,P=CH153.S.P;const [x,z,h]=P.at(R.s,R.o);pl.position.set(x,h+R.y,z);pl.rotation.y=P.yaw(R.s)-(R.steer||0)*.35;
+  if(typeof mModel!='undefined'&&mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}
+function ch153Hit(why){const R=CH153.R;if(!R||R.inv>0||R.ph!='run')return false;R.hp--;(R.log||(R.log=[])).push([why,Math.round(R.s),+R.o.toFixed(1),+R.y.toFixed(1)]);R.inv=CH153V.inv;R.hit=.5;
+  try{flash(why=='venom'||why=='pool'?'rgba(120,255,40,.75)':'rgba(255,80,30,.7)');shake(why=='crash'||why=='strike'?.32:.18);svSnd(why=='venom'||why=='pool'?'splash':'heavy',1,1.1)}catch(_){}
+  if(why=='crash'){R.stum=CH153V.stumT}
+  if(R.hp<=0)ch153Die('hits');else{try{pickup({ic:'💔',t:R.hp+' left',col:'#ff7a5a',sub:{crash:'You crashed',venom:'Venom!',pool:'You rode through venom',strike:'Its fangs caught you'}[why]||'Hit'})}catch(_){}}
+  return true}
+function ch153Die(why){const R=CH153.R;if(R.ph!='run')return;R.ph='dead';R.dead={why,t:0};R.v=0;
+  try{svSnd(why=='swallow'?'roar':'hiss',1.2,why=='swallow'?.8:1);shake(.5)}catch(_){}
+  say(why=='swallow'?'🐍 <b>Skarrith swallowed you whole.</b> The chase starts again.':'🐍 <b>The serpent wore you down.</b> The chase starts again.')}
+function ch153Win(){const R=CH153.R;if(R.ph!='run')return;R.ph='win';R.win={t:0};try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Through!','Skarrith slams into the rock behind you','The Galecliffs lie beyond','z1');svSnd('roar',1.2,.75)}catch(_){}}
+// the snake: speed, venom, strikes, and laying the model
+function ch153SnakeTick(dt,now){const S=CH153.S,P=S.P,K=S.K,R=CH153.R,N=R.sn,gap=R.s-N.s;
+  if(R.ph=='intro'){N.st='intro';N.t+=dt;const k=Math.min(1,Math.max(0,(R.t-.6)/1.9));N.s=-21+9*k*k;N.rear=1.2*(1-k);if(R.t>2.4&&!N.slam){N.slam=1;try{shake(.55);svSnd('heavy',1.3,.7);svSnd('roar',1.2,.85);const [x,z,h]=P.at(0,0);burst(new THREE.Vector3(x,h+.5,z),0x9a8a6a,40,3,2.6,1.4)}catch(_){}}}
+  else if(R.ph=='run'){const B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
+    if(gap<CH153V.catch){ch153Die('swallow');return}
+    // venom: the current phase sets how often and how many
+    const ph=K.venom.filter(q=>R.s>=q[0]).pop();if(ph&&!N.strike){N.spit-=dt;if(N.spit<=0){N.spit=ph[1]*(.85+Math.random()*.3);N.rear=1;N.spitAt=.42;N.spitN=ph[2]}}
+    if(N.spitAt!=null){N.spitAt-=dt;if(N.spitAt<=0){N.spitAt=null;ch153Spit(N.spitN)}}
+    // strikes: every so often when close enough, telegraphed, the head shoots forward to where you were
+    const sk=CH153V.strike;N.next-=dt;const busy=S.obs.some(q=>q.k!='gap'&&q.k!='log'&&q.s>R.s-2&&q.s<R.s+R.v*1.1+5);   // never a strike while you are dodging rocks
+    if(!N.strike&&N.next<=0&&gap<sk[0]&&R.s>110&&!busy){N.next=R.s>600?sk[2]:sk[1];N.strike={t:0,o:R.o,s0:N.s};try{svSnd('hiss',1.2,.8)}catch(_){}}
+    if(N.strike){const T=N.strike;T.t+=dt;if(T.t<.75)T.o+=(R.o-T.o)*Math.min(1,dt*3.2);   // it tracks you while it draws back, then commits
+      if(T.t>=1.05&&!T.hit){T.hit=1;if(Math.abs(R.o-T.o)<1.25&&R.y<1.2)ch153Hit('strike');else try{pickup({ic:'💨',t:'Dodged!',col:'#c8ff90'})}catch(_){}}
+      if(T.t>1.6)N.strike=null}}
+  else if(R.ph=='win'){N.s=Math.min(N.s+N.v*dt,P.S-13);N.v*=.9}
+  N.rear=Math.max(0,N.rear-dt*1.6);N.o+=((R.ph=='run'?R.o*.5:0)-N.o)*Math.min(1,dt*1.5);
+  ch153SnakeAnim(now)}
+function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now/1000;
+  const slope=(s,o)=>{if(s>=0)return P.at(s,o);const [x0,z0,h0]=P.at(0,0),tx=P.TX[0],tz=P.TZ[0],nx=-tz*P.sgn,nz=tx*P.sgn,d=-s;return [x0-tx*d*.45-nx*d*.85,z0-tz*d*.45-nz*d*.85,h0+d*1.05+2.5*Math.min(1,d/4)]};   // down the mountainside, clear of the slope
+  // the head: raised, rearing back to spit, lunging on a strike, over you when it swallows
+  let hs=N.s,ho=N.o,hy=2.4+N.rear*1.8,jaw=.18+.12*Math.sin(t*3),pitch=.12;
+  // a strike comes from the side: the neck swings out over the drop beside you (the wind-up), then the head lunges across the
+  // trail at your lane, and draws back
+  let face=null;if(N.strike){const T=N.strike,hw=P.hw(R.s),side=hw+3.4,A=[N.s,N.o,hy],Bw=[R.s-3.6,side,3.6],C=[R.s-.5,T.o,1.25];
+    const e=x=>x*x*(3-2*x),L=(p,q,k)=>[p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k,p[2]+(q[2]-p[2])*k];let p;
+    if(T.t<.75){p=L(A,Bw,e(T.t/.75));jaw=.35+.4*T.t/.75}else if(T.t<1.05){p=L(Bw,C,e((T.t-.75)/.3));jaw=.95}else{p=L(C,A,e(Math.min(1,(T.t-1.05)/.55)));jaw=.6}
+    hs=p[0];ho=p[1];hy=p[2];face=T.t<1.05?[R.s-.5,T.o]:null;pitch=T.t<1.05?.15:.05}
+  if(R.ph=='dead'&&R.dead.why=='swallow'){const k=Math.min(1,R.dead.t/.6);hs=N.s+(R.s-N.s)*k;ho=N.o+(R.o-N.o)*k;hy=2.4-1.0*k;jaw=R.dead.t<.55?1:Math.max(.1,1-(R.dead.t-.55)*3);pitch=.35}
+  if(R.ph=='win'&&R.win.t>.5){jaw=.9;hy=1.6;pitch=-.1}
+  if(N.rear>.05){jaw=Math.max(jaw,.35+.5*N.rear);pitch=-.25*N.rear}
+  const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);let ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);if(face){const [fx,fz]=P.at(face[0],face[1]);ya=Math.atan2(fx-hx,fz-hz)}
+  M.head.rotation.set(pitch,ya+(face?0:.12*Math.sin(t*1.7)),.06*Math.sin(t*2.3),'YXZ');
+  M.jaw.rotation.x=jaw*.9;M.hood.scale.set(1+.15*N.rear,1,1);
+  // the body along the trail behind it, slithering
+  const pts=[];for(let i=0;i<M.n;i++){const s=N.s-1.9-i*1.32,r=1.55*(1-Math.pow(i/M.n,1.6)*.82),hw=P.hw(Math.max(0,s)),o=Math.max(-hw+.4,Math.min(hw-.4,N.o*Math.max(0,1-i/8)+.95*Math.sin(t*3.1-i*.42)));
+    const [x,z,h]=slope(s,o);let px=x,py=h+r*.82+.12*Math.sin(t*4-i*.6)+(i<3?(hy-1.2)*(1-i/3):0),pz=z;pts.push([px,py,pz,r])}
+  ch153SnakeLay(M,pts)}
+// venom: n globs from the mouth to where you will be (leading you), each warned on the ground, each leaving a puddle
+// (v155: split in two so in co-op the lead player plans the volley at a rider and everyone spawns the same globs)
+function ch153Spit(n){const R=CH153.R;ch153SpitSpawn(ch153SpitPlan(n,R.s,R.o,R.v),n)}
+function ch153SpitPlan(n,s,o,v){const S=CH153.S,P=S.P,T=1.05;
+  // fairness: venom never lands on or right beside an obstacle (no boulder-or-puddle choices)
+  const clear=v=>{for(let k=0;k<4;k++){const q=S.obs.find(q=>Math.abs(q.s-v)<3+(q.l||0)/2);if(!q)return v;v=q.s+(v>=q.s?1:-1)*(3.4+(q.l||0)/2)}return v};
+  // one glob: at you · two: one behind the other on your line (step aside) · three: a wall across the trail (jump it)
+  const L=[];for(let i=0;i<n;i++){const ls=clear(s+Math.max(4,v)*T+(n==2?i*2.6:0)+(n>=3?(Math.random()-.5)*.6:0)),hw=P.hw(ls),lo=Math.max(-hw+.6,Math.min(hw-.6,n>=3?(i-(n-1)/2)*1.75:o+(Math.random()-.5)*.4));L.push([ls,lo])}
+  return L}
+function ch153SpitSpawn(L,n){const S=CH153.S,P=S.P,M=S.sn,T=1.05,from=M.head.position.clone().add(new THREE.Vector3(0,-.4,0));try{svSnd('hiss',1,1.3)}catch(_){}
+  if(n>=3&&!CH153.wallHint){CH153.wallHint=1;setTimeout(()=>{try{pickup({ic:'🦘',t:'JUMP the venom wall!',col:'#9aff40',sub:'Space'})}catch(_){}},250)}
+  L.forEach(([ls,lo],i)=>{const [x,z,h]=P.at(ls,lo),g=ch153Glob(),w=ch153Warn();g.position.copy(from);w.position.set(x,h+.08,z);w.scale.setScalar(1.35);S.root.add(g);S.root.add(w);
+    S.globs.push({m:g,w,a:from.clone(),b:new THREE.Vector3(x,h,z),s:ls,o:lo,t:0,T:T+i*.08})})}
+// the furthest rider up the trail (co-op: 3180 sets CH153.lead to the leading partner's spot): rockslides start from it
+function ch153LeadS(){const R=CH153.R;return Math.max(R&&R.ph=='run'?R.s:-1e9,CH153.lead!=null?CH153.lead:-1e9)}
+function ch153FxTick(dt,now){const S=CH153.S,P=S.P,R=CH153.R;
+  // globs fly and land
+  for(let i=S.globs.length-1;i>=0;i--){const G=S.globs[i];G.t+=dt;const k=Math.min(1,G.t/G.T);G.m.position.lerpVectors(G.a,G.b,k);G.m.position.y+=Math.sin(k*Math.PI)*5;G.w.material.uniforms.k.value=k;
+    if(k>=1){try{burst(G.b.clone().add(new THREE.Vector3(0,.3,0)),CH153M.venom,18,1.6,2.2,.6)}catch(_){}
+      if(R.ph=='run'&&Math.abs(R.s-G.s)<1.35&&Math.abs(R.o-G.o)<1.35&&R.y<.6)ch153Hit('venom');
+      const pm=ch153Pool();pm.position.set(G.b.x,G.b.y+.05,G.b.z);pm.scale.setScalar(1.15);S.root.add(pm);S.pools.push({m:pm,s:G.s,o:G.o,t:4.5,hit:0});
+      S.root.remove(G.m);S.root.remove(G.w);S.globs.splice(i,1)}}
+  for(let i=S.pools.length-1;i>=0;i--){const Q=S.pools[i];Q.t-=dt;Q.m.material.opacity=.72*Math.min(1,Q.t/1.2);Q.m.scale.setScalar(1.15*(1+.04*Math.sin(now/120+i)));
+    if(!Q.hit&&R.ph=='run'&&Math.abs(R.s-Q.s)<1.1&&Math.abs(R.o-Q.o)<1.1&&R.y<.3){Q.hit=1;ch153Hit('pool')}
+    if(Q.t<=0){S.root.remove(Q.m);S.pools.splice(i,1)}}
+  // rockslides: a rumble and dust on the wall above, then boulders bounce down and roll across the trail
+  // (seeded, so co-op partners see the same boulders)
+  S.K.slides.forEach((q,qi)=>{if(q.done||ch153LeadS()<q[0]-34)return;q.done=1;try{svSnd('crack',1.2,.7);shake(.2)}catch(_){}const rn=ab152R(1530+qi*71);
+    for(let i=0;i<q[1];i++){const s=q[0]+i*5.5+(rn()-.5)*2,hw=P.hw(s),[x,z,h]=P.at(s,-hw-7);try{burst(new THREE.Vector3(x,h+5,z),0xa89878,22,2.4,2,1.4)}catch(_){}
+      const m=ch153Ob('slide');m.position.set(x,h+6,z);S.root.add(m);S.slides.push({m,s,o:-hw-7,y:6,vo:4.6+rn()*1.2,vy:0,t:-.9-i*.55,sp:rn()*4})}});
+  for(let i=S.slides.length-1;i>=0;i--){const b=S.slides[i];b.t+=dt;if(b.t<0)continue;b.o+=b.vo*dt;b.vy-=22*dt;b.y+=b.vy*dt;const hw=P.hw(b.s);const ground=b.o>hw+1.2?-(b.o-hw-1.2)*2.2:0;
+    if(b.y<ground+1.0){b.y=ground+1.0;b.vy=Math.abs(b.vy)*.42;if(Math.abs(b.o)<hw+2)try{shake(.06)}catch(_){}}
+    const [x,z,h]=P.at(b.s,b.o);b.m.position.set(x,h+b.y,z);b.m.rotation.x+=b.vo*dt*.9;b.m.rotation.z+=dt*b.sp;
+    if(R.ph=='run'&&Math.abs(R.s-b.s)<1.3&&Math.abs(R.o-b.o)<1.35&&R.y<b.y+.2)ch153Hit('crash');
+    if(b.o>hw+14){S.root.remove(b.m);S.slides.splice(i,1)}}
+  // the bridge: planks fall away under and behind the snake
+  const sn=R.sn.s;S.planks.forEach(q=>{if(!q.f&&q.s<sn+1.5&&R.ph=='run'){q.f=1;q.vy=0}if(q.f&&q.m.visible){q.vy-=18*dt;q.m.position.y+=q.vy*dt;q.m.rotation.x+=dt*2;q.m.rotation.z+=dt*1.3;if(q.vy<-30)q.m.visible=false}})}
+// ---------------- each frame on the trail ----------------
+function ch153Tick(dt,now){const S=CH153.S,P=S.P,R=CH153.R,K=S.K;if(!R)return;R.t+=dt;
+  if(R.ph=='intro'){R.v=0;if(R.t>3.0){R.ph='run';R.t=0;R.sn.spit=3;R.sn.next=8;try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','RUN!','Skarrith, the Mountain Coil','Space · jump   A / D · steer','z1')}catch(_){}}}
+  else if(R.ph=='run'){
+    // speed: one for every mount; a crash slows you for a moment
+    const want=R.stum>0?CH153V.stumV:CH153V.spd;R.v+=(want-R.v)*Math.min(1,dt*(want>R.v?2.2:9));R.stum=Math.max(0,R.stum-dt);R.inv=Math.max(0,R.inv-dt);
+    // steering (A/D, arrows, the stick)
+    const st=(K_d()?1:0)-(K_a()?1:0)+(typeof dp!='undefined'?dp[0]:0);R.steer=(R.steer||0)+((st)-(R.steer||0))*Math.min(1,dt*10);
+    const hw=P.hw(R.s);R.o=Math.max(-hw+.55,Math.min(hw-.55,R.o+R.steer*P.sgn*CH153V.lat*dt*(R.stum>0?.5:1)));   // +o is the screen's right when P.sgn is 1
+    // the jump
+    if(CH153.jumpQ>0){CH153.jumpQ-=dt;if(R.jt<0&&R.y<.05){R.jt=0;CH153.jumpQ=0;try{svSnd('whoosh',.8,1.2)}catch(_){}}}
+    if(R.jt>=0){R.jt+=dt;const k=R.jt/CH153V.jumpT;R.y=k>=1?0:CH153V.jumpH*Math.sin(k*Math.PI);if(k>=1){R.jt=-1;R.y=0;try{burst(gY(pl.position,.2),0xa89878,10,1,1,.4)}catch(_){}}}
+    const s0=R.s;R.s+=R.v*dt;
+    // obstacles: a crash unless you are high enough over them (or still safe after the last hit)
+    for(const o of S.obs){if(Math.abs(R.s-o.s)>o.l/2+.6)continue;
+      if(o.k=='gap'){if(R.y<.15&&R.inv<=0&&s0<o.s+o.l/2-.25&&R.s>o.s-o.l/2+.25){if(ch153Hit('crash')){R.s=o.s+o.l/2+.4;R.jt=-1;R.y=0;try{pickup({ic:'🕳',t:'You fell short!',col:'#ff9a5a',sub:'Your mount scrambles up the far side'})}catch(_){}}}continue}
+      if(Math.abs(R.o-o.o)<o.w/2+.42&&R.y<o.h)ch153Hit('crash')}
+    if(R.s>=P.S-6.5)ch153Win()}
+  else if(R.ph=='dead'){const D=R.dead;D.t+=dt;R.v=0;if(D.why=='swallow'&&D.t>.55){pl.visible=false;if(mModel)mModel.visible=false}
+    if(D.t>2.2&&!D.fade){D.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
+  else if(R.ph=='win'){const W2=R.win;W2.t+=dt;R.v=Math.max(2.5,R.v*.97);R.s=Math.min(P.S-.5,R.s+R.v*dt);R.o*=.9;
+    if(W2.t>.5&&!W2.slam){W2.slam=1;try{shake(.7);svSnd('heavy',1.4,.6);svSnd('crack',1.2,.7);const [x,z,h]=P.at(P.S-13,0);burst(new THREE.Vector3(x,h+3,z),0x9a8a6a,60,4,3,1.6)}catch(_){}}
+    if(W2.t>2.0&&!W2.fade){W2.fade=1;ch153Finish()}}
+  R.hit=Math.max(0,R.hit-dt);
+  ch153SnakeTick(dt,now);ch153FxTick(dt,now);ch153Place();
+  // the mount blinks while you are safe after a hit
+  if(typeof mModel!='undefined'&&mModel&&R.ph=='run')mModel.visible=!(R.inv>0&&Math.floor(now/90)%2);
+  // in the tunnel the light drops and the snake's eyes glow
+  const tn=R.s>K.tunnel[0]-4&&R.s<K.tunnel[1]+4;R.dark=(R.dark||0)+((tn?1:0)-(R.dark||0))*Math.min(1,dt*2)}
+function K_a(){return !!(K.a||K.arrowleft)}function K_d(){return !!(K.d||K.arrowright)}
+// ---------------- getting in and out ----------------
+function ch153Enter(){if(AF)return;if(!mounts.length)return say('🐎 You need a mount to ride the hill path. Build the Stable at the Stronghold Steward in Duskhold and buy one.');
+  CH153Q.st=Math.max(1,CH153Q.st);CH153.lv=0;fadeTo(()=>{const S=ch153Build();const [x,z]=S.P.at(S.K.start,0);toPos(x,z,S.P.yaw(S.K.start)+Math.PI);ch153Reset(true);
+    setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','The Hilltop Ascent','A narrow trail up the mountain','','z1')}catch(_){}},200)})}
+function ch153Leave(){CH153.R=null;CH153.lv=1;fadeTo(()=>{const G=SP152.gates.ascent,s=G&&G.spot;if(s)toPos(s.x+s.ux*-2.5,s.z+s.uz*-2.5,s.ry);else insArrive(INSL[6])})}
+function ch153Finish(){CH153Q.st=2;CH153.lv=1;fadeTo(()=>{CH153.R=null;const N=INSL[7];insArrive(N);insMark(N);
+  setTimeout(()=>{try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','The Hilltops','You squeeze through the crack and out onto the high plains','Onward through '+N.n,'z1');mSfx('victory')}catch(_){}},400);
+  say('🐍 You escaped Skarrith. <b>'+N.n+'</b> lies ahead.')})}
+// ---------------- input: Space jumps (and nothing else does) ----------------
+addEventListener('keydown',e=>{if(!ch153Run())return;const k=(e.key||'').toLowerCase(),tg=e.target&&e.target.tagName;if(tg=='INPUT'||tg=='TEXTAREA')return;
+  if(k==' '){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)CH153.jumpQ=.18}
+  else if(k=='shift'||k=='v'||k=='t'){e.stopImmediatePropagation();e.preventDefault()}},{capture:true});
+{const f=walk;walk=function(o,dx,dz){if(o===pl&&ch153Run())return;return f.apply(this,arguments)}}
+{const f=dodge;dodge=function(){if(ch153Run())return;return f.apply(this,arguments)}}
+// the mount gallops whatever the keys (it runs on its own) at one pace for everyone
+{const f=mountTick;mountTick=function(dt,now,al){if(ch153Run()&&riding){const R=CH153.R,s0=riding.spd;riding.spd=45;try{return f.call(this,dt,now,R.v>.5?1:0)}finally{riding.spd=s0;if(mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}}return f.apply(this,arguments)}}
+// the camera rides behind along the trail (a look back at the snake during the intro)
+{const f=loop;loop=function(now){let keep=null;try{if(ch153Run()&&CH153.S){const R=CH153.R,P=CH153.S.P,yw=P.yaw(R.s);keep=[camPitch,camDist];
+    const intro=R.ph=='intro'&&R.t<2.7,dead=R.ph=='dead',want=intro?yw-.25*P.sgn:dead&&R.dead.why=='swallow'?yw+.9:yw+Math.PI;let d=want-camYaw;d=Math.atan2(Math.sin(d),Math.cos(d));camYaw+=d*Math.min(1,(intro?.08:.12)+0*(R.v));
+    // when the snake is close the camera rises over its head, so its jaws loom at the bottom of the screen
+    // as the snake closes in, the camera comes in close behind you, staying in front of its head (it bursts into view when it strikes)
+    const gap=R.s-R.sn.s,dh=Math.max(3.8,Math.min(8.8,gap-5.6));camPitch=intro?.16:dead?.45:.34;camDist=intro?22:dead?8:dh/Math.cos(.34)}}catch(_){}
+  try{return f.apply(this,arguments)}finally{if(keep){camPitch=keep[0];camDist=keep[1]}}}}
+// ---------------- the HUD ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#ch153h{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:7;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px;color:#f0ead2;font:600 12px system-ui,sans-serif;text-shadow:0 1px 2px #000}
+#ch153h.hide{display:none}#ch153h .hp{display:flex;gap:6px;font-size:22px;filter:drop-shadow(0 1px 2px #000)}#ch153h .hp span.off{opacity:.22;filter:grayscale(1)}
+#ch153h .gap{position:relative;width:300px;height:12px;border-radius:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,220,140,.4);overflow:hidden}
+#ch153h .gap i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ff3a20,#ffb040 55%,#6adf60);transition:width .15s}
+#ch153h .gap b{position:absolute;top:-6px;font-size:18px;line-height:1}#ch153h .gap b.sn{left:-2px}#ch153h .k{font-size:11px;color:#d8d0b0}
+#ch153h .warn{font:800 15px Cinzel,Georgia,serif;letter-spacing:.12em;color:#ff5a3a;opacity:0;transition:opacity .1s}
+#ch153v{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;box-shadow:inset 0 -120px 160px -40px rgba(255,30,10,.75)}
+#ch153g{position:fixed;right:14px;top:92px;z-index:7;pointer-events:auto;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,220,140,.35);background:rgba(10,8,6,.7);color:#e8e0c8;font:600 12px system-ui,sans-serif;cursor:pointer}
+#ch153g.hide{display:none}#mbtn button.ch153j{font-size:20px}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='ch153h';d.className='hide';d.innerHTML='<div class="hp"></div><div class="gap"><i></i><b class="sn">🐍</b></div><div class="k">Space · jump &nbsp; A / D · steer</div><div class="warn">⚠ STRIKE — swerve!</div>';document.body.appendChild(d);
+  const v=document.createElement('div');v.id='ch153v';document.body.appendChild(v);
+  const g=document.createElement('button');g.id='ch153g';g.className='hide';g.textContent='🏳 Ride back down';g.addEventListener('click',()=>{if(ch153Run())ch153Leave()});document.body.appendChild(g)})();
+function ch153Hud(){const el=$('ch153h');const on=ch153Run()&&!(typeof uiOpen=='function'&&uiOpen());el.classList.toggle('hide',!on);$('ch153g').classList.toggle('hide',!on);$('ch153v').style.opacity=0;
+  try{const mb=$('mbtn');if(on&&mb&&!CH153.btn){const b=document.createElement('button');b.className='ch153j';b.textContent='🦘';b.title='Jump';mb.appendChild(b);CH153.btn=b;b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();CH153.jumpQ=.18})}
+    if(CH153.btn)CH153.btn.style.display=on?'':'none'}catch(_){}
+  if(!on)return;const R=CH153.R,gap=Math.max(0,R.s-R.sn.s);el.querySelector('.hp').innerHTML=[0,1,2].map(i=>'<span class="'+(i<R.hp?'':'off')+'">💚</span>').join('');
+  el.querySelector('.gap i').style.width=Math.min(100,gap/26*100)+'%';el.querySelector('.warn').style.opacity=R.sn.strike&&R.sn.strike.t<1.05?1:0;
+  $('ch153v').style.opacity=R.ph=='run'?Math.max(0,Math.min(1,(9-gap)/6)):R.ph=='dead'?1:0}
+// ---------------- wiring ----------------
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{
+    if(ch153In()){const S=ch153Build();S.root.visible=true;if(!CH153.R&&!CH153.lv)ch153Reset(true);ch153Tick(dt,now);if(now-(CH153.hT||0)>100){CH153.hT=now;ch153Hud()}}
+    else{CH153.lv=0;if(CH153.S)CH153.S.root.visible=false;if(CH153.R)CH153.R=null;if(!CH153.off){CH153.off=1;try{ch153Hud()}catch(_){}}}
+    if(ch153In())CH153.off=0}catch(e){if(!CH153.err++)console.error('v153 ascent',e)}return r}}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{if(ch153Run()&&CH153.R.dark>.01){const k=1-.72*CH153.R.dark;sun.intensity*=k;hemi.intensity*=k}}catch(_){}return r}}
+SP152.R.ascent={park:1,forceMount:'🐎 Not now — it is right behind you!',noFight:'🐍 No time to fight — ride!',noRecall:'🐍 No time — ride for the summit (or 🏳 ride back down).',
+  onLoad(){CH153.R=null;const G=SP152.gates.ascent;setTimeout(()=>{try{const I=INSL[6];toPos(I.ba[0],I.ba[1])}catch(_){}},0)}};
+// ---------------- the road out of Mistmere ----------------
+sp152Gate('ascent',{ig:6,r:3.6,build:ch153GateModel,
+  prompt(s){if(ch153Done()){const N=INSL[7];return {label:'F · Ride up to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
+    if(!mounts.length)return {label:'🐎 Ascend to the hilltops · you need a mount for the hill path',fn:()=>say('🐎 The hill path is too long and steep on foot. Build the Stable at the Stronghold Steward in Duskhold and buy a mount.')};
+    return {label:'F · Ascend to the hilltops',fn:()=>ch153Enter()}}});
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.ch153={v:153,st:CH153Q.st}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.ch153;CH153Q.st=q&&typeof q=='object'?Math.max(0,Math.min(2,q.st|0)):0;CH153.R=null}catch(e){console.warn('v153 load',e)}return r}}
+// ---------------- the tracker ----------------
+SP152.trk.ascent=I=>{if(I.g===6&&!ch153Done())return {name:'The Hilltop Ascent',lines:[['Find the hill road at the end of '+INSL[6].n],[mounts.length?'Ascend to the hilltops (mounted)':'You will need a mount',null,!mounts.length]]};
+  if(I.sp==='ascent'&&CH153.R){const R=CH153.R,P=CH153.S.P;return {name:'The Hilltop Ascent',lines:[['Reach the crack in the summit'],['Climbed',Math.round(Math.max(0,R.s)/P.S*100)+'%']]}}
+  return null};
+// ---------------- the atmosphere: late sun and wind on the heights ----------------
+sp152Theme('ascent',{nm:'Serpent’s Spine',sub:'A trail up the mountain to the hilltops',a:{fog:.0055,fc:0xc8a888,fcA:.35,sun:1.0,hemi:.85,ex:1.0,sat:1.1,vig:1.35,sky:1,pt:'gust',pc:0xffffff,po:.45}});
+// ---------------- the terrain's snow line ----------------
+// The ground shader (0060) paints snow on flat ground above ~10–14 (the zones never climb higher). The trail climbs to ~90, so
+// inside the ascent's rectangle the snow line is raised by CH153SN.up: only the summit keeps a dusting.
+var CH153SN={r:{value:new THREE.Vector4()},up:{value:66}};
+try{const I=sp152I('ascent');CH153SN.r.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);
+  GTX.list.forEach(T=>{const m=T.mat;if(!m)return;const ob=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);
+      if(sh.fragmentShader.indexOf('float sn=smoothstep(9.5,14.,yc')<0)return;sh.uniforms.uSnR=CH153SN.r;sh.uniforms.uSnU=CH153SN.up;
+      sh.fragmentShader=sh.fragmentShader.replace('void main() {','uniform vec4 uSnR;uniform float uSnU;\nvoid main() {')
+        .replace('float sn=smoothstep(9.5,14.,yc','float inA=step(uSnR.x,vWP.x)*step(vWP.x,uSnR.z)*step(uSnR.y,vWP.z)*step(vWP.z,uSnR.w),sLo=9.5+inA*uSnU;float sn=smoothstep(sLo,sLo+4.5,yc')};
+    const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'sn153';m.needsUpdate=true})}catch(e){console.warn('v153 snow line',e)}
+// ================= v154 The Gate of the Hydra — Hillside Crest III main quest (chapter 3) =================
+// The Galecliffs' gateway to the Sovereign's Den is gone: at the far edge of the gateway clearing a massive old stone door is set
+// into the mountain, carved with the Crest Hydra — five serpent heads with open mouths like wind-horns. Behind it, inside the
+// mountain, the Hydra dwells in a hidden oasis (the Den). The door opens to "The Five Winds":
+//  1. Five Wind Stones stand across the windswept plateau (HD154.plan: off the road at 12 / 30 / 48 / 66 / 84 % of it, on open
+//     ground, away from the entrance, the door, the camps and each other; marked on the minimap and the N map). Each is a carved
+//     monolith topped by a bronze serpent vane. F turns the vane an eighth of a turn. Pointed at the door, the wind streams from the
+//     stone to the door in a ribbon of light and one of the Hydra's heads wakes (its mouth glows and hums its note). One step off,
+//     the stone hums and a short gust shows which way the wind wants to go.
+//  2. With all five winds flowing, the heads sing the Song of the Mother at the door: they light and sound in an order. Strike the
+//     five chime stones before the door (F, each matching a head by colour and note) in the same order. Three verses: 3, 4, 5 notes.
+//     A wrong stone: the heads hiss and the verse is sung again.
+//  3. The last verse: the seals crack, the wind roars in, the doors grind open on the green light and mist of the oasis inside.
+//     F at the open doors: into the Hydra's Oasis (the Den). Done also when the Den was reached (old saves, cheats).
+// State HD154: st (0 not seen · 1 found · 2 open), vane[5] (0..7), on[5] (aligned), v (verse 0..3), saved as x2.hd154.
+// Co-op: each player turns their own stones and sings their own song (like the sigils).
+var HD154={st:0,vane:[0,0,0,0,0],on:[0,0,0,0,0],v:0,S:null,song:null,err:0,name:'The Gate of the Hydra',
+  col:[0x5aff9a,0x4ad8ff,0xffd040,0xff7a4a,0xd88aff],css:['#5aff9a','#4ad8ff','#ffd040','#ff7a4a','#d88aff'],nm:['the Jade Wind','the Sky Wind','the Sun Wind','the Ember Wind','the Dusk Wind'],
+  pitch:[1.0,1.12,1.26,1.5,1.68],verses:[3,4,5]};
+function hd154Done(){return HD154.st>=2||insReach(1)>=3}
+function hd154In(){try{const I=curIns();return !!I&&I.g===7}catch(_){return false}}
+function hd154N(){return HD154.on.filter(Boolean).length}
+// ---------------- where things stand ----------------
+function hd154Plan(){if(hd154Plan.c)return hd154Plan.c;const I=INSL[7],P=I.path,N=P.length,DW=MAP.DW,G=SP152.gates.hydra;
+  const door=G&&G.spot?G.spot:sp152GateSpot(7,10.5);
+  const props=new Set();try{MAP.props.forEach(q=>props.add(q[1]*W+q[0]))}catch(_){}
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='R'||t=='~'||props.has(Z*W+X)||CBLK.has(Z*W+X))return false;const J=insAt(X,Z);if(!J||J.g!==7)return false;return DW[Z*W+X]<-m};
+  const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
+  const roadD=(x,z)=>{let d=1e9;for(let i=0;i<N;i+=2){const q=P[i];d=Math.min(d,Math.hypot(x-q[0],z-q[1]))}return d};
+  const avoid=[[I.en[0],I.en[1],20],[door.x,door.z,24]].concat((I.cl||[]).map(c=>[c[0],c[1],15]));
+  const st=[],fr=[.12,.3,.48,.66,.84];
+  for(const m of [2.6,1.8,1.2])for(let j=0;j<5;j++){if(st[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
+    for(const b of [11,13,9,15,8,17,6])for(const side of [sd,-sd])for(const da of [0,6,-6,12,-12,18,-18]){if(got)break;const k=Math.max(0,Math.min(N-1,ix+da)),q=P[k],t=tan(k),x=q[0]-t[1]*b*side,z=q[1]+t[0]*b*side;
+      if(!ok(x,z,m)||!ok(x+1.2,z,m*.6)||!ok(x-1.2,z,m*.6)||!ok(x,z+1.2,m*.6)||!ok(x,z-1.2,m*.6)||roadD(x,z)<5)continue;
+      if(!avoid.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r))continue;if(!st.every(o=>!o||Math.hypot(x-o.x,z-o.z)>=26))continue;got={x:Math.round(x),z:Math.round(z),i:j}}
+    if(got)st[j]=got}
+  for(let j=0;j<5;j++)if(!st[j]){const ix=Math.round((N-1)*fr[j]),q=P[ix],t=tan(ix);st[j]={x:Math.round(q[0]-t[1]*5),z:Math.round(q[1]+t[0]*5),i:j,fb:1}}
+  // the bearing from each stone to the door, as one of eight vane steps (0 = +z, then a quarter-turn-by-two clockwise from above)
+  st.forEach(o=>{const a=Math.atan2(door.x-o.x,door.z-o.z);o.want=((Math.round(a/(Math.PI/4))%8)+8)%8});
+  // the chime stones: an arc before the door
+  const ch=[],ca=Math.cos(door.ry),sa=Math.sin(door.ry);for(let j=0;j<5;j++){const a=(j-2)*.42,o=Math.sin(a)*6.6,d=Math.cos(a)*6.6-.4;ch.push({x:door.x+ca*o+sa*d,z:door.z-sa*o+ca*d,i:j})}
+  return hd154Plan.c={door,st,ch}}
+function hd154VaneYaw(k){return k*Math.PI/4}
+// ---------------- models ----------------
+var HD154C={st:0x8a8274,stD:0x5e584e,stL:0xb0a690,rock:[0x6a645a,0x7a7266,0x5a554c,0x8a8274],brz:0xb08a3a,brzD:0x6a4a1a,jade:0x3a9a6a,dark:0x0a0908};
+function hd154DoorKit(){const C=HD154C;return lgGroup('HD154|door',k=>{const R=ab152R(3131);
+  // the mountain: a broad cliff face of rock around the door
+  for(let i=0;i<26;i++){const x=(R()-.5)*30,y=2+R()*16,z=-3-R()*4,s=2+R()*3;if(Math.abs(x)<7.4&&y<13)continue;k.p('','dod','c',C.rock[i%4],x,y,z,s,s*1.2,s,R()*3,R()*3,R()*3)}
+  k.p('','box','c',C.rock[2],0,9,-5.2,32,18,4);
+  // the frame: two great serpent pillars, the lintel with the Hydra's heads
+  [-1,1].forEach(s=>{k.p('','box','c',C.st,s*6.2,6,-.8,2.2,12,2.2);k.p('','box','c',C.stL,s*6.2,.4,-.8,2.8,.8,2.8);
+    for(let y=1.2;y<11.5;y+=.75)k.p('','tor','c',y%1.5<.75?C.stD:C.jade,s*6.2,y,-.8,1.25,.32,1.25,0,y*1.7,0);
+    k.p('','sph','c',C.jade,s*6.2,12.4,-.2,.8,.6,1.0);k.p('','box','g',0xffd040,s*6.2+s*-.25,12.5,.6,.1,.08,.05);k.p('','box','g',0xffd040,s*6.2+s*.25,12.5,.6,.1,.08,.05)});
+  k.p('','box','c',C.st,0,11.8,-.8,14.6,2.0,2.4);k.p('','box','c',C.stD,0,10.65,-.1,12.6,.3,1.4);
+  for(let i=0;i<13;i++)k.p('','box','c',C.stL,-6+i,12.9,.42,.6,.16,.1,0,0,i%2?.6:-.6);
+  // the Hydra relief: a coiled body in the middle of the lintel, five necks fanning up, their heads (sockets lit later)
+  k.p('','tor','c',C.jade,0,12.1,.45,1.6,.6,1.6,Math.PI/2,0,0);k.p('','tor','c',lgCol(C.jade,0,.2),0,12.1,.55,1.0,.6,1.0,Math.PI/2,0,0);
+  for(let j=0;j<5;j++){const a=(j-2)*.42,hx=Math.sin(a)*4.4,hy=12.1+Math.cos(a)*3.2;k.L('','c',C.jade,[Math.sin(a)*1.2,12.1+Math.cos(a)*.9,.5],[hx,hy,.75],.42,.32,7);
+    k.p('','sph2','c',C.jade,hx,hy,.95,.62,.5,.8,-.4,a,0);k.p('','box','c',lgCol(C.jade,0,.3),hx,hy+.28,.95,.5,.14,.7,-.4,a,0);
+    [-1,1].forEach(e=>k.p('','cone4','c',0xf0e8d0,hx+e*.18,hy-.34,1.4,.05,.2,.05,Math.PI-.4,a,0))}
+  // the doorway's dark depth (seen when the doors open) and the steps
+  k.p('','box','c',0x0a1a14,0,5.0,-1.9,10,10,.2);
+  // a glimpse of the oasis beyond (hidden while the doors are shut): fronds, a pool's edge, glowing moss
+  for(let i=0;i<9;i++){const s=i%2?1:-1,x=s*(1.6+(i%4)*.7),y=1.2+(i*37%5)*.9;k.p('','cone4','c',i%3?0x2a8a4a:0x3aa860,x,y,-1.5,.35,2.2,.08,0,0,s*(1.1+(i%3)*.3))}
+  k.p('','box','g',0x3ae0b0,0,.08,-1.3,8.6,.06,.9);for(let i=0;i<6;i++)k.p('','sph','g',0x7affa0,-3.6+i*1.45,.25+(i%2)*.3,-1.75,.12)
+  for(let i=0;i<4;i++)k.p('','box','c',i%2?C.st:C.stL,0,.12+i*.0,1.2+i*.9-3.0,14-i*.8,.24,1.0);
+  // guardian statues, braziers and the inscription
+  [-1,1].forEach(s=>{const x=s*9.4;k.p('','box','c',C.stD,x,.6,1.0,2.0,1.2,2.0);k.L('','c',C.jade,[x,1.2,1.0],[x,4.4,1.3],.6,.4,7);k.p('','hood','c',lgCol(C.jade,0,.25),x,4.0,1.05,1.4,1.7,.7);
+    k.p('','sph','c',C.jade,x,4.6,1.55,.42,.32,.56);[-1,1].forEach(e=>k.p('','box','g',0xffc040,x+e*.16,4.66,2.06,.06,.05,.03))});
+  k.p('','box','c',C.stL,0,1.0,3.4,3.6,1.4,.4,-.25,0,0);for(let i=0;i<5;i++)k.p('','box','c',C.stD,-1.3+i*.65,1.05,3.62,.4,.5,.04,-.25,0,0)},0)}
+// a door leaf: carved panels, the wind sigil, studs, a ring handle; origin at its hinge (side s = −1 left, +1 right)
+function hd154Leaf(s){const C=HD154C;return lgGroup('HD154|leaf'+s,k=>{const w=5.0,cx=-s*w/2;
+  k.p('','box','c',C.st,cx,4.9,0,w,9.8,.9);k.p('','box','c',C.stD,cx,4.9,.46,w-.6,9.2,.06);
+  for(let r=0;r<3;r++)k.p('','box','c',C.stL,cx,1.8+r*3.0,.5,w-1.2,2.4,.08);
+  k.p('','tor','c',C.brz,-s*(w-.3),5.6,.55,2.0,.3,2.0,Math.PI/2,0,0);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('','box','c',C.brzD,-s*(w-.3)+Math.cos(a)*1.4,5.6+Math.sin(a)*1.4,.58,.5,.12,.06,0,0,a)}
+  for(let y=.6;y<9.6;y+=1.2)for(let x=.4;x<w;x+=1.1)k.p('','sph','m',C.brz,-s*x,y,.52,.09);
+  k.p('','ring','m',C.brz,-s*(w-1.2),4.2,.62,.45,.6,.45,Math.PI/2,0,0);
+  k.p('','box','m',C.brzD,cx,2.0,.5,w,.3,.1);k.p('','box','m',C.brzD,cx,7.8,.5,w,.3,.1)},0)}
+// the seals across the closed doors (they crack and fall when the song is sung)
+function hd154Seals(){const C=HD154C;return lgGroup('HD154|seals',k=>{[2.4,5.0,7.6].forEach(y=>{k.p('','box','m',C.brz,0,y,.8,10.6,.5,.3);k.p('','cyl','m',C.brzD,0,y,.95,.6,.2,.6,Math.PI/2,0,0)})},0)}
+function hd154Chime(j){const C=HD154C;return lgGroup('HD154|chime'+j,k=>{k.p('','box','c',C.stD,0,.25,0,1.2,.5,1.2);k.p('','box','c',C.st,0,1.4,0,.8,1.8,.6,0,0,(j-2)*.04);
+  for(let i=0;i<3;i++)k.p('','box','c',C.stL,0,.9+i*.5,.31,.5,.08,.02,0,0,(i%2?.6:-.6))},0)}
+function hd154Stone(){const C=HD154C;return lgGroup('HD154|stone',k=>{const R=ab152R(77);k.p('','box','c',C.stD,0,.3,0,2.6,.6,2.6);
+  k.p('','cyl','c',C.stD,0,2.6,0,.7,4.2,.7);k.p('','cyl','c',C.st,0,.9,0,.85,.6,.85);
+  for(let i=0;i<3;i++){const y=1.6+i*1.1;k.p('','tor','c',C.stL,0,y,0,.76,.12,.76);for(let q=0;q<4;q++){const a=q*Math.PI/2+i*.4;k.p('','box','c',C.dark,Math.sin(a)*.66,y+.5,Math.cos(a)*.66,.34,.12,.06,0,a,0)}}
+  // a jade serpent coiling up the monolith, its head under the vane
+  for(let i=0;i<34;i++){const t=i/33,a=t*Math.PI*4.2,y=.9+t*3.6,r=.78;k.p('','sph','c',i%3?C.jade:lgCol(C.jade,0,.25),Math.sin(a)*r,y,Math.cos(a)*r,.2-.06*t,.17-.05*t,.2-.06*t)}
+  k.p('','box','c',C.stL,0,4.75,0,1.0,.24,1.0);for(let i=0;i<5;i++)k.p('','dod','c',C.rock[i%4],(R()-.5)*3,.15,(R()-.5)*3,.3,.2,.3)},0)}
+function hd154Vane(){const C=HD154C;return lgGroup('HD154|vane',k=>{k.p('','cyl','m',C.brz,0,.5,0,.06,1.0,.06);
+  // a bronze serpent: the head points where the vane points (+z), the tail a fin catching the wind
+  k.L('','m',C.brz,[0,1.0,-1.1],[0,1.05,.6],.12,.16,6);k.p('','sph2','m',C.brz,0,1.08,.85,.22,.17,.34);k.p('','box','g',0xffd060,0,1.13,1.05,.12,.03,.03);
+  k.p('','box','m',C.brzD,0,1.2,-1.0,.04,.7,.7,.5,0,0)},0)}
+// the wind ribbon: a glowing tube arcing from a stone to the door, its stripes flowing towards the door
+function hd154Ribbon(a,b,col){const mid=new THREE.Vector3((a.x+b.x)/2,Math.max(a.y,b.y)+3+a.distanceTo(b)*.05,(a.z+b.z)/2),c=new THREE.QuadraticBezierCurve3(a,mid,b);
+  const g=new THREE.TubeGeometry(c,Math.max(40,Math.round(a.distanceTo(b)/2)),.5,8,false),
+    m=new THREE.ShaderMaterial({uniforms:{t:{value:0},col:{value:new THREE.Color(col)},op:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+      vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:'uniform float t,op;uniform vec3 col;varying vec2 vU;void main(){float s=.5+.5*sin(vU.x*120.-t*6.);gl_FragColor=vec4(col*1.4,op*(.45+.55*s*s));}'});
+  const mesh=new THREE.Mesh(g,m);mesh.frustumCulled=false;mesh.userData.psNo=1;mesh.userData.noFade135=1;return mesh}
+// ---------------- the world ----------------
+function hd154Build(){if(HD154.S)return HD154.S;const Pl=hd154Plan(),D=Pl.door,root=new THREE.Group();root.name='HydraGate';root.userData.noFade135=1;scene.add(root);
+  const S={root,stones:[],chimes:[],heads:[],ribbons:[],t:0,leafs:[]};HD154.S=S;
+  // a new game: every serpent starts a few turns away from the door (a save sets them itself); a stone's wind flows only when it faces the door
+  if(!HD154.vInit){HD154.vInit=1;HD154.vane=Pl.st.map((o,j)=>(o.want+3+j%3)%8)}HD154.on=HD154.vane.map((v,j)=>v===Pl.st[j].want?1:0);
+  // the door assembly (local +z faces the clearing)
+  const dg=new THREE.Group();dg.position.set(D.x,GH(D.x,D.z),D.z);dg.rotation.y=D.ry;root.add(dg);dg.add(hd154DoorKit());S.dg=dg;
+  [-1,1].forEach(s=>{const h=new THREE.Group();h.position.set(s*5.0,0,-.6);dg.add(h);h.add(hd154Leaf(s));S.leafs.push({g:h,s})});
+  S.seals=hd154Seals();S.seals.position.set(0,0,-.6);dg.add(S.seals);
+  // the heads' glowing mouths
+  for(let j=0;j<5;j++){const a=(j-2)*.42,hx=Math.sin(a)*4.4,hy=12.1+Math.cos(a)*3.2,m=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),new THREE.MeshBasicMaterial({color:HD154.col[j],fog:false}));
+    m.position.set(hx,hy-.25,1.45);m.visible=false;dg.add(m);const halo=mq143Halo(HD154.col[j],2.4);halo.position.copy(m.position);halo.visible=false;dg.add(halo);S.heads.push({m,halo,k:0,f:0})}
+  // the oasis light inside (shown when the doors open)
+  S.glow=ab152Pool(4.5,0x9affc8);S.glow.position.set(0,.06,-1.2);S.glow.visible=false;dg.add(S.glow);S.mist=ab152Pool(5.5,0x6affb0);S.mist.rotation.x=Math.PI/2;S.mist.position.set(0,4.6,-1.7);S.mist.visible=false;dg.add(S.mist);
+  S.lt=new THREE.PointLight(0x9affc0,0,22,1.4);S.lt.position.set(D.x+D.ux*1.5,GH(D.x,D.z)+4,D.z+D.uz*1.5);scene.add(S.lt);
+  // colliders: the wall and the frame (the doorway too while it is shut), the chime stones
+  const ca=Math.cos(D.ry),sa=Math.sin(D.ry),blk=(o,d)=>{const x=D.x+ca*o+sa*d,z=D.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))};
+  for(let o=-16;o<=16;o+=.6)for(let d=-6;d<=-1.6;d+=.6)blk(o,d);for(let o=-7.4;o<=7.4;o+=.6)blk(o,-.8);[-1,1].forEach(s=>{for(let d=-1.6;d<=1.6;d+=.6)blk(s*9.4,d+1)});
+  S.blkDoor=[];for(let o=-4.8;o<=4.8;o+=.6){const x=D.x+ca*o+sa*-.2,z=D.z-sa*o+ca*-.2,k=Math.round(z)*W+Math.round(x);CBLK.add(k);S.blkDoor.push(k)}
+  Pl.ch.forEach((c,j)=>{const m=hd154Chime(j);m.position.set(c.x,GH(c.x,c.z),c.z);m.rotation.y=D.ry;root.add(m);const cr=new THREE.Mesh(new THREE.OctahedronGeometry(.32,0),new THREE.MeshBasicMaterial({color:HD154.col[j],fog:false}));
+    cr.position.set(c.x,GH(c.x,c.z)+2.65,c.z);root.add(cr);const halo=mq143Halo(HD154.col[j],1.4);halo.position.copy(cr.position);halo.visible=false;root.add(halo);S.chimes.push({c,m,cr,halo,f:0});CBLK.add(Math.round(c.z)*W+Math.round(c.x))});
+  // the wind stones
+  Pl.st.forEach((o,j)=>{const g=hd154Stone();g.position.set(o.x,GH(o.x,o.z),o.z);root.add(g);const v=hd154Vane();v.position.set(o.x,GH(o.x,o.z)+4.85,o.z);root.add(v);
+    const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.28,0),new THREE.MeshBasicMaterial({color:HD154.col[j],fog:false}));gem.position.set(o.x,GH(o.x,o.z)+3.2,o.z+.72);gem.visible=false;root.add(gem);
+    const a=new THREE.Vector3(o.x,GH(o.x,o.z)+5.6,o.z);dg.updateMatrixWorld(true);const b=S.heads[j].m.getWorldPosition(new THREE.Vector3());
+    const rb=hd154Ribbon(a,b,HD154.col[j]);rb.visible=false;root.add(rb);S.ribbons.push(rb);
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,40,10,1,true),new THREE.MeshBasicMaterial({color:HD154.col[j],transparent:true,opacity:.12,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    beam.position.set(o.x,GH(o.x,o.z)+20,o.z);beam.userData.psNo=1;root.add(beam);
+    S.stones.push({o,g,v,gem,rb,beam,spin:0,hum:0});[[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>CBLK.add((o.z+dz)*W+o.x+dx))});
+  hd154Sync();return S}
+function hd154Sync(){const S=HD154.S;if(!S)return;const done=hd154Done();
+  S.stones.forEach((q,j)=>{const on=done||!!HD154.on[j];q.v.rotation.y=hd154VaneYaw(done?q.o.want:HD154.vane[j]);q.gem.visible=on;q.rb.visible=on&&!done;q.beam.material.opacity=on?.04:.12});
+  S.heads.forEach((h,j)=>{const on=done||!!HD154.on[j];h.m.visible=on;h.halo.visible=on});
+  const open=done?1:0;S.leafs.forEach(l=>l.g.rotation.y=-l.s*1.35*open);S.seals.visible=!done;S.glow.visible=!!open;S.mist.visible=!!open;S.mist.material.opacity=.6;S.lt.intensity=open?1.6:0;
+  if(open)S.blkDoor.forEach(k=>CBLK.delete(k));else S.blkDoor.forEach(k=>CBLK.add(k))}
+// ---------------- turning a vane ----------------
+function hd154Turn(j){const q=HD154.S.stones[j],was=!!HD154.on[j];HD154.vane[j]=(HD154.vane[j]+1)%8;q.spin=1;try{svSnd('crack',.6,1.6);svSnd('whoosh',.5,.8)}catch(_){}
+  const ok=HD154.vane[j]===q.o.want;HD154.on[j]=ok?1:0;if(HD154.st<1)HD154.st=1;
+  if(ok&&!was){setTimeout(()=>{try{svSnd('bell',1,HD154.pitch[j]);svSnd('hum',.8,HD154.pitch[j]);burst(q.gem.position,HD154.col[j],30,2,2.4,.8)}catch(_){}
+      const n=hd154N();say('🌬 The Wind Stone sings. <b>'+HD154.nm[j]+'</b> streams to the great door · '+n+' of 5'+(n>=5?' — the Hydra stirs. Go to the door.':''));
+      if(n>=5)try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','The Five Winds','All five winds reach the Gate of the Hydra','Sing the Song of the Mother at the door','z1')}catch(_){}},350)}
+  else if(was&&!ok)say('🌬 The wind turns away from the door. '+HD154.nm[j]+' falls silent.');
+  else if(!ok){const d=Math.min((q.o.want-HD154.vane[j]+8)%8,(HD154.vane[j]-q.o.want+8)%8);if(d==1){q.hum=1.6;try{svSnd('hum',.5,.8)}catch(_){}say('🌬 The stone hums: almost.')}}
+  hd154Sync()}
+// ---------------- the Song of the Mother ----------------
+function hd154SongSeq(v){const R=ab152R(4441+v*97),n=HD154.verses[v],s=[];let last=-1;for(let i=0;i<n;i++){let k=Math.floor(R()*5);if(k===last)k=(k+1+Math.floor(R()*4))%5;s.push(k);last=k}return s}
+function hd154SongStart(){if(HD154.song||hd154Done()||hd154N()<5||HD154.v>=3)return;HD154.song={seq:hd154SongSeq(HD154.v),i:0,t:-1.2,mode:'sing',in:0};
+  say('🐍 The Hydra sings verse '+(HD154.v+1)+' of 3. Watch the heads and the chime stones light up, then strike the chime stones in the same order.')}
+function hd154Strike(j){const G=HD154.song,S=HD154.S;if(!G||G.mode!='play')return;const c=S.chimes[j];c.f=1;try{svSnd('bell',1,HD154.pitch[j])}catch(_){}S.heads[j].f=1;
+  if(G.seq[G.in]===j){G.in++;if(G.in>=G.seq.length){G.mode='done';G.t=0;HD154.v++;try{svSnd('gong',1,1)}catch(_){}
+      if(HD154.v>=3){setTimeout(()=>hd154Open(),900)}else{say('🐍 The verse rings true ('+HD154.v+' of 3).');setTimeout(()=>{HD154.song=null;hd154SongStart()},2200)}}}
+  else{G.mode='wrong';G.t=0;try{svSnd('hiss',1.2,.9);flash('rgba(255,60,30,.5)');shake(.15)}catch(_){}say('🐍 The heads hiss: wrong stone. The verse is sung again.');setTimeout(()=>{if(HD154.song&&HD154.song.mode=='wrong'){HD154.song.mode='sing';HD154.song.i=0;HD154.song.t=-.8;HD154.song.in=0}},1600)}}
+function hd154SongTick(dt){const G=HD154.song,S=HD154.S;if(!G)return;G.t+=dt;
+  if(G.mode=='sing'){const step=.95;if(G.t>=0){const i=Math.floor(G.t/step);if(i!==G.last&&i<G.seq.length){G.last=i;const j=G.seq[i];S.heads[j].f=1;S.chimes[j].f=1;try{svSnd('bell',.9,HD154.pitch[j]);svSnd('hum',.5,HD154.pitch[j])}catch(_){}}
+      if(G.t>=G.seq.length*step+.3){G.mode='play';G.in=0;G.last=null;say('🐍 Your turn: strike the chime stones in the order the heads sang.')}}}}
+function hd154Open(){if(HD154.st>=2)return;HD154.song=null;HD154.op={t:0};try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','The Gate Opens','The Song of the Mother is sung','Beyond lies the Hydra’s Oasis','z1');svSnd('gong',1.2,.7)}catch(_){}}
+function hd154OpenTick(dt){const O=HD154.op,S=HD154.S;if(!O)return;O.t+=dt;const T=O.t;
+  if(T>.4&&!O.cr){O.cr=1;try{svSnd('crack',1.3,.6);shake(.35);burst(S.seals.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,5,0)),0xb08a3a,50,4,3,1.2)}catch(_){}S.seals.visible=false}
+  if(T>1.0&&T<5.2){const k=Math.min(1,(T-1.0)/4.0),e=k*k*(3-2*k);S.leafs.forEach(l=>l.g.rotation.y=-l.s*1.35*e);if(Math.random()<dt*6)try{shake(.08)}catch(_){}
+    if(!O.gr){O.gr=1;try{svSnd('heavy',1.3,.5)}catch(_){}}S.glow.visible=true;S.glow.material.opacity=.55*e;S.mist.visible=true;S.mist.material.opacity=.6*e;S.lt.intensity=1.6*e}
+  if(T>2.2&&!O.roar){O.roar=1;try{svSnd('roar',1.1,.7)}catch(_){}}
+  if(T>5.4&&!O.fin){O.fin=1;HD154.st=2;HD154.op=null;hd154Sync();say('🐍 The Gate of the Hydra stands open. Green light and the sound of water spill out of the mountain.')}}
+// ---------------- prompts ----------------
+{const f=worldPrompt;worldPrompt=function(){try{if(hd154In()&&HD154.S){const P=pl.position,S=HD154.S;
+    for(let j=0;j<5;j++){const q=S.stones[j];if(Math.hypot(P.x-q.o.x,P.z-q.o.z)<2.8){if(hd154Done())return null;
+      return {label:'F · Turn the Wind Stone’s serpent'+(HD154.on[j]?' (its wind reaches the door)':''),fn:()=>hd154Turn(j)}}}
+    if(!hd154Done()&&HD154.song&&HD154.song.mode=='play')for(let j=0;j<5;j++){const c=S.chimes[j].c;if(Math.hypot(P.x-c.x,P.z-c.z)<1.9)return {label:'F · Strike the '+['jade','sky','sun','ember','dusk'][j]+' chime stone',fn:()=>hd154Strike(j)}}}}catch(e){if(!HD154.err++)console.warn('v154 prompt',e)}
+  return f.apply(this,arguments)}}
+sp152Gate('hydra',{ig:7,r:5.2,where:()=>sp152GateSpot(7,10.5),build:s=>{HD154.S=null;const S=hd154Build();return S.root},
+  prompt(s){if(hd154Done()&&!HD154.op){const N=INSL[8];return {label:'F · Enter '+N.n+' · the Hydra’s Oasis',fn:()=>insGo(N)}}
+    if(HD154.op)return null;const n=hd154N();
+    if(n<5)return {label:'🔒 The Gate of the Hydra · '+n+'/5 winds reach it',fn:()=>say('🐍 Carved on the door: “Five winds from the five stones; sing them as the Mother wakes.” Five Wind Stones stand on the plateau (marked on your map). Turn each serpent to face this door.')};
+    if(!HD154.song)return {label:'F · Listen to the Hydra’s song (verse '+(HD154.v+1)+' of 3)',fn:()=>hd154SongStart()};
+    return null}});
+// ---------------- each frame in III ----------------
+function hd154Tick(dt,now){if(!hd154In()||!HD154.S){if(HD154.S&&HD154.S.lt)HD154.S.lt.intensity=hd154In()&&hd154Done()?1.6:0;return}const S=HD154.S,t=now/1000;
+  S.ribbons.forEach(r=>{r.material.uniforms.t.value=t;const tg=r.visible?1:0;r.material.uniforms.op.value+=(tg*.9-r.material.uniforms.op.value)*Math.min(1,dt*2)});
+  S.stones.forEach((q,j)=>{q.gem.rotation.y+=dt*1.5;if(q.spin>0){q.spin=Math.max(0,q.spin-dt*3);q.v.position.y+=Math.sin(q.spin*12)*.01}
+    if(q.hum>0){q.hum-=dt;if(Math.random()<dt*8)try{const a=Math.atan2(HD154.S.dg.position.x-q.o.x,HD154.S.dg.position.z-q.o.z);burst(new THREE.Vector3(q.o.x+Math.sin(a)*1.5,GH(q.o.x,q.o.z)+4.5,q.o.z+Math.cos(a)*1.5),0xffffff,3,.6,.4,.6)}catch(_){}}
+    q.beam.material.opacity=(HD154.on[j]||hd154Done()?.03:.1+.03*Math.sin(t*2+j))});
+  S.heads.forEach((h,j)=>{h.f=Math.max(0,h.f-dt*1.8);const on=hd154Done()||!!HD154.on[j];h.m.visible=on||h.f>0;h.halo.visible=h.m.visible;const s=2.0+1.2*h.f+.2*Math.sin(t*3+j);h.halo.scale.set(s,s,1);h.m.scale.setScalar(1+.8*h.f)});
+  S.chimes.forEach((c,j)=>{c.f=Math.max(0,c.f-dt*2.2);c.halo.visible=c.f>0||(HD154.song&&HD154.song.mode=='play');const s=1.2+1.6*c.f;c.halo.scale.set(s,s,1);c.cr.rotation.y+=dt;c.cr.position.y=GH(c.c.x,c.c.z)+2.65+.06*Math.sin(t*2+j)});
+  hd154SongTick(dt);hd154OpenTick(dt);
+  // leaving the door area mid-song pauses it
+  if(HD154.song){const D=hd154Plan().door;if(Math.hypot(pl.position.x-D.x,pl.position.z-D.z)>30){HD154.song=null;say('🐍 You walked away from the song. Return to the door to hear it again.')}}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{hd154Tick(dt,now)}catch(e){if(!HD154.err++)console.error('v154 hydra',e)}return r}}
+// ---------------- the minimap and the N map ----------------
+function hd154Marks(g,P,k){if(!hd154In()||!HD154.S)return;const Pl=hd154Plan(),done=hd154Done();
+  Pl.st.forEach((o,j)=>{const q=P(o.x,o.z);if(!q)return;const on=done||HD154.on[j];g.save();g.translate(q[0],q[1]);g.scale(k,k);g.beginPath();g.moveTo(0,-5);g.lineTo(4,4);g.lineTo(-4,4);g.closePath();
+    g.fillStyle=on?HD154.css[j]:'#5a5448';g.fill();g.lineWidth=1.2/k;g.strokeStyle='#1a140a';g.stroke();g.restore()});
+  const D=Pl.door,q=P(D.x,D.z);if(q){g.save();g.translate(q[0],q[1]);g.scale(k,k);g.fillStyle=done?'#9affc0':'#c8a860';g.strokeStyle='#1a140a';g.lineWidth=1.4/k;g.fillRect(-4,-5,8,10);g.strokeRect(-4,-5,8,10);g.restore()}}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{hd154Marks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}
+{const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{const I=INSL[7];if(hd154In()){const c=$('wmc'),g=c.getContext('2d'),k=Math.min(1060/I.w,640/I.h);hd154Marks(g,(x,z)=>[(x-I.x0+.5)*k,(z-I.y0+.5)*k],1.6)}}catch(e){console.warn('v154 wmap',e)}return r0}}
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.hd154={v:154,st:HD154.st,vane:HD154.vane.slice(),on:HD154.on.slice(),vs:HD154.v}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.hd154;HD154.st=0;HD154.on=[0,0,0,0,0];HD154.v=0;HD154.song=null;HD154.op=null;
+    let P=null;try{P=hd154Plan()}catch(_){}HD154.vane=[0,1,2,3,4].map(j=>P?(P.st[j].want+3+j%3)%8:j);HD154.vInit=P?1:0;
+    if(q&&typeof q=='object'){HD154.st=Math.max(0,Math.min(2,q.st|0));if(Array.isArray(q.vane)){q.vane.forEach((v,j)=>{if(j<5)HD154.vane[j]=((v|0)%8+8)%8});HD154.vInit=1}HD154.v=Math.max(0,Math.min(3,q.vs|0));
+      if(P)HD154.on=HD154.vane.map((v,j)=>v===P.st[j].want?1:0)}
+    if(HD154.S)hd154Sync()}catch(e){console.warn('v154 load',e)}return r}}
+// ---------------- the tracker ----------------
+SP152.trk.hydra=I=>{if(I.g!==7||hd154Done())return null;const n=hd154N();
+  if(n<5)return {name:HD154.name,lines:[['Wind Stones turned to the door',n+'/5'],['Turn each stone’s serpent to face the great door']]};
+  return {name:HD154.name,lines:[['Sing the Song of the Mother at the door'],['Verses sung',HD154.v+'/3']]}};
+// ---------------- the cheat "All quests complete" (3060) also finishes the Hillside Crest chapters ----------------
+{const f=cheatQuests147;cheatQuests147=function(){let n=0;try{if(AB152Q.st<2){AB152Q.st=2;n++}if(CH153Q.st<2){CH153Q.st=2;n++}if(HD154.st<2){HD154.st=2;HD154.song=null;HD154.op=null;n++;hd154Sync()}}catch(e){console.warn('v154 cheat',e)}
+  const r=f.apply(this,arguments);if(n)try{say('📜 Cheat: '+n+' Hillside Crest main quest chapter'+(n==1?'':'s')+' marked complete.')}catch(_){}return (r|0)+n}}
+// ================= v155: the Hillside Crest main quest together (co-op) =================
+// Owner: "When playing co-op I want the quests to be a shared experience, not separate." Playing together (partners in the same
+// map), the three Hillside chapters are played as one party:
+//  · Abeksi (3150–3155): F at the cleft takes every partner in Hillside Crest I into the city with you. One world (the map's host,
+//    MP.host) runs the snakes for everyone: their eyes watch every hero (partners' spots and crouch come from presence), partners'
+//    footsteps and the rats they scare are heard by the host's snakes (['ab','n',…]), and the host sends the snakes' state to the
+//    others (['ab','s',…], 6 a second, the snakes near each partner), who show them as they are. Whoever is spotted, the whole
+//    party goes back to the party's checkpoint (['ab','c',snake,peer]); the checkpoint is the furthest any of you reached
+//    (['ab','cp',i]). Slipping through the drain takes the whole party out together (['ab','out']).
+//  · The Hilltop Ascent (3160–3162): F at the hill road takes every partner in Hillside Crest II up with you (everyone needs a
+//    mount; no joining a chase already under way). Each rider rides their own mount, but there is one Skarrith: the host's world
+//    runs it after the rearmost rider still riding (['cs','n',s,v] 10 a second), aims every venom volley and strike at a rider
+//    (['cs','v',…], ['cs','k',peer,lane]) and each rider's own world checks its own hits. Riders tell each other where they are
+//    (['cs','p',…]: partners are drawn exactly on the trail, jumps too). A rider who falls (three hits or swallowed) watches the
+//    others ride on (spectating: the camera follows the leading rider, their hero hidden). If a rider gets through the crack
+//    (['cs','w']) the fallen arrive in Hillside Crest III too, lying downed beside the entrance (3085's revive, with a long
+//    timer) for their partner to revive. If everyone falls, the chase starts again for all (['cs','re']).
+//  · The Gate of the Hydra (3170): the Wind Stones' serpents, the song's verses and the opening are shared (['hd',…]); partners
+//    also swap their whole state every few seconds and keep the most progress, so a partner who arrives later catches up.
+// Presence carries cr (crouching in Abeksi), af (frozen: caught), hm (owns a mount), cs (chase: 1 intro · 2 riding · 3 fallen /
+// watching · 4 through). Solo play is unchanged.
+var CL155={q:[],tF:0,err:0,tM:0};
+function cl155On(){return typeof MP!='undefined'&&MP.on&&typeof MPX!='undefined'&&!!MPX.be}
+function cl155Mates(rg){const out=[];if(!cl155On())return out;for(const k in MP.rh){const r=MP.rh[k];if(r&&r.pr&&r.pr.rg===rg&&rg>-2)out.push(r)}return out}
+function cl155Co(){return cl155On()&&MP.rg>=0&&cl155Mates(MP.rg).length>0}
+function cl155Send(e){if(cl155On())CL155.q.push(e)}
+function cl155Flush(now){if(!CL155.q.length||now-CL155.tF<90)return;CL155.tF=now;if(!cl155On()){CL155.q.length=0;return}
+  while(CL155.q.length){const l=[];let n=2;while(CL155.q.length&&l.length<40){const s=JSON.stringify(CL155.q[0]).length;if(l.length&&n+s>3600)break;l.push(CL155.q.shift());n+=s+1}
+    try{MP.room.emit('ev',{r:MP.rg,l}).catch(()=>{})}catch(_){}}}
+const cl155R1=v=>Math.round(v*10)/10,cl155R2=v=>Math.round(v*100)/100;
+// presence: crouch, frozen, a mount, the chase
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.cr=ab152In()&&AB152H.cr?1:0;p.af=ab152In()&&(AB152H.frz||AB152H.cau)?1:0;p.hm=mounts.length?1:0;
+    const R=CH153.R;p.cs=ch153In()&&R?(R.ph=='intro'?1:R.ph=='run'?2:R.ph=='win'?4:3):0}catch(_){}}return f.apply(this,arguments)}}
+// messages
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(cl155On()&&!msg.sameTab&&d&&Array.isArray(d.l)&&MP.rh[msg.peer])for(const q of d.l.slice(0,60)){
+    if(!Array.isArray(q))continue;const t=q[0];if(t==='ab')ab155On(q,msg.peer);else if(t==='cs')cs155On(q,msg.peer);else if(t==='hd')hd155On(q,msg.peer)}}
+  catch(err){if(!CL155.err++)console.warn('v155 coop',err)}return f.apply(this,arguments)}}
+
+// ================= Abeksi together =================
+var AB155={rx:0,tS:0,tC:0,cpS:0,entering:0,U:{}};
+function ab155Co(){return ab152In()&&cl155Co()}
+function ab155Lead(){return !ab155Co()||MP.host===MP.me||!MP.host}
+// every hero the host's snakes can see: me (AB152H itself, live values) and each partner in the city
+function ab155Heroes(){const S=AB152.S,I=S.I,L=[AB152H];
+  for(const r of cl155Mates(MP.rg)){const p=r.pr;if(!(p.hp>0))continue;const u=p.x-I.x0,v=p.z-I.y0;L.push({u,v,cr:p.cr?1:0,lit:ab152Light(u,v),live:!p.af,peer:r.peer})}return L}
+// the host's snakes look at every hero (the one each sees best); the others' snakes follow the host's
+{const f=ab152ActTick;ab152ActTick=function(a,dt,now,H){if(!ab155Co())return f.apply(this,arguments);
+  if(!ab155Lead()){ab155Follow(a,dt);return null}
+  const L=AB155.hs||[H];let best=null,br=0,nb=null,nd=1e9;
+  for(const h of L){if(!h.live)continue;const r=ab152Sees(a,h.u,h.v,h.cr,h.lit);if(r>br){br=r;best=h}const d=Math.hypot(h.u-a.u,h.v-a.v);if(d<nd){nd=d;nb=h}}
+  const tg=best||nb||H,r=f.call(this,a,dt,now,tg);if(r=='caught')a.cBy=tg.peer||MP.me;return r}}
+function ab155Follow(a,dt){a.t+=dt;const T=a.net;if(!T)return;const k=Math.min(1,dt*8);
+  if(Math.hypot(T.u-a.u,T.v-a.v)>4){a.u=T.u;a.v=T.v}else{a.u+=(T.u-a.u)*k;a.v+=(T.v-a.v)*k}
+  let dy=T.yaw-a.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));a.yaw+=dy*k;a.hy+=(T.hy-a.hy)*k;a.ht=a.hy/.6;
+  a.st=T.st;a.sus=T.sus;a.mv=T.mv;a.pi=T.pi;a.seen=T.sus>0&&T.st!='routine'?1:0}
+{const f=ab152ResetActor;ab152ResetActor=function(a){a.net=null;return f.apply(this,arguments)}}
+const AB155ST=['routine','look','investigate','return','caught'];
+{const f=ab152Tick;ab152Tick=function(dt,now){const co=ab155Co();AB155.hs=co&&ab155Lead()&&AB152.S?ab155Heroes():null;const r=f.apply(this,arguments);
+  try{if(ab152In()&&AB152.S){const S=AB152.S;
+    // the host: the snakes near each partner, 6 a second
+    if(co&&ab155Lead()&&now-AB155.tS>160){AB155.tS=now;const I=S.I,ps=cl155Mates(MP.rg).map(r=>[r.pr.x-I.x0,r.pr.z-I.y0]);let flat=[],n=0;
+      S.acts.forEach((a,i)=>{if(!ps.some(p=>Math.hypot(p[0]-a.u,p[1]-a.v)<44))return;flat.push(i,cl155R1(a.u),cl155R1(a.v),cl155R2(a.yaw),cl155R2(a.hy),Math.max(0,AB155ST.indexOf(a.st)),Math.round(a.sus),cl155R1(a.mv||0),a.pi|0);
+        if(++n>=40){cl155Send(['ab','s',flat]);flat=[];n=0}});if(flat.length)cl155Send(['ab','s',flat])}
+    // the party's checkpoint
+    if(co&&(AB152Q.cp>AB155.cpS||now-AB155.tC>3000)){AB155.tC=now;AB155.cpS=AB152Q.cp;cl155Send(['ab','cp',AB152Q.cp])}}}catch(e){if(!CL155.err++)console.warn('v155 abeksi',e)}
+  return r}}
+// a guest's noises are heard by the host's snakes
+{const f=ab152Hear;ab152Hear=function(u,v,r,why){if(!AB155.rx&&ab155Co()&&!ab155Lead()){cl155Send(['ab','n',cl155R1(u),cl155R1(v),cl155R1(r),String(why||'noise').slice(0,8)]);return}return f.apply(this,arguments)}}
+// spotted: the whole party goes back
+{const f=ab152Caught;ab152Caught=function(a){const co=ab155Co(),was=!!AB152H.cau;const r=f.apply(this,arguments);
+  try{if(!was&&co&&ab155Lead()&&!AB155.rx){const S=AB152.S;cl155Send(['ab','c',S.acts.indexOf(a),a.cBy||MP.me]);if(a.cBy&&a.cBy!==MP.me)say('👁 '+mpEsc(mpName(a.cBy))+' was seen! The whole party goes back.')}}catch(_){}return r}}
+// entering together (the leader's checkpoint), side by side
+{const f=ab152Enter;ab152Enter=function(){const co=cl155Co()&&!AB155.rx;AB155.entering=1;const r=f.apply(this,arguments);if(co)cl155Send(['ab','go',AB152Q.cp]);setTimeout(()=>{AB155.entering=0},1500);return r}}
+{const f=ab152Restart;ab152Restart=function(first){if(!ab152In()&&!AB155.entering&&AB152Q.st>=2)return;const r=f.apply(this,arguments);
+  // partners stand side by side across the checkpoint (sorted by peer id: everyone works out the same order)
+  try{if(cl155On()&&Object.keys(MP.rh).length){const ids=[MP.me].concat(Object.keys(MP.rh)).sort(),k=ids.indexOf(MP.me);if(k>0){const c=ab152Spot(AB152Q.cp),S=AB152.S,G=S.G,I=S.I,o0=Math.ceil(k/2)*(k%2?1:-1)*.95;
+      for(const off of [o0,-o0,o0*.5]){const x=c.x+Math.cos(c.ry)*off,z=c.z-Math.sin(c.ry)*off,u=Math.round(x-I.x0),v=Math.round(z-I.y0);
+        if(u>=0&&v>=0&&u<G.W&&v<G.H&&!G.sol[v*G.W+u]&&G.cls[v*G.W+u]<2){pl.position.x=x;pl.position.z=z;pl.position.y=GH(x,z);break}}}}}catch(_){}return r}}
+// out through the drain together
+{const f=ab152Finish;ab152Finish=function(){const co=ab155Co()&&!AB155.rx;if(co&&!AB152H.cau)cl155Send(['ab','out']);return f.apply(this,arguments)}}
+function ab155On(q,peer){const k=q[1],S=AB152.S,nm=mpEsc(mpName(peer));
+  if(k==='go'){let g=-1;try{g=curIns().g}catch(_){}if(g!==5||ab152In()||AF||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;
+    AB152Q.cp=Math.max(0,Math.min(5,q[2]|0));say('👥 '+nm+' leads the way into Abeksi — you follow.');AB155.rx=1;try{ab152Enter()}finally{AB155.rx=0}}
+  else if(k==='cp'&&Number.isInteger(q[2])){const i=Math.max(0,Math.min(5,q[2]));if(i>AB152Q.cp&&AB152Q.st>=1&&AB152Q.st<2){AB152Q.cp=i;AB155.cpS=i;if(ab152In())try{pickup({ic:'✦',t:'Checkpoint',col:'#ffe07a',sub:ab152Plan().CP[i][3]+' · '+mpName(peer)})}catch(_){}}}
+  else if(!ab152In()||!S)return;
+  else if(k==='s'&&Array.isArray(q[2])&&!ab155Lead()&&peer===MP.host){const F=q[2];for(let j=0;j+8<F.length;j+=9){const a=S.acts[F[j]];if(!a)continue;
+      a.net={u:+F[j+1],v:+F[j+2],yaw:+F[j+3],hy:+F[j+4],st:AB155ST[F[j+5]]||'routine',sus:+F[j+6]||0,mv:+F[j+7]||0,pi:F[j+8]|0};if(a.path&&a.net.pi>=a.path.length)a.net.pi=0}}
+  else if(k==='n'&&ab155Lead()){AB155.rx=1;try{ab152Hear(+q[2],+q[3],Math.min(12,+q[4]||0),String(q[5]||'noise'))}finally{AB155.rx=0}}
+  else if(k==='c'&&peer===MP.host){const a=S.acts[q[2]|0];if(!a||AB152H.cau)return;AB155.rx=1;try{ab152Caught(a)}finally{AB155.rx=0}
+    if(q[3]&&q[3]!==MP.me)say('👁 '+mpEsc(mpName(q[3]))+' was seen! The whole party goes back.')}
+  else if(k==='out'){AB155.rx=1;try{if(AB152H.cau){AB152H.cau=null;AB152H.frz=0}say('👥 '+nm+' found the drain — you slip out together.');ab152Finish()}finally{AB155.rx=0}}}
+// partners crouch on screen (an exact undo each frame, like the hero's own crouch layer)
+function ab155CrPose(r,on){const U=AB155.U[r.peer]||(AB155.U[r.peer]=[]);for(let i=U.length-1;i>=0;i--){const u=U[i];if(u[0][u[1]]===u[3])u[0][u[1]]=u[2]}U.length=0;
+  if(!on||!r.m||!r.m.bones)return;const B=r.m.bones,add=(b,ax,v)=>{if(!b)return;const R=ax=='py'?b.position:b.rotation,a=ax=='py'?'y':ax,p=R[a];R[a]=p+v;U.push([R,a,p,R[a]])};
+  [['lh0',-.95],['rh0',-.95],['lh1',1.35],['rh1',1.35],['lh2',-.42],['rh2',-.42],['spine',.38],['chest',.14],['head',-.3],['aL0',-.3],['aR0',-.3],['aL1',-.35],['aR1',-.35]].forEach(([n,v])=>add(B[n],'x',v));add(B.pelvis,'py',-.2)}
+
+// ================= the Hilltop Ascent together =================
+var CS155={p:{},won:{},n:null,tP:0,tN:0,rx:0,out:0,reT:0};
+function cs155Co(){return ch153In()&&cl155Co()}
+function cs155Rider(peer){const q=CS155.p[peer];if(!q)return null;const age=Math.min(.35,(nowP()-q.t)/1000);return {peer,s:q.s+(q.ph==2?q.v*age:0),o:q.o,y:q.y,v:q.v,ph:q.ph,hp:q.hp}}
+// partners still riding (in this chase, heard from in the last 2.5 s)
+function cs155Alive(){const out=[];for(const r of cl155Mates(MP.rg)){const q=CS155.p[r.peer];if(!q||nowP()-q.t>2500)continue;if(q.ph==1||q.ph==2)out.push(cs155Rider(r.peer))}return out}
+function cs155Riders(){const R=CH153.R,L=cs155Alive();if(R&&(R.ph=='run'||R.ph=='intro'))L.push({peer:MP.me,s:R.s,o:R.o,y:R.y,v:R.v,ph:R.ph=='run'?2:1,me:1});return L}
+function cs155Won(){return Object.keys(CS155.won).length>0}
+// the one Skarrith: the host's world drives it, the others follow; everyone animates it and checks their own hits
+{const f=ch153SnakeTick;ch153SnakeTick=function(dt,now){const R=CH153.R;if(!R||!cs155Co()||R.ph=='intro'||R.ph=='win')return f.apply(this,arguments);return cs155Snake(dt,now)}}
+function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn,lead=MP.host===MP.me||!MP.host;N.st='run';
+  const run=cs155Riders().filter(q=>q.ph==2),tg=run.length?run.reduce((a,b)=>b.s<a.s?b:a):null;
+  if(lead){
+    if(tg){const gap=tg.s-N.s,B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.ph=='run'&&R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
+      const ph=K.venom.filter(q=>tg.s>=q[0]).pop();if(ph&&!N.strike){N.spit-=dt;if(N.spit<=0){N.spit=ph[1]*(.85+Math.random()*.3);N.rear=1;N.spitAt=.42;N.spitN=ph[2];N.spitTg=tg.peer}}
+      if(N.spitAt!=null){N.spitAt-=dt;if(N.spitAt<=0){N.spitAt=null;const t2=run.find(q=>q.peer===N.spitTg)||tg,L=ch153SpitPlan(N.spitN,t2.s,t2.o,t2.v);
+        cl155Send(['cs','v',N.spitN,L.map(q=>[cl155R1(q[0]),cl155R2(q[1])])]);ch153SpitSpawn(L,N.spitN)}}
+      const sk=CH153V.strike;N.next-=dt;const busy=S.obs.some(q=>q.k!='gap'&&q.k!='log'&&q.s>tg.s-2&&q.s<tg.s+tg.v*1.1+5);
+      if(!N.strike&&N.next<=0&&gap<sk[0]&&tg.s>110&&!busy){N.next=tg.s>600?sk[2]:sk[1];N.strike={t:0,o:tg.o,s0:N.s,tg:tg.peer};cl155Send(['cs','k',tg.peer,cl155R2(tg.o)]);try{svSnd('hiss',1.2,.8)}catch(_){}}}
+    else{N.v*=Math.max(0,1-dt*2);N.s+=N.v*dt}
+    if(now-CS155.tN>100){CS155.tN=now;cl155Send(['cs','n',cl155R1(N.s),cl155R1(N.v)])}}
+  else{const n=CS155.n;if(n){const want=n.s+n.v*Math.min(.4,(nowP()-n.t)/1000);N.v=n.v;N.s+=N.v*dt;if(Math.abs(want-N.s)>8)N.s=want;else N.s+=(want-N.s)*Math.min(1,dt*5)}}
+  // the strike: it tracks its rider while it draws back; that rider's own world checks the hit
+  if(N.strike){const T=N.strike,me=T.tg===MP.me,tr=me?(R.ph=='run'?R:null):cs155Rider(T.tg);T.t+=dt;if(T.t<.75&&tr)T.o+=(tr.o-T.o)*Math.min(1,dt*3.2);
+    if(T.t>=1.05&&!T.hit){T.hit=1;if(me&&R.ph=='run'){if(Math.abs(R.o-T.o)<1.25&&R.y<1.2)ch153Hit('strike');else try{pickup({ic:'💨',t:'Dodged!',col:'#c8ff90'})}catch(_){}}}
+    if(T.t>1.6)N.strike=null}
+  if(R.ph=='run'&&R.s-N.s<CH153V.catch)ch153Die('swallow');
+  N.rear=Math.max(0,N.rear-dt*1.6);N.o+=((tg?tg.o*.5:0)-N.o)*Math.min(1,dt*1.5);
+  // a strike at a partner is drawn round that partner
+  const T=N.strike;let keep=null;if(T&&T.tg!==MP.me){const q=cs155Rider(T.tg);if(q){keep=[R.s,R.o];R.s=q.s;R.o=q.o}}
+  try{ch153SnakeAnim(now)}finally{if(keep){R.s=keep[0];R.o=keep[1]}}}
+// falling with partners still riding: watch them; when nobody rides any more, either follow the winners to III or start again
+{const f=ch153Tick;ch153Tick=function(dt,now){const R=CH153.R;if(!R)return f.apply(this,arguments);const co=cs155Co();
+  try{if(co){let m=null;cs155Alive().forEach(q=>{if(q.ph==2&&(m==null||q.s>m))m=q.s});CH153.lead=m}else CH153.lead=null}catch(_){}
+  if(co&&R.ph=='dead'&&R.dead.t+Math.max(0,dt)>=2.0&&!R.dead.fade&&!R.dead.co){R.dead.co=1;const al=cs155Alive();
+    if(al.length){R.ph='spec';R.spec={t:0,wait:0};const n=al.map(q=>mpName(q.peer)).join(', ');say('👁 You fell. Watch '+mpEsc(n)+' ride on — if they get through, they can revive you on the other side.')}
+    else if(cs155Won()){cs155Out();return}
+    else{CS155.reT=nowP();cl155Send(['cs','re']);[500,1100].forEach(t=>setTimeout(()=>cl155Send(['cs','re']),t))}}
+  if(R.ph=='spec'){cs155Spec(dt,now);cs155Tell(now);return}
+  const r=f.apply(this,arguments);if(co)cs155Tell(now);return r}}
+function cs155Tell(now){const R=CH153.R;if(!R||now-CS155.tP<100)return;CS155.tP=now;const ph=R.ph=='intro'?1:R.ph=='run'?2:R.ph=='win'?4:3;
+  cl155Send(['cs','p',cl155R1(R.ph=='spec'?-99:R.s),cl155R2(R.o),cl155R2(R.y||0),ph,R.hp|0,cl155R1(R.v||0)])}
+function cs155Spec(dt,now){const R=CH153.R,S=CH153.S,P=S.P,K=S.K;R.t+=dt;R.spec.t+=dt;
+  const al=cs155Alive();
+  // a partner back at the foot of the trail (the chase started again for them): start again with them
+  if(al.some(q=>q.ph==1)&&!R.spec.fade&&R.spec.t>.5){R.spec.fade=1;CS155.won={};fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}
+  if(!al.length){if(cs155Won()){cs155Out();return}if(!R.spec.wait)R.spec.wait=nowP();
+    if(nowP()-R.spec.wait>1600&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}
+  else R.spec.wait=0;
+  const fo=al.length?al.reduce((a,b)=>b.s>a.s?b:a):null;
+  // the rider I watch is suddenly far back down the trail: the chase started again for them, so it does for me
+  if(fo&&R.spec.lastS!=null&&fo.s<R.spec.lastS-25&&!R.spec.fade){R.spec.fade=1;CS155.won={};fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}
+  if(fo){R.s=fo.s;R.o=fo.o;R.v=fo.v;R.spec.who=fo.peer;R.spec.lastS=fo.s}R.y=0;
+  pl.visible=false;if(typeof mModel!='undefined'&&mModel)mModel.visible=false;
+  const [x,z,h]=P.at(R.s,R.o);pl.position.set(x,h,z);pl.rotation.y=P.yaw(R.s);if(mModel)mModel.position.copy(pl.position);
+  ch153SnakeTick(dt,now);ch153FxTick(dt,now);
+  const tn=R.s>K.tunnel[0]-4&&R.s<K.tunnel[1]+4;R.dark=(R.dark||0)+((tn?1:0)-(R.dark||0))*Math.min(1,dt*2)}
+// the fallen arrive in Hillside Crest III with the winners, lying there to be revived
+function cs155Out(){if(CS155.out)return;CS155.out=1;CH153Q.st=2;CH153.lv=1;
+  fadeTo(()=>{CH153.R=null;pl.visible=true;if(typeof mModel!='undefined'&&mModel)mModel.visible=true;const N=INSL[7];insArrive(N);insMark(N);
+    setTimeout(()=>{CS155.out=0;cs155Downed()},900)})}
+function cs155Downed(n){const rg=mpCurRg(),st=cl155Mates(rg).filter(r=>r.pr.hp>0&&!r.pr.dn);
+  if(!st.length){if((n|0)<6){setTimeout(()=>cs155Downed((n|0)+1),700);return}say('🐍 Your partners got through — you come to on the hilltops.');return}
+  if(MP.rg!==rg)try{mpRoles(performance.now())}catch(_){}
+  try{rv148Fall();RV148.T=RV155.T;RV148.t=RV155.T;RV148.since=performance.now()+5000;RV148.long=1}catch(e){console.warn('v155 downed',e)}
+  say('💀 You fell on the mountain — '+mpEsc(st.map(r=>mpName(r.peer)).join(', '))+' got through and carried on. They can revive you here (F beside you).');cl155Send(['cs','dn'])}
+var RV155={T:180};
+{const f=rv148Up;rv148Up=function(){const r=f.apply(this,arguments);if(RV148.long){RV148.long=0;RV148.T=30}return r}}
+{const f=rv148Die;rv148Die=function(){const r=f.apply(this,arguments);if(RV148.long){RV148.long=0;RV148.T=30}return r}}
+{const f=ch153Win;ch153Win=function(){const R=CH153.R,was=R&&R.ph;const r=f.apply(this,arguments);if(was=='run'&&CH153.R&&CH153.R.ph=='win'&&cs155Co())cl155Send(['cs','w']);return r}}
+// riding up together: every partner in Mistmere comes too (they all need a mount)
+{const f=ch153Enter;ch153Enter=function(){CS155.won={};CS155.p={};CS155.n=null;if(!CS155.rx&&cl155Co()&&!AF&&mounts.length){const lack=cl155Mates(MP.rg).filter(r=>!r.pr.hm).map(r=>mpName(r.peer));
+    if(lack.length)return say('🐎 '+mpEsc(lack.join(', '))+(lack.length>1?' need':' needs')+' a mount first — the whole party rides up together.');
+    cl155Send(['cs','go'])}
+  return f.apply(this,arguments)}}
+{const G=SP152.gates.ascent,f=G.prompt;G.prompt=function(s){if(!ch153Done()&&cl155On()){const up=cl155Mates(31);
+    if(up.length)return {label:'🐍 '+up.map(r=>mpName(r.peer)).join(', ')+' '+(up.length>1?'are':'is')+' racing up the mountain — wait for them here',fn:()=>say('🐍 Your partners are on the mountain trail. Wait here; you can ride up together once they are back.')};
+    const lack=cl155Mates(MP.rg).filter(r=>!r.pr.hm).map(r=>mpName(r.peer));if(mounts.length&&lack.length)return {label:'🐎 Ascend to the hilltops · '+lack.join(', ')+(lack.length>1?' need':' needs')+' a mount',fn:()=>ch153Enter()}}
+  const r=f.apply(this,arguments);if(r&&r.label=='F · Ascend to the hilltops'&&cl155Co())r.label='F · Ascend to the hilltops (with your party)';return r}}
+function cs155On(q,peer){const k=q[1],R=CH153.R,nm=mpEsc(mpName(peer));
+  if(k==='go'){let g=-1;try{g=curIns().g}catch(_){}if(g!==6||ch153In()||AF||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;
+    if(!mounts.length)return say('🐎 '+nm+' rode up the hill path, but you have no mount to follow.');
+    say('👥 '+nm+' rides up the hill path — you ride with them!');CS155.rx=1;try{ch153Enter()}finally{CS155.rx=0}return}
+  if(k==='dn'){say('🤝 '+nm+' fell on the mountain — they lie here. Press F beside them to revive them.');return}
+  if(!ch153In())return;
+  if(k==='p'){CS155.p[peer]={s:+q[2]||0,o:+q[3]||0,y:+q[4]||0,ph:q[5]|0,hp:q[6]|0,v:+q[7]||0,t:nowP()}}
+  else if(k==='n'&&peer===MP.host){CS155.n={s:+q[2]||0,v:+q[3]||0,t:nowP()}}
+  else if(k==='w'){CS155.won[peer]=1;say('🐍 '+nm+' squeezed through the crack!')}
+  else if(!R||!CH153.S)return;
+  else if(k==='v'&&peer===MP.host&&Array.isArray(q[3])){const L=q[3].filter(a=>Array.isArray(a)).slice(0,5).map(a=>[+a[0]||0,+a[1]||0]);R.sn.rear=1;ch153SpitSpawn(L,q[2]|0)}
+  else if(k==='k'&&peer===MP.host&&typeof q[2]=='string'){if(!R.sn.strike){R.sn.strike={t:0,o:+q[3]||0,s0:R.sn.s,tg:q[2]};try{svSnd('hiss',1.2,.8)}catch(_){}}}
+  else if(k==='re'){if(R.ph=='run'||R.ph=='intro'||nowP()-CS155.reT<2500)return;CS155.reT=nowP();CS155.won={};
+    if(R.ph=='dead'){R.dead.co=1;return}   // my own fall's fade restarts me anyway (ch153Tick)
+    if(R.ph=='spec'&&!R.spec.fade){R.spec.fade=1;fadeTo(()=>{pl.visible=true;if(mModel)mModel.visible=true;ch153Reset(false)})}}}
+// partners on the trail: drawn exactly where they ride (jumps too); fallen partners are hidden
+{const f=mpTick;mpTick=function(){try{for(const k in AB155.U)ab155CrPose({peer:k},false)}catch(_){}const r=f.apply(this,arguments);
+  try{if(!cl155On())return r;const inC=ch153In()&&CH153.S,inA=ab152In();
+    for(const r2 of cl155Mates(MP.rg)){const m=r2.m;if(!m||!m.visible)continue;
+      if(inA&&r2.pr.cr)ab155CrPose(r2,true);
+      if(!inC)continue;const q=cs155Rider(r2.peer),g=r2.mt150&&r2.mt150.g;
+      if(!q||nowP()-CS155.p[r2.peer].t>2500){if(g)g.visible=true;continue}
+      if(q.ph==3||q.s<-50){m.visible=false;if(g)g.visible=false;continue}
+      const P=CH153.S.P,[x,z,h]=P.at(q.s,q.o);m.position.set(x,h+q.y,z);m.rotation.y=P.yaw(q.s);if(g){g.visible=true;g.position.copy(m.position);g.rotation.y=m.rotation.y}}}catch(e){if(!CL155.err++)console.warn('v155 riders',e)}
+  return r}}
+// the HUD: who you are watching, how your partners are doing
+{const f=ch153Hud;ch153Hud=function(){const r=f.apply(this,arguments);try{const el=$('ch153h'),R=CH153.R;if(!el||!R||el.classList.contains('hide'))return r;const k=el.querySelector('.k');
+    if(R.ph=='spec'){k.textContent='👁 Watching '+(R.spec.who?mpName(R.spec.who):'…')+' · you fell';el.querySelector('.hp').innerHTML='<span>💀</span>'}
+    else if(cs155Co()){const L=cl155Mates(MP.rg).map(m=>{const q=CS155.p[m.peer];return mpName(m.peer)+' '+(!q?'…':q.ph==3?'💀':q.ph==4?'✓':'💚'.repeat(Math.max(0,q.hp)))});k.textContent='Space · jump   A / D · steer   ·   '+L.join(' · ')}}catch(_){}return r}}
+
+// ================= the Gate of the Hydra together =================
+var HD155={rx:0,tS:0};
+function hd155Co(){return cl155On()&&cl155Mates(7).length>0}
+{const f=hd154Turn;hd154Turn=function(j){const r=f.apply(this,arguments);if(!HD155.rx&&hd155Co())cl155Send(['hd','t',j,HD154.vane[j]]);return r}}
+{const f=hd154SongStart;hd154SongStart=function(){const had=!!HD154.song,r=f.apply(this,arguments);if(!had&&HD154.song&&!HD155.rx&&hd155Co())cl155Send(['hd','s',HD154.v]);return r}}
+{const f=hd154Strike;hd154Strike=function(j){const G=HD154.song;if(!G||G.mode!='play')return f.apply(this,arguments);const v=HD154.v,i=G.in,r=f.apply(this,arguments);if(!HD155.rx&&hd155Co())cl155Send(['hd','k',j,v,i]);return r}}
+{const f=hd154Open;hd154Open=function(){const was=HD154.st>=2||!!HD154.op,r=f.apply(this,arguments);if(!was&&!HD155.rx&&hd155Co())cl155Send(['hd','o']);return r}}
+function hd155Want(j){try{return hd154Plan().st[j].want}catch(_){return -1}}
+function hd155On(q,peer){const k=q[1],nm=mpEsc(mpName(peer)),here=hd154In()&&!!HD154.S;HD155.rx=1;try{
+  if(k==='t'&&Number.isInteger(q[2])&&q[2]>=0&&q[2]<5){const j=q[2],v=((q[3]|0)%8+8)%8;if(hd154Done()||HD154.vane[j]===v)return;
+    if(here){HD154.vane[j]=(v+7)%8;hd154Turn(j);say('👥 '+nm+' turned the serpent of '+HD154.nm[j]+'.')}else{HD154.vane[j]=v;HD154.on[j]=v===hd155Want(j)?1:0}}
+  else if(k==='s'&&here&&!HD154.song&&HD154.v===(q[2]|0)&&!hd154Done()&&hd154N()>=5){say('👥 '+nm+' asks the Hydra to sing.');hd154SongStart()}
+  else if(k==='k'&&here&&Number.isInteger(q[2])){const G=HD154.song;if(!G||HD154.v!==(q[3]|0)||G.in!==(q[4]|0)||(G.mode!='play'&&G.mode!='sing'))return;
+    if(G.mode=='sing'){G.mode='play';G.in=0;G.last=null}hd154Strike(q[2])}
+  else if(k==='o'){if(HD154.st>=2||HD154.op)return;if(here)hd154Open();else{HD154.st=2;HD154.song=null}}
+  else if(k==='all'&&Array.isArray(q[2])){hd155Merge(q[2],q[3]|0,q[4]|0)}}finally{HD155.rx=0}}
+// every few seconds partners in III swap their whole state and keep the most progress (a partner who comes later catches up)
+function hd155Merge(vane,v,st){if(hd154Done())return;const here=hd154In()&&!!HD154.S;let ch=0;
+  if(st>=2){if(here)hd154Open();else HD154.st=2;return}
+  for(let j=0;j<5;j++){const w=hd155Want(j),t=((vane[j]|0)%8+8)%8;if(t===w&&HD154.vane[j]!==w){HD154.vane[j]=w;HD154.on[j]=1;ch=1}}
+  if(v>HD154.v&&!HD154.song&&v<=3){HD154.v=v;ch=1}if(st>HD154.st)HD154.st=st;if(ch&&HD154.S)hd154Sync()}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{
+    if(hd154In()&&hd155Co()&&now-HD155.tS>3000){HD155.tS=now;cl155Send(['hd','all',HD154.vane.slice(),HD154.v,HD154.st])}
+    cl155Flush(now)}catch(e){if(!CL155.err++)console.warn('v155 coop',e)}return r}}

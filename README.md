@@ -55,6 +55,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v149 Ssith'ra's body: the chain layout (`ssr149Post`: path = last frame's body, bend limits `SSR149.th0`/`th`, self-avoidance, smooth rearing curve, the dive pours down the hole), the flesh core tube (`ssr149Core`) and the remodelled segment armour (`ssr149Body`) | `3078-v149-ssithra-body.js` |
 | v150 owner's co-op list: partners' effects clean up and mounts show (`V150`, `3090`), monsters go for partners' companions (`AG150`, `3091`), shared progress (kills, camp clears `['cc']`, lamps `['m143']`, sigils `['m145']`, instance reach `ir`, rituals fought together `['r145']`/`['p145']`, `CP150`, `3092`), sigil rituals 50 wolves, ¼ XP / loot, stuck wolves blink (`GW150`, `3093`), the host's Duskhold for guests (`DK150`, `['ks']` / `['kd']` / `['kdo']`, `3094`), Sovereign moves start from the driver's pose (`BS150`, `3096`), Tab in boss fights, chests off the hatch, raven robes follow the legs (`FX150`, `RV150`, `3097`); bats keep only hind legs (0630, 2640); the hatchet's edge keeps one side (3070) | `3090`–`3097` |
 | v151 intro cinematic for new characters (`ic151Play` after `ccBegin`; own canvas/renderer `#ic151`; the main loop waits while `IC151.on`; every shot is `ic151Frame(S,t)`; score `ic151Score`; narration is text only (`IC151.lines`; `IC151.speak` / `IC151.voiceUrl` for a voice later); v151b: an earthquake opens the ground (no hand): one intensity curve `ic151Q(t)` drives the camera shake, the trees and undergrowth swaying in their own material (`S.matT`, `S.quakeU`), birds, falling leaves and hopping pebbles (`ic151Quake`/`ic151QuakeAt`) and the plates heaving until 21.1 s (`ic151Heave`); cracks spread from the middle (`S.crk`, `S.cracks`) out of five split points `S.tip0`; the ground breaks into Voronoi pieces (`ic151Shatter`) and caves in through a small rigid-body simulation run once (`ic151PhysInit`/`ic151PhysStep`, time-sliced live; support gives way via `ic151Ropen`, walls `ic151Env`, impacts → dust `S.efx`; the big jolt `IC151G.imp`); the rat's slab hinges on the meadow lip (`ic151RatCellM`); the rat walks on a precomputed path (`ic151RatTrack`, idle keys `IC151RK`) with IK legs (`ic151RatPoseIK`); floating spread out with closed eyes (`P.out`, `R.eye`); the upright rat is the game's bare rat posed from a settled base (`ic151HeroPose`); skip = button/Esc/Enter/Space; not played under automation unless `window.KQ_INTRO`); part 2 from 55.9 s in the real Duskhold scene (`ic151Dusk`, 3081): the hero walks a precomputed route (`ic151DuskInit` legs, `ic151DPos`) to the Steward → Innkeeper → Blacksmith → Merchant (name cards) → Cheddar at his quest board (the game's own Cheddar, `CHQ148.P.ch`, posed and put back), out of the south gate, then the voice lines over portal cuts (only a faint Sovereign face `IC151.SF`, no titles: v151e); shot list and timings in `IC151D`; cameras `ic151DCam`; name tags over the town folk hidden (`ic151DTags`); subtitles break only between words; the game starts on the Portal Road (40, 349.4). v151c, the flow (`3082`): a new game (New Game / Begin on the title, the layout picker without a save, New game in the save prompt) plays part one (`ic151Play(null,'p1')`, to `IC151.p1End`, then the light fades into the hero creator); "Begin your journey" plays part two (`'p2'`, `ic151BuildP2`: no woodland, from `IC151.cut`) with the hero and companion just made; `'all'` = the whole film (tests, video); Skip: part one → the creator, part two → the game; a greeted shopkeeper stops working (`_wk.ic151H`, wraps `wkAnim103`: the smith stops hammering). **Video: rendered on GitHub** (`tools/render.sh <changed ranges>|all`, `.github/workflows/render.yml`: 5 s pieces drawn at the same time, the rest from the last render in the Actions cache; `IC151.noDraw` lets a piece replay the town up to its start) | `3080-v151-intro-cinematic.js`, `3081-v151-intro-duskhold.js`, `3082-v151-intro-flow.js`; test/preview video: `v151_intro.py` (`VIDEO=1` renders an MP4 with sound; `F0`/`F1` frame range, `NOENC`), `v151_intro_live.py`; `tools/render.sh`, `tools/render_plan.py`, `tools/render_join.py` |
+| v151 The Lantern Road rework (owner): the outpost by Kindlelight I's entrance (`mq151Cfg().A` 36 steps down the road), lampposts along the whole road ~7 apart (`mq151Cfg().gap`, 47) at 1 glowbulb each (`MQ143.per`), every kill drops one until enough are carried (`MQ143.drop` 1), the Ripper rolls at 3 tiles/s, pre-v151 saves refunded; the entrance camp moves to the nearest open side field (`mq151MoveCamp`, called from 0045 after every seeded map step) | `3020`, `3023` (hook in `0045`) |
+| v151 Armored trait look: a riveted war harness (leather blanket, overlapping iron spine plates, rivets, flank flaps, `lpArmor151`) replaces the grey back domes that read as stones; picture sheet `test/v151_armor_look.py` | `0610` (`lpExtras`) |
+| v152–v155 Hillside Crest main quest (v155: played together in co-op, `3180`): special instances (`SP152`, `3150`), Abeksi city stealth level (`3151`–`3155`), the Hilltop Ascent chase (`3160`–`3162`), the Gate of the Hydra puzzle (`HD154`, `3170`) | `3150`–`3170` (hooks in `0045`) |
 | loot, secrets, treasure maps, gathering nodes | `1330`–`1360` (v89 loot), `0102-gathering.js` |
 | UI theme, icons, menus | `0020`–`0040` (v88 icons), `1040`–`1080` (v88 menus/theme), `1660`–`1670` (v90 ui) |
 | hero / humanoid models | `0090`, `0800` (v83), `1400`–`1530` (v94), `1540`–`1550` (v95 armour), `0010` (v99 proportions), `2100`–`2130` (v114 beast races) |
@@ -575,22 +578,30 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **The Lantern Road (v143, Kindlelight I main quest, `3020`–`3023`)**: the first chapter of a main quest line per zone (one chapter per
   field instance; only Kindlelight I so far). Kindlelight I's gateway to II is dormant until the quest is done: its F prompt is locked by a
   `portalPrompt` wrapper (`insGo` itself is not gated, so travel from the portal window, co-op joins and tests still work).
-  * Layout (`3020`, `mq143Plan`, a pure function of the map data, cached): the outpost on the road's last straight, `N-52` steps before the
-    gateway; 8 lampposts from `A+8` to `N-10`, alternating sides 2.7 off the road; the Ripper starts on the road at `A+2` and parks beside
+  * Layout (`3020`, `mq143Plan`, a pure function of the map data, cached): since v151 the outpost stands near the entrance, `A` = 36
+    steps down the road (`mq151A`, settings in the hoisted `mq151Cfg()` because 0045 and 0070 call this file before it runs; v143 put it
+    `N-52` steps before the gateway); lampposts from `A+8` to `N-10` about 7 steps apart (47 in Kindlelight I), alternating sides 2.7
+    off the road; the Ripper starts on the road at `A+2` and parks beside
     the gateway on the side away from Cheddar's gateway spot. `mq143Keep` keeps decorations out of the outpost, the lampposts and the
     parking spot: 1680's `place` returns true without placing (counted as placed, so the seeded stream and every other decoration are
     unchanged). Roaming groups whose home is within 17 of the outpost are dropped (`rosterBuild` wrapper).
+  * The entrance camp (v151, `mq151MoveCamp`): Kindlelight I's camp 0 stood where the outpost is now. 0045 calls this right after the
+    map's last seeded step (before `v112Map` / `cs123Map`), so tiles, water and harvest nodes everywhere else stay as they were. It moves
+    the camp record in place (`I.cl[j]`, shared with `PMAP[0].cl`) to the nearest branch-end field (r ≥ 15, 24+ off the road, away from
+    the entrance, gateway, outpost and other camps: (185,143), up the side path that leaves the road at the outpost), clears water and
+    harvest nodes within 14 there, and keeps its number (design `0_0_0` Caustic Pool, theme, saves). The old clearing stays open ground.
   * Wardens (`3021`): 7 armoured animals (wolf captain, boar, bear, hound, fox, lynx, beaver engineer) built as town folk
     (`FK137.out` / `FKO` labels `Lantern Warden · <key>`) wearing the heroes' heavy chest armour (`mdChestO` with a hand-made design:
     aegis / warplate / wall / hauberk / cuirass / mail), greaves, a tabard, the lantern sigil and a steel helm lofted over the folk skull
     (`mqw143Helm`: cap, kettle brim, crest, cheek guards, the captain's plume, the engineer's goggles). Weapons and shields are rigid kits
     mounted on the paw bones in the guard pose (`MQW143_POSE`); `mqw143Anim` = folk rest + guard pose + v93 idle, or the folk walk.
   * Quest (`3023`): `MQ143.st` 0 not met · 1 met · 2 rolling · 3 done; done also when II is reached (`mq143Done`). Glowbulbs are a quest item
-    (`MQ143.b`, not a material, no other use): every Kindlelight I kill drops one at `MQ143.drop` (55%) while more are needed (`mq143Need`:
-    dark lamps × 3 − carried − on the ground); kind `mq143` drops go through `take`. F at a lamppost with 3+ lights it; the last lamp
-    starts the roll (`MQ143.speed` 1.9 tiles/s along a Catmull-Rom route, wheels spin, chimney smoke, two escorts walk beside it), then the
+    (`MQ143.b`, not a material, no other use): every Kindlelight I kill drops one at `MQ143.drop` (100% since v151, was 55%; in addition to its normal loot) while more are needed (`mq143Need`:
+    dark lamps × `MQ143.per` (1 since v151, was 3) − carried − on the ground); kind `mq143` drops go through `take`. F at a lamppost with a bulb lights it; the last lamp
+    starts the roll (`MQ143.speed` 3 tiles/s since v151, was 1.9 along a Catmull-Rom route, wheels spin, chimney smoke, two escorts walk beside it), then the
     fire-up (jacks, claws open, coil charges, arcs to the arch, flash) opens the gateway (st 3). Leaving the instance mid-roll finishes it;
-    a mid-roll save loads as done. Saved as `x2.mq143 {st,b,lit[8],seen}`; saves without it start at 0 (or done if II was reached).
+    a mid-roll save loads as done. Saved as `x2.mq143 {v,st,b,lit[one per lamp],seen}`; saves without it start at 0 (or done if II was reached); saves before v151 (`v` < 151,
+    8 lamps) get 3 bulbs back per lamp they had lit and start the new road dark.
     The scene is built lazily the first time the hero is in Kindlelight I and hidden elsewhere (its pooled point lights go to 0).
   * UI: tracker `#mqt143` sits above Cheddar's (`chqTrkPos132` wrapper), captain window `XR.mq143`, minimap / N-map marks, the bag's
     Materials tab lists glowbulbs under Quest items (`kqmMatTab` wrapper), icon `KQI.glowbulb` (emoji 🪔).
@@ -631,6 +642,43 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     puffs), spawned as minions (local in co-op).
   * Saved as `x2.mq145 {at[3], fd[3]}`; done also when the Den was reached (`mq145Done`). Tracker uses `#mqt143` in III.
   Tests: `v145_sigils.py`.
+- **Hillside Crest main quest (v152–v154)**: three chapters, one per field instance; none of its gateways is a portal.
+  * Special instances (`3150`, `SP152`): one-time levels with their own instance records (`sp152Defs`, painted by `sp152Map` /
+    `sp152Terrain` from 0045; `insAt` falls back to `spIns` for rows below the zone grid). `sp152Gate(key,{ig,where,build,prompt,r})`
+    hides an instance's 'next' portal and puts the level's own entrance there (`sp152GateSpot`: the gateway clearing's far edge).
+    `SP152.R[key]` rules while inside: `park` (companions hidden), `noMount` / `forceMount`, `noFight`, `noRecall`, `onLoad`.
+    Tracker `#mqt152` (`SP152.trk[key]`), atmosphere `sp152Theme`.
+  * **Abeksi city (v152, I → II, `3151`–`3155`)**: "F · Sneak through Abeksi city" at a carved archway in I. Pure stealth through a
+    snake city in six districts (Breach, Market, Dwellings, Rat Warrens, Great Kitchen, Gate Yard), 6 checkpoints; seen = caught →
+    back to the last checkpoint. Ctrl (tap, toggles; holding Ctrl+W would close the tab) or C crouches: quieter, smaller to see.
+    Sight and hearing numbers `AB152V`; actors (`ab152MakeActor`, routines, poses `AB152P`) sit, eat, talk, work, patrol, investigate.
+    Plan `ab152Plan`, models `3152`, actors `3153`, poses `3154`, the level `3155`. Saved `x2.ab152`; done when II was reached.
+    Tests `v152_abeksi.py`, `v152_route.py` (an unseen route through every district), pictures `v152_look.py`.
+  * **The Hilltop Ascent (v153, II → III, `3160`–`3162`)**: "F · Ascend to the hilltops" at a hill road in II (a mount needed). A mounted
+    chase up a spiral trail (`ch153Path`, `ch153Course`: boulders, logs, spikes, gaps, rockslides, a plank bridge, a tunnel); Space jumps;
+    every mount runs at `CH153V.spd`; Skarrith (`ch153Snake`) chases on a rubber band, spits venom (phases in the course) and strikes from
+    the side; 3 hits or a swallow = start again. The crack at the summit leads to III. Saved `x2.ch153`. Tests `v153_ascent.py`
+    (an autopilot rides the whole trail: about 110 s), pictures `v153_look.py`.
+  * **The Gate of the Hydra (v154, III → Den, `3170`)**: a great carved stone door in the mountain replaces the Den portal
+    (`sp152Gate('hydra')`), five Hydra heads on its lintel. Five Wind Stones (`hd154Plan`: off the road at 12/30/48/66/84 %, open
+    ground, apart) each with a bronze serpent vane: F turns it an eighth; facing the door (`want`) its wind ribbon flows and a head
+    lights. With five winds, the Song of the Mother: the heads sing 3, 4, then 5 notes; strike the five chime stones before the door in
+    the same order (a wrong one hisses and the verse is sung again). Then the doors open (`hd154Open`) and F enters the Den (INSL[8]).
+    State `HD154` saved `x2.hd154 {st,vane,on,vs}`; done also when the Den was reached. The cheat "All quests complete" finishes all
+    three chapters. Tests `v154_hydra.py`, pictures `v154_look.py`.
+  * **Together in co-op (v155, `3180`)**: the chapters are one party's. *Abeksi*: F takes every partner in Hillside Crest I in
+    (the leader's checkpoint, side by side); the map's host runs the snakes, which look at every hero (presence `cr` crouch, `af`
+    frozen), hear partners' steps and rats (`['ab','n',…]`) and are sent to the others (`['ab','s',…]`, the snakes near each
+    partner, ~6/s; guests show them, `ab155Follow`); anyone seen = everyone back to the party checkpoint (`['ab','c',…]`, the
+    furthest reached: `['ab','cp',i]`); the drain takes everyone out (`['ab','out']`). Partners crouch on screen. *Ascent*: F takes
+    every partner in Mistmere up (all need a mount: presence `hm`; no joining a chase under way); one Skarrith driven by the host
+    after the rearmost rider (`cs155Snake`: `['cs','n',s,v]`; venom `ch153SpitPlan` / `ch153SpitSpawn` → `['cs','v',…]`; strikes
+    `['cs','k',peer,lane]`); each rider's own world checks its hits; riders send `['cs','p',s,o,y,ph,hp,v]` and are drawn on the
+    trail; rockslides start from the leading rider (`ch153LeadS`) and are seeded. A fallen rider spectates (`R.ph` 'spec': hero
+    hidden, the camera on the leading rider); all fallen → `['cs','re']`, everyone starts again; a rider through the crack
+    (`['cs','w']`) → the fallen arrive in III downed (3085 revive, `RV155.T` 180 s). *Hydra*: stone turns, song starts, chime
+    strikes and the opening are sent (`['hd',…]`), plus the whole state every 3 s (`hd155Merge` keeps the most progress).
+    Test `v155_coop_levels.py` (two windows, `mpt.py`).
 - **Sovereigns to the Vorraxis standard (v146, `3050`–`3056`)**: every Sovereign follows `docs/BOSS_RECIPE.md` now. Each keeps its
   v110/v112 poses and moves and gains (all in Phase II): a den change and a signature mechanic with a success and a failure outcome.
   | Boss | Den change (Phase II) | Signature (props → BROKEN / failure) |

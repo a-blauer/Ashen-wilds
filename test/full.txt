@@ -49,7 +49,7 @@ v137_items.py
 v138_abil_balance.py
 v139_checks.py
 v140_creator.py
-SEC=30 v141_sov.py
+SEC=60 v141_sov.py
 v143_lantern_road.py
 v144_glowmire.py
 v145_sigils.py
@@ -70,3 +70,8 @@ v150_coop.py
 v150_ritual.py
 TIMES=4,20,27,40,53,57.5 v151_intro.py
 v151_intro_live.py
+v152_abeksi.py
+v152_route.py
+v153_ascent.py
+v154_hydra.py
+v155_coop_levels.py
