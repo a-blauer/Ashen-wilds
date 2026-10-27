@@ -48,7 +48,7 @@ deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.p
 3090|3091|3092|3094|coop|co-op|0520|2170|215[0-9]|216[0-9]|3071|camp|cheddar|quest|duskhold|kingdom|1860|1870|1910|1960|3074|3076|aggro|eTarget|mount: v150_coop.py
 3092|3093|3040|sigil|ritual|wolf|coop|co-op|0520|0120: v150_ritual.py v145_sigils.py
 3093|3096|3097|0630|2640|bat|tab|target|chest|hatch|3033|sov|boss|1970|0520|0380|v150: v150_checks.py
-intro|cinematic: v151_intro.py v151_intro_live.py v117_creator.py v131_load_title.py v73t.py
+intro|cinematic|preview: v151_intro.py v151_intro_live.py v159_preview.py v117_creator.py v131_load_title.py v73t.py
 # v152–v154 Hillside Crest main quest (special instances, Abeksi city, the Hilltop Ascent, the Gate of the Hydra)
 3150|315[1-5]|319[123]|abeksi|special|stealth|crouch|0045|1940|instance|portal|gate|mount|recall|compan: v152_abeksi.py v152_route.py v157_abeksi_alarm.py v153_ascent.py v154_hydra.py
 316[0-2]|3192|ascent|chase|mount|riding|jump|3150|0045|terrain|0060: v153_ascent.py v154_hydra.py

@@ -4,3 +4,5 @@ __pycache__/
 dist/web/
 dist/kill-quest-web.zip
 dist/viewer/
+dist/preview/
+dist/preview.html
