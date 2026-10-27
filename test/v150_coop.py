@@ -29,7 +29,9 @@ for pg,dx in ((A,6),(B,8)):pg.evaluate("([x,z])=>{toPos(x,z)}",[C[1]+dx,C[2]])
 H,G=mp_roles(60000)
 print('host is',H.evaluate("()=>hero.name"),'roles',A.evaluate("()=>[MP.rg,MP.others,MP.host===MP.me]"),B.evaluate("()=>[MP.rg,MP.others,MP.host===MP.me]"))
 G.evaluate("""()=>{window.__ev={};const f=chqEv132;chqEv132=function(k,n){__ev[k]=(__ev[k]||0)+(n||1);return f.apply(this,arguments)};window.__xp0=hero.xp+hero.lvl*1e6;window.__ch0=CHESTS.length;hero.hp=heroMax()}""")
-# the guest must have the camp's creatures (mirrored from the host) before they die, or it has no kill to count
+# the host's world must have spawned the camp, and the guest its copies (mirrored from the host) before they die, or the guest
+# has no kill to count
+poll(lambda:H.evaluate("(j)=>{const C=CAMPS[j];return enemies.filter(e=>e.camp===C&&!e.dead).length}",C[0])>0,40000)
 poll(lambda:G.evaluate("(j)=>{const C=CAMPS[j];return enemies.filter(e=>e.mir&&!e.dead&&Math.hypot(e.m.position.x-C.x,e.m.position.z-C.z)<25).length}",C[0])>=H.evaluate("(j)=>{const C=CAMPS[j];return enemies.filter(e=>e.camp===C&&!e.dead).length}",C[0]),30000)
 n=H.evaluate("""(j)=>{const C=CAMPS[j];const L=enemies.filter(e=>e.camp===C&&!e.dead);L.forEach(e=>{e.lhH=0;kill(e)});return L.length}""",C[0])
 CLR="(j)=>{const C=CAMPS[j];return {clr:campCleared(C),ev:__ev,xp:hero.xp+hero.lvl*1e6-__xp0,chest:CHESTS.length-__ch0}}"

@@ -1,6 +1,6 @@
 # Two game windows in one browser over a fake claude.ai room (fakeroom.js), then runs a steps file with A, B (the pages) in scope.
 #   python3 mpt.py <steps.py>       (the co-op tests run themselves through this)
-#   SLOW=4 python3 mpt.py ...       slows both windows' CPU 4x (Chrome's CPU throttling), to try a test the way a slow machine runs it
+#   SLOW=4 python3 mpt.py ...       slows both windows' CPU 4x once loaded (Chrome's CPU throttling): try a test the way a slow machine runs it
 # Steadiness (Oct 27 2026): the windows start one after the other and only go on once each has its hero in the world; the steps
 # start only once both windows see each other in the room. Steps files can use these helpers (they wait for a condition instead of a
 # fixed time: on a slow machine the game runs fewer frames per second, and its game time (at most 0.05 s per frame) falls behind):
@@ -60,9 +60,9 @@ try:
         pg=ctx.new_page();pgs[k]=pg;pg.add_init_script('window.AW_NOTITLE=1')
         pg.on('console',lambda m,k=k:logs[k].append(m.type+': '+m.text))
         pg.on('pageerror',lambda e,k=k:logs[k].append('PAGEERROR: '+str(e)+' || '+(e.stack or '')[:600].replace('\n',' ')))
-        if os.environ.get('SLOW'):ctx.new_cdp_session(pg).send('Emulation.setCPUThrottlingRate',{'rate':float(os.environ['SLOW'])})
         pg.goto('http://127.0.0.1:8765/out/mp.html',wait_until='commit',timeout=120000);pg.wait_for_function('document.readyState=="complete"',timeout=180000)
         pg.wait_for_function("()=>typeof ren!='undefined'&&!!ren.render&&typeof POST!='undefined'&&!!document.querySelector('[data-dev=desktop]')",timeout=120000);pg.wait_for_timeout(1500)
+        if os.environ.get('SLOW'):ctx.new_cdp_session(pg).send('Emulation.setCPUThrottlingRate',{'rate':float(os.environ['SLOW'])})   # SLOW=4: a 4x slower CPU once the page has loaded
         pg.evaluate("()=>{window.__rr=ren.render.bind(ren);window.__pr=POST.render;ren.render=()=>{};POST.render=()=>{}}")
     A,B=pgs['A'],pgs['B']
     setup(A,'warrior','Aria');setup(B,'mage','Bram')

@@ -46,6 +46,7 @@ try:
         pg=ctx.new_page();pgs[k]=pg;logs[k]=[];pg.add_init_script('window.AW_NOTITLE=1')
         pg.on('pageerror',lambda e,k=k:logs[k].append('PAGEERROR: '+str(e)+' || '+(e.stack or '')[:500].replace('\n',' ')))
         pg.goto('http://127.0.0.1:8767/out/v148rv.html',wait_until='commit',timeout=60000);pg.wait_for_function('document.readyState=="complete"',timeout=180000);pg.wait_for_timeout(1500)
+        if os.environ.get('SLOW'):ctx.new_cdp_session(pg).send('Emulation.setCPUThrottlingRate',{'rate':float(os.environ['SLOW'])})   # SLOW=4: a 4x slower CPU once the page has loaded
         if k=='A':pg.evaluate("()=>localStorage.clear()")
     A,B=pgs['A'],pgs['B']
     setup(A,'warrior','Aria');setup(B,'mage','Bram')
