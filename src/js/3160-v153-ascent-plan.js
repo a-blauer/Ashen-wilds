@@ -44,7 +44,7 @@ function ch153Course(){if(ch153Course.c)return ch153Course.c;
   [622,634,646,658,670].forEach((s,i)=>ob('pillar',s,(i%2?1:-1)*1.3));
   // D · the final climb: gaps, boulders, logs
   ob('gap',760,0,{len:3.0});[778,796].forEach((s,i)=>ob('boulder',s,(i%2?-1:1)*1.3));ob('log',812,0);ob('gap',830,0,{len:3.2});[848,866].forEach((s,i)=>ob('spike',s,(i%2?1:-1)*1.0));ob('log',882,0);
-  return ch153Course.c={O,bridge:[400,470],tunnel:[606,684],slides:[[230,3],[700,5]],venom:[[70,4.2,1],[260,3.4,1],[480,3.0,2],[690,2.6,2],[750,2.2,3]],start:6,crack:12}}
+  return ch153Course.c={O,bridge:[400,470],tunnel:[606,684],slides:[[230,3],[700,5]],venom:[[70,4.2,1],[260,3.4,1],[480,3.0,2],[690,2.6,2],[750,2.2,3]],start:15,crack:12}}
 // ---------------- 0045: the ground and the heights ----------------
 function ch153Hash(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
 function ch153Map(m,bio,DW,I,bi){const P=ch153Path();

@@ -1,9 +1,9 @@
 # v153 pictures: the Hilltop Ascent. VIEWS=name,... (default all) -> <AW_TMP>/v153_<view>.png
 #   road (Mistmere's hill road) · intro (Skarrith comes down) · run (riding, the snake behind) · venom (a volley landing ahead)
-#   strike · bridge · tunnel · crack (the finish) · snake (a side view of the serpent) · swallow
+#   strike · bridge · tunnel · crack (the finish) · snake (a side view of the serpent) · swallow · boost (v157: the boost's streaks and wide view)
 import play,os
 VIEWS=[v for v in os.environ.get('VIEWS','').split(',') if v]
-V={'road':None,'intro':[6,'intro',2.2],'run':[70,'run',0],'venom':[260,'venom',0],'strike':[320,'strike',0],'bridge':[430,'run',0],'tunnel':[640,'run',0],'crack':[900,'run',0],'snake':[200,'side',0],'swallow':[150,'swallow',0]}
+V={'road':None,'intro':[6,'intro',1.9],'boost':[120,'boost',0],'run':[70,'run',0],'venom':[260,'venom',0],'strike':[320,'strike',0],'bridge':[430,'run',0],'tunnel':[640,'run',0],'crack':[900,'run',0],'snake':[200,'side',0],'swallow':[150,'swallow',0]}
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
@@ -22,8 +22,8 @@ def s(pg):
               if(mode=='intro'){ch153Reset(true);R.t=0;CH153.R.t=t;tick(3)}
               else{const r=CH153.R;r.ph='run';r.t=5;r.s=s;r.o=0;r.sn.s=s-11;r.sn.strike=null;r.inv=9;tick(12);
                 if(mode=='venom'){ch153Spit(3);tick(18)}if(mode=='strike'){r.sn.strike={t:.7,o:r.o,s0:r.sn.s};tick(7)}
-                if(mode=='swallow'){r.inv=0;r.sn.s=r.s-2.4;tick(14)}}
-              const r=CH153.R,yw=P.yaw(r.s);if(mode=='side'){camYaw=yw+Math.PI/2*P.sgn;camPitch=.5;camDist=26}else if(mode=='intro'){camYaw=yw-.25*P.sgn;camPitch=.16;camDist=22}else if(mode=='swallow'){camYaw=yw+.9;camPitch=.45;camDist=8}else{const gp=r.s-r.sn.s,dh=Math.max(3.8,Math.min(8.8,gp-5.6));camYaw=yw+Math.PI;camPitch=.34;camDist=dh/Math.cos(.34)}
+                if(mode=='swallow'){r.inv=0;r.sn.s=r.s-2.4;tick(14)}if(mode=='boost'){r.sn.s=r.s-14;r.sn.next=99;r.sn.spit=99;r.bc=2;ch157Boost();tick(10)}}
+              const r=CH153.R,yw=P.yaw(r.s);if(mode=='side'){camYaw=yw+Math.PI/2*P.sgn;camPitch=.5;camDist=26}else if(mode=='intro'){camYaw=yw-CH153CAM.yaw*P.sgn;camPitch=CH153CAM.pitch;camDist=CH153CAM.dist}else if(mode=='swallow'){camYaw=yw+.9;camPitch=.45;camDist=8}else{const gp=r.s-r.sn.s,dh=Math.max(3.8,Math.min(8.8,gp-5.6));camYaw=yw+Math.PI;camPitch=.34;camDist=dh/Math.cos(.34)}
               for(let i=0;i<40;i++)atmos(.05,performance.now());window.__snap={p:camPitch,d:camDist,y:camYaw-P.yaw(r.s)};snapCam();camK=camPitch;camDD=camDist;return 1}""",q)
         pg.wait_for_timeout(3500);pg.screenshot(path=play.TMP+'/v153_'+k+'.png',timeout=600000);print('shot',k)
 play.run(s,w=1280,hh=760)
