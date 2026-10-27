@@ -20,6 +20,9 @@
     a time: 2 cores, and helper agents run on this same machine).
   Tests run in fast mode (`test/fast.py`: the game view only draws for screenshots, ~30x faster game loop), on GitHub too; put
   `FAST=0` before a line in full.txt only if a test truly needs every frame drawn.
+  **Retry (owner's request, Oct 27 2026):** a failed test runs once more (`test/ci_run.py`, `CI_RETRY`, default 1), on GitHub and
+  locally. A pass on the second try counts and is listed as `PASS (retry)` (the summary says how many): a flaky test, worth making
+  steady but not a reason to hold a publish. A test that fails both tries is a real failure.
   New tests: add to `full.txt` and to the matching rules in `test/affects.txt`; every test must print `FAIL …` lines on a wrong result.
   **Small tweaks (owner's request):** for a balance number or similar one-line tuning change, skip the full suite: a focused
   local test plus a green `changed` run is enough to publish.

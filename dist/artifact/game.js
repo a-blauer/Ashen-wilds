@@ -47115,10 +47115,18 @@ document.addEventListener('visibilitychange',()=>{try{if(document.hidden&&CH157.
 //    AB157K.cap at once, nearest first; the rest stand and stare. XP and loot are scaled down (AB157K.xp, .loot). The tracker counts
 //    "Abeksi left"; with none left, F at the city gate (Gate Yard) leaves the city: ab152Finish('gate') (same as the drain, which keeps
 //    working). Death during the alarm: after "Rise Again" the city is calm again from the last checkpoint, every resident back.
+//  * v158 (owner: "players don't have to kill every single abeksi - they can just fight their way to the gate if seen. When the bell is
+//    rung when you're spotted a substantial amount of abeksi in the immediate area actively look for you and attack"): the alarm is a
+//    BELL (ab158Bell, three tolls over drums). It calls up to AB158.bell.n of the nearest residents by street distance (within
+//    AB158.bell.r steps) to hunt the hero: they run through the streets on a flow field from the heroes (ab158Flow, rebuilt every
+//    0.35 s; ab158Step) and turn into the game's enemies when they are AB158.eng steps away (any standing resident that close joins too),
+//    at most AB157K.cap fighting at once. An enemy left AB158.drop steps behind (cut off by a wall) becomes a street hunter again, with the
+//    health it had. Every AB158.bell.re s the bell tolls again and calls AB158.bell.rn more. The city gate opens as soon as the alarm
+//    sounds: F there leaves the city (ab152Finish('gate')); killing everyone is no longer needed. Tracker / banner: "Hunting you".
 //  * Co-op (3180): the map's host owns the alarm's enemies (spawning, AI; the game's monster sync shows them to the others); kills and
 //    assassinations are sent (['ab','x',i,u,v] a knife kill: the host checks for witnesses; ['ab','d',i,u,v] a resident fell;
 //    ['ab','rs',states] the host's residents every 0.6 s: 0 standing, 1 fighting, 2 dead; ['ab','calm'] someone died: everyone back).
-var AB157K={r:1.6,back:1.05,act:24,cap:8,civ:{hp:.55,atk:.6},xp:{g:.6,c:.3},loot:{g:.45,c:.15},gate:[75,185.6],gateR:3.2};
+var AB157K={r:1.6,back:1.05,act:24,cap:10,civ:{hp:.55,atk:.6},xp:{g:.6,c:.3},loot:{g:.45,c:.15},gate:[75,185.6],gateR:3.2};
 var AB157A={on:0,R:null,bodies:[],tg:null,kill:null,ring:null,tA:0,tB:0,tS:0,left:0,pool:null};
 function ab157Lead(){try{return typeof ab155Lead!='function'||ab155Lead()}catch(_){return true}}
 function ab157Co(){try{return typeof ab155Co=='function'&&ab155Co()}catch(_){return false}}
@@ -47166,8 +47174,8 @@ function ab157Assassinate(a,remote){const S=AB152.S,I=S.I,H=AB152H;if(!a||a.dead
     ab152CrAdd(B.spine,'y',.45*w-.3*s)}}}catch(_){}return r}}
 // ---------------- the alarm ----------------
 // a war horn (three long blasts) over drums
-function ab157Horn(){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
-  try{[0,1.5,3.0].forEach((d,i)=>{const t=t0+d,len=i==2?2.2:1.2,lp=a.createBiquadFilter(),g=a.createGain();lp.type='lowpass';lp.frequency.setValueAtTime(380,t);lp.frequency.linearRampToValueAtTime(900,t+.25);lp.connect(g);g.connect(out);
+function ab157Horn(drumsOnly){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
+  try{if(!drumsOnly)[0,1.5,3.0].forEach((d,i)=>{const t=t0+d,len=i==2?2.2:1.2,lp=a.createBiquadFilter(),g=a.createGain();lp.type='lowpass';lp.frequency.setValueAtTime(380,t);lp.frequency.linearRampToValueAtTime(900,t+.25);lp.connect(g);g.connect(out);
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.2,t+.18);g.gain.setValueAtTime(.18,t+len-.2);g.gain.exponentialRampToValueAtTime(.0005,t+len+.4);
       [[98,'sawtooth'],[147,'sawtooth'],[49,'square']].forEach(([f,ty],j)=>{const o=a.createOscillator();o.type=ty;o.frequency.setValueAtTime(f*(i==2?1.06:1)*.94,t);o.frequency.linearRampToValueAtTime(f*(i==2?1.06:1),t+.2);
         const og=a.createGain();og.gain.value=j==2?.35:j?.5:.8;o.connect(og);og.connect(lp);o.start(t);o.stop(t+len+.5)})});
@@ -47176,14 +47184,29 @@ function ab157Horn(){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||S
       o.type='sine';o.frequency.setValueAtTime(75,t);o.frequency.exponentialRampToValueAtTime(38,t+.25);og.gain.setValueAtTime(i%4==0?.45:.25,t);og.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(og);og.connect(out);o.start(t);o.stop(t+.35)}}catch(_){}}
 function ab157Alarm(){if(AB157A.on||!ab152In()||!AB152.S)return;const H=AB152H;AB157A.on=1;AB157A.t0=performance.now();H.cau=null;H.frz=0;AB157A.kill=null;ab152SetCrouch(false);H.crK=0;
   ab157Res().forEach(a=>{if(!a.dead){a.halt=0;a.st='look';a.sus=0}});
-  try{ab157Horn();flash('rgba(255,40,20,.55)');shake(.3)}catch(_){}
-  try{zt116Show(ZT116.Z[1],'Abeksi','The City Is Roused!','Horns sound from every wall · every serpent is hunting you','Kill them all and leave by the city gate · or flee through the drain','z1')}catch(_){}
-  say('📯 <b>The city is roused!</b> Every Abeksi in the city is coming for you. Kill them all and leave through the <b>city gate</b> — or flee through the drain.')}
+  AB157A.called=0;AB157A.tollT=performance.now();AB158.fl=null;AB158.flT=0;
+  try{ab158Bell(3);ab157Horn(true);flash('rgba(255,40,20,.55)');shake(.3)}catch(_){}
+  try{zt116Show(ZT116.Z[1],'Abeksi','The Bell Tolls!','The serpents nearby are hunting you through the streets','Fight your way to the city gate · or flee through the drain','z1')}catch(_){}
+  say('🔔 <b>The alarm bell tolls!</b> The Abeksi nearby are coming for you. Fight your way to the <b>city gate</b> — or flee through the drain.')}
+// v158: a few seconds' grace after the city calms (a restart at the checkpoint): nobody can be caught yet. In co-op the partner who died
+// still lies where they fell (often in a guard's view) until they rise, and the host's snakes look at every hero: without the grace that
+// body rang the bell again the moment the city had calmed.
+{const f=ab152Caught;ab152Caught=function(a){if(AB157A.calmT&&performance.now()-AB157A.calmT<AB158.grace*1000)return;return f.apply(this,arguments)}}
+// v158: only heroes on their feet can be seen: not one lying dead or downed (waiting for a revive), mine or a partner's
+function ab158Up(){try{return hero.hp>0&&!(typeof RV148!='undefined'&&RV148.down)&&!(typeof AWD!='undefined'&&AWD.dead)}catch(_){return true}}
+// each hero has AB158.grace s of not being seen from the moment they are back on their feet or were moved far at once (a restart at the
+// checkpoint, a rise): however long the death screen took on that player's machine
+function ab158Fresh(k,u,v,up){const P=AB158.pv||(AB158.pv={}),now=performance.now();let q=P[k];
+  if(!q){q=P[k]={u,v,up,t:-1e9}}if((up&&!q.up)||Math.hypot(u-q.u,v-q.v)>6)q.t=now;q.u=u;q.v=v;q.up=up;return up&&now-q.t>=AB158.grace*1000}
+if(typeof ab155Heroes=='function'){const f=ab155Heroes;ab155Heroes=function(){const L=f.apply(this,arguments);try{const M2=cl155Mates(MP.rg);
+  if(AB158.pv)for(const k in AB158.pv)if(k!=='me'&&!L.some(h=>h.peer===k))AB158.pv[k].up=false;   // a partner missing from the list (dead) is not standing
+  return L.map(h=>{if(h===AB152H)return ab158Fresh('me',h.u,h.v,ab158Up())?h:Object.assign({},h,{live:false});
+    const r=M2.find(q=>q.peer===h.peer),p=r&&r.pr,up=!(p&&(p.dn||!(p.hp>0)));return ab158Fresh(h.peer,h.u,h.v,up)?h:Object.assign({},h,{live:false})})}catch(_){return L}}}
 // what being seen leads to now: a moment of "!" (3155's hiss and flash), then the alarm
 ab152AfterCaught=function(a){say('👁 <b>Spotted!</b>');setTimeout(()=>{try{if(ab152In()&&AB152.S)ab157Alarm()}catch(e){console.error('v157 alarm',e)}},900)};
 // the city calm again: the fighting residents leave the field, every resident is back at their post (restore: the dead rise too)
-function ab157Calm(restore){const A=AB157A;A.on=0;A.kill=null;A.tg=null;if(restore)A.calmT=performance.now();
-  for(const a of ab157Res()){if(a.e){const e=a.e;a.e=null;try{if(!e.dead&&enemies.indexOf(e)>=0)removeE(e)}catch(_){}}a.net1=0;if(restore&&a.dead)ab157Unfall(a);
+function ab157Calm(restore){const A=AB157A;A.on=0;A.kill=null;A.tg=null;A.called=0;A.hunt=0;AB158.fl=null;if(restore)A.calmT=performance.now();
+  for(const a of ab157Res()){a.hunt=0;a.hpK=null;if(a.e){const e=a.e;a.e=null;try{if(!e.dead&&enemies.indexOf(e)>=0)removeE(e)}catch(_){}}a.net1=0;if(restore&&a.dead)ab157Unfall(a);
     if(restore&&a.folk){a.halt=0;a.hid=0;ab152ResetActor(a)}}
   try{enemies.slice().forEach(e=>{if(e.ab157&&!e.dead)removeE(e)})}catch(_){}
   if(restore){A.bodies.forEach(b=>{if(b.p&&b.p.parent)b.p.parent.remove(b.p)});A.bodies=[]}
@@ -47199,21 +47222,70 @@ function ab157Rouse(a){const S=AB152.S,I=S.I,lv=(INSL[30]&&INSL[30].lv)||I.lv||[
   if(a.pose=='spar')e.ab157.g=true;
   if(!e.ab157.g){const c=e.c,K=AB157K.civ;c.st.hp*=K.hp;c.st.pa*=K.atk;c.st.ma*=K.atk;c.h=Math.round(c.st.hp);
     try{const h=e.m.h;['aR2','aL2'].forEach(b=>{const bn=h.bones[b];if(bn)bn.children.slice().forEach(o=>{if(!o.isBone)bn.remove(o)})});const t=ab152Tool(a.pose=='chop'||a.pose=='skin'?'cleaver':'cleaver');if(t){t.rotation.x=-1;t.position.set(0,-.03,.02);h.bones.aR2.add(t)}}catch(_){}}
+  if(a.hpK!=null&&a.hpK<1){const c=e.c;c.h=Math.max(1,Math.round(M(c)*a.hpK))}a.hpK=null;a.hunt=0;
   a.e=e;a.st='look';return e}
-// one frame of the alarm (the host's world rouses and counts; everyone keeps the residents' looks in step)
-function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res();H.nT=1e9;
+// ---------------- v158: the bell and the hunt ----------------
+var AB158={bell:{r:44,n:16,re:24,rn:5},eng:7,drop:14,hold:4,grace:4,pv:null,spd:{g:4.4,c:3.7},fl:null,flT:0};
+// a heavy bronze bell: inharmonic partials with long decays, and the clang of the strike
+function ab158Bell(n){let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t0=a.currentTime,out=a.out;
+  try{for(let i=0;i<n;i++){const t=t0+i*2.1,f0=104;
+    [[.5,.5,7],[1,.9,5],[1.19,.55,3.5],[1.5,.4,3],[2,.45,2.6],[2.51,.25,2],[2.67,.22,1.8],[3.01,.18,1.5],[4.1,.1,1]].forEach(([r,amp,dec])=>{const o=a.createOscillator(),g=a.createGain();
+      o.type='sine';o.frequency.value=f0*r*(1+(Math.random()-.5)*.003);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp*.17,t+.008);g.gain.exponentialRampToValueAtTime(.0003,t+dec);o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.05)});
+    if(typeof NOISE!='undefined'&&NOISE){const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;f.type='bandpass';f.frequency.value=2300;f.Q.value=2;
+      g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);s.connect(f);f.connect(g);g.connect(out);s.start(t,Math.random()*.5);s.stop(t+.15)}}}catch(_){}}
+function ab158Ok(G,x,y){return x>=0&&y>=0&&x<G.W&&y<G.H&&!G.sol[y*G.W+x]&&G.cls[y*G.W+x]<2}
+function ab158Heroes(){const S=AB152.S,H=AB152H,hs=[[H.u,H.v]];try{if(ab157Co()){const I=S.I;cl155Mates(MP.rg).forEach(r=>{if(r.pr&&r.pr.hp>0)hs.push([r.pr.x-I.x0,r.pr.z-I.y0])})}}catch(_){}return hs}
+// steps through the streets to the nearest hero, for every open tile (breadth first from the heroes' tiles)
+function ab158Flow(){const S=AB152.S,G=S.G,W=G.W,N=W*G.H;let D=AB158.fl;if(!D||D.length!==N)D=AB158.fl=new Uint16Array(N);D.fill(65535);
+  const q=AB158.q&&AB158.q.length===N?AB158.q:(AB158.q=new Int32Array(N));let h=0,t=0;
+  for(const [u,v] of ab158Heroes()){let x=Math.round(u),y=Math.round(v);if(!ab158Ok(G,x,y)){const o=ab157Open(S,u,v);x=Math.round(o[0]);y=Math.round(o[1])}
+    if(!ab158Ok(G,x,y))continue;const k=y*W+x;if(D[k]){D[k]=0;q[t++]=k}}
+  while(h<t){const k=q[h++],x=k%W,y=(k-x)/W,d=D[k]+1;
+    if(x>0&&D[k-1]>d&&ab158Ok(G,x-1,y)){D[k-1]=d;q[t++]=k-1}if(x<W-1&&D[k+1]>d&&ab158Ok(G,x+1,y)){D[k+1]=d;q[t++]=k+1}
+    if(y>0&&D[k-W]>d&&ab158Ok(G,x,y-1)){D[k-W]=d;q[t++]=k-W}if(y<G.H-1&&D[k+W]>d&&ab158Ok(G,x,y+1)){D[k+W]=d;q[t++]=k+W}}
+  return D}
+// a spot's street distance to the nearest hero (65535: no way through)
+function ab158Du(u,v){const S=AB152.S,G=S.G,D=AB158.fl;if(!D)return 65535;let x=Math.round(u),y=Math.round(v);
+  if(!ab158Ok(G,x,y)){const o=ab157Open(S,u,v);x=Math.round(o[0]);y=Math.round(o[1]);if(!ab158Ok(G,x,y))return 65535}return D[y*G.W+x]}
+function ab158D(a){return (a.o.lift||0)>=1?65535:ab158Du(a.u,a.v)}
+var AB158N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+// a hunter runs one step down the flow toward the heroes
+function ab158Step(a,dt){const S=AB152.S,G=S.G,D=AB158.fl;if(!D)return;let x=Math.round(a.u),y=Math.round(a.v);
+  if(!ab158Ok(G,x,y)){const o=ab157Open(S,a.u,a.v);x=Math.round(o[0]);y=Math.round(o[1]);if(!ab158Ok(G,x,y)){a.mv=0;return}}
+  let best=D[y*G.W+x],bx=x,by=y;const H0=AB152H;
+  if(best<=AB158.hold&&AB157A.nf>=AB157K.cap){a.mv=0;ab152Turn(a,Math.atan2(H0.u-a.u,H0.v-a.v),5,dt);a.t+=dt;return}   // the fight is full: wait in a ring, glaring
+  for(const [dx,dy] of AB158N8){const nx=x+dx,ny=y+dy;if(!ab158Ok(G,nx,ny))continue;if(dx&&dy&&(!ab158Ok(G,x+dx,y)||!ab158Ok(G,x,y+dy)))continue;
+    const d=D[ny*G.W+nx]+(dx&&dy?.45:0);if(d<best){best=d;bx=nx;by=ny}}
+  const H=AB152H;if(bx===x&&by===y){const du=x-a.u,dv=y-a.v;if(Math.hypot(du,dv)>.06){bx=x;by=y}else{a.mv=0;ab152Turn(a,Math.atan2(H.u-a.u,H.v-a.v),5,dt);return}}
+  const sp=ab157Guard(a)?AB158.spd.g:AB158.spd.c,du=bx-a.u,dv=by-a.v,L=Math.hypot(du,dv)||1,st=Math.min(L,sp*dt);
+  a.u+=du/L*st;a.v+=dv/L*st;a.mv=sp;a.hy=0;a.t+=dt;ab152Turn(a,Math.atan2(du,dv),7,dt)}
+// the bell calls the n nearest residents (by street) within r steps to hunt
+function ab158Call(n,r){const C=[];for(const a of ab157Res()){if(a.dead||a.e||a.hunt||a.net1)continue;const d=ab158D(a);if(d<=r)C.push([d,a])}
+  C.sort((p,q)=>p[0]-q[0]);let k=0;for(const [,a] of C){if(k>=n)break;a.hunt=1;a.halt=1;a.st='look';a.sus=0;k++}return k}
+// one frame of the alarm (the host's world calls, rouses and counts; every client runs the hunters through the streets)
+function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res(),B=AB158.bell;H.nT=1e9;
   // the fallen: a fighting resident whose enemy died lies where it fell
   for(const a of R){if(!a.e)continue;const e=a.e;if(e.dead){const I=S.I,u=e.m.position.x-I.x0,v=e.m.position.z-I.y0;a.yaw=e.m.rotation.y;ab157Fall(a,u,v,false,1500);
       try{if(ab157Co())cl155Send(['ab','d',a.ri,cl155R1(u),cl155R1(v)])}catch(_){}}
-    else if(enemies.indexOf(e)<0){a.e=null;const I=S.I,[u,v]=[e.m.position.x-I.x0,e.m.position.z-I.y0];if(!(a.o.lift>.9)){a.u=u;a.v=v}}}   // left the field (too far): stands again
-  if(ab157Lead()&&now-A.tA>250){A.tA=now;let n=R.filter(a=>a.e).length;if(n<AB157K.cap){
-      let hs=[[H.u,H.v]];try{if(ab157Co()){const I=S.I;cl155Mates(MP.rg).forEach(r=>{if(r.pr&&r.pr.hp>0)hs.push([r.pr.x-I.x0,r.pr.z-I.y0])})}}catch(_){}
-      const C=R.filter(a=>!a.dead&&!a.e).map(a=>[Math.min(...hs.map(h=>Math.hypot(h[0]-a.u,h[1]-a.v))),a]).filter(q=>q[0]<AB157K.act).sort((p,q)=>p[0]-q[0]);
-      for(const [,a] of C){if(n>=AB157K.cap)break;if(ab157Rouse(a))n++}}}
-  A.left=R.filter(a=>!a.dead).length;
-  if(ab157Lead()&&ab157Co()&&now-A.tS>600){A.tS=now;try{cl155Send(['ab','rs',R.map(a=>a.dead?2:a.e?1:0).join('')])}catch(_){}}}
+    else if(enemies.indexOf(e)<0){a.e=null;const I=S.I,[u,v]=[e.m.position.x-I.x0,e.m.position.z-I.y0];if(!(a.o.lift>.9)){a.u=u;a.v=v;a.hunt=1;a.halt=1}}}   // left the field: hunts on foot again
+  if(!AB158.fl||now-AB158.flT>350){AB158.flT=now;ab158Flow()}
+  if(ab157Lead()){if(!A.called){A.called=1;A.tollT=now;ab158Call(B.n,B.r)}
+    else if(now-A.tollT>B.re*1000){A.tollT=now;try{ab158Bell(1);shake(.12)}catch(_){}if(ab158Call(B.rn,B.r*1.4))say('🔔 The bell tolls again · more serpents join the hunt')}}
+  A.nf=R.filter(a=>a.e||a.net1).length;
+  for(const a of R)if(a.hunt&&!a.dead&&!a.e&&!a.net1)ab158Step(a,dt);
+  if(ab157Lead()&&now-A.tA>250){A.tA=now;let n=R.filter(a=>a.e).length;
+    // close by street (hunters that arrived, and anyone standing near): they join the fight, nearest first
+    if(n<AB157K.cap){const C=R.filter(a=>!a.dead&&!a.e).map(a=>[(a.o.lift||0)>=1?(Math.hypot(H.u-a.u,H.v-a.v)<6?0:65535):ab158D(a),a]).filter(q=>q[0]<=AB158.eng).sort((p,q)=>p[0]-q[0]);
+      for(const [,a] of C){if(n>=AB157K.cap)break;if(ab157Rouse(a))n++}}
+    // a fighter cut off behind a wall goes back to the streets (keeping its wounds)
+    for(const a of R){const e=a.e;if(!e||e.dead||e.atk)continue;const I=S.I,u=e.m.position.x-I.x0,v=e.m.position.z-I.y0;
+      if(ab158Du(u,v)<=AB158.drop){e.ab158far=0;continue}e.ab158far=(e.ab158far||0)+.25;   // cut off for 2 s in a row (not a passing jump of the hero)
+      if(e.ab158far>=2){try{a.hpK=e.c.h/M(e.c)}catch(_){a.hpK=null}a.e=null;try{removeE(e)}catch(_){}a.u=u;a.v=v;a.yaw=e.m.rotation.y;a.hunt=1;a.halt=1}}}
+  A.left=R.filter(a=>!a.dead).length;A.hunt=R.filter(a=>!a.dead&&(a.e||a.hunt||a.net1)).length;
+  if(ab157Lead()&&ab157Co()&&now-A.tS>600){A.tS=now;try{cl155Send(['ab','rs',R.map(a=>a.dead?2:a.e?1:a.hunt?3:0).join('')])}catch(_){}}}
 // the snakes of the plan: a fallen one does nothing; in the alarm the ones not fighting yet stand and glare at the hero
-{const f=ab152ActTick;ab152ActTick=function(a,dt,now,H){if(a.dead||a.e||a.halt){a.sus=0;a.seen=0;a.mv=0;return null}
+{const f=ab152ActTick;ab152ActTick=function(a,dt,now,H){if(a.hunt&&!a.dead&&!a.e){a.sus=0;a.seen=0;return null}
+  if(a.dead||a.e||a.halt){a.sus=0;a.seen=0;a.mv=0;return null}
   if(AB157A.on){a.t+=dt;a.mv=0;a.sus=0;a.st='look';ab152Turn(a,Math.atan2(AB152H.u-a.u,AB152H.v-a.v),2.6,dt);a.hy*=.9;return null}
   return f.apply(this,arguments)}}
 {const f=ab152ActPose;ab152ActPose=function(a,now,dt,vis){if(a.e||a.net1){a.g.visible=false;return}
@@ -47225,17 +47297,17 @@ function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res();H
 // crouch is gone while the city hunts you; the HUD with it
 {const f=ab152SetCrouch;ab152SetCrouch=function(on){if(on&&AB157A.on)return;return f.apply(this,arguments)}}
 {const f=ab152Hud;ab152Hud=function(){const r=f.apply(this,arguments);try{const on=AB157A.on&&ab152In();if(on){$('ab152h').classList.add('hide');$('ab152cv').style.opacity=0;if(AB152H.btn)AB152H.btn.style.display='none'}
-    const el=$('ab157al');if(el){el.classList.toggle('hide',!on);if(on)el.querySelector('b').textContent=AB157A.left}}catch(_){}return r}}
+    const el=$('ab157al');if(el){el.classList.toggle('hide',!on);if(on)el.querySelector('b').textContent=AB157A.hunt||0}}catch(_){}return r}}
 (function(){const st=document.createElement('style');st.textContent=`#ab157al{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:6;pointer-events:none;padding:6px 16px;border-radius:20px;
   background:linear-gradient(180deg,rgba(60,6,4,.85),rgba(30,4,2,.7));border:1px solid rgba(255,90,60,.55);color:#ffd8c8;font:700 12.5px system-ui,sans-serif;text-shadow:0 1px 2px #000;letter-spacing:.03em}
   #ab157al.hide{display:none}#ab157al b{color:#fff;font-size:14px}body.mob #ab157al{top:8px}`;document.head.appendChild(st);
-  const d=document.createElement('div');d.id='ab157al';d.className='hide';d.innerHTML='📯 The city is roused · Abeksi left: <b>0</b>';document.body.appendChild(d)})();
+  const d=document.createElement('div');d.id='ab157al';d.className='hide';d.innerHTML='🔔 The bell tolls · hunting you: <b>0</b> · reach the city gate';document.body.appendChild(d)})();
 // fighting allowed while the city is roused
 {const R0=SP152.R.abeksi,m=R0.noFight;R0.noFight=()=>AB157A.on?null:m}
 // ---------------- each frame ----------------
 function ab157KnifeTick(dt,now){const S=AB152.S,A=AB157A,R=ab157Res();
   // the folk follow the alarm too: standing ones turn to the hero, fighting ones are hidden (their enemy shows them)
-  try{if(AB157.S)for(const a of AB157.S.folk){a.hid=(a.e||a.net1)?1:0;if(AB157A.on&&!a.dead&&!a.e){a.halt=1;a.st='look';ab152Turn(a,Math.atan2(AB152H.u-a.u,AB152H.v-a.v),2.6,dt)}else if(!AB157A.on&&!a.dead&&a.halt&&a.st=='look'){a.halt=0;a.st='routine'}}}catch(_){}
+  try{if(AB157.S)for(const a of AB157.S.folk){a.hid=(a.e||a.net1)?1:0;if(AB157A.on&&!a.dead&&!a.e&&!a.hunt){a.halt=1;a.st='look';ab152Turn(a,Math.atan2(AB152H.u-a.u,AB152H.v-a.v),2.6,dt)}else if(!AB157A.on&&!a.dead&&a.halt&&a.st=='look'){a.halt=0;a.st='routine'}}}catch(_){}
   // the knife's target, marked with a red ring
   A.tg=ab157Target();if(!A.ring){const m=new THREE.Mesh(new THREE.RingGeometry(.5,.66,28).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xff2a1a,transparent:true,opacity:.75,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
     m.renderOrder=5;m.userData.psNo=1;S.root.add(m);A.ring=m}
@@ -47253,13 +47325,11 @@ function ab157KnifeTick(dt,now){const S=AB152.S,A=AB157A,R=ab157Res();
 {const f=ab152Restart;ab152Restart=function(){try{if(AB152.S)ab157Calm(true)}catch(e){console.warn('v157 calm',e)}return f.apply(this,arguments)}}
 // ---------------- prompts: the knife, the gate ----------------
 {const f=worldPrompt;worldPrompt=function(){try{if(ab152In()&&AB152.S&&!AB152H.cau){const H=AB152H;
-    if(AB157A.on&&Math.hypot(H.u-AB157K.gate[0],H.v-AB157K.gate[1])<AB157K.gateR){const n=AB157A.left;
-      if(n<=0)return {label:'F · Leave through the city gate ('+INSL[6].n+')',fn:()=>ab152Finish('gate')};
-      return {label:'⛓ The gate is barred · '+n+' Abeksi still stand',fn:()=>say('⛓ The gate will not open while '+n+' Abeksi still stand. Kill them all — or flee through the drain.')}}
+    if(AB157A.on&&Math.hypot(H.u-AB157K.gate[0],H.v-AB157K.gate[1])<AB157K.gateR)return {label:'F · Escape through the city gate ('+INSL[6].n+')',fn:()=>ab152Finish('gate')};   // v158: open the moment the bell tolls
     if(AB157A.tg&&!AB157A.kill){const a=AB157A.tg;return {label:'F · Assassinate',fn:()=>{const t=ab157Target();if(t===a)ab157Assassinate(a)}}}}}catch(_){}return f.apply(this,arguments)}}
 // ---------------- the tracker ----------------
 {const f=SP152.trk.abeksi;SP152.trk.abeksi=I=>{if(I&&I.sp==='abeksi'&&AB157A.on){const n=AB157A.left;
-    return {name:'The Serpent City',lines:[['📯 The city is roused'],['Abeksi left',n],[n>0?'Kill them all, then leave by the city gate':'The gate is free: leave the city',null,n>0?0:1],['Or flee through the drain']]}}return f(I)}}
+    return {name:'The Serpent City',lines:[['🔔 The alarm bell tolls'],['Hunting you',AB157A.hunt||0],['Fight your way to the city gate (Gate Yard)'],['Or flee through the drain']]}}return f(I)}}
 // ---------------- XP and loot from the city's residents: kept low ----------------
 // (a partner's copy of a resident, mirrored from the host, has no tag: any serpent enemy inside the city counts, as a guard)
 function ab157Kind(e){if(!e)return null;if(e.ab157)return e.ab157.g?'g':'c';try{if(e.c&&/^naga[was]$/.test(e.c.en)&&ab152In())return 'g'}catch(_){}return null}
@@ -47279,5 +47349,8 @@ function ab157Rise(){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=
         if(w&&!AB152H.cau){w.cBy=peer;say('👁 '+mpEsc(mpName(peer))+'’s kill was seen!');ab152Caught(w)}}catch(_){}},340)}}
   else if(k==='d'){const a=R[q[2]|0];if(!a||a.dead||!isFinite(+q[3])||!isFinite(+q[4]))return;ab157Fall(a,+q[3],+q[4],false,1500)}
   else if(k==='rs'&&typeof q[2]==='string'&&peer===MP.host&&!ab157Lead()){if(!AB157A.on){if(performance.now()-(AB157A.calmT||-1e9)<3000)return;ab157Alarm()}const s=q[2];for(let i=0;i<R.length&&i<s.length;i++){const a=R[i],c=s[i];
-      if(c==='2'&&!a.dead)ab157Fall(a,null,null,false,0);a.net1=c==='1'?1:0}}
-  else if(k==='calm'){if(AB157A.on){say('👥 '+mpEsc(mpName(peer))+' fell — the whole party wakes at the checkpoint, the city calm again.');ab152Restart(false)}}}}
+      if(c==='2'&&!a.dead)ab157Fall(a,null,null,false,0);a.net1=c==='1'?1:0;if(c==='3'&&!a.dead&&!a.hunt){a.hunt=1;a.halt=1}else if(c!=='3'&&a.hunt&&!a.e)a.hunt=0}}
+  else if(k==='calm'){if(AB157A.on){say('👥 '+mpEsc(mpName(peer))+' fell — the whole party wakes at the checkpoint, the city calm again.');ab158Wake();ab152Restart(false)}}}}
+// v158: the whole party wakes at the checkpoint: a partner lying downed (waiting for a revive) gets up too, healed, instead of lying in a
+// guard's view at the checkpoint (which rang the bell again)
+function ab158Wake(){try{if(typeof RV148!='undefined'&&RV148.down){const s0=say;say=()=>{};try{rv148Up('')}finally{say=s0}}}catch(_){}if(hero.hp>0){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}try{ui()}catch(_){}}}
