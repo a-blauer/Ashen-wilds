@@ -59,7 +59,10 @@ jobs:
         uses: actions/cache@v4
         with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
       - name: Install Playwright + Chromium
-        run: pip install playwright pillow numpy scipy && python -m playwright install --with-deps chromium
+        timeout-minutes: 25   # it once hung for the job's whole hour; now each try is cut off and tried again
+        run: |
+          pip install playwright pillow numpy scipy
+          for i in 1 2 3; do timeout 420 python -m playwright install --with-deps chromium && exit 0; echo "::warning::browser install try $i failed or hung; trying again"; sleep 5; done; exit 1
       - name: Build
         run: ./build.sh && ./viewer/build_viewer.sh
       - name: Run ${{ matrix.t }}

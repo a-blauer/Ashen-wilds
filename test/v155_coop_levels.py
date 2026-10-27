@@ -16,12 +16,20 @@ def W(ms,step=350):
     t=0;i=0
     while t<ms:
         (A if i%2==0 else B).bring_to_front();A.wait_for_timeout(step);t+=step;i+=1
+# steady on slow machines (Oct 27 2026): every wait polls its condition on the wall clock with SLACK times the deadline it was
+# written for (a slow machine runs few frames per second and the game's own time, at most 0.05 s per frame, falls behind)
+SLACK=3
 def until(js,ms,pgs=None):
-    t=0;i=0
-    while t<ms:
-        if all(p.evaluate(js) for p in (pgs or (A,B))):return True
-        (A if i%2==0 else B).bring_to_front();A.wait_for_timeout(350);t+=350;i+=1
-    return False
+    return mp_until(js,ms*SLACK,list(pgs or (A,B)),step=350)
+def poll(f,ms):
+    t0=time.time()
+    while True:
+        try:
+            if f():return True
+        except Exception as e:
+            if 'closed' in str(e):raise
+        if (time.time()-t0)*1000>=ms*SLACK:return False
+        A.wait_for_timeout(350)
 for pg in (A,B):pg.evaluate("""()=>{window.__c=0;{const f=ab152Caught;ab152Caught=function(){__c++;return f.apply(this,arguments)}}
   window.__iv=setInterval(()=>{hero.hp=heroMax();if(CH153.R&&CH153.R.ph=='run'&&!window.__noInv)CH153.R.inv=9},100);insArrive(INSL[5]);return 1}""")
 ok=until("()=>MP.on&&MP.others>=1",20000)
@@ -31,8 +39,12 @@ A.evaluate("()=>ab152Enter()")
 ok=until("()=>ab152In()&&!!AB152.S",12000)
 chk('Abeksi: entering takes the partner in too',ok,json.dumps([p.evaluate("()=>[ab152In(),curIns()&&curIns().g]") for p in (A,B)]))
 until("()=>MP.others>=1&&MP.rg==30",8000)
-H,G=(A,B) if A.evaluate("()=>MP.host===MP.me") else (B,A)
-W(3000)
+H,G=mp_roles(30000)
+SNK="()=>{const S=AB152.S;const L=S.acts.map((a,i)=>a.net?[i,a.u,a.v]:null).filter(Boolean);return L.slice(0,40)}"
+def snakes_ok():
+    r=G.evaluate(SNK);h=H.evaluate("(L)=>L.map(([i,u,v])=>{const a=AB152.S.acts[i];return Math.hypot(a.u-u,a.v-v)})",r)
+    return len(r)>3 and max(h)<2.5
+W(3000);poll(snakes_ok,7000)
 r=G.evaluate("()=>{const S=AB152.S;const L=S.acts.map((a,i)=>a.net?[i,a.u,a.v]:null).filter(Boolean);return L.slice(0,40)}")
 h=H.evaluate("(L)=>L.map(([i,u,v])=>{const a=AB152.S.acts[i];return Math.hypot(a.u-u,a.v-v)})",r)
 chk("Abeksi: the partner's snakes follow the host's",len(r)>3 and max(h)<2.5,'%d synced, max off %.2f'%(len(r),max(h) if h else -1))
@@ -45,6 +57,7 @@ chk('Abeksi: a partner seen by the host\'s snake = the whole party is caught',ok
 ok=until("()=>AB157A.on&&!AB152H.cau&&!AB152H.frz",9000)
 chk('Abeksi: caught = the city is roused for the whole party',ok,json.dumps([p.evaluate("()=>[AB157A.on,AB152H.cr]") for p in (A,B)]))
 ok=until("()=>enemies.some(e=>!e.dead&&/^naga/.test(e.c.en))",9000)
+poll(lambda:H.evaluate("()=>enemies.filter(e=>e.ab157&&!e.dead).length")>0 and G.evaluate("()=>enemies.filter(e=>e.mir&&!e.dead&&/^naga/.test(e.c.en)).length")>0,7000)
 hs=H.evaluate("()=>enemies.filter(e=>e.ab157&&!e.dead).length");gs=G.evaluate("()=>[enemies.filter(e=>e.ab157&&!e.dead).length,enemies.filter(e=>e.mir&&!e.dead&&/^naga/.test(e.c.en)).length]")
 chk('Abeksi: the host owns the roused residents, the partner sees them mirrored',ok and hs>0 and gs[0]==0 and gs[1]>0,json.dumps([hs,gs]))
 ok=until("()=>AB157A.left>0",6000,[G])
@@ -78,7 +91,11 @@ chk('Abeksi: the drain takes the whole party out',ok,json.dumps([p.evaluate("()=
 # ---------------- the Hilltop Ascent ----------------
 for pg in (A,B):pg.evaluate("()=>{newMount(MNTK[0]);MP.lastPres='';return 1}")
 W(1500)
-lab=A.evaluate("()=>{const I=INSL[6];toPos(I.ba[0],I.ba[1]);for(let i=0;i<3;i++)homeTick(1/30,performance.now());const G=SP152.gates.ascent,s=G.spot;toPos(s.x,s.z);return (worldPrompt()||{}).label||''}")
+# both in Hillside Crest II, each seeing the other there with a mount (presence) before the road is asked
+mp_roles(30000);until("()=>cl155Mates(MP.rg).length>0&&cl155Mates(MP.rg).every(r=>r.pr.hm)",8000)
+LAB="()=>{const I=INSL[6];toPos(I.ba[0],I.ba[1]);for(let i=0;i<3;i++)homeTick(1/30,performance.now());const G=SP152.gates.ascent,s=G.spot;toPos(s.x,s.z);return (worldPrompt()||{}).label||''}"
+poll(lambda:"with your party" in A.evaluate(LAB),5000)
+lab=A.evaluate(LAB)
 chk('Ascent: the road says the party rides together',"with your party" in lab,lab)
 A.evaluate("()=>ch153Enter()")
 ok=until("()=>ch153In()&&CH153.R&&CH153.R.ph=='run'",14000)
@@ -126,7 +143,7 @@ G.evaluate("()=>ch153Die('hits')")
 until("()=>CH153.R&&CH153.R.ph=='spec'",6000,[G])
 H.evaluate("()=>{const R=CH153.R,P=CH153.S.P;R.s=P.S-8;R.sn.s=R.s-30;R.o=0;return 1}")
 ok=until("()=>curIns()&&curIns().g===7",14000)
-W(2500)
+until("()=>!!RV148.down",10000,[G])   # the fallen partner arrives first and is laid down once the winner is there too
 dn=G.evaluate("()=>[RV148.down,curIns().g,CH153Q.st,Math.round(RV148.t)]");gp=G.evaluate("()=>MP.me")
 chk('Ascent: the winner\'s partner arrives in III downed (to be revived)',ok and dn[0]==1 and dn[1]==7 and dn[2]==2 and dn[3]>60,json.dumps(dn))
 H.evaluate("(p)=>rv148Send(p)",gp)
@@ -148,7 +165,10 @@ for v in range(3):
     seq=A.evaluate("()=>HD154.song.seq.slice()")
     for i,j in enumerate(seq):
         pg=A if i%2==0 else B
-        pg.evaluate("(j)=>{const G=HD154.song;if(G&&G.mode=='sing'){G.mode='play'}hd154Strike(j)}",j);W(700)
+        # the striker must have the partner's last strike first (it comes as a message), or it strikes the wrong note
+        mp_until("(q)=>{const G=HD154.song;return HD154.v===q[0]&&!!G&&G.in===q[1]}",5000*SLACK,[pg],[v,i])
+        pg.evaluate("(j)=>{const G=HD154.song;if(G&&G.mode=='sing'){G.mode='play'}hd154Strike(j)}",j);W(350)
+    until("()=>HD154.v>%d"%v,5000)
     verses.append([len(seq),A.evaluate("()=>HD154.v"),B.evaluate("()=>HD154.v")])
 chk('Hydra: both players sing the verses together',[q[1] for q in verses]==[1,2,3] and [q[2] for q in verses]==[1,2,3],json.dumps(verses))
 ok=until("()=>HD154.st===2||!!HD154.op",14000)   # opening (its 5 s scene runs slowly in a background test window) or open

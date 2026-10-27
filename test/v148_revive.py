@@ -7,7 +7,11 @@ h=open(os.environ.get('SRC',os.path.join(HERE,'..','dist','ashen-wilds.html'))).
 h=h.replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','/vendor/three.min.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js','/vendor/GLTFLoader.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js','/vendor/SkeletonUtils.js')
 h=re.sub(r'<link rel="stylesheet" href="https://fonts[^>]*>','',h)
 open(HERE+'/out/v148rv.html','w').write(h)
-srv=subprocess.Popen(['python3','-m','http.server','8767','--directory',HERE],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen(['python3','-m','http.server','8767','--directory',HERE],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+import socket
+for _ in range(100):   # wait for the web server (a fixed 1 s was not always enough on a busy machine)
+    try:socket.create_connection(('127.0.0.1',8767),timeout=1).close();break
+    except OSError:time.sleep(.2)
 FAKE=open(HERE+'/fakesig.js').read()
 FAIL=[]
 def check(name,ok,info=''):
@@ -18,11 +22,16 @@ def setup(pg,cls,name):
     pg.wait_for_function("()=>!!document.querySelector('[data-dev=desktop]')",timeout=120000)
     ev("()=>{document.querySelector('[data-dev=desktop]').click();const d=document.getElementById('svp');if(d)d.classList.add('hide')}");pg.wait_for_timeout(800)
     ev("c=>document.querySelector('[data-c=\"'+c+'\"]').click()",cls);pg.wait_for_timeout(500)
-    ev("()=>$('ccNext').click()");pg.wait_for_timeout(1200);ev("()=>{if(!party.length)$('ccNext').click()}")
-    pg.wait_for_function('party.length>0',timeout=120000);pg.wait_for_timeout(1500)
+    ev("()=>{ren.render=()=>{};POST.render=()=>{}}")   # no drawing (also while the hero is made: much faster on a slow machine)
+    ev("()=>$('ccNext').click()");pg.wait_for_function("()=>ccStep==1||party.length>0",timeout=60000);pg.wait_for_timeout(300)
+    ev("()=>{if(!party.length)$('ccNext').click()}")
+    pg.wait_for_function('party.length>0&&hero.hp>0',timeout=180000);pg.wait_for_timeout(1500)
     ev("()=>{hero.name='%s';ren.render=()=>{};POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}"%name)
+# steady on slow machines (Oct 27 2026): every wait polls its condition with SLACK times the time it was written for (a slow
+# machine runs few frames per second, and the game's own time (at most 0.05 s per frame) falls behind the clock)
+SLACK=3
 def until(pg,js,t=30):
-    t0=time.time()
+    t*=SLACK;t0=time.time()
     while time.time()-t0<t:
         try:
             if pg.evaluate(js):return True
@@ -39,6 +48,7 @@ try:
         pg=ctx.new_page();pgs[k]=pg;logs[k]=[];pg.add_init_script('window.AW_NOTITLE=1')
         pg.on('pageerror',lambda e,k=k:logs[k].append('PAGEERROR: '+str(e)+' || '+(e.stack or '')[:500].replace('\n',' ')))
         pg.goto('http://127.0.0.1:8767/out/v148rv.html',wait_until='commit',timeout=60000);pg.wait_for_function('document.readyState=="complete"',timeout=180000);pg.wait_for_timeout(1500)
+        if os.environ.get('SLOW'):ctx.new_cdp_session(pg).send('Emulation.setCPUThrottlingRate',{'rate':float(os.environ['SLOW'])})   # SLOW=4: a 4x slower CPU once the page has loaded
         if k=='A':pg.evaluate("()=>localStorage.clear()")
     A,B=pgs['A'],pgs['B']
     setup(A,'warrior','Aria');setup(B,'mage','Bram')
@@ -50,8 +60,15 @@ try:
     # connect
     A.evaluate("()=>{openX('coop');document.querySelector('[data-kqc=host]').click()}")
     until(A,"()=>KQNET.cur&&KQNET.cur.host&&/^[A-Z2-9]{6}$/.test(KQNET.cur.code)",20);code=A.evaluate("()=>KQNET.cur.code")
-    B.evaluate("c=>kqcJoin(c)",code)
-    check('joined',until(B,"()=>KQNET.cur&&MP.on&&Object.keys(MP.rh).length==1",30) and until(A,"()=>Object.keys(MP.rh).length==1",20))
+    # join; a join that gave up (the game's own 20 s limit, e.g. a slow machine's WebRTC setup) is tried again, at most 3 times
+    jl=[]
+    for k in range(3):
+        B.evaluate("c=>kqcJoin(c)",code)
+        if until(B,"()=>!!(KQNET.cur&&MP.on)||!KQNET.busy&&!KQNET.cur",30):
+            if B.evaluate("()=>!!(KQNET.cur&&MP.on)"):break
+        jl.append(B.evaluate("()=>[KQNET.busy,!!KQNET.cur,KQNET.msg||'']"));B.wait_for_timeout(1000)
+    check('joined',until(B,"()=>KQNET.cur&&MP.on&&Object.keys(MP.rh).length==1",30) and until(A,"()=>Object.keys(MP.rh).length==1",20),
+          json.dumps([jl,B.evaluate("()=>[KQNET.busy,!!KQNET.cur,KQNET.msg||'',Object.keys(MP.rh).length]"),A.evaluate("()=>[!!KQNET.cur,Object.keys(MP.rh).length]")]))
     for pg in (A,B): pg.evaluate("()=>{closeX();const p=PMAP[0].ins[0].path[60];toPos(p[0]+(hero.cls=='mage'?1.2:0),p[1]+(hero.cls=='mage'?.6:0));hero.hp=heroMax()}")
     check('same map',until(A,"()=>MP.others>0",30) and until(B,"()=>MP.others>0",30))
     # B goes down
@@ -103,7 +120,8 @@ try:
     check('arena: A drives the boss now',until(A,"()=>mpBossAuth(0)===MP.me",10))
     A.evaluate("()=>{hero.hp=0;down()}")
     check('arena: A down with nobody standing = death',until(A,"()=>AWD.dead==1&&!RV148.down",10))
-    check('arena: B dies too',until(B,"()=>AWD.dead==1&&!RV148.down",15))
+    DIAG="()=>JSON.stringify({me:MP.me,rg:MP.rg,dn:RV148.down,t:Math.round(RV148.t),dead:AWD.dead,hp:hero.hp,AF:AF&&AF.i,others:MP.others,rh:Object.entries(MP.rh).map(([k,r])=>[k,r.pr&&[r.pr.rg,r.pr.hp,r.pr.dn,r.pr.ar]])})"
+    check('arena: B dies too',until(B,"()=>AWD.dead==1&&!RV148.down",15),'B '+B.evaluate(DIAG)+' A '+A.evaluate(DIAG))
     A.wait_for_timeout(2000)
     check('arena: lost for both, no new fight behind the death screen',A.evaluate("()=>!AF") and B.evaluate("()=>!AF"),(A.evaluate("()=>AF&&AF.i"),B.evaluate("()=>AF&&AF.i")))
     for pg in (A,B): until(pg,RISE,20)
