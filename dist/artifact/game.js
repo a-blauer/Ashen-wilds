@@ -36755,8 +36755,24 @@ fk142Setup();
 // the captain's map table on the south. The lampposts line the whole road from the outpost to ~10 steps before the gateway,
 // alternating sides, about mq151Cfg().gap (7) tiles apart (~47 of them; v143 had 8 on the last 50 steps). The Ripper parks beside
 // the gateway, on the side away from Cheddar's gateway spot, facing the arch.
+// v158, the lantern line (owner): the raw road path zigzags inside wide open ground (Kindlelight I's middle: a V and a W), so lamps
+// counted 7 path steps apart stood side by side on two legs of a zag (12 within 5 tiles, two pairs under 2) and the Ripper drove
+// every zag. mq158Line cuts each zag: a straight shortcut is kept while every point on it stays mq151Cfg().clr tiles inside open
+// ground and within .dev tiles of the raw path (so it never leaves the road's corridor), then the corners are rounded (Catmull-Rom).
+// Lamps go every .gap tiles of distance along that line (34 in Kindlelight I, none closer than ~8), and the Ripper rides it.
+// The map itself (tiles, camps, decorations' seeded stream) is untouched; only the lamps, the route and their keep-out rings move.
 // (hoisted functions, not a var: 0045 and 0070 call into this file long before its own lines run)
-function mq151Cfg(){return {A:36,gap:7}}
+function mq151Cfg(){return {A:36,gap:7,clr:5,dev:6}}
+// the road from path index s0 to s1 with the zigzags cut and the corners rounded: [[x,z],...] about a tile apart
+function mq158Line(P,s0,s1){const c=mq151Cfg(),DW=MAP.DW,near=new Set(),r=c.dev;
+  P.forEach(p=>{for(let z=Math.floor(p[1]-r);z<=Math.ceil(p[1]+r);z++)for(let x=Math.floor(p[0]-r);x<=Math.ceil(p[0]+r);x++)if(Math.hypot(x-p[0],z-p[1])<=r)near.add(z*W+x)});
+  const inL=(x,z)=>{const X=Math.round(x),Z=Math.round(z);return X>0&&Z>0&&X<W-1&&Z<H-1&&DW[Z*W+X]<-c.clr&&near.has(Z*W+X)};
+  const see=(a,b)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1]))+1;for(let t=0;t<=n;t++)if(!inL(a[0]+(b[0]-a[0])*t/n,a[1]+(b[1]-a[1])*t/n))return false;return true};
+  const kn=[s0];for(let i=s0;i<s1;){let j=s1;while(j>i+1&&!see(P[i],P[j]))j--;kn.push(j);i=j}
+  const K=kn.map(i=>P[i]),out=[];
+  for(let i=0;i<K.length-1;i++){const a=K[Math.max(0,i-1)],b=K[i],q=K[i+1],d=K[Math.min(K.length-1,i+2)],n=Math.max(2,Math.ceil(Math.hypot(q[0]-b[0],q[1]-b[1])));
+    for(let s=0;s<n;s++){const t=s/n,t2=t*t,t3=t2*t;out.push([0,1].map(k=>.5*(2*b[k]+(q[k]-a[k])*t+(2*a[k]-5*b[k]+4*q[k]-d[k])*t2+(3*b[k]-a[k]-3*q[k]+d[k])*t3)))}}
+  out.push([K[K.length-1][0],K[K.length-1][1]]);mq158Line.kn=kn;return out}
 function mq151A(N){return Math.max(10,Math.min(mq151Cfg().A,N-60))}
 function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   const I=INSL[0],P=I.path,N=P.length,DW=MAP.DW;
@@ -36787,10 +36803,17 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   // the palisade: sections of stakes along the east edge, a short screen on the west
   for(let a=-4.6;a<=8.6;a+=1.55){const o=pick(a,-9.7,.5);if(o){o.ry=road+Math.PI/2;o.n=6;R.stakes.push(o)}}
   [-2.2,-.7].forEach(a=>{const o=pick(a,5.6,.5);if(o){o.ry=road-Math.PI/2;o.n=5;R.stakes.push(o)}});
-  // the lampposts: from A+8 to N-10, about mq151Cfg().gap apart (at least 8), alternating sides 2.7 off the road centre, the arm over the road
-  const L0=A+8,L1=N-10,n=Math.max(8,Math.round((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const ix=Math.round(L0+(L1-L0)*i/(n-1)),q=P[ix],t=tan(ix),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
-    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)){o={x,z,i:ix};break}}
-    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:ix};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
+  // v158: the lantern line from the outpost to the gateway: the raw path up to the Ripper's start, the cut-and-rounded line to 13 steps
+  // before the gateway (where the Ripper turns off to park), then the raw path's last steps; RD.d = distance along it in tiles
+  const S1=N-13,LN=mq158Line(P,R.start,S1),RD=P.slice(A,R.start).map(p=>[p[0],p[1]]).concat(LN,P.slice(S1+1).map(p=>[p[0],p[1]]));
+  const Dd=[0];for(let i=1;i<RD.length;i++)Dd.push(Dd[i-1]+Math.hypot(RD[i][0]-RD[i-1][0],RD[i][1]-RD[i-1][1]));R.line=RD;R.lineD=Dd;R.lineLen=Dd[Dd.length-1];
+  const atD=s=>{let i=1;while(i<RD.length-1&&Dd[i]<s)i++;const a=RD[i-1],b=RD[i],k=(s-Dd[i-1])/Math.max(1e-6,Dd[i]-Dd[i-1]),
+      p=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k],u=RD[Math.max(0,i-4)],v=RD[Math.min(RD.length-1,i+3)];let dx=v[0]-u[0],dz=v[1]-u[1];const L=Math.hypot(dx,dz)||1;return [p,[dx/L,dz/L]]};
+  // the lampposts: from 8 tiles past the outpost to 10 before the gateway, every mq151Cfg().gap tiles along the line (at least 8),
+  // alternating sides 2.7 off the line, the arm over the road; .i = the distance along the line (tiles from the outpost)
+  const L0=8,L1=R.lineLen-10,n=Math.max(8,Math.round((L1-L0)/mq151Cfg().gap)+1);for(let i=0;i<n;i++){const s=L0+(L1-L0)*i/(n-1),[q,t]=atD(s),sv=[-t[1],t[0]],sd=i%2?1:-1;let o=null;
+    for(const b of [2.7*sd,3.3*sd,2.2*sd,-2.7*sd,-3.3*sd]){const x=q[0]+sv[0]*b,z=q[1]+sv[1]*b;if(ok(x,z,.8)){o={x,z,i:s};break}}
+    if(!o)o={x:q[0]+sv[0]*2.7*sd,z:q[1]+sv[1]*2.7*sd,i:s};o.ry=Math.atan2(-(q[1]-o.z),q[0]-o.x);R.lamps.push(o)}
   // the gateway and where the Ripper parks: beside the arch, away from Cheddar's gateway spot (2350 picks +side first)
   const G=I.ba,q=P[Math.max(0,N-14)];let dx=q[0]-G[0],dz=q[1]-G[1];const Lg=Math.hypot(dx,dz)||1;dx/=Lg;dz/=Lg;const sx=-dz,sz=dx;
   const chq=[[5.4,2],[5.4,-2],[6,2.4],[6,-2.4]].find(([a,b])=>ok(G[0]+dx*a+sx*b,G[1]+dz*a+sz*b,.3)),cs=chq?Math.sign(chq[1]):1;
@@ -36798,7 +36821,7 @@ function mq143Plan(){if(mq143Plan.c)return mq143Plan.c;
   for(const [a,b] of [[3.7,-3.1],[4.3,-3.4],[3.3,-3.7],[4.8,-3.0],[3.7,-2.6]]){const x=G[0]+dx*a+sx*b*cs,z=G[1]+dz*a+sz*b*cs;if(ok(x,z,.9)){R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs};break}}
   if(!R.park){const x=G[0]+dx*3.7-sx*3.1*cs,z=G[1]+dz*3.7-sz*3.1*cs;R.park={x,z,ry:yawTo(x,z,G[0],G[1]),side:-cs}}
   // the route: the road from the start to ~12 steps before the gateway, then a curve to the parking spot
-  const rt=[];for(let i=R.start;i<=N-13;i+=2)rt.push([P[i][0],P[i][1]]);
+  const rt=[];for(let i=0;i<LN.length;i+=2)rt.push(LN[i].slice());if(rt.length&&(LN.length-1)%2)rt.push(LN[LN.length-1].slice()); // v158: along the lantern line
   {const e=P[N-13],m=[(e[0]+R.park.x)/2+sx*cs*-.8,(e[1]+R.park.z)/2+sz*cs*-.8];rt.push(m);
     const b=[R.park.x-Math.sin(R.park.ry)*1.6,R.park.z-Math.cos(R.park.ry)*1.6];rt.push(b);rt.push([R.park.x,R.park.z])}
   R.route=rt;
@@ -37130,12 +37153,13 @@ MQM143.sheet.bulb=()=>{const g=mqm143Bulb();g.scale.setScalar(4);return g};
 // The first chapter of Kindlelight's main quest line (a chapter per field instance; II and III come later). In Kindlelight I the
 // gateway to II is dormant. The Lantern Wardens (3021) hold an outpost near the entrance (3020 plan) with the Portal Ripper (3022),
 // a machine that can tear the gateway open, but it will not roll through the dark: lampposts line the whole road from the outpost
-// to the gateway (v151: ~47, one glowbulb each; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
+// to the gateway (v158: 34 along the smoothed lantern line, one glowbulb each; v151 had ~47 on the raw zigzag road; v143 had 8 at 3 each near the gateway). Glowbulbs are a quest item (no other use)
 // that every Kindlelight I creature drops on top of its normal loot (MQ143.drop chance per kill, 100% since v151, only while more are needed: lamps still dark × MQ143.per
 // − carried − lying on the ground).
 // State MQ143.st: 0 not met · 1 met the captain · 2 the Ripper is rolling · 3 done (the gateway is open). Done also counts when
 // instance II has been reached (old saves, cheats, a cleared zone): mq143Done(). Saved as x2.mq143 {v, st, b (bulbs), lit[one per lamp], seen}; saves before v151
-// (8 lamps at 3 bulbs) get their bulbs back for lamps they had lit (the lamps stand elsewhere now) and start the new road dark.
+// (8 lamps at 3 bulbs) and saves before v158 (~47 lamps at 1 bulb) get their bulbs back for lamps they had lit (the lamps stand
+// elsewhere now) and start the new road dark.
 //  * F at an unlit lamppost with a bulb lights it (any state; the captain explains the quest). The last lamp starts the roll:
 //    the Ripper rolls the road (furnace lit, chimney smoking, two wardens escorting it), parks beside the gateway, drops its
 //    jacks, opens its claws, charges its coil and tears the gateway open (arcs, a flash): st 3. Leaving the instance mid-way
@@ -37175,10 +37199,12 @@ function mq143Drop(p){MQ143_G=MQ143_G||{b:new THREE.CylinderGeometry(.05,.05,1.6
   return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
 
 // ---------------- saves ----------------
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:151,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.mq143={v:158,st:MQ143.st,b:MQ143.b,lit:MQ143.lit.map(v=>v?1:0),seen:MQ143.seen|0}}catch(_){}return o}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.mq143;MQ143.st=0;MQ143.b=0;MQ143.lit=new Array(mq143N()).fill(0);MQ143.seen=0;
     if(q&&typeof q=='object'){MQ143.st=Math.max(0,Math.min(3,q.st|0));if(MQ143.st==2)MQ143.st=3;MQ143.b=Math.max(0,Math.min(99,q.b|0));MQ143.seen=q.seen|0;
-      if(Array.isArray(q.lit)){if((q.v|0)>=151)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+      if(Array.isArray(q.lit)){if((q.v|0)>=158)q.lit.forEach((v,i)=>{if(i<MQ143.lit.length)MQ143.lit[i]=v?1:0});
+        else if((q.v|0)>=151){if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+q.lit.filter(v=>v).length)} // v158: the ~47 lamps moved onto the lantern line (34): refund a bulb each, start dark
+
         else if(MQ143.st<3)MQ143.b=Math.min(99,MQ143.b+3*q.lit.filter(v=>v).length)}} // v151: the old 8 lamps cost 3 each and stood elsewhere: refund, start dark
     MQ143.trkK='';MQ143.roll=null;MQ143.fire=null;if(MQ143.S)mq143Sync()}catch(err){console.warn('v143 load',err)}return r}}
 
