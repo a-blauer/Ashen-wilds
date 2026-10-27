@@ -89,15 +89,11 @@ function loop(now){
   compTick(dt,now);
   compSpells(dt);
   const pt0=camPitch,cdd0=(camDist);
-  let pTar=pt0,dTar=cdd0;
-  {const ox=Math.sin(camYaw),oz=Math.cos(camYaw),py=pl.position.y+1.1,blk=(p)=>{const hc=Math.cos(p),sp=Math.sin(p);for(let s=1.2;s<=cdd0;s+=.5){const wy=py+sp*s,r=(MAP[Math.round(pl.position.z+oz*hc*s)]||[])[Math.round(pl.position.x+ox*hc*s)];const gy=GH(pl.position.x+ox*hc*s,pl.position.z+oz*hc*s);if(wy<gy+.8)return s}return 0};   // v135: only the ground itself moves the camera; rocks, walls and buildings between you and it fade out instead (2410)
-    const sb=blk(pt0);if(sb){let p=pt0,ok=0;for(let k=0;k<14&&p<1.25;k++){p=Math.min(1.25,p+.07);if(!blk(p)){ok=1;break}}   // v132: ground rising behind you raises the camera instead of pulling it in
-    if(ok){pTar=p;const hI=typeof insAt=='function'&&insAt(Math.round(pl.position.x),Math.round(pl.position.z)),hc=Math.cos(p);   // near an instance's edge, stay in front of its rim scenery
-      if(hI&&typeof v124Rim=='function')for(let s=1.2;s<=cdd0;s+=.5){const x=Math.round(pl.position.x+ox*hc*s),z=Math.round(pl.position.z+oz*hc*s),J=insAt(x,z);if(!J||J!==hI||v124Rim(x,z)){dTar=Math.max(3.4,s-.6);break}}}
-    else{dTar=Math.max(2.8,sb-.8);pTar=Math.min(1.3,pt0+.18*(1-dTar/cdd0)+.05)}}}
+  let pTar=pt0,dTar=cdd0;   // v157: walls never move the camera (no tilt-up, no pull-in); whatever stands between it and the hero is cut away instead (2420, 3190)
   camK+=(pTar-camK)*Math.min(1,dt*(pTar>camK?7:2)+.03);
   camDD=(camDD==null?cdd0:camDD);camDD+=(dTar-camDD)*Math.min(1,dt*(dTar<camDD?10:2.2)+.02);const cdd=camDD,pt=camK,cp=V(pl.position.x+Math.sin(camYaw)*Math.cos(pt)*cdd,pl.position.y+1.1+Math.sin(pt)*cdd,pl.position.z+Math.cos(camYaw)*Math.cos(pt)*cdd),lp=V(pl.position.x,pl.position.y+1.0,pl.position.z);
-  cam.position.lerp(cp,Math.min(1,dt*3+.02));look.lerp(lp,Math.min(1,dt*4+.02));cam.position.y=Math.max(cam.position.y,GH(cam.position.x,cam.position.z)+1.4);cam.lookAt(look);if(shk>0){cam.position.x+=(Math.random()-.5)*shk;cam.position.y+=(Math.random()-.5)*shk;shk=Math.max(0,shk-rd/1000*.9)}FADE.cam.value.copy(cam.position);FADE.pl.value.set(pl.position.x,pl.position.y+1.1,pl.position.z);chunkVis();
+  {const fl=cam157Floor(pl.position,cp);if(fl!=null&&cp.y<fl)cp.y=fl}   // v157: on gentle ground the camera rides above it, smoothly
+  cam.position.lerp(cp,Math.min(1,dt*3+.02));look.lerp(lp,Math.min(1,dt*4+.02));{const fl=cam157Floor(pl.position,cam.position);if(fl!=null)cam.position.y=Math.max(cam.position.y,fl-.8)}cam.lookAt(look);if(shk>0){cam.position.x+=(Math.random()-.5)*shk;cam.position.y+=(Math.random()-.5)*shk;shk=Math.max(0,shk-rd/1000*.9)}FADE.cam.value.copy(cam.position);FADE.pl.value.set(pl.position.x,pl.position.y+1.1,pl.position.z);chunkVis();
   torch.position.set(pl.position.x,pl.position.y+2.2,pl.position.z+.3);
   townTick(now,pl.position);
   qualityTick(rd);WIND.t.value=now/1000;atmos(dt,now);pln.constant=-pl.position.y;

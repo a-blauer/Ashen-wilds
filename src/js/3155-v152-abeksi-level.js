@@ -145,8 +145,8 @@ function ab152CamFit(){const S=AB152.S;if(!S)return null;const G=S.G,I=S.I,P=pl.
   const d0=camDist,p0=camPitch;if(!clear(p0,d0))return null;
   for(let p=p0+.08;p<=1.22;p+=.08)if(!clear(p,d0))return [p,d0];
   const s=clear(1.22,d0);return [1.22,Math.max(3.2,s-.4)]}
-{const f=loop;loop=function(now){let keep=null;try{if(ab152In()&&AB152.S&&!(typeof uiOpen=='function'&&uiOpen())){const r=ab152CamFit();if(r){keep=[camPitch,camDist];camPitch=r[0];camDist=r[1]}}}catch(_){}
-  try{return f.apply(this,arguments)}finally{if(keep){camPitch=keep[0];camDist=keep[1]}}}}
+// v157: the roof tilt is off; the houses between the camera and the hero are cut away around the hero instead (2420, 3190).
+// ab152CamFit stays for reference and tests but nothing calls it.
 // ---------------- prompts inside: the drain out, the breach back ----------------
 {const f=worldPrompt;worldPrompt=function(){try{if(ab152In()&&AB152.S&&!AB152H.cau){const P=pl.position,S=AB152.S;
     if(Math.hypot(P.x-S.drain[0],P.z-S.drain[1])<2.4)return {label:'F · Slip through the drain (leave Abeksi for '+INSL[6].n+')',fn:()=>ab152Finish()};
