@@ -46427,8 +46427,10 @@ function cs155Spec(dt,now){const R=CH153.R,S=CH153.S,P=S.P,K=S.K;R.t+=dt;R.spec.
 function cs155Out(){if(CS155.out)return;CS155.out=1;CH153Q.st=2;CH153.lv=1;
   fadeTo(()=>{CH153.R=null;pl.visible=true;if(typeof mModel!='undefined'&&mModel)mModel.visible=true;const N=INSL[7];insArrive(N);insMark(N);
     setTimeout(()=>{CS155.out=0;cs155Downed()},900)})}
+// v158: the fallen leave at once but the winner rides on for 2 s of game time, fades, then loads III (slower on a slow machine):
+// wait up to ~20 s for them (was ~5 s, after which the fallen just stood up instead of lying downed)
 function cs155Downed(n){const rg=mpCurRg(),st=cl155Mates(rg).filter(r=>r.pr.hp>0&&!r.pr.dn);
-  if(!st.length){if((n|0)<6){setTimeout(()=>cs155Downed((n|0)+1),700);return}say('🐍 Your partners got through — you come to on the hilltops.');return}
+  if(!st.length){if((n|0)<28){setTimeout(()=>cs155Downed((n|0)+1),700);return}say('🐍 Your partners got through — you come to on the hilltops.');return}
   if(MP.rg!==rg)try{mpRoles(performance.now())}catch(_){}
   try{rv148Fall();RV148.T=RV155.T;RV148.t=RV155.T;RV148.since=performance.now()+5000;RV148.long=1}catch(e){console.warn('v155 downed',e)}
   say('💀 You fell on the mountain — '+mpEsc(st.map(r=>mpName(r.peer)).join(', '))+' got through and carried on. They can revive you here (F beside you).');cl155Send(['cs','dn'])}

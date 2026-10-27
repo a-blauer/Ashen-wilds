@@ -7,7 +7,11 @@ h=open(os.environ.get('SRC',os.path.join(HERE,'..','dist','ashen-wilds.html'))).
 h=h.replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','/vendor/three.min.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js','/vendor/GLTFLoader.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js','/vendor/SkeletonUtils.js')
 h=re.sub(r'<link rel="stylesheet" href="https://fonts[^>]*>','',h)
 open(HERE+'/out/v148rv.html','w').write(h)
-srv=subprocess.Popen(['python3','-m','http.server','8767','--directory',HERE],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
+srv=subprocess.Popen(['python3','-m','http.server','8767','--directory',HERE],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+import socket
+for _ in range(100):   # wait for the web server (a fixed 1 s was not always enough on a busy machine)
+    try:socket.create_connection(('127.0.0.1',8767),timeout=1).close();break
+    except OSError:time.sleep(.2)
 FAKE=open(HERE+'/fakesig.js').read()
 FAIL=[]
 def check(name,ok,info=''):
@@ -21,8 +25,11 @@ def setup(pg,cls,name):
     ev("()=>$('ccNext').click()");pg.wait_for_timeout(1200);ev("()=>{if(!party.length)$('ccNext').click()}")
     pg.wait_for_function('party.length>0',timeout=120000);pg.wait_for_timeout(1500)
     ev("()=>{hero.name='%s';ren.render=()=>{};POST.render=()=>{};requestAnimationFrame=f=>setTimeout(()=>f(performance.now()),16)}"%name)
+# steady on slow machines (Oct 27 2026): every wait polls its condition with SLACK times the time it was written for (a slow
+# machine runs few frames per second, and the game's own time (at most 0.05 s per frame) falls behind the clock)
+SLACK=3
 def until(pg,js,t=30):
-    t0=time.time()
+    t*=SLACK;t0=time.time()
     while time.time()-t0<t:
         try:
             if pg.evaluate(js):return True
@@ -50,8 +57,15 @@ try:
     # connect
     A.evaluate("()=>{openX('coop');document.querySelector('[data-kqc=host]').click()}")
     until(A,"()=>KQNET.cur&&KQNET.cur.host&&/^[A-Z2-9]{6}$/.test(KQNET.cur.code)",20);code=A.evaluate("()=>KQNET.cur.code")
-    B.evaluate("c=>kqcJoin(c)",code)
-    check('joined',until(B,"()=>KQNET.cur&&MP.on&&Object.keys(MP.rh).length==1",30) and until(A,"()=>Object.keys(MP.rh).length==1",20))
+    # join; a join that gave up (the game's own 20 s limit, e.g. a slow machine's WebRTC setup) is tried again, at most 3 times
+    jl=[]
+    for k in range(3):
+        B.evaluate("c=>kqcJoin(c)",code)
+        if until(B,"()=>!!(KQNET.cur&&MP.on)||!KQNET.busy&&!KQNET.cur",30):
+            if B.evaluate("()=>!!(KQNET.cur&&MP.on)"):break
+        jl.append(B.evaluate("()=>[KQNET.busy,!!KQNET.cur,KQNET.msg||'']"));B.wait_for_timeout(1000)
+    check('joined',until(B,"()=>KQNET.cur&&MP.on&&Object.keys(MP.rh).length==1",30) and until(A,"()=>Object.keys(MP.rh).length==1",20),
+          json.dumps([jl,B.evaluate("()=>[KQNET.busy,!!KQNET.cur,KQNET.msg||'',Object.keys(MP.rh).length]"),A.evaluate("()=>[!!KQNET.cur,Object.keys(MP.rh).length]")]))
     for pg in (A,B): pg.evaluate("()=>{closeX();const p=PMAP[0].ins[0].path[60];toPos(p[0]+(hero.cls=='mage'?1.2:0),p[1]+(hero.cls=='mage'?.6:0));hero.hp=heroMax()}")
     check('same map',until(A,"()=>MP.others>0",30) and until(B,"()=>MP.others>0",30))
     # B goes down
