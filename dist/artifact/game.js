@@ -27386,7 +27386,8 @@ function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i
     if(!rid){[['lh0',R.a],['rh0',R.a],['lh1',R.k],['rh1',R.k],['lh2',R.an],['rh2',R.an]].forEach(q=>brAddR(H,q[0],'x',q[1]));
       // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition);
       // the posture follows a low-passed gait blend, so uneven frame times can never make the lean flicker
-      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
+      // v164: the dash's tuck (HA.cur.mv164, 3230) is movement, not an attack: the hold stays (the raven's wand swung into its pointer pose)
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur&&!HA.cur.mv164):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
       S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
       S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
       const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
@@ -31140,7 +31141,9 @@ var ABX135={p:null,r:0};
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
 var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
-var R157={value:new THREE.Vector2(1.35,2.4)};
+// v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
+// now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
+var R157={value:new THREE.Vector2(2.3,5.4)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
 var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
@@ -46883,7 +46886,7 @@ function hd155Merge(vane,v,st){if(hd154Done())return;const here=hd154In()&&!!HD1
 // 0104), the hard "above the ground under the camera" clamp then lifted it to the top of the wall, and Abeksi tilted it over the roofs
 // (3155). Pulling the camera in was tried before and was disorienting too. Now nothing moves the camera on its own:
 //  * scenery (2420) and the ground's steep walls (here) that come between the camera and the hero turn see-through in a round window
-//    around the hero on screen (R157: cut inside 1.35, dithered edge, solid from 2.4 units at the hero's distance);
+//    around the hero on screen (R157: cut inside 2.3, dithered edge, solid from 5.4 units at the hero's distance; v164, was 1.35-2.4);
 //  * floors stay solid: flat ground below the hero's waist is never cut, so the path behind and under the hero always shows;
 //  * the camera still rides above gentle ground (hills, slopes) with the same smoothing as everything else (cam157Floor). Behind a wall
 //    (the ground between hero and camera climbs a step) it simply stays inside the wall: from in there its faces point away and the
@@ -48243,3 +48246,18 @@ gripEdge=function(h,e,dt){
           if(e.pa163!==A){e.pa163=A;e.pl163=edge163Target(h,e,A);if(e.pl163!=null&&fromCarry)e.psi=e.pl163}
           else if(dt>0&&dt<.5&&!edge163Win(A)&&e.pl163!=null)edge163Step(e,e.pl163,dt,EDGE163.wind)})}}}catch(_){}
   return f.call(this,h,now,el,att)}}
+// ================= v164: a dash never turns the weapon in the hand =================
+// Owner (Oct 27 2026): "after sprinting the halberd is turned the wrong way briefly, it corrects itself after a few seconds".
+// The dash's quick tuck (haDodge, 0740) plays through the same action slot as an attack (HA.cur), so the grip (1270, 3220) took it
+// for a swing: the hands went to the strike grip, edge163Plan worked out an "edge roll" from the tuck's arm motion (the halberd:
+// ~176°, blade backwards) and, the tuck counting as an attack, the strike hold was kept for EDGE163.hold (2 s) afterwards. Every
+// edged weapon, the bow, crossbow, mace and wand turned 40-150° the same way. Measured by test/v164_dodge_grip.py.
+// Now the tuck is marked as movement (HA.cur.mv164) and, for the grip only, the hero is not in an action while it plays: out of a
+// fight the weapon stays in the carry grip; in a fight (right after an attack, a monster hunting nearby) it keeps the strike grip
+// and the roll it already had. The tuck's pose, timing and i-frames are unchanged.
+{const f=haDodge;haDodge=function(){const r=f.apply(this,arguments);try{if(HA.cur)HA.cur.mv164=1}catch(_){}return r}}
+function mv164(){return !!(typeof HA!='undefined'&&HA.cur&&HA.cur.mv164)}
+{const f=gripTick;gripTick=function(h,now,el,att){
+  if(h!==pl||!mv164())return f.apply(this,arguments);
+  const A=HA.cur,sw=pl.sw;HA.cur=null;pl.sw=hero.chan?1:0;
+  try{return f.call(this,h,now,el)}finally{HA.cur=A;pl.sw=sw}}}   // the hold is worked out again without the tuck
