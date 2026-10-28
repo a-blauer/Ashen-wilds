@@ -65,7 +65,7 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
   kit([ZG(4,2)],{st:[0x7e7a6a,0x9a967e],bk:[['d_tree',2],['d3_spikes',1]],bd:.55});
   // occupancy grid (2-tile cells) of everything already standing out of reach, so nothing new overlaps it
   const occ=new Map(),ck=(x,z)=>(Math.floor(z/2)*4096+Math.floor(x/2)),addO=(x,z,r,sn)=>{const k=ck(x,z);(occ.get(k)||occ.set(k,[]).get(k)).push([x,z,r,sn])},
-    clear=(x,z,r,rs)=>{for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const L=occ.get(ck(x+i*2,z+j*2));if(L)for(const q of L)if(Math.hypot(q[0]-x,q[1]-z)<(q[3]&&rs!=null?q[2]*.6+rs:q[2]+r))return false}return true};
+    clear=(x,z,r,rs)=>{for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const L=occ.get(ck(x+i*2,z+j*2));if(L)for(const q of L)if(Math.hypot(q[0]-x,q[1]-z)<(q[3]&&rs!=null?Math.max(1.25,q[2]*.6+rs):q[2]+r))return false /* v164: never closer than 1.25 to a ledge stone */}return true};
   // the zones' own boulders on the bank: drop the ones on a sheer face (they hung in the air off the wall)
   for(let i=out.length-1;i>=0;i--){const d=out[i];if(!/boulder|_rock$/.test(d.k)||DW[Math.round(d.z)*W+Math.round(d.x)]<0)continue;
     const a=[GH(d.x+1,d.z),GH(d.x-1,d.z),GH(d.x,d.z+1),GH(d.x,d.z-1)];if(Math.max(...a)-Math.min(...a)>2.6)out.splice(i,1)}

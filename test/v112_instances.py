@@ -47,7 +47,8 @@ def s(pg):
         print(('PASS ' if ok else 'FAIL ')+name,'=>',json.dumps(r)[:600])
         if not ok:fails.append(name)
         return r
-    st=T('themes',"()=>V112.stats()",lambda r:len(r['themes'])==12 and r['arches']>=12 and r['ceil']>20 and len(r['ribbons'])==4)
+    # v164: the bigger camp clearings widen a few stretches of road, so fewer spots fit an arch (17 -> 11)
+    st=T('themes',"()=>V112.stats()",lambda r:len(r['themes'])==12 and r['arches']>=10 and r['ceil']>20 and len(r['ribbons'])==4)
     T('biomes',"()=>INSL.filter(I=>I.fld).map(I=>[I.g,MAP.bio[Math.round(I.en[1])][Math.round(I.en[0])],PMAP[I.z].bi,BIOMES[MAP.bio[Math.round(I.en[1])][Math.round(I.en[0])]].n==PMAP[I.z].n])",
       lambda r:all((q[1]==q[2])==(q[0]%5==0) and q[3] for q in r))
     T('load cost',"()=>[WD.stats.ms,WD.stats.buildMs,WD.stats.meshes,WD.list.length]",lambda r:True)

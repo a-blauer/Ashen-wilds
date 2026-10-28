@@ -16,7 +16,7 @@ def s(pg):
     T('dens in own instance',"()=>BOSSES.map((b,i)=>{const I=insAt(b.x,b.y);return I.den&&I.z===i&&I.k===PMF&&Math.hypot(b.x-I.x0,0)>26*DK&&I.x0+I.w-b.x>26*DK&&I.y0+I.h-b.y>26*DK})",lambda r:all(r))
     T('den bigger',"()=>[ARENA_R,DK,PM_DENR,ARN.map(A=>{let n=0;for(let y=A.cz-45;y<=A.cz+45;y++)for(let x=A.cx-45;x<=A.cx+45;x++)if(MAP.DW[y*W+x]<0&&Math.hypot(x-A.cx,y-A.cz)<ARENA_R)n++;return n})]",lambda r:r[0]==28 and min(r[3])>2000)
     T('trial in own instance',"()=>PMAP.map((p,i)=>{const I=insAt(p.wa[0],p.wa[1]);return [I&&I.tri,I&&I.z,MAP.DW[p.wa[1]*W+p.wa[0]]<0,MAP.DW[(p.wa[1]+11)*W+p.wa[0]]<0]})",lambda r:all(q[0] and q[1]==i and q[2] and q[3] for i,q in enumerate(r)))
-    T('size',"()=>INSL.filter(I=>I.fld).map(I=>{let n=0;for(let y=I.y0;y<I.y0+I.h;y+=2)for(let x=I.x0;x<I.x0+I.w;x+=2)if(MAP.DW[y*W+x]<0)n++;return n*4})",lambda r:min(r)>10000 and max(r)<24000)
+    T('size',"()=>INSL.filter(I=>I.fld).map(I=>{let n=0;for(let y=I.y0;y<I.y0+I.h;y+=2)for(let x=I.x0;x<I.x0+I.w;x+=2)if(MAP.DW[y*W+x]<0)n++;return n*4})",lambda r:min(r)>10000 and max(r)<27000) # v164: the bigger camp clearings add up to ~1.6k walkable tiles per instance
     # enter Kindlelight I from its portal
     T('enter I',"()=>{insArrive(PMAP[0].ins[0]);rosterTick();const I=curIns();return [I.g,ROST.r,ROST.slots.length,ROST.slots.every(s=>rgAt(s.x,s.z)===0),Math.min(...ROST.slots.map(s=>s.lv)),Math.max(...ROST.slots.filter(s=>!s.al).map(s=>s.lv))]}",
       lambda r:r[0]==0 and r[1]==0 and r[2]>30 and r[3] and r[4]>=1 and r[5]<=4)
