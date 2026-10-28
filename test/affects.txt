@@ -62,3 +62,6 @@ v161|keymap|keybind|ui-scale|mobile|touch|0180-|1660-|location-box: v161_keys.py
 3210|0320|2300|element|react|0104|0340: v163_elements.py
 0001|3220|style-order|owner-fixes|attribute|2930|2940|tracker|2350|3023|3150-v152|zone-title|2210|swing|0580|0740|sov|305[0-6]|1970: v163_fixes.py
 1270|grip|weapon|edge|3220|0740|0890|0900|2310|2100|2220|2390|3230|dash|dodge: v163_weapons.py v148_edges.py v164_dodge_grip.py
+# v165 The Dirge main quest (the Keeper's grave, the Hidden Sanctum, the raft down the Black Channel, the five prisms)
+326[0-8]|3150|1680|3242|0045|1940|instance|portal|gate|grave|sanctum|raft|channel|prism|drown|0570|0400|insReach|3060|cheat|0350|kill: v165_dirge.py
+326[0-8]|3150|3180|coop|co-op|0520|3085|revive: v165_coop.py

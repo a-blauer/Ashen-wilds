@@ -57,6 +57,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v151 intro cinematic for new characters (`ic151Play` after `ccBegin`; own canvas/renderer `#ic151`; the main loop waits while `IC151.on`; every shot is `ic151Frame(S,t)`; score `ic151Score`; narration is text only (`IC151.lines`; `IC151.speak` / `IC151.voiceUrl` for a voice later); v151b: an earthquake opens the ground (no hand): one intensity curve `ic151Q(t)` drives the camera shake, the trees and undergrowth swaying in their own material (`S.matT`, `S.quakeU`), birds, falling leaves and hopping pebbles (`ic151Quake`/`ic151QuakeAt`) and the plates heaving until 21.1 s (`ic151Heave`); cracks spread from the middle (`S.crk`, `S.cracks`) out of five split points `S.tip0`; the ground breaks into Voronoi pieces (`ic151Shatter`) and caves in through a small rigid-body simulation run once (`ic151PhysInit`/`ic151PhysStep`, time-sliced live; support gives way via `ic151Ropen`, walls `ic151Env`, impacts → dust `S.efx`; the big jolt `IC151G.imp`); the rat's slab hinges on the meadow lip (`ic151RatCellM`); the rat walks on a precomputed path (`ic151RatTrack`, idle keys `IC151RK`) with IK legs (`ic151RatPoseIK`; v157: each paw has its own ankle, `ic151PawLevel` keeps it flat while planted and lifts the heel at push-off — it used to follow the shin, toes up in front, tiptoe behind); floating spread out with closed eyes (`P.out`, `R.eye`); the upright rat is the game's bare rat posed from a settled base (`ic151HeroPose`); skip = button/Esc/Enter/Space; not played under automation unless `window.KQ_INTRO`); part 2 from 55.9 s in the real Duskhold scene (`ic151Dusk`, 3081): the hero walks a precomputed route (`ic151DuskInit` legs, `ic151DPos`) to the Steward → Innkeeper → Blacksmith → Merchant (name cards) → Cheddar at his quest board (the game's own Cheddar, `CHQ148.P.ch`, posed and put back), out of the south gate, then the voice lines over portal cuts (only a faint Sovereign face `IC151.SF`, no titles: v151e); shot list and timings in `IC151D`; cameras `ic151DCam`; name tags over the town folk hidden (`ic151DTags`); subtitles break only between words; the game starts on the Portal Road (40, 349.4). v151c, the flow (`3082`): a new game (New Game / Begin on the title, the layout picker without a save, New game in the save prompt) plays part one (`ic151Play(null,'p1')`, to `IC151.p1End`, then the light fades into the hero creator); "Begin your journey" plays part two (`'p2'`, `ic151BuildP2`: no woodland, from `IC151.cut`) with the hero and companion just made; `'all'` = the whole film (tests, video); Skip: part one → the creator, part two → the game; a greeted shopkeeper stops working (`_wk.ic151H`, wraps `wkAnim103`: the smith stops hammering). **Video: rendered on GitHub** (`tools/render.sh <changed ranges>|all`, `.github/workflows/render.yml`: 5 s pieces drawn at the same time, the rest from the last render in the Actions cache; `IC151.noDraw` lets a piece replay the town up to its start) | `3080-v151-intro-cinematic.js`, `3081-v151-intro-duskhold.js`, `3082-v151-intro-flow.js`; test/preview video: `v151_intro.py` (`VIDEO=1` renders an MP4 with sound; `F0`/`F1` frame range, `NOENC`), `v151_intro_live.py`; `tools/render.sh`, `tools/render_plan.py`, `tools/render_join.py` |
 | v160 The lantern line (owner): Kindlelight I's lampposts and the Ripper's route follow a smoothed copy of the road (`mq158Line`: zigzags cut inside open ground, clear of ponds and bushes, corners rounded) instead of the raw zigzag path: 34 lamps at least 7 tiles apart, none crowded, the ride ~23% shorter (~83 s); v151–v159 saves refunded a bulb per lit lamp | `3020`, `3023` |
 | v162 co-op fixes found by steadier tests: no health regrows behind the co-op death screen (a `heroTick` wrapper keeps it at 0 while `AWD.dead`; partners took a dead hero at 1% for one still standing, so a downed partner never died and Abeksi's snakes could see the body); a fallen Ascent rider waits up to ~20 s for the winner to reach III (`cs155Downed`, 28 tries) | `3085-v148-coop-revive.js`, `3180-v155-coop-levels.js` |
+| v165 The Dirge main quest (owner): I the Keeper's grave (14 graves, the weeping angel's clue, digging) and the Hidden Sanctum (`sanctum`, g 32: pendulums, spike bands, plate + fire walk gate run, crumbling chasm, closing walls + knights, ossuary, flooded stair); II the raft down the Black Channel (`channel`, g 33: drowned dead tear the planks off, the raft breaks under `RF165.min`); III the five prisms and the Reliquary (one charge at a time, the dead rise round the carrier, five runes open the Den); co-op shared | `3260`–`3268` (hooks in `3150`, `1680`, `3242`) |
 | v164 Cheddar's board: 8 quests per zone and an exclusive skin per finished zone (`SKN164`, shader skins for the hero's fur, companions and the ridden mount) | `3235-v164-cheddar-skins.js` |
 | v164 owner's list: Abeksi fights (tougher, faster, pathing, sight hunting, bell elites `AB164`) and the city gate (`ab164GateBuild`); hero and companion XP −25% (`HXP164`, `hxp164` in 0120: kills, quests, camp clears) | `3231-v164-abeksi-hunt.js`, `0120` |
 | v163 element buildup: element hits fill a meter per enemy (`e.eb`, `EB163.F`), a full meter primes it (`e.el`, 6 s, ground ring), a different element sets off the reaction (`EB163.R`, `eb163React`); health bar border tint / primed glow, shimmer and icon (`eb163Vis`, `eb163Frame` from a `loop` wrapper), boss bar (`eb163Boss`, `#eb163bi`); replaces 0320's `applyEl` and 2300's wrapper | `3210-v163-element-buildup.js` |
@@ -859,6 +860,47 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     (`['cs','w']`) → the fallen arrive in III downed (3085 revive, `RV155.T` 180 s). *Hydra*: stone turns, song starts, chime
     strikes and the opening are sent (`['hd',…]`), plus the whole state every 3 s (`hd155Merge` keeps the most progress).
     Test `v155_coop_levels.py` (two windows, `mpt.py`).
+- **The Dirge main quest (v165, `3260`–`3268`)**: three chapters, one per field instance, each done also when the next instance
+  has been reached (`dg165GDone` … `dg165ODone`, 3261). Plans are pure and hoisted in `3260` (0045 paints the two special instances
+  through `sp152Map` / `sp152Terrain`; 1680 and 3242 keep decorations off the graves, prisms and Reliquary with `dg165Keep`). State
+  `DG165Q` saved as `x2.dg165` (3268); the cheat "All quests complete" finishes all three. Shared kit (3261): `dg165Snd` (whispers,
+  heartbeat, creaks, splashes…), `dg165Hurt` (trap damage as a share of health), the reading card `#dg165c`, the fear vignette
+  `#dg165v`, candle flames and a light pool `dg165LPool` (a few point lights follow the nearest light spots). Tracker `#mqt152`.
+  * **I · The Keeper's Grave** (`3262`): Dirge I's gateway portal is hidden behind a weeping angel (`sp152Gate('sanctum')`): reading
+    it gives the clue (a broken stone, a raven, undying candles) and the gravedigger's spade (`DG165Q.g.st` 1). Fourteen graves
+    (`dg165GravePlan`: road fractions 7–93 %, alternate sides, 6–14 off the road, apart; headstone / emblem / offering in `DG165G.F`,
+    names in `.N`; only grave `DG165G.K` 9 has all three marks). F reads a grave (card), F again digs (3.2 s, `dg165DigTick`;
+    moving or a hit stops it). A wrong grave stays open and lets out 2–3 of the Dirge's dead (local, `e.dg165r`, little XP/loot);
+    the Keeper's caves in on a stair: F · Descend into the Hidden Sanctum (st 2). Minimap marks for read graves.
+  * **The Hidden Sanctum** (`3263` models, `3264` level; special instance `sanctum`, g 32, floor at y 20 so the world's water
+    never shows): instanced flagstones of mixed sizes, ashlar walls with buttresses and cornices, skull niches in the ossuary.
+    Halls (`dg165SanPlan`): Stair Hall · Hall of Pendulums (5 blades, `DG165SP.amp`, cut = 30 % + knock-back) · Spike Hall
+    (2×2 plates in bands rolling toward the entrance every `spkStep`, red glow `spkWarn` before) · Antechamber plate → the
+    portcullis at the end of the Fire Walk (5 skull jets, `jetPer` / `jetOn`) stays up `gateT` 16 s · the Chasm (slabs crack
+    `slabT` after you step on, then fall; on a fallen slab you fall: −30 %, back at the edge, the bridge whole) · the Closing Walls
+    (doors slam, spiked walls close over `cwT` 42 s; turn the four weeping knights (F, 90°) to face the altar; time out = crushed)
+    · the Ossuary Gallery (a shade passes, lights out) · the Keeper's Tomb (the lid slides; the flooded stair: F → Dirge II).
+    Checkpoints `DG165Q.s.cp` 0–5; dying wakes you at the last one (`down_base` → `awDie` → `dg165SRise`). Companions wait, no mount,
+    no recall (the stair back up is in the first hall). The hero stands on the bridge slabs by `homeTick` (the ground below is the chasm).
+  * **II · The Black Channel** (`3265` drowned, `3266` raft; special instance `channel`, g 33): Dirge II's gateway is a quay with a
+    tunnel mouth and a moored raft (`sp152Gate('channel')`). The channel (`dg165ChPath`, ~750 tiles, Catmull-Rom; water half width
+    `dg165CCfg().hw`, walks, walls) is the world's own water (terrain below y 0.02) dressed with instanced masonry, arches with lanterns,
+    statues, pillars, grates, drifting debris, and grey daylight over a bone beach at the end. The raft: `RF165.cols×rows` planks of
+    `RF165.cs` (`RF165R.cells`, each `RF165.hp`); walking is turned into deck moves (`rf165Walk`, never off the planks; the 0570
+    unstick rescue is off on it). The Drowned Wretch (`EN.dgwretch`, registered by hand: gaunt, hair over the face, claws) and twice
+    a Drowned Hulk (the Thrall, elite, `RF165.hulk`) are real enemies whose `eTick` is `rf165WTick`: swim (hidden, ripples), rise,
+    cling to an open plank side (`rf165Open`), rake (`RF165.rake`; a hulk slams two planks and rocks the raft) or lunge at a hero
+    beside the edge; dead ones sink (`kill` wrapper). Poses are set fresh each frame on the rig (`dg165WPose` / `dg165WApply`).
+    Waves by progress `RF165.ph`; scripted: something passing under, the hands at the lull. A torn plank drifts off and sinks; at
+    `RF165.min` planks the raft breaks: everyone goes down (`rf165Shatter`, no revive) and wakes on a fresh raft. 🏳 abandons it.
+  * **III · The Five Runes** (`3267`): five prisms (`dg165PrismPlan`, colours `OS165.col`) and the Reliquary near the middle of
+    the map (5 rune pillars, an altar). F siphons a prism (`OS165.sip` 2.2 s) = one charge; while carrying the dead rise round you
+    every `OS165.gap` s (cap `OS165.cap`, `e.os165`, little XP/loot), no mount or recall; F at the matching rune lights it; falling
+    gives it back to its prism. Five lit: the Den gateway (sealed through `portalPrompt`, glyphs on its arch) opens (`DG165Q.o.st`).
+  * **Co-op** (`3268`, messages `['dg',…]`): the Keeper's grave, checkpoints, the gate, the walls and knights, the stairs out, the
+    raft's boarding / drift (`rs`) / planks (`rd`, `rb`, `rc`, `rx`) / drowned states (`rw`) and lunges (`lg`), the prisms and runes are
+    shared; the host runs the drowned and raises the dead round every carrier (presence `oc`). Tests `v165_dirge.py`, `v165_coop.py`,
+    pictures `v165_look.py` (VIEWS=angel,grave,keeper,stair,s_*,c_*,o_*).
 - **Burningeye Summit main quest (v151, `3150`–`3170`)**: the ice zone's three chapters, one per field instance. Each replaces the
   instance's end gateway (the old `RPORT` record stays, its model is hidden and its prompt replaced) and is done also when the next
   instance has been reached (`insReach(2)`), so heroes who are already further on are never blocked. Every scene is built lazily the
@@ -1222,6 +1264,8 @@ python3 v137_npcs.py         # v137: animal townsfolk — every keeper + citizen
 python3 v143_lantern_road.py  # v143: The Lantern Road (Kindlelight I main quest): drops, lampposts, the Ripper, the gateway, saves
 python3 v144_glowmire.py      # v144: The Glowmire Crystal (Kindlelight II main quest): hatch, lair, Vorraxis, crystal, gateway, saves
 python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main quest): sigils, ghost wolf waves, attuning, the Den gateway, saves
+python3 v165_dirge.py        # v165: The Dirge main quest: graves, the Sanctum's traps and puzzles, the raft, the prisms, saves
+python3 v165_coop.py         # v165: the Dirge main quest in co-op (two windows)
 python3 v151_frozen_maw.py    # v151: The Frozen Maw (Burningeye I): the cave mouth, Gorthrak, pillars, Frostbite, Phase II, the Rampage both ways, the passage, saves
 python3 v160_frozen_gate.py   # v151: The Frozen Gate (Burningeye II): caches and wardens, the flamespitter, the melt (carry, spray, overheat, spiders, charge), saves
 python3 v170_mountain_drill.py # v151: The Mountain Drill (Burningeye III): boxes, failures, the three repair windows, troll wreckers, the bore, the tunnel, saves

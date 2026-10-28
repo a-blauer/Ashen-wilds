@@ -32,6 +32,11 @@ VIEW=r"""async(k)=>{const wait=ms=>new Promise(r=>setTimeout(r,ms));let p=.42,d=
   if(k=='c_cling'){await goC(.35);stepR(300);const w=RF165R.W.find(q=>q.st=='cling')||RF165R.W[0];if(w){const [lu,lv]=rf165L(RF165R,w.x,w.z);RF165R.H=[Math.max(-1.8,Math.min(1.8,lu*.55)),Math.max(-3,Math.min(3,lv*.55))];rf165Place();y=Math.atan2(pl.position.x-w.x,pl.position.z-w.z)}p=.32;d=6}
   if(k=='c_small'){await goC(.7);RF165R.cells.forEach((C,i)=>{if(i%3==0||C.c==0||C.r==6)rf165Break(RF165R,C,false)});stepR(200);y=RF165R.yaw+Math.PI+.4;p=.6;d=12}
   if(k=='c_end'){await goC(.985);stepR(60);y=RF165R.yaw+Math.PI;p=.35;d=12}
+  const goO=async()=>{const I=INSL[22];toPos(I.ba[0],I.ba[1]);await wait(300);TK165(4)};
+  if(k=='o_prism'){await goO();const o=dg165PrismPlan().pr[2];toPos(o.x+4,o.z+4);TK165(3);y=Math.atan2(4,4);p=.25;d=8}
+  if(k=='o_carry'){await goO();const o=dg165PrismPlan().pr[0];toPos(o.x+2.5,o.z);TK165(2);os165Take(0,true);TK165(60);await wait(1800);TK165(10);y=.5;p=.5;d=13}
+  if(k=='o_reliq'){await goO();OS165.carry=null;os165Aura(false);enemies.slice().forEach(e=>{if(e.os165)removeE(e)});const c=dg165PrismPlan().ctr;toPos(c.x+11,c.z+3);TK165(3);y=Math.atan2(11,3);p=.45;d=14}
+  if(k=='o_lit'){await goO();DG165Q.o.lit=[1,1,1,0,1];const c=dg165PrismPlan().ctr;toPos(c.x+11,c.z+3);TK165(6);y=Math.atan2(11,3);p=.4;d=16}
   if(window.V165X)await V165X(k,(a,b,c)=>{p=a;d=b;y=c});
   for(let i=0;i<40;i++)atmos(.05,performance.now());camPitch=p;camDist=d;camYaw=y;window.__snap={p,d,y};snapCam();return ERRS.slice(0,5)}"""
 def s(pg):

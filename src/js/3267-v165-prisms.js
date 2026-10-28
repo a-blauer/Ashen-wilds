@@ -26,12 +26,13 @@ function os165PrismModel(i){const g=new THREE.Group(),c=OS165.col[i];g.userData.
     for(let q=0;q<12;q++){const a=q/12*6.283;k.L('','c',b2,[Math.cos(a)*.95,.4,Math.sin(a)*.95],[Math.cos(a)*.8,1.75,Math.sin(a)*.8],.05,.04,5)}
     k.p('','cyl','c',st,0,1.72,0,.9,.18,.9);k.p('','ring','m',0x5a4a2a,0,1.83,0,.82,.5,.82)},0));
   // the prism: a tall faceted crystal turning above the plinth, a bright core, a halo, a faint pillar of light
-  const cr=new THREE.Mesh(svG('os165cr',()=>{const q=new THREE.OctahedronGeometry(1,0);q.scale(.42,1.15,.42);return q}),new THREE.MeshPhongMaterial({color:c,emissive:c,emissiveIntensity:.6,shininess:90,transparent:true,opacity:.82,flatShading:true}));
-  cr.position.y=3.2;g.add(cr);const core=kqSpr(c,1.6);core.material=core.material.clone();core.position.y=3.2;g.add(core);
-  const halo=new THREE.Mesh(svG('os165ha',()=>new THREE.TorusGeometry(.95,.03,6,40)),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));halo.position.y=3.2;halo.rotation.x=Math.PI/2;g.add(halo);
-  const beam=new THREE.Mesh(svG('os165bm',()=>{const q=new THREE.CylinderGeometry(.25,.42,46,10,1,true);q.translate(0,23,0);return q}),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=2;g.add(beam);
-  const lt=new THREE.PointLight(c,1.8,12,1.6);lt.position.y=3.2;g.add(lt);
-  return {g,cr,core,halo,beam,lt,i}}
+  const cr=new THREE.Mesh(svG('os165cr',()=>{const q=new THREE.OctahedronGeometry(1,0);q.scale(.62,1.75,.62);return q}),new THREE.MeshPhongMaterial({color:c,emissive:c,emissiveIntensity:.6,shininess:90,transparent:true,opacity:.82,flatShading:true}));
+  cr.position.y=3.6;g.add(cr);const core=kqSpr(c,2.4);core.material=core.material.clone();core.position.y=3.2;g.add(core);
+  const halo=new THREE.Mesh(svG('os165ha',()=>new THREE.TorusGeometry(1.3,.04,6,48)),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));halo.position.y=3.2;halo.rotation.x=Math.PI/2;g.add(halo);
+  const beam=new THREE.Mesh(svG('os165bm',()=>{const q=new THREE.CylinderGeometry(.35,.6,46,10,1,true);q.translate(0,23,0);return q}),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=2;g.add(beam);
+  const lt=new THREE.PointLight(c,2.2,14,1.5);lt.position.y=3.4;g.add(lt);
+  const pool=new THREE.Mesh(svG('dec',()=>new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));pool.scale.setScalar(3.2);pool.position.y=.32;g.add(pool);
+  return {g,cr,core,halo,beam,lt,pool,i}}
 function os165ReliqModel(){const g=new THREE.Group();g.userData.psNo=1;
   g.add(lgGroup('DG165|reliq',k=>{const R=svRng(8200),st=0x5a5852,st2=0x46443e,b=0xb8b098,b2=0x8a8270;
     // the round floor and its steps, flagged, a bone mosaic ring
@@ -49,9 +50,9 @@ function os165ReliqModel(){const g=new THREE.Group();g.userData.psNo=1;
     pg.add(lgGroup('DG165|rpillar',k=>{const st=0x4e4c46,b=0xb8b098;k.p('','box','c',st,0,.3,0,1.3,.6,1.3);k.p('','box','c',st,0,2.1,0,.8,3.4,.8);k.p('','cone4','c',st,0,4.2,0,.6,.8,.6,0,Math.PI/4,0);
       for(let q=0;q<4;q++)k.p('','sph','c',b,0,.9+q*.75,-.44,.16,.17,.12);for(let q=0;q<6;q++)k.L('','c',0x8a8270,[-.42+q*.17,.6,-.42],[-.42+q*.17,3.6,-.42],.03,.03,4);
       k.p('','box','c',0x1a1a1c,0,2.3,.41,.6,1.5,.04)},0));
-    const rm=new THREE.Mesh(svG('os165rn',()=>new THREE.PlaneGeometry(.55,1.1)),new THREE.MeshBasicMaterial({color:OS165.col[i],map:os165RuneTex(i),transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));rm.position.set(0,2.3,.44);pg.add(rm);
+    const rm=new THREE.Mesh(svG('os165rn',()=>new THREE.PlaneGeometry(.7,1.4)),new THREE.MeshBasicMaterial({color:OS165.col[i],map:os165RuneTex(i),transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));rm.position.set(0,2.3,.44);pg.add(rm);
     const beam=new THREE.Mesh(svG('os165bm2',()=>{const q=new THREE.CylinderGeometry(.18,.3,40,8,1,true);q.translate(0,20,0);return q}),new THREE.MeshBasicMaterial({color:OS165.col[i],map:SPR,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=4.4;pg.add(beam);
-    const lt=new THREE.PointLight(OS165.col[i],0,10,1.6);lt.position.set(0,2.6,1.2);pg.add(lt);runes.push({g:pg,rm,beam,lt,a,i})}
+    const lt=new THREE.PointLight(OS165.col[i],0,12,1.5);lt.position.set(0,2.6,1.2);pg.add(lt);const fl=kqSpr(OS165.col[i],1.6);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=4.7;pg.add(fl);runes.push({g:pg,rm,beam,lt,fl,a,i})}
   const fl=kqSpr(0xd8fff0,1.2);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=2.4;g.add(fl);const flL=new THREE.PointLight(0xd8fff0,0,18,1.4);flL.position.y=3;g.add(flL);
   return {g,runes,fl,flL}}
 // ---------------- the world ----------------
@@ -65,11 +66,11 @@ function os165Tick(dt,now){const in3=os165In(),t=now/1000;if(in3&&!OS165.S)try{o
   const S=OS165.S;if(!S)return;S.pr.forEach(M=>M.g.visible=in3);S.R.g.visible=in3;
   if(!in3){S.pr.forEach(M=>M.lt.intensity=0);S.R.runes.forEach(q=>q.lt.intensity=0);S.R.flL.intensity=0;if(OS165.carry)os165Return('left');OS165.sipping=null;return}
   const P=pl.position;
-  S.pr.forEach((M,i)=>{const full=os165Full(i),sip=OS165.sipping&&OS165.sipping.i===i,k=full?1:.12;M.cr.rotation.y+=dt*(sip?3:.6);M.cr.position.y=3.2+.18*Math.sin(t*1.2+i);M.core.position.y=M.cr.position.y;M.halo.position.y=M.cr.position.y;
+  S.pr.forEach((M,i)=>{const full=os165Full(i),sip=OS165.sipping&&OS165.sipping.i===i,k=full?1:.12;M.cr.rotation.y+=dt*(sip?3:.6);M.cr.position.y=3.6+.18*Math.sin(t*1.2+i);M.core.position.y=M.cr.position.y;M.halo.position.y=M.cr.position.y;
     M.cr.material.opacity=.3+.55*k;M.cr.material.emissiveIntensity=.15+.6*k*(1+(sip?.6*Math.sin(t*16):0));M.core.material.opacity=.15+.75*k;M.core.scale.setScalar((1.2+.4*k)*(1+.08*Math.sin(t*3+i)));M.halo.rotation.z+=dt*.8;M.halo.material.opacity=.1+.5*k;
-    M.beam.material.opacity=.03+.14*k;M.lt.intensity=(.3+1.6*k)*(.9+.1*Math.sin(t*5+i));
+    M.beam.material.opacity=.04+.26*k;M.pool.material.opacity=.08+.42*k;M.lt.intensity=(.3+1.6*k)*(.9+.1*Math.sin(t*5+i));
     if(full&&Math.hypot(P.x-M.x,P.z-M.z)<50&&Math.random()<dt*4){const a=Math.random()*6.283;burst(V(M.x+Math.cos(a)*1.2,M.y+2+Math.random()*2,M.z+Math.sin(a)*1.2),OS165.col[i],1,.2,.6,.8)}});
-  S.R.runes.forEach(q=>{const lit=DG165Q.o.lit[q.i],want=OS165.carry&&OS165.carry.i===q.i;q.rm.material.opacity=lit?.95:want?.35+.3*Math.sin(t*6):.16;q.beam.material.opacity=lit?.32+.06*Math.sin(t*2+q.i):0;q.lt.intensity=lit?1.6:want?.8:0});
+  S.R.runes.forEach(q=>{const lit=DG165Q.o.lit[q.i],want=OS165.carry&&OS165.carry.i===q.i;q.rm.material.opacity=lit?.95:want?.35+.3*Math.sin(t*6):.16;q.beam.material.opacity=lit?.5+.08*Math.sin(t*2+q.i):0;q.lt.intensity=lit?2.4:want?1:0;q.fl.material.opacity=lit?.9:0;q.fl.scale.setScalar(1.5+.25*Math.sin(t*5+q.i))});
   const done=dg165ODone();S.R.fl.material.opacity=done?.85:0;S.R.fl.scale.setScalar(done?2.2+.3*Math.sin(t*4):1);S.R.flL.intensity=done?2.2:0;
   if(OS165.sipping)os165SipTick(dt,now);if(OS165.carry)os165CarryTick(dt,now);
   if(now-(OS165.tt||0)>400){OS165.tt=now;if(!OS165.gs){OS165.gs=1;os165GateSync()}}}
@@ -85,7 +86,7 @@ function os165Take(i,mine){const M=OS165.S&&OS165.S.pr[i];if(mine){OS165.carry={
     dg165Title('The '+OS165.nm[i]+' Essence','The dead feel it in you. They are coming.','Carry it to its rune in the Reliquary','The Ossuary Fields');dg165Co('take',i)}
   OS165.trkK=''}
 // ---------------- carrying: the aura and the dead it draws ----------------
-function os165Aura(on){const A=OS165.aura;if(on){if(!A){const g=new THREE.Group(),c=OS165.col[OS165.carry.i];for(let i=0;i<3;i++){const s=kqSpr(c,.45);s.material=s.material.clone();g.add(s)}const l=new THREE.PointLight(c,1.6,8,1.6);g.add(l);scene.add(g);OS165.aura={g,l}}
+function os165Aura(on){const A=OS165.aura;if(on){if(!A){const g=new THREE.Group(),c=OS165.col[OS165.carry.i];for(let i=0;i<3;i++){const s=kqSpr(c,.7);s.material=s.material.clone();g.add(s)}const core=kqSpr(c,1.4);core.material=core.material.clone();core.material.opacity=.45;g.add(core);const l=new THREE.PointLight(c,2,9,1.5);g.add(l);scene.add(g);OS165.aura={g,l}}
     else{A.g.visible=true;const c=OS165.col[OS165.carry.i];A.l.color.setHex(c);A.g.children.forEach(s=>{if(s.isSprite)s.material.color.setHex(c)})}}else if(A)A.g.visible=false}
 function os165CarryTick(dt,now){const C=OS165.carry,P=pl.position,t=now/1000;C.t+=dt;if(riding)try{dismount(true)}catch(_){}
   const A=OS165.aura;if(A){A.g.position.set(P.x,P.y+1.2,P.z);A.g.children.forEach((s,i)=>{if(s.isSprite){const a=t*2.4+i*2.094;s.position.set(Math.cos(a)*.7,.3*Math.sin(t*3+i),Math.sin(a)*.7)}});A.l.intensity=1.4+.3*Math.sin(t*6)}

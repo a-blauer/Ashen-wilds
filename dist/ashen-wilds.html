@@ -19313,7 +19313,8 @@ function wdDeco(){const T0=performance.now();
     const big=[],zstat={};let zn=0;
     const free=(x,y,r0)=>big.every(b=>Math.hypot(b[0]-x,b[1]-y)>b[2]+r0+2.6);
     const place=(S,x,y,ry,s,bank)=>{
-      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true;if(typeof mq145Keep=='function'&&mq145Keep(I.g,x,y))return true;if(typeof mq151Keep=='function'&&mq151Keep(I.g,x,y))return true;if(typeof mq160Keep=='function'&&mq160Keep(I.g,x,y))return true;if(typeof mq170Keep=='function'&&mq170Keep(I.g,x,y))return true;if(typeof cs164Keep=='function'&&cs164Keep(I.g,x,y))return true; // v164: the camps' trails stay clear (3240)
+      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true;if(typeof mq145Keep=='function'&&mq145Keep(I.g,x,y))return true;if(typeof mq151Keep=='function'&&mq151Keep(I.g,x,y))return true;if(typeof mq160Keep=='function'&&mq160Keep(I.g,x,y))return true;if(typeof mq170Keep=='function'&&mq170Keep(I.g,x,y))return true;if(typeof cs164Keep=='function'&&cs164Keep(I.g,x,y))return true;if(typeof dg165Keep=='function'&&dg165Keep(I.g,x,y))return true; // v165: the Dirge's graves, prisms and Reliquary (3260)
+       // v164: the camps' trails stay clear (3240)
        // v143: the Lantern Road outpost, lampposts and the Ripper's parking spot stay clear (counted as placed: the seeded stream is unchanged)
       const it={k:S.k,x,z:y,ry,s,col:0};
       // collider tiles: every tile whose centre is within the radius of a collider point
@@ -44127,12 +44128,17 @@ function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
   {key:'abeksi',g:30,z:1,k:0,x0:116,y0:1452,w:150,h:200,n:'Abeksi',rn:'Abeksi',lv:[11,11],
     bio:{n:'Abeksi',sp:'Foxlet',x:0,y:0,t:2,gnd:[96,84,66],grs:[70,84,54],acc:[104,98,90],frs:[40,34,28],wat:[40,70,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x3a2a20,0x3a4a2a,0x4a5a34],amp:.1}},
   {key:'ascent',g:31,z:1,k:1,x0:280,y0:1452,w:420,h:380,n:'The Hilltop Ascent',rn:'Ascent',lv:[14,14],
-    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
+    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}},
+  // v165: The Dirge's two hidden places (3260): the Hidden Sanctum (I → II) and the Black Channel (II → III)
+  {key:'sanctum',g:32,z:4,k:0,x0:112,y0:1660,w:160,h:360,n:'The Hidden Sanctum',rn:'Sanctum',lv:[38,38],
+    bio:{n:'Hidden Sanctum',sp:'Boneling',x:0,y:0,t:4,gnd:[26,26,28],grs:[44,52,48],acc:[70,66,62],frs:[22,24,26],wat:[24,48,46],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a3a34,0x4a4a40],amp:.1}},
+  {key:'channel',g:33,z:4,k:1,x0:712,y0:1456,w:460,h:568,n:'The Black Channel',rn:'Channel',lv:[40,40],
+    bio:{n:'Black Channel',sp:'Boneling',x:0,y:0,t:4,gnd:[46,50,52],grs:[40,56,50],acc:[62,64,66],frs:[20,26,26],wat:[18,62,54],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a4a50,0x4a5a64],amp:.2}}]}
 // 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
 function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
-    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
+    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):I.key=='sanctum'?(typeof dg165SanctumMap=='function'?dg165SanctumMap:null):I.key=='channel'?(typeof dg165ChannelMap=='function'?dg165ChannelMap:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
 // 0045: a level's own heights (after every other height pass)
-function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
+function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I);if(I.key=='sanctum'&&typeof dg165SanctumTerrain=='function')dg165SanctumTerrain(I);if(I.key=='channel'&&typeof dg165ChannelTerrain=='function')dg165ChannelTerrain(I)})}catch(e){console.warn('v152 terrain',e)}}
 // 0070: trees inside a level are scenery, not harvest nodes (hoisted: 0070 runs long before this file)
 function sp152NoNode(x,y){try{return sp152Defs().some(I=>x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)}catch(_){return false}}
 function spIns(x,y){if(!SPI||!SPI.on)return null;const L=SPI.L;for(let i=0;i<L.length;i++){const I=L[i];if(x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)return I}return null}
@@ -49227,7 +49233,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   const tile=(x,z)=>{const X=Math.round(C.x+x),Z=Math.round(C.z+z);return MAP[Z]&&MAP[Z][X]};
   const ground=(x,z,m)=>{const X=Math.round(C.x+x),Z=Math.round(C.z+z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='~'||insAt(X,Z)!==I)return false;return DW[Z*W+X]<-(m==null?.6:m)};
   const RP=[];cs164Road(I).forEach(q=>{const x=q[0]-C.x,z=q[1]-C.z;if(Math.abs(x)<r+10&&Math.abs(z)<r+10)RP.push([x,z])});
-  const kept=(x,z)=>{const X=C.x+x,Z=C.z+z,g=I.g;try{return (typeof mq143Keep=='function'&&mq143Keep(g,X,Z))||(typeof mq145Keep=='function'&&mq145Keep(g,X,Z))||(typeof mq151Keep=='function'&&mq151Keep(g,X,Z))||(typeof mq160Keep=='function'&&mq160Keep(g,X,Z))||(typeof mq170Keep=='function'&&mq170Keep(g,X,Z))}catch(_){return false}};
+  const kept=(x,z)=>{const X=C.x+x,Z=C.z+z,g=I.g;try{return (typeof mq143Keep=='function'&&mq143Keep(g,X,Z))||(typeof mq145Keep=='function'&&mq145Keep(g,X,Z))||(typeof mq151Keep=='function'&&mq151Keep(g,X,Z))||(typeof mq160Keep=='function'&&mq160Keep(g,X,Z))||(typeof mq170Keep=='function'&&mq170Keep(g,X,Z))||(typeof dg165Keep=='function'&&dg165Keep(g,X,Z))}catch(_){return false}};
   const TR=o.trail?o.trail.map(q=>[q[0]-C.x,q[1]-C.z]):[];
   const roadD=(x,z)=>{let b=1e9;for(const q of RP){const v=(q[0]-x)*(q[0]-x)+(q[1]-z)*(q[1]-z);if(v<b)b=v}for(const q of TR){const v=(q[0]-x)*(q[0]-x)+(q[1]-z)*(q[1]-z)+1.5;if(v<b)b=v}return Math.sqrt(b)};
   const GW=o.gates.map(a=>[a,2.6]).concat(o.gaps.map(([a0,a1])=>[(a0+a1)/2,(a1-a0)/2*rf+1.2]));
@@ -49977,4 +49983,1438 @@ function ch164HeadAnim(S,t,jaw,rear){const dt=Math.min(.1,Math.max(0,t-(S.lt||t)
   S.drips.forEach((d,i)=>{d.t+=dt;const f=S.fangs[i];if(d.t<0){d.m.visible=false;return}
     if(d.t<.75){if(fo<.25){d.m.visible=false;return}const tip=f.localToWorld(V.c.copy(f.userData.tip));d.m.visible=true;d.m.position.copy(tip);const k=d.t/.75,sc=.04+.07*k;d.m.scale.set(sc,sc*(1+k*.9),sc);d.m.position.y-=sc*.6;d.v=0}
     else{d.v+=22*dt;d.m.position.y-=d.v*dt;d.m.scale.y*=1+dt*.6;if(d.t>1.35){d.t=-.25-Math.random()*.9;d.m.visible=false}}})}
+// ================= v165 The Dirge main quest — the plan: two hidden places, the graves, the prisms =================
+// The Dirge's main quest has three chapters, one per field instance (like Hillside Crest, v152–v155):
+//  I   The Graveyard (3261): the gateway to II is gone. Graves stand scattered along the road; the weeping angel at the road's end
+//      tells which one the Keeper sleeps in. Digging it up opens a stair down into
+//      The Hidden Sanctum (special instance 'sanctum', g 32, 3262–3263): a one-time crypt of traps and timed puzzles whose last
+//      chamber holds the flooded stair down into the Drowned Crypts (II).
+//  II  The Drowned Crypts' gateway to III becomes a tunnel mouth over a flooded channel with a raft moored at its bank (3264).
+//      Taking the raft down starts The Black Channel (special instance 'channel', g 33, 3265–3266): drowned dead rise from the
+//      water and tear the raft apart plank by plank; reach the far end and you come out in the Ossuary Fields (III).
+//  III The Ossuary Fields (3267): five glowing prisms; carry their essence, one charge at a time, to the five runes of the
+//      Reliquary at the centre of the map. All five lit open the Den.
+// Everything here is a pure function of numbers and the map: 0045 paints the two hidden places' ground (sp152Map / sp152Terrain,
+// 3150) and 1680 keeps decorations off the graves and the prisms (dg165Keep) long before the rest of the script runs.
+// Local coordinates: u = x - I.x0, v = z - I.y0 (tiles).
+
+// ---------------- the Hidden Sanctum ----------------
+// The floor stands at DG165S.F0 (the world's water plane is at y 0.02 and fills anything lower; the chasm drops to y 1).
+function dg165SCfg(){return {F0:20,wall:7,pit:3.5}}
+function dg165SanPlan(){if(dg165SanPlan.c)return dg165SanPlan.c;
+  // rooms and corridors [u0, v0, u1, v1) and what they hold
+  const R={
+    entry:[68,8,92,30],          // the stair hall: you come down the stair at its north wall
+    pend:[77,30,83,78],          // the Hall of Pendulums: five blades sweep across
+    spike:[58,78,102,110],       // the Spike Hall: the floor's spikes rise in moving bands
+    plate:[60,110,68,116],       // the antechamber: a pressure plate opens the far gate for a moment
+    flame:[61,116,67,160],       // the Fire Walk: skull mouths in the walls breathe fire; the portcullis at its end
+    chasm:[40,160,104,214],      // the Chasm: a bridge of slabs that crumble under your feet
+    walls:[72,214,112,250],      // the Chamber of Closing Walls: four statues to turn before the walls meet
+    gal:[88,250,96,286],         // the Ossuary Gallery
+    tomb:[76,286,108,320]};      // the Keeper's Tomb and the flooded stair down
+  const P={R,
+    spawn:[80,12.5],                                                     // where you arrive at the foot of the stair
+    // checkpoints: [u, v, facing (yaw), name]
+    CP:[[80,13,0,'The Stair Hall'],[80,81,0,'The Spike Hall'],[64,112.5,0,'The Antechamber'],[64,162.6,0,'The Chasm'],[92,216.5,0,'The Closing Walls'],[92,254,0,'The Ossuary Gallery']],
+    pend:[38,46,54,62,70].map((v,i)=>({v,w:[1.55,2.05,1.75,2.35,1.9][i],ph:[0,1.9,3.6,.8,2.7][i]})),
+    // the spike grid: cells of 2×2 tiles over the hall floor (entry and exit strips stay safe)
+    spk:{u0:58,u1:102,v0:82,v1:106,cs:2,step:.62,warn:.36},
+    plate:[64,113.2],
+    jets:[122,129,136,143,150].map((v,i)=>({v,side:i%2?1:-1,ph:i*.55})),jet:{per:2.9,on:1.25},
+    gate:{v:158.5,u0:61,u1:67,open:16},
+    // the chasm's bridge: a chain of 2×2 slabs from the entry ledge to the exit ledge
+    ledgeA:[58,160,70,165],ledgeB:[86,207,98,214],
+    bridge:(()=>{const L=[[64,167],[64,175],[72,175],[72,183],[84,183],[84,191],[76,191],[76,199],[92,199],[92,205]],out=[],seen={};
+      for(let i=0;i<L.length-1;i++){const [a,b]=[L[i],L[i+1]],n=Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let k=0;k<=n;k++){const u=a[0]+(b[0]-a[0])*k/n,v=a[1]+(b[1]-a[1])*k/n,key=u+'_'+v;if(seen[key])continue;seen[key]=1;out.push([u,v])}}
+      return out})(),
+    // the closing walls: start at the room's sides, meet at the middle; statues stand ±6 from the middle
+    cw:{mid:92,half:20,stop:1.6,T:62,doorN:214,doorS:250},
+    statues:[[92,225.5],[92,239.5],[88.5,232.5],[95.5,232.5]],altar:[92,232.5],   // north, south, west, east of the altar
+    exit:[92,316.5],keeper:[92,300]};
+  return dg165SanPlan.c=P}
+// is (u, v) floor inside the sanctum (the chasm's pit is not; its ledges and bridge are)
+function dg165SanFloor(u,v){const P=dg165SanPlan(),R=P.R;for(const k in R){const r=R[k];if(u>=r[0]&&v>=r[1]&&u<r[2]&&v<r[3]){
+      if(k!='chasm')return k;const a=P.ledgeA,b=P.ledgeB;if(u>=a[0]&&v>=a[1]&&u<a[2]&&v<a[3])return 'ledge';if(u>=b[0]&&v>=b[1]&&u<b[2]&&v<b[3])return 'ledge';
+      for(const s of P.bridge)if(u>=s[0]-1&&u<s[0]+1&&v>=s[1]-1&&v<s[1]+1)return 'bridge';return 'pit'}}return null}
+function dg165SanctumMap(m,bio,DW,I,bi){const P=dg165SanPlan();
+  for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(!m[y])continue;const u=x-I.x0,v=y-I.y0,k=dg165SanFloor(u+.5,v+.5);bio[y][x]=bi;
+    if(k&&k!='pit'){m[y][x]=(Math.sin(x*12.9898+y*78.233)*43758.5453%1+1)%1<.18?'a':'.';DW[y*W+x]=-2}else{m[y][x]='';DW[y*W+x]=k=='pit'?1:4}}}
+function dg165SanctumTerrain(I){const C=dg165SCfg();
+  // distance (in tiles, up to 6) from each solid tile to the nearest floor, for the walls' rise
+  const w=I.w,h=I.h,fl=new Uint8Array(w*h),d=new Float32Array(w*h).fill(99);
+  for(let v=0;v<h;v++)for(let u=0;u<w;u++){const k=dg165SanFloor(u+.5,v+.5);fl[v*w+u]=k=='pit'||k=='bridge'?2:k?1:0;if(k&&k!='pit'&&k!='bridge')d[v*w+u]=0}
+  for(let it=0;it<7;it++)for(let v=1;v<h-1;v++)for(let u=1;u<w-1;u++){const i=v*w+u;if(d[i]===0)continue;const m=Math.min(d[i-1],d[i+1],d[i-w],d[i+w])+1;if(m<d[i])d[i]=m}
+  for(let j=I.y0-2;j<I.y0+h+2;j++)for(let i=I.x0-2;i<I.x0+w+2;i++){const u=i-I.x0,v=j-I.y0,inn=u>=0&&v>=0&&u<w&&v<h,k=inn?v*w+u:-1;let y;
+    if(k<0)y=C.F0+C.wall+2;
+    else if(fl[k]==2)y=C.pit+(fbm2(i*.11,j*.11,3)-.5)*2;                         // the chasm
+    else if(fl[k]==1)y=C.F0+(fbm2(i*.3,j*.3,2)-.5)*.06;                         // floor (the flagstones are meshes on top)
+    else{const dd=Math.min(6,d[k]);y=C.F0+Math.min(C.wall+1.5,Math.max(0,dd-1)*2.6)+(dd>1?(fbm2(i*.2,j*.2,2)-.5)*.8:0)}  // rock between the rooms
+    // the chasm's edge falls away: rock walls that drop into the dark under the ledges and along its sides
+    HF[(j+HPD)*HW+i+HPD]=y}}
+
+// ---------------- the Black Channel ----------------
+// A flooded channel winding through drowned vaults: water half width DG165C.hw, a stone walk on each side, walls beyond.
+// s runs along the channel (tiles, 0 at the mooring), o across it (+ = right of the flow).
+function dg165CCfg(){return {hw:6.6,walk:2.2,deep:-2.7,walkY:.62,wall:10}}
+function dg165ChPath(){if(dg165ChPath.c)return dg165ChPath.c;const I=sp152Defs().find(d=>d.key=='channel'),C=dg165CCfg();
+  const K=[[34,48],[118,42],[198,66],[238,136],[208,212],[132,248],[98,316],[150,388],[236,404],[306,388]].map(q=>[I.x0+q[0],I.y0+q[1]]);
+  // Catmull-Rom through the control points, then resampled every tile of arc length
+  const fx=[],fz=[];for(let i=0;i<K.length-1;i++){const p0=K[Math.max(0,i-1)],p1=K[i],p2=K[i+1],p3=K[Math.min(K.length-1,i+2)];
+    for(let k=0;k<60;k++){const t=k/60,t2=t*t,t3=t2*t;fx.push(.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3));
+      fz.push(.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3))}}
+  fx.push(K[K.length-1][0]);fz.push(K[K.length-1][1]);
+  const L=[0];for(let i=1;i<fx.length;i++)L.push(L[i-1]+Math.hypot(fx[i]-fx[i-1],fz[i]-fz[i-1]));const S=Math.floor(L[L.length-1]);
+  const X=new Float32Array(S+1),Z=new Float32Array(S+1),TX=new Float32Array(S+1),TZ=new Float32Array(S+1);let j=0;
+  for(let s=0;s<=S;s++){while(j<fx.length-2&&L[j+1]<s)j++;const a=(s-L[j])/Math.max(1e-6,L[j+1]-L[j]);X[s]=fx[j]+(fx[j+1]-fx[j])*a;Z[s]=fz[j]+(fz[j+1]-fz[j])*a}
+  for(let s=0;s<=S;s++){const a=Math.max(0,s-3),b=Math.min(S,s+3),dx=X[b]-X[a],dz=Z[b]-Z[a],l=Math.hypot(dx,dz)||1;TX[s]=dx/l;TZ[s]=dz/l}
+  const P={X,Z,TX,TZ,S,C,K,I};
+  // world (x, z) at (s, o): o is to the right of the flow (the normal (-tz, tx) rotated: right = (-tz, tx) when looking along +s with +y up)
+  P.at=(s,o)=>{s=Math.max(0,Math.min(S,s));const i=Math.min(S-1,Math.floor(s)),f=s-i,x=X[i]+(X[i+1]-X[i])*f,z=Z[i]+(Z[i+1]-Z[i])*f,tx=TX[i]+(TX[i+1]-TX[i])*f,tz=TZ[i]+(TZ[i+1]-TZ[i])*f,l=Math.hypot(tx,tz)||1;
+    return [x-tz/l*(o||0),z+tx/l*(o||0)]};
+  P.yaw=s=>{const i=Math.max(0,Math.min(S,s))|0;return Math.atan2(TX[i],TZ[i])};
+  P.tan=s=>{const i=Math.max(0,Math.min(S,s))|0;return [TX[i],TZ[i]]};
+  // nearest (s, o) to a world point, searched near a guess (cheap enough every frame for a few things)
+  P.near=(x,z,s0)=>{let bs=0,bd=1e18;const a=s0==null?0:Math.max(0,Math.floor(s0-30)),b=s0==null?S:Math.min(S,Math.ceil(s0+30));
+    for(let s=a;s<=b;s+=(s0==null?2:1)){const d=(X[s]-x)*(X[s]-x)+(Z[s]-z)*(Z[s]-z);if(d<bd){bd=d;bs=s}}const tx=TX[bs],tz=TZ[bs],dx=x-X[bs],dz=z-Z[bs];return [bs+dx*tx+dz*tz,-dx*tz+dz*tx]};
+  return dg165ChPath.c=P}
+// for every tile of the channel's rectangle: the nearest channel position (s) and the distance across (o, signed)
+function dg165ChField(){if(dg165ChField.c)return dg165ChField.c;const P=dg165ChPath(),I=P.I,w=I.w,h=I.h,best=new Float32Array(w*h).fill(99),bs=new Float32Array(w*h).fill(-1),so=new Float32Array(w*h);
+  for(let s=-14;s<=P.S+22;s+=.5){const sc=Math.max(0,Math.min(P.S,s)),ext=s<0?s:s>P.S?s-P.S:0,[tx,tz]=P.tan(sc);for(let o=-16;o<=16;o+=.5){let [x,z]=P.at(sc,o);x+=tx*ext;z+=tz*ext;
+      const u=Math.round(x)-I.x0,v=Math.round(z)-I.y0;if(u<0||v<0||u>=w||v>=h)continue;const k=v*w+u,d=Math.abs(o);if(d<best[k]){best[k]=d;bs[k]=s;so[k]=o}}}
+  return dg165ChField.c={best,bs,so,w,h}}
+function dg165ChannelMap(m,bio,DW,I,bi){const C=dg165CCfg(),F=dg165ChField();
+  for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(!m[y])continue;const k=(y-I.y0)*F.w+(x-I.x0),d=F.best[k];bio[y][x]=bi;
+    if(d<=C.hw){m[y][x]='~';DW[y*W+x]=-1}else if(d<=C.hw+C.walk){m[y][x]=((x*7+y*13)%9)<2?'a':'.';DW[y*W+x]=-.8}else{m[y][x]='';DW[y*W+x]=Math.min(6,d-C.hw-C.walk)}}}
+function dg165ChannelTerrain(I){const C=dg165CCfg(),F=dg165ChField(),P=dg165ChPath();
+  for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const u=i-I.x0,v=j-I.y0,inn=u>=0&&v>=0&&u<F.w&&v<F.h,k=inn?v*F.w+u:-1,d=k<0?99:F.best[k],s=k<0?0:F.bs[k];let y;
+    if(d<C.hw-1.2)y=C.deep+(fbm2(i*.15,j*.15,3)-.5)*.8;
+    else if(d<C.hw)y=C.deep+(C.walkY-C.deep)*Math.pow((d-(C.hw-1.2))/1.2,1.6);
+    else if(d<C.hw+C.walk)y=C.walkY+(fbm2(i*.4,j*.4,2)-.5)*.05;
+    else y=C.walkY+Math.min(C.wall,(d-C.hw-C.walk)*3.2)+(fbm2(i*.1,j*.1,3)-.5)*2.5;
+    // the landing at the far end: a beach of bone and shingle rising out of the water
+    if(s>P.S-6&&k>=0){const e=s-(P.S-6);if(d<C.hw+C.walk+4)y=Math.max(y,C.deep+e*.45)}
+    HF[(j+HPD)*HW+i+HPD]=y}}
+
+// ---------------- the graves of the Dirge I ----------------
+// Fourteen graves off the road, alternating sides. Each has a headstone (shape), an emblem and something left on it; the weeping
+// angel at the road's end names three marks, and only the Keeper's grave (DG165G.K) has all three.
+function dg165GD(){return dg165GD.c||(dg165GD.c={K:9,clue:{stone:'broken',emb:'raven',ext:'candles'},
+  F:[['slab','skull','lilies'],['broken','rose','candles'],['cross','raven','chains'],['obelisk','hourglass','candles'],['broken','raven','lilies'],['slab','bell','cage'],
+     ['cross','skull','candles'],['broken','hourglass','lantern'],['obelisk','raven','candles'],['broken','raven','candles'],['slab','rose','chains'],['cross','raven','lantern'],
+     ['broken','skull','candles'],['obelisk','bell','lilies']],
+  N:[['Maud Ashgrove','1061 – 1103','She sang to the drowned, and they listened.'],['Corwin Thale','1012 – 1060','Taken by the fever. Mourned by none.'],
+     ['Ilse Marrow','1077 – 1094','Bright as a lamp, and as soon put out.'],['Osric Fenn','998 – 1049','Sexton of the Dirge. He dug his own.'],
+     ['Agathe Rook','1040 – 1088','Her ravens came to the burying.'],['Little Pell','1101','Bound fast, that he might not wander.'],
+     ['Sir Hadrian Coyle','1003 – 1046','He kept his oath past dying.'],['Wenna Grist','1058 – 1102','The hour came, as hours do.'],
+     ['Tobias Slate','1020 – 1077','Lie still, Tobias. Lie still.'],['Brother Aldous Vane','Keeper of the Low Sanctum','What lies below, I keep.'],
+     ['Eda & Bram Holloway','1066 – 1090','Chained together, as in life.'],['Mother Ysolde','1031 – 1099','Her lantern still walks the paths at night.'],
+     ['Garrick Hume','1050 – 1095','Hanged at the crossroads. Buried here by mercy.'],['Sister Merel','1080 – 1104','The bell tolled once, and she was gone.']]})}
+var DG165G=dg165GD();
+function dg165GravePlan(){if(dg165GravePlan.c)return dg165GravePlan.c;
+  const I=INSL[20],P=I.path,N=P.length,DW=MAP.DW;
+  const props=new Set();try{MAP.props.forEach(q=>props.add(q[1]*W+q[0]))}catch(_){}
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];
+    if(!t||t=='#'||t=='r'||t=='~'||t=='R'||props.has(Z*W+X))return false;const J=insAt(X,Z);if(!J||J.g!==20)return false;return DW[Z*W+X]<-(m==null?1.2:m)};
+  const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
+  const roadD=(x,z)=>{let d=1e9;for(let i=0;i<N;i+=2){const q=P[i];d=Math.min(d,Math.hypot(x-q[0],z-q[1]))}return d};
+  const avoid=[[I.en[0],I.en[1],16],[I.ba[0],I.ba[1],PM_GTR+6]].concat(typeof cs164Avoid=='function'?cs164Avoid(I,14):(I.cl||[]).map(c=>[c[0],c[1],14]));
+  const D=dg165GD(),G=[],n=D.F.length;
+  for(let j=0;j<n;j++){const f=.07+j*(.86/(n-1)),ix=Math.round((N-1)*f),sd=j%2?-1:1;let got=null;
+    for(const T of [{m:2.6,road:6.5,sep:13},{m:1.8,road:5.5,sep:10},{m:1.2,road:4.5,sep:7}]){if(got)break;
+      for(const b of [8,9.5,7,11,12.5,6.5,14])for(const side of [sd,-sd])for(const da of [0,4,-4,8,-8,13,-13,18,-18]){if(got)break;
+        const k=Math.max(0,Math.min(N-1,ix+da)),q=P[k],t=tan(k),x=q[0]-t[1]*b*side,z=q[1]+t[0]*b*side;
+        if(!ok(x,z,T.m)||!ok(x+1.2,z,T.m*.6)||!ok(x-1.2,z,T.m*.6)||!ok(x,z+1.6,T.m*.6)||!ok(x,z-1.6,T.m*.6)||roadD(x,z)<T.road)continue;
+        if(!avoid.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r))continue;if(!G.every(o=>Math.hypot(x-o.x,z-o.z)>=T.sep))continue;
+        got={x:Math.round(x*2)/2,z:Math.round(z*2)/2,ix:k,ry:Math.atan2(q[0]-x,q[1]-z)}}}
+    if(!got){const q=P[ix],t=tan(ix);got={x:q[0]-t[1]*6*sd,z:q[1]+t[0]*6*sd,ix,ry:Math.atan2(t[1]*sd,-t[0]*sd),fb:1}}
+    const F=D.F[j],Nm=D.N[j];G.push(Object.assign(got,{i:j,stone:F[0],emb:F[1],ext:F[2],name:Nm[0],date:Nm[1],epi:Nm[2]}))}
+  return dg165GravePlan.c={G,keep:G.map(o=>[o.x,o.z,3.6])}}
+
+// ---------------- the prisms and the Reliquary of the Ossuary Fields (III) ----------------
+function dg165PrismPlan(){if(dg165PrismPlan.c)return dg165PrismPlan.c;
+  const I=INSL[22],P=I.path,N=P.length,DW=MAP.DW;
+  const props=new Set();try{MAP.props.forEach(q=>props.add(q[1]*W+q[0]))}catch(_){}
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];
+    if(!t||t=='#'||t=='r'||t=='~'||t=='R'||props.has(Z*W+X))return false;const J=insAt(X,Z);if(!J||J.g!==22)return false;return DW[Z*W+X]<-(m==null?1.2:m)};
+  const ring=(x,z,r,need,m)=>{let n=0;for(let k=0;k<16;k++){const a=k/16*6.283;if(ok(x+Math.cos(a)*r,z+Math.sin(a)*r,m))n++}return n>=need};
+  const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
+  const roadD=(x,z)=>{let d=1e9;for(let i=0;i<N;i+=2){const q=P[i];d=Math.min(d,Math.hypot(x-q[0],z-q[1]))}return d};
+  const camps=typeof cs164Avoid=='function'?cs164Avoid(I,16):(I.cl||[]).map(c=>[c[0],c[1],16]);
+  // the Reliquary: the open ground nearest the middle of the map, beside the road (the road passes its steps)
+  const cx=I.x0+I.w/2,cz=I.y0+I.h/2;let ctr=null,bd=1e9;
+  for(const T of [{R:11,need:15,m:1.2},{R:10,need:13,m:.8},{R:9,need:11,m:.5}]){if(ctr)break;
+    for(let i=4;i<N-4;i+=2){const q=P[i],t=tan(i);for(const side of [1,-1])for(const b of [12,14,16,18,11,20]){const x=q[0]-t[1]*b*side,z=q[1]+t[0]*b*side;
+      if(!ok(x,z,2.5)||!ring(x,z,T.R,T.need,T.m)||!ring(x,z,T.R*.55,16,T.m))continue;if(Math.hypot(x-I.en[0],z-I.en[1])<40||Math.hypot(x-I.ba[0],z-I.ba[1])<36)continue;
+      if(!camps.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r+T.R))continue;const d=Math.hypot(x-cx,z-cz);if(d<bd){bd=d;ctr={x:Math.round(x),z:Math.round(z),ix:i,ry:Math.atan2(q[0]-x,q[1]-z)}}}}}
+  if(!ctr){const i=Math.round(N/2),q=P[i];ctr={x:q[0],z:q[1],ix:i,ry:0,fb:1}}
+  const pr=[];const fr=[.1,.28,.47,.66,.86];
+  for(let j=0;j<5;j++){const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
+    for(const T of [{m:2.4,road:9,sep:34,c:34},{m:1.8,road:7,sep:26,c:28},{m:1.2,road:5,sep:18,c:22}]){if(got)break;
+      for(const b of [15,18,12,21,24,10])for(const side of [sd,-sd])for(const da of [0,6,-6,12,-12,18,-18]){if(got)break;const k=Math.max(0,Math.min(N-1,ix+da)),q=P[k],t=tan(k),x=q[0]-t[1]*b*side,z=q[1]+t[0]*b*side;
+        if(!ok(x,z,T.m)||!ring(x,z,4,12,.6)||roadD(x,z)<T.road)continue;if(Math.hypot(x-ctr.x,z-ctr.z)<T.c||Math.hypot(x-I.en[0],z-I.en[1])<18||Math.hypot(x-I.ba[0],z-I.ba[1])<20)continue;
+        if(!camps.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r))continue;if(!pr.every(o=>Math.hypot(x-o.x,z-o.z)>=T.sep))continue;got={x:Math.round(x*2)/2,z:Math.round(z*2)/2,ix:k}}}
+    if(!got){const q=P[ix],t=tan(ix);got={x:q[0]-t[1]*7*sd,z:q[1]+t[0]*7*sd,ix,fb:1}}got.i=j;pr.push(got)}
+  const keep=[[ctr.x,ctr.z,13]].concat(pr.map(o=>[o.x,o.z,4.4]));
+  return dg165PrismPlan.c={ctr,pr,keep,ok}}
+// 1680 place() and the camps' dressing (3242): keep decorations off the graves, the Reliquary and the prisms
+function dg165Keep(g,x,z){if(g!==20&&g!==22)return false;try{const L=g===20?dg165GravePlan().keep:dg165PrismPlan().keep;for(const k of L)if(Math.abs(x-k[0])<k[2]&&Math.abs(z-k[1])<k[2]&&Math.hypot(x-k[0],z-k[1])<k[2])return true}
+  catch(e){if(!dg165Keep.e){dg165Keep.e=1;console.warn('v165 keep',e)}}return false}
+// ================= v165 The Dirge main quest — shared kit: state, sounds, hurt, cards, title cards =================
+// State DG165Q (saved as x2.dg165, 3268):
+//   g {st 0 · 1 the angel read (you have the spade) · 2 the Keeper's grave open, ex[14] examined, bad[14] wrong graves dug}
+//   s {st 0 · 1 entered · 2 through (II reached), cp checkpoint 0..5, cw closing walls solved}
+//   r {st 0 · 1 boarded · 2 through (III reached)}
+//   o {lit[5] runes lit, st 0 · 1 the Den open}
+var DG165Q={g:{st:0,ex:[],bad:[]},s:{st:0,cp:0,cw:0},r:{st:0},o:{lit:[0,0,0,0,0],st:0}};
+var DG165={err:0,cardT:0,card:null,fear:0,lights:[]};
+function dg165Z(){try{return ZT116.Z[4]}catch(_){return null}}
+function dg165Title(t,sub,foot,kick){try{zt116Show(dg165Z(),kick||'The Dirge · Main Quest',t,sub||'',foot||'','z4')}catch(_){}}
+function dg165Lv(g){try{return INSL[g].lv}catch(_){return [38,38]}}
+function dg165InG(g){try{const I=curIns();return !!I&&I.g===g}catch(_){return false}}
+// done also when the next instance has been reached (heroes already further on are never blocked)
+function dg165GDone(){return DG165Q.g.st>=2||insReach(4)>=1}
+function dg165SDone(){return DG165Q.s.st>=2||insReach(4)>=1}
+function dg165RDone(){return DG165Q.r.st>=2||insReach(4)>=2}
+function dg165ODone(){return DG165Q.o.st>=1||DG165Q.o.lit.every(Boolean)||insReach(4)>=3}
+
+// ---------------- sounds: the crypt's own (whispers, heartbeat, creaks, water), made like svSnd ----------------
+function dg165Snd(k,vol,pitch){try{if(SET.sfx===false)return;const a=AUD;if(!a||a.state!='running'||!NOISE)return;const t=a.currentTime;vol=(vol||1)*.9;const p=pitch||1;
+  const env=(g,v,at,dec,hold,t0)=>{const s=t+(t0||0);g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(v*vol,s+at);if(hold)g.gain.setValueAtTime(v*vol,s+at+hold);g.gain.exponentialRampToValueAtTime(.001,s+at+(hold||0)+dec)};
+  const osc=(type,f0,f1,dur,v,at,hold,t0)=>{const o=a.createOscillator(),g=a.createGain(),s=t+(t0||0);o.type=type;o.frequency.setValueAtTime(f0*p,s);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1*p),s+(hold||0)+dur);
+    env(g,v,at||.01,dur,hold,t0);o.connect(g);g.connect(a.out);o.start(s);o.stop(s+(at||.01)+(hold||0)+dur+.05)};
+  const noise=(ft,f0,f1,dur,v,q,at,hold,t0)=>{const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),s0=t+(t0||0);s.buffer=NOISE;s.loop=true;f.type=ft;f.Q.value=q||1;f.frequency.setValueAtTime(f0*p,s0);
+    f.frequency.exponentialRampToValueAtTime(Math.max(40,f1*p),s0+(hold||0)+dur);env(g,v,at||.005,dur,hold,t0);s.connect(f);f.connect(g);g.connect(a.out);s.start(s0);s.stop(s0+(at||.005)+(hold||0)+dur+.05)};
+  ({// a breathy whisper: formant-filtered noise in a few syllables
+    whisper:()=>{for(let i=0;i<4;i++){const f=900+Math.random()*1400;noise('bandpass',f,f*(.7+Math.random()*.6),.18+Math.random()*.12,.09,7,.04,.03,i*.2+Math.random()*.05)}},
+    heart:()=>{osc('sine',58,38,.18,.5,.005,0,0);osc('sine',52,36,.2,.36,.005,0,.22)},
+    drone:()=>{osc('sawtooth',46,44,2.4,.05,.6,1.2);osc('sine',69,67,2.4,.08,.6,1.2);noise('lowpass',220,140,2.2,.08,1,.6,1)},
+    drip:()=>{osc('sine',1400+Math.random()*600,700,.09,.05,.002)},
+    creak:()=>{osc('sawtooth',90+Math.random()*30,60,.5,.05,.08,.25);noise('bandpass',700,380,.6,.08,9,.08,.2)},
+    splint:()=>{noise('highpass',3000,900,.18,.4,1,.002);osc('square',180,70,.12,.08);noise('bandpass',1200,500,.25,.2,3,.01,0,.05)},
+    gurgle:()=>{for(let i=0;i<5;i++)osc('sine',160+Math.random()*180,90,.07,.12,.004,0,i*.07+Math.random()*.03);noise('lowpass',600,200,.4,.15,1,.01)},
+    scrape:()=>{noise('bandpass',2400,1400,.35,.22,6,.02,.1);noise('highpass',3800,2600,.3,.1,1,.01,.05)},
+    wail:()=>{osc('sine',520,330,1.6,.12,.25,.4);osc('triangle',780,520,1.4,.05,.25,.4);noise('bandpass',1600,900,1.6,.06,4,.3,.4)},
+    spade:()=>{noise('lowpass',1200,300,.22,.45,1,.004);osc('triangle',120,70,.12,.15);noise('highpass',2600,1600,.06,.15,1,.002)},
+    thud:()=>{osc('sine',70,36,.5,.6,.004);noise('lowpass',500,90,.4,.4,1,.004)},
+    grind:()=>{noise('bandpass',260,180,1.1,.35,2,.08,.5);osc('sawtooth',48,42,1.2,.06,.1,.5)},
+    rumble:()=>{noise('lowpass',180,60,2.6,.55,1,.3,1.2);osc('sine',38,30,2.6,.25,.3,1.2)},
+    chime:()=>{osc('sine',880,880,1.2,.08,.004);osc('sine',1320,1318,.9,.05,.004);osc('sine',660,660,1.4,.06,.004,0,.05)},
+    choir:()=>{[220,277,330,415].forEach((f,i)=>osc('sine',f,f*.99,2.4,.035,.5,.8,i*.04))},
+    gasp:()=>{noise('bandpass',1100,600,.5,.25,2,.12,.05)},
+    scream:()=>{osc('sawtooth',880,420,.9,.06,.03,.2);osc('square',1240,760,.8,.03,.03,.15);noise('bandpass',2600,1400,1,.18,3,.03,.2)},
+    slam:()=>{osc('sine',60,30,.8,.7,.003);noise('lowpass',800,70,.7,.55,1,.003);noise('highpass',2200,1200,.12,.25,1,.003)},
+    fire:()=>{noise('bandpass',700,300,.8,.35,.8,.05,.35);noise('lowpass',400,160,.9,.25,1,.03,.4)},
+    spikes:()=>{noise('highpass',4200,2600,.12,.3,1,.002);osc('square',420,180,.08,.05)},
+    splash:()=>{noise('lowpass',2400,240,.6,.5,1,.005);osc('sine',200,60,.35,.22)},
+    crumble:()=>{for(let i=0;i<6;i++)noise('lowpass',900,200,.18,.25,1,.004,0,i*.06+Math.random()*.04)}})[k]?.()}catch(_){}}
+
+// ---------------- hurting the hero (traps, the crush, a fall): a share of their health, dodge-able unless `sure` ----------------
+function dg165Hurt(frac,label,col,sure){try{if(typeof AWD!='undefined'&&AWD.dead)return false;if(typeof RV148!='undefined'&&RV148.down)return false;
+  if(!sure&&hero.iv>0){dn(pl.position,'Dodged!','#bfe3ff',-20,900);return false}
+  const d=Math.max(1,Math.round(heroMax()*frac));hero.hp-=d;hero.lastHit=performance.now();try{heroFlinch()}catch(_){}dn(pl.position,d,col||'#ff6b5b');
+  if(label)dn(pl.position,label,'#ffb0a0',-36,900);shake(.18);burst(gY(pl.position,.9),0xaa2018,12,2,2,.45);flash('rgba(160,0,0,.35)');
+  hero.iv=Math.max(hero.iv||0,.7);if(hero.hp<=0)down();try{hud()}catch(_){}return true}catch(e){console.warn('v165 hurt',e);return false}}
+
+// ---------------- the card: an inscription or a clue, read on screen while you stand there ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#dg165c{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(8px);z-index:8;width:min(430px,88vw);pointer-events:none;opacity:0;transition:opacity .35s,transform .35s;
+  padding:18px 22px 16px;border-radius:6px;color:#d8d6cc;text-align:center;text-shadow:0 1px 2px #000;
+  background:radial-gradient(ellipse at 50% 0%,rgba(70,74,72,.96),rgba(26,28,28,.97) 75%),#1a1c1c;border:1px solid rgba(160,180,170,.35);box-shadow:0 10px 40px rgba(0,0,0,.7),inset 0 0 40px rgba(0,0,0,.6)}
+#dg165c.on{opacity:1;transform:translateX(-50%)}
+#dg165c .kk{font:600 10px Cinzel,Georgia,serif;letter-spacing:.22em;text-transform:uppercase;color:#8ab0a4;margin-bottom:6px}
+#dg165c .nm{font:600 20px 'Pirata One','IM Fell English SC',Georgia,serif;letter-spacing:.04em;color:#eef2ea}
+#dg165c .dt{font:12px 'IM Fell English',Georgia,serif;color:#a8aaa0;margin:2px 0 8px}
+#dg165c .ep{font:italic 15px 'IM Fell English',Georgia,serif;color:#e4e0d0;line-height:1.4}
+#dg165c .ob{margin-top:10px;font:12.5px system-ui,sans-serif;color:#b8c8c0;line-height:1.45}
+#dg165c .ob b{color:#e8f4ee}
+#dg165c .hn{margin-top:10px;font:600 11.5px system-ui,sans-serif;color:#9ae8c8}
+body.mob #dg165c{bottom:170px}
+#dg165v{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .2s;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 45%,rgba(0,0,0,.75) 100%)}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='dg165c';document.body.appendChild(d);const v=document.createElement('div');v.id='dg165v';document.body.appendChild(v)})();
+// show a card while the hero stays within r of (x, z)
+function dg165CardShow(html,x,z,r){const el=$('dg165c');if(!el)return;el.innerHTML=html;el.classList.add('on');DG165.card={x,z,r:r||3.4,t:performance.now()}}
+function dg165CardHide(){const el=$('dg165c');if(el)el.classList.remove('on');DG165.card=null}
+function dg165CardTick(){const C=DG165.card;if(!C)return;const P=pl.position;if(Math.hypot(P.x-C.x,P.z-C.z)>C.r||(typeof uiOpen=='function'&&uiOpen()))dg165CardHide()}
+// fear: the edges of the screen darken in pulses (a jump scare, the walls closing in, the raft breaking)
+function dg165Fear(k){DG165.fear=Math.max(DG165.fear,k)}
+function dg165FearTick(dt){const v=$('dg165v');if(!v)return;DG165.fear=Math.max(0,DG165.fear-dt*.5);const o=Math.min(1,DG165.fear);if(Math.abs((DG165.fo||0)-o)>.02){DG165.fo=o;v.style.opacity=o.toFixed(2)}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{dg165CardTick();dg165FearTick(dt)}catch(e){if(!DG165.err++)console.warn('v165 kit',e)}return r}}
+
+// ---------------- small shared pieces ----------------
+// a candle on the kit (wax, drips, wick); its flame is a sprite added at runtime (dg165Flame)
+function dg165Candle(k,x,y,z,h){h=h||.22;k.p('','cyl','c',0xd0c4a2,x,y+h/2,z,.035,h,.035);for(let i=0;i<3;i++)k.p('','sph','c',0xc8bc98,x+Math.cos(i*2.1)*.03,y+h*(.4+i*.18),z+Math.sin(i*2.1)*.03,.012,.03,.012);
+  k.p('','sph','c',0xb8ac88,x,y+.01,z,.06,.02,.06);k.p('','box','c',0x1a1410,x,y+h+.012,z,.006,.025,.006)}
+// a flickering flame sprite (+ an optional weak light pooled by the caller)
+function dg165Flame(parent,x,y,z,s,col){const f=kqSpr(col||0xffb050,s||.22);f.position.set(x,y,z);f.userData.ph=Math.random()*6;f.userData.s0=s||.22;parent.add(f);return f}
+function dg165FlTick(L,t){for(const f of L){const s=f.userData.s0*(1+.18*Math.sin(t*13+f.userData.ph)*Math.sin(t*5.1+f.userData.ph));f.scale.set(s*.75,s*1.25,1)}}
+// a shared pool of point lights for one place: lights follow the nearest light spots, so only a few are ever in the scene
+function dg165LPool(n,dist){const L=[];for(let i=0;i<n;i++){const l=new THREE.PointLight(0xffa050,0,dist||9,1.6);l.position.set(0,-50,0);scene.add(l);L.push(l)}return {L,on:false}}
+function dg165LPoolTick(Pool,spots,P,t,on){const L=Pool.L;if(!on){if(Pool.on){Pool.on=false;L.forEach(l=>l.intensity=0)}return}Pool.on=true;
+  const S=spots.map(s=>[s,(s.x-P.x)*(s.x-P.x)+(s.z-P.z)*(s.z-P.z)]).sort((a,b)=>a[1]-b[1]);
+  for(let i=0;i<L.length;i++){const q=S[i];if(!q||q[1]>1600){L[i].intensity=0;continue}const s=q[0];L[i].position.set(s.x,s.y,s.z);L[i].color.setHex(s.c||0xffa050);L[i].distance=s.r||9;
+    L[i].intensity=(s.i||1.4)*(s.off?0:1)*(.82+.18*Math.sin(t*(s.fq||9)+(s.ph||0))*Math.sin(t*3.7+(s.ph||0)))}}
+// ================= v165 The Dirge I — the Keeper's Grave =================
+// The Dirge I's gateway to II is gone. Where it stood, a weeping angel watches over the road's end, a gravedigger's spade stuck in the
+// earth at its feet and an inscription on its plinth: the Keeper sleeps where the stone is broken, a raven keeps watch and the candles
+// never die. Fourteen graves stand along the road (dg165GravePlan, 3260), each with its own headstone, emblem and offering.
+//  * F at a grave reads it (name, dates, epitaph, what you see on it). Once you have the spade, F again digs it up (3 s of digging,
+//    walking away or a hit stops it).
+//  * A wrong grave: the coffin bursts and its dead climb out (two or three of the Dirge's dead, local to you); the grave stays open.
+//  * The Keeper's grave: the earth caves in on a stone stair. F · Descend into the Hidden Sanctum (3263). Once the Sanctum is behind
+//    you, the stair (and the angel) lead straight on to the Drowned Crypts.
+// The graves are built the first time you are in the Dirge I, hidden elsewhere. Their tiles are solid (CBLK) except the stair.
+var DG165GR={S:null,dig:null,err:0,col:{st:0x5c5c60,st2:0x4a4a50,st3:0x6c6a64,moss:0x3a4a34,soil:0x2a241e,soil2:0x3a3026,wax:0xd0c4a2,iron:0x2a2c30,rust:0x5a3a24,bone:0xc8c0a8,lily:0xd8d4c8,stem:0x3a4a2a,rose:0x4a1214,raven:0x1c1c22}};
+function dg165GIn(){return dg165InG(20)}
+// ---------------- models ----------------
+function dg165GraveKit(k,o){const C=DG165GR.col,R=svRng(4100+o.i*37),st=[C.st,C.st2,C.st3][o.i%3];
+  // the mound: heaped earth with a ring of half-sunk stones, grass tufts
+  k.p('','dod','c',C.soil,0,.02,.35,.62,.26,1.18,0,0,0);k.p('','dod','c',C.soil2,0,.12,.3,.46,.16,.92,.1,0,0);
+  for(let i=0;i<14;i++){const a=i/14*6.283,x=Math.cos(a)*.78,z=.35+Math.sin(a)*1.32;k.p('','dod','c',lgCol(st,C.moss,R()*.6),x,.04,z,.12+R()*.08,.08+R()*.06,.12+R()*.08,R()*3,R()*3,R()*3)}
+  for(let i=0;i<7;i++)k.p('','cone','c',lgCol(0x2e3a2a,0x4a5a3a,R()),(R()-.5)*1.3,.05,.35+(R()-.5)*2.2,.04,.18+R()*.12,.04,(R()-.5)*.5,0,(R()-.5)*.5);
+  // the headstone
+  const z0=-.95,tilt=(R()-.5)*.12;
+  if(o.stone=='slab'){k.p('','box','c',st,0,.6,z0,1.0,1.2,.2,tilt,0,(R()-.5)*.06);k.p('','cyl','c',st,0,1.2,z0,.5,.2,.5,Math.PI/2+tilt,0,0);k.p('','box','c',lgCol(st,0,.25),0,.08,z0,1.15,.16,.32)}
+  else if(o.stone=='cross'){k.p('','box','c',st,0,.78,z0,.22,1.56,.18,tilt,0,0);k.p('','box','c',st,0,1.12,z0,.9,.2,.18,tilt,0,0);k.p('','box','c',lgCol(st,0,.25),0,.1,z0,.6,.2,.4);
+    k.p('','ring','c',lgCol(st,C.moss,.4),0,1.12,z0+.02,.3,.6,.3,Math.PI/2,0,0)}
+  else if(o.stone=='obelisk'){k.p('','box','c',lgCol(st,0,.2),0,.14,z0,.86,.28,.86);k.p('','box','c',st,0,.95,z0,.46,1.4,.46,tilt*.5,0,0);k.p('','cone4','c',st,0,1.86,z0,.33,.42,.33,0,Math.PI/4,0);
+    k.p('','box','c',lgCol(st,0,.3),0,.36,z0,.6,.12,.6)}
+  else{// broken: the lower half stands tilted, its top a jagged break; the upper half lies cracked in the grass beside it
+    k.p('','box','c',st,0,.34,z0,1.0,.68,.2,tilt-.08,0,.06);for(let i=0;i<6;i++)k.p('','box','c',st,-.42+i*.17,.7+R()*.1,z0,.17,.12+R()*.14,.2,0,0,(R()-.5)*.6);
+    k.p('','box','c',lgCol(st,C.moss,.3),.72,.1,z0+.55,.95,.18,.5,0,.6,0);k.p('','cyl','c',lgCol(st,C.moss,.3),.98,.12,z0+.18,.45,.18,.45,0,.6,Math.PI/2);
+    for(let i=0;i<5;i++)k.p('','dod','c',st,-.6+R()*1.2,.04,z0+.2+R()*.5,.06+R()*.05)}
+  // lichen and a carved name panel
+  k.p('','box','c',lgCol(st,0x1a1a1c,.55),0,o.stone=='broken'?.4:.62,z0+.105,.6,.26,.01);for(let i=0;i<5;i++)k.p('','box','c',C.moss,(R()-.5)*.8,.2+R()*.8,z0+.1,.12+R()*.1,.08+R()*.08,.012);
+  // the emblem
+  const ty=o.stone=='slab'?1.32:o.stone=='cross'?1.6:o.stone=='obelisk'?.32:.78,tz=o.stone=='obelisk'?z0+.44:z0;
+  if(o.emb=='raven'){const y=o.stone=='obelisk'?1.1:ty,z=o.stone=='obelisk'?z0+.0:z0,x=o.stone=='obelisk'?.0:.05,rc=C.raven;
+    const yb=o.stone=='obelisk'?.22:0;k.p('','sph','c',rc,x,y+.14+yb,z,.13,.15,.2,.3,0,0);k.p('','sph','c',rc,x,y+.3+yb,z+.12,.085,.085,.09);k.p('','cone4','c',0x0e0e10,x,y+.29+yb,z+.24,.025,.1,.025,Math.PI/2,0,0);
+    [-1,1].forEach(s=>{k.p('','box','c',lgCol(rc,0x2a2a34,.3),x+s*.11,y+.16+yb,z-.02,.03,.12,.28,.3,s*.15,s*.12);k.p('','sph','g',0xb0ff90,x+s*.05,y+.32+yb,z+.18,.012)});
+    k.p('','box','c',rc,x,y+.08+yb,z-.22,.12,.03,.22,-.4,0,0);[-1,1].forEach(s=>k.L('','c',0x101012,[x+s*.04,y+.06+yb,z+.02],[x+s*.04,y-.03+yb,z+.06],.008,.006,4))}
+  else if(o.emb=='skull'){const y=o.stone=='obelisk'?.95:o.stone=='broken'?.42:.78,z=(o.stone=='obelisk'?z0+.24:z0+.11);k.p('','sph','c',C.bone,0,y,z,.12,.13,.07);k.p('','box','c',C.bone,0,y-.11,z+.01,.08,.05,.05);
+    [-1,1].forEach(s=>k.p('','sph','c',0x0a0a0a,s*.045,y+.01,z+.05,.032,.03,.02));k.p('','cone4','c',0x0a0a0a,0,y-.05,z+.06,.015,.03,.01,Math.PI);
+    [-1,1].forEach(s=>k.L('','c',C.bone,[s*-.2,y-.22,z],[s*.2,y-.12,z],.022,.02,5))}
+  else if(o.emb=='rose'){const y=o.stone=='obelisk'?.95:o.stone=='broken'?.42:.8,z=(o.stone=='obelisk'?z0+.24:z0+.11);for(let i=0;i<6;i++){const a=i/6*6.283;k.p('','sph','c',lgCol(C.rose,0x2a0808,i/8),Math.cos(a)*.05,y+Math.sin(a)*.05,z,.045,.045,.025)}
+    k.p('','sph','c',0x3a0a0c,0,y,z+.01,.04,.04,.03);k.L('','c',C.stem,[0,y-.05,z],[.02,y-.4,z],.012,.01,4);k.p('','box','c',C.stem,.05,y-.22,z,.08,.03,.01,0,0,.6)}
+  else if(o.emb=='hourglass'){const y=o.stone=='obelisk'?.95:o.stone=='broken'?.42:.8,z=(o.stone=='obelisk'?z0+.24:z0+.11);k.p('','cone','c',lgCol(st,0x101010,.4),0,y+.1,z,.1,.18,.03,Math.PI,0,0);k.p('','cone','c',lgCol(st,0x101010,.4),0,y-.08,z,.1,.18,.03);
+    [-1,1].forEach(s=>k.p('','box','c',lgCol(st,0x101010,.3),0,y+s*.2,z,.24,.03,.04));[-1,1].forEach(s=>k.L('','c',lgCol(st,0,.2),[s*.12,y-.08,z+.01],[s*.24,y+.28,z+.01],.012,.01,4))}
+  else if(o.emb=='bell'){const y=o.stone=='broken'?.85:o.stone=='obelisk'?1.5:1.35,x=.32;k.L('','m',C.iron,[x-.1,y,z0],[x+.22,y+.04,z0+.02],.015,.015,4);k.L('','m',C.iron,[x+.2,y+.04,z0],[x+.22,y-.06,z0+.02],.008,.008,3);
+    k.p('','cone','m',lgCol(C.iron,C.rust,.5),x+.22,y-.14,z0+.02,.07,.13,.07);k.p('','sph','m',C.rust,x+.22,y-.21,z0+.02,.02);k.L('','c',0x3a3026,[x+.22,y-.2,z0+.02],[x+.1,y-.5,z0+.5],.006,.006,3)}
+  // what lies on the grave
+  if(o.ext=='candles')[[-.35,.05,.25,.24],[.3,.06,.0,.18],[-.12,.08,-.35,.28],[.4,.04,.62,.14]].forEach(q=>dg165Candle(k,q[0],q[1]+.12,q[2],q[3]));
+  else if(o.ext=='lilies'){for(let i=0;i<5;i++){const x=(R()-.5)*.4,z=.05+(R()-.5)*.3,a=R()*6.28;k.L('','c',C.stem,[x,.2,z],[x+Math.cos(a)*.3,.32,z+Math.sin(a)*.3],.008,.006,3);
+      k.p('','cone','c',lgCol(C.lily,0x8a7a5a,.5),x+Math.cos(a)*.33,.3,z+Math.sin(a)*.33,.04,.08,.04,Math.PI/2+.4,a,0)}k.p('','box','c',0x3a2a2a,0,.21,.05,.08,.03,.08)}
+  else if(o.ext=='cage'){// a mortsafe: an iron cage over the grave against the body snatchers
+    for(let i=0;i<8;i++){const x=-.7+i*.2;k.L('','m',C.iron,[x,0,-.6],[x,.62,-.6],.018,.018,4);k.L('','m',C.iron,[x,.62,-.6],[x,.62,1.3],.018,.018,4);k.L('','m',C.iron,[x,0,1.3],[x,.62,1.3],.018,.018,4);k.p('','cone4','m',C.rust,x,.7,1.3,.025,.08,.025)}
+    [-.6,1.3].forEach(z=>k.L('','m',C.rust,[-.75,.62,z],[.75,.62,z],.02,.02,4));[0,.3,.6,.95].forEach(z=>k.L('','m',C.rust,[-.75,.62,z],[.75,.62,z],.014,.014,4))}
+  else if(o.ext=='chains'){for(let i=0;i<16;i++){const t=i/15,x=-.75+t*1.5,y=.18+Math.sin(t*Math.PI)*.12;k.p('','ring','m',i%2?C.iron:C.rust,x,y,.4,.06,.5,.06,i%2?Math.PI/2:0,0,i%2?0:Math.PI/2)}
+    for(let i=0;i<10;i++){const a=i/10*6.283;k.p('','ring','m',i%2?C.iron:C.rust,Math.cos(a)*.52,.55,z0+Math.sin(a)*.12,.05,.5,.05,0,a,i%2?Math.PI/2:0)}
+    k.p('','box','m',C.iron,.5,.12,1.3,.12,.16,.06);k.p('','ring','m',C.rust,.5,.2,1.3,.07,.4,.07,Math.PI/2,0,0)}
+  else if(o.ext=='lantern'){k.L('','c',0x2a2018,[.75,0,.9],[.75,1.5,.9],.035,.03,5);k.L('','m',C.iron,[.75,1.45,.9],[.48,1.5,.9],.015,.015,4);
+    k.p('','box','m',C.iron,.48,1.24,.9,.16,.24,.16);k.p('','box','g',0x9affd0,.48,1.24,.9,.11,.16,.11);k.p('','cone4','m',C.iron,.48,1.42,.9,.11,.1,.11,0,Math.PI/4,0)}}
+function dg165GraveHole(k,o){const C=DG165GR.col,R=svRng(4200+o.i*13);
+  // an open pit with a heap of fresh earth beside it and a smashed coffin in it
+  k.p('','box','c',0x0c0a08,0,-.02,.35,1.0,.06,1.9);for(let i=0;i<8;i++){const s=i<4?-1:1;k.p('','dod','c',lgCol(C.soil,C.soil2,R()),s*.7,.02,.35+(i%4-1.5)*.5,.16,.08,.3,R(),R(),R())}
+  k.p('','dod','c',C.soil2,1.25,.22,.2,.55,.42,.8,.3,.4,0);k.p('','dod','c',C.soil,1.1,.12,.75,.4,.25,.45,.2,1,0);
+  k.p('','box','c',0x3a2618,0,.05,.35,.72,.1,1.6);for(let i=0;i<4;i++)k.p('','box','c',lgCol(0x4a3020,0x2a1a10,R()),-.3+i*.2,.12+R()*.08,.1+R()*.6,.18,.04,.7,R()*.4,R()*.8,R()*.4);
+  k.p('','box','c',0x4a3020,1.2,.35,-.25,.7,.06,1.5,.4,.9,.3);for(let i=0;i<3;i++)k.p('','sph','c',C.bone,(R()-.5)*.4,.14,.3+(R()-.5)*.8,.05,.04,.08)}
+// the angel at the road's end (local +z faces the clearing)
+function dg165AngelModel(s){const g=new THREE.Group();g.userData.psNo=1;const C=DG165GR.col;
+  g.add(lgGroup('DG165|angel',k=>{const R=svRng(4321),sA=0x77756e,sB=0x605e58,sC=0x8a8880;
+    // the plinth: stepped base, a panel with the inscription
+    k.p('','box','c',sB,0,.18,0,2.2,.36,2.2);k.p('','box','c',sA,0,.72,0,1.6,.8,1.6);k.p('','box','c',sB,0,1.2,0,1.85,.18,1.85);k.p('','box','c',lgCol(sB,0x1a1a1a,.5),0,.74,.81,1.1,.5,.02);
+    for(let i=0;i<4;i++)k.p('','box','c',lgCol(sA,0x101010,.6),0,.62+i*.1,.83,.8-i*.06,.025,.01);
+    for(let i=0;i<9;i++)k.p('','box','c',C.moss,(R()-.5)*1.8,.36+R()*.8,(R()<.5?-1:1)*(.8+R()*.02),.2+R()*.2,.1+R()*.15,.02);
+    // the angel: a robed figure kneeling, head bowed into its hands, wings folded high behind it
+    k.p('','skirt','c',sA,0,1.62,0,.55,.85,.48);k.p('','sph','c',sA,0,2.08,.02,.3,.42,.25,.25,0,0);k.p('','sph','c',sC,0,2.42,.18,.16,.18,.17,.6,0,0);
+    k.p('','hood','c',sB,0,2.44,.14,.2,.24,.22,-.9,0,0);[-1,1].forEach(sd=>{k.L('','c',sA,[sd*.24,2.28,.05],[sd*.14,2.18,.26],.07,.06,5);k.L('','c',sA,[sd*.14,2.18,.26],[sd*.06,2.42,.3],.05,.045,5);k.p('','sph','c',sC,sd*.05,2.44,.31,.06,.07,.04)});
+    for(let i=0;i<7;i++)k.p('','box','c',lgCol(sA,sB,i/7),(i-3)*.08,1.25,.38+Math.abs(i-3)*.02,.07,.3,.06,.2,0,0);   // robe folds
+    [-1,1].forEach(sd=>{for(let i=0;i<7;i++){const t=i/6,y=2.0+t*1.25,x=sd*(.22+.32*Math.sin(t*2.6)),z=-.22-.18*t;k.p('','box','c',lgCol(sA,sC,t),x,y,z,.16+.2*(1-t),.55-.3*t,.06,-.15,sd*.35,sd*(.25-t*.5))}
+      for(let i=0;i<5;i++)k.p('','box','c',lgCol(sB,sA,i/5),sd*(.3+i*.06),1.65-i*.08,-.28,.08,.6,.04,-.1,sd*.4,sd*.2)});
+    // cracks, a chipped wing tip, moss
+    k.p('','box','c',0x2a2a28,.25,2.0,.2,.02,.3,.02,0,0,.3);for(let i=0;i<6;i++)k.p('','sph','c',C.moss,(R()-.5)*.6,1.3+R()*1.4,(R()-.5)*.5,.06+R()*.06,.04,.06+R()*.04);
+    // the gravedigger's spade in a heap of earth, an iron lantern on a crook
+    k.p('','dod','c',C.soil,1.55,.12,.75,.45,.2,.42);k.L('','c',0x4a3420,[1.5,.2,.75],[1.62,1.5,.62],.03,.028,5);k.p('','box','c',0x4a3420,1.63,1.52,.61,.2,.04,.04);
+    k.p('','box','m',0x3a3c40,1.48,.25,.78,.24,.34,.03,0,.1,.06);k.L('','c',0x2a2018,[-1.4,0,.7],[-1.45,1.9,.7],.035,.03,5);k.L('','m',DG165GR.col.iron,[-1.45,1.85,.7],[-1.15,1.9,.7],.015,.015,4);
+    k.p('','box','m',DG165GR.col.iron,-1.15,1.62,.7,.18,.26,.18);k.p('','box','g',0x9affd0,-1.15,1.62,.7,.12,.18,.12);
+    // offerings: candles round the base
+    [[-.8,.36,1.0],[.85,.36,1.0],[-.4,.36,1.05],[.5,.36,1.02]].forEach(q=>dg165Candle(k,q[0],q[1],q[2],.18))},0));
+  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;g.scale.setScalar(1.35);scene.add(g);
+  g.userData.fl=[[-.8,.62,1.0],[.85,.62,1.0],[-.4,.62,1.05],[.5,.62,1.02]].map(q=>dg165Flame(g,q[0],q[1]-.05,q[2],.16));
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-1.6;o<=1.6;o+=.5)for(let d=-1.6;d<=1.6;d+=.5){const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
+  return g}
+// the opened Keeper's grave: the earth has fallen through onto a stone stair going down into green light
+function dg165StairKit(k){const C=DG165GR.col,R=svRng(4444),sA=0x4a4a4e,sB=0x3a3a3e;
+  k.p('','box','c',0x020302,0,-.02,.2,1.3,.04,2.4);for(let i=0;i<7;i++)k.p('','box','c',lgCol(sA,0x101010,i/7),0,-.12-i*.22,1.1-i*.36,1.15,.22,.36);
+  [-1,1].forEach(s=>{k.p('','box','c',sB,s*.72,.05,.2,.2,.24,2.5);for(let i=0;i<5;i++)k.p('','dod','c',lgCol(C.soil,C.soil2,R()),s*(.95+R()*.3),.08,-.8+i*.5,.2+R()*.1,.12,.25)});
+  k.p('','box','c',sB,0,.05,-1.0,1.6,.24,.25);k.p('','dod','c',C.soil2,1.4,.25,-.3,.6,.4,.7,.2,.4,0);for(let i=0;i<6;i++)k.p('','dod','c',lgCol(C.st,C.moss,R()*.5),(R()-.5)*2.6,.06,(R()-.5)*2.8,.08+R()*.1)}
+// ---------------- the world: built the first time you are in the Dirge I ----------------
+function dg165GBuild(){if(DG165GR.S)return DG165GR.S;const Pl=dg165GravePlan(),S={gr:[],fl:[],spots:[],root:new THREE.Group()};S.root.name='DirgeGraves';scene.add(S.root);DG165GR.S=S;
+  Pl.G.forEach(o=>{const g=new THREE.Group();g.position.set(o.x,GH(o.x,o.z),o.z);g.rotation.y=o.ry;S.root.add(g);
+    const body=lgGroup('DG165|grave'+o.i,k=>dg165GraveKit(k,o),0);g.add(body);
+    const hole=lgGroup('DG165|hole'+o.i,k=>dg165GraveHole(k,o),0);hole.visible=false;g.add(hole);
+    g.scale.setScalar(1.3);const G={o,g,body,hole,stair:null,fl:[],mark:null};
+    // a pale grave-light hangs over every grave of the quest (all alike: it does not give the Keeper away)
+    {const w=kqSpr(0xa8d8ff,.55);w.material=w.material.clone();w.material.opacity=.45;w.position.set(0,2.3,-.95);g.add(w);G.wisp=w}
+    if(o.ext=='candles')[[-.35,.05,.25,.24],[.3,.06,.0,.18],[-.12,.08,-.35,.28],[.4,.04,.62,.14]].forEach(q=>G.fl.push(dg165Flame(g,q[0],q[1]+.12+q[3]+.05,q[2],.15)));
+    if(o.ext=='lantern'){const f=dg165Flame(g,.48,1.24,.9,.35,0x9affd0);G.fl.push(f)}
+    S.fl.push(...G.fl);
+    // a faint lantern-glow on the Keeper's candles (the candles that never die: still, no flicker, a soft green-white)
+    if(o.i===DG165G.K)G.fl.forEach(f=>{f.material=f.material.clone();f.material.color.setHex(0xe8fff0);f.userData.still=1});
+    // tiles: the headstone and the mound block the way (the stair stays open when the Keeper's grave is dug)
+    const ca=Math.cos(o.ry),sa=Math.sin(o.ry);G.blk=[];for(let lx=-1;lx<=1;lx+=.5)for(let lz=-1.4;lz<=1.8;lz+=.5){const x=o.x+ca*lx+sa*lz,z=o.z-sa*lx+ca*lz,key=Math.round(z)*W+Math.round(x);if(G.blk.indexOf(key)<0)G.blk.push(key)}
+    G.blk.forEach(q=>CBLK.add(q));S.gr.push(G);
+    S.spots.push({x:o.x+Math.sin(o.ry)*1.2,y:GH(o.x,o.z)+.7,z:o.z+Math.cos(o.ry)*1.2,c:o.i===DG165G.K?0xd8ffe8:0xffb060,i:o.ext=='candles'?.9:o.ext=='lantern'?1:0,r:6,fq:o.i===DG165G.K?0:9})});
+  S.pool=dg165LPool(4,7);dg165GSync();return S}
+// match the graves to the state: dug wrong ones open, the Keeper's opened onto the stair
+function dg165GSync(){const S=DG165GR.S;if(!S)return;S.gr.forEach(G=>{const i=G.o.i,keep=i===DG165G.K,open=keep?dg165GDone():!!DG165Q.g.bad[i];
+  G.body.visible=!open||(!keep&&false);G.hole.visible=open&&!keep;if(keep&&open&&!G.stair){G.stair=lgGroup('DG165|stair',dg165StairKit,0);G.g.add(G.stair);
+    const gl=new THREE.PointLight(0x7affb0,1.4,6,1.6);gl.position.set(0,-.8,.4);G.g.add(gl);G.lt=gl;const b=kqSpr(0x5affa0,2.2);b.material=b.material.clone();b.material.opacity=.35;b.position.set(0,-.2,.2);G.g.add(b);G.glow=b}
+  if(G.stair)G.stair.visible=keep&&open;if(keep&&open)G.fl.forEach(f=>f.visible=false);
+  // the open stair is walkable: its tiles come off the block list
+  if(keep&&open&&!G.unb){G.unb=1;G.blk.forEach(q=>CBLK.delete(q))}})}
+function dg165GTick(dt,now){const inI=dg165GIn(),t=now/1000;if(inI&&!DG165GR.S)try{dg165GBuild()}catch(e){if(!DG165GR.err++)console.error('v165 graves',e)}
+  const S=DG165GR.S;if(!S)return;S.root.visible=inI;dg165LPoolTick(S.pool,S.spots,pl.position,t,inI);if(!inI){DG165GR.dig=null;return}
+  dg165FlTick(S.fl.filter(f=>!f.userData.still),t);S.gr.forEach((G,j)=>{if(G.wisp){const open=G.o.i===DG165G.K?dg165GDone():!!DG165Q.g.bad[G.o.i];G.wisp.visible=!open;G.wisp.position.y=2.3+.15*Math.sin(t*1.3+j);G.wisp.material.opacity=.32+.14*Math.sin(t*2.1+j*1.7)}if(G.glow)G.glow.material.opacity=.28+.1*Math.sin(t*2.2);if(G.lt)G.lt.intensity=1.2+.3*Math.sin(t*3.1)});
+  const A=SP152.gates.sanctum;if(A&&A.g&&A.g.userData.fl)dg165FlTick(A.g.userData.fl,t);
+  // the Keeper's candles: a thin wisp of pale smoke rises from them, straight up, never bending
+  const K=S.gr[DG165G.K];if(K&&!dg165GDone()&&Math.random()<dt*3&&Math.hypot(pl.position.x-K.o.x,pl.position.z-K.o.z)<30){const f=K.fl[(Math.random()*K.fl.length)|0];if(f){const p=f.getWorldPosition(new THREE.Vector3());p.y+=.1;burst(p,0xd8ffe8,1,.02,.8,1.2)}}
+  if(DG165GR.dig)dg165DigTick(dt,now)}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{dg165GTick(dt,now)}catch(e){if(!DG165GR.err++)console.error('v165 graves tick',e)}return r}}
+// ---------------- reading a grave ----------------
+var DG165OBS={stone:{slab:'The headstone is a plain, rounded slab',cross:'A stone cross stands at its head',obelisk:'A tall obelisk marks it',broken:'Its headstone is <b>broken in two</b>; the top half lies in the grass'},
+  emb:{raven:'a <b>stone raven</b> perches on it, watching the road',skull:'a skull is carved on its face',rose:'a rose is carved on its face',hourglass:'an hourglass is carved on its face',bell:'a little iron bell hangs from it on a cord that runs into the earth'},
+  ext:{candles:'<b>Candles</b> burn on the mound',lilies:'Wilted lilies lie on the mound',cage:'An iron cage is locked over the grave',chains:'Rusted chains bind the mound',lantern:'A lantern hangs over it on a crook'}};
+function dg165GCard(G){const o=G.o,keep=o.i===DG165G.K;let ext=DG165OBS.ext[o.ext];if(o.ext=='candles')ext+=keep?' · their flames are perfectly still, though the wind blows':' · they gutter in the wind';
+  const sp=DG165Q.g.st>=1,hint=sp?'F · Dig up this grave':'You would need a spade to open it — the gravedigger’s lies by the weeping angel at the road’s end';
+  dg165CardShow(`<div class="kk">✝ Here lies</div><div class="nm">${o.name}</div><div class="dt">${o.date}</div><div class="ep">“${o.epi}”</div>
+    <div class="ob">${DG165OBS.stone[o.stone]}; ${DG165OBS.emb[o.emb]}. ${ext}.</div><div class="hn">${hint}</div>`,o.x,o.z,3.6)}
+function dg165AngelCard(s){dg165CardShow(`<div class="kk">🕯 Carved into the plinth</div><div class="ep">“Where the stone lies broken,<br>where the raven keeps its watch,<br>where the candles never die —<br>there the Keeper sleeps<br>above the door below.”</div>
+  <div class="ob">A gravedigger’s spade stands in the heap of earth at the angel’s feet. You take it.</div><div class="hn">Find the Keeper’s grave among the graves along the road and dig it up</div>`,s.x,s.z,4.2)}
+// ---------------- digging ----------------
+function dg165DigStart(G){if(DG165GR.dig||AF)return;if(riding)try{dismount(true)}catch(_){}
+  DG165GR.dig={G,t:0,need:3.2,sw:0,hp:hero.hp,x:pl.position.x,z:pl.position.z};dg165CardHide();say('⛏ You start to dig up the grave of '+G.o.name+'…')}
+function dg165DigTick(dt,now){const D=DG165GR.dig,G=D.G,o=G.o,P=pl.position;
+  if(Math.hypot(P.x-D.x,P.z-D.z)>.6||hero.hp<D.hp-1||Math.hypot(P.x-o.x,P.z-o.z)>3.4){DG165GR.dig=null;say('⛏ You stop digging.');return}
+  D.t+=dt;D.sw-=dt;try{face(V(o.x-P.x,0,o.z-P.z).normalize())}catch(_){}
+  if(D.sw<=0){D.sw=.55;try{if(!pl.sw)swingAnim((D.n=(D.n||0)+1)%2,320)}catch(_){}setTimeout(()=>{try{dg165Snd('spade',.8,.9+Math.random()*.2);burst(gY(V(o.x+Math.sin(o.ry)*.4,0,o.z+Math.cos(o.ry)*.4),.3),0x3a3026,10,1.8,2.2,.5)}catch(_){}},180)}
+  G.body.children.forEach(m=>{m.scale.y=Math.max(.5,1-D.t/D.need*.35)});
+  if(D.t>=D.need){DG165GR.dig=null;G.body.children.forEach(m=>m.scale.y=1);dg165DigDone(G,true)}}
+function dg165DigDone(G,mine){const o=G.o,keep=o.i===DG165G.K;
+  if(keep){if(DG165Q.g.st>=2)return;DG165Q.g.st=2;dg165GSync();dg165Snd('rumble',1,1);shake(.5);dg165Fear(.6);
+    for(let i=0;i<40;i++)setTimeout(()=>{try{burst(gY(V(o.x+(Math.random()-.5)*1.6,0,o.z+(Math.random()-.5)*2.4),.2),0x2a241e,4,1.5,2,.6)}catch(_){}},i*40);
+    setTimeout(()=>{dg165Snd('choir',.9,1);dg165Title('The Keeper’s Grave','The earth gives way onto a stair going down into the dark','F · Descend into the Hidden Sanctum')},900);
+    say('🕯 The earth caves in under your spade: a stone stair leads down beneath the Keeper’s grave.');if(mine)try{dg165Co('dig',o.i)}catch(_){}return}
+  if(DG165Q.g.bad[o.i])return;DG165Q.g.bad[o.i]=1;dg165GSync();if(!mine)return;
+  // the wrong grave: the lid bursts and its dead climb out
+  dg165Snd('splint',1,.8);dg165Snd('scream',.6,.7+Math.random()*.2);shake(.3);dg165Fear(.8);flash('rgba(40,90,60,.35)');
+  const lv=dg165Lv(20),n=o.i>=7?3:2,keys=['ghoul','skeleton','ghoul'];
+  for(let k=0;k<n;k++)setTimeout(()=>{try{const a=Math.random()*6.283,x=o.x+Math.sin(o.ry)*.3+Math.cos(a)*.8,z=o.z+Math.cos(o.ry)*.3+Math.sin(a)*.8;
+    const e=spawnEnemy(keys[k],x,z,lv[1],{agg:1,minion:1});if(e){e.agg=1;e.hunt=1;e.dg165r=1;burst(gY(V(x,0,z),.3),0x3a3026,24,2,3,.8);dg165Snd('gasp',.6,.8)}}catch(err){console.warn('v165 risen',err)}},350+k*420);
+  setTimeout(()=>say('☠ Not the Keeper. Something else was sleeping in '+o.name+'’s grave…'),500)}
+// ---------------- prompts at the graves ----------------
+function dg165GPrompt(){if(!dg165GIn()||!DG165GR.S)return null;const P=pl.position;if(DG165GR.dig){const D=DG165GR.dig;return {label:'⛏ Digging… '+Math.round(D.t/D.need*100)+'%',fn:()=>{DG165GR.dig=null}}}
+  let best=null,bd=2.7;for(const G of DG165GR.S.gr){const o=G.o,d=Math.hypot(P.x-o.x-Math.sin(o.ry)*1.3,P.z-o.z-Math.cos(o.ry)*1.3);if(d<bd){bd=d;best=G}}
+  if(!best)return null;const G=best,o=G.o,keep=o.i===DG165G.K;
+  if(keep&&dg165GDone()){if(dg165SDone()){const N=INSL[21];return {label:'F · Take the stair down to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
+    return {label:'F · Descend into the Hidden Sanctum',fn:()=>{try{dg165SEnter()}catch(e){console.error('v165 sanctum enter',e)}}}}
+  if(!keep&&DG165Q.g.bad[o.i])return {label:'🪦 The grave of '+o.name+' · dug open, empty now',fn:()=>dg165GCard(G)};
+  const seen=DG165Q.g.ex[o.i],open=DG165.card&&Math.abs(DG165.card.x-o.x)<.01&&Math.abs(DG165.card.z-o.z)<.01;
+  if(!seen||!open)return {label:'F · Read the grave'+(seen?' of '+o.name:''),fn:()=>{DG165Q.g.ex[o.i]=1;dg165GCard(G);dg165Snd('whisper',.4,.9+Math.random()*.2)}};
+  if(DG165Q.g.st<1)return {label:'🪦 You have nothing to dig with · the gravedigger’s spade lies by the angel at the road’s end',fn:()=>dg165GCard(G)};
+  return {label:'F · Dig up the grave of '+o.name,fn:()=>dg165DigStart(G)}}
+{const f=worldPrompt;worldPrompt=function(){try{const r=dg165GPrompt();if(r)return r}catch(e){if(!DG165GR.err++)console.warn('v165 grave prompt',e)}return f.apply(this,arguments)}}
+// ---------------- the angel at the road's end (it replaces the gateway to II) ----------------
+sp152Gate('sanctum',{ig:20,r:3.4,build:dg165AngelModel,
+  prompt(s){if(dg165SDone()){const N=INSL[21];return {label:'F · Travel on to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
+    return {label:'F · Read the weeping angel',fn:()=>{const first=DG165Q.g.st<1;DG165Q.g.st=Math.max(1,DG165Q.g.st);dg165AngelCard(s);dg165Snd('choir',.6,.9);
+      if(first){try{pickup({ic:'⛏',t:'Gravedigger’s Spade',col:'#cfe8dc',sub:'Dig up the Keeper’s grave'})}catch(_){}setTimeout(()=>say('🕯 Read the graves along the road. Only one has all three marks.'),3500)}}}}});
+// a dead risen from a wrong grave gives little (the graves are not a farm)
+{const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return e&&e.dg165r?k*.35:k}}
+{const f=lootE;lootE=function(e){if(e&&e.dg165r&&Math.random()>=.3)return;return f.apply(this,arguments)}}
+// ---------------- the tracker ----------------
+SP152.trk.dirgeI=I=>{if(I.g!==20||dg165SDone())return null;const n=DG165Q.g.ex.filter(Boolean).length,N=dg165GravePlan().G.length;
+  if(dg165GDone())return {name:'The Keeper’s Grave',lines:[['The stair beneath the Keeper’s grave'],['Descend into the Hidden Sanctum']]};
+  if(DG165Q.g.st<1)return {name:'The Keeper’s Grave',lines:[['Follow the road to its end'],['Read the weeping angel'],['Graves read',n+'/'+N]]};
+  return {name:'The Keeper’s Grave',lines:[['Find the Keeper’s grave'],['A broken stone · a raven · undying candles',null,1],['Graves read',n+'/'+N]]}};
+// ---------------- the minimap: graves you have read ----------------
+function dg165GMarks(g,P,k){if(!dg165GIn())return;dg165GravePlan().G.forEach((o,i)=>{const seen=DG165Q.g.ex[i],keep=i===DG165G.K&&dg165GDone();if(!seen&&!keep)return;const q=P(o.x,o.z);if(!q)return;
+  g.save();g.translate(q[0],q[1]);g.scale(k,k);const c=keep?'#7affb0':DG165Q.g.bad[i]?'#6a5a4a':'#c8ccc4';g.fillStyle='#141618';g.fillRect(-3.4,-4.4,6.8,8.8);g.strokeStyle=c;g.lineWidth=1.4/k;
+  g.beginPath();g.moveTo(0,-3.4);g.lineTo(0,3.4);g.moveTo(-2.2,-1.2);g.lineTo(2.2,-1.2);g.stroke();g.restore()})}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{dg165GMarks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}
+// ================= v165 The Hidden Sanctum — models =================
+// The Sanctum is built from instanced stone: flagstones on every floor tile, ashlar courses along every wall, skull rows in the
+// ossuary walls. Traps and puzzle pieces are groups of their own (they move). Everything is made once, the first time you go down.
+var DG165SM={c:{st:0x4a4a4c,st2:0x3c3c40,st3:0x5a5854,moss:0x2e3a2c,iron:0x26282c,rust:0x5a3420,bone:0xb8b098,bone2:0x8a8270,wood:0x2e2418,blood:0x3a0a0a}};
+function dg165SAt(I,u,v){return [I.x0+u,I.y0+v]}
+// flagstones on every floor tile (the chasm's bridge has its own slabs)
+function dg165SFloor(I){const C=dg165SCfg(),R=svRng(5150),w=I.w,h=I.h,ok=new Uint8Array(w*h),kind=new Array(w*h),L=[];
+  for(let v=0;v<h;v++)for(let u=0;u<w;u++){const k=dg165SanFloor(u+.5,v+.5);if(k&&k!='pit'&&k!='bridge'){ok[v*w+u]=1;kind[v*w+u]=k}}
+  // greedy: each free tile starts a slab of a random size that still fits on free floor tiles of the same hall
+  for(let v=0;v<h;v++)for(let u=0;u<w;u++){const i=v*w+u;if(ok[i]!==1)continue;const k=kind[i],r=R();let sw=1,sh=1;
+    const free=(a,b)=>a<w&&b<h&&ok[b*w+a]===1&&kind[b*w+a]===k;
+    if(r<.3&&free(u+1,v)&&free(u,v+1)&&free(u+1,v+1)){sw=2;sh=2}else if(r<.55&&free(u+1,v))sw=2;else if(r<.75&&free(u,v+1))sh=2;
+    for(let a=0;a<sw;a++)for(let b=0;b<sh;b++)ok[(v+b)*w+u+a]=2;L.push([u+(sw-1)/2,v+(sh-1)/2,sw,sh,k])}
+  const g=new THREE.BoxGeometry(1,.2,1),m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95,metalness:0,flatShading:true}),M=new THREE.InstancedMesh(g,m,L.length),o=new THREE.Object3D(),c=new THREE.Color();
+  L.forEach(([u,v,sw,sh,k],i)=>{const r=R(),[x,z]=dg165SAt(I,u,v);o.position.set(x,C.F0-.08+(R()-.5)*.05,z);o.rotation.set((R()-.5)*.035,(R()-.5)*.05,(R()-.5)*.035);o.scale.set(sw-.05-R()*.04,1,sh-.05-R()*.04);o.updateMatrix();M.setMatrixAt(i,o.matrix);
+    const b=k=='tomb'||k=='gal'?.24:.27;c.setRGB(b+r*.07,b+r*.07+.008,b+r*.06+.012);if(R()<.14)c.lerp(new THREE.Color(DG165SM.c.moss),.45);if(R()<.05)c.multiplyScalar(.55);M.setColorAt(i,c)});
+  M.instanceMatrix.needsUpdate=true;if(M.instanceColor)M.instanceColor.needsUpdate=true;M.receiveShadow=true;M.frustumCulled=false;return M}
+// ashlar courses along every wall: each floor tile next to rock gets a column of blocks on that side (courses of mixed heights,
+// one long block or two short ones, a few fallen out), buttresses every few tiles, a cornice along the top, skulls in the ossuary
+function dg165SWalls(I){const C=dg165SCfg(),L=[],sk=[],R=svRng(5151);
+  const fl=(u,v)=>{const k=dg165SanFloor(u+.5,v+.5);return k&&k!='pit'?k:k=='pit'?'pit':null};
+  const CH=[.5,.62,.74];
+  for(let v=0;v<I.h;v++)for(let u=0;u<I.w;u++){const k=fl(u,v);if(!k||k=='pit'||k=='bridge')continue;
+    for(const [du,dv] of [[1,0],[-1,0],[0,1],[0,-1]]){const n=fl(u+du,v+dv);if(n)continue;const ossu=k=='gal'||k=='tomb',bx=I.x0+u+du*.75,bz=I.y0+v+dv*.75;
+      let y=C.F0,c=0;while(y<C.F0+4.3){const hgt=CH[(R()*3)|0],two=R()<.45,n2=two?2:1;
+        for(let b=0;b<n2;b++){if(R()<.035&&c>1)continue;const t=n2==1?0:(b?.25:-.25)+(R()-.5)*.04,len=(n2==1?.98:.48)-R()*.03;
+          L.push([bx+(dv?t:0)+du*(R()-.5)*.06,y+hgt/2,bz+(du?t:0)+dv*(R()-.5)*.06,du?.5:len,hgt*.95,du?len:.5,R(),ossu?1:0]);
+          if(ossu&&c>=1&&y<C.F0+3.2&&R()<.85)sk.push([I.x0+u+du*.45+(dv?t:0),y+hgt/2,I.y0+v+dv*.45+(du?t:0),Math.atan2(-du,-dv),n2])}
+        y+=hgt;c++}
+      // the cornice and, every few tiles, a buttress
+      L.push([bx-du*.08,C.F0+4.45,bz-dv*.08,du?.75:1.02,.28,du?1.02:.75,.3,2]);
+      if(((u*31+v*17)%5)==0){L.push([I.x0+u+du*.42,C.F0+2.2,I.y0+v+dv*.42,du?.36:.7,4.4,du?.7:.36,.5,3]);L.push([I.x0+u+du*.38,C.F0+.25,I.y0+v+dv*.38,du?.5:.86,.5,du?.86:.5,.6,3])}}}
+  const g=new THREE.BoxGeometry(1,1,1),m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.92,flatShading:true}),M=new THREE.InstancedMesh(g,m,L.length),o=new THREE.Object3D(),c=new THREE.Color();
+  L.forEach((q,i)=>{o.position.set(q[0],q[1],q[2]);o.rotation.set((R()-.5)*.03,(R()-.5)*.04,(R()-.5)*.03);o.scale.set(q[3],q[4],q[5]);o.updateMatrix();M.setMatrixAt(i,o.matrix);
+    const b=q[7]==1?.2:q[7]==2?.17:q[7]==3?.23:.22,r=q[6];c.setRGB(b+r*.07,b+r*.065,b+r*.055);if(r<.1&&q[7]<2)c.lerp(new THREE.Color(DG165SM.c.moss),.55);if(r>.96)c.multiplyScalar(.6);M.setColorAt(i,c)});
+  M.instanceMatrix.needsUpdate=true;if(M.instanceColor)M.instanceColor.needsUpdate=true;M.castShadow=false;M.receiveShadow=true;M.frustumCulled=false;
+  // skulls stacked in the ossuary walls, looking out from their niches, with dark eye sockets
+  const sg=new THREE.IcosahedronGeometry(.1,1);sg.scale(1,1.05,1.2);const sm=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.85,flatShading:true}),N=sk.reduce((a,q)=>a+(q[4]==1?3:2),0),S=new THREE.InstancedMesh(sg,sm,N);
+  const eg=new THREE.SphereGeometry(.03,5,3),E=new THREE.InstancedMesh(eg,new THREE.MeshBasicMaterial({color:0x050404}),N*2);let n=0;
+  sk.forEach(q=>{const a=q[3],m2=q[4]==1?3:2,sp=q[4]==1?.3:.22;for(let j=0;j<m2;j++){const lt=(j-(m2-1)/2)*sp,x=q[0]+Math.cos(a)*lt,z=q[2]-Math.sin(a)*lt,y=q[1]+(R()-.5)*.08,ry=a+(R()-.5)*.6,s=.85+R()*.3;
+    o.position.set(x,y,z);o.rotation.set((R()-.5)*.35,ry,(R()-.5)*.25);o.scale.setScalar(s);o.updateMatrix();S.setMatrixAt(n,o.matrix);const r=R();c.setRGB(.42+r*.12,.38+r*.1,.3+r*.08);S.setColorAt(n,c);
+    for(let e=0;e<2;e++){const ex=(e?.034:-.034)*s,fx=Math.sin(ry)*.105*s,fz=Math.cos(ry)*.105*s;o.position.set(x+Math.cos(ry)*ex+fx,y+.012*s,z-Math.sin(ry)*ex+fz);o.rotation.set(0,0,0);o.scale.setScalar(s);o.updateMatrix();E.setMatrixAt(n*2+e,o.matrix)}n++}});
+  [S,E].forEach(q=>{q.instanceMatrix.needsUpdate=true;if(q.instanceColor)q.instanceColor.needsUpdate=true;q.frustumCulled=false});
+  return [M,S,E]}
+// a brazier on a tripod of iron (its fire is a flame sprite added by the builder at local y 1.25)
+function dg165BrazierKit(k){const C=DG165SM.c;for(let i=0;i<3;i++){const a=i/3*6.283;k.L('','m',C.iron,[Math.cos(a)*.42,0,Math.sin(a)*.42],[Math.cos(a)*.22,1.0,Math.sin(a)*.22],.035,.03,4)}
+  k.p('','cyl','m',C.iron,0,1.08,0,.42,.22,.42);k.p('','ring','m',C.rust,0,1.18,0,.44,.5,.44);for(let i=0;i<6;i++)k.p('','dod','c',i%2?0x2a1408:0x5a2a10,(Math.random()-.5)*.4,1.2,(Math.random()-.5)*.4,.1,.07,.1);k.p('','sph','g',0xff8a30,0,1.2,0,.22,.06,.22)}
+// ---------------- trap and puzzle pieces ----------------
+// a pendulum: beam across the corridor, a long iron arm, a great crescent blade (pivot at the group's origin, swings round local z)
+function dg165Pendulum(){const g=new THREE.Group(),C=DG165SM.c;
+  g.add(lgGroup('DG165|pbeam',k=>{k.p('','box','c',C.wood,0,0,0,8.6,.5,.6);[-1,1].forEach(s=>k.p('','box','m',C.iron,s*3.9,0,0,.18,.6,.7));k.p('','cyl','m',C.iron,0,0,0,.16,.9,.16,Math.PI/2,0,0)},0));
+  const arm=new THREE.Group();g.add(arm);g.userData.arm=arm;
+  arm.add(lgGroup('DG165|parm',k=>{k.L('','m',C.iron,[0,0,0],[0,-6.6,0],.07,.06,6);for(let i=0;i<4;i++)k.p('','ring','m',C.rust,0,-1.2-i*1.4,0,.1,.5,.1);
+    // the blade: a crescent of dark iron with a bright edge, notched and stained
+    const sh=new THREE.Shape();sh.moveTo(-1.5,.2);sh.quadraticCurveTo(0,-.55,1.5,.2);sh.quadraticCurveTo(0,-1.25,-1.5,.2);
+    const bg=new THREE.ExtrudeGeometry(sh,{depth:.06,bevelEnabled:true,bevelThickness:.03,bevelSize:.04,bevelSegments:1,curveSegments:10});bg.translate(0,0,-.03);
+    k.p('',bg,'m',0x3a3c42,0,-6.5,0,1,1,1);k.p('','box','m',C.iron,0,-6.55,0,.5,.4,.14);k.p('','sph','m',C.rust,0,-6.5,0,.16);
+    for(let i=0;i<5;i++)k.p('','box','c',C.blood,-1+i*.5,-7.05+Math.abs(i-2)*.12,.05,.18,.06,.01)},0));
+  return g}
+// one spike trap cell (2×2 tiles): an iron grate plate; the spikes are a separate group that rises
+function dg165SpikePlateKit(k){const C=DG165SM.c;k.p('','box','m',0x2a2c30,0,.02,0,1.92,.06,1.92);for(let i=0;i<4;i++)for(let j=0;j<4;j++)k.p('','box','c',0x0a0a0a,-.72+i*.48,.055,-.72+j*.48,.16,.01,.16)}
+function dg165SpikesGeo(){return svG('dg165spk',()=>{const parts=[];const R=svRng(77);for(let i=0;i<4;i++)for(let j=0;j<4;j++){const c=new THREE.ConeGeometry(.07,.95+R()*.2,5);c.translate(-.72+i*.48,.48,-.72+j*.48);parts.push(c.toNonIndexed())}
+  return svMergeGeo(parts)})}
+function svMergeGeo(L){let n=0;L.forEach(g=>n+=g.attributes.position.count);const pos=new Float32Array(n*3);let j=0;L.forEach(g=>{pos.set(g.attributes.position.array,j);j+=g.attributes.position.array.length;g.dispose()});
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(pos,3));G.computeVertexNormals();return G}
+// a fire-breathing skull set into a wall (local +z points out of the wall)
+function dg165NozzleKit(k){const C=DG165SM.c;k.p('','box','c',C.st2,0,0,-.15,.9,.9,.3);k.p('','sph','c',C.bone2,0,.05,.05,.32,.34,.3);k.p('','box','c',C.bone2,0,-.18,.12,.24,.14,.2);
+  [-1,1].forEach(s=>k.p('','sph','c',0x080606,s*.12,.1,.28,.08,.08,.05));k.p('','box','c',0x080404,0,-.12,.26,.18,.1,.06);k.p('','box','c',0x1a1008,0,-.02,.33,.04,.02,.02)}
+function dg165Portcullis(w,h){const g=new THREE.Group(),C=DG165SM.c;g.add(lgGroup('DG165|pc'+w,k=>{const n=Math.round(w/.42);for(let i=0;i<=n;i++){const x=-w/2+i*w/n;k.L('','m',C.iron,[x,0,0],[x,h,0],.045,.045,5);k.p('','cone4','m',C.rust,x,-.12,0,.06,.24,.06,Math.PI)}
+  for(let j=0;j<6;j++)k.L('','m',C.rust,[-w/2,.3+j*h/6,0],[w/2,.3+j*h/6,0],.04,.04,4)},0));return g}
+function dg165PlateKit(k){k.p('','box','c',0x3a3a3e,0,.02,0,1.6,.05,1.6);k.p('','box','m',0x5a4a2a,0,.06,0,1.2,.06,1.2);k.p('','box','c',0x0a0a0a,0,.1,0,.8,.01,.8);
+  for(let i=0;i<4;i++)k.p('','box','m',0x8a6a2a,Math.cos(i*Math.PI/2)*.42,.1,Math.sin(i*Math.PI/2)*.42,.14,.02,.14,0,Math.PI/4,0)}
+// a chasm slab: a 2×2 stone block on a rough pillar of rock that drops into the dark
+function dg165SlabKit(k,i){const R=svRng(600+i),C=DG165SM.c;k.p('','box','c',lgCol(C.st,C.st3,R()),0,-.2,0,1.9,.42,1.9,(R()-.5)*.03,(R()-.5)*.1,(R()-.5)*.03);
+  for(let j=0;j<4;j++)k.p('','dod','c',lgCol(C.st2,0x201e1c,j/4),(R()-.5)*.8,-.9-j*1.6,(R()-.5)*.8,.75-j*.12,1.1,.75-j*.12,R(),R(),R());
+  for(let j=0;j<3;j++)k.p('','box','c',0x161616,(R()-.5)*1.2,.02,(R()-.5)*1.2,.5+R()*.4,.01,.03,0,R()*3,0)}
+// the closing wall: a slab of black stone bristling with iron spikes (local +x is the side that faces the room)
+function dg165CWallKit(k,len){const C=DG165SM.c,R=svRng(91);k.p('','box','c',0x2a2a2e,0,2.1,0,1.0,4.2,len);for(let i=0;i<Math.floor(len/1.2);i++)for(let j=0;j<3;j++){const z=-len/2+.6+i*1.2+(j%2)*.6,y=.7+j*1.3;
+  k.p('','cone4','m',lgCol(C.iron,C.rust,R()*.6),.75,y,z,.09,.6,.09,0,0,-Math.PI/2)}for(let i=0;i<6;i++)k.p('','box','m',C.rust,.52,.3+i*.7,0,.06,.08,len)}
+// a weeping knight statue on a turntable (its sword points where it faces: local +z)
+function dg165StatueKit(k){const C=DG165SM.c,s=0x68665e,s2=0x55534c;k.p('','cyl','c',s2,0,.18,0,.95,.36,.95);k.p('','cyl','m',0x4a3a22,0,.38,0,.85,.06,.85);
+  k.p('','box','c',s,0,.75,0,.7,.7,.7);k.p('','skirt','c',s,0,1.4,0,.5,.8,.45);k.p('','box','c',s,0,2.1,0,.62,.7,.4);k.p('','sph','c',s,0,2.62,-.02,.2,.24,.22,-.5,0,0);
+  k.p('','hood','c',s2,0,2.66,-.02,.26,.3,.28,-.4,0,0);[-1,1].forEach(sd=>{k.L('','c',s,[sd*.36,2.35,0],[sd*.2,2.0,.3],.09,.08,5);k.p('','box','c',s,sd*.4,2.38,0,.22,.16,.28)});
+  // the sword held point-down before it, and stone tears on its face
+  k.L('','m',0x7a7a80,[0,2.0,.42],[0,.95,.48],.04,.03,4);k.p('','box','m',0x6a6a70,0,1.98,.42,.42,.05,.08);k.p('','sph','m',0x6a6a70,0,2.12,.42,.06);
+  [-1,1].forEach(sd=>k.p('','box','c',0x2a2a2a,sd*.07,2.55,.17,.02,.14,.01));k.p('','box','g',0x8affc8,0,2.66,.17,.14,.03,.01)}
+function dg165AltarKit(k){const C=DG165SM.c;k.p('','box','c',0x3a3a3e,0,.3,0,2.4,.6,1.6);k.p('','box','c',0x4a4a4e,0,.75,0,2.1,.3,1.3);k.p('','box','c',C.blood,0,.92,0,1.6,.02,.9);
+  [-1,1].forEach(s=>{k.p('','sph','c',C.bone,s*.8,1.05,0,.16,.18,.2);dg165Candle(k,s*.5,.9,.4,.22);dg165Candle(k,s*.6,.9,-.35,.16)});for(let i=0;i<4;i++)k.p('','box','c',0x1a1a1c,-.9+i*.6,.4,.81,.3,.3,.02)}
+function dg165SconceKit(k){const C=DG165SM.c;k.p('','box','m',C.iron,0,0,-.08,.12,.4,.06);k.L('','m',C.iron,[0,0,-.06],[0,.12,.24],.03,.03,4);k.p('','cyl','m',C.iron,0,.16,.27,.1,.12,.1);k.p('','cyl','c',0x2a1a10,0,.24,.27,.06,.1,.06)}
+function dg165SarcKit(k,lid){const C=DG165SM.c,s=0x4e4c48;k.p('','box','c',s,0,.45,0,1.3,.9,2.6);k.p('','box','c',0x3a3834,0,.06,0,1.5,.12,2.8);for(let i=0;i<3;i++)k.p('','box','c',0x2a2826,0,.5,-.9+i*.9,1.32,.5,.06);
+  if(lid){k.p('','box','c',lgCol(s,0x6a6860,.3),0,.98,0,1.36,.16,2.66);k.p('','sph','c',0x5a5850,0,1.2,-.8,.3,.22,.32);k.p('','box','c',0x5a5850,0,1.12,.1,.5,.14,1.3);
+    [-1,1].forEach(sd=>k.L('','c',0x5a5850,[sd*.2,1.15,-.3],[sd*.05,1.2,.2],.07,.06,5))}}
+// rubble, bones and other clutter for the floors
+function dg165ClutterKit(k,R,kind,x,y,z){const C=DG165SM.c;
+  if(kind=='bones'){for(let i=0;i<6;i++)k.L('','c',lgCol(C.bone,C.bone2,R()),[x+(R()-.5)*.8,y+.04,z+(R()-.5)*.8],[x+(R()-.5)*.8,y+.05,z+(R()-.5)*.8],.03,.025,4);k.p('','sph','c',C.bone,x+(R()-.5)*.4,y+.12,z+(R()-.5)*.4,.13,.14,.16,R(),R(),R())}
+  else if(kind=='rubble'){for(let i=0;i<7;i++)k.p('','dod','c',lgCol(C.st,C.st2,R()),x+(R()-.5)*1.6,y+.08,z+(R()-.5)*1.6,.15+R()*.25,.12+R()*.2,.15+R()*.25,R()*3,R()*3,R()*3)}
+  else if(kind=='skeleton'){// a sprawled dead adventurer
+    k.p('','sph','c',C.bone,x,y+.12,z,.13,.14,.16);for(let i=0;i<5;i++)k.p('','ring','c',C.bone2,x,y+.08,z+.25+i*.09,.14,.3,.07,0,0,Math.PI/2);k.L('','c',C.bone,[x,y+.06,z+.2],[x,y+.06,z+.8],.025,.025,4);
+    [-1,1].forEach(s=>{k.L('','c',C.bone,[x+s*.12,y+.06,z+.3],[x+s*.45,y+.04,z+.15],.02,.02,4);k.L('','c',C.bone,[x+s*.08,y+.06,z+.8],[x+s*.2,y+.04,z+1.4],.025,.02,4)});
+    k.p('','box','c',0x2a2018,x+.3,y+.05,z+.6,.4,.06,.3,0,R(),0)}
+  else if(kind=='coffin'){k.p('','box','c',C.wood,x,y+.2,z,.7,.36,1.8,0,R()*.4,0);k.p('','box','c',lgCol(C.wood,0,.3),x+.3,y+.1,z+.2,.7,.06,1.8,.2,R()*.6+.4,.3)}
+  else if(kind=='urns'){for(let i=0;i<3;i++){const a=R()*6.28,r=R()*.6;k.p('','sph','c',lgCol(0x4a3a2a,0x2a2018,R()),x+Math.cos(a)*r,y+.25,z+Math.sin(a)*r,.18,.28,.18)}}
+  else if(kind=='chains'){const h=2.2+R()*1.2;for(let i=0;i<10;i++)k.p('','ring','m',i%2?C.iron:C.rust,x,y+3.9-i*h/10,z,.05,.5,.05,i%2?Math.PI/2:0,0,0);k.p('','cone4','m',C.iron,x,y+3.85-h,z,.06,.18,.06,Math.PI)}
+  else if(kind=='cage'){const y0=y+1.8+R()*.8;for(let i=0;i<8;i++){const a=i/8*6.283;k.L('','m',C.iron,[x+Math.cos(a)*.42,y0,z+Math.sin(a)*.42],[x+Math.cos(a)*.42,y0+1.4,z+Math.sin(a)*.42],.02,.02,3)}
+    [0,1.4].forEach(d=>k.p('','ring','m',C.rust,x,y0+d,z,.44,.4,.44));k.L('','m',C.iron,[x,y0+1.4,z],[x,y+4.2,z],.02,.02,3);k.p('','sph','c',C.bone,x,y0+.2,z,.13,.14,.16);k.L('','c',C.bone,[x,y0+.2,z],[x+.1,y0+.9,z],.03,.03,4)}
+  else if(kind=='web'){const s=.9+R()*.8;for(let i=0;i<7;i++){const a=i/7*Math.PI*.5;k.L('','c',0xb8b8b0,[x,y,z],[x+Math.cos(a)*s,y-Math.sin(a)*s,z],.005,.004,3)}for(let j=1;j<4;j++)for(let i=0;i<6;i++){const a=i/7*Math.PI*.5,b=(i+1)/7*Math.PI*.5,r=s*j/4;
+    k.L('','c',0x9a9a92,[x+Math.cos(a)*r,y-Math.sin(a)*r,z],[x+Math.cos(b)*r,y-Math.sin(b)*r,z],.004,.004,3)}}}
+// the flooded stair at the bottom of the Keeper's Tomb: steps going down into green-lit black water
+function dg165FloodStairKit(k){const C=DG165SM.c;for(let i=0;i<8;i++)k.p('','box','c',lgCol(0x3e3e42,0x1a2420,i/8),0,-.15-i*.3,-i*.45,2.6,.3,.45);
+  [-1,1].forEach(s=>{k.p('','box','c',C.st2,s*1.5,.6,-1.6,.4,1.6,3.8);k.p('','box','c',C.st,s*1.5,1.5,-1.6,.5,.2,3.9)});k.p('','box','c',C.st2,0,1.9,-3.4,3.4,.5,.5);
+  k.p('','box','c',0x1a3a32,0,-1.0,-2.0,2.6,.02,3);for(let i=0;i<5;i++)k.p('','sph','c',C.bone,(i-2)*.4,-.98,-1.2-i*.3,.1,.05,.12)}
+// ================= v165 The Hidden Sanctum — the level =================
+// Beneath the Keeper's grave (3262) a stair goes down into the Low Sanctum, built to keep intruders from the Drowned Crypts below.
+// It is played once: through the Keeper's Tomb at its bottom you come out in The Dirge II, and from then on the grave's stair
+// leads straight there. Halls, in order (plan dg165SanPlan, 3260; local u/v, world = I.x0+u-.5, I.y0+v-.5):
+//  1 The Stair Hall           arrival; the stair back up to the graveyard.
+//  2 The Hall of Pendulums    five crescent blades sweep across a narrow hall at their own pace: time each one.
+//  3 The Spike Hall           the floor's spike plates rise in bands that roll toward you (a red glow just before they rise).
+//  4 The Antechamber + Fire Walk   a pressure plate lifts the portcullis at the far end of a corridor of fire-breathing skulls for
+//                             DG165SP.gateT seconds: run it before the gate drops again (timed).
+//  5 The Chasm                a bridge of slabs over a black drop; each slab cracks under your feet and falls a moment later.
+//                             Falling costs health and puts you back at the chasm's edge with the bridge whole again.
+//  6 The Closing Walls        the doors slam, spiked walls grind in from both sides; turn the four weeping knights to face the
+//                             altar before the walls meet (timed: DG165SP.cwT). The dead in the walls' niches climb out to stop you.
+//  7 The Ossuary Gallery      bones in the walls, cages overhead; something passes in the dark.
+//  8 The Keeper's Tomb        the flooded stair down: F · Descend into the Drowned Crypts.
+// Checkpoints at the start of halls 1, 3, 4, 5, 6, 7 (DG165Q.s.cp). Dying wakes you at the last checkpoint, healed; the hall you
+// died in starts over. Inside: companions wait above, no mount, no recall (the stair back up is in the first hall).
+var DG165S={S:null,err:0,fall:null,cw:null,gate:null,scare:{},hT:0};
+var DG165SP={amp:.62,armL:6.5,pivot:7.6,spkStep:.62,spkWarn:.36,jetPer:2.9,jetOn:1.25,gateT:16,cwT:42,cwEnd:4.6,cwStart:20,slabT:.75,fallT:1.1};
+function dg165SIn(){return sp152Here('sanctum')}
+function dg165SI(){return sp152I('sanctum')}
+function dg165SW(u,v){const I=dg165SI();return [I.x0+u-.5,I.y0+v-.5]}
+function dg165SL(x,z){const I=dg165SI();return [x-I.x0+.5,z-I.y0+.5]}
+function dg165SY(){return dg165SCfg().F0}
+// ---------------- building it ----------------
+function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanPlan(),F0=dg165SY(),root=new THREE.Group();root.name='Sanctum';scene.add(root);
+  const S={I,P,root,spots:[],fl:[],pend:[],jets:[],slabs:[],statues:[],t:0};DG165S.S=S;
+  const at=(u,v,y)=>{const [x,z]=dg165SW(u,v);return [x,y==null?F0:y,z]},put=(o,u,v,ry,y)=>{const q=at(u,v,y);o.position.set(q[0],q[1],q[2]);o.rotation.y=ry||0;root.add(o);return o};
+  root.add(dg165SFloor(I));dg165SWalls(I).forEach(m=>root.add(m));
+  // sconces along the walls: every few tiles on alternate sides of each hall
+  const R=svRng(5300),sc=[];const wallAt=(u,v,du,dv)=>{const k=dg165SanFloor(u+.5,v+.5),n=dg165SanFloor(u+du+.5,v+dv+.5);return k&&k!='pit'&&k!='bridge'&&!n};
+  for(let v=0;v<I.h;v+=1)for(let u=0;u<I.w;u+=1)for(const [du,dv] of [[1,0],[-1,0],[0,1],[0,-1]])if(wallAt(u,v,du,dv)&&((u*7+v*13+(du+2)*5+(dv+2)*3)%11)==0)sc.push([u,v,du,dv]);
+  const scK=lgGroup('DG165|sconce',dg165SconceKit,0);
+  sc.forEach(([u,v,du,dv])=>{const g=scK.clone();const q=at(u+.5+du*.47,v+.5+dv*.47,F0+2.4);g.position.set(q[0],q[1],q[2]);g.rotation.y=Math.atan2(-du,-dv);root.add(g);
+    const fx=q[0]-du*.27,fz=q[2]-dv*.27,f=dg165Flame(root,fx,q[1]+.42,fz,.34,0xffa040);S.fl.push(f);S.spots.push({x:fx,y:q[1]+.6,z:fz,c:0xffa050,i:2.0,r:11,ph:R()*6})});
+  // braziers in the corners of the big halls, soul lights over the chasm
+  const brK=lgGroup('DG165|brazier',dg165BrazierKit,0);[[60,80],[100,80],[60,108],[100,108],[70,10],[90,10],[70,28],[90,28],[60,162],[68,162],[88,212],[96,212],[89,216],[95,216],[89,248.4],[95,248.4],[78,288],[106,288],[78,318],[106,318]].forEach(([u,v])=>{const g=brK.clone();put(g,u,v,0);const q=at(u,v);const f=dg165Flame(root,q[0],q[1]+1.32,q[2],.55,0xff9a40);S.fl.push(f);S.spots.push({x:q[0],y:q[1]+1.9,z:q[2],c:0xff9040,i:2.4,r:13,ph:R()*6});const [x,z]=dg165SW(u,v);CBLK.add(Math.round(z)*W+Math.round(x))});
+  [[64,170],[78,183],[80,195],[90,203]].forEach(([u,v])=>{const q=at(u,v,dg165SY()+3.2);const f=kqSpr(0x7affc0,.7);f.position.set(q[0],q[1],q[2]);root.add(f);S.fl.push(f);S.spots.push({x:q[0],y:q[1],z:q[2],c:0x6affb0,i:1.6,r:12,fq:1.3,ph:R()*6})});
+  // clutter: bones, rubble, coffins, urns, skeletons, cobwebs, chains and cages, per hall
+  const D=[],add=(kind,u,v)=>D.push([kind,u,v]);
+  for(let i=0;i<180;i++){const u=40+R()*72,v=8+R()*312,k=dg165SanFloor(u,v);if(!k||k=='pit'||k=='bridge'||k=='spike'||k=='pend'||k=='flame'||k=='walls')continue;
+    const near=(du,dv)=>!dg165SanFloor(u+du,v+dv);const edge=near(1.6,0)||near(-1.6,0)||near(0,1.6)||near(0,-1.6);if(!edge&&k!='tomb'&&k!='entry')continue;
+    add(['bones','rubble','bones','urns','coffin','skeleton','rubble'][(R()*7)|0],u,v)}
+  [[70,10],[90,10],[69,28],[91,28]].forEach(q=>add('web',q[0],q[1]));[[78,32],[82,76]].forEach(q=>add('web',q[0],q[1]));[[59,80],[101,80],[59,108],[101,108]].forEach(q=>add('web',q[0],q[1]));
+  for(let v=254;v<284;v+=6)add('cage',89.5+((v/6)%2)*5,v);for(let v=252;v<286;v+=4)add('chains',v%8?89:95,v);[[80,296],[104,296],[80,312],[104,312]].forEach(q=>add('coffin',q[0],q[1]));
+  root.add(lgGroup('DG165|sclutter',k=>{const RR=svRng(5301);D.forEach(([kind,u,v])=>{const [x,y,z]=at(u,v);dg165ClutterKit(k,RR,kind,x,y,z)})},0));
+  // the stair back up (north wall of the Stair Hall)
+  S.up=put(lgGroup('DG165|supstair',k=>{for(let i=0;i<7;i++)k.p('','box','c',lgCol(0x4a4a4e,0x1a1a1c,i/7),0,.1+i*.32,-i*.42,2.6,.3,.5);[-1,1].forEach(s=>k.p('','box','c',0x3a3a3e,s*1.45,1.4,-1.4,.3,2.8,3));
+    k.p('','box','c',0x050505,0,2.6,-3.2,2.6,2.4,.1);k.p('','box','c',0x3a3a3e,0,4.1,-1.4,3.2,.4,3.2)},0),80,9.6,0);
+  // the Hall of Pendulums: five blades on beams across the hall
+  const pK=dg165Pendulum;P.pend.forEach((q,i)=>{const g=pK();const w=at(80,q.v,F0+DG165SP.pivot);g.position.set(w[0],w[1],w[2]);root.add(g);S.pend.push({g,arm:g.userData.arm,q,th:0,u:80,v:q.v})});
+  // a corpse impaled on the third blade (it swings with it)
+  {const a=S.pend[2].arm;a.add(lgGroup('DG165|pcorpse',k=>{const C=DG165SM.c;k.p('','sph','c',C.bone,0,-5.5,.3,.16,.17,.18);k.p('','box','c',0x2a2018,0,-6.0,.3,.42,.6,.24);for(let i=0;i<4;i++)k.p('','ring','c',C.bone2,0,-5.85-i*.1,.32,.16,.3,.08,0,0,Math.PI/2);
+    [-1,1].forEach(s=>{k.L('','c',C.bone,[s*.2,-5.8,.3],[s*.5,-6.4,.3],.03,.025,4);k.L('','c',C.bone,[s*.1,-6.3,.3],[s*.18,-7.1,.3],.035,.03,4)})},0))}
+  // the Spike Hall: plates baked into one group, the spikes instanced, a warning glow instanced
+  {const Q=P.spk,cols=(Q.u1-Q.u0)/Q.cs,rows=(Q.v1-Q.v0)/Q.cs;S.spk={cols,rows,h:new Float32Array(cols*rows),up:new Uint8Array(cols*rows),k:-1};
+    root.add(lgGroup('DG165|splates',k=>{const kk=dkKit();dg165SpikePlateKit(kk);for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const [x,y,z]=at(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);kk.P.forEach(p=>{const m=p.m.clone();m.premultiply(new THREE.Matrix4().makeTranslation(x,y,z));k.P.push(Object.assign({},p,{m}))})}},0));
+    const mat=new THREE.MeshStandardMaterial({color:0xc8ccd4,metalness:.15,roughness:.45,flatShading:true}),M=new THREE.InstancedMesh(dg165SpikesGeo(),mat,cols*rows);M.frustumCulled=false;root.add(M);S.spk.M=M;
+    const gm=new THREE.MeshBasicMaterial({color:0xff3010,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),GM=new THREE.InstancedMesh(new THREE.PlaneGeometry(1.8,1.8).rotateX(-Math.PI/2),gm,cols*rows);GM.frustumCulled=false;root.add(GM);S.spk.G=GM;
+    // three dead adventurers lie on the spikes as a warning
+    root.add(lgGroup('DG165|sskel',k=>{const RR=svRng(5310);[[64,90],[88,96],[96,86]].forEach(q=>{const [x,y,z]=at(q[0],q[1]);dg165ClutterKit(k,RR,'skeleton',x,y+.02,z)})},0))}
+  // the Antechamber's plate, the Fire Walk's skulls and the portcullis at its end
+  S.plate=put(lgGroup('DG165|plate',dg165PlateKit,0),P.plate[0],P.plate[1],0);
+  const nzK=lgGroup('DG165|nozzle',dg165NozzleKit,0);
+  P.jets.forEach((q,i)=>{const u=q.side<0?P.R.flame[0]+.05:P.R.flame[2]-.05,g=nzK.clone(),w=at(u,q.v,F0+1.15);g.position.set(w[0],w[1],w[2]);g.rotation.y=q.side<0?Math.PI/2:-Math.PI/2;root.add(g);
+    // the flame: three nested additive cones along the corridor's width (scaled by the tick)
+    const fl=new THREE.Group();fl.position.set(w[0],w[1],w[2]);fl.rotation.y=q.side<0?Math.PI/2:-Math.PI/2;root.add(fl);
+    [[0xff5010,.55,.85],[0xffa030,.38,.7],[0xfff0a0,.2,.6]].forEach(([c,r,o])=>{const m=new THREE.Mesh(svG('dg165fc'+r,()=>new THREE.ConeGeometry(r,6,10,1,true).rotateX(-Math.PI/2).translate(0,0,3.1)),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));fl.add(m)});
+    fl.scale.set(1,1,.001);S.jets.push({q,fl,u,on:0,x:w[0],z:w[2]});S.spots.push({x:w[0]+(q.side<0?1:-1)*2.8,y:F0+1.3,z:w[2],c:0xff7020,i:0,r:9,jet:i})});
+  {const G=P.gate,g=dg165Portcullis(G.u1-G.u0,4.2);put(g,(G.u0+G.u1)/2,G.v,0);S.gateM=g;S.gateY=F0}
+  // the Chasm: slabs, faint green ghost lights far below
+  P.bridge.forEach((q,i)=>{const g=put(lgGroup('DG165|slab'+(i%6),k=>dg165SlabKit(k,i%6),0),q[0],q[1],(i%4)*Math.PI/2);S.slabs.push({g,u:q[0],v:q[1],st:0,t:0,y0:F0,tiles:[]})});
+  S.slabs.forEach(s=>{for(let du=-1;du<1;du++)for(let dv=-1;dv<1;dv++){const [x,z]=dg165SW(s.u+du+.5,s.v+dv+.5);s.tiles.push(Math.round(z)*W+Math.round(x))}});
+  for(let i=0;i<14;i++){const [x,,z]=at(42+R()*60,162+R()*50);const f=kqSpr(0x3aff9a,.9+R());f.material=f.material.clone();f.material.opacity=.3;f.position.set(x,3+R()*6,z);root.add(f);S.fl.push(f)}
+  {const C=P.R.chasm,[x0,z0]=dg165SW(C[0],C[1]),[x1,z1]=dg165SW(C[2],C[3]);const m=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x1a6a4a,map:SPR,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));m.position.set((x0+x1)/2,dg165SCfg().pit+2.6,(z0+z1)/2);root.add(m);S.deep=m}
+  // the Closing Walls: two spiked walls, the two doors, four weeping knights round the altar
+  {const C=P.cw,len=C.doorS-C.doorN,wK=lgGroup('DG165|cwall',k=>dg165CWallKit(k,len),0);S.cwL=put(wK,C.mid-DG165SP.cwStart-.5,(C.doorN+C.doorS)/2,0);S.cwR=put(wK.clone(),C.mid+DG165SP.cwStart+.5,(C.doorN+C.doorS)/2,Math.PI);
+    S.cwL.visible=S.cwR.visible=false;
+    const dN=dg165Portcullis(12,4.2);put(dN,92,C.doorN-.15,0);S.doorN=dN;const dS=dg165Portcullis(8,4.2);put(dS,92,C.doorS,0);S.doorS=dS;
+    put(lgGroup('DG165|altar',dg165AltarKit,0),P.altar[0],P.altar[1],0);const sK=lgGroup('DG165|statue',dg165StatueKit,0);
+    P.statues.forEach((q,i)=>{const g=sK.clone();put(g,q[0],q[1],0);S.statues.push({g,u:q[0],v:q[1],f:0,want:i,yaw:0,anim:null})});
+    S.spots.push({x:at(92,232.5)[0],y:F0+1.6,z:at(92,232.5)[2],c:0x9affc8,i:1.2,r:12,fq:2})}
+  // the Keeper's Tomb: his sarcophagus (the lid slides), coffins along the walls, the flooded stair
+  {S.sarc=put(lgGroup('DG165|sarc',k=>dg165SarcKit(k,false),0),P.keeper[0],P.keeper[1],0);S.lid=put(lgGroup('DG165|lid',k=>dg165SarcKit(k,true),0),P.keeper[0],P.keeper[1],0);
+    S.stair=put(lgGroup('DG165|flood',dg165FloodStairKit,0),P.exit[0],P.exit[1]+1.4,Math.PI);
+    const wm=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x1a8a6a,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    const w=at(P.exit[0],P.exit[1]+2.6,F0-1.0);wm.position.set(w[0],w[1],w[2]);root.add(wm);S.water=wm;S.spots.push({x:w[0],y:F0,z:w[2],c:0x3affb0,i:1.6,r:9,fq:1.5})}
+  // the solid bits: altar, statues, sarcophagus
+  const blk=(u,v,r)=>{for(let du=-r;du<=r;du+=.5)for(let dv=-r;dv<=r;dv+=.5){if(du*du+dv*dv>r*r)continue;const [x,z]=dg165SW(u+du,v+dv);CBLK.add(Math.round(z)*W+Math.round(x))}};
+  blk(P.altar[0],P.altar[1],1.1);P.statues.forEach(q=>blk(q[0],q[1],.7));blk(P.keeper[0],P.keeper[1]-.8,.8);blk(P.keeper[0],P.keeper[1]+.6,.8);
+  S.pool=dg165LPool(10,11);dg165SDoors();return S}
+// the doors' tiles: blocked while shut
+function dg165SBlkRow(u0,u1,v,on){for(let u=u0;u<u1;u++){const [x,z]=dg165SW(u+.5,v+.5),k=Math.round(z)*W+Math.round(x);if(on)CBLK.add(k);else CBLK.delete(k)}}
+function dg165SDoors(){const S=DG165S.S;if(!S)return;const C=S.P.cw,cw=DG165S.cw,shutN=!!(cw&&cw.ph!='done'),shutS=!DG165Q.s.cw;
+  // the gate at the end of the Fire Walk
+  const G=S.P.gate,open=!!(DG165S.gate&&DG165S.gate.open)||DG165Q.s.cp>=3;dg165SBlkRow(G.u0,G.u1,Math.floor(G.v),!open);S.gateOpen=open;
+  dg165SBlkRow(86,98,C.doorN-1,shutN);dg165SBlkRow(88,96,C.doorS,shutS);S.shutN=shutN;S.shutS=shutS}
+// ---------------- each frame in the Sanctum ----------------
+function dg165STick(dt,now){const inS=dg165SIn();
+  if(!inS){const S=DG165S.S;if(S){S.root.visible=false;dg165LPoolTick(S.pool,S.spots,pl.position,0,false)}DG165S.fall=null;if(DG165S.cw&&DG165S.cw.ph=='run')dg165SCwReset();if(!DG165S.off){DG165S.off=1;dg165SHud()}return}
+  DG165S.off=0;const S=dg165SBuild(),P=S.P,t=now/1000,F0=dg165SY(),H=pl.position,[hu,hv]=dg165SL(H.x,H.z),room=dg165SanFloor(hu,hv);S.root.visible=true;S.t+=dt;
+  if(riding)try{dismount(true)}catch(_){}
+  // checkpoints
+  const cpAt=room=='spike'?1:room=='plate'||room=='flame'?2:(room=='ledge'&&hv<170)?3:room=='walls'&&hv>215.5?4:room=='gal'||room=='tomb'?5:0;
+  if(cpAt>DG165Q.s.cp){DG165Q.s.cp=cpAt;try{pickup({ic:'✦',t:'Checkpoint',col:'#9ae8c8',sub:P.CP[cpAt][3]})}catch(_){}dg165Co('scp',cpAt)}
+  // lights: the nearest sconces (the gallery's go out while something passes)
+  dg165LPoolTick(S.pool,S.spots,H,t,!(DG165S.scare.dark>now));dg165FlTick(S.fl,t);
+  const live=!(typeof AWD!='undefined'&&AWD.dead)&&!DG165S.fall;
+  dg165SPend(S,dt,t,hu,hv,live);dg165SSpikes(S,dt,t,hu,hv,live);dg165SJets(S,dt,t,hu,hv,live);dg165SGate(S,dt,now,hu,hv);dg165SChasm(S,dt,now,hu,hv,room);dg165SCw(S,dt,now,hu,hv,room);dg165SScares(S,dt,now,hu,hv);
+  if(S.water){S.water.material.opacity=.45+.12*Math.sin(t*1.7)}
+  if(now-DG165S.hT>120){DG165S.hT=now;dg165SHud()}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{dg165STick(dt,now)}catch(e){if(!DG165S.err++)console.error('v165 sanctum',e)}return r}}
+// the pendulums: each swings at its own pace; a blade near the bottom of its swing cuts whoever is in its path
+function dg165SPend(S,dt,t,hu,hv,live){const A=DG165SP.amp;for(const p of S.pend){const q=p.q,th=A*Math.sin(t*q.w+q.ph),w=A*q.w*Math.cos(t*q.w+q.ph);p.arm.rotation.z=th;
+    const bu=80+DG165SP.armL*Math.sin(th),by=DG165SP.pivot-DG165SP.armL*Math.cos(th);
+    if(Math.abs(th)<.12&&!p.wh&&Math.abs(hv-q.v)<9){p.wh=1;try{dg165Snd('scrape',.25,1.6);svSnd('whoosh',.35,.7)}catch(_){}}else if(Math.abs(th)>.3)p.wh=0;
+    if(live&&Math.abs(hv-q.v)<.62&&Math.abs(hu-bu)<1.25&&by<1.7&&Math.abs(w)>.4){if(dg165Hurt(.3,'SLASHED')){const d=hv<q.v?-1:1;pl.step={x:0,z:d,sp:7,t:.22};burst(gY(pl.position,1.1),0x8a0a0a,18,3,2,.5)}}}}
+// the spike hall: bands of raised spikes rolling toward the entrance; a red glow warns of the next row
+function dg165SSpikes(S,dt,t,hu,hv,live){const Q=S.P.spk,K=S.spk,st=DG165SP.spkStep,k=Math.floor(t/st),fr=t/st-k,warn=fr>1-DG165SP.spkWarn/st,F0=dg165SY(),o=dg165SSpikes.o||(dg165SSpikes.o=new THREE.Object3D());
+  const upAt=(c,r,kk)=>((r+kk+(((c>>2)&1)*2))%4)<2;let mv=false,gw=false;
+  const hc=Math.floor((hu-Q.u0)/Q.cs),hr=Math.floor((hv-Q.v0)/Q.cs),inG=hc>=0&&hr>=0&&hc<K.cols&&hr<K.rows;
+  for(let c=0;c<K.cols;c++)for(let r=0;r<K.rows;r++){const i=c*K.rows+r,u=upAt(c,r,k),want=u?1:0;let h=K.h[i];if(h!==want){h+=(want-h)*Math.min(1,dt*(want?28:9));if(Math.abs(h-want)<.01)h=want;K.h[i]=h;mv=true}
+    if(u&&!K.up[i]&&Math.abs(c-hc)<6&&Math.abs(r-hr)<5&&Math.random()<.25)dg165Snd('spikes',.18,.9+Math.random()*.3);K.up[i]=u?1:0;
+    const [x,,z]=dg165SW(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);o.position.set(x,F0-1.0+h*1.0,z);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrix();K.M.setMatrixAt(i,o.matrix);
+    const g=warn&&!u&&upAt(c,r,k+1);o.position.set(x,F0+.07,z);o.scale.setScalar(g?1:.0001);o.updateMatrix();K.G.setMatrixAt(i,o.matrix);gw=gw||g}
+  K.M.instanceMatrix.needsUpdate=true;K.G.instanceMatrix.needsUpdate=true;K.G.material.opacity=.35+.3*Math.sin(t*30);
+  if(live&&inG){const i=hc*K.rows+hr;if(K.h[i]>.55)dg165Hurt(.24,'IMPALED')}}
+// the fire walk: skull mouths breathe fire across the corridor in a rolling pattern
+function dg165SJets(S,dt,t,hu,hv,live){const per=DG165SP.jetPer,on=DG165SP.jetOn;S.jets.forEach((J,i)=>{const ph=((t+J.q.ph)%per+per)%per,a=ph<on,pre=!a&&ph>per-.45;
+    const k=a?Math.min(1,ph/.12)*(ph>on-.15?(on-ph)/.15:1):0;J.fl.scale.set(.6+k*.5+Math.sin(t*40+i)*.05*k,.6+k*.5,Math.max(.001,k));J.fl.visible=k>.002;
+    if(a&&!J.on){J.on=1;if(Math.abs(hv-J.q.v)<14)dg165Snd('fire',.5,.9+Math.random()*.2)}if(!a)J.on=0;
+    if(pre&&Math.random()<.3)burst(V(J.x,dg165SY()+1.15,J.z),0xff6020,1,.3,.4,.3);if(k>.3&&Math.random()<.6)burst(V(J.x+(J.q.side<0?1:-1)*(1+Math.random()*4.5),dg165SY()+1.0+Math.random()*.4,J.z+(Math.random()-.5)*.6),0xffa040,2,1,1.2,.35);
+    const sp=S.spots.find(q=>q.jet===i);if(sp)sp.i=k*2.4;
+    if(live&&k>.6&&Math.abs(hv-J.q.v)<.95&&hu>S.P.R.flame[0]&&hu<S.P.R.flame[2]){if(dg165Hurt(.22,'BURNED','#ffb040')){pl.step={x:0,z:hv<J.q.v?-1:1,sp:6,t:.18}}}})}
+// the plate and the gate: standing on the plate lifts the portcullis; it drops again when the time runs out
+function dg165SGate(S,dt,now,hu,hv){const P=S.P,G=P.gate,F0=dg165SY();let g=DG165S.gate;
+  if(DG165Q.s.cp>=3){if(!g||!g.open){DG165S.gate={open:1,t:0,y:1,perm:1};dg165SDoors()}}
+  else{const onP=Math.hypot(hu-P.plate[0],hv-P.plate[1])<.95;
+    if(onP&&!(g&&g.open)){DG165S.gate=g={open:1,t:DG165SP.gateT,y:g?g.y:0};dg165SDoors();dg165Snd('slam',.5,1.6);dg165Snd('grind',.8,1.1);say('⚙ The plate sinks under your feet. Far down the hall, chains rattle: the portcullis is rising!');S.plate.position.y=F0-.05;dg165Co('gate',1)}
+    if(g&&g.open&&!g.perm){g.t-=dt;if(Math.floor(g.t)!==Math.floor(g.t+dt)&&g.t>0)dg165Snd('chime',.18,g.t<5?1.6:1.1);
+      if(g.t<=0){g.open=0;S.plate.position.y=F0;dg165Snd('slam',1,.8);shake(.15);
+        // anyone under the gate is pushed back to the near side
+        if(Math.abs(hv-G.v)<.9&&hu>G.u0&&hu<G.u1){const [x,z]=dg165SW(hu,G.v-1.2);pl.position.x=x;pl.position.z=z}
+        dg165SDoors();if(hv<G.v)say('⛓ The portcullis crashes down. Step on the plate again.')}}}
+  g=DG165S.gate;const tgt=g&&g.open?1:0;if(g){g.y=(g.y||0)+(tgt-(g.y||0))*Math.min(1,dt*(tgt?2.2:14))}const y=g?g.y:0;if(S.gateM)S.gateM.position.y=F0+y*3.8}
+// the chasm: a slab under you cracks, then falls; on a fallen slab you fall
+function dg165SChasm(S,dt,now,hu,hv,room){const F0=dg165SY(),H=pl.position;let on=null;
+  if(room=='bridge')for(const s of S.slabs)if(Math.abs(hu-s.u)<1&&Math.abs(hv-s.v)<1){on=s;break}
+  for(const s of S.slabs){if(s.st==1){s.t+=dt;s.g.position.x+=(Math.random()-.5)*.03;s.g.position.z+=(Math.random()-.5)*.03;if(Math.random()<dt*14)burst(V(s.g.position.x+(Math.random()-.5)*1.8,F0-.3,s.g.position.z+(Math.random()-.5)*1.8),0x5a5650,1,.4,.2,.6);
+      if(s.t>=DG165SP.slabT){s.st=2;s.t=0;s.tiles.forEach(k=>CBLK.add(k));dg165Snd('crumble',.8,.9);dg165Snd('thud',.4,.7)}}
+    else if(s.st==2){s.t+=dt;s.g.position.y=F0-s.t*s.t*9;s.g.rotation.x+=dt*.6;if(s.t>2.2){s.st=3;s.g.visible=false}}}
+  if(on&&on.st==0&&!DG165S.fall){on.st=1;on.t=0;try{svSnd('crack',.5,.8+Math.random()*.3)}catch(_){}}
+  // standing on a slab: the hero stands on its top (the ground beneath the bridge is the chasm floor far below)
+  if(room=='bridge'&&on&&on.st<2&&!DG165S.fall)H.y=F0+(on.st==1?Math.sin(now/30)*.02:0);
+  else if(room=='bridge'&&!DG165S.fall&&!(typeof AWD!='undefined'&&AWD.dead))dg165SFall();
+  if(DG165S.fall){const Fl=DG165S.fall;Fl.t+=dt;Fl.y-=Fl.vy*dt;Fl.vy+=dt*22;H.y=Fl.y;if(Fl.t>DG165SP.fallT&&!Fl.done){Fl.done=1;fadeTo(()=>{DG165S.fall=null;dg165SChasmReset();
+      const c=dg165SSpot(3);toPos(c.x,c.z,Math.PI);hero.hp=Math.max(1,hero.hp-Math.round(heroMax()*.3));try{hud()}catch(_){}say('💀 You fell into the chasm. You claw your way back up to its edge…')})}}}
+function dg165SFall(){if(DG165S.fall)return;DG165S.fall={t:0,y:pl.position.y,vy:1};dg165Snd('scream',.7,.8);dg165Fear(1);try{svSnd('whoosh',.6,.5)}catch(_){}}
+function dg165SChasmReset(){const S=DG165S.S;if(!S)return;const F0=dg165SY();S.slabs.forEach(s=>{s.st=0;s.t=0;s.g.visible=true;const [x,z]=dg165SW(s.u,s.v);s.g.position.set(x,F0,z);s.g.rotation.x=0;s.tiles.forEach(k=>CBLK.delete(k))})}
+// the closing walls
+function dg165SCwReset(){const S=DG165S.S;DG165S.cw=null;enemies.slice().forEach(e=>{if(e.dg165cw&&!e.dead)try{removeE(e)}catch(_){}});if(S){S.cwL.visible=S.cwR.visible=false;S.statues.forEach(s=>{s.anim=null})}dg165SDoors()}
+function dg165SCwStart(S){const R=svRng(Math.floor(performance.now())%9973+11);DG165S.cw={ph:'run',t:0,half:DG165SP.cwStart,sp:0,gT:0};
+  S.statues.forEach(s=>{s.f=(s.want+1+Math.floor(R()*3))%4;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
+  dg165SDoors();dg165Snd('slam',1.1,.8);shake(.35);dg165Fear(.7);setTimeout(()=>{dg165Snd('grind',1,.8);dg165Snd('rumble',.8,1)},350);
+  dg165Title('The Closing Walls','The doors slam shut. The walls begin to move.','Turn the four knights to face the altar','The Hidden Sanctum');
+  say('⚔ The walls are closing! Turn each weeping knight (F) until it faces the altar.');dg165Co('cw',1)}
+// facing 0 = +v (south), 1 = +u (east), 2 = −v (north), 3 = −u (west); the statues are N, S, W, E of the altar and want 0, 2, 1, 3
+function dg165SFaceYaw(f){return [0,Math.PI/2,Math.PI,-Math.PI/2][f&3]}
+function dg165SCw(S,dt,now,hu,hv,room){const C=S.P.cw,cw=DG165S.cw,F0=dg165SY();
+  if(!cw){if(!DG165Q.s.cw&&room=='walls'&&hv>217.2&&!(typeof AWD!='undefined'&&AWD.dead))dg165SCwStart(S);
+    if(DG165Q.s.cw&&S.cwL.visible){S.cwL.visible=S.cwR.visible=false}
+    S.doorN.position.y=F0+3.9*(S.shutN?0:1);S.doorS.position.y=F0+(DG165Q.s.cw?3.9:0);return}
+  // statues turning
+  S.statues.forEach(s=>{if(s.anim){s.anim.t+=dt;const k=Math.min(1,s.anim.t/.6),e=k*k*(3-2*k);s.g.rotation.y=s.anim.a+(s.anim.b-s.anim.a)*e;if(k>=1){s.anim=null;s.yaw=s.g.rotation.y}}});
+  const ok=S.statues.every(s=>s.f===[0,2,1,3][s.want]&&!s.anim);
+  if(cw.ph=='run'){cw.t+=dt;cw.half=DG165SP.cwStart-(DG165SP.cwStart-DG165SP.cwEnd)*Math.min(1,cw.t/DG165SP.cwT);cw.gT-=dt;if(cw.gT<=0){cw.gT=1.25;dg165Snd('grind',.7,.75+Math.random()*.1)}
+    dg165Fear(.2+.6*cw.t/DG165SP.cwT);if(cw.t>DG165SP.cwT*.7&&Math.random()<dt*2)dg165Snd('heart',.6,1+cw.t/DG165SP.cwT*.4);
+    // the dead in the walls' niches climb out (and are crushed if they are still there when the walls pass)
+    if(!cw.sk1&&cw.t>5){cw.sk1=1;dg165SCwDead(S,2)}if(!cw.sk2&&cw.t>17){cw.sk2=1;dg165SCwDead(S,2)}
+    if(ok){cw.ph='done';cw.t=0;DG165Q.s.cw=1;dg165SDoors();dg165Snd('chime',.8,1);dg165Snd('choir',.8,1.1);dg165Snd('grind',.8,1.3);
+      dg165Title('The Walls Fall Still','The knights look upon the altar. The walls draw back.','The way on is open','The Hidden Sanctum');say('✦ The walls grind back into the dark. The far door rises.');dg165Co('cw',2)}
+    else if(cw.t>=DG165SP.cwT){cw.ph='slam';cw.t=0;dg165Snd('slam',1.2,.6);dg165Snd('rumble',1,1);shake(.8)}}
+  else if(cw.ph=='slam'){cw.t+=dt;cw.half=Math.max(.4,DG165SP.cwEnd-cw.t*18);if(cw.half<=.45&&!cw.crushed){cw.crushed=1;flash('rgba(120,0,0,.85)');dg165Snd('splint',1,.6);
+      if(room=='walls')dg165Hurt(9,'CRUSHED','#ff2020',true)}if(cw.t>3&&!(typeof AWD!='undefined'&&AWD.dead))dg165SCwReset()}
+  else if(cw.ph=='done'){cw.t+=dt;cw.half=Math.min(DG165SP.cwStart,cw.half+dt*6);if(cw.half>=DG165SP.cwStart){DG165S.cw=null;S.cwL.visible=S.cwR.visible=false;dg165SDoors()}}
+  // the walls and the hero: they push you inward
+  const [xl]=dg165SW(C.mid-cw.half,0),[xr]=dg165SW(C.mid+cw.half,0);S.cwL.position.x=xl-.5;S.cwR.position.x=xr+.5;
+  if(room=='walls'){const H=pl.position;if(H.x<xl+.55)H.x=xl+.55;if(H.x>xr-.55)H.x=xr-.55}
+  enemies.slice().forEach(e=>{if(!e.dg165cw||e.dead)return;const x=e.m.position.x;if(x<xl+.4||x>xr-.4){burst(gY(e.m.position,1),0xc8c0a8,24,3,2,.6);try{e.c.h=0;kill(e)}catch(_){try{removeE(e)}catch(__){}}}});
+  S.doorN.position.y=F0+3.9*(S.shutN?0:1);S.doorS.position.y=F0+(DG165Q.s.cw?3.9:0)}
+function dg165SCwDead(S,n){const lv=dg165Lv(20),C=S.P.cw;for(let i=0;i<n;i++){const sd=i%2?1:-1,v=C.doorN+6+Math.random()*24,u=C.mid+sd*(DG165S.cw.half-1.2),[x,z]=dg165SW(u,v);
+  setTimeout(()=>{try{if(!DG165S.cw||DG165S.cw.ph!='run')return;const e=spawnEnemy(i%2?'skeleton':'ghoul',x,z,lv[1],{agg:1,minion:1});if(e){e.agg=1;e.hunt=1;e.dg165cw=1;e.dg165r=1;burst(gY(V(x,0,z),1),0xc8c0a8,20,2,2,.6);dg165Snd('gasp',.6,.7)}}catch(err){console.warn('v165 cw dead',err)}},i*600)}}
+function dg165STurn(i){const S=DG165S.S,s=S&&S.statues[i];if(!s||s.anim||!DG165S.cw||DG165S.cw.ph!='run')return;const a=s.g.rotation.y;s.f=(s.f+1)&3;s.anim={t:0,a,b:a+Math.PI/2};dg165Snd('grind',.6,1.4);dg165Co('turn',i,s.f)}
+// scares: the gallery's passing shade, the Keeper's lid
+function dg165SScares(S,dt,now,hu,hv){const sc=DG165S.scare;
+  if(!sc.gal&&hv>262&&hv<284){sc.gal=1;sc.dark=now+2400;dg165Snd('wail',.9,.9);dg165Fear(1);setTimeout(()=>dg165Snd('whisper',.7,.8),900);setTimeout(()=>dg165Snd('whisper',.6,1.1),1500);
+    const g=new THREE.Group(),[x0,z0]=dg165SW(86,hv+5),[x1,z1]=dg165SW(98,hv+2);g.position.set(x0,dg165SY()+1.6,z0);S.root.add(g);
+    for(let i=0;i<9;i++){const s=kqSpr(i<3?0xd8fff0:0x6affd0,i<3?.9:.6+i*.12);s.material=s.material.clone();s.material.opacity=.5-i*.04;s.position.set(-i*.25,i<3?.4-i*.3:-.3-i*.12,0);g.add(s)}
+    let t=0;kqFx({tick(d){t+=(d||.016);const k=Math.min(1,t/1.3);g.position.set(x0+(x1-x0)*k,dg165SY()+1.6+Math.sin(t*9)*.2,z0+(z1-z0)*k);g.children.forEach(s=>s.material.opacity*=.995);if(k>=1){S.root.remove(g);g.children.forEach(s=>s.material.dispose());return false}return true},end(){if(g.parent)S.root.remove(g)}})}
+  if(!sc.tomb&&hv>291){sc.tomb=1;dg165Snd('grind',1,.7);shake(.2);let t=0;const L=S.lid,z0=L.position.z;
+    kqFx({tick(d){t+=(d||.016);const k=Math.min(1,t/2.2);L.position.z=z0+k*.7;L.rotation.y=k*.25;if(k>=1){setTimeout(()=>{dg165Snd('whisper',.8,.7);say('🕯 <i>“…below… what lies below, I keep…”</i>')},600);return false}return true},end(){}})}
+  if(S.water&&hv>296&&Math.random()<dt*3){const [x,z]=dg165SW(92+(Math.random()-.5)*2,318);burst(V(x,dg165SY()-.8,z),0x6affd0,1,.2,.6,1)}}
+// ---------------- getting in and out ----------------
+function dg165SSpot(i){const P=dg165SanPlan(),c=P.CP[Math.max(0,Math.min(P.CP.length-1,i|0))],[x,z]=dg165SW(c[0],c[1]);return {x,z,ry:c[2],name:c[3]}}
+function dg165SRestart(){dg165SBuild();DG165S.fall=null;dg165SChasmReset();dg165SCwReset();if(DG165Q.s.cp<3)DG165S.gate=null;dg165SDoors();
+  const c=dg165SSpot(DG165Q.s.cp);toPos(c.x,c.z,Math.PI);try{pl.rotation.y=0}catch(_){}try{if(riding)dismount(true)}catch(_){}hud()}
+function dg165SEnter(){if(AF)return;try{if(riding)dismount(true)}catch(_){}const first=DG165Q.s.st<1;DG165Q.s.st=Math.max(1,DG165Q.s.st);
+  fadeTo(()=>{dg165SRestart();setTimeout(()=>{dg165Title('The Hidden Sanctum','Beneath the Keeper’s grave',first?'Traps guard every hall · watch, then move':'Checkpoint · '+dg165SSpot(DG165Q.s.cp).name)},350);
+    if(first)setTimeout(()=>{say('🕯 The Keeper built this place to keep the living out. Watch each trap’s rhythm before you move.');dg165Snd('drone',.8,1)},1600)});try{dg165Co('enter',0)}catch(_){}}
+function dg165SLeave(){const G=dg165GravePlan().G[DG165G.K];fadeTo(()=>{toPos(G.x+Math.sin(G.ry)*2.6,G.z+Math.cos(G.ry)*2.6,G.ry)})}
+function dg165SFinish(){if(DG165Q.s.st>=2&&!dg165SIn())return;DG165Q.s.st=2;dg165Snd('splash',1,.8);
+  fadeTo(()=>{const N=INSL[21];insArrive(N);insMark(N);setTimeout(()=>{dg165Title('Out of the Sanctum','You swim down the flooded stair and surface in the vaults below','Onward through '+N.n);try{mSfx('victory')}catch(_){}},400);
+    say('🕯 You passed through the Keeper’s Sanctum. <b>'+N.n+'</b> lies ahead.')});try{dg165Co('sout',0)}catch(_){}}
+function dg165SRise(){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}dg165SRestart();try{say('✦ Checkpoint · '+dg165SSpot(DG165Q.s.cp).name)}catch(_){}try{ui()}catch(_){}}
+{const f=down_base;down_base=function(){if(!(dg165SIn()&&DG165S.S))return f.apply(this,arguments);
+  if(typeof awDie=='function'&&typeof AWD!='undefined'){if(AWD.dead)return;awDie(()=>dg165SRise())}else dg165SRise()}}
+// prompts inside: the knights, the flooded stair, the stair back up
+{const f=worldPrompt;worldPrompt=function(){try{if(dg165SIn()&&DG165S.S){const S=DG165S.S,[hu,hv]=dg165SL(pl.position.x,pl.position.z);
+    if(DG165S.cw&&DG165S.cw.ph=='run'){let best=-1,bd=2.3;S.statues.forEach((s,i)=>{const d=Math.hypot(hu-s.u,hv-s.v);if(d<bd){bd=d;best=i}});
+      if(best>=0){const s=S.statues[best],good=s.f===[0,2,1,3][s.want];return {label:(good?'✦ This knight faces the altar · F · turn it anyway':'F · Turn the weeping knight'),fn:()=>dg165STurn(best)}}}
+    if(Math.hypot(hu-S.P.exit[0],hv-S.P.exit[1])<2.4)return {label:'F · Descend the flooded stair into '+INSL[21].n,fn:()=>dg165SFinish()};
+    if(Math.hypot(hu-80,hv-10.4)<2.4)return {label:'F · Climb back up to the graveyard ('+INSL[20].n+')',fn:()=>dg165SLeave()}}}catch(e){if(!DG165S.err++)console.warn('v165 sanctum prompt',e)}return f.apply(this,arguments)}}
+// ---------------- the rules while inside ----------------
+SP152.R.sanctum={park:1,noMount:'🕯 No mount down here: the halls are too narrow.',noRecall:'🕯 The Keeper’s wards hold you. Go on, or climb back up the stair in the first hall.',
+  onLoad(){DG165Q.s.st=Math.max(1,DG165Q.s.st);setTimeout(()=>{try{dg165SRestart()}catch(e){console.warn('v165 sanctum load',e)}},0)}};
+// ---------------- the HUD: the hall, the timers ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#dg165sh{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:6;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;color:#dfe8e2;font:600 12px system-ui,sans-serif;text-shadow:0 1px 2px #000}
+#dg165sh.hide{display:none}#dg165sh .nm{font:600 13px 'IM Fell English SC',Cinzel,Georgia,serif;letter-spacing:.08em;color:#bfe8d6;padding:3px 12px;border-radius:12px;background:rgba(6,10,9,.6);border:1px solid rgba(140,220,190,.25)}
+#dg165sh .tm{display:none;align-items:center;gap:8px;padding:4px 10px;border-radius:10px;background:rgba(20,6,6,.7);border:1px solid rgba(255,120,90,.35)}#dg165sh .tm.on{display:flex}
+#dg165sh .tm i{display:block;width:180px;height:7px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}#dg165sh .tm i b{display:block;height:100%;background:linear-gradient(90deg,#ff3a20,#ffb040)}
+#dg165sh .tm.hot{animation:dg165p .5s infinite alternate}@keyframes dg165p{to{border-color:#ff5030;box-shadow:0 0 14px rgba(255,60,30,.6)}}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='dg165sh';d.className='hide';d.innerHTML='<div class="nm"></div><div class="tm"><span class="tx"></span><i><b></b></i></div>';document.body.appendChild(d)})();
+var DG165SN={entry:'The Stair Hall',pend:'The Hall of Pendulums',spike:'The Spike Hall',plate:'The Antechamber',flame:'The Fire Walk',ledge:'The Chasm',bridge:'The Chasm',pit:'The Chasm',chasm:'The Chasm',walls:'The Closing Walls',gal:'The Ossuary Gallery',tomb:'The Keeper’s Tomb'};
+function dg165SHud(){const el=$('dg165sh');if(!el)return;const on=dg165SIn()&&!!DG165S.S&&!(typeof uiOpen=='function'&&uiOpen());el.classList.toggle('hide',!on);if(!on)return;
+  const [hu,hv]=dg165SL(pl.position.x,pl.position.z),room=dg165SanFloor(hu,hv);el.querySelector('.nm').textContent='🕯 '+(DG165SN[room]||'The Hidden Sanctum');
+  const tm=el.querySelector('.tm'),g=DG165S.gate,cw=DG165S.cw;let txt=null,k=0;
+  if(cw&&cw.ph=='run'){const left=Math.max(0,DG165SP.cwT-cw.t);txt='The walls close in · '+left.toFixed(0)+' s';k=left/DG165SP.cwT}
+  else if(g&&g.open&&!g.perm&&g.t>0){txt='⛓ The gate falls in '+g.t.toFixed(1)+' s';k=g.t/DG165SP.gateT}
+  tm.classList.toggle('on',!!txt);tm.classList.toggle('hot',!!txt&&k<.3);if(txt){tm.querySelector('.tx').textContent=txt;tm.querySelector('b').style.width=(k*100).toFixed(1)+'%'}}
+// ---------------- the tracker ----------------
+SP152.trk.sanctum=I=>{if(I.sp!=='sanctum')return null;const c=DG165Q.s.cp,P=dg165SanPlan(),[hu,hv]=dg165SL(pl.position.x,pl.position.z),room=dg165SanFloor(hu,hv);
+  const tip={pend:'Time the blades',spike:'Cross in the gaps between the spikes',plate:'Step on the plate, then run',flame:'Through the fire before the gate falls',ledge:'Keep moving: the slabs crumble',bridge:'Keep moving: the slabs crumble',walls:DG165Q.s.cw?'The way on is open':'Turn the knights to face the altar',gal:'Onward, into the dark',tomb:'Descend the flooded stair'}[room]||'Find the way down';
+  return {name:'The Hidden Sanctum',lines:[[tip],['Checkpoint',P.CP[c][3]],['Reach the Drowned Crypts',null,1]]}};
+// ---------------- the atmosphere: a crypt lit only by its own fires ----------------
+sp152Theme('sanctum',{nm:'The Hidden Sanctum',sub:'Beneath the Keeper’s grave',a:{fog:.06,fc:0x060a09,fcA:.96,sun:.12,hemi:.36,env:'dark',ex:1.0,sat:.9,vig:1.85,sky:0,pt:'mote',pc:0x9affd0,po:.3}});
+// placeholder for the co-op sender (3268 replaces it)
+function dg165Co(){}
+// ================= v165 The Black Channel — the drowned dead in the water =================
+// The Drowned Wretch (EN.dgwretch): a gaunt corpse of the channel, grey-green and waterlogged, its ribs showing through the
+// skin, long black hair plastered over its face, pale eyes, a hanging jaw and long black claws. Registered by hand (not n3Def:
+// it is no roaming monster, has no signature moves and never runs the normal AI). The Drowned Hulk is the Dirge's own bloated
+// Drowned Thrall (EN.drowned) as an elite, much bigger.
+// In the water they are driven by dg165WTick (from 3266's raft): a real enemy (targetable, hurt, killed, XP, co-op mirrored by
+// position) whose eTick returns true so the normal AI never runs. States (e.w.st):
+//   swim   under the surface toward its slot at the raft's edge (hidden: no target, no health bar; ripples, bubbles and a hand
+//          breaking the surface on each stroke show where it is)
+//   rise   comes up beside the raft (a splash), reaching for the edge
+//   cling  hands on the deck, half out of the water: rakes the planks it holds (the raft loses them), or lunges at a hero
+//          standing close (a wind-up, then the claws)
+//   flinch knocked back by a hit (a moment without raking)
+//   sink   dead or torn loose: falls back and sinks in a swirl of bubbles
+// Every pose is set fresh each frame on the humanoid rig (pelvis, spine, chest, neck, head, arms, legs), from smooth sine
+// motion and eased blends between states, so they move fluidly in and out of the water.
+var DG165W={err:0};
+(function(){
+const C={skin:0x6a7a72,skin2:0x4a5a54,bruise:0x3a3a4a,rot:0x2a3428,rib:0x9a9a86,hair:0x0c0e0e,hair2:0x1a1e1c,claw:0x0a0a0a,eye:0xb8fff0,shroud:0x6a6a5c,shroud2:0x4a4a40,weed:0x2a4a2a};
+HUMLOOK.dgwretch={skin:[106,122,114],tunic:C.shroud,cape:[60,60,50],pants:[60,60,50],sc:1.12,wpn:'none'};
+const D={body(B,P,k){P.build=0;P.belly=-.1;P.af=.82;P.lf=.84;P.head={w:.95,jaw:1.18,top:.96};
+  Object.assign(P.col,{skin:C.skin,torso:C.skin,sleeve:C.skin,fore:C.skin,hand:C.skin2,pants:C.shroud2,shin:C.skin2,boot:C.skin2,sole:C.rot,belt:C.rot,neck:C.skin});
+  n3Paint(P,(m,s,part)=>{const n=n3Sn(m.x,m.y,m.z,13,5),r=n3Nz(m.x,m.y,m.z,9);if(r>.965)return C.rot;if(n>.74)return C.bruise;if(part=='hand'&&m.y<.5)return C.skin2;if(n<.25)return C.skin2;return C.skin});
+  mdBody(B,P);mdHead(B,P,{eyes:'glow',glow:C.eye,brow:false,ears:false,nose:false,mouth:0x060808,noHair:true,headCol:m=>{const n=n3Sn(m.x,m.y,m.z,15,3);return n>.72?C.bruise:n<.3?C.skin2:C.skin}});
+  const z=y=>mdHeadZ(P,y);
+  // a slack, gaping jaw with broken teeth
+  k.p('head','box','c',0x040606,0,1.065,z(1.065)+.004,.055,.05,.012);for(let i=0;i<5;i++)k.p('head','box','c',0xb8b098,-.026+i*.013,1.088,z(1.088)+.006,.006,.014,.004);
+  // the ribs: arcs on the chest and the sunken belly
+  for(let i=0;i<5;i++){const y=.92-i*.045;for(let j=0;j<7;j++){const a=-1.2+j*.4,p=n3Surf(P,y-Math.abs(a)*.02,a,.004);k.p('chest','box','c',C.rib,p[0],p[1],p[2],.03,.008,.012,0,a,0)}}
+  // long black hair, plastered down over the face and shoulders
+  for(let i=0;i<16;i++){const a=-2.9+i*.36,fr=Math.abs(a)<.8,len=fr?.3+(i%3)*.05:.42+(i%4)*.09,p=[Math.sin(a)*.085,1.22,Math.cos(a)*.08];
+    k.S('head',i%3?C.hair:C.hair2,p[0],p[1],p[2]+(fr?.02:0),fr?.03:.04,len,a,fr?-.12:-.05,i)}
+  k.p('head','sph','c',C.hair,0,1.2,-.005,.098,.06,.094);
+  // claws: four long black talons on each hand
+  [-1,1].forEach(s=>{const b=P.bones[s<0?'aL2':'aR2'];for(let f=0;f<4;f++){const x=b[1]+s*.01+(f-1.5)*.016,y=b[2]-.06,zz=b[3]+.012;n3Claw(k,s<0?'aL2':'aR2',C.claw,[x,y,zz],[0,-1,.25],.15,.008,.3,3)}});
+  // rags of a burial shroud on the shoulders and hips, weed caught in them
+  for(let i=0;i<8;i++){const a=-2.6+i*.75,p=n3Surf(P,.93,a,.02);k.S('chest',i%2?C.shroud:C.shroud2,p[0],p[1],p[2],.08,.28+(i%3)*.08,a,.15,i)}
+  for(let i=0;i<9;i++){const a=-2.8+i*.7,p=n3Surf(P,.55,a,.03);k.S('pelvis',i%2?C.shroud:C.shroud2,p[0],p[1],p[2],.1,.32+(i%3)*.1,a,.1,i+9)}
+  [-1,1].forEach(s=>{const q=n3ArmAt(P,s,.7);k.S(q[3],C.weed,q[0]+s*.03,q[1],q[2],.025,.22,s*1.4,0,s+3)})}};
+EN.dgwretch={n:'Drowned Wretch',e:'🧟',w:{hp:.45,pa:.95,ma:.5,pd:.6,md:.8},mt:'p',moves:['strike'],fam:'Spirit',hum:'dgwretch',v113:1};
+try{S.dgwretch=S.dgwretch||{e:'🧟',c:0x6a7a72,h:'X',t:'x',hp:20,a:8,d:5};MSET.dgwretch=['strike'];N3.humB.dgwretch=D}catch(e){console.warn('v165 wretch',e)}
+})();
+// ---------------- the pose: absolute rotations on the rig, every frame ----------------
+// q = {pitch (body forward, rad), arms: [L, R] each {x shoulder fwd (−up), z out, e elbow}, head {x, y}, legs kick phase k, legsBent b}
+function dg165WBones(e){const g=e.m;if(!g||!g.h||!g.h.bones)return null;return g.h.bones}
+function dg165WApply(e,q){const b=dg165WBones(e);if(!b)return;const g=e.m,body=g.b;
+  if(body){body.rotation.x=q.pitch||0;body.rotation.z=q.roll||0;body.position.y=0}
+  const set=(o,x,y,z)=>{if(o){o.rotation.x=x||0;o.rotation.y=y||0;o.rotation.z=z||0}};
+  set(b.spine,q.sp||0,q.sy||0,0);set(b.chest,q.ch||0,0,q.cr||0);set(b.neck,q.nk||0,0,0);set(b.head,q.hx||0,q.hy||0,q.hz||0);
+  const A=q.arms||[{},{}];['aL','aR'].forEach((n,i)=>{const a=A[i]||{},s=i?1:-1;set(b[n+'0'],a.x||0,a.y||0,s*(a.z||0));set(b[n+'1'],a.e||0,0,0);set(b[n+'2'],a.w||0,0,s*(a.wz||0))});
+  const L=q.legs||{};['lh','rh'].forEach((n,i)=>{const s=i?1:-1,k=L.k||0;set(b[n+'0'],(L.b||0)+Math.sin(k+i*Math.PI)*(L.a||0),0,s*(L.z||0));set(b[n+'1'],(L.kb||0)+Math.max(0,Math.sin(k+i*Math.PI+1))*(L.a||0)*.8,0,0)});
+  if(b.pelvis){b.pelvis.rotation.set(q.px||0,0,0)}}
+// blend two pose objects (same shape) by t
+function dg165WMix(a,b,t){if(t<=0)return a;if(t>=1)return b;const o={};for(const k in a){const x=a[k],y=b[k];if(typeof x=='number')o[k]=x+((y==null?x:y)-x)*t;else if(Array.isArray(x))o[k]=x.map((q,i)=>dg165WMix(q,y&&y[i]||q,t));else if(x&&typeof x=='object')o[k]=dg165WMix(x,y||x,t);else o[k]=x}
+  for(const k in b)if(!(k in o))o[k]=b[k];return o}
+// the poses (t = seconds, ph = the wretch's own phase so no two move alike)
+function dg165WPose(st,t,ph,k){const s=Math.sin,c=Math.cos;
+  if(st=='swim'){const w=t*2.6+ph,st0=s(w);// a breaststroke, face down, legs kicking
+    return {pitch:1.35+.05*s(w*2),roll:.08*s(w),sp:.1,ch:.05,nk:-.5,hx:-.55,hy:.1*s(w*.5),arms:[{x:-2.6-.4*st0,z:.4+.7*Math.max(0,st0),e:-.25-.4*Math.max(0,-st0)},{x:-2.6-.4*st0,z:.4+.7*Math.max(0,st0),e:-.25-.4*Math.max(0,-st0)}],legs:{k:w*1.6,a:.38,b:.1,kb:.2}}}
+  if(st=='tread'){const w=t*1.7+ph;// upright in the water, arms sculling, head lolling
+    return {pitch:.2+.05*s(w),roll:.06*s(w*.7),sp:.1,ch:.08,nk:.1,hx:.25+.1*s(w*.6),hy:.3*s(w*.33),hz:.12*s(w*.5),arms:[{x:-.5+.35*s(w),z:.7+.25*c(w),e:-.6},{x:-.5+.35*s(w+2),z:.7+.25*c(w+2),e:-.6}],legs:{k:w,a:.3,b:-.1,kb:.4}}}
+  if(st=='reach'){const w=t*3+ph;// coming up: both arms reaching high for the edge
+    return {pitch:.25,sp:-.15,ch:-.1,nk:-.2,hx:-.35,hy:.1*s(w),arms:[{x:-2.7+.15*s(w),z:.35,e:-.15,w:-.3},{x:-2.5+.15*s(w+1.5),z:.3,e:-.2,w:-.3}],legs:{k:w,a:.35,b:-.2,kb:.4}}}
+  if(st=='cling'){const w=t*1.3+ph;// leaning on the deck, hands flat on the planks, head swaying, shoulders working
+    return {pitch:.62+.04*s(w),roll:.05*s(w*.8),sp:.2,ch:.12+.04*s(w*1.3),nk:-.1,hx:-.5+.12*s(w*.9),hy:.35*s(w*.4),hz:.15*s(w*.6),
+      arms:[{x:-1.25+.08*s(w),z:.45,e:-.55+.08*s(w*1.7),w:.35},{x:-1.25+.08*s(w+2),z:.45,e:-.55+.08*s(w*1.7+1),w:.35}],legs:{k:w,a:.2,b:.3,kb:.6}}}
+  if(st=='rake'){// k 0..1 through one rake of arm k.arm: raise high, slam down, drag back across the planks
+    const a=k.k,arm=k.arm,up=a<.38?a/.38:a<.52?1-(a-.38)/.14:0,drag=a>=.52?(a-.52)/.48:0,e=up*up*(3-2*up);
+    const R={x:-1.3-1.5*e+.5*drag,z:.4-.15*e,e:-.6-.5*e+.4*drag,w:.4-.6*e};const L={x:-1.2,z:.45,e:-.5,w:.35};
+    return {pitch:.62+.2*(1-e)*(a>.38?1:0)-.1*e,sp:.2+.15*(a>.38&&a<.6?1:0),ch:.12-.12*e,nk:-.1,hx:-.6-.3*e+.2*drag,hy:arm?.2:-.2,arms:arm?[L,R]:[R,L],legs:{k:a*6,a:.2,b:.3,kb:.6}}}
+  if(st=='lunge'){// k 0..1: rearing up out of the water, arms wide, then the double swipe
+    const a=k.k,up=Math.min(1,a/.6),hit=a>.6?(a-.6)/.4:0,e=up*up*(3-2*up);
+    return {pitch:.3-.45*e+.9*hit,sp:-.25*e+.35*hit,ch:-.15*e+.2*hit,nk:-.25*e,hx:-.5*e+.3*hit,arms:[{x:-2.2*e+1.2*hit,z:.9*e-.5*hit,e:-.4},{x:-2.2*e+1.2*hit,z:.9*e-.5*hit,e:-.4}],legs:{k:a*8,a:.3,b:-.2,kb:.5}}}
+  if(st=='flinch'){const a=k.k;return {pitch:.2-.3*s(a*Math.PI),sp:-.3*s(a*Math.PI),ch:-.1,nk:-.3,hx:-.7*s(a*Math.PI),arms:[{x:-.6,z:1.0,e:-.4},{x:-.8,z:.9,e:-.3}],legs:{k:a*5,a:.3,b:0,kb:.4}}}
+  if(st=='sink'){const a=k.k,w=t*4+ph;// falling back, arms clawing at the surface as it goes under
+    return {pitch:-.7*Math.min(1,a*2),roll:.2*s(w*.6),sp:-.3,ch:-.2,nk:-.3,hx:-.6,hy:.4*s(w*.3),arms:[{x:-2.4+.6*s(w),z:.6+.4*s(w*1.3),e:-.5},{x:-2.2+.6*s(w+1.7),z:.6+.4*s(w*1.1+1),e:-.5}],legs:{k:w,a:.4,b:.2,kb:.4}}}
+  return {}}
+// the water line for a wretch in each state: where its feet are (the body hangs below the surface; the water hides the rest)
+var DG165WY={swim:-1.35,tread:-.8,rise:-.65,cling:-.58,lunge:-.4,flinch:-.75,sink:-.62};
+// ================= v165 The Black Channel — the raft =================
+// The Drowned Crypts' (Dirge II) gateway to III is gone: at the far edge of its gateway clearing a tunnel mouth opens in the rock
+// over a flooded channel, and a raft of lashed logs lies moored at a little stone quay (F · Take the raft). The current carries the
+// raft down the Black Channel (special instance 'channel', 3260), played once: the drowned dead swim up out of the black water,
+// seize the raft's edges and tear it apart plank by plank. Kill them. Every plank they rip away is gone and the raft grows smaller;
+// when too few are left (RF165.min) it breaks apart and drags everyone under. At the channel's end the raft grinds onto a beach of
+// bone in grey daylight: the Ossuary Fields (III). From then on the quay's raft takes you straight there.
+//  * The raft: RF165.cols × RF165.rows planks (cells of RF165.cs tiles), each with its own strength (RF165.hp). You walk on it
+//    (walk() is turned into moves on the deck: you cannot step off it or into a hole); it drifts at RF165.spd along the channel.
+//  * The drowned (3265): Drowned Wretches, and twice a Drowned Hulk (the Dirge's bloated Thrall, elite) that slams the planks two at
+//    a time and rocks the raft. Waves by progress (RF165.ph): calm, then more and more at once, a lull, a frenzy at the end.
+//  * Dying: the run starts over at the quay end of the channel (solo). The 🏳 button gives up and goes back to the quay in II.
+//  * Inside: companions wait on the quay, no mount, no recall.
+var RF165={cs:1.2,cols:5,rows:7,min:9,hp:100,rake:11,slam:18,spd:4.3,wy:.02,deck:.3,
+  ph:[[0,0,0],[.05,2,6.5],[.22,3,4.8],[.34,4,4.0],[.45,3,4.6],[.55,0,0],[.6,5,3.2],[.72,6,2.7],[.84,8,2.1],[.95,0,0]],hulk:[.46,.79],err:0};
+var RF165R=null,RF165S=null;
+function rf165In(){return sp152Here('channel')}
+function rf165P(){return dg165ChPath()}
+// ---------------- the raft's frame ----------------
+function rf165Frame(R){const P=rf165P(),[x,z]=P.at(R.s,0);return {x,z,F:[Math.sin(R.yaw),Math.cos(R.yaw)],Rt:[Math.cos(R.yaw),-Math.sin(R.yaw)]}}
+function rf165W(R,lu,lv){const f=R.fr;return [f.x+f.Rt[0]*lu+f.F[0]*lv,f.z+f.Rt[1]*lu+f.F[1]*lv]}
+function rf165L(R,x,z){const f=R.fr,dx=x-f.x,dz=z-f.z;return [dx*f.Rt[0]+dz*f.Rt[1],dx*f.F[0]+dz*f.F[1]]}
+function rf165Idx(c,r){return c*RF165.rows+r}
+function rf165CellLU(c,r){return [(c-(RF165.cols-1)/2)*RF165.cs,(r-(RF165.rows-1)/2)*RF165.cs]}
+function rf165CellAt(R,lu,lv){const c=Math.round(lu/RF165.cs+(RF165.cols-1)/2),r=Math.round(lv/RF165.cs+(RF165.rows-1)/2);if(c<0||r<0||c>=RF165.cols||r>=RF165.rows)return null;const C=R.cells[rf165Idx(c,r)];return C&&C.alive?C:null}
+function rf165OnDeck(R,lu,lv){const m=.3;return !!(rf165CellAt(R,lu,lv)&&rf165CellAt(R,lu+m,lv)&&rf165CellAt(R,lu-m,lv)&&rf165CellAt(R,lu,lv+m)&&rf165CellAt(R,lu,lv-m))}
+function rf165Alive(R){return R.cells.reduce((a,C)=>a+(C.alive?1:0),0)}
+// the open sides of the planks (where a drowned can take hold): [cell, dir] with dir 0 +u (right) · 1 −u · 2 +v (front) · 3 −v (back)
+var RF165D=[[1,0],[-1,0],[0,1],[0,-1]];
+function rf165Open(R){const out=[];R.cells.forEach(C=>{if(!C.alive)return;RF165D.forEach((d,k)=>{const c=C.c+d[0],r=C.r+d[1],n=c>=0&&r>=0&&c<RF165.cols&&r<RF165.rows?R.cells[rf165Idx(c,r)]:null;if(!n||!n.alive)out.push([C,k])})});return out}
+function rf165SlotL(C,k,out){const d=RF165D[k];return [C.lu+d[0]*(RF165.cs/2+(out||.62)),C.lv+d[1]*(RF165.cs/2+(out||.62))]}
+// ---------------- models ----------------
+function rf165CellKit(k,i){const R=svRng(7100+i),bark=[0x2a1e14,0x241a10,0x32241a][i%3],rope=0x6a5a3c,cs=RF165.cs;
+  // two logs along the raft's length (a little longer than the plank, so neighbours read as one long log), a rope lashing, a cross plank
+  [-.29,.29].forEach((x,j)=>{k.p('','cyl','c',lgCol(bark,0x120c08,R()*.4),x+(R()-.5)*.03,(R()-.5)*.03,0,.27+R()*.02,cs+.03,.27,Math.PI/2,0,(R()-.5)*.03);
+    if(R()<.6)k.p('','ring','c',rope,x,0,(R()<.5?-1:1)*(cs/2-.16),.29,.55,.29,Math.PI/2,0,0);
+    for(let q=0;q<3;q++)k.p('','box','c',0x0e0a06,x+(R()-.5)*.2,.265,(R()-.5)*cs*.8,.035,.01,.12+R()*.1,0,R()*3,0)});
+  if(R()<.55)k.p('','box','c',lgCol(0x3a2818,0x1a120a,R()),0,.21,(R()-.5)*.6,cs-.12,.06,.2,0,(R()-.5)*.1,0);
+  for(let q=0;q<2;q++)k.p('','dod','c',0x223022,(R()-.5)*.8,.2,(R()-.5)*.9,.08,.03,.1)}
+function rf165LanternKit(k){k.L('','c',0x2a1e12,[0,0,0],[0,2.2,0],.05,.045,6);k.L('','c',0x2a1e12,[0,2.15,0],[.45,2.3,0],.03,.03,4);k.p('','box','m',0x2a2c30,.45,2.0,0,.2,.3,.2);k.p('','box','g',0xffc070,.45,2.0,0,.13,.2,.13);k.p('','cone4','m',0x2a2c30,.45,2.22,0,.14,.12,.14,0,Math.PI/4,0)}
+// a drowned arm reaching out of the water (the scare at the lull): forearm, hand, claws; rises from local y −1
+function rf165ArmKit(k){const s=0x5a6a64,s2=0x3a4a44;k.L('','c',s2,[0,-1.2,0],[0,.1,.05],.07,.055,6);k.L('','c',s,[0,.1,.05],[0,.55,.18],.055,.045,6);k.p('','sph','c',s2,0,.62,.2,.07,.05,.06);
+  for(let f=0;f<4;f++){const x=(f-1.5)*.03;k.L('','c',s,[x,.64,.22],[x*1.4,.78,.32],.014,.011,4);k.L('','c',0x0a0a0a,[x*1.4,.78,.32],[x*1.6,.86,.36],.01,.003,4)}k.S('',0x1a1e1c,0,.1,.06,.08,.5,0,.2,3)}
+// the quay in Dirge II: a tunnel mouth in the rock, the channel running into it, the raft moored at the steps (local +z faces the clearing)
+function rf165QuayModel(s){const g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('DG165|quay',k=>{const R=svRng(7300),sA=0x4a4c50,sB=0x3a3c40,sC=0x5a5a5c,rock=[0x3a3e40,0x2e3234,0x464a4c];
+    // the rock face and the arch of the tunnel mouth
+    for(let i=0;i<26;i++){const sd=i%2?1:-1,x=sd*(3.6+R()*3.5),z=-6.5-R()*4,s0=1.4+R()*1.6;k.p('','dod','c',rock[i%3],x,s0*.6+R()*2.5,z,s0,s0*1.3,s0,R()*3,R()*3,R()*3)}
+    for(let i=0;i<10;i++)k.p('','dod','c',rock[i%3],(R()-.5)*9,6.5+R()*2,-7-R()*3,1.6+R(),1.2,1.6,R()*3,R()*3,R()*3);
+    for(let i=0;i<13;i++){const a=Math.PI*i/12,x=Math.cos(a)*3.4,y=1.2+Math.sin(a)*3.4;k.p('','box','c',i%2?sA:sC,x,y,-6.2,.7,.62,1.2,0,0,a-Math.PI/2)}
+    [-1,1].forEach(sd=>{k.p('','box','c',sB,sd*3.4,.6,-6.2,.8,1.6,1.3);k.p('','box','c',sA,sd*3.4,1.45,-6.2,1,.2,1.4)});
+    k.p('','box','c',0x010202,0,2.4,-7.2,6,5.2,.2);k.p('','sph','c',0xd8d0b8,0,4.65,-5.6,.32,.36,.34);[-1,1].forEach(sd=>k.p('','sph','c',0x060606,sd*.12,4.68,-5.32,.08,.08,.05));
+    // the channel walls inside the basin and the quay with its steps
+    [-1,1].forEach(sd=>{for(let z=-6;z<0;z+=1)k.p('','box','c',lgCol(sA,sB,R()),sd*3.15,-.1,z+.5,.5,.6,.96);k.p('','box','c',sC,sd*3.15,.24,-3,.6,.1,6.2)});
+    k.p('','box','c',sA,0,.1,.55,6.8,.5,1.2);for(let i=0;i<3;i++)k.p('','box','c',lgCol(sA,sB,i/3),0,-.1-i*.22,-.25-i*.3,3.2,.22,.32);
+    // mooring posts, a coil of rope, a lantern on a crook, bones on the steps
+    [-1,1].forEach(sd=>{k.L('','c',0x2a2018,[sd*2.6,0,.5],[sd*2.6,1.1,.5],.1,.09,6);k.p('','ring','c',0x7a6a48,sd*2.6,.85,.5,.13,.6,.13)});
+    k.L('','c',0x7a6a48,[-2.6,.85,.5],[-1.2,.4,-2.4],.02,.02,4);k.p('','tor','c',0x6a5a3a,1.9,.4,.9,.28,.1,.28);
+    k.L('','c',0x2a1e12,[2.9,.3,.2],[2.9,2.6,.2],.05,.045,6);k.L('','c',0x2a1e12,[2.9,2.55,.2],[2.4,2.7,.2],.03,.03,4);k.p('','box','m',0x2a2c30,2.4,2.4,.2,.2,.3,.2);k.p('','box','g',0x9affd0,2.4,2.4,.2,.13,.2,.13);
+    for(let i=0;i<5;i++)k.p('','sph','c',0xb8b098,(R()-.5)*4,.38,.4+R()*.4,.09,.07,.12)},0));
+  // the raft at its mooring (planks as in the channel)
+  const raft=new THREE.Group();raft.position.set(0,-.05,-3.1);g.add(raft);for(let c=0;c<RF165.cols;c++)for(let r=0;r<RF165.rows;r++){const m=lgGroup('DG165|rcell'+((c*7+r)%3),k=>rf165CellKit(k,(c*7+r)%3),0);const [lu,lv]=rf165CellLU(c,r);m.position.set(lu*.78,0,lv*.62);m.scale.set(.78,1,.62);raft.add(m)}
+  g.userData.raft=raft;
+  // the water of the basin: dark, with moving light on it
+  const wm=new THREE.Mesh(new THREE.PlaneGeometry(5.8,7.4).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x08201c,roughness:.08,metalness:.4,transparent:true,opacity:.92}));wm.position.set(0,-.18,-3.3);wm.userData.noFade135=1;g.add(wm);g.userData.water=wm;
+  // a green light deep in the tunnel and the mist breathing out of it
+  {const lt=new THREE.PointLight(0x5affc0,2.2,14,1.4);lt.position.set(0,2.2,-7.6);g.add(lt);const gl=kqSpr(0x3affb0,5);gl.material=gl.material.clone();gl.material.opacity=.32;gl.position.set(0,2.2,-7.4);g.add(gl);g.userData.glow=gl;
+   const lt2=new THREE.PointLight(0x9affd0,1.2,8,1.6);lt2.position.set(2.4,2.4,.2);g.add(lt2)}
+  g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.5;o<=4.5;o+=.6)for(let d=-8;d<=-.2;d+=.6){if(Math.abs(o)<3.4&&d>-1.6&&d<-.3)continue;const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
+  return g}
+// ---------------- the channel's masonry and dressing (built the first time you are on it) ----------------
+function rf165Build(){if(RF165S)return RF165S;const P=rf165P(),C=dg165CCfg(),root=new THREE.Group();root.name='BlackChannel';scene.add(root);const S={root,spots:[],fl:[],float:[]};RF165S=S;
+  const Rn=svRng(7400),o=new THREE.Object3D(),col=new THREE.Color(),L=[],add=(s,off,y,w,h,d,c)=>{const [x,z]=P.at(s,off);L.push([x,y,z,P.yaw(s),w,h,d,c])};
+  for(let s=0;s<=P.S;s+=1){for(const sd of [1,-1]){
+    // coping stones at the water's edge, the flagged walk, the wall behind it (courses of mixed blocks)
+    add(s,sd*(C.hw+.25),C.walkY-.15,.6,.5,1.0,.24+Rn()*.05);
+    for(let q=0;q<2;q++)add(s+(Rn()-.5)*.1,sd*(C.hw+.6+q*.82),C.walkY-.08,.8,.16,.96,.2+Rn()*.06);
+    let y=C.walkY,hh;const wo=sd*(C.hw+C.walk+.3);while(y<C.walkY+5.2){hh=.45+Rn()*.35;if(Rn()>.04)add(s+(Rn()-.5)*.08,wo,y+hh/2,.6,hh*.95,.97,.17+Rn()*.07);y+=hh}
+    add(s,wo-sd*.05,C.walkY+5.35,.8,.3,1.02,.14)}}
+  const M=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true}),L.length);
+  L.forEach((q,i)=>{o.position.set(q[0],q[1],q[2]);o.rotation.set((Rn()-.5)*.03,q[3]+(Rn()-.5)*.03,(Rn()-.5)*.03);o.scale.set(q[4],q[5],q[6]);o.updateMatrix();M.setMatrixAt(i,o.matrix);
+    col.setRGB(q[7],q[7]*1.02,q[7]*1.04);if(Rn()<.1)col.lerp(new THREE.Color(0x2a3a30),.5);M.setColorAt(i,col)});M.instanceMatrix.needsUpdate=true;if(M.instanceColor)M.instanceColor.needsUpdate=true;M.frustumCulled=false;M.receiveShadow=true;root.add(M);
+  // arches across the channel, with a lantern hung from each and chains dangling; pillars in the water; statues on the walks
+  const span=C.hw+C.walk+.3,aK=lgGroup('DG165|carch',k=>{const sA=0x3e4044,sB=0x4e5054;[-1,1].forEach(sd=>{k.p('','box','c',sA,sd*span,2.6,0,1.2,5.2,1.4)});
+      for(let i=0;i<=16;i++){const a=Math.PI*i/16,x=Math.cos(a)*span,y=5.1+Math.sin(a)*3.6;k.p('','box','c',i%2?sA:sB,x,y,0,1.0,.7,1.3,0,0,a-Math.PI/2)}
+      k.p('','sph','c',0xc8c0a8,0,8.9,.66,.3,.34,.2);for(let i=0;i<5;i++)k.p('','ring','m',i%2?0x26282c:0x5a3420,-1.4,8.2-i*.18,.0,.06,.5,.06,i%2?Math.PI/2:0,0,0);
+      k.L('','m',0x26282c,[1.6,8.4,0],[1.6,6.6,0],.02,.02,3);k.p('','box','m',0x26282c,1.6,6.4,0,.22,.32,.22);k.p('','box','g',0x9affd0,1.6,6.4,0,.14,.22,.14)},0);
+  for(let s=38;s<P.S-20;s+=46+((s*7)%13)){const a=aK.clone(),[x,z]=P.at(s,0);a.position.set(x,C.walkY,z);a.rotation.y=P.yaw(s);root.add(a);const [lx,lz]=P.at(s,-1.6);S.spots.push({x:lx,y:C.walkY+6.4,z:lz,c:0x9affd0,i:2.2,r:16,fq:2.2,ph:s})}
+  // the props: baked in stretches of the channel
+  const props=[];for(let s=12;s<P.S-14;s+=7+Rn()*6){const sd=Rn()<.5?1:-1,r=Rn();props.push([s,sd,r<.18?'statue':r<.34?'pillarW':r<.5?'coffinF':r<.64?'grate':r<.8?'bones':'sconce'])}
+  const by=[];props.forEach(q=>{const b=Math.floor(q[0]/120);(by[b]=by[b]||[]).push(q)});
+  by.forEach((Lq,bi)=>{if(!Lq)return;root.add(lgGroup('DG165|cprops'+bi,k=>{const R=svRng(7500+bi);Lq.forEach(([s,sd,kind])=>{const yw=P.yaw(s),ca=Math.cos(yw),sa=Math.sin(yw);
+      const put=(off,lx,ly,lz)=>{const [x,z]=P.at(s+lz,off);return [x+ca*lx,ly,z-sa*lx]};
+      if(kind=='statue'){const [x,y,z]=put(sd*(C.hw+1.2),0,C.walkY,0);k.p('','box','c',0x3a3a3e,x,y+.3,z,.9,.6,.9);k.p('','skirt','c',0x5a5850,x,y+1.2,z,.4,1.2,.36);k.p('','sph','c',0x5a5850,x,y+2.05,z,.18,.2,.18);k.p('','hood','c',0x4a4842,x,y+2.1,z,.22,.26,.24,-.3,yw+(sd<0?Math.PI/2:-Math.PI/2),0);
+        k.L('','c',0x5a5850,[x,y+1.6,z],[x+.25,y+2.4,z],.06,.05,5);k.p('','dod','c',0x2a3a2a,x,y+.62,z,.4,.08,.4)}
+      else if(kind=='pillarW'){const [x,,z]=put(sd*(C.hw-1.3),0,0,0);k.p('','cyl','c',0x45474a,x,C.deep+2.2,z,.45,5.6,.45);k.p('','box','c',0x3a3c40,x,C.deep+5.2,z,1.1,.4,1.1,0,R()*3,0);for(let i=0;i<3;i++)k.p('','dod','c',0x2a3a2a,x+(R()-.5)*.5,.05,z+(R()-.5)*.5,.25,.06,.25)}
+      else if(kind=='coffinF'){const [x,,z]=put(sd*(C.hw-2.4),0,0,0);k.p('','box','c',0x2a2014,x,.02,z,.75,.24,1.9,(R()-.5)*.2,yw+R(),(R()-.5)*.2)}
+      else if(kind=='grate'){const [x,y,z]=put(sd*(C.hw+C.walk+.02),0,C.walkY+1.1,0);for(let i=0;i<5;i++)k.L('','m',0x26282c,[x,y-.5+i*.25,z],[x,y-.5+i*.25,z],.02,.02,3);k.p('','box','m',0x26282c,x,y,z,.12,1.2,1.2,0,yw,0);k.p('','box','c',0x020303,x-ca*sd*.0,y,z,.06,1.0,1.0,0,yw,0)}
+      else if(kind=='bones'){for(let i=0;i<5;i++){const [x,y,z]=put(sd*(C.hw+.7+R()*1.2),(R()-.5)*.5,C.walkY+.06,(R()-.5)*2);k.L('','c',0xb8b098,[x,y,z],[x+(R()-.5)*.7,y,z+(R()-.5)*.7],.03,.025,4)}const [x,y,z]=put(sd*(C.hw+1.2),0,C.walkY+.12,.3);k.p('','sph','c',0xc8c0a8,x,y,z,.13,.14,.16)}
+      else if(kind=='sconce'){const [x,y,z]=put(sd*(C.hw+C.walk+.05),0,C.walkY+2.4,0);dg165SconceKit(k);const last=k.P.length;for(let i=last-4;i<last;i++){const p=k.P[i];p.m.premultiply(new THREE.Matrix4().makeRotationY(yw+(sd>0?-Math.PI/2:Math.PI/2)).setPosition(x,y,z))}}})},0))});
+  props.forEach(([s,sd,kind])=>{if(kind=='sconce'){const [x,z]=P.at(s,sd*(C.hw+C.walk-.3));const f=dg165Flame(root,x,C.walkY+2.85,z,.32,0xffa040);S.fl.push(f);S.spots.push({x,y:C.walkY+3,z,c:0xffa050,i:1.8,r:11,ph:s})}
+    if(kind=='grate'&&Rn()<.8)S.float.push({k:'fall',s,sd})});
+  // drifting things on the water: logs, a coffin lid, a skull on a plank (they float with the current)
+  const fK=[lgGroup('DG165|flog',k=>{k.p('','cyl','c',0x2e2216,0,0,0,.22,2.2,.22,Math.PI/2,0,.1)},0),lgGroup('DG165|flid',k=>{k.p('','box','c',0x2a2014,0,0,0,.7,.1,1.8);k.p('','box','c',0x3a2a18,0,.06,0,.2,.04,1.2)},0),lgGroup('DG165|fsk',k=>{k.p('','box','c',0x3a2a18,0,0,0,.5,.08,1.0);k.p('','sph','c',0xc8c0a8,0,.15,.1,.13,.14,.16)},0)];
+  for(let i=0;i<26;i++){const g=fK[i%3].clone();root.add(g);S.float.push({k:'d',g,s:10+Rn()*(P.S-20),o:(Rn()-.5)*2*(C.hw-1.6),ph:Rn()*6,v:.4+Rn()*.5})}
+  // the far end: grey daylight pouring in over a beach of bone
+  {const [x,z]=P.at(P.S,0),[x2,z2]=P.at(P.S-10,0);const glow=kqSpr(0xe8e4d0,26);glow.material=glow.material.clone();glow.material.opacity=.5;glow.position.set(x+(x-x2)*.8,C.walkY+5,z+(z-z2)*.8);root.add(glow);S.day=glow;
+    const lt=new THREE.PointLight(0xe8e4d8,0,40,1.2);lt.position.set(x,C.walkY+8,z);root.add(lt);S.dayL=lt;
+    root.add(lgGroup('DG165|beach',k=>{const R=svRng(7600);for(let i=0;i<60;i++){const [bx,bz]=P.at(P.S-8+R()*10,(R()-.5)*2*(C.hw+2));k.L('','c',lgCol(0xb8b098,0x8a8270,R()),[bx,C.walkY+.05,bz],[bx+(R()-.5)*.8,C.walkY+.05,bz+(R()-.5)*.8],.03,.025,4);
+      if(R()<.3)k.p('','sph','c',0xc8c0a8,bx,C.walkY+.12,bz,.13,.14,.16)}},0))}
+  // the raft
+  S.raft=new THREE.Group();root.add(S.raft);S.lant=lgGroup('DG165|rlant',rf165LanternKit,0);S.lantL=new THREE.PointLight(0xffb060,1.4,16,1.4);S.lantL.position.set(.45,2.6,0);S.lant.add(S.lantL);S.lantF=dg165Flame(S.lant,.45,2.02,0,.3,0xffc070);
+  S.arms=[];const armK=lgGroup('DG165|rarm',rf165ArmKit,0);for(let i=0;i<14;i++){const a=armK.clone();a.visible=false;root.add(a);S.arms.push({g:a,t:-1})}
+  S.pool=dg165LPool(6,14);return S}
+// ---------------- the run ----------------
+function rf165Reset(){const S=rf165Build();rf165Clear();S.raft.children.slice().forEach(c=>S.raft.remove(c));S.drift=(S.drift||[]).filter(d=>{S.root.remove(d.g);return false});
+  const R={ph:'moor',t:0,s:2,v:0,yaw:rf165P().yaw(2),cells:[],H:[0,-1.6],W:[],spawnT:3,roll:0,rollV:0,pitch:0,hk:0,sc:{},n:0,lost:0,id:(RF165R&&RF165R.id||0)+1};
+  for(let c=0;c<RF165.cols;c++)for(let r=0;r<RF165.rows;r++){const [lu,lv]=rf165CellLU(c,r),v=(c*7+r)%3,g=lgGroup('DG165|rcell'+v,k=>rf165CellKit(k,v),0);g.position.set(lu,0,lv);S.raft.add(g);R.cells.push({c,r,lu,lv,alive:1,hp:RF165.hp,g,shk:0,i:rf165Idx(c,r)})}
+  S.raft.add(S.lant);S.lant.position.set(0,0,0);S.lantOn=1;R.fr=rf165Frame(R);RF165R=R;rf165Place();return R}
+// the drowned: remove all of them (a new run, leaving)
+function rf165Clear(){enemies.slice().forEach(e=>{if(e.dg165w&&!e.mir)try{removeE(e)}catch(_){}})}
+function rf165Place(){const R=RF165R;if(!R)return;const [x,z]=rf165W(R,R.H[0],R.H[1]);pl.position.x=x;pl.position.z=z;pl.position.y=RF165.wy+RF165.deck+(R.bob||0);R.last=[x,z]}
+// moves on the deck: one axis at a time, never off the planks
+function rf165Walk(dx,dz){const R=RF165R;if(!R||R.ph=='broken')return;const f=R.fr,du=dx*f.Rt[0]+dz*f.Rt[1],dv=dx*f.F[0]+dz*f.F[1];
+  if(rf165OnDeck(R,R.H[0]+du,R.H[1]))R.H[0]+=du;if(rf165OnDeck(R,R.H[0],R.H[1]+dv))R.H[1]+=dv;rf165Place()}
+{const f=walk;walk=function(o,dx,dz){if(o===pl&&rf165In()&&RF165R&&!(typeof AWD!='undefined'&&AWD.dead))return rf165Walk(dx,dz);return f.apply(this,arguments)}}
+function rf165Phase(p){const L=RF165.ph;let q=L[0];for(const x of L)if(p>=x[0])q=x;return q}
+function rf165Tick(dt,now){const inC=rf165In(),S=RF165S;
+  if(!inC){if(S){S.root.visible=false;dg165LPoolTick(S.pool,S.spots,pl.position,0,false);S.lantL.intensity=0}if(RF165R){rf165Clear();RF165R=null}if(!RF165.off){RF165.off=1;rf165Hud()}return}
+  RF165.off=0;rf165Build();if(!RF165R)rf165Reset();const R=RF165R,P=rf165P(),t=now/1000;RF165S.root.visible=true;R.t+=dt;
+  if(riding)try{dismount(true)}catch(_){}
+  // other things that moved the hero this frame (a knock-back, a pull): onto the deck if they can
+  if(R.last&&R.ph!='broken'){const ex=pl.position.x-R.last[0],ez=pl.position.z-R.last[1];if(Math.abs(ex)+Math.abs(ez)>.001&&Math.abs(ex)+Math.abs(ez)<3)rf165Walk(ex,ez)}
+  // drift: ease out of the mooring, a little faster and slower with the current, slow onto the beach at the end
+  const p=R.s/P.S;let vt=R.ph=='moor'?0:R.ph=='run'?RF165.spd*(1+.1*Math.sin(R.s/55))*(R.s>P.S-30?Math.max(.15,(P.S-R.s)/30):1):R.ph=='end'?0:R.v*.97;
+  if(R.ph=='moor'&&R.t>2.6){R.ph='run';R.t=0;dg165Snd('creak',.8,.8);say('🌊 The mooring rope parts. The current takes the raft into the dark…')}
+  R.v+=(vt-R.v)*Math.min(1,dt*(R.ph=='run'?.6:2));R.s=Math.min(P.S,R.s+R.v*dt);
+  let dy=P.yaw(Math.min(P.S,R.s+3))-R.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));R.yaw+=dy*Math.min(1,dt*1.2);R.fr=rf165Frame(R);
+  // the raft rides the water: bob, pitch, roll (a hulk's slam rocks it)
+  R.rollV+=(-R.roll*9-R.rollV*2.2)*dt;R.roll+=R.rollV*dt;R.bob=.05*Math.sin(t*1.4)+.03*Math.sin(t*2.3+1);
+  const G=RF165S.raft;G.position.set(R.fr.x,RF165.wy+.06+R.bob,R.fr.z);G.rotation.set(.025*Math.sin(t*1.1)+R.pitch,R.yaw,.03*Math.sin(t*.9)+R.roll,'YXZ');
+  R.cells.forEach(C=>{if(!C.alive)return;const dmg=1-C.hp/RF165.hp;C.shk=Math.max(0,C.shk-dt*3);C.g.position.y=-dmg*.1+(C.shk>0?(Math.random()-.5)*.08*C.shk:0);C.g.rotation.z=(C.i%2?1:-1)*dmg*.12;C.g.rotation.x=(C.i%3-1)*dmg*.08});
+  rf165Place();
+  if(R.ph=='run'){if(p>=.97&&R.s>=P.S-2.5){R.ph='end';R.t=0;rf165End()}rf165Spawn(R,dt,p);rf165Scripts(R,dt,now,p)}
+  if(R.ph=='end'&&R.t>2.2&&!R.fin){R.fin=1;rf165Finish()}
+  if(R.ph=='broken')rf165BrokenTick(R,dt);
+  rf165World(R,dt,t,p);
+  if(now-(RF165.hT||0)>110){RF165.hT=now;rf165Hud()}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{rf165Tick(dt,now)}catch(e){if(!RF165.err++)console.error('v165 raft',e)}return r}}
+// lights, the lantern, the floating things, the daylight at the end
+function rf165World(R,dt,t,p){const S=RF165S,P=rf165P();dg165LPoolTick(S.pool,S.spots,pl.position,t,true);dg165FlTick(S.fl,t);if(S.lantF)dg165FlTick([S.lantF],t);
+  S.lantL.intensity=S.lantOn?(1.3+.18*Math.sin(t*7)*Math.sin(t*3.3))*(R.flick>0?(Math.random()<.5?.15:1):1):0;R.flick=Math.max(0,(R.flick||0)-dt);
+  S.float.forEach(f=>{if(f.k=='d'){f.s+=f.v*dt;if(f.s>P.S-12)f.s=8;const [x,z]=P.at(f.s,f.o);f.g.position.set(x,RF165.wy+.05+.04*Math.sin(t*1.3+f.ph),z);f.g.rotation.y=P.yaw(f.s)+f.ph;
+      // the raft pushes floating things aside
+      const [lu,lv]=rf165L(R,x,z);if(Math.abs(lu)<4&&Math.abs(lv)<5.2){f.o+=(lu>0?1:-1)*dt*2;f.o=Math.max(-dg165CCfg().hw+1,Math.min(dg165CCfg().hw-1,f.o))}}
+    else if(f.k=='fall'&&Math.abs(f.s-R.s)<40&&Math.random()<dt*10){const C=dg165CCfg(),[x,z]=P.at(f.s,f.sd*(C.hw+C.walk-.1));burst(V(x,C.walkY+1+Math.random()*.3,z),0x6aa8a0,1,.4,-.2,.8)}});
+  (S.drift||[]).forEach(d=>{d.t+=dt;d.g.position.y-=dt*(.05+d.t*.06);d.g.rotation.x+=dt*d.rx;d.g.rotation.z+=dt*d.rz;if(d.t>6){S.root.remove(d.g);d.dead=1}});S.drift=(S.drift||[]).filter(d=>!d.dead);
+  S.arms.forEach(a=>{if(a.t<0)return;a.t+=dt;const k=a.t<.8?a.t/.8:a.t<2.4?1:Math.max(0,1-(a.t-2.4)/.8);a.g.position.y=RF165.wy-1.2+k*1.2+.06*Math.sin(a.t*5);a.g.rotation.z=.25*Math.sin(a.t*3+a.ph);if(a.t>3.2){a.t=-1;a.g.visible=false}});
+  const day=Math.max(0,(p-.86)/.14);S.day.material.opacity=.15+.55*day;S.dayL.intensity=day*2.6}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{if(rf165In()&&RF165R){const day=Math.max(0,(RF165R.s/rf165P().S-.86)/.14);if(day>0){sun.intensity*=1+day*3;hemi.intensity*=1+day*2}}}catch(_){}return r}}
+// ---------------- the drowned: spawning ----------------
+function rf165Mates(){try{return typeof cl155Mates=='function'?cl155Mates(MP.rg).length:0}catch(_){return 0}}
+function rf165Host(){try{return !(typeof MP!='undefined'&&MP.on&&MP.others)||MP.host===MP.me||!MP.host}catch(_){return true}}
+function rf165Spawn(R,dt,p){if(!rf165Host())return;const q=rf165Phase(p),live=R.W.filter(w=>!w.e.dead&&enemies.includes(w.e)).length,co=1+.4*rf165Mates();
+  RF165.hulk.forEach((hp,i)=>{if(p>=hp&&!R['hk'+i]){R['hk'+i]=1;rf165Make(R,1);dg165Snd('gurgle',1,.6);setTimeout(()=>dg165Snd('scream',.5,.4),400);say('🌊 Something huge rises beside the raft!')}});
+  if(!q[1])return;R.spawnT-=dt;if(R.spawnT>0||live>=Math.round(q[1]*co))return;R.spawnT=q[2]*(.75+Math.random()*.5)/Math.sqrt(co);rf165Make(R,0)}
+function rf165Make(R,hulk){const P=rf165P(),C=dg165CCfg();let ds=Math.random()<.5?-(8+Math.random()*8):9+Math.random()*12,o=(Math.random()-.5)*2*(C.hw-1.2);if(Math.random()<.3){ds=(Math.random()-.5)*8;o=(Math.random()<.5?1:-1)*(C.hw-1)}
+  const s=Math.max(1,Math.min(P.S-2,R.s+ds)),[x,z]=P.at(s,o),lv=dg165Lv(33);let e=null;
+  try{e=spawnEnemy(hulk?'drowned':'dgwretch',x,z,hulk?lv[1]+1:lv[1],{al:!!hulk})}catch(err){console.warn('v165 drowned',err)}if(!e)return null;
+  const w={e,st:'swim',t:0,ph:Math.random()*6,x,z,s,slot:null,act:null,hp:e.c.h,hulk:!!hulk,nT:.8,arm:0,rid:R.id};e.dg165w=w;e.hid=1;e.agg=1;e.cd=99;R.W.push(w);
+  if(hulk)e.m.children.forEach(c=>{if(c.isMesh&&c.geometry&&c.geometry.type=='RingGeometry')c.visible=false});
+  return w}
+// pick an open side of a plank to take hold of (not one another drowned holds)
+function rf165PickSlot(R,w){const open=rf165Open(R).filter(([C,k])=>!R.W.some(q=>q!==w&&q.slot&&q.slot.C===C&&q.slot.k===k&&!q.e.dead));if(!open.length)return null;
+  // a little more often near where the drowned already is
+  let best=null,bd=1e9;for(let i=0;i<4;i++){const q=open[(Math.random()*open.length)|0],[lu,lv]=rf165SlotL(q[0],q[1]),[x,z]=rf165W(R,lu,lv),d=Math.hypot(x-w.x,z-w.z)+Math.random()*6;if(d<bd){bd=d;best=q}}
+  return {C:best[0],k:best[1]}}
+// ---------------- the drowned: each frame (runs instead of the normal AI) ----------------
+{const f=eTick;eTick=function(e,dt,now){const w=e&&e.dg165w;if(w&&!e.dead){try{if(e.mir)return rf165Mirror(e,w,dt,now,f,arguments);rf165WTick(e,w,dt,now)}catch(err){if(!RF165.err++)console.error('v165 drowned tick',err)}return true}return f.apply(this,arguments)}}
+function rf165WTick(e,w,dt,now){const R=RF165R,m=e.m,t=now/1000,P=rf165P(),C=dg165CCfg(),wy=RF165.wy;
+  if(!R||!rf165In()||w.rid!==R.id){try{removeE(e)}catch(_){}return}
+  w.t+=dt;const hurtNow=e.c.h<w.hp-.5;w.hp=e.c.h;let pose=null,y=0,yaw=m.rotation.y;
+  const slotW=()=>{const [lu,lv]=rf165SlotL(w.slot.C,w.slot.k,w.hulk?.95:.62);return rf165W(R,lu,lv)};
+  const slotOk=()=>w.slot&&w.slot.C.alive&&rf165Open(R).some(([Cc,k])=>Cc===w.slot.C&&k===w.slot.k);
+  if(R.ph=='broken'||R.ph=='end'){if(w.st!='sink'){w.st='sink';w.t=0}}
+  if(w.st=='swim'){if(!slotOk())w.slot=rf165PickSlot(R,w);if(!w.slot){w.st='tread'}else{const [tx,tz]=slotW(),dx=tx-w.x,dz=tz-w.z,d=Math.hypot(dx,dz),sp=R.v+(w.hulk?1.8:2.6);
+      if(d<1.1){w.st='rise';w.t=0;w.rx=w.x;w.rz=w.z;rf165Splash(w.x,w.z,w.hulk);e.hid=0}else{const k=Math.min(d,sp*dt)/d;w.x+=dx*k+Math.sin(t*2+w.ph)*dt*.4*(-dz/d);w.z+=dz*k+Math.sin(t*2+w.ph)*dt*.4*(dx/d);yaw=Math.atan2(dx,dz)}}
+    // stay in the water: inside the channel's banks
+    const [ss,oo]=P.near(w.x,w.z,w.s);w.s=ss;if(Math.abs(oo)>C.hw-.6){const [nx,nz]=P.at(ss,Math.sign(oo)*(C.hw-.6));w.x=nx;w.z=nz}
+    const crest=Math.pow(Math.max(0,Math.sin(t*1.2+w.ph)),6);y=wy+DG165WY.swim+crest*1.1;pose=dg165WPose('swim',t,w.ph);
+    if(Math.random()<dt*6){ring(V(w.x,wy+.04,w.z),0x6a9a94,.35+crest*.4,520);if(Math.random()<.5)burst(V(w.x,wy+.08,w.z),0x9ac8c0,2,.25,.5,.4)}}
+  if(w.st=='tread'){y=wy+DG165WY.tread;pose=dg165WPose('tread',t,w.ph);if(w.t>1.5){w.t=0;w.st='swim'}}
+  if(w.st=='rise'){const k=Math.min(1,w.t/.85),[tx,tz]=slotW(),e2=k*k*(3-2*k);w.x=w.rx+(tx-w.rx)*e2;w.z=w.rz+(tz-w.rz)*e2;y=wy+DG165WY.swim+(DG165WY.cling-DG165WY.swim)*e2;
+    pose=k<.5?dg165WMix(dg165WPose('swim',t,w.ph),dg165WPose('reach',t,w.ph),k*2):dg165WMix(dg165WPose('reach',t,w.ph),dg165WPose('cling',t,w.ph),(k-.5)*2);
+    const [cx,cz]=rf165W(R,w.slot.C.lu,w.slot.C.lv);yaw=Math.atan2(cx-w.x,cz-w.z);if(k>=1){w.st='cling';w.t=0;w.nT=.4+Math.random()*.6;dg165Snd('scrape',.5,.7)}}
+  if(w.st=='cling'){if(!slotOk()){w.st='drop';w.t=0}else{const [tx,tz]=slotW();w.x=tx;w.z=tz;const [cx,cz]=rf165W(R,w.slot.C.lu,w.slot.C.lv);yaw=Math.atan2(cx-w.x,cz-w.z);y=wy+DG165WY.cling;
+      if(hurtNow&&(!w.act||w.act.k!='flinch'))w.act={k:'flinch',t:0,T:.45};
+      if(!w.act){w.nT-=dt;if(w.nT<=0){const H=rf165Heroes(),nh=H.filter(h=>Math.hypot(h.x-w.x,h.z-w.z)<(w.hulk?2.8:2.2));w.act=nh.length&&Math.random()<.5?{k:'lunge',t:0,T:1.15,tg:nh[0]}:{k:'rake',t:0,T:w.hulk?1.5:1.05,arm:(w.arm^=1)}}}
+      const A=w.act;if(A){A.t+=dt;const k=Math.min(1,A.t/A.T);
+        if(A.k=='rake'){pose=dg165WPose('rake',t,w.ph,{k,arm:A.arm});if(k>.5&&!A.hit){A.hit=1;rf165Rake(R,w)}}
+        else if(A.k=='lunge'){pose=dg165WPose('lunge',t,w.ph,{k});y+=.45*Math.sin(Math.min(1,k/.6)*Math.PI/2);const hy=Math.atan2(A.tg.x-w.x,A.tg.z-w.z);yaw=hy;if(k<.6&&Math.random()<dt*10)burst(V(w.x,wy+.05,w.z),0xa8d8d0,2,.6,.6,.3);
+          if(k>.62&&!A.hit){A.hit=1;dg165Snd('scrape',.6,1.2);rf165Lunge(R,w,A.tg)}}
+        else if(A.k=='flinch'){pose=dg165WMix(dg165WPose('cling',t,w.ph),dg165WPose('flinch',t,w.ph,{k}),Math.sin(k*Math.PI));y-=.18*Math.sin(k*Math.PI)}
+        if(k>=1){w.act=null;w.nT=(w.hulk?.9:.5)+Math.random()*.9}}
+      if(!pose)pose=dg165WPose('cling',t,w.ph);
+      if(Math.random()<dt*3)ring(V(w.x,wy+.04,w.z),0x6a9a94,.6,700)}}
+  if(w.st=='drop'){const k=Math.min(1,w.t/.8);y=wy+DG165WY.cling+(DG165WY.swim-DG165WY.cling)*k;pose=dg165WMix(dg165WPose('flinch',t,w.ph,{k:.5}),dg165WPose('swim',t,w.ph),k);if(k>=1){w.st='swim';w.t=0;w.slot=null;e.hid=1}}
+  if(w.st=='sink'){const k=Math.min(1,w.t/1.4);y=wy+DG165WY.cling-k*1.6;pose=dg165WPose('sink',t,w.ph,{k});e.hid=1;if(Math.random()<dt*12)burst(V(w.x,wy+.06,w.z),0x9ac8c0,2,.3,.6,.5);if(k>=1){try{removeE(e)}catch(_){}return}}
+  m.position.set(w.x,y,w.z);let dr=yaw-m.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));m.rotation.y+=dr*Math.min(1,dt*(w.st=='swim'?6:10));
+  if(pose)dg165WApply(e,pose);
+  e.hb.visible=!e.hid&&m.visible;e.hb.position.set(m.position.x,wy+(w.hulk?2.6:1.9),m.position.z)}
+// a partner's copy of a host's drowned (co-op): it goes where the host says; its state comes in the host's 'rw' list (3268),
+// or, before that arrives, from how close it is to the raft's edge
+function rf165Mirror(e,w,dt,now,f,args){const r=f.apply(this,args);const R=RF165R,m=e.m,t=now/1000,wy=RF165.wy;if(!R)return r;
+  const st=w.net||(()=>{const [lu,lv]=rf165L(R,m.position.x,m.position.z);return Math.abs(lu)<RF165.cs*(RF165.cols/2)+1.1&&Math.abs(lv)<RF165.cs*(RF165.rows/2)+1.1?'cling':'swim'})();
+  const y=wy+(DG165WY[st]||DG165WY.cling);m.position.y+=(y-m.position.y)*Math.min(1,dt*6);e.hid=st=='swim'||st=='sink'?1:0;
+  dg165WApply(e,st=='rake'?dg165WPose('rake',t,w.ph,{k:(t*.95)%1,arm:0}):dg165WPose(st=='rake'||st=='lunge'?'cling':st,t,w.ph,{k:.5}));
+  e.hb.visible=!e.hid&&m.visible;e.hb.position.set(m.position.x,wy+(w.hulk?2.6:1.9),m.position.z);return true}
+// the heroes on the raft (me and my partners on the channel)
+function rf165Heroes(){const L=[{x:pl.position.x,z:pl.position.z,me:1}];try{if(typeof cl155Mates=='function')for(const r of cl155Mates(MP.rg))if(r.pr&&r.pr.hp>0&&r.m)L.push({x:r.m.position.x,z:r.m.position.z,peer:r.peer})}catch(_){}return L}
+function rf165Splash(x,z,big){const wy=RF165.wy;burst(V(x,wy+.2,z),0xc8f0e8,big?60:30,big?3:2,big?4:3,.7);burst(V(x,wy+.1,z),0x2a5a54,big?30:14,2,2,.6);ring(V(x,wy+.04,z),0xa8e8e0,big?2.4:1.4,700);dg165Snd('splash',big?1.1:.7,big?.6:.9+Math.random()*.2);if(big)shake(.2)}
+// a rake: the claws tear at the plank (a hulk's slam tears at it and the next one, and rocks the raft)
+function rf165Rake(R,w){const C=w.slot&&w.slot.C;if(!C||!C.alive)return;const [lu,lv]=rf165SlotL(C,w.slot.k,.1),[x,z]=rf165W(R,lu,lv);
+  burst(V(x,RF165.wy+.35,z),0x6a4a2a,w.hulk?18:9,1.6,1.4,.5);dg165Snd('splint',w.hulk?.9:.45,w.hulk?.7:1+Math.random()*.3);
+  if(w.hulk){shake(.25);R.rollV+=(w.slot.k==0?-1:w.slot.k==1?1:0)*1.6+(Math.random()-.5);const d=RF165D[w.slot.k],n=[[d[1],d[0]],[-d[1],-d[0]]].map(q=>{const c=C.c+q[0],r=C.r+q[1];return c>=0&&r>=0&&c<RF165.cols&&r<RF165.rows?R.cells[rf165Idx(c,r)]:null}).find(q=>q&&q.alive);rf165Dmg(R,C,RF165.slam);if(n)rf165Dmg(R,n,RF165.slam*.6)}
+  else rf165Dmg(R,C,RF165.rake*(.85+Math.random()*.3))}
+function rf165Dmg(R,C,d){if(!C||!C.alive||R.ph!='run')return;C.hp-=d;C.shk=1;dg165Co('rd',C.i,Math.round(C.hp));if(C.hp<=0)rf165Break(R,C,true)}
+// a plank torn away: it drifts off and sinks; whoever stood on it stumbles onto the nearest plank left
+function rf165Break(R,C,mine){if(!C.alive)return;C.alive=0;C.hp=0;R.lost++;const S=RF165S,g=C.g;
+  g.updateMatrixWorld(true);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();g.matrixWorld.decompose(p,q,s);S.raft.remove(g);g.position.copy(p);g.quaternion.copy(q);S.root.add(g);
+  (S.drift=S.drift||[]).push({g,t:0,rx:(Math.random()-.5)*.6,rz:(Math.random()-.5)*.9});burst(V(p.x,RF165.wy+.3,p.z),0x6a4a2a,26,2.4,2,.6);rf165Splash(p.x,p.z,false);dg165Snd('splint',1,.6);dg165Snd('creak',.7,.6);shake(.15);
+  if(S.lant.parent===g||(C.c==2&&C.r==3)){if(S.lantOn){S.lantOn=0;S.raft.remove(S.lant);dg165Snd('splash',.6,1.4);say('🕯 The lantern goes over the side and hisses out. Darkness.');dg165Fear(.8)}}
+  const [hu,hv]=R.H;if(!rf165OnDeck(R,hu,hv)){let best=null,bd=1e9;R.cells.forEach(D=>{if(!D.alive)return;const d=Math.hypot(D.lu-hu,D.lv-hv);if(d<bd){bd=d;best=D}});if(best){R.H=[best.lu,best.lv];rf165Place();dg165Fear(.5);try{svSnd('splash',.5,1.2)}catch(_){}}}
+  if(mine)dg165Co('rb',C.i);
+  const n=rf165Alive(R);if(n<=RF165.min)rf165Shatter(R,mine);else if(n<=RF165.min+4&&!R.warn){R.warn=1;say('⚠ The raft is coming apart! Only '+n+' planks left!');dg165Fear(.9)}}
+// a lunge at a hero beside the edge
+function rf165Lunge(R,w,tg){if(tg.me){if(Math.hypot(pl.position.x-w.x,pl.position.z-w.z)<(w.hulk?3:2.5))try{hitHero(w.e,w.hulk?1.3:.85)}catch(_){}}else dg165Co('lg',w.e.nid||'',tg.peer)}
+// ---------------- scripted moments ----------------
+function rf165Scripts(R,dt,now,p){const sc=R.sc,S=RF165S;
+  if(!sc.under&&p>.03){sc.under=1;dg165Snd('gurgle',.9,.5);R.rollV+=1.4;shake(.18);dg165Fear(.6);setTimeout(()=>{dg165Snd('whisper',.7,.7);say('🌊 Something huge passes beneath the raft. The logs knock against it.')},600);
+    for(let i=0;i<24;i++)setTimeout(()=>{try{const [x,z]=rf165W(R,(Math.random()-.5)*1.5,-6+i*.6);burst(V(x,RF165.wy+.05,z),0x9ac8c0,3,.3,.8,.6)}catch(_){}},i*90)}
+  if(!sc.hands&&p>.552){sc.hands=1;R.flick=2.2;dg165Snd('wail',.8,.7);dg165Fear(1);S.arms.forEach((a,i)=>{const an=i/S.arms.length*6.283,[x,z]=rf165W(R,Math.cos(an)*(4.4+Math.random()),Math.sin(an)*(5.6+Math.random()));a.g.position.set(x,RF165.wy-1.2,z);a.g.rotation.y=Math.atan2(R.fr.x-x,R.fr.z-z);a.g.visible=true;a.t=-Math.random()*.6;a.ph=Math.random()*6;
+      setTimeout(()=>{a.t=0;ring(V(x,RF165.wy+.04,z),0xa8e8e0,.6,600)},Math.random()*700)});setTimeout(()=>say('🌊 Hands. Dozens of them, rising all around you… and sinking again.'),900)}
+  // the arms drift with the raft while they are up
+  S.arms.forEach(a=>{if(a.t>=0){a.g.position.x+=R.fr.F[0]*R.v*dt;a.g.position.z+=R.fr.F[1]*R.v*dt}});
+  if(Math.random()<dt*.08)dg165Snd(['whisper','drip','creak','gurgle'][(Math.random()*4)|0],.4,.8+Math.random()*.4);
+  if(p>.3&&p<.55&&Math.random()<dt*.15)R.flick=.25}
+// ---------------- the end: broken, or through ----------------
+function rf165Shatter(R,mine){if(R.ph=='broken')return;R.ph='broken';R.t=0;const S=RF165S;dg165Fear(1.2);shake(.6);dg165Snd('splint',1.2,.5);dg165Snd('slam',1,.6);dg165Snd('scream',.8,.6);
+  R.cells.forEach(C=>{if(C.alive){C.alive=0;const g=C.g;g.updateMatrixWorld(true);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();g.matrixWorld.decompose(p,q,s);S.raft.remove(g);g.position.copy(p);g.quaternion.copy(q);S.root.add(g);S.drift.push({g,t:0,rx:(Math.random()-.5)*1.4,rz:(Math.random()-.5)*1.6})}});
+  if(S.lantOn){S.lantOn=0;S.raft.remove(S.lant)}
+  dg165Title('The Raft Breaks Apart','The drowned drag you down into the black water','','The Black Channel');if(mine)dg165Co('rx',0)}
+function rf165BrokenTick(R,dt){pl.position.y=RF165.wy-Math.min(2.2,R.t*1.1);if(Math.random()<dt*14)burst(V(pl.position.x,RF165.wy+.06,pl.position.z),0x9ac8c0,3,.4,.8,.5);
+  if(R.t>2.2&&!R.died){R.died=1;try{if(typeof RV148!='undefined'&&RV148.down){RV148.down=0;document.body.classList.remove('rv148dn')}}catch(_){}hero.hp=0;try{down_base()}catch(e){console.warn('v165 raft death',e)}}}
+function rf165End(){dg165Snd('choir',.7,.9);dg165Title('Grey Light Ahead','The channel opens onto a beach of bone','The Ossuary Fields','The Black Channel');say('🌫 The raft grinds onto a shore of bones. Grey daylight. The drowned sink away behind you.')}
+function rf165Finish(){DG165Q.r.st=2;dg165Co('rout',0);fadeTo(()=>{rf165Clear();RF165R=null;const N=INSL[22];insArrive(N);insMark(N);setTimeout(()=>{dg165Title('Out of the Black Channel','You climb up from the beach into the Ossuary Fields','Onward through '+N.n);try{mSfx('victory')}catch(_){}},400);
+  say('🌊 You brought the raft through the Black Channel. <b>'+N.n+'</b> lies ahead.')})}
+// ---------------- getting on and off ----------------
+function rf165Enter(){if(AF)return;try{if(riding)dismount(true)}catch(_){}const first=DG165Q.r.st<1;DG165Q.r.st=Math.max(1,DG165Q.r.st);
+  fadeTo(()=>{rf165Build();const P=rf165P(),[x,z]=P.at(2,0);toPos(x,z,P.yaw(2)+Math.PI);rf165Reset();
+    setTimeout(()=>dg165Title('The Black Channel','The current carries the raft down into the dark',first?'Keep the drowned off the raft · every plank counts':'Hold the raft together'),300);
+    if(first)setTimeout(()=>{say('🌊 The drowned will rise and tear at the raft’s edges. Kill them before they rip the planks away — if the raft falls apart, you go down with it.');dg165Snd('drone',.9,.8)},2000)});try{dg165Co('renter',0)}catch(_){}}
+function rf165Leave(){fadeTo(()=>{rf165Clear();RF165R=null;const G=SP152.gates.channel,s=G&&G.spot;if(s)toPos(s.x+s.ux*-2.4,s.z+s.uz*-2.4,s.ry);else insArrive(INSL[21])})}
+function rf165Rise(){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}const P=rf165P(),[x,z]=P.at(2,0);toPos(x,z,P.yaw(2)+Math.PI);rf165Reset();say('🌊 You wake on a fresh raft at the mouth of the channel. Again…');try{ui()}catch(_){}}
+{const f=down_base;down_base=function(){if(!(rf165In()&&RF165S))return f.apply(this,arguments);if(typeof awDie=='function'&&typeof AWD!='undefined'){if(AWD.dead)return;awDie(()=>rf165Rise())}else rf165Rise()}}
+// a dead drowned sinks under the water instead of toppling over
+{const f=kill;kill=function(e){const w=e&&e.dg165w;if(w&&e.m){e.m._ssDead=1}const r=f.apply(this,arguments);
+  if(w&&e.m){const m=e.m,x=m.position.x,z=m.position.z,y0=m.position.y;let t=0;dg165Snd('gurgle',.6,.9);burst(V(x,RF165.wy+.2,z),0x9ac8c0,16,1.4,1.6,.6);
+    kqFx({tick(dt){t+=(dt||.016);const k=Math.min(1,t/1.4);m.position.set(x,y0-k*1.8,z);try{dg165WApply(e,dg165WPose('sink',t,w.ph,{k}))}catch(_){}if(Math.random()<.3)burst(V(x,RF165.wy+.06,z),0x9ac8c0,1,.3,.5,.5);return k<1},end(){}})}
+  return r}}
+{const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return e&&e.dg165w?k*(e.dg165w.hulk?.8:.35):k}}
+{const f=lootE;lootE=function(e){if(e&&e.dg165w&&!e.dg165w.hulk&&Math.random()>=.25)return;return f.apply(this,arguments)}}
+// ---------------- the HUD ----------------
+(function(){const st=document.createElement('style');st.textContent=`
+#rf165h{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:7;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px;color:#e2ece8;font:600 12px system-ui,sans-serif;text-shadow:0 1px 2px #000}
+#rf165h.hide{display:none}#rf165h .rw{display:flex;align-items:center;gap:8px}#rf165h .lb{font:600 11px Cinzel,Georgia,serif;letter-spacing:.12em;color:#a8d8c8;min-width:64px;text-align:right}
+#rf165h .bar{position:relative;width:260px;height:11px;border-radius:6px;background:rgba(0,0,0,.6);border:1px solid rgba(160,220,200,.35);overflow:hidden}
+#rf165h .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#8a3a20,#c88a40 50%,#d8c890)}#rf165h .bar.pr i{background:linear-gradient(90deg,#2a6a6a,#8ad8c8)}
+#rf165h .n{min-width:70px;font-size:11.5px}#rf165h .warn{font:800 14px Cinzel,Georgia,serif;letter-spacing:.12em;color:#ff6a4a;opacity:0}#rf165h.hot .bar.hp{animation:rf165p .4s infinite alternate}
+@keyframes rf165p{to{border-color:#ff5030;box-shadow:0 0 12px rgba(255,60,30,.7)}}
+#rf165g{position:fixed;right:14px;top:92px;z-index:7;pointer-events:auto;padding:5px 10px;border-radius:8px;border:1px solid rgba(160,220,200,.35);background:rgba(6,10,10,.7);color:#e0ece8;font:600 12px system-ui,sans-serif;cursor:pointer}#rf165g.hide{display:none}`;
+  document.head.appendChild(st);const d=document.createElement('div');d.id='rf165h';d.className='hide';d.innerHTML='<div class="rw"><span class="lb">RAFT</span><div class="bar hp"><i></i></div><span class="n a"></span></div><div class="rw"><span class="lb">CHANNEL</span><div class="bar pr"><i></i></div><span class="n b"></span></div><div class="warn">⚠ THE RAFT IS BREAKING</div>';document.body.appendChild(d);
+  const g=document.createElement('button');g.id='rf165g';g.className='hide';g.textContent='🏳 Abandon the raft';g.addEventListener('click',()=>{if(rf165In()&&RF165R&&RF165R.ph!='broken')rf165Leave()});document.body.appendChild(g)})();
+function rf165Hud(){const el=$('rf165h'),gb=$('rf165g');if(!el)return;const R=RF165R,on=rf165In()&&!!R&&!(typeof uiOpen=='function'&&uiOpen());el.classList.toggle('hide',!on);if(gb)gb.classList.toggle('hide',!on||R.ph=='broken');if(!on)return;
+  const n=rf165Alive(R),N=R.cells.length,k=Math.max(0,(n-RF165.min)/(N-RF165.min)),P=rf165P();el.querySelector('.hp i').style.width=(k*100).toFixed(1)+'%';el.querySelector('.n.a').textContent=n+' planks';
+  el.querySelector('.pr i').style.width=(R.s/P.S*100).toFixed(1)+'%';el.querySelector('.n.b').textContent=Math.round(R.s/P.S*100)+'%';el.classList.toggle('hot',k<.3);el.querySelector('.warn').style.opacity=k<.3&&R.ph=='run'?(.6+.4*Math.sin(performance.now()/120)).toFixed(2):0}
+// ---------------- the rules while inside ----------------
+SP152.R.channel={park:1,noMount:'🌊 No mount on a raft.',noRecall:'🌊 The current has you. Hold on (or 🏳 abandon the raft).',onLoad(){setTimeout(()=>{try{rf165Rise()}catch(e){console.warn('v165 raft load',e)}},0)}};
+// ---------------- the quay in Dirge II ----------------
+sp152Gate('channel',{ig:21,r:3.4,build:rf165QuayModel,where:()=>sp152GateSpot(21,5.5),
+  tick(s){const G=SP152.gates.channel;if(!G||!G.g)return;const t=performance.now()/1000,rf=G.g.userData.raft,gl=G.g.userData.glow;if(gl)gl.material.opacity=.26+.08*Math.sin(t*1.4);if(rf){rf.position.y=-.05+.04*Math.sin(t*1.3);rf.rotation.z=.02*Math.sin(t*.9)}
+    if(Math.random()<.05)burst(V(s.x-Math.sin(s.ry)*6,GH(s.x,s.z)-.1,s.z-Math.cos(s.ry)*6),0x8ab8b0,1,.2,.4,.6)},
+  prompt(s){if(dg165RDone()){const N=INSL[22];return {label:'F · Take the raft down to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
+    return {label:'F · Board the raft (down the Black Channel)',fn:()=>rf165Enter()}}});
+// ---------------- the tracker ----------------
+SP152.trk.channel=I=>{if(I.g===21&&!dg165RDone())return {name:'The Black Channel',lines:[['Find the flooded tunnel at the end of '+INSL[21].n],['Take the raft down the channel']]};
+  if(I.sp==='channel'&&RF165R){const R=RF165R;return {name:'The Black Channel',lines:[['Keep the drowned off the raft'],['Planks left',rf165Alive(R)+' / '+R.cells.length],['Reach the end of the channel',null,1]]}}return null};
+// ---------------- the atmosphere ----------------
+sp152Theme('channel',{nm:'The Black Channel',sub:'Flooded vaults beneath the crypts',a:{fog:.048,fc:0x041412,fcA:.95,sun:.14,hemi:.34,env:'dark',ex:.95,sat:1.1,vig:1.8,sky:0,pt:'wisp',pc:0x6affd8,po:.55}});
+// the raft floats over water tiles (solid ground for walking): the "stuck in a wall" rescue (0570) leaves a hero on it alone
+{const f=unstick;unstick=function(){if(rf165In()&&RF165R)return;return f.apply(this,arguments)}}
+// no fishing off the raft (or down in the Sanctum)
+{const f=nearWater;nearWater=function(){if(rf165In()||(typeof dg165SIn=='function'&&dg165SIn()))return null;return f.apply(this,arguments)}}
+// ================= v165 The Dirge III — the Ossuary Prisms and the Reliquary =================
+// The gateway to the Sovereign's Den at the end of the Ossuary Fields is sealed: five dark glyphs hang in it. Five prisms of the old
+// dead's essence float over bone plinths around the fields (dg165PrismPlan, 3260), each its own colour, and at the middle of the
+// map stands the Reliquary, a ring of five rune pillars round a cold altar.
+//  * F at a prism siphons its essence into you (OS165.sip seconds; stay close). You can hold the charge of one prism at a time.
+//  * Carrying a charge, the dead are drawn to you: they rise around you every OS165.gap seconds (OS165.cap at once) until it is
+//    delivered. No mount and no recall while you carry it.
+//  * F at the rune of the same colour in the Reliquary pours the charge into it; the rune burns. Fall while carrying and the charge
+//    flows back to its prism.
+//  * All five runes lit: the altar's flame wakes, the beams meet over the Reliquary, and the Den's gateway opens.
+// State DG165Q.o: lit[5] (runes lit), st (1 = the Den open). Saved in x2.dg165 (3268). A prism whose rune is lit stays dark.
+var OS165={sip:2.2,gap:2.7,first:.6,cap:11,lv:null,S:null,carry:null,sipping:null,err:0,trkK:'',
+  col:[0x5af0e0,0xb48aff,0xffc050,0xff5a5a,0x8aff6a],cs:['#5af0e0','#b48aff','#ffc050','#ff5a5a','#8aff6a'],nm:['Pale','Violet','Amber','Crimson','Verdant']};
+function os165In(){return dg165InG(22)}
+function os165N(){return DG165Q.o.lit.filter(Boolean).length}
+// ---------------- models ----------------
+function os165RuneTex(i){const k='os'+i;OS165.tx=OS165.tx||{};if(OS165.tx[k])return OS165.tx[k];const cv=document.createElement('canvas');cv.width=128;cv.height=256;const g=cv.getContext('2d');g.strokeStyle='#fff';g.lineCap='round';g.lineJoin='round';g.shadowColor='#fff';g.shadowBlur=10;g.lineWidth=11;
+  g.beginPath();const P=[[[64,30],[64,226]],[[30,70],[64,110],[98,70]],[[34,180],[64,140],[94,180]],[[40,60],[88,200]],[[88,60],[40,200]]];
+  [[0,1],[0,2],[3,4],[0,1,2],[0,3]][i].forEach(j=>{const L=P[j];g.moveTo(...L[0]);for(let q=1;q<L.length;q++)g.lineTo(...L[q])});
+  if(i==2){g.moveTo(30,128);g.lineTo(98,128)}if(i==4){g.arc(64,128,34,0,6.283)}if(i==1){g.moveTo(40,226);g.lineTo(88,226)}g.stroke();
+  return OS165.tx[k]=new THREE.CanvasTexture(cv)}
+function os165PrismModel(i){const g=new THREE.Group(),c=OS165.col[i];g.userData.psNo=1;
+  g.add(lgGroup('DG165|pplinth',k=>{const R=svRng(8100),b=0xb8b098,b2=0x8a8270,st=0x4a4a46;k.p('','cyl','c',st,0,.15,0,1.5,.3,1.5);k.p('','cyl','c',lgCol(st,0x2a2a28,.3),0,.42,0,1.15,.24,1.15);
+    // a drum of stacked skulls and long bones bound under a stone cap
+    for(let j=0;j<3;j++)for(let q=0;q<9;q++){const a=q/9*6.283+j*.35,y=.7+j*.32;k.p('','sph','c',lgCol(b,b2,R()),Math.cos(a)*.72,y,Math.sin(a)*.72,.17,.18,.2,0,-a+Math.PI/2,0);[-1,1].forEach(s=>k.p('','sph','c',0x080806,Math.cos(a)*.86+Math.cos(a+Math.PI/2)*s*.06,y+.02,Math.sin(a)*.86+Math.sin(a+Math.PI/2)*s*.06,.04,.04,.03))}
+    for(let q=0;q<12;q++){const a=q/12*6.283;k.L('','c',b2,[Math.cos(a)*.95,.4,Math.sin(a)*.95],[Math.cos(a)*.8,1.75,Math.sin(a)*.8],.05,.04,5)}
+    k.p('','cyl','c',st,0,1.72,0,.9,.18,.9);k.p('','ring','m',0x5a4a2a,0,1.83,0,.82,.5,.82)},0));
+  // the prism: a tall faceted crystal turning above the plinth, a bright core, a halo, a faint pillar of light
+  const cr=new THREE.Mesh(svG('os165cr',()=>{const q=new THREE.OctahedronGeometry(1,0);q.scale(.62,1.75,.62);return q}),new THREE.MeshPhongMaterial({color:c,emissive:c,emissiveIntensity:.6,shininess:90,transparent:true,opacity:.82,flatShading:true}));
+  cr.position.y=3.6;g.add(cr);const core=kqSpr(c,2.4);core.material=core.material.clone();core.position.y=3.2;g.add(core);
+  const halo=new THREE.Mesh(svG('os165ha',()=>new THREE.TorusGeometry(1.3,.04,6,48)),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));halo.position.y=3.2;halo.rotation.x=Math.PI/2;g.add(halo);
+  const beam=new THREE.Mesh(svG('os165bm',()=>{const q=new THREE.CylinderGeometry(.35,.6,46,10,1,true);q.translate(0,23,0);return q}),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=2;g.add(beam);
+  const lt=new THREE.PointLight(c,2.2,14,1.5);lt.position.y=3.4;g.add(lt);
+  const pool=new THREE.Mesh(svG('dec',()=>new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));pool.scale.setScalar(3.2);pool.position.y=.32;g.add(pool);
+  return {g,cr,core,halo,beam,lt,pool,i}}
+function os165ReliqModel(){const g=new THREE.Group();g.userData.psNo=1;
+  g.add(lgGroup('DG165|reliq',k=>{const R=svRng(8200),st=0x5a5852,st2=0x46443e,b=0xb8b098,b2=0x8a8270;
+    // the round floor and its steps, flagged, a bone mosaic ring
+    k.p('','cyl','c',st2,0,.12,0,9.4,.24,9.4);k.p('','cyl','c',st,0,.3,0,8.6,.16,8.6);k.p('','cyl','c',lgCol(st,0x2a2a28,.4),0,.42,0,2.4,.1,2.4);
+    for(let q=0;q<40;q++){const a=q/40*6.283;k.p('','box','c',lgCol(b,b2,R()),Math.cos(a)*4.4,.39,Math.sin(a)*4.4,.5,.04,.18,0,-a,0)}
+    for(let q=0;q<24;q++){const a=q/24*6.283;k.p('','box','c',lgCol(st,st2,R()),Math.cos(a)*7.6,.4,Math.sin(a)*7.6,1.6,.05,.9,0,-a,0)}
+    // broken arches all round the rim
+    for(let q=0;q<10;q++){const a=q/10*6.283+.31;if(q%3==1)continue;const x=Math.cos(a)*9.6,z=Math.sin(a)*9.6,h=3+R()*2.5;k.p('','box','c',st2,x,h/2,z,.8,h,.8,0,-a,0);if(q%3==0)k.p('','box','c',st,Math.cos(a+.3)*9.6,h,Math.sin(a+.3)*9.6,.7,.5,3.2,0,-a-.3+Math.PI/2,0)}
+    // the altar: a stepped block with a basin, skulls round it
+    k.p('','box','c',st2,0,.8,0,2.2,.8,2.2);k.p('','box','c',st,0,1.35,0,1.6,.4,1.6);k.p('','cyl','m',0x3a3028,0,1.65,0,.6,.2,.6);
+    for(let q=0;q<8;q++){const a=q/8*6.283;k.p('','sph','c',lgCol(b,b2,R()),Math.cos(a)*1.2,1.1,Math.sin(a)*1.2,.16,.17,.19,0,-a+Math.PI/2,0)}
+    for(let q=0;q<30;q++){const a=R()*6.283,r=2.6+R()*6;k.L('','c',lgCol(b,b2,R()),[Math.cos(a)*r,.4,Math.sin(a)*r],[Math.cos(a)*r+(R()-.5)*.7,.42,Math.sin(a)*r+(R()-.5)*.7],.03,.025,4)}},0));
+  // the five rune pillars: obelisks of bone and stone, each with its rune (a glowing slab facing the altar)
+  const runes=[];for(let i=0;i<5;i++){const a=i/5*6.283,pg=new THREE.Group();pg.position.set(Math.sin(a)*6.2,.38,Math.cos(a)*6.2);pg.rotation.y=a+Math.PI;g.add(pg);
+    pg.add(lgGroup('DG165|rpillar',k=>{const st=0x4e4c46,b=0xb8b098;k.p('','box','c',st,0,.3,0,1.3,.6,1.3);k.p('','box','c',st,0,2.1,0,.8,3.4,.8);k.p('','cone4','c',st,0,4.2,0,.6,.8,.6,0,Math.PI/4,0);
+      for(let q=0;q<4;q++)k.p('','sph','c',b,0,.9+q*.75,-.44,.16,.17,.12);for(let q=0;q<6;q++)k.L('','c',0x8a8270,[-.42+q*.17,.6,-.42],[-.42+q*.17,3.6,-.42],.03,.03,4);
+      k.p('','box','c',0x1a1a1c,0,2.3,.41,.6,1.5,.04)},0));
+    const rm=new THREE.Mesh(svG('os165rn',()=>new THREE.PlaneGeometry(.7,1.4)),new THREE.MeshBasicMaterial({color:OS165.col[i],map:os165RuneTex(i),transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));rm.position.set(0,2.3,.44);pg.add(rm);
+    const beam=new THREE.Mesh(svG('os165bm2',()=>{const q=new THREE.CylinderGeometry(.18,.3,40,8,1,true);q.translate(0,20,0);return q}),new THREE.MeshBasicMaterial({color:OS165.col[i],map:SPR,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=4.4;pg.add(beam);
+    const lt=new THREE.PointLight(OS165.col[i],0,12,1.5);lt.position.set(0,2.6,1.2);pg.add(lt);const fl=kqSpr(OS165.col[i],1.6);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=4.7;pg.add(fl);runes.push({g:pg,rm,beam,lt,fl,a,i})}
+  const fl=kqSpr(0xd8fff0,1.2);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=2.4;g.add(fl);const flL=new THREE.PointLight(0xd8fff0,0,18,1.4);flL.position.y=3;g.add(flL);
+  return {g,runes,fl,flL}}
+// ---------------- the world ----------------
+function os165Build(){if(OS165.S)return OS165.S;const Pl=dg165PrismPlan(),S={pr:[],R:null};OS165.S=S;
+  Pl.pr.forEach((o,i)=>{const M=os165PrismModel(i),y=GH(o.x,o.z);M.g.position.set(o.x,y,o.z);scene.add(M.g);M.x=o.x;M.z=o.z;M.y=y;S.pr.push(M);for(let du=-1;du<=1;du++)for(let dv=-1;dv<=1;dv++)CBLK.add(Math.round(o.z+dv)*W+Math.round(o.x+du))});
+  const c=Pl.ctr,R=os165ReliqModel();R.g.position.set(c.x,GH(c.x,c.z),c.z);R.g.rotation.y=c.ry;scene.add(R.g);R.x=c.x;R.z=c.z;S.R=R;
+  R.runes.forEach(q=>{const a=q.a+c.ry,x=c.x+Math.sin(a)*6.2,z=c.z+Math.cos(a)*6.2;q.x=x;q.z=z;CBLK.add(Math.round(z)*W+Math.round(x))});for(let du=-1;du<=1;du++)for(let dv=-1;dv<=1;dv++)CBLK.add(Math.round(c.z+dv)*W+Math.round(c.x+du));
+  os165GateSync();return S}
+function os165Full(i){return !DG165Q.o.lit[i]&&!(OS165.carry&&OS165.carry.i===i)&&!(OS165.net&&OS165.net[i])}
+function os165Tick(dt,now){const in3=os165In(),t=now/1000;if(in3&&!OS165.S)try{os165Build()}catch(e){if(!OS165.err++)console.error('v165 prisms',e)}
+  const S=OS165.S;if(!S)return;S.pr.forEach(M=>M.g.visible=in3);S.R.g.visible=in3;
+  if(!in3){S.pr.forEach(M=>M.lt.intensity=0);S.R.runes.forEach(q=>q.lt.intensity=0);S.R.flL.intensity=0;if(OS165.carry)os165Return('left');OS165.sipping=null;return}
+  const P=pl.position;
+  S.pr.forEach((M,i)=>{const full=os165Full(i),sip=OS165.sipping&&OS165.sipping.i===i,k=full?1:.12;M.cr.rotation.y+=dt*(sip?3:.6);M.cr.position.y=3.6+.18*Math.sin(t*1.2+i);M.core.position.y=M.cr.position.y;M.halo.position.y=M.cr.position.y;
+    M.cr.material.opacity=.3+.55*k;M.cr.material.emissiveIntensity=.15+.6*k*(1+(sip?.6*Math.sin(t*16):0));M.core.material.opacity=.15+.75*k;M.core.scale.setScalar((1.2+.4*k)*(1+.08*Math.sin(t*3+i)));M.halo.rotation.z+=dt*.8;M.halo.material.opacity=.1+.5*k;
+    M.beam.material.opacity=.04+.26*k;M.pool.material.opacity=.08+.42*k;M.lt.intensity=(.3+1.6*k)*(.9+.1*Math.sin(t*5+i));
+    if(full&&Math.hypot(P.x-M.x,P.z-M.z)<50&&Math.random()<dt*4){const a=Math.random()*6.283;burst(V(M.x+Math.cos(a)*1.2,M.y+2+Math.random()*2,M.z+Math.sin(a)*1.2),OS165.col[i],1,.2,.6,.8)}});
+  S.R.runes.forEach(q=>{const lit=DG165Q.o.lit[q.i],want=OS165.carry&&OS165.carry.i===q.i;q.rm.material.opacity=lit?.95:want?.35+.3*Math.sin(t*6):.16;q.beam.material.opacity=lit?.5+.08*Math.sin(t*2+q.i):0;q.lt.intensity=lit?2.4:want?1:0;q.fl.material.opacity=lit?.9:0;q.fl.scale.setScalar(1.5+.25*Math.sin(t*5+q.i))});
+  const done=dg165ODone();S.R.fl.material.opacity=done?.85:0;S.R.fl.scale.setScalar(done?2.2+.3*Math.sin(t*4):1);S.R.flL.intensity=done?2.2:0;
+  if(OS165.sipping)os165SipTick(dt,now);if(OS165.carry)os165CarryTick(dt,now);
+  if(now-(OS165.tt||0)>400){OS165.tt=now;if(!OS165.gs){OS165.gs=1;os165GateSync()}}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{os165Tick(dt,now)}catch(e){if(!OS165.err++)console.error('v165 prisms tick',e)}return r}}
+// ---------------- siphoning ----------------
+function os165SipStart(i){if(OS165.carry||OS165.sipping||!os165Full(i))return;try{if(riding)dismount(true)}catch(_){}const M=OS165.S.pr[i];
+  OS165.sipping={i,t:0,x:pl.position.x,z:pl.position.z,hp:hero.hp};dg165Snd('choir',.5,.8+i*.08);svSnd('charge',.6,.6);say('◆ You draw the '+OS165.nm[i]+' essence out of the prism…')}
+function os165SipTick(dt,now){const Q=OS165.sipping,M=OS165.S.pr[Q.i],P=pl.position;if(Math.hypot(P.x-Q.x,P.z-Q.z)>1.2||hero.hp<Q.hp-1||!os165Full(Q.i)){OS165.sipping=null;say('◆ The siphon breaks.');return}
+  Q.t+=dt;if(Math.random()<dt*30){const k=Math.random(),a=V(M.x,M.y+3.2,M.z),b=gY(P,1.1);burst(a.lerp(b,k),OS165.col[Q.i],1,.15,.2,.35)}
+  if(Q.t>=OS165.sip){OS165.sipping=null;os165Take(Q.i,true)}}
+function os165Take(i,mine){const M=OS165.S&&OS165.S.pr[i];if(mine){OS165.carry={i,t:0,sp:OS165.first,n:0,live:[]};os165Aura(true);
+    dg165Snd('chime',.8,.7+i*.1);dg165Snd('wail',.6,.8);shake(.15);dg165Fear(.4);if(M)svShock(V(M.x,0,M.z),OS165.col[i],4,.5);
+    dg165Title('The '+OS165.nm[i]+' Essence','The dead feel it in you. They are coming.','Carry it to its rune in the Reliquary','The Ossuary Fields');dg165Co('take',i)}
+  OS165.trkK=''}
+// ---------------- carrying: the aura and the dead it draws ----------------
+function os165Aura(on){const A=OS165.aura;if(on){if(!A){const g=new THREE.Group(),c=OS165.col[OS165.carry.i];for(let i=0;i<3;i++){const s=kqSpr(c,.7);s.material=s.material.clone();g.add(s)}const core=kqSpr(c,1.4);core.material=core.material.clone();core.material.opacity=.45;g.add(core);const l=new THREE.PointLight(c,2,9,1.5);g.add(l);scene.add(g);OS165.aura={g,l}}
+    else{A.g.visible=true;const c=OS165.col[OS165.carry.i];A.l.color.setHex(c);A.g.children.forEach(s=>{if(s.isSprite)s.material.color.setHex(c)})}}else if(A)A.g.visible=false}
+function os165CarryTick(dt,now){const C=OS165.carry,P=pl.position,t=now/1000;C.t+=dt;if(riding)try{dismount(true)}catch(_){}
+  const A=OS165.aura;if(A){A.g.position.set(P.x,P.y+1.2,P.z);A.g.children.forEach((s,i)=>{if(s.isSprite){const a=t*2.4+i*2.094;s.position.set(Math.cos(a)*.7,.3*Math.sin(t*3+i),Math.sin(a)*.7)}});A.l.intensity=1.4+.3*Math.sin(t*6)}
+  if(Math.random()<dt*14)burst(gY(P,.6+Math.random()*.8),OS165.col[C.i],1,.2,.5,.6);
+  if(Math.random()<dt*.5)dg165Snd('heart',.35,1);
+  // the dead rise around the carrier
+  C.live=C.live.filter(e=>!e.dead&&enemies.includes(e));C.sp-=dt;const cap=Math.round(OS165.cap*(1+.35*rf165Mates()));
+  if(C.sp<=0&&os165Host()){C.sp=OS165.gap*(.8+Math.random()*.4);C.n++;if(C.live.length<cap){os165Rise(P.x,P.z,C.n%5==0?3:2,C)}}}
+function os165Host(){return rf165Host()}
+var OS165K=['bonehound','bonehound','skeleton','bonearcher','bonehound'];
+function os165Rise(x,z,n,C,peer){const lv=dg165Lv(22),ok=dg165PrismPlan().ok;for(let k=0;k<n;k++){let px=x,pz=z;for(let tr=0;tr<14;tr++){const a=Math.random()*6.283,r=8+Math.random()*6;const qx=x+Math.cos(a)*r,qz=z+Math.sin(a)*r;if(ok(qx,qz,.4)){px=qx;pz=qz;break}}
+  const big=C&&C.n%7==0&&k==0,key=big?'colossus':OS165K[(Math.random()*OS165K.length)|0];
+  setTimeout(()=>{let e=null;try{e=spawnEnemy(key,px,pz,lv[0]+((Math.random()*3)|0),{agg:1})}catch(err){console.warn('v165 rise',err)}if(!e)return;e.agg=1;e.hunt=1;e.os165=1;if(C&&C.live)C.live.push(e);
+    burst(gY(V(px,0,pz),.3),0xc8c0a8,22,2,2.5,.8);svDecal(V(px,0,pz),0x1a1814,1.4,2.4,.8);if(Math.hypot(px-pl.position.x,pz-pl.position.z)<20)dg165Snd('gasp',.5,.7+Math.random()*.3)},k*260)}}
+{const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return e&&e.os165?k*.4:k}}
+{const f=lootE;lootE=function(e){if(e&&e.os165&&Math.random()>=.3)return;return f.apply(this,arguments)}}
+// ---------------- delivering, or losing it ----------------
+function os165Give(i,mine){if(DG165Q.o.lit[i])return;DG165Q.o.lit[i]=1;if(mine){OS165.carry=null;os165Aura(false);dg165Co('lit',i)}OS165.trkK='';const S=OS165.S,q=S&&S.R.runes[i];
+  if(q){svShock(V(q.x,0,q.z),OS165.col[i],5,.6);burst(V(q.x,GH(q.x,q.z)+3,q.z),OS165.col[i],60,3,4,1)}dg165Snd('chime',1,.6+i*.1);svSnd('bell',.8,.8+i*.1);shake(.2);
+  const n=os165N();if(n<5){dg165Title('The '+OS165.nm[i]+' Rune Burns',n+' of 5 runes lit','Siphon another prism','The Ossuary Fields');say('◆ The '+OS165.nm[i]+' rune drinks the essence and burns ('+n+'/5).')}
+  else setTimeout(os165Finish,1200);os165GateSync()}
+function os165Return(why){const C=OS165.carry;if(!C)return;OS165.carry=null;os165Aura(false);OS165.trkK='';const i=C.i,S=OS165.S,M=S&&S.pr[i];
+  if(M&&os165In()){const s=kqSpr(OS165.col[i],.9),a=gY(pl.position,1.2),b=V(M.x,M.y+3.2,M.z),mid=a.clone().lerp(b,.5);mid.y+=6;s.position.copy(a);scene.add(s);let t=0;
+    kqFx({tick(dt){t+=(dt||.016)/1.4;const k=Math.min(1,t),u=1-k;s.position.set(u*u*a.x+2*u*k*mid.x+k*k*b.x,u*u*a.y+2*u*k*mid.y+k*k*b.y,u*u*a.z+2*u*k*mid.z+k*k*b.z);if(Math.random()<.6)burst(s.position.clone(),OS165.col[i],1,.15,.2,.5);if(k>=1){scene.remove(s);burst(b,OS165.col[i],20,1.5,1.5,.6);return false}return true},end(){if(s.parent)scene.remove(s)}})}
+  say(why=='dead'?'◆ As you fall, the '+OS165.nm[i]+' essence tears free of you and streams back to its prism.':'◆ The '+OS165.nm[i]+' essence slips away from you, back to its prism.');dg165Co('ret',i)}
+{const f=down;down=function(){const r=f.apply(this,arguments);try{if(OS165.carry&&((typeof AWD!='undefined'&&AWD.dead)||(typeof RV148!='undefined'&&RV148.down)||hero.hp<=0))os165Return('dead')}catch(_){}return r}}
+function os165Finish(){DG165Q.o.st=1;OS165.trkK='';const S=OS165.S;dg165Snd('choir',1.2,.7);dg165Snd('rumble',1,1);shake(.5);
+  if(S){S.R.runes.forEach(q=>{svShock(V(q.x,0,q.z),OS165.col[q.i],7,.8)});svShock(V(S.R.x,0,S.R.z),0xd8fff0,12,1.2);burst(V(S.R.x,GH(S.R.x,S.R.z)+3,S.R.z),0xd8fff0,120,5,6,1.2)}
+  os165GateSync();const r=RPORT.find(q=>q.k=='next'&&q.ig===22);if(r)setTimeout(()=>{svShock(V(r.x,0,r.z),0xd8fff0,6,.7);burst(gY(V(r.x,0,r.z),1.2),0xd8fff0,70,3,3,1)},900);
+  setTimeout(()=>{dg165Title('The Den Is Open','Five runes burn as one. The gateway to '+PMAP[4].ins[3].n+' opens.','Face '+BOSSES[4].name+' at the end of the road');try{mSfx('victory')}catch(_){}say('🌀 All five runes burn: the gateway at the end of '+INSL[22].n+' now leads to the Den.')},1000);dg165Co('ofin',0)}
+// ---------------- the gateway to the Den: sealed until the runes burn ----------------
+function os165GateSync(){const r=RPORT.find(q=>q.k=='next'&&q.ig===22);if(!r||!r.disc)return;if(OS165.gc==null)OS165.gc=r.disc.material.color.getHex();const on=dg165ODone(),m=r.disc.material;
+  m.color.copy(new THREE.Color(0x101014).lerp(new THREE.Color(OS165.gc),on?1:0));m.opacity=on?.8:.3;
+  if(!OS165.gg){const G=new THREE.Group();G.position.set(0,1.2,.05);r.g.add(G);OS165.gg=G;for(let i=0;i<5;i++){const s=new THREE.Mesh(svG('os165gg',()=>new THREE.PlaneGeometry(.28,.56)),new THREE.MeshBasicMaterial({color:OS165.col[i],map:os165RuneTex(i),transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));s.position.set((i-2)*.42,1.0,0);G.add(s)}}
+  OS165.gg.children.forEach((s,i)=>{s.material.opacity=DG165Q.o.lit[i]||on?.9:.2})}
+function os165AtGate(){const P=pl.position;for(const r of RPORT)if(r.k=='next'&&r.ig===22&&Math.hypot(P.x-r.x,P.z-r.z)<2.8)return true;return false}
+{const f=portalPrompt;portalPrompt=function(){const r=f.apply(this,arguments);try{if(r&&!dg165ODone()&&os165AtGate())return {label:'🔒 The way to the Den is sealed · light the five runes of the Reliquary ('+os165N()+'/5)',fn:()=>say('🌀 Five dark glyphs hang in the arch. Carry the essence of the five prisms to the Reliquary at the heart of '+INSL[22].n+'.')}}catch(_){}return r}}
+// ---------------- prompts ----------------
+function os165Prompt(){if(!os165In()||!OS165.S)return null;const P=pl.position,S=OS165.S;
+  if(OS165.sipping)return {label:'◆ Siphoning… '+Math.round(OS165.sipping.t/OS165.sip*100)+'%',fn:()=>{OS165.sipping=null}};
+  for(const M of S.pr){if(Math.hypot(P.x-M.x,P.z-M.z)>2.9)continue;const i=M.i;
+    if(DG165Q.o.lit[i])return {label:'◆ The '+OS165.nm[i]+' prism · its essence burns in the Reliquary',fn:()=>{}};
+    if(OS165.carry)return OS165.carry.i===i?{label:'◆ You carry this prism’s essence · take it to the Reliquary',fn:()=>{}}:{label:'◆ You can hold only one charge · deliver the '+OS165.nm[OS165.carry.i]+' essence first',fn:()=>{}};
+    if(!os165Full(i))return {label:'◆ Someone carries this prism’s essence',fn:()=>{}};
+    return {label:'F · Siphon the '+OS165.nm[i]+' prism',fn:()=>os165SipStart(i)}}
+  for(const q of S.R.runes){if(Math.hypot(P.x-q.x,P.z-q.z)>2.7)continue;const i=q.i;
+    if(DG165Q.o.lit[i])return {label:'◆ The '+OS165.nm[i]+' rune burns',fn:()=>{}};
+    if(OS165.carry&&OS165.carry.i===i)return {label:'F · Pour the '+OS165.nm[i]+' essence into its rune',fn:()=>os165Give(i,true)};
+    return {label:'◆ The '+OS165.nm[i]+' rune is cold · it wants the '+OS165.nm[i]+' prism’s essence',fn:()=>{}}}
+  return null}
+{const f=worldPrompt;worldPrompt=function(){try{const r=os165Prompt();if(r)return r}catch(e){if(!OS165.err++)console.warn('v165 prism prompt',e)}return f.apply(this,arguments)}}
+// no mount, no recall with a charge
+{const f=toggleMount;toggleMount=function(){if(OS165.carry&&!riding)return say('◆ The essence would scatter at a gallop. Carry it on foot.');return f.apply(this,arguments)}}
+{const f=doRecall;doRecall=function(){if(OS165.carry)return say('◆ Not with the essence in you: it would be lost. Deliver it first.');return f.apply(this,arguments)}}
+// ---------------- the tracker (Dirge III) ----------------
+SP152.trk.dirgeIII=I=>{if(I.g!==22||(dg165ODone()&&insReach(4)>=3))return null;const n=os165N();
+  if(dg165ODone())return {name:'The Five Runes',lines:[['Step through the gateway to the Den',null,1]]};
+  const C=OS165.carry,L=[['Runes lit',n+'/5']];if(C)L.unshift(['Carrying the '+OS165.nm[C.i]+' essence'],['Take it to its rune in the Reliquary',null,1]);else L.unshift(['Siphon a prism (look for the pillars of light)'],['Carry its essence to the Reliquary']);
+  return {name:'The Five Runes',lines:L}};
+// ---------------- the minimap: the prisms and the Reliquary ----------------
+function os165Marks(g,P,k){if(!os165In())return;const Pl=dg165PrismPlan();Pl.pr.forEach((o,i)=>{const q=P(o.x,o.z);if(!q)return;g.save();g.translate(q[0],q[1]);g.scale(k,k);const lit=DG165Q.o.lit[i];
+    g.beginPath();g.moveTo(0,-5);g.lineTo(3.4,0);g.lineTo(0,5);g.lineTo(-3.4,0);g.closePath();g.fillStyle=lit?'#2a2a2a':OS165.cs[i];g.globalAlpha=lit?.5:1;g.fill();g.lineWidth=1.2/k;g.strokeStyle='#101010';g.stroke();g.restore()});
+  const c=Pl.ctr,q=P(c.x,c.z);if(q){g.save();g.translate(q[0],q[1]);g.scale(k,k);g.beginPath();g.arc(0,0,5.5,0,6.283);g.fillStyle='#14161a';g.fill();g.lineWidth=1.6/k;g.strokeStyle='#d8fff0';g.stroke();
+    for(let i=0;i<5;i++){const a=i/5*6.283;g.beginPath();g.arc(Math.sin(a)*3.4,-Math.cos(a)*3.4,1.1,0,6.283);g.fillStyle=DG165Q.o.lit[i]?OS165.cs[i]:'#3a3a3a';g.fill()}g.restore()}}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{os165Marks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}
+// ================= v165 The Dirge main quest — saves, the cheat, co-op =================
+// Saves: x2.dg165 {g:{st,ex,bad}, s:{st,cp,cw}, r:{st}, o:{lit,st}}; old saves start at nothing done (heroes already past an instance
+// are never blocked: each chapter is also done when the next instance has been reached, 3261).
+// Co-op (played together, like Hillside Crest v155): messages ['dg', kind, …] on the 'ev' topic (cl155Send, 3180).
+//  · The Keeper's grave: digging it open opens it for everyone ('dig'); wrong graves are your own.
+//  · The Sanctum: F at the stair takes every partner in the Dirge I down with you ('enter'); the party's checkpoint is the furthest
+//    reached ('scp'); a partner on the plate lifts everyone's gate ('gate'); the closing walls start and stop for all and the knights
+//    turn for all ('cw', 'turn'); the flooded stair takes everyone out ('sout').
+//  · The raft: F at the quay takes every partner in the Dirge II aboard ('renter'). One raft: the map's host drifts it ('rs': where,
+//    which run), runs the drowned (shared monsters: partners see them through the host's monster list and get their states in 'rw'),
+//    and decides every plank ('rd' damage, 'rb' torn away, 'rc' the whole deck every second, 'rx' the raft breaks: everyone goes down,
+//    'rout' through). A drowned lunging at a partner: 'lg'. A partner who falls and rises again rejoins the host's raft.
+//  · The prisms: one charge each; a prism someone carries is empty for everyone ('take', 'ret'), a rune lit by anyone is lit for all
+//    ('lit', 'ofin'). The host raises the dead round every carrier (presence oc = the prism carried + 1).
+//  · Every 3 s partners swap their whole quest state and keep the most progress ('st').
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{const Q=DG165Q;o.dg165={v:165,g:{st:Q.g.st,ex:Q.g.ex.map(v=>v?1:0),bad:Q.g.bad.map(v=>v?1:0)},s:{st:Q.s.st,cp:Q.s.cp,cw:Q.s.cw?1:0},r:{st:Q.r.st},o:{lit:Q.o.lit.map(v=>v?1:0),st:Q.o.st}}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.dg165,c=(v,a,b)=>Math.max(a,Math.min(b,v|0)),arr=(a,n)=>Array.from({length:n},(_,i)=>Array.isArray(a)&&a[i]?1:0);
+  DG165Q.g={st:0,ex:[],bad:[]};DG165Q.s={st:0,cp:0,cw:0};DG165Q.r={st:0};DG165Q.o={lit:[0,0,0,0,0],st:0};
+  if(q&&typeof q=='object'){if(q.g){DG165Q.g.st=c(q.g.st,0,2);DG165Q.g.ex=arr(q.g.ex,14);DG165Q.g.bad=arr(q.g.bad,14)}if(q.s){DG165Q.s.st=c(q.s.st,0,2);DG165Q.s.cp=c(q.s.cp,0,5);DG165Q.s.cw=q.s.cw?1:0}
+    if(q.r)DG165Q.r.st=c(q.r.st,0,2);if(q.o){DG165Q.o.lit=arr(q.o.lit,5);DG165Q.o.st=q.o.st?1:0}}
+  OS165.carry=null;OS165.sipping=null;OS165.net={};try{os165Aura(false)}catch(_){}DG165S.cw=null;DG165S.gate=null;DG165S.fall=null;RF165R=null;DG165GR.dig=null;
+  try{dg165GSync()}catch(_){}try{os165GateSync()}catch(_){}}catch(e){console.warn('v165 load',e)}return r}}
+// the cheat "All quests complete" (3060) finishes the Dirge's chapters too
+{const f=cheatQuests147;cheatQuests147=function(){try{const Q=DG165Q;Q.g.st=2;Q.s.st=2;Q.s.cw=1;Q.r.st=2;Q.o.lit=[1,1,1,1,1];Q.o.st=1;dg165GSync();os165GateSync()}catch(e){console.warn('v165 cheat',e)}return f.apply(this,arguments)}}
+// ---------------- co-op ----------------
+var DG165C={tS:0,tR:0,tW:0,tC:0,oc:{},err:0};
+function dg165CoOn(){try{return typeof cl155Co=='function'&&cl155Co()}catch(_){return false}}
+function dg165Co(k,a,b){try{if(!dg165CoOn())return;if(k=='take')(OS165.mine=OS165.mine||{})[a]=1;cl155Send(['dg',k,a==null?0:a,b==null?0:b])}catch(_){}}
+function dg165Me(){try{return MP.me}catch(_){return ''}}
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.oc=OS165.carry?OS165.carry.i+1:0}catch(_){}}return f.apply(this,arguments)}}
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(dg165CoOn()||(typeof cl155On=='function'&&cl155On())){if(!msg.sameTab&&d&&Array.isArray(d.l)&&MP.rh[msg.peer])for(const q of d.l.slice(0,60))if(Array.isArray(q)&&q[0]==='dg')dg165On(q,msg.peer)}}
+  catch(err){if(!DG165C.err++)console.warn('v165 coop',err)}return f.apply(this,arguments)}}
+function dg165On(q,peer){const k=q[1],a=q[2],b=q[3],I=curIns(),g=I?I.g:-1;
+  if(k=='dig'){if(!dg165GDone()){DG165Q.g.st=2;dg165GSync();say('🕯 '+mpEsc(mpName(peer))+' dug open the Keeper’s grave: a stair leads down.')}return}
+  // the Sanctum
+  if(k=='enter'){if(g===20&&!dg165SIn()&&!dg165SDone()){say('🕯 '+mpEsc(mpName(peer))+' takes the party down into the Hidden Sanctum.');dg165SEnter()}return}
+  if(k=='scp'){if((a|0)>DG165Q.s.cp&&(a|0)<=5)DG165Q.s.cp=a|0;return}
+  if(k=='gate'){if(dg165SIn()&&DG165S.S&&!(DG165S.gate&&DG165S.gate.open)&&DG165Q.s.cp<3){DG165S.gate={open:1,t:DG165SP.gateT,y:0};dg165SDoors();say('⚙ '+mpEsc(mpName(peer))+' stands on the plate: the portcullis is rising!')}return}
+  if(k=='cw'){if(a==2){if(!DG165Q.s.cw){DG165Q.s.cw=1;if(DG165S.cw)DG165S.cw.ph='done';dg165SDoors()}}else if(a==1&&dg165SIn()&&DG165S.S&&!DG165S.cw&&!DG165Q.s.cw){const [hu,hv]=dg165SL(pl.position.x,pl.position.z);if(dg165SanFloor(hu,hv)=='walls'||DG165Q.s.cp>=4){dg165SCwStart(DG165S.S)}}return}
+  if(k=='turn'){const S=DG165S.S,s=S&&S.statues[a|0];if(s&&DG165S.cw&&DG165S.cw.ph=='run'&&s.f!==(b&3)&&!s.anim){const a0=s.g.rotation.y;s.f=b&3;s.anim={t:0,a:a0,b:a0+Math.PI/2};dg165Snd('grind',.4,1.4)}return}
+  if(k=='sout'){if(dg165SIn())dg165SFinish();else DG165Q.s.st=Math.max(DG165Q.s.st,1);return}
+  // the raft
+  if(k=='renter'){if(g===21&&!rf165In()&&!dg165RDone()){say('🌊 '+mpEsc(mpName(peer))+' takes the party aboard the raft.');rf165Enter()}return}
+  if(k=='rs'){const R=RF165R;if(!R||!rf165In()||peer!==MP.host)return;if((b|0)&&(b|0)!==R.id){rf165Reset();RF165R.id=b|0}const R2=RF165R;R2.hs=+a;if(R2.ph=='moor'&&+a>2.3){R2.ph='run';R2.t=0}return}
+  if(k=='rd'){const R=RF165R,C=R&&R.cells[a|0];if(C&&C.alive&&peer===MP.host){C.hp=Math.min(C.hp,+b);C.shk=1}return}
+  if(k=='rb'){const R=RF165R,C=R&&R.cells[a|0];if(C&&C.alive&&peer===MP.host)rf165Break(R,C,false);return}
+  if(k=='rc'){const R=RF165R;if(!R||peer!==MP.host||typeof a!='string')return;for(let i=0;i<R.cells.length&&i<a.length;i++){const C=R.cells[i];if(a[i]==='0'&&C.alive)rf165Break(R,C,false)}return}
+  if(k=='rx'){const R=RF165R;if(R&&peer===MP.host)rf165Shatter(R,false);return}
+  if(k=='rw'){const R=RF165R;if(!R||typeof a!='string')return;a.split(';').forEach(s=>{const [id,st]=s.split(':'),e=MP.emap&&MP.emap[id];if(e&&e.dg165w)e.dg165w.net=DG165CST[st|0]||null});return}
+  if(k=='lg'){if(b===dg165Me()){const e=MP.emap&&MP.emap[a];if(e&&!e.dead&&Math.hypot(pl.position.x-e.m.position.x,pl.position.z-e.m.position.z)<2.8)try{hitHero(e,.85)}catch(_){}}return}
+  if(k=='rout'){if(rf165In()&&RF165R&&!RF165R.fin){RF165R.fin=1;rf165Finish()}return}
+  // the prisms
+  if(k=='take'){OS165.net=OS165.net||{};OS165.net[a|0]=peer;OS165.trkK='';return}
+  if(k=='ret'){if(OS165.net)delete OS165.net[a|0];return}
+  if(k=='lit'){if(OS165.net)delete OS165.net[a|0];if(!DG165Q.o.lit[a|0]){os165Give(a|0,false);say('◆ '+mpEsc(mpName(peer))+' lit the '+OS165.nm[a|0]+' rune.')}return}
+  if(k=='ofin'){if(!DG165Q.o.st){DG165Q.o.lit=[1,1,1,1,1];os165Finish()}return}
+  // everything at once: keep the most progress
+  if(k=='st'&&typeof a=='string'){try{const o=JSON.parse(a);if(o.g>=2&&!dg165GDone()){DG165Q.g.st=2;dg165GSync()}if(o.cp>DG165Q.s.cp&&o.cp<=5)DG165Q.s.cp=o.cp;if(o.cw&&!DG165Q.s.cw)DG165Q.s.cw=1;
+    if(Array.isArray(o.lit))o.lit.forEach((v,i)=>{if(v&&!DG165Q.o.lit[i])os165Give(i,false)})}catch(_){}}}
+var DG165CST=['swim','rise','cling','rake','lunge','flinch','drop','sink','tread'];
+// each frame: the host sends the raft, the drowned, the deck; partners' copies of the drowned get their looks; the whole state now and then
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(dg165CoOn())dg165CoTick(dt,now)}catch(e){if(!DG165C.err++)console.warn('v165 coop tick',e)}return r}}
+function dg165CoTick(dt,now){const host=rf165Host();
+  if(rf165In()&&RF165R){const R=RF165R;
+    if(host){if(now-DG165C.tR>240){DG165C.tR=now;cl155Send(['dg','rs',Math.round(R.s*100)/100,R.id])}
+      if(now-DG165C.tW>320){DG165C.tW=now;const L=[];R.W.forEach(w=>{if(w.e.nid&&!w.e.dead){const st=w.st=='cling'&&w.act?w.act.k:w.st;L.push(w.e.nid+':'+Math.max(0,DG165CST.indexOf(st)))}});if(L.length)cl155Send(['dg','rw',L.join(';').slice(0,3000),0])}
+      if(now-DG165C.tC>1000){DG165C.tC=now;cl155Send(['dg','rc',R.cells.map(C=>C.alive?'1':'0').join(''),0])}}
+    else{// follow the host's raft: ease toward where it says
+      if(R.hs!=null){const d=R.hs-R.s;if(Math.abs(d)>12)R.s=R.hs;else R.s+=d*Math.min(1,dt*2.5);R.v=Math.max(0,R.v)}}
+    // partners' copies of the host's drowned
+    enemies.forEach(e=>{if(e.mir&&!e.dg165w&&e.c&&(e.c.en=='dgwretch'||e.c.en=='drowned')&&!e.dead){e.dg165w={st:'swim',ph:Math.random()*6,hulk:e.c.en=='drowned',rid:R.id,t:0};e.hid=1;e.m.children.forEach(c=>{if(c.isMesh&&c.geometry&&c.geometry.type=='RingGeometry')c.visible=false})}})}
+  // the host raises the dead round partners who carry a prism's essence
+  if(host&&os165In()){try{for(const r of cl155Mates(MP.rg)){const p=r.pr,oc=p&&p.oc|0;if(!oc||!r.m)continue;const T=DG165C.oc[r.peer]=DG165C.oc[r.peer]||{sp:OS165.first,n:0,live:[]};T.live=T.live.filter(e=>!e.dead&&enemies.includes(e));T.sp-=dt;
+      if(T.sp<=0){T.sp=OS165.gap*(.8+Math.random()*.4);T.n++;if(T.live.length<OS165.cap)os165Rise(r.m.position.x,r.m.position.z,T.n%5==0?3:2,T,r.peer)}}}catch(_){}}
+  if(now-DG165C.tS>3000){DG165C.tS=now;cl155Send(['dg','st',JSON.stringify({g:DG165Q.g.st,cp:DG165Q.s.cp,cw:DG165Q.s.cw,lit:DG165Q.o.lit}),0])}}
+// the raft breaking takes everyone down (no revive: the water has them)
+{const f=rv148CanDown;rv148CanDown=function(){try{if(rf165In()&&RF165R&&RF165R.ph=='broken')return false}catch(_){}return f.apply(this,arguments)}}
+// a partner who rises again while the party is still on the channel rejoins the host's raft instead of starting over
+{const f=rf165Rise;rf165Rise=function(){if(dg165CoOn()&&!rf165Host()){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}const P=rf165P(),[x,z]=P.at(2,0);toPos(x,z,0);const id=RF165R?RF165R.id:0;rf165Reset();RF165R.id=id;say('🌊 You haul yourself back onto the raft.');return}return f.apply(this,arguments)}}
 </script></body></html>
