@@ -1,4 +1,4 @@
-# v164 (3230): Abeksi, owner's list. In the roused city: guards are tougher and townsfolk no longer half-strength; city fighters move
+# v164 (3231): Abeksi, owner's list. In the roused city: guards are tougher and townsfolk no longer half-strength; city fighters move
 # faster and walk the streets to a target they can't see (no walking into walls); any resident on the street who sees a hero joins the
 # hunt; each bell toll summons 2 elite guards (out of sight, hunting at once) instead of calling residents; the gate: a detailed
 # gatehouse whose doors open when the bell tolls, with a pillar of light, an ESCAPE sign, chevrons on the street, a screen-edge arrow,
