@@ -61,3 +61,4 @@ v161|keymap|keybind|ui-scale|mobile|touch|0180-|1660-|location-box: v161_keys.py
 # v163
 3210|0320|2300|element|react|0104|0340: v163_elements.py
 0001|3220|style-order|owner-fixes|attribute|2930|2940|tracker|2350|3023|3150-v152|zone-title|2210|swing|0580|0740|sov|305[0-6]|1970: v163_fixes.py
+1270|grip|weapon|edge|3220|0740|0890|0900|2310: v163_weapons.py v148_edges.py

@@ -98,3 +98,70 @@ arg146EyesStart=function(c){const e=c.e,S=c.S,A=c.A;if(!A)return;S.dr=.2;const D
   const P=sk146Props(A,L);c.M.an.props=P;D.props=(D.props||[]).concat(P);svSnd('roar',.9,.6);
   try{banner('👁 THE HUNDRED EYES','Argus sinks into the fog — four great eyes open around the hollow','Shut all four before the gaze completes!')}catch(_){}say('👁 Argus hides in the fog: shut the four Watcher Eyes around the hollow!')};
 try{const T=DSTXT[0].atk.find(a=>/Hundred Eyes/.test(a[0]));if(T)T[1]=T[1].replace('on the walls','around the hollow')}catch(_){}
+
+// ---------- 6. weapons never spin in the hand ----------
+// Measured before (every class and weapon, every frame of three attacks; the weapon's turn against its hand): the halberd's
+// edge roll went 90° → -166° → 75° → 121° in four frames at the start of each blow (a full spin), the twin axes' roll jumped
+// 40-72° in one frame, and the melee weapons and the bow whipped 60-104° in a frame from the carry hold to the strike hold as
+// each attack started (the two holds are 104-120° apart).
+// Causes: gripEdge (1270) turned the edge at once (exp(-120 dt)) to the tip's velocity on every fast frame, and in the first
+// frames of a blow that velocity points all over the place; and between attacks the hands went back to the carry hold.
+// Now, for the hero:
+//  (a) the edge roll a swing needs is worked out before the swing moves: edge163Plan poses the arm at points through the blow
+//      from the swing's own animation curve (A.pose, the same channels animHero writes), finds where the blade moves fastest
+//      across the handle, and puts the bones back (nothing is drawn in between). Cached per swing animation and hand;
+//  (b) the roll turns toward it from the first frame of the swing: at once while the hand is still coming from the carry hold
+//      (it is part of that turn), otherwise at most EDGE163.wind rad/s through the wind-up and EDGE163.rate through the blow
+//      (where it also follows the blade's motion, ignoring readings more than EDGE163.jump away), always the short way round
+//      (never a wrap), and it keeps that roll through the follow-through;
+//  (c) for EDGE163.hold s after an attack, and while a fight is on (a locked target, a monster hunting the hero within
+//      EDGE163.near), the hands keep the strike hold, coming up into it over EDGE163.raise s instead of in two frames.
+// Others (co-op partners, humanoid foes) keep v148's rule but pick their roll once per blow and turn at the capped rate.
+var EDGE163={rate:22,wind:10,jump:1.75,hold:2,raise:.35,near:10,last:-1e9,cache:new WeakMap(),fT:0,fV:false};
+function edge163Fight(){const t=nowP();if(t-EDGE163.fT<150)return EDGE163.fV;EDGE163.fT=t;let v=t-EDGE163.last<EDGE163.hold*1000;
+  if(!v&&typeof tgt!='undefined'&&tgt&&!tgt.dead&&d2(tgt.m.position,pl.position)<EDGE163.near+2)v=true;
+  if(!v)for(const e of enemies){if(!e.dead&&e.agg&&!e.minion&&d2(e.m.position,pl.position)<EDGE163.near){v=true;break}}
+  return EDGE163.fV=v}
+function edge163Step(e,tg,dt,rate){if(tg==null||!(dt>0))return;const d=gripWrap(tg-e.psi),m=(rate||EDGE163.rate)*dt;e.psi=gripWrap(e.psi+Math.max(-m,Math.min(m,d)))}
+function edge163Key(e){return (e.side||'R')+'|'+((e.W&&e.W.userData&&e.W.userData.wt)||'')}
+function edge163Win(A){return A.k>=.22&&A.k<=Math.min(.58,(A.hitAt<=1?A.hitAt:.42)+.1)}
+// the roll the blow needs, from the swing's own pose curve (null if it cannot tell)
+function edge163Plan(h,e,A){const b=h.bones,W=e.W,bn=W&&W.parent;if(!b||!bn||typeof A.pose!='function'||!e.S)return null;
+  const saved=[];for(const c in HACH){const [n,ax]=HACH[c];if(b[n])saved.push([b[n],ax,b[n].rotation[ax]])}
+  const k0=.22,k1=Math.min(.58,(A.hitAt<=1?A.hitAt:.42)+.1),tipL=new THREE.Vector3(0,-.6,0).applyQuaternion(e.S.q).add(new THREE.Vector3(...e.S.p));
+  let prev=null,best=null,bs=0;
+  try{for(let k=k0;k<=k1+1e-6;k+=.02){const P=A.pose(k);for(const c in P){if(HA_LEGS[c])continue;const ch=HACH[c];if(ch&&b[ch[0]])b[ch[0]].rotation[ch[1]]=P[c]}
+      h.updateMatrixWorld(true);const tip=tipL.clone().applyMatrix4(bn.matrixWorld);h.worldToLocal(tip);
+      if(prev){const v=tip.clone().sub(prev);h.getWorldQuaternion(GRIP_TQ);bn.getWorldQuaternion(GRIP_TQ2);GRIP_TQ.invert().multiply(GRIP_TQ2).multiply(e.S.q).invert();v.applyQuaternion(GRIP_TQ);
+        const sp=Math.hypot(v.x,v.z);if(sp>bs&&sp>=Math.abs(v.y)*.35){bs=sp;best=Math.atan2(-v.z,v.x)}}
+      prev=tip}}
+  catch(err){best=null}
+  finally{saved.forEach(([o,ax,v])=>{o.rotation[ax]=v});h.updateMatrixWorld(true)}
+  return best}
+function edge163Target(h,e,A){let C=EDGE163.cache.get(A.pose);if(!C){C={};EDGE163.cache.set(A.pose,C)}const k=edge163Key(e);
+  if(!(k in C))C[k]=edge163Plan(h,e,A);let tg=C[k];if(tg==null)return null;
+  if(e.edge==2&&Math.abs(gripWrap(tg-e.psi))>Math.PI/2)tg=gripWrap(tg+Math.PI);   // a double edge: whichever side is nearer
+  return tg}
+// through the blow the edge follows the blade's motion (v148), but never by a jump: a reading more than EDGE163.jump away from
+// where the edge points is the noisy start of a blow or the swing reversing, and is ignored; the turn is capped at EDGE163.rate
+gripEdge=function(h,e,dt){
+  const hero=h===pl&&HA.cur&&e.pa163===HA.cur;
+  const W=e.W,bn=W.parent;bn.updateWorldMatrix(true,false);
+  const tip=new THREE.Vector3(0,-.6,0).applyQuaternion(e.S.q).add(new THREE.Vector3(...e.S.p)).applyMatrix4(bn.matrixWorld);h.worldToLocal(tip);
+  const prev=e.tip;e.tip=tip;
+  if(!prev){e.pk=0;e.lk=hero?e.pl163:null;if(e.lk!=null)edge163Step(e,e.lk,dt);return}
+  const v=tip.clone().sub(prev).divideScalar(dt),vs=v.length();e.pk=Math.max(e.pk||0,vs);
+  if(vs>=e.pk*.4){h.getWorldQuaternion(GRIP_TQ);bn.getWorldQuaternion(GRIP_TQ2);GRIP_TQ.invert().multiply(GRIP_TQ2).multiply(e.S.q).invert();v.applyQuaternion(GRIP_TQ);
+    const sp=Math.hypot(v.x,v.z);if(sp>=1.6&&sp>=Math.abs(v.y)*.35){let tg=Math.atan2(-v.z,v.x);if(e.edge==2&&Math.abs(gripWrap(tg-e.psi))>Math.PI/2)tg=gripWrap(tg+Math.PI);
+      if(e.lk==null||Math.abs(gripWrap(tg-e.psi))<=EDGE163.jump)e.lk=tg}}
+  edge163Step(e,e.lk,dt)};
+{const f=gripTick;gripTick=function(h,now,el,att){
+  try{if(h===pl&&h._grip){const S=h._grip,A=HA.cur;
+      if(A)EDGE163.last=nowP();
+      if(att==null&&!A&&!pl.sw&&!hero.chan&&!(typeof riding!='undefined'&&riding)&&now!=null&&S.t!=null&&edge163Fight()){const dt=(now-S.t)/1000;
+        if(dt>0&&dt<.5){S.w=Math.max(0,(S.w==null?1:S.w)-dt/EDGE163.raise);S.t=now}att=true}
+      if(A&&now!=null){const dt=S.t!=null?(now-S.t)/1000:0,fromCarry=S.w==null||S.w>.3;
+        S.L.forEach(e=>{if(!e.edge||!e.S||e.psi==null)return;
+          if(e.pa163!==A){e.pa163=A;e.pl163=edge163Target(h,e,A);if(e.pl163!=null&&fromCarry)e.psi=e.pl163}
+          else if(dt>0&&dt<.5&&!edge163Win(A)&&e.pl163!=null)edge163Step(e,e.pl163,dt,EDGE163.wind)})}}}catch(_){}
+  return f.call(this,h,now,el,att)}}

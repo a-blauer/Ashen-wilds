@@ -58,6 +58,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v160 The lantern line (owner): Kindlelight I's lampposts and the Ripper's route follow a smoothed copy of the road (`mq158Line`: zigzags cut inside open ground, clear of ponds and bushes, corners rounded) instead of the raw zigzag path: 34 lamps at least 7 tiles apart, none crowded, the ride ~23% shorter (~83 s); v151–v159 saves refunded a bulb per lit lamp | `3020`, `3023` |
 | v162 co-op fixes found by steadier tests: no health regrows behind the co-op death screen (a `heroTick` wrapper keeps it at 0 while `AWD.dead`; partners took a dead hero at 1% for one still standing, so a downed partner never died and Abeksi's snakes could see the body); a fallen Ascent rider waits up to ~20 s for the winner to reach III (`cs155Downed`, 28 tries) | `3085-v148-coop-revive.js`, `3180-v155-coop-levels.js` |
 | v163 element buildup: element hits fill a meter per enemy (`e.eb`, `EB163.F`), a full meter primes it (`e.el`, 6 s, ground ring), a different element sets off the reaction (`EB163.R`, `eb163React`); health bar border tint / primed glow, shimmer and icon (`eb163Vis`, `eb163Frame` from a `loop` wrapper), boss bar (`eb163Boss`, `#eb163bi`); replaces 0320's `applyEl` and 2300's wrapper | `3210-v163-element-buildup.js` |
+| v163 owner's list: page stylesheet moved to `<head>` first thing (`0001`: on claude.ai the page is wrapped and its `<head>` lands in the outer `<body>`, after every runtime `<style>`); attribute Reset under the list (`#ch163Rs`); desktop quest trackers stacked by the layout (`ui163TrkDesk`, `ui161Desk` replaced, `chqTrkPos132`/`mq143TrkPos`/`sp152TrkPos` → `ui161Lay`); one title card at a time (`TC163`); attacks aim when they land (`aim163`, `SW163`); Sovereign signatures 60 s apart, Argus' eyes 10 m out with twice the time (`SIG163`); weapons never spin (`EDGE163`: planned edge roll `edge163Plan`, capped turn `edge163Step`, fight stance `edge163Fight`) | `0001-v163-style-order.js`, `3220-v163-owner-fixes.js` |
 | v151 The Lantern Road rework (owner): the outpost by Kindlelight I's entrance (`mq151Cfg().A` 36 steps down the road), lampposts along the whole road ~7 apart (`mq151Cfg().gap`, 47) at 1 glowbulb each (`MQ143.per`), every kill drops one until enough are carried (`MQ143.drop` 1), the Ripper rolls at 3 tiles/s, pre-v151 saves refunded; the entrance camp moves to the nearest open side field (`mq151MoveCamp`, called from 0045 after every seeded map step) | `3020`, `3023` (hook in `0045`) |
 | v151 Armored trait look: a riveted war harness (leather blanket, overlapping iron spine plates, rivets, flank flaps, `lpArmor151`) replaces the grey back domes that read as stones; picture sheet `test/v151_armor_look.py` | `0610` (`lpExtras`) |
 | v152–v155 Hillside Crest main quest (v155: played together in co-op, `3180`): special instances (`SP152`, `3150`), Abeksi city stealth level (`3151`–`3155`), the Hilltop Ascent chase (`3160`–`3162`), the Gate of the Hydra puzzle (`HD154`, `3170`) | `3150`–`3170` (hooks in `0045`) |
@@ -160,6 +161,26 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Projectiles fired together by one cast hit each enemy once at full damage (`BAL138.dup` 30% for the rest; Arcane Missiles exempt).
   Classes re-checked with `test/v127_balance/` at rank 1 (levels 10–50) and with every ability evolved at rank 5 (levels 40–50; use
   `TUNE=` a file that wraps `V90.setup` to set rank 5 and `hero.tal['__ev:'+name]`): within ~±10% of each other.
+- **Owner's list (v163, `0001`, `3220`)**: *Live site*: claude.ai wraps the published page in an outer page, so index.html's `<head>`
+  (the main stylesheet) ends up inside the outer `<body>`, after every `<style>` the game adds to `<head>` while it runs: base rules then
+  beat runtime rules of equal weight, on the live site only. That broke v161's phone layout live (hotbar as one tall column, touch
+  buttons pushed to the top). `0001` moves the page's stylesheets into `<head>` before any game code runs. `v161_mobile_shot.py` with
+  `WRAP=1` loads the page wrapped the same way (full suite: `WRAP=1 SIZES=cs,pp,pl`; `cs` = 412×720, the owner's phone in the Claude
+  app) and fails on a tall hotbar or touch buttons pushed up. *Trackers*: on desktop `ui161Desk` used to clear the trackers' place every
+  0.4 s while the older placement code set it again on every text change (jumping, Cheddar's over the main quest's); the layout now
+  stacks them (main quest first, `UI161_TRK` reordered) and the older functions just run the layout. *Title cards*: "Welcome back" waits
+  for a zone card and the reverse. *Aim*: for 1.5 s after an attack is pressed `aimDir` answers `aim163` (a locked target in reach, an
+  aimed ground point, else the camera with mouse-look on or on a phone, else the mouse pointer); a melee swing's direction is updated
+  every frame of its wind-up and at its hit. *Sovereigns*: the six v146 signatures have `cd` 60 (was 30) and weight 4 after the first
+  cast; Argus' Hundred Eyes runs its move clock at half speed while eyes are open (~19.8 s to shut them, was ~9.5) and the eyes open
+  `SIG163.argR` 10 m from the centre (were 26.8 m out, ~38 m apart: out of reach at 4.5 m/s). Vorraxis and Gorthrak checked, unchanged.
+  *Weapons*: the edge roll is planned before a swing moves (`edge163Plan` poses the arm along the swing's own curve, cached per
+  animation and hand), set at once while the hand comes from the carry hold, then turned at most `EDGE163.wind` (wind-up) /
+  `EDGE163.rate` (blow, following the blade but ignoring readings over `EDGE163.jump` away) rad/s, never wrapping; for 2 s after an
+  attack and while a fight is on (locked target, a monster hunting within 10 m) the hands keep the strike hold, coming up into it over
+  0.35 s. Others (partners, humanoid foes) pick the roll once per blow and turn at the capped rate. Tests: `v163_fixes.py`,
+  `v163_weapons.py` (every class and weapon: FAIL over 30° in a frame or 120° in 0.1 s; before: halberd 375° in 0.1 s, twin axes 72°
+  and the bow 104° in a frame), `v148_edges.py` (edges still lead every combo step).
 - **Element reactions (v163, `3210`)**: the v45 rule (any second element reacts at once, ×1.2–×2 on that hit) is replaced by
   buildup. An element hit fills `e.eb.v` by `EB163.F`: hero hit .24 × (raw ÷ attack, clamped .4–2.5), companion .13, status (burn,
   poison) .1; elites ×.75, bosses ×.5. Idle 3 s → drains .3/s. A different element while building pushes the meter back (tug of war).
@@ -1065,6 +1086,9 @@ python3 v38t.py              # save/load
 python3 v32t.py              # portal → Sovereign kill → wave trial
 python3 v57t.py              # grades, XP, skills, consume, fusion
 python3 v163_elements.py     # v163: element buildup, priming, reactions, tug of war, drain, companion rule, bar look (SHOT=1 pictures)
+python3 v163_fixes.py        # v163: Reset placement, desktop trackers, title cards, attack aim, Sovereign signatures, Argus' eyes
+python3 v163_weapons.py      # v163: no weapon spins in the hand (every class and weapon, a monster nearby; CLS=, MAXF=, MAXW=)
+WRAP=1 SIZES=cs python3 v161_mobile_shot.py   # v163: the phone layout as claude.ai serves the page (wrapped)
 python3 v60t.py              # zone roster (per instance, 30 s respawn)
 python3 v108_instances.py    # v108: instances (fields, Den, Trial), levels, gateways, respawn, recall back, portal window, saves, chunk visibility, den size
 python3 v113_roster.py       # v113: instance creatures per field instance, camps, a free fight with each new creature
