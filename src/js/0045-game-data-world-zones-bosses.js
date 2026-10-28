@@ -222,6 +222,7 @@ const MAP=(()=>{
   if(typeof mq151MoveCamp=='function')mq151MoveCamp(m,props); // v151: Kindlelight I's entrance camp moves off the Lantern Road outpost (3020); after every seeded step above
   if(typeof sp152Map=='function')sp152Map(m,bio,DW); // v152: the special instances' ground (3150; no seeded draws)
   if(typeof v112Map=='function')v112Map(m,bio,DW,props,stamp); // v112: the themed instances II and III get their own ground (1981)
+  if(typeof cs164Grow=='function')cs164Grow(m,bio,DW,props,stamp); // v164: each camp's bigger clearing, trail and moves (3240)
   if(typeof cs123Map=='function')cs123Map(m); // v123: the ground under each camp (2270)
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now

@@ -27,7 +27,7 @@ function hd154Plan(){if(hd154Plan.c)return hd154Plan.c;const I=INSL[7],P=I.path,
   const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='R'||t=='~'||props.has(Z*W+X)||CBLK.has(Z*W+X))return false;const J=insAt(X,Z);if(!J||J.g!==7)return false;return DW[Z*W+X]<-m};
   const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
   const roadD=(x,z)=>{let d=1e9;for(let i=0;i<N;i+=2){const q=P[i];d=Math.min(d,Math.hypot(x-q[0],z-q[1]))}return d};
-  const avoid=[[I.en[0],I.en[1],20],[door.x,door.z,24]].concat((I.cl||[]).map(c=>[c[0],c[1],15]));
+  const avoid=[[I.en[0],I.en[1],20],[door.x,door.z,24]].concat(typeof cs164Avoid=='function'?cs164Avoid(I,15):(I.cl||[]).map(c=>[c[0],c[1],15])); // v164: camp radius + 3
   const st=[],fr=[.12,.3,.48,.66,.84];
   for(const m of [2.6,1.8,1.2])for(let j=0;j<5;j++){if(st[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
     for(const b of [11,13,9,15,8,17,6])for(const side of [sd,-sd])for(const da of [0,6,-6,12,-12,18,-18]){if(got)break;const k=Math.max(0,Math.min(N-1,ix+da)),q=P[k],t=tan(k),x=q[0]-t[1]*b*side,z=q[1]+t[0]*b*side;

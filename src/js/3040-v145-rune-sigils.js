@@ -33,7 +33,7 @@ function mq145Plan(){if(mq145Plan.c)return mq145Plan.c;
   const ring=(x,z,r,need)=>{let n=0;for(let k=0;k<12;k++){const a=k/12*6.283;if(ok(x+Math.cos(a)*r,z+Math.sin(a)*r,.5))n++}return n>=need};
   const PR=(MAP.props||[]).filter(q=>Math.abs(q[0]-I.x0-I.w/2)<I.w&&Math.abs(q[1]-I.y0-I.h/2)<I.h),clear=(x,z)=>!PR.some(q=>Math.hypot(q[0]-x,q[1]-z)<5.4);
   const roadD=(x,z)=>{let d=1e9;for(let i=0;i<N;i+=2){const q=P[i];d=Math.min(d,Math.hypot(x-q[0],z-q[1]))}return d};
-  const avoid=[[I.en[0],I.en[1],22],[I.ba[0],I.ba[1],18]].concat((I.cl||[]).map(c=>[c[0],c[1],15]));
+  const avoid=[[I.en[0],I.en[1],22],[I.ba[0],I.ba[1],18]].concat(typeof cs164Avoid=='function'?cs164Avoid(I,15):(I.cl||[]).map(c=>[c[0],c[1],15])); // v164: camp radius + 3
   const R={sig:[null,null,null],keep:[],ok},fr=[.3,.56,.82];
   const tries=[{m:3,ring:10,road:8,sep:30,av:1,cl:1},{m:2.2,ring:9,road:7,sep:24,av:1,cl:1},{m:1.6,ring:8,road:6,sep:18,av:.7,cl:1},{m:1.2,ring:6,road:5,sep:12,av:.5}];
   for(const T of tries)for(let j=0;j<3;j++){if(R.sig[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
