@@ -42,23 +42,25 @@ function rf165Start(own){const C=SS165.c2,K=KH165W.e;if(RF165.E||C.st!==2||!K||!
   say('🐜 Kheprit strides to the rift stones and lifts his claws. The runes begin to wake… and from the gates comes the howl of the cult.');svSnd('bell',.9,.6);
   if(own!==false&&typeof co165Rift=='function')co165Rift('start');SS165.trkK='';return true}
 // ends the defence: 'won' (through the rift) · 'fall' (Kheprit fell) · 'quiet' (left, died)
-function rf165Stop(why){const E=RF165.E;if(!E)return;RF165.E=null;SS165.trkK='';const K=KH165W.e;rf165Hud();
+function rf165Stop(why,keep){const E=RF165.E;if(!E)return;RF165.E=null;SS165.trkK='';const K=KH165W.e;rf165Hud();
   const melt=s=>{if(s.dead)return;burst(gY(s.m.position,.8),0xc8a070,16,1.6,1.6,.6);try{removeE(s)}catch(_){}};
   enemies.slice().forEach(s=>{if(s.rf165){if(why==='fall')qs165After(.6+Math.random()*1.6,()=>melt(s));else melt(s)}});
   if(why==='won')return;
   rf165RiftK(0,0);
   if(why==='fall'&&K){svStart(K,'fall',3);say('💀 Kheprit falls — the rift gutters and collapses. The cult howls and melts back into the sand.');
     qs165After(6,()=>{if(!KH165W.e||RF165.E)return;svStart(KH165W.e,'rise',4);say('🐜 Sand pours into Kheprit’s cracks and he drags himself up again. Speak with him to try once more.')})}
-  SS165.c2.st=2;if(K&&why!=='fall'){K.sv.alive=1;svEndMove(K,true)}}
+  if(!keep)SS165.c2.st=2;if(K&&why!=='fall'){K.sv.alive=1;svEndMove(K,true)}}
 // ---------------- the cult pours in ----------------
 function rf165Spawn(n){const T=ss165T2(),I=ss165I(1),lv=(I.lv&&I.lv[1])||20;for(let i=0;i<n;i++){const g=T.gates[Math.floor(Math.random()*T.gates.length)],[x,z]=T.F.W2(g.a+(g.a<0?2.2:0)+(Math.random()-.5)*1.6,g.b+(g.b<0?2.2:g.b>0?-2.2:0)+(Math.random()-.5)*1.6);
     const k=RF165.cult[Math.floor(Math.random()*RF165.cult.length)];let e=null;try{e=spawnEnemy(k,x,z,lv-1+Math.floor(Math.random()*3),{agg:1})}catch(err){if(!RF165.err++)console.error('v165 cultist',err)}if(!e)continue;
-    e.rf165=1;e.agg=1;e.hunt=1;e.rfK=Math.random()<.5?1:0;e.rfP=new THREE.Object3D();e.rfP.rf165K=1;burst(gY(e.m.position,.6),0xc8a070,14,1.4,1.4,.5)}}
+    e.rf165=1;e.agg=1;e.hunt=1;e.rfK=k==='ss165zealot'&&Math.random()<.62?1:0;e.rfP=new THREE.Object3D();e.rfP.rf165K=1;burst(gY(e.m.position,.6),0xc8a070,14,1.4,1.4,.5)}}
 function rf165Alive(){let n=0;enemies.forEach(e=>{if(e.rf165&&!e.dead)n++});return n}
 // ---------------- the tick ----------------
 function rf165Tick(dt,now){const E=RF165.E,t=now/1000;
   if(!E){if(!RF165.aft&&CY165.g&&KH165W.built&&(SS165.c2.st>=4||ss165Done(2)))kh165Sync();if(RF165.aft)RF165.aft.visible=ss165Here(1);if(RF165.aft&&ss165Here(1)){rf165RiftK(1,t);rf165Enter()}return}
-  if(!ss165Here(1)||hero.hp<=0){rf165Stop('quiet');return}
+  // co-op: a partner's defence ends when the host says so; the host's when nobody in the court is standing (or it left)
+  {const co=typeof co151On=='function'&&co151On();if(!ss165Here(1)){rf165Stop('quiet');if(co&&co151Host()&&typeof co165Rift=='function')co165Rift('quiet');return}
+    if(co?(co151Host()&&!co151Standing()):hero.hp<=0){rf165Stop('quiet');if(co&&typeof co165Rift=='function')co165Rift('quiet');return}}
   const K=KH165W.e,host=typeof co151On!='function'||!co151On()||co151Host(),S=K&&K.sv;if(!K){rf165Stop('quiet');return}
   // he walks to the stones, then channels
   if(!E.go){const P=rf165KhSpot(),dx=P.x-K.m.position.x,dz=P.z-K.m.position.z,L=Math.hypot(dx,dz);if(L>.15){const st=Math.min(L,dt*2.2);K.m.position.x+=dx/L*st;K.m.position.z+=dz/L*st;K.m.position.y=P.y;S.spd=2;K.m.rotation.y=Math.atan2(dx,dz)}
@@ -85,7 +87,7 @@ function rf165Tick(dt,now){const E=RF165.E,t=now/1000;
   rf165Hud()}
 // step into the open rift
 function rf165Enter(){const p=pl.position;if(hero.hp<=0||!rf165In(p.x,p.z))return;if(RF165.ent&&performance.now()-RF165.ent<3000)return;RF165.ent=performance.now();
-  const first=SS165.c2.st<4;if(first){SS165.c2.st=4;SS165.trkK='';rf165Stop('won')}svSnd('whoosh',1,.6);
+  const first=SS165.c2.st<4;if(first){SS165.c2.st=4;SS165.trkK='';rf165Stop('won',true);if(typeof co165Credit=='function')co165Credit('c2')}svSnd('whoosh',1,.6);
   try{insGo(ss165I(2))}catch(e){console.error('v165 rift go',e)}
   if(first)setTimeout(()=>{try{zt116Show(ZT116.Z[3],'Searing Sands · Main Quest','The Salt Wastes','The rift spits you out onto blinding salt','','z3')}catch(_){}},900)}
 // ---------------- his health at the top of the screen ----------------
@@ -122,5 +124,6 @@ function rf165After(){const T=ss165T2(),F=T.F;if(!CY165.g)return;if(RF165.aft){R
     [[T.kh.a-1.2,0,5],[T.rift.a-2.2,2.4,3.2]].concat(T.gates.map(G=>[G.a+(G.a<0?2.6:0),G.b+(G.b<0?2.6:G.b>0?-2.6:0),3.4])).forEach(([a,b,r])=>{const [x,z]=F.W2(a,b);q.p('','cyl','c',0x3a1a10,x,y0+.075,z,r,.01,r*.85,0,rn()*3,0)});
     for(let i=0;i<10;i++){const ang=rn()*Math.PI*2,rr=5+rn()*(T.R-7),[x,z]=F.W2(Math.cos(ang)*rr,Math.sin(ang)*rr);q.p('','box','c',0x5a3a22,x,y0+.08,z,.05,.05,2.4,0,rn()*3,0);q.p('','box','c',0x8a3018,x+.3,y0+.09,z+.2,.7,.02,.9,0,rn()*3,0)}},0));
   rf165RiftK(1,0)}
-SS165L.push(()=>{if(RF165.E)rf165Stop('quiet');if(RF165.aft&&!(ss165Done(2)||SS165.c2.st>=3)){RF165.aft.parent&&RF165.aft.parent.remove(RF165.aft);RF165.aft=null;rf165RiftK(0,0)}});
+SS165L.unshift(()=>{if(RF165.E)rf165Stop('quiet',true)});
+SS165L.push(()=>{if(RF165.aft&&!(ss165Done(2)||SS165.c2.st>=3)){RF165.aft.parent&&RF165.aft.parent.remove(RF165.aft);RF165.aft=null;rf165RiftK(0,0)}});
 // the tracker's rift line reads RF165.E.t / RF165.T (3270)

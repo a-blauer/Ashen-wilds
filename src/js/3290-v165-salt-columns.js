@@ -41,7 +41,7 @@ function sc165Build(i){const S=sc165Spots()[i],M=sc165Mats(),g=new THREE.Group()
 function sc165Show(C){const n=C.hits,N=SC165.N,f=Math.min(1,n/N);C.cr.forEach((m,j)=>{m.visible=j>=Math.round(f*C.cr.length*1.08)});
   C.core.scale.set(1-f*.45,1-f*.62,1-f*.45);C.pm.position.y=1.35-f*.5;if(C.gl)C.gl.scale.setScalar(1.2+f*1.2);C.beam.visible=!C.done}
 // every column standing (or broken, with its part on the ground) from the state
-function sc165Sync(){const C3=SS165.c3,I=ss165I(2);SC165.cols.forEach(C=>{if(C&&C.g)scene.remove(C.g)});SC165.cols=[];SC165.picks.slice().forEach(q=>scene.remove(q.g));SC165.picks=[];
+function sc165Sync(){sc165Stop();SC165.golem={};const C3=SS165.c3,I=ss165I(2);SC165.cols.forEach(C=>{if(C&&C.g)scene.remove(C.g)});SC165.cols=[];SC165.picks.slice().forEach(q=>scene.remove(q.g));SC165.picks=[];
   if(C3.built||ss165Done(3))return;
   for(let i=0;i<5;i++){const p=SC165P[i];if(C3.col&(1<<i)){if(!(C3.got&(1<<p))){const S=sc165Spots()[i];sc165Drop(p,S.x,S.z,false)}continue}sc165Build(i)}}
 // ---------------- mining ----------------

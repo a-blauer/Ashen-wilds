@@ -32,7 +32,7 @@ function co165Flush(now){if(!CO165.cq.length)return;const l=[];CO165.cq.forEach(
   CO165.cq=CO165.cq.filter(q=>q.n>0);if(l.length)try{MP.room.emit('ev',{r:MP.rg,l}).catch(()=>{})}catch(_){}}
 function co165Apply(key,by){const who=mpEsc(String(by||'A partner').slice(0,20));co165Rx(()=>{
   if(key==='c1'){if(SS165.c1.st<3){SS165.c1.st=3;SS165.trkK='';if(QS165.e&&!QS165.e.dead&&!(QS165A&&QS165A.f))qs165Reset(false);try{sd165Sync()}catch(_){}say('🏜️ '+who+' slew Qarsul, the Living Dune: the Sunken Temple stands open for you too.')}}
-  else if(key==='c2'){if(SS165.c2.st<4){SS165.c2.st=4;SS165.trkK='';try{if(KH165W.built)kh165Sync()}catch(_){}say('🌀 '+who+' went through Kheprit’s rift: the way to the Salt Wastes is open for you too.')}}
+  else if(key==='c2'){if(SS165.c2.st<4&&!RF165.E){SS165.c2.st=4;SS165.trkK='';try{if(KH165W.built)kh165Sync()}catch(_){}say('🌀 '+who+' went through Kheprit’s rift: the way to the Salt Wastes is open for you too.')}}
   else if(key==='c3'){if(!SS165.c3.built){SS165.c3.built=1;SS165.c3.got=31;SS165.trkK='';try{cs165Parts();sc165Sync()}catch(_){}say('🛷 '+who+' built the Sandskimmer in the salt-cutters’ yard.')}}
   else if(key==='run'){if(!SS165.run.st){SS165.run.st=1;SS165.trkK='';say('🌪️ '+who+' rode through the sandstorm to the Den: the Sandskimmer will take you straight there.')}}})}
 {const f=qs165Won;qs165Won=function(e){const r=f.apply(this,arguments);try{co165Credit('c1')}catch(_){}return r}}
@@ -83,12 +83,12 @@ function co165Lay(mask){if(co151On())co165Send(['s5l',mask|0])}
 function co165Wake(){if(co151On())co165Send(['s5w'])}
 function co165OnLay(mask){const C=SS165.c2;mask&=2047;const add=mask&~C.lay;if(!add)return;if(!KH165W.built||!ss165Here(1)){C.lay|=add;C.got&=~add;SS165.trkK='';return}
   const e=kh165Laid();for(let i=0;i<11;i++)if(add&(1<<i)){kh165PartShow(e.sv.R,i,true);const j=e.sv.R.part[i]||e.sv.R.J.torso,p=new THREE.Vector3();j.getWorldPosition(p);burst(p,0xffd070,20,1,1.4,.6)}
-  C.lay|=add;C.got&=~add;SS165.trkK=''}
+  C.lay|=add;C.got&=~add;SS165.trkK='';if(C.lay===2047&&C.st<1)qs165After(1.4,()=>kh165Wake(false))}
 // ================= II: the rift (the host runs it) =================
 function co165Ask(k){if(k==='rf'&&nowP()-(CO165.tR||0)>800){CO165.tR=nowP();co165Send(['s5ra'])}}
-function co165Rift(k){if(!co151On())return;co165Send(['s5r',k]);if(k==='open')co165Credit('c2')}
+function co165Rift(k){if(!co151On())return;co165Send(['s5r',k])}
 function co165RiftSync(now){const E=RF165.E;if(!E||!co151On()||!co151Host()||now-CO165.tS<150)return;CO165.tS=now;co165Send(['s5re',Math.round(E.t*10),Math.round(E.hp),E.esc|0,E.go|0])}
-function co165OnRift(q){if(co151Host()||!ss165Here(1))return;let E=RF165.E;if(!E){if(SS165.c2.st!==2||!KH165W.e)return;co165Rx(()=>rf165Start(false));E=RF165.E;if(!E)return}
+function co165OnRift(q){if(co151Host()||!ss165Here(1)||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;let E=RF165.E;if(!E){if(SS165.c2.st!==2||!KH165W.e)return;co165Rx(()=>rf165Start(false));E=RF165.E;if(!E)return}
   E.t=Math.max(0,(q[1]|0)/10);E.hp=Math.max(0,Math.min(RF165.hpM,q[2]|0));if(q[4]&&!E.go){E.go=1;try{const K=KH165W.e,P=rf165KhSpot();K.m.position.set(P.x,P.y,P.z);svStart(K,'chan',5);K.sv.chg=1}catch(_){}}}
 // a partner's copy of the rift does not spawn or hurt (the host's world does)
 {const f=rf165Spawn;rf165Spawn=function(n){if(co151On()&&!co151Host())return;return f.apply(this,arguments)}}
@@ -118,7 +118,7 @@ function co165VSync(now){if(!SR165.on||!co151On()||now-CO165.tV<100)return;CO165
 function co165Shot(V,A){if(co151On())co165Send(['s5f',V.id,co165R(A.x),co165R(A.z)])}
 function co165Worm(W){if(co151On()&&co151Host())co165Send(['s5wy',Math.round(W.s*10)/10,co165R(W.o0),co165R(W.o1),co165R(W.a.x),co165R(W.a.z),co165R(W.b.x),co165R(W.b.z)])}
 {const f=sr165Sting;sr165Sting=function(from,x,z,T){if(co151On()&&co151Host()&&!CO165.rx)co165Send(['s5st',co165R(from.x),co165R(from.y),co165R(from.z),co165R(x),co165R(z),co165R(T)]);return f.apply(this,arguments)}}
-function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
+function co165RunWin(){co165Credit('run');if(co151On())co165Send(['s5win'])}
 // ================= presence and the messages =================
 {const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.q1=qs180Has()?1:0}catch(_){}}return f.apply(this,arguments)}}
 {const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)){
@@ -142,7 +142,7 @@ function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
       else if(t==='s5l')co165OnLay(q[1]|0);
       else if(t==='s5w'){if(SS165.c2.st<1&&KH165W.built)kh165Wake(false);else if(SS165.c2.st<1)SS165.c2.st=2}
       else if(t==='s5ra'){if(iHost&&!RF165.E&&SS165.c2.st===2&&ss165Here(1))setTimeout(()=>{if(!RF165.E)rf165Start(true)},0)}
-      else if(t==='s5r'){if(fromHost){if(q[1]==='start'&&!RF165.E&&ss165Here(1)&&SS165.c2.st===2&&KH165W.e)rf165Start(false);else if(q[1]==='fall'&&RF165.E)rf165Stop('fall');else if(q[1]==='open'&&SS165.c2.st<3){SS165.c2.st=3;SS165.trkK=''}}}
+      else if(t==='s5r'){if(fromHost){if(q[1]==='start'&&!RF165.E&&ss165Here(1)&&SS165.c2.st===2&&KH165W.e)rf165Start(false);else if(q[1]==='fall'&&RF165.E)rf165Stop('fall');else if(q[1]==='open'&&RF165.E&&SS165.c2.st<3){SS165.c2.st=3;SS165.trkK=''}else if(q[1]==='quiet'&&RF165.E)rf165Stop('quiet')}}
       else if(t==='s5re'){if(fromHost)co165OnRift(q)}
       // III
       else if(t==='s5m'){const i=q[1]|0;if(SC165.cols[i])sc165Hit(i,false)}
@@ -152,9 +152,10 @@ function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
       // the Run
       else if(t==='s5ga'){const pr=msg.peer;if(iHost&&!SR165.on&&SS165.c3.built)setTimeout(()=>{if(!SR165.on)co165RunGo(co165Crews(pr))},0)}
       else if(t==='s5go'){let C=null;try{C=JSON.parse(String(q[1]||''))}catch(_){}if(Array.isArray(C)&&C.length<=8&&ss165Here(2))co165RunUse(C.filter(c=>c&&typeof c.id==='string'))}
-      else if(t==='s5v'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&!co165Sim(V)){V.net={x:+q[2],z:+q[3],h:+q[4],v:+q[5],b:q[6]|0,st:+q[7],hp:+q[8],s:+q[9]};V.hp=+q[8];V.netT=performance.now();if(V.gun!=='me'){V.aY=+q[10];V.aP=+q[11]}if(q[12]&&!V.wreck){V.wreck=1;burst(gY(V.m.position,1.5),0xff8a3a,60,4,3,.8)}else if(!q[12])V.wreck=0}}
+      else if(t==='s5v'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&V.drvOrig===msg.peer&&V.drv==='chd'&&V.gun==='me'){V.drv=V.drvOrig;V.drvOrig=null;if(V.chd){V.chd.root.parent&&V.chd.root.parent.remove(V.chd.root);V.chd=null}say('🐭 Cheddar hands the wheel back.')}
+        if(V&&!co165Sim(V)){V.net={x:+q[2],z:+q[3],h:+q[4],v:+q[5],b:q[6]|0,st:+q[7],hp:+q[8],s:+q[9]};V.hp=+q[8];V.netT=performance.now();if(V.gun!=='me'){V.aY=+q[10];V.aP=+q[11]}if(q[12]&&!V.wreck){V.wreck=1;burst(gY(V.m.position,1.5),0xff8a3a,60,4,3,.8)}else if(!q[12])V.wreck=0}}
       else if(t==='s5a'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&V.gun!=='me'){V.aY=+q[2]||0;V.aP=+q[3]||0}}
-      else if(t==='s5f'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&isFinite(q[2])&&isFinite(q[3])){V.aim=new THREE.Vector3(+q[2],V.y+.9,+q[3]);V.fT=0;sr165Fire(V,false)}}
+      else if(t==='s5f'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&isFinite(q[2])&&isFinite(q[3])){V.aim=new THREE.Vector3(+q[2],V.y+.9,+q[3]);V.fT=0;sr165Fire(V,false)}}   // a partner's own shells hurt the host's monsters through their copies
       else if(t==='s5h'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&co165Sim(V)){CO165.ap=1;try{sr165Hurt(V,Math.max(0,Math.min(200,+q[2]||0)),'host')}finally{CO165.ap=0}}}
       else if(t==='s5wy'){if(fromHost&&SR165.on)sr165Worm(+q[1],+q[2],+q[3],false,[+q[4],+q[5],+q[6],+q[7]])}
       else if(t==='s5st'){if(fromHost&&SR165.on){const from=new THREE.Vector3(+q[1],+q[2],+q[3]);sr165Sting(from,+q[4],+q[5],+q[6]);const g=SR165F.st[SR165F.st.length-1];if(g)g.noHit=1}}
@@ -167,5 +168,7 @@ function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
     if(CO165.hq>0&&t-CO165.tH>150){CO165.tH=t;co165Send(['q1h',CO165.hq]);CO165.hq=0}
     qs180Sync(t);co165DigSync(t);co165RiftSync(t);co165VSync(t);co165Flush(t);
     // a machine whose driver went quiet for 3 s: Cheddar takes the helm (its gunner's world drives it now)
-    if(SR165.on)SR165.V.forEach(V=>{if(V.gun==='me'&&V.drv!=='chd'&&V.drv!=='me'&&V.netT&&t-V.netT>3000){V.drv='chd';V.net=null;if(!V.chd)try{const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC*1.15);V.R.J.seatD.add(C.root);V.chd=C}catch(_){}say('🐭 Cheddar grabs the wheel!')}});
+    if(SR165.on)SR165.V.forEach(V=>{if(V.gun==='me'&&V.drv!=='chd'&&V.drv!=='me'&&V.netT&&t-V.netT>3000){V.drvOrig=V.drv;V.drv='chd';V.net=null;if(!V.chd)try{const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC*1.15);V.R.J.seatD.add(C.root);V.chd=C}catch(_){}say('🐭 Cheddar grabs the wheel!')}});
     const g=qs180Has()?1:0;if(g!==CO165.q1){CO165.q1=g;MP.lastPres=''}}}catch(err){if(!CO165.err++)console.warn('v165 co-op tick',err)}return r}}
+// leaving the group: what was sent or heard is forgotten (a new group gets it again)
+{const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);CO165.got={};CO165.cq=[];CO165.hq=0;CO165.vh={};return r}}

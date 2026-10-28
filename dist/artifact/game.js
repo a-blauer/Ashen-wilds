@@ -50985,7 +50985,7 @@ var KH165B={name:'Kheprit',col:KH165.col,P:KH165P,loco:kh165Loco,post:kh165Post,
   fall:{dur:2.2,trk:[[.4,'hurt','o'],[1.6,'dead','i'],[2.2,'dead','l']],go(c){c.S.alive=0;c.S.chg=0}},
   dead:{dur:1e9,trk:[[0,'dead','l']],go(c){c.S.alive=0;c.S.chg=0}},
   rise:{dur:3.4,trk:[[0,'dead','l'],[1.2,'stir','io'],[2.2,'push','io'],[3.4,'stand','io']],go(c){c.S.alive=1}}}};
-function kh165Wake(own){const C=SS165.c2;if(C.st>=1&&KH165W.e&&KH165W.e.sv.alive)return;C.st=Math.max(C.st,1);SS165.trkK='';const e=kh165Laid();for(let i=0;i<11;i++)kh165PartShow(e.sv.R,i,true);
+function kh165Wake(own){const C=SS165.c2;if(C.st>=1&&KH165W.e&&(KH165W.e.wk||KH165W.e.sv.alive))return;C.st=Math.max(C.st,1);SS165.trkK='';const e=kh165Laid();for(let i=0;i<11;i++)kh165PartShow(e.sv.R,i,true);
   svStart(e,'wake',1);e.wk={t:0};try{zt116Show(ZT116.Z[3],'Searing Sands · Main Quest','Kheprit Wakes','The Last Warden of the Sunken Temple','','z3')}catch(_){}
   say('🐜 The pieces on the altar knit together… and the Warden stirs.');if(own!==false&&typeof co165Wake=='function')co165Wake()}
 // the waking's last steps: off the altar, down the dais, to stand before it facing the court
@@ -51028,7 +51028,7 @@ function kh165Tick(dt,now){const here=ss165Here(1),C=SS165.c2,t=now/1000;if(!CY1
   KH165W.picks.forEach(q=>{q.g.visible=here;if(!here)return;q.t+=dt;q.m.rotation.y+=dt*.9;q.m.position.y=.25+Math.sin(q.t*2)*.12;if(hero.hp>0&&Math.hypot(pl.position.x-q.x,pl.position.z-q.z)<1.1)kh165Take(q.p,true)});
   const e=KH165W.e;if(e){e.m.visible=here;if(here){const dx=e.m.position.x-e.sv.lp.x,dz=e.m.position.z-e.sv.lp.z;e.sv.lp.copy(e.m.position);
     if(e.sv.mv){const M=e.sv.mv;M.t+=dt;e.sv.tt=M.t;const D=M.D;if(D.ev)D.ev.forEach((v,i)=>{if(!M.done.has('e'+i)&&M.t>=v[0]){M.done.add('e'+i);try{v[1]({e,S:e.sv,M,t:M.t,m:e.m})}catch(err){console.error('kh ev',err)}}});if(D.tk)try{D.tk({e,S:e.sv,M,t:M.t,m:e.m},dt)}catch(_){}
-      if(M.t>=D.dur){try{D.end&&D.end({e,S:e.sv,M,m:e.m})}catch(_){}const keep=e.sv.mv;e.sv.mv=null;if(keep.id==='talk'||keep.id==='point'||keep.id==='rise'){e.sv.trk=null}}}
+      if(M.t>=D.dur){try{D.end&&D.end({e,S:e.sv,M,m:e.m})}catch(_){}const keep=e.sv.mv;e.sv.mv=null;if(keep.id==='talk'||keep.id==='point'||keep.id==='rise'){e.sv.trk=null}if(keep.id==='fall')svStart(e,'dead',1)}}
     kh165WakeTick(e,dt);try{svApply(e,dt,now)}catch(err){if(!KH165W.err++)console.warn('v165 kh anim',err)}}}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{kh165Tick(dt,now)}catch(e){if(!KH165W.err++)console.warn('v165 warden tick',e)}return r}}
 // the scene from the state (first visit, after a load): the urns still standing, pieces on the ground, the remains on the altar, Kheprit standing
@@ -51083,23 +51083,25 @@ function rf165Start(own){const C=SS165.c2,K=KH165W.e;if(RF165.E||C.st!==2||!K||!
   say('🐜 Kheprit strides to the rift stones and lifts his claws. The runes begin to wake… and from the gates comes the howl of the cult.');svSnd('bell',.9,.6);
   if(own!==false&&typeof co165Rift=='function')co165Rift('start');SS165.trkK='';return true}
 // ends the defence: 'won' (through the rift) · 'fall' (Kheprit fell) · 'quiet' (left, died)
-function rf165Stop(why){const E=RF165.E;if(!E)return;RF165.E=null;SS165.trkK='';const K=KH165W.e;rf165Hud();
+function rf165Stop(why,keep){const E=RF165.E;if(!E)return;RF165.E=null;SS165.trkK='';const K=KH165W.e;rf165Hud();
   const melt=s=>{if(s.dead)return;burst(gY(s.m.position,.8),0xc8a070,16,1.6,1.6,.6);try{removeE(s)}catch(_){}};
   enemies.slice().forEach(s=>{if(s.rf165){if(why==='fall')qs165After(.6+Math.random()*1.6,()=>melt(s));else melt(s)}});
   if(why==='won')return;
   rf165RiftK(0,0);
   if(why==='fall'&&K){svStart(K,'fall',3);say('💀 Kheprit falls — the rift gutters and collapses. The cult howls and melts back into the sand.');
     qs165After(6,()=>{if(!KH165W.e||RF165.E)return;svStart(KH165W.e,'rise',4);say('🐜 Sand pours into Kheprit’s cracks and he drags himself up again. Speak with him to try once more.')})}
-  SS165.c2.st=2;if(K&&why!=='fall'){K.sv.alive=1;svEndMove(K,true)}}
+  if(!keep)SS165.c2.st=2;if(K&&why!=='fall'){K.sv.alive=1;svEndMove(K,true)}}
 // ---------------- the cult pours in ----------------
 function rf165Spawn(n){const T=ss165T2(),I=ss165I(1),lv=(I.lv&&I.lv[1])||20;for(let i=0;i<n;i++){const g=T.gates[Math.floor(Math.random()*T.gates.length)],[x,z]=T.F.W2(g.a+(g.a<0?2.2:0)+(Math.random()-.5)*1.6,g.b+(g.b<0?2.2:g.b>0?-2.2:0)+(Math.random()-.5)*1.6);
     const k=RF165.cult[Math.floor(Math.random()*RF165.cult.length)];let e=null;try{e=spawnEnemy(k,x,z,lv-1+Math.floor(Math.random()*3),{agg:1})}catch(err){if(!RF165.err++)console.error('v165 cultist',err)}if(!e)continue;
-    e.rf165=1;e.agg=1;e.hunt=1;e.rfK=Math.random()<.5?1:0;e.rfP=new THREE.Object3D();e.rfP.rf165K=1;burst(gY(e.m.position,.6),0xc8a070,14,1.4,1.4,.5)}}
+    e.rf165=1;e.agg=1;e.hunt=1;e.rfK=k==='ss165zealot'&&Math.random()<.62?1:0;e.rfP=new THREE.Object3D();e.rfP.rf165K=1;burst(gY(e.m.position,.6),0xc8a070,14,1.4,1.4,.5)}}
 function rf165Alive(){let n=0;enemies.forEach(e=>{if(e.rf165&&!e.dead)n++});return n}
 // ---------------- the tick ----------------
 function rf165Tick(dt,now){const E=RF165.E,t=now/1000;
   if(!E){if(!RF165.aft&&CY165.g&&KH165W.built&&(SS165.c2.st>=4||ss165Done(2)))kh165Sync();if(RF165.aft)RF165.aft.visible=ss165Here(1);if(RF165.aft&&ss165Here(1)){rf165RiftK(1,t);rf165Enter()}return}
-  if(!ss165Here(1)||hero.hp<=0){rf165Stop('quiet');return}
+  // co-op: a partner's defence ends when the host says so; the host's when nobody in the court is standing (or it left)
+  {const co=typeof co151On=='function'&&co151On();if(!ss165Here(1)){rf165Stop('quiet');if(co&&co151Host()&&typeof co165Rift=='function')co165Rift('quiet');return}
+    if(co?(co151Host()&&!co151Standing()):hero.hp<=0){rf165Stop('quiet');if(co&&typeof co165Rift=='function')co165Rift('quiet');return}}
   const K=KH165W.e,host=typeof co151On!='function'||!co151On()||co151Host(),S=K&&K.sv;if(!K){rf165Stop('quiet');return}
   // he walks to the stones, then channels
   if(!E.go){const P=rf165KhSpot(),dx=P.x-K.m.position.x,dz=P.z-K.m.position.z,L=Math.hypot(dx,dz);if(L>.15){const st=Math.min(L,dt*2.2);K.m.position.x+=dx/L*st;K.m.position.z+=dz/L*st;K.m.position.y=P.y;S.spd=2;K.m.rotation.y=Math.atan2(dx,dz)}
@@ -51126,7 +51128,7 @@ function rf165Tick(dt,now){const E=RF165.E,t=now/1000;
   rf165Hud()}
 // step into the open rift
 function rf165Enter(){const p=pl.position;if(hero.hp<=0||!rf165In(p.x,p.z))return;if(RF165.ent&&performance.now()-RF165.ent<3000)return;RF165.ent=performance.now();
-  const first=SS165.c2.st<4;if(first){SS165.c2.st=4;SS165.trkK='';rf165Stop('won')}svSnd('whoosh',1,.6);
+  const first=SS165.c2.st<4;if(first){SS165.c2.st=4;SS165.trkK='';rf165Stop('won',true);if(typeof co165Credit=='function')co165Credit('c2')}svSnd('whoosh',1,.6);
   try{insGo(ss165I(2))}catch(e){console.error('v165 rift go',e)}
   if(first)setTimeout(()=>{try{zt116Show(ZT116.Z[3],'Searing Sands · Main Quest','The Salt Wastes','The rift spits you out onto blinding salt','','z3')}catch(_){}},900)}
 // ---------------- his health at the top of the screen ----------------
@@ -51163,7 +51165,8 @@ function rf165After(){const T=ss165T2(),F=T.F;if(!CY165.g)return;if(RF165.aft){R
     [[T.kh.a-1.2,0,5],[T.rift.a-2.2,2.4,3.2]].concat(T.gates.map(G=>[G.a+(G.a<0?2.6:0),G.b+(G.b<0?2.6:G.b>0?-2.6:0),3.4])).forEach(([a,b,r])=>{const [x,z]=F.W2(a,b);q.p('','cyl','c',0x3a1a10,x,y0+.075,z,r,.01,r*.85,0,rn()*3,0)});
     for(let i=0;i<10;i++){const ang=rn()*Math.PI*2,rr=5+rn()*(T.R-7),[x,z]=F.W2(Math.cos(ang)*rr,Math.sin(ang)*rr);q.p('','box','c',0x5a3a22,x,y0+.08,z,.05,.05,2.4,0,rn()*3,0);q.p('','box','c',0x8a3018,x+.3,y0+.09,z+.2,.7,.02,.9,0,rn()*3,0)}},0));
   rf165RiftK(1,0)}
-SS165L.push(()=>{if(RF165.E)rf165Stop('quiet');if(RF165.aft&&!(ss165Done(2)||SS165.c2.st>=3)){RF165.aft.parent&&RF165.aft.parent.remove(RF165.aft);RF165.aft=null;rf165RiftK(0,0)}});
+SS165L.unshift(()=>{if(RF165.E)rf165Stop('quiet',true)});
+SS165L.push(()=>{if(RF165.aft&&!(ss165Done(2)||SS165.c2.st>=3)){RF165.aft.parent&&RF165.aft.parent.remove(RF165.aft);RF165.aft=null;rf165RiftK(0,0)}});
 // the tracker's rift line reads RF165.E.t / RF165.T (3270)
 // ================= v165 Searing Sands III · The Sandskimmer: the parts locked in the salt =================
 // Five great salt columns stand round the Salt Wastes, each grown round one part of the salt-cutters' machine (SK165.parts:
@@ -51208,7 +51211,7 @@ function sc165Build(i){const S=sc165Spots()[i],M=sc165Mats(),g=new THREE.Group()
 function sc165Show(C){const n=C.hits,N=SC165.N,f=Math.min(1,n/N);C.cr.forEach((m,j)=>{m.visible=j>=Math.round(f*C.cr.length*1.08)});
   C.core.scale.set(1-f*.45,1-f*.62,1-f*.45);C.pm.position.y=1.35-f*.5;if(C.gl)C.gl.scale.setScalar(1.2+f*1.2);C.beam.visible=!C.done}
 // every column standing (or broken, with its part on the ground) from the state
-function sc165Sync(){const C3=SS165.c3,I=ss165I(2);SC165.cols.forEach(C=>{if(C&&C.g)scene.remove(C.g)});SC165.cols=[];SC165.picks.slice().forEach(q=>scene.remove(q.g));SC165.picks=[];
+function sc165Sync(){sc165Stop();SC165.golem={};const C3=SS165.c3,I=ss165I(2);SC165.cols.forEach(C=>{if(C&&C.g)scene.remove(C.g)});SC165.cols=[];SC165.picks.slice().forEach(q=>scene.remove(q.g));SC165.picks=[];
   if(C3.built||ss165Done(3))return;
   for(let i=0;i<5;i++){const p=SC165P[i];if(C3.col&(1<<i)){if(!(C3.got&(1<<p))){const S=sc165Spots()[i];sc165Drop(p,S.x,S.z,false)}continue}sc165Build(i)}}
 // ---------------- mining ----------------
@@ -51661,9 +51664,9 @@ function sr165Burst(p,own){burst(p,0xffb050,24,3,2.2,.4);burst(p,0x6a5a4a,10,1.6
 // every foe a shell can hit (3302 fills it: scarabs, scorpions, worms): {p (Vector3), r, hit(k)}
 function sr165Foes(){return typeof sr165FoeList=='function'?sr165FoeList():[]}
 // ---------------- starting, wrecking, checkpoints, the end ----------------
-function sr165Start(own){if(SR165.on||!SS165.c3.built)return;if(own&&typeof co165RunAsk=='function'&&co165RunAsk())return;sr165Go([{id:'v0',drv:'chd',gun:'me'}])}
+function sr165Start(own){if(SR165.on||SR165.going||!SS165.c3.built)return;if(own&&typeof co165RunAsk=='function'&&co165RunAsk())return;sr165Go([{id:'v0',drv:'chd',gun:'me'}])}
 // crews: [{id, drv:'chd'|'me'|peer, gun:'me'|peer|null}], one for each machine
-function sr165Go(crews){SR165.crews=crews;fadeTo(()=>{try{sr165Build();SR165.V.forEach(V=>scene.remove(V.m));SR165.V=crews.map(c=>sr165Veh(c.id,c.drv,c.gun));SR165.me=SR165.V.find(V=>V.drv==='me'||V.gun==='me')||SR165.V[0];
+function sr165Go(crews){if(SR165.going||SR165.on)return;SR165.going=1;SR165.crews=crews;fadeTo(()=>{SR165.going=0;try{sr165Build();SR165.V.forEach(V=>scene.remove(V.m));SR165.V=crews.map(c=>sr165Veh(c.id,c.drv,c.gun));SR165.V.forEach(V=>V.netT=performance.now());SR165.me=SR165.V.find(V=>V.drv==='me'||V.gun==='me')||SR165.V[0];
     SR165.on=true;SR165.cp=0;SR165.tries=0;SR165.cam={y:camYaw,p:camPitch,d:camDist};sr165Reset(0);
     setTimeout(()=>{try{zt116Show(ZT116.Z[3],'Searing Sands · Main Quest','The Sandstorm Run','Ride through the storm to the Den of Ssith’ra',SR165.me.drv==='me'?'W/S throttle · A/D steer · Shift boost':'Hold the left button to fire · the turret follows your aim','z3')}catch(_){}},200)}catch(e){console.error('v165 run go',e);SR165.on=false}})}
 function sr165Reset(cp){const P=sr165Path(),s=sr165CPs()[cp]||0;SR165.ph='intro';SR165.t=0;SR165.V.forEach((V,i)=>{if(V.placed&&typeof co165Sim=='function'&&typeof co151On=='function'&&co151On()&&!co165Sim(V))return;V.placed=1;sr165Place(V,s+2-i*9,(i%2?-1:1)*(i?3:0));V.hp=V.hpM;V.wreck=0;V.bst=1;V.cling.length=0;V.aY=0});
@@ -51765,7 +51768,7 @@ function sr165FoeAI(e,dt,now){const m=e.m,P=sr165Path(),me=SR165.me;if(!SR165.on
     return}
   if(e.sr165==='sp'){// stand at the edge, face the Skimmer, spit venom where it is going
     m.rotation.y=Math.atan2(V.x-m.position.x,V.z-m.position.z);animC(m,now,false,0);e.srT-=dt;
-    if(e.srT<=0&&d<46&&d>6){e.srT=2.6+Math.random()*1.2;const T=Math.min(1.6,.5+d/30),px=V.x+Math.sin(V.h)*V.v*T,pz=V.z+Math.cos(V.h)*V.v*T;sr165Sting(gY(m.position,1.4),px,pz,T)}}}
+    if(e.srT<=0&&d<28&&d>6){e.srT=2.6+Math.random()*1.2;const T=Math.min(1.6,.5+d/30),px=V.x+Math.sin(V.h)*V.v*T,pz=V.z+Math.cos(V.h)*V.v*T;sr165Sting(gY(m.position,1.4),px,pz,T)}}}
 {const f=eTick;eTick=function(e,dt,now){if(e&&e.sr165){try{sr165FoeAI(e,dt,now)}catch(err){if(!SR165F.err++)console.warn('v165 foe ai',err)}return true}return f.apply(this,arguments)}}
 // a venom glob: a ring on the sand where it will land, the glob arcing there
 function sr165Sting(from,x,z,T){const M=sr165FM(),y=GH(x,z),r=new THREE.Mesh(svG('sr_ring',()=>new THREE.RingGeometry(2.2,2.7,24)),M.ring);r.rotation.x=-Math.PI/2;r.position.set(x,y+.1,z);scene.add(r);
@@ -51780,7 +51783,7 @@ function sr165WormMesh(){const M=sr165FM(),g=new THREE.Group(),segs=[];for(let i
   g.add(head);return {g,segs,head}}
 function sr165Worm(s,o0,o1,own,ab){const P=sr165Path();if(SR165F.wy.length>3)return;const W={s,o0,o1,t:0,ph:'tell',hp:4,hitV:new Set(),id:Math.random()};
   const [ax,az]=P.at(s,o0),[bx,bz]=P.at(s+(Math.random()-.5)*6,o1);W.a=new THREE.Vector3(ax,GH(ax,az),az);W.b=new THREE.Vector3(bx,GH(bx,bz),bz);if(Math.random()<.5){const q=W.a;W.a=W.b;W.b=q}if(ab&&ab.length===4&&ab.every(isFinite)){W.a.set(ab[0],GH(ab[0],ab[1]),ab[1]);W.b.set(ab[2],GH(ab[2],ab[3]),ab[3])}
-  const rip=new THREE.Mesh(new THREE.PlaneGeometry(1,2.2),new THREE.MeshBasicMaterial({map:sr165SwirlTex(),transparent:true,opacity:.0,depthWrite:false}));rip.rotation.x=-Math.PI/2;W.rip=rip;scene.add(rip);
+  const rip=new THREE.Mesh(svG('sr_rip',()=>new THREE.PlaneGeometry(1,2.2)),new THREE.MeshBasicMaterial({map:sr165SwirlTex(),transparent:true,opacity:.0,depthWrite:false}));rip.rotation.x=-Math.PI/2;W.rip=rip;scene.add(rip);
   SR165F.wy.push(W);SR165.wy=SR165F.wy;if(own&&typeof co165Worm=='function')co165Worm(W);return W}
 function sr165WormAt(W,u){const p=W.a.clone().lerp(W.b,u);p.y=Math.max(W.a.y,W.b.y)*0+((W.a.y*(1-u)+W.b.y*u))+Math.sin(Math.PI*u)*6.5-1.2;return p}
 function sr165WormTick(dt){SR165F.wy=SR165F.wy.filter(W=>{W.t+=dt;
@@ -51795,9 +51798,12 @@ function sr165WormTick(dt){SR165F.wy=SR165F.wy.filter(W=>{W.t+=dt;
     if(Math.random()<dt*20&&W.head.visible){burst(gY(uh<.2?W.a:W.b,.3),0xd8b080,3,2,2,.5)}
     // what it smashes: where its body is low (near either end)
     SR165.V.forEach(V=>{if(V.wreck||W.hitV.has(V))return;for(const m of W.segs){if(!m.visible||m.position.y-V.y>2.6)continue;if(Math.hypot(m.position.x-V.x,m.position.z-V.z)<2.4){W.hitV.add(V);sr165Hurt(V,18,'worm');V.v*=.3;V.bump=.6;svSnd('heavy',.9,.6);burst(gY(V.m.position,1.5),0xd8b080,40,3,3,.7);if(V===SR165.me)say('🪱 The worm slams into the Skimmer!');break}}});
-    if(uh-18*.06>1||(!any&&W.t>1)){scene.remove(W.g);scene.remove(W.rip);return false}return true})}
+    if(uh-18*.06>1||(!any&&W.t>1)){scene.remove(W.g);scene.remove(W.rip);W.rip.material.dispose();return false}return true})}
 // ---------------- what the shells can hit ----------------
-function sr165FoeList(){const L=[];enemies.forEach(e=>{if(!e.sr165||e.dead)return;L.push({p:gY(e.m.position,.6),r:e.sr165==='sp'?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(e.sr165==='sp'?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}
+function sr165FoeList(){const L=[];enemies.forEach(e=>{if(e.dead)return;
+    // a partner's world: the host's scarabs and scorpions are copies here (a hit on one goes to the host)
+    if(!e.sr165&&e.mir&&SR165.on&&e.c&&(e.c.en==='scarab'||e.c.en==='scorp')){const sp=e.c.en==='scorp';L.push({p:gY(e.m.position,.6),r:sp?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(sp?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}}});return}
+    if(!e.sr165)return;L.push({p:gY(e.m.position,.6),r:e.sr165==='sp'?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(e.sr165==='sp'?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}
       if(e.dead&&e.cl){const i=e.cl.V.cling.indexOf(e);if(i>=0)e.cl.V.cling.splice(i,1);e.cl=null}}})});
   SR165F.wy.forEach(W=>{if(W.ph==='tell'||!W.segs)return;[0,5,10].forEach(i=>{const m=i?W.segs[i]:W.head;if(m&&m.visible)L.push({p:m.position.clone(),r:1.4,hit:k=>{W.hp-=k;burst(m.position,0xffc060,10,1.6,1.4,.4);if(W.hp<=0&&W.ph!=='down'){W.ph='down';popT(m.position,'Driven under!','#ffe080',true);svSnd('shriek',.6,1.1)}}})})});return L}
 // ---------------- the tick ----------------
@@ -51836,7 +51842,7 @@ function co165Flush(now){if(!CO165.cq.length)return;const l=[];CO165.cq.forEach(
   CO165.cq=CO165.cq.filter(q=>q.n>0);if(l.length)try{MP.room.emit('ev',{r:MP.rg,l}).catch(()=>{})}catch(_){}}
 function co165Apply(key,by){const who=mpEsc(String(by||'A partner').slice(0,20));co165Rx(()=>{
   if(key==='c1'){if(SS165.c1.st<3){SS165.c1.st=3;SS165.trkK='';if(QS165.e&&!QS165.e.dead&&!(QS165A&&QS165A.f))qs165Reset(false);try{sd165Sync()}catch(_){}say('🏜️ '+who+' slew Qarsul, the Living Dune: the Sunken Temple stands open for you too.')}}
-  else if(key==='c2'){if(SS165.c2.st<4){SS165.c2.st=4;SS165.trkK='';try{if(KH165W.built)kh165Sync()}catch(_){}say('🌀 '+who+' went through Kheprit’s rift: the way to the Salt Wastes is open for you too.')}}
+  else if(key==='c2'){if(SS165.c2.st<4&&!RF165.E){SS165.c2.st=4;SS165.trkK='';try{if(KH165W.built)kh165Sync()}catch(_){}say('🌀 '+who+' went through Kheprit’s rift: the way to the Salt Wastes is open for you too.')}}
   else if(key==='c3'){if(!SS165.c3.built){SS165.c3.built=1;SS165.c3.got=31;SS165.trkK='';try{cs165Parts();sc165Sync()}catch(_){}say('🛷 '+who+' built the Sandskimmer in the salt-cutters’ yard.')}}
   else if(key==='run'){if(!SS165.run.st){SS165.run.st=1;SS165.trkK='';say('🌪️ '+who+' rode through the sandstorm to the Den: the Sandskimmer will take you straight there.')}}})}
 {const f=qs165Won;qs165Won=function(e){const r=f.apply(this,arguments);try{co165Credit('c1')}catch(_){}return r}}
@@ -51887,12 +51893,12 @@ function co165Lay(mask){if(co151On())co165Send(['s5l',mask|0])}
 function co165Wake(){if(co151On())co165Send(['s5w'])}
 function co165OnLay(mask){const C=SS165.c2;mask&=2047;const add=mask&~C.lay;if(!add)return;if(!KH165W.built||!ss165Here(1)){C.lay|=add;C.got&=~add;SS165.trkK='';return}
   const e=kh165Laid();for(let i=0;i<11;i++)if(add&(1<<i)){kh165PartShow(e.sv.R,i,true);const j=e.sv.R.part[i]||e.sv.R.J.torso,p=new THREE.Vector3();j.getWorldPosition(p);burst(p,0xffd070,20,1,1.4,.6)}
-  C.lay|=add;C.got&=~add;SS165.trkK=''}
+  C.lay|=add;C.got&=~add;SS165.trkK='';if(C.lay===2047&&C.st<1)qs165After(1.4,()=>kh165Wake(false))}
 // ================= II: the rift (the host runs it) =================
 function co165Ask(k){if(k==='rf'&&nowP()-(CO165.tR||0)>800){CO165.tR=nowP();co165Send(['s5ra'])}}
-function co165Rift(k){if(!co151On())return;co165Send(['s5r',k]);if(k==='open')co165Credit('c2')}
+function co165Rift(k){if(!co151On())return;co165Send(['s5r',k])}
 function co165RiftSync(now){const E=RF165.E;if(!E||!co151On()||!co151Host()||now-CO165.tS<150)return;CO165.tS=now;co165Send(['s5re',Math.round(E.t*10),Math.round(E.hp),E.esc|0,E.go|0])}
-function co165OnRift(q){if(co151Host()||!ss165Here(1))return;let E=RF165.E;if(!E){if(SS165.c2.st!==2||!KH165W.e)return;co165Rx(()=>rf165Start(false));E=RF165.E;if(!E)return}
+function co165OnRift(q){if(co151Host()||!ss165Here(1)||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;let E=RF165.E;if(!E){if(SS165.c2.st!==2||!KH165W.e)return;co165Rx(()=>rf165Start(false));E=RF165.E;if(!E)return}
   E.t=Math.max(0,(q[1]|0)/10);E.hp=Math.max(0,Math.min(RF165.hpM,q[2]|0));if(q[4]&&!E.go){E.go=1;try{const K=KH165W.e,P=rf165KhSpot();K.m.position.set(P.x,P.y,P.z);svStart(K,'chan',5);K.sv.chg=1}catch(_){}}}
 // a partner's copy of the rift does not spawn or hurt (the host's world does)
 {const f=rf165Spawn;rf165Spawn=function(n){if(co151On()&&!co151Host())return;return f.apply(this,arguments)}}
@@ -51922,7 +51928,7 @@ function co165VSync(now){if(!SR165.on||!co151On()||now-CO165.tV<100)return;CO165
 function co165Shot(V,A){if(co151On())co165Send(['s5f',V.id,co165R(A.x),co165R(A.z)])}
 function co165Worm(W){if(co151On()&&co151Host())co165Send(['s5wy',Math.round(W.s*10)/10,co165R(W.o0),co165R(W.o1),co165R(W.a.x),co165R(W.a.z),co165R(W.b.x),co165R(W.b.z)])}
 {const f=sr165Sting;sr165Sting=function(from,x,z,T){if(co151On()&&co151Host()&&!CO165.rx)co165Send(['s5st',co165R(from.x),co165R(from.y),co165R(from.z),co165R(x),co165R(z),co165R(T)]);return f.apply(this,arguments)}}
-function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
+function co165RunWin(){co165Credit('run');if(co151On())co165Send(['s5win'])}
 // ================= presence and the messages =================
 {const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.q1=qs180Has()?1:0}catch(_){}}return f.apply(this,arguments)}}
 {const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)){
@@ -51946,7 +51952,7 @@ function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
       else if(t==='s5l')co165OnLay(q[1]|0);
       else if(t==='s5w'){if(SS165.c2.st<1&&KH165W.built)kh165Wake(false);else if(SS165.c2.st<1)SS165.c2.st=2}
       else if(t==='s5ra'){if(iHost&&!RF165.E&&SS165.c2.st===2&&ss165Here(1))setTimeout(()=>{if(!RF165.E)rf165Start(true)},0)}
-      else if(t==='s5r'){if(fromHost){if(q[1]==='start'&&!RF165.E&&ss165Here(1)&&SS165.c2.st===2&&KH165W.e)rf165Start(false);else if(q[1]==='fall'&&RF165.E)rf165Stop('fall');else if(q[1]==='open'&&SS165.c2.st<3){SS165.c2.st=3;SS165.trkK=''}}}
+      else if(t==='s5r'){if(fromHost){if(q[1]==='start'&&!RF165.E&&ss165Here(1)&&SS165.c2.st===2&&KH165W.e)rf165Start(false);else if(q[1]==='fall'&&RF165.E)rf165Stop('fall');else if(q[1]==='open'&&RF165.E&&SS165.c2.st<3){SS165.c2.st=3;SS165.trkK=''}else if(q[1]==='quiet'&&RF165.E)rf165Stop('quiet')}}
       else if(t==='s5re'){if(fromHost)co165OnRift(q)}
       // III
       else if(t==='s5m'){const i=q[1]|0;if(SC165.cols[i])sc165Hit(i,false)}
@@ -51956,9 +51962,10 @@ function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
       // the Run
       else if(t==='s5ga'){const pr=msg.peer;if(iHost&&!SR165.on&&SS165.c3.built)setTimeout(()=>{if(!SR165.on)co165RunGo(co165Crews(pr))},0)}
       else if(t==='s5go'){let C=null;try{C=JSON.parse(String(q[1]||''))}catch(_){}if(Array.isArray(C)&&C.length<=8&&ss165Here(2))co165RunUse(C.filter(c=>c&&typeof c.id==='string'))}
-      else if(t==='s5v'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&!co165Sim(V)){V.net={x:+q[2],z:+q[3],h:+q[4],v:+q[5],b:q[6]|0,st:+q[7],hp:+q[8],s:+q[9]};V.hp=+q[8];V.netT=performance.now();if(V.gun!=='me'){V.aY=+q[10];V.aP=+q[11]}if(q[12]&&!V.wreck){V.wreck=1;burst(gY(V.m.position,1.5),0xff8a3a,60,4,3,.8)}else if(!q[12])V.wreck=0}}
+      else if(t==='s5v'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&V.drvOrig===msg.peer&&V.drv==='chd'&&V.gun==='me'){V.drv=V.drvOrig;V.drvOrig=null;if(V.chd){V.chd.root.parent&&V.chd.root.parent.remove(V.chd.root);V.chd=null}say('🐭 Cheddar hands the wheel back.')}
+        if(V&&!co165Sim(V)){V.net={x:+q[2],z:+q[3],h:+q[4],v:+q[5],b:q[6]|0,st:+q[7],hp:+q[8],s:+q[9]};V.hp=+q[8];V.netT=performance.now();if(V.gun!=='me'){V.aY=+q[10];V.aP=+q[11]}if(q[12]&&!V.wreck){V.wreck=1;burst(gY(V.m.position,1.5),0xff8a3a,60,4,3,.8)}else if(!q[12])V.wreck=0}}
       else if(t==='s5a'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&V.gun!=='me'){V.aY=+q[2]||0;V.aP=+q[3]||0}}
-      else if(t==='s5f'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&isFinite(q[2])&&isFinite(q[3])){V.aim=new THREE.Vector3(+q[2],V.y+.9,+q[3]);V.fT=0;sr165Fire(V,false)}}
+      else if(t==='s5f'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&isFinite(q[2])&&isFinite(q[3])){V.aim=new THREE.Vector3(+q[2],V.y+.9,+q[3]);V.fT=0;sr165Fire(V,false)}}   // a partner's own shells hurt the host's monsters through their copies
       else if(t==='s5h'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&co165Sim(V)){CO165.ap=1;try{sr165Hurt(V,Math.max(0,Math.min(200,+q[2]||0)),'host')}finally{CO165.ap=0}}}
       else if(t==='s5wy'){if(fromHost&&SR165.on)sr165Worm(+q[1],+q[2],+q[3],false,[+q[4],+q[5],+q[6],+q[7]])}
       else if(t==='s5st'){if(fromHost&&SR165.on){const from=new THREE.Vector3(+q[1],+q[2],+q[3]);sr165Sting(from,+q[4],+q[5],+q[6]);const g=SR165F.st[SR165F.st.length-1];if(g)g.noHit=1}}
@@ -51971,5 +51978,7 @@ function co165RunWin(){if(co151On()){co165Send(['s5win']);co165Credit('run')}}
     if(CO165.hq>0&&t-CO165.tH>150){CO165.tH=t;co165Send(['q1h',CO165.hq]);CO165.hq=0}
     qs180Sync(t);co165DigSync(t);co165RiftSync(t);co165VSync(t);co165Flush(t);
     // a machine whose driver went quiet for 3 s: Cheddar takes the helm (its gunner's world drives it now)
-    if(SR165.on)SR165.V.forEach(V=>{if(V.gun==='me'&&V.drv!=='chd'&&V.drv!=='me'&&V.netT&&t-V.netT>3000){V.drv='chd';V.net=null;if(!V.chd)try{const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC*1.15);V.R.J.seatD.add(C.root);V.chd=C}catch(_){}say('🐭 Cheddar grabs the wheel!')}});
+    if(SR165.on)SR165.V.forEach(V=>{if(V.gun==='me'&&V.drv!=='chd'&&V.drv!=='me'&&V.netT&&t-V.netT>3000){V.drvOrig=V.drv;V.drv='chd';V.net=null;if(!V.chd)try{const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC*1.15);V.R.J.seatD.add(C.root);V.chd=C}catch(_){}say('🐭 Cheddar grabs the wheel!')}});
     const g=qs180Has()?1:0;if(g!==CO165.q1){CO165.q1=g;MP.lastPres=''}}}catch(err){if(!CO165.err++)console.warn('v165 co-op tick',err)}return r}}
+// leaving the group: what was sent or heard is forgotten (a new group gets it again)
+{const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);CO165.got={};CO165.cq=[];CO165.hq=0;CO165.vh={};return r}}

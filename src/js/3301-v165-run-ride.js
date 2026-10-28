@@ -125,9 +125,9 @@ function sr165Burst(p,own){burst(p,0xffb050,24,3,2.2,.4);burst(p,0x6a5a4a,10,1.6
 // every foe a shell can hit (3302 fills it: scarabs, scorpions, worms): {p (Vector3), r, hit(k)}
 function sr165Foes(){return typeof sr165FoeList=='function'?sr165FoeList():[]}
 // ---------------- starting, wrecking, checkpoints, the end ----------------
-function sr165Start(own){if(SR165.on||!SS165.c3.built)return;if(own&&typeof co165RunAsk=='function'&&co165RunAsk())return;sr165Go([{id:'v0',drv:'chd',gun:'me'}])}
+function sr165Start(own){if(SR165.on||SR165.going||!SS165.c3.built)return;if(own&&typeof co165RunAsk=='function'&&co165RunAsk())return;sr165Go([{id:'v0',drv:'chd',gun:'me'}])}
 // crews: [{id, drv:'chd'|'me'|peer, gun:'me'|peer|null}], one for each machine
-function sr165Go(crews){SR165.crews=crews;fadeTo(()=>{try{sr165Build();SR165.V.forEach(V=>scene.remove(V.m));SR165.V=crews.map(c=>sr165Veh(c.id,c.drv,c.gun));SR165.me=SR165.V.find(V=>V.drv==='me'||V.gun==='me')||SR165.V[0];
+function sr165Go(crews){if(SR165.going||SR165.on)return;SR165.going=1;SR165.crews=crews;fadeTo(()=>{SR165.going=0;try{sr165Build();SR165.V.forEach(V=>scene.remove(V.m));SR165.V=crews.map(c=>sr165Veh(c.id,c.drv,c.gun));SR165.V.forEach(V=>V.netT=performance.now());SR165.me=SR165.V.find(V=>V.drv==='me'||V.gun==='me')||SR165.V[0];
     SR165.on=true;SR165.cp=0;SR165.tries=0;SR165.cam={y:camYaw,p:camPitch,d:camDist};sr165Reset(0);
     setTimeout(()=>{try{zt116Show(ZT116.Z[3],'Searing Sands · Main Quest','The Sandstorm Run','Ride through the storm to the Den of Ssith’ra',SR165.me.drv==='me'?'W/S throttle · A/D steer · Shift boost':'Hold the left button to fire · the turret follows your aim','z3')}catch(_){}},200)}catch(e){console.error('v165 run go',e);SR165.on=false}})}
 function sr165Reset(cp){const P=sr165Path(),s=sr165CPs()[cp]||0;SR165.ph='intro';SR165.t=0;SR165.V.forEach((V,i)=>{if(V.placed&&typeof co165Sim=='function'&&typeof co151On=='function'&&co151On()&&!co165Sim(V))return;V.placed=1;sr165Place(V,s+2-i*9,(i%2?-1:1)*(i?3:0));V.hp=V.hpM;V.wreck=0;V.bst=1;V.cling.length=0;V.aY=0});

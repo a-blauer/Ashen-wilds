@@ -46,7 +46,7 @@ function sr165FoeAI(e,dt,now){const m=e.m,P=sr165Path(),me=SR165.me;if(!SR165.on
     return}
   if(e.sr165==='sp'){// stand at the edge, face the Skimmer, spit venom where it is going
     m.rotation.y=Math.atan2(V.x-m.position.x,V.z-m.position.z);animC(m,now,false,0);e.srT-=dt;
-    if(e.srT<=0&&d<46&&d>6){e.srT=2.6+Math.random()*1.2;const T=Math.min(1.6,.5+d/30),px=V.x+Math.sin(V.h)*V.v*T,pz=V.z+Math.cos(V.h)*V.v*T;sr165Sting(gY(m.position,1.4),px,pz,T)}}}
+    if(e.srT<=0&&d<28&&d>6){e.srT=2.6+Math.random()*1.2;const T=Math.min(1.6,.5+d/30),px=V.x+Math.sin(V.h)*V.v*T,pz=V.z+Math.cos(V.h)*V.v*T;sr165Sting(gY(m.position,1.4),px,pz,T)}}}
 {const f=eTick;eTick=function(e,dt,now){if(e&&e.sr165){try{sr165FoeAI(e,dt,now)}catch(err){if(!SR165F.err++)console.warn('v165 foe ai',err)}return true}return f.apply(this,arguments)}}
 // a venom glob: a ring on the sand where it will land, the glob arcing there
 function sr165Sting(from,x,z,T){const M=sr165FM(),y=GH(x,z),r=new THREE.Mesh(svG('sr_ring',()=>new THREE.RingGeometry(2.2,2.7,24)),M.ring);r.rotation.x=-Math.PI/2;r.position.set(x,y+.1,z);scene.add(r);
@@ -61,7 +61,7 @@ function sr165WormMesh(){const M=sr165FM(),g=new THREE.Group(),segs=[];for(let i
   g.add(head);return {g,segs,head}}
 function sr165Worm(s,o0,o1,own,ab){const P=sr165Path();if(SR165F.wy.length>3)return;const W={s,o0,o1,t:0,ph:'tell',hp:4,hitV:new Set(),id:Math.random()};
   const [ax,az]=P.at(s,o0),[bx,bz]=P.at(s+(Math.random()-.5)*6,o1);W.a=new THREE.Vector3(ax,GH(ax,az),az);W.b=new THREE.Vector3(bx,GH(bx,bz),bz);if(Math.random()<.5){const q=W.a;W.a=W.b;W.b=q}if(ab&&ab.length===4&&ab.every(isFinite)){W.a.set(ab[0],GH(ab[0],ab[1]),ab[1]);W.b.set(ab[2],GH(ab[2],ab[3]),ab[3])}
-  const rip=new THREE.Mesh(new THREE.PlaneGeometry(1,2.2),new THREE.MeshBasicMaterial({map:sr165SwirlTex(),transparent:true,opacity:.0,depthWrite:false}));rip.rotation.x=-Math.PI/2;W.rip=rip;scene.add(rip);
+  const rip=new THREE.Mesh(svG('sr_rip',()=>new THREE.PlaneGeometry(1,2.2)),new THREE.MeshBasicMaterial({map:sr165SwirlTex(),transparent:true,opacity:.0,depthWrite:false}));rip.rotation.x=-Math.PI/2;W.rip=rip;scene.add(rip);
   SR165F.wy.push(W);SR165.wy=SR165F.wy;if(own&&typeof co165Worm=='function')co165Worm(W);return W}
 function sr165WormAt(W,u){const p=W.a.clone().lerp(W.b,u);p.y=Math.max(W.a.y,W.b.y)*0+((W.a.y*(1-u)+W.b.y*u))+Math.sin(Math.PI*u)*6.5-1.2;return p}
 function sr165WormTick(dt){SR165F.wy=SR165F.wy.filter(W=>{W.t+=dt;
@@ -76,9 +76,12 @@ function sr165WormTick(dt){SR165F.wy=SR165F.wy.filter(W=>{W.t+=dt;
     if(Math.random()<dt*20&&W.head.visible){burst(gY(uh<.2?W.a:W.b,.3),0xd8b080,3,2,2,.5)}
     // what it smashes: where its body is low (near either end)
     SR165.V.forEach(V=>{if(V.wreck||W.hitV.has(V))return;for(const m of W.segs){if(!m.visible||m.position.y-V.y>2.6)continue;if(Math.hypot(m.position.x-V.x,m.position.z-V.z)<2.4){W.hitV.add(V);sr165Hurt(V,18,'worm');V.v*=.3;V.bump=.6;svSnd('heavy',.9,.6);burst(gY(V.m.position,1.5),0xd8b080,40,3,3,.7);if(V===SR165.me)say('🪱 The worm slams into the Skimmer!');break}}});
-    if(uh-18*.06>1||(!any&&W.t>1)){scene.remove(W.g);scene.remove(W.rip);return false}return true})}
+    if(uh-18*.06>1||(!any&&W.t>1)){scene.remove(W.g);scene.remove(W.rip);W.rip.material.dispose();return false}return true})}
 // ---------------- what the shells can hit ----------------
-function sr165FoeList(){const L=[];enemies.forEach(e=>{if(!e.sr165||e.dead)return;L.push({p:gY(e.m.position,.6),r:e.sr165==='sp'?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(e.sr165==='sp'?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}
+function sr165FoeList(){const L=[];enemies.forEach(e=>{if(e.dead)return;
+    // a partner's world: the host's scarabs and scorpions are copies here (a hit on one goes to the host)
+    if(!e.sr165&&e.mir&&SR165.on&&e.c&&(e.c.en==='scarab'||e.c.en==='scorp')){const sp=e.c.en==='scorp';L.push({p:gY(e.m.position,.6),r:sp?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(sp?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}}});return}
+    if(!e.sr165)return;L.push({p:gY(e.m.position,.6),r:e.sr165==='sp'?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(e.sr165==='sp'?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}
       if(e.dead&&e.cl){const i=e.cl.V.cling.indexOf(e);if(i>=0)e.cl.V.cling.splice(i,1);e.cl=null}}})});
   SR165F.wy.forEach(W=>{if(W.ph==='tell'||!W.segs)return;[0,5,10].forEach(i=>{const m=i?W.segs[i]:W.head;if(m&&m.visible)L.push({p:m.position.clone(),r:1.4,hit:k=>{W.hp-=k;burst(m.position,0xffc060,10,1.6,1.4,.4);if(W.hp<=0&&W.ph!=='down'){W.ph='down';popT(m.position,'Driven under!','#ffe080',true);svSnd('shriek',.6,1.1)}}})})});return L}
 // ---------------- the tick ----------------

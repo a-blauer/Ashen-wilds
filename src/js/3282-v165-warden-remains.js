@@ -67,7 +67,7 @@ var KH165B={name:'Kheprit',col:KH165.col,P:KH165P,loco:kh165Loco,post:kh165Post,
   fall:{dur:2.2,trk:[[.4,'hurt','o'],[1.6,'dead','i'],[2.2,'dead','l']],go(c){c.S.alive=0;c.S.chg=0}},
   dead:{dur:1e9,trk:[[0,'dead','l']],go(c){c.S.alive=0;c.S.chg=0}},
   rise:{dur:3.4,trk:[[0,'dead','l'],[1.2,'stir','io'],[2.2,'push','io'],[3.4,'stand','io']],go(c){c.S.alive=1}}}};
-function kh165Wake(own){const C=SS165.c2;if(C.st>=1&&KH165W.e&&KH165W.e.sv.alive)return;C.st=Math.max(C.st,1);SS165.trkK='';const e=kh165Laid();for(let i=0;i<11;i++)kh165PartShow(e.sv.R,i,true);
+function kh165Wake(own){const C=SS165.c2;if(C.st>=1&&KH165W.e&&(KH165W.e.wk||KH165W.e.sv.alive))return;C.st=Math.max(C.st,1);SS165.trkK='';const e=kh165Laid();for(let i=0;i<11;i++)kh165PartShow(e.sv.R,i,true);
   svStart(e,'wake',1);e.wk={t:0};try{zt116Show(ZT116.Z[3],'Searing Sands · Main Quest','Kheprit Wakes','The Last Warden of the Sunken Temple','','z3')}catch(_){}
   say('🐜 The pieces on the altar knit together… and the Warden stirs.');if(own!==false&&typeof co165Wake=='function')co165Wake()}
 // the waking's last steps: off the altar, down the dais, to stand before it facing the court
@@ -110,7 +110,7 @@ function kh165Tick(dt,now){const here=ss165Here(1),C=SS165.c2,t=now/1000;if(!CY1
   KH165W.picks.forEach(q=>{q.g.visible=here;if(!here)return;q.t+=dt;q.m.rotation.y+=dt*.9;q.m.position.y=.25+Math.sin(q.t*2)*.12;if(hero.hp>0&&Math.hypot(pl.position.x-q.x,pl.position.z-q.z)<1.1)kh165Take(q.p,true)});
   const e=KH165W.e;if(e){e.m.visible=here;if(here){const dx=e.m.position.x-e.sv.lp.x,dz=e.m.position.z-e.sv.lp.z;e.sv.lp.copy(e.m.position);
     if(e.sv.mv){const M=e.sv.mv;M.t+=dt;e.sv.tt=M.t;const D=M.D;if(D.ev)D.ev.forEach((v,i)=>{if(!M.done.has('e'+i)&&M.t>=v[0]){M.done.add('e'+i);try{v[1]({e,S:e.sv,M,t:M.t,m:e.m})}catch(err){console.error('kh ev',err)}}});if(D.tk)try{D.tk({e,S:e.sv,M,t:M.t,m:e.m},dt)}catch(_){}
-      if(M.t>=D.dur){try{D.end&&D.end({e,S:e.sv,M,m:e.m})}catch(_){}const keep=e.sv.mv;e.sv.mv=null;if(keep.id==='talk'||keep.id==='point'||keep.id==='rise'){e.sv.trk=null}}}
+      if(M.t>=D.dur){try{D.end&&D.end({e,S:e.sv,M,m:e.m})}catch(_){}const keep=e.sv.mv;e.sv.mv=null;if(keep.id==='talk'||keep.id==='point'||keep.id==='rise'){e.sv.trk=null}if(keep.id==='fall')svStart(e,'dead',1)}}
     kh165WakeTick(e,dt);try{svApply(e,dt,now)}catch(err){if(!KH165W.err++)console.warn('v165 kh anim',err)}}}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{kh165Tick(dt,now)}catch(e){if(!KH165W.err++)console.warn('v165 warden tick',e)}return r}}
 // the scene from the state (first visit, after a load): the urns still standing, pieces on the ground, the remains on the altar, Kheprit standing
