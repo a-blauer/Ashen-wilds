@@ -64,12 +64,12 @@ function chqGear132(I,sl){const lv=Math.max(1,Math.min(chqLv132(I),hero.lvl+2)),
 function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max(1,Math.min(5,PMAP[I.z].t||1)));const sp=L[Math.floor(Math.random()*L.length)];
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
-  if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
+  if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
-  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+xp+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
+  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
   say('🐭 <b>'+q.t+'</b> turned in: +'+xp+' XP, +'+g+' gold.')}
 
 // ---------------- progress ----------------
@@ -230,7 +230,7 @@ function chqRwInfo132(I,q){const minR=I.k>=2?2:1,lv=Math.max(1,Math.min(chqLv132
   return {n:'Mystery '+nm,sub:'<span style="color:'+R[1]+'">'+R[0]+' or better</span> · item level '+lv,col:R[1]}}
 function chqRwHTML132(I,q,s){const r=chqRwInfo132(I,q);
   return '<div class="cq132rw'+(s==2?' glow':'')+'">'+chqIco132(q.rw,r.col,s==3)+'<div class="cq132ri"><div class="cq132rl">'+(s==3?'Claimed':'Reward')+'</div><div class="cq132rn">'+r.n+'</div><div class="cq132rs">'+r.sub+'</div>'+
-    '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+chqXP132(I,q)+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chqGold132(I,q)+'</b> gold</span></div></div></div>'}
+    '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+hxp164(chqXP132(I,q))+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chqGold132(I,q)+'</b> gold</span></div></div></div>'}
 XR.chq132=()=>{const I=chqHere132();$('xwT').textContent='🐭 Cheddar';$('xwS').textContent='Burrow-walker'+(I?' · '+I.n:'');
   if(!I){$('xwB').innerHTML='<div class="cq132say">'+CHQ132_SAY.none+'</div>';$('xwF').innerHTML='';return}
   const L=chqList132(I),st=chqState132(I);

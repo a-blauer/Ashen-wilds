@@ -115,8 +115,8 @@ chqReward132=function(I,q){const D=CHQ148_DF[q.df]||CHQ148_DF[1],xp=chq148XP(q),
   for(let n=0;n<D.n2;n++){if(q.rw=='egg'&&n==0){const eg=chq148Egg(q);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg});try{dex.egg.add(eg.sp)}catch(_){}}}
     else{const it=chq148Gear(q,n==0&&q.rw!='gear'&&q.rw!='egg'?q.rw:null);if(it)take({kind:'gear',data:it})}}
   if(D.egg&&q.rw!='egg'){const eg=chq148Egg(q);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}}
-  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+xp+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
-  say('🐭 <b>'+q.t+'</b> turned in: +'+xp+' XP, +'+g+' gold.')};
+  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
+  say('🐭 <b>'+q.t+'</b> turned in: +'+hxp164(xp)+' XP, +'+g+' gold.')};
 function chq148RwInfo(q){const D=CHQ148_DF[q.df]||CHQ148_DF[1],R=RAR[D.r]||['Uncommon','#6ee7b7'],lv=chq148ILv(q);
   const nm={weapon:'Weapon',chest:'Chest Armour',helm:'Helm',boots:'Boots',gear:'Gear'}[q.rw]||'Gear';
   if(q.rw=='egg')return {n:'Mystery Egg'+(D.n2>1?' + Gear':''),sub:'A '+PMAP[q.z].n+' companion egg',col:'#f0cc72',ic:'egg'};
@@ -208,7 +208,7 @@ XR.chq132=()=>{$('xwT').textContent='🐭 Cheddar’s Quest Board';const Z=chq14
       s==2?'<button class="pri cq132bt cq132go" data-cq8t="'+q.id+'">Claim reward</button>':'';
     const r=chq148RwInfo(q);
     const rw='<div class="cq132rw'+(s==2?' glow':'')+'">'+chqIco132(r.ic,r.col,s==3)+'<div class="cq132ri"><div class="cq132rl">'+(s==3?'Claimed':'Reward')+'</div><div class="cq132rn">'+r.n+'</div><div class="cq132rs">'+r.sub+'</div>'+
-      '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+chq148XP(q)+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chq148Gold(q)+'</b> gold</span></div></div></div>';
+      '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+hxp164(chq148XP(q))+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chq148Gold(q)+'</b> gold</span></div></div></div>';
     b+='<div class="cq132 s'+s+' df'+(q.df||1)+(lock?' lk8':'')+'"><div class="cq132h"><b>'+q.t+'</b><span class="cq148d" title="'+D.n+'">'+D.s+' '+D.n+'</span><span class="cq132tag">'+tag+'</span></div><div class="cq132d">'+q.d+'</div>'+obj+rw+btn+'</div>'});
   $('xwB').innerHTML=b+'</div>';
   $('xwF').innerHTML=(zs.av>1?'<button class="pri" data-cq8all="'+z+'">Accept all in '+PMAP[z].n+'</button> ':'')+'<span class="mut dtl">New zones join the board as their portals open. Turn finished quests in here.</span>'};

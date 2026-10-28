@@ -20,7 +20,7 @@ function camp148Lv(C){try{return Math.max(1,Math.min(MAXLV,zoneLv(C.x,C.z)))}cat
 function camp148T(C){try{return Math.max(1,Math.min(5,(PMAP[INSL[C.ig].z].t)||tierAt(C.x,C.z)))}catch(_){return 1}}
 function camp148XP(C){const L=camp148Lv(C),s=HS();return Math.max(1,Math.round((8+L*12)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(1+(s.xp||0))*CAMP148.xp))}
 function camp148Give(xp){
-  if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
+  if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 // the camp's creature families (from its garrison list)
 function camp148Fams(C){const L=[];try{(C.th&&C.th.mem||[]).forEach(m=>{const E=EN[m[0]];const f=(E&&E.fam)||famOf(m[0]);if(FAMD[f]&&!L.includes(f))L.push(f)})}catch(_){}return L.length?L:['Beast']}
@@ -41,7 +41,7 @@ function camp148Loot(C){const l=camp148Lv(C),T=camp148T(C),F=camp148Fams(C),beas
 function camp148Spot(C){for(let r=0;r<=6;r++)for(let a=0;a<12;a++){const x=Math.round(C.x+Math.cos(a/12*6.283)*r),z=Math.round(C.z+Math.sin(a/12*6.283)*r);
   if(!solid(x,z)&&!(typeof CBLK!='undefined'&&CBLK.has(z*W+x)))return [x,z];if(!r)break}return [C.x,C.z]}
 function camp148Clear(C){
-  const xp=camp148XP(C);camp148Give(xp);try{dn(pl.position,'+'+xp+' XP','#c4b5fd',0,1600)}catch(_){}
+  const xp=camp148XP(C);camp148Give(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600)}catch(_){}
   if(C.ch148&&CHESTS.includes(C.ch148)){say('⛺ '+(C.th?C.th.n:'Camp')+' cleared! +'+xp+' XP');return}
   const [x,z]=camp148Spot(C),loot=camp148Loot(C);
   const ch=makeChest(x,z,'camp chest',p=>{loot.forEach(q=>drop(q[0],q[1],p,q[2]));C.ch148=null;const i=CAMP148.chests.indexOf(ch);if(i>=0)CAMP148.chests.splice(i,1)});
