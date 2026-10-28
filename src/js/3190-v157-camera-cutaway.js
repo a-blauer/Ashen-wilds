@@ -3,7 +3,7 @@
 // 0104), the hard "above the ground under the camera" clamp then lifted it to the top of the wall, and Abeksi tilted it over the roofs
 // (3155). Pulling the camera in was tried before and was disorienting too. Now nothing moves the camera on its own:
 //  * scenery (2420) and the ground's steep walls (here) that come between the camera and the hero turn see-through in a round window
-//    around the hero on screen (R157: cut inside 1.35, dithered edge, solid from 2.4 units at the hero's distance);
+//    around the hero on screen (R157: cut inside 2.3, dithered edge, solid from 5.4 units at the hero's distance; v164, was 1.35-2.4);
 //  * floors stay solid: flat ground below the hero's waist is never cut, so the path behind and under the hero always shows;
 //  * the camera still rides above gentle ground (hills, slopes) with the same smoothing as everything else (cam157Floor). Behind a wall
 //    (the ground between hero and camera climbs a step) it simply stays inside the wall: from in there its faces point away and the

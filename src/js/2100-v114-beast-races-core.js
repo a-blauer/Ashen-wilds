@@ -237,7 +237,8 @@ function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i
     if(!rid){[['lh0',R.a],['rh0',R.a],['lh1',R.k],['rh1',R.k],['lh2',R.an],['rh2',R.an]].forEach(q=>brAddR(H,q[0],'x',q[1]));
       // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition);
       // the posture follows a low-passed gait blend, so uneven frame times can never make the lean flicker
-      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
+      // v164: the dash's tuck (HA.cur.mv164, 3230) is movement, not an attack: the hold stays (the raven's wand swung into its pointer pose)
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur&&!HA.cur.mv164):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
       S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
       S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
       const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
