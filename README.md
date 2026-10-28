@@ -70,6 +70,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | Beast races (v114: rat Warrior, cat Assassin, frog Mage (the raven since v134), badger Paladin, weasel Ranger): rig, body rings, paws, tails (`2100`), helmets over each skull (`2110`), the five races' heads and shapes (`2120`), creator/barber/saves/co-op (`2130`) | `2100`–`2130` (v114; replaces the v112 rat file) |
 | v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
 | v123 camp sites: every camp's size (`C.r`), ground shape (`cs123Plan`, `cs123Terrain` from 0045), tile paint (`cs123Map`), set pieces (`cs123Designs`), title card on entry (`cs123Card`); no signposts | `2270-v123-camp-sites.js` |
+| v164 camps (owner: "much larger, more integrated, much more detail"): sizes and spots (`cs164Sites`, `cs164Rd`, moves like v151), bigger clearings (`cs164Grow` from 0045), ground and tiles (`cs123Terrain` / `cs123Map` / `cs123Setup` / `cs123Rad` replaced), recipes (`cs164Rec`), the dressing (`cs164Dress`, palettes `cs164Pal`), merge by material kind (`cs164Merge`, `CS164.M`), camp lights (`CS164.lights`), keep-outs (`cs164Keep`, `cs164Avoid`) | `3240-v164-camps-plan.js`, `3241-v164-camps-kit.js`, `3242-v164-camps-dress.js` (hooks in `0045`, `1680`, `2280`, `3040`, `3160`, `3170`) |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
@@ -930,6 +931,46 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   in the zone's lettering instead. Camp radius is used by `campAt`, the zone map circle, box breaking, the roaming-group and
   decoration keep-out rings (`CAMPS_PRE` returns `[x,y,r]`). Test: `v123_camps.py` (`NOSHOT=1` for checks only; `BRIGHT=1` for
   well-lit review shots).
+- **Camps, bigger and set into the land (v164, `3240`–`3242`)**: owner: "make each camp much larger and make them feel more integrated
+  in the map with much more detail, structures and landscape and accessories."
+  * *Size and spot* (`cs164Sites`, a pure function of the map data, cached): each camp wants `cs164Rd(r123)` = 1.9 r + 2 (18..30 tiles;
+    v123's 8..16). What fits is worked out against the instance edge (10 tiles kept), the gateway clearing, the entrance, the Lantern
+    Road outpost and the other camps (crowded pairs give back what they grew, in proportion; 8 tiles between rings). A camp that can't
+    reach its size moves up to 21 tiles to open ground (moves cost a little; Kindlelight II's furthest camp stays the furthest, so
+    `mq144Camp` is still the Glowmire Warren). The record in `I.cl` is moved in place (like `mq151MoveCamp`). Result: 51 of 54 camps
+    are 1.5–2.3× their v123 radius (most at the full 1.9×+2); Cliffside Lair, Frozen Hollow, Sunken Ossuary, Bleached Oasis and a few
+    others are boxed in by cliffs, the gateway or a neighbour and grow less (never smaller than v123).
+  * *Clearing* (`cs164Grow`, from 0045 after `v112Map`): a lobed walkable clearing (r + 2) at the final spot, the trail to the road,
+    the rim redrawn behind it, water and harvest nodes cleared inside.
+  * *Rings*: the core `C.rc` (≈ r123..1.15 r123) holds the v123 design (built unchanged by `cs123Build` with `C.r = C.rc`); the
+    settlement ring out to the fence `C.rf` (≈ .8 r) holds dwellings, works and filler; the outskirts out to r + 5 hold towers,
+    lanterns, banners, cairns and the zone's own scenery (trees, fungus, pines, cacti, dead trees, ruins…), thinning into the land.
+  * *Ground* (`cs123Terrain` replaced): the v123 shape on the core, the settlement ring levelled (lighter than the core), the fort's
+    earth bank and a shallow ditch outside it (gaps at every gate), hummocks in the outskirts, blended into the natural ground out to
+    r + 7; a ramp along the trail. Wet camps sink by their core's lowest ground. *Tiles* (`cs123Map` replaced): the core keeps its
+    v123 tile, trodden bare ground and dirt fade into the land toward the edge, dirt paths from every gate to the heart, the trail.
+  * *Gates and trails* (`cs164Gates`): where the road (or a side branch) crosses the fence ring the fence opens; a camp the road
+    misses gets a gate toward the nearest road point, a back gate, and a trail out to the road when it is more than a few tiles away
+    (only over open ground). `cs164Keep` (1680 `place`) keeps decorations off trails.
+  * *Dressing* (`cs164Dress`, recipes `cs164Rec` per camp key: fort kind, dwellings, works, outskirts, clutter, light colours; palettes
+    `cs164Pal` per zone/instance): bonfire with log seats (the main light), halls, huts, yurts, snow huts, stilt houses, pavilions,
+    tents with guy ropes, lean-tos, tombs, kennels, burrows; spits, racks, forges, stores, bedroll circles, woodpiles, targets, totems,
+    altars, cages, meat racks, carts, nets, boats, graves, pyres, statues; rope lines with pennants between dwellings; boardwalks in wet
+    camps; the fence (palisade with rails and the odd skull, stake lines, dry-stone, ruined walls, ice, iron railings, bone, hedge,
+    roots, reeds) with breaches; gates with posts and lintel or an arch, braziers, a banner and, for wooden forts, two watchtowers.
+    Seeded from the camp (`C.seed`); nothing on the road, the trail or the main quests' keep-out spots (`mq143Keep`, `mq145Keep`…).
+  * *Performance* (`cs164Merge`): every static part is baked with its colour into vertex colours and merged per material *kind*
+    (shared materials `CS164.M`: lit / metal / glow strength / transparency), so a camp is ~6–16 draw calls (v123: 6–42) for ~10–65k
+    triangles; build ~10–150 ms (once, lazily, as before). Breakable boxes: at most `CS164.box` (10) per camp, each merged per look;
+    extra crates are scenery. Lights: 1–2 per camp (bonfire, gate brazier) as plain scene point lights (the v98 pool picks the
+    nearest 4), on only while the camp is shown and within 70 tiles. Far cull (v111) and frozen matrices work on the camp group as
+    before.
+  * *Gameplay*: `C.r` is the v164 radius (`campAt`, the zone map circle, box breaking, the title card, the roaming-group and decoration
+    keep-out rings via `CAMPS_PRE`/`cs123Rad`); `C.r0` the v123 one; garrison spread `C.sp` = .42 r (6.5..12, was .62 r 4.5..9.5).
+    Sigils (3040), the Frozen Gate caches (3160) and the Hydra door's chime stones (3170) avoid camp radius + 3 (`cs164Avoid`); v124
+    groves keep r + 6 away. Tests: `python3 probe.py v164_camps.js` (sizes, moves, draw calls, triangles, lights, reachability of
+    every camp's walkable ground, chest spot and garrison spots), `v164_shots.py` (overview `_a` and ground-level `_g` pictures,
+    `ZONES= KS= JS= VIEWS= TAG=`).
 - **Terrain height fix (v112)**: `GHv` clamps the row by `H` (it used `W`, so everything south of row 1182 — all of The Citadel and the
   Crimson Throne Hall — read row 1182's heights). `test/v112_arena.py` checks arrival height and floor flatness in all six dens.
 - **Sovereigns (v112)**: every boss file (1971–1976) has a far more detailed model, three new special attacks, cooldowns on every move and

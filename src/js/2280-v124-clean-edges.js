@@ -19,7 +19,7 @@ function v124R(s){let sd=(Math.abs(Math.floor(s))%2147483646)+1;return ()=>(sd=s
 // ---------- choppable groves (inside the field instances) ----------
 function v124Groves(m){const DW=m.DW,props=m.props,walk=t=>t=='.'||t=='g'||t=='a';let n=0;
   INSL.forEach(I=>{if(!I.fld||I.z===5)return;const rnd=v124R(123000+I.g*104729),P=I.path,e1=P[16]||I.en,th=typeof TH112!='undefined'&&TH112&&TH112.byG[I.g],cave=!!th&&th.sh.k=='cave',RD=cave?5.6:8.5,ED=cave?2.6:5;
-    const away=(x,y)=>Math.hypot(x-I.ba[0],y-I.ba[1])>PM_GTR+7&&Math.hypot(x-I.en[0],y-I.en[1])>15&&Math.hypot(x-e1[0],y-e1[1])>15&&I.cl.every(c=>Math.hypot(x-c[0],y-c[1])>22)
+    const away=(x,y)=>Math.hypot(x-I.ba[0],y-I.ba[1])>PM_GTR+7&&Math.hypot(x-I.en[0],y-I.en[1])>15&&Math.hypot(x-e1[0],y-e1[1])>15&&I.cl.every((c,j)=>Math.hypot(x-c[0],y-c[1])>Math.max(22,(typeof cs123Rad=='function'?cs123Rad(I,j):16)+6)) /* v164: bigger camps */
       &&!(I.wa&&Math.hypot(x-I.wa[0],y-I.wa[1])<24)&&P.every((q,i)=>i%3||Math.hypot(q[0]-x,q[1]-y)>RD)&&I.br.every(l=>l.every(q=>Math.hypot(q[0]-x,q[1]-y)>RD-1.5));
     const want=Math.round(I.w*I.h/58000*9);let got=0;const cen=[];
     for(let tr=0;tr<want*60&&got<want;tr++){const x=I.x0+4+Math.floor(rnd()*(I.w-8)),y=I.y0+4+Math.floor(rnd()*(I.h-8));

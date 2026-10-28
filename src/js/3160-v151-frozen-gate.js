@@ -36,7 +36,7 @@ function mq160Plan(){if(mq160Plan.c)return mq160Plan.c;const I=INSL[insG(2,1)],P
   R.yard={x:gx+fx*6,z:gz+fz*6};
   // the caches: off the road at 28 / 52 / 76% of II's road, alternating sides, on open ground away from camps and each other
   const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
-  const avoid=[[I.en[0],I.en[1],20],[gx,gz,22]].concat((I.cl||[]).map(c=>[c[0],c[1],16])),fr=[.28,.52,.76];
+  const avoid=[[I.en[0],I.en[1],20],[gx,gz,22]].concat(typeof cs164Avoid=='function'?cs164Avoid(I,16):(I.cl||[]).map(c=>[c[0],c[1],16])), /* v164 */fr=[.28,.52,.76];
   for(const T of [{m:2.4,sep:30,av:1},{m:1.6,sep:22,av:.75},{m:1.1,sep:14,av:.5}])for(let j=0;j<3;j++){if(R.cache[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
     for(const b of [12,10,14,9,16,7])for(const side of [sd,-sd])for(const da of [0,6,-6,12,-12]){if(got)break;const k=Math.max(0,Math.min(N-1,ix+da)),p=P[k],t=tan(k),x=p[0]-t[1]*b*side,z=p[1]+t[0]*b*side;
       if(!ok(x,z,T.m)||!avoid.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r*T.av)||!R.cache.every(o=>!o||Math.hypot(x-o.x,z-o.z)>=T.sep))continue;got={x:Math.round(x*2)/2,z:Math.round(z*2)/2,i:j,ry:Math.atan2(p[0]-x,p[1]-z)}}
