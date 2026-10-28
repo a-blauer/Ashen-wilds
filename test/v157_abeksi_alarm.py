@@ -41,7 +41,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   out.alarm=AB157A.on;out.cr=H.cr;out.stealthHud=$('ab152h').classList.contains('hide');out.alHud=!$('ab157al').classList.contains('hide');
   out.crouchBlocked=(()=>{ab152SetCrouch(true);return H.cr})();
   out.fightOk=(()=>{const g=$('glog').textContent.length;swing();return !/Not here/.test($('glog').textContent.slice(g))})();
-  tick(1.5);const E=enemies.filter(e=>e.ab157&&!e.dead);out.foes=E.length;out.cap=AB157K.cap;out.keys=[...new Set(E.map(e=>e.c.en))];
+  tick(1.5);const E=enemies.filter(e=>e.ab157&&!e.dead&&!e.ab164e);/* v164: residents only (the bell's elite guards are tagged too) */out.foes=E.length;out.cap=AB157K.cap;out.keys=[...new Set(E.map(e=>e.c.en))];
   out.hostile=E.every(e=>e.agg&&e.hunt);out.left=AB157A.left;out.trk=JSON.stringify(SP152.trk.abeksi(I));
   // v158: the bell calls a crowd of hunters who run to the hero through the streets
   {const R=ab157Res(),hs=()=>R.filter(a=>a.hunt&&!a.dead&&!a.e),md=()=>{const L=hs();return L.length?L.reduce((t,a)=>t+Math.min(999,ab158D(a)),0)/L.length:0};
@@ -77,7 +77,7 @@ def s(pg):
     exp(r['fightOk'],'fighting is allowed while the city is roused')
     exp(0<r['foes']<=r['cap'] and r['hostile'] and len(r['keys'])>=2,'residents near the hero become hostile enemies (%s of cap %s, %s)'%(r['foes'],r['cap'],r['keys']))
     exp('Hunting you' in r['trk'] and 'city gate' in r['trk'],'the tracker: hunting you, fight to the city gate (%s)'%r['trk'][:160])
-    exp(r['hunters']>=10,'the bell calls a crowd of hunters (%s)'%r['hunters'])
+    exp(r['hunters']>=6,'residents who see the hero hunt it (v164: by sight; the bell summons elite guards) (%s)'%r['hunters'])
     exp(r['hn0']==0 or r['hd1']<r['hd0'] or r['hn1']<r['hn0'],'the hunters close in through the streets (mean steps %s -> %s, %s -> %s on foot)'%(r['hd0'],r['hd1'],r['hn0'],r['hn1']))
     exp(r['foes1']>=min(r['cap'],6),'the hunters join the fight (%s fighting, cap %s)'%(r['foes1'],r['cap']))
     exp(r['inWall']==0,'no hunter stands inside a wall (%s)'%r['inWall'])
