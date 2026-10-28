@@ -59,6 +59,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v162 co-op fixes found by steadier tests: no health regrows behind the co-op death screen (a `heroTick` wrapper keeps it at 0 while `AWD.dead`; partners took a dead hero at 1% for one still standing, so a downed partner never died and Abeksi's snakes could see the body); a fallen Ascent rider waits up to ~20 s for the winner to reach III (`cs155Downed`, 28 tries) | `3085-v148-coop-revive.js`, `3180-v155-coop-levels.js` |
 | v163 element buildup: element hits fill a meter per enemy (`e.eb`, `EB163.F`), a full meter primes it (`e.el`, 6 s, ground ring), a different element sets off the reaction (`EB163.R`, `eb163React`); health bar border tint / primed glow, shimmer and icon (`eb163Vis`, `eb163Frame` from a `loop` wrapper), boss bar (`eb163Boss`, `#eb163bi`); replaces 0320's `applyEl` and 2300's wrapper | `3210-v163-element-buildup.js` |
 | v163 owner's list: page stylesheet moved to `<head>` first thing (`0001`: on claude.ai the page is wrapped and its `<head>` lands in the outer `<body>`, after every runtime `<style>`); attribute Reset under the list (`#ch163Rs`); desktop quest trackers stacked by the layout (`ui163TrkDesk`, `ui161Desk` replaced, `chqTrkPos132`/`mq143TrkPos`/`sp152TrkPos` → `ui161Lay`); one title card at a time (`TC163`); attacks aim when they land (`aim163`, `SW163`); Sovereign signatures 60 s apart, Argus' eyes 10 m out with twice the time (`SIG163`); weapons never spin (`EDGE163`: planned edge roll `edge163Plan`, capped turn `edge163Step`, fight stance `edge163Fight`) | `0001-v163-style-order.js`, `3220-v163-owner-fixes.js` |
+| v164 Hilltop Ascent rework (owner): no obstacles, strikes or hit points; broken trail to jump (`ch153Course().gaps`, carved in `ch153Terrain`, dressed by `ch164Abyss`), venom that slows (`ch153SpitPlan`/`ch153SpitSpawn`, `ch164Pool`, `ch164Slow`), Skarrith at its own speed (`ch164SnakeV`) with the chomp, the distance meter; Skarrith rebuilt in detail (`ch153Snake`, `ch153SnakeHead`, `ch153SnakeLay`, `ch164HeadAnim`); pictures `test/v164_look.py` | `3250-v164-ascent-chase.js`, `3251-v164-skarrith-model.js` (edits in `3160`–`3162`, `3192`, `3180`) |
 | v151 The Lantern Road rework (owner): the outpost by Kindlelight I's entrance (`mq151Cfg().A` 36 steps down the road), lampposts along the whole road ~7 apart (`mq151Cfg().gap`, 47) at 1 glowbulb each (`MQ143.per`), every kill drops one until enough are carried (`MQ143.drop` 1), the Ripper rolls at 3 tiles/s, pre-v151 saves refunded; the entrance camp moves to the nearest open side field (`mq151MoveCamp`, called from 0045 after every seeded map step) | `3020`, `3023` (hook in `0045`) |
 | v151 Armored trait look: a riveted war harness (leather blanket, overlapping iron spine plates, rivets, flank flaps, `lpArmor151`) replaces the grey back domes that read as stones; picture sheet `test/v151_armor_look.py` | `0610` (`lpExtras`) |
 | v152–v155 Hillside Crest main quest (v155: played together in co-op, `3180`): special instances (`SP152`, `3150`), Abeksi city stealth level (`3151`–`3155`), the Hilltop Ascent chase (`3160`–`3162`), the Gate of the Hydra puzzle (`HD154`, `3170`) | `3150`–`3170` (hooks in `0045`) |
@@ -745,20 +746,47 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     alarm too. Death during the alarm: `ab157Rise` → `ab152Restart` + `ab157Calm(true)` (calm at the last checkpoint, everyone alive).
     Co-op: the host spawns the hostile residents; `['ab','x',i,u,v,hu,hv]` knife kill (the host checks witnesses), `['ab','d',i,u,v]` a
     resident fell, `['ab','rs',states]` resident states every 0.6 s, `['ab','calm']`, `['ab','out',gate]`. Test `v157_abeksi_alarm.py`.
-  * **The Hilltop Ascent (v153, II → III, `3160`–`3162`)**: "F · Ascend to the hilltops" at a hill road in II (a mount needed). A mounted
-    chase up a spiral trail (`ch153Path`, `ch153Course`: boulders, logs, spikes, gaps, rockslides, a plank bridge, a tunnel); Space jumps;
-    every mount runs at `CH153V.spd`; Skarrith (`ch153Snake`) chases on a rubber band, spits venom (phases in the course) and strikes from
-    the side; 3 hits or a swallow = start again. The crack at the summit leads to III. Saved `x2.ch153`. Tests `v153_ascent.py`
-    (an autopilot rides the whole trail: about 110 s), pictures `v153_look.py`.
+  * **The Hilltop Ascent (v153, II → III, `3160`–`3162`; reworked in v164, `3250`/`3251`)**: "F · Ascend to the hilltops" at a hill road
+    in II (a mount needed). A mounted chase up a spiral trail (`ch153Path`); A / D steer, Space jumps; every mount runs at `CH153V.spd`.
+    The crack at the summit leads to III. Saved `x2.ch153`. Tests `v153_ascent.py` (an autopilot rides the whole trail: about 100 s),
+    pictures `v164_look.py` (`v153_look.py` is the older set).
+  * **v164 rework (owner: "remove the obstacles, the attack from behind and the health system; the snake spits venom that slows you;
+    the trail has broken portions to jump; if he catches you he chomps you")**: no boulders, logs, spikes, pillars, rockslides, plank
+    bridge, strikes or hit points (the 💚 hearts and `CH153V.hp` are gone; the hero's health is never touched). *Broken trail*:
+    `ch153Course().gaps` (seeded, 13 stretches, ~80 tiles apart and 2.4 long at the foot → ~45 apart and 3.2 long near the summit;
+    `ch153GapAt`), the ground carved ~11 deep there (`ch153Terrain`), each dressed by `ch164Abyss` (lit cracked lip slabs tipped
+    toward the hole, unlit rock walls dropping into black, a dark mouth so it reads as a drop) plus crack decals and stones crumbling
+    off the near lip as you come; a "Broken trail — JUMP!" cue. Space jumps it (the mount leaps at least at full stride, ×`CH164.leap`,
+    even when slowed, and keeps its speed in the air); land in it and you fall (`ch153Die('fall')`): you drop into the gap, Skarrith
+    reaches the lip and dives after you, its jaws close (`ch164Bite`), then the chase starts again. *Venom*: in phases by trail
+    position (`ch153Course().venom`: [from s, seconds between volleys, most globs]) it rears and spits (`ch164SpitTick`): one glob at
+    your lane, two as a slalom (`CH164.slalom` apart, other side), or a wall of three (jump it). Each glob arcs through the air with a
+    pulsing target ring and a growing shadow where it will land (`ch164Ring`), lands with a splash and leaves a bubbling puddle for
+    `CH164.poolT` 7 s (`ch164Pool`). A puddle or a glob landing on you slows the mount to ×`CH164.slowK` .42 for `CH164.slowT` 1 s
+    (`ch164Slow`: green screen tint `#ch164v`, squelch, hiss; ~6 tiles lost). Volleys never land within `CH164.gapB` 12 before /
+    `CH164.gapA` 6.5 after a gap, and one or two always leave a lane `CH164.lane` wide. *The chase*: Skarrith runs at its own speed
+    (`ch164SnakeV`: `CH164.snV` 8.55 → 8.85 up the trail, a surge only past `CH164.far` 28 behind), between a mount (8.2) and steady
+    boosting; held to `CH153V.slow0` for the first 3 s. Without boosting it reaches you in ~45 s; each slow lets it close in, boosts open
+    the gap. Within `CH164.catch` 2.6 it rears and chomps (`ch153Die('chomp')`: a lunge, jaws over hero and mount, shake, red flash) and
+    the chase starts again. *HUD*: a distance meter (🐍 … 🐎 bar, "Skarrith · N m behind", glowing red under 10), the chase camera
+    pulls back and swings out over the drop as it closes (`CH153CAM.near` / `.side`) so its head looms behind you.
+  * **Skarrith's model (v164, `3251`)**: one smooth body tube along a Catmull-Rom curve through the spine points (`ch153SnakeLay`:
+    `CH164B.sub` 4 rings per point × `CH164B.ns` 22 sides, analytic normals, rebuilt in place in one geometry), a flatter belly, a
+    painted skin texture with a bump map (`ch164SkinTex`: shingled keeled scales, a dorsal diamond chain with bronze rims, flank
+    blotches, wide pale ventral plates) laid by length ÷ radius so scales shrink toward the tail; keeled dorsal scutes and spines
+    (two InstancedMeshes on the tube's frame). Head (`ch153SnakeHead`): lofted wedge skull and hinged jaw (`ch164Loft`), heavy brow
+    ridges, head shields, a horn crown and crest, slit-pupil glowing eyes in dark sockets, nostrils and heat pits, rows of teeth, two
+    fangs that swing forward as the jaw opens, a forked tongue that flicks, venom dripping from the fangs (`ch164HeadAnim`), a ribbed
+    cobra hood (pale banded front, dark scaled back with eye-spots). Smooth MeshStandard materials of its own (kept out of 2420's
+    fade); textures, materials and fixed geometries are made once (`CH164B`); nothing is made per frame.
   * **Ascent boost and danger (v157, `3192`)**: Shift (desktop) or the 💨 dash button gives `ch157Boost()`: ×`CH157.mul` 1.55 for `CH157.T` 0.9 s,
-    `CH157.n` 2 charges each refilling in `CH157.refill` 5 s (not while boosting); it cancels a stumble and carries through a jump; 3162's
+    `CH157.n` 2 charges each refilling in `CH157.refill` 5 s (not while boosting); it carries through a jump; 3250's
     speed reads `ch157Mul(R)`; co-op: each rider boosts themselves. Effects `ch157Fx`/`ch157Hud`: speed FOV, wind streaks (`#ch157c`), hoof
-    dust, pulsing red edge (`#ch157e`), surge thuds and shake, a looping rumble/hiss (`ch157Snd`), side strike arrows (`#ch157sL/R`), the VENOM
-    warning; `ch157Calm()` (Screen shake off or reduced motion) tones them down. *Emergence*: Skarrith bursts from the trail behind the rider at
-    `CH153V.hole` (1; `ch153Course().start` 15) at `ch153EmT(R)` s into the intro (3162 poses it via `N.em`/`N.drop`; 3192 adds the crack
+    dust, pulsing red edge (`#ch157e`, v164: from ~18 tiles in, stronger and faster as it closes), surge thuds and shake, a looping rumble/hiss
+    (`ch157Snd`), the VENOM warning (v164: the side strike arrows `#ch157sL/R` stay hidden); `ch157Calm()` (Screen shake off or reduced motion) tones them down. *Emergence*: Skarrith bursts from the trail behind the rider at
+    `CH153V.hole` (1; `ch153Course().start` 15) at `ch153EmT(R)` s into the intro (3250 poses it via `N.em`/`N.drop`; 3192 adds the crack
     `ch157CrackMesh`, debris `ch157Erupt`, dust); intro camera `CH153CAM`; off-trail spots follow the ground (`ch153Ext`). Old bug: before the
-    trail's foot the serpent was placed 10–30 above the slope, out of the intro camera's view. Under ~10 tiles the chase camera's pitch rises
-    (up to 0.95) so it stays above Skarrith's head instead of inside it. Tests: `v153_ascent.py` (emergence, boost; the autopilot boosts),
+    trail's foot the serpent was placed 10–30 above the slope, out of the intro camera's view. v164: under `CH153CAM.near` 15 tiles the chase camera pulls back, rises and swings out over the drop so Skarrith's head stays in view behind the rider. Tests: `v153_ascent.py` (emergence, boost; the autopilot boosts),
     `v155_coop_levels.py` (a co-op boost).
   * **The Gate of the Hydra (v154, III → Den, `3170`)**: a great carved stone door in the mountain replaces the Den portal
     (`sp152Gate('hydra')`), five Hydra heads on its lintel. Five Wind Stones (`hd154Plan`: off the road at 12/30/48/66/84 %, open
@@ -773,9 +801,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     partner, ~6/s; guests show them, `ab155Follow`); anyone seen = everyone back to the party checkpoint (`['ab','c',…]`, the
     furthest reached: `['ab','cp',i]`); the drain takes everyone out (`['ab','out']`). Partners crouch on screen. *Ascent*: F takes
     every partner in Mistmere up (all need a mount: presence `hm`; no joining a chase under way); one Skarrith driven by the host
-    after the rearmost rider (`cs155Snake`: `['cs','n',s,v]`; venom `ch153SpitPlan` / `ch153SpitSpawn` → `['cs','v',…]`; strikes
-    `['cs','k',peer,lane]`); each rider's own world checks its hits; riders send `['cs','p',s,o,y,ph,hp,v]` and are drawn on the
-    trail; rockslides start from the leading rider (`ch153LeadS`) and are seeded. A fallen rider spectates (`R.ph` 'spec': hero
+    after the rearmost rider (`cs155Snake`: `['cs','n',s,v]`; v164: its own speed `ch164SnakeV`, its distance measured to that rider;
+    venom at a rider picked at random, `ch153SpitPlan` / `ch153SpitSpawn` → `['cs','v',…]`; no strikes, `['cs','k']` is gone); each
+    rider's own world checks its puddles, the gaps (seeded: the same for everyone) and the chomp; riders send
+    `['cs','p',s,o,y,ph,slowed,v,rd]` and are drawn on the trail; stones crumble off gaps ahead of the leading rider (`ch164LeadS`). A fallen rider (chomped or into a gap) spectates (`R.ph` 'spec': hero
     hidden, the camera on the leading rider); all fallen → `['cs','re',rd]`, everyone starts again (v156: tries are numbered, `CS155.rd`, sent in `p`; a fallen rider
     whose partner is already on a later try starts again with them instead of watching them, the cause of the old stuck watcher); a rider through the crack
     (`['cs','w']`) → the fallen arrive in III downed (3085 revive, `RV155.T` 180 s). *Hydra*: stone turns, song starts, chime

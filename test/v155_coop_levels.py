@@ -2,7 +2,8 @@
 #  Abeksi: F takes the partner in too · one host runs the snakes (the other's follow) · a partner seen = the whole party caught and
 #  back · the checkpoint is shared · the drain takes both out. Ascent: F takes the partner up too · one Skarrith · a fallen rider
 #  watches the other · both fallen = the chase starts again for both · the other gets through = the fallen lies downed in III and
-#  can be revived. Gate of the Hydra: the stones and the song are shared and the door opens for both.
+#  can be revived. v164: riders are kept from the gaps and the chomp (CH164.catch / CH164.edge: they do not steer or jump); a
+#  venom volley the host spits lands for the partner too (['cs','v']); the gaps are the same for both. Gate of the Hydra: the stones and the song are shared and the door opens for both.
 # Run: python3 mpt.py v155_coop_levels.py
 if 'A' not in globals():  # run directly (the test suite): open the two co-op windows through mpt.py
     import os,sys,subprocess;sys.exit(subprocess.call([sys.executable,os.path.join(os.path.dirname(os.path.abspath(__file__)),'mpt.py'),os.path.abspath(__file__)]))
@@ -31,7 +32,7 @@ def poll(f,ms):
         if (time.time()-t0)*1000>=ms*SLACK:return False
         A.wait_for_timeout(350)
 for pg in (A,B):pg.evaluate("""()=>{window.__c=0;{const f=ab152Caught;ab152Caught=function(){__c++;return f.apply(this,arguments)}}
-  window.__iv=setInterval(()=>{hero.hp=heroMax();if(CH153.R&&CH153.R.ph=='run'&&!window.__noInv)CH153.R.inv=9},100);insArrive(INSL[5]);return 1}""")
+  window.__iv=setInterval(()=>{hero.hp=heroMax();if(!window.__noInv){CH164.catch=-1e9;CH164.edge=1e9}},100);insArrive(INSL[5]);return 1}""")
 ok=until("()=>MP.on&&MP.others>=1",20000)
 chk('both in Hillside Crest I together',ok,json.dumps([p.evaluate("()=>[MP.rg,MP.others]") for p in (A,B)]))
 # ---------------- Abeksi ----------------
@@ -109,37 +110,46 @@ chk('Ascent: one Skarrith for both',abs(n[0]-n[1])<4,json.dumps(n))
 bo=G.evaluate("()=>{const R=CH153.R;R.bc=CH157.n;R.bst=0;return ch157Boost()}")
 ok=until("()=>{const q=Object.values(CS155.p)[0];return !!q&&q.v>CH153V.spd*1.2}",2500,[H])
 chk('Ascent: a boost in co-op (the partner sees the boosting rider speed up)',bo and ok,json.dumps(H.evaluate("()=>Object.values(CS155.p).map(q=>q.v)")))
+# v164: the host's venom volley lands in the partner's world too (['cs','v'] relays it)
+G.evaluate("()=>{window.__vv=0;const f=ch153SpitSpawn;ch153SpitSpawn=function(){window.__vv++;return f.apply(this,arguments)};return 1}")
+H.evaluate("()=>{const R=CH153.R,N=R.sn;N.spit=0;N.spitAt=null;N.s=Math.min(N.s,R.s-12);return 1}")
+ok=False
+for i in range(16):   # both windows take turns in front (a background window barely runs)
+    W(700)
+    if G.evaluate("()=>window.__vv>0"):ok=True;break
+gp=[p.evaluate("()=>ch153Course().gaps.map(g=>g.s+':'+g.len).join(',')") for p in (H,G)]
+chk('Ascent: the host\'s venom lands for the partner too, and the broken trail is the same for both',ok and gp[0]==gp[1] and len(gp[0])>20,json.dumps([G.evaluate("()=>window.__vv"),gp[0][:60]]))
 # the partner falls: they watch the host ride on
-G.evaluate("()=>ch153Die('hits')")
+G.evaluate("()=>ch153Die('chomp')")
 ok=until("()=>CH153.R&&CH153.R.ph=='spec'",6000,[G])
 st=G.evaluate("()=>[CH153.R.ph,pl.visible]");hs=H.evaluate("()=>CH153.R&&CH153.R.ph")
 W(1200)
 dd=G.evaluate("()=>{const q=cs155Alive()[0];return q?Math.abs(CH153.R.s-q.s):99}")
 chk('Ascent: a fallen rider watches the other ride on',ok and st[0]=='spec' and not st[1] and hs=='run' and dd<6,json.dumps([st,hs,dd]))
 # both fall: the chase starts again for both
-H.evaluate("()=>ch153Die('hits')")
-ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.hp==3&&CH153.R.s<40",12000)
-chk('Ascent: everyone fallen = the chase starts again for both',ok,json.dumps([p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s)]") for p in (A,B)]))
+H.evaluate("()=>ch153Die('chomp')")
+ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.s<40",12000)
+chk('Ascent: everyone fallen = the chase starts again for both',ok,json.dumps([p.evaluate("()=>CH153.R&&[CH153.R.ph,Math.round(CH153.R.t),Math.round(CH153.R.s)]") for p in (A,B)]))
 until("()=>CH153.R&&CH153.R.ph=='run'",8000)
 # v156: the same, but the last rider's game runs behind (lag, a slow or background window): the watcher has already started
 # again and is riding when the last rider decides. Before v156 the last rider took them for a partner still on the old try,
 # watched them and stayed stuck watching.
-G.evaluate("()=>ch153Die('hits')")
+G.evaluate("()=>ch153Die('chomp')")
 until("()=>CH153.R&&CH153.R.ph=='spec'",6000,[G])
 H.evaluate("""()=>{window.__pin=1;if(!window.__pinW){window.__pinW=1;const f=ch153Tick;ch153Tick=function(){const R=CH153.R;if(window.__pin&&R&&R.ph=='dead')R.dead.t=Math.min(R.dead.t,1);return f.apply(this,arguments)}}
-  ch153Die('hits');return 1}""")
+  ch153Die('chomp');return 1}""")
 ok1=until("()=>CH153.R&&CH153.R.ph=='run'&&CH153.R.s>CH153.S.K.start+6",12000,[G])
 H.evaluate("()=>{window.__pin=0;return 1}")
-ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.hp==3",9000,[H])
-st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s),CS155.rd]") for p in (H,G)]
+ok=until("()=>CH153.R&&(CH153.R.ph=='intro'||CH153.R.ph=='run')&&CH153.R.s<60",9000,[H])
+st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,Math.round(CH153.R.t),Math.round(CH153.R.s),CS155.rd]") for p in (H,G)]
 chk('Ascent: the last rider to fall starts again even when the other already has (no stuck watcher)',ok1 and ok and st[0][3]==st[1][3],json.dumps(st))
 # ... and the one who started first is not swallowed by the last try's serpent meanwhile
 W(2500);until("()=>CH153.R&&CH153.R.ph=='run'",6000,[H])   # v157: the restart's emergence takes ~2 s of game time (slower in a background window)
-st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,CH153.R.hp,Math.round(CH153.R.s),CS155.rd,Math.round(CH153.R.sn.s)]") for p in (H,G)]
+st=[p.evaluate("()=>CH153.R&&[CH153.R.ph,Math.round(CH153.R.t),Math.round(CH153.R.s),CS155.rd,Math.round(CH153.R.sn.s)]") for p in (H,G)]
 chk('Ascent: the rider who started again first keeps riding (no serpent from the last try)',st[1][0]=='run' and st[0][0]=='run' and st[1][3]==st[0][3],json.dumps(st))
 until("()=>CH153.R&&CH153.R.ph=='run'",8000)
 # the partner falls again, the host gets through: the partner lies downed in III, and the host revives them
-G.evaluate("()=>ch153Die('hits')")
+G.evaluate("()=>ch153Die('chomp')")
 until("()=>CH153.R&&CH153.R.ph=='spec'",6000,[G])
 H.evaluate("()=>{const R=CH153.R,P=CH153.S.P;R.s=P.S-8;R.sn.s=R.s-30;R.o=0;return 1}")
 ok=until("()=>curIns()&&curIns().g===7",14000)

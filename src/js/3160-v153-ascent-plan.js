@@ -7,8 +7,8 @@
 //  * Width: CH153.hw (half width) per stretch (the bridge is the narrowest).
 //  * The mountain: a cone (height falls 0.85 per tile of radius) with the trail cut into it as a flat ledge; the inward side rises
 //    as a rock wall, the outward side falls away. Rocks ('R') line the wall, pines ('#') dot the slopes.
-//  * Course (CH153C): the obstacles and set pieces by s — boulders, logs, spikes, gaps, rockslides, the bridge, the tunnel, venom
-//    phases — see 3162 for how each one plays.
+//  * Course (ch153Course): v164 — no obstacles any more. The broken stretches of trail (gaps to jump, seeded so every co-op rider
+//    has the same ones; carved out of the ground here, dressed and played in 3250) and Skarrith's venom phases.
 var CH153;
 function ch153Cfg(){return {R0:165,R1:62,turns:1.3,rise:88,h0:2,th0:-Math.PI*.15,cx:210,cy:190}}
 function ch153Path(){if(ch153Path.c)return ch153Path.c;const C=ch153Cfg(),I=sp152Defs().find(d=>d.key=='ascent'),cx=I.x0+C.cx,cz=I.y0+C.cy;
@@ -27,24 +27,18 @@ function ch153Path(){if(ch153Path.c)return ch153Path.c;const C=ch153Cfg(),I=sp15
     nx=-tz*sgn,nz=tx*sgn;return [x+nx*(o||0),z+nz*(o||0),H[i]+(H[i+1]-H[i])*f]};
   P.hw=s=>HW[Math.max(0,Math.min(S,Math.round(s)))];P.yaw=s=>{const i=Math.max(0,Math.min(S,Math.round(s)));return Math.atan2(TX[i],TZ[i])};
   return ch153Path.c=P}
-// the trail's half width: 2.6 (5.2 wide), narrower in places, the bridge 1.6
-function ch153HW(s,S){const B=ch153Course().bridge;if(s>=B[0]&&s<=B[1])return 1.65;if(s>=270&&s<=380)return 2.1;if(s>=S-40)return 2.2+Math.max(0,(S-12-s)/28)*.4;return 2.7}
-// the course: everything by s (the gaps, the bridge, the tunnel, rockslides, venom phases, the snake's lunge spots)
+// the trail's half width: 2.7 (5.4 wide), narrower through the narrows and up to the summit crack
+function ch153HW(s,S){if(s>=270&&s<=380)return 2.1;if(s>=S-40)return 2.2+Math.max(0,(S-12-s)/28)*.4;return 2.7}
+// the course (v164): the broken stretches of trail and the venom phases. Gaps: {s: middle, len: length along the trail}, shorter
+// and further apart near the bottom, longer and closer together toward the summit (13–14 of them, ~80 tiles apart at the foot, ~40 near the top).
+// A fixed seed: every rider's world (co-op) has the same gaps. Venom phases: [from s, seconds between volleys, most globs a volley].
+// Self-contained: 0045 paints the ground from it (through ch153Path / ch153Terrain) before the rest of the script has run.
 function ch153Course(){if(ch153Course.c)return ch153Course.c;
-  const O=[];const ob=(k,s,o,ex)=>O.push(Object.assign({k,s,o},ex||{}));
-  // A · the ledge: boulders on alternate sides, two logs to jump, a first spike
-  [52,74,96,118,140,162,186,208].forEach((s,i)=>ob('boulder',s,(i%2?1:-1)*1.25));ob('log',128,0);ob('log',198,0);ob('spike',150,0);
-  // B · the narrows: spikes and a broken stretch to jump
-  [282,300,318,356,372].forEach((s,i)=>ob('spike',s,(i%2?-1:1)*.9));ob('gap',336,0,{len:3.0});ob('log',364,0);
-  // the bridge: two missing planks
-  ob('gap',425,0,{len:2.6,plank:1});ob('gap',452,0,{len:2.6,plank:1});
-  // C · the high ledge: logs, boulders, faster curves
-  [492,516,540,566,590].forEach((s,i)=>ob(i%2?'log':'boulder',s,i%2?0:(i%4?1:-1)*1.2));
-  // the tunnel: stalactite pillars to weave between
-  [622,634,646,658,670].forEach((s,i)=>ob('pillar',s,(i%2?1:-1)*1.3));
-  // D · the final climb: gaps, boulders, logs
-  ob('gap',760,0,{len:3.0});[778,796].forEach((s,i)=>ob('boulder',s,(i%2?-1:1)*1.3));ob('log',812,0);ob('gap',830,0,{len:3.2});[848,866].forEach((s,i)=>ob('spike',s,(i%2?1:-1)*1.0));ob('log',882,0);
-  return ch153Course.c={O,bridge:[400,470],tunnel:[606,684],slides:[[230,3],[700,5]],venom:[[70,4.2,1],[260,3.4,1],[480,3.0,2],[690,2.6,2],[750,2.2,3]],start:15,crack:12}}
+  let sd=16407;const rn=()=>(sd=sd*16807%2147483647)/2147483647,G=[];
+  for(let s=78;s<872;){const k=s/880,len=Math.round((2.3+.9*k+rn()*.3)*100)/100;G.push({s:Math.round(s*10)/10,len});s+=len+(80-46*k)+rn()*12}
+  return ch153Course.c={gaps:G,venom:[[30,4.4,1],[170,3.8,2],[360,3.3,2],[540,2.9,3],[720,2.45,3]],start:15,crack:12}}
+// the gap at trail position s (with a margin m inside its ends), or null
+function ch153GapAt(s,m){const G=ch153Course().gaps;m=m||0;for(let i=0;i<G.length;i++){const g=G[i];if(s>g.s-g.len/2+m&&s<g.s+g.len/2-m)return g}return null}
 // ---------------- 0045: the ground and the heights ----------------
 function ch153Hash(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
 function ch153Map(m,bio,DW,I,bi){const P=ch153Path();
@@ -55,10 +49,12 @@ function ch153Map(m,bio,DW,I,bi){const P=ch153Path();
   // rocks along the mountain wall, pines on the slopes (never on the trail)
   for(let s=0;s<=P.S;s+=1.6){const hw=P.hw(s),o=-(hw+1.6+ch153Hash(s,7)*1.4),[x,z]=P.at(s,o),X=Math.round(x),Z=Math.round(z);if(m[Z]&&m[Z][X]===''&&ch153Hash(s,3)<.5)m[Z][X]='R'}
   for(let i=0;i<900;i++){const x=I.x0+4+Math.floor(ch153Hash(i,1)*(I.w-8)),z=I.y0+4+Math.floor(ch153Hash(i,2)*(I.h-8));if(m[z]&&m[z][x]===''&&DW[z*W+x]>3)m[z][x]='#'}}
-function ch153Terrain(I){const P=ch153Path(),C=P.C,best=new Float32Array(I.w*I.h).fill(99),ph=new Float32Array(I.w*I.h),sg=new Float32Array(I.w*I.h);
+function ch153Terrain(I){const P=ch153Path(),C=P.C,best=new Float32Array(I.w*I.h).fill(99),ph=new Float32Array(I.w*I.h),sg=new Float32Array(I.w*I.h),bs=new Float32Array(I.w*I.h).fill(-99);
   for(let s=-8;s<=P.S+6;s+=.4){const sc=Math.max(0,Math.min(P.S,s)),hw=P.hw(sc);for(let o=-hw-5;o<=hw+5;o+=.4){const [x,z,h]=P.at(sc,o),X=Math.round(x)-I.x0,Z=Math.round(z)-I.y0;if(X<0||Z<0||X>=I.w||Z>=I.h)continue;const k=Z*I.w+X,d=Math.abs(o)-hw;
-      if(d<best[k]){best[k]=d;ph[k]=h-(s<0?(-s)*.6:0);sg[k]=o<0?-1:1}}}
+      if(d<best[k]){best[k]=d;ph[k]=h-(s<0?(-s)*.6:0);sg[k]=o<0?-1:1;bs[k]=s}}}
   const cone=(i,j)=>{const r=Math.hypot(i-P.cx,j-P.cz);let h=C.h0+C.rise*(C.R0-r)/(C.R0-C.R1);if(r<C.R1)h+=(C.R1-r)*1.4;if(r>C.R0)h=C.h0-(r-C.R0)*1.6-(r>C.R0+6?30:0);return h+(fbm2(i*.08,j*.08,3)-.5)*3.2};
   for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const X=i-I.x0,Z=j-I.y0,inn=X>=0&&Z>=0&&X<I.w&&Z<I.h,k=inn?Z*I.w+X:-1;let h=cone(i,j);
-    if(k>=0&&best[k]<5){const d=best[k],w=d<=.6?1:1-((d-.6)/4.4)*((d-.6)/4.4)*(3-2*(d-.6)/4.4);const wall=sg[k]<0?Math.min(4,Math.max(0,d-.6)*1.6):-Math.max(0,d-.6)*.9;h=ph[k]*w+(Math.max(h,ph[k]+wall)*(sg[k]<0?1:0)+Math.min(h,ph[k]+wall)*(sg[k]<0?0:1))*(1-w)}
+    if(k>=0&&best[k]<5){const d=best[k],w=d<=.6?1:1-((d-.6)/4.4)*((d-.6)/4.4)*(3-2*(d-.6)/4.4);const wall=sg[k]<0?Math.min(4,Math.max(0,d-.6)*1.6):-Math.max(0,d-.6)*.9;h=ph[k]*w+(Math.max(h,ph[k]+wall)*(sg[k]<0?1:0)+Math.min(h,ph[k]+wall)*(sg[k]<0?0:1))*(1-w);
+      // v164: a broken stretch: the ledge has fallen away down the mountain (the inner wall stays); 3250 dresses its edges
+      if(ch153GapAt(bs[k],0)&&(sg[k]<0?d<0:d<7))h=Math.min(h,ph[k]-11-Math.max(0,d)*.6)}
     HF[(j+HPD)*HW+i+HPD]=h}}

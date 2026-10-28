@@ -1,4 +1,4 @@
-# v153 pictures: the Hilltop Ascent. VIEWS=name,... (default all) -> <AW_TMP>/v153_<view>.png
+# v153 pictures: the Hilltop Ascent (v164: the obstacles, bridge and strikes are gone; v164_look.py pictures the new chase). VIEWS=name,... (default all) -> <AW_TMP>/v153_<view>.png
 #   road (Mistmere's hill road) · intro (Skarrith comes down) · run (riding, the snake behind) · venom (a volley landing ahead)
 #   strike · bridge · tunnel · crack (the finish) · snake (a side view of the serpent) · swallow · boost (v157: the boost's streaks and wide view)
 import play,os
