@@ -73,7 +73,7 @@ jobs:
       - name: Result
         if: always()
         run: |
-          mkdir -p res && n=$(echo "${{ matrix.t }}" | awk '{print $NF}')
+          mkdir -p res && n=$(echo "${{ matrix.t }}" | tr -c 'A-Za-z0-9._,=-' '_')   # the whole line: two lines can run the same script with different settings
           tail=$(grep -E '^(====|  FAIL)' test/out/ci_log.txt 2>/dev/null | head -8 | tr '\n' ' ' | cut -c1-500)
           r="${{ steps.run.outcome == 'success' && 'PASS' || 'FAIL' }}"; grep -q 'passed on retry' test/out/ci_log.txt 2>/dev/null && r="PASS (retry)"
           echo "$r ${{ matrix.t }}  ${tail}" > res/$n.txt
