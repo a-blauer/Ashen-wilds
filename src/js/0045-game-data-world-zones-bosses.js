@@ -265,6 +265,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)
+  if(typeof ss165Terrain=='function')ss165Terrain(); // v165: the Searing Sands chapters' own ground (3271: I's forecourt; II, III)
 }
 
 let party=[],inv={},gear=[],eggs=[],incS={},eq={},px=2,py=2,foe=null,busy=false,lines=[],sel=[];
