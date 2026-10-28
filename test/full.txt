@@ -89,3 +89,5 @@ v163_elements.py
 v163_fixes.py
 WRAP=1 SIZES=cs,pp,pl v161_mobile_shot.py
 v163_weapons.py
+v164_dodge_grip.py
+v164_kite.py

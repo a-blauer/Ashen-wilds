@@ -9823,6 +9823,17 @@ function lfTopS(n,x,z,lo,r){const P=lfSurf(n);r=r||.025;let y=null;for(let i=0;i
 
 // ---------------- companions: magic users attack from range; Space commands the team to attack your target ----------------
 var CMD={e:null,t:0};
+var CMD164={gap:6000};
+// v164 (owner: "companions are too good at kiting; the dragon can keep backing up while attacking and never get hit"): measured over 30 s
+// against one monster, the dragon took 2 of the 7 blows aimed at it and the wisp 1 of 5 (the fox, which fights up close, 10 of 10):
+// a magic companion stepped back the moment a foe came within 2.2 m, so it walked out of every telegraphed wind-up, and kept casting.
+// Now a step back lasts at most KITE164.T s, comes at most once every KITE164.cd s, never starts while a monster is already winding
+// up an attack on that companion, and the companion does not cast while stepping back. Test v164_kite.py.
+var KITE164={T:.7,cd:4};
+function kite164(f,foe){if(f.kb164>0)return true;
+  if((f.kc164||0)>0)return false;
+  const a=foe&&foe.atk;if(a&&a.tg===f&&a.ph==0)return false;
+  f.kb164=KITE164.T;f.kc164=KITE164.cd;return true}
 const CMD_MS=12000,MAG_R=5.5;
 function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<24)return tgt;
   let b=null,bd=14;const d=aimDir?aimDir():V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
@@ -9833,7 +9844,8 @@ function commandAttack(){
   const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
-  act.forEach(c=>{const f=fols[party.indexOf(c)];if(f){f.cdA=Math.min(f.cdA||0,.15);dn(f.position,'!','#ffd24a',-10,700)}});
+  // v164: the quick first strike is given once per companion every CMD164.gap ms (owner: pressing Space over and over made them attack as fast as you pressed)
+  act.forEach(c=>{const f=fols[party.indexOf(c)];if(f){const t=nowP();if(t>=(f.cmdQ164||0)){f.cdA=Math.min(f.cdA||0,.15);f.cmdQ164=t+CMD164.gap}dn(f.position,'!','#ffd24a',-10,700)}});
   say('📣 '+act.map(c=>c.n).join(' and ')+(act.length>1?' attack ':' attacks ')+(e.c.n||e.c.g[0])+'!');if(typeof sfx=='function')sfx('chime',.5)}
 {const f=teamFoe;teamFoe=function(){const C=CMD;if(C.e){if(C.e.dead||nowP()>C.t||!enemies.includes(C.e)||d2(C.e.m.position,pl.position)>30)CMD={e:null,t:0};
   else if(townAt(pl.position.x,pl.position.z,0)<0)return C.e}return f.apply(this,arguments)}}
@@ -9858,7 +9870,7 @@ function compTick(dt,now){
     f.vel=f.vel||V();f.idleT=f.idleT||0;
     const P=pl.position,dpl=d2(f.position,P);
     if(dpl>28){const fy0=plFaceY();f.position.set(P.x-Math.sin(fy0)*2+(i?-1:1),0,P.z-Math.cos(fy0)*2);f.vel.set(0,0,0)}
-    f.cdA=(f.cdA||0)-dt;
+    f.cdA=(f.cdA||0)-dt;f.kc164=Math.max(0,(f.kc164||0)-dt);f.kb164=Math.max(0,(f.kb164||0)-dt);
     if(!f.visible||dt<=0){animC(f,now,false);return}
     const spdK=FAMD[famOf(c.g[0])].spd*((c.mods||[]).includes('Swift')?1.18:1),mg=xMt(c)=='m';
     let goal=null,want=0,face=null;
@@ -9867,8 +9879,8 @@ function compTick(dt,now){
       const ang=Math.atan2(f.position.x-fp.x,f.position.z-fp.z)+(i?.5:-.5)*dt,slot=V(fp.x+Math.sin(ang)*reach*.85,0,fp.z+Math.cos(ang)*reach*.85);
       face=dv;
       if(L>reach){goal=slot;want=Math.min(7,3.2+L)*spdK}
-      else if(mg&&L<2.2&&!foe.boss){const away=V(-dv.x,0,-dv.z).normalize();goal=V(f.position.x+away.x*2,0,f.position.z+away.z*2);want=3*spdK} // step back to casting range
-      if(L<=reach&&!f.lk&&f.cdA<=0){f.rotation.y=Math.atan2(dv.x,dv.z);
+      else if(mg&&L<2.2&&!foe.boss&&kite164(f,foe)){const away=V(-dv.x,0,-dv.z).normalize();goal=V(f.position.x+away.x*2,0,f.position.z+away.z*2);want=3*spdK} // step back to casting range
+      if(L<=reach&&!f.lk&&f.cdA<=0&&!(f.kb164>0)){f.rotation.y=Math.atan2(dv.x,dv.z);
         if(mg){f.cdA=1.35/spdK;f.lk=1;const b=f.b;tw(220,k=>{if(b){b.position.y=Math.sin(k*Math.PI)*.12;b.rotation.x=-Math.sin(k*Math.PI)*.25}},()=>{if(b){b.position.y=0;b.rotation.x=0}f.lk=0;if(!foe.dead)compBolt(f,c,foe,()=>{if(!foe.dead)compHit(c,foe,1)})})}
         else{f.cdA=1.15/spdK;f.lk=1;lunge(f,fp,()=>{f.lk=0;if(!foe.dead)compHit(c,foe,1)})}}
     }else{
@@ -27781,7 +27793,8 @@ function brUndo(H){const U=H._brU;if(!U||!U.length)return;for(let i=U.length-1;i
     if(!rid){[['lh0',R.a],['rh0',R.a],['lh1',R.k],['rh1',R.k],['lh2',R.an],['rh2',R.an]].forEach(q=>brAddR(H,q[0],'x',q[1]));
       // the arm hold eases out when an attack / ability pose starts and back in when it ends (no snap at the transition);
       // the posture follows a low-passed gait blend, so uneven frame times can never make the lean flicker
-      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
+      // v164: the dash's tuck (HA.cur.mv164, 3230) is movement, not an attack: the hold stays (the raven's wand swung into its pointer pose)
+      const atk=H===pl?!!(typeof HA!='undefined'&&HA.cur&&!HA.cur.mv164):!!H.sw,S=H._brS||(H._brS={a:atk?0:1,w,t:now||0}),dt=Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
       S.a+=((atk?0:1)-S.a)*Math.min(1,dt*(atk?14:5));const arm=S.a<.001?0:S.a*S.a*(3-2*S.a);
       S.w+=(w-S.w)*(1-Math.exp(-dt/.2));
       const o=brPoseOff(D,S.w,arm);for(const k in o){const [bn,ax]=k.split('.');brAddR(H,bn,ax,o[k])}
@@ -31535,7 +31548,9 @@ var ABX135={p:null,r:0};
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
 var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
-var R157={value:new THREE.Vector2(1.35,2.4)};
+// v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
+// now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
+var R157={value:new THREE.Vector2(2.3,5.4)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
 var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
@@ -47278,7 +47293,7 @@ function hd155Merge(vane,v,st){if(hd154Done())return;const here=hd154In()&&!!HD1
 // 0104), the hard "above the ground under the camera" clamp then lifted it to the top of the wall, and Abeksi tilted it over the roofs
 // (3155). Pulling the camera in was tried before and was disorienting too. Now nothing moves the camera on its own:
 //  * scenery (2420) and the ground's steep walls (here) that come between the camera and the hero turn see-through in a round window
-//    around the hero on screen (R157: cut inside 1.35, dithered edge, solid from 2.4 units at the hero's distance);
+//    around the hero on screen (R157: cut inside 2.3, dithered edge, solid from 5.4 units at the hero's distance; v164, was 1.35-2.4);
 //  * floors stay solid: flat ground below the hero's waist is never cut, so the path behind and under the hero always shows;
 //  * the camera still rides above gentle ground (hills, slopes) with the same smoothing as everything else (cam157Floor). Behind a wall
 //    (the ground between hero and camera climbs a step) it simply stays inside the wall: from in there its faces point away and the
@@ -48638,4 +48653,19 @@ gripEdge=function(h,e,dt){
           if(e.pa163!==A){e.pa163=A;e.pl163=edge163Target(h,e,A);if(e.pl163!=null&&fromCarry)e.psi=e.pl163}
           else if(dt>0&&dt<.5&&!edge163Win(A)&&e.pl163!=null)edge163Step(e,e.pl163,dt,EDGE163.wind)})}}}catch(_){}
   return f.call(this,h,now,el,att)}}
+// ================= v164: a dash never turns the weapon in the hand =================
+// Owner (Oct 27 2026): "after sprinting the halberd is turned the wrong way briefly, it corrects itself after a few seconds".
+// The dash's quick tuck (haDodge, 0740) plays through the same action slot as an attack (HA.cur), so the grip (1270, 3220) took it
+// for a swing: the hands went to the strike grip, edge163Plan worked out an "edge roll" from the tuck's arm motion (the halberd:
+// ~176°, blade backwards) and, the tuck counting as an attack, the strike hold was kept for EDGE163.hold (2 s) afterwards. Every
+// edged weapon, the bow, crossbow, mace and wand turned 40-150° the same way. Measured by test/v164_dodge_grip.py.
+// Now the tuck is marked as movement (HA.cur.mv164) and, for the grip only, the hero is not in an action while it plays: out of a
+// fight the weapon stays in the carry grip; in a fight (right after an attack, a monster hunting nearby) it keeps the strike grip
+// and the roll it already had. The tuck's pose, timing and i-frames are unchanged.
+{const f=haDodge;haDodge=function(){const r=f.apply(this,arguments);try{if(HA.cur)HA.cur.mv164=1}catch(_){}return r}}
+function mv164(){return !!(typeof HA!='undefined'&&HA.cur&&HA.cur.mv164)}
+{const f=gripTick;gripTick=function(h,now,el,att){
+  if(h!==pl||!mv164())return f.apply(this,arguments);
+  const A=HA.cur,sw=pl.sw;HA.cur=null;pl.sw=hero.chan?1:0;
+  try{return f.call(this,h,now,el)}finally{HA.cur=A;pl.sw=sw}}}   // the hold is worked out again without the tuck
 </script></body></html>
