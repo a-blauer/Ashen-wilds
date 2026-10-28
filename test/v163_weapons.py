@@ -2,6 +2,8 @@
 # the weapon's turn against its hand measured every 16 ms. FAIL when any frame turns more than MAXF degrees or any 0.1 s more
 # than MAXW (the orb lifting off the palm: ~26° a frame, ~100° in 0.1 s, smooth; before v163: the halberd 375° in 0.1 s, twin axes 72° in one frame, every melee weapon / the bow 60-104° in a frame
 # when an attack started). CLS=warrior,... to limit.
+# v164: the fight check (edge163Fight) is cached for 150 ms; after spawning the monster the cache is cleared, or a stale 'no fight'
+# from before the test (set on the real clock) could keep the hands down for part of the 0.32 s idle and fail atk0 at random.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -17,7 +19,7 @@ JS=r"""async(cls)=>{const out={};window.VT=performance.now();performance.now=()=
   const fr=[];let f=0;
   const tick=(lab)=>{STEP(1);f++;Ws.forEach((W,i)=>{const q=W.quaternion,d=Math.min(1,Math.abs(prev[i].dot(q)));const a=2*Math.acos(d)*180/Math.PI;prev[i]=q.clone();const r=R[i];r.hist.push(a);
      if(a>r.max){r.max=a;r.maxAt=lab+'@'+f+' k='+(HA.cur?HA.cur.k.toFixed(2):'-')}const w=r.hist.slice(-6).reduce((s,x)=>s+x,0);if(w>r.win){r.win=w;r.winAt=lab+'@'+f}})};
-  if(window.FIGHT){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}}for(let i=0;i<20;i++)tick('idle');
+  if(window.FIGHT){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9}for(let i=0;i<20;i++)tick('idle');
   for(let n=0;n<3;n++){atkCd=0;swing();for(let i=0;i<45;i++)tick('atk'+n)}
   for(let i=0;i<40;i++)tick('rest');
   out[wt]=R.map(r=>({max:+r.max.toFixed(1),maxAt:r.maxAt,win6:+r.win.toFixed(1),winAt:r.winAt}))}
