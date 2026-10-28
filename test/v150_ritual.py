@@ -25,7 +25,7 @@ mp_until("()=>enemies.some(e=>e.mir&&e.c.en==='ghostwolf'&&!e.dead)&&!!CP150.RR"
 g=G.evaluate("()=>[enemies.filter(e=>e.mir&&e.c.en==='ghostwolf'&&!e.dead).length,!!CP150.RR]")
 chk('guest sees the wolves and the count',g[0]>0 and g[1],json.dumps(g))
 # XP of one wolf vs one normal monster at the same level
-x=H.evaluate("()=>{const w=MQ145.R.live.find(e=>!e.dead);const xw=gainXP(w),xn=gainXP({c:Object.assign({},w.c,{en:'goo'})});return [xw,xn]}")
+x=H.evaluate("()=>{const w=MQ145.R.live.find(e=>!e.dead);const hk=HXP164;HXP164=1;const xw=gainXP(w),xn=gainXP({c:Object.assign({},w.c,{en:'goo'})});HXP164=hk;return [xw,xn]}")
 chk('a ghost wolf gives a quarter of the XP',x[1]>0 and abs(x[0]/x[1]-.25)<.06,json.dumps(x))
 # the host slays them all
 import time

@@ -16,7 +16,7 @@ JS=r"""async(a)=>{const [z,k]=a,out={err:null};const w=ms=>new Promise(r=>setTim
       L.forEach(e=>{e.hp=0;try{kill(e)}catch(err){out.kerr=String(err)}});await w(50)}
     out.cleared=campCleared(C);out.alive=S.filter(s=>!s.dead).length;
     out.rt=S.map(s=>Math.round(((s.rt||0)-t0)/1000));out.rtRoam=(ROST.slots.find(s=>!s.camp&&s.dead)||{}).rt||null;
-    out.xpCalc=camp148XP(C);
+    out.xpCalc=hxp164(camp148XP(C));   // v164: the hero gets 25% less
     out.chests=CHESTS.length-ch0;const ch=C.ch148;out.chestNear=ch?+Math.hypot(ch.x-C.x,ch.z-C.z).toFixed(1):null;
     // a second clear message without a second chest
     const xp1=hero.xp,lv1=hero.lvl;camp148Clear(C);out.xpGain=hero.lvl>lv1?'levelled':hero.xp-xp1;out.chests2=CHESTS.length-ch0;

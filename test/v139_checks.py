@@ -29,7 +29,7 @@ CHK=r"""(()=>{const R={},ok=(k,v,why)=>{R[k]={ok:!!v,why:why===undefined?null:wh
   hero.lvl=1;hsDirty();const p1=heroPower();hero.lvl=50;hsDirty();atr139Auto();atr139Apply();const p50=heroPower();
   ok('power_small',p1>=60&&p1<=140&&p50<1000,[p1,p50]);ok('rec_small',recPower(1)<=150&&recPower(50)<=900&&recPower(50)%5===0,[recPower(1),recPower(50)]);
   // --- flat kill XP: no bonus or penalty for the level gap ---
-  hero.lvl=20;hero.xp=0;const xpAt=l=>{hero.xp=0;const e={c:{l,al:0,boss:0}};return gainXP(e)};const a=xpAt(10),b=xpAt(20),c=xpAt(30);hero.lvl=20;
+  hero.lvl=20;hero.xp=0;const hk=HXP164;HXP164=1;const xpAt=l=>{hero.xp=0;const e={c:{l,al:0,boss:0}};return gainXP(e)};const a=xpAt(10),b=xpAt(20),c=xpAt(30);HXP164=hk;hero.lvl=20;   /* v164: the hero's 25% cut off, so the ratio is not lost to rounding */
   const base=l=>8+12*l;ok('xp_flat',Math.abs(a/b-base(10)/base(20))<.03&&Math.abs(c/b-base(30)/base(20))<.03,[a,b,c]);
   // --- labels: power instead of level ranges ---
   const I=INSL[insG(0,0)];insArrive(I);for(let i=0;i<3;i++){window._vt=(window._vt||performance.now()+1e5)+16;loop(window._vt)}

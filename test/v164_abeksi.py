@@ -44,7 +44,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   for(let i=0;i<150;i++){T+=33;ab152WorldTick(1/30,T)}
   out.open=+Q.leaves[0].rotation.y.toFixed(2);out.open2=+Q.leaves[1].rotation.y.toFixed(2);out.beam=Q.beam.visible&&Q.beam.material.opacity>.3;out.sign=Q.sign.visible;out.lt=+Q.lt.intensity.toFixed(2);
   H.u=34;H.v=184.5;Q.k=1;S.ch164&&(S.ch164.t=0);ab152WorldTick(1/30,T+=33);out.chev=S.ch164?S.ch164.im.count:0;out.path=S.ch164?S.ch164.path.length:0;
-  out.arrow=!$('ab164ga').classList.contains('hide');out.arrowTxt=$('ab164ga').textContent;
+  out.arrUi=typeof uiOpen=='function'&&uiOpen();out.arrOn=AB157A.on;out.arrIn=ab152In();out.arrow=!$('ab164ga').classList.contains('hide');out.arrowTxt=$('ab164ga').textContent;
   out.trk=JSON.stringify(SP152.trk.abeksi(I));
   // ---- the gate leads out ----
   enemies.filter(e=>e.ab157&&!e.dead).forEach(e=>{try{removeE(e)}catch(_){}});
@@ -75,7 +75,7 @@ def s(pg):
     exp(not r['hidA'] or not r['hidHunt'],'a resident behind a wall does not (%s)'%r['hidHunt'])
     exp(r['open']>1.3 and r['open2']<-1.3 and r['beam'] and r['sign'] and r['lt']>1,'the bell opens the gate: doors, beacon, sign, light (%s %s %s %s %s)'%(r['open'],r['open2'],r['beam'],r['sign'],r['lt']))
     exp(r['chev']>=5 and r['path']>10,'chevrons on the street lead to the gate (%s on a %s-step path)'%(r['chev'],r['path']))
-    exp(r['arrow'] and 'City Gate' in r['arrowTxt'],'the screen-edge arrow points to the gate (%s)'%r['arrowTxt'])
+    exp(r['arrow'] and 'City Gate' in r['arrowTxt'],'the screen-edge arrow points to the gate (%s; ui open %s, alarm %s, in city %s)'%(r['arrowTxt'],r['arrUi'],r['arrOn'],r['arrIn']))
     exp('Escape through the city gate' in r['trk'] and 'steps' in r['trk'],'the tracker tells how far the gate is (%s)'%r['trk'][:200])
     exp(r['gateP'] and 'city gate' in r['gateP'],'F at the gate (%s)'%r['gateP'])
     exp(r['arrived']==6 and r['done'] and not r['alarmAfter'] and r['elAfter']==0 and r['arrowAfter'],'the gate leads to Hillside Crest II, the elites and the arrow are gone (%s %s %s %s)'%(r['arrived'],r['alarmAfter'],r['elAfter'],r['arrowAfter']))
