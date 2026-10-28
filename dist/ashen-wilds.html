@@ -3054,12 +3054,14 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
     cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}
 }
 // ---------------- XP / leveling ----------------
+// v164 (owner): the hero earns 25% less XP from everything (kills, quests, camp clears); companions keep their share
+var HXP164=.75;function hxp164(x){return Math.max(1,Math.round(x*HXP164))}
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1)*(typeof gw150X=='function'?gw150X(e):1);xp=Math.max(1,Math.round(xp));
-  if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
+  const hx=hxp164(xp);if(hero.lvl<MAXLV){hero.xp+=hx;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
-  return xp;
+  return hx;
 }
 function heroLevelUp(){
   hero.lvl++;hsDirty();hero.hp=Math.min(heroMax(),Math.max(0,hero.hp)+heroMax()*.5);hero.mp=Math.min(mpMax(),(hero.mp||0)+mpMax()*.5);
@@ -30965,12 +30967,12 @@ function chqGear132(I,sl){const lv=Math.max(1,Math.min(chqLv132(I),hero.lvl+2)),
 function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max(1,Math.min(5,PMAP[I.z].t||1)));const sp=L[Math.floor(Math.random()*L.length)];
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
-  if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
+  if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
-  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+xp+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
+  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
   say('🐭 <b>'+q.t+'</b> turned in: +'+xp+' XP, +'+g+' gold.')}
 
 // ---------------- progress ----------------
@@ -31131,7 +31133,7 @@ function chqRwInfo132(I,q){const minR=I.k>=2?2:1,lv=Math.max(1,Math.min(chqLv132
   return {n:'Mystery '+nm,sub:'<span style="color:'+R[1]+'">'+R[0]+' or better</span> · item level '+lv,col:R[1]}}
 function chqRwHTML132(I,q,s){const r=chqRwInfo132(I,q);
   return '<div class="cq132rw'+(s==2?' glow':'')+'">'+chqIco132(q.rw,r.col,s==3)+'<div class="cq132ri"><div class="cq132rl">'+(s==3?'Claimed':'Reward')+'</div><div class="cq132rn">'+r.n+'</div><div class="cq132rs">'+r.sub+'</div>'+
-    '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+chqXP132(I,q)+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chqGold132(I,q)+'</b> gold</span></div></div></div>'}
+    '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+hxp164(chqXP132(I,q))+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chqGold132(I,q)+'</b> gold</span></div></div></div>'}
 XR.chq132=()=>{const I=chqHere132();$('xwT').textContent='🐭 Cheddar';$('xwS').textContent='Burrow-walker'+(I?' · '+I.n:'');
   if(!I){$('xwB').innerHTML='<div class="cq132say">'+CHQ132_SAY.none+'</div>';$('xwF').innerHTML='';return}
   const L=chqList132(I),st=chqState132(I);
@@ -39997,7 +39999,7 @@ function camp148Lv(C){try{return Math.max(1,Math.min(MAXLV,zoneLv(C.x,C.z)))}cat
 function camp148T(C){try{return Math.max(1,Math.min(5,(PMAP[INSL[C.ig].z].t)||tierAt(C.x,C.z)))}catch(_){return 1}}
 function camp148XP(C){const L=camp148Lv(C),s=HS();return Math.max(1,Math.round((8+L*12)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(1+(s.xp||0))*CAMP148.xp))}
 function camp148Give(xp){
-  if(hero.lvl<MAXLV){hero.xp+=xp;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
+  if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 // the camp's creature families (from its garrison list)
 function camp148Fams(C){const L=[];try{(C.th&&C.th.mem||[]).forEach(m=>{const E=EN[m[0]];const f=(E&&E.fam)||famOf(m[0]);if(FAMD[f]&&!L.includes(f))L.push(f)})}catch(_){}return L.length?L:['Beast']}
@@ -40018,7 +40020,7 @@ function camp148Loot(C){const l=camp148Lv(C),T=camp148T(C),F=camp148Fams(C),beas
 function camp148Spot(C){for(let r=0;r<=6;r++)for(let a=0;a<12;a++){const x=Math.round(C.x+Math.cos(a/12*6.283)*r),z=Math.round(C.z+Math.sin(a/12*6.283)*r);
   if(!solid(x,z)&&!(typeof CBLK!='undefined'&&CBLK.has(z*W+x)))return [x,z];if(!r)break}return [C.x,C.z]}
 function camp148Clear(C){
-  const xp=camp148XP(C);camp148Give(xp);try{dn(pl.position,'+'+xp+' XP','#c4b5fd',0,1600)}catch(_){}
+  const xp=camp148XP(C);camp148Give(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600)}catch(_){}
   if(C.ch148&&CHESTS.includes(C.ch148)){say('⛺ '+(C.th?C.th.n:'Camp')+' cleared! +'+xp+' XP');return}
   const [x,z]=camp148Spot(C),loot=camp148Loot(C);
   const ch=makeChest(x,z,'camp chest',p=>{loot.forEach(q=>drop(q[0],q[1],p,q[2]));C.ch148=null;const i=CAMP148.chests.indexOf(ch);if(i>=0)CAMP148.chests.splice(i,1)});
@@ -40236,8 +40238,8 @@ chqReward132=function(I,q){const D=CHQ148_DF[q.df]||CHQ148_DF[1],xp=chq148XP(q),
   for(let n=0;n<D.n2;n++){if(q.rw=='egg'&&n==0){const eg=chq148Egg(q);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg});try{dex.egg.add(eg.sp)}catch(_){}}}
     else{const it=chq148Gear(q,n==0&&q.rw!='gear'&&q.rw!='egg'?q.rw:null);if(it)take({kind:'gear',data:it})}}
   if(D.egg&&q.rw!='egg'){const eg=chq148Egg(q);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}}
-  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+xp+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
-  say('🐭 <b>'+q.t+'</b> turned in: +'+xp+' XP, +'+g+' gold.')};
+  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
+  say('🐭 <b>'+q.t+'</b> turned in: +'+hxp164(xp)+' XP, +'+g+' gold.')};
 function chq148RwInfo(q){const D=CHQ148_DF[q.df]||CHQ148_DF[1],R=RAR[D.r]||['Uncommon','#6ee7b7'],lv=chq148ILv(q);
   const nm={weapon:'Weapon',chest:'Chest Armour',helm:'Helm',boots:'Boots',gear:'Gear'}[q.rw]||'Gear';
   if(q.rw=='egg')return {n:'Mystery Egg'+(D.n2>1?' + Gear':''),sub:'A '+PMAP[q.z].n+' companion egg',col:'#f0cc72',ic:'egg'};
@@ -40329,7 +40331,7 @@ XR.chq132=()=>{$('xwT').textContent='🐭 Cheddar’s Quest Board';const Z=chq14
       s==2?'<button class="pri cq132bt cq132go" data-cq8t="'+q.id+'">Claim reward</button>':'';
     const r=chq148RwInfo(q);
     const rw='<div class="cq132rw'+(s==2?' glow':'')+'">'+chqIco132(r.ic,r.col,s==3)+'<div class="cq132ri"><div class="cq132rl">'+(s==3?'Claimed':'Reward')+'</div><div class="cq132rn">'+r.n+'</div><div class="cq132rs">'+r.sub+'</div>'+
-      '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+chq148XP(q)+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chq148Gold(q)+'</b> gold</span></div></div></div>';
+      '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+hxp164(chq148XP(q))+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chq148Gold(q)+'</b> gold</span></div></div></div>';
     b+='<div class="cq132 s'+s+' df'+(q.df||1)+(lock?' lk8':'')+'"><div class="cq132h"><b>'+q.t+'</b><span class="cq148d" title="'+D.n+'">'+D.s+' '+D.n+'</span><span class="cq132tag">'+tag+'</span></div><div class="cq132d">'+q.d+'</div>'+obj+rw+btn+'</div>'});
   $('xwB').innerHTML=b+'</div>';
   $('xwF').innerHTML=(zs.av>1?'<button class="pri" data-cq8all="'+z+'">Accept all in '+PMAP[z].n+'</button> ':'')+'<span class="mut dtl">New zones join the board as their portals open. Turn finished quests in here.</span>'};
@@ -48638,4 +48640,465 @@ gripEdge=function(h,e,dt){
           if(e.pa163!==A){e.pa163=A;e.pl163=edge163Target(h,e,A);if(e.pl163!=null&&fromCarry)e.psi=e.pl163}
           else if(dt>0&&dt<.5&&!edge163Win(A)&&e.pl163!=null)edge163Step(e,e.pl163,dt,EDGE163.wind)})}}}catch(_){}
   return f.call(this,h,now,el,att)}}
+// ================= v164 Abeksi (owner): a real fight, eyes that hunt, elite guards at the bell, a gate you can't miss =================
+// Owner: "abeksi city residents are too easy when they become aggressive. Also make any abeksi path towards you and attack if you're in
+// their line of sight. When the bell tolls, it summons 2 elite guards each time instead." and "make the exit gate in the abeksi city
+// much more obvious that it's the escape when you choose to kill your way to the exit, and make it more detailed."
+//  * Tougher (ab157Rouse wrapper): guards ×AB164.g (health, attack), townsfolk no longer half-strength (AB157K.civ 1 / .85, was .55 / .6),
+//    every city fighter moves ×AB164.spd (walkM wrapper, m.userData.spk164) and attacks AB164.cdK faster (aiLod wrapper), up to
+//    AB157K.cap (12, was 10) fighting at once.
+//  * They path (eTarget wrapper, ab164Route): a city fighter that cannot see its target walks down the street flow field (AB158.fl,
+//    3193) towards it, AB164.look steps ahead at a time, instead of walking into a wall; with the target in sight it goes straight in.
+//  * Eyes that hunt (ab164Sight, on the alarm's host every 0.25 s): while the city is roused, any resident on the street who has a
+//    clear line of sight (ab152LOS) to a hero within AB164.see tiles joins the hunt (runs the flow field, 3193's ab158Step, and
+//    turns into an enemy within AB158.eng steps). Roof folk stay where they are.
+//  * The bell (ab158Call redefined): each toll (the first and every AB158.bell.re s after) summons AB164.elN elite guards instead of
+//    calling residents: real enemies (elite, a level above the city, a crested helm), placed out of every hero's sight
+//    AB164.elR street steps away, hunting at once (e.hunt, e.ab164e). At most AB164.elMax alive. They leave when the city calms.
+//  * The gate (ab164GateBuild): the old plank slab (AB152KB.gate) is replaced by a gatehouse porch on the Gate Yard's tower: two
+//    carved pylons with serpent reliefs and rearing jade serpents with braziers on top, a stone arch with a serpent-skull keystone,
+//    a battlement walk (the tower lamp's guard stands on it now), crimson banners, a mosaic in the porch floor and two iron-bound
+//    doors. The plan (ab164Plan) gives the pylons footprints and moves four crates out of the porch. When the bell tolls the doors
+//    swing open on a lit passage and the way out is marked everywhere: a pillar of light over the gate (seen over the roofs), a
+//    floating "ESCAPE" sign, braziers flaring, glowing chevrons on the street along the shortest way there (AB164.G.dg, a flow
+//    field from the porch), an arrow at the screen's edge with the distance (#ab164ga), a mark on the minimap and the tracker line.
+//    Everything is local and deterministic (co-op partners see the same gate).
+var AB164={g:{hp:1.5,atk:1.3},spd:1.85,cdK:.35,look:3,see:28,elN:2,elLv:1,elHp:1.15,elMax:8,elR:[16,30],el:[],tS:0,G:null,v:164};
+AB157K.cap=12;AB157K.civ.hp=1;AB157K.civ.atk=.85;
+// ---------------- tougher, faster ----------------
+function ab164Buff(e,k){const c=e.c;let r=1;try{r=Math.max(.01,Math.min(1,c.h/M(c)))}catch(_){}c.st.hp*=k.hp;c.st.pa*=k.atk;c.st.ma*=k.atk;try{c.h=Math.max(1,Math.round(M(c)*r))}catch(_){c.h=Math.round(c.st.hp*r)}}
+function ab164Fighter(e){e.ab164f=1;try{e.m.userData.spk164=AB164.spd}catch(_){}}
+{const f=ab157Rouse;ab157Rouse=function(a){const e=f.apply(this,arguments);if(e){try{if(e.ab157&&e.ab157.g)ab164Buff(e,AB164.g)}catch(_){}ab164Fighter(e)}return e}}
+{const f=walkM;walkM=function(o,dx,dz){const k=o&&o.userData&&o.userData.spk164;if(k&&AB157A.on){dx*=k;dz*=k}return f.call(this,o,dx,dz)}}
+{const f=aiLod;aiLod=function(e,dpl,dt){const r=f.apply(this,arguments);if(e&&e.ab164f&&r>0&&!e.atk&&AB157A.on)e.cd-=r*AB164.cdK;return r}}
+// ---------------- pathing: down the street flow when the target is out of sight ----------------
+function ab164Down(G,D,x,y){let best=D[y*G.W+x],bx=x,by=y;
+  for(const [dx,dy] of AB158N8){const nx=x+dx,ny=y+dy;if(!ab158Ok(G,nx,ny))continue;if(dx&&dy&&(!ab158Ok(G,x+dx,y)||!ab158Ok(G,x,y+dy)))continue;
+    const d=D[ny*G.W+nx]+(dx&&dy?.45:0);if(d<best){best=d;bx=nx;by=ny}}return [bx,by]}
+function ab164Route(e,tg){if(!AB157A.on||!AB152.S||!AB158.fl||!tg||!tg.position||!ab152In())return tg;const S=AB152.S,G=S.G,I=S.I,D=AB158.fl,P=e.m.position;
+  const u=P.x-I.x0,v=P.z-I.y0,tu=tg.position.x-I.x0,tv=tg.position.z-I.y0;if(Math.hypot(tu-u,tv-v)<2.2||ab152LOS(G,u,v,tu,tv,false))return tg;
+  let x=Math.round(u),y=Math.round(v);if(!ab158Ok(G,x,y)){const o=ab157Open(S,u,v);x=Math.round(o[0]);y=Math.round(o[1]);if(!ab158Ok(G,x,y))return tg}
+  if(D[y*G.W+x]>=65535)return tg;
+  for(let s=0;s<AB164.look;s++){const [nx,ny]=ab164Down(G,D,x,y);if(nx===x&&ny===y)break;x=nx;y=ny}
+  const W=e.ab164w||(e.ab164w={position:new THREE.Vector3(),ab164w:1});W.position.set(I.x0+x,P.y,I.y0+y);e.cd=Math.max(e.cd,.25);return W}
+{const f=eTarget;eTarget=function(e,m,dpl){const tg=f.apply(this,arguments);if(!e||!e.ab164f||e.dead||e.mir)return tg;try{return ab164Route(e,tg)}catch(_){return tg}}}
+// ---------------- eyes that hunt ----------------
+function ab164Sight(now){if(now-AB164.tS<250)return 0;AB164.tS=now;const S=AB152.S,G=S.G,hs=ab158Heroes();let n=0;
+  for(const a of ab157Res()){if(a.dead||a.e||a.hunt||a.net1||(a.o.lift||0)>=1)continue;
+    for(const [hu,hv] of hs){if(Math.hypot(hu-a.u,hv-a.v)>AB164.see||!ab152LOS(G,a.u,a.v,hu,hv,false))continue;a.hunt=1;a.halt=1;a.st='look';a.sus=0;n++;break}}
+  return n}
+// ---------------- the bell: two elite guards each toll ----------------
+function ab164EliteLook(e){try{const b=e.m.h&&e.m.h.bones&&e.m.h.bones.head;if(!b)return;const M0=ab164Mats(),g=new THREE.Group();g.name='ab164crest';
+    const crest=new THREE.Mesh(svG('ab164crest',()=>{const s=new THREE.Shape();s.moveTo(0,0);s.quadraticCurveTo(.05,.42,-.34,.5);s.quadraticCurveTo(-.12,.3,-.2,0);s.closePath();return new THREE.ExtrudeGeometry(s,{depth:.04,bevelEnabled:false}).translate(.08,0,-.02)}),M0.gold);
+    crest.rotation.y=Math.PI/2;crest.position.set(0,.16,0);g.add(crest);
+    const ring=new THREE.Mesh(svG('ab164crown',()=>new THREE.TorusGeometry(.17,.035,6,14).rotateX(Math.PI/2)),M0.gold);ring.position.y=.1;g.add(ring);
+    [-1,1].forEach(s=>{const h=new THREE.Mesh(svG('ab164horn',()=>new THREE.ConeGeometry(.04,.26,6)),M0.gold);h.position.set(s*.13,.2,-.04);h.rotation.set(-.5,0,-s*.5);g.add(h)});
+    g.scale.setScalar(1/Math.max(.2,e.m.bs||1));b.add(g)}catch(_){}}
+function ab164Elites(n){if(!ab157Lead()||!AB152.S||!AB158.fl)return 0;const S=AB152.S,G=S.G,I=S.I,D=AB158.fl;
+  AB164.el=AB164.el.filter(e=>!e.dead&&enemies.indexOf(e)>=0);n=Math.min(n,Math.max(0,AB164.elMax-AB164.el.length));if(!n)return 0;
+  const hs=ab158Heroes(),C=[],[r0,r1]=AB164.elR,mid=(r0+r1)/2;
+  for(let y=0;y<G.H;y++)for(let x=0;x<G.W;x++){const d=D[y*G.W+x];if(d<r0||d>r1||!ab158Ok(G,x,y))continue;let near=1e9,seen=0;
+    for(const [hu,hv] of hs){const s=Math.hypot(hu-x,hv-y);near=Math.min(near,s);if(s<AB164.see+4&&ab152LOS(G,x,y,hu,hv,false)){seen=1;break}}
+    if(!seen&&near<26)C.push([Math.abs(d-mid)+Math.random()*4,x,y])}
+  C.sort((a,b)=>a[0]-b[0]);const out=[];for(const [,x,y] of C){if(out.length>=n)break;if(out.some(q=>Math.hypot(q[0]-x,q[1]-y)<4))continue;out.push([x,y])}
+  const lv=(INSL[30]&&INSL[30].lv)||I.lv||[10,11];let k=0;
+  out.forEach(([x,y])=>{let e=null;try{e=spawnEnemy('nagaw',I.x0+x,I.y0+y,Math.max(1,Math.min(MAXLV,lv[1]+AB164.elLv)),{agg:1,al:true})}catch(err){console.error('v164 elite',err)}if(!e)return;
+    e.hunt=1;e.agg=1;e.ab157={ri:-1,g:true,el:1};e.ab164e=1;ab164Buff(e,{hp:AB164.elHp,atk:AB164.g.atk});ab164Fighter(e);
+    e.c.n=(e.trait?e.trait+' ':'')+'Abeksi Elite Guard';ab164EliteLook(e);AB164.el.push(e);k++});
+  if(k)say('🔔 The bell tolls · <b>'+(k==1?'an Abeksi elite guard answers':k+' Abeksi elite guards answer')+'</b> its call and hunt you');return 0}
+ab158Call=function(n,r){try{return ab164Elites(AB164.elN)}catch(e){console.error('v164 bell',e);return 0}};
+// an elite left far behind (out of the monsters' 30-tile wake range) keeps running the streets towards the heroes
+function ab164ElTick(dt){if(!AB158.fl)return;const S=AB152.S,G=S.G,I=S.I,D=AB158.fl;AB164.el=AB164.el.filter(e=>!e.dead&&enemies.indexOf(e)>=0);
+  for(const e of AB164.el){const P=e.m.position;let far=1e9;for(const [hu,hv] of ab158Heroes())far=Math.min(far,Math.hypot(hu+I.x0-P.x,hv+I.y0-P.z));if(far<28)continue;
+    let x=Math.round(P.x-I.x0),y=Math.round(P.z-I.y0);if(!ab158Ok(G,x,y))continue;const [nx,ny]=ab164Down(G,D,x,y);if(nx===x&&ny===y)continue;
+    const tx=I.x0+nx,tz=I.y0+ny,du=tx-P.x,dv=tz-P.z,L=Math.hypot(du,dv)||1,st=Math.min(L,AB158.spd.g*dt);P.x+=du/L*st;P.z+=dv/L*st;P.y=GH(P.x,P.z);e.m.rotation.y=Math.atan2(du,dv)}}
+{const f=ab157AlarmTick;ab157AlarmTick=function(dt,now){const r=f.apply(this,arguments);try{if(ab157Lead()){ab164Sight(now);ab164ElTick(dt)}}catch(e){if(!AB164.err++)console.error('v164 hunt',e)}return r}}
+AB164.err=0;
+{const f=ab157Calm;ab157Calm=function(){const r=f.apply(this,arguments);try{AB164.el.forEach(e=>{if(!e.dead&&enemies.indexOf(e)>=0)removeE(e)});AB164.el=[]}catch(_){}return r}}
+
+// ================= the gate =================
+// plan: the pylons' footprints (2x3 tiles each side of the 6-wide porch), four crates moved out of the porch, the tower lamp's guard
+// up on the new battlement walk
+AB152_K.pylon=[2,3,2,1];
+AB152KB.gate=undefined;
+function ab164Plan(P){if(P.v164)return P;P.v164=1;const mv={'70,186':[66,185],'80,186':[84,185],'69,187':[67,186],'81,187':[83,186]};
+  P.C.forEach(c=>{const k=c[1]+','+c[2];if(mv[k]&&(c[0]=='cstack'||c[0]=='crate'||c[0]=='barrel')){c[1]=mv[k][0];c[2]=mv[k][1]}});
+  P.C.push(['pylon',70.5,186,0],['pylon',78.5,186,0]);
+  const g=P.N.find(n=>n[0]=='f3');if(g){g[3]=74.5;g[4]=185.1;g[6]=Object.assign({},g[6],{lift:8.2})}
+  return P}
+{const f=ab152Plan;ab152Plan=function(){const P=f.apply(this,arguments);try{if(P&&!P.v164)ab164Plan(P)}catch(e){console.error('v164 plan',e)}return P}}
+var AB164GATE={u:74.5,v:187.5,porch:[[72,77],[185,186]]};
+function ab164Mats(){return AB164.M||(AB164.M={
+  stone:new THREE.MeshStandardMaterial({color:0xa08c6c,roughness:.92,flatShading:true}),stoneD:new THREE.MeshStandardMaterial({color:0x6a5a46,roughness:.95,flatShading:true}),
+  stoneL:new THREE.MeshStandardMaterial({color:0xc4b090,roughness:.88,flatShading:true}),dark:new THREE.MeshStandardMaterial({color:0x241a12,roughness:1,flatShading:true}),vault:new THREE.MeshStandardMaterial({color:0x5a4c3c,roughness:.95,flatShading:true,side:THREE.DoubleSide}),
+  wood:new THREE.MeshStandardMaterial({color:0x4e3420,roughness:.85,flatShading:true}),woodD:new THREE.MeshStandardMaterial({color:0x2e1e12,roughness:.9,flatShading:true}),
+  iron:new THREE.MeshStandardMaterial({color:0x2c2e33,roughness:.42,metalness:.65,flatShading:true}),bronze:new THREE.MeshStandardMaterial({color:0x9a7232,roughness:.35,metalness:.75,flatShading:true}),
+  gold:new THREE.MeshStandardMaterial({color:0xd8a844,roughness:.28,metalness:.85,emissive:0x2a1800,flatShading:true}),
+  jade:new THREE.MeshStandardMaterial({color:0x2c8e68,roughness:.32,metalness:.22,emissive:0x06221a,flatShading:false}),
+  jadeD:new THREE.MeshStandardMaterial({color:0x1c5a44,roughness:.4,metalness:.2,emissive:0x041610,flatShading:false}),
+  eye:new THREE.MeshBasicMaterial({color:0xffb040}),tongue:new THREE.MeshStandardMaterial({color:0x8a1a22,roughness:.5,flatShading:true}),flame:new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending}),
+  flameC:new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending}),
+  coal:new THREE.MeshStandardMaterial({color:0x3a1206,emissive:0xff4a10,emissiveIntensity:.8,roughness:1,flatShading:true})})}
+// a swept tube along points with a radius per point (serpents: body, reliefs), smooth normals
+function ab164Tube(pts,rad,seg,rs){const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],p[1],p[2]))),F=c.computeFrenetFrames(seg,false),pos=[],idx=[],n=rs||10;
+  for(let i=0;i<=seg;i++){const t=i/seg,P=c.getPointAt(t),N=F.normals[i],B=F.binormals[i],r=typeof rad=='function'?rad(t):rad;
+    for(let j=0;j<=n;j++){const a=j/n*Math.PI*2,cs=Math.cos(a),sn=Math.sin(a);pos.push(P.x+r*(cs*N.x+sn*B.x),P.y+r*(cs*N.y+sn*B.y),P.z+r*(cs*N.z+sn*B.z))}}
+  for(let i=0;i<seg;i++)for(let j=0;j<n;j++){const a=i*(n+1)+j,b=a+n+1;idx.push(a,b,a+1,b,b+1,a+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g}
+// a serpent's head: snout, brow ridges, open jaw, fangs, a flared hood; eyes in the eye material (they glow red in the alarm)
+function ab164HeadG(){if(AB164.HG)return AB164.HG;const G={};
+  G.skull=svLoftZ([[-.16,.12,.1,0,.0],[-.05,.19,.13,0,.02],[.08,.23,.15,0,.035],[.2,.215,.13,0,.035],[.32,.17,.1,0,.025],[.44,.12,.072,0,.012],[.54,.07,.048,0,0],[.61,.028,.028,0,-.005]],10);
+  G.jaw=svLoftZ([[-.02,.15,.04,0,0],[.15,.15,.04,0,0],[.32,.115,.034,0,0],[.46,.07,.026,0,0],[.54,.03,.018,0,0]],8).rotateX(.4).translate(0,-.085,.02);
+  const h=new THREE.Shape();h.moveTo(0,-.42);h.bezierCurveTo(.34,-.36,.5,-.02,.42,.22);h.bezierCurveTo(.36,.36,.16,.4,0,.3);h.bezierCurveTo(-.16,.4,-.36,.36,-.42,.22);h.bezierCurveTo(-.5,-.02,-.34,-.36,0,-.42);
+  G.hood=new THREE.ExtrudeGeometry(h,{depth:.035,bevelEnabled:true,bevelSize:.012,bevelThickness:.012,bevelSegments:1,curveSegments:10}).translate(0,-.12,-.2);
+  {const P=G.hood.attributes.position;for(let i=0;i<P.count;i++){const x=P.getX(i);P.setZ(i,P.getZ(i)-x*x*.45)}G.hood.computeVertexNormals()}
+  G.brow=[-1,1].map(sd=>new THREE.BoxGeometry(.07,.035,.2).rotateY(-sd*.22).rotateZ(sd*.25).translate(sd*.12,.15,.2));
+  G.eye=[-1,1].map(sd=>new THREE.SphereGeometry(.036,8,6).scale(1,.8,1.25).translate(sd*.135,.095,.29));
+  G.fang=[-1,1].map(sd=>new THREE.ConeGeometry(.018,.13,6).rotateX(Math.PI).translate(sd*.072,-.07,.43));
+  G.scale=[];for(let i=0;i<9;i++){const zz=-.05+i*.065;G.scale.push(new THREE.BoxGeometry(.09-i*.004,.012,.06).translate(0,.135+.02*Math.sin(i*.5)-i*.009,zz))}
+  G.tongue=new THREE.BoxGeometry(.016,.008,.2).translate(0,-.06,.66);G.fork=[-1,1].map(sd=>new THREE.BoxGeometry(.012,.008,.08).rotateY(sd*.45).translate(sd*.02,-.06,.78));
+  return AB164.HG=G}
+// a serpent's head: a lofted skull, an open lower jaw, fangs, brow ridges, crown scales, a forked tongue and a flared hood behind;
+// eyes in the eye material (they glow red in the alarm); built along +z and turned ry
+function ab164Head(k,M,x,y,z,ry,s,mat){const G=ab164HeadG(),put=(g,m)=>k.m(g,m,x,y,z,0,ry,0,s,s,s);
+  put(G.skull,mat);put(G.jaw,mat);put(G.hood,mat);G.brow.forEach(g=>put(g,mat));G.eye.forEach(g=>put(g,M.eye));G.fang.forEach(g=>put(g,M.stoneL));
+  G.scale.forEach(g=>put(g,mat));put(G.tongue,M.tongue);G.fork.forEach(g=>put(g,M.tongue))}
+// a rearing serpent coiled on a pylon top (relative to the pylon top centre), facing the yard (-z)
+function ab164Statue(k,M,x,y,z,s){const C=[];for(let i=0;i<=26;i++){const t=i/26,a=t*Math.PI*4.2,r=(.85-.25*t)*s;C.push([x+Math.cos(a)*r,y+(.12+t*.55)*s,z+Math.sin(a)*r])}
+  const top=C[C.length-1];[[x+.15*s,y+1.2*s,z-.05*s],[x+.05*s,y+1.95*s,z-.3*s],[x,y+2.4*s,z-.55*s]].forEach(p=>C.push(p));
+  k.m(ab164Tube(C,t=>(.24-.13*t)*s*(t>.97?.9:1),110,12),M.jade,0,0,0);
+  k.m(ab164Tube([[x+Math.cos(0)*.85*s,y+.12*s,z],[x+.9*s,y+.06*s,z+.4*s],[x+.55*s,y+.04*s,z+.85*s],[x+.1*s,y+.03*s,z+.95*s]],t=>(.22-.18*t)*s,24,8),M.jade,0,0,0);   // the tail tip curling round the base
+  ab164Head(k,M,x,y+2.5*s,z-.62*s,Math.PI,s*1.15,M.jade);
+  k.m(svG('ab164base',()=>new THREE.CylinderGeometry(1,1.08,1,10)),M.stoneL,x,y-.1*s,z,0,0,0,1.15*s,.25*s,1.15*s)}
+function ab164Flame(g,M,x,y,z,s,list){const f=new THREE.Group();f.position.set(x,y,z);
+  const o=new THREE.Mesh(svG('ab164fl',()=>new THREE.ConeGeometry(.28,1,8,1,true).translate(0,.5,0)),M.flame);o.scale.set(s,s,s);f.add(o);
+  const c=new THREE.Mesh(svG('ab164flc',()=>new THREE.ConeGeometry(.15,.62,7,1,true).translate(0,.31,0)),M.flameC);c.scale.set(s,s,s);f.add(c);
+  f.userData.psNo=1;g.add(f);list.push({m:f,s,ph:Math.random()*6});return f}
+function ab164Brazier(k,M,x,y,z,s){k.m(svG('ab164bz',()=>new THREE.CylinderGeometry(.55,.3,.45,10,1,true)),M.bronze,x,y+.22*s,z,0,0,0,s,s,s);
+  k.m(svG('ab164bzr',()=>new THREE.TorusGeometry(.55,.05,5,14).rotateX(Math.PI/2)),M.bronze,x,y+.45*s,z,0,0,0,s,s,s);
+  k.m(svG('ab164coal',()=>new THREE.CylinderGeometry(.5,.45,.12,10)),M.coal,x,y+.38*s,z,0,0,0,s,s,s);
+  [0,1,2].forEach(i=>{const a=i/3*Math.PI*2;k.m(svG('ab164bzl',()=>new THREE.CylinderGeometry(.04,.04,1,5)),M.iron,x+Math.cos(a)*.3*s,y-.1*s,z+Math.sin(a)*.3*s,Math.sin(a)*.25,0,-Math.cos(a)*.25,s,.5*s,s)})}
+function ab164Canvas(w,h,f){const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+// the passage seen through the open doors: arches receding to a bright way out
+function ab164TunnelTex(){return ab164Canvas(512,384,(g,w,h)=>{g.fillStyle='#120c08';g.fillRect(0,0,w,h);const cx=w/2,cy=h*.6;
+  for(let i=0;i<9;i++){const k=1-i/9,ww=w*.5*k*k+30,hh=h*.62*k*k+26;g.fillStyle='rgb('+(30+i*6)+','+(22+i*5)+','+(16+i*4)+')';g.beginPath();g.moveTo(cx-ww,cy+hh*.6);g.lineTo(cx-ww,cy-hh*.35);
+    g.arc(cx,cy-hh*.35,ww,Math.PI,0);g.lineTo(cx+ww,cy+hh*.6);g.closePath();g.fill();g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=3*k+1;g.stroke()}
+  const L=g.createRadialGradient(cx,cy-6,4,cx,cy-6,110);L.addColorStop(0,'rgba(255,246,214,1)');L.addColorStop(.35,'rgba(255,214,150,.85)');L.addColorStop(1,'rgba(255,170,90,0)');
+  g.fillStyle=L;g.fillRect(0,0,w,h);g.fillStyle='rgba(255,236,190,.9)';g.beginPath();g.moveTo(cx-26,cy+24);g.lineTo(cx-26,cy-14);g.arc(cx,cy-14,26,Math.PI,0);g.lineTo(cx+26,cy+24);g.closePath();g.fill();
+  const F=g.createLinearGradient(0,cy,0,h);F.addColorStop(0,'rgba(255,200,130,.35)');F.addColorStop(1,'rgba(255,200,130,0)');g.fillStyle=F;g.beginPath();g.moveTo(cx-26,cy+24);g.lineTo(cx+26,cy+24);g.lineTo(w*.9,h);g.lineTo(w*.1,h);g.closePath();g.fill()})}
+function ab164BannerTex(){return ab164Canvas(128,512,(g,w,h)=>{const G=g.createLinearGradient(0,0,w,0);G.addColorStop(0,'#4a0c0a');G.addColorStop(.5,'#8a1a16');G.addColorStop(1,'#4a0c0a');g.fillStyle=G;g.fillRect(0,0,w,h);
+  g.strokeStyle='#d8a844';g.lineWidth=6;g.strokeRect(8,8,w-16,h-60);g.lineWidth=2;g.strokeRect(16,16,w-32,h-76);
+  g.fillStyle='#4a0c0a';g.beginPath();g.moveTo(0,h-52);g.lineTo(w/2,h);g.lineTo(w,h-52);g.lineTo(w,h);g.lineTo(0,h);g.closePath();g.globalCompositeOperation='destination-out';g.fill();g.globalCompositeOperation='source-over';
+  g.strokeStyle='#e8b850';g.lineWidth=7;g.lineCap='round';g.beginPath();for(let i=0;i<=60;i++){const t=i/60,a=t*Math.PI*3.4,r=36*(1-t*.7);const x=w/2+Math.cos(a)*r,y=200+Math.sin(a)*r*.9-t*80;i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();
+  g.fillStyle='#e8b850';g.beginPath();g.ellipse(w/2,108,13,18,0,0,Math.PI*2);g.fill();g.fillStyle='#8a1a16';g.fillRect(w/2-6,100,3,4);g.fillRect(w/2+3,100,3,4);
+  g.fillStyle='#d8a844';for(let i=0;i<5;i++)g.fillRect(w/2-30+i*15,300+(i%2)*6,8,8)})}
+function ab164MosaicTex(){return ab164Canvas(256,256,(g,w,h)=>{const c=w/2;g.fillStyle='#6a5a46';g.beginPath();g.arc(c,c,c-2,0,Math.PI*2);g.fill();
+  for(let r=0;r<6;r++){const R0=c-8-r*18;for(let i=0;i<48;i++){const a=i/48*Math.PI*2;g.fillStyle=['#8a7a5a','#a08c6a','#7a6a4e'][(i+r)%3];g.fillRect(c+Math.cos(a)*R0-3,c+Math.sin(a)*R0-3,6,6)}}
+  g.strokeStyle='#2c8e68';g.lineWidth=12;g.beginPath();g.arc(c,c,c-34,.25,Math.PI*2-.1);g.stroke();g.fillStyle='#2c8e68';g.beginPath();g.ellipse(c+(c-34),c-14,12,18,.3,0,Math.PI*2);g.fill();
+  g.strokeStyle='#d8a844';g.lineWidth=3;g.beginPath();g.arc(c,c,c-6,0,Math.PI*2);g.stroke();g.beginPath();g.arc(c,c,40,0,Math.PI*2);g.stroke();
+  g.fillStyle='#d8a844';g.beginPath();for(let i=0;i<8;i++){const a=i/8*Math.PI*2;g.lineTo(c+Math.cos(a)*30,c+Math.sin(a)*30);g.lineTo(c+Math.cos(a+.39)*12,c+Math.sin(a+.39)*12)}g.closePath();g.fill()})}
+function ab164SignTex(){return ab164Canvas(256,256,(g,w,h)=>{const c=w/2;const R=g.createRadialGradient(c,c-8,10,c,c-8,120);R.addColorStop(0,'rgba(255,220,140,.95)');R.addColorStop(.55,'rgba(255,140,50,.55)');R.addColorStop(1,'rgba(255,90,30,0)');
+  g.fillStyle=R;g.fillRect(0,0,w,h);g.fillStyle='#2a0e06';g.strokeStyle='#fff2c8';g.lineWidth=6;g.beginPath();g.moveTo(c-46,c+40);g.lineTo(c-46,c-14);g.arc(c,c-14,46,Math.PI,0);g.lineTo(c+46,c+40);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#fff2c8';g.beginPath();g.moveTo(c,c-44);g.lineTo(c+26,c-8);g.lineTo(c+10,c-8);g.lineTo(c+10,c+30);g.lineTo(c-10,c+30);g.lineTo(c-10,c-8);g.lineTo(c-26,c-8);g.closePath();g.fill();
+  g.font='900 34px system-ui,sans-serif';g.textAlign='center';g.lineWidth=7;g.strokeStyle='#2a0e06';g.strokeText('ESCAPE',c,c+84);g.fillStyle='#ffe6a8';g.fillText('ESCAPE',c,c+84)})}
+function ab164BeamTex(){return ab164Canvas(16,256,(g,w,h)=>{const G=g.createLinearGradient(0,h,0,0);G.addColorStop(0,'rgba(255,220,150,1)');G.addColorStop(.12,'rgba(255,170,80,.75)');G.addColorStop(.5,'rgba(255,110,50,.25)');G.addColorStop(1,'rgba(255,80,40,0)');g.fillStyle=G;g.fillRect(0,0,w,h)})}
+// one door leaf, hinged at its outer edge (sd -1 left, 1 right); built along +x (left) / -x (right) from the hinge
+function ab164Leaf(M,sd){const k=gb151Kit(),W=2.95,H=4.3,dir=-sd,rn=svRng(1640+sd*7),bx=svG('ab164box',()=>new THREE.BoxGeometry(1,1,1));
+  for(let i=0;i<5;i++){const w=W/5;k.m(bx,i%2?M.wood:M.woodD,dir*(w*(i+.5)),H/2,0,0,0,0,w-.03,H,.2+rn()*.03)}
+  [.55,1.6,2.7,3.75].forEach(y=>{k.m(bx,M.iron,dir*W/2,y,-.13,0,0,0,W-.06,.16,.05);for(let i=0;i<9;i++)k.m(svG('ab164riv',()=>new THREE.SphereGeometry(1,6,4)),M.iron,dir*(.18+i*(W-.36)/8),y,-.16,0,0,0,.035,.035,.03)});
+  k.m(bx,M.iron,dir*.12,H/2,-.12,0,0,0,.14,H-.1,.05);   // the hinge strap
+  [.9,2.2,3.5].forEach(y=>k.m(svG('ab164pin',()=>new THREE.CylinderGeometry(1,1,1,8)),M.iron,dir*.02,y,0,0,0,0,.07,.36,.07));
+  // the half of the great serpent seal on the meeting edge and an iron ring knocker held in a bronze serpent's jaws
+  k.m(svG('ab164seal'+sd,()=>{const h=new THREE.Shape();h.moveTo(0,-.85);h.absarc(0,0,.85,sd<0?Math.PI/2:-Math.PI/2,sd<0?Math.PI*1.5:Math.PI/2,false);h.closePath();return new THREE.ExtrudeGeometry(h,{depth:.06,bevelEnabled:false,curveSegments:16})}),M.bronze,dir*W,2.25,-.2);
+  k.m(svG('ab164sealr',()=>new THREE.TorusGeometry(.62,.045,5,20,Math.PI)),M.gold,dir*W,2.25,-.21,0,0,sd<0?Math.PI/2:-Math.PI/2);
+  k.m(svG('ab164knk',()=>new THREE.TorusGeometry(.2,.035,6,16)),M.iron,dir*(W-.75),1.35,-.2,0,0,0);ab164Head(k,M,dir*(W-.75),1.62,-.2,Math.PI,.42,M.bronze);
+  for(let i=0;i<14;i++)k.m(svG('ab164stud',()=>new THREE.ConeGeometry(1,1,4)),M.iron,dir*(.4+(i%7)*.37),i<7?.95:3.2,-.14,-Math.PI/2,0,0,.05,.07,.05);
+  return k.done()}
+function ab164GateBuild(S){if(S.g164)return S.g164;const M=ab164Mats(),I=S.I,X=I.x0+AB164GATE.u,Z=I.y0+AB164GATE.v,Y=GH(X,Z-2),k=gb151Kit(),bx=svG('ab164box',()=>new THREE.BoxGeometry(1,1,1)),rn=svRng(1640);
+  const root=new THREE.Group();root.name='ab164gate';root.position.set(X,Y,Z);root.userData.psNo=1;S.root.add(root);const fl=[];
+  // the pylons: plinth, shaft with an inset panel, a serpent relief climbing it, bronze bands, cornice, merlons, a rearing serpent and a brazier
+  [-1,1].forEach(s=>{const x=s*4;
+    k.m(bx,M.stoneD,x,.55,-1.5,0,0,0,2.4,1.1,3.3);k.m(bx,M.stoneL,x,1.16,-1.5,0,0,0,2.3,.14,3.2);
+    k.m(bx,M.stone,x,4.6,-1.45,0,0,0,2,7,2.9);
+    k.m(bx,M.stoneD,x,4.4,-2.92,0,0,0,1.3,5.2,.1);k.m(bx,M.stoneL,x,7.05,-2.95,0,0,0,1.55,.16,.14);k.m(bx,M.stoneL,x,1.75,-2.95,0,0,0,1.55,.16,.14);
+    for(let i=0;i<6;i++)k.m(bx,M.stoneD,x+s*.99,1.6+i*1.05,-1.45,0,0,0,.04,.05,2.9);   // coursing lines on the outer face
+    const rel=[];for(let i=0;i<=16;i++){const t=i/16;rel.push([x+Math.sin(t*Math.PI*3)*.38,2.1+t*4.4,-3.0])}k.m(ab164Tube(rel,t=>.07+.08*Math.sin(Math.PI*Math.min(1,t*1.15)),70,8),M.jadeD,0,0,0);
+    ab164Head(k,M,x,6.65,-3.02,Math.PI,.5,M.jadeD);
+    [3.1,5.6].forEach(y=>k.m(bx,M.bronze,x,y,-2.97,0,0,0,1.38,.1,.06));
+    k.m(bx,M.stoneL,x,8.25,-1.45,0,0,0,2.35,.4,3.25);k.m(bx,M.stone,x,8.75,-1.45,0,0,0,2.1,.6,3.0);
+    for(let i=0;i<3;i++){k.m(bx,M.stoneL,x-.75+i*.75,9.3,-2.85,0,0,0,.42,.5,.28);k.m(bx,M.stoneL,x-.75+i*.75,9.3,-.05,0,0,0,.42,.5,.28)}
+    ab164Statue(k,M,x,9.05,-1.3,.95);ab164Brazier(k,M,x+s*-.55,9.05,-2.55,.55);ab164Flame(root,M,x+s*-.55,9.32,-2.55,.75,fl);
+    // the inner side walls of the porch: ashlar courses
+    for(let i=0;i<5;i++)k.m(bx,i%2?M.stoneD:M.stone,s*3.02,.45+i*.85,-1.5,0,0,0,.05,.8,2.9)});
+  // the arch: voussoirs round a semicircle (springing at 3.4), a serpent-skull keystone, spandrels and a frieze
+  const yS=3.4,R0=3,nV=15;for(let i=0;i<nV;i++){const a0=Math.PI-(i+.5)/nV*Math.PI,cx=Math.cos(a0)*(R0+.35),cy=yS+Math.sin(a0)*(R0+.35),key=i==7;
+    k.m(bx,key?M.stoneL:(i%2?M.stone:M.stoneL),cx,cy,-2.75,0,0,a0-Math.PI/2,key?.95:Math.PI*R0/nV*1.04,key?1.05:.72,key?.95:.62)}
+  [-1,1].forEach(s=>{k.m(bx,M.stoneL,s*2.95,1.7,-2.75,0,0,0,.28,3.4,.62);k.m(bx,M.stoneL,s*3.0,yS,-2.78,0,0,0,.5,.18,.72)});   // jambs and impost blocks
+  ab164Head(k,M,0,yS+R0+.4,-3.32,Math.PI,.62,M.stoneL);
+  const rr=R0+.71,hy=Math.sqrt(rr*rr-9),th=Math.atan2(hy,3),sp=new THREE.Shape();sp.moveTo(-3,yS+hy);sp.lineTo(-3,8.0);sp.lineTo(3,8.0);sp.lineTo(3,yS+hy);sp.absarc(0,yS,rr,th,Math.PI-th,false);sp.closePath();
+  k.m(svG('ab164spd',()=>new THREE.ExtrudeGeometry(sp,{depth:.62,bevelEnabled:false,curveSegments:20})),M.stone,0,0,-3.05);
+  k.m(bx,M.stoneL,0,7.55,-3.12,0,0,0,6.1,.22,.2);for(let i=0;i<12;i++)k.m(bx,M.stoneD,-2.75+i*.5,7.3,-3.13,0,0,0,.22,.22,.08);   // frieze with dentils
+  // the passage: a barrel vault, raised portcullis teeth, the tympanum over the doors with a serpent sun
+  k.m(svG('ab164vault',()=>new THREE.CylinderGeometry(R0,R0,2.85,24,1,true,Math.PI/2,Math.PI).rotateX(Math.PI/2)),M.vault,0,yS,-1.55,0,0,0);
+  for(let i=0;i<9;i++)k.m(svG('ab164tooth',()=>new THREE.ConeGeometry(1,1,4)),M.iron,-2.4+i*.6,4.75,-2.1,Math.PI,0,0,.06,.5,.06);k.m(bx,M.iron,0,5.0,-2.1,0,0,0,5.6,.12,.1);
+  k.m(svG('ab164tym',()=>new THREE.CircleGeometry(R0,24,0,Math.PI)),M.stone,0,yS+.9,-.04,0,Math.PI,0,1,.72,1);
+  for(let i=0;i<11;i++){const a=i/10*Math.PI;k.m(bx,M.gold,Math.cos(a)*1.25,yS+.95+Math.sin(a)*1.0,-.1,0,0,a-Math.PI/2,.08,.55,.05)}
+  k.m(svG('ab164sun',()=>new THREE.CylinderGeometry(1,1,1,16)),M.gold,0,yS+1.05,-.12,Math.PI/2,0,0,.42,.06,.42);
+  k.m(bx,M.stoneL,0,4.42,-.12,0,0,0,6,.25,.3);   // the lintel the doors close under
+  // the battlement walk over the arch (the tower lamp's guard stands here) and its merlons
+  k.m(bx,M.stoneL,0,8.1,-2.0,0,0,0,6.2,.22,2.3);for(let i=0;i<5;i++)k.m(bx,M.stone,-2.4+i*1.2,8.55,-3.0,0,0,0,.7,.7,.32);
+  // the porch floor: worn flags and a threshold; a stepped apron spilling into the yard
+  k.m(bx,M.stoneD,0,.03,-1.5,0,0,0,6,.06,3);k.m(bx,M.stoneL,0,.06,-.35,0,0,0,6,.08,.4);
+  for(let r=0;r<3;r++)k.m(bx,r%2?M.stone:M.stoneL,0,.04-r*.01,-3.25-r*.45,0,0,0,10.6-r*.8+rn()*.2,.08,.5);
+  // chains with lanterns hanging from the vault, bronze rings on the pylon fronts holding the banners
+  [-1,1].forEach(s=>{for(let i=0;i<6;i++)k.m(svG('ab164link',()=>new THREE.TorusGeometry(.06,.016,4,8)),M.iron,s*1.6,5.6-i*.12,-1.6,0,i%2?Math.PI/2:0,0);
+    k.m(svG('ab164lant',()=>new THREE.CylinderGeometry(.16,.12,.36,6)),M.iron,s*1.6,4.82,-1.6,0,0,0);k.m(bx,M.bronze,s*4,7.75,-3.05,0,0,0,1.0,.07,.12)});
+  const stat=k.done();root.add(stat);
+  stat.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  // the lanterns' glow (shared flame material), the eyes are in M.eye
+  [-1,1].forEach(s=>{const m=new THREE.Mesh(svG('ab164lg',()=>new THREE.SphereGeometry(.11,8,6)),M.flameC);m.position.set(s*1.6,4.82,-1.6);root.add(m)});
+  // the passage beyond the doors, the doors
+  const tun=new THREE.Mesh(new THREE.PlaneGeometry(6,4.3),new THREE.MeshBasicMaterial({map:ab164TunnelTex()}));tun.position.set(0,2.15,-.16);tun.rotation.y=Math.PI;root.add(tun);
+  const leaves=[-1,1].map(sd=>{const p=new THREE.Group();p.position.set(sd*2.95,0,-.34);p.add(ab164Leaf(M,sd));root.add(p);return p});
+  // banners on the pylon fronts
+  const bt=ab164BannerTex(),bm=new THREE.MeshStandardMaterial({map:bt,transparent:true,alphaTest:.4,side:THREE.DoubleSide,roughness:.85});
+  const ban=[-1,1].map(s=>{const g=new THREE.PlaneGeometry(.95,3.8,1,8);g.translate(0,-1.9,0);const m=new THREE.Mesh(g,bm);m.position.set(s*4,7.7,-3.12);m.rotation.y=Math.PI;root.add(m);return m});
+  // the porch mosaic
+  const mos=new THREE.Mesh(new THREE.CircleGeometry(2.3,40).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:ab164MosaicTex(),roughness:.9,polygonOffset:true,polygonOffsetFactor:-2}));mos.position.set(0,.075,-1.65);root.add(mos);
+  // the alarm's markers: a pillar of light, a floating ESCAPE sign, a glowing ring in the porch, a light (straight into the scene)
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.6,2.2,64,24,1,true).translate(0,32,0),new THREE.MeshBasicMaterial({map:ab164BeamTex(),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,fog:false,opacity:0}));
+  beam.position.set(0,8.4,-1.6);beam.renderOrder=4;beam.visible=false;root.add(beam);
+  const sign=new THREE.Sprite(new THREE.SpriteMaterial({map:ab164SignTex(),transparent:true,depthTest:false,depthWrite:false,fog:false}));sign.position.set(0,12.6,-1.6);sign.scale.set(3.4,3.4,1);sign.renderOrder=12;sign.visible=false;root.add(sign);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(2.2,2.55,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffb050,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
+  ring.position.set(0,.1,-1.65);ring.renderOrder=5;ring.visible=false;root.add(ring);
+  const lt=new THREE.PointLight(0xffa050,0,20,1.5);lt.position.set(X,Y+3.2,Z-2.6);scene.add(lt);
+  root.updateMatrixWorld(true);
+  return S.g164={root,leaves,fl,ban,beam,sign,ring,lt,k:0,want:0,eyeK:0,snd:0}}
+// ---------------- the way to the gate: a street flow field from the porch, chevrons along it ----------------
+function ab164GateFlow(S){if(S.dg164)return S.dg164;const G=S.G,W=G.W,N=W*G.H,D=new Uint16Array(N).fill(65535),q=new Int32Array(N);let h=0,t=0;
+  const [[u0,u1],[v0,v1]]=AB164GATE.porch;for(let v=v0;v<=v1;v++)for(let u=u0;u<=u1;u++)if(ab158Ok(G,u,v)){const k=v*W+u;D[k]=0;q[t++]=k}
+  while(h<t){const k=q[h++],x=k%W,y=(k-x)/W,d=D[k]+1;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(!ab158Ok(G,nx,ny))return;const j=ny*W+nx;if(D[j]>d){D[j]=d;q[t++]=j}})}
+  return S.dg164=D}
+function ab164Chev(S){if(S.ch164)return S.ch164;const sh=new THREE.Shape();sh.moveTo(-.55,.25);sh.lineTo(0,-.3);sh.lineTo(.55,.25);sh.lineTo(.55,.0);sh.lineTo(0,-.55);sh.lineTo(-.55,0);sh.closePath();
+  const g=new THREE.ShapeGeometry(sh).rotateX(-Math.PI/2),m=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending,fog:false});
+  const n=14,im=new THREE.InstancedMesh(g,m,n);im.count=0;im.renderOrder=4;im.frustumCulled=false;im.userData.psNo=1;for(let i=0;i<n;i++)im.setColorAt(i,new THREE.Color(0xffa040));S.root.add(im);
+  return S.ch164={im,n,path:[],t:0}}
+var AB164O=new THREE.Object3D(),AB164C=new THREE.Color();
+function ab164ChevTick(S,now,on){const C=ab164Chev(S),im=C.im;if(!on){im.count=0;return}const G=S.G,I=S.I,D=ab164GateFlow(S),H=AB152H;
+  if(now-C.t>200){C.t=now;const L=[];let x=Math.round(H.u),y=Math.round(H.v);if(!ab158Ok(G,x,y)){const o=ab157Open(S,H.u,H.v);x=Math.round(o[0]);y=Math.round(o[1])}
+    if(ab158Ok(G,x,y)&&D[y*G.W+x]<65535){for(let s=0;s<44;s++){L.push([x,y]);const [nx,ny]=ab164Down(G,D,x,y);if(nx===x&&ny===y)break;x=nx;y=ny}}C.path=L}
+  const L=C.path;let n=0;if(L.length>5){for(let i=4;i<L.length-2&&n<C.n;i+=3){const a=L[i],b=L[Math.min(L.length-1,i+2)],p=L[i-1],q=L[i+1];
+      const px=(a[0]*2+p[0]+q[0])/4,pz=(a[1]*2+p[1]+q[1])/4,wx=I.x0+px,wz=I.y0+pz;AB164O.position.set(wx,GH(wx,wz)+.08,wz);AB164O.rotation.set(0,Math.atan2(b[0]-a[0],b[1]-a[1]),0);
+      const s=.9+.12*Math.sin(now/180-i*.5);AB164O.scale.set(s,1,s);AB164O.updateMatrix();im.setMatrixAt(n,AB164O.matrix);
+      const w=.35+.65*Math.max(0,Math.sin(now/160-i*.42));AB164C.setRGB(1*w+.2,.62*w+.08,.22*w);im.setColorAt(n,AB164C);n++}}
+  im.count=n;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}
+// ---------------- the screen-edge arrow ----------------
+(function(){const st=document.createElement('style');st.textContent=`#ab164ga{position:fixed;z-index:6;pointer-events:none;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;
+  font:800 12px system-ui,sans-serif;color:#ffe6b0;text-shadow:0 1px 3px #000,0 0 8px rgba(255,120,40,.8);letter-spacing:.04em;white-space:nowrap}#ab164ga.hide{display:none}
+  #ab164ga i{display:block;width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:26px solid #ffb040;filter:drop-shadow(0 0 6px rgba(255,110,30,.95)) drop-shadow(0 1px 1px #000)}
+  #ab164ga span{padding:2px 8px;border-radius:9px;background:rgba(40,8,4,.72);border:1px solid rgba(255,150,70,.6)}`;document.head.appendChild(st);
+  const d=document.createElement('div');d.id='ab164ga';d.className='hide';d.innerHTML='<i></i><span>City Gate</span>';document.body.appendChild(d)})();
+var AB164V=new THREE.Vector3();
+function ab164Arrow(S,on){const el=$('ab164ga');if(!el)return;if(!on||typeof uiOpen=='function'&&uiOpen()){el.classList.add('hide');return}const I=S.I,gx=I.x0+AB164GATE.u,gz=I.y0+AB164GATE.v-1.6,gy=GH(gx,gz)+5.5;
+  const r=(typeof ren!='undefined'&&ren.domElement)?ren.domElement.getBoundingClientRect():{left:0,top:0,width:innerWidth,height:innerHeight};
+  AB164V.set(gx,gy,gz).project(cam);let x=AB164V.x,y=AB164V.y;const behind=AB164V.z>1;if(behind){x=-x;y=-y}
+  const dist=Math.round(Math.hypot(pl.position.x-gx,pl.position.z-gz)),inV=!behind&&Math.abs(x)<.86&&Math.abs(y)<.8,ar=el.firstChild,lb=el.lastChild;
+  let ang=0;if(!inV){const m=Math.max(Math.abs(x)/.9,Math.abs(y)/.82);x/=m;y/=m;ang=Math.atan2(x,y)}else{ang=Math.PI}
+  el.style.left=(r.left+(x+1)/2*r.width)+'px';el.style.top=(r.top+(1-y)/2*r.height)+'px';ar.style.transform='rotate('+ang+'rad)';
+  lb.textContent=(dist<4?'Press F · Escape':'City Gate · '+dist+' m');el.classList.remove('hide')}
+// ---------------- each frame in the city ----------------
+function ab164GateTick(dt,now){const S=AB152.S;if(!S)return;const Q=ab164GateBuild(S),on=!!AB157A.on&&ab152In(),t=now/1000,M=ab164Mats();
+  Q.want=on?1:0;if(on&&!Q.snd){Q.snd=1;try{svSnd('heavy',.9,.45);setTimeout(()=>{try{svSnd('crack',.5,.4)}catch(_){}},500)}catch(_){}}if(!on)Q.snd=0;
+  Q.k+=Math.sign(Q.want-Q.k)*Math.min(Math.abs(Q.want-Q.k),dt*(on?.5:1.5));const e=Q.k<.5?2*Q.k*Q.k:1-Math.pow(-2*Q.k+2,2)/2;
+  Q.leaves[0].rotation.y=e*1.5;Q.leaves[1].rotation.y=-e*1.5;
+  Q.eyeK+=((on?1:0)-Q.eyeK)*Math.min(1,dt*3);M.eye.color.setRGB(1,.69-.55*Q.eyeK,.25-.2*Q.eyeK);
+  Q.fl.forEach(f=>{const s=f.s*(1+.6*Q.eyeK)*(1+.12*Math.sin(t*11+f.ph)*Math.sin(t*4.3+f.ph));f.m.scale.set(f.s*(1+.4*Q.eyeK),s,f.s*(1+.4*Q.eyeK))});
+  Q.ban.forEach((b,i)=>{b.rotation.x=.05*Math.sin(t*1.3+i*2)+.03*Math.sin(t*3.1+i)});
+  const vis=Q.k>.02||on;Q.beam.visible=Q.sign.visible=Q.ring.visible=vis;
+  if(vis){Q.beam.material.opacity=Q.k*(.62+.12*Math.sin(t*2.4));Q.beam.rotation.y+=dt*.2;const p=1+.08*Math.sin(t*3.2);Q.sign.scale.set(3.4*p,3.4*p,1);Q.sign.position.y=12.6+.3*Math.sin(t*1.6);Q.sign.material.opacity=Math.min(1,Q.k*1.4);
+    Q.ring.material.opacity=Q.k*(.45+.35*Math.sin(t*4));const rs=1+.05*Math.sin(t*4);Q.ring.scale.set(rs,1,rs)}
+  Q.lt.intensity=Q.k*(2.6+.4*Math.sin(t*7.1));
+  ab164ChevTick(S,now,on&&Q.k>.3);ab164Arrow(S,on)}
+{const f=ab152WorldTick;ab152WorldTick=function(dt,now){const r=f.apply(this,arguments);try{ab164GateTick(dt,now)}catch(e){if(!AB164.err++)console.error('v164 gate',e)}return r}}
+// hide the arrow the moment the hero is out of the city
+{const f=ab152Tick;ab152Tick=function(dt,now){const r=f.apply(this,arguments);try{if(!ab152In()){const el=$('ab164ga');if(el&&!el.classList.contains('hide'))el.classList.add('hide')}}catch(_){}return r}}
+// the minimap: the gate, gold and pulsing, while the city hunts you
+function ab164Marks(g,P,k){if(!AB157A.on||!AB152.S||!ab152In())return;const I=AB152.S.I,q=P(I.x0+AB164GATE.u,I.y0+AB164GATE.v-1);if(!q)return;const p=1+.18*Math.sin(performance.now()/160);
+  g.save();g.translate(q[0],q[1]);g.scale(k*p,k*p);g.beginPath();g.arc(0,0,8,0,Math.PI*2);g.fillStyle='rgba(255,150,50,.35)';g.fill();
+  g.beginPath();g.moveTo(-4.5,5);g.lineTo(-4.5,-1);g.arc(0,-1,4.5,Math.PI,0);g.lineTo(4.5,5);g.closePath();g.fillStyle='#ffc060';g.fill();g.lineWidth=1.4/k;g.strokeStyle='#2a0e06';g.stroke();g.restore()}
+{const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{ab164Marks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;
+    return [Math.max(4,Math.min(w-4,X)),Math.max(4,Math.min(h-4,Y))]},1)}catch(_){}}}
+// the tracker: how far the gate is
+{const f=SP152.trk.abeksi;SP152.trk.abeksi=I=>{const r=f(I);try{if(r&&I&&I.sp==='abeksi'&&AB157A.on&&AB152.S){const S=AB152.S,D=ab164GateFlow(S),x=Math.round(AB152H.u),y=Math.round(AB152H.v),d=ab158Ok(S.G,x,y)?D[y*S.G.W+x]:65535;
+    r.lines=r.lines.map(l=>/city gate/.test(l[0])?['⛩ Escape through the city gate (Gate Yard)',d<65535?d+' steps · follow the glowing arrows':'follow the pillar of light']:l)}}catch(_){}return r}}
+// ================= v164 Cheddar's board: eight quests a zone, and an exclusive skin for finishing them all =================
+// Owner: "reduce the amount of cheddar quests in each zone to 8 total and award the player with an exclusive and extra cool looking
+// cosmetic skin variant for either a playable animal race or a companion or mount if they do all the quests in a zone."
+//  * Quests: every zone's list (CHQD148) is exactly 8 (Easy · Medium · Hard). Kindlelight and Hillside Crest drop their menu chores;
+//    the Sands, the Dirge and the Citadel gain one or two. Removed quests keep their ids in CHQ132_ID (old saves load) but no longer
+//    show or count.
+//  * Skins (SKN164.D, one per zone, SKN164_Z[zone]): turning in the last of a zone's 8 quests unlocks its skin (title card, splash),
+//    and it is worn at once. Each is a shader skin, not just a colour: a base palette, a procedural pattern in the model's own
+//    space (it moves with the body) and glowing animated veins, a rim light, and its own sheen (roughness / metalness):
+//      Kindlelight  Lanternbound  hero (any race)  charcoal fur threaded with flowing ember-light
+//      Hillside     Stormmane     mount            gunmetal coat crackling with blue lightning
+//      Burningeye   Rimeborn      companions       frost-white hide, glowing ice veins and sparkles
+//      Searing Sands Sunforged    hero (any race)  hammered gold with molten seams
+//      The Dirge    Wraithveil    companions       violet shadow with drifting ghost-light
+//      The Citadel  Bloodcrown    mount            obsidian split by pulsing crimson veins
+//    Where it goes: hero skins replace the fur only (the look's fur colour becomes a sentinel magenta, SKN164.SENT, when building the
+//    model; the shader finds those vertices, mode 0), so armour and gear keep their colours; companion skins cover the whole creature
+//    (mode 1, the cloth/hide material, never metal or glow); mount skins cover the coat (mode 2: vertices whose colour matches the mount's
+//    own coat colours, MDL100_S[k].c/c2/bel/m), not the tack. One skin of each kind can be worn (SKN164.e.race / .comp / .mount);
+//    Cheddar's board shows the zone's skin above its quests with progress, and Wear / Take off once it is earned.
+//  * Saved as x2.skn164 {u: unlocked ids, e: worn per kind}. Co-op: the hero's skin travels in the look array (index 9).
+var SKN164={u:[],e:{race:null,comp:null,mount:null},SENT:0xff00ff,t:{value:0},U:{},MC:new Map(),O:new WeakMap(),B:new WeakMap(),poll:0,v:164,D:{
+  lantern:{n:'Lanternbound',k:'race',z:0,d:'Charcoal fur threaded with living ember-light: the glow of Kindlelight’s lanterns under your skin.',a:0x161214,b:0x4a3a32,e:0xff9a2a,r:0xff6a1a,rs:.22,sc:9,w:.055,pw:1.5,ro:.85,me:0,fx:0},
+  storm:{n:'Stormmane',k:'mount',z:1,d:'A gunmetal coat that crackles with the Crest’s thunderheads.',a:0x1e242a,b:0x6a7888,e:0x8adcff,r:0x5aa8ff,rs:.35,sc:4.5,w:.045,pw:2.0,ro:.45,me:.4,fx:1},
+  rime:{n:'Rimeborn',k:'comp',z:2,d:'Frost-white hide grown from the Summit’s ice. It sparkles, and glows from within.',a:0x6a94b8,b:0xeaf6ff,e:0x6ae8ff,r:0xbff4ff,rs:.55,sc:6,w:.07,pw:1.1,ro:.28,me:.12,fx:2},
+  sun:{n:'Sunforged',k:'race',z:3,d:'Fur like hammered gold, its seams still molten from the heat of the Sands.',a:0xa0701e,b:0xffe08a,e:0xffa630,r:0xffd890,rs:.5,sc:8,w:.05,pw:1.35,ro:.5,me:.18,fx:0},
+  wraith:{n:'Wraithveil',k:'comp',z:4,d:'A spectral shroud from the Dirge’s mists: violet shadow and drifting ghost-light.',a:0x150f22,b:0x5a4a80,e:0xb47aff,r:0xc89aff,rs:.9,sc:5,w:.09,pw:1.25,ro:.6,me:0,fx:3},
+  blood:{n:'Bloodcrown',k:'mount',z:5,d:'Obsidian hide split by molten crimson veins, fit for the Crimson King’s own steed.',a:0x0e090b,b:0x3a2024,e:0xff2a14,r:0xff3a1a,rs:.3,sc:5,w:.065,pw:1.8,ro:.38,me:.25,fx:0}}};
+var SKN164_Z=['lantern','storm','rime','sun','wraith','blood'];
+var SKN164_KN={race:'Hero',comp:'Companion',mount:'Mount'};
+
+// ---------------- eight quests a zone ----------------
+(function(){const Q=CHQ132_ID,keep=(z,ids)=>{CHQD148[z]=ids.map(id=>Q[id]).filter(Boolean)};
+  const add=(z,q)=>{q.z=z;q.ik='z'+z;if(!q.rw)q.rw='gear';CHQ132_ID[q.id]=q;return q};
+  keep(0,['k1a','k1b','k3b','k2a','k2c','c0a','c0b','c0c']);
+  Q.k3b.df=1;Q.k2a.df=2;Q.k2c.df=2;
+  keep(1,['h1b','c1a','h2c','h1c','c1b','h2a','c1c','h1a']);
+  Q.h2c.df=1;
+  CHQD148[3].splice(5,0,add(3,{id:'c3h',t:'Buried Caravans',d:'Caravans the dunes swallowed whole. Their strongboxes always end up in the camps. Open five.',o:[['chest',5,'Camp chests opened']],df:2,rw:'gear'}));
+  CHQD148[4].splice(5,0,add(4,{id:'c4h',t:'Sunken Purses',d:'Pilgrims drowned their coin in the black water. Fish up two gold pouches. Don’t look at what holds them.',o:[['pouch',2,'Gold pouches fished up']],df:2,rw:'egg'}));
+  CHQD148[5].splice(2,0,add(5,{id:'c5g',t:'Rations for the March',d:'An army marches on its stomach, and so do yours. Feed your companions six times.',o:[['feed',6,'Companions fed']],df:1,rw:'boots'}));
+  CHQD148[5].splice(5,0,add(5,{id:'c5h',t:'Forged for the Siege',d:'Have the Blacksmith forge your weapon to +2 or better, then kill something in the Citadel with it.',o:[['forgeKill',1,'Kill with a +2 forged weapon']],df:2,rw:'weapon'}));
+  for(const z in CHQD148)CHQD148[z].forEach(q=>{q.z=+z;q.ik='z'+z})})();
+
+// ---------------- the skin shader ----------------
+function skn164U(id){if(SKN164.U[id])return SKN164.U[id];const S=SKN164.D[id],C=c=>new THREE.Color(c);
+  return SKN164.U[id]={uT164:SKN164.t,uA164:{value:C(S.a)},uB164:{value:C(S.b)},uE164:{value:C(S.e)},uR164:{value:C(S.r)},uSc164:{value:S.sc},uW164:{value:S.w},
+    uPw164:{value:S.pw},uRs164:{value:S.rs},uRo164:{value:S.ro},uMe164:{value:S.me},uFx164:{value:S.fx}}}
+var SKN164_FH=`
+uniform float uT164,uSc164,uW164,uPw164,uRs164,uRo164,uMe164,uFx164,uMode164;uniform vec3 uA164,uB164,uE164,uR164,uC0164,uC1164,uC2164,uC3164;varying vec3 vP164;
+float k164h(vec3 p){p=fract(p*.3183099+vec3(.1,.2,.3));p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float k164n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
+  return mix(mix(mix(k164h(i),k164h(i+vec3(1.,0.,0.)),f.x),mix(k164h(i+vec3(0.,1.,0.)),k164h(i+vec3(1.,1.,0.)),f.x),f.y),mix(mix(k164h(i+vec3(0.,0.,1.)),k164h(i+vec3(1.,0.,1.)),f.x),mix(k164h(i+vec3(0.,1.,1.)),k164h(i+vec3(1.,1.,1.)),f.x),f.y),f.z);}
+float k164f(vec3 p){return .5*k164n(p)+.25*k164n(p*2.03+3.1)+.125*k164n(p*4.01+7.7)+.0625*k164n(p*8.1+1.3);}
+// crackle: distance to the nearest cell wall (Voronoi F2-F1), cells drifting slowly
+float k164v(vec3 p,float t){vec3 i=floor(p),f=fract(p);float d1=8.,d2=8.;
+  for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec3 g=vec3(float(x),float(y),float(z)),o=vec3(k164h(i+g),k164h(i+g+19.1),k164h(i+g+47.3));
+    o=.5+.38*sin(t*.35+6.2831*o);vec3 r=g+o-f;float d=dot(r,r);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}
+  return sqrt(d2)-sqrt(d1);}
+float k164c(vec3 a,vec3 c){float m=max(a.r,max(a.g,a.b)),n=max(c.r,max(c.g,c.b));return length(a/max(m,.001)-c/max(n,.001))+abs(m-n)*.3;}
+`;
+var SKN164_FC=`
+float m164=0.;
+#ifdef USE_COLOR
+{vec3 c=vColor.rgb;float mx=max(c.r,max(c.g,c.b));
+  if(uMode164<.5)m164=smoothstep(.12,.3,(min(c.r,c.b)-c.g)/max(mx,.001))*(1.-smoothstep(.1,.22,abs(c.r-c.b)/max(mx,.001)));
+  else if(uMode164<1.5)m164=1.;
+  else{float d=min(min(k164c(c,uC0164),k164c(c,uC1164)),min(k164c(c,uC2164),k164c(c,uC3164)));m164=1.-smoothstep(.12,.26,d);}
+  float wh=uMode164<.5?clamp(c.g/max(mx,.001)*1.7,0.,1.):clamp(dot(c,vec3(.3,.59,.11))*1.6,0.,1.),dk=uMode164<.5?mx:1.,pt=k164f(vP164*uSc164*1.6);
+  vec3 b=mix(uA164,uB164,clamp(wh*.85+pt*.4-.1,0.,1.))*(.5+.5*dk);
+  diffuseColor.rgb=mix(diffuseColor.rgb,b,m164);}
+#endif
+`;
+var SKN164_FE=`
+if(m164>.001){vec3 q=vP164*uSc164;float t=uT164;
+  vec3 qw=q+(vec3(k164n(q*.7+3.),k164n(q*.7+11.),k164n(q*.7+23.))-.5)*.9;
+  float v=k164f(q*.8+vec3(0.,t*.1,t*.04)),e1=k164v(qw,t),vein=1.-smoothstep(0.,uW164*2.2,e1);
+  vein=max(vein,(1.-smoothstep(0.,uW164*1.5,k164v(qw*2.3+5.,t*1.3)))*.45);
+  if(uFx164>2.5){float b=abs(fract(dot(vP164,vec3(.8,2.6,.5))*1.4+v*1.6-t*.18)-.5);vein=max(vein*.5,1.-smoothstep(0.,uW164*2.5,b));}
+  float pu;
+  if(uFx164<.5)pu=.35+.65*pow(.5+.5*sin(t*2.2-dot(vP164,vec3(2.,5.,1.5))*2.6),2.);
+  else if(uFx164<1.5)pu=.18+.9*step(.6,k164n(vec3(q.x*.7,q.y*.7+t*6.,t*11.)))+.15*sin(t*31.);
+  else if(uFx164<2.5)pu=.55+.45*sin(t*1.4+v*9.);
+  else pu=.4+.6*pow(.5+.5*sin(t*1.1+vP164.y*5.+v*6.),1.5);
+  float sp=0.;if(uFx164>1.5&&uFx164<2.5)sp=step(.982,k164h(floor(q*10.)+vec3(floor(t*4.))))*1.6;
+  vec3 nv=normalize(vViewPosition);float fr=pow(1.-clamp(abs(dot(normal,nv)),0.,1.),2.4);
+  totalEmissiveRadiance+=m164*(uE164*(vein*pu*uPw164+sp)+uR164*fr*uRs164);}
+`;
+// patch a material (it must be the model's own, or a clone made here): mode 0 fur sentinel, 1 whole, 2 coat colours (cols: up to 4)
+function skn164Patch(m,id,mode,cols){if(!m||!SKN164.D[id])return m;if(!SKN164.O.has(m))SKN164.O.set(m,{ob:m.onBeforeCompile,ck:m.customProgramCacheKey});
+  const o=SKN164.O.get(m),U=skn164U(id),C=(cols||[]).concat([0,0,0,0]).slice(0,4).map(c=>({value:new THREE.Color(c||0xff00ff)})),mu={uMode164:{value:mode},uC0164:C[0],uC1164:C[1],uC2164:C[2],uC3164:C[3]};
+  m.onBeforeCompile=(sh,rn)=>{if(o.ob&&o.ob!==THREE.Material.prototype.onBeforeCompile)o.ob.call(m,sh,rn);Object.assign(sh.uniforms,U,mu);
+    sh.vertexShader='varying vec3 vP164;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvP164=position;');
+    sh.fragmentShader=SKN164_FH+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+SKN164_FC)
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,uRo164,m164);')
+      .replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor=mix(metalnessFactor,uMe164,m164);')
+      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n'+SKN164_FE)};
+  m.customProgramCacheKey=function(){return (o.ck&&o.ck!==THREE.Material.prototype.customProgramCacheKey?o.ck.call(m):'')+'|skn164'};
+  m.userData.skn164=id;m.needsUpdate=true;return m}
+function skn164Unpatch(m){if(!m||!SKN164.O.has(m)||!m.userData.skn164)return;const o=SKN164.O.get(m);m.onBeforeCompile=o.ob;m.customProgramCacheKey=o.ck;delete m.userData.skn164;m.needsUpdate=true}
+// a skin copy of a shared material (companions, mounts), cached per material and skin
+function skn164Copy(base,id,mode,cols,tag){const k=base.uuid+'|'+id+'|'+(tag||'');let m=SKN164.MC.get(k);if(m)return m;m=base.clone();SKN164.B.set(m,base);skn164Patch(m,id,mode,cols);SKN164.MC.set(k,m);return m}
+function skn164Fits(m){return m&&!Array.isArray(m)&&m.isMeshStandardMaterial&&m.vertexColors&&(m.metalness||0)<.5}
+
+// ---------------- the hero: fur becomes the sentinel while the model is built; the hero's own material gets the shader ----------------
+function skn164RaceOf(h){try{if(h&&h.mdLook){const id=h.mdLook.skn164;return SKN164.D[id]&&SKN164.D[id].k=='race'?id:null}if(h&&h.mpPeer)return null;return SKN164.e.race}catch(_){return null}}
+{const f=mdLookOf;mdLookOf=function(h,cls){const r=f.apply(this,arguments);try{const id=skn164RaceOf(h);if(id&&r){r.skin=SKN164.SENT;r.skn164=id}}catch(_){}return r}}
+{const f=mdLookKey;mdLookKey=function(L){return f.apply(this,arguments)+(L&&L.skn164?'.s'+L.skn164:'')}}
+{const f=mdHeroApply;mdHeroApply=function(h,cls,E){const r=f.apply(this,arguments);try{const M=h&&h._mdM,L=h&&h.mdL;if(M&&M.c){const id=L&&L.skn164;
+    if(id&&M.c.userData.skn164!==id)skn164Patch(M.c,id,0);else if(!id&&M.c.userData.skn164)skn164Unpatch(M.c)}}catch(e){console.warn('v164 skin',e)}return r}}
+// co-op: the hero's skin rides in the look array (index 9)
+{const f=mpLookOut;mpLookOut=function(){const a=f.apply(this,arguments);try{if(Array.isArray(a))a[9]=SKN164.e.race||0}catch(_){}return a}}
+{const f=mpLookIn;mpLookIn=function(a){const r=f.apply(this,arguments);try{if(r&&Array.isArray(a)){const id=a[9];r.skn164=SKN164.D[id]&&SKN164.D[id].k=='race'?id:null}}catch(_){}return r}}
+
+// ---------------- companions and the mount: their shared materials are swapped for skin copies ----------------
+function skn164Dress(root,id,mode,cols,tag){if(!root)return;const want=id||null,key=want?want+'|'+(tag||''):'';if(root.userData.skn164k===key)return;root.userData.skn164k=key;
+  root.traverse(o=>{if(!o.isMesh)return;const cur=o.material,base=(cur&&SKN164.B.get(cur))||cur;
+    if(!want){if(cur!==base)o.material=base;return}if(!skn164Fits(base))return;o.material=skn164Copy(base,want,mode,cols,tag)})}
+function skn164MountCols(k){const S=(typeof MDL100_S!='undefined'&&(MDL100_S[k]||MDL100_S.pony))||{};return [S.c,S.c2,S.bel,S.m].filter(c=>c!=null)}
+function skn164Tick(){try{const c=SKN164.e.comp;if(typeof fols!='undefined')fols.forEach(g=>{if(g)skn164Dress(g,c,1)});
+    const m=SKN164.e.mount;if(typeof mModel!='undefined'&&mModel&&typeof riding!='undefined'&&riding){const k=riding.k;skn164Dress(mModel,m,2,skn164MountCols(k),k)}}catch(e){if(!SKN164.err++)console.warn('v164 skins',e)}}
+SKN164.err=0;
+{const f=loop;loop=function(t){SKN164.t.value=performance.now()/1000;if(performance.now()-SKN164.poll>400){SKN164.poll=performance.now();skn164Tick()}return f.apply(this,arguments)}}
+
+// ---------------- earning, wearing ----------------
+function skn164ZoneDone(z){const L=CHQD148[z]||[];return L.length>0&&L.every(q=>{const S=chqS132(q);return S&&S.s===3})}
+function skn164Wear(id,on){const S=SKN164.D[id];if(!S||!SKN164.u.includes(id))return;SKN164.e[S.k]=on?id:(SKN164.e[S.k]===id?null:SKN164.e[S.k]);skn164Refresh()}
+function skn164Refresh(){try{if(SKN164.e.race!==SKN164.lastRace){SKN164.lastRace=SKN164.e.race;heroOutfit(pl,hero.cls)}}catch(e){console.warn('v164 hero skin',e)}skn164Tick()}
+function skn164Unlock(id,silent){const S=SKN164.D[id];if(!S||SKN164.u.includes(id))return false;SKN164.u.push(id);if(!SKN164.e[S.k])SKN164.e[S.k]=id;
+  if(!silent){try{zt116Show(ZT116.Z[S.z]||ZT116.Z[0],'Cheddar’s Reward · '+PMAP[S.z].n,S.n,'Exclusive '+SKN164_KN[S.k].toLowerCase()+' skin unlocked','Wear or take it off at Cheddar’s quest board','z'+S.z)}catch(_){}
+    try{pickup({ic:'✨',t:'Exclusive skin: '+S.n,col:'#'+new THREE.Color(S.e).getHexString(),sub:SKN164_KN[S.k]+' skin · every '+PMAP[S.z].n+' quest done',r:4})}catch(_){}
+    try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}
+    say('🐭✨ Every one of Cheddar’s <b>'+PMAP[S.z].n+'</b> quests is done. Your reward: the exclusive <b>'+S.n+'</b> '+SKN164_KN[S.k].toLowerCase()+' skin'+(SKN164.e[S.k]===id?' (now worn)':'')+'.')}
+  skn164Refresh();return true}
+function skn164Check(silent){let n=0;SKN164_Z.forEach((id,z)=>{if(!SKN164.u.includes(id)&&skn164ZoneDone(z)&&skn164Unlock(id,silent))n++});return n}
+{const f=chqTurnIn132;chqTurnIn132=function(){const r=f.apply(this,arguments);try{skn164Check(false)}catch(e){console.warn('v164 unlock',e)}return r}}
+if(typeof cheatQuests147=='function'){const f=cheatQuests147;cheatQuests147=function(){const r=f.apply(this,arguments);try{skn164Check(false)}catch(_){}return r}}
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.skn164={u:SKN164.u.slice(),e:Object.assign({},SKN164.e)}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.skn164;SKN164.u=[];SKN164.e={race:null,comp:null,mount:null};
+    if(q){(Array.isArray(q.u)?q.u:[]).forEach(id=>{if(SKN164.D[id]&&!SKN164.u.includes(id))SKN164.u.push(id)});
+      if(q.e)for(const k in SKN164.e){const id=q.e[k];if(SKN164.D[id]&&SKN164.D[id].k===k&&SKN164.u.includes(id))SKN164.e[k]=id}}
+    skn164Check(true);SKN164.lastRace=undefined;setTimeout(()=>{try{skn164Refresh()}catch(_){}},0)}catch(e){console.warn('v164 skins load',e)}return r}}
+
+// ---------------- Cheddar's board: the zone's skin above its quests ----------------
+function skn164Css(c){return '#'+new THREE.Color(c).getHexString()}
+function skn164Card(z){const id=SKN164_Z[z],S=SKN164.D[id];if(!S)return '';const st=chq148State(z),have=SKN164.u.includes(id),on=SKN164.e[S.k]===id,pc=Math.round(st.dn/Math.max(1,st.n)*100);
+  const who={race:'your hero, whatever its race',comp:'your companions',mount:'the mount you ride'}[S.k];
+  return '<div class="sk164'+(have?' have':'')+(on?' on':'')+'" style="--a:'+skn164Css(S.a)+';--b:'+skn164Css(S.b)+';--e:'+skn164Css(S.e)+'">'+
+    '<div class="sk164sw"><i></i><s></s></div><div class="sk164t"><div class="sk164l">✨ Exclusive '+SKN164_KN[S.k].toLowerCase()+' skin · '+(have?'earned':'finish every quest here')+'</div>'+
+    '<b>'+S.n+'</b><div class="sk164d">'+S.d+' <span class="mut">For '+who+'.</span></div>'+
+    (have?'':'<div class="sk164p"><i style="width:'+pc+'%"></i></div><small>'+st.dn+' of '+st.n+' quests turned in</small>')+'</div>'+
+    (have?'<button class="'+(on?'':'pri ')+'sk164b" data-sk164="'+id+'">'+(on?'Take off':'Wear it')+'</button>':'<span class="sk164lk" title="Locked">🔒</span>')+'</div>'}
+{const f=XR.chq132;XR.chq132=function(){const r=f.apply(this,arguments);try{const z=CHQ148.tab;if(z!=null)$('xwB').insertAdjacentHTML('afterbegin',skn164Card(z))}catch(e){console.warn('v164 card',e)}return r}}
+$('xw').addEventListener('click',e=>{if(xwMode!='chq132')return;const t=e.target.closest('[data-sk164]');if(!t)return;const id=t.dataset.sk164,S=SKN164.D[id];if(!S)return;
+  skn164Wear(id,SKN164.e[S.k]!==id);try{sfx('chime')}catch(_){}rX()});
+document.head.insertAdjacentHTML('beforeend',`<style>
+#xw .sk164{display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(216,168,68,.35);
+  background:linear-gradient(90deg,rgba(30,20,10,.85),rgba(20,14,10,.6));position:relative;overflow:hidden}
+#xw .sk164.have{border-color:var(--e);box-shadow:0 0 14px -4px var(--e)}
+#xw .sk164sw{flex:none;width:58px;height:58px;border-radius:50%;position:relative;background:radial-gradient(circle at 35% 30%,var(--b),var(--a) 70%);border:2px solid rgba(255,255,255,.18);overflow:hidden}
+#xw .sk164sw i{position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 9px,var(--e) 9px 11px,transparent 11px 19px);opacity:.75;mix-blend-mode:screen;animation:sk164v 3s linear infinite}
+#xw .sk164sw s{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 12px var(--e)}
+#xw .sk164:not(.have) .sk164sw{filter:grayscale(.7) brightness(.6)}
+@keyframes sk164v{from{background-position:0 0}to{background-position:40px 0}}
+#xw .sk164t{flex:1;min-width:0}#xw .sk164l{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#d8b860}
+#xw .sk164t b{display:block;font-size:1.05rem;color:#f4e2a8;margin:1px 0 2px}#xw .sk164d{font-size:.76rem;color:#cbb994;line-height:1.3}
+#xw .sk164p{height:6px;border-radius:4px;background:rgba(255,255,255,.08);margin:6px 0 2px;overflow:hidden}#xw .sk164p i{display:block;height:100%;background:linear-gradient(90deg,#c9a24a,var(--e))}
+#xw .sk164 small{font-size:.68rem;color:#a8987a}#xw .sk164lk{font-size:1.4rem;opacity:.6}#xw .sk164b{flex:none}
+</style>`);
 </script></body></html>
