@@ -30,6 +30,7 @@ function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanP
   // sconces along the walls: every few tiles on alternate sides of each hall
   const R=svRng(5300),sc=[];const wallAt=(u,v,du,dv)=>{const k=dg165SanFloor(u+.5,v+.5),n=dg165SanFloor(u+du+.5,v+dv+.5);return k&&k!='pit'&&k!='bridge'&&!n};
   for(let v=0;v<I.h;v+=1)for(let u=0;u<I.w;u+=1)for(const [du,dv] of [[1,0],[-1,0],[0,1],[0,-1]])if(wallAt(u,v,du,dv)&&((u*7+v*13+(du+2)*5+(dv+2)*3)%11)==0)sc.push([u,v,du,dv]);
+  [84,92,100].forEach(v=>{sc.push([58,v,-1,0]);sc.push([101,v,1,0])});[150,186,200].forEach(v=>{if(wallAt(40,v,-1,0))sc.push([40,v,-1,0])});
   const scK=lgGroup('DG165|sconce',dg165SconceKit,0);
   sc.forEach(([u,v,du,dv])=>{const g=scK.clone();const q=at(u+.5+du*.47,v+.5+dv*.47,F0+2.4);g.position.set(q[0],q[1],q[2]);g.rotation.y=Math.atan2(-du,-dv);root.add(g);
     const fx=q[0]-du*.27,fz=q[2]-dv*.27,f=dg165Flame(root,fx,q[1]+.42,fz,.34,0xffa040);S.fl.push(f);S.spots.push({x:fx,y:q[1]+.6,z:fz,c:0xffa050,i:2.0,r:11,ph:R()*6})});
@@ -72,7 +73,9 @@ function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanP
   P.bridge.forEach((q,i)=>{const g=put(lgGroup('DG165|slab'+(i%6),k=>dg165SlabKit(k,i%6),0),q[0],q[1],(i%4)*Math.PI/2);S.slabs.push({g,u:q[0],v:q[1],st:0,t:0,y0:F0,tiles:[]})});
   S.slabs.forEach(s=>{for(let du=-1;du<1;du++)for(let dv=-1;dv<1;dv++){const [x,z]=dg165SW(s.u+du+.5,s.v+dv+.5);s.tiles.push(Math.round(z)*W+Math.round(x))}});
   for(let i=0;i<14;i++){const [x,,z]=at(42+R()*60,162+R()*50);const f=kqSpr(0x3aff9a,.9+R());f.material=f.material.clone();f.material.opacity=.3;f.position.set(x,3+R()*6,z);root.add(f);S.fl.push(f)}
-  {const C=P.R.chasm,[x0,z0]=dg165SW(C[0],C[1]),[x1,z1]=dg165SW(C[2],C[3]);const m=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x1a6a4a,map:SPR,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));m.position.set((x0+x1)/2,dg165SCfg().pit+2.6,(z0+z1)/2);root.add(m);S.deep=m}
+  // the chasm's depths: a cold green glow far below (sprites, so nothing shows through in patches)
+  for(let i=0;i<16;i++){const [x,,z]=at(44+R()*56,163+R()*48);const f=kqSpr(0x1a8a5a,7+R()*6);f.material=f.material.clone();f.material.opacity=.22;f.position.set(x,dg165SCfg().pit+1.5,z);root.add(f)}
+  [[50,175],[96,170],[52,200],[70,192]].forEach(([u,v])=>{const q=at(u,v,dg165SCfg().pit+3);S.spots.push({x:q[0],y:q[1],z:q[2],c:0x3aff9a,i:2.4,r:20,fq:.8,ph:R()*6})});
   // the Closing Walls: two spiked walls, the two doors, four weeping knights round the altar
   {const C=P.cw,len=C.doorS-C.doorN,wK=lgGroup('DG165|cwall',k=>dg165CWallKit(k,len),0);S.cwL=put(wK,C.mid-DG165SP.cwStart-.5,(C.doorN+C.doorS)/2,0);S.cwR=put(wK.clone(),C.mid+DG165SP.cwStart+.5,(C.doorN+C.doorS)/2,Math.PI);
     S.cwL.visible=S.cwR.visible=false;
@@ -121,7 +124,7 @@ function dg165SSpikes(S,dt,t,hu,hv,live){const Q=S.P.spk,K=S.spk,st=DG165SP.spkS
   const hc=Math.floor((hu-Q.u0)/Q.cs),hr=Math.floor((hv-Q.v0)/Q.cs),inG=hc>=0&&hr>=0&&hc<K.cols&&hr<K.rows;
   for(let c=0;c<K.cols;c++)for(let r=0;r<K.rows;r++){const i=c*K.rows+r,u=upAt(c,r,k),want=u?1:0;let h=K.h[i];if(h!==want){h+=(want-h)*Math.min(1,dt*(want?28:9));if(Math.abs(h-want)<.01)h=want;K.h[i]=h;mv=true}
     if(u&&!K.up[i]&&Math.abs(c-hc)<6&&Math.abs(r-hr)<5&&Math.random()<.25)dg165Snd('spikes',.18,.9+Math.random()*.3);K.up[i]=u?1:0;
-    const [x,,z]=dg165SW(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);o.position.set(x,F0-1.0+h*1.0,z);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrix();K.M.setMatrixAt(i,o.matrix);
+    const [x,z]=dg165SW(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);o.position.set(x,F0-1.0+h*1.0,z);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrix();K.M.setMatrixAt(i,o.matrix);
     const g=warn&&!u&&upAt(c,r,k+1);o.position.set(x,F0+.07,z);o.scale.setScalar(g?1:.0001);o.updateMatrix();K.G.setMatrixAt(i,o.matrix);gw=gw||g}
   K.M.instanceMatrix.needsUpdate=true;K.G.instanceMatrix.needsUpdate=true;K.G.material.opacity=.35+.3*Math.sin(t*30);
   if(live&&inG){const i=hc*K.rows+hr;if(K.h[i]>.55)dg165Hurt(.24,'IMPALED')}}

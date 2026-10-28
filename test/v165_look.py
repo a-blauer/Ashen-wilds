@@ -18,10 +18,10 @@ VIEW=r"""async(k)=>{const wait=ms=>new Promise(r=>setTimeout(r,ms));let p=.42,d=
   if(k=='stair'){await goI();const o=G[9];DG165Q.g.st=2;dg165GSync();toPos(o.x+Math.sin(o.ry)*3.4,o.z+Math.cos(o.ry)*3.4);TK165(4);y=o.ry;p=.45;d=6}
   if(k=='s_entry'){await goS(80,22,Math.PI);y=Math.PI*0;p=.5;d=12}
   if(k=='s_pend'){await goS(80,34,0);y=Math.PI;p=.32;d=9}
-  if(k=='s_spike'){await goS(80,84,0);TK165(10);y=Math.PI;p=.6;d=16}
+  if(k=='s_spike'){await goS(80,81,0);TK165(10);y=Math.PI+.4;p=.42;d=9}
   if(k=='s_flame'){await goS(64,118,0);TK165(30);y=Math.PI;p=.35;d=9}
   if(k=='s_chasm'){await goS(64,163,0);TK165(4);y=Math.PI-.5;p=.7;d=20}
-  if(k=='s_walls'){DG165Q.s.cp=4;await goS(92,219,0);TK165(160);y=Math.PI;p=.75;d=18}
+  if(k=='s_walls'){DG165Q.s.cp=4;await goS(92,219,0);TK165(820);y=Math.PI;p=.75;d=18}
   if(k=='s_gal'){await goS(92,256,0);y=Math.PI;p=.35;d=9}
   if(k=='s_tomb'){await goS(92,300,0);y=Math.PI;p=.45;d=11}
   const stepR=n=>{let T=performance.now();for(let i=0;i<n;i++){T+=33;homeTick(1/30,T);enemies.slice().forEach(e=>{if(e.dg165w&&!e.dead)eTick(e,1/30,T)});kqFxTick(1/30)}};

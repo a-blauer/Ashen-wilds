@@ -77,3 +77,6 @@ function dg165CoTick(dt,now){const host=rf165Host();
 {const f=rv148CanDown;rv148CanDown=function(){try{if(rf165In()&&RF165R&&RF165R.ph=='broken')return false}catch(_){}return f.apply(this,arguments)}}
 // a partner who rises again while the party is still on the channel rejoins the host's raft instead of starting over
 {const f=rf165Rise;rf165Rise=function(){if(dg165CoOn()&&!rf165Host()){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h=M(c))}catch(_){}const P=rf165P(),[x,z]=P.at(2,0);toPos(x,z,0);const id=RF165R?RF165R.id:0;rf165Reset();RF165R.id=id;say('🌊 You haul yourself back onto the raft.');return}return f.apply(this,arguments)}}
+// the death screen says where you will really wake
+{const f=awDie;awDie=function(){const r=f.apply(this,arguments);try{const el=document.querySelector('#dth .dw');if(el){if(dg165SIn())el.textContent='You will wake at the last checkpoint of the Sanctum ('+dg165SSpot(DG165Q.s.cp).name+'), healed.';
+  else if(rf165In())el.textContent='You will wake on a fresh raft at the mouth of the Black Channel.'}}catch(_){}return r}}
