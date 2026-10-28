@@ -25,13 +25,13 @@ VIEW=r"""async(k)=>{const wait=ms=>new Promise(r=>setTimeout(r,ms));let p=.42,d=
   if(k=='s_gal'){await goS(92,256,0);y=Math.PI;p=.35;d=9}
   if(k=='s_tomb'){await goS(92,300,0);y=Math.PI;p=.45;d=11}
   const stepR=n=>{let T=performance.now();for(let i=0;i<n;i++){T+=33;homeTick(1/30,T);enemies.slice().forEach(e=>{if(e.dg165w&&!e.dead)eTick(e,1/30,T)});kqFxTick(1/30)}};
-  const goC=async(frac)=>{const P=dg165ChPath();rf165Build();const [x,z]=P.at(2,0);toPos(x,z,0);rf165Reset();await wait(300);RF165R.s=P.S*frac;RF165R.ph='run';stepR(4)};
+  const goC=async(frac)=>{const P=dg165ChPath();rt165Build();const [x,z]=P.at(2,0);toPos(x,z,0);rt165Reset();await wait(300);RT165R.s=P.S*frac;RT165R.ph='run';stepR(4)};
   if(k=='c_ii'){const I=INSL[21];toPos(I.ba[0],I.ba[1]);await wait(300);TK165(4);const s=SP152.gates.channel.spot;toPos(s.x+s.ux*-6,s.z+s.uz*-6,s.ry);TK165(3);y=s.ry;p=.3;d=9}
-  if(k=='c_start'){await goC(.01);y=RF165R.yaw+Math.PI;p=.5;d=13}
-  if(k=='c_fight'){await goC(.35);RF165R.W.forEach(w=>{});stepR(420);y=RF165R.yaw+Math.PI+.6;p=.55;d=11}
-  if(k=='c_cling'){await goC(.35);stepR(300);const w=RF165R.W.find(q=>q.st=='cling')||RF165R.W[0];if(w){const [lu,lv]=rf165L(RF165R,w.x,w.z);RF165R.H=[Math.max(-1.8,Math.min(1.8,lu*.55)),Math.max(-3,Math.min(3,lv*.55))];rf165Place();y=Math.atan2(pl.position.x-w.x,pl.position.z-w.z)}p=.32;d=6}
-  if(k=='c_small'){await goC(.7);RF165R.cells.forEach((C,i)=>{if(i%3==0||C.c==0||C.r==6)rf165Break(RF165R,C,false)});stepR(200);y=RF165R.yaw+Math.PI+.4;p=.6;d=12}
-  if(k=='c_end'){await goC(.985);stepR(60);y=RF165R.yaw+Math.PI;p=.35;d=12}
+  if(k=='c_start'){await goC(.01);y=RT165R.yaw+Math.PI;p=.5;d=13}
+  if(k=='c_fight'){await goC(.35);RT165R.W.forEach(w=>{});stepR(420);y=RT165R.yaw+Math.PI+.6;p=.55;d=11}
+  if(k=='c_cling'){await goC(.35);stepR(300);const w=RT165R.W.find(q=>q.st=='cling')||RT165R.W[0];if(w){const [lu,lv]=rt165L(RT165R,w.x,w.z);RT165R.H=[Math.max(-1.8,Math.min(1.8,lu*.55)),Math.max(-3,Math.min(3,lv*.55))];rt165Place();y=Math.atan2(pl.position.x-w.x,pl.position.z-w.z)}p=.32;d=6}
+  if(k=='c_small'){await goC(.7);RT165R.cells.forEach((C,i)=>{if(i%3==0||C.c==0||C.r==6)rt165Break(RT165R,C,false)});stepR(200);y=RT165R.yaw+Math.PI+.4;p=.6;d=12}
+  if(k=='c_end'){await goC(.985);stepR(60);y=RT165R.yaw+Math.PI;p=.35;d=12}
   const goO=async()=>{const I=INSL[22];toPos(I.ba[0],I.ba[1]);await wait(300);TK165(4)};
   if(k=='o_prism'){await goO();const o=dg165PrismPlan().pr[2];toPos(o.x+4,o.z+4);TK165(3);y=Math.atan2(4,4);p=.25;d=8}
   if(k=='o_carry'){await goO();const o=dg165PrismPlan().pr[0];toPos(o.x+2.5,o.z);TK165(2);os165Take(0,true);TK165(60);await wait(1800);TK165(10);y=.5;p=.5;d=13}

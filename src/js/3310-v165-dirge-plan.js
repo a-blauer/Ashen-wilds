@@ -1,13 +1,13 @@
 // ================= v165 The Dirge main quest — the plan: two hidden places, the graves, the prisms =================
 // The Dirge's main quest has three chapters, one per field instance (like Hillside Crest, v152–v155):
-//  I   The Graveyard (3261): the gateway to II is gone. Graves stand scattered along the road; the weeping angel at the road's end
+//  I   The Graveyard (3311): the gateway to II is gone. Graves stand scattered along the road; the weeping angel at the road's end
 //      tells which one the Keeper sleeps in. Digging it up opens a stair down into
-//      The Hidden Sanctum (special instance 'sanctum', g 32, 3262–3263): a one-time crypt of traps and timed puzzles whose last
+//      The Hidden Sanctum (special instance 'sanctum', g 33, 3313–3314): a one-time crypt of traps and timed puzzles whose last
 //      chamber holds the flooded stair down into the Drowned Crypts (II).
-//  II  The Drowned Crypts' gateway to III becomes a tunnel mouth over a flooded channel with a raft moored at its bank (3264).
-//      Taking the raft down starts The Black Channel (special instance 'channel', g 33, 3265–3266): drowned dead rise from the
+//  II  The Drowned Crypts' gateway to III becomes a tunnel mouth over a flooded channel with a raft moored at its bank (3314).
+//      Taking the raft down starts The Black Channel (special instance 'channel', g 34, 3315–3316): drowned dead rise from the
 //      water and tear the raft apart plank by plank; reach the far end and you come out in the Ossuary Fields (III).
-//  III The Ossuary Fields (3267): five glowing prisms; carry their essence, one charge at a time, to the five runes of the
+//  III The Ossuary Fields (3317): five glowing prisms; carry their essence, one charge at a time, to the five runes of the
 //      Reliquary at the centre of the map. All five lit open the Den.
 // Everything here is a pure function of numbers and the map: 0045 paints the two hidden places' ground (sp152Map / sp152Terrain,
 // 3150) and 1680 keeps decorations off the graves and the prisms (dg165Keep) long before the rest of the script runs.
@@ -73,7 +73,7 @@ function dg165SanctumTerrain(I){const C=dg165SCfg();
 // s runs along the channel (tiles, 0 at the mooring), o across it (+ = right of the flow).
 function dg165CCfg(){return {hw:6.6,walk:2.2,deep:-2.7,walkY:.62,wall:10}}
 function dg165ChPath(){if(dg165ChPath.c)return dg165ChPath.c;const I=sp152Defs().find(d=>d.key=='channel'),C=dg165CCfg();
-  const K=[[34,48],[118,42],[198,66],[238,136],[208,212],[132,248],[98,316],[150,388],[236,404],[306,388]].map(q=>[I.x0+q[0],I.y0+q[1]]);
+  const K=[[22,38],[110,30],[210,44],[300,32],[364,50],[388,90],[366,132],[290,150],[190,140],[100,154],[34,146]].map(q=>[I.x0+q[0],I.y0+q[1]]);
   // Catmull-Rom through the control points, then resampled every tile of arc length
   const fx=[],fz=[];for(let i=0;i<K.length-1;i++){const p0=K[Math.max(0,i-1)],p1=K[i],p2=K[i+1],p3=K[Math.min(K.length-1,i+2)];
     for(let k=0;k<60;k++){const t=k/60,t2=t*t,t3=t2*t;fx.push(.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3));

@@ -215,7 +215,9 @@ function wdDeco(){const T0=performance.now();
     const big=[],zstat={};let zn=0;
     const free=(x,y,r0)=>big.every(b=>Math.hypot(b[0]-x,b[1]-y)>b[2]+r0+2.6);
     const place=(S,x,y,ry,s,bank)=>{
-      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true;if(typeof mq145Keep=='function'&&mq145Keep(I.g,x,y))return true;if(typeof mq151Keep=='function'&&mq151Keep(I.g,x,y))return true;if(typeof mq160Keep=='function'&&mq160Keep(I.g,x,y))return true;if(typeof mq170Keep=='function'&&mq170Keep(I.g,x,y))return true;if(typeof cs164Keep=='function'&&cs164Keep(I.g,x,y))return true;if(typeof dg165Keep=='function'&&dg165Keep(I.g,x,y))return true; // v165: the Dirge's graves, prisms and Reliquary (3260)
+      if(typeof mq143Keep=='function'&&mq143Keep(I.g,x,y))return true;if(typeof mq145Keep=='function'&&mq145Keep(I.g,x,y))return true;if(typeof mq151Keep=='function'&&mq151Keep(I.g,x,y))return true;if(typeof mq160Keep=='function'&&mq160Keep(I.g,x,y))return true;if(typeof mq170Keep=='function'&&mq170Keep(I.g,x,y))return true;if(typeof cs164Keep=='function'&&cs164Keep(I.g,x,y))return true;if(typeof th165Keep=='function'&&th165Keep(I.g,x,y))return true; // v165: Mistmere's mountain trail (3260)
+      if(typeof ss165Keep=='function'&&ss165Keep(I.g,x,y))return true; // v165: the Searing Sands chapters' scenes (3271)
+      if(typeof dg165Keep=='function'&&dg165Keep(I.g,x,y))return true; // v165: the Dirge's graves, prisms and Reliquary (3310)
        // v164: the camps' trails stay clear (3240)
        // v143: the Lantern Road outpost, lampposts and the Ripper's parking spot stay clear (counted as placed: the seeded stream is unchanged)
       const it={k:S.k,x,z:y,ry,s,col:0};

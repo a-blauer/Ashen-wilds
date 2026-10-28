@@ -3,7 +3,7 @@
 // skin, long black hair plastered over its face, pale eyes, a hanging jaw and long black claws. Registered by hand (not n3Def:
 // it is no roaming monster, has no signature moves and never runs the normal AI). The Drowned Hulk is the Dirge's own bloated
 // Drowned Thrall (EN.drowned) as an elite, much bigger.
-// In the water they are driven by dg165WTick (from 3266's raft): a real enemy (targetable, hurt, killed, XP, co-op mirrored by
+// In the water they are driven by dg165WTick (from 3316's raft): a real enemy (targetable, hurt, killed, XP, co-op mirrored by
 // position) whose eTick returns true so the normal AI never runs. States (e.w.st):
 //   swim   under the surface toward its slot at the raft's edge (hidden: no target, no health bar; ripples, bubbles and a hand
 //          breaking the surface on each stroke show where it is)

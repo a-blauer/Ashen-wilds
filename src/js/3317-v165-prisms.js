@@ -1,6 +1,6 @@
 // ================= v165 The Dirge III — the Ossuary Prisms and the Reliquary =================
 // The gateway to the Sovereign's Den at the end of the Ossuary Fields is sealed: five dark glyphs hang in it. Five prisms of the old
-// dead's essence float over bone plinths around the fields (dg165PrismPlan, 3260), each its own colour, and at the middle of the
+// dead's essence float over bone plinths around the fields (dg165PrismPlan, 3310), each its own colour, and at the middle of the
 // map stands the Reliquary, a ring of five rune pillars round a cold altar.
 //  * F at a prism siphons its essence into you (OS165.sip seconds; stay close). You can hold the charge of one prism at a time.
 //  * Carrying a charge, the dead are drawn to you: they rise around you every OS165.gap seconds (OS165.cap at once) until it is
@@ -8,7 +8,7 @@
 //  * F at the rune of the same colour in the Reliquary pours the charge into it; the rune burns. Fall while carrying and the charge
 //    flows back to its prism.
 //  * All five runes lit: the altar's flame wakes, the beams meet over the Reliquary, and the Den's gateway opens.
-// State DG165Q.o: lit[5] (runes lit), st (1 = the Den open). Saved in x2.dg165 (3268). A prism whose rune is lit stays dark.
+// State DG165Q.o: lit[5] (runes lit), st (1 = the Den open). Saved in x2.dg165 (3318). A prism whose rune is lit stays dark.
 var OS165={sip:2.2,gap:2.7,first:.6,cap:11,lv:null,S:null,carry:null,sipping:null,err:0,trkK:'',
   col:[0x5af0e0,0xb48aff,0xffc050,0xff5a5a,0x8aff6a],cs:['#5af0e0','#b48aff','#ffc050','#ff5a5a','#8aff6a'],nm:['Pale','Violet','Amber','Crimson','Verdant']};
 function os165In(){return dg165InG(22)}
@@ -93,9 +93,9 @@ function os165CarryTick(dt,now){const C=OS165.carry,P=pl.position,t=now/1000;C.t
   if(Math.random()<dt*14)burst(gY(P,.6+Math.random()*.8),OS165.col[C.i],1,.2,.5,.6);
   if(Math.random()<dt*.5)dg165Snd('heart',.35,1);
   // the dead rise around the carrier
-  C.live=C.live.filter(e=>!e.dead&&enemies.includes(e));C.sp-=dt;const cap=Math.round(OS165.cap*(1+.35*rf165Mates()));
+  C.live=C.live.filter(e=>!e.dead&&enemies.includes(e));C.sp-=dt;const cap=Math.round(OS165.cap*(1+.35*rt165Mates()));
   if(C.sp<=0&&os165Host()){C.sp=OS165.gap*(.8+Math.random()*.4);C.n++;if(C.live.length<cap){os165Rise(P.x,P.z,C.n%5==0?3:2,C)}}}
-function os165Host(){return rf165Host()}
+function os165Host(){return rt165Host()}
 var OS165K=['bonehound','bonehound','skeleton','bonearcher','bonehound'];
 function os165Rise(x,z,n,C,peer){const lv=dg165Lv(22),ok=dg165PrismPlan().ok;for(let k=0;k<n;k++){let px=x,pz=z;for(let tr=0;tr<14;tr++){const a=Math.random()*6.283,r=8+Math.random()*6;const qx=x+Math.cos(a)*r,qz=z+Math.sin(a)*r;if(ok(qx,qz,.4)){px=qx;pz=qz;break}}
   const big=C&&C.n%7==0&&k==0,key=big?'colossus':OS165K[(Math.random()*OS165K.length)|0];

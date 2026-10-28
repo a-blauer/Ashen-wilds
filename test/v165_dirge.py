@@ -54,18 +54,18 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   goS(SP.exit[0],SP.exit[1]-.6);tick(.05);out.lx=lab();worldPrompt().fn();await wait(900);tick(.2);out.ii=(curIns()||{}).g;out.sst2=DG165Q.s.st;
   // ---------------- II: the raft ----------------
   const J=INSL[21];toPos(J.ba[0],J.ba[1]);tick(.3);const Q=SP152.gates.channel;out.quay=!!Q.g;const r2=RPORT.find(q=>q.k=='next'&&q.ig===21);out.portal2Hidden=!r2||!r2.g.visible;
-  toPos(Q.spot.x-Q.spot.ux*2.2,Q.spot.z-Q.spot.uz*2.2);tick(.05);out.lq=lab();worldPrompt().fn();await wait(900);tick(.2);out.inC=rf165In()&&!!RF165R;
-  const R=RF165R,P=dg165ChPath();out.cells=R.cells.length;
+  toPos(Q.spot.x-Q.spot.ux*2.2,Q.spot.z-Q.spot.uz*2.2);tick(.05);out.lq=lab();worldPrompt().fn();await wait(900);tick(.2);out.inC=rt165In()&&!!RT165R;
+  const R=RT165R,P=dg165ChPath();out.cells=R.cells.length;
   // walking stays on the deck
-  for(let i=0;i<40;i++)walk(pl,.3,0);const [lu]=rf165L(R,pl.position.x,pl.position.z);out.edge=+lu.toFixed(2);
-  tough();R.s=P.S*.3;R.ph='run';tick(14);out.W=R.W.length;out.clung=R.W.some(w=>w.st=='cling');tick(16);out.lost=Math.round(R.cells.reduce((a,C)=>a+(RF165.hp-Math.max(0,C.hp)),0));
+  for(let i=0;i<40;i++)walk(pl,.3,0);const [lu]=rt165L(R,pl.position.x,pl.position.z);out.edge=+lu.toFixed(2);
+  tough();R.s=P.S*.3;R.ph='run';tick(14);out.W=R.W.length;out.clung=R.W.some(w=>w.st=='cling');tick(16);out.lost=Math.round(R.cells.reduce((a,C)=>a+(RT165.hp-Math.max(0,C.hp)),0));
   // kill a clinging drowned: it sinks and goes
   {const w=R.W.find(q=>q.st=='cling'&&!q.e.dead);if(w){hurt(w.e,M(w.e.c)*3,{col:0xffffff},false);out.dead=!!w.e.dead;await wait(3500);tick(.1);out.gone=!enemies.includes(w.e)}}
   // too few planks: the raft breaks and drags you under
-  R.cells.forEach(C=>{if(C.alive&&rf165Alive(R)>RF165.min+1)rf165Break(R,C,true)});out.alive=rf165Alive(R);rf165Break(R,R.cells.find(C=>C.alive),true);out.broken=R.ph;hero.hp=heroMax();tick(2.6);out.raftDeath=AWD.dead;
-  if(AWD.dead&&AWD.res){const f=AWD.res;AWD.res=null;f();AWD.dead=0;document.body.classList.remove('awdead');$('dth').classList.add('hide')}tick(.1);out.fresh=[RF165R&&RF165R.id!==R.id,RF165R&&rf165Alive(RF165R)];
+  R.cells.forEach(C=>{if(C.alive&&rt165Alive(R)>RT165.min+1)rt165Break(R,C,true)});out.alive=rt165Alive(R);rt165Break(R,R.cells.find(C=>C.alive),true);out.broken=R.ph;hero.hp=heroMax();tick(2.6);out.raftDeath=AWD.dead;
+  if(AWD.dead&&AWD.res){const f=AWD.res;AWD.res=null;f();AWD.dead=0;document.body.classList.remove('awdead');$('dth').classList.add('hide')}tick(.1);out.fresh=[RT165R&&RT165R.id!==R.id,RT165R&&rt165Alive(RT165R)];
   // the end of the channel
-  enemies.slice().forEach(e=>{if(e.dg165w)removeE(e)});RF165R.s=P.S-2;RF165R.ph='run';tick(3.5);await wait(900);tick(.2);out.iii=(curIns()||{}).g;out.rst=DG165Q.r.st;
+  enemies.slice().forEach(e=>{if(e.dg165w)removeE(e)});RT165R.s=P.S-2;RT165R.ph='run';tick(3.5);await wait(900);tick(.2);out.iii=(curIns()||{}).g;out.rst=DG165Q.r.st;
   // ---------------- III: the prisms ----------------
   const K3=INSL[22];toPos(K3.ba[0],K3.ba[1]);tick(.3);const O=dg165PrismPlan();out.prIns=O.pr.every(o=>(insAt(Math.round(o.x),Math.round(o.z))||{}).g===22)&&!O.pr.some(o=>o.fb);out.ctr=[(insAt(O.ctr.x,O.ctr.z)||{}).g,!!O.ctr.fb];
   out.prMin=99;O.pr.forEach((a,i)=>O.pr.forEach((b,j)=>{if(j>i)out.prMin=Math.min(out.prMin,Math.round(Math.hypot(a.x-b.x,a.z-b.z)))}));

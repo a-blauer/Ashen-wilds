@@ -93,5 +93,9 @@ WRAP=1 SIZES=cs,pp,pl v161_mobile_shot.py
 v163_weapons.py
 v164_dodge_grip.py
 v164_kite.py
+v165_temple.py
+v165_courtyard.py
+v165_run.py
 v165_dirge.py
+v165_dirge_coop.py
 v165_coop.py

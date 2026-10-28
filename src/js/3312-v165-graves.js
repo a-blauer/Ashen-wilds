@@ -1,11 +1,11 @@
 // ================= v165 The Dirge I — the Keeper's Grave =================
 // The Dirge I's gateway to II is gone. Where it stood, a weeping angel watches over the road's end, a gravedigger's spade stuck in the
 // earth at its feet and an inscription on its plinth: the Keeper sleeps where the stone is broken, a raven keeps watch and the candles
-// never die. Fourteen graves stand along the road (dg165GravePlan, 3260), each with its own headstone, emblem and offering.
+// never die. Fourteen graves stand along the road (dg165GravePlan, 3310), each with its own headstone, emblem and offering.
 //  * F at a grave reads it (name, dates, epitaph, what you see on it). Once you have the spade, F again digs it up (3 s of digging,
 //    walking away or a hit stops it).
 //  * A wrong grave: the coffin bursts and its dead climb out (two or three of the Dirge's dead, local to you); the grave stays open.
-//  * The Keeper's grave: the earth caves in on a stone stair. F · Descend into the Hidden Sanctum (3263). Once the Sanctum is behind
+//  * The Keeper's grave: the earth caves in on a stone stair. F · Descend into the Hidden Sanctum (3313). Once the Sanctum is behind
 //    you, the stair (and the angel) lead straight on to the Drowned Crypts.
 // The graves are built the first time you are in the Dirge I, hidden elsewhere. Their tiles are solid (CBLK) except the stair.
 var DG165GR={S:null,dig:null,err:0,col:{st:0x5c5c60,st2:0x4a4a50,st3:0x6c6a64,moss:0x3a4a34,soil:0x2a241e,soil2:0x3a3026,wax:0xd0c4a2,iron:0x2a2c30,rust:0x5a3a24,bone:0xc8c0a8,lily:0xd8d4c8,stem:0x3a4a2a,rose:0x4a1214,raven:0x1c1c22}};

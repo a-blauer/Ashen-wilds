@@ -1,7 +1,7 @@
 // ================= v165 The Hidden Sanctum — the level =================
-// Beneath the Keeper's grave (3262) a stair goes down into the Low Sanctum, built to keep intruders from the Drowned Crypts below.
+// Beneath the Keeper's grave (3312) a stair goes down into the Low Sanctum, built to keep intruders from the Drowned Crypts below.
 // It is played once: through the Keeper's Tomb at its bottom you come out in The Dirge II, and from then on the grave's stair
-// leads straight there. Halls, in order (plan dg165SanPlan, 3260; local u/v, world = I.x0+u-.5, I.y0+v-.5):
+// leads straight there. Halls, in order (plan dg165SanPlan, 3310; local u/v, world = I.x0+u-.5, I.y0+v-.5):
 //  1 The Stair Hall           arrival; the stair back up to the graveyard.
 //  2 The Hall of Pendulums    five crescent blades sweep across a narrow hall at their own pace: time each one.
 //  3 The Spike Hall           the floor's spike plates rise in bands that roll toward you (a red glow just before they rise).
@@ -247,5 +247,5 @@ SP152.trk.sanctum=I=>{if(I.sp!=='sanctum')return null;const c=DG165Q.s.cp,P=dg16
   return {name:'The Hidden Sanctum',lines:[[tip],['Checkpoint',P.CP[c][3]],['Reach the Drowned Crypts',null,1]]}};
 // ---------------- the atmosphere: a crypt lit only by its own fires ----------------
 sp152Theme('sanctum',{nm:'The Hidden Sanctum',sub:'Beneath the Keeper’s grave',a:{fog:.06,fc:0x060a09,fcA:.96,sun:.12,hemi:.36,env:'dark',ex:1.0,sat:.9,vig:1.85,sky:0,pt:'mote',pc:0x9affd0,po:.3}});
-// placeholder for the co-op sender (3268 replaces it)
+// placeholder for the co-op sender (3318 replaces it)
 function dg165Co(){}

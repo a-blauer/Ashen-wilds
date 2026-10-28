@@ -1,5 +1,5 @@
 // ================= v165 The Dirge main quest — shared kit: state, sounds, hurt, cards, title cards =================
-// State DG165Q (saved as x2.dg165, 3268):
+// State DG165Q (saved as x2.dg165, 3318):
 //   g {st 0 · 1 the angel read (you have the spade) · 2 the Keeper's grave open, ex[14] examined, bad[14] wrong graves dug}
 //   s {st 0 · 1 entered · 2 through (II reached), cp checkpoint 0..5, cw closing walls solved}
 //   r {st 0 · 1 boarded · 2 through (III reached)}
