@@ -34,7 +34,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   const tile=(x,z)=>{const X=Math.round(C.x+x),Z=Math.round(C.z+z);return MAP[Z]&&MAP[Z][X]};
   const ground=(x,z,m)=>{const X=Math.round(C.x+x),Z=Math.round(C.z+z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='~'||insAt(X,Z)!==I)return false;return DW[Z*W+X]<-(m==null?.6:m)};
   const RP=[];cs164Road(I).forEach(q=>{const x=q[0]-C.x,z=q[1]-C.z;if(Math.abs(x)<r+10&&Math.abs(z)<r+10)RP.push([x,z])});
-  const kept=(x,z)=>{const X=C.x+x,Z=C.z+z,g=I.g;try{return (typeof mq143Keep=='function'&&mq143Keep(g,X,Z))||(typeof mq145Keep=='function'&&mq145Keep(g,X,Z))||(typeof mq151Keep=='function'&&mq151Keep(g,X,Z))||(typeof mq160Keep=='function'&&mq160Keep(g,X,Z))||(typeof mq170Keep=='function'&&mq170Keep(g,X,Z))}catch(_){return false}};
+  const kept=(x,z)=>{const X=C.x+x,Z=C.z+z,g=I.g;try{return (typeof mq143Keep=='function'&&mq143Keep(g,X,Z))||(typeof mq145Keep=='function'&&mq145Keep(g,X,Z))||(typeof mq151Keep=='function'&&mq151Keep(g,X,Z))||(typeof mq160Keep=='function'&&mq160Keep(g,X,Z))||(typeof mq170Keep=='function'&&mq170Keep(g,X,Z))||(typeof dg165Keep=='function'&&dg165Keep(g,X,Z))}catch(_){return false}};
   const TR=o.trail?o.trail.map(q=>[q[0]-C.x,q[1]-C.z]):[];
   const roadD=(x,z)=>{let b=1e9;for(const q of RP){const v=(q[0]-x)*(q[0]-x)+(q[1]-z)*(q[1]-z);if(v<b)b=v}for(const q of TR){const v=(q[0]-x)*(q[0]-x)+(q[1]-z)*(q[1]-z)+1.5;if(v<b)b=v}return Math.sqrt(b)};
   const GW=o.gates.map(a=>[a,2.6]).concat(o.gaps.map(([a0,a1])=>[(a0+a1)/2,(a1-a0)/2*rf+1.2]));

@@ -19,12 +19,17 @@ function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
   {key:'abeksi',g:30,z:1,k:0,x0:116,y0:1452,w:150,h:200,n:'Abeksi',rn:'Abeksi',lv:[11,11],
     bio:{n:'Abeksi',sp:'Foxlet',x:0,y:0,t:2,gnd:[96,84,66],grs:[70,84,54],acc:[104,98,90],frs:[40,34,28],wat:[40,70,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x3a2a20,0x3a4a2a,0x4a5a34],amp:.1}},
   {key:'ascent',g:31,z:1,k:1,x0:280,y0:1452,w:420,h:380,n:'The Hilltop Ascent',rn:'Ascent',lv:[14,14],
-    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
+    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}},
+  // v165: The Dirge's two hidden places (3260): the Hidden Sanctum (I → II) and the Black Channel (II → III)
+  {key:'sanctum',g:32,z:4,k:0,x0:112,y0:1660,w:160,h:360,n:'The Hidden Sanctum',rn:'Sanctum',lv:[38,38],
+    bio:{n:'Hidden Sanctum',sp:'Boneling',x:0,y:0,t:4,gnd:[26,26,28],grs:[44,52,48],acc:[70,66,62],frs:[22,24,26],wat:[24,48,46],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a3a34,0x4a4a40],amp:.1}},
+  {key:'channel',g:33,z:4,k:1,x0:712,y0:1456,w:460,h:568,n:'The Black Channel',rn:'Channel',lv:[40,40],
+    bio:{n:'Black Channel',sp:'Boneling',x:0,y:0,t:4,gnd:[46,50,52],grs:[40,56,50],acc:[62,64,66],frs:[20,26,26],wat:[18,62,54],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a4a50,0x4a5a64],amp:.2}}]}
 // 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
 function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
-    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
+    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):I.key=='sanctum'?(typeof dg165SanctumMap=='function'?dg165SanctumMap:null):I.key=='channel'?(typeof dg165ChannelMap=='function'?dg165ChannelMap:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
 // 0045: a level's own heights (after every other height pass)
-function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
+function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I);if(I.key=='sanctum'&&typeof dg165SanctumTerrain=='function')dg165SanctumTerrain(I);if(I.key=='channel'&&typeof dg165ChannelTerrain=='function')dg165ChannelTerrain(I)})}catch(e){console.warn('v152 terrain',e)}}
 // 0070: trees inside a level are scenery, not harvest nodes (hoisted: 0070 runs long before this file)
 function sp152NoNode(x,y){try{return sp152Defs().some(I=>x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)}catch(_){return false}}
 function spIns(x,y){if(!SPI||!SPI.on)return null;const L=SPI.L;for(let i=0;i<L.length;i++){const I=L[i];if(x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)return I}return null}
