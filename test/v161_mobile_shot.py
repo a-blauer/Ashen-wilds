@@ -6,9 +6,15 @@ import sys,os,json
 import play
 from playwright.sync_api import sync_playwright
 TAG=sys.argv[1] if len(sys.argv)>1 else 'cur'
-SZ={'pp':(390,844,'mobile'),'pl':(844,390,'mobile'),'sp':(360,640,'mobile'),'sl':(640,360,'mobile'),'tp':(820,1180,'mobile'),'tl':(1180,820,'mobile'),'dk':(1280,760,'desktop')}
+SZ={'pp':(390,844,'mobile'),'cp':(352,615,'mobile'),'cs':(412,720,'mobile'),'pl':(844,390,'mobile'),'sp':(360,640,'mobile'),'sl':(640,360,'mobile'),'tp':(820,1180,'mobile'),'tl':(1180,820,'mobile'),'dk':(1280,760,'desktop')}
 want=os.environ.get('SIZES','pp,pl,sl,dk').split(',')
 CHECK=open(os.path.join(play.HERE,'v161_layout.js')).read()
+# WRAP=1 (v163): load the page the way claude.ai serves it, wrapped inside an outer page's <body> (so the page's own <head>,
+# stylesheet included, lands in that <body>), to catch layout that only breaks on the live site
+PAGE='live.html'
+if os.environ.get('WRAP'):
+    W0='<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;padding:0;font:14px sans-serif;background:#fff;color:#000}</style></head><body>\n'
+    open(play.TMP+'/live_wrap.html','w').write(W0+open(play.TMP+'/live.html').read()+'\n</body></html>');PAGE='live_wrap.html'
 fails=0
 with sync_playwright() as p:
     b=p.chromium.launch(executable_path=os.environ.get('PW_CHROME') or (os.path.exists('/opt/pw-browsers/chromium') and '/opt/pw-browsers/chromium') or None,args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
@@ -19,7 +25,7 @@ with sync_playwright() as p:
         pg.on('pageerror',lambda e:logs.append('PAGEERROR: '+str(e)))
         pg.add_init_script('window.AW_NOTITLE=1')
         if os.environ.get('INIT'):pg.add_init_script(os.environ['INIT'])
-        pg.goto('file://'+play.TMP+'/live.html',wait_until='domcontentloaded',timeout=120000);pg.wait_for_timeout(4000)
+        pg.goto('file://'+play.TMP+'/'+PAGE,wait_until='domcontentloaded',timeout=120000);pg.wait_for_timeout(4000)
         pg.set_default_timeout(600000)
         pg.click('[data-dev=%s]'%dev,timeout=60000)
         pg.evaluate("()=>{try{if(document.fullscreenElement)document.exitFullscreen()}catch(_){}}")

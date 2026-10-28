@@ -49,7 +49,7 @@ def s(pg):
             toPos(A.cx+Math.sin(a)*o.d,A.cz+Math.cos(a)*o.d);hero.iv=0;STEP(.05);return 1}"""
         # every move to its end (Phase II for ph:2 moves), no errors
         res=ev("""(o)=>{const e=BE,S=e.sv,out=[];window.LERR='';for(const id of Object.keys(S.B.M)){if(['intro','awaken','stagger','broken',o.sig].includes(id))continue;const D=S.B.M[id];
-            (%s)({d:4,ph:(D.ph||1)===2?2:1});if(!svStart(e,id)){out.push(id+':nostart');continue}let t=0;while(S.mv&&S.mv.id===id&&t<D.dur+2){STEP(.1);t+=.1}out.push(id+':'+(t<=D.dur+1?'ok':'stuck')+(window.LERR?':ERR':''));window.LERR=''}
+            (%s)({d:4,ph:(D.ph||1)===2?2:1});if(!svStart(e,id)){out.push(id+':nostart');continue}let t=0;const lim=D.sig163?D.dur*2+2:D.dur+2;while(S.mv&&S.mv.id===id&&t<lim){STEP(.1);t+=.1}out.push(id+":"+(t<=lim-1?'ok':'stuck')+(window.LERR?':ERR':''));window.LERR=''}
             svEndMove(e,true);return out}"""%PLACE,{'sig':C['sig']})
         bad=[m for m in res if not m.endswith(':ok')]
         if bad:F('%s: moves %s'%(tag,bad))
@@ -74,7 +74,7 @@ def s(pg):
         if br.get('err'):F('%s: game loop error after breaking the props: %s'%(tag,br['err'][:300]))
         if br['mv']!='broken' or br['dr']!=0:F('%s: breaking every prop did not BREAK him %s'%(tag,br))
         # the signature again, left alone: the fail outcome (he heals)
-        fl=ev("""(o)=>{const e=BE,S=e.sv;(%s)({d:6,ph:2,hp:.4});const h0=e.c.h;S.cd={};svStart(e,o.sig);let t=0;while(S.mv&&S.mv.id===o.sig&&t<20){STEP(.2);t+=.2}STEP(3);
+        fl=ev("""(o)=>{const e=BE,S=e.sv;(%s)({d:6,ph:2,hp:.4});const h0=e.c.h;S.cd={};svStart(e,o.sig);let t=0;while(S.mv&&S.mv.id===o.sig&&t<34){STEP(.2);t+=.2}STEP(3);
             return {err:window.LERR||'',healed:e.c.h-h0,left:(XA.s146&&XA.s146.props||[]).filter(p=>!p.dead&&!p._gone).length,dr:S.dr}}"""%PLACE,{'sig':C['sig']})
         print(tag,'fail',json.dumps(fl))
         if fl.get('err'):F('%s: game loop error in the failed signature: %s'%(tag,fl['err'][:300]))

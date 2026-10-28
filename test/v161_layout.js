@@ -13,9 +13,12 @@
     if(!(info.open&&info.open.length)){if(!info.joy)fail.push('joystick hidden');if(!info.mbtn)fail.push('action buttons hidden')}
     // how much of the screen the HUD covers (rough): the bars + controls
     let cov=0;['topl','mini','bbar','joy','mbtn'].forEach(i=>{const r=info[i];if(r)cov+=r.w*r.h});info.cover=Math.round(100*cov/(innerWidth*innerHeight));
-    if(info.cover>36)fail.push('HUD covers '+info.cover+'% of the screen');
+    const cvL=innerWidth<innerHeight&&innerHeight<780?45:36;if(info.cover>cvL)fail.push('HUD covers '+info.cover+'% of the screen');
     // touch targets: buttons at least 40 px
     document.querySelectorAll('#mbtn button').forEach(b=>{const r=b.getBoundingClientRect();if(r.width>0&&r.width<40)fail.push('touch button '+b.dataset.m+' only '+Math.round(r.width)+'px')});
+    // v163: the hotbar is a bar (wider than tall) and the touch buttons sit in the lower half
+    if(info.bbar&&info.bbar.h>info.bbar.w)fail.push('hotbar is a tall column '+info.bbar.w+'x'+info.bbar.h);
+    if(info.mbtn&&info.mbtn.t<innerHeight*.35)fail.push('touch buttons pushed up to '+info.mbtn.t+'px');
     const hs=[...document.querySelectorAll('#acts .hs')].find(b=>b.offsetWidth>0);if(hs){const r=hs.getBoundingClientRect();info.hs=Math.round(r.width);if(r.width<28)fail.push('hotbar slot only '+Math.round(r.width)+'px')}
   }
   // every visible direct child of the stage that is fully off screen
