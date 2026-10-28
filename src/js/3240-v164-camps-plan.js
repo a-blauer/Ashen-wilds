@@ -115,9 +115,9 @@ function cs164Sites(){if(cs164Sites.S)return cs164Sites.S;const DW0=cs164Sites.D
       r=Math.min(r,d([x,y],I.ba)-PM_GTR-8,d([x,y],I.en)-14,d([x,y],e1)-14);if(out)r=Math.min(r,d([x,y],out)-20);return r};
     const share=(o,x,y)=>{let r=1e9;L.forEach(q=>{if(q!==o)r=Math.min(r,(d([x,y],[q.x,q.y])-8)*o.rd/(o.rd+q.rd))});return r};
     const far=()=>{let b=-1,bd=-1;L.forEach(o=>{const v=d([o.x,o.y],I.en);if(v>bd){bd=v;b=o.j}});return b},f0=far();
-    // a camp that cannot reach its size where it stands moves up to 21 tiles to the roomiest nearby spot (moving costs a little)
+    // a camp that cannot reach its size where it stands moves up to 21 tiles (36 when it could hardly grow at all) to the roomiest nearby spot (moving costs a little)
     L.forEach(o=>{const sc=(x,y)=>Math.min(o.rd,solo(x,y),share(o,x,y));const s0=sc(o.x,o.y);if(s0>=o.rd)return;let bs=s0,bx=o.x,by=o.y;
-      for(let rr=3;rr<=21;rr+=3)for(let k=0;k<20;k++){const a=k/20*6.2832+rr*.37,x=Math.round(o.x+Math.cos(a)*rr),y=Math.round(o.y+Math.sin(a)*rr);
+      const far2=s0<o.r0*1.5?36:21;for(let rr=3;rr<=far2;rr+=3)for(let k=0;k<20;k++){const a=k/20*6.2832+rr*.37,x=Math.round(o.x+Math.cos(a)*rr),y=Math.round(o.y+Math.sin(a)*rr);
         if(insAt(x,y)!==I||(out&&d([x,y],out)<32)||(DW0&&!(DW0[y*W+x]<-5)))continue; /* only to open ground (the camp stays joined to the road) */const v=sc(x,y)-.18*rr;if(v>bs+.01){bs=v;bx=x;by=y}}
       if(bs>=s0+1.5){o.x=bx;o.y=by}});
     if(I.g===1&&far()!==f0)L.forEach(o=>{o.x=Math.round(o.c[0]);o.y=Math.round(o.c[1])}); // keep the camp furthest from the entrance (v144 hatch)

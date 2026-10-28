@@ -936,7 +936,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   * *Size and spot* (`cs164Sites`, a pure function of the map data, cached): each camp wants `cs164Rd(r123)` = 1.9 r + 2 (18..30 tiles;
     v123's 8..16). What fits is worked out against the instance edge (10 tiles kept), the gateway clearing, the entrance, the Lantern
     Road outpost and the other camps (crowded pairs give back what they grew, in proportion; 8 tiles between rings). A camp that can't
-    reach its size moves up to 21 tiles to open ground (moves cost a little; Kindlelight II's furthest camp stays the furthest, so
+    reach its size moves up to 21 tiles (36 when it could hardly grow) to open ground (moves cost a little; Kindlelight II's furthest camp stays the furthest, so
     `mq144Camp` is still the Glowmire Warren). The record in `I.cl` is moved in place (like `mq151MoveCamp`). Result: 51 of 54 camps
     are 1.5–2.3× their v123 radius (most at the full 1.9×+2); Cliffside Lair, Frozen Hollow, Sunken Ossuary, Bleached Oasis and a few
     others are boxed in by cliffs, the gateway or a neighbour and grow less (never smaller than v123).
