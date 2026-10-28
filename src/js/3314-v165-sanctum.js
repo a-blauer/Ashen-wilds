@@ -163,7 +163,7 @@ function dg165SChasmReset(){const S=DG165S.S;if(!S)return;const F0=dg165SY();S.s
 // the closing walls
 function dg165SCwReset(){const S=DG165S.S;DG165S.cw=null;enemies.slice().forEach(e=>{if(e.dg165cw&&!e.dead)try{removeE(e)}catch(_){}});if(S){S.cwL.visible=S.cwR.visible=false;S.statues.forEach(s=>{s.anim=null})}dg165SDoors()}
 function dg165SCwStart(S){const R=svRng(Math.floor(performance.now())%9973+11);DG165S.cw={ph:'run',t:0,half:DG165SP.cwStart,sp:0,gT:0};
-  S.statues.forEach(s=>{s.f=(s.want+1+Math.floor(R()*3))%4;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
+  S.statues.forEach(s=>{const g=[0,2,1,3][s.want];s.f=(g+1+Math.floor(R()*3))%4;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
   dg165SDoors();dg165Snd('slam',1.1,.8);shake(.35);dg165Fear(.7);setTimeout(()=>{dg165Snd('grind',1,.8);dg165Snd('rumble',.8,1)},350);
   dg165Title('The Closing Walls','The doors slam shut. The walls begin to move.','Turn the four knights to face the altar','The Hidden Sanctum');
   say('⚔ The walls are closing! Turn each weeping knight (F) until it faces the altar.');dg165Co('cw',1)}

@@ -87,8 +87,8 @@ function dg165Candle(k,x,y,z,h){h=h||.22;k.p('','cyl','c',0xd0c4a2,x,y+h/2,z,.03
 function dg165Flame(parent,x,y,z,s,col){const f=kqSpr(col||0xffb050,s||.22);f.position.set(x,y,z);f.userData.ph=Math.random()*6;f.userData.s0=s||.22;parent.add(f);return f}
 function dg165FlTick(L,t){for(const f of L){const s=f.userData.s0*(1+.18*Math.sin(t*13+f.userData.ph)*Math.sin(t*5.1+f.userData.ph));f.scale.set(s*.75,s*1.25,1)}}
 // a shared pool of point lights for one place: lights follow the nearest light spots, so only a few are ever in the scene
-function dg165LPool(n,dist){const L=[];for(let i=0;i<n;i++){const l=new THREE.PointLight(0xffa050,0,dist||9,1.6);l.position.set(0,-50,0);scene.add(l);L.push(l)}return {L,on:false}}
-function dg165LPoolTick(Pool,spots,P,t,on){const L=Pool.L;if(!on){if(Pool.on){Pool.on=false;L.forEach(l=>l.intensity=0)}return}Pool.on=true;
+function dg165LPool(n,dist){const L=[];for(let i=0;i<n;i++){const l=new THREE.PointLight(0xffa050,0,dist||9,1.6);l.position.set(0,-50,0);l.visible=false;scene.add(l);L.push(l)}return {L,on:false}}
+function dg165LPoolTick(Pool,spots,P,t,on){const L=Pool.L;if(!on){if(Pool.on!==false){Pool.on=false;L.forEach(l=>{l.intensity=0;l.visible=false})}return}if(!Pool.on){Pool.on=true;L.forEach(l=>l.visible=true)}
   const S=spots.map(s=>[s,(s.x-P.x)*(s.x-P.x)+(s.z-P.z)*(s.z-P.z)]).sort((a,b)=>a[1]-b[1]);
   for(let i=0;i<L.length;i++){const q=S[i];if(!q||q[1]>1600){L[i].intensity=0;continue}const s=q[0];L[i].position.set(s.x,s.y,s.z);L[i].color.setHex(s.c||0xffa050);L[i].distance=s.r||9;
     L[i].intensity=(s.i||1.4)*(s.off?0:1)*(.82+.18*Math.sin(t*(s.fq||9)+(s.ph||0))*Math.sin(t*3.7+(s.ph||0)))}}

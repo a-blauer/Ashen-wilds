@@ -124,14 +124,14 @@ function rt165Place(){const R=RT165R;if(!R)return;const [x,z]=rt165W(R,R.H[0],R.
 // moves on the deck: one axis at a time, never off the planks
 function rt165Walk(dx,dz){const R=RT165R;if(!R||R.ph=='broken')return;const f=R.fr,du=dx*f.Rt[0]+dz*f.Rt[1],dv=dx*f.F[0]+dz*f.F[1];
   if(rt165OnDeck(R,R.H[0]+du,R.H[1]))R.H[0]+=du;if(rt165OnDeck(R,R.H[0],R.H[1]+dv))R.H[1]+=dv;rt165Place()}
-{const f=walk;walk=function(o,dx,dz){if(o===pl&&rt165In()&&RT165R&&!(typeof AWD!='undefined'&&AWD.dead))return rt165Walk(dx,dz);return f.apply(this,arguments)}}
+{const f=walk;walk=function(o,dx,dz){if(o===pl&&rt165In()&&RT165R&&!(typeof AWD!='undefined'&&AWD.dead)&&!(typeof RV148!='undefined'&&RV148.down))return rt165Walk(dx,dz);return f.apply(this,arguments)}}
 function rt165Phase(p){const L=RT165.ph;let q=L[0];for(const x of L)if(p>=x[0])q=x;return q}
 function rt165Tick(dt,now){const inC=rt165In(),S=RT165S;
   if(!inC){if(S){S.root.visible=false;dg165LPoolTick(S.pool,S.spots,pl.position,0,false);S.lantL.intensity=0}if(RT165R){rt165Clear();RT165R=null}if(!RT165.off){RT165.off=1;rt165Hud()}return}
   RT165.off=0;rt165Build();if(!RT165R)rt165Reset();const R=RT165R,P=rt165P(),t=now/1000;RT165S.root.visible=true;R.t+=dt;
   if(riding)try{dismount(true)}catch(_){}
   // other things that moved the hero this frame (a knock-back, a pull): onto the deck if they can
-  if(R.last&&R.ph!='broken'){const ex=pl.position.x-R.last[0],ez=pl.position.z-R.last[1];if(Math.abs(ex)+Math.abs(ez)>.001&&Math.abs(ex)+Math.abs(ez)<3)rt165Walk(ex,ez)}
+  if(R.last&&R.ph!='broken'&&!(typeof RV148!='undefined'&&RV148.down)){const ex=pl.position.x-R.last[0],ez=pl.position.z-R.last[1];if(Math.abs(ex)+Math.abs(ez)>.001&&Math.abs(ex)+Math.abs(ez)<3)rt165Walk(ex,ez)}
   // drift: ease out of the mooring, a little faster and slower with the current, slow onto the beach at the end
   const p=R.s/P.S;let vt=R.ph=='moor'?0:R.ph=='run'?RT165.spd*(1+.1*Math.sin(R.s/55))*(R.s>P.S-30?Math.max(.15,(P.S-R.s)/30):1):R.ph=='end'?0:R.v*.97;
   if(R.ph=='moor'&&R.t>2.6){R.ph='run';R.t=0;dg165Snd('creak',.8,.8);say('🌊 The mooring rope parts. The current takes the raft into the dark…')}
@@ -179,7 +179,7 @@ function rt165PickSlot(R,w){const open=rt165Open(R).filter(([C,k])=>!R.W.some(q=
 // ---------------- the drowned: each frame (runs instead of the normal AI) ----------------
 {const f=eTick;eTick=function(e,dt,now){const w=e&&e.dg165w;if(w&&!e.dead){try{if(e.mir)return rt165Mirror(e,w,dt,now,f,arguments);rt165WTick(e,w,dt,now)}catch(err){if(!RT165.err++)console.error('v165 drowned tick',err)}return true}return f.apply(this,arguments)}}
 function rt165WTick(e,w,dt,now){const R=RT165R,m=e.m,t=now/1000,P=rt165P(),C=dg165CCfg(),wy=RT165.wy;
-  if(!R||!rt165In()||w.rid!==R.id){try{removeE(e)}catch(_){}return}
+  if(!R||!rt165In()||w.rid!==R.id||w.x==null||!R.W.includes(w)){try{removeE(e)}catch(_){}return}
   w.t+=dt;const hurtNow=e.c.h<w.hp-.5;w.hp=e.c.h;let pose=null,y=0,yaw=m.rotation.y;
   const slotW=()=>{const [lu,lv]=rt165SlotL(w.slot.C,w.slot.k,w.hulk?.95:.62);return rt165W(R,lu,lv)};
   const slotOk=()=>w.slot&&w.slot.C.alive&&rt165Open(R).some(([Cc,k])=>Cc===w.slot.C&&k===w.slot.k);

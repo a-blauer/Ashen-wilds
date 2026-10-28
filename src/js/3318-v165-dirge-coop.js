@@ -18,7 +18,7 @@
   DG165Q.g={st:0,ex:[],bad:[]};DG165Q.s={st:0,cp:0,cw:0};DG165Q.r={st:0};DG165Q.o={lit:[0,0,0,0,0],st:0};
   if(q&&typeof q=='object'){if(q.g){DG165Q.g.st=c(q.g.st,0,2);DG165Q.g.ex=arr(q.g.ex,14);DG165Q.g.bad=arr(q.g.bad,14)}if(q.s){DG165Q.s.st=c(q.s.st,0,2);DG165Q.s.cp=c(q.s.cp,0,5);DG165Q.s.cw=q.s.cw?1:0}
     if(q.r)DG165Q.r.st=c(q.r.st,0,2);if(q.o){DG165Q.o.lit=arr(q.o.lit,5);DG165Q.o.st=q.o.st?1:0}}
-  OS165.carry=null;OS165.sipping=null;OS165.net={};try{os165Aura(false)}catch(_){}DG165S.cw=null;DG165S.gate=null;DG165S.fall=null;RT165R=null;DG165GR.dig=null;
+  OS165.carry=null;OS165.sipping=null;OS165.net={};OS165.fin=0;try{os165Aura(false)}catch(_){}DG165S.cw=null;DG165S.gate=null;DG165S.fall=null;RT165R=null;DG165GR.dig=null;
   try{dg165GSync()}catch(_){}try{os165GateSync()}catch(_){}}catch(e){console.warn('v165 load',e)}return r}}
 // the cheat "All quests complete" (3060) finishes the Dirge's chapters too
 {const f=cheatQuests147;cheatQuests147=function(){try{const Q=DG165Q;Q.g.st=2;Q.s.st=2;Q.s.cw=1;Q.r.st=2;Q.o.lit=[1,1,1,1,1];Q.o.st=1;dg165GSync();os165GateSync()}catch(e){console.warn('v165 cheat',e)}return f.apply(this,arguments)}}
@@ -28,7 +28,7 @@ function dg165CoOn(){try{return typeof cl155Co=='function'&&cl155Co()}catch(_){r
 function dg165Co(k,a,b){try{if(!dg165CoOn())return;if(k=='take')(OS165.mine=OS165.mine||{})[a]=1;cl155Send(['dg',k,a==null?0:a,b==null?0:b])}catch(_){}}
 function dg165Me(){try{return MP.me}catch(_){return ''}}
 {const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.oc=OS165.carry?OS165.carry.i+1:0}catch(_){}}return f.apply(this,arguments)}}
-{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(dg165CoOn()||(typeof cl155On=='function'&&cl155On())){if(!msg.sameTab&&d&&Array.isArray(d.l)&&MP.rh[msg.peer])for(const q of d.l.slice(0,60))if(Array.isArray(q)&&q[0]==='dg')dg165On(q,msg.peer)}}
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(dg165CoOn()||(typeof cl155On=='function'&&cl155On())){if(!msg.sameTab&&d&&Array.isArray(d.l)&&MP.rh[msg.peer]&&d.r===MP.rg)for(const q of d.l.slice(0,60))if(Array.isArray(q)&&q[0]==='dg')dg165On(q,msg.peer)}}
   catch(err){if(!DG165C.err++)console.warn('v165 coop',err)}return f.apply(this,arguments)}}
 function dg165On(q,peer){const k=q[1],a=q[2],b=q[3],I=curIns(),g=I?I.g:-1;
   if(k=='dig'){if(!dg165GDone()){DG165Q.g.st=2;dg165GSync();say('🕯 '+mpEsc(mpName(peer))+' dug open the Keeper’s grave: a stair leads down.')}return}
@@ -50,7 +50,7 @@ function dg165On(q,peer){const k=q[1],a=q[2],b=q[3],I=curIns(),g=I?I.g:-1;
   if(k=='lg'){if(b===dg165Me()){const e=MP.emap&&MP.emap[a];if(e&&!e.dead&&Math.hypot(pl.position.x-e.m.position.x,pl.position.z-e.m.position.z)<2.8)try{hitHero(e,.85)}catch(_){}}return}
   if(k=='rout'){if(rt165In()&&RT165R&&!RT165R.fin){RT165R.fin=1;rt165Finish()}return}
   // the prisms
-  if(k=='take'){OS165.net=OS165.net||{};OS165.net[a|0]=peer;OS165.trkK='';return}
+  if(k=='take'){OS165.net=OS165.net||{};OS165.net[a|0]=peer;(OS165.netT=OS165.netT||{})[a|0]=performance.now();OS165.trkK='';return}
   if(k=='ret'){if(OS165.net)delete OS165.net[a|0];return}
   if(k=='lit'){if(OS165.net)delete OS165.net[a|0];if(!DG165Q.o.lit[a|0]){os165Give(a|0,false);say('◆ '+mpEsc(mpName(peer))+' lit the '+OS165.nm[a|0]+' rune.')}return}
   if(k=='ofin'){if(!DG165Q.o.st){DG165Q.o.lit=[1,1,1,1,1];os165Finish()}return}
@@ -72,6 +72,8 @@ function dg165CoTick(dt,now){const host=rt165Host();
   // the host raises the dead round partners who carry a prism's essence
   if(host&&os165In()){try{for(const r of cl155Mates(MP.rg)){const p=r.pr,oc=p&&p.oc|0;if(!oc||!r.m)continue;const T=DG165C.oc[r.peer]=DG165C.oc[r.peer]||{sp:OS165.first,n:0,live:[]};T.live=T.live.filter(e=>!e.dead&&enemies.includes(e));T.sp-=dt;
       if(T.sp<=0){T.sp=OS165.gap*(.8+Math.random()*.4);T.n++;if(T.live.length<OS165.cap)os165Rise(r.m.position.x,r.m.position.z,T.n%5==0?3:2,T,r.peer)}}}catch(_){}}
+  // a prism someone carries is free again once they have gone or no longer carry it (a disconnect, leaving the fields)
+  if(OS165.net){OS165.netT=OS165.netT||{};for(const i in OS165.net){const r=MP.rh[OS165.net[i]];if(!r||!r.pr||r.pr.rg!==MP.rg||(r.pr.oc|0)!==(+i)+1){if(now-(OS165.netT[i]||0)>5000)delete OS165.net[i]}else OS165.netT[i]=now}}
   if(now-DG165C.tS>3000){DG165C.tS=now;cl155Send(['dg','st',JSON.stringify({g:DG165Q.g.st,cp:DG165Q.s.cp,cw:DG165Q.s.cw,lit:DG165Q.o.lit}),0])}}
 // the raft breaking takes everyone down (no revive: the water has them)
 {const f=rv148CanDown;rv148CanDown=function(){try{if(rt165In()&&RT165R&&RT165R.ph=='broken')return false}catch(_){}return f.apply(this,arguments)}}

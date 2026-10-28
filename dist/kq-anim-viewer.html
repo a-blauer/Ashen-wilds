@@ -52520,7 +52520,7 @@ function dg165SanPlan(){if(dg165SanPlan.c)return dg165SanPlan.c;
     jets:[122,129,136,143,150].map((v,i)=>({v,side:i%2?1:-1,ph:i*.55})),jet:{per:2.9,on:1.25},
     gate:{v:158.5,u0:61,u1:67,open:16},
     // the chasm's bridge: a chain of 2×2 slabs from the entry ledge to the exit ledge
-    ledgeA:[58,160,70,165],ledgeB:[86,207,98,214],
+    ledgeA:[58,160,70,166],ledgeB:[86,206,98,214],
     bridge:(()=>{const L=[[64,167],[64,175],[72,175],[72,183],[84,183],[84,191],[76,191],[76,199],[92,199],[92,205]],out=[],seen={};
       for(let i=0;i<L.length-1;i++){const [a,b]=[L[i],L[i+1]],n=Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let k=0;k<=n;k++){const u=a[0]+(b[0]-a[0])*k/n,v=a[1]+(b[1]-a[1])*k/n,key=u+'_'+v;if(seen[key])continue;seen[key]=1;out.push([u,v])}}
       return out})(),
@@ -52745,8 +52745,8 @@ function dg165Candle(k,x,y,z,h){h=h||.22;k.p('','cyl','c',0xd0c4a2,x,y+h/2,z,.03
 function dg165Flame(parent,x,y,z,s,col){const f=kqSpr(col||0xffb050,s||.22);f.position.set(x,y,z);f.userData.ph=Math.random()*6;f.userData.s0=s||.22;parent.add(f);return f}
 function dg165FlTick(L,t){for(const f of L){const s=f.userData.s0*(1+.18*Math.sin(t*13+f.userData.ph)*Math.sin(t*5.1+f.userData.ph));f.scale.set(s*.75,s*1.25,1)}}
 // a shared pool of point lights for one place: lights follow the nearest light spots, so only a few are ever in the scene
-function dg165LPool(n,dist){const L=[];for(let i=0;i<n;i++){const l=new THREE.PointLight(0xffa050,0,dist||9,1.6);l.position.set(0,-50,0);scene.add(l);L.push(l)}return {L,on:false}}
-function dg165LPoolTick(Pool,spots,P,t,on){const L=Pool.L;if(!on){if(Pool.on){Pool.on=false;L.forEach(l=>l.intensity=0)}return}Pool.on=true;
+function dg165LPool(n,dist){const L=[];for(let i=0;i<n;i++){const l=new THREE.PointLight(0xffa050,0,dist||9,1.6);l.position.set(0,-50,0);l.visible=false;scene.add(l);L.push(l)}return {L,on:false}}
+function dg165LPoolTick(Pool,spots,P,t,on){const L=Pool.L;if(!on){if(Pool.on!==false){Pool.on=false;L.forEach(l=>{l.intensity=0;l.visible=false})}return}if(!Pool.on){Pool.on=true;L.forEach(l=>l.visible=true)}
   const S=spots.map(s=>[s,(s.x-P.x)*(s.x-P.x)+(s.z-P.z)*(s.z-P.z)]).sort((a,b)=>a[1]-b[1]);
   for(let i=0;i<L.length;i++){const q=S[i];if(!q||q[1]>1600){L[i].intensity=0;continue}const s=q[0];L[i].position.set(s.x,s.y,s.z);L[i].color.setHex(s.c||0xffa050);L[i].distance=s.r||9;
     L[i].intensity=(s.i||1.4)*(s.off?0:1)*(.82+.18*Math.sin(t*(s.fq||9)+(s.ph||0))*Math.sin(t*3.7+(s.ph||0)))}}
@@ -52891,11 +52891,12 @@ function dg165AngelCard(s){dg165CardShow(`<div class="kk">🕯 Carved into the p
 function dg165DigStart(G){if(DG165GR.dig||AF)return;if(riding)try{dismount(true)}catch(_){}
   DG165GR.dig={G,t:0,need:3.2,sw:0,hp:hero.hp,x:pl.position.x,z:pl.position.z};dg165CardHide();say('⛏ You start to dig up the grave of '+G.o.name+'…')}
 function dg165DigTick(dt,now){const D=DG165GR.dig,G=D.G,o=G.o,P=pl.position;
-  if(Math.hypot(P.x-D.x,P.z-D.z)>.6||hero.hp<D.hp-1||Math.hypot(P.x-o.x,P.z-o.z)>3.4){DG165GR.dig=null;say('⛏ You stop digging.');return}
+  if(Math.hypot(P.x-D.x,P.z-D.z)>.6||hero.hp<D.hp-1||Math.hypot(P.x-o.x,P.z-o.z)>3.4){dg165DigStop();say('⛏ You stop digging.');return}
   D.t+=dt;D.sw-=dt;try{face(V(o.x-P.x,0,o.z-P.z).normalize())}catch(_){}
   if(D.sw<=0){D.sw=.55;try{if(!pl.sw)swingAnim((D.n=(D.n||0)+1)%2,320)}catch(_){}setTimeout(()=>{try{dg165Snd('spade',.8,.9+Math.random()*.2);burst(gY(V(o.x+Math.sin(o.ry)*.4,0,o.z+Math.cos(o.ry)*.4),.3),0x3a3026,10,1.8,2.2,.5)}catch(_){}},180)}
   G.body.children.forEach(m=>{m.scale.y=Math.max(.5,1-D.t/D.need*.35)});
   if(D.t>=D.need){DG165GR.dig=null;G.body.children.forEach(m=>m.scale.y=1);dg165DigDone(G,true)}}
+function dg165DigStop(){const D=DG165GR.dig;DG165GR.dig=null;if(D)D.G.body.children.forEach(m=>m.scale.y=1)}
 function dg165DigDone(G,mine){const o=G.o,keep=o.i===DG165G.K;
   if(keep){if(DG165Q.g.st>=2)return;DG165Q.g.st=2;dg165GSync();dg165Snd('rumble',1,1);shake(.5);dg165Fear(.6);
     for(let i=0;i<40;i++)setTimeout(()=>{try{burst(gY(V(o.x+(Math.random()-.5)*1.6,0,o.z+(Math.random()-.5)*2.4),.2),0x2a241e,4,1.5,2,.6)}catch(_){}},i*40);
@@ -52909,7 +52910,7 @@ function dg165DigDone(G,mine){const o=G.o,keep=o.i===DG165G.K;
     const e=spawnEnemy(keys[k],x,z,lv[1],{agg:1,minion:1});if(e){e.agg=1;e.hunt=1;e.dg165r=1;burst(gY(V(x,0,z),.3),0x3a3026,24,2,3,.8);dg165Snd('gasp',.6,.8)}}catch(err){console.warn('v165 risen',err)}},350+k*420);
   setTimeout(()=>say('☠ Not the Keeper. Something else was sleeping in '+o.name+'’s grave…'),500)}
 // ---------------- prompts at the graves ----------------
-function dg165GPrompt(){if(!dg165GIn()||!DG165GR.S)return null;const P=pl.position;if(DG165GR.dig){const D=DG165GR.dig;return {label:'⛏ Digging… '+Math.round(D.t/D.need*100)+'%',fn:()=>{DG165GR.dig=null}}}
+function dg165GPrompt(){if(!dg165GIn()||!DG165GR.S)return null;const P=pl.position;if(DG165GR.dig){const D=DG165GR.dig;return {label:'⛏ Digging… '+Math.round(D.t/D.need*100)+'%',fn:()=>dg165DigStop()}}
   let best=null,bd=2.7;for(const G of DG165GR.S.gr){const o=G.o,d=Math.hypot(P.x-o.x-Math.sin(o.ry)*1.3,P.z-o.z-Math.cos(o.ry)*1.3);if(d<bd){bd=d;best=G}}
   if(!best)return null;const G=best,o=G.o,keep=o.i===DG165G.K;
   if(keep&&dg165GDone()){if(dg165SDone()){const N=INSL[21];return {label:'F · Take the stair down to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
@@ -53214,7 +53215,7 @@ function dg165SChasmReset(){const S=DG165S.S;if(!S)return;const F0=dg165SY();S.s
 // the closing walls
 function dg165SCwReset(){const S=DG165S.S;DG165S.cw=null;enemies.slice().forEach(e=>{if(e.dg165cw&&!e.dead)try{removeE(e)}catch(_){}});if(S){S.cwL.visible=S.cwR.visible=false;S.statues.forEach(s=>{s.anim=null})}dg165SDoors()}
 function dg165SCwStart(S){const R=svRng(Math.floor(performance.now())%9973+11);DG165S.cw={ph:'run',t:0,half:DG165SP.cwStart,sp:0,gT:0};
-  S.statues.forEach(s=>{s.f=(s.want+1+Math.floor(R()*3))%4;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
+  S.statues.forEach(s=>{const g=[0,2,1,3][s.want];s.f=(g+1+Math.floor(R()*3))%4;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
   dg165SDoors();dg165Snd('slam',1.1,.8);shake(.35);dg165Fear(.7);setTimeout(()=>{dg165Snd('grind',1,.8);dg165Snd('rumble',.8,1)},350);
   dg165Title('The Closing Walls','The doors slam shut. The walls begin to move.','Turn the four knights to face the altar','The Hidden Sanctum');
   say('⚔ The walls are closing! Turn each weeping knight (F) until it faces the altar.');dg165Co('cw',1)}
@@ -53505,14 +53506,14 @@ function rt165Place(){const R=RT165R;if(!R)return;const [x,z]=rt165W(R,R.H[0],R.
 // moves on the deck: one axis at a time, never off the planks
 function rt165Walk(dx,dz){const R=RT165R;if(!R||R.ph=='broken')return;const f=R.fr,du=dx*f.Rt[0]+dz*f.Rt[1],dv=dx*f.F[0]+dz*f.F[1];
   if(rt165OnDeck(R,R.H[0]+du,R.H[1]))R.H[0]+=du;if(rt165OnDeck(R,R.H[0],R.H[1]+dv))R.H[1]+=dv;rt165Place()}
-{const f=walk;walk=function(o,dx,dz){if(o===pl&&rt165In()&&RT165R&&!(typeof AWD!='undefined'&&AWD.dead))return rt165Walk(dx,dz);return f.apply(this,arguments)}}
+{const f=walk;walk=function(o,dx,dz){if(o===pl&&rt165In()&&RT165R&&!(typeof AWD!='undefined'&&AWD.dead)&&!(typeof RV148!='undefined'&&RV148.down))return rt165Walk(dx,dz);return f.apply(this,arguments)}}
 function rt165Phase(p){const L=RT165.ph;let q=L[0];for(const x of L)if(p>=x[0])q=x;return q}
 function rt165Tick(dt,now){const inC=rt165In(),S=RT165S;
   if(!inC){if(S){S.root.visible=false;dg165LPoolTick(S.pool,S.spots,pl.position,0,false);S.lantL.intensity=0}if(RT165R){rt165Clear();RT165R=null}if(!RT165.off){RT165.off=1;rt165Hud()}return}
   RT165.off=0;rt165Build();if(!RT165R)rt165Reset();const R=RT165R,P=rt165P(),t=now/1000;RT165S.root.visible=true;R.t+=dt;
   if(riding)try{dismount(true)}catch(_){}
   // other things that moved the hero this frame (a knock-back, a pull): onto the deck if they can
-  if(R.last&&R.ph!='broken'){const ex=pl.position.x-R.last[0],ez=pl.position.z-R.last[1];if(Math.abs(ex)+Math.abs(ez)>.001&&Math.abs(ex)+Math.abs(ez)<3)rt165Walk(ex,ez)}
+  if(R.last&&R.ph!='broken'&&!(typeof RV148!='undefined'&&RV148.down)){const ex=pl.position.x-R.last[0],ez=pl.position.z-R.last[1];if(Math.abs(ex)+Math.abs(ez)>.001&&Math.abs(ex)+Math.abs(ez)<3)rt165Walk(ex,ez)}
   // drift: ease out of the mooring, a little faster and slower with the current, slow onto the beach at the end
   const p=R.s/P.S;let vt=R.ph=='moor'?0:R.ph=='run'?RT165.spd*(1+.1*Math.sin(R.s/55))*(R.s>P.S-30?Math.max(.15,(P.S-R.s)/30):1):R.ph=='end'?0:R.v*.97;
   if(R.ph=='moor'&&R.t>2.6){R.ph='run';R.t=0;dg165Snd('creak',.8,.8);say('🌊 The mooring rope parts. The current takes the raft into the dark…')}
@@ -53560,7 +53561,7 @@ function rt165PickSlot(R,w){const open=rt165Open(R).filter(([C,k])=>!R.W.some(q=
 // ---------------- the drowned: each frame (runs instead of the normal AI) ----------------
 {const f=eTick;eTick=function(e,dt,now){const w=e&&e.dg165w;if(w&&!e.dead){try{if(e.mir)return rt165Mirror(e,w,dt,now,f,arguments);rt165WTick(e,w,dt,now)}catch(err){if(!RT165.err++)console.error('v165 drowned tick',err)}return true}return f.apply(this,arguments)}}
 function rt165WTick(e,w,dt,now){const R=RT165R,m=e.m,t=now/1000,P=rt165P(),C=dg165CCfg(),wy=RT165.wy;
-  if(!R||!rt165In()||w.rid!==R.id){try{removeE(e)}catch(_){}return}
+  if(!R||!rt165In()||w.rid!==R.id||w.x==null||!R.W.includes(w)){try{removeE(e)}catch(_){}return}
   w.t+=dt;const hurtNow=e.c.h<w.hp-.5;w.hp=e.c.h;let pose=null,y=0,yaw=m.rotation.y;
   const slotW=()=>{const [lu,lv]=rt165SlotL(w.slot.C,w.slot.k,w.hulk?.95:.62);return rt165W(R,lu,lv)};
   const slotOk=()=>w.slot&&w.slot.C.alive&&rt165Open(R).some(([Cc,k])=>Cc===w.slot.C&&k===w.slot.k);
@@ -53746,7 +53747,7 @@ function os165Build(){if(OS165.S)return OS165.S;const Pl=dg165PrismPlan(),S={pr:
   const c=Pl.ctr,R=os165ReliqModel();R.g.position.set(c.x,GH(c.x,c.z),c.z);R.g.rotation.y=c.ry;scene.add(R.g);R.x=c.x;R.z=c.z;S.R=R;
   R.runes.forEach(q=>{const a=q.a+c.ry,x=c.x+Math.sin(a)*6.2,z=c.z+Math.cos(a)*6.2;q.x=x;q.z=z;CBLK.add(Math.round(z)*W+Math.round(x))});for(let du=-1;du<=1;du++)for(let dv=-1;dv<=1;dv++)CBLK.add(Math.round(c.z+dv)*W+Math.round(c.x+du));
   os165GateSync();return S}
-function os165Full(i){return !DG165Q.o.lit[i]&&!(OS165.carry&&OS165.carry.i===i)&&!(OS165.net&&OS165.net[i])}
+function os165Full(i){if(OS165.net&&OS165.net[i]&&!(typeof dg165CoOn=='function'&&dg165CoOn()))delete OS165.net[i];return !DG165Q.o.lit[i]&&!(OS165.carry&&OS165.carry.i===i)&&!(OS165.net&&OS165.net[i])}
 function os165Tick(dt,now){const in3=os165In(),t=now/1000;if(in3&&!OS165.S)try{os165Build()}catch(e){if(!OS165.err++)console.error('v165 prisms',e)}
   const S=OS165.S;if(!S)return;S.pr.forEach(M=>M.g.visible=in3);S.R.g.visible=in3;
   if(!in3){S.pr.forEach(M=>M.lt.intensity=0);S.R.runes.forEach(q=>q.lt.intensity=0);S.R.flL.intensity=0;if(OS165.carry)os165Return('left');OS165.sipping=null;return}
@@ -53798,7 +53799,7 @@ function os165Return(why){const C=OS165.carry;if(!C)return;OS165.carry=null;os16
     kqFx({tick(dt){t+=(dt||.016)/1.4;const k=Math.min(1,t),u=1-k;s.position.set(u*u*a.x+2*u*k*mid.x+k*k*b.x,u*u*a.y+2*u*k*mid.y+k*k*b.y,u*u*a.z+2*u*k*mid.z+k*k*b.z);if(Math.random()<.6)burst(s.position.clone(),OS165.col[i],1,.15,.2,.5);if(k>=1){scene.remove(s);burst(b,OS165.col[i],20,1.5,1.5,.6);return false}return true},end(){if(s.parent)scene.remove(s)}})}
   say(why=='dead'?'◆ As you fall, the '+OS165.nm[i]+' essence tears free of you and streams back to its prism.':'◆ The '+OS165.nm[i]+' essence slips away from you, back to its prism.');dg165Co('ret',i)}
 {const f=down;down=function(){const r=f.apply(this,arguments);try{if(OS165.carry&&((typeof AWD!='undefined'&&AWD.dead)||(typeof RV148!='undefined'&&RV148.down)||hero.hp<=0))os165Return('dead')}catch(_){}return r}}
-function os165Finish(){DG165Q.o.st=1;OS165.trkK='';const S=OS165.S;dg165Snd('choir',1.2,.7);dg165Snd('rumble',1,1);shake(.5);
+function os165Finish(){if(OS165.fin)return;OS165.fin=1;DG165Q.o.st=1;OS165.trkK='';const S=OS165.S;dg165Snd('choir',1.2,.7);dg165Snd('rumble',1,1);shake(.5);
   if(S){S.R.runes.forEach(q=>{svShock(V(q.x,0,q.z),OS165.col[q.i],7,.8)});svShock(V(S.R.x,0,S.R.z),0xd8fff0,12,1.2);burst(V(S.R.x,GH(S.R.x,S.R.z)+3,S.R.z),0xd8fff0,120,5,6,1.2)}
   os165GateSync();const r=RPORT.find(q=>q.k=='next'&&q.ig===22);if(r)setTimeout(()=>{svShock(V(r.x,0,r.z),0xd8fff0,6,.7);burst(gY(V(r.x,0,r.z),1.2),0xd8fff0,70,3,3,1)},900);
   setTimeout(()=>{dg165Title('The Den Is Open','Five runes burn as one. The gateway to '+PMAP[4].ins[3].n+' opens.','Face '+BOSSES[4].name+' at the end of the road');try{mSfx('victory')}catch(_){}say('🌀 All five runes burn: the gateway at the end of '+INSL[22].n+' now leads to the Den.')},1000);dg165Co('ofin',0)}
@@ -53857,7 +53858,7 @@ function os165Marks(g,P,k){if(!os165In())return;const Pl=dg165PrismPlan();Pl.pr.
   DG165Q.g={st:0,ex:[],bad:[]};DG165Q.s={st:0,cp:0,cw:0};DG165Q.r={st:0};DG165Q.o={lit:[0,0,0,0,0],st:0};
   if(q&&typeof q=='object'){if(q.g){DG165Q.g.st=c(q.g.st,0,2);DG165Q.g.ex=arr(q.g.ex,14);DG165Q.g.bad=arr(q.g.bad,14)}if(q.s){DG165Q.s.st=c(q.s.st,0,2);DG165Q.s.cp=c(q.s.cp,0,5);DG165Q.s.cw=q.s.cw?1:0}
     if(q.r)DG165Q.r.st=c(q.r.st,0,2);if(q.o){DG165Q.o.lit=arr(q.o.lit,5);DG165Q.o.st=q.o.st?1:0}}
-  OS165.carry=null;OS165.sipping=null;OS165.net={};try{os165Aura(false)}catch(_){}DG165S.cw=null;DG165S.gate=null;DG165S.fall=null;RT165R=null;DG165GR.dig=null;
+  OS165.carry=null;OS165.sipping=null;OS165.net={};OS165.fin=0;try{os165Aura(false)}catch(_){}DG165S.cw=null;DG165S.gate=null;DG165S.fall=null;RT165R=null;DG165GR.dig=null;
   try{dg165GSync()}catch(_){}try{os165GateSync()}catch(_){}}catch(e){console.warn('v165 load',e)}return r}}
 // the cheat "All quests complete" (3060) finishes the Dirge's chapters too
 {const f=cheatQuests147;cheatQuests147=function(){try{const Q=DG165Q;Q.g.st=2;Q.s.st=2;Q.s.cw=1;Q.r.st=2;Q.o.lit=[1,1,1,1,1];Q.o.st=1;dg165GSync();os165GateSync()}catch(e){console.warn('v165 cheat',e)}return f.apply(this,arguments)}}
@@ -53867,7 +53868,7 @@ function dg165CoOn(){try{return typeof cl155Co=='function'&&cl155Co()}catch(_){r
 function dg165Co(k,a,b){try{if(!dg165CoOn())return;if(k=='take')(OS165.mine=OS165.mine||{})[a]=1;cl155Send(['dg',k,a==null?0:a,b==null?0:b])}catch(_){}}
 function dg165Me(){try{return MP.me}catch(_){return ''}}
 {const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.oc=OS165.carry?OS165.carry.i+1:0}catch(_){}}return f.apply(this,arguments)}}
-{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(dg165CoOn()||(typeof cl155On=='function'&&cl155On())){if(!msg.sameTab&&d&&Array.isArray(d.l)&&MP.rh[msg.peer])for(const q of d.l.slice(0,60))if(Array.isArray(q)&&q[0]==='dg')dg165On(q,msg.peer)}}
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(dg165CoOn()||(typeof cl155On=='function'&&cl155On())){if(!msg.sameTab&&d&&Array.isArray(d.l)&&MP.rh[msg.peer]&&d.r===MP.rg)for(const q of d.l.slice(0,60))if(Array.isArray(q)&&q[0]==='dg')dg165On(q,msg.peer)}}
   catch(err){if(!DG165C.err++)console.warn('v165 coop',err)}return f.apply(this,arguments)}}
 function dg165On(q,peer){const k=q[1],a=q[2],b=q[3],I=curIns(),g=I?I.g:-1;
   if(k=='dig'){if(!dg165GDone()){DG165Q.g.st=2;dg165GSync();say('🕯 '+mpEsc(mpName(peer))+' dug open the Keeper’s grave: a stair leads down.')}return}
@@ -53889,7 +53890,7 @@ function dg165On(q,peer){const k=q[1],a=q[2],b=q[3],I=curIns(),g=I?I.g:-1;
   if(k=='lg'){if(b===dg165Me()){const e=MP.emap&&MP.emap[a];if(e&&!e.dead&&Math.hypot(pl.position.x-e.m.position.x,pl.position.z-e.m.position.z)<2.8)try{hitHero(e,.85)}catch(_){}}return}
   if(k=='rout'){if(rt165In()&&RT165R&&!RT165R.fin){RT165R.fin=1;rt165Finish()}return}
   // the prisms
-  if(k=='take'){OS165.net=OS165.net||{};OS165.net[a|0]=peer;OS165.trkK='';return}
+  if(k=='take'){OS165.net=OS165.net||{};OS165.net[a|0]=peer;(OS165.netT=OS165.netT||{})[a|0]=performance.now();OS165.trkK='';return}
   if(k=='ret'){if(OS165.net)delete OS165.net[a|0];return}
   if(k=='lit'){if(OS165.net)delete OS165.net[a|0];if(!DG165Q.o.lit[a|0]){os165Give(a|0,false);say('◆ '+mpEsc(mpName(peer))+' lit the '+OS165.nm[a|0]+' rune.')}return}
   if(k=='ofin'){if(!DG165Q.o.st){DG165Q.o.lit=[1,1,1,1,1];os165Finish()}return}
@@ -53911,6 +53912,8 @@ function dg165CoTick(dt,now){const host=rt165Host();
   // the host raises the dead round partners who carry a prism's essence
   if(host&&os165In()){try{for(const r of cl155Mates(MP.rg)){const p=r.pr,oc=p&&p.oc|0;if(!oc||!r.m)continue;const T=DG165C.oc[r.peer]=DG165C.oc[r.peer]||{sp:OS165.first,n:0,live:[]};T.live=T.live.filter(e=>!e.dead&&enemies.includes(e));T.sp-=dt;
       if(T.sp<=0){T.sp=OS165.gap*(.8+Math.random()*.4);T.n++;if(T.live.length<OS165.cap)os165Rise(r.m.position.x,r.m.position.z,T.n%5==0?3:2,T,r.peer)}}}catch(_){}}
+  // a prism someone carries is free again once they have gone or no longer carry it (a disconnect, leaving the fields)
+  if(OS165.net){OS165.netT=OS165.netT||{};for(const i in OS165.net){const r=MP.rh[OS165.net[i]];if(!r||!r.pr||r.pr.rg!==MP.rg||(r.pr.oc|0)!==(+i)+1){if(now-(OS165.netT[i]||0)>5000)delete OS165.net[i]}else OS165.netT[i]=now}}
   if(now-DG165C.tS>3000){DG165C.tS=now;cl155Send(['dg','st',JSON.stringify({g:DG165Q.g.st,cp:DG165Q.s.cp,cw:DG165Q.s.cw,lit:DG165Q.o.lit}),0])}}
 // the raft breaking takes everyone down (no revive: the water has them)
 {const f=rv148CanDown;rv148CanDown=function(){try{if(rt165In()&&RT165R&&RT165R.ph=='broken')return false}catch(_){}return f.apply(this,arguments)}}

@@ -139,11 +139,12 @@ function dg165AngelCard(s){dg165CardShow(`<div class="kk">🕯 Carved into the p
 function dg165DigStart(G){if(DG165GR.dig||AF)return;if(riding)try{dismount(true)}catch(_){}
   DG165GR.dig={G,t:0,need:3.2,sw:0,hp:hero.hp,x:pl.position.x,z:pl.position.z};dg165CardHide();say('⛏ You start to dig up the grave of '+G.o.name+'…')}
 function dg165DigTick(dt,now){const D=DG165GR.dig,G=D.G,o=G.o,P=pl.position;
-  if(Math.hypot(P.x-D.x,P.z-D.z)>.6||hero.hp<D.hp-1||Math.hypot(P.x-o.x,P.z-o.z)>3.4){DG165GR.dig=null;say('⛏ You stop digging.');return}
+  if(Math.hypot(P.x-D.x,P.z-D.z)>.6||hero.hp<D.hp-1||Math.hypot(P.x-o.x,P.z-o.z)>3.4){dg165DigStop();say('⛏ You stop digging.');return}
   D.t+=dt;D.sw-=dt;try{face(V(o.x-P.x,0,o.z-P.z).normalize())}catch(_){}
   if(D.sw<=0){D.sw=.55;try{if(!pl.sw)swingAnim((D.n=(D.n||0)+1)%2,320)}catch(_){}setTimeout(()=>{try{dg165Snd('spade',.8,.9+Math.random()*.2);burst(gY(V(o.x+Math.sin(o.ry)*.4,0,o.z+Math.cos(o.ry)*.4),.3),0x3a3026,10,1.8,2.2,.5)}catch(_){}},180)}
   G.body.children.forEach(m=>{m.scale.y=Math.max(.5,1-D.t/D.need*.35)});
   if(D.t>=D.need){DG165GR.dig=null;G.body.children.forEach(m=>m.scale.y=1);dg165DigDone(G,true)}}
+function dg165DigStop(){const D=DG165GR.dig;DG165GR.dig=null;if(D)D.G.body.children.forEach(m=>m.scale.y=1)}
 function dg165DigDone(G,mine){const o=G.o,keep=o.i===DG165G.K;
   if(keep){if(DG165Q.g.st>=2)return;DG165Q.g.st=2;dg165GSync();dg165Snd('rumble',1,1);shake(.5);dg165Fear(.6);
     for(let i=0;i<40;i++)setTimeout(()=>{try{burst(gY(V(o.x+(Math.random()-.5)*1.6,0,o.z+(Math.random()-.5)*2.4),.2),0x2a241e,4,1.5,2,.6)}catch(_){}},i*40);
@@ -157,7 +158,7 @@ function dg165DigDone(G,mine){const o=G.o,keep=o.i===DG165G.K;
     const e=spawnEnemy(keys[k],x,z,lv[1],{agg:1,minion:1});if(e){e.agg=1;e.hunt=1;e.dg165r=1;burst(gY(V(x,0,z),.3),0x3a3026,24,2,3,.8);dg165Snd('gasp',.6,.8)}}catch(err){console.warn('v165 risen',err)}},350+k*420);
   setTimeout(()=>say('☠ Not the Keeper. Something else was sleeping in '+o.name+'’s grave…'),500)}
 // ---------------- prompts at the graves ----------------
-function dg165GPrompt(){if(!dg165GIn()||!DG165GR.S)return null;const P=pl.position;if(DG165GR.dig){const D=DG165GR.dig;return {label:'⛏ Digging… '+Math.round(D.t/D.need*100)+'%',fn:()=>{DG165GR.dig=null}}}
+function dg165GPrompt(){if(!dg165GIn()||!DG165GR.S)return null;const P=pl.position;if(DG165GR.dig){const D=DG165GR.dig;return {label:'⛏ Digging… '+Math.round(D.t/D.need*100)+'%',fn:()=>dg165DigStop()}}
   let best=null,bd=2.7;for(const G of DG165GR.S.gr){const o=G.o,d=Math.hypot(P.x-o.x-Math.sin(o.ry)*1.3,P.z-o.z-Math.cos(o.ry)*1.3);if(d<bd){bd=d;best=G}}
   if(!best)return null;const G=best,o=G.o,keep=o.i===DG165G.K;
   if(keep&&dg165GDone()){if(dg165SDone()){const N=INSL[21];return {label:'F · Take the stair down to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}

@@ -61,7 +61,7 @@ function os165Build(){if(OS165.S)return OS165.S;const Pl=dg165PrismPlan(),S={pr:
   const c=Pl.ctr,R=os165ReliqModel();R.g.position.set(c.x,GH(c.x,c.z),c.z);R.g.rotation.y=c.ry;scene.add(R.g);R.x=c.x;R.z=c.z;S.R=R;
   R.runes.forEach(q=>{const a=q.a+c.ry,x=c.x+Math.sin(a)*6.2,z=c.z+Math.cos(a)*6.2;q.x=x;q.z=z;CBLK.add(Math.round(z)*W+Math.round(x))});for(let du=-1;du<=1;du++)for(let dv=-1;dv<=1;dv++)CBLK.add(Math.round(c.z+dv)*W+Math.round(c.x+du));
   os165GateSync();return S}
-function os165Full(i){return !DG165Q.o.lit[i]&&!(OS165.carry&&OS165.carry.i===i)&&!(OS165.net&&OS165.net[i])}
+function os165Full(i){if(OS165.net&&OS165.net[i]&&!(typeof dg165CoOn=='function'&&dg165CoOn()))delete OS165.net[i];return !DG165Q.o.lit[i]&&!(OS165.carry&&OS165.carry.i===i)&&!(OS165.net&&OS165.net[i])}
 function os165Tick(dt,now){const in3=os165In(),t=now/1000;if(in3&&!OS165.S)try{os165Build()}catch(e){if(!OS165.err++)console.error('v165 prisms',e)}
   const S=OS165.S;if(!S)return;S.pr.forEach(M=>M.g.visible=in3);S.R.g.visible=in3;
   if(!in3){S.pr.forEach(M=>M.lt.intensity=0);S.R.runes.forEach(q=>q.lt.intensity=0);S.R.flL.intensity=0;if(OS165.carry)os165Return('left');OS165.sipping=null;return}
@@ -113,7 +113,7 @@ function os165Return(why){const C=OS165.carry;if(!C)return;OS165.carry=null;os16
     kqFx({tick(dt){t+=(dt||.016)/1.4;const k=Math.min(1,t),u=1-k;s.position.set(u*u*a.x+2*u*k*mid.x+k*k*b.x,u*u*a.y+2*u*k*mid.y+k*k*b.y,u*u*a.z+2*u*k*mid.z+k*k*b.z);if(Math.random()<.6)burst(s.position.clone(),OS165.col[i],1,.15,.2,.5);if(k>=1){scene.remove(s);burst(b,OS165.col[i],20,1.5,1.5,.6);return false}return true},end(){if(s.parent)scene.remove(s)}})}
   say(why=='dead'?'◆ As you fall, the '+OS165.nm[i]+' essence tears free of you and streams back to its prism.':'◆ The '+OS165.nm[i]+' essence slips away from you, back to its prism.');dg165Co('ret',i)}
 {const f=down;down=function(){const r=f.apply(this,arguments);try{if(OS165.carry&&((typeof AWD!='undefined'&&AWD.dead)||(typeof RV148!='undefined'&&RV148.down)||hero.hp<=0))os165Return('dead')}catch(_){}return r}}
-function os165Finish(){DG165Q.o.st=1;OS165.trkK='';const S=OS165.S;dg165Snd('choir',1.2,.7);dg165Snd('rumble',1,1);shake(.5);
+function os165Finish(){if(OS165.fin)return;OS165.fin=1;DG165Q.o.st=1;OS165.trkK='';const S=OS165.S;dg165Snd('choir',1.2,.7);dg165Snd('rumble',1,1);shake(.5);
   if(S){S.R.runes.forEach(q=>{svShock(V(q.x,0,q.z),OS165.col[q.i],7,.8)});svShock(V(S.R.x,0,S.R.z),0xd8fff0,12,1.2);burst(V(S.R.x,GH(S.R.x,S.R.z)+3,S.R.z),0xd8fff0,120,5,6,1.2)}
   os165GateSync();const r=RPORT.find(q=>q.k=='next'&&q.ig===22);if(r)setTimeout(()=>{svShock(V(r.x,0,r.z),0xd8fff0,6,.7);burst(gY(V(r.x,0,r.z),1.2),0xd8fff0,70,3,3,1)},900);
   setTimeout(()=>{dg165Title('The Den Is Open','Five runes burn as one. The gateway to '+PMAP[4].ins[3].n+' opens.','Face '+BOSSES[4].name+' at the end of the road');try{mSfx('victory')}catch(_){}say('🌀 All five runes burn: the gateway at the end of '+INSL[22].n+' now leads to the Den.')},1000);dg165Co('ofin',0)}

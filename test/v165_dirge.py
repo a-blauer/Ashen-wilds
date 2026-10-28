@@ -29,6 +29,10 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   stand(K);worldPrompt().fn();worldPrompt().fn();tick(3.6);out.gst=DG165Q.g.st;out.lk=lab();
   // ---------------- the Sanctum ----------------
   worldPrompt().fn();await wait(900);tick(.2);out.inS=dg165SIn();out.sst=DG165Q.s.st;const S=DG165S.S,SP=dg165SanPlan();
+  // on foot from the arrival to the flooded stair: the walkable tiles (bridge slabs included) join up
+  {const I=dg165SI(),[sx,sz]=dg165SW(SP.spawn[0],SP.spawn[1]),[ex,ez]=dg165SW(SP.exit[0],SP.exit[1]),ok=(x,z)=>{const t=MAP[z]&&MAP[z][x];return !!t&&'.ag'.includes(t)},seen=new Set(),q=[[Math.round(sx),Math.round(sz)]];seen.add(q[0][1]*W+q[0][0]);
+    while(q.length){const [x,z]=q.pop();for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Z=z+dz,k=Z*W+X;if(!seen.has(k)&&ok(X,Z)&&insAt(X,Z)===I){seen.add(k);q.push([X,Z])}}}
+    out.walk=seen.has(Math.round(ez)*W+Math.round(ex))}
   const goS=(u,v)=>{const [x,z]=dg165SW(u,v);toPos(x,z,0);tick(.03)};
   // pendulums: stand in a blade's path long enough to be cut
   tough();goS(80,SP.pend[1].v);let hp=hero.hp;hero.iv=0;for(let i=0;i<120&&hero.hp>=hp;i++){goS(80,SP.pend[1].v);hero.iv=0;tick(.05)}out.pend=hero.hp<hp;
@@ -96,6 +100,7 @@ def s(pg):
     e(r['unique']==1 and r['keep']=='broken,raven,candles','I: only the Keeper\'s grave has all three marks (%s)'%r['unique'])
     e(r['gst']==2 and 'Sanctum' in r['lk'],'I: the Keeper\'s grave opens on the stair (%s %s)'%(r['gst'],r['lk']))
     e(r['inS'] and r['sst']==1,'Sanctum: the stair leads into it')
+    e(r['walk'],'Sanctum: the way from the arrival to the flooded stair is walkable end to end')
     e(r['pend'] and r['spike'] and r['fire'],'Sanctum: blades, spikes and fire hurt (%s %s %s)'%(r['pend'],r['spike'],r['fire']))
     e(r['gateShut'] and r['gateOpen'] and r['gateFell'],'Sanctum: the plate lifts the gate and it falls again (%s %s %s)'%(r['gateShut'],r['gateOpen'],r['gateFell']))
     e(r['crack']==1 and r['slabFell'] and r['afterFall'][2] and r['afterFall'][1]<166 and r['slabsBack'],'Sanctum: a slab crumbles, the fall costs health and goes back to the edge (%s %s %s %s)'%(r['crack'],r['slabFell'],r['afterFall'],r['slabsBack']))

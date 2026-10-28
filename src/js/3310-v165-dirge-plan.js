@@ -39,7 +39,7 @@ function dg165SanPlan(){if(dg165SanPlan.c)return dg165SanPlan.c;
     jets:[122,129,136,143,150].map((v,i)=>({v,side:i%2?1:-1,ph:i*.55})),jet:{per:2.9,on:1.25},
     gate:{v:158.5,u0:61,u1:67,open:16},
     // the chasm's bridge: a chain of 2×2 slabs from the entry ledge to the exit ledge
-    ledgeA:[58,160,70,165],ledgeB:[86,207,98,214],
+    ledgeA:[58,160,70,166],ledgeB:[86,206,98,214],
     bridge:(()=>{const L=[[64,167],[64,175],[72,175],[72,183],[84,183],[84,191],[76,191],[76,199],[92,199],[92,205]],out=[],seen={};
       for(let i=0;i<L.length-1;i++){const [a,b]=[L[i],L[i+1]],n=Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let k=0;k<=n;k++){const u=a[0]+(b[0]-a[0])*k/n,v=a[1]+(b[1]-a[1])*k/n,key=u+'_'+v;if(seen[key])continue;seen[key]=1;out.push([u,v])}}
       return out})(),
