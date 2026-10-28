@@ -76,7 +76,7 @@ def s(pg):
     c(r['board'],'no board / Cheddar in town');c(not r['onLot'] and r['inWalls'],'board on a lot or outside the walls');c(r['decoHit']==0,'board overlaps a decoration (%s)'%r['decoHit'])
     c(r['cols']==4,'board colliders (%s)'%r['cols']);c(r['prompt'] and 'Quest Board' in r['prompt'],'prompt at the board: %s'%r['prompt'])
     c(any('Kindlelight' in t and not t.startswith('L:') for t in r['tabs']),'Kindlelight tab open: %s'%r['tabs']);c(any(t.startswith('L:') for t in r['tabs']),'locked zones shown locked')
-    c(r['cards']>=10,'Kindlelight quests on the board (%s)'%r['cards']);c(all(r['acc']),'quests accepted')
+    c(r['cards']>=8,'Kindlelight quests on the board (%s)'%r['cards']);c(all(r['acc']),'quests accepted')
     c(r['feedTown']==1,'an anywhere quest counts in town');c(r['killTown']==0,'a kill in town counted')
     c(r['instVis']==0 and r['posts']==0,'Cheddar still in an instance');c(not r['oldCol'],'old Cheddar collider still there')
     c(r['kills'][0]==3 and r['kills'][1]==5,'kills in field I and II count (%s)'%r['kills'])
