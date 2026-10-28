@@ -6,7 +6,7 @@ AL=bool(os.environ.get('ALARM'))
 # name: hero plan spot [u,v], camera plan [u,v,height above ground], look-at plan [u,v,height]
 V={'front':[[74.5,170],[74.5,182.8,1.6],[74.5,187,4.6]],'over':[[74.5,170],[74.5,176,17],[74.5,186,3]],
    'side':[[60,176],[57,184.6,4.5],[74.5,186,4.2]],'sideR':[[60,176],[93,184.4,4.5],[74.5,186,4.2]],'doors':[[74.5,170],[74.5,183.4,2.0],[74.5,187.4,2.6]],
-   'far':[[74.5,150],[74.5,140,30],[74.5,186,4]],'hero':[[74.5,184],None,None],'trail':[[34,184.5],None,None]}
+   'far':[[74.5,150],[74.5,140,30],[74.5,186,4]],'statue':[[74.5,150],[72.5,180.5,11.8],[70.5,186.2,11.0]],'knock':[[74.5,150],[73.2,184.6,1.8],[73.8,187.2,1.6]],'hero':[[74.5,184],None,None],'trail':[[34,184.5],None,None]}
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)

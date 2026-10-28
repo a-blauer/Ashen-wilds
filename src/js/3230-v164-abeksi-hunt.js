@@ -94,7 +94,7 @@ function ab164Mats(){return AB164.M||(AB164.M={
   gold:new THREE.MeshStandardMaterial({color:0xd8a844,roughness:.28,metalness:.85,emissive:0x2a1800,flatShading:true}),
   jade:new THREE.MeshStandardMaterial({color:0x2c8e68,roughness:.32,metalness:.22,emissive:0x06221a,flatShading:false}),
   jadeD:new THREE.MeshStandardMaterial({color:0x1c5a44,roughness:.4,metalness:.2,emissive:0x041610,flatShading:false}),
-  eye:new THREE.MeshBasicMaterial({color:0xffb040}),flame:new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending}),
+  eye:new THREE.MeshBasicMaterial({color:0xffb040}),tongue:new THREE.MeshStandardMaterial({color:0x8a1a22,roughness:.5,flatShading:true}),flame:new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.92,depthWrite:false,blending:THREE.AdditiveBlending}),
   flameC:new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending}),
   coal:new THREE.MeshStandardMaterial({color:0x3a1206,emissive:0xff4a10,emissiveIntensity:.8,roughness:1,flatShading:true})})}
 // a swept tube along points with a radius per point (serpents: body, reliefs), smooth normals
@@ -104,13 +104,23 @@ function ab164Tube(pts,rad,seg,rs){const c=new THREE.CatmullRomCurve3(pts.map(p=
   for(let i=0;i<seg;i++)for(let j=0;j<n;j++){const a=i*(n+1)+j,b=a+n+1;idx.push(a,b,a+1,b,b+1,a+1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g}
 // a serpent's head: snout, brow ridges, open jaw, fangs, a flared hood; eyes in the eye material (they glow red in the alarm)
-function ab164Head(k,M,x,y,z,ry,s,mat){const R=(a,b,c2)=>[x+(Math.cos(ry)*a+Math.sin(ry)*c2)*s,y+b*s,z+(-Math.sin(ry)*a+Math.cos(ry)*c2)*s],sp=svG('ab164sph',()=>new THREE.SphereGeometry(1,12,9));
-  let p=R(0,0,.18);k.m(sp,mat,...p,-.15,ry,0,.3*s,.2*s,.48*s);p=R(0,-.13,.22);k.m(sp,mat,...p,.38,ry,0,.24*s,.07*s,.42*s);   // skull, lower jaw (dropped open)
-  [-1,1].forEach(si=>{p=R(si*.14,.12,.12);k.m(sp,mat,...p,0,ry+si*.3,0,.11*s,.06*s,.2*s);   // brow ridges
-    p=R(si*.155,.07,.2);k.m(svG('ab164eye',()=>new THREE.SphereGeometry(1,8,6)),M.eye,...p,0,0,0,.045*s,.035*s,.05*s);
-    p=R(si*.09,-.08,.5);k.m(svG('ab164fang',()=>new THREE.ConeGeometry(1,1,6)),M.stoneL,...p,Math.PI,0,0,.022*s,.15*s,.022*s);
-    p=R(si*.32,.0,-.12);k.m(sp,mat,...p,0,ry+si*.55,si*.35,.32*s,.4*s,.05*s)});   // the hood's two flares
-  p=R(0,.0,-.2);k.m(sp,mat,...p,0,ry,0,.42*s,.42*s,.06*s)}
+function ab164HeadG(){if(AB164.HG)return AB164.HG;const G={};
+  G.skull=svLoftZ([[-.16,.12,.1,0,.0],[-.05,.19,.13,0,.02],[.08,.23,.15,0,.035],[.2,.215,.13,0,.035],[.32,.17,.1,0,.025],[.44,.12,.072,0,.012],[.54,.07,.048,0,0],[.61,.028,.028,0,-.005]],10);
+  G.jaw=svLoftZ([[-.02,.15,.04,0,0],[.15,.15,.04,0,0],[.32,.115,.034,0,0],[.46,.07,.026,0,0],[.54,.03,.018,0,0]],8).rotateX(.4).translate(0,-.085,.02);
+  const h=new THREE.Shape();h.moveTo(0,-.42);h.bezierCurveTo(.34,-.36,.5,-.02,.42,.22);h.bezierCurveTo(.36,.36,.16,.4,0,.3);h.bezierCurveTo(-.16,.4,-.36,.36,-.42,.22);h.bezierCurveTo(-.5,-.02,-.34,-.36,0,-.42);
+  G.hood=new THREE.ExtrudeGeometry(h,{depth:.035,bevelEnabled:true,bevelSize:.012,bevelThickness:.012,bevelSegments:1,curveSegments:10}).translate(0,-.12,-.2);
+  {const P=G.hood.attributes.position;for(let i=0;i<P.count;i++){const x=P.getX(i);P.setZ(i,P.getZ(i)-x*x*.45)}G.hood.computeVertexNormals()}
+  G.brow=[-1,1].map(sd=>new THREE.BoxGeometry(.07,.035,.2).rotateY(-sd*.22).rotateZ(sd*.25).translate(sd*.12,.15,.2));
+  G.eye=[-1,1].map(sd=>new THREE.SphereGeometry(.036,8,6).scale(1,.8,1.25).translate(sd*.135,.095,.29));
+  G.fang=[-1,1].map(sd=>new THREE.ConeGeometry(.018,.13,6).rotateX(Math.PI).translate(sd*.072,-.07,.43));
+  G.scale=[];for(let i=0;i<9;i++){const zz=-.05+i*.065;G.scale.push(new THREE.BoxGeometry(.09-i*.004,.012,.06).translate(0,.135+.02*Math.sin(i*.5)-i*.009,zz))}
+  G.tongue=new THREE.BoxGeometry(.016,.008,.2).translate(0,-.06,.66);G.fork=[-1,1].map(sd=>new THREE.BoxGeometry(.012,.008,.08).rotateY(sd*.45).translate(sd*.02,-.06,.78));
+  return AB164.HG=G}
+// a serpent's head: a lofted skull, an open lower jaw, fangs, brow ridges, crown scales, a forked tongue and a flared hood behind;
+// eyes in the eye material (they glow red in the alarm); built along +z and turned ry
+function ab164Head(k,M,x,y,z,ry,s,mat){const G=ab164HeadG(),put=(g,m)=>k.m(g,m,x,y,z,0,ry,0,s,s,s);
+  put(G.skull,mat);put(G.jaw,mat);put(G.hood,mat);G.brow.forEach(g=>put(g,mat));G.eye.forEach(g=>put(g,M.eye));G.fang.forEach(g=>put(g,M.stoneL));
+  G.scale.forEach(g=>put(g,mat));put(G.tongue,M.tongue);G.fork.forEach(g=>put(g,M.tongue))}
 // a rearing serpent coiled on a pylon top (relative to the pylon top centre), facing the yard (-z)
 function ab164Statue(k,M,x,y,z,s){const C=[];for(let i=0;i<=26;i++){const t=i/26,a=t*Math.PI*4.2,r=(.85-.25*t)*s;C.push([x+Math.cos(a)*r,y+(.12+t*.55)*s,z+Math.sin(a)*r])}
   const top=C[C.length-1];[[x+.15*s,y+1.2*s,z-.05*s],[x+.05*s,y+1.95*s,z-.3*s],[x,y+2.4*s,z-.55*s]].forEach(p=>C.push(p));
