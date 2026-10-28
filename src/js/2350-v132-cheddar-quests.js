@@ -65,7 +65,7 @@ function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
   if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}

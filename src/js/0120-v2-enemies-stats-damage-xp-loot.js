@@ -204,13 +204,13 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
     cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}
 }
 // ---------------- XP / leveling ----------------
-// v164 (owner): the hero earns 25% less XP from everything (kills, quests, camp clears); companions keep their share
+// v164 (owner): the hero and the active companions earn 25% less XP from everything (kills, quests, camp clears)
 var HXP164=.75;function hxp164(x){return Math.max(1,Math.round(x*HXP164))}
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1)*(typeof gw150X=='function'?gw150X(e):1);xp=Math.max(1,Math.round(xp));
   const hx=hxp164(xp);if(hero.lvl<MAXLV){hero.xp+=hx;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return hx;
 }
 function heroLevelUp(){

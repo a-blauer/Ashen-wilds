@@ -3055,13 +3055,13 @@ function chainFrom(e0,raw,mt,jumps,col,cc,fx){
     cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}
 }
 // ---------------- XP / leveling ----------------
-// v164 (owner): the hero earns 25% less XP from everything (kills, quests, camp clears); companions keep their share
+// v164 (owner): the hero and the active companions earn 25% less XP from everything (kills, quests, camp clears)
 var HXP164=.75;function hxp164(x){return Math.max(1,Math.round(x*HXP164))}
 function gainXP(e){
   const s=HS(),c=e.c;let xp=(8+c.l*12)*(c.al?3:1)*(c.boss?25:1)*(1+s.xp+restBonus());
   xp*=.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(e&&e.wv?.315:1)*(typeof gw150X=='function'?gw150X(e):1);xp=Math.max(1,Math.round(xp));
   const hx=hxp164(xp);if(hero.lvl<MAXLV){hero.xp+=hx;while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!'+(EVLV.includes(c2.l)?' ✨ It can evolve now (Companions menu).':''))}});
   return hx;
 }
 function heroLevelUp(){
@@ -30983,7 +30983,7 @@ function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
   if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
   if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
   else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
@@ -40017,7 +40017,7 @@ function camp148T(C){try{return Math.max(1,Math.min(5,(PMAP[INSL[C.ig].z].t)||ti
 function camp148XP(C){const L=camp148Lv(C),s=HS();return Math.max(1,Math.round((8+L*12)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(1+(s.xp||0))*CAMP148.xp))}
 function camp148Give(xp){
   if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 // the camp's creature families (from its garrison list)
 function camp148Fams(C){const L=[];try{(C.th&&C.th.mem||[]).forEach(m=>{const E=EN[m[0]];const f=(E&&E.fam)||famOf(m[0]);if(FAMD[f]&&!L.includes(f))L.push(f)})}catch(_){}return L.length?L:['Beast']}
 // 2-3 different kinds from the area's loot table, each with its own roll

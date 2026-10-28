@@ -21,7 +21,7 @@ function camp148T(C){try{return Math.max(1,Math.min(5,(PMAP[INSL[C.ig].z].t)||ti
 function camp148XP(C){const L=camp148Lv(C),s=HS();return Math.max(1,Math.round((8+L*12)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(1+(s.xp||0))*CAMP148.xp))}
 function camp148Give(xp){
   if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
-  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=xp;while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
+  party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
 // the camp's creature families (from its garrison list)
 function camp148Fams(C){const L=[];try{(C.th&&C.th.mem||[]).forEach(m=>{const E=EN[m[0]];const f=(E&&E.fam)||famOf(m[0]);if(FAMD[f]&&!L.includes(f))L.push(f)})}catch(_){}return L.length?L:['Beast']}
 // 2-3 different kinds from the area's loot table, each with its own roll
