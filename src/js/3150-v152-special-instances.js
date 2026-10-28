@@ -19,12 +19,15 @@ function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
   {key:'abeksi',g:30,z:1,k:0,x0:116,y0:1452,w:150,h:200,n:'Abeksi',rn:'Abeksi',lv:[11,11],
     bio:{n:'Abeksi',sp:'Foxlet',x:0,y:0,t:2,gnd:[96,84,66],grs:[70,84,54],acc:[104,98,90],frs:[40,34,28],wat:[40,70,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x3a2a20,0x3a4a2a,0x4a5a34],amp:.1}},
   {key:'ascent',g:31,z:1,k:1,x0:280,y0:1452,w:420,h:380,n:'The Hilltop Ascent',rn:'Ascent',lv:[14,14],
-    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}}]}
+    bio:{n:'Hilltop Ascent',sp:'Foxlet',x:0,y:0,t:2,gnd:[84,80,68],grs:[70,92,52],acc:[104,96,82],frs:[40,52,36],wat:[60,110,150],tree:['pine'],pr:['rock'],den:[0,0,0,0],tc:[0x4a3a28,0x3a6a3a,0x4a7a44],amp:1}},
+  // v165: the Sandstorm Run (Searing Sands, between III and the Den; 3300–3304)
+  {key:'sandrun',g:32,z:3,k:2,x0:714,y0:1452,w:460,h:570,n:'The Sandstorm Run',rn:'Sandstorm',lv:[35,35],
+    bio:{n:'Sandstorm Run',sp:'Foxlet',x:0,y:0,t:2,gnd:[196,156,104],grs:[170,140,96],acc:[180,140,92],frs:[120,90,60],wat:[60,110,150],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x8a6a44,0x9a7a50,0xa88a5a],amp:.2}}]}
 // 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
 function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
-    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
+    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):I.key=='sandrun'?(typeof sr165Map=='function'?sr165Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
 // 0045: a level's own heights (after every other height pass)
-function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
+function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I);if(I.key=='sandrun'&&typeof sr165Terrain=='function')sr165Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
 // 0070: trees inside a level are scenery, not harvest nodes (hoisted: 0070 runs long before this file)
 function sp152NoNode(x,y){try{return sp152Defs().some(I=>x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)}catch(_){return false}}
 function spIns(x,y){if(!SPI||!SPI.on)return null;const L=SPI.L;for(let i=0;i<L.length;i++){const I=L[i];if(x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)return I}return null}

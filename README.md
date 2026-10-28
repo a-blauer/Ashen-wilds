@@ -74,6 +74,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v113 instance creatures: 24 new monsters for field instances II/III (`N3`, `n3Def`, `n3Mv`, `n3Zone`, keyframe tracks `n3Hum`/`n3Cr`) | `2000-v113-instance-creatures-core.js`, one file per zone `2010`–`2050`, `2090` (camps) |
 | v123 camp sites: every camp's size (`C.r`), ground shape (`cs123Plan`, `cs123Terrain` from 0045), tile paint (`cs123Map`), set pieces (`cs123Designs`), title card on entry (`cs123Card`); no signposts | `2270-v123-camp-sites.js` |
 | v164 camps (owner: "much larger, more integrated, much more detail"): sizes and spots (`cs164Sites`, `cs164Rd`, moves like v151), bigger clearings (`cs164Grow` from 0045), ground and tiles (`cs123Terrain` / `cs123Map` / `cs123Setup` / `cs123Rad` replaced), recipes (`cs164Rec`), the dressing (`cs164Dress`, palettes `cs164Pal`), merge by material kind (`cs164Merge`, `CS164.M`), camp lights (`CS164.lights`), keep-outs (`cs164Keep`, `cs164Avoid`) | `3240-v164-camps-plan.js`, `3241-v164-camps-kit.js`, `3242-v164-camps-dress.js` (hooks in `0045`, `1680`, `2280`, `3040`, `3160`, `3170`) |
+| v165 Searing Sands main quest (owner): I dig + Qarsul (`3270`–`3274`), II court, urns, Kheprit, the rift (`3280`–`3283`), III salt columns, Sandskimmer, yard and vista (`3290`–`3292`), the Sandstorm Run (`3300`–`3302`, record `sandrun` in 3150), co-op (`3305`); the Pilgrim's Stair trailhead (`3260`) | `3260`, `3270`–`3305` (hooks in `0045`, `1680`, `3150`) |
 | creature models | `0080`, `0610`–`0730` (v81), `0770` (v83), `1710`–`1770` (v100 evolve), `1800` |
 | animation | `0740` (v81), `0890`–`0900` (v85), `1270`–`1320` (v93 grip/idle), `1700`–`1705` (v100) |
 | performance (enemy LOD, light pool, shadows, frozen matrices) | `1610`, `1620`, `1630`, `1640` (v98) |
@@ -859,6 +860,14 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     (`['cs','w']`) → the fallen arrive in III downed (3085 revive, `RV155.T` 180 s). *Hydra*: stone turns, song starts, chime
     strikes and the opening are sent (`['hd',…]`), plus the whole state every 3 s (`hd155Merge` keeps the most progress).
     Test `v155_coop_levels.py` (two windows, `mpt.py`).
+  * **The Pilgrim's Stair (v165, `3260`; owner: "more detail on that piece of the map so it really feels like a place where you're
+    leaving and going up a mountain")**: Mistmere's way up to the Hilltop Ascent is a trailhead cut into the NE rock band (`th165Plan`:
+    a trail of stair runs, landings and a ramp, `TH165`). Map (`th165Map`, from 0045 after `cs123Map`): the trail is walkable, the
+    mountain round it solid with DW 9.5 (no v124 edge stones or oaks on it); terrain (`th165Terrain`): the ledge cut, a gorge notch,
+    the slope and crags (`th165Hs`). Dressing (`th165Build`): stairs with cheek walls, flagstones, parapets, rope rails, serpent
+    pillars, a signpost, hitching rail and trough, a wayshrine, prayer flags, the Pilgrims' Gate (towers, voussoir arch, keystone),
+    gorge boulders, pines, scree, a waterfall into a tarn (`th165Falls`) and a snow peak shown only from the trail (`th165Peak`). The
+    v153 gateway's spot is the top of the stair (`G.where`). Decorations keep off (`th165Keep`, 1680).
 - **Burningeye Summit main quest (v151, `3150`–`3170`)**: the ice zone's three chapters, one per field instance. Each replaces the
   instance's end gateway (the old `RPORT` record stays, its model is hidden and its prompt replaced) and is done also when the next
   instance has been reached (`insReach(2)`), so heroes who are already further on are never blocked. Every scene is built lazily the
@@ -910,6 +919,47 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     the cliff bursts open on a tunnel to the Den. HUD `#dr170h`. `MQ170.st` 0 · 1 open; saved as `x2.mq170 {st}`.
   Tests: `v151_frozen_maw.py`, `v160_frozen_gate.py`, `v170_mountain_drill.py`, `v151_coop.py` (two windows); model sheets `v143_look.py PROPS=gorthrak,gorthrakShell,
   fgate,fbench,fspitter,fcache,ddrill2,dbox,dbox2` and `PROPS=gbP:<pose>` (a trailing `+` shows the Rampage shell).
+- **Searing Sands main quest (v165, `3270`–`3305`)**: the owner's design, one chapter per field instance; none of the three gateway
+  portals is used any more (`ss165HidePortals`). Shared state `SS165` (`c1` dig / Qarsul, `c2` urns / pieces / Kheprit / rift, `c3`
+  columns / parts / build, `run`), saved as `x2.ss165` (old saves load with nothing done; a chapter also counts as done when the next
+  instance has been reached, `ss165Done`). Each chapter's frame is `ss165F(k)` at its gateway clearing (`W2`/`L2`: a along the way out,
+  b across). Tracker lines `SP152.trk.sands`. Map/terrain/keep hooks: `ss165Map` and `ss165Terrain` (0045), `ss165Keep` (1680).
+  * **I · The Buried Temple (`3271`–`3274`)**: the temple entrance lies under a dune at the end of the road (`ss165T1`, `sd165Build`).
+    F digs (the gathering spade and motion, `sd165Start/Next`): each stroke scoops the dune's height grid (`SD165.D`, `sd165Stroke`
+    with slumping), the spoil flies onto three heaps that grow (`sd165Heaps`), the strokes are saved (`c1.dig`, packed, replayed on
+    load). Cleared (`ss165DigP` ≥ `SD165.done`): the heaps rise as **Qarsul, the Living Dune** (mini boss to the Vorraxis standard:
+    model `3272`, moves `3273` `QS165MV`, fight `3274`): a sand wall closes the yard, no recall or mounts (`qs165Held`); phase II
+    sandstorm with dust devils; the Heart of the Dune shell game (three mounds, seeded swaps: break the right one); slabs and the
+    Sandstorm Burial. A wipe puts him back in the heaps; he rises again when a hero returns. Slain: the doors open (`sd165Open`), F
+    enters II. Test `v165_temple.py`.
+  * **II · The Last Warden (`3280`–`3283`)**: a walled temple court (`ss165T2`, `cy165Build`: mosaic floor, colonnade, gate pylons,
+    obelisks, ant statues, the dais and altar, the rift horns). 14 urns (`kh165Urns`: hidden-model adds, 3 blows break one) hold the 11
+    pieces of **Kheprit** (model `3281`, an ant-headed six-legged warden; `kh165PartShow`/`kh165PartMesh`), two hold scarab nests.
+    Pieces lie glowing where their urn stood (walk over them); F at the altar lays them (`kh165LayAll`, one rig in the `laid` pose).
+    All 11: he wakes (`kh165Wake`, ~9 s) and steps down; F speaks (`XR.kh165`). "Begin" starts the rift (`3283`, `RF165`): he
+    channels 60 s (`RF165.T`) by the horns (a swirl shader `rf165Rift`), cultists (`ss165zealot`, `ss165caller`) pour in through
+    the gates, about half go for him (`eTarget`/`hitTarget` wrappers with a proxy target `e.rfP`), a pulse throws them back every
+    12 s; his health is the bar at the top (`#rf165H`). At zero the rift collapses (retry by speaking again). Open: run in before he
+    falls (`rf165Enter` → III). Afterwards (`rf165After`): he lies dead by the rift among ~320 cultist bodies (`RF165|bodies`), the
+    rift stays open as the way on. Test `v165_courtyard.py`.
+  * **III · The Sandskimmer (`3290`–`3292`)**: five salt columns by the road (`sc165Spots`) each hold a part (`SK165.parts`); F mines
+    with the pick (9 blows, `SC165.N`; the 6th breaks a Salt Golem loose), the part drops free. The machine (`3291`, `sk165Build`:
+    hull, ram prow, skis, turbine, twin-cannon turret, helm) stands bare on its cradle in the salt-cutters' yard (`cs165Build`) at the
+    clearing's end, where the rim is cut away (`ss165T3Map/Terrain`) over a desert vista only seen from III (`ss165Vista`: hand-shaded
+    dunes, mesas, the Den's peak, a storm wall). With all five, F builds it (`cs165Assemble`); F boards it (`cs165Board`).
+  * **The Sandstorm Run (`3300`–`3302`, special instance `sandrun`, g 32, x 714–1174, y 1452–2022)**: a ~1580-tile course
+    (`sr165Path`, Catmull-Rom through `sr165Cfg().cp`) between dune walls (`sr165Map`/`sr165Terrain`, called from 3150's hooks;
+    `freeSpot` skips the region so older worlds' secrets stay put), boulders, salt spires and sand traps (`sr165Obs`), checkpoints at
+    ¼ ½ ¾ (`sr165CPs`), the Den's cave at the end. The machine's physics `sr165Drive` (W/S, A/D, Shift boost); solo, Cheddar drives
+    (`sr165Auto`: lane planner over the hazards ahead, boosts on clear straights) and the hero fires the turret (mouse aim with assist,
+    left button: `sr165Aim`/`sr165Fire`). Foes (`3302`, host-run, their own AI): scarab swarms that cling (boost flings them), scorpions
+    that spit venom where you are going, worms that arc over the course. Wrecked → the last checkpoint. The cave → the Den
+    (`sr165Win`, `SS165.run.st`); later rides from the yard go straight there. 🏳 turns back. Test `v165_run.py` (~105 s run).
+  * **Co-op (`3305`)**: every chapter is shared (messages `s5…`/`q1…`): strokes and the uncovering; Qarsul with one driver (moves with
+    seeds, health sync, partners' damage to the driver, mounds); urns, pieces, laying, waking; the host runs the rift; columns, parts,
+    the build; the Run's crews (two to a machine, the boarder drives; an odd one out shoots with Cheddar driving), each machine
+    simulated by its driver and sent 10×/s, shots shown everywhere, creatures' damage from the host, first into the cave takes all.
+    Credit for the group: `['bq165', c1|c2|c3|run]`. Test `v165_coop.py` (mpt).
 - **Sovereigns to the Vorraxis standard (v146, `3050`–`3056`)**: every Sovereign follows `docs/BOSS_RECIPE.md` now. Each keeps its
   v110/v112 poses and moves and gains (all in Phase II): a den change and a signature mechanic with a success and a failure outcome.
   | Boss | Den change (Phase II) | Signature (props → BROKEN / failure) |

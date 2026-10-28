@@ -225,6 +225,7 @@ const MAP=(()=>{
   if(typeof cs164Grow=='function')cs164Grow(m,bio,DW,props,stamp); // v164: each camp's bigger clearing, trail and moves (3240)
   if(typeof cs123Map=='function')cs123Map(m); // v123: the ground under each camp (2270)
   if(typeof th165Map=='function')th165Map(m,bio,DW); // v165: Mistmere's mountain trail (3260; after every other map pass, no seeded draws)
+  if(typeof ss165Map=='function')ss165Map(m,bio,DW); // v165: the Searing Sands chapters' tiles (3270: II's court, III's yard)
   m.bio=bio;m.DW=DW;
   const cyk=new Set(CYD.nodes.map(q=>q[1]*W+q[0])); // v100: the courtyard's nodes are inside the walls now
   m.props=props.filter(q=>(townAt(q[0],q[1],3)<0||cyk.has(q[1]*W+q[0]))&&(['rock','grave','pillar'].includes(q[2])?m[q[1]][q[0]]=='r':'.ga'.includes(m[q[1]][q[0]])&&!BOSSES.some(b=>Math.hypot(q[0]-b.x,q[1]-b.y)<PM_DENR+1)&&!INSL.some(p=>(p.wa&&Math.hypot(q[0]-p.wa[0],q[1]-p.wa[1])<16)||Math.hypot(q[0]-p.en[0],q[1]-p.en[1])<5)));

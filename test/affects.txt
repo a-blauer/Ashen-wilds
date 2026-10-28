@@ -62,3 +62,6 @@ v161|keymap|keybind|ui-scale|mobile|touch|0180-|1660-|location-box: v161_keys.py
 3210|0320|2300|element|react|0104|0340: v163_elements.py
 0001|3220|style-order|owner-fixes|attribute|2930|2940|tracker|2350|3023|3150-v152|zone-title|2210|swing|0580|0740|sov|305[0-6]|1970: v163_fixes.py
 1270|grip|weapon|edge|3220|0740|0890|0900|2310|2100|2220|2390|3230|dash|dodge: v163_weapons.py v148_edges.py v164_dodge_grip.py
+# v165 Searing Sands main quest (dig and Qarsul, the court and Kheprit, the salt columns and the Sandskimmer, the Sandstorm Run)
+3260|327[0-9]|328[0-9]|329[0-9]|330[0-4]|sands|qarsul|kheprit|skimmer|sandrun|0045|1680|3150|1970|0380: v165_temple.py v165_courtyard.py v165_run.py
+3305|327[0-9]|328[0-9]|329[0-9]|330[0-9]|3180|coop|co-op|0520: v165_coop.py

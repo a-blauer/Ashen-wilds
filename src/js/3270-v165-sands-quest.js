@@ -26,11 +26,13 @@ function ss165Here(k){try{const I=curIns();return !!I&&I.g===insG(3,k)}catch(_){
 function ss165Done(c){const r=insReach(3);return c===1?(SS165.c1.st>=3||r>=1):c===2?(SS165.c2.st>=3||r>=2):c===3?(SS165.c3.built>=1||r>=3):r>=3||SS165.run.st>=1}
 // a chapter's frame at the end of its instance: G the gateway clearing's centre, f away from where the road comes in, l across
 // (to the right looking along f), y0 the ground there. Local (a, b) → world: G + f·a + l·b.
-function ss165F(k){const c=ss165F.c||(ss165F.c={});if(c[k])return c[k];const I=ss165I(k),P=I.path,q=P[Math.max(0,P.length-14)],G=I.ba;let fx=G[0]-q[0],fz=G[1]-q[1];const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;
+function ss165F(k,DW0){const c=ss165F.c||(ss165F.c={});if(c[k])return c[k];const DWm=DW0||MAP.DW;const I=ss165I(k),P=I.path,q=P[Math.max(0,P.length-14)],G=I.ba;let fx=G[0]-q[0],fz=G[1]-q[1];const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;
   const lx=-fz,lz=fx,F={I,k,x:G[0],z:G[1],fx,fz,lx,lz,W2:(a,b)=>[G[0]+fx*a+lx*b,G[1]+fz*a+lz*b],L2:(x,z)=>{const dx=x-G[0],dz=z-G[1];return [dx*fx+dz*fz,dx*lx+dz*lz]},yaw:Math.atan2(fx,fz)};
   // how far the clearing reaches along f (the first rim tile)
-  F.reach=(()=>{for(let a=4;a<40;a+=.5){const [x,z]=F.W2(a,0),X=Math.round(x),Z=Math.round(z);if(MAP.DW[Z*W+X]>-1.2)return a}return 20})();
+  F.reach=(()=>{for(let a=4;a<40;a+=.5){const [x,z]=F.W2(a,0),X=Math.round(x),Z=Math.round(z);if(DWm[Z*W+X]>-1.2)return a}return 20})();
   return c[k]=F}
+// 0045: the chapters' own tiles (II's court, III's yard and overlook), after every other map pass (no seeded draws)
+function ss165Map(m,bio,DW){try{if(typeof ss165T2Map=='function')ss165T2Map(m,bio,DW)}catch(e){console.warn('v165 map II',e)}try{if(typeof ss165T3Map=='function')ss165T3Map(m,bio,DW)}catch(e){console.warn('v165 map III',e)}}
 // ---------------- the tracker (#mqt152, the main-quest box) ----------------
 SP152.trk.sands=I=>{if(!I||I.z!==3||I.den||I.sp)return null;const k=I.k;
   if(k===0){const C=SS165.c1;if(ss165Done(1)&&C.st>=4)return null;const nm='The Buried Temple';
@@ -52,7 +54,7 @@ function ss165Bits(m){let n=0;for(let i=0;i<16;i++)if(m&(1<<i))n++;return n}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.ss165,S=SS165,cl=(v,a,b)=>Math.max(a,Math.min(b,v|0));
     S.c1={st:0,dig:[],seen:0};S.c2={st:0,urn:0,got:0,lay:0};S.c3={st:0,col:0,got:0,built:0};S.run={st:0};
     if(q&&typeof q=='object'){if(q.c1){S.c1.st=cl(q.c1.st,0,4);S.c1.seen=q.c1.seen|0;S.c1.dig=typeof q.c1.dig=='string'&&q.c1.dig?q.c1.dig.split(',').map(v=>v|0).slice(0,600):[]}
-      if(q.c2){S.c2.st=cl(q.c2.st,0,4);S.c2.urn=q.c2.urn&2047;S.c2.got=q.c2.got&2047;S.c2.lay=q.c2.lay&2047}
+      if(q.c2){S.c2.st=cl(q.c2.st,0,4);S.c2.urn=q.c2.urn&16383;S.c2.got=q.c2.got&2047;S.c2.lay=q.c2.lay&2047}
       if(q.c3){S.c3.st=cl(q.c3.st,0,3);S.c3.col=q.c3.col&31;S.c3.got=q.c3.got&31;S.c3.built=q.c3.built?1:0}
       if(q.run)S.run.st=q.run.st?1:0}
     S.trkK='';try{if(typeof ss165OnLoad=='function')ss165OnLoad()}catch(e){console.warn('v165 load hook',e)}}catch(e){console.warn('v165 load',e)}return r}}
