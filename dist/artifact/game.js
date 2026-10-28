@@ -9428,6 +9428,17 @@ function lfTopS(n,x,z,lo,r){const P=lfSurf(n);r=r||.025;let y=null;for(let i=0;i
 
 // ---------------- companions: magic users attack from range; Space commands the team to attack your target ----------------
 var CMD={e:null,t:0};
+var CMD164={gap:6000};
+// v164 (owner: "companions are too good at kiting; the dragon can keep backing up while attacking and never get hit"): measured over 30 s
+// against one monster, the dragon took 2 of the 7 blows aimed at it and the wisp 1 of 5 (the fox, which fights up close, 10 of 10):
+// a magic companion stepped back the moment a foe came within 2.2 m, so it walked out of every telegraphed wind-up, and kept casting.
+// Now a step back lasts at most KITE164.T s, comes at most once every KITE164.cd s, never starts while a monster is already winding
+// up an attack on that companion, and the companion does not cast while stepping back. Test v164_kite.py.
+var KITE164={T:.7,cd:4};
+function kite164(f,foe){if(f.kb164>0)return true;
+  if((f.kc164||0)>0)return false;
+  const a=foe&&foe.atk;if(a&&a.tg===f&&a.ph==0)return false;
+  f.kb164=KITE164.T;f.kc164=KITE164.cd;return true}
 const CMD_MS=12000,MAG_R=5.5;
 function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position,pl.position)<24)return tgt;
   let b=null,bd=14;const d=aimDir?aimDir():V(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y));
@@ -9438,7 +9449,8 @@ function commandAttack(){
   const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
-  act.forEach(c=>{const f=fols[party.indexOf(c)];if(f){f.cdA=Math.min(f.cdA||0,.15);dn(f.position,'!','#ffd24a',-10,700)}});
+  // v164: the quick first strike is given once per companion every CMD164.gap ms (owner: pressing Space over and over made them attack as fast as you pressed)
+  act.forEach(c=>{const f=fols[party.indexOf(c)];if(f){const t=nowP();if(t>=(f.cmdQ164||0)){f.cdA=Math.min(f.cdA||0,.15);f.cmdQ164=t+CMD164.gap}dn(f.position,'!','#ffd24a',-10,700)}});
   say('📣 '+act.map(c=>c.n).join(' and ')+(act.length>1?' attack ':' attacks ')+(e.c.n||e.c.g[0])+'!');if(typeof sfx=='function')sfx('chime',.5)}
 {const f=teamFoe;teamFoe=function(){const C=CMD;if(C.e){if(C.e.dead||nowP()>C.t||!enemies.includes(C.e)||d2(C.e.m.position,pl.position)>30)CMD={e:null,t:0};
   else if(townAt(pl.position.x,pl.position.z,0)<0)return C.e}return f.apply(this,arguments)}}
@@ -9463,7 +9475,7 @@ function compTick(dt,now){
     f.vel=f.vel||V();f.idleT=f.idleT||0;
     const P=pl.position,dpl=d2(f.position,P);
     if(dpl>28){const fy0=plFaceY();f.position.set(P.x-Math.sin(fy0)*2+(i?-1:1),0,P.z-Math.cos(fy0)*2);f.vel.set(0,0,0)}
-    f.cdA=(f.cdA||0)-dt;
+    f.cdA=(f.cdA||0)-dt;f.kc164=Math.max(0,(f.kc164||0)-dt);f.kb164=Math.max(0,(f.kb164||0)-dt);
     if(!f.visible||dt<=0){animC(f,now,false);return}
     const spdK=FAMD[famOf(c.g[0])].spd*((c.mods||[]).includes('Swift')?1.18:1),mg=xMt(c)=='m';
     let goal=null,want=0,face=null;
@@ -9472,8 +9484,8 @@ function compTick(dt,now){
       const ang=Math.atan2(f.position.x-fp.x,f.position.z-fp.z)+(i?.5:-.5)*dt,slot=V(fp.x+Math.sin(ang)*reach*.85,0,fp.z+Math.cos(ang)*reach*.85);
       face=dv;
       if(L>reach){goal=slot;want=Math.min(7,3.2+L)*spdK}
-      else if(mg&&L<2.2&&!foe.boss){const away=V(-dv.x,0,-dv.z).normalize();goal=V(f.position.x+away.x*2,0,f.position.z+away.z*2);want=3*spdK} // step back to casting range
-      if(L<=reach&&!f.lk&&f.cdA<=0){f.rotation.y=Math.atan2(dv.x,dv.z);
+      else if(mg&&L<2.2&&!foe.boss&&kite164(f,foe)){const away=V(-dv.x,0,-dv.z).normalize();goal=V(f.position.x+away.x*2,0,f.position.z+away.z*2);want=3*spdK} // step back to casting range
+      if(L<=reach&&!f.lk&&f.cdA<=0&&!(f.kb164>0)){f.rotation.y=Math.atan2(dv.x,dv.z);
         if(mg){f.cdA=1.35/spdK;f.lk=1;const b=f.b;tw(220,k=>{if(b){b.position.y=Math.sin(k*Math.PI)*.12;b.rotation.x=-Math.sin(k*Math.PI)*.25}},()=>{if(b){b.position.y=0;b.rotation.x=0}f.lk=0;if(!foe.dead)compBolt(f,c,foe,()=>{if(!foe.dead)compHit(c,foe,1)})})}
         else{f.cdA=1.15/spdK;f.lk=1;lunge(f,fp,()=>{f.lk=0;if(!foe.dead)compHit(c,foe,1)})}}
     }else{

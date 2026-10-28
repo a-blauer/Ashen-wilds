@@ -161,13 +161,19 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Projectiles fired together by one cast hit each enemy once at full damage (`BAL138.dup` 30% for the rest; Arcane Missiles exempt).
   Classes re-checked with `test/v127_balance/` at rank 1 (levels 10–50) and with every ability evolved at rank 5 (levels 40–50; use
   `TUNE=` a file that wraps `V90.setup` to set rank 5 and `hero.tal['__ev:'+name]`): within ~±10% of each other.
-- **Owner's list (v164, `3230`)**: *See-through window* twice as large with a soft edge (`R157` 2.3 → 5.4, was 1.35 → 2.4; scenery
+- **Owner's list (v164, `3230`, `0860`)**: *See-through window* twice as large with a soft edge (`R157` 2.3 → 5.4, was 1.35 → 2.4; scenery
   and steep terrain both use it). *Dash grip*: the dash's tuck (`haDodge`) plays in the attack slot (`HA.cur`), so the grip took it
   for a swing: strike grip, an edge roll planned from the tuck's arm motion (the halberd ~176°, blade backwards) and the 2 s
   strike hold after it; the raven's arm hold (2100 `_brS`) also let go, swinging the wand into its pointer pose. Now the tuck is
   marked `HA.cur.mv164` and the grip (`gripTick` wrapper in 3230) and the beast arm hold ignore it: the weapon keeps the grip it had
   (carry when calm, the strike hold and roll in a fight). Test `v164_dodge_grip.py` (every class and weapon, calm and in a fight,
   two dashes: FAIL over 12° from the pre-dash grip or 30° in a frame; before: 40-176°).
+  *Companion command* (Space, `commandAttack`): the quick first strike (`cdA` cut to .15) comes once per companion every `CMD164.gap`
+  (6 s); before, every press cut it, so mashing Space made them attack as fast as you pressed (14 attacks in 6 s vs 6).
+  *Kiting*: a magic companion stepped back whenever a foe came within 2.2 m, so it walked out of every telegraphed wind-up while
+  still casting (the dragon took 2 of 9 blows aimed at it, the wisp 2 of 6; the fox 10 of 10). Now a step back (`kite164`) lasts at
+  most `KITE164.T` .7 s, once every `KITE164.cd` 4 s, never starts while a monster winds up an attack on that companion, and it does
+  not cast while stepping back (now ~90% of blows land; its own attack count is unchanged). Test `v164_kite.py`.
 - **Owner's list (v163, `0001`, `3220`)**: *Live site*: claude.ai wraps the published page in an outer page, so index.html's `<head>`
   (the main stylesheet) ends up inside the outer `<body>`, after every `<style>` the game adds to `<head>` while it runs: base rules then
   beat runtime rules of equal weight, on the live site only. That broke v161's phone layout live (hotbar as one tall column, touch
