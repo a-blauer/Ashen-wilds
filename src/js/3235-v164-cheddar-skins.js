@@ -113,7 +113,8 @@ function skn164RaceOf(h){try{if(h&&h.mdLook){const id=h.mdLook.skn164;return SKN
 {const f=mpLookIn;mpLookIn=function(a){const r=f.apply(this,arguments);try{if(r&&Array.isArray(a)){const id=a[9];r.skn164=SKN164.D[id]&&SKN164.D[id].k=='race'?id:null}}catch(_){}return r}}
 
 // ---------------- companions and the mount: their shared materials are swapped for skin copies ----------------
-function skn164Dress(root,id,mode,cols,tag){if(!root)return;const want=id||null,key=want?want+'|'+(tag||''):'';if(root.userData.skn164k===key)return;root.userData.skn164k=key;
+function skn164Dress(root,id,mode,cols,tag){if(!root)return;const want=id||null;let nm=0;root.traverse(o=>{if(o.isMesh)nm++});   // re-dress when the model gains meshes (effects added later)
+  const key=want?want+'|'+(tag||'')+'|'+nm:'|'+nm;if(root.userData.skn164k===key)return;root.userData.skn164k=key;
   root.traverse(o=>{if(!o.isMesh)return;const cur=o.material,base=(cur&&SKN164.B.get(cur))||cur;
     if(!want){if(cur!==base)o.material=base;return}if(!skn164Fits(base))return;o.material=skn164Copy(base,want,mode,cols,tag)})}
 function skn164MountCols(k){const S=(typeof MDL100_S!='undefined'&&(MDL100_S[k]||MDL100_S.pony))||{};return [S.c,S.c2,S.bel,S.m].filter(c=>c!=null)}

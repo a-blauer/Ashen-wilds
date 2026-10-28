@@ -31,7 +31,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   $('xwB').querySelector('[data-sk164]').click();await wait(200);out.on2=SKN164.e.race;
   closeX();
   // ---- companions and the mount ----
-  SKN164.u=Object.keys(SKN164.D);SKN164.e.comp='rime';skn164Tick();const f=fols[0];let cm=0,cn=0;if(f)f.traverse(o=>{if(o.isMesh&&o.material&&o.material.isMeshStandardMaterial){cn++;if(o.material.userData.skn164==='rime')cm++}});out.comp=[cm,cn];
+  SKN164.u=Object.keys(SKN164.D);SKN164.e.comp='rime';skn164Tick();const f=fols[0];let cm=0,cn=0;if(f)f.traverse(o=>{const b=o.isMesh&&o.material&&(SKN164.B.get(o.material)||o.material);if(b&&skn164Fits(b)){cn++;if(o.material.userData.skn164==='rime')cm++}});   /* metal parts (horns, claws) keep their look */out.comp=[cm,cn];
   SKN164.e.comp=null;skn164Tick();let cb=0;if(f)f.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData&&o.material.userData.skn164)cb++});out.compOff=cb;
   if(!mounts.length)newMount(MNTK[0]);toPos(s.fx+6,s.fz+6);await wait(200);hero.lastHit=-1e9;try{toggleMount()}catch(e){out.mtErr=String(e)}await wait(200);SKN164.e.mount='blood';skn164Tick();
   let mm=0,mn=0;if(typeof mModel!='undefined'&&mModel)mModel.traverse(o=>{if(o.isMesh&&o.material&&o.material.isMeshStandardMaterial){mn++;if(o.material.userData.skn164==='blood')mm++}});out.mount=[mm,mn];out.riding=!!riding;
