@@ -3,14 +3,13 @@
 // was supposed to emerge behind the player."
 //  * Boost (ch157Boost): the dash input (Shift, the 💨 dash button on touch screens, the dash slot of the action bar) spurs the
 //    mount: ×CH157.mul speed for CH157.T s. CH157.n charges (the 💨 pips under the gap bar), each refilling in CH157.refill s
-//    (not while boosting). A boost also shakes off a crash's stumble (recover after a hit). The jump works as before; a boost
-//    carries on through a jump (a longer leap). Skarrith's rubber band (CH153V.band) is unchanged: a boost buys ~4 tiles, which
-//    it wins back over ~5–10 s, and a long lead (past CH153V.strike[0]) keeps its strikes away meanwhile.
+//    (not while boosting). The jump works as before; a boost carries on through a jump (a longer leap). v164: Skarrith has its own
+//    speed (3250), so the ~4 tiles a boost buys are kept; boosting is how you pull away.
 //  * Speed: the field of view widens with speed and more while boosting (ch157Fov), wind streaks at the screen's edges
 //    (#ch157c), dust kicked up at the hooves (partners' too in co-op when they boost).
 //  * Danger: a red edge vignette that pulses like a heartbeat as Skarrith closes in (#ch157e), a heavy thud and a little camera
 //    shake with each of its surges when it is close, its rumble and hiss growing louder with closeness (ch157Snd, a looping noise
-//    on the game's sound bus), a ⚠ on the side a strike comes from, a VENOM warning while it rears to spit.
+//    on the game's sound bus), a VENOM warning while it rears to spit. (v164: strikes and their ⚠ side arrows are gone.)
 //  * The emergence (3162 poses the serpent; this file adds the rest): the ground trembles and cracks open behind you (a crack
 //    decal tilted to the slope, dust, cracking sounds), then Skarrith bursts out with flying rock debris, a shock ring, a roar
 //    and a big shake; the camera looks back at it from in front of you (3162's CH153CAM).
@@ -103,7 +102,7 @@ function ch157Fx(dt,now){const R=CH153.R,S=CH153.S;if(!R||!S)return;ch157Init(R)
   R.bk+=((R.bst>0?1:0)-R.bk)*Math.min(1,dt*(R.bst>0?8:3));
   if(R.ph=='intro')ch157Intro(dt,R);else if(CH157.crack&&R.ph=='run'&&R.t>6)CH157.crack.material.opacity=Math.max(.0,CH157.crack.material.opacity-dt*.25);
   ch157DebTick(dt);
-  const run=R.ph=='run',gap=R.s-R.sn.s,close=run?Math.max(0,Math.min(1,(13-gap)/9)):0,sp=run?Math.max(0,R.v/CH153V.spd):0;
+  const run=R.ph=='run',gap=R.s-R.sn.s,close=run?Math.max(0,Math.min(1,(16-gap)/12)):0,sp=run?Math.max(0,R.v/CH153V.spd):0;
   // the field of view
   if(CH157.fov0==null||!CH157.fovOn){CH157.fov0=cam.fov;CH157.fov=cam.fov;CH157.fovOn=1}
   const ex=(5*Math.min(1,sp)+10*R.bk+2*close)*(calm?.4:1),want=CH157.fov0+ex;CH157.fov+=(want-CH157.fov)*Math.min(1,dt*4);
@@ -114,16 +113,14 @@ function ch157Fx(dt,now){const R=CH153.R,S=CH153.S;if(!R||!S)return;ch157Init(R)
   CH157.dT-=dt;if(run&&CH157.dT<=0&&R.y<.1&&R.v>3){CH157.dT=R.bk>.3?.035:.07;try{const yw=pl.rotation.y,p=pl.position;burst(new THREE.Vector3(p.x-Math.sin(yw)*.9,p.y+.15,p.z-Math.cos(yw)*.9),0xb8a684,R.bk>.3?4:2,.9+R.bk,.7,.55)}catch(_){}
     try{if(typeof cs155Co=='function'&&cs155Co())cs155Alive().forEach(q=>{if(q.ph==2&&q.v>CH153V.spd*1.15&&q.y<.1){const [x,z,h]=S.P.at(q.s-.9,q.o);burst(new THREE.Vector3(x,h+.15,z),0xb8a684,3,1.4,.7,.55)}})}catch(_){}}
   // its surges when close: a thud and a little shake, faster the closer
-  if(run&&gap<11){CH157.thT-=dt;if(CH157.thT<=0){CH157.thT=.32+.45*(1-close);try{shake(.03+.1*close);if(close>.25)svSnd('step',.5+.7*close,.7)}catch(_){}}}
-  // a strike at me: shake as it lands
-  const T=R.sn.strike,mine=T&&(!T.tg||typeof MP=='undefined'||T.tg===MP.me);if(mine&&T.t>=1.0&&!T.sh){T.sh=1;try{shake(.22)}catch(_){}}
+  if(run&&gap<14){CH157.thT-=dt;if(CH157.thT<=0){CH157.thT=.32+.45*(1-close);try{shake(.03+.1*close);if(close>.25)svSnd('step',.5+.7*close,.7)}catch(_){}}}
   ch157Snd(run||R.ph=='intro'?(R.ph=='intro'?Math.min(1,Math.max(0,R.t-ch153EmT(R)+.6)):Math.max(0,Math.min(1,(26-gap)/20))):0,run||R.ph=='intro'||R.ph=='dead')}
 function ch157Hud(){const R=CH153.R,on=!!R&&ch153Run()&&!(typeof uiOpen=='function'&&uiOpen()),e=$('ch157e'),sL=$('ch157sL'),sR=$('ch157sR');
   if(!on||R.ph=='spec'){if(e)e.style.opacity=0;if(sL)sL.style.opacity=0;if(sR)sR.style.opacity=0;return}
-  const run=R.ph=='run',gap=R.s-R.sn.s,close=run?Math.max(0,Math.min(1,(12-gap)/8)):0,now=performance.now()/1000,hz=1.1+1.8*close;
-  if(e)e.style.opacity=run?(close*(.55+.45*Math.max(0,Math.sin(now*hz*6.283)))).toFixed(3):R.ph=='dead'?.9:0;
-  const T=R.sn.strike,mine=T&&(!T.tg||typeof MP=='undefined'||T.tg===MP.me)&&T.t<1.05,P=CH153.S.P,right=P.sgn>0;
-  if(sL)sL.style.opacity=mine&&!right?(.6+.4*Math.sin(now*20)).toFixed(2):0;if(sR)sR.style.opacity=mine&&right?(.6+.4*Math.sin(now*20)).toFixed(2):0;
+  // v164: the danger edge grows from ~18 tiles in, a heartbeat faster as it closes (a real distance now, no rubber band)
+  const run=R.ph=='run',gap=R.s-R.sn.s,close=run?Math.max(0,Math.min(1,(18-gap)/14)):0,now=performance.now()/1000,hz=1.0+2.0*close;
+  if(e)e.style.opacity=run?(close*close*(.5+.5*Math.max(0,Math.sin(now*hz*6.283)))).toFixed(3):R.ph=='dead'?.9:0;
+  if(sL)sL.style.opacity=0;if(sR)sR.style.opacity=0;
   const h=$('ch153h');if(!h)return;ch157Init(R);const b=h.querySelector('.bst');if(b){const f=b.querySelectorAll('i b');f.forEach((x,i)=>{x.style.width=Math.round(Math.max(0,Math.min(1,R.bc-i))*100)+'%'});b.classList.toggle('on',R.bst>0);
     if(CH157.deny&&performance.now()-CH157.deny<300){b.classList.remove('no');void b.offsetWidth;b.classList.add('no');CH157.deny=0}}
   const v=h.querySelector('.vw');if(v){const N=R.sn,inc=run&&(N.spitAt!=null||CH153.S.globs.length>0);v.style.opacity=inc?1:0}

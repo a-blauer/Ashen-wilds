@@ -9,9 +9,10 @@
 //    (['ab','cp',i]). Slipping through the drain takes the whole party out together (['ab','out']).
 //  · The Hilltop Ascent (3160–3162): F at the hill road takes every partner in Hillside Crest II up with you (everyone needs a
 //    mount; no joining a chase already under way). Each rider rides their own mount, but there is one Skarrith: the host's world
-//    runs it after the rearmost rider still riding (['cs','n',s,v] 10 a second), aims every venom volley and strike at a rider
-//    (['cs','v',…], ['cs','k',peer,lane]) and each rider's own world checks its own hits. Riders tell each other where they are
-//    (['cs','p',…]: partners are drawn exactly on the trail, jumps too). A rider who falls (three hits or swallowed) watches the
+//    runs it after the rearmost rider still riding (['cs','n',s,v] 10 a second; v164: its own speed, its distance measured to
+//    that rider), aims every venom volley at a rider (['cs','v',…]) and each rider's own world checks its own puddles, the broken
+//    trail (seeded: the same gaps for everyone) and the chomp. Riders tell each other where they are
+//    (['cs','p',…]: partners are drawn exactly on the trail, jumps too). A rider who falls (chomped or into a gap) watches the
 //    others ride on (spectating: the camera follows the leading rider, their hero hidden). If a rider gets through the crack
 //    (['cs','w']) the fallen arrive in Hillside Crest III too, lying downed beside the entrance (3085's revive, with a long
 //    timer) for their partner to revive. If everyone falls, the chase starts again for all (['cs','re',try]; v156: tries are numbered, CS155.rd).
@@ -116,31 +117,24 @@ function cs155Won(){return Object.keys(CS155.won).length>0}
 {const f=ch153SnakeTick;ch153SnakeTick=function(dt,now){const R=CH153.R;if(!R||!cs155Co()||R.ph=='intro'||R.ph=='win')return f.apply(this,arguments);return cs155Snake(dt,now)}}
 // v156: the host's serpent is followed only while it is on my try and still heard from; otherwise (the host still lies fallen on
 // the last try, or has gone quiet) my world runs it, so a rider who started again is not swallowed by the last try's serpent
-function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn;
+function cs155Snake(dt,now){const S=CH153.S,R=CH153.R,N=R.sn;
   // my chase is still the last try's (I have joined the next try but my fade has not started me again yet): its serpent is drawn
   // but neither driven nor sent, or it would hunt the riders who already started again from far up the trail
   if((R.rd|0)!==CS155.rd){try{ch153SnakeAnim(now)}catch(_){}return}
   const hn=CS155.n,lead=MP.host===MP.me||!MP.host||!!hn&&(hn.rd!==CS155.rd||nowP()-hn.t>1500);N.st='run';
   const run=cs155Riders().filter(q=>q.ph==2),tg=run.length?run.reduce((a,b)=>b.s<a.s?b:a):null;
   if(lead){
-    if(tg){const gap=tg.s-N.s,B=CH153V.band;let v=CH153V.spd*.93+Math.max(B[2],Math.min(B[3],(gap-B[0])*B[1]));if(R.ph=='run'&&R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
-      const ph=K.venom.filter(q=>tg.s>=q[0]).pop();if(ph&&!N.strike){N.spit-=dt;if(N.spit<=0){N.spit=ph[1]*(.85+Math.random()*.3);N.rear=1;N.spitAt=.42;N.spitN=ph[2];N.spitTg=tg.peer}}
-      if(N.spitAt!=null){N.spitAt-=dt;if(N.spitAt<=0){N.spitAt=null;const t2=run.find(q=>q.peer===N.spitTg)||tg,L=ch153SpitPlan(N.spitN,t2.s,t2.o,t2.v);
-        cl155Send(['cs','v',N.spitN,L.map(q=>[cl155R1(q[0]),cl155R2(q[1])])]);ch153SpitSpawn(L,N.spitN)}}
-      const sk=CH153V.strike;N.next-=dt;const busy=S.obs.some(q=>q.k!='gap'&&q.k!='log'&&q.s>tg.s-2&&q.s<tg.s+tg.v*1.1+5);
-      if(!N.strike&&N.next<=0&&gap<sk[0]&&tg.s>110&&!busy){N.next=tg.s>600?sk[2]:sk[1];N.strike={t:0,o:tg.o,s0:N.s,tg:tg.peer};cl155Send(['cs','k',tg.peer,cl155R2(tg.o)]);try{svSnd('hiss',1.2,.8)}catch(_){}}}
+    // v164: Skarrith runs at its own speed after the rearmost rider (ch164SnakeV); venom at a rider picked at random
+    if(tg){const gap=tg.s-N.s;let v=ch164SnakeV(tg.s,gap);if(R.ph=='run'&&R.t<3)v=Math.min(v,CH153V.slow0);N.v+=(v-N.v)*Math.min(1,dt*2);N.s+=N.v*dt;
+      if(R.ph!='run'||R.t>2.5)ch164SpitTick(N,tg.s,gap,dt,n=>{const t2=run[Math.floor(Math.random()*run.length)]||tg,L=ch153SpitPlan(n,t2.s,t2.o,t2.v);
+        cl155Send(['cs','v',n,L.map(q=>[cl155R1(q[0]),cl155R2(q[1])])]);ch153SpitSpawn(L,n)})}
     else{N.v*=Math.max(0,1-dt*2);N.s+=N.v*dt}
     if(now-CS155.tN>100){CS155.tN=now;cl155Send(['cs','n',cl155R1(N.s),cl155R1(N.v),CS155.rd])}}
   else{const n=CS155.n;if(n){const want=n.s+n.v*Math.min(.4,(nowP()-n.t)/1000);N.v=n.v;N.s+=N.v*dt;if(Math.abs(want-N.s)>8)N.s=want;else N.s+=(want-N.s)*Math.min(1,dt*5)}}
-  // the strike: it tracks its rider while it draws back; that rider's own world checks the hit
-  if(N.strike){const T=N.strike,me=T.tg===MP.me,tr=me?(R.ph=='run'?R:null):cs155Rider(T.tg);T.t+=dt;if(T.t<.75&&tr)T.o+=(tr.o-T.o)*Math.min(1,dt*3.2);
-    if(T.t>=1.05&&!T.hit){T.hit=1;if(me&&R.ph=='run'){if(Math.abs(R.o-T.o)<1.25&&R.y<1.2)ch153Hit('strike');else try{pickup({ic:'💨',t:'Dodged!',col:'#c8ff90'})}catch(_){}}}
-    if(T.t>1.6)N.strike=null}
-  if(R.ph=='run'&&R.s-N.s<CH153V.catch)ch153Die('swallow');
+  // each rider's own world checks the chomp
+  if(R.ph=='run'&&R.s-N.s<CH164.catch)ch153Die('chomp');
   N.rear=Math.max(0,N.rear-dt*1.6);N.o+=((tg?tg.o*.5:0)-N.o)*Math.min(1,dt*1.5);
-  // a strike at a partner is drawn round that partner
-  const T=N.strike;let keep=null;if(T&&T.tg!==MP.me){const q=cs155Rider(T.tg);if(q){keep=[R.s,R.o];R.s=q.s;R.o=q.o}}
-  try{ch153SnakeAnim(now)}finally{if(keep){R.s=keep[0];R.o=keep[1]}}}
+  try{ch153SnakeAnim(now)}catch(e){if(!CL155.err++)console.warn('v164 snake',e)}}
 // falling with partners still riding: watch them; when nobody rides any more, either follow the winners to III or start again
 {const f=ch153Tick;ch153Tick=function(dt,now){const R=CH153.R;if(!R)return f.apply(this,arguments);const co=cs155Co();
   try{if(co){let m=null;cs155Alive().forEach(q=>{if(q.ph==2&&(m==null||q.s>m))m=q.s});CH153.lead=m}else CH153.lead=null}catch(_){}
@@ -152,7 +146,7 @@ function cs155Snake(dt,now){const S=CH153.S,K=S.K,R=CH153.R,N=R.sn;
   if(R.ph=='spec'){cs155Spec(dt,now);cs155Tell(now);return}
   const r=f.apply(this,arguments);if(co)cs155Tell(now);return r}}
 function cs155Tell(now){const R=CH153.R;if(!R||now-CS155.tP<100)return;CS155.tP=now;const ph=R.ph=='intro'?1:R.ph=='run'?2:R.ph=='win'?4:3;
-  cl155Send(['cs','p',cl155R1(R.ph=='spec'?-99:R.s),cl155R2(R.o),cl155R2(R.y||0),ph,R.hp|0,cl155R1(R.v||0),CS155.rd])}
+  cl155Send(['cs','p',cl155R1(R.ph=='spec'?-99:R.s),cl155R2(R.o),cl155R2(R.y||0),ph,R.slow>0?1:0,cl155R1(R.v||0),CS155.rd])}   // v164: the 5th field is 'slowed by venom' (was hits left)
 function cs155Spec(dt,now){const R=CH153.R,S=CH153.S,P=S.P,K=S.K;R.t+=dt;R.spec.t+=dt;
   const al=cs155Alive(),up=cs155Ahead();
   // a partner already on the next try (everyone fell and the chase started again for them): start again with them
@@ -169,7 +163,7 @@ function cs155Spec(dt,now){const R=CH153.R,S=CH153.S,P=S.P,K=S.K;R.t+=dt;R.spec.
   pl.visible=false;if(typeof mModel!='undefined'&&mModel)mModel.visible=false;
   const [x,z,h]=P.at(R.s,R.o);pl.position.set(x,h,z);pl.rotation.y=P.yaw(R.s);if(mModel)mModel.position.copy(pl.position);
   ch153SnakeTick(dt,now);ch153FxTick(dt,now);
-  const tn=R.s>K.tunnel[0]-4&&R.s<K.tunnel[1]+4;R.dark=(R.dark||0)+((tn?1:0)-(R.dark||0))*Math.min(1,dt*2)}
+  const tn=R.s>600&&R.s<690;R.dark=(R.dark||0)+((tn?1:0)-(R.dark||0))*Math.min(1,dt*2)}
 // the fallen arrive in Hillside Crest III with the winners, lying there to be revived
 function cs155Out(){if(CS155.out)return;CS155.out=1;CH153Q.st=2;CH153.lv=1;
   fadeTo(()=>{CH153.R=null;pl.visible=true;if(typeof mModel!='undefined'&&mModel)mModel.visible=true;const N=INSL[7];insArrive(N);insMark(N);
@@ -205,7 +199,6 @@ function cs155On(q,peer){const k=q[1],R=CH153.R,nm=mpEsc(mpName(peer));
   else if(k==='w'){CS155.won[peer]=1;say('🐍 '+nm+' squeezed through the crack!')}
   else if(!R||!CH153.S)return;
   else if(k==='v'&&peer===MP.host&&Array.isArray(q[3])){const L=q[3].filter(a=>Array.isArray(a)).slice(0,5).map(a=>[+a[0]||0,+a[1]||0]);R.sn.rear=1;ch153SpitSpawn(L,q[2]|0)}
-  else if(k==='k'&&peer===MP.host&&typeof q[2]=='string'){if(!R.sn.strike){R.sn.strike={t:0,o:+q[3]||0,s0:R.sn.s,tg:q[2]};try{svSnd('hiss',1.2,.8)}catch(_){}}}
   else if(k==='re'&&q.length>2){const rd=q[2]|0;if(R.ph=='run'||R.ph=='intro'||rd<=CS155.rd)return;CS155.reT=nowP();
     if(R.ph=='dead'){CS155.rd=rd;CS155.won={};R.dead.co=1;return}   // my own fall's fade restarts me anyway (ch153Tick)
     cs155Again(rd)}
@@ -224,8 +217,8 @@ function cs155On(q,peer){const k=q[1],R=CH153.R,nm=mpEsc(mpName(peer));
   return r}}
 // the HUD: who you are watching, how your partners are doing
 {const f=ch153Hud;ch153Hud=function(){const r=f.apply(this,arguments);try{const el=$('ch153h'),R=CH153.R;if(!el||!R||el.classList.contains('hide'))return r;const k=el.querySelector('.k');
-    if(R.ph=='spec'){k.textContent='👁 Watching '+(R.spec.who?mpName(R.spec.who):'…')+' · you fell';el.querySelector('.hp').innerHTML='<span>💀</span>'}
-    else if(cs155Co()){const L=cl155Mates(MP.rg).map(m=>{const q=CS155.p[m.peer];return mpName(m.peer)+' '+(!q?'…':q.ph==3?'💀':q.ph==4?'✓':'💚'.repeat(Math.max(0,q.hp)))});k.textContent='Space · jump   A / D · steer   ·   '+L.join(' · ')}}catch(_){}return r}}
+    if(R.ph=='spec'){k.textContent='💀 You fell · 👁 watching '+(R.spec.who?mpName(R.spec.who):'…')}
+    else if(cs155Co()){const L=cl155Mates(MP.rg).map(m=>{const q=CS155.p[m.peer];return mpName(m.peer)+' '+(!q?'…':q.ph==3?'💀':q.ph==4?'✓':q.hp?'☣':'🐎')});k.textContent='Space · jump   A / D · steer   ·   '+L.join(' · ')}}catch(_){}return r}}
 
 // ================= the Gate of the Hydra together =================
 var HD155={rx:0,tS:0};
