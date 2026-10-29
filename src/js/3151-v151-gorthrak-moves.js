@@ -190,12 +190,12 @@ var GB151M={
         m.position.x=M.an.p0.x+(T.x-M.an.p0.x)*k;m.position.z=M.an.p0.z+(T.z-M.an.p0.z)*k;c.S.rmOn=1}else if(c.t>1.62&&c.t<3.6)c.S.rmOn=1},
     end(c){gb151RlkClose(c.e);c.S.chgT=0}}),
   // the shell holds: he heals and brings the ceiling down; only the shelters are safe (cast by the controller)
-  rfail:GB151_NO141({dur:4.6,armor:1,inv:[0,4.6],trk:[[.4,'roar','o'],[3.0,'roar','l',.03],[3.3,'stUp','io'],[3.75,'stHit','s'],[4.6,'rec','io']],
-    go(c){try{gb151Shelters(c.e)}catch(err){console.error('gb shelters',err)}},
+  rfail:GB151_NO141({dur:4.6,armor:1,inv:[0,4.6],trk:[[.4,'roar','o'],[3.0,'roar','l',.03],[3.3,'stUp','io'],[3.75,'stHit','s'],[4.6,'rec','io']], // (go: a partner's copy forgets the Shell too; v168)
+    go(c){c.S.rp=null;c.S.rlk=null;try{gb151Shelters(c.e)}catch(err){console.error('gb shelters',err)}},
     ev:[[.45,c=>{svSnd('roar',1.2,.7);try{sk146Heal(c.e,.12,0x9ad8ff)}catch(_){}}],[3.75,c=>{try{gb151Avalanche(c.e)}catch(err){console.error('gb avalanche',err)}}]],end(c){c.S.shell=0;c.S.crk=0}}),
   // the shell bursts: a long stagger (cast the moment the third crack lands)
   broken:GB151_NO141({dur:4.8,trk:[[.3,'stag','o'],[4.2,'stag','l',.03],[4.8,'rec','io']],
-    go(c){c.S.stg=4.8;c.S.shell=0;c.S.crk=0;c.S.dr=0;svSnd('stag',1.2,.7);svSnd('crack',1.2,.5);popT(c.m.position,'SHATTERED','#bfe8ff',true);
+    go(c){c.S.rp=null;c.S.rlk=null;c.S.stg=4.8;c.S.shell=0;c.S.crk=0;c.S.dr=0;svSnd('stag',1.2,.7);svSnd('crack',1.2,.5);popT(c.m.position,'SHATTERED','#bfe8ff',true);
       try{sk146Debris(gY(c.m.position,2),gb151IceMat(),16,.25,6,7,1.6)}catch(_){}burst(gY(c.m.position,2),0xd8f4ff,90,4,3,.9);svShock(c.m.position,0xbfe8ff,6,.6)},
     tk(c,dt){c.S.stg=Math.max(0,4.8-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'head',0,.2,0);burst(p,0xffe08a,1,.5,.6,.5)}},end(c){c.S.stg=0}})};
 // the icicle moves draw their own falling icicles at the warning's centre, timed to land on the hit
