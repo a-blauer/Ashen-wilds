@@ -182,7 +182,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   veil; plants: an older narrow tube; dens: their own tube), ~480 objects (glowing windows, plain materials) were never cut, and new
   scenery waited up to 2 s. Now every world material shares one rule (`gh169W` in 0061) and one look, drawn by real blending, never by
   dither: what stands between the camera and the hero is glass (`GH169.a` .4 opacity) in a smooth window round the hero (`GH169.R`
-  2.3–5.4 at the hero's distance, the v164 size) or within `GH169.N` (1.2–2.2) of the camera; floors below the knees stay solid.
+  2.3–5.4 at the hero's distance, the v164 size) or within `GH169.N` (1.2–3.4, a soft edge) of the camera; floors below the knees stay solid.
   Behind the glass, buildings and props are darkened to `GH169.k` (.06: a house's inside reads black); the hero, companions, monsters,
   the ground, plants, water and the sky are seen clearly (stencil 1). Plants are glass without the dark inside. The inside faces of
   two-sided houses (Abeksi) are black glass. Outside the instance's rectangle the ground is black (not scenery: Abeksi's north wall stands past

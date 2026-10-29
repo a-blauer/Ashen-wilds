@@ -1508,7 +1508,7 @@ MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v124Rim=='function'&&v1
 //     Plants themselves are see-through without the dark inside (GH169_SEE).
 //   * back faces (the inside of a two-sided house) are black in the colour pass; one-sided materials never show their back.
 //   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
-var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,2.2],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
+var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,3.4],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
 GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
   uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
 // gh169W(world point, camera, hero chest): inside a round window around the hero on screen (uGhR, world units at the hero's
