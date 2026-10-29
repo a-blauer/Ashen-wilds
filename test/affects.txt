@@ -70,3 +70,7 @@ v161|keymap|keybind|ui-scale|mobile|touch|0180-|1660-|location-box: v161_keys.py
 331[0-8]|3150|3180|coop|co-op|0520|3085|revive: v165_dirge_coop.py
 # v166
 v166|hud-tidy|1100-|3200-|3220-|0520-|0840-: v166_hud.py v161_mobile_shot.py
+# v168 quest set pieces in detail (the kit, the Dirge's graves / angel / quay / prisms / Reliquary, the court, Abeksi's cleft, the wind stones)
+3345|v168|detail|331[0-8]|3155|3170|328[0-2]|1680|3251|0780|0470: v168_ground.py
+# the kit is used by every v151-v165 set piece: their quests' own tests
+3345: v165_dirge.py v165_temple.py v165_courtyard.py v165_run.py v152_abeksi.py v154_hydra.py v160_frozen_gate.py
