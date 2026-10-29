@@ -33,7 +33,7 @@ function sc165Build(i){const S=sc165Spots()[i],M=sc165Mats(),g=new THREE.Group()
   for(let c=0;c<14;c++){const a=c/14*Math.PI*2+rn()*.3,r=.7+rn()*.35,h=2.2+rn()*2.6*(c%3?1:.55),w=.34+rn()*.26,m=new THREE.Mesh(svG('sc_pr'+(c%5),()=>sc165Prism(1,1)),c%4?M.salt:M.pink);
     m.position.set(Math.cos(a)*r,-.1,Math.sin(a)*r);m.scale.set(w,h,w);m.rotation.set((rn()-.5)*.12+Math.sin(a)*.12,rn()*3,(rn()-.5)*.12-Math.cos(a)*.12);g.add(m);C.cr.push(m)}
   // salt rubble round the foot
-  g.add(lgGroup('SC165|rub'+(i%2),q=>{const r2=dkRng(16560+i);for(let c=0;c<16;c++){const a=r2()*6.28,r=1.3+r2()*1.6,s=.12+r2()*.25;q.p('','dod','c',r2()<.3?0xe8c8c0:0xece6de,Math.cos(a)*r,s*.4,Math.sin(a)*r,s,s*.7,s,r2(),r2()*3,0)}},.1));
+  g.add(lgGroup('SC165|rub'+(i%2),q=>{dt168Up(q);const r2=dkRng(16560+i);for(let c=0;c<16;c++){const a=r2()*6.28,r=1.3+r2()*1.6,s=.12+r2()*.25;q.p('','dod','c',r2()<.3?0xe8c8c0:0xece6de,Math.cos(a)*r,s*.4,Math.sin(a)*r,s,s*.7,s,r2(),r2()*3,0)}},.1));
   // a pale shaft of light over it so it can be found
   const b=new THREE.Mesh(svG('sc_beam',()=>{const q=new THREE.CylinderGeometry(.6,1.3,26,10,1,true);q.translate(0,13,0);return q}),M.beam);g.add(b);C.beam=b;
   SC165.cols[i]=C;sc165Show(C);return C}

@@ -36,7 +36,7 @@ function sd165Mats(){if(SD165.M)return SD165.M;const M={},S=(c,o)=>new THREE.Mes
 function sd165Build(){if(SD165.g)return SD165.g;const T=ss165T1(),F=T.F,g=new THREE.Group();g.name='SunkenTempleGate';g.userData.psNo=1;scene.add(g);SD165.g=g;const R=dkRng(16511),M=sd165Mats();
   const [fx0,fz0]=F.W2(T.aF,0),root=new THREE.Group();root.position.set(fx0,T.yP,fz0);root.rotation.y=Math.atan2(-F.fx,-F.fz);g.add(root);SD165.root=root;
   const sd=[0xc8a070,0xbc9464,0xd2ac7c,0xb08858],sdD=0x8a6a44,gl=0x2a1a0e,gold=0xd8a840,pick=a=>a[Math.floor(R()*a.length)];
-  root.add(lgGroup('SD165|facade',q=>{// local: +z toward the yard, y up from the forecourt floor, x across
+  root.add(dt168Group('SD165|facade',q=>{dt168Up(q);// local: +z toward the yard, y up from the forecourt floor, x across
     const blk=(x,y,z,w,h,d,c)=>q.p('','box','c',c||pick(sd),x,y,z,w,h,d,(R()-.5)*.01,(R()-.5)*.01,(R()-.5)*.01);
     // the wall in courses of dressed blocks, a deep doorway in the middle
     for(let y=0,k=0;y<9.4;y+=.62,k++)for(let x=-7.5+(k%2)*.55;x<7.5;x+=1.1){if(Math.abs(x)<2.2&&y<5.6)continue;blk(Math.max(-7.4,Math.min(7.4,x)),y+.31,-1.6,1.08,.6,3.2)}
@@ -47,8 +47,7 @@ function sd165Build(){if(SD165.g)return SD165.g;const T=ss165T1(),F=T.F,g=new TH
     [[11,0],[8,1],[5,2]].forEach(([w,k])=>{blk(0,10.95+k*.8,-1.0-k*.3,w,.8,3.6-k*.6)});
     // the doorway: deep and dark; the frame of two papyrus columns with lotus capitals and a lintel with the winged sun
     q.p('','box','c',0x1a120a,0,2.8,-.9,3.6,5.6,.2);
-    [-1,1].forEach(s=>{const x=s*2.65;q.p('','box','c',sdD,x,.25,.4,1.4,.5,1.4);for(let k=0;k<6;k++){const a=k/6*Math.PI*2;q.p('','cyl','c',pick(sd),x+Math.cos(a)*.22,3.25,.4+Math.sin(a)*.22,.2,5.6,.2)}
-      q.p('','cyl','c',sd[2],x,3.25,.4,.42,5.6,.42).p('','cone','c',sd[0],x,6.45,.4,.75,.8,.75,Math.PI,0,0).p('','box','c',sdD,x,6.95,.4,1.3,.25,1.3);
+    [-1,1].forEach(s=>{const x=s*2.65;q.p('','box','c',sdD,x,.25,.4,1.4,.5,1.4);q.p('',cy168Col(),'c',sd[2],x,.45,.4,.92,5.6/6.4,.92,0,s,0).p('',cy168Cap(),'c',sd[0],x,6.05,.4,.92,.95,.92,0,s,0).p('','box','c',sdD,x,6.95,.4,1.3,.25,1.3);
       for(let k=0;k<5;k++)q.p('','box','c',gl,x+s*.0,1.2+k*.9,.85,.06,.4,.04)});
     blk(0,7.45,.25,7.4,1.0,1.6);blk(0,8.1,.25,7.8,.3,1.7,sdD);
     // the winged sun on the lintel: a disc between two great fanned wings of carved feathers
@@ -62,17 +61,17 @@ function sd165Build(){if(SD165.g)return SD165.g;const T=ss165T1(),F=T.F,g=new TH
     // cracks and drifts of sand on the ledges
     for(let k=0;k<8;k++)q.p('','box','c',0x5a4028,-6+R()*12,2+R()*6,.01,.05,1.2+R()*1.6,.02,0,0,(R()-.5)*.8);
     [-1,1].forEach(s=>{for(let k=0;k<3;k++)q.p('','sph','c',0xdcb880,s*(3+k*1.6),9.7+k*.2,1.2,.9,.25,.8)});
-  },0));
+  },CY168W,.05));
   // the doors: two great stone leaves banded in bronze (they slide apart into the walls when the temple opens)
   const door=new THREE.Group();root.add(door);SD165.door=door;SD165.leaves=[];
-  [-1,1].forEach(s=>{const L=lgGroup('SD165|leaf',q=>{q.p('','box','c',0xa47c52,0,2.75,0,1.78,5.5,.4);for(let k=0;k<4;k++)q.p('','box','m',0x8a6a34,0,.8+k*1.4,.22,1.8,.12,.05);q.p('','sph','m',0xd8a840,.55,2.8,.24,.12);
-      for(let k=0;k<3;k++)q.p('','box','c',0x2a1a0e,-.3,1.4+k*1.4,.21,.4,.5,.02)},0);L.position.set(s*.9,0,-.55);L.scale.x=s;door.add(L);SD165.leaves.push(L)});
+  [-1,1].forEach(s=>{const L=dt168Group('SD165|leaf',q=>{dt168Up(q);q.p('','box','c',0xa47c52,0,2.75,0,1.78,5.5,.4);for(let k=0;k<4;k++)q.p('','box','m',0x8a6a34,0,.8+k*1.4,.22,1.8,.12,.05);q.p('','sph','m',0xd8a840,.55,2.8,.24,.12);
+      for(let k=0;k<3;k++)q.p('','box','c',0x2a1a0e,-.3,1.4+k*1.4,.21,.4,.5,.02)},CY168W,.05);L.position.set(s*.9,0,-.55);L.scale.x=s;door.add(L);SD165.leaves.push(L)});
   // the passage behind (a faint fire glow deep inside once open) and the sun disc's glow
   const pas=new THREE.Mesh(new THREE.BoxGeometry(3.5,5.4,6),M.dark);pas.position.set(0,2.7,-3.8);root.add(pas);
   const glo=new THREE.Mesh(new THREE.PlaneGeometry(3.3,5.2),M.glow.clone());glo.position.set(0,2.7,-6.7);root.add(glo);SD165.pglow=glo;
   const sun=new THREE.Mesh(new THREE.CircleGeometry(.52,20),new THREE.MeshBasicMaterial({color:0xffc040,transparent:true,opacity:0,fog:false,blending:THREE.AdditiveBlending,depthWrite:false}));sun.position.set(0,7.45,1.16);root.add(sun);SD165.sun=sun;
   // the two kneeling guardians with scarab heads (khopesh across the knees), on plinths at the forecourt's sides
-  [-1,1].forEach(s=>{const G=lgGroup('SD165|guard',q=>{const c=0xc49a68,c2=0xb08858,c3=0x8a6a44;
+  [-1,1].forEach(s=>{const G=dt168Group('SD165|guard',q=>{dt168Up(q);const c=0xc49a68,c2=0xb08858,c3=0x8a6a44;
       q.p('','box','c',c3,0,-.36,0,2.3,.8,2.7).p('','box','c',c3,0,.55,0,2.2,1.1,2.6).p('','box','c',c2,0,1.15,0,2.4,.12,2.8);
       q.p('','box','c',c,0,1.6,-.35,1.5,.9,1.5).p('','box','c',c,-.42,1.45,.55,.5,.6,1.3).p('','box','c',c,.42,1.45,.55,.5,.6,1.3);   // folded legs, knees forward
       q.p('','box','c',c,0,2.9,-.4,1.3,1.9,.9).p('','box','c',c2,0,2.25,-.38,1.36,.18,.95);   // torso, belt
@@ -82,10 +81,10 @@ function sd165Build(){if(SD165.g)return SD165.g;const T=ss165T1(),F=T.F,g=new TH
       for(let k=0;k<5;k++)[-1,1].forEach(e=>q.p('','box','c',k%2?0x3a5a8a:0xd8b070,e*(.42+k*.0),3.7-k*.18,-.05,.42,.18,.62));
       // the scarab head: a domed beetle head, a horn, mandibles, compound eyes
       q.p('','sph','c',0x6a5a3a,0,4.35,-.25,.58,.48,.62).p('','sph','c',0x7a6a44,0,4.1,.25,.4,.32,.4).p('','cone','c',0x5a4a30,0,4.85,.05,.14,.6,.14,-.45,0,0);
-      [-1,1].forEach(e=>{q.p('','cone','c',0x5a4a30,e*.2,3.88,.62,.07,.42,.07,1.9,0,e*.5).p('','sph','g',0x40e0c0,e*.33,4.45,.18,.09,.12,.09)})},0);
+      [-1,1].forEach(e=>{q.p('','cone','c',0x5a4a30,e*.2,3.88,.62,.07,.42,.07,1.9,0,e*.5).p('','sph','g',0x40e0c0,e*.33,4.45,.18,.09,.12,.09)})},CY168W,.05);
     const [x,z]=F.W2(T.aF-1.6,s*4.75);G.position.set(x,T.yP+.75,z);G.rotation.y=Math.atan2(-F.fx,-F.fz);g.add(G)});
   // the forecourt: a stair down, flagstones, retaining walls of sandstone with a balustrade, two beetle finials at the top of the stair
-  g.add(lgGroup('SD165|court',q=>{const P=T.pit,S=T.st,yw=Math.atan2(F.fx,F.fz),W=(a,b)=>F.W2(a,b);
+  g.add(dt168Group('SD165|court',q=>{dt168Up(q);const P=T.pit,S=T.st,yw=Math.atan2(F.fx,F.fz),W=(a,b)=>F.W2(a,b);
     const n=8;for(let k=0;k<n;k++){const a=S.a0+(k+.5)*(S.a1-S.a0)/n,top=T.y0-(T.y0-T.yP)*(k+.75)/n,[x,z]=W(a,0);q.p('','box','c',pick(sd),x,top-.35,z,S.b*2,.7,(S.a1-S.a0)/n*1.02,0,yw,0).p('','box','c',sdD,x+F.fx*.2,top-.02,z+F.fz*.2,S.b*2+.05,.05,.07,0,yw,0)}
     for(let a=P.a0+.5;a<P.a1;a+=1.1)for(let b=-P.b+.55;b<P.b;b+=1.1){const [x,z]=W(a+(R()-.5)*.1,b+(R()-.5)*.1);q.p('','box','c',R()<.15?sdD:pick(sd),x,T.yP+.03,z,1.04,.08,1.04,0,yw+(R()-.5)*.05,0)}
     const wall=(a0,a1,b0,b1,h0,h1)=>{const L=Math.hypot(a1-a0,b1-b0),m=Math.max(1,Math.round(L/1.1));for(let k=0;k<m;k++){const t=(k+.5)/m,a=a0+(a1-a0)*t,b=b0+(b1-b0)*t,[x,z]=W(a,b),hb=h0+(h1-h0)*t,top=T.y0+.35,yw2=Math.atan2((a1-a0)*F.fx+(b1-b0)*F.lx,(a1-a0)*F.fz+(b1-b0)*F.lz);
@@ -95,7 +94,7 @@ function sd165Build(){if(SD165.g)return SD165.g;const T=ss165T1(),F=T.F,g=new TH
     [-1,1].forEach(s=>{const [x,z]=W(S.a0-.4,s*(S.b+.3));q.p('','box','c',sdD,x,T.y0+.4,z,.9,.8,1.2,0,yw,0).p('','sph','c',0x8a7048,x,T.y0+1.05,z,.38,.3,.55,0,yw,0).p('','sph','c',0x7a6040,x,T.y0+1.05,z+F.fz*0,.22,.2,.2)});
     // braziers by the doors (lit when the temple opens)
     SD165.fires=[];[-1,1].forEach(s=>{const [x,z]=W(P.a1-1.2,s*2.6);q.p('','cyl','m',0x5a4020,x,T.yP+.5,z,.16,1.0,.16).p('','cyl','m',0x6a4a24,x,T.yP+1.05,z,.38,.22,.38);SD165.fires.push([x,T.yP+1.2,z])});
-  },0));
+  },CY168W,.05));
   // the spoil heaps: each is a lumpy dune mesh scaled by the sand thrown on it
   SD165.heaps=T.heaps.map((h,i)=>{const [x,z]=F.W2(h[0],h[1]),m=new THREE.Mesh(svG('sd165heap'+i,()=>{const q=new THREE.SphereGeometry(1,20,9,0,Math.PI*2,0,Math.PI/2),P=q.attributes.position,rn=svRng(1651+i),col=[],c=new THREE.Color();
       for(let j=0;j<P.count;j++){const X=P.getX(j),Y=P.getY(j),Z=P.getZ(j),a=Math.atan2(Z,X),k=1+.18*Math.sin(a*3+i)+.1*Math.sin(a*7+i*2)+(rn()-.5)*.08,y=Math.pow(Math.max(0,Y),1.25)*(.92+.12*Math.sin(a*2)+(rn()-.5)*.1);P.setXYZ(j,X*k*(1-.25*Y),y,Z*k*(1-.25*Y));

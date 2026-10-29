@@ -17,24 +17,24 @@ function sr165Here(){return SR165.on&&sr165In()}
 function sr165Build(){if(SR165.g)return SR165.g;const P=sr165Path(),g=new THREE.Group();g.name='SandRun';scene.add(g);SR165.g=g;const rn=dkRng(16591);
   // the hazards
   SR165.obs=sr165Obs().map(o=>Object.assign({},o));const traps=[];
-  g.add(lgGroup('SR165|obs',q=>{SR165.obs.forEach((o,i)=>{const y=GH(o.x,o.z);if(o.k=='rock'){for(let c=0;c<3;c++){const a=c*2.1+o.ry,rr=c?o.r*.55:0,s=c?o.r*.6:o.r;q.p('','dod','c',c%2?0x9a7a58:0xb08a60,o.x+Math.cos(a)*rr,y+s*.55,o.z+Math.sin(a)*rr,s,s*.85,s,o.ry+c,c*.7,0)}}
+  g.add(lgGroup('SR165|obs',q=>{dt168Up(q);SR165.obs.forEach((o,i)=>{const y=GH(o.x,o.z);if(o.k=='rock'){for(let c=0;c<3;c++){const a=c*2.1+o.ry,rr=c?o.r*.55:0,s=c?o.r*.6:o.r;q.p('','dod','c',c%2?0x9a7a58:0xb08a60,o.x+Math.cos(a)*rr,y+s*.55,o.z+Math.sin(a)*rr,s,s*.85,s,o.ry+c,c*.7,0)}}
     else if(o.k=='trap')traps.push(o)})},.12));
-  SR165.obs.forEach(o=>{if(o.k!=='spire')return;const m=lgGroup('SR165|spire',q=>{for(let c=0;c<4;c++){const a=c*1.6,rr=c?.5:0,h=c?1.6+c*.4:3.6;q.p('','cone','c',c%2?0xf0e8e0:0xe0d4c8,Math.cos(a)*rr,h/2,Math.sin(a)*rr,c?.5:.85,h,c?.5:.85,(c?.25:0)*Math.cos(a),0,(c?.25:0)*Math.sin(a))}},.12);
+  SR165.obs.forEach(o=>{if(o.k!=='spire')return;const m=lgGroup('SR165|spire',q=>{dt168Up(q);for(let c=0;c<4;c++){const a=c*1.6,rr=c?.5:0,h=c?1.6+c*.4:3.6;q.p('','cone','c',c%2?0xf0e8e0:0xe0d4c8,Math.cos(a)*rr,h/2,Math.sin(a)*rr,c?.5:.85,h,c?.5:.85,(c?.25:0)*Math.cos(a),0,(c?.25:0)*Math.sin(a))}},.12);
     m.position.set(o.x,GH(o.x,o.z),o.z);m.rotation.y=o.ry;m.scale.setScalar(o.r);g.add(m);o.mesh=m});
   // sand traps: a sunken swirl that turns
   const tm=new THREE.MeshBasicMaterial({map:sr165SwirlTex(),transparent:true,depthWrite:false,fog:true});SR165.trapM=[];
   traps.forEach(o=>{const m=new THREE.Mesh(new THREE.CircleGeometry(o.r+.6,24),tm);m.rotation.x=-Math.PI/2;m.position.set(o.x,GH(o.x,o.z)+.06,o.z);m.userData.lpsSkip=1;g.add(m);SR165.trapM.push(m)});
   // the checkpoints: banner poles either side of the course
-  g.add(lgGroup('SR165|cps',q=>{sr165CPs().slice(1).forEach(s=>{[-1,1].forEach(sd=>{const [x,z]=P.at(s,sd*(SR165C.hw-.8)),y=GH(x,z);q.L('','c',0x5a3e24,[x,y,z],[x,y+5.5,z],.09,.07,5);
+  g.add(lgGroup('SR165|cps',q=>{dt168Up(q);sr165CPs().slice(1).forEach(s=>{[-1,1].forEach(sd=>{const [x,z]=P.at(s,sd*(SR165C.hw-.8)),y=GH(x,z);q.L('','c',0x5a3e24,[x,y,z],[x,y+5.5,z],.09,.07,5);
       const [x2,z2]=P.at(s+1.2,sd*(SR165C.hw-.8));q.p('','box','c',0xc84a2a,(x+x2)/2,y+4.6,(z+z2)/2,.05,1.4,1.2,0,P.yaw(s),0);q.p('','sph','c',0xd8a840,x,y+5.6,z,.14,.14,.14)})})},.1));
   // bones of old caravans and half-buried wrecks along the edges
-  g.add(lgGroup('SR165|deco',q=>{for(let s=30;s<P.S-30;s+=9+rn()*14){const sd=rn()<.5?-1:1,o=sd*(SR165C.hw-.5+rn()*2.5),[x,z]=P.at(s,o),y=GH(x,z),r=rn();
+  g.add(lgGroup('SR165|deco',q=>{dt168Up(q);for(let s=30;s<P.S-30;s+=9+rn()*14){const sd=rn()<.5?-1:1,o=sd*(SR165C.hw-.5+rn()*2.5),[x,z]=P.at(s,o),y=GH(x,z),r=rn();
       if(r<.3){for(let k=0;k<6;k++){const a=k*.5;q.L('','c',0xe8e0d0,[x+k*.5,y,z],[x+k*.5+Math.cos(a)*.3,y+1.2,z+.6],.06,.03,4)}q.p('','sph','c',0xe8e0d0,x-.6,y+.3,z,.4,.3,.5)}
       else if(r<.5){q.p('','box','c',0x6a4a2a,x,y+.3,z,2.2,.5,1.0,.2,rn()*3,.3);q.L('','c',0x5a3e24,[x,y,z],[x+.4,y+2.4,z+.2],.07,.05,5)}
       else q.p('','dod','c',0xa88458,x,y+.4,z,1.2+rn(),1+rn()*.6,1.2+rn(),rn(),rn()*3,0)}},.12));
   // the cave of the Den at the end: a mouth in the cliff, fangs of rock round it, a dull red glow inside
   {const s=P.S,[x,z]=P.at(s+2,0),y=GH(x,z),yaw=P.yaw(s);const c=new THREE.Group();c.position.set(x,y,z);c.rotation.y=yaw;g.add(c);SR165.cave=c;
-    c.add(lgGroup('SR165|cave',q=>{for(let k=0;k<=12;k++){const a=k/12*Math.PI,r=6.5;q.p('','dod','c',k%2?0x5a3a28:0x6a4a30,Math.cos(a)*r,Math.sin(a)*r*1.1,1.5,2.2,2.0,2.4,k,k,0)}
+    c.add(lgGroup('SR165|cave',q=>{dt168Up(q);for(let k=0;k<=12;k++){const a=k/12*Math.PI,r=6.5;q.p('','dod','c',k%2?0x5a3a28:0x6a4a30,Math.cos(a)*r,Math.sin(a)*r*1.1,1.5,2.2,2.0,2.4,k,k,0)}
       q.p('','box','c',0x0a0605,0,3.4,2.4,11.5,7.4,.6);for(let k=0;k<7;k++){const xx=-4.5+k*1.5;q.p('','cone','c',0xd8ccb0,xx,7.0-Math.abs(xx)*.25,1.0,.35,1.6,.35,Math.PI,0,0)}
       for(let k=0;k<5;k++)q.p('','dod','c',0x4a3020,(k-2)*5.4,9+(k%2)*3,3,4,4,3,k,0,0)},.1));
     const gl=new THREE.Mesh(new THREE.CircleGeometry(4,16),new THREE.MeshBasicMaterial({color:0xff5a2a,transparent:true,opacity:.35,fog:false}));gl.position.set(0,3.2,2.1);gl.rotation.y=Math.PI;c.add(gl)}
