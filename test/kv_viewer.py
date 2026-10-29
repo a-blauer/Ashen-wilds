@@ -49,9 +49,9 @@ def s(pg):
                 if SHOT:
                     ev("()=>{window.KVNODRAW=0;KVCLK.tick(16);window.KVNODRAW=1}")
                     p=OUT+'/kv_one.png';pg.locator('#gl canvas').first.screenshot(path=p,animations='disabled');im=Image.open(p).convert('RGB');W,H=im.size;im=im.crop((int(W*.1),int(H*.08),int(W*.9),int(H*.92))).resize((300,200));d=ImageDraw.Draw(im);d.rectangle([0,0,300,14],fill=(0,0,0));d.text((3,1),sub+' · '+ev("()=>KV.label"),fill=(255,230,170));ims.append(im)
-                o=ev("""()=>{if(KV.mode=='boss'){for(let i=0;i<80&&(KV.boss&&KV.boss.e&&(KV.boss.e.sv.mv||KV.die));i++)ST(250)}else ST(3200);
+                o=ev("""()=>{if(KV.mode=='boss'){for(let i=0;i<140&&(KV.boss&&KV.boss.e&&(KV.boss.e.sv.mv||KV.die));i++)ST(250)}else ST(3200);
                   const e=ERR.filter(x=>!/fishing|audio|AudioContext/i.test(x)),b=KV.boss&&KV.boss.e;
-                  return {err:e.slice(0,3),busy:!!(fols[0]&&fols[0]._m105),lk:!!(fols[0]&&fols[0].lk),chan:!!hero.chan,bmv:b?!!b.sv.mv:false,bdead:KV.mode=='boss'?!(b&&!b.dead):false,lab:KV.label}}""")
+                  return {err:e.slice(0,3),g139:e.some(x=>/enemy guard/.test(x))?G139.log.slice(-3):undefined,busy:!!(fols[0]&&fols[0]._m105),lk:!!(fols[0]&&fols[0].lk),chan:!!hero.chan,bmv:b?!!b.sv.mv:false,bdead:KV.mode=='boss'?!(b&&!b.dead):false,lab:KV.label}}""")
                 n+=1
                 if o['err'] or o['busy'] or o['lk'] or o['bmv'] or o['bdead']:F(tab,sub,k,json.dumps(o))
         if ims:

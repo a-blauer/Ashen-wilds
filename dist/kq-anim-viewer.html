@@ -55204,7 +55204,7 @@ const QSD={intro:'The three heaps of sand pour into a vortex in the yard and he 
   collapse:'Close: he slumps into his vortex (a close blast) and bursts back up in a ring further out.',
   awaken:'At 55%: a roar, the storm thickens, the sand wall closes in and dust devils wander the yard.',
   fury:'Phase II: five blows and a leaping slam.',surge2:'Phase II: a surge through you and back again.',spires:'Phase II: a ring of spikes closing in, then one under you.',
-  heart:'Signature: he sinks into the sand, three mounds rise and his heart flies into one; the mounds change places. Break the one whose glow flickers.',
+  heart:'Signature: he sinks into the sand, three mounds rise and his heart flies into one; the mounds change places. Break the one whose glow flickers. Here nobody breaks it, so it runs to the time-out (about 20 s).',
   hfail:'Time runs out: he rises healed, three stone slabs burst up and the Sandstorm Burial scours everything not behind them.',
   broken:'The right mound broken: he is torn out of the ground in a long stagger.'};
 const BOSSD={mb:MBD,gb:GBD,qs:QSD};
@@ -55424,6 +55424,8 @@ function bossBusy(){const B=KV.boss,e=B&&B.e;return !!(e&&e.sv&&(e.sv.mv||KV.die
 function frame(){requestAnimationFrame(frame);if(!KV.on)return;const t=now_(),idle=t>KV.busyT&&!bossBusy();
   // the floating lantern's halo (dark zones) would glow right in front of the side camera; its light stays
   try{if(FLAN.halo.visible)FLAN.halo.visible=false}catch(_){}
+  // Qarsul's wall of whirling sand: the viewer's camera stands outside it, so only its far side is drawn (it still frames the yard)
+  try{if(typeof QS165!='undefined'&&QS165.wall)QS165.wall.L.forEach(o=>{const mt=o.m.material;if(mt.side!==THREE.BackSide){mt.side=THREE.BackSide;mt.needsUpdate=true}})}catch(_){}
   HIDE.forEach(g=>{const el=g();if(el&&!el.classList.contains('hide'))el.classList.add('hide')});try{if(typeof KQMENU!='undefined')KQMENU.on=false}catch(_){}
   hero.hp=heroMax();if(KV.mode!='hero')hero.mp=mpMax();
   if(KV.mode=='boss'){const e=bossGet();
