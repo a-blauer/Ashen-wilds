@@ -35,7 +35,7 @@ t0=$(date +%s)
 gh run watch "$id" --interval 30 >/dev/null 2>&1 || true
 mkdir -p test/out/suite
 out=test/out/suite/gh-$suite.summary.txt
-note() { gh api "repos/$repo/check-runs/$1/annotations" --jq ".[]|select(.title|test(\"$2\"))|.message" 2>/dev/null; }
+note() { gh api "repos/$repo/check-runs/$1/annotations" --jq ".[]|select((.title//\"\")|test(\"$2\"))|.message" 2>/dev/null || true; }
 # the job list page by page through repos/<owner>/<repo>/... (gh run view follows GitHub's next-page links, which use
 # repositories/<id>/... paths that this workspace's proxy refuses once a run has more than 100 jobs)
 jobs=$(for pg in $(seq 10); do r=$(gh api "repos/$repo/actions/runs/$id/jobs?per_page=100&page=$pg" --jq '.jobs[]|"\(.id)\t\(.conclusion)\t\(.name)"');

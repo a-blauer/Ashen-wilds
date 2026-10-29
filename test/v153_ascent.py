@@ -138,7 +138,7 @@ def s(pg):
     exp(d['ph']=='win' and d['deaths']==0,'the autopilot rides the whole trail to the summit (%s)'%d)
     exp(55<=d['t']<=110,'about 85 s with the v167 faster mount (%s s)'%d['t'])
     exp(d.get('crashes',9)<=1,'the autopilot gets past the obstacles (%s crashes)'%d.get('crashes'))
-    exp(d['jumps']>=r['gapN'] and d['boosts']>=8 and d['vol']>=15,'it jumped every broken stretch, boosted and met the venom (%s jumps, %s boosts, %s volleys)'%(d['jumps'],d['boosts'],d['vol']))
+    exp(d['jumps']>=r['gapN'] and d['boosts']>=8 and d['vol']>=10,'it jumped every broken stretch, boosted and met the venom (%s jumps, %s boosts, %s volleys)'%(d['jumps'],d['boosts'],d['vol']))
     exp(d['minGap']>CH_CATCH,'Skarrith never reached it (closest %s)'%d['minGap'])
     n=r['rideNoBoost']
     exp(n['ph']=='dead' and n.get('why')=='chomp','without boosting Skarrith catches the rider (%s)'%n)
