@@ -38,7 +38,7 @@ function dt168Ext(key,pts,depth,b,bs){b=b||0;return dt168Geo('E'+key+':'+depth.t
 function dt168ArchPts(w,y0,y1,k,n){const p=[[-w/2,y0],[w/2,y0],[w/2,y1]];n=n||14;for(let i=1;i<n;i++){const a=i/n*Math.PI;p.push([Math.cos(a)*w/2,y1+Math.sin(a)*w/2*k])}p.push([-w/2,y1]);return p}
 function dt168Rock(seed,det,jag,crag){return dt168Geo('R'+seed+'_'+det+'_'+jag+(crag?'c':''),()=>{const g=new THREE.IcosahedronGeometry(1,det==null?1:det),P=g.attributes.position,j=jag==null?.45:jag,R=dkRng(seed*97+13),cut=[];
   // crag: fractured faces: the stone is cut by a few random planes (flat facets like split rock), then roughened a little
-  if(crag)for(let c=0;c<7;c++){const a=R()*6.283,b=Math.acos(2*R()-1);cut.push([Math.sin(b)*Math.cos(a),Math.cos(b),Math.sin(b)*Math.sin(a),.62+R()*.25])}
+  if(crag)for(let c=0;c<11;c++){const a=R()*6.283,b=Math.acos(2*R()-1);cut.push([Math.sin(b)*Math.cos(a),Math.cos(b),Math.sin(b)*Math.sin(a),.5+R()*.28])}
   for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const k=1+(dt168Fbm(x*1.4+seed*.37,y*1.4,z*1.4,seed)-.5)*(crag?j*.4:j);x*=k;y*=k;z*=k;
     for(const [nx,ny,nz,d] of cut){const t=x*nx+y*ny+z*nz;if(t>d){x-=nx*(t-d);y-=ny*(t-d);z-=nz*(t-d)}}P.setXYZ(i,x,y,z)}g.computeVertexNormals();return g})}
 // a heaped mound (radius 1, height 1 before scaling), its rim just below the ground
@@ -151,7 +151,7 @@ function dt168Up(k,o){o=o||{};if(k.up168)return k;k.up168=1;const p0=k.p,L0=k.L,
     skirt:new THREE.CylinderGeometry(.55,1,1,22,1,true),tube:new THREE.CylinderGeometry(1,1,1,18,1,true),ring:new THREE.TorusGeometry(1,.12,7,28).rotateX(Math.PI/2)})},bmax=o.b==null?.06:o.b;let sd=0;
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(typeof geo=='string'){const sy1=sy==null?sx:sy,sz1=sz==null?sx:sz;
       if(geo=='box'&&!o.nb){const m=Math.min(Math.abs(sx),Math.abs(sy1),Math.abs(sz1));if(m>(o.bmin||.035))return p0.call(k,bn,dt168BBox(Math.abs(sx),Math.abs(sy1),Math.abs(sz1),Math.min(bmax,m*.14),o.bs||1),t,col,x,y,z,1,1,1,rx,ry,rz)}
-      else if(geo=='dod')return p0.call(k,bn,dt168Rock(150+(sd++)%12,1,.5,1),t,col,x,y,z,sx*1.12,sy1*1.12,sz1*1.12,rx,ry,rz);
+      else if(geo=='dod')return p0.call(k,bn,dt168Rock(150+(sd++)%12,1,.5,1),t,col,x,y,z,sx*1.25,sy1*1.25,sz1*1.25,rx,ry,rz);
       else if(Math.max(Math.abs(sx),Math.abs(sy1),Math.abs(sz1))>.07&&Math.min(Math.abs(sx),Math.abs(sz1))>.045){const U=G()[geo];if(U)geo=U}}
     return p0.call(k,bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz)};
   k.L=function(bn,t,col,a,b,r1,r2,seg){const r=Math.max(r1,r2==null?r1:r2);return L0.call(k,bn,t,col,a,b,r1,r2,Math.max(seg||6,r>.2?18:r>.06?12:r>.025?8:seg||6))};
