@@ -13,7 +13,7 @@
 //    ['f2st']). One hero carries the flamespitter at a time (a partner asks for it: ['f2c', 1]; drops it: ['f2c', 0, x, z, ry]); the
 //    carrier's screen says when it sprays and whether it hits the gate (['f2f', fire, onGate]); the host keeps the heat, the melt and
 //    the charge and sends them every 150 ms (['f2e', …]). Spiders are the host's shared monsters and hunt the nearest hero; a partner's
-//    flame asks the host to burn one (['f2k', id], charge spent on the host). Wardens are the host's shared monsters too.
+//    flame asks the host to burn one (['f2k', id]: one burn, fs160Burn, charge spent on the host). Wardens are the host's shared monsters too.
 //  · The Mountain Drill: the region host runs it (start ['d3rq'] / ['d3st'], the drill's progress and the boxes every 150 ms
 //    ['d3e', …]); anyone switches on or repairs any box (['d3o', i]); troll wreckers are the host's shared monsters and their
 //    wind-up shows on every screen (['d3w', id, box]).
@@ -118,7 +118,7 @@ function co160OnAsk(q,peer){const E=MQ160.E;if(!E||!co151Host())return;const r=M
   if(q[1]===1){if(E.carrier||E.carry)return;const sp=E.gp||mq160BenchSpot();if(Math.hypot(p.x-sp.x,p.z-sp.z)>4.5)return;E.carrier=peer;E.gp=null;E.rfire=0;mq160Sync();CO151.tS=0}
   else if(E.carrier===peer){E.carrier='';E.rfire=0;const x=+q[2],z=+q[3];E.gp=new THREE.Vector3(isFinite(x)?x:p.x,GH(isFinite(x)?x:p.x,isFinite(z)?z:p.z)+.18,isFinite(z)?z:p.z);E.gry=+q[4]||0;mq160Sync();CO151.tS=0}}
 function co160OnBurn(id){const E=MQ160.E;if(!E||!co151Host())return;const e=enemies.find(q=>q.nid===id&&!q.mir&&!q.dead);if(!e||!(e.fs160sp||e.c.en==='icespider'))return;
-  if(E.charge<MQ160.kc)return;E.charge-=MQ160.kc;E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6);try{hurt(e,1e9,{col:'#ff9a3a'},false)}catch(_){}if(!e.dead)try{removeE(e)}catch(_){}}
+  fs160Burn(e)}   // v166: one heavy burn (no more one-hit kills; the charge only makes it blaze)
 // spiders hunt the nearest standing hero
 {const f=eTarget;eTarget=function(e,m,dpl){if(e&&!e.dead&&(e.fs160sp||e.dr170t&&e.angry)&&co151On()){let tg=co151Me()?pl:null,bd=tg?dpl:1e9;
     for(const k in MP.rh){const r=MP.rh[k];if(!r.act||!r.m||r.pr&&r.pr.dn)continue;const d=m.position.distanceTo(r.m.position);if(d<bd){bd=d;tg=r.m}}return tg||pl}
