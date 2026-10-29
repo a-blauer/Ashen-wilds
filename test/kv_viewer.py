@@ -17,7 +17,7 @@ def s(pg):
       window.addEventListener('error',e=>ERR.push('ERR '+e.message));window.ST=ms=>{for(let i=0;i<Math.round(ms/16);i++)KVCLK.tick(16)};ST(300);return 1}""")
     subs={'comp':ev("()=>SPK"),
           'mon':ev("()=>Object.keys(EN).filter(k=>!/^boss/.test(k)&&k!=='vorraxis'&&((MSET[k]&&MSET[k].length)||(EN[k].moves&&EN[k].moves.length)))"),
-          'boss':['s0','s1','s2','s3','s4','s5','mb'],
+          'boss':['s0','s1','s2','s3','s4','s5','mb','gb','qs'],
           'hero':ev("()=>CLSK.flatMap(c=>{const s={};ITPL.forEach(t=>{if(t.sl=='weapon'&&t.cls==c)s[t.wt]=1});return Object.keys(s).map(w=>c+':'+w)})"),
           'abil':ev("()=>CLSK.flatMap(c=>[c+':base',c+':evo'])")}
     fails=[];n=0
