@@ -24,14 +24,14 @@ function os165RuneTex(i){const k='os'+i;OS165.tx=OS165.tx||{};if(OS165.tx[k])ret
 var OS165W={c:{g:[.6,.4],n:.16,s:.25,m:[0x3e4a36,.9,.35],l:[0xa8a488,.5],sd:21},m:{n:.2,sd:4}};
 function os165PrismModel(i){const g=new THREE.Group(),c=OS165.col[i];g.userData.psNo=1;
   g.add(dt168Group('DG165|pplinth168',k=>{const R=svRng(8100),b=0xb8b098,b2=0x8a8270,st=0x4a4a46;
-    dt168P(k,dt168Lathe([[0,-.6],[1.55,-.6],[1.55,.22],[1.5,.28],[1.22,.3],[1.2,.4],[1.16,.48],[1.1,.52],[0,.52]],40),'c',st,new THREE.Matrix4());
+    dt168P(k,dt168Lathe([[0,-.6],[1.55,-.6],[1.55,.22],[1.5,.28],[1.22,.3],[1.2,.4],[1.16,.48],[1.1,.52],[0,.52]],32),'c',st,new THREE.Matrix4());
     // a drum of stacked skulls and long bones bound under a stone cap
     dt168P(k,dt168Lathe([[0,.5],[.72,.5],[.72,1.62],[0,1.62]],24),'c',0x2a2620,new THREE.Matrix4());
     for(let j=0;j<3;j++)for(let q=0;q<11;q++){const a=q/11*6.283+j*.29,y=.72+j*.34;dt168Skull(k,Math.sin(a)*.8,y,Math.cos(a)*.8,a,.3,dt168Mix(b,b2,R()),0,0)}
     for(let q=0;q<14;q++){const a=q/14*6.283+.1,x0=Math.sin(a),z0=Math.cos(a);k.L('','c',dt168Mix(b2,b,R()*.4),[x0*1.0,.5,z0*1.0],[x0*.9,1.62,z0*.9],.035,.03,8);
-      [[1.0,.5],[.9,1.62]].forEach(([r,y])=>dt168P(k,dt168Lathe([[0,-1],[.8,-.6],[1,0],[.8,.6],[0,1]],8),'c',b2,dt168Mx(x0*r,y,z0*r,0,a,0,.05,.045,.06)))}
-    dt168P(k,dt168Lathe([[0,1.6],[.98,1.6],[1.02,1.64],[1.02,1.72],[.96,1.78],[.9,1.8],[.88,1.84],[0,1.84]],40),'c',st,new THREE.Matrix4());
-    dt168P(k,dt168Geo('ppring',()=>new THREE.TorusGeometry(.9,.035,8,64).rotateX(Math.PI/2)),'m',0x5a4a2a,dt168Mx(0,1.7,0));
+      [[1.0,.5],[.9,1.62]].forEach(([r,y])=>dt168P(k,dt168Lathe([[0,-1],[1,0],[0,1]],6),'c',b2,dt168Mx(x0*r,y,z0*r,0,a,0,.05,.045,.06)))}
+    dt168P(k,dt168Lathe([[0,1.6],[.98,1.6],[1.02,1.64],[1.02,1.72],[.96,1.78],[.9,1.8],[.88,1.84],[0,1.84]],32),'c',st,new THREE.Matrix4());
+    dt168P(k,dt168Geo('ppring',()=>new THREE.TorusGeometry(.9,.035,6,48).rotateX(Math.PI/2)),'m',0x5a4a2a,dt168Mx(0,1.7,0));
     for(let q=0;q<6;q++){const a=q/6*6.283;dt168P(k,dt168BBox(.08,.26,.04,.012),'m',0x5a4a2a,dt168Mx(Math.sin(a)*.97,1.7,Math.cos(a)*.97,0,a,0))}
     for(let q=0;q<8;q++){const a=R()*6.283,r=1.25+R()*.5;k.L('','c',dt168Mix(b,b2,R()),[Math.sin(a)*r,.01,Math.cos(a)*r],[Math.sin(a)*r+(R()-.5)*.4,.03,Math.cos(a)*r+(R()-.5)*.4],.02,.018,6)}},OS165W,.04));
   // the prism: a tall faceted crystal turning above the plinth, a bright core, a halo, a faint pillar of light
