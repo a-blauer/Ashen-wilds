@@ -28,9 +28,9 @@ function commandAttack(){
   say('📣 '+act.map(c=>c.n).join(' and ')+(act.length>1?' attack ':' attacks ')+(e.c.n||e.c.g[0])+'!');if(typeof sfx=='function')sfx('chime',.5)}
 {const f=teamFoe;teamFoe=function(){const C=CMD;if(C.e){if(C.e.dead||nowP()>C.t||!enemies.includes(C.e)||d2(C.e.m.position,pl.position)>30)CMD={e:null,t:0};
   else if(townAt(pl.position.x,pl.position.z,0)<0)return C.e}return f.apply(this,arguments)}}
-// v167: Space belongs to a level that uses it (the Hilltop Ascent's jump, the drill's hold-to-heat): their key listeners are added
-// after this one, so this one steps aside instead of swallowing the key (Space never jumped in the chase before).
-function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false;if(typeof MQ170!='undefined'&&MQ170&&MQ170.W)return false}catch(_){}return true}
+// v167: Space belongs to a level that uses it (the Hilltop Ascent's jump): its key listener is added after this one, so this one
+// steps aside instead of swallowing the key (Space never jumped in the chase before). (v168: the drill's hold-to-heat is gone.)
+function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false}catch(_){}return true}
 addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey||!cmd167Free())return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
   e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;commandAttack()},true);
 {const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Command companions to attack';b.textContent='📣';mb.appendChild(b);

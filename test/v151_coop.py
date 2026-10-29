@@ -166,7 +166,7 @@ G.evaluate("()=>{for(let i=0;i<4;i++)dr170Fix(i)}")
 until(H,"()=>MQ170.E.box.every(b=>b.s=='on')&&MQ170.E.prog>.5",30000);until(G,"()=>MQ170.E.box.every(b=>b.s=='on')&&MQ170.E.prog>.3",15000)
 r=[pg.evaluate("()=>[MQ170.E.box.map(b=>b.s).join(','),MQ170.E.prog]") for pg in (H,G)]
 chk('the guest switches the boxes on: the host\'s drill bores and the guest sees it',r[0][0]=='on,on,on,on' and r[0][1]>.5 and r[1][0]=='on,on,on,on' and r[1][1]>.3,json.dumps(r))
-# the host's box smashed: the guest sees it and repairs it in the window
+# the host's box smashed: the guest sees it and repairs it (v168: dr170Win finishes the timed repair at once)
 H.evaluate("()=>dr170Set(2,'smashed')")
 until(G,"()=>MQ170.E.box[2].s=='smashed'",15000)
 g=G.evaluate("()=>MQ170.E.box[2].s")
