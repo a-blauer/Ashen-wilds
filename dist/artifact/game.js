@@ -53581,7 +53581,8 @@ CH164.snV=[+(8.55*1.35).toFixed(2),+(8.85*1.35).toFixed(2)];CH164.farK=+(.14*1.3
 // ---------------- where venom may not land ----------------
 // [from, to] stretches of trail: each broken stretch with 3250's margins, each obstacle with a short one before and after
 function ch167Keep(){if(ch167Keep.c)return ch167Keep.c;const L=ch153Course().gaps.map(g=>[g.s-g.len/2-CH164.gapB,g.s+g.len/2+CH164.gapA]);
-  ch167Obs().forEach(q=>{const e=ch167Ext(q);L.push([e[0]-6,e[1]+3.5])});return ch167Keep.c=L.sort((a,b)=>a[0]-b[0])}
+  // (before a log 15: jumping a puddle there would land you on the log)
+  ch167Obs().forEach(q=>{const e=ch167Ext(q);L.push([e[0]-(q.k=='log'?15:6),e[1]+3.5])});return ch167Keep.c=L.sort((a,b)=>a[0]-b[0])}
 // ---------------- materials (shared, made once) ----------------
 function ch167Mats(){if(CH167.mats)return CH167.mats;const mk=o=>{const m=new THREE.MeshLambertMaterial(o);m.userData.noFade135=1;return m};
   // the cut end of a log: pale wood with dark growth rings and a crack

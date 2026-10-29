@@ -80,7 +80,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
         if(q.k=='nar'){const a=q.s-q.len/2-r0.s,e=q.s+q.len/2-r0.s;if(a<r0.v*.9+3&&e>-1){const E=ch167Edge(Math.max(r0.s,q.s-q.len/2+1.5));tgt=Math.min(tgt,Math.max(lo,(E?E.o:-hw+q.w)-.55))}}
         if(q.k=='rock'&&b.st<=3&&!b.hit){const d=q.s-r0.s;if(d>-1.5&&d<r0.v*2.6){const ta=Math.max(0,d)/Math.max(1,r0.v),wait=b.st==0?CH167.rockPre:b.st==1?CH167.rockPre-b.t:0;
             const op=b.st==0&&d>r0.v*2.4?null:b.o+q.u*Math.max(0,ta-wait),cl=q.r+CH167.mw+.55;if(op!=null&&Math.abs(op-tgt)<cl){const t1=op-cl;tgt=t1>=lo?t1:Math.min(lim,op+cl)}}}
-        if(q.k=='log'&&b.st==0&&tgt+CH167.mw>q.o0-.1&&tgt-CH167.mw<q.o1+.1){const d=q.s-q.r-(r0.s+CH167.ml);if(d>r0.v*.11&&d<r0.v*.24&&r0.y<.05)CH153.jumpQ=.1}});
+        if(q.k=='log'&&b.st==0&&[tgt,r0.o].some(o=>o+CH167.mw>q.o0-.1&&o-CH167.mw<q.o1+.1)){const d=q.s-q.r-(r0.s+CH167.ml);if(d>r0.v*.11&&d<r0.v*.24&&r0.y<.05)CH153.jumpQ=.1}});
       const w=tgt-r0.o;K.a=K.d=0;if(Math.abs(w)>.12){if(w*P.sgn>0)K.d=1;else K.a=1}};
     while(st.t<230){tick(1/30,fr);st.t+=1/30;const r0=R();if(!r0)break;if(r0.ph=='run')st.minGap=Math.min(st.minGap,r0.s-r0.sn.s);if(r0.ph=='dead'){st.deaths++;st.why=r0.dead.why;break}if(r0.ph=='win')break}
     K.a=K.d=0;const r0=R();st.t=Math.round(st.t);st.minGap=+st.minGap.toFixed(1);st.ph=r0?r0.ph:'gone';st.s=r0?Math.round(r0.s):0;st.jumps=r0&&r0.jumps||0;st.slows=r0&&r0.slows||0;st.crashes=r0&&r0.crashes||0;st.vol=r0&&r0.vol||0;return st};

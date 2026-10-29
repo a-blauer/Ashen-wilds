@@ -23,7 +23,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   {let lo=9,hi=0;S.ob.filter(b=>b.q.k=='rock').forEach(b=>{const p=b.m.geometry.attributes.position;for(let i=0;i<p.count;i++){const r=Math.hypot(p.getX(i),p.getY(i),p.getZ(i))/b.q.r;lo=Math.min(lo,r);hi=Math.max(hi,r)}});out.rockR=[+lo.toFixed(3),+hi.toFixed(3)]}
   // the log model lies where its collision cylinder is: its world bounding box spans o0..o1 at height r
   {const b=S.ob.find(x=>x.q.k=='log'),q=b.q,[x0,z0,h]=P.at(q.s,q.o0),[x1,z1]=P.at(q.s,q.o1),bb=new THREE.Box3().setFromObject(b.m.children[0].children.length?b.m.children[0]:b.m);
-    const tr=b.m.children[0];tr.geometry.computeBoundingBox();const c=tr.geometry.boundingBox.getCenter(new THREE.Vector3()).applyMatrix4(tr.matrixWorld);out.logAt=[+Math.hypot(c.x-(x0+x1)/2,c.z-(z0+z1)/2).toFixed(2),+(c.y-(h+q.r)).toFixed(2)]}
+    const tr=b.m.children[0];b.m.updateMatrixWorld(true);tr.geometry.computeBoundingBox();const c=tr.geometry.boundingBox.getCenter(new THREE.Vector3()).applyMatrix4(tr.matrixWorld);out.logAt=[+Math.hypot(c.x-(x0+x1)/2,c.z-(z0+z1)/2).toFixed(2),+(c.y-(h+q.r)).toFixed(2)]}
   // the hit tests at the shape's edge
   {const q=O.find(x=>x.k=='log'&&x.o0<-P.hw(x.s)&&x.o1>P.hw(x.s)),R={s:q.s,o:0,y:2*q.r+.02};out.logOver=ch167HitLog(R,q);R.y=2*q.r-.05;out.logInto=ch167HitLog(R,q);
     R.y=0;R.s=q.s-q.r-CH167.ml-.02;out.logBefore=ch167HitLog(R,q);R.s+=.06;out.logTouch=ch167HitLog(R,q);
