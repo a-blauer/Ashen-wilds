@@ -15,7 +15,7 @@ compan|command|kite|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|suppo
 abilit|skill|talent|class|spell|resource|helpers-new: v117_abilities.py v105_abil.py v119_abprev.py v114_race.py v137_evolve.py
 beast|race|raven|creator|look|model|humanoid|outfit|armour|equipment|helm|jewel|gear|item|md|ornate|hair|chest|boots|amulet|hood|robe|weapon-details|icons|new-gear: v137_npcs.py v136_gear.py v136_icons.py v137_items.py v134_raven.py v120_anim.py v114_race.py v117_creator.py v117_wclip.py v117_grip_atk.py v117_xbow.py
 grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|tilt|movement|mount|riding|carry: v134_raven.py v120_anim.py v117_grip_atk.py v117_xbow.py v117_wclip.py v110_fight.py v73t.py v32t.py
-menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py v131_load_title.py v161_keys.py v161_mobile_shot.py
+menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py v131_load_title.py v161_keys.py v161_mobile_shot.py v166_hud.py
 signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp|companion-|foes|old-creatures|v137_creature: v137_enemies.py v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py
 coop|co-op|net: v108_instances.py v116_slots.py
 cheddar|quest|skins|3235: v164_skins.py v143_lantern_road.py v144_glowmire.py v145_sigils.py v148_cheddar.py v38t.py v114_save.py v108_instances.py v57t.py
@@ -68,3 +68,5 @@ v161|keymap|keybind|ui-scale|mobile|touch|0180-|1660-|location-box: v161_keys.py
 # v165 The Dirge main quest (the Keeper's grave, the Hidden Sanctum, the raft down the Black Channel, the five prisms)
 331[0-8]|3150|1680|3242|0045|1940|instance|portal|gate|grave|sanctum|raft|channel|prism|drown|0570|0400|insReach|3060|cheat|0350|kill: v165_dirge.py
 331[0-8]|3150|3180|coop|co-op|0520|3085|revive: v165_dirge_coop.py
+# v166
+v166|hud-tidy|1100-|3200-|3220-|0520-|0840-: v166_hud.py v161_mobile_shot.py
