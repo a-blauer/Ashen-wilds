@@ -22,6 +22,9 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     // v169: the shared see-through rule (0061): glass with a dark inside instead of a dithered hole
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     float ghw=0.;vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;
+    // v169: the cliff the ground drops off at the instance's edge (within a tile of it, sloping down out of the map) is black (0061)
+    float ghEdge=0.;{float dl=vC135.x-uGhV.x,dr=uGhV.z-vC135.x,dt=vC135.z-uGhV.y,db=uGhV.w-vC135.z,me=min(min(dl,dr),min(dt,db));
+     vec2 o=me==dl?vec2(-1.,0.):me==dr?vec2(1.,0.):me==dt?vec2(0.,-1.):vec2(0.,1.);if(me<1.1&&dot(fn.xz,o)>.3)ghEdge=1.;}
     if(uOn135>.5&&uOn157>.5){float hf=vC135.y-uPl157.y+1.1;
      ghw=gh169W(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));}   // flat ground below the waist stays solid
     `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true)};

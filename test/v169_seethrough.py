@@ -58,7 +58,7 @@ def s(pg):
         # screen points whose view ray first meets the world outside the instance (ground out there or the cliff at its edge, or
         # falls below -30 there)
         pts=pg.evaluate("""(st)=>{const k=cvKey(),I=INSL[k],c=cam.position,v=new THREE.Vector3(),d=new THREE.Vector3(),out=[];
-          const m=GH169.vin+.15,inR=(x,z)=>x>=I.x0+m&&x<=I.x0+I.w-m&&z>=I.y0+m&&z<=I.y0+I.h-m;   // the ground's last tile is the cliff it drops off
+          const m=1.25,inR=(x,z)=>x>=I.x0+m&&x<=I.x0+I.w-m&&z>=I.y0+m&&z<=I.y0+I.h-m;   // the ground's last tile is the cliff it drops off
           for(let gy=0;gy<10;gy++)for(let gx=0;gx<16;gx++){const sx=-.9+gx*1.8/15,sy=.9-gy*1.5/9;v.set(sx,sy,.5).unproject(cam);d.copy(v).sub(c).normalize();
             let hit=0;for(let s=.5;s<80;s+=.25){const x=c.x+d.x*s,y=c.y+d.y*s,z=c.z+d.z*s;const g=GH(x,z);
               if(inR(x,z)){if(y<g){hit=1;break}}else if(y<g-.3||y<-30){hit=2;break}}
@@ -70,7 +70,7 @@ def s(pg):
         else:   # a few points may catch a firefly or a spark floating in the void: judge the 85th percentile
             p85=sorted(L)[int(len(L)*.85)]
             if p85>14:fail('edge: the void past the edge is not black (85th percentile',round(p85),'of 255)')
-    # 3. the camera inside the rock of an instance's wall (Hillside Crest III's west wall): black but for the window round the hero
+    # 3. the camera inside the rock of an instance's wall (Hillside Crest III's west wall): nothing under the map shows, the hero does
     q=pg.evaluate(EDGE,7);pg.wait_for_timeout(2000)
     if not q:fail('inside the rock: no edge spot found')
     else:
@@ -80,13 +80,20 @@ def s(pg):
         else:
             place(q,d,.3);im=shot('inwall');u=pg.evaluate("()=>[GH169C.under||GH169C.out,GH169C.fade]")
             if not u[0]:fail('inside the rock: the camera was not seen as inside the rock',u)
-            W,H=stage[2],stage[3];x0,y0=stage[0],stage[1]
-            corners=[lum(im,(int(x0+W*a),int(y0+H*b),int(x0+W*a+W*.12),int(y0+H*b+H*.15))) for a,b in [(.03,.15),(.85,.15),(.03,.45),(.85,.45)]]
+            # pixels whose view ray never comes out of the ground (it only goes deeper): under the map, must be black
+            pts=pg.evaluate("""(st)=>{const c=cam.position,v=new THREE.Vector3(),d=new THREE.Vector3(),out=[];
+              for(let gy=0;gy<12;gy++)for(let gx=0;gx<16;gx++){const sx=-.92+gx*1.84/15,sy=.92-gy*1.84/11;v.set(sx,sy,.5).unproject(cam);d.copy(v).sub(c).normalize();
+                let ok=1;for(let s=.25;s<60;s+=.25){const x=c.x+d.x*s,y=c.y+d.y*s,z=c.z+d.z*s;if(y>=GH(x,z)){ok=0;break}}
+                if(ok)out.push([Math.round(st[0]+(sx+1)/2*st[2]),Math.round(st[1]+(1-sy)/2*st[3])])}
+              return out}""",stage)
+            L=sorted(lum(im,(x-2,y-2,x+3,y+3)) for x,y in pts)
             hero=pg.evaluate(BOX,stage);hl=lum(im,tuple(hero))
-            print('inside the rock: corners',[round(c) for c in corners],'hero box',hero,round(hl))
-            if max(corners)>14:fail('inside the rock: the view out past the window is not black (brightest corner',round(max(corners)),')')
+            print('inside the rock:',len(L),'under-the-map points, brightness 85th pct',round(L[int(len(L)*.85)]) if L else None,'hero box',hero,round(hl))
+            if len(L)>=4 and L[int(len(L)*.85)]>14:fail('inside the rock: the view under the map is not black (85th percentile',round(L[int(len(L)*.85)]),')')
             if hl<25:fail('inside the rock: the hero is not visible in the window (brightness',round(hl),')')
             # the fade: back on the map it fades out again within GH169.fadeT
+            ga=pg.evaluate("()=>[GH169.U.uGhA.value,GH169.U.uGhK.value]")
+            if ga[0]>.01 or ga[1]<.99:fail('inside the rock: the glass did not fade clear (opacity, inside)',ga)
             fa=pg.evaluate("()=>GH169C.fade");place(dict(q,x=q['x']+12,yaw=1.5708),9.5,.3)
             fb=pg.evaluate("()=>[GH169C.fade,GH169C.under]");print('fade inside',fa,'after returning',fb)
             if fa<.99:fail('inside the rock: the fade to black did not finish',fa)

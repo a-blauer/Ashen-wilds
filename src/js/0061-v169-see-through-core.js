@@ -13,7 +13,8 @@
 //     Plants themselves are see-through without the dark inside (GH169_SEE).
 //   * back faces (the inside of a two-sided house) are black in the colour pass; one-sided materials never show their back.
 //   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
-//     With the camera out of the map (inside the rock or past the edge) the whole view fades to black but for the window (3350).
+//     So is the ground's cliff where it drops off at the edge (its slope faces out of the map, ghEdge in 3190).
+//     With the camera out of the map (inside the rock or past the edge) the background fades to black (3350).
 var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,3.4],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
 GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
   uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
@@ -35,20 +36,22 @@ GH169.GATE=`if(uGhOn>.5){if(uGhM<.5){if(ghw>.004)discard;}else{if(ghw<=.004)disc
  #endif
  }}else if(uGhM>.5)discard;
 `;
-// after the colour is done (p = the world position varying): black outside the instance; the glass blend in the colour pass
+// after the colour is done (p = the world position varying): black outside the instance (and the ground's outward cliff at its
+// edge: ghEdge, 3190); the glass blend in the colour pass. Glass fades fully clear toward the camera (uGhN): a wall or rock right
+// at the lens is never a pale veil over the screen, and has no dark inside (owner: "a difference in lighting at some angles")
 GH169.tail=p=>`
  if(uGhOn>.5){
   #ifdef GH169_VOID
-  if(gh169Out(${p}))gl_FragColor.rgb=vec3(0.);
+  if(gh169Out(${p})||ghEdge>.5)gl_FragColor.rgb=vec3(0.);
   #endif
-  if(uGhM>1.5){float ga=1.-ghw*(1.-uGhA);vec3 gc=gl_FragColor.rgb*ga;
+  if(uGhM>1.5){float nf=smoothstep(uGhN.x,uGhN.y,length(${p}-cameraPosition));float ga=1.-ghw*(1.-uGhA*nf);vec3 gc=gl_FragColor.rgb*ga;
    #ifdef GH169_DS
    if(!gl_FrontFacing)gc=vec3(0.);
    #endif
    #ifdef GH169_SEE
    gl_FragColor=vec4(gc,ga);
    #else
-   gl_FragColor=vec4(gc,1.-(1.-ga)*uGhK);
+   gl_FragColor=vec4(gc,1.-(1.-ga)*mix(1.,uGhK,nf));
    #endif
   }}`;
 // gh169Shader(sh, material, world position varying, see-through plant?, black outside the instance?): uniforms, the head, the tail;
