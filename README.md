@@ -130,7 +130,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 | v144 The Glowmire Crystal (Kindlelight II main quest): Vorraxis model (`MB144`, `mb144Build`, poses `MB144P`, `mb144Loco`/`mb144Post`), his moves (`MB144M`, lair arena `MB144A`, `svCtx`/`svHitNow` wrappers), the hatch, the Seeping Lair (INSL[4]), the fight controller `mb144AI`, quest state `MQ144`, crystal, sealed II→III gateway | `3031`–`3033` |
 | v145 The Three Sigils (Kindlelight III main quest): sigil layout `mq145Plan` / keep-out `mq145Keep` (called from 1680 `place`), sigil model `ms145Sigil`, ghost wolves (`EN.ghostwolf`, look `gw145Look` via a `cr` wrapper), the essence charging ritual (`MQ145.R`, `mq145Start`/`mq145RTick`/`mq145Attune`/`mq145Fail`), sealed Den gateway, tracker, map marks | `3040` (edit in 1680) |
 | v146 Sovereigns to the Vorraxis standard: shared kit (`sk146*`: springs `B.spr`, effects, props, ring waves, den state `A.s146`, smoother strike ease), Argus rebuilt (`argBuild146`), and per boss a Phase II den change + signature mechanic + model/effect upgrades | `3050` kit, `3051` Vaelric, `3052` Rime Wraith, `3053` Bloated One, `3054` Argus, `3055` Hydra, `3056` Ssith'ra |
-| v151 Burningeye Summit main quest (the ice zone): I The Frozen Maw (cave mouth `gb151CaveMouth`, the cave = Burningeye's unused Wave Trial `INSL[14]` `GB151L`, Gorthrak the Glacierback: model `gb151Build` / poses `GB151P` / moves `GB151M`, Frostbite `gb151Frost`, ice pillars, Glacial Rampage, quest `MQ151`); II The Frozen Gate (`mq160Plan`, caches + elite wardens, workbench, flamespitter `fs160Spitter`, the melt event `MQ160.E`, ice spiders `EN.icespider`); III The Mountain Drill (`mq170Plan`, cliff / drill / 4 control boxes, the drill event `MQ170.E`, repair windows `dr170Open` thaw / wire / rebuild, Frost Troll wreckers `dr170Troll`) | `3150`–`3152`, `3160`, `3170`, co-op `3180` (edit in 1680) |
+| v151 Burningeye Summit main quest (the ice zone): I The Frozen Maw (cave mouth `gb151CaveMouth`, the cave = Burningeye's unused Wave Trial `INSL[14]` `GB151L`, Gorthrak the Glacierback: model `gb151Build` / poses `GB151P` / moves `GB151M`, Frostbite `gb151Frost`, Rimelock and the Glacier Shell (v168, were the ice pillars and the Glacial Rampage), quest `MQ151`; v168 the cave openings `gb168Cave` in `3330`); II The Frozen Gate (`mq160Plan`, caches + elite wardens, workbench, flamespitter `fs160Spitter`, the melt event `MQ160.E`, ice spiders `EN.icespider`); III The Mountain Drill (`mq170Plan`, cliff / drill / 4 control boxes, the drill event `MQ170.E`, repair windows `dr170Open` thaw / wire / rebuild, Frost Troll wreckers `dr170Troll`) | `3150`–`3152`, `3160`, `3170`, co-op `3180` (edit in 1680) |
 
 ## Conventions (read before changing code)
 
@@ -168,6 +168,28 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Projectiles fired together by one cast hit each enemy once at full damage (`BAL138.dup` 30% for the rest; Arcane Missiles exempt).
   Classes re-checked with `test/v127_balance/` at rank 1 (levels 10–50) and with every ability evolved at rank 5 (levels 40–50; use
   `TUNE=` a file that wraps `V90.setup` to set rank 5 and `hero.tal['__ev:'+name]`): within ~±10% of each other.
+- **Owner's list (v168, `3330`, `3151`, `3152`, `2270`)**: *Ice caves*: the Frozen Maw's mouth at the end of Burningeye I and both
+  openings inside the cave (the way out, the passage at the back) are one builder, `gb168Cave` (3330): an arch-shaped passage lining
+  that darkens to black with depth (a short one still does: `o.fall`), a snow floor fading into it, smooth sculpted rock round it
+  (rim, buttresses, a block over the arch, the hill behind; tilted strata ledges, snow on upward faces, all in vertex colours), a
+  glacier cap, an ice lip with icicles (never below head height over the way in), drifts and frost. Nothing may stand in an opening:
+  rock vertices inside the passage's shape are pushed to its wall (`gb168Push`; the hill behind has those triangles cut), the cave's
+  wall rocks are pushed out too (`gb168PushW`), and the zone's scenery standing where a passage runs is hidden (`gb168Clear`: a snowy
+  edge boulder stood inside the passage at the back); floors are laid over rising ground (`gb168Ground`). Before: jittered `svLump`
+  rocks (each triangle corner moved on its own: cracked and spiky), two of them and a glow sprite inside the throat. The cave walls
+  are smooth layered rocks now (`gb168RockG`, one merged mesh). The fight's seal and the wall over the passage are plugs of ice
+  shaped to the arch. *Gorthrak*: the pillars are gone (kiting him into them was "too easy and kind of a slog"). New mechanic,
+  **Rimelock**: when his maul is frozen in the floor the glacier on his back cracks open and glows, the ground behind him lights gold,
+  and hits from behind deal ×1.5 (`GB151R`; "behind" = more than 105° round from his front, `gb151Behind`). Phase I: a Glacier
+  Charge that misses skids into Rimelock (`skid`, 1.75 s), the lesson. Signature **Glacier Shell** (move id still `rampage`): armoured
+  (85% less damage, heals), he leaps at you three times (`rleap`: the ring marks where he lands, locked .62 s in, 1 s before the
+  landing), each landing Rimelocks him ~1.9 s while ice shards burst out in front of him: two hits on the glowing crack from behind
+  (one counted each .22 s; damage over time does not count) crack the shell; the third crack shatters it at once (`broken`);
+  fewer after three leaps: he heals and the Avalanche (shelters) as before. Co-op: a partner's counted hit goes to the driver as
+  `['g1b']` (`['g1p']` is gone). *Serpent Shrine*: the 'tiers' ground (2270 `cs123Op`) has a flat top plateau now: the top terrace
+  only reached its height at the centre point, so the coiled idol stood on a cone ~.8 above the ground round its base (also the
+  centrepieces of Jotun Hold, Elemental Ruins, Temple Sanctum, Blood Coven, Blood Garden). Tests: `v151_frozen_maw.py` (Rimelock,
+  the leaps, cracks, the openings clear), `v151_coop.py` (the partner's cracks), `v168_tiers.py`; pictures `v168_look.py`.
 - **Owner's list (v166, `3320`)**: *HUD flicker*: never let two pieces of code set the same style of a HUD element (one sets, the other
   clears, and the element jumps every few frames: v165's target frame on phones, between `ui161Lay` and `bfxTgtCls`). Place HUD
   widgets only in `ui161Lay` / `ui161Desk`; other code toggles classes. `test/v166_flip.js` (run by `v166_hud.py`) watches every
@@ -934,16 +956,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     cliff of rocks, an arch hung with icicles, a dark throat, a troll totem). F: into the Frozen Maw = Burningeye's Wave Trial instance
     (`INSL[14]`, renamed, Lv 21, its own dim blue atmosphere `TH112.byG[14]`; the old trial's war-camp dressing `ARK_TRIAL[2]` is
     removed): frozen floor with ice veins, rock and crystal walls, icicles, frozen falls, a mammoth in a block of ice, the throne of ice
-    and bone, six ice pillars, the passage at the back sealed by a wall of ice. **Gorthrak the Glacierback**: a towering warlord troll,
+    and bone, the passage at the back sealed by a wall of ice (v168: the six ice pillars are gone; the openings are `gb168Cave`). **Gorthrak the Glacierback**: a towering warlord troll,
     nothing like the zone's blue Frost Trolls (dark umber hide, red war paint, white mane, a glacier of crystals on his back, a mammoth
     skull pauldron, the Glacier Maul and the Rime Fist; ~34k triangles, `GB151.tris`). Built and fought like Vorraxis
     (`docs/BOSS_RECIPE.md`): Sovereign engine moves (Skullbreaker, Glacier Charge, Wrecking Whirl, Cave-in Roar, Glacier Hurl,
     Permafrost Slam; Phase II at 55% Glacial Fury: the ceiling keeps dropping icicles (`gb151Quake`), Warlord's Fury, Avalanche Hurl,
     Icefall Storm), springs on ears and loincloth, posture bar. **Frostbite** (`gb151Frost`): frost hits stack on the hero; the third
-    freezes you solid for 1.3 s (dash out). **Ice pillars**: a charge that runs into one shatters it and dazes him (`gb151Crash`).
-    **Glacial Rampage** (signature): 85% damage reduction while his shell holds and his troll blood heals him; three charges; each that
-    hits a pillar cracks the shell; three cracks = SHATTERED (long stagger); fewer = he heals 12% and the ceiling comes down
-    (Avalanche: only the three rock shelters at the wall are safe). When he dies the ice over the passage bursts: F takes you to II.
+    freezes you solid for 1.3 s (dash out). **Rimelock** (v168, replaced the ice pillars): his maul frozen in the floor, the
+    crack on his back glows, hits from behind ×1.5; a missed Glacier Charge skids into it. **Glacier Shell** (v168, was the Glacial
+    Rampage; signature): 85% damage reduction while his shell holds and his troll blood heals him; three leaps, each Rimelocks him:
+    two hits on his back crack the shell; three cracks = SHATTERED (long stagger) at once; fewer = he heals 12% and the ceiling
+    comes down (Avalanche: only the three rock shelters at the wall are safe). When he dies the ice over the passage bursts: F takes you to II.
     `MQ151.st` 0 · 1 entered · 2 slain · 3 through; saved as `x2.mq151 {st,seen}`; a save in the cave loads at the cave mouth.
   * **II · The Frozen Gate** (`3160`): a great stone gate filled with ancient ice stands where the gateway was, a workbench beside it.
     Three flamespitter parts (Essence Core, Ember Nozzle, Bellows Tank) lie in salvage caches off II's road (`mq160Plan`, orange
@@ -1321,10 +1344,12 @@ python3 v144_glowmire.py      # v144: The Glowmire Crystal (Kindlelight II main 
 python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main quest): sigils, ghost wolf waves, attuning, the Den gateway, saves
 python3 v165_dirge.py        # v165: The Dirge main quest: graves, the Sanctum's traps and puzzles, the raft, the prisms, saves
 python3 v165_dirge_coop.py   # v165: the Dirge main quest in co-op (two windows)
-python3 v151_frozen_maw.py    # v151: The Frozen Maw (Burningeye I): the cave mouth, Gorthrak, pillars, Frostbite, Phase II, the Rampage both ways, the passage, saves
+python3 v151_frozen_maw.py    # v151: The Frozen Maw (Burningeye I): the cave mouth (v168: openings clear), Gorthrak, Rimelock and the Glacier Shell (v168), Frostbite, Phase II, the Rampage both ways, the passage, saves
 python3 v160_frozen_gate.py   # v151: The Frozen Gate (Burningeye II): caches and wardens, the flamespitter, the melt (carry, spray, overheat, spiders, charge), saves
 python3 v170_mountain_drill.py # v151: The Mountain Drill (Burningeye III): boxes, failures, the three repair windows, troll wreckers, the bore, the tunnel, saves
 python3 v151_coop.py          # v151: the three chapters with two players (shared Gorthrak, shared melt and carrier, shared drill and repairs, credit)
+python3 v168_tiers.py         # v168: terraced camps have a flat top (the Serpent Shrine's idol no longer stands on a cone)
+VIEWS=mouth,rlk python3 v168_look.py   # v168 pictures: the ice cave openings, Rimelock, the Serpent Shrine (AW_TMP=<dir>)
 python3 v146_sovs.py          # v146: Sovereigns: den changes, signature mechanics, springs, every move, clean dens (BOSS=0..5)
 python3 v142_folk.py         # v142: townsfolk anatomy — floating parts, feet on the ground, sheets (SP=, KEEP=0, NOSHEET=1, V137=1)
 TITLE=1 python3 v114_race.py # v114: creator → save → reload → barber; every class casts every ability as its beast (ABIL_ONLY=1 for just that)

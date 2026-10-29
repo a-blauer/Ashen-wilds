@@ -5,13 +5,16 @@
 // Theme: a brute warlord of the glacier. Everything he does is weight and cold: a maul of glacier ice, a fist crusted in rime,
 // charges that shake the cave, ice torn out of the floor and the ceiling brought down on you.
 // Frostbite (his debuff): every frost hit adds a stack (shown on the hero); the third stack freezes you solid for 1.3 s (dash out).
-// The stacks fade 7 s after the last one. The ice pillars of the cave (3152) are part of the fight from the start: a charge that
-// runs into one shatters it and leaves him dazed (a free punish), which teaches the signature mechanic before it matters.
+// The stacks fade 7 s after the last one. (v168: the ice pillars are gone. The owner: "I don't like the mechanic of making him charge
+// into the ice pillars. It's too easy and kind of a slog." Kiting him into objects is replaced by reading his leaps and getting
+// behind him: see Rimelock below. Phase I's charge teaches it.)
 // Pattern (learnable; cooldowns, no repeats, combo strings):
 //  close, front ── Skullbreaker: a diagonal maul smash, a Rime Fist backhand, a pause… then both hands up and an overhead slam
 //                  down a line (late: it punishes an early dodge).
 //  mid, front   ── Glacier Charge: drops his shoulder and fixes on you (the lane shows where he will run), then runs straight
-//                  through; frost patches on his path. Into a pillar he crashes and reels (Dazed).
+//                  through; frost patches on his path. Sidestep it and he overruns and skids, driving his maul into the floor to
+//                  stop: STUCK for a moment, the crack in his back glows and the ground behind him lights gold (hits from
+//                  behind ×1.5). That is Rimelock, taught before it matters.
 //  behind/side  ── Wrecking Whirl: winds the maul out behind him and spins a full turn: a ring around him (hug him, or be far out).
 //  any          ── Cave-in Roar: beats his chest and roars at the ceiling; four icicles fall on you, each aimed ahead of you.
 //  far, front   ── Glacier Hurl: tears a boulder of ice out of the floor and lobs it at you; it bursts into shards.
@@ -20,10 +23,13 @@
 //  Phase II (55%) "Glacial Fury": a roar, the glacier on his back flares, the Maw groans and icicles keep falling from the ceiling
 //                  for the rest of the fight (3152). He rests less and gains Warlord's Fury (smash, backhand, smash, uppercut and a
 //                  leaping slam), Avalanche Hurl (three boulders), Icefall Storm (a ring of icicles closing on you) and the signature:
-//  Glacial Rampage: he armours himself in glacier ice (85% less damage, his troll blood heals him) and charges you three times.
-//                  Stand in front of an ice pillar and step aside: each charge that runs into a pillar shatters it and cracks his
-//                  shell. Three cracks and the shell bursts: SHATTERED, a long stagger. Fewer and the shell holds: he heals, and
-//                  the ceiling comes down (Avalanche): only the three rock shelters at the cave wall are safe.
+//  Glacier Shell (v168, was the pillar Rampage): he armours himself in glacier ice (85% less damage, his troll blood heals him)
+//                  and leaps at you three times. Each leap: he crouches and fixes on you (a ring marks where he lands: get out of
+//                  it), lands with a blast, and his maul freezes into the floor: RIMELOCKED for ~2 s. The glacier on his back
+//                  cracks open and glows, the ground behind him lights gold, and ice shards burst out in FRONT of him: get round
+//                  behind him and strike the glowing crack twice to crack the shell. Three cracks and the shell bursts:
+//                  SHATTERED, a long stagger. Fewer and the shell holds: he heals, and the ceiling comes down (Avalanche): only
+//                  the three rock shelters at the cave wall are safe.
 // Weakness: posture (the yellow bar); every break staggers him (+35% damage). Big moves have armour.
 var GB151A=null;   // the cave arena while he exists: {cx, cz, r (his reach), hr (the hero's), y, f (fight on)}
 {const f=svCtx;svCtx=function(e){const c=f.apply(this,arguments);if(e&&e.gb151){c.A=GB151A;c.inA=(p,mg)=>gb151Clamp(p,mg==null?1.2:mg);c.hit=(s,an,dm,o)=>gb151HitNow(e,s,an,dm,o||{})}return c}}
@@ -63,11 +69,11 @@ function gb151Icicle(p,big,T){const s=big?1.5:1,y0=GH(p.x,p.z),o=new THREE.Mesh(
 // a boulder of ice lobbed from a to b; bursts into shards on landing
 function gb151Boulder(a,b,T,onEnd){const o=new THREE.Group(),m1=new THREE.Mesh(svG('gb_bd',()=>svLump(.62,1,.25,181)),gb151IceMat()),m2=new THREE.Mesh(svG('gb_bd2',()=>svLump(.42,0,.35,182)),gb151RockMat());
   m2.position.set(.25,-.1,.2);o.add(m1,m2);o.userData.lpsSkip=1;svShot(a,b,T,0x9ad8ff,1,3.4,onEnd,o);return o}
-// a short lane of ice shards flying outward from p along angle a (hits once)
+// a short lane of ice shards flying outward from p along angle a (hits once; dm 0: only the look, the move's own hit does the damage)
 function gb151Shards(c,p,a,L,dm){const e=c.e,N=7,st=L/N,sa=Math.sin(a),ca=Math.cos(a);let t=0,k=0,hit=false;
   kqFx({tick(dt){t+=dt||0;while(k<N&&t>=k*.04){const d=.8+k*st,x=p.x+sa*d,z=p.z+ca*d;k++;const A=GB151A;if(A&&Math.hypot(x-A.cx,z-A.cz)>A.r+.8){k=N;break}
       const q=new THREE.Vector3(x,0,z);svSpike(q,gb151IceMat(),.7+(k%2)*.3,.16,.8,.6);if(k%2)burst(gY(q,.3),0xd8f4ff,3,.8,1.2,.35);
-      if(!hit&&!e.dead&&svIn({k:'c',r:.7},{x,z,a:0},pl.position,.25)){hit=true;gb151HitNow(e,{k:'c',r:99},{x,z,a:0},dm,{flash:false,fr:1})}}
+      if(dm>0&&!hit&&!e.dead&&svIn({k:'c',r:.7},{x,z,a:0},pl.position,.25)){hit=true;gb151HitNow(e,{k:'c',r:99},{x,z,a:0},dm,{flash:false,fr:1})}}
     return k<N&&!e.dead},end(){}})}
 // a ring of ice spikes erupting between r0 and r1 round p (Permafrost Slam's second beat)
 function gb151SpikeRing(p,r0,r1){const n=Math.round(r1*4.2);for(let i=0;i<n;i++){const a=i/n*6.283+Math.random()*.1,r=r0+.4+Math.random()*(r1-r0-.6),q=new THREE.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r);
@@ -82,12 +88,10 @@ const GB151_NO141=D=>{D._h141=null;return D};
 // a landing slam on p: shockwave, crack, debris, a frost patch
 function gb151Slam(c,p,r,pool){svShock(p,GB151.col,r,.4);burst(gY(p,.3),0xd8f4ff,40,r*.9,2.4,.6);svDecal(p,0x8ac8ff,r*.8,3,.5);try{sk146Crack(p,0x9ad8ff,r*.9,1.8);sk146Debris(gY(p,.3),gb151RockMat(),5,.16,3.5,5,1.2)}catch(_){}
   shake(.3);svSnd('heavy',1.15,.85);if(pool)gb151Pool(c.e,p,pool,3200)}
-// the charge: runs along the facing at sp tiles/s from t0 to t1; a pillar in the way stops it (crash), the wall stops it (stumble)
+// the charge: runs along the facing at sp tiles/s from t0 to t1; the wall stops it (stumble)
 function gb151Run(c,dt,t0,t1,sp,rampage){const M=c.M,e=c.e;if(c.t<t0||M.an.stop)return;if(c.t>t1){M.an.stop=1;return}
   const a=c.m.rotation.y,d=sp*dt,x=c.m.position.x+Math.sin(a)*d,z=c.m.position.z+Math.cos(a)*d,A=GB151A;
-  const P=typeof gb151PillarAt=='function'&&gb180Auth()?gb151PillarAt(x,z,e.sv.body+.8):null;   // co-op: only the driver's run crashes (3180 relays it)
-  if(P){M.an.stop=1;try{gb151Crash(e,P,rampage)}catch(err){console.error('gb crash',err)}return}
-  if(A&&Math.hypot(x-A.cx,z-A.cz)>A.r-1.6){M.an.stop=1;shake(.25);svSnd('heavy',1,.7);burst(gY(c.m.position,.6),0x6a6e76,30,3,2,.6);return}
+  if(A&&Math.hypot(x-A.cx,z-A.cz)>A.r-1.6){M.an.stop=1;M.an.wall=1;shake(.25);svSnd('heavy',1,.7);burst(gY(c.m.position,.6),0x6a6e76,30,3,2,.6);return}
   c.m.position.x=x;c.m.position.z=z;e.sv.rmOn=1;
   if(!M.an.lp)M.an.lp=c.m.position.clone();if(c.m.position.distanceTo(M.an.lp)>1.6){M.an.lp=c.m.position.clone();gb151Pool(e,c.m.position.clone(),1.0,3800)}
   if(Math.random()<.7)burst(gY(c.m.position,.3),0xd8f4ff,3,1.5,1.4,.5);
@@ -105,15 +109,18 @@ var GB151M={
     tr:[GB151_TR(.62,.78),GB151_TF(1.14,1.28),GB151_TR(1.88,2.04)],
     ev:[[.6,c=>svSnd('swing',.9,.85)],[1.14,c=>svSnd('swing',.8,1.1)],[1.55,c=>svSnd('roar',.5,1.1)],[1.9,c=>svSnd('whoosh',1.1,.75)],[.72,c=>{burst(c.wp('maul',0,-2.3,0),0xd8f4ff,20,2,1.5,.4);svSnd('heavy',.8,1.1);shake(.12)}]],
     nx:[['charge',.25,12],['spin',.3,6]],rec:.3}),
-  // Glacier Charge: the run through you; frost patches; a pillar in the way: crash
+  // Glacier Charge: the run through you; frost patches; sidestepped, he skids and is stuck (Rimelock, the lesson)
   charge:GB151_NO141({wt:8,cd:6.5,r:[4,14],a:'f',armor:1,dur:2.4,lock:.5,trn:[[0,.5,4.2]],
     trk:[[.55,'chLow','io'],[.85,'chLow','l',.016],[.95,'chGo','s'],[1.7,'chGo','l'],[2.4,'rec','io']],
     hit:[{t:.95,s:{k:'l',w:2.8,l:11,b:0},nohit:1,w:.45}],
     ev:[[.3,c=>{svSnd('roar',.7,1.0);burst(gY(c.m.position,.3),0x6a6e76,14,2,1,.5)}],[.95,c=>{svSnd('whoosh',1.2,.7);shake(.15)}]],
-    tk(c,dt){gb151Run(c,dt,.95,1.65,15,false);if(c.t>.95&&c.t<1.7&&Math.random()<dt*6)shake(.06)},rec:.35}),
-  // the crash into a pillar (cast by gb151Crash): reels, dazed
-  crash:GB151_NO141({dur:2.4,trk:[[.15,'crash','o'],[.6,'crash','l',.03],[.9,'daze','io'],[1.9,'daze','l',.03],[2.4,'rec','io']],
-    go(c){c.S.stg=2.0;popT(c.m.position,'DAZED','#bfe8ff',true);svSnd('stag',1,.8)},tk(c,dt){c.S.stg=Math.max(0,2.0-c.t);if(Math.random()<dt*6){const p=svWP(c.e,'head',0,.2,0);burst(p,0xffe08a,1,.5,.6,.5)}},end(c){c.S.stg=0}}),
+    tk(c,dt){gb151Run(c,dt,.95,1.65,15,false);if(c.t>.95&&c.t<1.7&&Math.random()<dt*6)shake(.06);
+      // v168: a run that missed you ends in a skid: his maul goes into the floor and he is stuck (co-op: the driver decides)
+      const M=c.M;if(c.t>=1.68&&!M.an.sk){M.an.sk=1;if(!M.an.hh&&!M.an.wall&&gb180Auth()){svEndMove(c.e,true);svCast(c.e,'skid')}}},rec:.35}),
+  // v168 the skid after a missed charge: the maul driven into the floor, stuck (Rimelock: hits from behind ×1.5)
+  skid:GB151_NO141({dur:2.5,trk:[[.18,'stHit','o'],[.4,'stHit','l',.02],[1.9,'stHit','l',.035],[2.5,'rec','io']],
+    go(c){gb151RlkOpen(c.e,1.75,false);burst(gY(c.m.position,.3),0xd8f4ff,40,2.6,1.6,.6);try{sk146Crack(c.at(1.4),0x9ad8ff,1.8,1.8)}catch(_){}svSnd('heavy',1.1,.8);svSnd('crack',.9,1.2);shake(.25)},
+    tk(c,dt){c.S.rmOn=1},end(c){gb151RlkClose(c.e)}}),
   // Wrecking Whirl: a full turn with the maul out (only from behind or the side)
   spin:GB151_NO141({wt:(e,L,side)=>side==='b'?14:side==='s'?6:0,cd:5.5,r:[0,6.2],a:'sb',dur:2.15,lock:.5,trn:[[0,.5,2.4]],
     trk:[[.55,'spW','io'],[.86,'spW','l',.015],[1.0,'spGo','s'],[1.45,'spGo','l'],[2.15,'rec','io']],
@@ -164,23 +171,29 @@ var GB151M={
     hit:[0,1,2,3,4,5].map(k=>({t:1.65,s:{k:'c',r:1.6},o:c=>{if(!c.M.an.er)c.M.an.er=pl.position.clone();const P=c.M.an.er,a=k/6*Math.PI*2,q=gb151Clamp(new THREE.Vector3(P.x+Math.sin(a)*3.2,0,P.z+Math.cos(a)*3.2),.5);return {x:q.x,z:q.z,a:0}},w:.85,dm:.9,fr:1,fx:(c,an)=>{}}))
       .concat([{t:2.2,s:{k:'c',r:2.3},o:c=>{const P=c.M.an.er||pl.position;return {x:P.x,z:P.z,a:0}},w:.6,dm:1.25,fr:1,fx:(c,an)=>{}}]),
     ev:[[.9,c=>{svSnd('roar',1.1,.75);shake(.35)}]],rec:.4}),
-  // Glacial Rampage: armour up (the three charges and the outcome are cast by the controller, 3152)
+  // Glacier Shell (the move keeps its old id 'rampage'): armour up (the three leaps and the outcome are cast by the controller, 3152)
   rampage:GB151_NO141({wt:(e,L)=>e.sv.rpN?12:30,cd:28,ph:2,r:[0,40],a:'any',armor:1,dur:2.6,inv:[0,2.6],trn:[[0,2.6,2]],
     trk:[[.35,'stUp','io'],[.9,'armor','o'],[2.1,'armor','l',.03],[2.6,'rec','io']],
     go(c){try{gb151RampStart(c.e)}catch(err){console.error('gb rampage',err)}},
     tk(c,dt){c.S.shell=Math.min(1,Math.max(c.S.shell||0,(c.t-.4)/1.4));c.S.chg=.5+.5*Math.sin(c.t*8)},
     ev:[[.9,c=>{svSnd('roar',1.2,.65);svSnd('crack',1,.5);shake(.4);svShock(c.m.position,0xbfe8ff,6,.6);burst(gY(c.m.position,2),0xd8f4ff,70,3,3,1)}]],end(c){c.S.chg=0}}),
-  // one Rampage charge: a long wind-up (stand in front of a pillar), then the run
-  rcharge:GB151_NO141({dur:2.5,armor:1,lock:.5,trn:[[0,.5,4.6]],
-    trk:[[.5,'chLow','io'],[1.05,'chLow','l',.02],[1.15,'chGo','s'],[2.0,'chGo','l'],[2.5,'rec','io']],
-    hit:[{t:1.15,s:{k:'l',w:3,l:14,b:0},nohit:1,w:.65}],
-    ev:[[.25,c=>{svSnd('roar',.9,.8)}],[1.15,c=>{svSnd('whoosh',1.3,.6);shake(.2)}]],
-    tk(c,dt){gb151Run(c,dt,1.15,2.0,16,true);if(c.t>1.15&&c.t<2.0&&Math.random()<dt*8)shake(.07)}}),
+  // v168 one Glacier Shell leap: crouch and fix on you (the ring marks where he lands), leap, land with a blast, then RIMELOCKED: the
+  // maul frozen in the floor ~1.9 s, the crack on his back open; shards burst out in front of him. Get behind him and strike the crack.
+  rleap:GB151_NO141({dur:4.3,armor:1,lock:.95,trn:[[0,.95,4.6]],
+    trk:[[.4,'chLow','io'],[.9,'chLow','l',.022],[1.05,'leap','o'],[1.5,'leap','l'],[1.62,'stHit','s'],[3.5,'stHit','l',.035],[4.3,'rec','io']],
+    hit:[{t:1.62,s:{k:'c',r:3.3},o:c=>{const M=c.M;if(!M.an.lp)M.an.lp=gb151HeroIn(pl.position.clone());return {x:M.an.lp.x,z:M.an.lp.z,a:0}},w:1.0,dm:1.45,kb:3.5,fr:1,
+        fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);gb151Slam(c,p,4.2,0);gb151SpikeRing(p,1.2,3.3)}},
+      {t:2.3,s:{k:'a',r:7.5,h:.7},f:.4,dm:.9,w:.6,fr:1,fx:c=>{const a=c.m.rotation.y,p=c.at(1.2);for(let k=-2;k<=2;k++)gb151Shards(c,p,a+k*.26,6.2,0);svSnd('crack',1.1,.8)}}],
+    ev:[[.3,c=>{svSnd('roar',1.0,.75);c.S.chgT=1}],[1.0,c=>{svSnd('whoosh',1.3,.6);burst(gY(c.m.position,.3),0xd8f4ff,30,2.4,2,.6);c.S.chgT=0}],
+      [1.62,c=>{gb151RlkOpen(c.e,1.95,true)}],[3.57,c=>{gb151RlkClose(c.e);burst(c.wp('maul',0,-2.4,0),0xd8f4ff,30,2,2,.6);svSnd('crack',.9,.9)}]],
+    tk(c,dt){const M=c.M,m=c.m;if(c.t>=1.0&&c.t<=1.62){if(!M.an.p0)M.an.p0=m.position.clone();const T=M.an.lp||gb151HeroIn(pl.position.clone()),k=svEase.io(Math.min(1,(c.t-1.0)/.62));
+        m.position.x=M.an.p0.x+(T.x-M.an.p0.x)*k;m.position.z=M.an.p0.z+(T.z-M.an.p0.z)*k;c.S.rmOn=1}else if(c.t>1.62&&c.t<3.6)c.S.rmOn=1},
+    end(c){gb151RlkClose(c.e);c.S.chgT=0}}),
   // the shell holds: he heals and brings the ceiling down; only the shelters are safe (cast by the controller)
   rfail:GB151_NO141({dur:4.6,armor:1,inv:[0,4.6],trk:[[.4,'roar','o'],[3.0,'roar','l',.03],[3.3,'stUp','io'],[3.75,'stHit','s'],[4.6,'rec','io']],
     go(c){try{gb151Shelters(c.e)}catch(err){console.error('gb shelters',err)}},
     ev:[[.45,c=>{svSnd('roar',1.2,.7);try{sk146Heal(c.e,.12,0x9ad8ff)}catch(_){}}],[3.75,c=>{try{gb151Avalanche(c.e)}catch(err){console.error('gb avalanche',err)}}]],end(c){c.S.shell=0;c.S.crk=0}}),
-  // the shell bursts: a long stagger
+  // the shell bursts: a long stagger (cast the moment the third crack lands)
   broken:GB151_NO141({dur:4.8,trk:[[.3,'stag','o'],[4.2,'stag','l',.03],[4.8,'rec','io']],
     go(c){c.S.stg=4.8;c.S.shell=0;c.S.crk=0;c.S.dr=0;svSnd('stag',1.2,.7);svSnd('crack',1.2,.5);popT(c.m.position,'SHATTERED','#bfe8ff',true);
       try{sk146Debris(gY(c.m.position,2),gb151IceMat(),16,.25,6,7,1.6)}catch(_){}burst(gY(c.m.position,2),0xd8f4ff,90,4,3,.9);svShock(c.m.position,0xbfe8ff,6,.6)},

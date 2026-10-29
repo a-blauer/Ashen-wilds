@@ -6,7 +6,8 @@
 //    there) runs his AI: every move it casts is relayed with its seed and his spot (['g1c', id, seed, x, z, ry, phase]), and his
 //    health, phase, posture and shell go out every 120 ms (['g1s', …]). The others play the same moves on their own copy (each is hit
 //    on their own screen) and glide to the synced spot between moves; their damage goes to the driver (['g1h', dmg]). The fight starts
-//    when any hero comes close (['g1st']), pillars break for everyone (['g1p', i]), it is lost only when every hero in the cave is
+//    when any hero comes close (['g1st']), a partner's hit on his back while he is Rimelocked goes to the driver (['g1b'], v168; the
+//    pillars and ['g1p'] are gone), it is lost only when every hero in the cave is
 //    down (['g1r']), and when he falls everyone there gets the kill, their own loot and XP (['g1k']). A partner whose own troll is
 //    already slain sees a visiting copy (e.gbV) and fights alongside.
 //  · The Frozen Gate: the region host runs the melt. Anyone may start it (a partner asks: ['f2rq']; the host starts and tells all:
@@ -64,7 +65,6 @@ function gb180Glide(e,dt){const m=e.m,S=e.sv;if(e.nry!=null){const da=svAng(e.nr
 {const f=svCast;svCast=function(e,id,seed){if(e&&e.gb151&&co151On()&&!gb180Auth()&&!CO151.rx)return;const r=f.apply(this,arguments);
   try{if(e&&e.gb151&&co151On()&&!CO151.rx&&e.sv&&e.sv.mv&&e.sv.mv.id===id){const m=e.m;co151Send(['g1c',id,e.sv.mv.seed,mpR2(m.position.x),mpR2(m.position.z),mpR2(m.rotation.y),e.sv.ph|0])}}catch(_){}return r}}
 {const f=gb151Start;gb151Start=function(e){const was=!!(GB151A&&GB151A.f);const r=f.apply(this,arguments);try{if(!was&&GB151A&&GB151A.f&&co151On()&&gb180Auth()&&!CO151.rx)co151Send(['g1st'])}catch(_){}return r}}
-{const f=gb151PillarBreak;gb151PillarBreak=function(P){const ok=P&&P.ok;const r=f.apply(this,arguments);try{if(ok&&co151On()&&gb180Auth()&&!CO151.rx)co151Send(['g1p',P.i])}catch(_){}return r}}
 // a follower's hits go to the driver (shown here, applied there)
 {const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.gb151&&!e.dead&&co151On()&&!gb180Auth()&&!CO151.ap){d=Math.max(0,Math.round(d));if(!isFinite(d)||!d)return;
     CO151.hq+=d;e.lhT=performance.now();e.c.h+=1e9;try{return f(e,d,s,crit,dot)}finally{e.c.h=Math.max(1,e.c.h-1e9)}}
@@ -154,12 +154,12 @@ function co170WindTick(dt){if(typeof MP=='undefined'||!MP.on)return;for(const id
       // Gorthrak
       if(t==='g1h'){if(gb180Auth()&&MQ151.e&&!MQ151.e.dead){const dm=Math.max(0,Math.min(1e6,+q[1]||0));if(dm){CO151.ap=1;try{hurt(MQ151.e,dm,{col:0xc8d0ff},false,true)}finally{CO151.ap=0}MQ151.e.agg=1}}}
       else if(t==='g1k')gb180OnKill();
+      else if(t==='g1b'){if(gb180Auth()&&MQ151.e&&!MQ151.e.dead)gb151RlkHit(MQ151.e,true)}
       // the driver's word: from whoever drives while I do not (presence can lag a moment on who that is; when two drive, the lower id wins)
       else if(msg.peer===gb180Drv()||!gb180Auth()&&(gb180Has()||t==='g1s')||(t==='g1s'&&!gb180Has())){
         if(t==='g1c')gb180OnCast(q);else if(t==='g1s')gb180OnSync(q);
         else if(t==='g1st'){const e=MQ151.e;if(e&&!e.dead&&!(GB151A&&GB151A.f))co151Rx(()=>gb151Start(e))}
-        else if(t==='g1r'){if(GB151A&&GB151A.f)co151Rx(()=>gb151Reset(true))}
-        else if(t==='g1p'){const P=MQ151.pil[q[1]|0];if(P&&P.ok)co151Rx(()=>gb151PillarBreak(P))}}
+        else if(t==='g1r'){if(GB151A&&GB151A.f)co151Rx(()=>gb151Reset(true))}}
       // the Frozen Gate
       else if(t==='f2rq'){if(iHost&&MQ160.st>=2&&!MQ160.E&&mq160In2()&&!mq160Done())co151Rx(()=>{const e0=MQ160.E;mq160Start();if(!e0&&MQ160.E){MQ160.E.carrier='';co151Send(['f2st'])}})}
       else if(t==='f2st'){if(fromHost&&mq160In2()&&!MQ160.E){if(MQ160.st<2){MQ160.st=2;MQ160.p=[1,1,1];MQ160.gk=[1,1,1]}co151Rx(()=>mq160Start())}}

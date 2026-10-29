@@ -92,7 +92,9 @@ function cs123Op(o,dx,dz,d,r,ca,sa,sd,x,y){const q=o[0],a=o[1];
   if(q=='mound')return a*(1-smt(o[2]*r,r,d));
   if(q=='bowl')return -a*(1-smt(o[2]*r,r*.95,d));
   if(q=='ridge'){const u=(d-o[2]*r)/(o[3]||2);return a*Math.exp(-u*u)}
-  if(q=='tiers'){const n=o[1],h=o[2],v=Math.max(0,Math.min(1,1-d/(r*.95)))*n,f=Math.floor(v);return h*Math.min(n,f+smt(.74,1,v-f))/n}
+  // v168: the top terrace is a flat plateau (v ends at n + .9 instead of n): before, the last step only reached its full height at the
+  // centre point, so the top was a cone and the Serpent Shrine's idol (and every tiers camp's centrepiece) sat on its tip, ~.8 up
+  if(q=='tiers'){const n=o[1],h=o[2],v=Math.max(0,Math.min(1,1-d/(r*.95)))*(n+.9),f=Math.floor(v);return h*Math.min(n,f+smt(.74,1,v-f))/n}
   if(q=='shelf'){const p=(dx*ca+dz*sa)/r+(fbm2(x*.18+sd,y*.18,2)-.5)*.35,s=o[2]||.2;return a*smt(-s,s,p)*(1-smt(r*.7,r*1.02,d))}
   if(q=='tilt'){const p=(dx*ca+dz*sa)/r;return a*p*(1-smt(r*.8,r*1.1,d))}
   if(q=='bumps'){const f=o[2]||.25;return a*(fbm2(x*f+sd,y*f+sd*.7,3)-.5)*2.2}

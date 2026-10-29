@@ -1,6 +1,7 @@
 # v151 co-op Burningeye Summit main quest, two windows in the same instance:
 #  1 The Frozen Maw: one shared Gorthrak (the fight starts for both, the driver's moves play on the partner's copy, the partner's
-#    damage reaches the driver, his kill is the partner's kill too, the passage opens for both).
+#    damage reaches the driver, v168 the partner's hits on his back while he is Rimelocked crack the shell on the driver, his kill is
+#    the partner's kill too, the passage opens for both).
 #  2 The Frozen Gate: a part taken by one is the other's too, the guest assembles and starts the melt, the host runs it, one carrier
 #    at a time (the host's C is refused while the guest carries), the guest's flame melts the host's gate, the host's spiders are on
 #    the guest's screen and the guest's flame burns them (charge spent on the host), the gate opens for both.
@@ -78,6 +79,15 @@ until(F,"(h)=>Math.abs(MQ151.e.c.h-h)<M(MQ151.e.c)*.06",15000,h1)
 fh=F.evaluate("()=>[MQ151.e.c.h,MQ151.e.dead?1:0]")
 chk('the partner\'s hits reach the driver',h0[0]-h1>=h0[1]*.08,json.dumps([h0,h1]))
 chk('the partner\'s copy follows the driver\'s health',not fh[1] and abs(fh[0]-h1)<h0[1]*.06,json.dumps([fh,h1]))
+# v168 Rimelock: a partner's hits on his back while he is Rimelocked go to the driver (['g1b']) and crack the Glacier Shell there;
+# the crack shows on the partner's screen too (sync)
+D.evaluate("()=>{const e=MQ151.e,S=e.sv;if(S.mv)svEndMove(e,true);S.rest=99;S.rp={n:1,hit:0};S.crk=0;gb151RlkOpen(e,90,true);S.rlk.hold=1;return 1}")
+F.evaluate("""async()=>{const e=MQ151.e,S=e.sv;if(S.mv)svEndMove(e,true);S.rp={n:1,hit:0};S.crk=0;gb151RlkOpen(e,90,true);S.rlk.hold=1;const m=e.m,a=m.rotation.y;
+  toPos(m.position.x-Math.sin(a)*3.2,m.position.z-Math.cos(a)*3.2);hurt(e,50,{},false);await new Promise(r=>setTimeout(r,450));toPos(m.position.x-Math.sin(m.rotation.y)*3.2,m.position.z-Math.cos(m.rotation.y)*3.2);hurt(e,50,{},false);return 1}""")
+ok=until(D,"()=>MQ151.e.sv.crk>=1",20000)
+ok2=until(F,"()=>MQ151.e.sv.crk>=1",15000)
+chk('v168: the partner\'s hits on his back crack the shell on the driver and the crack shows for both',ok and ok2,json.dumps([pg.evaluate("()=>[MQ151.e.sv.crk,MQ151.e.sv.rlk&&MQ151.e.sv.rlk.h]") for pg in (D,F)]))
+for pg in (D,F):pg.evaluate("()=>{const S=MQ151.e.sv;S.rlk=null;S.rp=null;S.crk=0;S.shell=0}")
 # the driver's kill is everyone's
 x0=F.evaluate("()=>hero.xp")
 D.evaluate("()=>{const e=MQ151.e;if(e.sv.mv)svEndMove(e,true);e.sv.inv=0;hurt(e,1e9,{},false)}")
