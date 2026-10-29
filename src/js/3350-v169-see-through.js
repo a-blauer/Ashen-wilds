@@ -11,7 +11,7 @@
 //     with k 1 (the hero, the ground round them, plants behind the glass show through at 1 - a). Blend: ONE, ONE_MINUS_SRC_ALPHA (premultiplied, 0061 tail).
 //  3. Outside the instance you are in (its rectangle, GH169.vm margin; with the camera out past the edge, from one tile inside:
 //     the cliff face the ground drops off) the ground is black (0061), and a black floor lies far under the instance (GH169C.vo),
-//     so the void past the edge is black.
+//     so the void past the edge is black. With the camera inside the rock the ground's back faces are drawn black (gh169Under).
 var GH169L=3,GH169C={live:0,pass:0,f:0,cand:[],top:new Set(),hid:[],mats:[],ct:0,vo:null,vk:null,st:{cand:0,passes:0,ms:0,skip:0}};
 GH169.vm=.5;GH169.vy=-75;
 // the mesh's bounds in the world (instanced meshes: all instances, cached; top = the highest instance's top, local y)
@@ -67,6 +67,12 @@ function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV
   if(!I){V.set(-1e6,-1e6,1e6,1e6);return}
   const c=FADE.cam.value,out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h,m=out?-GH169.vin:GH169.vm;
   V.set(I.x0-m,I.y0-m,I.x0+I.w+m,I.y0+I.h+m)}
+// the camera inside the rock (below the ground under it: behind a wall step it stays where the player put it): the ground's back
+// faces are drawn (black, 0061 GH169_TB) so the rock's inside is black, not the view out under the map. Culling is the only
+// switch (no recompile): the shader always has the back-face code. Meanwhile the background is black and the sky and the water
+// are hidden (POST.render below), so through the see-through window you see the map and the characters, never under the map.
+function gh169Under(){const C=GH169C,c=FADE.cam.value;let u=false;try{u=c.y<GH(c.x,c.z)-.05}catch(_){}
+  GH169.U.uGhU.value=u&&GH169.on?1:0;if(u===C.under)return;C.under=u;try{GTX.list.forEach(T=>{if(T.mat)T.mat.side=u?THREE.DoubleSide:THREE.FrontSide})}catch(_){}}
 function gh169Restore(){const C=GH169C;for(const q of C.mats){const m=q[0];m.blending=q[1];m.blendSrc=q[2];m.blendDst=q[3];m.blendEquation=q[4];m.blendSrcAlpha=q[5];m.blendDstAlpha=q[6];m.blendEquationAlpha=q[7];m.stencilWrite=q[8]}
   C.mats.length=0;for(const o of C.hid)o.visible=true;C.hid.length=0}
 POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
@@ -94,5 +100,9 @@ POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
 {const f=POST.render;POST.render=function(){const C=GH169C,U=GH169.U;C.f++;C.cand.length=0;C.top.clear();
   try{U.uGhA.value=GH169.a;U.uGhK.value=GH169.k;if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
     else{U.uGhR.value.set(-2,-1);U.uGhN.value.set(-2,-1)}
-    gh169Void();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
-  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0}}}
+    gh169Void();gh169Under();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
+  // inside the rock nothing but the map shows: no sky, a black background, and no water (its sheet lies at sea level under
+  // all the ground, so from inside the rock you saw it under the map)
+  let bg=null;const hid=[];if(C.under&&GH169.on){bg=scene.background;scene.background=GH169C.blk||(GH169C.blk=new THREE.Color(0));
+    try{[SKY,WTR.w,WTR.l].forEach(o=>{if(o&&o.visible){o.visible=false;hid.push(o)}})}catch(_){}}
+  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0;if(bg)scene.background=bg;for(const o of hid)o.visible=true}}}

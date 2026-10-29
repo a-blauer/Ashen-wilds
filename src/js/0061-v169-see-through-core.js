@@ -12,19 +12,25 @@
 //     characters are seen clearly (they write 1 into the stencil buffer, gh169Clear; 3350 draws those pixels at k 1).
 //     Plants themselves are see-through without the dark inside (GH169_SEE).
 //   * back faces (the inside of a two-sided house) are black in the colour pass; one-sided materials never show their back.
-//   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
+//   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge;
+//     with the camera inside the rock (behind a wall step, uGhU), the ground's back faces are drawn and black (GH169_TB), and
+//     every world pixel outside the window is black (rocks and boulders buried in the ground showed from in there).
 var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,3.4],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
 GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
-  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
+  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON,
+  uGhU:{value:0},uGhC:FADE.cam,uGhH:FADE.pl};   // uGhU 1: the camera is inside the rock (3350 gh169Under)
 // gh169W(world point, camera, hero chest): inside a round window around the hero on screen (uGhR, world units at the hero's
 // distance, smooth edge, no dither) and in front of the hero, or anything right in front of the camera (uGhN)
-GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;
+GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn,uGhU;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;uniform vec3 uGhC,uGhH;
 float gh169T(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;return dot(p-c,ab)/max(dot(ab,ab),1e-4);}
 float gh169W(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;
  float d=length(p-(c+ab*t))/max(t,.02);
  float w=(1.-smoothstep(uGhR.x,uGhR.y,d))*(1.-smoothstep(.86,.96,t));
  float n=(1.-smoothstep(uGhN.x,uGhN.y,length(p-c)))*(1.-smoothstep(.75,.9,t));
  return max(w,n);}
+// inside the window on screen at any depth (or near the camera): what still shows while the camera is inside the rock
+float gh169In(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;
+ return max(1.-smoothstep(uGhR.x,uGhR.y,length(p-(c+ab*t))/max(t,.02)),1.-smoothstep(uGhN.x,uGhN.y,length(p-c)));}
 bool gh169Out(vec3 p){return p.x<uGhV.x||p.z<uGhV.y||p.x>uGhV.z||p.z>uGhV.w;}
 `;
 // the start of main, after ghw is known: the normal draw skips see-through pixels, the ghost passes draw only them
@@ -40,6 +46,10 @@ GH169.tail=p=>`
   #ifdef GH169_VOID
   if(gh169Out(${p}))gl_FragColor.rgb=vec3(0.);
   #endif
+  #ifdef GH169_TB
+  if(!gl_FrontFacing)gl_FragColor.rgb=vec3(0.);   // the ground seen from inside the rock: black
+  #endif
+  if(uGhU>.5&&uGhM<.5)gl_FragColor.rgb*=gh169In(${p},uGhC,uGhH);   // inside the rock: black but for the window
   if(uGhM>1.5){float ga=1.-ghw*(1.-uGhA);vec3 gc=gl_FragColor.rgb*ga;
    #ifdef GH169_DS
    if(!gl_FrontFacing)gc=vec3(0.);
@@ -54,9 +64,11 @@ GH169.tail=p=>`
 // call after the material's own replacements (they must already have put `float ghw` at the top of main and GH169.GATE after it).
 // Only the ground goes black outside the instance (the void and the cliffs it drops off): scenery out there stays as it was
 // (Abeksi's north wall stands 0.5-3 tiles past its rectangle)
-function gh169Shader(sh,m,p,see,vd){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
-  const ds=m.side===THREE.DoubleSide;
-  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
+// tb = the ground: its back faces (only drawn while the camera is inside the rock, 3350 gh169Under) are black, and black glass
+// in the see-through window
+function gh169Shader(sh,m,p,see,vd,tb){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
+  const ds=tb||m.side===THREE.DoubleSide;
+  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+(tb?'#define GH169_TB\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
   if(sh.fragmentShader.indexOf('#include <dithering_fragment>')<0){console.warn('v169: no dithering_fragment to end on');return}
   sh.fragmentShader=sh.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>'+GH169.tail(p))}
 // mark a material as see-through capable when it is patched (3350 reads this before the first draw): all = its pixels can turn

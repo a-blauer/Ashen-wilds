@@ -22,7 +22,7 @@ def s(pg):
     def shot(name):
         p=play.TMP+'/v169t_'+name+'.png';pg.screenshot(path=p,timeout=600000);return Image.open(p).convert('RGB')
     # the hero's box on the page (project the hero's feet and head)
-    BOX=r"""(st)=>{const P=pl.position,v=new THREE.Vector3(),xs=[],ys=[];for(const h of [.2,1,1.8])for(const dx of [-.35,.35]){v.set(P.x+dx,P.y+h,P.z).project(cam);xs.push(st[0]+(v.x+1)/2*st[2]);ys.push(st[1]+(1-v.y)/2*st[3])}
+    BOX=r"""(st)=>{const P=pl.position,v=new THREE.Vector3(),xs=[],ys=[];for(const h of [.2,1,1.8])for(const [dx,dz] of [[-.35,0],[.35,0],[0,-.35],[0,.35]]){v.set(P.x+dx,P.y+h,P.z+dz).project(cam);xs.push(st[0]+(v.x+1)/2*st[2]);ys.push(st[1]+(1-v.y)/2*st[3])}
       return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)].map(Math.round)}"""
     # 1. a cave wall between the camera and the hero
     q=pg.evaluate(CAVE,1);pg.wait_for_timeout(2000)
@@ -70,5 +70,21 @@ def s(pg):
         else:   # a few points may catch a firefly or a spark floating in the void: judge the 85th percentile
             p85=sorted(L)[int(len(L)*.85)]
             if p85>14:fail('edge: the void past the edge is not black (85th percentile',round(p85),'of 255)')
+    # 3. the camera inside the rock of an instance's wall (Hillside Crest III's west wall): black but for the window round the hero
+    q=pg.evaluate(EDGE,7);pg.wait_for_timeout(2000)
+    if not q:fail('inside the rock: no edge spot found')
+    else:
+        q['yaw']=-1.5708
+        d=pg.evaluate("""(q)=>{let best=0;for(let d=4.5;d<=15;d+=.5){const x=q.x+Math.sin(q.yaw)*Math.cos(.3)*d,z=q.z+Math.cos(q.yaw)*Math.cos(.3)*d,y=GH(q.x,q.z)+1.1+Math.sin(.3)*d;if(GH(x,z)>y+.8)best=d}return best}""",q)
+        if not d:fail('inside the rock: no camera distance puts the camera inside the wall')
+        else:
+            place(q,d,.3);im=shot('inwall');u=pg.evaluate("()=>[GH169C.under,GH169.U.uGhU.value]")
+            if not u[0]:fail('inside the rock: the camera was not seen as inside the rock',u)
+            W,H=stage[2],stage[3];x0,y0=stage[0],stage[1]
+            corners=[lum(im,(int(x0+W*a),int(y0+H*b),int(x0+W*a+W*.12),int(y0+H*b+H*.15))) for a,b in [(.03,.15),(.85,.15),(.03,.45),(.85,.45)]]
+            hero=pg.evaluate(BOX,stage);hl=lum(im,tuple(hero))
+            print('inside the rock: corners',[round(c) for c in corners],'hero box',hero,round(hl))
+            if max(corners)>14:fail('inside the rock: the view out past the window is not black (brightest corner',round(max(corners)),')')
+            if hl<25:fail('inside the rock: the hero is not visible in the window (brightness',round(hl),')')
     print('DONE' if not F else 'FAILED '+str(len(F)))
 play.run(s,w=1000,hh=620)
