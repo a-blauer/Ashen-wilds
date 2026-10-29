@@ -119,6 +119,15 @@ function ch164ScuteGeo(){if(CH164B.scG)return CH164B.scG;const o=[[0,.55],[.38,.
 // ---------------- the head ----------------
 // head units (the group is scaled 1.35); +z forward, +y up. The lower jaw hinges at CH164B.jp, the fangs at their roots.
 CH164B.jp=[0,-.26,-.98];
+// v167 the mouth's corners: n points along each side from the hinge (z0) to where the gape stays open (z1); the upper edge is on the
+// skull just above the lip line, the lower one on the jaw's lip line (it swings with the jaw about CH164B.jp)
+CH164B.ckN=6;CH164B.ck={z0:-1.12,z1:-.28,wu:[.96,.9],yu:-.2,wl:[.9,.86],yl:-.28};
+function ch167Cheek(head,ang){const C=CH164B.ck,J=CH164B.jp,n=CH164B.ckN,c=Math.cos(ang),sn=Math.sin(ang);
+  (head.userData.cheek||[]).forEach(q=>{const P=q.geo.attributes.position.array;
+    for(let k=0;k<n;k++){const t=k/(n-1),z=C.z0+(C.z1-C.z0)*t,wu=(C.wu[0]+(C.wu[1]-C.wu[0])*t)*q.s,wl=(C.wl[0]+(C.wl[1]-C.wl[0])*t)*q.s;
+      // the upper edge (fixed); the lower edge: the closed lip point rotated about the hinge (x) by the jaw's angle
+      P[k*6]=wu;P[k*6+1]=C.yu;P[k*6+2]=z;const dy=C.yl-J[1],dz=z-J[2];P[k*6+3]=wl;P[k*6+4]=J[1]+dy*c-dz*sn;P[k*6+5]=J[2]+dy*sn+dz*c}
+    q.geo.attributes.position.needsUpdate=true;q.geo.computeVertexNormals();q.geo.computeBoundingSphere()})}
 function ch153SnakeHead(){const M=ch164Mats(),g=new THREE.Group();g.userData.psNo=1;g.userData.noFade135=1;
   const SPH=CH164B.sph||(CH164B.sph=new THREE.SphereGeometry(1,20,14)),I=new THREE.Matrix4(),mx=ch164Mx;
   const U={skin:[],plate:[],bone:[],horn:[],mouth:[],dark:[]},L={skin:[],plate:[],bone:[],mouth:[],dark:[]};
@@ -165,6 +174,13 @@ function ch153SnakeHead(){const M=ch164Mats(),g=new THREE.Group();g.userData.psN
   const tm=new THREE.Mesh(CH164B.tgG,M.tongue);tg.add(tm);tg.scale.z=.25;
   // the hood
   const hood=ch164Hood(M);g.add(hood);
+  // v167 (owner: "the snake's mouth seems glitched when he is revealed"): with the jaw wide open nothing joined the jaws at the
+  // corners of the mouth, so the lower jaw looked torn off. A stretch of skin (outside) and mouth lining (inside) now spans each
+  // corner, from the hinge forward, and is re-laid every frame from the jaw's angle (ch167Cheek).
+  g.userData.cheek=[-1,1].map(s=>{const n=CH164B.ckN,pos=new Float32Array(n*2*3),idx=[];for(let k=0;k<n-1;k++){const a=k*2,b=a+1,c=a+2,d=a+3;idx.push(a,c,b,b,c,d)}
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3).setUsage(THREE.DynamicDrawUsage));geo.setIndex(idx);
+    const out=new THREE.Mesh(geo,CH164B.ckM||(CH164B.ckM=(()=>{const m=new THREE.MeshStandardMaterial({color:0x1d2715,roughness:.5,metalness:.12,side:THREE.DoubleSide});m.userData.noFade135=1;return m})()));
+    out.frustumCulled=false;out.userData.noFade135=1;g.add(out);return {s,geo,m:out}});
   g.userData.jaw=jaw;g.userData.hood=hood;g.userData.fangs=fangs;g.userData.tongue=tg;g.userData.eyeM=M.eye;
   g.scale.setScalar(1.35);return g}
 // the hood: a ribbed fan around the back of the head and the neck, cupped forward, scalloped between the ribs
@@ -228,7 +244,7 @@ function ch153SnakeLay(S,pts){const n=pts.length,SUB=CH164B.sub,NS=CH164B.ns,W=N
       m.makeBasis(a,b,c);m.scale(V.h.set(sx*rr,sy*rr,sz*rr));m.setPosition(d);q.setMatrixAt(i,m)});q.instanceMatrix.needsUpdate=true};
   place(S.sc,S.scR,.97,.5,.42,.5);place(S.sp,S.spR,.99,.42,.5,.42)}
 // the head's own motion each frame: fangs swing with the jaw, the tongue flicks, the eyes pulse, venom drips from the fangs
-function ch164HeadAnim(S,t,jaw,rear){const dt=Math.min(.1,Math.max(0,t-(S.lt||t)));S.lt=t;
+function ch164HeadAnim(S,t,jaw,rear){const dt=Math.min(.1,Math.max(0,t-(S.lt||t)));S.lt=t;try{ch167Cheek(S.head,S.jaw.rotation.x)}catch(_){}
   const fo=Math.min(1,Math.max(0,(jaw-.12)/.6));S.fangs.forEach(f=>{f.rotation.x=-1.25*(1-fo)});
   const ph=(t*.42)%1,out=ph<.22?Math.sin(ph/.22*Math.PI):0,tg=S.tongue;tg.scale.z=.25+.85*out*(jaw<.85?1:.4);tg.rotation.x=.12*out*Math.sin(t*31);tg.rotation.y=.18*out*Math.sin(t*23);
   if(S.eyeM)S.eyeM.color.setScalar(.82+.18*Math.sin(t*2.6)+.15*rear);

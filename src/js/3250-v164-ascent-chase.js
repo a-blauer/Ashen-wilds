@@ -139,9 +139,12 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
   const emg=R.ph=='intro',lx=-P.TZ[0]*P.sgn,lz=P.TX[0]*P.sgn;let em=0;
   if(emg){em=N.em||0;const d=N.drop||0,eo=1-Math.pow(1-em,3),dd=d*d*(3-2*d),top=-2.5+11.5*eo+.35*Math.sin(t*2.1)*em,k2=Math.max(0,Math.min(1,(R.t-ch153EmT(R)-.55)/.35));
     hs=HO;ho=.45*Math.sin(t*1.9)*em*(1-dd);hy=top+(4.2-top)*dd;
-    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.75+.18*Math.sin(t*7)}
+    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.84+.1*Math.sin(t*3.2)}
   M.head.visible=!(emg&&em<=0);M.hood.scale.set(1+(emg?.18*em:.16*N.rear+(D?.2:0)),1,1);
   const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);const ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);
+  // v167: the jaw and the head's tilt ease toward their pose (they used to snap: wide open → ¾ in one frame at the reveal, and
+  // wide open again when the run starts); quick enough for the chomp
+  {const dt=Math.min(.1,Math.max(0,t-(N.aT==null?t:N.aT)));N.aT=t;const kj=Math.min(1,dt*(D?22:11));N.jw=N.jw==null||N.reset!==R?jaw:N.jw+(jaw-N.jw)*kj;N.pt=N.pt==null||N.reset!==R?pitch:N.pt+(pitch-N.pt)*kj;N.reset=R;jaw=N.jw;pitch=N.pt}
   M.head.rotation.set(pitch,ya+.12*Math.sin(t*1.7)*(D?0:1),.06*Math.sin(t*2.3),'YXZ');M.jaw.rotation.x=jaw*.95;
   // the body along the trail behind it, slithering; the neck rises to the head
   const pts=[],[Hx,Hz,Hh]=slope(HO,0);
@@ -158,7 +161,9 @@ function ch153Spit(n){const R=CH153.R;ch153SpitSpawn(ch153SpitPlan(n,R.s,R.o,R.v
 // one glob: your lane · two: a slalom · three: a wall across the trail (jump it)
 function ch153SpitPlan(n,s,o,v){const P=CH153.S.P,T=1.05,G=ch153Course().gaps,span=n==2?CH164.slalom:.5;
   // the whole volley (from x to x + span) lands clear of every broken stretch: not within CH164.gapB before one, CH164.gapA after
-  const clear=x=>{for(let k=0;k<6;k++){const g=G.find(g=>x+span>g.s-g.len/2-CH164.gapB&&x-.5<g.s+g.len/2+CH164.gapA);if(!g)break;x=g.s+g.len/2+CH164.gapA+.6+Math.random()*2}return Math.min(x,P.S-12)};
+  // v167: and clear of every obstacle (ch167Keep: the broken stretches with these margins, each obstacle with a short one)
+  const KP=typeof ch167Keep=='function'?ch167Keep():G.map(g=>[g.s-g.len/2-CH164.gapB,g.s+g.len/2+CH164.gapA]);
+  const clear=x=>{for(let k=0;k<10;k++){const g=KP.find(q=>x+span>q[0]&&x-.5<q[1]);if(!g)break;x=g[1]+.6+Math.random()*2}return Math.min(x,P.S-12)};
   const ls=clear(s+Math.max(4,v)*T+3+Math.random()*4),lim=q=>P.hw(q)-.6,L=[];
   if(n>=3){for(let i=0;i<3;i++)L.push([ls+(Math.random()-.5)*.5,(i-1)*1.75])}
   else{const a=Math.max(-lim(ls),Math.min(lim(ls),o+(Math.random()-.5)*.5));L.push([ls,a]);

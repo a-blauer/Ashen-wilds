@@ -5,6 +5,8 @@
 # globs slow you ~1 s (health untouched); broken trail: jump it (also when slowed) or fall; caught = chomped; both restart.
 # An autopilot (jumps every gap, steers around venom, jumps a venom wall, boosts) rides the whole trail and must win in about
 # two minutes; the same autopilot without boosting must be caught. Venom volleys leave a lane and never land near a gap.
+# v167: the mount is 35% faster (a run is ~85 s) and the trail has obstacles (logs, rolling boulders, narrow ledges: v167_obstacles.py
+# tests them); the checks of speed, venom and gaps ride with CH167.off, the autopilot jumps logs, dodges boulders and hugs the wall.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -23,7 +25,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
       a=yw-C.yaw*P.sgn,p=pl.position;c.position.set(p.x+Math.sin(a)*Math.cos(C.pitch)*C.dist,p.y+1.1+Math.sin(C.pitch)*C.dist,p.z+Math.cos(a)*Math.cos(C.pitch)*C.dist);c.lookAt(p.x,p.y+1,p.z);c.updateMatrixWorld();
       const h=S.sn.head.getWorldPosition(new THREE.Vector3()),v=h.clone().project(c);out.emNdc=[+v.x.toFixed(2),+v.y.toFixed(2),+v.z.toFixed(3)];out.emUp=+(h.y-GH(h.x,h.z)).toFixed(1);out.emHeadVis=S.sn.head.visible&&S.root.visible;
       out.emDeb=CH157.deb.length;fcPass();out.emCulled=FC.hide.some(o=>o===S.root||o===S.sn.g||o===S.sn.head);out.emBehind=+(r0.s-r0.sn.s).toFixed(1)}else out.emNdc='no intro '+r0.ph}
-  tick(3.3);out.ph1=R().ph;const P=CH153.S.P,S0=CH153.S,KC=ch153Course();
+  tick(3.3);out.ph1=R().ph;const P=CH153.S.P,S0=CH153.S,KC=ch153Course();CH167.off=1;
   // v164: no obstacles, no strikes, no hit points
   out.noObs=!S0.obs&&!KC.O&&!S0.slides&&!S0.planks&&!('strike' in R().sn)&&!('hp' in R())&&typeof ch153Hit=='undefined';
   {const h=document.querySelector('#ch153h .hp');out.noHearts=!h||getComputedStyle(h).display=='none'}
@@ -47,7 +49,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
       ch164ClearFx(CH153.S);const jg=()=>{const g=KC.gaps.find(q=>q.s+q.len/2>r0.s);if(g&&g.s-g.len/2-r0.s<1&&g.s-g.len/2>r0.s)CH153.jumpQ=.1};if(boost)ch157Boost();tick(1.2,jg);const g1=r0.s-N.s;tick(8,jg);return [+g1.toFixed(1),+(r0.s-N.s).toFixed(1),r0.ph]};
     const a=run(false),b=run(true);out.distNo=a;out.distBoost=b}
   // v164 venom: a puddle on your lane slows you for about a second, then you recover; health untouched
-  {const r0=R();r0.ph='run';r0.s=110;r0.o=.3;r0.y=0;r0.jt=-1;r0.v=CH153V.spd;r0.slow=0;r0.bst=0;keep(r0);r0.sn.s=r0.s-25;const [x,z,h]=P.at(r0.s+3,0);
+  {const r0=R();r0.ph='run';r0.s=95;r0.o=.3;r0.y=0;r0.jt=-1;r0.v=CH153V.spd;r0.slow=0;r0.bst=0;keep(r0);r0.sn.s=r0.s-25;const [x,z,h]=P.at(r0.s+3,0);
     const pm=ch164Pool();pm.position.set(x,h+.06,z);CH153.S.root.add(pm);CH153.S.pools.push({m:pm,s:r0.s+3,o:0,t:7,hit:0,g:1});const s0=r0.s;
     tick(.6);out.vSlow=+r0.slow.toFixed(2);out.vV=+(r0.v/CH153V.spd).toFixed(2);ch153Hud();out.vGreen=+getComputedStyle($('ch164v')).opacity;tick(1.0);out.vOff=r0.slow==0;tick(1.6);out.vRec=+(r0.v/CH153V.spd).toFixed(2);out.vLost=+((s0+3.2*CH153V.spd)-r0.s).toFixed(1);
     out.vHp=hero.hp===hp0;
@@ -73,10 +75,16 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
       let tgt=0;if(thr.length){let best=-1;for(let o=-lim;o<=lim+1e-6;o+=.1){const c=Math.min(...thr.map(q=>Math.abs(o-q.o)))-.12*Math.abs(o-r0.o);if(c>best){best=c;tgt=o}}
         const near=thr.filter(q=>q.s>r0.s&&q.s-r0.s<CH164.poolR+1.4);if(near.length&&near.some(q=>Math.abs(r0.o-q.o)<CH164.poolR+.1)&&r0.y<.05)CH153.jumpQ=.1}
       else tgt=Math.max(-lim,Math.min(lim,r0.o*.98));
+      // v167 obstacles: hug the wall on a narrow ledge, steer behind a rolling boulder, jump a log in your lane
+      const lo=-hw+.6;(CH153.S.ob||[]).forEach(b=>{const q=b.q;
+        if(q.k=='nar'){const a=q.s-q.len/2-r0.s,e=q.s+q.len/2-r0.s;if(a<r0.v*.9+3&&e>-1){const E=ch167Edge(Math.max(r0.s,q.s-q.len/2+1.5));tgt=Math.min(tgt,Math.max(lo,(E?E.o:-hw+q.w)-.55))}}
+        if(q.k=='rock'&&b.st<=3&&!b.hit){const d=q.s-r0.s;if(d>-1.5&&d<r0.v*2.6){const ta=Math.max(0,d)/Math.max(1,r0.v),wait=b.st==0?CH167.rockPre:b.st==1?CH167.rockPre-b.t:0;
+            const op=b.st==0&&d>r0.v*2.4?null:b.o+q.u*Math.max(0,ta-wait),cl=q.r+CH167.mw+.55;if(op!=null&&Math.abs(op-tgt)<cl){const t1=op-cl;tgt=t1>=lo?t1:Math.min(lim,op+cl)}}}
+        if(q.k=='log'&&b.st==0&&tgt+CH167.mw>q.o0-.1&&tgt-CH167.mw<q.o1+.1){const d=q.s-q.r-(r0.s+CH167.ml);if(d>r0.v*.11&&d<r0.v*.24&&r0.y<.05)CH153.jumpQ=.1}});
       const w=tgt-r0.o;K.a=K.d=0;if(Math.abs(w)>.12){if(w*P.sgn>0)K.d=1;else K.a=1}};
     while(st.t<230){tick(1/30,fr);st.t+=1/30;const r0=R();if(!r0)break;if(r0.ph=='run')st.minGap=Math.min(st.minGap,r0.s-r0.sn.s);if(r0.ph=='dead'){st.deaths++;st.why=r0.dead.why;break}if(r0.ph=='win')break}
-    K.a=K.d=0;const r0=R();st.t=Math.round(st.t);st.minGap=+st.minGap.toFixed(1);st.ph=r0?r0.ph:'gone';st.s=r0?Math.round(r0.s):0;st.jumps=r0&&r0.jumps||0;st.slows=r0&&r0.slows||0;st.vol=r0&&r0.vol||0;return st};
-  ch153Reset(false);tick(1.7);const a=pilot(true);out.ride=a;out.rideHp=hero.hp===hp0;
+    K.a=K.d=0;const r0=R();st.t=Math.round(st.t);st.minGap=+st.minGap.toFixed(1);st.ph=r0?r0.ph:'gone';st.s=r0?Math.round(r0.s):0;st.jumps=r0&&r0.jumps||0;st.slows=r0&&r0.slows||0;st.crashes=r0&&r0.crashes||0;st.vol=r0&&r0.vol||0;return st};
+  CH167.off=0;ch153Reset(false);tick(1.7);const a=pilot(true);out.ride=a;out.rideHp=hero.hp===hp0;
   // without boosting it cannot stay ahead: Skarrith catches it
   if(R().ph!='dead'){ch153Reset(false);tick(1.7)}else{tick(2.6);await wait(900);tick(1.7)}out.rideNoBoost=pilot(false);if(R().ph=='dead'){tick(2.6);await wait(900);tick(.3)}
   // 3) every venom volley of one or two leaves a lane to escape into; none lands on or just before a broken stretch
@@ -128,7 +136,8 @@ def s(pg):
     exp(r['dead']=='chomp' and r['bit'] and r['restart'] in ('intro','run'),'caught -> chomped -> the chase starts again (%s %s %s)'%(r['dead'],r['bit'],r['restart']))
     d=r['ride']
     exp(d['ph']=='win' and d['deaths']==0,'the autopilot rides the whole trail to the summit (%s)'%d)
-    exp(90<=d['t']<=135,'about two minutes (%s s)'%d['t'])
+    exp(55<=d['t']<=110,'about 85 s with the v167 faster mount (%s s)'%d['t'])
+    exp(d.get('crashes',9)<=2,'the autopilot gets past the obstacles (%s crashes)'%d.get('crashes'))
     exp(d['jumps']>=r['gapN'] and d['boosts']>=8 and d['vol']>=15,'it jumped every broken stretch, boosted and met the venom (%s jumps, %s boosts, %s volleys)'%(d['jumps'],d['boosts'],d['vol']))
     exp(d['minGap']>CH_CATCH,'Skarrith never reached it (closest %s)'%d['minGap'])
     n=r['rideNoBoost']

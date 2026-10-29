@@ -37,6 +37,33 @@ function ch153Course(){if(ch153Course.c)return ch153Course.c;
   let sd=16407;const rn=()=>(sd=sd*16807%2147483647)/2147483647,G=[];
   for(let s=78;s<872;){const k=s/880,len=Math.round((2.3+.9*k+rn()*.3)*100)/100;G.push({s:Math.round(s*10)/10,len});s+=len+(80-46*k)+rn()*12}
   return ch153Course.c={gaps:G,venom:[[30,4.4,1],[170,3.8,2],[360,3.3,2],[540,2.9,3],[720,2.45,3]],start:15,crack:12}}
+// v167 obstacles (owner: "add rolling boulders, parts of the path that are skinnier, and logs; make the collision true to the
+// object"). Seeded like the gaps (every co-op rider has the same course), placed between the broken stretches, never in the tunnel
+// for boulders and narrows, denser toward the summit. Self-contained and hoisted: 0045 carves the narrows out of the ground.
+//  log  {s, r, o0, o1}: a fallen trunk across the trail (a cylinder from o0 to o1 at height r): full width, or from one side.
+//  rock {s, r, off, u}: a boulder that rolls down off the mountain wall (from -o) across the trail at u tiles a second, timed so a
+//       rider at full speed meets it at o = off; it rolls off the outer lip and falls.
+//  nar  {s, len, w}: the outer part of the ledge has fallen away: only w tiles of trail stay along the mountain wall.
+function ch167Obs(){if(ch167Obs.c)return ch167Obs.c;const P=ch153Path(),G=ch153Course().gaps,O=[];
+  let sd=16701;const rn=()=>(sd=sd*16807%2147483647)/2147483647;
+  const busy=(a,b)=>G.some(g=>b>g.s-g.len/2-10&&a<g.s+g.len/2+8)||O.some(q=>{const e=ch167Ext(q);return b>e[0]-9&&a<e[1]+9});
+  let s=58,n=0;while(s<P.S-48){const k=s/P.S,hw=P.hw(s),tun=s>596&&s<694,narrows=s>=262&&s<=388;
+    // the type: logs and boulders from the start, narrow ledges from the first third
+    const pat=['log','rock','log','nar','rock','log','nar','rock','log','rock','nar','log'];let t=pat[n%pat.length];if(t=='nar'&&(s<120||tun||narrows))t=n%2?'rock':'log';if(t=='rock'&&tun)t='log';
+    let q;if(t=='log'){const r=Math.round((.36+rn()*.1)*100)/100,f=rn();let o0=-hw-1.4,o1=hw+1.1;if(f<.3)o1=-hw+hw*2*(.55+rn()*.08);else if(f<.5)o0=hw-hw*2*(.55+rn()*.08);q={k:'log',s:0,r,o0,o1}}
+    else if(t=='rock'){q={k:'rock',s:0,r:Math.round((.72+rn()*.22)*100)/100,off:Math.round((rn()*1.6-.8)*100)/100,u:Math.round((4.3+rn()*1.1)*100)/100}}
+    else{const len=Math.round((7+rn()*4+k*5)*10)/10;q={k:'nar',s:0,len,w:Math.round((1.95+rn()*.3)*100)/100}}
+    // slide forward to the first free stretch
+    for(let i=0;i<40;i++){q.s=Math.round(s*10)/10;const e=ch167Ext(q);if(!busy(e[0],e[1])&&e[1]<P.S-44)break;s+=3}
+    const e=ch167Ext(q);if(e[1]>=P.S-44)break;if(!busy(e[0],e[1])){O.push(q);n++}
+    s=e[1]+(20-8*k)+rn()*10}
+  return ch167Obs.c=O}
+// an obstacle's stretch of trail [from, to]
+function ch167Ext(q){return q.k=='nar'?[q.s-q.len/2,q.s+q.len/2]:q.k=='rock'?[q.s-q.r-1,q.s+q.r+1]:[q.s-q.r,q.s+q.r]}
+// the outer edge of what is left of the trail at s (+o side), or null where the trail is whole. The break runs in on a slant over
+// CH167E tiles at each end; this one edge is both the fall line and where the broken lip is built.
+function ch167Edge(s){const O=ch167Obs();for(let i=0;i<O.length;i++){const q=O[i];if(q.k!='nar')continue;const a=q.s-q.len/2,b=q.s+q.len/2;if(s<=a||s>=b)continue;
+    const hw=ch153Path().hw(s),keep=-hw+q.w,ramp=Math.min(1,Math.min(s-a,b-s)/1.4);return {q,o:hw+.45+(keep-hw-.45)*ramp}}return null}
 // the gap at trail position s (with a margin m inside its ends), or null
 function ch153GapAt(s,m){const G=ch153Course().gaps;m=m||0;for(let i=0;i<G.length;i++){const g=G[i];if(s>g.s-g.len/2+m&&s<g.s+g.len/2-m)return g}return null}
 // ---------------- 0045: the ground and the heights ----------------
@@ -56,5 +83,8 @@ function ch153Terrain(I){const P=ch153Path(),C=P.C,best=new Float32Array(I.w*I.h
   for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const X=i-I.x0,Z=j-I.y0,inn=X>=0&&Z>=0&&X<I.w&&Z<I.h,k=inn?Z*I.w+X:-1;let h=cone(i,j);
     if(k>=0&&best[k]<5){const d=best[k],w=d<=.6?1:1-((d-.6)/4.4)*((d-.6)/4.4)*(3-2*(d-.6)/4.4);const wall=sg[k]<0?Math.min(4,Math.max(0,d-.6)*1.6):-Math.max(0,d-.6)*.9;h=ph[k]*w+(Math.max(h,ph[k]+wall)*(sg[k]<0?1:0)+Math.min(h,ph[k]+wall)*(sg[k]<0?0:1))*(1-w);
       // v164: a broken stretch: the ledge has fallen away down the mountain (the inner wall stays); 3250 dresses its edges
-      if(ch153GapAt(bs[k],0)&&(sg[k]<0?d<0:d<7))h=Math.min(h,ph[k]-11-Math.max(0,d)*.6)}
+      if(ch153GapAt(bs[k],0)&&(sg[k]<0?d<0:d<7))h=Math.min(h,ph[k]-11-Math.max(0,d)*.6)
+      // v167: a narrow stretch: the outer part of the ledge has fallen away. Vertices from .9 past its edge are carved: the slope
+      // between them and the kept band starts under the lip slabs (3330 lays them .6 inside the edge), so the trail itself never sags
+      {const E=ch167Edge(bs[k]),o=sg[k]*(d+P.hw(bs[k]));if(E&&o>E.o+.9)h=Math.min(h,ph[k]-9-Math.max(0,o-E.o)*.5)}}
     HF[(j+HPD)*HW+i+HPD]=h}}

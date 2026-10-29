@@ -45961,6 +45961,33 @@ function ch153Course(){if(ch153Course.c)return ch153Course.c;
   let sd=16407;const rn=()=>(sd=sd*16807%2147483647)/2147483647,G=[];
   for(let s=78;s<872;){const k=s/880,len=Math.round((2.3+.9*k+rn()*.3)*100)/100;G.push({s:Math.round(s*10)/10,len});s+=len+(80-46*k)+rn()*12}
   return ch153Course.c={gaps:G,venom:[[30,4.4,1],[170,3.8,2],[360,3.3,2],[540,2.9,3],[720,2.45,3]],start:15,crack:12}}
+// v167 obstacles (owner: "add rolling boulders, parts of the path that are skinnier, and logs; make the collision true to the
+// object"). Seeded like the gaps (every co-op rider has the same course), placed between the broken stretches, never in the tunnel
+// for boulders and narrows, denser toward the summit. Self-contained and hoisted: 0045 carves the narrows out of the ground.
+//  log  {s, r, o0, o1}: a fallen trunk across the trail (a cylinder from o0 to o1 at height r): full width, or from one side.
+//  rock {s, r, off, u}: a boulder that rolls down off the mountain wall (from -o) across the trail at u tiles a second, timed so a
+//       rider at full speed meets it at o = off; it rolls off the outer lip and falls.
+//  nar  {s, len, w}: the outer part of the ledge has fallen away: only w tiles of trail stay along the mountain wall.
+function ch167Obs(){if(ch167Obs.c)return ch167Obs.c;const P=ch153Path(),G=ch153Course().gaps,O=[];
+  let sd=16701;const rn=()=>(sd=sd*16807%2147483647)/2147483647;
+  const busy=(a,b)=>G.some(g=>b>g.s-g.len/2-10&&a<g.s+g.len/2+8)||O.some(q=>{const e=ch167Ext(q);return b>e[0]-9&&a<e[1]+9});
+  let s=58,n=0;while(s<P.S-48){const k=s/P.S,hw=P.hw(s),tun=s>596&&s<694,narrows=s>=262&&s<=388;
+    // the type: logs and boulders from the start, narrow ledges from the first third
+    const pat=['log','rock','log','nar','rock','log','nar','rock','log','rock','nar','log'];let t=pat[n%pat.length];if(t=='nar'&&(s<120||tun||narrows))t=n%2?'rock':'log';if(t=='rock'&&tun)t='log';
+    let q;if(t=='log'){const r=Math.round((.36+rn()*.1)*100)/100,f=rn();let o0=-hw-1.4,o1=hw+1.1;if(f<.3)o1=-hw+hw*2*(.55+rn()*.08);else if(f<.5)o0=hw-hw*2*(.55+rn()*.08);q={k:'log',s:0,r,o0,o1}}
+    else if(t=='rock'){q={k:'rock',s:0,r:Math.round((.72+rn()*.22)*100)/100,off:Math.round((rn()*1.6-.8)*100)/100,u:Math.round((4.3+rn()*1.1)*100)/100}}
+    else{const len=Math.round((7+rn()*4+k*5)*10)/10;q={k:'nar',s:0,len,w:Math.round((1.95+rn()*.3)*100)/100}}
+    // slide forward to the first free stretch
+    for(let i=0;i<40;i++){q.s=Math.round(s*10)/10;const e=ch167Ext(q);if(!busy(e[0],e[1])&&e[1]<P.S-44)break;s+=3}
+    const e=ch167Ext(q);if(e[1]>=P.S-44)break;if(!busy(e[0],e[1])){O.push(q);n++}
+    s=e[1]+(20-8*k)+rn()*10}
+  return ch167Obs.c=O}
+// an obstacle's stretch of trail [from, to]
+function ch167Ext(q){return q.k=='nar'?[q.s-q.len/2,q.s+q.len/2]:q.k=='rock'?[q.s-q.r-1,q.s+q.r+1]:[q.s-q.r,q.s+q.r]}
+// the outer edge of what is left of the trail at s (+o side), or null where the trail is whole. The break runs in on a slant over
+// CH167E tiles at each end; this one edge is both the fall line and where the broken lip is built.
+function ch167Edge(s){const O=ch167Obs();for(let i=0;i<O.length;i++){const q=O[i];if(q.k!='nar')continue;const a=q.s-q.len/2,b=q.s+q.len/2;if(s<=a||s>=b)continue;
+    const hw=ch153Path().hw(s),keep=-hw+q.w,ramp=Math.min(1,Math.min(s-a,b-s)/1.4);return {q,o:hw+.45+(keep-hw-.45)*ramp}}return null}
 // the gap at trail position s (with a margin m inside its ends), or null
 function ch153GapAt(s,m){const G=ch153Course().gaps;m=m||0;for(let i=0;i<G.length;i++){const g=G[i];if(s>g.s-g.len/2+m&&s<g.s+g.len/2-m)return g}return null}
 // ---------------- 0045: the ground and the heights ----------------
@@ -45980,7 +46007,10 @@ function ch153Terrain(I){const P=ch153Path(),C=P.C,best=new Float32Array(I.w*I.h
   for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const X=i-I.x0,Z=j-I.y0,inn=X>=0&&Z>=0&&X<I.w&&Z<I.h,k=inn?Z*I.w+X:-1;let h=cone(i,j);
     if(k>=0&&best[k]<5){const d=best[k],w=d<=.6?1:1-((d-.6)/4.4)*((d-.6)/4.4)*(3-2*(d-.6)/4.4);const wall=sg[k]<0?Math.min(4,Math.max(0,d-.6)*1.6):-Math.max(0,d-.6)*.9;h=ph[k]*w+(Math.max(h,ph[k]+wall)*(sg[k]<0?1:0)+Math.min(h,ph[k]+wall)*(sg[k]<0?0:1))*(1-w);
       // v164: a broken stretch: the ledge has fallen away down the mountain (the inner wall stays); 3250 dresses its edges
-      if(ch153GapAt(bs[k],0)&&(sg[k]<0?d<0:d<7))h=Math.min(h,ph[k]-11-Math.max(0,d)*.6)}
+      if(ch153GapAt(bs[k],0)&&(sg[k]<0?d<0:d<7))h=Math.min(h,ph[k]-11-Math.max(0,d)*.6)
+      // v167: a narrow stretch: the outer part of the ledge has fallen away. Vertices from .9 past its edge are carved: the slope
+      // between them and the kept band starts under the lip slabs (3330 lays them .6 inside the edge), so the trail itself never sags
+      {const E=ch167Edge(bs[k]),o=sg[k]*(d+P.hw(bs[k]));if(E&&o>E.o+.9)h=Math.min(h,ph[k]-9-Math.max(0,o-E.o)*.5)}}
     HF[(j+HPD)*HW+i+HPD]=h}}
 // ================= v153 The Hilltop Ascent — models =================
 //  * Skarrith, the Mountain Coil: v164 rebuilt it in detail (3251: ch153Snake, ch153SnakeHead, ch153SnakeLay).
@@ -49625,9 +49655,12 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
   const emg=R.ph=='intro',lx=-P.TZ[0]*P.sgn,lz=P.TX[0]*P.sgn;let em=0;
   if(emg){em=N.em||0;const d=N.drop||0,eo=1-Math.pow(1-em,3),dd=d*d*(3-2*d),top=-2.5+11.5*eo+.35*Math.sin(t*2.1)*em,k2=Math.max(0,Math.min(1,(R.t-ch153EmT(R)-.55)/.35));
     hs=HO;ho=.45*Math.sin(t*1.9)*em*(1-dd);hy=top+(4.2-top)*dd;
-    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.75+.18*Math.sin(t*7)}
+    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.84+.1*Math.sin(t*3.2)}
   M.head.visible=!(emg&&em<=0);M.hood.scale.set(1+(emg?.18*em:.16*N.rear+(D?.2:0)),1,1);
   const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);const ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);
+  // v167: the jaw and the head's tilt ease toward their pose (they used to snap: wide open → ¾ in one frame at the reveal, and
+  // wide open again when the run starts); quick enough for the chomp
+  {const dt=Math.min(.1,Math.max(0,t-(N.aT==null?t:N.aT)));N.aT=t;const kj=Math.min(1,dt*(D?22:11));N.jw=N.jw==null||N.reset!==R?jaw:N.jw+(jaw-N.jw)*kj;N.pt=N.pt==null||N.reset!==R?pitch:N.pt+(pitch-N.pt)*kj;N.reset=R;jaw=N.jw;pitch=N.pt}
   M.head.rotation.set(pitch,ya+.12*Math.sin(t*1.7)*(D?0:1),.06*Math.sin(t*2.3),'YXZ');M.jaw.rotation.x=jaw*.95;
   // the body along the trail behind it, slithering; the neck rises to the head
   const pts=[],[Hx,Hz,Hh]=slope(HO,0);
@@ -49644,7 +49677,9 @@ function ch153Spit(n){const R=CH153.R;ch153SpitSpawn(ch153SpitPlan(n,R.s,R.o,R.v
 // one glob: your lane · two: a slalom · three: a wall across the trail (jump it)
 function ch153SpitPlan(n,s,o,v){const P=CH153.S.P,T=1.05,G=ch153Course().gaps,span=n==2?CH164.slalom:.5;
   // the whole volley (from x to x + span) lands clear of every broken stretch: not within CH164.gapB before one, CH164.gapA after
-  const clear=x=>{for(let k=0;k<6;k++){const g=G.find(g=>x+span>g.s-g.len/2-CH164.gapB&&x-.5<g.s+g.len/2+CH164.gapA);if(!g)break;x=g.s+g.len/2+CH164.gapA+.6+Math.random()*2}return Math.min(x,P.S-12)};
+  // v167: and clear of every obstacle (ch167Keep: the broken stretches with these margins, each obstacle with a short one)
+  const KP=typeof ch167Keep=='function'?ch167Keep():G.map(g=>[g.s-g.len/2-CH164.gapB,g.s+g.len/2+CH164.gapA]);
+  const clear=x=>{for(let k=0;k<10;k++){const g=KP.find(q=>x+span>q[0]&&x-.5<q[1]);if(!g)break;x=g[1]+.6+Math.random()*2}return Math.min(x,P.S-12)};
   const ls=clear(s+Math.max(4,v)*T+3+Math.random()*4),lim=q=>P.hw(q)-.6,L=[];
   if(n>=3){for(let i=0;i<3;i++)L.push([ls+(Math.random()-.5)*.5,(i-1)*1.75])}
   else{const a=Math.max(-lim(ls),Math.min(lim(ls),o+(Math.random()-.5)*.5));L.push([ls,a]);
@@ -49878,6 +49913,15 @@ function ch164ScuteGeo(){if(CH164B.scG)return CH164B.scG;const o=[[0,.55],[.38,.
 // ---------------- the head ----------------
 // head units (the group is scaled 1.35); +z forward, +y up. The lower jaw hinges at CH164B.jp, the fangs at their roots.
 CH164B.jp=[0,-.26,-.98];
+// v167 the mouth's corners: n points along each side from the hinge (z0) to where the gape stays open (z1); the upper edge is on the
+// skull just above the lip line, the lower one on the jaw's lip line (it swings with the jaw about CH164B.jp)
+CH164B.ckN=6;CH164B.ck={z0:-1.12,z1:-.28,wu:[.96,.9],yu:-.2,wl:[.9,.86],yl:-.28};
+function ch167Cheek(head,ang){const C=CH164B.ck,J=CH164B.jp,n=CH164B.ckN,c=Math.cos(ang),sn=Math.sin(ang);
+  (head.userData.cheek||[]).forEach(q=>{const P=q.geo.attributes.position.array;
+    for(let k=0;k<n;k++){const t=k/(n-1),z=C.z0+(C.z1-C.z0)*t,wu=(C.wu[0]+(C.wu[1]-C.wu[0])*t)*q.s,wl=(C.wl[0]+(C.wl[1]-C.wl[0])*t)*q.s;
+      // the upper edge (fixed); the lower edge: the closed lip point rotated about the hinge (x) by the jaw's angle
+      P[k*6]=wu;P[k*6+1]=C.yu;P[k*6+2]=z;const dy=C.yl-J[1],dz=z-J[2];P[k*6+3]=wl;P[k*6+4]=J[1]+dy*c-dz*sn;P[k*6+5]=J[2]+dy*sn+dz*c}
+    q.geo.attributes.position.needsUpdate=true;q.geo.computeVertexNormals();q.geo.computeBoundingSphere()})}
 function ch153SnakeHead(){const M=ch164Mats(),g=new THREE.Group();g.userData.psNo=1;g.userData.noFade135=1;
   const SPH=CH164B.sph||(CH164B.sph=new THREE.SphereGeometry(1,20,14)),I=new THREE.Matrix4(),mx=ch164Mx;
   const U={skin:[],plate:[],bone:[],horn:[],mouth:[],dark:[]},L={skin:[],plate:[],bone:[],mouth:[],dark:[]};
@@ -49924,6 +49968,13 @@ function ch153SnakeHead(){const M=ch164Mats(),g=new THREE.Group();g.userData.psN
   const tm=new THREE.Mesh(CH164B.tgG,M.tongue);tg.add(tm);tg.scale.z=.25;
   // the hood
   const hood=ch164Hood(M);g.add(hood);
+  // v167 (owner: "the snake's mouth seems glitched when he is revealed"): with the jaw wide open nothing joined the jaws at the
+  // corners of the mouth, so the lower jaw looked torn off. A stretch of skin (outside) and mouth lining (inside) now spans each
+  // corner, from the hinge forward, and is re-laid every frame from the jaw's angle (ch167Cheek).
+  g.userData.cheek=[-1,1].map(s=>{const n=CH164B.ckN,pos=new Float32Array(n*2*3),idx=[];for(let k=0;k<n-1;k++){const a=k*2,b=a+1,c=a+2,d=a+3;idx.push(a,c,b,b,c,d)}
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3).setUsage(THREE.DynamicDrawUsage));geo.setIndex(idx);
+    const out=new THREE.Mesh(geo,CH164B.ckM||(CH164B.ckM=(()=>{const m=new THREE.MeshStandardMaterial({color:0x1d2715,roughness:.5,metalness:.12,side:THREE.DoubleSide});m.userData.noFade135=1;return m})()));
+    out.frustumCulled=false;out.userData.noFade135=1;g.add(out);return {s,geo,m:out}});
   g.userData.jaw=jaw;g.userData.hood=hood;g.userData.fangs=fangs;g.userData.tongue=tg;g.userData.eyeM=M.eye;
   g.scale.setScalar(1.35);return g}
 // the hood: a ribbed fan around the back of the head and the neck, cupped forward, scalloped between the ribs
@@ -49987,7 +50038,7 @@ function ch153SnakeLay(S,pts){const n=pts.length,SUB=CH164B.sub,NS=CH164B.ns,W=N
       m.makeBasis(a,b,c);m.scale(V.h.set(sx*rr,sy*rr,sz*rr));m.setPosition(d);q.setMatrixAt(i,m)});q.instanceMatrix.needsUpdate=true};
   place(S.sc,S.scR,.97,.5,.42,.5);place(S.sp,S.spR,.99,.42,.5,.42)}
 // the head's own motion each frame: fangs swing with the jaw, the tongue flicks, the eyes pulse, venom drips from the fangs
-function ch164HeadAnim(S,t,jaw,rear){const dt=Math.min(.1,Math.max(0,t-(S.lt||t)));S.lt=t;
+function ch164HeadAnim(S,t,jaw,rear){const dt=Math.min(.1,Math.max(0,t-(S.lt||t)));S.lt=t;try{ch167Cheek(S.head,S.jaw.rotation.x)}catch(_){}
   const fo=Math.min(1,Math.max(0,(jaw-.12)/.6));S.fangs.forEach(f=>{f.rotation.x=-1.25*(1-fo)});
   const ph=(t*.42)%1,out=ph<.22?Math.sin(ph/.22*Math.PI):0,tg=S.tongue;tg.scale.z=.25+.85*out*(jaw<.85?1:.4);tg.rotation.x=.12*out*Math.sin(t*31);tg.rotation.y=.18*out*Math.sin(t*23);
   if(S.eyeM)S.eyeM.color.setScalar(.82+.18*Math.sin(t*2.6)+.15*rear);
@@ -53896,4 +53947,168 @@ try{pt166Sync();gold166Sync()}catch(_){}
 // pressed the button instead. While the menu is open they fade and let taps through.
 document.head.insertAdjacentHTML('beforeend','<style>body.sm166 #mbtn,body.sm166 #joy{opacity:.18!important}body.sm166 #mbtn,body.sm166 #mbtn *,body.sm166 #joy,body.sm166 #joy *{pointer-events:none!important}</style>');
 {const sm=$('sysmenu');if(sm){const s=()=>document.body.classList.toggle('sm166',!sm.classList.contains('hide'));new MutationObserver(s).observe(sm,{attributes:true,attributeFilter:['class']});s()}}
+// ================= v167 The Hilltop Ascent: obstacles, a faster mount =================
+// The owner: "Add obstacles in the path during the chase. Make sure the obstacles' collision box is true to the object. Add
+// rolling boulders, parts of the path that are skinnier, and logs. Make the speed of the mount 35% faster."
+//  * The course (ch167Obs in 3160: seeded, the same for every co-op rider, between the broken stretches):
+//    - Fallen logs: a trunk lying across the trail, the whole width (jump it) or from one side (jump it or ride round its end).
+//    - Rolling boulders: one breaks off the mountain wall above the trail (a rumble, dust, a wobble), rolls across the trail and
+//      off the outer lip into the drop. It is timed to cross your line as you arrive at full speed: steer round behind it, boost
+//      past before it gets there, or ease off and let it pass.
+//    - Narrow ledges: the outer part of the ledge has fallen away (carved out of the ground in 3160, dressed here with a broken
+//      lip and a dark drop): keep to the mountain wall. Ride over the edge and you fall (like a broken stretch).
+//  * Collision true to the object (ch167Hit*): the obstacle is tested as exactly the shape that is drawn (a log is a cylinder of
+//    its radius between its two ends; a boulder a sphere of its radius at its real place and height; a narrow ledge its broken edge
+//    line, ch167Edge, which is also where the lip is built) against the mount's own box (CH167.ml long, CH167.mw wide, from its
+//    hooves R.y up to CH167.mh). A jump clears a log only if the hooves really pass over the trunk.
+//  * Hitting a log or a boulder: a crash (no health is lost; the v164 rule stands): the mount stumbles to ×CH167.crashK speed for
+//    CH167.crashT s (a boost still helps a little), which lets Skarrith close in. The log breaks apart; a boulder rolls on.
+//  * Skarrith smashes through any log or boulder in its way (splinters and rock chips), so it never passes through them.
+//  * Venom never lands on an obstacle or just before one (ch167Keep, used by 3250's ch153SpitPlan).
+//  * Speed: every mount runs 35% faster (CH153V.spd 8.2 → 11.07). Skarrith's speed, its slow start and the steering are scaled
+//    with it, so the chase keeps its balance (a run is ~85 s instead of ~115 s).
+var CH167={ml:.85,mw:.4,mh:1.7,crashT:.95,crashK:.35,rockPre:.5,err:0,cue:{},mats:null};
+// ---------------- the speed: everything that sets the pace, ×1.35 ----------------
+CH153V.spd=+(8.2*1.35).toFixed(2);CH153V.slow0=+(6.4*1.35).toFixed(2);CH153V.lat=+(6.6*1.2).toFixed(2);
+CH164.snV=[+(8.55*1.35).toFixed(2),+(8.85*1.35).toFixed(2)];CH164.farK=+(.14*1.35).toFixed(3);
+// ---------------- where venom may not land ----------------
+// [from, to] stretches of trail: each broken stretch with 3250's margins, each obstacle with a short one before and after
+function ch167Keep(){if(ch167Keep.c)return ch167Keep.c;const L=ch153Course().gaps.map(g=>[g.s-g.len/2-CH164.gapB,g.s+g.len/2+CH164.gapA]);
+  ch167Obs().forEach(q=>{const e=ch167Ext(q);L.push([e[0]-6,e[1]+3.5])});return ch167Keep.c=L.sort((a,b)=>a[0]-b[0])}
+// ---------------- materials (shared, made once) ----------------
+function ch167Mats(){if(CH167.mats)return CH167.mats;const mk=o=>{const m=new THREE.MeshLambertMaterial(o);m.userData.noFade135=1;return m};
+  // the cut end of a log: pale wood with dark growth rings and a crack
+  const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),R=ch153R(16707);x.fillStyle='#b89a6a';x.fillRect(0,0,128,128);
+  for(let i=1;i<14;i++){x.strokeStyle='rgba(90,62,32,'+(.35+R()*.35).toFixed(2)+')';x.lineWidth=1+R()*1.5;x.beginPath();x.arc(64+R()*2,64+R()*2,i*4.4,0,7);x.stroke()}
+  x.strokeStyle='#3a2410';x.lineWidth=7;x.beginPath();x.arc(64,64,61,0,7);x.stroke();x.strokeStyle='rgba(40,24,10,.8)';x.lineWidth=2;x.beginPath();x.moveTo(64,64);x.lineTo(64+40,64-22);x.stroke();
+  const M={bark:mk({vertexColors:true,flatShading:true}),end:mk({map:new THREE.CanvasTexture(c)}),wood:mk({color:0x6a4a2a,flatShading:true}),
+    moss:mk({color:0x46682e,flatShading:true}),rock:mk({vertexColors:true,flatShading:true}),chip:mk({color:0x8a6a40,flatShading:true})};
+  M.end.userData.noFade135=1;return CH167.mats=M}
+// ---------------- a fallen log: a trunk of radius r and length len along +x (centred), bark, cut or broken ends ----------------
+// The trunk's surface stays within ±3% of r (the collision cylinder is the drawn trunk); branch stubs and roots stay off the trail.
+function ch167LogModel(r,len,seed,stubA,stubB,rootA,brokeB){const M=ch167Mats(),R=ch153R(seed),g=new THREE.Group();g.userData.psNo=1;g.userData.noFade135=1;
+  const geo=new THREE.CylinderGeometry(r,r,len,14,Math.max(2,Math.round(len*2)),true).rotateZ(Math.PI/2),p=geo.attributes.position,col=[],C=new THREE.Color();
+  for(let i=0;i<p.count;i++){const X=p.getX(i),Y=p.getY(i),Z=p.getZ(i),a=Math.atan2(Z,Y),k=1+.03*Math.sin(a*5+X*1.7+seed)*Math.cos(X*2.3);p.setY(i,Y*k);p.setZ(i,Z*k);
+    const ridge=.5+.5*Math.sin(a*9+Math.sin(X*.8)*1.2),top=Y/r;C.setHex(ridge>.75?0x3a2a1a:ridge>.3?0x5a4028:0x4a3420);if(top>.55&&R()<.5)C.lerp(new THREE.Color(0x4a6a30),.5);col.push(C.r,C.g,C.b)}
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.computeVertexNormals();const tr=new THREE.Mesh(geo,M.bark);tr.castShadow=true;tr.receiveShadow=true;tr.userData.noFade135=1;g.add(tr);
+  // the ends: a sawn / snapped face (a broken end gets splinters instead)
+  [[-1,0],[1,1]].forEach(([sd,j])=>{if(j&&brokeB){const sp=new THREE.Mesh(new THREE.ConeGeometry(r*.95,r*.9,9,1,true).rotateZ(-Math.PI/2),M.wood);sp.position.x=len/2+r*.45;tr.add(sp);
+      for(let k=0;k<6;k++){const s2=new THREE.Mesh(new THREE.ConeGeometry(.05,.22+R()*.2,4).rotateZ(-Math.PI/2),M.wood);const a=k/6*6.283;s2.position.set(len/2+.08,Math.sin(a)*r*.6,Math.cos(a)*r*.6);tr.add(s2)}return}
+    const e=new THREE.Mesh(new THREE.CircleGeometry(r*1.01,14),M.end);e.rotation.y=sd*Math.PI/2;e.position.x=sd*len/2;tr.add(e)});
+  // the root plate at end A (into the mountain wall): a flattened disc of earth and roots
+  if(rootA){const rp=new THREE.Mesh(new THREE.CylinderGeometry(r*2.1,r*1.8,.32,10).rotateZ(Math.PI/2),M.wood);rp.position.x=-len/2-.12;rp.castShadow=true;tr.add(rp);
+    for(let k=0;k<7;k++){const a=k/7*6.283,rt=new THREE.Mesh(new THREE.ConeGeometry(.08,.7+R()*.5,4).rotateZ(Math.PI/2),M.wood);rt.position.set(-len/2-.4,Math.sin(a)*r*1.6,Math.cos(a)*r*1.6);tr.add(rt)}}
+  // branch stubs, only near the ends (off the trail): stubA / stubB are their distances in from each end
+  const stub=(x)=>{const b=new THREE.Mesh(new THREE.ConeGeometry(.08,.55,5),M.wood),a=(R()-.5)*1.2;b.position.set(x,Math.cos(a)*(r+.2),Math.sin(a)*(r+.2));b.rotation.x=a;tr.add(b)};
+  if(stubA>0)stub(-len/2+stubA);if(stubB>0)stub(len/2-stubB);
+  // moss on top
+  for(let k=0;k<4;k++){const m=new THREE.Mesh(CH167.mossG||(CH167.mossG=new THREE.SphereGeometry(1,7,4)),M.moss);m.scale.set(.3+R()*.4,.05,.2+R()*.12);m.position.set((R()-.5)*len*.8,r*.99,(R()-.5)*r*.5);tr.add(m)}
+  return g}
+// ---------------- a boulder: a rough rock of mean radius r (its surface within ±4%: the collision sphere is r) ----------------
+function ch167RockModel(r,seed){const M=ch167Mats(),R=ch153R(seed),geo=new THREE.IcosahedronGeometry(1,2),p=geo.attributes.position,col=[],C=new THREE.Color();
+  const cols=[0x6a645a,0x7a7266,0x5a554c,0x847b6c];
+  for(let i=0;i<p.count;i++){const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize(),k=1+.04*Math.sin(v.x*5+seed)*Math.sin(v.y*4.3+v.z*3.1+seed*.3);p.setXYZ(i,v.x*k*r,v.y*k*r,v.z*k*r);
+    C.setHex(cols[(Math.abs(Math.floor(v.x*3+v.y*5+v.z*7+seed))%4)]);if(v.y>.6)C.lerp(new THREE.Color(0x56703a),.35);col.push(C.r,C.g,C.b)}
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.computeVertexNormals();
+  const m=new THREE.Mesh(geo,M.rock);m.castShadow=true;m.receiveShadow=true;m.userData.psNo=1;m.userData.noFade135=1;return m}
+// ---------------- a narrow ledge: the broken outer lip along the edge line, the dark drop beyond it ----------------
+function ch167Ledge(P,q,i){const R=ch153R(8101+i*41),a=q.s-q.len/2,b=q.s+q.len/2,C=new THREE.Color(),L={p:[],c:[]},D={p:[],c:[]};
+  const at=(s,o,y)=>{const t=P.at(s,o);return [t[0],t[2]+y,t[1]]},edge=s=>{const E=ch167Edge(Math.max(a+1e-3,Math.min(b-1e-3,s)));return E?E.o:P.hw(s)+.45};
+  const tri=(B,p1,p2,p3,c1,c2,c3)=>{B.p.push(...p1,...p2,...p3);[c1,c2==null?c1:c2,c3==null?c1:c3].forEach(c=>{C.setHex(c);B.c.push(C.r,C.g,C.b)})};
+  const quad=(B,p1,p2,p3,p4,ct,cb)=>{cb=cb==null?ct:cb;tri(B,p1,p2,p3,ct,ct,cb);tri(B,p1,p3,p4,ct,cb,cb)};
+  const SL=[0x8a8262,0x7a7454,0x948a68,0x6c664c],RK=[0x3a352e,0x2e2a24,0x443e36],N=Math.max(4,Math.ceil(q.len/.5)),S=k=>a+(b-a)*k/N;
+  // the lip: cracked slabs along the edge, tipped a little toward the drop, a hanging chunk under some of them
+  for(let k=0;k<N;k++){const s0=S(k),s1=S(k+1),e0=edge(s0),e1=edge(s1),j=(R()-.5)*.05,dn=.06+R()*.12,c=SL[(R()*4)|0];
+    const T=[at(s0,e0-.6,.015),at(s1,e1-.6,.015),at(s1,e1+j,.015-dn),at(s0,e0+j,.015-dn)];quad(L,T[0],T[3],T[2],T[1],c);
+    quad(L,T[3],T[2],at(s1,e1+j,-.7),at(s0,e0+j,-.7),c,RK[k%3]);
+    if(R()<.55){const m=(s0+s1)/2,e=edge(m),h=.25+R()*.35;quad(L,at(m-.18,e+.02,-.05),at(m+.18,e+.02,-.05),at(m+.18,e+.02,-.05-h),at(m-.18,e+.02,-.05-h),RK[(R()*3)|0])}}
+  // the drop (unlit): dark across the fallen part (just above the old ground there), the broken face falling into black
+  // the broken face under the lip, falling steeply into black (it hides the carved ground's slope just past the edge)
+  for(let k=0;k<N;k++){const s0=S(k),s1=S(k+1),e0=edge(s0),e1=edge(s1);
+    quad(D,at(s0,e0+.03,-.05),at(s1,e1+.03,-.05),at(s1,e1+.35,-1.6),at(s0,e0+.35,-1.6),0x2a231c,0x0c0a08);
+    quad(D,at(s0,e0+.35,-1.6),at(s1,e1+.35,-1.6),at(s1,e1+1.1,-8),at(s0,e0+1.1,-8),0x0c0a08,0x020202)}
+  // the ends of the break: the slanted faces where the ledge is whole again
+  [[a,1],[b,-1]].forEach(([s,d])=>{const e=edge(s+d*1.4);quad(D,at(s,P.hw(s)+.45,-.05),at(s+d*1.4,e+.03,-.05),at(s+d*1.4,e+1.1,-8),at(s,P.hw(s)+1.2,-8),0x2a231c,0x020202)});
+  const mk=(B,lit)=>{const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(B.p,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(B.c,3));geo.computeVertexNormals();
+    const key=lit?'leL':'leD',M=CH167[key]||(CH167[key]=(()=>{const m=lit?new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide}):new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,fog:false,polygonOffset:true,polygonOffsetFactor:-2});m.userData.noFade135=1;return m})());
+    const m=new THREE.Mesh(geo,M);m.castShadow=!!lit;m.receiveShadow=!!lit;m.userData.psNo=1;m.userData.noFade135=1;return m};
+  const G=new THREE.Group();G.userData.psNo=1;G.userData.noFade135=1;G.add(mk(L,1),mk(D,0));return G}
+// ---------------- building the course (once, with the level) ----------------
+function ch167Build(S){if(S.ob)return S.ob;const P=S.P,root=S.root,O=[];S.ob=O;
+  ch167Obs().forEach((q,i)=>{const hw=P.hw(q.s);
+    if(q.k=='log'){const len=q.o1-q.o0,full=q.o0<-hw&&q.o1>hw,inner=q.o0<-hw,g=ch167LogModel(q.r,len,40+i*7,inner?.35:0,!inner?.35:(full?.3:0),inner,!full);
+      const [x0,z0,h]=P.at(q.s,q.o0),[x1,z1]=P.at(q.s,q.o1);g.position.set((x0+x1)/2,h+q.r,(z0+z1)/2);g.rotation.y=Math.atan2(-(z1-z0),x1-x0);root.add(g);
+      O.push({q,m:g,st:0})}
+    else if(q.k=='rock'){const m=ch167RockModel(q.r,60+i*11);root.add(m);const b={q,m,st:0,o:0,y:0,t:0,rot:new THREE.Quaternion()};O.push(b);ch167RockHome(P,b)}
+    else{root.add(ch167Ledge(P,q,i));[-1].forEach(()=>{const c=ch164CrackDecal(),[x,z,h]=P.at(q.s-q.len/2-2,P.hw(q.s)-.9);c.position.set(x,h+.05,z);c.rotation.y=P.yaw(q.s);c.scale.set(.55,1,.8);root.add(c)});O.push({q,st:0})}});
+  return O}
+// a boulder at rest, up on the mountain wall above its crossing
+function ch167RockStart(P,q){return -P.hw(q.s)-6.2}
+function ch167RockHome(P,b){const q=b.q;b.st=0;b.o=ch167RockStart(P,q);b.t=0;b.vy=0;b.hit=0;b.m.visible=true;b.m.scale.setScalar(1);ch167RockPut(P,b,0)}
+// its height above the trail at o: on the wall it sits on the ground, on the trail on the trail, past the lip it falls (b.y)
+function ch167RockPut(P,b,dt){const q=b.q,[x,z,h]=P.at(q.s,b.o),hw=P.hw(q.s);let y;
+  if(b.st==3){b.vy-=22*dt;b.fy=(b.fy||0)+b.vy*dt;y=b.fy}
+  else if(b.o<-hw){const gh=GH(x,z);y=Math.max(0,gh-h)+q.r}else y=q.r;
+  b.y=y;b.m.position.set(x,h+y,z)}
+// ---------------- each frame ----------------
+function ch167Tick(dt,now){const S=CH153.S,R=CH153.R;if(!S||!R)return;const P=S.P,O=ch167Build(S),lead=ch164LeadS(),run=R.ph=='run';
+  O.forEach(b=>{const q=b.q;
+    if(q.k=='rock'){
+      // the trigger: the leading rider is as far from the crossing as a full-speed rider covers while it rolls there
+      if(b.st==0&&run&&lead>-1e8){const tCross=(q.off-ch167RockStart(P,q))/q.u+CH167.rockPre;if(lead>=q.s-CH153V.spd*tCross&&lead<q.s+2){b.st=1;b.t=0;
+          try{const [x,z]=P.at(q.s,b.o);const p=new THREE.Vector3(x,b.m.position.y,z);burst(p,0x9a8a6a,14,1.4,1.4,.8);if(Math.abs(R.s-q.s)<40)svSnd('crack',1,.6)}catch(_){}
+          ch167Cue('rock','🪨','Rolling boulder!','Steer clear — A / D',R)}}
+      if(b.st==1){b.t+=dt;b.m.position.x+=Math.sin(b.t*60)*.02;if(b.t>=CH167.rockPre){b.st=2;try{if(Math.abs(R.s-q.s)<40)svSnd('heavy',1.1,.6)}catch(_){}}}
+      else if(b.st==2||b.st==3){const hw=P.hw(q.s),o0=b.o;b.o+=q.u*dt;if(b.st==2&&b.o>hw+.35){b.st=3;b.fy=b.y;b.vy=1.2}
+        // rolling: about the axis up × (the way it rolls)
+        const [x0,z0]=P.at(q.s,o0),[x1,z1]=P.at(q.s,b.o),dx=x1-x0,dz=z1-z0,d=Math.hypot(dx,dz);if(d>1e-5){const ax=new THREE.Vector3(dz/d,0,-dx/d);b.m.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,d/q.r))}
+        const yb=b.y;ch167RockPut(P,b,dt);
+        if(b.st==2){b.dT=(b.dT||0)-dt;if(b.dT<=0){b.dT=.12;try{burst(new THREE.Vector3(b.m.position.x,b.m.position.y-q.r*.8,b.m.position.z),0xa89878,3,.8,.6,.5)}catch(_){}}
+          b.sT=(b.sT||0)-dt;if(b.sT<=0){b.sT=.28;try{const dd=Math.abs(R.s-q.s);if(dd<30)svSnd('step',.7*(1-dd/32),.55)}catch(_){}}
+          if(yb-b.y>.25&&b.o>-hw-.3&&!b.land){b.land=1;try{shake(Math.abs(R.s-q.s)<20?.12:.04);svSnd('heavy',.9,.7)}catch(_){}}}
+        if(b.st==3&&b.y<-30){b.st=4;b.m.visible=false}}
+      // Skarrith smashes through a boulder on the trail
+      if((b.st==0||b.st==1||b.st==2)&&b.o>-P.hw(q.s)-1&&R.sn&&Math.abs(R.sn.s-q.s)<q.r+1.2&&R.ph!='intro')ch167Smash(b,'rock')}
+    else if(q.k=='log'){if(b.st==0&&R.sn&&R.ph!='intro'&&R.sn.s>q.s-q.r-1.3)ch167Smash(b,'log')}});
+  if(!run||CH167.off)return;   // CH167.off: tests that measure something else ride without obstacles
+  // the rider against each obstacle near it
+  for(const b of O){const q=b.q;if(Math.abs(q.s-R.s)>(q.k=='nar'?q.len/2+2:6))continue;
+    if(q.k=='log'&&b.st==0&&ch167HitLog(R,q)){ch167Crash(b,'log');break}
+    if(q.k=='rock'&&b.st>=1&&b.st<=3&&!b.hit&&ch167HitRock(R,b)){b.hit=1;ch167Crash(b,'rock');break}}
+  // a narrow ledge: the mount's centre past the broken edge, on the ground: you fall
+  {const E=ch167Edge(R.s);if(E&&R.y<.15&&R.o>E.o+.1){ch153Die('fall',{s:R.s+.7,len:1.2,nar:1});if(R.dead)R.dead.o0=R.o;return}}
+  // the cues as the first of each kind comes into view
+  for(const b of O){const q=b.q,d=q.s-(q.k=='nar'?q.len/2:q.r)-R.s;if(d<0||d>R.v*1.3+4)continue;
+    if(q.k=='log')ch167Cue('log','🪵','Fallen log — JUMP!','Space'+(q.o0>-P.hw(q.s)&&q.o1>P.hw(q.s)||q.o1<P.hw(q.s)?' · or ride round it':''),R);
+    if(q.k=='nar')ch167Cue('nar','⚠','The ledge narrows!','Keep to the mountain wall',R);break}}
+// the mount's box against a log (a cylinder across the trail: its axis at height r over s, from o0 to o1)
+function ch167HitLog(R,q){if(R.o+CH167.mw<q.o0||R.o-CH167.mw>q.o1)return false;
+  const cs=Math.max(R.s-CH167.ml,Math.min(R.s+CH167.ml,q.s)),cy=Math.max(R.y,Math.min(R.y+CH167.mh,q.r)),ds=cs-q.s,dy=cy-q.r;return ds*ds+dy*dy<q.r*q.r}
+// the mount's box against a boulder (a sphere of radius r where it is now)
+function ch167HitRock(R,b){const q=b.q,cs=Math.max(R.s-CH167.ml,Math.min(R.s+CH167.ml,q.s)),co=Math.max(R.o-CH167.mw,Math.min(R.o+CH167.mw,b.o)),cy=Math.max(R.y,Math.min(R.y+CH167.mh,b.y));
+  const ds=cs-q.s,dl=co-b.o,dy=cy-b.y;return ds*ds+dl*dl+dy*dy<q.r*q.r}
+// a crash: the mount stumbles (health untouched); the log breaks apart, a boulder rolls on
+function ch167Crash(b,k){const R=CH153.R;R.crash=CH167.crashT;R.crashes=(R.crashes||0)+1;R.v=Math.min(R.v,CH153V.spd*CH167.crashK);R.bst=0;
+  try{flash('rgba(255,150,60,.5)');shake(ch157Calm()?.12:.32);svSnd('heavy',1.3,.85);svSnd(k=='log'?'crack':'step',1.2,.7);burst(pl.position.clone().add(new THREE.Vector3(0,.8,0)),k=='log'?0x8a6a40:0x8a8274,22,2,1.6,.7)}catch(_){}
+  try{pickup({ic:'💥',t:k=='log'?'Crashed into a log!':'Hit by a boulder!',col:'#ffb060',sub:'Skarrith is gaining — '+(k=='log'?'jump the logs (Space)':'steer clear (A / D)')})}catch(_){}
+  if(k=='log')ch167Smash(b,'log',1)}
+// broken apart (by Skarrith, or by a crash): splinters or rock chips; gone until the chase starts again
+function ch167Smash(b,k,quiet){if(k=='log'){if(b.st)return;b.st=1}else{if(b.st==4||b.st==5)return;b.st=5}const m=b.m;if(!m)return;
+  const p=new THREE.Vector3();m.getWorldPosition(p);m.visible=false;
+  try{burst(p.clone().add(new THREE.Vector3(0,.3,0)),k=='log'?0x6a4a2a:0x7a7266,30,2.6,2.4,.9);burst(p,k=='log'?0x3a2a1a:0x5a554c,14,1.6,1.2,1);
+    const R=CH153.R,d=R?Math.abs(R.s-b.q.s):99;if(!quiet&&d<36)svSnd(k=='log'?'crack':'heavy',1.2*(1-d/40),k=='log'?.9:.6)}catch(_){}}
+// a cue the first time each kind of obstacle comes up (per chase attempt: the first one only)
+function ch167Cue(k,ic,t,sub,R){if(CH167.cue[k]===R)return;CH167.cue[k]=R;try{pickup({ic,t,col:'#ffd27a',sub})}catch(_){}}
+// ---------------- wiring ----------------
+// a crash slows the mount through the chase's own speed rule (3250: want = spd × ch157Mul × venom)
+{const f=ch157Mul;ch157Mul=function(R){const m=f.apply(this,arguments);return R&&R.crash>0?m*CH167.crashK:m}}
+{const f=ch153Build;ch153Build=function(){const S=f.apply(this,arguments);try{ch167Build(S)}catch(e){if(!CH167.err++)console.error('v167 build',e)}return S}}
+{const f=ch153Reset;ch153Reset=function(){const r=f.apply(this,arguments);try{const S=CH153.S;CH167.cue={};(S.ob||[]).forEach(b=>{if(b.q.k=='rock')ch167RockHome(S.P,b);else if(b.q.k=='log'){b.st=0;b.m.visible=true}})}catch(e){if(!CH167.err++)console.error('v167 reset',e)}return r}}
+{const f=ch153Tick;ch153Tick=function(dt,now){const R=CH153.R;if(R&&R.crash>0)R.crash=Math.max(0,R.crash-dt);const r=f.apply(this,arguments);
+  try{ch167Tick(dt,now);
+    // falling off a narrow ledge: down and out over the drop (3250 drifts a gap's fall toward the middle)
+    const R2=CH153.R;if(R2&&R2.ph=='dead'&&R2.dead&&R2.dead.g&&R2.dead.g.nar&&R2.dead.o0!=null)R2.o=R2.dead.o0+R2.dead.t*1.6;
+    // a stumble: the mount pitches and dust flies
+    if(R2&&R2.crash>0&&typeof mModel!='undefined'&&mModel){const k=R2.crash/CH167.crashT;mModel.rotateX(Math.sin(k*Math.PI)*.22);if(Math.random()<dt*25)burst(gY(pl.position,.2),0xa89878,2,1,.8,.5)}}
+  catch(e){if(!CH167.err++)console.error('v167 tick',e)}return r}}
 </script></body></html>
