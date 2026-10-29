@@ -45575,7 +45575,9 @@ function ch153Course(){if(ch153Course.c)return ch153Course.c;
 //  nar  {s, len, w}: the outer part of the ledge has fallen away: only w tiles of trail stay along the mountain wall.
 function ch167Obs(){if(ch167Obs.c)return ch167Obs.c;const P=ch153Path(),G=ch153Course().gaps,O=[];
   let sd=16701;const rn=()=>(sd=sd*16807%2147483647)/2147483647;
-  const busy=(a,b)=>G.some(g=>b>g.s-g.len/2-10&&a<g.s+g.len/2+8)||O.some(q=>{const e=ch167Ext(q);return b>e[0]-9&&a<e[1]+9});
+  // the room around each: 9–10 tiles, but 15 between two things you jump (a log and a broken stretch, two logs): a boosted
+  // jump carries ~13 tiles, so a log closer behind a gap could not be cleared
+  const busy=(a,b,lg)=>G.some(g=>b>g.s-g.len/2-(lg?15:10)&&a<g.s+g.len/2+(lg?15:8))||O.some(q=>{const e=ch167Ext(q),m=lg&&q.k=='log'?15:9;return b>e[0]-m&&a<e[1]+m});
   let s=58,n=0;while(s<P.S-48){const k=s/P.S,hw=P.hw(s),tun=s>596&&s<694,narrows=s>=262&&s<=388;
     // the type: logs and boulders from the start, narrow ledges from the first third
     const pat=['log','rock','log','nar','rock','log','nar','rock','log','rock','nar','log'];let t=pat[n%pat.length];if(t=='nar'&&(s<120||tun||narrows))t=n%2?'rock':'log';if(t=='rock'&&tun)t='log';
@@ -45583,8 +45585,8 @@ function ch167Obs(){if(ch167Obs.c)return ch167Obs.c;const P=ch153Path(),G=ch153C
     else if(t=='rock'){q={k:'rock',s:0,r:Math.round((.72+rn()*.22)*100)/100,off:Math.round((rn()*1.6-.8)*100)/100,u:Math.round((4.3+rn()*1.1)*100)/100}}
     else{const len=Math.round((7+rn()*4+k*5)*10)/10;q={k:'nar',s:0,len,w:Math.round((1.95+rn()*.3)*100)/100}}
     // slide forward to the first free stretch
-    for(let i=0;i<40;i++){q.s=Math.round(s*10)/10;const e=ch167Ext(q);if(!busy(e[0],e[1])&&e[1]<P.S-44)break;s+=3}
-    const e=ch167Ext(q);if(e[1]>=P.S-44)break;if(!busy(e[0],e[1])){O.push(q);n++}
+    for(let i=0;i<40;i++){q.s=Math.round(s*10)/10;const e=ch167Ext(q);if(!busy(e[0],e[1],q.k=='log')&&e[1]<P.S-44)break;s+=3}
+    const e=ch167Ext(q);if(e[1]>=P.S-44)break;if(!busy(e[0],e[1],q.k=='log')){O.push(q);n++}
     s=e[1]+(20-8*k)+rn()*10}
   return ch167Obs.c=O}
 // an obstacle's stretch of trail [from, to]
