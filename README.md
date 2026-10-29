@@ -1484,7 +1484,14 @@ game code on a quiet stage (Hillside Crest I's road; natural spawns off). Four t
   recoloured lower tiers show their own bodies (3110–3140), and the bats (Batwing, Duskwing, Blood Bat) have wings and hind legs only.
 * **Monsters**: every creature that can spawn, grouped by the zone it lives in (the bestiary's `dex141Where`), plus quest
   creatures (the ghost wolf), and each of its moves (basic + signature moves, red warnings shown).
-* **Bosses**: the six Sovereigns, each in its own den with the real fight started, and Vorraxis in the Seeping Lair.
+* **Bosses**: the six Sovereigns, each in its own den with the real fight started, and the main-quest bosses in their own arenas:
+  Vorraxis in the Seeping Lair, Gorthrak in the Frozen Maw (Burningeye Summit I's ice cave) and Qarsul in the Sunken Gate's yard
+  (Searing Sands I: the viewer marks the dig done, `SS165.c1.st` 2, and he forms out of the heaps for real; his Heart of the Dune's
+  16 s wait under the sand, `hidden`, is not listed on its own, it plays inside the signature). Moves that only happen inside another
+  are listed after it (`BOSSFOL` / `BOSSSUB`: Gorthrak's skid after a missed charge, a single Glacier Shell leap, the shell holding;
+  Qarsul's time-out). Phase II moves switch the place too (Gorthrak's falling ice, Qarsul's storm), like the Sovereigns' dens.
+  The Monsters tab lists quest-only creatures (`QMON`: ghost wolf, ice spider, the rift cultists, drowned wretch) apart from
+  "Other creatures" (no zone field or camp has them now: the old roster).
   Every move by name (`BOSSN` maps the move ids to the names in each den's guide `DSTXT`; follow-ups marked), Phase II moves
   (turn Phase II and the den change on), the signature move, entrance, stagger, broken, Reach and a defeat preview (the fall
   track on the living boss). The AI is held still while the viewer runs: `svPick` returns nothing, `svMoveFree` /
@@ -1495,5 +1502,5 @@ Speed (1×–⅒×), pause, frame step, camera presets (relative to the boss's f
 `viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame / setTimeout on a virtual clock
 (`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh` (the build is committed), check with
 `cd test && python3 kv_viewer.py` (`TABS=comp,mon,boss,hero,abil`, `ONLY=`, `SHOT=1` for contact sheets; in the full suite).
-Rebuild and republish it after changing models, attacks, abilities or bosses: read the live page (~90 KB, Artifact `read`
+Rebuild and republish it after changing models, attacks, abilities or bosses: read the live page (~100 KB, Artifact `read`
 with no `path`), then publish `dist/viewer/index.html` with `files: {"game.js": "dist/viewer/game.js"}` and `url` = the URL above.

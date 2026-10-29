@@ -3,7 +3,8 @@
 // Four tabs:
 //  · Companions: every species, every evolution look: basic attack + its 4 abilities
 //  · Monsters:   every creature that spawns (grouped by the zone it lives in, plus quest creatures) and each of its moves
-//  · Bosses:     the six Sovereigns in their own dens and Vorraxis in the Seeping Lair: every move, Phase II, stagger, defeat
+//  · Bosses:     the six Sovereigns in their own dens and the main-quest bosses in their arenas (Vorraxis in the Seeping Lair,
+//                Gorthrak in the Frozen Maw, Qarsul in the Sunken Gate yard): every move, Phase II, signature, stagger, defeat
 //  · Hero:       every class as its beast, every weapon type (each combo hit, full combo) and all 17 class abilities,
 //                base form (rank 1) or evolved form (rank 5, v137 evolution)
 // The field stage is a quiet spot on Hillside Crest I's road; natural spawns are off, the viewer keeps only its own actors.
@@ -40,7 +41,12 @@ const BOSSN={
   s5:{combo:'Crimson Combo',lunge:'Crimson Lunge',wave:'Blood Wave',batstep:'Bat Step',nova:'Sanguine Nova',grasp:'Hemorrhage Grasp',spin:'Danse Macabre',
       awaken:'The Blood Moon',skyfall:'Skyfall',waves:'Blood Wave · three waves',combo5:'Crimson Combo · five cuts',thorns:'Thorned Procession',covenant:'Blood Covenant'},
   mb:{combo:'Scythe Rend',lunge:'Caustic Lunge',tail:'Tail Lash',geyser:'Ooze Geyser',volley:'Spine Volley',burst:'Carapace Burst',awaken:'The Seeping',
-      combo5:'Frenzied Rend',eruption:'Caustic Eruption',volley2:'Double Spine Volley',siphon:'Crystal Siphon'}};
+      combo5:'Frenzied Rend',eruption:'Caustic Eruption',volley2:'Double Spine Volley',siphon:'Crystal Siphon'},
+  gb:{combo:'Skullbreaker',charge:'Glacier Charge',skid:'Glacier Charge · overrun and skid',spin:'Wrecking Whirl',icefall:'Cave-in Roar',hurl:'Glacier Hurl',
+      stomp:'Permafrost Slam',awaken:'Glacial Fury',fury:"Warlord's Fury",hurl3:'Avalanche Hurl',storm:'Icefall Storm',rampage:'Glacier Shell',
+      rleap:'Glacier Shell · one leap',rfail:'Glacier Shell · the shell holds (Avalanche)',broken:'Shattered'},
+  qs:{pummel:'Sandstone Pummel',surge:'Dune Surge',lash:'Vortex Lash',grasp:'Grasping Sands',blast:'Sandblast',collapse:'Collapse',awaken:'The Storm Wakes',
+      fury:'Avalanche Pummel',surge2:'Twin Surge',spires:'Buried Spires',heart:'Heart of the Dune',hfail:'Heart of the Dune · time runs out (Sandstorm Burial)',broken:'Torn Out'}};
 const BOSSN0={intro:'Entrance',awaken:'Awakening (Phase II)',stagger:'Staggered',broken:'Broken (signature stopped)',reach141:'Reach'};
 const BOSSD0={intro:'What it does when the fight starts.',awaken:'At about half health it changes: Phase II, a changed den and new moves.',
   stagger:'A full posture bar: it reels for a few seconds and takes +35% damage.',broken:'What happens when every prop of its signature move is destroyed in time.',
@@ -50,10 +56,44 @@ const MBD={combo:'Close, in front: right cut, left cut, a pause, then a crossing
   volley:'From afar: the dorsal spines bristle and five spines fly out in a fan. Stand in a gap.',burst:'Close: he curls up and trembles, a close blast, then his scales fire along eight lanes, then eight more.',
   awaken:'At 55%: a roar, his seams split and the edge of the lair floods with ooze.',combo5:'Phase II: five cuts and a leaping double cut.',eruption:'Phase II: a ring of geysers closing on you.',
   volley2:'Phase II: two spine fans in a row.',siphon:'Phase II: he leaps to the crystal and drinks from it; burst the three ooze sacs or the floor floods.'};
-const KVB=[0,1,2,3,4,5].map(i=>({k:'s'+i,i})).concat([{k:'mb',i:'mb'}]);
+const GBD={intro:'Walk close to his throne: a wall of ice seals the cave and he rises with his maul.',
+  combo:'Close, in front: a diagonal maul smash, a frost-fist backhand, a pause, then an overhead slam down a line.',
+  charge:'Mid range: he drops his shoulder, the lane shows where he will run, then he charges straight through; frost patches on his path.',
+  skid:'A missed charge: he overruns, drives his maul into the floor to stop and is stuck (Rimelock): hits on the glowing crack in his back deal ×1.5.',
+  spin:'Behind or beside him: he winds the maul out and spins a full turn, a ring around him.',
+  icefall:'He beats his chest and roars at the ceiling: four icicles fall on you, each aimed ahead of you.',
+  hurl:'From afar: he tears a boulder of ice out of the floor and lobs it; it bursts into shards.',
+  stomp:'Close: both fists into the floor, a close blast, then ice spikes erupt in a ring further out.',
+  awaken:'At 55%: a roar, the glacier on his back flares and icicles keep falling from the ceiling for the rest of the fight.',
+  fury:'Phase II: smash, backhand, smash, uppercut and a leaping slam.',hurl3:'Phase II: three ice boulders in a row.',
+  storm:'Phase II: a ring of icicles closing in on you.',
+  rampage:'Signature: armoured in glacier ice he leaps at you three times; after each landing he is Rimelocked: strike the crack in his back twice.',
+  rleap:'One leap of the Glacier Shell: a ring marks the landing, a blast, then his maul freezes in the floor.',
+  rfail:'Fewer than three cracks: the shell holds, he heals and the ceiling comes down; only the rock shelters are safe.',
+  broken:'Three cracks: the shell bursts and he reels in a long stagger.'};
+const QSD={intro:'The three heaps of sand pour into a vortex in the yard and he rises out of it; a wall of whirling sand closes the yard.',
+  pummel:'Close, in front: an overhead smash with the obelisk, a left hook, a pause, then a hammer blow down a line that throws up sand spikes.',
+  surge:'Mid range: he pours himself into the ground and comes through you as a wave of sand; quicksand on his path.',
+  lash:'Behind or beside him: his vortex flares and he whirls a full turn, a ring around him.',
+  grasp:'Fists into the ground: three hands of sand burst up under you; a hand that catches you buries you (dash free).',
+  blast:'From afar: his chest opens and a fan of five sand bolts flies out. Stand in a gap.',
+  collapse:'Close: he slumps into his vortex (a close blast) and bursts back up in a ring further out.',
+  awaken:'At 55%: a roar, the storm thickens, the sand wall closes in and dust devils wander the yard.',
+  fury:'Phase II: five blows and a leaping slam.',surge2:'Phase II: a surge through you and back again.',spires:'Phase II: a ring of spikes closing in, then one under you.',
+  heart:'Signature: he sinks into the sand, three mounds rise and his heart flies into one; the mounds change places. Break the one whose glow flickers. Here nobody breaks it, so it runs to the time-out (about 20 s).',
+  hfail:'Time runs out: he rises healed, three stone slabs burst up and the Sandstorm Burial scours everything not behind them.',
+  broken:'The right mound broken: he is torn out of the ground in a long stagger.'};
+const BOSSD={mb:MBD,gb:GBD,qs:QSD};
+// moves that only happen as part of another one (named after it), and moves the list leaves out (a 16 s wait under the sand)
+const BOSSFOL={gb:{skid:'charge',rleap:'rampage',rfail:'rampage'},qs:{hfail:'heart'}};
+const BOSSSUB={gb:['rleap','rfail'],qs:['hfail']},BOSSHIDE={qs:['hidden']};
+const KVB=[0,1,2,3,4,5].map(i=>({k:'s'+i,i})).concat([{k:'mb',i:'mb'},{k:'gb',i:'gb'},{k:'qs',i:'qs'}]);
+const QBOSS=['mb','gb','qs'];
 function bossInfo(k){if(k=='mb')return {n:'Vorraxis',t:'the Seeping King',ic:'🦂',zone:'Kindlelight II',den:'The Seeping Lair',kind:'Main-quest boss'};
+  if(k=='gb')return {n:'Gorthrak',t:'the Glacierback',ic:'🧌',zone:(PMAP[2]&&PMAP[2].ins[0].n)||'Burningeye Summit I',den:'The Frozen Maw',kind:'Main-quest boss'};
+  if(k=='qs')return {n:'Qarsul',t:'the Living Dune',ic:'🏜️',zone:(PMAP[3]&&PMAP[3].ins[0].n)||'Searing Sands I',den:'The Sunken Gate',kind:'Main-quest boss'};
   const i=+k.slice(1),b=BOSSES[i],D=(typeof DSTXT!='undefined'&&DSTXT[i])||{};return {n:b.name,t:b.title,ic:b.i||'👑',zone:(PMAP[i]&&PMAP[i].n)||D.zone||'',den:D.den||'Sovereign’s Den',kind:'Sovereign'}}
-function bossDesc(k,id){const nm=(BOSSN[k]||{})[id];if(k=='mb')return MBD[id]||BOSSD0[id]||'';
+function bossDesc(k,id){const nm=(BOSSN[k]||{})[id];if(BOSSD[k])return BOSSD[k][id]||BOSSD0[id]||'';
   const D=(typeof DSTXT!='undefined'&&DSTXT[+k.slice(1)])||{},base=(nm||'').split(' · ')[0],norm=s=>String(s).replace(/^[^A-Za-z']+/,'').trim();
   const a=(D.atk||[]).find(x=>norm(x[0])===base);return a?a[1]+(a[2]?' — '+a[2]:''):BOSSD0[id]||''}
 
@@ -144,12 +184,21 @@ function comboN(wt){if(MW[wt])return MW[wt].N;if(WBEH[wt])return 0;const C=CLS[h
 function bossEnter(k){bossLeave(true);KV.dummy=null;KV.mon=null;enemies.slice().forEach(e=>{try{removeE(e)}catch(_){}});
   const B=KV.boss={k,e:null,t0:now_(),ph:1};
   try{if(k=='mb'){const L=MB144L;if(MQ144.st>=2)MQ144.st=1;toPos(L.ent.x,L.ent.z,0);B.c=V(L.cx,0,L.cz);B.Y0=0;B.R=L.hr-1.2}
+    // Gorthrak: the Frozen Maw (Burningeye Summit's ice cave); he waits before his throne until the hero walks in
+    else if(k=='gb'){const L=GB151L;MQ151.st=1;toPos(L.ent.x,L.ent.z,0);B.c=V(L.cx,0,L.cz);B.Y0=0;B.R=L.hr-1.2}
+    // Qarsul: the temple yard of Searing Sands I, the dig done (uncovered, doors shut); he rises out of the heaps
+    else if(k=='qs'){const A=qs165Arena(),F=ss165F(0);if(QS165.e||QS165.form)qs165Reset(false);toPos(A.cx+F.fx*-6,A.cz+F.fz*-6,0);B.c=V(A.cx,0,A.cz);B.Y0=Math.atan2(-F.fx,-F.fz);B.R=A.hr-1.2}
     else{const i=+k.slice(1),I=PMAP[i].ins[3],A=ARN[i];try{bossDone.delete(i)}catch(_){}insArrive(I);B.A=A;B.c=V(A.cx,0,A.cz);B.Y0=Math.atan2(I.en[0]-A.cx,I.en[1]-A.cz);B.R=ARENA_R-2.5}
   }catch(e){console.warn('viewer boss enter',e)}
   KV.where='boss';KV.home.boss=B.c;KV.home.hero=V(B.c.x+Math.sin(B.Y0)*8,0,B.c.z+Math.cos(B.Y0)*8);placeHero(KV.home.hero)}
 // the boss entity: found or spawned, the fight started (the intro plays), the hero inside the arena
 function bossGet(){const B=KV.boss;if(!B)return null;if(B.e&&!B.e.dead&&enemies.includes(B.e))return B.e;B.e=null;
   try{if(B.k=='mb'){const e=MQ144.e&&!MQ144.e.dead&&enemies.includes(MQ144.e)?MQ144.e:mb144Spawn();if(e&&e.sv){B.e=e;if(!(MB144A&&MB144A.f))mb144Start(e)}}
+    else if(B.k=='gb'){const e=MQ151.e&&!MQ151.e.dead&&enemies.includes(MQ151.e)?MQ151.e:gb151Spawn(true);if(e&&e.sv){B.e=e;if(!(GB151A&&GB151A.f))gb151Start(e)}}
+    else if(B.k=='qs'){// the yard is built by the game's own tick once the hero is there; then the dig is marked done and he forms (~4.5 s)
+      if(!SD165.g||!qs165Here())return null;
+      if(SS165.c1.st!==2){SS165.c1.st=2;try{sd165Sync()}catch(err){console.warn('viewer yard',err)}}
+      if(qs165Alive()&&QS165A&&QS165A.f)B.e=QS165.e;else{if(!QS165.form&&!qs165Alive())qs165Form();return null}}
     else{const i=+B.k.slice(1);let e=bossEnt(i);if(!e)e=KV.spawnBoss0(i);if(e&&e.sv){B.e=e;if(AF!==B.A)try{arenaStart(B.A,e)}catch(err){console.warn(err)}}}}
   catch(err){console.warn('viewer boss',err)}
   const e=B.e;if(e){e.m.rotation.y=B.Y0;const bb=new THREE.Box3().setFromObject(e.sv.R.root),sz=bb.getSize(V());B.h=Math.max(1.5,sz.y);B.sz=Math.max(sz.x,sz.y,sz.z);
@@ -157,11 +206,19 @@ function bossGet(){const B=KV.boss;if(!B)return null;if(B.e&&!B.e.dead&&enemies.
   return e}
 function bossLeave(stay){const B=KV.boss;KV.boss=null;KV.die=null;
   if(B)try{if(B.k=='mb'){try{mb144Reset()}catch(_){}if(MQ144.e)try{removeE(MQ144.e)}catch(_){}MQ144.e=null}
+    else if(B.k=='gb'){try{gb151Reset()}catch(_){}if(MQ151.e)try{removeE(MQ151.e)}catch(_){}MQ151.e=null}
+    else if(B.k=='qs'){try{qs165Reset(false)}catch(_){}}
     else{if(AF)arenaFail();const e=bossEnt(+B.k.slice(1));if(e)removeE(e)}}catch(e){console.warn('viewer boss leave',e)}
   if(!stay&&KV.where!=='stage'){enemies.slice().forEach(e=>{try{removeE(e)}catch(_){}});toStage()}}
-function bossPhase(e,ph){const S=e.sv;if(S.ph===ph)return;S.ph=ph;e.bs.ph=ph;if(ph>1)try{S.B.awake&&S.B.awake(e)}catch(_){}renderDetail()}
+// Phase II changes the place too: the Sovereigns' dens (awake), Gorthrak's falling ice, Qarsul's storm
+function bossPhase(e,ph){const S=e.sv;if(S.ph===ph)return;S.ph=ph;e.bs.ph=ph;if(ph>1)try{S.B.awake&&S.B.awake(e)}catch(_){}
+  if(ph>1)try{if(e.gb151)gb151Quake(true);else if(e.qs165&&!QS165.storm)qs165Storm(true)}catch(err){console.warn('viewer phase',err)}renderDetail()}
+// what one move leaves behind that would carry into the next (a shell, a crack, the heart's mounds, slabs)
+function bossClean(e){const S=e.sv;
+  if(e.gb151)try{if(S.rlk)gb151RlkClose(e);S.rp=null;S.rpN=0;S.shell=0;S.crk=0;S.chg=0;S.chgT=0;S.dr=0;gb151HandRock(e,false);gb151ShelterClear()}catch(err){console.warn('viewer gb clean',err)}
+  if(e.qs165)try{qs165HeartClear();qs165SlabClear();S.melt=0;S.chg=0;S.chgT=0}catch(err){console.warn('viewer qs clean',err)}}
 function bossPlay(id){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv,D=S.B.M[id];if(!D)return;
-  svEndMove(e,true);S.mv=null;S.stg=0;S.inv=0;S.cd={};S.rt=null;S.plan=null;S.force=null;S.dieM=0;KV.die=null;
+  svEndMove(e,true);S.mv=null;S.stg=0;S.inv=0;S.cd={};S.rt=null;S.plan=null;S.force=null;S.dieM=0;KV.die=null;bossClean(e);
   enemies.slice().forEach(q=>{if(q.minion&&!q.dead)try{removeE(q)}catch(_){}});
   if((D.ph||1)>1&&S.ph<2)bossPhase(e,2);
   e.m.position.set(B.c.x,e.m.position.y,B.c.z);e.m.rotation.y=B.Y0;
@@ -170,15 +227,15 @@ function bossPlay(id){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv,D=S.
   svStart(e,id,1+((Math.random()*997)|0))}
 function bossDie(){const e=bossGet();if(!e)return;const S=e.sv;svEndMove(e,true);S.mv=null;if(!S.B.die)return;svSnapNow(S);S.dieM=1;S.trk=S.B.die;S.tt=0;KV.die={e,t:0,T:2.6}}
 function bossActions(){const B=KV.boss,e=B&&B.e,out=[];if(!e)return out;const S=e.sv,N=BOSSN[B.k]||{},nm=id=>N[id]||BOSSN0[id]||id;
-  const follow={};for(const id in S.B.M)(S.B.M[id].nx||[]).forEach(q=>{const N=S.B.M[q[0]];if(N&&!N.wt&&!follow[q[0]])follow[q[0]]=id});
+  const follow=Object.assign({},BOSSFOL[B.k]||{});for(const id in S.B.M)(S.B.M[id].nx||[]).forEach(q=>{const N=S.B.M[q[0]];if(N&&!N.wt&&!follow[q[0]])follow[q[0]]=id});
   const add=(id,grp,ic)=>{const D=S.B.M[id];out.push({k:'b'+id,g:grp,i:ic,t:nm(id),s:(follow[id]?'Follows '+nm(follow[id])+' · ':'')+(D.r?'range '+D.r[0]+'–'+D.r[1]+' · ':'')+({f:'in front',b:'behind',s:'beside',sb:'beside or behind',fs:'in front or beside',any:'any side'}[D.a]||'')+' · '+(+D.dur).toFixed(1)+'s',
     d:bossDesc(B.k,id),ms:(D.dur||2)*1000+900,run(){bossPlay(id)}})};
-  const ids=Object.keys(S.B.M),skip={intro:1,awaken:1,stagger:1,broken:1,reach141:1};
-  const sig=ids.filter(id=>S.B.M[id].wt&&S.B.M.broken&&['hundred','sever','heart','scars','feast','covenant','siphon'].includes(id));
+  const ids=Object.keys(S.B.M),skip={intro:1,awaken:1,stagger:1,broken:1,reach141:1},sub=BOSSSUB[B.k]||[];(BOSSHIDE[B.k]||[]).concat(sub).forEach(id=>skip[id]=1);
+  const sig=ids.filter(id=>S.B.M[id].wt&&S.B.M.broken&&['hundred','sever','heart','scars','feast','covenant','siphon','rampage'].includes(id));
   ids.filter(id=>!skip[id]&&!sig.includes(id)&&(S.B.M[id].ph||1)==1).forEach(id=>add(id,'Phase I',follow[id]?'↪️':'⚔️'));
   if(S.B.M.awaken)add('awaken','Phase II','🌕');
   ids.filter(id=>!skip[id]&&!sig.includes(id)&&(S.B.M[id].ph||1)>1).forEach(id=>add(id,'Phase II',follow[id]?'↪️':'🔥'));
-  sig.forEach(id=>add(id,'Signature','✴️'));
+  sig.forEach(id=>add(id,'Signature','✴️'));sub.forEach(id=>{if(S.B.M[id])add(id,'Signature','↪️')});
   ['intro','stagger','broken','reach141'].forEach(id=>{if(S.B.M[id])add(id,'Other',{intro:'🎬',stagger:'💫',broken:'💔',reach141:'🎯'}[id])});
   if(S.B.die)out.push({k:'bdie',g:'Other',i:'💀',t:'Defeat',s:'Its fall (the body stays: this is a preview)',ms:3400,run(){bossDie()}});
   return out}
@@ -190,13 +247,13 @@ function kvBossIdle(e,dt){const S=e.sv,m=e.m,h=KV.home.boss,ai=S.B.ai||{};S.rt=n
   S.walkSp=sp}
 {const f=svPick;svPick=function(){if(KV.on)return null;return f.apply(this,arguments)}}
 {const f=svMoveFree;svMoveFree=function(e,dt,now){if(KV.on&&e&&e.sv){kvBossIdle(e,dt);return}return f.apply(this,arguments)}}
-if(typeof mb144Move=='function'){const f=mb144Move;mb144Move=function(e,dt){if(KV.on&&e&&e.sv){kvBossIdle(e,dt);return}return f.apply(this,arguments)}}
+['mb144Move','gb151Move','qs165Move'].forEach(n=>{if(typeof window[n]!='function')return;const f=window[n];window[n]=function(e,dt){if(KV.on&&e&&e.sv){kvBossIdle(e,dt);return}return f.apply(this,arguments)}});
 {const f=svAfterMove;svAfterMove=function(e,M){f.apply(this,arguments);const S=e&&e.sv;if(KV.on&&S){S.rt=null;S.plan=null;S.dis141=0;S.cl141=0;S.far141=0;if(!S.mv)S.rest=99}}}
 // the defeat preview: the fall track plays on the living boss, then it stands up again
 function kvDieTick(e,dt,now){const K=KV.die;if(!K||K.e!==e)return false;K.t+=dt;const S=e.sv;S.tt=K.t;
   if(K.t>=K.T){S.dieM=0;S.trk=null;S.aw=0;KV.die=null}svApply(e,dt,now);return true}
 {const f=svAI;svAI=function(e,dt,now){if(KV.on&&kvDieTick(e,dt||0,now))return;return f.apply(this,arguments)}}
-if(typeof mb144AI=='function'){const f=mb144AI;mb144AI=function(e,dt,now){if(KV.on&&kvDieTick(e,dt||0,now))return;return f.apply(this,arguments)}}
+['mb144AI','gb151AI','qs165AI'].forEach(n=>{if(typeof window[n]!='function')return;const f=window[n];window[n]=function(e,dt,now){if(KV.on&&kvDieTick(e,dt||0,now))return;return f.apply(this,arguments)}});
 
 // ---------- actions ----------
 function busy(ms){KV.busyT=Math.max(KV.busyT,now_()+ms)}
@@ -243,6 +300,8 @@ function bossBusy(){const B=KV.boss,e=B&&B.e;return !!(e&&e.sv&&(e.sv.mv||KV.die
 function frame(){requestAnimationFrame(frame);if(!KV.on)return;const t=now_(),idle=t>KV.busyT&&!bossBusy();
   // the floating lantern's halo (dark zones) would glow right in front of the side camera; its light stays
   try{if(FLAN.halo.visible)FLAN.halo.visible=false}catch(_){}
+  // Qarsul's wall of whirling sand: the viewer's camera stands outside it, so only its far side is drawn (it still frames the yard)
+  try{if(typeof QS165!='undefined'&&QS165.wall)QS165.wall.L.forEach(o=>{const mt=o.m.material;if(mt.side!==THREE.BackSide){mt.side=THREE.BackSide;mt.needsUpdate=true}})}catch(_){}
   HIDE.forEach(g=>{const el=g();if(el&&!el.classList.contains('hide'))el.classList.add('hide')});try{if(typeof KQMENU!='undefined')KQMENU.on=false}catch(_){}
   hero.hp=heroMax();if(KV.mode!='hero')hero.mp=mpMax();
   if(KV.mode=='boss'){const e=bossGet();
@@ -345,23 +404,29 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 // where each monster lives (the bestiary's table): zone → the instances, camps
 function monWhere(){return typeof dex141Where=='function'?dex141Where():{}}
 function monKeys(){return Object.keys(EN).filter(k=>!/^boss/.test(k)&&k!=='vorraxis'&&((typeof MSET!='undefined'&&MSET[k]&&MSET[k].length)||(EN[k].moves&&EN[k].moves.length)))}
+// creatures that only come in a quest (not a zone's fields or camps), and where
+const QMON={ghostwolf:'Kindlelight III · The Three Sigils (the sigil rituals)',icespider:'Burningeye Summit · The Frozen Gate',
+  ss165zealot:'Searing Sands II · the rift (the cult attacks while Kheprit opens it)',ss165caller:'Searing Sands II · the rift (the cult attacks while Kheprit opens it)',
+  dgwretch:'The Dirge · the Black Channel (they climb onto the raft)'};
 function whereTxt(L){const by={};(L||[]).forEach(o=>{(by[o.z]=by[o.z]||[]).push(ROMAN[o.k]+(o.camp&&!o.roam?' (camp)':''))});return Object.keys(by).map(z=>PMAP[z].n+' '+by[z].join(', ')).join(' · ')}
 function renderList(){const L=Q('#kvList');let h='';
   if(KV.mode=='comp'){const fams={};SPK.forEach(k=>{(fams[SP2[k][0]]=fams[SP2[k][0]]||[]).push(k)});
     for(const f in fams){h+=`<div class="grp">${FAMI[f]||''} ${f}</div><div class="chips">`+fams[f].sort((a,b)=>SP2[a][1]-SP2[b][1]).map(k=>`<button data-k="${k}" class="${KV.sel.comp==k?'on':''}"><i>${SP2[k][3]}</i>${k}<small>T${SP2[k][1]}</small></button>`).join('')+'</div>'}}
   else if(KV.mode=='mon'){const W=monWhere(),G={};
-    monKeys().forEach(k=>{const w=W[k],z=w&&w.length?w[0].z:'q',f=w&&w.length?w[0].k:9;(G[z]=G[z]||[]).push([f,k])});
-    Object.keys(G).sort((a,b)=>(a=='q')-(b=='q')||a-b).forEach(z=>{const P=PMAP[z];h+=`<div class="grp">${z=='q'?'📜 Quest creatures':(P.ic||'')+' '+esc(P.n)}</div><div class="chips">`+
+    monKeys().forEach(k=>{const w=W[k],z=w&&w.length?w[0].z:QMON[k]?'q':'o',f=w&&w.length?w[0].k:9;(G[z]=G[z]||[]).push([f,k])});
+    const rk=z=>z=='q'?1:z=='o'?2:0;
+    Object.keys(G).sort((a,b)=>rk(a)-rk(b)||a-b).forEach(z=>{const P=PMAP[z];h+=`<div class="grp">${z=='q'?'📜 Quest creatures':z=='o'?'🗃️ Other creatures':(P.ic||'')+' '+esc(P.n)}</div><div class="chips">`+
       G[z].sort((a,b)=>a[0]-b[0]||EN[a[1]].n.localeCompare(EN[b[1]].n)).map(([f,k])=>`<button data-k="${k}" class="${KV.sel.mon==k?'on':''}"><i>${EN[k].e}</i>${esc(EN[k].n)}${f<3?'<small>'+ROMAN[f]+'</small>':''}</button>`).join('')+'</div>'})}
-  else if(KV.mode=='boss'){h+='<div class="grp">Sovereigns</div><div class="chips">'+KVB.filter(b=>b.k!='mb').map(b=>{const I=bossInfo(b.k);return `<button data-k="${b.k}" class="${KV.sel.boss==b.k?'on':''}"><i>${I.ic}</i>${esc(I.n)}</button>`}).join('')+'</div>';
-    const I=bossInfo('mb');h+=`<div class="grp">Main-quest bosses</div><div class="chips"><button data-k="mb" class="${KV.sel.boss=='mb'?'on':''}"><i>${I.ic}</i>${I.n}</button></div>`}
+  else if(KV.mode=='boss'){const chip=k=>{const I=bossInfo(k);return `<button data-k="${k}" class="${KV.sel.boss==k?'on':''}"><i>${I.ic}</i>${esc(I.n)}</button>`};
+    h+='<div class="grp">Sovereigns</div><div class="chips">'+KVB.filter(b=>!QBOSS.includes(b.k)).map(b=>chip(b.k)).join('')+'</div>';
+    h+='<div class="grp">Main-quest bosses</div><div class="chips">'+QBOSS.map(chip).join('')+'</div>'}
   else{h+='<div class="grp">Class</div><div class="chips">'+CLSK.map(k=>`<button data-k="${k}" class="${KV.sel.cls==k?'on':''}"><i>${CLS[k].i}</i>${CLS[k].n}</button>`).join('')+'</div>'}
   L.innerHTML=h;Q('#kvTgtRow').style.display=KV.mode=='comp'||KV.mode=='hero'?'':'none'}
 function renderDetail(){const D=Q('#kvDetail');let h='';const A=actions();
   if(KV.mode=='comp'){const k=KV.sel.comp,q=SP2[k];h+=`<h2><i>${q[3]}</i> ${k}</h2><p class="meta">${FAMI[q[0]]||''} ${q[0]} family · tier ${q[1]} · ${xMt(party[0])=='m'?'magic (keeps its distance)':'physical (closes in)'}</p>
     <div class="lbl2">Evolution look</div><div class="seg wide">${STAGEN.map((n,i)=>`<button data-stage="${i}" class="${KV.stage==i?'on':''}">${n}</button>`).join('')}</div>`}
   else if(KV.mode=='mon'){const e=EN[KV.sel.mon],w=whereTxt(monWhere()[KV.sel.mon]);h+=`<h2><i>${e.e}</i> ${esc(e.n)}</h2><p class="meta">${e.hum?'Humanoid':'Creature ('+e.rig+' body)'} · ${e.fam} · ${e.mt=='m'?'magic':'physical'}${e.ranged?' · ranged':''}${e.sc&&e.sc!=1?' · size ×'+e.sc:''}</p>
-    <p class="note">${w?'Lives in '+esc(w)+'.':'Appears during a quest.'} Red ground shapes are the warning players see before the hit lands.</p>`}
+    <p class="note">${w?'Lives in '+esc(w)+'.':QMON[KV.sel.mon]?'Appears in a quest: '+esc(QMON[KV.sel.mon])+'.':'Not found in any zone’s fields or camps now.'} Red ground shapes are the warning players see before the hit lands.</p>`}
   else if(KV.mode=='boss'){const I=bossInfo(KV.sel.boss),e=KV.boss&&KV.boss.e;h+=`<h2><i>${I.ic}</i> ${esc(I.n)}</h2><p class="meta">${esc(I.t)} · ${esc(I.kind)} of ${esc(I.zone)} · ${esc(I.den)}${e?' · Phase '+(e.sv.ph>1?'II':'I'):''}</p>
     <p class="note">${e?'Shown in its own arena. Its AI is held still, so it only moves when you pick a move. Phase II moves turn Phase II on (the den changes with it); pick the boss again to go back to Phase I.':'Entering the arena…'}</p>`}
   else{const C=CLS[KV.sel.cls];h+=`<h2><i>${C.i}</i> ${C.n}</h2><p class="meta">${esc(C.role)}${typeof BRD!='undefined'&&typeof BR_CLS!='undefined'&&BRD[BR_CLS[KV.sel.cls]]?' · played as the '+esc(BRD[BR_CLS[KV.sel.cls]].n.toLowerCase()):''}</p><div class="lbl2">Weapon</div><div class="seg wide wrapb">${wtList(KV.sel.cls).map(w=>`<button data-wt="${w.wt}" class="${KV.wt==w.wt?'on':''}">${w.i} ${w.n}</button>`).join('')}</div>`
