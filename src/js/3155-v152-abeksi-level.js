@@ -17,8 +17,8 @@ function ab152Build(){if(AB152.S)return AB152.S;const I=sp152I('abeksi'),P=ab152
   const S={I,P,G,root,acts:[],lights:[],anim:[],rats:[],pens:[],t:0};AB152.S=S;
   const at=(u,v)=>[I.x0+u,I.y0+v],put=(o,u,v,ry,y)=>{const [x,z]=at(u,v);o.position.set(x,y==null?GH(x,z):y,z);o.rotation.y=ry||0;root.add(o);return o};
   // buildings, one baked group per district; the wall and the skyline
-  P.D.forEach(([a,b],i)=>{const R=ab152R(3100+i*977);root.add(lgGroup('AB152|bld'+i,k=>{P.B.forEach(B=>{const cv=(B[1]+B[3])/2;if(cv>=a-4&&cv<(P.D[i+1]?P.D[i+1][0]-4:999))ab152House(k,B,R,I)})},0))});
-  root.add(lgGroup('AB152|walls',k=>ab152Walls(k,P,I),0));root.add(lgGroup('AB152|sky',k=>ab152Skyline(k,I),0));
+  P.D.forEach(([a,b],i)=>{const R=ab152R(3100+i*977);root.add(lgGroup('AB152|bld'+i,k=>{dt168Up(k,{bmin:.3});P.B.forEach(B=>{const cv=(B[1]+B[3])/2;if(cv>=a-4&&cv<(P.D[i+1]?P.D[i+1][0]-4:999))ab152House(k,B,R,I)})},0))});
+  root.add(lgGroup('AB152|walls',k=>{dt168Up(k,{bmin:.3});ab152Walls(k,P,I)},0));root.add(lgGroup('AB152|sky',k=>{dt168Up(k,{bmin:.5});ab152Skyline(k,I)},0));
   root.children.forEach(m=>m.traverse(o=>{if(o.isMesh)o.castShadow=false}));
   root.add(ab152Streets(P,I,G));
   // props, their colliders (CBLK), the animated ones
@@ -158,7 +158,7 @@ SP152.R.abeksi={park:1,noMount:'🐍 No mount in Abeksi: hooves on the cobbles w
   noRecall:'🐍 The serpent wards block your recall. Find the drain under the south wall, or climb back out at the breach.',onLoad(){AB152Q.st=Math.max(1,AB152Q.st);ab152Restart(false)}};
 // ---------------- the cleft in Hillside Crest I ----------------
 function ab152GateModel(s){const C=AB152C,g=new THREE.Group();g.userData.psNo=1;
-  g.add(lgGroup('AB152|cleft3',k=>{const R=ab152R(5511),rock=[0x4e4a44,0x5a554c,0x46423c,0x615a50];
+  g.add(dt168Group('AB152|cleft3',k=>{dt168Up(k);const R=ab152R(5511),rock=[0x4e4a44,0x5a554c,0x46423c,0x615a50];
     // a rock outcrop with a carved archway set into it; stairs go down into the dark between the posts
     [-1,1].forEach(sd=>{for(let i=0;i<7;i++){const s0=.8+R()*1.0,x=sd*(2.0+s0+R()*1.6),z=-1.3-R()*2.4;k.p('','dod','c',rock[i%4],x,s0*.7+R()*1.5,z,s0,s0*1.25,s0,R()*3,R()*3,R()*3)}});
     for(let i=0;i<6;i++)k.p('','dod','c',rock[i%4],(R()-.5)*4.4,4.0+R()*1.2,-2.0-R()*1.6,1.1+R()*.6,.8+R()*.4,1.1,R()*3,R()*3,R()*3);
@@ -167,13 +167,16 @@ function ab152GateModel(s){const C=AB152C,g=new THREE.Group();g.userData.psNo=1;
     [-1,1].forEach(sd=>{k.p('','box','c',C.stoneL,sd*1.25,1.45,-.2,.55,2.9,.7);k.p('','box','c',C.stone,sd*1.25,.12,-.2,.75,.24,.9);
       for(let y=.5;y<2.7;y+=.42)k.p('','box','c',C.trimD,sd*1.25,y,.02,.36,.06,.04,0,0,sd*.5)});
     k.p('','box','c',C.stoneL,0,3.05,-.35,3.3,.5,.85);k.p('','box','c',C.trim,0,2.78,-.35,3.1,.08,.9);
-    for(let i=0;i<9;i++){const x=-1.4+i*.35;k.p('','sph','c',C.jade,x,3.06+Math.sin(i*1.1)*.12,.12,.14,.12,.1)}k.p('','sph','c',C.jade,1.62,3.1,.14,.2,.16,.16);k.p('','box','g',0xff4020,1.7,3.14,.28,.05,.04,.02);
+    {const sp=[],sr=[];for(let i=0;i<=24;i++){const t=i/24,x=-1.52+t*3.04;sp.push([x,3.06+Math.sin(t*8*1.1/ .99)*.12,.12]);sr.push([.09+.05*Math.sin(t*Math.PI)*.0+.05*t,.08+.04*t])}dt168P(k,dt168Geo('abcl',()=>ch164Tube(sp,sr,10,{})),'c',C.jade,new THREE.Matrix4())}   // v168: one carved serpent body (was 9 beads)
+    k.p('','sph','c',C.jade,1.62,3.1,.14,.2,.16,.16);k.p('','box','g',0xff4020,1.7,3.14,.28,.05,.04,.02);
     // the dark way down: a black opening, stairs sinking into it
     k.p('','box','c',0x040303,0,1.35,-.75,2.0,2.7,.1);for(let i=0;i<6;i++)k.p('','box','c',lgCol(0x6a6458,0x0a0806,i/6),0,.06-i*.16,-.05-i*.32,1.9,.12,.36);
     // a toppled serpent statue beside the way down, the city's banner on a spear stuck in the rock
-    k.L('','c',C.jade,[-2.6,.25,1.1],[-1.6,.35,2.0],.28,.2,7);k.p('','hood','c',lgCol(C.jade,0x3a3a30,.4),-1.5,.5,2.2,.8,.9,.4,1.3,0,.2);k.p('','tor','c',C.jade,-2.9,.3,.6,.7,.35,.7);
+    {const sp=[],sr=[];for(let i=0;i<=30;i++){const t=i/30,a=t*Math.PI*1.6;sp.push([-2.3+Math.cos(a)*.55*(1-t*.3)+t*.9,.24+.02*Math.sin(t*9),.9+Math.sin(a)*.55+t*.9]);sr.push([.24-.1*t,.2-.08*t])}   // v168: the toppled serpent lies on its side, coiled
+      dt168P(k,dt168Geo('abtop',()=>ch164Tube(sp,sr,12,{})),'c',C.jade,new THREE.Matrix4());const e=sp[30];k.p('','sph2','c',C.jade,e[0]+.12,.26,e[2]+.12,.2,.17,.3,0,.8,0);
+      k.p('','hood','c',lgCol(C.jade,0x3a3a30,.4),e[0]+.05,.36,e[2]+.06,.5,.55,.3,1.45,.8,0);k.p('','box','c',C.stone,-2.6,.12,.5,.8,.3,.7,0,.3,.12)}
     k.L('','c',C.woodD,[2.4,0,.6],[2.5,2.9,.4],.04,.035,5);k.S('',C.cloth[0],2.48,2.8,.42,.5,1.2,0,0,3);k.p('','box','m',C.brass,2.5,2.3,.46,.2,.2,.02,0,0,Math.PI/4);
-    for(let i=0;i<4;i++)k.p('','dod','c',rock[i],(R()-.5)*5,.2,.6+R()*1.2,.3+R()*.3,.22,.3)},0));
+    for(let i=0;i<4;i++)k.p('','dod','c',rock[i],(R()-.5)*5,.2,.6+R()*1.2,.3+R()*.3,.22,.3)},CY168W,.05));
   const gl=ab152Pool(1.3,0xff9a40);gl.position.set(0,.05,-.4);g.add(gl);
   g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);   // local +z faces the clearing
   // block the rock (the archway's steps stay open in front: the F prompt is there)

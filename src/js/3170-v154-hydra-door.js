@@ -43,7 +43,7 @@ function hd154Plan(){if(hd154Plan.c)return hd154Plan.c;const I=INSL[7],P=I.path,
 function hd154VaneYaw(k){return k*Math.PI/4}
 // ---------------- models ----------------
 var HD154C={st:0x8a8274,stD:0x5e584e,stL:0xb0a690,rock:[0x6a645a,0x7a7266,0x5a554c,0x8a8274],brz:0xb08a3a,brzD:0x6a4a1a,jade:0x3a9a6a,dark:0x0a0908};
-function hd154DoorKit(){const C=HD154C;return lgGroup('HD154|door',k=>{const R=ab152R(3131);
+function hd154DoorKit(){const C=HD154C;return dt168Group('HD154|door',k=>{dt168Up(k);const R=ab152R(3131);
   // the mountain: a broad cliff face of rock around the door
   for(let i=0;i<26;i++){const x=(R()-.5)*30,y=2+R()*16,z=-3-R()*4,s=2+R()*3;if(Math.abs(x)<7.4&&y<13)continue;k.p('','dod','c',C.rock[i%4],x,y,z,s,s*1.2,s,R()*3,R()*3,R()*3)}
   k.p('','box','c',C.rock[2],0,9,-5.2,32,18,4);
@@ -67,29 +67,30 @@ function hd154DoorKit(){const C=HD154C;return lgGroup('HD154|door',k=>{const R=a
   // guardian statues, braziers and the inscription
   [-1,1].forEach(s=>{const x=s*9.4;k.p('','box','c',C.stD,x,.6,1.0,2.0,1.2,2.0);k.L('','c',C.jade,[x,1.2,1.0],[x,4.4,1.3],.6,.4,7);k.p('','hood','c',lgCol(C.jade,0,.25),x,4.0,1.05,1.4,1.7,.7);
     k.p('','sph','c',C.jade,x,4.6,1.55,.42,.32,.56);[-1,1].forEach(e=>k.p('','box','g',0xffc040,x+e*.16,4.66,2.06,.06,.05,.03))});
-  k.p('','box','c',C.stL,0,1.0,3.4,3.6,1.4,.4,-.25,0,0);for(let i=0;i<5;i++)k.p('','box','c',C.stD,-1.3+i*.65,1.05,3.62,.4,.5,.04,-.25,0,0)},0)}
+  k.p('','box','c',C.stL,0,1.0,3.4,3.6,1.4,.4,-.25,0,0);for(let i=0;i<5;i++)k.p('','box','c',C.stD,-1.3+i*.65,1.05,3.62,.4,.5,.04,-.25,0,0)},HD168W,.05)}
 // a door leaf: carved panels, the wind sigil, studs, a ring handle; origin at its hinge (side s = −1 left, +1 right)
-function hd154Leaf(s){const C=HD154C;return lgGroup('HD154|leaf'+s,k=>{const w=5.0,cx=-s*w/2;
+function hd154Leaf(s){const C=HD154C;return dt168Group('HD154|leaf'+s,k=>{dt168Up(k);const w=5.0,cx=-s*w/2;
   k.p('','box','c',C.st,cx,4.9,0,w,9.8,.9);k.p('','box','c',C.stD,cx,4.9,.46,w-.6,9.2,.06);
   for(let r=0;r<3;r++)k.p('','box','c',C.stL,cx,1.8+r*3.0,.5,w-1.2,2.4,.08);
   k.p('','tor','c',C.brz,-s*(w-.3),5.6,.55,2.0,.3,2.0,Math.PI/2,0,0);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('','box','c',C.brzD,-s*(w-.3)+Math.cos(a)*1.4,5.6+Math.sin(a)*1.4,.58,.5,.12,.06,0,0,a)}
   for(let y=.6;y<9.6;y+=1.2)for(let x=.4;x<w;x+=1.1)k.p('','sph','m',C.brz,-s*x,y,.52,.09);
   k.p('','ring','m',C.brz,-s*(w-1.2),4.2,.62,.45,.6,.45,Math.PI/2,0,0);
-  k.p('','box','m',C.brzD,cx,2.0,.5,w,.3,.1);k.p('','box','m',C.brzD,cx,7.8,.5,w,.3,.1)},0)}
+  k.p('','box','m',C.brzD,cx,2.0,.5,w,.3,.1);k.p('','box','m',C.brzD,cx,7.8,.5,w,.3,.1)},HD168W,.05)}
 // the seals across the closed doors (they crack and fall when the song is sung)
-function hd154Seals(){const C=HD154C;return lgGroup('HD154|seals',k=>{[2.4,5.0,7.6].forEach(y=>{k.p('','box','m',C.brz,0,y,.8,10.6,.5,.3);k.p('','cyl','m',C.brzD,0,y,.95,.6,.2,.6,Math.PI/2,0,0)})},0)}
-function hd154Chime(j){const C=HD154C;return lgGroup('HD154|chime'+j,k=>{k.p('','box','c',C.stD,0,.25,0,1.2,.5,1.2);k.p('','box','c',C.st,0,1.4,0,.8,1.8,.6,0,0,(j-2)*.04);
-  for(let i=0;i<3;i++)k.p('','box','c',C.stL,0,.9+i*.5,.31,.5,.08,.02,0,0,(i%2?.6:-.6))},0)}
-function hd154Stone(){const C=HD154C;return lgGroup('HD154|stone',k=>{const R=ab152R(77);k.p('','box','c',C.stD,0,.3,0,2.6,.6,2.6);
+function hd154Seals(){const C=HD154C;return dt168Group('HD154|seals',k=>{dt168Up(k);[2.4,5.0,7.6].forEach(y=>{k.p('','box','m',C.brz,0,y,.8,10.6,.5,.3);k.p('','cyl','m',C.brzD,0,y,.95,.6,.2,.6,Math.PI/2,0,0)})},HD168W,.05)}
+function hd154Chime(j){const C=HD154C;return dt168Group('HD154|chime'+j,k=>{dt168Up(k);k.p('','box','c',C.stD,0,.25,0,1.2,.5,1.2);k.p('','box','c',C.st,0,1.4,0,.8,1.8,.6,0,0,(j-2)*.04);
+  for(let i=0;i<3;i++)k.p('','box','c',C.stL,0,.9+i*.5,.31,.5,.08,.02,0,0,(i%2?.6:-.6))},HD168W,.05)}
+function hd154Stone(){const C=HD154C;return dt168Group('HD154|stone',k=>{dt168Up(k);const R=ab152R(77);k.p('','box','c',C.stD,0,-.1,0,2.6,1.4,2.6);   // v168: its foot runs into the ground (it floated on a slope)
   k.p('','cyl','c',C.stD,0,2.6,0,.7,4.2,.7);k.p('','cyl','c',C.st,0,.9,0,.85,.6,.85);
   for(let i=0;i<3;i++){const y=1.6+i*1.1;k.p('','tor','c',C.stL,0,y,0,.76,.12,.76);for(let q=0;q<4;q++){const a=q*Math.PI/2+i*.4;k.p('','box','c',C.dark,Math.sin(a)*.66,y+.5,Math.cos(a)*.66,.34,.12,.06,0,a,0)}}
   // a jade serpent coiling up the monolith, its head under the vane
-  for(let i=0;i<34;i++){const t=i/33,a=t*Math.PI*4.2,y=.9+t*3.6,r=.78;k.p('','sph','c',i%3?C.jade:lgCol(C.jade,0,.25),Math.sin(a)*r,y,Math.cos(a)*r,.2-.06*t,.17-.05*t,.2-.06*t)}
-  k.p('','box','c',C.stL,0,4.75,0,1.0,.24,1.0);for(let i=0;i<5;i++)k.p('','dod','c',C.rock[i%4],(R()-.5)*3,.15,(R()-.5)*3,.3,.2,.3)},0)}
-function hd154Vane(){const C=HD154C;return lgGroup('HD154|vane',k=>{k.p('','cyl','m',C.brz,0,.5,0,.06,1.0,.06);
+  {const sp=[],sr=[];for(let i=0;i<=60;i++){const t=i/60,a=t*Math.PI*4.2,r=.8;sp.push([Math.sin(a)*r,.9+t*3.6,Math.cos(a)*r]);sr.push([.19-.07*t,.16-.05*t])}dt168P(k,dt168Geo('hdcoil',()=>ch164Tube(sp,sr,12,{tip:.12})),'c',C.jade,new THREE.Matrix4());   // v168: one smooth coiled body (was 34 beads)
+    const e=sp[60];k.p('','sph2','c',lgCol(C.jade,0,.15),e[0]*1.02,e[1]+.08,e[2]*1.02,.2,.15,.26,0,Math.atan2(e[0],e[2])+Math.PI/2,0)}
+  k.p('','box','c',C.stL,0,4.75,0,1.0,.24,1.0);for(let i=0;i<5;i++)k.p('','dod','c',C.rock[i%4],(R()-.5)*3,.15,(R()-.5)*3,.3,.2,.3)},HD168W,.05)}
+function hd154Vane(){const C=HD154C;return dt168Group('HD154|vane',k=>{dt168Up(k);k.p('','cyl','m',C.brz,0,.5,0,.06,1.0,.06);
   // a bronze serpent: the head points where the vane points (+z), the tail a fin catching the wind
   k.L('','m',C.brz,[0,1.0,-1.1],[0,1.05,.6],.12,.16,6);k.p('','sph2','m',C.brz,0,1.08,.85,.22,.17,.34);k.p('','box','g',0xffd060,0,1.13,1.05,.12,.03,.03);
-  k.p('','box','m',C.brzD,0,1.2,-1.0,.04,.7,.7,.5,0,0)},0)}
+  k.p('','box','m',C.brzD,0,1.2,-1.0,.04,.7,.7,.5,0,0)},HD168W,.05)}
 // the wind ribbon: a glowing tube arcing from a stone to the door, its stripes flowing towards the door
 function hd154Ribbon(a,b,col){const mid=new THREE.Vector3((a.x+b.x)/2,Math.max(a.y,b.y)+3+a.distanceTo(b)*.05,(a.z+b.z)/2),c=new THREE.QuadraticBezierCurve3(a,mid,b);
   const g=new THREE.TubeGeometry(c,Math.max(40,Math.round(a.distanceTo(b)/2)),.5,8,false),
@@ -204,3 +205,5 @@ SP152.trk.hydra=I=>{if(I.g!==7||hd154Done())return null;const n=hd154N();
 // ---------------- the cheat "All quests complete" (3060) also finishes the Hillside Crest chapters ----------------
 {const f=cheatQuests147;cheatQuests147=function(){let n=0;try{if(AB152Q.st<2){AB152Q.st=2;n++}if(CH153Q.st<2){CH153Q.st=2;n++}if(HD154.st<2){HD154.st=2;HD154.song=null;HD154.op=null;n++;hd154Sync()}}catch(e){console.warn('v154 cheat',e)}
   const r=f.apply(this,arguments);if(n)try{say('📜 Cheat: '+n+' Hillside Crest main quest chapter'+(n==1?'':'s')+' marked complete.')}catch(_){}return (r|0)+n}}
+// v168: the door's stone weathers (grime at the foot, rain streaks, moss on top), its bronze a little mottled
+var HD168W={c:{g:[1.2,.3],n:.14,s:.35,m:[0x4a5a34,.7,.4],sd:51},m:{n:.2,sd:6}};
