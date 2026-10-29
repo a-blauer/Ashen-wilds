@@ -32,7 +32,8 @@ done
 fi
 echo "run $id: $(gh run view "$id" --json url --jq .url)"
 t0=$(date +%s)
-gh run watch "$id" --interval 30 >/dev/null 2>&1 || true
+# wait for the run (gh run watch fails in this workspace: it returned at once and the results were read too early)
+until [ "$(gh run view "$id" --json status --jq .status 2>/dev/null || true)" = completed ]; do sleep 30; done
 mkdir -p test/out/suite
 out=test/out/suite/gh-$suite.summary.txt
 note() { gh api "repos/$repo/check-runs/$1/annotations" --jq ".[]|select((.title//\"\")|test(\"$2\"))|.message" 2>/dev/null || true; }
