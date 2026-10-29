@@ -8,6 +8,10 @@
 // setTimeout all run on KVCLK.vt, which advances by (real frame time × speed) once per real frame.
 window.AW_NOTITLE=1;window.KQV=1;
 try{localStorage.clear()}catch(_){}
+// warnings and errors, for the viewer's Look → Info (a phone has no console to read)
+window.KVLOG=[];(function(){const keep=(t,a)=>{try{const m=t+' '+[].map.call(a,x=>x&&x.message?x.message:typeof x=='object'?JSON.stringify(x):String(x)).join(' ');if(!/fishing|enemy guard/i.test(m)){KVLOG.push(m);if(KVLOG.length>40)KVLOG.shift()}}catch(_){}};
+  ['warn','error'].forEach(k=>{const f=console[k];console[k]=function(){keep(k,arguments);return f.apply(console,arguments)}});
+  addEventListener('error',e=>keep('error',[e.message]));addEventListener('webglcontextlost',()=>keep('error',['WebGL context lost']),true)})();
 (function(){
   const rp=performance.now.bind(performance),rRAF=window.requestAnimationFrame.bind(window),rST=window.setTimeout.bind(window),rCT=window.clearTimeout.bind(window);
   const T=window.KVCLK={vt:rp(),speed:1,step:0,lastTs:null,q:[],id:1e7,frame:0,manual:false,cbs:[]};
@@ -389,6 +393,7 @@ body.kv-on #kvBoot{display:none}
   #kvList{max-height:20vh}
   #kvHint{display:none}
 }
+#kvGfxOut{margin:2px 0 0;font-size:.68rem;word-break:break-word;max-height:22vh;overflow:auto;user-select:text}
 </style></head><body><div id="kvBoot">Kill Quest · Animation Viewer<small>Loading the game models…</small></div>
 <div class="wrap">
 <h1>Kill Quest</h1>
@@ -1388,16 +1393,15 @@ const POST=(()=>{
   const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
    mBlur=M('uniform sampler2D t;uniform vec2 dir;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;c+=(texture2D(t,vUv+dir*1.385).rgb+texture2D(t,vUv-dir*1.385).rgb)*.3162;c+=(texture2D(t,vUv+dir*3.23).rgb+texture2D(t,vUv-dir*3.23).rgb)*.0703;gl_FragColor=vec4(c,1.);}',{t:{value:null},dir:{value:new THREE.Vector2()}}),
    mRay=M('uniform sampler2D t;uniform vec2 sun;varying vec2 vUv;void main(){vec2 d=(sun-vUv)*.034;vec2 uv=vUv;float w=1.;vec3 a=vec3(0.);for(int i=0;i<28;i++){uv+=d;a+=texture2D(t,uv).rgb*w;w*=.935;}gl_FragColor=vec4(a/18.,1.);}',{t:{value:null},sun:{value:new THREE.Vector2(.5,.5)}}),
-   mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx,ghU,ghA;uniform vec2 res,ghC,ghR;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
+   mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx;uniform vec2 res;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
    vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
    float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
    void main(){vec3 c=texture2D(t,vUv).rgb+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
     float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c*=mix(shT,vec3(1.),smoothstep(0.,.45,l));c=mix(c,c*hiT,smoothstep(.45,1.,l)*.6);
     vec2 q=vUv-.5;c*=1.-dot(q,q)*vig;c+=(hs(vUv*vec2(1731.,977.)+time)-.5)*grain;
-    if(ghU>0.){vec2 g=(vUv-ghC)*vec2(ghA,1.);c*=mix(1.,1.-smoothstep(ghR.x,ghR.y,length(g)),ghU);}   // v169: the camera out of the map: black but for the window round the hero (3350)
     if(psx>.5){vec2 px=floor(vUv*res);vec2 a=px*.5;float b2a=fract(dot(floor(a),vec2(.5,floor(a.y)*.75)));float b2b=fract(dot(px,vec2(.5,px.y*.75)));float bay=b2a*.25+b2b;c=floor(clamp(c,0.,1.)*31.+bay)/31.;}
     gl_FragColor=vec4(c,1.);}`,
-   {t:{value:null},bl:{value:null},ry:{value:null},ex:{value:1},bk:{value:.4},rk:{value:.3},sat:{value:.95},vig:{value:1.1},time:{value:0},grain:{value:.035},rayC:{value:new THREE.Color(1,.9,.7)},psx:{value:PSXON&&PSXH>0?1:0},res:{value:new THREE.Vector2(320,240)},ghU:{value:0},ghA:{value:1},ghC:{value:new THREE.Vector2(.5,.5)},ghR:{value:new THREE.Vector2(.3,.5)},shT:{value:new THREE.Color(.9,.96,1.08)},hiT:{value:new THREE.Color(1.08,1,.9)}});
+   {t:{value:null},bl:{value:null},ry:{value:null},ex:{value:1},bk:{value:.4},rk:{value:.3},sat:{value:.95},vig:{value:1.1},time:{value:0},grain:{value:.035},rayC:{value:new THREE.Color(1,.9,.7)},psx:{value:PSXON&&PSXH>0?1:0},res:{value:new THREE.Vector2(320,240)},shT:{value:new THREE.Color(.9,.96,1.08)},hiT:{value:new THREE.Color(1.08,1,.9)}});
   let r0,rb1,rb2,rr,sz=new THREE.Vector2();
   const P={on:true,u:mComp.uniforms,bu:mBright.uniforms,resize(){ren.getDrawingBufferSize(sz);let w=Math.max(2,sz.x|0),h=Math.max(2,sz.y|0);[r0,rb1,rb2,rr].forEach(t=>t&&t.dispose());if(PSXON&&PSXH>0){h=Math.min(h,PSXH);w=Math.max(2,Math.round(h*sz.x/Math.max(1,sz.y)));r0=new THREE.WebGLRenderTarget(w,h,Object.assign({},opt,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter}))}else r0=T(w,h,true);mComp.uniforms.res.value.set(w,h);const q=Math.max(2,w>>2),qh=Math.max(2,h>>2);rb1=T(q,qh);rb2=T(q,qh);rr=T(q,qh)},
    pass(m,src,dst){fq.material=m;if(src)m.uniforms.t.value=src.texture;ren.setRenderTarget(dst);ren.render(ps,oc)},
@@ -1605,7 +1609,8 @@ MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v124Rim=='function'&&v1
 //     Plants themselves are see-through without the dark inside (GH169_SEE).
 //   * back faces (the inside of a two-sided house) are black in the colour pass; one-sided materials never show their back.
 //   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
-//     With the camera out of the map (inside the rock or past the edge) the whole view fades to black but for the window (3350).
+//     So is the ground's cliff where it drops off at the edge (its slope faces out of the map, ghEdge in 3190).
+//     With the camera out of the map (inside the rock or past the edge) the background fades to black (3350).
 var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,3.4],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
 GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
   uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
@@ -1627,20 +1632,22 @@ GH169.GATE=`if(uGhOn>.5){if(uGhM<.5){if(ghw>.004)discard;}else{if(ghw<=.004)disc
  #endif
  }}else if(uGhM>.5)discard;
 `;
-// after the colour is done (p = the world position varying): black outside the instance; the glass blend in the colour pass
+// after the colour is done (p = the world position varying): black outside the instance (and the ground's outward cliff at its
+// edge: ghEdge, 3190); the glass blend in the colour pass. Glass fades fully clear toward the camera (uGhN): a wall or rock right
+// at the lens is never a pale veil over the screen, and has no dark inside (owner: "a difference in lighting at some angles")
 GH169.tail=p=>`
  if(uGhOn>.5){
   #ifdef GH169_VOID
-  if(gh169Out(${p}))gl_FragColor.rgb=vec3(0.);
+  if(gh169Out(${p})||ghEdge>.5)gl_FragColor.rgb=vec3(0.);
   #endif
-  if(uGhM>1.5){float ga=1.-ghw*(1.-uGhA);vec3 gc=gl_FragColor.rgb*ga;
+  if(uGhM>1.5){float nf=smoothstep(uGhN.x,uGhN.y,length(${p}-cameraPosition));float ga=1.-ghw*(1.-uGhA*nf);vec3 gc=gl_FragColor.rgb*ga;
    #ifdef GH169_DS
    if(!gl_FrontFacing)gc=vec3(0.);
    #endif
    #ifdef GH169_SEE
    gl_FragColor=vec4(gc,ga);
    #else
-   gl_FragColor=vec4(gc,1.-(1.-ga)*uGhK);
+   gl_FragColor=vec4(gc,1.-(1.-ga)*mix(1.,uGhK,nf));
    #endif
   }}`;
 // gh169Shader(sh, material, world position varying, see-through plant?, black outside the instance?): uniforms, the head, the tail;
@@ -47462,6 +47469,9 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     // v169: the shared see-through rule (0061): glass with a dark inside instead of a dithered hole
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     float ghw=0.;vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;
+    // v169: the cliff the ground drops off at the instance's edge (within a tile of it, sloping down out of the map) is black (0061)
+    float ghEdge=0.;{float dl=vC135.x-uGhV.x,dr=uGhV.z-vC135.x,dt=vC135.z-uGhV.y,db=uGhV.w-vC135.z,me=min(min(dl,dr),min(dt,db));
+     vec2 o=me==dl?vec2(-1.,0.):me==dr?vec2(1.,0.):me==dt?vec2(0.,-1.):vec2(0.,1.);if(me<1.1&&dot(fn.xz,o)>.3)ghEdge=1.;}
     if(uOn135>.5&&uOn157>.5){float hf=vC135.y-uPl157.y+1.1;
      ghw=gh169W(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));}   // flat ground below the waist stays solid
     `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true)};
@@ -55013,12 +55023,11 @@ function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt16
 //  2. POST.after: only the layer's meshes are drawn again (the rest of the scene is hidden for the walk): a depth pass (the nearest
 //     see-through surface per pixel), then the colour pass twice: stencil != 1 with the dark inside (uGhK = GH169.k), stencil == 1
 //     with k 1 (the hero, the ground round them, plants behind the glass show through at 1 - a). Blend: ONE, ONE_MINUS_SRC_ALPHA (premultiplied, 0061 tail).
-//  3. Outside the instance you are in (its rectangle, GH169.vm margin; with the camera out past the edge, from one tile inside:
-//     the cliff face the ground drops off) the ground is black (0061), and a black floor lies far under the instance (GH169C.vo),
-//     so the void past the edge is black, and the water stops at the edge. With the camera out of the map (inside the rock or
-//     past the edge) the view fades to black but for the window round the hero (gh169Away, in the final composite).
+//  3. Outside the instance you are in (its rectangle) the ground is black, and so is the cliff it drops off at the edge (0061,
+//     3190 ghEdge); a black floor lies far under the instance (GH169C.vo) and the water stops at the edge, so the void past the
+//     edge is black. With the camera out of the map (inside the rock or past the edge) the background fades to black too.
 var GH169L=3,GH169C={live:0,pass:0,f:0,cand:[],top:new Set(),hid:[],mats:[],ct:0,vo:null,vk:null,st:{cand:0,passes:0,ms:0,skip:0}};
-GH169.vm=.5;GH169.vy=-75;
+GH169.vy=-75;
 // the mesh's bounds in the world (instanced meshes: all instances, cached; top = the highest instance's top, local y)
 function gh169Sphere(o,out){const g=o.geometry;if(!g)return null;
   if(o.isInstancedMesh){let s=o.userData.gh169S;
@@ -55059,10 +55068,8 @@ function gh169Mark1(o){if(!o.isMesh&&!o.isPoints&&!o.isLine&&!o.isSprite)return;
 function gh169Chars(){const S=f135Skip();try{gh169Clear(SKY.material);gh169Clear(WTR.w.material);gh169Clear(WTR.l.material)}catch(_){}try{(typeof party!='undefined'?party:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
   try{(typeof comps!='undefined'?comps:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
   S.forEach(o=>{if(o&&o.traverse)o.traverse(gh169Mark1)})}
-// the black floor under the instance you are in, and the rectangle past which everything is black. An instance's ground drops
-// off a cliff in its last tile (e.g. 12.7 -> -49.6 at the edge): with the camera out past the edge that cliff face is what you
-// look at, so the black then starts one tile inside (GH169.vin) instead of half a tile outside (GH169.vm)
-GH169.vin=1.05;
+// the black floor under the instance you are in, and the rectangle past which the ground is black (the cliff it drops off at
+// the edge is black too: 3190 ghEdge)
 function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV.value;
   if(k!==C.vk||!C.vo){C.vk=k;
     if(!C.vo){const o=C.vo=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,fog:false}));
@@ -55070,23 +55077,19 @@ function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV
     const o=C.vo;o.visible=!!I;if(I){o.position.set(I.x0+I.w/2,GH169.vy,I.y0+I.h/2);o.scale.set(I.w+800,1,I.h+800)}
     o.updateMatrix();o.updateMatrixWorld(true)}
   if(!I){V.set(-1e6,-1e6,1e6,1e6);C.out=false;return}
-  const c=FADE.cam.value,out=C.out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h,m=out?-GH169.vin:GH169.vm;
-  V.set(I.x0-m,I.y0-m,I.x0+I.w+m,I.y0+I.h+m)}
+  const c=FADE.cam.value;C.out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h;V.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h)}
 // The camera out of the map: inside the rock (below the ground under it: behind a wall step it stays where the player put it)
-// or out past the instance's edge. Then the whole view fades to black (GH169.fadeT seconds) but for the round window round the
-// hero, in the final composite (0060 mComp: ghU, ghC, ghR, ghA), so nothing under or outside the map shows (fog, the void,
-// boulders buried in the wall); the background fades to black with it. It fades back when the camera returns.
+// or out past the instance's edge. Then the background (what shows under the map from in there) fades to black over
+// GH169.fadeT s, and so does the glass (to fully clear, gh169K / uGhA), and back when the camera returns; the fade runs on the
+// game's clock (homeTick).
 GH169.fadeT=.35;
-// the fade runs with the game's clock (homeTick, below), the window is placed when drawing
+// with the camera out of the map what stands between it and the hero fades fully clear instead of turning to glass (from inside
+// the wall the boulders lining it were stacked pale glass over the hero), and nothing behind is darkened
+function gh169K(){const fd=GH169C.fade||0;return GH169.k+(1-GH169.k)*fd}
 function gh169AwayTick(dt){const C=GH169C,c=FADE.cam.value;let u=false;try{u=c.y<GH(c.x,c.z)-.05}catch(_){}
   const away=GH169.on&&(u||!!C.out)&&!(typeof IC151!='undefined'&&IC151.on);C.under=u;
   C.fade=Math.max(0,Math.min(1,(C.fade||0)+(away?1:-1)*Math.min(.1,dt||0)/GH169.fadeT))}
 {const f=homeTick;homeTick=function(dt){const r=f.apply(this,arguments);try{gh169AwayTick(dt)}catch(e){if(!GH169C.err3){GH169C.err3=1;console.warn('v169 fade',e)}}return r}}
-function gh169Away(){const C=GH169C,c=FADE.cam.value,P=POST.u;P.ghU.value=C.fade||0;if(!C.fade)return;
-  // the window on screen: the hero's spot, GH169.R measured at the hero's distance (the same window the walls turn to glass in)
-  const v=GH169V.copy(FADE.pl.value).project(cam);P.ghC.value.set((v.x+1)/2,(v.y+1)/2);
-  const fw=GH169W.set(0,0,-1).applyQuaternion(cam.quaternion),dep=Math.max(.5,GH169S.c.copy(FADE.pl.value).sub(c).dot(fw)),k=.5/(dep*Math.tan(cam.fov*Math.PI/360));
-  P.ghR.value.set(GH169.R[0]*k,GH169.R[1]*k);P.ghA.value=cam.aspect}
 // the water: never past the instance's edge (its sheet spans the void at sea level: from out there it was a pale sheet over all)
 function gh169Water(){try{[WTR.w,WTR.l].forEach(o=>{const m=o&&o.material;if(!m||m.userData.gh169W)return;m.userData.gh169W=1;
   m.uniforms.uGhV=GH169.U.uGhV;m.uniforms.uGhOn=GH169.U.uGhOn;
@@ -55108,17 +55111,17 @@ POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
     B.color.setLocked(false);B.color.setMask(true);B.color.setLocked(true);B.depth.setLocked(false);B.depth.setMask(false);B.depth.setLocked(true);
     B.stencil.setLocked(false);B.stencil.setTest(true);B.stencil.setMask(0);B.stencil.setOp(THREE.KeepStencilOp,THREE.KeepStencilOp,THREE.KeepStencilOp);
     B.stencil.setFunc(THREE.NotEqualStencilFunc,1,0xff);B.stencil.setLocked(true);
-    U.uGhM.value=2;C.pass=2;U.uGhK.value=GH169.k;ren.render(scene,cam);
+    U.uGhM.value=2;C.pass=2;U.uGhK.value=gh169K();ren.render(scene,cam);
     B.stencil.setFunc(THREE.EqualStencilFunc,1,0xff);U.uGhK.value=1;ren.render(scene,cam);
     C.st.passes++}
   catch(e){if(!C.err){C.err=1;console.warn('v169 see-through',e)}}
-  finally{U.uGhM.value=0;U.uGhK.value=GH169.k;C.pass=0;
+  finally{U.uGhM.value=0;U.uGhK.value=gh169K();C.pass=0;
     B.color.setLocked(false);B.color.setMask(true);B.depth.setLocked(false);B.depth.setMask(true);B.stencil.setLocked(false);B.stencil.setTest(false);B.stencil.setMask(0xff);
     scene.background=bg;ren.autoClear=ac;ren.shadowMap.autoUpdate=sa;ren.shadowMap.needsUpdate=sn;cam.layers.mask=lm;gh169Restore();C.st.ms=+(performance.now()-t0).toFixed(2)}};
 {const f=POST.render;POST.render=function(){const C=GH169C,U=GH169.U;C.f++;C.cand.length=0;C.top.clear();
-  try{U.uGhA.value=GH169.a;U.uGhK.value=GH169.k;if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
+  try{const fd=C.fade||0;U.uGhA.value=GH169.a*(1-fd);U.uGhK.value=gh169K();if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
     else{U.uGhR.value.set(-2,-1);U.uGhN.value.set(-2,-1)}
-    gh169Void();gh169Away();gh169Water();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
+    gh169Void();gh169Water();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
   // out of the map the background fades to black with the view
   let bg=null;if(C.fade>0&&scene.background&&scene.background.isColor){bg=scene.background;scene.background=(C.bgc||(C.bgc=new THREE.Color())).copy(bg).multiplyScalar(1-C.fade)}
   C.live=1;try{return f.apply(this,arguments)}finally{C.live=0;if(bg)scene.background=bg}}}
@@ -55503,6 +55506,9 @@ function buildUI(){
     <div class="row"><span class="lbl">View</span><div class="seg" id="kvCam"><button data-c="side">Side</button><button data-c="front">Front</button><button data-c="back">Back</button><button data-c="top">Top</button></div>
       <label class="chk"><input type="checkbox" id="kvLoop"> Loop</label></div>
     <div class="row" id="kvTgtRow"><span class="lbl">Target</span><select id="kvTarget"></select></div>
+    <div class="row"><span class="lbl">Look</span><div class="seg" id="kvGfx"><button data-g="full" class="on">Full</button><button data-g="noglass">No glass</button><button data-g="plain">Plain</button><button data-g="safe">Safe</button></div>
+      <button id="kvGfxI" title="What this device's graphics report">Info</button></div>
+    <div id="kvGfxOut" class="note" hidden></div>
   </footer>`;
   document.body.appendChild(pn);
   const tsel=Q('#kvTarget');['hobgoblin','orc','skeleton','troll','snowwolf','tortoise','goo','yeti'].forEach(k=>{if(EN[k]){const o=document.createElement('option');o.value=k;o.textContent=EN[k].e+' '+EN[k].n;tsel.appendChild(o)}});
@@ -55513,6 +55519,7 @@ function buildUI(){
   Q('#kvStep').onclick=()=>{if(KVCLK.speed!=0)setSpeed(0);KVCLK.step+=16};
   Q('#kvCam').onclick=e=>{const b=e.target.closest('button');if(b)camPreset(b.dataset.c)};
   Q('#kvLoop').onchange=e=>{KV.loop=e.target.checked};
+  Q('#kvGfx').onclick=e=>{const b=e.target.closest('button');if(b)kvGfx(b.dataset.g)};Q('#kvGfxI').onclick=()=>{const o=Q('#kvGfxOut');o.hidden=!o.hidden;if(!o.hidden)o.innerHTML=kvGfxInfo()};
   Q('#kvList').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;select(KV.mode,b.dataset.k);if(KV.mode=='boss')camPreset('side')};
   Q('#kvDetail').onclick=e=>{const b=e.target.closest('button');if(!b)return;
     if(b.dataset.stage!=null){KV.stage=+b.dataset.stage;select('comp',KV.sel.comp,{stage:KV.stage});return}
@@ -55579,4 +55586,24 @@ window.KVbossReady=()=>!!(KV.boss&&KV.boss.e&&KV.boss.ready);
 // wait for the game to finish loading
 const wait=()=>{if(typeof hero!='undefined'&&typeof ccBegin=='function'&&document.querySelector('#ccNext'))boot();else setTimeout(wait,100)};wait();
 })();
+
+// ---- Look: drawing options, to find which part of the drawing a device gets wrong (owner, Oct 29 2026: shredded view on a phone) ----
+// Full: the game's normal look. No glass: the see-through wall passes off (GH169.on). Plain: no post-processing (POST.on: the
+// scene draws straight to the screen, no anti-aliased buffer, glow or colour grade). Safe: both, at pixel ratio 1.
+var KVGFX={mode:'full',pr:null};
+function kvGfx(m){KVGFX.mode=m;if(KVGFX.pr==null)KVGFX.pr=ren.getPixelRatio();
+  GH169.on=m=='full'||m=='plain';POST.on=m=='full'||m=='noglass';
+  if(KVGFX.qa==null)KVGFX.qa=QL.auto;QL.auto=m=='safe'?false:KVGFX.qa;   // the game's auto quality would reset the pixel ratio
+  const pr=m=='safe'?1:KVGFX.pr;if(ren.getPixelRatio()!==pr){ren.setPixelRatio(pr);try{rs()}catch(_){}}
+  document.querySelectorAll('#kvGfx button').forEach(b=>b.classList.toggle('on',b.dataset.g==m));
+  const o=Q('#kvGfxOut');if(o&&!o.hidden)o.innerHTML=kvGfxInfo()}
+function kvGfxInfo(){const L=[],E=x=>String(x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  try{const gl=ren.getContext(),d=gl.getExtension('WEBGL_debug_renderer_info'),c=ren.domElement;
+    L.push('WebGL '+(ren.capabilities.isWebGL2?'2':'1')+(gl.isContextLost()?' · <b>context lost</b>':''));
+    L.push('GPU: '+E(d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)));
+    L.push('Canvas '+c.width+'×'+c.height+' · shown '+c.clientWidth+'×'+c.clientHeight+' · ratio '+ren.getPixelRatio()+' (device '+(devicePixelRatio||1)+') · quality '+QL.lv);
+    L.push('Float buffers '+(gl.getExtension('EXT_color_buffer_float')||gl.getExtension('EXT_color_buffer_half_float')?'yes':'no')+' · max samples '+(ren.capabilities.maxSamples||0)+' · colour-only copies '+(window.KQ170?KQ170.n:'-'));
+    L.push('Look: '+KVGFX.mode+' · see-through '+(GH169.on?'on':'off')+' · post '+(POST.on?'on':'off'))}catch(e){L.push('info error: '+E(e.message))}
+  const w=(window.KVLOG||[]).slice(-6);L.push(w.length?'Last warnings:<br>'+w.map(x=>'· '+E(x.slice(0,160))).join('<br>'):'No warnings');
+  return L.join('<br>')}
 </script></body></html>

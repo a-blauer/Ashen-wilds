@@ -3,6 +3,10 @@
 // setTimeout all run on KVCLK.vt, which advances by (real frame time × speed) once per real frame.
 window.AW_NOTITLE=1;window.KQV=1;
 try{localStorage.clear()}catch(_){}
+// warnings and errors, for the viewer's Look → Info (a phone has no console to read)
+window.KVLOG=[];(function(){const keep=(t,a)=>{try{const m=t+' '+[].map.call(a,x=>x&&x.message?x.message:typeof x=='object'?JSON.stringify(x):String(x)).join(' ');if(!/fishing|enemy guard/i.test(m)){KVLOG.push(m);if(KVLOG.length>40)KVLOG.shift()}}catch(_){}};
+  ['warn','error'].forEach(k=>{const f=console[k];console[k]=function(){keep(k,arguments);return f.apply(console,arguments)}});
+  addEventListener('error',e=>keep('error',[e.message]));addEventListener('webglcontextlost',()=>keep('error',['WebGL context lost']),true)})();
 (function(){
   const rp=performance.now.bind(performance),rRAF=window.requestAnimationFrame.bind(window),rST=window.setTimeout.bind(window),rCT=window.clearTimeout.bind(window);
   const T=window.KVCLK={vt:rp(),speed:1,step:0,lastTs:null,q:[],id:1e7,frame:0,manual:false,cbs:[]};
