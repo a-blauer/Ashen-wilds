@@ -31,43 +31,56 @@ function rt165Open(R){const out=[];R.cells.forEach(C=>{if(!C.alive)return;RT165D
 function rt165SlotL(C,k,out){const d=RT165D[k];return [C.lu+d[0]*(RT165.cs/2+(out||.62)),C.lv+d[1]*(RT165.cs/2+(out||.62))]}
 // ---------------- models ----------------
 function rt165CellKit(k,i){const R=svRng(7100+i),bark=[0x2a1e14,0x241a10,0x32241a][i%3],rope=0x6a5a3c,cs=RT165.cs;
-  // two logs along the raft's length (a little longer than the plank, so neighbours read as one long log), a rope lashing, a cross plank
-  [-.29,.29].forEach((x,j)=>{k.p('','cyl','c',lgCol(bark,0x120c08,R()*.4),x+(R()-.5)*.03,(R()-.5)*.03,0,.27+R()*.02,cs+.03,.27,Math.PI/2,0,(R()-.5)*.03);
-    if(R()<.6)k.p('','ring','c',rope,x,0,(R()<.5?-1:1)*(cs/2-.16),.29,.55,.29,Math.PI/2,0,0);
+  // two logs along the raft's length (a little longer than the plank, so neighbours read as one long log), rope lashings, a cross plank
+  // (v168: round barked logs with sawn ends, rope wound round them)
+  [-.29,.29].forEach((x,j)=>{dt168P(k,dt168Log(i*2+j),'c',lgCol(bark,0x120c08,R()*.4),dt168Mx(x+(R()-.5)*.03,(R()-.5)*.03,0,Math.PI/2,0,(R()-.5)*.03,.27+R()*.02,cs+.03,.27));
+    if(R()<.6){const z=(R()<.5?-1:1)*(cs/2-.16);dt168P(k,dt168Geo('rlash',()=>new THREE.TorusGeometry(1,.1,4,16)),'c',rope,dt168Mx(x,0,z,0,0,0,.29,.29,.4))}
     for(let q=0;q<3;q++)k.p('','box','c',0x0e0a06,x+(R()-.5)*.2,.265,(R()-.5)*cs*.8,.035,.01,.12+R()*.1,0,R()*3,0)});
-  if(R()<.55)k.p('','box','c',lgCol(0x3a2818,0x1a120a,R()),0,.21,(R()-.5)*.6,cs-.12,.06,.2,0,(R()-.5)*.1,0);
-  for(let q=0;q<2;q++)k.p('','dod','c',0x223022,(R()-.5)*.8,.2,(R()-.5)*.9,.08,.03,.1)}
+  if(R()<.55)dt168P(k,dt168BBox(cs-.12,.06,.2,.015),'c',lgCol(0x3a2818,0x1a120a,R()),dt168Mx(0,.27,(R()-.5)*.6,0,(R()-.5)*.1,0));
+  for(let q=0;q<2;q++)dt168P(k,dt168Rock(130+q,1,.5),'c',0x223022,dt168Mx((R()-.5)*.8,.24,(R()-.5)*.9,0,R()*3,0,.08,.03,.1))}
 function rt165LanternKit(k){k.L('','c',0x2a1e12,[0,0,0],[0,2.2,0],.05,.045,6);k.L('','c',0x2a1e12,[0,2.15,0],[.45,2.3,0],.03,.03,4);k.p('','box','m',0x2a2c30,.45,2.0,0,.2,.3,.2);k.p('','box','g',0xffc070,.45,2.0,0,.13,.2,.13);k.p('','cone4','m',0x2a2c30,.45,2.22,0,.14,.12,.14,0,Math.PI/4,0)}
 // a drowned arm reaching out of the water (the scare at the lull): forearm, hand, claws; rises from local y −1
 function rt165ArmKit(k){const s=0x5a6a64,s2=0x3a4a44;k.L('','c',s2,[0,-1.2,0],[0,.1,.05],.07,.055,6);k.L('','c',s,[0,.1,.05],[0,.55,.18],.055,.045,6);k.p('','sph','c',s2,0,.62,.2,.07,.05,.06);
   for(let f=0;f<4;f++){const x=(f-1.5)*.03;k.L('','c',s,[x,.64,.22],[x*1.4,.78,.32],.014,.011,4);k.L('','c',0x0a0a0a,[x*1.4,.78,.32],[x*1.6,.86,.36],.01,.003,4)}k.S('',0x1a1e1c,0,.1,.06,.08,.5,0,.2,3)}
 // the quay in Dirge II: a tunnel mouth in the rock, the channel running into it, the raft moored at the steps (local +z faces the clearing)
-function rt165QuayModel(s){const g=new THREE.Group();g.userData.psNo=1;
-  g.add(lgGroup('DG165|quay',k=>{const R=svRng(7300),sA=0x4a4c50,sB=0x3a3c40,sC=0x5a5a5c,rock=[0x3a3e40,0x2e3234,0x464a4c];
+// v168: the basin is a stone canal raised on the ground (its water at RT165Q.wy, held by walls; the world's water was under the
+// ground here, so the raft lay on dry earth), the quay a platform with steps; the rocks are lumpy stone, the arch bevelled voussoirs
+var RT165Q={wy:.3};
+function rt165QuayModel(s){const g=new THREE.Group();g.userData.psNo=1;const wy=RT165Q.wy;
+  g.add(dt168Group('DG165|quay168',k=>{const R=svRng(7300),sA=0x4a4c50,sB=0x3a3c40,sC=0x5a5a5c,rock=[0x3a3e40,0x2e3234,0x464a4c];
     // the rock face and the arch of the tunnel mouth
-    for(let i=0;i<26;i++){const sd=i%2?1:-1,x=sd*(3.6+R()*3.5),z=-6.5-R()*4,s0=1.4+R()*1.6;k.p('','dod','c',rock[i%3],x,s0*.6+R()*2.5,z,s0,s0*1.3,s0,R()*3,R()*3,R()*3)}
-    for(let i=0;i<10;i++)k.p('','dod','c',rock[i%3],(R()-.5)*9,6.5+R()*2,-7-R()*3,1.6+R(),1.2,1.6,R()*3,R()*3,R()*3);
-    for(let i=0;i<13;i++){const a=Math.PI*i/12,x=Math.cos(a)*3.4,y=1.2+Math.sin(a)*3.4;k.p('','box','c',i%2?sA:sC,x,y,-6.2,.7,.62,1.2,0,0,a-Math.PI/2)}
-    [-1,1].forEach(sd=>{k.p('','box','c',sB,sd*3.4,.6,-6.2,.8,1.6,1.3);k.p('','box','c',sA,sd*3.4,1.45,-6.2,1,.2,1.4)});
-    k.p('','box','c',0x010202,0,2.4,-7.2,6,5.2,.2);k.p('','sph','c',0xd8d0b8,0,4.65,-5.6,.32,.36,.34);[-1,1].forEach(sd=>k.p('','sph','c',0x060606,sd*.12,4.68,-5.32,.08,.08,.05));
-    // the channel walls inside the basin and the quay with its steps
-    [-1,1].forEach(sd=>{for(let z=-6;z<0;z+=1)k.p('','box','c',lgCol(sA,sB,R()),sd*3.15,-.1,z+.5,.5,.6,.96);k.p('','box','c',sC,sd*3.15,.24,-3,.6,.1,6.2)});
-    k.p('','box','c',sA,0,.1,.55,6.8,.5,1.2);for(let i=0;i<3;i++)k.p('','box','c',lgCol(sA,sB,i/3),0,-.1-i*.22,-.25-i*.3,3.2,.22,.32);
-    // mooring posts, a coil of rope, a lantern on a crook, bones on the steps
-    [-1,1].forEach(sd=>{k.L('','c',0x2a2018,[sd*2.6,0,.5],[sd*2.6,1.1,.5],.1,.09,6);k.p('','ring','c',0x7a6a48,sd*2.6,.85,.5,.13,.6,.13)});
-    k.L('','c',0x7a6a48,[-2.6,.85,.5],[-1.2,.4,-2.4],.02,.02,4);k.p('','tor','c',0x6a5a3a,1.9,.4,.9,.28,.1,.28);
-    k.L('','c',0x2a1e12,[2.9,.3,.2],[2.9,2.6,.2],.05,.045,6);k.L('','c',0x2a1e12,[2.9,2.55,.2],[2.4,2.7,.2],.03,.03,4);k.p('','box','m',0x2a2c30,2.4,2.4,.2,.2,.3,.2);k.p('','box','g',0x9affd0,2.4,2.4,.2,.13,.2,.13);
-    for(let i=0;i<5;i++)k.p('','sph','c',0xb8b098,(R()-.5)*4,.38,.4+R()*.4,.09,.07,.12)},0));
-  // the raft at its mooring (planks as in the channel)
-  const raft=new THREE.Group();raft.position.set(0,-.05,-3.1);g.add(raft);for(let c=0;c<RT165.cols;c++)for(let r=0;r<RT165.rows;r++){const m=lgGroup('DG165|rcell'+((c*7+r)%3),k=>rt165CellKit(k,(c*7+r)%3),0);const [lu,lv]=rt165CellLU(c,r);m.position.set(lu*.78,0,lv*.62);m.scale.set(.78,1,.62);raft.add(m)}
+    for(let i=0;i<26;i++){const sd=i%2?1:-1,x=sd*(3.9+R()*3.5),z=-6.6-R()*4,s0=1.4+R()*1.6;dt168P(k,dt168Rock(100+i%9,1,.6),'c',rock[i%3],dt168Mx(x,s0*.5+R()*2.5,z,R()*3,R()*3,R()*3,s0,s0*1.3,s0))}
+    for(let i=0;i<10;i++)dt168P(k,dt168Rock(110+i%5,1,.55),'c',rock[i%3],dt168Mx((R()-.5)*9,6.5+R()*2,-7.2-R()*3,R()*3,R()*3,R()*3,1.6+R(),1.2,1.6+R()*.5));
+    for(let i=0;i<13;i++){const a=Math.PI*i/12,x=Math.cos(a)*3.45,y=1.2+Math.sin(a)*3.45;dt168P(k,dt168BBox(i==6?.85:.68,.62,1.3,.06),'c',i%2?sA:sC,dt168Mx(x,y,-6.2,0,0,a-Math.PI/2))}
+    [-1,1].forEach(sd=>{dt168P(k,dt168BBox(.86,1.75,1.4,.06),'c',sB,dt168Mx(sd*3.45,.42,-6.2));dt168P(k,dt168BBox(1.06,.22,1.5,.05),'c',sA,dt168Mx(sd*3.45,1.32,-6.2))});
+    dt168P(k,dt168BBox(6,5.4,.2,.02),'c',0x010202,dt168Mx(0,2.4,-7.4));dt168Skull(k,0,4.62,-5.5,0,.42,0xd8d0b8);
+    // the canal's walls (ashlar on a footing, coping on top) and the quay at its mouth: a flagged platform, two steps down to the ground
+    [-1,1].forEach(sd=>{for(let z=-6.2,q=0;z<-.3;z+=1.0,q++){dt168P(k,dt168BBox(.6,.36,.98,.04),'c',dt168Mix(sA,sB,R()),dt168Mx(sd*3.15,.0,z+.5,0,(R()-.5)*.02,0));
+        dt168P(k,dt168BBox(.56,.3,.96,.04),'c',dt168Mix(sA,sC,R()),dt168Mx(sd*3.15,.33,z+.5+(q%2?.25:0)*0,0,(R()-.5)*.02,0))}
+      dt168P(k,dt168BBox(.72,.12,6.1,.04),'c',sC,dt168Mx(sd*3.15,.54,-3.25))});
+    dt168P(k,dt168BBox(7.0,.6,1.3,.05),'c',sB,dt168Mx(0,.15,.2));for(let i=0;i<7;i++)dt168P(k,dt168BBox(.96,.08,1.2,.025),'c',dt168Mix(sA,sC,R()),dt168Mx(-3+i,.47,.2,0,0,(R()-.5)*.02));
+    dt168P(k,dt168BBox(4.2,.3,.45,.04),'c',sA,dt168Mx(0,.15,1.05));dt168P(k,dt168BBox(4.6,.24,.4,.04),'c',sB,dt168Mx(0,.0,1.45));
+    // the canal's floor stones show under the water
+    dt168P(k,dt168BBox(5.7,.1,6.0,.02),'c',0x1a2220,dt168Mx(0,-.02,-3.3));
+    // mooring posts with rope, a coil of rope, a lantern on a crook, bones on the steps
+    [-1,1].forEach(sd=>{dt168P(k,dt168Lathe([[0,0],[.11,0],[.1,.9],[.12,.95],[.12,1.05],[.08,1.12],[0,1.14]],10),'c',0x2a2018,dt168Mx(sd*2.6,.5,.5));
+      dt168P(k,dt168Geo('qrope',()=>new THREE.TorusGeometry(.13,.035,6,18).rotateX(Math.PI/2)),'c',0x7a6a48,dt168Mx(sd*2.6,1.2,.5))});
+    dt168T(k,'qline','c',0x7a6a48,[[-2.6,1.2,.5],[-2.1,.8,-.6],[-1.6,wy+.32,-1.8],[-1.2,wy+.35,-2.4]],.02,6);
+    for(let i=0;i<4;i++)dt168P(k,dt168Geo('qcoil',()=>new THREE.TorusGeometry(.24,.04,6,22).rotateX(Math.PI/2)),'c',0x6a5a3a,dt168Mx(1.9,.55+i*.06,.45,0,0,0,1-i*.12,1,1-i*.12));
+    dt168T(k,'qcrook','c',0x2a1e12,[[2.95,.4,.2],[2.95,1.6,.2],[2.93,2.5,.2],[2.85,2.72,.2],[2.66,2.78,.2],[2.5,2.7,.2],[2.45,2.62,.2]],.045,8);
+    k.L('','m',0x2a2c30,[2.45,2.62,.2],[2.44,2.5,.2],.006,.006,4);dt168Lantern(k,2.44,2.08,.2,1,0x9affd0);
+    for(let i=0;i<5;i++){const x=(R()-.5)*3.6,z=.3+R()*.4,a=R()*3;k.L('','c',0xb8b098,[x,.53,z],[x+Math.cos(a)*.24,.54,z+Math.sin(a)*.24],.016,.013,6)}
+    dt168Skull(k,-1.4,.6,.5,.6,.16,0xb8b098)},{c:{g:[.5,.35],n:.18,s:.3,m:[0x3a4a34,1,.35],l:[0x9a9a7a,.4],sd:31}},.04));
+  // the raft at its mooring, floating on the canal (planks as in the channel)
+  const raft=new THREE.Group();raft.position.set(0,wy,-3.1);g.add(raft);for(let c=0;c<RT165.cols;c++)for(let r=0;r<RT165.rows;r++){const m=dt168G('DG165|rcell'+((c*7+r)%3),k=>rt165CellKit(k,(c*7+r)%3),0);const [lu,lv]=rt165CellLU(c,r);m.position.set(lu*.78,0,lv*.62);m.scale.set(.78,1,.62);raft.add(m)}
   g.userData.raft=raft;
-  // the water of the basin: dark, with moving light on it
-  const wm=new THREE.Mesh(new THREE.PlaneGeometry(5.8,7.4).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x08201c,roughness:.08,metalness:.4,transparent:true,opacity:.92}));wm.position.set(0,-.18,-3.3);wm.userData.noFade135=1;g.add(wm);g.userData.water=wm;
+  // the water of the canal: dark, with moving light on it
+  const wm=new THREE.Mesh(new THREE.PlaneGeometry(5.7,7.6).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x08201c,roughness:.08,metalness:.4,transparent:true,opacity:.9}));wm.position.set(0,wy,-3.6);wm.userData.noFade135=1;g.add(wm);g.userData.water=wm;
   // a green light deep in the tunnel and the mist breathing out of it
   {const lt=new THREE.PointLight(0x5affc0,2.2,14,1.4);lt.position.set(0,2.2,-7.6);g.add(lt);const gl=kqSpr(0x3affb0,5);gl.material=gl.material.clone();gl.material.opacity=.32;gl.position.set(0,2.2,-7.4);g.add(gl);g.userData.glow=gl;
    const lt2=new THREE.PointLight(0x9affd0,1.2,8,1.6);lt2.position.set(2.4,2.4,.2);g.add(lt2)}
   g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;scene.add(g);
-  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.5;o<=4.5;o+=.6)for(let d=-8;d<=-.2;d+=.6){if(Math.abs(o)<3.4&&d>-1.6&&d<-.3)continue;const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
+  const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-4.5;o<=4.5;o+=.6)for(let d=-8;d<=1.2;d+=.6){const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
   return g}
 // ---------------- the channel's masonry and dressing (built the first time you are on it) ----------------
 function rt165Build(){if(RT165S)return RT165S;const P=rt165P(),C=dg165CCfg(),root=new THREE.Group();root.name='BlackChannel';scene.add(root);const S={root,spots:[],fl:[],float:[]};RT165S=S;
@@ -82,7 +95,7 @@ function rt165Build(){if(RT165S)return RT165S;const P=rt165P(),C=dg165CCfg(),roo
   L.forEach((q,i)=>{o.position.set(q[0],q[1],q[2]);o.rotation.set((Rn()-.5)*.03,q[3]+(Rn()-.5)*.03,(Rn()-.5)*.03);o.scale.set(q[4],q[5],q[6]);o.updateMatrix();M.setMatrixAt(i,o.matrix);
     col.setRGB(q[7],q[7]*1.02,q[7]*1.04);if(Rn()<.1)col.lerp(new THREE.Color(0x2a3a30),.5);M.setColorAt(i,col)});M.instanceMatrix.needsUpdate=true;if(M.instanceColor)M.instanceColor.needsUpdate=true;M.frustumCulled=false;M.receiveShadow=true;root.add(M);
   // arches across the channel, with a lantern hung from each and chains dangling; pillars in the water; statues on the walks
-  const span=C.hw+C.walk+.3,aK=lgGroup('DG165|carch',k=>{const sA=0x3e4044,sB=0x4e5054;[-1,1].forEach(sd=>{k.p('','box','c',sA,sd*span,2.6,0,1.2,5.2,1.4)});
+  const span=C.hw+C.walk+.3,aK=dt168G('DG165|carch',k=>{const sA=0x3e4044,sB=0x4e5054;[-1,1].forEach(sd=>{k.p('','box','c',sA,sd*span,2.6,0,1.2,5.2,1.4)});
       for(let i=0;i<=16;i++){const a=Math.PI*i/16,x=Math.cos(a)*span,y=5.1+Math.sin(a)*3.6;k.p('','box','c',i%2?sA:sB,x,y,0,1.0,.7,1.3,0,0,a-Math.PI/2)}
       k.p('','sph','c',0xc8c0a8,0,8.9,.66,.3,.34,.2);for(let i=0;i<5;i++)k.p('','ring','m',i%2?0x26282c:0x5a3420,-1.4,8.2-i*.18,.0,.06,.5,.06,i%2?Math.PI/2:0,0,0);
       k.L('','m',0x26282c,[1.6,8.4,0],[1.6,6.6,0],.02,.02,3);k.p('','box','m',0x26282c,1.6,6.4,0,.22,.32,.22);k.p('','box','g',0x9affd0,1.6,6.4,0,.14,.22,.14)},0);
@@ -90,7 +103,7 @@ function rt165Build(){if(RT165S)return RT165S;const P=rt165P(),C=dg165CCfg(),roo
   // the props: baked in stretches of the channel
   const props=[];for(let s=12;s<P.S-14;s+=7+Rn()*6){const sd=Rn()<.5?1:-1,r=Rn();props.push([s,sd,r<.18?'statue':r<.34?'pillarW':r<.5?'coffinF':r<.64?'grate':r<.8?'bones':'sconce'])}
   const by=[];props.forEach(q=>{const b=Math.floor(q[0]/120);(by[b]=by[b]||[]).push(q)});
-  by.forEach((Lq,bi)=>{if(!Lq)return;root.add(lgGroup('DG165|cprops'+bi,k=>{const R=svRng(7500+bi);Lq.forEach(([s,sd,kind])=>{const yw=P.yaw(s),ca=Math.cos(yw),sa=Math.sin(yw);
+  by.forEach((Lq,bi)=>{if(!Lq)return;root.add(dt168G('DG165|cprops'+bi,k=>{const R=svRng(7500+bi);Lq.forEach(([s,sd,kind])=>{const yw=P.yaw(s),ca=Math.cos(yw),sa=Math.sin(yw);
       const put=(off,lx,ly,lz)=>{const [x,z]=P.at(s+lz,off);return [x+ca*lx,ly,z-sa*lx]};
       if(kind=='statue'){const [x,y,z]=put(sd*(C.hw+1.2),0,C.walkY,0);k.p('','box','c',0x3a3a3e,x,y+.3,z,.9,.6,.9);k.p('','skirt','c',0x5a5850,x,y+1.2,z,.4,1.2,.36);k.p('','sph','c',0x5a5850,x,y+2.05,z,.18,.2,.18);k.p('','hood','c',0x4a4842,x,y+2.1,z,.22,.26,.24,-.3,yw+(sd<0?Math.PI/2:-Math.PI/2),0);
         k.L('','c',0x5a5850,[x,y+1.6,z],[x+.25,y+2.4,z],.06,.05,5);k.p('','dod','c',0x2a3a2a,x,y+.62,z,.4,.08,.4)}
@@ -102,21 +115,21 @@ function rt165Build(){if(RT165S)return RT165S;const P=rt165P(),C=dg165CCfg(),roo
   props.forEach(([s,sd,kind])=>{if(kind=='sconce'){const [x,z]=P.at(s,sd*(C.hw+C.walk-.3));const f=dg165Flame(root,x,C.walkY+2.85,z,.32,0xffa040);S.fl.push(f);S.spots.push({x,y:C.walkY+3,z,c:0xffa050,i:1.8,r:11,ph:s})}
     if(kind=='grate'&&Rn()<.8)S.float.push({k:'fall',s,sd})});
   // drifting things on the water: logs, a coffin lid, a skull on a plank (they float with the current)
-  const fK=[lgGroup('DG165|flog',k=>{k.p('','cyl','c',0x2e2216,0,0,0,.22,2.2,.22,Math.PI/2,0,.1)},0),lgGroup('DG165|flid',k=>{k.p('','box','c',0x2a2014,0,0,0,.7,.1,1.8);k.p('','box','c',0x3a2a18,0,.06,0,.2,.04,1.2)},0),lgGroup('DG165|fsk',k=>{k.p('','box','c',0x3a2a18,0,0,0,.5,.08,1.0);k.p('','sph','c',0xc8c0a8,0,.15,.1,.13,.14,.16)},0)];
+  const fK=[dt168G('DG165|flog',k=>{k.p('','cyl','c',0x2e2216,0,0,0,.22,2.2,.22,Math.PI/2,0,.1)},0),dt168G('DG165|flid',k=>{k.p('','box','c',0x2a2014,0,0,0,.7,.1,1.8);k.p('','box','c',0x3a2a18,0,.06,0,.2,.04,1.2)},0),dt168G('DG165|fsk',k=>{k.p('','box','c',0x3a2a18,0,0,0,.5,.08,1.0);k.p('','sph','c',0xc8c0a8,0,.15,.1,.13,.14,.16)},0)];
   for(let i=0;i<26;i++){const g=fK[i%3].clone();root.add(g);S.float.push({k:'d',g,s:10+Rn()*(P.S-20),o:(Rn()-.5)*2*(C.hw-1.6),ph:Rn()*6,v:.4+Rn()*.5})}
   // the far end: grey daylight pouring in over a beach of bone
   {const [x,z]=P.at(P.S,0),[x2,z2]=P.at(P.S-10,0);const glow=kqSpr(0xe8e4d0,26);glow.material=glow.material.clone();glow.material.opacity=.5;glow.position.set(x+(x-x2)*.8,C.walkY+5,z+(z-z2)*.8);root.add(glow);S.day=glow;
     const lt=new THREE.PointLight(0xe8e4d8,0,40,1.2);lt.position.set(x,C.walkY+8,z);root.add(lt);S.dayL=lt;
-    root.add(lgGroup('DG165|beach',k=>{const R=svRng(7600);for(let i=0;i<60;i++){const [bx,bz]=P.at(P.S-8+R()*10,(R()-.5)*2*(C.hw+2));k.L('','c',lgCol(0xb8b098,0x8a8270,R()),[bx,C.walkY+.05,bz],[bx+(R()-.5)*.8,C.walkY+.05,bz+(R()-.5)*.8],.03,.025,4);
+    root.add(dt168G('DG165|beach',k=>{const R=svRng(7600);for(let i=0;i<60;i++){const [bx,bz]=P.at(P.S-8+R()*10,(R()-.5)*2*(C.hw+2));k.L('','c',lgCol(0xb8b098,0x8a8270,R()),[bx,C.walkY+.05,bz],[bx+(R()-.5)*.8,C.walkY+.05,bz+(R()-.5)*.8],.03,.025,4);
       if(R()<.3)k.p('','sph','c',0xc8c0a8,bx,C.walkY+.12,bz,.13,.14,.16)}},0))}
   // the raft
-  S.raft=new THREE.Group();root.add(S.raft);S.lant=lgGroup('DG165|rlant',rt165LanternKit,0);S.lantL=new THREE.PointLight(0xffb060,1.4,16,1.4);S.lantL.position.set(.45,2.6,0);S.lant.add(S.lantL);S.lantF=dg165Flame(S.lant,.45,2.02,0,.3,0xffc070);
-  S.arms=[];const armK=lgGroup('DG165|rarm',rt165ArmKit,0);for(let i=0;i<14;i++){const a=armK.clone();a.visible=false;root.add(a);S.arms.push({g:a,t:-1})}
+  S.raft=new THREE.Group();root.add(S.raft);S.lant=dt168G('DG165|rlant',rt165LanternKit,0);S.lantL=new THREE.PointLight(0xffb060,1.4,16,1.4);S.lantL.position.set(.45,2.6,0);S.lant.add(S.lantL);S.lantF=dg165Flame(S.lant,.45,2.02,0,.3,0xffc070);
+  S.arms=[];const armK=dt168G('DG165|rarm',rt165ArmKit,0);for(let i=0;i<14;i++){const a=armK.clone();a.visible=false;root.add(a);S.arms.push({g:a,t:-1})}
   S.pool=dg165LPool(6,14);return S}
 // ---------------- the run ----------------
 function rt165Reset(){const S=rt165Build();rt165Clear();S.raft.children.slice().forEach(c=>S.raft.remove(c));S.drift=(S.drift||[]).filter(d=>{S.root.remove(d.g);return false});
   const R={ph:'moor',t:0,s:2,v:0,yaw:rt165P().yaw(2),cells:[],H:[0,-1.6],W:[],spawnT:3,roll:0,rollV:0,pitch:0,hk:0,sc:{},n:0,lost:0,id:(RT165R&&RT165R.id||0)+1};
-  for(let c=0;c<RT165.cols;c++)for(let r=0;r<RT165.rows;r++){const [lu,lv]=rt165CellLU(c,r),v=(c*7+r)%3,g=lgGroup('DG165|rcell'+v,k=>rt165CellKit(k,v),0);g.position.set(lu,0,lv);S.raft.add(g);R.cells.push({c,r,lu,lv,alive:1,hp:RT165.hp,g,shk:0,i:rt165Idx(c,r)})}
+  for(let c=0;c<RT165.cols;c++)for(let r=0;r<RT165.rows;r++){const [lu,lv]=rt165CellLU(c,r),v=(c*7+r)%3,g=dt168G('DG165|rcell'+v,k=>rt165CellKit(k,v),0);g.position.set(lu,0,lv);S.raft.add(g);R.cells.push({c,r,lu,lv,alive:1,hp:RT165.hp,g,shk:0,i:rt165Idx(c,r)})}
   S.raft.add(S.lant);S.lant.position.set(0,0,0);S.lantOn=1;R.fr=rt165Frame(R);RT165R=R;rt165Place();return R}
 // the drowned: remove all of them (a new run, leaving)
 function rt165Clear(){enemies.slice().forEach(e=>{if(e.dg165w&&!e.mir)try{removeE(e)}catch(_){}})}
@@ -289,8 +302,8 @@ function rt165Hud(){const el=$('rt165h'),gb=$('rt165g');if(!el)return;const R=RT
 SP152.R.channel={park:1,noMount:'🌊 No mount on a raft.',noRecall:'🌊 The current has you. Hold on (or 🏳 abandon the raft).',onLoad(){setTimeout(()=>{try{rt165Rise()}catch(e){console.warn('v165 raft load',e)}},0)}};
 // ---------------- the quay in Dirge II ----------------
 sp152Gate('channel',{ig:21,r:3.4,build:rt165QuayModel,where:()=>sp152GateSpot(21,5.5),
-  tick(s){const G=SP152.gates.channel;if(!G||!G.g)return;const t=performance.now()/1000,rf=G.g.userData.raft,gl=G.g.userData.glow;if(gl)gl.material.opacity=.26+.08*Math.sin(t*1.4);if(rf){rf.position.y=-.05+.04*Math.sin(t*1.3);rf.rotation.z=.02*Math.sin(t*.9)}
-    if(Math.random()<.05)burst(V(s.x-Math.sin(s.ry)*6,GH(s.x,s.z)-.1,s.z-Math.cos(s.ry)*6),0x8ab8b0,1,.2,.4,.6)},
+  tick(s){const G=SP152.gates.channel;if(!G||!G.g)return;const t=performance.now()/1000,rf=G.g.userData.raft,gl=G.g.userData.glow;if(gl)gl.material.opacity=.26+.08*Math.sin(t*1.4);if(rf){rf.position.y=RT165Q.wy+.04*Math.sin(t*1.3);rf.rotation.z=.02*Math.sin(t*.9)}
+    if(Math.random()<.05)burst(V(s.x-Math.sin(s.ry)*6,GH(s.x,s.z)+RT165Q.wy+.05,s.z-Math.cos(s.ry)*6),0x8ab8b0,1,.2,.4,.6)},
   prompt(s){if(dg165RDone()){const N=INSL[22];return {label:'F · Take the raft down to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>insGo(N)}}
     return {label:'F · Board the raft (down the Black Channel)',fn:()=>rt165Enter()}}});
 // ---------------- the tracker ----------------
