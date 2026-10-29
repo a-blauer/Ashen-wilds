@@ -6,7 +6,7 @@
 //  * dt168Lathe(profile, n): a turned solid; n 4 = a square section (plinths, mouldings, obelisks) with faces on x/z.
 //  * dt168BBox(w,h,d,b): a box with bevelled edges (centred like BoxGeometry). dt168Ext(key, outline, depth, bevel): an extruded
 //    outline in x/y (headstones, crosses, blades), centred on z.
-//  * dt168Rock(seed, detail, jag): a lumpy stone (noise by position, so it stays watertight). dt168Mound(seed): a heaped mound.
+//  * dt168Rock(seed, detail, jag, crag): a lumpy stone (noise by position, so it stays watertight; crag: angular, from a dodecahedron). dt168Mound(seed): a heaped mound.
 //  * dt168Sweep(rings, n): a vertical body of elliptical rings with drapery folds (robes); ch164Tube (3251) for limbs and stems.
 //  * dt168Wing(k, side, root, o): a folded feathered wing (rows of feathers on a membrane); dt168Angel(k, o): a robed mourning angel
 //    (o.pose 'kneel': face in its hands, wings raised; 'stand': hands joined in prayer, wings folded down).
@@ -36,8 +36,11 @@ function dt168Ext(key,pts,depth,b,bs){b=b||0;return dt168Geo('E'+key+':'+depth.t
   g.translate(0,0,-Math.max(.001,depth-2*b)/2);g.computeVertexNormals();return g})}
 // outlines: a headstone with a rounded (k 1) or flattened (k < 1) arch top, from y0 to the shoulders at y1
 function dt168ArchPts(w,y0,y1,k,n){const p=[[-w/2,y0],[w/2,y0],[w/2,y1]];n=n||14;for(let i=1;i<n;i++){const a=i/n*Math.PI;p.push([Math.cos(a)*w/2,y1+Math.sin(a)*w/2*k])}p.push([-w/2,y1]);return p}
-function dt168Rock(seed,det,jag){return dt168Geo('R'+seed+'_'+det+'_'+jag,()=>{const g=new THREE.IcosahedronGeometry(1,det==null?1:det),P=g.attributes.position,j=jag==null?.45:jag;
-  for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),k=1+(dt168Fbm(x*1.4+seed*.37,y*1.4,z*1.4,seed)-.5)*j;P.setXYZ(i,x*k,y*k,z*k)}g.computeVertexNormals();return g})}
+function dt168Rock(seed,det,jag,crag){return dt168Geo('R'+seed+'_'+det+'_'+jag+(crag?'c':''),()=>{const g=new THREE.IcosahedronGeometry(1,det==null?1:det),P=g.attributes.position,j=jag==null?.45:jag,R=dkRng(seed*97+13),cut=[];
+  // crag: fractured faces: the stone is cut by a few random planes (flat facets like split rock), then roughened a little
+  if(crag)for(let c=0;c<7;c++){const a=R()*6.283,b=Math.acos(2*R()-1);cut.push([Math.sin(b)*Math.cos(a),Math.cos(b),Math.sin(b)*Math.sin(a),.62+R()*.25])}
+  for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const k=1+(dt168Fbm(x*1.4+seed*.37,y*1.4,z*1.4,seed)-.5)*(crag?j*.4:j);x*=k;y*=k;z*=k;
+    for(const [nx,ny,nz,d] of cut){const t=x*nx+y*ny+z*nz;if(t>d){x-=nx*(t-d);y-=ny*(t-d);z-=nz*(t-d)}}P.setXYZ(i,x,y,z)}g.computeVertexNormals();return g})}
 // a heaped mound (radius 1, height 1 before scaling), its rim just below the ground
 function dt168Mound(seed){return dt168Geo('M'+seed,()=>{const g=new THREE.SphereGeometry(1,22,12),P=g.attributes.position;   // closed: the lower half is pressed flat under the rim
   for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=dt168Fbm(x*2.6+seed,Math.max(0,y)*2.6,z*2.6,seed),n2=dt168N(x*7+seed,Math.max(0,y)*7,z*7,seed+4),k=1+(n-.5)*.3+(n2-.5)*.08;
@@ -111,7 +114,7 @@ function dt168Angel(k,o){const Y=o.y0||0,sA=o.s,sB=o.s2,sC=o.s3,kn=o.pose=='knee
     dt168P(k,dt168Sweep('asv',vl.map(q=>{const r=q.slice();r[0]+=Y;return r}),20,{fk:13}),'c',sB,new THREE.Matrix4());
     [-1,1].forEach(s=>{const sh=[s*.27,Y+1.42,0],el=[s*.25,Y+1.12,.1],wr=[s*.05,Y+1.3,.27];dt168T(k,key+'ua'+s,'c',sA,[sh,[s*.29,Y+1.27,.03],el],[.075,.07,.07],9);
       dt168T(k,key+'fa'+s,'c',sA,[el,[s*.16,Y+1.2,.22],wr],[.07,.08,.1],9);dt168P(k,dt168Lathe([[0,-1],[.7,-.7],[1,0],[.8,.6],[0,1]],10),'c',sC,dt168Mx(s*.022,Y+1.4,.28,-.15,0,0,.03,.09,.05))});
-    dt168Wing(k,-1,[-.14,Y+1.36,-.1],{sc:.95,spread:.35,lift:.25,col:sA,col2:sC,key:key+'w'});dt168Wing(k,1,[.14,Y+1.36,-.1],{sc:.95,spread:.35,lift:.25,col:sA,col2:sC,key:key+'w'})}}
+    dt168Wing(k,-1,[-.14,Y+1.32,-.1],{sc:.85,spread:.45,lift:.7,col:sA,col2:sC,key:key+'w'});dt168Wing(k,1,[.14,Y+1.32,-.1],{sc:.85,spread:.45,lift:.7,col:sA,col2:sC,key:key+'w'})}}
 // the Dirge's scattered mourning angel (1680's 'd_angel', instanced): a standing angel praying on a moulded plinth
 function dt168AngelDeco(){const C=dt168();if(C.deco)return C.deco;const k=dkKit(),sA=0x8a8a90,sB=0x6e6e74,sC=0x9a9aa0;
   dt168P(k,dt168Lathe([[0,-.45],[.56,-.45],[.56,.3],[.53,.34],[.46,.36],[.44,.42],[.4,.46],[.4,.9],[.43,.93],[.47,.98],[.48,1.03],[.45,1.06],[0,1.06]],4),'c',sB,new THREE.Matrix4());
@@ -148,7 +151,7 @@ function dt168Up(k,o){o=o||{};if(k.up168)return k;k.up168=1;const p0=k.p,L0=k.L,
     skirt:new THREE.CylinderGeometry(.55,1,1,22,1,true),tube:new THREE.CylinderGeometry(1,1,1,18,1,true),ring:new THREE.TorusGeometry(1,.12,7,28).rotateX(Math.PI/2)})},bmax=o.b==null?.06:o.b;let sd=0;
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(typeof geo=='string'){const sy1=sy==null?sx:sy,sz1=sz==null?sx:sz;
       if(geo=='box'&&!o.nb){const m=Math.min(Math.abs(sx),Math.abs(sy1),Math.abs(sz1));if(m>(o.bmin||.035))return p0.call(k,bn,dt168BBox(Math.abs(sx),Math.abs(sy1),Math.abs(sz1),Math.min(bmax,m*.14),o.bs||1),t,col,x,y,z,1,1,1,rx,ry,rz)}
-      else if(geo=='dod')return p0.call(k,bn,dt168Rock(150+(sd++)%12,1,.9),t,col,x,y,z,sx,sy1*.85,sz1,rx,ry,rz);
+      else if(geo=='dod')return p0.call(k,bn,dt168Rock(150+(sd++)%12,1,.5,1),t,col,x,y,z,sx*1.12,sy1*1.12,sz1*1.12,rx,ry,rz);
       else if(Math.max(Math.abs(sx),Math.abs(sy1),Math.abs(sz1))>.07&&Math.min(Math.abs(sx),Math.abs(sz1))>.045){const U=G()[geo];if(U)geo=U}}
     return p0.call(k,bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz)};
   k.L=function(bn,t,col,a,b,r1,r2,seg){const r=Math.max(r1,r2==null?r1:r2);return L0.call(k,bn,t,col,a,b,r1,r2,Math.max(seg||6,r>.2?18:r>.06?12:r>.025?8:seg||6))};
