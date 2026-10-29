@@ -9461,7 +9461,10 @@ function commandAttack(){
   say('📣 '+act.map(c=>c.n).join(' and ')+(act.length>1?' attack ':' attacks ')+(e.c.n||e.c.g[0])+'!');if(typeof sfx=='function')sfx('chime',.5)}
 {const f=teamFoe;teamFoe=function(){const C=CMD;if(C.e){if(C.e.dead||nowP()>C.t||!enemies.includes(C.e)||d2(C.e.m.position,pl.position)>30)CMD={e:null,t:0};
   else if(townAt(pl.position.x,pl.position.z,0)<0)return C.e}return f.apply(this,arguments)}}
-addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey)return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
+// v167: Space belongs to a level that uses it (the Hilltop Ascent's jump, the drill's hold-to-heat): their key listeners are added
+// after this one, so this one steps aside instead of swallowing the key (Space never jumped in the chase before).
+function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false;if(typeof MQ170!='undefined'&&MQ170&&MQ170.W)return false}catch(_){}return true}
+addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey||!cmd167Free())return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
   e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;commandAttack()},true);
 {const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Command companions to attack';b.textContent='📣';mb.appendChild(b);
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();commandAttack()})}}
@@ -49617,7 +49620,7 @@ function ch164HeadAnim(S,t,jaw,rear){const dt=Math.min(.1,Math.max(0,t-(S.lt||t)
 //    the ledges, a waterfall down the crags into a rock pool, and behind it all a great snow-capped peak with clouds round it.
 //  * The F prompt ("Ascend to the hilltops") is at the top of the trail in the gorge (G.spot), where the climb really begins.
 // Everything is seeded (co-op partners build the same mountain). th165Plan is hoisted and pure: 0045 calls it during the world build.
-var TH165={S:null,err:0,fl:[],wf:null,t:0};
+var TH165={S:null,err:0,fl:[],wf:null,t:0,clr:3};
 function th165Walk(t){return t==='.'||t==='g'||t==='a'}
 // the foot of the trail: the gateway clearing's far edge (as sp152GateSpot, from the tiles and DW only: the world is still being built)
 function th165Spot(m,DW){const I=INSL[6],P=I.path,G=I.ba,q=P[Math.max(0,P.length-16)];let dx=G[0]-q[0],dz=G[1]-q[1];const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
@@ -49860,12 +49863,17 @@ function th165Peak(P){const S=P.S,I=P.I,g=new THREE.Group();g.name='PilgrimPeak'
   geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));geo.computeVertexNormals();
   const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95}));m.position.set(cx,P.h0+Hh/2-14,cz);g.add(m);
   // two shoulder peaks
-  [[-30,22,.55],[26,-18,.48]].forEach(([ox,oz,s],j)=>{const q=m.clone();q.scale.set(s*1.1,s,s);q.position.set(cx+ox,P.h0+Hh*s/2-12,cz+oz);q.rotation.y=j*2.1;g.add(q)});
+  // v167 (owner: "mountain clipping into the path"): the first shoulder stood on the switchbacks. Each cone is pushed straight away
+  // from the trail and the gorge until its widest base (noise up to ×1.45) stays TH165.clr tiles clear of them.
+  const away=(x,z,r)=>{const pts=[];for(let i=0;i<P.N;i+=2)pts.push([P.X[i],P.Z[i]]);for(let i=0;i<P.gz.X.length;i++)pts.push([P.gz.X[i],P.gz.Z[i]]);
+    for(let k=0;k<200;k++){let bd=1e9,bp=null;pts.forEach(p=>{const d=Math.hypot(p[0]-x,p[1]-z);if(d<bd){bd=d;bp=p}});if(bd>=r)break;const dx=x-bp[0],dz=z-bp[1],L=Math.hypot(dx,dz)||1;x+=dx/L*.5;z+=dz/L*.5}return [x,z]};
+  {const [x,z]=away(cx,cz,R0*1.45+TH165.clr);m.position.x=x;m.position.z=z}
+  [[-30,22,.55],[26,-18,.48]].forEach(([ox,oz,s],j)=>{const q=m.clone();q.scale.set(s*1.1,s,s);const [x,z]=away(cx+ox,cz+oz,R0*s*1.1*1.45+TH165.clr);q.position.set(x,P.h0+Hh*s/2-12,z);q.rotation.y=j*2.1;g.add(q)});
   // a ring of cloud: soft sprites drifting round the peak's waist
   const ct=(()=>{if(TH165C.ct)return TH165C.ct;const cv=document.createElement('canvas');cv.width=cv.height=128;const x=cv.getContext('2d'),gr=x.createRadialGradient(64,64,8,64,64,62);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,128,128);return TH165C.ct=new THREE.CanvasTexture(cv)})();
   const cm=new THREE.SpriteMaterial({map:ct,color:0xdfe4e8,transparent:true,opacity:.55,depthWrite:false,fog:true});const cl=[];
-  for(let i=0;i<14;i++){const s=new THREE.Sprite(cm);const a=i/14*Math.PI*2,r=R0*.72+rn()*10;s.position.set(cx+Math.cos(a)*r,P.h0+30+rn()*14,cz+Math.sin(a)*r);s.scale.set(40+rn()*20,14+rn()*6,1);s.userData.a=a;s.userData.r=r;g.add(s);cl.push(s)}
-  g.userData.cl=cl;g.userData.c=[cx,cz];g.visible=false;scene.add(g);return g}
+  for(let i=0;i<14;i++){const s=new THREE.Sprite(cm);const a=i/14*Math.PI*2,r=R0*.72+rn()*10;s.position.set(m.position.x+Math.cos(a)*r,P.h0+30+rn()*14,m.position.z+Math.sin(a)*r);s.scale.set(40+rn()*20,14+rn()*6,1);s.userData.a=a;s.userData.r=r;g.add(s);cl.push(s)}
+  g.userData.cl=cl;g.userData.c=[m.position.x,m.position.z];g.visible=false;scene.add(g);return g}
 // ---------------- the gateway: the top of the trail is where the Ascent starts ----------------
 try{const G=SP152.gates.ascent;if(G){G.build=s=>th165Build();G.where=()=>{const P=th165Plan(),T=th165At(P,P.N-10);return {x:T.x,z:T.z,ry:Math.atan2(-T.dx,-T.dz),ux:T.dx,uz:T.dz}};G.r=3.4}}catch(e){console.error('v165 gate',e)}
 // the world tick: the flags, the water, the braziers, the peak (only in Mistmere)
