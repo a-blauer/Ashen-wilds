@@ -955,7 +955,11 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     carrying it you are slower and cannot swing or cast, and both hands hold its grips (arm IK `fs160Hold`). Hold the left button to
     spray where you aim: on the gate it melts (60 s of flame); 5 s of spraying overheats it and it must cool right down (4 s). Ice
     spiders (`EN.icespider`, rig `Iceskitter`) come from all round the yard all the time, faster as the melt goes on, and always hunt
-    you; the flame kills one at once for 8 of its 100 essence charge (with the charge spent it only melts). HUD `#fs160`.
+    you. v166: **twice as many** (two or more per spawn, up to 32 alive, 40 in co-op: `MQ160.cap` / `capC`), and the flame no
+    longer one-hits them: it burns every spider in it once every 0.3 s (`fs160Burn`, host only; a partner's flame sends `f2k`),
+    each burn 36% of the spider's health (3 burns). The **essence charge** (the 💠 bar, 100) is a bonus: while it lasts each burn
+    blazes for 55% (2 burns) and costs 4 charge; it refills 5 a second while the flamespitter is not spraying. Empty, the flame
+    still burns at the normal rate (before v166 an empty charge made the flame stop killing spiders: the bug). HUD `#fs160` says so.
     `MQ160.st` 0 parts · 1 all parts · 2 assembled · 3 open; saved as `x2.mq160 {st,p,fd}`.
   * **III · The Mountain Drill** (`3170`): the road to the Den ends at a sheer cliff with a great essence drill against it, wired to
     four control boxes. F at the console starts **the drill** (`MQ170.E`; held in the yard, no recall, a death ends it): it bores only
@@ -1323,7 +1327,7 @@ python3 v145_sigils.py        # v145: The Three Sigils (Kindlelight III main que
 python3 v165_dirge.py        # v165: The Dirge main quest: graves, the Sanctum's traps and puzzles, the raft, the prisms, saves
 python3 v165_dirge_coop.py   # v165: the Dirge main quest in co-op (two windows)
 python3 v151_frozen_maw.py    # v151: The Frozen Maw (Burningeye I): the cave mouth, Gorthrak, pillars, Frostbite, Phase II, the Rampage both ways, the passage, saves
-python3 v160_frozen_gate.py   # v151: The Frozen Gate (Burningeye II): caches and wardens, the flamespitter, the melt (carry, spray, overheat, spiders, charge), saves
+python3 v160_frozen_gate.py   # v151: The Frozen Gate (Burningeye II): caches and wardens, the flamespitter, the melt (carry, spray, overheat, spiders x2, burns, charge bonus/refill), saves
 python3 v170_mountain_drill.py # v151: The Mountain Drill (Burningeye III): boxes, failures, the three repair windows, troll wreckers, the bore, the tunnel, saves
 python3 v151_coop.py          # v151: the three chapters with two players (shared Gorthrak, shared melt and carrier, shared drill and repairs, credit)
 python3 v146_sovs.py          # v146: Sovereigns: den changes, signature mechanics, springs, every move, clean dens (BOSS=0..5)

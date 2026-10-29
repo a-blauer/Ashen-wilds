@@ -12,14 +12,17 @@
 //      Hold the left mouse button to spray flame where you aim. On the gate it melts the ice (MQ160.melt, 60 s of flame in all).
 //      The flamespitter heats while it fires: 5 s of spraying (MQ160.heatT) and it overheats, and must cool right down (MQ160.coolT)
 //      before it fires again. Drop it to fight while it cools.
-//      Ice spiders come from all round the yard all the time, faster as the melt goes on, and always run at you. The flame kills a
-//      spider at once, but each kill burns MQ160.kc of the flamespitter's essence charge (MQ160.charge): spend it when you are
-//      surrounded. With the charge spent the flame still melts, but no longer kills.
+//      Ice spiders come from all round the yard all the time, faster as the melt goes on, and always run at you (v166: twice as
+//      many: two per spawn, up to 32 alive, 40 in co-op). The flame burns every spider in it, one burn every MQ160.burnI s
+//      (fs160Burn, v166: no more one-hit kills): a normal burn takes MQ160.bn of a spider's health (3 burns kill it). The essence
+//      charge (MQ160.charge, the 💠 bar) is a bonus: while it lasts each burn blazes (MQ160.bb, 2 burns kill) for MQ160.kc charge;
+//      it refills while the flamespitter is not spraying (MQ160.rch a second). Empty, the flame still burns at the normal rate
+//      (before v166 an empty charge meant the flame stopped killing spiders at all: the bug the owner hit).
 //  * Melted: the ice bursts, the gate opens on a road of cold light; F at it goes to Stormcrown (Burningeye III).
 // State MQ160.st: 0 finding parts · 1 all three parts · 2 assembled · 3 the gate is open. p[3] the parts taken. Done also when III has
 // been reached (mq160Done). Saved as x2.mq160 {st, p}. A save made mid-melt loads with the flamespitter on the bench. Co-op: local to each
 // player (the spiders are minions, never shared; each player melts their own gate).
-var MQ160={name:'The Frozen Gate',st:0,p:[0,0,0],gk:[0,0,0],fd:[0,0,0],S:null,E:null,err:0,t:0,trkK:'',melt:60,heatT:5,coolT:4,charge:100,kc:8,lv:22,gl:24,see:28,leash:15.5,
+var MQ160={name:'The Frozen Gate',st:0,p:[0,0,0],gk:[0,0,0],fd:[0,0,0],S:null,E:null,err:0,t:0,trkK:'',melt:60,heatT:5,coolT:4,charge:100,kc:4,burnI:.3,bn:.36,bb:.55,rch:5,cap:32,capC:40,lv:22,gl:24,see:28,leash:15.5,
   parts:[{k:'core',n:'Essence Core',ic:'🔮',g:'wendigo'},{k:'nozzle',n:'Ember Nozzle',ic:'🔥',g:'troll'},{k:'tank',n:'Bellows Tank',ic:'🛢️',g:'rimecrawler'}]};
 function mq160Ins(){try{return curIns()}catch(_){return null}}
 function mq160In2(){const I=mq160Ins();return !!I&&I.g===insG(2,1)}
@@ -212,7 +215,8 @@ function mq160Start(){if(MQ160.E||MQ160.st!==2)return;const R=mq160Plan();
   MQ160.E={t:0,melt:0,heat:0,ovh:0,charge:MQ160.charge,carry:0,fire:0,spT:3,live:[],kills:0,burned:0,gp:null,gry:0,hint:0};MQ160.trkK='';mq160Sync();
   shake(.2);svSnd('charge',1,.6);svShock(new THREE.Vector3(R.yard.x,0,R.yard.z),0xffa040,MQ160.leash,.8);
   try{zt116Show(ZT116.Z[2],'The Frozen Gate','Melt the Gate','The ice cracks and the spiders wake','C picks up the flamespitter · hold left click to spray','z2')}catch(_){}
-  say('🔥 The melt begins! Pick up the flamespitter (C), hold the left mouse button on the gate. It overheats after 5 s: drop it (C) and fight while it cools.');fs160Hud()}
+  say('🔥 The melt begins! Pick up the flamespitter (C), hold the left mouse button on the gate. It overheats after 5 s: drop it (C) and fight while it cools.');
+  setTimeout(()=>{try{if(MQ160.E)say('💠 The essence charge (the orange bar) makes the flame burn spiders twice as fast. It drains as it burns and refills while you are not spraying. Empty, the flame still burns them, just slower.')}catch(_){}},2500);fs160Hud()}
 function mq160Fail(why){const E=MQ160.E;if(!E)return;MQ160.E=null;MQ160.trkK='';
   enemies.slice().forEach(e=>{if(e.fs160sp&&!e.dead){burst(gY(e.m.position,.4),0xbfe8ff,14,1.4,1.2,.6);try{removeE(e)}catch(_){}}});
   mq160Sync();const S=MQ160.S;if(S){S.gate.ice.scale.set(1,1,1);S.gate.pud.scale.set(.01,1,.01);S.gate.hot.material.opacity=0}fs160Hud();svSnd('crack',1,.6);
@@ -274,14 +278,16 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
   {const k=E.melt/MQ160.melt,ice=S.gate.ice;ice.scale.set(1-.12*k,Math.max(.05,1-.85*k),1-.35*k);S.gate.pud.scale.set(.5+3.2*k,1,.4+1.4*k);
     const hot=S.gate.hot;hot.material.opacity=onGate&&E.fire?.7+.2*Math.sin(now/40):Math.max(0,hot.material.opacity-dt*2);if(onGate&&E.fire){const y=Math.max(.6,6*Math.max(.05,1-.85*k)*.55);hot.position.set((Math.random()-.5)*.2,y,1.0);
       if(Math.random()<dt*20){const w=new THREE.Vector3();hot.getWorldPosition(w);burst(w,0xf0f4f8,1,.5,1.6,1.1);burst(w,0x8ad0ff,1,.4,-1.2,.6)}if(Math.random()<dt*2)svSnd('hiss',.5,1.3)}}
-  // the flame burns spiders: each kill spends essence charge (a partner's flame asks the host)
+  // the flame burns spiders (v166: a heavy burn every MQ160.burnI s, not a one-hit kill; the essence charge only makes it blaze;
+  // a partner's flame asks the host, who burns it with fs160Burn)
   if(E.carry&&E.fire){const R2=6.2;for(const e of enemies){if(!(e.fs160sp||e.c&&e.c.en==='icespider')||e.dead)continue;const hx=e.m.position.x-pl.position.x,hz=e.m.position.z-pl.position.z,hd=Math.hypot(hx,hz);if(hd>R2)continue;const ca=(hx*d.x+hz*d.z)/(hd||1);if(ca<.86&&hd>1.4)continue;
-    if(E.charge>=MQ160.kc){if(host){E.charge-=MQ160.kc;E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6);try{hurt(e,1e9,{col:'#ff9a3a'},false)}catch(_){}if(!e.dead)try{removeE(e)}catch(_){}}
-      else if(e.nid&&!(e.fs160b>now)){e.fs160b=now+600;co151Send(['f2k',e.nid]);burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6)}}
-    else if(!E.spent){E.spent=1;popT(pl.position,'CHARGE SPENT','#ffb060',true);say('💠 The essence charge is spent: the flame still melts the gate, but it will not kill spiders any more.')}}}
+    if(host)fs160Burn(e);
+    else if(e.nid&&!(e.fs160b>now)){e.fs160b=now+MQ160.burnI*1000;co151Send(['f2k',e.nid]);burst(gY(e.m.position,.4),0xff8a2a,12,1.4,2,.5)}}}
+  // the essence charge refills while the flamespitter is not spraying (the host keeps it)
+  if(host&&!E.fire&&E.charge<MQ160.charge){E.charge=Math.min(MQ160.charge,E.charge+dt*MQ160.rch);if(E.spent&&E.charge>=MQ160.kc*5)E.spent=0}
   // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at the nearest hero (the host spawns them)
   if(host){E.spT-=dt;const live=enemies.filter(e=>(e.fs160sp||e.c&&e.c.en==='icespider')&&!e.dead&&!e.mir).length;
-  if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004)*(co?.85:1);let n=1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0)+(co&&Math.random()<.4?1:0);n=Math.min(n,(co?20:16)-live);
+  if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004)*(co?.85:1);let n=2*(1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0)+(co&&Math.random()<.4?1:0));n=Math.min(n,(co?MQ160.capC:MQ160.cap)-live);   // v166: twice as many
     for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<14&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
         if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8){x=qx;z=qz;okp=true}}
       if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:co?0:1})}catch(err){console.error('v151 spider',err)}
@@ -290,6 +296,15 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
   if(E.melt>=MQ160.melt)return mq160Win()}
   if(co&&host)co160Sync(now);
   if(now-(E.hu||0)>120){E.hu=now;fs160Hud()}}
+// one burn of the flame on a spider (the host only): a heavy hit scaled to the spider's health; with essence charge it blazes
+// (bigger hit, MQ160.kc charge). Burns of one spider are MQ160.burnI s apart (event time, so the host's flame and a partner's share it)
+function fs160Burn(e){const E=MQ160.E;if(!E||!e||e.dead)return false;if(e.fs160t!=null&&E.t<e.fs160t)return false;e.fs160t=E.t+MQ160.burnI;
+  const bl=E.charge>=MQ160.kc;if(bl)E.charge-=MQ160.kc;let mx=1;try{mx=cM(e.c)}catch(_){mx=e.c.h||1}
+  const dm=Math.max(1,Math.ceil(mx*(bl?MQ160.bb:MQ160.bn)));burst(gY(e.m.position,.4),bl?0xffc060:0xff8a2a,bl?18:12,1.6,2,.5);
+  try{hurt(e,dm,{col:bl?0xffc060:0xff8a3a},false,true)}catch(err){if(!FS160.be){FS160.be=1;console.warn('v151 burn',err)}}
+  if(e.dead){E.burned++;burst(gY(e.m.position,.4),0xff8a2a,24,1.8,2,.6)}
+  if(!bl&&!E.spent){E.spent=1;try{popT(pl.position,'CHARGE EMPTY','#ffb060',true);say('💠 The essence charge is empty: the flame still burns spiders, just slower. It refills while you are not spraying.')}catch(_){}}
+  return true}
 // no swings or spells while carrying; the C key toggles the flamespitter during the melt (instead of opening the Character window)
 {const f=swing;swing=function(){if(MQ160.E&&MQ160.E.carry)return;return f.apply(this,arguments)}}
 {const f=cast;cast=function(){if(MQ160.E&&MQ160.E.carry){if(nowP()-(FS160.ct||0)>1500){FS160.ct=nowP();say('🔥 Drop the flamespitter (C) to use your abilities.')}return}return f.apply(this,arguments)}}
@@ -318,7 +333,8 @@ function fs160Hud(){let el=document.getElementById('fs160');const E=MQ160.E;if(!
   const m=E.melt/MQ160.melt,live=enemies.filter(e=>e.fs160sp&&!e.dead).length;
   el.innerHTML=`<div class="t"><span>🔥 Melting the Frozen Gate</span><span>${Math.round(m*100)}%</span></div><div class="bar m"><i style="width:${(m*100).toFixed(1)}%"></i></div>
   <div class="t"><span>${E.ovh?'♨️ Overheated · cooling':'Heat'}</span><span>${E.carry?(E.fire?'spraying':'held'):'on the ground'}</span></div><div class="bar h${E.ovh?' ov':''}"><i style="width:${(E.heat*100).toFixed(1)}%"></i></div>
-  <div class="t"><span>💠 Essence charge</span><span>${Math.round(E.charge)}</span></div><div class="bar c"><i style="width:${(E.charge/MQ160.charge*100).toFixed(1)}%"></i></div>
+  <div class="t"><span>💠 Essence charge · bonus burn</span><span>${Math.round(E.charge)}</span></div><div class="bar c"><i style="width:${(E.charge/MQ160.charge*100).toFixed(1)}%"></i></div>
+  <div class="k">${E.charge>=MQ160.kc?'💠 Charged: the flame burns spiders twice as fast':'Empty: the flame still burns spiders, just slower'} · refills when not spraying</div>
   <div class="k"><b>C</b> ${E.carry?'drop':'pick up'} the flamespitter · <b>hold left click</b> to spray · ice spiders: <b>${live}</b></div>`}
 
 // ---------------- prompts ----------------

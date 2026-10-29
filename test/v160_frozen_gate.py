@@ -1,7 +1,7 @@
 # v151: The Frozen Gate (Burningeye Summit II main quest): the plan (gate, workbench, three caches), the gate replaces the II
 # gateway, each cache's elite warden and its part, assembling the flamespitter, the melt event (held in the yard, recall blocked,
 # C picks up and drops, holding the left button sprays and melts, overheating after 5 s and cooling, ice spiders spawning and
-# hunting, the flame killing spiders for charge, the charge running out, a death resets it), the gate opening, the road to III,
+# hunting, v166: twice as many, the flame burning spiders in heavy hits (charge = bonus burn, empty still kills, refills), a death resets it), the gate opening, the road to III,
 # saves (round trip, old saves, III reached, a mid-melt save). NOSHOT=1 skips the pictures.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -43,12 +43,22 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   for(let i=0;i<100;i++){aimAt();clk+=33;god();mq160Tick(1/30,clk)}out.ovh=E.ovh;const m5=E.melt;for(let i=0;i<30;i++){aimAt();clk+=33;god();mq160Tick(1/30,clk)}out.noMeltHot=+(E.melt-m5).toFixed(3);
   atkHeld=false;for(let i=0;i<130;i++){clk+=33;god();mq160Tick(1/30,clk)}out.cooled=E.ovh===0&&E.heat<.05;
   out.spiders=enemies.filter(e=>e.fs160sp&&!e.dead).length;out.hunt=enemies.filter(e=>e.fs160sp&&!e.dead).every(e=>e.hunt&&e.agg&&e.minion);
-  // the flame kills a spider in front for charge
-  enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});const sp=spawnEnemy('icespider',pl.position.x+Math.sin(pl.rotation.y)*3,pl.position.z+Math.cos(pl.rotation.y)*3,22,{agg:1,minion:1});sp.fs160sp=1;sp.hunt=1;
-  const ch0=E.charge;atkHeld=true;E.spT=99;for(let i=0;i<4;i++){clk+=33;god();mq160Tick(1/30,clk)}out.spDead=!!sp.dead||!enemies.includes(sp);out.chargeCost=ch0-E.charge;
-  // with no charge left the flame does not kill
-  E.charge=3;const sp2=spawnEnemy('icespider',pl.position.x+Math.sin(pl.rotation.y)*3,pl.position.z+Math.cos(pl.rotation.y)*3,22,{agg:1,minion:1});sp2.fs160sp=1;sp2.hunt=1;
-  for(let i=0;i<4;i++){clk+=33;god();mq160Tick(1/30,clk)}out.sp2Alive=!sp2.dead&&enemies.includes(sp2);out.spent=E.spent;atkHeld=false;
+  // v166: twice as many spiders: two or more per spawn, up to MQ160.cap alive
+  enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});E.spT=0;clk+=33;god();mq160Tick(1/30,clk);out.spawn1=enemies.filter(e=>e.fs160sp&&!e.dead).length;
+  for(let i=0;i<40;i++){E.spT=0;clk+=33;god();mq160Tick(1/30,clk)}out.spawnMax=enemies.filter(e=>e.fs160sp&&!e.dead).length;out.cap=MQ160.cap;
+  // v166: the flame burns a spider down in a few heavy hits (not at once); with essence charge 2 burns, 8 charge
+  const spawnFront=()=>{const e=spawnEnemy('icespider',pl.position.x+Math.sin(pl.rotation.y)*3,pl.position.z+Math.cos(pl.rotation.y)*3,22,{agg:1,minion:1});e.fs160sp=1;e.hunt=1;e.vx=e.vz=0;return e};
+  const keep=e=>{e.m.position.set(pl.position.x+Math.sin(pl.rotation.y)*3,e.m.position.y,pl.position.z+Math.cos(pl.rotation.y)*3)};
+  enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});E.heat=0;E.ovh=0;E.charge=MQ160.charge;E.spent=0;const sp=spawnFront(),hp0=sp.c.h;
+  const ch0=E.charge;atkHeld=true;E.spT=99;for(let i=0;i<4;i++){aimAt();keep(sp);clk+=33;god();mq160Tick(1/30,clk)}out.sp1Alive=!sp.dead&&enemies.includes(sp);out.sp1Frac=+(sp.c.h/hp0).toFixed(2);
+  for(let i=0;i<20&&!sp.dead;i++){aimAt();keep(sp);clk+=33;god();mq160Tick(1/30,clk)}out.spDead=!!sp.dead||!enemies.includes(sp);out.chargeCost=Math.round(ch0-E.charge);
+  // with the charge empty the flame still kills, just slower (3 burns): the v166 bug fix
+  E.charge=0;E.heat=0;const sp2=spawnFront(),hp2=sp2.c.h;
+  for(let i=0;i<4;i++){aimAt();keep(sp2);clk+=33;god();mq160Tick(1/30,clk)}out.sp2Alive=!sp2.dead&&enemies.includes(sp2);out.sp2Frac=+(sp2.c.h/hp2).toFixed(2);out.spent=E.spent;
+  for(let i=0;i<40&&!sp2.dead;i++){aimAt();keep(sp2);clk+=33;god();mq160Tick(1/30,clk)}out.sp2Dead=!!sp2.dead||!enemies.includes(sp2);
+  fs160Hud();out.hudTxt=(document.getElementById('fs160')||{}).textContent||'';
+  // the charge refills while not spraying
+  atkHeld=false;const c0=E.charge;for(let i=0;i<30;i++){clk+=33;god();mq160Tick(1/30,clk)}out.refill=+(E.charge-c0).toFixed(1);
   // C drops it
   document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}));out.dropped=!E.carry&&!!E.gp&&MQ160.S.sp.parent===scene;
   // a death resets the melt
@@ -92,8 +102,14 @@ def s(pg):
     exp(r['ovh']==1 and r['noMeltHot']==0,'5 s of spraying overheats it; no melting while hot (%s, %s)'%(r['ovh'],r['noMeltHot']))
     exp(r['cooled'],'it cools down after release')
     exp(r['spiders']>=1 and r['hunt'],'ice spiders spawn and hunt the hero (%s)'%r['spiders'])
-    exp(r['spDead'] and r['chargeCost']==8,'the flame kills a spider for 8 charge (%s, cost %s)'%(r['spDead'],r['chargeCost']))
-    exp(r['sp2Alive'] and r['spent'],'with the charge spent the flame does not kill')
+    exp(r['spawn1']>=2,'v166: a spawn brings two or more spiders (%s)'%r['spawn1'])
+    exp(16<r['spawnMax']<=r['cap']==32,'v166: up to 32 spiders alive, twice the old 16 (%s of %s)'%(r['spawnMax'],r['cap']))
+    exp(r['sp1Alive'] and .3<r['sp1Frac']<.6,'v166: one charged burn is a heavy hit, not a kill (alive %s, %s hp left)'%(r['sp1Alive'],r['sp1Frac']))
+    exp(r['spDead'] and r['chargeCost']==8,'the charged flame kills a spider in 2 burns for 8 charge (%s, cost %s)'%(r['spDead'],r['chargeCost']))
+    exp(r['sp2Alive'] and .5<r['sp2Frac']<.75 and r['spent'],'v166: an empty charge burns lighter (alive %s, %s hp left, spent %s)'%(r['sp2Alive'],r['sp2Frac'],r['spent']))
+    exp(r['sp2Dead'],'v166: with the charge empty the flame still kills spiders (the old bug: it stopped killing)')
+    exp('bonus burn' in r['hudTxt'] and 'still burns' in r['hudTxt'],'v166: the HUD explains the essence charge (%s)'%r['hudTxt'][:200])
+    exp(r['refill']>=3,'v166: the charge refills while not spraying (+%s)'%r['refill'])
     exp(r['dropped'],'C drops the flamespitter on the ground')
     exp(r['failEv'] and r['failSt']==2 and r['spidersGone'] and r['onBench'],'a death ends the melt, clears the spiders and puts the flamespitter back')
     exp(r['st3']==3 and r['evEnd'] and r['done'] and r['iceGone'] and r['iceFree'] and r['spBack'],'melting through opens the gate')
