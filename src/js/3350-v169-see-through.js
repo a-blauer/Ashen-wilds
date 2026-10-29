@@ -23,22 +23,26 @@ function gh169Sphere(o,out){const g=o.geometry;if(!g)return null;
       s=o.userData.gh169S={n,c,r,top}}
     out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
   if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
-// can any pixel of this mesh be see-through? (a cone from the camera to the hero, GH169.R wide at the hero; a ball round the camera)
+// can any pixel of this mesh be see-through? v171: it meets one of the blocking boxes (gh171Scan), it is the ground while the
+// ground blocks the view or the camera is inside the rock, or it reaches the lens (GH169.N)
 const GH169S={c:new THREE.Vector3(),r:0},GH169V=new THREE.Vector3(),GH169W=new THREE.Vector3();
-function gh169Hit(o,fl){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value;
-  if(fl!=null&&s.top<H.y+fl)return false;   // wholly below the material's floor rule (grass, paving): never see-through
-  const ab=GH169V.copy(H).sub(C),L2=ab.lengthSq();if(L2<1e-4)return false;const L=Math.sqrt(L2),tc=GH169W.copy(s.c).sub(C).dot(ab)/L2,tr=s.r/L;
+function gh169Hit(o,fl,gt){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value,B=GH171;
   if(s.c.distanceTo(C)-s.r<GH169.N[1])return true;
-  if(tc+tr<=0||tc-tr>=.96)return false;
-  const t=Math.min(1,Math.max(0,tc)),lat=GH169W.copy(C).addScaledVector(ab,t).distanceTo(s.c);
-  return lat-s.r<GH169.R[1]*Math.min(1,tc+tr)+.5}
+  if(gt)return B.under||(GH169.U.uGhT.value>0&&gh171Front(s,C,H));
+  if(fl!=null&&s.top<H.y+fl)return false;   // wholly below the material's floor rule (grass, paving): never see-through
+  for(const b of B.box)if(b.w>0){const x=Math.max(b.mn.x,Math.min(s.c.x,b.mx.x))-s.c.x,y=Math.max(b.mn.y,Math.min(s.c.y,b.mx.y))-s.c.y,z=Math.max(b.mn.z,Math.min(s.c.z,b.mx.z))-s.c.z;
+    if(x*x+y*y+z*z<(s.r+.35)*(s.r+.35))return true}
+  return false}
+// does a ball reach in front of the hero (between the camera and the hero's depth)?
+function gh171Front(s,C,H){const ab=GH169V.copy(H).sub(C),L2=ab.lengthSq();if(L2<1e-4)return false;const L=Math.sqrt(L2),tc=GH169W.copy(s.c).sub(C).dot(ab)/L2,tr=s.r/L;return tc+tr>0&&tc-tr<.99}
 // fl: the lowest floor among the mesh's materials (null: one of them has none)
-function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0,fl;
-  for(const m of Array.isArray(M)?M:[M])if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1;const f=m.userData.gh169Fl;
+function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0,gt=0,fl;
+  for(const m of Array.isArray(M)?M:[M])if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1;if(m.userData.gh171T)gt=1;const f=m.userData.gh169Fl;
     fl=f==null||fl===null?null:fl===undefined?f:Math.min(fl,f)}
   if(fl===undefined)fl=null;
   if(!g||o.isSkinnedMesh){if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L);return}
-  if(all||gh169Hit(o,fl)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
+  if(!gt&&!u.gh171No)GH171.seen.push(o,fl);   // what was drawn: what the next scan tests against the view (gh171Scan)
+  if(all||gh169Hit(o,fl,gt)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
   else if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L)}
 // in the ghost passes the see-through materials blend as premultiplied glass and write no stencil (a material that writes it
 // would also reset the stencil test the colour passes rely on); put back after the passes
@@ -54,28 +58,13 @@ function gh169Mark1(o){if(!o.isMesh&&!o.isPoints&&!o.isLine&&!o.isSprite)return;
 function gh169Chars(){const S=f135Skip();try{gh169Clear(SKY.material);gh169Clear(WTR.w.material);gh169Clear(WTR.l.material)}catch(_){}try{(typeof party!='undefined'?party:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
   try{(typeof comps!='undefined'?comps:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
   S.forEach(o=>{if(o&&o.traverse)o.traverse(gh169Mark1)})}
-// the black floor under the instance you are in, and the rectangle past which the ground is black (the cliff it drops off at
-// the edge is black too: 3190 ghEdge)
+// the rectangle past which the ground stops (3355's apron continues it). v169's black floor under the instance and its fade to
+// black with the camera out of the map are gone (v171, owner: rock past the edge instead, looked through like any wall)
 function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV.value;
-  if(k!==C.vk||!C.vo){C.vk=k;
-    if(!C.vo){const o=C.vo=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,fog:false}));
-      o.name='gh169Void';o.userData.noFade135=1;o.userData.psNo=1;o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false;scene.add(o)}
-    const o=C.vo;o.visible=!!I;if(I){o.position.set(I.x0+I.w/2,GH169.vy,I.y0+I.h/2);o.scale.set(I.w+800,1,I.h+800)}
-    o.updateMatrix();o.updateMatrixWorld(true)}
   if(!I){V.set(-1e6,-1e6,1e6,1e6);C.out=false;return}
   const c=FADE.cam.value;C.out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h;V.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h)}
-// The camera out of the map: inside the rock (below the ground under it: behind a wall step it stays where the player put it)
-// or out past the instance's edge. Then the background (what shows under the map from in there) fades to black over
-// GH169.fadeT s, and so does the glass (to fully clear, gh169K / uGhA), and back when the camera returns; the fade runs on the
-// game's clock (homeTick).
 GH169.fadeT=.35;
-// with the camera out of the map what stands between it and the hero fades fully clear instead of turning to glass (from inside
-// the wall the boulders lining it were stacked pale glass over the hero), and nothing behind is darkened
-function gh169K(){const fd=GH169C.fade||0;return GH169.k+(1-GH169.k)*fd}
-function gh169AwayTick(dt){const C=GH169C,c=FADE.cam.value;let u=false;try{u=c.y<GH(c.x,c.z)-.05}catch(_){}
-  const away=GH169.on&&(u||!!C.out)&&!(typeof IC151!='undefined'&&IC151.on);C.under=u;
-  C.fade=Math.max(0,Math.min(1,(C.fade||0)+(away?1:-1)*Math.min(.1,dt||0)/GH169.fadeT))}
-{const f=homeTick;homeTick=function(dt){const r=f.apply(this,arguments);try{gh169AwayTick(dt)}catch(e){if(!GH169C.err3){GH169C.err3=1;console.warn('v169 fade',e)}}return r}}
+function gh169K(){return GH169.k}
 // the water: never past the instance's edge (its sheet spans the void at sea level: from out there it was a pale sheet over all)
 function gh169Water(){try{[WTR.w,WTR.l].forEach(o=>{const m=o&&o.material;if(!m||m.userData.gh169W)return;m.userData.gh169W=1;
   m.uniforms.uGhV=GH169.U.uGhV;m.uniforms.uGhOn=GH169.U.uGhOn;
@@ -105,9 +94,6 @@ POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
     B.color.setLocked(false);B.color.setMask(true);B.depth.setLocked(false);B.depth.setMask(true);B.stencil.setLocked(false);B.stencil.setTest(false);B.stencil.setMask(0xff);
     scene.background=bg;ren.autoClear=ac;ren.shadowMap.autoUpdate=sa;ren.shadowMap.needsUpdate=sn;cam.layers.mask=lm;gh169Restore();C.st.ms=+(performance.now()-t0).toFixed(2)}};
 {const f=POST.render;POST.render=function(){const C=GH169C,U=GH169.U;C.f++;C.cand.length=0;C.top.clear();
-  try{const fd=C.fade||0;U.uGhA.value=GH169.a*(1-fd);U.uGhK.value=gh169K();if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
-    else{U.uGhR.value.set(-2,-1);U.uGhN.value.set(-2,-1)}
-    gh169Void();gh169Water();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
-  // out of the map the background fades to black with the view
-  let bg=null;if(C.fade>0&&scene.background&&scene.background.isColor){bg=scene.background;scene.background=(C.bgc||(C.bgc=new THREE.Color())).copy(bg).multiplyScalar(1-C.fade)}
-  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0;if(bg)scene.background=bg}}}
+  try{U.uGhA.value=GH169.a;U.uGhK.value=gh169K();U.uGhD.value=GH169.d;if(GH169.on)U.uGhN.value.set(GH169.N[0],GH169.N[1]);else U.uGhN.value.set(-2,-1);
+    gh169Void();gh169Water();gh171Tick();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
+  GH171.seen.length=0;C.live=1;try{return f.apply(this,arguments)}finally{C.live=0}}}
