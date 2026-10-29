@@ -164,17 +164,17 @@ function windMat(mat,amp,off){
     #else
     vWP2=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
-    // v169: one see-through rule for everything (0061): plants turn see-through above the hero's knees (grass stays), no dark inside.
+    // v169: one see-through rule for everything (0061): plants turn see-through above the hero's waist (grass stays), no dark inside.
     // The intro's Duskhold shots (uM157 0, 2420) keep the old dithered tube, so its rendered video stays the same.
     sh.uniforms.uM157w=M157;
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
     float ghw=0.;
-    if(uM157w>.5)ghw=gh169W(vWP2,uCam,uPl)*smoothstep(-.85,-.55,vWP2.y-uPl.y);
+    if(uM157w>.5)ghw=gh169W(vWP2,uCam,uPl)*smoothstep(-.6,-.3,vWP2.y-uPl.y);
     else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}
     `+GH169.GATE);gh169Shader(sh,mat,'vWP2',true)};
-  mat.customProgramCacheKey=()=>'ifx';gh169Flag(mat,0,1);
+  mat.customProgramCacheKey=()=>'ifx';gh169Flag(mat,0,1,-.6);
 }
 function buildVI(){
   const chk={};buildTerrain(chk);

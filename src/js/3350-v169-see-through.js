@@ -14,28 +14,31 @@
 //     so the void past the edge is black.
 var GH169L=3,GH169C={live:0,pass:0,f:0,cand:[],top:new Set(),hid:[],mats:[],ct:0,vo:null,vk:null,st:{cand:0,passes:0,ms:0,skip:0}};
 GH169.vm=.5;GH169.vy=-75;
-// the mesh's bounds in the world (instanced meshes: all instances, cached)
+// the mesh's bounds in the world (instanced meshes: all instances, cached; top = the highest instance's top, local y)
 function gh169Sphere(o,out){const g=o.geometry;if(!g)return null;
   if(o.isInstancedMesh){let s=o.userData.gh169S;
     if(!s||s.n!==o.count){if(!g.boundingSphere)g.computeBoundingSphere();const a=o.instanceMatrix.array,n=o.count,c=new THREE.Vector3(),m=new THREE.Matrix4(),p=new THREE.Vector3();
-      for(let i=0;i<n;i++){c.x+=a[i*16+12];c.y+=a[i*16+13];c.z+=a[i*16+14]}if(n)c.multiplyScalar(1/n);let r=0;
-      for(let i=0;i<n;i++){m.fromArray(a,i*16);p.copy(g.boundingSphere.center).applyMatrix4(m);r=Math.max(r,p.distanceTo(c)+g.boundingSphere.radius*m.getMaxScaleOnAxis())}
-      s=o.userData.gh169S={n,c,r}}
-    out.c.copy(s.c).applyMatrix4(o.matrixWorld);out.r=s.r*o.matrixWorld.getMaxScaleOnAxis();return out}
-  if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();return out}
+      for(let i=0;i<n;i++){c.x+=a[i*16+12];c.y+=a[i*16+13];c.z+=a[i*16+14]}if(n)c.multiplyScalar(1/n);let r=0,top=-1e9;
+      for(let i=0;i<n;i++){m.fromArray(a,i*16);p.copy(g.boundingSphere.center).applyMatrix4(m);const ri=g.boundingSphere.radius*m.getMaxScaleOnAxis();r=Math.max(r,p.distanceTo(c)+ri);top=Math.max(top,p.y+ri)}
+      s=o.userData.gh169S={n,c,r,top}}
+    out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
+  if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
 // can any pixel of this mesh be see-through? (a cone from the camera to the hero, GH169.R wide at the hero; a ball round the camera)
 const GH169S={c:new THREE.Vector3(),r:0},GH169V=new THREE.Vector3(),GH169W=new THREE.Vector3();
-function gh169Hit(o){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value;
+function gh169Hit(o,fl){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value;
+  if(fl!=null&&s.top<H.y+fl)return false;   // wholly below the material's floor rule (grass, paving): never see-through
   const ab=GH169V.copy(H).sub(C),L2=ab.lengthSq();if(L2<1e-4)return false;const L=Math.sqrt(L2),tc=GH169W.copy(s.c).sub(C).dot(ab)/L2,tr=s.r/L;
   if(s.c.distanceTo(C)-s.r<GH169.N[1])return true;
   if(tc+tr<=0||tc-tr>=.96)return false;
   const t=Math.min(1,Math.max(0,tc)),lat=GH169W.copy(C).addScaledVector(ab,t).distanceTo(s.c);
   return lat-s.r<GH169.R[1]*Math.min(1,tc+tr)+.5}
-function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0;
-  if(Array.isArray(M)){for(let i=0;i<M.length;i++){const m=M[i];if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1}}}
-  else if(M&&M.userData.gh169){g=1;all=M.userData.gh169All}
+// fl: the lowest floor among the mesh's materials (null: one of them has none)
+function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0,fl;
+  for(const m of Array.isArray(M)?M:[M])if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1;const f=m.userData.gh169Fl;
+    fl=f==null||fl===null?null:fl===undefined?f:Math.min(fl,f)}
+  if(fl===undefined)fl=null;
   if(!g||o.isSkinnedMesh){if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L);return}
-  if(all||gh169Hit(o)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
+  if(all||gh169Hit(o,fl)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
   else if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L)}
 // in the ghost passes the see-through materials blend as premultiplied glass and write no stencil (a material that writes it
 // would also reset the stencil test the colour passes rely on); put back after the passes

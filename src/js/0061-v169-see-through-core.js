@@ -62,7 +62,9 @@ function gh169Shader(sh,m,p,see,vd){for(const k in GH169.U)sh.uniforms[k]=GH169.
 // mark a material as see-through capable when it is patched (3350 reads this before the first draw): all = its pixels can turn
 // see-through far from the line of sight (den walls cut on the camera's side), so its meshes always join the ghost passes
 // clear = what lies behind the glass is seen clearly, not darkened (the ground, plants): stencil 1, like the characters (3350)
-function gh169Flag(m,all,clear){m.userData.gh169=1;if(all)m.userData.gh169All=1;if(clear)gh169Clear(m)}
+// floor = how far below the hero's chest the material's pixels can still turn see-through (its "never below the knees" rule;
+// 3350 skips meshes lying wholly below it); none for terrain and den walls
+function gh169Flag(m,all,clear,floor){m.userData.gh169=1;if(all)m.userData.gh169All=1;if(clear)gh169Clear(m);if(floor!=null)m.userData.gh169Fl=floor}
 function gh169Clear(m){if(!m||m.userData.gh169C)return;m.userData.gh169C=1;
   m.stencilWrite=true;m.stencilRef=1;m.stencilWriteMask=0xff;m.stencilFuncMask=0xff;m.stencilFunc=THREE.AlwaysStencilFunc;
   m.stencilZPass=THREE.ReplaceStencilOp;m.stencilFail=THREE.KeepStencilOp;m.stencilZFail=THREE.KeepStencilOp}

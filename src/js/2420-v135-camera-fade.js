@@ -50,7 +50,7 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
       #endif
       }}}
     `+GH169.GATE);if(m.isMeshBasicMaterial)sh.fragmentShader='#define GH169_B135\n'+sh.fragmentShader;gh169Shader(sh,m,'vF135')};
-  m.customProgramCacheKey=()=>k0+'f135';gh169Flag(m,m.side===THREE.DoubleSide);m.needsUpdate=true}
+  m.customProgramCacheKey=()=>k0+'f135';gh169Flag(m,m.side===THREE.DoubleSide,0,-.85);m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
   try{drops.forEach(d=>d&&d.g&&S.add(d.g))}catch(_){}try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){const q=MP.rh[k];if(q&&q.m)S.add(q.m);if(q&&q.h)S.add(q.h)}}catch(_){}
