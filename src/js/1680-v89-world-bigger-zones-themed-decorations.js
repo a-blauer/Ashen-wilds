@@ -145,7 +145,7 @@ function wdDeco(){const T0=performance.now();
   def('d_skulls',{parts:[M([skull(0xd8d0b8),skull(0xc8c0a8).translate(.35,0,.25),skull(0xd0c8b0).translate(-.2,.22,.05)])],near:true,s:[.9,1.3]});
   def('d_candles',{parts:[candles(),{g:candleGlow(),glow:1}],near:true,s:[1,1.6],gt:[0xffd890]});
   def('d_coffin',{parts:[coffin(0x3a2a22)],cast:true,s:[.9,1.1]});
-  def('d_angel',{parts:[statueG(0x8a8a90,{wings:1})],cast:true,col:.7,s:[.95,1.15]});
+  def('d_angel',{parts:[(()=>{try{return dt168AngelDeco()}catch(e){console.warn('v168 angel',e);return statueG(0x8a8a90,{wings:1})}})()],cast:true,col:.7,s:[.95,1.15]});   // v168: a sculpted angel (3345)
   def('d_reeds',{parts:[reeds(0x5a6a4a,0x3a2a22)],near:true,s:[.8,1.3],sway:.18});
   def('d_lamp',{parts:[lanternPost(),{g:lanternGlow(),glow:1}],cast:true,s:[.95,1.1],gt:[0x8affd0]});
   def('d_mist',{parts:[{g:plain(pln(1,1).rotateX(-Math.PI/2)),mat:'mist'}],y:.3,s:[4,8],j:0,tint:[0x8ab8b0]});

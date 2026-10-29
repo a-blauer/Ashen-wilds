@@ -31,11 +31,11 @@ function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanP
   const R=svRng(5300),sc=[];const wallAt=(u,v,du,dv)=>{const k=dg165SanFloor(u+.5,v+.5),n=dg165SanFloor(u+du+.5,v+dv+.5);return k&&k!='pit'&&k!='bridge'&&!n};
   for(let v=0;v<I.h;v+=1)for(let u=0;u<I.w;u+=1)for(const [du,dv] of [[1,0],[-1,0],[0,1],[0,-1]])if(wallAt(u,v,du,dv)&&((u*7+v*13+(du+2)*5+(dv+2)*3)%11)==0)sc.push([u,v,du,dv]);
   [84,92,100].forEach(v=>{sc.push([58,v,-1,0]);sc.push([101,v,1,0])});[150,186,200].forEach(v=>{if(wallAt(40,v,-1,0))sc.push([40,v,-1,0])});
-  const scK=lgGroup('DG165|sconce',dg165SconceKit,0);
+  const scK=dt168G('DG165|sconce',dg165SconceKit,0);
   sc.forEach(([u,v,du,dv])=>{const g=scK.clone();const q=at(u+.5+du*.47,v+.5+dv*.47,F0+2.4);g.position.set(q[0],q[1],q[2]);g.rotation.y=Math.atan2(-du,-dv);root.add(g);
     const fx=q[0]-du*.27,fz=q[2]-dv*.27,f=dg165Flame(root,fx,q[1]+.42,fz,.34,0xffa040);S.fl.push(f);S.spots.push({x:fx,y:q[1]+.6,z:fz,c:0xffa050,i:2.0,r:11,ph:R()*6})});
   // braziers in the corners of the big halls, soul lights over the chasm
-  const brK=lgGroup('DG165|brazier',dg165BrazierKit,0);[[60,80],[100,80],[60,108],[100,108],[70,10],[90,10],[70,28],[90,28],[60,162],[68,162],[88,212],[96,212],[89,216],[95,216],[89,248.4],[95,248.4],[78,288],[106,288],[78,318],[106,318]].forEach(([u,v])=>{const g=brK.clone();put(g,u,v,0);const q=at(u,v);const f=dg165Flame(root,q[0],q[1]+1.32,q[2],.55,0xff9a40);S.fl.push(f);S.spots.push({x:q[0],y:q[1]+1.9,z:q[2],c:0xff9040,i:2.4,r:13,ph:R()*6});const [x,z]=dg165SW(u,v);CBLK.add(Math.round(z)*W+Math.round(x))});
+  const brK=dt168G('DG165|brazier',dg165BrazierKit,0);[[60,80],[100,80],[60,108],[100,108],[70,10],[90,10],[70,28],[90,28],[60,162],[68,162],[88,212],[96,212],[89,216],[95,216],[89,248.4],[95,248.4],[78,288],[106,288],[78,318],[106,318]].forEach(([u,v])=>{const g=brK.clone();put(g,u,v,0);const q=at(u,v);const f=dg165Flame(root,q[0],q[1]+1.32,q[2],.55,0xff9a40);S.fl.push(f);S.spots.push({x:q[0],y:q[1]+1.9,z:q[2],c:0xff9040,i:2.4,r:13,ph:R()*6});const [x,z]=dg165SW(u,v);CBLK.add(Math.round(z)*W+Math.round(x))});
   [[64,170],[78,183],[80,195],[90,203]].forEach(([u,v])=>{const q=at(u,v,dg165SY()+3.2);const f=kqSpr(0x7affc0,.7);f.position.set(q[0],q[1],q[2]);root.add(f);S.fl.push(f);S.spots.push({x:q[0],y:q[1],z:q[2],c:0x6affb0,i:1.6,r:12,fq:1.3,ph:R()*6})});
   // clutter: bones, rubble, coffins, urns, skeletons, cobwebs, chains and cages, per hall
   const D=[],add=(kind,u,v)=>D.push([kind,u,v]);
@@ -44,25 +44,25 @@ function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanP
     add(['bones','rubble','bones','urns','coffin','skeleton','rubble'][(R()*7)|0],u,v)}
   [[70,10],[90,10],[69,28],[91,28]].forEach(q=>add('web',q[0],q[1]));[[78,32],[82,76]].forEach(q=>add('web',q[0],q[1]));[[59,80],[101,80],[59,108],[101,108]].forEach(q=>add('web',q[0],q[1]));
   for(let v=254;v<284;v+=6)add('cage',89.5+((v/6)%2)*5,v);for(let v=252;v<286;v+=4)add('chains',v%8?89:95,v);[[80,296],[104,296],[80,312],[104,312]].forEach(q=>add('coffin',q[0],q[1]));
-  root.add(lgGroup('DG165|sclutter',k=>{const RR=svRng(5301);D.forEach(([kind,u,v])=>{const [x,y,z]=at(u,v);dg165ClutterKit(k,RR,kind,x,y,z)})},0));
+  root.add(dt168G('DG165|sclutter',k=>{const RR=svRng(5301);D.forEach(([kind,u,v])=>{const [x,y,z]=at(u,v);dg165ClutterKit(k,RR,kind,x,y,z)})},0));
   // the stair back up (north wall of the Stair Hall)
-  S.up=put(lgGroup('DG165|supstair',k=>{for(let i=0;i<7;i++)k.p('','box','c',lgCol(0x4a4a4e,0x1a1a1c,i/7),0,.1+i*.32,-i*.42,2.6,.3,.5);[-1,1].forEach(s=>k.p('','box','c',0x3a3a3e,s*1.45,1.4,-1.4,.3,2.8,3));
+  S.up=put(dt168G('DG165|supstair',k=>{for(let i=0;i<7;i++)k.p('','box','c',lgCol(0x4a4a4e,0x1a1a1c,i/7),0,.1+i*.32,-i*.42,2.6,.3,.5);[-1,1].forEach(s=>k.p('','box','c',0x3a3a3e,s*1.45,1.4,-1.4,.3,2.8,3));
     k.p('','box','c',0x050505,0,2.6,-3.2,2.6,2.4,.1);k.p('','box','c',0x3a3a3e,0,4.1,-1.4,3.2,.4,3.2)},0),80,9.6,0);
   // the Hall of Pendulums: five blades on beams across the hall
   const pK=dg165Pendulum;P.pend.forEach((q,i)=>{const g=pK();const w=at(80,q.v,F0+DG165SP.pivot);g.position.set(w[0],w[1],w[2]);root.add(g);S.pend.push({g,arm:g.userData.arm,q,th:0,u:80,v:q.v})});
   // a corpse impaled on the third blade (it swings with it)
-  {const a=S.pend[2].arm;a.add(lgGroup('DG165|pcorpse',k=>{const C=DG165SM.c;k.p('','sph','c',C.bone,0,-5.5,.3,.16,.17,.18);k.p('','box','c',0x2a2018,0,-6.0,.3,.42,.6,.24);for(let i=0;i<4;i++)k.p('','ring','c',C.bone2,0,-5.85-i*.1,.32,.16,.3,.08,0,0,Math.PI/2);
+  {const a=S.pend[2].arm;a.add(dt168G('DG165|pcorpse',k=>{const C=DG165SM.c;k.p('','sph','c',C.bone,0,-5.5,.3,.16,.17,.18);k.p('','box','c',0x2a2018,0,-6.0,.3,.42,.6,.24);for(let i=0;i<4;i++)k.p('','ring','c',C.bone2,0,-5.85-i*.1,.32,.16,.3,.08,0,0,Math.PI/2);
     [-1,1].forEach(s=>{k.L('','c',C.bone,[s*.2,-5.8,.3],[s*.5,-6.4,.3],.03,.025,4);k.L('','c',C.bone,[s*.1,-6.3,.3],[s*.18,-7.1,.3],.035,.03,4)})},0))}
   // the Spike Hall: plates baked into one group, the spikes instanced, a warning glow instanced
   {const Q=P.spk,cols=(Q.u1-Q.u0)/Q.cs,rows=(Q.v1-Q.v0)/Q.cs;S.spk={cols,rows,h:new Float32Array(cols*rows),up:new Uint8Array(cols*rows),k:-1};
-    root.add(lgGroup('DG165|splates',k=>{const kk=dkKit();dg165SpikePlateKit(kk);for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const [x,y,z]=at(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);kk.P.forEach(p=>{const m=p.m.clone();m.premultiply(new THREE.Matrix4().makeTranslation(x,y,z));k.P.push(Object.assign({},p,{m}))})}},0));
+    root.add(dt168G('DG165|splates',k=>{const kk=dkKit();dg165SpikePlateKit(kk);for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const [x,y,z]=at(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);kk.P.forEach(p=>{const m=p.m.clone();m.premultiply(new THREE.Matrix4().makeTranslation(x,y,z));k.P.push(Object.assign({},p,{m}))})}},0));
     const mat=new THREE.MeshStandardMaterial({color:0xc8ccd4,metalness:.15,roughness:.45,flatShading:true}),M=new THREE.InstancedMesh(dg165SpikesGeo(),mat,cols*rows);M.frustumCulled=false;root.add(M);S.spk.M=M;
     const gm=new THREE.MeshBasicMaterial({color:0xff3010,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),GM=new THREE.InstancedMesh(new THREE.PlaneGeometry(1.8,1.8).rotateX(-Math.PI/2),gm,cols*rows);GM.frustumCulled=false;root.add(GM);S.spk.G=GM;
     // three dead adventurers lie on the spikes as a warning
-    root.add(lgGroup('DG165|sskel',k=>{const RR=svRng(5310);[[64,90],[88,96],[96,86]].forEach(q=>{const [x,y,z]=at(q[0],q[1]);dg165ClutterKit(k,RR,'skeleton',x,y+.02,z)})},0))}
+    root.add(dt168G('DG165|sskel',k=>{const RR=svRng(5310);[[64,90],[88,96],[96,86]].forEach(q=>{const [x,y,z]=at(q[0],q[1]);dg165ClutterKit(k,RR,'skeleton',x,y+.02,z)})},0))}
   // the Antechamber's plate, the Fire Walk's skulls and the portcullis at its end
-  S.plate=put(lgGroup('DG165|plate',dg165PlateKit,0),P.plate[0],P.plate[1],0);
-  const nzK=lgGroup('DG165|nozzle',dg165NozzleKit,0);
+  S.plate=put(dt168G('DG165|plate',dg165PlateKit,0),P.plate[0],P.plate[1],0);
+  const nzK=dt168G('DG165|nozzle',dg165NozzleKit,0);
   P.jets.forEach((q,i)=>{const u=q.side<0?P.R.flame[0]+.05:P.R.flame[2]-.05,g=nzK.clone(),w=at(u,q.v,F0+1.15);g.position.set(w[0],w[1],w[2]);g.rotation.y=q.side<0?Math.PI/2:-Math.PI/2;root.add(g);
     // the flame: three nested additive cones along the corridor's width (scaled by the tick)
     const fl=new THREE.Group();fl.position.set(w[0],w[1],w[2]);fl.rotation.y=q.side<0?Math.PI/2:-Math.PI/2;root.add(fl);
@@ -70,22 +70,22 @@ function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanP
     fl.scale.set(1,1,.001);S.jets.push({q,fl,u,on:0,x:w[0],z:w[2]});S.spots.push({x:w[0]+(q.side<0?1:-1)*2.8,y:F0+1.3,z:w[2],c:0xff7020,i:0,r:9,jet:i})});
   {const G=P.gate,g=dg165Portcullis(G.u1-G.u0,4.2);put(g,(G.u0+G.u1)/2,G.v,0);S.gateM=g;S.gateY=F0}
   // the Chasm: slabs, faint green ghost lights far below
-  P.bridge.forEach((q,i)=>{const g=put(lgGroup('DG165|slab'+(i%6),k=>dg165SlabKit(k,i%6),0),q[0],q[1],(i%4)*Math.PI/2);S.slabs.push({g,u:q[0],v:q[1],st:0,t:0,y0:F0,tiles:[]})});
+  P.bridge.forEach((q,i)=>{const g=put(dt168G('DG165|slab'+(i%6),k=>dg165SlabKit(k,i%6),0),q[0],q[1],(i%4)*Math.PI/2);S.slabs.push({g,u:q[0],v:q[1],st:0,t:0,y0:F0,tiles:[]})});
   S.slabs.forEach(s=>{for(let du=-1;du<1;du++)for(let dv=-1;dv<1;dv++){const [x,z]=dg165SW(s.u+du+.5,s.v+dv+.5);s.tiles.push(Math.round(z)*W+Math.round(x))}});
   for(let i=0;i<14;i++){const [x,,z]=at(42+R()*60,162+R()*50);const f=kqSpr(0x3aff9a,.9+R());f.material=f.material.clone();f.material.opacity=.3;f.position.set(x,3+R()*6,z);root.add(f);S.fl.push(f)}
   // the chasm's depths: a cold green glow far below (sprites, so nothing shows through in patches)
   for(let i=0;i<16;i++){const [x,,z]=at(44+R()*56,163+R()*48);const f=kqSpr(0x1a8a5a,7+R()*6);f.material=f.material.clone();f.material.opacity=.22;f.position.set(x,dg165SCfg().pit+1.5,z);root.add(f)}
   [[50,175],[96,170],[52,200],[70,192]].forEach(([u,v])=>{const q=at(u,v,dg165SCfg().pit+3);S.spots.push({x:q[0],y:q[1],z:q[2],c:0x3aff9a,i:2.4,r:20,fq:.8,ph:R()*6})});
   // the Closing Walls: two spiked walls, the two doors, four weeping knights round the altar
-  {const C=P.cw,len=C.doorS-C.doorN,wK=lgGroup('DG165|cwall',k=>dg165CWallKit(k,len),0);S.cwL=put(wK,C.mid-DG165SP.cwStart-.5,(C.doorN+C.doorS)/2,0);S.cwR=put(wK.clone(),C.mid+DG165SP.cwStart+.5,(C.doorN+C.doorS)/2,Math.PI);
+  {const C=P.cw,len=C.doorS-C.doorN,wK=dt168G('DG165|cwall',k=>dg165CWallKit(k,len),0);S.cwL=put(wK,C.mid-DG165SP.cwStart-.5,(C.doorN+C.doorS)/2,0);S.cwR=put(wK.clone(),C.mid+DG165SP.cwStart+.5,(C.doorN+C.doorS)/2,Math.PI);
     S.cwL.visible=S.cwR.visible=false;
     const dN=dg165Portcullis(12,4.2);put(dN,92,C.doorN-.15,0);S.doorN=dN;const dS=dg165Portcullis(8,4.2);put(dS,92,C.doorS,0);S.doorS=dS;
-    put(lgGroup('DG165|altar',dg165AltarKit,0),P.altar[0],P.altar[1],0);const sK=lgGroup('DG165|statue',dg165StatueKit,0);
+    put(dt168G('DG165|altar',dg165AltarKit,0),P.altar[0],P.altar[1],0);const sK=dt168G('DG165|statue',dg165StatueKit,0);
     P.statues.forEach((q,i)=>{const g=sK.clone();put(g,q[0],q[1],0);S.statues.push({g,u:q[0],v:q[1],f:0,want:i,yaw:0,anim:null})});
     S.spots.push({x:at(92,232.5)[0],y:F0+1.6,z:at(92,232.5)[2],c:0x9affc8,i:1.2,r:12,fq:2})}
   // the Keeper's Tomb: his sarcophagus (the lid slides), coffins along the walls, the flooded stair
-  {S.sarc=put(lgGroup('DG165|sarc',k=>dg165SarcKit(k,false),0),P.keeper[0],P.keeper[1],0);S.lid=put(lgGroup('DG165|lid',k=>dg165SarcKit(k,true),0),P.keeper[0],P.keeper[1],0);
-    S.stair=put(lgGroup('DG165|flood',dg165FloodStairKit,0),P.exit[0],P.exit[1]+1.4,Math.PI);
+  {S.sarc=put(dt168G('DG165|sarc',k=>dg165SarcKit(k,false),0),P.keeper[0],P.keeper[1],0);S.lid=put(dt168G('DG165|lid',k=>dg165SarcKit(k,true),0),P.keeper[0],P.keeper[1],0);
+    S.stair=put(dt168G('DG165|flood',dg165FloodStairKit,0),P.exit[0],P.exit[1]+1.4,Math.PI);
     const wm=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x1a8a6a,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
     const w=at(P.exit[0],P.exit[1]+2.6,F0-1.0);wm.position.set(w[0],w[1],w[2]);root.add(wm);S.water=wm;S.spots.push({x:w[0],y:F0,z:w[2],c:0x3affb0,i:1.6,r:9,fq:1.5})}
   // the solid bits: altar, statues, sarcophagus

@@ -99,7 +99,7 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
   const st=[0x8a8270,0x7e7664,0x948a76,0x736c5c],stD=0x5e574a,moss=[0x4a6a34,0x3e5a2c],wood=0x5a4028,woodD=0x3a2818,rope=0x9a8a5a,iron=0x3a3c42;
   const pick=a=>a[Math.floor(R()*a.length)];
   // ---- stairs, cheek walls, paving, parapets, rope rails (one baked group) ----
-  g.add(lgGroup('TH165|trail',q=>{const runs=th165Runs(P);
+  g.add(dt168Group('TH165|trail',q=>{dt168Up(q);const runs=th165Runs(P);
     runs.forEach((r,ri)=>{const A=th165At(P,r.i0),B=th165At(P,r.i1),dx=P.X[r.i1]-P.X[r.i0],dz=P.Z[r.i1]-P.Z[r.i0],L=Math.hypot(dx,dz)||1,ux=dx/L,uz=dz/L,yaw=Math.atan2(ux,uz),nx=-uz,nz=ux;
       if(r.k=='st'){const dh=B.y-A.y,n=Math.max(4,Math.round(dh/.26)),dep=L/n;
         for(let k=0;k<n;k++){const t=(k+.5)/n,cx=A.x+dx*t,cz=A.z+dz*t,top=A.y+dh*(k+.82)/n,hw=A.hw+(B.hw-A.hw)*t;
@@ -122,7 +122,7 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
   },0));
   // ---- the foot: carved serpent pillars, a signpost, a hitching rail, trough and mounting block ----
   const F0=th165At(P,Math.round(3.5/.25)),yawF=F0.yaw;
-  g.add(lgGroup('TH165|foot',q=>{[-1,1].forEach(sd=>{const x=F0.x+F0.nx*sd*2.55,z=F0.z+F0.nz*sd*2.55,y=GH(x,z);
+  g.add(dt168Group('TH165|foot',q=>{dt168Up(q);[-1,1].forEach(sd=>{const x=F0.x+F0.nx*sd*2.55,z=F0.z+F0.nz*sd*2.55,y=GH(x,z);
       q.p('','box','c',st[1],x,y+.3,z,1.15,.6,1.15,0,yawF,0).p('','box','c',stD,x,y+.66,z,.95,.14,.95,0,yawF,0);
       q.p('','cyl','c',st[0],x,y+2.2,z,.36,3.2,.36,0,yawF,0).p('','box','c',st[2],x,y+3.9,z,.7,.22,.7,0,yawF,0);
       // the serpent coiling up the shaft to a rearing head that looks down the stair at the clearing
@@ -139,11 +139,11 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
     // a pilgrims' cairn of little stones by the first step
     const cx=F0.x-F0.dx*2.2-F0.nx*2.6,cz=F0.z-F0.dz*2.2-F0.nz*2.6,cy=GH(cx,cz);for(let k=0;k<7;k++)q.p('','dod','c',pick(st),cx,cy+.12+k*.2,cz,.34-k*.035,.14,.3-k*.03,R(),R()*3,R())},0));
   // the signpost
-  try{const sx=F0.x-F0.dx*1.6+F0.nx*2.9,sz=F0.z-F0.dz*1.6+F0.nz*2.9,sy=GH(sx,sz);g.add(lgGroup('TH165|post',q=>{q.L('','c',woodD,[sx,sy-.2,sz],[sx,sy+2.35,sz],.08,.07,6).p('','box','c',woodD,sx,sy+2.4,sz,.2,.1,.2)},0));
+  try{const sx=F0.x-F0.dx*1.6+F0.nx*2.9,sz=F0.z-F0.dz*1.6+F0.nz*2.9,sy=GH(sx,sz);g.add(dt168Group('TH165|post',q=>{dt168Up(q);q.L('','c',woodD,[sx,sy-.2,sz],[sx,sy+2.35,sz],.08,.07,6).p('','box','c',woodD,sx,sy+2.4,sz,.2,.1,.2)},0));
     sign(g,[{t:'⛰ The Pilgrim’s Stair',f:'700 34px'},{t:'to the Hilltops',f:'italic 28px'}],1.7,.5,'#2a1e14','#efe2c0',null,sx,sy+1.9,sz,yawF+Math.PI)}catch(err){console.warn('v165 sign',err)}
   // ---- the wayshrine on the first landing ----
   const L1=th165At(P,th165Runs(P)[2].i0+3);
-  g.add(lgGroup('TH165|shrine',q=>{const T=L1,up=-T.down,x=T.x+T.nx*up*(T.hw+1.0),z=T.z+T.nz*up*(T.hw+1.0),y=T.y,yw=Math.atan2(-T.nx*up,-T.nz*up),fx=Math.sin(yw),fz=Math.cos(yw),rx=Math.cos(yw),rz=-Math.sin(yw);
+  g.add(dt168Group('TH165|shrine',q=>{dt168Up(q);const T=L1,up=-T.down,x=T.x+T.nx*up*(T.hw+1.0),z=T.z+T.nz*up*(T.hw+1.0),y=T.y,yw=Math.atan2(-T.nx*up,-T.nz*up),fx=Math.sin(yw),fz=Math.cos(yw),rx=Math.cos(yw),rz=-Math.sin(yw);
     const at=(r,f)=>[x+rx*r+fx*f,z+rz*r+fz*f];
     q.p('','box','c',st[3],x,y+.18,z,2.2,.36,1.6,0,yw,0);let [bx,bz]=at(0,-.62);q.p('','box','c',st[1],bx,y+1.3,bz,2.0,2.2,.3,0,yw,0);
     [-1,1].forEach(s=>{const [px,pz]=at(s*.82,.42);q.p('','cyl','c',st[0],px,y+1.25,pz,.14,2.1,.14,0,yw,0).p('','box','c',st[2],px,y+2.33,pz,.3,.12,.3,0,yw,0);
@@ -162,14 +162,14 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
     q.p('','box','c',woodD,...at(-1.6,.9).flatMap((v,i)=>i?[v]:[v,y+.35]),1.4,.12,.36,0,yw+.15,0)},0));
   // ---- the switchback: a cairn, prayer flags strung over the drop, a log bench ----
   const L2=th165At(P,th165Runs(P)[4].i0+Math.round((th165Runs(P)[4].i1-th165Runs(P)[4].i0)/2));
-  g.add(lgGroup('TH165|turn',q=>{const T=L2,o=T.hw+.9,cx=T.x+T.nx*T.down*o+T.dx*1.2,cz=T.z+T.nz*T.down*o+T.dz*1.2,cy=GH(cx,cz)>T.y-1?GH(cx,cz):T.y;
+  g.add(dt168Group('TH165|turn',q=>{dt168Up(q);const T=L2,o=T.hw+.9,cx=T.x+T.nx*T.down*o+T.dx*1.2,cz=T.z+T.nz*T.down*o+T.dz*1.2,cy=GH(cx,cz)>T.y-1?GH(cx,cz):T.y;
     for(let k=0;k<9;k++)q.p('','dod','c',pick(st),cx+(R()-.5)*.1,T.y+.15+k*.21,cz+(R()-.5)*.1,.42-k*.035,.16,.38-k*.032,R(),R()*3,R());
     [-1,1].forEach(e=>{const px=T.x+T.nx*T.down*(T.hw+.55)+T.dx*e*2.6,pz=T.z+T.nz*T.down*(T.hw+.55)+T.dz*e*2.6;q.L('','c',woodD,[px,T.y,pz],[px,T.y+3.1,pz],.06,.045,5).p('','sph','m',0x8a6a3a,px,T.y+3.15,pz,.07)});
     const bx=T.x-T.nx*T.down*(T.hw+.1),bz=T.z-T.nz*T.down*(T.hw+.1);q.L('','c',wood,[bx-T.dx*.9,T.y+.42,bz-T.dz*.9],[bx+T.dx*.9,T.y+.42,bz+T.dz*.9],.16,.16,6).p('','box','c',woodD,bx-T.dx*.7,T.y+.18,bz-T.dz*.7,.3,.36,.3).p('','box','c',woodD,bx+T.dx*.7,T.y+.18,bz+T.dz*.7,.3,.36,.3)},0));
   {const T=L2,a=[T.x+T.nx*T.down*(T.hw+.55)-T.dx*2.6,T.y+3.0,T.z+T.nz*T.down*(T.hw+.55)-T.dz*2.6],b=[T.x+T.nx*T.down*(T.hw+.55)+T.dx*2.6,T.y+3.0,T.z+T.nz*T.down*(T.hw+.55)+T.dz*2.6];TH165.fl=th165Flags(g,a,b,11)}
   // ---- the Pilgrims' Gate: two towers, a broken arch with a fallen serpent keystone, braziers ----
   const rr=th165Runs(P),gi=rr[7].i0+5,G3=th165At(P,gi);TH165.gate={x:G3.x,z:G3.z,y:G3.y};
-  g.add(lgGroup('TH165|gate',q=>{const T=G3,yw=T.yaw,o=T.hw+1.05,ash=(x,y,z,w,h,d,c)=>q.p('','box','c',c||pick(st),x,y,z,w,h,d,(R()-.5)*.03,yw+(R()-.5)*.05,(R()-.5)*.03);
+  g.add(dt168Group('TH165|gate',q=>{dt168Up(q);const T=G3,yw=T.yaw,o=T.hw+1.05,ash=(x,y,z,w,h,d,c)=>q.p('','box','c',c||pick(st),x,y,z,w,h,d,(R()-.5)*.03,yw+(R()-.5)*.05,(R()-.5)*.03);
     [-1,1].forEach(sd=>{const bx=T.x+T.nx*sd*o,bz=T.z+T.nz*sd*o,gy=Math.min(T.y,GH(bx,bz)),top=sd<0?6.3:5.7;
       for(let y=gy-.4,k=0;y<T.y+top;y+=.46,k++){const w=1.5-(k%2)*.06;ash(bx,y+.23,bz,w,.44,1.5-(k%3)*.05)}
       // a cap with merlons (the right tower's are broken off), moss in the joints
@@ -193,7 +193,7 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
     for(let k=0;k<9;k++){const bx=T.x-T.nx*o-T.dx*.78,bz=T.z-T.nz*o-T.dz*.78;q.p('','sph','c',pick(moss),bx+T.nx*(R()-.5)*1.2,T.y+.5+k*.6,bz+T.nz*(R()-.5)*1.2,.28,.22,.1,0,yw,0)}},0));
   // ---- the gorge and the top: boulders along the walls, the warning stone, old bones and a broken saddle ----
   const TOP=th165At(P,P.N-6);TH165.top=TOP;
-  g.add(lgGroup('TH165|gorge',q=>{const rg=th165Runs(P)[7];for(let i=rg.i0;i<=P.N-1;i+=3){const T=th165At(P,i);[-1,1].forEach(sd=>{if(R()<.35)return;const o=T.hw+.7+R()*1.2,x=T.x+T.nx*sd*o,z=T.z+T.nz*sd*o,y=Math.max(T.y,GH(x,z)-.4),s=.6+R()*1.1;
+  g.add(dt168Group('TH165|gorge',q=>{dt168Up(q);const rg=th165Runs(P)[7];for(let i=rg.i0;i<=P.N-1;i+=3){const T=th165At(P,i);[-1,1].forEach(sd=>{if(R()<.35)return;const o=T.hw+.7+R()*1.2,x=T.x+T.nx*sd*o,z=T.z+T.nz*sd*o,y=Math.max(T.y,GH(x,z)-.4),s=.6+R()*1.1;
       q.p('','dod','c',pick(st),x,y+s*.4,z,s,s*.8,s*1.1,R()*3,R()*3,R()*3)})}
     const T=TOP,wx=T.x-T.nx*T.down*(T.hw+.3),wz=T.z-T.nz*T.down*(T.hw+.3);q.p('','box','c',0x6a645a,wx,T.y+1.3,wz,.95,2.6,.4,0,T.yaw+Math.PI/2,(R()-.5)*.12);
     for(let k=0;k<16;k++){const a=k/16*Math.PI*2*1.6,r0=.38-k*.016;q.p('','sph','c',0x3e4a30,wx-T.nx*T.down*.22+T.dx*Math.cos(a)*r0,T.y+1.5+Math.sin(a)*r0,wz-T.nz*T.down*.22+T.dz*Math.cos(a)*r0,.07)}
@@ -204,7 +204,7 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
     q.L('','c',0xd0c4a8,[bx-T.dx*.8,T.y+.32,bz-T.dz*.8],[bx+T.dx*.8,T.y+.32,bz+T.dz*.8],.05,.05,5).p('','box','c',0xd8ccb0,bx+T.dx*1.3,T.y+.15,bz+T.dz*1.3,.24,.2,.5,0,T.yaw+.4,0);
     q.p('','box','c',0x4a2a18,bx-T.dx*1.6+T.nx*.5,T.y+.12,bz-T.dz*1.6+T.nz*.5,.5,.2,.6,.3,T.yaw+1.2,.2)},0));
   // ---- the mountain: pines on the ledges, scree, boulders ----
-  g.add(lgGroup('TH165|slopes',q=>{const [x0,z0,x1,z1]=P.bb;let n=0,sc=0;const fr=[];
+  g.add(dt168Group('TH165|slopes',q=>{dt168Up(q);const [x0,z0,x1,z1]=P.bb;let n=0,sc=0;const fr=[];
     for(let t=0;t<2600&&(n<70||sc<160);t++){const x=x0+R()*(x1-x0),z=z0+R()*(z1-z0),X=Math.round(x),Z=Math.round(z);if(P.mask[(Z-z0)*P.bw+(X-x0)]!==1)continue;
       const [,d]=P.near(x,z);if(d<1.4)continue;const [,gd]=P.gnear(x,z);if(gd<2.2)continue;const y=GH(x,z),sl=Math.max(Math.abs(GH(x+1,z)-GH(x-1,z)),Math.abs(GH(x,z+1)-GH(x,z-1)))/2;
       if(n<70&&sl<1.0&&d>2.4&&fr.every(f=>Math.hypot(f[0]-x,f[1]-z)>2.2)){const s=.7+R()*.75;fr.push([x,z]);n++;q.L('','c',0x4a3424,[x,y-.3,z],[x,y+1.0*s,z],.1*s,.07*s,5);

@@ -19,46 +19,72 @@ function os165RuneTex(i){const k='os'+i;OS165.tx=OS165.tx||{};if(OS165.tx[k])ret
   [[0,1],[0,2],[3,4],[0,1,2],[0,3]][i].forEach(j=>{const L=P[j];g.moveTo(...L[0]);for(let q=1;q<L.length;q++)g.lineTo(...L[q])});
   if(i==2){g.moveTo(30,128);g.lineTo(98,128)}if(i==4){g.arc(64,128,34,0,6.283)}if(i==1){g.moveTo(40,226);g.lineTo(88,226)}g.stroke();
   return OS165.tx[k]=new THREE.CanvasTexture(cv)}
+// v168: the plinth and the Reliquary sculpted (3345's kit): turned and moulded stone, real skulls and long bones, columns and lintels
+// that stand (a broken arch's lintel lies on the ground), bases that run down into the ground on a slope
+var OS165W={c:{g:[.6,.4],n:.16,s:.25,m:[0x3e4a36,.9,.35],l:[0xa8a488,.5],sd:21},m:{n:.2,sd:4}};
 function os165PrismModel(i){const g=new THREE.Group(),c=OS165.col[i];g.userData.psNo=1;
-  g.add(lgGroup('DG165|pplinth',k=>{const R=svRng(8100),b=0xb8b098,b2=0x8a8270,st=0x4a4a46;k.p('','cyl','c',st,0,.15,0,1.5,.3,1.5);k.p('','cyl','c',lgCol(st,0x2a2a28,.3),0,.42,0,1.15,.24,1.15);
+  g.add(dt168Group('DG165|pplinth168',k=>{const R=svRng(8100),b=0xb8b098,b2=0x8a8270,st=0x4a4a46;
+    dt168P(k,dt168Lathe([[0,-.6],[1.55,-.6],[1.55,.22],[1.5,.28],[1.22,.3],[1.2,.4],[1.16,.48],[1.1,.52],[0,.52]],32),'c',st,new THREE.Matrix4());
     // a drum of stacked skulls and long bones bound under a stone cap
-    for(let j=0;j<3;j++)for(let q=0;q<9;q++){const a=q/9*6.283+j*.35,y=.7+j*.32;k.p('','sph','c',lgCol(b,b2,R()),Math.cos(a)*.72,y,Math.sin(a)*.72,.17,.18,.2,0,-a+Math.PI/2,0);[-1,1].forEach(s=>k.p('','sph','c',0x080806,Math.cos(a)*.86+Math.cos(a+Math.PI/2)*s*.06,y+.02,Math.sin(a)*.86+Math.sin(a+Math.PI/2)*s*.06,.04,.04,.03))}
-    for(let q=0;q<12;q++){const a=q/12*6.283;k.L('','c',b2,[Math.cos(a)*.95,.4,Math.sin(a)*.95],[Math.cos(a)*.8,1.75,Math.sin(a)*.8],.05,.04,5)}
-    k.p('','cyl','c',st,0,1.72,0,.9,.18,.9);k.p('','ring','m',0x5a4a2a,0,1.83,0,.82,.5,.82)},0));
+    dt168P(k,dt168Lathe([[0,.5],[.72,.5],[.72,1.62],[0,1.62]],24),'c',0x2a2620,new THREE.Matrix4());
+    for(let j=0;j<3;j++)for(let q=0;q<11;q++){const a=q/11*6.283+j*.29,y=.72+j*.34;dt168Skull(k,Math.sin(a)*.8,y,Math.cos(a)*.8,a,.3,dt168Mix(b,b2,R()),0,0)}
+    for(let q=0;q<14;q++){const a=q/14*6.283+.1,x0=Math.sin(a),z0=Math.cos(a);k.L('','c',dt168Mix(b2,b,R()*.4),[x0*1.0,.5,z0*1.0],[x0*.9,1.62,z0*.9],.035,.03,8);
+      [[1.0,.5],[.9,1.62]].forEach(([r,y])=>dt168P(k,dt168Lathe([[0,-1],[1,0],[0,1]],6),'c',b2,dt168Mx(x0*r,y,z0*r,0,a,0,.05,.045,.06)))}
+    dt168P(k,dt168Lathe([[0,1.6],[.98,1.6],[1.02,1.64],[1.02,1.72],[.96,1.78],[.9,1.8],[.88,1.84],[0,1.84]],32),'c',st,new THREE.Matrix4());
+    dt168P(k,dt168Geo('ppring',()=>new THREE.TorusGeometry(.9,.035,6,48).rotateX(Math.PI/2)),'m',0x5a4a2a,dt168Mx(0,1.7,0));
+    for(let q=0;q<6;q++){const a=q/6*6.283;dt168P(k,dt168BBox(.08,.26,.04,.012),'m',0x5a4a2a,dt168Mx(Math.sin(a)*.97,1.7,Math.cos(a)*.97,0,a,0))}
+    for(let q=0;q<8;q++){const a=R()*6.283,r=1.25+R()*.5;k.L('','c',dt168Mix(b,b2,R()),[Math.sin(a)*r,.01,Math.cos(a)*r],[Math.sin(a)*r+(R()-.5)*.4,.03,Math.cos(a)*r+(R()-.5)*.4],.02,.018,6)}},OS165W,.04));
   // the prism: a tall faceted crystal turning above the plinth, a bright core, a halo, a faint pillar of light
-  const cr=new THREE.Mesh(svG('os165cr',()=>{const q=new THREE.OctahedronGeometry(1,0);q.scale(.62,1.75,.62);return q}),new THREE.MeshPhongMaterial({color:c,emissive:c,emissiveIntensity:.6,shininess:90,transparent:true,opacity:.82,flatShading:true}));
+  const cr=new THREE.Mesh(svG('os165cr168',()=>{const q=new THREE.LatheGeometry([[0,-1.75],[.5,-1.05],[.62,-.25],[.6,.55],[.48,1.1],[0,1.75]].map(p=>new THREE.Vector2(p[0],p[1])),6);q.computeVertexNormals();return q}),new THREE.MeshPhongMaterial({color:c,emissive:c,emissiveIntensity:.6,shininess:90,transparent:true,opacity:.82,flatShading:true}));
   cr.position.y=3.6;g.add(cr);const core=kqSpr(c,2.4);core.material=core.material.clone();core.position.y=3.2;g.add(core);
   const halo=new THREE.Mesh(svG('os165ha',()=>new THREE.TorusGeometry(1.3,.04,6,48)),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));halo.position.y=3.2;halo.rotation.x=Math.PI/2;g.add(halo);
   const beam=new THREE.Mesh(svG('os165bm',()=>{const q=new THREE.CylinderGeometry(.35,.6,46,10,1,true);q.translate(0,23,0);return q}),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=2;g.add(beam);
   const lt=new THREE.PointLight(c,2.2,14,1.5);lt.position.y=3.4;g.add(lt);
-  const pool=new THREE.Mesh(svG('dec',()=>new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));pool.scale.setScalar(3.2);pool.position.y=.32;g.add(pool);
+  const pool=new THREE.Mesh(svG('dec',()=>new THREE.CircleGeometry(1,20).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:c,map:SPR,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));pool.scale.setScalar(3.2);pool.position.y=.54;g.add(pool);
   return {g,cr,core,halo,beam,lt,pool,i}}
-function os165ReliqModel(){const g=new THREE.Group();g.userData.psNo=1;
-  g.add(lgGroup('DG165|reliq',k=>{const R=svRng(8200),st=0x5a5852,st2=0x46443e,b=0xb8b098,b2=0x8a8270;
-    // the round floor and its steps, flagged, a bone mosaic ring
-    k.p('','cyl','c',st2,0,.12,0,9.4,.24,9.4);k.p('','cyl','c',st,0,.3,0,8.6,.16,8.6);k.p('','cyl','c',lgCol(st,0x2a2a28,.4),0,.42,0,2.4,.1,2.4);
-    for(let q=0;q<40;q++){const a=q/40*6.283;k.p('','box','c',lgCol(b,b2,R()),Math.cos(a)*4.4,.39,Math.sin(a)*4.4,.5,.04,.18,0,-a,0)}
-    for(let q=0;q<24;q++){const a=q/24*6.283;k.p('','box','c',lgCol(st,st2,R()),Math.cos(a)*7.6,.4,Math.sin(a)*7.6,1.6,.05,.9,0,-a,0)}
-    // broken arches all round the rim
-    for(let q=0;q<10;q++){const a=q/10*6.283+.31;if(q%3==1)continue;const x=Math.cos(a)*9.6,z=Math.sin(a)*9.6,h=3+R()*2.5;k.p('','box','c',st2,x,h/2,z,.8,h,.8,0,-a,0);if(q%3==0)k.p('','box','c',st,Math.cos(a+.3)*9.6,h,Math.sin(a+.3)*9.6,.7,.5,3.2,0,-a-.3+Math.PI/2,0)}
-    // the altar: a stepped block with a basin, skulls round it
-    k.p('','box','c',st2,0,.8,0,2.2,.8,2.2);k.p('','box','c',st,0,1.35,0,1.6,.4,1.6);k.p('','cyl','m',0x3a3028,0,1.65,0,.6,.2,.6);
-    for(let q=0;q<8;q++){const a=q/8*6.283;k.p('','sph','c',lgCol(b,b2,R()),Math.cos(a)*1.2,1.1,Math.sin(a)*1.2,.16,.17,.19,0,-a+Math.PI/2,0)}
-    for(let q=0;q<30;q++){const a=R()*6.283,r=2.6+R()*6;k.L('','c',lgCol(b,b2,R()),[Math.cos(a)*r,.4,Math.sin(a)*r],[Math.cos(a)*r+(R()-.5)*.7,.42,Math.sin(a)*r+(R()-.5)*.7],.03,.025,4)}},0));
-  // the five rune pillars: obelisks of bone and stone, each with its rune (a glowing slab facing the altar)
-  const runes=[];for(let i=0;i<5;i++){const a=i/5*6.283,pg=new THREE.Group();pg.position.set(Math.sin(a)*6.2,.38,Math.cos(a)*6.2);pg.rotation.y=a+Math.PI;g.add(pg);
-    pg.add(lgGroup('DG165|rpillar',k=>{const st=0x4e4c46,b=0xb8b098;k.p('','box','c',st,0,.3,0,1.3,.6,1.3);k.p('','box','c',st,0,2.1,0,.8,3.4,.8);k.p('','cone4','c',st,0,4.2,0,.6,.8,.6,0,Math.PI/4,0);
-      for(let q=0;q<4;q++)k.p('','sph','c',b,0,.9+q*.75,-.44,.16,.17,.12);for(let q=0;q<6;q++)k.L('','c',0x8a8270,[-.42+q*.17,.6,-.42],[-.42+q*.17,3.6,-.42],.03,.03,4);
-      k.p('','box','c',0x1a1a1c,0,2.3,.41,.6,1.5,.04)},0));
-    const rm=new THREE.Mesh(svG('os165rn',()=>new THREE.PlaneGeometry(.7,1.4)),new THREE.MeshBasicMaterial({color:OS165.col[i],map:os165RuneTex(i),transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));rm.position.set(0,2.3,.44);pg.add(rm);
-    const beam=new THREE.Mesh(svG('os165bm2',()=>{const q=new THREE.CylinderGeometry(.18,.3,40,8,1,true);q.translate(0,20,0);return q}),new THREE.MeshBasicMaterial({color:OS165.col[i],map:SPR,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=4.4;pg.add(beam);
-    const lt=new THREE.PointLight(OS165.col[i],0,12,1.5);lt.position.set(0,2.6,1.2);pg.add(lt);const fl=kqSpr(OS165.col[i],1.6);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=4.7;pg.add(fl);runes.push({g:pg,rm,beam,lt,fl,a,i})}
-  const fl=kqSpr(0xd8fff0,1.2);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=2.4;g.add(fl);const flL=new THREE.PointLight(0xd8fff0,0,18,1.4);flL.position.y=3;g.add(flL);
+// c: the Reliquary's spot {x, z, ry} (the ground under the rim and the columns is sampled so nothing floats)
+function os165ReliqModel(c){const g=new THREE.Group();g.userData.psNo=1;c=c||{x:0,z:0,ry:0};const y0=GH(c.x,c.z),ca=Math.cos(c.ry),sa=Math.sin(c.ry);
+  const gy=(lx,lz)=>{try{return GH(c.x+ca*lx+sa*lz,c.z-sa*lx+ca*lz)-y0}catch(_){return 0}};let lo=0;for(let q=0;q<24;q++){const a=q/24*6.283;lo=Math.min(lo,gy(Math.sin(a)*9.5,Math.cos(a)*9.5))}
+  g.add(dt168Group('DG165|reliq168',k=>{const R=svRng(8200),st=0x5a5852,st2=0x46443e,b=0xb8b098,b2=0x8a8270,bot=Math.min(-.6,lo-.4);
+    // the round floor and its two steps, run down into the ground; flagstones in rings, a bone mosaic ring
+    dt168P(k,dt168Lathe([[0,bot],[9.5,bot],[9.5,.1],[9.42,.18],[9.3,.22],[8.75,.22],[8.7,.28],[8.62,.36],[0,.36]],64),'c',st2,new THREE.Matrix4());
+    [[2.6,3.9,12],[5.0,6.4,22],[6.5,8.5,30]].forEach(([r0,r1,n],j)=>{for(let q=0;q<n;q++){const a=(q+j*.5)/n*6.283,r=(r0+r1)/2,w=2*Math.PI*r/n-.07;
+      dt168P(k,dt168BBox(w,.06,r1-r0-.06,.018),'c',dt168Mix(st,st2,R()*.7),dt168Mx(Math.sin(a)*r,.37+R()*.012,Math.cos(a)*r,(R()-.5)*.012,a,(R()-.5)*.012))}});
+    for(let q=0;q<48;q++){const a=q/48*6.283,r=4.45;k.L('','c',dt168Mix(b,b2,R()),[Math.sin(a-.05)*r,.39,Math.cos(a-.05)*r],[Math.sin(a+.05)*r,.39,Math.cos(a+.05)*r],.04,.04,6);
+      if(q%4==0)dt168Skull(k,Math.sin(a)*4.45,.42,Math.cos(a)*4.45,a+Math.PI,.16,dt168Mix(b,b2,R()))}
+    // broken arches round the rim: pairs of columns with a lintel across; on the ruined ones a column snapped and its lintel lies in the grass
+    // a column h tall from its foot (a buried footing, a moulded base, the shaft, a capital); broken: snapped off at h, a jagged top
+    const colP=(h,brk)=>{const b=[[0,-1.2],[.68,-1.2],[.68,.12],[.64,.16],[.58,.18],[.56,.26],[.5,.3],[.47,.38]];
+      return brk?b.concat([[.45,h-.12],[.36,h],[.2,h-.14],[.08,h+.04],[0,h-.06]]):b.concat([[.43,h-.42],[.48,h-.38],[.6,h-.3],[.66,h-.2],[.72,h-.14],[.72,h],[0,h]])};
+    for(let q=0;q<10;q++){if(q%3==1)continue;const a=q/10*6.283+.31,h=3+R()*2.5,ruin=q%3==2,a1=a-.17,a2=a+.17,P=[a1,a2].map(t=>[Math.sin(t)*9.85,Math.cos(t)*9.85]);
+      const G=P.map(([x,z])=>gy(x,z)),top=Math.max(G[0],G[1])+h;
+      P.forEach(([x,z],j)=>{const g0=G[j],hh=+(ruin&&j?h*(.35+R()*.15):top-g0).toFixed(2);dt168P(k,dt168Lathe(colP(hh,ruin&&j),16),'c',st2,dt168Mx(x,g0,z,0,R()*6,0));
+        if(ruin&&j)for(let r=0;r<3;r++)dt168P(k,dt168Rock(90+r,1,.5),'c',st2,dt168Mx(x+(R()-.5)*1.6,g0+.05,z+(R()-.5)*1.6,R()*3,R()*3,0,.25,.16,.22))});
+      const [x1,z1]=P[0],[x2,z2]=P[1],mx=(x1+x2)/2,mz=(z1+z2)/2,L=Math.hypot(x2-x1,z2-z1)+1.3,ty=Math.atan2(x2-x1,z2-z1);
+      if(!ruin)dt168P(k,dt168BBox(.8,.55,L,.06),'c',st,dt168Mx(mx,top+.27,mz,0,ty,0));
+      else{const ox=Math.sin(a)*1.5,oz=Math.cos(a)*1.5;dt168P(k,dt168BBox(.8,.55,L,.06),'c',dt168Mix(st,0x3a4a30,.2),dt168Mx(mx+ox,gy(mx+ox,mz+oz)+.2,mz+oz,.08,ty+.35,.1))}}
+    // the altar: a moulded block on two steps, a bronze basin, skulls round its foot, long bones scattered over the floor
+    dt168P(k,dt168Lathe([[0,.3],[1.25,.3],[1.25,.5],[1.2,.54],[1.0,.56],[1.0,.72],[.96,.76],[.82,.8],[.8,.86],[.78,1.38],[.84,1.42],[.9,1.48],[.92,1.56],[0,1.56]],4),'c',st2,new THREE.Matrix4());
+    dt168P(k,dt168Lathe([[0,1.5],[.5,1.52],[.6,1.62],[.64,1.74],[.58,1.76],[.5,1.66],[0,1.64]],24),'m',0x4a3a26,new THREE.Matrix4());
+    for(let q=0;q<8;q++){const a=q/8*6.283+.39;dt168Skull(k,Math.sin(a)*1.12,.69,Math.cos(a)*1.12,a,.22,dt168Mix(b,b2,R()))}
+    for(let q=0;q<30;q++){const a=R()*6.283,r=2.6+R()*5.8,x=Math.sin(a)*r,z=Math.cos(a)*r,t=R()*6.283,L=.3+R()*.3;k.L('','c',dt168Mix(b,b2,R()),[x,.4,z],[x+Math.cos(t)*L,.41,z+Math.sin(t)*L],.022,.018,6);
+      [0,1].forEach(e=>dt168P(k,dt168Lathe([[0,-1],[.8,-.6],[1,0],[.8,.6],[0,1]],6),'c',b,dt168Mx(x+e*Math.cos(t)*L,.405,z+e*Math.sin(t)*L,0,0,0,.035,.03,.035)))}},OS165W,.04));
+  // the five rune pillars: obelisks of stone faced with bone, each with its rune (a glowing slab facing the altar)
+  const runes=[];for(let i=0;i<5;i++){const a=i/5*6.283,pg=new THREE.Group();pg.position.set(Math.sin(a)*6.2,.36,Math.cos(a)*6.2);pg.rotation.y=a+Math.PI;g.add(pg);
+    pg.add(dt168Group('DG165|rpillar168',k=>{const st=0x4e4c46,b=0xb8b098,R=svRng(8300);
+      dt168P(k,dt168Lathe([[0,0],[.68,0],[.68,.4],[.64,.44],[.56,.46],[.54,.54],[.48,.58],[.44,.62],[.4,3.6],[.46,3.64],[.48,3.72],[.42,3.78],[0,4.6]],4),'c',st,new THREE.Matrix4());
+      dt168P(k,dt168BBox(.62,1.55,.05,.02),'c',0x1a1a1c,dt168Mx(0,2.3,.425));dt168P(k,dt168BBox(.72,1.65,.04,.015),'c',dt168Mix(st,b,.25),dt168Mx(0,2.3,.418));
+      for(let q=0;q<4;q++)dt168Skull(k,0,.95+q*.72,-.47,Math.PI,.26,dt168Mix(b,0x8a8270,R()));
+      for(let q=0;q<6;q++){if(q==2||q==3)continue;k.L('','c',0x8a8270,[-.36+q*.144,.62,-.43],[-.34+q*.136,3.55,-.41],.028,.026,6)}},OS165W,.04));
+    const rm=new THREE.Mesh(svG('os165rn',()=>new THREE.PlaneGeometry(.7,1.4)),new THREE.MeshBasicMaterial({color:OS165.col[i],map:os165RuneTex(i),transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));rm.position.set(0,2.3,.46);pg.add(rm);
+    const beam=new THREE.Mesh(svG('os165bm2',()=>{const q=new THREE.CylinderGeometry(.18,.3,40,8,1,true);q.translate(0,20,0);return q}),new THREE.MeshBasicMaterial({color:OS165.col[i],map:SPR,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));beam.position.y=4.6;pg.add(beam);
+    const lt=new THREE.PointLight(OS165.col[i],0,12,1.5);lt.position.set(0,2.6,1.2);pg.add(lt);const fl=kqSpr(OS165.col[i],1.6);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=4.9;pg.add(fl);runes.push({g:pg,rm,beam,lt,fl,a,i})}
+  const fl=kqSpr(0xd8fff0,1.2);fl.material=fl.material.clone();fl.material.opacity=0;fl.position.y=2.2;g.add(fl);const flL=new THREE.PointLight(0xd8fff0,0,18,1.4);flL.position.y=3;g.add(flL);
   return {g,runes,fl,flL}}
 // ---------------- the world ----------------
 function os165Build(){if(OS165.S)return OS165.S;const Pl=dg165PrismPlan(),S={pr:[],R:null};OS165.S=S;
   Pl.pr.forEach((o,i)=>{const M=os165PrismModel(i),y=GH(o.x,o.z);M.g.position.set(o.x,y,o.z);scene.add(M.g);M.x=o.x;M.z=o.z;M.y=y;S.pr.push(M);for(let du=-1;du<=1;du++)for(let dv=-1;dv<=1;dv++)CBLK.add(Math.round(o.z+dv)*W+Math.round(o.x+du))});
-  const c=Pl.ctr,R=os165ReliqModel();R.g.position.set(c.x,GH(c.x,c.z),c.z);R.g.rotation.y=c.ry;scene.add(R.g);R.x=c.x;R.z=c.z;S.R=R;
+  const c=Pl.ctr,R=os165ReliqModel(c);R.g.position.set(c.x,GH(c.x,c.z),c.z);R.g.rotation.y=c.ry;scene.add(R.g);R.x=c.x;R.z=c.z;S.R=R;
   R.runes.forEach(q=>{const a=q.a+c.ry,x=c.x+Math.sin(a)*6.2,z=c.z+Math.cos(a)*6.2;q.x=x;q.z=z;CBLK.add(Math.round(z)*W+Math.round(x))});for(let du=-1;du<=1;du++)for(let dv=-1;dv<=1;dv++)CBLK.add(Math.round(c.z+dv)*W+Math.round(c.x+du));
   os165GateSync();return S}
 function os165Full(i){if(OS165.net&&OS165.net[i]&&!(typeof dg165CoOn=='function'&&dg165CoOn()))delete OS165.net[i];return !DG165Q.o.lit[i]&&!(OS165.carry&&OS165.carry.i===i)&&!(OS165.net&&OS165.net[i])}

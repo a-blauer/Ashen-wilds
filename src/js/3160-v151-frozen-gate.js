@@ -139,30 +139,37 @@ function fs160Spitter(){const M=fs160Mats(),k=fs160Kit();
   g.userData={gR,gL,tip,pil,psNo:1};return g}
 // the workbench: timbers, a vise, tools, a brazier of coals, crates and a rack
 function fs160Bench(){const M=fs160Mats(),k=fs160Kit(),rn=svRng(1630);
-  k.m(svG('fb_t',()=>new THREE.BoxGeometry(2.6,.16,1.1)),M.wood,0,1.0,0);k.m(svG('fb_t2',()=>new THREE.BoxGeometry(2.7,.06,1.2)),M.wood2,0,.92,0);
-  [[-1.15,-.42],[1.15,-.42],[-1.15,.42],[1.15,.42]].forEach(([x,z])=>k.m(svG('fb_l',()=>new THREE.BoxGeometry(.16,.92,.16)),M.wood2,x,.46,z));
-  k.m(svG('fb_sh',()=>new THREE.BoxGeometry(2.4,.06,.9)),M.wood2,0,.32,0);
+  // v168: planked top on bevelled trestle legs with braces, a forged anvil (waist, horn, heel) on a barked stump, a turned iron brazier,
+  // boarded crates; the same footprint and spots (the flamespitter rests at y 1.25, the coals' glow at the brazier)
+  for(let i=0;i<5;i++)k.m(dt168BBox(2.62,.1,.22,.02),i%2?M.wood:M.wood2,0,1.03,-.44+i*.22,0,(rn()-.5)*.01,0);k.m(dt168BBox(2.72,.08,1.2,.025),M.wood2,0,.93,0);
+  [[-1.15,-.42],[1.15,-.42],[-1.15,.42],[1.15,.42]].forEach(([x,z])=>k.m(dt168BBox(.15,.92,.15,.025),M.wood2,x,.46,z));
+  [-1.15,1.15].forEach(x=>{k.m(dt168BBox(.08,.08,.86,.015),M.wood2,x,.2,0);k.m(dt168BBox(.07,.07,1.05,.012),M.wood,x,.6,0,.85,0,0)});
+  k.m(dt168BBox(2.4,.05,.9,.012),M.wood2,0,.32,0);
   // the vise, a hammer, tongs, a file, scrap
-  k.m(svG('fb_v',()=>new THREE.BoxGeometry(.24,.2,.2)),M.iron,1.0,1.18,.36);k.m(svG('fb_vs',()=>new THREE.CylinderGeometry(.02,.02,.4,5)),M.iron,1.0,1.18,.58,Math.PI/2,0,0);
-  k.m(svG('fb_hh',()=>new THREE.CylinderGeometry(.025,.025,.42,5)),M.wood2,-.7,1.1,.25,0,0,Math.PI/2);k.m(svG('fb_hd',()=>new THREE.BoxGeometry(.1,.12,.16)),M.iron2,-.9,1.12,.25);
-  k.m(svG('fb_tg',()=>new THREE.BoxGeometry(.5,.025,.04)),M.iron,-.3,1.1,-.3,0,.4,0);k.m(svG('fb_tg2',()=>new THREE.BoxGeometry(.5,.025,.04)),M.iron,-.3,1.1,-.26,0,.5,0);
-  for(let i=0;i<5;i++)k.m(svG('fb_sc',()=>new THREE.BoxGeometry(.12,.03,.08)),i%2?M.brass:M.iron,-.2+rn()*.8,1.1,-.4+rn()*.3,0,rn()*3,0);
-  // the rack at the back with hanging tools, a lantern hook
-  [-1,1].forEach(s=>k.m(svG('fb_r',()=>new THREE.BoxGeometry(.1,1.6,.1)),M.wood2,s*1.2,1.8,-.62));k.m(svG('fb_rb',()=>new THREE.BoxGeometry(2.5,.1,.1)),M.wood2,0,2.55,-.62);
-  for(let i=0;i<4;i++)k.m(svG('fb_ht',()=>new THREE.BoxGeometry(.05,.5,.05)),M.iron,-.8+i*.5,2.2,-.6,0,0,(i%2?.1:-.1));
-  // an anvil on a stump, a brazier of glowing coals on iron legs, crates
-  k.m(svG('fb_st',()=>new THREE.CylinderGeometry(.35,.42,.7,8)),M.wood2,-2.0,.35,.4);k.m(svG('fb_an',()=>new THREE.BoxGeometry(.6,.25,.28)),M.iron2,-2.0,.82,.4);k.m(svG('fb_ah',()=>new THREE.ConeGeometry(.12,.32,4)),M.iron2,-2.4,.86,.4,0,0,Math.PI/2);
-  k.m(svG('fb_br',()=>new THREE.CylinderGeometry(.42,.28,.3,10,1,true)),M.iron,2.0,1.0,.5);for(let i=0;i<3;i++){const a=i/3*6.283;k.m(svG('fb_bl',()=>new THREE.CylinderGeometry(.03,.03,.9,4)),M.iron,2.0+Math.sin(a)*.3,.45,.5+Math.cos(a)*.3,Math.cos(a)*.2,0,-Math.sin(a)*.2)}
-  for(let i=0;i<7;i++)k.lump(7,1631+i,M.coal,2.0+(rn()-.5)*.5,1.08,.5+(rn()-.5)*.5,.1,.07,.1,rn()*3,.3);
-  k.m(svG('fb_cr',()=>new THREE.BoxGeometry(.7,.6,.6)),M.wood,-1.6,.3,-1.0,0,.3,0);k.m(svG('fb_cr2',()=>new THREE.BoxGeometry(.5,.45,.5)),M.wood2,-1.5,.82,-1.0,0,.6,0);
+  k.m(dt168BBox(.24,.2,.2,.025),M.iron,1.0,1.18,.36);k.m(svG('fb_vs168',()=>new THREE.CylinderGeometry(.02,.02,.4,10)),M.iron,1.0,1.18,.58,Math.PI/2,0,0);
+  k.m(svG('fb_hh168',()=>new THREE.CylinderGeometry(.022,.026,.42,10)),M.wood2,-.7,1.1,.25,0,0,Math.PI/2);k.m(dt168BBox(.1,.11,.17,.02),M.iron2,-.9,1.12,.25);
+  k.m(dt168BBox(.5,.025,.04,.008),M.iron,-.3,1.1,-.3,0,.4,0);k.m(dt168BBox(.5,.025,.04,.008),M.iron,-.3,1.1,-.26,0,.5,0);
+  for(let i=0;i<5;i++)k.m(dt168BBox(.12,.03,.08,.008),i%2?M.brass:M.iron,-.2+rn()*.8,1.1,-.4+rn()*.3,0,rn()*3,0);
+  // the rack at the back with hanging tools
+  [-1,1].forEach(s=>k.m(dt168BBox(.1,1.6,.1,.02),M.wood2,s*1.2,1.8,-.62));k.m(dt168BBox(2.5,.1,.1,.02),M.wood2,0,2.55,-.62);
+  for(let i=0;i<4;i++){k.m(svG('fb_hk',()=>new THREE.CylinderGeometry(.012,.012,.12,6)),M.iron,-.8+i*.5,2.44,-.6);k.m(dt168BBox(.05,.42,.04,.01),M.iron,-.8+i*.5,2.17,-.6,0,0,(i%2?.06:-.06))}
+  // the anvil on its stump
+  k.m(dt168Log(3),M.wood2,-2.0,.35,.4,0,0,0,.38,.7,.38);k.m(svG('fb_an168',()=>{const g=dt168Ext('anvil',[[-.3,0],[.22,0],[.24,.05],[.16,.1],[.14,.17],[.26,.19],[.3,.25],[-.24,.25],[-.48,.24],[-.6,.21],[-.4,.17],[-.24,.14],[-.2,.08],[-.28,.04]],.26,.02,1).clone();return g}),M.iron2,-1.92,.7,.4);
+  // the brazier: a turned iron bowl on three legs, coals glowing in it
+  k.m(svG('fb_br168',()=>new THREE.LatheGeometry([[.0,-.14],[.2,-.14],[.34,-.06],[.43,.1],[.45,.16],[.41,.15],[.32,-.02],[0,-.06]].map(p=>new THREE.Vector2(p[0],p[1])),20)),M.iron,2.0,1.0,.5);
+  for(let i=0;i<3;i++){const a=i/3*6.283;k.m(svG('fb_bl168',()=>new THREE.CylinderGeometry(.025,.03,.95,8)),M.iron,2.0+Math.sin(a)*.3,.45,.5+Math.cos(a)*.3,Math.cos(a)*.2,0,-Math.sin(a)*.2)}
+  for(let i=0;i<9;i++)k.lump(7,1631+i,M.coal,2.0+(rn()-.5)*.5,1.05,.5+(rn()-.5)*.5,.09,.06,.09,rn()*3,.3);
+  // crates: boards over a frame
+  [[-1.6,.3,-1.0,.7,.6,.6,.3,M.wood],[-1.5,.82,-1.0,.5,.45,.5,.6,M.wood2]].forEach(([x,y,z,w,h,d,ry,m])=>{k.m(dt168BBox(w,h,d,.02),m,x,y,z,0,ry,0);
+    [-1,1].forEach(e=>k.m(dt168BBox(w+.02,.06,.06,.01),M.wood2,x,y+e*(h/2-.05),z+0,0,ry,0))});
   k.lump(8,1638,M.snow,0,1.1,-.45,1.1,.06,.2,0,.2);
   const g=k.done();g.userData.psNo=1;const fl=kqSpr(0xff7a2a,1.3);fl.position.set(2.0,1.35,.5);g.add(fl);g.userData.fl=fl;return g}
 // a salvage cache: a broken sled, a split crate, a barrel; the part sits on top under an orange beacon
 function fs160Cache(i){const M=fs160Mats(),k=fs160Kit(),rn=svRng(1640+i);
   [-1,1].forEach(s=>k.m(svG('fc_ru',()=>svTube([[0,.05,-1.0],[0,.03,.6],[0,.25,.95]],.04,5)),M.iron,s*.5,0,0));
-  k.m(svG('fc_bd',()=>new THREE.BoxGeometry(1.2,.08,1.6)),M.wood,0,.32,0,0,0,.08);for(let q=0;q<4;q++)k.m(svG('fc_bp',()=>new THREE.BoxGeometry(.06,.3,.06)),M.wood2,(q%2?.55:-.55),.18,q<2?-.6:.6);
-  k.m(svG('fc_cr',()=>new THREE.BoxGeometry(.6,.5,.6)),M.wood,.1,.62,-.3,0,.3,.05);k.m(svG('fc_cr2',()=>new THREE.BoxGeometry(.5,.08,.6)),M.wood2,.75,.06,.6,0,.9,.3);
-  k.m(svG('fc_ba',()=>new THREE.CylinderGeometry(.26,.24,.6,10)),M.wood2,-.9,.3,.8,0,0,1.4);k.m(svG('fc_bb',()=>new THREE.TorusGeometry(.26,.02,4,12)),M.iron,-.9,.3,.6,0,Math.PI/2,0);
+  for(let q=0;q<5;q++)k.m(dt168BBox(.23,.07,1.6,.015),q%2?M.wood:M.wood2,-.48+q*.24,.32+(-.48+q*.24)*.08,0,0,0,.08);for(let q=0;q<4;q++)k.m(dt168BBox(.07,.32,.07,.012),M.wood2,(q%2?.55:-.55),.17,q<2?-.6:.6);   // v168: planked bed on posts
+  k.m(dt168BBox(.6,.5,.6,.03),M.wood,.1,.62,-.3,0,.3,.05);[-1,1].forEach(e=>k.m(dt168BBox(.62,.06,.62,.012),M.wood2,.1,.62+e*.2,-.3,0,.3,.05));k.m(dt168BBox(.5,.07,.6,.015),M.wood2,.75,.04,.6,0,.9,.06);
+  k.m(svG('fc_ba168',()=>new THREE.LatheGeometry([[0,-.3],[.24,-.3],[.27,-.15],[.28,0],[.27,.15],[.24,.3],[0,.3]].map(p=>new THREE.Vector2(p[0],p[1])),18)),M.wood2,-.9,.27,.8,0,0,Math.PI/2);[-.2,.2].forEach(d=>k.m(svG('fc_bb168',()=>new THREE.TorusGeometry(.265,.016,6,24)),M.iron,-.9+d,.27,.8,0,Math.PI/2,0));
   k.lump(9,1645+i,M.snow,.0,.42,.4,.6,.08,.5,0,.2);k.lump(10,1648+i,M.snow,-.4,.05,-.9,.9,.12,.6,0,.25);
   fs160PartModel(i,k,{x:.1,y:1.07,z:-.3});
   const g=k.done();g.userData.psNo=1;

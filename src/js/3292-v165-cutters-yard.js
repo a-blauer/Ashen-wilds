@@ -26,7 +26,7 @@ function ss165Keep3(g,x,z){if(g!==insG(3,2))return false;const T=ss165T3(),[a,b]
 function cs165Build(){if(CS165.g)return CS165.g;const T=ss165T3(),F=T.F,g=new THREE.Group();g.name='CuttersYard';scene.add(g);CS165.g=g;const y0=T.y0!=null?T.y0:GH(F.x,F.z),W2=F.W2,yw=F.yaw,R=dkRng(16570);
   const rot=(a,b)=>Math.atan2(a*F.fx+b*F.lx,a*F.fz+b*F.lz);
   const wood=0x7a5a38,wood2=0x5a3e24,saltc=0xf0ece4,salt2=0xe0d8cc,canvas=0xd8ccb0,red=0x8a2a1a,iron=0x4a4a50,stone=0xb8a888,stone2=0x9a8a70,rope=0xb89a68;
-  g.add(lgGroup('CS165|yard',q=>{const P=(a,b,h)=>{const [x,z]=W2(a,b);return [x,y0+h,z]};const box=(c,a,b,h,sx,sy,sz,ry,rx,rz)=>{const p=P(a,b,h);q.p('','box','c',c,p[0],p[1],p[2],sx,sy,sz,rx||0,yw+(ry||0),rz||0)};
+  g.add(dt168Group('CS165|yard',q=>{dt168Up(q);const P=(a,b,h)=>{const [x,z]=W2(a,b);return [x,y0+h,z]};const box=(c,a,b,h,sx,sy,sz,ry,rx,rz)=>{const p=P(a,b,h);q.p('','box','c',c,p[0],p[1],p[2],sx,sy,sz,rx||0,yw+(ry||0),rz||0)};
     const cyl=(c,a,b,h,r,l,rx,ry,rz)=>{const p=P(a,b,h);q.p('','cyl','c',c,p[0],p[1],p[2],r,l,r,rx||0,yw+(ry||0),rz||0)};const beam=(c,A,B,r)=>q.L('','c',c,P(...A),P(...B),r,r,5);
     const ca=T.cr.a;
     // the cradle: three trestles and chocks under the hull, a plank floor
@@ -60,7 +60,7 @@ function cs165Build(){if(CS165.g)return CS165.g;const T=ss165T3(),F=T.F,g=new TH
     // the slipway: two greased rails on a timber trestle running down over the edge
     for(let k=0;k<10;k++){const a0=E-1+k*1.6,h0=-k*1.25;[-1,1].forEach(s=>{const A=[a0,s*1.35,h0],B=[a0+1.6,s*1.35,h0-1.25];beam(k%2?wood:wood2,A,B,.1)});if(k>1){beam(wood2,[a0,-1.35,h0],[a0+.3,-1.35,h0-6],.08);beam(wood2,[a0,1.35,h0],[a0+.3,1.35,h0-6],.08)}
       box(wood2,a0+.8,0,h0-.7,.2,.14,2.9)}
-  },.1));
+  },CY168W,.08));
   // the machine on its cradle (bare hull until built)
   try{const Rg=svRig();sk165Build(Rg);svRest(Rg);svMerge(Rg);const [x,z]=W2(T.cr.a,0);Rg.root.position.set(x,y0+.62,z);Rg.root.rotation.y=yw;g.add(Rg.root);CS165.R=Rg;cs165Parts()}catch(e){console.error('v165 skimmer',e)}
   try{CS165.vis=ss165Vista(T,y0)}catch(e){console.error('v165 vista',e)}

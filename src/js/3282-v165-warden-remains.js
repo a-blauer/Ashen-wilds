@@ -14,10 +14,13 @@ var KH165W={urns:[],picks:[],e:null,lay:null,err:0,rq:0};
 function kh165Mats(){if(KH165W.M)return KH165W.M;const M={};M.urnG=new THREE.MeshBasicMaterial({color:0xffd070,transparent:true,opacity:.35,depthWrite:false,blending:THREE.AdditiveBlending,fog:false,side:THREE.DoubleSide});return KH165W.M=M}
 // ---------------- the urns ----------------
 function kh165UrnModel(i){return lgGroup('KH165|urn'+(i%3),q=>{const c=[0xa86a3c,0x9a5a34,0xb8784a][i%3],d=0x5a3420,p=0xd8c090,b=0x2a4a6a;
-  q.p('','cyl','c',c,0,.12,0,.32,.24,.32).p('','sph2','c',c,0,.62,0,.48,.56,.48).p('','cyl','c',c,0,1.12,0,.24,.3,.24).p('','cyl','c',d,0,1.3,0,.3,.08,.3).p('','sph','c',p,0,1.36,0,.27,.1,.27);
-  [.45,.72].forEach((y,k)=>q.p('','cyl','c',k?b:d,0,y,0,.5,.06,.5));for(let k=0;k<8;k++){const a=k/8*Math.PI*2;q.p('','box','c',p,Math.cos(a)*.49,.6,Math.sin(a)*.49,.08,.12,.03,0,-a+Math.PI/2,0)}
+  // v168: one turned jar (foot, belly, shoulder, neck, rim) with painted bands, a lid, glyph tiles round the belly
+  dt168P(q,dt168Lathe([[0,0],[.3,0],[.33,.04],[.3,.1],[.36,.2],[.46,.4],[.5,.6],[.47,.82],[.38,.98],[.26,1.08],[.22,1.14],[.25,1.18],[.3,1.22],[.31,1.28],[0,1.28]],28),'c',c,new THREE.Matrix4());
+  dt168P(q,dt168Lathe([[0,1.26],[.3,1.26],[.31,1.3],[.24,1.36],[.1,1.42],[.07,1.48],[.1,1.52],[0,1.55]],24),'c',p,new THREE.Matrix4());
+  [[.45,.485,d],[.72,.495,b]].forEach(([y,r,cc])=>dt168P(q,dt168Geo('urnb'+y,()=>new THREE.TorusGeometry(r,.022,6,48).rotateX(Math.PI/2)),'c',cc,dt168Mx(0,y,0)));
+  for(let k=0;k<8;k++){const a=k/8*Math.PI*2;q.p('','box','c',p,Math.cos(a)*.5,.6,Math.sin(a)*.5,.08,.12,.03,0,-a+Math.PI/2,0)}
   // the seal: wax and cord over the lid, a glyph of the Warden pressed in it
-  q.p('','sph','c',0x8a1a14,0,1.44,0,.1,.05,.1).L('','c',0x6a5a3a,[-.28,1.3,0],[.28,1.3,0],.012,.012,3)},0)}
+  q.p('','sph','c',0x8a1a14,0,1.5,0,.12,.05,.12).L('','c',0x6a5a3a,[-.28,1.3,0],[.28,1.3,0],.012,.012,3)},0)}
 function kh165UrnSpot(i){const T=ss165T2(),u=T.urns[i],[x,z]=T.F.W2(u.a,u.b);return {x,z,ry:u.ry,s:u.s}}
 function kh165Urns(){const C=SS165.c2,T=ss165T2();KH165W.urns.forEach(s=>{try{if(!s.dead)removeE(s)}catch(_){}});KH165W.urns=[];if(ss165Done(2)||C.st>=1)return;
   T.urns.forEach((u,i)=>{if(C.urn&(1<<i))return;const p=kh165UrnSpot(i);let s=null;try{s=spawnEnemy('goo',p.x,p.z,ss165I(1).lv[0],{minion:1})}catch(e){console.error('v165 urn',e)}if(!s)return;
