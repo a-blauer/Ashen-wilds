@@ -41,7 +41,8 @@ function loop(now){
   if(!ax&&!az&&rmb&&mOn){const rx=mg.x-pl.position.x,rz=mg.z-pl.position.z,rd=Math.hypot(rx,rz);if(rd>.35){ax=rx/rd;az=rz/rd}}
   {const c=Math.cos(camYaw),s2=Math.sin(camYaw),wx=ax*c+az*s2,wz=-ax*s2+az*c;if(!(rmb&&mOn&&!K.w&&!K.a&&!K.s&&!K.d&&!dp[0]&&!dp[1])){ax=wx;az=wz}}
   const al=Math.hypot(ax,az);if(al>0)pl.mvd={x:ax/al,z:az/al,t:now};
-  atkCd=Math.max(0,atkCd-dt);for(const k in hero.cd)hero.cd[k]=Math.max(0,hero.cd[k]-dt);hero.iv=Math.max(0,(hero.iv||0)-dt);hero.cdD=Math.max(0,(hero.cdD||0)-dt);hero.cdP=Math.max(0,(hero.cdP||0)-dt);
+  atkCd=Math.max(0,atkCd-(slowT>0?dtR:dt));   // v167: the attack cooldown counts real time in a perfect dodge's slow motion
+  for(const k in hero.cd)hero.cd[k]=Math.max(0,hero.cd[k]-dt);hero.iv=Math.max(0,(hero.iv||0)-dt);hero.cdD=Math.max(0,(hero.cdD||0)-dt);hero.cdP=Math.max(0,(hero.cdP||0)-dt);
   if(al>0&&dtR>0){const msp=4.5*Math.max(0,1+HS().mspd)*(hero.chan?.55:1)*(riding?1+riding.spd/100:1);walk(pl,ax/al*msp*dtR,az/al*msp*dtR);if(!pl.sw){let da=Math.atan2(ax,az)-pl.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));pl.rotation.y+=da*Math.min(1,dtR*18)}animHero(now,true)}else animHero(now,false);
   if(pl.step&&dtR>0){walk(pl,pl.step.x*pl.step.sp*dtR,pl.step.z*pl.step.sp*dtR);pl.step.t-=dtR;if(pl.step.t<=0)pl.step=null}
   if(hero.dash){walk(pl,hero.dash.x*14*dtR,hero.dash.z*14*dtR);hero.dash.t-=dtR;burst(gY(pl.position,.3),0xbfd0ff,2,.3,.3,.3);if(hero.dash.t<=0)hero.dash=null}
@@ -81,6 +82,7 @@ function loop(now){
       else if(L>.01){if(!e.sd||Math.random()<dt*.35)e.sd=Math.random()<.5?1:-1;sp=.75*slow;ux=-v.z/L*e.sd;uz=v.x/L*e.sd}
     }
     else{const r_=enemyWander(e,m,dt,now);ux=r_[0];uz=r_[1];sp=r_[2]}
+    sp*=espd167();   // v167: every monster walks 30% faster (one knob: ESPD167.k in 3340)
     if(e.agg&&L>.01)m.rotation.y=Math.atan2(v.x,v.z);else if(sp)m.rotation.y=Math.atan2(ux,uz);
     if(!(e.root>0))walkM(m,(ux*sp+e.vx)*dt,(uz*sp+e.vz)*dt);e.vx*=.85;e.vz*=.85;
     animC(m,now,sp>0,sp);

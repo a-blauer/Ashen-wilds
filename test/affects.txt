@@ -70,3 +70,4 @@ v161|keymap|keybind|ui-scale|mobile|touch|0180-|1660-|location-box: v161_keys.py
 331[0-8]|3150|3180|coop|co-op|0520|3085|revive: v165_dirge_coop.py
 # v166
 v166|hud-tidy|1100-|3200-|3220-|0520-|0840-: v166_hud.py v161_mobile_shot.py
+3340|v167|combat-fix|0095-|0870-|1950-|2000-|0740-|0310-|1970-|perfect-dodge|signature|enemy-attacks: v167_combat.py
