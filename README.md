@@ -1500,5 +1500,5 @@ Speed (1×–⅒×), pause, frame step, camera presets (relative to the boss's f
 `viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame / setTimeout on a virtual clock
 (`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh` (the build is committed), check with
 `cd test && python3 kv_viewer.py` (`TABS=comp,mon,boss,hero,abil`, `ONLY=`, `SHOT=1` for contact sheets; in the full suite).
-Rebuild and republish it after changing models, attacks, abilities or bosses: read the live page (~90 KB, Artifact `read`
+Rebuild and republish it after changing models, attacks, abilities or bosses: read the live page (~100 KB, Artifact `read`
 with no `path`), then publish `dist/viewer/index.html` with `files: {"game.js": "dist/viewer/game.js"}` and `url` = the URL above.
