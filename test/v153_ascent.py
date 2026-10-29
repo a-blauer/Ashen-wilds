@@ -95,7 +95,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   ch153Reset(false);tick(1.7);
   // the finish into III
   if(R()&&R().ph!='win'){R().s=P.S-8;R().sn.s=P.S-30;R().ph='run';tick(.4)}tick(2.6);await wait(1300);tick(.5);const c=curIns();out.arrived=c&&c.g;out.insr=INSR[1];out.st=CH153Q.st;out.done=ch153Done();
-  out.folsBack=fols.filter(f=>f&&f.visible).length;
+  out.folsBack=fols.filter(f=>f&&f.visible).length;out.folsInfo=fols.map((f,i)=>f&&[f.visible,+f.position.y.toFixed(1),+f.position.distanceTo(pl.position).toFixed(1),party[i]?[party[i].hp,party[i].dead||0,party[i].out||0]:null]);
   {toPos(I2.ba[0],I2.ba[1]);tick(.2);toPos(s.x,s.z);tick(.1);out.roadAfter=(worldPrompt()||{}).label||''}
   const sv=x2Save();out.saved=JSON.stringify(sv.ch153);const old=JSON.parse(JSON.stringify(sv));delete old.ch153;old.insr=[0,1,0,0,0,0];x2Load(old);out.oldSt=CH153Q.st;out.oldDone=ch153Done();old.insr=[0,2,0,0,0,0];x2Load(old);out.oldReached=ch153Done();
   out.errs=errs.slice(0,6);return out}"""
@@ -144,7 +144,7 @@ def s(pg):
     exp(n['ph']=='dead' and n.get('why')=='chomp','without boosting Skarrith catches the rider (%s)'%n)
     exp(r['spitLane']>=.8 and r['spitNearGap']==0,'venom volleys leave a lane (narrowest %s) and never land by a gap (%s)'%(r['spitLane'],r['spitNearGap']))
     exp(r['arrived']==7 and r['insr']>=2 and r['st']==2 and r['done'],'the crack leads to Hillside Crest III and finishes the chapter (%s %s %s)'%(r['arrived'],r['insr'],r['st']))
-    exp(r['folsBack']>=1,'companions back afterwards')
+    exp(r['folsBack']>=1,'companions back afterwards (%s)'%r.get('folsInfo'))
     exp('Ride up to' in r['roadAfter'],'afterwards the road leads straight on (%s)'%r['roadAfter'])
     exp(r['oldSt']==0 and not r['oldDone'] and r['oldReached'],'old saves: not started, or done if III was reached')
     exp(not r['errs'],'no console errors (%s)'%r['errs'])

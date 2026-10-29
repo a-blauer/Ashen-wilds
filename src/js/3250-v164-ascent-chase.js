@@ -156,15 +156,17 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
     const [x,z,h]=slope(s,o);pts.push([x,h+r*.82+.12*Math.sin(t*4-i*.6)+neck,z,r])}
   ch153SnakeLay(M,pts);ch164HeadAnim(M,t,jaw,N.rear)}
 // ---------------- venom ----------------
-function ch153Spit(n){const R=CH153.R;ch153SpitSpawn(ch153SpitPlan(n,R.s,R.o,R.v),n)}
+function ch153Spit(n){const R=CH153.R,L=ch153SpitPlan(n,R.s,R.o,R.v);if(L.length)ch153SpitSpawn(L,n)}   // v167: no clear spot ahead: it holds its venom
 // where a volley lands: ahead of the rider (they see it coming down), never on or just before a broken stretch
 // one glob: your lane · two: a slalom · three: a wall across the trail (jump it)
 function ch153SpitPlan(n,s,o,v){const P=CH153.S.P,T=1.05,G=ch153Course().gaps,span=n==2?CH164.slalom:.5;
   // the whole volley (from x to x + span) lands clear of every broken stretch: not within CH164.gapB before one, CH164.gapA after
   // v167: and clear of every obstacle (ch167Keep: the broken stretches with these margins, each obstacle with a short one)
   const KP=typeof ch167Keep=='function'?ch167Keep():G.map(g=>[g.s-g.len/2-CH164.gapB,g.s+g.len/2+CH164.gapA]);
-  const clear=x=>{for(let k=0;k<10;k++){const g=KP.find(q=>x+span>q[0]&&x-.5<q[1]);if(!g)break;x=g[1]+.6+Math.random()*2}return Math.min(x,P.S-12)};
-  const ls=clear(s+Math.max(4,v)*T+3+Math.random()*4),lim=q=>P.hw(q)-.6,L=[];
+  // the nearest clear spot to x, a little further on or a little nearer (never closer than lo ahead of the rider); none: no volley
+  const ok=x=>x<P.S-12&&!KP.some(q=>x+span>q[0]&&x-.5<q[1]),lo0=s+Math.max(4,v)*T*.7;
+  const clear=x=>{for(let d=0;d<=24;d+=.5){if(ok(x+d))return x+d;if(x-d>=lo0&&ok(x-d))return x-d}return null};
+  const ls=clear(s+Math.max(4,v)*T+3+Math.random()*4),lim=q=>P.hw(q)-.6,L=[];if(ls==null)return L;
   if(n>=3){for(let i=0;i<3;i++)L.push([ls+(Math.random()-.5)*.5,(i-1)*1.75])}
   else{const a=Math.max(-lim(ls),Math.min(lim(ls),o+(Math.random()-.5)*.5));L.push([ls,a]);
     // two: a slalom — the second lands further on, on the other side of the trail (go round the first, then swerve back)
