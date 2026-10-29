@@ -9463,9 +9463,9 @@ function commandAttack(){
   say('📣 '+act.map(c=>c.n).join(' and ')+(act.length>1?' attack ':' attacks ')+(e.c.n||e.c.g[0])+'!');if(typeof sfx=='function')sfx('chime',.5)}
 {const f=teamFoe;teamFoe=function(){const C=CMD;if(C.e){if(C.e.dead||nowP()>C.t||!enemies.includes(C.e)||d2(C.e.m.position,pl.position)>30)CMD={e:null,t:0};
   else if(townAt(pl.position.x,pl.position.z,0)<0)return C.e}return f.apply(this,arguments)}}
-// v167: Space belongs to a level that uses it (the Hilltop Ascent's jump, the drill's hold-to-heat): their key listeners are added
-// after this one, so this one steps aside instead of swallowing the key (Space never jumped in the chase before).
-function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false;if(typeof MQ170!='undefined'&&MQ170&&MQ170.W)return false}catch(_){}return true}
+// v167: Space belongs to a level that uses it (the Hilltop Ascent's jump): its key listener is added after this one, so this one
+// steps aside instead of swallowing the key (Space never jumped in the chase before). (v168: the drill's hold-to-heat is gone.)
+function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false}catch(_){}return true}
 addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey||!cmd167Free())return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
   e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;commandAttack()},true);
 {const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Command companions to attack';b.textContent='📣';mb.appendChild(b);
@@ -45782,17 +45782,20 @@ try{const I=sp152I('ascent');CH153SN.r.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);
 // against the rock, wired to four control boxes round the yard.
 //  * F at the drill's console starts the drill: a special event that cannot be stopped (the hero is held in the drill yard, no recall)
 //    until the mountain is bored through (MQ170.need, 90 s of drilling) or the hero falls (the drill winds down and the bore is lost).
-//  * The drill only turns while all four control boxes are lit and running. Each box starts dark: F switches it on. Running boxes fail
-//    on their own: one FREEZES (F opens the Thaw window: hold the heater and keep the needle in the green band until the ice is gone) or
-//    MALFUNCTIONS (the Rewire window: drag each loose wire to the socket of its colour).
+//  * The drill bores at full speed while all four control boxes are lit and running; v168: with boxes offline it keeps boring, only
+//    slower (×MQ170.slow = 0.4 for each box offline: 100% · 40% · 16% · 6%), and with none running it has no power. Each box starts
+//    dark: F switches it on. Running boxes fail on their own: one FREEZES or MALFUNCTIONS.
 //  * Frost Trolls come up the road and out of the snow and go for the boxes, not for you: a troll that reaches a box raises its fists
-//    (a warning ring) and SMASHES it (the Rebuild window: drag each broken piece back into its place). Hit a troll and it turns on you.
-//  * The repair windows do not pause the game: the drill and the trolls keep going while you work, you cannot move, and a hit knocks
-//    you away from the box (the window closes).
+//    (a warning ring) and SMASHES it. Hit a troll and it turns on you.
+//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch (3 s), REWIRE with a
+//    spanner on one knee (6 s), REBUILD with a hammer (10 s). The game keeps going while you work; moving or a hit stops the work,
+//    and F carries on where it stopped (see the repairs section).
 //  * Bored through: the rock face bursts open on a tunnel; F at it goes to the Sovereign's Den.
 // State MQ170.st: 0 · 1 the tunnel is open. Done also when the Den has been reached (mq170Done). Saved as x2.mq170 {st}. A save made
 // mid-drill loads with the drill at rest. Co-op: local to each player (the trolls are minions, never shared).
-var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,
+var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,slow:.4,
+  // v168: the repairs are timed (seconds of work at the box): thawing is quickest, rewiring takes longer, rebuilding longest
+  rt:{thaw:3,wire:6,rebuild:10},
   bn:['North-west box','North-east box','South-west box','South-east box'],
   stN:{off:'dark',on:'running',frozen:'frozen',fault:'malfunctioning',smashed:'smashed'},
   stC:{off:'#5a6470',on:'#7aff8a',frozen:'#8ad8ff',fault:'#ffb040',smashed:'#ff5a4a'}};
@@ -45864,26 +45867,40 @@ function dr170Drill(){const M=dr170Mats(),k=gb151Kit();
   bit.add(kb.done());
   const glow=kqSpr(0x7ad8ff,1.6);glow.material=glow.material.clone();glow.position.set(-.6,3.75,.3);g.add(glow);
   return {g,bit,glow}}
-// a control box: an iron cabinet with a lever, gauges and a status lamp; an ice crust (frozen), sparks (fault), broken pieces (smashed)
+// a control box: an iron cabinet with a status lamp; its front parts (the panel, the two gauges, the lever) are separate pieces, so a
+// smashed box lies in pieces and is rebuilt piece by piece (v168). An ice crust (frozen) and three loose cables (fault) hang on it.
 function dr170Box(i){const M=dr170Mats(),k=gb151Kit(),g=new THREE.Group();g.userData.psNo=1;
-  k.m(svG('db_c',()=>new THREE.BoxGeometry(1.0,1.3,.7)),M.iron,0,.8,0);k.m(svG('db_b',()=>new THREE.BoxGeometry(1.2,.16,.9)),M.iron2,0,.08,0);k.m(svG('db_p',()=>new THREE.BoxGeometry(.8,.9,.04)),M.panel,0,.85,.36);
-  for(let q=0;q<2;q++){k.m(svG('db_g',()=>new THREE.CylinderGeometry(.12,.12,.04,12)),M.brass,-.2+q*.4,1.1,.39,Math.PI/2,0,0);k.m(svG('db_gf',()=>new THREE.CircleGeometry(.09,10)),M.snow,-.2+q*.4,1.1,.41)}
-  k.m(svG('db_l',()=>new THREE.CylinderGeometry(.03,.03,.45,6)),M.steel,.25,.65,.5,.5,0,0);k.m(svG('db_lk',()=>new THREE.SphereGeometry(.07,8,6)),M.rubber,.25,.85,.62);
+  k.m(svG('db_c',()=>new THREE.BoxGeometry(1.0,1.3,.7)),M.iron,0,.8,0);k.m(svG('db_b',()=>new THREE.BoxGeometry(1.2,.16,.9)),M.iron2,0,.08,0);
   k.m(svG('db_cb',()=>svTube([[0,.1,-.35],[0,.05,-.9],[0,.04,-1.6]],.07,6)),M.rubber,0,0,0);k.m(svG('db_ro',()=>new THREE.BoxGeometry(1.1,.12,.8)),M.iron2,0,1.5,0);
   const body=k.done();g.add(body);
   const lamp=new THREE.Mesh(svG('db_lm',()=>new THREE.SphereGeometry(.16,10,8)),new THREE.MeshBasicMaterial({color:0x5a6470}));lamp.position.set(0,1.7,0);g.add(lamp);
   const halo=kqSpr(0x7aff8a,1.1);halo.material=halo.material.clone();halo.position.copy(lamp.position);g.add(halo);
+  // the front pieces: {o: the piece, on: [x,y,z,rx,ry,rz] mounted, off: lying in the snow}
+  const piece=(fn,on,off)=>{const kk=gb151Kit();fn(kk);const o=kk.done();g.add(o);o.position.set(on[0],on[1],on[2]);return {o,on,off}};
+  const parts=[
+    piece(kk=>{kk.m(svG('db_p',()=>new THREE.BoxGeometry(.8,.9,.04)),M.panel,0,0,0);for(let q=0;q<3;q++)kk.m(svG('db_so',()=>new THREE.CylinderGeometry(.05,.05,.04,8)),M.brass,-.25+q*.25,-.3,.03,Math.PI/2,0,0)},[0,.85,.37,0,0,0],[.55,.05,.95,-Math.PI/2+.2,.4,0]),
+    piece(kk=>{for(let q=0;q<2;q++){kk.m(svG('db_g',()=>new THREE.CylinderGeometry(.12,.12,.04,12)),M.brass,-.2+q*.4,0,.02,Math.PI/2,0,0);kk.m(svG('db_gf',()=>new THREE.CircleGeometry(.09,10)),M.snow,-.2+q*.4,0,.045)}},[0,1.1,.39,0,0,0],[-.6,.06,.75,-Math.PI/2,0,.6]),
+    piece(kk=>{kk.m(svG('db_l',()=>new THREE.CylinderGeometry(.03,.03,.45,6)),M.steel,0,0,0,.5,0,0);kk.m(svG('db_lk',()=>new THREE.SphereGeometry(.07,8,6)),M.rubber,0,.2,.11)},[.25,.68,.5,0,0,0],[-.3,.05,1.15,Math.PI/2,0,.7])];
   // the frozen crust
   const ice=new THREE.Group();g.add(ice);const ki=gb151Kit();ki.lump(1,1850+i,M.glass,0,.8,0,.8,.95,.6,0,.2);for(let q=0;q<5;q++)ki.crys(q,dr170Mats().glass,(q-2)*.22,1.45,.1,(q-2)*.3,1,.3,.07,.3+q%2*.2);ice.add(ki.done());ice.visible=false;
-  // the broken pieces (smashed): the panel torn off, a gauge, the lever lying in the snow
-  const brk=new THREE.Group();g.add(brk);const kp=gb151Kit();kp.m(svG('db_p',()=>new THREE.BoxGeometry(.8,.9,.04)),M.panel,.5,.05,.9,-Math.PI/2+.2,.4,0);kp.m(svG('db_g',()=>new THREE.CylinderGeometry(.12,.12,.04,12)),M.brass,-.6,.03,.7);
-  kp.m(svG('db_l',()=>new THREE.CylinderGeometry(.03,.03,.45,6)),M.steel,-.3,.03,1.1,Math.PI/2,0,.7);brk.add(kp.done());brk.visible=false;
-  return {g,body,lamp,halo,ice,brk,i}}
+  // the loose cables (a malfunction): each swings from the cabinet's foot; rewired, it stands up into its socket on the panel
+  const wir=new THREE.Group();g.add(wir);const cab=[0xc84a3a,0x4a8ad8,0xd8b040].map((c,q)=>{const p=new THREE.Group();p.position.set(-.25+q*.25,.2,.42);wir.add(p);
+    const m=new THREE.Mesh(svG('db_wr',()=>{const q2=new THREE.CylinderGeometry(.025,.025,.35,5);q2.translate(0,.175,0);return q2}),new THREE.MeshStandardMaterial({color:c,roughness:.6,flatShading:true}));m.castShadow=true;p.add(m);
+    const tip=new THREE.Mesh(svG('db_wt',()=>new THREE.CylinderGeometry(.04,.03,.07,6)),M.copper);tip.position.y=.35;p.add(tip);p.userData.a0=1.75+q*.18;return p});wir.visible=false;
+  const B={g,body,lamp,halo,ice,wir,cab,parts,i};dr170Part(B,'on',0);return B}
+// how far a repair has come shows on the box: the ice melts down, the cables stand up into their sockets one by one, the pieces
+// the cabinet is heaved upright first, then the pieces jump back into place one by one (p 0..1 for state s; 'on' = whole, 'off' = whole and dark)
+function dr170Part(B,s,p){const sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
+  B.ice.visible=s==='frozen'&&p<.97;if(B.ice.visible)B.ice.scale.set(1-.3*p,Math.max(.04,1-.95*sm(p)),1-.3*p);
+  B.wir.visible=s==='fault';if(s==='fault')B.cab.forEach((c,q)=>{const t=sm((p-q*.3)/.22);c.rotation.x=c.userData.a0*(1-t)+(t<1?.12*Math.sin(nowP()/260+q*2):0)});
+  const sh=s==='smashed';B.parts.forEach((P,q)=>{const t=sh?sm((p-.2-q*.26)/.16):1,a=P.off,b=P.on,o=P.o;
+    o.position.set(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+Math.sin(Math.PI*t)*.45,a[2]+(b[2]-a[2])*t);o.rotation.set(a[3]+(b[3]-a[3])*t,a[4]+(b[4]-a[4])*t,a[5]+(b[5]-a[5])*t)});
+  const tl=sh?1-sm(p/.15):0;B.body.rotation.set(.25*tl,0,.3*tl);B.body.position.y=-.12*tl}
 // the console at the drill's back: a lectern of levers and a big wheel
 function dr170Console(){const M=dr170Mats(),k=gb151Kit();k.m(svG('dc_b',()=>new THREE.BoxGeometry(1.4,1.1,.7)),M.iron,0,.55,0);k.m(svG('dc_t',()=>new THREE.BoxGeometry(1.5,.12,.9)),M.iron2,0,1.15,0,-.3,0,0);
   for(let i=0;i<3;i++)k.m(svG('dc_lv',()=>new THREE.CylinderGeometry(.03,.03,.5,6)),M.steel,-.4+i*.4,1.4,.1,-.3,0,0);k.m(svG('dc_w',()=>new THREE.TorusGeometry(.32,.04,5,14)),M.brass,0,1.55,-.25,.2,0,0);
   const g=k.done();g.userData.psNo=1;return g}
-KQSH151.ddrill2=()=>dr170Drill().g;KQSH151.ddrill=()=>{const g=new THREE.Group(),c=dr170Cliff(),d=dr170Drill();g.add(c.g);d.g.position.z=4.4;g.add(d.g);return g};KQSH151.dbox=()=>{const b=dr170Box(0);b.ice.visible=true;return b.g};KQSH151.dbox2=()=>{const b=dr170Box(1);b.brk.visible=true;b.body.rotation.z=.35;return b.g};
+KQSH151.ddrill2=()=>dr170Drill().g;KQSH151.ddrill=()=>{const g=new THREE.Group(),c=dr170Cliff(),d=dr170Drill();g.add(c.g);d.g.position.z=4.4;g.add(d.g);return g};KQSH151.dbox=()=>{const b=dr170Box(0);dr170Part(b,'frozen',0);return b.g};KQSH151.dbox2=()=>{const b=dr170Box(1);dr170Part(b,'smashed',0);return b.g};KQSH151.dbox3=()=>{const b=dr170Box(2);dr170Part(b,'fault',0);return b.g};
 
 // ---------------- the world ----------------
 function mq170Build(){if(MQ170.S)return MQ170.S;const R=mq170Plan(),G=R.g,S={box:[]};MQ170.S=S;const y=(p)=>GH(p.x,p.z);
@@ -45893,6 +45910,7 @@ function mq170Build(){if(MQ170.S)return MQ170.S;const R=mq170Plan(),G=R.g,S={box
   R.box.forEach((b,i)=>{const B=dr170Box(i);B.g.position.set(b.x,y(b),b.z);B.g.rotation.y=Math.atan2(R.drill.x-b.x,R.drill.z-b.z);scene.add(B.g);B.x=b.x;B.z=b.z;S.box.push(B)});
   S.tunT=MQ170.tunT||[];
   S.lt=new THREE.PointLight(0x7ad8ff,0,10,1.6);S.lt.position.set(R.drill.x,y(R.drill)+4,R.drill.z);scene.add(S.lt);
+  S.tl=new THREE.PointLight(0xff8a3a,0,6,1.8);S.tl.position.set(R.yard.x,-50,R.yard.z);scene.add(S.tl);   // v168: the repair torch's light
   try{const r=RPORT.find(q=>q.k=='next'&&q.ig===insG(2,2));if(r){r.g.visible=false;MQ170.rp=r}}catch(_){}
   mq170Sync();return S}
 function mq170Sync(){const S=MQ170.S;if(!S)return;const open=mq170Done(),E=MQ170.E;S.cliff.tun.visible=open;S.cliff.bore.visible=!open;
@@ -45900,7 +45918,7 @@ function mq170Sync(){const S=MQ170.S;if(!S)return;const open=mq170Done(),E=MQ170
   if(!E){S.cliff.bore.scale.set(open?.01:.01,open?.01:.01,1);S.drill.g.position.copy(S.d0)}
   S.box.forEach((B,i)=>dr170BoxLook(B,E?E.box[i].s:(open?'on':'off')))}
 function dr170BoxLook(B,st){const c={off:0x3a4048,on:0x7aff8a,frozen:0x8ad8ff,fault:0xffb040,smashed:0x2a2020}[st]||0x3a4048;B.lamp.material.color.setHex(c);B.halo.material.color.setHex(st=='smashed'?0xff3a2a:c);
-  B.halo.visible=st!='off';B.ice.visible=st=='frozen';B.brk.visible=st=='smashed';B.body.rotation.set(st=='smashed'?.25:0,0,st=='smashed'?.3:0);B.body.position.y=st=='smashed'?-.12:0}
+  B.halo.visible=st!='off';dr170Part(B,st,0)}
 
 // ---------------- the event ----------------
 function mq170Start(){if(MQ170.E||mq170Done())return;const R=mq170Plan();if(riding)try{dismount()}catch(_){}
@@ -45921,27 +45939,32 @@ function mq170Through(){MQ170.st=1;MQ170.trkK='';try{insGo(PMAP[2].ins[3])}catch
 // a box is switched on or repaired: here, or (a co-op partner) on the host's world too
 function dr170Fix(i){if(co151On()&&!co151Host()){co151Send(['d3o',i]);const E=MQ170.E;if(E){E.fq=E.fq||{};E.fq[i]=nowP()+4000}}dr170Set(i,'on')}
 // a box changes state (with its effect and a line in the log)
-function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;b.s=s;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
+function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;
+  const W=MQ170.W;if(W&&W.i===i)dr170Close(false);b.s=s;b.rp=0;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
   if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}
   else if(s==='frozen'){burst(gY(p,1),0xd8f4ff,30,1.5,1.5,.7);svSnd('crack',.9,1.2);popT(gY(p,2),'❄ FROZEN','#8ad8ff',true)}
   else if(s==='fault'){burst(gY(p,1.4),0xffd07a,30,2,2,.4);svSnd('zap',1,1);popT(gY(p,2),'⚡ MALFUNCTION','#ffb040',true)}
   else if(s==='smashed'){try{sk146Debris(gY(p,1),dr170Mats().iron,8,.15,4,5,1.3)}catch(_){}burst(gY(p,1),0xffa07a,30,2,2,.5);shake(.25);svSnd('heavy',1.1,.9);svSnd('crack',.8,1.4);popT(gY(p,2),'💥 SMASHED','#ff5a4a',true)}
-  if(was==='on'&&s!=='on')say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': the drill stops!');
-  const W=MQ170.W;if(W&&W.i===i&&s==='smashed'&&W.k!=='rebuild')dr170Close(false)}
-function mq170ETick(dt,now){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
+  if(was==='on'&&s!=='on'){const r=dr170Rate(E);say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': '+(r>0?'the drill slows to '+Math.round(r*100)+'% speed!':'the drill has no power!'))}}
+// v168: the drill keeps boring with boxes offline, only slower: ×0.4 for each box that is not running (1 · 0.4 · 0.16 · 0.064);
+// with all four offline it has no power at all
+function dr170Off(E){return E?E.box.filter(b=>b.s!=='on').length:4}
+function dr170Rate(E){const n=dr170Off(E);return n>=4?0:Math.pow(MQ170.slow,n)}
+function mq170ETick(dt,now,al){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
   // co-op (3180): the region host runs the drill (progress, failures, trolls, the end); partners switch on and repair boxes
   const co=co151On(),host=co151Host();
   if(!mq170In3())return mq170Fail('left');
   if(!co&&hero.hp<=0)return mq170Fail('dead');
   if(co&&host&&!co151Standing())return mq170Fail('dead');
   if(hero.hp>0){const p=pl.position,dx=p.x-R.yard.x,dz=p.z-R.yard.z,d=Math.hypot(dx,dz);if(d>MQ170.leash){p.x=R.yard.x+dx/d*MQ170.leash;p.z=R.yard.z+dz/d*MQ170.leash;if(now-(E.lw||0)>2500){E.lw=now;say('⚙️ You cannot leave the drill now!')}}}
-  // drilling: only with all four boxes running
-  const run=E.box.every(b=>b.s==='on');if(run!==!!E.run){E.run=run?1:0;MQ170.trkK='';svSnd(run?'charge':'hiss',.8,run?.7:.9)}
-  if(run&&host){E.prog=Math.min(MQ170.need,E.prog+dt);E.box.forEach((b,i)=>{b.tf-=dt;if(b.tf<=0)dr170Set(i,Math.random()<.55?'frozen':'fault')})}
-  const k=E.prog/MQ170.need;S.drill.bit.rotation.z+=dt*(run?14:Math.max(0,(S.drill.bitV||0)));S.drill.bitV=run?14:Math.max(0,(S.drill.bitV||0)-dt*10);
-  S.drill.g.position.copy(S.d0).add(new THREE.Vector3(-R.g.fx*k*1.6,0,-R.g.fz*k*1.6));S.cliff.bore.scale.set(.2+1.9*k,.2+1.9*k,1);S.lt.intensity=run?1.2+.4*Math.sin(now/60):.3;
-  S.drill.glow.material.opacity=run?.9:.35;if(run&&Math.random()<dt*24){const p=new THREE.Vector3(R.face.x+(Math.random()-.5)*2.4,GH(R.face.x,R.face.z)+1.2+Math.random()*2.2,R.face.z);p.x+=R.g.fx*.6;p.z+=R.g.fz*.6;burst(p,Math.random()<.5?0xffd07a:0x9aa0a8,2,2.4,2,.5)}
-  if(run&&Math.random()<dt*3)shake(.05);if(run&&Math.random()<dt*2){const c=new THREE.Vector3();S.drill.g.localToWorld(c.set(.6,5.6,1.8));burst(c,0xd8d8d8,3,.4,2,1.4)}
+  // drilling: full speed with all four boxes running, slower with each box offline (dr170Rate), stopped with none running
+  const rate=dr170Rate(E),run=rate>0,full=rate>=1;if(rate!==E.rate){const up=rate>(E.rate||0);E.rate=rate;E.run=full?1:0;MQ170.trkK='';svSnd(up?'charge':'hiss',.8,up?.7:.9)}
+  // running boxes fail on their own while the drill turns
+  if(run&&host){E.prog=Math.min(MQ170.need,E.prog+dt*rate);E.box.forEach((b,i)=>{if(b.s!=='on')return;b.tf-=dt;if(b.tf<=0)dr170Set(i,Math.random()<.55?'frozen':'fault')})}
+  const k=E.prog/MQ170.need,bv=14*rate;S.drill.bitV=Math.max(bv,(S.drill.bitV||0)-dt*10);S.drill.bit.rotation.z+=dt*S.drill.bitV;
+  S.drill.g.position.copy(S.d0).add(new THREE.Vector3(-R.g.fx*k*1.6,0,-R.g.fz*k*1.6));S.cliff.bore.scale.set(.2+1.9*k,.2+1.9*k,1);S.lt.intensity=run?.5+.7*rate+.4*rate*Math.sin(now/60):.3;
+  S.drill.glow.material.opacity=run?.45+.45*rate:.35;if(run&&Math.random()<dt*24*rate){const p=new THREE.Vector3(R.face.x+(Math.random()-.5)*2.4,GH(R.face.x,R.face.z)+1.2+Math.random()*2.2,R.face.z);p.x+=R.g.fx*.6;p.z+=R.g.fz*.6;burst(p,Math.random()<.5?0xffd07a:0x9aa0a8,2,2.4,2,.5)}
+  if(run&&Math.random()<dt*3*rate)shake(.05);if(run&&Math.random()<dt*(.6+1.4*rate)){const c=new THREE.Vector3();S.drill.g.localToWorld(c.set(.6,5.6,1.8));burst(c,0xd8d8d8,3,.4,2,1.4)}
   // Frost Trolls for the boxes: more as the bore deepens
   if(host){E.trT-=dt;const live=enemies.filter(e=>e.dr170t&&!e.dead).length;
   if(E.trT<=0){E.trT=Math.max(5.5,10-k*4.5)+Math.random()*2;const n=Math.min(1+(k>.35?1:0)+(k>.75&&Math.random()<.5?1:0)+(co&&k>.2?1:0),(co?8:6)-live);
@@ -45952,7 +45975,7 @@ function mq170ETick(dt,now){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)re
     if(n>0&&!E.hint){E.hint=1;say('🧌 Frost Trolls are going for the control boxes! Hit one and it will come for you instead.')}}
   if(E.prog>=MQ170.need)return mq170Win()}
   if(co&&host)co170Sync(now);
-  dr170WTick(dt,now);if(now-(E.hu||0)>150){E.hu=now;dr170Hud()}}
+  dr170WTick(dt,now,al);if(now-(E.hu||0)>150){E.hu=now;dr170Hud()}}
 // a wrecker troll: walks to a box, raises its fists over it (a warning ring), smashes it; once hit it fights you instead
 function dr170Troll(e,dt,now){const E=MQ170.E,S=MQ170.S;if(!E||!S){try{removeE(e)}catch(_){}return}const D=e.dr,m=e.m;
   const pick=()=>{const L=E.box.map((b,i)=>({i,b})).filter(q=>q.b.s!=='smashed'),on=L.filter(q=>q.b.s==='on'),C=on.length?on:L;if(!C.length)return -1;
@@ -45968,12 +45991,12 @@ function dr170Troll(e,dt,now){const E=MQ170.E,S=MQ170.S;if(!E||!S){try{removeE(e
 {const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.dr170t&&!e.angry&&!e.dead&&d>0){e.angry=1;e.agg=1;e.hunt=1;e.m.ak=null;if(e.dr&&e.dr.w&&e.dr.w.kill)try{e.dr.w.kill()}catch(_){}dn(e.m.position,'!','#ff6a3a',-40,800)}return f.apply(this,arguments)}}
 // the boxes' prompts and the console's
 function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,R=mq170Plan(),E=MQ170.E;
-  if(E){if(MQ170.W)return {label:'🔧 Repairing · Esc to step away',fn:()=>{}};
+  if(E){const W=MQ170.W;if(W)return {label:'🔧 '+DR170W.kn[W.kind]+' the '+MQ170.bn[W.i].toLowerCase()+' · '+Math.round((E.box[W.i].rp||0)*100)+'% · move or Esc to stop',fn:()=>{}};
     for(const B of MQ170.S.box){if(Math.hypot(P.x-B.x,P.z-B.z)>2.3)continue;const b=E.box[B.i],n=MQ170.bn[B.i];
       if(b.s==='off')return {label:'F · Switch on the '+n.toLowerCase(),fn:()=>dr170Fix(B.i)};if(b.s==='on')return {label:'✅ The '+n.toLowerCase()+' is running',fn:()=>{}};
-      if(b.s==='frozen')return {label:'F · Thaw the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'thaw')};if(b.s==='fault')return {label:'F · Rewire the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'wire')};
-      return {label:'F · Rebuild the '+n.toLowerCase(),fn:()=>dr170Open(B.i,'rebuild')}}
-    return {label:'⚙️ The drill: '+Math.round(E.prog/MQ170.need*100)+'% · boxes running '+E.box.filter(b=>b.s==='on').length+'/4',fn:()=>{}}}
+      const kd=dr170Kind(b.s),rp=b.rp||0;
+      return {label:'F · '+(rp>0?'Carry on: '+DR170W.vb[kd].toLowerCase()+' the '+n.toLowerCase()+' ('+Math.round(rp*100)+'% done)':DR170W.vb[kd]+' the '+n.toLowerCase()+' ('+MQ170.rt[kd]+' s)'),fn:()=>dr170Open(B.i,kd)}}
+    return {label:'⚙️ The drill: '+Math.round(E.prog/MQ170.need*100)+'% · '+dr170Speed(E),fn:()=>{}}}
   if(Math.hypot(P.x-R.con.x,P.z-R.con.z)<2.6)return mq170Done()?{label:'F · Into the tunnel to '+mq170Den(),fn:()=>mq170Through()}:{label:'F · Start the drill (no turning back)',fn:()=>mq170Start()};
   const T=R.L(0,-.6);if(Math.hypot(P.x-T.x,P.z-T.z)<4.6){if(mq170Done())return {label:'F · Into the tunnel to '+mq170Den(),fn:()=>mq170Through()};return {label:'🔒 Sheer rock: the way to the Den is through the mountain',fn:()=>say('⚙️ The drill at the end of the road could bore through. Its console is at the back.')}}
   return null}
@@ -45982,70 +46005,140 @@ function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,
 {const f=doRecall;doRecall=function(){if(MQ170.E)return say('⚙️ You cannot leave the drill now. Bore through, or fall trying.');return f.apply(this,arguments)}}
 {const f=toggleMount;toggleMount=function(){if(MQ170.E)return say('⚙️ No mount will come near the roaring drill.');return f.apply(this,arguments)}}
 
-// ---------------- the repair windows (they do not pause the game) ----------------
-(function(){const st=document.createElement('style');st.textContent=`
-#dr170w{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:380px;max-width:92%;padding:10px 12px 12px;border-radius:10px;user-select:none;touch-action:none;
-  background:linear-gradient(180deg,#2a3038,#1a1e24);border:2px solid #6a7480;box-shadow:0 10px 40px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.06);font:13px/1.35 system-ui,sans-serif;color:#e0e6ec}
-#dr170w .hd{display:flex;justify-content:space-between;align-items:center;font-family:Cinzel,Georgia,serif;letter-spacing:.08em;font-size:13px;color:#ffd07a;margin-bottom:6px}
-#dr170w .x{cursor:pointer;background:#3a2020;border:1px solid #8a4040;color:#ffb0a0;border-radius:4px;padding:0 7px;font:700 13px system-ui}
-#dr170w .tip{color:#9aa8b4;font-size:11.5px;margin-bottom:8px}#dr170w .pane{position:relative;height:230px;border-radius:6px;background:#11151a;border:1px solid #3a424c;overflow:hidden}
-#dr170w svg{position:absolute;inset:0;width:100%;height:100%}#dr170w .pc{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:grab;
-  background:#3a424c;border:2px solid #8a96a4;box-shadow:0 3px 8px rgba(0,0,0,.6)}#dr170w .sl{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:8px;border:2px dashed #5a6470;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.35}
-#dr170w .ok{color:#7aff8a}#dr170w .hb{position:absolute;right:18px;bottom:16px;width:120px;height:54px;border-radius:8px;background:linear-gradient(180deg,#8a3a1a,#5a2410);border:2px solid #ff9a5a;color:#ffe0c0;font:700 14px system-ui;cursor:pointer}
-#dr170w .hb.on{background:linear-gradient(180deg,#ff7a2a,#c04a10)}`;document.head.appendChild(st)})();
-function dr170Open(i,kind){if(!MQ170.E||MQ170.W)return;const st=document.getElementById('stage')||document.body;let el=document.getElementById('dr170w');if(!el){el=document.createElement('div');el.id='dr170w';st.appendChild(el)}
-  const W={i,kind,el,hp:hero.hp,lock:pl.position.clone(),done:0,t:0};MQ170.W=W;try{if(typeof orbEnd=='function'&&typeof orb!='undefined'&&orb)orbEnd()}catch(_){}atkHeld=false;
-  const ttl={thaw:'❄ Thaw the box',wire:'⚡ Rewire the box',rebuild:'🔩 Rebuild the box'}[kind],tip={thaw:'Hold the heater (or Space) and keep the needle in the green band until the ice is gone. Too hot and the ice refreezes.',
-    wire:'Drag each loose wire on the left to the socket of its colour on the right.',rebuild:'Drag each broken piece back into its place on the panel.'}[kind];
-  el.innerHTML=`<div class="hd"><span>${ttl} · ${MQ170.bn[i]}</span><span class="x">✕</span></div><div class="tip">${tip}</div><div class="pane"></div>`;el.style.display='block';
-  el.querySelector('.x').onclick=()=>dr170Close(false);W.pane=el.querySelector('.pane');({thaw:dr170Thaw,wire:dr170Wire,rebuild:dr170Rebuild})[kind](W);svSnd('click',.6,1)}
-function dr170Close(ok){const W=MQ170.W;if(!W)return;MQ170.W=null;try{W.off&&W.off()}catch(_){}const el=document.getElementById('dr170w');if(el){el.style.display='none';el.innerHTML=''}
+// ---------------- the repairs (v168: timed work at the box, each with its own motion; they do not pause the game) ----------------
+// (they replace v151's Thaw / Rewire / Rebuild mini-game windows.) F at a broken box starts the work: the hero steps up to the box,
+// faces it and works while a ring over the box fills:
+//  * Thaw (MQ170.rt 3 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
+//  * Rewire (6 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
+//  * Rebuild (10 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
+//    and the panel, the gauges and the lever jump back into place one by one.
+// Moving (or Esc, or a dodge) steps away and a hit knocks you away: the work stops, but what is done stays done (E.box[i].rp), so F
+// again carries on from there. The box changing state (a troll smashing a frozen box) starts that box's work afresh.
+var DR170W={kn:{thaw:'Thawing',wire:'Rewiring',rebuild:'Rebuilding'},vb:{thaw:'Thaw',wire:'Rewire',rebuild:'Rebuild'},ic:{thaw:'🔥',wire:'🔧',rebuild:'🔨'},
+  sd:{thaw:1.2,wire:.8,rebuild:1.0},col:{thaw:'#ffb060',wire:'#ffd040',rebuild:'#ff8a5a'},tools:{},tool:null,hid:[],rest:null,kT:null};   // kT: pictures hold the motion at this progress
+function dr170Kind(s){return s==='frozen'?'thaw':s==='fault'?'wire':s==='smashed'?'rebuild':null}
+function dr170Open(i,kind){const E=MQ170.E,S=MQ170.S;if(!E||!S||MQ170.W||hero.hp<=0)return;const b=E.box[i],B=S.box[i];if(!b||!B)return;kind=dr170Kind(b.s);if(!kind)return;
+  if(riding)try{dismount()}catch(_){}try{if(typeof orbEnd=='function'&&typeof orb!='undefined'&&orb)orbEnd()}catch(_){}atkHeld=false;
+  // step up to the box's front (its panel faces the drill), facing it
+  const P=pl.position,dx=Math.sin(B.g.rotation.y),dz=Math.cos(B.g.rotation.y);
+  const sd=DR170W.sd[kind],lk=new THREE.Vector3(B.x+dx*sd,0,B.z+dz*sd);if(solid(Math.round(lk.x),Math.round(lk.z)))lk.set(P.x,0,P.z);
+  P.x=lk.x;P.z=lk.z;pl.step=null;hero.dash=null;
+  const W={i,kind,lock:lk,hp:hero.hp,ry:Math.atan2(B.x-lk.x,B.z-lk.z),t:0,need:MQ170.rt[kind],k0:0,seat:dr170Seats(kind,b.rp||0)};MQ170.W=W;pl.rotation.y=W.ry;
+  dr170Tool(kind);try{const T=DR170_T[kind];haPlay(T.ms,T.t,2,null,.25);if(HA.cur)HA.cur.dr170=1}catch(_){}svSnd(kind==='thaw'?'hiss':kind==='wire'?'hum':'heavy',.5,1.3);dr170Ring()}
+// stop working: ok = the repair is finished (the box runs again)
+function dr170Close(ok){const W=MQ170.W;if(!W)return;MQ170.W=null;dr170Tool(null);try{if(HA.cur&&HA.cur.dr170)haCancel(false)}catch(_){}dr170Ring();
   const E=MQ170.E;if(ok&&E){dr170Fix(W.i);say('🔧 The '+MQ170.bn[W.i].toLowerCase()+' is running again.')}}
-function dr170Win(W){if(W.done)return;W.done=1;svSnd('bell',.8,1.4);setTimeout(()=>{if(MQ170.W===W)dr170Close(true)},350)}
-function dr170WTick(dt,now){const W=MQ170.W;if(!W)return;W.t+=dt;
-  // you stay at the box; a hit knocks you away from it
-  pl.position.x=W.lock.x;pl.position.z=W.lock.z;pl.step=null;
-  if(hero.hp<W.hp-.5){dr170Close(false);say('💢 Knocked away from the box!');return}W.hp=Math.max(W.hp,hero.hp);
-  const b=MQ170.E&&MQ170.E.box[W.i];if(!b||b.s==='on'){dr170Close(false);return}
-  if(W.tick)W.tick(dt)}
+function dr170Win(W){W=W||MQ170.W;if(!W||MQ170.W!==W)return;const b=MQ170.E&&MQ170.E.box[W.i];if(b)b.rp=1;dr170Close(true)}
+// tests: finish the repair in hand at once
+function dr170Solve(){const W=MQ170.W;if(!W)return false;dr170Win(W);return true}
+// the steps of a repair already done (cables seated; the cabinet upright, then each piece back): a sound and a burst as each lands
+function dr170Seats(kind,p){return kind==='wire'?[.22,.52,.82].filter(x=>p>=x).length:kind==='rebuild'?[.15,.36,.62,.88].filter(x=>p>=x).length:0}
+function dr170WTick(dt,now,al){const W=MQ170.W;if(!W)return;const E=MQ170.E,b=E&&E.box[W.i],B=MQ170.S&&MQ170.S.box[W.i];
+  if(!b||!B||dr170Kind(b.s)!==W.kind){dr170Close(false);return}
+  const pc=()=>Math.round((b.rp||0)*100)+'%',n=MQ170.bn[W.i].toLowerCase();
+  if(hero.hp<W.hp-.5){dr170Close(false);pl.step={x:-Math.sin(W.ry),z:-Math.cos(W.ry),sp:7,t:.14};say('💢 Knocked away from the '+n+' ('+pc()+' done): F to carry on.');return}
+  if(al>0||hero.dash||hero.hp<=0){dr170Close(false);if(hero.hp>0)say('🔧 You step away from the '+n+' ('+pc()+' done): F to carry on.');return}
+  W.hp=Math.max(W.hp,hero.hp);pl.position.x=W.lock.x;pl.position.z=W.lock.z;pl.step=null;pl.rotation.y=W.ry;
+  W.t+=dt;b.rp=Math.min(1,(b.rp||0)+dt/W.need);
+  // the motion: a loop of the kind's body track (the hands are put on the tools after the animation, dr170Aim)
+  const T=DR170_T[W.kind];if(!HA.cur||HA.cur.pose!==T.t){haPlay(T.ms,T.t,2,null,.25);if(HA.cur)HA.cur.dr170=1}
+  try{dr170Fx(W,B,b,dt,now)}catch(e){if(!MQ170.err++)console.warn('v168 repair fx',e)}dr170Part(B,b.s,b.rp);dr170Ring();
+  if(b.rp>=1)dr170Close(true)}
 addEventListener('keydown',e=>{if(MQ170.W&&e.key==='Escape'){dr170Close(false);e.stopImmediatePropagation()}},true);
-// Thaw: a heat gauge; holding the heater raises the needle, letting go lowers it; time in the green band melts the ice
-function dr170Thaw(W){const lo=46+Math.random()*24,hi=lo+18;W.temp=10;W.melt=0;W.hold=0;
-  W.pane.innerHTML=`<svg viewBox="0 0 380 230"><rect x="30" y="20" width="44" height="190" rx="8" fill="#1e252c" stroke="#5a6470"/><rect x="32" y="${210-hi*1.9}" width="40" height="${(hi-lo)*1.9}" fill="#2aff6a" opacity=".35"/>
-    <rect x="32" y="${210-100*1.9}" width="40" height="${(100-92)*1.9}" fill="#ff3a2a" opacity=".35"/><rect class="nd" x="26" y="200" width="52" height="5" rx="2" fill="#ffd07a"/>
-    <rect x="110" y="40" width="160" height="150" rx="10" fill="#9ad8ff" class="ic" opacity=".85"/><text x="190" y="120" text-anchor="middle" font-size="44">🧊</text>
-    <rect x="110" y="200" width="160" height="10" rx="4" fill="#0a0e12" stroke="#3a424c"/><rect class="pg" x="110" y="200" width="0" height="10" rx="4" fill="#7ad8ff"/></svg><button class="hb">HOLD TO HEAT</button>`;
-  const btn=W.pane.querySelector('.hb'),nd=W.pane.querySelector('.nd'),pg=W.pane.querySelector('.pg'),ic=W.pane.querySelector('.ic'),on=v=>{W.hold=v;btn.classList.toggle('on',!!v)};
-  btn.onpointerdown=e=>{e.preventDefault();on(1)};btn.onpointerup=btn.onpointerleave=()=>on(0);
-  const kd=e=>{if(e.key===' '){on(1);e.preventDefault();e.stopImmediatePropagation()}},ku=e=>{if(e.key===' ')on(0)};addEventListener('keydown',kd,true);addEventListener('keyup',ku,true);W.off=()=>{removeEventListener('keydown',kd,true);removeEventListener('keyup',ku,true)};
-  W.lo=lo;W.hi=hi;W.tick=dt=>{W.temp=Math.max(0,Math.min(100,W.temp+(W.hold?48:-32)*dt));if(W.temp>=92){W.melt=Math.max(0,W.melt-dt*.6)}else if(W.temp>=lo&&W.temp<=hi)W.melt=Math.min(1,W.melt+dt/2.4);
-    nd.setAttribute('y',(210-W.temp*1.9-2).toFixed(1));pg.setAttribute('width',(160*W.melt).toFixed(1));ic.setAttribute('opacity',(.85*(1-W.melt)+.05).toFixed(2));if(W.melt>=1)dr170Win(W)}}
-// Rewire: four coloured wire ends on the left, the four sockets on the right in another order; drag each to its colour
-function dr170Wire(W){const C=['#ff4a4a','#4a9aff','#ffd040','#d05aff'],ord=[0,1,2,3].sort(()=>Math.random()-.5),y=k=>36+k*52;W.con=[0,0,0,0];
-  W.pane.innerHTML=`<svg viewBox="0 0 380 230">${C.map((c,k)=>`<rect x="6" y="${y(k)-9}" width="40" height="18" rx="4" fill="${c}"/><circle class="w" data-k="${k}" cx="52" cy="${y(k)}" r="11" fill="${c}" stroke="#fff" stroke-width="2"/>`).join('')}
-    ${ord.map((k,j)=>`<rect x="334" y="${y(j)-9}" width="40" height="18" rx="4" fill="${C[k]}"/><circle class="s" data-k="${k}" data-j="${j}" cx="328" cy="${y(j)}" r="12" fill="#11151a" stroke="${C[k]}" stroke-width="3"/>`).join('')}<g class="ln"></g></svg>`;
-  const sv=W.pane.querySelector('svg'),ln=W.pane.querySelector('.ln'),pt=e=>{const r=sv.getBoundingClientRect();return [(e.clientX-r.left)/r.width*380,(e.clientY-r.top)/r.height*230]};let drag=null;
-  const line=(k,x2,y2,keep)=>{const L=document.createElementNS('http://www.w3.org/2000/svg','line');L.setAttribute('x1',52);L.setAttribute('y1',y(k));L.setAttribute('x2',x2);L.setAttribute('y2',y2);L.setAttribute('stroke',C[k]);L.setAttribute('stroke-width',9);L.setAttribute('stroke-linecap','round');if(!keep)L.setAttribute('opacity',.85);ln.appendChild(L);return L};
-  sv.querySelectorAll('.w').forEach(c=>c.onpointerdown=e=>{const k=+c.dataset.k;if(W.con[k])return;e.preventDefault();try{sv.setPointerCapture(e.pointerId)}catch(_){}const [x,yy]=pt(e);drag={k,L:line(k,x,yy)}});
-  sv.onpointermove=e=>{if(!drag)return;const [x,yy]=pt(e);drag.L.setAttribute('x2',x);drag.L.setAttribute('y2',yy)};
-  sv.onpointerup=e=>{if(!drag)return;const [x,yy]=pt(e);let hit=null;sv.querySelectorAll('.s').forEach(s=>{const j=+s.dataset.j;if(Math.hypot(x-328,yy-y(j))<24)hit=s});const k=drag.k;
-    if(hit&&+hit.dataset.k===k)dr170WireSet(W,k);else{drag.L.remove();if(hit)svSnd('zap',.4,1.6)}drag=null};
-  W.setK=k=>{const j=ord.indexOf(k);line(k,328,y(j),1);W.con[k]=1;svSnd('click',.6,1.4);if(W.con.every(Boolean))dr170Win(W)}}
-function dr170WireSet(W,k){if(W.con[k])return;W.pane.querySelectorAll('line').forEach(L=>{if(L.getAttribute('opacity'))L.remove()});W.setK(k)}
-// Rebuild: four broken pieces scattered; drag each into its outlined place on the panel
-function dr170Rebuild(W){const P=[['⚙️',120,70],['🔩',250,70],['🎚️',120,165],['🧭',250,165]],put=[0,0,0,0];W.put=put;
-  W.pane.innerHTML=`<svg viewBox="0 0 380 230"><rect x="70" y="20" width="240" height="195" rx="12" fill="#232a32" stroke="#5a6470" stroke-width="2"/></svg>`+P.map((p,k)=>`<div class="sl" data-k="${k}" style="left:${p[1]/380*100}%;top:${p[2]/230*100}%">${p[0]}</div>`).join('')
-    +P.map((p,k)=>{const x=k<2?28+Math.random()*16:338-Math.random()*16,yy=40+k%2*80+Math.random()*60;return `<div class="pc" data-k="${k}" style="left:${x/380*100}%;top:${yy/230*100}%;transform:rotate(${(Math.random()-.5)*60}deg)">${p[0]}</div>`}).join('');
-  const pane=W.pane;let drag=null;
-  pane.querySelectorAll('.pc').forEach(el=>el.onpointerdown=e=>{const k=+el.dataset.k;if(put[k])return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}drag={k,el};el.style.cursor='grabbing';el.style.zIndex=5});
-  pane.onpointermove=e=>{if(!drag)return;const r=pane.getBoundingClientRect();drag.el.style.left=((e.clientX-r.left)/r.width*100)+'%';drag.el.style.top=((e.clientY-r.top)/r.height*100)+'%'};
-  pane.onpointerup=e=>{if(!drag)return;const r=pane.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*380,yy=(e.clientY-r.top)/r.height*230,k=drag.k,p=P[k];
-    if(Math.hypot(x-p[1],yy-p[2])<36)dr170Put(W,k);else{const sl=P.findIndex(q=>Math.hypot(x-q[1],yy-q[2])<36);if(sl>=0)svSnd('zap',.4,1.6)}drag.el.style.cursor='grab';drag.el.style.zIndex='';drag=null};
-  W.P=P}
-function dr170Put(W,k){if(W.put[k])return;W.put[k]=1;const el=W.pane.querySelector('.pc[data-k="'+k+'"]'),p=W.P[k];if(el){el.style.left=p[1]/380*100+'%';el.style.top=p[2]/230*100+'%';el.style.transform='none';el.style.borderColor='#7aff8a';el.style.cursor='default'}
-  const sl=W.pane.querySelector('.sl[data-k="'+k+'"]');if(sl)sl.style.opacity=0;svSnd('heavy',.4,1.8);if(W.put.every(Boolean))dr170Win(W)}
-// tests: finish the open window as a player would
-function dr170Solve(){const W=MQ170.W;if(!W)return false;if(W.kind==='thaw'){W.melt=1;W.tick&&W.tick(0)}else if(W.kind==='wire')[0,1,2,3].forEach(k=>dr170WireSet(W,k));else [0,1,2,3].forEach(k=>dr170Put(W,k));return true}
+// ---- the tools: a torch, a spanner, a hammer (each built along +y from the grip; placed in the world every frame) ----
+function dr170ToolMk(kind){const M=dr170Mats(),g=new THREE.Group(),S=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8,flatShading:true},o||{}));
+  const add=(geo,mat,x,y,z,rx,ry,rz)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);m.rotation.set(rx||0,ry||0,rz||0);m.castShadow=true;g.add(m);return m};
+  if(kind==='thaw'){add(new THREE.CylinderGeometry(.022,.028,.5,7),M.wood,0,.1,0);add(new THREE.CylinderGeometry(.05,.04,.14,8),S(0x3a2a1c,{roughness:.95}),0,.4,0);
+    add(new THREE.TorusGeometry(.044,.011,4,10),M.iron2,0,.33,0,Math.PI/2,0,0);
+    // the flame: stays upright (turned back against the torch every frame), flickers
+    const fl=new THREE.Group();fl.position.y=.48;g.add(fl);const F=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+    const c1=new THREE.Mesh(new THREE.ConeGeometry(.075,.3,7),F(0xff6a1a,.85));c1.position.y=.1;fl.add(c1);const c2=new THREE.Mesh(new THREE.ConeGeometry(.045,.2,6),F(0xffd060,.95));c2.position.y=.07;fl.add(c2);
+    const gl=kqSpr(0xff8a2a,.55);gl.material=gl.material.clone();gl.material.opacity=.7;gl.position.y=.08;fl.add(gl);g.userData.fl=fl;g.userData.cn=[c1,c2];g.userData.gl=gl}
+  else if(kind==='wire'){const st=M.steel;add(new THREE.BoxGeometry(.035,.3,.016),st,0,.12,0);add(new THREE.BoxGeometry(.06,.05,.018),st,0,.29,0);
+    [-1,1].forEach(s=>add(new THREE.BoxGeometry(.016,.06,.018),st,s*.025,.335,0));add(new THREE.CylinderGeometry(.024,.024,.12,6),S(0x8a2a1a),0,-.02,0)}
+  else{add(new THREE.CylinderGeometry(.02,.026,.48,7),M.wood,0,.15,0);add(new THREE.CylinderGeometry(.028,.028,.1,7),S(0x3a2418,{roughness:.95}),0,-.04,0);
+    add(new THREE.BoxGeometry(.12,.12,.3),M.iron,0,.42,0);add(new THREE.BoxGeometry(.135,.135,.05),M.iron2,0,.42,.15);add(new THREE.BoxGeometry(.13,.13,.04),M.iron2,0,.42,-.14)}
+  g.userData.k=kind;g.visible=false;scene.add(g);return g}
+function dr170Tool(kind){const D=DR170W;if(D.tool){D.tool.visible=false;D.tool=null}D.hid.forEach(o=>o.visible=true);D.hid=[];const S=MQ170.S;if(S&&S.tl)S.tl.intensity=0;
+  if(!kind||!pl)return;try{const t=D.tools[kind]||(D.tools[kind]=dr170ToolMk(kind));t.visible=true;D.tool=t;(pl.gearG||[]).forEach(o=>{if(o&&o.visible){o.visible=false;D.hid.push(o)}})}catch(e){console.warn('v168 tool',e)}}
+// ---- the body motions (ordinary attack tracks with no hit, looped while working) ----
+var DR170_T=(function(){const E=atkEyes,T={};
+  // thaw: standing, leaning in a little, the free arm raised to shield the face from the heat
+  const th=x=>E(Object.assign({sx:.14,dy:-.04,lk:.2,rk:.1,lh:-.12,lx:-1.05,lz:.35,le:-1.45,hx:.12},x));
+  T.thaw={ms:1800,t:atkTrack([[0,th({})],[.5,th({sx:.2,sy:.1,dy:-.06,hx:.18})],[1,th({})]],true)};
+  // rewire: down on one knee at the panel, bent in to it
+  const wr=x=>E(Object.assign({sx:.38,dy:-.46,lh:-1.45,lk:1.5,rh:.35,rk:1.75,hx:.3},x));
+  T.wire={ms:1300,t:atkTrack([[0,wr({})],[.5,wr({sx:.44,sy:-.08})],[1,wr({})]],true)};
+  // rebuild: feet apart, rising up with the swing and bending into the blow (dr170Aim moves the hammer from the same progress)
+  const rb=x=>E(Object.assign({sx:.16,dy:-.06,lk:.3,rk:.22,lh:-.2,rh:.1},x));
+  T.rebuild={ms:900,t:atkTrack([[0,rb({})],[.45,rb({sx:-.06,sy:.2,dy:-.01,lk:.15,rk:.12}),'io'],[.6,rb({sx:.32,sy:-.12,dy:-.12,lk:.4,rk:.3}),'in2'],[1,rb({}),'io']],true)};
+  return T})();
+// the hammer's swing: [progress, arm angle, hammer angle] (radians above the hero's forward, in the plane of the blow)
+var DR170_SW=[[0,-.2,-.5],[.45,1.25,2.4],[.6,-.1,-.4],[1,-.2,-.5]];
+function dr170Sw(k){const K=DR170_SW;let i=0;while(i<K.length-2&&k>K[i+1][0])i++;const a=K[i],b=K[i+1],t0=Math.max(0,Math.min(1,(k-a[0])/((b[0]-a[0])||1))),t=i==1?t0*t0:t0*t0*(3-2*t0);
+  return [a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
+// after every animation layer: the tool in the world and the hands on it (two-bone arm IK); the arm bones are put back next frame
+function dr170Restore(){const R=DR170W.rest;DR170W.rest=null;if(R)R.forEach(r=>r.o.quaternion.copy(r.q))}
+function dr170Aim(now){const W=MQ170.W,t=DR170W.tool,S=MQ170.S;if(!W||!t||!S)return;const B=S.box[W.i],b=pl.bones;if(!B||!b||!b.aR0||!b.aR1||!b.aR2||!b.aL0||!b.aL1||!b.aL2||typeof fc116IK!='function')return;
+  const V=THREE.Vector3,up=new V(0,1,0),f=new V(Math.sin(W.ry),0,Math.cos(W.ry));pl.updateMatrixWorld(true);B.g.updateMatrixWorld(true);
+  const hs=Math.sign(pl.worldToLocal(b.aR0.getWorldPosition(new V())).x)||1,s=new V(f.z,0,-f.x).multiplyScalar(hs),sR=b.aR0.getWorldPosition(new V()),sL=b.aL0.getWorldPosition(new V());
+  const BL=(x,y,z)=>B.g.localToWorld(new V(x,y,z)),T=now/1000,dn=new V(0,-1,0);
+  DR170W.rest=[b.aR0,b.aR1,b.aR2,b.aL0,b.aL1,b.aL2].map(o=>({o,q:o.quaternion.clone()}));
+  const ik=(R,tg,pole)=>{try{if(R)fc116IK(sR,b.aR0,b.aR1,b.aR2,tg,pole,1);else fc116IK(sL,b.aL0,b.aL1,b.aL2,tg,pole,1)}catch(e){if(!DR170W.ie){DR170W.ie=1;console.warn('v168 ik',e)}}};
+  // everything is measured from the hero's own shoulder and arm (the races differ a lot in size); the tools are scaled to the arm
+  const A=Math.max(.15,sR.distanceTo(b.aR1.getWorldPosition(new V()))+b.aR1.getWorldPosition(new V()).distanceTo(b.aR2.getWorldPosition(new V()))),ts=Math.max(.7,Math.min(2.2,A/.34));t.scale.setScalar(ts);
+  let d,hand,x=null;
+  if(W.kind==='thaw'){
+    // the torch held out and up, its flame on the ice, waved slowly across it
+    hand=sR.clone().addScaledVector(f,.75*A).addScaledVector(up,.3*A+.12*A*Math.sin(T*1.7)).addScaledVector(s,.1*A+.22*A*Math.sin(T*2.3));
+    d=f.clone().multiplyScalar(.8).addScaledVector(up,.62).addScaledVector(s,-.12-.2*Math.sin(T*2.3)).normalize()}
+  else if(W.kind==='wire'){
+    // the spanner on the panel by the cable being seated, turning back and forth; the other hand on that cable's end
+    const q=Math.min(2,dr170Seats('wire',(MQ170.E.box[W.i].rp||0))),c=B.cab[q],head=BL(-.25+q*.25+.08,.66,.44);
+    d=f.clone().multiplyScalar(.9).addScaledVector(up,.15).addScaledVector(s,.25).normalize();hand=head.clone().addScaledVector(d,-.3*ts);
+    const tw=.6*Math.sin(T*7);x=s.clone().applyAxisAngle(d,tw);
+    if(c){c.updateMatrixWorld(true);const ct=c.localToWorld(new V(0,.36,0)).addScaledVector(f,-.04);ik(false,ct,s.clone().multiplyScalar(-.6).add(dn))}}
+  else{
+    // the hammer: up over the shoulder, then down onto the cabinet (the blow lands at .6 of the loop)
+    const k=HA.cur&&HA.cur.pose===DR170_T.rebuild.t?HA.cur.k:0,[al,th]=dr170Sw(k),sh=sR.clone().addScaledVector(s,-.15*A);
+    hand=sh.clone().addScaledVector(f,.9*A*Math.cos(al)).addScaledVector(up,.9*A*Math.sin(al));d=f.clone().multiplyScalar(Math.cos(th)).addScaledVector(up,Math.sin(th)).normalize();
+    x=s.clone();
+    // the blow lands: sparks and a clang where the head meets the iron
+    if(W.k0<.6&&k>=.6){const hp=hand.clone().addScaledVector(d,.4*ts);burst(hp,0xffd07a,10,2.2,1.6,.3);burst(hp,0x9aa0a8,4,1.4,1.4,.5);svSnd('heavy',.35,1.9);shake(.06)}W.k0=k;
+    // the other hand out low to the cabinet, steadying it
+    ik(false,sL.clone().addScaledVector(f,.85*A).addScaledVector(up,-.25*A).addScaledVector(s,.1*A),s.clone().multiplyScalar(-.7).add(dn))}
+  // the tool: its +y along d (a spanner and a hammer turned about it too), the hand on its grip
+  const y=d.clone(),x0=x||new V().crossVectors(y,s),xx=x0.clone().addScaledVector(y,-x0.dot(y));if(xx.lengthSq()<1e-6)xx.set(1,0,0);xx.normalize();
+  const z=new V().crossVectors(xx,y).normalize();t.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xx,y,z));
+  ik(true,hand,s.clone().multiplyScalar(.6).add(dn));
+  // the grip in the hand (if the arm falls short of where the tool wanted to be, the tool follows the hand)
+  try{b.aR2.getWorldPosition(t.position)}catch(_){t.position.copy(hand)}t.updateMatrixWorld(true);
+  if(t.userData.fl){const fl=t.userData.fl;fl.quaternion.copy(t.quaternion).invert();const fk=1+.18*Math.sin(T*23)+.12*Math.sin(T*37);t.userData.cn.forEach((c,q)=>c.scale.set(1,fk*(1+q*.1),1));t.userData.gl.scale.setScalar(.9*fk);
+    const tl=S.tl;if(tl){fl.getWorldPosition(tl.position);tl.position.y+=.12;tl.intensity=.9*fk}}}
+{const f=animHero;animHero=function(now,mv,h){const me=(h||pl)===pl;if(me){dr170Restore();if(MQ170.W){pl.rotation.y=MQ170.W.ry;if(DR170W.kT!=null&&HA.cur&&HA.cur.dr170)HA.cur.k=DR170W.kT}}const r=f.apply(this,arguments);
+  try{if(me&&MQ170.W)dr170Aim(now)}catch(e){if(!DR170W.ae){DR170W.ae=1;console.warn('v168 aim',e)}}return r}}
+// ---- what the work does to the box, frame by frame ----
+function dr170Fx(W,B,b,dt,now){const p=b.rp||0,V=THREE.Vector3,g=B.g,BL=(x,y,z)=>g.localToWorld(new V(x,y,z));g.updateMatrixWorld(true);const n=dr170Seats(W.kind,p);
+  if(W.kind==='thaw'){const t=DR170W.tool;if(t&&t.userData.fl&&Math.random()<dt*30){const q=t.userData.fl.getWorldPosition(new V());q.y+=.12;burst(q,Math.random()<.5?0xffa040:0xffd070,1,.3,1.1,.35)}
+    if(Math.random()<dt*9)burst(BL((Math.random()-.5)*.7,.5+Math.random()*.9*(1-p),.4),0xe8eef4,1,.25,1.2,1.1);
+    if(Math.random()<dt*6)burst(BL((Math.random()-.5)*.8,.25+Math.random()*.6,.38),0x8ad8ff,1,.15,-.6,.6);
+    if(Math.random()<dt*1.2)svSnd('hiss',.18,1.4+Math.random()*.4)}
+  else if(W.kind==='wire'){const q=Math.min(2,n);if(Math.random()<dt*9*(1-p*.7))burst(BL(-.25+q*.25,.6+Math.random()*.2,.48),0xffe07a,2,1.8,1.4,.25);
+    if(Math.random()<dt*1.5)svSnd('hum',.12,1.6)}
+  else if(Math.random()<dt*3)burst(BL((Math.random()-.5)*.8,.1,.6),0x9aa0a8,1,.6,.8,.5);
+  if(n>W.seat){W.seat=n;if(W.kind==='wire'){burst(BL(-.25+(n-1)*.25,.55,.45),0x7aff8a,10,1.2,1,.35);svSnd('bell',.3,2.2)}
+    else if(W.kind==='rebuild'){const P=n>1?B.parts[n-2]:null,q=P?BL(P.on[0],P.on[1],P.on[2]+.05):BL(0,.8,.4);burst(q,0xffd07a,14,2,1.6,.35);svSnd('heavy',.55,n>1?1.5:.9);if(n===1)shake(.12)}}}
+// the ring over the box: how far the work has come
+(function(){const st=document.createElement('style');st.textContent=`
+#dr170r{position:absolute;z-index:8;transform:translate(-50%,-100%);pointer-events:none;text-align:center;font:600 11.5px/1.25 system-ui,sans-serif;color:#f0e6d8;text-shadow:0 1px 3px #000;white-space:nowrap}
+#dr170r.hide{display:none}#dr170r svg{display:block;margin:0 auto 2px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.7))}#dr170r .s{color:#b8a890;font-weight:500;font-size:10.5px}`;document.head.appendChild(st)})();
+function dr170Ring(){let el=document.getElementById('dr170r');const W=MQ170.W,S=MQ170.S;if(!W||!S||!MQ170.E){if(el)el.classList.add('hide');return}
+  if(!el){el=document.createElement('div');el.id='dr170r';($('stage')||document.body).appendChild(el)}el.classList.remove('hide');
+  const B=S.box[W.i],p=MQ170.E.box[W.i].rp||0,c=DR170W.col[W.kind],L=2*Math.PI*21,left=Math.max(0,(1-p)*W.need);
+  const k=W.kind+Math.round(p*100);if(el.dataset.k!==k){el.dataset.k=k;el.innerHTML=`<svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="21" fill="rgba(10,12,16,.72)" stroke="rgba(255,255,255,.12)" stroke-width="5"/>
+    <circle cx="27" cy="27" r="21" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(L*p).toFixed(1)} ${L.toFixed(1)}" transform="rotate(-90 27 27)"/>
+    <text x="27" y="33" text-anchor="middle" font-size="17">${DR170W.ic[W.kind]}</text></svg>${DR170W.kn[W.kind]} · ${Math.round(p*100)}%<div class="s">${left.toFixed(1)} s left · move or Esc to stop</div>`}
+  try{const v=gY(B.g.position,2.9).project(cam),s=$('stage');el.style.left=((v.x*.5+.5)*s.clientWidth).toFixed(0)+'px';el.style.top=((-v.y*.5+.5)*s.clientHeight).toFixed(0)+'px'}catch(_){}}
 // no swings or spells while repairing
 {const f=swing;swing=function(){if(MQ170.W)return;return f.apply(this,arguments)}}
 {const f=cast;cast=function(){if(MQ170.W)return;return f.apply(this,arguments)}}
@@ -46058,20 +46151,23 @@ function dr170Solve(){const W=MQ170.W;if(!W)return false;if(W.kind==='thaw'){W.m
 #dr170h .bx{display:flex;gap:6px;justify-content:space-between}#dr170h .b{flex:1;text-align:center;padding:3px 2px;border-radius:5px;background:rgba(0,0,0,.4);font-size:10.5px;border:1px solid rgba(255,255,255,.08)}
 #dr170h .b i{display:block;width:10px;height:10px;border-radius:50%;margin:0 auto 2px}`;document.head.appendChild(st)})();
 function dr170Hud(){let el=document.getElementById('dr170h');const E=MQ170.E;if(!E){if(el)el.classList.add('hide');return}if(!el){el=document.createElement('div');el.id='dr170h';($('stage')||document.body).appendChild(el)}el.classList.remove('hide');
-  const k=E.prog/MQ170.need,run=E.box.every(b=>b.s==='on'),live=enemies.filter(e=>e.dr170t&&!e.dead).length;
-  el.innerHTML=`<div class="t"><span>⚙️ ${run?'Drilling':'The drill has stopped'}</span><span>${Math.round(k*100)}%</span></div><div class="bar"><i style="width:${(k*100).toFixed(1)}%"></i></div>
+  const k=E.prog/MQ170.need,r=dr170Rate(E),off=dr170Off(E),live=enemies.filter(e=>e.dr170t&&!e.dead).length;
+  el.innerHTML=`<div class="t"><span>⚙️ ${r>=1?'Drilling at full speed':r>0?'Drilling slowly':'The drill has stopped'}</span><span>${Math.round(k*100)}%</span></div><div class="bar"><i style="width:${(k*100).toFixed(1)}%;${r<1?'background:linear-gradient(90deg,#8a5a2a,#c8a060)':''}"></i></div>
+  <div class="sp" style="text-align:center;margin:-3px 0 5px;font-size:11px;color:${r>=1?'#7aff8a':r>0?'#ffb040':'#ff6a5a'}">${dr170Speed(E)}</div>
   <div class="bx">${E.box.map((b,i)=>`<div class="b"><i style="background:${MQ170.stC[b.s]};box-shadow:0 0 6px ${MQ170.stC[b.s]}"></i>${['NW','NE','SW','SE'][i]} · ${MQ170.stN[b.s]}</div>`).join('')}</div>
-  <div class="t" style="margin-top:4px"><span>Frost Trolls: ${live}</span><span>${run?'':'switch on / repair every box'}</span></div>`}
+  <div class="t" style="margin-top:4px"><span>Frost Trolls: ${live}</span><span>${off?'switch on / repair every box':''}</span></div>`}
+// the drill's speed in plain words
+function dr170Speed(E){const r=dr170Rate(E),n=dr170Off(E);return r>=1?'All four boxes running: full speed':r>0?n+' box'+(n>1?'es':'')+' offline: '+Math.round(r*100)+'% speed':'No box running: no power'}
 // ---------------- the world tick ----------------
-function mq170Tick(dt,now){const in3=mq170In3(),t=now/1000;
+function mq170Tick(dt,now,al){const in3=mq170In3(),t=now/1000;
   if(in3&&!MQ170.S)try{mq170Build()}catch(err){console.error('v151 drill build',err);MQ170.err++}
   const S=MQ170.S;if(!S)return;[S.cliff.g,S.drill.g,S.con].concat(S.box.map(b=>b.g)).forEach(o=>o.visible=in3);if(!in3)S.lt.intensity=0;
   if(in3){S.box.forEach((B,i)=>{const s=MQ170.E?MQ170.E.box[i].s:mq170Done()?'on':'off';B.halo.scale.setScalar(1.1*(1+.15*Math.sin(t*(s=='on'?3:8)+i)));
-      if(s==='fault'&&Math.random()<dt*14){const p=new THREE.Vector3(B.x,GH(B.x,B.z)+.9+Math.random()*.6,B.z);burst(p,0xffd07a,3,2.2,1.6,.3)}if(s==='frozen'&&Math.random()<dt*3)burst(new THREE.Vector3(B.x,GH(B.x,B.z)+1.5,B.z),0xd8f4ff,1,.2,.4,1)});
+      if(s==='fault'&&Math.random()<dt*14*(1-.8*((MQ170.E&&MQ170.E.box[i].rp)||0))){const p=new THREE.Vector3(B.x,GH(B.x,B.z)+.9+Math.random()*.6,B.z);burst(p,0xffd07a,3,2.2,1.6,.3)}if(s==='frozen'&&Math.random()<dt*3*(1-((MQ170.E&&MQ170.E.box[i].rp)||0)))burst(new THREE.Vector3(B.x,GH(B.x,B.z)+1.5,B.z),0xd8f4ff,1,.2,.4,1)});
     if(mq170Done()){S.cliff.gl.material.opacity=.45+.12*Math.sin(t*2)}}
-  if(MQ170.E)try{mq170ETick(dt,now)}catch(err){if(!MQ170.err++)console.error('v151 drill',err)}
+  if(MQ170.E)try{mq170ETick(dt,now,al)}catch(err){if(!MQ170.err++)console.error('v151 drill',err)}
   if(now-MQ170.t>400){MQ170.t=now;try{if(in3)mq143Trk()}catch(_){}}}
-{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq170Tick(dt,now)}catch(err){if(!MQ170.err++)console.warn('v151 drill tick',err)}return r}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq170Tick(dt,now,al)}catch(err){if(!MQ170.err++)console.warn('v151 drill tick',err)}return r}}
 // ---------------- the tracker (chapter 3 in the main-quest box, in Burningeye III) ----------------
 {const f=mq143Trk;mq143Trk=function(){try{if(mq170In3()){MQ143.trkK='';return mq170Trk()}}catch(err){if(!MQ170.err++)console.warn('v151 drill trk',err)}MQ170.trkK='';return f.apply(this,arguments)}}
 function mq170Trk(){const el=$('mqt143');if(!el)return;const hide=(typeof uiOpen=='function'&&uiOpen())||(mq170Done()&&insReach(2)>=3),E=MQ170.E;
@@ -46079,7 +46175,7 @@ function mq170Trk(){const el=$('mqt143');if(!el)return;const hide=(typeof uiOpen
   if(hide){el.classList.add('hide');mq143TrkPos();return}
   const o=(a,b,d)=>`<div class="o${d?' d':''}"><span>${a}</span>${b!=null?'<b>'+b+'</b>':''}</div>`;let h='<div class="k">⚜ Main quest · Burningeye Summit</div><div class="h">'+MQ170.name+'</div>';
   if(mq170Done())h+=o('Enter the tunnel to '+mq170Den(),null,1);
-  else if(E)h+=o('Keep all four control boxes running',E.box.filter(b=>b.s==='on').length+'/4')+o('Bore through the mountain',Math.round(E.prog/MQ170.need*100)+'%');
+  else if(E)h+=o('Keep all four control boxes running',E.box.filter(b=>b.s==='on').length+'/4')+o('Bore through the mountain',Math.round(E.prog/MQ170.need*100)+'%')+o('Drill speed',Math.round(dr170Rate(E)*100)+'%');
   else h+=o('Start the great drill at the end of the road');
   el.innerHTML=h;el.classList.add('z2');el.classList.remove('hide');mq143TrkPos()}
 // ---------------- saves ----------------
