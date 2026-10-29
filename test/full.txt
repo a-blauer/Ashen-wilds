@@ -104,3 +104,4 @@ v165_coop.py
 v167_combat.py
 v168_tiers.py
 v168_ground.py
+v169_seethrough.py

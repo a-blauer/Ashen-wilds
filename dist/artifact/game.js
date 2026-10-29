@@ -890,7 +890,7 @@ if(PSXON){
 }
 const POST=(()=>{
   let hf=false;try{hf=!!(ren.extensions.get('EXT_color_buffer_float')||ren.extensions.get('EXT_color_buffer_half_float'))}catch(e){}
-  const w2=ren.capabilities.isWebGL2,opt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:true};
+  const w2=ren.capabilities.isWebGL2,opt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:true};   // v169: the stencil marks characters for the see-through passes (3350)
   const T=(w,h,ms)=>{if(ms&&w2){try{const t=new THREE.WebGLMultisampleRenderTarget(w,h,opt);t.samples=4;return t}catch(e){}}return new THREE.WebGLRenderTarget(w,h,opt)};
   const vs='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',oc=new THREE.OrthographicCamera(-1,1,1,-1,0,1),ps=new THREE.Scene(),fq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),null);fq.frustumCulled=false;ps.add(fq);
   const M=(fs,u)=>new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:fs,uniforms:u,depthTest:false,depthWrite:false});
@@ -911,8 +911,8 @@ const POST=(()=>{
    pass(m,src,dst){fq.material=m;if(src)m.uniforms.t.value=src.texture;ren.setRenderTarget(dst);ren.render(ps,oc)},
    render(){
     ren.info.reset();
-    if(!P.on||!r0){ren.setRenderTarget(null);ren.render(scene,cam);return}
-    ren.setRenderTarget(r0);ren.clear();ren.render(scene,cam);
+    if(!P.on||!r0){ren.setRenderTarget(null);ren.render(scene,cam);if(P.after)P.after();return}
+    ren.setRenderTarget(r0);ren.clear();ren.render(scene,cam);if(P.after)P.after();   // v169: the see-through passes (3350) draw on top
     P.pass(mBright,r0,rb1);
     if(mComp.uniforms.rk.value>0){mRay.uniforms.sun.value.copy(ATM.sunU);P.pass(mRay,rb1,rr)} // god rays: off (rk 0) in the default look
     const qw=1/rb1.width,qh=1/rb1.height;
@@ -1040,11 +1040,17 @@ function windMat(mat,amp,off){
     #else
     vWP2=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;varying vec3 vWP2;').replace('void main() {',`void main() {
-    {vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
+    // v169: one see-through rule for everything (0061): plants turn see-through above the hero's knees (grass stays), no dark inside.
+    // The intro's Duskhold shots (uM157 0, 2420) keep the old dithered tube, so its rendered video stays the same.
+    sh.uniforms.uM157w=M157;
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
+    float ghw=0.;
+    if(uM157w>.5)ghw=gh169W(vWP2,uCam,uPl)*smoothstep(-.85,-.55,vWP2.y-uPl.y);
+    else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
-     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  mat.customProgramCacheKey=()=>'ifx';
+     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}
+    `+GH169.GATE);gh169Shader(sh,mat,'vWP2',true)};
+  mat.customProgramCacheKey=()=>'ifx';gh169Flag(mat,0,1);
 }
 function buildVI(){
   const chk={};buildTerrain(chk);
@@ -1092,6 +1098,74 @@ const hx=(a,k)=>((a[0]*k|0)<<16)|((a[1]*k|0)<<8)|(a[2]*k|0);
 const trees=[],gr=[];
 MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v124Rim=='function'&&v124Rim(x,y)))trees.push([x,y]); // v124: the rim draws its own edge (2270)
  if(t=='g')gr.push([x,y]);}));
+// ================= v169: see-through walls, the shader half (the drawing passes are in 3350) =================
+// Owner: "I'd rather everything just become semi transparent, I don't like the vignette with the speckled look"; "when a house
+// becomes transparent, the inside is black instead of showing the floors, still transparent so we can see our character";
+// "make outside of the map black so we can't see under the map".
+// Every world material that used to dither away between the camera and the hero (scenery 2420, terrain 3190, swaying plants
+// windMat 0060, den walls 0960 / 1100) now computes one ghost weight `ghw` per pixel (0 solid .. 1 fully see-through) with the
+// same rule (gh169W) and ends in the same code (GH169_GATE at the start of main, GH169_TAIL after the colour is done):
+//   * the normal draw (uGhM 0) leaves out every pixel with ghw > 0;
+//   * 3350 then draws those pixels again on their own: a depth pass (uGhM 1, only the nearest see-through surface counts) and a
+//     colour pass (uGhM 2) that blends them as glass: the surface at uGhA opacity over what is behind. Buildings and props seen
+//     through the glass are darkened to uGhK (near black: a house's inside, its floors); the ground, plants, water, the sky and
+//     characters are seen clearly (they write 1 into the stencil buffer, gh169Clear; 3350 draws those pixels at k 1).
+//     Plants themselves are see-through without the dark inside (GH169_SEE).
+//   * back faces (the inside of a two-sided house) are black in the colour pass; one-sided materials never show their back.
+//   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
+var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,2.2],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
+GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
+  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
+// gh169W(world point, camera, hero chest): inside a round window around the hero on screen (uGhR, world units at the hero's
+// distance, smooth edge, no dither) and in front of the hero, or anything right in front of the camera (uGhN)
+GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;
+float gh169T(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;return dot(p-c,ab)/max(dot(ab,ab),1e-4);}
+float gh169W(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;
+ float d=length(p-(c+ab*t))/max(t,.02);
+ float w=(1.-smoothstep(uGhR.x,uGhR.y,d))*(1.-smoothstep(.86,.96,t));
+ float n=(1.-smoothstep(uGhN.x,uGhN.y,length(p-c)))*(1.-smoothstep(.75,.9,t));
+ return max(w,n);}
+bool gh169Out(vec3 p){return p.x<uGhV.x||p.z<uGhV.y||p.x>uGhV.z||p.z>uGhV.w;}
+`;
+// the start of main, after ghw is known: the normal draw skips see-through pixels, the ghost passes draw only them
+GH169.GATE=`if(uGhOn>.5){if(uGhM<.5){if(ghw>.004)discard;}else{if(ghw<=.004)discard;
+ #ifndef GH169_DS
+ if(!gl_FrontFacing)discard;
+ #endif
+ }}else if(uGhM>.5)discard;
+`;
+// after the colour is done (p = the world position varying): black outside the instance; the glass blend in the colour pass
+GH169.tail=p=>`
+ if(uGhOn>.5){
+  #ifdef GH169_VOID
+  if(gh169Out(${p}))gl_FragColor.rgb=vec3(0.);
+  #endif
+  if(uGhM>1.5){float ga=1.-ghw*(1.-uGhA);vec3 gc=gl_FragColor.rgb*ga;
+   #ifdef GH169_DS
+   if(!gl_FrontFacing)gc=vec3(0.);
+   #endif
+   #ifdef GH169_SEE
+   gl_FragColor=vec4(gc,ga);
+   #else
+   gl_FragColor=vec4(gc,1.-(1.-ga)*uGhK);
+   #endif
+  }}`;
+// gh169Shader(sh, material, world position varying, see-through plant?, black outside the instance?): uniforms, the head, the tail;
+// call after the material's own replacements (they must already have put `float ghw` at the top of main and GH169.GATE after it).
+// Only the ground goes black outside the instance (the void and the cliffs it drops off): scenery out there stays as it was
+// (Abeksi's north wall stands 0.5-3 tiles past its rectangle)
+function gh169Shader(sh,m,p,see,vd){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
+  const ds=m.side===THREE.DoubleSide;
+  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
+  if(sh.fragmentShader.indexOf('#include <dithering_fragment>')<0){console.warn('v169: no dithering_fragment to end on');return}
+  sh.fragmentShader=sh.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>'+GH169.tail(p))}
+// mark a material as see-through capable when it is patched (3350 reads this before the first draw): all = its pixels can turn
+// see-through far from the line of sight (den walls cut on the camera's side), so its meshes always join the ghost passes
+// clear = what lies behind the glass is seen clearly, not darkened (the ground, plants): stencil 1, like the characters (3350)
+function gh169Flag(m,all,clear){m.userData.gh169=1;if(all)m.userData.gh169All=1;if(clear)gh169Clear(m)}
+function gh169Clear(m){if(!m||m.userData.gh169C)return;m.userData.gh169C=1;
+  m.stencilWrite=true;m.stencilRef=1;m.stencilWriteMask=0xff;m.stencilFuncMask=0xff;m.stencilFunc=THREE.AlwaysStencilFunc;
+  m.stencilZPass=THREE.ReplaceStencilOp;m.stencilFail=THREE.KeepStencilOp;m.stencilZFail=THREE.KeepStencilOp}
 // ================= Towns, walls and mountain ridges =================
 const TLAMP=[],TANIM=[],TPL=[0,1,2,3].map(()=>{const l=new THREE.PointLight(0xffb060,0,11);scene.add(l);return l});
 const MCa={},sm=(c,o)=>{const k=c+(o?JSON.stringify(o):'');return MCa[k]||(MCa[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.9},o||{})))},gmat=c=>MCa['g'+c]||(MCa['g'+c]=new THREE.MeshBasicMaterial({color:c}));
@@ -11485,13 +11559,16 @@ function dqPose(e,n,wind,act){const m=e&&e.m;if(!m)return;const id=(m._dqp=(m._d
 // cutaway: den geometry beyond radius rIn and higher than yMin above the floor dissolves (dithered) on the camera's side
 // whenever the camera is outside the den, so walls never hide the fight (the game's default camera sits low and far back)
 function dqCut(base,A,rIn,yMin){rIn*=DK;yMin*=DKY;const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector2(rIn,yMin)};
-  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
+  // v169: the cut walls turn to glass with a dark inside (0061), and so does whatever stands between the camera and the hero
+  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPc=(modelMatrix*vec4(transformed,1.)).xyz;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
-    {vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
-     if(uCut.w>.5&&lc>uCutR.x-3.&&lf>uCutR.x&&vWPc.y>uCut.z+uCutR.y){float c=dot(fp/lf,cp/lc);float f=1.-smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);
-       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  m.customProgramCacheKey=()=>'dqcut'+base.type;return m}
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
+    float ghw=0.;
+    if(uCut.w>.5&&vWPc.y>uCut.z+uCutR.y){vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
+     if(lc>uCutR.x-3.&&lf>uCutR.x){float c=dot(fp/lf,cp/lc);ghw=smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);}
+     ghw=max(ghw,gh169W(vWPc,uCam,uPl));}
+    `+GH169.GATE);gh169Shader(sh,m,'vWPc')};
+  m.customProgramCacheKey=()=>'dqcut'+base.type;gh169Flag(m,1);return m}
 // static den meshes: one soup per material
 function dqMesh(A,S,mat,shadow){const m=S.mesh(mat);m.castShadow=shadow!==false;m.receiveShadow=true;A.g.add(m);return m}
 // block a band of tiles (the den's walls) except the gate
@@ -14003,14 +14080,15 @@ function bfxCutMat(base,A,rIn,yMin,tube){const k=A.i+':'+base.uuid;if(BFX.cut[k]
   const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector3(rIn,yMin,tube)},ob=base.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPb;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPb=(modelMatrix*vec4(transformed,1.)).xyz;');
+    // v169: the den's camera-side walls and the line of sight turn to glass (0061) instead of dithering away
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl,uCutR;uniform vec4 uCut;varying vec3 vWPb;').replace('void main() {',`void main() {
-    if(uCut.w>.5&&vWPb.y>uCut.z+uCutR.y){float f=1.;
+    float ghw=0.;
+    if(uCut.w>.5&&vWPb.y>uCut.z+uCutR.y){
       vec2 cp=uCam.xz-uCut.xy,fp=vWPb.xz-uCut.xy;float lc=length(cp),lf=length(fp);
-      if(lc>uCutR.x-3.&&lf>uCutR.x){float c=dot(fp/lf,cp/lc);f=1.-smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);}
-      vec3 ab=uPl-uCam;float t=clamp(dot(vWPb-uCam,ab)/max(dot(ab,ab),.01),0.,1.);float d=length(vWPb-(uCam+ab*t)),rr=uCutR.z*(1.25-.5*t);
-      float g=smoothstep(rr*.55,rr,d);g=max(g,smoothstep(.86,.97,t));g*=smoothstep(.6,2.6,length(vWPb-uCam));f=min(f,g);
-      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  m.customProgramCacheKey=()=>'bfxcut'+base.type+(base.vertexColors?'v':'')+(base.flatShading?'f':'');BFX.cut[k]=m;BFX.cutN++;return m}
+      if(lc>uCutR.x-3.&&lf>uCutR.x){float c=dot(fp/lf,cp/lc);ghw=smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);}
+      ghw=max(ghw,gh169W(vWPb,uCam,uPl));}
+    `+GH169.GATE);gh169Shader(sh,m,'vWPb')};
+  m.customProgramCacheKey=()=>'bfxcut'+base.type+(base.vertexColors?'v':'')+(base.flatShading?'f':'');gh169Flag(m,1);BFX.cut[k]=m;BFX.cutN++;return m}
 function bfxCutDen(A,rIn,yMin,tube){A.g.traverse(o=>{if(!o.isMesh||!o.material||Array.isArray(o.material))return;const b=o.material;
   if(b.userData.bfxCut||b.transparent||b.blending!==THREE.NormalBlending||b.depthTest===false)return;
   if(b.customProgramCacheKey!==THREE.Material.prototype.customProgramCacheKey)return;   // already custom (dqCut, wind)
@@ -31169,6 +31247,7 @@ var ABX135={p:null,r:0};
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
+// v169: no dither any more: the see-through pixels are left out here and drawn again as glass by 3350 (one rule for all: 0061).
 var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
@@ -31178,12 +31257,14 @@ var R157={value:new THREE.Vector2(2.3,5.4)};
 var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
 // small 3D previews share these materials but are drawn elsewhere (icons at the world origin), so there they do nothing
-var FX135ON={value:0};
+var FX135ON=GH169.ON;   // v169: the see-through passes (0061, 3350) share it
 {const f=POST.render;POST.render=function(){FX135ON.value=1;try{return f.apply(this,arguments)}finally{FX135ON.value=0}}}
 function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
-  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
   const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
+  // v169: and the town's plain (unlit) atlas material: its glowing windows and glass stayed solid in a see-through wall. Other plain
+  // materials stay out: backdrops such as the desert vista (3292) lie past the instance's edge on purpose
+  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial||(m.isMeshBasicMaterial&&k0==='txa1'))||m.transparent||m.skinning||m.userData.noFade135)return;
   if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
@@ -31193,18 +31274,24 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     vF135=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform vec2 uR157,uN157;uniform float uM157;uniform float uF135,uOn135;uniform vec4 uClip;varying vec3 vF135;').replace('void main() {',`void main() {
+    float ghw=0.;
     if(uOn135>.5){
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
-    if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
-     if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
-      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);f=mix(f,1.,smoothstep(.84,.96,t));f=mix(f,1.,step(t,0.));f=max(f,uF135);
-      float near=t>0.&&t<.85?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
-      if(!gl_FrontFacing&&t>0.&&t<.9)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
-     }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
-      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);}
-     f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));   // never below the hero's knees: floors, paving and bridges stay
-     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
+    if(dot(uPl-uCam,uPl-uCam)>.0001){
+     if(uM157>.5){   // v169: the see-through rule shared by every world material (0061): a smooth window round the hero, glass, no dither
+      ghw=gh169W(vF135,uCam,uPl);float t=gh169T(vF135,uCam,uPl);
+      if(!gl_FrontFacing&&t>0.&&t<.9)ghw=1.;   // the inside of a two-sided house the camera stands in (Abeksi): black glass
+      ghw*=smoothstep(-.85,-.55,vF135.y-uPl.y);   // never below the hero's knees: floors, paving and bridges stay
+     }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays; plain materials joined in v169: not there)
+      #ifndef GH169_B135
+      vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
+      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
+      f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));
+      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;
+      #endif
+      }}}
+    `+GH169.GATE);if(m.isMeshBasicMaterial)sh.fragmentShader='#define GH169_B135\n'+sh.fragmentShader;gh169Shader(sh,m,'vF135')};
+  m.customProgramCacheKey=()=>k0+'f135';gh169Flag(m,m.side===THREE.DoubleSide);m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
   try{drops.forEach(d=>d&&d.g&&S.add(d.g))}catch(_){}try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){const q=MP.rh[k];if(q&&q.m)S.add(q.m);if(q&&q.h)S.add(q.h)}}catch(_){}
@@ -46866,6 +46953,7 @@ function hd155Merge(vane,v,st){if(hd154Done())return;const here=hd154In()&&!!HD1
 //  * the camera still rides above gentle ground (hills, slopes) with the same smoothing as everything else (cam157Floor). Behind a wall
 //    (the ground between hero and camera climbs a step) it simply stays inside the wall: from in there its faces point away and the
 //    terrain is not drawn, and the window shows the hero.
+// v169: the window is see-through glass now, not a dithered hole (the shared rule in 0061, drawn by 3350).
 // cam157Floor(hero position, camera point) -> the lowest the camera may go there, or null when a wall stands between them.
 function cam157Floor(P,c){const dx=c.x-P.x,dz=c.z-P.z,L=Math.hypot(dx,dz);let prev=GH(P.x,P.z);
   if(L>.3)for(let s=.5;s<=L;s+=.5){const g=GH(P.x+dx*s/L,P.z+dz*s/L);if(g-prev>CAM157.step)return null;prev=g}
@@ -46876,14 +46964,13 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
   m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);
     sh.uniforms.uCam157=FADE.cam;sh.uniforms.uPl157=FADE.pl;sh.uniforms.uR157=R157;sh.uniforms.uOn157=CAM157U;
     if(sh.fragmentShader.indexOf('varying vec3 vC135')<0){console.warn('v157: terrain has no vC135');return}
+    // v169: the shared see-through rule (0061): glass with a dark inside instead of a dithered hole
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
-    if(uOn135>.5&&uOn157>.5){vec3 ab=uPl157-uCam157;float t=dot(vC135-uCam157,ab)/dot(ab,ab);
-     if(t>.0&&t<.95){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
-      vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
-      f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      f=mix(f,1.,smoothstep(.86,.95,t));
-      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
+    float ghw=0.;vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;
+    if(uOn135>.5&&uOn157>.5){float hf=vC135.y-uPl157.y+1.1;
+     ghw=gh169W(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));}   // flat ground below the waist stays solid
+    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true)};
+  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';gh169Flag(m,0,1);m.needsUpdate=true}
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}
 // the intro's Duskhold shots (3081) keep the v135 look: the old tube fade for scenery, no terrain cut
@@ -54420,3 +54507,98 @@ function dt168Lantern(k,x,y,z,s,gl,iron){s=s||1;iron=iron||0x2a2c30;const M=(dx,
 function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt168P(k,dt168Lathe([[0,0],[r*1.05,0],[r,h*.6],[r*.97,h],[r*.6,h+.008],[0,h+.012]],10),'c',col,dt168Mx(x,y,z));
   for(let i=0;i<3;i++){const a=i*2.3+x*7;dt168P(k,dt168Lathe([[0,-1],[.8,-.6],[1,.2],[.6,.8],[0,1]],6),'c',dt168Mix(col,0xfff4d8,.2),dt168Mx(x+Math.cos(a)*r,y+h*(.55+i*.13),z+Math.sin(a)*r,0,a,0,.012,.03+i*.008,.012))}
   dt168P(k,dt168Lathe([[0,0],[.06,0],[.055,.012],[0,.016]],10),'c',dt168Mix(col,0x8a7a5a,.25),dt168Mx(x,y,z));dt168P(k,dt168Lathe([[0,0],[.004,0],[.003,.025],[0,.03]],5),'c',0x1a1410,dt168Mx(x,y+h+.008,z))}
+// ================= v169: see-through walls, the drawing passes (the shader half is 0061) =================
+// What stands between the camera and the hero turns to glass: the surface at GH169.a opacity, what is behind it darkened to
+// GH169.k (the inside of a house or a rock reads as black, not floors), characters behind it seen clearly. No dither anywhere.
+// Each frame (POST.render, 0060):
+//  1. the normal draw: every see-through material (userData.gh169, set by gh169Flag) leaves out its see-through pixels. While it
+//     draws, each such mesh whose bounds reach the see-through zone joins layer GH169L (gh169Cand, from Mesh.onBeforeRender);
+//     what is seen clearly through glass writes 1 into the stencil buffer: characters (hero, companions, monsters, partners, loot;
+//     gh169Chars marks their materials), the ground and plants (0061 gh169Flag), water and the sky. Buildings and props stay 0.
+//  2. POST.after: only the layer's meshes are drawn again (the rest of the scene is hidden for the walk): a depth pass (the nearest
+//     see-through surface per pixel), then the colour pass twice: stencil != 1 with the dark inside (uGhK = GH169.k), stencil == 1
+//     with k 1 (the hero, the ground round them, plants behind the glass show through at 1 - a). Blend: ONE, ONE_MINUS_SRC_ALPHA (premultiplied, 0061 tail).
+//  3. Outside the instance you are in (its rectangle, GH169.vm margin; with the camera out past the edge, from one tile inside:
+//     the cliff face the ground drops off) the ground is black (0061), and a black floor lies far under the instance (GH169C.vo),
+//     so the void past the edge is black.
+var GH169L=3,GH169C={live:0,pass:0,f:0,cand:[],top:new Set(),hid:[],mats:[],ct:0,vo:null,vk:null,st:{cand:0,passes:0,ms:0,skip:0}};
+GH169.vm=.5;GH169.vy=-75;
+// the mesh's bounds in the world (instanced meshes: all instances, cached)
+function gh169Sphere(o,out){const g=o.geometry;if(!g)return null;
+  if(o.isInstancedMesh){let s=o.userData.gh169S;
+    if(!s||s.n!==o.count){if(!g.boundingSphere)g.computeBoundingSphere();const a=o.instanceMatrix.array,n=o.count,c=new THREE.Vector3(),m=new THREE.Matrix4(),p=new THREE.Vector3();
+      for(let i=0;i<n;i++){c.x+=a[i*16+12];c.y+=a[i*16+13];c.z+=a[i*16+14]}if(n)c.multiplyScalar(1/n);let r=0;
+      for(let i=0;i<n;i++){m.fromArray(a,i*16);p.copy(g.boundingSphere.center).applyMatrix4(m);r=Math.max(r,p.distanceTo(c)+g.boundingSphere.radius*m.getMaxScaleOnAxis())}
+      s=o.userData.gh169S={n,c,r}}
+    out.c.copy(s.c).applyMatrix4(o.matrixWorld);out.r=s.r*o.matrixWorld.getMaxScaleOnAxis();return out}
+  if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();return out}
+// can any pixel of this mesh be see-through? (a cone from the camera to the hero, GH169.R wide at the hero; a ball round the camera)
+const GH169S={c:new THREE.Vector3(),r:0},GH169V=new THREE.Vector3(),GH169W=new THREE.Vector3();
+function gh169Hit(o){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value;
+  const ab=GH169V.copy(H).sub(C),L2=ab.lengthSq();if(L2<1e-4)return false;const L=Math.sqrt(L2),tc=GH169W.copy(s.c).sub(C).dot(ab)/L2,tr=s.r/L;
+  if(s.c.distanceTo(C)-s.r<GH169.N[1])return true;
+  if(tc+tr<=0||tc-tr>=.96)return false;
+  const t=Math.min(1,Math.max(0,tc)),lat=GH169W.copy(C).addScaledVector(ab,t).distanceTo(s.c);
+  return lat-s.r<GH169.R[1]*Math.min(1,tc+tr)+.5}
+function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0;
+  if(Array.isArray(M)){for(let i=0;i<M.length;i++){const m=M[i];if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1}}}
+  else if(M&&M.userData.gh169){g=1;all=M.userData.gh169All}
+  if(!g||o.isSkinnedMesh){if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L);return}
+  if(all||gh169Hit(o)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
+  else if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L)}
+// in the ghost passes the see-through materials blend as premultiplied glass and write no stencil (a material that writes it
+// would also reset the stencil test the colour passes rely on); put back after the passes
+function gh169B1(m){if(!m||!m.userData.gh169||m.userData.gh169P===GH169C.f)return;m.userData.gh169P=GH169C.f;
+  GH169C.mats.push([m,m.blending,m.blendSrc,m.blendDst,m.blendEquation,m.blendSrcAlpha,m.blendDstAlpha,m.blendEquationAlpha,m.stencilWrite]);
+  m.blending=THREE.CustomBlending;m.blendSrc=THREE.OneFactor;m.blendDst=THREE.OneMinusSrcAlphaFactor;m.blendEquation=THREE.AddEquation;
+  m.blendSrcAlpha=null;m.blendDstAlpha=null;m.blendEquationAlpha=null;m.stencilWrite=false}
+THREE.Mesh.prototype.onBeforeRender=function(){const C=GH169C;if(C.live)gh169Cand(this);
+  else if(C.pass){const M=this.material;if(Array.isArray(M))M.forEach(gh169B1);else gh169B1(M)}};
+// characters, water and the sky write 1 into the stencil buffer wherever they are seen (every 0.25 s: new monsters, gear, mounts)
+function gh169Mark1(o){if(!o.isMesh&&!o.isPoints&&!o.isLine&&!o.isSprite)return;const M=o.material;
+  (Array.isArray(M)?M:[M]).forEach(m=>{if(m&&!m.userData.gh169)gh169Clear(m)})}
+function gh169Chars(){const S=f135Skip();try{gh169Clear(SKY.material);gh169Clear(WTR.w.material);gh169Clear(WTR.l.material)}catch(_){}try{(typeof party!='undefined'?party:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
+  try{(typeof comps!='undefined'?comps:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
+  S.forEach(o=>{if(o&&o.traverse)o.traverse(gh169Mark1)})}
+// the black floor under the instance you are in, and the rectangle past which everything is black. An instance's ground drops
+// off a cliff in its last tile (e.g. 12.7 -> -49.6 at the edge): with the camera out past the edge that cliff face is what you
+// look at, so the black then starts one tile inside (GH169.vin) instead of half a tile outside (GH169.vm)
+GH169.vin=1.05;
+function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV.value;
+  if(k!==C.vk||!C.vo){C.vk=k;
+    if(!C.vo){const o=C.vo=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,fog:false}));
+      o.name='gh169Void';o.userData.noFade135=1;o.userData.psNo=1;o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false;scene.add(o)}
+    const o=C.vo;o.visible=!!I;if(I){o.position.set(I.x0+I.w/2,GH169.vy,I.y0+I.h/2);o.scale.set(I.w+800,1,I.h+800)}
+    o.updateMatrix();o.updateMatrixWorld(true)}
+  if(!I){V.set(-1e6,-1e6,1e6,1e6);return}
+  const c=FADE.cam.value,out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h,m=out?-GH169.vin:GH169.vm;
+  V.set(I.x0-m,I.y0-m,I.x0+I.w+m,I.y0+I.h+m)}
+function gh169Restore(){const C=GH169C;for(const q of C.mats){const m=q[0];m.blending=q[1];m.blendSrc=q[2];m.blendDst=q[3];m.blendEquation=q[4];m.blendSrcAlpha=q[5];m.blendDstAlpha=q[6];m.blendEquationAlpha=q[7];m.stencilWrite=q[8]}
+  C.mats.length=0;for(const o of C.hid)o.visible=true;C.hid.length=0}
+POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
+  if(!n||!GH169.on||!FX135ON.value||(typeof IC151!='undefined'&&IC151.on)){C.st.skip++;return}
+  const t0=performance.now(),B=ren.state.buffers,U=GH169.U,ch=scene.children;
+  for(let i=0;i<ch.length;i++){const o=ch[i];if(o.isLight){o.layers.enable(GH169L);continue}if(o.visible&&!C.top.has(o)){o.visible=false;C.hid.push(o)}}
+  const bg=scene.background,ac=ren.autoClear,sa=ren.shadowMap.autoUpdate,sn=ren.shadowMap.needsUpdate,lm=cam.layers.mask;
+  scene.background=null;ren.autoClear=false;ren.shadowMap.autoUpdate=false;ren.shadowMap.needsUpdate=false;cam.layers.set(GH169L);
+  try{
+    // 1. depth only: the nearest see-through surface per pixel
+    U.uGhM.value=1;C.pass=1;B.color.setMask(false);B.color.setLocked(true);B.depth.setMask(true);B.depth.setLocked(true);
+    B.stencil.setTest(false);B.stencil.setLocked(true);
+    ren.render(scene,cam);
+    // 2. colour: the glass over the dark inside (no character there), then over the characters (k 1)
+    B.color.setLocked(false);B.color.setMask(true);B.color.setLocked(true);B.depth.setLocked(false);B.depth.setMask(false);B.depth.setLocked(true);
+    B.stencil.setLocked(false);B.stencil.setTest(true);B.stencil.setMask(0);B.stencil.setOp(THREE.KeepStencilOp,THREE.KeepStencilOp,THREE.KeepStencilOp);
+    B.stencil.setFunc(THREE.NotEqualStencilFunc,1,0xff);B.stencil.setLocked(true);
+    U.uGhM.value=2;C.pass=2;U.uGhK.value=GH169.k;ren.render(scene,cam);
+    B.stencil.setFunc(THREE.EqualStencilFunc,1,0xff);U.uGhK.value=1;ren.render(scene,cam);
+    C.st.passes++}
+  catch(e){if(!C.err){C.err=1;console.warn('v169 see-through',e)}}
+  finally{U.uGhM.value=0;U.uGhK.value=GH169.k;C.pass=0;
+    B.color.setLocked(false);B.color.setMask(true);B.depth.setLocked(false);B.depth.setMask(true);B.stencil.setLocked(false);B.stencil.setTest(false);B.stencil.setMask(0xff);
+    scene.background=bg;ren.autoClear=ac;ren.shadowMap.autoUpdate=sa;ren.shadowMap.needsUpdate=sn;cam.layers.mask=lm;gh169Restore();C.st.ms=+(performance.now()-t0).toFixed(2)}};
+{const f=POST.render;POST.render=function(){const C=GH169C,U=GH169.U;C.f++;C.cand.length=0;C.top.clear();
+  try{U.uGhA.value=GH169.a;U.uGhK.value=GH169.k;if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
+    else{U.uGhR.value.set(-2,-1);U.uGhN.value.set(-2,-1)}
+    gh169Void();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
+  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0}}}

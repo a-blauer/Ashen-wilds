@@ -137,14 +137,15 @@ function bfxCutMat(base,A,rIn,yMin,tube){const k=A.i+':'+base.uuid;if(BFX.cut[k]
   const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector3(rIn,yMin,tube)},ob=base.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPb;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPb=(modelMatrix*vec4(transformed,1.)).xyz;');
+    // v169: the den's camera-side walls and the line of sight turn to glass (0061) instead of dithering away
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl,uCutR;uniform vec4 uCut;varying vec3 vWPb;').replace('void main() {',`void main() {
-    if(uCut.w>.5&&vWPb.y>uCut.z+uCutR.y){float f=1.;
+    float ghw=0.;
+    if(uCut.w>.5&&vWPb.y>uCut.z+uCutR.y){
       vec2 cp=uCam.xz-uCut.xy,fp=vWPb.xz-uCut.xy;float lc=length(cp),lf=length(fp);
-      if(lc>uCutR.x-3.&&lf>uCutR.x){float c=dot(fp/lf,cp/lc);f=1.-smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);}
-      vec3 ab=uPl-uCam;float t=clamp(dot(vWPb-uCam,ab)/max(dot(ab,ab),.01),0.,1.);float d=length(vWPb-(uCam+ab*t)),rr=uCutR.z*(1.25-.5*t);
-      float g=smoothstep(rr*.55,rr,d);g=max(g,smoothstep(.86,.97,t));g*=smoothstep(.6,2.6,length(vWPb-uCam));f=min(f,g);
-      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  m.customProgramCacheKey=()=>'bfxcut'+base.type+(base.vertexColors?'v':'')+(base.flatShading?'f':'');BFX.cut[k]=m;BFX.cutN++;return m}
+      if(lc>uCutR.x-3.&&lf>uCutR.x){float c=dot(fp/lf,cp/lc);ghw=smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);}
+      ghw=max(ghw,gh169W(vWPb,uCam,uPl));}
+    `+GH169.GATE);gh169Shader(sh,m,'vWPb')};
+  m.customProgramCacheKey=()=>'bfxcut'+base.type+(base.vertexColors?'v':'')+(base.flatShading?'f':'');gh169Flag(m,1);BFX.cut[k]=m;BFX.cutN++;return m}
 function bfxCutDen(A,rIn,yMin,tube){A.g.traverse(o=>{if(!o.isMesh||!o.material||Array.isArray(o.material))return;const b=o.material;
   if(b.userData.bfxCut||b.transparent||b.blending!==THREE.NormalBlending||b.depthTest===false)return;
   if(b.customProgramCacheKey!==THREE.Material.prototype.customProgramCacheKey)return;   // already custom (dqCut, wind)
