@@ -11,7 +11,7 @@
 //  * Weapons: the Glacier Maul (a gnarled tree trunk with a block of glacier ice bound in iron for a head) in the right hand,
 //    and the Rime Fist: the left hand crusted in ice crystals.
 //  * The Rampage shell (gb151Shell): ice plates over chest, shoulders, arms and thighs that grow when he armours himself
-//    (hidden otherwise; its material cracks as pillars break it).
+//    (hidden otherwise; its material cracks as the shell is cracked: v168 Rimelock, were pillars).
 //  * About twice the triangles of the zone's Frost Troll (GB151.tris is measured on the first build).
 // Joints (L = +x, the model's left): root · hips · spine · chest · neck · head · jaw · earL/R · hump · shL/R · elL/R · wrL/R · maul ·
 // thL/R · knL/R · ftL/R · loinF · loinB. Poses (GB151P) are offsets from the rest pose, mirrored with '~' (svPose).
@@ -220,7 +220,7 @@ var GB151P={
   // Permafrost Slam: both fists raised, then driven into the floor
   stUp:{hips:[-.15,0,0,0,.12,-.1],spine:[-.3,0,0],chest:[-.35,0,0],head:[-.35,0,0],jaw:[.55,0,0],shL:[-2.8,0,-.35],elL:[-.95,0,0],shR:[-2.8,0,.35],elR:[-.95,0,0],thL:[-.15,0,0],thR:[-.15,0,0]},
   stHit:{hips:[.45,0,0,0,-.75,.25],spine:[.5,0,0],chest:[.4,0,0],neck:[.15,0,0],head:[.25,0,0],jaw:[.4,0,0],shL:[-.75,0,-.05],elL:[-.25,0,0],shR:[-.75,0,.05],elR:[-.25,0,0],thL:[-.85,0,0],knL:[1.1,0,0],ftL:[-.25,0,0],thR:[-.85,0,0],knR:[1.1,0,0],ftR:[-.25,0,0]},
-  // Phase II: the uppercut (Warlord's Fury), the leap, the armoured stance (Glacial Rampage)
+  // Phase II: the uppercut (Warlord's Fury), the leap, the armoured stance (the Glacier Shell, v168; was the Glacial Rampage)
   upUp:{hips:[.25,.3,0,0,-.4,0],spine:[.3,.25,0],chest:[.2,.35,0],shL:[.3,0,.3],elL:[-1.7,0,0],thL:[-.6,0,0],knL:[.8,0,0],thR:[-.4,0,0],knR:[.7,0,0]},
   upHit:{hips:[-.25,-.35,0,0,.15,.2],spine:[-.35,-.25,0],chest:[-.4,-.4,0],head:[-.3,.2,0],shL:[-2.9,0,-.1],elL:[-.3,0,0],thL:[-.2,0,0],thR:[.1,0,0],jaw:[.5,0,0]},
   leap:{hips:[-.25,0,0,0,1.5,0],spine:[-.2,0,0],chest:[-.25,0,0],shR:[-3.0,0,.25],elR:[-.5,0,0],shL:[-3.0,0,-.25],elL:[-.5,0,0],thL:[-1.0,0,0],knL:[1.4,0,0],thR:[-1.0,0,0],knR:[1.4,0,0]},
@@ -243,7 +243,7 @@ function gb151Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/2.
 function gb151Post(e,S,dt,now){const R=S.R,t=now/1000,ph2=S.ph>1,ch=S.chg||0;
   const k=(ph2?.95:.5)+.16*Math.sin(t*1.05)+ch*1.2;R.ice.emissiveIntensity=k;R.ice2.emissiveIntensity=k*.8;if(ph2){R.ice.emissive.setHex(0x2a7ac0)}
   R.eyeM.color.setHex(ch>.3?0xffffff:ph2?0x9ae8ff:0xcff4ff);
-  // the shell (Glacial Rampage): grows in, glows, darkens and cracks as pillars break it
+  // the shell (the Glacier Shell): grows in, glows, darkens and cracks as hits on his back crack it (v168 Rimelock; were pillars)
   const sh=S.shell||0;R.shellM.visible=sh>0;if(sh>0){R.shellM.opacity=.82*Math.min(1,sh);const c=S.crk||0;R.shellM.emissiveIntensity=.6+.25*Math.sin(t*4)-c*.18;R.shellM.color.setHex(c>=2?0x8ab8d8:c>=1?0xa8d4f0:0xbfe8ff)}
   if(!S.dieM&&Math.random()<dt*(ph2?5:2.5)){const p=svWP(e,'head',0,-.12,.5);burst(p,0xe8f6ff,2,.2,.3,.9)}
   if(!S.dieM&&ph2&&Math.random()<dt*6){const p=svWP(e,'hump',(Math.random()-.5)*.8,.4+Math.random()*.6,(Math.random()-.5)*.6);burst(p,0x9ad8ff,1,.1,-.4,.7)}}
