@@ -24,7 +24,7 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     float ghw=0.;vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;
     if(uOn135>.5&&uOn157>.5){float hf=vC135.y-uPl157.y+1.1;
      ghw=gh169W(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));}   // flat ground below the waist stays solid
-    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true,true)};
+    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';gh169Flag(m,0,1);m.needsUpdate=true}
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}

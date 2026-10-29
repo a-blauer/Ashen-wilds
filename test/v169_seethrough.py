@@ -78,7 +78,7 @@ def s(pg):
         d=pg.evaluate("""(q)=>{let best=0;for(let d=4.5;d<=15;d+=.5){const x=q.x+Math.sin(q.yaw)*Math.cos(.3)*d,z=q.z+Math.cos(q.yaw)*Math.cos(.3)*d,y=GH(q.x,q.z)+1.1+Math.sin(.3)*d;if(GH(x,z)>y+.8)best=d}return best}""",q)
         if not d:fail('inside the rock: no camera distance puts the camera inside the wall')
         else:
-            place(q,d,.3);im=shot('inwall');u=pg.evaluate("()=>[GH169C.under,GH169.U.uGhU.value]")
+            place(q,d,.3);im=shot('inwall');u=pg.evaluate("()=>[GH169C.under||GH169C.out,GH169C.fade]")
             if not u[0]:fail('inside the rock: the camera was not seen as inside the rock',u)
             W,H=stage[2],stage[3];x0,y0=stage[0],stage[1]
             corners=[lum(im,(int(x0+W*a),int(y0+H*b),int(x0+W*a+W*.12),int(y0+H*b+H*.15))) for a,b in [(.03,.15),(.85,.15),(.03,.45),(.85,.45)]]
@@ -86,5 +86,11 @@ def s(pg):
             print('inside the rock: corners',[round(c) for c in corners],'hero box',hero,round(hl))
             if max(corners)>14:fail('inside the rock: the view out past the window is not black (brightest corner',round(max(corners)),')')
             if hl<25:fail('inside the rock: the hero is not visible in the window (brightness',round(hl),')')
+            # the fade: back on the map it fades out again within GH169.fadeT
+            fa=pg.evaluate("()=>GH169C.fade");place(dict(q,x=q['x']+12,yaw=1.5708),9.5,.3)
+            fb=pg.evaluate("()=>[GH169C.fade,GH169C.under]");print('fade inside',fa,'after returning',fb)
+            if fa<.99:fail('inside the rock: the fade to black did not finish',fa)
+            if fb[1]:fail('the return spot is still inside the rock',fb)
+            elif fb[0]>0:fail('back on the map the view did not fade back',fb)
     print('DONE' if not F else 'FAILED '+str(len(F)))
 play.run(s,w=1000,hh=620)
