@@ -3,17 +3,18 @@
 // end of Burningeye Summit I is gone: in its place the road ends at the mouth of an ice cave.
 //  * F at the cave mouth: into the Frozen Maw = Burningeye's unused Wave Trial instance (INSL[14], renamed, Lv 21; the round arena
 //    of the old trial), dressed as a glacier cave: a frozen rock floor veined with blue ice and drifted with snow, walls of dark rock
-//    and blue crystal hung with icicles, frozen falls, a mammoth frozen in a block of ice, the troll's throne of ice and bone, six
-//    great ice pillars round the floor, and at the back a passage sealed by a wall of ice.
+//    and blue crystal hung with icicles, frozen falls, a mammoth frozen in a block of ice, the troll's throne of ice and bone, and at
+//    the back a passage sealed by a plug of ancient ice (v168: both openings are sculpted ice caves, 3330; the six pillars are gone).
 //  * Gorthrak the Glacierback (model 3150, moves 3151) waits before his throne. Walking close starts the fight: a wall of ice closes
 //    the cave mouth (recall is blocked) until he falls or you do. A wipe resets him. Fought once (MQ151.st ≥ 2: he never returns).
-//  * The ice pillars: a charge that runs into one shatters it and leaves him dazed; in his Glacial Rampage every pillar he hits
-//    cracks his shell (three: SHATTERED). They grow back when he starts a Rampage, and after the fight.
+//  * Rimelock (v168, replaced the ice pillars): when his maul is frozen in the floor (after a missed Glacier Charge, and after each
+//    leap of his Glacier Shell) the crack in his back glows and the ground behind him lights gold. Hits from behind then deal x1.5;
+//    during the Glacier Shell two hits from behind crack the shell (three cracks: SHATTERED).
 //  * When he dies the ice wall over the passage at the back bursts: the frozen passage leads to The Rimecaverns (Burningeye II).
 // State MQ151.st: 0 · 1 entered · 2 Gorthrak slain (the passage is open) · 3 through the passage. Done also when II has been reached
 // (mq151Done). Saved as x2.mq151 {st, seen}. A save made in the cave loads at the cave mouth. Co-op: local to each player (like
 // Vorraxis: e.boss is never shared, so each player in the cave fights their own Gorthrak).
-var MQ151={st:0,seen:0,name:'The Frozen Maw',boss:'Gorthrak',title:'the Glacierback',lv:21,LS:null,CM:null,e:null,trkK:'',t:0,err:0,quake:0,qT:0,sh:[],pil:[]};
+var MQ151={st:0,seen:0,name:'The Frozen Maw',boss:'Gorthrak',title:'the Glacierback',lv:21,LS:null,CM:null,e:null,trkK:'',t:0,err:0,quake:0,qT:0,sh:[]};
 function mq151Done(){return MQ151.st>=3||insReach(2)>=1}
 function mq151Ins(){try{return curIns()}catch(_){return null}}
 function mq151In1(){const I=mq151Ins();return !!I&&I.g===insG(2,0)}
@@ -23,7 +24,6 @@ function mq151Next(){try{const t=typeof TH112!='undefined'&&TH112&&TH112.byG&&TH
 var GB151L=(()=>{const T=INSL[insG(2,4)];try{T.n='The Frozen Maw';T.rn='The Frozen Maw';T.lv=[MQ151.lv,MQ151.lv]}catch(_){}
   const cx=T.wa[0],cz=T.wa[1],ta=2.44;return {T,cx,cz,y:GH(cx,cz),ent:{x:cx,z:cz+10.2},mouth:{x:cx,z:cz+12.5},home:{x:cx,z:cz-3.2},throne:{x:cx,z:cz-10.8},
     tun:{x:cx+Math.sin(ta)*12.6,z:cz+Math.cos(ta)*12.6,a:ta},tunIn:{x:cx+Math.sin(ta)*10.9,z:cz+Math.cos(ta)*10.9},r:11.6,hr:12.6,
-    pil:[30,90,150,210,270,330].map(d=>{const a=d*Math.PI/180;return {a,x:cx+Math.sin(a)*7.1,z:cz+Math.cos(a)*7.1}}),
     shl:[70,200,300].map(d=>{const a=d*Math.PI/180;return {a,x:cx+Math.sin(a)*11.1,z:cz+Math.cos(a)*11.1}})}})();
 // the cave's own atmosphere (the v112 per-instance blend, ia112): a dim blue glacier cave, the hero's lantern lit
 try{if(typeof TH112!='undefined'&&TH112&&TH112.byG&&!TH112.byG[insG(2,4)])TH112.byG[insG(2,4)]={z:2,k:4,g:insG(2,4),nm:'The Frozen Maw',sub:'A glacier cave beneath Burningeye Summit',
@@ -61,44 +61,23 @@ function gb151Kit(){const R=svRig();svJ(R,'k',null,0,0,0);R.root.add(R.J.k);cons
   icl(mat,x,y,z,r,l){return svM(R,'k',svG('gbk_icl',()=>svHorn(1,1,0,0,6,3)),mat,x,y,z,Math.PI/2,0,0,r,r,l)},
   done(){svMerge(R);R.root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});return R.root}};return k}
 // ---------------- the cave mouth at the end of Burningeye I ----------------
-function gb151CaveMouth(){const M=gb151Mats(),k=gb151Kit(),rn=svRng(1511);
-  // the mound the cave runs into: a cliff of big rocks behind and to the sides, snow on top
-  [[0,3.4,-7.4,6.4,4.6,3.4],[-5.2,2.2,-4.4,3.0,3.0,2.8],[5.3,2.3,-4.2,3.0,3.2,2.8],[-3.0,5.2,-6.2,3.0,2.6,2.6],[3.2,5.4,-6.4,3.2,2.4,2.6],[0,7.4,-7.6,3.8,2.0,2.6],[-6.6,1.0,-1.8,2.0,1.6,1.8],[6.8,1.1,-1.6,2.0,1.8,1.8],[-3.4,1.8,-3.0,1.6,2.0,1.6],[3.5,1.9,-3.0,1.6,2.1,1.6]].forEach(([x,y,z,sx,sy,sz],i)=>{
-    k.lump(i%4,40+i,i%3?M.rock:M.rock2,x,y,z,sx,sy,sz,rn()*3,.3);if(i<8)k.lump(10+i%3,60+i,M.snow,x+(rn()-.5)*.6,y+sy*.74,z,sx*.75,sy*.28,sz*.75,rn()*3,.2)});
-  // the arch round the opening: two jambs of stacked rocks and a lintel slab, icicles hanging from it
-  [-1,1].forEach(s=>{for(let i=0;i<4;i++)k.lump(20+i,70+i+(s>0?5:0),i%2?M.rock2:M.rock,s*(2.55+rn()*.25+(i==3?-.3:0)),.7+i*1.05,-.7+rn()*.3,1.0+rn()*.25,.75,1.15,rn()*3,.25)});
-  k.lump(24,80,M.rock,0,4.15,-.8,3.2,.8,1.4,0,.2);k.lump(25,81,M.snow,0,4.85,-.85,2.6,.32,1.1,0,.15);
-  for(let i=0;i<13;i++){const x=-2.2+i*.37+(rn()-.5)*.1;k.icl(i%2?M.ice:M.ice2,x,3.55-rn()*.15,.1+rn()*.25,.1+rn()*.07,.5+rn()*.9)}
-  // the throat: a dark tunnel running into the rock, black at its end
-  k.m(svG('gbk_tun',()=>{const g=new THREE.CylinderGeometry(1.95,1.95,6,14,3,true);g.rotateX(Math.PI/2);g.translate(0,0,-3);return g}),M.tun,0,1.65,-.3,0,0,0,1,1.05,1);
-  k.m(svG('gbk_th',()=>new THREE.CircleGeometry(1,20)),M.void,0,1.65,-6.1,0,0,0,2.2,2.3,1);
-  k.m(svG('gbk_fl',()=>new THREE.PlaneGeometry(3.8,6).rotateX(-Math.PI/2)),M.dark,0,.08,-3.2);
-  // ice crystals growing out of the rock
-  [[-3.4,2.6,-1.4,-1,1,.3],[3.3,2.4,-1.2,1,1,.4],[-1.2,5.0,-3.2,-.4,1,-.3],[1.6,4.9,-3.0,.4,1,-.2],[-4.6,1.0,-.4,-1,.6,.5],[4.8,1.2,-.3,1,.6,.5]].forEach(([x,y,z,dx,dy,dz],i)=>{
-    for(let q=0;q<3;q++)k.crys(i+q,q%2?M.ice2:M.ice,x+(rn()-.5)*.5,y+(rn()-.5)*.3,z+(rn()-.5)*.4,dx+(rn()-.5)*.6,dy,dz+(rn()-.5)*.6,.18+rn()*.12,.9+rn()*.9)});
-  // frost on the ground before the mouth
-  k.lump(30,90,M.snow,-1.2,.05,.9,1.3,.12,.9,0,.2);k.lump(31,91,M.snow,1.4,.05,1.1,1.1,.1,.8,0,.2);
-  // a troll totem beside the mouth: a pole, a mammoth skull, bones and a ring of icicles
-  k.m(svG('gbk_pole',()=>new THREE.CylinderGeometry(.09,.12,3.4,6)),M.wood,3.1,1.7,1.3,0,0,.05);k.lump(32,92,M.bone,3.1,3.45,1.3,.42,.32,.46,0,.15);
-  [-1,1].forEach(s=>k.m(svG('gbk_tt',()=>svHorn(.07,1,0,.5,6,5)),M.tusk,3.1+s*.22,3.3,1.55,.5,s*.5,0,1,1,.9));
-  for(let i=0;i<5;i++)k.m(svG('gbk_bn',()=>new THREE.CylinderGeometry(.04,.05,.5,5)),M.bone,3.1+Math.sin(i*1.3)*.2,2.6-i*.08,1.3+Math.cos(i*1.3)*.2,0,i,.3);
-  for(let i=0;i<6;i++){const a=rn()*6.28,r=1.5+rn()*2.5;k.m(svG('gbk_bn',()=>new THREE.CylinderGeometry(.04,.05,.5,5)),M.bone,Math.cos(a)*r,.05,1.5+Math.sin(a)*r*.6,Math.PI/2,0,rn()*6)}
-  const g=k.done();g.userData.psNo=1;
-  const glow=kqSpr(0x5ab8ff,3.2);glow.material=glow.material.clone();glow.material.opacity=.45;glow.position.set(0,1.6,-4.5);g.add(glow);
-  return {g,glow}}
-function gb151MouthBuild(){if(MQ151.CM)return MQ151.CM;const G=mq151Gate(),C=gb151CaveMouth();C.g.position.set(G.x,GH(G.x,G.z),G.z);C.g.rotation.y=G.ry;scene.add(C.g);MQ151.CM=C;
+function gb151CaveMouth(){const M=gb151Mats(),rn=svRng(1511);
+  // v168: the mouth is one sculpted ice cave (3330 gb168Cave): smooth layered rock, a glacier cap, icicles, snow drifts, a passage
+  // that darkens into the mountain, and nothing standing in the opening
+  const C=gb168Cave({W:2.3,H:3.6,D:9,seed:151,end:'dark'}),g=C.g;g.userData.psNo=1;
+  // a troll totem off to the side of the mouth: a pole, a mammoth skull, bones (well clear of the way in)
+  const k=gb151Kit(),tx=5.4,tz=2.9;
+  k.m(svG('gbk_pole',()=>new THREE.CylinderGeometry(.09,.12,3.4,6)),M.wood,tx,1.7,tz,0,0,.05);k.lump(32,92,M.bone,tx,3.45,tz,.42,.32,.46,0,.15);
+  [-1,1].forEach(s=>k.m(svG('gbk_tt',()=>svHorn(.07,1,0,.5,6,5)),M.tusk,tx+s*.22,3.3,tz+.25,.5,s*.5,0,1,1,.9));
+  for(let i=0;i<5;i++)k.m(svG('gbk_bn',()=>new THREE.CylinderGeometry(.04,.05,.5,5)),M.bone,tx+Math.sin(i*1.3)*.2,2.6-i*.08,tz+Math.cos(i*1.3)*.2,0,i,.3);
+  for(let i=0;i<5;i++){const a=rn()*6.28,r=.6+rn()*1.2;k.m(svG('gbk_bn',()=>new THREE.CylinderGeometry(.04,.05,.5,5)),M.bone,tx+Math.cos(a)*r,.05,tz+Math.sin(a)*r*.6,Math.PI/2,0,rn()*6)}
+  g.add(k.done());
+  return {g,glow:null,C}}
+function gb151MouthBuild(){if(MQ151.CM)return MQ151.CM;const G=mq151Gate(),C=gb151CaveMouth();C.g.position.set(G.x,GH(G.x,G.z),G.z);C.g.rotation.y=G.ry;scene.add(C.g);MQ151.CM=C;MQ151.clr=gb168Clear(C.C);gb168Ground(C.C);
   // the old gateway: gone (its record stays for older code; the cave mouth is the way on)
   try{const r=RPORT.find(q=>q.k=='next'&&q.ig===insG(2,0));if(r){r.g.visible=false;MQ151.rp=r}}catch(_){}
   return C}
 // ---------------- the cave ----------------
-function gb151PillarModel(i){const M=gb151Mats(),g=new THREE.Group(),rn=svRng(1520+i);g.userData.psNo=1;
-  const base=new THREE.Mesh(svG('gbp_b',()=>svLump(1,1,.3,1521)),M.rock);base.scale.set(1.0,.4,.95);base.position.y=.1;g.add(base);
-  const sn=new THREE.Mesh(svG('gbp_s',()=>svLump(1,1,.2,1522)),M.snow);sn.scale.set(.85,.16,.8);sn.position.y=.36;g.add(sn);
-  const top=new THREE.Group();g.add(top);const big=new THREE.Mesh(gb151Crys(1,6,.82),M.ice);big.scale.set(.56,3.5,.56);big.position.y=.3;big.rotation.y=rn()*3;top.add(big);
-  for(let k=0;k<4;k++){const a=k/4*6.28+rn(),o=new THREE.Mesh(gb151Crys(k%3,6,.7),k%2?M.ice2:M.ice);o.scale.set(.24,1.1+rn()*.9,.24);o.position.set(Math.sin(a)*.5,.2,Math.cos(a)*.5);o.rotation.set(Math.cos(a)*.35,0,-Math.sin(a)*.35);top.add(o)}
-  const core=kqSpr(0x7ad8ff,1.1);core.material=core.material.clone();core.material.opacity=.3;core.position.y=1.7;top.add(core);
-  const stump=new THREE.Mesh(gb151Crys(2,6,.5),M.ice2);stump.scale.set(.8,.9,.8);stump.position.y=.25;stump.visible=false;g.add(stump);
-  return {g,top,core,stump}}
 function gb151LairBuild(){if(MQ151.LS)return MQ151.LS;const L=GB151L,M=gb151Mats(),root=new THREE.Group();root.name='FrozenMaw';scene.add(root);const LS={root,lights:[],falls:[],t:0};MQ151.LS=LS;
   const rn=svRng(1515),y=(x,z)=>GH(x,z);
   // the floor: frozen grey-blue rock, snow drifts, cracks, glowing ice veins (painted)
@@ -118,10 +97,12 @@ function gb151LairBuild(){if(MQ151.LS)return MQ151.LS;const L=GB151L,M=gb151Mats
     const o=new THREE.Mesh(svG('gb_sheet',()=>new THREE.CircleGeometry(1,16).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0xbfe0f0,roughness:.05,metalness:.35,transparent:true,opacity:.55,polygonOffset:true,polygonOffsetFactor:-3}));
     o.position.set(x,y(x,z)+.06,z);o.scale.set(1.2+rn()*1.4,1,.8+rn()*1.1);o.rotation.y=rn()*3;o.material.userData.noFade135=1;o.userData.noFade135=1;root.add(o)}
   // the walls: dark rock and blue ice, snow on their shoulders, icicles hanging off them; gaps for the mouth (south) and the passage
-  const K=gb151Kit(),gap=a=>{const d=x=>Math.abs(Math.atan2(Math.sin(x),Math.cos(x)));return d(a-0)<.17||d(a-L.tun.a)<.2};
+  // v168: the walls are smooth layered rocks with snow on their ledges (3330 gb168RockG, merged into one mesh), not cracked lumps;
+  // the gaps for the way out (south) and the passage are wider: their arches (gb168Cave) fill them
+  const K=gb151Kit();K.lump=(k2,seed,mat,x,yy,z,sx,sy,sz,ry)=>svM(K.R,'k',gb151Blob('L'+k2,seed,.16,14),mat,x,yy,z,0,ry||0,0,sx,sy,sz); // v168: smooth, not cracked
+  const gap=a=>{const d=x=>Math.abs(Math.atan2(Math.sin(x),Math.cos(x)));return d(a-0)<.3||d(a-L.tun.a)<.32},WR=[],WI=[],mx=new THREE.Matrix4(),qq=new THREE.Quaternion(),eu=new THREE.Euler();
   for(let i=0;i<36;i++){const a=i/36*Math.PI*2+rn()*.1;if(gap(a))continue;const r=15.0+rn()*1.6,x=Math.sin(a)*r,z=Math.cos(a)*r,s=1.6+rn()*1.5,yy=y(L.cx+x,L.cz+z)-L.y;
-    K.lump(i%6,100+i,i%5==0?M.ice2:i%2?M.rock:M.rock2,x,yy+s*.3,z,s*1.3,s*(1.15+rn()*.6),s*1.2,rn()*6,.35);
-    if(i%2==0)K.lump(10+i%3,140+i,M.snow,x*.97,yy+s*1.2,z*.97,s*.9,s*.25,s*.8,rn()*6,.2);
+    {const sy=s*(1.15+rn()*.6),ry=rn()*6;mx.compose(new THREE.Vector3(x,yy+s*.3,z),qq.setFromEuler(eu.set(0,ry,0)),new THREE.Vector3(s*1.3,sy,s*1.2));(i%5==0?WI:WR).push([i%5==0?svG('gb168ice'+(i%3),()=>gb168Blob(400+i%3,.2,24)):gb168RockG(i%6),mx.clone()])}
     if(i%3==0)for(let q=0;q<4;q++){const qa=a+(rn()-.5)*.12,qr=r-1.3-rn()*.5;K.icl(q%2?M.ice:M.ice2,Math.sin(qa)*qr,yy+2.2+rn()*1.6,Math.cos(qa)*qr,.12+rn()*.08,.7+rn()*1.1)}
     if(i%4==1){const qr=r-1.2;for(let q=0;q<3;q++)K.crys(i+q,q%2?M.ice2:M.ice,Math.sin(a)*qr+(rn()-.5)*.6,yy+.4+rn()*1.6,Math.cos(a)*qr+(rn()-.5)*.6,-Math.sin(a)+(rn()-.5)*.6,.8,-Math.cos(a)+(rn()-.5)*.6,.2+rn()*.15,1.0+rn()*1.4)}}
   // stalagmites of ice near the wall, snow drifts
@@ -142,47 +123,70 @@ function gb151LairBuild(){if(MQ151.LS)return MQ151.LS;const L=GB151L,M=gb151Mats
     if(i%2)K.m(svG('gb_shd',()=>new THREE.CylinderGeometry(.45,.45,.06,10)),M.iron,x,yy+.08,z,(rn()-.5)*.4,0,(rn()-.5)*.4);else K.m(svG('gb_bld',()=>new THREE.BoxGeometry(.08,.02,1.1)),M.iron,x,yy+.05,z,0,rn()*6,0);
     K.lump(43,195+i,M.ice,x,yy+.05,z,.7,.15,.6,rn()*3,.2);for(let q=0;q<3;q++)K.m(svG('gb_bn',()=>new THREE.CylinderGeometry(.05,.06,.6,5)),M.bone,x+(rn()-.5)*1.4,yy+.06,z+(rn()-.5)*1.4,Math.PI/2,0,rn()*6)}
   const KR=K.done();KR.position.set(L.cx,L.y,L.cz);root.add(KR);
+
   // frozen falls down the walls (translucent, slowly shimmering)
   [1.3,3.3,5.3].forEach((a,i)=>{const r=13.9,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,yy=y(x,z),fall=new THREE.Mesh(svG('gb_fall',()=>{const g=new THREE.PlaneGeometry(2.2,6.4,4,8),P=g.attributes.position,rr=svRng(77);for(let k=0;k<P.count;k++)P.setZ(k,(rr()-.5)*.35);g.computeVertexNormals();return g}),
       new THREE.MeshStandardMaterial({color:0xbfe8ff,emissive:0x3a8ac8,emissiveIntensity:.4,roughness:.05,metalness:.2,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false,flatShading:true}));
     fall.material.userData.noFade135=1;fall.position.set(x,yy+3.0,z);fall.rotation.y=a+Math.PI;root.add(fall);LS.falls.push({m:fall,x,z,yy,ph:i*1.7})});
-  // the six ice pillars
-  LS.pil=L.pil.map((q,i)=>{const P=gb151PillarModel(i);P.g.position.set(q.x,y(q.x,q.z),q.z);P.g.rotation.y=q.a;root.add(P.g);return Object.assign(P,{x:q.x,z:q.z,ok:1,i,gr:1})});MQ151.pil=LS.pil;
-  // the cave mouth (south): daylight, a ward of ice that closes it during the fight
-  {const m=L.mouth,my=y(m.x,m.z),day=kqSpr(0xdff0ff,5);day.position.set(m.x,my+2.2,m.z+1.4);root.add(day);
-
-    const seal=new THREE.Mesh(svG('gb_seal',()=>{const g=new THREE.CylinderGeometry(2.4,2.6,4.2,10,3,true,-1.1,2.2),P=g.attributes.position,rr=svRng(88);for(let k=0;k<P.count;k++){P.setX(k,P.getX(k)*(1+(rr()-.5)*.12));P.setZ(k,P.getZ(k)*(1+(rr()-.5)*.12))}g.computeVertexNormals();return g}),M.glass);
-    seal.position.set(m.x,my+2.0,m.z+1.6);seal.rotation.y=Math.PI;seal.visible=false;root.add(seal);LS.seal=seal;
+  // the cave mouth (south): v168 an arch of the cave (3330 gb168Cave) running out to the daylight; its plug of ice is the seal that
+  // closes it during the fight
+  {const m=L.mouth,my=y(m.x,m.z),C=gb168Cave({W:2.1,H:3.4,D:3.6,seed:1521,end:'day',out:false,plug:1.1});C.g.position.set(m.x,my,m.z+.45);C.g.rotation.y=Math.PI;C.g.userData.psNo=1;root.add(C.g);
+    LS.seal=C.plug;LS.sealM=C.plugM;LS.seal.visible=false;LS.mouthC=C;
     const lt=new THREE.PointLight(0xcfe8ff,1.0,10,1.6);lt.position.set(m.x,my+2.4,m.z-.5);scene.add(lt);LS.lights.push(lt)}
-  // the passage at the back: a dark throat, sealed by a wall of ice until he falls
-  {const t=L.tun,ty=y(t.x,t.z),tg=new THREE.Group();tg.position.set(t.x,ty,t.z);tg.rotation.y=t.a+Math.PI;root.add(tg);
-    {const k=gb151Kit(),r2=svRng(1533);[-1,1].forEach(s=>{for(let i=0;i<3;i++)k.lump(50+i,200+i+(s>0?4:0),i%2?M.rock2:M.rock,s*(2.1+r2()*.2),.7+i*1.0,-.9+r2()*.3,.95+r2()*.2,.72,1.1,r2()*3,.25)});
-      k.lump(54,210,M.rock,0,3.4,-1.0,2.7,.75,1.3,0,.2);k.lump(55,211,M.snow,0,4.05,-1.05,2.1,.28,1.0,0,.15);[[-3.4,2.2,-2.2,2.0,2.6,2.0],[3.4,2.3,-2.2,2.0,2.7,2.0],[0,4.6,-2.6,3.2,1.6,2.0]].forEach(([x,y,z,sx,sy,sz],i)=>k.lump(56+i,212+i,M.rock2,x,y,z,sx,sy,sz,r2()*3,.3));
-      for(let i=0;i<10;i++)k.icl(i%2?M.ice:M.ice2,-1.7+i*.38,2.85-r2()*.15,-.2+r2()*.25,.09+r2()*.06,.4+r2()*.7);
-      k.m(svG('gbk_tun',()=>{const g=new THREE.CylinderGeometry(1.95,1.95,6,14,3,true);g.rotateX(Math.PI/2);g.translate(0,0,-3);return g}),M.tun,0,1.45,-.6,0,0,0,.85,.9,1);
-      k.m(svG('gbk_th',()=>new THREE.CircleGeometry(1,20)),M.void,0,1.45,-5.6,0,0,0,1.8,1.9,1);tg.add(k.done())}
-    const glo=kqSpr(0x5ab8ff,2.6);glo.material=glo.material.clone();glo.material.opacity=0;glo.position.set(0,1.5,-3.5);tg.add(glo);LS.tglo=glo;
-    const wall=new THREE.Group();tg.add(wall);for(let k=0;k<9;k++){const o=new THREE.Mesh(gb151Crys(k%3,6,.75),k%2?M.ice:M.ice2);o.position.set((k%3-1)*.8+(rn()-.5)*.3,0,-.6+(rn()-.5)*.3);o.scale.set(.5+rn()*.2,2.4+rn()*1.0,.5);o.rotation.set((rn()-.5)*.2,rn()*3,(k%3-1)*-.18);wall.add(o)}
-    const slab=new THREE.Mesh(svG('gb_tsl',()=>svLump(1,1,.2,1530)),M.glass);slab.scale.set(1.8,1.8,.6);slab.position.set(0,1.5,-.5);wall.add(slab);LS.twall=wall;
+  // the passage at the back: v168 an arch of the cave (3330 gb168Cave) running into the dark, sealed by a plug of ancient ice until he
+  // falls; then a cold blue glow far down it
+  {const t=L.tun,ty=y(t.x,t.z),C=gb168Cave({W:2.0,H:3.3,D:3.9,seed:1533,end:'dark',out:false,plug:.9});C.g.position.set(t.x,ty,t.z);C.g.rotation.y=t.a+Math.PI;C.g.userData.psNo=1;root.add(C.g);
+    LS.twall=C.plug;LS.tend=C.endM;LS.tunC=C;
+    const S=gb168Sec(C.o,-3.3),glo=kqSpr(0x5ab8ff,1.0);glo.material=glo.material.clone();glo.material.opacity=0;glo.position.set(S.x,1.3,-3.3);C.g.add(glo);LS.tglo=glo;
     const lt=new THREE.PointLight(0x5ab8ff,0,11,1.6);lt.position.set(t.x,ty+2.2,t.z);scene.add(lt);LS.lights.push(lt);LS.tlt=lt}
   // the throne's cold light
   {const tl=new THREE.PointLight(0x8ad0ff,1.4,15,1.5);tl.position.set(L.throne.x,y(L.throne.x,L.throne.z)+3,L.throne.z+1);scene.add(tl);LS.lights.push(tl)}
+  // v168: the wall rocks, merged; none may reach into the two openings
+  {const M8=gb168Mats(),off=new THREE.Vector3(L.cx,L.y,L.cz),fix=v=>{v.add(off);gb168PushW(LS.mouthC,v);gb168PushW(LS.tunC,v);v.sub(off)};
+    const wr=new THREE.Mesh(gb168Merge(WR,fix),M8.rock),wi=new THREE.Mesh(gb168Merge(WI,fix),M8.ice);[wr,wi].forEach(o=>{o.position.copy(off);o.castShadow=o.receiveShadow=true;root.add(o)})}
+  LS.clr=gb168Clear(LS.mouthC)+gb168Clear(LS.tunC);gb168Ground(LS.mouthC);gb168Ground(LS.tunC);
   gb151LairSync();return LS}
-function gb151LairSync(){const LS=MQ151.LS;if(!LS)return;const open=MQ151.st>=2||mq151Done();LS.twall.visible=!open;LS.tglo.material.opacity=open?.55:0;LS.tlt.userData.on=open?1.4:0;LS.seal.visible=!!(GB151A&&GB151A.f)}
-// ---------------- pillars ----------------
-function gb151PillarAt(x,z,rad){for(const P of MQ151.pil)if(P.ok&&Math.hypot(x-P.x,z-P.z)<rad)return P;return null}
-function gb151PillarBreak(P){if(!P||!P.ok)return;P.ok=0;P.top.visible=false;P.stump.visible=true;const p=new THREE.Vector3(P.x,0,P.z);
-  try{sk146Debris(gY(p,2),gb151Mats().ice,14,.3,6,7,1.6)}catch(_){}burst(gY(p,2.2),0xd8f4ff,90,3.5,3,.9);svShock(p,0xbfe8ff,4.5,.5);svSnd('crack',1.3,.55);svSnd('heavy',1.1,.7);shake(.45)}
-function gb151PillarsGrow(){MQ151.pil.forEach(P=>{if(P.ok)return;P.ok=1;P.top.visible=true;P.stump.visible=false;P.top.scale.set(1,.01,1);tw(900,k=>P.top.scale.set(1,Math.max(.01,svEase.o(k)),1));burst(new THREE.Vector3(P.x,GH(P.x,P.z)+1,P.z),0x9ad8ff,30,1.5,3,.7)})}
-// a charge ran into a pillar: it shatters; a normal charge leaves him dazed, a Rampage charge also cracks his shell
-function gb151Crash(e,P,ramp){const S=e.sv;gb151PillarBreak(P);
-  if(ramp&&S.rp){S.crk=(S.crk||0)+1;S.rp.hit++;popT(e.m.position,S.crk>=3?'THE SHELL BREAKS!':'SHELL CRACKED '+S.crk+'/3','#bfe8ff',true);try{flash('rgba(190,230,255,.25)')}catch(_){}}
-  svEndMove(e,true);svCast(e,'crash')}
-// ---------------- the Glacial Rampage (the controller's part: the three charges and the outcome) ----------------
-function gb151RampStart(e){const S=e.sv;gb151PillarsGrow();S.rp={n:0,hit:0};S.crk=0;S.dr=.15;S.rpN=(S.rpN||0)+1;
-  say('🧊 Gorthrak armours himself in glacier ice! Stand in front of an ice pillar and make him charge into it.');try{banner('🧊 GLACIAL RAMPAGE','Make him charge into the ice pillars to crack his shell','')}catch(_){}}
+function gb151LairSync(){const LS=MQ151.LS;if(!LS)return;const open=MQ151.st>=2||mq151Done();LS.twall.visible=!open;LS.tglo.material.opacity=open?.38:0;LS.tlt.userData.on=open?1.4:0;LS.seal.visible=!!(GB151A&&GB151A.f);
+  if(LS.tend)LS.tend.color.setHex(open?0x04121e:0x010203)}
+// ---------------- Rimelock (v168: replaced the ice pillars) ----------------
+// His maul frozen in the floor: S.rlk = {T (seconds left), ramp (a Glacier Shell leap: hits crack the shell), h (counted hits), tH}.
+// Hits from behind (the hero more than 105° round from his front) deal ×1.5; in a Glacier Shell window every hit from behind (at
+// most one each .22 s; damage over time does not count) adds to the crack: GB151R.need hits crack the shell once. Co-op: a partner's
+// hit from behind goes to the driver as ['g1b'] (3180), who counts it; the driver's sync carries the cracks.
+var GB151R={need:2,arc:1.83,gap:.22,mult:1.5};
+function gb151Behind(e,p){p=p||pl.position;const m=e.m,dx=p.x-m.position.x,dz=p.z-m.position.z,l=Math.hypot(dx,dz);if(l<.01||l>16)return false;
+  const a=m.rotation.y,dot=(Math.sin(a)*dx+Math.cos(a)*dz)/l;return dot<Math.cos(GB151R.arc)}
+function gb151RlkOpen(e,T,ramp){const S=e.sv;S.rlk={T,ramp:!!(ramp&&S.rp&&(S.crk||0)<3),h:0,tH:-9};
+  popT(e.m.position,S.rlk.ramp?'RIMELOCKED · STRIKE HIS BACK!':'STUCK IN THE ICE!','#ffd27a',true);svSnd('ice',1,1)}
+function gb151RlkClose(e){const S=e&&e.sv;if(!S||!S.rlk)return;const R=S.rlk;S.rlk=null;if(R.ramp&&!R.done&&GB151A&&GB151A.f&&!e.dead)dn(e.m.position,'The crack freezes over','#9ad8ff',-30,1100)}
+// a counted hit while he is Rimelocked (my own from behind; or peer: a partner's, already spaced out on their side, sent to the driver)
+function gb151RlkHit(e,peer){const S=e.sv,R=S&&S.rlk;if(!R||e.dead||R.done)return false;const now=nowP()/1000;if(!peer&&now-R.tH<GB151R.gap)return false;R.tH=now;
+  if(!R.ramp){if(nowP()-(S.rlkT||0)>650){S.rlkT=nowP();dn(e.m.position,'EXPOSED ×1.5','#ffd27a',-40,700)}return true}
+  R.h++;svSnd('crack',.8,1.3+R.h*.15);burst(svWP(e,'hump',0,.25,-.55),0xffe0a0,24,1.2,1.4,.5);
+  if(R.h<GB151R.need){dn(e.m.position,'CRACK '+R.h+'/'+GB151R.need,'#ffd27a',-40,800);return true}
+  R.done=1;gb151Crack(e);return true}
+// a crack in the shell; the third bursts it at once (SHATTERED)
+function gb151Crack(e){const S=e.sv;if(!S.rp)return;S.crk=(S.crk||0)+1;S.rp.hit++;popT(e.m.position,S.crk>=3?'THE SHELL BREAKS!':'SHELL CRACKED '+S.crk+'/3','#bfe8ff',true);try{flash('rgba(190,230,255,.25)')}catch(_){}
+  svSnd('crack',1.3,.55);svSnd('heavy',1.1,.7);shake(.35);try{sk146Debris(svWP(e,'hump',0,.4,0),gb151Mats().ice,14,.28,6,7,1.5)}catch(_){}
+  if(S.crk>=3&&gb180Auth()){S.rlk=null;S.rp=null;S.dr=0;svEndMove(e,true);svCast(e,'broken')}}
+// hits from behind while he is Rimelocked: ×1.5, and they crack the Glacier Shell
+{const f=hurt;hurt=function(e,d,s,crit,dot){try{if(e&&e.gb151&&e.sv&&e.sv.rlk&&!e.dead&&!dot&&d>0&&GB151A&&GB151A.f&&!(typeof CO151!='undefined'&&CO151.ap)&&hero.hp>0&&gb151Behind(e)){
+      d=Math.round(d*GB151R.mult);if(typeof co151On=='function'&&co151On()&&!gb180Auth()){const R=e.sv.rlk,now=nowP()/1000;if(R.ramp&&!R.done&&now-R.tH>=GB151R.gap){R.tH=now;co151Send(['g1b'])}}
+      else gb151RlkHit(e)}}catch(err){if(!MQ151.err++)console.warn('v168 rlk',err)}
+  return f.call(this,e,d,s,crit,dot)}}
+// the look: the glacier on his back cracks open and glows; the ground behind him lights gold (where to stand)
+function gb151RlkFx(e,t){const LS=MQ151.LS;if(!LS)return;const S=e&&e.sv,on=!!(S&&S.rlk&&!e.dead&&GB151A&&GB151A.f);
+  if(!LS.rlk){const g=new THREE.Group(),ring=new THREE.Mesh(new THREE.RingGeometry(1.9,6.2,40,1,Math.PI/2-1.25,2.5).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffc860,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    ring.position.y=.12;ring.renderOrder=3;g.add(ring);const glow=kqSpr(0xffb840,2.2);glow.material=glow.material.clone();glow.userData.lpsSkip=1;scene.add(glow);g.visible=false;glow.visible=false;LS.root.add(g);LS.rlk={g,ring,glow}}
+  const R=LS.rlk;R.g.visible=R.glow.visible=on;if(!on)return;const m=e.m;R.g.position.set(m.position.x,GH(m.position.x,m.position.z),m.position.z);R.g.rotation.y=m.rotation.y;
+  const k=.5+.5*Math.sin(t*9),hot=S.rlk.ramp;R.ring.material.opacity=(hot?.32:.22)+.14*k;R.glow.position.copy(svWP(e,'hump',0,.25,-.55));R.glow.scale.setScalar((hot?3.4:2.4)+.6*k+(S.rlk.h||0)*.6);R.glow.material.opacity=.75+.25*k;
+  if(Math.random()<.25)burst(R.glow.position,0xffe0a0,1,.4,.8,.4)}
+// ---------------- the Glacier Shell (v168; the move keeps the id 'rampage'): the controller's part, the three leaps and the outcome ----------------
+function gb151RampStart(e){const S=e.sv;S.rp={n:0,hit:0};S.crk=0;S.dr=.15;S.rpN=(S.rpN||0)+1;
+  say('🧊 Gorthrak armours himself in glacier ice! Dodge his leaps, then get behind him while his maul is frozen in the floor and strike the glowing crack in his back.');
+  try{banner('🧊 GLACIER SHELL','Dodge his leap · get behind him while his maul is stuck · hit the glowing crack twice','')}catch(_){}}
 function gb151RampNext(e){const S=e.sv,R=S.rp;if(!R)return false;if(S.crk>=3){S.rp=null;S.dr=0;svCast(e,'broken');return true}
-  if(R.n<3){R.n++;svCast(e,'rcharge');return true}
+  if(R.n<3){R.n++;svCast(e,'rleap');return true}
   S.rp=null;svCast(e,'rfail');setTimeout(()=>{if(e.sv)e.sv.dr=0},4700);return true}
 function gb151Shelters(e){gb151ShelterClear();const M=gb151Mats(),LS=MQ151.LS;
   GB151L.shl.forEach((q,i)=>{const g=new THREE.Group(),y0=GH(q.x,q.z);g.position.set(q.x,y0-1.2,q.z);g.rotation.y=q.a+Math.PI;
@@ -224,8 +228,8 @@ function gb151Start(e){const S=e.sv,A=GB151A;if(!A||A.f)return;A.f=true;e.agg=1;
   try{zt116Show(ZT116.Z[2],'The Frozen Maw','Gorthrak','the Glacierback · warlord of the frozen deep','A wall of ice has sealed the way out','z2')}catch(_){}
   svSnd('crack',1,.6)}
 // back to the start (a wipe, or the hero left the cave): full health, home, Phase I, pillars regrown, every leftover gone
-function gb151Reset(why){const e=MQ151.e,A=GB151A;if(A)A.f=false;gb151Quake(false);gb151ShelterClear();gb151PillarsGrow();gb151FbSet(0);gb151LairSync();if(!e||e.dead)return;const S=e.sv;
-  svEndMove(e,true);S.stgM=null;S.on=false;S.ph=1;e.bs.ph=1;S.po=0;S.stg=0;S.inv=0;S.cd={};S.dr=0;S.chg=0;S.chgT=0;S.last=[];S.rpN=0;S.rp=null;S.shell=0;S.crk=0;gb151HandRock(e,false);e.agg=0;e.c.h=M(e.c);
+function gb151Reset(why){const e=MQ151.e,A=GB151A;if(A)A.f=false;gb151Quake(false);gb151ShelterClear();gb151FbSet(0);gb151LairSync();if(!e||e.dead)return;const S=e.sv;
+  svEndMove(e,true);S.stgM=null;S.on=false;S.ph=1;e.bs.ph=1;S.po=0;S.stg=0;S.inv=0;S.cd={};S.dr=0;S.chg=0;S.chgT=0;S.last=[];S.rpN=0;S.rp=null;S.rlk=null;S.shell=0;S.crk=0;gb151HandRock(e,false);e.agg=0;e.c.h=M(e.c);
   e.m.position.set(GB151L.home.x,0,GB151L.home.z);e.m.rotation.y=0;if(why)setTimeout(()=>say('🧌 Gorthrak lumbers back to his throne and settles down. He waits.'),900)}
 // he falls: the ice over the passage bursts
 function gb151Won(e){const A=GB151A;if(A)A.f=false;MQ151.st=Math.max(MQ151.st,2);MQ151.trkK='';gb151Quake(false);gb151ShelterClear();gb151FbSet(0);
@@ -278,12 +282,13 @@ function gb151Hud(){const e=MQ151.e,on=!!(e&&!e.dead&&GB151A&&GB151A.f&&mq151InC
   if(!p){p=document.createElement('div');p.id='gbPo';p.style.cssText='height:5px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.6);border:1px solid rgba(255,216,96,.35);border-radius:2px;overflow:hidden';p.innerHTML='<i style="display:block;height:100%;width:0;background:linear-gradient(90deg,#c89020,#ffe080);transition:width .12s"></i>';const mt=b.querySelector('.meter');if(mt)mt.after(p);else b.appendChild(p)}
   p.style.display='block';p.firstChild.style.width=(S.stg>0?100:Math.min(100,S.po*100)).toFixed(1)+'%';p.firstChild.style.background=S.stg>0?'#fff4c0':'linear-gradient(90deg,#c89020,#ffe080)'}
 {const f=hud;hud=function(){const r=f.apply(this,arguments);try{gb151Hud()}catch(_){}return r}}
-// his AI: the Sovereign engine's moves, picks and rests; his own footwork, the pillars and the cave
+// his AI: the Sovereign engine's moves, picks and rests; his own footwork, Rimelock and the cave
 function gb151AI(e,dt,now){const S=e.sv,A=GB151A,m=e.m;if(!A)return;if(e.hb)e.hb.visible=false;m.visible=mq151InCave();
   const dx=m.position.x-S.lp.x,dz=m.position.z-S.lp.z;S.lp.copy(m.position);const ms=dt>0?Math.hypot(dx,dz)/dt:0;S.spd+=((ms>12?0:ms)-S.spd)*Math.min(1,dt*8);
   for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.inv=Math.max(0,S.inv-dt);gb151FrostTick();
   if(!(S.mv&&S.mv.id==='rampage'))S.chg=(S.chg||0)+((S.chgT||0)-(S.chg||0))*Math.min(1,dt*3);
-  if(!S.rp&&!(S.mv&&(S.mv.id==='rampage'||S.mv.id==='rfail'||S.mv.id==='crash'||S.mv.id==='rcharge')))S.shell=Math.max(0,(S.shell||0)-dt*.8);
+  if(!S.rp&&!(S.mv&&(S.mv.id==='rampage'||S.mv.id==='rfail'||S.mv.id==='rleap')))S.shell=Math.max(0,(S.shell||0)-dt*.8);
+  if(S.rlk){S.rlk.T-=dt;if(S.rlk.T<=0||(!S.mv&&!S.rlk.hold))gb151RlkClose(e)}
   {const p=pl.position;if(S.hp0&&dt>0){const vx=(p.x-S.hp0.x)/dt,vz=(p.z-S.hp0.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv=S.hv||{x:0,z:0};S.hv.x+=(vx-S.hv.x)*a;S.hv.z+=(vz-S.hv.z)*a}}S.hp0={x:p.x,z:p.z}}
   if(!A.f){// waiting before his throne: breathe, face the cave mouth, heal; the fight starts when you come close
     if(S.mv)svEndMove(e,true);e.agg=0;const hx=GB151L.home.x-m.position.x,hz=GB151L.home.z-m.position.z,hl=Math.hypot(hx,hz);
@@ -305,10 +310,9 @@ function gb151AI(e,dt,now){const S=e.sv,A=GB151A,m=e.m;if(!A)return;if(e.hb)e.hb
   else if(S.ph===1&&e.c.h/M(e.c)<=GB151B.ph2)svCast(e,'awaken');
   else{gb151Move(e,dt);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}
   gb151Clamp(m.position,GB151B.edge);gb151QuakeTick(e,dt);
-  // keep the hero in the cave, out of his body and out of the pillars; keep him out of the pillars too (except a charge, which crashes)
+  // keep the hero in the cave and out of his body
   {const p=pl.position,hx=p.x-A.cx,hz=p.z-A.cz,hd=Math.hypot(hx,hz);if(hd>A.hr){p.x=A.cx+hx/hd*A.hr;p.z=A.cz+hz/hd*A.hr}}
   if(!S.ghost&&!S.rmOn&&hero.hp>0){const hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,hl=Math.hypot(hx,hz),R0=S.body;if(hl<R0&&hl>.001){const k=R0-hl;pl.position.x+=hx/hl*k;pl.position.z+=hz/hl*k}}
-  for(const P of MQ151.pil){if(!P.ok)continue;const push=(o,r)=>{const qx=o.x-P.x,qz=o.z-P.z,ql=Math.hypot(qx,qz);if(ql<r&&ql>.001){o.x=P.x+qx/ql*r;o.z=P.z+qz/ql*r}};push(pl.position,1.15);if(!(S.mv&&(S.mv.id==='charge'||S.mv.id==='rcharge')))push(m.position,S.body+.9)}
   svApply(e,dt,now)}
 // footwork: close to his preferred range, circle when there, a short back-off when crowded; slides along the cave's edge
 function gb151Move(e,dt){const S=e.sv,ai=GB151B.ai,m=e.m,v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
@@ -321,15 +325,15 @@ function gb151Move(e,dt){const S=e.sv,ai=GB151B.ai,m=e.m,v=V().subVectors(pl.pos
 // ---------------- the world tick: the cave mouth, the cave ----------------
 function mq151Tick(dt,now){const in1=mq151In1(),cave=mq151InCave(),t=now/1000;
   if(in1&&!MQ151.CM)try{gb151MouthBuild()}catch(err){console.error('v151 mouth',err);MQ151.err++}
-  if(MQ151.CM){MQ151.CM.g.visible=in1;if(in1){MQ151.CM.glow.material.opacity=.38+.1*Math.sin(t*1.3);const G=mq151Gate();if(Math.random()<dt*3)burst(new THREE.Vector3(G.x+(Math.random()-.5)*3,GH(G.x,G.z)+.4+Math.random()*2,G.z+(Math.random()-.5)*.6),0xe8f6ff,1,.2,.4,1)}}
+  if(MQ151.CM){MQ151.CM.g.visible=in1;if(in1){if(MQ151.CM.glow)MQ151.CM.glow.material.opacity=.38+.1*Math.sin(t*1.3);const G=mq151Gate();if(Math.random()<dt*3)burst(new THREE.Vector3(G.x+(Math.random()-.5)*3,GH(G.x,G.z)+.4+Math.random()*2,G.z+(Math.random()-.5)*.6),0xe8f6ff,1,.2,.4,1)}}
   if(cave){if(!MQ151.LS)try{gb151LairBuild()}catch(err){console.error('v151 lair',err);MQ151.err++}
     if(MQ151.st<2&&!(MQ151.e&&enemies.includes(MQ151.e)))try{gb151Spawn()}catch(err){console.error('v151 spawn',err);MQ151.err++}
     if(!MQ151.seen)MQ151.seen=1;if(MQ151.st<1){MQ151.st=1;MQ151.trkK=''}}
-  const LS=MQ151.LS;if(LS){LS.root.visible=cave;LS.lights.forEach(l=>{const want=l===LS.tlt?(l.userData.on||0):l.userData.i0!=null?l.userData.i0:(l.userData.i0=l.intensity);l.intensity=cave?want:0});
+  const LS=MQ151.LS;if(LS){LS.root.visible=cave;if(!cave&&LS.rlk)LS.rlk.glow.visible=false;LS.lights.forEach(l=>{const want=l===LS.tlt?(l.userData.on||0):l.userData.i0!=null?l.userData.i0:(l.userData.i0=l.intensity);l.intensity=cave?want:0});
     if(cave){LS.falls.forEach(f=>{f.m.material.emissiveIntensity=.35+.12*Math.sin(t*1.4+f.ph)});LS.floorM.emissiveIntensity=.45+.08*Math.sin(t*.8)+(MQ151.quake?.12:0);
-      const ramp=!!(MQ151.e&&MQ151.e.sv&&MQ151.e.sv.rp);MQ151.pil.forEach((P,i)=>{if(P.ok){P.core.material.opacity=ramp?.6+.3*Math.sin(t*7+i):.3+.06*Math.sin(t*1.2+i)}});
+      gb151RlkFx(MQ151.e,t);
       if(MQ151.sh.length)MQ151.sh.forEach(o=>{o.ring.material.opacity=.55+.3*Math.sin(t*8)});
       if(Math.random()<dt*4){const m=GB151L.mouth;burst(new THREE.Vector3(m.x+(Math.random()-.5)*3,GH(m.x,m.z)+3+Math.random(),m.z+(Math.random()-.5)*2),0xeef6ff,1,.2,-.5,1.6)}
-      if(LS.seal.visible)LS.seal.material.opacity=.45+.08*Math.sin(t*2)}}
+      if(LS.seal.visible&&LS.sealM)LS.sealM.opacity=.66+.08*Math.sin(t*2)}}
   if(now-MQ151.t>400){MQ151.t=now;try{if(in1||cave)mq143Trk()}catch(_){}}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{mq151Tick(dt,now)}catch(err){if(!MQ151.err++)console.warn('v151 tick',err)}return r}}
