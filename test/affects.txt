@@ -18,6 +18,7 @@ grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|t
 menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|settings|bestiary: v117_menus.py v117_titles.py v100_fusemenu.py v73t.py v131_load_title.py v161_keys.py v161_mobile_shot.py v166_hud.py
 signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp|companion-|foes|old-creatures|v137_creature: v137_enemies.py v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py
 coop|co-op|net: v108_instances.py v116_slots.py
+detail|low-poly-look|0060-|0750-: kqd_detail.py
 cheddar|quest|skins|3235: v164_skins.py v143_lantern_road.py v144_glowmire.py v145_sigils.py v148_cheddar.py v38t.py v114_save.py v108_instances.py v57t.py
 v135|cheddar|camera|fade|clip|wave|hatch|ring|death|kill|unique|fish|right|mouse|preview|travel: v135_checks.py
 v139|attribut|character|talent|power|flail|xp|preview|inventory: v139_checks.py
