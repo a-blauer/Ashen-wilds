@@ -15,6 +15,11 @@ def s(pg):
     ev("""()=>{KVCLK.manual=true;window.KVNODRAW=1;window.ERR=[];const cap=fn=>function(){ERR.push([].map.call(arguments,a=>a&&a.stack?String(a.stack).slice(0,300):String(a)).join(' '));return fn.apply(console,arguments)};
       console.warn=cap(console.warn);console.error=cap(console.error);
       window.addEventListener('error',e=>ERR.push('ERR '+e.message));window.ST=ms=>{for(let i=0;i<Math.round(ms/16);i++)KVCLK.tick(16)};ST(300);return 1}""")
+    # the frame callbacks reach the manual clock only once the browser has run a real frame: wait for them before ticking
+    for i in range(40):
+        if ev("()=>KVCLK.cbs.length>=2"):break
+        pg.wait_for_timeout(250)
+    ev("()=>{ST(300);return 1}")
     subs={'comp':ev("()=>SPK"),
           'mon':ev("()=>Object.keys(EN).filter(k=>!/^boss/.test(k)&&k!=='vorraxis'&&((MSET[k]&&MSET[k].length)||(EN[k].moves&&EN[k].moves.length)))"),
           'boss':['s0','s1','s2','s3','s4','s5','mb','gb','qs'],
