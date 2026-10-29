@@ -11,97 +11,156 @@
 var DG165GR={S:null,dig:null,err:0,col:{st:0x5c5c60,st2:0x4a4a50,st3:0x6c6a64,moss:0x3a4a34,soil:0x2a241e,soil2:0x3a3026,wax:0xd0c4a2,iron:0x2a2c30,rust:0x5a3a24,bone:0xc8c0a8,lily:0xd8d4c8,stem:0x3a4a2a,rose:0x4a1214,raven:0x1c1c22}};
 function dg165GIn(){return dg165InG(20)}
 // ---------------- models ----------------
-function dg165GraveKit(k,o){const C=DG165GR.col,R=svRng(4100+o.i*37),st=[C.st,C.st2,C.st3][o.i%3];
-  // the mound: heaped earth with a ring of half-sunk stones, grass tufts
-  k.p('','dod','c',C.soil,0,.02,.35,.62,.26,1.18,0,0,0);k.p('','dod','c',C.soil2,0,.12,.3,.46,.16,.92,.1,0,0);
-  for(let i=0;i<14;i++){const a=i/14*6.283,x=Math.cos(a)*.78,z=.35+Math.sin(a)*1.32;k.p('','dod','c',lgCol(st,C.moss,R()*.6),x,.04,z,.12+R()*.08,.08+R()*.06,.12+R()*.08,R()*3,R()*3,R()*3)}
-  for(let i=0;i<7;i++)k.p('','cone','c',lgCol(0x2e3a2a,0x4a5a3a,R()),(R()-.5)*1.3,.05,.35+(R()-.5)*2.2,.04,.18+R()*.12,.04,(R()-.5)*.5,0,(R()-.5)*.5);
-  // the headstone
-  const z0=-.95,tilt=(R()-.5)*.12;
-  if(o.stone=='slab'){k.p('','box','c',st,0,.6,z0,1.0,1.2,.2,tilt,0,(R()-.5)*.06);k.p('','cyl','c',st,0,1.2,z0,.5,.2,.5,Math.PI/2+tilt,0,0);k.p('','box','c',lgCol(st,0,.25),0,.08,z0,1.15,.16,.32)}
-  else if(o.stone=='cross'){k.p('','box','c',st,0,.78,z0,.22,1.56,.18,tilt,0,0);k.p('','box','c',st,0,1.12,z0,.9,.2,.18,tilt,0,0);k.p('','box','c',lgCol(st,0,.25),0,.1,z0,.6,.2,.4);
-    k.p('','ring','c',lgCol(st,C.moss,.4),0,1.12,z0+.02,.3,.6,.3,Math.PI/2,0,0)}
-  else if(o.stone=='obelisk'){k.p('','box','c',lgCol(st,0,.2),0,.14,z0,.86,.28,.86);k.p('','box','c',st,0,.95,z0,.46,1.4,.46,tilt*.5,0,0);k.p('','cone4','c',st,0,1.86,z0,.33,.42,.33,0,Math.PI/4,0);
-    k.p('','box','c',lgCol(st,0,.3),0,.36,z0,.6,.12,.6)}
-  else{// broken: the lower half stands tilted, its top a jagged break; the upper half lies cracked in the grass beside it
-    k.p('','box','c',st,0,.34,z0,1.0,.68,.2,tilt-.08,0,.06);for(let i=0;i<6;i++)k.p('','box','c',st,-.42+i*.17,.7+R()*.1,z0,.17,.12+R()*.14,.2,0,0,(R()-.5)*.6);
-    k.p('','box','c',lgCol(st,C.moss,.3),.72,.1,z0+.55,.95,.18,.5,0,.6,0);k.p('','cyl','c',lgCol(st,C.moss,.3),.98,.12,z0+.18,.45,.18,.45,0,.6,Math.PI/2);
-    for(let i=0;i<5;i++)k.p('','dod','c',st,-.6+R()*1.2,.04,z0+.2+R()*.5,.06+R()*.05)}
-  // lichen and a carved name panel
-  k.p('','box','c',lgCol(st,0x1a1a1c,.55),0,o.stone=='broken'?.4:.62,z0+.105,.6,.26,.01);for(let i=0;i<5;i++)k.p('','box','c',C.moss,(R()-.5)*.8,.2+R()*.8,z0+.1,.12+R()*.1,.08+R()*.08,.012);
-  // the emblem
-  const ty=o.stone=='slab'?1.32:o.stone=='cross'?1.6:o.stone=='obelisk'?.32:.78,tz=o.stone=='obelisk'?z0+.44:z0;
-  if(o.emb=='raven'){const y=o.stone=='obelisk'?1.1:ty,z=o.stone=='obelisk'?z0+.0:z0,x=o.stone=='obelisk'?.0:.05,rc=C.raven;
-    const yb=o.stone=='obelisk'?.22:0;k.p('','sph','c',rc,x,y+.14+yb,z,.13,.15,.2,.3,0,0);k.p('','sph','c',rc,x,y+.3+yb,z+.12,.085,.085,.09);k.p('','cone4','c',0x0e0e10,x,y+.29+yb,z+.24,.025,.1,.025,Math.PI/2,0,0);
-    [-1,1].forEach(s=>{k.p('','box','c',lgCol(rc,0x2a2a34,.3),x+s*.11,y+.16+yb,z-.02,.03,.12,.28,.3,s*.15,s*.12);k.p('','sph','g',0xb0ff90,x+s*.05,y+.32+yb,z+.18,.012)});
-    k.p('','box','c',rc,x,y+.08+yb,z-.22,.12,.03,.22,-.4,0,0);[-1,1].forEach(s=>k.L('','c',0x101012,[x+s*.04,y+.06+yb,z+.02],[x+s*.04,y-.03+yb,z+.06],.008,.006,4))}
-  else if(o.emb=='skull'){const y=o.stone=='obelisk'?.95:o.stone=='broken'?.42:.78,z=(o.stone=='obelisk'?z0+.24:z0+.11);k.p('','sph','c',C.bone,0,y,z,.12,.13,.07);k.p('','box','c',C.bone,0,y-.11,z+.01,.08,.05,.05);
-    [-1,1].forEach(s=>k.p('','sph','c',0x0a0a0a,s*.045,y+.01,z+.05,.032,.03,.02));k.p('','cone4','c',0x0a0a0a,0,y-.05,z+.06,.015,.03,.01,Math.PI);
-    [-1,1].forEach(s=>k.L('','c',C.bone,[s*-.2,y-.22,z],[s*.2,y-.12,z],.022,.02,5))}
-  else if(o.emb=='rose'){const y=o.stone=='obelisk'?.95:o.stone=='broken'?.42:.8,z=(o.stone=='obelisk'?z0+.24:z0+.11);for(let i=0;i<6;i++){const a=i/6*6.283;k.p('','sph','c',lgCol(C.rose,0x2a0808,i/8),Math.cos(a)*.05,y+Math.sin(a)*.05,z,.045,.045,.025)}
-    k.p('','sph','c',0x3a0a0c,0,y,z+.01,.04,.04,.03);k.L('','c',C.stem,[0,y-.05,z],[.02,y-.4,z],.012,.01,4);k.p('','box','c',C.stem,.05,y-.22,z,.08,.03,.01,0,0,.6)}
-  else if(o.emb=='hourglass'){const y=o.stone=='obelisk'?.95:o.stone=='broken'?.42:.8,z=(o.stone=='obelisk'?z0+.24:z0+.11);k.p('','cone','c',lgCol(st,0x101010,.4),0,y+.1,z,.1,.18,.03,Math.PI,0,0);k.p('','cone','c',lgCol(st,0x101010,.4),0,y-.08,z,.1,.18,.03);
-    [-1,1].forEach(s=>k.p('','box','c',lgCol(st,0x101010,.3),0,y+s*.2,z,.24,.03,.04));[-1,1].forEach(s=>k.L('','c',lgCol(st,0,.2),[s*.12,y-.08,z+.01],[s*.24,y+.28,z+.01],.012,.01,4))}
-  else if(o.emb=='bell'){const y=o.stone=='broken'?.85:o.stone=='obelisk'?1.5:1.35,x=.32;k.L('','m',C.iron,[x-.1,y,z0],[x+.22,y+.04,z0+.02],.015,.015,4);k.L('','m',C.iron,[x+.2,y+.04,z0],[x+.22,y-.06,z0+.02],.008,.008,3);
-    k.p('','cone','m',lgCol(C.iron,C.rust,.5),x+.22,y-.14,z0+.02,.07,.13,.07);k.p('','sph','m',C.rust,x+.22,y-.21,z0+.02,.02);k.L('','c',0x3a3026,[x+.22,y-.2,z0+.02],[x+.1,y-.5,z0+.5],.006,.006,3)}
+// v168 (owner: "the angel graves look way too low detail"): sculpted, bevelled and weathered (3345's kit), each part sitting on the
+// ground under it. Local frame: the headstone at z -.95, the mound round z .38, +z toward the road; the group is scaled 1.3.
+// the ground under a grave's local spot, relative to its centre (the headstone is sunk or lifted to it)
+function dg165GY(o,lx,lz){const s=1.3,ca=Math.cos(o.ry),sa=Math.sin(o.ry);try{return (GH(o.x+(ca*lx+sa*lz)*s,o.z+(-sa*lx+ca*lz)*s)-GH(o.x,o.z))/s}catch(_){return 0}}
+// the mound's surface height, and the candles on it: [x, base y, z, height]
+function dg165MoundY(x,z){const u=x/.72,v=(z-.38)/1.18;return .3*Math.sqrt(Math.max(0,1-u*u-v*v))-.03}
+function dg165CandleQ(){return [[-.33,.25,.24],[.28,0,.18],[-.1,-.3,.27],[.36,.66,.14]].map(([x,z,h])=>[x,dg165MoundY(x,z),z,h])}
+// v168: the soil is kind 's' (the same stone-like material, weathered without moss)
+function dg165Berm(){return dt168Geo('berm',()=>{const g=new THREE.TorusGeometry(1,.16,8,48),P=g.attributes.position;g.rotateX(Math.PI/2);
+  for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=dt168Fbm(x*3,y*3,z*3,61);P.setXYZ(i,x*(1+(n-.5)*.1),Math.max(-.02,y*(.7+n*.8)),z*(1+(n-.5)*.1))}g.computeVertexNormals();return g})}
+var DG165WX={s:{g:[.3,.25],n:.3,sd:8},c:{g:[.55,.4],n:.16,s:.3,m:[0x2e3a26,.7,.45],l:[0x9a9878,.7],sd:5},m:{n:.25,sd:9}};
+// a raven perched at (x, y, z) facing +z (turned ry)
+function dg165Raven(k,x,y,z,ry,col){const i0=k.P.length,c=col||DG165GR.col.raven,c2=lgCol(c,0x3a3a48,.35),fth=dt168Feather(),V3=THREE.Vector3;
+  dt168P(k,dt168Lathe([[0,-1],[.6,-.8],[.95,-.3],[1,.1],[.8,.6],[.4,.9],[0,1]],12),'c',c,dt168Mx(0,.15,0,.85,0,0,.085,.16,.095));
+  dt168P(k,dt168Lathe([[0,-1],[.7,-.7],[1,0],[.75,.65],[0,1]],12),'c',c,dt168Mx(0,.29,.09,0,0,0,.058,.06,.07));
+  dt168P(k,dt168Lathe([[0,0],[.5,.05],[.4,.5],[.15,.85],[0,1]],8),'c',0x0e0e10,dt168Mx(0,.28,.15,1.45,0,0,.024,.11,.03));
+  [-1,1].forEach(s=>{dt168P(k,fth,'c',c2,dt168Basis(new V3(s*.07,.22,.05),new V3(s*.04,-.45,-1),new V3(s,0,0),.26,.12,1));
+    dt168P(k,fth,'c',c,dt168Basis(new V3(s*.075,.2,.02),new V3(s*.03,-.6,-1),new V3(s,0,0),.2,.09,1));
+    dt168P(k,dt168Lathe([[0,-1],[1,0],[0,1]],6),'g',0xb0ff90,dt168Mx(s*.04,.305,.135,0,0,0,.011,.011,.008));
+    k.L('','c',0x101012,[s*.03,.07,.02],[s*.03,-.005,.04],.008,.006,5);k.L('','c',0x101012,[s*.03,0,.04],[s*.03,0,.08],.005,.004,4)});
+  for(let i=0;i<3;i++)dt168P(k,fth,'c',lgCol(c,0x000000,.2),dt168Basis(new V3((i-1)*.025,.09,-.08),new V3((i-1)*.15,-.55,-1),new V3(0,1,-.4).normalize(),.2,.07,1));
+  dt168Xf(k,i0,dt168Mx(x,y,z,0,ry||0,0))}
+// a candle's flame spot for 3311's flame sprites
+function dg165Flames(){return dg165CandleQ().map(q=>[q[0],q[1]+q[3]+.06,q[2]])}
+// the headstone and its emblem (also left standing beside an open grave)
+function dg165Head(k,o){const C=DG165GR.col,R=svRng(4100+o.i*37),st=[C.st,C.st2,C.st3][o.i%3],z0=-.95,i0=k.P.length,dk=lgCol(st,0x0c0c0e,.6),T=.17,ft=lgCol(st,0x1a1a1c,.25),V3=THREE.Vector3;
+  let ey=.95,ez=z0+T/2,rv=null,bl=null;
+  if(o.stone=='slab'){dt168P(k,dt168Ext('slab',dt168ArchPts(.92,-.45,1.0,.55),T,.028),'c',st,dt168Mx(0,0,z0));
+    dt168P(k,dt168Ext('slabp',dt168ArchPts(.7,.2,.86,.5),.016,.004,1),'c',ft,dt168Mx(0,0,z0+T/2-.003));
+    for(let i=0;i<4;i++)dt168P(k,dt168BBox(.44-i*.08,.026,.012,.004),'c',dk,dt168Mx(0,.66-i*.09,z0+T/2+.006));
+    dt168P(k,dt168BBox(1.14,.22,.4,.035),'c',lgCol(st,0x202020,.2),dt168Mx(0,.0,z0+.02));rv=[0,1.25,z0];bl=[.34,1.0]}
+  else if(o.stone=='cross'){const pts=[[-.07,-.45],[.07,-.45],[.07,.98],[.1,1.02],[.34,1.0],[.4,1.05],[.4,1.19],[.34,1.24],[.1,1.22],[.07,1.26],[.07,1.5],[.1,1.55],[.06,1.62],[-.06,1.62],[-.1,1.55],[-.07,1.5],[-.07,1.26],[-.1,1.22],[-.34,1.24],[-.4,1.19],[-.4,1.05],[-.34,1.0],[-.1,1.02],[-.07,.98]];
+    dt168P(k,dt168Ext('cross',pts,.15,.02),'c',st,dt168Mx(0,0,z0));dt168P(k,dt168Geo('xring',()=>new THREE.TorusGeometry(.25,.034,8,40)),'c',lgCol(st,C.moss,.2),dt168Mx(0,1.12,z0));
+    dt168P(k,dt168BBox(.66,.22,.46,.035),'c',lgCol(st,0x202020,.2),dt168Mx(0,0,z0));dt168P(k,dt168BBox(.46,.14,.32,.03),'c',st,dt168Mx(0,.17,z0));
+    for(let i=0;i<3;i++)dt168P(k,dt168BBox(.2-i*.04,.02,.01,.003),'c',dk,dt168Mx(0,.82-i*.07,z0+.081));ey=1.12;ez=z0+.08;rv=[0,1.62,z0];bl=[.33,1.0]}
+  else if(o.stone=='obelisk'){dt168P(k,dt168Lathe([[0,-.4],[.44,-.4],[.44,.14],[.42,.18],[.36,.2],[.36,.28],[.33,.32],[.28,.34],[.27,.4],[.24,.44],[.22,.48],[.17,1.62],[.2,1.64],[.2,1.69],[.17,1.71],[0,1.98]],4),'c',st,dt168Mx(0,0,z0));
+    dt168P(k,dt168BBox(.27,.4,.012,.004),'c',ft,dt168Mx(0,.82,z0+.205,-.045,0,0));for(let i=0;i<3;i++)dt168P(k,dt168BBox(.18-i*.03,.02,.01,.003),'c',dk,dt168Mx(0,.92-i*.07,z0+.212,-.045,0,0));
+    ey=1.22;ez=z0+.19;rv=[0,.34,z0+.33];bl=[.2,1.42]}
+  else{// broken: the stump stands, its top a jagged break; the top half lies on its back in the grass beside it
+    const lo=[[-.46,-.45],[.46,-.45],[.46,.55],[.37,.64],[.27,.57],[.15,.72],[.05,.6],[-.07,.68],[-.2,.58],[-.3,.66],[-.46,.6]];
+    dt168P(k,dt168Ext('brk',lo,T,.02),'c',st,dt168Mx(0,0,z0));
+    const up=[[.46,.55],[.46,1.0]].concat(dt168ArchPts(.92,0,1.0,.55,12).slice(3),[[-.46,.6],[-.3,.66],[-.2,.58],[-.07,.68],[.05,.6],[.15,.72],[.27,.57],[.37,.64]]);
+    dt168P(k,dt168Ext('brku',up,T,.02),'c',lgCol(st,C.moss,.18),dt168Mx(.98,.05,z0+.22,0,-Math.PI/2+.25,0).multiply(dt168Mx(0,0,0,-Math.PI/2+.07,0,.04)).multiply(dt168Mx(0,-.9,0)));
+    for(let i=0;i<6;i++)dt168P(k,dt168Rock(60+i,1,.6),'c',st,dt168Mx(-.5+R()*1.1,.01,z0+.18+R()*.5,R()*3,R()*3,0,.04+R()*.04,.025+R()*.02,.04+R()*.03));
+    dt168P(k,dt168BBox(.6,.24,.012,.004),'c',ft,dt168Mx(0,.3,z0+T/2-.002));for(let i=0;i<2;i++)dt168P(k,dt168BBox(.36-i*.08,.024,.01,.003),'c',dk,dt168Mx(0,.34-i*.08,z0+T/2+.006));
+    ey=.18;rv=[.15,.71,z0];bl=[.3,.5]}
+  // the emblem: a raven perched on the stone, or carved in relief on its face, or a bell on an iron bracket
+  if(o.emb=='raven')dg165Raven(k,rv[0],rv[1],rv[2],o.stone=='obelisk'?0:.25);
+  else if(o.emb=='skull'){const y=ey,z=ez,b=C.bone;dt168P(k,dt168Lathe([[0,-1],[.6,-.8],[.95,-.3],[1,.2],[.8,.7],[.4,.95],[0,1]],14),'c',b,dt168Mx(0,y+.02,z,0,0,0,.1,.105,.055));
+    dt168P(k,dt168BBox(.085,.05,.05,.012),'c',b,dt168Mx(0,y-.08,z+.012));[-1,1].forEach(s=>dt168P(k,dt168Lathe([[0,-1],[1,0],[0,1]],8),'c',0x0a0a0a,dt168Mx(s*.038,y+.005,z+.045,0,0,0,.027,.025,.02)));
+    dt168P(k,dt168Lathe([[0,0],[1,0],[0,1]],3),'c',0x0a0a0a,dt168Mx(0,y-.04,z+.05,Math.PI,0,0,.014,.025,.01));
+    [-1,1].forEach(s=>{k.L('','c',b,[s*-.17,y-.2,z],[s*.17,y-.11,z],.016,.016,8);[[-.17,-.2],[.17,-.11]].forEach(([dx,dy])=>dt168P(k,dt168Lathe([[0,-1],[1,0],[0,1]],8),'c',b,dt168Mx(s*dx,y+dy,z,0,0,0,.025,.025,.02)))})}
+  else if(o.emb=='rose'){const y=ey,z=ez,rc=lgCol(st,C.rose,.5);for(let r=0;r<2;r++)for(let i=0;i<(r?5:6);i++){const a=i/(r?5:6)*6.283+r*.4,d=r?.03:.055;
+      dt168P(k,dt168Lathe([[0,-1],[.7,-.7],[1,0],[.7,.7],[0,1]],8),'c',lgCol(rc,0x1a0606,r*.25),dt168Mx(Math.cos(a)*d,y+Math.sin(a)*d,z+.008+r*.012,0,0,a,.042-r*.01,.03-r*.006,.016))}
+    dt168P(k,dt168Lathe([[0,-1],[.8,-.5],[1,.2],[0,1]],8),'c',lgCol(rc,0x1a0606,.4),dt168Mx(0,y,z+.03,Math.PI/2,0,0,.022,.02,.022));
+    k.L('','c',lgCol(st,C.stem,.4),[0,y-.06,z],[.02,y-.42,z],.01,.008,6);[-1,1].forEach(s=>dt168P(k,dt168Feather(),'c',lgCol(st,C.stem,.45),dt168Basis(new V3(.01,y-.2-s*.06,z+.004),new V3(s,-.4,0),new V3(0,0,1),.13,.06,.6)))}
+  else if(o.emb=='hourglass'){const y=ey,z=ez,c=lgCol(st,0x101010,.35);dt168P(k,dt168Lathe([[0,-.5],[.42,-.47],[.4,-.38],[.12,-.06],[.06,0],[.12,.06],[.4,.38],[.42,.47],[0,.5]],12),'c',c,dt168Mx(0,y,z,0,0,0,.13,.34,.045));
+    [-1,1].forEach(s=>{dt168P(k,dt168BBox(.26,.03,.05,.008),'c',lgCol(st,0x101010,.25),dt168Mx(0,y+s*.185,z));k.L('','c',lgCol(st,0,.2),[s*.11,y-.17,z+.01],[s*.11,y+.17,z+.01],.01,.01,6)})}
+  else if(o.emb=='bell'){const x=bl[0],y=bl[1],z=z0,ir=C.iron;k.L('','m',ir,[x-.12,y,z],[x+.2,y+.03,z],.013,.011,8);k.L('','m',ir,[x+.19,y+.03,z],[x+.2,y-.06,z],.007,.007,6);
+    dt168P(k,dt168Lathe([[0,0],[.055,-.01],[.07,-.05],[.075,-.11],[.1,-.15],[.105,-.17],[0,-.165]],12),'m',lgCol(ir,C.rust,.5),dt168Mx(x+.2,y-.06,z));dt168P(k,dt168Lathe([[0,-1],[1,0],[0,1]],8),'m',C.rust,dt168Mx(x+.2,y-.22,z,0,0,0,.02));
+    dt168T(k,'bcord'+o.stone,'c',0x3a3026,[[x+.2,y-.2,z],[x+.16,y-.5,z+.25],[x+.12,.05,z+.55]],.005,4)}
+  // lean (seeded), then sink or lift it to the ground at its foot
+  const tilt=(R()-.5)*.1,roll=(R()-.5)*.06,gy=dg165GY(o,0,z0);dt168Xf(k,i0,dt168Mx(0,gy-.02,z0).multiply(dt168Mx(0,0,0,tilt,0,roll)).multiply(dt168Mx(0,0,-z0)))}
+function dg165GraveKit(k,o){const C=DG165GR.col,R=svRng(4100+o.i*37+5),st=[C.st,C.st2,C.st3][o.i%3],gm=dg165GY(o,0,.38);
+  dg165Head(k,o);const i0=k.P.length;
+  // the mound: heaped earth, a kerb of half-sunk stones (a stone surround for a slab or an obelisk), grass tufts
+  dt168P(k,dt168Mound(o.i%5+1),'c',C.soil,dt168Mx(0,0,.38,0,0,0,.72,.3,1.18));
+  if(o.stone=='slab'||o.stone=='obelisk'){[[0,-.42,1.5,.2],[0,1.92,1.5,.2],[-.83,.75,.2,2.34],[.83,.75,.2,2.34]].forEach(([x,z,w,d],i)=>dt168P(k,dt168BBox(w,.2,d,.035),'c',lgCol(st,C.moss,.15+i*.05),dt168Mx(x,.02,z,(R()-.5)*.03,(R()-.5)*.04,(R()-.5)*.05)))}
+  else for(let i=0;i<12;i++){const a=i/12*6.283+R()*.3,x=Math.cos(a)*.78,z=.38+Math.sin(a)*1.28;dt168P(k,dt168Rock(i%6+40,1,.5),'c',lgCol(st,C.moss,R()*.5),dt168Mx(x,.0,z,R()*3,R()*3,R()*3,.07+R()*.05,.05+R()*.03,.07+R()*.05))}
+  for(let i=0;i<10;i++){const a=R()*6.283,r=R()*.8,x=Math.cos(a)*r*.62,z=.38+Math.sin(a)*r*1.05;dt168P(k,dt168Rock(170+i%6,1,.6),'s',lgCol(C.soil,C.soil2,R()),dt168Mx(x,dg165MoundY(x,z)-.01,z,R()*3,R()*3,0,.05+R()*.05,.03+R()*.02,.05+R()*.04))}
+  for(let i=0;i<14;i++){const a=R()*6.283,r=.4+R()*.65,x=Math.cos(a)*r*.9,z=.38+Math.sin(a)*r*1.4;dt168P(k,dt168Tuft(i%4+1,7,.32),'c',lgCol(0x2e3a2a,0x5a6440,R()),dt168Mx(x,dg165MoundY(x,z)-.01,z,0,R()*6,0,1,.8+R()*.5,1))}
   // what lies on the grave
-  if(o.ext=='candles')[[-.35,.05,.25,.24],[.3,.06,.0,.18],[-.12,.08,-.35,.28],[.4,.04,.62,.14]].forEach(q=>dg165Candle(k,q[0],q[1]+.12,q[2],q[3]));
-  else if(o.ext=='lilies'){for(let i=0;i<5;i++){const x=(R()-.5)*.4,z=.05+(R()-.5)*.3,a=R()*6.28;k.L('','c',C.stem,[x,.2,z],[x+Math.cos(a)*.3,.32,z+Math.sin(a)*.3],.008,.006,3);
-      k.p('','cone','c',lgCol(C.lily,0x8a7a5a,.5),x+Math.cos(a)*.33,.3,z+Math.sin(a)*.33,.04,.08,.04,Math.PI/2+.4,a,0)}k.p('','box','c',0x3a2a2a,0,.21,.05,.08,.03,.08)}
-  else if(o.ext=='cage'){// a mortsafe: an iron cage over the grave against the body snatchers
-    for(let i=0;i<8;i++){const x=-.7+i*.2;k.L('','m',C.iron,[x,0,-.6],[x,.62,-.6],.018,.018,4);k.L('','m',C.iron,[x,.62,-.6],[x,.62,1.3],.018,.018,4);k.L('','m',C.iron,[x,0,1.3],[x,.62,1.3],.018,.018,4);k.p('','cone4','m',C.rust,x,.7,1.3,.025,.08,.025)}
-    [-.6,1.3].forEach(z=>k.L('','m',C.rust,[-.75,.62,z],[.75,.62,z],.02,.02,4));[0,.3,.6,.95].forEach(z=>k.L('','m',C.rust,[-.75,.62,z],[.75,.62,z],.014,.014,4))}
-  else if(o.ext=='chains'){for(let i=0;i<16;i++){const t=i/15,x=-.75+t*1.5,y=.18+Math.sin(t*Math.PI)*.12;k.p('','ring','m',i%2?C.iron:C.rust,x,y,.4,.06,.5,.06,i%2?Math.PI/2:0,0,i%2?0:Math.PI/2)}
-    for(let i=0;i<10;i++){const a=i/10*6.283;k.p('','ring','m',i%2?C.iron:C.rust,Math.cos(a)*.52,.55,z0+Math.sin(a)*.12,.05,.5,.05,0,a,i%2?Math.PI/2:0)}
-    k.p('','box','m',C.iron,.5,.12,1.3,.12,.16,.06);k.p('','ring','m',C.rust,.5,.2,1.3,.07,.4,.07,Math.PI/2,0,0)}
-  else if(o.ext=='lantern'){k.L('','c',0x2a2018,[.75,0,.9],[.75,1.5,.9],.035,.03,5);k.L('','m',C.iron,[.75,1.45,.9],[.48,1.5,.9],.015,.015,4);
-    k.p('','box','m',C.iron,.48,1.24,.9,.16,.24,.16);k.p('','box','g',0x9affd0,.48,1.24,.9,.11,.16,.11);k.p('','cone4','m',C.iron,.48,1.42,.9,.11,.1,.11,0,Math.PI/4,0)}}
-function dg165GraveHole(k,o){const C=DG165GR.col,R=svRng(4200+o.i*13);
-  // an open pit with a heap of fresh earth beside it and a smashed coffin in it
-  k.p('','box','c',0x0c0a08,0,-.02,.35,1.0,.06,1.9);for(let i=0;i<8;i++){const s=i<4?-1:1;k.p('','dod','c',lgCol(C.soil,C.soil2,R()),s*.7,.02,.35+(i%4-1.5)*.5,.16,.08,.3,R(),R(),R())}
-  k.p('','dod','c',C.soil2,1.25,.22,.2,.55,.42,.8,.3,.4,0);k.p('','dod','c',C.soil,1.1,.12,.75,.4,.25,.45,.2,1,0);
-  k.p('','box','c',0x3a2618,0,.05,.35,.72,.1,1.6);for(let i=0;i<4;i++)k.p('','box','c',lgCol(0x4a3020,0x2a1a10,R()),-.3+i*.2,.12+R()*.08,.1+R()*.6,.18,.04,.7,R()*.4,R()*.8,R()*.4);
-  k.p('','box','c',0x4a3020,1.2,.35,-.25,.7,.06,1.5,.4,.9,.3);for(let i=0;i<3;i++)k.p('','sph','c',C.bone,(R()-.5)*.4,.14,.3+(R()-.5)*.8,.05,.04,.08)}
-// the angel at the road's end (local +z faces the clearing)
-function dg165AngelModel(s){const g=new THREE.Group();g.userData.psNo=1;const C=DG165GR.col;
-  g.add(lgGroup('DG165|angel',k=>{const R=svRng(4321),sA=0x77756e,sB=0x605e58,sC=0x8a8880;
-    // the plinth: stepped base, a panel with the inscription
-    k.p('','box','c',sB,0,.18,0,2.2,.36,2.2);k.p('','box','c',sA,0,.72,0,1.6,.8,1.6);k.p('','box','c',sB,0,1.2,0,1.85,.18,1.85);k.p('','box','c',lgCol(sB,0x1a1a1a,.5),0,.74,.81,1.1,.5,.02);
-    for(let i=0;i<4;i++)k.p('','box','c',lgCol(sA,0x101010,.6),0,.62+i*.1,.83,.8-i*.06,.025,.01);
-    for(let i=0;i<9;i++)k.p('','box','c',C.moss,(R()-.5)*1.8,.36+R()*.8,(R()<.5?-1:1)*(.8+R()*.02),.2+R()*.2,.1+R()*.15,.02);
-    // the angel: a robed figure kneeling, head bowed into its hands, wings folded high behind it
-    k.p('','skirt','c',sA,0,1.62,0,.55,.85,.48);k.p('','sph','c',sA,0,2.08,.02,.3,.42,.25,.25,0,0);k.p('','sph','c',sC,0,2.42,.18,.16,.18,.17,.6,0,0);
-    k.p('','hood','c',sB,0,2.44,.14,.2,.24,.22,-.9,0,0);[-1,1].forEach(sd=>{k.L('','c',sA,[sd*.24,2.28,.05],[sd*.14,2.18,.26],.07,.06,5);k.L('','c',sA,[sd*.14,2.18,.26],[sd*.06,2.42,.3],.05,.045,5);k.p('','sph','c',sC,sd*.05,2.44,.31,.06,.07,.04)});
-    for(let i=0;i<7;i++)k.p('','box','c',lgCol(sA,sB,i/7),(i-3)*.08,1.25,.38+Math.abs(i-3)*.02,.07,.3,.06,.2,0,0);   // robe folds
-    [-1,1].forEach(sd=>{for(let i=0;i<7;i++){const t=i/6,y=2.0+t*1.25,x=sd*(.22+.32*Math.sin(t*2.6)),z=-.22-.18*t;k.p('','box','c',lgCol(sA,sC,t),x,y,z,.16+.2*(1-t),.55-.3*t,.06,-.15,sd*.35,sd*(.25-t*.5))}
-      for(let i=0;i<5;i++)k.p('','box','c',lgCol(sB,sA,i/5),sd*(.3+i*.06),1.65-i*.08,-.28,.08,.6,.04,-.1,sd*.4,sd*.2)});
-    // cracks, a chipped wing tip, moss
-    k.p('','box','c',0x2a2a28,.25,2.0,.2,.02,.3,.02,0,0,.3);for(let i=0;i<6;i++)k.p('','sph','c',C.moss,(R()-.5)*.6,1.3+R()*1.4,(R()-.5)*.5,.06+R()*.06,.04,.06+R()*.04);
-    // the gravedigger's spade in a heap of earth, an iron lantern on a crook
-    k.p('','dod','c',C.soil,1.55,.12,.75,.45,.2,.42);k.L('','c',0x4a3420,[1.5,.2,.75],[1.62,1.5,.62],.03,.028,5);k.p('','box','c',0x4a3420,1.63,1.52,.61,.2,.04,.04);
-    k.p('','box','m',0x3a3c40,1.48,.25,.78,.24,.34,.03,0,.1,.06);k.L('','c',0x2a2018,[-1.4,0,.7],[-1.45,1.9,.7],.035,.03,5);k.L('','m',DG165GR.col.iron,[-1.45,1.85,.7],[-1.15,1.9,.7],.015,.015,4);
-    k.p('','box','m',DG165GR.col.iron,-1.15,1.62,.7,.18,.26,.18);k.p('','box','g',0x9affd0,-1.15,1.62,.7,.12,.18,.12);
-    // offerings: candles round the base
-    [[-.8,.36,1.0],[.85,.36,1.0],[-.4,.36,1.05],[.5,.36,1.02]].forEach(q=>dg165Candle(k,q[0],q[1],q[2],.18))},0));
+  if(o.ext=='candles')dg165CandleQ().forEach(q=>dt168Candle(k,q[0],q[1],q[2],q[3],C.wax));
+  else if(o.ext=='lilies'){for(let i=0;i<5;i++){const x=(R()-.5)*.36,z=.1+(R()-.5)*.3,a=R()*6.28,y=dg165MoundY(x,z),ex=x+Math.cos(a)*.32,ez=z+Math.sin(a)*.32;
+      dt168T(k,'lily'+o.i+i,'c',C.stem,[[x,y,z],[(x+ex)/2,y+.06,(z+ez)/2],[ex,dg165MoundY(ex,ez)+.03,ez]],.008,5);
+      dt168P(k,dt168Lathe([[0,0],[.008,0],[.012,.04],[.03,.08],[.055,.1],[.06,.104]],9),'c',lgCol(C.lily,0x8a7a5a,.35+R()*.3),dt168Mx(ex,dg165MoundY(ex,ez)+.03,ez,0,0,0).multiply(dt168Mx(0,0,0,Math.PI/2+.5,a+Math.PI/2,0,1,1,1,'YXZ')));
+      dt168P(k,dt168Feather(),'c',lgCol(C.stem,0x6a6a3a,.3),dt168Basis(new THREE.Vector3(x,y+.01,z),new THREE.Vector3(Math.cos(a+.7),.05,Math.sin(a+.7)),new THREE.Vector3(0,1,0),.18,.05,.5))}
+    dt168P(k,dt168BBox(.1,.03,.06,.008),'c',0x4a1a1a,dt168Mx(0,dg165MoundY(0,.1)+.01,.1,0,.4,0))}
+  else if(o.ext=='cage'){const ir=C.iron,rs=C.rust;// a mortsafe: hoops of iron bars over the grave, spear tips, rails at the foot
+    for(let i=0;i<8;i++){const x=-.7+i*.2,c=i%3?ir:lgCol(ir,rs,.5);k.L('','m',c,[x,-.1,-.62],[x,.62,-.62],.016,.016,8);k.L('','m',c,[x,.62,-.62],[x,.62,1.32],.016,.016,8);k.L('','m',c,[x,-.1,1.32],[x,.62,1.32],.016,.016,8);
+      dt168P(k,dt168Lathe([[0,0],[.025,0],[.03,.04],[.012,.08],[0,.12]],6),'m',rs,dt168Mx(x,.62,1.32));dt168P(k,dt168Lathe([[0,0],[.025,0],[.03,.04],[.012,.08],[0,.12]],6),'m',rs,dt168Mx(x,.62,-.62))}
+    [-.62,1.32].forEach(z=>{dt168P(k,dt168BBox(1.56,.05,.05,.01),'m',rs,dt168Mx(0,.6,z));dt168P(k,dt168BBox(1.56,.05,.05,.01),'m',ir,dt168Mx(0,.04,z))});
+    [0,.35,.7,1.0].forEach(z=>dt168P(k,dt168BBox(1.56,.035,.035,.008),'m',rs,dt168Mx(0,.6,z)))}
+  else if(o.ext=='chains'){const L=dt168Geo('link',()=>new THREE.TorusGeometry(1,.26,4,10));
+    for(let i=0;i<22;i++){const t=i/21,x=-.82+t*1.64,y=Math.max(dg165MoundY(x,.4),0)+.03;dt168P(k,L,'m',i%2?C.iron:lgCol(C.iron,C.rust,.6),dt168Mx(x,y,.4,i%2?Math.PI/2:0,0,0,.045,.03,.045).multiply(dt168Mx(0,0,0,0,Math.PI/2,0)))}
+    for(let i=0;i<16;i++){const a=i/16*6.283,x=Math.cos(a)*.53,z=-.95+Math.sin(a)*.15;dt168P(k,L,'m',i%2?C.iron:C.rust,dt168Mx(x,.5+dg165GY(o,0,-.95),z,0,-a,i%2?Math.PI/2:0,.045,.03,.045))}
+    [-.85,.85].forEach(x=>{k.L('','m',C.iron,[x,-.2,.4],[x,.12,.4],.025,.02,8);dt168P(k,L,'m',C.rust,dt168Mx(x,.14,.4,0,Math.PI/2,0,.05,.04,.05))})}
+  else if(o.ext=='lantern'){dt168T(k,'crook','c',0x2a2018,[[.76,-.3,.9],[.76,.6,.9],[.75,1.3,.9],[.73,1.5,.9],[.66,1.6,.9],[.56,1.6,.9],[.5,1.53,.9]],.032,8);
+    k.L('','m',C.iron,[.49,1.53,.9],[.48,1.44,.9],.006,.006,4);dt168Lantern(k,.48,1.12,.9,1,0x9affd0,C.iron)}
+  dt168Xf(k,i0,dt168Mx(0,gm,0))}
+// an open grave: the headstone stays; a black pit ringed with spilled earth, the spoil heap, the smashed coffin
+function dg165GraveHole(k,o){const C=DG165GR.col,R=svRng(4200+o.i*13),gm=dg165GY(o,0,.38);dg165Head(k,o);const i0=k.P.length;
+  const pit=[];for(let i=0;i<20;i++){const a=i/20*6.283;pit.push([Math.cos(a)*(.5+R()*.05),-(.35+Math.sin(a)*(.98+R()*.05))])}
+  dt168P(k,dt168Ext('pit'+o.i,pit,.04,0),'g',0x030202,dt168Mx(0,.012,0,-Math.PI/2,0,0));   // unlit: the dark of the pit
+  dt168P(k,dg165Berm(),'s',C.soil2,dt168Mx(0,0,.35,0,0,0,.62,.55,1.12));
+  dt168P(k,dt168Mound(9),'s',C.soil2,dt168Mx(1.3,0,.3,0,.4,0,.62,.5,.9));dt168P(k,dt168Mound(10),'s',lgCol(C.soil,C.soil2,.5),dt168Mx(1.05,0,1.0,0,1,0,.4,.25,.45));
+  // the lid, split, thrown on the heap; boards and bones at the pit's edge
+  [[-.14,.0],[.14,.08]].forEach(([dx,dr],i)=>dt168P(k,dt168BBox(.26,.04,1.5,.01),'c',lgCol(0x4a3020,0x2a1a10,i*.4),dt168Mx(1.15+dx,.42,-.15,.42,.9+dr,.25)));
+  for(let i=0;i<4;i++)dt168P(k,dt168BBox(.12,.03,.5+R()*.3,.008),'c',lgCol(0x4a3020,0x2a1a10,R()),dt168Mx(-.6+R()*.3,.04,R()*1.2-.1,R()*.3,R()*3,R()*.3));
+  for(let i=0;i<3;i++){const x=-.7+R()*.3,z=.6+R()*.6,a=R()*3;k.L('','c',C.bone,[x,.03,z],[x+Math.cos(a)*.22,.04,z+Math.sin(a)*.22],.014,.012,6)}
+  dt168P(k,dt168Lathe([[0,-1],[.6,-.8],[.95,-.3],[1,.2],[.8,.7],[.4,.95],[0,1]],12),'c',C.bone,dt168Mx(-.62,.06,1.05,.4,.6,0,.07,.075,.085));
+  dt168Xf(k,i0,dt168Mx(0,gm,0))}
+// the angel at the road's end (local +z faces the clearing): a weathered plinth, the angel kneeling on it with its face in its hands
+function dg165AngelModel(s){const g=new THREE.Group();g.userData.psNo=1;const C=DG165GR.col,sA=0x7c7a72,sB=0x605e58,sC=0x8e8c84;
+  g.add(dt168Group('DG165|angel168',k=>{const R=svRng(4321),Y0=1.27;
+    // the plinth: a stepped, moulded base, a die with the inscription panel, a cornice
+    dt168P(k,dt168Lathe([[0,-.45],[1.12,-.45],[1.12,.22],[1.09,.26],[.92,.27],[.9,.34],[.86,.38],[.78,.41],[.76,.45],[.73,.49],[.7,.52],[.7,1.0],[.73,1.02],[.77,1.05],[.83,1.09],[.88,1.15],[.9,1.21],[.9,1.25],[.86,Y0],[0,Y0]],4),'c',sB,new THREE.Matrix4());
+    dt168P(k,dt168BBox(1.04,.4,.02,.006),'c',lgCol(sB,0x1a1a1a,.45),dt168Mx(0,.76,.705));[[0,.98,1.12,.04],[0,.54,1.12,.04]].forEach(q=>dt168P(k,dt168BBox(q[2],q[3],.03,.01),'c',sA,dt168Mx(q[0],q[1],.71)));
+    [-.56,.56].forEach(x=>dt168P(k,dt168BBox(.04,.48,.03,.01),'c',sA,dt168Mx(x,.76,.71)));
+    for(let i=0;i<5;i++)for(let j=0;j<6;j++)if(R()<.85)dt168P(k,dt168BBox(.1+R()*.06,.022,.012,.004),'c',lgCol(sB,0x080808,.7),dt168Mx(-.4+j*.16,.9-i*.072,.716));
+    dt168Angel(k,{pose:'kneel',y0:Y0,s:sA,s2:sB,s3:sC,key:'dgA'});
+    // a crack across the die, a chipped corner
+    k.L('','c',0x2a2a28,[.42,.55,.705],[.55,.86,.705],.006,.004,4);k.L('','c',0x2a2a28,[.55,.86,.705],[.62,.99,.705],.005,.003,4);
+    // the gravedigger's spade stuck in a heap of earth, an iron lantern hung from a crook
+    dt168P(k,dt168Mound(4),'s',C.soil,dt168Mx(1.58,0,.8,0,.5,0,.48,.26,.44));for(let i=0;i<3;i++)dt168P(k,dt168Rock(70+i,1,.5),'s',C.soil2,dt168Mx(1.3+R()*.5,.03,.5+R()*.6,R()*3,R()*3,0,.05,.03,.05));
+    {const i0=k.P.length,ir=0x3a3c40,wd=0x4a3420;dt168P(k,dt168Ext('spade',[[-.11,0],[.11,0],[.12,-.18],[.09,-.28],[0,-.33],[-.09,-.28],[-.12,-.18]],.02,.006,1),'m',ir,new THREE.Matrix4());
+      dt168P(k,dt168Lathe([[0,-.02],[.045,-.02],[.03,.12],[0,.12]],8),'m',ir,new THREE.Matrix4());k.L('','c',wd,[0,.1,0],[0,1.1,0],.022,.02,8);
+      dt168P(k,dt168Geo('dgrip',()=>new THREE.TorusGeometry(.08,.016,6,14,Math.PI)),'c',wd,dt168Mx(0,1.12,0));k.L('','c',wd,[-.08,1.12,0],[.08,1.12,0],.016,.016,6);
+      dt168Xf(k,i0,dt168Mx(1.55,.16,.82,-.12,.3,-.14))}
+    dt168T(k,'dgcrook','c',0x2a2018,[[-1.42,-.3,.7],[-1.43,.8,.7],[-1.45,1.7,.7],[-1.42,1.92,.7],[-1.32,2.0,.7],[-1.2,1.97,.7],[-1.15,1.9,.7]],.034,8);
+    k.L('','m',C.iron,[-1.15,1.9,.7],[-1.15,1.82,.7],.006,.006,4);dt168Lantern(k,-1.15,1.42,.7,1,0x9affd0,C.iron);
+    // offerings: candles on the base step
+    DG165AF.forEach(q=>dt168Candle(k,q[0],.27,q[2],.18,C.wax))},{c:{g:[.9,.35],n:.16,s:.28,m:[C.moss,1,.32],l:[0x9a9a78,.7],sd:11},m:DG165WX.m,s:DG165WX.s},0));
   g.position.set(s.x,GH(s.x,s.z),s.z);g.rotation.y=s.ry;g.scale.setScalar(1.35);scene.add(g);
-  g.userData.fl=[[-.8,.62,1.0],[.85,.62,1.0],[-.4,.62,1.05],[.5,.62,1.02]].map(q=>dg165Flame(g,q[0],q[1]-.05,q[2],.16));
+  g.userData.fl=DG165AF.map(q=>dg165Flame(g,q[0],.27+.18+.05,q[2],.16));
   const ca=Math.cos(s.ry),sa=Math.sin(s.ry);for(let o=-1.6;o<=1.6;o+=.5)for(let d=-1.6;d<=1.6;d+=.5){const x=s.x+ca*o+sa*d,z=s.z-sa*o+ca*d;CBLK.add(Math.round(z)*W+Math.round(x))}
   return g}
-// the opened Keeper's grave: the earth has fallen through onto a stone stair going down into green light
-function dg165StairKit(k){const C=DG165GR.col,R=svRng(4444),sA=0x4a4a4e,sB=0x3a3a3e;
-  k.p('','box','c',0x020302,0,-.02,.2,1.3,.04,2.4);for(let i=0;i<7;i++)k.p('','box','c',lgCol(sA,0x101010,i/7),0,-.12-i*.22,1.1-i*.36,1.15,.22,.36);
-  [-1,1].forEach(s=>{k.p('','box','c',sB,s*.72,.05,.2,.2,.24,2.5);for(let i=0;i<5;i++)k.p('','dod','c',lgCol(C.soil,C.soil2,R()),s*(.95+R()*.3),.08,-.8+i*.5,.2+R()*.1,.12,.25)});
-  k.p('','box','c',sB,0,.05,-1.0,1.6,.24,.25);k.p('','dod','c',C.soil2,1.4,.25,-.3,.6,.4,.7,.2,.4,0);for(let i=0;i<6;i++)k.p('','dod','c',lgCol(C.st,C.moss,R()*.5),(R()-.5)*2.6,.06,(R()-.5)*2.8,.08+R()*.1)}
+var DG165AF=[[-.8,0,1.0],[.85,0,1.0],[-.42,0,1.04],[.5,0,1.02]];
+// the opened Keeper's grave: the earth has fallen through onto a stone stair going down into green light; its broken stone still stands
+function dg165StairKit(k,o){const C=DG165GR.col,R=svRng(4444),sA=0x4a4a4e,sB=0x3a3a3e;if(o)dg165Head(k,o);const i0=k.P.length;
+  dt168P(k,dt168BBox(1.3,.04,2.4,.01),'g',0x010201,dt168Mx(0,-.005,.2));
+  // the stairwell's kerb: bevelled stones round the opening, worn and shifted
+  for(let i=0;i<5;i++)[-1,1].forEach(s=>dt168P(k,dt168BBox(.24,.24,.48,.04),'c',lgCol(sA,sB,R()),dt168Mx(s*.77,.04+R()*.03,-.78+i*.49,(R()-.5)*.05,(R()-.5)*.08,(R()-.5)*.05)));
+  [-1.12,1.52].forEach(z=>dt168P(k,dt168BBox(1.78,.24,.26,.04),'c',sB,dt168Mx(0,.05,z,0,(R()-.5)*.05,0)));
+  // the top steps showing at the lip
+  for(let i=0;i<2;i++)dt168P(k,dt168BBox(1.2,.06,.3,.02),'c',lgCol(sA,0x101010,.3+i*.3),dt168Mx(0,-.02-i*.008,1.25-i*.3));
+  // the caved-in earth, heaped round the opening
+  dt168P(k,dt168Mound(12),'s',C.soil2,dt168Mx(1.4,0,-.3,0,.4,0,.6,.42,.75));dt168P(k,dt168Mound(13),'s',C.soil,dt168Mx(-1.2,0,.7,0,1.2,0,.45,.25,.5));
+  for(let i=0;i<8;i++)dt168P(k,dt168Rock(80+i%5,1,.5),'c',lgCol(C.st,C.moss,R()*.5),dt168Mx((R()-.5)*2.8,.02,(R()-.5)*2.9,R()*3,R()*3,0,.06+R()*.06,.04+R()*.03,.06+R()*.05));
+  dt168Xf(k,i0,dt168Mx(0,o?dg165GY(o,0,.2):0,0))}
 // ---------------- the world: built the first time you are in the Dirge I ----------------
 function dg165GBuild(){if(DG165GR.S)return DG165GR.S;const Pl=dg165GravePlan(),S={gr:[],fl:[],spots:[],root:new THREE.Group()};S.root.name='DirgeGraves';scene.add(S.root);DG165GR.S=S;
   Pl.G.forEach(o=>{const g=new THREE.Group();g.position.set(o.x,GH(o.x,o.z),o.z);g.rotation.y=o.ry;S.root.add(g);
-    const body=lgGroup('DG165|grave'+o.i,k=>dg165GraveKit(k,o),0);g.add(body);
-    const hole=lgGroup('DG165|hole'+o.i,k=>dg165GraveHole(k,o),0);hole.visible=false;g.add(hole);
+    const body=dt168Group('DG165|grave168|'+o.i,k=>dg165GraveKit(k,o),DG165WX,.04);g.add(body);
+    const hole=dt168Group('DG165|hole168|'+o.i,k=>dg165GraveHole(k,o),DG165WX,.04);hole.visible=false;g.add(hole);
     g.scale.setScalar(1.3);const G={o,g,body,hole,stair:null,fl:[],mark:null};
     // a pale grave-light hangs over every grave of the quest (all alike: it does not give the Keeper away)
     {const w=kqSpr(0xa8d8ff,.55);w.material=w.material.clone();w.material.opacity=.45;w.position.set(0,2.3,-.95);g.add(w);G.wisp=w}
-    if(o.ext=='candles')[[-.35,.05,.25,.24],[.3,.06,.0,.18],[-.12,.08,-.35,.28],[.4,.04,.62,.14]].forEach(q=>G.fl.push(dg165Flame(g,q[0],q[1]+.12+q[3]+.05,q[2],.15)));
-    if(o.ext=='lantern'){const f=dg165Flame(g,.48,1.24,.9,.35,0x9affd0);G.fl.push(f)}
+    const gm=dg165GY(o,0,.38);if(o.ext=='candles')dg165Flames().forEach(q=>G.fl.push(dg165Flame(g,q[0],q[1]+gm,q[2],.15)));
+    if(o.ext=='lantern'){const f=dg165Flame(g,.48,1.2+gm,.9,.35,0x9affd0);G.fl.push(f)}
     S.fl.push(...G.fl);
     // a faint lantern-glow on the Keeper's candles (the candles that never die: still, no flicker, a soft green-white)
     if(o.i===DG165G.K)G.fl.forEach(f=>{f.material=f.material.clone();f.material.color.setHex(0xe8fff0);f.userData.still=1});
@@ -112,7 +171,7 @@ function dg165GBuild(){if(DG165GR.S)return DG165GR.S;const Pl=dg165GravePlan(),S
   S.pool=dg165LPool(4,7);dg165GSync();return S}
 // match the graves to the state: dug wrong ones open, the Keeper's opened onto the stair
 function dg165GSync(){const S=DG165GR.S;if(!S)return;S.gr.forEach(G=>{const i=G.o.i,keep=i===DG165G.K,open=keep?dg165GDone():!!DG165Q.g.bad[i];
-  G.body.visible=!open||(!keep&&false);G.hole.visible=open&&!keep;if(keep&&open&&!G.stair){G.stair=lgGroup('DG165|stair',dg165StairKit,0);G.g.add(G.stair);
+  G.body.visible=!open||(!keep&&false);G.hole.visible=open&&!keep;if(keep&&open&&!G.stair){G.stair=dt168Group('DG165|stair168|'+i,k=>dg165StairKit(k,G.o),DG165WX,.04);G.g.add(G.stair);
     const gl=new THREE.PointLight(0x7affb0,1.4,6,1.6);gl.position.set(0,-.8,.4);G.g.add(gl);G.lt=gl;const b=kqSpr(0x5affa0,2.2);b.material=b.material.clone();b.material.opacity=.35;b.position.set(0,-.2,.2);G.g.add(b);G.glow=b}
   if(G.stair)G.stair.visible=keep&&open;if(keep&&open)G.fl.forEach(f=>f.visible=false);
   // the open stair is walkable: its tiles come off the block list
