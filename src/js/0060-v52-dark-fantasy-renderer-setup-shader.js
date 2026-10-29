@@ -21,15 +21,16 @@ const POST=(()=>{
   const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
    mBlur=M('uniform sampler2D t;uniform vec2 dir;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;c+=(texture2D(t,vUv+dir*1.385).rgb+texture2D(t,vUv-dir*1.385).rgb)*.3162;c+=(texture2D(t,vUv+dir*3.23).rgb+texture2D(t,vUv-dir*3.23).rgb)*.0703;gl_FragColor=vec4(c,1.);}',{t:{value:null},dir:{value:new THREE.Vector2()}}),
    mRay=M('uniform sampler2D t;uniform vec2 sun;varying vec2 vUv;void main(){vec2 d=(sun-vUv)*.034;vec2 uv=vUv;float w=1.;vec3 a=vec3(0.);for(int i=0;i<28;i++){uv+=d;a+=texture2D(t,uv).rgb*w;w*=.935;}gl_FragColor=vec4(a/18.,1.);}',{t:{value:null},sun:{value:new THREE.Vector2(.5,.5)}}),
-   mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx;uniform vec2 res;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
+   mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx,ghU,ghA;uniform vec2 res,ghC,ghR;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
    vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
    float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
    void main(){vec3 c=texture2D(t,vUv).rgb+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
     float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c*=mix(shT,vec3(1.),smoothstep(0.,.45,l));c=mix(c,c*hiT,smoothstep(.45,1.,l)*.6);
     vec2 q=vUv-.5;c*=1.-dot(q,q)*vig;c+=(hs(vUv*vec2(1731.,977.)+time)-.5)*grain;
+    if(ghU>0.){vec2 g=(vUv-ghC)*vec2(ghA,1.);c*=mix(1.,1.-smoothstep(ghR.x,ghR.y,length(g)),ghU);}   // v169: the camera out of the map: black but for the window round the hero (3350)
     if(psx>.5){vec2 px=floor(vUv*res);vec2 a=px*.5;float b2a=fract(dot(floor(a),vec2(.5,floor(a.y)*.75)));float b2b=fract(dot(px,vec2(.5,px.y*.75)));float bay=b2a*.25+b2b;c=floor(clamp(c,0.,1.)*31.+bay)/31.;}
     gl_FragColor=vec4(c,1.);}`,
-   {t:{value:null},bl:{value:null},ry:{value:null},ex:{value:1},bk:{value:.4},rk:{value:.3},sat:{value:.95},vig:{value:1.1},time:{value:0},grain:{value:.035},rayC:{value:new THREE.Color(1,.9,.7)},psx:{value:PSXON&&PSXH>0?1:0},res:{value:new THREE.Vector2(320,240)},shT:{value:new THREE.Color(.9,.96,1.08)},hiT:{value:new THREE.Color(1.08,1,.9)}});
+   {t:{value:null},bl:{value:null},ry:{value:null},ex:{value:1},bk:{value:.4},rk:{value:.3},sat:{value:.95},vig:{value:1.1},time:{value:0},grain:{value:.035},rayC:{value:new THREE.Color(1,.9,.7)},psx:{value:PSXON&&PSXH>0?1:0},res:{value:new THREE.Vector2(320,240)},ghU:{value:0},ghA:{value:1},ghC:{value:new THREE.Vector2(.5,.5)},ghR:{value:new THREE.Vector2(.3,.5)},shT:{value:new THREE.Color(.9,.96,1.08)},hiT:{value:new THREE.Color(1.08,1,.9)}});
   let r0,rb1,rb2,rr,sz=new THREE.Vector2();
   const P={on:true,u:mComp.uniforms,bu:mBright.uniforms,resize(){ren.getDrawingBufferSize(sz);let w=Math.max(2,sz.x|0),h=Math.max(2,sz.y|0);[r0,rb1,rb2,rr].forEach(t=>t&&t.dispose());if(PSXON&&PSXH>0){h=Math.min(h,PSXH);w=Math.max(2,Math.round(h*sz.x/Math.max(1,sz.y)));r0=new THREE.WebGLRenderTarget(w,h,Object.assign({},opt,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter}))}else r0=T(w,h,true);mComp.uniforms.res.value.set(w,h);const q=Math.max(2,w>>2),qh=Math.max(2,h>>2);rb1=T(q,qh);rb2=T(q,qh);rr=T(q,qh)},
    pass(m,src,dst){fq.material=m;if(src)m.uniforms.t.value=src.texture;ren.setRenderTarget(dst);ren.render(ps,oc)},

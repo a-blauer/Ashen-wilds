@@ -1292,15 +1292,16 @@ const POST=(()=>{
   const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
    mBlur=M('uniform sampler2D t;uniform vec2 dir;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;c+=(texture2D(t,vUv+dir*1.385).rgb+texture2D(t,vUv-dir*1.385).rgb)*.3162;c+=(texture2D(t,vUv+dir*3.23).rgb+texture2D(t,vUv-dir*3.23).rgb)*.0703;gl_FragColor=vec4(c,1.);}',{t:{value:null},dir:{value:new THREE.Vector2()}}),
    mRay=M('uniform sampler2D t;uniform vec2 sun;varying vec2 vUv;void main(){vec2 d=(sun-vUv)*.034;vec2 uv=vUv;float w=1.;vec3 a=vec3(0.);for(int i=0;i<28;i++){uv+=d;a+=texture2D(t,uv).rgb*w;w*=.935;}gl_FragColor=vec4(a/18.,1.);}',{t:{value:null},sun:{value:new THREE.Vector2(.5,.5)}}),
-   mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx;uniform vec2 res;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
+   mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx,ghU,ghA;uniform vec2 res,ghC,ghR;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
    vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
    float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
    void main(){vec3 c=texture2D(t,vUv).rgb+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
     float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c*=mix(shT,vec3(1.),smoothstep(0.,.45,l));c=mix(c,c*hiT,smoothstep(.45,1.,l)*.6);
     vec2 q=vUv-.5;c*=1.-dot(q,q)*vig;c+=(hs(vUv*vec2(1731.,977.)+time)-.5)*grain;
+    if(ghU>0.){vec2 g=(vUv-ghC)*vec2(ghA,1.);c*=mix(1.,1.-smoothstep(ghR.x,ghR.y,length(g)),ghU);}   // v169: the camera out of the map: black but for the window round the hero (3350)
     if(psx>.5){vec2 px=floor(vUv*res);vec2 a=px*.5;float b2a=fract(dot(floor(a),vec2(.5,floor(a.y)*.75)));float b2b=fract(dot(px,vec2(.5,px.y*.75)));float bay=b2a*.25+b2b;c=floor(clamp(c,0.,1.)*31.+bay)/31.;}
     gl_FragColor=vec4(c,1.);}`,
-   {t:{value:null},bl:{value:null},ry:{value:null},ex:{value:1},bk:{value:.4},rk:{value:.3},sat:{value:.95},vig:{value:1.1},time:{value:0},grain:{value:.035},rayC:{value:new THREE.Color(1,.9,.7)},psx:{value:PSXON&&PSXH>0?1:0},res:{value:new THREE.Vector2(320,240)},shT:{value:new THREE.Color(.9,.96,1.08)},hiT:{value:new THREE.Color(1.08,1,.9)}});
+   {t:{value:null},bl:{value:null},ry:{value:null},ex:{value:1},bk:{value:.4},rk:{value:.3},sat:{value:.95},vig:{value:1.1},time:{value:0},grain:{value:.035},rayC:{value:new THREE.Color(1,.9,.7)},psx:{value:PSXON&&PSXH>0?1:0},res:{value:new THREE.Vector2(320,240)},ghU:{value:0},ghA:{value:1},ghC:{value:new THREE.Vector2(.5,.5)},ghR:{value:new THREE.Vector2(.3,.5)},shT:{value:new THREE.Color(.9,.96,1.08)},hiT:{value:new THREE.Color(1.08,1,.9)}});
   let r0,rb1,rb2,rr,sz=new THREE.Vector2();
   const P={on:true,u:mComp.uniforms,bu:mBright.uniforms,resize(){ren.getDrawingBufferSize(sz);let w=Math.max(2,sz.x|0),h=Math.max(2,sz.y|0);[r0,rb1,rb2,rr].forEach(t=>t&&t.dispose());if(PSXON&&PSXH>0){h=Math.min(h,PSXH);w=Math.max(2,Math.round(h*sz.x/Math.max(1,sz.y)));r0=new THREE.WebGLRenderTarget(w,h,Object.assign({},opt,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter}))}else r0=T(w,h,true);mComp.uniforms.res.value.set(w,h);const q=Math.max(2,w>>2),qh=Math.max(2,h>>2);rb1=T(q,qh);rb2=T(q,qh);rr=T(q,qh)},
    pass(m,src,dst){fq.material=m;if(src)m.uniforms.t.value=src.texture;ren.setRenderTarget(dst);ren.render(ps,oc)},
@@ -1507,25 +1508,20 @@ MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v124Rim=='function'&&v1
 //     characters are seen clearly (they write 1 into the stencil buffer, gh169Clear; 3350 draws those pixels at k 1).
 //     Plants themselves are see-through without the dark inside (GH169_SEE).
 //   * back faces (the inside of a two-sided house) are black in the colour pass; one-sided materials never show their back.
-//   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge;
-//     with the camera inside the rock (behind a wall step, uGhU), the ground's back faces are drawn and black (GH169_TB), and
-//     every world pixel outside the window is black (rocks and boulders buried in the ground showed from in there).
+//   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
+//     With the camera out of the map (inside the rock or past the edge) the whole view fades to black but for the window (3350).
 var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,3.4],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
 GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
-  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON,
-  uGhU:{value:0},uGhC:FADE.cam,uGhH:FADE.pl};   // uGhU 1: the camera is inside the rock (3350 gh169Under)
+  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
 // gh169W(world point, camera, hero chest): inside a round window around the hero on screen (uGhR, world units at the hero's
 // distance, smooth edge, no dither) and in front of the hero, or anything right in front of the camera (uGhN)
-GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn,uGhU;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;uniform vec3 uGhC,uGhH;
+GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;
 float gh169T(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;return dot(p-c,ab)/max(dot(ab,ab),1e-4);}
 float gh169W(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;
  float d=length(p-(c+ab*t))/max(t,.02);
  float w=(1.-smoothstep(uGhR.x,uGhR.y,d))*(1.-smoothstep(.86,.96,t));
  float n=(1.-smoothstep(uGhN.x,uGhN.y,length(p-c)))*(1.-smoothstep(.75,.9,t));
  return max(w,n);}
-// inside the window on screen at any depth (or near the camera): what still shows while the camera is inside the rock
-float gh169In(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;
- return max(1.-smoothstep(uGhR.x,uGhR.y,length(p-(c+ab*t))/max(t,.02)),1.-smoothstep(uGhN.x,uGhN.y,length(p-c)));}
 bool gh169Out(vec3 p){return p.x<uGhV.x||p.z<uGhV.y||p.x>uGhV.z||p.z>uGhV.w;}
 `;
 // the start of main, after ghw is known: the normal draw skips see-through pixels, the ghost passes draw only them
@@ -1541,10 +1537,6 @@ GH169.tail=p=>`
   #ifdef GH169_VOID
   if(gh169Out(${p}))gl_FragColor.rgb=vec3(0.);
   #endif
-  #ifdef GH169_TB
-  if(!gl_FrontFacing)gl_FragColor.rgb=vec3(0.);   // the ground seen from inside the rock: black
-  #endif
-  if(uGhU>.5&&uGhM<.5)gl_FragColor.rgb*=gh169In(${p},uGhC,uGhH);   // inside the rock: black but for the window
   if(uGhM>1.5){float ga=1.-ghw*(1.-uGhA);vec3 gc=gl_FragColor.rgb*ga;
    #ifdef GH169_DS
    if(!gl_FrontFacing)gc=vec3(0.);
@@ -1559,11 +1551,9 @@ GH169.tail=p=>`
 // call after the material's own replacements (they must already have put `float ghw` at the top of main and GH169.GATE after it).
 // Only the ground goes black outside the instance (the void and the cliffs it drops off): scenery out there stays as it was
 // (Abeksi's north wall stands 0.5-3 tiles past its rectangle)
-// tb = the ground: its back faces (only drawn while the camera is inside the rock, 3350 gh169Under) are black, and black glass
-// in the see-through window
-function gh169Shader(sh,m,p,see,vd,tb){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
-  const ds=tb||m.side===THREE.DoubleSide;
-  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+(tb?'#define GH169_TB\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
+function gh169Shader(sh,m,p,see,vd){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
+  const ds=m.side===THREE.DoubleSide;
+  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
   if(sh.fragmentShader.indexOf('#include <dithering_fragment>')<0){console.warn('v169: no dithering_fragment to end on');return}
   sh.fragmentShader=sh.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>'+GH169.tail(p))}
 // mark a material as see-through capable when it is patched (3350 reads this before the first draw): all = its pixels can turn
@@ -47378,7 +47368,7 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     float ghw=0.;vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;
     if(uOn135>.5&&uOn157>.5){float hf=vC135.y-uPl157.y+1.1;
      ghw=gh169W(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));}   // flat ground below the waist stays solid
-    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true,true)};
+    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';gh169Flag(m,0,1);m.needsUpdate=true}
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}
@@ -54929,7 +54919,8 @@ function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt16
 //     with k 1 (the hero, the ground round them, plants behind the glass show through at 1 - a). Blend: ONE, ONE_MINUS_SRC_ALPHA (premultiplied, 0061 tail).
 //  3. Outside the instance you are in (its rectangle, GH169.vm margin; with the camera out past the edge, from one tile inside:
 //     the cliff face the ground drops off) the ground is black (0061), and a black floor lies far under the instance (GH169C.vo),
-//     so the void past the edge is black. With the camera inside the rock the ground's back faces are drawn black (gh169Under).
+//     so the void past the edge is black, and the water stops at the edge. With the camera out of the map (inside the rock or
+//     past the edge) the view fades to black but for the window round the hero (gh169Away, in the final composite).
 var GH169L=3,GH169C={live:0,pass:0,f:0,cand:[],top:new Set(),hid:[],mats:[],ct:0,vo:null,vk:null,st:{cand:0,passes:0,ms:0,skip:0}};
 GH169.vm=.5;GH169.vy=-75;
 // the mesh's bounds in the world (instanced meshes: all instances, cached; top = the highest instance's top, local y)
@@ -54982,15 +54973,28 @@ function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV
       o.name='gh169Void';o.userData.noFade135=1;o.userData.psNo=1;o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false;scene.add(o)}
     const o=C.vo;o.visible=!!I;if(I){o.position.set(I.x0+I.w/2,GH169.vy,I.y0+I.h/2);o.scale.set(I.w+800,1,I.h+800)}
     o.updateMatrix();o.updateMatrixWorld(true)}
-  if(!I){V.set(-1e6,-1e6,1e6,1e6);return}
-  const c=FADE.cam.value,out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h,m=out?-GH169.vin:GH169.vm;
+  if(!I){V.set(-1e6,-1e6,1e6,1e6);C.out=false;return}
+  const c=FADE.cam.value,out=C.out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h,m=out?-GH169.vin:GH169.vm;
   V.set(I.x0-m,I.y0-m,I.x0+I.w+m,I.y0+I.h+m)}
-// the camera inside the rock (below the ground under it: behind a wall step it stays where the player put it): the ground's back
-// faces are drawn (black, 0061 GH169_TB) so the rock's inside is black, not the view out under the map. Culling is the only
-// switch (no recompile): the shader always has the back-face code. Meanwhile the background is black and the sky and the water
-// are hidden (POST.render below), so through the see-through window you see the map and the characters, never under the map.
-function gh169Under(){const C=GH169C,c=FADE.cam.value;let u=false;try{u=c.y<GH(c.x,c.z)-.05}catch(_){}
-  GH169.U.uGhU.value=u&&GH169.on?1:0;if(u===C.under)return;C.under=u;try{GTX.list.forEach(T=>{if(T.mat)T.mat.side=u?THREE.DoubleSide:THREE.FrontSide})}catch(_){}}
+// The camera out of the map: inside the rock (below the ground under it: behind a wall step it stays where the player put it)
+// or out past the instance's edge. Then the whole view fades to black (GH169.fadeT seconds) but for the round window round the
+// hero, in the final composite (0060 mComp: ghU, ghC, ghR, ghA), so nothing under or outside the map shows (fog, the void,
+// boulders buried in the wall); the background fades to black with it. It fades back when the camera returns.
+GH169.fadeT=.35;
+// the fade runs with the game's clock (homeTick, below), the window is placed when drawing
+function gh169AwayTick(dt){const C=GH169C,c=FADE.cam.value;let u=false;try{u=c.y<GH(c.x,c.z)-.05}catch(_){}
+  const away=GH169.on&&(u||!!C.out)&&!(typeof IC151!='undefined'&&IC151.on);C.under=u;
+  C.fade=Math.max(0,Math.min(1,(C.fade||0)+(away?1:-1)*Math.min(.1,dt||0)/GH169.fadeT))}
+{const f=homeTick;homeTick=function(dt){const r=f.apply(this,arguments);try{gh169AwayTick(dt)}catch(e){if(!GH169C.err3){GH169C.err3=1;console.warn('v169 fade',e)}}return r}}
+function gh169Away(){const C=GH169C,c=FADE.cam.value,P=POST.u;P.ghU.value=C.fade||0;if(!C.fade)return;
+  // the window on screen: the hero's spot, GH169.R measured at the hero's distance (the same window the walls turn to glass in)
+  const v=GH169V.copy(FADE.pl.value).project(cam);P.ghC.value.set((v.x+1)/2,(v.y+1)/2);
+  const fw=GH169W.set(0,0,-1).applyQuaternion(cam.quaternion),dep=Math.max(.5,GH169S.c.copy(FADE.pl.value).sub(c).dot(fw)),k=.5/(dep*Math.tan(cam.fov*Math.PI/360));
+  P.ghR.value.set(GH169.R[0]*k,GH169.R[1]*k);P.ghA.value=cam.aspect}
+// the water: never past the instance's edge (its sheet spans the void at sea level: from out there it was a pale sheet over all)
+function gh169Water(){try{[WTR.w,WTR.l].forEach(o=>{const m=o&&o.material;if(!m||m.userData.gh169W)return;m.userData.gh169W=1;
+  m.uniforms.uGhV=GH169.U.uGhV;m.uniforms.uGhOn=GH169.U.uGhOn;
+  m.fragmentShader='uniform vec4 uGhV;uniform float uGhOn;\n'+m.fragmentShader.replace('void main(){','void main(){\n if(uGhOn>.5&&(vP.x<uGhV.x||vP.z<uGhV.y||vP.x>uGhV.z||vP.z>uGhV.w))discard;');m.needsUpdate=true})}catch(e){console.warn('v169 water',e)}}
 function gh169Restore(){const C=GH169C;for(const q of C.mats){const m=q[0];m.blending=q[1];m.blendSrc=q[2];m.blendDst=q[3];m.blendEquation=q[4];m.blendSrcAlpha=q[5];m.blendDstAlpha=q[6];m.blendEquationAlpha=q[7];m.stencilWrite=q[8]}
   C.mats.length=0;for(const o of C.hid)o.visible=true;C.hid.length=0}
 POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
@@ -55018,10 +55022,8 @@ POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
 {const f=POST.render;POST.render=function(){const C=GH169C,U=GH169.U;C.f++;C.cand.length=0;C.top.clear();
   try{U.uGhA.value=GH169.a;U.uGhK.value=GH169.k;if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
     else{U.uGhR.value.set(-2,-1);U.uGhN.value.set(-2,-1)}
-    gh169Void();gh169Under();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
-  // inside the rock nothing but the map shows: no sky, a black background, and no water (its sheet lies at sea level under
-  // all the ground, so from inside the rock you saw it under the map)
-  let bg=null;const hid=[];if(C.under&&GH169.on){bg=scene.background;scene.background=GH169C.blk||(GH169C.blk=new THREE.Color(0));
-    try{[SKY,WTR.w,WTR.l].forEach(o=>{if(o&&o.visible){o.visible=false;hid.push(o)}})}catch(_){}}
-  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0;if(bg)scene.background=bg;for(const o of hid)o.visible=true}}}
+    gh169Void();gh169Away();gh169Water();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
+  // out of the map the background fades to black with the view
+  let bg=null;if(C.fade>0&&scene.background&&scene.background.isColor){bg=scene.background;scene.background=(C.bgc||(C.bgc=new THREE.Color())).copy(bg).multiplyScalar(1-C.fade)}
+  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0;if(bg)scene.background=bg}}}
 </script></body></html>

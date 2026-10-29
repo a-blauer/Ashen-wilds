@@ -65,10 +65,12 @@ def s(pg):
         if not q:print('FAIL',nm,': no edge spot found');continue
         if nm=='edgein':q['yaw']+=3.14159   # the camera inside, looking out over the edge
         shoot(nm,q,12 if nm!='edgein' else 9.5,pt)
-    if not VIEWS or 'inwall' in VIEWS:   # Hillside Crest III (INSL[7]): the camera inside the rock of the instance's west wall
+    if not VIEWS or 'inwall' in VIEWS or 'outwall' in VIEWS:   # Hillside Crest III (INSL[7]): the camera inside the rock of the instance's west wall
         q=pg.evaluate(EDGE,7);pg.wait_for_timeout(2000)
         if q:
             q['yaw']=-1.5708
+            if not VIEWS or 'outwall' in VIEWS:   # the camera out past the wall, over the void between instances
+                shoot('outwall',dict(q,x=q['x']+2),13,.3)
             for nm,pt in [('inwall',.3),('inwall2',.6)]:
                 d=pg.evaluate("""(a)=>{const q=a[0],p=a[1];let best=0;for(let d=4.5;d<=15;d+=.5){const x=q.x+Math.sin(q.yaw)*Math.cos(p)*d,z=q.z+Math.cos(q.yaw)*Math.cos(p)*d,y=GH(q.x,q.z)+1.1+Math.sin(p)*d;if(GH(x,z)>y+.8)best=d}return best}""",[q,pt])
                 print(nm,'dist',d)
