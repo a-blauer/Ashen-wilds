@@ -189,11 +189,11 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     cgShell(B,M,m=>m.part=='torso'&&m.s>.25&&m.y<sh-.05,.03,m=>n3Sn(m.x,m.y,m.z,11,3)>.68?bl:a181Nz(ap,m,.35,14));
     cgSkirt(B,S,wy-.02,kn+.06,.06,.06,m=>n3Sn(m.x,m.y,m.z,11,5)>.7?bl:a181Nz(ap,m,.35,14),{n:5,keep:m=>m.s>.35});
     [-1,1].forEach(s=>{const f=cgTAt(S,sh-.06),b=cgTAt(S,sh-.08);cgTube(B,[[s*.09*S.h,sh-.06,f.z+f.f+.032],[s*.15,sh+.03,0],[s*.08,sh-.1,b.z-b.b-.02]],[.016,.016,.016],[[['chest',1]],[['chest',1]],[['chest',1]]],0x1e120c,{seg:6})});
-    cgBelt(B,M,wy-.015,.035,.07,0x1a100a);
-    const bf=cgSurf(M,S,wy-.015,0,.074),bR=cgSurf(M,S,wy-.02,Math.PI/2,.074),bL=cgSurf(M,S,wy-.02,-Math.PI/2,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);
+    const hy=T[1][0]+.03;cgBelt(B,M,hy,.032,.07,0x1a100a);   // the heavy belt rides on the hips (below the waist's bend), with everything it carries
+    const bf=cgSurf(M,S,hy,0,.074),bR=cgSurf(M,S,hy-.005,Math.PI/2,.074),bL=cgSurf(M,S,hy-.005,-Math.PI/2,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);
     const n0=k.P.length;k.L('pelvis','c',0x3a2414,bR,add3(bR,[.012,-.05,0]),.012,.012,4);k.p('pelvis','box','m',ir,bR[0]+.018,bR[1]-.12,bR[2],.012,.14,.09,0,0,.08);
     for(let i=0;i<7;i++)k.p('pelvis','tor','m',ir2,bL[0]-.006-i*.003,bL[1]-.012-i*.026,bL[2]+.004*i,.014,.006,.014,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);
-    for(let i=n0;i<k.P.length;i++)k.P[i].w=cgTorsoW(S,wy-.015);k.P[n0-1].w=cgTorsoW(S,wy-.015);   // hung on the belt: the belt's own bone blend
+    for(let i=n0-1;i<k.P.length;i++)k.P[i].w=[['pelvis',1]];   // hung on the belt: the belt's own bone blend
     // scars on the back and arms; forearm wraps; manacles with a broken link; breeches, heavy boots
     [[sh-.06,2.4],[wy+.12,-2.6],[sh-.12,Math.PI]].forEach(([y,a])=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(!p)return;const e=[p[0]+.05,p[1]-.08,p[2]];
       k.L('chest','c',scar,p,e,.006,.005,3);for(let i=0;i<4;i++){const c=lerp3(p,e,i/3);k.p('chest','box','c',0x1a1010,c[0],c[1],c[2],.016,.003,.003,0,a,.5)}});
