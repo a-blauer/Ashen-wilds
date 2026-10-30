@@ -103,11 +103,34 @@ def ray_hits(o,d,T,maxd=.6):
     s_=o-T[:,0];u=f*(s_*h).sum(1);q=np.cross(s_,e1);v=f*(q@d);t=f*(e2*q).sum(1)
     return bool((ok&(u>=0)&(v>=0)&(u+v<=1)&(t>1e-6)&(t<maxd)).any())
 
+def seg_tri_any(E,Tt):
+    # does any segment E[i] (a->b) pass through any triangle Tt[j]? vectorised Moller-Trumbore, chunked
+    if len(E)==0 or len(Tt)==0:return False
+    lo=np.minimum(E[:,0],E[:,1]).min(0);hi=np.maximum(E[:,0],E[:,1]).max(0)
+    keep=((Tt.max(1)>=lo-1e-6)&(Tt.min(1)<=hi+1e-6)).all(1);Tt=Tt[keep]
+    if len(Tt)==0:return False
+    A=Tt[:,0];e1=Tt[:,1]-A;e2=Tt[:,2]-A
+    step=max(1,200000//len(Tt))
+    for i in range(0,len(E),step):
+        a=E[i:i+step,0][:,None,:];d=(E[i:i+step,1]-E[i:i+step,0])[:,None,:]
+        h=np.cross(d,e2[None]);det=(e1[None]*h).sum(-1);ok=np.abs(det)>1e-14;f=np.where(ok,1/np.where(ok,det,1),0)
+        sv=a-A[None];u=f*(sv*h).sum(-1);q=np.cross(sv,e1[None]);v=f*(q*d).sum(-1);t=f*(e2[None]*q).sum(-1)
+        if (ok&(u>=0)&(v>=0)&(u+v<=1)&(t>1e-6)&(t<1)).any():return True
+    return False
+def components_fast(V):
+    # same as components(), with scipy's connected_components instead of a Python union-find loop
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    T=V.reshape(-1,3,3)
+    key=np.round(V/2e-5).astype(np.int64);_,vid=np.unique(key,axis=0,return_inverse=True);vid=vid.reshape(-1,3);nv=vid.max()+1
+    r=np.concatenate([vid[:,0],vid[:,1]]);c=np.concatenate([vid[:,1],vid[:,2]])
+    _,vl=connected_components(coo_matrix((np.ones(len(r),np.int8),(r,c)),shape=(nv,nv)),directed=False)
+    _,lab=np.unique(vl[vid[:,0]],return_inverse=True);return T,lab.ravel()
 def floating_fast(V,thr,root=None):
     # same rule as floating(), built as a graph: two pieces are joined when they come within thr of each other (or an edge
     # of one passes through the other); the attached set is everything joined to the root piece. Much faster on models
     # with hundreds of separate parts (companion kits).
-    T,lab=components(V);n=lab.max()+1
+    T,lab=components_fast(V);n=lab.max()+1
     if n<=1:return []
     sizes=np.bincount(lab)
     if root is not None and root.any():big=int(np.bincount(lab[root],minlength=n).argmax())
@@ -120,21 +143,25 @@ def floating_fast(V,thr,root=None):
         tc=T[tris_of(c)];Q=np.concatenate([tc.reshape(-1,3),((tc+np.roll(tc,1,axis=1))/2).reshape(-1,3),tc.mean(1)]);Qs.append(np.unique(np.round(Q,5),axis=0))
     adj=[set() for _ in range(n)]
     for c in range(n):
-        near=tree.query_ball_point(Qs[c],rmax+thr)
-        cand=np.unique(np.fromiter((i for L in near for i in L),dtype=np.int64)) if len(near) else np.zeros(0,np.int64)
-        cand=cand[lab[cand]!=c]
-        for d in np.unique(lab[cand]):
-            if d in adj[c]:continue
-            idx=cand[lab[cand]==d];A,B,C=T[idx,0],T[idx,1],T[idx,2];m=len(idx);Q=Qs[c];step=max(1,400000//m);hit=False
-            for j in range(0,len(Q),step):
-                q=Q[j:j+step];k=len(q)
-                if pt_tri_dist(np.repeat(q,m,0),np.tile(A,(k,1)),np.tile(B,(k,1)),np.tile(C,(k,1))).min()<=thr:hit=True;break
-            if not hit:
-                tc=T[tris_of(c)];E=np.concatenate([tc[:,[0,1]],tc[:,[1,2]],tc[:,[2,0]]]);At=T[idx]
-                for a,b in E:
-                    dd=b-a;L=np.linalg.norm(dd)
-                    if L>1e-9 and ray_hits(a,dd/L,At,L):hit=True;break
-            if hit:adj[c].add(d);adj[d].add(c)
+        Q=Qs[c];near=tree.query_ball_point(Q,rmax+thr)
+        ln=np.fromiter((len(L) for L in near),dtype=np.int64,count=len(near))
+        if ln.sum()==0:continue
+        pi=np.repeat(np.arange(len(Q)),ln);ti=np.fromiter((i for L in near for i in L),dtype=np.int64,count=int(ln.sum()))
+        m=(lab[ti]!=c);pi,ti=pi[m],ti[m]
+        m=np.linalg.norm(Q[pi]-cen[ti],axis=1)<=rad[ti]+thr;pi,ti=pi[m],ti[m]
+        cands=set(np.unique(lab[ti]).tolist())-adj[c]
+        if pi.size:
+            hitd=set()
+            for j in range(0,len(pi),300000):
+                p,t=pi[j:j+300000],ti[j:j+300000];dd=pt_tri_dist(Q[p],T[t,0],T[t,1],T[t,2]);hitd|=set(np.unique(lab[t[dd<=thr]]).tolist())
+            for d in hitd:adj[c].add(d);adj[d].add(c)
+            cands-=hitd
+        # an edge of this piece passing through a nearby piece (a whisker rooted deep inside a muzzle)
+        if cands:
+            tc=T[tris_of(c)];E=np.concatenate([tc[:,[0,1]],tc[:,[1,2]],tc[:,[2,0]]])
+            for d in cands:
+                if d in adj[c]:continue
+                if seg_tri_any(E,T[tris_of(d)]):adj[c].add(d);adj[d].add(c)
     seen={big};st=[big]
     while st:
         c=st.pop()
@@ -145,6 +172,6 @@ def floating_fast(V,thr,root=None):
     for c in range(n):
         if c in seen:continue
         o=Qs[c].mean(0)
-        if all(ray_hits(o,d,At) for d in Dd):continue
+        if all(ray_hits(o,d,At,3.) for d in Dd):continue
         out.append((c,sizes[c],o,piece_dist(Qs[c],T,tree,att,rmax,thr)))
     return out

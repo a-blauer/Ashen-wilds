@@ -90,7 +90,7 @@ function er150CragKit(k,C,red){const T=ER150.CR,top=T.top,nz=er150Nz;
   // serrated rim: stone spikes jutting out and down all round the shell
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2,z=Math.cos(a)*.47-.03,P=er150Prof(T.shell,Math.max(-.48,Math.min(.41,z))),x=Math.sin(a)*P[1];if(Math.abs(Math.sin(a))<.25&&Math.cos(a)>0)continue;
     const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk173Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v173: on the shell (they stood off its flanks)
-    k.p('spine','cone4','c',i%2?st2:stone,q[0]+d.x*(h*.5-.012),q[1]+d.y*(h*.5-.012),q[2]+d.z*(h*.5-.012),.03,h,.03,rx,0,rz)}
+    k.p('spine','cone4','c',i%2?st2:stone,q[0]+d.x*(h*.5-.018),q[1]+d.y*(h*.5-.018),q[2]+d.z*(h*.5-.018),.03,h,.03,rx,0,rz)}
   // crystal outcrops between the blades (glowing cores, dark shards)
   [[.22,.12,.13],[-.24,-.08,.15],[.18,-.27,.11],[-.14,.22,.09]].forEach(([x,z,h],j)=>{const y=top(x,z);for(let i=0;i<4;i++){const a=i*1.7+j,dx=i?Math.cos(a)*.03:0,dz=i?Math.sin(a)*.03:0,hh=i?h*.6:h,lx=Math.sign(x)*(i?.4:.25)+dx*4,lz=dz*4;
       k.L('spine',i%2?'c':'g',i%2?cryD:cry,[x+dx,y-.02,z+dz],[x+dx+lx*hh*.5,y+hh,z+dz+lz*hh*.3],i?.022:.032,.003,4)}
@@ -170,7 +170,7 @@ function er150TitanKit(k,C,red){const T=ER150.TI,top=T.top,Y=T.Y,nz=er150Nz;
   [[.1,.05],[-.1,.12],[.08,-.05]].forEach(([x,z],i)=>k.p('spine','ico','c',i%2?moss:moss2,x,Y+.004,z,.04,.008,.035));
   for(let i=0;i<22;i++){const a=i/22*Math.PI*2,z=Math.cos(a)*.5-.02,P=er150Prof(T.shell,Math.max(-.49,Math.min(.45,z))),x=Math.sin(a)*P[1];
     k.p('spine','box','c',i%2?stone:st2,x*.985,P[0]-.005,z,.09,.035,.05,Math.cos(a)*.6,a,-Math.sin(a)*.25);
-    if(i%2&&Math.abs(Math.sin(a))>.3){const L=.07+nz(i,1,2)*.08;k.L('spine','c',i%4==1?moss:0x3a3022,[x*.98,P[0]-.01,z],[x*1.02,P[0]-.01-L,z+.01],.012,.004,3)}}
+    if(i%2&&Math.abs(Math.sin(a))>.3){const L=.07+nz(i,1,2)*.08;k.L('spine','c',i%4==1?moss:0x3a3022,[x*.92,P[0]+.02,z],[x*1.02,P[0]-.01-L,z+.01],.012,.004,3)}}
   [[.24,.12],[-.27,-.06],[.2,-.3],[-.18,.28],[.33,-.12],[-.33,.12]].forEach(([x,z],i)=>k.p('spine','ico','c',i%2?moss:moss2,x,top(x,z)+.002,z,.06,.014,.05,0,i,0));
   // the head: heavy brow, glowing deep-set eyes, great curving horns, tusks, stone plates on the crown, a moss beard
   [-1,1].forEach(s=>{

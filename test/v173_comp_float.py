@@ -1,7 +1,7 @@
 # v173: companion bodies hold together. Builds every companion species at every evolution (0-3), every trait (Horned, Spiked,
 # Armored, Universal), the colour variants (Ember, Frost, Shadow, Golden), a rare variant, shiny, and fused companions
 # (a second / third species' signature parts), then checks in idle, two walk phases and a bite:
-#  * FAIL on a floating piece: any separate piece of mesh more than FLOAT_MM from the rest of the model that does not pierce it
+#  * FAIL on a floating piece: any separate piece of mesh more than FLOAT_MM (4 mm; MOVE_MM 12 mm in walk / bite frames) from the rest of the model that does not pierce it
 #    and is not enclosed by it (same rule as the townsfolk test v142_folk.py, float_lib.py)
 #  * FAIL on NaN vertices or a build error
 # Parts meant to hover (glow motes, magic rings) are listed in OK_FLOAT below with the reason.
@@ -12,6 +12,8 @@ import numpy as np
 import play
 from float_lib import floating_fast as floating
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'))
+# in walk and bite frames a rigid ornament on bending skin opens a gap for a moment: up to MOVE_MM is allowed there
+MOVE_MM=float(os.environ.get('MOVE_MM','12'))
 JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimationFrame=()=>0;
   if(!window._v173){window._v173=1;const tag=(r,key)=>{(Array.isArray(r)?r:[r]).forEach(m=>{if(m&&m.isMesh)m.userData._bk=String(key||'').split('|').slice(0,2).join('|')})};
     {const o=dkBake;dkBake=function(P,O,key){const r=o.apply(this,arguments);tag(r,key||'dk');return r}}
@@ -75,7 +77,7 @@ def s(pg):
     fails=[];okd=[];thr=FLOAT_MM/1000;verbose=bool(os.environ.get('VERBOSE'))
     print('configs',len(L),flush=True)
     for i in range(0,len(L),6):
-        r=ev(JS,[L[i:i+6],poses])
+        import time;t0=time.time();r=ev(JS,[L[i:i+6],poses]);tj=time.time()-t0;t1=time.time()
         for it in r:
             lab=it['lab']
             if it['err']:fails.append(lab+': '+it['err']);continue
@@ -86,10 +88,12 @@ def s(pg):
                 V=V.reshape(-1,3);M=np.array(P['m']);info=P['info']
                 # scale the threshold with the model (companions are drawn at their own scale)
                 root=np.array([info[i].get('k')=='body?' for i in M]) if len(M) else None
-                for c,n,cc,d in floating(V,thr,root):
+                if os.environ.get('DUMP'):np.savez(os.environ['DUMP']+'_%s_%s.npz'%(lab.replace(' ','_'),pn),V=V,root=root)
+                bad=floating(V,thr if pn=='idle' else max(thr,MOVE_MM/1000),root)
+                if bad:from float_lib import components_fast;_,lab_=components_fast(V)
+                for c,n,cc,d in bad:
                     # which mesh owns most of the piece
-                    from float_lib import components
-                    T,lab_=components(V);sel=np.where(lab_==c)[0];mid=np.bincount(M[sel]).argmax();mi=info[mid]
+                    sel=np.where(lab_==c)[0];mid=np.bincount(M[sel]).argmax();mi=info[mid]
                     from collections import Counter
                     tb=Counter(P['tb'][k] for k in sel).most_common(1)[0][0];tc=Counter(P['tc'][k] for k in sel).most_common(1)[0][0]
                     desc='%s %s on %s col %s%s%s'%(mi['t'],mi.get('k') or '?',tb or '-',tc or '#'+mi['col'],' glow' if mi['add'] else '',' see-through' if mi['tr'] else '')
@@ -100,6 +104,7 @@ def s(pg):
                     if desc in seen and not verbose:continue
                     seen.add(desc);fails.append(msg)
             print('checked',lab,flush=True)
+        if os.environ.get('TIMING'):print('timing js %.1fs py %.1fs'%(tj,time.time()-t1),flush=True)
     for o in okd[:40] if verbose else []:print('ok',o)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])

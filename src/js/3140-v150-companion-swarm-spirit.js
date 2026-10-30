@@ -186,7 +186,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
     for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.6;L('chest','m',iron,[Math.cos(a)*.034,.51,.12+Math.sin(a)*.034],[Math.cos(a)*.03,.39,.12+Math.sin(a)*.03],.004,.004,3)}
     L('chest','m',iron,[0,.515,.12],[0,.6,.12],.005,.005,3);Bx('chest','m',iron,[0,.37,.12],.012,.03,.012,Math.PI,0,0,'cone4')}
   // rags hanging from the robe and the hip hide; collar trim
-  [[.33,.12],[.28,.2],[.23,.16],[.18,.23],[.13,.18],[.08,.22],[.03,.17],[-.02,.13]].forEach((q,i)=>[-1,1].forEach(s=>{const z=q[0],x=s*(z>.3?.15:z<0?.17:.205),y=z>.3?.63:.6;
+  [[.33,.12],[.28,.2],[.23,.16],[.18,.23],[.13,.18],[.08,.22],[.03,.17],[-.02,.13]].forEach((q,i)=>[-1,1].forEach(s=>{const z=q[0],x=s*(z>.3?.144:z<0?.163:.197),y=z>.3?.635:.605;
     S(z>.05?'chest':'spine',i%2?robe:robe2,[x,y,z],.065,q[1]+(s>0?.02:0),Math.PI/2,s*.12,i+(s>0?3:0))}));
   // the robe's gold-trimmed hem round the neck, a clasp at the throat
   for(let i=0;i<9;i++){const a=(i/8-.5)*Math.PI*1.3;Bx('neck','c',trim,[Math.sin(a)*.12,.69+Math.cos(a)*.03,.35+Math.cos(a)*.02],.04,.014,.024,0,a,0)}
@@ -233,7 +233,7 @@ function H150(s){return [s<0?'hl2':'hr2',.112]}
 // ===================================================================== variant / trait extras =====================================================================
 // lpExtras (Ember, Frost, Spiked, Armored, Horned ...) reads the rig's back line and head point: give each variant its own
 var V150_EX={
-  Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.6,.33],up:.1},
+  Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.56,.41],up:.1}, // v173: head mark on the head proper
   Hivemother:{back:[['tail0',0,.79,-1.0],['tail0',0,.81,-.8],['tail0',0,.78,-.6],['tail0',0,.6,-.3],['chest',0,.54,.15]],head:['head',0,.5,.41],up:.1},
   Lichbone:{back:[['neck',...boneP([0,.75,.36])],['chest',...boneP([0,.76,.24])],['chest',...boneP([0,.76,.12])],['spine',...boneP([0,.72,.0])],['pelvis',...boneP([0,.66,-.24])]],head:['head',...boneP([0,.78,.52])],up:.08}};
 {const f=lpExtras;lpExtras=function(k,c,D){const sp=c&&c.g&&c.g[0],o=V150_EX[sp];

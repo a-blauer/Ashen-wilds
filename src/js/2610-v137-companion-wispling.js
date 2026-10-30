@@ -26,7 +26,7 @@ function wsp137HoodR(v,y){const PR=v==2?[[.84,.196],[.88,.186],[.93,.168],[.98,.
   if(y<=PR[0][0])return PR[0][1];for(let i=1;i<PR.length;i++)if(y<=PR[i][0]){const k=(y-PR[i-1][0])/(PR[i][0]-PR[i-1][0]);return PR[i-1][1]+(PR[i][1]-PR[i-1][1])*k}return 0}
 LPR.Wispling={
   head:['head',0,1.13,-.03],up:.1,
-  back:[['chest',0,.86,-.15],['spine',0,.7,-.17],['pelvis',0,.52,-.16]],
+  back:[['chest',0,.875,-.12],['chest',0,.88,-.06],['chest',.1,.86,-.08],['chest',-.1,.86,-.08]], // v173: on the shoulders (trait armour and spikes hung behind the robe)
   mat:{transparent:true,opacity:.72,depthWrite:false,emissive:0x0c2030},
   geo(C,c){const sp=rv137('Wispling',c),v=rv137I('Wispling',sp);
     const base=new THREE.Color(C),pale=base.clone().lerp(new THREE.Color(0xe4ecf0),v==1?.55:.28),deep=base.clone().lerp(new THREE.Color(v==2?0x0a0a14:0x1a2a3a),v==2?.7:.55);

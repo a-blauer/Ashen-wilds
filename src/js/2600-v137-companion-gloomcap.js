@@ -38,10 +38,11 @@ LPR.Gloomcap={
       dirt=new THREE.Color(0x3a2c20),gill=new THREE.Color(spore?0x4a3a2a:0x4a2430),root=new THREE.Color(0x3a2c20),moss=new THREE.Color(0x4a5a2a);
     const R=(y,rx,f,bk,b,o)=>Object.assign({p:[0,y,0],rx,ryT:f,ryB:bk,b},o||{});
     // the stem: wide soft base, belly in front, narrowing to the cap; the top (the face) rides the head bone
+    // (v173: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
     const st=spore?[R(.03,.12,.115,.115,['pelvis','pelvis',0]),R(.09,.15,.15,.14,['pelvis','pelvis',0]),R(.18,.165,.17,.155,['pelvis','pelvis',0]),R(.3,.155,.16,.145,['pelvis','spine',.4]),
-        R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.45]),R(.67,.112,.122,.108,['chest','head',.85]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0]),R(.84,.086,.088,.084,['head','head',0])]
+        R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.8]),R(.67,.112,.122,.108,['head','head',0]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0]),R(.84,.086,.088,.084,['head','head',0])]
       :[R(.03,.13,.12,.12,['pelvis','pelvis',0]),R(.08,.175,.17,.16,['pelvis','pelvis',0]),R(.16,.2,.21,.18,['pelvis','pelvis',0]),R(.26,.195,.205,.175,['pelvis','spine',.3]),
-        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.3]),R(.62,.132,.138,.124,['chest','head',.75]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v173: the stem runs up into the cap (it stopped short of the gill disc)
+        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v173: the stem runs up into the cap (it stopped short of the gill disc)
     const lofts=[{rings:st,seg:16,ref:[0,0,1],capA:1,paint:(o,r,s,cc)=>{o.copy(stalk);if(s<-.3)o.lerp(stalkD,.35);if(Math.abs(Math.sin((cc+s)*7+r.p[1]*30))>.86)o.lerp(stalkD,.4);
         const t=Math.max(0,(.2-r.p[1])*5);if(t>0)o.lerp(dirt,Math.min(.75,t));if(r.p[1]>.5&&s<-.2)o.lerp(capD,.25)}}];
     // the skirt (annulus): a tattered collar hanging under the cap

@@ -58,14 +58,15 @@ LPR.Gravewyrm={
       // vertebra plates down the spine and rib bands down the flanks; tufts of grave moss
       for(let z=.3,i=0;z>-1.42;z-=.12,i++){const T=WY137.top(z),bn=wyrmBones(z)[0];
         k.L(bn,'c',i%2?bone:bone2,[T.x,T.top-.02,z+.03],[T.x,T.top+T.r*.38,z-.06],T.r*.3,.004,4);
-        if(i%2==0&&z<.15&&z>-1.2)[-1,1].forEach(s=>k.L(bn,'c',bone2,[T.x+s*T.r*.55,T.top-T.r*.25,z],[T.x+s*T.r*.88,T.y-T.r*.15,z-.02],.012,.008,3));
+        if(i%2==0&&z<.15&&z>-.55)[-1,1].forEach(s=>{const P=a=>[T.x+s*(T.r+.003)*Math.cos(a),T.y+(a>0?T.r*.88:T.r*.74)*Math.sin(a)+.003*Math.sin(a),z-.02*(1-a)]; // v173: rib bands follow the flank
+          k.L(bn,'c',bone2,P(1.05),P(.45),.012,.01,3);k.L(bn,'c',bone2,P(.45),P(-.2),.01,.008,3)});
         if(i%3==1&&z<0)k.p(bn,'dod','c',0x4a5a2a,T.x+(i%2?.05:-.05),T.top-.01,z,.03,.018,.03)}
       k.L('tail3','c',bone,[WY137.curve(-1.6),.02,-1.58],[WY137.curve(-1.72),.03,-1.74],.02,.002,4)}
     else{
       // the hood: a broad lens flaring behind the head; a pale front with dark throat bands, a ribbed back with the
       // spectacle mark, a rim of small scales
       const T=WY137.top(.3),hz=.33,hy=T.y+.05,pale=dkShade(0xd8d0a0,.95),dkr=0x14140c,rx=-.25,cr=Math.cos(rx),sr=Math.sin(rx);
-      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz-y*sr];
+      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz+y*sr]; // v173: tilted with the hood (the sign was flipped: rim scales and marks stood up to 11 cm off it)
       k.p('neck','sph2','c',main,0,hy,hz,.27,.24,.035,rx,0,0); // v173: rounder hood (the 7-sided one left its rim scales hanging off one side)
       k.p('neck','sph2','c',pale,0,hy-.01,hz+.012,.22,.19,.026,rx,0,0);
       for(let i=0;i<4;i++){const y=-.12+i*.06,w=.2*Math.sqrt(Math.max(0,1-(y/.19)**2));k.L('neck','c',0x8a7a50,H(-w,y,.04),H(w,y,.04),.006,.006,3)}
@@ -75,10 +76,11 @@ LPR.Gravewyrm={
         k.p('neck','sph','c',0xe8d860,e[0],e[1],e[2]-.002,.03,.03,.006,rx,0,0);k.p('neck','sph','c',dkr,e[0],e[1],e[2]-.004,.012,.012,.004,rx,0,0)});
       {const a=H(-.075,.08,-.033),b=H(.075,.08,-.033),m=H(0,.105,-.033);k.L('neck','c',dkr,a,m,.01,.01,3).L('neck','c',dkr,m,b,.01,.01,3)}
       // big head plates, cheek venom glands, heat pits
-      [[0,.462,.6,.05,.012,.06],[-.035,.458,.68,.03,.01,.04],[.035,.458,.68,.03,.01,.04],[0,.452,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],q[1],q[2],q[3],q[4],q[5],-.08,0,0));
+      const hT=(x,z)=>{const H=WY137.head;let i=0;while(i<H.length-2&&H[i+1][0]<z)i++;const t=Math.max(0,Math.min(1,(z-H[i][0])/(H[i+1][0]-H[i][0]))),q=H[i].map((v,j)=>v+(H[i+1][j]-v)*t);return q[1]+q[3]*Math.sqrt(Math.max(0,1-(x/q[2])**2))};
+      [[0,.6,.05,.012,.06],[-.035,.68,.03,.01,.04],[.035,.68,.03,.01,.04],[0,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],hT(q[0],q[1])+.001,q[1],q[2],q[3],q[4],-.08,0,0)); // v173: on the head (they stood up to 3 cm above it)
       [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.046,.366,.806,.007,.006,.006)});
       // a ridge of keeled scales down the back
-      for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.004,z,.022,.014,.03)}
+      for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.009,z,.022,.018,.034)}
       // a crest of small scales on the head, and a rattle on the tail
       for(let i=0;i<4;i++)k.p('head','cone4','c',dk,0,.45-i*.006,.62-i*.05,.02,.03,.025,-.5);
       for(let i=0;i<5;i++){const z=-1.56-i*.035,r=.03-i*.004;k.p('tail3','sph','c',i%2?0xc8b890:0xa89870,WY137.curve(z),.04,z,r,r*.8,.022)}}

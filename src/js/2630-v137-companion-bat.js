@@ -15,7 +15,7 @@ RV137.var.Batwing=['Batwing','Duskwing'];if(EVO100.surf)delete EVO100.surf.Batwi
     for(let i=0;i<12;i++){const a=(i/11-.5)*3.6,r=.13;tuft('neck',[Math.sin(a)*r*.9,.36+Math.cos(a)*.05,.29+Math.cos(a)*.03],[Math.sin(a)*r*1.25,.31+Math.cos(a)*.03,.25],dusk?.04:.03,i%2?fur:furD)}
     // shoulder and belly fluff
     [-1,1].forEach(s=>{for(let i=0;i<3;i++)tuft('chest',[s*.13,.36-i*.04,.18-i*.03],[s*.18,.33-i*.05,.13-i*.03],.026)});
-    for(let i=0;i<5;i++){const z=.08-i*.07;tuft(z>0?'chest':'spine',[((i%2)-.5)*.06,.17,z],[((i%2)-.5)*.07,.135,z-.04],.03)}
+    for(let i=0;i<5;i++){const z=.08-i*.07;tuft(z>0?'chest':'spine',[((i%2)-.5)*.06,.17+Math.max(0,-z)*.2,z],[((i%2)-.5)*.07,.135,z-.04],.03)}
     if(dusk){// mane, crescent moon on the breast, violet eyes over the old ones, tail tuft
       for(let i=0;i<14;i++){const a=(i/13-.5)*4.2,r=.15;tuft(i%3?'neck':'chest',[Math.sin(a)*r*.85,.42+Math.cos(a)*.04,.27],[Math.sin(a)*r*1.35,.4+Math.cos(a)*.02,.13],.05,i%2?0xc8c0e0:0x9a90b8)}
       for(let i=0;i<7;i++){const a=-1.2+i*.4,a2=a+.4,R=.07,rr=.045;k.L('chest','g',0xe8e0ff,[Math.sin(a)*R,.25+Math.cos(a)*R,.3+Math.cos(a)*.01],[Math.sin(a2)*R,.25+Math.cos(a2)*R,.3+Math.cos(a2)*.01],.014-Math.abs(i-3)*.003,.014-Math.abs(i-3+1)*.003,3)}

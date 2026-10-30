@@ -54,7 +54,13 @@ function lpPart(S,bones,bn,geo,mat,x,y,z,sx,sy,sz,rx,ry,rz){
   const m=new THREE.Mesh(geo,mat);m.scale.set(sx,sy==null?sx:sy,sz==null?sx:sz);m.rotation.set(rx||0,ry||0,rz||0);m.castShadow=true;p.add(m);bones[bn].add(p);return p}
 // variant & trait extras on a dkKit, using the creature's back line D.back [[bone,x,y,z]…] and head point D.head [bone,x,y,z]
 function lpExtras(k,c,D){
-  const bk=D.back||[],hd=D.head,up=D.up||.09;
+  let bk=D.back||[],hd=D.head;const up=D.up||.09;
+  // v173: anchors drawn above a body (horns and shards hung in the air on the Mossfrog and Bogmaw, spikes over the Titanshell's
+  // shell) are lowered onto it: the anchor's height becomes at most the body's top there (less 1 cm for the head)
+  // (and a head point buried deep in a tall head, the Sporelord's cap, comes up to 3 cm under its top); back points sit on the back
+  if(typeof lk173Top=='function'&&(c.v||c.tr)){try{const G=D.geo(c.cl[0],c),top=q=>q&&lk173Top(G,q[1],q[3]);
+    if(hd){const t=top(hd);if(t!=null&&Math.abs(t-hd[2])<.15)hd=[hd[0],hd[1],Math.max(Math.min(hd[2],t-.01),t-.03),hd[3]]}
+    bk=bk.map(q=>{const t=top(q);return t!=null&&Math.abs(q[2]-t)<.2?[q[0],q[1],t-.004,q[3]]:q})}catch(e){}}
   if(c.v=='Ember')bk.forEach((q,i)=>k.L(q[0],'g',i%2?0xffb040:0xff6a1a,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up*.8,q[3]-.05],.03,.002,4));
   if(c.v=='Frost')bk.forEach(q=>k.L(q[0],'g',0xd8f6ff,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up,q[3]-.03],.03,.002,4));
   // v173: the Golden and Universal marks grow from the head as crystal shards (they were a halo and orbs hovering over it)
@@ -102,10 +108,16 @@ function lpRig(c,n,D){
     [false,true].forEach(bs=>{const m=bakeMesh(vparts,O,'LPO|'+n+'|'+ornLv(c)+'|'+famOf(c.g[0]),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}})}
   if(extra.length){
     const parts=[],bax=raw=>(bn,geo,col,px,py,pz,sx,sy,sz,rx,rz,basic)=>{if(!S.bones[bn])return;const r=(S.T&&!raw)?S.T([px,py,pz]):[px,py,pz];parts.push({bn:bn,geo:geo,col:col,x:r[0],y:r[1],z:r[2],sx:sx||1,sy:sy||1,sz:sz||1,rx:rx||0,rz:rz||0,basic:basic})};
-    Object.assign(x,{ax:bax(),axw:bax(true),axm:(bn,...a)=>S.bones[bn]?mkAx(S,bones)(bn,...a):new THREE.Object3D(),
+    Object.assign(x,{ax:bax(),axw:bax(true),axm:(bn,...a)=>{if(!S.bones[bn])return new THREE.Object3D();const m=mkAx(S,bones)(bn,...a);
+        // v173: a borrowed part (ears, shells) set on this body: its centre moves onto the nearest surface (they hung up to 45 cm off)
+        try{if(typeof lk173Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk173Near(mesh.geometry,q),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
+          if(h.d>half+.01)m.position.set(h.p[0]-r[1],h.p[1]-r[2],h.p[2]-r[3])}}catch(e){}
+        return m},
       tex:(st,hex,pal)=>{const t=rigTex({id:'x'+st,st:st,pal:pal},hex);return new THREE.MeshStandardMaterial({map:t.map,normalMap:t.nm,roughness:.9})},
       wing:(bn,s,span,chord,col,col2,type,px,py,pz)=>{if(!S.bones[bn])return new THREE.Group();const grp=mkWing(type,span,chord,col,col2);if(s<0)grp.scale.x=-1;const p=new THREE.Group();p.add(grp);
-        const r=S.bones[bn],q=S.T?S.T([s*px,py,pz]):[s*px,py,pz];p.position.set(q[0]-r[1],q[1]-r[2],q[2]-r[3]);bones[bn].add(p);x.wings.push({p:p,s:s,base:.35,amp:.55});return p}});
+        const r=S.bones[bn],q=S.T?S.T([s*px,py,pz]):[s*px,py,pz];
+        try{if(typeof lk173Near=='function'){const h=lk173Near(mesh.geometry,q),ax=Math.abs(q[0]);if(h.d>.002&&Math.abs(h.p[0])<ax)q[0]=Math.sign(q[0])*Math.max(ax-.05,Math.abs(h.p[0])-.012)}}catch(e){} // v173: hinge on the body
+        p.position.set(q[0]-r[1],q[1]-r[2],q[2]-r[3]);bones[bn].add(p);x.wings.push({p:p,s:s,base:.35,amp:.55});return p}});
     extra.forEach(a=>{try{a[0].sig(x,a[1],c)}catch(e){console.error('lp fuse',n,e)}});
     [false,true].forEach(bs=>{const m=bakeMesh(parts,O,'LPF|'+n+'|'+c.g.join()+'|'+c.cl.join(),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}});
   }
