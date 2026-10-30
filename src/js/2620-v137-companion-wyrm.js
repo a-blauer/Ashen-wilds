@@ -58,7 +58,7 @@ LPR.Gravewyrm={
       // vertebra plates down the spine and rib bands down the flanks; tufts of grave moss
       for(let z=.3,i=0;z>-1.42;z-=.12,i++){const T=WY137.top(z),bn=wyrmBones(z)[0];
         k.L(bn,'c',i%2?bone:bone2,[T.x,T.top-.02,z+.03],[T.x,T.top+T.r*.38,z-.06],T.r*.3,.004,4);
-        if(i%2==0&&z<.15&&z>-1.2)[-1,1].forEach(s=>k.L(bn,'c',bone2,[T.x+s*T.r*.55,T.top-T.r*.25,z],[T.x+s*T.r*.95,T.y-T.r*.15,z-.02],.012,.008,3));
+        if(i%2==0&&z<.15&&z>-1.2)[-1,1].forEach(s=>k.L(bn,'c',bone2,[T.x+s*T.r*.55,T.top-T.r*.25,z],[T.x+s*T.r*.88,T.y-T.r*.15,z-.02],.012,.008,3));
         if(i%3==1&&z<0)k.p(bn,'dod','c',0x4a5a2a,T.x+(i%2?.05:-.05),T.top-.01,z,.03,.018,.03)}
       k.L('tail3','c',bone,[WY137.curve(-1.6),.02,-1.58],[WY137.curve(-1.72),.03,-1.74],.02,.002,4)}
     else{
@@ -66,8 +66,8 @@ LPR.Gravewyrm={
       // spectacle mark, a rim of small scales
       const T=WY137.top(.3),hz=.33,hy=T.y+.05,pale=dkShade(0xd8d0a0,.95),dkr=0x14140c,rx=-.25,cr=Math.cos(rx),sr=Math.sin(rx);
       const H=(x,y,dz)=>[x,hy+y*cr,hz+dz-y*sr];
-      k.p('neck','sph','c',main,0,hy,hz,.27,.24,.035,rx,0,0);
-      k.p('neck','sph','c',pale,0,hy-.01,hz+.012,.22,.19,.026,rx,0,0);
+      k.p('neck','sph2','c',main,0,hy,hz,.27,.24,.035,rx,0,0); // v173: rounder hood (the 7-sided one left its rim scales hanging off one side)
+      k.p('neck','sph2','c',pale,0,hy-.01,hz+.012,.22,.19,.026,rx,0,0);
       for(let i=0;i<4;i++){const y=-.12+i*.06,w=.2*Math.sqrt(Math.max(0,1-(y/.19)**2));k.L('neck','c',0x8a7a50,H(-w,y,.04),H(w,y,.04),.006,.006,3)}
       for(let i=0;i<20;i++){const a=i/20*Math.PI*2;const p=H(Math.sin(a)*.262,Math.cos(a)*.232,0);k.p('neck','dod','c',i%2?dk:mdSh(main,.7),p[0],p[1],p[2],.011,.011,.008)}
       for(let i=0;i<7;i++){const a=(i/6-.5)*2.4;k.L('neck','c',dk,H(0,-.02,-.03),H(Math.sin(a)*.24,Math.cos(a)*.21-.02,-.03),.008,.003,3)}

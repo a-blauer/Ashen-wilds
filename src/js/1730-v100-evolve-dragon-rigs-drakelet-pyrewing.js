@@ -9,7 +9,7 @@ EVO100.D.Drakelet={glow:0xff6a1a,wing:{grow:.06},build(E,L,P){
   if(L>=2){// tall dorsal sail-spines with glowing tips, cheek frills, jaw spikes, tail blade
     M.ridge(E,[[.4,.07,.022],[.3,.1,.03],[.2,.13,.036],[.1,.14,.038],[0,.14,.038],[-.1,.13,.034],[-.2,.11,.03],[-.3,.08,.024]],'c',P.mainD,.9,0,L>=3?P.glow:null);
     [-1,1].forEach(s=>{for(let i=0;i<3;i++)E.L([s*.09,.71-i*.02,.56-i*.025],[s*(.2+i*.02),.72-i*.04,.47-i*.04],.022,.002,'c',i%2?P.mainD:boneD,4,{bn:'head'});
-      E.L([s*.08,.64,.66],[s*.15,.6,.58],.016,.002,'c',bone,4,{bn:'jaw'})});
+      E.L([s*.035,.636,.66],[s*.13,.6,.58],.016,.002,'c',bone,4,{bn:'jaw'})});
     E.pd('cone4','c',P.mainD,[0,.57,-1.27],[0,0,-1],[.1,.16,.022],[0,1,0],{bn:'tail3'})}
   if(L>=3){// scale armour across chest and shoulders (darker plates with bone rims), ember vents along the spine
     E.shell((x,y,z,nx,ny,nz)=>z>.12&&z<.4&&ny>-.2&&nz>-.3&&y>.45,.016,'c',(x,y,z,i)=>i%3?P.mainD:P.dark,{rimCol:boneD});
@@ -29,7 +29,7 @@ EVO100.D.Gravewyrm={glow:0x8aff4a,build(E,L,P){
   const M=EVO100_M,bone=P.bone,boneD=P.boneD,seg=['tail1','tail0','pelvis','spine','chest','neck'];
   // L1: longer back-swept horns, venom drip on the fangs, glowing scale lines behind the eyes
   [-1,1].forEach(s=>{E.horn([s*.09,.37,.52],[s*.5,.45,-1],[s*.03,-.03,-.03],.18+.03*L,.026,'c',bone,5,null,L>=4?P.trim:boneD);
-    E.L([s*.045,.238,.76],[s*.045,.205,.76],.006,.002,'g',P.glow,3,{bn:'head'});
+    {const ft=RV137.cur.Gravewyrm=='Venomcoil'?.27:.282;E.L([s*.05,ft+.008,.793],[s*.05,ft-.03,.797],.006,.002,'g',P.glow,3,{bn:'head'})} // v173: the drip hangs from the fang tip (the v137 head moved the fangs)
     E.L([s*.125,.335,.55],[s*.14,.33,.44],.006,.006,'g',P.glow,3,{bn:'head'})});
   if(L>=2){// cobra hood frills on the neck with bony struts, bigger ridge plates
     // cobra hood: two upright membranes flaring from the neck behind the head, ribbed with bone, eye-spots

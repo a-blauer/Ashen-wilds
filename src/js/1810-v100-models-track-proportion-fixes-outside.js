@@ -9,6 +9,6 @@ var MDL100_WS={sword:.86,gs:.8,ga:.86,axe:.9,axes:.9,mace:.86,hammer:.86,club:.9
   return g}}
 // Ashwolf family (Ashwolf, Direfang, Skollmaw, Snow Wolf): the hanging tail was as long as the body and as thick as the
 // torso. Real wolf tails are ~1/3 of body length and slim at the root: 20% shorter, 28% slimmer (same bones and weights).
-(function MDL100_wolfTail(){try{if(typeof WOLF_TAIL=='undefined')return;WOLF_TAIL.forEach(r=>{r[0]=-.33+(r[0]+.33)*.8;r[2]*=.72});
+(function MDL100_wolfTail(){try{if(typeof WOLF_TAIL=='undefined')return;WOLF_TAIL.forEach(r=>{r[0]=-.33+(r[0]+.33)*.8;r[2]*=.72});WOLF_TAIL.v100=1;
   for(const k in LPG)if(/^Ashwolf\|/.test(k))delete LPG[k]}catch(e){console.warn('v100 wolf tail',e)}})();
 

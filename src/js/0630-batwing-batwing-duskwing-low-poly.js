@@ -19,6 +19,10 @@ function lpwWing(key,outline,hub,sticks,cA,cB,cS,bands){
   G.computeVertexNormals();return LPWG[key]=G}
 // hang a wing pair on bone bn at model point (x,y,z); sweep = turn back (rad), droop = tilt down (rad)
 function lpwPair(x,bn,geo,mat,px,py,pz,sweep,droop,base,amp){
+  // v173: the hinge sits just inside the body's side (several wings hinged 1-5 cm out from it, so the root showed a gap when
+  // they beat); only ever moved inward, at most 5 cm
+  try{const B=x.b&&x.b.children.find(m=>m.isSkinnedMesh);if(B&&typeof lk173Near=='function'){const q=lk173Near(B.geometry,[px,py,pz]);
+    if(q.d>.002&&Math.abs(q.p[0])<px)px=Math.max(px-.05,Math.abs(q.p[0])-.012)}}catch(e){}
   [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,bn,geo,mat,s*px,py,pz,s,1,1,0,s*sweep,-s*droop);x.wings.push({p:p,s:s,base:base==null?.35:base,amp:amp==null?.55:amp})})}
 
 // Batwing rings are in model space (stretched fox template: pelvis y .28, head z .38). [z, y, half width, above, below, bones, kind]

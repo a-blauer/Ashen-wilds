@@ -121,7 +121,7 @@ function pw150Kit(k,c,C,red){
   k.p('tail3','cone4','g',lava,0,.582,-1.47,.014,.1,.075,-Math.PI/2-.15);
   [-1,1].forEach(s=>k.L('tail3','c',obs,[0,.574,-1.42],[s*.07,.578,-1.36],.014,.002,4));
   // obsidian talons
-  [['fl2',-.102,.225],['fr2',.102,.225],['hl2',-.112,-.29],['hr2',.112,-.29]].forEach(f=>{k.p(f[0],'box','c',obs,f[1],.02,f[2]+.03,.055,.034,.08);
+  [['fl2',-.102,.225],['fr2',.102,.225],['hl2',-.112,-.29],['hr2',.112,-.29]].forEach(f=>{k.p(f[0],'box','c',obs,f[1],.024,f[2]+.03,.055,.044,.08); // v173: the pad meets the leg
     [-1,0,1].forEach(i=>{k.L(f[0],'c',obs2,[f[1]+i*.018,.022,f[2]+.06],[f[1]+i*.024,.016,f[2]+.1],.009,.006,4);k.p(f[0],'cone4','c',0x0c0806,f[1]+i*.025,.012,f[2]+.12,.007,.04,.007,Math.PI/2+.3)})});
 }
 function pw150Post(x,c,C,mat){
@@ -298,7 +298,7 @@ function st150Post(x,c,C,mat){
     [.45,.04,-.16],
     [[[0,.01,.06],[.6,.08,.03],.024],[[.6,.08,.03],[1.25,.01,-.32],.013]],
     root,tipC,lead,5);
-  lpwPair(x,'chest',W,mat,.1,.74,.14,.5,.15,.35,.55)}
+  lpwPair(x,'chest',W,mat,.07,.74,.14,.5,.15,.35,.55)} // v173: the wing root on the shoulder (it hinged 1.5 cm out from the body)
 
 // ======================================================================== Rocsovereign ========================================================================
 var RS150={body:[
@@ -368,7 +368,7 @@ function rs150Post(x,c,C,mat){
     [.42,.04,-.24],
     [[[0,.01,.08],[.55,.11,.08],.03],[[.55,.11,.08],[1.02,.03,-.14],.015]],
     root,tipC,lead,4);
-  lpwPair(x,'chest',W,mat,.15,.78,.14,.35,.2,.35,.5)}
+  lpwPair(x,'chest',W,mat,.125,.78,.14,.35,.2,.35,.5)}
 
 // ---------------- hook the variants into the shared rigs ----------------
 {const D=LPR.Drakelet,g0=D.geo,k0=D.kit,p0=D.post;
@@ -432,13 +432,14 @@ function st150Evo(E,L,P){const hb={bn:'head'};
   // L1: a glowing storm streak down the breast, longer glowing plume tips, long streamer tips
   {const pts=[[0,.74],[.02,.69],[-.015,.65],[.01,.6]].map(q=>E.on([q[0],q[1],2],[0,0,-1])).filter(h=>h).map(h=>E.add(h.p,h.n,.004));if(pts.length>1)E.chain(pts,.008,.005,'g',P.glow,3,{vs:1})}
   for(let i=-1;i<=1;i++){const L1=1-Math.abs(i)*.17,x=i*.016,p3=[x*2.3,1.0+.07*L1,.24-.07*L1];E.L(p3,E.add(p3,[x*.4,.02,-.04-.01*L]),.006,.001,'g',P.glow2,3,hb)}
-  [-1,1].forEach(s=>E.pd('cone4',L>=3?'g':'c',L>=3?P.glow:P.dark,[s*.115,.49,-.93-.02*L],[s*.18,-.06,-1],[.014,.06+.01*L,.006],[0,1,0],{bn:'tail0'}));
+  [-1,1].forEach(s=>{const d=E.nrm([s*.18,-.06,-1]),e=E.add([s*.08,.5,-.78],d,.14),len=.06+.01*L; // v173: on the streamer's end (longer tips stood off it)
+    E.pd('cone4',L>=3?'g':'c',L>=3?P.glow:P.dark,E.add(e,d,len*.5-.006),d,[.014,len,.006],[0,1,0],{bn:'tail0'})});
   if(L>=2){// a mantle of long feathers over the shoulders, bronze talon bands
     for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=E.on([Math.sin(a)*1.5,.77-k*.05,.22+Math.cos(a)*.3-k*.04],[-Math.sin(a),-.2,-.3]);
-      if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,E.nrm([h.n[0]*1.2,-.3,-1]),.1-k*.02),.028,.002,'c',(i+k)%2?P.mainD:P.dark,4)}
+      if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,E.nrm([h.n[0]*1.2,-.3,-1]),.1-k*.02),.028,.002,'c',(i+k)%2?P.mainD:P.dark,4,{vs:1})}
     [-1,1].forEach(s=>{E.band([s*.075,.2,-.005],[0,1,0],.004,.008,'m',P.trim,8);E.band([s*.075,.26,.012],[0,1,0],.004,.007,'m',P.trim,8)})}
   if(L>=3){// a steel breastplate with a storm rune, a steel-capped beak hook
-    E.shell((x,y,z,nx,ny,nz)=>nz>.35&&y>.6&&y<.78&&z>.15&&z<.33,.012,'m',P.metal,{rimCol:P.trim});
+    E.shell((x,y,z,nx,ny,nz)=>nz>.35&&y>.6&&y<.78&&z>.15&&z<.42,.012,'m',P.metal,{rimCol:P.trim});
     const cp=E.on([0,.69,2],[0,0,-1]);if(cp)E.rune({p:E.add(cp.p,cp.n,.014),n:cp.n},[0,1,0],.045,P.glow);
     E.L([0,.874,.598],[0,.838,.635],.018,.004,'m',P.trim,4,hb)}
   if(L>=4){// a storm crown: golden spikes in an arc behind the crest, a storm gem
@@ -457,7 +458,7 @@ function rs150Evo(E,L,P){const hb={bn:'head'};
     for(let i=0;i<7;i++){const a=Math.PI+(i/6-.5)*1.6,h=E.on([Math.sin(a)*1.5,.74,.05+Math.cos(a)*1.5],[-Math.sin(a),-.15,-Math.cos(a)]);
       if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,E.nrm([h.n[0]*.6,-.9,-1]),.17),.034,.003,'c',i%2?P.mainD:P.dark,4)}}
   if(L>=3){// a gilded breastplate with a sun rune, a gold-capped beak hook
-    E.shell((x,y,z,nx,ny,nz)=>nz>.3&&y>.5&&y<.74&&z>.18&&z<.34,.014,'c',(x,y,z,i)=>i%3?0xc89a3a:0xa87a2a,{rimCol:P.trim});
+    E.shell((x,y,z,nx,ny,nz)=>nz>.3&&y>.5&&y<.74&&z>.18&&z<.46,.014,'c',(x,y,z,i)=>i%3?0xc89a3a:0xa87a2a,{rimCol:P.trim});
     const cp=E.on([0,.62,2],[0,0,-1]);if(cp)E.rune({p:E.add(cp.p,cp.n,.016),n:cp.n},[0,1,0],.06,P.glow);
     E.L([0,.895,.6],[0,.862,.655],.03,.014,'m',P.gold,5,hb)}
   if(L>=4){// a golden circlet round the crest with spikes and a sovereign's gem, glowing tail tips

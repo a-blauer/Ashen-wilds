@@ -20,7 +20,7 @@ LPR.Boneling={
         R([0,.592,.59],.076,.052,.036,['head','head',0]),R([0,.572,.65],.052,.036,.022,['head','head',0]),R([0,.557,.72],.04,.027,.016,['head','head',0],{k:.15}),
         R([0,.55,.775],.022,.016,.01,['head','head',0],{k:.35})],seg:6,capA:1,capB:1,paint:bonePaint},
       // spine: neck → back → tail tip
-      {rings:[R([0,.58,.44],.026,.026,null,['head','neck',.5]),R([0,.565,.36],.03,.03,null,['neck','neck',0]),R([0,.565,.22],.032,.032,null,['chest','chest',0]),
+      {rings:[R([0,.58,.44],.026,.026,null,['head','head',0]),R([0,.565,.36],.03,.03,null,['neck','neck',0]),R([0,.565,.22],.032,.032,null,['chest','chest',0]),
         R([0,.56,.06],.03,.03,null,['chest','spine',.5]),R([0,.555,-.08],.03,.03,null,['spine','spine',0]),R([0,.55,-.22],.032,.032,null,['pelvis','pelvis',0]),
         R([0,.53,-.36],.026,.026,null,['tail0','tail0',0]),R([0,.5,-.55],.022,.022,null,['tail1','tail1',0],{k:.1}),R([0,.48,-.75],.017,.017,null,['tail2','tail2',0],{k:.2}),
         R([0,.47,-.92],.011,.011,null,['tail3','tail3',0],{k:.3}),R([0,.47,-1.0],.004,.004,null,['tail3','tail3',0],{k:.4})],seg:5,capA:1,capB:1,paint:bonePaint}];
@@ -38,13 +38,16 @@ LPR.Boneling={
     const L=(bn,t,col,a,b,r1,r2,sg)=>k.L(bn,t,col,P(a),P(b),r1,r2,sg||4),B=(bn,t,col,p,sx,sy,sz,rx,ry,rz,geo)=>{const q=P(p);k.p(bn,geo||'box',t,col,q[0],q[1],q[2],sx,sy,sz,rx,ry,rz)};
     // ribcage: ribs arcing out from the spine and back in under the chest; the front four meet the sternum
     [.27,.2,.13,.06,-.01,-.08].forEach((z,i)=>{const w=1-i*.05,dp=1-i*.09,bn=i<4?'chest':'spine',sh=i%2?dkShade(bone,.88):bone;
-      [-1,1].forEach(s=>{const a=[s*.025,.565,z],b=[s*.125*w,.55,z-.02],c2=[s*.16*w,.46,z-.04],d=[s*.13*w,.565-.2*dp,z-.035],e=[s*.035,.345,z-.01];
+      [-1,1].forEach(s=>{const a=[s*.025,.565,z],b=[s*.125*w,.55,z-.02],c2=[s*.16*w,.46,z-.04],d=[s*.13*w,.565-.2*dp,z-.035],e=[s*.016,.345,z-.01];
         L(bn,'c',sh,a,b,.015,.014,5);L(bn,'c',sh,b,c2,.014,.013,5);L(bn,'c',sh,c2,d,.013,.011,5);if(i<4)L(bn,'c',dkShade(sh,.85),d,e,.011,.009,5)})});
     L('chest','c',bone,[0,.34,.3],[0,.35,.06],.02,.013,5);
     // vertebra spikes along the back and down the tail
     for(let i=0;i<9;i++){const z=.36-i*.075,bn=z>.3?'neck':z>.1?'chest':z>-.15?'spine':'pelvis';B(bn,'c',i%2?bone:dkShade(bone,.85),[0,.6,z],.012,.05,.016,-.5,0,0,'cone4')}
     [['tail0',.55,-.4],['tail1',.52,-.55],['tail1',.5,-.68],['tail2',.49,-.8]].forEach(q=>B(q[0],'c',bone,[0,q[1],q[2]],.009,.035,.012,-.6,0,0,'cone4'));
-    // shoulder blades and hip bones
+    // shoulder blades and hip bones; v173: a pelvis plate joins the hips to the spine, ball joints seat the legs in the
+    // shoulders and hips, and the top of the neck moves with the skull (the legs, hips and skull stood apart from the spine)
+    B('pelvis','c',dkShade(bone,.92),[0,.535,-.25],.15,.03,.1,.1,0,0);
+    [-1,1].forEach(s=>{B('chest','c',bone,[s*.105,.505,.205],.036,.036,.036,0,0,0,'sph');B('pelvis','c',bone,[s*.1,.515,-.24],.042,.042,.042,0,0,0,'sph')});
     [-1,1].forEach(s=>{B('chest','c',bone,[s*.135,.52,.24],.012,.1,.075,.3,0,s*.15);B('pelvis','c',bone,[s*.07,.53,-.25],.05,.06,.12,.2,0,s*.3);B('pelvis','c',crev,[s*.072,.52,-.25],.02,.025,.04,.2,0,s*.3)});
     // skull: black sockets with soul-fire eyes, brow ridges, nasal hole, back-swept horns
     [-1,1].forEach(s=>{

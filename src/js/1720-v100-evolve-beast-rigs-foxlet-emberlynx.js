@@ -16,7 +16,8 @@ var EVO100_M={
       E.L(E.add(b1,d,-.05*k),E.add(b1,d,.11*k*tipGlow),.05*k,.002,'g',glowCol,5,{bn:T[T.length-1][3][0]});E.L(E.add(b1,d,-.02*k),E.add(b1,[d[0]*.6,d[1]+.6,d[2]*.6],.08*k*tipGlow),.03*k,.001,'g',glowCol,4,{bn:T[T.length-1][3][0]})}
     return rings},
   // dangling charm on a string from point p (on the body), 'tooth' or 'bone' or gem
-  charm(E,p,len,col,kind,o){E.L(p,E.add(p,[0,-len*.55,0]),.004,.004,'c',0x2a2018,3,o);const q=E.add(p,[0,-len*.55,0]);
+  charm(E,p,len,col,kind,o){o=Object.assign({at:p},o); // v173: every piece skinned like the point it hangs from (a tooth skinned to the chest left the string in a bite)
+    E.L(E.add(p,[0,.012,0]),E.add(p,[0,-len*.55,0]),.004,.004,'c',0x2a2018,3,o);const q=E.add(p,[0,-len*.55,0]);
     if(kind=='gem')return E.pd('oct','g',col,E.add(q,[0,-len*.18,0]),[0,1,0],[len*.18,len*.28,len*.18],null,o);
     if(kind=='bone'){E.L(E.add(q,[-len*.2,-len*.1,0]),E.add(q,[len*.2,-len*.1,0]),len*.06,len*.06,'c',col,4,o);return E}
     return E.pd('cone4','c',col,E.add(q,[0,-len*.25,0]),[0,-1,0],[len*.11,len*.5,len*.11],null,o)},
@@ -43,7 +44,7 @@ EVO100.D.Foxlet={glow:0xff8a2a,build(E,L,P){
     [-1,1].forEach(s=>{E.band([s*.102,.16,.212],[0,1,0],.003,.007,'m',P.trim,8);E.band([s*.112,.22,-.2],[0,1,0],.003,.007,'m',P.trim,8)})}
   if(L>=4){// gold circlet across the brow with a gem, two more tails, glowing paw runes
     const arc=[];for(let i=-3;i<=3;i++){const a=i/3*1.1,h=E.on([Math.sin(a)*.5,.9,.52+Math.cos(a)*.1],[-Math.sin(a),-1.2,-.1]);if(h)arc.push(h)}
-    for(let i=0;i<arc.length-1;i++)E.L(E.add(arc[i].p,arc[i].n,.008),E.add(arc[i+1].p,arc[i+1].n,.008),.008,.008,'m',P.gold,4);
+    for(let i=0;i<arc.length-1;i++)E.L(E.add(arc[i].p,arc[i].n,.004),E.add(arc[i+1].p,arc[i+1].n,.004),.008,.008,'m',P.gold,4,{vs:1});
     arc.forEach((h,i)=>{if(i%2==0)E.pd('cone4','m',P.gold,E.add(h.p,h.n,.03),E.nrm([h.n[0],h.n[1]+1,h.n[2]]),[.012,.05+(i==3?.04:0),.012])});
     if(arc[3])E.gem({p:E.add(arc[3].p,arc[3].n,.012),n:arc[3].n},.02,P.glow);
     [-1,1].forEach(s=>M.tail(E,FOX_TAIL,root,s*.8,.25,.62,P.mainD,0xd8cbb2,1,P.glow))}
@@ -57,7 +58,7 @@ EVO100.D.Ashwolf={glow:0xff7a2a,build(E,L,P){
   // L1: a thicker ruff (second ring of long shag), glowing claw-mark war paint on the shoulders, a bone fang charm
   for(let i=0;i<13;i++){const a=-Math.PI*.2+i/12*Math.PI*1.4,cx=Math.cos(a),sy=Math.sin(a),o=W([cx*.3,.53+sy*.3,.34]),c=W([0,.53,.34]);
     const h=E.on(o,[c[0]-o[0],c[1]-o[1],c[2]-o[2]]);if(h)M.tuft(E,h,[0,0,-1.3],.12+.012*L,.04,i%2?P.main:P.mainD)}
-  [-1,1].forEach(s=>{[0,1,2].forEach(k=>{const h=E.on([s*.5,Y(L>=3?.41:.5)-k*.02,Z(.2-k*.035)],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,.004),E.add(E.add(h.p,h.n,.004),[0,-.075,-.05]),.008,.003,'g',P.glow,3,{vs:1})})});
+  [-1,1].forEach(s=>{[0,1,2].forEach(k=>{const h=E.on([s*.5,Y(L>=3?.41:.5)-k*.02,Z(.2-k*.035)],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,.001),E.add(E.add(h.p,h.n,.001),[0,-.075,-.05]),.008,.003,'g',P.glow,3,{vs:1})})});
   if(L>=2){// spiked leather collar with a necklace of fangs and a bone talisman, longer hackle crest
     const c=W([0,.52,.42]),pts=M.collar(E,c,[0,.3,1],.012,.017,P.leather,12,P.metal,.045);
     pts.forEach((p,i)=>{if(p[1]<c[1]-.02&&i%2)M.charm(E,p,.1,P.bone,'tooth')});const lo=pts.reduce((a,p)=>p[1]<a[1]?p:a,pts[0]);M.charm(E,lo,.13,P.boneD,'bone');
@@ -75,7 +76,7 @@ EVO100.D.Ashwolf={glow:0xff7a2a,build(E,L,P){
     E.shell((x,y,z,nx,ny,nz)=>z>Z(.18)&&nz>.55&&y<Y(.56)&&y>Y(.36),.02,'m',P.metal,{rimCol:P.trim});
     const cp=E.on([0,Y(.46),2],[0,0,-1]);if(cp)E.gem({p:E.add(cp.p,cp.n,.02),n:cp.n},.028,P.glow);
     [-1,1].forEach(s=>{E.shell((x,y,z)=>Math.abs(x-s*W([.104,0,0])[0])<.07&&y>Y(.17)&&y<Y(.24)&&z>Z(.15),.01,'c',P.leather,{rimCol:P.dark});E.band(W([s*.104,.25,.215]),[0,1,0],.006,.008,'m',P.trim,8)});
-    [['tail1',-.62],['tail2',-.82]].forEach(q=>{const h=E.on([0,-1,Z(q[1])],[0,1,0]);if(h)M.charm(E,E.add(h.p,[0,.004,0]),.1,P.glow,'gem',{bn:q[0]})})}
+    [['tail1',-.62],['tail2',-.82]].forEach(q=>{const h=E.on([0,-1,Z(q[1])],[0,1,0]);if(h)M.charm(E,E.add(h.p,[0,.004,0]),.1,P.glow,'gem')})}
   if(L>=5){// ember mane through the ruff, burning eye trails, gold crown spikes on the helm
     for(let i=0;i<9;i++){const a=-Math.PI*.05+i/8*Math.PI*1.1,o=W([Math.cos(a)*.3,.53+Math.sin(a)*.3,.3]),c=W([0,.53,.3]),h=E.on(o,[c[0]-o[0],c[1]-o[1],c[2]-o[2]]);
       if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],h.n[1]+.3,-1.2]),.22),.04,.002,'g',i%2?P.glow:P.glow2,4)}

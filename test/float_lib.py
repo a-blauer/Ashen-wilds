@@ -53,12 +53,17 @@ def piece_dist(Q,T,tree,mask,rmax,thr):
         best=min(best,d)
         if best<=thr:break
     return best
-def floating(V,thr):
-    # grow the attached set from the biggest piece: a piece is attached when it comes within thr of something attached
+def floating(V,thr,root=None):
+    # grow the attached set from the biggest piece: a piece is attached when it comes within thr of something attached.
+    # root (optional, one bool per triangle): start from the biggest piece among those triangles (the body), not from a
+    # bigger accessory
     T,lab=components(V);n=lab.max()+1
     if n<=1:return []
     cen=T.mean(1);rad=np.linalg.norm(T-cen[:,None,:],axis=2).max(1);tree=cKDTree(cen);rmax=rad.max()
-    sizes=np.bincount(lab);big=int(sizes.argmax());att=(lab==big)
+    sizes=np.bincount(lab)
+    if root is not None and root.any():big=int(np.bincount(lab[root],minlength=n).argmax())
+    else:big=int(sizes.argmax())
+    att=(lab==big)
     Qs={}
     for c in range(n):
         if c==big:continue

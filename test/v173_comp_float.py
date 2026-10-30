@@ -85,7 +85,8 @@ def s(pg):
                 if not np.isfinite(V).all():fails.append('%s %s: NaN vertex'%(lab,pn));continue
                 V=V.reshape(-1,3);M=np.array(P['m']);info=P['info']
                 # scale the threshold with the model (companions are drawn at their own scale)
-                for c,n,cc,d in floating(V,thr):
+                root=np.array([info[i].get('k')=='body?' for i in M]) if len(M) else None
+                for c,n,cc,d in floating(V,thr,root):
                     # which mesh owns most of the piece
                     from float_lib import components
                     T,lab_=components(V);sel=np.where(lab_==c)[0];mid=np.bincount(M[sel]).argmax();mi=info[mid]

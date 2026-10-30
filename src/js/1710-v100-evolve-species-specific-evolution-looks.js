@@ -151,13 +151,13 @@ function evo100Kit(n,L,P,seed){
         pts.push(h?add(h.p,d,off):add(c,d,off+.05))}
       for(let k=0;k<N;k++)E.L(pts[k],pts[(k+1)%N],r,r,t,col,4,Object.assign({vs:1},o));return pts},
     // small glowing rune glyph lying on the surface (three strokes)
-    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,.004);
+    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,.0015);
       const st=(a,b)=>E.L(add(add(p0,F.toArray(),a[1]*sz),X.toArray(),a[0]*sz),add(add(p0,F.toArray(),b[1]*sz),X.toArray(),b[0]*sz),sz*.09,sz*.09,'g',col||P.glow,3,Object.assign({vs:1},o));
       const k=(R()*3)|0;st([0,-1],[0,1]);if(k==0){st([-.5,.4],[0,1]);st([.5,.4],[0,1])}else if(k==1){st([0,.2],[.6,-.4]);st([0,.2],[-.6,-.4])}else{st([-.55,0],[.55,0]);st([.5,-.8],[0,-1])}return E},
     // gem in a metal setting on the surface
     gem(h,sz,col,o){E.pd('cyl','m',P.trim,add(h.p,h.n,sz*.15),h.n,[sz*1.25,sz*.35,sz*1.25],null,o);return E.pd('oct','g',col||P.glow,add(h.p,h.n,sz*.6),h.n,[sz*.8,sz*.95,sz*.8],null,o)},
     // hanging charm (tooth / claw) under point p
-    fang(p,len,col,o){return E.pd('cone4','c',col||P.bone,add(p,[0,-len*.5,0]),[0,-1,0],[len*.22,len,len*.22],null,o)},
+    fang(p,len,col,o){return E.pd('cone4','c',col||P.bone,add(p,[0,-len*.5,0]),[0,-1,0],[len*.22,len,len*.22],null,Object.assign({at:p},o))},
     // armour/mantle shell: every body triangle that passes sel is copied and pushed out along the
     // vertex normals by off (+ lift(x,y,z) if given); col = hex or (x,y,z,i)=>hex; a rim (edge thickness) closes the
     // open border. Skinned exactly like the body, so it bends with it. Returns the number of triangles.

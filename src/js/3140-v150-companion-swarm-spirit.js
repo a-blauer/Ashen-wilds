@@ -155,7 +155,7 @@ function lb150Geo(C){const K=LB150.cols(C),R=(p,rx,ryT,ryB,b,ex)=>Object.assign(
     {rings:[R([0,.5,-.64],.006,.006,null,['tail1','tail1',0],{k:.3}),R([0,.505,-.6],.018,.018,null,['tail1','tail1',0],{k:.2}),R([0,.53,-.47],.026,.026,null,['tail0','tail0',0],{k:.1}),
       R([0,.565,-.34],.034,.034,null,['pelvis','tail0',.5]),R([0,.58,-.22],.038,.038,null,['pelvis','pelvis',0]),R([0,.595,-.1],.036,.036,null,['spine','spine',0]),
       R([0,.625,.04],.038,.038,null,['spine','chest',.5]),R([0,.66,.16],.042,.042,null,['chest','chest',0]),R([0,.675,.27],.038,.038,null,['chest','neck',.5]),
-      R([0,.68,.35],.034,.034,null,['neck','neck',0]),R([0,.675,.43],.03,.03,null,['neck','head',.6])],seg:6,capA:1,capB:1,paint:bonePaint},
+      R([0,.68,.35],.034,.034,null,['neck','neck',0]),R([0,.675,.43],.03,.03,null,['head','head',0])],seg:6,capA:1,capB:1,paint:bonePaint},
     // the robe over the shoulders and back (its underside is hidden in the ribcage), ragged at the edges
     {rings:[R([0,.66,.39],.07,.045,.035,['neck','neck',0]),R([0,.668,.34],.15,.06,.07,['chest','neck',.4]),R([0,.66,.27],.215,.065,.1,['chest','chest',0],{j:.1}),
       R([0,.648,.17],.225,.06,.105,['chest','chest',0],{j:.12}),R([0,.632,.07],.21,.055,.1,['spine','chest',.4],{j:.12}),R([0,.615,-.01],.17,.05,.08,['spine','spine',0],{j:.1}),
@@ -177,7 +177,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
     S=(bn,col,p,w,len,ry,rx,sd)=>{const q=P(p);k.S(bn,col,q[0],q[1],q[2],w,len,ry,rx,sd)};
   // a deep ribcage: ribs arcing out from the spine and down under the chest; the front four meet the sternum
   [.26,.19,.12,.05,-.02,-.09].forEach((z,i)=>{const w=1.08-i*.05,dp=1.05-i*.08,bn=i<4?'chest':'spine',sh=i%2?dkShade(bone,.85):bone,ys=.64-(.27-z)*.12;
-    [-1,1].forEach(s=>{const a=[s*.025,ys,z],b=[s*.14*w,ys-.03,z-.02],c2=[s*.18*w,ys-.14,z-.04],d=[s*.14*w,ys-.27*dp,z-.035],e=[s*.035,.33,z-.01];
+    [-1,1].forEach(s=>{const a=[s*.025,ys,z],b=[s*.14*w,ys-.03,z-.02],c2=[s*.18*w,ys-.14,z-.04],d=[s*.14*w,ys-.27*dp,z-.035],e=[s*.016,.33,z-.01];
       L(bn,'c',sh,a,b,.017,.016,5);L(bn,'c',sh,b,c2,.016,.015,5);L(bn,'c',sh,c2,d,.015,.012,5);if(i<4)L(bn,'c',dkShade(sh,.85),d,e,.012,.01,5)})});
   L('chest','c',bone,[0,.32,.3],[0,.335,.04],.022,.014,5);
   // the phylactery: a glowing crystal in a small iron cage, hung from the spine on a chain
@@ -198,7 +198,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
     Bx('head','c',0x050404,[s*.052,.7,.565],.05,.042,.03,0,s*.4,-s*.15);Bx('head','g',glow,[s*.057,.7,.577],.028,.018,.01,0,s*.4,-s*.2);
     Bx('head','c',dark,[s*.055,.735,.555],.066,.022,.05,0,s*.4,s*.35);
     Bx('head','c',crev,[s*.09,.655,.5],.012,.03,.05);
-    for(let i=0;i<4;i++){Bx('head','c',0xece4cc,[s*(.032-i*.002),.6,.74-i*.042],.008,i?.03:.045,.009,Math.PI,0,0,'cone4');Bx('jaw','c',0xe4dcc4,[s*(.03-i*.002),.6,.705-i*.042],.007,.026,.008,0,0,0,'cone4')}
+    for(let i=0;i<4;i++){Bx('head','c',0xece4cc,[s*(.026-i*.002),.612,.74-i*.042],.008,i?.03:.045,.009,Math.PI,0,0,'cone4');Bx('jaw','c',0xe4dcc4,[s*(.014+i*.002),.608,.705-i*.042],.007,.026,.008,0,0,0,'cone4')} // v173: rooted in the skull and the jaw
     // ram horns curling back, out and down past the cheeks
     const hp=[[s*.065,.75,.49],[s*.12,.82,.43],[s*.19,.83,.35],[s*.24,.76,.32],[s*.24,.68,.37],[s*.21,.64,.43]],hr=[.034,.03,.026,.021,.015,.008,.002];
     for(let i=0;i<hp.length-1;i++)L('head','c',i%2?dkShade(dark,1.2):dark,hp[i],hp[i+1],hr[i],hr[i+1],6);
@@ -221,6 +221,8 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
   for(let i=0;i<6;i++){const z=.42-i*.04,y=.7+(i>1?.0:.0);L(i<2?'head':'neck','g',i%2?glow:glow2,[0,y-.02,z],[0,y+.12-i*.008,z-.1],.024-i*.002,.002,4);
     if(i>0&&i<5)[-1,1].forEach(s=>L('neck','g',i%2?glow2:glow,[s*.04,y-.03,z],[s*.08,y+.06,z-.08],.016,.002,4))}
   for(let i=0;i<4;i++){const a=(i-1.5)*.5;L('tail1','g',i%2?glow:glow2,[0,.5,-.62],[Math.sin(a)*.05,.56+Math.abs(Math.cos(a))*.05,-.74-Math.cos(a)*.05],.025,.002,4)}
+  // v173: ball joints seat the legs in the shoulders and hips (the hind legs stood off the hips in a stride)
+  [-1,1].forEach(s=>{Bx('chest','c',bone,[s*.1,.55,.205],.042,.042,.042,0,0,0,'sph');Bx('pelvis','c',bone,[s*.1,.535,-.24],.048,.048,.048,0,0,0,'sph')});
   // bony toes with claws
   [['fl2',-.105,.215],['fr2',.105,.215],['hl2',-.112,-.24],['hr2',.112,-.24]].forEach(f=>[-1,0,1].forEach(i=>{
     L(f[0],'c',bone,[f[1]+i*.02,.034,f[2]-.012],[f[1]+i*.025,.014,f[2]+.065],.013,.009,4);Bx(f[0],'c',crev,[f[1]+i*.025,.012,f[2]+.082],.007,.034,.007,Math.PI/2,0,0,'cone4')}));
@@ -288,7 +290,7 @@ function lb150Evo(E,L,P){const B=boneP,hb={bn:'head'},nb={bn:'neck'};
   // L1: soul-fire wisps rising from the eye sockets, a grave chain round the throat with a charm
   [-1,1].forEach(s=>{const e=B([s*.057,.7,.577]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,hb);if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,hb)});
   {const nk=B([0,.675,.425]),ring=[];for(let i=0;i<10;i++){const a=i/10*6.283;ring.push(E.add(nk,[Math.cos(a)*.036,Math.sin(a)*.042,0]))}
-    for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,nb);
+    for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1});
     EVO100_M.charm(E,E.add(nk,[0,-.044,0]),.08,P.glow,'gem',nb)}
   if(L>=2){// glowing runes on the robe's flanks, spectral ribbons from the horn tips
     [-1,1].forEach(s=>[.21,.07].forEach(z=>{const h=E.on([s*2,B([0,.6,z])[1],B([0,0,z])[2]],[-s,0,0]);if(h)E.rune(h,[0,0,1],.05,P.glow)}));

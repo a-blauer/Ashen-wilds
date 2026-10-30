@@ -89,7 +89,8 @@ function er150CragKit(k,C,red){const T=ER150.CR,top=T.top,nz=er150Nz;
     [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x,y+h*.3,z,.025,h,.05,-.2,0,-s*.95)})});
   // serrated rim: stone spikes jutting out and down all round the shell
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2,z=Math.cos(a)*.47-.03,P=er150Prof(T.shell,Math.max(-.48,Math.min(.41,z))),x=Math.sin(a)*P[1];if(Math.abs(Math.sin(a))<.25&&Math.cos(a)>0)continue;
-    k.p('spine','cone4','c',i%2?st2:stone,x*1.01,P[0]+.005,z,.03,i%2?.07:.1,.03,Math.cos(a)*1.75,0,-Math.sin(a)*1.75)}
+    const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk173Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v173: on the shell (they stood off its flanks)
+    k.p('spine','cone4','c',i%2?st2:stone,q[0]+d.x*(h*.5-.012),q[1]+d.y*(h*.5-.012),q[2]+d.z*(h*.5-.012),.03,h,.03,rx,0,rz)}
   // crystal outcrops between the blades (glowing cores, dark shards)
   [[.22,.12,.13],[-.24,-.08,.15],[.18,-.27,.11],[-.14,.22,.09]].forEach(([x,z,h],j)=>{const y=top(x,z);for(let i=0;i<4;i++){const a=i*1.7+j,dx=i?Math.cos(a)*.03:0,dz=i?Math.sin(a)*.03:0,hh=i?h*.6:h,lx=Math.sign(x)*(i?.4:.25)+dx*4,lz=dz*4;
       k.L('spine',i%2?'c':'g',i%2?cryD:cry,[x+dx,y-.02,z+dz],[x+dx+lx*hh*.5,y+hh,z+dz+lz*hh*.3],i?.022:.032,.003,4)}
@@ -168,18 +169,19 @@ function er150TitanKit(k,C,red){const T=ER150.TI,top=T.top,Y=T.Y,nz=er150Nz;
   // moss on the platform, vines and roots hanging from the shell rim, big rim scutes
   [[.1,.05],[-.1,.12],[.08,-.05]].forEach(([x,z],i)=>k.p('spine','ico','c',i%2?moss:moss2,x,Y+.004,z,.04,.008,.035));
   for(let i=0;i<22;i++){const a=i/22*Math.PI*2,z=Math.cos(a)*.5-.02,P=er150Prof(T.shell,Math.max(-.49,Math.min(.45,z))),x=Math.sin(a)*P[1];
-    k.p('spine','box','c',i%2?stone:st2,x*1.0,P[0]-.005,z,.09,.035,.05,Math.cos(a)*.6,a,-Math.sin(a)*.25);
-    if(i%2&&Math.abs(Math.sin(a))>.3){const L=.07+nz(i,1,2)*.08;k.L('spine','c',i%4==1?moss:0x3a3022,[x*1.02,P[0]-.01,z],[x*1.05,P[0]-.01-L,z+.01],.012,.004,3)}}
+    k.p('spine','box','c',i%2?stone:st2,x*.985,P[0]-.005,z,.09,.035,.05,Math.cos(a)*.6,a,-Math.sin(a)*.25);
+    if(i%2&&Math.abs(Math.sin(a))>.3){const L=.07+nz(i,1,2)*.08;k.L('spine','c',i%4==1?moss:0x3a3022,[x*.98,P[0]-.01,z],[x*1.02,P[0]-.01-L,z+.01],.012,.004,3)}}
   [[.24,.12],[-.27,-.06],[.2,-.3],[-.18,.28],[.33,-.12],[-.33,.12]].forEach(([x,z],i)=>k.p('spine','ico','c',i%2?moss:moss2,x,top(x,z)+.002,z,.06,.014,.05,0,i,0));
   // the head: heavy brow, glowing deep-set eyes, great curving horns, tusks, stone plates on the crown, a moss beard
   [-1,1].forEach(s=>{
     k.p('head','sph','c',dark,s*.118,.37,.63,.03,.024,.026,0,s*.55,0);k.p('head','sph','g',eye,s*.124,.371,.636,.018,.014,.014);
     k.p('head','box','c',st2,s*.1,.405,.62,.08,.026,.07,0,s*.4,s*.28);
     const H=[[s*.12,.41,.52],[s*.2,.44,.47],[s*.27,.49,.47],[s*.31,.55,.51],[s*.3,.6,.57]];
-    for(let i=0;i<H.length-1;i++)k.L('head','c',i%2?horn2:horn,H[i],H[i+1],.05-i*.01,.04-i*.01+(i==3?-.03:0),6);
+    for(let i=0;i<H.length-1;i++)k.L('head','c',i%2?horn2:horn,H[i],H[i+1],.05-i*.01,i==3?.003:.04-i*.01,6);
     for(let i=1;i<4;i++)k.p('head','tor','c',horn2,H[i][0],H[i][1],H[i][2],.05-i*.01,.012,.05-i*.01,0,0,s*(.6+i*.25));
     k.p('jaw','cone4','c',ivory,s*.085,.3,.69,.016,.07,.016,-.25,0,s*.2);
-    for(let i=0;i<4;i++)k.L('jaw','c',i%2?moss:moss2,[s*(.02+i*.025),.215,.6+i*.03],[s*(.025+i*.028),.13+i*.01,.59+i*.03],.016,.004,3);
+    for(let i=0;i<4;i++){const x=.02+i*.025,z=.6+i*.03,J=er150Prof(T.jaw,z),y0=J[0]-J[3]*Math.sqrt(Math.max(0,1-(x/J[1])**2))+.008; // v173: rooted in the jaw
+      k.L('jaw','c',i%2?moss:moss2,[s*x,y0,z],[s*(.025+i*.028),.13+i*.01,z-.01],.016,.004,3)}
     k.p('head','sph','c',dark,s*.03,.33,.79,.01,.008,.008)});
   [[0,.46,.55],[0,.455,.62],[.06,.44,.58],[-.06,.44,.58],[0,.44,.48]].forEach((q,i)=>k.p('head','dod','c',i%2?st2:stone,q[0],q[1],q[2],.04,.022,.04,i,0,0));
   k.p('head','cone4','c',0x1e1c18,0,.3,.785,.035,.05,.03,Math.PI*.85,0,0);
@@ -250,7 +252,7 @@ function er150BogKit(k,C,red){const T=ER150.BG,top=T.top,nz=er150Nz;
   [[.12,.06],[-.15,-.04],[.06,-.16],[-.05,.13],[.2,-.12],[-.22,.1]].forEach(([x,z],i)=>{const y=top(x,z);k.p(bn(z),'sph','c',0x8a8a50,x,y+.006,z,.028,.018,.028);k.p(bn(z),'sph','c',0xb0a860,x,y+.018,z,.012,.008,.012)});
   // fungal growths: a cluster of toadstools on the back, shelf fungi on the flanks, glowing spore dots
   [[.08,-.05,.08],[.02,-.09,.06],[.12,-.11,.05],[-.12,.0,.07],[-.08,.04,.05]].forEach(([x,z,h],i)=>{const y=top(x,z),b=bn(z),tp=[x+(i%2?.01:-.01),y+h,z];
-    k.L(b,'c',0x9a9078,[x,y-.01,z],tp,.012,.009,5);k.p(b,'hem','c',i%2?cap:fun,tp[0],tp[1]-.004,tp[2],.035+h*.15,.026,.035+h*.15);k.p(b,'sph','g',glow,tp[0]+.012,tp[1]+.018,tp[2],.006)});
+    k.L(b,'c',0x9a9078,[x,y-.01,z],tp,.012,.009,5);k.p(b,'hem','c',i%2?cap:fun,tp[0],tp[1]-.004,tp[2],.035+h*.15,.026,.035+h*.15);k.p(b,'cyl','c',0xb8a888,tp[0],tp[1]-.003,tp[2],(.035+h*.15)*.96,.004,(.035+h*.15)*.96);k.p(b,'sph','g',glow,tp[0]+.012,tp[1]+.018,tp[2],.006)});
   [-1,1].forEach(s=>{[[.05,.06],[-.08,.05],[-.2,.04]].forEach(([z,dy],i)=>{const P=er150Prof(T.body,z),y=P[0]+dy,xx=s*(P[1]*Math.sqrt(Math.max(0,1-(dy/P[2])**2))-.02);
       for(let j=0;j<2;j++)k.p(bn(z),'hem','c',j?fun:fun2,xx+s*.02,y-j*.035,z+j*.02,.055-j*.012,.018,.045-j*.01,0,0,-s*.25)});
     // weed strands hanging off the flanks
@@ -290,18 +292,18 @@ function er150TitanEvo(E,L,P){const Y=ER150.TI.Y,sb={bn:'spine'},hb={bn:'head'},
   // L2: lit windows in the keep and turret, braziers on the walls
   [[.1,0],[.17,-.02],[.17,.03]].forEach(([h,dx])=>E.p('box','g',P.glow,[kx+dx,Y+h,kz+.068],[.016,.026,.006],null,sb));
   E.p('box','g',P.glowD,[kx,Y+.035,kz+.068],[.03,.045,.006],null,sb);E.p('box','g',P.glow,[.12,Y+.09,-.082],[.01,.02,.006],null,sb);
-  [[3,.09],[6,.085]].forEach(([i,h])=>{const a=i/10*Math.PI*2,x=Math.sin(a)*.19,z=Math.cos(a)*.19-.02;E.p('cyl','m',P.metal,[x,Y+h+.02,z],[.018,.02,.018],null,sb);E.p('oct','g',P.glow2,[x,Y+h+.045,z],[.014,.03,.014],null,sb)});
+  [[3,.09],[6,.085]].forEach(([i,h])=>{const a=i/10*Math.PI*2,x=Math.sin(a)*.19,z=Math.cos(a)*.19-.02;E.p('cyl','m',P.metal,[x,Y+h+.008,z],[.018,.02,.018],null,sb);E.p('oct','g',P.glow2,[x,Y+h+.032,z],[.014,.03,.014],null,sb)});
   if(L>=3){// runes round the shell rim, banners on the keep and the turret
     for(let i=0;i<10;i++){const a=i/10*6.283+.3,h=E.on([Math.sin(a)*.9,.36,Math.cos(a)*1-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.3&&h.p[1]<.45)E.rune(h,[0,1,0],.045,P.glow)}
     [[kx+.05,Y+.25,kz+.05,.15],[.12,Y+.19,-.13,.1]].forEach(([x,y,z,hh])=>{E.L([x,y,z],[x,y+hh,z],.004,.004,'m',P.metal,4,sb);
       E.fan([x,y+hh,z],[[x,y+hh-.005,z],[x+.075,y+hh-.02,z+.01],[x+.06,y+hh-.06,z+.012],[x+.08,y+hh-.09,z+.01],[x,y+hh-.08,z]],P.mainD,P.glowD,'c',sb)})}
   if(L>=4){// a heart crystal floating in the gate, glowing cracks down the dome from the platform
-    E.pd('oct','g',P.glow,[0,Y+.08,.17],[0,1,0],[.03,.055,.03],null,sb);E.pd('oct','g',P.glow2,[0,Y+.08,.17],[0,1,0],[.015,.03,.015],null,sb);
+    E.pd('oct','g',P.glow,[0,Y+.08,.17],[0,1,0],[.03,.055,.03],null,sb);E.L([0,Y+.166,.17],[0,Y+.12,.17],.003,.003,'m',P.metal,4,sb);E.pd('oct','g',P.glow2,[0,Y+.08,.17],[0,1,0],[.015,.03,.015],null,sb);
     for(let k=0;k<8;k++){const a=k/8*6.283+.2;let pr=null;for(let i=0;i<5;i++){const r=.23+i*.045,w=Math.sin(i*1.7+k)*.06,t=E.top(Math.sin(a+w)*r,Math.cos(a+w)*r-.02);if(!t)break;const q=E.add(t.p,t.n,.004);
       if(pr)E.L(pr,q,.009-i*.001,.008-i*.001,'g',i<2?P.glow:P.glowD,3,{vs:1});pr=q}}}
   if(L>=5){// a beacon flame on the keep, glowing horn tips, a gilded band on the brow
     E.pd('oct','g',P.glow,[kx-.02,Y+.4,kz],[0,1,0],[.028,.05,.028],null,sb);E.pd('oct','g',P.glow2,[kx-.02,Y+.4,kz],[0,1,0],[.014,.03,.014],null,sb);
-    [-1,1].forEach(s=>E.pd('oct','g',P.glow,[s*.3,.615,.585],[s*-.1,.6,.8],[.012,.026,.012],null,hb));
+    [-1,1].forEach(s=>E.pd('oct','g',P.glow,[s*.3,.6,.57],[s*-.1,.5,.6],[.012,.026,.012],null,hb));
     E.L([-.11,.43,.6],[.11,.43,.6],.008,.008,'m',P.trim,5,hb)}
 }
 // Bogmaw (levels 1, 2, 3, 5): glowing pustules → a moss cloak with glowing spore caps → bone charms on the jaw tendrils,
@@ -312,7 +314,7 @@ function er150BogEvo(E,L,P){const M=EVO100_M,moss=0x4a6a2a,hb={bn:'head'},jb={bn
   if(L>=2){// moss cloak over the back with hanging strands, glowing spore caps
     E.shell((x,y,z,nx,ny)=>ny>.55&&z<.12&&z>-.3&&Math.abs(x)>.12,.01,'c',(x,y,z,i)=>i%3?0x2e3e1c:0x26341a,{rimCol:0x1e2a14});
     [-1,1].forEach(s=>[.08,-.08,-.2].forEach(z=>{const h=E.on([s*.8,.4,z],[-s,-.4,0]);if(h)E.L(h.p,E.add(h.p,[s*.02,-.09,-.01]),.012,.002,'c',moss,3)}));
-    [[.2,-.04],[-.16,.1],[.06,.12]].forEach(q=>{const t=E.top(q[0],q[1]);if(!t)return;const tp=E.add(t.p,t.n,.05);E.L(t.p,tp,.009,.007,'c',0xc8bc98,4);E.pd('hem','g',P.glowD,tp,t.n,[.026,.018,.026])})}
+    [[.2,-.04],[-.16,.1],[.06,.12]].forEach(q=>{const t=E.top(q[0],q[1]);if(!t)return;const tp=E.add(t.p,t.n,.05);E.L(t.p,tp,.009,.007,'c',0xc8bc98,4);E.pd('hem','g',P.glowD,tp,t.n,[.026,.018,.026]);E.pd('cyl','c',0xb8a888,E.add(tp,t.n,.001),t.n,[.025,.003,.025])})}
   if(L>=3){// bone charms on the barbels, bony spurs over the eyes
     [-1,1].forEach(s=>ER150.BG.barb.forEach(([x,z],i)=>{if(i==1)return;M.charm(E,[s*(x+.025),ER150.BG.bot(x,z)-.06-i*.006,z+.012],.045,P.bone,'tooth',jb)}));
     [-1,1].forEach(s=>E.horn([s*.2,.43,.36],[s*.5,.8,-.3],[0,0,-.02],.075,.018,'c',P.boneD,4,hb))}
