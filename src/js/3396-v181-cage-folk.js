@@ -65,7 +65,8 @@ function cgGoblinBody(B,k,C,S,K){const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFace
   cg181Reg('shaman',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0];
     cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.35)||(m.part=='arm'&&m.y>J.aR1[1]),.016,m=>a181Nz(rb,m,.35,14));
     cgSkirt(B,S,wy-.02,J.lh2[1]+.12,.1,.022,m=>a181Nz(rb2,m,.35,12),{n:6,keep:m=>!(m.y<J.lh1[1]&&a181H(Math.round(Math.atan2(m.c,m.s)*9),2)<(J.lh1[1]-m.y)*2.5)});
-    const mt=S.hp(0,1.66,0),mp=cgRay(M,[0,mt[1],mt[2]+.5],[0,0,-1],{head:1});if(mp){k.p('head','sph2','c',bone,0,mp[1],mp[2]-.03*S.hs,.085*S.hs,.05*S.hs,.06*S.hs);[-1,1].forEach(s=>k.p('head','sph','c',0x14100c,s*.034*S.hs,mp[1]-.004,mp[2]+.02*S.hs,.017*S.hs,.012*S.hs,.008))}
+    // a bone mask over the brow and eyes (a shell of the face), dark eye holes, a crack
+    const ey=S.hp(0,1.628,0)[1];cgShell(B,M,m=>m.part=='head'&&m.s>.2&&m.y>S.hp(0,1.6,0)[1]&&m.y<S.hp(0,1.69,0)[1],.008,m=>{const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.038)<.016&&Math.abs(m.y-ey)<.011*S.hs)return 0x0c0806;return Math.abs(m.x-.01)<.004&&m.y>ey+.01?0x6a6050:a181Nz(bone,m,.2,30)},{rim:.4});
     for(let i=0;i<5;i++){const t=S.hp(-.06+i*.03,1.72,-.02);k.L('head','c',[0x8a2a1a,0x2a6a8a,0xc8a02a,0x2a2a2a,0x8a2a1a][i],t,[t[0]*2.2,t[1]+.13*S.hs,t[2]-.05],.02,.003,4)}
     for(let j=0;j<2;j++)for(let i=0;i<9;i++){const p=cgSurf(M,S,T[6][0]-.02-j*.04-Math.abs(i-4)*.01,(i-4)*.2,.018);k.p('chest',i%2?'cone4':'sph','c',i%2?0xe8e0c8:j?0x2a6a3a:0x8a2a1a,p[0],p[1]-.01,p[2],.01,i%2?.03:.01,.009,Math.PI)}})})();
 ST179.hob={sx:.22,hx:-.2,lk:.27,rk:.27,az:.08,lz:-.1,le:-.25,ex:-.15};ST179.sling={sx:.2,hx:-.18,lk:.27,rk:.27,lz:-.1,le:-.25};ST179.shaman={sx:.22,hx:-.2,lk:.2,rk:.2,lz:-.08,le:-.3};
@@ -79,7 +80,7 @@ function cgHumanBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.scul
 const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,1.1,1.05],at:1.1,lt:1.05,hs:.96,armL:1.0,legL:1.03},o||{});
 // ---------------- Bandit: dark leather garb, a hood, a cloth mask over the lower face, a short ragged cape, boots ----------------
 (function(){const S=cgHuman(HUM181({w:.98,at:1.0})),K={sk:0x9a7a62,fist:s=>s>0},lt=0x34343c,lt2=0x26262c,bt=0x2a2018,T=S.torso,J=S.J;
-  cg181Reg('bandit',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K),wy=T[2][0];
+  cg181Reg('bandit',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{ears:false}),wy=T[2][0];
     cgShell(B,M,m=>(m.part=='torso'&&m.y>J.lh0[1]-.06)||(m.part=='arm'&&m.y>J.aR2[1]+.02),.014,m=>a181Nz(m.part=='arm'?lt2:lt,m,.3,16));
     cgShell(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,m=>a181Nz(0x2e2a30,m,.3,16));cgShell(B,M,m=>m.part=='foot'||(m.part=='leg'&&m.y<J.rh1[1]-.08),.02,m=>a181Nz(bt,m,.3,16));
     cgHood(B,k,M,S,{col:m=>a181Nz(0x2a2a30,m,.3,16),off:.016,drape:.08});cgShell(B,M,m=>m.part=='head'&&m.s>-.2&&m.y<S.hp(0,1.61,0)[1],.012,m=>a181Nz(0x6a2222,m,.3,20),{rim:.1});
@@ -94,6 +95,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
     cgShell(B,M,m=>m.part=='head'&&m.y>S.hp(0,1.655,0)[1],.026,ir,{t:'m',rim:.4});const np=S.hp(0,1.64,0),nr=cgRay(M,[0,np[1],np[2]+.5],[0,0,-1],{head:1});if(nr)k.p('head','box','m',ir,0,np[1]-.012,nr[2]+.026,.022,.07,.012);
     cgFur(B,M,m=>m.part=='head'&&m.s>-.2&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-S.hp(0,1.557,0)[1])<.008*S.hs),{off:.01,len:.05,col:0x3a2414,col2:0x2a180c,seed:61,jag:.5,lump:[.6,.6]});
     const a=J.aL0;k.p('aL0','hem','m',ir,a[0]-.03,a[1]+.03,a[2],.12,.09,.12,0,0,-.4);for(let i=0;i<2;i++)k.L('aL0','m',0x8a8e96,[a[0]-.06-i*.03,a[1]+.07,a[2]-.02+i*.04],[a[0]-.1-i*.03,a[1]+.16,a[2]-.02+i*.04],.018,.002,5);
+    cgShell(B,M,m=>(m.part=='leg'&&m.y>J.rh1[1]-.08)||(m.part=='torso'&&m.y<J.lh0[1]-.06),.01,m=>a181Nz(0x3a3036,m,.3,16));
     [-1,1].forEach(s=>{cgShell(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<J.rh1[1]-.06))&&Math.sign(m.x)==s,.022,m=>a181Nz(0x3a2a1c,m,.3,16));cgFur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&Math.abs(m.y-(J.rh1[1]-.07))<.03,{off:.03,len:.05,col:0x6a5a48,col2:0x4a3a2a,seed:62+s,jag:.5})});
     cgCape(B,S,{len:J.lh1[1]+.15,w:1.0,col:0x4a1410,ins:0x200806,rag:.6})})})();
 // ---------------- Ember Cultist: a deep red hood with horns, a face lost in shadow (only the eyes burn), a long robe, a glowing sigil ----------------
@@ -113,7 +115,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
     cgCape(B,S,{len:J.lh1[1]-.05,w:1.2,col:0x18141e,ins:0x0c0a10,trim:0x2a1e30,rag:.6})})})();
 ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
 // ---------------- Zealot of the Endless One: bare scarred torso, a bronze viper helm, a rust kilt, wrapped forearms and shins, bone charms ----------------
-(function(){const S=cgHuman(HUM181({w:.96,d:.95,at:1.0,lt:.98})),K={sk:0x7a5e48,fist:s=>s>0},rust=0x4a1a0e,rust2=0x30100a,wrap=0x6a5e48,bronze=0x4a3a22,T=S.torso,J=S.J;
+(function(){const S=cgHuman(HUM181({w:.96,d:.95,at:1.0,lt:.98})),K={sk:0x664a38,fist:s=>s>0},rust=0x4a1a0e,rust2=0x30100a,wrap=0x6a5e48,bronze=0x4a3a22,T=S.torso,J=S.J;
   cg181Reg('ss165zealot',S,function(B,P,k,C){const sc=mdSh(K.sk,.65),M=cgHumanBody(B,k,C,S,K,{ears:false,paint:m=>{if(m.part!='torso')return null;const a=Math.atan2(m.x,m.z),w=Math.sin(a*2+m.y*13);return Math.abs(w)<.09&&m.y>T[2][0]&&m.y<T[6][0]-.02?sc:null}}),wy=T[2][0];
     cgShell(B,M,m=>m.part=='head'&&m.y>S.hp(0,1.645,0)[1],.024,bronze,{t:'m',rim:.4});const t=S.hp(0,1.7,.07);k.L('head','m',bronze,t,[0,t[1]+.04,t[2]+.05],.022,.012,5);k.p('head','oct','g',0xffa030,0,t[1]+.04,t[2]+.06,.012,.012,.012);
     [-1,1].forEach(s=>{const p=S.hp(s*.07,1.67,.02);k.L('head','m',rust2,p,[p[0]+s*.04,p[1]-.06,p[2]+.02],.016,.004,4)});
