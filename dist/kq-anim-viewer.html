@@ -55221,8 +55221,8 @@ function sn177Part(p){const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.
   const tri=[],S=V.slice();for(let i=0;i+2<n;i+=3){const a=V[ix?ix[i]:i],b=V[ix?ix[i+1]:i+1],c=V[ix?ix[i+2]:i+2];tri.push([a,b,c]);
     S.push([(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],[(b[0]+c[0])/2,(b[1]+c[1])/2,(b[2]+c[2])/2],[(c[0]+a[0])/2,(c[1]+a[1])/2,(c[2]+a[2])/2])}
   const c=[0,0,0];V.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});const k=1/Math.max(1,V.length);
-  // big parts: an even spread of at most 96 sample points (the nearest-surface search is the costly step)
-  const Sx=S.length>96?S.filter((_,i)=>i%Math.ceil(S.length/96)==0):S;return {p,tri,S:Sx,c:[c[0]*k,c[1]*k,c[2]*k]}}
+  // bosses (SN177.cap): an even spread of at most that many sample points per part (the nearest-surface search is the costly step)
+  const cap=SN177.cap||Infinity,Sx=S.length>cap?S.filter((_,i)=>i%Math.ceil(S.length/cap)==0):S;return {p,tri,S:Sx,c:[c[0]*k,c[1]*k,c[2]*k]}}
 // body: flat triangle list (xyz × 9 per triangle); P: kit parts (their matrices are moved in place); tag: for SN177.far
 function sn177Snap(body,P,tag){if(!SN177.on||!P||!P.length||!body||body.length<9)return 0;
   let y0=1e9,y1=-1e9;for(let i=1;i<body.length;i+=3){y0=Math.min(y0,body[i]);y1=Math.max(y1,body[i])}const H=Math.max(.2,y1-y0),tol=SN177.tol*Math.max(1,H/1.7),max=SN177.max*H,emb=SN177.emb*Math.max(1,H/1.7);
@@ -55287,9 +55287,8 @@ function sn177SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn177Key(Math.flo
       for(const [L,v] of A){const dx=L.p[v*3]-c.x,dy=L.p[v*3+1]-c.y,dz=L.p[v*3+2]-c.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=[L,v]}}}
     if(!hit)return;const [L,v]=hit,w=[];let own=false;for(let j=0;j<4;j++){const x=L.sw[v*4+j];if(x>0){const n=B.O[L.si[v*4+j]];w.push([n,x]);if(n===p.bn)own=true}}
     if(own&&w.length>1)p.w=w;
-    // a shoulder part over skin that only follows the torso (a pauldron), or a hip part over the thigh (a pouch), goes half
-    // with its own bone, half with the skin under it
-    else if(!own&&/^(a[LR]0|pelvis)$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5])).slice(0,4)})}
+    // a shoulder part over skin that only follows the torso (a pauldron) goes half with its own bone, half with the skin under it
+    else if(!own&&/^a[LR]0$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5])).slice(0,4)})}
 {const f=mdKit;mdKit=function(B,k){if(SN177.hum>0&&k&&k.P&&k.P.length){try{sn177SkinW(B,k.P);const X=sn177Warp(B),T=[];
       ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){let x=L.p[v*3],y=L.p[v*3+1],z=L.p[v*3+2];
         if(X){let X0=0,Y0=0,Z0=0,Wt=0;for(let j=0;j<4;j++){const w=L.sw[v*4+j];if(!(w>0))continue;const b=X.pl.idx[L.si[v*4+j]];if(!b)continue;const M=b.M,dx=x-b.a[0],dy=y-b.a[1],dz=z-b.a[2];
@@ -55330,7 +55329,7 @@ function sn177Boss(R){if(!SN177.on||!R||R.s177||R.no177)return 0;R.s177=1;const 
   const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
   M.forEach(q=>{if(q.n>=mx*.3){const g=q.o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(q.m);T.push(v.x,v.y,v.z)}}
     else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone(),mi:M.indexOf(q)})});
-  const mx0=SN177.max;SN177.max=.02;let n=0;try{n=sn177Snap(T,P,'boss')}finally{SN177.max=mx0}
+  const mx0=SN177.max;SN177.max=.02;SN177.cap=96;let n=0;try{n=sn177Snap(T,P,'boss')}finally{SN177.max=mx0;SN177.cap=0}
   const rec=[];P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
     const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix();rec.push([p.mi,d.x,d.y,d.z])});
   SN177_BC.set(key,rec);return n}
