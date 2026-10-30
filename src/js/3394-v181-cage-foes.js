@@ -235,7 +235,7 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     // war-kilt of leather panels, a studded belt, fur-wrapped boots
     cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),m,.3,10),{n:6,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
     cgBelt(B,M,wy-.012,.036,.06,0x1e160e);
-    for(let i=0;i<14;i++){const p=cgSurf(M,S,wy-.012,i/14*Math.PI*2,.062);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.012)}
+    for(let i=0;i<14;i++){const p=cgSurf(M,S,wy-.012,i/14*Math.PI*2,.046);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.016,.016,.012)}   /* studs half sunk in the belt */
     [-1,1].forEach(s=>{cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.03,m=>a181Nz(pe2,m,.35,16));cgFur(B,M,m=>m.part=='leg'&&m.y<kn-.04&&Math.sign(m.x)==s,{off:.035,len:.08,col:pe,col2:pe2,seed:5+s,jag:.5})})});})();
 
 // ===================================================================== Yeti =====================================================================

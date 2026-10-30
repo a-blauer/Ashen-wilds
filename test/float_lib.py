@@ -118,10 +118,19 @@ def seated(V,thr,dmin,maxsz):
     def f(c):
         while par[c]!=c:par[c]=par[par[c]];c=par[c]
         return c
-    allp=np.concatenate([PP[c] for c in pcs]);own=np.concatenate([np.full(len(PP[c]),c) for c in pcs]);kt=cKDTree(allp)
-    for a,b in kt.query_pairs(thr):
-        ca,cb2=own[a],own[b]
-        if ca!=cb2:par[f(ca)]=f(cb2)
+    # two pieces touch when a vertex of one comes within thr of a triangle of the other (surfaces that cross: hung gear)
+    TT=T[lab!=big];TL=lab[lab!=big];tc=TT.mean(1);tr=np.linalg.norm(TT-tc[:,None,:],axis=2).max(1);kt=cKDTree(tc);rmx=float(tr.max()) if len(tr) else 0
+    for c in pcs:
+        P=PP[c];near=set()
+        for i in kt.query_ball_point(P,thr+rmx):near.update(i)
+        idx=np.array([i for i in near if TL[i]!=c],dtype=np.int64)
+        if not len(idx):continue
+        for o2 in np.unique(TL[idx]):
+            if f(o2)==f(c):continue
+            J=idx[TL[idx]==o2];A,B,C=TT[J,0],TT[J,1],TT[J,2];m=len(J);step=max(1,200000//m)
+            for j in range(0,len(P),step):
+                q=P[j:j+step];k2=len(q)
+                if pt_tri_dist(np.repeat(q,m,0),np.tile(A,(k2,1)),np.tile(B,(k2,1)),np.tile(C,(k2,1))).min()<=thr:par[f(c)]=f(o2);break
     G={}
     for c in pcs:G.setdefault(f(c),[]).append(c)
     for L in G.values():
