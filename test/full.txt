@@ -47,6 +47,7 @@ v137_npcs.py
 NOSHEET=1 v142_folk.py
 PART=checks,cast v137_evolve.py
 v137_items.py
+v177_gear_audit.py
 v138_abil_balance.py
 v139_checks.py
 v140_creator.py

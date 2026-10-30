@@ -94,7 +94,7 @@ function lgWpnKit(k,type,col,r){
     k.p('',lgSlab('halbE',[[.3,.27],[.27,0],[.31,-.2],[.285,-.18],[.25,0],[.275,.23]],.03),'m',edge,.02,-1.28,0,1,1,1);
     k.p('','cone4','m',W.iron2,-.11,-1.28,0,.03,.18,.03,0,0,Math.PI/2);k.p('',lgBlade(.08,.03,.04,.03,.24,.012),'m',steel,0,-1.38,0,1,1,1);k.p('','box','m',W.iron,0,-1.33,0,.065,.18,.05);if(gl)k.p('','box','g',gl,.14,-1.28,0,.035,.035,.034,0,0,.78)}
   else if(type=='flail'){haft(.08,-.28,.032,true);for(let i=0;i<4;i++)k.p('','cyl','c',i%2?W.wrap:W.leather,0,.04-i*.04,0,.037,.03,.037,0,i*.4);k.p('','oct','m',W.iron2,0,-.29,0,.04);
-    for(let i=0;i<5;i++)k.p('','ring','m',W.iron,0,-.34-i*.07,0,.028,.6,.028,0,i%2?Math.PI/2:0,Math.PI/2);
+    for(let i=0;i<8;i++)k.p('','ring','m',W.iron,0,-.325-i*.045,0,.028,.6,.028,0,i%2?Math.PI/2:0,Math.PI/2);// v177: links overlap down to the head (were 5, .07 apart: none touched)
     k.p('',lgLump('flb',.1,.12,4),'m',lgCol(W.iron,col==0x9aa2ae?W.iron:col,.3),0,-.76,0,1,1,1);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,y=i%2?.05:-.05;k.p('','cone4','m',W.iron2,Math.cos(a)*.1,-.76+y,Math.sin(a)*.1,.022,.09,.022,Math.sin(a)*1.57,0,-Math.cos(a)*1.57)}
     k.p('','cone4','m',W.iron2,0,-.88,0,.022,.09,.022,Math.PI);if(gl)k.p('','ring','g',gl,0,-.76,0,.105,.15,.105)}

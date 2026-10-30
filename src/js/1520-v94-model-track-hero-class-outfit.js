@@ -10,9 +10,10 @@ function mdOutfit(cls){
     warrior:{col:{torso:0x7e3626,sleeve:null,fore:0x5a3a22,pants:0x4a3a2e,shin:0x4a3a2e,boot:0x3e2a1c,belt:0x3a2618},bare:1,cape:0x6e2018,capeLen:.4,boots:{a:'medium',st:'trail',M:0x4a3020,A:0x6a4a2a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>m.s>.85&&m.y>.8?mdSh(0x7e3626,.8):0x7e3626,lip:.008});mdTS(B,P,.93,1.0,.036,{col:m=>Math.round(m.c*7+m.s*2)%2?0x5a4636:0x4a3a2c,lip:.03,lipT:.012});
         [-1,1].forEach(s=>mdAS(B,P,s,4,5,.012,{col:0x5a3a22}));mdBelt(B,P,.6,0x3a2618,0xa88848)}},
-    paladin:{col:{torso:0x8a8e9a,fore:0x6a6e78,pants:0x5a5a66,shin:0x5a5a66,boot:0x3a2e24,belt:0x4a3424},cape:0xd8ccaa,capeTrim:0xc9a24a,boots:{a:'medium',st:'trail',M:0x3a2e24,A:0x5a4a3a},
+    // v177: the paladin wears a charcoal tabard and an oxblood cape (they were cream: tabard + cross read as a first-aid kit)
+    paladin:{col:{torso:0x8a8e9a,fore:0x6a6e78,pants:0x5a5a66,shin:0x5a5a66,boot:0x3a2e24,belt:0x4a3424},cape:0x4a2a2e,capeTrim:0xb08a3a,boots:{a:'medium',st:'trail',M:0x3a2e24,A:0x5a4a3a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.012,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a,lip:.01});[-1,1].forEach(s=>mdAS(B,P,s,0,5,.01,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a}))},
-      extra:(B,P,D)=>{if(!(D.chest&&(D.chest.st=='aegis'||D.chest.st=='blood')))mdTabard(B,P,0xe6dcc0,0xc9a24a,0xc9a24a)}},
+      extra:(B,P,D)=>{if(!(D.chest&&(D.chest.st=='aegis'||D.chest.st=='blood')))mdTabard(B,P,0x3a2a2e,0xb08a3a,0xb08a3a)}},
     assassin:{col:{torso:0x3a2c4a,sleeve:0x2e2438,fore:0x241e2a,hand:0x1e1a22,pants:0x26222c,shin:0x2e2836,boot:0x1e1a20,belt:0x6a3a8a},boots:{a:'light',st:'soft',M:0x1e1a20,A:0x6a3a8a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>Math.abs(m.c-m.s*.5)<.1&&m.y>.66?0x241e2a:0x3a2c4a});[-1,1].forEach(s=>{mdAS(B,P,s,0,3,.008,{col:0x2e2438});mdAS(B,P,s,4,6,.008,{col:m=>Math.round(m.y*40)%2?0x241e2a:0x302838})});mdBelt(B,P,.6,0x6a3a8a,0x8a8e96)},
       extra:(B,P,D)=>{const sc=D.chest?mdSh(D.chest.A,.85):0x5a3478;if(!D.helm||mdHelmHair(D.helm)!='none'){mdTS(B,P,.93,1.06,(P.tOff||0)+.024,{col:sc,lipT:.012,lip:.01});mdLoft(B,[{p:[-.06,.97,-.15],rx:.035,f:.01,b:.01,w:[['chest',1]]},{p:[-.09,.78,-.18],rx:.04,f:.01,b:.01,w:[['chest',.4],['cp1',.6]]},{p:[-.1,.62,-.2],rx:.034,f:.01,b:.01,w:[['cp1',1]]}],{seg:4,capA:true,capB:true,col:sc})}}},
