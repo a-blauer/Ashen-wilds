@@ -198,7 +198,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
     Bx('head','c',0x050404,[s*.052,.7,.565],.05,.042,.03,0,s*.4,-s*.15);Bx('head','g',glow,[s*.057,.7,.577],.028,.018,.01,0,s*.4,-s*.2);
     Bx('head','c',dark,[s*.055,.735,.555],.066,.022,.05,0,s*.4,s*.35);
     Bx('head','c',crev,[s*.09,.655,.5],.012,.03,.05);
-    for(let i=0;i<4;i++){Bx('head','c',0xece4cc,[s*(.026-i*.002),.612,.74-i*.042],.008,i?.03:.045,.009,Math.PI,0,0,'cone4');Bx('jaw','c',0xe4dcc4,[s*(.014+i*.002),.608,.705-i*.042],.007,.026,.008,0,0,0,'cone4')} // v179: rooted in the skull and the jaw
+    for(let i=0;i<4;i++){Bx('head','c',0xece4cc,[s*(.026-i*.002),.612,.74-i*.042],.008,i?.03:.045,.009,Math.PI,0,0,'cone4');Bx('jaw','c',0xe4dcc4,[s*(.014+i*.002),.608,.705-i*.042],.007,.026,.008,0,0,0,'cone4')} // v180: rooted in the skull and the jaw
     // ram horns curling back, out and down past the cheeks
     const hp=[[s*.065,.75,.49],[s*.12,.82,.43],[s*.19,.83,.35],[s*.24,.76,.32],[s*.24,.68,.37],[s*.21,.64,.43]],hr=[.034,.03,.026,.021,.015,.008,.002];
     for(let i=0;i<hp.length-1;i++)L('head','c',i%2?dkShade(dark,1.2):dark,hp[i],hp[i+1],hr[i],hr[i+1],6);
@@ -221,7 +221,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
   for(let i=0;i<6;i++){const z=.42-i*.04,y=.7+(i>1?.0:.0);L(i<2?'head':'neck','g',i%2?glow:glow2,[0,y-.02,z],[0,y+.12-i*.008,z-.1],.024-i*.002,.002,4);
     if(i>0&&i<5)[-1,1].forEach(s=>L('neck','g',i%2?glow2:glow,[s*.04,y-.03,z],[s*.08,y+.06,z-.08],.016,.002,4))}
   for(let i=0;i<4;i++){const a=(i-1.5)*.5;L('tail1','g',i%2?glow:glow2,[0,.5,-.62],[Math.sin(a)*.05,.56+Math.abs(Math.cos(a))*.05,-.74-Math.cos(a)*.05],.025,.002,4)}
-  // v179: ball joints seat the legs in the shoulders and hips (the hind legs stood off the hips in a stride)
+  // v180: ball joints seat the legs in the shoulders and hips (the hind legs stood off the hips in a stride)
   [-1,1].forEach(s=>{Bx('chest','c',bone,[s*.1,.55,.205],.042,.042,.042,0,0,0,'sph');Bx('pelvis','c',bone,[s*.1,.535,-.24],.048,.048,.048,0,0,0,'sph')});
   // bony toes with claws
   [['fl2',-.105,.215],['fr2',.105,.215],['hl2',-.112,-.24],['hr2',.112,-.24]].forEach(f=>[-1,0,1].forEach(i=>{
@@ -233,7 +233,7 @@ function H150(s){return [s<0?'hl2':'hr2',.112]}
 // ===================================================================== variant / trait extras =====================================================================
 // lpExtras (Ember, Frost, Spiked, Armored, Horned ...) reads the rig's back line and head point: give each variant its own
 var V150_EX={
-  Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.56,.41],up:.1}, // v179: head mark on the head proper
+  Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.56,.41],up:.1}, // v180: head mark on the head proper
   Hivemother:{back:[['tail0',0,.79,-1.0],['tail0',0,.81,-.8],['tail0',0,.78,-.6],['tail0',0,.6,-.3],['chest',0,.54,.15]],head:['head',0,.5,.41],up:.1},
   Lichbone:{back:[['neck',...boneP([0,.75,.36])],['chest',...boneP([0,.76,.24])],['chest',...boneP([0,.76,.12])],['spine',...boneP([0,.72,.0])],['pelvis',...boneP([0,.66,-.24])]],head:['head',...boneP([0,.78,.52])],up:.08}};
 {const f=lpExtras;lpExtras=function(k,c,D){const sp=c&&c.g&&c.g[0],o=V150_EX[sp];
@@ -282,7 +282,7 @@ function cs150HMEvo(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},SAC=CS150.hmSac,wa
     [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i).P,p=v150Lerp(G[0],G[1],.55);E.pd('hem','m',P.metal,E.add(p,[0,.035,0]),[s*.3,1,0],[.05,.03,.06],null,{bn:G.k+'0'})}))}
   if(L>=4){// a crown of horns tipped in gold, gold bands on the legs
     for(let i=0;i<5;i++){const a=(i/4-.5)*2.2,b=[Math.sin(a)*.09,.47,.4+Math.cos(a)*.02];E.horn(b,[Math.sin(a)*.6,1,-.5],[0,0,-.03],.11-Math.abs(i-2)*.015,.016,'c',P.dark,4,hb,P.trim)}
-    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const LG=CS150.leg('Hivemother',s,i),G=LG.P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:LG.k+'1'})}))} // v179: on the leg bone (G.k was undefined: the bands rode the hips)
+    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const LG=CS150.leg('Hivemother',s,i),G=LG.P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:LG.k+'1'})}))} // v180: on the leg bone (G.k was undefined: the bands rode the hips)
   if(L>=5){// the brood stirs: glowing grubs on the sac, a glowing seam along the top of the sac
     for(let i=0;i<10;i++){const h=sacHit(-.55-(i%5)*.13,.4+i*.27);if(h)E.pd('ico','g',i%2?P.glow:P.glow2,E.add(h.p,h.n,.012),h.n,[.016,.026,.016])}
     let prev=null;for(let j=0;j<8;j++){const h=E.top(0,-.5-j*.1),p=h?E.add(h.p,h.n,.012):null;if(p&&prev)E.L(prev,p,.008,.008,'g',P.glow,3,{vs:1});prev=p}}}

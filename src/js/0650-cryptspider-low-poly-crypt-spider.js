@@ -55,7 +55,7 @@ LPR.Cryptspider={
     });
     // hair tufts over the abdomen and thorax
     for(let i=0;i<26;i++){const a=R()*Math.PI*2,u=(R(),.96),z=-.55+R()*.4,r=.25*Math.sin(Math.PI*(z+.68)/.56),y=.49+Math.sin(a)*r*.92*u,x=Math.cos(a)*r*u;
-      if(y<.42)continue;const bn=z<-.42?'tail1':z<-.3?'tail0':'pelvis';k.L(bn,'c',i%3?hair:hair2,[x*.86,.49+(y-.49)*.86-.01,z],[x*1.25,y+.06+R()*.04,z-.05],.022,.002,3)} // v179: rooted deeper (fused abdomens are slimmer)
+      if(y<.42)continue;const bn=z<-.42?'tail1':z<-.3?'tail0':'pelvis';k.L(bn,'c',i%3?hair:hair2,[x*.86,.49+(y-.49)*.86-.01,z],[x*1.25,y+.06+R()*.04,z-.05],.022,.002,3)} // v180: rooted deeper (fused abdomens are slimmer)
     [-1,0,1].forEach(i=>k.L('chest','c',hair,[i*.06,.5,.15],[i*.08,.56,.08],.02,.002,3));
     // spinnerets
     [-1,1].forEach(s=>k.L('tail3','c',hair2,[s*.02,.46,-.66],[s*.03,.44,-.74],.018,.004,4));

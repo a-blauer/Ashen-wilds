@@ -38,11 +38,11 @@ LPR.Gloomcap={
       dirt=new THREE.Color(0x3a2c20),gill=new THREE.Color(spore?0x4a3a2a:0x4a2430),root=new THREE.Color(0x3a2c20),moss=new THREE.Color(0x4a5a2a);
     const R=(y,rx,f,bk,b,o)=>Object.assign({p:[0,y,0],rx,ryT:f,ryB:bk,b},o||{});
     // the stem: wide soft base, belly in front, narrowing to the cap; the top (the face) rides the head bone
-    // (v179: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
+    // (v180: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
     const st=spore?[R(.03,.12,.115,.115,['pelvis','pelvis',0]),R(.09,.15,.15,.14,['pelvis','pelvis',0]),R(.18,.165,.17,.155,['pelvis','pelvis',0]),R(.3,.155,.16,.145,['pelvis','spine',.4]),
         R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.8]),R(.67,.112,.122,.108,['head','head',0]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0]),R(.84,.086,.088,.084,['head','head',0])]
       :[R(.03,.13,.12,.12,['pelvis','pelvis',0]),R(.08,.175,.17,.16,['pelvis','pelvis',0]),R(.16,.2,.21,.18,['pelvis','pelvis',0]),R(.26,.195,.205,.175,['pelvis','spine',.3]),
-        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v179: the stem runs up into the cap (it stopped short of the gill disc)
+        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v180: the stem runs up into the cap (it stopped short of the gill disc)
     const lofts=[{rings:st,seg:16,ref:[0,0,1],capA:1,paint:(o,r,s,cc)=>{o.copy(stalk);if(s<-.3)o.lerp(stalkD,.35);if(Math.abs(Math.sin((cc+s)*7+r.p[1]*30))>.86)o.lerp(stalkD,.4);
         const t=Math.max(0,(.2-r.p[1])*5);if(t>0)o.lerp(dirt,Math.min(.75,t));if(r.p[1]>.5&&s<-.2)o.lerp(capD,.25)}}];
     // the skirt (annulus): a tattered collar hanging under the cap
@@ -77,7 +77,7 @@ LPR.Gloomcap={
     // the face under the brim (head bone): sockets, glowing eyes, brows, cheeks, the mouth (lower lip on the jaw)
     const fz=y=>y>.7?.122:y>.64?.132:.14;
     [-1,1].forEach(s=>{const y=spore?.66:.675,z=fz(y)-.012;
-      // v179 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
+      // v180 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
       // big round eyes with white sparkles and pink blush read as a cartoon)
       k.p('head','sph','c',soc,s*.052,y,z,.042,.032,.022,0,s*.35,s*.18);k.p('head','sph','g',eye,s*.054,y-.002,z+.014,.02,.012,.01,0,s*.35,s*.25);
       k.p('head','box','c',spore?0x5a4a34:0x4a3428,s*.052,y+.026,z+.008,.06,.016,.024,.25,s*.3,s*-.42);
@@ -104,13 +104,13 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sp
   bracket(Math.PI-.6,.34,.06);bracket(Math.PI+.7,.24,.05);
   if(L>=2){// little toadstools sprouting from the cap, glowing spots
     [[.16,.05],[-.14,-.1],[.03,-.21],[-.18,.13]].forEach((q,i)=>{const y=capTop(q[0],q[1]),b=[q[0],y,q[1]],tp=E.add(b,E.nrm([q[0],1,q[1]]),.06+i%2*.02);
-      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v179: gills under the caps, the spot on the cap
+      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v180: gills under the caps, the spot on the cap
     for(let i=0;i<12;i++){const a=i/12*6.283,r=rim*.7,x=Math.sin(a)*r,z=Math.cos(a)*r;E.pd('sph','g',P.glowD,[x,capTop(x,z)+.004,z],E.nrm([x,.6,z]),[.016,.005,.016],null,hb)}
     bracket(Math.PI*.5+2.8,.44,.05)}
   if(L>=3){// moss and roots hanging from the rim at the back and sides (the face stays clear), root tendrils down the back
     for(let i=0;i<14;i++){const a=Math.PI*.42+i/13*Math.PI*1.16,p=[Math.sin(a)*(rim-.01),rimY+.005,Math.cos(a)*(rim-.01)],len=.08+((i*7)%4)*.025;
       E.L(p,E.add(p,[Math.sin(a)*.025,-len,Math.cos(a)*.025]),.026,.004,'c',i%3?0x3a4a26:0x4a3a26,4,hb);if(i%4==1)E.pd('sph','g',P.glow,E.add(p,[Math.sin(a)*.025,-len,Math.cos(a)*.025]),[0,1,0],.012,null,hb)}
-    [-1,1].forEach(s=>E.chain([[s*.05,.64,-.11],[s*.07,.46,-.16],[s*.06,.32,-.17],[s*.08,.18,-.15]],.016,.006,'c',0x3a2c20,4,{vs:1}))} // v179: the roots follow the stem as the cap bows
+    [-1,1].forEach(s=>E.chain([[s*.05,.64,-.11],[s*.07,.46,-.16],[s*.06,.32,-.17],[s*.08,.18,-.15]],.016,.006,'c',0x3a2c20,4,{vs:1}))} // v180: the roots follow the stem as the cap bows
   if(L>=4){// a crown of spore stalks with glowing bulbs, glow motes on the cap, a gilded band round the stem
     for(let i=0;i<5;i++){const a=i/5*6.283,x=Math.sin(a)*.08,z=Math.cos(a)*.08,b=[x,capTop(x,z),z],tip=E.add(b,E.nrm([Math.sin(a)*.35,1,Math.cos(a)*.35]),.14+(i%2)*.05);
       E.L(b,tip,.014,.008,'c',stalk,4,hb);E.pd('sph','g',i%2?P.glow:P.glow2,tip,[0,1,0],[.028,.022,.028],null,hb)}

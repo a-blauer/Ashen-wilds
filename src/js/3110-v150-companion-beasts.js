@@ -162,12 +162,12 @@ function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,ivory=0xe4dcc8,ir
   {const N=14,pts=[];for(let i=0;i<N;i++)pts.push(bz150S(R,.43,i/N*Math.PI*2,.016).p);
     for(let i=0;i<N;i++)k.L('neck','m',iron,pts[i],pts[(i+1)%N],.016,.016,5);
     [-.9,-1.57,-2.24].forEach((a,i)=>{const h=bz150S(R,.43,a,.03);k.p('neck','box','g',vio,h.p[0],h.p[1],h.p[2]+.004,.012,.024,.006,0,0,a+Math.PI/2)});
-    const lo=bz150S(R,.43,-Math.PI/2,.016).p;lk179Chain(k,'neck','m',[iron,ironD],lo,4,.016,[0,-1,-.3])} // v179: links that hold together
+    const lo=bz150S(R,.43,-Math.PI/2,.016).p;lk180Chain(k,'neck','m',[iron,ironD],lo,4,.016,[0,-1,-.3])} // v180: links that hold together
   // broken shackles on the forelegs, chain ends trailing
   [['fl1',-1],['fr1',1]].forEach(([bn,s])=>{const a=e137B('Ashwolf',bn),b=e137B('Ashwolf',bn[0]+bn[1]+'2'),p=e137L(a,b,.45);
     k.p(bn,'tor','m',iron,p[0],p[1],p[2],.045,.045,.045);k.p(bn,'ring','m',ironD,p[0],p[1]+.024,p[2],.046,.06,.046);k.p(bn,'ring','m',ironD,p[0],p[1]-.024,p[2],.046,.06,.046);
     k.p(bn,'box','g',vio,p[0],p[1],p[2]+.046,.012,.026,.004);
-    lk179Chain(k,bn,"m",[iron,ironD],[p[0]+s*.028,p[1]-.02,p[2]+.028],3,.013,[s*.15,-1,-.25])});
+    lk180Chain(k,bn,"m",[iron,ironD],[p[0]+s*.028,p[1]-.02,p[2]+.028],3,.013,[s*.15,-1,-.25])});
   // long thin paws with black claws
   ['fl2','fr2','hl2','hr2'].forEach(bn=>{const c0=e137B('Ashwolf',bn);for(let i=-1;i<=1;i++){const x=c0[0]+i*.018;k.L(bn,'c',0x08080a,[x,.022,c0[2]+.075],[x,.003,c0[2]+.11],.008,.001,4)}});
   // the smouldering tail tuft
@@ -212,7 +212,7 @@ function el150Kit(k,c,C,red){const K=el150Cols(C),R=EL150.body,cream=K.cream.get
   // forward-facing almond eyes with slit pupils, dark eye-liner, a pale brow streak
   [-1,1].forEach(s=>{const x=s*.044,y=.637,z=bz150Front(R,Math.abs(x),y,.5,.7);
     k.p('head','sph','c',black,x,y,z-.006,.028,.02,.014,0,s*.35,s*-.25);k.p('head','sph','g',eye,x+s*.002,y,z-.002,.022,.015,.01,0,s*.35,s*-.25);
-    k.p('head','box','c',0x000000,x+s*.004,y,z+.005,.004,.022,.004,0,s*.35,0); // v179: no cartoon sparkle
+    k.p('head','box','c',0x000000,x+s*.004,y,z+.005,.004,.022,.004,0,s*.35,0); // v180: no cartoon sparkle
     k.L('head','c',black,[x+s*.018,y-.012,z-.008],[x+s*.04,y-.035,z-.04],.005,.003,3)});
   // nose leather, split lip, small fangs; the chin on the jaw with a dark mouth
   k.p('head','box','c',0x2a1612,0,.608,.656,.022,.012,.012,-.3,0,0);k.L('head','c',0x2a1410,[0,.598,.658],[0,.575,.648],.004,.004,3);
@@ -234,7 +234,7 @@ function el150Kit(k,c,C,red){const K=el150Cols(C),R=EL150.body,cream=K.cream.get
   [.12,-.02,-.16].forEach((z0,j)=>[-1,1].forEach(s=>{const an=a=>s>0?a:Math.PI-a,A=[1.38,.95,.5,.08],W=[.003,.01,.011,.008,.002],bn=z0>.1?'chest':z0>-.12?'spine':'pelvis';
     let p=bz150S(R,z0,an(A[0]),.004).p;for(let t=1;t<4;t++){const q=bz150S(R,z0-t*.022-(t==2?.012:0),an(A[t]),.004).p;k.L(bn,'g',(t+j)%2?emb:emb2,p,q,W[t-1]+.002,W[t]+.002,3);p=q}}));
   [[.6,0],[.58,.025],[.58,-.025]].forEach(q=>{const t=bz150S(R,q[0]-.07,Math.PI/2,.002).p;k.L('head','g',emb2,[q[1],t[1],q[0]-.04],[q[1]*1.4,t[1]-.004,q[0]-.11],.006,.003,3)});
-  [['fl0',.2,.3],['fr0',.2,.3],['hl0',-.22,.3],['hr0',-.22,.3]].forEach(([bn,z,y])=>{const b=e137B('Foxlet',bn),s=Math.sign(b[0]),o=bn[0]=='h'?.056:.052; // v179: hind stripes on the thigh (were 7 mm off it)
+  [['fl0',.2,.3],['fr0',.2,.3],['hl0',-.22,.3],['hr0',-.22,.3]].forEach(([bn,z,y])=>{const b=e137B('Foxlet',bn),s=Math.sign(b[0]),o=bn[0]=='h'?.056:.052; // v180: hind stripes on the thigh (were 7 mm off it)
     k.L(bn,'g',emb,[b[0]+s*o,y+.03,z+.01],[b[0]+s*(o+.002),y-.03,z-.01],.007,.003,3)});
   // big furry paws: cream toes, short claws hidden in the fur
   ['fl2','fr2','hl2','hr2'].forEach(bn=>{const c0=e137B('Foxlet',bn);for(let i=-1;i<=1;i++)k.p(bn,'sph','c',cream,c0[0]+i*.022,.018,c0[2]+.068,.017,.014,.02)})}

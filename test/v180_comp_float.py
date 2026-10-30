@@ -1,8 +1,8 @@
-# v179: companion bodies hold together. Builds every companion species at every evolution (0-3), every trait (Horned, Spiked,
+# v180: companion bodies hold together. Builds every companion species at every evolution (0-3), every trait (Horned, Spiked,
 # Armored, Universal), the colour variants (Ember, Frost, Shadow, Golden), a rare variant, shiny, and fused companions
 # (a second / third species' signature parts), then checks in idle, two walk phases and a bite:
 #  * FAIL on a floating piece: any separate piece of mesh more than FLOAT_MM (4 mm; MOVE_MM 12 mm in walk / bite frames) from the rest of the model that does not pierce it
-#    and is not enclosed by it (same rule as the townsfolk test v142_folk.py, float_lib.py)
+#    and is not enclosed by it (same rule as the townsfolk test v142_folk.py, comp_float_lib.py)
 #  * FAIL on NaN vertices or a build error
 # Parts meant to hover (glow motes, magic rings) are listed in OK_FLOAT below with the reason.
 # SP=Foxlet,Ashwolf (species)  SETS=base,trait,var,fuse (fewer)  POSES=idle,walkA,walkB,bite  FLOAT_MM=4  VERBOSE=1
@@ -10,12 +10,12 @@ import os,sys,re,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import play
-from float_lib import floating_fast as floating
+from comp_float_lib import floating_fast as floating
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'))
 # in walk and bite frames a rigid ornament on bending skin opens a gap for a moment: up to MOVE_MM is allowed there
 MOVE_MM=float(os.environ.get('MOVE_MM','12'))
 JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimationFrame=()=>0;
-  if(!window._v179){window._v179=1;const tag=(r,key)=>{(Array.isArray(r)?r:[r]).forEach(m=>{if(m&&m.isMesh)m.userData._bk=String(key||'').split('|').slice(0,2).join('|')})};
+  if(!window._v180){window._v180=1;const tag=(r,key)=>{(Array.isArray(r)?r:[r]).forEach(m=>{if(m&&m.isMesh)m.userData._bk=String(key||'').split('|').slice(0,2).join('|')})};
     {const o=dkBake;dkBake=function(P,O,key){const r=o.apply(this,arguments);tag(r,key||'dk');return r}}
     {const o=bakeMesh;bakeMesh=function(parts,O,key){const r=o.apply(this,arguments);tag(r,key||'bake');return r}}}
   const sc=new THREE.Scene();
@@ -94,7 +94,7 @@ def s(pg):
                 root=np.array([info[i].get('k')=='body?' for i in M]) if len(M) else None
                 if os.environ.get('DUMP'):np.savez(os.environ['DUMP']+'_%s_%s.npz'%(lab.replace(' ','_'),pn),V=V,root=root)
                 bad=floating(V,thr if pn=='idle' else max(thr,MOVE_MM/1000),root)
-                if bad:from float_lib import components_fast;_,lab_=components_fast(V)
+                if bad:from comp_float_lib import components_fast;_,lab_=components_fast(V)
                 for c,n,cc,d in bad:
                     # which mesh owns most of the piece
                     sel=np.where(lab_==c)[0];mid=np.bincount(M[sel]).argmax();mi=info[mid]
@@ -112,5 +112,5 @@ def s(pg):
     for o in okd[:40] if verbose else []:print('ok',o)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])
-    print('==== v179_comp_float: %d configs, %d fails, %d allowed hovering parts'%(len(L),len(fails)+len(errs[:6]),len(okd)))
+    print('==== v180_comp_float: %d configs, %d fails, %d allowed hovering parts'%(len(L),len(fails)+len(errs[:6]),len(okd)))
 play.run(s)

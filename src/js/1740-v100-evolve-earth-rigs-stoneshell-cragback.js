@@ -38,13 +38,13 @@ EVO100.D.Mossfrog={glow:0xb8ff4a,build(E,L,P){
   if(L>=2){// moss cloak over the back with hanging strands, a reed crown between the eyes
     E.shell((x,y,z,nx,ny)=>ny>.55&&z<.22&&z>-.25,.012,'c',(x,y,z,i)=>i%3?moss:0x3a5222,{rimCol:0x2a3a1a});
     [-1,1].forEach(s=>[.1,-.05,-.18].forEach(z=>{const h=E.on([s*.6,.42,z],[-s,-.3,0]);if(h)E.L(h.p,E.add(h.p,[s*.02,-.08,-.01]),.012,.002,'c',moss,3)}));
-    for(let i=-2;i<=2;i++){const t=E.top(i*.025,.3),y=t?t.p[1]-.012:.43;E.L([i*.025,y,.3],[i*.04,y+.08,.27-Math.abs(i)*.01],.007,.002,'c',reed,3,{bn:'head'})}} // v179: rooted in the head (the head top is lower than these were drawn for)
+    for(let i=-2;i<=2;i++){const t=E.top(i*.025,.3),y=t?t.p[1]-.012:.43;E.L([i*.025,y,.3],[i*.04,y+.08,.27-Math.abs(i)*.01],.007,.002,'c',reed,3,{bn:'head'})}} // v180: rooted in the head (the head top is lower than these were drawn for)
   if(L>=3){// bone charm necklace across the throat, bony brow spurs, warty knuckle bands
     const pts=[];for(let i=-3;i<=3;i++){const a=i/3*1.2,h=E.on([Math.sin(a)*.5,.2,.32+Math.cos(a)*.3],[-Math.sin(a),.2,-Math.cos(a)]);if(h)pts.push(E.add(h.p,h.n,.008))}
     for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.005,.005,'c',P.leather,3);pts.forEach((p,i)=>{if(i%2)M.charm(E,p,.07,P.bone,'tooth');else E.pd('sph','c',P.bone,p,[0,1,0],.012)});
     [-1,1].forEach(s=>E.horn([s*.12,.47,.33],[s*.4,.7,-.5],[0,0,-.02],.07,.018,'c',P.boneD,4,{bn:'head'}))}
   if(L>=4){// an angler lure on a bony stalk with a glowing lantern bulb, glowing eye rims, moss beard
-    const lt=E.top(0,.33),b=lt?lt.p[1]-.01:.45; // v179: the lure grows from the head (it was drawn 3 cm above it)
+    const lt=E.top(0,.33),b=lt?lt.p[1]-.01:.45; // v180: the lure grows from the head (it was drawn 3 cm above it)
     E.chain([[0,b,.33],[0,b+.08,.36],[0,b+.12,.42],[0,b+.1,.48]],.016,.007,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,b+.08,.49],[0,1,0],.026,null,{bn:'head'});E.pd('ico','g',P.glow2,[0,b+.08,.49],[0,1,0],.014,null,{bn:'head'});
     [0,1,2].forEach(i=>E.L([0,b+.045+i*.025,.35+i*.03],[0,b+.08+i*.025,.33+i*.03],.006,.001,'c',P.boneD,3,{bn:'head'}));
     [-1,1].forEach(s=>{const c=[s*.12,.415,.34],A=new THREE.Vector3(s*.4,.9,.5).normalize(),U=new THREE.Vector3(1,0,0).sub(A.clone().multiplyScalar(A.x)).normalize(),V2=new THREE.Vector3().crossVectors(A,U),rp=[];
