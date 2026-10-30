@@ -56421,7 +56421,7 @@ function cgToes(k,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.l
 // outside find the smoothed surface; parts limits which faces count)
 function cgSurf(M,S,y,a,off,parts){const q=cgTAt(S,y),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,[d[0]*.9,y,q.z+d[2]*.9],[-d[0],0,-d[2]],parts||{torso:1,tail:1});return p?add3(p,mul3(d,off||0)):[d[0]*(q.rx+(off||0)),y,q.z+d[2]*((d[2]>=0?q.f:q.b)+(off||0))]}
 // a belt / sash: a band of the body's own surface (torso, or the tail top for a naga) between y−h and y+h, pushed out by off
-function cgBelt(B,M,y,h,off,col,t){cgShell(B,M,m=>(m.part=='torso'||m.part=='tail')&&Math.abs(m.y-y)<h,off,col,{t,rim:.25})}
+function cgBelt(B,M,y,h,off,col,t){cgShell(B,M,m=>(m.part=='torso'||m.part=='tail')&&Math.abs(m.y-y)<h,off,col,{t,rim:0})}
 // the torso ring of the cage spec at height y (rx, f, b, z)
 function cgTAt(S,y){const q=cgAt(S.torso,y);return {rx:q[1],f:q[2],b:q[3],z:q[4]||0}}
 // a skirt / robe / coat tail / tasset band from the torso at y0 down to y1: flares by fl, follows the hips and then the legs
@@ -56559,9 +56559,9 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     cgSkirt(B,S,wy-.02,kn+.06,.06,.06,m=>n3Sn(m.x,m.y,m.z,11,5)>.7?bl:a181Nz(ap,m,.35,14),{n:5,keep:m=>m.s>.35});
     [-1,1].forEach(s=>{const f=cgTAt(S,sh-.06),b=cgTAt(S,sh-.08);cgTube(B,[[s*.09*S.h,sh-.06,f.z+f.f+.032],[s*.15,sh+.03,0],[s*.08,sh-.1,b.z-b.b-.02]],[.016,.016,.016],[[['chest',1]],[['chest',1]],[['chest',1]]],0x1e120c,{seg:6})});
     cgBelt(B,M,wy-.015,.035,.07,0x1a100a);
-    const bf=cgSurf(M,S,wy-.015,0,.074),br=cgSurf(M,S,wy-.02,Math.PI/2,.074),bl=cgSurf(M,S,wy-.02,-Math.PI/2,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);
-    k.L('pelvis','c',0x3a2414,br,add3(br,[.012,-.05,0]),.012,.012,4);k.p('pelvis','box','m',ir,br[0]+.018,br[1]-.12,br[2],.012,.14,.09,0,0,.08);
-    for(let i=0;i<7;i++)k.p('pelvis','tor','m',ir2,bl[0]-.006-i*.003,bl[1]-.012-i*.026,bl[2]+.004*i,.014,.006,.014,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);
+    const bf=cgSurf(M,S,wy-.015,0,.074),bR=cgSurf(M,S,wy-.02,Math.PI/2,.074),bL=cgSurf(M,S,wy-.02,-Math.PI/2,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);
+    k.L('pelvis','c',0x3a2414,bR,add3(bR,[.012,-.05,0]),.012,.012,4);k.p('pelvis','box','m',ir,bR[0]+.018,bR[1]-.12,bR[2],.012,.14,.09,0,0,.08);
+    for(let i=0;i<7;i++)k.p('pelvis','tor','m',ir2,bL[0]-.006-i*.003,bL[1]-.012-i*.026,bL[2]+.004*i,.014,.006,.014,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);
     // scars on the back and arms; forearm wraps; manacles with a broken link; breeches, heavy boots
     [[sh-.06,2.4],[wy+.12,-2.6],[sh-.12,Math.PI]].forEach(([y,a])=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(!p)return;const e=[p[0]+.05,p[1]-.08,p[2]];
       k.L('chest','c',scar,p,e,.006,.005,3);for(let i=0;i<4;i++){const c=lerp3(p,e,i/3);k.p('chest','box','c',0x1a1010,c[0],c[1],c[2],.016,.003,.003,0,a,.5)}});
