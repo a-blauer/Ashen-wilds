@@ -55651,7 +55651,7 @@ function a181Nz(base,m,amt,f,seed){const v=n3Sn(m.x,m.y,m.z,f||14,seed||0);retur
 // ---------------- torso ----------------
 // shapes: rings [y, rx (half width), f (front), b (back), z]; weights by height as every humanoid (mdTorsoW)
 const A181T={
-  brute:[[.42,.15,.11,.12],[.48,.18,.13,.14],[.54,.19,.15,.145],[.6,.19,.165,.135],[.67,.2,.175,.13],[.74,.215,.17,.135],[.81,.235,.165,.145],[.87,.25,.165,.155],[.925,.255,.15,.16],[.965,.232,.12,.155],[1.0,.14,.095,.125],[1.035,.088,.078,.085],[1.075,.072,.07,.07]],
+  brute:[[.42,.15,.11,.12],[.48,.18,.13,.14],[.54,.19,.15,.145],[.6,.19,.165,.135],[.67,.2,.175,.13],[.74,.215,.17,.135],[.81,.235,.165,.145],[.87,.25,.165,.155],[.925,.25,.15,.16],[.965,.21,.12,.155],[1.0,.15,.1,.13],[1.035,.1,.085,.095],[1.075,.076,.072,.072]],
   knight:[[.42,.13,.1,.11],[.5,.148,.108,.122],[.56,.146,.104,.114],[.62,.134,.098,.1],[.7,.146,.106,.104],[.78,.18,.13,.114],[.86,.214,.146,.126],[.92,.226,.14,.132],[.965,.2,.11,.118],[1.0,.104,.078,.088],[1.035,.064,.064,.06],[1.075,.057,.059,.056]],
   lean:[[.42,.13,.092,.1],[.5,.148,.1,.114],[.56,.146,.096,.11],[.62,.13,.088,.094],[.7,.138,.094,.098],[.78,.162,.112,.106],[.86,.188,.126,.116],[.92,.198,.122,.122],[.965,.18,.098,.11],[1.0,.094,.07,.08],[1.035,.056,.056,.054],[1.075,.05,.053,.05]],
   gaunt:[[.42,.12,.084,.094],[.5,.134,.088,.104],[.56,.128,.08,.098],[.62,.11,.066,.088],[.7,.118,.074,.092],[.78,.146,.1,.104],[.86,.168,.116,.114],[.92,.178,.112,.12],[.965,.166,.09,.112],[1.0,.086,.064,.076],[1.035,.05,.052,.05],[1.075,.046,.05,.047]]};
@@ -55705,6 +55705,7 @@ function a181Leg(B,P,s,L0,col,o){const R=a181LegR(P,s,L0);mdLoft(B,mdDome(R),Obj
 function a181Foot(B,P,k,s,F){F=F||{};const bn=(s<0?'lh':'rh')+'2',A=mdV(P.bones[bn]),w=F.w||1,ln=F.len||1,col=F.col,x=A.x,W=[[bn,1]];
   const r=(z,y,rx,f,b)=>({p:[x,y,A.z+z*ln],rx:rx*w,f,b,w:W});
   mdLoft(B,[r(-.065,.048,.04,.03,.036),r(-.035,.052,.05,.042,.044),r(.03,.042,.054,.034,.04),r(.09,.03,.056,.024,.028),r(.115,.024,.05,.018,.02)],{seg:9,ref:[0,1,0],capA:true,capB:true,col});
+  const lb=s<0?'lh1':'rh1';mdLoft(B,[{p:[x,A.y+.04,A.z-.008],rx:.04*w,f:.04*w,b:.042*w,w:[[lb,.45],[bn,.55]]},{p:[x,(A.y+.04)*.5+.03,A.z-.01],rx:.046*w,f:.044*w,b:.046*w,w:W},{p:[x,.04,A.z-.012],rx:.044*w,f:.04*w,b:.044*w,w:W}],{seg:9,capA:true,capB:true,col});   // the ankle plug: overlaps the shin's end and the foot, so no gap opens when the foot turns
   const n=F.toes||5;for(let i=0;i<n;i++){const tx=x+(i-(n-1)/2)*.021*w*(5/n),tz=A.z+.112*ln,l=(F.toe||.03)*(i==Math.floor(n/2)?1.1:.9);
     k.L(bn,'c',col,[tx,.022,tz],[tx+(i-(n-1)/2)*.004,.014,tz+l],.011*w,.008*w,4);if(F.claw)k.L(bn,'c',F.nail==null?0x141012:F.nail,[tx+(i-(n-1)/2)*.004,.014,tz+l],[tx+(i-(n-1)/2)*.006,.003,tz+l+F.claw],.007*w,.001,4)}}
 
@@ -55762,7 +55763,9 @@ function a181Band(c1,c2,n){return m=>Math.floor(m.i*(n||1))%2?c1:c2}
 function a181Boot(B,P,s,o){const bn=(s<0?'lh':'rh')+'2',A=mdV(P.bones[bn]),x=A.x,W=[[bn,1]],tp=o.toe||.05,r=(z,y,rx,f,b)=>({p:[x,y,A.z+z],rx,f,b,w:W});
   mdLoft(B,[r(-.075,.055,.046,.036,.044),r(-.04,.07,.058,.05,.054),r(.03,.052,.06,.04,.048),r(.1,.036,.056,.028,.03),r(.12+tp*.5,.026,.04,.018,.02),r(.12+tp,.016,.01,.006,.008)],{seg:10,ref:[0,1,0],capA:true,capB:true,col:o.col,t:o.t||'c'})}
 // shells over arm / leg rings (slices of the ring lists), pushed out by off
-function a181Shell(B,R,i0,i1,off,col,o){const Q=R.slice(i0,i1+1).map(r=>Object.assign({},r,{rx:r.rx+off,f:r.f+off,b:r.b+off}));mdLoft(B,i0==0?mdDome(Q):Q,Object.assign({seg:10,col},i0==0?{capA:true}:{},o||{}))}
+function a181Shell(B,R,i0,i1,off,col,o){const Q=R.slice(i0,i1+1).map(r=>Object.assign({},r,{rx:r.rx+off,f:r.f+off,b:r.b+off}));mdLoft(B,i0==0?mdDome(Q):Q,Object.assign({seg:10,col},i0==0?{capA:true}:{},o||{}));
+  // closed rims down to the skin at the open ends (a sleeve or band never stands as a loose tube)
+  const seg=(o&&o.seg)||10,t=(o&&o.t)||'c',c=typeof col=='function'?col:(()=>col);[[i0,i0==0?null:1],[i1,1]].forEach(([i,on])=>{if(!on)return;const a=R[i],b=Q[i-i0];mdLoft(B,[Object.assign({},a,{rx:a.rx*.96,f:a.f*.96,b:a.b*.96}),b],{seg,t,col:m=>c(Object.assign({},m,{i:i-i0}))})})}
 // a helm over the head rings (the face is hidden): o {off, col, t, slit (visor slit colour), face fn(m)→colour|null}
 function a181Helm(B,P,o){const H=P._H,off=o.off||.022;const R=H.map(r=>Object.assign({},r,{p:r.p.slice(),rx:r.rx+off,f:r.f+off*1.2,b:r.b+off}));
   mdLoft(B,R,{seg:18,capA:false,capB:true,t:o.t||'m',col:m=>{const c=o.face&&o.face(m);return c!=null?c:o.col}})}
@@ -55793,7 +55796,7 @@ a181Reg('vampk',function(B,P,k,L){const pl=0x2a1419,pl2=0x40202a,ed=0x5a262c,gd=
     for(let j=0;j<3;j++)k.p(a,'cone4','m',j==1?pl2:pl,x+s*(.02+j*.025),1.06+j*.015,-.03-j*.03,.024,.16-j*.035,.008,-.55-j*.12,0,-s*(.3+j*.15));
     // rerebrace, couter with a back spike, vambrace flared at the wrist
     const R=AR[i];a181Shell(B,R,2,4,.016,pl,{t:'m',col:m=>Math.round(m.i*2)%2?pl:pl2});a181Shell(B,R,6,8,.016,pl,{t:'m',col:m=>m.i>1.6?gd:pl});
-    const e=R[5].p;k.p(a.replace('0','1'),'sph','m',pl2,e[0],e[1],e[2]-.01,.06,.055,.06);k.L(a.replace('0','1'),'m',ed,[e[0],e[1],e[2]-.05],[e[0]+s*.02,e[1]+.03,e[2]-.12],.022,.002,4);
+    const e=R[5].p,eb=e[2]-R[5].b-.016;k.p(a.replace('0','1'),'sph','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(a.replace('0','1'),'m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
     a181Hand(B,P,k,s,{kind:'fist',col:pl,t:'m',w:1.1});
     // cuisses, poleyn with a spike, greaves, pointed sabatons
     const G=LR[i],l=s<0?'lh':'rh';a181Shell(B,G,1,3,.014,pl,{t:'m',col:m=>Math.round(m.i*2)%2?pl:pl2});
@@ -55922,7 +55925,7 @@ a181Reg('yeti',function(B,P,k,L){const f1=0x9c9e9c,f2=0x868a8e,f3=0xb0b2ae,un=0x
   [-1,1].forEach(s=>{a181Hand(B,P,k,s,{kind:'claw',col:sk,len:.85,nail:cl,tip:.035,w:1.35,fr:1.4});a181Foot(B,P,k,s,{col:sk,claw:.025,len:1.15,w:1.35,toe:.03,nail:cl})});
   // the ape head: heavy brow, deep-set eyes, flat nose, jutting jaw, fur all round the face
   a181Head(B,P,{w:1.05,jaw:1.3,chin:1.25,len:1.22,brow:1.25,crown:.8,back:.95,cheek:1.1},m=>m.s>.35&&m.y<1.19&&Math.abs(m.c)<.6?(m.y>1.135&&m.y<1.165?sk2:sk):fur(m));
-  a181Eyes(k,P,{glow:0x9ad8ff,sock:0x0a0c10,r:.75,brow:false,tilt:.05});{const bz=mdHeadZ(P,1.175)-.012;k.L('head','c',sk2,[-.085,1.17,bz-.02],[0,1.18,bz+.006],.026,.024,6).L('head','c',sk2,[0,1.18,bz+.006],[.085,1.17,bz-.02],.024,.026,6)}
+  a181Eyes(k,P,{glow:0x9ad8ff,sock:0x0a0c10,r:.75,brow:false,tilt:.05});{const bz=mdHeadZ(P,1.175)-.012;k.L('head','c',sk,[-.08,1.168,bz-.022],[0,1.176,bz],.017,.016,6).L('head','c',sk,[0,1.176,bz],[.08,1.168,bz-.022],.016,.017,6)}
   const nz=mdHeadZ(P,1.11);k.p('head','sph','c',sk2,0,1.11,nz-.004,.04,.022,.022);[-1,1].forEach(s=>k.p('head','sph','c',0x050608,s*.016,1.105,nz+.012,.008,.006,.004));
   a181Mouth(k,P,{y:1.065,open:.012,col:0x0a0606,lip:sk2,w:1.3,tooth:0xd8d0b8,fangs:[[-.032,.032,1],[.032,.032,1],[-.026,.02],[.026,.02]]});
   a181HairCap(B,P,{col:f1,col2:f1,y1:.95,thick:.03,rag:.3,front:.35});
@@ -55962,7 +55965,7 @@ a181Reg('jotun',function(B,P,k,L){const sk=0x5e7388,sk2=0x485a6e,rune=0x8ae0ff,w
     for(let j=0;j<2;j++){const p=R[2+j].p;k.p(bn+'0','box','g',rune,p[0]+s*.02,p[1],p[2]+.05,.006,.05,.003,0,0,s*.4)}});
   // war-kilt: leather panels with iron studs over a fur loincloth; a heavy belt; fur-wrapped boots
   mdSkirt(B,P,.6,.32,.06,.018,{n:5,col:m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),m,.3,10),keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>.48});
-  for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=n3Surf(P,.5,a,.055);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.01)}
+  for(let i=0;i<14;i++){const a=i/14*Math.PI*2,p=n3Surf(P,.605,a,.052);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.011)}
   mdLoft(B,a181TShell(P,.57,.64,.05),{seg:20,col:0x1e160e});k.p('pelvis','box','m',ir2,0,.605,mdTorsoAt(P,.6).f+.06,.07,.05,.012);
   LR.forEach((G,i)=>{const s=i?1:-1;a181Shell(B,G,5,8,.03,pe,{col:m=>a181Nz(pe,m,.35,16)});a181Fringe(B,a181RingPts(B,G[5],.03,14),{len:.06,col:pe,col2:pe2,closed:true,cx:G[5].p[0],cz:G[5].p[2]});a181Boot(B,P,s,{col:pe2,toe:.03})})},'v181j');
 
@@ -55998,3 +56001,144 @@ a181Reg('executioner',function(B,P,k,L){const sk=0x8a7468,sk2=0x6a564c,scar=0x5a
     const w=R[8].p;k.p(s<0?'aL1':'aR1','tor','m',ir2,w[0],w[1]-.03,w[2]+.05,.014,.006,.016,Math.PI/2,0,0);
     const p=R[2].p;k.L(s<0?'aL0':'aR0','c',scar,[p[0]+s*.06,p[1]+.03,p[2]+.02],[p[0]+s*.065,p[1]-.05,p[2]+.04],.005,.005,3)});
   LR.forEach((G,i)=>a181Shell(B,G,6,8,.016,0x1a120c,{col:m=>m.i>1.4?ir:0x1a120c,t:'c'}))},'v181e');
+// ================= v181: the naga — a serpent body instead of legs =================
+// The v94 / v137 naga were lizard-men standing on two legs with a short tail. Now: a human upper body (scaled, a pale ventral
+// plate running down the belly) that flows at the hips into a heavy snake body which lies on the ground and trails ~1.7 m
+// behind in an S-curve, a cobra hood flaring behind a reptilian head (slit eyes, no nose, a lipless mouth with fangs).
+// The snake body hangs on five tail bones of its own (nt0–nt4, added to the humanoid skeleton of these three foes only):
+// they are children of the body mesh, not of the pelvis, so the coils stay on the ground whatever the upper body does (hip
+// bob, lean, twist), and they sway in a slither wave (faster and wider on the move). The legs are not built at all; the
+// humanoid animations still drive the arms, spine and head, so every naga move plays as before.
+var NAGA181={keys:{nagaw:1,nagaa:1,nagas:1},
+  // name, parent, rest position (model space, before the foe's scale)
+  bones:[['nt0',null,0,.3,-.05],['nt1','nt0',0,.115,-.32],['nt2','nt1',-.13,.098,-.66],['nt3','nt2',.06,.082,-1.0],['nt4','nt3',.15,.058,-1.32]],
+  amp:[.05,.1,.16,.2,.24],sc:1.3};
+Object.assign(AW_PROP99.PRE,{v181n:{pelvis:[.96,1.05,.92],spine:[.9,1.22,.88],chest:[.96,1.14,.92],neck:[1,1.45,1],head:.78,arm:[1.28,.98],hand:.92,leg:[1,1],foot:1,cape:[1.2,1]}});
+// the snake body: rings from the waist down into the ground and back along an S-curve
+function n181Tail(B,P,col){const T=(y)=>mdTorsoAt(P,y),q=T(.66),W=(a,b,t)=>t<=0?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]];
+  const R=[{p:[0,.66,q.z],rx:q.rx+.004,f:q.f+.004,b:q.b+.004,w:mdTorsoW(.66)},{p:[0,.58,0],rx:.152,f:.118,b:.122,w:[['pelvis',1]]},{p:[0,.5,-.006],rx:.162,f:.128,b:.132,w:[['pelvis',1]]},
+    {p:[0,.41,-.022],rx:.164,f:.134,b:.136,w:W('pelvis','nt0',.2)},{p:[0,.31,-.052],rx:.158,f:.132,b:.132,w:W('pelvis','nt0',.55)},{p:[0,.215,-.11],rx:.148,f:.13,b:.13,w:[['nt0',1]]},
+    {p:[0,.145,-.2],rx:.138,f:.124,b:.124,w:W('nt0','nt1',.4)}];
+  [[0,.115,-.32,.128,'nt1','nt1',0],[-.07,.105,-.48,.118,'nt1','nt2',.4],[-.13,.097,-.66,.108,'nt2','nt2',0],[-.09,.088,-.84,.098,'nt2','nt3',.5],[.06,.08,-1.0,.088,'nt3','nt3',0],
+   [.14,.07,-1.16,.077,'nt3','nt4',.4],[.15,.058,-1.32,.064,'nt4','nt4',0],[.09,.045,-1.48,.05,'nt4','nt4',0],[0,.032,-1.6,.034,'nt4','nt4',0],[-.07,.021,-1.7,.019,'nt4','nt4',0],[-.11,.012,-1.76,.006,'nt4','nt4',0]]
+    .forEach(([x,y,z,r,a,b,t])=>R.push({p:[x,y,z],rx:r,f:r*.9,b:r*.9,w:W(a,b,t)}));
+  mdLoft(B,R,{seg:16,ref:[0,0,-1],capB:true,col});return R}
+function n181Rig(g){const h=g.h,body=huBody(h);if(!body||!body.skeleton)return;const sk=body.skeleton,abs={},nb=[],by={};
+  NAGA181.bones.forEach(([n,p,x,y,z])=>{const b=new THREE.Bone();b.name=n;abs[n]=[x,y,z];by[n]=b;if(p){const a=abs[p];b.position.set(x-a[0],y-a[1],z-a[2]);by[p].add(b)}else{b.position.set(x,y,z);body.add(b)}nb.push(b)});
+  const inv=nb.map(b=>new THREE.Matrix4().makeTranslation(abs[b.name][0],abs[b.name][1],abs[b.name][2]).premultiply(body.bindMatrix).invert());
+  const S=new THREE.Skeleton(sk.bones.concat(nb),sk.boneInverses.map(m=>m.clone()).concat(inv));
+  h.children.forEach(o=>{if(o.isSkinnedMesh&&o.skeleton===sk)o.bind(S,o.bindMatrix)});h.nt=nb;g.n181=1}
+{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);if(A181.on&&NAGA181.keys[key]&&g&&g.h){try{n181Rig(g)}catch(e){console.error('v181 naga rig',e)}}return g}}
+// the slither: a travelling wave down the tail bones (the coils stay on the ground: rotations about the vertical only)
+{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const N=g&&g.h&&g.h.nt;if(N){const k=mv?1:.4,sp=mv?.0062:.0024;
+  N.forEach((b,i)=>{b.rotation.y=Math.sin(now*sp-i*1.25)*NAGA181.amp[i]*k*(mv?1.6:1)});N[0].rotation.y+=g.ak&&g.ak.n=='spin'?0:0}}catch(e){}return r}}
+
+// ---------------- the naga body (shared), then each one's gear ----------------
+function n181Body(B,P,k,o){B.O.push(...NAGA181.bones.map(q=>q[0]));
+  const sk=o.sk,sk2=o.sk2,bel=o.bel,bel2=mdSh(o.bel,.82),pat=o.pat;
+  // scales: a mottled back with dark diamond bands down the spine, pale ventral plates down the belly and under the tail
+  const scale=m=>a181Nz(sk,m,.38,13);
+  a181Torso(B,P,a181TRings('knight',{w:.98}).filter(r=>r.y>=.58),m=>m.s>.55&&Math.abs(m.c)<.45&&m.y<.84?(Math.round(m.y*34)%2?bel:bel2):m.s<-.6&&n3Sn(m.x,m.y*2,m.z,7,1)>.55?pat:scale(m),{capA:false});
+  n181Tail(B,P,m=>{const top=m.i<5?m.s<-.2:m.s>.2,a=Math.abs(Math.atan2(m.c,m.s));if(m.i<5?m.s>.45:m.s<-.45)return Math.round(m.i*2.2)%2?bel:bel2;
+    if(top&&(a<.55||a>2.6)&&Math.round(m.i*1.3)%2==0)return a181Nz(pat,m,.3,9);return scale(m)});
+  const AR=[-1,1].map(s=>a181Arm(B,P,s,{sh:1.1,bi:1.08,fo:1.05,wr:1},scale));
+  [-1,1].forEach(s=>a181Hand(B,P,k,s,{kind:o.fist&&o.fist(s)?'fist':'open',col:sk,len:1.05,nail:0x14100a,tip:.014,w:.95}));
+  // the head: long, flat-browed, no nose; slit eyes; a cobra hood flaring behind
+  a181Head(B,P,{w:.9,jaw:.86,chin:.85,len:1.18,crown:.88,back:1.1,cheek:1.06,brow:1.12},m=>m.s>.5&&m.y<1.1&&Math.abs(m.c)<.5?bel:scale(m));
+  a181Eyes(k,P,{glow:o.eye,sock:mdSh(o.sk2,.6),r:.72,tilt:.4,brow:false});[-1,1].forEach(s=>{const z=mdHeadZ(P,1.148);k.p('head','box','c',0x050403,s*.04,1.148,z+.002,.003,.014,.004);
+    k.L('head','c',sk2,[s*.075,1.176,mdHeadZ(P,1.176)-.016],[s*.02,1.168,mdHeadZ(P,1.168)],.012,.008,4);k.p('head','box','c',0x0a0806,s*.008,1.112,mdHeadZ(P,1.112)+.002,.004,.006,.004,0,0,s*.4)});
+  a181Mouth(k,P,{y:1.072,w:1.25,open:.006,col:0x140806,tooth:0xe8e0c8,fangs:[[-.022,.026],[.022,.026]]});
+  for(let i=0;i<5;i++)k.p('head','sph','c',i%2?sk2:sk,0,1.215+i*.012,mdHeadZ(P,1.215+i*.012)-.012-i*.018,.018,.012,.03);
+  const HR=[];[[1.0,.085,-.055],[1.05,.15,-.07],[1.11,.205,-.085],[1.17,.215,-.09],[1.23,.18,-.09],[1.275,.1,-.085],[1.3,.025,-.08]].forEach(([y,r,z])=>HR.push({p:[0,y,z],rx:r,f:.02,b:.03,w:y<1.07?[['neck',1]]:[['neck',.3],['head',.7]]}));
+  mdLoft(B,HR,{seg:18,capB:true,col:m=>{if(m.s>.3){const ex=Math.abs(Math.abs(m.x)-.12),ey=Math.abs(m.y-1.16),rim=Math.abs(m.x)>.15;return ex<.022&&ey<.02?0x0a0806:ex<.034&&ey<.032?mdSh(bel,.8):rim?a181Nz(sk2,m,.3,12):a181Nz(mdMix(sk,bel,.25),m,.3,14)}return a181Nz(sk2,m,.35,12)}});
+  [-1,1].forEach(s=>{for(let i=0;i<3;i++)k.L('neck','c',sk2,[s*.03,1.04,-.075],[s*(.17-i*.035),1.1+i*.065,-.095],.006,.004,3)});
+  return AR}
+
+a181Reg('nagaw',function(B,P,k,L){const br=0x6a5226,br2=0x4a3818,gd=0x8a7034,lt=0x2e2014;
+  const AR=n181Body(B,P,k,{sk:0x3a4a2c,sk2:0x283420,bel:0x8c7c4e,pat:0x1a2214,eye:0xffc020,fist:s=>s>0});
+  // bronze scale cuirass, gorget, one heavy pauldron, vambraces
+  mdLoft(B,a181TShell(P,.62,.975,.02,y=>y>.82?.006:0),{seg:18,t:'m',col:m=>m.i<.45||m.i>5.6?gd:a181Nz(Math.round(m.y*36+(Math.round(Math.atan2(m.c,m.s)*8)%2)*.5)%2?br:br2,m,.25,12)});
+  mdLoft(B,[{p:[0,.955,0],rx:.19,f:.14,b:.13,w:[['chest',1]]},{p:[0,1.0,0],rx:.12,f:.1,b:.1,w:[['chest',.6],['neck',.4]]},{p:[0,1.03,0],rx:.075,f:.075,b:.075,w:[['neck',1]]}],{seg:16,t:'m',col:gd});
+  const a='aL0',x=P.bones[a][1];[[1.0,.13,.09,.135,br],[.955,.12,.075,.125,br2],[.915,.11,.06,.115,br]].forEach(([y,sx,sy,sz,c],j)=>k.p(a,'hem','m',c,x-(.02+j*.012),y,0,sx,sy,sz,0,0,-(.4+j*.12)));
+  for(let j=0;j<3;j++)k.L(a,'m',gd,[x-.06-j*.025,1.05,-.03+j*.03],[x-.1-j*.03,1.14,-.04+j*.03],.016,.002,4);
+  [-1,1].forEach((s,i)=>a181Shell(B,AR[i],6,8,.014,br,{t:'m',col:m=>m.i<.4||m.i>1.6?gd:br}));
+  // the war-belt over the join: a thick wrap and hanging bronze plates
+  mdLoft(B,a181TShell(P,.6,.68,.03),{seg:20,col:lt});k.p('spine','oct','m',gd,0,.64,mdTorsoAt(P,.64).f+.035,.03,.035,.012);
+  for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),p=n3Surf(P,.61,an,.032);k.p('pelvis','box','m',i%2?br:br2,p[0],p[1]-.08,p[2]+Math.cos(an)*.012,.07,.15,.012,-.12*Math.cos(an),an,0)}},'v181n');
+
+a181Reg('nagaa',function(B,P,k,L){const lt=0x4a3422,lt2=0x30200f,fe=0x8a2a1a;
+  const AR=n181Body(B,P,k,{sk:0x4a4c2c,sk2:0x34361e,bel:0x9a8a5a,pat:0x22220e,eye:0xffd84a,fist:s=>s<0});
+  // a leather harness crossing the chest, a quiver of arrows on the back, a bracer on the bow arm, a hide wrap over the join
+  [-1,1].forEach(s=>{const p=n3Surf(P,.97,s*.45,.012),q=n3Surf(P,.64,-s*.6,.016),r=n3Surf(P,.97,Math.PI-s*.5,.012),t=n3Surf(P,.66,Math.PI+s*.6,.016);k.L('chest','c',lt,p,[(p[0]+q[0])/2,(p[1]+q[1])/2,(p[2]+q[2])/2+.02],.014,.014,4).L('spine','c',lt,[(p[0]+q[0])/2,(p[1]+q[1])/2,(p[2]+q[2])/2+.02],q,.014,.014,4);k.L('chest','c',lt,r,t,.014,.014,4)});
+  k.p('chest','sph','m',0x8a7a50,0,.84,mdTorsoAt(P,.84).f+.03,.022,.022,.012);
+  const qz=-mdTorsoAt(P,.82).b-.06;k.L('chest','c',lt2,[.1,.62,qz],[-.08,1.02,qz-.03],.045,.04,8);for(let i=0;i<6;i++){const ox=(i%3-1)*.025,oz=(i<3?0:.02);k.L('chest','c',0x5a4a32,[-.08+ox,1.0,qz-.03+oz],[-.1+ox,1.1,qz-.04+oz],.004,.004,3);k.p('chest','cone4','c',i%2?fe:0xd8d0b8,-.1+ox,1.12,qz-.04+oz,.012,.05,.004)}
+  a181Shell(B,AR[0],5,8,.014,lt,{col:m=>Math.round(m.i*4)%2?lt:lt2});
+  mdLoft(B,a181TShell(P,.6,.68,.022),{seg:20,col:m=>a181Nz(lt,m,.3,12)});a181Fringe(B,a181TRingPts(B,P,.6,.022,40),{len:.09,col:lt,col2:lt2,closed:true});
+  for(let i=0;i<5;i++){const p=n3Surf(P,.67,-.6+i*.3,.026);k.p('spine','cone4','c',0xd8d0b8,p[0],p[1]-.02,p[2],.008,.04,.006,Math.PI)}},'v181n');
+
+a181Reg('nagas',function(B,P,k,L){const cl=0x1e3a3a,cl2=0x122626,gd=0xa88a3a,rune=0x5affc8,bone=0xd8d0b8;
+  const AR=n181Body(B,P,k,{sk:0x2c4844,sk2:0x1e3430,bel:0x8a9a78,pat:0x0e1e1c,eye:0x7affd8,fist:s=>s>0});
+  // a fringed shawl over the shoulders, bead and fang necklaces, a sash with long cloth panels over the join, glowing marks
+  mdLoft(B,a181TShell(P,.84,1.0,.022,y=>y>.97?.008:0),{seg:22,col:m=>a181Nz(cl,m,.35,14)});a181Fringe(B,a181TRingPts(B,P,.84,.022,44),{len:.1,col:cl,col2:cl2,closed:true});
+  for(let j=0;j<2;j++)for(let i=0;i<13;i++){const a=(i-6)*.15,p=n3Surf(P,.96-j*.05-Math.abs(i-6)*.006,a,.03+j*.004);k.p('chest',i%3?'sph':'cone4','c',i%3?(j?gd:0x2a8a7a):bone,p[0],p[1],p[2],i%3?.011:.008,i%3?.011:.035,i%3?.011:.006,i%3?0:Math.PI)}
+  mdLoft(B,a181TShell(P,.6,.68,.024),{seg:20,col:cl2});[[0,.15],[.5,.13],[-.5,.13],[Math.PI,.16]].forEach(([a,l])=>{const p=n3Surf(P,.62,a,.03);mdLoft(B,[0,1,2].map(i=>({p:[p[0]+Math.sin(a)*i*.012,p[1]-i*l*.5,p[2]+Math.cos(a)*i*.012],rx:.06,f:.008,b:.008,w:i?[['pelvis',.5],['nt0',.5]]:[['pelvis',1]]})),{seg:6,ref:[Math.sin(a),0,Math.cos(a)],col:m=>m.i>1.6?gd:cl})});
+  [[.86,.25],[.86,-.25],[.76,0],[.92,.5],[.92,-.5]].forEach(([y,a],i)=>{const p=n3Surf(P,y,a,.002);k.p(n3TB(y),'box','g',rune,p[0],p[1],p[2],.006,.05,.002,0,a,i%2?.7:-.7)});
+  [-1,1].forEach((s,i)=>{const R=AR[i];for(let j=0;j<2;j++){const p=R[2+j*4].p;k.p((s<0?'aL':'aR')+(j?'1':'0'),'box','g',rune,p[0]+s*.03,p[1],p[2]+.03,.005,.045,.002,0,0,s*.3)}a181Shell(B,R,7,8,.012,gd,{t:'m'})});
+  // a crown of bone spines and feathers behind the hood
+  for(let i=0;i<7;i++){const a=(i-3)*.32;k.L('head','c',i%2?bone:gd,[Math.sin(a)*.08,1.25,-.07+Math.cos(a)*.02],[Math.sin(a)*.16,1.38-Math.abs(i-3)*.025,-.13],.012,.002,4)}},'v181n');
+
+// no legs: no knee bend in their stance (ST179); a little lean, the arms ready
+ST179.nagaw={sx:.1,hx:-.08,az:.08,lz:-.1,le:-.15};ST179.nagaa={sx:.08,hx:-.06,lz:-.06};ST179.nagas={sx:.08,hx:-.06,lz:-.06,le:-.25};
+Object.keys(NAGA181.keys).forEach(k=>{if(HUMLOOK[k])HUMLOOK[k].sc=(HUMLOOK[k].sc||1)*NAGA181.sc});
+// ================= v181: harpies — a woman-bird, not an eagle =================
+// The Harpy and the Storm Harpy were both an eagle body. Now each is a harpy: a gaunt, ash-skinned woman's upper body under a
+// ragged feather mantle, a wild mane, a narrow face with burning eyes and a mouth of jagged teeth; her arms are great ragged
+// wings (a bony leading edge with a hooked claw at the wrist); from the waist down she is bird — feathered hips and thighs,
+// scaled shanks bending at a backward ankle, splayed talons. The skeleton is upright (same bone names as the bird rig, so the
+// walk, bite, Gale Dive and Gale Shriek all still play), with the torso, neck and head at the humanoid heights so the face,
+// eyes and hair use the v181 anatomy toolkit. Harpy (carrion browns) and Storm Harpy (slate, storm-blue streaks) share it.
+var HARPY181={on:true,
+  bones:{pelvis:[null,0,.55,-.01],spine:['pelvis',0,.66,0],chest:['spine',0,.84,0],neck:['chest',0,1.0,0],head:['neck',0,1.1,0],jaw:['head',0,1.07,.06],
+    tail0:['pelvis',0,.52,-.1],tail1:['tail0',0,.46,-.2],tail2:['tail1',0,.41,-.29],tail3:['tail2',0,.37,-.37],
+    hl0:['pelvis',-.085,.55,0],hl1:['hl0',-.09,.36,.09],hl2:['hl1',-.095,.14,-.05],hr0:['pelvis',.085,.55,0],hr1:['hr0',.09,.36,.09],hr2:['hr1',.095,.14,-.05]},
+  pal:{Harpy181:{f:0x33281f,f2:0x241b14,ruff:0x4e4032,sk:0x6e645c,sk2:0x544a44,hair:0x1a1410,leg:0x34302c,claw:0x0c0a08,eye:0xffb020,glow:null},
+       GaleHarpy:{f:0x2c323c,f2:0x1c2028,ruff:0x56606c,sk:0x66707a,sk2:0x4c5660,hair:0x14181e,leg:0x3a3e44,claw:0x0a0a0c,eye:0x8ad8ff,glow:0x8ad8ff}},G:{}};
+function h181Geo(n){if(HARPY181.G[n])return HARPY181.G[n];const K=HARPY181.pal[n],B=mdB(HARPY181.bones),k=dkKit(),P=mdP({bones:HB,col:{skin:K.sk}});
+  const skin=m=>a181Nz(K.sk,m,.3,14),fe=m=>a181Nz(K.f,m,.4,12);
+  // torso: lean, narrow-waisted; feathers from the waist down
+  a181Torso(B,P,a181TRings('lean',{w:.86,d:.9}),m=>m.y<.66?fe(m):skin(m));
+  [-1,1].forEach(s=>{const x=s*.17;mdLoft(B,[{p:[x*.7,.94,0],rx:.06,f:.06,b:.06,w:[['chest',1]]},{p:[x,.95,-.01],rx:.07,f:.06,b:.065,w:[['chest',1]]},{p:[x*1.12,.93,-.02],rx:.05,f:.045,b:.05,w:[['chest',1]]}],{seg:10,capA:true,capB:true,col:skin})});
+  // the head: narrow, hollow-cheeked; eyes burn; a mouth of jagged teeth; a wild mane with quills
+  a181Head(B,P,{w:.88,jaw:.84,chin:.92,gaunt:1,cheek:1.08,len:1.04,crown:1.04},m=>m.s>.5&&m.y>1.13&&m.y<1.165&&Math.abs(m.c)>.08?mdSh(K.sk2,.5):m.s<-.2?K.sk2:K.sk);
+  a181Eyes(k,P,{glow:K.eye,brow:K.sk2,tilt:.3,browTilt:.35,r:.9});a181Nose(k,P,K.sk,{out:.018,len:1.05,w:.85,r:.011});
+  a181Mouth(k,P,{y:1.072,open:.008,col:0x120606,lip:K.sk2,w:.9,fangs:[[-.016,.014],[.016,.014],[-.008,.009,1],[.008,.009,1]]});
+  a181HairCap(B,P,{col:K.hair,col2:mdSh(K.hair,1.4),y1:.8,thick:.016,rag:.9,front:.08});
+  for(let i=0;i<9;i++){const a=Math.PI*(.55+i*.11)*(i%2?1:-1),y=1.2-a181H(i,2)*.08,p=[Math.sin(a)*.07,y,Math.cos(a)*.07];k.L('head','c',i%3?K.f:K.ruff,p,[p[0]*2.8,y-.05-a181H(i,5)*.1,p[2]*2.3-.05],.012,.002,4)}
+  // the feather mantle over the shoulders and breast, the feathered hips (two layers)
+  a181Shag(B,P,.76,.99,.02,K.ruff,K.f,.12);a181Shag(B,P,.5,.66,.03,K.f,K.f2,.16);a181Fringe(B,a181TRingPts(B,P,.58,.05,44),{len:.2,col:K.f2,col2:K.f,closed:true});
+  // bird legs: a feathered thigh, a bare scaled shank, an ankle knob, splayed talons (three forward, one back)
+  [-1,1].forEach(s=>{const l=s<0?'hl':'hr',Hb=HARPY181.bones,a=Hb[l+'0'],b=Hb[l+'1'],c=Hb[l+'2'],A=[a[1],a[2],a[3]],Kn=[b[1],b[2],b[3]],An=[c[1],c[2],c[3]],L=(p,q,t)=>p.map((v,i)=>v+(q[i]-v)*t);
+    const ring=(p,r,w,f)=>({p,rx:r,f:f||r,b:f||r,w});
+    const TH=[ring(L(A,Kn,-.1),.07,[['pelvis',.6],[l+'0',.4]]),ring(L(A,Kn,.3),.085,[[l+'0',1]]),ring(L(A,Kn,.7),.07,[[l+'0',1]]),ring(L(A,Kn,1.05),.045,[[l+'0',.5],[l+'1',.5]])];
+    mdLoft(B,mdDome(TH),{seg:10,capA:true,col:fe});a181Fringe(B,a181RingPts(B,TH[3],.012,16),{len:.08,col:K.f,col2:K.f2,closed:true,cx:TH[3].p[0],cz:TH[3].p[2]});
+    mdLoft(B,[ring(Kn,.034,[[l+'0',.4],[l+'1',.6]]),ring(L(Kn,An,.5),.026,[[l+'1',1]]),ring(L(Kn,An,.92),.024,[[l+'1',.6],[l+'2',.4]]),ring(An,.03,[[l+'2',1]]),ring([An[0],.05,An[2]+.02],.026,[[l+'2',1]]),ring([An[0],.03,An[2]+.04],.03,[[l+'2',1]])],
+      {seg:8,capB:true,col:m=>Math.round(m.y*60)%2?K.leg:mdSh(K.leg,.8)});
+    k.p(l+'2','sph','c',K.leg,An[0],.03,An[2]+.035,.04,.024,.046);
+    [[-.5,.11],[0,.13],[.5,.11],[Math.PI,.07]].forEach(([an,len])=>{const d=[Math.sin(an),0,Math.cos(an)],p=[An[0]+d[0]*.02,.03,An[2]+.04+d[2]*.02],q=[p[0]+d[0]*len*.55,.02,p[2]+d[2]*len*.55],e=[p[0]+d[0]*len,.016,p[2]+d[2]*len];
+      k.L(l+'2','c',K.leg,p,q,.014,.011,5).L(l+'2','c',K.leg,q,e,.011,.008,5);a181Digit(k,l+'2',K.claw,e,[d[0],-.25,d[2]],.05,.008,2,.6,[d[2],0,-d[0]],.012)})});
+  // the tail: a fan of long ragged feathers
+  for(let i=0;i<9;i++){const a=(i-4)*.17,l=.3+.08*Math.cos(a*2)-a181H(i,4)*.06,p0=[Math.sin(a)*.05,.52,-.1],p1=[Math.sin(a)*(.05+l*.6),.46-l*.35,-.1-l*.85];
+    mdLoft(B,[{p:p0,rx:.012,f:.004,b:.004,w:[['tail0',1]]},{p:[(p0[0]+p1[0])/2,(p0[1]+p1[1])/2,(p0[2]+p1[2])/2],rx:.035,f:.005,b:.005,w:[['tail1',1]]},{p:p1,rx:.006,f:.003,b:.003,w:[['tail2',1]]}],{seg:4,ref:[0,1,0],col:i%2?K.f:K.f2})}
+  mdKit(B,k);return HARPY181.G[n]=mdBake(B).c}
+function h181Wing(n){const K=HARPY181.pal[n],O=[[0,0,.06],[.2,.05,.09],[.45,.07,.09],[.7,.04,.02],[1.0,0,-.1]];const N=13;
+  for(let i=1;i<=N;i++){const t=i/N,x=1.0-t*.98,z=-.1-Math.sin(t*Math.PI)*.42-t*.12,tip=i%2?.1+a181H(i,3)*.08:0;O.push([x+tip*.15,-.01,z-tip])}
+  O.push([0,0,-.2]);
+  return lpwWing('harpy181'+n,O,[.32,.02,-.12],[[[0,.01,.06],[.45,.08,.09],.03],[[.45,.08,.09],[1.0,.02,-.1],.016],[[.45,.08,.09],[.5,.1,.17],.008]],K.ruff,K.f2,K.sk2,6)}
+(function(){if(!HARPY181.on||!LPR.GaleHarpy||!SPEC.GaleHarpy)return;
+  ['Harpy181','GaleHarpy'].forEach(n=>{const K=HARPY181.pal[n];
+    SPEC[n]=Object.assign({},SPEC.GaleHarpy,{bones:HARPY181.bones,hd:[0,1.2,.04],bk:[['spine',.7,-.12],['chest',.88,-.12],['neck',1.02,-.08]],legs:[['hl',0],['hr',Math.PI]],ex:()=>{},sig:null,dt:null});
+    LPR[n]=Object.assign({},LPR.GaleHarpy,{geo:()=>h181Geo(n),
+      kit(k,c,C,red){[-1,1].forEach(s=>k.p('head','sph','g',red?0xff2a2a:K.eye,s*.04,1.148,.1,.012,.007,.006));
+        if(K.glow)for(let i=0;i<5;i++){const s=i%2?1:-1;k.L(i<2?'chest':'pelvis','g',K.glow,[s*(.06+i*.02),.9-i*.08,-.11],[s*(.1+i*.02),.84-i*.08,-.13],.005,.002,3)}},
+      post(x,c,C,mat){lpwPair(x,'chest',h181Wing(n),mat,.17,.95,-.03,.8,.1,.55,.4)}})});
+  if(EN.harpy)EN.harpy.rig='Harpy181';})();

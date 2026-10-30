@@ -27,7 +27,7 @@ function a181Nz(base,m,amt,f,seed){const v=n3Sn(m.x,m.y,m.z,f||14,seed||0);retur
 // ---------------- torso ----------------
 // shapes: rings [y, rx (half width), f (front), b (back), z]; weights by height as every humanoid (mdTorsoW)
 const A181T={
-  brute:[[.42,.15,.11,.12],[.48,.18,.13,.14],[.54,.19,.15,.145],[.6,.19,.165,.135],[.67,.2,.175,.13],[.74,.215,.17,.135],[.81,.235,.165,.145],[.87,.25,.165,.155],[.925,.255,.15,.16],[.965,.232,.12,.155],[1.0,.14,.095,.125],[1.035,.088,.078,.085],[1.075,.072,.07,.07]],
+  brute:[[.42,.15,.11,.12],[.48,.18,.13,.14],[.54,.19,.15,.145],[.6,.19,.165,.135],[.67,.2,.175,.13],[.74,.215,.17,.135],[.81,.235,.165,.145],[.87,.25,.165,.155],[.925,.25,.15,.16],[.965,.21,.12,.155],[1.0,.15,.1,.13],[1.035,.1,.085,.095],[1.075,.076,.072,.072]],
   knight:[[.42,.13,.1,.11],[.5,.148,.108,.122],[.56,.146,.104,.114],[.62,.134,.098,.1],[.7,.146,.106,.104],[.78,.18,.13,.114],[.86,.214,.146,.126],[.92,.226,.14,.132],[.965,.2,.11,.118],[1.0,.104,.078,.088],[1.035,.064,.064,.06],[1.075,.057,.059,.056]],
   lean:[[.42,.13,.092,.1],[.5,.148,.1,.114],[.56,.146,.096,.11],[.62,.13,.088,.094],[.7,.138,.094,.098],[.78,.162,.112,.106],[.86,.188,.126,.116],[.92,.198,.122,.122],[.965,.18,.098,.11],[1.0,.094,.07,.08],[1.035,.056,.056,.054],[1.075,.05,.053,.05]],
   gaunt:[[.42,.12,.084,.094],[.5,.134,.088,.104],[.56,.128,.08,.098],[.62,.11,.066,.088],[.7,.118,.074,.092],[.78,.146,.1,.104],[.86,.168,.116,.114],[.92,.178,.112,.12],[.965,.166,.09,.112],[1.0,.086,.064,.076],[1.035,.05,.052,.05],[1.075,.046,.05,.047]]};
@@ -81,6 +81,7 @@ function a181Leg(B,P,s,L0,col,o){const R=a181LegR(P,s,L0);mdLoft(B,mdDome(R),Obj
 function a181Foot(B,P,k,s,F){F=F||{};const bn=(s<0?'lh':'rh')+'2',A=mdV(P.bones[bn]),w=F.w||1,ln=F.len||1,col=F.col,x=A.x,W=[[bn,1]];
   const r=(z,y,rx,f,b)=>({p:[x,y,A.z+z*ln],rx:rx*w,f,b,w:W});
   mdLoft(B,[r(-.065,.048,.04,.03,.036),r(-.035,.052,.05,.042,.044),r(.03,.042,.054,.034,.04),r(.09,.03,.056,.024,.028),r(.115,.024,.05,.018,.02)],{seg:9,ref:[0,1,0],capA:true,capB:true,col});
+  const lb=s<0?'lh1':'rh1';mdLoft(B,[{p:[x,A.y+.04,A.z-.008],rx:.04*w,f:.04*w,b:.042*w,w:[[lb,.45],[bn,.55]]},{p:[x,(A.y+.04)*.5+.03,A.z-.01],rx:.046*w,f:.044*w,b:.046*w,w:W},{p:[x,.04,A.z-.012],rx:.044*w,f:.04*w,b:.044*w,w:W}],{seg:9,capA:true,capB:true,col});   // the ankle plug: overlaps the shin's end and the foot, so no gap opens when the foot turns
   const n=F.toes||5;for(let i=0;i<n;i++){const tx=x+(i-(n-1)/2)*.021*w*(5/n),tz=A.z+.112*ln,l=(F.toe||.03)*(i==Math.floor(n/2)?1.1:.9);
     k.L(bn,'c',col,[tx,.022,tz],[tx+(i-(n-1)/2)*.004,.014,tz+l],.011*w,.008*w,4);if(F.claw)k.L(bn,'c',F.nail==null?0x141012:F.nail,[tx+(i-(n-1)/2)*.004,.014,tz+l],[tx+(i-(n-1)/2)*.006,.003,tz+l+F.claw],.007*w,.001,4)}}
 
@@ -138,7 +139,9 @@ function a181Band(c1,c2,n){return m=>Math.floor(m.i*(n||1))%2?c1:c2}
 function a181Boot(B,P,s,o){const bn=(s<0?'lh':'rh')+'2',A=mdV(P.bones[bn]),x=A.x,W=[[bn,1]],tp=o.toe||.05,r=(z,y,rx,f,b)=>({p:[x,y,A.z+z],rx,f,b,w:W});
   mdLoft(B,[r(-.075,.055,.046,.036,.044),r(-.04,.07,.058,.05,.054),r(.03,.052,.06,.04,.048),r(.1,.036,.056,.028,.03),r(.12+tp*.5,.026,.04,.018,.02),r(.12+tp,.016,.01,.006,.008)],{seg:10,ref:[0,1,0],capA:true,capB:true,col:o.col,t:o.t||'c'})}
 // shells over arm / leg rings (slices of the ring lists), pushed out by off
-function a181Shell(B,R,i0,i1,off,col,o){const Q=R.slice(i0,i1+1).map(r=>Object.assign({},r,{rx:r.rx+off,f:r.f+off,b:r.b+off}));mdLoft(B,i0==0?mdDome(Q):Q,Object.assign({seg:10,col},i0==0?{capA:true}:{},o||{}))}
+function a181Shell(B,R,i0,i1,off,col,o){const Q=R.slice(i0,i1+1).map(r=>Object.assign({},r,{rx:r.rx+off,f:r.f+off,b:r.b+off}));mdLoft(B,i0==0?mdDome(Q):Q,Object.assign({seg:10,col},i0==0?{capA:true}:{},o||{}));
+  // closed rims down to the skin at the open ends (a sleeve or band never stands as a loose tube)
+  const seg=(o&&o.seg)||10,t=(o&&o.t)||'c',c=typeof col=='function'?col:(()=>col);[[i0,i0==0?null:1],[i1,1]].forEach(([i,on])=>{if(!on)return;const a=R[i],b=Q[i-i0];mdLoft(B,[Object.assign({},a,{rx:a.rx*.96,f:a.f*.96,b:a.b*.96}),b],{seg,t,col:m=>c(Object.assign({},m,{i:i-i0}))})})}
 // a helm over the head rings (the face is hidden): o {off, col, t, slit (visor slit colour), face fn(m)→colour|null}
 function a181Helm(B,P,o){const H=P._H,off=o.off||.022;const R=H.map(r=>Object.assign({},r,{p:r.p.slice(),rx:r.rx+off,f:r.f+off*1.2,b:r.b+off}));
   mdLoft(B,R,{seg:18,capA:false,capB:true,t:o.t||'m',col:m=>{const c=o.face&&o.face(m);return c!=null?c:o.col}})}
@@ -169,7 +172,7 @@ a181Reg('vampk',function(B,P,k,L){const pl=0x2a1419,pl2=0x40202a,ed=0x5a262c,gd=
     for(let j=0;j<3;j++)k.p(a,'cone4','m',j==1?pl2:pl,x+s*(.02+j*.025),1.06+j*.015,-.03-j*.03,.024,.16-j*.035,.008,-.55-j*.12,0,-s*(.3+j*.15));
     // rerebrace, couter with a back spike, vambrace flared at the wrist
     const R=AR[i];a181Shell(B,R,2,4,.016,pl,{t:'m',col:m=>Math.round(m.i*2)%2?pl:pl2});a181Shell(B,R,6,8,.016,pl,{t:'m',col:m=>m.i>1.6?gd:pl});
-    const e=R[5].p;k.p(a.replace('0','1'),'sph','m',pl2,e[0],e[1],e[2]-.01,.06,.055,.06);k.L(a.replace('0','1'),'m',ed,[e[0],e[1],e[2]-.05],[e[0]+s*.02,e[1]+.03,e[2]-.12],.022,.002,4);
+    const e=R[5].p,eb=e[2]-R[5].b-.016;k.p(a.replace('0','1'),'sph','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(a.replace('0','1'),'m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
     a181Hand(B,P,k,s,{kind:'fist',col:pl,t:'m',w:1.1});
     // cuisses, poleyn with a spike, greaves, pointed sabatons
     const G=LR[i],l=s<0?'lh':'rh';a181Shell(B,G,1,3,.014,pl,{t:'m',col:m=>Math.round(m.i*2)%2?pl:pl2});
@@ -298,7 +301,7 @@ a181Reg('yeti',function(B,P,k,L){const f1=0x9c9e9c,f2=0x868a8e,f3=0xb0b2ae,un=0x
   [-1,1].forEach(s=>{a181Hand(B,P,k,s,{kind:'claw',col:sk,len:.85,nail:cl,tip:.035,w:1.35,fr:1.4});a181Foot(B,P,k,s,{col:sk,claw:.025,len:1.15,w:1.35,toe:.03,nail:cl})});
   // the ape head: heavy brow, deep-set eyes, flat nose, jutting jaw, fur all round the face
   a181Head(B,P,{w:1.05,jaw:1.3,chin:1.25,len:1.22,brow:1.25,crown:.8,back:.95,cheek:1.1},m=>m.s>.35&&m.y<1.19&&Math.abs(m.c)<.6?(m.y>1.135&&m.y<1.165?sk2:sk):fur(m));
-  a181Eyes(k,P,{glow:0x9ad8ff,sock:0x0a0c10,r:.75,brow:false,tilt:.05});{const bz=mdHeadZ(P,1.175)-.012;k.L('head','c',sk2,[-.085,1.17,bz-.02],[0,1.18,bz+.006],.026,.024,6).L('head','c',sk2,[0,1.18,bz+.006],[.085,1.17,bz-.02],.024,.026,6)}
+  a181Eyes(k,P,{glow:0x9ad8ff,sock:0x0a0c10,r:.75,brow:false,tilt:.05});{const bz=mdHeadZ(P,1.175)-.012;k.L('head','c',sk,[-.08,1.168,bz-.022],[0,1.176,bz],.017,.016,6).L('head','c',sk,[0,1.176,bz],[.08,1.168,bz-.022],.016,.017,6)}
   const nz=mdHeadZ(P,1.11);k.p('head','sph','c',sk2,0,1.11,nz-.004,.04,.022,.022);[-1,1].forEach(s=>k.p('head','sph','c',0x050608,s*.016,1.105,nz+.012,.008,.006,.004));
   a181Mouth(k,P,{y:1.065,open:.012,col:0x0a0606,lip:sk2,w:1.3,tooth:0xd8d0b8,fangs:[[-.032,.032,1],[.032,.032,1],[-.026,.02],[.026,.02]]});
   a181HairCap(B,P,{col:f1,col2:f1,y1:.95,thick:.03,rag:.3,front:.35});
@@ -338,7 +341,7 @@ a181Reg('jotun',function(B,P,k,L){const sk=0x5e7388,sk2=0x485a6e,rune=0x8ae0ff,w
     for(let j=0;j<2;j++){const p=R[2+j].p;k.p(bn+'0','box','g',rune,p[0]+s*.02,p[1],p[2]+.05,.006,.05,.003,0,0,s*.4)}});
   // war-kilt: leather panels with iron studs over a fur loincloth; a heavy belt; fur-wrapped boots
   mdSkirt(B,P,.6,.32,.06,.018,{n:5,col:m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),m,.3,10),keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>.48});
-  for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=n3Surf(P,.5,a,.055);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.01)}
+  for(let i=0;i<14;i++){const a=i/14*Math.PI*2,p=n3Surf(P,.605,a,.052);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.011)}
   mdLoft(B,a181TShell(P,.57,.64,.05),{seg:20,col:0x1e160e});k.p('pelvis','box','m',ir2,0,.605,mdTorsoAt(P,.6).f+.06,.07,.05,.012);
   LR.forEach((G,i)=>{const s=i?1:-1;a181Shell(B,G,5,8,.03,pe,{col:m=>a181Nz(pe,m,.35,16)});a181Fringe(B,a181RingPts(B,G[5],.03,14),{len:.06,col:pe,col2:pe2,closed:true,cx:G[5].p[0],cz:G[5].p[2]});a181Boot(B,P,s,{col:pe2,toe:.03})})},'v181j');
 

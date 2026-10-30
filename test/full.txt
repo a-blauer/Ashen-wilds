@@ -121,3 +121,4 @@ SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=trait,var v180_comp_floa
 SP=Gloomcap,Cryptspider,Sporelord,Widowqueen,Hivemother SETS=base,fuse v180_comp_float.py
 SP=Gloomcap,Cryptspider,Sporelord,Widowqueen,Hivemother SETS=trait,var v180_comp_float.py
 NOSHEET=1 v179_enemy_parts.py
+v181_models.py
