@@ -101,9 +101,15 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
         ring.push(cgVert(M,[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf],w))}
       cgBand(M,prev,ring,'arm',c);prev=ring});
     cgCap(M,prev,add3(pts[pts.length-1],mul3(nrm3(sub3(a2,a1)),.012)),[[bn+'2',1]],'hand',pts[pts.length-2])});
+  // a serpent body instead of legs (naga): the bottom ring flows on into the tail rings (S.tail: {p, r, w}), the front of the
+  // torso becoming the underside of the tail
+  if(S.tail){let prev=tr[0];const TL=S.tail,n=T16;TL.forEach((q,i)=>{const t=nrm3(sub3(TL[Math.min(i+1,TL.length-1)].p,i?TL[i-1].p:[0,S.torso[0][0],S.torso[0][4]||0])),
+      u=nrm3(sub3([1,0,0],mul3(t,t[0]))),v=nrm3(cross3(t,u)),ring=[];for(let j=0;j<n;j++){const a=j*Math.PI*2/n,ca=Math.cos(a),sa=Math.sin(a),r1=q.r,r2=sa>=0?q.r*(q.fl||.82):q.r*(q.tp||.95);
+        ring.push(cgVert(M,[q.p[0]+u[0]*ca*r1+v[0]*sa*r2,q.p[1]+u[1]*ca*r1+v[1]*sa*r2,q.p[2]+u[2]*ca*r1+v[2]*sa*r2],q.w))}
+      cgBand(M,prev,ring,'tail',q.p);prev=ring});const L=TL[TL.length-1],P2=TL[TL.length-2];cgCap(M,prev,add3(L.p,mul3(nrm3(sub3(L.p,P2.p)),L.r*.8)),L.w,'tail',P2.p)}
   // legs: the bottom ring split in two halves with a crotch line
-  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=cgVert(M,[0,y0-.045,q0[4]||0],[['pelvis',1]]),cb=cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
-  [-1,1].forEach(s=>{const l=s<0?'lh':'rh',h0=mdV0(J[l+'0']),k1=mdV0(J[l+'1']),k2=mdV0(J[l+'2']);
+  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=S.tail?0:cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=S.tail?0:cgVert(M,[0,y0-.045,q0[4]||0],[['pelvis',1]]),cb=S.tail?0:cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
+  if(!S.tail)[-1,1].forEach(s=>{const l=s<0?'lh':'rh',h0=mdV0(J[l+'0']),k1=mdV0(J[l+'1']),k2=mdV0(J[l+'2']);
     // right half: front (j4) → side (j0) → back (j12): 4,3,2,1,0,15,14,13,12 · left: 4,5,…,12
     const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+T16)%T16:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
     let prev=root;S.leg.forEach((q,i)=>{const t=q.t,c=t<=1?lerp3(h0,k1,t):lerp3(k1,k2,Math.min(1,t-1)),w=t<.12?[['pelvis',.4],[l+'0',.6]]:t<.9?[[l+'0',1]]:t<1.1?[[l+'0',.5],[l+'1',.5]]:t<1.9?[[l+'1',1]]:[[l+'1',.4],[l+'2',.6]];
@@ -131,7 +137,7 @@ function nrm3(a){const l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2
 function cg181Plan(name,J){const S=AW_PROP99,names=Object.keys(HB),abs={},N={},M={},id=[1,0,0,0,1,0,0,0,1];names.forEach(n=>{abs[n]=[HB[n][1],HB[n][2],HB[n][3]];N[n]=(J[n]||abs[n]).slice();M[n]=id});
   let m=S.plans.get(HB);if(!m){m={};S.plans.set(HB,m)}m[name]={names,abs,N,M,idx:names.map(n=>({a:abs[n],n:N[n],M:M[n]})),lift:0,hip:N.pelvis[1]};return m[name]}
 // a cage foe: the body builder gets (B, P, k, C) with C = the smoothed body; registered like the a181 foes
-function cg181Reg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';const C=cg181Body(B,S);P.cg=C;fn(B,P,k,C,S)},pn)}
+function cg181Reg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;fn(B,P,k,C,S)},pn)}
 // ring helpers for specs: where on the torso / head a point is
 function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+1];if(y<=b[0]){const t=Math.max(0,(y-a[0])/(b[0]-a[0]));return a.map((v,j)=>v+(b[j]-v)*t)}}return list[list.length-1]}
 
