@@ -39,8 +39,17 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
     F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},.95,.3,.12,0,1.1,.12,[.72,.46,.62]),F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},-.9,.28,-.1,0,2.2,-.1,[.7,.44,.6])]);
   const stand=(hex,top)=>M([F(dod(1),hex,{j:.13,top,tt:.6,lo:.6,hi:.45},0,.62,0,0,.4,0,[1.15,.9,.95]),F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},1.05,.25,.25,0,2.4,0,[.62,.4,.55]),
     F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},-1.05,.22,-.15,0,.9,0,[.55,.36,.5])]);
-  const oak=(bark,l1,l2)=>M([F(cyl(.16,.32,2.6,7),bark,{j:.04,lo:.6,hi:.4,f:(x,y,z)=>y<-1.2?[x*1.4,y,z*1.4]:[x,y,z]},0,1.3,0),F(cyl(.06,.11,1.1,5),bark,{j:.02},.35,2.3,0,0,0,-.9),F(cyl(.05,.1,1,5),bark,{j:.02},-.3,2.4,.15,.3,0,.9),
-    F(ico(1.35,1),l1,{j:.3,lo:.6,hi:.5},0,3.3,0,0,0,0,[1,.78,1]),F(ico(1.05,1),l2,{j:.25,lo:.65,hi:.5},.75,3.85,.3,0,0,0,[1,.8,1]),F(ico(.95,1),l2,{j:.22,lo:.65,hi:.5},-.7,3.7,-.35,0,0,0,[1,.8,1]),F(ico(.8,1),l1,{j:.2,lo:.7,hi:.45},.1,4.35,-.1,0,0,0,[1,.8,1])]);
+  // v177: a gnarled oak (it was a stick under a green ball): a leaning, flared trunk forking into three limbs, the crown a loose
+  // mass of uneven clumps hung on the limbs (dark beneath), a dead branch or two poking out
+  const oak=(bark,l1,l2)=>{const bend=(x,y,z)=>{const t=Math.max(0,y)/2.6;return [x*(y<.3?1.25-y*.8:1)+t*t*.28,y,z+Math.sin(y*1.3)*.05]};
+    const p=[F(cyl(.17,.34,2.5,8),bark,{j:.04,lo:.55,hi:.42,f:bend},0,1.25,0),
+      F(cyl(.3,.42,.3,8),bark,{j:.06,lo:.5,hi:.3},.02,.1,0)];
+    const limbs=[[.62,0,2.15,1.5],[-.55,2.1,2.0,1.35],[.45,4.2,2.25,1.2]];
+    limbs.forEach(([lz,ry,y,L])=>p.push(F(cyl(.055,.12,L,6),bark,{j:.03,lo:.55,hi:.4},0,L/2,0).rotateZ(lz).rotateY(ry).translate(.2,y,0)));
+    const cl=[[.0,3.95,0,.95,l1],[.85,3.55,.35,.8,l2],[-.75,3.5,-.4,.82,l1],[.25,3.35,-.85,.7,l2],[-.35,3.4,.8,.72,l2],[.55,4.45,-.25,.62,l1],[-.4,4.35,.3,.6,l2],[1.2,3.1,-.35,.5,l1]];
+    cl.forEach(([x,y,z,r,c],i)=>p.push(F(ico(r,1),c,{j:r*.34,lo:.42,hi:.7,f:(X,Y,Z)=>[X,Y<y?y-(y-Y)*.62:Y,Z]},x,y,z,0,i*.9,0,[1.1,.82,1.05])));
+    p.push(F(cyl(.02,.045,.9,4),bark,{j:.02},0,.45,0).rotateZ(-1.05).rotateY(2.6).translate(-.2,2.6,.1),F(cyl(.015,.035,.7,4),bark,{j:.02},0,.35,0).rotateZ(.95).rotateY(.4).translate(.3,2.9,-.1));
+    return M(p)};
   const pine=(bark,leaf,snow)=>{const p=[F(cyl(.12,.22,1.4,6),bark,{j:.03},0,.7,0)];[[1.35,1.6,1.25],[1.12,1.45,2.15],[.88,1.3,2.95],[.62,1.15,3.65],[.36,.95,4.25]].forEach(([r,h,y],i)=>p.push(F(cone(r,h,8),leaf,{j:.07,top:snow,tt:.35,lo:.55+i*.04,hi:.45},0,y,0,0,i*.6,0)));return M(p)};
   const mk=(k,o)=>{if(!T[k])def(k,o);return k};
   const eOak=(b,l1,l2)=>mk('e_oak_'+b.toString(16)+l1.toString(16),{parts:[oak(b,l1,l2)],cast:true,s:[1,1.35],sway:.012,j:.14});

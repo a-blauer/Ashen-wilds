@@ -22,9 +22,10 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(Math.cos(a)*s*.45,y+.45,-Math.sin(a)*s*.45,.6,s*1.3,a+.6,bark,.035))});
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
-    if(moss)[[.35,2.0,.2],[-.32,1.65,2.5],[.3,2.35,4],[-.2,2.55,5.2],[.1,2.6,1.2]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},Math.cos(a)*s*1.5,y-L/2+.1,-Math.sin(a)*s*1.5,Math.PI))});
+    if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
+      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
     if(o.snow)p.push(F(dome(.3,6),0xf4f8ff,{j:.04},0,2.62,0,0,0,0,[1,.4,1]));return M(p)};
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
@@ -33,8 +34,13 @@ function wdDeco(){const T0=performance.now();
     p.push(F(ico(.3,0),c,{j:.05},1.75,.3,0,0,0,0,[1.3,.9,.9]),F(cone(.05,.5,4),c,{},1.9,.65,.18,.5,0,-.6),F(cone(.05,.5,4),c,{},1.9,.65,-.18,-.5,0,-.6));return M(p)};
   const skull=c=>M([F(ico(.22,0),c,{j:.04},0,.18,0,0,0,0,[1.2,.9,1]),F(box(.2,.1,.18),c,{},.2,.08,0),F(cone(.04,.4,4),c,{},-.05,.35,.18,.7,0,.3),F(cone(.04,.4,4),c,{},-.05,.35,-.18,-.7,0,.3),F(cyl(.03,.03,.4,4),c,{},-.3,.04,.1,0,.6,Math.PI/2)]);
   const pillarG=(hex,h,top)=>M([F(cyl(.36,.4,h,7),hex,{j:.05,top,tt:.6,f:(x,y,z)=>y>h-.01?[x,y-((x*7+z*13)%1+1)%1*.4,z]:[x,y,z]},0,h/2,0),F(cyl(.5,.55,.3,7),hex,{j:.04},0,.15,0),F(cyl(.32,.36,.5,7),hex,{j:.06},.9,.25,.3,0,.4,Math.PI/2)]);
-  const wallG=(hex,top,len,hh)=>{const p=[];for(let i=0;i<4;i++){const w=len/4,h0=hh*(.55+((i*37)%10)/22);p.push(F(box(w*.98,h0,.7),hex,{j:.08,top,tt:.6},-len/2+w*(i+.5),h0/2,0))}
-    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0));return M(p)};
+  // v177: a ruined wall laid in courses of dressed blocks (joints, staggered, a broken top) instead of four plain boxes
+  const wallG=(hex,top,len,hh)=>{const p=[],w=len/4;for(let i=0;i<4;i++){const h0=hh*(.55+((i*37)%10)/22);let y=0,c=0;
+      while(y<h0-.06){const bh=Math.min(.34+((i*7+c*3)%4)*.05,h0-y),sh=(c%2?.25:-.05)*w,last=y+bh>=h0-.06;
+        for(let k=0;k<2;k++){const x0=-len/2+w*i+sh+k*w*.5,x1=Math.min(-len/2+w*(i+1),x0+w*.5),xa=Math.max(-len/2+w*i,x0);if(x1-xa<.08)continue;
+          const d=.64+(((i+c+k)*29)%5)*.025,bw=x1-xa-.025;p.push(F(box(bw,bh-.025,d),hex,{j:last?.09:.035,top,tt:.6},(xa+x1)/2,y+bh/2,(((i*3+c+k)%3)-1)*.03,0,(((c+k)%3)-1)*.02,0))}
+        y+=bh;c++}}
+    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0),F(dod(.22),hex,{j:.08},len*.15,.12,.7),F(dod(.16),hex,{j:.06},-len*.42,.08,.62));return M(p)};
   const grave=(hex,lean)=>M([F(box(.42,.6,.12),hex,{j:.03},0,.28,0,lean,0,lean*.5),F(cyl(.21,.21,.12,6,1),hex,{},0,.6,0,Math.PI/2,0,0,[1,1,1]),F(box(.55,.08,.8),0x3a3428,{j:.04},0,.04,.42)]);
   const crossG=(hex)=>M([F(box(.12,1.1,.1),hex,{j:.02},0,.55,0),F(box(.6,.12,.1),hex,{j:.02},0,.82,0),F(dome(.35,6),0x3e3428,{j:.06},0,0,.5,0,0,0,[1,.35,1.6])]);
   const fenceG=(wood)=>M([F(box(.12,.95,.12),wood,{j:.02},-1.15,.47,0),F(box(.12,.85,.12),wood,{j:.02},1.15,.42,0),F(box(2.5,.1,.06),wood,{j:.02},0,.7,0,0,0,.03),F(box(2.5,.1,.06),wood,{j:.02},0,.38,0,0,0,-.04)]);
@@ -56,11 +62,13 @@ function wdDeco(){const T0=performance.now();
   const statueG=(stone,o)=>{o=o||{};const p=[F(box(1.1,.7,1.1),stone,{j:.05},0,.35,0),F(box(1.25,.12,1.25),stone,{},0,.72,0),F(cyl(.22,.38,1.3,6),stone,{j:.04},0,1.43,0),F(ico(.2,0),stone,{j:.03},0,2.25,0),F(box(.62,.18,.3),stone,{},0,1.95,0)];
     if(o.wings)[-1,1].forEach(s=>p.push(F(cone(.35,1.2,3),stone,{j:.04},s*.35,2.1,-.12,0,0,s*.7,[1,1,.25])));
     if(o.sword)p.push(F(box(.08,1.3,.04),stone,{},.28,1.5,.2),F(box(.36,.06,.06),stone,{},.28,2.0,.2));
-    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.95,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
+    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.9,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
     if(o.broken)p.splice(3,2);return M(p)};
   const mausoleum=(st,roof)=>M([F(box(2.6,.25,3),st,{j:.04},0,.12,0),F(box(2.2,1.9,2.6),st,{j:.06},0,1.2,0),F(cyl(.16,.18,1.9,6),st,{},-.95,1.2,1.4),F(cyl(.16,.18,1.9,6),st,{},.95,1.2,1.4),
     F(box(2.5,.2,3),st,{},0,2.2,0),F(cone(1.85,.9,4),roof,{j:.05},0,2.75,0,0,Math.PI/4,0,[1,1,1.25]),F(box(.9,1.3,.06),0x141218,{lo:1,hi:0},0,.95,1.31),F(cyl(.04,.04,.6,4),0x8a8a90,{},0,3.35,0),F(box(.4,.06,.06),0x8a8a90,{},0,3.5,0)]);
-  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(box(.62,.22,1.6),w,{j:.02},.15,.25,.5,.1,.3,.15)]);
+  // v177: a coffin is coffin-shaped (narrow head, broad shoulders, tapered foot) with a lid knocked askew, not a box
+  const coffinG=(L,W,H)=>{const s=new G.Shape([[-W*.62,0],[-W,L*.28],[-W*.7,L],[W*.7,L],[W,L*.28],[W*.62,0]].map(q=>new G.Vector2(q[0],q[1]-L*.5)));const g=new G.ExtrudeGeometry(s,{depth:H,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,H,0);return g};
+  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(coffinG(1.6,.31,.2),w,{j:.015},.15,.12,.5,.1,.3,.15),F(coffinG(1.62,.33,.05),dt168Mix(w,0x000000,.25),{j:.01},.22,.33,.42,.16,.42,.1)]);
   const archG=(st,top)=>M([F(box(.9,3.2,1),st,{j:.1,top,tt:.6},-1.7,1.6,0),F(box(.9,3.2,1),st,{j:.1,top,tt:.6},1.7,1.6,0),F(tor(1.7,.5,Math.PI,8),st,{j:.08,top,tt:.6},0,3.0,0,0,0,0,[1,.6,1.2]),F(box(1.2,.5,1.1),st,{j:.1},-1.7,.25,0),F(box(1.2,.5,1.1),st,{j:.1},1.7,.25,0)]);
   const duneG=(c)=>F(dome(1,9),c,{j:.12,jy:.5,lo:.86,hi:.24,f:(x,y,z)=>[x*(1+.25*Math.sign(x)),y*(1-.35*Math.max(0,x)),z]},0,0,0);
   const cartG=()=>M([F(box(2.0,.12,1.1),0x6a4a2e,{j:.03},0,.75,0,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,.53,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,-.53,0,0,.15),
@@ -70,11 +78,12 @@ function wdDeco(){const T0=performance.now();
   const basalt=(c,top)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.05,r=i?.42:0,h=1.4+((i*53)%10)/5;p.push(F(cyl(.24,.26,h,6),c,{j:.02,top,tt:.8},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return M(p)};
   const icicles=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.2,r=i?.2+i*.06:0,h=.4+((i*29)%10)/14;p.push(F(cone(.08,h,4),c,{lo:.8,hi:.5},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
-  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(F(box(s*1.4,s,s),c,{j:.06},Math.cos(a)*r,s/2,Math.sin(a)*r,0,a,(i%2)*.3))}return M(p)};
+  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v177: broken blocks among rough chunks
+    for(let i=0;i<6;i++){const a=i*1.7+.4,r=.5+(i%3)*.3;p.push(F(oct(.06+(i%3)*.025),c,{j:.03},Math.cos(a)*r,.02,Math.sin(a)*r,0,i,0,[1,.6,1]))}return M(p)};
   const candles=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cyl(.03,.035,h,5),0xe8dcc0,{lo:.9,hi:.2},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const candleGlow=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cone(.025,.07,4),0xffffff,{lo:1,hi:0},Math.cos(a)*r,h+.04,Math.sin(a)*r))}return M(p)};
-  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.82,0)]);
-  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,2.0,0)]);
+  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.72,0)]);
+  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,1.9,0)]);
   const rootsG=(bark)=>{const p=[];for(let i=0;i<4;i++){const a=i*1.6;p.push(F(tor(.9+i*.15,.13-i*.015,Math.PI*.85,7),bark,{j:.04},0,-.25,0,0,a,0,[1.3,1,1]))}p.push(F(cyl(.3,.45,.7,6),bark,{j:.05},.2,.1,0,0,0,.6));return M(p)};
   const hay=()=>M([F(cyl(.55,.55,.9,8),0xd8b860,{j:.04,lo:.75,hi:.35},0,.55,0,Math.PI/2,0,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},.2,.55,0,0,Math.PI/2,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},-.2,.55,0,0,Math.PI/2,0)]);
   const totem=(w,c1,c2)=>M([F(cyl(.18,.22,2.6,6),w,{j:.03},0,1.3,0),F(cone(.3,.5,5),c1,{},0,2.85,0),F(box(.5,.3,.42),c2,{j:.02},0,2.2,.08),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},.12,2.25,.3),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},-.12,2.25,.3),F(box(.9,.12,.12),w,{},0,1.6,0),F(box(.04,.7,.3),c1,{},.42,1.25,0),F(box(.04,.7,.3),c2,{},-.42,1.25,0)]);
@@ -112,7 +121,9 @@ function wdDeco(){const T0=performance.now();
   def('h_hay',{parts:[hay()],cast:true,col:.6,s:[.9,1.15]});
   def('h_cairn',{parts:[cairn(0x9a9488)],cast:true,s:[.8,1.2]});
   def('h_totem',{parts:[totem(0x6a4a2e,0x3a8a5a,0xc8a040)],cast:true,col:.35,s:[.9,1.1]});
-  def('h_bush',{parts:[M([F(ico(.45,0),0x4a8a3a,{j:.12},0,.35,0),F(ico(.35,0),0x5a9a42,{j:.1},.35,.3,.1),F(ico(.3,0),0x3e7a32,{j:.1},-.3,.25,-.15)])],near:true,s:[.8,1.4],sway:.04});
+  // v177: h_bush is a dense, uneven shrub with bare twigs (was three bright green balls)
+  def('h_bush',{parts:[M([F(ico(.42,1),0x3e6a32,{j:.16,lo:.45,hi:.6},0,.34,0,0,0,0,[1.1,.82,1]),F(ico(.33,1),0x48743a,{j:.13,lo:.45,hi:.6},.36,.27,.12,0,1,0,[1,.8,1]),F(ico(.29,1),0x36602c,{j:.12,lo:.45,hi:.6},-.32,.23,-.15,0,2,0,[1,.8,1]),
+    F(ico(.22,1),0x4a7038,{j:.1,lo:.5,hi:.6},.06,.58,-.12),twig(.1,.2,.05,.75,.7,.5,0x3a2e22,.025),twig(-.1,.2,-.05,.6,-.8,2.2,0x3a2e22,.02),twig(0,.15,.1,.55,.5,4,0x3a2e22,.02)])],near:true,s:[.8,1.4],sway:.04});
   // Burningeye Summit: a frozen peak under a burning sky
   def('b_crystal',{parts:[{g:crystals(0xffffff),glow:1}],cast:false,col:.6,s:[.8,1.5],tint:[0x9ad8ff,0xbfe8ff,0x7ab8ff]});
   def('b_rock',{parts:[rockG(0x6a7280,0xf4f8ff,1.1,.75)],cast:true,col:.95,s:[1,1.7]});
@@ -159,8 +170,9 @@ function wdDeco(){const T0=performance.now();
   def('c_column',{parts:[pillarG(0x5a5058,3.2,null)],cast:true,col:.5,s:[.95,1.3]});
   def('c_graves',{parts:[M([grave(0x3e3a42,.15).translate(-.7,0,0),grave(0x46404a,-.1).translate(.7,0,.1)])],cast:true,s:[.9,1.2]});
   def('c_candela',{parts:[candelabra(),{g:candelaGlow(),glow:1}],cast:true,s:[.9,1.1],gt:[0xffc870]});
-  def('c_blood',{parts:[F(disc(1,9),0x4a0610,{lo:1,hi:0,j:.15,jy:0},0,0,0,-Math.PI/2)],near:true,y:.04,s:[.6,1.4],j:.05});
-  def('c_coffin',{parts:[M([F(box(.7,.35,1.8),0x2a1a1a,{j:.03},0,.18,0),F(box(.76,.08,1.86),0x3a2222,{},.1,.4,.15,0,.25,.12)])],cast:true,s:[.9,1.1]});
+  def('c_blood',{parts:[(()=>{const sp=(r,n,sd)=>{const g=disc(r,n),P=g.attributes.position;for(let i=1;i<P.count;i++){const a=Math.atan2(P.getY(i),P.getX(i)),k=.62+.38*Math.abs(Math.sin(a*3+sd))+.22*Math.sin(a*7+sd*2);P.setXY(i,P.getX(i)*k,P.getY(i)*k)}return g};   // v177: a ragged pool with drops, dark
+    return M([F(sp(1,22,1.3),0x2a0408,{lo:1,hi:0,j:.04,jy:0},0,0,0,-Math.PI/2),F(sp(.16,8,2),0x30050a,{lo:1,hi:0},1.25,.003,.3,-Math.PI/2),F(sp(.1,7,3),0x30050a,{lo:1,hi:0},-.9,.003,1.05,-Math.PI/2),F(sp(.12,7,4),0x2a0408,{lo:1,hi:0},.2,.003,-1.3,-Math.PI/2)])})()],near:true,y:.04,s:[.6,1.4],j:.05});
+  def('c_coffin',{parts:[M([F(coffinG(1.8,.36,.33),0x2a1a1a,{j:.015},0,0,0),F(coffinG(1.84,.38,.06),0x3a2222,{j:.01},.1,.36,.15,0,.25,.1),F(box(.04,.05,.5),0x6a5a3a,{},.0,.335,-.3),F(box(.3,.05,.04),0x6a5a3a,{},0,.335,-.4)])],cast:true,s:[.9,1.1]});
   // ---------- where each zone puts them: w = in (walkable, off the road) | edge (walkable near the cliff) | bank (the raised rim, out of reach) | lane (beside the road) | water ----------
   // n = items per 1000 tiles of that kind, c = [min,max] per cluster, r = cluster radius
   const Z=[
@@ -254,6 +266,7 @@ function wdDeco(){const T0=performance.now();
   if(ZX&&ZX.post)ZX.post(out,col);
   if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
+  try{if(typeof env177Look=='function')env177Look(T,out)}catch(e){console.warn('v177 look',e)}   // v177: graded and weathered (3370)
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
@@ -271,7 +284,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
   for(const k in groups){const cx=k%1000,cz=Math.floor(k/1000),c={ms:[],ns:[],on:false,non:false,wd:1,box:new THREE.Box3(new THREE.Vector3(cx*CN-3,-4,cz*CN-3),new THREE.Vector3((cx+1)*CN+3,30,(cz+1)*CN+3))};
     for(const kk in groups[k]){const S=WD.T[kk],L=groups[k][kk];
       S.parts.forEach((p,pi)=>{const m=new THREE.InstancedMesh(p.g,mat(S,pi,p),L.length),col=new Float32Array(L.length*3);
-        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1];d0.position.set(d.x,(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s)),d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2]);d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
+        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1],y0=(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s));
+          // v177: seated on the slope under the whole base (3370 env177Seat), once per piece
+          const st=d.st176||(d.st176=typeof env177Seat=='function'?env177Seat(S,d,y0):null);
+          if(st){d0.position.set(st.x,st.y,st.z);d0.quaternion.copy(st.q);d0.scale.set(st.sx,st.sy,st.sz)}else{d0.position.set(d.x,y0,d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2])}d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
           const h=((d.x*73.13+d.z*37.7)%1+1)%1,tl=p.glow?(S.gt||S.tint):S.tint;cc.setHex(tl?tl[Math.floor(h*tl.length)%tl.length]:0xffffff);if(!p.glow&&!p.mat){const v=1-S.j/2+S.j*h;cc.multiplyScalar(v)}col.set([cc.r,cc.g,cc.b],j*3)});
         m.instanceColor=new THREE.InstancedBufferAttribute(col,3);m.instanceMatrix.needsUpdate=true;m.frustumCulled=false;m.visible=false;m.castShadow=false;m.receiveShadow=!p.glow&&!p.mat;m.userData.cast=!!S.cast&&!p.glow&&!p.mat;
         if(p.mat)m.renderOrder=3;scene.add(m);WD.ms.push(m);(S.near?c.ns:c.ms).push(m)})}

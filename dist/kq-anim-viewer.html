@@ -1206,6 +1206,7 @@ const BIOMES=[
  {n:'The Citadel',sp:'Batwing',x:630,y:336,t:5,gnd:[66,58,62],grs:[90,30,36],acc:[96,88,92],frs:[30,24,28],wat:[90,20,30],tree:['dead'],pr:['pillar','pillar','bones'],den:[0,.6,0,0],tc:[0x2a1a1a,0x3a2028,0x4a2a30],amp:.08}
 ];
 if(typeof v112Biomes=='function')v112Biomes(); // v112: one biome per themed field instance (II, III; 1981)
+if(typeof env177Biomes=='function')env177Biomes(); // v177: the zones' ground in a darker, weathered palette (3370)
 
 const MAP=(()=>{
   let sd=11;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,m=[],bio=[];
@@ -1326,6 +1327,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
+  if(typeof env177Banks=='function')env177Banks(); // v177: shelving pond banks instead of sheer drops (3370)
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)
@@ -1477,8 +1479,8 @@ function buildTerrain(chk){
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
      vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
      float n1=fb3(q*.8),n2=fb3(q*3.1);
-     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.82+.36*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
-     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.84+.28*n2)*mix(.84+.3*fh,1.,pav);
+     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.9+.2*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
+     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);
      diffuseColor.rgb=mix(diffuseColor.rgb,rock,rm);float sn=smoothstep(9.5,14.,yc+(n1-.5)*4.)*(1.-smoothstep(.22,.6,sl))*(1.-sand);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.9,.94,1.)*(.84+.16*fh),sn);}`)};
   GTX.list.forEach(T=>{const m=T===GTX.main?mat:mat.clone();m.map=T.t;m.flatShading=true;m.userData.lps=1;m.onBeforeCompile=obc(T);T.mat=m});
   for(let cz=0;cz*CHN<H;cz++)for(let cx=0;cx*CHN<W;cx++){
@@ -1640,35 +1642,36 @@ const WTR=(()=>{
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){const b=BIOMES[MAP.bio[y][x]],k=(y*W+x)*4,lv=lava?.05:.02,ok=!!b.lava==lava,dp=ok?lv-GHv(x,y):-1;d[k]=Math.max(0,Math.min(1,(dp+.5)/2))*255;const w=b.wat;d[k+1]=w[0];d[k+2]=w[1];d[k+3]=w[2]}
     const t=new THREE.DataTexture(d,W,H,THREE.RGBAFormat);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
     const m=new THREE.ShaderMaterial({transparent:!lava,depthWrite:lava,uniforms:{dm:{value:t},time:{value:0},lava:{value:lava?1:0},fogC:{value:new THREE.Color()},fogD:{value:.02},hor:{value:new THREE.Color()},top:{value:new THREE.Color()},sunDir:{value:new THREE.Vector3()},sunCol:{value:new THREE.Color()},amb:{value:1},WH:{value:new THREE.Vector2(W,H)}},
-    vertexShader:'varying vec3 vP;void main(){vP=position;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',
-    fragmentShader:`varying vec3 vP;uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
+    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v177: vW, the real world spot (fog and view were measured from vP)
+    fragmentShader:`varying vec3 vP,vW;uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
     float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
     float fb(vec2 p){return vn(p)*.5+vn(p*2.03+1.7)*.3+vn(p*4.1+5.2)*.2;}
     void main(){
-      vec4 s=texture2D(dm,(vP.xz+.5)/WH);float d=s.r*2.-.5;if(d<-.03)discard;
-      vec3 V=normalize(cameraPosition-vP);float dist=length(cameraPosition-vP);
+      vec4 s=texture2D(dm,(vW.xz+.5)/WH);float d=s.r*2.-.5;if(d<-.03)discard;
+      vec3 V=normalize(cameraPosition-vW);float dist=length(cameraPosition-vW);
       vec3 col;float al=1.;
-      if(lava>.5){float f=fb(vP.xz*.55+vec2(time*.05,time*.03)),g=fb(vP.xz*1.4-vec2(time*.04,0.)+f*2.);
+      if(lava>.5){float f=fb(vW.xz*.55+vec2(time*.05,time*.03)),g=fb(vW.xz*1.4-vec2(time*.04,0.)+f*2.);
         col=mix(vec3(.55,.08,.02),vec3(1.5,.55,.08),smoothstep(.3,.75,g));col=mix(col,vec3(2.2,1.5,.5),smoothstep(.72,.9,g)*.8);
-        col=mix(col,vec3(.12,.04,.03),smoothstep(.55,.2,g)*.8*(1.-smoothstep(.0,.35,d)*0.)); col*=.9+.3*sin(time*.8+vP.x);
+        col=mix(col,vec3(.12,.04,.03),smoothstep(.55,.2,g)*.8*(1.-smoothstep(.0,.35,d)*0.)); col*=.9+.3*sin(time*.8+vW.x);
         col+=vec3(1.,.35,.05)*smoothstep(.45,0.,d)*.6;
       }else{
-        vec2 p=vP.xz*.6;float e=.05;
+        vec2 p=vW.xz*.6;float e=.05;
         float h0=fb(p+vec2(time*.06,time*.04))+fb(p*1.7-vec2(time*.05,time*.03))*.6;
         float hx=fb(p+vec2(e,0.)+vec2(time*.06,time*.04))+fb((p+vec2(e,0.))*1.7-vec2(time*.05,time*.03))*.6;
         float hz=fb(p+vec2(0.,e)+vec2(time*.06,time*.04))+fb((p+vec2(0.,e))*1.7-vec2(time*.05,time*.03))*.6;
         vec3 N=normalize(vec3((h0-hx)*2.2,1.,(h0-hz)*2.2));
         float dp=clamp(d,0.,1.6),k=smoothstep(0.,1.2,dp);
-        vec3 tint=s.gba/255.;vec3 shallow=tint*vec3(1.1,1.25,1.1)+vec3(.04,.1,.08),deep=tint*vec3(.35,.45,.6);
+        vec3 tint=s.gba;   // v177: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
+        vec3 shallow=tint*vec3(.64,.68,.68)+vec3(.012,.016,.016),deep=tint*vec3(.3,.32,.34);
         vec3 body=mix(shallow,deep,k)*(.25+.75*amb);
         vec3 R=reflect(-V,N);float ry=max(R.y,0.);vec3 refl=mix(hor,top,pow(ry,.5));
         float sg=pow(max(dot(R,sunDir),0.),220.);refl+=sunCol*sg*3.;refl+=sunCol*pow(max(dot(R,sunDir),0.),12.)*.12;
-        float fr=.05+.9*pow(1.-max(dot(V,N),0.),3.5);
-        col=mix(body,refl,clamp(fr,0.,1.));
-        float fm=fb(vP.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
-        float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.9,.95,.95)*(.4+.6*amb),foam*.85);
-        al=clamp(.5+.5*k+foam,0.,1.)*smoothstep(-.03,.045,d);
+        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v177: murkier, the sky mirrored less (ponds read as white holes)
+        col=mix(body,refl*.72,clamp(fr,0.,1.));
+        float fm=fb(vW.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
+        float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.62,.66,.64)*(.4+.6*amb),foam*.6);
+        al=clamp(.66+.4*k+foam,0.,1.)*smoothstep(-.03,.045,d);
       }
       float fg=1.-exp(-fogD*fogD*dist*dist);col=mix(col,fogC,clamp(fg,0.,1.));
       gl_FragColor=vec4(col,al);}`});
@@ -1679,9 +1682,12 @@ const TT=(()=>{const {fin,tr,merge,leaf,bark}=NK,G=THREE;
   const pineTier=(r,hh,sd)=>fin(new G.ConeGeometry(r,hh,7,2),{j:.06,sd,f:(x,y,z)=>{if(y<-hh/2+1e-3)return [x*1.14,y-.07,z*1.14];if(Math.abs(y)<1e-3)return [x*.9,y,z*.9];return [x,y,z]},paint:leaf});
   const PC=[pineTier(.66,.95,1),pineTier(.56,.9,2),pineTier(.45,.85,3),pineTier(.32,.78,4),pineTier(.17,.62,5)];
   const PT=fin(new G.CylinderGeometry(.06,.13,.6,5,2),{j:.02,sd:7,paint:bark});
-  const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,6,2),{j:.025,sd:8,f:(x,y,z)=>y<-.29?[x*1.35,y,z*1.35]:[x,y,z],paint:bark}),
-    fin(tr(new G.CylinderGeometry(.022,.04,.26,4),.07,.18,0,0,0,-.8),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.02,.035,.22,4),-.06,.12,.03,.3,0,.85),{j:.01,sd:10,paint:bark})]);
-  const canopy=(r,sd)=>fin(new G.IcosahedronGeometry(r,1),{j:r*.32,sd,f:(x,y,z)=>[x,y<0?y*.7:y,z],paint:leaf});
+  // v177: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
+  const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,7,3),{j:.025,sd:8,f:(x,y,z)=>{const t=y+.3;return y<-.25?[x*1.35,y,z*1.35]:[x+t*t*.05,y,z]},paint:bark}),
+    fin(tr(new G.CylinderGeometry(.024,.045,.34,5),.1,.3,0,0,0,-.75),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.022,.04,.3,5),-.08,.28,.04,.35,0,.8),{j:.01,sd:10,paint:bark}),
+    fin(tr(new G.CylinderGeometry(.018,.035,.28,5),.0,.32,-.09,-.7,0,.1),{j:.01,sd:11,paint:bark})]);
+  const canopy=(r,sd)=>merge([[0,0,0,.72],[.5,-.12,.22,.52],[-.45,-.08,-.3,.5],[.1,.28,-.42,.46],[-.2,-.2,.48,.44]].map(([x,y,z,k],i)=>
+    fin(tr(new G.IcosahedronGeometry(r*k,1),x*r,y*r,z*r,0,i,0),{j:r*k*.36,sd:sd*7+i,f:(X,Y,Z)=>[X,Y<y*r?y*r-(y*r-Y)*.6:Y,Z],paint:leaf})));
   const OC=[canopy(.62,6),canopy(.5,7),canopy(.44,8)];
   const DT=fin(new G.CylinderGeometry(.05,.13,.6,5,3),{j:.03,sd:11,f:(x,y,z)=>{const a=y*2.2,c=Math.cos(a),s=Math.sin(a);return [x*c-z*s+y*y*.12,y,x*s+z*c]},paint:(h,ny,r)=>{const v=(.62+.3*h)*(.82+.36*r);return [v,v,v*1.04]}});
   const dpaint=(h,ny,r)=>{const v=(.7+.3*h)*(.82+.36*r);return [v,v,v*1.04]};
@@ -1716,7 +1722,10 @@ Object.keys(TL).forEach(ty=>{
   const L=TL[ty],P=TT[ty].map(pt=>{const m=inst(pt[0],L.length,true);if(pt[6])m.material=new THREE.MeshBasicMaterial();m.material.vertexColors=!!pt[0].attributes.color;if(pt[9]){m.sway=pt[9];m.off=pt[1]*.9}return m});
   L.forEach((q,i)=>{
     const sc=(ty=='pine'?1.05+Math.random()*.9:ty=='oak'?.95+Math.random()*.7:.85+Math.random()*.6),X=q[0]+(Math.random()-.5)*.35,Z=q[1]+(Math.random()-.5)*.35,tc=q[2].tc,ry=Math.random()*6.28,tl=(Math.random()-.5)*.1,tz=(Math.random()-.5)*.1;
-    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
+    // v177: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
+    // crown slid up or down off its trunk), sunk to the lowest ground round the trunk's foot
+    let g0=GH(X,Z);{const r=.35*sc;let lo=g0;for(let a=0;a<8;a++)lo=Math.min(lo,GH(X+Math.cos(a*.785)*r,Z+Math.sin(a*.785)*r));g0-=Math.min(.9*sc,Math.max(0,g0-lo-.03))}
+    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,g0-GH(X+pt[7]*sc,Z)+pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
     d0.rotation.set(0,0,0);AOL.push([X,Z,sc*(ty=='pine'?1.15:ty=='oak'?1.4:.8)]);
   });
 });
@@ -5955,7 +5964,7 @@ var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
-  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.32,0,0);return {g,x,z,disc}}
+  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.12,0,0);return {g,x,z,disc}}   // v177: the name plate rests on the capstone (it hung ~.2 above it)
 // v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
 INSL.forEach(I=>{if(I.tri)return;const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
   const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
@@ -7607,15 +7616,15 @@ function lpPart(S,bones,bn,geo,mat,x,y,z,sx,sy,sz,rx,ry,rz){
 // variant & trait extras on a dkKit, using the creature's back line D.back [[bone,x,y,z]…] and head point D.head [bone,x,y,z]
 function lpExtras(k,c,D){
   let bk=D.back||[],hd=D.head;const up=D.up||.09;
-  // v177: anchors drawn above a body (horns and shards hung in the air on the Mossfrog and Bogmaw, spikes over the Titanshell's
+  // v178: anchors drawn above a body (horns and shards hung in the air on the Mossfrog and Bogmaw, spikes over the Titanshell's
   // shell) are lowered onto it: the anchor's height becomes at most the body's top there (less 1 cm for the head)
   // (and a head point buried deep in a tall head, the Sporelord's cap, comes up to 3 cm under its top); back points sit on the back
-  if(typeof lk177Top=='function'&&(c.v||c.tr)){try{const G=D.geo(c.cl[0],c),top=q=>q&&lk177Top(G,q[1],q[3]);
+  if(typeof lk178Top=='function'&&(c.v||c.tr)){try{const G=D.geo(c.cl[0],c),top=q=>q&&lk178Top(G,q[1],q[3]);
     if(hd){const t=top(hd);if(t!=null&&Math.abs(t-hd[2])<.15)hd=[hd[0],hd[1],Math.max(Math.min(hd[2],t-.01),t-.03),hd[3]]}
     bk=bk.map(q=>{const t=top(q);return t!=null&&Math.abs(q[2]-t)<.2?[q[0],q[1],t-.004,q[3]]:q})}catch(e){}}
   if(c.v=='Ember')bk.forEach((q,i)=>k.L(q[0],'g',i%2?0xffb040:0xff6a1a,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up*.8,q[3]-.05],.03,.002,4));
   if(c.v=='Frost')bk.forEach(q=>k.L(q[0],'g',0xd8f6ff,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up,q[3]-.03],.03,.002,4));
-  // v177: the Golden and Universal marks grow from the head as crystal shards (they were a halo and orbs hovering over it)
+  // v178: the Golden and Universal marks grow from the head as crystal shards (they were a halo and orbs hovering over it)
   if(c.v=='Golden'&&hd){k.L(hd[0],'g',0xffd84a,[hd[1],hd[2],hd[3]],[hd[1],hd[2]+.11,hd[3]-.04],.022,.002,4);[-1,1].forEach(s=>k.L(hd[0],'g',0xe8b830,[hd[1]+s*.02,hd[2],hd[3]],[hd[1]+s*.05,hd[2]+.075,hd[3]-.03],.015,.002,4))}
   if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
   if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
@@ -7661,14 +7670,14 @@ function lpRig(c,n,D){
   if(extra.length){
     const parts=[],bax=raw=>(bn,geo,col,px,py,pz,sx,sy,sz,rx,rz,basic)=>{if(!S.bones[bn])return;const r=(S.T&&!raw)?S.T([px,py,pz]):[px,py,pz];parts.push({bn:bn,geo:geo,col:col,x:r[0],y:r[1],z:r[2],sx:sx||1,sy:sy||1,sz:sz||1,rx:rx||0,rz:rz||0,basic:basic})};
     Object.assign(x,{ax:bax(),axw:bax(true),axm:(bn,...a)=>{if(!S.bones[bn])return new THREE.Object3D();const m=mkAx(S,bones)(bn,...a);
-        // v177: a borrowed part (ears, shells) set on this body: its centre moves onto the nearest surface (they hung up to 45 cm off)
-        try{if(typeof lk177Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk177Near(mesh.geometry,q,O.indexOf(bn)),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
+        // v178: a borrowed part (ears, shells) set on this body: its centre moves onto the nearest surface (they hung up to 45 cm off)
+        try{if(typeof lk178Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk178Near(mesh.geometry,q,O.indexOf(bn)),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
           if(h.d>half+.01)m.position.set(h.p[0]-r[1],h.p[1]-r[2],h.p[2]-r[3])}}catch(e){}
         return m},
       tex:(st,hex,pal)=>{const t=rigTex({id:'x'+st,st:st,pal:pal},hex);return new THREE.MeshStandardMaterial({map:t.map,normalMap:t.nm,roughness:.9})},
       wing:(bn,s,span,chord,col,col2,type,px,py,pz)=>{if(!S.bones[bn])return new THREE.Group();const grp=mkWing(type,span,chord,col,col2);if(s<0)grp.scale.x=-1;const p=new THREE.Group();p.add(grp);
         const r=S.bones[bn],q=S.T?S.T([s*px,py,pz]):[s*px,py,pz];
-        try{if(typeof lk177Near=='function'){const h=lk177Near(mesh.geometry,q);if(h.d>.006)for(let i=0;i<3;i++)q[i]=h.p[i]-h.n[i]*.012}}catch(e){} // v177: a borrowed wing hinges just inside this body (they hung beside or above it)
+        try{if(typeof lk178Near=='function'){const h=lk178Near(mesh.geometry,q);if(h.d>.006)for(let i=0;i<3;i++)q[i]=h.p[i]-h.n[i]*.012}}catch(e){} // v178: a borrowed wing hinges just inside this body (they hung beside or above it)
         p.position.set(q[0]-r[1],q[1]-r[2],q[2]-r[3]);bones[bn].add(p);x.wings.push({p:p,s:s,base:.35,amp:.55});return p}});
     extra.forEach(a=>{try{a[0].sig(x,a[1],c)}catch(e){console.error('lp fuse',n,e)}});
     [false,true].forEach(bs=>{const m=bakeMesh(parts,O,'LPF|'+n+'|'+c.g.join()+'|'+c.cl.join(),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}});
@@ -7765,7 +7774,7 @@ LPR.Ashwolf={
     [[.42,.66,'head'],[.35,.645,'neck'],[.28,.64,'neck'],[.2,.64,'chest'],[.12,.625,'chest'],[.03,.6,'chest']].forEach((q,i)=>
       [-1,1].forEach(s=>L(q[2],'c',i%2?back:dark,[s*.025,q[1]-.035,q[0]],[s*.045,q[1]+.012,q[0]-.1],.035,.003,4)));
     // tail shag
-    // v177: placed on the tail as v100 shortened (z ×.8 from the root) and slimmed it (×.72); they hung off its sides
+    // v178: placed on the tail as v100 shortened (z ×.8 from the root) and slimmed it (×.72); they hung off its sides
     const tk=WOLF_TAIL.v100?.72:1,tz=z=>WOLF_TAIL.v100?-.33+(z+.33)*.8:z;
     [['tail1',.43,-.6],['tail1',.4,-.72],['tail2',.39,-.84]].forEach(q=>[-1,1].forEach(s=>L(q[0],'c',dkShade(back,1.2),[s*.05*tk*.8,q[1],tz(q[2])],[s*.09*tk,q[1]-.04,tz(q[2]-.12)],.04*tk,.003,4)));
     // big paws with black claws
@@ -7800,9 +7809,9 @@ function lpwWing(key,outline,hub,sticks,cA,cB,cS,bands){
   G.computeVertexNormals();return LPWG[key]=G}
 // hang a wing pair on bone bn at model point (x,y,z); sweep = turn back (rad), droop = tilt down (rad)
 function lpwPair(x,bn,geo,mat,px,py,pz,sweep,droop,base,amp){
-  // v177: the hinge sits just inside the body's side (several wings hinged 1-5 cm out from it, so the root showed a gap when
+  // v178: the hinge sits just inside the body's side (several wings hinged 1-5 cm out from it, so the root showed a gap when
   // they beat); only ever moved inward, at most 5 cm
-  try{const B=x.b&&x.b.children.find(m=>m.isSkinnedMesh);if(B&&typeof lk177Near=='function'){const q=lk177Near(B.geometry,[px,py,pz]);
+  try{const B=x.b&&x.b.children.find(m=>m.isSkinnedMesh);if(B&&typeof lk178Near=='function'){const q=lk178Near(B.geometry,[px,py,pz]);
     if(q.d>.002&&Math.abs(q.p[0])<px)px=Math.max(px-.05,Math.abs(q.p[0])-.012)}}catch(e){}
   [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,bn,geo,mat,s*px,py,pz,s,1,1,0,s*sweep,-s*droop);x.wings.push({p:p,s:s,base:base==null?.35:base,amp:amp==null?.55:amp})})}
 
@@ -7915,7 +7924,7 @@ LPR.Boneling={
     // vertebra spikes along the back and down the tail
     for(let i=0;i<9;i++){const z=.36-i*.075,bn=z>.3?'neck':z>.1?'chest':z>-.15?'spine':'pelvis';B(bn,'c',i%2?bone:dkShade(bone,.85),[0,.6,z],.012,.05,.016,-.5,0,0,'cone4')}
     [['tail0',.55,-.4],['tail1',.52,-.55],['tail1',.5,-.68],['tail2',.49,-.8]].forEach(q=>B(q[0],'c',bone,[0,q[1],q[2]],.009,.035,.012,-.6,0,0,'cone4'));
-    // shoulder blades and hip bones; v177: a pelvis plate joins the hips to the spine, ball joints seat the legs in the
+    // shoulder blades and hip bones; v178: a pelvis plate joins the hips to the spine, ball joints seat the legs in the
     // shoulders and hips, and the top of the neck moves with the skull (the legs, hips and skull stood apart from the spine)
     B('pelvis','c',dkShade(bone,.92),[0,.535,-.25],.15,.03,.1,.1,0,0);
     [-1,1].forEach(s=>{B('chest','c',bone,[s*.105,.505,.205],.036,.036,.036,0,0,0,'sph');B('pelvis','c',bone,[s*.1,.515,-.24],.042,.042,.042,0,0,0,'sph')});
@@ -8297,7 +8306,7 @@ LPR.Gravewyrm={
       const skin=lpMain(C,.42).multiplyScalar(.82).getHex(),dk=dkShade(skin,.6),lid=dkShade(skin,.85),belly=0xc4bf96,eye=red?0xff2a2a:0xd8c030;
       // bulging eyes on top of the head: lidded domes, glowing gold iris with a black slit
       [-1,1].forEach(s=>{
-        // v177 (owner: not cartoony): a toad's eyes, smaller and hooded, with a horizontal pupil; warty parotoid glands
+        // v178 (owner: not cartoony): a toad's eyes, smaller and hooded, with a horizontal pupil; warty parotoid glands
         // behind them (the big round glowing eyes with slit pupils read as a cartoon frog)
         k.p('head','sph2','c',lid,s*.12,.415,.34,.056,.05,.058);
         k.p('head','sph2','g',dkShade(eye,.8),s*.134,.42,.366,.034,.029,.024,0,s*.5,0);
@@ -8436,8 +8445,8 @@ LPR.Skyhawk={
       const rocks=[[0,.02,.075],[-.2,.0,.06],[.2,-.02,.06],[0,.26,.055],[0,-.3,.065],[-.22,.18,.05],[.22,.17,.05],[-.21,-.2,.055],[.21,-.22,.05],[.1,-.1,.045],[-.1,.1,.04]];
       rocks.forEach((q,i)=>k.p('spine',i%3?'dod':'ico','c',i%2?stone:dstone,q[0],domeY(q[0],q[1])-q[2]*.5,q[1],q[2],q[2]*.75,q[2],i*.7,i*1.3,i*.4));
       [[.12,.08],[-.15,-.12],[.17,-.02],[-.05,.18]].forEach((q,i)=>k.p('spine','ico','c',moss,q[0],domeY(q[0],q[1])-.005,q[1],.06,.018,.05,0,i));
-      const G0=typeof lk177Near=='function'?LPR.Stoneshell.geo(C,c):null;
-      for(let i=0;i<12;i++){const a=i/12*Math.PI*2,x=Math.sin(a)*.355,z=Math.cos(a)*.44-.02,h=G0&&lk177Near(G0,[x,.215,z]),q=h?h.p.map((v,j)=>v-h.n[j]*.012):[x,.215,z]; // v177: set into the shell's rim
+      const G0=typeof lk178Near=='function'?LPR.Stoneshell.geo(C,c):null;
+      for(let i=0;i<12;i++){const a=i/12*Math.PI*2,x=Math.sin(a)*.355,z=Math.cos(a)*.44-.02,h=G0&&lk178Near(G0,[x,.215,z]),q=h?h.p.map((v,j)=>v-h.n[j]*.012):[x,.215,z]; // v178: set into the shell's rim
         k.p('spine','dod','c',i%2?dstone:stone,q[0],q[1],q[2],.045,.03,.045,i,i*.5,0)}
       // glowing crystal cluster growing from the shell
       [[.06,-.02,.12,.15],[-.02,.04,.09,-.25],[.0,-.08,.07,.35],[-.16,-.16,.06,-.2]].forEach((q,i)=>{const y=domeY(q[0],q[1])-.02;k.L('spine',i<3?'g':'c',i<3?0x5ae8d0:0x3a6a64,[q[0],y,q[1]],[q[0]+q[3]*.12,y+q[2],q[1]-q[3]*.05],.028,.003,4)});
@@ -9377,7 +9386,8 @@ function lpnPortalArch(g){
   const st=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,color:0x6a6672}),G=new THREE.Group(),{fin,tr,merge,stone,hs}=NK;
   const blk=(w,hh,d,x,y,z,ry,sd)=>fin(tr(new THREE.BoxGeometry(w,hh,d,1,1,1),x,y,z,0,ry,0),{j:.07,sd,paint:stone});
   const parts=[];
-  [-1,1].forEach(s=>{let y=0;for(let i=0;i<4;i++){const hh=.5+hs(i,s,7)*.18,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
+  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v177: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
+    for(let i=0;i<4;i++){const hh=H[i]*k,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
   parts.push(blk(2.5,.34,.5,0,2.5,0,.03,61),blk(.5,.3,.46,0,2.82,0,.6,62));
   // a couple of fallen chunks at the base
   parts.push(fin(tr(new THREE.DodecahedronGeometry(.22,0),-1.35,.12,.3),{j:.06,sd:63,paint:stone}),fin(tr(new THREE.DodecahedronGeometry(.16,0),1.3,.09,-.25),{j:.05,sd:64,paint:stone}));
@@ -9947,16 +9957,16 @@ lfKit('Skyhawk',P=>P.forEach(p=>{if(p.bn=='tail2'||p.bn=='tail3'){p.bn='tail0';l
 var LFS={};
 function lfSurf(n){const sp=(typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n,K=n+'|'+sp;if(LFS[K])return LFS[K];const D=LPR[n],C=0x808080,G=D.geo(C,{g:[sp],cl:[C],v:'',tr:'',f:0,z:1}),P=G.attributes.position.array,I=G.index.array,o=[];
   for(let t=0;t<I.length;t+=3){const a=I[t]*3,b=I[t+1]*3,c=I[t+2]*3;for(let i=0;i<=3;i++)for(let j=0;j<=3-i;j++){const u=i/3,w=j/3,z=1-u-w;o.push(P[a]*z+P[b]*u+P[c]*w,P[a+1]*z+P[b+1]*u+P[c+1]*w,P[a+2]*z+P[b+2]*u+P[c+2]*w)}}
-  return LFS[K]=new Float32Array(o)} // v177: per body variant (Direfang, Titanshell… have their own bodies)
+  return LFS[K]=new Float32Array(o)} // v178: per body variant (Direfang, Titanshell… have their own bodies)
 function lfNearS(n,x,y,z){const P=lfSurf(n);let b=1e9,k=0;for(let i=0;i<P.length;i+=3){const d=(P[i]-x)**2+(P[i+1]-y)**2+(P[i+2]-z)**2;if(d<b){b=d;k=i}}return [P[k],P[k+1],P[k+2],Math.sqrt(b)]}
-// v177: the bone that moves the body at the vertex nearest (x,y,z) (a borrowed fusion part rides the body part it now sits on)
+// v178: the bone that moves the body at the vertex nearest (x,y,z) (a borrowed fusion part rides the body part it now sits on)
 function lfBoneAt(n,x,y,z){const sp=(typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n,C=0x808080,G=LPR[n].geo(C,{g:[sp],cl:[C],v:'',tr:'',f:0,z:1}),P=G.attributes.position.array,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight;
   if(!SI)return null;let b=1e9,k=0;for(let i=0;i<P.length;i+=3){const d=(P[i]-x)**2+(P[i+1]-y)**2+(P[i+2]-z)**2;if(d<b){b=d;k=i/3}}
   let bi=SI.getX(k),bw=SW.getX(k);[['getY'],['getZ'],['getW']].forEach(([f])=>{if(SW[f](k)>bw){bw=SW[f](k);bi=SI[f](k)}});return Object.keys(SPEC[n].bones)[bi]||null}
 // highest / lowest body surface over (x,z); null when the body does not reach there
 function lfTopS(n,x,z,lo,r){const P=lfSurf(n);r=r||.025;let y=null;for(let i=0;i<P.length;i+=3)if(Math.abs(P[i]-x)<r&&Math.abs(P[i+2]-z)<r&&(y==null||(lo?P[i+1]<y:P[i+1]>y)))y=P[i+1];return y}
 {const o=bakeMesh;bakeMesh=function(parts,O,key,basic){
-  // v177: also a fused companion's borrowed signature parts ('LPF|rig|…', placed from the old rig's points: they hung up to 60 cm off)
+  // v178: also a fused companion's borrowed signature parts ('LPF|rig|…', placed from the old rig's points: they hung up to 60 cm off)
   try{const m=/^LP([OF])\|([^|]+)\|/.exec(key||''),n=m&&m[2],fz=m&&m[1]=='F';if(n&&LPR[n]&&!parts._lf){parts._lf=1;parts.forEach(p=>{
     if(p.geo&&p.geo.type=='TorusGeometry')return; // halos float on purpose
     const q=lfNearS(n,p.x,p.y,p.z),half=Math.min(p.sx,p.sy,p.sz)*.5;if(fz&&q[3]<.08)p.bn=lfBoneAt(n,q[0],q[1],q[2])||p.bn;if(q[3]<half+.015)return;
@@ -19266,9 +19276,10 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(Math.cos(a)*s*.45,y+.45,-Math.sin(a)*s*.45,.6,s*1.3,a+.6,bark,.035))});
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
-    if(moss)[[.35,2.0,.2],[-.32,1.65,2.5],[.3,2.35,4],[-.2,2.55,5.2],[.1,2.6,1.2]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},Math.cos(a)*s*1.5,y-L/2+.1,-Math.sin(a)*s*1.5,Math.PI))});
+    if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
+      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
     if(o.snow)p.push(F(dome(.3,6),0xf4f8ff,{j:.04},0,2.62,0,0,0,0,[1,.4,1]));return M(p)};
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
@@ -19277,8 +19288,13 @@ function wdDeco(){const T0=performance.now();
     p.push(F(ico(.3,0),c,{j:.05},1.75,.3,0,0,0,0,[1.3,.9,.9]),F(cone(.05,.5,4),c,{},1.9,.65,.18,.5,0,-.6),F(cone(.05,.5,4),c,{},1.9,.65,-.18,-.5,0,-.6));return M(p)};
   const skull=c=>M([F(ico(.22,0),c,{j:.04},0,.18,0,0,0,0,[1.2,.9,1]),F(box(.2,.1,.18),c,{},.2,.08,0),F(cone(.04,.4,4),c,{},-.05,.35,.18,.7,0,.3),F(cone(.04,.4,4),c,{},-.05,.35,-.18,-.7,0,.3),F(cyl(.03,.03,.4,4),c,{},-.3,.04,.1,0,.6,Math.PI/2)]);
   const pillarG=(hex,h,top)=>M([F(cyl(.36,.4,h,7),hex,{j:.05,top,tt:.6,f:(x,y,z)=>y>h-.01?[x,y-((x*7+z*13)%1+1)%1*.4,z]:[x,y,z]},0,h/2,0),F(cyl(.5,.55,.3,7),hex,{j:.04},0,.15,0),F(cyl(.32,.36,.5,7),hex,{j:.06},.9,.25,.3,0,.4,Math.PI/2)]);
-  const wallG=(hex,top,len,hh)=>{const p=[];for(let i=0;i<4;i++){const w=len/4,h0=hh*(.55+((i*37)%10)/22);p.push(F(box(w*.98,h0,.7),hex,{j:.08,top,tt:.6},-len/2+w*(i+.5),h0/2,0))}
-    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0));return M(p)};
+  // v177: a ruined wall laid in courses of dressed blocks (joints, staggered, a broken top) instead of four plain boxes
+  const wallG=(hex,top,len,hh)=>{const p=[],w=len/4;for(let i=0;i<4;i++){const h0=hh*(.55+((i*37)%10)/22);let y=0,c=0;
+      while(y<h0-.06){const bh=Math.min(.34+((i*7+c*3)%4)*.05,h0-y),sh=(c%2?.25:-.05)*w,last=y+bh>=h0-.06;
+        for(let k=0;k<2;k++){const x0=-len/2+w*i+sh+k*w*.5,x1=Math.min(-len/2+w*(i+1),x0+w*.5),xa=Math.max(-len/2+w*i,x0);if(x1-xa<.08)continue;
+          const d=.64+(((i+c+k)*29)%5)*.025,bw=x1-xa-.025;p.push(F(box(bw,bh-.025,d),hex,{j:last?.09:.035,top,tt:.6},(xa+x1)/2,y+bh/2,(((i*3+c+k)%3)-1)*.03,0,(((c+k)%3)-1)*.02,0))}
+        y+=bh;c++}}
+    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0),F(dod(.22),hex,{j:.08},len*.15,.12,.7),F(dod(.16),hex,{j:.06},-len*.42,.08,.62));return M(p)};
   const grave=(hex,lean)=>M([F(box(.42,.6,.12),hex,{j:.03},0,.28,0,lean,0,lean*.5),F(cyl(.21,.21,.12,6,1),hex,{},0,.6,0,Math.PI/2,0,0,[1,1,1]),F(box(.55,.08,.8),0x3a3428,{j:.04},0,.04,.42)]);
   const crossG=(hex)=>M([F(box(.12,1.1,.1),hex,{j:.02},0,.55,0),F(box(.6,.12,.1),hex,{j:.02},0,.82,0),F(dome(.35,6),0x3e3428,{j:.06},0,0,.5,0,0,0,[1,.35,1.6])]);
   const fenceG=(wood)=>M([F(box(.12,.95,.12),wood,{j:.02},-1.15,.47,0),F(box(.12,.85,.12),wood,{j:.02},1.15,.42,0),F(box(2.5,.1,.06),wood,{j:.02},0,.7,0,0,0,.03),F(box(2.5,.1,.06),wood,{j:.02},0,.38,0,0,0,-.04)]);
@@ -19300,11 +19316,13 @@ function wdDeco(){const T0=performance.now();
   const statueG=(stone,o)=>{o=o||{};const p=[F(box(1.1,.7,1.1),stone,{j:.05},0,.35,0),F(box(1.25,.12,1.25),stone,{},0,.72,0),F(cyl(.22,.38,1.3,6),stone,{j:.04},0,1.43,0),F(ico(.2,0),stone,{j:.03},0,2.25,0),F(box(.62,.18,.3),stone,{},0,1.95,0)];
     if(o.wings)[-1,1].forEach(s=>p.push(F(cone(.35,1.2,3),stone,{j:.04},s*.35,2.1,-.12,0,0,s*.7,[1,1,.25])));
     if(o.sword)p.push(F(box(.08,1.3,.04),stone,{},.28,1.5,.2),F(box(.36,.06,.06),stone,{},.28,2.0,.2));
-    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.95,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
+    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.9,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
     if(o.broken)p.splice(3,2);return M(p)};
   const mausoleum=(st,roof)=>M([F(box(2.6,.25,3),st,{j:.04},0,.12,0),F(box(2.2,1.9,2.6),st,{j:.06},0,1.2,0),F(cyl(.16,.18,1.9,6),st,{},-.95,1.2,1.4),F(cyl(.16,.18,1.9,6),st,{},.95,1.2,1.4),
     F(box(2.5,.2,3),st,{},0,2.2,0),F(cone(1.85,.9,4),roof,{j:.05},0,2.75,0,0,Math.PI/4,0,[1,1,1.25]),F(box(.9,1.3,.06),0x141218,{lo:1,hi:0},0,.95,1.31),F(cyl(.04,.04,.6,4),0x8a8a90,{},0,3.35,0),F(box(.4,.06,.06),0x8a8a90,{},0,3.5,0)]);
-  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(box(.62,.22,1.6),w,{j:.02},.15,.25,.5,.1,.3,.15)]);
+  // v177: a coffin is coffin-shaped (narrow head, broad shoulders, tapered foot) with a lid knocked askew, not a box
+  const coffinG=(L,W,H)=>{const s=new G.Shape([[-W*.62,0],[-W,L*.28],[-W*.7,L],[W*.7,L],[W,L*.28],[W*.62,0]].map(q=>new G.Vector2(q[0],q[1]-L*.5)));const g=new G.ExtrudeGeometry(s,{depth:H,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,H,0);return g};
+  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(coffinG(1.6,.31,.2),w,{j:.015},.15,.12,.5,.1,.3,.15),F(coffinG(1.62,.33,.05),dt168Mix(w,0x000000,.25),{j:.01},.22,.33,.42,.16,.42,.1)]);
   const archG=(st,top)=>M([F(box(.9,3.2,1),st,{j:.1,top,tt:.6},-1.7,1.6,0),F(box(.9,3.2,1),st,{j:.1,top,tt:.6},1.7,1.6,0),F(tor(1.7,.5,Math.PI,8),st,{j:.08,top,tt:.6},0,3.0,0,0,0,0,[1,.6,1.2]),F(box(1.2,.5,1.1),st,{j:.1},-1.7,.25,0),F(box(1.2,.5,1.1),st,{j:.1},1.7,.25,0)]);
   const duneG=(c)=>F(dome(1,9),c,{j:.12,jy:.5,lo:.86,hi:.24,f:(x,y,z)=>[x*(1+.25*Math.sign(x)),y*(1-.35*Math.max(0,x)),z]},0,0,0);
   const cartG=()=>M([F(box(2.0,.12,1.1),0x6a4a2e,{j:.03},0,.75,0,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,.53,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,-.53,0,0,.15),
@@ -19314,11 +19332,12 @@ function wdDeco(){const T0=performance.now();
   const basalt=(c,top)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.05,r=i?.42:0,h=1.4+((i*53)%10)/5;p.push(F(cyl(.24,.26,h,6),c,{j:.02,top,tt:.8},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return M(p)};
   const icicles=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.2,r=i?.2+i*.06:0,h=.4+((i*29)%10)/14;p.push(F(cone(.08,h,4),c,{lo:.8,hi:.5},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
-  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(F(box(s*1.4,s,s),c,{j:.06},Math.cos(a)*r,s/2,Math.sin(a)*r,0,a,(i%2)*.3))}return M(p)};
+  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v177: broken blocks among rough chunks
+    for(let i=0;i<6;i++){const a=i*1.7+.4,r=.5+(i%3)*.3;p.push(F(oct(.06+(i%3)*.025),c,{j:.03},Math.cos(a)*r,.02,Math.sin(a)*r,0,i,0,[1,.6,1]))}return M(p)};
   const candles=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cyl(.03,.035,h,5),0xe8dcc0,{lo:.9,hi:.2},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const candleGlow=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cone(.025,.07,4),0xffffff,{lo:1,hi:0},Math.cos(a)*r,h+.04,Math.sin(a)*r))}return M(p)};
-  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.82,0)]);
-  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,2.0,0)]);
+  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.72,0)]);
+  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,1.9,0)]);
   const rootsG=(bark)=>{const p=[];for(let i=0;i<4;i++){const a=i*1.6;p.push(F(tor(.9+i*.15,.13-i*.015,Math.PI*.85,7),bark,{j:.04},0,-.25,0,0,a,0,[1.3,1,1]))}p.push(F(cyl(.3,.45,.7,6),bark,{j:.05},.2,.1,0,0,0,.6));return M(p)};
   const hay=()=>M([F(cyl(.55,.55,.9,8),0xd8b860,{j:.04,lo:.75,hi:.35},0,.55,0,Math.PI/2,0,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},.2,.55,0,0,Math.PI/2,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},-.2,.55,0,0,Math.PI/2,0)]);
   const totem=(w,c1,c2)=>M([F(cyl(.18,.22,2.6,6),w,{j:.03},0,1.3,0),F(cone(.3,.5,5),c1,{},0,2.85,0),F(box(.5,.3,.42),c2,{j:.02},0,2.2,.08),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},.12,2.25,.3),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},-.12,2.25,.3),F(box(.9,.12,.12),w,{},0,1.6,0),F(box(.04,.7,.3),c1,{},.42,1.25,0),F(box(.04,.7,.3),c2,{},-.42,1.25,0)]);
@@ -19356,7 +19375,9 @@ function wdDeco(){const T0=performance.now();
   def('h_hay',{parts:[hay()],cast:true,col:.6,s:[.9,1.15]});
   def('h_cairn',{parts:[cairn(0x9a9488)],cast:true,s:[.8,1.2]});
   def('h_totem',{parts:[totem(0x6a4a2e,0x3a8a5a,0xc8a040)],cast:true,col:.35,s:[.9,1.1]});
-  def('h_bush',{parts:[M([F(ico(.45,0),0x4a8a3a,{j:.12},0,.35,0),F(ico(.35,0),0x5a9a42,{j:.1},.35,.3,.1),F(ico(.3,0),0x3e7a32,{j:.1},-.3,.25,-.15)])],near:true,s:[.8,1.4],sway:.04});
+  // v177: h_bush is a dense, uneven shrub with bare twigs (was three bright green balls)
+  def('h_bush',{parts:[M([F(ico(.42,1),0x3e6a32,{j:.16,lo:.45,hi:.6},0,.34,0,0,0,0,[1.1,.82,1]),F(ico(.33,1),0x48743a,{j:.13,lo:.45,hi:.6},.36,.27,.12,0,1,0,[1,.8,1]),F(ico(.29,1),0x36602c,{j:.12,lo:.45,hi:.6},-.32,.23,-.15,0,2,0,[1,.8,1]),
+    F(ico(.22,1),0x4a7038,{j:.1,lo:.5,hi:.6},.06,.58,-.12),twig(.1,.2,.05,.75,.7,.5,0x3a2e22,.025),twig(-.1,.2,-.05,.6,-.8,2.2,0x3a2e22,.02),twig(0,.15,.1,.55,.5,4,0x3a2e22,.02)])],near:true,s:[.8,1.4],sway:.04});
   // Burningeye Summit: a frozen peak under a burning sky
   def('b_crystal',{parts:[{g:crystals(0xffffff),glow:1}],cast:false,col:.6,s:[.8,1.5],tint:[0x9ad8ff,0xbfe8ff,0x7ab8ff]});
   def('b_rock',{parts:[rockG(0x6a7280,0xf4f8ff,1.1,.75)],cast:true,col:.95,s:[1,1.7]});
@@ -19403,8 +19424,9 @@ function wdDeco(){const T0=performance.now();
   def('c_column',{parts:[pillarG(0x5a5058,3.2,null)],cast:true,col:.5,s:[.95,1.3]});
   def('c_graves',{parts:[M([grave(0x3e3a42,.15).translate(-.7,0,0),grave(0x46404a,-.1).translate(.7,0,.1)])],cast:true,s:[.9,1.2]});
   def('c_candela',{parts:[candelabra(),{g:candelaGlow(),glow:1}],cast:true,s:[.9,1.1],gt:[0xffc870]});
-  def('c_blood',{parts:[F(disc(1,9),0x4a0610,{lo:1,hi:0,j:.15,jy:0},0,0,0,-Math.PI/2)],near:true,y:.04,s:[.6,1.4],j:.05});
-  def('c_coffin',{parts:[M([F(box(.7,.35,1.8),0x2a1a1a,{j:.03},0,.18,0),F(box(.76,.08,1.86),0x3a2222,{},.1,.4,.15,0,.25,.12)])],cast:true,s:[.9,1.1]});
+  def('c_blood',{parts:[(()=>{const sp=(r,n,sd)=>{const g=disc(r,n),P=g.attributes.position;for(let i=1;i<P.count;i++){const a=Math.atan2(P.getY(i),P.getX(i)),k=.62+.38*Math.abs(Math.sin(a*3+sd))+.22*Math.sin(a*7+sd*2);P.setXY(i,P.getX(i)*k,P.getY(i)*k)}return g};   // v177: a ragged pool with drops, dark
+    return M([F(sp(1,22,1.3),0x2a0408,{lo:1,hi:0,j:.04,jy:0},0,0,0,-Math.PI/2),F(sp(.16,8,2),0x30050a,{lo:1,hi:0},1.25,.003,.3,-Math.PI/2),F(sp(.1,7,3),0x30050a,{lo:1,hi:0},-.9,.003,1.05,-Math.PI/2),F(sp(.12,7,4),0x2a0408,{lo:1,hi:0},.2,.003,-1.3,-Math.PI/2)])})()],near:true,y:.04,s:[.6,1.4],j:.05});
+  def('c_coffin',{parts:[M([F(coffinG(1.8,.36,.33),0x2a1a1a,{j:.015},0,0,0),F(coffinG(1.84,.38,.06),0x3a2222,{j:.01},.1,.36,.15,0,.25,.1),F(box(.04,.05,.5),0x6a5a3a,{},.0,.335,-.3),F(box(.3,.05,.04),0x6a5a3a,{},0,.335,-.4)])],cast:true,s:[.9,1.1]});
   // ---------- where each zone puts them: w = in (walkable, off the road) | edge (walkable near the cliff) | bank (the raised rim, out of reach) | lane (beside the road) | water ----------
   // n = items per 1000 tiles of that kind, c = [min,max] per cluster, r = cluster radius
   const Z=[
@@ -19498,6 +19520,7 @@ function wdDeco(){const T0=performance.now();
   if(ZX&&ZX.post)ZX.post(out,col);
   if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
+  try{if(typeof env177Look=='function')env177Look(T,out)}catch(e){console.warn('v177 look',e)}   // v177: graded and weathered (3370)
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
@@ -19515,7 +19538,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
   for(const k in groups){const cx=k%1000,cz=Math.floor(k/1000),c={ms:[],ns:[],on:false,non:false,wd:1,box:new THREE.Box3(new THREE.Vector3(cx*CN-3,-4,cz*CN-3),new THREE.Vector3((cx+1)*CN+3,30,(cz+1)*CN+3))};
     for(const kk in groups[k]){const S=WD.T[kk],L=groups[k][kk];
       S.parts.forEach((p,pi)=>{const m=new THREE.InstancedMesh(p.g,mat(S,pi,p),L.length),col=new Float32Array(L.length*3);
-        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1];d0.position.set(d.x,(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s)),d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2]);d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
+        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1],y0=(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s));
+          // v177: seated on the slope under the whole base (3370 env177Seat), once per piece
+          const st=d.st176||(d.st176=typeof env177Seat=='function'?env177Seat(S,d,y0):null);
+          if(st){d0.position.set(st.x,st.y,st.z);d0.quaternion.copy(st.q);d0.scale.set(st.sx,st.sy,st.sz)}else{d0.position.set(d.x,y0,d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2])}d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
           const h=((d.x*73.13+d.z*37.7)%1+1)%1,tl=p.glow?(S.gt||S.tint):S.tint;cc.setHex(tl?tl[Math.floor(h*tl.length)%tl.length]:0xffffff);if(!p.glow&&!p.mat){const v=1-S.j/2+S.j*h;cc.multiplyScalar(v)}col.set([cc.r,cc.g,cc.b],j*3)});
         m.instanceColor=new THREE.InstancedBufferAttribute(col,3);m.instanceMatrix.needsUpdate=true;m.frustumCulled=false;m.visible=false;m.castShadow=false;m.receiveShadow=!p.glow&&!p.mat;m.userData.cast=!!S.cast&&!p.glow&&!p.mat;
         if(p.mat)m.renderOrder=3;scene.add(m);WD.ms.push(m);(S.near?c.ns:c.ms).push(m)})}
@@ -19891,7 +19917,7 @@ function evo100Kit(n,L,P,seed){
         pts.push(h?add(h.p,d,off):add(c,d,off+.05))}
       for(let k=0;k<N;k++)E.L(pts[k],pts[(k+1)%N],r,r,t,col,4,Object.assign({vs:1},o));return pts},
     // small glowing rune glyph lying on the surface (three strokes)
-    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,0); // v177: the stroke centre on the given point (callers already lift it 3-4 mm; with both it hung off the hide)
+    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,0); // v178: the stroke centre on the given point (callers already lift it 3-4 mm; with both it hung off the hide)
       const st=(a,b)=>E.L(add(add(p0,F.toArray(),a[1]*sz),X.toArray(),a[0]*sz),add(add(p0,F.toArray(),b[1]*sz),X.toArray(),b[0]*sz),sz*.09,sz*.09,'g',col||P.glow,3,Object.assign({vs:1},o));
       const k=(R()*3)|0;st([0,-1],[0,1]);if(k==0){st([-.5,.4],[0,1]);st([.5,.4],[0,1])}else if(k==1){st([0,.2],[.6,-.4]);st([0,.2],[-.6,-.4])}else{st([-.55,0],[.55,0]);st([.5,-.8],[0,-1])}return E},
     // gem in a metal setting on the surface
@@ -20016,7 +20042,7 @@ var EVO100_M={
       E.L(E.add(b1,d,-.05*k),E.add(b1,d,.11*k*tipGlow),.05*k,.002,'g',glowCol,5,{bn:T[T.length-1][3][0]});E.L(E.add(b1,d,-.02*k),E.add(b1,[d[0]*.6,d[1]+.6,d[2]*.6],.08*k*tipGlow),.03*k,.001,'g',glowCol,4,{bn:T[T.length-1][3][0]})}
     return rings},
   // dangling charm on a string from point p (on the body), 'tooth' or 'bone' or gem
-  charm(E,p,len,col,kind,o){o=Object.assign({at:p},o); // v177: every piece skinned like the point it hangs from (a tooth skinned to the chest left the string in a bite)
+  charm(E,p,len,col,kind,o){o=Object.assign({at:p},o); // v178: every piece skinned like the point it hangs from (a tooth skinned to the chest left the string in a bite)
     E.L(E.add(p,[0,.012,0]),E.add(p,[0,-len*.55,0]),.004,.004,'c',0x2a2018,3,o);const q=E.add(p,[0,-len*.55,0]);
     if(kind=='gem')return E.pd('oct','g',col,E.add(q,[0,-len*.18,0]),[0,1,0],[len*.18,len*.28,len*.18],null,o);
     if(kind=='bone'){E.L(E.add(q,[-len*.2,-len*.1,0]),E.add(q,[len*.2,-len*.1,0]),len*.06,len*.06,'c',col,4,o);return E}
@@ -20115,7 +20141,7 @@ EVO100.D.Gravewyrm={glow:0x8aff4a,build(E,L,P){
   const M=EVO100_M,bone=P.bone,boneD=P.boneD,seg=['tail1','tail0','pelvis','spine','chest','neck'];
   // L1: longer back-swept horns, venom drip on the fangs, glowing scale lines behind the eyes
   [-1,1].forEach(s=>{E.horn([s*.09,.37,.52],[s*.5,.45,-1],[s*.03,-.03,-.03],.18+.03*L,.026,'c',bone,5,null,L>=4?P.trim:boneD);
-    {const ft=RV137.cur.Gravewyrm=='Venomcoil'?.27:.282;E.L([s*.05,ft+.008,.793],[s*.05,ft-.03,.797],.006,.002,'g',P.glow,3,{bn:'head'})} // v177: the drip hangs from the fang tip (the v137 head moved the fangs)
+    {const ft=RV137.cur.Gravewyrm=='Venomcoil'?.27:.282;E.L([s*.05,ft+.008,.793],[s*.05,ft-.03,.797],.006,.002,'g',P.glow,3,{bn:'head'})} // v178: the drip hangs from the fang tip (the v137 head moved the fangs)
     E.L([s*.118,.335,.55],[s*.13,.33,.44],.006,.006,'g',P.glow,3,{bn:'head'})});
   if(L>=2){// cobra hood frills on the neck with bony struts, bigger ridge plates
     // cobra hood: two upright membranes flaring from the neck behind the head, ribbed with bone, eye-spots
@@ -20175,13 +20201,13 @@ EVO100.D.Mossfrog={glow:0xb8ff4a,build(E,L,P){
   if(L>=2){// moss cloak over the back with hanging strands, a reed crown between the eyes
     E.shell((x,y,z,nx,ny)=>ny>.55&&z<.22&&z>-.25,.012,'c',(x,y,z,i)=>i%3?moss:0x3a5222,{rimCol:0x2a3a1a});
     [-1,1].forEach(s=>[.1,-.05,-.18].forEach(z=>{const h=E.on([s*.6,.42,z],[-s,-.3,0]);if(h)E.L(h.p,E.add(h.p,[s*.02,-.08,-.01]),.012,.002,'c',moss,3)}));
-    for(let i=-2;i<=2;i++){const t=E.top(i*.025,.3),y=t?t.p[1]-.012:.43;E.L([i*.025,y,.3],[i*.04,y+.08,.27-Math.abs(i)*.01],.007,.002,'c',reed,3,{bn:'head'})}} // v177: rooted in the head (the head top is lower than these were drawn for)
+    for(let i=-2;i<=2;i++){const t=E.top(i*.025,.3),y=t?t.p[1]-.012:.43;E.L([i*.025,y,.3],[i*.04,y+.08,.27-Math.abs(i)*.01],.007,.002,'c',reed,3,{bn:'head'})}} // v178: rooted in the head (the head top is lower than these were drawn for)
   if(L>=3){// bone charm necklace across the throat, bony brow spurs, warty knuckle bands
     const pts=[];for(let i=-3;i<=3;i++){const a=i/3*1.2,h=E.on([Math.sin(a)*.5,.2,.32+Math.cos(a)*.3],[-Math.sin(a),.2,-Math.cos(a)]);if(h)pts.push(E.add(h.p,h.n,.008))}
     for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.005,.005,'c',P.leather,3);pts.forEach((p,i)=>{if(i%2)M.charm(E,p,.07,P.bone,'tooth');else E.pd('sph','c',P.bone,p,[0,1,0],.012)});
     [-1,1].forEach(s=>E.horn([s*.12,.47,.33],[s*.4,.7,-.5],[0,0,-.02],.07,.018,'c',P.boneD,4,{bn:'head'}))}
   if(L>=4){// an angler lure on a bony stalk with a glowing lantern bulb, glowing eye rims, moss beard
-    const lt=E.top(0,.33),b=lt?lt.p[1]-.01:.45; // v177: the lure grows from the head (it was drawn 3 cm above it)
+    const lt=E.top(0,.33),b=lt?lt.p[1]-.01:.45; // v178: the lure grows from the head (it was drawn 3 cm above it)
     E.chain([[0,b,.33],[0,b+.08,.36],[0,b+.12,.42],[0,b+.1,.48]],.016,.007,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,b+.08,.49],[0,1,0],.026,null,{bn:'head'});E.pd('ico','g',P.glow2,[0,b+.08,.49],[0,1,0],.014,null,{bn:'head'});
     [0,1,2].forEach(i=>E.L([0,b+.045+i*.025,.35+i*.03],[0,b+.08+i*.025,.33+i*.03],.006,.001,'c',P.boneD,3,{bn:'head'}));
     [-1,1].forEach(s=>{const c=[s*.12,.415,.34],A=new THREE.Vector3(s*.4,.9,.5).normalize(),U=new THREE.Vector3(1,0,0).sub(A.clone().multiplyScalar(A.x)).normalize(),V2=new THREE.Vector3().crossVectors(A,U),rp=[];
@@ -20209,7 +20235,7 @@ EVO100.D.Batwing={glow:0xc04aff,wing:{grow:.07},build(E,L,P){
     E.L([0,.47,.5],[0,.53,.47],.012,.002,'c',P.bone,4,{bn:'head'});
     [-1,1].forEach(s=>{E.band([s*.074,.432,.468],[s*.5,0,1],.01,.004,'g',P.glow,7,{bn:'head'});const h=E.on([s*.4,.42,.12],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],1,-.5]),.08),.02,.002,'c',P.boneD,4)})}
   if(L>=4){// a crescent-moon crown between the ears, a gem on the chest, glowing tail tip
-    const ct=E.top(.067,.36),c=[0,ct?ct.p[1]-.024:.53,.36]; // v177: the crown stands on the head (it rested only on the ears)
+    const ct=E.top(.067,.36),c=[0,ct?ct.p[1]-.024:.53,.36]; // v178: the crown stands on the head (it rested only on the ears)
     for(let i=0;i<8;i++){const a=-1.3+i/7*2.6,a2=-1.3+(i+1)/7*2.6;if(i<7)E.L(E.add(c,[Math.sin(a)*.07,Math.cos(a)*.07,0]),E.add(c,[Math.sin(a2)*.07,Math.cos(a2)*.07,0]),.01-Math.abs(a)*.003,.01-Math.abs(a2)*.003,'m',P.trim,4,{bn:'head'})}
     E.pd('oct','g',P.glow,E.add(c,[0,.07,0]),[0,1,0],[.014,.024,.014],null,{bn:'head'});
     const cp=E.on([0,.3,1],[0,0,-1]);if(cp)E.gem({p:E.add(cp.p,cp.n,.008),n:cp.n},.022,P.glow)}
@@ -20248,7 +20274,7 @@ EVO100.D.Boneling={glow:0x6aff9a,ownGlow:1,build(E,L,P){
   // L1: soul-fire wisps rising from the eye sockets, a grave chain collar with a lantern charm
   [-1,1].forEach(s=>{const e=B([s*.055,.625,.575]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,{bn:'head'});if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,{bn:'head'})});
   const nk=B([0,.56,.38]);const ring=[];for(let i=0;i<10;i++){const a=i/10*6.283;ring.push(E.add(nk,[Math.cos(a)*.03,.012+Math.sin(a)*.042,0]))}
-  for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1}); // v177: follows the neck as it bends
+  for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1}); // v178: follows the neck as it bends
   M.charm(E,E.add(nk,[0,-.03,.012]),.08,P.glow,'gem');
   if(L>=2){// ghostly flame ribbon along the spine, bigger back-swept horns, soul-fire in the ribcage
     for(let i=0;i<6;i++){const p=B([0,.6,.34-i*.1]);E.L(p,E.add(p,[0,.07-i*.004,-.06]),.018,.002,'g',i%2?P.glow:P.glowD,4)}
@@ -20282,7 +20308,7 @@ EVO100.D.Wispling={glow:0x9ff0ff,build(E,L,P){
   lantern('fr2',[.225,.55,.1],P.glow);
   if(L>=2){// a ragged mantle over the shoulders (body shell), ghost chains trailing from the wrists
     E.shell((x,y,z,nx,ny)=>y>.68&&y<.9&&ny>-.25,.016,'c',(x,y,z,i)=>i%2?hood:0x26222c,{rimCol:trim});
-    [-1,1].forEach(s=>lk177EChain(E,'m',P.iron,[s*.222,.6,.082],6,.012,[s*.18,-1,-.57],{bn:s<0?'fl2':'fr2'}))} // v177: links that hold together
+    [-1,1].forEach(s=>lk178EChain(E,'m',P.iron,[s*.222,.6,.082],6,.012,[s*.18,-1,-.57],{bn:s<0?'fl2':'fr2'}))} // v178: links that hold together
   if(L>=3){// a halo of runes over the hood, glowing bands in the cloak tails
     const c=[0,1.22,-.05];for(let i=0;i<14;i++){const a=i/14*6.283,a2=(i+1)/14*6.283,r=.16;E.L(E.add(c,[Math.cos(a)*r,0,Math.sin(a)*r]),E.add(c,[Math.cos(a2)*r,0,Math.sin(a2)*r]),.007,.007,'g',P.glow,3,hb);
       if(i%2==0)E.pd('oct','g',P.glow2,E.add(c,[Math.cos(a)*r,0,Math.sin(a)*r]),[0,1,0],[.012,.024,.012],null,hb)}
@@ -26204,8 +26230,8 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
     p.push(F(ico(.18,0),0x5a3a1a,{},.8,3.15,.12),F(ico(.16,0),0x5a3a1a,{},.7,3.12,-.15));return M(p)};
   const obelisk=(hex)=>M([F(box(1.1,.5,1.1),hex,{j:.06},0,.25,0),F(cyl(.32,.5,4.2,4),hex,{j:.05},0,2.6,0,0,Math.PI/4,0),F(cone(.34,.7,4),hex,{j:.03},0,5.05,0,0,Math.PI/4,0)]);
   const glyphs=()=>{const p=[];for(let i=0;i<4;i++)p.push(F(box(.1,.22,.05),0xffffff,{lo:1,hi:0},((i%2)-.5)*.2,1.4+i*.75,.36));return M(p)};
-  const frozen=()=>M([F(box(1.1,1.9,1),0x9ad0f0,{j:.18,lo:.8,hi:.5},0,.95,0,0,.3,0),skull(0xd8d8e0).translate(0,1.3,0)]);
-  const sarco=(hex)=>M([F(box(1,.6,2.2),hex,{j:.03},0,.3,0),F(box(1.1,.16,2.3),hex,{j:.03},0,.68,0),F(box(.5,.2,1.4),hex,{j:.06},0,.86,-.1),F(ico(.2,0),hex,{},0,.9,.8)]);
+  const frozen=()=>M([F(dt168Rock(171,1,.35,1).clone(),0x8ab8d4,{j:.08,lo:.8,hi:.5},0,.95,0,0,.3,0,[.62,1.02,.56]),skull(0xd8d8e0).translate(0,1.3,0)]);
+  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v177: a carved tomb with a plinth, panels and a laid-out effigy
   const bonePile=()=>M([skull(0xd8d0b8),skull(0xc8c0a8).translate(.45,0,.2),skull(0xd0c8b0).translate(-.3,0,-.3),skull(0xc0b8a0).translate(.1,.3,0),F(dome(.9,7),0xb8b098,{j:.2},0,0,0,0,0,0,[1,.35,1]),
     F(cyl(.04,.04,.9,4),0xd8d0b8,{},.6,.15,-.4,0,.5,Math.PI/2),F(cyl(.04,.04,.8,4),0xd8d0b8,{},-.5,.12,.4,0,-.8,Math.PI/2)]);
   const boneSpikes=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.3,r=i?.3+i*.12:0,h=i?1+((i*37)%10)/10:2.2;p.push(F(cone(.1,h,4),0xe0d8c0,{j:.02},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
@@ -26215,7 +26241,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const catapult=()=>M([F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,.6),F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,-.6),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,.6,0,0,.3),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,-.6,0,0,.3),
     F(cyl(.06,.06,1.4,5),0x3a2a1a,{},.2,1.4,0,Math.PI/2,0,0),F(box(2.8,.12,.14),0x6a4a2e,{},-.6,1.8,0,0,0,.6),F(dome(.35,6),0x3a2a1a,{},-1.7,2.4,0,Math.PI),
     F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,-.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,-.72,0,0,0)]);
-  const hedge=()=>F(box(3,1.2,.9),0x2a4a2a,{j:.08,lo:.6,hi:.5},0,.6,0);
+  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v177: clipped but leafy, not a green box
   const topiary=()=>M([F(cyl(.08,.1,.6,5),0x3a2a1a,{},0,.3,0),F(ico(.55,1),0x2a4a2a,{j:.04,lo:.6,hi:.5},0,1.1,0),F(cone(.4,.9,6),0x2e522e,{j:.03},0,1.9,0),F(box(.9,.35,.9),0x5a5258,{j:.03},0,.17,0)]);
   const fountain=()=>M([F(cyl(1.8,1.9,.55,10),0x5a5258,{j:.05},0,.27,0),F(cyl(1.55,1.55,.1,10),0x3a0810,{lo:1,hi:0},0,.5,0),F(cyl(.25,.4,1.6,7),0x5a5258,{j:.03},0,1.2,0),F(cyl(.75,.4,.25,8),0x5a5258,{},0,1.95,0),statueG(0x5a5258,{}).scale(.6,.6,.6).translate(0,2.05,0)]);
   const fountainGlow=()=>F(cyl(1.5,1.5,.04,10),0xffffff,{lo:1,hi:0},0,.56,0);
@@ -26223,7 +26249,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   // ---- Kindlelight II: the Glowmire Hollows ----
   def('k2_gshroom',{parts:[gshroom(0xb8b8a0),glowM(gcap())],cast:true,col:.45,s:[.9,1.6],gt:[0x4affb0,0x7aff6a,0x5ae8ff]});
   def('k2_gshroomB',{parts:[gshroom(0xa8a890),glowM(gcap())],s:[1.4,2.4],gt:[0x4affb0,0x9aff5a,0x5ae8ff]});
-  def('k2_shelf',{parts:[glowM(shelf())],near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
+  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v177: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
   def('k2_goo',{parts:[glowM(gooPuddle())],near:true,y:.05,s:[.8,1.8],gt:[0x3ad82a,0x5aff3a]});
   def('k2_stalag',{parts:[stalag(0x3a423e,0x4a7a4a)],cast:true,col:.5,s:[.8,1.5]});
   def('k2_pillar',{parts:[pillarR(0x343c38,0x3e6a42,9)],cast:true,col:.95,s:[.9,1.2]});
@@ -29896,7 +29922,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const water=(x,z,rx,rz,col,op)=>{if(gy(x,z)<-.05){take(x,z,Math.max(rx,rz)*.7);return {userData:{Y:.02}}}return pool(x,z,rx,rz,col,false,op)};
   const lily=(x,Y,z,col)=>{const o=putY(Q.disc,S(col||0x3a7a3a),x,Y,z,rr(.25,.45),rr(.25,.45),1,-P2,0,rr(0,6));o.castShadow=false};
   // ---- growth ----
-  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++)put(Q.cyl4,S(col||0x5a7a3a),x+rr(-.45,.45),.45,z+rr(-.45,.45),.025,rr(.7,1.3),.025,rr(-.2,.2),0,rr(-.2,.2))};
+  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++){const ox=rr(-.45,.45),oz=rr(-.45,.45),h=rr(.7,1.3);put(Q.cyl4,S(col||0x5a7a3a),x+ox,h/2-.08,z+oz,.025,h,.025,rr(-.2,.2),0,rr(-.2,.2))}};   // v177: rooted (short reeds stood ~.1 above the ground)
   const shroom=(x,z,k,cap,glow)=>{put(Q.cyl,S(0xd8cdb0),x,k*.6,z,k*.14,k*1.2,k*.14);put(Q.sph,glow?S(cap,{emissive:cap,emissiveIntensity:.6}):S(cap),x,k*1.2,z,k*.6,k*.3,k*.6);[0,1,2].forEach(i=>put(Q.sph,S(0xf0e8d8),x+Math.cos(i*2.1)*k*.34,k*1.4,z+Math.sin(i*2.1)*k*.34,k*.08,k*.05,k*.08));if(k>1)blk(x,z,0)};
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
@@ -29964,7 +29990,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
   const palm=(x,z,h,dead)=>{blk(x,z,0);take(x,z,1);const lx=rr(-.25,.25),lz=rr(-.25,.25);put(Q.tcyl,S(0x6a5038),x+lx*h*.5,h/2,z+lz*h*.5,.16,h,.16,lz,0,-lx);
-    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*.7,Y+(dead?-.5:.05),tz+Math.sin(a)*.7,1.5,.04,.3,0,-a,dead?-1.15:-.35)}};
+    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;const tl=dead?1.15:.35,fr=.75*Math.cos(tl)-.04,fy=Y-.75*Math.sin(tl)+.02;   // v177: each frond grows from the crown (their inner ends stood ~.3 above and beside it)
+    for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*fr,fy,tz+Math.sin(a)*fr,1.5,.04,.3,0,-a,-tl)}};
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
     TQ(sg,Q.box,M,-.6*k,2.4*k,0,.4*k,3*k,1.8*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,.1*k,1.6*k,.86*k*s,1.4*k,.5*k,.3*k));TQ(sg,Q.cone4,M,-.6*k,4.25*k,0,.6*k,.9*k,.9*k,0,Math.PI/4,0)};
@@ -29987,7 +30014,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const burrowMouth=(x,z,a,k,col)=>{const sg=sub(x,z,a,-.3*k);TQ(sg,Q.arc,S(col),0,0,0,1.1*k,1.2*k,2.6*k,0,P2,0);const d=TQ(sg,Q.disc,G(0x040302),-.15*k,.05,0,1*k,1*k,1,0,-P2,0);d.castShadow=false;take(x,z,1.3*k);blk(x-Math.cos(a)*.4,z-Math.sin(a)*.4,.6*k)};
   const steam=(x,z,col,k)=>{const o=put(Q.cone,T(col||0xb0ffa0,.18),x,1.1*(k||1),z,.4*(k||1),2.2*(k||1),.4*(k||1),Math.PI,0,0);anim(o,'puff',.25,.8)};
   const wisp=(x,y,z,col,k)=>{k=k||1;const sg=new THREE.Group();sg.position.set(x,gy(x,z)+y,z);TQ(sg,Q.sph,G(col),0,0,0,.09*k,.09*k,.09*k);TQ(sg,Q.sph,T(col,.22),0,0,0,.24*k,.24*k,.24*k);g.add(sg);anim(sg,'bob',.35,rr(.6,1.2));return sg};
-  const ladder=(x,z,a,h,col)=>{const sg=sub(x,z,a,0),M=S(col||0x4a3220);take(x,z,.7);[-1,1].forEach(s=>TQ(sg,Q.box,M,.4,h/2,.28*s,.07,h,.07,0,0,-.35));for(let i=1;i<h/.4;i++)TQ(sg,Q.box,M,.4-Math.sin(.35)*i*.4+.05,i*.4*Math.cos(.35),0,.05,.05,.56)};
+  const ladder=(x,z,a,h,col)=>{const sg=sub(x,z,a,0),M=S(col||0x4a3220);take(x,z,.7);[-1,1].forEach(s=>TQ(sg,Q.box,M,.4,h/2,.28*s,.07,h,.07,0,0,-.35));for(let i=1;i<h/.4;i++){const y=i*.4*Math.cos(.35);TQ(sg,Q.box,M,.4+Math.tan(.35)*(y-h/2),y,0,.05,.05,.56)}};   // v177: rungs follow the rails' lean (they leaned the other way, off the ladder)
   // the camp's main axis: [u,v] → camp coordinates
   const A=(u,v)=>ax(u,v);
   const K={rn,rr,pk,gy,ax,A,AN,S,G,T,put,putY,sub,blk,take,free,spot,scat,ring,keep,anim,flame,halo,patch,fire,brazier,torch,candle,candles,rock,slab,pillar,fallen,arch,wall,rubble,obelisk,runes,cracks,
@@ -30395,8 +30422,17 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
     F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},.95,.3,.12,0,1.1,.12,[.72,.46,.62]),F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},-.9,.28,-.1,0,2.2,-.1,[.7,.44,.6])]);
   const stand=(hex,top)=>M([F(dod(1),hex,{j:.13,top,tt:.6,lo:.6,hi:.45},0,.62,0,0,.4,0,[1.15,.9,.95]),F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},1.05,.25,.25,0,2.4,0,[.62,.4,.55]),
     F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},-1.05,.22,-.15,0,.9,0,[.55,.36,.5])]);
-  const oak=(bark,l1,l2)=>M([F(cyl(.16,.32,2.6,7),bark,{j:.04,lo:.6,hi:.4,f:(x,y,z)=>y<-1.2?[x*1.4,y,z*1.4]:[x,y,z]},0,1.3,0),F(cyl(.06,.11,1.1,5),bark,{j:.02},.35,2.3,0,0,0,-.9),F(cyl(.05,.1,1,5),bark,{j:.02},-.3,2.4,.15,.3,0,.9),
-    F(ico(1.35,1),l1,{j:.3,lo:.6,hi:.5},0,3.3,0,0,0,0,[1,.78,1]),F(ico(1.05,1),l2,{j:.25,lo:.65,hi:.5},.75,3.85,.3,0,0,0,[1,.8,1]),F(ico(.95,1),l2,{j:.22,lo:.65,hi:.5},-.7,3.7,-.35,0,0,0,[1,.8,1]),F(ico(.8,1),l1,{j:.2,lo:.7,hi:.45},.1,4.35,-.1,0,0,0,[1,.8,1])]);
+  // v177: a gnarled oak (it was a stick under a green ball): a leaning, flared trunk forking into three limbs, the crown a loose
+  // mass of uneven clumps hung on the limbs (dark beneath), a dead branch or two poking out
+  const oak=(bark,l1,l2)=>{const bend=(x,y,z)=>{const t=Math.max(0,y)/2.6;return [x*(y<.3?1.25-y*.8:1)+t*t*.28,y,z+Math.sin(y*1.3)*.05]};
+    const p=[F(cyl(.17,.34,2.5,8),bark,{j:.04,lo:.55,hi:.42,f:bend},0,1.25,0),
+      F(cyl(.3,.42,.3,8),bark,{j:.06,lo:.5,hi:.3},.02,.1,0)];
+    const limbs=[[.62,0,2.15,1.5],[-.55,2.1,2.0,1.35],[.45,4.2,2.25,1.2]];
+    limbs.forEach(([lz,ry,y,L])=>p.push(F(cyl(.055,.12,L,6),bark,{j:.03,lo:.55,hi:.4},0,L/2,0).rotateZ(lz).rotateY(ry).translate(.2,y,0)));
+    const cl=[[.0,3.95,0,.95,l1],[.85,3.55,.35,.8,l2],[-.75,3.5,-.4,.82,l1],[.25,3.35,-.85,.7,l2],[-.35,3.4,.8,.72,l2],[.55,4.45,-.25,.62,l1],[-.4,4.35,.3,.6,l2],[1.2,3.1,-.35,.5,l1]];
+    cl.forEach(([x,y,z,r,c],i)=>p.push(F(ico(r,1),c,{j:r*.34,lo:.42,hi:.7,f:(X,Y,Z)=>[X,Y<y?y-(y-Y)*.62:Y,Z]},x,y,z,0,i*.9,0,[1.1,.82,1.05])));
+    p.push(F(cyl(.02,.045,.9,4),bark,{j:.02},0,.45,0).rotateZ(-1.05).rotateY(2.6).translate(-.2,2.6,.1),F(cyl(.015,.035,.7,4),bark,{j:.02},0,.35,0).rotateZ(.95).rotateY(.4).translate(.3,2.9,-.1));
+    return M(p)};
   const pine=(bark,leaf,snow)=>{const p=[F(cyl(.12,.22,1.4,6),bark,{j:.03},0,.7,0)];[[1.35,1.6,1.25],[1.12,1.45,2.15],[.88,1.3,2.95],[.62,1.15,3.65],[.36,.95,4.25]].forEach(([r,h,y],i)=>p.push(F(cone(r,h,8),leaf,{j:.07,top:snow,tt:.35,lo:.55+i*.04,hi:.45},0,y,0,0,i*.6,0)));return M(p)};
   const mk=(k,o)=>{if(!T[k])def(k,o);return k};
   const eOak=(b,l1,l2)=>mk('e_oak_'+b.toString(16)+l1.toString(16),{parts:[oak(b,l1,l2)],cast:true,s:[1,1.35],sway:.012,j:.14});
@@ -32895,11 +32931,11 @@ LPR.Gloomcap={
       dirt=new THREE.Color(0x3a2c20),gill=new THREE.Color(spore?0x4a3a2a:0x4a2430),root=new THREE.Color(0x3a2c20),moss=new THREE.Color(0x4a5a2a);
     const R=(y,rx,f,bk,b,o)=>Object.assign({p:[0,y,0],rx,ryT:f,ryB:bk,b},o||{});
     // the stem: wide soft base, belly in front, narrowing to the cap; the top (the face) rides the head bone
-    // (v177: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
+    // (v178: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
     const st=spore?[R(.03,.12,.115,.115,['pelvis','pelvis',0]),R(.09,.15,.15,.14,['pelvis','pelvis',0]),R(.18,.165,.17,.155,['pelvis','pelvis',0]),R(.3,.155,.16,.145,['pelvis','spine',.4]),
         R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.8]),R(.67,.112,.122,.108,['head','head',0]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0]),R(.84,.086,.088,.084,['head','head',0])]
       :[R(.03,.13,.12,.12,['pelvis','pelvis',0]),R(.08,.175,.17,.16,['pelvis','pelvis',0]),R(.16,.2,.21,.18,['pelvis','pelvis',0]),R(.26,.195,.205,.175,['pelvis','spine',.3]),
-        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v177: the stem runs up into the cap (it stopped short of the gill disc)
+        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v178: the stem runs up into the cap (it stopped short of the gill disc)
     const lofts=[{rings:st,seg:16,ref:[0,0,1],capA:1,paint:(o,r,s,cc)=>{o.copy(stalk);if(s<-.3)o.lerp(stalkD,.35);if(Math.abs(Math.sin((cc+s)*7+r.p[1]*30))>.86)o.lerp(stalkD,.4);
         const t=Math.max(0,(.2-r.p[1])*5);if(t>0)o.lerp(dirt,Math.min(.75,t));if(r.p[1]>.5&&s<-.2)o.lerp(capD,.25)}}];
     // the skirt (annulus): a tattered collar hanging under the cap
@@ -32934,7 +32970,7 @@ LPR.Gloomcap={
     // the face under the brim (head bone): sockets, glowing eyes, brows, cheeks, the mouth (lower lip on the jaw)
     const fz=y=>y>.7?.122:y>.64?.132:.14;
     [-1,1].forEach(s=>{const y=spore?.66:.675,z=fz(y)-.012;
-      // v177 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
+      // v178 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
       // big round eyes with white sparkles and pink blush read as a cartoon)
       k.p('head','sph','c',soc,s*.052,y,z,.042,.032,.022,0,s*.35,s*.18);k.p('head','sph','g',eye,s*.054,y-.002,z+.014,.02,.012,.01,0,s*.35,s*.25);
       k.p('head','box','c',spore?0x5a4a34:0x4a3428,s*.052,y+.026,z+.008,.06,.016,.024,.25,s*.3,s*-.42);
@@ -32961,7 +32997,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sp
   bracket(Math.PI-.6,.34,.06);bracket(Math.PI+.7,.24,.05);
   if(L>=2){// little toadstools sprouting from the cap, glowing spots
     [[.16,.05],[-.14,-.1],[.03,-.21],[-.18,.13]].forEach((q,i)=>{const y=capTop(q[0],q[1]),b=[q[0],y,q[1]],tp=E.add(b,E.nrm([q[0],1,q[1]]),.06+i%2*.02);
-      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v177: gills under the caps, the spot on the cap
+      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v178: gills under the caps, the spot on the cap
     for(let i=0;i<12;i++){const a=i/12*6.283,r=rim*.7,x=Math.sin(a)*r,z=Math.cos(a)*r;E.pd('sph','g',P.glowD,[x,capTop(x,z)+.004,z],E.nrm([x,.6,z]),[.016,.005,.016],null,hb)}
     bracket(Math.PI*.5+2.8,.44,.05)}
   if(L>=3){// moss and roots hanging from the rim at the back and sides (the face stays clear), root tendrils down the back
@@ -33005,7 +33041,7 @@ function wsp137HoodR(v,y){const PR=v==2?[[.84,.196],[.88,.186],[.93,.168],[.98,.
   if(y<=PR[0][0])return PR[0][1];for(let i=1;i<PR.length;i++)if(y<=PR[i][0]){const k=(y-PR[i-1][0])/(PR[i][0]-PR[i-1][0]);return PR[i-1][1]+(PR[i][1]-PR[i-1][1])*k}return 0}
 LPR.Wispling={
   head:['head',0,1.13,-.03],up:.1,
-  back:[['chest',0,.875,-.12],['chest',0,.88,-.06],['chest',.1,.86,-.08],['chest',-.1,.86,-.08]], // v177: on the shoulders (trait armour and spikes hung behind the robe)
+  back:[['chest',0,.875,-.12],['chest',0,.88,-.06],['chest',.1,.86,-.08],['chest',-.1,.86,-.08]], // v178: on the shoulders (trait armour and spikes hung behind the robe)
   mat:{transparent:true,opacity:.72,depthWrite:false,emissive:0x0c2030},
   geo(C,c){const sp=rv137('Wispling',c),v=rv137I('Wispling',sp);
     const base=new THREE.Color(C),pale=base.clone().lerp(new THREE.Color(0xe4ecf0),v==1?.55:.28),deep=base.clone().lerp(new THREE.Color(v==2?0x0a0a14:0x1a2a3a),v==2?.7:.55);
@@ -33030,11 +33066,11 @@ LPR.Wispling={
     {const rim=[];for(let y=.9;y<=1.12;y+=.011){const ph=Math.min(.95,.95*Math.sqrt(Math.max(0,1-((y-1.0)/.12)**2))),r=wsp137HoodR(v,y)+.002,t=(y-.84)/.38,bz=-.01-.06*t*t;rim.push([Math.sin(ph)*r,y,bz+Math.cos(ph)*r])}
       const pts=rim.concat(rim.slice().reverse().map(p=>[-p[0],p[1],p[2]]));for(let i=0;i<pts.length-1;i++)k.L('head','c',trim,pts[i],pts[i+1],.008,.008,4)}
     // the void inside the hood and the eyes
-    k.p('head','sph','c',0x020306,0,.95,.0,.115,.12,.1); // v177: the void fills the robe's neck (the hood hung over a gap)
+    k.p('head','sph','c',0x020306,0,.95,.0,.115,.12,.1); // v178: the void fills the robe's neck (the hood hung over a gap)
     [-1,1].forEach(s=>{k.p('head','box','c',0x010204,s*.046,1.0,.085,.05,.032,.02,0,s*.3,s*.28);k.p('head','box','g',eye,s*.048,1.0,.097,.034,.012,.006,0,s*.3,s*.28);
       k.p('head','sph','g',mdSh(eye,1.2),s*.052,1.002,.1,.008,.006,.004)});
     // the glowing heart and wispy fingers
-    k.p('chest','ico','g',glow,0,.72,.06,.05);k.L('chest','g',glow,[0,.74,.04],[0,.79,-.215],.008,.004,4); // v177: a soul thread holds the heart to the robe's back
+    k.p('chest','ico','g',glow,0,.72,.06,.05);k.L('chest','g',glow,[0,.74,.04],[0,.79,-.215],.008,.004,4); // v178: a soul thread holds the heart to the robe's back
     // a ghostly forearm out of each bell sleeve (from its wall), a palm and three wispy fingers (they hung in the sleeve's mouth)
     [['fl2',-.225],['fr2',.225]].forEach(f=>{const s=Math.sign(f[1]);k.L(f[0],'g',0xa8dcf8,[s*.214,.645,.072],[f[1],.545,.098],.074,.03,6);k.p(f[0],'sph','g',0xbfeaff,f[1],.54,.1,.036,.03,.038);
       [-1,0,1].forEach(i=>k.L(f[0],'g',0xbfeaff,[f[1]+i*.014,.53,.105],[f[1]+i*.025,.47,.125],.011,.002,4))});
@@ -33044,12 +33080,12 @@ LPR.Wispling={
     else if(v==1){// a halo of light behind the head, a lantern on a chain in the right hand
       for(let i=0;i<16;i++){const a=i/16*Math.PI*2,a2=(i+1)/16*Math.PI*2,r=.19;k.L('head','g',0xfff0b0,[Math.sin(a)*r,1.04+Math.cos(a)*r,-.2],[Math.sin(a2)*r,1.04+Math.cos(a2)*r,-.2],.008,.008,3)}
       for(let i=0;i<8;i++){const a=i/8*Math.PI*2,r=.19;k.L('head','g',0xffe080,[Math.sin(a)*r,1.04+Math.cos(a)*r,-.2],[Math.sin(a)*(r+.05),1.04+Math.cos(a)*(r+.05),-.2],.006,.001,3)}
-      const h=[.225,.55,.1],e=lk177Chain(k,'fr2','m',0xb8a870,[h[0],h[1]-.012,h[2]],4,.009),y=e[1]; // v177: links that hold together, the lantern on the last
+      const h=[.225,.55,.1],e=lk178Chain(k,'fr2','m',0xb8a870,[h[0],h[1]-.012,h[2]],4,.009),y=e[1]; // v178: links that hold together, the lantern on the last
       k.p('fr2','cyl','m',0xb8a870,h[0],y-.004,h[2],.03,.012,.03);k.p('fr2','oct','g',0xffe8a0,h[0],y-.039,h[2],.026,.042,.026);k.p('fr2','cone','m',0xb8a870,h[0],y-.084,h[2],.024,.022,.024,Math.PI)}
     else{// horns on the hood, a bone mantle, spectral chains, a soul-gem
       [-1,1].forEach(s=>{k.L('head','c',0xd0c8b8,[s*.09,1.1,-.06],[s*.16,1.2,-.14],.024,.012,5).L('head','c',0xa89a88,[s*.16,1.2,-.14],[s*.15,1.3,-.24],.012,.002,5);
         for(let i=0;i<4;i++){const a=s*(.5+i*.35);k.p('chest','hem','c',i%2?0xc8c0b0:0xe0d8c8,Math.sin(a)*.2,.87-i*.01,Math.cos(a)*.17-.01,.07,.025,.06,0,a,-s*.4)}});
-      lk177Loop(k,'pelvis','m',0x7affd0,0,-.035,.158,.142,.5,34,.011,a=>Math.sin(a*2)*.02); // v177: a closed chain of linked rings round the waist
+      lk178Loop(k,'pelvis','m',0x7affd0,0,-.035,.158,.142,.5,34,.011,a=>Math.sin(a*2)*.02); // v178: a closed chain of linked rings round the waist
       k.p('chest','oct','g',0x7affd0,0,.8,.17,.028,.04,.016);k.p('chest','tor','m',0x8a8494,0,.8,.165,.04,.008,.04,Math.PI/2)}
   }};
 // ================= v137: Gravewyrm and Venomcoil rebuilt =================
@@ -33100,7 +33136,7 @@ LPR.Gravewyrm={
       k.p('head','box','c',0x050403,s*.104,.406,.692,.004,.022,.004,0,s*.55,0);
       k.p('head','box','c',ven?dk:bone2,s*.085,.44,.64,.06,.016,.09,.15,s*.45,s*.25);
       // nostrils
-      k.p('head','sph','c',0x0a0908,s*.02,.364,.846,.008,.006,.008); // v177: on the snout (they floated 2 cm above it)
+      k.p('head','sph','c',0x0a0908,s*.02,.364,.846,.008,.006,.008); // v178: on the snout (they floated 2 cm above it)
       // fangs
       k.p('head','cone4','c',0xf4eee0,s*.05,.312,.79,.012,ven?.085:.06,.012,Math.PI+.15,0,0);
       k.p('head','cone4','c',0xf4eee0,s*.08,.322,.71,.009,.04,.009,Math.PI)});
@@ -33112,7 +33148,7 @@ LPR.Gravewyrm={
       // vertebra plates down the spine and rib bands down the flanks; tufts of grave moss
       for(let z=.3,i=0;z>-1.42;z-=.12,i++){const T=WY137.top(z),bn=wyrmBones(z)[0];
         k.L(bn,'c',i%2?bone:bone2,[T.x,T.top-.02,z+.03],[T.x,T.top+T.r*.38,z-.06],T.r*.3,.004,4);
-        if(i%2==0&&z<.15&&z>-.55)[-1,1].forEach(s=>{const P=a=>[T.x+s*(T.r+.003)*Math.cos(a),T.y+(a>0?T.r*.88:T.r*.74)*Math.sin(a)+.003*Math.sin(a),z-.02*(1-a)]; // v177: rib bands follow the flank
+        if(i%2==0&&z<.15&&z>-.55)[-1,1].forEach(s=>{const P=a=>[T.x+s*(T.r+.003)*Math.cos(a),T.y+(a>0?T.r*.88:T.r*.74)*Math.sin(a)+.003*Math.sin(a),z-.02*(1-a)]; // v178: rib bands follow the flank
           k.L(bn,'c',bone2,P(1.05),P(.45),.012,.01,3);k.L(bn,'c',bone2,P(.45),P(-.2),.01,.008,3)});
         if(i%3==1&&z<0)k.p(bn,'dod','c',0x4a5a2a,T.x+(i%2?.05:-.05),T.top-.01,z,.03,.018,.03)}
       k.L('tail3','c',bone,[WY137.curve(-1.6),.02,-1.58],[WY137.curve(-1.72),.03,-1.74],.02,.002,4)}
@@ -33120,8 +33156,8 @@ LPR.Gravewyrm={
       // the hood: a broad lens flaring behind the head; a pale front with dark throat bands, a ribbed back with the
       // spectacle mark, a rim of small scales
       const T=WY137.top(.3),hz=.33,hy=T.y+.05,pale=dkShade(0xd8d0a0,.95),dkr=0x14140c,rx=-.25,cr=Math.cos(rx),sr=Math.sin(rx);
-      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz+y*sr]; // v177: tilted with the hood (the sign was flipped: rim scales and marks stood up to 11 cm off it)
-      k.p('neck','sph2','c',main,0,hy,hz,.27,.24,.035,rx,0,0); // v177: rounder hood (the 7-sided one left its rim scales hanging off one side)
+      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz+y*sr]; // v178: tilted with the hood (the sign was flipped: rim scales and marks stood up to 11 cm off it)
+      k.p('neck','sph2','c',main,0,hy,hz,.27,.24,.035,rx,0,0); // v178: rounder hood (the 7-sided one left its rim scales hanging off one side)
       k.p('neck','sph2','c',pale,0,hy-.01,hz+.012,.22,.19,.026,rx,0,0);
       for(let i=0;i<4;i++){const y=-.12+i*.06,w=.2*Math.sqrt(Math.max(0,1-(y/.19)**2));k.L('neck','c',0x8a7a50,H(-w,y,.04),H(w,y,.04),.006,.006,3)}
       for(let i=0;i<20;i++){const a=i/20*Math.PI*2;const p=H(Math.sin(a)*.262,Math.cos(a)*.232,0);k.p('neck','dod','c',i%2?dk:mdSh(main,.7),p[0],p[1],p[2],.011,.011,.008)}
@@ -33131,7 +33167,7 @@ LPR.Gravewyrm={
       {const a=H(-.075,.08,-.033),b=H(.075,.08,-.033),m=H(0,.105,-.033);k.L('neck','c',dkr,a,m,.01,.01,3).L('neck','c',dkr,m,b,.01,.01,3)}
       // big head plates, cheek venom glands, heat pits
       const hT=(x,z)=>{const H=WY137.head;let i=0;while(i<H.length-2&&H[i+1][0]<z)i++;const t=Math.max(0,Math.min(1,(z-H[i][0])/(H[i+1][0]-H[i][0]))),q=H[i].map((v,j)=>v+(H[i+1][j]-v)*t);return q[1]+q[3]*Math.sqrt(Math.max(0,1-(x/q[2])**2))};
-      [[0,.6,.05,.012,.06],[-.035,.68,.03,.01,.04],[.035,.68,.03,.01,.04],[0,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],hT(q[0],q[1])+.001,q[1],q[2],q[3],q[4],-.08,0,0)); // v177: on the head (they stood up to 3 cm above it)
+      [[0,.6,.05,.012,.06],[-.035,.68,.03,.01,.04],[.035,.68,.03,.01,.04],[0,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],hT(q[0],q[1])+.001,q[1],q[2],q[3],q[4],-.08,0,0)); // v178: on the head (they stood up to 3 cm above it)
       [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.046,.366,.806,.007,.006,.006)});
       // a ridge of keeled scales down the back
       for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.012,z,.022,.02,.036)}
@@ -42782,12 +42818,12 @@ function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,ivory=0xe4dcc8,ir
   {const N=14,pts=[];for(let i=0;i<N;i++)pts.push(bz150S(R,.43,i/N*Math.PI*2,.016).p);
     for(let i=0;i<N;i++)k.L('neck','m',iron,pts[i],pts[(i+1)%N],.016,.016,5);
     [-.9,-1.57,-2.24].forEach((a,i)=>{const h=bz150S(R,.43,a,.03);k.p('neck','box','g',vio,h.p[0],h.p[1],h.p[2]+.004,.012,.024,.006,0,0,a+Math.PI/2)});
-    const lo=bz150S(R,.43,-Math.PI/2,.016).p;lk177Chain(k,'neck','m',[iron,ironD],lo,4,.016,[0,-1,-.3])} // v177: links that hold together
+    const lo=bz150S(R,.43,-Math.PI/2,.016).p;lk178Chain(k,'neck','m',[iron,ironD],lo,4,.016,[0,-1,-.3])} // v178: links that hold together
   // broken shackles on the forelegs, chain ends trailing
   [['fl1',-1],['fr1',1]].forEach(([bn,s])=>{const a=e137B('Ashwolf',bn),b=e137B('Ashwolf',bn[0]+bn[1]+'2'),p=e137L(a,b,.45);
     k.p(bn,'tor','m',iron,p[0],p[1],p[2],.045,.045,.045);k.p(bn,'ring','m',ironD,p[0],p[1]+.024,p[2],.046,.06,.046);k.p(bn,'ring','m',ironD,p[0],p[1]-.024,p[2],.046,.06,.046);
     k.p(bn,'box','g',vio,p[0],p[1],p[2]+.046,.012,.026,.004);
-    lk177Chain(k,bn,"m",[iron,ironD],[p[0]+s*.028,p[1]-.02,p[2]+.028],3,.013,[s*.15,-1,-.25])});
+    lk178Chain(k,bn,"m",[iron,ironD],[p[0]+s*.028,p[1]-.02,p[2]+.028],3,.013,[s*.15,-1,-.25])});
   // long thin paws with black claws
   ['fl2','fr2','hl2','hr2'].forEach(bn=>{const c0=e137B('Ashwolf',bn);for(let i=-1;i<=1;i++){const x=c0[0]+i*.018;k.L(bn,'c',0x08080a,[x,.022,c0[2]+.075],[x,.003,c0[2]+.11],.008,.001,4)}});
   // the smouldering tail tuft
@@ -42832,7 +42868,7 @@ function el150Kit(k,c,C,red){const K=el150Cols(C),R=EL150.body,cream=K.cream.get
   // forward-facing almond eyes with slit pupils, dark eye-liner, a pale brow streak
   [-1,1].forEach(s=>{const x=s*.044,y=.637,z=bz150Front(R,Math.abs(x),y,.5,.7);
     k.p('head','sph','c',black,x,y,z-.006,.028,.02,.014,0,s*.35,s*-.25);k.p('head','sph','g',eye,x+s*.002,y,z-.002,.022,.015,.01,0,s*.35,s*-.25);
-    k.p('head','box','c',0x000000,x+s*.004,y,z+.005,.004,.022,.004,0,s*.35,0); // v177: no cartoon sparkle
+    k.p('head','box','c',0x000000,x+s*.004,y,z+.005,.004,.022,.004,0,s*.35,0); // v178: no cartoon sparkle
     k.L('head','c',black,[x+s*.018,y-.012,z-.008],[x+s*.04,y-.035,z-.04],.005,.003,3)});
   // nose leather, split lip, small fangs; the chin on the jaw with a dark mouth
   k.p('head','box','c',0x2a1612,0,.608,.656,.022,.012,.012,-.3,0,0);k.L('head','c',0x2a1410,[0,.598,.658],[0,.575,.648],.004,.004,3);
@@ -42854,7 +42890,7 @@ function el150Kit(k,c,C,red){const K=el150Cols(C),R=EL150.body,cream=K.cream.get
   [.12,-.02,-.16].forEach((z0,j)=>[-1,1].forEach(s=>{const an=a=>s>0?a:Math.PI-a,A=[1.38,.95,.5,.08],W=[.003,.01,.011,.008,.002],bn=z0>.1?'chest':z0>-.12?'spine':'pelvis';
     let p=bz150S(R,z0,an(A[0]),.004).p;for(let t=1;t<4;t++){const q=bz150S(R,z0-t*.022-(t==2?.012:0),an(A[t]),.004).p;k.L(bn,'g',(t+j)%2?emb:emb2,p,q,W[t-1]+.002,W[t]+.002,3);p=q}}));
   [[.6,0],[.58,.025],[.58,-.025]].forEach(q=>{const t=bz150S(R,q[0]-.07,Math.PI/2,.002).p;k.L('head','g',emb2,[q[1],t[1],q[0]-.04],[q[1]*1.4,t[1]-.004,q[0]-.11],.006,.003,3)});
-  [['fl0',.2,.3],['fr0',.2,.3],['hl0',-.22,.3],['hr0',-.22,.3]].forEach(([bn,z,y])=>{const b=e137B('Foxlet',bn),s=Math.sign(b[0]),o=bn[0]=='h'?.056:.052; // v177: hind stripes on the thigh (were 7 mm off it)
+  [['fl0',.2,.3],['fr0',.2,.3],['hl0',-.22,.3],['hr0',-.22,.3]].forEach(([bn,z,y])=>{const b=e137B('Foxlet',bn),s=Math.sign(b[0]),o=bn[0]=='h'?.056:.052; // v178: hind stripes on the thigh (were 7 mm off it)
     k.L(bn,'g',emb,[b[0]+s*o,y+.03,z+.01],[b[0]+s*(o+.002),y-.03,z-.01],.007,.003,3)});
   // big furry paws: cream toes, short claws hidden in the fur
   ['fl2','fr2','hl2','hr2'].forEach(bn=>{const c0=e137B('Foxlet',bn);for(let i=-1;i<=1;i++)k.p(bn,'sph','c',cream,c0[0]+i*.022,.018,c0[2]+.068,.017,.014,.02)})}
@@ -43040,7 +43076,7 @@ function pw150Kit(k,c,C,red){
   k.p('tail3','cone4','g',lava,0,.582,-1.47,.014,.1,.075,-Math.PI/2-.15);
   [-1,1].forEach(s=>k.L('tail3','c',obs,[0,.574,-1.42],[s*.07,.578,-1.36],.014,.002,4));
   // obsidian talons
-  [['fl2',-.102,.225],['fr2',.102,.225],['hl2',-.112,-.29],['hr2',.112,-.29]].forEach(f=>{k.p(f[0],'box','c',obs,f[1],.024,f[2]+.03,.055,.044,.08); // v177: the pad meets the leg
+  [['fl2',-.102,.225],['fr2',.102,.225],['hl2',-.112,-.29],['hr2',.112,-.29]].forEach(f=>{k.p(f[0],'box','c',obs,f[1],.024,f[2]+.03,.055,.044,.08); // v178: the pad meets the leg
     [-1,0,1].forEach(i=>{k.L(f[0],'c',obs2,[f[1]+i*.018,.022,f[2]+.06],[f[1]+i*.024,.016,f[2]+.1],.009,.006,4);k.p(f[0],'cone4','c',0x0c0806,f[1]+i*.025,.012,f[2]+.12,.007,.04,.007,Math.PI/2+.3)})});
 }
 function pw150Post(x,c,C,mat){
@@ -43217,7 +43253,7 @@ function st150Post(x,c,C,mat){
     [.45,.04,-.16],
     [[[0,.01,.06],[.6,.08,.03],.024],[[.6,.08,.03],[1.25,.01,-.32],.013]],
     root,tipC,lead,5);
-  lpwPair(x,'chest',W,mat,.07,.74,.14,.5,.15,.35,.55)} // v177: the wing root on the shoulder (it hinged 1.5 cm out from the body)
+  lpwPair(x,'chest',W,mat,.07,.74,.14,.5,.15,.35,.55)} // v178: the wing root on the shoulder (it hinged 1.5 cm out from the body)
 
 // ======================================================================== Rocsovereign ========================================================================
 var RS150={body:[
@@ -43314,7 +43350,7 @@ function pw150Evo(E,L,P){const M=EVO100_M,T=PW150.body,hb={bn:'head'};
     E.pd('cone4','g',P.glow,[0,.6,-1.56],[0,.2,-1],[.016,.13,.06],[0,1,0],{bn:'tail3'})}
   if(L>=3){// obsidian scale armour on the chest and shoulders, glowing seams down the spine
     E.shell((x,y,z,nx,ny,nz)=>z>.12&&z<.36&&ny>-.15&&y>.46&&y<.62,.012,'c',(x,y,z,i)=>i%3?P.dark:P.mainD,{rimCol:P.glowD});
-    [.1,0,-.1,-.2].forEach(z=>[-1,1].forEach(s=>{const h=E.top(s*.03,z);if(h)E.L(E.add(h.p,[0,-.003,.025]),E.add(h.p,[0,-.004,-.025]),.006,.006,'g',P.glow,3,{vs:1})}))} // v177: each seam on its own side of the spine (one stood off the hide)
+    [.1,0,-.1,-.2].forEach(z=>[-1,1].forEach(s=>{const h=E.top(s*.03,z);if(h)E.L(E.add(h.p,[0,-.003,.025]),E.add(h.p,[0,-.004,-.025]),.006,.006,'g',P.glow,3,{vs:1})}))} // v178: each seam on its own side of the spine (one stood off the hide)
   if(L>=4){// a crown of four thin horns banded in gold, a gem on the brow, molten seams under the belly, a glowing tail blade
     [-1,1].forEach(s=>{E.horn([s*.03,.775,.62],[s*.25,1,-.4],[0,0,-.05],.15,.014,'c',0x2a201c,4,hb,P.trim);E.horn([s*.075,.77,.6],[s*.6,.6,-.6],[0,.02,-.04],.11,.012,'c',0x2a201c,4,hb,P.trim);
       E.pd('ring','m',P.trim,[s*.077,.795,.5],[s*.33,.43,-1],[.022,.03,.022],null,hb)});
@@ -43351,7 +43387,7 @@ function st150Evo(E,L,P){const hb={bn:'head'};
   // L1: a glowing storm streak down the breast, longer glowing plume tips, long streamer tips
   {const pts=[[0,.74],[.02,.69],[-.015,.65],[.01,.6]].map(q=>E.on([q[0],q[1],2],[0,0,-1])).filter(h=>h).map(h=>E.add(h.p,h.n,.004));if(pts.length>1)E.chain(pts,.008,.005,'g',P.glow,3,{vs:1})}
   for(let i=-1;i<=1;i++){const L1=1-Math.abs(i)*.17,x=i*.016,p3=[x*2.3,1.0+.07*L1,.24-.07*L1];E.L(p3,E.add(p3,[x*.4,.02,-.04-.01*L]),.006,.001,'g',P.glow2,3,hb)}
-  [-1,1].forEach(s=>{const d=E.nrm([s*.18,-.06,-1]),e=E.add([s*.08,.5,-.78],d,.14),len=.06+.01*L; // v177: on the streamer's end (longer tips stood off it)
+  [-1,1].forEach(s=>{const d=E.nrm([s*.18,-.06,-1]),e=E.add([s*.08,.5,-.78],d,.14),len=.06+.01*L; // v178: on the streamer's end (longer tips stood off it)
     E.pd('cone4',L>=3?'g':'c',L>=3?P.glow:P.dark,E.add(e,d,len*.5-.006),d,[.014,len,.006],[0,1,0],{bn:'tail0'})});
   if(L>=2){// a mantle of long feathers over the shoulders, bronze talon bands
     for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=E.on([Math.sin(a)*1.5,.77-k*.05,.22+Math.cos(a)*.3-k*.04],[-Math.sin(a),-.2,-.3]);
@@ -43481,7 +43517,7 @@ function er150CragKit(k,C,red){const T=ER150.CR,top=T.top,nz=er150Nz;
     [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x*.97,y+h*.12,z,.025,h,.05,-.2,0,-s*.95)})});
   // serrated rim: stone spikes jutting out and down all round the shell
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2,z=Math.cos(a)*.47-.03,P=er150Prof(T.shell,Math.max(-.48,Math.min(.41,z))),x=Math.sin(a)*P[1];if(Math.abs(Math.sin(a))<.25&&Math.cos(a)>0)continue;
-    const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk177Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v177: on the shell (they stood off its flanks)
+    const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk178Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v178: on the shell (they stood off its flanks)
     k.p('spine','cone4','c',i%2?st2:stone,q[0]+d.x*(h*.5-.018),q[1]+d.y*(h*.5-.018),q[2]+d.z*(h*.5-.018),.03,h,.03,rx,0,rz)}
   // crystal outcrops between the blades (glowing cores, dark shards)
   [[.22,.12,.13],[-.24,-.08,.15],[.18,-.27,.11],[-.14,.22,.09]].forEach(([x,z,h],j)=>{const y=top(x,z);for(let i=0;i<4;i++){const a=i*1.7+j,dx=i?Math.cos(a)*.03:0,dz=i?Math.sin(a)*.03:0,hh=i?h*.6:h,lx=Math.sign(x)*(i?.4:.25)+dx*4,lz=dz*4;
@@ -43572,7 +43608,7 @@ function er150TitanKit(k,C,red){const T=ER150.TI,top=T.top,Y=T.Y,nz=er150Nz;
     for(let i=0;i<H.length-1;i++)k.L('head','c',i%2?horn2:horn,H[i],H[i+1],.05-i*.01,i==3?.003:.04-i*.01,6);
     for(let i=1;i<4;i++)k.p('head','tor','c',horn2,H[i][0],H[i][1],H[i][2],.05-i*.01,.012,.05-i*.01,0,0,s*(.6+i*.25));
     k.p('jaw','cone4','c',ivory,s*.085,.3,.69,.016,.07,.016,-.25,0,s*.2);
-    for(let i=0;i<4;i++){const x=.02+i*.025,z=.6+i*.03,J=er150Prof(T.jaw,z),y0=J[0]-J[3]*Math.sqrt(Math.max(0,1-(x/J[1])**2))+.008; // v177: rooted in the jaw
+    for(let i=0;i<4;i++){const x=.02+i*.025,z=.6+i*.03,J=er150Prof(T.jaw,z),y0=J[0]-J[3]*Math.sqrt(Math.max(0,1-(x/J[1])**2))+.008; // v178: rooted in the jaw
       k.L('jaw','c',i%2?moss:moss2,[s*x,y0,z],[s*(.025+i*.028),.13+i*.01,z-.01],.016,.004,3)}
     k.p('head','sph','c',dark,s*.03,.33,.79,.01,.008,.008)});
   [[0,.46,.55],[0,.455,.62],[.06,.44,.58],[-.06,.44,.58],[0,.44,.48]].forEach((q,i)=>k.p('head','dod','c',i%2?st2:stone,q[0],q[1],q[2],.04,.022,.04,i,0,0));
@@ -43916,7 +43952,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
     Bx('head','c',0x050404,[s*.052,.7,.565],.05,.042,.03,0,s*.4,-s*.15);Bx('head','g',glow,[s*.057,.7,.577],.028,.018,.01,0,s*.4,-s*.2);
     Bx('head','c',dark,[s*.055,.735,.555],.066,.022,.05,0,s*.4,s*.35);
     Bx('head','c',crev,[s*.09,.655,.5],.012,.03,.05);
-    for(let i=0;i<4;i++){Bx('head','c',0xece4cc,[s*(.026-i*.002),.612,.74-i*.042],.008,i?.03:.045,.009,Math.PI,0,0,'cone4');Bx('jaw','c',0xe4dcc4,[s*(.014+i*.002),.608,.705-i*.042],.007,.026,.008,0,0,0,'cone4')} // v177: rooted in the skull and the jaw
+    for(let i=0;i<4;i++){Bx('head','c',0xece4cc,[s*(.026-i*.002),.612,.74-i*.042],.008,i?.03:.045,.009,Math.PI,0,0,'cone4');Bx('jaw','c',0xe4dcc4,[s*(.014+i*.002),.608,.705-i*.042],.007,.026,.008,0,0,0,'cone4')} // v178: rooted in the skull and the jaw
     // ram horns curling back, out and down past the cheeks
     const hp=[[s*.065,.75,.49],[s*.12,.82,.43],[s*.19,.83,.35],[s*.24,.76,.32],[s*.24,.68,.37],[s*.21,.64,.43]],hr=[.034,.03,.026,.021,.015,.008,.002];
     for(let i=0;i<hp.length-1;i++)L('head','c',i%2?dkShade(dark,1.2):dark,hp[i],hp[i+1],hr[i],hr[i+1],6);
@@ -43939,7 +43975,7 @@ function lb150Kit(k,C,red){const K=LB150.cols(C),bone=K.bone.getHex(),dark=K.dar
   for(let i=0;i<6;i++){const z=.42-i*.04,y=.7+(i>1?.0:.0);L(i<2?'head':'neck','g',i%2?glow:glow2,[0,y-.02,z],[0,y+.12-i*.008,z-.1],.024-i*.002,.002,4);
     if(i>0&&i<5)[-1,1].forEach(s=>L('neck','g',i%2?glow2:glow,[s*.04,y-.03,z],[s*.08,y+.06,z-.08],.016,.002,4))}
   for(let i=0;i<4;i++){const a=(i-1.5)*.5;L('tail1','g',i%2?glow:glow2,[0,.5,-.62],[Math.sin(a)*.05,.56+Math.abs(Math.cos(a))*.05,-.74-Math.cos(a)*.05],.025,.002,4)}
-  // v177: ball joints seat the legs in the shoulders and hips (the hind legs stood off the hips in a stride)
+  // v178: ball joints seat the legs in the shoulders and hips (the hind legs stood off the hips in a stride)
   [-1,1].forEach(s=>{Bx('chest','c',bone,[s*.1,.55,.205],.042,.042,.042,0,0,0,'sph');Bx('pelvis','c',bone,[s*.1,.535,-.24],.048,.048,.048,0,0,0,'sph')});
   // bony toes with claws
   [['fl2',-.105,.215],['fr2',.105,.215],['hl2',-.112,-.24],['hr2',.112,-.24]].forEach(f=>[-1,0,1].forEach(i=>{
@@ -43951,7 +43987,7 @@ function H150(s){return [s<0?'hl2':'hr2',.112]}
 // ===================================================================== variant / trait extras =====================================================================
 // lpExtras (Ember, Frost, Spiked, Armored, Horned ...) reads the rig's back line and head point: give each variant its own
 var V150_EX={
-  Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.56,.41],up:.1}, // v177: head mark on the head proper
+  Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.56,.41],up:.1}, // v178: head mark on the head proper
   Hivemother:{back:[['tail0',0,.79,-1.0],['tail0',0,.81,-.8],['tail0',0,.78,-.6],['tail0',0,.6,-.3],['chest',0,.54,.15]],head:['head',0,.5,.41],up:.1},
   Lichbone:{back:[['neck',...boneP([0,.75,.36])],['chest',...boneP([0,.76,.24])],['chest',...boneP([0,.76,.12])],['spine',...boneP([0,.72,.0])],['pelvis',...boneP([0,.66,-.24])]],head:['head',...boneP([0,.78,.52])],up:.08}};
 {const f=lpExtras;lpExtras=function(k,c,D){const sp=c&&c.g&&c.g[0],o=V150_EX[sp];
@@ -44000,7 +44036,7 @@ function cs150HMEvo(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},SAC=CS150.hmSac,wa
     [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i).P,p=v150Lerp(G[0],G[1],.55);E.pd('hem','m',P.metal,E.add(p,[0,.035,0]),[s*.3,1,0],[.05,.03,.06],null,{bn:G.k+'0'})}))}
   if(L>=4){// a crown of horns tipped in gold, gold bands on the legs
     for(let i=0;i<5;i++){const a=(i/4-.5)*2.2,b=[Math.sin(a)*.09,.47,.4+Math.cos(a)*.02];E.horn(b,[Math.sin(a)*.6,1,-.5],[0,0,-.03],.11-Math.abs(i-2)*.015,.016,'c',P.dark,4,hb,P.trim)}
-    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const LG=CS150.leg('Hivemother',s,i),G=LG.P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:LG.k+'1'})}))} // v177: on the leg bone (G.k was undefined: the bands rode the hips)
+    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const LG=CS150.leg('Hivemother',s,i),G=LG.P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:LG.k+'1'})}))} // v178: on the leg bone (G.k was undefined: the bands rode the hips)
   if(L>=5){// the brood stirs: glowing grubs on the sac, a glowing seam along the top of the sac
     for(let i=0;i<10;i++){const h=sacHit(-.55-(i%5)*.13,.4+i*.27);if(h)E.pd('ico','g',i%2?P.glow:P.glow2,E.add(h.p,h.n,.012),h.n,[.016,.026,.016])}
     let prev=null;for(let j=0;j<8;j++){const h=E.top(0,-.5-j*.1),p=h?E.add(h.p,h.n,.012):null;if(p&&prev)E.L(prev,p,.008,.008,'g',P.glow,3,{vs:1});prev=p}}}
@@ -49668,7 +49704,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     drum(x,z){drum(x,z,pal.wood,1.1)},
     totem(x,z,a){const h=rr(3.2,4.4),sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.7);let y=0;const cs=[pal.wood,pal.acc,pal.woodD,pal.trim];
       for(let i=0;i<4;i++){const hh=h/4,rd=.32-i*.03;TQ(sg,Q.cyl,S(cs[i%4]),0,y+hh/2,0,rd,hh,rd);TQ(sg,Q.box,S(pal.woodD),rd*.85,y+hh*.55,0,.1,hh*.4,rd*1.2);[-1,1].forEach(s=>TQ(sg,Q.box,G(i%2?0xffd060:0x0a0808),rd*.92,y+hh*.62,s*rd*.32,.04,.06,.08));y+=hh}
-      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.42,.04,.9,.18,s*.15,0,0))},
+      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.3,.04,.9,.18,s*.15,0,0))},   // v177: hung on the pole (they hung .1 off it)
     altar(x,z,a){const sg=sub(x,z,a,0);TQ(sg,Q.box,STN,0,.45,0,1.8,.9,1);TQ(sg,Q.box,STD,0,.93,0,2,.1,1.15);TQ(sg,Q.box,STD,0,.1,0,2.4,.2,1.5);const d=TQ(sg,Q.disc,G(Lc[0]),0,.99,0,.3,.3,1,-P2,0,0);d.castShadow=false;
       bRect(x,z,a,2.4,1.5);take(x,z,1.5);candles(x,z,6,1.2,pal.lant);halo(x,z,1.8,Lc[0],.14,.05);skull(x+Math.cos(a+P2)*.6,.98,z+Math.sin(a+P2)*.6,.9,pal.bone,a)},
     brazier(x,z){brazier(x,z,pal.fire,1.15)},
@@ -49701,7 +49737,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     carcass(x,z,a){carcass(x,z,a,1.3,0x5a3a30,pal.bone)}};
   // ---------------- outskirts ----------------
   const lantern=(x,z,h)=>{h=h||2.4;blk(x,z,0);take(x,z,.5);const y=gy(x,z);put(Q.cyl4,WD,x,h/2,z,.06,h,.06);put(Q.box,WD,x+.3,h-.05,z,.62,.05,.05);
-    putY(Q.box,G(pal.lant),x+.55,y+h-.4,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.22,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.6,z,.1,.05,.1);halo(x+.55,z,1.4,pal.lant,.16,.06)};
+    putY(Q.box,G(pal.lant),x+.55,y+h-.33,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.15,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.465,z,.1,.05,.1);   // v177: hung from the arm, the base under the glass (both stood ~.07 off)
+    halo(x+.55,z,1.4,pal.lant,.16,.06)};
   const tower=(x,z,a)=>{const H=4.2,sg=sub(x,z,a,0);blk(x,z,1);take(x,z,1.6);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([u,v])=>TQ(sg,Q.cyl,WD,u*.75,H/2,v*.75,.1,H+.2,.1,v*.04,0,-u*.04));
     TQ(sg,Q.box,WOOD,0,H,0,1.9,.14,1.9);[[0,-.9,0],[0,.9,0],[-.9,0,1],[.9,0,1]].forEach(([u,v,q])=>TQ(sg,Q.box,WOOD,u,H+.38,v,q?.08:1.9,.6,q?1.9:.08));
     [[-1,1],[1,-1]].forEach(([u,v])=>TQ(sg,Q.cyl4,WD,0,H*.45,v*.75,.04,2.4,.04,u*.6,0,0));TQ(sg,CG.tent,S(pal.thatch),0,H+1.5,0,1.5,1,1.5,0,Math.PI/4,0);
@@ -49794,9 +49831,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       const P=[-1,1].map(s=>[x+sx*hw*s,z+sz*hw*s]);
       if(fk=='ruin'||fk=='stone')arch(x,z,ga,hw*2,3.4,pal.stone,.6);
       else if(fk=='hedge'){const sg=sub(x,z,ga+P2,0);TQ(sg,Q.arc,S(0x1a1416),0,0,0,hw,2.6,1.2,0,P2,0);P.forEach(([px,pz])=>blk(px,pz,0))}
-      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.2,pz,.2,.18,.2)});
+      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.14,pz,.2,.18,.2)});
         seg(P[0][0],gy(P[0][0],P[0][1])+H-.25,P[0][1],P[1][0],gy(P[1][0],P[1][1])+H-.25,P[1][1],.14,M,Q.cyl);
-        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s];seg(c[0],gy(c[0],c[1])+H+.05,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,gy(c[0],c[1])+H+.9,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
+        const g0=gy(P[0][0],P[0][1]),g1=gy(P[1][0],P[1][1]);   // v177: the tusks grow out of the lintel (they stood ~.2 above it, in the air)
+        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s],yb=g0+(g1-g0)*(hw+.9*s)/(2*hw)+H-.25+.06;seg(c[0],yb,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,yb+.85,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
       // braziers / torches just inside, a banner outside
       const bi=[-1,1].map(s=>[x-Math.cos(ga)*1.3+sx*(hw+.7)*s,z-Math.sin(ga)*1.3+sz*(hw+.7)*s]);
       bi.forEach(([bx,bz])=>{if(!ground(bx,bz,.2))return;if(gi==0)brazier(bx,bz,pal.fire,1.2);else torch(bx,bz,pal.fire,2)});
@@ -54975,27 +55013,27 @@ function dt168Lantern(k,x,y,z,s,gl,iron){s=s||1;iron=iron||0x2a2c30;const M=(dx,
 function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt168P(k,dt168Lathe([[0,0],[r*1.05,0],[r,h*.6],[r*.97,h],[r*.6,h+.008],[0,h+.012]],10),'c',col,dt168Mx(x,y,z));
   for(let i=0;i<3;i++){const a=i*2.3+x*7;dt168P(k,dt168Lathe([[0,-1],[.8,-.6],[1,.2],[.6,.8],[0,1]],6),'c',dt168Mix(col,0xfff4d8,.2),dt168Mx(x+Math.cos(a)*r,y+h*(.55+i*.13),z+Math.sin(a)*r,0,a,0,.012,.03+i*.008,.012))}
   dt168P(k,dt168Lathe([[0,0],[.06,0],[.055,.012],[0,.016]],10),'c',dt168Mix(col,0x8a7a5a,.25),dt168Mx(x,y,z));dt168P(k,dt168Lathe([[0,0],[.004,0],[.003,.025],[0,.03]],5),'c',0x1a1410,dt168Mx(x,y+h+.008,z))}
-// ================= v177: companion bodies hold together (owner, Oct 30 2026) =================
+// ================= v178: companion bodies hold together (owner, Oct 30 2026) =================
 // "Carefully check all companions for unattached pieces, accessories and limbs; keep their anatomy non-cartoony."
-// test/v177_comp_float.py builds every species × evolution × trait × variant × fusion and fails on any piece of mesh that
-// floats free of the body. Fixes live in the files that build each part (marked v177); helpers shared by them are here.
+// test/v178_comp_float.py builds every species × evolution × trait × variant × fusion and fails on any piece of mesh that
+// floats free of the body. Fixes live in the files that build each part (marked v178); helpers shared by them are here.
 
 // A hanging chain of interlocked oval links on bone bn (a dkKit k): the first link's top end sits at top, the chain runs
 // along dir (default straight down), n links of half-width r; links alternate between two planes at right angles and each
 // overlaps the next, so the pieces touch (the old chains were rings spaced apart that hung in the air).
-function lk177Chain(k,bn,t,cols,top,n,r,dir){const D=new THREE.Vector3(...(dir||[0,-1,0])).normalize(),U=new THREE.Vector3(1,0,0);
+function lk178Chain(k,bn,t,cols,top,n,r,dir){const D=new THREE.Vector3(...(dir||[0,-1,0])).normalize(),U=new THREE.Vector3(1,0,0);
   if(Math.abs(U.dot(D))>.9)U.set(0,0,1);U.sub(D.clone().multiplyScalar(U.dot(D))).normalize();const W=new THREE.Vector3().crossVectors(D,U),L=r*1.35,sp=2*L*.92;
-  for(let i=0;i<n;i++)lk177Link(k,bn,t,Array.isArray(cols)?cols[i%cols.length]:cols,new THREE.Vector3(...top).addScaledVector(D,L+i*sp),D,i%2?W:U,r);
+  for(let i=0;i<n;i++)lk178Link(k,bn,t,Array.isArray(cols)?cols[i%cols.length]:cols,new THREE.Vector3(...top).addScaledVector(D,L+i*sp),D,i%2?W:U,r);
   return new THREE.Vector3(...top).addScaledVector(D,2*L+(n-1)*sp).toArray()}
 // one oval link at centre c (Vector3), long axis along D, lying in the plane of D and A (unit vectors at right angles)
-function lk177Link(k,bn,t,col,c,D,A,r){const L=r*1.35,Z=new THREE.Vector3().crossVectors(D,A),N=new THREE.Vector3().crossVectors(Z,D),M=new THREE.Matrix4().makeBasis(D,N,Z);
+function lk178Link(k,bn,t,col,c,D,A,r){const L=r*1.35,Z=new THREE.Vector3().crossVectors(D,A),N=new THREE.Vector3().crossVectors(Z,D),M=new THREE.Matrix4().makeBasis(D,N,Z);
   M.scale(new THREE.Vector3(L,r*1.6,r));M.setPosition(c);k.P.push({bn,geo:dkG().ring,t,col,m:M})}
 // a closed loop of links round a centre (a chain belt): ellipse radii rx, rz at height y (+ wave(a)), n links of half-width r
-function lk177Loop(k,bn,t,cols,cx,cz,rx,rz,y,n,r,wave){for(let i=0;i<n;i++){const a=i/n*Math.PI*2,c=new THREE.Vector3(cx+Math.sin(a)*rx,y+(wave?wave(a):0),cz+Math.cos(a)*rz),
+function lk178Loop(k,bn,t,cols,cx,cz,rx,rz,y,n,r,wave){for(let i=0;i<n;i++){const a=i/n*Math.PI*2,c=new THREE.Vector3(cx+Math.sin(a)*rx,y+(wave?wave(a):0),cz+Math.cos(a)*rz),
     D=new THREE.Vector3(Math.cos(a)*rx,0,-Math.sin(a)*rz).normalize(),A=i%2?new THREE.Vector3(0,1,0):new THREE.Vector3(Math.sin(a),0,Math.cos(a));
-  lk177Link(k,bn,t,Array.isArray(cols)?cols[i%cols.length]:cols,c,D,A,r)}}
+  lk178Link(k,bn,t,Array.isArray(cols)?cols[i%cols.length]:cols,c,D,A,r)}}
 // the same chain for an evolution kit E (EVO100): links as E.pd parts, options o (bn / at / vs) passed through
-function lk177EChain(E,t,col,top,n,r,dir,o){const D=new THREE.Vector3(...(dir||[0,-1,0])).normalize(),U=new THREE.Vector3(1,0,0);
+function lk178EChain(E,t,col,top,n,r,dir,o){const D=new THREE.Vector3(...(dir||[0,-1,0])).normalize(),U=new THREE.Vector3(1,0,0);
   if(Math.abs(U.dot(D))>.9)U.set(0,0,1);U.sub(D.clone().multiplyScalar(U.dot(D))).normalize();const W=new THREE.Vector3().crossVectors(D,U),L=r*1.35,sp=2*L*.92;
   for(let i=0;i<n;i++){const A=i%2?W:U,N=new THREE.Vector3().crossVectors(new THREE.Vector3().crossVectors(D,A),D),c=new THREE.Vector3(...top).addScaledVector(D,L+i*sp);
     E.pd('ring',t,col,c.toArray(),N.toArray(),[r,r*1.6,L],D.toArray(),Object.assign({at:top},o))}
@@ -55004,20 +55042,20 @@ function lk177EChain(E,t,col,top,n,r,dir,o){const D=new THREE.Vector3(...(dir||[
 // Nearest point on a body geometry's rest-pose surface to p: {p:[x,y,z], n:[outward normal], d:distance}. G = an indexed
 // BufferGeometry (an LPR body from lpGeo). Used to set kit parts onto the body they belong to.
 // bone (optional): only the surface skinned mostly to that bone index
-function lk177Near(G,p,bone){const P=G.attributes.position.array,I=G.index?G.index.array:null,n=I?I.length:P.length/3,V=THREE.Vector3,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight,
+function lk178Near(G,p,bone){const P=G.attributes.position.array,I=G.index?G.index.array:null,n=I?I.length:P.length/3,V=THREE.Vector3,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight,
     a=new V(),b=new V(),c=new V(),q=new V(...p),t=new THREE.Triangle(),o=new V();let best=1e9,bp=null,bn=null;
   const mb=v=>{let b=SI.getX(v),w=SW.getX(v);if(SW.getY(v)>w){w=SW.getY(v);b=SI.getY(v)}if(SW.getZ(v)>w){w=SW.getZ(v);b=SI.getZ(v)}return b};
   for(let i=0;i<n;i+=3){const ia=I?I[i]:i,ib=I?I[i+1]:i+1,ic=I?I[i+2]:i+2;if(bone!=null&&SI&&mb(ia)!==bone)continue;a.fromArray(P,ia*3);b.fromArray(P,ib*3);c.fromArray(P,ic*3);t.set(a,b,c);t.closestPointToPoint(q,o);
     const d=o.distanceToSquared(q);if(d<best){best=d;bp=o.toArray();bn=t.getNormal(new V()).toArray()}}
-  if(!bp)return bone!=null?lk177Near(G,p):{p:p.slice(),n:[0,1,0],d:0};
+  if(!bp)return bone!=null?lk178Near(G,p):{p:p.slice(),n:[0,1,0],d:0};
   // the triangle normal can face in (winding): point it away from the body's centre line
   const out=[bp[0],bp[1]-(G.boundingSphere||(G.computeBoundingSphere(),G.boundingSphere)).center.y,0];if(bn[0]*out[0]+bn[1]*out[1]<0)bn=bn.map(v=>-v);
   return {p:bp,n:bn,d:Math.sqrt(best)}}
 
 // The highest point of a body geometry's surface straight above (x, z), or null when the body does not reach there.
-var LK177M=null;
-function lk177Top(G,x,z){LK177M=LK177M||new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
-  const m=LK177M;m.geometry=G;if(!G.boundingSphere)G.computeBoundingSphere();const rc=new THREE.Raycaster(new THREE.Vector3(x,5,z),new THREE.Vector3(0,-1,0));
+var LK178M=null;
+function lk178Top(G,x,z){LK178M=LK178M||new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
+  const m=LK178M;m.geometry=G;if(!G.boundingSphere)G.computeBoundingSphere();const rc=new THREE.Raycaster(new THREE.Vector3(x,5,z),new THREE.Vector3(0,-1,0));
   const h=rc.intersectObject(m,false);return h.length?h[0].point.y:null}
 // ================= v172: the camera stays inside the map at its outer edge =================
 // Owner (Oct 29 2026): "when my camera goes past the edge of the map I can see literally everything" — v169-v171 tried to change
@@ -55224,6 +55262,102 @@ function ob176Sphere(o,out){const g=o.geometry;if(!g)return null;
       s=o.userData.ob176S={n,c,r,top}}
     out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
   if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
+// ================= v177 environment pass: scattered scenery sits on the ground =================
+// Owner: "check all environment pieces on each instance in each zone ... for unattached pieces or poor quality".
+// The scattered decorations (1680 / 1981 / 2280: WD kinds, instanced per 64x64 chunk in wdBuild) used to stand at the ground height
+// under their centre, so on a slope one side of a rock, log or grave hung in the air (up to metres on the rim banks, and pieces on a
+// cliff lip hung over the drop). wdBuild now asks env177Seat for each piece's place:
+//  * low, wide pieces (rocks, ledge stones, logs, dunes, rubble, graves) lean with the slope under them (tall ones stay upright:
+//    trees, pillars, lamps, statues), up to ENV177.tilt;
+//  * then the piece sinks until no point of its base is above the ground (the uphill side goes into the ground);
+//  * a piece that would have to sink more than its share (ENV177.sink: a tall piece a third of its height, a low one 45%) stands on
+//    ground too steep for it (a cliff face, a wall lip) and is not drawn (scale 0; gb168Clear hides pieces the same way).
+// Flat patches (goo, blood, salt crust) lie along the slope; mist, webs and pieces at a fixed height (lilies on water) stay as they were.
+// Everything here is a hoisted function: wdBuild runs at load, long before this file.
+var ENV177;   // lazy: wdBuild calls in before this line runs
+function env177(){return ENV177||(ENV177={tilt:.4,tol:.04,sink:[.34,.45],n:0,hid:0})}
+// the kind's base outline (local vertices at the very bottom), size and how much it leans: cached on the kind
+function env177Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
+  try{if(S.abs==null&&!S.parts.some(p=>p.mat)){const V=[];let mn=1e9,mx=-1e9,x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+    S.parts.forEach(p=>{const P=p.g.attributes.position;for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);V.push(x,y,z);if(y<mn)mn=y;if(y>mx)mx=y;if(x<x0)x0=x;if(x>x1)x1=x;if(z<z0)z0=z;if(z>z1)z1=z}});
+    const h=mx-mn,w=Math.max(x1-x0,z1-z0);
+    if(h>.06){const lo=[],lean=h<w*.6?1:h<w*1.2?.5:0,cut=mn+Math.max(.03,h*(lean?.2:.07)),seen=new Map();
+      for(let i=0;i<V.length;i+=3)if(V[i+1]<=cut){const k=Math.round(V[i]*50)+','+Math.round(V[i+2]*50),j=seen.get(k);if(j==null){seen.set(k,lo.length);lo.push(V[i],V[i+1],V[i+2])}else if(V[i+1]<lo[j+1])lo[j+1]=V[i+1]}   // the lowest point over each spot
+      // big outlines thinned to ~48 points (every n-th): enough to find the lowest ground under the base
+      let L=lo;if(lo.length>144){const st=Math.ceil(lo.length/144);L=[];for(let i=0;i<lo.length;i+=3*st)L.push(lo[i],lo[i+1],lo[i+2])}
+      r={lo:L,h,w,lean,tall:h>w*1.2}}
+    else if(w>.2)r={decal:1,w}}}catch(e){console.warn('v177 kind',S.k,e)}
+  return S._e176=r}
+// where piece d stands: {x,y,z,q,sx,sy,sz} (sx 0: not drawn); y0 is its old height (ground at its centre plus the kind's lift)
+function env177Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env177Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
+  if(!K)return o;const E=env177();E.n++;
+  if(K.decal||K.lean){const r=Math.max(.6,K.w*.45*s),gx=(GH(d.x+r,d.z)-GH(d.x-r,d.z))/(2*r),gz=(GH(d.x,d.z+r)-GH(d.x,d.z-r))/(2*r),n=new V3(-gx,1,-gz).normalize(),up=new V3(0,1,0);
+    let a=Math.acos(Math.min(1,n.y))*(K.decal?1:K.lean);a=Math.min(a,K.decal?.7:E.tilt);if(a>.01){const ax=new V3().crossVectors(up,n).normalize();o.q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,a))}}
+  if(K.decal)return o;   // a flat patch (goo, salt crust, blood) lies along the slope at its old height
+  const L=K.lo,v=new V3();let gap=-1e9;
+  for(let i=0;i<L.length;i+=3){v.set(L[i]*o.sx,L[i+1]*o.sy,L[i+2]*o.sz).applyQuaternion(o.q);const g=y0+v.y-GH(d.x+v.x,d.z+v.z);if(g>gap)gap=g}
+  const sink=Math.max(0,gap-E.tol),lim=K.h*o.sy*E.sink[K.tall?0:1]+.08;
+  if(sink>lim){o.sx=o.sy=o.sz=0;E.hid++;return o}
+  o.y=y0-sink;return o}
+// ================= v177 environment pass: a darker, weathered palette =================
+// Owner: "analyze and optimize structure, color and overall style ... non-cartoony (this is a dark fantasy game) or too simple".
+// The zones were painted in candy colours (lime moss, pure white snow and bone, saturated sand and grass). One grade per zone
+// (ENV177Z) is applied once at load: to every scattered decoration's baked vertex colours (env177Look, from wdDeco before the
+// chunks are built: colour pulled toward grey by .sat, lime greens turned toward olive by .olive, bright colours compressed above
+// .knee by .comp, everything times .dark), its instance tints (saturation only), and to the zone's ground colours (env177Biomes,
+// from 0045: BIOMES gnd / grs / acc / frs / tree tints). Then weathering is baked into each decoration (dt168Weather, 3345):
+// grime toward the foot, mottling and rain streaks, so props stop reading as flat painted plastic. Glowing parts are left alone.
+// Duskhold is not graded.
+function env177Z(z){return [
+  {sat:.78,olive:.25,knee:.42,comp:.55,dark:.95},   // Kindlelight (already a dark bog)
+  {sat:.6,olive:.45,knee:.4,comp:.5,dark:.88},      // Hillside Crest: the brightest, most cartoony greens
+  {sat:.68,olive:.3,knee:.5,comp:.55,dark:.9},      // Burningeye Summit: snow and ice, not glaring white
+  {sat:.66,olive:.35,knee:.45,comp:.5,dark:.88},    // Searing Sands: sun-bleached, not orange candy
+  {sat:.72,olive:.3,knee:.4,comp:.5,dark:.9},       // The Dirge: bone and stone in murk
+  {sat:.82,olive:.3,knee:.4,comp:.55,dark:.92}][z]||null}  // The Citadel
+// grade one colour (0..1 floats) in place: returns [r,g,b]
+function env177Grade(r,g,b,Z){let l=.3*r+.59*g+.11*b;
+  if(g>r&&g>b){const k=Math.min(1,(g-Math.max(r,b))*4)*Z.olive;r+=(g-r)*k*.5;b+=(g-b)*k*.15;g-=(g-r)*k*.15}   // lime -> olive / moss
+  l=.3*r+.59*g+.11*b;r=l+(r-l)*Z.sat;g=l+(g-l)*Z.sat;b=l+(b-l)*Z.sat;
+  if(l>Z.knee){const L=Z.knee+(l-Z.knee)*Z.comp,f=L/l;r*=f;g*=f;b*=f}
+  return [r*Z.dark,g*Z.dark,b*Z.dark]}
+function env177Hex(h,Z,satOnly){const c=new THREE.Color(h);let o;if(satOnly){const l=.3*c.r+.59*c.g+.11*c.b;o=[l+(c.r-l)*Z.sat,l+(c.g-l)*Z.sat,l+(c.b-l)*Z.sat]}else o=env177Grade(c.r,c.g,c.b,Z);
+  return c.setRGB(Math.max(0,o[0]),Math.max(0,o[1]),Math.max(0,o[2])).getHex()}
+// the zone a decoration kind belongs to: by its name (k_, k2_ ... c3_), else by where most of its pieces stand
+function env177KindZone(k,list){const m=/^([khbsdc])\d?_/.exec(k);if(m)return 'khbsdc'.indexOf(m[1]);
+  const n=[0,0,0,0,0,0,0];for(const d of list)if(d.k===k){const I=insAt(Math.round(d.x),Math.round(d.z));n[I?I.z:6]++}let b=6;for(let i=0;i<6;i++)if(n[i]>(b<6?n[b]:0))b=i;return b<6?b:-1}
+function env177Look(T,list){const T0=performance.now(),done=new Set();let nk=0;
+  for(const k in T){const S=T[k];if(!S||!S.parts)continue;const z=env177KindZone(k,list),Z=env177Z(z);if(!Z)continue;nk++;
+    if(S.tint)S.tint=S.tint.map(h=>env177Hex(h,Z,true));
+    S.parts.forEach(p=>{const g=p.g;if(p.glow||p.mat||!g||done.has(g))return;done.add(g);const C=g.attributes.color,P=g.attributes.position;if(!C)return;
+      let y0=1e9,y1=-1e9;for(let i=0;i<P.count;i++){const y=P.getY(i);if(y<y0)y0=y;if(y>y1)y1=y}
+      for(let i=0;i<C.count;i++){const o=env177Grade(C.getX(i),C.getY(i),C.getZ(i),Z);C.setXYZ(i,o[0],o[1],o[2])}
+      if(!g.attributes.normal)g.computeVertexNormals();
+      try{dt168Weather(g,{y0,g:[Math.min(.7,Math.max(.25,(y1-y0)*.3)),.3],n:.2,s:.2,sd:(k.length*7)%13})}catch(e){}
+      C.needsUpdate=true})}
+  env177().look={kinds:nk,ms:Math.round(performance.now()-T0)}}
+// the zones' ground colours (BIOMES, after v112 added the themed instances' own); Duskhold (biome 0) stays
+function env177Biomes(){try{BIOMES.forEach((b,i)=>{if(!i||b.e176)return;b.e176=1;const z=b.v112!=null?Math.floor(b.v112/PMG):i-1,Z=env177Z(z);if(!Z)return;
+  const G=a=>{const o=env177Grade(a[0]/255,a[1]/255,a[2]/255,Z);return o.map(v=>Math.max(0,Math.min(255,Math.round(v*255))))};
+  ['gnd','grs','acc','frs'].forEach(k=>{if(Array.isArray(b[k]))b[k]=G(b[k])});if(Array.isArray(b.tc))b.tc=b.tc.map(h=>env177Hex(h,Z))})}catch(e){console.warn('v177 biomes',e)}}
+// ---- the zones' light and grade (0550 ZATM, and each themed instance's own in 1981): the v52 "vivid" grade pushed saturation
+// up to +50% and the bright zones over-exposed, which made every colour read as a cartoon. Boosts are cut to under a third (a
+// zone that is already desaturated keeps its value), over-bright suns and exposure come down, the vignette deepens a little,
+// and the hero's light in the dark zones no longer whites out what stands next to it.
+function env177Atm(a){if(!a||a.e176)return;a.e176=1;const cut=(v,k)=>v>1?1+(v-1)*k:v;
+  if(a.sat!=null)a.sat=cut(a.sat,.3);if(a.ex!=null)a.ex=cut(a.ex,.3)*.97;if(a.sun!=null)a.sun=cut(a.sun,.55);if(a.hemi!=null)a.hemi=cut(a.hemi,.6);if(a.vig!=null)a.vig*=1.08;
+  // the dark zones' carried light (li 2.2-3.4) burned a wall or rock a step away to pure white: softer, reaching a little further
+  if(a.li>1.5){a.li*=.72;if(a.ld)a.ld*=1.15}}
+try{for(let z=0;z<6;z++)env177Atm(ZATM[z]);if(typeof th112=='function')th112().list.forEach(t=>env177Atm(t.a))}catch(e){console.warn('v177 atmosphere',e)}
+// ---- pond banks (from 0045, right after the heights are made): a water tile was 1.2 below the surface next to land at full
+// height, a one-tile drop that read as a pit with sheer walls. The walkable land within ENV177B.r tiles of water now slopes down
+// to just above the waterline, and the water's first two rings shelve (ENV177B.w) before the deep middle. Rims are left alone.
+function env177Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W*H).fill(99),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~';let n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){if(!wet(x,y)||!insAt(x,y))continue;let land=99;
+    for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
+    const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
+  env177().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v177 banks',e)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

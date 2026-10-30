@@ -78,3 +78,4 @@ camp-sites|2270|tiers: v168_tiers.py v123_camps.py v164_camps.py
 # the kit is used by every v151-v165 set piece: their quests' own tests
 3345: v165_dirge.py v165_temple.py v165_courtyard.py v165_run.py v152_abeksi.py v154_hydra.py v160_frozen_gate.py
 06[1-9]0|0850|17[1-7]0|18[01]0|26[0-3]0|31[1-4]0|0470|float_lib|v178: v178_comp_float.py v137_enemies.py
+3370|env-pass|1680|1981|2270|2280|3242|0810|0510|v177: v177_env.py v168_ground.py v124_edge_test.py v164_camps.py v123_camps.py
