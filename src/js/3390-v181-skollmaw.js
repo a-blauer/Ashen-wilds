@@ -87,11 +87,13 @@ function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,T=SK150.tail,eye=
   // the sun he swallowed: a glow down his throat and along the inside of the lower jaw (seen when he opens his mouth)
   {const J=bz150At(SK150.jaw,.7);k.p('jaw','box','g',ember,0,J.y+J.a*.55,.71,.05,.006,.2);k.p('head','sph','g',ember,0,.705,.6,.04,.026,.05)}
   // a black-sun eclipse on the brow: a black disc in a thin gold corona
-  {const h=bz150S(R,.6,Math.PI/2,.0015),rt=bz150Up(h.n),p=h.p,gold=GL.g;k.p('head','sph','c',0x040306,p[0],p[1],p[2],.026,.004,.026,...rt);
-    k.p('head','ring','g',gold,p[0],p[1]+.002,p[2],.03,.02,.03,...rt)}}
+  // (v181: the corona is a loop of short strokes laid on the skull's curve; a flat ring stood up to 1 cm off its edges)
+  {const h=bz150S(R,.6,Math.PI/2,-.0015),rt=bz150Up(h.n),p=h.p,gold=GL.g,on=(x,z)=>{const r=bz150At(R,z);return [x,r.y+r.a*Math.sqrt(Math.max(0,1-(x/r.w)**2))-.0005,z]};
+    k.p('head','sph','c',0x040306,p[0],p[1],p[2],.026,.004,.026,...rt);
+    for(let i=0;i<14;i++){const a=i/14*Math.PI*2,b=(i+1)/14*Math.PI*2;k.L('head','g',gold,on(Math.cos(a)*.03,.6+Math.sin(a)*.03),on(Math.cos(b)*.03,.6+Math.sin(b)*.03),.0045,.0045,3)}}}
 function sk150Post(x,c,C,mat){const K=sk150Cols(C),og=lpSpikeGeo(K.main.clone().lerp(K.back,.3),K.dark),ig=lpSpikeGeo(0x3a2a40,0x120c14);
-  // tall ears, swept back
-  [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.058,.815,.545,.052,.15,.028,-.55,-s*.18,s*.12);
+  // tall ears, swept back; the base sits 3-4 cm deep in the skull so no edge stands off the rounded head (v181)
+  [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.05,.775,.548,.044,.185,.028,-.55,-s*.18,s*.12);
     const n=new THREE.Mesh(ig,mat);n.scale.set(.6,.72,.5);n.position.set(0,.02,.45);p.children[0].add(n);p.userData={rz:-s*.3,sd:s};x.ears.push(p)})}
 
 // ---------------- evolution look: the eclipse wolf ascends (tier 5 shows level 2 from the start; 5 at the last evolution) ----------------
@@ -99,21 +101,34 @@ function sk150Post(x,c,C,mat){const K=sk150Cols(C),og=lpSpikeGeo(K.main.clone().
 // L3 broken golden fetters with hanging chain on the forelegs, a corona of black spines with glowing tips rising from the nape
 // L4 a crown of gold rays round the brow eclipse, fetters on the hind legs · L5 flames through the corona and mane, burning
 // eye trails, a burning tail tip. Everything is rooted in the body (rays onto the real surface), so it holds on in motion.
-function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016;
-  for(let i=0;i<8;i++){const z=.44-i*.045,h=E.top((i%2?1:-1)*.03,z);if(h)M.tuft(E,h,[0,.15,-1.3],.1+.01*L,.022,i%2?P.glow:P.glow2,'g')}
+function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016,V=THREE.Vector3;
+  // a tuft / spine / flame from a root sunk into the body, skinned like the body at its root (not at its middle, which for a
+  // long spine over the withers is nearer the raised neck and swung it off in the bite)
+  const spike=(h,d,ln,r,t,col,sink)=>{const a=E.add(h.p,h.n,-(sink||.012)),D=E.nrm(d);E.L(a,E.add(h.p,D,ln),r,.002,t,col,4,{at:a});return D};
+  // a gold fetter round a lower leg: a ring of strokes laid round the leg's own loft (sk181Leg: radius .036 half way
+  // between the knee and the ankle), rigid on the lower leg bone, with a glowing stud and a broken chain on the outside
+  const fetter=(p,chain)=>{const b=e137B('Ashwolf',p+'1'),c=e137B('Ashwolf',p+'2'),m=e137L(b,c,.5),A=new V(c[0]-b[0],c[1]-b[1],c[2]-b[2]).normalize(),
+      U=new V().crossVectors(A,new V(1,0,0)).normalize(),W=new V().crossVectors(A,U).normalize(),s=Math.sign(b[0]),R=.039,bn=p+'1',N=12,pt=a=>{const v=U.clone().multiplyScalar(Math.cos(a)*R).addScaledVector(W,Math.sin(a)*R);return [m[0]+v.x,m[1]+v.y,m[2]+v.z]};
+    for(let i=0;i<N;i++)E.L(pt(i/N*Math.PI*2),pt((i+1)/N*Math.PI*2),.0075,.0075,'m',P.gold,4,{bn});
+    const o=W.x*s>0?W:W.clone().negate(),q=[m[0]+o.x*(R+.006),m[1]+o.y*(R+.006),m[2]+o.z*(R+.006)];E.pd('box','g',P.glow,q,[o.x,o.y,o.z],[.014,.006,.02],[A.x,A.y,A.z],{bn});
+    if(chain)lk180EChain(E,'m',P.gold,[m[0]+o.x*(R+.004),m[1]+o.y*(R+.004)-.008,m[2]+o.z*(R+.004)],3,.008,[s*.2,-1,-.3],{bn})};
+  // L1 ember tips through the mane, glowing claws
+  for(let i=0;i<8;i++){const z=.44-i*.045,h=E.top((i%2?1:-1)*.03,z);if(h)spike(h,[0,.25,-1.3],.1+.01*L,.022,'g',i%2?P.glow:P.glow2)}
   ['fl2','fr2','hl2','hr2'].forEach(bn=>{const c0=E.bone(bn);for(let i=-1;i<=1;i++)E.L([c0[0]+i*.018,.024,c0[2]+.078],[c0[0]+i*.019,.004,c0[2]+.112],.006,.001,'g',P.glow,3,{bn})});
+  // L2 eclipse marks on the haunches
   const ecl=(h,sz)=>{E.pd('sph','c',0x040306,E.add(h.p,h.n,.001),h.n,[sz,sz*.12,sz]);E.pd('ring','g',P.glow2,E.add(h.p,h.n,.003),h.n,[sz*1.15,sz*.9,sz*1.15]);
     E.pd('ring','g',P.glow,E.add(h.p,h.n,.002),h.n,[sz*1.45,sz*.6,sz*1.45])};
   if(L>=2)[-1,1].forEach(s=>{const hh=M.side(E,s,.6,-.27);if(hh)ecl(hh,.036)});
-  if(L>=3){[['fl1','fl2'],['fr1','fr2']].forEach(([a,b])=>{const A=E.bone(a),B=E.bone(b),c=[(A[0]+B[0])/2,A[1]+(B[1]-A[1])*.55,(A[2]+B[2])/2],s=Math.sign(A[0]);
-      E.band(c,[0,1,0],.004,.011,'m',P.gold,8);const h=E.on([c[0]+s*.3,c[1],c[2]],[-s,0,0]);
-      if(h){E.rune({p:E.add(h.p,h.n,.014),n:h.n},[0,1,0],.022,P.glow);lk180EChain(E,'m',P.gold,E.add(E.add(h.p,h.n,.012),[0,-.012,-.01]),3,.009,[s*.2,-1,-.3],{vs:1})}});
-    for(let i=0;i<7;i++){const z=.42-i*.05,x=(i%2?1:-1)*.02,h=E.top(x,z);if(!h)continue;const d=E.nrm([x*4,1,-.55]),ln=.15+.03*Math.sin(i/6*Math.PI)+.01*L;
-      E.L(E.add(h.p,h.n,-.012),E.add(h.p,d,ln),.018,.002,'c',blk,4);E.L(E.add(h.p,d,ln*.6),E.add(h.p,d,ln*1.01),.008,.001,'g',P.glow2,3)}}
-  if(L>=4){const h=E.top(0,.6);if(h)for(let i=0;i<9;i++){const a=i/9*Math.PI*2,dx=Math.cos(a),dz=Math.sin(a),q=E.top(dx*.04,.6+dz*.04);
+  // L3 broken golden fetters on the forelegs, a corona of black spines with glowing tips rising from the nape
+  if(L>=3){fetter('fl',1);fetter('fr',1);
+    for(let i=0;i<7;i++){const z=.42-i*.05,x=(i%2?1:-1)*.02,h=E.top(x,z);if(!h)continue;const ln=.15+.03*Math.sin(i/6*Math.PI)+.01*L,D=spike(h,[x*4,1,-.55],ln,.018,'c',blk);
+      const a=E.add(h.p,D,ln*.6);E.L(a,E.add(h.p,D,ln*1.01),.008,.001,'g',P.glow2,3,{at:E.add(h.p,h.n,-.012)})}}
+  // L4 a crown of gold rays round the brow eclipse, fetters on the hind legs
+  if(L>=4){for(let i=0;i<9;i++){const a=i/9*Math.PI*2,dx=Math.cos(a),dz=Math.sin(a),q=E.top(dx*.04,.6+dz*.04);
       if(q)E.L(E.add(q.p,q.n,-.002),E.add(q.p,E.nrm([dx,.25,dz]),.03+(i%2?0:.012)),.006,.001,'m',P.gold,3,{vs:1})}
-    [['hl1','hl2'],['hr1','hr2']].forEach(([a,b])=>{const A=E.bone(a),B=E.bone(b);E.band([(A[0]+B[0])/2,A[1]+(B[1]-A[1])*.5,(A[2]+B[2])/2],E.nrm([B[0]-A[0],B[1]-A[1],B[2]-A[2]]),.004,.01,'m',P.gold,8)})}
-  if(L>=5){for(let i=0;i<7;i++){const z=.4-i*.05,h=E.top((i%2?-1:1)*.025,z);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([0,1,-.7]),.2+.02*(i%3)),.03,.002,'g',i%2?P.glow:P.glow2,4)}
+    fetter('hl',0);fetter('hr',0)}
+  // L5 flames through the corona and mane, burning eye trails, a burning tail tip
+  if(L>=5){for(let i=0;i<7;i++){const z=.4-i*.05,h=E.top((i%2?-1:1)*.025,z);if(h)spike(h,[0,1,-.7],.2+.02*(i%3),.03,'g',i%2?P.glow:P.glow2,.01)}
     [-1,1].forEach(s=>{const h=E.on([s*.5,.73,.625],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,.002),E.add(h.p,[s*.03,.012,-.13]),.01,.001,'g',P.glow2,3,{bn:'head'})});
     E.L([0,.49,-1.0],[0,.53,-1.12],.03,.002,'g',P.glow,5,{bn:'tail3'});E.L([0,.49,-1.01],[0,.55,-1.09],.018,.001,'g',P.glow2,4,{bn:'tail3'})}}
 {const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf!='Skollmaw')return b0.apply(this,arguments);
