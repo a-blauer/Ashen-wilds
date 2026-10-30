@@ -98,7 +98,9 @@ function unqWpnKit135(k,it,U){const n0=k.P.length;v89WpnKit(k,it);
   let s=U.key.length*977;const Rr=()=>{s=(s*16807)%2147483647;return s/2147483647};
   pts.sort((a,b)=>b.length()-a.length());const pick=[];for(const q of pts){if(pick.every(o=>o.distanceTo(q)>.09))pick.push(q);if(pick.length>=8)break}
   const n1=k.P.length;pick.forEach((p,i)=>UNQ135_ORN[U.z](k,p,i,Rr));const S=new THREE.Vector3(1.5,1.5,1.5);for(let i=n1;i<k.P.length;i++)k.P[i].m.scale(S);
-  k.p('','oct','g',U.gem,0,-.02,.03,.024)}
+  // the gem sits on the grip; on a bow (the frame is off the hand) on the part nearest the grip (v178: it hung in the air)
+  let gp=[0,-.02,.03];{let bd=1e9,bq=null;for(let i=n0;i<n1;i++){V.setFromMatrixPosition(k.P[i].m);const d=V.length();if(d<bd){bd=d;bq=V.clone()}}if(bq&&bd>.1)gp=[bq.x,bq.y,bq.z+.03]}
+  k.p('','oct','g',U.gem,gp[0],gp[1],gp[2],.024)}
 {const f=v89Kit;v89Kit=function(k,it){const U=unqOf135(it);if(!U)return f.apply(this,arguments);try{if(U.sl=='weapon')return unqWpnKit135(k,it,U);return U.kit(k)}catch(e){console.warn('v135 unique kit',e);return f.apply(this,arguments)}}}
 {const f=v89Key;v89Key=function(it){return f.apply(this,arguments)+(it&&it.u?'|u'+it.u:'')}}
 {const f=v89Wpn;v89Wpn=function(it,type){if(!unqOf135(it))return f.apply(this,arguments);const t=itT(it),g=lgGroup('LW89U|'+it.u+'|'+it.tp,k=>v89WpnKit_u135(k,it),.18);g.userData.wt=type||t.wt;return g}}
