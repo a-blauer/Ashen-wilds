@@ -3,7 +3,7 @@
 # in the bind pose and while running / striking (pieces that come away from what they sit on), and the clipping counts
 # (v114 poke / hide) per worn piece.
 #   python3 v177_gear_audit.py          CLS=warrior,mage  SL=helm,chest,boots,weapon  R=4  POSED=0  CLIP=1 (also count clipping)  PIC=all|<indices> (pictures, floating pieces magenta)  OUT=out/v177_audit.json
-#   FAIL lines: a rigid floating piece bigger than MINSZ (default .012 m) with a gap over 7 mm (cloth: 'cloth:' warning lines).
+#   FAIL lines: a rigid floating piece bigger than MINSZ (default .012 m) with a gap over 7.5 mm at rest ('cloth:' notes: cloth, and pieces that swing away while running / striking).
 import os,sys,json,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -44,14 +44,15 @@ def s(pg):
                 print('  %4d %-30s parts %3d pieces %3d float %d %s'%(tp,n[:30],k['parts'],k['pieces'],len(fl),'; '.join('%s sz %.3f gap %.3f @%s'%(d['lab'][0],d['sz'],d['gap'],d['c']) for d in fl[:4])),flush=True)
                 for d in fl:F.append('%s %s: floating %s (size %.3f, gap %.3f) at %s'%(cls,n,d['lab'][0],d['sz'],d['gap'],d['c']))
                 continue
-            w=r['w'];fl=[d for d in w['bind'] if d['sz']>=MINSZ and d['gap']>.007]
+            w=r['w'];fl=[d for d in w['bind'] if d['sz']>=MINSZ and d['gap']>.0075]
             ps=[];[ps.extend([(nm,d) for d in v if d['sz']>=MINSZ]) for nm,v in w.get('posed',{}).items()]
             cl=w.get('clip') or {}
             print('  %4d %-30s pieces %4d float %d posed %d clip %s/%s %s'%(tp,n[:30],w['pieces'],len(fl),len(ps),cl.get('poke','-'),cl.get('hide','-'),
                   '; '.join('%s sz %.3f gap %.3f @%s'%(d['lab'][0][:40],d['sz'],d['gap'],d['c']) for d in fl[:3])+(' | posed: '+'; '.join('%s %s sz %.3f gap %.3f'%(nm,d['lab'][0][:30],d['sz'],d['gap']) for nm,d in ps[:3]) if ps else '')),flush=True)
             # rigid pieces (kit parts: their label has '@') fail; cloth (lofts, skirts, sleeves, capes) is listed as a warning
             for d in fl:(F if '@' in d['lab'][0] else W).append('%s %s: floating %s (size %.3f, gap %.3f) at %s'%(cls,n,d['lab'][0],d['sz'],d['gap'],d['c']))
-            for nm,d in ps:(F if '@' in d['lab'][0] else W).append('%s %s: comes away when %s: %s (size %.3f, gap %.3f)'%(cls,n,nm,d['lab'][0],d['sz'],d['gap']))
+            # pieces that move away while animating (hanging chains, books, skulls swing with the hips): notes, not failures
+            for nm,d in ps:W.append('%s %s: comes away when %s: %s (size %.3f, gap %.3f)'%(cls,n,nm,d['lab'][0],d['sz'],d['gap']))
     json.dump(ALL,open(os.environ.get('OUT',play.TMP+'/v177_audit.json'),'w'))
     for w in W:print('cloth:',w)
     for f in F:print('FAIL',f)

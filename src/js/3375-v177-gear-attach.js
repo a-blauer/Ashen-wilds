@@ -50,8 +50,9 @@ function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Ma
   const cp=(p,i)=>gf176CPo(p,TT,i*9),ray=(o,d,i)=>gf176Ray(o,d,TT.subarray(i*9,i*9+9));
   // touches of every non-ground piece
   const L=[];for(let p=0;p<np;p++)L.push(new Set());
+  const sit=new Int32Array(np).fill(-1);// the first ground triangle each piece rests on
   for(let p=0;p<np;p++){if(S.ground[p]||!byP[p])continue;const acc=L[p];
-    for(const q of verts(p))each(q,eps,i=>{const o=own[i];if(o===p||acc.has(o))return;if(cp(q,i)[3]<=eps)acc.add(o)});
+    for(const q of verts(p))each(q,eps,i=>{const o=own[i];if(o===p||(acc.has(o)&&(o!==-1||sit[p]>=0)))return;if(cp(q,i)[3]<=eps){acc.add(o);if(o===-1&&sit[p]<0)sit[p]=i}});
     if(!acc.size)for(const i of byP[p]){const o9=i*9;for(const [a,b] of [[0,3],[3,6],[6,0]]){const o=[TT[o9+a],TT[o9+a+1],TT[o9+a+2]],d=[TT[o9+b]-o[0],TT[o9+b+1]-o[1],TT[o9+b+2]-o[2]],len=Math.hypot(d[0],d[1],d[2]);if(len<1e-6)continue;
         const u=[d[0]/len,d[1]/len,d[2]/len],mid=[o[0]+d[0]/2,o[1]+d[1]/2,o[2]+d[2]/2];each(mid,len/2,j=>{const ow=own[j];if(ow===p||acc.has(ow))return;const h=ray(o,u,j);if(h>=0&&h<=len)acc.add(ow)})}}}
   (S.join||[]).forEach(([a,b])=>{L[a].add(b)});
@@ -65,6 +66,8 @@ function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Ma
       if(big)big.forEach(p=>{ok[p]=1;q.push(p)});spread()}}
   // loose groups
   let groups=[];{const done=new Uint8Array(np);for(let p=0;p<np;p++){if(ok[p]||done[p])continue;const g=[p];done[p]=1;for(let j=0;j<g.length;j++)L[g[j]].forEach(o=>{if(o>=0&&!ok[o]&&!done[o]){done[o]=1;g.push(o)}});groups.push(g)}}
+  // pieces resting on the ground take its bone weights (a stud on a pauldron moves with the pauldron, not the chest it was weighted to)
+  if(S.rest)for(let p=0;p<np;p++)if(!S.ground[p]&&sit[p]>=0)S.rest(p,sit[p]);
   if(!groups.length){GF176.stat.ms+=performance.now()-t0;GF176.stat.built++;return}
   const isOk=i=>{const o=own[i];return o<0||ok[o]};
   // the nearest attached surface to a group: a sample of its vertices, searched out to 1.2 cm, then 3 cm, then RR
@@ -93,8 +96,8 @@ function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Ma
   for(const p of k.P){const t=p.t=='m'?'m':p.t=='g'?'g':'c',L=B.L[t]||B.L.c,a=L.p.length;f.call(this,B,{P:[p]});const b=L.p.length;if(b<=a)continue;const tt=L===B.L[t]?t:'c',last=R[R.length-1];
     // the links of one chain / the segments of one tube are one piece (p.gfg)
     if(p.gfg&&last&&last.g===p.gfg&&last.t===tt&&last.b===a)last.b=b;else R.push({t:tt,a,b,body:GL176.body>0,g:p.gfg||0})}}}
-// hanging cloth panels (tabards, war banners) are one piece each, which may be moved (they are big, but they hang free)
-['mdTabard','mdTabardO'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(X){const B=X&&X.L?X:X&&X.B;if(!B||!B.L||!(GL176.on>0)||!GF176.on||GF176.inRec)return f.apply(this,arguments);
+// hanging cloth panels (tabards, war banners) and the quiver are one piece each, which may be moved (they are big, but they hang free)
+['mdTabard','mdTabardO','mdQuiver'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(X){const B=X&&X.L?X:X&&X.B;if(!B||!B.L||!(GL176.on>0)||!GF176.on||GF176.inRec)return f.apply(this,arguments);
   const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;GF176.inRec=1;let r;try{r=f.apply(this,arguments)}finally{GF176.inRec=0}const R=B.__gf||(B.__gf=[]),g=++GF176_G;
   for(const t in B.L){const b=B.L[t].p.length;if(b>n0[t])R.push({t,a:n0[t],b,body:false,g,panel:1})}return r}});
 var GF176_G=0;function gf176Group(k,n0){const g=++GF176_G;for(let i=n0;i<k.P.length;i++)k.P[i].gfg=g;return k}
@@ -102,10 +105,11 @@ function gf176Hero(B,since){const R=B.__gf;if(!R||!R.length)return;const S={n:0,
   const owner={};for(const t in B.L)owner[t]=new Int32Array(B.L[t].p.length/9|0).fill(-1);R.forEach((r,i)=>{const ow=owner[r.t];if(ow)for(let x=r.a;x<r.b;x+=9)ow[x/9|0]=i;
     // the animal's own parts, parts built before `since`, and big parts stay where they are
     let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;const P=B.L[r.t].p;for(let x=r.a;x<r.b;x+=3){x0=Math.min(x0,P[x]);x1=Math.max(x1,P[x]);y0=Math.min(y0,P[x+1]);y1=Math.max(y1,P[x+1]);z0=Math.min(z0,P[x+2]);z1=Math.max(z1,P[x+2])}
-    r.sz=Math.hypot(x1-x0,y1-y0,z1-z0);if(r.body||(since&&i<since)||(r.panel?(r.sz>.85||x1-x0>.36):r.sz>.2))S.ground[i]=1});
+    r.sz=Math.hypot(x1-x0,y1-y0,z1-z0);if(r.body||(since&&i<since)||(r.panel?(r.sz>.85||x1-x0>.36):r.sz>(r.g?.6:.2)))S.ground[i]=1});
   S.join=[];R.forEach((r,i)=>{if(r.panel&&i&&R[i-1].g===r.g)S.join.push([i-1,i])});
   for(const t in B.L){const P=B.L[t].p;for(let x=0;x+8<P.length;x+=9)refs.push([t,x])}
   S.n=refs.length;S.own=new Int32Array(S.n);S.TT=new Float64Array(S.n*9);refs.forEach((r,i)=>{S.own[i]=owner[r[0]][r[1]/9|0];const P=B.L[r[0]].p;for(let j=0;j<9;j++)S.TT[i*9+j]=P[r[1]+j]});
+  S.rest=(pid,ti)=>{const r=R[pid];if(r.sz>.12||r.panel||r.g)return;const L=B.L[r.t],q=refs[ti],Lq=B.L[q[0]],v=q[1]/3*4;for(let x=r.a;x<r.b;x+=3){const u=x/3*4;for(let j=0;j<4;j++){L.si[u+j]=Lq.si[v+j];L.sw[u+j]=Lq.sw[v+j]}}};
   // a small piece takes the bone weights of what it now sits on (so it stays on it when that moves)
   S.move=(pid,dx,dy,dz,ti)=>{const r=R[pid],L=B.L[r.t],P=L.p;for(let x=r.a;x<r.b;x+=3){P[x]+=dx;P[x+1]+=dy;P[x+2]+=dz}
     if(ti>=0&&r.sz<=.07&&!r.panel){const q=refs[ti],Lq=B.L[q[0]],v=q[1]/3*4;for(let x=r.a;x<r.b;x+=3){const u=x/3*4;for(let j=0;j<4;j++){L.si[u+j]=Lq.si[v+j];L.sw[u+j]=Lq.sw[v+j]}}}};

@@ -55183,21 +55183,27 @@ function o176Chest(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKit(
   if(k.P.length)mdKit(B,k)}
 // ---------------- helm ----------------
 // the head is measured by rays from the middle of the skull: dir(th, ph) (th = 0 forward, π/2 the hero's right; ph = up from level)
-// hits the outermost surface built there (helm, hood, hat); a hit in an ear is no spot
-function o176HeadTris(B,c){return o176Sec(B,'htri',()=>{const T=[];for(const t in B.L){const L=B.L[t].p;for(let i=0;i+8<L.length;i+=9){const x=(L[i]+L[i+3]+L[i+6])/3-c[0],y=(L[i+1]+L[i+4]+L[i+7])/3-c[1],z=(L[i+2]+L[i+5]+L[i+8])/3-c[2];if(x*x+y*y+z*z<.09)T.push(L.slice(i,i+9))}}return T})}
-function o176HeadAt(B,c,th,ph,clr,ear){const d=[Math.sin(th)*Math.cos(ph),Math.sin(ph),Math.cos(th)*Math.cos(ph)];let best=-1;for(const t of o176HeadTris(B,c)){const h=gf176Ray(c,d,t);if(h>best&&h<.26)best=h}
+// hits the outermost surface built there by the helm (and what came after it: hood, hat), never the animal's own head (a circlet
+// leaves most of the head bare: rays that miss the band find no spot); a hit in an ear is no spot
+function o176HeadTris(B,c,n0){return o176Sec(B,'htri',()=>{const T=[];for(const t in B.L){const L=B.L[t].p;for(let i=(n0&&n0[t])||0;i+8<L.length;i+=9){const x=(L[i]+L[i+3]+L[i+6])/3-c[0],y=(L[i+1]+L[i+4]+L[i+7])/3-c[1],z=(L[i+2]+L[i+5]+L[i+8])/3-c[2];if(x*x+y*y+z*z<.09)T.push(L.slice(i,i+9))}}return T})}
+function o176HeadAt(B,c,th,ph,clr,ear,n0){const d=[Math.sin(th)*Math.cos(ph),Math.sin(ph),Math.cos(th)*Math.cos(ph)];let best=-1;for(const t of o176HeadTris(B,c,n0)){const h=gf176Ray(c,d,t);if(h>best&&h<.26)best=h}
   if(best<=0)return null;const p=[c[0]+d[0]*(best+(clr||0)),c[1]+d[1]*(best+(clr||0)),c[2]+d[2]*(best+(clr||0))];if(ear&&ear(p))return null;return {p,n:d}}
-function o176Helm(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const H=a7Head(B);if(!H)return;const k=dkKit(),cls=C.cls,a=d.a,T=C.T,hw=[['head',1]],D=BR.on&&BR.R;
-  const ear=p=>D&&D.earE&&brEarIn(D,p[0],p[1],p[2],[1.6,1.45,2.6]),c=[0,H.y-.085,H.top[2]+.015],at=(th,ph,clr)=>o176HeadAt(B,c,th,ph,clr,ear);
+function o176Helm(B,P,d,n0){const C=o176C(d),ti=C.ti;if(ti<1)return;
+  // circlets, diadems and crowns are jewellery already: they stay as they are (studs on them would sit on the bare head)
+  if(['circlet','diadem','crown'].includes(d.st))return;
+  // the raven's nape feathers lie over the back of anything on his head: nothing goes behind the ears' line there
+  const rv=BR.on&&BR.R&&BR.R.key=='raven',back=th=>rv&&Math.cos(th)<.2;const H=a7Head(B);if(!H)return;const k=dkKit(),cls=C.cls,a=d.a,T=C.T,hw=[['head',1]],D=BR.on&&BR.R;
+  const ear=p=>D&&D.earE&&brEarIn(D,p[0],p[1],p[2],[1.6,1.45,2.6]),c=[0,H.y-.085,H.top[2]+.015],at=(th,ph,clr)=>back(th)&&ph<1.2?null:o176HeadAt(B,c,th,ph,clr,ear,n0);
   // a line of spots round the head at one elevation (runs broken where an ear is)
   const band=(ph,th0,th1,n,clr)=>{const R=[];let cur=[];for(let i=0;i<=n;i++){const q=at(th0+(th1-th0)*i/n,ph,clr);if(q)cur.push(q);else{if(cur.length>1)R.push(cur);cur=[]}}if(cur.length>1)R.push(cur);return R};
-  const studs=band(.32,-2.7,2.7,18,.002);studs.forEach(R=>R.forEach((q,i)=>{if(i%2==0||ti>=2)o176Stud(k,'head',q.p,q.n,.0055,T,'m',hw)}));
-  if(ti>=2){band(.42,-2.9,2.9,30,.004).forEach(R=>o176Tube(k,'head',R.map(q=>q.p),.0045,.0045,T,'m',null,4));
+  // (the raven: his cheek and nape feathers cover the low band, the studs and the temple filigree; he keeps the gem, crest and crown)
+  const studs=rv?[]:band(.32,-2.7,2.7,18,.002);studs.forEach(R=>R.forEach((q,i)=>{if(i%2==0||ti>=2)o176Stud(k,'head',q.p,q.n,.0055,T,'m',hw)}));
+  if(ti>=2&&!rv){band(.42,-2.9,2.9,30,.004).forEach(R=>o176Tube(k,'head',R.map(q=>q.p),.0045,.0045,T,'m',null,4));
     // a ridge over the crown, front to back
     if(a=='heavy'||a=='light'){const L=[];for(let i=0;i<=10;i++){const q=at(0,.5+i*.2,.002);if(q)L.push(q.p)}o176Tube(k,'head',L,.006,.004,mdSh(T,.9),'m',null,4)}}
   if(ti>=3){// filigree at the temples and a brow gem
-    [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=14;i++){const t=i/14,r=.32*(1-t*.8),an=t*2.2*Math.PI,q=at(s*(1.5+r*Math.cos(an)),.2+r*Math.sin(an)*.8,.003);if(q)pts.push(q.p)}o176Tube(k,'head',pts,.003,.002,cls=='ranger'?C.bone:T,cls=='ranger'?'c':'m',null,4)});
-    {const q=at(0,.62,.004);if(q)a7Put(k,'head',q.p,q.n,[0,1,0],.9,t=>{t.p('','oct','m',T,0,0,.004,.02,.026,.008);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.7),0,0,.009,.01,.014,.006)},hw)}
+    if(!rv)[-1,1].forEach(s=>{const pts=[];for(let i=0;i<=14;i++){const t=i/14,r=.32*(1-t*.8),an=t*2.2*Math.PI,q=at(s*(1.5+r*Math.cos(an)),.2+r*Math.sin(an)*.8,.003);if(q)pts.push(q.p)}o176Tube(k,'head',pts,.003,.002,cls=='ranger'?C.bone:T,cls=='ranger'?'c':'m',null,4)});
+    {const q=rv?null:at(0,.62,.004);if(q)a7Put(k,'head',q.p,q.n,[0,1,0],.9,t=>{t.p('','oct','m',T,0,0,.004,.02,.026,.008);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.7),0,0,.009,.01,.014,.006)},hw)}
     // class crest
     [-1,1].forEach(s=>{const q=at(s*1.65,.55,.002);if(!q)return;const p=q.p,o=[p[0]+s*.004,p[1],p[2]];
       if(cls=='warrior'){k.L('head','c',C.bone,o,[p[0]+s*.05,p[1]+.035,p[2]-.01],.012,.008,5);k.L('head','c',C.bone,[p[0]+s*.05,p[1]+.035,p[2]-.01],[p[0]+s*.06,p[1]+.1,p[2]+.01],.008,.001,5)}
@@ -55235,7 +55241,7 @@ function o176Boots(B,P,d,R){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKi
 // ---------------- hooks: after the piece (in a hero, after everything: gkLater) ----------------
 {const c=mdChest,h=mdHelm,b=mdBoots,run=(fn,B,P,d,x)=>{if(!O176.on||!d||!MD_ORN||!(BR.on&&BR.R))return;const o=GL176.ti;GL176.ti=d.ti|0;try{gkLater(B,B2=>{try{fn(B2,P,d,x)}catch(e){console.warn('v177 ornate',e)}})}finally{GL176.ti=o}};
   mdChest=function(B,P,d){const r=c.apply(this,arguments);run(o176Chest,B,P,d);return r};
-  mdHelm=function(B,P,d){const r=h.apply(this,arguments);run(o176Helm,B,P,d);return r};
+  mdHelm=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=h.apply(this,arguments);run(o176Helm,B,P,d,n0);return r};
   mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;
     // the class outfit's boots (no item) stay plain
     if(d&&d.key)run(o176Boots,B,P,d,{n0,n1});return r}}
@@ -55385,8 +55391,9 @@ function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Ma
   const cp=(p,i)=>gf176CPo(p,TT,i*9),ray=(o,d,i)=>gf176Ray(o,d,TT.subarray(i*9,i*9+9));
   // touches of every non-ground piece
   const L=[];for(let p=0;p<np;p++)L.push(new Set());
+  const sit=new Int32Array(np).fill(-1);// the first ground triangle each piece rests on
   for(let p=0;p<np;p++){if(S.ground[p]||!byP[p])continue;const acc=L[p];
-    for(const q of verts(p))each(q,eps,i=>{const o=own[i];if(o===p||acc.has(o))return;if(cp(q,i)[3]<=eps)acc.add(o)});
+    for(const q of verts(p))each(q,eps,i=>{const o=own[i];if(o===p||(acc.has(o)&&(o!==-1||sit[p]>=0)))return;if(cp(q,i)[3]<=eps){acc.add(o);if(o===-1&&sit[p]<0)sit[p]=i}});
     if(!acc.size)for(const i of byP[p]){const o9=i*9;for(const [a,b] of [[0,3],[3,6],[6,0]]){const o=[TT[o9+a],TT[o9+a+1],TT[o9+a+2]],d=[TT[o9+b]-o[0],TT[o9+b+1]-o[1],TT[o9+b+2]-o[2]],len=Math.hypot(d[0],d[1],d[2]);if(len<1e-6)continue;
         const u=[d[0]/len,d[1]/len,d[2]/len],mid=[o[0]+d[0]/2,o[1]+d[1]/2,o[2]+d[2]/2];each(mid,len/2,j=>{const ow=own[j];if(ow===p||acc.has(ow))return;const h=ray(o,u,j);if(h>=0&&h<=len)acc.add(ow)})}}}
   (S.join||[]).forEach(([a,b])=>{L[a].add(b)});
@@ -55400,6 +55407,8 @@ function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Ma
       if(big)big.forEach(p=>{ok[p]=1;q.push(p)});spread()}}
   // loose groups
   let groups=[];{const done=new Uint8Array(np);for(let p=0;p<np;p++){if(ok[p]||done[p])continue;const g=[p];done[p]=1;for(let j=0;j<g.length;j++)L[g[j]].forEach(o=>{if(o>=0&&!ok[o]&&!done[o]){done[o]=1;g.push(o)}});groups.push(g)}}
+  // pieces resting on the ground take its bone weights (a stud on a pauldron moves with the pauldron, not the chest it was weighted to)
+  if(S.rest)for(let p=0;p<np;p++)if(!S.ground[p]&&sit[p]>=0)S.rest(p,sit[p]);
   if(!groups.length){GF176.stat.ms+=performance.now()-t0;GF176.stat.built++;return}
   const isOk=i=>{const o=own[i];return o<0||ok[o]};
   // the nearest attached surface to a group: a sample of its vertices, searched out to 1.2 cm, then 3 cm, then RR
@@ -55428,8 +55437,8 @@ function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Ma
   for(const p of k.P){const t=p.t=='m'?'m':p.t=='g'?'g':'c',L=B.L[t]||B.L.c,a=L.p.length;f.call(this,B,{P:[p]});const b=L.p.length;if(b<=a)continue;const tt=L===B.L[t]?t:'c',last=R[R.length-1];
     // the links of one chain / the segments of one tube are one piece (p.gfg)
     if(p.gfg&&last&&last.g===p.gfg&&last.t===tt&&last.b===a)last.b=b;else R.push({t:tt,a,b,body:GL176.body>0,g:p.gfg||0})}}}
-// hanging cloth panels (tabards, war banners) are one piece each, which may be moved (they are big, but they hang free)
-['mdTabard','mdTabardO'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(X){const B=X&&X.L?X:X&&X.B;if(!B||!B.L||!(GL176.on>0)||!GF176.on||GF176.inRec)return f.apply(this,arguments);
+// hanging cloth panels (tabards, war banners) and the quiver are one piece each, which may be moved (they are big, but they hang free)
+['mdTabard','mdTabardO','mdQuiver'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(X){const B=X&&X.L?X:X&&X.B;if(!B||!B.L||!(GL176.on>0)||!GF176.on||GF176.inRec)return f.apply(this,arguments);
   const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;GF176.inRec=1;let r;try{r=f.apply(this,arguments)}finally{GF176.inRec=0}const R=B.__gf||(B.__gf=[]),g=++GF176_G;
   for(const t in B.L){const b=B.L[t].p.length;if(b>n0[t])R.push({t,a:n0[t],b,body:false,g,panel:1})}return r}});
 var GF176_G=0;function gf176Group(k,n0){const g=++GF176_G;for(let i=n0;i<k.P.length;i++)k.P[i].gfg=g;return k}
@@ -55437,10 +55446,11 @@ function gf176Hero(B,since){const R=B.__gf;if(!R||!R.length)return;const S={n:0,
   const owner={};for(const t in B.L)owner[t]=new Int32Array(B.L[t].p.length/9|0).fill(-1);R.forEach((r,i)=>{const ow=owner[r.t];if(ow)for(let x=r.a;x<r.b;x+=9)ow[x/9|0]=i;
     // the animal's own parts, parts built before `since`, and big parts stay where they are
     let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;const P=B.L[r.t].p;for(let x=r.a;x<r.b;x+=3){x0=Math.min(x0,P[x]);x1=Math.max(x1,P[x]);y0=Math.min(y0,P[x+1]);y1=Math.max(y1,P[x+1]);z0=Math.min(z0,P[x+2]);z1=Math.max(z1,P[x+2])}
-    r.sz=Math.hypot(x1-x0,y1-y0,z1-z0);if(r.body||(since&&i<since)||(r.panel?(r.sz>.85||x1-x0>.36):r.sz>.2))S.ground[i]=1});
+    r.sz=Math.hypot(x1-x0,y1-y0,z1-z0);if(r.body||(since&&i<since)||(r.panel?(r.sz>.85||x1-x0>.36):r.sz>(r.g?.6:.2)))S.ground[i]=1});
   S.join=[];R.forEach((r,i)=>{if(r.panel&&i&&R[i-1].g===r.g)S.join.push([i-1,i])});
   for(const t in B.L){const P=B.L[t].p;for(let x=0;x+8<P.length;x+=9)refs.push([t,x])}
   S.n=refs.length;S.own=new Int32Array(S.n);S.TT=new Float64Array(S.n*9);refs.forEach((r,i)=>{S.own[i]=owner[r[0]][r[1]/9|0];const P=B.L[r[0]].p;for(let j=0;j<9;j++)S.TT[i*9+j]=P[r[1]+j]});
+  S.rest=(pid,ti)=>{const r=R[pid];if(r.sz>.12||r.panel||r.g)return;const L=B.L[r.t],q=refs[ti],Lq=B.L[q[0]],v=q[1]/3*4;for(let x=r.a;x<r.b;x+=3){const u=x/3*4;for(let j=0;j<4;j++){L.si[u+j]=Lq.si[v+j];L.sw[u+j]=Lq.sw[v+j]}}};
   // a small piece takes the bone weights of what it now sits on (so it stays on it when that moves)
   S.move=(pid,dx,dy,dz,ti)=>{const r=R[pid],L=B.L[r.t],P=L.p;for(let x=r.a;x<r.b;x+=3){P[x]+=dx;P[x+1]+=dy;P[x+2]+=dz}
     if(ti>=0&&r.sz<=.07&&!r.panel){const q=refs[ti],Lq=B.L[q[0]],v=q[1]/3*4;for(let x=r.a;x<r.b;x+=3){const u=x/3*4;for(let j=0;j<4;j++){L.si[u+j]=Lq.si[v+j];L.sw[u+j]=Lq.sw[v+j]}}}};

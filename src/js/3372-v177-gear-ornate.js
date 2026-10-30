@@ -95,21 +95,27 @@ function o176Chest(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKit(
   if(k.P.length)mdKit(B,k)}
 // ---------------- helm ----------------
 // the head is measured by rays from the middle of the skull: dir(th, ph) (th = 0 forward, π/2 the hero's right; ph = up from level)
-// hits the outermost surface built there (helm, hood, hat); a hit in an ear is no spot
-function o176HeadTris(B,c){return o176Sec(B,'htri',()=>{const T=[];for(const t in B.L){const L=B.L[t].p;for(let i=0;i+8<L.length;i+=9){const x=(L[i]+L[i+3]+L[i+6])/3-c[0],y=(L[i+1]+L[i+4]+L[i+7])/3-c[1],z=(L[i+2]+L[i+5]+L[i+8])/3-c[2];if(x*x+y*y+z*z<.09)T.push(L.slice(i,i+9))}}return T})}
-function o176HeadAt(B,c,th,ph,clr,ear){const d=[Math.sin(th)*Math.cos(ph),Math.sin(ph),Math.cos(th)*Math.cos(ph)];let best=-1;for(const t of o176HeadTris(B,c)){const h=gf176Ray(c,d,t);if(h>best&&h<.26)best=h}
+// hits the outermost surface built there by the helm (and what came after it: hood, hat), never the animal's own head (a circlet
+// leaves most of the head bare: rays that miss the band find no spot); a hit in an ear is no spot
+function o176HeadTris(B,c,n0){return o176Sec(B,'htri',()=>{const T=[];for(const t in B.L){const L=B.L[t].p;for(let i=(n0&&n0[t])||0;i+8<L.length;i+=9){const x=(L[i]+L[i+3]+L[i+6])/3-c[0],y=(L[i+1]+L[i+4]+L[i+7])/3-c[1],z=(L[i+2]+L[i+5]+L[i+8])/3-c[2];if(x*x+y*y+z*z<.09)T.push(L.slice(i,i+9))}}return T})}
+function o176HeadAt(B,c,th,ph,clr,ear,n0){const d=[Math.sin(th)*Math.cos(ph),Math.sin(ph),Math.cos(th)*Math.cos(ph)];let best=-1;for(const t of o176HeadTris(B,c,n0)){const h=gf176Ray(c,d,t);if(h>best&&h<.26)best=h}
   if(best<=0)return null;const p=[c[0]+d[0]*(best+(clr||0)),c[1]+d[1]*(best+(clr||0)),c[2]+d[2]*(best+(clr||0))];if(ear&&ear(p))return null;return {p,n:d}}
-function o176Helm(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const H=a7Head(B);if(!H)return;const k=dkKit(),cls=C.cls,a=d.a,T=C.T,hw=[['head',1]],D=BR.on&&BR.R;
-  const ear=p=>D&&D.earE&&brEarIn(D,p[0],p[1],p[2],[1.6,1.45,2.6]),c=[0,H.y-.085,H.top[2]+.015],at=(th,ph,clr)=>o176HeadAt(B,c,th,ph,clr,ear);
+function o176Helm(B,P,d,n0){const C=o176C(d),ti=C.ti;if(ti<1)return;
+  // circlets, diadems and crowns are jewellery already: they stay as they are (studs on them would sit on the bare head)
+  if(['circlet','diadem','crown'].includes(d.st))return;
+  // the raven's nape feathers lie over the back of anything on his head: nothing goes behind the ears' line there
+  const rv=BR.on&&BR.R&&BR.R.key=='raven',back=th=>rv&&Math.cos(th)<.2;const H=a7Head(B);if(!H)return;const k=dkKit(),cls=C.cls,a=d.a,T=C.T,hw=[['head',1]],D=BR.on&&BR.R;
+  const ear=p=>D&&D.earE&&brEarIn(D,p[0],p[1],p[2],[1.6,1.45,2.6]),c=[0,H.y-.085,H.top[2]+.015],at=(th,ph,clr)=>back(th)&&ph<1.2?null:o176HeadAt(B,c,th,ph,clr,ear,n0);
   // a line of spots round the head at one elevation (runs broken where an ear is)
   const band=(ph,th0,th1,n,clr)=>{const R=[];let cur=[];for(let i=0;i<=n;i++){const q=at(th0+(th1-th0)*i/n,ph,clr);if(q)cur.push(q);else{if(cur.length>1)R.push(cur);cur=[]}}if(cur.length>1)R.push(cur);return R};
-  const studs=band(.32,-2.7,2.7,18,.002);studs.forEach(R=>R.forEach((q,i)=>{if(i%2==0||ti>=2)o176Stud(k,'head',q.p,q.n,.0055,T,'m',hw)}));
-  if(ti>=2){band(.42,-2.9,2.9,30,.004).forEach(R=>o176Tube(k,'head',R.map(q=>q.p),.0045,.0045,T,'m',null,4));
+  // (the raven: his cheek and nape feathers cover the low band, the studs and the temple filigree; he keeps the gem, crest and crown)
+  const studs=rv?[]:band(.32,-2.7,2.7,18,.002);studs.forEach(R=>R.forEach((q,i)=>{if(i%2==0||ti>=2)o176Stud(k,'head',q.p,q.n,.0055,T,'m',hw)}));
+  if(ti>=2&&!rv){band(.42,-2.9,2.9,30,.004).forEach(R=>o176Tube(k,'head',R.map(q=>q.p),.0045,.0045,T,'m',null,4));
     // a ridge over the crown, front to back
     if(a=='heavy'||a=='light'){const L=[];for(let i=0;i<=10;i++){const q=at(0,.5+i*.2,.002);if(q)L.push(q.p)}o176Tube(k,'head',L,.006,.004,mdSh(T,.9),'m',null,4)}}
   if(ti>=3){// filigree at the temples and a brow gem
-    [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=14;i++){const t=i/14,r=.32*(1-t*.8),an=t*2.2*Math.PI,q=at(s*(1.5+r*Math.cos(an)),.2+r*Math.sin(an)*.8,.003);if(q)pts.push(q.p)}o176Tube(k,'head',pts,.003,.002,cls=='ranger'?C.bone:T,cls=='ranger'?'c':'m',null,4)});
-    {const q=at(0,.62,.004);if(q)a7Put(k,'head',q.p,q.n,[0,1,0],.9,t=>{t.p('','oct','m',T,0,0,.004,.02,.026,.008);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.7),0,0,.009,.01,.014,.006)},hw)}
+    if(!rv)[-1,1].forEach(s=>{const pts=[];for(let i=0;i<=14;i++){const t=i/14,r=.32*(1-t*.8),an=t*2.2*Math.PI,q=at(s*(1.5+r*Math.cos(an)),.2+r*Math.sin(an)*.8,.003);if(q)pts.push(q.p)}o176Tube(k,'head',pts,.003,.002,cls=='ranger'?C.bone:T,cls=='ranger'?'c':'m',null,4)});
+    {const q=rv?null:at(0,.62,.004);if(q)a7Put(k,'head',q.p,q.n,[0,1,0],.9,t=>{t.p('','oct','m',T,0,0,.004,.02,.026,.008);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.7),0,0,.009,.01,.014,.006)},hw)}
     // class crest
     [-1,1].forEach(s=>{const q=at(s*1.65,.55,.002);if(!q)return;const p=q.p,o=[p[0]+s*.004,p[1],p[2]];
       if(cls=='warrior'){k.L('head','c',C.bone,o,[p[0]+s*.05,p[1]+.035,p[2]-.01],.012,.008,5);k.L('head','c',C.bone,[p[0]+s*.05,p[1]+.035,p[2]-.01],[p[0]+s*.06,p[1]+.1,p[2]+.01],.008,.001,5)}
@@ -147,7 +153,7 @@ function o176Boots(B,P,d,R){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKi
 // ---------------- hooks: after the piece (in a hero, after everything: gkLater) ----------------
 {const c=mdChest,h=mdHelm,b=mdBoots,run=(fn,B,P,d,x)=>{if(!O176.on||!d||!MD_ORN||!(BR.on&&BR.R))return;const o=GL176.ti;GL176.ti=d.ti|0;try{gkLater(B,B2=>{try{fn(B2,P,d,x)}catch(e){console.warn('v177 ornate',e)}})}finally{GL176.ti=o}};
   mdChest=function(B,P,d){const r=c.apply(this,arguments);run(o176Chest,B,P,d);return r};
-  mdHelm=function(B,P,d){const r=h.apply(this,arguments);run(o176Helm,B,P,d);return r};
+  mdHelm=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=h.apply(this,arguments);run(o176Helm,B,P,d,n0);return r};
   mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;
     // the class outfit's boots (no item) stay plain
     if(d&&d.key)run(o176Boots,B,P,d,{n0,n1});return r}}
