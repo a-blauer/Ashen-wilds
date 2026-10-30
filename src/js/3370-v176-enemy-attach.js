@@ -48,6 +48,10 @@ function sn176N(G,t,r){const T=G.T,ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],ux=T[t*9+3]
   const cx=ax+(ux+vx)/3,cy=ay+(uy+vy)/3,cz=az+(uz+vz)/3,cs=G.cs,n=Math.max(1,Math.ceil(r/cs)),i0=Math.floor(cx/cs),j0=Math.floor(cy/cs),k0=Math.floor(cz/cs);let mx=0,my=0,mz=0,c=0;
   for(let i=i0-n;i<=i0+n;i++)for(let j=j0-n;j<=j0+n;j++)for(let k=k0-n;k<=k0+n;k++){const L=G.C.get(sn176Key(i,j,k));if(!L)continue;for(const u of L){mx+=T[u*9]+T[u*9+3]+T[u*9+6];my+=T[u*9+1]+T[u*9+4]+T[u*9+7];mz+=T[u*9+2]+T[u*9+5]+T[u*9+8];c+=3}}
   if(c&&nx*(cx-mx/c)+ny*(cy-my/c)+nz*(cz-mz/c)<0){nx=-nx;ny=-ny;nz=-nz}return [nx,ny,nz]}
+// the same, through the grid: only the triangles in the cells the ray passes
+function sn176RayG(G,p,d,mx){const cs=G.cs,T=G.T,seen=new Set(),q=[0,0,0];for(let t=0;t<=mx+cs;t+=cs*.5){q[0]=p[0]+d[0]*t;q[1]=p[1]+d[1]*t;q[2]=p[2]+d[2]*t;
+    const L=G.C.get(sn176Key(Math.floor(q[0]/cs),Math.floor(q[1]/cs),Math.floor(q[2]/cs)));if(!L)continue;const S=[];for(const u of L)if(!seen.has(u)){seen.add(u);S.push(T[u*9],T[u*9+1],T[u*9+2],T[u*9+3],T[u*9+4],T[u*9+5],T[u*9+6],T[u*9+7],T[u*9+8])}
+    if(S.length&&sn176Ray(S,p,d,mx))return true}return false}
 // a part's triangles and sample points in model space
 function sn176Part(p){const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count,v=new THREE.Vector3(),V=[];
   for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);V.push([v.x,v.y,v.z])}
@@ -62,7 +66,7 @@ function sn176Snap(body,P,tag){if(!SN176.on||!P||!P.length||!body||body.length<9
   const attach=i=>{if(att[i]!=='in')att[i]=true;parts[i].tri.forEach(t=>sn176Add(G,t[0],t[1],t[2]))};
   const near=(q,r)=>{let best=-1,bp=null,bq=null,bt=-1;for(const s of q.S){const d=sn176Near(G,s,r,o);if(d>=0&&(best<0||d<best)){best=d;bp=s;bq=o.slice();bt=G.lastT}}return best<0?null:{d:best,s:bp,q:bq,t:bt}};
   // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height)
-  const BT=body,AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn176Ray(BT,p,d,H*.12))))att[i]='in'});
+  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn176RayG(G,p,d,H*.12))))att[i]='in'});
   parts.forEach((q,i)=>{if(att[i]==='in')attach(i)});
   if(SN176.dbg)parts.forEach((q,i)=>{const r=near(q,.2);SN176.dbg.push((tag||'')+' '+q.p.bn+' c '+q.c.map(v=>v.toFixed(3)).join(',')+' d '+(r?r.d.toFixed(4)+' q '+r.q.map(v=>v.toFixed(3)).join(','):'-')+(att[i]==='in'?' IN':''))});
   const grow=()=>{let ch=true;while(ch){ch=false;parts.forEach((q,i)=>{if(att[i])return;if(near(q,tol)){attach(i);ch=true}})}};
@@ -141,3 +145,21 @@ function sn176Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R
   mdLoft(B,[A,Bq],Object.assign(k,{off:0}))}
 {const f=mdAS;mdAS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN176.on&&SN176.hum>0)try{const R=mdArm(P,s).slice(i0,i1+1);sn176Rim(B,R,off,Object.assign({seg:7},o||{}),0);sn176Rim(B,R,off,Object.assign({seg:7},o||{}),1)}catch(e){console.warn('v176 rim',e)}return r}}
 {const f=mdLS;mdLS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN176.on&&SN176.hum>0)try{const R=mdLeg(P,s).slice(i0,i1+1);sn176Rim(B,R,off,Object.assign({seg:8},o||{}),0);sn176Rim(B,R,off,Object.assign({seg:8},o||{}),1)}catch(e){console.warn('v176 rim',e)}return r}}
+// ---------------- Sovereigns and quest bosses: rigid parts on joints ----------------
+// A boss model is many small meshes on named joints (svRig), merged per joint by svMerge. Before the merge the same snap runs
+// on them in the rest pose: the big meshes are the body, every other visible, solid mesh is a part; a moved part keeps its
+// joint (its own position is shifted). Glows, see-through effects and hidden pieces are left alone, as is Ssith'ra (its
+// segments are laid out live along the body path).
+function sn176Boss(R){if(!SN176.on||!R||R.s176||R.no176)return 0;R.s176=1;const root=R.root;root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),M=[];
+  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible)return;p=p.parent}
+    const mt=Array.isArray(o.material)?o.material[0]:o.material;if(!mt||mt.blending===THREE.AdditiveBlending||(mt.transparent&&mt.opacity<.6)||mt.visible===false)return;
+    const n=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;M.push({o,n,m:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)})});
+  if(M.length<2)return 0;const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
+  M.forEach(q=>{if(q.n>=mx*.3){const g=q.o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(q.m);T.push(v.x,v.y,v.z)}}
+    else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone()})});
+  const mx0=SN176.max;SN176.max=.02;let n=0;try{n=sn176Snap(T,P,'boss')}finally{SN176.max=mx0}
+  P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
+    const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix()});
+  return n}
+{const f=svMerge;svMerge=function(R){try{sn176Boss(R)}catch(e){console.warn('v176 boss snap',e)}return f.apply(this,arguments)}}
+if(SVB[3]){const b=SVB[3].build;SVB[3].build=function(R,e){if(R)R.no176=1;return b.apply(this,arguments)}}

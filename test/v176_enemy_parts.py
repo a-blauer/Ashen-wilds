@@ -4,7 +4,8 @@
 #    model's size) from the rest of the model; glow / effect meshes (additive or see-through basic materials) are skipped),
 #    feet on the ground in idle (walkers only: lowest point within -3..+4 % of the height)
 #  * sheets: out/v176_en<n>.jpg — front, 3/4, side, back, and the attack pose
-# BOSSES=1: the Sovereigns and quest bosses instead (rest pose: argus,hydra,rimewraith,ssithra,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer)
+# BOSSES=1: the Sovereigns and quest bosses instead (rest pose: argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer;
+#   not Ssith'ra: its segments are laid out live along its path)
 # ONLY=orc,scarab  NOSHEET=1  POSES=rest,idle  FLOAT_MM=4 (per 1.7 m of height)
 import os,sys,base64,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -70,7 +71,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=600000);pg.click('[data-c="warrior"]',timeout=600000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     errs=[];pg.on('pageerror',lambda e: errs.append(str(e)))
     ev("()=>{window.requestAnimationFrame=()=>0}")   # stop the game loop: only the model renderer draws
-    keys=[q for q in os.environ.get('ONLY','').split(',') if q] or ('argus,hydra,rimewraith,ssithra,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer'.split(',') if os.environ.get('BOSSES') else ev(LISTJS))
+    keys=[q for q in os.environ.get('ONLY','').split(',') if q] or ('argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer'.split(',') if os.environ.get('BOSSES') else ev(LISTJS))
     poses=os.environ.get('POSES','rest,idle,walk,atk').split(',');nos=bool(os.environ.get('NOSHEET'))
     fails=[];cells=[]
     for i in range(0,len(keys),4):
