@@ -1,6 +1,6 @@
 # v181: old vs new model pictures. Renders each enemy from two builds and puts them side by side:
 # old front, 3/4, back, face | new front, 3/4, back, face.
-# ONLY=orc,troll  OLD=<old build html>  (NEW = the normal SRC)  SZ=300  OUT=out/v181_cmp  ->  out/v181_cmp_<n>.jpg (4 enemies each)
+# ONLY=orc,troll  OLD=<old build html, or the out_old.json of an earlier run to reuse its pictures>  (NEW = the normal SRC)  SZ=300  OUT=out/v181_cmp  ->  out/v181_cmp_<n>.jpg (4 enemies each)
 import os,sys,json,base64,io,subprocess
 from PIL import Image,ImageDraw
 if os.environ.get('V181_PART'):
@@ -31,6 +31,7 @@ if os.environ.get('V181_PART'):
 here=os.path.dirname(os.path.abspath(__file__));SZ=int(os.environ.get('SZ','300'));out=os.environ.get('OUT','out/v181_cmp')
 parts={}
 for lab,src in (('old',os.environ['OLD']),('new',os.environ.get('SRC',os.path.join(here,'..','dist','ashen-wilds.html')))):
+    if src.endswith('.json'):parts[lab]={it['k']:it for it in json.load(open(src))};continue   # reuse earlier old pictures
     pf=out+'_'+lab+'.json';env=dict(os.environ,V181_PART=pf,SRC=src,SZ=str(SZ))
     subprocess.run([sys.executable,os.path.abspath(__file__)],env=env,cwd=here,check=True);parts[lab]={it['k']:it for it in json.load(open(pf))}
 keys=os.environ['ONLY'].split(',')
