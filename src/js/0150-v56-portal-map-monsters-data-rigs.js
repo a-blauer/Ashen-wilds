@@ -45,9 +45,9 @@
 })();
 // ---- humanoid looks (kit designs are in dkNewKit, used by mkHumanoid) ----
 Object.assign(HUMLOOK,{
- nagaw:{skin:[70,120,70],tunic:0x3a4a2a,cape:[60,80,40],pants:[50,60,40],sc:1.05,wpn:'sword',wcol:0x9aa0a8},
- nagaa:{skin:[90,130,60],tunic:0x4a3a22,cape:[70,60,30],pants:[60,50,30],sc:1,wpn:'bow',wcol:0x6a5a40},
- nagas:{skin:[60,100,90],tunic:0x1a3a3a,cape:[30,70,70],pants:[30,50,50],sc:1,wpn:'staff',wcol:0x7affc0},
+ nagaw:{skin:[62,84,60],tunic:0x3a4a2a,cape:[60,80,40],pants:[50,60,40],sc:1.05,wpn:'sword',wcol:0x9aa0a8},
+ nagaa:{skin:[74,88,54],tunic:0x4a3a22,cape:[70,60,30],pants:[60,50,30],sc:1,wpn:'bow',wcol:0x6a5a40},
+ nagas:{skin:[54,80,76],tunic:0x1a3a3a,cape:[30,70,70],pants:[30,50,50],sc:1,wpn:'staff',wcol:0x7affc0},
  troll:{skin:[120,150,170],tunic:0x3a4a5a,cape:[60,70,90],pants:[60,64,72],sc:1.5,wpn:'club',wcol:0x6a4a2a},
  trollsh:{skin:[110,140,170],tunic:0x2a3a5a,cape:[40,60,110],pants:[50,60,80],sc:1.35,wpn:'staff',wcol:0x9ad8ff},
  yeti:{skin:[214,220,228],tunic:0xd8dce4,cape:[200,206,214],pants:[200,206,214],sc:1.55,wpn:'none'},
@@ -60,8 +60,8 @@ Object.assign(HUMLOOK,{
  vlord:{skin:[222,212,218],tunic:0x1a0a10,cape:[110,10,24],pants:[24,16,20],sc:1.1,wpn:'sword',wcol:0xc02030}});
 // ---- enemy roster for the portal maps ----
 const NEWEN={
- goo:{n:'Caustic Goo',e:'🟢',rig:'Goo',col:0x5ad83a,w:{hp:1.05,pa:.9,ma:.6,pd:.8,md:.9},mt:'p',moves:['strike','spit','slam'],fam:'Earth'},
- spitter:{n:'Acid Spitter',e:'🧪',rig:'Goo',col:0xb8e02a,sc:.8,w:{hp:.75,pa:.5,ma:1.05,pd:.7,md:.9},mt:'m',moves:['spit','bolt'],ranged:1,fam:'Earth'},
+ goo:{n:'Caustic Goo',e:'🟢',rig:'Goo',col:0x3a5e26,w:{hp:1.05,pa:.9,ma:.6,pd:.8,md:.9},mt:'p',moves:['strike','spit','slam'],fam:'Earth'},
+ spitter:{n:'Acid Spitter',e:'🧪',rig:'Goo',col:0x6a6a24,sc:.8,w:{hp:.75,pa:.5,ma:1.05,pd:.7,md:.9},mt:'m',moves:['spit','bolt'],ranged:1,fam:'Earth'},
  maggot:{n:'Bloat Maggot',e:'🐛',rig:'Maggot',col:0xe0d0a8,w:{hp:.9,pa:1,ma:.4,pd:.8,md:.7},mt:'p',moves:['strike','bite','charge'],fam:'Swarm'},
  nagaw:{n:'Naga Warrior',e:'🐍',hum:'nagaw',w:{hp:1.1,pa:1.1,ma:.4,pd:1.1,md:.8},mt:'p',moves:['strike','spin','charge'],fam:'Dragon'},
  nagaa:{n:'Naga Archer',e:'🏹',hum:'nagaa',w:{hp:.8,pa:1.05,ma:.4,pd:.8,md:.8},mt:'p',moves:['throw','strike'],ranged:1,fam:'Dragon'},

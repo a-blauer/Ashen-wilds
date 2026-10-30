@@ -35,8 +35,8 @@ function dkBake(P,O,key){DKBK=DKBK||{};
   if(!gs){gs={};const by={};P.forEach(p=>(by[p.t]=by[p.t]||[]).push(p));
     const v=new THREE.Vector3(),c=new THREE.Color(),nm=new THREE.Matrix3();
     for(const t in by){const pos=[],nor=[],col=[],si=[],sw=[],idx=[];let off=0;
-      by[t].forEach(p=>{const g=p.geo,pa=g.attributes.position,na=g.attributes.normal,n=pa.count,bi=O?Math.max(0,O.indexOf(p.bn)):0;c.set(p.col);nm.getNormalMatrix(p.m);
-        for(let i=0;i<n;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);pos.push(v.x,v.y,v.z);v.fromBufferAttribute(na,i).applyMatrix3(nm).normalize();nor.push(v.x,v.y,v.z);col.push(c.r,c.g,c.b);if(O){si.push(bi,0,0,0);sw.push(1,0,0,0)}}
+      by[t].forEach(p=>{const g=p.geo,pa=g.attributes.position,na=g.attributes.normal,n=pa.count,bi=O?Math.max(0,O.indexOf(p.bn)):0,PW=O&&p.w?p.w.slice(0,4).map(q=>[Math.max(0,O.indexOf(q[0])),q[1]]):null;c.set(p.col);nm.getNormalMatrix(p.m);
+        for(let i=0;i<n;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);pos.push(v.x,v.y,v.z);v.fromBufferAttribute(na,i).applyMatrix3(nm).normalize();nor.push(v.x,v.y,v.z);col.push(c.r,c.g,c.b);if(O){if(PW){for(let j=0;j<4;j++){si.push(PW[j]?PW[j][0]:0);sw.push(PW[j]?PW[j][1]:0)}}else{si.push(bi,0,0,0);sw.push(1,0,0,0)}}}
         if(g.index){const ix=g.index.array;for(let i=0;i<ix.length;i++)idx.push(ix[i]+off)}else for(let i=0;i<n;i++)idx.push(i+off);off+=n});
       const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));G.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));G.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
       if(O){G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4))}

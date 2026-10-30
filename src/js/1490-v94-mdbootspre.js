@@ -8,6 +8,7 @@ function mdBoots(B,P,d){const M=d.M,A=d.A,G=d.G,dk=d.dk,st=d.st,k=mdKP(),a=d.a;
       if(G)mdLS(B,P,s,5,6,off+.006,{t:'g',col:G,keep:m=>m.y>.13})}
     else if(a=='medium'){const off=.016;mdFS(B,P,s,off,{col:m=>m.y<.03?0x1e1610:M});mdLS(B,P,s,st=='trail'?5:4,6,off,{col:M});
       const L=mdLeg(P,s),cuff=Object.assign({},L[st=='trail'?5:4]);cuff.rx+=.012;cuff.f+=.012;cuff.b+=.012;mdLoft(B,[cuff,Object.assign({},cuff,{p:[cuff.p[0],cuff.p[1]+.03,cuff.p[2]]})],{seg:8,off,col:st=='pelt'||st=='path'?0xd8ccb0:mdSh(M,1.15)});
+      {const cc=st=='pelt'||st=='path'?0xd8ccb0:mdSh(M,1.15),rim=y=>mdLoft(B,[Object.assign({},cuff,{p:[cuff.p[0],y,cuff.p[2]]}),Object.assign({},cuff,{p:[cuff.p[0],y+.0015,cuff.p[2]],rx:cuff.rx-.011,f:cuff.f-.011,b:cuff.b-.011})],{seg:8,off,col:cc});rim(cuff.p[1]);rim(cuff.p[1]+.0285)}   // v179: the cuff's edges close down onto the boot (it hovered round it)
       if(st=='stalker'||st=='strider'||st=='gale')mdLS(B,P,s,4,6,off+.004,{col:A,keep:m=>m.s>.5&&Math.round(m.y*45)%2==0});
       if(G)k.p(l+'1','oct','g',G,P.bones[l+'1'][1],.2,.09,.012)}
     else if(a=='light'){const off=.012;mdFS(B,P,s,off,{col:m=>m.y<.03?0x14100c:M});mdLS(B,P,s,st=='soft'?6:4,6,off,{col:m=>Math.round(m.y*40)%2?M:mdSh(M,.75)});

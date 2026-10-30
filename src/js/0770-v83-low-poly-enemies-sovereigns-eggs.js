@@ -34,7 +34,7 @@ LPR.Goo={
     return lpGeo('Goo|'+C,'Goo',lofts,61);
   },
   kit(k,c,C,red){
-    const main=bzC(C).lerp(bzC(0x40502a),.22),bone=0xb8ae8c,bone2=0x8a8068,eye=red?0xff2a2a:0xe8ff40,lite=main.clone().lerp(bzC(0xf4ffb8),.5).getHex(),crust=dkShade(main.clone().lerp(bzC(0x2e2a1c),.62).getHex(),.8),R=dkRng(5);
+    const main=bzC(C).lerp(bzC(0x40502a),.22),bone=0xb8ae8c,bone2=0x8a8068,eye=red?0xff2a2a:0xb0b830,lite=main.clone().lerp(bzC(0xf4ffb8),.5).getHex(),crust=dkShade(main.clone().lerp(bzC(0x2e2a1c),.62).getHex(),.8),R=dkRng(5);
     // a drowned skull and loose bones floating in the slime
     k.p('chest','sph','c',bone,0,.44,.0,.11,.1,.12).p('chest','box','c',bone2,0,.39,.07,.08,.04,.06);
     [-1,1].forEach(s=>k.p('chest','sph','c',0x141008,s*.042,.45,.1,.032,.03,.02));
@@ -43,7 +43,8 @@ LPR.Goo={
     for(let i=0;i<4;i++)k.L('spine','c',bone2,[-.12+i*.05,.3,-.1],[-.08+i*.05,.24,.04],.01,.008,4);   // a ribcage fragment
     // eyes: glowing slits sunk into the surface
     // three mismatched eyes adrift near the surface: glowing balls with black slit pupils
-    [[-.09,.6,.28,.05],[.11,.65,.25,.036],[.02,.72,.19,.024]].forEach(q=>{k.p('head','sph','c',0x050805,q[0],q[1],q[2]-q[3]*.5,q[3]*1.25);k.p('head','sph','g',eye,q[0],q[1],q[2]+q[3]*.35,q[3]);k.p('head','box','c',0x000000,q[0],q[1],q[2]+q[3]*1.3,q[3]*.18,q[3]*1.1,q[3]*.12)});
+    [[-.09,.6,.28,.032],[.11,.65,.25,.024],[.02,.72,.19,.016]].forEach(   // (v179: smaller, duller — they read as cartoon eyes)
+      q=>{k.p('head','sph','c',0x050805,q[0],q[1],q[2]-q[3]*.5,q[3]*1.25);k.p('head','sph','g',eye,q[0],q[1],q[2]+q[3]*.35,q[3]);k.p('head','box','c',0x000000,q[0],q[1],q[2]+q[3]*1.3,q[3]*.18,q[3]*1.1,q[3]*.12)});
     // wide jagged maw (the lower lip is on the jaw bone, so it gapes on attack)
     k.p('jaw','box','c',0x0a1404,0,.47,.4,.26,.07,.04,0,0,.1).p('jaw','box','c',crust,0,.43,.41,.24,.025,.05,0,0,.1);
     for(let i=0;i<9;i++){const x=-.11+i*.0275,h=.03+((i*5)%3)*.012;k.p('head','cone4','c',0xd8d0b0,x,.505,.41,.009,h,.009,Math.PI);if(i%2)k.p('jaw','cone4','c',0xc8c0a0,x,.445,.415,.008,h*.8,.008)}
@@ -81,7 +82,9 @@ LPR.Maggot={
     k.p('head','ring','c',dkShade(0xb07870,.9),0,my,mz,.09,.09,.09,Math.PI/2);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,x=Math.cos(a)*.064,y=my+Math.sin(a)*.064;k.L('head','c',0xece4cc,[x,y,mz+.01],[x*.4,my+(y-my)*.4,mz+.045],.011,.002,3)}
     // clusters of tiny black eyes
-    [-1,1].forEach(s=>[[.05,.09,.47],[.065,.08,.5],[.035,.1,.5]].forEach(q=>k.p('head','sph',red?'g':'c',red?0xff2a2a:0x0a0606,s*q[0],my+q[1],q[2],.013)));
+    // (v179) set into the skin of the head (they hovered over it)
+    const top=(x,z)=>{const r=bzMagR(z);return r*.82+.004+r*.96*Math.sqrt(Math.max(0,1-Math.pow(x/(r*1.04),2)))};
+    [-1,1].forEach(s=>[[.05,.47],[.065,.5],[.035,.5]].forEach(q=>k.p('head','sph',red?'g':'c',red?0xff2a2a:0x0a0606,s*q[0],top(q[0],q[1])-.004,q[1],.013)));
     // bristles on every roll, stubby prolegs underneath
     for(let z=-1.36;z<.35;z+=.148){const r=bzMagR(z),bn=wyrmBones(z),b=bn[2]>.5?bn[1]:bn[0],y=r*.82+.004;
       [-1,1].forEach(s=>{k.L(b,'c',dk,[s*r*.95,y+r*.25,z],[s*(r*1.3),y+r*.5+R()*.03,z-.03],.007,.002,3);k.p(b,'sph','c',dkShade(main.getHex(),.62),s*r*.6,.025,z,.035,.025,.04)})}
