@@ -41,13 +41,19 @@ function mdHeadR(P){const h=P.head||{},w=h.w||1,jw=(h.jaw||1)*(P.sex==1?.88:1),f
 function mdHeadZ(P,y){const H=P._H||(P._H=mdHeadR(P));for(let i=0;i<H.length-1;i++){const a=H[i],b=H[i+1];if(y<=b.y){const t=(y-a.y)/(b.y-a.y);return a.p[2]+a.f+(b.p[2]+b.f-a.p[2]-a.f)*t}}return 0}
 function mdHeadX(P,y){const H=P._H||(P._H=mdHeadR(P));for(let i=0;i<H.length-1;i++){const a=H[i],b=H[i+1];if(y<=b.y){const t=(y-a.y)/(b.y-a.y);return a.rx+(b.rx-a.rx)*t}}return .05}
 // build the whole body: torso + neck, arms + hands, legs, feet (head separately: mdHead)
+// (v181) a limb loft was an open tube at its top end: the shoulder showed a hole wherever the arm's first ring stood outside the
+// torso. mdDome puts two shrinking rings above the first one (along the limb, away from it) so the end closes in a rounded cap;
+// only the body's own loft gets them, so the ring numbers every sleeve / armour shell uses (mdAS / mdLS slices) are unchanged
+function mdDome(R,k){if(!R||R.length<2)return R;const a=R[0],b=R[1],d=[a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]],l=Math.hypot(d[0],d[1],d[2])||1,r=Math.max(a.rx,a.f==null?a.rx:a.f,a.b==null?a.rx:a.b)*(k||1);
+  const ring=(t,s)=>Object.assign({},a,{p:[a.p[0]+d[0]/l*r*t,a.p[1]+d[1]/l*r*t,a.p[2]+d[2]/l*r*t],rx:a.rx*s,f:(a.f==null?a.rx:a.f)*s,b:(a.b==null?a.rx:a.b)*s});
+  return [ring(.85,.42),ring(.55,.8)].concat(R)}
 function mdBody(B,P){const C=P.col,T=mdTorso(P);P._T=T;
   // torso: lower part (hips/pants), belt band, upper (shirt), neck skin
   const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY;
   if(!P.noTorso)mdLoft(B,T,{seg:12,capA:true,sq:P.sq||0,col:m=>m.y>1.0?C.neck:m.y>.985&&!P.highNeck?C.neck:Math.abs(m.y-belt)<.026&&C.belt!=null?C.belt:m.y<belt?(P.paint.torsoLo?P.paint.torsoLo(m):C.torsoLo==C.torso&&m.y<.5?C.pants:C.torsoLo):tp?tp(m):C.torso});
   [-1,1].forEach(s=>{
-    mdLoft(B,mdArm(P,s),{seg:7,capB:true,col:m=>{const p=m.r.part;return p=='hand'?(P.paint.hand?P.paint.hand(m,s):C.hand):p=='up'||(p=='el'&&m.i<3.5)?(P.paint.sleeve?P.paint.sleeve(m,s):C.sleeve):(P.paint.fore?P.paint.fore(m,s):C.fore)}});
-    mdLoft(B,mdLeg(P,s),{seg:8,col:m=>{const p=m.r.part;return (P.paint.leg?P.paint.leg(m,s):null)||(p=='shin'||p=='ankle'||(p=='knee'&&m.i>3.5)?C.shin:C.pants)}});
+    mdLoft(B,mdDome(mdArm(P,s)),{seg:7,capA:true,capB:true,col:m=>{const p=m.r.part;return p=='hand'?(P.paint.hand?P.paint.hand(m,s):C.hand):p=='up'||(p=='el'&&m.i<5.5)?(P.paint.sleeve?P.paint.sleeve(m,s):C.sleeve):(P.paint.fore?P.paint.fore(m,s):C.fore)}});
+    mdLoft(B,mdDome(mdLeg(P,s)),{seg:8,capA:true,col:m=>{const p=m.r.part;return (P.paint.leg?P.paint.leg(m,s):null)||(p=='shin'||p=='ankle'||(p=='knee'&&m.i>5.5)?C.shin:C.pants)}});
     mdLoft(B,mdFoot(P,s),{seg:7,ref:[0,1,0],capA:true,capB:true,col:m=>m.y<.022?C.sole:C.boot})})}
 
 // =====================================================================================================

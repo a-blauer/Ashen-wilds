@@ -29,7 +29,7 @@ function mdTS(B,P,y0,y1,off,o){o=o||{};const T=P._T||(P._T=mdTorso(P)),R=[mdTRin
   if(o.lip){const r=Object.assign({},R[0]);r.rx+=o.lip;r.f+=o.lip;r.b+=o.lip;r.p=[0,R[0].p[1]-.012,r.p[2]];R.unshift(r)}
   if(o.lipT){const q=R[R.length-1],r=Object.assign({},q);r.rx+=o.lipT;r.f+=o.lipT;r.b+=o.lipT;r.p=[0,q.p[1]+.006,q.p[2]];R.push(r)}
   P.tOff=Math.max(P.tOff||0,off);mdLoft(B,R,Object.assign({seg:12,off,sq:P.sq||0},o))}
-function mdAS(B,P,s,i0,i1,off,o){mdLoft(B,mdArm(P,s).slice(i0,i1+1),Object.assign({seg:7,off},o))}
+function mdAS(B,P,s,i0,i1,off,o){const R=mdArm(P,s).slice(i0,i1+1);mdLoft(B,i0==0?mdDome(R):R,Object.assign({seg:7,off},i0==0?{capA:true}:{},o))}   // (v181) a sleeve from the shoulder closes over it too
 function mdLS(B,P,s,i0,i1,off,o){mdLoft(B,mdLeg(P,s).slice(i0,i1+1),Object.assign({seg:8,off},o))}
 function mdFS(B,P,s,off,o){mdLoft(B,mdFoot(P,s),Object.assign({seg:7,off,ref:[0,1,0],capA:true,capB:true},o))}
 // skirt / coat / robe from y0 down to y1 that follows the legs (weights: pelvis + each thigh by side)
