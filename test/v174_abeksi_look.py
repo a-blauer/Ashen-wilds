@@ -24,9 +24,10 @@ def s(pg):
         print('VIEW ab%d yaw %.2f hero box'%(i,yaw),b,'window vs none',round(dd,1))
     # the hero standing right at a house wall, the camera on the wall's far side at a slant (owner, v175: "the diagonal wall covering my character")
     spots=pg.evaluate("""()=>{const I=INSL[30],rc=new THREE.Raycaster(),V3=THREE.Vector3,M=[];AB152.S.root.traverse(o=>{if(o.isMesh&&!o.isInstancedMesh&&o.material&&o.material.side===2)M.push(o)});
-      const out=[];for(let v=20;v<I.h-20&&out.length<4;v+=7)for(let u=20;u<I.w-20&&out.length<4;u+=7){const x=I.x0+u+.5,z=I.y0+v+.5;if(solid(x,z))continue;const y=GH(x,z)+1.1;
-        for(let a=0;a<16;a++){const yw=a/16*Math.PI*2,dir=new V3(Math.sin(yw),0,Math.cos(yw));rc.set(new V3(x,y,z),dir);rc.far=.9;rc.near=0;const H=rc.intersectObjects(M,false);
-          if(H.length){const w=H[0].distance;out.push({x:x+dir.x*(w-.45),z:z+dir.z*(w-.45),yaw:yw+.6});break}}}
+      const out=[];for(let v=12;v<I.h-12&&out.length<4;v+=3)for(let u=12;u<I.w-12&&out.length<4;u+=3){const x=I.x0+u+.5,z=I.y0+v+.5;if(solid(x,z))continue;const y=GH(x,z)+1.1,h=new V3(x,y,z);
+        for(let a=0;a<16;a++){const yw=a/16*Math.PI*2,c=new V3(x+Math.sin(yw)*Math.cos(.35)*9.5,y+Math.sin(.35)*9.5,z+Math.cos(yw)*Math.cos(.35)*9.5);
+          rc.set(c,h.clone().sub(c).normalize());rc.far=c.distanceTo(h)-.3;rc.near=.3;const H=rc.intersectObjects(M,false);
+          if(H.length){const last=H[H.length-1],gap=c.distanceTo(h)-last.distance;if(gap<1.3&&gap>.35){out.push({x,z,yaw:yw,gap:+gap.toFixed(2)});break}}}}
       return out}""")
     for i,q in enumerate(spots):
         pg.evaluate("(q)=>{toPos(q.x,q.z,q.yaw);camYaw=q.yaw;camPitch=.35;camDist=9.5;camDD=null;try{snapCam()}catch(_){}return 1}",q);pg.evaluate(FR,60)
