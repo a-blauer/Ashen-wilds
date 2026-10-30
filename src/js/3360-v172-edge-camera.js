@@ -24,3 +24,9 @@ function cam172Reach(P,yaw,pitch,d){if(!CAM172.on)return d;let I=null;try{const 
   const ox=Math.sin(yaw)*Math.cos(pitch),oy=Math.sin(pitch),oz=Math.cos(yaw)*Math.cos(pitch),y0=P.y+1.1;
   for(let s=1;s<=d+.6;s+=CAM172.step){if(!cam172Ok(P.x+ox*s,y0+oy*s,P.z+oz*s,I)){const r=Math.max(CAM172.min,Math.min(d,s-.7));CAM172.st.d=r;CAM172.st.cut++;return r}}
   CAM172.st.d=d;return d}
+// the camera itself trails its target (0104 lerps it there over a few frames): while it catches up (turning toward an edge, zooming
+// out) it must not pass the edge either, so its actual spot is held inside the map too (no lag here)
+const CAM172V=new THREE.Vector3();
+function cam172Hold(P,c){if(!CAM172.on)return;let I=null;try{const k=cvKey();I=k>=0?INSL[k]:null}catch(_){}
+  const y0=P.y+1.1,d=CAM172V.set(c.x-P.x,c.y-y0,c.z-P.z),L=d.length();if(L<CAM172.min)return;d.multiplyScalar(1/L);
+  for(let s=1;s<=L;s+=CAM172.step)if(!cam172Ok(P.x+d.x*s,y0+d.y*s,P.z+d.z*s,I)){const r=Math.max(CAM172.min,Math.min(L,s-.7));c.set(P.x+d.x*r,y0+d.y*r,P.z+d.z*r);CAM172.st.hold=(CAM172.st.hold||0)+1;return}}

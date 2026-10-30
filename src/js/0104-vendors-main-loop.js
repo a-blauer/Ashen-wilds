@@ -96,7 +96,7 @@ function loop(now){
   camK+=(pTar-camK)*Math.min(1,dt*(pTar>camK?7:2)+.03);
   camDD=(camDD==null?cdd0:camDD);camDD+=(dTar-camDD)*Math.min(1,dt*(dTar<camDD?10:2.2)+.02);const cdd=camDD,pt=camK,cp=V(pl.position.x+Math.sin(camYaw)*Math.cos(pt)*cdd,pl.position.y+1.1+Math.sin(pt)*cdd,pl.position.z+Math.cos(camYaw)*Math.cos(pt)*cdd),lp=V(pl.position.x,pl.position.y+1.0,pl.position.z);
   {const fl=cam157Floor(pl.position,cp);if(fl!=null&&cp.y<fl)cp.y=fl}   // v157: on gentle ground the camera rides above it, smoothly
-  cam.position.lerp(cp,Math.min(1,dt*3+.02));look.lerp(lp,Math.min(1,dt*4+.02));{const fl=cam157Floor(pl.position,cam.position);if(fl!=null)cam.position.y=Math.max(cam.position.y,fl-.8)}cam.lookAt(look);if(shk>0){cam.position.x+=(Math.random()-.5)*shk;cam.position.y+=(Math.random()-.5)*shk;shk=Math.max(0,shk-rd/1000*.9)}FADE.cam.value.copy(cam.position);FADE.pl.value.set(pl.position.x,pl.position.y+1.1,pl.position.z);chunkVis();
+  cam.position.lerp(cp,Math.min(1,dt*3+.02));look.lerp(lp,Math.min(1,dt*4+.02));if(typeof cam172Hold=='function')try{cam172Hold(pl.position,cam.position)}catch(_){}{const fl=cam157Floor(pl.position,cam.position);if(fl!=null)cam.position.y=Math.max(cam.position.y,fl-.8)}cam.lookAt(look);if(shk>0){cam.position.x+=(Math.random()-.5)*shk;cam.position.y+=(Math.random()-.5)*shk;shk=Math.max(0,shk-rd/1000*.9)}FADE.cam.value.copy(cam.position);FADE.pl.value.set(pl.position.x,pl.position.y+1.1,pl.position.z);chunkVis();
   torch.position.set(pl.position.x,pl.position.y+2.2,pl.position.z+.3);
   townTick(now,pl.position);
   qualityTick(rd);WIND.t.value=now/1000;atmos(dt,now);pln.constant=-pl.position.y;
