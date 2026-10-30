@@ -43,7 +43,7 @@ LPR.Goo={
     for(let i=0;i<4;i++)k.L('spine','c',bone2,[-.12+i*.05,.3,-.1],[-.08+i*.05,.24,.04],.01,.008,4);   // a ribcage fragment
     // eyes: glowing slits sunk into the surface
     // three mismatched eyes adrift near the surface: glowing balls with black slit pupils
-    [[-.09,.6,.28,.032],[.11,.65,.25,.024],[.02,.72,.19,.016]].forEach(   // (v177: smaller, duller — they read as cartoon eyes)
+    [[-.09,.6,.28,.032],[.11,.65,.25,.024],[.02,.72,.19,.016]].forEach(   // (v178: smaller, duller — they read as cartoon eyes)
       q=>{k.p('head','sph','c',0x050805,q[0],q[1],q[2]-q[3]*.5,q[3]*1.25);k.p('head','sph','g',eye,q[0],q[1],q[2]+q[3]*.35,q[3]);k.p('head','box','c',0x000000,q[0],q[1],q[2]+q[3]*1.3,q[3]*.18,q[3]*1.1,q[3]*.12)});
     // wide jagged maw (the lower lip is on the jaw bone, so it gapes on attack)
     k.p('jaw','box','c',0x0a1404,0,.47,.4,.26,.07,.04,0,0,.1).p('jaw','box','c',crust,0,.43,.41,.24,.025,.05,0,0,.1);
@@ -82,7 +82,7 @@ LPR.Maggot={
     k.p('head','ring','c',dkShade(0xb07870,.9),0,my,mz,.09,.09,.09,Math.PI/2);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,x=Math.cos(a)*.064,y=my+Math.sin(a)*.064;k.L('head','c',0xece4cc,[x,y,mz+.01],[x*.4,my+(y-my)*.4,mz+.045],.011,.002,3)}
     // clusters of tiny black eyes
-    // (v177) set into the skin of the head (they hovered over it)
+    // (v178) set into the skin of the head (they hovered over it)
     const top=(x,z)=>{const r=bzMagR(z);return r*.82+.004+r*.96*Math.sqrt(Math.max(0,1-Math.pow(x/(r*1.04),2)))};
     [-1,1].forEach(s=>[[.05,.47],[.065,.5],[.035,.5]].forEach(q=>k.p('head','sph',red?'g':'c',red?0xff2a2a:0x0a0606,s*q[0],top(q[0],q[1])-.004,q[1],.013)));
     // bristles on every roll, stubby prolegs underneath

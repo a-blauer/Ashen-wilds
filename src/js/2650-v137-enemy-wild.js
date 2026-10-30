@@ -4,7 +4,7 @@
 // tail tucked under, two big pincers in front (the moving fingers ride the jaw, so a bite snaps them shut), a cluster of
 // glowing eyes and thick crystal-jointed legs.
 (function(){const n='Rimecrawler';if(!LPR[n])return;
-  const K={shell:0x8ab8d8,shell2:0x4a6e94,dark:0x2a3e58,under:0x3a4e68,ice:0xbfeaff,glow:0x5ad8ff,eye:0x9af0ff};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={shell:0x8ab8d8,shell2:0x4a6e94,dark:0x2a3e58,under:0x3a4e68,ice:0xbfeaff,glow:0x5ad8ff,eye:0x9af0ff};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sh=new THREE.Color(K.shell),sh2=new THREE.Color(K.shell2),dk=new THREE.Color(K.dark),un=new THREE.Color(K.under),ice=new THREE.Color(K.ice);
     const paint=(o,r,s,cc,i)=>{if(r.jt)return o.copy(ice);if(r.k=='leg')return o.copy(r.p[1]<.12?dk:sh2);if(s<-.3)return o.copy(un);o.copy(sh2);if(s>.5)o.copy(i%2?sh:sh.clone().lerp(ice,.3));else if(Math.abs(cc)>.85)o.copy(dk)};
     const body=e137Rows([[-.5,.4,.04,.03,.03,['tail2','tail2',0]],[-.45,.41,.1,.06,.05,['tail1','tail2',.4]],[-.38,.42,.16,.08,.07,['tail0','tail1',.5]],[-.29,.44,.25,.11,.09,['pelvis','tail0',.3]],
@@ -21,7 +21,7 @@
     for(let i=0;i<14;i++){const z=-.25+n3Nz(i,1,3)*.45,x=(n3Nz(i,5,7)-.5)*.5,y=.45+.15*Math.sqrt(Math.max(0,1-(x/.38)**2))-.01,h=.06+n3Nz(i,2,9)*.08;
       k.p(z>.15?'chest':z>-.1?'spine':'pelvis',i%3?'oct':'cone4',i%4?'c':'g',i%4?K.ice:K.glow,x,y+h*.4,z,.025,h,.025,(n3Nz(i,3,3)-.5)*.6,0,-x*1.2)}
     // rim of the carapace: jagged frost spines
-    for(let i=0;i<18;i++){const a=i/18*Math.PI*2,z=.03+Math.cos(a)*.3,x=Math.sin(a)*.37;if(Math.cos(a)>.85||Math.cos(a)<-.9)continue;   /* v177: none buried in the middle of the back */k.p(z>.15?'chest':z>-.1?'spine':'pelvis','cone4','c',K.ice,x,.45,z,.02,.06,.018,Math.cos(a)*1.4,0,-Math.sin(a)*1.4)}
+    for(let i=0;i<18;i++){const a=i/18*Math.PI*2,z=.03+Math.cos(a)*.3,x=Math.sin(a)*.37;if(Math.cos(a)>.85||Math.cos(a)<-.9)continue;   /* v178: none buried in the middle of the back */k.p(z>.15?'chest':z>-.1?'spine':'pelvis','cone4','c',K.ice,x,.45,z,.02,.06,.018,Math.cos(a)*1.4,0,-Math.sin(a)*1.4)}
     // eyes
     [[-.04,.47,.42],[.04,.47,.42],[-.08,.46,.4],[.08,.46,.4],[-.02,.49,.39],[.02,.49,.39]].forEach((p,i)=>k.p('head','sph','g',red?0xff2a2a:K.eye,p[0],p[1],p[2],i<2?.018:.011));
     // pincers: arm on the head, fixed finger on the head, moving finger on the jaw
@@ -37,7 +37,7 @@
 // with a long hooked beak and glowing eyes, feathered thighs over scaly shanks, huge talons, ragged wings and tail with
 // lightning-blue streaks.
 (function(){const n='GaleHarpy';if(!LPR[n])return;
-  const K={f:0x2c323c,f2:0x1c2028,ruff:0xb8b8b0,skin:0x6a7a8a,skin2:0x4a5866,beak:0xc8b070,claw:0x1a1a1e,glow:0x8ad8ff,leg:0x8a8070};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={f:0x2c323c,f2:0x1c2028,ruff:0xb8b8b0,skin:0x6a7a8a,skin2:0x4a5866,beak:0xc8b070,claw:0x1a1a1e,glow:0x8ad8ff,leg:0x8a8070};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const f=new THREE.Color(K.f),f2=new THREE.Color(K.f2),ru=new THREE.Color(K.ruff),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),lg=new THREE.Color(K.leg);
     const paint=(o,r,s,cc,i)=>{if(r.k=='hd')return o.copy(i%2?sk:sk2);if(r.k=='ruff')return o.copy(ru).multiplyScalar(i%2?1:.85);if(r.k=='leg'||r.k=='paw'||r.k=='ank')return o.copy(lg);
       if(r.k=='thigh')return o.copy(i%2?f:f2);o.copy(f);if((i+Math.round(cc*3))%3==0)o.copy(f2);if(s<-.4)o.lerp(ru,.25)};
@@ -78,7 +78,7 @@
 // a thick ridged lip, two rings of hooked teeth slanting into a deep throat that glows (its glass breath), and three curved
 // mandibles round the rim that hook inward (the lower two ride the jaw bone, so they spread when it bites).
 (function(){const n='DustWyrm';if(!LPR[n])return;
-  const K={sand:0xb89a62,sand2:0x8a6a3a,belly:0xd8c8a0,plate:0x9a7a48,lip:0x7a4a32,lip2:0x5a3022,glass:0xff9a3a,tooth:0xf0e8d0,throat:0x2a0a04,mand:0x4a3420};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={sand:0xb89a62,sand2:0x8a6a3a,belly:0xd8c8a0,plate:0x9a7a48,lip:0x7a4a32,lip2:0x5a3022,glass:0xff9a3a,tooth:0xf0e8d0,throat:0x2a0a04,mand:0x4a3420};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const RAD=z=>z<-1.5?.03+(z+1.65)*.8:z<-.9?.15+(z+1.5)*.18:z<.2?.26:.26-(z-.2)*.15;
   const LIFT=z=>z<=0?0:.12*Math.min(1,z/.35);
   const R0=RAD(.5),CY=R0*.78+.004+LIFT(.5),MZ=.5;
@@ -119,7 +119,7 @@
 // a slender bodice laced over the ribs, torn lace at the throat, long sleeves that hang in tatters from thin arms with long
 // fingers and broken shackles, and a burial gown that unravels into trailing wisps of mist.
 (function(){const n='Banshee';if(!LPR[n])return;
-  const K={gown:0x6a8aa8,gown2:0x34465a,lace:0xd8e8f0,pale:0xd8f0f8,skin:0xc8d4dc,skin2:0x9aaab8,hair:0xd8e0e8,hair2:0xa8b4c0,dark:0x0a1018,glow:0xa8e8ff,eye:0xe8ffff,silver:0x9aa4b0};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={gown:0x6a8aa8,gown2:0x34465a,lace:0xd8e8f0,pale:0xd8f0f8,skin:0xc8d4dc,skin2:0x9aaab8,hair:0xd8e0e8,hair2:0xa8b4c0,dark:0x0a1018,glow:0xa8e8ff,eye:0xe8ffff,silver:0x9aa4b0};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].mat={transparent:true,opacity:.82,depthWrite:true,emissive:0x0a1a28};
   LPR[n].geo=function(C,c){const g=new THREE.Color(K.gown),g2=new THREE.Color(K.gown2),la=new THREE.Color(K.lace),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),h=new THREE.Color(K.hair),h2=new THREE.Color(K.hair2);
     const paint=(o,r,s,cc,i)=>{if(r.k=='hd'){o.copy(sk);if(r.p[1]<1.0&&Math.abs(cc)>.5)o.copy(sk2);return}if(r.k=='jaw')return o.copy(sk2);if(r.k=='arm')return o.copy(i%2?sk:sk2);
@@ -151,7 +151,7 @@
     // a tarnished circlet with a teardrop gem
     k.p('head','tor','m',K.silver,0,1.05,.006,.064,.008,.068,0,0,0);k.p('head','oct','g',K.glow,0,1.05,.075,.008,.014,.005);
     // hair falling over the shoulders in front, a few loose strands
-    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.4,.945,z+.014],.0075,.007,4).L('neck','c',i%2?K.hair:K.hair2,[x*1.3,.99,z+.01],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});   // v177: the two halves overlap at the neck, so a head turn doesn't part them
+    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.4,.945,z+.014],.0075,.007,4).L('neck','c',i%2?K.hair:K.hair2,[x*1.3,.99,z+.01],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});   // v178: the two halves overlap at the neck, so a head turn doesn't part them
     // torn lace at the throat, a laced bodice
     for(let i=0;i<12;i++){const a=(i/11-.5)*3.4;k.p('neck','cone4','c',K.lace,Math.sin(a)*.06,.88,Math.cos(a)*.045,.01,.03,.004,Math.PI-.3*Math.cos(a),a,0)}
     for(let i=0;i<5;i++){const y=.79-i*.025;k.L('chest','c',K.gown2,[-.02,y,.068-i*.003],[.02,y-.012,.068-i*.003],.003,.003,3);k.L('chest','c',K.gown2,[.02,y,.068-i*.003],[-.02,y-.012,.068-i*.003],.003,.003,3)}

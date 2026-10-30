@@ -179,7 +179,7 @@ function n3Claw(k,bn,col,p,dir,len,r,curl,seg){let a=p.slice(),d=dir.slice();con
 // a creature's own stance on top of every humanoid pose (idle, walk, attacks): D.stance = {channel: offset} (e.g. a hunch)
 {const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const D=g&&g.n3k&&N3.def[g.n3k],St=D&&D.stance,b=g.h&&g.h.bones;
   if(St&&b){for(const c in St){const ch=HACH[c];if(c=='dy')continue;if(ch&&b[ch[0]])b[ch[0]].rotation[ch[1]]+=St[c]}
-    // (v177) the hips drop by what the knee bend takes off the leg (a set dy sank the feet 7–13 cm into the ground); a thigh with
+    // (v178) the hips drop by what the knee bend takes off the leg (a set dy sank the feet 7–13 cm into the ground); a thigh with
     // no swing of its own swings forward half the bend so the foot stays under the hip
     [['lk','lh','lh0'],['rk','rh','rh0']].forEach(([c,h,bn])=>{if(St[c]&&St[h]==null&&b[bn])b[bn].rotation.x-=St[c]/2});
     const k=Math.max(St.lk||0,St.rk||0);if(k&&b.lh1&&b.lh2)b.pelvis.position.y-=(b.lh1.position.length()+b.lh2.position.length())*(1-Math.cos(k/2))}}catch(e){}return r}}

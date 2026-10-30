@@ -18,9 +18,9 @@ function e137Quad(n,F,H,paint,o){o=o||{};const L=[];
     L.push(e137Limb([[A,R[0]*1.05,[par,p+'0',.6]],[e137L(a,b,.4),R[0]*.92,[p+'0',p+'0',0]],[b,R[1],[p+'0',p+'1',.5]],[e137L(b,c,.5),(R[1]+R[2])/2,[p+'1',p+'1',0]],
       [c,R[2],[p+'1',p+'2',.5],'ank'],[[c[0],ft+.012,c[2]+toe*.35],R[3],[p+'2',p+'2',0],'paw'],[[c[0],ft*.6,c[2]+toe],R[3]*.55,[p+'2',p+'2',0],'paw']],paint,o.seg||6))});
   return L}
-// (v177) a point on a body loft made from e137Rows-style rows [z, y, half width, above, below]: at z, angle a from the top
+// (v178) a point on a body loft made from e137Rows-style rows [z, y, half width, above, below]: at z, angle a from the top
 // (0 = top, π/2 = the side, π = underneath; s = side ±1), d metres outside the surface (negative = sunk into it)
-function e177On(rows,z,a,s,d){let i=0;while(i<rows.length-2&&z>rows[i+1][0])i++;const A=rows[i],B=rows[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(B[0]-A[0]))),L=j=>A[j]+(B[j]-A[j])*t;
+function e178On(rows,z,a,s,d){let i=0;while(i<rows.length-2&&z>rows[i+1][0])i++;const A=rows[i],B=rows[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(B[0]-A[0]))),L=j=>A[j]+(B[j]-A[j])*t;
   const c=Math.cos(a),ry=c>0?L(3):L(4),rx=L(2),k=.96,x=Math.sin(a)*rx*k,y=c*ry*k,n=Math.hypot(x/(rx*rx||1),y/(ry*ry||1))||1;return [s*(x+d*x/(rx*rx)/n),L(1)+y+d*y/(ry*ry)/n,z]}
 // claws on a paw: n toes spread around the paw tip
 function e137Claws(k,n,bn,col,len,r,cnt){const c=e137B(n,bn);for(let i=0;i<(cnt||3);i++){const x=c[0]+(i-((cnt||3)-1)/2)*.022;k.L(bn,'c',col,[x,.03,c[2]+.05],[x,.006,c[2]+.05+len],r,.002,4)}}
@@ -31,7 +31,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A gaunt flayed hunting hound: hyena-like high shoulders over a tucked waist, raw red muscle with pale sinew, bare ribs
 // down the flanks, a long narrow skull-like snout full of teeth, a mane of black bristles, a naked rat tail, a spiked iron collar.
 (function(){const n='BloodHound';if(!LPR[n])return;
-  const K={mus:0x7a1a20,mus2:0x5a0e14,sinew:0xc89a8a,skin:0x2a1416,bone:0xd8ccb4,iron:0x3a3a40,blood:0xc81a2a,glow:0xff3a4a,dark:0x120808};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={mus:0x7a1a20,mus2:0x5a0e14,sinew:0xc89a8a,skin:0x2a1416,bone:0xd8ccb4,iron:0x3a3a40,blood:0xc81a2a,glow:0xff3a4a,dark:0x120808};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const BHR=[[-.47,.505,.03,.03,.03,['tail0','tail0',0]],[-.42,.5,.065,.06,.06,['pelvis','tail0',.5]],[-.36,.5,.1,.09,.095,['pelvis','pelvis',0]],[-.27,.5,.112,.1,.105,['pelvis','pelvis',0]],
       [-.16,.505,.095,.095,.075,['pelvis','spine',.5]],[-.04,.515,.1,.1,.085,['spine','spine',0]],[.08,.53,.13,.12,.15,['spine','chest',.5]],[.19,.545,.145,.13,.19,['chest','chest',0]],
       [.29,.57,.135,.13,.165,['chest','neck',.3]],[.37,.61,.1,.1,.11,['neck','neck',0]],[.45,.65,.08,.08,.08,['neck','head',.5]],
@@ -51,8 +51,8 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       for(let i=0;i<5;i++)k.p('head','cone4','c',K.bone,s*(.036-i*.003),.645,.6+i*.04,.007,.024,.007,Math.PI);
       k.p('head','cone4','c',0xf0e8d8,s*.026,.64,.77,.009,.05,.009,Math.PI);k.p('jaw','cone4','c',0xf0e8d8,s*.03,.64,.74,.008,.04,.008);
       // bare ribs on the flanks
-      // (v177: each rib lies on the flank's surface, half sunk into it; they stood off the waist before)
-      for(let i=0;i<4;i++){const z=.17-i*.07,bn=i<2?'chest':'spine',P=[.42,.62,.82,1.02,1.2].map(a=>e177On(BHR,z-(a-.42)*.02,a*Math.PI/2,s,-.002));for(let j=0;j<4;j++)k.L(bn,'c',K.bone,P[j],P[j+1],.012-j*.001,.011-j*.001,4)}});
+      // (v178: each rib lies on the flank's surface, half sunk into it; they stood off the waist before)
+      for(let i=0;i<4;i++){const z=.17-i*.07,bn=i<2?'chest':'spine',P=[.42,.62,.82,1.02,1.2].map(a=>e178On(BHR,z-(a-.42)*.02,a*Math.PI/2,s,-.002));for(let j=0;j<4;j++)k.L(bn,'c',K.bone,P[j],P[j+1],.012-j*.001,.011-j*.001,4)}});
     k.p('head','sph','c',K.dark,0,.67,.8,.02,.015,.012);
     for(let i=0;i<3;i++)k.L('jaw','c',K.blood,[(i-1)*.025,.62,.68+i*.03],[(i-1)*.03,.53-i*.02,.7+i*.03],.008,.003,3);
     // a mane of black bristles from the crown down the spine
@@ -60,12 +60,12 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       [-1,0,1].forEach(j=>k.L(bn,'c',K.dark,[j*.025,y,z],[j*.04,y+.07-i*.002,z-.07],.014,.002,3))}
     // spiked iron collar with a dangling chain
     for(let i=0;i<9;i++){const a=i/9*Math.PI*2;k.p('neck','cone4','m',K.iron,Math.sin(a)*.11,.61+Math.cos(a)*.105,.37,.012,.05,.012,Math.cos(a)*1.5,0,-Math.sin(a)*1.5)}
-    k.p('neck','tor','m',0x2a2a30,0,.61,.37,.104,.03,.098,Math.PI/2+.25,0,0);   // v177: the collar hugs the neck
-    for(let i=0;i<4;i++)k.p('neck','ring','m',K.iron,0,.502-i*.03,.345,.018,.03,.018,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);   // links in turn across and along: each hooks through the last (v177)
+    k.p('neck','tor','m',0x2a2a30,0,.61,.37,.104,.03,.098,Math.PI/2+.25,0,0);   // v178: the collar hugs the neck
+    for(let i=0;i<4;i++)k.p('neck','ring','m',K.iron,0,.502-i*.03,.345,.018,.03,.018,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);   // links in turn across and along: each hooks through the last (v178)
     // claws
     ['fl2','fr2','hl2','hr2'].forEach(b=>e137Claws(k,n,b,0x1a1210,.035,.008,3))};
   LPR[n].post=function(x,c,C,mat){// torn, swept-back ears
-    const og=lpSpikeGeo(K.skin,K.dark,3),ig=lpSpikeGeo(K.mus,K.mus2,3);   // v177: from the palette (the Snow Wolf's were red)
+    const og=lpSpikeGeo(K.skin,K.dark,3),ig=lpSpikeGeo(K.mus,K.mus2,3);   // v178: from the palette (the Snow Wolf's were red)
     [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.06,.73,.53,.055,.16,.03,-.6,-s*.3,s*.25);const m=new THREE.Mesh(ig,mat);m.scale.set(.6,.7,.5);m.position.set(0,.03,.45);p.children[0].add(m);p.userData={rz:-s*.3,sd:s};x.ears.push(p)})};
 })();
 
@@ -73,7 +73,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A corpse hound, half flesh half bone: rotting grey-green hide on the haunches and shoulders, an open ribcage between them,
 // a bare skull with ghast-flame eyes, exposed vertebrae, and green spirit fire licking along its spine.
 (function(){const n='BoneHound';if(!LPR[n])return;
-  const K={hide:0x4a5040,hide2:0x343a2c,rot:0x6a5a3a,bone:0xd8ccb0,bone2:0xa89c84,flame:0x7aff9a,dark:0x0a0c08};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={hide:0x4a5040,hide2:0x343a2c,rot:0x6a5a3a,bone:0xd8ccb0,bone2:0xa89c84,flame:0x7aff9a,dark:0x0a0c08};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const hide=new THREE.Color(K.hide),hide2=new THREE.Color(K.hide2),rot=new THREE.Color(K.rot),bone=new THREE.Color(K.bone),bone2=new THREE.Color(K.bone2);
     const paint=(o,r,s,cc,i)=>{if(r.k=='bn'||r.k=='paw'||r.k=='ank')return o.copy(i%2?bone:bone2);o.copy(hide);if(Math.abs(cc)>.5&&i%2)o.copy(hide2);if(s<-.4)o.lerp(rot,.5);if(r.k=='leg'&&s<0)o.lerp(rot,.3)};
     // haunches
@@ -81,7 +81,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     // a bare spine through the open ribcage
     const spine=e137Rows([[-.12,.48,.025,.025,.025,['pelvis','spine',.5],'bn'],[0,.49,.028,.028,.028,['spine','spine',0],'bn'],[.1,.49,.028,.028,.028,['spine','chest',.5],'bn'],[.14,.49,.03,.03,.03,['chest','chest',0],'bn']]);
     // shoulders and neck
-    const front=e137Rows([[.12,.48,.04,.04,.04,['chest','chest',0],'bn'],[.17,.47,.1,.09,.1,['chest','chest',0]],[.25,.47,.115,.1,.12,['chest','chest',0]],[.32,.49,.1,.09,.1,['chest','neck',.4]],[.38,.53,.07,.07,.07,['neck','neck',0]],[.43,.56,.055,.055,.055,['neck','head',.5]],[.48,.585,.05,.05,.045,['neck','head',.9]]]);   // (v177: the neck runs into the skull)
+    const front=e137Rows([[.12,.48,.04,.04,.04,['chest','chest',0],'bn'],[.17,.47,.1,.09,.1,['chest','chest',0]],[.25,.47,.115,.1,.12,['chest','chest',0]],[.32,.49,.1,.09,.1,['chest','neck',.4]],[.38,.53,.07,.07,.07,['neck','neck',0]],[.43,.56,.055,.055,.055,['neck','head',.5]],[.48,.585,.05,.05,.045,['neck','head',.9]]]);   // (v178: the neck runs into the skull)
     // the skull
     const skull=e137Rows([[.44,.585,.06,.06,.05,['head','head',0],'bn'],[.49,.605,.08,.075,.06,['head','head',0],'bn'],[.55,.6,.07,.06,.045,['head','head',0],'bn'],[.62,.58,.048,.04,.03,['head','head',0],'bn'],[.69,.565,.034,.028,.022,['head','head',0],'bn'],[.73,.56,.02,.018,.014,['head','head',0],'bn']]);
     const jaw=e137Rows([[.47,.56,.04,.025,.02,['head','jaw',.3],'bn'],[.52,.54,.05,.015,.02,['head','jaw',.7],'bn'],[.6,.535,.038,.012,.018,['jaw','jaw',0],'bn'],[.68,.54,.024,.01,.012,['jaw','jaw',0],'bn']]);
@@ -114,7 +114,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A vampire bat: bald wrinkled crimson face with a big pig-like nose leaf, huge veined ears, a bloated belly swollen with
 // glowing blood, gaunt bony shoulders, hooked thumbs and tattered, veined wings with holes along the trailing edge.
 (function(){const n='BloodBat';SPEC[n]=Object.assign({},SPEC.Batwing);
-  const K={fur:0x2a1418,skin:0x8a3a3a,skin2:0x6a2228,belly:0xb01a2a,mem:0x4a1a20,vein:0xa02a34,dark:0x120808,glow:0xff4a3a,bone:0xe8dcc8};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={fur:0x2a1418,skin:0x8a3a3a,skin2:0x6a2228,belly:0xb01a2a,mem:0x4a1a20,vein:0xa02a34,dark:0x120808,glow:0xff4a3a,bone:0xe8dcc8};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const BB=LPR.Batwing;
   LPR[n]={head:['head',0,.5,.38],up:.08,sc:1.15,back:BB.back,
     geo(C,c){const fur=new THREE.Color(K.fur),skin=new THREE.Color(K.skin),skin2=new THREE.Color(K.skin2),belly=new THREE.Color(K.belly),dark=new THREE.Color(K.dark);

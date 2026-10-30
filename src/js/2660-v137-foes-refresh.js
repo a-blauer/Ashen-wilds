@@ -19,7 +19,7 @@ function f137Reg(key,fn){FOE137[key]=fn;N3.humB[key]={body:fn}}
 f137Reg('yeti',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C;const f1=0xc4c8d0,f2=0xa4aab4,f3=0xe4e8ee;P.build=2;P.belly=.04;P.af=1.25;P.lf=1.2;
   Object.assign(C,{skin:0x5a6a7a,torso:f1,sleeve:f1,fore:f1,hand:0x5a6a7a,pants:f1,shin:f1,boot:f2,sole:0x5a6a7a});
   const fur=m=>Math.round(m.y*22+m.c*3)%2?f1:f2;P.paint.torso=fur;P.paint.sleeve=P.paint.fore=fur;P.paint.leg=fur;X.body();
-  X.head({eyes:'glow',glow:0x7ad8ff,noHair:true,brow:false,ears:false,nose:false,headCol:m=>m.s>.3&&m.y<1.2?0x5a6a7a:fur(m)});mdLoft(B,mdHeadR(P).slice(1,7),{seg:10,off:.012,col:fur,keep:m=>!(m.s>.25&&m.y<1.2)});   // v177: the shag lies on the skull (3 cm off it before)
+  X.head({eyes:'glow',glow:0x7ad8ff,noHair:true,brow:false,ears:false,nose:false,headCol:m=>m.s>.3&&m.y<1.2?0x5a6a7a:fur(m)});mdLoft(B,mdHeadR(P).slice(1,7),{seg:10,off:.012,col:fur,keep:m=>!(m.s>.25&&m.y<1.2)});   // v178: the shag lies on the skull (3 cm off it before)
   [-1,1].forEach(s=>k.L('head','c',0xb8ad90,[s*.1,1.22,0],[s*.2,1.3,-.04],.03,.02).L('head','c',0xb8ad90,[s*.2,1.3,-.04],[s*.22,1.4,.02],.02,.003));mdTS(B,P,.9,1.02,.04,{col:fur,lip:.04});
   for(let i=-2;i<=2;i++)k.p('head','cone4','c',0xe8e0c8,i*.016,1.095,mdHeadZ(P,1.095)+.006,.007,.03,.007,Math.PI);
   // shaggy coat: rows of tufts round the torso, heavier on the shoulders and back
@@ -45,7 +45,7 @@ f137Reg('selem',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C;const s1=0xc8a060,
   for(let i=0;i<5;i++){const a=-.9+i*.45,p=n3Surf(P,.74+(i%2)*.06,a,.012),q=n3Surf(P,.64+(i%3)*.04,a+.15,.012);k.L(n3TB(.7),'g',gl,p,q,.006,.004,3)}
   [-1,1].forEach(s=>{for(let t=.3;t<1.9;t+=.45){const p=n3ArmAt(P,s,t);k.p(p[3],'dod','c',t>1?rk:mdSh(rk,.9),p[0]+s*.04,p[1],p[2],.05,.045,.05,t,t,0)}
     const w=n3ArmAt(P,s,2);k.p(w[3],'dod','c',rk,w[0],w[1]-.06,w[2]+.01,.075,.07,.075);k.L(w[3],'g',gl,[w[0]-.02,w[1]-.04,w[2]+.06],[w[0]+.02,w[1]-.09,w[2]+.06],.005,.004,3)});
-  // a girdle of stones grown into the hips (v177: they hung in a ring 10 cm out from the waist), a crown of jagged rock
+  // a girdle of stones grown into the hips (v178: they hung in a ring 10 cm out from the waist), a crown of jagged rock
   for(let i=0;i<10;i++){const a=i/10*Math.PI*2,y=.55+Math.sin(a*3)*.04,p=n3Surf(P,y,a,.004);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.03+(i%3)*.01)}
   for(let i=0;i<5;i++){const a=(i-2)*.45;k.p('head','cone4','c',i%2?rk:s3,Math.sin(a)*.08,1.28,-.01+Math.cos(a)*.03,.03,.12-Math.abs(i-2)*.025,.03,-.1,0,-a*.6)}});
 

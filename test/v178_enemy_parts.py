@@ -1,9 +1,9 @@
-# v177: enemy models — no unattached pieces. Builds every enemy (zone rosters, camps, instance rosters and the quest-only
+# v178: enemy models — no unattached pieces. Builds every enemy (zone rosters, camps, instance rosters and the quest-only
 # foes), poses it (rest, idle, two walk phases, an attack) and
 #  * checks (FAIL lines): build errors, NaN, floating pieces (any separate piece of mesh more than FLOAT_MM (scaled with the
 #    model's size) from the rest of the model; glow / effect meshes (additive or see-through basic materials) are skipped),
 #    feet on the ground in idle (walkers only: lowest point within -3..+4 % of the height)
-#  * sheets: out/v177_en<n>.jpg — front, 3/4, side, back, and the attack pose
+#  * sheets: out/v178_en<n>.jpg — front, 3/4, side, back, and the attack pose
 # BOSSES=1: the Sovereigns and quest bosses instead (rest pose: argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit;
 #   not Ssith'ra: its segments are laid out live along its path; Qarsul's debris ring (joint 'orbit') floats on purpose)
 # The standing model (rest, idle) must have no loose piece; walk / attack gaps under ANIM_MM (40, per 1.7 m) are NOTE lines
@@ -20,7 +20,7 @@ FLOAT_MM=float(os.environ.get('FLOAT_MM','4'));FOCUS=bool(os.environ.get('FOCUS'
 # things meant to drift inside a see-through body (the goo's bubbles and half-dissolved trophies): not checked
 SUSPEND={'goo','spitter'}
 STRICT=bool(os.environ.get('STRICT'));ANIM_MM=float(os.environ.get('ANIM_MM','40'))
-# Known small gaps still open in the idle sway (v177, Oct 30 2026): enemy -> [(where, up to mm)]; listed as NOTE lines, and
+# Known small gaps still open in the idle sway (v178, Oct 30 2026): enemy -> [(where, up to mm)]; listed as NOTE lines, and
 # any growth past the limit fails. Close them and remove the line (STRICT=1 shows them as failures).
 KNOWN={'dgwretch':[('bone chest',8)],'ghostwolf':[('bone tail2',15)],'maggot':[('bone tail2',20)],'saltgolem':[('bone chest',40)],
   'stalker':[('bone jaw',12)],'rimecrawler':[('bone jaw',15)],'tombpriest':[('bone pelvis',20)],'troll':[('bone pelvis',25)],
@@ -32,7 +32,7 @@ JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={ite
     sc.add(new THREE.HemisphereLight(0xc8d0dc,0x3a3028,.9));const dl=new THREE.DirectionalLight(0xfff0d8,1.1);dl.position.set(2,4,4);sc.add(dl);const d2=new THREE.DirectionalLight(0x8090c0,.55);d2.position.set(-4,1,-2);sc.add(d2);
     const gr=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshLambertMaterial({color:0x3a4234}));gr.rotation.x=-Math.PI/2;sc.add(gr);window.RT6={rd,sc,pc:new THREE.PerspectiveCamera(30,1,.02,200)}}
   const {rd,sc,pc}=RT6;
-  const fx=m=>{const M=Array.isArray(m.material)?m.material[0]:m.material;if(!M)return true;if(M.blending==THREE.AdditiveBlending)return true;if(M.isMeshBasicMaterial&&M.transparent&&M.opacity<.95)return true;if(M.visible===false)return true;if(window.BOSS177&&M.emissive&&M.emissive.getHex()>0&&(M.emissiveIntensity||1)*Math.max(M.emissive.r,M.emissive.g,M.emissive.b)>.35)return true;return false};
+  const fx=m=>{const M=Array.isArray(m.material)?m.material[0]:m.material;if(!M)return true;if(M.blending==THREE.AdditiveBlending)return true;if(M.isMeshBasicMaterial&&M.transparent&&M.opacity<.95)return true;if(M.visible===false)return true;if(window.BOSS178&&M.emissive&&M.emissive.getHex()>0&&(M.emissiveIntensity||1)*Math.max(M.emissive.r,M.emissive.g,M.emissive.b)>.35)return true;return false};
   const GC=(a,j,q)=>q==0?a.getX(j):q==1?a.getY(j):q==2?a.getZ(j):a.getW(j);
   const vis=o=>{let p=o;while(p){if(!p.visible||/^(orbit|halo)/.test(p.name||''))return false;p=p.parent}return true};
   const geo=g=>{g.updateMatrixWorld(true);const P=[],F=[],TG=[],NM=[],v=new V();let mi_=0;g.traverse(m=>{if(!m.isMesh||!m.geometry||!m.geometry.attributes.position||!vis(m))return;const isfx=fx(m);
@@ -47,7 +47,7 @@ JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={ite
     const err=[];const ce=console.error;console.error=function(){err.push([].map.call(arguments,String).join(' '));return ce.apply(console,arguments)};
     const SV=i=>()=>{const R=svRig();SVB[i].build(R,null);svRest(R);svMerge(R);return R.root};
     const BLD={argus:SV(0),hydra:SV(1),rimewraith:SV(2),ssithra:SV(3),bloated:SV(4),vaelric:SV(5),vorraxis:()=>MB144.sheet.boss(),gorthrak:()=>GB151.sheet.gorthrak(),
-      qarsul:()=>QS165M.sheet.qarsul(),kheprit:()=>KH165.sheet.kheprit(),skimmer:()=>SK165.sheet.skimmer()};const boss=!!BLD[k];window.BOSS177=boss;if(boss)it.n=k;
+      qarsul:()=>QS165M.sheet.qarsul(),kheprit:()=>KH165.sheet.kheprit(),skimmer:()=>SK165.sheet.skimmer()};const boss=!!BLD[k];window.BOSS178=boss;if(boss)it.n=k;
     try{if(boss)g=BLD[k]();else{const c=enemyC(k,20,{});g=cr(c)}g.position.set(0,0,0);g.rotation.y=0;sc.add(g)}catch(e){it.err='build error '+String(e).slice(0,200);console.error=ce;return}
     const tick=(ms,mv,sp)=>{if(!boss)for(let t=0;t<ms;t+=16){T+=16;try{animC(g,T,mv,sp||0)}catch(e){it.err='anim error '+String(e).slice(0,200)}}g.position.set(0,g.position.y,0);g.updateMatrixWorld(true)};
     it.fly=boss||!!(EN[k]&&(EN[k].fly||EN[k].hover));
@@ -115,7 +115,7 @@ def s(pg):
                     for j,(key,u) in enumerate(ims):
                         im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,((j%4)*W,(j//4)*W))
                         if j%4==0:t=it['k']+' '+key;d.rectangle([0,(j//4)*W,len(t)*7+8,(j//4)*W+16],fill=(0,0,0));d.text((4,(j//4)*W+2),t,fill=(255,255,255))
-                    nm='%s/v177_focus_%s.jpg'%(O,it['k']);sh.save(nm,quality=88);print('wrote',nm,flush=True)
+                    nm='%s/v178_focus_%s.jpg'%(O,it['k']);sh.save(nm,quality=88);print('wrote',nm,flush=True)
             for t0,P in sorted(PC.items()):
                 cc=P['cc']
                 # a held weapon (its own mesh, no bone) off the hand only mid-attack is a grip matter of that swing: noted, not failed
@@ -134,9 +134,9 @@ def s(pg):
             for ri,(lab,shots) in enumerate(ch):
                 for ci,(l,u) in enumerate(shots):
                     im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,(ci*W,ri*W));t=(lab+' · '+l) if ci==0 else l;d.rectangle([ci*W,ri*W,ci*W+len(t)*7+8,ri*W+16],fill=(0,0,0));d.text((ci*W+4,ri*W+2),t,fill=(255,255,255))
-            nm='%s/v177_%s%d.jpg'%(O,'boss' if os.environ.get('BOSSES') else 'en',si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
+            nm='%s/v178_%s%d.jpg'%(O,'boss' if os.environ.get('BOSSES') else 'en',si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
     for f in notes:print('NOTE',f)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])
-    print('==== v177_enemy_parts: %d enemies, %d fails'%(len(keys),len(fails)+len(errs[:6])))
+    print('==== v178_enemy_parts: %d enemies, %d fails'%(len(keys),len(fails)+len(errs[:6])))
 play.run(s)

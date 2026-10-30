@@ -26,7 +26,7 @@ function mdOutfit(cls){
 function mdBelt(B,P,y,c,bc){mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.008,{col:c});const k=dkKit();k.p('spine','box','m',bc,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.012,.05,.042,.014);mdKit(B,k)}
 function mdTabard(B,P,c,tr,sym){const off=(P.tOff||0)+.01;
   mdTS(B,P,.62,.975,off,{col:m=>Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.33});
-  mdSkirt(B,P,.64,.33,.02,typeof SN177!='undefined'&&SN177.hum>0?Math.max(off-.002,(P.sOff||0)+.004):Math.max(off+.006,(P.sOff||0)+.008),{   // v177 (foes): the skirt starts under the tabard's top, not 6 mm outside it
+  mdSkirt(B,P,.64,.33,.02,typeof SN178!='undefined'&&SN178.hum>0?Math.max(off-.002,(P.sOff||0)+.004):Math.max(off+.006,(P.sOff||0)+.008),{   // v178 (foes): the skirt starts under the tabard's top, not 6 mm outside it
     col:m=>m.y<.355||Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.31,n:4});
   if(sym){const k=dkKit(),f=mdTorsoAt(P,.83).f+off+.006;k.p('chest','box','m',sym,0,.83,f,.022,.13,.006).p('chest','box','m',sym,0,.86,f,.085,.022,.006);mdKit(B,k)}}
 function mdQuiver(B,P){const k=dkKit(),z=-(mdTorsoAt(P,.85).b+(P.tOff||0)+.05),a=[-.06,.66,z],b=[.1,1.0,z-.03];

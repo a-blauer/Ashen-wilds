@@ -77,5 +77,5 @@ camp-sites|2270|tiers: v168_tiers.py v123_camps.py v164_camps.py
 3345|v168|detail|331[0-8]|3155|3170|328[0-2]|1680|3251|0780|0470: v168_ground.py
 # the kit is used by every v151-v165 set piece: their quests' own tests
 3345: v165_dirge.py v165_temple.py v165_courtyard.py v165_run.py v152_abeksi.py v154_hydra.py v160_frozen_gate.py
-# v177: every enemy model has no loose pieces (snap 3370, looks / stance / palettes 3371) and the bodies they are built from
-3370|3371|v177|float_lib|enemy|enemies|foes|monster|old-creatures|0120-|0150-|0610-|0780-|1410-|1420-|1450-|1460-|0010-|200[0-9]-|20[1-5]0-|2035-|26[4-6]\d-|3283|3315: v177_enemy_parts.py v137_enemies.py v113_roster.py
+# v178: every enemy model has no loose pieces (snap 3380, looks / stance / palettes 3381) and the bodies they are built from
+3380|3381|v178|float_lib|enemy|enemies|foes|monster|old-creatures|0120-|0150-|0610-|0780-|1410-|1420-|1450-|1460-|0010-|200[0-9]-|20[1-5]0-|2035-|26[4-6]\d-|3283|3315: v178_enemy_parts.py v137_enemies.py v113_roster.py
