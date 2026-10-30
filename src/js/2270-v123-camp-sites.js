@@ -256,7 +256,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const water=(x,z,rx,rz,col,op)=>{if(gy(x,z)<-.05){take(x,z,Math.max(rx,rz)*.7);return {userData:{Y:.02}}}return pool(x,z,rx,rz,col,false,op)};
   const lily=(x,Y,z,col)=>{const o=putY(Q.disc,S(col||0x3a7a3a),x,Y,z,rr(.25,.45),rr(.25,.45),1,-P2,0,rr(0,6));o.castShadow=false};
   // ---- growth ----
-  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++)put(Q.cyl4,S(col||0x5a7a3a),x+rr(-.45,.45),.45,z+rr(-.45,.45),.025,rr(.7,1.3),.025,rr(-.2,.2),0,rr(-.2,.2))};
+  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++){const ox=rr(-.45,.45),oz=rr(-.45,.45),h=rr(.7,1.3);put(Q.cyl4,S(col||0x5a7a3a),x+ox,h/2-.08,z+oz,.025,h,.025,rr(-.2,.2),0,rr(-.2,.2))}};   // v176: rooted (short reeds stood ~.1 above the ground)
   const shroom=(x,z,k,cap,glow)=>{put(Q.cyl,S(0xd8cdb0),x,k*.6,z,k*.14,k*1.2,k*.14);put(Q.sph,glow?S(cap,{emissive:cap,emissiveIntensity:.6}):S(cap),x,k*1.2,z,k*.6,k*.3,k*.6);[0,1,2].forEach(i=>put(Q.sph,S(0xf0e8d8),x+Math.cos(i*2.1)*k*.34,k*1.4,z+Math.sin(i*2.1)*k*.34,k*.08,k*.05,k*.08));if(k>1)blk(x,z,0)};
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
@@ -324,7 +324,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
   const palm=(x,z,h,dead)=>{blk(x,z,0);take(x,z,1);const lx=rr(-.25,.25),lz=rr(-.25,.25);put(Q.tcyl,S(0x6a5038),x+lx*h*.5,h/2,z+lz*h*.5,.16,h,.16,lz,0,-lx);
-    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*.7,Y+(dead?-.5:.05),tz+Math.sin(a)*.7,1.5,.04,.3,0,-a,dead?-1.15:-.35)}};
+    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;const tl=dead?1.15:.35,fr=.75*Math.cos(tl)-.04,fy=Y-.75*Math.sin(tl)+.02;   // v176: each frond grows from the crown (their inner ends stood ~.3 above and beside it)
+    for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*fr,fy,tz+Math.sin(a)*fr,1.5,.04,.3,0,-a,-tl)}};
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
     TQ(sg,Q.box,M,-.6*k,2.4*k,0,.4*k,3*k,1.8*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,.1*k,1.6*k,.86*k*s,1.4*k,.5*k,.3*k));TQ(sg,Q.cone4,M,-.6*k,4.25*k,0,.6*k,.9*k,.9*k,0,Math.PI/4,0)};

@@ -710,6 +710,7 @@ const BIOMES=[
  {n:'The Citadel',sp:'Batwing',x:630,y:336,t:5,gnd:[66,58,62],grs:[90,30,36],acc:[96,88,92],frs:[30,24,28],wat:[90,20,30],tree:['dead'],pr:['pillar','pillar','bones'],den:[0,.6,0,0],tc:[0x2a1a1a,0x3a2028,0x4a2a30],amp:.08}
 ];
 if(typeof v112Biomes=='function')v112Biomes(); // v112: one biome per themed field instance (II, III; 1981)
+if(typeof env176Biomes=='function')env176Biomes(); // v176: the zones' ground in a darker, weathered palette (3370)
 
 const MAP=(()=>{
   let sd=11;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,m=[],bio=[];
@@ -830,6 +831,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
+  if(typeof env176Banks=='function')env176Banks(); // v176: shelving pond banks instead of sheer drops (3370)
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)
@@ -981,8 +983,8 @@ function buildTerrain(chk){
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
      vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
      float n1=fb3(q*.8),n2=fb3(q*3.1);
-     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.82+.36*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
-     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.84+.28*n2)*mix(.84+.3*fh,1.,pav);
+     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.9+.2*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
+     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);
      diffuseColor.rgb=mix(diffuseColor.rgb,rock,rm);float sn=smoothstep(9.5,14.,yc+(n1-.5)*4.)*(1.-smoothstep(.22,.6,sl))*(1.-sand);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.9,.94,1.)*(.84+.16*fh),sn);}`)};
   GTX.list.forEach(T=>{const m=T===GTX.main?mat:mat.clone();m.map=T.t;m.flatShading=true;m.userData.lps=1;m.onBeforeCompile=obc(T);T.mat=m});
   for(let cz=0;cz*CHN<H;cz++)for(let cx=0;cx*CHN<W;cx++){
@@ -1141,35 +1143,36 @@ const WTR=(()=>{
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){const b=BIOMES[MAP.bio[y][x]],k=(y*W+x)*4,lv=lava?.05:.02,ok=!!b.lava==lava,dp=ok?lv-GHv(x,y):-1;d[k]=Math.max(0,Math.min(1,(dp+.5)/2))*255;const w=b.wat;d[k+1]=w[0];d[k+2]=w[1];d[k+3]=w[2]}
     const t=new THREE.DataTexture(d,W,H,THREE.RGBAFormat);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
     const m=new THREE.ShaderMaterial({transparent:!lava,depthWrite:lava,uniforms:{dm:{value:t},time:{value:0},lava:{value:lava?1:0},fogC:{value:new THREE.Color()},fogD:{value:.02},hor:{value:new THREE.Color()},top:{value:new THREE.Color()},sunDir:{value:new THREE.Vector3()},sunCol:{value:new THREE.Color()},amb:{value:1},WH:{value:new THREE.Vector2(W,H)}},
-    vertexShader:'varying vec3 vP;void main(){vP=position;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',
-    fragmentShader:`varying vec3 vP;uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
+    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v176: vW, the real world spot (fog and view were measured from vP)
+    fragmentShader:`varying vec3 vP,vW;//v176uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
     float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
     float fb(vec2 p){return vn(p)*.5+vn(p*2.03+1.7)*.3+vn(p*4.1+5.2)*.2;}
     void main(){
-      vec4 s=texture2D(dm,(vP.xz+.5)/WH);float d=s.r*2.-.5;if(d<-.03)discard;
-      vec3 V=normalize(cameraPosition-vP);float dist=length(cameraPosition-vP);
+      vec4 s=texture2D(dm,(vW.xz+.5)/WH);float d=s.r*2.-.5;if(d<-.03)discard;
+      vec3 V=normalize(cameraPosition-vW);float dist=length(cameraPosition-vW);
       vec3 col;float al=1.;
-      if(lava>.5){float f=fb(vP.xz*.55+vec2(time*.05,time*.03)),g=fb(vP.xz*1.4-vec2(time*.04,0.)+f*2.);
+      if(lava>.5){float f=fb(vW.xz*.55+vec2(time*.05,time*.03)),g=fb(vW.xz*1.4-vec2(time*.04,0.)+f*2.);
         col=mix(vec3(.55,.08,.02),vec3(1.5,.55,.08),smoothstep(.3,.75,g));col=mix(col,vec3(2.2,1.5,.5),smoothstep(.72,.9,g)*.8);
-        col=mix(col,vec3(.12,.04,.03),smoothstep(.55,.2,g)*.8*(1.-smoothstep(.0,.35,d)*0.)); col*=.9+.3*sin(time*.8+vP.x);
+        col=mix(col,vec3(.12,.04,.03),smoothstep(.55,.2,g)*.8*(1.-smoothstep(.0,.35,d)*0.)); col*=.9+.3*sin(time*.8+vW.x);
         col+=vec3(1.,.35,.05)*smoothstep(.45,0.,d)*.6;
       }else{
-        vec2 p=vP.xz*.6;float e=.05;
+        vec2 p=vW.xz*.6;float e=.05;
         float h0=fb(p+vec2(time*.06,time*.04))+fb(p*1.7-vec2(time*.05,time*.03))*.6;
         float hx=fb(p+vec2(e,0.)+vec2(time*.06,time*.04))+fb((p+vec2(e,0.))*1.7-vec2(time*.05,time*.03))*.6;
         float hz=fb(p+vec2(0.,e)+vec2(time*.06,time*.04))+fb((p+vec2(0.,e))*1.7-vec2(time*.05,time*.03))*.6;
         vec3 N=normalize(vec3((h0-hx)*2.2,1.,(h0-hz)*2.2));
         float dp=clamp(d,0.,1.6),k=smoothstep(0.,1.2,dp);
-        vec3 tint=s.gba/255.;vec3 shallow=tint*vec3(1.1,1.25,1.1)+vec3(.04,.1,.08),deep=tint*vec3(.35,.45,.6);
+        vec3 tint=s.gba;   // v176: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
+        vec3 shallow=tint*vec3(.8,.84,.82)+vec3(.015,.02,.02),deep=tint*vec3(.3,.32,.34);
         vec3 body=mix(shallow,deep,k)*(.25+.75*amb);
         vec3 R=reflect(-V,N);float ry=max(R.y,0.);vec3 refl=mix(hor,top,pow(ry,.5));
         float sg=pow(max(dot(R,sunDir),0.),220.);refl+=sunCol*sg*3.;refl+=sunCol*pow(max(dot(R,sunDir),0.),12.)*.12;
-        float fr=.05+.9*pow(1.-max(dot(V,N),0.),3.5);
-        col=mix(body,refl,clamp(fr,0.,1.));
-        float fm=fb(vP.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
-        float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.9,.95,.95)*(.4+.6*amb),foam*.85);
-        al=clamp(.5+.5*k+foam,0.,1.)*smoothstep(-.03,.045,d);
+        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v176: murkier, the sky mirrored less (ponds read as white holes)
+        col=mix(body,refl*.72,clamp(fr,0.,1.));
+        float fm=fb(vW.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
+        float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.62,.66,.64)*(.4+.6*amb),foam*.6);
+        al=clamp(.66+.4*k+foam,0.,1.)*smoothstep(-.03,.045,d);
       }
       float fg=1.-exp(-fogD*fogD*dist*dist);col=mix(col,fogC,clamp(fg,0.,1.));
       gl_FragColor=vec4(col,al);}`});
@@ -1180,9 +1183,12 @@ const TT=(()=>{const {fin,tr,merge,leaf,bark}=NK,G=THREE;
   const pineTier=(r,hh,sd)=>fin(new G.ConeGeometry(r,hh,7,2),{j:.06,sd,f:(x,y,z)=>{if(y<-hh/2+1e-3)return [x*1.14,y-.07,z*1.14];if(Math.abs(y)<1e-3)return [x*.9,y,z*.9];return [x,y,z]},paint:leaf});
   const PC=[pineTier(.66,.95,1),pineTier(.56,.9,2),pineTier(.45,.85,3),pineTier(.32,.78,4),pineTier(.17,.62,5)];
   const PT=fin(new G.CylinderGeometry(.06,.13,.6,5,2),{j:.02,sd:7,paint:bark});
-  const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,6,2),{j:.025,sd:8,f:(x,y,z)=>y<-.29?[x*1.35,y,z*1.35]:[x,y,z],paint:bark}),
-    fin(tr(new G.CylinderGeometry(.022,.04,.26,4),.07,.18,0,0,0,-.8),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.02,.035,.22,4),-.06,.12,.03,.3,0,.85),{j:.01,sd:10,paint:bark})]);
-  const canopy=(r,sd)=>fin(new G.IcosahedronGeometry(r,1),{j:r*.32,sd,f:(x,y,z)=>[x,y<0?y*.7:y,z],paint:leaf});
+  // v176: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
+  const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,7,3),{j:.025,sd:8,f:(x,y,z)=>{const t=y+.3;return y<-.25?[x*1.35,y,z*1.35]:[x+t*t*.05,y,z]},paint:bark}),
+    fin(tr(new G.CylinderGeometry(.024,.045,.34,5),.1,.3,0,0,0,-.75),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.022,.04,.3,5),-.08,.28,.04,.35,0,.8),{j:.01,sd:10,paint:bark}),
+    fin(tr(new G.CylinderGeometry(.018,.035,.28,5),.0,.32,-.09,-.7,0,.1),{j:.01,sd:11,paint:bark})]);
+  const canopy=(r,sd)=>merge([[0,0,0,.72],[.5,-.12,.22,.52],[-.45,-.08,-.3,.5],[.1,.28,-.42,.46],[-.2,-.2,.48,.44]].map(([x,y,z,k],i)=>
+    fin(tr(new G.IcosahedronGeometry(r*k,1),x*r,y*r,z*r,0,i,0),{j:r*k*.36,sd:sd*7+i,f:(X,Y,Z)=>[X,Y<y*r?y*r-(y*r-Y)*.6:Y,Z],paint:leaf})));
   const OC=[canopy(.62,6),canopy(.5,7),canopy(.44,8)];
   const DT=fin(new G.CylinderGeometry(.05,.13,.6,5,3),{j:.03,sd:11,f:(x,y,z)=>{const a=y*2.2,c=Math.cos(a),s=Math.sin(a);return [x*c-z*s+y*y*.12,y,x*s+z*c]},paint:(h,ny,r)=>{const v=(.62+.3*h)*(.82+.36*r);return [v,v,v*1.04]}});
   const dpaint=(h,ny,r)=>{const v=(.7+.3*h)*(.82+.36*r);return [v,v,v*1.04]};
@@ -1217,7 +1223,10 @@ Object.keys(TL).forEach(ty=>{
   const L=TL[ty],P=TT[ty].map(pt=>{const m=inst(pt[0],L.length,true);if(pt[6])m.material=new THREE.MeshBasicMaterial();m.material.vertexColors=!!pt[0].attributes.color;if(pt[9]){m.sway=pt[9];m.off=pt[1]*.9}return m});
   L.forEach((q,i)=>{
     const sc=(ty=='pine'?1.05+Math.random()*.9:ty=='oak'?.95+Math.random()*.7:.85+Math.random()*.6),X=q[0]+(Math.random()-.5)*.35,Z=q[1]+(Math.random()-.5)*.35,tc=q[2].tc,ry=Math.random()*6.28,tl=(Math.random()-.5)*.1,tz=(Math.random()-.5)*.1;
-    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
+    // v176: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
+    // crown slid up or down off its trunk), sunk to the lowest ground round the trunk's foot
+    let g0=GH(X,Z);{const r=.35*sc;let lo=g0;for(let a=0;a<8;a++)lo=Math.min(lo,GH(X+Math.cos(a*.785)*r,Z+Math.sin(a*.785)*r));g0-=Math.min(.9*sc,Math.max(0,g0-lo-.03))}
+    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,g0-GH(X+pt[7]*sc,Z)+pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
     d0.rotation.set(0,0,0);AOL.push([X,Z,sc*(ty=='pine'?1.15:ty=='oak'?1.4:.8)]);
   });
 });
@@ -5456,7 +5465,7 @@ var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
-  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.32,0,0);return {g,x,z,disc}}
+  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.12,0,0);return {g,x,z,disc}}   // v176: the name plate rests on the capstone (it hung ~.2 above it)
 // v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
 INSL.forEach(I=>{if(I.tri)return;const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
   const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
@@ -8851,7 +8860,8 @@ function lpnPortalArch(g){
   const st=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,color:0x6a6672}),G=new THREE.Group(),{fin,tr,merge,stone,hs}=NK;
   const blk=(w,hh,d,x,y,z,ry,sd)=>fin(tr(new THREE.BoxGeometry(w,hh,d,1,1,1),x,y,z,0,ry,0),{j:.07,sd,paint:stone});
   const parts=[];
-  [-1,1].forEach(s=>{let y=0;for(let i=0;i<4;i++){const hh=.5+hs(i,s,7)*.18,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
+  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v176: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
+    for(let i=0;i<4;i++){const hh=H[i]*k,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
   parts.push(blk(2.5,.34,.5,0,2.5,0,.03,61),blk(.5,.3,.46,0,2.82,0,.6,62));
   // a couple of fallen chunks at the base
   parts.push(fin(tr(new THREE.DodecahedronGeometry(.22,0),-1.35,.12,.3),{j:.06,sd:63,paint:stone}),fin(tr(new THREE.DodecahedronGeometry(.16,0),1.3,.09,-.25),{j:.05,sd:64,paint:stone}));
@@ -18735,9 +18745,10 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(Math.cos(a)*s*.45,y+.45,-Math.sin(a)*s*.45,.6,s*1.3,a+.6,bark,.035))});
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v176: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
-    if(moss)[[.35,2.0,.2],[-.32,1.65,2.5],[.3,2.35,4],[-.2,2.55,5.2],[.1,2.6,1.2]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},Math.cos(a)*s*1.5,y-L/2+.1,-Math.sin(a)*s*1.5,Math.PI))});
+    if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v176: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
+      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
     if(o.snow)p.push(F(dome(.3,6),0xf4f8ff,{j:.04},0,2.62,0,0,0,0,[1,.4,1]));return M(p)};
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
@@ -18746,8 +18757,13 @@ function wdDeco(){const T0=performance.now();
     p.push(F(ico(.3,0),c,{j:.05},1.75,.3,0,0,0,0,[1.3,.9,.9]),F(cone(.05,.5,4),c,{},1.9,.65,.18,.5,0,-.6),F(cone(.05,.5,4),c,{},1.9,.65,-.18,-.5,0,-.6));return M(p)};
   const skull=c=>M([F(ico(.22,0),c,{j:.04},0,.18,0,0,0,0,[1.2,.9,1]),F(box(.2,.1,.18),c,{},.2,.08,0),F(cone(.04,.4,4),c,{},-.05,.35,.18,.7,0,.3),F(cone(.04,.4,4),c,{},-.05,.35,-.18,-.7,0,.3),F(cyl(.03,.03,.4,4),c,{},-.3,.04,.1,0,.6,Math.PI/2)]);
   const pillarG=(hex,h,top)=>M([F(cyl(.36,.4,h,7),hex,{j:.05,top,tt:.6,f:(x,y,z)=>y>h-.01?[x,y-((x*7+z*13)%1+1)%1*.4,z]:[x,y,z]},0,h/2,0),F(cyl(.5,.55,.3,7),hex,{j:.04},0,.15,0),F(cyl(.32,.36,.5,7),hex,{j:.06},.9,.25,.3,0,.4,Math.PI/2)]);
-  const wallG=(hex,top,len,hh)=>{const p=[];for(let i=0;i<4;i++){const w=len/4,h0=hh*(.55+((i*37)%10)/22);p.push(F(box(w*.98,h0,.7),hex,{j:.08,top,tt:.6},-len/2+w*(i+.5),h0/2,0))}
-    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0));return M(p)};
+  // v176: a ruined wall laid in courses of dressed blocks (joints, staggered, a broken top) instead of four plain boxes
+  const wallG=(hex,top,len,hh)=>{const p=[],w=len/4;for(let i=0;i<4;i++){const h0=hh*(.55+((i*37)%10)/22);let y=0,c=0;
+      while(y<h0-.06){const bh=Math.min(.34+((i*7+c*3)%4)*.05,h0-y),sh=(c%2?.25:-.05)*w,last=y+bh>=h0-.06;
+        for(let k=0;k<2;k++){const x0=-len/2+w*i+sh+k*w*.5,x1=Math.min(-len/2+w*(i+1),x0+w*.5),xa=Math.max(-len/2+w*i,x0);if(x1-xa<.08)continue;
+          const d=.64+(((i+c+k)*29)%5)*.025,bw=x1-xa-.025;p.push(F(box(bw,bh-.025,d),hex,{j:last?.09:.035,top,tt:.6},(xa+x1)/2,y+bh/2,(((i*3+c+k)%3)-1)*.03,0,(((c+k)%3)-1)*.02,0))}
+        y+=bh;c++}}
+    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0),F(dod(.22),hex,{j:.08},len*.15,.12,.7),F(dod(.16),hex,{j:.06},-len*.42,.08,.62));return M(p)};
   const grave=(hex,lean)=>M([F(box(.42,.6,.12),hex,{j:.03},0,.28,0,lean,0,lean*.5),F(cyl(.21,.21,.12,6,1),hex,{},0,.6,0,Math.PI/2,0,0,[1,1,1]),F(box(.55,.08,.8),0x3a3428,{j:.04},0,.04,.42)]);
   const crossG=(hex)=>M([F(box(.12,1.1,.1),hex,{j:.02},0,.55,0),F(box(.6,.12,.1),hex,{j:.02},0,.82,0),F(dome(.35,6),0x3e3428,{j:.06},0,0,.5,0,0,0,[1,.35,1.6])]);
   const fenceG=(wood)=>M([F(box(.12,.95,.12),wood,{j:.02},-1.15,.47,0),F(box(.12,.85,.12),wood,{j:.02},1.15,.42,0),F(box(2.5,.1,.06),wood,{j:.02},0,.7,0,0,0,.03),F(box(2.5,.1,.06),wood,{j:.02},0,.38,0,0,0,-.04)]);
@@ -18769,11 +18785,13 @@ function wdDeco(){const T0=performance.now();
   const statueG=(stone,o)=>{o=o||{};const p=[F(box(1.1,.7,1.1),stone,{j:.05},0,.35,0),F(box(1.25,.12,1.25),stone,{},0,.72,0),F(cyl(.22,.38,1.3,6),stone,{j:.04},0,1.43,0),F(ico(.2,0),stone,{j:.03},0,2.25,0),F(box(.62,.18,.3),stone,{},0,1.95,0)];
     if(o.wings)[-1,1].forEach(s=>p.push(F(cone(.35,1.2,3),stone,{j:.04},s*.35,2.1,-.12,0,0,s*.7,[1,1,.25])));
     if(o.sword)p.push(F(box(.08,1.3,.04),stone,{},.28,1.5,.2),F(box(.36,.06,.06),stone,{},.28,2.0,.2));
-    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.95,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
+    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.9,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
     if(o.broken)p.splice(3,2);return M(p)};
   const mausoleum=(st,roof)=>M([F(box(2.6,.25,3),st,{j:.04},0,.12,0),F(box(2.2,1.9,2.6),st,{j:.06},0,1.2,0),F(cyl(.16,.18,1.9,6),st,{},-.95,1.2,1.4),F(cyl(.16,.18,1.9,6),st,{},.95,1.2,1.4),
     F(box(2.5,.2,3),st,{},0,2.2,0),F(cone(1.85,.9,4),roof,{j:.05},0,2.75,0,0,Math.PI/4,0,[1,1,1.25]),F(box(.9,1.3,.06),0x141218,{lo:1,hi:0},0,.95,1.31),F(cyl(.04,.04,.6,4),0x8a8a90,{},0,3.35,0),F(box(.4,.06,.06),0x8a8a90,{},0,3.5,0)]);
-  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(box(.62,.22,1.6),w,{j:.02},.15,.25,.5,.1,.3,.15)]);
+  // v176: a coffin is coffin-shaped (narrow head, broad shoulders, tapered foot) with a lid knocked askew, not a box
+  const coffinG=(L,W,H)=>{const s=new G.Shape([[-W*.62,0],[-W,L*.28],[-W*.7,L],[W*.7,L],[W,L*.28],[W*.62,0]].map(q=>new G.Vector2(q[0],q[1]-L*.5)));const g=new G.ExtrudeGeometry(s,{depth:H,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,H,0);return g};
+  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(coffinG(1.6,.31,.2),w,{j:.015},.15,.12,.5,.1,.3,.15),F(coffinG(1.62,.33,.05),dt168Mix(w,0x000000,.25),{j:.01},.22,.33,.42,.16,.42,.1)]);
   const archG=(st,top)=>M([F(box(.9,3.2,1),st,{j:.1,top,tt:.6},-1.7,1.6,0),F(box(.9,3.2,1),st,{j:.1,top,tt:.6},1.7,1.6,0),F(tor(1.7,.5,Math.PI,8),st,{j:.08,top,tt:.6},0,3.0,0,0,0,0,[1,.6,1.2]),F(box(1.2,.5,1.1),st,{j:.1},-1.7,.25,0),F(box(1.2,.5,1.1),st,{j:.1},1.7,.25,0)]);
   const duneG=(c)=>F(dome(1,9),c,{j:.12,jy:.5,lo:.86,hi:.24,f:(x,y,z)=>[x*(1+.25*Math.sign(x)),y*(1-.35*Math.max(0,x)),z]},0,0,0);
   const cartG=()=>M([F(box(2.0,.12,1.1),0x6a4a2e,{j:.03},0,.75,0,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,.53,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,-.53,0,0,.15),
@@ -18783,11 +18801,12 @@ function wdDeco(){const T0=performance.now();
   const basalt=(c,top)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.05,r=i?.42:0,h=1.4+((i*53)%10)/5;p.push(F(cyl(.24,.26,h,6),c,{j:.02,top,tt:.8},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return M(p)};
   const icicles=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.2,r=i?.2+i*.06:0,h=.4+((i*29)%10)/14;p.push(F(cone(.08,h,4),c,{lo:.8,hi:.5},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
-  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(F(box(s*1.4,s,s),c,{j:.06},Math.cos(a)*r,s/2,Math.sin(a)*r,0,a,(i%2)*.3))}return M(p)};
+  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v176: broken blocks among rough chunks
+    for(let i=0;i<6;i++){const a=i*1.7+.4,r=.5+(i%3)*.3;p.push(F(oct(.06+(i%3)*.025),c,{j:.03},Math.cos(a)*r,.02,Math.sin(a)*r,0,i,0,[1,.6,1]))}return M(p)};
   const candles=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cyl(.03,.035,h,5),0xe8dcc0,{lo:.9,hi:.2},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const candleGlow=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cone(.025,.07,4),0xffffff,{lo:1,hi:0},Math.cos(a)*r,h+.04,Math.sin(a)*r))}return M(p)};
-  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.82,0)]);
-  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,2.0,0)]);
+  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.72,0)]);
+  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,1.9,0)]);
   const rootsG=(bark)=>{const p=[];for(let i=0;i<4;i++){const a=i*1.6;p.push(F(tor(.9+i*.15,.13-i*.015,Math.PI*.85,7),bark,{j:.04},0,-.25,0,0,a,0,[1.3,1,1]))}p.push(F(cyl(.3,.45,.7,6),bark,{j:.05},.2,.1,0,0,0,.6));return M(p)};
   const hay=()=>M([F(cyl(.55,.55,.9,8),0xd8b860,{j:.04,lo:.75,hi:.35},0,.55,0,Math.PI/2,0,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},.2,.55,0,0,Math.PI/2,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},-.2,.55,0,0,Math.PI/2,0)]);
   const totem=(w,c1,c2)=>M([F(cyl(.18,.22,2.6,6),w,{j:.03},0,1.3,0),F(cone(.3,.5,5),c1,{},0,2.85,0),F(box(.5,.3,.42),c2,{j:.02},0,2.2,.08),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},.12,2.25,.3),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},-.12,2.25,.3),F(box(.9,.12,.12),w,{},0,1.6,0),F(box(.04,.7,.3),c1,{},.42,1.25,0),F(box(.04,.7,.3),c2,{},-.42,1.25,0)]);
@@ -18825,7 +18844,9 @@ function wdDeco(){const T0=performance.now();
   def('h_hay',{parts:[hay()],cast:true,col:.6,s:[.9,1.15]});
   def('h_cairn',{parts:[cairn(0x9a9488)],cast:true,s:[.8,1.2]});
   def('h_totem',{parts:[totem(0x6a4a2e,0x3a8a5a,0xc8a040)],cast:true,col:.35,s:[.9,1.1]});
-  def('h_bush',{parts:[M([F(ico(.45,0),0x4a8a3a,{j:.12},0,.35,0),F(ico(.35,0),0x5a9a42,{j:.1},.35,.3,.1),F(ico(.3,0),0x3e7a32,{j:.1},-.3,.25,-.15)])],near:true,s:[.8,1.4],sway:.04});
+  // v176: h_bush is a dense, uneven shrub with bare twigs (was three bright green balls)
+  def('h_bush',{parts:[M([F(ico(.42,1),0x3e6a32,{j:.16,lo:.45,hi:.6},0,.34,0,0,0,0,[1.1,.82,1]),F(ico(.33,1),0x48743a,{j:.13,lo:.45,hi:.6},.36,.27,.12,0,1,0,[1,.8,1]),F(ico(.29,1),0x36602c,{j:.12,lo:.45,hi:.6},-.32,.23,-.15,0,2,0,[1,.8,1]),
+    F(ico(.22,1),0x4a7038,{j:.1,lo:.5,hi:.6},.06,.58,-.12),twig(.1,.2,.05,.75,.7,.5,0x3a2e22,.025),twig(-.1,.2,-.05,.6,-.8,2.2,0x3a2e22,.02),twig(0,.15,.1,.55,.5,4,0x3a2e22,.02)])],near:true,s:[.8,1.4],sway:.04});
   // Burningeye Summit: a frozen peak under a burning sky
   def('b_crystal',{parts:[{g:crystals(0xffffff),glow:1}],cast:false,col:.6,s:[.8,1.5],tint:[0x9ad8ff,0xbfe8ff,0x7ab8ff]});
   def('b_rock',{parts:[rockG(0x6a7280,0xf4f8ff,1.1,.75)],cast:true,col:.95,s:[1,1.7]});
@@ -18872,8 +18893,9 @@ function wdDeco(){const T0=performance.now();
   def('c_column',{parts:[pillarG(0x5a5058,3.2,null)],cast:true,col:.5,s:[.95,1.3]});
   def('c_graves',{parts:[M([grave(0x3e3a42,.15).translate(-.7,0,0),grave(0x46404a,-.1).translate(.7,0,.1)])],cast:true,s:[.9,1.2]});
   def('c_candela',{parts:[candelabra(),{g:candelaGlow(),glow:1}],cast:true,s:[.9,1.1],gt:[0xffc870]});
-  def('c_blood',{parts:[F(disc(1,9),0x4a0610,{lo:1,hi:0,j:.15,jy:0},0,0,0,-Math.PI/2)],near:true,y:.04,s:[.6,1.4],j:.05});
-  def('c_coffin',{parts:[M([F(box(.7,.35,1.8),0x2a1a1a,{j:.03},0,.18,0),F(box(.76,.08,1.86),0x3a2222,{},.1,.4,.15,0,.25,.12)])],cast:true,s:[.9,1.1]});
+  def('c_blood',{parts:[(()=>{const sp=(r,n,sd)=>{const g=disc(r,n),P=g.attributes.position;for(let i=1;i<P.count;i++){const a=Math.atan2(P.getY(i),P.getX(i)),k=.62+.38*Math.abs(Math.sin(a*3+sd))+.22*Math.sin(a*7+sd*2);P.setXY(i,P.getX(i)*k,P.getY(i)*k)}return g};   // v176: a ragged pool with drops, dark
+    return M([F(sp(1,22,1.3),0x2a0408,{lo:1,hi:0,j:.04,jy:0},0,0,0,-Math.PI/2),F(sp(.16,8,2),0x30050a,{lo:1,hi:0},1.25,.003,.3,-Math.PI/2),F(sp(.1,7,3),0x30050a,{lo:1,hi:0},-.9,.003,1.05,-Math.PI/2),F(sp(.12,7,4),0x2a0408,{lo:1,hi:0},.2,.003,-1.3,-Math.PI/2)])})()],near:true,y:.04,s:[.6,1.4],j:.05});
+  def('c_coffin',{parts:[M([F(coffinG(1.8,.36,.33),0x2a1a1a,{j:.015},0,0,0),F(coffinG(1.84,.38,.06),0x3a2222,{j:.01},.1,.36,.15,0,.25,.1),F(box(.04,.05,.5),0x6a5a3a,{},.0,.335,-.3),F(box(.3,.05,.04),0x6a5a3a,{},0,.335,-.4)])],cast:true,s:[.9,1.1]});
   // ---------- where each zone puts them: w = in (walkable, off the road) | edge (walkable near the cliff) | bank (the raised rim, out of reach) | lane (beside the road) | water ----------
   // n = items per 1000 tiles of that kind, c = [min,max] per cluster, r = cluster radius
   const Z=[
@@ -18967,6 +18989,7 @@ function wdDeco(){const T0=performance.now();
   if(ZX&&ZX.post)ZX.post(out,col);
   if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
+  try{if(typeof env176Look=='function')env176Look(T,out)}catch(e){console.warn('v176 look',e)}   // v176: graded and weathered (3370)
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
@@ -18984,7 +19007,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
   for(const k in groups){const cx=k%1000,cz=Math.floor(k/1000),c={ms:[],ns:[],on:false,non:false,wd:1,box:new THREE.Box3(new THREE.Vector3(cx*CN-3,-4,cz*CN-3),new THREE.Vector3((cx+1)*CN+3,30,(cz+1)*CN+3))};
     for(const kk in groups[k]){const S=WD.T[kk],L=groups[k][kk];
       S.parts.forEach((p,pi)=>{const m=new THREE.InstancedMesh(p.g,mat(S,pi,p),L.length),col=new Float32Array(L.length*3);
-        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1];d0.position.set(d.x,(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s)),d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2]);d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
+        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1],y0=(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s));
+          // v176: seated on the slope under the whole base (3370 env176Seat), once per piece
+          const st=d.st176||(d.st176=typeof env176Seat=='function'?env176Seat(S,d,y0):null);
+          if(st){d0.position.set(st.x,st.y,st.z);d0.quaternion.copy(st.q);d0.scale.set(st.sx,st.sy,st.sz)}else{d0.position.set(d.x,y0,d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2])}d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
           const h=((d.x*73.13+d.z*37.7)%1+1)%1,tl=p.glow?(S.gt||S.tint):S.tint;cc.setHex(tl?tl[Math.floor(h*tl.length)%tl.length]:0xffffff);if(!p.glow&&!p.mat){const v=1-S.j/2+S.j*h;cc.multiplyScalar(v)}col.set([cc.r,cc.g,cc.b],j*3)});
         m.instanceColor=new THREE.InstancedBufferAttribute(col,3);m.instanceMatrix.needsUpdate=true;m.frustumCulled=false;m.visible=false;m.castShadow=false;m.receiveShadow=!p.glow&&!p.mat;m.userData.cast=!!S.cast&&!p.glow&&!p.mat;
         if(p.mat)m.renderOrder=3;scene.add(m);WD.ms.push(m);(S.near?c.ns:c.ms).push(m)})}
@@ -25670,8 +25696,8 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
     p.push(F(ico(.18,0),0x5a3a1a,{},.8,3.15,.12),F(ico(.16,0),0x5a3a1a,{},.7,3.12,-.15));return M(p)};
   const obelisk=(hex)=>M([F(box(1.1,.5,1.1),hex,{j:.06},0,.25,0),F(cyl(.32,.5,4.2,4),hex,{j:.05},0,2.6,0,0,Math.PI/4,0),F(cone(.34,.7,4),hex,{j:.03},0,5.05,0,0,Math.PI/4,0)]);
   const glyphs=()=>{const p=[];for(let i=0;i<4;i++)p.push(F(box(.1,.22,.05),0xffffff,{lo:1,hi:0},((i%2)-.5)*.2,1.4+i*.75,.36));return M(p)};
-  const frozen=()=>M([F(box(1.1,1.9,1),0x9ad0f0,{j:.18,lo:.8,hi:.5},0,.95,0,0,.3,0),skull(0xd8d8e0).translate(0,1.3,0)]);
-  const sarco=(hex)=>M([F(box(1,.6,2.2),hex,{j:.03},0,.3,0),F(box(1.1,.16,2.3),hex,{j:.03},0,.68,0),F(box(.5,.2,1.4),hex,{j:.06},0,.86,-.1),F(ico(.2,0),hex,{},0,.9,.8)]);
+  const frozen=()=>M([F(dt168Rock(171,1,.35,1).clone(),0x8ab8d4,{j:.08,lo:.8,hi:.5},0,.95,0,0,.3,0,[.62,1.02,.56]),skull(0xd8d8e0).translate(0,1.3,0)]);
+  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v176: a carved tomb with a plinth, panels and a laid-out effigy
   const bonePile=()=>M([skull(0xd8d0b8),skull(0xc8c0a8).translate(.45,0,.2),skull(0xd0c8b0).translate(-.3,0,-.3),skull(0xc0b8a0).translate(.1,.3,0),F(dome(.9,7),0xb8b098,{j:.2},0,0,0,0,0,0,[1,.35,1]),
     F(cyl(.04,.04,.9,4),0xd8d0b8,{},.6,.15,-.4,0,.5,Math.PI/2),F(cyl(.04,.04,.8,4),0xd8d0b8,{},-.5,.12,.4,0,-.8,Math.PI/2)]);
   const boneSpikes=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.3,r=i?.3+i*.12:0,h=i?1+((i*37)%10)/10:2.2;p.push(F(cone(.1,h,4),0xe0d8c0,{j:.02},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
@@ -25681,7 +25707,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const catapult=()=>M([F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,.6),F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,-.6),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,.6,0,0,.3),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,-.6,0,0,.3),
     F(cyl(.06,.06,1.4,5),0x3a2a1a,{},.2,1.4,0,Math.PI/2,0,0),F(box(2.8,.12,.14),0x6a4a2e,{},-.6,1.8,0,0,0,.6),F(dome(.35,6),0x3a2a1a,{},-1.7,2.4,0,Math.PI),
     F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,-.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,-.72,0,0,0)]);
-  const hedge=()=>F(box(3,1.2,.9),0x2a4a2a,{j:.08,lo:.6,hi:.5},0,.6,0);
+  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v176: clipped but leafy, not a green box
   const topiary=()=>M([F(cyl(.08,.1,.6,5),0x3a2a1a,{},0,.3,0),F(ico(.55,1),0x2a4a2a,{j:.04,lo:.6,hi:.5},0,1.1,0),F(cone(.4,.9,6),0x2e522e,{j:.03},0,1.9,0),F(box(.9,.35,.9),0x5a5258,{j:.03},0,.17,0)]);
   const fountain=()=>M([F(cyl(1.8,1.9,.55,10),0x5a5258,{j:.05},0,.27,0),F(cyl(1.55,1.55,.1,10),0x3a0810,{lo:1,hi:0},0,.5,0),F(cyl(.25,.4,1.6,7),0x5a5258,{j:.03},0,1.2,0),F(cyl(.75,.4,.25,8),0x5a5258,{},0,1.95,0),statueG(0x5a5258,{}).scale(.6,.6,.6).translate(0,2.05,0)]);
   const fountainGlow=()=>F(cyl(1.5,1.5,.04,10),0xffffff,{lo:1,hi:0},0,.56,0);
@@ -25689,7 +25715,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   // ---- Kindlelight II: the Glowmire Hollows ----
   def('k2_gshroom',{parts:[gshroom(0xb8b8a0),glowM(gcap())],cast:true,col:.45,s:[.9,1.6],gt:[0x4affb0,0x7aff6a,0x5ae8ff]});
   def('k2_gshroomB',{parts:[gshroom(0xa8a890),glowM(gcap())],s:[1.4,2.4],gt:[0x4affb0,0x9aff5a,0x5ae8ff]});
-  def('k2_shelf',{parts:[glowM(shelf())],near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
+  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v176: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
   def('k2_goo',{parts:[glowM(gooPuddle())],near:true,y:.05,s:[.8,1.8],gt:[0x3ad82a,0x5aff3a]});
   def('k2_stalag',{parts:[stalag(0x3a423e,0x4a7a4a)],cast:true,col:.5,s:[.8,1.5]});
   def('k2_pillar',{parts:[pillarR(0x343c38,0x3e6a42,9)],cast:true,col:.95,s:[.9,1.2]});
@@ -29362,7 +29388,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const water=(x,z,rx,rz,col,op)=>{if(gy(x,z)<-.05){take(x,z,Math.max(rx,rz)*.7);return {userData:{Y:.02}}}return pool(x,z,rx,rz,col,false,op)};
   const lily=(x,Y,z,col)=>{const o=putY(Q.disc,S(col||0x3a7a3a),x,Y,z,rr(.25,.45),rr(.25,.45),1,-P2,0,rr(0,6));o.castShadow=false};
   // ---- growth ----
-  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++)put(Q.cyl4,S(col||0x5a7a3a),x+rr(-.45,.45),.45,z+rr(-.45,.45),.025,rr(.7,1.3),.025,rr(-.2,.2),0,rr(-.2,.2))};
+  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++){const ox=rr(-.45,.45),oz=rr(-.45,.45),h=rr(.7,1.3);put(Q.cyl4,S(col||0x5a7a3a),x+ox,h/2-.08,z+oz,.025,h,.025,rr(-.2,.2),0,rr(-.2,.2))}};   // v176: rooted (short reeds stood ~.1 above the ground)
   const shroom=(x,z,k,cap,glow)=>{put(Q.cyl,S(0xd8cdb0),x,k*.6,z,k*.14,k*1.2,k*.14);put(Q.sph,glow?S(cap,{emissive:cap,emissiveIntensity:.6}):S(cap),x,k*1.2,z,k*.6,k*.3,k*.6);[0,1,2].forEach(i=>put(Q.sph,S(0xf0e8d8),x+Math.cos(i*2.1)*k*.34,k*1.4,z+Math.sin(i*2.1)*k*.34,k*.08,k*.05,k*.08));if(k>1)blk(x,z,0)};
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
@@ -29430,7 +29456,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
   const palm=(x,z,h,dead)=>{blk(x,z,0);take(x,z,1);const lx=rr(-.25,.25),lz=rr(-.25,.25);put(Q.tcyl,S(0x6a5038),x+lx*h*.5,h/2,z+lz*h*.5,.16,h,.16,lz,0,-lx);
-    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*.7,Y+(dead?-.5:.05),tz+Math.sin(a)*.7,1.5,.04,.3,0,-a,dead?-1.15:-.35)}};
+    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;const tl=dead?1.15:.35,fr=.75*Math.cos(tl)-.04,fy=Y-.75*Math.sin(tl)+.02;   // v176: each frond grows from the crown (their inner ends stood ~.3 above and beside it)
+    for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*fr,fy,tz+Math.sin(a)*fr,1.5,.04,.3,0,-a,-tl)}};
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
     TQ(sg,Q.box,M,-.6*k,2.4*k,0,.4*k,3*k,1.8*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,.1*k,1.6*k,.86*k*s,1.4*k,.5*k,.3*k));TQ(sg,Q.cone4,M,-.6*k,4.25*k,0,.6*k,.9*k,.9*k,0,Math.PI/4,0)};
@@ -29861,8 +29888,17 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
     F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},.95,.3,.12,0,1.1,.12,[.72,.46,.62]),F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},-.9,.28,-.1,0,2.2,-.1,[.7,.44,.6])]);
   const stand=(hex,top)=>M([F(dod(1),hex,{j:.13,top,tt:.6,lo:.6,hi:.45},0,.62,0,0,.4,0,[1.15,.9,.95]),F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},1.05,.25,.25,0,2.4,0,[.62,.4,.55]),
     F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},-1.05,.22,-.15,0,.9,0,[.55,.36,.5])]);
-  const oak=(bark,l1,l2)=>M([F(cyl(.16,.32,2.6,7),bark,{j:.04,lo:.6,hi:.4,f:(x,y,z)=>y<-1.2?[x*1.4,y,z*1.4]:[x,y,z]},0,1.3,0),F(cyl(.06,.11,1.1,5),bark,{j:.02},.35,2.3,0,0,0,-.9),F(cyl(.05,.1,1,5),bark,{j:.02},-.3,2.4,.15,.3,0,.9),
-    F(ico(1.35,1),l1,{j:.3,lo:.6,hi:.5},0,3.3,0,0,0,0,[1,.78,1]),F(ico(1.05,1),l2,{j:.25,lo:.65,hi:.5},.75,3.85,.3,0,0,0,[1,.8,1]),F(ico(.95,1),l2,{j:.22,lo:.65,hi:.5},-.7,3.7,-.35,0,0,0,[1,.8,1]),F(ico(.8,1),l1,{j:.2,lo:.7,hi:.45},.1,4.35,-.1,0,0,0,[1,.8,1])]);
+  // v176: a gnarled oak (it was a stick under a green ball): a leaning, flared trunk forking into three limbs, the crown a loose
+  // mass of uneven clumps hung on the limbs (dark beneath), a dead branch or two poking out
+  const oak=(bark,l1,l2)=>{const bend=(x,y,z)=>{const t=Math.max(0,y)/2.6;return [x*(y<.3?1.25-y*.8:1)+t*t*.28,y,z+Math.sin(y*1.3)*.05]};
+    const p=[F(cyl(.17,.34,2.5,8),bark,{j:.04,lo:.55,hi:.42,f:bend},0,1.25,0),
+      F(cyl(.3,.42,.3,8),bark,{j:.06,lo:.5,hi:.3},.02,.1,0)];
+    const limbs=[[.62,0,2.15,1.5],[-.55,2.1,2.0,1.35],[.45,4.2,2.25,1.2]];
+    limbs.forEach(([lz,ry,y,L])=>p.push(F(cyl(.055,.12,L,6),bark,{j:.03,lo:.55,hi:.4},0,L/2,0).rotateZ(lz).rotateY(ry).translate(.2,y,0)));
+    const cl=[[.0,3.95,0,.95,l1],[.85,3.55,.35,.8,l2],[-.75,3.5,-.4,.82,l1],[.25,3.35,-.85,.7,l2],[-.35,3.4,.8,.72,l2],[.55,4.45,-.25,.62,l1],[-.4,4.35,.3,.6,l2],[1.2,3.1,-.35,.5,l1]];
+    cl.forEach(([x,y,z,r,c],i)=>p.push(F(ico(r,1),c,{j:r*.34,lo:.42,hi:.7,f:(X,Y,Z)=>[X,Y<y?y-(y-Y)*.62:Y,Z]},x,y,z,0,i*.9,0,[1.1,.82,1.05])));
+    p.push(F(cyl(.02,.045,.9,4),bark,{j:.02},0,.45,0).rotateZ(-1.05).rotateY(2.6).translate(-.2,2.6,.1),F(cyl(.015,.035,.7,4),bark,{j:.02},0,.35,0).rotateZ(.95).rotateY(.4).translate(.3,2.9,-.1));
+    return M(p)};
   const pine=(bark,leaf,snow)=>{const p=[F(cyl(.12,.22,1.4,6),bark,{j:.03},0,.7,0)];[[1.35,1.6,1.25],[1.12,1.45,2.15],[.88,1.3,2.95],[.62,1.15,3.65],[.36,.95,4.25]].forEach(([r,h,y],i)=>p.push(F(cone(r,h,8),leaf,{j:.07,top:snow,tt:.35,lo:.55+i*.04,hi:.45},0,y,0,0,i*.6,0)));return M(p)};
   const mk=(k,o)=>{if(!T[k])def(k,o);return k};
   const eOak=(b,l1,l2)=>mk('e_oak_'+b.toString(16)+l1.toString(16),{parts:[oak(b,l1,l2)],cast:true,s:[1,1.35],sway:.012,j:.14});
@@ -49126,7 +49162,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     drum(x,z){drum(x,z,pal.wood,1.1)},
     totem(x,z,a){const h=rr(3.2,4.4),sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.7);let y=0;const cs=[pal.wood,pal.acc,pal.woodD,pal.trim];
       for(let i=0;i<4;i++){const hh=h/4,rd=.32-i*.03;TQ(sg,Q.cyl,S(cs[i%4]),0,y+hh/2,0,rd,hh,rd);TQ(sg,Q.box,S(pal.woodD),rd*.85,y+hh*.55,0,.1,hh*.4,rd*1.2);[-1,1].forEach(s=>TQ(sg,Q.box,G(i%2?0xffd060:0x0a0808),rd*.92,y+hh*.62,s*rd*.32,.04,.06,.08));y+=hh}
-      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.42,.04,.9,.18,s*.15,0,0))},
+      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.3,.04,.9,.18,s*.15,0,0))},   // v176: hung on the pole (they hung .1 off it)
     altar(x,z,a){const sg=sub(x,z,a,0);TQ(sg,Q.box,STN,0,.45,0,1.8,.9,1);TQ(sg,Q.box,STD,0,.93,0,2,.1,1.15);TQ(sg,Q.box,STD,0,.1,0,2.4,.2,1.5);const d=TQ(sg,Q.disc,G(Lc[0]),0,.99,0,.3,.3,1,-P2,0,0);d.castShadow=false;
       bRect(x,z,a,2.4,1.5);take(x,z,1.5);candles(x,z,6,1.2,pal.lant);halo(x,z,1.8,Lc[0],.14,.05);skull(x+Math.cos(a+P2)*.6,.98,z+Math.sin(a+P2)*.6,.9,pal.bone,a)},
     brazier(x,z){brazier(x,z,pal.fire,1.15)},
@@ -49252,9 +49288,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       const P=[-1,1].map(s=>[x+sx*hw*s,z+sz*hw*s]);
       if(fk=='ruin'||fk=='stone')arch(x,z,ga,hw*2,3.4,pal.stone,.6);
       else if(fk=='hedge'){const sg=sub(x,z,ga+P2,0);TQ(sg,Q.arc,S(0x1a1416),0,0,0,hw,2.6,1.2,0,P2,0);P.forEach(([px,pz])=>blk(px,pz,0))}
-      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.2,pz,.2,.18,.2)});
+      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.14,pz,.2,.18,.2)});
         seg(P[0][0],gy(P[0][0],P[0][1])+H-.25,P[0][1],P[1][0],gy(P[1][0],P[1][1])+H-.25,P[1][1],.14,M,Q.cyl);
-        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s];seg(c[0],gy(c[0],c[1])+H+.05,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,gy(c[0],c[1])+H+.9,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
+        const g0=gy(P[0][0],P[0][1]),g1=gy(P[1][0],P[1][1]);   // v176: the tusks grow out of the lintel (they stood ~.2 above it, in the air)
+        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s],yb=g0+(g1-g0)*(hw+.9*s)/(2*hw)+H-.25+.06;seg(c[0],yb,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,yb+.85,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
       // braziers / torches just inside, a banner outside
       const bi=[-1,1].map(s=>[x-Math.cos(ga)*1.3+sx*(hw+.7)*s,z-Math.sin(ga)*1.3+sz*(hw+.7)*s]);
       bi.forEach(([bx,bz])=>{if(!ground(bx,bz,.2))return;if(gi==0)brazier(bx,bz,pal.fire,1.2);else torch(bx,bz,pal.fire,2)});
@@ -54470,3 +54507,99 @@ function cam172Hold(P,c){if(!CAM172.on)return;let I=null;try{const k=cvKey();I=k
 {const f=POST.render;POST.render=function(){try{if(CAM172.on&&!(typeof IC151!='undefined'&&IC151.on)&&typeof pl!='undefined'&&pl){const x=cam.position.x,y=cam.position.y,z=cam.position.z;
     cam172Hold(pl.position,cam.position);if(cam.position.x!==x||cam.position.y!==y||cam.position.z!==z){cam.lookAt(look);cam.updateMatrixWorld();FADE.cam.value.copy(cam.position)}}}catch(_){}
   return f.apply(this,arguments)}}
+// ================= v176 environment pass: scattered scenery sits on the ground =================
+// Owner: "check all environment pieces on each instance in each zone ... for unattached pieces or poor quality".
+// The scattered decorations (1680 / 1981 / 2280: WD kinds, instanced per 64x64 chunk in wdBuild) used to stand at the ground height
+// under their centre, so on a slope one side of a rock, log or grave hung in the air (up to metres on the rim banks, and pieces on a
+// cliff lip hung over the drop). wdBuild now asks env176Seat for each piece's place:
+//  * low, wide pieces (rocks, ledge stones, logs, dunes, rubble, graves) lean with the slope under them (tall ones stay upright:
+//    trees, pillars, lamps, statues), up to ENV176.tilt;
+//  * then the piece sinks until no point of its base is above the ground (the uphill side goes into the ground);
+//  * a piece that would have to sink more than its share (ENV176.sink: a tall piece a third of its height, a low one 45%) stands on
+//    ground too steep for it (a cliff face, a wall lip) and is not drawn (scale 0; gb168Clear hides pieces the same way).
+// Flat patches (goo, blood, salt crust) lie along the slope; mist, webs and pieces at a fixed height (lilies on water) stay as they were.
+// Everything here is a hoisted function: wdBuild runs at load, long before this file.
+var ENV176;   // lazy: wdBuild calls in before this line runs
+function env176(){return ENV176||(ENV176={tilt:.4,tol:.04,sink:[.34,.45],n:0,hid:0})}
+// the kind's base outline (local vertices at the very bottom), size and how much it leans: cached on the kind
+function env176Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
+  try{if(S.abs==null&&!S.parts.some(p=>p.mat)){const V=[];let mn=1e9,mx=-1e9,x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+    S.parts.forEach(p=>{const P=p.g.attributes.position;for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);V.push(x,y,z);if(y<mn)mn=y;if(y>mx)mx=y;if(x<x0)x0=x;if(x>x1)x1=x;if(z<z0)z0=z;if(z>z1)z1=z}});
+    const h=mx-mn,w=Math.max(x1-x0,z1-z0);
+    if(h>.06){const lo=[],lean=h<w*.6?1:h<w*1.2?.5:0,cut=mn+Math.max(.03,h*(lean?.2:.07)),seen=new Map();
+      for(let i=0;i<V.length;i+=3)if(V[i+1]<=cut){const k=Math.round(V[i]*50)+','+Math.round(V[i+2]*50),j=seen.get(k);if(j==null){seen.set(k,lo.length);lo.push(V[i],V[i+1],V[i+2])}else if(V[i+1]<lo[j+1])lo[j+1]=V[i+1]}   // the lowest point over each spot
+      // big outlines thinned to ~48 points (every n-th): enough to find the lowest ground under the base
+      let L=lo;if(lo.length>144){const st=Math.ceil(lo.length/144);L=[];for(let i=0;i<lo.length;i+=3*st)L.push(lo[i],lo[i+1],lo[i+2])}
+      r={lo:L,h,w,lean,tall:h>w*1.2}}
+    else if(w>.2)r={decal:1,w}}}catch(e){console.warn('v176 kind',S.k,e)}
+  return S._e176=r}
+// where piece d stands: {x,y,z,q,sx,sy,sz} (sx 0: not drawn); y0 is its old height (ground at its centre plus the kind's lift)
+function env176Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env176Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
+  if(!K)return o;const E=env176();E.n++;
+  if(K.decal||K.lean){const r=Math.max(.6,K.w*.45*s),gx=(GH(d.x+r,d.z)-GH(d.x-r,d.z))/(2*r),gz=(GH(d.x,d.z+r)-GH(d.x,d.z-r))/(2*r),n=new V3(-gx,1,-gz).normalize(),up=new V3(0,1,0);
+    let a=Math.acos(Math.min(1,n.y))*(K.decal?1:K.lean);a=Math.min(a,K.decal?.7:E.tilt);if(a>.01){const ax=new V3().crossVectors(up,n).normalize();o.q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,a))}}
+  if(K.decal)return o;   // a flat patch (goo, salt crust, blood) lies along the slope at its old height
+  const L=K.lo,v=new V3();let gap=-1e9;
+  for(let i=0;i<L.length;i+=3){v.set(L[i]*o.sx,L[i+1]*o.sy,L[i+2]*o.sz).applyQuaternion(o.q);const g=y0+v.y-GH(d.x+v.x,d.z+v.z);if(g>gap)gap=g}
+  const sink=Math.max(0,gap-E.tol),lim=K.h*o.sy*E.sink[K.tall?0:1]+.08;
+  if(sink>lim){o.sx=o.sy=o.sz=0;E.hid++;return o}
+  o.y=y0-sink;return o}
+// ================= v176 environment pass: a darker, weathered palette =================
+// Owner: "analyze and optimize structure, color and overall style ... non-cartoony (this is a dark fantasy game) or too simple".
+// The zones were painted in candy colours (lime moss, pure white snow and bone, saturated sand and grass). One grade per zone
+// (ENV176Z) is applied once at load: to every scattered decoration's baked vertex colours (env176Look, from wdDeco before the
+// chunks are built: colour pulled toward grey by .sat, lime greens turned toward olive by .olive, bright colours compressed above
+// .knee by .comp, everything times .dark), its instance tints (saturation only), and to the zone's ground colours (env176Biomes,
+// from 0045: BIOMES gnd / grs / acc / frs / tree tints). Then weathering is baked into each decoration (dt168Weather, 3345):
+// grime toward the foot, mottling and rain streaks, so props stop reading as flat painted plastic. Glowing parts are left alone.
+// Duskhold is not graded.
+function env176Z(z){return [
+  {sat:.78,olive:.25,knee:.42,comp:.55,dark:.95},   // Kindlelight (already a dark bog)
+  {sat:.6,olive:.45,knee:.4,comp:.5,dark:.88},      // Hillside Crest: the brightest, most cartoony greens
+  {sat:.68,olive:.3,knee:.5,comp:.55,dark:.9},      // Burningeye Summit: snow and ice, not glaring white
+  {sat:.66,olive:.35,knee:.45,comp:.5,dark:.88},    // Searing Sands: sun-bleached, not orange candy
+  {sat:.72,olive:.3,knee:.4,comp:.5,dark:.9},       // The Dirge: bone and stone in murk
+  {sat:.82,olive:.3,knee:.4,comp:.55,dark:.92}][z]||null}  // The Citadel
+// grade one colour (0..1 floats) in place: returns [r,g,b]
+function env176Grade(r,g,b,Z){let l=.3*r+.59*g+.11*b;
+  if(g>r&&g>b){const k=Math.min(1,(g-Math.max(r,b))*4)*Z.olive;r+=(g-r)*k*.5;b+=(g-b)*k*.15;g-=(g-r)*k*.15}   // lime -> olive / moss
+  l=.3*r+.59*g+.11*b;r=l+(r-l)*Z.sat;g=l+(g-l)*Z.sat;b=l+(b-l)*Z.sat;
+  if(l>Z.knee){const L=Z.knee+(l-Z.knee)*Z.comp,f=L/l;r*=f;g*=f;b*=f}
+  return [r*Z.dark,g*Z.dark,b*Z.dark]}
+function env176Hex(h,Z,satOnly){const c=new THREE.Color(h);let o;if(satOnly){const l=.3*c.r+.59*c.g+.11*c.b;o=[l+(c.r-l)*Z.sat,l+(c.g-l)*Z.sat,l+(c.b-l)*Z.sat]}else o=env176Grade(c.r,c.g,c.b,Z);
+  return c.setRGB(Math.max(0,o[0]),Math.max(0,o[1]),Math.max(0,o[2])).getHex()}
+// the zone a decoration kind belongs to: by its name (k_, k2_ ... c3_), else by where most of its pieces stand
+function env176KindZone(k,list){const m=/^([khbsdc])\d?_/.exec(k);if(m)return 'khbsdc'.indexOf(m[1]);
+  const n=[0,0,0,0,0,0,0];for(const d of list)if(d.k===k){const I=insAt(Math.round(d.x),Math.round(d.z));n[I?I.z:6]++}let b=6;for(let i=0;i<6;i++)if(n[i]>(b<6?n[b]:0))b=i;return b<6?b:-1}
+function env176Look(T,list){const T0=performance.now(),done=new Set();let nk=0;
+  for(const k in T){const S=T[k];if(!S||!S.parts)continue;const z=env176KindZone(k,list),Z=env176Z(z);if(!Z)continue;nk++;
+    if(S.tint)S.tint=S.tint.map(h=>env176Hex(h,Z,true));
+    S.parts.forEach(p=>{const g=p.g;if(p.glow||p.mat||!g||done.has(g))return;done.add(g);const C=g.attributes.color,P=g.attributes.position;if(!C)return;
+      let y0=1e9,y1=-1e9;for(let i=0;i<P.count;i++){const y=P.getY(i);if(y<y0)y0=y;if(y>y1)y1=y}
+      for(let i=0;i<C.count;i++){const o=env176Grade(C.getX(i),C.getY(i),C.getZ(i),Z);C.setXYZ(i,o[0],o[1],o[2])}
+      if(!g.attributes.normal)g.computeVertexNormals();
+      try{dt168Weather(g,{y0,g:[Math.min(.7,Math.max(.25,(y1-y0)*.3)),.3],n:.2,s:.2,sd:(k.length*7)%13})}catch(e){}
+      C.needsUpdate=true})}
+  env176().look={kinds:nk,ms:Math.round(performance.now()-T0)}}
+// the zones' ground colours (BIOMES, after v112 added the themed instances' own); Duskhold (biome 0) stays
+function env176Biomes(){try{BIOMES.forEach((b,i)=>{if(!i||b.e176)return;b.e176=1;const z=b.v112!=null?Math.floor(b.v112/PMG):i-1,Z=env176Z(z);if(!Z)return;
+  const G=a=>{const o=env176Grade(a[0]/255,a[1]/255,a[2]/255,Z);return o.map(v=>Math.max(0,Math.min(255,Math.round(v*255))))};
+  ['gnd','grs','acc','frs'].forEach(k=>{if(Array.isArray(b[k]))b[k]=G(b[k])});if(Array.isArray(b.tc))b.tc=b.tc.map(h=>env176Hex(h,Z))})}catch(e){console.warn('v176 biomes',e)}}
+// ---- the zones' light and grade (0550 ZATM, and each themed instance's own in 1981): the v52 "vivid" grade pushed saturation
+// up to +50% and the bright zones over-exposed, which made every colour read as a cartoon. Boosts are cut to under a third (a
+// zone that is already desaturated keeps its value), over-bright suns and exposure come down, the vignette deepens a little,
+// and the hero's light in the dark zones no longer whites out what stands next to it.
+function env176Atm(a){if(!a||a.e176)return;a.e176=1;const cut=(v,k)=>v>1?1+(v-1)*k:v;
+  if(a.sat!=null)a.sat=cut(a.sat,.3);if(a.ex!=null)a.ex=cut(a.ex,.3)*.97;if(a.sun!=null)a.sun=cut(a.sun,.55);if(a.hemi!=null)a.hemi=cut(a.hemi,.6);if(a.vig!=null)a.vig*=1.08;
+  // the dark zones' carried light (li 2.2-3.4) burned a wall or rock a step away to pure white: softer, reaching a little further
+  if(a.li>1.5){a.li*=.72;if(a.ld)a.ld*=1.15}}
+try{for(let z=0;z<6;z++)env176Atm(ZATM[z]);if(typeof th112=='function')th112().list.forEach(t=>env176Atm(t.a))}catch(e){console.warn('v176 atmosphere',e)}
+// ---- pond banks (from 0045, right after the heights are made): a water tile was 1.2 below the surface next to land at full
+// height, a one-tile drop that read as a pit with sheer walls. The walkable land within ENV176B.r tiles of water now slopes down
+// to just above the waterline, and the water's first two rings shelve (ENV176B.w) before the deep middle. Rims are left alone.
+function env176Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W*H).fill(99),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~';let n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){if(!wet(x,y)||!insAt(x,y))continue;let land=99;
+    for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
+    const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
+  env176().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v176 banks',e)}}
