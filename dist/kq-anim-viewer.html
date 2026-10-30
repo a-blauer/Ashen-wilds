@@ -9107,7 +9107,7 @@ function lgWpnKit(k,type,col,r){
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,y=i%2?.05:-.05;k.p('','cone4','m',W.iron2,Math.cos(a)*.1,-.76+y,Math.sin(a)*.1,.022,.09,.022,Math.sin(a)*1.57,0,-Math.cos(a)*1.57)}
     k.p('','cone4','m',W.iron2,0,-.88,0,.022,.09,.022,Math.PI);if(gl)k.p('','ring','g',gl,0,-.76,0,.105,.15,.105)}
   else if(type=='staff'){const R=dkRng(11);let p=[0,.55,0];for(let i=0;i<5;i++){const q=[(R()-.5)*.05,.55-(i+1)*.29,(R()-.5)*.05];k.L('','c',i%2?W.woodD:0x33251a,p,q,.03,.035,6);if(i%2)k.p('','dod','c',W.woodD,q[0],q[1],q[2],.042);p=q}
-    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4,c=[Math.cos(a)*.03,-.92,Math.sin(a)*.03],t=[Math.cos(a)*.066,-1.05,Math.sin(a)*.066],tt=[Math.cos(a)*.03,-1.15,Math.sin(a)*.03];k.L('','c',0x33251a,c,t,.022,.016,5);k.L('','c',W.bone,t,tt,.015,.003,4)}
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2,c=[Math.cos(a)*.03,-.92,Math.sin(a)*.03],t=[Math.cos(a)*.066,-1.05,Math.sin(a)*.066],tt=[Math.cos(a)*.03,-1.15,Math.sin(a)*.03];k.L('','c',0x33251a,c,t,.022,.016,5);k.L('','c',W.bone,t,tt,.015,.003,4)}
     [0,1,2].forEach(i=>k.p('','cyl','m',W.brass,0,-.7-i*.045,0,.04,.022,.04));for(let i=0;i<3;i++)k.L('','c',W.leather,[0,-.2-i*.05,0],[.06,-.32-i*.07,.02],.012,.006,4);
     k.p('','oct','g',col,0,-1.06,0,.06,.11,.06);k.p('','oct','g',lgCol(col,0xffffff,.5),0,-1.06,0,.03,.06,.03)}
   else if(type=='wand'){k.L('','c',W.bone,[0,.12,0],[0,-.1,0],.02,.016,6);k.L('','c',lgCol(W.bone,0x5a4a30,.4),[0,-.1,0],[0,-.36,0],.016,.01,6);[.02,-.06,-.14].forEach(q=>k.p('','cyl','m',W.brass,0,q,0,.023,.018,.023));
@@ -17749,7 +17749,8 @@ function mdOutfit(cls){
 function mdBelt(B,P,y,c,bc){mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.008,{col:c});const k=dkKit();k.p('spine','box','m',bc,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.012,.05,.042,.014);mdKit(B,k)}
 function mdTabard(B,P,c,tr,sym){const off=(P.tOff||0)+.01;
   mdTS(B,P,.62,.975,off,{col:m=>Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.33});
-  mdSkirt(B,P,.62,.33,.02,Math.max(off+.006,(P.sOff||0)+.008),{col:m=>m.y<.355||Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.31,n:4});
+  mdSkirt(B,P,.64,.33,.02,typeof SN177!='undefined'&&SN177.hum>0?Math.max(off-.002,(P.sOff||0)+.004):Math.max(off+.006,(P.sOff||0)+.008),{   // v177 (foes): the skirt starts under the tabard's top, not 6 mm outside it
+    col:m=>m.y<.355||Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.31,n:4});
   if(sym){const k=dkKit(),f=mdTorsoAt(P,.83).f+off+.006;k.p('chest','box','m',sym,0,.83,f,.022,.13,.006).p('chest','box','m',sym,0,.86,f,.085,.022,.006);mdKit(B,k)}}
 function mdQuiver(B,P){const k=dkKit(),z=-(mdTorsoAt(P,.85).b+(P.tOff||0)+.05),a=[-.06,.66,z],b=[.1,1.0,z-.03];
   k.L('chest','c',0x5a3a20,a,b,.05,.056,8);k.L('chest','c',0x3a2618,[a[0]+.02,a[1]+.04,a[2]],[b[0]-.02,b[1]-.04,b[2]],.058,.058,8);
@@ -33466,7 +33467,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     for(let i=0;i<14;i++){const z=-.25+n3Nz(i,1,3)*.45,x=(n3Nz(i,5,7)-.5)*.5,y=.45+.15*Math.sqrt(Math.max(0,1-(x/.38)**2))-.01,h=.06+n3Nz(i,2,9)*.08;
       k.p(z>.15?'chest':z>-.1?'spine':'pelvis',i%3?'oct':'cone4',i%4?'c':'g',i%4?K.ice:K.glow,x,y+h*.4,z,.025,h,.025,(n3Nz(i,3,3)-.5)*.6,0,-x*1.2)}
     // rim of the carapace: jagged frost spines
-    for(let i=0;i<18;i++){const a=i/18*Math.PI*2,z=.03+Math.cos(a)*.3,x=Math.sin(a)*.37;if(Math.cos(a)>.85)continue;k.p(z>.15?'chest':z>-.1?'spine':'pelvis','cone4','c',K.ice,x,.45,z,.02,.06,.018,Math.cos(a)*1.4,0,-Math.sin(a)*1.4)}
+    for(let i=0;i<18;i++){const a=i/18*Math.PI*2,z=.03+Math.cos(a)*.3,x=Math.sin(a)*.37;if(Math.cos(a)>.85||Math.cos(a)<-.9)continue;   /* v177: none buried in the middle of the back */k.p(z>.15?'chest':z>-.1?'spine':'pelvis','cone4','c',K.ice,x,.45,z,.02,.06,.018,Math.cos(a)*1.4,0,-Math.sin(a)*1.4)}
     // eyes
     [[-.04,.47,.42],[.04,.47,.42],[-.08,.46,.4],[.08,.46,.4],[-.02,.49,.39],[.02,.49,.39]].forEach((p,i)=>k.p('head','sph','g',red?0xff2a2a:K.eye,p[0],p[1],p[2],i<2?.018:.011));
     // pincers: arm on the head, fixed finger on the head, moving finger on the jaw
@@ -33596,7 +33597,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     // a tarnished circlet with a teardrop gem
     k.p('head','tor','m',K.silver,0,1.05,.006,.064,.008,.068,0,0,0);k.p('head','oct','g',K.glow,0,1.05,.075,.008,.014,.005);
     // hair falling over the shoulders in front, a few loose strands
-    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.4,.945,z+.014],.0075,.007,4).L('chest','c',i%2?K.hair:K.hair2,[x*1.3,.99,z+.01],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});   // v177: the two halves overlap at the neck, so a head turn doesn't part them
+    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.4,.945,z+.014],.0075,.007,4).L('neck','c',i%2?K.hair:K.hair2,[x*1.3,.99,z+.01],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});   // v177: the two halves overlap at the neck, so a head turn doesn't part them
     // torn lace at the throat, a laced bodice
     for(let i=0;i<12;i++){const a=(i/11-.5)*3.4;k.p('neck','cone4','c',K.lace,Math.sin(a)*.06,.88,Math.cos(a)*.045,.01,.03,.004,Math.PI-.3*Math.cos(a),a,0)}
     for(let i=0;i<5;i++){const y=.79-i*.025;k.L('chest','c',K.gown2,[-.02,y,.068-i*.003],[.02,y-.012,.068-i*.003],.003,.003,3);k.L('chest','c',K.gown2,[.02,y,.068-i*.003],[-.02,y-.012,.068-i*.003],.003,.003,3)}
@@ -33787,7 +33788,7 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
       // shelf fungi up the back, moss hanging from the arms, root claws
       for(let i=0;i<6;i++){const y=.3+i*.08,s=i%2?1:-1;k.p(y>.5?'chest':y>.38?'spine':'pelvis','hem','c',i%2?0x8a6a4a:0x6a4a3a,s*.08,y,-.21-(y>.5?0:.01),.09,.03,.06,-.3,0,s*.2)}
       [-1,1].forEach(s=>{const f=s<0?'fl':'fr';for(let i=0;i<3;i++)k.L(f+'1','c',K.moss,[s*.33,.42-i*.06,.06],[s*.35,.34-i*.06,.05],.016,.004,3);
-        for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.02,.17+i%2*.02],.014,.003,4)});
+        for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.07,.18+i%2*.02],.014,.003,4)   /* v177: root claws clear of the ground (they dug 7 cm into it in idle) */});
       }};
   if(EN.shambler)EN.shambler.rig=n;
 })();
@@ -55219,7 +55220,9 @@ function sn177Part(p){const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.
   for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);V.push([v.x,v.y,v.z])}
   const tri=[],S=V.slice();for(let i=0;i+2<n;i+=3){const a=V[ix?ix[i]:i],b=V[ix?ix[i+1]:i+1],c=V[ix?ix[i+2]:i+2];tri.push([a,b,c]);
     S.push([(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],[(b[0]+c[0])/2,(b[1]+c[1])/2,(b[2]+c[2])/2],[(c[0]+a[0])/2,(c[1]+a[1])/2,(c[2]+a[2])/2])}
-  const c=[0,0,0];V.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});const k=1/Math.max(1,V.length);return {p,tri,S,c:[c[0]*k,c[1]*k,c[2]*k]}}
+  const c=[0,0,0];V.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});const k=1/Math.max(1,V.length);
+  // big parts: an even spread of at most 96 sample points (the nearest-surface search is the costly step)
+  const Sx=S.length>96?S.filter((_,i)=>i%Math.ceil(S.length/96)==0):S;return {p,tri,S:Sx,c:[c[0]*k,c[1]*k,c[2]*k]}}
 // body: flat triangle list (xyz × 9 per triangle); P: kit parts (their matrices are moved in place); tag: for SN177.far
 function sn177Snap(body,P,tag){if(!SN177.on||!P||!P.length||!body||body.length<9)return 0;
   let y0=1e9,y1=-1e9;for(let i=1;i<body.length;i+=3){y0=Math.min(y0,body[i]);y1=Math.max(y1,body[i])}const H=Math.max(.2,y1-y0),tol=SN177.tol*Math.max(1,H/1.7),max=SN177.max*H,emb=SN177.emb*Math.max(1,H/1.7);
@@ -55227,8 +55230,8 @@ function sn177Snap(body,P,tag){if(!SN177.on||!P||!P.length||!body||body.length<9
   const parts=P.map(sn177Part),att=new Array(parts.length).fill(false),o=[0,0,0];let moved=0;
   const attach=i=>{if(att[i]!=='in')att[i]=true;parts[i].tri.forEach(t=>sn177Add(G,t[0],t[1],t[2]))};
   const near=(q,r)=>{let best=-1,bp=null,bq=null,bt=-1;for(const s of q.S){const d=sn177Near(G,s,r,o);if(d>=0&&(best<0||d<best)){best=d;bp=s;bq=o.slice();bt=G.lastT}}return best<0?null:{d:best,s:bp,q:bq,t:bt}};
-  // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height)
-  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn177RayG(G,p,d,H*.12))))att[i]='in'});
+  // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height, at most 30 cm)
+  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn177RayG(G,p,d,Math.min(H*.12,.3)))))att[i]='in'});
   parts.forEach((q,i)=>{if(att[i]==='in')attach(i)});
   if(SN177.dbg)parts.forEach((q,i)=>{const r=near(q,.2);SN177.dbg.push((tag||'')+' '+q.p.bn+' c '+q.c.map(v=>v.toFixed(3)).join(',')+' d '+(r?r.d.toFixed(4)+' q '+r.q.map(v=>v.toFixed(3)).join(','):'-')+(att[i]==='in'?' IN':''))});
   const grow=()=>{let ch=true;while(ch){ch=false;parts.forEach((q,i)=>{if(att[i])return;if(near(q,tol)){attach(i);ch=true}})}};
@@ -55284,8 +55287,9 @@ function sn177SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn177Key(Math.flo
       for(const [L,v] of A){const dx=L.p[v*3]-c.x,dy=L.p[v*3+1]-c.y,dz=L.p[v*3+2]-c.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=[L,v]}}}
     if(!hit)return;const [L,v]=hit,w=[];let own=false;for(let j=0;j<4;j++){const x=L.sw[v*4+j];if(x>0){const n=B.O[L.si[v*4+j]];w.push([n,x]);if(n===p.bn)own=true}}
     if(own&&w.length>1)p.w=w;
-    // a shoulder part over skin that only follows the torso (a pauldron) goes half with the torso, half with the arm
-    else if(!own&&/^a[LR]0$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5]))})}
+    // a shoulder part over skin that only follows the torso (a pauldron), or a hip part over the thigh (a pouch), goes half
+    // with its own bone, half with the skin under it
+    else if(!own&&/^(a[LR]0|pelvis)$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5])).slice(0,4)})}
 {const f=mdKit;mdKit=function(B,k){if(SN177.hum>0&&k&&k.P&&k.P.length){try{sn177SkinW(B,k.P);const X=sn177Warp(B),T=[];
       ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){let x=L.p[v*3],y=L.p[v*3+1],z=L.p[v*3+2];
         if(X){let X0=0,Y0=0,Z0=0,Wt=0;for(let j=0;j<4;j++){const w=L.sw[v*4+j];if(!(w>0))continue;const b=X.pl.idx[L.si[v*4+j]];if(!b)continue;const M=b.M,dx=x-b.a[0],dy=y-b.a[1],dz=z-b.a[2];
@@ -55310,21 +55314,43 @@ function sn177Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R
 // ---------------- Sovereigns and quest bosses: rigid parts on joints ----------------
 // A boss model is many small meshes on named joints (svRig), merged per joint by svMerge. Before the merge the same snap runs
 // on them in the rest pose: the big meshes are the body, every other visible, solid mesh is a part; a moved part keeps its
-// joint (its own position is shifted). Glows, see-through effects and hidden pieces are left alone, as is Ssith'ra (its
-// segments are laid out live along the body path).
+// joint (its own position is shifted). Glows (glowing stones too), see-through effects, hidden pieces and joints meant to float
+// (SN177_FREE) are left alone, as is Ssith'ra (its segments are laid out live along the body path).
+// joints whose pieces are meant to float free: Qarsul's ring of whirling debris, the Rime Wraith's Phase II halo
+var SN177_FREE=/^(orbit|halo)/;
+// Every build of the same boss gives the same moves: they are kept per boss (key: its joints and parts) and replayed.
+var SN177_BC=new Map();
 function sn177Boss(R){if(!SN177.on||!R||R.s177||R.no177)return 0;R.s177=1;const root=R.root;root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),M=[];
-  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible)return;p=p.parent}
+  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible||SN177_FREE.test(p.name||''))return;p=p.parent}
     const mt=Array.isArray(o.material)?o.material[0]:o.material;if(!mt||mt.blending===THREE.AdditiveBlending||(mt.transparent&&mt.opacity<.6)||mt.visible===false)return;
+    if(mt.emissive&&mt.emissive.getHex()>0&&(mt.emissiveIntensity||1)*Math.max(mt.emissive.r,mt.emissive.g,mt.emissive.b)>.35)return;   // a glowing stone or wisp is magic, left where it hangs
     const n=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;M.push({o,n,m:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)})});
-  if(M.length<2)return 0;const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
+  if(M.length<2)return 0;const key=Object.keys(R.J).join(',')+'|'+M.map(q=>q.o.geometry.uuid).join(','),hit=SN177_BC.get(key);
+  if(hit){hit.forEach(([i,x,y,z])=>{const o=M[i].o;o.position.x+=x;o.position.y+=y;o.position.z+=z;o.updateMatrix()});return hit.length}
+  const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
   M.forEach(q=>{if(q.n>=mx*.3){const g=q.o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(q.m);T.push(v.x,v.y,v.z)}}
-    else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone()})});
+    else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone(),mi:M.indexOf(q)})});
   const mx0=SN177.max;SN177.max=.02;let n=0;try{n=sn177Snap(T,P,'boss')}finally{SN177.max=mx0}
-  P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
-    const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix()});
-  return n}
+  const rec=[];P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
+    const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix();rec.push([p.mi,d.x,d.y,d.z])});
+  SN177_BC.set(key,rec);return n}
 {const f=svMerge;svMerge=function(R){try{sn177Boss(R)}catch(e){console.warn('v177 boss snap',e)}return f.apply(this,arguments)}}
 if(SVB[3]){const b=SVB[3].build;SVB[3].build=function(R,e){if(R)R.no177=1;return b.apply(this,arguments)}}
+// ---------------- humanoid foes: skirts, coat tails and tabard skirts start on the body ----------------
+// mdSkirt hangs a skirt from the waist at an offset; many outfits gave it 1–2 cm over whatever was worn there, so a flap
+// hung beside the belt touching nothing. For foes the top now sits just over the layer beneath (P.tOff + 2 mm), tucked up 1.5 cm.
+// Its top also takes the waist's own bone blend (mdTorsoW) fading into the thighs, so the proportion pass moves it with the belt.
+{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(SN177.on&&SN177.hum>0&&P){const t=(P.tOff||0)+.002;if(off>t){off=t;y0+=.015}
+    if(!(o&&o.wf)){const Y=y0;o=Object.assign({},o||{},{wf:(x,y)=>{const d=Math.max(0,Math.min(1,(Y-y)/Math.max(.05,Y-.32)))*.9,l=Math.max(0,Math.min(1,.5-x/.16)),W=mdTorsoW(Math.min(Y,Math.max(.44,y))).map(q=>[q[0],q[1]*(1-d)]);
+      if(d>0)W.push(['lh0',d*l],['rh0',d*(1-l)]);return W.filter(q=>q[1]>0).slice(0,4)}})}}
+  return f.call(this,B,P,y0,y1,fl,off,o)}}
+// ---------------- weapons carried by foes (mkWpn kits, 'LW|' cache) ----------------
+// The same snap on a weapon's own parts, grown from its largest piece (a hammer's head was 4 cm off its haft, a staff's gem
+// sat loose in its claws, studs and spikes floated off heads).
+{const f=lgBake;lgBake=function(P,key,mot){if(SN177.on&&P&&P.length>1&&/^LW\|/.test(key||'')){try{
+    const S=P.map(p=>{const b=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);return b.getSize(new THREE.Vector3()).length()}),i0=S.indexOf(Math.max(...S)),seed=P[i0],v=new THREE.Vector3(),T=[];
+    const g=seed.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(seed.m);T.push(v.x,v.y,v.z)}
+    sn177Snap(T,P.filter((_,i)=>i!==i0),key)}catch(e){console.warn('v177 weapon snap',e)}}return f.apply(this,arguments)}}
 // ================= v177: enemy posture and the plainest foes dressed =================
 // Owner: "optimize anatomy, posture and overall style … non-cartoony (dark fantasy), not too simple".
 // * Posture: the older humanoid foes stood bolt upright like mannequins. ST177[hum key] is a stance laid over every pose
