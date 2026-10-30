@@ -60,12 +60,12 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       [-1,0,1].forEach(j=>k.L(bn,'c',K.dark,[j*.025,y,z],[j*.04,y+.07-i*.002,z-.07],.014,.002,3))}
     // spiked iron collar with a dangling chain
     for(let i=0;i<9;i++){const a=i/9*Math.PI*2;k.p('neck','cone4','m',K.iron,Math.sin(a)*.11,.61+Math.cos(a)*.105,.37,.012,.05,.012,Math.cos(a)*1.5,0,-Math.sin(a)*1.5)}
-    k.p('neck','tor','m',0x2a2a30,0,.61,.37,.11,.03,.1,Math.PI/2+.25,0,0);
+    k.p('neck','tor','m',0x2a2a30,0,.61,.37,.104,.03,.098,Math.PI/2+.25,0,0);   // v176: the collar hugs the neck
     for(let i=0;i<4;i++)k.p('neck','ring','m',K.iron,0,.502-i*.03,.345,.018,.03,.018,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);   // links in turn across and along: each hooks through the last (v176)
     // claws
     ['fl2','fr2','hl2','hr2'].forEach(b=>e137Claws(k,n,b,0x1a1210,.035,.008,3))};
   LPR[n].post=function(x,c,C,mat){// torn, swept-back ears
-    const og=lpSpikeGeo(0x3a1a1c,0x120808,3),ig=lpSpikeGeo(0x8a2a30,0x3a0a10,3);
+    const og=lpSpikeGeo(K.skin,K.dark,3),ig=lpSpikeGeo(K.mus,K.mus2,3);   // v176: from the palette (the Snow Wolf's were red)
     [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.06,.73,.53,.055,.16,.03,-.6,-s*.3,s*.25);const m=new THREE.Mesh(ig,mat);m.scale.set(.6,.7,.5);m.position.set(0,.03,.45);p.children[0].add(m);p.userData={rz:-s*.3,sd:s};x.ears.push(p)})};
 })();
 

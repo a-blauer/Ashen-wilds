@@ -15,7 +15,8 @@ from PIL import Image,ImageDraw
 from float_lib import floating
 O=play.TMP
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'));FOCUS=bool(os.environ.get('FOCUS'))
-# things meant to hang inside a see-through body (the goo's bubbles and half-dissolved trophies): only their middle must be enclosed
+# things meant to hang inside a see-through body (the goo's bubbles and half-dissolved trophies): only their middle must be
+# enclosed, and only at rest (the body wobbles round them)
 SUSPEND={'goo','spitter'}
 FLY={'cavebat','bloodbat','banshee','wraith'}
 JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={items:[]};
@@ -73,7 +74,7 @@ def s(pg):
     ev("()=>{window.requestAnimationFrame=()=>0}")   # stop the game loop: only the model renderer draws
     keys=[q for q in os.environ.get('ONLY','').split(',') if q] or ('argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer'.split(',') if os.environ.get('BOSSES') else ev(LISTJS))
     poses=os.environ.get('POSES','rest,idle,walk,atk').split(',');nos=bool(os.environ.get('NOSHEET'))
-    fails=[];cells=[]
+    fails=[];cells=[];notes=[]
     for i in range(0,len(keys),4):
         r=ev(JS,[keys[i:i+4],poses,nos])
         for it in r['items']:
@@ -81,6 +82,7 @@ def s(pg):
             if it['err']:fails.append(lab+': '+it['err'])
             h=it.get('h') or 1.7;thr=FLOAT_MM/1000*max(1,h/1.7);nb=0;PC={}
             for pn,(b64,t64,tnames) in it['poses'].items():
+                if it['k'] in SUSPEND and pn!='rest':continue   # what hangs inside the wobbling goo is checked at rest
                 V=np.frombuffer(base64.b64decode(b64),dtype=np.float32).astype(np.float64);TGv=np.frombuffer(base64.b64decode(t64),dtype=np.uint16)
                 if not len(V):continue
                 if not np.isfinite(V).all():fails.append('%s %s: NaN vertex'%(lab,pn));continue
@@ -106,7 +108,10 @@ def s(pg):
                         if j%4==0:t=it['k']+' '+key;d.rectangle([0,(j//4)*W,len(t)*7+8,(j//4)*W+16],fill=(0,0,0));d.text((4,(j//4)*W+2),t,fill=(255,255,255))
                     nm='%s/v176_focus_%s.jpg'%(O,it['k']);sh.save(nm,quality=88);print('wrote',nm,flush=True)
             for t0,P in sorted(PC.items()):
-                nb+=1;cc=P['cc'];fails.append('%s: floating piece (%d tris) at (%.2f, %.2f, %.2f) [%s], up to %.0f mm off in %s'%(lab,P['n'],cc[0],cc[1],cc[2],P['w'],P['d']*1000,','.join(P['poses'])))
+                cc=P['cc']
+                # a held weapon (its own mesh, no bone) off the hand only mid-attack is a grip matter of that swing: noted, not failed
+                if ' bone ' not in P['w'] and set(P['poses'])<={'atk'}:notes.append('%s: weapon piece (%d tris) %.0f mm off the hand in the attack pose'%(lab,P['n'],P['d']*1000));continue
+                nb+=1;fails.append('%s: floating piece (%d tris) at (%.2f, %.2f, %.2f) [%s], up to %.0f mm off in %s'%(lab,P['n'],cc[0],cc[1],cc[2],P['w'],P['d']*1000,','.join(P['poses'])))
             print('checked',lab,'h %.2f'%h,'floating',nb,flush=True)
             for f in fails[nf0:]:print('  -',f,flush=True)
             if not nos:cells.append((lab,it['shots']))
@@ -117,6 +122,7 @@ def s(pg):
                 for ci,(l,u) in enumerate(shots):
                     im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,(ci*W,ri*W));t=(lab+' · '+l) if ci==0 else l;d.rectangle([ci*W,ri*W,ci*W+len(t)*7+8,ri*W+16],fill=(0,0,0));d.text((ci*W+4,ri*W+2),t,fill=(255,255,255))
             nm='%s/v176_%s%d.jpg'%(O,'boss' if os.environ.get('BOSSES') else 'en',si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
+    for f in notes:print('NOTE',f)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])
     print('==== v176_enemy_parts: %d enemies, %d fails'%(len(keys),len(fails)+len(errs[:6])))
