@@ -31565,22 +31565,19 @@ var ABX135={p:null,r:0};
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
-var F135={done:new WeakSet(),t:0,min:0,on:true};F135.U={value:F135.min};   // v173: min was .25 (the window never fully cleared)
+var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
 // now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
-// v173 (owner, Abeksi: the whole screen a murky speckle behind houses): same outer size, but clear right up to 4.7 and only a thin
-// speckled ring (4.7-5.4) marks the window's edge; nothing is left inside it (F135.min 0, was .25: a quarter of every wall stayed)
-// v174 (owner: "a bit too large"; with several buildings in front the hero did not show): 3.7-4.3, a fifth smaller
-var R157={value:new THREE.Vector2(3.7,4.3)};
+var R157={value:new THREE.Vector2(2.3,5.4)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
-var N157={value:new THREE.Vector2(3.4,4.)},M157={value:1};   // v174: a thinner speckled edge (was 3.4-5)   // M157 0 = the old v135 tube (the intro)
+var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
 // small 3D previews share these materials but are drawn elsewhere (icons at the world origin), so there they do nothing
 var FX135ON={value:0};
 {const f=POST.render;POST.render=function(){FX135ON.value=1;try{return f.apply(this,arguments)}finally{FX135ON.value=0}}}
 function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
-  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial||m.isMeshBasicMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
+  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
   const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
   if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
@@ -31596,22 +31593,13 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
     if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
      if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
-      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(-.1,.15,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v175: solid only from the hero's own depth back (v174: .2-.55 in front, which still hid a hero standing at a wall seen at a slant; before: the last 4-16% of the way)
-      float near=t>0.&&fr>1.?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
-      if(!gl_FrontFacing&&t>0.&&fr>.15)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
+      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);f=mix(f,1.,smoothstep(.84,.96,t));f=mix(f,1.,step(t,0.));f=max(f,uF135);
+      float near=t>0.&&t<.85?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
+      if(!gl_FrontFacing&&t>0.&&t<.9)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
      }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
-      #ifdef F135_B
-      f=1.;   // v174: plain (unlit) materials joined; the intro keeps its look
-      #else
-      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
-      #endif
-      }
-     float kn=smoothstep(-.85,-.55,vF135.y-uPl.y);
-     if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v174: only flat surfaces keep it (walls on lower ground were a solid diagonal band)
-     f=mix(1.,f,kn);   // never below the hero's knees: floors, paving and bridges stay
+      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);}
+     f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));   // never below the hero's knees: floors, paving and bridges stay
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v174: windows and plain panes (Abeksi) are cut too
-  m.extensions=Object.assign({},m.extensions,{derivatives:true});   // v174: the knee rule reads the surface's slope (dFdx) on WebGL1 too
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
@@ -47286,10 +47274,10 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     if(sh.fragmentShader.indexOf('varying vec3 vC135')<0){console.warn('v157: terrain has no vC135');return}
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     if(uOn135>.5&&uOn157>.5){vec3 ab=uPl157-uCam157;float t=dot(vC135-uCam157,ab)/dot(ab,ab);
-     float fr=(1.-t)*length(ab);if(t>.0&&fr>.15){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
+     if(t>.0&&t<.95){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
       vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
       f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      f=mix(f,1.,1.-smoothstep(.2,.55,fr));   // v174: solid only right at the hero (was the last 5-14% of the way)
+      f=mix(f,1.,smoothstep(.86,.95,t));
       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
 var CAM157U={value:1};
@@ -54841,11 +54829,18 @@ function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt16
 //   * inside the rock (below the ground there) within CAM172.r2 of the void: the rim's wall at the edge of the map. Deeper inside
 //     the map (a cave's wall) the camera may stand in the rock as before.
 // Duskhold (no instance) uses the same rule: the island's edge is void too.
-var CAM172={on:true,vt:-6,r1:1.2,r2:8,min:2,step:.35,st:{d:0,cut:0}};
+var CAM172={on:true,vt:-6,r1:1.2,r2:8,min:2,step:.35,ab:.35,st:{d:0,cut:0}};
 const CAM172A=[0,1,2,3,4,5,6,7].map(i=>[Math.sin(i*Math.PI/4),Math.cos(i*Math.PI/4)]);
 function cam172Void(x,z,r){if(GH(x,z)<CAM172.vt)return true;for(const [a,b] of CAM172A)if(GH(x+a*r,z+b*r)<CAM172.vt)return true;return false}
+// v176 (owner: "with the buildings in the Abeksi city just have them behave like the edge of the map and have the camera get
+// closer to the character"): inside an Abeksi building (its box from the plan, as 3152 builds it, roof included) counts as out of
+// the map too, so the camera slides in instead of going behind a house
+function cam172Ab(x,y,z,I){if(!I||I.g!==30||typeof ab152Plan!='function')return false;const P=ab152Plan(),u=x-I.x0+.5,v=z-I.y0+.5,m=CAM172.ab;
+  for(const B of P.B){if(u>B[0]-m&&u<B[2]+m&&v>B[1]-m&&v<B[3]+m){const s=B[4],st=B[5],H=st=='tower'?2.3*s+.8:st=='hall'?3.4:st=='barn'?3:st=='ruin'?3:2.3*s;if(y<1.6+H+1.2)return true}}
+  return false}
 function cam172Ok(x,y,z,I){
   if(I&&(x<I.x0+.5||z<I.y0+.5||x>I.x0+I.w-.5||z>I.y0+I.h-.5))return false;
+  if(cam172Ab(x,y,z,I))return false;
   if(cam172Void(x,z,CAM172.r1))return false;
   if(y<GH(x,z)-.05){for(const r of [3,5.5,CAM172.r2])if(cam172Void(x,z,r))return false}
   return true}
