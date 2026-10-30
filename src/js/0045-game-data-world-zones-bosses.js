@@ -143,6 +143,7 @@ const BIOMES=[
  {n:'The Citadel',sp:'Batwing',x:630,y:336,t:5,gnd:[66,58,62],grs:[90,30,36],acc:[96,88,92],frs:[30,24,28],wat:[90,20,30],tree:['dead'],pr:['pillar','pillar','bones'],den:[0,.6,0,0],tc:[0x2a1a1a,0x3a2028,0x4a2a30],amp:.08}
 ];
 if(typeof v112Biomes=='function')v112Biomes(); // v112: one biome per themed field instance (II, III; 1981)
+if(typeof env177Biomes=='function')env177Biomes(); // v177: the zones' ground in a darker, weathered palette (3370)
 
 const MAP=(()=>{
   let sd=11;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,m=[],bio=[];
@@ -263,6 +264,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
+  if(typeof env177Banks=='function')env177Banks(); // v177: shelving pond banks instead of sheer drops (3370)
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)

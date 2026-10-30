@@ -105,8 +105,8 @@ function buildTerrain(chk){
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
      vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
      float n1=fb3(q*.8),n2=fb3(q*3.1);
-     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.82+.36*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
-     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.84+.28*n2)*mix(.84+.3*fh,1.,pav);
+     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.9+.2*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
+     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);
      diffuseColor.rgb=mix(diffuseColor.rgb,rock,rm);float sn=smoothstep(9.5,14.,yc+(n1-.5)*4.)*(1.-smoothstep(.22,.6,sl))*(1.-sand);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.9,.94,1.)*(.84+.16*fh),sn);}`)};
   GTX.list.forEach(T=>{const m=T===GTX.main?mat:mat.clone();m.map=T.t;m.flatShading=true;m.userData.lps=1;m.onBeforeCompile=obc(T);T.mat=m});
   for(let cz=0;cz*CHN<H;cz++)for(let cx=0;cx*CHN<W;cx++){

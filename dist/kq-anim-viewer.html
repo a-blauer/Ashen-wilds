@@ -1206,6 +1206,7 @@ const BIOMES=[
  {n:'The Citadel',sp:'Batwing',x:630,y:336,t:5,gnd:[66,58,62],grs:[90,30,36],acc:[96,88,92],frs:[30,24,28],wat:[90,20,30],tree:['dead'],pr:['pillar','pillar','bones'],den:[0,.6,0,0],tc:[0x2a1a1a,0x3a2028,0x4a2a30],amp:.08}
 ];
 if(typeof v112Biomes=='function')v112Biomes(); // v112: one biome per themed field instance (II, III; 1981)
+if(typeof env177Biomes=='function')env177Biomes(); // v177: the zones' ground in a darker, weathered palette (3370)
 
 const MAP=(()=>{
   let sd=11;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,m=[],bio=[];
@@ -1326,6 +1327,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
+  if(typeof env177Banks=='function')env177Banks(); // v177: shelving pond banks instead of sheer drops (3370)
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)
@@ -1477,8 +1479,8 @@ function buildTerrain(chk){
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
      vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
      float n1=fb3(q*.8),n2=fb3(q*3.1);
-     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.82+.36*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
-     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.84+.28*n2)*mix(.84+.3*fh,1.,pav);
+     float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.9+.2*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
+     float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);
      diffuseColor.rgb=mix(diffuseColor.rgb,rock,rm);float sn=smoothstep(9.5,14.,yc+(n1-.5)*4.)*(1.-smoothstep(.22,.6,sl))*(1.-sand);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.9,.94,1.)*(.84+.16*fh),sn);}`)};
   GTX.list.forEach(T=>{const m=T===GTX.main?mat:mat.clone();m.map=T.t;m.flatShading=true;m.userData.lps=1;m.onBeforeCompile=obc(T);T.mat=m});
   for(let cz=0;cz*CHN<H;cz++)for(let cx=0;cx*CHN<W;cx++){
@@ -1640,35 +1642,36 @@ const WTR=(()=>{
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){const b=BIOMES[MAP.bio[y][x]],k=(y*W+x)*4,lv=lava?.05:.02,ok=!!b.lava==lava,dp=ok?lv-GHv(x,y):-1;d[k]=Math.max(0,Math.min(1,(dp+.5)/2))*255;const w=b.wat;d[k+1]=w[0];d[k+2]=w[1];d[k+3]=w[2]}
     const t=new THREE.DataTexture(d,W,H,THREE.RGBAFormat);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
     const m=new THREE.ShaderMaterial({transparent:!lava,depthWrite:lava,uniforms:{dm:{value:t},time:{value:0},lava:{value:lava?1:0},fogC:{value:new THREE.Color()},fogD:{value:.02},hor:{value:new THREE.Color()},top:{value:new THREE.Color()},sunDir:{value:new THREE.Vector3()},sunCol:{value:new THREE.Color()},amb:{value:1},WH:{value:new THREE.Vector2(W,H)}},
-    vertexShader:'varying vec3 vP;void main(){vP=position;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',
-    fragmentShader:`varying vec3 vP;uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
+    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v177: vW, the real world spot (fog and view were measured from vP)
+    fragmentShader:`varying vec3 vP,vW;uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
     float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
     float fb(vec2 p){return vn(p)*.5+vn(p*2.03+1.7)*.3+vn(p*4.1+5.2)*.2;}
     void main(){
-      vec4 s=texture2D(dm,(vP.xz+.5)/WH);float d=s.r*2.-.5;if(d<-.03)discard;
-      vec3 V=normalize(cameraPosition-vP);float dist=length(cameraPosition-vP);
+      vec4 s=texture2D(dm,(vW.xz+.5)/WH);float d=s.r*2.-.5;if(d<-.03)discard;
+      vec3 V=normalize(cameraPosition-vW);float dist=length(cameraPosition-vW);
       vec3 col;float al=1.;
-      if(lava>.5){float f=fb(vP.xz*.55+vec2(time*.05,time*.03)),g=fb(vP.xz*1.4-vec2(time*.04,0.)+f*2.);
+      if(lava>.5){float f=fb(vW.xz*.55+vec2(time*.05,time*.03)),g=fb(vW.xz*1.4-vec2(time*.04,0.)+f*2.);
         col=mix(vec3(.55,.08,.02),vec3(1.5,.55,.08),smoothstep(.3,.75,g));col=mix(col,vec3(2.2,1.5,.5),smoothstep(.72,.9,g)*.8);
-        col=mix(col,vec3(.12,.04,.03),smoothstep(.55,.2,g)*.8*(1.-smoothstep(.0,.35,d)*0.)); col*=.9+.3*sin(time*.8+vP.x);
+        col=mix(col,vec3(.12,.04,.03),smoothstep(.55,.2,g)*.8*(1.-smoothstep(.0,.35,d)*0.)); col*=.9+.3*sin(time*.8+vW.x);
         col+=vec3(1.,.35,.05)*smoothstep(.45,0.,d)*.6;
       }else{
-        vec2 p=vP.xz*.6;float e=.05;
+        vec2 p=vW.xz*.6;float e=.05;
         float h0=fb(p+vec2(time*.06,time*.04))+fb(p*1.7-vec2(time*.05,time*.03))*.6;
         float hx=fb(p+vec2(e,0.)+vec2(time*.06,time*.04))+fb((p+vec2(e,0.))*1.7-vec2(time*.05,time*.03))*.6;
         float hz=fb(p+vec2(0.,e)+vec2(time*.06,time*.04))+fb((p+vec2(0.,e))*1.7-vec2(time*.05,time*.03))*.6;
         vec3 N=normalize(vec3((h0-hx)*2.2,1.,(h0-hz)*2.2));
         float dp=clamp(d,0.,1.6),k=smoothstep(0.,1.2,dp);
-        vec3 tint=s.gba/255.;vec3 shallow=tint*vec3(1.1,1.25,1.1)+vec3(.04,.1,.08),deep=tint*vec3(.35,.45,.6);
+        vec3 tint=s.gba;   // v177: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
+        vec3 shallow=tint*vec3(.64,.68,.68)+vec3(.012,.016,.016),deep=tint*vec3(.3,.32,.34);
         vec3 body=mix(shallow,deep,k)*(.25+.75*amb);
         vec3 R=reflect(-V,N);float ry=max(R.y,0.);vec3 refl=mix(hor,top,pow(ry,.5));
         float sg=pow(max(dot(R,sunDir),0.),220.);refl+=sunCol*sg*3.;refl+=sunCol*pow(max(dot(R,sunDir),0.),12.)*.12;
-        float fr=.05+.9*pow(1.-max(dot(V,N),0.),3.5);
-        col=mix(body,refl,clamp(fr,0.,1.));
-        float fm=fb(vP.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
-        float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.9,.95,.95)*(.4+.6*amb),foam*.85);
-        al=clamp(.5+.5*k+foam,0.,1.)*smoothstep(-.03,.045,d);
+        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v177: murkier, the sky mirrored less (ponds read as white holes)
+        col=mix(body,refl*.72,clamp(fr,0.,1.));
+        float fm=fb(vW.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
+        float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.62,.66,.64)*(.4+.6*amb),foam*.6);
+        al=clamp(.66+.4*k+foam,0.,1.)*smoothstep(-.03,.045,d);
       }
       float fg=1.-exp(-fogD*fogD*dist*dist);col=mix(col,fogC,clamp(fg,0.,1.));
       gl_FragColor=vec4(col,al);}`});
@@ -1679,9 +1682,12 @@ const TT=(()=>{const {fin,tr,merge,leaf,bark}=NK,G=THREE;
   const pineTier=(r,hh,sd)=>fin(new G.ConeGeometry(r,hh,7,2),{j:.06,sd,f:(x,y,z)=>{if(y<-hh/2+1e-3)return [x*1.14,y-.07,z*1.14];if(Math.abs(y)<1e-3)return [x*.9,y,z*.9];return [x,y,z]},paint:leaf});
   const PC=[pineTier(.66,.95,1),pineTier(.56,.9,2),pineTier(.45,.85,3),pineTier(.32,.78,4),pineTier(.17,.62,5)];
   const PT=fin(new G.CylinderGeometry(.06,.13,.6,5,2),{j:.02,sd:7,paint:bark});
-  const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,6,2),{j:.025,sd:8,f:(x,y,z)=>y<-.29?[x*1.35,y,z*1.35]:[x,y,z],paint:bark}),
-    fin(tr(new G.CylinderGeometry(.022,.04,.26,4),.07,.18,0,0,0,-.8),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.02,.035,.22,4),-.06,.12,.03,.3,0,.85),{j:.01,sd:10,paint:bark})]);
-  const canopy=(r,sd)=>fin(new G.IcosahedronGeometry(r,1),{j:r*.32,sd,f:(x,y,z)=>[x,y<0?y*.7:y,z],paint:leaf});
+  // v177: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
+  const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,7,3),{j:.025,sd:8,f:(x,y,z)=>{const t=y+.3;return y<-.25?[x*1.35,y,z*1.35]:[x+t*t*.05,y,z]},paint:bark}),
+    fin(tr(new G.CylinderGeometry(.024,.045,.34,5),.1,.3,0,0,0,-.75),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.022,.04,.3,5),-.08,.28,.04,.35,0,.8),{j:.01,sd:10,paint:bark}),
+    fin(tr(new G.CylinderGeometry(.018,.035,.28,5),.0,.32,-.09,-.7,0,.1),{j:.01,sd:11,paint:bark})]);
+  const canopy=(r,sd)=>merge([[0,0,0,.72],[.5,-.12,.22,.52],[-.45,-.08,-.3,.5],[.1,.28,-.42,.46],[-.2,-.2,.48,.44]].map(([x,y,z,k],i)=>
+    fin(tr(new G.IcosahedronGeometry(r*k,1),x*r,y*r,z*r,0,i,0),{j:r*k*.36,sd:sd*7+i,f:(X,Y,Z)=>[X,Y<y*r?y*r-(y*r-Y)*.6:Y,Z],paint:leaf})));
   const OC=[canopy(.62,6),canopy(.5,7),canopy(.44,8)];
   const DT=fin(new G.CylinderGeometry(.05,.13,.6,5,3),{j:.03,sd:11,f:(x,y,z)=>{const a=y*2.2,c=Math.cos(a),s=Math.sin(a);return [x*c-z*s+y*y*.12,y,x*s+z*c]},paint:(h,ny,r)=>{const v=(.62+.3*h)*(.82+.36*r);return [v,v,v*1.04]}});
   const dpaint=(h,ny,r)=>{const v=(.7+.3*h)*(.82+.36*r);return [v,v,v*1.04]};
@@ -1716,7 +1722,10 @@ Object.keys(TL).forEach(ty=>{
   const L=TL[ty],P=TT[ty].map(pt=>{const m=inst(pt[0],L.length,true);if(pt[6])m.material=new THREE.MeshBasicMaterial();m.material.vertexColors=!!pt[0].attributes.color;if(pt[9]){m.sway=pt[9];m.off=pt[1]*.9}return m});
   L.forEach((q,i)=>{
     const sc=(ty=='pine'?1.05+Math.random()*.9:ty=='oak'?.95+Math.random()*.7:.85+Math.random()*.6),X=q[0]+(Math.random()-.5)*.35,Z=q[1]+(Math.random()-.5)*.35,tc=q[2].tc,ry=Math.random()*6.28,tl=(Math.random()-.5)*.1,tz=(Math.random()-.5)*.1;
-    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
+    // v177: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
+    // crown slid up or down off its trunk), sunk to the lowest ground round the trunk's foot
+    let g0=GH(X,Z);{const r=.35*sc;let lo=g0;for(let a=0;a<8;a++)lo=Math.min(lo,GH(X+Math.cos(a*.785)*r,Z+Math.sin(a*.785)*r));g0-=Math.min(.9*sc,Math.max(0,g0-lo-.03))}
+    TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,g0-GH(X+pt[7]*sc,Z)+pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
     d0.rotation.set(0,0,0);AOL.push([X,Z,sc*(ty=='pine'?1.15:ty=='oak'?1.4:.8)]);
   });
 });
@@ -5955,7 +5964,7 @@ var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
-  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.32,0,0);return {g,x,z,disc}}
+  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.12,0,0);return {g,x,z,disc}}   // v177: the name plate rests on the capstone (it hung ~.2 above it)
 // v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
 INSL.forEach(I=>{if(I.tri)return;const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
   const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
@@ -8736,7 +8745,7 @@ LPR.Goo={
     for(let i=0;i<4;i++)k.L('spine','c',bone2,[-.12+i*.05,.3,-.1],[-.08+i*.05,.24,.04],.01,.008,4);   // a ribcage fragment
     // eyes: glowing slits sunk into the surface
     // three mismatched eyes adrift near the surface: glowing balls with black slit pupils
-    [[-.09,.6,.28,.032],[.11,.65,.25,.024],[.02,.72,.19,.016]].forEach(   // (v177: smaller, duller — they read as cartoon eyes)
+    [[-.09,.6,.28,.032],[.11,.65,.25,.024],[.02,.72,.19,.016]].forEach(   // (v178: smaller, duller — they read as cartoon eyes)
       q=>{k.p('head','sph','c',0x050805,q[0],q[1],q[2]-q[3]*.5,q[3]*1.25);k.p('head','sph','g',eye,q[0],q[1],q[2]+q[3]*.35,q[3]);k.p('head','box','c',0x000000,q[0],q[1],q[2]+q[3]*1.3,q[3]*.18,q[3]*1.1,q[3]*.12)});
     // wide jagged maw (the lower lip is on the jaw bone, so it gapes on attack)
     k.p('jaw','box','c',0x0a1404,0,.47,.4,.26,.07,.04,0,0,.1).p('jaw','box','c',crust,0,.43,.41,.24,.025,.05,0,0,.1);
@@ -8775,7 +8784,7 @@ LPR.Maggot={
     k.p('head','ring','c',dkShade(0xb07870,.9),0,my,mz,.09,.09,.09,Math.PI/2);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,x=Math.cos(a)*.064,y=my+Math.sin(a)*.064;k.L('head','c',0xece4cc,[x,y,mz+.01],[x*.4,my+(y-my)*.4,mz+.045],.011,.002,3)}
     // clusters of tiny black eyes
-    // (v177) set into the skin of the head (they hovered over it)
+    // (v178) set into the skin of the head (they hovered over it)
     const top=(x,z)=>{const r=bzMagR(z);return r*.82+.004+r*.96*Math.sqrt(Math.max(0,1-Math.pow(x/(r*1.04),2)))};
     [-1,1].forEach(s=>[[.05,.47],[.065,.5],[.035,.5]].forEach(q=>k.p('head','sph',red?'g':'c',red?0xff2a2a:0x0a0606,s*q[0],top(q[0],q[1])-.004,q[1],.013)));
     // bristles on every roll, stubby prolegs underneath
@@ -9089,7 +9098,7 @@ function lgWpnKit(k,type,col,r){
     for(let i=0;i<5;i++)k.p('','dod','c',0x3a2a1a,(R()-.5)*.12,-.35-R()*.3,(R()-.5)*.12,.035);
     for(let i=0;i<9;i++){const a=R()*6.28,y=-.4-R()*.3;k.p('','cone4','m',W.iron2,Math.cos(a)*.09,y,Math.sin(a)*.09,.014,.08,.014,Math.sin(a)*1.4,0,-Math.cos(a)*1.4)}
     k.p('','cyl','m',W.iron,0,-.3,0,.07,.04,.07);k.p('','cyl','c',W.wrap,0,0,0,.036,.12,.036)}
-  else if(type=='hammer'){haft(.08,-.7,.035,true);   /* v177: the haft runs into the head (a 4 cm gap) */[.0,-.18].forEach(q=>k.p('','cyl','m',W.iron,0,q,0,.043,.03,.043));for(let i=0;i<3;i++)k.p('','cyl','c',W.leather,0,.06-i*.03,0,.04,.02,.04);
+  else if(type=='hammer'){haft(.08,-.7,.035,true);   /* v178: the haft runs into the head (a 4 cm gap) */[.0,-.18].forEach(q=>k.p('','cyl','m',W.iron,0,q,0,.043,.03,.043));for(let i=0;i<3;i++)k.p('','cyl','c',W.leather,0,.06-i*.03,0,.04,.02,.04);
     const H=lgCol(W.iron,col==0x9aa2ae?W.iron:col,.25);k.p('','box','m',H,0,-.74,0,.36,.2,.2);[-1,1].forEach(s=>{k.p('','box','m',lgCol(H,0,.25),s*.2,-.74,0,.05,.24,.24);k.p('','box','m',W.iron2,s*.2,-.74,0,.058,.08,.25)});
     k.p('','box','m',fit,0,-.74,0,.16,.22,.215);k.p('','cone4','m',W.iron2,0,-.88,0,.04,.1,.04,Math.PI,Math.PI/4);
     if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,0,-.74,s*.11,.1,.03,.008));else[-1,1].forEach(s=>k.p('','box','c',W.dark,0,-.74,s*.109,.1,.02,.006))}
@@ -9353,7 +9362,8 @@ function lpnPortalArch(g){
   const st=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,color:0x6a6672}),G=new THREE.Group(),{fin,tr,merge,stone,hs}=NK;
   const blk=(w,hh,d,x,y,z,ry,sd)=>fin(tr(new THREE.BoxGeometry(w,hh,d,1,1,1),x,y,z,0,ry,0),{j:.07,sd,paint:stone});
   const parts=[];
-  [-1,1].forEach(s=>{let y=0;for(let i=0;i<4;i++){const hh=.5+hs(i,s,7)*.18,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
+  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v177: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
+    for(let i=0;i<4;i++){const hh=H[i]*k,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
   parts.push(blk(2.5,.34,.5,0,2.5,0,.03,61),blk(.5,.3,.46,0,2.82,0,.6,62));
   // a couple of fallen chunks at the base
   parts.push(fin(tr(new THREE.DodecahedronGeometry(.22,0),-1.35,.12,.3),{j:.06,sd:63,paint:stone}),fin(tr(new THREE.DodecahedronGeometry(.16,0),1.3,.09,-.25),{j:.05,sd:64,paint:stone}));
@@ -17380,7 +17390,7 @@ function mdLookOf(h,cls){
 // shared materials (one to three draw calls + weapon). Each type keeps its signature: goblin ears and noses, orc and
 // troll tusks, skeleton bones, the vampires' standing collar (v89 dkHighCollar), naga snake heads and tails, etc.
 function mdD(a,st,M,A,o){return Object.assign({a,st,ti:2,r:0,M,A,G:null,dk:mdSh(M,.6),gem:A,sl:''},o||{})}
-// (v177: the belt band hugs the waist and the flaps start tucked under it, then flare out; band and flaps used to stand 2 cm off the body)
+// (v178: the belt band hugs the waist and the flaps start tucked under it, then flare out; band and flaps used to stand 2 cm off the body)
 function mdLoin(B,P,c,c2,y1,y0){const Y=y0||.6,t0=P.tOff,o=P.noTorso?-.03:0;mdSkirt(B,P,Y+.02,y1||.36,.03,.002+o,{col:m=>m.y<(y1||.36)+.04?c2||mdSh(c,.75):c,keep:m=>Math.abs(m.c)<.36,n:5});mdTS(B,P,Y-.02,Y+.03,.005+o,{col:mdSh(c2||c,.8),lip:.006});P.tOff=Math.max(t0||0,.016)}   // a skeleton (no torso) is belted round its pelvis bones
 function mdStrap(B,P,c,sd){mdTS(B,P,.6,.99,(P.tOff||0)+.008,{col:c,keep:m=>Math.abs(m.c+(sd||1)*m.s*.55)<.12})}
 function mdTusks(k,P,c,len,w){const z=mdHeadZ(P,1.07);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*.04*(w||1),1.072+len*.022,z-.004,.014*len*1.4,.05*len,.014*len*1.4,0,0,-s*.2))}
@@ -17528,7 +17538,7 @@ function mdSkirt(B,P,y0,y1,fl,off,o){o=o||{};const q=mdTorsoAt(P,y0),n=o.n||5,R=
 function mdCape(B,P,col,o){o=o||{};const off=(P.tOff||0)+.016,len=o.len||.36,w=o.w||1,ins=mdSh(col,.58),tr=o.trim;
   const at=(y,bn,rx)=>{const q=mdTorsoAt(P,Math.min(.97,y));return {p:[0,y,-(Math.max(q.b,.12)+off+(.97-Math.min(.97,y))*.08)],rx:rx*w,f:.012,b:.012,w:bn}};
   const R=[at(.99,[['chest',.7],['cp0',.3]],.15),at(.86,[['cp0',1]],.19),at(.7,[['cp0',.5],['cp1',.5]],.205),at(.54,[['cp1',.5],['cp2',.5]],.215),at(len,[['cp2',1]],.22)];
-  R[0].p[2]+=.012;if(typeof SN177!='undefined'&&SN177.on&&SN177.hum>0)R[0].p[2]=-(mdTorsoAt(P,.99).b+(P.tOff||0)+.008);   // v177 (foes): the cape is pinned on at the shoulders, not 2–4 cm behind them
+  R[0].p[2]+=.012;if(typeof SN178!='undefined'&&SN178.on&&SN178.hum>0)R[0].p[2]=-(mdTorsoAt(P,.99).b+(P.tOff||0)+.008);   // v178 (foes): the cape is pinned on at the shoulders, not 2–4 cm behind them
   mdLoft(B,R,{seg:6,capA:true,capB:true,col:m=>tr!=null&&m.i>R.length-1.45?tr:m.s>.3?ins:col})}
 function mdKP(){return dkKit()}
 // rarity glow strip (Epic+) or accent strip
@@ -17541,7 +17551,7 @@ function mdChestPre(P,d){P.col.torso=d.M;P.col.sleeve=d.M;P.hasChest=1;if(d.a=='
 function mdChest(B,P,d,cls){const st=d.st,M=d.M,A=d.A,dk=d.dk,G=d.G,k=mdKP(),gl=mdGlowOr(d,A),lt=0x3a2618,ti=d.ti;
   const mail=(o0)=>{const mc=mdMix(M,0x6a6c70,.3),md=mdSh(mc,.78);mdTS(B,P,.43,.99,.012,{col:m=>(Math.round(m.y*48)%2?mc:md),lip:.012});[-1,1].forEach(s=>mdAS(B,P,s,0,o0||3,.01,{col:m=>(Math.round(m.y*48)%2?mc:md)}));
     mdSkirt(B,P,.5,.36,.03,.014,{col:m=>m.y<.385?dk:(Math.round(m.y*48)%2?mc:md),n:4})};
-  const belt=(y,c,bc)=>{mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.003,{col:c||lt,lip:.004});k.p('spine','box','m',bc||A,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.008,.05,.04,.014)};   // v177: belts sit on the cloth (they stood 8 mm off it)
+  const belt=(y,c,bc)=>{mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.003,{col:c||lt,lip:.004});k.p('spine','box','m',bc||A,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.008,.05,.04,.014)};   // v178: belts sit on the cloth (they stood 8 mm off it)
   const plate=(lv)=>{const pc=M,ps=mdSh(M,1.18);mdTS(B,P,.6,.985,.03,{t:'m',col:m=>m.s>.55&&m.y>.68&&m.y<.95&&lv>1?ps:m.y<.64?dk:pc,lip:.012,lipT:.006});
     if(G)mdTS(B,P,.6,.62,.034,{t:'g',col:G})};
   const pauld=(n,sz,spk,sq)=>[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',x=s*(P.bones[a][1]*1+s*.012*(mdBuildF(P)-1)*3),W=mdBuildF(P);
@@ -17583,7 +17593,7 @@ function mdChest(B,P,d,cls){const st=d.st,M=d.M,A=d.A,dk=d.dk,G=d.G,k=mdKP(),gl=
   else if(d.a=='light'){
     if(st=='wraps'){mdTS(B,P,.5,.99,.01,{col:m=>Math.round(m.y*26+m.c*2)%2?M:mdSh(M,.8)});[-1,1].forEach(s=>mdAS(B,P,s,3,5,.01,{col:m=>Math.round(m.y*30)%2?M:mdSh(M,.75)}))}
     else if(st=='scale'){mdTS(B,P,.5,.99,.012,{col:m=>(Math.round(m.y*36)+Math.round((m.c+1)*5))%2?M:mdSh(M,.78)});sleeves(mdSh(M,.6),2);belt(.6,A,A)}
-    else if(st=='garb'){shirt(M);sleeves(M,5);mdTS(B,P,.66,.98,.011,{col:mdSh(M,.6),keep:m=>Math.abs(m.c-m.s*.5)<.12||Math.abs(m.c+m.s*.5)<.12});belt(.6,A,mdSh(A,1.2));   // v177: the straps lie on the shirt (.008)
+    else if(st=='garb'){shirt(M);sleeves(M,5);mdTS(B,P,.66,.98,.011,{col:mdSh(M,.6),keep:m=>Math.abs(m.c-m.s*.5)<.12||Math.abs(m.c+m.s*.5)<.12});belt(.6,A,mdSh(A,1.2));   // v178: the straps lie on the shirt (.008)
       mdSkirt(B,P,.6,.42,.02,(P.tOff||0)+.012,{col:mdSh(M,.75),keep:m=>Math.abs(m.c)<.5,n:3})}
     else if(st=='shroud'){shirt(M);sleeves(M,5);belt(.6,mdSh(M,.6),A);coat(mdSh(M,.85),.3,.05,true);mdTS(B,P,.93,1.03,(P.tOff||0)+.02,{col:mdSh(M,.7),lipT:.02});k.p('aR0','hem','m',A,.25,.985,0,.1,.07,.1,0,0,.4)}
     else if(st=='raiment'){shirt(M);sleeves(M,5);belt(.6,A,A);coat(mdSh(M,.85),.26,.07,true);mdTS(B,P,.94,1.06,(P.tOff||0)+.03,{col:m=>m.s<0?mdSh(M,.6):A,lipT:.04,keep:m=>m.s<.55})}
@@ -17676,7 +17686,7 @@ function mdBoots(B,P,d){const M=d.M,A=d.A,G=d.G,dk=d.dk,st=d.st,k=mdKP(),a=d.a;
       if(G)mdLS(B,P,s,5,6,off+.006,{t:'g',col:G,keep:m=>m.y>.13})}
     else if(a=='medium'){const off=.016;mdFS(B,P,s,off,{col:m=>m.y<.03?0x1e1610:M});mdLS(B,P,s,st=='trail'?5:4,6,off,{col:M});
       const L=mdLeg(P,s),cuff=Object.assign({},L[st=='trail'?5:4]);cuff.rx+=.012;cuff.f+=.012;cuff.b+=.012;mdLoft(B,[cuff,Object.assign({},cuff,{p:[cuff.p[0],cuff.p[1]+.03,cuff.p[2]]})],{seg:8,off,col:st=='pelt'||st=='path'?0xd8ccb0:mdSh(M,1.15)});
-      {const cc=st=='pelt'||st=='path'?0xd8ccb0:mdSh(M,1.15),rim=y=>mdLoft(B,[Object.assign({},cuff,{p:[cuff.p[0],y,cuff.p[2]]}),Object.assign({},cuff,{p:[cuff.p[0],y+.0015,cuff.p[2]],rx:cuff.rx-.011,f:cuff.f-.011,b:cuff.b-.011})],{seg:8,off,col:cc});rim(cuff.p[1]);rim(cuff.p[1]+.0285)}   // v177: the cuff's edges close down onto the boot (it hovered round it)
+      {const cc=st=='pelt'||st=='path'?0xd8ccb0:mdSh(M,1.15),rim=y=>mdLoft(B,[Object.assign({},cuff,{p:[cuff.p[0],y,cuff.p[2]]}),Object.assign({},cuff,{p:[cuff.p[0],y+.0015,cuff.p[2]],rx:cuff.rx-.011,f:cuff.f-.011,b:cuff.b-.011})],{seg:8,off,col:cc});rim(cuff.p[1]);rim(cuff.p[1]+.0285)}   // v178: the cuff's edges close down onto the boot (it hovered round it)
       if(st=='stalker'||st=='strider'||st=='gale')mdLS(B,P,s,4,6,off+.004,{col:A,keep:m=>m.s>.5&&Math.round(m.y*45)%2==0});
       if(G)k.p(l+'1','oct','g',G,P.bones[l+'1'][1],.2,.09,.012)}
     else if(a=='light'){const off=.012;mdFS(B,P,s,off,{col:m=>m.y<.03?0x14100c:M});mdLS(B,P,s,st=='soft'?6:4,6,off,{col:m=>Math.round(m.y*40)%2?M:mdSh(M,.75)});
@@ -17749,7 +17759,7 @@ function mdOutfit(cls){
 function mdBelt(B,P,y,c,bc){mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.008,{col:c});const k=dkKit();k.p('spine','box','m',bc,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.012,.05,.042,.014);mdKit(B,k)}
 function mdTabard(B,P,c,tr,sym){const off=(P.tOff||0)+.01;
   mdTS(B,P,.62,.975,off,{col:m=>Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.33});
-  mdSkirt(B,P,.64,.33,.02,typeof SN177!='undefined'&&SN177.hum>0?Math.max(off-.002,(P.sOff||0)+.004):Math.max(off+.006,(P.sOff||0)+.008),{   // v177 (foes): the skirt starts under the tabard's top, not 6 mm outside it
+  mdSkirt(B,P,.64,.33,.02,typeof SN178!='undefined'&&SN178.hum>0?Math.max(off-.002,(P.sOff||0)+.004):Math.max(off+.006,(P.sOff||0)+.008),{   // v178 (foes): the skirt starts under the tabard's top, not 6 mm outside it
     col:m=>m.y<.355||Math.abs(m.c)>.26?tr:c,keep:m=>Math.abs(m.c)<.31,n:4});
   if(sym){const k=dkKit(),f=mdTorsoAt(P,.83).f+off+.006;k.p('chest','box','m',sym,0,.83,f,.022,.13,.006).p('chest','box','m',sym,0,.86,f,.085,.022,.006);mdKit(B,k)}}
 function mdQuiver(B,P){const k=dkKit(),z=-(mdTorsoAt(P,.85).b+(P.tOff||0)+.05),a=[-.06,.66,z],b=[.1,1.0,z-.03];
@@ -19241,9 +19251,10 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(Math.cos(a)*s*.45,y+.45,-Math.sin(a)*s*.45,.6,s*1.3,a+.6,bark,.035))});
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
-    if(moss)[[.35,2.0,.2],[-.32,1.65,2.5],[.3,2.35,4],[-.2,2.55,5.2],[.1,2.6,1.2]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},Math.cos(a)*s*1.5,y-L/2+.1,-Math.sin(a)*s*1.5,Math.PI))});
+    if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
+      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
     if(o.snow)p.push(F(dome(.3,6),0xf4f8ff,{j:.04},0,2.62,0,0,0,0,[1,.4,1]));return M(p)};
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
@@ -19252,8 +19263,13 @@ function wdDeco(){const T0=performance.now();
     p.push(F(ico(.3,0),c,{j:.05},1.75,.3,0,0,0,0,[1.3,.9,.9]),F(cone(.05,.5,4),c,{},1.9,.65,.18,.5,0,-.6),F(cone(.05,.5,4),c,{},1.9,.65,-.18,-.5,0,-.6));return M(p)};
   const skull=c=>M([F(ico(.22,0),c,{j:.04},0,.18,0,0,0,0,[1.2,.9,1]),F(box(.2,.1,.18),c,{},.2,.08,0),F(cone(.04,.4,4),c,{},-.05,.35,.18,.7,0,.3),F(cone(.04,.4,4),c,{},-.05,.35,-.18,-.7,0,.3),F(cyl(.03,.03,.4,4),c,{},-.3,.04,.1,0,.6,Math.PI/2)]);
   const pillarG=(hex,h,top)=>M([F(cyl(.36,.4,h,7),hex,{j:.05,top,tt:.6,f:(x,y,z)=>y>h-.01?[x,y-((x*7+z*13)%1+1)%1*.4,z]:[x,y,z]},0,h/2,0),F(cyl(.5,.55,.3,7),hex,{j:.04},0,.15,0),F(cyl(.32,.36,.5,7),hex,{j:.06},.9,.25,.3,0,.4,Math.PI/2)]);
-  const wallG=(hex,top,len,hh)=>{const p=[];for(let i=0;i<4;i++){const w=len/4,h0=hh*(.55+((i*37)%10)/22);p.push(F(box(w*.98,h0,.7),hex,{j:.08,top,tt:.6},-len/2+w*(i+.5),h0/2,0))}
-    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0));return M(p)};
+  // v177: a ruined wall laid in courses of dressed blocks (joints, staggered, a broken top) instead of four plain boxes
+  const wallG=(hex,top,len,hh)=>{const p=[],w=len/4;for(let i=0;i<4;i++){const h0=hh*(.55+((i*37)%10)/22);let y=0,c=0;
+      while(y<h0-.06){const bh=Math.min(.34+((i*7+c*3)%4)*.05,h0-y),sh=(c%2?.25:-.05)*w,last=y+bh>=h0-.06;
+        for(let k=0;k<2;k++){const x0=-len/2+w*i+sh+k*w*.5,x1=Math.min(-len/2+w*(i+1),x0+w*.5),xa=Math.max(-len/2+w*i,x0);if(x1-xa<.08)continue;
+          const d=.64+(((i+c+k)*29)%5)*.025,bw=x1-xa-.025;p.push(F(box(bw,bh-.025,d),hex,{j:last?.09:.035,top,tt:.6},(xa+x1)/2,y+bh/2,(((i*3+c+k)%3)-1)*.03,0,(((c+k)%3)-1)*.02,0))}
+        y+=bh;c++}}
+    p.push(F(box(.6,.4,.5),hex,{j:.1},len*.4,.2,.8,0,.5,0),F(box(.5,.35,.45),hex,{j:.1},-len*.3,.17,-.85,0,1.1,0),F(dod(.22),hex,{j:.08},len*.15,.12,.7),F(dod(.16),hex,{j:.06},-len*.42,.08,.62));return M(p)};
   const grave=(hex,lean)=>M([F(box(.42,.6,.12),hex,{j:.03},0,.28,0,lean,0,lean*.5),F(cyl(.21,.21,.12,6,1),hex,{},0,.6,0,Math.PI/2,0,0,[1,1,1]),F(box(.55,.08,.8),0x3a3428,{j:.04},0,.04,.42)]);
   const crossG=(hex)=>M([F(box(.12,1.1,.1),hex,{j:.02},0,.55,0),F(box(.6,.12,.1),hex,{j:.02},0,.82,0),F(dome(.35,6),0x3e3428,{j:.06},0,0,.5,0,0,0,[1,.35,1.6])]);
   const fenceG=(wood)=>M([F(box(.12,.95,.12),wood,{j:.02},-1.15,.47,0),F(box(.12,.85,.12),wood,{j:.02},1.15,.42,0),F(box(2.5,.1,.06),wood,{j:.02},0,.7,0,0,0,.03),F(box(2.5,.1,.06),wood,{j:.02},0,.38,0,0,0,-.04)]);
@@ -19275,11 +19291,13 @@ function wdDeco(){const T0=performance.now();
   const statueG=(stone,o)=>{o=o||{};const p=[F(box(1.1,.7,1.1),stone,{j:.05},0,.35,0),F(box(1.25,.12,1.25),stone,{},0,.72,0),F(cyl(.22,.38,1.3,6),stone,{j:.04},0,1.43,0),F(ico(.2,0),stone,{j:.03},0,2.25,0),F(box(.62,.18,.3),stone,{},0,1.95,0)];
     if(o.wings)[-1,1].forEach(s=>p.push(F(cone(.35,1.2,3),stone,{j:.04},s*.35,2.1,-.12,0,0,s*.7,[1,1,.25])));
     if(o.sword)p.push(F(box(.08,1.3,.04),stone,{},.28,1.5,.2),F(box(.36,.06,.06),stone,{},.28,2.0,.2));
-    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.95,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
+    if(o.snake){p.push(F(tor(.38,.12,Math.PI*1.8,10),stone,{j:.02},0,.9,0,Math.PI/2,0,0),F(tor(.26,.1,Math.PI*1.6,8),stone,{},0,1.2,0,Math.PI/2,0,1),F(cyl(.08,.1,.7,5),stone,{},.2,1.55,0,0,0,-.3),F(cone(.16,.3,4),stone,{},.35,1.95,0,0,0,-1.3));p.splice(2,3)}
     if(o.broken)p.splice(3,2);return M(p)};
   const mausoleum=(st,roof)=>M([F(box(2.6,.25,3),st,{j:.04},0,.12,0),F(box(2.2,1.9,2.6),st,{j:.06},0,1.2,0),F(cyl(.16,.18,1.9,6),st,{},-.95,1.2,1.4),F(cyl(.16,.18,1.9,6),st,{},.95,1.2,1.4),
     F(box(2.5,.2,3),st,{},0,2.2,0),F(cone(1.85,.9,4),roof,{j:.05},0,2.75,0,0,Math.PI/4,0,[1,1,1.25]),F(box(.9,1.3,.06),0x141218,{lo:1,hi:0},0,.95,1.31),F(cyl(.04,.04,.6,4),0x8a8a90,{},0,3.35,0),F(box(.4,.06,.06),0x8a8a90,{},0,3.5,0)]);
-  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(box(.62,.22,1.6),w,{j:.02},.15,.25,.5,.1,.3,.15)]);
+  // v177: a coffin is coffin-shaped (narrow head, broad shoulders, tapered foot) with a lid knocked askew, not a box
+  const coffinG=(L,W,H)=>{const s=new G.Shape([[-W*.62,0],[-W,L*.28],[-W*.7,L],[W*.7,L],[W,L*.28],[W*.62,0]].map(q=>new G.Vector2(q[0],q[1]-L*.5)));const g=new G.ExtrudeGeometry(s,{depth:H,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,H,0);return g};
+  const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(coffinG(1.6,.31,.2),w,{j:.015},.15,.12,.5,.1,.3,.15),F(coffinG(1.62,.33,.05),dt168Mix(w,0x000000,.25),{j:.01},.22,.33,.42,.16,.42,.1)]);
   const archG=(st,top)=>M([F(box(.9,3.2,1),st,{j:.1,top,tt:.6},-1.7,1.6,0),F(box(.9,3.2,1),st,{j:.1,top,tt:.6},1.7,1.6,0),F(tor(1.7,.5,Math.PI,8),st,{j:.08,top,tt:.6},0,3.0,0,0,0,0,[1,.6,1.2]),F(box(1.2,.5,1.1),st,{j:.1},-1.7,.25,0),F(box(1.2,.5,1.1),st,{j:.1},1.7,.25,0)]);
   const duneG=(c)=>F(dome(1,9),c,{j:.12,jy:.5,lo:.86,hi:.24,f:(x,y,z)=>[x*(1+.25*Math.sign(x)),y*(1-.35*Math.max(0,x)),z]},0,0,0);
   const cartG=()=>M([F(box(2.0,.12,1.1),0x6a4a2e,{j:.03},0,.75,0,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,.53,0,0,.15),F(box(2.0,.4,.06),0x5a3e26,{j:.03},0,.98,-.53,0,0,.15),
@@ -19289,11 +19307,12 @@ function wdDeco(){const T0=performance.now();
   const basalt=(c,top)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.05,r=i?.42:0,h=1.4+((i*53)%10)/5;p.push(F(cyl(.24,.26,h,6),c,{j:.02,top,tt:.8},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return M(p)};
   const icicles=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.2,r=i?.2+i*.06:0,h=.4+((i*29)%10)/14;p.push(F(cone(.08,h,4),c,{lo:.8,hi:.5},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
-  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(F(box(s*1.4,s,s),c,{j:.06},Math.cos(a)*r,s/2,Math.sin(a)*r,0,a,(i%2)*.3))}return M(p)};
+  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v177: broken blocks among rough chunks
+    for(let i=0;i<6;i++){const a=i*1.7+.4,r=.5+(i%3)*.3;p.push(F(oct(.06+(i%3)*.025),c,{j:.03},Math.cos(a)*r,.02,Math.sin(a)*r,0,i,0,[1,.6,1]))}return M(p)};
   const candles=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cyl(.03,.035,h,5),0xe8dcc0,{lo:.9,hi:.2},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const candleGlow=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cone(.025,.07,4),0xffffff,{lo:1,hi:0},Math.cos(a)*r,h+.04,Math.sin(a)*r))}return M(p)};
-  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.82,0)]);
-  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,2.0,0)]);
+  const candelabra=()=>M([F(cyl(.05,.18,1.6,5),0x1e1c22,{},0,.8,0),F(tor(.35,.03,Math.PI,6),0x1e1c22,{},0,1.6,0,0,0,Math.PI),F(cyl(.04,.04,.25,5),0xe8dcc0,{},-.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},.35,1.72,0),F(cyl(.04,.04,.25,5),0xe8dcc0,{},0,1.72,0)]);
+  const candelaGlow=()=>M([F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},-.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},.35,1.9,0),F(cone(.04,.12,4),0xffffff,{lo:1,hi:0},0,1.9,0)]);
   const rootsG=(bark)=>{const p=[];for(let i=0;i<4;i++){const a=i*1.6;p.push(F(tor(.9+i*.15,.13-i*.015,Math.PI*.85,7),bark,{j:.04},0,-.25,0,0,a,0,[1.3,1,1]))}p.push(F(cyl(.3,.45,.7,6),bark,{j:.05},.2,.1,0,0,0,.6));return M(p)};
   const hay=()=>M([F(cyl(.55,.55,.9,8),0xd8b860,{j:.04,lo:.75,hi:.35},0,.55,0,Math.PI/2,0,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},.2,.55,0,0,Math.PI/2,0),F(tor(.56,.03,Math.PI*2,8),0x8a6a30,{},-.2,.55,0,0,Math.PI/2,0)]);
   const totem=(w,c1,c2)=>M([F(cyl(.18,.22,2.6,6),w,{j:.03},0,1.3,0),F(cone(.3,.5,5),c1,{},0,2.85,0),F(box(.5,.3,.42),c2,{j:.02},0,2.2,.08),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},.12,2.25,.3),F(box(.12,.06,.1),0xffd060,{lo:1,hi:0},-.12,2.25,.3),F(box(.9,.12,.12),w,{},0,1.6,0),F(box(.04,.7,.3),c1,{},.42,1.25,0),F(box(.04,.7,.3),c2,{},-.42,1.25,0)]);
@@ -19331,7 +19350,9 @@ function wdDeco(){const T0=performance.now();
   def('h_hay',{parts:[hay()],cast:true,col:.6,s:[.9,1.15]});
   def('h_cairn',{parts:[cairn(0x9a9488)],cast:true,s:[.8,1.2]});
   def('h_totem',{parts:[totem(0x6a4a2e,0x3a8a5a,0xc8a040)],cast:true,col:.35,s:[.9,1.1]});
-  def('h_bush',{parts:[M([F(ico(.45,0),0x4a8a3a,{j:.12},0,.35,0),F(ico(.35,0),0x5a9a42,{j:.1},.35,.3,.1),F(ico(.3,0),0x3e7a32,{j:.1},-.3,.25,-.15)])],near:true,s:[.8,1.4],sway:.04});
+  // v177: h_bush is a dense, uneven shrub with bare twigs (was three bright green balls)
+  def('h_bush',{parts:[M([F(ico(.42,1),0x3e6a32,{j:.16,lo:.45,hi:.6},0,.34,0,0,0,0,[1.1,.82,1]),F(ico(.33,1),0x48743a,{j:.13,lo:.45,hi:.6},.36,.27,.12,0,1,0,[1,.8,1]),F(ico(.29,1),0x36602c,{j:.12,lo:.45,hi:.6},-.32,.23,-.15,0,2,0,[1,.8,1]),
+    F(ico(.22,1),0x4a7038,{j:.1,lo:.5,hi:.6},.06,.58,-.12),twig(.1,.2,.05,.75,.7,.5,0x3a2e22,.025),twig(-.1,.2,-.05,.6,-.8,2.2,0x3a2e22,.02),twig(0,.15,.1,.55,.5,4,0x3a2e22,.02)])],near:true,s:[.8,1.4],sway:.04});
   // Burningeye Summit: a frozen peak under a burning sky
   def('b_crystal',{parts:[{g:crystals(0xffffff),glow:1}],cast:false,col:.6,s:[.8,1.5],tint:[0x9ad8ff,0xbfe8ff,0x7ab8ff]});
   def('b_rock',{parts:[rockG(0x6a7280,0xf4f8ff,1.1,.75)],cast:true,col:.95,s:[1,1.7]});
@@ -19378,8 +19399,9 @@ function wdDeco(){const T0=performance.now();
   def('c_column',{parts:[pillarG(0x5a5058,3.2,null)],cast:true,col:.5,s:[.95,1.3]});
   def('c_graves',{parts:[M([grave(0x3e3a42,.15).translate(-.7,0,0),grave(0x46404a,-.1).translate(.7,0,.1)])],cast:true,s:[.9,1.2]});
   def('c_candela',{parts:[candelabra(),{g:candelaGlow(),glow:1}],cast:true,s:[.9,1.1],gt:[0xffc870]});
-  def('c_blood',{parts:[F(disc(1,9),0x4a0610,{lo:1,hi:0,j:.15,jy:0},0,0,0,-Math.PI/2)],near:true,y:.04,s:[.6,1.4],j:.05});
-  def('c_coffin',{parts:[M([F(box(.7,.35,1.8),0x2a1a1a,{j:.03},0,.18,0),F(box(.76,.08,1.86),0x3a2222,{},.1,.4,.15,0,.25,.12)])],cast:true,s:[.9,1.1]});
+  def('c_blood',{parts:[(()=>{const sp=(r,n,sd)=>{const g=disc(r,n),P=g.attributes.position;for(let i=1;i<P.count;i++){const a=Math.atan2(P.getY(i),P.getX(i)),k=.62+.38*Math.abs(Math.sin(a*3+sd))+.22*Math.sin(a*7+sd*2);P.setXY(i,P.getX(i)*k,P.getY(i)*k)}return g};   // v177: a ragged pool with drops, dark
+    return M([F(sp(1,22,1.3),0x2a0408,{lo:1,hi:0,j:.04,jy:0},0,0,0,-Math.PI/2),F(sp(.16,8,2),0x30050a,{lo:1,hi:0},1.25,.003,.3,-Math.PI/2),F(sp(.1,7,3),0x30050a,{lo:1,hi:0},-.9,.003,1.05,-Math.PI/2),F(sp(.12,7,4),0x2a0408,{lo:1,hi:0},.2,.003,-1.3,-Math.PI/2)])})()],near:true,y:.04,s:[.6,1.4],j:.05});
+  def('c_coffin',{parts:[M([F(coffinG(1.8,.36,.33),0x2a1a1a,{j:.015},0,0,0),F(coffinG(1.84,.38,.06),0x3a2222,{j:.01},.1,.36,.15,0,.25,.1),F(box(.04,.05,.5),0x6a5a3a,{},.0,.335,-.3),F(box(.3,.05,.04),0x6a5a3a,{},0,.335,-.4)])],cast:true,s:[.9,1.1]});
   // ---------- where each zone puts them: w = in (walkable, off the road) | edge (walkable near the cliff) | bank (the raised rim, out of reach) | lane (beside the road) | water ----------
   // n = items per 1000 tiles of that kind, c = [min,max] per cluster, r = cluster radius
   const Z=[
@@ -19473,6 +19495,7 @@ function wdDeco(){const T0=performance.now();
   if(ZX&&ZX.post)ZX.post(out,col);
   if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
+  try{if(typeof env177Look=='function')env177Look(T,out)}catch(e){console.warn('v177 look',e)}   // v177: graded and weathered (3370)
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
@@ -19490,7 +19513,10 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
   for(const k in groups){const cx=k%1000,cz=Math.floor(k/1000),c={ms:[],ns:[],on:false,non:false,wd:1,box:new THREE.Box3(new THREE.Vector3(cx*CN-3,-4,cz*CN-3),new THREE.Vector3((cx+1)*CN+3,30,(cz+1)*CN+3))};
     for(const kk in groups[k]){const S=WD.T[kk],L=groups[k][kk];
       S.parts.forEach((p,pi)=>{const m=new THREE.InstancedMesh(p.g,mat(S,pi,p),L.length),col=new Float32Array(L.length*3);
-        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1];d0.position.set(d.x,(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s)),d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2]);d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
+        L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1],y0=(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s));
+          // v177: seated on the slope under the whole base (3370 env177Seat), once per piece
+          const st=d.st176||(d.st176=typeof env177Seat=='function'?env177Seat(S,d,y0):null);
+          if(st){d0.position.set(st.x,st.y,st.z);d0.quaternion.copy(st.q);d0.scale.set(st.sx,st.sy,st.sz)}else{d0.position.set(d.x,y0,d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2])}d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
           const h=((d.x*73.13+d.z*37.7)%1+1)%1,tl=p.glow?(S.gt||S.tint):S.tint;cc.setHex(tl?tl[Math.floor(h*tl.length)%tl.length]:0xffffff);if(!p.glow&&!p.mat){const v=1-S.j/2+S.j*h;cc.multiplyScalar(v)}col.set([cc.r,cc.g,cc.b],j*3)});
         m.instanceColor=new THREE.InstancedBufferAttribute(col,3);m.instanceMatrix.needsUpdate=true;m.frustumCulled=false;m.visible=false;m.castShadow=false;m.receiveShadow=!p.glow&&!p.mat;m.userData.cast=!!S.cast&&!p.glow&&!p.mat;
         if(p.mat)m.renderOrder=3;scene.add(m);WD.ms.push(m);(S.near?c.ns:c.ms).push(m)})}
@@ -26176,8 +26202,8 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
     p.push(F(ico(.18,0),0x5a3a1a,{},.8,3.15,.12),F(ico(.16,0),0x5a3a1a,{},.7,3.12,-.15));return M(p)};
   const obelisk=(hex)=>M([F(box(1.1,.5,1.1),hex,{j:.06},0,.25,0),F(cyl(.32,.5,4.2,4),hex,{j:.05},0,2.6,0,0,Math.PI/4,0),F(cone(.34,.7,4),hex,{j:.03},0,5.05,0,0,Math.PI/4,0)]);
   const glyphs=()=>{const p=[];for(let i=0;i<4;i++)p.push(F(box(.1,.22,.05),0xffffff,{lo:1,hi:0},((i%2)-.5)*.2,1.4+i*.75,.36));return M(p)};
-  const frozen=()=>M([F(box(1.1,1.9,1),0x9ad0f0,{j:.18,lo:.8,hi:.5},0,.95,0,0,.3,0),skull(0xd8d8e0).translate(0,1.3,0)]);
-  const sarco=(hex)=>M([F(box(1,.6,2.2),hex,{j:.03},0,.3,0),F(box(1.1,.16,2.3),hex,{j:.03},0,.68,0),F(box(.5,.2,1.4),hex,{j:.06},0,.86,-.1),F(ico(.2,0),hex,{},0,.9,.8)]);
+  const frozen=()=>M([F(dt168Rock(171,1,.35,1).clone(),0x8ab8d4,{j:.08,lo:.8,hi:.5},0,.95,0,0,.3,0,[.62,1.02,.56]),skull(0xd8d8e0).translate(0,1.3,0)]);
+  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v177: a carved tomb with a plinth, panels and a laid-out effigy
   const bonePile=()=>M([skull(0xd8d0b8),skull(0xc8c0a8).translate(.45,0,.2),skull(0xd0c8b0).translate(-.3,0,-.3),skull(0xc0b8a0).translate(.1,.3,0),F(dome(.9,7),0xb8b098,{j:.2},0,0,0,0,0,0,[1,.35,1]),
     F(cyl(.04,.04,.9,4),0xd8d0b8,{},.6,.15,-.4,0,.5,Math.PI/2),F(cyl(.04,.04,.8,4),0xd8d0b8,{},-.5,.12,.4,0,-.8,Math.PI/2)]);
   const boneSpikes=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.3,r=i?.3+i*.12:0,h=i?1+((i*37)%10)/10:2.2;p.push(F(cone(.1,h,4),0xe0d8c0,{j:.02},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
@@ -26187,7 +26213,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const catapult=()=>M([F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,.6),F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,-.6),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,.6,0,0,.3),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,-.6,0,0,.3),
     F(cyl(.06,.06,1.4,5),0x3a2a1a,{},.2,1.4,0,Math.PI/2,0,0),F(box(2.8,.12,.14),0x6a4a2e,{},-.6,1.8,0,0,0,.6),F(dome(.35,6),0x3a2a1a,{},-1.7,2.4,0,Math.PI),
     F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,-.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,-.72,0,0,0)]);
-  const hedge=()=>F(box(3,1.2,.9),0x2a4a2a,{j:.08,lo:.6,hi:.5},0,.6,0);
+  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v177: clipped but leafy, not a green box
   const topiary=()=>M([F(cyl(.08,.1,.6,5),0x3a2a1a,{},0,.3,0),F(ico(.55,1),0x2a4a2a,{j:.04,lo:.6,hi:.5},0,1.1,0),F(cone(.4,.9,6),0x2e522e,{j:.03},0,1.9,0),F(box(.9,.35,.9),0x5a5258,{j:.03},0,.17,0)]);
   const fountain=()=>M([F(cyl(1.8,1.9,.55,10),0x5a5258,{j:.05},0,.27,0),F(cyl(1.55,1.55,.1,10),0x3a0810,{lo:1,hi:0},0,.5,0),F(cyl(.25,.4,1.6,7),0x5a5258,{j:.03},0,1.2,0),F(cyl(.75,.4,.25,8),0x5a5258,{},0,1.95,0),statueG(0x5a5258,{}).scale(.6,.6,.6).translate(0,2.05,0)]);
   const fountainGlow=()=>F(cyl(1.5,1.5,.04,10),0xffffff,{lo:1,hi:0},0,.56,0);
@@ -26195,7 +26221,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   // ---- Kindlelight II: the Glowmire Hollows ----
   def('k2_gshroom',{parts:[gshroom(0xb8b8a0),glowM(gcap())],cast:true,col:.45,s:[.9,1.6],gt:[0x4affb0,0x7aff6a,0x5ae8ff]});
   def('k2_gshroomB',{parts:[gshroom(0xa8a890),glowM(gcap())],s:[1.4,2.4],gt:[0x4affb0,0x9aff5a,0x5ae8ff]});
-  def('k2_shelf',{parts:[glowM(shelf())],near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
+  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v177: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
   def('k2_goo',{parts:[glowM(gooPuddle())],near:true,y:.05,s:[.8,1.8],gt:[0x3ad82a,0x5aff3a]});
   def('k2_stalag',{parts:[stalag(0x3a423e,0x4a7a4a)],cast:true,col:.5,s:[.8,1.5]});
   def('k2_pillar',{parts:[pillarR(0x343c38,0x3e6a42,9)],cast:true,col:.95,s:[.9,1.2]});
@@ -26598,7 +26624,7 @@ function n3Claw(k,bn,col,p,dir,len,r,curl,seg){let a=p.slice(),d=dir.slice();con
 // a creature's own stance on top of every humanoid pose (idle, walk, attacks): D.stance = {channel: offset} (e.g. a hunch)
 {const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const D=g&&g.n3k&&N3.def[g.n3k],St=D&&D.stance,b=g.h&&g.h.bones;
   if(St&&b){for(const c in St){const ch=HACH[c];if(c=='dy')continue;if(ch&&b[ch[0]])b[ch[0]].rotation[ch[1]]+=St[c]}
-    // (v177) the hips drop by what the knee bend takes off the leg (a set dy sank the feet 7–13 cm into the ground); a thigh with
+    // (v178) the hips drop by what the knee bend takes off the leg (a set dy sank the feet 7–13 cm into the ground); a thigh with
     // no swing of its own swings forward half the bend so the foot stays under the hip
     [['lk','lh','lh0'],['rk','rh','rh0']].forEach(([c,h,bn])=>{if(St[c]&&St[h]==null&&b[bn])b[bn].rotation.x-=St[c]/2});
     const k=Math.max(St.lk||0,St.rk||0);if(k&&b.lh1&&b.lh2)b.pelvis.position.y-=(b.lh1.position.length()+b.lh2.position.length())*(1-Math.cos(k/2))}}catch(e){}return r}}
@@ -29872,7 +29898,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const water=(x,z,rx,rz,col,op)=>{if(gy(x,z)<-.05){take(x,z,Math.max(rx,rz)*.7);return {userData:{Y:.02}}}return pool(x,z,rx,rz,col,false,op)};
   const lily=(x,Y,z,col)=>{const o=putY(Q.disc,S(col||0x3a7a3a),x,Y,z,rr(.25,.45),rr(.25,.45),1,-P2,0,rr(0,6));o.castShadow=false};
   // ---- growth ----
-  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++)put(Q.cyl4,S(col||0x5a7a3a),x+rr(-.45,.45),.45,z+rr(-.45,.45),.025,rr(.7,1.3),.025,rr(-.2,.2),0,rr(-.2,.2))};
+  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++){const ox=rr(-.45,.45),oz=rr(-.45,.45),h=rr(.7,1.3);put(Q.cyl4,S(col||0x5a7a3a),x+ox,h/2-.08,z+oz,.025,h,.025,rr(-.2,.2),0,rr(-.2,.2))}};   // v177: rooted (short reeds stood ~.1 above the ground)
   const shroom=(x,z,k,cap,glow)=>{put(Q.cyl,S(0xd8cdb0),x,k*.6,z,k*.14,k*1.2,k*.14);put(Q.sph,glow?S(cap,{emissive:cap,emissiveIntensity:.6}):S(cap),x,k*1.2,z,k*.6,k*.3,k*.6);[0,1,2].forEach(i=>put(Q.sph,S(0xf0e8d8),x+Math.cos(i*2.1)*k*.34,k*1.4,z+Math.sin(i*2.1)*k*.34,k*.08,k*.05,k*.08));if(k>1)blk(x,z,0)};
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
@@ -29940,7 +29966,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
   const palm=(x,z,h,dead)=>{blk(x,z,0);take(x,z,1);const lx=rr(-.25,.25),lz=rr(-.25,.25);put(Q.tcyl,S(0x6a5038),x+lx*h*.5,h/2,z+lz*h*.5,.16,h,.16,lz,0,-lx);
-    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*.7,Y+(dead?-.5:.05),tz+Math.sin(a)*.7,1.5,.04,.3,0,-a,dead?-1.15:-.35)}};
+    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;const tl=dead?1.15:.35,fr=.75*Math.cos(tl)-.04,fy=Y-.75*Math.sin(tl)+.02;   // v177: each frond grows from the crown (their inner ends stood ~.3 above and beside it)
+    for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*fr,fy,tz+Math.sin(a)*fr,1.5,.04,.3,0,-a,-tl)}};
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
     TQ(sg,Q.box,M,-.6*k,2.4*k,0,.4*k,3*k,1.8*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,.1*k,1.6*k,.86*k*s,1.4*k,.5*k,.3*k));TQ(sg,Q.cone4,M,-.6*k,4.25*k,0,.6*k,.9*k,.9*k,0,Math.PI/4,0)};
@@ -29963,7 +29990,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const burrowMouth=(x,z,a,k,col)=>{const sg=sub(x,z,a,-.3*k);TQ(sg,Q.arc,S(col),0,0,0,1.1*k,1.2*k,2.6*k,0,P2,0);const d=TQ(sg,Q.disc,G(0x040302),-.15*k,.05,0,1*k,1*k,1,0,-P2,0);d.castShadow=false;take(x,z,1.3*k);blk(x-Math.cos(a)*.4,z-Math.sin(a)*.4,.6*k)};
   const steam=(x,z,col,k)=>{const o=put(Q.cone,T(col||0xb0ffa0,.18),x,1.1*(k||1),z,.4*(k||1),2.2*(k||1),.4*(k||1),Math.PI,0,0);anim(o,'puff',.25,.8)};
   const wisp=(x,y,z,col,k)=>{k=k||1;const sg=new THREE.Group();sg.position.set(x,gy(x,z)+y,z);TQ(sg,Q.sph,G(col),0,0,0,.09*k,.09*k,.09*k);TQ(sg,Q.sph,T(col,.22),0,0,0,.24*k,.24*k,.24*k);g.add(sg);anim(sg,'bob',.35,rr(.6,1.2));return sg};
-  const ladder=(x,z,a,h,col)=>{const sg=sub(x,z,a,0),M=S(col||0x4a3220);take(x,z,.7);[-1,1].forEach(s=>TQ(sg,Q.box,M,.4,h/2,.28*s,.07,h,.07,0,0,-.35));for(let i=1;i<h/.4;i++)TQ(sg,Q.box,M,.4-Math.sin(.35)*i*.4+.05,i*.4*Math.cos(.35),0,.05,.05,.56)};
+  const ladder=(x,z,a,h,col)=>{const sg=sub(x,z,a,0),M=S(col||0x4a3220);take(x,z,.7);[-1,1].forEach(s=>TQ(sg,Q.box,M,.4,h/2,.28*s,.07,h,.07,0,0,-.35));for(let i=1;i<h/.4;i++){const y=i*.4*Math.cos(.35);TQ(sg,Q.box,M,.4+Math.tan(.35)*(y-h/2),y,0,.05,.05,.56)}};   // v177: rungs follow the rails' lean (they leaned the other way, off the ladder)
   // the camp's main axis: [u,v] → camp coordinates
   const A=(u,v)=>ax(u,v);
   const K={rn,rr,pk,gy,ax,A,AN,S,G,T,put,putY,sub,blk,take,free,spot,scat,ring,keep,anim,flame,halo,patch,fire,brazier,torch,candle,candles,rock,slab,pillar,fallen,arch,wall,rubble,obelisk,runes,cracks,
@@ -30371,8 +30398,17 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
     F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},.95,.3,.12,0,1.1,.12,[.72,.46,.62]),F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},-.9,.28,-.1,0,2.2,-.1,[.7,.44,.6])]);
   const stand=(hex,top)=>M([F(dod(1),hex,{j:.13,top,tt:.6,lo:.6,hi:.45},0,.62,0,0,.4,0,[1.15,.9,.95]),F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},1.05,.25,.25,0,2.4,0,[.62,.4,.55]),
     F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},-1.05,.22,-.15,0,.9,0,[.55,.36,.5])]);
-  const oak=(bark,l1,l2)=>M([F(cyl(.16,.32,2.6,7),bark,{j:.04,lo:.6,hi:.4,f:(x,y,z)=>y<-1.2?[x*1.4,y,z*1.4]:[x,y,z]},0,1.3,0),F(cyl(.06,.11,1.1,5),bark,{j:.02},.35,2.3,0,0,0,-.9),F(cyl(.05,.1,1,5),bark,{j:.02},-.3,2.4,.15,.3,0,.9),
-    F(ico(1.35,1),l1,{j:.3,lo:.6,hi:.5},0,3.3,0,0,0,0,[1,.78,1]),F(ico(1.05,1),l2,{j:.25,lo:.65,hi:.5},.75,3.85,.3,0,0,0,[1,.8,1]),F(ico(.95,1),l2,{j:.22,lo:.65,hi:.5},-.7,3.7,-.35,0,0,0,[1,.8,1]),F(ico(.8,1),l1,{j:.2,lo:.7,hi:.45},.1,4.35,-.1,0,0,0,[1,.8,1])]);
+  // v177: a gnarled oak (it was a stick under a green ball): a leaning, flared trunk forking into three limbs, the crown a loose
+  // mass of uneven clumps hung on the limbs (dark beneath), a dead branch or two poking out
+  const oak=(bark,l1,l2)=>{const bend=(x,y,z)=>{const t=Math.max(0,y)/2.6;return [x*(y<.3?1.25-y*.8:1)+t*t*.28,y,z+Math.sin(y*1.3)*.05]};
+    const p=[F(cyl(.17,.34,2.5,8),bark,{j:.04,lo:.55,hi:.42,f:bend},0,1.25,0),
+      F(cyl(.3,.42,.3,8),bark,{j:.06,lo:.5,hi:.3},.02,.1,0)];
+    const limbs=[[.62,0,2.15,1.5],[-.55,2.1,2.0,1.35],[.45,4.2,2.25,1.2]];
+    limbs.forEach(([lz,ry,y,L])=>p.push(F(cyl(.055,.12,L,6),bark,{j:.03,lo:.55,hi:.4},0,L/2,0).rotateZ(lz).rotateY(ry).translate(.2,y,0)));
+    const cl=[[.0,3.95,0,.95,l1],[.85,3.55,.35,.8,l2],[-.75,3.5,-.4,.82,l1],[.25,3.35,-.85,.7,l2],[-.35,3.4,.8,.72,l2],[.55,4.45,-.25,.62,l1],[-.4,4.35,.3,.6,l2],[1.2,3.1,-.35,.5,l1]];
+    cl.forEach(([x,y,z,r,c],i)=>p.push(F(ico(r,1),c,{j:r*.34,lo:.42,hi:.7,f:(X,Y,Z)=>[X,Y<y?y-(y-Y)*.62:Y,Z]},x,y,z,0,i*.9,0,[1.1,.82,1.05])));
+    p.push(F(cyl(.02,.045,.9,4),bark,{j:.02},0,.45,0).rotateZ(-1.05).rotateY(2.6).translate(-.2,2.6,.1),F(cyl(.015,.035,.7,4),bark,{j:.02},0,.35,0).rotateZ(.95).rotateY(.4).translate(.3,2.9,-.1));
+    return M(p)};
   const pine=(bark,leaf,snow)=>{const p=[F(cyl(.12,.22,1.4,6),bark,{j:.03},0,.7,0)];[[1.35,1.6,1.25],[1.12,1.45,2.15],[.88,1.3,2.95],[.62,1.15,3.65],[.36,.95,4.25]].forEach(([r,h,y],i)=>p.push(F(cone(r,h,8),leaf,{j:.07,top:snow,tt:.35,lo:.55+i*.04,hi:.45},0,y,0,0,i*.6,0)));return M(p)};
   const mk=(k,o)=>{if(!T[k])def(k,o);return k};
   const eOak=(b,l1,l2)=>mk('e_oak_'+b.toString(16)+l1.toString(16),{parts:[oak(b,l1,l2)],cast:true,s:[1,1.35],sway:.012,j:.14});
@@ -32802,8 +32838,8 @@ function wpX(k,type,col,r){const W=LGW,steel=col==0x9aa2ae?W.steel:lgCol(W.steel
   else if(type=='orb'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.L('','c',bone,[Math.cos(a)*.06,-.13,Math.sin(a)*.06],[Math.cos(a)*.14,-.02,Math.sin(a)*.14],.008,.006,4);k.L('','c',bone,[Math.cos(a)*.14,-.02,Math.sin(a)*.14],[Math.cos(a)*.06,.12,Math.sin(a)*.06],.006,.002,4)}
     gkChain(k,'',[[0,-.16,.05],[.04,-.24,.04]],.007,W.brass,null)}
   else if(type=='bow'){// feathers and bone charms tied at the limbs, carved rings on the riser
-    [-1,1].forEach(s=>{const y=s*.3*BOW_K,x=-.555+(.555-Math.sqrt(1-Math.pow(.3/.561,2))*.55)*BOW_KX+.016;/* v177: tied on the limb itself (they hung 9 cm off it) */gkFeather(k,'',[x-.02,y,0],[.1,-1,.15],.08,.012,s<0?0x1a1a1a:0x8a2a1a,null);k.L('','c',0x2a1e14,[x-.02,y+.01,0],[x-.03,y-.04,.01],.003,.003,3)});
-    for(let i=0;i<3;i++)k.p('','cyl','m',fit,-.553,-.06+i*.06,0,.021,.008,.021)}   // (v177) rings hug the grip
+    [-1,1].forEach(s=>{const y=s*.3*BOW_K,x=-.555+(.555-Math.sqrt(1-Math.pow(.3/.561,2))*.55)*BOW_KX+.016;/* v178: tied on the limb itself (they hung 9 cm off it) */gkFeather(k,'',[x-.02,y,0],[.1,-1,.15],.08,.012,s<0?0x1a1a1a:0x8a2a1a,null);k.L('','c',0x2a1e14,[x-.02,y+.01,0],[x-.03,y-.04,.01],.003,.003,3)});
+    for(let i=0;i<3;i++)k.p('','cyl','m',fit,-.553,-.06+i*.06,0,.021,.008,.021)}   // (v178) rings hug the grip
   else if(type=='crossbow'){gkSkull(k,'',0,.14,.0,.7,bone,0,null);[-1,1].forEach(s=>k.p('','cone4','m',W.iron2,s*.08,-.5,0,.01,.05,.01,0,0,-s*Math.PI/2))}
   else if(type=='shield'){// a spiked boss, a skull set over it (Rare+), claw marks across the face
     [-1,1].forEach(s=>{k.p('','cone4','m',W.iron2,0,0,s*.1,.03,.08,.03,s*Math.PI/2);if(r>=2)gkSkull(k,'',0,.24,s*.035,1.1,bone,s<0?Math.PI:0,null);
@@ -33157,9 +33193,9 @@ function e137Quad(n,F,H,paint,o){o=o||{};const L=[];
     L.push(e137Limb([[A,R[0]*1.05,[par,p+'0',.6]],[e137L(a,b,.4),R[0]*.92,[p+'0',p+'0',0]],[b,R[1],[p+'0',p+'1',.5]],[e137L(b,c,.5),(R[1]+R[2])/2,[p+'1',p+'1',0]],
       [c,R[2],[p+'1',p+'2',.5],'ank'],[[c[0],ft+.012,c[2]+toe*.35],R[3],[p+'2',p+'2',0],'paw'],[[c[0],ft*.6,c[2]+toe],R[3]*.55,[p+'2',p+'2',0],'paw']],paint,o.seg||6))});
   return L}
-// (v177) a point on a body loft made from e137Rows-style rows [z, y, half width, above, below]: at z, angle a from the top
+// (v178) a point on a body loft made from e137Rows-style rows [z, y, half width, above, below]: at z, angle a from the top
 // (0 = top, π/2 = the side, π = underneath; s = side ±1), d metres outside the surface (negative = sunk into it)
-function e177On(rows,z,a,s,d){let i=0;while(i<rows.length-2&&z>rows[i+1][0])i++;const A=rows[i],B=rows[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(B[0]-A[0]))),L=j=>A[j]+(B[j]-A[j])*t;
+function e178On(rows,z,a,s,d){let i=0;while(i<rows.length-2&&z>rows[i+1][0])i++;const A=rows[i],B=rows[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(B[0]-A[0]))),L=j=>A[j]+(B[j]-A[j])*t;
   const c=Math.cos(a),ry=c>0?L(3):L(4),rx=L(2),k=.96,x=Math.sin(a)*rx*k,y=c*ry*k,n=Math.hypot(x/(rx*rx||1),y/(ry*ry||1))||1;return [s*(x+d*x/(rx*rx)/n),L(1)+y+d*y/(ry*ry)/n,z]}
 // claws on a paw: n toes spread around the paw tip
 function e137Claws(k,n,bn,col,len,r,cnt){const c=e137B(n,bn);for(let i=0;i<(cnt||3);i++){const x=c[0]+(i-((cnt||3)-1)/2)*.022;k.L(bn,'c',col,[x,.03,c[2]+.05],[x,.006,c[2]+.05+len],r,.002,4)}}
@@ -33170,7 +33206,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A gaunt flayed hunting hound: hyena-like high shoulders over a tucked waist, raw red muscle with pale sinew, bare ribs
 // down the flanks, a long narrow skull-like snout full of teeth, a mane of black bristles, a naked rat tail, a spiked iron collar.
 (function(){const n='BloodHound';if(!LPR[n])return;
-  const K={mus:0x7a1a20,mus2:0x5a0e14,sinew:0xc89a8a,skin:0x2a1416,bone:0xd8ccb4,iron:0x3a3a40,blood:0xc81a2a,glow:0xff3a4a,dark:0x120808};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={mus:0x7a1a20,mus2:0x5a0e14,sinew:0xc89a8a,skin:0x2a1416,bone:0xd8ccb4,iron:0x3a3a40,blood:0xc81a2a,glow:0xff3a4a,dark:0x120808};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const BHR=[[-.47,.505,.03,.03,.03,['tail0','tail0',0]],[-.42,.5,.065,.06,.06,['pelvis','tail0',.5]],[-.36,.5,.1,.09,.095,['pelvis','pelvis',0]],[-.27,.5,.112,.1,.105,['pelvis','pelvis',0]],
       [-.16,.505,.095,.095,.075,['pelvis','spine',.5]],[-.04,.515,.1,.1,.085,['spine','spine',0]],[.08,.53,.13,.12,.15,['spine','chest',.5]],[.19,.545,.145,.13,.19,['chest','chest',0]],
       [.29,.57,.135,.13,.165,['chest','neck',.3]],[.37,.61,.1,.1,.11,['neck','neck',0]],[.45,.65,.08,.08,.08,['neck','head',.5]],
@@ -33190,8 +33226,8 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       for(let i=0;i<5;i++)k.p('head','cone4','c',K.bone,s*(.036-i*.003),.645,.6+i*.04,.007,.024,.007,Math.PI);
       k.p('head','cone4','c',0xf0e8d8,s*.026,.64,.77,.009,.05,.009,Math.PI);k.p('jaw','cone4','c',0xf0e8d8,s*.03,.64,.74,.008,.04,.008);
       // bare ribs on the flanks
-      // (v177: each rib lies on the flank's surface, half sunk into it; they stood off the waist before)
-      for(let i=0;i<4;i++){const z=.17-i*.07,bn=i<2?'chest':'spine',P=[.42,.62,.82,1.02,1.2].map(a=>e177On(BHR,z-(a-.42)*.02,a*Math.PI/2,s,-.002));for(let j=0;j<4;j++)k.L(bn,'c',K.bone,P[j],P[j+1],.012-j*.001,.011-j*.001,4)}});
+      // (v178: each rib lies on the flank's surface, half sunk into it; they stood off the waist before)
+      for(let i=0;i<4;i++){const z=.17-i*.07,bn=i<2?'chest':'spine',P=[.42,.62,.82,1.02,1.2].map(a=>e178On(BHR,z-(a-.42)*.02,a*Math.PI/2,s,-.002));for(let j=0;j<4;j++)k.L(bn,'c',K.bone,P[j],P[j+1],.012-j*.001,.011-j*.001,4)}});
     k.p('head','sph','c',K.dark,0,.67,.8,.02,.015,.012);
     for(let i=0;i<3;i++)k.L('jaw','c',K.blood,[(i-1)*.025,.62,.68+i*.03],[(i-1)*.03,.53-i*.02,.7+i*.03],.008,.003,3);
     // a mane of black bristles from the crown down the spine
@@ -33199,12 +33235,12 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       [-1,0,1].forEach(j=>k.L(bn,'c',K.dark,[j*.025,y,z],[j*.04,y+.07-i*.002,z-.07],.014,.002,3))}
     // spiked iron collar with a dangling chain
     for(let i=0;i<9;i++){const a=i/9*Math.PI*2;k.p('neck','cone4','m',K.iron,Math.sin(a)*.11,.61+Math.cos(a)*.105,.37,.012,.05,.012,Math.cos(a)*1.5,0,-Math.sin(a)*1.5)}
-    k.p('neck','tor','m',0x2a2a30,0,.61,.37,.104,.03,.098,Math.PI/2+.25,0,0);   // v177: the collar hugs the neck
-    for(let i=0;i<4;i++)k.p('neck','ring','m',K.iron,0,.502-i*.03,.345,.018,.03,.018,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);   // links in turn across and along: each hooks through the last (v177)
+    k.p('neck','tor','m',0x2a2a30,0,.61,.37,.104,.03,.098,Math.PI/2+.25,0,0);   // v178: the collar hugs the neck
+    for(let i=0;i<4;i++)k.p('neck','ring','m',K.iron,0,.502-i*.03,.345,.018,.03,.018,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);   // links in turn across and along: each hooks through the last (v178)
     // claws
     ['fl2','fr2','hl2','hr2'].forEach(b=>e137Claws(k,n,b,0x1a1210,.035,.008,3))};
   LPR[n].post=function(x,c,C,mat){// torn, swept-back ears
-    const og=lpSpikeGeo(K.skin,K.dark,3),ig=lpSpikeGeo(K.mus,K.mus2,3);   // v177: from the palette (the Snow Wolf's were red)
+    const og=lpSpikeGeo(K.skin,K.dark,3),ig=lpSpikeGeo(K.mus,K.mus2,3);   // v178: from the palette (the Snow Wolf's were red)
     [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.06,.73,.53,.055,.16,.03,-.6,-s*.3,s*.25);const m=new THREE.Mesh(ig,mat);m.scale.set(.6,.7,.5);m.position.set(0,.03,.45);p.children[0].add(m);p.userData={rz:-s*.3,sd:s};x.ears.push(p)})};
 })();
 
@@ -33212,7 +33248,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A corpse hound, half flesh half bone: rotting grey-green hide on the haunches and shoulders, an open ribcage between them,
 // a bare skull with ghast-flame eyes, exposed vertebrae, and green spirit fire licking along its spine.
 (function(){const n='BoneHound';if(!LPR[n])return;
-  const K={hide:0x4a5040,hide2:0x343a2c,rot:0x6a5a3a,bone:0xd8ccb0,bone2:0xa89c84,flame:0x7aff9a,dark:0x0a0c08};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={hide:0x4a5040,hide2:0x343a2c,rot:0x6a5a3a,bone:0xd8ccb0,bone2:0xa89c84,flame:0x7aff9a,dark:0x0a0c08};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const hide=new THREE.Color(K.hide),hide2=new THREE.Color(K.hide2),rot=new THREE.Color(K.rot),bone=new THREE.Color(K.bone),bone2=new THREE.Color(K.bone2);
     const paint=(o,r,s,cc,i)=>{if(r.k=='bn'||r.k=='paw'||r.k=='ank')return o.copy(i%2?bone:bone2);o.copy(hide);if(Math.abs(cc)>.5&&i%2)o.copy(hide2);if(s<-.4)o.lerp(rot,.5);if(r.k=='leg'&&s<0)o.lerp(rot,.3)};
     // haunches
@@ -33220,7 +33256,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     // a bare spine through the open ribcage
     const spine=e137Rows([[-.12,.48,.025,.025,.025,['pelvis','spine',.5],'bn'],[0,.49,.028,.028,.028,['spine','spine',0],'bn'],[.1,.49,.028,.028,.028,['spine','chest',.5],'bn'],[.14,.49,.03,.03,.03,['chest','chest',0],'bn']]);
     // shoulders and neck
-    const front=e137Rows([[.12,.48,.04,.04,.04,['chest','chest',0],'bn'],[.17,.47,.1,.09,.1,['chest','chest',0]],[.25,.47,.115,.1,.12,['chest','chest',0]],[.32,.49,.1,.09,.1,['chest','neck',.4]],[.38,.53,.07,.07,.07,['neck','neck',0]],[.43,.56,.055,.055,.055,['neck','head',.5]],[.48,.585,.05,.05,.045,['neck','head',.9]]]);   // (v177: the neck runs into the skull)
+    const front=e137Rows([[.12,.48,.04,.04,.04,['chest','chest',0],'bn'],[.17,.47,.1,.09,.1,['chest','chest',0]],[.25,.47,.115,.1,.12,['chest','chest',0]],[.32,.49,.1,.09,.1,['chest','neck',.4]],[.38,.53,.07,.07,.07,['neck','neck',0]],[.43,.56,.055,.055,.055,['neck','head',.5]],[.48,.585,.05,.05,.045,['neck','head',.9]]]);   // (v178: the neck runs into the skull)
     // the skull
     const skull=e137Rows([[.44,.585,.06,.06,.05,['head','head',0],'bn'],[.49,.605,.08,.075,.06,['head','head',0],'bn'],[.55,.6,.07,.06,.045,['head','head',0],'bn'],[.62,.58,.048,.04,.03,['head','head',0],'bn'],[.69,.565,.034,.028,.022,['head','head',0],'bn'],[.73,.56,.02,.018,.014,['head','head',0],'bn']]);
     const jaw=e137Rows([[.47,.56,.04,.025,.02,['head','jaw',.3],'bn'],[.52,.54,.05,.015,.02,['head','jaw',.7],'bn'],[.6,.535,.038,.012,.018,['jaw','jaw',0],'bn'],[.68,.54,.024,.01,.012,['jaw','jaw',0],'bn']]);
@@ -33253,7 +33289,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A vampire bat: bald wrinkled crimson face with a big pig-like nose leaf, huge veined ears, a bloated belly swollen with
 // glowing blood, gaunt bony shoulders, hooked thumbs and tattered, veined wings with holes along the trailing edge.
 (function(){const n='BloodBat';SPEC[n]=Object.assign({},SPEC.Batwing);
-  const K={fur:0x2a1418,skin:0x8a3a3a,skin2:0x6a2228,belly:0xb01a2a,mem:0x4a1a20,vein:0xa02a34,dark:0x120808,glow:0xff4a3a,bone:0xe8dcc8};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={fur:0x2a1418,skin:0x8a3a3a,skin2:0x6a2228,belly:0xb01a2a,mem:0x4a1a20,vein:0xa02a34,dark:0x120808,glow:0xff4a3a,bone:0xe8dcc8};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const BB=LPR.Batwing;
   LPR[n]={head:['head',0,.5,.38],up:.08,sc:1.15,back:BB.back,
     geo(C,c){const fur=new THREE.Color(K.fur),skin=new THREE.Color(K.skin),skin2=new THREE.Color(K.skin2),belly=new THREE.Color(K.belly),dark=new THREE.Color(K.dark);
@@ -33296,7 +33332,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // A horned bog toad: a round squat body, a head as wide as the body with an enormous mouth, pointed horn-like eyelids over
 // gold eyes, swollen poison glands behind them, warty mottled skin, fat folded hind legs and a pale throat.
 (function(){const n='Croaker';if(!LPR[n])return;
-  const K={skin:0x55663a,skin2:0x3a4826,blot:0x2a3418,belly:0xc8c094,horn:0xc8803a,gland:0x8a8a4a,eye:0xe8b830,lip:0x6a2a2a,dark:0x080806};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={skin:0x55663a,skin2:0x3a4826,blot:0x2a3418,belly:0xc8c094,horn:0xc8803a,gland:0x8a8a4a,eye:0xe8b830,lip:0x6a2a2a,dark:0x080806};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),bl=new THREE.Color(K.blot),be=new THREE.Color(K.belly);
     const paint=(o,r,s,cc,i)=>{if(s<-.35&&r.k!='leg'){o.copy(be);if(i%2)o.multiplyScalar(.9);return}o.copy(sk);if((i*3+Math.round(cc*4))%5==0)o.copy(bl);else if(s>.6)o.lerp(sk2,.5);if(r.k=='leg'&&s<0)o.lerp(be,.25)};
     const body=e137Rows([[-.31,.22,.05,.04,.04,['pelvis','pelvis',0]],[-.26,.23,.17,.11,.13,['pelvis','pelvis',0]],[-.16,.25,.24,.16,.19,['pelvis','spine',.5]],[-.03,.265,.265,.18,.2,['spine','spine',0]],
@@ -33312,7 +33348,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     // mouth line, tongue, small fangs; eyes on top with horn eyelids; poison glands; warts
     k.L('head','c',K.lip,[-.2,.29,.33],[0,.292,.5],.012,.012,3);k.L('head','c',K.lip,[.2,.29,.33],[0,.292,.5],.012,.012,3);
     k.p('jaw','sph','c',0xc85a6a,0,.29,.42,.06,.015,.05);
-    [-1,1].forEach(s=>{k.p('head','sph','c',K.skin2,s*.13,.4,.37,.07,.06,.07);k.p('head','sph','g',red?0xff2a2a:K.eye,s*.148,.415,.398,.032,.028,.03);k.p('head','box','c',K.dark,s*.156,.417,.426,.006,.024,.006,0,s*.4,0);k.p('head','sph','c',K.skin2,s*.145,.44,.4,.05,.022,.045,.15,0,0);   // (v177: smaller, sunk under a heavy lid)
+    [-1,1].forEach(s=>{k.p('head','sph','c',K.skin2,s*.13,.4,.37,.07,.06,.07);k.p('head','sph','g',red?0xff2a2a:K.eye,s*.148,.415,.398,.032,.028,.03);k.p('head','box','c',K.dark,s*.156,.417,.426,.006,.024,.006,0,s*.4,0);k.p('head','sph','c',K.skin2,s*.145,.44,.4,.05,.022,.045,.15,0,0);   // (v178: smaller, sunk under a heavy lid)
       k.L('head','c',K.horn,[s*.12,.44,.36],[s*.16,.5,.29],.032,.012,5).L('head','c',K.horn,[s*.16,.5,.29],[s*.18,.52,.24],.012,.002,4);k.L('head','c',K.horn,[s*.17,.43,.33],[s*.21,.46,.28],.016,.002,4);
       k.p('chest','sph','c',K.gland,s*.17,.4,.22,.06,.04,.1,0,s*.2,0);for(let i=0;i<4;i++)k.p('chest','sph','c',K.dark,s*(.15+i%2*.04),.43,.17+i*.03,.008,.006,.008);
       k.p('jaw','cone4','c',0xece4d0,s*.07,.285,.45,.01,.025,.01)});
@@ -33326,7 +33362,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // The king of serpents as a heavy armoured lizard: low sprawling stance, a thick tail, rows of stone osteoderms down the
 // back, an orange throat dewlap, a crown of bone horns with a frill membrane between them, and blazing petrifying eyes.
 (function(){const n='Basilisk';if(!LPR[n])return;
-  const K={skin:0x4a5438,skin2:0x2e3622,belly:0xa89a70,stone:0x7a7262,dew:0xc85a2a,horn:0xd8ccb0,frill:0x7a2e22,frill2:0xa8542a,eye:0xffe060,dark:0x080806};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={skin:0x4a5438,skin2:0x2e3622,belly:0xa89a70,stone:0x7a7262,dew:0xc85a2a,horn:0xd8ccb0,frill:0x7a2e22,frill2:0xa8542a,eye:0xffe060,dark:0x080806};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),be=new THREE.Color(K.belly),st=new THREE.Color(K.stone);
     const paint=(o,r,s,cc,i)=>{if(r.k=='paw')return o.copy(sk2);if(s<-.45){o.copy(be);if(i%2)o.multiplyScalar(.85);return}o.copy(sk);if(s>.55)o.copy(i%2?sk2:sk.clone().lerp(st,.25));else if((i+Math.round(cc*3))%3==0)o.lerp(sk2,.6)};
     const body=e137Rows([[-0.45,0.43,0.096,0.073,0.072,['pelvis','tail0',.6]],[-0.36,0.42,0.147,0.101,0.096,['pelvis','pelvis',0]],[-0.26,0.41,0.186,0.112,0.12,['pelvis','pelvis',0]],[-0.12,0.415,0.198,0.112,0.132,['pelvis','spine',.5]],
@@ -33363,7 +33399,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // An alligator snapping turtle: a flat, ridged shell with three keels of jagged spikes and a serrated rim, a huge triangular
 // head with a hooked beak, a thick tubercled neck, elephantine clawed legs and a long saw-crested tail. Moss and weed hang off it.
 (function(){const n='Snapper';if(!LPR[n])return;
-  const K={shell:0x4e5a3a,shell2:0x353f28,plast:0xb8a878,skin:0x5a5a40,skin2:0x3e3e2a,moss:0x3a4e22,spike:0x2a2a20,beak:0x1a1a14,eye:0xd8a020,dark:0x080806};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={shell:0x4e5a3a,shell2:0x353f28,plast:0xb8a878,skin:0x5a5a40,skin2:0x3e3e2a,moss:0x3a4e22,spike:0x2a2a20,beak:0x1a1a14,eye:0xd8a020,dark:0x080806};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const SHELL=[[-.5,.24,.12,.05,.05],[-.42,.25,.27,.13,.08],[-.3,.26,.35,.2,.09],[-.15,.27,.39,.24,.1],[0,.27,.4,.25,.1],[.14,.27,.38,.24,.1],[.26,.27,.33,.19,.09],[.34,.27,.24,.11,.08],[.38,.27,.12,.05,.05]];
   function shellAt(z){for(let i=0;i<SHELL.length-1;i++)if(z>=SHELL[i][0]&&z<=SHELL[i+1][0]){const a=SHELL[i],b=SHELL[i+1],t=(z-a[0])/(b[0]-a[0]);return a.map((v,j)=>v+(b[j]-v)*t)}return null}
   LPR[n].geo=function(C,c){const sh=new THREE.Color(K.shell),sh2=new THREE.Color(K.shell2),pl=new THREE.Color(K.plast),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2);
@@ -33403,7 +33439,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // great curved horn, clubbed antennae, jagged spiny legs (the middle pair swings with the walk) and a glowing sun disc
 // rising from its back.
 (function(){const n='SunScarab';if(!LPR[n])return;
-  const K={sh:0x8a6a2a,sh2:0x5a4218,hi:0xe8c060,leg:0x2a1e10,dark:0x0a0804,sun:0xffc040,eye:0xff8a20};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={sh:0x8a6a2a,sh2:0x5a4218,hi:0xe8c060,leg:0x2a1e10,dark:0x0a0804,sun:0xffc040,eye:0xff8a20};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sh=new THREE.Color(K.sh),sh2=new THREE.Color(K.sh2),hi=new THREE.Color(K.hi),lg=new THREE.Color(K.leg);
     const paint=(o,r,s,cc,i)=>{if(r.k=='leg'||r.k=='ank'||r.k=='paw')return o.copy(lg).multiplyScalar(i%2?1:.8);if(s<-.3)return o.copy(sh2).multiplyScalar(.6);
       o.copy(sh);if(s>.75)o.lerp(hi,.55);else if(Math.abs(cc)>.7)o.copy(sh2);if(r.k=='pro'&&s>.4)o.lerp(hi,.25)};
@@ -33415,7 +33451,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     return lpGeo('E137|'+n,n,[{rings:ely,seg:14,capA:1,capB:1,paint},{rings:pro,seg:12,capA:1,capB:1,paint},{rings:head,seg:9,capB:1,paint}].concat(legs),87)};
   LPR[n].kit=function(k,c,C,red){
     // seam between the wing cases, sheen lines
-    // (v177: the seam, sheen lines and sun emblem follow the shell's surface; they used to hover over it)
+    // (v178: the seam, sheen lines and sun emblem follow the shell's surface; they used to hover over it)
     const EL=[[-.47,.08,.05],[-.42,.2,.14],[-.32,.27,.2],[-.18,.3,.23],[-.04,.3,.235],[.08,.28,.21],[.14,.22,.14],[.16,.12,.06]],
       top=(x,z)=>{z=Math.max(-.47,Math.min(.16,z));let i=0;while(i<EL.length-2&&z>EL[i+1][0])i++;const a=EL[i],b=EL[i+1],t=(z-a[0])/(b[0]-a[0]),rx=a[1]+(b[1]-a[1])*t,ry=a[2]+(b[2]-a[2])*t;return .3+ry*Math.sqrt(Math.max(0,1-(x/rx)**2))},
       bnZ=z=>z<-.25?'pelvis':'spine',
@@ -33431,7 +33467,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     // the great curved horn
     let p=[0,.32,.45],d=[0,.6,.8];for(let i=0;i<5;i++){const q=[p[0]+d[0]*.07,p[1]+d[1]*.07,p[2]+d[2]*.07];k.L('head','c',i>3?K.hi:K.sh2,p,q,.035-i*.006,.03-i*.006,5);p=q;const a=-.32;d=[0,d[1]*Math.cos(a)-d[2]*Math.sin(a),d[1]*Math.sin(a)+d[2]*Math.cos(a)]}
     // the sun disc rising from the back: a glowing ring of rays
-    // (v177) the sun emblem is set into the shell: a gold boss with a glowing amber stone, rays raised on the shell around it
+    // (v178) the sun emblem is set into the shell: a gold boss with a glowing amber stone, rays raised on the shell around it
     {const zc=-.12,y0=top(0,zc);k.p('spine','cyl','c',K.hi,0,y0+.004,zc,.075,.03,.075);k.p('spine','ico','g',K.sun,0,y0+.02,zc,.045,.03,.045);
       for(let i=0;i<12;i++){const a=i/12*Math.PI*2,r1=.085,r2=i%2?.13:.155;onShell(K.hi,Math.sin(a)*r1,Math.sin(a)*r2,zc+Math.cos(a)*r1,zc+Math.cos(a)*r2,i%2?.006:.008,2,-.001)}}
     // spines on the leg shins, hooked feet
@@ -33450,7 +33486,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // tail tucked under, two big pincers in front (the moving fingers ride the jaw, so a bite snaps them shut), a cluster of
 // glowing eyes and thick crystal-jointed legs.
 (function(){const n='Rimecrawler';if(!LPR[n])return;
-  const K={shell:0x8ab8d8,shell2:0x4a6e94,dark:0x2a3e58,under:0x3a4e68,ice:0xbfeaff,glow:0x5ad8ff,eye:0x9af0ff};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={shell:0x8ab8d8,shell2:0x4a6e94,dark:0x2a3e58,under:0x3a4e68,ice:0xbfeaff,glow:0x5ad8ff,eye:0x9af0ff};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sh=new THREE.Color(K.shell),sh2=new THREE.Color(K.shell2),dk=new THREE.Color(K.dark),un=new THREE.Color(K.under),ice=new THREE.Color(K.ice);
     const paint=(o,r,s,cc,i)=>{if(r.jt)return o.copy(ice);if(r.k=='leg')return o.copy(r.p[1]<.12?dk:sh2);if(s<-.3)return o.copy(un);o.copy(sh2);if(s>.5)o.copy(i%2?sh:sh.clone().lerp(ice,.3));else if(Math.abs(cc)>.85)o.copy(dk)};
     const body=e137Rows([[-.5,.4,.04,.03,.03,['tail2','tail2',0]],[-.45,.41,.1,.06,.05,['tail1','tail2',.4]],[-.38,.42,.16,.08,.07,['tail0','tail1',.5]],[-.29,.44,.25,.11,.09,['pelvis','tail0',.3]],
@@ -33467,7 +33503,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     for(let i=0;i<14;i++){const z=-.25+n3Nz(i,1,3)*.45,x=(n3Nz(i,5,7)-.5)*.5,y=.45+.15*Math.sqrt(Math.max(0,1-(x/.38)**2))-.01,h=.06+n3Nz(i,2,9)*.08;
       k.p(z>.15?'chest':z>-.1?'spine':'pelvis',i%3?'oct':'cone4',i%4?'c':'g',i%4?K.ice:K.glow,x,y+h*.4,z,.025,h,.025,(n3Nz(i,3,3)-.5)*.6,0,-x*1.2)}
     // rim of the carapace: jagged frost spines
-    for(let i=0;i<18;i++){const a=i/18*Math.PI*2,z=.03+Math.cos(a)*.3,x=Math.sin(a)*.37;if(Math.cos(a)>.85||Math.cos(a)<-.9)continue;   /* v177: none buried in the middle of the back */k.p(z>.15?'chest':z>-.1?'spine':'pelvis','cone4','c',K.ice,x,.45,z,.02,.06,.018,Math.cos(a)*1.4,0,-Math.sin(a)*1.4)}
+    for(let i=0;i<18;i++){const a=i/18*Math.PI*2,z=.03+Math.cos(a)*.3,x=Math.sin(a)*.37;if(Math.cos(a)>.85||Math.cos(a)<-.9)continue;   /* v178: none buried in the middle of the back */k.p(z>.15?'chest':z>-.1?'spine':'pelvis','cone4','c',K.ice,x,.45,z,.02,.06,.018,Math.cos(a)*1.4,0,-Math.sin(a)*1.4)}
     // eyes
     [[-.04,.47,.42],[.04,.47,.42],[-.08,.46,.4],[.08,.46,.4],[-.02,.49,.39],[.02,.49,.39]].forEach((p,i)=>k.p('head','sph','g',red?0xff2a2a:K.eye,p[0],p[1],p[2],i<2?.018:.011));
     // pincers: arm on the head, fixed finger on the head, moving finger on the jaw
@@ -33483,7 +33519,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // with a long hooked beak and glowing eyes, feathered thighs over scaly shanks, huge talons, ragged wings and tail with
 // lightning-blue streaks.
 (function(){const n='GaleHarpy';if(!LPR[n])return;
-  const K={f:0x2c323c,f2:0x1c2028,ruff:0xb8b8b0,skin:0x6a7a8a,skin2:0x4a5866,beak:0xc8b070,claw:0x1a1a1e,glow:0x8ad8ff,leg:0x8a8070};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={f:0x2c323c,f2:0x1c2028,ruff:0xb8b8b0,skin:0x6a7a8a,skin2:0x4a5866,beak:0xc8b070,claw:0x1a1a1e,glow:0x8ad8ff,leg:0x8a8070};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const f=new THREE.Color(K.f),f2=new THREE.Color(K.f2),ru=new THREE.Color(K.ruff),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),lg=new THREE.Color(K.leg);
     const paint=(o,r,s,cc,i)=>{if(r.k=='hd')return o.copy(i%2?sk:sk2);if(r.k=='ruff')return o.copy(ru).multiplyScalar(i%2?1:.85);if(r.k=='leg'||r.k=='paw'||r.k=='ank')return o.copy(lg);
       if(r.k=='thigh')return o.copy(i%2?f:f2);o.copy(f);if((i+Math.round(cc*3))%3==0)o.copy(f2);if(s<-.4)o.lerp(ru,.25)};
@@ -33524,7 +33560,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // a thick ridged lip, two rings of hooked teeth slanting into a deep throat that glows (its glass breath), and three curved
 // mandibles round the rim that hook inward (the lower two ride the jaw bone, so they spread when it bites).
 (function(){const n='DustWyrm';if(!LPR[n])return;
-  const K={sand:0xb89a62,sand2:0x8a6a3a,belly:0xd8c8a0,plate:0x9a7a48,lip:0x7a4a32,lip2:0x5a3022,glass:0xff9a3a,tooth:0xf0e8d0,throat:0x2a0a04,mand:0x4a3420};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={sand:0xb89a62,sand2:0x8a6a3a,belly:0xd8c8a0,plate:0x9a7a48,lip:0x7a4a32,lip2:0x5a3022,glass:0xff9a3a,tooth:0xf0e8d0,throat:0x2a0a04,mand:0x4a3420};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   const RAD=z=>z<-1.5?.03+(z+1.65)*.8:z<-.9?.15+(z+1.5)*.18:z<.2?.26:.26-(z-.2)*.15;
   const LIFT=z=>z<=0?0:.12*Math.min(1,z/.35);
   const R0=RAD(.5),CY=R0*.78+.004+LIFT(.5),MZ=.5;
@@ -33565,7 +33601,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
 // a slender bodice laced over the ribs, torn lace at the throat, long sleeves that hang in tatters from thin arms with long
 // fingers and broken shackles, and a burial gown that unravels into trailing wisps of mist.
 (function(){const n='Banshee';if(!LPR[n])return;
-  const K={gown:0x6a8aa8,gown2:0x34465a,lace:0xd8e8f0,pale:0xd8f0f8,skin:0xc8d4dc,skin2:0x9aaab8,hair:0xd8e0e8,hair2:0xa8b4c0,dark:0x0a1018,glow:0xa8e8ff,eye:0xe8ffff,silver:0x9aa4b0};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={gown:0x6a8aa8,gown2:0x34465a,lace:0xd8e8f0,pale:0xd8f0f8,skin:0xc8d4dc,skin2:0x9aaab8,hair:0xd8e0e8,hair2:0xa8b4c0,dark:0x0a1018,glow:0xa8e8ff,eye:0xe8ffff,silver:0x9aa4b0};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n].mat={transparent:true,opacity:.82,depthWrite:true,emissive:0x0a1a28};
   LPR[n].geo=function(C,c){const g=new THREE.Color(K.gown),g2=new THREE.Color(K.gown2),la=new THREE.Color(K.lace),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),h=new THREE.Color(K.hair),h2=new THREE.Color(K.hair2);
     const paint=(o,r,s,cc,i)=>{if(r.k=='hd'){o.copy(sk);if(r.p[1]<1.0&&Math.abs(cc)>.5)o.copy(sk2);return}if(r.k=='jaw')return o.copy(sk2);if(r.k=='arm')return o.copy(i%2?sk:sk2);
@@ -33597,7 +33633,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     // a tarnished circlet with a teardrop gem
     k.p('head','tor','m',K.silver,0,1.05,.006,.064,.008,.068,0,0,0);k.p('head','oct','g',K.glow,0,1.05,.075,.008,.014,.005);
     // hair falling over the shoulders in front, a few loose strands
-    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.4,.945,z+.014],.0075,.007,4).L('neck','c',i%2?K.hair:K.hair2,[x*1.3,.99,z+.01],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});   // v177: the two halves overlap at the neck, so a head turn doesn't part them
+    [-1,1].forEach(s=>{for(let i=0;i<5;i++){const x=s*(.048+i*.007),z=.03-i*.012;k.L('head','c',i%2?K.hair:K.hair2,[x,1.07,z],[x*1.4,.945,z+.014],.0075,.007,4).L('neck','c',i%2?K.hair:K.hair2,[x*1.3,.99,z+.01],[x*1.6+s*.012,.78-i*.025,z+.04],.0068,.002,4)}});   // v178: the two halves overlap at the neck, so a head turn doesn't part them
     // torn lace at the throat, a laced bodice
     for(let i=0;i<12;i++){const a=(i/11-.5)*3.4;k.p('neck','cone4','c',K.lace,Math.sin(a)*.06,.88,Math.cos(a)*.045,.01,.03,.004,Math.PI-.3*Math.cos(a),a,0)}
     for(let i=0;i<5;i++){const y=.79-i*.025;k.L('chest','c',K.gown2,[-.02,y,.068-i*.003],[.02,y-.012,.068-i*.003],.003,.003,3);k.L('chest','c',K.gown2,[.02,y,.068-i*.003],[-.02,y-.012,.068-i*.003],.003,.003,3)}
@@ -33635,7 +33671,7 @@ function f137Reg(key,fn){FOE137[key]=fn;N3.humB[key]={body:fn}}
 f137Reg('yeti',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C;const f1=0xc4c8d0,f2=0xa4aab4,f3=0xe4e8ee;P.build=2;P.belly=.04;P.af=1.25;P.lf=1.2;
   Object.assign(C,{skin:0x5a6a7a,torso:f1,sleeve:f1,fore:f1,hand:0x5a6a7a,pants:f1,shin:f1,boot:f2,sole:0x5a6a7a});
   const fur=m=>Math.round(m.y*22+m.c*3)%2?f1:f2;P.paint.torso=fur;P.paint.sleeve=P.paint.fore=fur;P.paint.leg=fur;X.body();
-  X.head({eyes:'glow',glow:0x7ad8ff,noHair:true,brow:false,ears:false,nose:false,headCol:m=>m.s>.3&&m.y<1.2?0x5a6a7a:fur(m)});mdLoft(B,mdHeadR(P).slice(1,7),{seg:10,off:.012,col:fur,keep:m=>!(m.s>.25&&m.y<1.2)});   // v177: the shag lies on the skull (3 cm off it before)
+  X.head({eyes:'glow',glow:0x7ad8ff,noHair:true,brow:false,ears:false,nose:false,headCol:m=>m.s>.3&&m.y<1.2?0x5a6a7a:fur(m)});mdLoft(B,mdHeadR(P).slice(1,7),{seg:10,off:.012,col:fur,keep:m=>!(m.s>.25&&m.y<1.2)});   // v178: the shag lies on the skull (3 cm off it before)
   [-1,1].forEach(s=>k.L('head','c',0xb8ad90,[s*.1,1.22,0],[s*.2,1.3,-.04],.03,.02).L('head','c',0xb8ad90,[s*.2,1.3,-.04],[s*.22,1.4,.02],.02,.003));mdTS(B,P,.9,1.02,.04,{col:fur,lip:.04});
   for(let i=-2;i<=2;i++)k.p('head','cone4','c',0xe8e0c8,i*.016,1.095,mdHeadZ(P,1.095)+.006,.007,.03,.007,Math.PI);
   // shaggy coat: rows of tufts round the torso, heavier on the shoulders and back
@@ -33661,7 +33697,7 @@ f137Reg('selem',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C;const s1=0xc8a060,
   for(let i=0;i<5;i++){const a=-.9+i*.45,p=n3Surf(P,.74+(i%2)*.06,a,.012),q=n3Surf(P,.64+(i%3)*.04,a+.15,.012);k.L(n3TB(.7),'g',gl,p,q,.006,.004,3)}
   [-1,1].forEach(s=>{for(let t=.3;t<1.9;t+=.45){const p=n3ArmAt(P,s,t);k.p(p[3],'dod','c',t>1?rk:mdSh(rk,.9),p[0]+s*.04,p[1],p[2],.05,.045,.05,t,t,0)}
     const w=n3ArmAt(P,s,2);k.p(w[3],'dod','c',rk,w[0],w[1]-.06,w[2]+.01,.075,.07,.075);k.L(w[3],'g',gl,[w[0]-.02,w[1]-.04,w[2]+.06],[w[0]+.02,w[1]-.09,w[2]+.06],.005,.004,3)});
-  // a girdle of stones grown into the hips (v177: they hung in a ring 10 cm out from the waist), a crown of jagged rock
+  // a girdle of stones grown into the hips (v178: they hung in a ring 10 cm out from the waist), a crown of jagged rock
   for(let i=0;i<10;i++){const a=i/10*Math.PI*2,y=.55+Math.sin(a*3)*.04,p=n3Surf(P,y,a,.004);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.03+(i%3)*.01)}
   for(let i=0;i<5;i++){const a=(i-2)*.45;k.p('head','cone4','c',i%2?rk:s3,Math.sin(a)*.08,1.28,-.01+Math.cos(a)*.03,.03,.12-Math.abs(i-2)*.025,.03,-.1,0,-a*.6)}});
 
@@ -33745,7 +33781,7 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
     // hooked mandibles either side of the mouth, a slime coat and pale veins along the back
     [-1,1].forEach(s=>{k.L('head','c',0x2a1a10,[s*.07,my,mz-.01],[s*.1,my-.02,mz+.06],.016,.01,4).L('head','c',0x1a0e08,[s*.1,my-.02,mz+.06],[s*.05,my-.035,mz+.1],.01,.002,4)});
     for(let z=-1.3;z<.4;z+=.21){const r=bzMagR(z),bn=wyrmBones(z),b=bn[2]>.5?bn[1]:bn[0],y=r*.82+.004;
-      const x=(z*7%2-1)*r*.4,on=x=>y+r*.74*Math.sqrt(Math.max(0,1-Math.pow(x/r,2)));   // (v177) on the skin, which dips between the rolls
+      const x=(z*7%2-1)*r*.4,on=x=>y+r*.74*Math.sqrt(Math.max(0,1-Math.pow(x/r,2)));   // (v178) on the skin, which dips between the rolls
       k.p(b,'sph','g',0xf4f0c0,x,on(x),z,.012,.008,.012);k.L(b,'c',0xe8d8c0,[-r*.3,on(r*.3),z],[r*.3,on(r*.3),z-.06],.004,.004,3)}
     // a drip of slime hanging off the mouth
     k.L('head','g',0xe8f0b0,[0,my-.06,mz+.02],[0,.01,mz+.04],.01,.004,3)}}
@@ -33762,7 +33798,7 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
 // hang to its knees and end in root claws, stumpy legs, a cluster of drooping caps on its head and shoulders, shelf fungi up
 // its back and glowing spore pores.
 (function(){const n='Shambler';SPEC[n]=Object.assign({},SPEC.Gloomcap);
-  const K={bark:0x4a3a2a,bark2:0x2e2418,moss:0x3e4e22,cap:0x6a2a6a,cap2:0x8a4a8a,gill:0x2a1420,glow:0xc8ff6a,spore:0xe0ff9a,dark:0x080604};(window.VARK177=window.VARK177||{})[n]=K;   // v177: per-enemy palettes (3371)
+  const K={bark:0x4a3a2a,bark2:0x2e2418,moss:0x3e4e22,cap:0x6a2a6a,cap2:0x8a4a8a,gill:0x2a1420,glow:0xc8ff6a,spore:0xe0ff9a,dark:0x080604};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
   LPR[n]={head:['head',0,.94,0],up:.08,back:[['chest',0,.7,-.18],['spine',0,.5,-.2],['pelvis',0,.3,-.18]],
     geo(C,c){const b=new THREE.Color(K.bark),b2=new THREE.Color(K.bark2),mo=new THREE.Color(K.moss),ca=new THREE.Color(K.cap);
       const paint=(o,r,s,cc,i)=>{o.copy((Math.round((cc+1)*6)+(i%2))%2?b:b2);if(r.k=='leg'&&r.p[1]<.03)o.copy(b2);if(s<-.5&&r.p[1]>.3&&r.p[1]<.6)o.lerp(mo,.5);if(r.p[1]>.78&&s<-.2)o.lerp(ca,.3)};
@@ -33781,14 +33817,14 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
       // drooping caps: a big one on the head, smaller ones on the shoulders
       [[0.03,.87,-.01,.2,.1,-.12,.12,'head'],[-.2,.72,-.02,.11,.06,-.2,-.5,'chest'],[.18,.74,-.05,.085,.05,.3,.6,'chest'],[-.08,.98,-.06,.08,.05,.4,-.3,'head']].forEach(q=>{
         k.p(q[7],'hem','c',K.cap,q[0],q[1],q[2],q[3],q[4],q[3],q[5],0,q[6]);k.p(q[7],'cyl','c',K.gill,q[0],q[1]-.005,q[2],q[3]*.92,.01,q[3]*.92,q[5],0,q[6]);
-        // (v177) spots sit on the tilted cap's surface (they hovered over it)
+        // (v178) spots sit on the tilted cap's surface (they hovered over it)
         const on=(r,a)=>{const v=new THREE.Vector3(Math.sin(a)*r*q[3],Math.sqrt(1-r*r)*q[4]*.97,Math.cos(a)*r*q[3]).applyEuler(new THREE.Euler(q[5],0,q[6]));return [q[0]+v.x,q[1]+v.y,q[2]+v.z]};
         for(let i=0;i<4;i++){const p=on(.5,i*1.7);k.p(q[7],'sph','c',K.cap2,p[0],p[1],p[2],.014,.008,.014)}
         if(q[7]=='head'&&q[3]>.15)for(let i=0;i<5;i++){const p=on(.62,i*1.3);k.p('head','sph','g',K.spore,p[0],p[1],p[2],.012,.006,.012)}});
       // shelf fungi up the back, moss hanging from the arms, root claws
       for(let i=0;i<6;i++){const y=.3+i*.08,s=i%2?1:-1;k.p(y>.5?'chest':y>.38?'spine':'pelvis','hem','c',i%2?0x8a6a4a:0x6a4a3a,s*.08,y,-.21-(y>.5?0:.01),.09,.03,.06,-.3,0,s*.2)}
       [-1,1].forEach(s=>{const f=s<0?'fl':'fr';for(let i=0;i<3;i++)k.L(f+'1','c',K.moss,[s*.33,.42-i*.06,.06],[s*.35,.34-i*.06,.05],.016,.004,3);
-        for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.07,.18+i%2*.02],.014,.003,4)   /* v177: root claws clear of the ground (they dug 7 cm into it in idle) */});
+        for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.07,.18+i%2*.02],.014,.003,4)   /* v178: root claws clear of the ground (they dug 7 cm into it in idle) */});
       }};
   if(EN.shambler)EN.shambler.rig=n;
 })();
@@ -49649,7 +49685,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     drum(x,z){drum(x,z,pal.wood,1.1)},
     totem(x,z,a){const h=rr(3.2,4.4),sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.7);let y=0;const cs=[pal.wood,pal.acc,pal.woodD,pal.trim];
       for(let i=0;i<4;i++){const hh=h/4,rd=.32-i*.03;TQ(sg,Q.cyl,S(cs[i%4]),0,y+hh/2,0,rd,hh,rd);TQ(sg,Q.box,S(pal.woodD),rd*.85,y+hh*.55,0,.1,hh*.4,rd*1.2);[-1,1].forEach(s=>TQ(sg,Q.box,G(i%2?0xffd060:0x0a0808),rd*.92,y+hh*.62,s*rd*.32,.04,.06,.08));y+=hh}
-      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.42,.04,.9,.18,s*.15,0,0))},
+      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.3,.04,.9,.18,s*.15,0,0))},   // v177: hung on the pole (they hung .1 off it)
     altar(x,z,a){const sg=sub(x,z,a,0);TQ(sg,Q.box,STN,0,.45,0,1.8,.9,1);TQ(sg,Q.box,STD,0,.93,0,2,.1,1.15);TQ(sg,Q.box,STD,0,.1,0,2.4,.2,1.5);const d=TQ(sg,Q.disc,G(Lc[0]),0,.99,0,.3,.3,1,-P2,0,0);d.castShadow=false;
       bRect(x,z,a,2.4,1.5);take(x,z,1.5);candles(x,z,6,1.2,pal.lant);halo(x,z,1.8,Lc[0],.14,.05);skull(x+Math.cos(a+P2)*.6,.98,z+Math.sin(a+P2)*.6,.9,pal.bone,a)},
     brazier(x,z){brazier(x,z,pal.fire,1.15)},
@@ -49682,7 +49718,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     carcass(x,z,a){carcass(x,z,a,1.3,0x5a3a30,pal.bone)}};
   // ---------------- outskirts ----------------
   const lantern=(x,z,h)=>{h=h||2.4;blk(x,z,0);take(x,z,.5);const y=gy(x,z);put(Q.cyl4,WD,x,h/2,z,.06,h,.06);put(Q.box,WD,x+.3,h-.05,z,.62,.05,.05);
-    putY(Q.box,G(pal.lant),x+.55,y+h-.4,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.22,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.6,z,.1,.05,.1);halo(x+.55,z,1.4,pal.lant,.16,.06)};
+    putY(Q.box,G(pal.lant),x+.55,y+h-.33,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.15,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.465,z,.1,.05,.1);   // v177: hung from the arm, the base under the glass (both stood ~.07 off)
+    halo(x+.55,z,1.4,pal.lant,.16,.06)};
   const tower=(x,z,a)=>{const H=4.2,sg=sub(x,z,a,0);blk(x,z,1);take(x,z,1.6);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([u,v])=>TQ(sg,Q.cyl,WD,u*.75,H/2,v*.75,.1,H+.2,.1,v*.04,0,-u*.04));
     TQ(sg,Q.box,WOOD,0,H,0,1.9,.14,1.9);[[0,-.9,0],[0,.9,0],[-.9,0,1],[.9,0,1]].forEach(([u,v,q])=>TQ(sg,Q.box,WOOD,u,H+.38,v,q?.08:1.9,.6,q?1.9:.08));
     [[-1,1],[1,-1]].forEach(([u,v])=>TQ(sg,Q.cyl4,WD,0,H*.45,v*.75,.04,2.4,.04,u*.6,0,0));TQ(sg,CG.tent,S(pal.thatch),0,H+1.5,0,1.5,1,1.5,0,Math.PI/4,0);
@@ -49775,9 +49812,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       const P=[-1,1].map(s=>[x+sx*hw*s,z+sz*hw*s]);
       if(fk=='ruin'||fk=='stone')arch(x,z,ga,hw*2,3.4,pal.stone,.6);
       else if(fk=='hedge'){const sg=sub(x,z,ga+P2,0);TQ(sg,Q.arc,S(0x1a1416),0,0,0,hw,2.6,1.2,0,P2,0);P.forEach(([px,pz])=>blk(px,pz,0))}
-      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.2,pz,.2,.18,.2)});
+      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.14,pz,.2,.18,.2)});
         seg(P[0][0],gy(P[0][0],P[0][1])+H-.25,P[0][1],P[1][0],gy(P[1][0],P[1][1])+H-.25,P[1][1],.14,M,Q.cyl);
-        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s];seg(c[0],gy(c[0],c[1])+H+.05,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,gy(c[0],c[1])+H+.9,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
+        const g0=gy(P[0][0],P[0][1]),g1=gy(P[1][0],P[1][1]);   // v177: the tusks grow out of the lintel (they stood ~.2 above it, in the air)
+        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s],yb=g0+(g1-g0)*(hw+.9*s)/(2*hw)+H-.25+.06;seg(c[0],yb,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,yb+.85,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
       // braziers / torches just inside, a banner outside
       const bi=[-1,1].map(s=>[x-Math.cos(ga)*1.3+sx*(hw+.7)*s,z-Math.sin(ga)*1.3+sz*(hw+.7)*s]);
       bi.forEach(([bx,bz])=>{if(!ground(bx,bz,.2))return;if(gi==0)brazier(bx,bz,pal.fire,1.2);else torch(bx,bz,pal.fire,2)});
@@ -55161,31 +55199,127 @@ function ob176Sphere(o,out){const g=o.geometry;if(!g)return null;
       s=o.userData.ob176S={n,c,r,top}}
     out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
   if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
-// ================= v177: enemy models — no unattached pieces =================
+// ================= v177 environment pass: scattered scenery sits on the ground =================
+// Owner: "check all environment pieces on each instance in each zone ... for unattached pieces or poor quality".
+// The scattered decorations (1680 / 1981 / 2280: WD kinds, instanced per 64x64 chunk in wdBuild) used to stand at the ground height
+// under their centre, so on a slope one side of a rock, log or grave hung in the air (up to metres on the rim banks, and pieces on a
+// cliff lip hung over the drop). wdBuild now asks env177Seat for each piece's place:
+//  * low, wide pieces (rocks, ledge stones, logs, dunes, rubble, graves) lean with the slope under them (tall ones stay upright:
+//    trees, pillars, lamps, statues), up to ENV177.tilt;
+//  * then the piece sinks until no point of its base is above the ground (the uphill side goes into the ground);
+//  * a piece that would have to sink more than its share (ENV177.sink: a tall piece a third of its height, a low one 45%) stands on
+//    ground too steep for it (a cliff face, a wall lip) and is not drawn (scale 0; gb168Clear hides pieces the same way).
+// Flat patches (goo, blood, salt crust) lie along the slope; mist, webs and pieces at a fixed height (lilies on water) stay as they were.
+// Everything here is a hoisted function: wdBuild runs at load, long before this file.
+var ENV177;   // lazy: wdBuild calls in before this line runs
+function env177(){return ENV177||(ENV177={tilt:.4,tol:.04,sink:[.34,.45],n:0,hid:0})}
+// the kind's base outline (local vertices at the very bottom), size and how much it leans: cached on the kind
+function env177Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
+  try{if(S.abs==null&&!S.parts.some(p=>p.mat)){const V=[];let mn=1e9,mx=-1e9,x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+    S.parts.forEach(p=>{const P=p.g.attributes.position;for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);V.push(x,y,z);if(y<mn)mn=y;if(y>mx)mx=y;if(x<x0)x0=x;if(x>x1)x1=x;if(z<z0)z0=z;if(z>z1)z1=z}});
+    const h=mx-mn,w=Math.max(x1-x0,z1-z0);
+    if(h>.06){const lo=[],lean=h<w*.6?1:h<w*1.2?.5:0,cut=mn+Math.max(.03,h*(lean?.2:.07)),seen=new Map();
+      for(let i=0;i<V.length;i+=3)if(V[i+1]<=cut){const k=Math.round(V[i]*50)+','+Math.round(V[i+2]*50),j=seen.get(k);if(j==null){seen.set(k,lo.length);lo.push(V[i],V[i+1],V[i+2])}else if(V[i+1]<lo[j+1])lo[j+1]=V[i+1]}   // the lowest point over each spot
+      // big outlines thinned to ~48 points (every n-th): enough to find the lowest ground under the base
+      let L=lo;if(lo.length>144){const st=Math.ceil(lo.length/144);L=[];for(let i=0;i<lo.length;i+=3*st)L.push(lo[i],lo[i+1],lo[i+2])}
+      r={lo:L,h,w,lean,tall:h>w*1.2}}
+    else if(w>.2)r={decal:1,w}}}catch(e){console.warn('v177 kind',S.k,e)}
+  return S._e176=r}
+// where piece d stands: {x,y,z,q,sx,sy,sz} (sx 0: not drawn); y0 is its old height (ground at its centre plus the kind's lift)
+function env177Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env177Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
+  if(!K)return o;const E=env177();E.n++;
+  if(K.decal||K.lean){const r=Math.max(.6,K.w*.45*s),gx=(GH(d.x+r,d.z)-GH(d.x-r,d.z))/(2*r),gz=(GH(d.x,d.z+r)-GH(d.x,d.z-r))/(2*r),n=new V3(-gx,1,-gz).normalize(),up=new V3(0,1,0);
+    let a=Math.acos(Math.min(1,n.y))*(K.decal?1:K.lean);a=Math.min(a,K.decal?.7:E.tilt);if(a>.01){const ax=new V3().crossVectors(up,n).normalize();o.q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,a))}}
+  if(K.decal)return o;   // a flat patch (goo, salt crust, blood) lies along the slope at its old height
+  const L=K.lo,v=new V3();let gap=-1e9;
+  for(let i=0;i<L.length;i+=3){v.set(L[i]*o.sx,L[i+1]*o.sy,L[i+2]*o.sz).applyQuaternion(o.q);const g=y0+v.y-GH(d.x+v.x,d.z+v.z);if(g>gap)gap=g}
+  const sink=Math.max(0,gap-E.tol),lim=K.h*o.sy*E.sink[K.tall?0:1]+.08;
+  if(sink>lim){o.sx=o.sy=o.sz=0;E.hid++;return o}
+  o.y=y0-sink;return o}
+// ================= v177 environment pass: a darker, weathered palette =================
+// Owner: "analyze and optimize structure, color and overall style ... non-cartoony (this is a dark fantasy game) or too simple".
+// The zones were painted in candy colours (lime moss, pure white snow and bone, saturated sand and grass). One grade per zone
+// (ENV177Z) is applied once at load: to every scattered decoration's baked vertex colours (env177Look, from wdDeco before the
+// chunks are built: colour pulled toward grey by .sat, lime greens turned toward olive by .olive, bright colours compressed above
+// .knee by .comp, everything times .dark), its instance tints (saturation only), and to the zone's ground colours (env177Biomes,
+// from 0045: BIOMES gnd / grs / acc / frs / tree tints). Then weathering is baked into each decoration (dt168Weather, 3345):
+// grime toward the foot, mottling and rain streaks, so props stop reading as flat painted plastic. Glowing parts are left alone.
+// Duskhold is not graded.
+function env177Z(z){return [
+  {sat:.78,olive:.25,knee:.42,comp:.55,dark:.95},   // Kindlelight (already a dark bog)
+  {sat:.6,olive:.45,knee:.4,comp:.5,dark:.88},      // Hillside Crest: the brightest, most cartoony greens
+  {sat:.68,olive:.3,knee:.5,comp:.55,dark:.9},      // Burningeye Summit: snow and ice, not glaring white
+  {sat:.66,olive:.35,knee:.45,comp:.5,dark:.88},    // Searing Sands: sun-bleached, not orange candy
+  {sat:.72,olive:.3,knee:.4,comp:.5,dark:.9},       // The Dirge: bone and stone in murk
+  {sat:.82,olive:.3,knee:.4,comp:.55,dark:.92}][z]||null}  // The Citadel
+// grade one colour (0..1 floats) in place: returns [r,g,b]
+function env177Grade(r,g,b,Z){let l=.3*r+.59*g+.11*b;
+  if(g>r&&g>b){const k=Math.min(1,(g-Math.max(r,b))*4)*Z.olive;r+=(g-r)*k*.5;b+=(g-b)*k*.15;g-=(g-r)*k*.15}   // lime -> olive / moss
+  l=.3*r+.59*g+.11*b;r=l+(r-l)*Z.sat;g=l+(g-l)*Z.sat;b=l+(b-l)*Z.sat;
+  if(l>Z.knee){const L=Z.knee+(l-Z.knee)*Z.comp,f=L/l;r*=f;g*=f;b*=f}
+  return [r*Z.dark,g*Z.dark,b*Z.dark]}
+function env177Hex(h,Z,satOnly){const c=new THREE.Color(h);let o;if(satOnly){const l=.3*c.r+.59*c.g+.11*c.b;o=[l+(c.r-l)*Z.sat,l+(c.g-l)*Z.sat,l+(c.b-l)*Z.sat]}else o=env177Grade(c.r,c.g,c.b,Z);
+  return c.setRGB(Math.max(0,o[0]),Math.max(0,o[1]),Math.max(0,o[2])).getHex()}
+// the zone a decoration kind belongs to: by its name (k_, k2_ ... c3_), else by where most of its pieces stand
+function env177KindZone(k,list){const m=/^([khbsdc])\d?_/.exec(k);if(m)return 'khbsdc'.indexOf(m[1]);
+  const n=[0,0,0,0,0,0,0];for(const d of list)if(d.k===k){const I=insAt(Math.round(d.x),Math.round(d.z));n[I?I.z:6]++}let b=6;for(let i=0;i<6;i++)if(n[i]>(b<6?n[b]:0))b=i;return b<6?b:-1}
+function env177Look(T,list){const T0=performance.now(),done=new Set();let nk=0;
+  for(const k in T){const S=T[k];if(!S||!S.parts)continue;const z=env177KindZone(k,list),Z=env177Z(z);if(!Z)continue;nk++;
+    if(S.tint)S.tint=S.tint.map(h=>env177Hex(h,Z,true));
+    S.parts.forEach(p=>{const g=p.g;if(p.glow||p.mat||!g||done.has(g))return;done.add(g);const C=g.attributes.color,P=g.attributes.position;if(!C)return;
+      let y0=1e9,y1=-1e9;for(let i=0;i<P.count;i++){const y=P.getY(i);if(y<y0)y0=y;if(y>y1)y1=y}
+      for(let i=0;i<C.count;i++){const o=env177Grade(C.getX(i),C.getY(i),C.getZ(i),Z);C.setXYZ(i,o[0],o[1],o[2])}
+      if(!g.attributes.normal)g.computeVertexNormals();
+      try{dt168Weather(g,{y0,g:[Math.min(.7,Math.max(.25,(y1-y0)*.3)),.3],n:.2,s:.2,sd:(k.length*7)%13})}catch(e){}
+      C.needsUpdate=true})}
+  env177().look={kinds:nk,ms:Math.round(performance.now()-T0)}}
+// the zones' ground colours (BIOMES, after v112 added the themed instances' own); Duskhold (biome 0) stays
+function env177Biomes(){try{BIOMES.forEach((b,i)=>{if(!i||b.e176)return;b.e176=1;const z=b.v112!=null?Math.floor(b.v112/PMG):i-1,Z=env177Z(z);if(!Z)return;
+  const G=a=>{const o=env177Grade(a[0]/255,a[1]/255,a[2]/255,Z);return o.map(v=>Math.max(0,Math.min(255,Math.round(v*255))))};
+  ['gnd','grs','acc','frs'].forEach(k=>{if(Array.isArray(b[k]))b[k]=G(b[k])});if(Array.isArray(b.tc))b.tc=b.tc.map(h=>env177Hex(h,Z))})}catch(e){console.warn('v177 biomes',e)}}
+// ---- the zones' light and grade (0550 ZATM, and each themed instance's own in 1981): the v52 "vivid" grade pushed saturation
+// up to +50% and the bright zones over-exposed, which made every colour read as a cartoon. Boosts are cut to under a third (a
+// zone that is already desaturated keeps its value), over-bright suns and exposure come down, the vignette deepens a little,
+// and the hero's light in the dark zones no longer whites out what stands next to it.
+function env177Atm(a){if(!a||a.e176)return;a.e176=1;const cut=(v,k)=>v>1?1+(v-1)*k:v;
+  if(a.sat!=null)a.sat=cut(a.sat,.3);if(a.ex!=null)a.ex=cut(a.ex,.3)*.97;if(a.sun!=null)a.sun=cut(a.sun,.55);if(a.hemi!=null)a.hemi=cut(a.hemi,.6);if(a.vig!=null)a.vig*=1.08;
+  // the dark zones' carried light (li 2.2-3.4) burned a wall or rock a step away to pure white: softer, reaching a little further
+  if(a.li>1.5){a.li*=.72;if(a.ld)a.ld*=1.15}}
+try{for(let z=0;z<6;z++)env177Atm(ZATM[z]);if(typeof th112=='function')th112().list.forEach(t=>env177Atm(t.a))}catch(e){console.warn('v177 atmosphere',e)}
+// ---- pond banks (from 0045, right after the heights are made): a water tile was 1.2 below the surface next to land at full
+// height, a one-tile drop that read as a pit with sheer walls. The walkable land within ENV177B.r tiles of water now slopes down
+// to just above the waterline, and the water's first two rings shelve (ENV177B.w) before the deep middle. Rims are left alone.
+function env177Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W*H).fill(99),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~';let n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){if(!wet(x,y)||!insAt(x,y))continue;let land=99;
+    for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
+    const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
+  env177().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v177 banks',e)}}
+// ================= v178: enemy models — no unattached pieces =================
 // Owner: "check all enemy models for unattached pieces, accessories and limbs". Every enemy's small rigid parts (teeth, beads,
 // studs, spikes, chain links, tassels, eyes…) are built as dkKit parts (k.P: {bn, geo, t, col, m}) and baked onto the body.
 // Many were placed by hand-picked numbers that left them a few mm to a few cm off the skin (a necklace hovering in front of
-// an orc's chest, teeth below the gum line, chain links that never touched). sn177Snap moves each loose part (or a group
+// an orc's chest, teeth below the gum line, chain links that never touched). sn178Snap moves each loose part (or a group
 // of parts that touch each other, e.g. a chain or a rib made of segments) straight onto the nearest surface already
 // attached, so it sits on / slightly into it:
-//  * a part is attached when it comes within SN177.tol of the body or of a part already attached (grown from the body);
+//  * a part is attached when it comes within SN178.tol of the body or of a part already attached (grown from the body);
 //    a part wholly inside the body (hidden) counts as attached;
-//  * a loose group is moved by the shortest gap (+ SN177.emb so it sinks in a little) when the gap is at most SN177.max
-//    of the body's height; farther ones are left for hand fixes (and listed in SN177.far for the test);
+//  * a loose group is moved by the shortest gap (+ SN178.emb so it sinks in a little) when the gap is at most SN178.max
+//    of the body's height; farther ones are left for hand fixes (and listed in SN178.far for the test);
 //  * runs once per look: creature rigs (lpRig) snap their kit against the body loft before the bake is cached; humanoid
 //    foes (mdFoeB, which also builds the v113 / v137 humanoids) snap every mdKit against what is built so far.
-// Companions, heroes and townsfolk are not touched. SN177.on=false builds the old models (cache keys differ, so both can be compared).
-// Test: test/v177_enemy_parts.py.
-var SN177={on:true,tol:.0015,max:.075,emb:.002,hum:0,far:[],moved:0,lp:null};
+// Companions, heroes and townsfolk are not touched. SN178.on=false builds the old models (cache keys differ, so both can be compared).
+// Test: test/v178_enemy_parts.py.
+var SN178={on:true,tol:.0015,max:.075,emb:.002,hum:0,far:[],moved:0,lp:null};
 // triangles (flat xyz, 9 numbers each) → a cell grid for nearest-surface queries
-function sn177Grid(cs){return {cs,T:[],C:new Map(),stamp:null,sid:1}}
-function sn177Key(i,j,k){return ((i+1024)*2048+(j+1024))*2048+(k+1024)}
-function sn177Add(G,a,b,c){const T=G.T,id=T.length/9;T.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);const cs=G.cs;
+function sn178Grid(cs){return {cs,T:[],C:new Map(),stamp:null,sid:1}}
+function sn178Key(i,j,k){return ((i+1024)*2048+(j+1024))*2048+(k+1024)}
+function sn178Add(G,a,b,c){const T=G.T,id=T.length/9;T.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);const cs=G.cs;
   const i0=Math.floor(Math.min(a[0],b[0],c[0])/cs),i1=Math.floor(Math.max(a[0],b[0],c[0])/cs),j0=Math.floor(Math.min(a[1],b[1],c[1])/cs),j1=Math.floor(Math.max(a[1],b[1],c[1])/cs),
     k0=Math.floor(Math.min(a[2],b[2],c[2])/cs),k1=Math.floor(Math.max(a[2],b[2],c[2])/cs);
-  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++)for(let k=k0;k<=k1;k++){const key=sn177Key(i,j,k);let L=G.C.get(key);if(!L)G.C.set(key,L=[]);L.push(id)}}
+  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++)for(let k=k0;k<=k1;k++){const key=sn178Key(i,j,k);let L=G.C.get(key);if(!L)G.C.set(key,L=[]);L.push(id)}}
 // closest point on triangle t of G to p (Ericson); returns squared distance, writes the point to o
-function sn177Tri(T,t,p,o){const ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],bx=T[t*9+3],by=T[t*9+4],bz=T[t*9+5],cx=T[t*9+6],cy=T[t*9+7],cz=T[t*9+8];
+function sn178Tri(T,t,p,o){const ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],bx=T[t*9+3],by=T[t*9+4],bz=T[t*9+5],cx=T[t*9+6],cy=T[t*9+7],cz=T[t*9+8];
   const abx=bx-ax,aby=by-ay,abz=bz-az,acx=cx-ax,acy=cy-ay,acz=cz-az,apx=p[0]-ax,apy=p[1]-ay,apz=p[2]-az;
   const set=(x,y,z)=>{o[0]=x;o[1]=y;o[2]=z;const dx=p[0]-x,dy=p[1]-y,dz=p[2]-z;return dx*dx+dy*dy+dz*dz};
   const d1=abx*apx+aby*apy+abz*apz,d2=acx*apx+acy*apy+acz*apz;if(d1<=0&&d2<=0)return set(ax,ay,az);
@@ -55196,100 +55330,102 @@ function sn177Tri(T,t,p,o){const ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],bx=T[t*9+3],b
   const va=d3*d6-d5*d4;if(va<=0&&d4-d3>=0&&d5-d6>=0){const w=(d4-d3)/((d4-d3)+(d5-d6));return set(bx+(cx-bx)*w,by+(cy-by)*w,bz+(cz-bz)*w)}
   const dn=1/(va+vb+vc),v=vb*dn,w=vc*dn;return set(ax+abx*v+acx*w,ay+aby*v+acy*w,az+abz*v+acz*w)}
 // nearest surface point of G to p within r: {d, q} or null
-function sn177Near(G,p,r,o){const cs=G.cs,n=Math.ceil(r/cs),i0=Math.floor(p[0]/cs),j0=Math.floor(p[1]/cs),k0=Math.floor(p[2]/cs),T=G.T;
+function sn178Near(G,p,r,o){const cs=G.cs,n=Math.ceil(r/cs),i0=Math.floor(p[0]/cs),j0=Math.floor(p[1]/cs),k0=Math.floor(p[2]/cs),T=G.T;
   if(!G.stamp||G.stamp.length<T.length/9)G.stamp=new Int32Array(Math.max(1024,T.length/9*2));const sid=++G.sid;let best=r*r,hit=false;const q=[0,0,0];
-  for(let i=i0-n;i<=i0+n;i++)for(let j=j0-n;j<=j0+n;j++)for(let k=k0-n;k<=k0+n;k++){const L=G.C.get(sn177Key(i,j,k));if(!L)continue;
-    for(let m=0;m<L.length;m++){const t=L[m];if(G.stamp[t]===sid)continue;G.stamp[t]=sid;const d=sn177Tri(T,t,p,q);if(d<best){best=d;hit=true;o[0]=q[0];o[1]=q[1];o[2]=q[2];G.lastT=t}}}
+  for(let i=i0-n;i<=i0+n;i++)for(let j=j0-n;j<=j0+n;j++)for(let k=k0-n;k<=k0+n;k++){const L=G.C.get(sn178Key(i,j,k));if(!L)continue;
+    for(let m=0;m<L.length;m++){const t=L[m];if(G.stamp[t]===sid)continue;G.stamp[t]=sid;const d=sn178Tri(T,t,p,q);if(d<best){best=d;hit=true;o[0]=q[0];o[1]=q[1];o[2]=q[2];G.lastT=t}}}
   return hit?Math.sqrt(best):-1}
 // does a ray from p along axis dir hit a triangle of the list (Möller–Trumbore)?
-function sn177Ray(T,p,d,mx){for(let t=0;t<T.length/9;t++){const ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],e1x=T[t*9+3]-ax,e1y=T[t*9+4]-ay,e1z=T[t*9+5]-az,e2x=T[t*9+6]-ax,e2y=T[t*9+7]-ay,e2z=T[t*9+8]-az;
+function sn178Ray(T,p,d,mx){for(let t=0;t<T.length/9;t++){const ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],e1x=T[t*9+3]-ax,e1y=T[t*9+4]-ay,e1z=T[t*9+5]-az,e2x=T[t*9+6]-ax,e2y=T[t*9+7]-ay,e2z=T[t*9+8]-az;
     const hx=d[1]*e2z-d[2]*e2y,hy=d[2]*e2x-d[0]*e2z,hz=d[0]*e2y-d[1]*e2x,a=e1x*hx+e1y*hy+e1z*hz;if(Math.abs(a)<1e-12)continue;const f=1/a,sx=p[0]-ax,sy=p[1]-ay,sz=p[2]-az,u=f*(sx*hx+sy*hy+sz*hz);if(u<0||u>1)continue;
     const qx=sy*e1z-sz*e1y,qy=sz*e1x-sx*e1z,qz=sx*e1y-sy*e1x,v=f*(d[0]*qx+d[1]*qy+d[2]*qz);if(v<0||u+v>1)continue;const t2=f*(e2x*qx+e2y*qy+e2z*qz);if(t2>1e-6&&t2<mx)return true}return false}
 // the outward normal of the surface at triangle t of G: its face normal turned away from the middle of the body nearby
-function sn177N(G,t,r){const T=G.T,ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],ux=T[t*9+3]-ax,uy=T[t*9+4]-ay,uz=T[t*9+5]-az,vx=T[t*9+6]-ax,vy=T[t*9+7]-ay,vz=T[t*9+8]-az;
+function sn178N(G,t,r){const T=G.T,ax=T[t*9],ay=T[t*9+1],az=T[t*9+2],ux=T[t*9+3]-ax,uy=T[t*9+4]-ay,uz=T[t*9+5]-az,vx=T[t*9+6]-ax,vy=T[t*9+7]-ay,vz=T[t*9+8]-az;
   let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;const l=Math.hypot(nx,ny,nz)||1;nx/=l;ny/=l;nz/=l;
   const cx=ax+(ux+vx)/3,cy=ay+(uy+vy)/3,cz=az+(uz+vz)/3,cs=G.cs,n=Math.max(1,Math.ceil(r/cs)),i0=Math.floor(cx/cs),j0=Math.floor(cy/cs),k0=Math.floor(cz/cs);let mx=0,my=0,mz=0,c=0;
-  for(let i=i0-n;i<=i0+n;i++)for(let j=j0-n;j<=j0+n;j++)for(let k=k0-n;k<=k0+n;k++){const L=G.C.get(sn177Key(i,j,k));if(!L)continue;for(const u of L){mx+=T[u*9]+T[u*9+3]+T[u*9+6];my+=T[u*9+1]+T[u*9+4]+T[u*9+7];mz+=T[u*9+2]+T[u*9+5]+T[u*9+8];c+=3}}
+  for(let i=i0-n;i<=i0+n;i++)for(let j=j0-n;j<=j0+n;j++)for(let k=k0-n;k<=k0+n;k++){const L=G.C.get(sn178Key(i,j,k));if(!L)continue;for(const u of L){mx+=T[u*9]+T[u*9+3]+T[u*9+6];my+=T[u*9+1]+T[u*9+4]+T[u*9+7];mz+=T[u*9+2]+T[u*9+5]+T[u*9+8];c+=3}}
   if(c&&nx*(cx-mx/c)+ny*(cy-my/c)+nz*(cz-mz/c)<0){nx=-nx;ny=-ny;nz=-nz}return [nx,ny,nz]}
 // the same, through the grid: only the triangles in the cells the ray passes
-function sn177RayG(G,p,d,mx){const cs=G.cs,T=G.T,seen=new Set(),q=[0,0,0];for(let t=0;t<=mx+cs;t+=cs*.5){q[0]=p[0]+d[0]*t;q[1]=p[1]+d[1]*t;q[2]=p[2]+d[2]*t;
-    const L=G.C.get(sn177Key(Math.floor(q[0]/cs),Math.floor(q[1]/cs),Math.floor(q[2]/cs)));if(!L)continue;const S=[];for(const u of L)if(!seen.has(u)){seen.add(u);S.push(T[u*9],T[u*9+1],T[u*9+2],T[u*9+3],T[u*9+4],T[u*9+5],T[u*9+6],T[u*9+7],T[u*9+8])}
-    if(S.length&&sn177Ray(S,p,d,mx))return true}return false}
+function sn178RayG(G,p,d,mx){const cs=G.cs,T=G.T,seen=new Set(),q=[0,0,0];for(let t=0;t<=mx+cs;t+=cs*.5){q[0]=p[0]+d[0]*t;q[1]=p[1]+d[1]*t;q[2]=p[2]+d[2]*t;
+    const L=G.C.get(sn178Key(Math.floor(q[0]/cs),Math.floor(q[1]/cs),Math.floor(q[2]/cs)));if(!L)continue;const S=[];for(const u of L)if(!seen.has(u)){seen.add(u);S.push(T[u*9],T[u*9+1],T[u*9+2],T[u*9+3],T[u*9+4],T[u*9+5],T[u*9+6],T[u*9+7],T[u*9+8])}
+    if(S.length&&sn178Ray(S,p,d,mx))return true}return false}
 // a part's triangles and sample points in model space
-function sn177Part(p){const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count,v=new THREE.Vector3(),V=[];
+function sn178Part(p){const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count,v=new THREE.Vector3(),V=[];
   for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);V.push([v.x,v.y,v.z])}
   const tri=[],S=V.slice();for(let i=0;i+2<n;i+=3){const a=V[ix?ix[i]:i],b=V[ix?ix[i+1]:i+1],c=V[ix?ix[i+2]:i+2];tri.push([a,b,c]);
     S.push([(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],[(b[0]+c[0])/2,(b[1]+c[1])/2,(b[2]+c[2])/2],[(c[0]+a[0])/2,(c[1]+a[1])/2,(c[2]+a[2])/2])}
   const c=[0,0,0];V.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});const k=1/Math.max(1,V.length);
-  // bosses (SN177.cap): an even spread of at most that many sample points per part (the nearest-surface search is the costly step)
-  const cap=SN177.cap||Infinity,Sx=S.length>cap?S.filter((_,i)=>i%Math.ceil(S.length/cap)==0):S;return {p,tri,S:Sx,c:[c[0]*k,c[1]*k,c[2]*k]}}
-// body: flat triangle list (xyz × 9 per triangle); P: kit parts (their matrices are moved in place); tag: for SN177.far
-function sn177Snap(body,P,tag){if(!SN177.on||!P||!P.length||!body||body.length<9)return 0;
-  let y0=1e9,y1=-1e9;for(let i=1;i<body.length;i+=3){y0=Math.min(y0,body[i]);y1=Math.max(y1,body[i])}const H=Math.max(.2,y1-y0),tol=SN177.tol*Math.max(1,H/1.7),max=SN177.max*H,emb=SN177.emb*Math.max(1,H/1.7);
-  const G=sn177Grid(Math.max(.02,H*.02));for(let i=0;i<body.length;i+=9)sn177Add(G,[body[i],body[i+1],body[i+2]],[body[i+3],body[i+4],body[i+5]],[body[i+6],body[i+7],body[i+8]]);
-  const parts=P.map(sn177Part),att=new Array(parts.length).fill(false),o=[0,0,0];let moved=0;
-  const attach=i=>{if(att[i]!=='in')att[i]=true;parts[i].tri.forEach(t=>sn177Add(G,t[0],t[1],t[2]))};
-  const near=(q,r)=>{let best=-1,bp=null,bq=null,bt=-1;for(const s of q.S){const d=sn177Near(G,s,r,o);if(d>=0&&(best<0||d<best)){best=d;bp=s;bq=o.slice();bt=G.lastT}}return best<0?null:{d:best,s:bp,q:bq,t:bt}};
+  // bosses (SN178.cap): an even spread of at most that many sample points per part (the nearest-surface search is the costly step)
+  const cap=SN178.cap||Infinity,Sx=S.length>cap?S.filter((_,i)=>i%Math.ceil(S.length/cap)==0):S;return {p,tri,S:Sx,c:[c[0]*k,c[1]*k,c[2]*k]}}
+// body: flat triangle list (xyz × 9 per triangle); P: kit parts (their matrices are moved in place); tag: for SN178.far
+function sn178Snap(body,P,tag){if(!SN178.on||!P||!P.length||!body||body.length<9)return 0;
+  let y0=1e9,y1=-1e9;for(let i=1;i<body.length;i+=3){y0=Math.min(y0,body[i]);y1=Math.max(y1,body[i])}const H=Math.max(.2,y1-y0),tol=SN178.tol*Math.max(1,H/1.7),max=SN178.max*H,emb=SN178.emb*Math.max(1,H/1.7);
+  const G=sn178Grid(Math.max(.02,H*.02));for(let i=0;i<body.length;i+=9)sn178Add(G,[body[i],body[i+1],body[i+2]],[body[i+3],body[i+4],body[i+5]],[body[i+6],body[i+7],body[i+8]]);
+  const parts=P.map(sn178Part),att=new Array(parts.length).fill(false),o=[0,0,0];let moved=0;
+  const attach=i=>{if(att[i]!=='in')att[i]=true;parts[i].tri.forEach(t=>sn178Add(G,t[0],t[1],t[2]))};
+  const near=(q,r)=>{let best=-1,bp=null,bq=null,bt=-1;for(const s of q.S){const d=sn178Near(G,s,r,o);if(d>=0&&(best<0||d<best)){best=d;bp=s;bq=o.slice();bt=G.lastT}}return best<0?null:{d:best,s:bp,q:bq,t:bt}};
   // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height, at most 30 cm)
-  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn177RayG(G,p,d,Math.min(H*.12,.3)))))att[i]='in'});
+  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn178RayG(G,p,d,Math.min(H*.12,.3)))))att[i]='in'});
   parts.forEach((q,i)=>{if(att[i]==='in')attach(i)});
-  if(SN177.dbg)parts.forEach((q,i)=>{const r=near(q,.2);SN177.dbg.push((tag||'')+' '+q.p.bn+' c '+q.c.map(v=>v.toFixed(3)).join(',')+' d '+(r?r.d.toFixed(4)+' q '+r.q.map(v=>v.toFixed(3)).join(','):'-')+(att[i]==='in'?' IN':''))});
+  if(SN178.dbg)parts.forEach((q,i)=>{const r=near(q,.2);SN178.dbg.push((tag||'')+' '+q.p.bn+' c '+q.c.map(v=>v.toFixed(3)).join(',')+' d '+(r?r.d.toFixed(4)+' q '+r.q.map(v=>v.toFixed(3)).join(','):'-')+(att[i]==='in'?' IN':''))});
   const grow=()=>{let ch=true;while(ch){ch=false;parts.forEach((q,i)=>{if(att[i])return;if(near(q,tol)){attach(i);ch=true}})}};
   grow();
   for(let pass=0;pass<6;pass++){const L=[];parts.forEach((q,i)=>{if(!att[i])L.push(i)});if(!L.length)break;
     // loose parts that touch each other move together
     const grp=L.map(i=>[i]),gi=new Map(L.map((i,j)=>[i,j]));
-    {const T=sn177Grid(G.cs);const own=[];L.forEach(i=>parts[i].tri.forEach(t=>{sn177Add(T,t[0],t[1],t[2]);own.push(i)}));const par=L.map((_,j)=>j),f=j=>{while(par[j]!==j)j=par[j]=par[par[j]];return j};
+    {const T=sn178Grid(G.cs);const own=[];L.forEach(i=>parts[i].tri.forEach(t=>{sn178Add(T,t[0],t[1],t[2]);own.push(i)}));const par=L.map((_,j)=>j),f=j=>{while(par[j]!==j)j=par[j]=par[par[j]];return j};
       L.forEach(i=>{const q=parts[i];for(const s of q.S){const cs=T.cs,n=1,a=Math.floor(s[0]/cs),b=Math.floor(s[1]/cs),c=Math.floor(s[2]/cs);
-        for(let x=a-n;x<=a+n;x++)for(let y=b-n;y<=b+n;y++)for(let z=c-n;z<=c+n;z++){const C=T.C.get(sn177Key(x,y,z));if(!C)continue;C.forEach(t=>{const j=own[t];if(j===i)return;if(sn177Tri(T.T,t,s,o)<=tol*tol){const A=f(gi.get(i)),B=f(gi.get(j));if(A!==B)par[B]=A}})}}});
+        for(let x=a-n;x<=a+n;x++)for(let y=b-n;y<=b+n;y++)for(let z=c-n;z<=c+n;z++){const C=T.C.get(sn178Key(x,y,z));if(!C)continue;C.forEach(t=>{const j=own[t];if(j===i)return;if(sn178Tri(T.T,t,s,o)<=tol*tol){const A=f(gi.get(i)),B=f(gi.get(j));if(A!==B)par[B]=A}})}}});
       grp.length=0;const by=new Map();L.forEach((i,j)=>{const r=f(j);if(!by.has(r))by.set(r,[]);by.get(r).push(i)});by.forEach(v=>grp.push(v))}
     let did=false;
     grp.forEach(g=>{let best=null,bi=-1;g.forEach(i=>{const r=near(parts[i],max);if(r&&(!best||r.d<best.d)){best=r;bi=i}});if(!best)return;
       let dx=best.q[0]-best.s[0],dy=best.q[1]-best.s[1],dz=best.q[2]-best.s[2];const L2=Math.hypot(dx,dy,dz)||1;let k=(L2+emb)/L2;
       // a part sunk into the body (its middle behind the surface) comes out to sit on it, its middle at the surface
-      const N=sn177N(G,best.t,G.cs*1.5),c=parts[bi].c,dc=[c[0]-best.q[0],c[1]-best.q[1],c[2]-best.q[2]];
+      const N=sn178N(G,best.t,G.cs*1.5),c=parts[bi].c,dc=[c[0]-best.q[0],c[1]-best.q[1],c[2]-best.q[2]];
       if(N[0]*dc[0]+N[1]*dc[1]+N[2]*dc[2]<0){dx=best.q[0]-c[0];dy=best.q[1]-c[1];dz=best.q[2]-c[2];k=1}
       const M=new THREE.Matrix4().makeTranslation(dx*k,dy*k,dz*k);
-      g.forEach(i=>{parts[i].p.m.premultiply(M);parts[i]=sn177Part(parts[i].p);attach(i)});moved+=g.length;did=true});
+      g.forEach(i=>{parts[i].p.m.premultiply(M);parts[i]=sn178Part(parts[i].p);attach(i)});moved+=g.length;did=true});
     grow();if(!did)break}
-  parts.forEach((q,i)=>{if(!att[i])SN177.far.push((tag||'')+' '+q.p.bn+' at '+q.c.map(v=>v.toFixed(3)).join(','))});
-  SN177.moved+=moved;return moved}
+  parts.forEach((q,i)=>{if(!att[i])SN178.far.push((tag||'')+' '+q.p.bn+' at '+q.c.map(v=>v.toFixed(3)).join(','))});
+  SN178.moved+=moved;return moved}
 // ---------------- creature rigs: the kit against the body loft ----------------
-{const f=lpRig;lpRig=function(c,n,D){const en=c&&(c.en||(c.g&&EN[c.g[0]]&&!SP2[c.g[0]]));if(!SN177.on||!en)return f.apply(this,arguments);
-  SN177.lp={c,n,D};try{return f.apply(this,arguments)}finally{SN177.lp=null}}}
-{const f=dkBake;dkBake=function(P,O,key){const L=SN177.lp;if(L&&key&&/^LP\|/.test(key)){key=key+'|s177';
+{const f=lpRig;lpRig=function(c,n,D){const en=c&&(c.en||(c.g&&EN[c.g[0]]&&!SP2[c.g[0]]));if(!SN178.on||!en)return f.apply(this,arguments);
+  SN178.lp={c,n,D};try{return f.apply(this,arguments)}finally{SN178.lp=null}}}
+{const f=dkBake;dkBake=function(P,O,key){const L=SN178.lp;if(L&&key&&/^LP\|/.test(key)){key=key+'|s178';
     if(!(DKBK&&DKBK[key])&&P&&P.length){try{const G=L.D.geo(L.c.cl[0],L.c),pa=G.attributes.position,ix=G.index?G.index.array:null,n=ix?ix.length:pa.count,T=[];
-      for(let i=0;i<n;i++){const j=ix?ix[i]:i;T.push(pa.getX(j),pa.getY(j),pa.getZ(j))}sn177Snap(T,P,L.n);sn177LpW(G,O,P)}catch(e){console.warn('v177 snap',L.n,e)}}}
+      for(let i=0;i<n;i++){const j=ix?ix[i]:i;T.push(pa.getX(j),pa.getY(j),pa.getZ(j))}sn178Snap(T,P,L.n);sn178LpW(G,O,P)}catch(e){console.warn('v178 snap',L.n,e)}}}
   return f.call(this,P,O,key)}}
-// creature kits likewise take the weights of the body vertex under each part (dkBake honours p.w since v177)
-function sn177LpW(G,O,P){const pa=G.attributes.position,si=G.attributes.skinIndex,sw=G.attributes.skinWeight;if(!si||!sw)return;const M=new Map(),cs=.04,v=new THREE.Vector3();
-  for(let i=0;i<pa.count;i++){const k=sn177Key(Math.floor(pa.getX(i)/cs),Math.floor(pa.getY(i)/cs),Math.floor(pa.getZ(i)/cs));let A=M.get(k);if(!A)M.set(k,A=[]);A.push(i)}
+// creature kits likewise take the weights of the body vertex under each part (dkBake honours p.w since v178)
+function sn178LpW(G,O,P){const pa=G.attributes.position,si=G.attributes.skinIndex,sw=G.attributes.skinWeight;if(!si||!sw)return;const M=new Map(),cs=.04,v=new THREE.Vector3();
+  for(let i=0;i<pa.count;i++){const k=sn178Key(Math.floor(pa.getX(i)/cs),Math.floor(pa.getY(i)/cs),Math.floor(pa.getZ(i)/cs));let A=M.get(k);if(!A)M.set(k,A=[]);A.push(i)}
   const GC=(a,j,q)=>q==0?a.getX(j):q==1?a.getY(j):q==2?a.getZ(j):a.getW(j);
-  P.forEach(p=>{if(p.w||!p.bn)return;v.setFromMatrixPosition(p.m);let best=.06*.06,hit=-1;const i0=Math.floor(v.x/cs),j0=Math.floor(v.y/cs),k0=Math.floor(v.z/cs);
-    for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=M.get(sn177Key(i,j,k));if(!A)continue;for(const x of A){const dx=pa.getX(x)-v.x,dy=pa.getY(x)-v.y,dz=pa.getZ(x)-v.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=x}}}
+  P.forEach(p=>{if(p.w||!p.bn)return;v.setFromMatrixPosition(p.m);const bb=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);if(bb.getSize(new THREE.Vector3()).length()>.25&&!/^a[LR]0$/.test(p.bn))return;let best=.06*.06,hit=-1;const i0=Math.floor(v.x/cs),j0=Math.floor(v.y/cs),k0=Math.floor(v.z/cs);
+    for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=M.get(sn178Key(i,j,k));if(!A)continue;for(const x of A){const dx=pa.getX(x)-v.x,dy=pa.getY(x)-v.y,dz=pa.getZ(x)-v.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=x}}}
     if(hit<0)return;const w=[];let own=false;for(let q=0;q<4;q++){const x=GC(sw,hit,q);if(x>0){const n=O[GC(si,hit,q)];w.push([n,x]);if(n===p.bn)own=true}}if(own&&w.length>1)p.w=w})}
 // ---------------- humanoid foes: every kit against what is built so far ----------------
-{const f=mdFoeB;mdFoeB=function(key){if(!SN177.on)return f.apply(this,arguments);SN177.hum++;SN177.humK=key;try{return f.apply(this,arguments)}finally{SN177.hum--}}}
-{const f=mdFoeGeo;mdFoeGeo=function(key){return SN177.on?mdGeo('F177|'+key,()=>mdFoeB(key)):f.apply(this,arguments)}}
+{const f=mdFoeB;mdFoeB=function(key){if(!SN178.on)return f.apply(this,arguments);SN178.hum++;SN178.humK=key;try{return f.apply(this,arguments)}finally{SN178.hum--}}}
+{const f=mdFoeGeo;mdFoeGeo=function(key){return SN178.on?mdGeo('F178|'+key,()=>mdFoeB(key)):f.apply(this,arguments)}}
 // The v99 proportions (0010) move every vertex by its bones when the build is baked, so the snap works on the final shape:
 // the body and each part are taken through that warp, snapped there, and the move is carried back (W⁻¹·T·W) onto the part.
-function sn177Warp(B){let pl=null;try{if(B.kqPre&&B.kqPre!='none'&&typeof AW_PROP99!='undefined')pl=AW_PROP99.plan(B.bones,B.kqPre)}catch(e){pl=null}
+function sn178Warp(B){let pl=null;try{if(B.kqPre&&B.kqPre!='none'&&typeof AW_PROP99!='undefined')pl=AW_PROP99.plan(B.bones,B.kqPre)}catch(e){pl=null}
   if(!pl)return null;const W={};pl.names.forEach(n=>{const M=pl.M[n],a=pl.abs[n],N=pl.N[n],m=new THREE.Matrix4().set(M[0],M[1],M[2],0,M[3],M[4],M[5],0,M[6],M[7],M[8],0,0,0,0,1);
     const t=new THREE.Vector3(a[0],a[1],a[2]).applyMatrix4(m);m.setPosition(N[0]-t.x,N[1]-t.y,N[2]-t.z);W[n]=m});return {pl,W}}
 // Every part takes the bone weights of the skin under it (the nearest body vertex, when that vertex follows the part's own bone
 // at all), so it bends with that skin: rigid on one bone, a back plate, a bead or a shoulder pad lifted off the body whenever
 // the spine bent or the arm swung (attacks, the stance).
-function sn177SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn177Key(Math.floor(x/cs),Math.floor(y/cs),Math.floor(z/cs));
+function sn178SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn178Key(Math.floor(x/cs),Math.floor(y/cs),Math.floor(z/cs));
   ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){const k=key(L.p[v*3],L.p[v*3+1],L.p[v*3+2]);let A=G.get(k);if(!A)G.set(k,A=[]);A.push([L,v])}});
-  P.forEach(p=>{if(p.w||!p.bn)return;const c=new THREE.Vector3().setFromMatrixPosition(p.m),bi=B.O.indexOf(p.bn);if(bi<0)return;let best=.08*.08,hit=null;
+  P.forEach(p=>{if(p.w||!p.bn)return;const c=new THREE.Vector3().setFromMatrixPosition(p.m),bi=B.O.indexOf(p.bn);if(bi<0)return;
+    // only small parts lying on the skin (a tail or a limb built of rigid pieces keeps its own bone; shoulder pads may be big)
+    const bb=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);if(bb.getSize(new THREE.Vector3()).length()>.25&&!/^a[LR]0$/.test(p.bn))return;let best=.08*.08,hit=null;
     const i0=Math.floor(c.x/cs),j0=Math.floor(c.y/cs),k0=Math.floor(c.z/cs);
-    for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=G.get(sn177Key(i,j,k));if(!A)continue;
+    for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=G.get(sn178Key(i,j,k));if(!A)continue;
       for(const [L,v] of A){const dx=L.p[v*3]-c.x,dy=L.p[v*3+1]-c.y,dz=L.p[v*3+2]-c.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=[L,v]}}}
     if(!hit)return;const [L,v]=hit,w=[];let own=false;for(let j=0;j<4;j++){const x=L.sw[v*4+j];if(x>0){const n=B.O[L.si[v*4+j]];w.push([n,x]);if(n===p.bn)own=true}}
     if(own&&w.length>1)p.w=w;
     // a shoulder part over skin that only follows the torso (a pauldron) goes half with its own bone, half with the skin under it
     else if(!own&&/^a[LR]0$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5])).slice(0,4)})}
-{const f=mdKit;mdKit=function(B,k){if(SN177.hum>0&&k&&k.P&&k.P.length){try{sn177SkinW(B,k.P);const X=sn177Warp(B),T=[];
+{const f=mdKit;mdKit=function(B,k){if(SN178.hum>0&&k&&k.P&&k.P.length){try{sn178SkinW(B,k.P);const X=sn178Warp(B),T=[];
       ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){let x=L.p[v*3],y=L.p[v*3+1],z=L.p[v*3+2];
         if(X){let X0=0,Y0=0,Z0=0,Wt=0;for(let j=0;j<4;j++){const w=L.sw[v*4+j];if(!(w>0))continue;const b=X.pl.idx[L.si[v*4+j]];if(!b)continue;const M=b.M,dx=x-b.a[0],dy=y-b.a[1],dz=z-b.a[2];
             X0+=w*(b.n[0]+M[0]*dx+M[1]*dy+M[2]*dz);Y0+=w*(b.n[1]+M[3]*dx+M[4]*dy+M[5]*dz);Z0+=w*(b.n[2]+M[6]*dx+M[7]*dy+M[8]*dz);Wt+=w}if(Wt>0){x=X0/Wt;y=Y0/Wt;z=Z0/Wt}}
@@ -55298,67 +55434,67 @@ function sn177SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn177Key(Math.flo
       const Wb=p=>{if(!X)return null;const w=p.w||[[p.bn||B.O[0],1]];let t=0;const M=new THREE.Matrix4().set(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
         w.forEach(([bn,x])=>{const m=X.W[bn];if(!m||!(x>0))return;for(let i=0;i<16;i++)M.elements[i]+=m.elements[i]*x;t+=x});if(!t)return null;for(let i=0;i<16;i++)M.elements[i]/=t;return M};
       const Q=k.P.map(p=>{const w=Wb(p);return Object.assign({},p,{m:w?w.clone().multiply(p.m):p.m.clone()})});
-      sn177Snap(T,Q,SN177.humK);
-      Q.forEach((q,i)=>{const p=k.P[i],w=Wb(p);p.m=w?new THREE.Matrix4().copy(w).invert().multiply(q.m):q.m})}catch(e){console.warn('v177 snap',e)}}
+      sn178Snap(T,Q,SN178.humK);
+      Q.forEach((q,i)=>{const p=k.P[i],w=Wb(p);p.m=w?new THREE.Matrix4().copy(w).invert().multiply(q.m):q.m})}catch(e){console.warn('v178 snap',e)}}
   return f.apply(this,arguments)}}
 // ---------------- humanoid foes: limb shells (bracers, greaves, wraps) get closed ends ----------------
 // mdAS / mdLS lay a single-surface tube a little off the arm or leg; with open ends it hovered round the limb, touching nothing.
 // Each end now gets a narrow rim from the tube down to the skin (the cuff's thickness), so it sits on the limb.
-function sn177Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R[i],q=R[j];if(!r||!q||!(off>.004))return;
+function sn178Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R[i],q=R[j];if(!r||!q||!(off>.004))return;
   const d=[q.p[0]-r.p[0],q.p[1]-r.p[1],q.p[2]-r.p[2]],L=Math.hypot(d[0],d[1],d[2])||1,e=.0015/L,k=Object.assign({},o);delete k.off;
   const A=Object.assign({},r,{rx:r.rx+off,f:(r.f==null?r.rx:r.f)+off,b:(r.b==null?r.rx:r.b)+off}),Bq=Object.assign({},r,{p:[r.p[0]+d[0]*e,r.p[1]+d[1]*e,r.p[2]+d[2]*e],rx:r.rx+.001,f:(r.f==null?r.rx:r.f)+.001,b:(r.b==null?r.rx:r.b)+.001});
   mdLoft(B,[A,Bq],Object.assign(k,{off:0}))}
-{const f=mdAS;mdAS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN177.on&&SN177.hum>0)try{const R=mdArm(P,s).slice(i0,i1+1);sn177Rim(B,R,off,Object.assign({seg:7},o||{}),0);sn177Rim(B,R,off,Object.assign({seg:7},o||{}),1)}catch(e){console.warn('v177 rim',e)}return r}}
-{const f=mdLS;mdLS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN177.on&&SN177.hum>0)try{const R=mdLeg(P,s).slice(i0,i1+1);sn177Rim(B,R,off,Object.assign({seg:8},o||{}),0);sn177Rim(B,R,off,Object.assign({seg:8},o||{}),1)}catch(e){console.warn('v177 rim',e)}return r}}
+{const f=mdAS;mdAS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN178.on&&SN178.hum>0)try{const R=mdArm(P,s).slice(i0,i1+1);sn178Rim(B,R,off,Object.assign({seg:7},o||{}),0);sn178Rim(B,R,off,Object.assign({seg:7},o||{}),1)}catch(e){console.warn('v178 rim',e)}return r}}
+{const f=mdLS;mdLS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN178.on&&SN178.hum>0)try{const R=mdLeg(P,s).slice(i0,i1+1);sn178Rim(B,R,off,Object.assign({seg:8},o||{}),0);sn178Rim(B,R,off,Object.assign({seg:8},o||{}),1)}catch(e){console.warn('v178 rim',e)}return r}}
 // ---------------- Sovereigns and quest bosses: rigid parts on joints ----------------
 // A boss model is many small meshes on named joints (svRig), merged per joint by svMerge. Before the merge the same snap runs
 // on them in the rest pose: the big meshes are the body, every other visible, solid mesh is a part; a moved part keeps its
 // joint (its own position is shifted). Glows (glowing stones too), see-through effects, hidden pieces and joints meant to float
-// (SN177_FREE) are left alone, as is Ssith'ra (its segments are laid out live along the body path).
+// (SN178_FREE) are left alone, as is Ssith'ra (its segments are laid out live along the body path).
 // joints whose pieces are meant to float free: Qarsul's ring of whirling debris, the Rime Wraith's Phase II halo
-var SN177_FREE=/^(orbit|halo)/;
+var SN178_FREE=/^(orbit|halo)/;
 // Every build of the same boss gives the same moves: they are kept per boss (key: its joints and parts) and replayed.
-var SN177_BC=new Map();
-function sn177Boss(R){if(!SN177.on||!R||R.s177||R.no177)return 0;R.s177=1;const root=R.root;root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),M=[];
-  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible||SN177_FREE.test(p.name||''))return;p=p.parent}
+var SN178_BC=new Map();
+function sn178Boss(R){if(!SN178.on||!R||R.s178||R.no178)return 0;R.s178=1;const root=R.root;root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),M=[];
+  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible||SN178_FREE.test(p.name||''))return;p=p.parent}
     const mt=Array.isArray(o.material)?o.material[0]:o.material;if(!mt||mt.blending===THREE.AdditiveBlending||(mt.transparent&&mt.opacity<.6)||mt.visible===false)return;
     if(mt.emissive&&mt.emissive.getHex()>0&&(mt.emissiveIntensity||1)*Math.max(mt.emissive.r,mt.emissive.g,mt.emissive.b)>.35)return;   // a glowing stone or wisp is magic, left where it hangs
     const n=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;M.push({o,n,m:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)})});
-  if(M.length<2)return 0;const key=Object.keys(R.J).join(',')+'|'+M.map(q=>q.o.geometry.uuid).join(','),hit=SN177_BC.get(key);
+  if(M.length<2)return 0;const key=Object.keys(R.J).join(',')+'|'+M.map(q=>q.o.geometry.uuid).join(','),hit=SN178_BC.get(key);
   if(hit){hit.forEach(([i,x,y,z])=>{const o=M[i].o;o.position.x+=x;o.position.y+=y;o.position.z+=z;o.updateMatrix()});return hit.length}
   const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
   M.forEach(q=>{if(q.n>=mx*.3){const g=q.o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(q.m);T.push(v.x,v.y,v.z)}}
     else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone(),mi:M.indexOf(q)})});
-  const mx0=SN177.max;SN177.max=.02;SN177.cap=96;let n=0;try{n=sn177Snap(T,P,'boss')}finally{SN177.max=mx0;SN177.cap=0}
+  const mx0=SN178.max;SN178.max=.02;SN178.cap=96;let n=0;try{n=sn178Snap(T,P,'boss')}finally{SN178.max=mx0;SN178.cap=0}
   const rec=[];P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
     const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix();rec.push([p.mi,d.x,d.y,d.z])});
-  SN177_BC.set(key,rec);return n}
-{const f=svMerge;svMerge=function(R){try{sn177Boss(R)}catch(e){console.warn('v177 boss snap',e)}return f.apply(this,arguments)}}
-if(SVB[3]){const b=SVB[3].build;SVB[3].build=function(R,e){if(R)R.no177=1;return b.apply(this,arguments)}}
+  SN178_BC.set(key,rec);return n}
+{const f=svMerge;svMerge=function(R){try{sn178Boss(R)}catch(e){console.warn('v178 boss snap',e)}return f.apply(this,arguments)}}
+if(SVB[3]){const b=SVB[3].build;SVB[3].build=function(R,e){if(R)R.no178=1;return b.apply(this,arguments)}}
 // ---------------- humanoid foes: skirts, coat tails and tabard skirts start on the body ----------------
 // mdSkirt hangs a skirt from the waist at an offset; many outfits gave it 1–2 cm over whatever was worn there, so a flap
 // hung beside the belt touching nothing. For foes the top now sits just over the layer beneath (P.tOff + 2 mm), tucked up 1.5 cm.
 // Its top also takes the waist's own bone blend (mdTorsoW) fading into the thighs, so the proportion pass moves it with the belt.
-{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(SN177.on&&SN177.hum>0&&P){const t=(P.tOff||0)+.002;if(off>t){off=t;y0+=.015}
+{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(SN178.on&&SN178.hum>0&&P){const t=(P.tOff||0)+.002;if(off>t){off=t;y0+=.015}
     if(!(o&&o.wf)){const Y=y0;o=Object.assign({},o||{},{wf:(x,y)=>{const d=Math.max(0,Math.min(1,(Y-y)/Math.max(.05,Y-.32)))*.9,l=Math.max(0,Math.min(1,.5-x/.16)),W=mdTorsoW(Math.min(Y,Math.max(.44,y))).map(q=>[q[0],q[1]*(1-d)]);
       if(d>0)W.push(['lh0',d*l],['rh0',d*(1-l)]);return W.filter(q=>q[1]>0).slice(0,4)}})}}
   return f.call(this,B,P,y0,y1,fl,off,o)}}
 // ---------------- weapons carried by foes (mkWpn kits, 'LW|' cache) ----------------
 // The same snap on a weapon's own parts, grown from its largest piece (a hammer's head was 4 cm off its haft, a staff's gem
 // sat loose in its claws, studs and spikes floated off heads).
-{const f=lgBake;lgBake=function(P,key,mot){if(SN177.on&&P&&P.length>1&&/^LW\|/.test(key||'')){try{
+{const f=lgBake;lgBake=function(P,key,mot){if(SN178.on&&P&&P.length>1&&/^LW\|/.test(key||'')){try{
     const S=P.map(p=>{const b=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);return b.getSize(new THREE.Vector3()).length()}),i0=S.indexOf(Math.max(...S)),seed=P[i0],v=new THREE.Vector3(),T=[];
     const g=seed.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(seed.m);T.push(v.x,v.y,v.z)}
-    sn177Snap(T,P.filter((_,i)=>i!==i0),key)}catch(e){console.warn('v177 weapon snap',e)}}return f.apply(this,arguments)}}
-// ================= v177: enemy posture and the plainest foes dressed =================
+    sn178Snap(T,P.filter((_,i)=>i!==i0),key)}catch(e){console.warn('v178 weapon snap',e)}}return f.apply(this,arguments)}}
+// ================= v178: enemy posture and the plainest foes dressed =================
 // Owner: "optimize anatomy, posture and overall style … non-cartoony (dark fantasy), not too simple".
-// * Posture: the older humanoid foes stood bolt upright like mannequins. ST177[hum key] is a stance laid over every pose
+// * Posture: the older humanoid foes stood bolt upright like mannequins. ST178[hum key] is a stance laid over every pose
 //   (idle, walk, attacks), like the v113 creatures' D.stance: a forward lean, the head raised to look ahead, bent knees (the hips
 //   drop by what the bend takes off the leg, so the feet stay on the ground), arms held out from the body. Brutes hunch, ghouls stoop, goblins crouch, soldiers stand ready.
 //   A v113 creature with its own D.stance keeps it.
 // * The Searing Sands cultists (Zealot of the Endless One, Salt Caller) were a bare default body: they now have their own
 //   builders (serpent mask and ritual scars / salt-crusted robes and a hood).
-var ST177={
+var ST178={
   orc:{sx:.2,hx:-.18,lk:.24,rk:.24,az:.1,lz:-.1,ex:-.2,le:-.25},
   troll:{sx:.28,hx:-.26,lk:.27,rk:.27,az:.12,lz:-.12,ax:-.12,lx:-.15,ex:-.3,le:-.35},
   trollsh:{sx:.24,hx:-.22,lk:.20,rk:.20,lz:-.08,le:-.25},
@@ -55385,8 +55521,8 @@ var ST177={
   dgwretch:{sx:.3,hx:-.26,lk:.27,rk:.27,ax:-.3,lx:-.3,ex:-.5,le:-.5},
   ss165zealot:{sx:.16,hx:-.14,lk:.27,rk:.27,lz:-.1,le:-.4},
   ss165caller:{sx:.1,hx:-.08,lk:.10,rk:.10,lz:-.08,le:-.35}};
-{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{if(g)g.hk177=key}catch(_){}return g}}
-{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const St=g&&g.hk177&&ST177[g.hk177],b=g&&g.h&&g.h.bones;
+{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{if(g)g.hk178=key}catch(_){}return g}}
+{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const St=g&&g.hk178&&ST178[g.hk178],b=g&&g.h&&g.h.bones;
     if(St&&b&&!(g.n3k&&N3.def[g.n3k]&&N3.def[g.n3k].stance)){for(const c in St){const ch=HACH[c];if(ch&&b[ch[0]])b[ch[0]].rotation[ch[1]]+=St[c]}
       // bent knees: each thigh swings forward half the bend so the shin comes back under the hip, and the hips drop by exactly
       // what the bend shortens the leg, so the feet stay planted
@@ -55417,9 +55553,9 @@ f137Reg('ss165caller',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHe
   for(let i=0;i<9;i++){const a=(i-4)*.2,p=n3Surf(P,.93-Math.abs(i-4)*.014,a,(P.tOff||0)+.012);k.p('chest','oct',i==4?'g':'c',i==4?gl:salt,p[0],p[1],p[2],.012)}});
 
 // ---------------- palettes: dark-fantasy colours; enemies that shared another's body get their own ----------------
-// VAR177[rig] = {'*': changes for every enemy on that body, <enemy key>: that enemy only}. The body builders (2640–2665)
-// register their palette object (VARK177[rig]); it is swapped in while the model builds and the caches get their own keys.
-var VAR177={suf:'',
+// VAR178[rig] = {'*': changes for every enemy on that body, <enemy key>: that enemy only}. The body builders (2640–2665)
+// register their palette object (VARK178[rig]); it is swapped in while the model builds and the caches get their own keys.
+var VAR178={suf:'',
   Croaker:{'*':{skin:0x48523a,skin2:0x30382a,blot:0x1c2216,belly:0x8e8668,horn:0x4a3e2c,gland:0x5e5a34,eye:0xa8802a,lip:0x4a1e1e},
     lurker:{skin:0x3c4836,skin2:0x283024,blot:0x141a10,eye:0x8aa830},
     boghorror:{skin:0x3a3a30,skin2:0x26261e,blot:0x12120c,belly:0x6e6450,eye:0xb84a24,horn:0x2a241c,gland:0x4a3a2a}},
@@ -55432,11 +55568,11 @@ var VAR177={suf:'',
   Banshee:{wraith:{gown:0x3a4658,gown2:0x1e2632,lace:0x8a96a4,hair:0x6a7480,hair2:0x4a525e,glow:0x7ab8ff}},
   Shambler:{'*':{cap:0x4a2a3a,cap2:0x6a4050}},
   SunScarab:{'*':{sh:0x6a5226,sh2:0x3e2e12,hi:0xb8963a}}};
-{const f=lpRig;lpRig=function(c,n,D){const V=VAR177[n],K=window.VARK177&&VARK177[n],key=c&&c.g&&c.g[0];if(!V||!K)return f.apply(this,arguments);
-  const own=key&&V[key],ov=Object.assign({},V['*']||{},own||{}),old={};for(const q in ov){old[q]=K[q];K[q]=ov[q]}const o=VAR177.suf;VAR177.suf=own?'|v177'+key:'|v177';
-  try{return f.apply(this,arguments)}finally{for(const q in old)K[q]=old[q];VAR177.suf=o}}}
-{const f=lpGeo;lpGeo=function(key){if(VAR177.suf&&key){arguments[0]=key+VAR177.suf}return f.apply(this,arguments)}}
-{const f=dkBake;dkBake=function(P,O,key){if(VAR177.suf&&key&&/^LP\|/.test(key))key+=VAR177.suf;return f.call(this,P,O,key)}}
+{const f=lpRig;lpRig=function(c,n,D){const V=VAR178[n],K=window.VARK178&&VARK178[n],key=c&&c.g&&c.g[0];if(!V||!K)return f.apply(this,arguments);
+  const own=key&&V[key],ov=Object.assign({},V['*']||{},own||{}),old={};for(const q in ov){old[q]=K[q];K[q]=ov[q]}const o=VAR178.suf;VAR178.suf=own?'|v178'+key:'|v178';
+  try{return f.apply(this,arguments)}finally{for(const q in old)K[q]=old[q];VAR178.suf=o}}}
+{const f=lpGeo;lpGeo=function(key){if(VAR178.suf&&key){arguments[0]=key+VAR178.suf}return f.apply(this,arguments)}}
+{const f=dkBake;dkBake=function(P,O,key){if(VAR178.suf&&key&&/^LP\|/.test(key))key+=VAR178.suf;return f.call(this,P,O,key)}}
 
 // ---------------- skeletons: joined up ----------------
 // The skeleton foes (Skeleton Warrior, Bone Archer) had rib hoops that met nothing, feet hanging below the shins and a loincloth
@@ -55446,7 +55582,7 @@ var VAR177={suf:'',
     mdLoft(B,[.5,.6,.7,.8,.9,1.0,1.05].map((y,i)=>({p:[0,y,-.074],rx:.03,f:.026,b:.03,w:mdTorsoW(y)})),{seg:6,capA:true,capB:true,col:m=>Math.round(m.y*40)%2?bone:bd});
     k.L('chest','c',bone,[0,.95,.104],[0,.77,.112],.016,.012,5);
     [-1,1].forEach(s=>{const l=s<0?'lh2':'rh2',A=P.bones[l];k.p(l,'sph','c',bone,A[1],A[2]+.006,A[3]-.008,.026,.024,.03);k.L(l,'c',bd,[A[1],A[2]+.006,A[3]-.006],[A[1],.045,A[3]-.035],.019,.017,5)});
-    mdKit(B,k)}catch(e){console.warn('v177 skel',e)}return r}}
+    mdKit(B,k)}catch(e){console.warn('v178 skel',e)}return r}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

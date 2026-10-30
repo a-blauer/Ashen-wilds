@@ -119,7 +119,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     drum(x,z){drum(x,z,pal.wood,1.1)},
     totem(x,z,a){const h=rr(3.2,4.4),sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.7);let y=0;const cs=[pal.wood,pal.acc,pal.woodD,pal.trim];
       for(let i=0;i<4;i++){const hh=h/4,rd=.32-i*.03;TQ(sg,Q.cyl,S(cs[i%4]),0,y+hh/2,0,rd,hh,rd);TQ(sg,Q.box,S(pal.woodD),rd*.85,y+hh*.55,0,.1,hh*.4,rd*1.2);[-1,1].forEach(s=>TQ(sg,Q.box,G(i%2?0xffd060:0x0a0808),rd*.92,y+hh*.62,s*rd*.32,.04,.06,.08));y+=hh}
-      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.42,.04,.9,.18,s*.15,0,0))},
+      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.3,.04,.9,.18,s*.15,0,0))},   // v177: hung on the pole (they hung .1 off it)
     altar(x,z,a){const sg=sub(x,z,a,0);TQ(sg,Q.box,STN,0,.45,0,1.8,.9,1);TQ(sg,Q.box,STD,0,.93,0,2,.1,1.15);TQ(sg,Q.box,STD,0,.1,0,2.4,.2,1.5);const d=TQ(sg,Q.disc,G(Lc[0]),0,.99,0,.3,.3,1,-P2,0,0);d.castShadow=false;
       bRect(x,z,a,2.4,1.5);take(x,z,1.5);candles(x,z,6,1.2,pal.lant);halo(x,z,1.8,Lc[0],.14,.05);skull(x+Math.cos(a+P2)*.6,.98,z+Math.sin(a+P2)*.6,.9,pal.bone,a)},
     brazier(x,z){brazier(x,z,pal.fire,1.15)},
@@ -152,7 +152,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     carcass(x,z,a){carcass(x,z,a,1.3,0x5a3a30,pal.bone)}};
   // ---------------- outskirts ----------------
   const lantern=(x,z,h)=>{h=h||2.4;blk(x,z,0);take(x,z,.5);const y=gy(x,z);put(Q.cyl4,WD,x,h/2,z,.06,h,.06);put(Q.box,WD,x+.3,h-.05,z,.62,.05,.05);
-    putY(Q.box,G(pal.lant),x+.55,y+h-.4,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.22,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.6,z,.1,.05,.1);halo(x+.55,z,1.4,pal.lant,.16,.06)};
+    putY(Q.box,G(pal.lant),x+.55,y+h-.33,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.15,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.465,z,.1,.05,.1);   // v177: hung from the arm, the base under the glass (both stood ~.07 off)
+    halo(x+.55,z,1.4,pal.lant,.16,.06)};
   const tower=(x,z,a)=>{const H=4.2,sg=sub(x,z,a,0);blk(x,z,1);take(x,z,1.6);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([u,v])=>TQ(sg,Q.cyl,WD,u*.75,H/2,v*.75,.1,H+.2,.1,v*.04,0,-u*.04));
     TQ(sg,Q.box,WOOD,0,H,0,1.9,.14,1.9);[[0,-.9,0],[0,.9,0],[-.9,0,1],[.9,0,1]].forEach(([u,v,q])=>TQ(sg,Q.box,WOOD,u,H+.38,v,q?.08:1.9,.6,q?1.9:.08));
     [[-1,1],[1,-1]].forEach(([u,v])=>TQ(sg,Q.cyl4,WD,0,H*.45,v*.75,.04,2.4,.04,u*.6,0,0));TQ(sg,CG.tent,S(pal.thatch),0,H+1.5,0,1.5,1,1.5,0,Math.PI/4,0);
@@ -245,9 +246,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       const P=[-1,1].map(s=>[x+sx*hw*s,z+sz*hw*s]);
       if(fk=='ruin'||fk=='stone')arch(x,z,ga,hw*2,3.4,pal.stone,.6);
       else if(fk=='hedge'){const sg=sub(x,z,ga+P2,0);TQ(sg,Q.arc,S(0x1a1416),0,0,0,hw,2.6,1.2,0,P2,0);P.forEach(([px,pz])=>blk(px,pz,0))}
-      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.2,pz,.2,.18,.2)});
+      else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.14,pz,.2,.18,.2)});
         seg(P[0][0],gy(P[0][0],P[0][1])+H-.25,P[0][1],P[1][0],gy(P[1][0],P[1][1])+H-.25,P[1][1],.14,M,Q.cyl);
-        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s];seg(c[0],gy(c[0],c[1])+H+.05,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,gy(c[0],c[1])+H+.9,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
+        const g0=gy(P[0][0],P[0][1]),g1=gy(P[1][0],P[1][1]);   // v177: the tusks grow out of the lintel (they stood ~.2 above it, in the air)
+        [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s],yb=g0+(g1-g0)*(hw+.9*s)/(2*hw)+H-.25+.06;seg(c[0],yb,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,yb+.85,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
       // braziers / torches just inside, a banner outside
       const bi=[-1,1].map(s=>[x-Math.cos(ga)*1.3+sx*(hw+.7)*s,z-Math.sin(ga)*1.3+sz*(hw+.7)*s]);
       bi.forEach(([bx,bz])=>{if(!ground(bx,bz,.2))return;if(gi==0)brazier(bx,bz,pal.fire,1.2);else torch(bx,bz,pal.fire,2)});
