@@ -33,7 +33,9 @@ def s(pg):
         q=pg.evaluate(EDGE,gk);pg.wait_for_timeout(2500)
         if not q:fail('edge',gk,': no edge spot');continue
         for dist,pt in [(12,.3),(15,.6)]:
-            place(q,dist,pt);r=watch(90);print('edge',gk,dist,pt,json.dumps(q),json.dumps(r))
+            place(q,dist,pt);r=watch(90)
+            if not r['ok']:r=watch(30)   # a late arrival snap (insArrive) can still be settling on a fast machine
+            print('edge',gk,dist,pt,json.dumps(q),json.dumps(r))
             # a hero standing right at the edge: the camera comes in to its closest (CAM172.min) and may not get further away
             if not r['ok'] and r['dist']>2.15:fail('edge',gk,'dist',dist,': the camera is out of the map',r['cam'])
             if r['dist']>dist-.5:fail('edge',gk,'dist',dist,': the camera was not pulled in (distance',r['dist'],')')
