@@ -55774,7 +55774,7 @@ function bw181Wings(x,c,C,mat,sp){const L=typeof evo100Lv=='function'&&EVO100.D.
 // after the shared animation: fold toward the creature's state, pick the shared geometry for that fold, scale the flap
 function bw181Anim(x,now){const B=x.bw181,g=x.g,G=(g&&g._ga)||{},S=x.spec;const dt=B.t?Math.min(.1,Math.max(0,(now-B.t)/1000)):0;B.t=now;
   const w=G.w||0,run=typeof gaSS=='function'?gaSS(.3,1.4,G.Fr||0):0,m5=g&&g._m105;
-  let tgt=1-w*(.45+.4*run);if((g&&g.atk)||S.anim=='fly'||(m5&&m5.M&&m5.M.wing))tgt=0;
+  let tgt=1-w*(.45+.4*run);if((g&&(g.atk||g.ak||g._lk!=null||g.lk||g._bo))||S.anim=='fly'||(m5&&m5.M&&m5.M.wing))tgt=0; // attacks (enemy moves g.ak, companion lunges g._lk / g.lk), flight, wing abilities
   if(B.force!=null)B.f=tgt=B.force;
   B.f+=(tgt-B.f)*(1-Math.exp(-dt*(tgt<B.f?10:5)));if(Math.abs(B.f-tgt)<.002)B.f=tgt;
   const lv=Math.round(B.f*BW181.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw181Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
