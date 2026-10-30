@@ -1,4 +1,4 @@
-# v177: companion bodies hold together. Builds every companion species at every evolution (0-3), every trait (Horned, Spiked,
+# v178: companion bodies hold together. Builds every companion species at every evolution (0-3), every trait (Horned, Spiked,
 # Armored, Universal), the colour variants (Ember, Frost, Shadow, Golden), a rare variant, shiny, and fused companions
 # (a second / third species' signature parts), then checks in idle, two walk phases and a bite:
 #  * FAIL on a floating piece: any separate piece of mesh more than FLOAT_MM (4 mm; MOVE_MM 12 mm in walk / bite frames) from the rest of the model that does not pierce it
@@ -15,7 +15,7 @@ FLOAT_MM=float(os.environ.get('FLOAT_MM','4'))
 # in walk and bite frames a rigid ornament on bending skin opens a gap for a moment: up to MOVE_MM is allowed there
 MOVE_MM=float(os.environ.get('MOVE_MM','12'))
 JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimationFrame=()=>0;
-  if(!window._v177){window._v177=1;const tag=(r,key)=>{(Array.isArray(r)?r:[r]).forEach(m=>{if(m&&m.isMesh)m.userData._bk=String(key||'').split('|').slice(0,2).join('|')})};
+  if(!window._v178){window._v178=1;const tag=(r,key)=>{(Array.isArray(r)?r:[r]).forEach(m=>{if(m&&m.isMesh)m.userData._bk=String(key||'').split('|').slice(0,2).join('|')})};
     {const o=dkBake;dkBake=function(P,O,key){const r=o.apply(this,arguments);tag(r,key||'dk');return r}}
     {const o=bakeMesh;bakeMesh=function(parts,O,key){const r=o.apply(this,arguments);tag(r,key||'bake');return r}}}
   const sc=new THREE.Scene();
@@ -113,5 +113,5 @@ def s(pg):
     for o in okd[:40] if verbose else []:print('ok',o)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])
-    print('==== v177_comp_float: %d configs, %d fails, %d allowed hovering parts'%(len(L),len(fails)+len(errs[:6]),len(okd)))
+    print('==== v178_comp_float: %d configs, %d fails, %d allowed hovering parts'%(len(L),len(fails)+len(errs[:6]),len(okd)))
 play.run(s)

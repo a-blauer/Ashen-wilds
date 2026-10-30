@@ -46,7 +46,7 @@ LPR.Gravewyrm={
       k.p('head','box','c',0x050403,s*.104,.406,.692,.004,.022,.004,0,s*.55,0);
       k.p('head','box','c',ven?dk:bone2,s*.085,.44,.64,.06,.016,.09,.15,s*.45,s*.25);
       // nostrils
-      k.p('head','sph','c',0x0a0908,s*.02,.364,.846,.008,.006,.008); // v177: on the snout (they floated 2 cm above it)
+      k.p('head','sph','c',0x0a0908,s*.02,.364,.846,.008,.006,.008); // v178: on the snout (they floated 2 cm above it)
       // fangs
       k.p('head','cone4','c',0xf4eee0,s*.05,.312,.79,.012,ven?.085:.06,.012,Math.PI+.15,0,0);
       k.p('head','cone4','c',0xf4eee0,s*.08,.322,.71,.009,.04,.009,Math.PI)});
@@ -58,7 +58,7 @@ LPR.Gravewyrm={
       // vertebra plates down the spine and rib bands down the flanks; tufts of grave moss
       for(let z=.3,i=0;z>-1.42;z-=.12,i++){const T=WY137.top(z),bn=wyrmBones(z)[0];
         k.L(bn,'c',i%2?bone:bone2,[T.x,T.top-.02,z+.03],[T.x,T.top+T.r*.38,z-.06],T.r*.3,.004,4);
-        if(i%2==0&&z<.15&&z>-.55)[-1,1].forEach(s=>{const P=a=>[T.x+s*(T.r+.003)*Math.cos(a),T.y+(a>0?T.r*.88:T.r*.74)*Math.sin(a)+.003*Math.sin(a),z-.02*(1-a)]; // v177: rib bands follow the flank
+        if(i%2==0&&z<.15&&z>-.55)[-1,1].forEach(s=>{const P=a=>[T.x+s*(T.r+.003)*Math.cos(a),T.y+(a>0?T.r*.88:T.r*.74)*Math.sin(a)+.003*Math.sin(a),z-.02*(1-a)]; // v178: rib bands follow the flank
           k.L(bn,'c',bone2,P(1.05),P(.45),.012,.01,3);k.L(bn,'c',bone2,P(.45),P(-.2),.01,.008,3)});
         if(i%3==1&&z<0)k.p(bn,'dod','c',0x4a5a2a,T.x+(i%2?.05:-.05),T.top-.01,z,.03,.018,.03)}
       k.L('tail3','c',bone,[WY137.curve(-1.6),.02,-1.58],[WY137.curve(-1.72),.03,-1.74],.02,.002,4)}
@@ -66,8 +66,8 @@ LPR.Gravewyrm={
       // the hood: a broad lens flaring behind the head; a pale front with dark throat bands, a ribbed back with the
       // spectacle mark, a rim of small scales
       const T=WY137.top(.3),hz=.33,hy=T.y+.05,pale=dkShade(0xd8d0a0,.95),dkr=0x14140c,rx=-.25,cr=Math.cos(rx),sr=Math.sin(rx);
-      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz+y*sr]; // v177: tilted with the hood (the sign was flipped: rim scales and marks stood up to 11 cm off it)
-      k.p('neck','sph2','c',main,0,hy,hz,.27,.24,.035,rx,0,0); // v177: rounder hood (the 7-sided one left its rim scales hanging off one side)
+      const H=(x,y,dz)=>[x,hy+y*cr,hz+dz+y*sr]; // v178: tilted with the hood (the sign was flipped: rim scales and marks stood up to 11 cm off it)
+      k.p('neck','sph2','c',main,0,hy,hz,.27,.24,.035,rx,0,0); // v178: rounder hood (the 7-sided one left its rim scales hanging off one side)
       k.p('neck','sph2','c',pale,0,hy-.01,hz+.012,.22,.19,.026,rx,0,0);
       for(let i=0;i<4;i++){const y=-.12+i*.06,w=.2*Math.sqrt(Math.max(0,1-(y/.19)**2));k.L('neck','c',0x8a7a50,H(-w,y,.04),H(w,y,.04),.006,.006,3)}
       for(let i=0;i<20;i++){const a=i/20*Math.PI*2;const p=H(Math.sin(a)*.262,Math.cos(a)*.232,0);k.p('neck','dod','c',i%2?dk:mdSh(main,.7),p[0],p[1],p[2],.011,.011,.008)}
@@ -77,7 +77,7 @@ LPR.Gravewyrm={
       {const a=H(-.075,.08,-.033),b=H(.075,.08,-.033),m=H(0,.105,-.033);k.L('neck','c',dkr,a,m,.01,.01,3).L('neck','c',dkr,m,b,.01,.01,3)}
       // big head plates, cheek venom glands, heat pits
       const hT=(x,z)=>{const H=WY137.head;let i=0;while(i<H.length-2&&H[i+1][0]<z)i++;const t=Math.max(0,Math.min(1,(z-H[i][0])/(H[i+1][0]-H[i][0]))),q=H[i].map((v,j)=>v+(H[i+1][j]-v)*t);return q[1]+q[3]*Math.sqrt(Math.max(0,1-(x/q[2])**2))};
-      [[0,.6,.05,.012,.06],[-.035,.68,.03,.01,.04],[.035,.68,.03,.01,.04],[0,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],hT(q[0],q[1])+.001,q[1],q[2],q[3],q[4],-.08,0,0)); // v177: on the head (they stood up to 3 cm above it)
+      [[0,.6,.05,.012,.06],[-.035,.68,.03,.01,.04],[.035,.68,.03,.01,.04],[0,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],hT(q[0],q[1])+.001,q[1],q[2],q[3],q[4],-.08,0,0)); // v178: on the head (they stood up to 3 cm above it)
       [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.046,.366,.806,.007,.006,.006)});
       // a ridge of keeled scales down the back
       for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.012,z,.022,.02,.036)}

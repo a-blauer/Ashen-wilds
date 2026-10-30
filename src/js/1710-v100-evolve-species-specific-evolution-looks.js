@@ -151,7 +151,7 @@ function evo100Kit(n,L,P,seed){
         pts.push(h?add(h.p,d,off):add(c,d,off+.05))}
       for(let k=0;k<N;k++)E.L(pts[k],pts[(k+1)%N],r,r,t,col,4,Object.assign({vs:1},o));return pts},
     // small glowing rune glyph lying on the surface (three strokes)
-    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,0); // v177: the stroke centre on the given point (callers already lift it 3-4 mm; with both it hung off the hide)
+    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,0); // v178: the stroke centre on the given point (callers already lift it 3-4 mm; with both it hung off the hide)
       const st=(a,b)=>E.L(add(add(p0,F.toArray(),a[1]*sz),X.toArray(),a[0]*sz),add(add(p0,F.toArray(),b[1]*sz),X.toArray(),b[0]*sz),sz*.09,sz*.09,'g',col||P.glow,3,Object.assign({vs:1},o));
       const k=(R()*3)|0;st([0,-1],[0,1]);if(k==0){st([-.5,.4],[0,1]);st([.5,.4],[0,1])}else if(k==1){st([0,.2],[.6,-.4]);st([0,.2],[-.6,-.4])}else{st([-.55,0],[.55,0]);st([.5,-.8],[0,-1])}return E},
     // gem in a metal setting on the surface
