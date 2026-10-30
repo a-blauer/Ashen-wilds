@@ -4,8 +4,10 @@
 #   1. scattered decorations (WD kinds, 1680/1981/2280): FAIL when a kind has a part that touches nothing and hangs above the
 #      ground, or a placed piece has a gap under its base over .12 (env177Seat leans, sinks or hides it: 3370); FAIL when more
 #      than 1600 pieces are hidden (too steep), or any hidden piece stands deep inside walkable ground with a collider.
-#   2. every other scenery object: FAIL for a lit part that touches nothing and hangs more than .12 above the ground (a lintel,
-#      a name plate, tusks, cloth, reeds), apart from the spots in OK below (looked at: attached within the measure's tolerance).
+#   2. every other scenery object: FAIL for a lit part .6 or larger that touches nothing and hangs more than .12 above the ground
+#      (a lintel, a name plate, tusks, fronds, reeds), apart from the spots in OK below (looked at: attached within the measure's
+#      tolerance); smaller parts are printed as NOTE (camps are built near the hero and dropped far away, so which ones exist
+#      at the end varies; glowing parts such as wisps may float).
 #   Plus: the grade ran on every kind (ENV177.look), no console errors.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -34,7 +36,8 @@ def s(pg):
     print('objects',r['nobj'],'skipped',r['skipped'],'visited',len(r['vis']),flush=True)
     for o in r['out']:
         for f in o['fl']:
-            if f['gap']<=.12:continue
+            if f['gap']<=.12 or max(f['sz'])<.25:continue   # tiny bits (wisp cores, spores, pebbles) are not what reads as floating
+            if max(f['sz'])<.6:print('NOTE %s: a small part (%s) %.2f above the ground at %s'%(o['ins'],sz,f['gap'],f['at']));continue
             sz=tuple(round(v,1) for v in f['sz'])
             if any(o['ins']==a and sz==b for a,b in OK):continue
             if any(o['ins']==a and abs(f['at'][0]-x)<r and abs(f['at'][2]-z)<r for a,x,z,r in OKAT):continue

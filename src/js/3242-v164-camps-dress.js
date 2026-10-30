@@ -152,7 +152,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     carcass(x,z,a){carcass(x,z,a,1.3,0x5a3a30,pal.bone)}};
   // ---------------- outskirts ----------------
   const lantern=(x,z,h)=>{h=h||2.4;blk(x,z,0);take(x,z,.5);const y=gy(x,z);put(Q.cyl4,WD,x,h/2,z,.06,h,.06);put(Q.box,WD,x+.3,h-.05,z,.62,.05,.05);
-    putY(Q.box,G(pal.lant),x+.55,y+h-.4,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.22,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.6,z,.1,.05,.1);halo(x+.55,z,1.4,pal.lant,.16,.06)};
+    putY(Q.box,G(pal.lant),x+.55,y+h-.33,z,.14,.22,.14);putY(Q.cone4,S(pal.metal),x+.55,y+h-.15,z,.13,.14,.13);putY(Q.cyl4,S(pal.metal),x+.55,y+h-.465,z,.1,.05,.1);   // v177: hung from the arm, the base under the glass (both stood ~.07 off)
+    halo(x+.55,z,1.4,pal.lant,.16,.06)};
   const tower=(x,z,a)=>{const H=4.2,sg=sub(x,z,a,0);blk(x,z,1);take(x,z,1.6);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([u,v])=>TQ(sg,Q.cyl,WD,u*.75,H/2,v*.75,.1,H+.2,.1,v*.04,0,-u*.04));
     TQ(sg,Q.box,WOOD,0,H,0,1.9,.14,1.9);[[0,-.9,0],[0,.9,0],[-.9,0,1],[.9,0,1]].forEach(([u,v,q])=>TQ(sg,Q.box,WOOD,u,H+.38,v,q?.08:1.9,.6,q?1.9:.08));
     [[-1,1],[1,-1]].forEach(([u,v])=>TQ(sg,Q.cyl4,WD,0,H*.45,v*.75,.04,2.4,.04,u*.6,0,0));TQ(sg,CG.tent,S(pal.thatch),0,H+1.5,0,1.5,1,1.5,0,Math.PI/4,0);

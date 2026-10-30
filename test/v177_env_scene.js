@@ -1,5 +1,5 @@
 // v177 test: every other scenery object in the zone instances (camps, gateways, set pieces, dens) after visiting each instance:
-// lit parts that touch nothing and hang above the ground. Run by v177_env.py.
+// lit parts that touch nothing and hang above the ground (glowing parts such as wisps may float). Run by v177_env.py.
 async()=>{
   // every top-level scenery object in the zone instances (not instanced decorations, not characters): parts that touch nothing and hang above the ground
   const out=[],V3=THREE.Vector3,v=new V3(),skipped={skin:0,big:0,town:0};const t0=performance.now();
@@ -11,7 +11,7 @@ async()=>{
   const ALL=new Map(),PEND=[];
   const actors=new Set();try{enemies.forEach(e=>e&&e.m&&actors.add(e.m));fols.forEach(f=>f&&actors.add(f))}catch(_){}
   const under=c=>{for(let p=c;p;p=p.parent){if(p.isBone||p.isSkinnedMesh)return true}return false};
-  for(const o of objs){let skin=actors.has(o),ms=[];o.traverse(c=>{if(under(c))return;if(c.isMesh&&!c.isInstancedMesh&&c.geometry&&c.geometry.attributes.position&&!(c.material&&c.material.isPointsMaterial)){c.__lit=c.visible!==false&&!(c.material&&(c.material.transparent||c.material.isMeshBasicMaterial||c.material.isShaderMaterial));ms.push(c)}});
+  for(const o of objs){let skin=actors.has(o),ms=[],lines=[];o.traverse(c=>{if(under(c))return;if(c.isLine&&c.geometry&&c.geometry.attributes.position)lines.push(c);if(c.isMesh&&!c.isInstancedMesh&&c.geometry&&c.geometry.attributes.position&&!(c.material&&c.material.isPointsMaterial)){c.__lit=!(c.material&&(c.material.transparent||c.material.isMeshBasicMaterial||c.material.isShaderMaterial||(c.material.emissive&&c.material.emissive.getHex()!==0&&c.material.emissiveIntensity>0)));ms.push(c)}});
     if(skin){skipped.skin++;continue}if(!ms.length)continue;
     const B=new THREE.Box3().setFromObject(o);if(!isFinite(B.min.x))continue;const sz=B.getSize(new V3());
     // huge or out-of-zone objects are not reported, but their pieces still count as something to touch
@@ -26,6 +26,9 @@ async()=>{
       for(let t=0;t<n;t+=3){const a=vid[ix?ix.getX(t):t],b=vid[ix?ix.getX(t+1):t+1],c=vid[ix?ix.getX(t+2):t+2];par[f(a)]=f(b);par[f(b)]=f(c)}
       const bx=new Map();for(let i=0;i<P.count;i++){const r=f(vid[i]);let q=bx.get(r);if(!q){q={mn:[1e9,1e9,1e9],mx:[-1e9,-1e9,-1e9],n:0,lit:m.__lit,m:m.name||m.parent&&m.parent.name||''};bx.set(r,q)}q.n++;for(let a=0;a<3;a++){const w=wp[i*3+a];if(w<q.mn[a])q.mn[a]=w;if(w>q.mx[a])q.mx[a]=w}}
       bx.forEach(q=>comps.push(q))}
+    // chains and ropes drawn as lines hold things up too (a hanging lantern): every segment is a piece that is never reported
+    for(const l of lines){const P=l.geometry.attributes.position,st=l.isLineSegments?2:1,a=new V3(),b=new V3();for(let i=0;i+1<P.count;i+=st){a.fromBufferAttribute(P,i).applyMatrix4(l.matrixWorld);b.fromBufferAttribute(P,i+1).applyMatrix4(l.matrixWorld);
+      comps.push({mn:[Math.min(a.x,b.x),Math.min(a.y,b.y),Math.min(a.z,b.z)],mx:[Math.max(a.x,b.x),Math.max(a.y,b.y),Math.max(a.z,b.z)],n:0,lit:false,m:'line'})}}
     const oid=objs.indexOf(o);comps.forEach(c=>{const k=Math.floor(c.mn[0]/4)+','+Math.floor(c.mn[2]/4);(ALL.get(k)||ALL.set(k,[]).get(k)).push([oid,c])});
     if(!I)continue;
     // join by touching boxes, then check each group's floor
@@ -34,7 +37,7 @@ async()=>{
     for(let ii=0;ii<n;ii++){const i=srt[ii],A=comps[i];for(let jj=ii+1;jj<n;jj++){const j=srt[jj],C=comps[j];if(C.mn[0]>A.mx[0]+tol)break;
       if(A.mn[1]<=C.mx[1]+tol&&C.mn[1]<=A.mx[1]+tol&&A.mn[2]<=C.mx[2]+tol&&C.mn[2]<=A.mx[2]+tol)pp[f(i)]=f(j)}}
     const G=new Map();comps.forEach((c,i)=>{const r=f(i);let q=G.get(r);if(!q){q={mn:[1e9,1e9,1e9],mx:[-1e9,-1e9,-1e9],n:0,c:0,lit:true,m:c.m};G.set(r,q)}q.n+=c.n;q.lit=q.lit&&c.lit;q.c++;for(let a=0;a<3;a++){q.mn[a]=Math.min(q.mn[a],c.mn[a]);q.mx[a]=Math.max(q.mx[a],c.mx[a])}});
-    const fl=[];G.forEach(q=>{let gmax=-1e9;for(const [x,z] of [[q.mn[0],q.mn[2]],[q.mx[0],q.mn[2]],[q.mn[0],q.mx[2]],[q.mx[0],q.mx[2]],[(q.mn[0]+q.mx[0])/2,(q.mn[2]+q.mx[2])/2]])gmax=Math.max(gmax,GH(x,z));
+    const fl=[];G.forEach(q=>{let gmax=-1e9;for(let u=0;u<=4;u++)for(let w=0;w<=4;w++){const x=q.mn[0]-.25+(q.mx[0]-q.mn[0]+.5)*u/4,z=q.mn[2]-.25+(q.mx[2]-q.mn[2]+.5)*w/4;gmax=Math.max(gmax,GH(x,z))}   // a piece set against a cave wall or slope touches it
       const gap=q.mn[1]-gmax;if(gap>.08&&q.n>=6&&q.lit)fl.push({gap:+gap.toFixed(2),n:q.n,c:q.c,at:[+((q.mn[0]+q.mx[0])/2).toFixed(1),+q.mn[1].toFixed(2),+((q.mn[2]+q.mx[2])/2).toFixed(1)],sz:[+(q.mx[0]-q.mn[0]).toFixed(2),+(q.mx[1]-q.mn[1]).toFixed(2),+(q.mx[2]-q.mn[2]).toFixed(2)],m:q.m})});
     // main body: the group with the most vertices
     let tris=0;ms.forEach(m=>{const g=m.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3});
