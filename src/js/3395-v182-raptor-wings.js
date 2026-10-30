@@ -10,7 +10,7 @@
 // spread and beating. The wing entry keeps {p (shoulder bone), s, base, amp}, so older code that nudges p still works.
 var RPW={geo:{}};
 // one feather in its bone's space: root at the origin, pointing −z, width w, a raised shaft, top colour → tip colour,
-// dark bands across (n), a dark tip; both faces (the underside a little paler: folded, it is the face that shows)
+// dark bands across (n), a dark tip; both faces (the underside paler, as on a real raptor)
 function rpwFeather(P,C,SI,b,M,len,w,top,tip,under,bands,dark){
   const st=[[0,.34],[.18,.5],[.55,.5],[.82,.36],[1,0]],v=new THREE.Vector3(),c=new THREE.Color();
   const pt=(t,side)=>{let hw=0;for(let i=0;i<st.length-1;i++)if(t>=st[i][0]&&t<=st[i+1][0]){const u=(t-st[i][0])/(st[i+1][0]-st[i][0]);hw=st[i][1]+(st[i+1][1]-st[i][1])*u}
@@ -27,44 +27,40 @@ function rpwFeather(P,C,SI,b,M,len,w,top,tip,under,bands,dark){
 function rpwRod(P,C,SI,b,M,x0,x1,r0,r1,col){const v=new THREE.Vector3(),c=new THREE.Color(col),q=(x,r,a)=>[x,Math.sin(a)*r*.7,Math.cos(a)*r];
   for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4,b2=(i+1)/4*Math.PI*2+Math.PI/4,s=[q(x0,r0,a),q(x1,r1,a),q(x1,r1,b2),q(x0,r0,b2)];
     [[0,1,2],[0,2,3],[0,2,1],[0,3,2]].forEach(t=>t.forEach(k=>{v.set(...s[k]).applyMatrix4(M);P.push(v.x,v.y,v.z);const sh=.85+.15*Math.cos(a);C.push(c.r*sh,c.g*sh,c.b*sh);SI.push(b)}))}}
-// build a wing on bone bn at model point (px,py,pz) for side s; D = design {arm, fore, hand lengths, feathers, colours}
+// build a wing on bone bn at model point (px,py,pz) for side s; D = design (segment lengths, feather groups, fold, colours).
+// Feather groups: [name, joint ('sh' arm / 'el' forearm / 'wr' hand), height above the bones, [[x along the segment, rest
+// angle, length]…], width, colours, bands, dark tips]. Every feather has its own bone, so at rest each turns to lie back.
 function rpwWing(x,bn,c,D,px,py,pz,s,mat){
   const S=x.S,r=S.bones[bn],mir=new THREE.Group();mir.position.set(s*px-r[1],py-r[2],pz-r[3]);mir.scale.x=s;x.bones[bn].add(mir);
   const B=[],mk=(par,x0,y0,z0,ry)=>{const b=new THREE.Bone();b.position.set(x0,y0,z0);b.rotation.order='YXZ';b.rotation.y=ry||0;(par||mir).add(b);B.push(b);return b};
-  const sh=mk(null,0,0,0),el=mk(sh,D.arm,0,0),wr=mk(el,D.fore,0,0),sec=[],pri=[];
-  D.sec.forEach(q=>sec.push(mk(el,q[0],.0,-.004,q[1])));D.pri.forEach(q=>pri.push(mk(wr,q[0],.002,0,q[1])));
+  const sh=mk(null,0,0,0),el=mk(sh,D.arm,0,0),wr=mk(el,D.fore,0,0),J={sh,el,wr},grp={};
+  D.groups.forEach(q=>{grp[q[0]]=q[3].map(f=>mk(J[q[1]],f[0],q[2],-.004,f[1]))});
   // rest matrices relative to the mirror group
   mir.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(mir.matrixWorld).invert(),Mr=B.map(b=>new THREE.Matrix4().multiplyMatrices(inv,b.matrixWorld));
   const P=[],C=[],SI=[],id=b=>B.indexOf(b),K=D.col;
   // leading edge: arm (starting inside the body), forearm, hand
   rpwRod(P,C,SI,id(sh),Mr[id(sh)],-.04,D.arm+.01,.022,.017,K.edge);rpwRod(P,C,SI,id(el),Mr[id(el)],-.01,D.fore+.01,.017,.013,K.edge);rpwRod(P,C,SI,id(wr),Mr[id(wr)],-.01,D.hand,.013,.007,K.edge);
-  // coverts (rigid on their segment): marginal on the arm, greater on the forearm, primary coverts on the hand
-  const cov=(b,x0,x1,n,len,w,col,y)=>{for(let i=0;i<n;i++){const t=n>1?i/(n-1):0,m=new THREE.Matrix4().makeRotationY(-.12-.18*t).setPosition(x0+(x1-x0)*t,y||.006,.008);
-    rpwFeather(P,C,SI,id(b),new THREE.Matrix4().multiplyMatrices(Mr[id(b)],m),len*(.9+.2*t),w,col,K.covTip,K.under,0,false)}};
-  cov(sh,-.02,D.arm,D.nArm,D.lArm,.08,K.cov,.008);
-  // tertials: long inner feathers next to the body (they close the gap between the body and the secondaries)
-  (D.ter||[]).forEach(q=>rpwFeather(P,C,SI,id(sh),new THREE.Matrix4().multiplyMatrices(Mr[id(sh)],new THREE.Matrix4().makeRotationY(q[1]).setPosition(q[0],.002,-.004)),q[2],D.wSec,K.sec,K.secTip,K.under,D.bands,false));
-  // flight feathers on their own bones
-  sec.forEach((b,i)=>rpwFeather(P,C,SI,id(b),Mr[id(b)],D.sec[i][2],D.wSec,K.sec,K.secTip,K.under,D.bands,false));
-  cov(el,0,D.fore,D.nFore,D.lFore,.07,K.cov,.012);
-  pri.forEach((b,i)=>rpwFeather(P,C,SI,id(b),Mr[id(b)],D.pri[i][2],D.wPri,K.pri,K.priTip,K.under,D.bands,true));
-  cov(wr,0,D.hand,3,D.lFore*.9,.06,K.cov,.012);
+  D.groups.forEach(q=>grp[q[0]].forEach((b,i)=>{const k=q[5];rpwFeather(P,C,SI,id(b),Mr[id(b)],q[3][i][2],q[4],K[k],K[k+'Tip'],K.under,q[6],q[7])}));
   const key=D.key+'|'+(c.v||'');let G=RPW.geo[key];
   if(!G){G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
     const n=SI.length,si=new Uint16Array(n*4),sw=new Float32Array(n*4);for(let i=0;i<n;i++){si[i*4]=SI[i];sw[i*4]=1}
     G.setAttribute('skinIndex',new THREE.BufferAttribute(si,4));G.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4));G.computeVertexNormals();G.computeBoundingSphere();RPW.geo[key]=G}
   const mesh=new THREE.SkinnedMesh(G,mat);mesh.castShadow=true;mesh.frustumCulled=false;mesh.userData.rpw=1;mir.add(mesh);
   mesh.bind(new THREE.Skeleton(B,Mr.map(m=>new THREE.Matrix4().copy(m).invert())),new THREE.Matrix4());
-  const rest={sec:sec.map(b=>b.rotation.y),pri:pri.map(b=>b.rotation.y)};
-  const wg={p:sh,s,base:0,amp:0,art:{sh,el,wr,sec,pri,rest,D,f:0}};x.wings.push(wg);return wg}
-// the pose: f = 0 folded … 1 spread; flap = angle of the beat at the shoulder (the elbow and wrist follow later)
-function rpwPose(wg,f,ph,amp,breath,now){const A=wg.art,D=A.D,F=D.fold,L=(a,b)=>a+(b-a)*f,sm=f*f*(3-2*f);
+  const rest={};D.groups.forEach(q=>rest[q[0]]=grp[q[0]].map(b=>b.rotation.y));
+  const wg={p:sh,s,base:0,amp:0,art:{sh,el,wr,grp,rest,D}};x.wings.push(wg);return wg}
+// the pose: f = 0 folded … 1 spread; amp / ph = the wing beat (it rolls out from the shoulder to the elbow and the wrist).
+// Folded (a raptor at rest): the arm runs back along the top of the flank, the forearm folds forward and down so the
+// wrist is the front of the folded wing, the hand runs back again; the top of the wing faces out and every feather is
+// turned to lie back toward the tail, the coverts over the flight feathers, the primaries reaching over the tail.
+function rpwPose(wg,f,ph,amp,breath){const A=wg.art,D=A.D,F=D.fold,L=(a,b)=>a+(b-a)*f,sm=f*f*(3-2*f);
   const beat=k=>amp*Math.sin(ph-k);
   A.sh.rotation.set(L(F.rx,0),L(F.ry,D.sweep),L(F.rz,D.lift)+beat(0)+breath);
   A.el.rotation.set(0,L(F.ely,D.ely),beat(.7)*.55*sm);
   A.wr.rotation.set(beat(1.3)*.25*sm,L(F.wry,D.wry),beat(1.3)*.7*sm);
-  A.sec.forEach((b,i)=>{b.rotation.y=L(F.secy+i*.02,A.rest.sec[i]);b.rotation.z=0});
-  A.pri.forEach((b,i)=>{const fan=A.rest.pri[i]+(amp>0?.06*Math.sin(ph-1.6)*(i/(A.pri.length-1)):0);b.rotation.y=L(F.priy+i*.03,fan);b.rotation.x=-beat(1.6)*.08*sm*(i/A.pri.length)})}
+  D.groups.forEach(q=>{const fa=F[q[0]];A.grp[q[0]].forEach((b,i)=>{const n=A.grp[q[0]].length,t=n>1?i/(n-1):0;
+    let rest=A.rest[q[0]][i];if(q[0]=='pri'&&amp>0)rest+=.06*Math.sin(ph-1.6)*t;
+    b.rotation.y=L(fa+(q[8]||0)*t,rest);b.rotation.x=q[0]=='pri'?-beat(1.6)*.08*sm*t:0})})}
 // drive every articulated wing after the normal creature animation
 {const f0=rigAnim;rigAnim=function(x,now,mv,sp){const r=f0.apply(this,arguments);try{if(x.wings&&x.wings.some(w=>w.art)){
   const g=x.g,A=g&&g.atk,dt=Math.min(.1,Math.max(0,(now-(x._rpwT||now))/1000));x._rpwT=now;
@@ -74,15 +70,20 @@ function rpwPose(wg,f,ph,amp,breath,now){const A=wg.art,D=A.D,F=D.fold,L=(a,b)=>
   const tgt=A?1:run>0?.35*run:settle;x._rpwF=(x._rpwF==null?tgt:x._rpwF)+(tgt-(x._rpwF==null?tgt:x._rpwF))*Math.min(1,dt*(A?9:5));
   const amp=A?.75:run>0?.28*run:0;x._rpwP=(x._rpwP||0)+dt*(A?14:9);
   const breath=Math.sin(now/650)*.015;
-  x.wings.forEach(w=>{if(w.art)rpwPose(w,x._rpwF,x._rpwP,amp,breath,now)})}}catch(e){if(!x._rpwE){x._rpwE=1;console.error('v182 wings',e)}}return r}}
+  x.wings.forEach(w=>{if(w.art)rpwPose(w,x._rpwF,x._rpwP,amp,breath)})}}catch(e){if(!x._rpwE){x._rpwE=1;console.error('v182 wings',e)}}return r}}
 
 // ---------------- Skyhawk: a hawk ----------------
 function rpwSkyhawk(C){const main=lpMain(C,.22),dk=(k)=>main.clone().multiplyScalar(k).getHex();
+  // groups: [name, joint, height, feathers [x, rest angle, length], width, colour key, bands, dark tip, fold stagger]
   return {key:'rpw|Skyhawk|'+C,arm:.2,fore:.22,hand:.12,sweep:.18,lift:.08,ely:-.28,wry:.42,
-    sec:[[.02,-.02,.23],[.06,-.05,.235],[.1,-.08,.24],[.14,-.11,.24],[.18,-.14,.235],[.215,-.18,.23]],
-    pri:[[.0,-.3,.25],[.025,-.48,.28],[.05,-.68,.3],[.075,-.88,.31],[.095,-1.08,.3],[.11,-1.27,.27],[.12,-1.45,.22]],
-    ter:[[.03,.05,.19],[.08,.02,.21],[.13,-.01,.22],[.175,-.02,.225]],nArm:5,lArm:.12,nFore:6,lFore:.11,wSec:.075,wPri:.07,bands:5,
-    fold:{rx:-1.85,ry:1.53,rz:-.1,ely:.22,wry:.1,secy:-1.05,priy:-1.5},
-    col:{edge:dk(.7),cov:dk(.62),covTip:dk(.5),sec:dk(.55),secTip:dk(.4),pri:dk(.45),priTip:dk(.28),under:main.clone().multiplyScalar(.62).lerp(new THREE.Color(0xd8ccb0),.18).getHex()}}}
+    groups:[['ter','sh',.002,[[.03,.05,.19],[.08,.02,.21],[.13,-.01,.22],[.175,-.02,.225]],.075,'sec',5,false,.12],
+      ['sec','el',0,[[.02,-.02,.23],[.06,-.05,.235],[.1,-.08,.24],[.14,-.11,.24],[.18,-.14,.235],[.215,-.18,.23]],.075,'sec',5,false,.15],
+      ['pri','wr',.002,[[.0,-.3,.25],[.025,-.48,.28],[.05,-.68,.3],[.075,-.88,.31],[.095,-1.08,.3],[.11,-1.27,.27],[.12,-1.45,.22]],.07,'pri',5,true,.12],
+      ['cArm','sh',.009,[[-.02,-.12,.11],[.03,-.16,.12],[.08,-.2,.125],[.13,-.24,.13],[.18,-.28,.13]],.08,'cov',0,false,.1],
+      ['cFore','el',.012,[[0,-.12,.11],[.045,-.16,.115],[.09,-.2,.12],[.135,-.24,.12],[.18,-.27,.115],[.22,-.3,.11]],.07,'cov',0,false,.1],
+      ['cHand','wr',.012,[[0,-.3,.1],[.05,-.45,.1],[.1,-.6,.09]],.06,'cov',0,false,.08]],
+    // folded: wing rolled so its top faces out, arm back, forearm forward-down, hand back; every feather turned to lie back
+    fold:{rx:1.3,ry:1.53,rz:-.05,ely:-2.53,wry:2.43,ter:-1.87,cArm:-1.87,sec:.66,cFore:.76,pri:-1.77,cHand:-1.67},
+    col:{edge:dk(.7),cov:dk(.62),covTip:dk(.5),sec:dk(.55),secTip:dk(.4),pri:dk(.45),priTip:dk(.28),under:main.clone().lerp(new THREE.Color(0xd8ccb0),.55).getHex()}}}
 {const D=LPR.Skyhawk,p0=D.post;D.post=function(x,c,C,mat){const sp=typeof RV137!='undefined'&&RV137.cur?RV137.cur.Skyhawk:null;if(sp&&sp!='Skyhawk')return p0.apply(this,arguments);
   const W=rpwSkyhawk(C),m=lpMat(c.v,1,D.mat);[-1,1].forEach(s=>rpwWing(x,'chest',c,W,.12,.72,.14,s,m))}}
