@@ -32,5 +32,5 @@ only then show the owner — saying what the reviewer found and what was fixed.
 
 ## 4. Automatic checks
 - `test/v180_comp_float.py` (companions) / `test/v179_enemy_parts.py` (enemies): floating pieces.
-- Clipping of separately animated parts (wings, tails) into the body: measured at build time for raptor wings
-  (`rpwFit` in 3395) — extend the same idea to any new animated part.
+- Clipping of separately animated parts (wings, tails) into the body: measure it (fold / pose the part, check its
+  vertices against the real body mesh) for any new animated part.

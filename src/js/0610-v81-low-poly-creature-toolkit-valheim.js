@@ -68,8 +68,7 @@ function lpExtras(k,c,D){
   // v180: the Golden and Universal marks grow from the head as crystal shards (they were a halo and orbs hovering over it)
   if(c.v=='Golden'&&hd){k.L(hd[0],'g',0xffd84a,[hd[1],hd[2],hd[3]],[hd[1],hd[2]+.11,hd[3]-.04],.022,.002,4);[-1,1].forEach(s=>k.L(hd[0],'g',0xe8b830,[hd[1]+s*.02,hd[2],hd[3]],[hd[1]+s*.05,hd[2]+.075,hd[3]-.03],.015,.002,4))}
   if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
-  // (v182: a rig may draw the trait its own way, D.spiked returning true: the Skyhawk raises a ruff of hackle feathers)
-  if(c.tr=='Spiked'&&!(D.spiked&&D.spiked(k,bk,c)))bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
+  if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
   if(c.tr=='Armored')lpArmor151(k,bk,D.armor||.17); // v151: a riveted war harness (was grey domes that read as stones)
   if(c.tr=='Universal'&&hd)[0,1,2].forEach(i=>{const a=(i-1)*.5;k.L(hd[0],'g',[0xd86a8a,0x6ad0e0,0xe0c060][i],[hd[1]+Math.sin(a)*.02,hd[2],hd[3]-.01*i],[hd[1]+Math.sin(a)*.07,hd[2]+.09-Math.abs(i-1)*.02,hd[3]-.05],.02,.002,4)});
 }
