@@ -77,7 +77,7 @@ def s(pg):
     if not q:fail('cave: no wall spot found')
     else:
         place(q,9.5,.3);p0=pg.evaluate("()=>GH169C.st.passes");place(q,9.5,.3,20)
-        on=shot('cave');st=pg.evaluate("()=>({st:Object.assign({},GH169C.st),t:GH169.U.uGhT.value,g:window.GH171?Object.assign({},GH171.st):null})")
+        on=shot('cave');st=pg.evaluate("()=>({st:Object.assign({},GH169C.st),t:GH169.U.uGhT?GH169.U.uGhT.value:0,g:window.GH171?Object.assign({},GH171.st):null})")
         print('cave',json.dumps(st))
         if st['st']['passes']<=p0:fail('cave: the ghost passes did not run')
         if NEW and st['t']<.99:fail('cave: the ground did not switch to glass (uGhT',st['t'],')')
