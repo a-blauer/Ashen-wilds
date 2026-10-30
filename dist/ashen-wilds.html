@@ -56011,4 +56011,372 @@ var VAR179={suf:'',
     k.L('chest','c',bone,[0,.95,.104],[0,.77,.112],.016,.012,5);
     [-1,1].forEach(s=>{const l=s<0?'lh2':'rh2',A=P.bones[l];k.p(l,'sph','c',bone,A[1],A[2]+.006,A[3]-.008,.026,.024,.03);k.L(l,'c',bd,[A[1],A[2]+.006,A[3]-.006],[A[1],.045,A[3]-.035],.019,.017,5)});
     mdKit(B,k)}catch(e){console.warn('v179 skel',e)}return r}}
+// ================= v181: feathered wings for the bird companions (Skyhawk, Stormtalon, Rocsovereign) =================
+// Owner (Oct 30 2026): "All of our bird companions aren't quite right- specifically their wings and details. Let's clean them
+// up and bring them up to standard with other models."
+// Each wing was one flat fan of triangles from a single hub (lpwWing), always held straight out to the side and black on its
+// underside. Now every wing is built from feathers: a jointed arm (humerus, forearm, hand) along the leading edge, primaries
+// on the hand, secondaries on the forearm, tertials by the body, three rows of coverts over them, an alula at the wrist and
+// pale under-coverts below. Every feather is a thin two-sided blade (its own colour above and below, barred, darker tips).
+// The shape follows the species: Skyhawk a broad rounded hawk wing, Stormtalon a long narrow pointed falcon wing, Rocsovereign
+// a broad eagle wing whose outer primaries spread into "fingers".
+// The wing folds: three key shapes (spread, half-open, folded along the flank) are built for every wing and blended on the
+// CPU into shared geometries at 11 steps (BW181.lv), so instances share them and nothing is made per creature. Standing, the
+// wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw181Push`);
+// walking it half opens and beats a little; running opens it more; attacking, flying and wing abilities spread it fully
+// (`bw181Anim` after rigAnim, which also scales the shoulder flap down while folded).
+// Evolution: the wing grows 6% per level (as before) and gains darker covert edges, bright flight-feather tips and a trimmed
+// leading edge (the old evo100Wing only worked on lpwWing fans).
+var BW181={lv:10,G:{},
+  // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
+  sp:{
+    Skyhawk:{T:()=>HWK_BODY,zs:.15,arm:[.13,.2,.15],rad:[.03,.024,.016],
+      nP:10,pL:[.27,.37,.36],pW:.044,pTip:'round',pFing:4,notch:.72,pFan:[1.25,.04],
+      nS:10,sL:.25,sW:.046,tL:.21,tW:.05,base:.2,amp:.5},
+    Stormtalon:{T:()=>ST150.body,zs:.15,arm:[.13,.24,.22],rad:[.026,.02,.014],
+      nP:10,pL:[.3,.52,.56],pW:.036,pTip:'point',pFing:0,notch:1,pFan:[1.2,.1],
+      nS:10,sL:.2,sW:.04,tL:.19,tW:.042,base:.2,amp:.5},
+    Rocsovereign:{T:()=>RS150.body,zs:.14,arm:[.15,.24,.17],rad:[.038,.03,.02],
+      nP:10,pL:[.31,.45,.43],pW:.05,pTip:'round',pFing:6,notch:.55,pFan:[1.3,-.22],
+      nS:12,sL:.32,sW:.056,tL:.26,tW:.06,base:.18,amp:.45}},
+  // the three key poses: joint angles in the wing plane (from the span direction toward the back), the plane (back V and
+  // up N), and how far the folded wing sits out from the shoulder
+  pose:{sp:{ph:[.18,-.1,.3],V:[0,-.04,-1],N:[0,1,.12]},fo:{ph:[1.38,-1.6,1.52],V:[-.17,-.1,-1],N:[1,.3,0]}}};
+// colours per species (THREE.Color): cov(erts), covD, fl(ight), bar, tip, und(er), undBar, lin(ing), lead (leading edge)
+function bw181Cols(sp,C){const c=x=>new THREE.Color(x),mul=(a,k)=>a.clone().multiplyScalar(k),mix=(a,b,t)=>a.clone().lerp(b instanceof THREE.Color?b:c(b),t);
+  if(sp=='Stormtalon'){const m=lpMain(C,.2),fl=mix(mul(m,.38),0x14161c,.45);
+    return {cov:mul(m,.88),covD:mul(m,.62),fl,bar:mix(fl,0x5a6474,.35),tip:c(0x101216),und:c(0xc8ccd2).lerp(m,.12),undBar:mix(fl,0xc8ccd2,.45),lin:c(0xdfe2e6).lerp(m,.08),lead:c(0xa8b8c8)}}
+  if(sp=='Rocsovereign'){const m=lpMain(C,.25),dk=mix(mul(m,.32),0x2a1e14,.35),cream=c(0xe8d8b0).lerp(m,.25);
+    return {cov:m.clone(),covD:mul(m,.6),fl:dk,bar:mix(dk,cream,.42),tip:c(0x1a140e),und:mix(cream,dk,.12),undBar:mix(dk,cream,.25),lin:cream.clone(),lead:mix(cream,m,.35)}}
+  const m=lpMain(C,.22),fl=mix(mul(m,.5),0x3a3024,.3),bel=c(0xd8ccb0);
+  return {cov:m.clone(),covD:mul(m,.68),fl,bar:mul(fl,.62),tip:mix(mul(m,.25),0x221c18,.5),und:mix(bel,m,.15),undBar:mix(fl,bel,.35),lin:mix(bel,m,.18),lead:mul(m,1.12)}}
+// piecewise-linear lookup in [v0, v(.7), v1]
+function bw181PL(a,u){return u<.7?a[0]+(a[1]-a[0])*u/.7:a[1]+(a[2]-a[1])*(u-.7)/.3}
+// width profile of a blade along its length t (0 root .. 1 tip)
+function bw181WF(t,shape,notch){let w=t<.18?.45+.55*t/.18:1;
+  if(shape=='point'){if(t>.45)w*=Math.max(0,1-(t-.45)/.55)*.9+.1*(1-t)}
+  else if(shape=='lance'){if(t>.3)w*=Math.max(0,1-(t-.3)/.7)}
+  else{const te=.7;if(t>te)w*=Math.sqrt(Math.max(0,1-Math.pow((t-te)/(1-te),2)))}
+  if(notch<1&&t>.42)w*=notch+(1-notch)*Math.max(0,(.5-t)/.08);  // emarginated outer primaries: the "fingers"
+  return w}
+// push a point (model space, right side) out of the body loft T so it clears it by clr; returns the displacement or null
+function bw181Push(T,x,y,z,clr){const z0=T[0][0];let zh=T[T.length-1][0];for(let i=0;i<T.length;i++)if(T[i][6]){zh=T[i][0];break}
+  if(z<z0||z>zh)return null;const q=dh150At(T,z),dy=y-q.y,h=dy>0?q.a:q.b,u=x/q.w,v=dy/h,r=Math.hypot(u,v);if(r<1e-4)return null;
+  const rad=Math.hypot(u*q.w,v*h)/r,rt=1.035+clr/rad;if(r>=rt)return null;const k=rt/r;return [x*k-x,dy*k-dy,0]}
+// ---------------- the wing ----------------
+// builds the three key shapes of the right wing in the shoulder's space: {P:[spread, half, folded] Float32Arrays, C, piv}
+function bw181Build(sp,C,L,P){
+  const D=BW181.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw181Cols(sp,C),sc=1+.06*L;
+  const q=dh150At(T,D.zs),piv=[q.w*.62,q.y+q.a*.62,D.zs];
+  // evolution colours
+  if(L>=2){K.covEdge=K.covD.clone().lerp(new THREE.Color(P.dark),.45)}
+  if(L>=3){K.glowTip=new THREE.Color(P.glow)}
+  if(L>=4){K.lead=K.cov.clone().lerp(new THREE.Color(P.trim),.4)}
+  if(L>=5){K.bar=K.bar.clone().lerp(new THREE.Color(P.glowD),.3)}
+  const POS=[[],[],[]],COL=[];
+  // pose frames (t 0 spread, .5 half, 1 folded)
+  const B0=BW181.pose.sp,B1=BW181.pose.fo,mkQ=(V,N0)=>{const v=new V3(...V).normalize(),n=new V3(...N0);n.sub(v.clone().multiplyScalar(n.dot(v))).normalize();
+      const u=new V3().crossVectors(v,n);return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(u,v,n))};
+  const qa=mkQ(B0.V,B0.N),qb=mkQ(B1.V,B1.N);
+  const F=[0,.5,1].map(t=>{const Q=qa.clone().slerp(qb,t),U=new V3(1,0,0).applyQuaternion(Q),V=new V3(0,1,0).applyQuaternion(Q),N=new V3(0,0,1).applyQuaternion(Q);
+    const ph=[0,1,2].map(i=>B0.ph[i]+(B1.ph[i]-B0.ph[i])*t),A=D.arm.map(l=>l*sc);
+    const S=[0,0],E=[S[0]+A[0]*Math.cos(ph[0]),S[1]+A[0]*Math.sin(ph[0])],W=[E[0]+A[1]*Math.cos(ph[1]),E[1]+A[1]*Math.sin(ph[1])],H=[W[0]+A[2]*Math.cos(ph[2]),W[1]+A[2]*Math.sin(ph[2])];
+    const O=new V3(q.w*.32*t,-.01*t,-.01*t);
+    return {t,U,V,N,ph,S,E,W,H,O,kb:.55*(1-t),lm:1+.25*t,aW:W[0]}});
+  // (a, b, n) in the wing plane of frame f → shoulder space
+  const map=(f,a,b,n)=>f.O.clone().addScaledVector(f.U,a).addScaledVector(f.V,b).addScaledVector(f.N,n+f.kb*Math.pow(Math.max(0,a-f.aW),2));
+  const dir=(f,th)=>f.U.clone().multiplyScalar(Math.cos(th)).addScaledVector(f.V,Math.sin(th)).normalize();
+  const tc=new THREE.Color();
+  const tri=(vs,k,ia,ib,ic)=>{POS[k].push(vs[ia].x,vs[ia].y,vs[ia].z,vs[ib].x,vs[ib].y,vs[ib].z,vs[ic].x,vs[ic].y,vs[ic].z)};
+  const colTri=c=>{for(let i=0;i<3;i++)COL.push(c.r,c.g,c.b)};
+  // one feather: per pose g(f) → {r:[a,b], th, n}; len, w (half width), shape, notch, ns (stations), kind (colour scheme)
+  const blade=(g,o)=>{const ST=o.ns==4?[0,.35,.72,1]:o.ns==5?[0,.25,.55,.8,1]:[0,.14,.32,.52,.7,.86,1],len=o.len*sc,w=o.w*sc,th=Math.max(.0025,w*.09);
+    let first=true;
+    F.forEach((f,k)=>{const G=g(f),R=map(f,G.r[0],G.r[1],G.n*f.lm),d=dir(f,G.th),n=f.N.clone(),lw=new V3().crossVectors(d,n).normalize(),dr=o.droop==null?.05:o.droop;
+      const rows=ST.map(t=>{const wf=bw181WF(t,o.shape,o.notch==null?1:o.notch),cam=.14*w*wf,c=R.clone().addScaledVector(d,len*t).addScaledVector(n,-dr*len*t*t*(1-f.t*.7));
+        const p=bw181Push(T,c.x+piv[0],c.y+piv[1],c.z+piv[2],.008+Math.max(0,G.n)*f.lm);if(p)c.add(new V3(...p));
+        return [c.clone().addScaledVector(lw,w*.75*wf).addScaledVector(n,-cam*.3),c.clone().addScaledVector(n,th*.5+cam),c.clone().addScaledVector(n,-th*.5+cam*.8),c.clone().addScaledVector(lw,-w*1.25*wf).addScaledVector(n,-cam*.3)]});
+      for(let i=0;i<ST.length-1;i++){const a=rows[i],b=rows[i+1],vs=[a[0],a[1],a[2],a[3],b[0],b[1],b[2],b[3]],tm=(ST[i]+ST[i+1])/2;
+        // top: lead, rachis, trail
+        tri(vs,k,0,1,4);tri(vs,k,1,5,4);tri(vs,k,1,3,5);tri(vs,k,3,7,5);
+        // bottom
+        tri(vs,k,0,6,2);tri(vs,k,0,4,6);tri(vs,k,2,6,3);tri(vs,k,3,6,7);
+        if(first){const top=[o.col(tm,0,1).clone(),o.col(tm,1,1).clone()],bot=[o.col(tm,0,0).clone(),o.col(tm,1,0).clone()];colTri(top[0]);colTri(top[0]);colTri(top[1]);colTri(top[1]);colTri(bot[0]);colTri(bot[0]);colTri(bot[1]);colTri(bot[1])}}
+      first=false})};
+  // colour schemes
+  const flight=(nb,j)=>(t,side,top)=>{if(top){if(t>.86)return K.glowTip&&t>.9?tc.copy(K.tip).lerp(K.glowTip,.4):tc.copy(K.tip);const b=Math.floor((t-.2)*nb);tc.copy(t>.2&&b%2==1?K.bar:K.fl);if(side)tc.multiplyScalar(.9);return tc.multiplyScalar(.96+.08*((j*7)%3)/2)}
+      if(t>.88)return tc.copy(K.tip).lerp(K.und,.25);const b=Math.floor((t-.15)*(nb+1));return tc.copy(t>.15&&b%2==1?K.undBar:K.und)};
+  const covert=(base,j)=>(t,side,top)=>{if(!top)return tc.copy(K.lin);tc.copy(base);if(t>.78&&K.covEdge)tc.lerp(K.covEdge,.6);else if(t>.8)tc.multiplyScalar(.84);if(side)tc.multiplyScalar(.93);return tc.multiplyScalar(.97+.05*((j*5)%4)/3)};
+  const lin=(t,side,top)=>top?tc.copy(K.cov).multiplyScalar(.85):tc.copy(K.lin).multiplyScalar(t>.7?.9:1);
+  // ---- primaries (0 inner .. nP-1 outer) along the hand ----
+  const nP=D.nP,nS=D.nS,lerp=(a,b,t)=>a+(b-a)*t;
+  for(let i=0;i<nP;i++){const u=i/(nP-1),fing=i>=nP-D.pFing,Lp=bw181PL(D.pL,u);
+    blade(f=>{const s=lerp(.06,.9,u),r=[f.W[0]+(f.H[0]-f.W[0])*s,f.W[1]+(f.H[1]-f.W[1])*s];
+      const thS=f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),thF=1.53+.008*i,th=lerp(thS,thF,f.t);
+      return {r,th,n:.0012*(nP-1-i)}},{len:Lp,w:D.pW*(fing?.92:1),shape:D.pTip,notch:fing?D.notch:1,col:flight(4,i),droop:.06})}
+  // ---- secondaries (0 at the wrist .. nS-1 at the elbow) along the forearm ----
+  for(let j=0;j<nS;j++){const v=j/(nS-1);
+    blade(f=>{const s=.04+.92*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s];
+      const thS=f.ph[1]+1.5+.28*v,thF=1.24+.2*v;return {r,th:lerp(thS,thF,f.t),n:.004+.0012*j}},{len:D.sL*(1-.08*v),w:D.sW,shape:'round',col:flight(3,j+3),droop:.04})}
+  // ---- tertials: long inner feathers by the body ----
+  for(let j=0;j<3;j++)blade(f=>{const s=.1+.18*j,r=[f.E[0]+(f.S[0]-f.E[0])*s,f.E[1]+(f.S[1]-f.E[1])*s];return {r,th:lerp(1.85+.1*j,1.47+.03*j,f.t),n:.009+.001*j}},
+    {len:D.tL*(1-.12*j),w:D.tW,shape:'round',col:covert(j%2?K.covD:K.cov,j),droop:.03});
+  // ---- greater coverts (over the secondaries and the inner primaries) ----
+  for(let j=0;j<nS;j++){const v=j/(nS-1);blade(f=>{const s=.04+.92*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s],th=lerp(f.ph[1]+1.5+.28*v,1.24+.2*v,f.t),d=[Math.cos(th),Math.sin(th)];
+      return {r:[r[0]-d[0]*.012*sc,r[1]-d[1]*.012*sc],th,n:.0065+.0008*j}},{len:D.sL*.46,w:D.sW*.95,shape:'round',ns:5,col:covert(K.cov,j),droop:.02})}
+  for(let i=0;i<nP-1;i++){const u=i/(nP-1);blade(f=>{const s=lerp(.06,.9,u),r=[f.W[0]+(f.H[0]-f.W[0])*s,f.W[1]+(f.H[1]-f.W[1])*s],th=lerp(f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),1.53+.008*i,f.t);
+      return {r,th,n:.007+.001*(nP-1-i)}},{len:bw181PL(D.pL,u)*.36,w:D.pW*.9,shape:'round',ns:5,col:covert(K.covD,i),droop:.02})}
+  // ---- median coverts ----
+  for(let j=0;j<nS;j++){const v=j/(nS-1);blade(f=>{const s=.02+.96*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s],th=lerp(f.ph[1]+1.45+.3*v,1.3+.16*v,f.t);
+      return {r,th,n:.011+.0006*j}},{len:D.sL*.28,w:D.sW*.85,shape:'round',ns:4,col:covert(K.cov,j+1),droop:0})}
+  // ---- lesser and marginal coverts along the arm (the leading edge) ----
+  const NL=12;for(let j=0;j<NL;j++){const v=j/(NL-1);blade(f=>{// along the path shoulder → elbow → wrist → part of the hand
+      const seg=v<.3?[f.S,f.E,v/.3]:v<.8?[f.E,f.W,(v-.3)/.5]:[f.W,f.H,(v-.8)/.2*.55],r=[seg[0][0]+(seg[1][0]-seg[0][0])*seg[2],seg[0][1]+(seg[1][1]-seg[0][1])*seg[2]];
+      const th=v<.3?lerp(1.9,1.45,f.t):v<.8?lerp(f.ph[1]+1.45,1.32,f.t):lerp(f.ph[2]+1.35,1.45,f.t);return {r,th,n:.015+.0006*j}},
+      {len:.1*(1+.2*Math.sin(j*2.3)),w:.035,shape:'round',ns:4,col:(t,side,top)=>top?tc.copy(t<.5?K.lead:K.cov).multiplyScalar(.95+.1*(j%2)):tc.copy(K.lin),droop:0})}
+  // ---- alula: three small feathers on the thumb at the wrist ----
+  for(let j=0;j<3;j++)blade(f=>({r:[f.W[0]+.01*j,f.W[1]-.008*j],th:lerp(f.ph[2]-.3-.18*j,1.5,f.t),n:.014+.001*j}),{len:.07+.02*j,w:.022,shape:'lance',ns:4,col:covert(K.covD,j),droop:0});
+  // ---- under-coverts (the pale lining beneath) ----
+  for(let j=0;j<nS;j+=1){const v=j/(nS-1);blade(f=>{const s=.04+.92*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s];return {r,th:lerp(f.ph[1]+1.5+.28*v,1.24+.2*v,f.t),n:-.006}},
+      {len:D.sL*.42,w:D.sW,shape:'round',ns:4,col:lin,droop:0})}
+  for(let i=0;i<nP-2;i++){const u=i/(nP-1);blade(f=>{const s=lerp(.06,.9,u),r=[f.W[0]+(f.H[0]-f.W[0])*s,f.W[1]+(f.H[1]-f.W[1])*s];
+      return {r,th:lerp(f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),1.53,f.t),n:-.006}},{len:bw181PL(D.pL,u)*.33,w:D.pW,shape:'round',ns:4,col:lin,droop:0})}
+  // ---- the arm: a flattened tube along the leading edge (shoulder → elbow → wrist → hand) ----
+  {const NR=8;let first=true;F.forEach((f,k)=>{const path=[];const add=(A,B,n)=>{for(let i=0;i<n;i++){const t=i/n;path.push([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t])}};
+      add(f.S,f.E,3);add(f.E,f.W,4);add(f.W,[f.W[0]+(f.H[0]-f.W[0])*.62,f.W[1]+(f.H[1]-f.W[1])*.62],2);path.push([f.W[0]+(f.H[0]-f.W[0])*.62,f.W[1]+(f.H[1]-f.W[1])*.62]);
+      const R=D.rad.map(r=>r*sc),rad=i=>{const t=i/(path.length-1);return t<.35?R[0]+(R[1]-R[0])*t/.35:t<.78?R[1]+(R[2]-R[1])*(t-.35)/.43:R[2]*(1-(t-.78)/.22*.6)};
+      const rings=path.map((p,i)=>{const c=map(f,p[0],p[1],.004),nx=path[Math.min(i+1,path.length-1)],pv=path[Math.max(i-1,0)],ax=map(f,nx[0],nx[1],.004).sub(map(f,pv[0],pv[1],.004)).normalize(),
+        o1=new V3().crossVectors(ax,f.N).normalize(),o2=new V3().crossVectors(o1,ax).normalize(),r=rad(i);
+        const out=[];for(let s=0;s<NR;s++){const a=s/NR*Math.PI*2;out.push(c.clone().addScaledVector(o1,Math.cos(a)*r).addScaledVector(o2,Math.sin(a)*r*.62))}return out});
+      for(let i=0;i<rings.length-1;i++)for(let s=0;s<NR;s++){const s1=(s+1)%NR,vs=[rings[i][s],rings[i][s1],rings[i+1][s],rings[i+1][s1]];tri(vs,k,0,2,1);tri(vs,k,1,2,3);
+        if(first){const up=Math.sin((s+.5)/NR*Math.PI*2)>0;tc.copy(up?K.cov:K.lin);if(Math.cos((s+.5)/NR*Math.PI*2)>.5)tc.copy(K.lead);colTri(tc);colTri(tc)}}
+      // close the hand end
+      const e=rings[rings.length-1],ce=e.reduce((a,b)=>a.add(b),new V3()).multiplyScalar(1/NR);for(let s=0;s<NR;s++){const s1=(s+1)%NR,vs=[e[s],e[s1],ce];tri(vs,k,0,1,2);if(first)colTri(tc.copy(K.cov))}
+      first=false})}
+  return {P:POS.map(a=>new Float32Array(a)),C:new Float32Array(COL),piv}}
+// the shared geometry of a wing at fold level i (0 spread .. BW181.lv folded), made on first use
+function bw181Geo(key,d,i){const G=BW181.G[key]||(BW181.G[key]={d,g:[]});if(G.g[i])return G.g[i];
+  const f=i/BW181.lv,P=G.d.P,o=new Float32Array(P[0].length);let A,B,t;if(f<=.5){A=P[0];B=P[1];t=f*2}else{A=P[1];B=P[2];t=(f-.5)*2}
+  for(let j=0;j<o.length;j++)o[j]=A[j]+(B[j]-A[j])*t;
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(o,3));g.setAttribute('color',new THREE.BufferAttribute(G.d.C,3));
+  g.computeVertexNormals();g.computeBoundingSphere();g.userData.bw181=1;return G.g[i]=g}
+// hang the pair on the chest; x.bw181 drives the fold
+function bw181Wings(x,c,C,mat,sp){const L=typeof evo100Lv=='function'&&EVO100.D.Skyhawk?evo100Lv(c):0,P=L?evo100Pal(c,'Skyhawk',L):{};
+  const key=sp+'|'+C+'|'+L+'|'+(L?[P.glow,P.trim,P.dark].join(','):''),D=BW181.sp[sp];
+  const d=(BW181.G[key]&&BW181.G[key].d)||bw181Build(sp,C,L,P),g=bw181Geo(key,d,BW181.lv);
+  const W={key,d,lv:BW181.lv,m:[]};x.bw181={f:1,t:0,W};if(x.g)x.g.bw181=x.bw181; // g.bw181.force = a fixed fold (tests, previews)
+  [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'chest',g,mat,s*d.piv[0],d.piv[1],d.piv[2],s,1,1,0,0,0);W.m.push(p.children[0]);x.wings.push({p,s,base:D.base,amp:D.amp,bw:1})})}
+// after the shared animation: fold toward the creature's state, pick the shared geometry for that fold, scale the flap
+function bw181Anim(x,now){const B=x.bw181,g=x.g,G=(g&&g._ga)||{},S=x.spec;const dt=B.t?Math.min(.1,Math.max(0,(now-B.t)/1000)):0;B.t=now;
+  const w=G.w||0,run=typeof gaSS=='function'?gaSS(.3,1.4,G.Fr||0):0,m5=g&&g._m105;
+  let tgt=1-w*(.45+.4*run);if((g&&g.atk)||S.anim=='fly'||(m5&&m5.M&&m5.M.wing))tgt=0;
+  if(B.force!=null)B.f=tgt=B.force;
+  B.f+=(tgt-B.f)*(1-Math.exp(-dt*(tgt<B.f?10:5)));if(Math.abs(B.f-tgt)<.002)B.f=tgt;
+  const lv=Math.round(B.f*BW181.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw181Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
+  const k=1-B.f;x.wings.forEach(wg=>{if(wg.bw)wg.p.rotation.z*=k})}
+{const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.bw181)try{bw181Anim(x,now)}catch(e){console.error('bw181',e)}return r}}
+// the three birds' post() builds these wings (the harpy and the Gale Roc mount on the base Skyhawk body get them too)
+{const D=LPR.Skyhawk;D.post=function(x,c,C,mat){bw181Wings(x,c,C,mat,rv137('Skyhawk',c))}}
+// ================= v181: the bird companions' details (Skyhawk, Stormtalon, Rocsovereign) =================
+// The rest of the owner's "wings and details" pass (see 3390 for the wings). What changed on the bodies:
+//  * Tails: flat boxes with loose white blocks on their ends → a fanned tail of real feathers (12-14 rectrices, the central pair
+//    on top, barred, a pale tip band) with upper and under tail coverts over the rump (`bd181Tail`, a vertex-coloured mesh on tail0).
+//    Stormtalon keeps its two long streamers as feathers with broadened tips.
+//  * The breast "ruff" (white cones that read as teeth) and the Rocsovereign's mantle of pyramids → rows of overlapping contour
+//    feathers and long pointed hackles that lie on the skin and follow it (`bd181Coat`: rows on the body loft, skinned like it).
+//  * Nape and shoulders get a cape of small feathers that covers the wing root (scapulars).
+//  * Eyes: flat boxes → a dark socket, a round glowing iris with a pupil, under a rounded brow shelf. A cere at the beak base.
+//  * Crests: cones → feather blades (Skyhawk's swept nape crest, Rocsovereign's crown of stiff gold-tipped feathers and plumes;
+//    Stormtalon's lightning plumes stay).
+//  * Legs: feathered trousers of blades over the thighs (Rocsovereign: feathered down to the ankles).
+// ---------------- a feather blade for kit parts: along +y (0..1), width x (±.5), thickness z ----------------
+var BD181={G:{}};
+function bd181G(kind){if(BD181.G[kind])return BD181.G[kind];
+  const ST=kind=='lance'?[0,.2,.45,.7,.88,1]:[0,.25,.55,.8,1],P=[],I=[];
+  const wf=t=>{let w=t<.2?.55+.45*t/.2:1;if(kind=='lance'){if(t>.35)w*=Math.max(0,1-(t-.35)/.65)}else{if(t>.62)w*=Math.sqrt(Math.max(0,1-Math.pow((t-.62)/.38,2)))}return w};
+  ST.forEach(t=>{const w=wf(t)*.5,cam=.35*wf(t);P.push(-w,t,-.2*cam, 0,t,1+cam, 0,t,-1+cam*.6, w,t,-.2*cam)});
+  for(let i=0;i<ST.length-1;i++){const a=i*4,b=a+4;I.push(a,a+1,b, a+1,b+1,b, a+1,a+3,b+1, a+3,b+3,b+1, a,b,a+2, b,b+2,a+2, a+2,b+2,a+3, a+3,b+2,b+3)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return BD181.G[kind]=g}
+// one feather part: root a, pointing dir, flat side facing nrm; len, half width w; bn = bone name or [[bone,weight],…]
+function bd181F(k,bn,col,a,dir,nrm,len,w,kind,th){const V=THREE.Vector3,y=new V(...dir).normalize(),z=new V(...nrm);z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
+  const x=new V().crossVectors(y,z),m=new THREE.Matrix4().makeBasis(x.multiplyScalar(w*2),y.multiplyScalar(len),z.multiplyScalar(th||Math.max(.002,w*.12)));m.setPosition(new V(...a));
+  const p={bn:Array.isArray(bn)?bn[0][0]:bn,geo:bd181G(kind||'contour'),t:'c',col,m};if(Array.isArray(bn))p.w=bn;k.P.push(p);return p}
+// a point on a bird's body loft T (rows [z, y, half width, above, below, bones]) at z, t radians from the top (0 spine, PI belly),
+// side s: {p, n (outward), w (skin weights like the body there)}
+function bd181S(T,z,t,s){const q=dh150At(T,z),ct=Math.cos(t),st=Math.sin(t),h=ct>0?q.a:q.b,p=[s*st*q.w,q.y+ct*h,z],n=new THREE.Vector3(s*st/q.w,ct/h,0).normalize();
+  let i=0;for(let j=1;j<T.length;j++)if(Math.abs(T[j][0]-z)<Math.abs(T[i][0]-z))i=j;const b=T[i][5],w=b[2]||0;
+  return {p,n:[n.x,n.y,n.z],w:w>0&&b[0]!=b[1]?[[b[0],1-w],[b[1],w]]:[[b[0],1]]}}
+// the body's real surface along the line through p in direction n (outermost hit of a ray coming in from outside):
+// {p, n (outward), w (skin weights of the nearest corner)} or null; G = the body geometry, O = its bone names
+var BD181R=null;
+function bd181Hit(G,O,p,n){BD181R=BD181R||{m:new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide})),rc:new THREE.Raycaster()};
+  const V=THREE.Vector3,m=BD181R.m;m.geometry=G;if(!G.boundingSphere)G.computeBoundingSphere();const N=new V(...n).normalize();
+  BD181R.rc.set(new V(...p).addScaledVector(N,.3),N.clone().negate());const h=BD181R.rc.intersectObject(m,false)[0];if(!h)return null;
+  const fn=h.face.normal.clone();if(fn.dot(N)<0)fn.negate();const SI=G.attributes.skinIndex,SW=G.attributes.skinWeight,w=[];
+  [h.face.a,h.face.b,h.face.c].sort((a,b)=>new V().fromBufferAttribute(G.attributes.position,a).distanceTo(h.point)-new V().fromBufferAttribute(G.attributes.position,b).distanceTo(h.point)).slice(0,1).forEach(v=>{
+    [['getX'],['getY'],['getZ'],['getW']].forEach(([g])=>{const wt=SW[g](v);if(wt>.02)w.push([O[SI[g](v)],wt])})});
+  return {p:h.point.toArray(),n:fn.toArray(),w:w.length?w:[[O[0],1]]}}
+// rows of overlapping feathers on the body: zs (front → back), t range [t0, t1] round the body (0 spine, PI belly), n per half
+// row, pointing along (back, down) mixed by `down`, lifted `lift` off the skin; col(row, i) → colour. o.G / o.O: the body geometry
+// and bone names (each feather is set on the real surface and skinned like it)
+function bd181Coat(k,T,o){const V=THREE.Vector3;o.zs.forEach((z,r)=>{for(let i=0;i<o.n;i++){const u=o.n>1?i/(o.n-1):.5,t=o.t0+(o.t1-o.t0)*u+(r%2?(o.t1-o.t0)/(o.n-1||1)*.5:0);if(t>o.t1+.01)continue;
+    [-1,1].forEach(s=>{if(t<.05&&s<0)return;const S0=bd181S(T,z,t,s),S=(o.G&&bd181Hit(o.G,o.O,S0.p,S0.n))||S0,n=new V(...S.n),want=new V(0,-(o.down||0),-1).normalize(),
+        d=want.clone().sub(n.clone().multiplyScalar(want.dot(n))).normalize().addScaledVector(n,o.lift||.12).normalize();
+      const a=new V(...S.p).addScaledVector(n,-(o.sink||.004));bd181F(k,S.w,o.col(r,i,s),a.toArray(),d.toArray(),S.n,o.len*(1+.12*Math.sin(r*3.1+i*1.7)),o.w,o.kind||'contour')})}})}
+// the front of the breast (faces forward, which the round-the-body rows miss): rows at heights ys, xs across, from z0 forward
+function bd181Bib(k,o){const V=THREE.Vector3;o.ys.forEach((y,r)=>o.xs.forEach((x,i)=>{const xx=x+(r%2?o.dx||0:0),S=bd181Hit(o.G,o.O,[xx,y,o.z0],[xx*1.5,0,1]);if(!S||S.n[2]<.15)return;
+    const n=new V(...S.n),want=new V(0,-1,-.15).normalize(),d=want.clone().sub(n.clone().multiplyScalar(want.dot(n))).normalize().addScaledVector(n,o.lift||.12).normalize();
+    bd181F(k,S.w,o.col(r,i),new V(...S.p).addScaledVector(n,-.004).toArray(),d.toArray(),S.n,o.len*(1+.1*Math.sin(r*2.3+i*1.9)),o.w,'contour')}))}
+// eyes: dark socket, round glowing iris and pupil, rounded brow shelf (x side offset, y, z of the eye centre, r iris radius)
+function bd181Eyes(k,s,x,y,z,r,eye,brow,yaw){k.p('head','sph','c',0x080706,s*(x-.004),y,z-.002,r*1.35,r*1.15,r*.7,0,s*yaw,0);
+  k.p('head','sph2','g',eye,s*x,y,z,r,r,r*.6,0,s*yaw,0);k.p('head','sph','c',0x050404,s*(x+r*.45),y+.001,z+r*.28,r*.42,r*.42,r*.3,0,s*yaw,0);
+  k.p('head','sph','c',brow,s*(x-.006),y+r*1.15,z+.004,r*1.9,r*.6,r*1.5,.05,s*(yaw-.15),s*.32)}
+// a static vertex-coloured feather mesh (tails): F = [{a, d, n, len, w, shape, col(t, side, top)}] in the bone's model space
+function bd181Mesh(F){const pos=[],col=[],V=THREE.Vector3,tc=new THREE.Color();
+  F.forEach(o=>{const ST=[0,.18,.4,.6,.78,.9,1],R=new V(...o.a),d=new V(...o.d).normalize(),n=new V(...o.n);n.sub(d.clone().multiplyScalar(n.dot(d))).normalize();const lw=new V().crossVectors(d,n).normalize(),th=Math.max(.0025,o.w*.09);
+    const rows=ST.map(t=>{const wf=bw181WF(t,o.shape||'round',1),cam=.12*o.w*wf,c=R.clone().addScaledVector(d,o.len*t).addScaledVector(n,-(o.droop||.03)*o.len*t*t);
+      return [c.clone().addScaledVector(lw,o.w*wf).addScaledVector(n,-cam*.3),c.clone().addScaledVector(n,th*.5+cam),c.clone().addScaledVector(n,-th*.5+cam*.8),c.clone().addScaledVector(lw,-o.w*wf).addScaledVector(n,-cam*.3)]});
+    for(let i=0;i<ST.length-1;i++){const a=rows[i],b=rows[i+1],vs=[a[0],a[1],a[2],a[3],b[0],b[1],b[2],b[3]],tm=(ST[i]+ST[i+1])/2;
+      [[0,1,4,0,1],[1,5,4,0,1],[1,3,5,1,1],[3,7,5,1,1],[0,6,2,0,0],[0,4,6,0,0],[2,6,3,1,0],[3,6,7,1,0]].forEach(q=>{[q[0],q[1],q[2]].forEach(j=>pos.push(vs[j].x,vs[j].y,vs[j].z));
+        o.col(tm,q[3],q[4],tc);for(let j=0;j<3;j++)col.push(tc.r,tc.g,tc.b)})}});
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.computeVertexNormals();g.computeBoundingSphere();return g}
+// the tail fan: rectrices from the rump to tips on an arc (hub H, radius R, half angle A), coverts over and under the root
+var BD181T={
+  Skyhawk:{n:12,root:[0,.535,-.27],H:[0,.512,-.3],R:.31,A:.34,w:.046,up:[0,.565,-.21],upL:.17,un:[0,.5,-.24],unL:.14,nb:3},
+  Stormtalon:{n:10,root:[0,.54,-.33],H:[0,.527,-.5],R:.33,A:.2,w:.038,up:[0,.57,-.27],upL:.17,un:[0,.505,-.3],unL:.13,nb:4,streamers:1},
+  Rocsovereign:{n:14,root:[0,.555,-.34],H:[0,.537,-.48],R:.36,A:.5,w:.056,up:[0,.585,-.28],upL:.2,un:[0,.52,-.31],unL:.16,nb:3}};
+function bd181Tail(sp,C){const key='T|'+sp+'|'+C;if(BD181.G[key])return BD181.G[key];const D=BD181T[sp],K=bw181Cols(sp,C),F=[],c=x=>new THREE.Color(x);
+  const top=sp=='Rocsovereign'?K.cov.clone().lerp(K.fl,.35):sp=='Stormtalon'?K.cov.clone().multiplyScalar(.7):K.cov.clone().multiplyScalar(.85),bar=sp=='Rocsovereign'?K.fl.clone():K.fl.clone().multiplyScalar(.8),tipC=sp=='Stormtalon'?c(0xd8dce0):K.lin.clone();
+  const rect=(t,side,tp,o)=>{if(!tp){if(t>.9)return o.copy(tipC).multiplyScalar(.9);const b=Math.floor((t-.15)*(D.nb*2+1));return o.copy(t>.15&&b%2?K.undBar:K.und)}
+    if(t>.9)return o.copy(tipC);if(t>.74)return o.copy(K.tip);const b=Math.floor((t-.12)*(D.nb*2)/.62);o.copy(t>.12&&b%2?bar:top);if(side)o.multiplyScalar(.92);return o};
+  for(let i=0;i<D.n;i++){const u=(i-(D.n-1)/2)/((D.n-1)/2),a=u*D.A,ctr=1-Math.abs(u);
+    const r=[D.root[0]+Math.sin(a)*.03,D.root[1]+.004*ctr,D.root[2]],tp=[D.H[0]+Math.sin(a*1.06)*D.R,D.H[1]-.008*Math.abs(u)+.004*ctr,D.H[2]-Math.cos(a*1.06)*D.R];
+    const d=[tp[0]-r[0],tp[1]-r[1],tp[2]-r[2]],len=Math.hypot(...d);r[1]+=.0035*ctr*(D.n/2); // the central pair on top
+    F.push({a:r,d,n:[Math.sin(a)*.35,1,0],len,w:D.w,shape:'round',col:rect,droop:.02})}
+  if(D.streamers)[-1,1].forEach(s=>{const r=[s*.02,.548,-.34],d=[s*.18,-.06,-1],len=.64;F.push({a:r,d,n:[s*.2,1,0],len,w:.022,shape:'lance',col:(t,sd,tp,o)=>o.copy(t>.8?tipC:t>.62?K.tip:K.fl),droop:0});
+    const L2=Math.hypot(...d),e=[r[0]+d[0]/L2*len*.78,r[1]+d[1]/L2*len*.78+.002,r[2]+d[2]/L2*len*.78];F.push({a:e,d,n:[s*.2,1,0],len:.16,w:.034,shape:'round',col:(t,sd,tp,o)=>o.copy(t>.7?tipC:K.tip),droop:0})});
+  // upper tail coverts (over the root), under tail coverts (pale, below)
+  for(let i=0;i<7;i++){const u=(i-3)/3,a=u*D.A*.7;F.push({a:[D.up[0]+Math.sin(a)*.03,D.up[1]+.003*(1-Math.abs(u)),D.up[2]],d:[Math.sin(a)*.5,-.12,-1],n:[Math.sin(a)*.3,1,0],len:D.upL,w:D.w*.95,shape:'round',col:(t,sd,tp,o)=>tp?o.copy(K.cov).multiplyScalar(t>.75?.72:.86):o.copy(K.lin),droop:.04})}
+  for(let i=0;i<5;i++){const u=(i-2)/2,a=u*D.A*.6;F.push({a:[D.un[0]+Math.sin(a)*.03,D.un[1],D.un[2]],d:[Math.sin(a)*.5,.05,-1],n:[0,-1,0],len:D.unL,w:D.w*.9,shape:'round',col:(t,sd,tp,o)=>o.copy(K.lin).multiplyScalar(.92+.08*tp),droop:-.03})}
+  return BD181.G[key]=bd181Mesh(F)}
+function bd181TailOn(x,sp,C,mat){const p=lpPart(x.S,x.bones,'tail0',bd181Tail(sp,C),mat,0,0,0,1,1,1,0,0,0);
+  // lpPart places the mesh at the given model point; the geometry is already in model space, so undo the bone offset
+  const r=x.S.bones.tail0;p.position.set(-r[1],-r[2],-r[3]);return p}
+
+// ======================================================================== the kits ========================================================================
+// shared pieces: beak with a cere, talons, coat (breast rows, nape cape), trousers
+function bd181Talons(k,s,o){const f=s<0?'hl2':'hr2',fx=s*.075,g=o.g||1;
+  [-1,0,1].forEach(i=>{const e=[fx+i*.05*g,.022,(.115-Math.abs(i)*.026)*g];k.L(f,'c',o.toe,[fx,.026,0],e,.018*g,.014*g,5);
+    k.L(f,'c',o.claw,e,[e[0]+i*.007,.03,e[2]+.03*g],.013*g,.008*g,4).L(f,'c',o.claw,[e[0]+i*.007,.03,e[2]+.03*g],[e[0]+i*.009,.0,e[2]+.052*g],.008*g,.002,4)});
+  k.L(f,'c',o.toe,[fx,.026,0],[fx,.022,-.075*g],.017*g,.013*g,5).L(f,'c',o.claw,[fx,.022,-.075*g],[fx,.03,-.1*g],.012*g,.007*g,4).L(f,'c',o.claw,[fx,.03,-.1*g],[fx,.0,-.12*g],.007*g,.002,4);
+  // scutes: small plates down the front of the shank
+  for(let j=0;j<4;j++)k.p(s<0?'hl1':'hr1','box','c',dkShade(o.toe,.85),fx,.24-j*.045,.022*g+.004,.03*g,.012,.008,-.15)}
+function bd181Trousers(k,T,s,o){const b=s<0?"hl0":"hr0",fx=s*(o.x||.075),V=THREE.Vector3;
+  for(let r=0;r<o.rows;r++){const y=o.y0-r*o.dy,N=9;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.35,n=[Math.sin(a),0,Math.cos(a)];
+      bd181F(k,b,o.col(r,i),[fx+n[0]*o.r(r),y,o.z0+n[2]*o.r(r)],[n[0]*.25,-1,n[2]*.25],n,o.len,o.w,'contour')}}}
+// ---------------- Skyhawk ----------------
+function bd181KitSky(k,c,C,red,G,O){
+  const T=HWK_BODY,main=lpMain(C,.22),M=main.getHex(),back=dkShade(M,.55),deep=dkShade(M,.35),bel=new THREE.Color(0xd8ccb0),barC=main.clone().multiplyScalar(.5).lerp(new THREE.Color(0x3a3024),.4),
+    pale=bel.clone().multiplyScalar(.9).getHex(),bar=bel.clone().lerp(barC,.32).getHex(),eye=red?0xff2a2a:0xf2b21e,beak=0x2a2420,tip=0x14100e,cere=0xc89a3a,trou=bel.clone().lerp(main,.55).multiplyScalar(.85).getHex();
+  [-1,1].forEach(s=>{bd181Eyes(k,s,.07,.893,.432,.019,eye,back,.62);
+    bd181Talons(k,s,{toe:0x9a8448,claw:tip});
+    bd181Trousers(k,T,s,{rows:3,y0:.47,dy:.045,z0:.0,r:r=>.072-r*.008,len:.09,w:.026,col:(r,i)=>(r+i)%3?trou:dkShade(trou,.8)})});
+  // the hooked beak with a cere at its base and nostrils
+  k.L('head','c',beak,[0,.872,.48],[0,.865,.56],.032,.018,6).L('head','c',tip,[0,.865,.56],[0,.83,.6],.018,.004,5);
+  k.L('jaw','c',dkShade(beak,1.3),[0,.84,.48],[0,.835,.54],.022,.008,5);
+  k.L('head','c',cere,[0,.874,.466],[0,.874,.494],.037,.034,7);[-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.018,.884,.5,.006,.004,.006));
+  // a swept nape crest of pointed feathers
+  for(let i=-2;i<=2;i++)bd181F(k,'head',Math.abs(i)%2?back:deep,[i*.022,.94-Math.abs(i)*.006,.4],[i*.12,.25,-1],[i*.1,1,.25],.13-Math.abs(i)*.018,.018,'lance');
+  // the coat: barred breast rows, a dark nape cape over the wing roots
+  bd181Coat(k,T,{G,O,zs:[.22,.17,.12,.07,.02,-.03,-.08],t0:1.7,t1:2.75,n:4,len:.065,w:.026,down:1.2,lift:.12,col:(r,i)=>r%2?bar:pale});
+  bd181Bib(k,{G,O,ys:[.74,.7,.66,.62,.58,.54],xs:[-.075,-.025,.025,.075],dx:.025,z0:.2,len:.065,w:.027,lift:.12,col:(r,i)=>r%2?bar:pale});
+  bd181Coat(k,T,{G,O,zs:[.33,.29,.25,.21,.17,.13,.09],t0:0,t1:1.3,n:6,len:.065,w:.026,down:.25,lift:.08,col:(r,i)=>(r+i)%3?M:dkShade(M,.8)});
+  // the rump, under the tail
+  k.L('tail0','c',back,[0,.565,-.24],[0,.53,-.36],.07,.045,6)}
+// ---------------- Stormtalon ----------------
+function bd181KitSt(k,c,C,red,G,O){
+  const T=ST150.body,K=st150Cols(C),main=K.main.getHex(),back=dkShade(main,.5),deep=dkShade(main,.3),eye=red?0xff2a2a:0xf4e46a,glow=0x9ae8ff,steel=0x2a2e34,steelD=0x14161a,claw=0x0a0a0c,scale=0x5a6070,
+    pale=K.pale.getHex(),chev=K.pale.clone().lerp(K.chev,.4).getHex();
+  [-1,1].forEach(s=>{bd181Eyes(k,s,.064,.895,.447,.017,eye,deep,.62);
+    // the glowing lightning streak under each eye
+    k.L('head','g',glow,[s*.064,.873,.452],[s*.07,.86,.42],.006,.005,3).L('head','g',glow,[s*.07,.86,.42],[s*.07,.862,.39],.005,.004,3).L('head','g',glow,[s*.07,.862,.39],[s*.072,.845,.36],.004,.002,3);
+    bd181Talons(k,s,{toe:scale,claw,g:1.15});
+    bd181Trousers(k,T,s,{rows:3,y0:.46,dy:.05,z0:.0,r:r=>.082-r*.009,len:.1,w:.028,col:(r,i)=>i%2?back:main})});
+  // a sleek steel beak with a sharp hook, a grey cere
+  k.L('head','c',steel,[0,.884,.5],[0,.874,.6],.03,.015,6).L('head','c',steelD,[0,.874,.6],[0,.838,.635],.015,.003,5);
+  k.L('jaw','c',dkShade(steel,1.4),[0,.855,.5],[0,.852,.57],.02,.007,5);k.L('head','c',K.cere.getHex(),[0,.885,.486],[0,.885,.512],.033,.03,7);
+  // the lightning crest: zigzag plumes swept back from the crown, glowing tips (kept from v150)
+  for(let i=-3;i<=3;i++){const x=i*.016,L=1-Math.abs(i)*.17,p0=[x,.935,.425-Math.abs(i)*.012],p1=[x*1.5,.975+.03*L,.37],p2=[x*1.9,.968+.04*L,.31-.03*L],p3=[x*2.3,1.0+.07*L,.24-.07*L];
+    k.L('head','c',Math.abs(i)%2?back:deep,p0,p1,.022,.016,4).L('head','c',Math.abs(i)%2?deep:back,p1,p2,.016,.011,4).L('head','g',glow,p2,p3,.011,.002,4)}
+  bd181Coat(k,T,{G,O,zs:[.23,.18,.13,.08,.03,-.02,-.07],t0:1.7,t1:2.75,n:4,len:.06,w:.024,down:1.2,lift:.12,col:(r,i)=>r%2?chev:pale});
+  bd181Bib(k,{G,O,ys:[.76,.72,.68,.64,.6,.56,.52],xs:[-.06,-.02,.02,.06],dx:.02,z0:.2,len:.06,w:.024,lift:.12,col:(r,i)=>r%2?chev:pale});
+  bd181Coat(k,T,{G,O,zs:[.35,.31,.27,.23,.19,.15,.11],t0:0,t1:1.3,n:6,len:.06,w:.024,down:.25,lift:.08,col:(r,i)=>(r+i)%3?main:dkShade(main,.8)});
+  k.L('tail0','c',back,[0,.565,-.24],[0,.535,-.38],.06,.035,6)}
+// ---------------- Rocsovereign ----------------
+function bd181KitRs(k,c,C,red,G,O){
+  const T=RS150.body,K=rs150Cols(C),main=K.main.getHex(),back=K.back.getHex(),dk=K.dk.getHex(),cream=K.cream.getHex(),eye=red?0xff2a2a:0xffb020,ivory=0xd8c088,ivoryD=0xa88a50,tip=0x241c12,gold=0xe8c060,claw=0x16120e;
+  [-1,1].forEach(s=>{bd181Eyes(k,s,.09,.902,.455,.021,eye,dk,.6);
+    bd181Talons(k,s,{toe:0xc8a040,claw,g:1.2});
+    // legs feathered down to the ankles: rows of feathers round the thigh and shank
+    bd181Trousers(k,T,s,{x:.088,rows:4,y0:.47,dy:.05,z0:.0,r:r=>.1-r*.008,len:.1,w:.032,col:(r,i)=>(r+i)%3?main:back});
+    [0,1,2].forEach(r=>{const N=8;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.4,n=[Math.sin(a),0,Math.cos(a)],rr=.07-r*.012;
+      bd181F(k,s<0?"hl1":"hr1",(r+i)%2?main:K.cream.clone().lerp(K.main,.5).getHex(),[s*.08+n[0]*rr,.3-r*.05,.018+n[2]*rr],[n[0]*.2,-1,n[2]*.2],n,.08,.026,'contour')}})});
+  // the massive hooked beak: ivory-gold, a dark hooked tip; a heavy lower mandible; a cere
+  k.L('head','c',ivory,[0,.9,.49],[0,.897,.6],.052,.03,6).L('head','c',ivoryD,[0,.897,.6],[0,.862,.655],.03,.013,6).L('head','c',tip,[0,.862,.655],[0,.812,.662],.013,.002,5);
+  k.L('jaw','c',ivoryD,[0,.85,.5],[0,.845,.6],.036,.012,6);k.L('head','c',0xc8a040,[0,.902,.48],[0,.902,.505],.056,.052,8);
+  [-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.028,.918,.51,.008,.005,.008));
+  // the crown: a fan of stiff upright crest feathers with golden tips, long plumes swept back behind
+  for(let i=-3;i<=3;i++){const x=i*.026,b=[x,.962-Math.abs(i)*.006,.4-Math.abs(i)*.012],d=[x*2.6,1,-.3],L=(i%2?.13:.19)-Math.abs(i)*.012;
+    bd181F(k,'head',i%2?back:dk,b,d,[0,0,1],L,.022,'lance');const n=dh150N(d);bd181F(k,'head',gold,[b[0]+n[0]*L*.62,b[1]+n[1]*L*.62,b[2]+n[2]*L*.62+.003],d,[0,0,1],L*.36,.014,'lance')}
+  [-1,0,1].forEach(i=>bd181F(k,'head',dk,[i*.03,.95,.35],[i*.25,.35,-1],[i*.2,1,.3],.2,.02,'lance'));
+  // the mantle: long pointed hackles lying down the neck and over the shoulders, a cream breast
+  bd181Coat(k,T,{G,O,zs:[.44,.4,.36,.32,.28,.24,.2],t0:0,t1:2.3,n:8,len:.11,w:.028,down:.9,lift:.07,kind:'lance',col:(r,i)=>(r+i)%2?main:back});
+  bd181Bib(k,{G,O,ys:[.78,.73,.68,.63,.58,.53,.48,.43],xs:[-.12,-.06,0,.06,.12],dx:.03,z0:.2,len:.085,w:.034,lift:.12,col:(r,i)=>r%2?K.cream.clone().lerp(K.back,.3).getHex():cream});
+  bd181Coat(k,T,{G,O,zs:[.18,.12,.06,0,-.06,-.12],t0:2.0,t1:2.8,n:4,len:.085,w:.034,down:1.3,lift:.12,col:(r,i)=>r%2?K.cream.clone().lerp(K.back,.35).getHex():cream});
+  bd181Coat(k,T,{G,O,zs:[.15,.11,.07],t0:.1,t1:1.25,n:5,len:.085,w:.032,down:.2,lift:.07,col:(r,i)=>(r+i)%3?main:K.main.clone().multiplyScalar(.8).getHex()});
+  k.L('tail0','c',back,[0,.58,-.24],[0,.555,-.38],.085,.05,6)}
+// ---------------- hook them in ----------------
+{const D=LPR.Skyhawk,k0=D.kit;D.kit=function(k,c,C,red){const sp=rv137('Skyhawk',c),F={Skyhawk:bd181KitSky,Stormtalon:bd181KitSt,Rocsovereign:bd181KitRs}[sp];
+    if(F){let G=null;try{G=D.geo(C,c)}catch(e){}return F(k,c,C,red,G,Object.keys(SPEC.Skyhawk.bones))}return k0.apply(this,arguments)};
+  const p0=D.post;D.post=function(x,c,C,mat){p0.apply(this,arguments);const sp=rv137('Skyhawk',c);if(BD181T[sp])bd181TailOn(x,sp,C,mat)}}
+
+// ======================================================================== evolution looks ========================================================================
+// The evolution feathers (crest plumes, shoulder mantles, the Rocsovereign's back cape, the Skyhawk's tail streamers) were
+// tapered cones and rods; they are feather blades now (E.fth). Everything else in the v100 / v150 designs is kept as it was.
+function bd181Fth(E,a,dir,nrm,len,w,t,col,o){return E.pd(bd181G(o&&o.kind||'lance'),t,col,a,dir,[w*2,len,Math.max(.003,w*.24)],nrm,o)}
+// Skyhawk (the base design of 1750, with feathers)
+function bd181EvoSky(E,L,P){const M=EVO100_M,hb={bn:'head'};
+  // L1: a tall swept crest of long plumes, a glowing lightning stripe under each eye, two long tail streamers
+  for(let i=-2;i<=2;i++){const a=[i*.024,.925,.4],b=[i*.05,.99+.012*L-Math.abs(i)*.014,.24-Math.abs(i)*.03],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]),len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+    bd181Fth(E,a,d,[i*.2,1,.4],len,.016,'c',Math.abs(i)%2?P.mainD:P.dark,hb);if(L>=3)bd181Fth(E,E.add(b,d,-.012),d,[i*.2,1,.4],.06,.008,'g',P.glow,hb)}
+  [-1,1].forEach(s=>{const h=E.on([s*.5,.875,.43],[-s,0,0]);if(h){const o=E.add(h.p,h.n,.003);E.chain([o,E.add(o,[0,-.03,-.022]),E.add(o,[0,-.028,-.035]),E.add(o,[0,-.06,-.05])],.006,.003,'g',P.glow,3,{vs:1})}});
+  [-1,1].forEach(s=>{const a=[s*.03,.522,-.5],b=[s*.08,.47,-.95-.05*L],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]),len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+    bd181Fth(E,a,d,[s*.15,1,0],len,.02,'c',P.mainD,{bn:'tail3'});bd181Fth(E,E.add(a,d,len-.11),d,[s*.15,1,0],.13,.03,'c',P.dark,{bn:'tail3',kind:'contour'})});
+  if(L>=2){// a feather mantle over the shoulders, bronze talon bands, a bead cord in the crest
+    for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=E.on([Math.sin(a)*.5,.8-k*.05,.25+Math.cos(a)*.1-k*.04],[-Math.sin(a),-.2,-.3]);
+      if(h)bd181Fth(E,E.add(h.p,h.n,-.005),E.nrm([h.n[0]*.5,-.3,-1]),h.n,.1-k*.02,.024,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}
+    [-1,1].forEach(s=>{E.band([s*.075,.2,.0],[0,1,0],.004,.009,'m',P.trim,8);E.band([s*.075,.27,.012],[0,1,0],.004,.007,'m',P.trim,8)});
+    E.L([0,.96,.3],[0,.89,.21],.003,.003,'c',P.leather,3,hb);[0,1,2].forEach(k=>E.pd('sph',k==1?'g':'c',k==1?P.glow:P.bone,[0,.94-k*.022,.27-k*.02],[0,1,0],.012,null,hb))}
+  if(L>=3){// a breastplate with a storm rune, a metal-capped beak
+    E.shell((x,y,z,nx,ny,nz)=>nz>.35&&y>.6&&y<.8&&z>.15,.014,'m',P.metal,{rimCol:P.trim});
+    const cp=E.on([0,.7,1],[0,0,-1]);if(cp)E.rune({p:E.add(cp.p,cp.n,.016),n:cp.n},[0,1,0],.05,P.glow);
+    E.L([0,.865,.555],[0,.835,.6],.02,.004,'m',P.trim,4,hb)}
+  if(L>=4){// a sun crown of golden rays above the crest with a storm gem, glowing tail streamer tips
+    for(let i=-3;i<=3;i++){const a=i/3*1.25;E.L([0,.95,.36],[Math.sin(a)*.13,.95+Math.cos(a)*.13,.33],.009,.002,'m',P.gold,4,hb)}
+    E.pd('oct','g',P.glow,[0,.965,.37],[0,0,1],[.022,.032,.014],null,hb);
+    [-1,1].forEach(s=>{const a=[s*.03,.522,-.5],b=[s*.08,.47,-.95-.05*L],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);bd181Fth(E,E.add(b,d,-.06),d,[s*.15,1,0],.09,.02,'g',P.glow,{bn:'tail3',kind:'contour'})})}
+  if(L>=5){// lightning arcs crackling around the wing roots
+    [-1,1].forEach(s=>{const sh=E.on([s*.5,.74,.14],[-s,-.3,0]),b=sh?E.add(sh.p,sh.n,-.004):[s*.15,.64,.14];E.chain([b,E.add(b,[s*.05,.06,-.02]),E.add(b,[s*.03,.1,-.06]),E.add(b,[s*.08,.15,-.08])],.008,.003,'g',P.glow2,3,{at:b})})}}
+// the outward direction from a bird body's centre line at point a (table T)
+function bd181Out(T,a){const q=dh150At(T,a[2]),n=[a[0],(a[1]-q.y)*.7,0],l=Math.hypot(n[0],n[1])||1;return [n[0]/l,n[1]/l,0]}
+// swap the tapered cones of size (r1, r2) made by an evolution design for feather blades along the same lines
+function bd181Swap(f,T,r1s,r2s,kind,wk,flat){return function(E){const L0=E.L;
+  E.L=function(a,b,r1,r2,t,col,seg,o){if(Math.abs(r1-r1s)<1e-6&&Math.abs(r2-r2s)<1e-6){let d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);const len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+      if(flat)d=E.nrm([d[0]*flat,d[1]*flat,d[2]]);
+      return bd181Fth(E,a,d,bd181Out(T,a),len,r1*wk,t,col,Object.assign({kind,vs:1},o||{}))}return L0.apply(this,arguments)};
+  try{return f.apply(this,arguments)}finally{E.L=L0}}}
+// Stormtalon: the v150 design with a feathered shoulder mantle (L2); Rocsovereign: with a feathered back cape (L2)
+st150Evo=bd181Swap(st150Evo,ST150.body,.028,.002,'contour',.85);
+rs150Evo=bd181Swap(rs150Evo,RS150.body,.034,.003,'lance',.9,.3); // the cape lies along the back (hanging down it poked out under the folded wings)
+{const D=EVO100.D.Skyhawk,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Skyhawk;if(!sp||sp=='Skyhawk')return bd181EvoSky(E,L,P,c);return b0.apply(this,arguments)}}
 </script></body></html>
