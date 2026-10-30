@@ -49,7 +49,8 @@ JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimation
 # Parts meant to hover free of the body. Match on the species label (regex) and the mesh description; keep each with a reason.
 # (label regex, piece regex, reason, at most this many mm)
 OK_FLOAT=[
- (r'^Venomcoil .*Armored',r'EVO on chest',"an evolution scale line on the breast lies 4 mm off the hide",6),
+ (r'^Venomcoil',r'EVO on chest',"an evolution scale line on the breast lies 4 mm off the hide",6),
+ (r'^Drakelet evo3',r'EVO on chest',"an evolution chest piece in the bite frame (the neck stretches)",14),
  (r'^Cryptspider evo3',r'EVO on tail0',"the evolution glow on the abdomen's crest sits a few mm proud of it",8),
  (r'^Cryptspider ',r'EVO on head',"the evolution eye gems while the fangs strike (bite frame)",13),
  (r'\+',r'LPF\||mesh \?|^skin \? ',"a fused companion's borrowed parts are rigid on one bone of the new body; up to 2 cm in a stride or bite",20),
