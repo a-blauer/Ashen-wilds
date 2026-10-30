@@ -1,4 +1,4 @@
-# v172 the camera stays inside the map at its outer edge (3360): backing the camera out past an instance's edge (or Duskhold's island
+# v172 the camera stays inside the map at its outer edge (3360); v176: Abeksi's buildings count as the edge too: backing the camera out past an instance's edge (or Duskhold's island
 # edge) slides it in toward the hero; in the middle of a field and inside a cave it keeps the distance the player set.
 #   python3 fast.py v172_edge_cam.py      (pictures: <AW_TMP>/v172_<name>.png)
 # FAIL when: at an edge the camera ends up out of the map (cam172Ok false: past the rectangle, over or next to the void, inside the
@@ -45,6 +45,15 @@ def s(pg):
         print('edge',gk,'turn',json.dumps(r))
         if not r['ok'] and r['dist']>2.15:fail('edge',gk,'turning toward the edge: the camera is out of the map',r['cam'])
         if r['step']>2.5:fail('edge',gk,'turning toward the edge: the camera jumped',r['step'])
+    # 1b. Abeksi (v176): a house between the camera and the hero pulls the camera in front of it
+    pg.evaluate("()=>{toPos(142.01,1559.24);return 1}");pg.wait_for_timeout(4000)
+    for yaw in [3.53,2.75,3.93]:
+        q={'x':142.01,'z':1559.24,'yaw':yaw};place(q,9.5,.35);r=watch(90)
+        if r['dist']>9:r=watch(30)
+        ab=pg.evaluate("()=>{const c=cam.position,I=INSL[cvKey()];return cam172Ab(c.x,c.y,c.z,I)}")
+        print('abeksi',yaw,json.dumps(r),'in a building',ab);shot('abeksi_%.2f'%yaw)
+        if ab and r['dist']>1.35:fail('Abeksi yaw',yaw,': the camera is inside a building',r['cam'])   # right at a wall it may stop at its closest (minAb 1.2; the house is then dithered)
+        if r['dist']>9:fail('Abeksi yaw',yaw,': the camera was not pulled in in front of the house (distance',r['dist'],')')
     # 2. Duskhold's island edge
     q=pg.evaluate(DUSK);pg.wait_for_timeout(2500)
     if not q:fail('Duskhold: no edge spot')
