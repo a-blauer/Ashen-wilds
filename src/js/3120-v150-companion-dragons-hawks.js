@@ -121,7 +121,7 @@ function pw150Kit(k,c,C,red){
   k.p('tail3','cone4','g',lava,0,.582,-1.47,.014,.1,.075,-Math.PI/2-.15);
   [-1,1].forEach(s=>k.L('tail3','c',obs,[0,.574,-1.42],[s*.07,.578,-1.36],.014,.002,4));
   // obsidian talons
-  [['fl2',-.102,.225],['fr2',.102,.225],['hl2',-.112,-.29],['hr2',.112,-.29]].forEach(f=>{k.p(f[0],'box','c',obs,f[1],.024,f[2]+.03,.055,.044,.08); // v173: the pad meets the leg
+  [['fl2',-.102,.225],['fr2',.102,.225],['hl2',-.112,-.29],['hr2',.112,-.29]].forEach(f=>{k.p(f[0],'box','c',obs,f[1],.024,f[2]+.03,.055,.044,.08); // v177: the pad meets the leg
     [-1,0,1].forEach(i=>{k.L(f[0],'c',obs2,[f[1]+i*.018,.022,f[2]+.06],[f[1]+i*.024,.016,f[2]+.1],.009,.006,4);k.p(f[0],'cone4','c',0x0c0806,f[1]+i*.025,.012,f[2]+.12,.007,.04,.007,Math.PI/2+.3)})});
 }
 function pw150Post(x,c,C,mat){
@@ -298,7 +298,7 @@ function st150Post(x,c,C,mat){
     [.45,.04,-.16],
     [[[0,.01,.06],[.6,.08,.03],.024],[[.6,.08,.03],[1.25,.01,-.32],.013]],
     root,tipC,lead,5);
-  lpwPair(x,'chest',W,mat,.07,.74,.14,.5,.15,.35,.55)} // v173: the wing root on the shoulder (it hinged 1.5 cm out from the body)
+  lpwPair(x,'chest',W,mat,.07,.74,.14,.5,.15,.35,.55)} // v177: the wing root on the shoulder (it hinged 1.5 cm out from the body)
 
 // ======================================================================== Rocsovereign ========================================================================
 var RS150={body:[
@@ -432,7 +432,7 @@ function st150Evo(E,L,P){const hb={bn:'head'};
   // L1: a glowing storm streak down the breast, longer glowing plume tips, long streamer tips
   {const pts=[[0,.74],[.02,.69],[-.015,.65],[.01,.6]].map(q=>E.on([q[0],q[1],2],[0,0,-1])).filter(h=>h).map(h=>E.add(h.p,h.n,.004));if(pts.length>1)E.chain(pts,.008,.005,'g',P.glow,3,{vs:1})}
   for(let i=-1;i<=1;i++){const L1=1-Math.abs(i)*.17,x=i*.016,p3=[x*2.3,1.0+.07*L1,.24-.07*L1];E.L(p3,E.add(p3,[x*.4,.02,-.04-.01*L]),.006,.001,'g',P.glow2,3,hb)}
-  [-1,1].forEach(s=>{const d=E.nrm([s*.18,-.06,-1]),e=E.add([s*.08,.5,-.78],d,.14),len=.06+.01*L; // v173: on the streamer's end (longer tips stood off it)
+  [-1,1].forEach(s=>{const d=E.nrm([s*.18,-.06,-1]),e=E.add([s*.08,.5,-.78],d,.14),len=.06+.01*L; // v177: on the streamer's end (longer tips stood off it)
     E.pd('cone4',L>=3?'g':'c',L>=3?P.glow:P.dark,E.add(e,d,len*.5-.006),d,[.014,len,.006],[0,1,0],{bn:'tail0'})});
   if(L>=2){// a mantle of long feathers over the shoulders, bronze talon bands
     for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=E.on([Math.sin(a)*1.5,.77-k*.05,.22+Math.cos(a)*.3-k*.04],[-Math.sin(a),-.2,-.3]);

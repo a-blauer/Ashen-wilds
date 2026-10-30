@@ -29,7 +29,7 @@ EVO100.D.Gravewyrm={glow:0x8aff4a,build(E,L,P){
   const M=EVO100_M,bone=P.bone,boneD=P.boneD,seg=['tail1','tail0','pelvis','spine','chest','neck'];
   // L1: longer back-swept horns, venom drip on the fangs, glowing scale lines behind the eyes
   [-1,1].forEach(s=>{E.horn([s*.09,.37,.52],[s*.5,.45,-1],[s*.03,-.03,-.03],.18+.03*L,.026,'c',bone,5,null,L>=4?P.trim:boneD);
-    {const ft=RV137.cur.Gravewyrm=='Venomcoil'?.27:.282;E.L([s*.05,ft+.008,.793],[s*.05,ft-.03,.797],.006,.002,'g',P.glow,3,{bn:'head'})} // v173: the drip hangs from the fang tip (the v137 head moved the fangs)
+    {const ft=RV137.cur.Gravewyrm=='Venomcoil'?.27:.282;E.L([s*.05,ft+.008,.793],[s*.05,ft-.03,.797],.006,.002,'g',P.glow,3,{bn:'head'})} // v177: the drip hangs from the fang tip (the v137 head moved the fangs)
     E.L([s*.125,.335,.55],[s*.14,.33,.44],.006,.006,'g',P.glow,3,{bn:'head'})});
   if(L>=2){// cobra hood frills on the neck with bony struts, bigger ridge plates
     // cobra hood: two upright membranes flaring from the neck behind the head, ribbed with bone, eye-spots

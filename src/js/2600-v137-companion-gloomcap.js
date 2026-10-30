@@ -38,11 +38,11 @@ LPR.Gloomcap={
       dirt=new THREE.Color(0x3a2c20),gill=new THREE.Color(spore?0x4a3a2a:0x4a2430),root=new THREE.Color(0x3a2c20),moss=new THREE.Color(0x4a5a2a);
     const R=(y,rx,f,bk,b,o)=>Object.assign({p:[0,y,0],rx,ryT:f,ryB:bk,b},o||{});
     // the stem: wide soft base, belly in front, narrowing to the cap; the top (the face) rides the head bone
-    // (v173: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
+    // (v177: the whole face rides it, so the mouth stays on the face when the cap bows to bite; it sank 4-6 cm into the stem)
     const st=spore?[R(.03,.12,.115,.115,['pelvis','pelvis',0]),R(.09,.15,.15,.14,['pelvis','pelvis',0]),R(.18,.165,.17,.155,['pelvis','pelvis',0]),R(.3,.155,.16,.145,['pelvis','spine',.4]),
         R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.8]),R(.67,.112,.122,.108,['head','head',0]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0]),R(.84,.086,.088,.084,['head','head',0])]
       :[R(.03,.13,.12,.12,['pelvis','pelvis',0]),R(.08,.175,.17,.16,['pelvis','pelvis',0]),R(.16,.2,.21,.18,['pelvis','pelvis',0]),R(.26,.195,.205,.175,['pelvis','spine',.3]),
-        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v173: the stem runs up into the cap (it stopped short of the gill disc)
+        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.65]),R(.62,.132,.138,.124,['head','head',0]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v177: the stem runs up into the cap (it stopped short of the gill disc)
     const lofts=[{rings:st,seg:16,ref:[0,0,1],capA:1,paint:(o,r,s,cc)=>{o.copy(stalk);if(s<-.3)o.lerp(stalkD,.35);if(Math.abs(Math.sin((cc+s)*7+r.p[1]*30))>.86)o.lerp(stalkD,.4);
         const t=Math.max(0,(.2-r.p[1])*5);if(t>0)o.lerp(dirt,Math.min(.75,t));if(r.p[1]>.5&&s<-.2)o.lerp(capD,.25)}}];
     // the skirt (annulus): a tattered collar hanging under the cap
@@ -77,7 +77,7 @@ LPR.Gloomcap={
     // the face under the brim (head bone): sockets, glowing eyes, brows, cheeks, the mouth (lower lip on the jaw)
     const fz=y=>y>.7?.122:y>.64?.132:.14;
     [-1,1].forEach(s=>{const y=spore?.66:.675,z=fz(y)-.012;
-      // v173 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
+      // v177 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
       // big round eyes with white sparkles and pink blush read as a cartoon)
       k.p('head','sph','c',soc,s*.052,y,z,.042,.032,.022,0,s*.35,s*.18);k.p('head','sph','g',eye,s*.054,y-.002,z+.014,.02,.012,.01,0,s*.35,s*.25);
       k.p('head','box','c',spore?0x5a4a34:0x4a3428,s*.052,y+.026,z+.008,.06,.016,.024,.25,s*.3,s*-.42);
@@ -104,7 +104,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sp
   bracket(Math.PI-.6,.34,.06);bracket(Math.PI+.7,.24,.05);
   if(L>=2){// little toadstools sprouting from the cap, glowing spots
     [[.16,.05],[-.14,-.1],[.03,-.21],[-.18,.13]].forEach((q,i)=>{const y=capTop(q[0],q[1]),b=[q[0],y,q[1]],tp=E.add(b,E.nrm([q[0],1,q[1]]),.06+i%2*.02);
-      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v173: gills under the caps, the spot on the cap
+      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v177: gills under the caps, the spot on the cap
     for(let i=0;i<12;i++){const a=i/12*6.283,r=rim*.7,x=Math.sin(a)*r,z=Math.cos(a)*r;E.pd('sph','g',P.glowD,[x,capTop(x,z)+.004,z],E.nrm([x,.6,z]),[.016,.005,.016],null,hb)}
     bracket(Math.PI*.5+2.8,.44,.05)}
   if(L>=3){// moss and roots hanging from the rim at the back and sides (the face stays clear), root tendrils down the back

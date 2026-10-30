@@ -26,10 +26,10 @@
       const skin=lpMain(C,.42).multiplyScalar(.82).getHex(),dk=dkShade(skin,.6),lid=dkShade(skin,.85),belly=0xc4bf96,eye=red?0xff2a2a:0xd8c030;
       // bulging eyes on top of the head: lidded domes, glowing gold iris with a black slit
       [-1,1].forEach(s=>{
-        // v173 (owner: not cartoony): a toad's eyes, smaller and hooded, with a horizontal pupil; warty parotoid glands
+        // v177 (owner: not cartoony): a toad's eyes, smaller and hooded, with a horizontal pupil; warty parotoid glands
         // behind them (the big round glowing eyes with slit pupils read as a cartoon frog)
-        k.p('head','sph','c',lid,s*.12,.415,.34,.056,.05,.058);
-        k.p('head','sph','g',dkShade(eye,.8),s*.134,.42,.366,.034,.029,.024,0,s*.5,0);
+        k.p('head','sph2','c',lid,s*.12,.415,.34,.056,.05,.058);
+        k.p('head','sph2','g',dkShade(eye,.8),s*.134,.42,.366,.034,.029,.024,0,s*.5,0);
         k.p('head','box','c',0x050505,s*.139,.42,.388,.026,.007,.008,0,s*.5,0);
         k.p('head','box','c',dk,s*.118,.452,.352,.074,.022,.056,.12,s*.3,s*.3);
         k.p('head','sph','c',dkShade(skin,1.08),s*.15,.4,.25,.05,.034,.075,0,s*.25,s*.35);[0,1,2].forEach(i=>k.p('head','ico','c',dk,s*(.155+i*.01),.43-i*.01,.29-i*.035,.011,.008,.011));
