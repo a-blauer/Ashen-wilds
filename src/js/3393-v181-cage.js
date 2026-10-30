@@ -68,9 +68,9 @@ function cgSculpt(M,parts,fn){const N=cgNormals(M),pt=new Array(M.V.length);M.F.
 // a soft bump: 1 at (x0,y0), falling off over sx / sy (Gaussian)
 function cgG(x,y,x0,y0,sx,sy){const a=(x-x0)/sx,b=(y-y0)/sy;return Math.exp(-(a*a+b*b))}
 // the surface point hit by a ray (origin p, direction d) on the smoothed body, or null
-function cgRay(M,p,d){let best=null,bt=1e9;const V=M.V,sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dt=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function cgRay(M,p,d,parts){let best=null,bt=1e9;const V=M.V,sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dt=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
   const tri=(a,b,c)=>{const e1=sub(b,a),e2=sub(c,a),h=cr(d,e2),det=dt(e1,h);if(Math.abs(det)<1e-12)return;const f=1/det,s=sub(p,a),u=f*dt(s,h);if(u<0||u>1)return;const q=cr(s,e1),v=f*dt(d,q);if(v<0||u+v>1)return;const t=f*dt(e2,q);if(t>1e-6&&t<bt){bt=t;best=[p[0]+d[0]*t,p[1]+d[1]*t,p[2]+d[2]*t]}};
-  M.F.forEach(f=>{const v=f.v.map(i=>V[i]);tri(v[0],v[1],v[2]);if(v.length==4)tri(v[0],v[2],v[3])});return best}
+  M.F.forEach(f=>{if(parts&&!parts[f.part])return;const v=f.v.map(i=>V[i]);tri(v[0],v[1],v[2]);if(v.length==4)tri(v[0],v[2],v[3])});return best}
 
 // ---------------- the humanoid cage from a spec ----------------
 // S: {torso:[[y, rx, f, b, z]…] bottom→top (16-vertex rings; the arms leave from rings ia..ia+2), push(ringIndex,k,θ) → radius,
@@ -171,6 +171,7 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
     d+=.011*cgG(x,y,0,1.648,.05,.006);                                              // the brow ridge
     d-=.005*cgG(x,y,0,1.558,.022,.0035);d+=.01*cgG(x,y,0,1.538,.018,.012);           // the mouth line, the chin
     return d*f};
+  CG181.base=S;CG181.faceGaunt=FACE;
   cg181Reg('vamp',S,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036;cgSculpt(M,{head:1},FACE);
     const skin=m=>{if(m.part=='head'&&m.s>.3){if(Math.abs(Math.abs(m.x)-EX)<.022&&Math.abs(m.y-EY)<.014)return sock;if(Math.abs(m.y-1.558)<.0045&&Math.abs(m.x)<.026)return lip}
       const v=n3Sn(m.x,m.y,m.z,20,2);return m.s<-.3?mdSh(sk2,1-v*.2):v>.72?mdMix(sk,0x3a2232,.5):mdSh(sk,1-v*.15)};

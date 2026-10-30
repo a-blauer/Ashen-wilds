@@ -37,7 +37,8 @@ function h181Geo(n){if(HARPY181.G[n])return HARPY181.G[n];const K=HARPY181.pal[n
   // the tail: a fan of long ragged feathers
   for(let i=0;i<9;i++){const a=(i-4)*.17,l=.3+.08*Math.cos(a*2)-a181H(i,4)*.06,p0=[Math.sin(a)*.05,.52,-.1],p1=[Math.sin(a)*(.05+l*.6),.46-l*.35,-.1-l*.85];
     mdLoft(B,[{p:p0,rx:.012,f:.004,b:.004,w:[['tail0',1]]},{p:[(p0[0]+p1[0])/2,(p0[1]+p1[1])/2,(p0[2]+p1[2])/2],rx:.035,f:.005,b:.005,w:[['tail1',1]]},{p:p1,rx:.006,f:.003,b:.003,w:[['tail2',1]]}],{seg:4,ref:[0,1,0],col:i%2?K.f:K.f2})}
-  mdKit(B,k);return HARPY181.G[n]=mdBake(B).c}
+  mdKit(B,k);const G=mdBake(B).c,n3=G.attributes.position.count,I=new (n3>65535?Uint32Array:Uint16Array)(n3);for(let i=0;i<n3;i++)I[i]=i;G.setIndex(new THREE.BufferAttribute(I,1));   // indexed like every creature body (the v84 limb helpers read the index)
+  return HARPY181.G[n]=G}
 function h181Wing(n){const K=HARPY181.pal[n],O=[[0,0,.06],[.2,.05,.09],[.45,.07,.09],[.7,.04,.02],[1.0,0,-.1]];const N=13;
   for(let i=1;i<=N;i++){const t=i/N,x=1.0-t*.98,z=-.1-Math.sin(t*Math.PI)*.42-t*.12,tip=i%2?.1+a181H(i,3)*.08:0;O.push([x+tip*.15,-.01,z-tip])}
   O.push([0,0,-.2]);
