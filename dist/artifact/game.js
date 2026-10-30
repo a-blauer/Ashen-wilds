@@ -7133,7 +7133,8 @@ function lpExtras(k,c,D){
   // v180: the Golden and Universal marks grow from the head as crystal shards (they were a halo and orbs hovering over it)
   if(c.v=='Golden'&&hd){k.L(hd[0],'g',0xffd84a,[hd[1],hd[2],hd[3]],[hd[1],hd[2]+.11,hd[3]-.04],.022,.002,4);[-1,1].forEach(s=>k.L(hd[0],'g',0xe8b830,[hd[1]+s*.02,hd[2],hd[3]],[hd[1]+s*.05,hd[2]+.075,hd[3]-.03],.015,.002,4))}
   if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
-  if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
+  // (v182: a rig may draw the trait its own way, D.spiked returning true: the Skyhawk raises a ruff of hackle feathers)
+  if(c.tr=='Spiked'&&!(D.spiked&&D.spiked(k,bk,c)))bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
   if(c.tr=='Armored')lpArmor151(k,bk,D.armor||.17); // v151: a riveted war harness (was grey domes that read as stones)
   if(c.tr=='Universal'&&hd)[0,1,2].forEach(i=>{const a=(i-1)*.5;k.L(hd[0],'g',[0xd86a8a,0x6ad0e0,0xe0c060][i],[hd[1]+Math.sin(a)*.02,hd[2],hd[3]-.01*i],[hd[1]+Math.sin(a)*.07,hd[2]+.09-Math.abs(i-1)*.02,hd[3]-.05],.02,.002,4)});
 }
@@ -55696,13 +55697,13 @@ function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016,V=THREE.Vector3;
 // spread and beating. The wing entry keeps {p (shoulder bone), s, base, amp}, so older code that nudges p still works.
 var RPW={geo:{}};
 // one feather in its bone's space: root at the origin, pointing −z, width w, a raised shaft, top colour → tip colour,
-// dark bands across (n), a dark tip; both faces (the underside a little paler: folded, it is the face that shows)
-function rpwFeather(P,C,SI,b,M,len,w,top,tip,under,bands,dark){
+// dark bands across (n), a dark tip; both faces (the underside paler, as on a real raptor)
+function rpwFeather(P,C,SI,b,M,len,w,top,tip,under,bands,dark,lite){
   const st=[[0,.34],[.18,.5],[.55,.5],[.82,.36],[1,0]],v=new THREE.Vector3(),c=new THREE.Color();
   const pt=(t,side)=>{let hw=0;for(let i=0;i<st.length-1;i++)if(t>=st[i][0]&&t<=st[i+1][0]){const u=(t-st[i][0])/(st[i+1][0]-st[i][0]);hw=st[i][1]+(st[i+1][1]-st[i][1])*u}
     return [side*hw*w,side?-.002*len*t:.003+.004*len*(1-t),-len*t-(side?0:0)]};
   const colAt=(t,base)=>{c.set(base).lerp(new THREE.Color(tip),Math.min(1,t*t*1.1));if(bands&&Math.floor(t*bands)%2==1)c.multiplyScalar(.78);if(dark&&t>.8)c.lerp(new THREE.Color(0x15110e),.6);return c};
-  const T=[0,.18,.42,.66,.82,1];
+  const T=lite?[0,.4,.8,1]:[0,.18,.42,.66,.82,1];
   const put=(p,col)=>{v.set(p[0],p[1],p[2]).applyMatrix4(M);P.push(v.x,v.y,v.z);C.push(col.r,col.g,col.b);SI.push(b)};
   for(let i=0;i<T.length-1;i++){const a=T[i],e=T[i+1];
     [-1,1].forEach(s=>{const A=pt(a,s),B=pt(e,s),Ca=pt(a,0),Cb=pt(e,0);
@@ -55713,44 +55714,41 @@ function rpwFeather(P,C,SI,b,M,len,w,top,tip,under,bands,dark){
 function rpwRod(P,C,SI,b,M,x0,x1,r0,r1,col){const v=new THREE.Vector3(),c=new THREE.Color(col),q=(x,r,a)=>[x,Math.sin(a)*r*.7,Math.cos(a)*r];
   for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4,b2=(i+1)/4*Math.PI*2+Math.PI/4,s=[q(x0,r0,a),q(x1,r1,a),q(x1,r1,b2),q(x0,r0,b2)];
     [[0,1,2],[0,2,3],[0,2,1],[0,3,2]].forEach(t=>t.forEach(k=>{v.set(...s[k]).applyMatrix4(M);P.push(v.x,v.y,v.z);const sh=.85+.15*Math.cos(a);C.push(c.r*sh,c.g*sh,c.b*sh);SI.push(b)}))}}
-// build a wing on bone bn at model point (px,py,pz) for side s; D = design {arm, fore, hand lengths, feathers, colours}
+// build a wing on bone bn at model point (px,py,pz) for side s; D = design (segment lengths, feather groups, fold, colours).
+// Feather groups: [name, joint ('sh' arm / 'el' forearm / 'wr' hand), height above the bones, [[x along the segment, rest
+// angle, length]…], width, colours, bands, dark tips]. Every feather has its own bone, so at rest each turns to lie back.
 function rpwWing(x,bn,c,D,px,py,pz,s,mat){
   const S=x.S,r=S.bones[bn],mir=new THREE.Group();mir.position.set(s*px-r[1],py-r[2],pz-r[3]);mir.scale.x=s;x.bones[bn].add(mir);
   const B=[],mk=(par,x0,y0,z0,ry)=>{const b=new THREE.Bone();b.position.set(x0,y0,z0);b.rotation.order='YXZ';b.rotation.y=ry||0;(par||mir).add(b);B.push(b);return b};
-  const sh=mk(null,0,0,0),el=mk(sh,D.arm,0,0),wr=mk(el,D.fore,0,0),sec=[],pri=[];
-  D.sec.forEach(q=>sec.push(mk(el,q[0],.0,-.004,q[1])));D.pri.forEach(q=>pri.push(mk(wr,q[0],.002,0,q[1])));
+  const sh=mk(null,0,0,0),el=mk(sh,D.arm,0,0),wr=mk(el,D.fore,0,0),J={sh,el,wr},grp={};
+  D.groups.forEach(q=>{grp[q[0]]=q[3].map(f=>mk(J[q[1]],f[0],q[2],-.004,f[1]))});
   // rest matrices relative to the mirror group
   mir.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(mir.matrixWorld).invert(),Mr=B.map(b=>new THREE.Matrix4().multiplyMatrices(inv,b.matrixWorld));
   const P=[],C=[],SI=[],id=b=>B.indexOf(b),K=D.col;
-  // leading edge: arm (starting inside the body), forearm, hand
-  rpwRod(P,C,SI,id(sh),Mr[id(sh)],-.04,D.arm+.01,.022,.017,K.edge);rpwRod(P,C,SI,id(el),Mr[id(el)],-.01,D.fore+.01,.017,.013,K.edge);rpwRod(P,C,SI,id(wr),Mr[id(wr)],-.01,D.hand,.013,.007,K.edge);
-  // coverts (rigid on their segment): marginal on the arm, greater on the forearm, primary coverts on the hand
-  const cov=(b,x0,x1,n,len,w,col,y)=>{for(let i=0;i<n;i++){const t=n>1?i/(n-1):0,m=new THREE.Matrix4().makeRotationY(-.12-.18*t).setPosition(x0+(x1-x0)*t,y||.006,.008);
-    rpwFeather(P,C,SI,id(b),new THREE.Matrix4().multiplyMatrices(Mr[id(b)],m),len*(.9+.2*t),w,col,K.covTip,K.under,0,false)}};
-  cov(sh,-.02,D.arm,D.nArm,D.lArm,.08,K.cov,.008);
-  // tertials: long inner feathers next to the body (they close the gap between the body and the secondaries)
-  (D.ter||[]).forEach(q=>rpwFeather(P,C,SI,id(sh),new THREE.Matrix4().multiplyMatrices(Mr[id(sh)],new THREE.Matrix4().makeRotationY(q[1]).setPosition(q[0],.002,-.004)),q[2],D.wSec,K.sec,K.secTip,K.under,D.bands,false));
-  // flight feathers on their own bones
-  sec.forEach((b,i)=>rpwFeather(P,C,SI,id(b),Mr[id(b)],D.sec[i][2],D.wSec,K.sec,K.secTip,K.under,D.bands,false));
-  cov(el,0,D.fore,D.nFore,D.lFore,.07,K.cov,.012);
-  pri.forEach((b,i)=>rpwFeather(P,C,SI,id(b),Mr[id(b)],D.pri[i][2],D.wPri,K.pri,K.priTip,K.under,D.bands,true));
-  cov(wr,0,D.hand,3,D.lFore*.9,.06,K.cov,.012);
+  // (no bare leading-edge rods: folded they stood out from the body like a bracket; the coverts form the leading edge)
+  if(D.rods){rpwRod(P,C,SI,id(sh),Mr[id(sh)],-.04,D.arm+.01,.022,.017,K.edge);rpwRod(P,C,SI,id(el),Mr[id(el)],-.01,D.fore+.01,.017,.013,K.edge);rpwRod(P,C,SI,id(wr),Mr[id(wr)],-.01,D.hand,.013,.007,K.edge)}
+  D.groups.forEach(q=>grp[q[0]].forEach((b,i)=>{const k=q[5];rpwFeather(P,C,SI,id(b),Mr[id(b)],q[3][i][2],q[4],K[k],K[k+'Tip'],K.under,q[6],q[7])}));
   const key=D.key+'|'+(c.v||'');let G=RPW.geo[key];
   if(!G){G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
     const n=SI.length,si=new Uint16Array(n*4),sw=new Float32Array(n*4);for(let i=0;i<n;i++){si[i*4]=SI[i];sw[i*4]=1}
     G.setAttribute('skinIndex',new THREE.BufferAttribute(si,4));G.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4));G.computeVertexNormals();G.computeBoundingSphere();RPW.geo[key]=G}
   const mesh=new THREE.SkinnedMesh(G,mat);mesh.castShadow=true;mesh.frustumCulled=false;mesh.userData.rpw=1;mir.add(mesh);
   mesh.bind(new THREE.Skeleton(B,Mr.map(m=>new THREE.Matrix4().copy(m).invert())),new THREE.Matrix4());
-  const rest={sec:sec.map(b=>b.rotation.y),pri:pri.map(b=>b.rotation.y)};
-  const wg={p:sh,s,base:0,amp:0,art:{sh,el,wr,sec,pri,rest,D,f:0}};x.wings.push(wg);return wg}
-// the pose: f = 0 folded … 1 spread; flap = angle of the beat at the shoulder (the elbow and wrist follow later)
-function rpwPose(wg,f,ph,amp,breath,now){const A=wg.art,D=A.D,F=D.fold,L=(a,b)=>a+(b-a)*f,sm=f*f*(3-2*f);
+  const rest={};D.groups.forEach(q=>rest[q[0]]=grp[q[0]].map(b=>b.rotation.y));
+  const wg={p:sh,s,base:0,amp:0,art:{sh,el,wr,grp,rest,D,mir,mx0:mir.position.x}};x.wings.push(wg);return wg}
+// the pose: f = 0 folded … 1 spread; amp / ph = the wing beat (it rolls out from the shoulder to the elbow and the wrist).
+// Folded (a raptor at rest): the arm runs back along the top of the flank, the forearm folds forward and down so the
+// wrist is the front of the folded wing, the hand runs back again; the top of the wing faces out and every feather is
+// turned to lie back toward the tail, the coverts over the flight feathers, the primaries reaching over the tail.
+function rpwPose(wg,f,ph,amp,breath){const A=wg.art,D=A.D,F=D.fold,L=(a,b)=>a+(b-a)*f,sm=f*f*(3-2*f);
+  A.mir.position.x=A.mx0+wg.s*(1-f)*(D.foldOut||0);   // folded, the wing lies on the flank, not inside it
   const beat=k=>amp*Math.sin(ph-k);
   A.sh.rotation.set(L(F.rx,0),L(F.ry,D.sweep),L(F.rz,D.lift)+beat(0)+breath);
   A.el.rotation.set(0,L(F.ely,D.ely),beat(.7)*.55*sm);
   A.wr.rotation.set(beat(1.3)*.25*sm,L(F.wry,D.wry),beat(1.3)*.7*sm);
-  A.sec.forEach((b,i)=>{b.rotation.y=L(F.secy+i*.02,A.rest.sec[i]);b.rotation.z=0});
-  A.pri.forEach((b,i)=>{const fan=A.rest.pri[i]+(amp>0?.06*Math.sin(ph-1.6)*(i/(A.pri.length-1)):0);b.rotation.y=L(F.priy+i*.03,fan);b.rotation.x=-beat(1.6)*.08*sm*(i/A.pri.length)})}
+  D.groups.forEach(q=>{const fa=F[q[0]];A.grp[q[0]].forEach((b,i)=>{const n=A.grp[q[0]].length,t=n>1?i/(n-1):0;
+    let rest=A.rest[q[0]][i];if(q[0]=='pri'&&amp>0)rest+=.06*Math.sin(ph-1.6)*t;
+    b.rotation.y=L(fa+(q[8]||0)*t,rest);b.rotation.x=q[0]=='pri'?-beat(1.6)*.08*sm*t:0})})}
 // drive every articulated wing after the normal creature animation
 {const f0=rigAnim;rigAnim=function(x,now,mv,sp){const r=f0.apply(this,arguments);try{if(x.wings&&x.wings.some(w=>w.art)){
   const g=x.g,A=g&&g.atk,dt=Math.min(.1,Math.max(0,(now-(x._rpwT||now))/1000));x._rpwT=now;
@@ -55760,15 +55758,145 @@ function rpwPose(wg,f,ph,amp,breath,now){const A=wg.art,D=A.D,F=D.fold,L=(a,b)=>
   const tgt=A?1:run>0?.35*run:settle;x._rpwF=(x._rpwF==null?tgt:x._rpwF)+(tgt-(x._rpwF==null?tgt:x._rpwF))*Math.min(1,dt*(A?9:5));
   const amp=A?.75:run>0?.28*run:0;x._rpwP=(x._rpwP||0)+dt*(A?14:9);
   const breath=Math.sin(now/650)*.015;
-  x.wings.forEach(w=>{if(w.art)rpwPose(w,x._rpwF,x._rpwP,amp,breath,now)})}}catch(e){if(!x._rpwE){x._rpwE=1;console.error('v182 wings',e)}}return r}}
+  x.wings.forEach(w=>{if(w.art)rpwPose(w,x._rpwF,x._rpwP,amp,breath)})}}catch(e){if(!x._rpwE){x._rpwE=1;console.error('v182 wings',e)}}return r}}
 
 // ---------------- Skyhawk: a hawk ----------------
 function rpwSkyhawk(C){const main=lpMain(C,.22),dk=(k)=>main.clone().multiplyScalar(k).getHex();
-  return {key:'rpw|Skyhawk|'+C,arm:.2,fore:.22,hand:.12,sweep:.18,lift:.08,ely:-.28,wry:.42,
-    sec:[[.02,-.02,.23],[.06,-.05,.235],[.1,-.08,.24],[.14,-.11,.24],[.18,-.14,.235],[.215,-.18,.23]],
-    pri:[[.0,-.3,.25],[.025,-.48,.28],[.05,-.68,.3],[.075,-.88,.31],[.095,-1.08,.3],[.11,-1.27,.27],[.12,-1.45,.22]],
-    ter:[[.03,.05,.19],[.08,.02,.21],[.13,-.01,.22],[.175,-.02,.225]],nArm:5,lArm:.12,nFore:6,lFore:.11,wSec:.075,wPri:.07,bands:5,
-    fold:{rx:-1.85,ry:1.53,rz:-.1,ely:.22,wry:.1,secy:-1.05,priy:-1.5},
-    col:{edge:dk(.7),cov:dk(.62),covTip:dk(.5),sec:dk(.55),secTip:dk(.4),pri:dk(.45),priTip:dk(.28),under:main.clone().multiplyScalar(.62).lerp(new THREE.Color(0xd8ccb0),.18).getHex()}}}
+  // groups: [name, joint, height, feathers [x, rest angle, length], width, colour key, bands, dark tip, fold stagger]
+  return {key:'rpw|Skyhawk|'+C,arm:.2,fore:.22,hand:.12,foldOut:.015,sweep:.18,lift:.08,ely:-.28,wry:.42,
+    groups:[['ter','sh',.002,[[-.02,.06,.17],[.03,.05,.19],[.08,.02,.21],[.13,-.01,.22],[.175,-.02,.225]],.075,'sec',5,false,.12],
+      ['sec','el',0,[[.02,-.02,.23],[.06,-.05,.235],[.1,-.08,.24],[.14,-.11,.24],[.18,-.14,.235],[.215,-.18,.23]],.075,'sec',5,false,.15],
+      ['pri','wr',.002,[[.0,-.3,.25],[.025,-.48,.28],[.05,-.68,.3],[.075,-.88,.31],[.095,-1.08,.3],[.11,-1.27,.27],[.12,-1.45,.22]],.07,'pri',5,true,.12],
+      ['cArm','sh',.009,[[-.06,-.1,.12],[-.02,-.12,.11],[.03,-.16,.12],[.08,-.2,.125],[.13,-.24,.13],[.18,-.28,.13]],.08,'cov',0,false,.1],
+      ['cFore','el',.012,[[0,-.12,.11],[.045,-.16,.115],[.09,-.2,.12],[.135,-.24,.12],[.18,-.27,.115],[.22,-.3,.11]],.07,'cov',0,false,.1],
+      ['cHand','wr',.012,[[0,-.3,.1],[.05,-.45,.1],[.1,-.6,.09]],.06,'cov',0,false,.08]],
+    // folded: wing rolled so its top faces out, arm back, forearm forward-down, hand back; every feather turned to lie back
+    fold:{rx:1.3,ry:1.72,rz:-.24,ely:-2.53,wry:2.43,ter:-1.87,cArm:-1.87,sec:.66,cFore:.76,pri:-1.77,cHand:-1.67},
+    col:{edge:dk(.7),cov:dk(.62),covTip:dk(.5),sec:dk(.55),secTip:dk(.4),pri:dk(.45),priTip:dk(.28),under:main.clone().lerp(new THREE.Color(0xd8ccb0),.55).getHex()}}}
 {const D=LPR.Skyhawk,p0=D.post;D.post=function(x,c,C,mat){const sp=typeof RV137!='undefined'&&RV137.cur?RV137.cur.Skyhawk:null;if(sp&&sp!='Skyhawk')return p0.apply(this,arguments);
   const W=rpwSkyhawk(C),m=lpMat(c.v,1,D.mat);[-1,1].forEach(s=>rpwWing(x,'chest',c,W,.12,.72,.14,s,m))}}
+
+// ================= step 2: the Skyhawk's body — a hawk, not a block =================
+// A rounder, smoother body (12-sided rings, more of them): a deep rounded breast, a dark mantle, a flat-crowned head with a
+// heavy brow, deep-set amber eyes, a yellow cere and a hooked beak; over it ~150 small shingled feathers (dkKit leaves that
+// take the body's own bone weights at their roots), feathered 'trousers' over yellow scaled legs, black talons; a tail
+// of 12 feathers on its own bones that fans out when it attacks and sways at rest; quick raptor head tilts at rest.
+var SH182={body:[[-.335,.54,.03,.025,.025,['tail0','tail0',0],'rump'],[-.28,.545,.062,.055,.055,['tail0','pelvis',.4],'rump'],
+    [-.2,.555,.1,.095,.09,['pelvis','pelvis',0]],[-.11,.57,.132,.125,.12,['pelvis','spine',.4]],[-.02,.59,.14,.135,.145,['pelvis','spine',.75],'belly'],
+    [.06,.615,.146,.14,.16,['spine','spine',0],'breast'],[.13,.645,.145,.135,.165,['spine','chest',.6],'breast'],[.2,.685,.13,.12,.145,['chest','chest',0],'breast'],
+    [.255,.73,.11,.1,.11,['chest','neck',.5],'throat'],[.3,.78,.085,.08,.085,['neck','neck',0],'throat'],[.34,.83,.085,.085,.075,['neck','head',.7],'hd'],
+    [.38,.868,.093,.088,.072,['head','head',0],'hd'],[.425,.878,.085,.078,.062,['head','head',0],'hd'],[.465,.872,.062,.056,.046,['head','head',0],'hd'],
+    [.495,.865,.04,.034,.032,['head','head',0],'cere'],[.51,.862,.028,.024,.024,['head','head',0],'cere']]};
+function sh182Cols(C){const main=lpMain(C,.22);return {main,back:main.clone().multiplyScalar(.5),deep:main.clone().multiplyScalar(.34),
+  bel:new THREE.Color(0xd8ccb0),bar:main.clone().multiplyScalar(.45).lerp(new THREE.Color(0x3a3024),.45),face:new THREE.Color(0xd8ccb0).lerp(main,.2),
+  cere:new THREE.Color(0xd8a83a),leg:new THREE.Color(0xc8a040),trou:new THREE.Color(0xd8ccb0).lerp(main,.35)}}
+function sh182Leg(s){const H=s<0?'hl':'hr',x=s*.075;return [[x,.56,-.04,.06,['pelvis',H+'0',.4],'trou'],[x,.47,-.02,.078,['pelvis',H+'0',.7],'trou'],
+  [x,.38,.0,.07,[H+'0',H+'0',0],'trou'],[x,.31,.016,.045,[H+'0',H+'1',.6],'trou'],[x,.27,.02,.024,[H+'1',H+'1',0],'leg'],[x,.12,-.015,.021,[H+'1',H+'2',.8],'leg'],[x,.04,0,.024,[H+'2',H+'2',0],'leg']]}
+function sh182Geo(C){const K=sh182Cols(C),R=SH182.body;
+  const paint=(o,r,s,c,i)=>{if(r.k=='cere')return o.copy(K.cere);if(r.k=='leg')return o.copy(K.leg);if(r.k=='trou'){o.copy(K.trou);if((i||0)%2)o.lerp(K.bar,.3);return}
+    o.copy(K.main);if(s>.35)o.lerp(K.back,.85);
+    if(r.k=='hd'){if(s>.3)o.copy(K.deep);else if(s>-.25)o.lerp(K.back,.5);else{o.copy(K.face);if(Math.abs(c)>.4)o.lerp(K.deep,.8)}return}
+    if(r.k=='throat'&&s<.1)return o.copy(K.face);
+    if((r.k=='breast'||r.k=='belly')&&s<-.05){o.copy(K.bel);if(r.i%2)o.lerp(K.bar,.6)}};
+  const rings=bz150Rows(R).map((r,i)=>Object.assign(r,{i}));
+  const legs=[-1,1].map(s=>({rings:sh182Leg(s).map((r,i)=>({p:[r[0],r[1],r[2]],rx:r[3],ryT:r[3],ryB:r[3],b:r[4],k:r[5],i})),seg:8,ref:[0,0,1],capB:1,paint:(o,r)=>paint(o,r,0,0,r.i)}));
+  return lpGeo('SH182|'+C,'Skyhawk',[{rings,seg:12,capA:1,capB:1,paint}].concat(legs),53)}
+// a small leaf-shaped feather for dkKit parts: root at the origin, pointing −z, unit length and width, a raised centre
+var SH182LEAF=null;
+function sh182Leaf(){if(SH182LEAF)return SH182LEAF;const R0=[-.3,0,0],R1=[.3,0,0],M0=[-.5,.03,-.45],M1=[.5,.03,-.45],T=[0,0,-1],Cc=[0,.07,-.4],P=[];
+  [[R0,R1,Cc],[R0,Cc,M0],[R1,M1,Cc],[M0,Cc,T],[Cc,M1,T]].forEach(t=>t.forEach(p=>P.push(...p)));
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.computeVertexNormals();return SH182LEAF=G}
+function sh182Kit(k,c,C,red){const K=sh182Cols(C),R=SH182.body,V=THREE.Vector3,eye=red?0xff2a2a:0xf2a21e,beak=0x24201c,tip=0x0e0c0a,G=sh182Leaf();
+  // a feather lying on the body at z, angle a (0 right flank, π/2 back, −π/2 breast): pointing back (and down on the breast),
+  // root sunk 4 mm, the body's own bone weights at the root
+  const rowW=z=>{let i=0;while(i<R.length-2&&z>R[i+1][0])i++;const A=R[i],B=R[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(B[0]-A[0]))),q=t<.5?A[5]:B[5];return [[q[0],1-q[2]],[q[1],q[2]]]};
+  const leaf=(z,a,len,w,col,down,lift)=>{const h=bz150S(R,z,a,-.004),n=new V(...h.n),d=new V(0,-(down||0),-1);d.addScaledVector(n,-d.dot(n)).normalize();
+    const y=n.clone().addScaledVector(d,-(lift||0)).normalize(),x=new V().crossVectors(y,d.clone().negate()).normalize(),M=new THREE.Matrix4().makeBasis(x,y,d.clone().negate());
+    M.scale(new V(w,.25,len));M.setPosition(h.p[0],h.p[1],h.p[2]);k.P.push({bn:'chest',w:rowW(z),geo:G,t:'c',col,m:M})};
+  const hx=v=>v.getHex(),back=hx(K.back),deep=hx(K.deep),main=hx(K.main),bel=hx(K.bel),bar=hx(K.bar);
+  // nape hackles and a short crest
+  for(let i=0;i<5;i++)leaf(.33,Math.PI/2+(i-2)*.35,.07,.05,i%2?deep:back,-.25,.25);
+  [-1,0,1].forEach(i=>k.L('head','c',deep,[i*.025,.95,.37],[i*.04,.975,.27],.022,.003,4));
+  // the face: deep-set amber eyes under a heavy brow shelf, a dark streak behind the eye
+  [-1,1].forEach(s=>{const e=bz150S(R,.425,s>0?.5:Math.PI-.5,-.006),p=e.p;k.p('head','sph','c',0x070605,p[0],p[1],p[2],.026,.022,.02,0,s*.6,0);
+    k.p('head','sph','g',eye,p[0]+e.n[0]*.009,p[1]+e.n[1]*.009,p[2]+.006,.02,.018,.012,0,s*.6,0);k.p('head','sph','c',0x050404,p[0]+e.n[0]*.014,p[1]+e.n[1]*.014,p[2]+.009,.008,.009,.005,0,s*.6,0);
+    const b0=bz150S(R,.455,s>0?.95:Math.PI-.95,-.004).p,b1=bz150S(R,.39,s>0?.7:Math.PI-.7,-.002).p;k.L('head','c',deep,b0,[b1[0],b1[1]+.006,b1[2]],.018,.014,4);
+    const t0=bz150S(R,.4,s>0?.15:Math.PI-.15,-.002).p,t1=bz150S(R,.33,s>0?-.05:Math.PI+.05,-.004).p;k.L('head','c',deep,t0,t1,.012,.008,4)});
+  // hooked beak: the upper mandible curving over a lower one on the jaw, a yellow cere at the root
+  k.L('head','c',beak,[0,.872,.5],[0,.874,.55],.03,.022,5);k.L('head','c',beak,[0,.874,.55],[0,.858,.585],.022,.012,5);k.L('head','c',beak,[0,.858,.585],[0,.828,.6],.012,.002,4);
+  k.L('jaw','c',dkShade(beak,1.4),[0,.842,.5],[0,.84,.565],.02,.007,4);
+  // feathered trousers: shaggy tufts round the thighs; yellow scaled feet, black talons
+  [-1,1].forEach(s=>{const H=s<0?'hl':'hr',x=s*.075;for(let y=.5,j=0;y>.31;y-=.045,j++)for(let i=0;i<6;i++){const a=i/6*Math.PI*2+(j%2)*.5,r=.07-j*.006;
+      k.L(H+'0','c',(i+j)%3?hx(K.trou):bar,[x+Math.cos(a)*r*.7,y,-.01+Math.sin(a)*r*.7],[x+Math.cos(a)*r*1.05,y-.07,-.01+Math.sin(a)*r*1.05],.03,.003,4)}
+    const f=H+'2';[-1,0,1].forEach(i=>{k.L(f,'c',hx(K.leg),[x,.025,.0],[x+i*.04,.02,.09-Math.abs(i)*.02],.016,.012,4);k.p(f,'cone4','c',tip,x+i*.045,.018,.1-Math.abs(i)*.02,.008,.04,.008,Math.PI/2)});
+    k.L(f,'c',hx(K.leg),[x,.025,0],[x,.02,-.07],.015,.011,4);k.p(f,'cone4','c',tip,x,.018,-.085,.008,.035,.008,-Math.PI/2)});
+  lk182Seat(k.P,sh182Geo(C),{from:0,depth:.004})}
+// the tail: 12 feathers on their own bones under tail0 (one skinned mesh); fans out when attacking, sways at rest
+function rpwTail(x,c,C,mat){const K=sh182Cols(C),S=x.S,bn='tail0',r=S.bones[bn],root=new THREE.Group();root.position.set(0-r[1],.545-r[2],-.3-r[3]);x.bones[bn].add(root);
+  const B=[],N=12;for(let i=0;i<N;i++){const t=i/(N-1)-.5,b=new THREE.Bone();b.position.set(t*.07,.004*Math.abs(t),-.004*Math.abs(t));b.rotation.order='YXZ';b.rotation.y=-t*.5;b.rotation.x=-.06;root.add(b);B.push(b)}
+  root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),Mr=B.map(b=>new THREE.Matrix4().multiplyMatrices(inv,b.matrixWorld)),P=[],Cc=[],SI=[];
+  B.forEach((b,i)=>{const mid=Math.abs(i-(N-1)/2)<1.1;rpwFeather(P,Cc,SI,i,Mr[i],.3-Math.abs(i-(N-1)/2)*.008,.07,(mid?K.back:K.main).getHex(),K.deep.getHex(),K.bel.getHex(),6,true)});
+  const key='rpwTail|'+C;let G=RPW.geo[key];
+  if(!G){G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
+    const n=SI.length,si=new Uint16Array(n*4),sw=new Float32Array(n*4);for(let i=0;i<n;i++){si[i*4]=SI[i];sw[i*4]=1}
+    G.setAttribute('skinIndex',new THREE.BufferAttribute(si,4));G.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4));G.computeVertexNormals();G.computeBoundingSphere();RPW.geo[key]=G}
+  const mesh=new THREE.SkinnedMesh(G,mat);mesh.castShadow=true;mesh.frustumCulled=false;mesh.userData.rpw=1;root.add(mesh);
+  mesh.bind(new THREE.Skeleton(B,Mr.map(m=>new THREE.Matrix4().copy(m).invert())),new THREE.Matrix4());
+  (x.rpwTails=x.rpwTails||[]).push({B,rest:B.map(b=>b.rotation.y)})}
+// fan: 0 closed … 1 spread wide; plus a slow sway
+function rpwTailPose(T,fan,now){const n=T.B.length;T.B.forEach((b,i)=>{const t=i/(n-1)-.5;b.rotation.y=T.rest[i]-t*1.3*fan+Math.sin(now/900)*.03;b.rotation.x=-.06-.12*fan*(1-Math.abs(t)*1.5)})}
+{const D=LPR.Skyhawk,g0=D.geo,k0=D.kit,p0=D.post,cur=()=>typeof RV137!='undefined'&&RV137.cur?RV137.cur.Skyhawk:null,own=()=>{const s=cur();return !s||s=='Skyhawk'};
+  D.geo=function(C,c){return own()?sh182Geo(C):g0.apply(this,arguments)};
+  D.kit=function(k,c,C,red){return own()?sh182Kit(k,c,C,red):k0.apply(this,arguments)};
+  const p1=D.post;D.post=function(x,c,C,mat){const r=p1.apply(this,arguments);if(own()){rpwTail(x,c,C,lpMat(c.v,1,D.mat));rpwCoat(x,c,C)}return r};
+  // the Spiked trait on a hawk: a ruff of raised dark hackles at the nape (feathers, not spikes)
+  D.spiked=function(k,bk,c){if(!own())return false;const G=sh182Leaf(),V=THREE.Vector3,R=SH182.body;
+    for(let i=0;i<7;i++){const a=Math.PI/2+(i-3)*.32,h=bz150S(R,.32,a,-.006),n=new V(...h.n),d=new V(0,.55,-1).addScaledVector(n,.25).normalize(),y=n.clone(),x=new V().crossVectors(y,d.clone().negate()).normalize();
+      const M=new THREE.Matrix4().makeBasis(x,new V().crossVectors(d.clone().negate(),x),d.clone().negate());M.scale(new V(.045,.3,.11+.015*(3-Math.abs(i-3))));M.setPosition(...h.p);k.P.push({bn:'neck',geo:G,t:'c',col:0x1a1c24,m:M})}
+    return true};
+  // anchor points for variant traits: the Skyhawk's own, the others' (Stormtalon, Rocsovereign: 3120) as before
+  const hd=Object.getOwnPropertyDescriptor(D,'head'),bk=Object.getOwnPropertyDescriptor(D,'back'),old=q=>q.get?q.get.call(D):q.value;
+  Object.defineProperty(D,'head',{configurable:true,get(){return own()?['head',0,.96,.4]:old(hd)}});
+  Object.defineProperty(D,'back',{configurable:true,get(){return own()?[['neck',0,.86,.3],['chest',0,.82,.2],['spine',0,.77,.08],['pelvis',0,.7,-.08]]:old(bk)}})}
+// head: quick raptor tilts and glances at rest; the tail fans with the wings
+{const f0=rigAnim;rigAnim=function(x,now,mv,sp){const r=f0.apply(this,arguments);try{if(x.rpwTails){const A=x.g&&x.g.atk,F=x._rpwF||0;
+  x.rpwTails.forEach(T=>rpwTailPose(T,A?Math.min(1,F*1.2):F*.6,now));
+  const b=x.bones;if(b&&b.head&&!A){const seg=Math.floor(now/1300+(x._rpwS||0)),rnd=q=>{const v=Math.sin(seg*12.9898+q*78.233)*43758.5453;return v-Math.floor(v)};
+    const tz=(rnd(1)-.5)*.6*(rnd(2)>.45?1:0),ty=(rnd(3)-.5)*.5,k=Math.min(1,((x._rpwT2!=null?now-x._rpwT2:16)/1000)*14);x._rpwT2=now;
+    x._rpwHz=(x._rpwHz||0)+(tz-(x._rpwHz||0))*k;x._rpwHy=(x._rpwHy||0)+(ty-(x._rpwHy||0))*k;const w=mv?.3:1;b.head.rotation.z=x._rpwHz*w;b.head.rotation.y+=x._rpwHy*w}else if(b&&b.head)b.head.rotation.z=0}}catch(e){if(!x._rpwE2){x._rpwE2=1;console.error('v182 tail/head',e)}}return r}}
+
+// ---------------- seat kit parts on the real mesh (the root cause of 'feathers not attached') ----------------
+// Kit parts are placed from ideal shapes (ellipse rings, fixed points), but the body is a faceted mesh whose flat faces
+// lie inside those ideal rings, so a part 'on the surface' can hover a few mm to a cm off it. This pass measures every
+// part against the real body mesh (signed distance of each of its vertices) and, when its deepest point is not at least
+// `depth` inside, moves it in along the surface normal there. Parts more than o.max (3 cm) away are left alone (they hang
+// on purpose); o.from = first part index to treat. Shared: any rig can call it at the end of its kit.
+function lk182Seat(P,G,o){o=o||{};const dep=o.depth==null?.004:o.depth,mx=o.max==null?.03:o.max,v=new THREE.Vector3(),V=THREE.Vector3;
+  for(let i=o.from||0;i<P.length;i++){const p=P[i];if(p.free||p.t=='g'&&o.glow===false)continue;const pa=p.geo.attributes.position,n=pa.count,st=Math.max(1,Math.floor(n/24));
+    let best=1e9,bn=null;for(let j=0;j<n;j+=st){v.fromBufferAttribute(pa,j).applyMatrix4(p.m);const q=lk180Near(G,[v.x,v.y,v.z]),sd=((v.x-q.p[0])*q.n[0]+(v.y-q.p[1])*q.n[1]+(v.z-q.p[2])*q.n[2])>0?q.d:-q.d;
+      if(sd<best){best=sd;bn=q.n}}
+    if(bn&&best>-dep&&best<mx){const d=best+dep;p.m=new THREE.Matrix4().makeTranslation(-bn[0]*d,-bn[1]*d,-bn[2]*d).multiply(p.m)}}}
+// ---------------- the body coat: contour feathers like the wing coverts, bending with the body ----------------
+// ~150 feathers (the wing-feather shape, lighter) laid on the real body surface: rows over the back, flanks, breast, neck and
+// crown, each pointing back (down and back on the breast), its root 3 mm in, skinned with the body vertex nearest its root,
+// so body and wings read as one plumage (and the flat-shaded body under it no longer shows as smooth bands).
+function rpwCoat(x,c,C){const body=x.b&&x.b.children.find(m=>m.isSkinnedMesh&&m.skeleton);if(!body)return;
+  const G=body.geometry,pos=G.attributes.position,SIa=G.attributes.skinIndex,SWa=G.attributes.skinWeight,K=sh182Cols(C),W=rpwSkyhawk(C).col,R=SH182.body,V=THREE.Vector3;
+  const P=[],Cc=[],SI=[],SK=[],SW=[],near=(p)=>{let b=1e9,k=0;for(let i=0;i<pos.count;i++){const d=(pos.getX(i)-p[0])**2+(pos.getY(i)-p[1])**2+(pos.getZ(i)-p[2])**2;if(d<b){b=d;k=i}}return k};
+  const feather=(z,a,len,w,top,tip,under,down,lite)=>{const h0=bz150S(R,z,a,0),h=lk180Near(G,h0.p);if(h.d>.05)return;const n=new V(...h.n),d=new V(0,-(down||0),-1);d.addScaledVector(n,-d.dot(n)).normalize();
+    const y=n,xx=new V().crossVectors(y,d.clone().negate()).normalize(),M=new THREE.Matrix4().makeBasis(xx,new V().crossVectors(d.clone().negate(),xx),d.clone().negate());
+    M.setPosition(h.p[0]-n.x*.003,h.p[1]-n.y*.003,h.p[2]-n.z*.003);const n0=SI.length;rpwFeather(P,Cc,SI,0,M,len,w,top,tip,under,0,false,lite);
+    const vi=near(h.p);for(let i=n0;i<SI.length;i++){SK.push(SIa.getX(vi),SIa.getY(vi),SIa.getZ(vi),SIa.getW(vi));SW.push(SWa.getX(vi),SWa.getY(vi),SWa.getZ(vi),SWa.getW(vi))}};
+  const hx=v=>v.getHex?v.getHex():v;
+  // back and flanks (the wing covert colours), staggered rows
+  for(let z=.27,j=0;z>-.3;z-=.045,j++){const n=z>.2?7:11;for(let i=0;i<n;i++){const a=-.15+(i+(j%2)*.5)/(n-1)*(Math.PI+.3);feather(z,a,.11,.06,W.cov,W.covTip,W.cov,.05,true)}}
+  // breast and belly: pale, barred (every other row tipped dark), pointing down and back
+  for(let z=.25,j=0;z>-.12;z-=.04,j++)for(let i=0;i<6;i++){const a=-Math.PI/2+(i-2.5+(j%2)*.5)*.3;feather(z,a,.09,.055,hx(K.bel),j%2?hx(K.bar):hx(K.bel),hx(K.bel),.55,true)}
+  // throat and the front of the neck: small pale feathers (the bare faceted body showed there as flat colour steps)
+  for(let z=.36,j=0;z>.22;z-=.03,j++)for(let i=0;i<7;i++){const a=-Math.PI/2+(i-3+(j%2)*.5)*.34;feather(z,a,.06,.04,hx(K.face),hx(K.bel),hx(K.bel),.4,true)}
+  // neck and crown: small feathers
+  for(let z=.36,j=0;z<.45;z+=.035,j++)for(let i=0;i<5;i++){const a=Math.PI/2+(i-2+(j%2)*.5)*.38;feather(z,a,.06,.04,hx(K.deep),hx(K.deep),hx(K.deep),-.1,true)}
+  const key='rpwCoat|'+C;let Gc=RPW.geo[key];
+  if(!Gc){Gc=new THREE.BufferGeometry();Gc.setAttribute('position',new THREE.Float32BufferAttribute(P,3));Gc.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
+    Gc.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SK,4));Gc.setAttribute('skinWeight',new THREE.Float32BufferAttribute(SW,4));Gc.computeVertexNormals();Gc.computeBoundingSphere();RPW.geo[key]=Gc}
+  const m=new THREE.SkinnedMesh(Gc,body.material);m.castShadow=true;m.frustumCulled=false;m.userData.rpw=1;x.b.add(m);m.bind(body.skeleton,body.bindMatrix)}
