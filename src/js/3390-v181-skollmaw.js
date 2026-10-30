@@ -5,7 +5,7 @@
 // in his throat and mouth. Same skeleton as the Ashwolf (rig variant, see 3110), so every animation and all gameplay stay.
 // Also fixes the leg tops standing out beside the body (the old body was 10–12 cm wide where 7 cm thick legs hung 11–12 cm
 // out): each leg now starts inside the body and widens into a shoulder or thigh muscle that is part of the body's outline.
-// Step 2: the body shape (head, body, legs, tail, ears, a plain face). Fur, mane, glow and ornaments come next.
+// Step 2: the body shape (head, body, legs, tail, ears). Step 3: mane, ruff, fur, eyes and face. Glow and ornaments come next.
 var SK150={
   // [z, y, half width, above, below, bones, tag]
   body:[[-.44,.645,.035,.035,.035,['pelvis','tail0',.6]],[-.395,.635,.085,.08,.085,['pelvis','tail0',.3]],
@@ -45,10 +45,34 @@ function sk150Geo(C){const K=sk150Cols(C);
   const lofts=[{rings:bz150Rows(SK150.body),seg:12,capA:1,capB:1,paint},{rings:bz150Rows(SK150.jaw),seg:8,capA:1,capB:1,paint},bz150Tail(SK150.tail,paint,8),
     sk181Leg('fl','chest',1,paint),sk181Leg('fr','chest',1,paint),sk181Leg('hl','pelvis',0,paint),sk181Leg('hr','pelvis',0,paint)];
   return lpGeo('SK181|'+C,'Ashwolf',lofts,67)}
-function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,eye=red?0xff2a2a:0xffc860,dark=K.dark.getHex();
-  // eyes under a heavy brow
-  [-1,1].forEach(s=>{const e=bz150S(R,.625,s>0?.62:Math.PI-.62,-.008).p;k.p('head','sph','c',0x050406,e[0],e[1],e[2],.022,.014,.024,0,s*.5,s*-.2);
-    k.p('head','box','g',eye,e[0]+s*.005,e[1],e[2]+.005,.022,.007,.01,0,s*.5,s*-.2);k.p('head','box','c',dark,s*.045,e[1]+.022,e[2]-.004,.05,.014,.04,.12,s*.35,s*.25)});
+function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,T=SK150.tail,eye=red?0xff2a2a:0xffb84a,ivory=0xd8cfbc,
+    mane=K.main.clone().lerp(K.back,.45).getHex(),maneD=K.dark.clone().lerp(K.main,.35).getHex(),ash=K.main.clone().lerp(new THREE.Color(0x8a8690),.14).getHex(),
+    nm=(v)=>{const l=Math.hypot(...v);return v.map(x=>x/l)},rn=i=>((i*9301+49297)%233280)/233280,
+    tuft=(bn,h,d,ln,r,col,sides)=>{const D=nm(d);k.L(bn,'c',col,h.p,[h.p[0]+D[0]*ln,h.p[1]+D[1]*ln,h.p[2]+D[2]*ln],r,.004,sides||5)};
+  // the mane: long shag over the neck and shoulders, sweeping back (roots 2.5 cm inside the body)
+  [[.5,.1],[.45,.15],[.4,.18],[.345,.2],[.29,.19],[.235,.16],[.18,.12],[.13,.08]].forEach((q,j)=>{const N=12;for(let i=0;i<N;i++){
+    const a=-.35+(i+(j%2)*.5)/(N-1)*(Math.PI+.7),h=bz150S(R,q[0],a,-.025),n=h.n,bn=q[0]>.5?'head':q[0]>.36?'neck':'chest',u=rn(i*13+j*7);
+    tuft(bn,h,[n[0]*.22,n[1]*.14,-1],q[1]*(.85+u*.35),.048,u<.25?ash:(i+j)%2?mane:maneD)}});
+  // the ruff: long fur hanging from the throat and the front of the chest
+  [[.46,.12,'neck'],[.4,.15,'neck'],[.34,.16,'chest'],[.28,.14,'chest']].forEach((q,j)=>{for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.32+(j%2)*.12,h=bz150S(R,q[0],a,-.025),u=rn(i*5+j*11+3);
+    tuft(q[2],h,[h.n[0]*.25,-1,-.1],q[1]*(.85+u*.3),.045,u<.35?ash:i%2?mane:maneD)}});
+  // cheek ruffs behind the jaw
+  [-1,1].forEach(s=>[-.35,0,.35].forEach((da,i)=>{const h=bz150S(R,.575,(s>0?0:Math.PI)+da*s,-.015);tuft('head',h,[s*.6,.05-da*.3,-1],.075+i*.01,.03,i%2?mane:maneD,4)}));
+  // short fur down the back, shaggy britches behind the thighs
+  for(let z=.1,j=0;z>-.33;z-=.075,j++)[-.35,0,.35].forEach((da,i)=>{const h=bz150S(R,z,Math.PI/2+da,-.015),bn=z>-.12?'spine':'pelvis';tuft(bn,h,[h.n[0]*.15,.08,-1],.06+rn(i+j*3)*.02,.028,(i+j)%2?mane:maneD,4)});
+  [-1,1].forEach(s=>[[-.33,.6],[-.37,.9],[-.4,.7],[-.36,1.15]].forEach((q,i)=>{const h=bz150S(R,q[0],s>0?-q[1]:Math.PI+q[1],-.02);tuft('pelvis',h,[s*.3,-.9,-.6],.085+i*.008,.035,i%2?mane:maneD,4)}));
+  // the tail fluffed out along its length
+  {const at=z=>{let i=0;while(i<T.length-2&&z<T[i+1][0])i++;const A=T[i],B=T[i+1],t=(z-A[0])/(B[0]-A[0]);return [A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t]};
+    for(let z=-.5,j=0;z>-1.01;z-=.08,j++)for(let i=0;i<6;i++){const a=(i+(j%2)*.5)/6*Math.PI*2,[y,r]=at(z),c=Math.cos(a),sn=Math.sin(a),p=[c*(r-.02),y+sn*(r-.02),z],
+      bn=z>-.6?'tail0':z>-.85?'tail1':'tail2';tuft(bn,{p},[c*.22,sn*.22-.08,-1],.07+r*.6,Math.min(.032,r*.45),z<-.9?K.dark.getHex():(i+j)%2?mane:maneD,4)}}
+  // eyes: deep sockets with an amber glow, under a brow ridge that is part of the skull
+  [-1,1].forEach(s=>{const h=bz150S(R,.625,s>0?.62:Math.PI-.62,-.006),e=h.p;k.p('head','sph','c',0x060507,e[0],e[1],e[2],.026,.013,.022,0,s*.5,s*-.2);
+    k.p('head','oct','g',eye,e[0]+h.n[0]*.008,e[1]+h.n[1]*.008,e[2]+.006,.016,.009,.016,0,s*.5,s*-.2);
+    const b0=bz150S(R,.64,s>0?1.15:Math.PI-1.15,-.006).p,b1=bz150S(R,.6,s>0?.62:Math.PI-.62,-.004).p;k.L('head','c',maneD,b0,[b1[0],b1[1]+.016,b1[2]],.014,.011,4)});
+  // a dark lip line along the muzzle, canines just showing, the nose
+  [-1,1].forEach(s=>{let p=bz150S(R,.6,s>0?-.62:Math.PI+.62,-.004).p;for(let z=.66;z<=.84;z+=.06){const q=bz150S(R,z,s>0?-.62:Math.PI+.62,-.004).p;k.L('head','c',0x0a0809,p,q,.006,.006,4);p=q}
+    const u=bz150At(R,.8),x=s*u.w*.55,y=u.y-u.b*.85;k.p('head','cone4','c',ivory,x,y-.006,.8,.007,.03,.007,Math.PI);
+    const J=bz150At(SK150.jaw,.78);k.p('jaw','cone4','c',ivory,s*J.w*.55,J.y+J.a*.6+.004,.785,.006,.022,.006)});
   k.p('head','box','c',0x08070a,0,.718,.858,.028,.019,.017)}
 function sk150Post(x,c,C,mat){const K=sk150Cols(C),og=lpSpikeGeo(K.main.clone().lerp(K.back,.3),K.dark),ig=lpSpikeGeo(0x3a2a40,0x120c14);
   // tall ears, swept back
