@@ -100,7 +100,7 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
   for(let i=0;i<6;i++)k.p('pelvis','cone4','c',sd,0,.52-i*.075,-.1-i*.13,.012,.05,.03,-.9)}));
 
 // ---------------- Skeleton Warrior / Bone Archer: a cold soul-light caged in the ribs, rusted scraps, a torn banner rag ----------------
-{const f=mdFoeB;mdFoeB=function(key){const B=f.apply(this,arguments);if(key!='skel'&&key!='archer')return B;
+{const f=mdFoeB;mdFoeB=function(key){const B=f.apply(this,arguments);if(key!='skel'&&key!='archer'||(typeof A181!='undefined'&&A181.keys[key]))return B;   // (v181: the bone skeletons have their own soul-light)
   const k=dkKit(),glow=key=='skel'?0x6aff9a:0x7ad8ff;
   k.p('chest','ico','g',glow,0,.86,.01,.045);k.p('chest','ico','g',0xffffff,0,.86,.01,.022);
   for(let i=0;i<3;i++)k.L('chest','g',glow,[0,.86,.01],[(i-1)*.05,.98,.02],.006,.001,3);
