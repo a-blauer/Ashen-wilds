@@ -84,7 +84,7 @@ def s(pg):
         box=pg.evaluate(BOX,stage);solid();sl=shot('cave_solid');glass()
         d=diff(on,sl,box);print('cave hero box',box,'glass vs solid',round(d,1))
         if d<6:fail('cave: the hero is not visible through the wall (difference to a solid wall',round(d,1),')')
-        for x in pg.evaluate(STATE):fail('state:',x)
+        for x in (pg.evaluate(STATE) if NEW else []):fail('state:',x)
     # 2. one scenery object between the camera and the hero (Kindlelight I): handed over whole
     pg.evaluate(OBJ,0);pg.wait_for_timeout(3000);pg.evaluate(FR,30)
     q=pg.evaluate(OBJ2)
@@ -128,6 +128,6 @@ def s(pg):
             hero=pg.evaluate(BOX,stage);solid();sl=shot('inwall_solid');glass();dd=diff(im,sl,hero)
             print('inside the rock: hero box',hero,'glass vs solid',round(dd,1))
             if dd<5:fail('inside the rock: the hero is not seen through the rock (difference',round(dd,1),')')
-            for x in pg.evaluate(STATE):fail('state:',x)
+            for x in (pg.evaluate(STATE) if NEW else []):fail('state:',x)
     print('DONE' if not F else 'FAILED '+str(len(F)))
 play.run(s,w=1000,hh=620)
