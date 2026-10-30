@@ -55268,7 +55268,7 @@ function o176Chest(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKit(
     for(let i=0;i<9;i++){const th=Math.PI+(i-4)*.32,q=top.at(th,.004),len=.06+(4-Math.abs(i-4))*.012;o176Spike(k,'chest',q.p,[q.n[0]*.5,1,q.n[2]*.5].map(v=>v/Math.hypot(q.n[0]*.5,1,q.n[2]*.5)),len,.012,i%2?T:mdSh(T,.7),W(q.p))}}
   else if(cls=='paladin'&&top.ok){// a gothic halo of thin gilded blades fanning up behind the head
     for(let i=0;i<11;i++){const th=Math.PI+(i-5)*.26,q=top.at(th,.004),up=1.2,dir=[q.n[0]*.25,up,q.n[2]*.25-.12],l=Math.hypot(...dir);o176Spike(k,'chest',q.p,dir.map(v=>v/l),.09+(5-Math.abs(i-5))*.016,.008,i%2?T:mdSh(T,1.1),W(q.p))}
-    const q=top.at(Math.PI,.01);k.p('chest','ring','m',T,q.p[0],q.p[1]+.12,q.p[2]-.03,.075,.12,.075,Math.PI/2-.25);mdOW(k,W(q.p))}
+}
   else if(cls=='mage'&&top.ok){// a tall standing collar of tapering plates behind the head
     for(let i=0;i<7;i++){const th=Math.PI+(i-3)*.36,q=top.at(th,.003),h=.1+(3-Math.abs(i-3))*.025;a7Put(k,'chest',q.p,[q.n[0],0,q.n[2]],[0,1,0],1,t=>{t.p('','cone4','c',C.acc,0,h/2,0,.03,h,.006,0,Math.PI/4,0);t.L('','m',T,[0,0,.006],[0,h*.95,.003],.0035,.001,4)},W(q.p))}}
   else if(cls=='assassin'&&top.ok){// a high blade collar at the back
