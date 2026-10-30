@@ -51,3 +51,28 @@ function cmTeeth(B,pts,o){pts.forEach((q,i)=>{const big=o.fang&&o.fang.indexOf(i
 // a mane / ruff / saddle of fur locks over a loft: rows of locks shingled toward the loft's end (or start with back:1)
 // o: {u0,u1,a0,a1,rows,n,size,w,lift,col(a,u,r,k) or K+mode}
 function cmFur(B,name,o){return B.cover(name,Object.assign({geo:'lock',sl:'f',lift:.32,w:.55,th:.5},o))}
+// ---------------- membrane wings (bats, drakes) ----------------
+// A wing as one rigid geometry for a wing pivot (x.wings: rigAnim flaps the pivot). Pivot space: +x out along the span, +z
+// forward, +y up. o: {key, outline [[x,z],...] counter-clockwise (the membrane's edge, scallops included), camber(x,z) → y,
+// struts [[[x,y,z],[x,y,z],r0,r1], ...] (arm and finger bones, drawn over the membrane), mem(x,z) → hex, strut hex, tile}
+function cmWing(o){return cmG('wing|'+o.key,()=>{const P=[],C=[],UV=[],tile=o.tile||.3,cam=o.camber||(()=>0);
+  const sh=new THREE.Shape();o.outline.forEach(([x,z],i)=>i?sh.lineTo(x,z):sh.moveTo(x,z));const g=new THREE.ShapeGeometry(sh),gp=g.attributes.position,gi=g.index?g.index.array:null;
+  const vt=i=>{const x=gp.getX(i),z=gp.getY(i);return [x,cam(x,z),z]},push=(p,c,uv)=>{P.push(p[0],p[1],p[2]);const k=cmCol(c);C.push(k.r,k.g,k.b);UV.push(uv[0],uv[1])};
+  const n=gi?gi.length:gp.count;for(let t=0;t<n;t++){const i=gi?gi[t]:t,p=vt(i);push(p,o.mem(p[0],p[2]),[p[0]/tile,p[2]/tile])}
+  // struts: tapered tubes, 6 sides
+  (o.struts||[]).forEach(([a,b,r0,r1])=>{const A=cmV(a),Bv=cmV(b),d=Bv.clone().sub(A),L=d.length();d.normalize();const up=Math.abs(d.y)>.9?new CM_V(1,0,0):new CM_V(0,1,0),X=new CM_V().crossVectors(d,up).normalize(),Y=new CM_V().crossVectors(X,d);
+    const ring=(c,r)=>{const R=[];for(let k=0;k<6;k++){const an=k/6*Math.PI*2;R.push(c.clone().addScaledVector(X,Math.cos(an)*r).addScaledVector(Y,Math.sin(an)*r))}return R},R0=ring(A,r0),R1=ring(Bv,r1==null?r0*.3:r1),sc=o.strut||0x444444;
+    for(let k=0;k<6;k++){const j=(k+1)%6;[[R0[k],R1[k],R1[j]],[R0[k],R1[j],R0[j]]].forEach(tr=>tr.forEach(p=>push([p.x,p.y,p.z],sc,[0,0])))}
+    for(let k=0;k<6;k++){const j=(k+1)%6;[Bv,R1[j],R1[k]].forEach(p=>push([p.x,p.y,p.z],sc,[0,0]))}});
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(C,3));G.setAttribute('uv',new THREE.Float32BufferAttribute(UV,2));
+  G.computeVertexNormals();G.userData.lps=1;g.dispose();return G})}
+// hang a pair of wings on bone bn at model point (±px, py, pz); sweep / droop as lpwPair; base / amp = flap pose and amplitude
+function cmWingPair(x,bn,geo,mat,px,py,pz,sweep,droop,base,amp){[-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,bn,geo,mat,s*px,py,pz,s,1,1,0,s*sweep,-s*droop);p.children[0].userData.lpsSkip=1;p.children[0].castShadow=true;
+  x.wings.push({p,s,base:base==null?.35:base,amp:amp==null?.55:amp})})}
+// ---------------- ventral plates (belly scutes) ----------------
+// broad glossy plates down the underside of a loft, each overlapping the next toward the loft's end; o: {u0, u1, n, wf (width
+// factor of the section), col(i, t) → hex, sl}
+function cmPlates(B,name,o){const L=B.L[name],RR=L.rings,N=RR.length,out=[],n=o.n||8;
+  for(let i=0;i<n;i++){const t=n>1?i/(n-1):.5,u=o.u0+(o.u1-o.u0)*t,q=B.at(name,u,-Math.PI/2,0),f=Math.min(N-1,Math.round(u*(N-1))),r=RR[f],step=Math.abs(o.u1-o.u0)/n;
+    let len=0;for(let k=1;k<N;k++)len+=RR[k].p.distanceTo(RR[k-1].p);const w=r.rx*2*(o.wf||.8),l=len*step*1.6;
+    out.push(B.on(o.sl||'k',CM_SH.plate(),q,{dir:q.t,s:[w,l,Math.min(w,l)*.35],tilt:-.12,sink:.4,th:.16,col:o.col?o.col(i,t):0xd8c49a,nm:'plate '+name+i}))}return out}

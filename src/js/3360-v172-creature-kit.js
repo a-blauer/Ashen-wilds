@@ -19,8 +19,8 @@
 // parts that float (cm172Check), and the tests fail on them.
 var CM172={on:true,D:{},gc:{},chk:0,tris:{},rep:{},last:{},smooth:1,tile:.3};
 // ---------------- shared materials ----------------
-function cm172TexMat(kind,slot){const M=cm172Mats(),k=kind+'|'+slot;if(M.tx[k])return M.tx[k];const sm=!!CM172.smooth;
-  const m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:!sm,skinning:true,side:THREE.DoubleSide,map:cm172Tex(kind),roughness:slot=='f'?.92:.88,metalness:0});
+function cm172TexMat(kind,slot,rigid){const M=cm172Mats(),k=kind+'|'+slot+(rigid?'|r':'');if(M.tx[k])return M.tx[k];const sm=!!CM172.smooth;
+  const m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:!sm,skinning:!rigid,side:THREE.DoubleSide,map:cm172Tex(kind),roughness:slot=='f'?.92:kind=='scale'?.62:.88,metalness:kind=='scale'?.08:0});
   m.userData.lpsSkip=1;return M.tx[k]=m}
 function cm172Mats(){if(CM172.M&&CM172.M.sm===!!CM172.smooth)return CM172.M;const sm=!!CM172.smooth,f=o=>Object.assign({vertexColors:true,flatShading:!sm,skinning:true},o),M=dkM();
   // flat shading takes its normal from the screen, so every material is two-sided and no part can show its back
@@ -53,10 +53,14 @@ function cm172Tex(kind){CM172.tex=CM172.tex||{};if(CM172.tex[kind])return CM172.
       x.lineCap='round';for(let i=0;i<(fine?4:9);i++){const sx=(rn()-.5)*w*.75,lt=rn()<.55;x.strokeStyle=lt?'rgba(255,255,255,.35)':'rgba(40,40,40,.28)';x.lineWidth=(fine?.8:1.4)+rn()*(fine?.8:1.6);
         x.beginPath();x.moveTo(sx,h*(.05+rn()*.15));x.quadraticCurveTo(sx*.7+(rn()-.5)*4,h*.55,sx*.25+w*.04,h*(.8+rn()*.18));x.stroke()}
       x.restore()}))}
-  else if(kind=='scale'||kind=='chitin'){const cols=kind=='scale'?12:6,rows=kind=='scale'?14:7,cw=S/cols,rh=S/rows;x.fillStyle=g(.4);x.fillRect(0,0,S,S);
-    for(let r=rows-1;r>=0;r--)for(let c=0;c<cols;c++){const cx=c*cw+(r%2?cw/2:0),cy=r*rh,w=cw*.98,h=rh*1.5;wrap(()=>{x.save();x.translate(cx,cy);
-      const gr=x.createRadialGradient(0,h*.25,1,0,h*.35,w*.75);gr.addColorStop(0,g(.98));gr.addColorStop(.7,g(.8));gr.addColorStop(1,g(.55));x.fillStyle=gr;
-      x.beginPath();x.moveTo(-w*.5,0);x.quadraticCurveTo(-w*.55,h*.7,0,h);x.quadraticCurveTo(w*.55,h*.7,w*.5,0);x.closePath();x.fill();x.strokeStyle=g(.3);x.lineWidth=1.5;x.stroke();x.restore()})}}
+  else if(kind=='scale'||kind=='chitin'){const ch=kind=='chitin',cols=ch?4:7,rows=ch?4:8,cw=S/cols,rh=S/rows;x.fillStyle=g(.5);x.fillRect(0,0,S,S);
+    // overlapping scales: each a rounded shield, lit along its keel, darker at the overlapped root; soft shadow under its tip
+    for(let r=rows*2-1;r>=0;r--)for(let c=0;c<cols;c++){const cx=c*cw+(r%2?cw/2:0)+(rn()-.5)*cw*.12,cy=r*rh/2,w=cw*(1.02+rn()*.12),h=rh*(1.05+rn()*.15),k=rn();wrap(()=>{x.save();x.translate(cx,cy);
+      const sh=()=>{x.beginPath();x.moveTo(-w*.5,0);x.bezierCurveTo(-w*.56,h*.55,-w*.22,h*.95,0,h);x.bezierCurveTo(w*.22,h*.95,w*.56,h*.55,w*.5,0);x.quadraticCurveTo(0,-h*.1,-w*.5,0)};
+      x.save();x.filter='blur(3px)';x.translate(0,h*.08);x.fillStyle='rgba(0,0,0,.35)';sh();x.fill();x.restore();
+      const gr=x.createLinearGradient(-w*.5,0,w*.5,h);gr.addColorStop(0,g(.62+k*.08));gr.addColorStop(.5,g(.86+k*.08));gr.addColorStop(1,g(.7+k*.06));x.fillStyle=gr;sh();x.fill();
+      x.strokeStyle='rgba(255,255,255,.25)';x.lineWidth=2;x.beginPath();x.moveTo(0,h*.15);x.lineTo(0,h*.85);x.stroke();
+      x.strokeStyle='rgba(0,0,0,.22)';x.lineWidth=1.5;sh();x.stroke();x.restore()})}}
   else{x.fillStyle=g(.85);x.fillRect(0,0,S,S);for(let i=0;i<1400;i++){x.fillStyle=g(.7+rn()*.3);x.globalAlpha=.25;const r=2+rn()*7;x.beginPath();x.arc(rn()*S,rn()*S,r,0,7);x.fill()}x.globalAlpha=1}
   const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return CM172.tex[kind]=t}
 // ---------------- small helpers ----------------
