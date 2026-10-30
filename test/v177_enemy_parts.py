@@ -32,7 +32,7 @@ JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={ite
     sc.add(new THREE.HemisphereLight(0xc8d0dc,0x3a3028,.9));const dl=new THREE.DirectionalLight(0xfff0d8,1.1);dl.position.set(2,4,4);sc.add(dl);const d2=new THREE.DirectionalLight(0x8090c0,.55);d2.position.set(-4,1,-2);sc.add(d2);
     const gr=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshLambertMaterial({color:0x3a4234}));gr.rotation.x=-Math.PI/2;sc.add(gr);window.RT6={rd,sc,pc:new THREE.PerspectiveCamera(30,1,.02,200)}}
   const {rd,sc,pc}=RT6;
-  const fx=m=>{const M=Array.isArray(m.material)?m.material[0]:m.material;if(!M)return true;if(M.blending==THREE.AdditiveBlending)return true;if(M.isMeshBasicMaterial&&M.transparent&&M.opacity<.95)return true;if(M.visible===false)return true;return false};
+  const fx=m=>{const M=Array.isArray(m.material)?m.material[0]:m.material;if(!M)return true;if(M.blending==THREE.AdditiveBlending)return true;if(M.isMeshBasicMaterial&&M.transparent&&M.opacity<.95)return true;if(M.visible===false)return true;if(window.BOSS177&&M.emissive&&M.emissive.getHex()>0&&(M.emissiveIntensity||1)*Math.max(M.emissive.r,M.emissive.g,M.emissive.b)>.35)return true;return false};
   const GC=(a,j,q)=>q==0?a.getX(j):q==1?a.getY(j):q==2?a.getZ(j):a.getW(j);
   const vis=o=>{let p=o;while(p){if(!p.visible||/^(orbit|halo)/.test(p.name||''))return false;p=p.parent}return true};
   const geo=g=>{g.updateMatrixWorld(true);const P=[],F=[],TG=[],NM=[],v=new V();let mi_=0;g.traverse(m=>{if(!m.isMesh||!m.geometry||!m.geometry.attributes.position||!vis(m))return;const isfx=fx(m);
@@ -47,7 +47,7 @@ JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={ite
     const err=[];const ce=console.error;console.error=function(){err.push([].map.call(arguments,String).join(' '));return ce.apply(console,arguments)};
     const SV=i=>()=>{const R=svRig();SVB[i].build(R,null);svRest(R);svMerge(R);return R.root};
     const BLD={argus:SV(0),hydra:SV(1),rimewraith:SV(2),ssithra:SV(3),bloated:SV(4),vaelric:SV(5),vorraxis:()=>MB144.sheet.boss(),gorthrak:()=>GB151.sheet.gorthrak(),
-      qarsul:()=>QS165M.sheet.qarsul(),kheprit:()=>KH165.sheet.kheprit(),skimmer:()=>SK165.sheet.skimmer()};const boss=!!BLD[k];if(boss)it.n=k;
+      qarsul:()=>QS165M.sheet.qarsul(),kheprit:()=>KH165.sheet.kheprit(),skimmer:()=>SK165.sheet.skimmer()};const boss=!!BLD[k];window.BOSS177=boss;if(boss)it.n=k;
     try{if(boss)g=BLD[k]();else{const c=enemyC(k,20,{});g=cr(c)}g.position.set(0,0,0);g.rotation.y=0;sc.add(g)}catch(e){it.err='build error '+String(e).slice(0,200);console.error=ce;return}
     const tick=(ms,mv,sp)=>{if(!boss)for(let t=0;t<ms;t+=16){T+=16;try{animC(g,T,mv,sp||0)}catch(e){it.err='anim error '+String(e).slice(0,200)}}g.position.set(0,g.position.y,0);g.updateMatrixWorld(true)};
     it.fly=boss||!!(EN[k]&&(EN[k].fly||EN[k].hover));

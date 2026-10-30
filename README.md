@@ -678,7 +678,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Still open (listed in the test's `KNOWN` / `GROUND_KNOWN`, NOTE lines): small gaps in the idle sway on 12 creatures (Banshee /
   Wraith hair strands, Rimeshell Crawler / Web Stalker mandibles, Ghost Wolf and Maggot tail spines, Salt Golem shoulder
   crystals, Troll / Tomb Priest hip pieces, Croaker / Bog Horror glands, Drowned Wretch chest piece) and the Shambler's /
-  Maggot's feet a few cm into the ground in idle; Hydra has 6 small head pieces in the rest pose (BOSSES=1).
+  Maggot's feet a few cm into the ground in idle; in the rest pose (BOSSES=1) Hydra still has 6 small head
+  pieces, Argus and the Bloated One 1 each.
 - **Animal townsfolk (v137, `2800`–`2830`)**: every Duskhold townsperson is a warm-blooded animal.
   * Bodies use the v114 beast engine on the town-folk skeleton `idlNB` + tail bones `tl…`, ear bones `erL`/`erR` and cape bones
     `cp0…cp2` (`fkNB`), so the v93 idle, the v103 work stations, the citizens' walk and held tools work unchanged. `idlNpcBody(o)` →
