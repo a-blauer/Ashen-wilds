@@ -56405,11 +56405,11 @@ function cgEars(k,M,S,col,y,len,up,back,r,inner){[-1,1].forEach(s=>{const q=S.hp
 // fingers from the knuckles: kind 'open' | 'claw' | 'fist', len, nail colour, claw tip
 function cgFingers(k,S,s,col,kind,len,nail,tip,t){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*(S.hand||1))),L=(len||1)*.08;
   // the hand's frame: u = the back of the hand, f = across the knuckles (thumb side), turned by S.pron like the cage's hand
-  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=mul3(f,s);
+  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));   // the curl axis: each joint turns the finger toward the palm (−u)
   const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c)));
   for(let i=0;i<4;i++){const z=(1.5-i)*.016,p=P(kn,z,-.004);if(kind=='fist')a181Digit(k,bn+'2',col,p,D(1,-.45,.05),L*.7,.0095,2,1.15,ax,0,null,t);
     else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6),L*(i==3?.82:1),.0085,3,kind=='claw'?.26:.14,ax,tip||0,nail,t)}
-  const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',col,P(tb,.026,-.01),D(.6,-.3,.75),L*.62,.009,2,.3,mul3(u,-1),tip?tip*.6:0,nail,t)}
+  const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',col,P(tb,.026,-.01),D(.6,-.3,.75),L*.62,.009,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail,t)}   // the thumb curls across the palm
 function cgToes(k,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w;for(let i=0;i<5;i++){const tx=A[0]+(i-2)*.018*W,tz=A[2]+.16*L;k.L(l,'c',col,[tx,.018,tz-.02],[tx+(i-2)*.004,.012,tz+.012],.009*W,.007*W,4);if(claw)k.L(l,'c',nail||0x1a1214,[tx+(i-2)*.004,.012,tz+.012],[tx+(i-2)*.006,.004,tz+.012+claw],.006*W,.001,4)}}
 // the torso ring of the cage spec at height y (rx, f, b, z)
 function cgTAt(S,y){const q=cgAt(S.torso,y);return {rx:q[1],f:q[2],b:q[3],z:q[4]||0}}
