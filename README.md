@@ -664,10 +664,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     Hound (ribs on the flanks, chain links that hook), Ossuary Hound (neck into the skull, jaw hinge), Croaker eyes (small, under
     a lid) and horns (short spurs), Shambler cap spots, Caustic Goo eyes, belts and loincloth flaps (`mdLoin`), the staff's claws,
     the war-hammer's haft, the bow's feathers and grip rings; goblin, naga, amalgam, goo, cultist and troll colours.
+  * Also: foes' skirts / coat tails / tabard skirts start on the layer beneath (`mdSkirt` wrapper, P.tOff + 2 mm), belts and
+    straps lie on the cloth, boot cuffs and limb shells have closed rims, capes are pinned at the shoulders; the carried weapons'
+    parts are snapped too (`lgBake`, `LW|` kits); bosses' rigid parts are snapped before `svMerge` (`sn177Boss`; not Ssith'ra,
+    not joints meant to float: `SN177_FREE` = Qarsul's debris ring, the Rime Wraith's halo; glowing stones stay put).
   Test: `v177_enemy_parts.py` (every enemy that can spawn plus the quest-only ones; rest, idle, two walk phases, an attack:
-  FAIL on a piece more than `FLOAT_MM` (4 mm per 1.7 m of height) from the rest of the model, NaN, feet off the ground in
-  idle; `BOSSES=1` the Sovereigns and quest bosses in their rest pose; `ONLY=`, `FOCUS=1` close-ups of each loose piece,
-  `NOSHEET=1`; sheets `out/v177_en*.jpg`). The floating-piece check is shared in `test/float_lib.py`.
+  FAIL on a piece more than `FLOAT_MM` (4 mm per 1.7 m of height) from the rest of the model in the standing model (rest,
+  idle), or more than `ANIM_MM` (40 mm) off mid-walk / mid-attack; smaller animation-only gaps (a rigid part over stretching
+  skin) and a held weapon off the hand mid-swing are NOTE lines (`STRICT=1` fails them all); NaN; feet off the ground in idle;
+  `BOSSES=1` the Sovereigns and quest bosses in their rest pose; `ONLY=`, `FOCUS=1` close-ups of each loose piece,
+  `NOSHEET=1`; sheets `out/v177_en*.jpg`). The floating-piece check is shared in `test/float_lib.py`. Before / after (Oct 30
+  2026): 732 loose pieces over the 68 enemies before v177; bosses Argus 91, Hydra 21, Bloated One 20, Rime Wraith 9 before.
 - **Animal townsfolk (v137, `2800`–`2830`)**: every Duskhold townsperson is a warm-blooded animal.
   * Bodies use the v114 beast engine on the town-folk skeleton `idlNB` + tail bones `tl…`, ear bones `erL`/`erR` and cape bones
     `cp0…cp2` (`fkNB`), so the v93 idle, the v103 work stations, the citizens' walk and held tools work unchanged. `idlNpcBody(o)` →

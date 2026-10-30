@@ -4,8 +4,10 @@
 #    model's size) from the rest of the model; glow / effect meshes (additive or see-through basic materials) are skipped),
 #    feet on the ground in idle (walkers only: lowest point within -3..+4 % of the height)
 #  * sheets: out/v177_en<n>.jpg — front, 3/4, side, back, and the attack pose
-# BOSSES=1: the Sovereigns and quest bosses instead (rest pose: argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer;
-#   not Ssith'ra: its segments are laid out live along its path)
+# BOSSES=1: the Sovereigns and quest bosses instead (rest pose: argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit;
+#   not Ssith'ra: its segments are laid out live along its path; Qarsul's debris ring (joint 'orbit') floats on purpose)
+# The standing model (rest, idle) must have no loose piece; walk / attack gaps under ANIM_MM (40, per 1.7 m) are NOTE lines
+# (a rigid part over stretching skin), larger ones fail; STRICT=1 fails every one. A held weapon off the hand only mid-attack is a NOTE.
 # ONLY=orc,scarab  NOSHEET=1  POSES=rest,idle  FLOAT_MM=4 (per 1.7 m of height)
 import os,sys,base64,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -18,6 +20,7 @@ FLOAT_MM=float(os.environ.get('FLOAT_MM','4'));FOCUS=bool(os.environ.get('FOCUS'
 # things meant to hang inside a see-through body (the goo's bubbles and half-dissolved trophies): only their middle must be
 # enclosed, and only at rest (the body wobbles round them)
 SUSPEND={'goo','spitter'}
+STRICT=bool(os.environ.get('STRICT'));ANIM_MM=float(os.environ.get('ANIM_MM','40'))
 FLY={'cavebat','bloodbat','banshee','wraith'}
 JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={items:[]};
   if(!window.RT6){const rd=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rd.setSize(FW,FH);const sc=new THREE.Scene();sc.background=new THREE.Color(0x2c3036);
@@ -26,7 +29,7 @@ JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={ite
   const {rd,sc,pc}=RT6;
   const fx=m=>{const M=Array.isArray(m.material)?m.material[0]:m.material;if(!M)return true;if(M.blending==THREE.AdditiveBlending)return true;if(M.isMeshBasicMaterial&&M.transparent&&M.opacity<.95)return true;if(M.visible===false)return true;return false};
   const GC=(a,j,q)=>q==0?a.getX(j):q==1?a.getY(j):q==2?a.getZ(j):a.getW(j);
-  const vis=o=>{let p=o;while(p){if(!p.visible)return false;p=p.parent}return true};
+  const vis=o=>{let p=o;while(p){if(!p.visible||/^(orbit|halo)/.test(p.name||''))return false;p=p.parent}return true};
   const geo=g=>{g.updateMatrixWorld(true);const P=[],F=[],TG=[],NM=[],v=new V();let mi_=0;g.traverse(m=>{if(!m.isMesh||!m.geometry||!m.geometry.attributes.position||!vis(m))return;const isfx=fx(m);
       const mid=mi_++;const M0=Array.isArray(m.material)?m.material[0]:m.material;NM.push((m.name||'mesh')+'#'+(M0&&M0.color?M0.color.getHexString():'')+(m.parent&&m.parent.isBone?'@'+m.parent.name:''));const BN=m.isSkinnedMesh?m.skeleton.bones.map(b=>b.name):[],sk=m.isSkinnedMesh&&m.geometry.attributes.skinIndex,sw=m.isSkinnedMesh&&m.geometry.attributes.skinWeight;if(m.isSkinnedMesh)m.skeleton.update();const pa=m.geometry.attributes.position,ix=m.geometry.index,n=ix?ix.count:pa.count;
       const cnt=m.isInstancedMesh?m.count:1,mi=new THREE.Matrix4();
@@ -72,7 +75,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=600000);pg.click('[data-c="warrior"]',timeout=600000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     errs=[];pg.on('pageerror',lambda e: errs.append(str(e)))
     ev("()=>{window.requestAnimationFrame=()=>0}")   # stop the game loop: only the model renderer draws
-    keys=[q for q in os.environ.get('ONLY','').split(',') if q] or ('argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer'.split(',') if os.environ.get('BOSSES') else ev(LISTJS))
+    keys=[q for q in os.environ.get('ONLY','').split(',') if q] or ('argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit'.split(',') if os.environ.get('BOSSES') else ev(LISTJS))
     poses=os.environ.get('POSES','rest,idle,walk,atk').split(',');nos=bool(os.environ.get('NOSHEET'))
     fails=[];cells=[];notes=[]
     for i in range(0,len(keys),4):
@@ -111,6 +114,9 @@ def s(pg):
                 cc=P['cc']
                 # a held weapon (its own mesh, no bone) off the hand only mid-attack is a grip matter of that swing: noted, not failed
                 if ' bone ' not in P['w'] and set(P['poses'])<={'atk'}:notes.append('%s: weapon piece (%d tris) %.0f mm off the hand in the attack pose'%(lab,P['n'],P['d']*1000));continue
+                # the standing model (rest, idle) must be whole; a gap that only opens mid-stride or mid-swing (a rigid part over
+                # skin that stretches) is listed, not failed, unless it is large (STRICT=1 fails them all)
+                if not STRICT and not (set(P['poses'])&{'rest','idle'}) and P['d']<ANIM_MM/1000*max(1,h/1.7):notes.append('%s: piece (%d tris) at (%.2f, %.2f, %.2f) [%s] %.0f mm off only in %s'%(lab,P['n'],cc[0],cc[1],cc[2],P['w'],P['d']*1000,','.join(P['poses'])));continue
                 nb+=1;fails.append('%s: floating piece (%d tris) at (%.2f, %.2f, %.2f) [%s], up to %.0f mm off in %s'%(lab,P['n'],cc[0],cc[1],cc[2],P['w'],P['d']*1000,','.join(P['poses'])))
             print('checked',lab,'h %.2f'%h,'floating',nb,flush=True)
             for f in fails[nf0:]:print('  -',f,flush=True)

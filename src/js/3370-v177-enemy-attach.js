@@ -65,8 +65,8 @@ function sn177Snap(body,P,tag){if(!SN177.on||!P||!P.length||!body||body.length<9
   const parts=P.map(sn177Part),att=new Array(parts.length).fill(false),o=[0,0,0];let moved=0;
   const attach=i=>{if(att[i]!=='in')att[i]=true;parts[i].tri.forEach(t=>sn177Add(G,t[0],t[1],t[2]))};
   const near=(q,r)=>{let best=-1,bp=null,bq=null,bt=-1;for(const s of q.S){const d=sn177Near(G,s,r,o);if(d>=0&&(best<0||d<best)){best=d;bp=s;bq=o.slice();bt=G.lastT}}return best<0?null:{d:best,s:bp,q:bq,t:bt}};
-  // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height)
-  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn177RayG(G,p,d,H*.12))))att[i]='in'});
+  // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height, at most 30 cm)
+  const AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn177RayG(G,p,d,Math.min(H*.12,.3)))))att[i]='in'});
   parts.forEach((q,i)=>{if(att[i]==='in')attach(i)});
   if(SN177.dbg)parts.forEach((q,i)=>{const r=near(q,.2);SN177.dbg.push((tag||'')+' '+q.p.bn+' c '+q.c.map(v=>v.toFixed(3)).join(',')+' d '+(r?r.d.toFixed(4)+' q '+r.q.map(v=>v.toFixed(3)).join(','):'-')+(att[i]==='in'?' IN':''))});
   const grow=()=>{let ch=true;while(ch){ch=false;parts.forEach((q,i)=>{if(att[i])return;if(near(q,tol)){attach(i);ch=true}})}};
@@ -148,11 +148,14 @@ function sn177Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R
 // ---------------- Sovereigns and quest bosses: rigid parts on joints ----------------
 // A boss model is many small meshes on named joints (svRig), merged per joint by svMerge. Before the merge the same snap runs
 // on them in the rest pose: the big meshes are the body, every other visible, solid mesh is a part; a moved part keeps its
-// joint (its own position is shifted). Glows, see-through effects and hidden pieces are left alone, as is Ssith'ra (its
-// segments are laid out live along the body path).
+// joint (its own position is shifted). Glows (glowing stones too), see-through effects, hidden pieces and joints meant to float
+// (SN177_FREE) are left alone, as is Ssith'ra (its segments are laid out live along the body path).
+// joints whose pieces are meant to float free: Qarsul's ring of whirling debris, the Rime Wraith's Phase II halo
+var SN177_FREE=/^(orbit|halo)/;
 function sn177Boss(R){if(!SN177.on||!R||R.s177||R.no177)return 0;R.s177=1;const root=R.root;root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),M=[];
-  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible)return;p=p.parent}
+  root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible||SN177_FREE.test(p.name||''))return;p=p.parent}
     const mt=Array.isArray(o.material)?o.material[0]:o.material;if(!mt||mt.blending===THREE.AdditiveBlending||(mt.transparent&&mt.opacity<.6)||mt.visible===false)return;
+    if(mt.emissive&&mt.emissive.getHex()>0&&(mt.emissiveIntensity||1)*Math.max(mt.emissive.r,mt.emissive.g,mt.emissive.b)>.35)return;   // a glowing stone or wisp is magic, left where it hangs
     const n=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;M.push({o,n,m:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)})});
   if(M.length<2)return 0;const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
   M.forEach(q=>{if(q.n>=mx*.3){const g=q.o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(q.m);T.push(v.x,v.y,v.z)}}
@@ -163,3 +166,14 @@ function sn177Boss(R){if(!SN177.on||!R||R.s177||R.no177)return 0;R.s177=1;const 
   return n}
 {const f=svMerge;svMerge=function(R){try{sn177Boss(R)}catch(e){console.warn('v177 boss snap',e)}return f.apply(this,arguments)}}
 if(SVB[3]){const b=SVB[3].build;SVB[3].build=function(R,e){if(R)R.no177=1;return b.apply(this,arguments)}}
+// ---------------- humanoid foes: skirts, coat tails and tabard skirts start on the body ----------------
+// mdSkirt hangs a skirt from the waist at an offset; many outfits gave it 1–2 cm over whatever was worn there, so a flap
+// hung beside the belt touching nothing. For foes the top now sits just over the layer beneath (P.tOff + 2 mm), tucked up 1.5 cm.
+{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(SN177.on&&SN177.hum>0&&P){const t=(P.tOff||0)+.002;if(off>t){off=t;y0+=.015}}return f.call(this,B,P,y0,y1,fl,off,o)}}
+// ---------------- weapons carried by foes (mkWpn kits, 'LW|' cache) ----------------
+// The same snap on a weapon's own parts, grown from its largest piece (a hammer's head was 4 cm off its haft, a staff's gem
+// sat loose in its claws, studs and spikes floated off heads).
+{const f=lgBake;lgBake=function(P,key,mot){if(SN177.on&&P&&P.length>1&&/^LW\|/.test(key||'')){try{
+    const S=P.map(p=>{const b=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);return b.getSize(new THREE.Vector3()).length()}),i0=S.indexOf(Math.max(...S)),seed=P[i0],v=new THREE.Vector3(),T=[];
+    const g=seed.geo,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(seed.m);T.push(v.x,v.y,v.z)}
+    sn177Snap(T,P.filter((_,i)=>i!==i0),key)}catch(e){console.warn('v177 weapon snap',e)}}return f.apply(this,arguments)}}
