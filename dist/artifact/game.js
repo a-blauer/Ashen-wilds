@@ -31170,7 +31170,7 @@ var ABX135={p:null,r:0};
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
-var F135={done:new WeakSet(),t:0,min:0,on:true};   // v173: was .25 (the window never fully cleared)F135.U={value:F135.min};
+var F135={done:new WeakSet(),t:0,min:0,on:true};F135.U={value:F135.min};   // v173: min was .25 (the window never fully cleared)
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
 // now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
