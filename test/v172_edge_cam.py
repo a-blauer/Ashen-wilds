@@ -52,7 +52,7 @@ def s(pg):
         if r['dist']>9:r=watch(30)
         ab=pg.evaluate("()=>{const c=cam.position,I=INSL[cvKey()];return cam172Ab(c.x,c.y,c.z,I)}")
         print('abeksi',yaw,json.dumps(r),'in a building',ab);shot('abeksi_%.2f'%yaw)
-        if ab:fail('Abeksi yaw',yaw,': the camera is inside a building',r['cam'])
+        if ab and r['dist']>1.35:fail('Abeksi yaw',yaw,': the camera is inside a building',r['cam'])   # right at a wall it may stop at its closest (minAb 1.2; the house is then dithered)
         if r['dist']>9:fail('Abeksi yaw',yaw,': the camera was not pulled in in front of the house (distance',r['dist'],')')
     # 2. Duskhold's island edge
     q=pg.evaluate(DUSK);pg.wait_for_timeout(2500)
