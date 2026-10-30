@@ -56417,11 +56417,17 @@ function cgFingers(k,S,s,col,kind,len,nail,tip,t){const bn=s<0?'aL':'aR',a1=S.J[
     else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6),L*(i==3?.82:1),.0085,3,kind=='claw'?.26:.14,ax,tip||0,nail,t)}
   const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',col,P(tb,.026,-.01),D(.6,-.3,.75),L*.62,.009,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail,t)}   // the thumb curls across the palm
 function cgToes(k,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w;for(let i=0;i<5;i++){const tx=A[0]+(i-2)*.018*W,tz=A[2]+.16*L;k.L(l,'c',col,[tx,.018,tz-.02],[tx+(i-2)*.004,.012,tz+.012],.009*W,.007*W,4);if(claw)k.L(l,'c',nail||0x1a1214,[tx+(i-2)*.004,.012,tz+.012],[tx+(i-2)*.006,.004,tz+.012+claw],.006*W,.001,4)}}
+// a point on the body surface at height y, angle a round the body (0 front, π/2 right side), pushed out by off (rays from
+// outside find the smoothed surface; parts limits which faces count)
+function cgSurf(M,S,y,a,off,parts){const q=cgTAt(S,y),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,[d[0]*.9,y,q.z+d[2]*.9],[-d[0],0,-d[2]],parts||{torso:1,tail:1});return p?add3(p,mul3(d,off||0)):[d[0]*(q.rx+(off||0)),y,q.z+d[2]*((d[2]>=0?q.f:q.b)+(off||0))]}
+// a belt / sash: a band of the body's own surface (torso, or the tail top for a naga) between y−h and y+h, pushed out by off
+function cgBelt(B,M,y,h,off,col,t){cgShell(B,M,m=>(m.part=='torso'||m.part=='tail')&&Math.abs(m.y-y)<h,off,col,{t,rim:.25})}
 // the torso ring of the cage spec at height y (rx, f, b, z)
 function cgTAt(S,y){const q=cgAt(S.torso,y);return {rx:q[1],f:q[2],b:q[3],z:q[4]||0}}
 // a skirt / robe / coat tail / tasset band from the torso at y0 down to y1: flares by fl, follows the hips and then the legs
 function cgSkirt(B,S,y0,y1,fl,off,col,o){o=o||{};const n=o.n||7,q=cgTAt(S,y0),J=S.J,hy=J.lh0[1],ky=J.lh1[1],R=[];
   for(let i=0;i<n;i++){const t=i/(n-1),y=y0+(y1-y0)*t,e=Math.min(1,t*2.4),wx=Math.max(q.rx,(J.rh0[0]+.09*(o.lw||1)));R.push({p:[0,y,q.z-(o.dz||0)*t*t],rx:q.rx+(wx-q.rx)*e+fl*t+off,f:q.f+fl*.7*t+off,b:q.b+fl*.9*t+off,w:[['pelvis',1]]})}
+  R.unshift({p:[0,y0+.03,q.z],rx:Math.max(.02,q.rx-.012),f:Math.max(.02,q.f-.012),b:Math.max(.02,q.b-.012),w:[['pelvis',1]]});   // the top starts just inside the body, so the skirt is attached
   const wf=(x,y)=>{const d=Math.max(0,Math.min(1,(hy+.04-y)/Math.max(.05,hy+.04-ky))),kk=Math.max(0,Math.min(1,(ky-y)/(ky*.6))),l=Math.max(0,Math.min(1,.5-x/(Math.abs(J.rh0[0])*2.2)));
     if(d<=0)return [['pelvis',1]];const a=d*(1-kk*.5)*.85,b=d*kk*.45;return [['pelvis',1-a-b],['lh0',a*l],['rh0',a*(1-l)],[x<0?'lh1':'rh1',b]]};
   mdLoft(B,R,{seg:o.seg||24,wf,col,keep:o.keep,t:o.t||'c'});return R}
@@ -56434,8 +56440,8 @@ function cgCape(B,S,o){const J=S.J,top=S.torso[6][0],len=o.len||.4,w=o.w||1,off=
 // a tall flared collar round the back of the neck (open in front)
 function cgCollar(B,k,S,o){const top=S.hp(0,o.top||1.66,0)[1],y0=S.torso[6][0]-.01,q=cgTAt(S,y0),w=o.w||1,R=[],n=6;for(let i=0;i<n;i++){const t=i/(n-1),y=y0+(top-y0)*t,r=(q.rx*.62+t*t*.16+t*.02)*w;
     R.push({p:[0,y,q.z-.01-t*t*.07],rx:r,f:r*.8,b:r*.78,w:y<S.J.neck[1]-.02?[['chest',1]]:[['chest',.45],['neck',.55]]})}
-  const cut=o.cut||.36;mdLoft(B,R,{seg:24,col:m=>m.s>-.1&&m.i>.5?o.ins:o.col,keep:m=>{const a=Math.abs(Math.atan2(m.c,m.s));if(a<Math.PI*cut+m.i*.1)return false;if(o.rag&&m.i>n-2.2&&a181H(Math.round(a*9),4)<o.rag)return false;return true}});
-  if(o.rib!=null)for(let i=0;i<4;i++){const a=Math.PI*(.62+i*.25)*(i%2?1:-1),x=Math.sin(a),z=Math.cos(a),p0=R[1],p1=R[n-1];k.L('neck','m',o.rib,[x*p0.rx,p0.p[1],p0.p[2]+z*p0.b],[x*p1.rx*1.02,p1.p[1]+.01,p1.p[2]+z*p1.b*1.02],.007,.004,4)}}
+  R.unshift({p:[0,y0-.02,q.z],rx:q.rx*.75,f:q.f*.75,b:q.b*.75,w:[['chest',1]]});const cut=o.cut||.36;mdLoft(B,R,{seg:24,col:m=>m.s>-.1&&m.i>1.5?o.ins:o.col,keep:m=>{const a=Math.abs(Math.atan2(m.c,m.s));if(a<Math.PI*cut+m.i*.1)return false;if(o.rag&&m.i>n-1.2&&a181H(Math.round(a*9),4)<o.rag)return false;return true}});
+  if(o.rib!=null)for(let i=0;i<4;i++){const a=Math.PI*(.62+i*.25)*(i%2?1:-1),x=Math.sin(a),z=Math.cos(a),p0=R[2],p1=R[n];k.L('neck','m',o.rib,[x*p0.rx,p0.p[1],p0.p[2]+z*p0.b],[x*p1.rx*1.02,p1.p[1]+.01,p1.p[2]+z*p1.b*1.02],.007,.004,4)}}
 // a hair shell: crown and back of the head down to the nape, with a hairline (peak = widow's peak depth, base y of the line)
 function cgHair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.nape||1.56,0)[1];
   cgShell(B,M,m=>{if(m.part!='head'&&!(o.neck&&m.part=='neck'&&m.s<-.2))return false;const by=(m.y-S.nb)/(S.hs*1)+1.52,bx=m.x/S.hs;if(m.y<nape)return false;
@@ -56454,8 +56460,8 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     // mail skirt and banded tassets, a belt with a winged buckle
     cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?0x18181c:ml,{n:5});
     cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',keep:m=>Math.abs(m.c)>.25||m.s<-.2});
-    mdLoft(B,[wy-.035,wy+.005].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.058,f:q.f+.058,b:q.b+.058,w:cgTorsoW(S,y)}}),{seg:24,t:'m',col:0x1a1012});
-    const bz=cgTAt(S,wy-.015).f+.065;k.p('pelvis','sph','m',gd,0,wy-.015,bz,.03,.028,.014);[-1,1].forEach(s=>k.p('pelvis','cone4','m',gd,s*.04,wy-.01,bz-.004,.012,.05,.006,0,0,s*1.25));
+    cgBelt(B,M,wy-.015,.022,.058,0x1a1012,'m');
+    const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','sph','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);[-1,1].forEach(s=>k.p('pelvis','cone4','m',gd,s*.04,bk[1]+.005,bk[2]-.004,.012,.05,.006,0,0,s*1.25));
     const cz=cgTAt(S,J.chest[1]+.04).f+.042;k.p('chest','oct','g',glow,0,J.chest[1]+.04,cz,.022,.03,.012);[-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('chest','cone4','m',gd,s*(.035+i*.022),J.chest[1]+.05-i*.012,cz-.006-i*.003,.012,.06-i*.012,.005,0,0,s*(1.0+i*.25))});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],L=s<0?'lh':'rh';
       // pauldrons: three dome lames, a swept fin of blades
@@ -56495,8 +56501,8 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     cgSkirt(B,S,wy,.02,.16,.02,m=>m.y<.06?gd:un,{n:8});
     cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.3)||(m.part=='arm'&&m.y>J.aR1[1]-.02),.02,m=>Math.abs(Math.atan2(m.x,m.z))<.45&&m.part=='torso'?gd:Math.round(m.y*24)%2?rb:mdSh(rb,.9));
     cgSkirt(B,S,wy,.03,.2,.042,m=>m.y<.07||Math.abs(Math.atan2(m.c,m.s))<.55?gd:Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,{n:8,dz:.06,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.42});
-    mdLoft(B,[wy-.04,wy+.03].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.055,f:q.f+.055,b:q.b+.055,w:cgTorsoW(S,y)}}),{seg:24,col:rb2});
-    const sz=cgTAt(S,wy).f+.062;k.p('pelvis','oct','m',gd,0,wy,sz,.03,.035,.014);k.L('pelvis','c',rb2,[.05,wy-.02,sz-.01],[.08,wy-.24,sz-.02],.022,.016,4);
+    cgBelt(B,M,wy-.005,.035,.055,rb2);
+    const sz=cgSurf(M,S,wy,0,.058)[2];k.p('pelvis','oct','m',gd,0,wy,sz,.03,.035,.014);k.L('pelvis','c',rb2,[.05,wy-.02,sz-.01],[.08,wy-.24,sz-.02],.022,.016,4);
     k.L('pelvis','m',gd,[-.07,wy-.02,sz-.01],[-.08,wy-.08,sz-.004],.004,.004,3);k.p('pelvis','cyl','g',glow,-.08,wy-.11,sz-.004,.014,.05,.014);k.p('pelvis','cyl','m',gd,-.08,wy-.08,sz-.004,.016,.008,.016);
     // bell sleeves from the elbow
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',e=J[A+'1'],w=J[A+'2'],d=sub3(w,e),pt=t=>add3(e,mul3(d,t)),r0=.05*S.h;
@@ -56524,7 +56530,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     for(let i=0;i<8;i++){const y=T[6][0]-i*.06,q=cgTAt(S,y),p=cgRay(M,[0,y,q.z-.4],[0,0,1]);if(p)k.p(n3TB?'chest':'chest','sph','c',sk,p[0],p[1],p[2]-.004,.016,.012,.012)}
     cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04&&Math.abs(Math.atan2(m.x,m.z))>.7)||(m.part=='arm'&&m.y>J.aR2[1]+.08),.016,m=>Math.round(m.y*26)%3==0?co2:co);
     cgSkirt(B,S,wy-.02,J.lh1[1]-.25,.16,.035,m=>Math.round(Math.atan2(m.c,m.s)*7)%2?co:co2,{n:8,dz:.1,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.8&&!(m.y<J.lh1[1]-.05&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<(J.lh1[1]-.05-m.y)*3.5)});
-    mdLoft(B,[wy-.04,wy-.005].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.042,f:q.f+.042,b:q.b+.042,w:cgTorsoW(S,y)}}),{seg:24,col:0x2a1e16});
+    cgBelt(B,M,wy-.022,.018,.042,0x2a1e16);
     cgCollar(B,k,S,{top:1.64,w:1.1,col:co,ins:0x2a0a0a,rag:.5,cut:.4})});})();
 
 // ---------------- fur and fringes on cage bodies ----------------
@@ -56552,9 +56558,10 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     cgShell(B,M,m=>m.part=='torso'&&m.s>.25&&m.y<sh-.05,.03,m=>n3Sn(m.x,m.y,m.z,11,3)>.68?bl:a181Nz(ap,m,.35,14));
     cgSkirt(B,S,wy-.02,kn+.06,.06,.06,m=>n3Sn(m.x,m.y,m.z,11,5)>.7?bl:a181Nz(ap,m,.35,14),{n:5,keep:m=>m.s>.35});
     [-1,1].forEach(s=>{const f=cgTAt(S,sh-.06),b=cgTAt(S,sh-.08);cgTube(B,[[s*.09*S.h,sh-.06,f.z+f.f+.032],[s*.15,sh+.03,0],[s*.08,sh-.1,b.z-b.b-.02]],[.016,.016,.016],[[['chest',1]],[['chest',1]],[['chest',1]]],0x1e120c,{seg:6})});
-    mdLoft(B,[wy-.05,wy+.02].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.07,f:q.f+.07,b:q.b+.07,w:cgTorsoW(S,y)}}),{seg:24,col:0x1a100a});
-    const bq=cgTAt(S,wy-.015);k.p('pelvis','box','m',ir2,0,wy-.015,bq.z+bq.f+.075,.06,.05,.012);k.p('pelvis','box','m',ir,bq.rx+.07,wy-.12,bq.z+.04,.012,.14,.09,0,0,.08);k.L('pelvis','c',0x3a2414,[bq.rx+.07,wy-.02,bq.z+.04],[bq.rx+.07,wy-.05,bq.z+.04],.012,.012,4);
-    for(let i=0;i<7;i++)k.p('pelvis','tor','m',ir2,-bq.rx-.07-i*.004,wy-.03-i*.03,bq.z+.06-i*.004,.014,.006,.014,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);
+    cgBelt(B,M,wy-.015,.035,.07,0x1a100a);
+    const bf=cgSurf(M,S,wy-.015,0,.074),br=cgSurf(M,S,wy-.02,Math.PI/2,.074),bl=cgSurf(M,S,wy-.02,-Math.PI/2,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);
+    k.L('pelvis','c',0x3a2414,br,add3(br,[.012,-.05,0]),.012,.012,4);k.p('pelvis','box','m',ir,br[0]+.018,br[1]-.12,br[2],.012,.14,.09,0,0,.08);
+    for(let i=0;i<7;i++)k.p('pelvis','tor','m',ir2,bl[0]-.006-i*.003,bl[1]-.012-i*.026,bl[2]+.004*i,.014,.006,.014,i%2?0:Math.PI/2,0,i%2?Math.PI/2:0);
     // scars on the back and arms; forearm wraps; manacles with a broken link; breeches, heavy boots
     [[sh-.06,2.4],[wy+.12,-2.6],[sh-.12,Math.PI]].forEach(([y,a])=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(!p)return;const e=[p[0]+.05,p[1]-.08,p[2]];
       k.L('chest','c',scar,p,e,.006,.005,3);for(let i=0;i<4;i++){const c=lerp3(p,e,i/3);k.p('chest','box','c',0x1a1010,c[0],c[1],c[2],.016,.003,.003,0,a,.5)}});
@@ -56591,8 +56598,8 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
       cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'1'][1]+wr)/2)<.012,.03,rune,{t:'g'});cgFingers(k,S,s,sk,s>0?'fist':'open',1.05,sk2,0)});
     // war-kilt of leather panels, a studded belt, fur-wrapped boots
     cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),m,.3,10),{n:6,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
-    mdLoft(B,[wy-.05,wy+.025].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.06,f:q.f+.06,b:q.b+.06,w:cgTorsoW(S,y)}}),{seg:24,col:0x1e160e});
-    for(let i=0;i<14;i++){const a=i/14*Math.PI*2,q=cgTAt(S,wy-.012);k.p('pelvis','sph','m',ir2,Math.sin(a)*(q.rx+.062),wy-.012,q.z+Math.cos(a)*((Math.cos(a)>0?q.f:q.b)+.062),.012)}
+    cgBelt(B,M,wy-.012,.036,.06,0x1e160e);
+    for(let i=0;i<14;i++){const p=cgSurf(M,S,wy-.012,i/14*Math.PI*2,.062);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.012)}
     [-1,1].forEach(s=>{cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.03,m=>a181Nz(pe2,m,.35,16));cgFur(B,M,m=>m.part=='leg'&&m.y<kn-.04&&Math.sign(m.x)==s,{off:.035,len:.08,col:pe,col2:pe2,seed:5+s,jag:.5})})});})();
 
 // ===================================================================== Yeti =====================================================================
@@ -56677,9 +56684,8 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
     const a=J.aL0;[[.05,.13,.09,.135,br],[.0,.12,.075,.125,br2],[-.045,.11,.06,.115,br]].forEach(([dy,sx,sy,sz,c],j)=>k.p('aL0','hem','m',c,a[0]-(.03+j*.012),a[1]+dy,a[2],sx,sy,sz,0,0,-(.4+j*.12)));
     for(let j=0;j<3;j++)k.L('aL0','m',gd,[a[0]-.07-j*.025,a[1]+.06,a[2]-.03+j*.03],[a[0]-.11-j*.03,a[1]+.15,a[2]-.04+j*.03],.016,.002,4);
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>J[A+'2'][1]+.01,.016,m=>m.y<J[A+'2'][1]+.04?gd:br,{t:'m'})});
-    const by=T[0][0]+.03;mdLoft(B,[by-.04,by+.04].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.035,f:q.f+.035,b:q.b+.035,w:[['pelvis',1]]}}),{seg:24,col:lt});
-    const bq=cgTAt(S,by);k.p('pelvis','oct','m',gd,0,by,bq.z+bq.f+.04,.03,.035,.012);
-    for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),x=Math.sin(an)*(bq.rx+.04),z=bq.z+Math.cos(an)*(bq.f+.04);k.p('pelvis','box','m',i%2?br:br2,x,by-.09,z,.07,.15,.012,-.12*Math.cos(an),an,0)}})})();
+    const by=T[0][0]+.03;cgBelt(B,M,by,.04,.035,lt);const bk=cgSurf(M,S,by,0,.04);k.p('pelvis','oct','m',gd,bk[0],bk[1],bk[2],.03,.035,.012);
+    for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),p=cgSurf(M,S,by-.02,an,.042);k.p('pelvis','box','m',i%2?br:br2,p[0],p[1]-.075,p[2],.07,.15,.012,-.12*Math.cos(an),an,0)}})})();
 
 // ---------------- Naga Archer: a leather harness, a quiver of red-fletched arrows, a bracer on the bow arm, a hide wrap ----------------
 (function(){const S=n181Spec(),K={sk:0x4a4c2c,sk2:0x34361e,bel:0x9a8a5a,pat:0x22220e,eye:0xffd84a,fist:s=>s<0};const lt=0x4a3422,lt2=0x30200f,fe=0x8a2a1a,T=S.torso,J=S.J;
@@ -56700,8 +56706,8 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
     const sp=(y,a,off)=>{const q=cgTAt(S,y);return [Math.sin(a)*(q.rx+off),y,q.z+Math.cos(a)*((Math.cos(a)>=0?q.f:q.b)+off)]};
     cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]-.03)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.12),{off:.026,len:.12,col:cl,col2:cl2,seed:51,jag:.5,lump:[.6,.7]});
     for(let j=0;j<2;j++)for(let i=0;i<13;i++){const a=(i-6)*.15,p=sp(J.chest[1]+.02-j*.05-Math.abs(i-6)*.006,a,.034+j*.004);k.p('chest',i%3?'sph':'cone4','c',i%3?(j?gd:0x2a8a7a):bone,p[0],p[1],p[2],i%3?.011:.008,i%3?.011:.035,i%3?.011:.006,i%3?0:Math.PI)}
-    mdLoft(B,[by-.04,by+.04].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.028,f:q.f+.028,b:q.b+.028,w:[['pelvis',1]]}}),{seg:24,col:cl2});
-    [[0,.2],[.5,.17],[-.5,.17],[Math.PI,.2]].forEach(([a,l])=>{const p=sp(by-.02,a,.03);mdLoft(B,[0,1,2].map(i=>({p:[p[0]+Math.sin(a)*i*.014,p[1]-i*l*.5,p[2]+Math.cos(a)*i*.014],rx:.06,f:.008,b:.008,w:i?[['pelvis',.5],['nt0',.5]]:[['pelvis',1]]})),{seg:6,ref:[Math.sin(a),0,Math.cos(a)],col:m=>m.i>1.6?gd:cl})});
+    cgBelt(B,M,by,.04,.028,cl2);
+    [[0,.2],[.5,.17],[-.5,.17],[Math.PI,.2]].forEach(([a,l])=>{const p=cgSurf(M,S,by-.02,a,.026);mdLoft(B,[0,1,2].map(i=>({p:[p[0]+Math.sin(a)*i*.014,p[1]-i*l*.5,p[2]+Math.cos(a)*i*.014],rx:.06,f:.008,b:.008,w:i?[['pelvis',.5],['nt0',.5]]:[['pelvis',1]]})),{seg:6,ref:[Math.sin(a),0,Math.cos(a)],col:m=>m.i>1.6?gd:cl})});
     [[J.chest[1]+.03,.25],[J.chest[1]+.03,-.25],[J.spine[1]+.03,0],[J.chest[1]+.08,.5],[J.chest[1]+.08,-.5]].forEach(([y,a],i)=>{const p=cgRay(M,add3(sp(y,a,0),[Math.sin(a)*.4,0,Math.cos(a)*.4]),[-Math.sin(a),0,-Math.cos(a)],{torso:1});if(p)k.p(y>J.chest[1]-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.006,.05,.002,0,a,i%2?.7:-.7)});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'2'][1]+.06&&m.y>J[A+'2'][1]-.01,.014,gd,{t:'m'})});
     for(let i=0;i<7;i++){const a=(i-3)*.32,q=S.hp(Math.sin(a)*.08,1.66,-.03+Math.cos(a)*.02);k.L('head','c',i%2?bone:gd,q,[q[0]*2,q[1]+.13-Math.abs(i-3)*.025,q[2]-.06],.012,.002,4)}})})();

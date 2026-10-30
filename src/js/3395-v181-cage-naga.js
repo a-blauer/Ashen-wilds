@@ -51,9 +51,8 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
     const a=J.aL0;[[.05,.13,.09,.135,br],[.0,.12,.075,.125,br2],[-.045,.11,.06,.115,br]].forEach(([dy,sx,sy,sz,c],j)=>k.p('aL0','hem','m',c,a[0]-(.03+j*.012),a[1]+dy,a[2],sx,sy,sz,0,0,-(.4+j*.12)));
     for(let j=0;j<3;j++)k.L('aL0','m',gd,[a[0]-.07-j*.025,a[1]+.06,a[2]-.03+j*.03],[a[0]-.11-j*.03,a[1]+.15,a[2]-.04+j*.03],.016,.002,4);
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>J[A+'2'][1]+.01,.016,m=>m.y<J[A+'2'][1]+.04?gd:br,{t:'m'})});
-    const by=T[0][0]+.03;mdLoft(B,[by-.04,by+.04].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.035,f:q.f+.035,b:q.b+.035,w:[['pelvis',1]]}}),{seg:24,col:lt});
-    const bq=cgTAt(S,by);k.p('pelvis','oct','m',gd,0,by,bq.z+bq.f+.04,.03,.035,.012);
-    for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),x=Math.sin(an)*(bq.rx+.04),z=bq.z+Math.cos(an)*(bq.f+.04);k.p('pelvis','box','m',i%2?br:br2,x,by-.09,z,.07,.15,.012,-.12*Math.cos(an),an,0)}})})();
+    const by=T[0][0]+.03;cgBelt(B,M,by,.04,.035,lt);const bk=cgSurf(M,S,by,0,.04);k.p('pelvis','oct','m',gd,bk[0],bk[1],bk[2],.03,.035,.012);
+    for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),p=cgSurf(M,S,by-.02,an,.042);k.p('pelvis','box','m',i%2?br:br2,p[0],p[1]-.075,p[2],.07,.15,.012,-.12*Math.cos(an),an,0)}})})();
 
 // ---------------- Naga Archer: a leather harness, a quiver of red-fletched arrows, a bracer on the bow arm, a hide wrap ----------------
 (function(){const S=n181Spec(),K={sk:0x4a4c2c,sk2:0x34361e,bel:0x9a8a5a,pat:0x22220e,eye:0xffd84a,fist:s=>s<0};const lt=0x4a3422,lt2=0x30200f,fe=0x8a2a1a,T=S.torso,J=S.J;
@@ -74,8 +73,8 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
     const sp=(y,a,off)=>{const q=cgTAt(S,y);return [Math.sin(a)*(q.rx+off),y,q.z+Math.cos(a)*((Math.cos(a)>=0?q.f:q.b)+off)]};
     cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]-.03)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.12),{off:.026,len:.12,col:cl,col2:cl2,seed:51,jag:.5,lump:[.6,.7]});
     for(let j=0;j<2;j++)for(let i=0;i<13;i++){const a=(i-6)*.15,p=sp(J.chest[1]+.02-j*.05-Math.abs(i-6)*.006,a,.034+j*.004);k.p('chest',i%3?'sph':'cone4','c',i%3?(j?gd:0x2a8a7a):bone,p[0],p[1],p[2],i%3?.011:.008,i%3?.011:.035,i%3?.011:.006,i%3?0:Math.PI)}
-    mdLoft(B,[by-.04,by+.04].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.028,f:q.f+.028,b:q.b+.028,w:[['pelvis',1]]}}),{seg:24,col:cl2});
-    [[0,.2],[.5,.17],[-.5,.17],[Math.PI,.2]].forEach(([a,l])=>{const p=sp(by-.02,a,.03);mdLoft(B,[0,1,2].map(i=>({p:[p[0]+Math.sin(a)*i*.014,p[1]-i*l*.5,p[2]+Math.cos(a)*i*.014],rx:.06,f:.008,b:.008,w:i?[['pelvis',.5],['nt0',.5]]:[['pelvis',1]]})),{seg:6,ref:[Math.sin(a),0,Math.cos(a)],col:m=>m.i>1.6?gd:cl})});
+    cgBelt(B,M,by,.04,.028,cl2);
+    [[0,.2],[.5,.17],[-.5,.17],[Math.PI,.2]].forEach(([a,l])=>{const p=cgSurf(M,S,by-.02,a,.026);mdLoft(B,[0,1,2].map(i=>({p:[p[0]+Math.sin(a)*i*.014,p[1]-i*l*.5,p[2]+Math.cos(a)*i*.014],rx:.06,f:.008,b:.008,w:i?[['pelvis',.5],['nt0',.5]]:[['pelvis',1]]})),{seg:6,ref:[Math.sin(a),0,Math.cos(a)],col:m=>m.i>1.6?gd:cl})});
     [[J.chest[1]+.03,.25],[J.chest[1]+.03,-.25],[J.spine[1]+.03,0],[J.chest[1]+.08,.5],[J.chest[1]+.08,-.5]].forEach(([y,a],i)=>{const p=cgRay(M,add3(sp(y,a,0),[Math.sin(a)*.4,0,Math.cos(a)*.4]),[-Math.sin(a),0,-Math.cos(a)],{torso:1});if(p)k.p(y>J.chest[1]-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.006,.05,.002,0,a,i%2?.7:-.7)});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'2'][1]+.06&&m.y>J[A+'2'][1]-.01,.014,gd,{t:'m'})});
     for(let i=0;i<7;i++){const a=(i-3)*.32,q=S.hp(Math.sin(a)*.08,1.66,-.03+Math.cos(a)*.02);k.L('head','c',i%2?bone:gd,q,[q[0]*2,q[1]+.13-Math.abs(i-3)*.025,q[2]-.06],.012,.002,4)}})})();
