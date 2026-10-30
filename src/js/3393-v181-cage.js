@@ -1,0 +1,195 @@
+// ================= v181: cage bodies — one connected, smoothed surface per creature =================
+// Owner (Oct 30 2026): "our humanoid toolkit is bad — the arms don't connect to the body and the shoulders are placed
+// incorrectly"; "heads have no neck and the facial detail looks cluttered and lost".
+// The md / a181 bodies were separate tubes (torso, arms, legs, head) pushed into each other, with faces made of small boxes
+// glued on. A cage body is modelled the way a character artist box-models a low-poly figure: one coarse quad cage of the whole
+// body — torso rings, the arms and legs extruded out of the torso's side and bottom, the neck out of its top, the head
+// continuing from the neck — smoothed once by Catmull-Clark subdivision. So the shoulder (deltoid cap, armpit), the hips and
+// the neck are real joined shapes, and the face (sockets, brow ridge, cheekbones, nose, jaw) is pushed and pulled out of the
+// head itself. Bone weights are set on the cage and smoothed with it, so joints bend softly.
+// The skeleton is the humanoid one (same bone names, every animation plays) with its rest joints where this body puts them:
+// a v99 plan (`cg181Plan`) is registered for the model's preset, so mkBones builds the bones there; the body is built
+// directly in that space (B.kqPre='none': no proportion warp).
+// Clothes and armour come from the body's own surface (`cg181Shell`: chosen faces pushed out along the normals, rims tucked
+// to the skin), so they fit exactly and bend with it.
+var CG181={on:true};
+// ---------------- the cage: vertices carry [x,y,z, w0..wn] (one weight per bone), faces carry a part tag and an inside point ----------------
+function cgMesh(B){return {B,nb:B.O.length,V:[],F:[]}}
+function cgW(B,w){const o=[];w.forEach(([n,x])=>o.push([mdBI(B,n),x]));return o}
+function cgVert(M,p,w){const a=new Float64Array(3+M.nb);a[0]=p[0];a[1]=p[1];a[2]=p[2];let t=0;w.forEach(q=>t+=q[1]);cgW(M.B,w).forEach(([i,x])=>a[3+i]+=x/(t||1));M.V.push(a);return M.V.length-1}
+function cgFace(M,v,part,ref){M.F.push({v,part,ref})}
+// a ring of n vertices round centre c: u = "outward" axis, f = "front" axis (unit, perpendicular), radii ru (along u) and
+// per-vertex: angle φ_j = a0 + dir*j*2π/n from u toward f; rf / rb = radius toward +f / −f; push(j,φ) → extra radius
+function cgRing(M,c,u,fv,n,ru,rf,rb,w,o){o=o||{};const out=[];for(let j=0;j<n;j++){const a=(o.a0||0)+(o.dir||1)*j*Math.PI*2/n,ca=Math.cos(a),sa=Math.sin(a),e=o.push?o.push(j,a):0,
+    r1=ru+e,r2=(sa>=0?rf:rb)+e;const p=[c[0]+u[0]*ca*r1+fv[0]*sa*r2,c[1]+u[1]*ca*r1+fv[1]*sa*r2,c[2]+u[2]*ca*r1+fv[2]*sa*r2];out.push(cgVert(M,p,typeof w=='function'?w(j,a):w))}return out}
+function cgBand(M,A,Bv,part,ref,skip){const n=A.length;for(let j=0;j<n;j++){if(skip&&skip(j))continue;cgFace(M,[A[j],A[(j+1)%n],Bv[(j+1)%n],Bv[j]],part,typeof ref=='function'?ref(j):ref)}}
+// close a ring with quads round a centre vertex (n even)
+function cgCap(M,R,cp,w,part,ref){const c=cgVert(M,cp,w),n=R.length;for(let j=0;j<n;j+=2)cgFace(M,[R[j],R[(j+1)%n],R[(j+2)%n],c],part,ref||null);return c}
+// make every face point away from its inside point (or the part's centroid)
+function cgOrient(M){const V=M.V;M.F.forEach(f=>{const v=f.v.map(i=>V[i]);let nx=0,ny=0,nz=0,cx=0,cy=0,cz=0;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length];nx+=(a[1]-b[1])*(a[2]+b[2]);ny+=(a[2]-b[2])*(a[0]+b[0]);nz+=(a[0]-b[0])*(a[1]+b[1]);cx+=a[0];cy+=a[1];cz+=a[2]}
+  cx/=v.length;cy/=v.length;cz/=v.length;const r=f.ref;if(!r)return;if(nx*(cx-r[0])+ny*(cy-r[1])+nz*(cz-r[2])<0)f.v.reverse()})}
+// one Catmull-Clark step (n-gons in, quads out); every attribute (position and weights) is smoothed the same way
+function cgSub(M){const V=M.V,D=V[0].length,F=M.F,E=new Map(),NV=[],add=(a,b,t)=>{for(let i=0;i<D;i++)a[i]+=b[i]*t;return a};
+  const fp=F.map(f=>{const p=new Float64Array(D);f.v.forEach(i=>add(p,V[i],1/f.v.length));return p});
+  F.forEach((f,fi)=>{const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;let e=E.get(k);if(!e){e={a:Math.min(a,b),b:Math.max(a,b),f:[]};E.set(k,e)}e.f.push(fi)}});
+  const out={B:M.B,nb:M.nb,V:[],F:[]},vid=new Map(),eid=new Map(),fid=[];
+  const vf=V.map(()=>[]),ve=V.map(()=>[]);F.forEach((f,fi)=>f.v.forEach(i=>vf[i].push(fi)));E.forEach(e=>{ve[e.a].push(e);ve[e.b].push(e)});
+  E.forEach((e,k)=>{const p=new Float64Array(D);if(e.f.length==2){add(p,V[e.a],.25);add(p,V[e.b],.25);add(p,fp[e.f[0]],.25);add(p,fp[e.f[1]],.25)}else{add(p,V[e.a],.5);add(p,V[e.b],.5)}out.V.push(p);eid.set(k,out.V.length-1)});
+  V.forEach((P,i)=>{if(!vf[i].length)return;const n=ve[i].length,bd=ve[i].filter(e=>e.f.length<2),p=new Float64Array(D);
+    if(bd.length){add(p,P,.75);bd.forEach(e=>{add(p,V[e.a==i?e.b:e.a],.125)})}
+    else{const Q=new Float64Array(D),R=new Float64Array(D);vf[i].forEach(fi=>add(Q,fp[fi],1/vf[i].length));ve[i].forEach(e=>{add(R,V[e.a],.5/n);add(R,V[e.b],.5/n)});add(p,Q,1/n);add(p,R,2/n);add(p,P,(n-3)/n)}
+    out.V.push(p);vid.set(i,out.V.length-1)});
+  F.forEach((f,fi)=>{out.V.push(fp[fi]);fid[fi]=out.V.length-1});
+  const ek=(a,b)=>eid.get(a<b?a+'_'+b:b+'_'+a);
+  F.forEach((f,fi)=>{const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],nx=f.v[(i+1)%n],pv=f.v[(i+n-1)%n];out.F.push({v:[vid.get(a),ek(a,nx),fid[fi],ek(pv,a)],part:f.part,ref:f.ref})}});
+  return out}
+// face info for colour / selection: centroid, normal, part
+function cgInfo(M,f){const v=f.v.map(i=>M.V[i]),c=[0,0,0];let nx=0,ny=0,nz=0;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length];nx+=(a[1]-b[1])*(a[2]+b[2]);ny+=(a[2]-b[2])*(a[0]+b[0]);nz+=(a[0]-b[0])*(a[1]+b[1]);c[0]+=a[0];c[1]+=a[1];c[2]+=a[2]}
+  const l=Math.hypot(nx,ny,nz)||1;return {x:c[0]/v.length,y:c[1]/v.length,z:c[2]/v.length,nx:nx/l,ny:ny/l,nz:nz/l,s:nz/l,c:nx/l,part:f.part,i:0}}
+// write faces into the md builder (layer t), coloured by col(m); keep(m) selects; P = per-vertex position override (shells)
+function cgEmit(B,M,col,o){o=o||{};const t=o.t||'c',W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=M.V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;
+    for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;if(!s)sw[0]=1;w=[si,sw];W.set(i,w);return w};
+  const pos=o.pos||(i=>M.V[i]),vx=i=>{const p=pos(i);return {x:p[0],y:p[1],z:p[2],w:wOf(i)}};
+  M.F.forEach((f,fi)=>{const m=cgInfo(M,f);if(o.keep&&!o.keep(m,fi))return;const c=mdC(typeof col=='function'?col(m):col),v=f.v.map(vx);mdTri(B,t,v[0],v[1],v[2],c);if(v.length==4)mdTri(B,t,v[0],v[2],v[3],c)})}
+// smooth vertex normals of a mesh (area weighted)
+function cgNormals(M){const N=M.V.map(()=>[0,0,0]);M.F.forEach(f=>{const v=f.v.map(i=>M.V[i]);let nx=0,ny=0,nz=0;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length];nx+=(a[1]-b[1])*(a[2]+b[2]);ny+=(a[2]-b[2])*(a[0]+b[0]);nz+=(a[0]-b[0])*(a[1]+b[1])}
+  f.v.forEach(i=>{N[i][0]+=nx;N[i][1]+=ny;N[i][2]+=nz})});return N.map(n=>{const l=Math.hypot(n[0],n[1],n[2])||1;return [n[0]/l,n[1]/l,n[2]/l]})}
+// a shell from the body surface: the faces sel(m) picks, pushed out along the normals by off (off(m-vertex) may vary); the
+// rim (vertices on the edge of the selection) is tucked onto the skin, so a shell never stands loose
+function cgShell(B,M,sel,off,col,o){o=o||{};const N=M.N||(M.N=cgNormals(M)),pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map();
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1)}});
+  const rim=new Set();M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;if(cnt.get(k)==1){rim.add(a);rim.add(b)}}});
+  const P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=M.V[i],n=N[i],d=(typeof off=='function'?off(v):off)*(rim.has(i)?(o.rim==null?.12:o.rim):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  cgEmit(B,M,col,{t:o.t,pos,keep:(m,fi)=>pick[fi]})}
+// sculpt the smoothed surface: every vertex of the chosen parts moves along its normal by fn(x,y,z,n) (soft bumps and dents:
+// nose, brow ridge, eye sockets, cheekbones…), so features keep their shape instead of melting in the subdivision
+function cgSculpt(M,parts,fn){const N=cgNormals(M),pt=new Array(M.V.length);M.F.forEach(f=>f.v.forEach(i=>{if(pt[i]==null)pt[i]=f.part}));
+  M.V.forEach((v,i)=>{if(!parts[pt[i]])return;const d=fn(v[0],v[1],v[2],N[i]);if(d){v[0]+=N[i][0]*d;v[1]+=N[i][1]*d;v[2]+=N[i][2]*d}});M.N=null}
+// a soft bump: 1 at (x0,y0), falling off over sx / sy (Gaussian)
+function cgG(x,y,x0,y0,sx,sy){const a=(x-x0)/sx,b=(y-y0)/sy;return Math.exp(-(a*a+b*b))}
+// the surface point hit by a ray (origin p, direction d) on the smoothed body, or null
+function cgRay(M,p,d){let best=null,bt=1e9;const V=M.V,sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dt=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const tri=(a,b,c)=>{const e1=sub(b,a),e2=sub(c,a),h=cr(d,e2),det=dt(e1,h);if(Math.abs(det)<1e-12)return;const f=1/det,s=sub(p,a),u=f*dt(s,h);if(u<0||u>1)return;const q=cr(s,e1),v=f*dt(d,q);if(v<0||u+v>1)return;const t=f*dt(e2,q);if(t>1e-6&&t<bt){bt=t;best=[p[0]+d[0]*t,p[1]+d[1]*t,p[2]+d[2]*t]}};
+  M.F.forEach(f=>{const v=f.v.map(i=>V[i]);tri(v[0],v[1],v[2]);if(v.length==4)tri(v[0],v[2],v[3])});return best}
+
+// ---------------- the humanoid cage from a spec ----------------
+// S: {torso:[[y, rx, f, b, z]…] bottom→top (16-vertex rings; the arms leave from rings ia..ia+2), push(ringIndex,k,θ) → radius,
+//   neck:[[y,rx,f,b,z]…], head:[[y,rx,f,b,z]…] (16-vertex rings, the last closed), face(ringIndex,k,θ) → radius,
+//   arm:[{t (0 shoulder … 1 elbow … 2 wrist … 2.4 knuckles), r, rf, rb, o (outward bulge)}…], leg:[{t (0 hip … 1 knee … 2 ankle), r, rf, rb}…],
+//   foot:{len, w, h}, J: joints {pelvis:[x,y,z]…} (the skeleton's rest pose)}
+// returns {M (smoothed), S, at(y) torso ring at height y}
+function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,H=T16/2,Q=T16/4;
+  const tr=S.torso.map((q,i)=>cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],T16,q[1],q[2],q[3],TW(q[0]),{a0:0,push:S.push&&((j,a)=>S.push(i,j,a))}));
+  // note: cgRing's angle runs from +x (u) toward +z (f); index j=0 is the right side, 4 the front, 8 the left, 12 the back
+  const ia=S.armRing,cent=q=>[0,q[0],q[4]||0];
+  // torso quads, leaving the two arm sockets open (columns round the sides, rings ia..ia+2)
+  const sock=(i,j)=>i>=ia&&i<ia+2&&(j==T16-1||j==0||j==H-1||j==H);
+  for(let i=0;i<tr.length-1;i++)cgBand(M,tr[i],tr[i+1],'torso',cent([(S.torso[i][0]+S.torso[i+1][0])/2,0,0,0,S.torso[i][4]||0]),j=>sock(i,j));
+  // arms: the socket boundary (8 vertices) → rings down the arm
+  [-1,1].forEach(s=>{const bn=s<0?'aL':'aR',a0=mdV0(J[bn+'0']),a1=mdV0(J[bn+'1']),a2=mdV0(J[bn+'2']),R0=tr[ia],R1=tr[ia+1],R2=tr[ia+2];
+    const c1=s>0?[1,0,T16-1]:[H-1,H,H+1];   // the socket's three columns: front, side, back
+    const root=[R0[c1[0]],R0[c1[1]],R0[c1[2]],R1[c1[2]],R2[c1[2]],R2[c1[1]],R2[c1[0]],R1[c1[0]]];
+    // root order: front-low, armpit (inner), back-low, back-mid, back-top, top (outer), front-top, front-mid
+    const pts=S.arm.map(q=>{const t=q.t,p=t<=1?lerp3(a0,a1,t):t<=2?lerp3(a1,a2,t-1):add3(a2,mul3(nrm3(sub3(a2,a1)),(t-2)*.2));return p});
+    let prev=root;S.arm.forEach((q,i)=>{const c=pts[i],dn=nrm3(sub3(pts[Math.min(i+1,pts.length-1)],i?pts[i-1]:[s*.04+a0[0]*.8,a0[1],a0[2]])),
+      u=nrm3(sub3([s,0,0],mul3(dn,dn[0]*s))),fv=nrm3(cross3(dn,u)),f2=fv[2]<0?mul3(fv,-1):fv;
+      const w=q.t<.15?[['chest',.35],[bn+'0',.65]]:q.t<.9?[[bn+'0',1]]:q.t<1.1?[[bn+'0',.5],[bn+'1',.5]]:q.t<1.85?[[bn+'1',1]]:q.t<2.05?[[bn+'1',.4],[bn+'2',.6]]:[[bn+'2',1]];
+      // the j order matches the root: j0 front-low(135°) … φ_j = (j−5)·45° from "outer" toward front
+      const ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0)),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
+        ring.push(cgVert(M,[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf],w))}
+      cgBand(M,prev,ring,'arm',c);prev=ring});
+    cgCap(M,prev,add3(pts[pts.length-1],mul3(nrm3(sub3(a2,a1)),.012)),[[bn+'2',1]],'hand',pts[pts.length-2])});
+  // legs: the bottom ring split in two halves with a crotch line
+  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=cgVert(M,[0,y0-.045,q0[4]||0],[['pelvis',1]]),cb=cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
+  [-1,1].forEach(s=>{const l=s<0?'lh':'rh',h0=mdV0(J[l+'0']),k1=mdV0(J[l+'1']),k2=mdV0(J[l+'2']);
+    // right half: front (j4) → side (j0) → back (j12): 4,3,2,1,0,15,14,13,12 · left: 4,5,…,12
+    const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+T16)%T16:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
+    let prev=root;S.leg.forEach((q,i)=>{const t=q.t,c=t<=1?lerp3(h0,k1,t):lerp3(k1,k2,Math.min(1,t-1)),w=t<.12?[['pelvis',.4],[l+'0',.6]]:t<.9?[[l+'0',1]]:t<1.1?[[l+'0',.5],[l+'1',.5]]:t<1.9?[[l+'1',1]]:[[l+'1',.4],[l+'2',.6]];
+      const ring=[];for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);ring.push(cgVert(M,[c[0]+s*ca*(q.r+(ca>0?(q.o||0):0)),c[1],c[2]+sa*rf],w))}
+      cgBand(M,prev,ring,'leg',c);prev=ring});
+    cgCap(M,prev,[k2[0],k2[1]-.02,k2[2]],[[l+'2',1]],'leg',[k2[0],k2[1]+.1,k2[2]]);
+    // the foot: a closed cage of its own (heel → toes), overlapping the ankle
+    const F=S.foot,fw=F.w,fr=[];[[-.05,.045,.034,.04],[-.01,.06,.042,.05],[.06,.04,.05,.036],[.12,.026,.052,.022],[.155,.018,.044,.014]].forEach(([z,y,rx,ry],i)=>{
+      fr.push(cgRing(M,[k2[0],y*F.h,k2[2]+z*F.len],[s,0,0],[0,1,0],8,rx*fw,ry*F.h,ry*F.h*.75,[[l+'2',1]],{}))});
+    for(let i=0;i<fr.length-1;i++)cgBand(M,fr[i],fr[i+1],'foot',[k2[0],.03,k2[2]+.05]);cgCap(M,fr[0],[k2[0],.045*F.h,k2[2]-.06*F.len],[[l+'2',1]],'foot',[k2[0],.04,k2[2]+.03]);cgCap(M,fr[fr.length-1],[k2[0],.016*F.h,k2[2]+.165*F.len],[[l+'2',1]],'foot',[k2[0],.03,k2[2]+.05])});
+  // the top of the torso: neck and head, one ring stack
+  let prev=tr[tr.length-1];const NH=S.neck.concat(S.head),nN=S.neck.length;
+  NH.forEach((q,i)=>{const hi=i-nN,w=cgNeckW(S,q[0]),ring=cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],T16,q[1],q[2],q[3],w,{push:hi>=0&&S.face?(j,a)=>S.face(hi,j,a):null});
+    cgBand(M,prev,ring,i<nN?'neck':'head',[0,q[0],(q[4]||0)-.01]);prev=ring});
+  const top=S.head[S.head.length-1];cgCap(M,prev,[0,top[0]+.012,(top[4]||0)-.004],[['head',1]],'head',[0,top[0]-.08,0]);
+  cgOrient(M);const SM=cgSub(M);return {M:SM,S,cage:M}}
+function cgTorsoW(S,y){const J=S.J,p=J.pelvis[1],sp=J.spine[1],ch=J.chest[1],nk=J.neck[1];
+  return y<=p?[['pelvis',1]]:y<=sp?mdWb('pelvis','spine',(y-p)/(sp-p)):y<=ch?mdWb('spine','chest',(y-sp)/(ch-sp)):y<=nk-.04?[['chest',1]]:mdWb('chest','neck',Math.min(1,(y-nk+.04)/.06))}
+function cgNeckW(S,y){const J=S.J,nk=J.neck[1],hd=J.head[1];return y<=nk?mdWb('chest','neck',.6):y<hd-.02?mdWb('neck','head',Math.max(0,(y-nk)/(hd-.02-nk))*.7):[['head',1]]}
+function mdV0(a){return [a[0],a[1],a[2]]}
+function lerp3(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
+function add3(a,b){return [a[0]+b[0],a[1]+b[1],a[2]+b[2]]}function sub3(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]]}function mul3(a,t){return [a[0]*t,a[1]*t,a[2]*t]}
+function nrm3(a){const l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2]/l]}function cross3(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+// the skeleton's rest pose for a cage body: a v99 plan with these joint positions (no warp)
+function cg181Plan(name,J){const S=AW_PROP99,names=Object.keys(HB),abs={},N={},M={},id=[1,0,0,0,1,0,0,0,1];names.forEach(n=>{abs[n]=[HB[n][1],HB[n][2],HB[n][3]];N[n]=(J[n]||abs[n]).slice();M[n]=id});
+  let m=S.plans.get(HB);if(!m){m={};S.plans.set(HB,m)}m[name]={names,abs,N,M,idx:names.map(n=>({a:abs[n],n:N[n],M:M[n]})),lift:0,hip:N.pelvis[1]};return m[name]}
+// a cage foe: the body builder gets (B, P, k, C) with C = the smoothed body; registered like the a181 foes
+function cg181Reg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';const C=cg181Body(B,S);P.cg=C;fn(B,P,k,C,S)},pn)}
+// ring helpers for specs: where on the torso / head a point is
+function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+1];if(y<=b[0]){const t=Math.max(0,(y-a[0])/(b[0]-a[0]));return a.map((v,j)=>v+(b[j]-v)*t)}}return list[list.length-1]}
+
+// ===================================================================== Vampire Thrall (cage prototype) =====================================================================
+// Gaunt and hunched: ribs, collarbones and shoulder blades under ash-grey skin; long, thin arms that grow out of the shoulders;
+// a long neck into a narrow skull with deep eye sockets, a hard brow, high cheekbones over hollow cheeks, a long nose and a
+// lipless mouth with fangs. Wears an open, torn crimson coat (shoulders, back, upper arms), ragged breeches, an iron collar.
+(function(){const J={pelvis:[0,.98,0],spine:[0,1.1,0],chest:[0,1.27,0],neck:[0,1.44,.01],head:[0,1.53,.02],
+    lh0:[-.085,.92,0],lh1:[-.095,.49,.025],lh2:[-.1,.085,0],rh0:[.085,.92,0],rh1:[.095,.49,.025],rh2:[.1,.085,0],
+    aL0:[-.175,1.385,-.005],aL1:[-.205,1.1,-.03],aL2:[-.215,.84,.0],aR0:[.175,1.385,-.005],aR1:[.205,1.1,-.03],aR2:[.215,.84,0],
+    cp0:[0,1.38,-.13],cp1:[0,1.0,-.18],cp2:[0,.62,-.22]};
+  const S={J,armRing:4,
+    // groin, hips, waist, lower ribs, chest (armpit), mid socket, shoulder line, trapezius
+    torso:[[.89,.118,.085,.095],[.97,.135,.086,.106],[1.06,.108,.064,.084],[1.16,.124,.082,.09],[1.27,.146,.1,.1],[1.335,.158,.094,.102],[1.4,.15,.068,.094],[1.44,.085,.058,.075,.004]],
+    push:(i,j,a)=>{const ca=Math.cos(a),sa=Math.sin(a);let e=0;
+      if(i==4&&sa>.6)e+=.008*(Math.abs(ca)>.15&&Math.abs(ca)<.7?1:-.6);   // pectorals either side of the sternum
+      if(i==2&&sa>.5)e-=.01;                                               // the sunken belly
+      if((i==4||i==5)&&sa<-.5&&Math.abs(ca)>.2&&Math.abs(ca)<.75)e+=.012; // shoulder blades
+      if(i==6&&sa>.3&&Math.abs(ca)>.3&&Math.abs(ca)<.85)e+=.006;            // collarbones
+      return e},
+    neck:[[1.47,.052,.05,.056,.008],[1.5,.054,.054,.056,.014]],
+    // throat/jaw, chin, mouth, cheek, nose, eyes, brow, forehead, crown, top
+    // throat, under the chin, chin, mouth, upper lip, nose base, cheekbone, below the eyes, eyes, brow, above the brow, forehead ×2, crown, top
+    head:[[1.52,.058,.064,.058,.018],[1.535,.062,.08,.064,.017],[1.548,.065,.092,.068,.016],[1.562,.069,.098,.074,.015],[1.576,.073,.1,.08,.014],[1.59,.077,.1,.085,.013],[1.605,.08,.098,.09,.012],
+      [1.62,.082,.094,.094,.011],[1.634,.082,.093,.097,.01],[1.648,.082,.096,.099,.009],[1.664,.08,.094,.1,.008],[1.682,.077,.088,.1,.006],[1.7,.07,.076,.094,.004],[1.716,.058,.06,.082,.002],[1.73,.034,.034,.05,0]],
+    face:(i,j,a)=>{const ca=Math.cos(a),sa=Math.sin(a),side=Math.abs(ca);let e=0;
+      if(i==0&&sa>-.2&&side>.6)e+=.006;                        // the jaw's angle
+      if((i==3||i==4)&&sa>.4&&side>.3&&side<.8)e-=.008;        // hollow cheeks
+      return e},
+    arm:[{t:.06,r:.05,o:.012},{t:.32,r:.042},{t:.62,r:.038,rf:.042},{t:.95,r:.034,rb:.04},{t:1.25,r:.036},{t:1.6,r:.03},{t:1.94,r:.024,rf:.026},{t:2.18,r:.017,rf:.034,rb:.03},{t:2.38,r:.015,rf:.034,rb:.028}],
+    leg:[{t:.12,r:.078},{t:.45,r:.07,rf:.074},{t:.8,r:.056},{t:1.0,r:.048,rf:.054},{t:1.22,r:.05,rb:.058},{t:1.55,r:.04},{t:1.88,r:.032},{t:2.0,r:.034}],
+    foot:{len:1.05,w:1,h:1}};
+  const sk=0x625860,sk2=0x483e46,sock=0x140c10,lip=0x2a0c12,co=0x4a0c16,co2=0x2e0710,br=0x1e161a,ir=0x3a3434;
+  const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6),ax=Math.abs(x);let d=0;
+    d+=.024*cgG(x,y,0,1.596,.01,.013)+.013*cgG(x,y,0,1.616,.008,.012);            // the nose: a ridge down from the brow to a hooked tip
+    [-1,1].forEach(s=>{d-=.017*cgG(x,y,s*.036,1.629,.016,.01);                     // deep eye sockets
+      d+=.009*cgG(x,y,s*.056,1.6,.014,.01);d-=.011*cgG(x,y,s*.047,1.567,.016,.014);  // high cheekbones over hollow cheeks
+      d+=.004*cgG(x,y,s*.01,1.585,.006,.004)});                                      // nostril wings
+    d+=.011*cgG(x,y,0,1.648,.05,.006);                                              // the brow ridge
+    d-=.005*cgG(x,y,0,1.558,.022,.0035);d+=.01*cgG(x,y,0,1.538,.018,.012);           // the mouth line, the chin
+    return d*f};
+  cg181Reg('vamp',S,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036;cgSculpt(M,{head:1},FACE);
+    const skin=m=>{if(m.part=='head'&&m.s>.3){if(Math.abs(Math.abs(m.x)-EX)<.022&&Math.abs(m.y-EY)<.014)return sock;if(Math.abs(m.y-1.558)<.0045&&Math.abs(m.x)<.026)return lip}
+      const v=n3Sn(m.x,m.y,m.z,20,2);return m.s<-.3?mdSh(sk2,1-v*.2):v>.72?mdMix(sk,0x3a2232,.5):mdSh(sk,1-v*.15)};
+    cgEmit(B,M,skin);
+    // eyes burning in the sockets, fangs, ears; fingers, toes
+    [-1,1].forEach(s=>{const p=cgRay(M,[s*EX,EY,.3],[0,0,-1]);if(p)k.p('head','sph','g',0xff2a30,p[0],p[1],p[2]+.001,.009,.006,.005,0,0,s*.25);
+      const q=cgRay(M,[s*.3,1.63,0],[-s,0,0]);if(q){k.L('head','c',sk,[q[0]-s*.006,q[1]-.012,q[2]],[q[0]+s*.05,q[1]+.05,q[2]-.05],.016,.002,4);k.L('head','c',sk,[q[0]-s*.006,q[1]-.024,q[2]+.004],[q[0]+s*.045,q[1]+.03,q[2]-.04],.01,.002,4)}
+      const f=cgRay(M,[s*.013,1.554,.3],[0,0,-1]);if(f)k.p('head','cone4','c',0xe8e0d0,f[0],f[1]-.01,f[2]-.003,.005,.022,.005,Math.PI)});
+    [-1,1].forEach(s=>{const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08));
+      for(let i=0;i<4;i++){const z=(1.5-i)*.016,p=[kn[0]-s*.004,kn[1],kn[2]+z];a181Digit(k,bn+'2',sk,p,[d[0]-s*.15,d[1],d[2]+z*.6],(i==3?.065:.08)*(s>0?.8:1.15),.0085,3,s>0?.5:.26,[0,0,s],s>0?0:.035,0x1a1214)}
+      const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',sk,[tb[0]-s*.01,tb[1],tb[2]+.026],[d[0]-s*.3,d[1]*.6,.75],.05,.009,2,.3,[0,1,0],.02,0x1a1214);
+      const l=s<0?'lh2':'rh2',A=S.J[l];for(let i=0;i<5;i++){const tx=A[0]+(i-2)*.018,tz=A[2]+.16;k.L(l,'c',sk2,[tx,.018,tz-.02],[tx+(i-2)*.004,.012,tz+.012],.009,.007,4);k.L(l,'c',0x1a1214,[tx+(i-2)*.004,.012,tz+.012],[tx+(i-2)*.006,.004,tz+.03],.006,.001,4)}});
+    // lank hair: a shell over the crown and the back of the skull, locks down the nape
+    cgShell(B,M,m=>m.part=='head'&&m.y>1.58&&(m.s<.1||m.y>1.672-.022*Math.exp(-(m.x/.022)*(m.x/.022))+(Math.abs(m.x)>.05?-.004:0)),v=>.018*Math.min(1,Math.max(.35,(v[1]-1.56)/.12)),m=>a181Nz(0x120c0e,m,.4,24));
+    for(let i=0;i<10;i++){const a=Math.PI*(.62+i*.085)*(i%2?1:-1),o=[Math.sin(a)*.3,1.64+a181H(i,3)*.05,Math.cos(a)*.3],p=cgRay(M,o,nrm3([-o[0],0,-o[2]]));if(!p)continue;
+      const e=[p[0]*1.25,1.47-a181H(i,5)*.05,p[2]*1.2-.02];k.L('head','c',i%2?0x120c0e:0x1e1418,p,[(p[0]+e[0])/2,(p[1]+e[1])/2+.02,(p[2]+e[2])/2],.014,.01,4).L('neck','c',i%2?0x120c0e:0x1e1418,[(p[0]+e[0])/2,(p[1]+e[1])/2+.02,(p[2]+e[2])/2],e,.01,.002,4)}
+    // the open coat (shoulders, back, upper arms), ragged; breeches; an iron collar
+    cgShell(B,M,m=>(m.part=='torso'&&m.y>1.0&&!(m.s>.45&&Math.abs(m.x)<.05+(1.42-m.y)*.12)&&!(m.y<1.08&&a181H(Math.round(m.x*40),Math.round(m.z*40))<.5))||(m.part=='arm'&&m.y>1.16&&!(m.y<1.2&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.45)),.014,m=>a181Nz(co,m,.35,14));
+    cgShell(B,M,m=>(m.part=='leg'&&m.y>.32&&!(m.y<.36&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.5))||(m.part=='torso'&&m.y<1.03),.01,m=>a181Nz(br,m,.3,16));
+    const nk=cgRay(M,[0,1.475,.3],[0,0,-1]);mdLoft(B,[{p:[0,1.462,.008],rx:.064,f:.064,b:.066,w:[['neck',1]]},{p:[0,1.49,.012],rx:.062,f:.062,b:.064,w:[['neck',1]]}],{seg:14,t:'m',col:ir});
+    if(nk)k.p('neck','tor','m',mdSh(ir,.8),0,1.47,nk[2]+.012,.012,.006,.014,Math.PI/2,0,0)});
+})();
