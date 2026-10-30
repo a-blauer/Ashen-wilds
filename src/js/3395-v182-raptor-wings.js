@@ -84,7 +84,7 @@ function rpwSkyhawk(C){const main=lpMain(C,.22),dk=(k)=>main.clone().multiplySca
       ['cFore','el',.012,[[0,-.12,.11],[.045,-.16,.115],[.09,-.2,.12],[.135,-.24,.12],[.18,-.27,.115],[.22,-.3,.11]],.07,'cov',0,false,.1],
       ['cHand','wr',.012,[[0,-.3,.1],[.05,-.45,.1],[.1,-.6,.09]],.06,'cov',0,false,.08]],
     // folded: wing rolled so its top faces out, arm back, forearm forward-down, hand back; every feather turned to lie back
-    fold:{rx:1.3,ry:1.53,rz:-.05,ely:-2.53,wry:2.43,ter:-1.87,cArm:-1.87,sec:.66,cFore:.76,pri:-1.77,cHand:-1.67},
+    fold:{rx:1.3,ry:1.72,rz:-.05,ely:-2.53,wry:2.43,ter:-1.87,cArm:-1.87,sec:.66,cFore:.76,pri:-1.77,cHand:-1.67},
     col:{edge:dk(.7),cov:dk(.62),covTip:dk(.5),sec:dk(.55),secTip:dk(.4),pri:dk(.45),priTip:dk(.28),under:main.clone().lerp(new THREE.Color(0xd8ccb0),.55).getHex()}}}
 {const D=LPR.Skyhawk,p0=D.post;D.post=function(x,c,C,mat){const sp=typeof RV137!='undefined'&&RV137.cur?RV137.cur.Skyhawk:null;if(sp&&sp!='Skyhawk')return p0.apply(this,arguments);
   const W=rpwSkyhawk(C),m=lpMat(c.v,1,D.mat);[-1,1].forEach(s=>rpwWing(x,'chest',c,W,.12,.72,.14,s,m))}}
@@ -127,12 +127,9 @@ function sh182Kit(k,c,C,red){const K=sh182Cols(C),R=SH182.body,V=THREE.Vector3,e
     const y=n.clone().addScaledVector(d,-(lift||0)).normalize(),x=new V().crossVectors(y,d.clone().negate()).normalize(),M=new THREE.Matrix4().makeBasis(x,y,d.clone().negate());
     M.scale(new V(w,.25,len));M.setPosition(h.p[0],h.p[1],h.p[2]);k.P.push({bn:'chest',w:rowW(z),geo:G,t:'c',col,m:M})};
   const hx=v=>v.getHex(),back=hx(K.back),deep=hx(K.deep),main=hx(K.main),bel=hx(K.bel),bar=hx(K.bar);
-  // mantle and back: dark shingles
-  for(let z=.24,j=0;z>-.3;z-=.055,j++)for(let i=0;i<7;i++){const a=Math.PI/2+(i-3+(j%2)*.5)*.28;leaf(z,a,.075,.06,(i*7+j*3)%5?back:main,0,.03)}
-  // flanks
-  for(let z=.18,j=0;z>-.22;z-=.06,j++)[-1,1].forEach(s=>[.55,.2].forEach((a0,i)=>{leaf(z,s>0?a0:Math.PI-a0,.07,.06,(i+j)%3?main:back,.1,.03)}));
-  // breast: pale, barred, pointing down and back
-  for(let z=.23,j=0;z>-.12;z-=.045,j++)for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2+(j%2)*.5)*.3;leaf(z,a,.06,.055,j%2?bar:bel,.6,.03)}
+  // scapulars: a few long, flat feathers from the shoulders lying back over the roots of the folded wings (the rest of the
+  // plumage is painted: small shingles all over read as scales)
+  [-1,1].forEach(s=>[[.17,.62,.15],[.12,.7,.16],[.07,.78,.15]].forEach((q,i)=>leaf(q[0],s>0?q[1]+i*.08:Math.PI-q[1]-i*.08,q[2],.05,i%2?main:back,0,0)));
   // nape hackles and a short crest
   for(let i=0;i<5;i++)leaf(.33,Math.PI/2+(i-2)*.35,.07,.05,i%2?deep:back,-.25,.25);
   [-1,0,1].forEach(i=>k.L('head','c',deep,[i*.025,.95,.37],[i*.04,.975,.27],.022,.003,4));
@@ -167,6 +164,11 @@ function rpwTailPose(T,fan,now){const n=T.B.length;T.B.forEach((b,i)=>{const t=i
   D.geo=function(C,c){return own()?sh182Geo(C):g0.apply(this,arguments)};
   D.kit=function(k,c,C,red){return own()?sh182Kit(k,c,C,red):k0.apply(this,arguments)};
   const p1=D.post;D.post=function(x,c,C,mat){const r=p1.apply(this,arguments);if(own())rpwTail(x,c,C,lpMat(c.v,1,D.mat));return r};
+  // the Spiked trait on a hawk: a ruff of raised dark hackles at the nape (feathers, not spikes)
+  D.spiked=function(k,bk,c){if(!own())return false;const G=sh182Leaf(),V=THREE.Vector3,R=SH182.body;
+    for(let i=0;i<7;i++){const a=Math.PI/2+(i-3)*.32,h=bz150S(R,.32,a,-.006),n=new V(...h.n),d=new V(0,.55,-1).addScaledVector(n,.25).normalize(),y=n.clone(),x=new V().crossVectors(y,d.clone().negate()).normalize();
+      const M=new THREE.Matrix4().makeBasis(x,new V().crossVectors(d.clone().negate(),x),d.clone().negate());M.scale(new V(.045,.3,.11+.015*(3-Math.abs(i-3))));M.setPosition(...h.p);k.P.push({bn:'neck',geo:G,t:'c',col:0x1a1c24,m:M})}
+    return true};
   // anchor points for variant traits: the Skyhawk's own, the others' (Stormtalon, Rocsovereign: 3120) as before
   const hd=Object.getOwnPropertyDescriptor(D,'head'),bk=Object.getOwnPropertyDescriptor(D,'back'),old=q=>q.get?q.get.call(D):q.value;
   Object.defineProperty(D,'head',{configurable:true,get(){return own()?['head',0,.96,.4]:old(hd)}});
@@ -176,4 +178,4 @@ function rpwTailPose(T,fan,now){const n=T.B.length;T.B.forEach((b,i)=>{const t=i
   x.rpwTails.forEach(T=>rpwTailPose(T,A?Math.min(1,F*1.2):F*.6,now));
   const b=x.bones;if(b&&b.head&&!A){const seg=Math.floor(now/1300+(x._rpwS||0)),rnd=q=>{const v=Math.sin(seg*12.9898+q*78.233)*43758.5453;return v-Math.floor(v)};
     const tz=(rnd(1)-.5)*.6*(rnd(2)>.45?1:0),ty=(rnd(3)-.5)*.5,k=Math.min(1,((x._rpwT2!=null?now-x._rpwT2:16)/1000)*14);x._rpwT2=now;
-    x._rpwHz=(x._rpwHz||0)+(tz-(x._rpwHz||0))*k;x._rpwHy=(x._rpwHy||0)+(ty-(x._rpwHy||0))*k;const w=mv?.3:1;b.head.rotation.z+=x._rpwHz*w;b.head.rotation.y+=x._rpwHy*w}}}catch(e){if(!x._rpwE2){x._rpwE2=1;console.error('v182 tail/head',e)}}return r}}
+    x._rpwHz=(x._rpwHz||0)+(tz-(x._rpwHz||0))*k;x._rpwHy=(x._rpwHy||0)+(ty-(x._rpwHy||0))*k;const w=mv?.3:1;b.head.rotation.z=x._rpwHz*w;b.head.rotation.y+=x._rpwHy*w}else if(b&&b.head)b.head.rotation.z=0}}catch(e){if(!x._rpwE2){x._rpwE2=1;console.error('v182 tail/head',e)}}return r}}
