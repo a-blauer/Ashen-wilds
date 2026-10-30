@@ -1330,6 +1330,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)
   if(typeof ss165Terrain=='function')ss165Terrain(); // v165: the Searing Sands chapters' own ground (3271: I's forecourt; II, III)
+  if(typeof ed171Fill=='function')ed171Fill(); // v171: the void round each instance's land becomes rock carried on from its rim (3356)
 }
 
 let party=[],inv={},gear=[],eggs=[],incS={},eq={},px=2,py=2,foe=null,busy=false,lines=[],sel=[];
@@ -1611,40 +1612,47 @@ MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='#'&&!(typeof v124Rim=='function'&&v1
 //   * ground pixels outside the current instance's rectangle (uGhV) are black in every pass: the void past an instance's edge.
 //     So is the ground's cliff where it drops off at the edge (its slope faces out of the map, ghEdge in 3190).
 //     With the camera out of the map (inside the rock or past the edge) the background fades to black (3350).
-var GH169={on:true,a:.4,k:.06,R:[2.3,5.4],N:[1.2,3.4],ON:{value:0}};   // R: the window's size from v164 (owner: large, a soft edge)
+var GH169={on:true,a:.4,k:.06,d:.16,R:[2.3,5.4],N:[.5,1.3],ON:{value:0}};   // d: the glass's slight dither (v171); N: right at the lens (v171, was 1.2-3.4); R unused since v171
 GH169.U={uGhM:{value:0},uGhA:{value:GH169.a},uGhK:{value:GH169.k},uGhR:{value:new THREE.Vector2(GH169.R[0],GH169.R[1])},
-  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON};
-// gh169W(world point, camera, hero chest): inside a round window around the hero on screen (uGhR, world units at the hero's
-// distance, smooth edge, no dither) and in front of the hero, or anything right in front of the camera (uGhN)
-GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;
+  uGhN:{value:new THREE.Vector2(GH169.N[0],GH169.N[1])},uGhV:{value:new THREE.Vector4(-1e6,-1e6,1e6,1e6)},uGhOn:GH169.ON,
+  uGhT:{value:0},uGhD:{value:GH169.d},uGhBm:{value:[0,1,2,3,4,5,6,7].map(()=>new THREE.Vector3())},uGhBM:{value:[0,1,2,3,4,5,6,7].map(()=>new THREE.Vector3())},uGhBw:{value:[0,0,0,0,0,0,0,0]}};
+// gh169W(world point, camera, hero chest). v171 (owner: "I dont want the circular cutout view when looking through an object. Just
+// make it transparent"; "add a slight dithering"): no window round the hero any more. 3350 finds what actually blocks the view
+// (rays from the camera to the hero) and hands its bounds over as up to 8 boxes (uGhBm/uGhBM, faded by uGhBw): the whole object
+// inside a box turns to glass, as far as it stands in front of the hero (gh169Fr). The ground has its own switch (uGhT, 3190):
+// when the ground blocks the view, every wall of it in front of the hero turns to glass. Anything right at the lens (uGhN) too.
+GH169.HEAD=`uniform float uGhM,uGhA,uGhK,uGhOn,uGhT,uGhD;uniform vec2 uGhR,uGhN;uniform vec4 uGhV;uniform vec3 uGhBm[8],uGhBM[8];uniform float uGhBw[8];
 float gh169T(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;return dot(p-c,ab)/max(dot(ab,ab),1e-4);}
-float gh169W(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;
- float d=length(p-(c+ab*t))/max(t,.02);
- float w=(1.-smoothstep(uGhR.x,uGhR.y,d))*(1.-smoothstep(.86,.96,t));
- float n=(1.-smoothstep(uGhN.x,uGhN.y,length(p-c)))*(1.-smoothstep(.75,.9,t));
- return max(w,n);}
+float gh169Fr(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;return 1.-smoothstep(.9,.99,t);}
+float gh169Bx(vec3 p){float w=0.;for(int i=0;i<8;i++){if(uGhBw[i]>0.){vec3 q=max(uGhBm[i]-p,p-uGhBM[i]);w=max(w,uGhBw[i]*(1.-smoothstep(0.,.3,max(q.x,max(q.y,q.z)))));}}return w;}
+float gh169Nc(vec3 p,vec3 c,vec3 h){return (1.-smoothstep(uGhN.x,uGhN.y,length(p-c)))*(1.-smoothstep(.75,.9,gh169T(p,c,h)));}
+float gh169W(vec3 p,vec3 c,vec3 h){return max(gh169Bx(p)*gh169Fr(p,c,h),gh169Nc(p,c,h));}
+float gh169WT(vec3 p,vec3 c,vec3 h){return max(uGhT*gh169Fr(p,c,h),gh169Nc(p,c,h));}
 bool gh169Out(vec3 p){return p.x<uGhV.x||p.z<uGhV.y||p.x>uGhV.z||p.z>uGhV.w;}
 `;
 // the start of main, after ghw is known: the normal draw skips see-through pixels, the ghost passes draw only them
 GH169.GATE=`if(uGhOn>.5){if(uGhM<.5){if(ghw>.004)discard;}else{if(ghw<=.004)discard;
- #ifndef GH169_DS
+ #if !defined(GH169_DS)&&!defined(GH169_RK)
  if(!gl_FrontFacing)discard;
  #endif
  }}else if(uGhM>.5)discard;
 `;
-// after the colour is done (p = the world position varying): black outside the instance (and the ground's outward cliff at its
-// edge: ghEdge, 3190); the glass blend in the colour pass. Glass fades fully clear toward the camera (uGhN): a wall or rock right
-// at the lens is never a pale veil over the screen, and has no dark inside (owner: "a difference in lighting at some angles")
+// after the colour is done (p = the world position varying): the ground stops at the instance's edge (v171: discarded, the rock
+// past it is 3355's apron; it was black in v169); the glass blend in the colour pass, with a slight dither (uGhD, owner v171).
+// Glass fades fully clear toward the camera (uGhN): a wall or rock right at the lens is never a pale veil over the screen.
+// Rock (GH169_RK: the ground, seen from outside or from inside) and plants (GH169_SEE) are plain glass: nothing behind is darkened.
 GH169.tail=p=>`
  if(uGhOn>.5){
   #ifdef GH169_VOID
-  if(gh169Out(${p})||ghEdge>.5)gl_FragColor.rgb=vec3(0.);
+  if(gh169Out(${p}))discard;
   #endif
-  if(uGhM>1.5){float nf=smoothstep(uGhN.x,uGhN.y,length(${p}-cameraPosition));float ga=1.-ghw*(1.-uGhA*nf);vec3 gc=gl_FragColor.rgb*ga;
+  if(uGhM>1.5){float nf=smoothstep(uGhN.x,uGhN.y,length(${p}-cameraPosition));float ga=1.-ghw*(1.-uGhA*nf);
+   float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))))-.5;ga=clamp(ga+dh*uGhD*ghw*nf,0.,1.);
+   vec3 gc=gl_FragColor.rgb*ga;
    #ifdef GH169_DS
    if(!gl_FrontFacing)gc=vec3(0.);
    #endif
-   #ifdef GH169_SEE
+   #if defined(GH169_SEE)||defined(GH169_RK)
    gl_FragColor=vec4(gc,ga);
    #else
    gl_FragColor=vec4(gc,1.-(1.-ga)*mix(1.,uGhK,nf));
@@ -1654,9 +1662,10 @@ GH169.tail=p=>`
 // call after the material's own replacements (they must already have put `float ghw` at the top of main and GH169.GATE after it).
 // Only the ground goes black outside the instance (the void and the cliffs it drops off): scenery out there stays as it was
 // (Abeksi's north wall stands 0.5-3 tiles past its rectangle)
-function gh169Shader(sh,m,p,see,vd){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
-  const ds=m.side===THREE.DoubleSide;
-  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
+// rk (v171): rock, the ground: two-sided so it shows from inside too, never darkens what is behind it
+function gh169Shader(sh,m,p,see,vd,rk){for(const k in GH169.U)sh.uniforms[k]=GH169.U[k];
+  const ds=m.side===THREE.DoubleSide&&!rk;
+  sh.fragmentShader=(ds?'#define GH169_DS\n':'')+(see?'#define GH169_SEE\n':'')+(vd?'#define GH169_VOID\n':'')+(rk?'#define GH169_RK\n':'')+sh.fragmentShader.replace('#include <common>','#include <common>\n'+GH169.HEAD);
   if(sh.fragmentShader.indexOf('#include <dithering_fragment>')<0){console.warn('v169: no dithering_fragment to end on');return}
   sh.fragmentShader=sh.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>'+GH169.tail(p))}
 // mark a material as see-through capable when it is patched (3350 reads this before the first draw): all = its pixels can turn
@@ -47456,6 +47465,8 @@ function hd155Merge(vane,v,st){if(hd154Done())return;const here=hd154In()&&!!HD1
 //    (the ground between hero and camera climbs a step) it simply stays inside the wall: from in there its faces point away and the
 //    terrain is not drawn, and the window shows the hero.
 // v169: the window is see-through glass now, not a dithered hole (the shared rule in 0061, drawn by 3350).
+// v171: no window: when the ground blocks the view every wall of it in front of the hero turns to glass (uGhT, 3350); the ground is
+// two-sided and its inside is glass, so from inside the rock you look through it (no black, no fade).
 // cam157Floor(hero position, camera point) -> the lowest the camera may go there, or null when a wall stands between them.
 function cam157Floor(P,c){const dx=c.x-P.x,dz=c.z-P.z,L=Math.hypot(dx,dz);let prev=GH(P.x,P.z);
   if(L>.3)for(let s=.5;s<=L;s+=.5){const g=GH(P.x+dx*s/L,P.z+dz*s/L);if(g-prev>CAM157.step)return null;prev=g}
@@ -47469,13 +47480,16 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     // v169: the shared see-through rule (0061): glass with a dark inside instead of a dithered hole
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     float ghw=0.;vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;
-    // v169: the cliff the ground drops off at the instance's edge (within a tile of it, sloping down out of the map) is black (0061)
-    float ghEdge=0.;{float dl=vC135.x-uGhV.x,dr=uGhV.z-vC135.x,dt=vC135.z-uGhV.y,db=uGhV.w-vC135.z,me=min(min(dl,dr),min(dt,db));
-     vec2 o=me==dl?vec2(-1.,0.):me==dr?vec2(1.,0.):me==dt?vec2(0.,-1.):vec2(0.,1.);if(me<1.1&&dot(fn.xz,o)>.3)ghEdge=1.;}
-    if(uOn135>.5&&uOn157>.5){float hf=vC135.y-uPl157.y+1.1;
-     ghw=gh169W(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));}   // flat ground below the waist stays solid
-    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true)};
-  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';gh169Flag(m,0,1);m.needsUpdate=true}
+    // v171: the ground is two-sided. From inside the rock (the camera in a wall or out past the edge, 3355) its faces are seen
+    // from behind: always glass, rock-coloured (0060), so the view goes through it; outside the main view they stay culled.
+    bool ghIn=uOn135>.5&&uOn157>.5&&uGhOn>.5;if(!gl_FrontFacing&&!ghIn)discard;
+    if(ghIn){float hf=vC135.y-uPl157.y+1.1;
+     ghw=gh169WT(vC135,uCam157,uPl157)*(1.-smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
+     if(!gl_FrontFacing)ghw=1.;}
+    `+GH169.GATE);gh169Shader(sh,m,'vC135',false,true,true);
+    // v171: rock seen from inside is plain grey-brown rock (the ground's colours are for its top)
+    sh.fragmentShader=sh.fragmentShader.replace('vec3(.9,.94,1.)*(.84+.16*fh),sn);}','vec3(.9,.94,1.)*(.84+.16*fh),sn);if(!gl_FrontFacing)diffuseColor.rgb=vec3(.31,.28,.25)*(.75+.5*n2)*(.85+.3*fh);}')};
+  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.side=THREE.DoubleSide;m.userData.gh171T=1;gh169Flag(m,0,1);m.needsUpdate=true}
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}
 // the intro's Duskhold shots (3081) keep the v135 look: the old tube fade for scenery, no terrain cut
@@ -55037,22 +55051,26 @@ function gh169Sphere(o,out){const g=o.geometry;if(!g)return null;
       s=o.userData.gh169S={n,c,r,top}}
     out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
   if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
-// can any pixel of this mesh be see-through? (a cone from the camera to the hero, GH169.R wide at the hero; a ball round the camera)
+// can any pixel of this mesh be see-through? v171: it meets one of the blocking boxes (gh171Scan), it is the ground while the
+// ground blocks the view or the camera is inside the rock, or it reaches the lens (GH169.N)
 const GH169S={c:new THREE.Vector3(),r:0},GH169V=new THREE.Vector3(),GH169W=new THREE.Vector3();
-function gh169Hit(o,fl){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value;
-  if(fl!=null&&s.top<H.y+fl)return false;   // wholly below the material's floor rule (grass, paving): never see-through
-  const ab=GH169V.copy(H).sub(C),L2=ab.lengthSq();if(L2<1e-4)return false;const L=Math.sqrt(L2),tc=GH169W.copy(s.c).sub(C).dot(ab)/L2,tr=s.r/L;
+function gh169Hit(o,fl,gt){const s=gh169Sphere(o,GH169S);if(!s)return true;const C=FADE.cam.value,H=FADE.pl.value,B=GH171;
   if(s.c.distanceTo(C)-s.r<GH169.N[1])return true;
-  if(tc+tr<=0||tc-tr>=.96)return false;
-  const t=Math.min(1,Math.max(0,tc)),lat=GH169W.copy(C).addScaledVector(ab,t).distanceTo(s.c);
-  return lat-s.r<GH169.R[1]*Math.min(1,tc+tr)+.5}
+  if(gt)return B.under||(GH169.U.uGhT.value>0&&gh171Front(s,C,H));
+  if(fl!=null&&s.top<H.y+fl)return false;   // wholly below the material's floor rule (grass, paving): never see-through
+  for(const b of B.box)if(b.w>0){const x=Math.max(b.mn.x,Math.min(s.c.x,b.mx.x))-s.c.x,y=Math.max(b.mn.y,Math.min(s.c.y,b.mx.y))-s.c.y,z=Math.max(b.mn.z,Math.min(s.c.z,b.mx.z))-s.c.z;
+    if(x*x+y*y+z*z<(s.r+.35)*(s.r+.35))return true}
+  return false}
+// does a ball reach in front of the hero (between the camera and the hero's depth)?
+function gh171Front(s,C,H){const ab=GH169V.copy(H).sub(C),L2=ab.lengthSq();if(L2<1e-4)return false;const L=Math.sqrt(L2),tc=GH169W.copy(s.c).sub(C).dot(ab)/L2,tr=s.r/L;return tc+tr>0&&tc-tr<.99}
 // fl: the lowest floor among the mesh's materials (null: one of them has none)
-function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0,fl;
-  for(const m of Array.isArray(M)?M:[M])if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1;const f=m.userData.gh169Fl;
+function gh169Cand(o){const C=GH169C,u=o.userData;if(u.gh169F===C.f)return;u.gh169F=C.f;const M=o.material;let g=0,all=0,gt=0,fl;
+  for(const m of Array.isArray(M)?M:[M])if(m&&m.userData.gh169){g=1;if(m.userData.gh169All)all=1;if(m.userData.gh171T)gt=1;const f=m.userData.gh169Fl;
     fl=f==null||fl===null?null:fl===undefined?f:Math.min(fl,f)}
   if(fl===undefined)fl=null;
   if(!g||o.isSkinnedMesh){if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L);return}
-  if(all||gh169Hit(o,fl)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
+  if(!gt&&!u.gh171No)GH171.seen.push(o,fl);   // what was drawn: what the next scan tests against the view (gh171Scan)
+  if(all||gh169Hit(o,fl,gt)){o.layers.enable(GH169L);C.cand.push(o);let p=o;while(p.parent&&p.parent!==scene)p=p.parent;C.top.add(p)}
   else if(o.layers.mask&(1<<GH169L))o.layers.disable(GH169L)}
 // in the ghost passes the see-through materials blend as premultiplied glass and write no stencil (a material that writes it
 // would also reset the stencil test the colour passes rely on); put back after the passes
@@ -55068,28 +55086,13 @@ function gh169Mark1(o){if(!o.isMesh&&!o.isPoints&&!o.isLine&&!o.isSprite)return;
 function gh169Chars(){const S=f135Skip();try{gh169Clear(SKY.material);gh169Clear(WTR.w.material);gh169Clear(WTR.l.material)}catch(_){}try{(typeof party!='undefined'?party:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
   try{(typeof comps!='undefined'?comps:[]).forEach(c=>c&&c.m&&S.add(c.m))}catch(_){}
   S.forEach(o=>{if(o&&o.traverse)o.traverse(gh169Mark1)})}
-// the black floor under the instance you are in, and the rectangle past which the ground is black (the cliff it drops off at
-// the edge is black too: 3190 ghEdge)
+// the rectangle past which the ground stops (3355's apron continues it). v169's black floor under the instance and its fade to
+// black with the camera out of the map are gone (v171, owner: rock past the edge instead, looked through like any wall)
 function gh169Void(){const C=GH169C,k=cvKey(),I=k>=0?INSL[k]:null,V=GH169.U.uGhV.value;
-  if(k!==C.vk||!C.vo){C.vk=k;
-    if(!C.vo){const o=C.vo=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0,fog:false}));
-      o.name='gh169Void';o.userData.noFade135=1;o.userData.psNo=1;o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false;scene.add(o)}
-    const o=C.vo;o.visible=!!I;if(I){o.position.set(I.x0+I.w/2,GH169.vy,I.y0+I.h/2);o.scale.set(I.w+800,1,I.h+800)}
-    o.updateMatrix();o.updateMatrixWorld(true)}
   if(!I){V.set(-1e6,-1e6,1e6,1e6);C.out=false;return}
   const c=FADE.cam.value;C.out=c.x<I.x0||c.z<I.y0||c.x>I.x0+I.w||c.z>I.y0+I.h;V.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h)}
-// The camera out of the map: inside the rock (below the ground under it: behind a wall step it stays where the player put it)
-// or out past the instance's edge. Then the background (what shows under the map from in there) fades to black over
-// GH169.fadeT s, and so does the glass (to fully clear, gh169K / uGhA), and back when the camera returns; the fade runs on the
-// game's clock (homeTick).
 GH169.fadeT=.35;
-// with the camera out of the map what stands between it and the hero fades fully clear instead of turning to glass (from inside
-// the wall the boulders lining it were stacked pale glass over the hero), and nothing behind is darkened
-function gh169K(){const fd=GH169C.fade||0;return GH169.k+(1-GH169.k)*fd}
-function gh169AwayTick(dt){const C=GH169C,c=FADE.cam.value;let u=false;try{u=c.y<GH(c.x,c.z)-.05}catch(_){}
-  const away=GH169.on&&(u||!!C.out)&&!(typeof IC151!='undefined'&&IC151.on);C.under=u;
-  C.fade=Math.max(0,Math.min(1,(C.fade||0)+(away?1:-1)*Math.min(.1,dt||0)/GH169.fadeT))}
-{const f=homeTick;homeTick=function(dt){const r=f.apply(this,arguments);try{gh169AwayTick(dt)}catch(e){if(!GH169C.err3){GH169C.err3=1;console.warn('v169 fade',e)}}return r}}
+function gh169K(){return GH169.k}
 // the water: never past the instance's edge (its sheet spans the void at sea level: from out there it was a pale sheet over all)
 function gh169Water(){try{[WTR.w,WTR.l].forEach(o=>{const m=o&&o.material;if(!m||m.userData.gh169W)return;m.userData.gh169W=1;
   m.uniforms.uGhV=GH169.U.uGhV;m.uniforms.uGhOn=GH169.U.uGhOn;
@@ -55119,12 +55122,9 @@ POST.after=function(){const C=GH169C;C.live=0;const n=C.cand.length;C.st.cand=n;
     B.color.setLocked(false);B.color.setMask(true);B.depth.setLocked(false);B.depth.setMask(true);B.stencil.setLocked(false);B.stencil.setTest(false);B.stencil.setMask(0xff);
     scene.background=bg;ren.autoClear=ac;ren.shadowMap.autoUpdate=sa;ren.shadowMap.needsUpdate=sn;cam.layers.mask=lm;gh169Restore();C.st.ms=+(performance.now()-t0).toFixed(2)}};
 {const f=POST.render;POST.render=function(){const C=GH169C,U=GH169.U;C.f++;C.cand.length=0;C.top.clear();
-  try{const fd=C.fade||0;U.uGhA.value=GH169.a*(1-fd);U.uGhK.value=gh169K();if(GH169.on){U.uGhR.value.set(GH169.R[0],GH169.R[1]);U.uGhN.value.set(GH169.N[0],GH169.N[1])}
-    else{U.uGhR.value.set(-2,-1);U.uGhN.value.set(-2,-1)}
-    gh169Void();gh169Water();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
-  // out of the map the background fades to black with the view
-  let bg=null;if(C.fade>0&&scene.background&&scene.background.isColor){bg=scene.background;scene.background=(C.bgc||(C.bgc=new THREE.Color())).copy(bg).multiplyScalar(1-C.fade)}
-  C.live=1;try{return f.apply(this,arguments)}finally{C.live=0;if(bg)scene.background=bg}}}
+  try{U.uGhA.value=GH169.a;U.uGhK.value=gh169K();U.uGhD.value=GH169.d;if(GH169.on)U.uGhN.value.set(GH169.N[0],GH169.N[1]);else U.uGhN.value.set(-2,-1);
+    gh169Void();gh169Water();gh171Tick();const now=performance.now();if(now-C.ct>250){C.ct=now;gh169Chars()}}catch(e){if(!C.err2){C.err2=1;console.warn('v169 setup',e)}}
+  GH171.seen.length=0;C.live=1;try{return f.apply(this,arguments)}finally{C.live=0}}}
 // ================= v170: the main view's anti-aliased buffer copies out its colour only =================
 // Since v169 the view's buffer (POST r0, 0060) has a stencil, so three.js r128 copied colour + depth + stencil out of the
 // multisampled buffer after every draw into it (blitFramebuffer, four times a frame with the see-through passes). Some phone
@@ -55138,6 +55138,270 @@ var KQ170={on:1,n:0};
     if(KQ170.on&&(mask&16384)&&(mask&(256|1024))){mask&=~(256|1024);KQ170.n++}   // COLOR_BUFFER_BIT kept; DEPTH / STENCIL dropped
     return blit(x0,y0,x1,y1,u0,v0,u1,v1,mask,filter)}}
   catch(e){console.warn('v170 resolve',e)}})();
+// ================= v171: whole objects turn see-through (no round window) =================
+// Owner (Oct 29 2026): "I dont want the circular cutout view when looking through an object. Just make it transparent", then
+// "add a slight dithering when looking through an object as well".
+// v169 cut a smooth round window round the hero out of anything in front of them. Now ~11 times a second gh171Scan casts five
+// rays from the camera to the hero (chest, head, knees, both shoulders) against what was drawn last frame, and every object one of
+// them meets is handed to the shaders as a box (0061 gh169Bx, up to GH171N): the whole object turns to glass, as far as it stands
+// in front of the hero (never below the hero's knees, as before). "The object" is:
+//   * a plain mesh: the largest group above it that is still object-sized (a house = its walls + roof), GH171.big across at most;
+//   * one tree or rock of an instanced set (InstancedMesh): that instance;
+//   * a big merged mesh (camp dressing, Duskhold's outskirts, Abeksi): the piece of it the ray meets — the triangles joined to
+//     the one it hit, then pieces whose boxes touch it (gh171Acc, built once per geometry when it first blocks the view).
+// The ground has its own switch: when it blocks the view (a wall, a hill, the rock past an instance's edge) or the camera is inside
+// it, uGhT goes to 1 and every wall of ground in front of the hero turns to glass (3190); seen from inside, the rock is glass too.
+// Boxes and the ground's switch fade in and out over GH171.fade s. The glass has a slight dither (GH169.d, 0061).
+var GH171={box:[],seen:[],t:0,last:0,under:false,bt:0,fade:.18,big:12,st:{scans:0,ms:0,hits:0,boxes:0},rc:new THREE.Raycaster(),acc:new WeakMap(),err:0};
+var GH171N=8;
+// the ground's height there, the rock past the instance's edge included (3356's apron)
+function gh171Ground(x,z){const k=cvKey(),I=k>=0?INSL[k]:null;
+  if(I&&(x<I.x0||z<I.y0||x>I.x0+I.w||z>I.y0+I.h)&&typeof ed171H=='function'){const h=ed171H(I,x,z);if(h!=null)return h}
+  return GH(x,z)}
+const GH171V=[0,1,2,3,4].map(()=>new THREE.Vector3()),GH171D=new THREE.Vector3(),GH171S=new THREE.Vector3(),GH171M=new THREE.Matrix4(),GH171B=new THREE.Box3();
+function gh171Scan(){const B=GH171,C=FADE.cam.value,H=FADE.pl.value,t0=performance.now();B.st.scans++;
+  for(const b of B.box)b.on=0;
+  if(!GH169.on||(typeof IC151!='undefined'&&IC151.on)){B.bt=0;B.under=false;return}
+  const T=GH171V,ab=GH171D.copy(H).sub(C);if(ab.lengthSq()<1e-4){B.bt=0;return}
+  const sd=GH171S.set(ab.z,0,-ab.x);if(sd.lengthSq()>1e-6)sd.normalize();
+  T[0].copy(H);T[1].copy(H).y+=.6;T[2].copy(H).y-=.75;T[3].copy(H).addScaledVector(sd,.38);T[4].copy(H).addScaledVector(sd,-.38);
+  // the ground: inside it, or does it rise above any of the rays?
+  let bt=false;B.under=C.y<gh171Ground(C.x,C.z)-.05;if(B.under)bt=true;
+  for(let i=0;i<5&&!bt;i++){const P=T[i],L=C.distanceTo(P);for(let s=.5;s<L-.4;s+=.4){const f=s/L,x=C.x+(P.x-C.x)*f,y=C.y+(P.y-C.y)*f,z=C.z+(P.z-C.z)*f;if(gh171Ground(x,z)>y+.02){bt=true;break}}}
+  B.bt=bt?1:0;
+  // what was drawn: objects the rays meet
+  const S=B.seen,done=new Set();let hits=0;
+  for(let i=0;i<S.length;i+=2){const o=S[i];if(done.has(o))continue;done.add(o);
+    const s=gh169Sphere(o,GH169S);if(!s)continue;if(S[i+1]!=null&&s.top<H.y+S[i+1])continue;
+    // broad: the ball against the segment from the camera to the hero
+    const L2=ab.lengthSq(),u=Math.max(0,Math.min(1,GH169W.copy(s.c).sub(C).dot(ab)/L2)),dx=C.x+ab.x*u-s.c.x,dy=C.y+ab.y*u-s.c.y,dz=C.z+ab.z*u-s.c.z;
+    if(dx*dx+dy*dy+dz*dz>(s.r+.9)*(s.r+.9))continue;
+    for(let j=0;j<5;j++){const k=gh171Ray(o,C,T[j]);if(k){hits++;break}}}
+  B.st.hits=hits;B.st.ms=+(performance.now()-t0).toFixed(2)}
+// one ray from the camera to a point on the hero against one object; on a hit its box is switched on (gh171Box). Stops .45 short
+// of the hero (their own gear, held weapons are not scenery) and starts .2 past the lens.
+function gh171Ray(o,C,P){const B=GH171,g=o.geometry;if(!g||!g.attributes.position)return false;
+  const L=C.distanceTo(P);if(L<.8)return false;
+  if(o.isInstancedMesh){const rc=B.rc;rc.set(C,GH169V.copy(P).sub(C).normalize());rc.near=.2;rc.far=L-.45;rc.camera=cam;let I=[];
+    try{I=rc.intersectObject(o,false)}catch(_){I=[]}
+    if(!I.length||I[0].instanceId==null)return false;const id=I[0].instanceId;
+    if(!g.boundingBox)g.computeBoundingBox();o.getMatrixAt(id,GH171M);GH171M.premultiply(o.matrixWorld);
+    GH171B.copy(g.boundingBox).applyMatrix4(GH171M);gh171Box(o.uuid+':'+id,GH171B);return true}
+  const nT=(g.index?g.index.count:g.attributes.position.count)/3;
+  if(nT<=3000){const rc=B.rc;rc.set(C,GH169V.copy(P).sub(C).normalize());rc.near=.2;rc.far=L-.45;rc.camera=cam;let I=[];
+    try{I=rc.intersectObject(o,false)}catch(_){I=[]}
+    if(!I.length)return false;const ob=gh171Whole(o);gh171Box(ob.k,ob.b);return true}
+  // a big merged mesh: the piece the ray meets
+  const A=gh171Acc(g);if(!A)return false;const inv=GH171M.copy(o.matrixWorld).invert();
+  const a=GH171A0.copy(C).applyMatrix4(inv),e=GH171A1.copy(P).addScaledVector(GH169V.copy(C).sub(P).normalize(),.45).applyMatrix4(inv);
+  const tri=gh171AccRay(A,a,e);if(tri<0)return false;
+  const grp=A.tg[tri],bx=A.gb.subarray(grp*6,grp*6+6);GH171B.min.set(bx[0],bx[1],bx[2]);GH171B.max.set(bx[3],bx[4],bx[5]);GH171B.applyMatrix4(o.matrixWorld);
+  gh171Box(o.uuid+'#'+grp,GH171B);return true}
+const GH171A0=new THREE.Vector3(),GH171A1=new THREE.Vector3();
+// the whole object a plain mesh belongs to: climb its parents while the group stays object-sized (static scenery: cached by spot)
+function gh171Whole(o){const u=o.userData,me=o.matrixWorld.elements,f=me[12]*7.1+me[13]*3.3+me[14];if(u.gh171W&&u.gh171W.f===f)return u.gh171W;
+  let best=o,bb=gh171OBox(o,new THREE.Box3(),1e9),a=o;
+  while(a.parent&&a.parent!==scene&&!a.parent.isScene){const p=a.parent,b=gh171OBox(p,new THREE.Box3(),GH171.big);if(!b)break;best=p;bb=b;a=p}
+  return u.gh171W={k:best.uuid,b:bb,f}}
+// a group's box from its meshes' bounding boxes (null as soon as it grows past lim across)
+const GH171Q=new THREE.Box3();
+function gh171OBox(r,out,lim){out.makeEmpty();let ok=true;
+  r.traverse(q=>{if(!ok||!q.isMesh||!q.visible)return;const g=q.geometry;if(!g||!g.attributes||!g.attributes.position)return;if(!g.boundingBox)g.computeBoundingBox();
+    GH171Q.copy(g.boundingBox).applyMatrix4(q.matrixWorld);out.union(GH171Q);
+    if(out.max.x-out.min.x>lim||out.max.z-out.min.z>lim||out.max.y-out.min.y>lim*1.6)ok=false});
+  return ok&&!out.isEmpty()?out:null}
+// switch a box on (a new one takes a free slot, or the faintest one that is off)
+function gh171Box(k,b){const B=GH171;let x=B.box.find(q=>q.k===k);
+  if(!x){if(B.box.length<GH171N)B.box.push(x={k,mn:new THREE.Vector3(),mx:new THREE.Vector3(),w:0,on:0});
+    else{let lo=null;for(const q of B.box)if(!q.on&&(!lo||q.w<lo.w))lo=q;if(!lo)return;x=lo;x.k=k;x.w=0}}
+  x.mn.copy(b.min);x.mx.copy(b.max);x.on=1}
+// each frame (POST.render, 3350): a scan now and then, the fades, the uniforms
+function gh171Tick(){const B=GH171,U=GH169.U,now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(B.last||now))/1000));B.last=now;
+  if(now-B.t>90){B.t=now;try{gh171Scan()}catch(e){if(!B.err){B.err=1;console.warn('v171 scan',e)}}}
+  const k=dt/B.fade;U.uGhT.value=Math.max(0,Math.min(1,U.uGhT.value+(B.bt?k:-k)));if(B.under)U.uGhT.value=1;
+  for(const b of B.box)b.w=Math.max(0,Math.min(1,b.w+(b.on?k:-k)));
+  B.box=B.box.filter(b=>b.w>0||b.on);B.st.boxes=B.box.length;
+  for(let i=0;i<GH171N;i++){const b=B.box[i];if(b){U.uGhBm.value[i].copy(b.mn);U.uGhBM.value[i].copy(b.mx);U.uGhBw.value[i]=b.w}else U.uGhBw.value[i]=0}}
+// ---- big merged meshes: the pieces (triangles joined by shared corners, then pieces whose boxes touch) and a grid of triangles ----
+// A: {p positions, ix corner index or null, tg triangle -> group, gb group boxes (6 per group, local), cells, cs cell size, o origin,
+// n grid size}. Built once per geometry, the first time a ray reaches it.
+function gh171Acc(g){let A=GH171.acc.get(g);if(A!==undefined)return A;const t0=performance.now();
+  try{A=gh171AccBuild(g)}catch(e){console.warn('v171 pieces',e);A=null}
+  GH171.acc.set(g,A);if(A)A.ms=+(performance.now()-t0).toFixed(1);return A}
+function gh171AccBuild(g){const P=g.attributes.position.array,ix=g.index?g.index.array:null,nT=(ix?ix.length:P.length/3)/3,nV=P.length/3;
+  const vi=(t,c)=>ix?ix[t*3+c]:t*3+c;
+  // corners at the same spot are one corner
+  const par=new Int32Array(nV);for(let i=0;i<nV;i++)par[i]=i;
+  const fd=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i},un=(a,b)=>{a=fd(a);b=fd(b);if(a!==b)par[a]=b};
+  const wm=new Map();for(let i=0;i<nV;i++){const k=Math.round(P[i*3]*100)*73856093^Math.round(P[i*3+1]*100)*19349663^Math.round(P[i*3+2]*100)*83492791,q=wm.get(k);if(q===undefined)wm.set(k,i);else un(i,q)}
+  for(let t=0;t<nT;t++){un(vi(t,0),vi(t,1));un(vi(t,1),vi(t,2))}
+  // pieces and their boxes
+  const pid=new Map(),pb=[];const tp=new Int32Array(nT);
+  for(let t=0;t<nT;t++){const r=fd(vi(t,0));let k=pid.get(r);if(k===undefined){k=pb.length/6;pid.set(r,k);pb.push(1e9,1e9,1e9,-1e9,-1e9,-1e9)}tp[t]=k;
+    for(let c=0;c<3;c++){const v=vi(t,c)*3;for(let a=0;a<3;a++){const x=P[v+a];if(x<pb[k*6+a])pb[k*6+a]=x;if(x>pb[k*6+3+a])pb[k*6+3+a]=x}}}
+  const nP=pb.length/6,gp=new Int32Array(nP);for(let i=0;i<nP;i++)gp[i]=i;
+  const gf=i=>{while(gp[i]!==i){gp[i]=gp[gp[i]];i=gp[i]}return i};
+  // pieces whose boxes touch (within .2) join, as long as the joined box stays object-sized
+  const gbx=pb.slice(),big=GH171.big,cs0=4,hm=new Map();
+  for(let k=0;k<nP;k++){const b=pb.slice(k*6,k*6+6);if(Math.max(b[3]-b[0],b[5]-b[2])>big)continue;
+    for(let x=Math.floor(b[0]/cs0);x<=Math.floor(b[3]/cs0);x++)for(let z=Math.floor(b[2]/cs0);z<=Math.floor(b[5]/cs0);z++){const h=x*92821+z;let l=hm.get(h);if(!l)hm.set(h,l=[]);
+      for(const j of l){const a=gf(k),c=gf(j);if(a===c)continue;const A=gbx.slice(a*6,a*6+6),Cb=gbx.slice(c*6,c*6+6);
+        if(A[0]>Cb[3]+.2||Cb[0]>A[3]+.2||A[1]>Cb[4]+.2||Cb[1]>A[4]+.2||A[2]>Cb[5]+.2||Cb[2]>A[5]+.2)continue;
+        const U=[Math.min(A[0],Cb[0]),Math.min(A[1],Cb[1]),Math.min(A[2],Cb[2]),Math.max(A[3],Cb[3]),Math.max(A[4],Cb[4]),Math.max(A[5],Cb[5])];
+        if(Math.max(U[3]-U[0],U[5]-U[2])>big||U[4]-U[1]>big*1.6)continue;
+        gp[a]=c;for(let q=0;q<6;q++)gbx[c*6+q]=U[q]}
+      l.push(k)}}
+  const gid=new Map(),gb=[],tg=new Int32Array(nT);
+  for(let t=0;t<nT;t++){const r=gf(tp[t]);let k=gid.get(r);if(k===undefined){k=gb.length/6;gid.set(r,k);for(let q=0;q<6;q++)gb.push(gbx[r*6+q])}tg[t]=k}
+  // a grid of triangles for the rays
+  if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox,ex=Math.max(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z),cs=Math.max(1.5,ex/48),n=Math.ceil(ex/cs)+1;
+  const cells=new Map(),o=[bb.min.x,bb.min.y,bb.min.z],ci=(a,i)=>Math.max(0,Math.min(n-1,Math.floor((a-o[i])/cs)));
+  for(let t=0;t<nT;t++){let a0=1e9,a1=1e9,a2=1e9,b0=-1e9,b1=-1e9,b2=-1e9;for(let c=0;c<3;c++){const v=vi(t,c)*3;a0=Math.min(a0,P[v]);b0=Math.max(b0,P[v]);a1=Math.min(a1,P[v+1]);b1=Math.max(b1,P[v+1]);a2=Math.min(a2,P[v+2]);b2=Math.max(b2,P[v+2])}
+    for(let x=ci(a0,0);x<=ci(b0,0);x++)for(let y=ci(a1,1);y<=ci(b1,1);y++)for(let z=ci(a2,2);z<=ci(b2,2);z++){const h=(x*n+y)*n+z;let l=cells.get(h);if(!l)cells.set(h,l=[]);l.push(t)}}
+  return {P,ix,tg,gb:new Float32Array(gb),cells,cs,o,n,stamp:new Uint32Array(nT),sv:0,nT,nG:gb.length/6}}
+// the first triangle the segment a->e meets (local space), walking the grid's cells in order; -1 for none
+function gh171AccRay(A,a,e){const P=A.P,ix=A.ix,cs=A.cs,o=A.o,n=A.n;A.sv++;const st=A.stamp,sv=A.sv;
+  const d=[e.x-a.x,e.y-a.y,e.z-a.z],L=Math.hypot(d[0],d[1],d[2]);if(L<1e-4)return -1;
+  const steps=Math.ceil(L/(cs*.5))+1,seen=new Set();
+  for(let i=0;i<=steps;i++){const f=i/steps,x=Math.floor((a.x+d[0]*f-o[0])/cs),y=Math.floor((a.y+d[1]*f-o[1])/cs),z=Math.floor((a.z+d[2]*f-o[2])/cs);
+    if(x<0||y<0||z<0||x>=n||y>=n||z>=n)continue;
+    // the cell and its neighbours along the way (a thin ray can cross a cell corner between samples)
+    for(let qx=x-1;qx<=x+1;qx++)for(let qy=y-1;qy<=y+1;qy++)for(let qz=z-1;qz<=z+1;qz++){if(qx<0||qy<0||qz<0||qx>=n||qy>=n||qz>=n)continue;const h=(qx*n+qy)*n+qz;if(seen.has(h))continue;seen.add(h);
+      const l=A.cells.get(h);if(!l)continue;
+      for(const t of l){if(st[t]===sv)continue;st[t]=sv;
+        const i0=(ix?ix[t*3]:t*3)*3,i1=(ix?ix[t*3+1]:t*3+1)*3,i2=(ix?ix[t*3+2]:t*3+2)*3;
+        if(gh171Tri(a,d,P,i0,i1,i2))return t}}}
+  return -1}
+// does the segment a + d*u (0 < u < 1) cross the triangle? (Moller-Trumbore, both sides)
+function gh171Tri(a,d,P,i0,i1,i2){const e1x=P[i1]-P[i0],e1y=P[i1+1]-P[i0+1],e1z=P[i1+2]-P[i0+2],e2x=P[i2]-P[i0],e2y=P[i2+1]-P[i0+1],e2z=P[i2+2]-P[i0+2];
+  const px=d[1]*e2z-d[2]*e2y,py=d[2]*e2x-d[0]*e2z,pz=d[0]*e2y-d[1]*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-9)return false;
+  const iv=1/det,tx=a.x-P[i0],ty=a.y-P[i0+1],tz=a.z-P[i0+2],u=(tx*px+ty*py+tz*pz)*iv;if(u<0||u>1)return false;
+  const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,v=(d[0]*qx+d[1]*qy+d[2]*qz)*iv;if(v<0||u+v>1)return false;
+  const w=(e2x*qx+e2y*qy+e2z*qz)*iv;return w>0&&w<1}
+// ================= v171: rock past the map's edge, a floor under it (no black, no void) =================
+// Owner (Oct 29 2026): "Instead of having black on the outside of the map, can we extend the edge of the map's terrain width so its
+// past the viewable area? We could also extend the map floor to that edge as well. This way they would just be looking through a
+// semi transparent object and if they turned the camera they couldn't see more than that."
+// Every zone instance is land (its fields, rimmed by walls) in a deep void basin inside its rectangle, 6 tiles of void from the next.
+// Three parts:
+//  1. ed171Fill (at load, from 0045, before the ground is built): the void round the land, out to the rectangle's edge, becomes
+//     rock that carries on from the rim: the nearest rim's height, smoothed, rising gently outward (ED171.k / cap) with some
+//     roughness. Where walkable ground itself meets the void (a ledge, a lip) the rock lies 26 below it instead, so drops stay
+//     drops. Holes enclosed by land (chasms, pits: not reached from the rectangle's edge) stay as they are.
+//  2. the apron (ed171Apron, the instance you are in): the same rock carried on past the rectangle, ED171.M tiles out (well past
+//     the fog), from the edge's own heights (exact at the edge, smoothed further out), with a short skirt under its inner edge.
+//     The ground inside the rectangle stops exactly at its edge (0061), so the two meet there. Same look as the ground (a copy of its
+//     material, colours taken from the edge).
+//  3. the floor (ed171Floor): a flat sheet just under the lowest ground of the instance, under the land and the rock and out to
+//     the apron's end (not under enclosed holes), so from inside the rock there is always ground below.
+// From inside the rock (camera in a wall or out past the edge) the ground's faces are glass (3190, 3355): you look through rock
+// at the hero, the floor below and more rock — never black, never the space under the map.
+var ED171={VT:-6,k:.3,cap:9,n:3,k2:.22,cap2:8,M:104,on:true,cur:null,st:{fill:0,ms:0,apron:0,floor:0}};
+// 1. the fill (runs inside 0045's height-map block: only what exists by then — HF, W, H, MAP, INSL, smt, fbm2 — may be used)
+function ed171Fill(){const t0=Date.now(),VT=-6,K=.3,CAP=9,NZ=3,DROP=26;let nf=0,miss=0;   // ED171 (below) does not exist yet: its numbers are repeated here
+  // the special instances (3150: Abeksi, the Ascent, the Sandstorm Run, the Sanctum, the Channel) get their records later: their plans
+  const L=INSL.slice();try{if(typeof sp152Defs=='function')sp152Defs().forEach(D=>{if(!L.some(I=>I&&I.g===D.g))L.push(D)})}catch(_){}
+  window.ED171G=new Set();
+  for(const I of L){if(!I)continue;const nx=I.w+1,nz=I.h+1,N=nx*nz,x0=I.x0,y0=I.y0;
+    const HI=(i,j)=>(j+HPD)*HW+i+HPD,hv=new Float32Array(N),st=new Uint8Array(N);   // st: 0 void, 1 land, 2 fill (void reached from the edge)
+    for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i,h=HF[HI(x0+i,y0+j)];hv[k]=h;st[k]=h>=VT?1:0}
+    // void reached from the rectangle's edge
+    const q=new Int32Array(N);let qh=0,qt=0;
+    for(let i=0;i<nx;i++)for(const j of [0,nz-1]){const k=j*nx+i;if(!st[k]){st[k]=2;q[qt++]=k}}
+    for(let j=1;j<nz-1;j++)for(const i of [0,nx-1]){const k=j*nx+i;if(!st[k]){st[k]=2;q[qt++]=k}}
+    while(qh<qt){const k=q[qh++],i=k%nx,j=(k/nx)|0;
+      if(i>0&&!st[k-1]){st[k-1]=2;q[qt++]=k-1}if(i<nx-1&&!st[k+1]){st[k+1]=2;q[qt++]=k+1}
+      if(j>0&&!st[k-nx]){st[k-nx]=2;q[qt++]=k-nx}if(j<nz-1&&!st[k+nx]){st[k+nx]=2;q[qt++]=k+nx}}
+    let land=0;for(let k=0;k<N;k++)if(st[k]===1){land=1;break}if(!land)continue;
+    if(!qt){I.ed171=1;ED171G.add(I.g);continue}   // no void to fill (land to the edge all round): only the apron
+    // distance to the nearest land, that land's height and whether you can walk there (two chamfer passes)
+    const d=new Float32Array(N),hc=new Float32Array(N),wk=new Uint8Array(N);
+    // a ledge: land at the void within 3.5 tiles of walkable ground (rim tiles reach 2.6 past it) and no higher than the land round it
+    // (+2.5 over the lowest within 4 tiles); a wall's top is further from the ground you walk on, or stands above it
+    for(let k=0;k<N;k++){if(st[k]===2){d[k]=1e9;hc[k]=0;continue}d[k]=0;hc[k]=hv[k];if(st[k]!==1)continue;const i=k%nx,j=(k/nx)|0;
+      if(!((i>0&&st[k-1]===2)||(i<nx-1&&st[k+1]===2)||(j>0&&st[k-nx]===2)||(j<nz-1&&st[k+nx]===2)))continue;
+      const dw=MAP.DW[Math.min(H-1,y0+j)*W+Math.min(W-1,x0+i)];if(dw==null||dw>=3.5)continue;let mn=1e9;
+      for(let dj=-4;dj<=4;dj++)for(let di=-4;di<=4;di++){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k2=jj*nx+ii;if(st[k2]===1&&hv[k2]<mn)mn=hv[k2]}
+      wk[k]=hv[k]<mn+2.5?1:0}
+    // spread outward from the land through the fill, breadth first (8 neighbours; every fill point reached, however winding)
+    qh=0;qt=0;for(let k=0;k<N;k++)if(st[k]===1){const i=k%nx,j=(k/nx)|0;if((i>0&&st[k-1]===2)||(i<nx-1&&st[k+1]===2)||(j>0&&st[k-nx]===2)||(j<nz-1&&st[k+nx]===2))q[qt++]=k}
+    const NB=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+    while(qh<qt){const k=q[qh++],i=k%nx,j=(k/nx)|0;
+      for(const [di,dj,c] of NB){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k2=jj*nx+ii;if(st[k2]!==2)continue;const v=d[k]+c;
+        if(d[k2]>=1e8){d[k2]=v;hc[k2]=hc[k];wk[k2]=wk[k];q[qt++]=k2}else if(v<d[k2]-.01){d[k2]=v;hc[k2]=hc[k];wk[k2]=wk[k]}}}
+    // where the land you can walk on meets the void (a ledge, a lip: Hilltop Ascent, roads to the edge) the drop stays a drop: the
+    // rock lies DROP below it there, rising back slowly; next to a wall it carries on from the wall's top. Smoothed across (land fixed).
+    let a=new Float32Array(N),b=new Float32Array(N);for(let k=0;k<N;k++)a[k]=st[k]===2?hc[k]-(wk[k]?DROP:0):hv[k];
+    for(let p=0;p<4;p++){for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(st[k]!==2){b[k]=a[k];continue}let s=0,n=0;
+        for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k2=jj*nx+ii;if(st[k2]===0)continue;s+=a[k2];n++}
+        b[k]=n?s/n:a[k]}const t=a;a=b;b=t}
+    for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(st[k]!==2)continue;if(d[k]>=1e8){miss++;continue}const x=x0+i,z=y0+j,dd=d[k],dr=wk[k]?Math.max(0,dd-3):dd;
+      HF[HI(x,z)]=a[k]+Math.min(CAP,dr*K)+NZ*(fbm2(x*.06+31,z*.06+17,3)-.5)*2*smt(1,10,dd);nf++}
+    I.ed171=1;ED171G.add(I.g)}
+  window.ED171F={fill:nf,miss,ms:Date.now()-t0}}
+// 2. the apron: heights past the rectangle. The rectangle's edge as one loop (perimeter position s), raw and smoothed.
+function ed171Edge(I){if(I._ed171E)return I._ed171E;const w=I.w,h=I.h,P=2*(w+h),raw=new Float32Array(P);
+  for(let s=0;s<P;s++){const q=ed171S2P(I,s);raw[s]=GH(q[0],q[1])}
+  const bl=(src,r)=>{const o=new Float32Array(P);let acc=0;for(let k=-r;k<=r;k++)acc+=src[((k%P)+P)%P];for(let s=0;s<P;s++){o[s]=acc/(2*r+1);acc+=src[(s+r+1)%P]-src[((s-r)%P+P)%P]}return o};
+  const sm=bl(bl(raw,6),6);return I._ed171E={P,raw,sm}}
+function ed171S2P(I,s){const w=I.w,h=I.h;if(s<=w)return [I.x0+s,I.y0];if(s<=w+h)return [I.x0+w,I.y0+s-w];if(s<=2*w+h)return [I.x0+w-(s-w-h),I.y0+h];return [I.x0,I.y0+h-(s-2*w-h)]}
+function ed171P2S(I,x,z){const w=I.w,h=I.h,dx=x-I.x0,dz=z-I.y0;
+  if(dz<=0)return Math.max(0,Math.min(w,dx));if(dx>=w)return w+Math.max(0,Math.min(h,dz));if(dz>=h)return w+h+Math.max(0,Math.min(w,w-dx));return 2*w+h+Math.max(0,Math.min(h,h-dz))}
+function ed171Lk(a,P,s){const i=Math.floor(s),f=s-i;return a[((i%P)+P)%P]*(1-f)+a[(((i+1)%P)+P)%P]*f}
+// the height at (x, z) past the rectangle (null inside it)
+function ed171Done(I){return !!I&&(!!I.ed171||(typeof ED171G!='undefined'&&ED171G.has(I.g)))}
+function ed171H(I,x,z){if(!ed171Done(I))return null;const qx=Math.max(I.x0,Math.min(I.x0+I.w,x)),qz=Math.max(I.y0,Math.min(I.y0+I.h,z)),d=Math.hypot(x-qx,z-qz);if(d<=0)return null;
+  const E=ed171Edge(I),s=ed171P2S(I,qx,qz),b=ed171Lk(E.raw,E.P,s)*(1-smt(0,16,d))+ed171Lk(E.sm,E.P,s)*smt(0,16,d);
+  return b+Math.min(ED171.cap2,d*ED171.k2)+ED171.n*(fbm2(x*.05+7,z*.05+3,3)-.5)*2*smt(2,14,d)}
+// the steps out from the edge: 2 tiles to 16, 4 to 48, then 8
+function ed171Steps(M){const a=[0];let d=0;while(d<M){d+=d<16?2:d<48?4:8;a.push(Math.min(M,d))}return a}
+function ed171Axis(a0,len,M){const o=ed171Steps(M),xs=[];for(let i=o.length-1;i>0;i--)xs.push(a0-o[i]);for(let v=0;v<len;v+=2)xs.push(a0+v);xs.push(a0+len);for(let i=1;i<o.length;i++)xs.push(a0+len+o[i]);return xs}
+function ed171Mat(I){const T=GTX.main,base=T.mat;if(ED171.mat)return ED171.mat;
+  const m=base.clone();m.side=THREE.DoubleSide;m.flatShading=true;m.userData=Object.assign({},base.userData);m.userData.ed171=1;
+  m.stencilWrite=base.stencilWrite;m.stencilRef=base.stencilRef;m.stencilFunc=base.stencilFunc;m.stencilZPass=base.stencilZPass;m.stencilFail=base.stencilFail;m.stencilZFail=base.stencilZFail;m.stencilWriteMask=base.stencilWriteMask;m.stencilFuncMask=base.stencilFuncMask;
+  const U=ED171.R={value:new THREE.Vector4(0,0,1,1)};
+  m.onBeforeCompile=(sh,rn)=>{base.onBeforeCompile.call(base,sh,rn);sh.uniforms.uEdR=U;
+    sh.fragmentShader=sh.fragmentShader.replace('#define GH169_VOID\n','').replace(CL135_GLSL,'')
+      .replace('#include <common>','#include <common>\nuniform vec4 uEdR;').replace('vec2 fc=fi+co;','vec2 fc=clamp(fi+co,uEdR.xy+.5,uEdR.zw-.5);')};
+  const k0=base.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'ed171';return ED171.mat=m}
+function ed171Apron(I){const xs=ed171Axis(I.x0,I.w,ED171.M),zs=ed171Axis(I.y0,I.h,ED171.M),nx=xs.length,nz=zs.length,T=GTX.main;
+  const vid=new Int32Array(nx*nz).fill(-1),pos=[],uv=[],idx=[];
+  const inR=(x,z)=>x>=I.x0&&x<=I.x0+I.w&&z>=I.y0&&z<=I.y0+I.h;
+  const V=(i,j)=>{const k=j*nx+i;if(vid[k]>=0)return vid[k];const x=xs[i],z=zs[j];let y=ed171H(I,x,z);if(y==null)y=GH(x,z);
+    const qx=Math.max(I.x0+.5,Math.min(I.x0+I.w-.5,x)),qz=Math.max(I.y0+.5,Math.min(I.y0+I.h-.5,z));
+    pos.push(x,y,z);uv.push((qx-T.x0+.5)/T.w,1-(qz-T.y0+.5)/T.h);return vid[k]=pos.length/3-1};
+  for(let j=0;j<nz-1;j++)for(let i=0;i<nx-1;i++){const cx=(xs[i]+xs[i+1])/2,cz=(zs[j]+zs[j+1])/2;if(inR(cx,cz))continue;
+    const a=V(i,j),b=V(i+1,j),c=V(i,j+1),d=V(i+1,j+1);if((i+j)&1)idx.push(a,c,b,b,c,d);else idx.push(a,c,d,a,d,b)}
+  // the skirt under the inner edge: hides any sliver between the ground's edge and the apron's (they meet on 2-tile steps)
+  const ring=[];for(let s=0;s<2*(I.w+I.h);s+=1)ring.push(ed171S2P(I,s));ring.push(ring[0]);
+  for(let r=0;r<ring.length-1;r++){const p=ring[r],n=ring[r+1],ya=GH(p[0],p[1]),yb=GH(n[0],n[1]),b0=pos.length/3;
+    const ua=[(Math.max(I.x0+.5,Math.min(I.x0+I.w-.5,p[0]))-T.x0+.5)/T.w,1-(Math.max(I.y0+.5,Math.min(I.y0+I.h-.5,p[1]))-T.y0+.5)/T.h];
+    pos.push(p[0],ya+.05,p[1],n[0],yb+.05,n[1],p[0],ya-5,p[1],n[0],yb-5,n[1]);uv.push(ua[0],ua[1],ua[0],ua[1],ua[0],ua[1],ua[0],ua[1]);idx.push(b0,b0+2,b0+1,b0+1,b0+2,b0+3)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();g.computeBoundingBox();
+  const m=new THREE.Mesh(g,ed171Mat(I));m.name='ed171Apron';m.receiveShadow=true;m.castShadow=false;m.userData.cast=false;m.userData.noFade135=1;m.userData.psNo=1;
+  ED171.st.apron=idx.length/3;return m}
+// 3. the floor: just under the instance's lowest ground; not under enclosed holes (still void after the fill)
+function ed171Floor(I){let mn=1e9;for(let z=I.y0;z<=I.y0+I.h;z+=2)for(let x=I.x0;x<=I.x0+I.w;x+=2){const h=GH(x,z);if(h>=ED171.VT&&h<mn)mn=h}if(mn>1e8)mn=0;
+  const y=mn-.4,M=ED171.M,S=4,x0=I.x0-M,z0=I.y0-M,nx=Math.ceil((I.w+2*M)/S),nz=Math.ceil((I.h+2*M)/S),pos=[],idx=[];
+  const hole=(cx,cz)=>{if(cx+S<I.x0||cz+S<I.y0||cx>I.x0+I.w||cz>I.y0+I.h)return false;
+    for(let z=cz;z<=cz+S;z+=1)for(let x=cx;x<=cx+S;x+=1){if(x<I.x0||z<I.y0||x>I.x0+I.w||z>I.y0+I.h)continue;if(GH(x,z)<ED171.VT)return true}return false};
+  for(let j=0;j<nz;j++){let run=-1;const cz=z0+j*S;
+    for(let i=0;i<=nx;i++){const ok=i<nx&&!hole(x0+i*S,cz);
+      if(ok&&run<0)run=i;
+      if(!ok&&run>=0){const a=x0+run*S,b=x0+i*S,v=pos.length/3;pos.push(a,y,cz,b,y,cz,a,y,cz+S,b,y,cz+S);idx.push(v,v+2,v+1,v+1,v+2,v+3);run=-1}}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();
+  let c=[60,56,50];try{const b=BIOMES[PMAP[I.z].bi].gnd;if(b)c=b}catch(_){}
+  const mat=new THREE.MeshStandardMaterial({color:new THREE.Color(c[0]/255*.42,c[1]/255*.4,c[2]/255*.38),roughness:1,metalness:0});mat.userData.ed171F=1;gh169Clear(mat);
+  const m=new THREE.Mesh(g,mat);m.name='ed171Floor';m.receiveShadow=false;m.castShadow=false;m.userData.cast=false;m.userData.noFade135=1;m.userData.psNo=1;
+  ED171.st.floor=idx.length/3;ED171.st.fy=+y.toFixed(2);return m}
+// keep the apron and floor of the instance you are in (built on arrival, the last one freed)
+function ed171Tick(){const k=cvKey(),I=k>=0?INSL[k]:null,on=ED171.on&&ed171Done(I);const C=ED171.cur;
+  if(C&&(!on||C.k!==k)){[C.a,C.f].forEach(o=>{if(!o)return;scene.remove(o);o.geometry.dispose();if(o.material!==ED171.mat)o.material.dispose()});ED171.cur=null}
+  if(!on||ED171.cur)return;
+  try{const a=ed171Apron(I),f=ed171Floor(I);ED171.R.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);scene.add(a);scene.add(f);ED171.cur={k,a,f}}
+  catch(e){console.warn('v171 edge rock',e);ED171.on=false}}
+{const f=POST.render;POST.render=function(){try{ed171Tick()}catch(e){if(!ED171.err){ED171.err=1;console.warn('v171 edge tick',e)}}return f.apply(this,arguments)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:
