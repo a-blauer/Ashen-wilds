@@ -198,12 +198,10 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     const skin=m=>m.s<-.4?sk2:a181Nz(sk,m,.18,16);cgEmit(B,M,m=>m.part=='leg'||m.part=='foot'?lt:skin(m));
     cgEyes(k,M,S,rune,.038,1.629,.95,.002);
     // beard: over the jaw, a broad mass to the chest, two braids with iron rings; the mane
-    const bc=m=>a181Nz(wh,m,.3,26);
-    cgShell(B,M,m=>m.part=='head'&&m.s>-.1&&m.y<S.hp(0,1.574,0)[1]&&!(m.s>.6&&Math.abs(m.x)<.03*S.hs&&m.y>S.hp(0,1.55,0)[1]),v=>.006+.016*Math.max(0,Math.min(1,(S.hp(0,1.574,0)[1]-v[1])/(.05*S.hs))),bc,{rim:.15});
-    [-1,1].forEach(s=>{const p=S.hp(s*.026,1.568,0),r=cgRay(M,[p[0],p[1],p[2]+.4],[0,0,-1]);if(r)k.L('head','c',wh,[r[0]-s*.016,r[1]+.004,r[2]-.002],[r[0]+s*.022,r[1]-.018,r[2]+.006],.009,.006,4)});
-    const ch=S.hp(0,1.535,.09);cgTube(B,[[0,ch[1]+.03,ch[2]-.02],[0,ch[1]-.03,ch[2]+.012],[0,ch[1]-.11,ch[2]+.02],[0,ch[1]-.19,ch[2]+.012],[0,ch[1]-.26,ch[2]-.004],[0,ch[1]-.31,ch[2]-.016]],[.06,.062,.052,.038,.022,.006],
-      [[['head',1]],[['head',.85],['neck',.15]],[['head',.5],['neck',.5]],[['neck',.6],['chest',.4]],[['chest',1]],[['chest',1]]],bc,{seg:12,capB:true});
-    [-1,1].forEach(s=>{const p=S.hp(s*.05,1.555,.07);const q=[p[0]*1.15,p[1]-.13,p[2]+.02],r=[p[0]*1.1,p[1]-.27,p[2]+.0];cgTube(B,[p,q,r],[.017,.015,.006],[[['head',1]],[['neck',1]],[['chest',1]]],bc,{seg:6,capB:true});
+    const bc=m=>a181Nz(wh,m,.3,26),my=S.hp(0,1.562,0)[1];
+    cgFur(B,M,m=>m.part=='head'&&m.s>-.15&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-my)<.01*S.hs),{off:.016,len:.24,col:wh,col2:wh2,seed:21,jag:.55});
+    [-1,1].forEach(s=>{const p=S.hp(s*.024,1.574,0),r=cgRay(M,[p[0],p[1],p[2]+.4],[0,0,-1]);if(r)k.L('head','c',wh,[r[0]-s*.018,r[1]+.004,r[2]+.006],[r[0]+s*.03,r[1]-.03,r[2]+.012],.011,.006,4)});
+    [-1,1].forEach(s=>{const p=S.hp(s*.05,1.545,.07);const q=[p[0]*1.15,p[1]-.13,p[2]+.02],r=[p[0]*1.1,p[1]-.27,p[2]+.0];cgTube(B,[p,q,r],[.017,.015,.006],[[['head',1]],[['neck',1]],[['chest',1]]],bc,{seg:6,capB:true});
       for(let i=0;i<3;i++){const c=lerp3(p,r,.25+i*.22);k.p(i<1?'neck':'chest','sph','c',wh2,c[0],c[1],c[2],.017,.012,.017)}k.p('chest','tor','m',ir2,q[0],q[1]-.05,q[2],.022,.02,.022)});
     cgHair(B,M,S,{col:wh,line:1.69,neck:true,thick:.02,side:.15});
     // horned helm (iron cap with a nasal), heavy curling horns
@@ -211,8 +209,7 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     const np=S.hp(0,1.64,0),nr=cgRay(M,[0,np[1],np[2]+.4],[0,0,-1]);if(nr)k.p('head','box','m',ir2,0,np[1]-.01,nr[2]+.03,.026,.075,.014);
     [-1,1].forEach(s=>{const q=S.hp(s*.088,1.68,0);let p=q;[[s*.07,.02,.0],[s*.06,.04,.03],[s*.02,.05,.05],[-s*.01,.04,.05]].forEach((d,j)=>{const n=add3(p,d);k.L('head','c',j<3?hn:mdSh(hn,.8),p,n,.04-j*.009,.031-j*.009,6);p=n})});
     // the wolf-pelt mantle with a ragged fur edge and the wolf's head on one shoulder; storm runes; rune-bracers
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]-.04)||(m.part=='arm'&&m.y>J.aR0[1]-.12),.05,m=>a181Nz(pe,m,.35,14),{rim:.35});
-    cgTufts(k,M,S,J.chest[1]-.03,34,.13,pe,pe2,{off:.04,r:.034});
+    cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]-.04)||(m.part=='arm'&&m.y>J.aR0[1]-.12),{off:.05,len:.2,col:pe,col2:pe2,seed:2,jag:.6});
     [[J.chest[1]+.06,0,.09],[J.chest[1],-.4,.07],[J.chest[1],.4,.07],[J.spine[1]+.06,0,.07],[J.chest[1]+.1,-.62,.05],[J.chest[1]+.1,.62,.05]].forEach(([y,a,l],i)=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(p)k.p(y>J.chest[1]-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.009,l,.003,0,a,i%2?.6:-.6)});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.05&&m.y>wr+.02,.024,m=>Math.round(m.y*30)%2?ir:ir2,{t:'m'});
       cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'1'][1]+wr)/2)<.012,.03,rune,{t:'g'});cgFingers(k,S,s,sk,s>0?'fist':'open',1.05,sk2,0)});
@@ -220,7 +217,7 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),m,.3,10),{n:6,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
     mdLoft(B,[wy-.05,wy+.025].map(y=>{const q=cgTAt(S,y);return {p:[0,y,q.z],rx:q.rx+.06,f:q.f+.06,b:q.b+.06,w:cgTorsoW(S,y)}}),{seg:24,col:0x1e160e});
     for(let i=0;i<14;i++){const a=i/14*Math.PI*2,q=cgTAt(S,wy-.012);k.p('pelvis','sph','m',ir2,Math.sin(a)*(q.rx+.062),wy-.012,q.z+Math.cos(a)*((Math.cos(a)>0?q.f:q.b)+.062),.012)}
-    [-1,1].forEach(s=>{cgShell(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<kn-.05))&&Math.sign(m.x)==s,.035,m=>a181Nz(pe,m,.35,16),{rim:.3});const L=s<0?'lh':'rh';cgLimbTufts(k,M,J[L+'1'],J[L+'2'],.12,16,.08,pe,pe2,L+'1',{off:.03})})});})();
+    [-1,1].forEach(s=>{cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.03,m=>a181Nz(pe2,m,.35,16));cgFur(B,M,m=>m.part=='leg'&&m.y<kn-.04&&Math.sign(m.x)==s,{off:.035,len:.08,col:pe,col2:pe2,seed:5+s,jag:.5})})});})();
 
 // ===================================================================== Yeti =====================================================================
 (function(){const S=cgHuman({h:.86,w:1.36,d:1.3,rw:[1.2,1.26,1.26,1.32,1.42,1.46,1.5,1.62],rf:[1.1,1.15,1.35,1.4,1.4,1.3,1.2,1.3],rb:[1.15,1.25,1.25,1.32,1.42,1.48,1.55,1.7],at:1.75,lt:1.62,hs:1.02,hw:1.1,hd:1.05,armL:1.3,legL:.8,nw:1.9,neckL:-.02,foot:1.25,footW:1.45,hz:.03});
@@ -235,14 +232,17 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     cgEmit(B,M,m=>face(m)||m.part=='hand'||m.part=='foot'?sk:m.part=='torso'&&m.s>.5&&m.y<J.chest[1]?mdMix(sk,f2,.5):fur(m));
     cgEyes(k,M,S,0x9ad8ff,.036,1.629,.75,-.004);cgTeeth(k,M,S,[[-.03,1.547,.03,1],[.03,1.547,.03,1],[-.024,1.55,.02],[.024,1.55,.02]],0xd8d0b8);
     [-1,1].forEach(s=>{cgFingers(k,S,s,sk,'claw',.9,cl,.035);cgToes(k,S,s,sk,.025,cl)});
-    // shag: rows of hanging tufts all over the body (thicker over the shoulders and back), round the face, down the arms and legs
-    const ys=[];for(let y=J.lh0[1]-.04;y<sh+.04;y+=.075)ys.push(y);ys.forEach((y,i)=>cgTufts(k,M,S,y,30+i*2,.1+(y>J.chest[1]-.05?.05:0),i%2?f1:f3,f2,{off:-.004,r:.03+(y>J.chest[1]?.008:0)}));
-    for(let i=0;i<22;i++){const a=Math.PI*(.32+i/21*1.36)*(i%2?1:-1),y=S.hp(0,1.56+a181H(i,4)*.16,0)[1],q=[Math.sin(a)*.5,y,Math.cos(a)*.5+S.J.head[2]],p=cgRay(M,q,nrm3([-q[0],0,S.J.head[2]-q[2]]),{head:1,neck:1});if(!p)continue;
-      k.L(y>S.J.head[1]?'head':'neck','c',i%3?f1:f3,sub3(p,mul3(nrm3([q[0],0,q[2]-S.J.head[2]]),.01)),add3(p,[Math.sin(a)*.05,-.09,Math.cos(a)*.04]),.03,.003,4)}
-    for(let i=0;i<9;i++){const a=(i-4)*.3,q=S.hp(Math.sin(a)*.07,1.73,Math.cos(a)*.02-.02);k.L('head','c',i%2?f1:f3,q,[q[0]*1.6,q[1]-.05,q[2]-.07],.028,.003,4)}
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh';[.2,.45,.7,.92].forEach((t,i)=>cgLimbTufts(k,M,J[A+'0'],J[A+'1'],t,14,.1,i%2?f1:f3,f2,A+'0',{off:-.004}));
-      [.2,.5,.8].forEach((t,i)=>cgLimbTufts(k,M,J[A+'1'],J[A+'2'],t,14,.1,i%2?f3:f1,f2,A+'1',{off:-.004}));
-      [.15,.45,.75].forEach((t,i)=>cgLimbTufts(k,M,J[L+'0'],J[L+'1'],t,16,.1,i%2?f1:f3,f2,L+'0',{off:-.004}));[.2,.55,.85].forEach((t,i)=>cgLimbTufts(k,M,J[L+'1'],J[L+'2'],t,14,.08,i%2?f3:f1,f2,L+'1',{off:-.004}))});
+    // the coat: overlapping fur layers, each breaking into ragged clumps over the next (head mane, shoulder mantle, chest and
+    // back, hips and thighs; upper arms, forearms to the wrist cuffs, shins to the ankles)
+    const ch=J.chest[1],sp=J.spine[1],F=(sel,off,len,col,col2,seed)=>cgFur(B,M,sel,{off,len,col,col2,seed,jag:.6}),E=(m,y,a,sd)=>m.y>cgEdge(m,y,a,sd);
+    F(m=>(m.part=='head'&&!face(m))||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1)),.03,.13,f1,f2,1);
+    F(m=>((m.part=='torso'||m.part=='neck')&&E(m,ch-.05,.05,2))||(m.part=='arm'&&E(m,J.aR0[1]-.17,.04,12)),.05,.2,f3,f2,2);
+    F(m=>m.part=='torso'&&E(m,sp-.07,.05,3)&&!E(m,ch-.02,.05,2),.04,.17,f1,f2,3);
+    F(m=>(m.part=='torso'&&!E(m,sp-.05,.05,3))||(m.part=='leg'&&E(m,kn+.03,.04,4)),.04,.17,f1,f2,4);
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',side=m=>Math.sign(m.x)==s;
+      F(m=>m.part=='arm'&&side(m)&&!E(m,J.aR0[1]-.15,.04,12)&&E(m,J[A+'1'][1]-.03,.03,5+s),.034,.15,f3,f2,5+s);
+      F(m=>m.part=='arm'&&side(m)&&!E(m,J[A+'1'][1]-.01,.03,5+s)&&E(m,J[A+'2'][1]+.04,.02,7+s),.03,.13,f1,f2,7+s);
+      F(m=>m.part=='leg'&&side(m)&&!E(m,kn+.05,.04,4)&&E(m,J[L+'2'][1]+.05,.02,9+s),.03,.12,f3,f2,9+s)});
     // icicles frozen into the shoulder fur, an old scar across the face
     [[-.18,0],[.16,-.02],[-.06,.03],[.22,-.05]].forEach(([x,dy],i)=>{const y=sh+dy,p=cgRay(M,[x*S.h,y,-.6],[0,0,1]);if(p)k.p('chest','cone4','g',0xbfe6ff,p[0],p[1]-.05,p[2]-.03,.01,.07+i*.01,.01,Math.PI)})});
   ST179.yeti={sx:.5,hx:-.45,lk:.3,rk:.3,ax:-.2,lx:-.2,az:.18,lz:-.18,ex:-.35,le:-.35};})();

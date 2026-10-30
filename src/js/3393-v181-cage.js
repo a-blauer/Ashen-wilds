@@ -194,3 +194,26 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
     const nk=cgRay(M,[0,1.475,.3],[0,0,-1]);mdLoft(B,[{p:[0,1.462,.008],rx:.064,f:.064,b:.066,w:[['neck',1]]},{p:[0,1.49,.012],rx:.062,f:.062,b:.064,w:[['neck',1]]}],{seg:14,t:'m',col:ir});
     if(nk)k.p('neck','tor','m',mdSh(ir,.8),0,1.47,nk[2]+.012,.012,.006,.014,Math.PI/2,0,0)});
 })();
+// ---------------- fur: layered shells with ragged clump edges ----------------
+// A fur layer is a shell over the faces sel(m) picks, pushed out along the normals by off (lumpy: smooth noise stretched
+// downward, so clumps run with the fall of the fur), its top edge tucked onto the skin. Its lower edge breaks into solid
+// pointed clumps: each clump closes the gap between the shell and the skin (outer face, inner face, two sides), hangs down by
+// len (uneven), and leans out. One connected piece per layer, bent by the same bone weights as the skin under it.
+// o: {off, len, col, col2 (groove colour), jag (0..1 length spread), w (clump width in rim edges), seed, t}
+function cgFur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0;
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
+  const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
+  const lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,24,seed);return .35+1.3*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  const groove=v=>n3Sn(v[0]*1.4,v[1]*.35,v[2]*1.4,22,seed)<.42,col=m=>{const c=a181Nz(o.col,m,.3,18,seed);return o.col2!=null&&groove([m.x,m.y,m.z])?o.col2:c};
+  cgEmit(B,M,col,{t:o.t,pos,keep:(m,fi)=>pick[fi]});
+  // clumps along the lower edge: the rim is walked as loops and cut into runs of 2–4 edges; each run hangs as one wide, solid
+  // clump (outer and inner faces fanned to its tip, closed at its two ends), uneven in length
+  const W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;w=[si,sw];W.set(i,w);return w};
+  const vx=(p,i)=>({x:p[0],y:p[1],z:p[2],w:wOf(i)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
+  low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
+    for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,2+Math.floor(a181H(ci,seed,7)*3)),run=loop.slice(i,i+n+1);i+=n;ci++;
+      const h=a181H(ci,seed,3),L=o.len*(1-(o.jag==null?.6:o.jag)*h),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],c=mdC(h<.25&&o.col2!=null?o.col2:mdSh(o.col,.8+a181H(ci,9,seed)*.28)),T=vx(tip,run[Math.floor(run.length/2)]);
+      for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p),T,vx(pos(q),q),c);mdTri(B,t,vx(V[q],q),T,vx(V[p],p),c)}
+      const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f),T,vx(pos(f),f),c);mdTri(B,t,vx(pos(l),l),T,vx(V[l],l),c)}})}// a wandering edge height for a fur layer: y0 moved up and down by amp round the body (so no layer ends on a level line)
+function cgEdge(m,y0,amp,seed){return y0+amp*(n3Sn(m.x*2.2,0,m.z*2.2,10,seed||0)-.5)*2.4}
