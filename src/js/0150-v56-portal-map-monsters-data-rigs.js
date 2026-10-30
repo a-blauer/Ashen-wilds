@@ -60,8 +60,8 @@ Object.assign(HUMLOOK,{
  vlord:{skin:[222,212,218],tunic:0x1a0a10,cape:[110,10,24],pants:[24,16,20],sc:1.1,wpn:'sword',wcol:0xc02030}});
 // ---- enemy roster for the portal maps ----
 const NEWEN={
- goo:{n:'Caustic Goo',e:'🟢',rig:'Goo',col:0x4a8a30,w:{hp:1.05,pa:.9,ma:.6,pd:.8,md:.9},mt:'p',moves:['strike','spit','slam'],fam:'Earth'},
- spitter:{n:'Acid Spitter',e:'🧪',rig:'Goo',col:0x8a9a2a,sc:.8,w:{hp:.75,pa:.5,ma:1.05,pd:.7,md:.9},mt:'m',moves:['spit','bolt'],ranged:1,fam:'Earth'},
+ goo:{n:'Caustic Goo',e:'🟢',rig:'Goo',col:0x3a5e26,w:{hp:1.05,pa:.9,ma:.6,pd:.8,md:.9},mt:'p',moves:['strike','spit','slam'],fam:'Earth'},
+ spitter:{n:'Acid Spitter',e:'🧪',rig:'Goo',col:0x6a6a24,sc:.8,w:{hp:.75,pa:.5,ma:1.05,pd:.7,md:.9},mt:'m',moves:['spit','bolt'],ranged:1,fam:'Earth'},
  maggot:{n:'Bloat Maggot',e:'🐛',rig:'Maggot',col:0xe0d0a8,w:{hp:.9,pa:1,ma:.4,pd:.8,md:.7},mt:'p',moves:['strike','bite','charge'],fam:'Swarm'},
  nagaw:{n:'Naga Warrior',e:'🐍',hum:'nagaw',w:{hp:1.1,pa:1.1,ma:.4,pd:1.1,md:.8},mt:'p',moves:['strike','spin','charge'],fam:'Dragon'},
  nagaa:{n:'Naga Archer',e:'🏹',hum:'nagaa',w:{hp:.8,pa:1.05,ma:.4,pd:.8,md:.8},mt:'p',moves:['throw','strike'],ranged:1,fam:'Dragon'},

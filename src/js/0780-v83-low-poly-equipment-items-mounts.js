@@ -81,7 +81,7 @@ function lgWpnKit(k,type,col,r){
     for(let i=0;i<5;i++)k.p('','dod','c',0x3a2a1a,(R()-.5)*.12,-.35-R()*.3,(R()-.5)*.12,.035);
     for(let i=0;i<9;i++){const a=R()*6.28,y=-.4-R()*.3;k.p('','cone4','m',W.iron2,Math.cos(a)*.09,y,Math.sin(a)*.09,.014,.08,.014,Math.sin(a)*1.4,0,-Math.cos(a)*1.4)}
     k.p('','cyl','m',W.iron,0,-.3,0,.07,.04,.07);k.p('','cyl','c',W.wrap,0,0,0,.036,.12,.036)}
-  else if(type=='hammer'){haft(.08,-.6,.035,true);[.0,-.18].forEach(q=>k.p('','cyl','m',W.iron,0,q,0,.043,.03,.043));for(let i=0;i<3;i++)k.p('','cyl','c',W.leather,0,.06-i*.03,0,.04,.02,.04);
+  else if(type=='hammer'){haft(.08,-.7,.035,true);   /* v176: the haft runs into the head (a 4 cm gap) */[.0,-.18].forEach(q=>k.p('','cyl','m',W.iron,0,q,0,.043,.03,.043));for(let i=0;i<3;i++)k.p('','cyl','c',W.leather,0,.06-i*.03,0,.04,.02,.04);
     const H=lgCol(W.iron,col==0x9aa2ae?W.iron:col,.25);k.p('','box','m',H,0,-.74,0,.36,.2,.2);[-1,1].forEach(s=>{k.p('','box','m',lgCol(H,0,.25),s*.2,-.74,0,.05,.24,.24);k.p('','box','m',W.iron2,s*.2,-.74,0,.058,.08,.25)});
     k.p('','box','m',fit,0,-.74,0,.16,.22,.215);k.p('','cone4','m',W.iron2,0,-.88,0,.04,.1,.04,Math.PI,Math.PI/4);
     if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,0,-.74,s*.11,.1,.03,.008));else[-1,1].forEach(s=>k.p('','box','c',W.dark,0,-.74,s*.109,.1,.02,.006))}
@@ -99,7 +99,7 @@ function lgWpnKit(k,type,col,r){
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,y=i%2?.05:-.05;k.p('','cone4','m',W.iron2,Math.cos(a)*.1,-.76+y,Math.sin(a)*.1,.022,.09,.022,Math.sin(a)*1.57,0,-Math.cos(a)*1.57)}
     k.p('','cone4','m',W.iron2,0,-.88,0,.022,.09,.022,Math.PI);if(gl)k.p('','ring','g',gl,0,-.76,0,.105,.15,.105)}
   else if(type=='staff'){const R=dkRng(11);let p=[0,.55,0];for(let i=0;i<5;i++){const q=[(R()-.5)*.05,.55-(i+1)*.29,(R()-.5)*.05];k.L('','c',i%2?W.woodD:0x33251a,p,q,.03,.035,6);if(i%2)k.p('','dod','c',W.woodD,q[0],q[1],q[2],.042);p=q}
-    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4,c=[Math.cos(a)*.03,-.92,Math.sin(a)*.03],t=[Math.cos(a)*.1,-1.05,Math.sin(a)*.1],tt=[Math.cos(a)*.035,-1.17,Math.sin(a)*.035];k.L('','c',0x33251a,c,t,.022,.016,5);k.L('','c',W.bone,t,tt,.015,.003,4)}
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4,c=[Math.cos(a)*.03,-.92,Math.sin(a)*.03],t=[Math.cos(a)*.066,-1.05,Math.sin(a)*.066],tt=[Math.cos(a)*.03,-1.15,Math.sin(a)*.03];k.L('','c',0x33251a,c,t,.022,.016,5);k.L('','c',W.bone,t,tt,.015,.003,4)}
     [0,1,2].forEach(i=>k.p('','cyl','m',W.brass,0,-.7-i*.045,0,.04,.022,.04));for(let i=0;i<3;i++)k.L('','c',W.leather,[0,-.2-i*.05,0],[.06,-.32-i*.07,.02],.012,.006,4);
     k.p('','oct','g',col,0,-1.06,0,.06,.11,.06);k.p('','oct','g',lgCol(col,0xffffff,.5),0,-1.06,0,.03,.06,.03)}
   else if(type=='wand'){k.L('','c',W.bone,[0,.12,0],[0,-.1,0],.02,.016,6);k.L('','c',lgCol(W.bone,0x5a4a30,.4),[0,-.1,0],[0,-.36,0],.016,.01,6);[.02,-.06,-.14].forEach(q=>k.p('','cyl','m',W.brass,0,q,0,.023,.018,.023));

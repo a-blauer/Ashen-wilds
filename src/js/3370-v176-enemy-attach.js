@@ -100,13 +100,28 @@ function sn176Snap(body,P,tag){if(!SN176.on||!P||!P.length||!body||body.length<9
 function sn176Warp(B){let pl=null;try{if(B.kqPre&&B.kqPre!='none'&&typeof AW_PROP99!='undefined')pl=AW_PROP99.plan(B.bones,B.kqPre)}catch(e){pl=null}
   if(!pl)return null;const W={};pl.names.forEach(n=>{const M=pl.M[n],a=pl.abs[n],N=pl.N[n],m=new THREE.Matrix4().set(M[0],M[1],M[2],0,M[3],M[4],M[5],0,M[6],M[7],M[8],0,0,0,0,1);
     const t=new THREE.Vector3(a[0],a[1],a[2]).applyMatrix4(m);m.setPosition(N[0]-t.x,N[1]-t.y,N[2]-t.z);W[n]=m});return {pl,W}}
-{const f=mdKit;mdKit=function(B,k){if(SN176.hum>0&&k&&k.P&&k.P.length){try{const X=sn176Warp(B),T=[];
+// Parts on the torso bones get the torso's own blend of bone weights at their height (mdTorsoW), so they bend with the skin
+// under them: rigid on one bone, a back plate or a bead lifted off the body whenever the spine bent (attacks, the stance).
+var SN176_TB={pelvis:1,spine:1,chest:1,neck:1};
+function sn176TorsoW(P){P.forEach(p=>{if(p.w||!SN176_TB[p.bn])return;const v=new THREE.Vector3().setFromMatrixPosition(p.m);if(v.y>.4&&v.y<1.06)p.w=mdTorsoW(v.y)})}
+{const f=mdKit;mdKit=function(B,k){if(SN176.hum>0&&k&&k.P&&k.P.length){try{sn176TorsoW(k.P);const X=sn176Warp(B),T=[];
       ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){let x=L.p[v*3],y=L.p[v*3+1],z=L.p[v*3+2];
         if(X){let X0=0,Y0=0,Z0=0,Wt=0;for(let j=0;j<4;j++){const w=L.sw[v*4+j];if(!(w>0))continue;const b=X.pl.idx[L.si[v*4+j]];if(!b)continue;const M=b.M,dx=x-b.a[0],dy=y-b.a[1],dz=z-b.a[2];
             X0+=w*(b.n[0]+M[0]*dx+M[1]*dy+M[2]*dz);Y0+=w*(b.n[1]+M[3]*dx+M[4]*dy+M[5]*dz);Z0+=w*(b.n[2]+M[6]*dx+M[7]*dy+M[8]*dz);Wt+=w}if(Wt>0){x=X0/Wt;y=Y0/Wt;z=Z0/Wt}}
         T.push(x,y,z)}});
-      const bnOf=p=>(p.w&&p.w[0]&&p.w[0][0])||p.bn||B.O[0],Wb=p=>X&&X.W[bnOf(p)]||null;
+      // a part's warp: its bone's, or the weighted blend of its bones' (the warp is a linear blend per vertex, so the blend is exact)
+      const Wb=p=>{if(!X)return null;const w=p.w||[[p.bn||B.O[0],1]];let t=0;const M=new THREE.Matrix4().set(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+        w.forEach(([bn,x])=>{const m=X.W[bn];if(!m||!(x>0))return;for(let i=0;i<16;i++)M.elements[i]+=m.elements[i]*x;t+=x});if(!t)return null;for(let i=0;i<16;i++)M.elements[i]/=t;return M};
       const Q=k.P.map(p=>{const w=Wb(p);return Object.assign({},p,{m:w?w.clone().multiply(p.m):p.m.clone()})});
       sn176Snap(T,Q,SN176.humK);
       Q.forEach((q,i)=>{const p=k.P[i],w=Wb(p);p.m=w?new THREE.Matrix4().copy(w).invert().multiply(q.m):q.m})}catch(e){console.warn('v176 snap',e)}}
   return f.apply(this,arguments)}}
+// ---------------- humanoid foes: limb shells (bracers, greaves, wraps) get closed ends ----------------
+// mdAS / mdLS lay a single-surface tube a little off the arm or leg; with open ends it hovered round the limb, touching nothing.
+// Each end now gets a narrow rim from the tube down to the skin (the cuff's thickness), so it sits on the limb.
+function sn176Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R[i],q=R[j];if(!r||!q||!(off>.004))return;
+  const d=[q.p[0]-r.p[0],q.p[1]-r.p[1],q.p[2]-r.p[2]],L=Math.hypot(d[0],d[1],d[2])||1,e=.0015/L,k=Object.assign({},o);delete k.off;
+  const A=Object.assign({},r,{rx:r.rx+off,f:(r.f==null?r.rx:r.f)+off,b:(r.b==null?r.rx:r.b)+off}),Bq=Object.assign({},r,{p:[r.p[0]+d[0]*e,r.p[1]+d[1]*e,r.p[2]+d[2]*e],rx:r.rx+.001,f:(r.f==null?r.rx:r.f)+.001,b:(r.b==null?r.rx:r.b)+.001});
+  mdLoft(B,[A,Bq],Object.assign(k,{off:0}))}
+{const f=mdAS;mdAS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN176.on&&SN176.hum>0)try{const R=mdArm(P,s).slice(i0,i1+1);sn176Rim(B,R,off,Object.assign({seg:7},o||{}),0);sn176Rim(B,R,off,Object.assign({seg:7},o||{}),1)}catch(e){console.warn('v176 rim',e)}return r}}
+{const f=mdLS;mdLS=function(B,P,s,i0,i1,off,o){const r=f.apply(this,arguments);if(SN176.on&&SN176.hum>0)try{const R=mdLeg(P,s).slice(i0,i1+1);sn176Rim(B,R,off,Object.assign({seg:8},o||{}),0);sn176Rim(B,R,off,Object.assign({seg:8},o||{}),1)}catch(e){console.warn('v176 rim',e)}return r}}

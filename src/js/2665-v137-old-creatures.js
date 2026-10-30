@@ -55,12 +55,14 @@
       // drooping caps: a big one on the head, smaller ones on the shoulders
       [[0.04,.9,-.01,.2,.1,-.25,.2,'head'],[-.2,.72,-.02,.11,.06,-.2,-.5,'chest'],[.18,.74,-.05,.085,.05,.3,.6,'chest'],[-.08,.98,-.06,.08,.05,.4,-.3,'head']].forEach(q=>{
         k.p(q[7],'hem','c',K.cap,q[0],q[1],q[2],q[3],q[4],q[3],q[5],0,q[6]);k.p(q[7],'cyl','c',K.gill,q[0],q[1]-.005,q[2],q[3]*.92,.01,q[3]*.92,q[5],0,q[6]);
-        for(let i=0;i<4;i++){const a=i*1.7;k.p(q[7],'sph','c',K.cap2,q[0]+Math.sin(a)*q[3]*.5,q[1]+q[4]*.7,q[2]+Math.cos(a)*q[3]*.5,.014,.008,.014)}});
+        // (v176) spots sit on the tilted cap's surface (they hovered over it)
+        const on=(r,a)=>{const v=new THREE.Vector3(Math.sin(a)*r*q[3],Math.sqrt(1-r*r)*q[4]*.97,Math.cos(a)*r*q[3]).applyEuler(new THREE.Euler(q[5],0,q[6]));return [q[0]+v.x,q[1]+v.y,q[2]+v.z]};
+        for(let i=0;i<4;i++){const p=on(.5,i*1.7);k.p(q[7],'sph','c',K.cap2,p[0],p[1],p[2],.014,.008,.014)}
+        if(q[7]=='head'&&q[3]>.15)for(let i=0;i<5;i++){const p=on(.62,i*1.3);k.p('head','sph','g',K.spore,p[0],p[1],p[2],.012,.006,.012)}});
       // shelf fungi up the back, moss hanging from the arms, root claws
       for(let i=0;i<6;i++){const y=.3+i*.08,s=i%2?1:-1;k.p(y>.5?'chest':y>.38?'spine':'pelvis','hem','c',i%2?0x8a6a4a:0x6a4a3a,s*.08,y,-.21-(y>.5?0:.01),.09,.03,.06,-.3,0,s*.2)}
       [-1,1].forEach(s=>{const f=s<0?'fl':'fr';for(let i=0;i<3;i++)k.L(f+'1','c',K.moss,[s*.33,.42-i*.06,.06],[s*.35,.34-i*.06,.05],.016,.004,3);
         for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.02,.17+i%2*.02],.014,.003,4)});
-      // glowing spore pores on the caps
-      for(let i=0;i<5;i++){const a=i*1.3;k.p('head','sph','g',K.spore,.04+Math.sin(a)*.12,.985,-.01+Math.cos(a)*.12,.012,.006,.012)}}};
+      }};
   if(EN.shambler)EN.shambler.rig=n;
 })();

@@ -42,10 +42,10 @@ var ST176={
       const k=Math.max(St.lk||0,St.rk||0);if(k&&b.lh1&&b.lh2)b.pelvis.position.y-=(b.lh1.position.length()+b.lh2.position.length())*(1-Math.cos(k/2))}}catch(e){}return r}}
 
 // ---------------- Zealot of the Endless One: sun-dark, lean, ritual serpent scars, a bronze viper mask, wrapped arms, a rust kilt ----------------
-f137Reg('ss165zealot',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHex(L.skin),.8),rust=0x6a2412,rust2=0x4a180c,wrap=0x8a7a5a,bronze=0x8a6a2a,scar=mdSh(sk,.62);
+f137Reg('ss165zealot',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHex(L.skin),.8),rust=0x4a1a0e,rust2=0x30100a,wrap=0x6a5e48,bronze=0x4a3a22,scar=mdSh(sk,.72);
   P.af=.92;P.lf=.95;Object.assign(C,{skin:sk,torso:sk,sleeve:sk,fore:sk,hand:mdSh(sk,.9),pants:wrap,shin:wrap,boot:0x3a2618,belt:0x2a1a10});
   // ritual scars: a serpent coiling down the chest and back, painted in dried blood
-  P.paint.torso=m=>{const a=Math.atan2(m.x,m.z),w=Math.sin(a*2+m.y*22);return Math.abs(w)<.18&&m.y>.62&&m.y<.95?scar:sk};
+  P.paint.torso=m=>{const a=Math.atan2(m.x,m.z),w=Math.sin(a*2+m.y*22);return Math.abs(w)<.09&&m.y>.66&&m.y<.92&&m.s>-.3?scar:sk};
   X.human({hair:0x140e0a,hairStyle:0});X.body();X.head({noHair:true});
   mdHelm(B,P,mdD('medium','viper',bronze,rust2));
   mdLoin(B,P,rust,rust2,.34,.6);mdSkirt(B,P,.6,.42,.03,.012,{col:m=>Math.round(m.c*8)%2?rust:rust2,n:4});
@@ -55,7 +55,7 @@ f137Reg('ss165zealot',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHe
   k.p('pelvis','box','c',0x2a1a10,-.19,.5,.02,.03,.16,.05,0,0,.25)});
 
 // ---------------- Salt Caller: a salt-crusted sand robe, a blood-red hood, glowing salt crystals grown through the shoulders ----------------
-f137Reg('ss165caller',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHex(L.skin),.78),robe=0x9a8a68,robe2=0x6a5a40,red=0x5a1410,salt=0xe8e4dc,gl=0x40e0c0;
+f137Reg('ss165caller',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHex(L.skin),.78),robe=0x6e6248,robe2=0x4a3e2c,red=0x4a100c,salt=0xe8e4dc,gl=0x40e0c0;
   Object.assign(C,{skin:sk,hand:sk});X.human({hair:0x1a1410,hairStyle:0});X.body();X.head({eyes:'glow',glow:gl,noHair:true});
   mdChest(B,P,mdD('cloth','robe',robe,red));mdHelm(B,P,mdD('cloth','tallcowl',red,0x3a0c08));mdBoots(B,P,mdD('cloth','wrapped',robe2,0x3a2a1a));
   // a crust of salt along the hem and sleeves, crystals through the shoulders and down the spine, a cord of salt beads
@@ -85,3 +85,13 @@ var VAR176={suf:'',
   try{return f.apply(this,arguments)}finally{for(const q in old)K[q]=old[q];VAR176.suf=o}}}
 {const f=lpGeo;lpGeo=function(key){if(VAR176.suf&&key){arguments[0]=key+VAR176.suf}return f.apply(this,arguments)}}
 {const f=dkBake;dkBake=function(P,O,key){if(VAR176.suf&&key&&/^LP\|/.test(key))key+=VAR176.suf;return f.call(this,P,O,key)}}
+
+// ---------------- skeletons: joined up ----------------
+// The skeleton foes (Skeleton Warrior, Bone Archer) had rib hoops that met nothing, feet hanging below the shins and a loincloth
+// sized for a fleshy waist: now a vertebral column the ribs rest on, a breastbone joining the upper ribs, ankle knuckles that
+// carry the feet, and (1450 mdLoin) the cloth belted round the pelvis bones.
+{const f=mdSkel;mdSkel=function(B,P,bone,eye){const r=f.apply(this,arguments);try{const bd=mdSh(bone,.72),k=dkKit();
+    mdLoft(B,[.5,.6,.7,.8,.9,1.0,1.05].map((y,i)=>({p:[0,y,-.074],rx:.03,f:.026,b:.03,w:mdTorsoW(y)})),{seg:6,capA:true,capB:true,col:m=>Math.round(m.y*40)%2?bone:bd});
+    k.L('chest','c',bone,[0,.95,.104],[0,.77,.112],.016,.012,5);
+    [-1,1].forEach(s=>{const l=s<0?'lh2':'rh2',A=P.bones[l];k.p(l,'sph','c',bone,A[1],A[2]+.006,A[3]-.008,.026,.024,.03);k.L(l,'c',bd,[A[1],A[2]+.006,A[3]-.006],[A[1],.045,A[3]-.035],.019,.017,5)});
+    mdKit(B,k)}catch(e){console.warn('v176 skel',e)}return r}}
