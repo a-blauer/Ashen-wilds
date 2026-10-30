@@ -20231,7 +20231,7 @@ EVO100.D.Wispling={glow:0x9ff0ff,build(E,L,P){
 EVO100.D.Cryptspider={glow:0xff3a5a,build(E,L,P){
   // L1: a carapace crest (spiked ridge) on the cephalothorax, glowing venom drops on the fangs, a second glowing eye row
   [[.3,.05,.018],[.22,.07,.022],[.14,.06,.02]].forEach(q=>{const h=E.top(0,q[0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([0,1,-.8]),q[1]+.01*L),q[2],.002,'c',P.dark,4)});
-  [-1,1].forEach(s=>{E.pd('sph','g',P.glow,[s*.02,.27,.5],[0,1,0],.012,null,{bn:'jaw'});[[.05,.49,.4],[.03,.5,.37]].forEach(q=>E.pd('sph','g',P.glow,[s*q[0],q[1],q[2]],[0,1,0],.01,null,{bn:'head'}))});
+  [-1,1].forEach(s=>{E.pd('sph','g',P.glow,[s*.02,.27,.5],[0,1,0],.012,null,{bn:'jaw'});[[.05,.49,.4],[.03,.5,.37]].forEach(q=>E.pd('sph','g',P.glow,[s*q[0],q[1],q[2]],[0,1,0],.01,null,{vs:1}))}); // v179: the eye gems follow the head's skin (they drifted off it in the bite)
   if(L>=2){// a glowing venom sigil on the abdomen and venom veins along it, bony spurs on the knees
     const ab=E.top(0,-.36);if(ab){E.rune({p:E.add(ab.p,ab.n,.006),n:ab.n},[0,0,1],.07,P.glow)}
     [-1,1].forEach(s=>{for(let k=0;k<3;k++){const z=-.26-k*.1,h=E.on([s*.6,.6,z],[-s,-.3,0]);if(h)E.L(E.add(h.p,h.n,.004),E.add(E.add(h.p,h.n,.004),[0,.05,-.04]),.006,.006,'g',P.glowD,3,{vs:1})}

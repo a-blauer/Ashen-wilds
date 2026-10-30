@@ -51,7 +51,6 @@ JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimation
 OK_FLOAT=[
  (r'^Venomcoil',r'EVO on chest',"an evolution scale line on the breast lies 4 mm off the hide",6),
  (r'^Drakelet evo3',r'EVO on chest',"an evolution chest piece in the bite frame (the neck stretches)",14),
- (r'^Cryptspider ',r'EVO on head',"the evolution eye gems while the fangs strike (bite frame)",13),
  (r'\+',r'LPF\||mesh \?|^skin \? ',"a fused companion's borrowed parts are rigid on one bone of the new body; up to 2 cm in a stride or bite",20),
 ]
 def configs():
