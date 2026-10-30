@@ -107,76 +107,7 @@ function df150Post(x,c,C,mat){const K=df150Cols(C),og=lpSpikeGeo(K.main.clone().
     const n=new THREE.Mesh(ig,mat);n.scale.set(.6,.6,.5);n.position.set(0,.02,.45);p.children[0].add(n);p.userData={rz:-s*.3,sd:s};x.ears.push(p)})}
 
 // ===================================================================== Skollmaw =====================================================================
-var SK150={
-  body:[[-.42,.585,.03,.03,.03,['pelvis','tail0',.6]],[-.37,.58,.07,.07,.07,['pelvis','tail0',.3]],[-.29,.575,.095,.09,.095,['pelvis','pelvis',0]],
-    [-.18,.58,.068,.08,.06,['pelvis','spine',.5]],[-.07,.6,.08,.095,.09,['spine','spine',0]],[.04,.615,.105,.11,.16,['spine','chest',.6],'rib'],
-    [.14,.625,.12,.12,.2,['chest','chest',0],'rib'],[.24,.635,.12,.12,.19,['chest','chest',0],'rib'],[.33,.65,.1,.11,.12,['chest','neck',.5]],
-    [.42,.655,.075,.085,.085,['neck','neck',0]],[.51,.675,.08,.08,.07,['neck','head',.6]],[.58,.7,.1,.085,.065,['head','head',0],'hd'],
-    [.66,.7,.09,.07,.05,['head','head',0],'hd'],[.76,.69,.07,.052,.038,['head','head',0],'hd'],[.87,.678,.058,.042,.03,['head','head',0],'hd'],
-    [.97,.668,.045,.034,.025,['head','head',0],'hd'],[1.05,.662,.032,.028,.02,['head','head',0],'nose'],[1.09,.66,.018,.016,.013,['head','head',0],'nose'],
-    [1.105,.66,.006,.006,.006,['head','head',0],'nose']],
-  jaw:[[.6,.65,.075,.025,.035,['head','jaw',.4],'jaw'],[.7,.64,.07,.022,.036,['head','jaw',.85],'jaw'],[.82,.636,.055,.02,.032,['jaw','jaw',0],'jaw'],
-    [.94,.634,.042,.017,.026,['jaw','jaw',0],'jaw'],[1.03,.634,.03,.014,.018,['jaw','jaw',0],'jaw'],[1.07,.636,.01,.008,.008,['jaw','jaw',0],'jaw']],
-  tail:[[-.4,.6,.04,['tail0','tail0',0]],[-.52,.6,.055,['tail0','tail1',.5]],[-.68,.585,.05,['tail1','tail1',0]],[-.85,.57,.038,['tail1','tail2',.6]],
-    [-.98,.57,.026,['tail2','tail2',0]],[-1.08,.58,.022,['tail2','tail3',.6],'tip'],[-1.16,.59,.006,['tail3','tail3',0],'tip']],
-  head:['head',0,.78,.62],back:[['neck',0,.74,.42],['chest',0,.76,.33],['chest',0,.75,.22],['spine',0,.73,.08],['spine',0,.7,-.07]]};
-function sk150Cols(C){const main=lpMain(C,.1);return {main,back:main.clone().multiplyScalar(.5),dark:main.clone().multiplyScalar(.28),
-  belly:main.clone().lerp(new THREE.Color(0x6a6878),.35),rib:main.clone().lerp(new THREE.Color(0x8a8494),.3),mouth:new THREE.Color(0x3a0a18),nose:new THREE.Color(0x0a090c)}}
-function sk150Geo(C){const K=sk150Cols(C);
-  const paint=(o,r,s,cc,i)=>{
-    if(r.k=='nose')return o.copy(K.nose);if(r.k=='paw')return o.copy(K.dark);if(r.k=='ank'){o.copy(K.main).lerp(K.dark,.5);return}
-    if(r.k=='leg'){o.copy(K.main);if(r.p[1]<.3)o.lerp(K.dark,.25);return}
-    if(r.k=='jaw'){if(s>.25)return o.copy(K.mouth);o.copy(K.belly);return}
-    if(r.k=='tail'||r.k=='tip'){o.copy(r.k=='tip'?K.dark:K.main);if(r.k=='tail'&&s>.3)o.lerp(K.back,.5);return}
-    o.copy(K.main);if(s>.45)o.lerp(K.back,.65);
-    if(r.k=='hd'){if(s<-.3)o.lerp(K.belly,.4);return}
-    if(r.k=='rib'&&s<.5&&s>-.75&&(Math.round(cc*6)%2==0))o.lerp(K.rib,.5);if(s<-.5)o.lerp(K.belly,.45)};
-  const lofts=[{rings:bz150Rows(SK150.body),seg:11,capA:1,capB:1,paint},{rings:bz150Rows(SK150.jaw),seg:8,capA:1,capB:1,paint},bz150Tail(SK150.tail,paint,6)]
-    .concat(bz150Legs('Ashwolf',[.062,.036,.026,.038],[.072,.04,.027,.038],paint,{toe:.085,foot:.03,seg:6}));
-  return lpGeo('SK150|'+C,'Ashwolf',lofts,67)}
-function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,ivory=0xe4dcc8,iron=0x4a4a54,ironD=0x2e2e36,gold=red?0xff3a2a:0xffd27a,vio=red?0xc01a2a:0x9a7aff,
-    eye=red?0xff2a2a:0xfff0c0,rib=K.rib.getHex(),dark=K.dark.getHex();
-  // burning pale eyes in deep sockets
-  [-1,1].forEach(s=>{const e=bz150S(R,.68,s>0?.55:Math.PI-.55,-.01).p;k.p('head','sph','c',0x050406,e[0],e[1],e[2],.032,.018,.03,0,s*.45,s*-.2);
-    k.p('head','box','g',eye,e[0]+s*.006,e[1],e[2]+.006,.03,.008,.012,0,s*.45,s*-.2);k.p('head','box','c',dark,s*.06,e[1]+.03,e[2],.06,.014,.04,.1,s*.4,s*.3)});
-  k.p('head','box','c',0x08070a,0,.672,1.085,.03,.022,.022);
-  // the long jaws: a row of teeth down each side of both jaws, long canines at the front, a dark mouth inside
-  for(let i=0;i<8;i++){const z=.7+i*.045,r=bz150At(R,z),x=r.w*.72,y=r.y-r.b*.8,big=i==7||i==6;
-    [-1,1].forEach(s=>k.p('head','cone4','c',ivory,s*x,y-(big?.02:.008),z,big?.009:.006,big?.05:.024,big?.009:.006,Math.PI))}
-  for(let i=0;i<7;i++){const z=.72+i*.045,J=bz150At(SK150.jaw,z),x=J.w*.7,y=J.y+J.a*.6,big=i==6;
-    [-1,1].forEach(s=>k.p('jaw','cone4','c',ivory,s*x,y+(big?.018:.008),z,big?.008:.006,big?.04:.022,big?.008:.006))}
-  k.p('jaw','box','c',0x2a0610,0,.65,.84,.06,.008,.38);k.L('jaw','c',0x8a2a3a,[0,.652,.7],[0,.654,.98],.018,.01,4);
-  // smouldering spines down the back: dark ragged blades with glowing tips
-  for(let i=0;i<13;i++){const z=.52-i*.065,h=bz150S(R,z,Math.PI/2,-.012),bn=z>.47?'head':z>.37?'neck':z>.12?'chest':z>-.16?'spine':'pelvis',len=.09+(i<6?.04:0)-(i>10?.03:0);
-    const tp=[0,h.p[1]+len,z-.07],mid=[0,h.p[1]+len*.62,z-.045];k.L(bn,'c',i%2?dark:K.back.getHex(),h.p,tp,.022,.002,4);k.L(bn,'g',i%2?vio:gold,mid,tp,.008,.001,3)}
-  // ribs showing through the taut hide
-  [.2,.14,.08,.02].forEach((z,j)=>[-1,1].forEach(s=>{let p=bz150S(R,z,s>0?.75:Math.PI-.75,.003).p;
-    for(let t=1;t<=4;t++){const a=.75-t*.42,q=bz150S(R,z-t*.008,s>0?a:Math.PI-a,.003).p;k.L(j<2?'chest':'spine','c',rib,p,q,.009,.008,4);p=q}}));
-  // eclipse marks: a black disc ringed with a glowing corona on each shoulder, one on the brow
-  const ecl=(bn,h,sz)=>{const rt=bz150Up(h.n),p=h.p;k.p(bn,'sph','c',0x040306,p[0],p[1],p[2],sz,sz*.12,sz,...rt);
-    k.p(bn,'ring','g',gold,p[0]+h.n[0]*.004,p[1]+h.n[1]*.004,p[2]+(h.n[2]||0)*.004,sz*1.15,sz*.9,sz*1.15,...rt);
-    k.p(bn,'ring','g',vio,p[0]+h.n[0]*.002,p[1]+h.n[1]*.002,p[2]+(h.n[2]||0)*.002,sz*1.45,sz*.6,sz*1.45,...rt)};
-  [-1,1].forEach(s=>ecl('chest',bz150S(R,.22,s>0?.3:Math.PI-.3,.004),.05));
-  {const t=bz150S(R,.63,Math.PI/2,.002);ecl('head',{p:t.p,n:[0,.92,.38]},.03)}
-  // rune-bound iron collar with glowing runes and a broken chain hanging from it
-  {const N=14,pts=[];for(let i=0;i<N;i++)pts.push(bz150S(R,.43,i/N*Math.PI*2,.016).p);
-    for(let i=0;i<N;i++)k.L('neck','m',iron,pts[i],pts[(i+1)%N],.016,.016,5);
-    [-.9,-1.57,-2.24].forEach((a,i)=>{const h=bz150S(R,.43,a,.03);k.p('neck','box','g',vio,h.p[0],h.p[1],h.p[2]+.004,.012,.024,.006,0,0,a+Math.PI/2)});
-    const lo=bz150S(R,.43,-Math.PI/2,.016).p;lk180Chain(k,'neck','m',[iron,ironD],lo,4,.016,[0,-1,-.3])} // v180: links that hold together
-  // broken shackles on the forelegs, chain ends trailing
-  [['fl1',-1],['fr1',1]].forEach(([bn,s])=>{const a=e137B('Ashwolf',bn),b=e137B('Ashwolf',bn[0]+bn[1]+'2'),p=e137L(a,b,.45);
-    k.p(bn,'tor','m',iron,p[0],p[1],p[2],.045,.045,.045);k.p(bn,'ring','m',ironD,p[0],p[1]+.024,p[2],.046,.06,.046);k.p(bn,'ring','m',ironD,p[0],p[1]-.024,p[2],.046,.06,.046);
-    k.p(bn,'box','g',vio,p[0],p[1],p[2]+.046,.012,.026,.004);
-    lk180Chain(k,bn,"m",[iron,ironD],[p[0]+s*.028,p[1]-.02,p[2]+.028],3,.013,[s*.15,-1,-.25])});
-  // long thin paws with black claws
-  ['fl2','fr2','hl2','hr2'].forEach(bn=>{const c0=e137B('Ashwolf',bn);for(let i=-1;i<=1;i++){const x=c0[0]+i*.018;k.L(bn,'c',0x08080a,[x,.022,c0[2]+.075],[x,.003,c0[2]+.11],.008,.001,4)}});
-  // the smouldering tail tuft
-  for(let i=0;i<7;i++){const a=i/7*Math.PI*2,y=.585,z=-1.08;k.L('tail3','c',dark,[Math.cos(a)*.015,y+Math.sin(a)*.015,z],[Math.cos(a)*.04,y+Math.sin(a)*.03+.015,z-.12],.02,.002,3);
-    if(i%2==0)k.L('tail3','g',i%4?vio:gold,[Math.cos(a)*.03,y+Math.sin(a)*.025+.01,z-.07],[Math.cos(a)*.038,y+Math.sin(a)*.028+.015,z-.12],.006,.001,3)}}
-function sk150Post(x,c,C,mat){const K=sk150Cols(C),og=lpSpikeGeo(K.main.clone().lerp(K.back,.3),K.dark),ig=lpSpikeGeo(0x3a2a40,0x120c14);
-  // long narrow ears swept far back
-  [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'head',og,mat,s*.06,.765,.6,.048,.2,.024,-.95,-s*.22,s*.1);
-    const n=new THREE.Mesh(ig,mat);n.scale.set(.6,.72,.5);n.position.set(0,.02,.45);p.children[0].add(n);p.userData={rz:-s*.3,sd:s};x.ears.push(p)})}
+// v181: Skollmaw was redesigned (the eclipse wolf): SK150 and sk150Geo / sk150Kit / sk150Post now live in 3390-v181-skollmaw.js.
 
 // ===================================================================== Emberlynx (Foxlet skeleton) =====================================================================
 var EL150={
@@ -289,7 +220,7 @@ function el150Evo(E,L,P){const M=EVO100_M;
 // Direfang and Skollmaw: the war-wolf design is ray-placed, so it follows the new bodies; only its jaw tusks sit at a fixed
 // Ashwolf spot (inside these longer heads), so they are left out: Direfang has its sabres, Skollmaw its rows of teeth.
 {const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Ashwolf;if(sp!='Direfang'&&sp!='Skollmaw')return b0.apply(this,arguments);
-  const l0=E.L,s0=E.shell,eye=sp=='Direfang'?[DF150.body,.695,.62,-.012]:[SK150.body,.68,.55,-.01],old=wolfP([.09,.636,.574]);
+  const l0=E.L,s0=E.shell,eye=sp=='Direfang'?[DF150.body,.695,.62,-.012]:[SK150.body,.625,.62,-.008],old=wolfP([.09,.636,.574]);
   E.L=function(a,b,r1,r2,t,col,seg,o){if(o&&o.bn=='jaw')return E;
     if(o&&o.bn=='head'&&Math.abs(Math.abs(a[0])-old[0])<1e-6&&Math.abs(a[1]-old[1])<1e-6){const s=Math.sign(a[0]),e=bz150S(eye[0],eye[1],s>0?eye[2]:Math.PI-eye[2],eye[3]).p,d=[e[0]-a[0],e[1]-a[1],e[2]-a[2]];
       return l0.call(this,e,[b[0]+d[0],b[1]+d[1],b[2]+d[2]],r1,r2,t,col,seg,o)}
