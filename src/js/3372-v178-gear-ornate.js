@@ -1,4 +1,4 @@
-// ================= v177: armour grows more ornate with every tier =================
+// ================= v178: armour grows more ornate with every tier =================
 // Owner (Oct 30 2026): "I want all armor and weapons to look very cool and unique. Getting even more elaborate and ornate as you
 // level up." Every helm, chest piece and pair of boots gets a tier layer on top of what it already has (its base shape, the v95
 // trims, the v136 class details and the v137 motif), measured onto what is built, like the v137 motifs:
@@ -151,7 +151,7 @@ function o176Boots(B,P,d,R){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKi
       if(cls=='ranger'){for(let i=0;i<8;i++){const at=cuff.at(Math.PI*.4+i*.3,.006);gkFeather(k,bn,at.p,[at.n[0]*.5,-1,at.n[2]*.5],.05,.01,i%2?0x2a2622:0x4a3a2a,nw(at.p))}}}});
   if(k.P.length)mdKit(B,k)}
 // ---------------- hooks: after the piece (in a hero, after everything: gkLater) ----------------
-{const c=mdChest,h=mdHelm,b=mdBoots,run=(fn,B,P,d,x)=>{if(!O176.on||!d||!MD_ORN||!(BR.on&&BR.R))return;const o=GL176.ti;GL176.ti=d.ti|0;try{gkLater(B,B2=>{try{fn(B2,P,d,x)}catch(e){console.warn('v177 ornate',e)}})}finally{GL176.ti=o}};
+{const c=mdChest,h=mdHelm,b=mdBoots,run=(fn,B,P,d,x)=>{if(!O176.on||!d||!MD_ORN||!(BR.on&&BR.R))return;const o=GL176.ti;GL176.ti=d.ti|0;try{gkLater(B,B2=>{try{fn(B2,P,d,x)}catch(e){console.warn('v178 ornate',e)}})}finally{GL176.ti=o}};
   mdChest=function(B,P,d){const r=c.apply(this,arguments);run(o176Chest,B,P,d);return r};
   mdHelm=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=h.apply(this,arguments);run(o176Helm,B,P,d,n0);return r};
   mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;

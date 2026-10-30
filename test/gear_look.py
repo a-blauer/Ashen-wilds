@@ -1,4 +1,4 @@
-# Gear look sheets (v177): how each class's armour and weapons look, tier by tier.
+# Gear look sheets (v178): how each class's armour and weapons look, tier by tier.
 #   CLS=warrior MODE=prog python3 gear_look.py       -> out/gear_prog_<cls>.jpg  rows = tiers I..V (the tier's helm + chest + boots +
 #                                                        main weapon), columns front / 3-4 / back / head / chest / weapon
 #   CLS=warrior MODE=items SL=helm python3 gear_look.py -> out/gear_items_<cls>_<sl>.jpg  every template of that slot the class can

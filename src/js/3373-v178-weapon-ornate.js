@@ -1,4 +1,4 @@
-// ================= v177: weapons grow more ornate with every tier =================
+// ================= v178: weapons grow more ornate with every tier =================
 // Owner (Oct 30 2026): weapons "very cool and unique ... even more elaborate and ornate as you level up". Every weapon and shield
 // kit (base, v137 and unique) gets a tier layer measured from its own geometry, after it is built and before loose pieces are
 // attached (gf176Kit):
@@ -91,4 +91,4 @@ function w176Kit(k,it){if(!W176.on)return;const t=itT(it);if(!t)return;const ti=
     for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/(n-1);let th=0;P.forEach(p=>{if(Math.abs(p[0])<.01&&Math.abs(p[1]-y)<.012)th=Math.max(th,Math.abs(p[2]))});if(th<=0||th>.06)continue;[-1,1].forEach(s=>k.p('','box','g',gl,0,y,s*(th+.001),.006,.018,.002,0,0,i%2?.6:-.6))}}
   {const a=[0,topY-.015,(rAt(topY-.015)||.02)+.002],b=[a[0],a[1]-.06,a[2]+.01];gkChain(k,'',[a,b],.005,T,null);gkSkull(k,'',b[0],b[1]-.018,b[2],.55,cls=='paladin'?0xd8b050:0xd0c4a4,0,null)}}
 // after the weapon is built (inside the outermost kit builder, before gf176Kit attaches loose pieces)
-['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const o=W176.kd|0;W176.kd=o+1;try{return f.apply(this,arguments)}finally{W176.kd=o;if(!o)try{w176Kit(k,it)}catch(e){console.warn('v177 weapon ornate',e)}}}});
+['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const o=W176.kd|0;W176.kd=o+1;try{return f.apply(this,arguments)}finally{W176.kd=o;if(!o)try{w176Kit(k,it)}catch(e){console.warn('v178 weapon ornate',e)}}}});

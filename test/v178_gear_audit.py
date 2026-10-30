@@ -1,14 +1,14 @@
-# v177 gear audit: every helm / chest / boots on each class animal that wears it, every weapon and shield model, every unique.
+# v178 gear audit: every helm / chest / boots on each class animal that wears it, every weapon and shield model, every unique.
 # Prints each floating piece (a part of the gear that touches nothing that leads back to the body, or to the grip for weapons),
 # in the bind pose and while running / striking (pieces that come away from what they sit on), and the clipping counts
 # (v114 poke / hide) per worn piece.
-#   python3 v177_gear_audit.py          CLS=warrior,mage  SL=helm,chest,boots,weapon  R=4  POSED=0  CLIP=1 (also count clipping)  PIC=all|<indices> (pictures, floating pieces magenta)  OUT=out/v177_audit.json
+#   python3 v178_gear_audit.py          CLS=warrior,mage  SL=helm,chest,boots,weapon  R=4  POSED=0  CLIP=1 (also count clipping)  PIC=all|<indices> (pictures, floating pieces magenta)  OUT=out/v178_audit.json
 #   FAIL lines: a rigid floating piece bigger than MINSZ (default .012 m) with a gap over 7.5 mm at rest ('cloth:' notes: cloth, and pieces that swing away while running / striking).
 import os,sys,json,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 HERE=os.path.dirname(os.path.abspath(__file__))
-LIB=open(HERE+'/v114_clip_lib.js').read()+'\n'+open(HERE+'/v177_gear_audit_lib.js').read()
+LIB=open(HERE+'/v114_clip_lib.js').read()+'\n'+open(HERE+'/v178_gear_audit_lib.js').read()
 MV={'warrior':'gs1','paladin':'mace1','assassin':'dag1','ranger':'sling','mage':'sword0'}
 CL=os.environ.get('CLS','warrior,paladin,assassin,ranger,mage').split(',')
 SL=os.environ.get('SL','helm,chest,boots,weapon').split(',')
@@ -36,7 +36,7 @@ def s(pg):
             r=ev(ONE,[cls,tp,(n if sl=='unique' else sl),R,MV[cls],POSED,CLIPC])
             key='%s|%s|%s'%(cls,tp,n);ALL[key]=r
             if PIC and (PIC=='all' or str(tp) in PIC.split(',')) and 'err' not in r:
-                img=ev(PICJS,[cls,tp,(n if sl=='unique' else sl),R]);nm='v177_audit_%s_%s.jpg'%(cls,tp if tp>=0 else n)
+                img=ev(PICJS,[cls,tp,(n if sl=='unique' else sl),R]);nm='v178_audit_%s_%s.jpg'%(cls,tp if tp>=0 else n)
                 open(play.TMP+'/'+nm,'wb').write(base64.b64decode(img.split(',')[1]));print('  wrote',nm)
             if 'err' in r:print('  ERR',tp,n,r['err'][:200]);F.append('error %s %s'%(n,r['err'][:120]));continue
             if 'k' in r:
@@ -53,7 +53,7 @@ def s(pg):
             for d in fl:(F if '@' in d['lab'][0] else W).append('%s %s: floating %s (size %.3f, gap %.3f) at %s'%(cls,n,d['lab'][0],d['sz'],d['gap'],d['c']))
             # pieces that move away while animating (hanging chains, books, skulls swing with the hips): notes, not failures
             for nm,d in ps:W.append('%s %s: comes away when %s: %s (size %.3f, gap %.3f)'%(cls,n,nm,d['lab'][0],d['sz'],d['gap']))
-    json.dump(ALL,open(os.environ.get('OUT',play.TMP+'/v177_audit.json'),'w'))
+    json.dump(ALL,open(os.environ.get('OUT',play.TMP+'/v178_audit.json'),'w'))
     for w in W:print('cloth:',w)
     for f in F:print('FAIL',f)
     print('FAILURES:',len(F))

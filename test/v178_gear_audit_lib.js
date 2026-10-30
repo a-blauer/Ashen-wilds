@@ -1,4 +1,4 @@
-// v177 gear audit (injected by test/v177_gear_audit.py, after v114_clip_lib.js).
+// v178 gear audit (injected by test/v178_gear_audit.py, after v114_clip_lib.js).
 // Floating pieces: the gear's triangles are split into connected pieces (vertices welded by position); a piece is attached when one
 // of its vertices lies within GA.eps of another piece's (or the body's) surface, or one of its edges passes through another surface.
 // Starting from the body (worn gear) or the grip (weapons), every piece reached through attached pieces is fine; the rest float.

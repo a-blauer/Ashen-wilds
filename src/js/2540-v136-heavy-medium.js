@@ -31,11 +31,11 @@ function hvExtra(X){const {B,P,d,k}=X,cls=hvCls(),M=d.M,T=d.T,G=d.G,lv=d.lv|0,st
     if(lv>=1)[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;for(let i=0;i<2+Math.min(2,lv>>1);i++)gkSpike(k,a,[sp[0]+s*(.04+i*.024),1.02-i*.012,-.04+i*.035],[s*.55,1,-.05],.05+lv*.008,.011,mdSh(T,.8),'m')});
     gkSkull(k,'spine',0,.6,cf(.6)+.032,.85,mdSh(T,1.05),0,tw(.6),'m');
     if(lv>=3&&st!='warlord'){mdFur(X,.92,1.0,0x3a2e24,12)}}
-  else if(cls=='paladin'){const tab=mdMix(0x2a2226,d.A,.12),gold=lv>=2?0xd8b050:T,cream=0xe0d4b4;// v177: a dark tabard (it was cream with a red cross: it read as a first-aid kit)
+  else if(cls=='paladin'){const tab=mdMix(0x2a2226,d.A,.12),gold=lv>=2?0xd8b050:T,cream=0xe0d4b4;// v178: a dark tabard (it was cream with a red cross: it read as a first-aid kit)
     // the long holy tabard (front and back panels) with an embroidered border and a sun
     // (v137: a narrow tabard, front and back, with a crimson cross — no longer a skirt round the hips)
     if(!['aegis','blood'].includes(st)){mdTabardO(X,tab,mdSh(gold,.8),{lo:.15,wd:.085,top:.6,band:.5});
-      // a gilded sunburst on it (v177; was a red cross)
+      // a gilded sunburst on it (v178; was a red cross)
       const q=mdTorsoAt(P,.6),zf=(q.z||0)+Math.max(.135,q.f)+((P.tOff||0)+.012)*1.15+.006,wf=mdSkW(P,.6);
       k.p('pelvis','oct','m',gold,0,.44,zf,.016,.02,.004);mdOW(k,wf(0,.44));for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('pelvis','cone4','m',mdSh(gold,.85),Math.sin(a)*.026,.44+Math.cos(a)*.026,zf,.005,.024,.002,0,0,-a);mdOW(k,wf(0,.44))}}
     // purity seals: red wax with parchment strips, on the breast and both shoulders

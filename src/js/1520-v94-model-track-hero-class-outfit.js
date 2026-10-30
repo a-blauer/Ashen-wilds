@@ -10,7 +10,7 @@ function mdOutfit(cls){
     warrior:{col:{torso:0x7e3626,sleeve:null,fore:0x5a3a22,pants:0x4a3a2e,shin:0x4a3a2e,boot:0x3e2a1c,belt:0x3a2618},bare:1,cape:0x6e2018,capeLen:.4,boots:{a:'medium',st:'trail',M:0x4a3020,A:0x6a4a2a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>m.s>.85&&m.y>.8?mdSh(0x7e3626,.8):0x7e3626,lip:.008});mdTS(B,P,.93,1.0,.036,{col:m=>Math.round(m.c*7+m.s*2)%2?0x5a4636:0x4a3a2c,lip:.03,lipT:.012});
         [-1,1].forEach(s=>mdAS(B,P,s,4,5,.012,{col:0x5a3a22}));mdBelt(B,P,.6,0x3a2618,0xa88848)}},
-    // v177: the paladin wears a charcoal tabard and an oxblood cape (they were cream: tabard + cross read as a first-aid kit)
+    // v178: the paladin wears a charcoal tabard and an oxblood cape (they were cream: tabard + cross read as a first-aid kit)
     paladin:{col:{torso:0x8a8e9a,fore:0x6a6e78,pants:0x5a5a66,shin:0x5a5a66,boot:0x3a2e24,belt:0x4a3424},cape:0x4a2a2e,capeTrim:0xb08a3a,boots:{a:'medium',st:'trail',M:0x3a2e24,A:0x5a4a3a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.012,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a,lip:.01});[-1,1].forEach(s=>mdAS(B,P,s,0,5,.01,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a}))},
       extra:(B,P,D)=>{if(!(D.chest&&(D.chest.st=='aegis'||D.chest.st=='blood')))mdTabard(B,P,0x3a2a2e,0xb08a3a,0xb08a3a)}},

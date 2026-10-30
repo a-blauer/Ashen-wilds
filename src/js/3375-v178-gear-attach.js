@@ -1,5 +1,5 @@
-// ================= v177: every piece of gear is attached to something =================
-// Owner (Oct 30 2026): "check all equipment models for unattached pieces". The gear audit (test/v177_gear_audit.py) found pieces
+// ================= v178: every piece of gear is attached to something =================
+// Owner (Oct 30 2026): "check all equipment models for unattached pieces". The gear audit (test/v178_gear_audit.py) found pieces
 // hovering off what they should sit on: studs, scratches and seals placed on a formula of the torso instead of the armour actually
 // built there (some float, some are buried inside the plate), weapon blades and censer cages a few cm off their guards, staff
 // crystals hanging in mid-air, serration teeth beside a blade, chain links that do not meet.
@@ -113,11 +113,11 @@ function gf176Hero(B,since){const R=B.__gf;if(!R||!R.length)return;const S={n:0,
   // a small piece takes the bone weights of what it now sits on (so it stays on it when that moves)
   S.move=(pid,dx,dy,dz,ti)=>{const r=R[pid],L=B.L[r.t],P=L.p;for(let x=r.a;x<r.b;x+=3){P[x]+=dx;P[x+1]+=dy;P[x+2]+=dz}
     if(ti>=0&&r.sz<=.07&&!r.panel){const q=refs[ti],Lq=B.L[q[0]],v=q[1]/3*4;for(let x=r.a;x<r.b;x+=3){const u=x/3*4;for(let j=0;j<4;j++){L.si[u+j]=Lq.si[v+j];L.sw[u+j]=Lq.sw[v+j]}}}};
-  try{gf176Run(S)}catch(e){console.warn('v177 attach',e)}}
+  try{gf176Run(S)}catch(e){console.warn('v178 attach',e)}}
 // a hero: once, after everything (hoods and motifs included) is built
 {const f=mdHeroB;mdHeroB=function(){const o=GF176.inH|0;GF176.inH=o+1;try{const B=f.apply(this,arguments);if(!o&&B&&B.__gf&&GF176.on)gf176Hero(B);return B}finally{GF176.inH=o}}}
 // an armour picture: the piece's parts after the piece is built (the animal under it is ground)
-['mdHelm','mdChest','mdBoots'].forEach(n=>{const f=window[n];window[n]=function(B){if(GF176.inH||!(GL176.on>0)||!GF176.on)return f.apply(this,arguments);const n0=(B.__gf||[]).length,r=f.apply(this,arguments);try{if(B.__gf&&B.__gf.length>n0)gf176Hero(B,n0)}catch(e){console.warn('v177 attach',e)}return r}});
+['mdHelm','mdChest','mdBoots'].forEach(n=>{const f=window[n];window[n]=function(B){if(GF176.inH||!(GL176.on>0)||!GF176.on)return f.apply(this,arguments);const n0=(B.__gf||[]).length,r=f.apply(this,arguments);try{if(B.__gf&&B.__gf.length>n0)gf176Hero(B,n0)}catch(e){console.warn('v178 attach',e)}return r}});
 // ---------------- weapon and shield kits ----------------
 function gf176Kit(k,it){if(!GF176.on||!k||!k.P||!k.P.length)return;const v=new THREE.Vector3(),T=[],own=[];let shield=false,wt='';try{shield=itT(it).sl=='offhand';wt=String(itT(it).wt||'')}catch(e){}
   k.P.forEach((p,pi)=>{const g=p.geo;if(!g||!g.attributes||!g.attributes.position)return;const pa=g.attributes.position,ix=g.index?g.index.array:null,cnt=ix?ix.length:pa.count,Pp=[];
@@ -128,6 +128,6 @@ function gf176Kit(k,it){if(!GF176.on||!k||!k.P||!k.P.length)return;const v=new T
   else{let bd=1e9,bp=-1;T.forEach((t,i)=>{const d=gf176CP([0,0,0],t)[3];if(d<.03)ground[own[i]]=1;if(d<bd){bd=d;bp=own[i]}});if(bp>=0)ground[bp]=1}
   const TT=new Float64Array(T.length*9);T.forEach((t,i)=>{for(let j=0;j<9;j++)TT[i*9+j]=t[j]});
   const S={n:T.length,TT,own:Int32Array.from(own),np,ground,autoGround:!shield&&/bow|sling/.test(wt),R:.12,move:(pid,dx,dy,dz)=>{const p=k.P[pid];p.m=p.m.clone();p.m.elements[12]+=dx;p.m.elements[13]+=dy;p.m.elements[14]+=dz}};
-  try{gf176Run(S)}catch(e){console.warn('v177 attach kit',e)}}
+  try{gf176Run(S)}catch(e){console.warn('v178 attach kit',e)}}
 // the outermost kit builder snaps (a unique's kit calls the base weapon's kit inside it, then adds its ornaments)
 ['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const o=GF176.kd|0;GF176.kd=o+1;try{return f.apply(this,arguments)}finally{GF176.kd=o;if(!o)gf176Kit(k,it)}}});

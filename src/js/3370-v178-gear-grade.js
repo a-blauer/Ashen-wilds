@@ -1,4 +1,4 @@
-// ================= v177: dark-fantasy colour grade for heroes' gear =================
+// ================= v178: dark-fantasy colour grade for heroes' gear =================
 // Owner (Oct 30 2026): "keep them looking non-cartoony (this is a dark fantasy game)". The armour and weapon palettes had grown
 // bright and toy-like (grass-green robes, royal and sky blue plate, cream tabards, white panels). Every colour a hero's gear is
 // built with now goes through gl176Col while it is built:
@@ -43,4 +43,4 @@ var GL176_KD=0;
 function gl176Kit(k,n0,ti){for(let i=n0;i<k.P.length;i++){const p=k.P[i];if(p.gl176)continue;p.gl176=1;if(p.t=='g')continue;p.col=gl176Col(mdC(p.col),p.t=='m'?'m':'c',ti)}}
 ['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const n0=k.P.length;GL176_KD++;try{return f.apply(this,arguments)}finally{GL176_KD--;if(!GL176_KD)try{gl176Kit(k,n0,itT(it).t|0)}catch(e){}}}});
 // forged, not polished: hero metal is a little rougher (the copper and steel highlights read as plastic)
-{const f=mdMats;mdMats=function(){const M=f.apply(this,arguments);if(M&&M.m&&!M.m.userData.v177){M.m.userData.v177=1;M.m.roughness=.6;M.m.metalness=.55}return M}}
+{const f=mdMats;mdMats=function(){const M=f.apply(this,arguments);if(M&&M.m&&!M.m.userData.v178){M.m.userData.v178=1;M.m.roughness=.6;M.m.metalness=.55}return M}}

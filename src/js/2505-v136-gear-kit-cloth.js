@@ -87,8 +87,8 @@ function gkVial(k,bn,x,y,z,s,glow,T,w){gkW(k.p(bn,'cyl','g',glow,x,y,z,.011*s,.0
 function gkCandle(k,bn,x,y,z,s,w,fl){gkW(k.p(bn,'cyl','c',0xe8e0c8,x,y,z,.01*s,.035*s,.01*s),w);for(let i=0;i<3;i++){const a=i*2.1;gkW(k.p(bn,'box','c',0xf0e8d4,x+Math.sin(a)*.009*s,y-.006*s-i*.004*s,z+Math.cos(a)*.009*s,.004*s,.016*s,.004*s),w)}
   gkW(k.p(bn,'cyl','c',0x1a1410,x,y+.02*s,z,.0015,.006*s,.0015),w);gkW(k.p(bn,'cone4','g',fl||0xffb040,x,y+.03*s,z,.005*s,.016*s,.005*s),w);return k}
 // chain of links along points (each point [x,y,z]); wf(i) → weights or null
-function gkChain(k,bn,pts,r,col,wf){let n=0;const n0=k.P.length;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]),m=Math.max(1,Math.round(L/(r*1.8)));// v177: links overlap (they were 2.6 r apart, 2.24 r long: none touched)
-    // v177: each link lies along the chain, every other one turned a quarter round it, so neighbours hook through each other and touch
+function gkChain(k,bn,pts,r,col,wf){let n=0;const n0=k.P.length;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]),m=Math.max(1,Math.round(L/(r*1.8)));// v178: links overlap (they were 2.6 r apart, 2.24 r long: none touched)
+    // v178: each link lies along the chain, every other one turned a quarter round it, so neighbours hook through each other and touch
     // (the old rotation laid every other link flat across the chain, where it touched nothing)
     const V=THREE.Vector3,D=new V(b[0]-a[0],b[1]-a[1],b[2]-a[2]).normalize(),qd=new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),D),qr=new THREE.Quaternion().setFromAxisAngle(new V(1,0,0),Math.PI/2);
     for(let j=0;j<m;j++){const t=(j+.5)/m,p=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],qa=new THREE.Quaternion().setFromAxisAngle(new V(0,1,0),(n++%2)*Math.PI/2),q=qd.clone().multiply(qa).multiply(qr);
