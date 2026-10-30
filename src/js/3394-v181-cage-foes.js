@@ -36,9 +36,13 @@ function cgEyes(k,M,S,col,ex,ey,r,out){[-1,1].forEach(s=>{const q=S.hp(s*ex,ey,0
 // fangs / teeth hanging from the mouth line
 function cgTeeth(k,M,S,list,col){list.forEach(([x,y,len,up])=>{const q=S.hp(x,y,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','cone4','c',col||0xe8e0d0,p[0],p[1]+(up?.004:-.006)*S.hs,p[2]-.002,.0052*S.hs,len*S.hs,.0052*S.hs,up?0:Math.PI)})}
 // pointed ears from the sides of the head (base y), length len, swept up / back
-function cgEars(k,M,S,col,y,len,up,back,r,inner){[-1,1].forEach(s=>{const q=S.hp(s*.3,y,0),p=cgRay(M,[q[0],q[1],q[2]],[-s,0,0]);if(!p)return;const L=len*S.hs;
-  k.L('head','c',col,[p[0]-s*.006,p[1]-.01,p[2]],[p[0]+s*L*.55,p[1]+L*up,p[2]-L*back],(r||.017)*S.hs,.002,4);k.L('head','c',col,[p[0]-s*.006,p[1]-.024,p[2]+.004],[p[0]+s*L*.5,p[1]+L*up*.7,p[2]-L*back*.85],(r||.017)*.65*S.hs,.002,4);
-  if(inner!=null)k.p('head','sph','c',inner,p[0]+s*L*.18,p[1]+L*up*.3,p[2]-L*back*.25,.006*S.hs,L*.3,.014*S.hs,0,0,-s*.7)})}
+// ears grown out of the head: a flat, tapering loft whose root starts inside the skull (so no gap can show round its base),
+// swept up / back; len, r (base half width), inner = the inside colour
+function cgEars(k,M,S,col,y,len,up,back,r,inner){const B=k.B181;[-1,1].forEach(s=>{const q=S.hp(s*.3,y,0),p=cgRay(M,[q[0],q[1],q[2]],[-s,0,0],{head:1});if(!p)return;const L=len*S.hs,w=(r||.017)*S.hs*1.6,
+    d=nrm3([s*.55,up,-back]),root=sub3(p,[s*.02*S.hs,0,0]),P=t=>add3(add3(p,mul3(d,L*t)),[0,0,0]);
+  const R=[{p:root,rx:w*.9,f:.006,b:.006,w:[['head',1]]},{p:P(0),rx:w,f:.006,b:.006,w:[['head',1]]},{p:P(.45),rx:w*.72,f:.005,b:.005,w:[['head',1]]},{p:P(.8),rx:w*.3,f:.004,b:.004,w:[['head',1]]},{p:P(1),rx:.002,f:.002,b:.002,w:[['head',1]]}];
+  if(B)mdLoft(B,R,{seg:8,ref:[s,0,0],capA:true,capB:true,col:m=>inner!=null&&m.s<-.2&&m.i>.8&&m.i<3.2?inner:col});
+  else k.L('head','c',col,root,P(1),w,.002,4)})}
 // fingers from the knuckles: kind 'open' | 'claw' | 'fist', len, nail colour, claw tip
 function cgFingers(k,S,s,col,kind,len,nail,tip,t){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*(S.hand||1))),L=(len||1)*.08;
   // the hand's frame: u = the back of the hand, f = across the knuckles (thumb side), turned by S.pron like the cage's hand

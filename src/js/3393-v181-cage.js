@@ -137,7 +137,7 @@ function nrm3(a){const l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2
 function cg181Plan(name,J){const S=AW_PROP99,names=Object.keys(HB),abs={},N={},M={},id=[1,0,0,0,1,0,0,0,1];names.forEach(n=>{abs[n]=[HB[n][1],HB[n][2],HB[n][3]];N[n]=(J[n]||abs[n]).slice();M[n]=id});
   let m=S.plans.get(HB);if(!m){m={};S.plans.set(HB,m)}m[name]={names,abs,N,M,idx:names.map(n=>({a:abs[n],n:N[n],M:M[n]})),lift:0,hip:N.pelvis[1]};return m[name]}
 // a cage foe: the body builder gets (B, P, k, C) with C = the smoothed body; registered like the a181 foes
-function cg181Reg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;fn(B,P,k,C,S)},pn)}
+function cg181Reg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;k.B181=B;fn(B,P,k,C,S);cgSeat(k,C.M,0)},pn);(CG181.keys||(CG181.keys={}))[key]=1}
 // ring helpers for specs: where on the torso / head a point is
 function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+1];if(y<=b[0]){const t=Math.max(0,(y-a[0])/(b[0]-a[0]));return a.map((v,j)=>v+(b[j]-v)*t)}}return list[list.length-1]}
 
@@ -222,3 +222,27 @@ function cgFur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>
       for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p),T,vx(pos(q),q),c);mdTri(B,t,vx(V[q],q),T,vx(V[p],p),c)}
       const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f),T,vx(pos(f),f),c);mdTri(B,t,vx(pos(l),l),T,vx(V[l],l),c)}})}// a wandering edge height for a fur layer: y0 moved up and down by amp round the body (so no layer ends on a level line)
 function cgEdge(m,y0,amp,seed){return y0+amp*(n3Sn(m.x*2.2,0,m.z*2.2,10,seed||0)-.5)*2.4}
+// ---------------- every attached part is seated in the body ----------------
+// Owner (Oct 30 2026): "nosferatu's ears are not attached … a common issue — fix permanently". A part placed with its base on
+// the surface only touches it at one spot; on a curved head or limb the rest of its base stands off, a visible gap. After a cage
+// foe's builder has placed its parts (ears, horns, spikes, eyes, teeth, fingers, locks of hair), cgSeat checks each part that is
+// close to the body: its deepest vertex must sink into the skin by a depth that grows with the part's size (3–8 mm); if not,
+// the part is pushed in along the skin's normal until it does. Parts hung on something else (a shell, another part: farther
+// than 3.5 cm from the skin) are left alone; p.noSeat opts a part out. The test v179_enemy_parts checks the same ("seated").
+function cgSeat(k,M,n0){const N=M.N||(M.N=cgNormals(M)),V=M.V,cs=.03,G=new Map(),key=(a,b,c)=>a+','+b+','+c;
+  V.forEach((v,i)=>{const kk=key(Math.floor(v[0]/cs),Math.floor(v[1]/cs),Math.floor(v[2]/cs));let L=G.get(kk);if(!L)G.set(kk,L=[]);L.push(i)});
+  const near=p=>{let b=-1,bd=1e9;const x=Math.floor(p[0]/cs),y=Math.floor(p[1]/cs),z=Math.floor(p[2]/cs);for(let a=-1;a<=1;a++)for(let c=-1;c<=1;c++)for(let e=-1;e<=1;e++){const L=G.get(key(x+a,y+c,z+e));
+    if(L)L.forEach(i=>{const v=V[i],d=(v[0]-p[0])*(v[0]-p[0])+(v[1]-p[1])*(v[1]-p[1])+(v[2]-p[2])*(v[2]-p[2]);if(d<bd){bd=d;b=i}})}return b<0?null:[b,Math.sqrt(bd)]};
+  const v=new THREE.Vector3();let moved=0;const I=[],PT=[],BB=[];
+  for(let pi=n0||0;pi<k.P.length;pi++){const p=k.P[pi];if(p.noSeat)continue;const pa=p.geo.attributes.position,pts=[];for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);pts.push([v.x,v.y,v.z])}
+    const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];pts.forEach(q=>{for(let j=0;j<3;j++){mn[j]=Math.min(mn[j],q[j]);mx[j]=Math.max(mx[j],q[j])}});I.push(pi);PT.push(pts);BB.push([mn,mx])}
+  // parts that touch each other (a finger's segments, a strap and its buckle) are seated together, as one group
+  const par=I.map((_,i)=>i),f=i=>{while(par[i]!=i)i=par[i]=par[par[i]];return i},e=.004;
+  for(let i=0;i<I.length;i++)for(let j=i+1;j<I.length;j++){const a=BB[i],b=BB[j];if(a[0][0]>b[1][0]+e||b[0][0]>a[1][0]+e||a[0][1]>b[1][1]+e||b[0][1]>a[1][1]+e||a[0][2]>b[1][2]+e||b[0][2]>a[1][2]+e)continue;
+    let hit=false;for(const q of PT[i]){for(const r of PT[j]){if((q[0]-r[0])**2+(q[1]-r[1])**2+(q[2]-r[2])**2<e*e*4){hit=true;break}}if(hit)break}if(hit)par[f(i)]=f(j)}
+  const G2=new Map();I.forEach((_,i)=>{const r=f(i);if(!G2.has(r))G2.set(r,[]);G2.get(r).push(i)});
+  G2.forEach(L=>{const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];let best=-1e9,bn=null,dmin=1e9;
+    L.forEach(i=>{for(let j=0;j<3;j++){mn[j]=Math.min(mn[j],BB[i][0][j]);mx[j]=Math.max(mx[j],BB[i][1][j])}PT[i].forEach(q=>{const r=near(q);if(!r)return;const s=V[r[0]],n=N[r[0]],dep=(s[0]-q[0])*n[0]+(s[1]-q[1])*n[1]+(s[2]-q[2])*n[2];dmin=Math.min(dmin,r[1]);if(dep>best){best=dep;bn=n}})});
+    const size=Math.hypot(mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]);if(!bn||dmin>.035||size>.45)return;const want=Math.max(.004,Math.min(.01,size*.15));if(best>=want)return;const t=want-best,T=new THREE.Matrix4().makeTranslation(-bn[0]*t,-bn[1]*t,-bn[2]*t);
+    L.forEach(i=>k.P[I[i]].m.premultiply(T));moved++});
+  CG181.seated=(CG181.seated||0)+moved;return moved}

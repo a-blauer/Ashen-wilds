@@ -14,7 +14,8 @@ sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import play
 from PIL import Image,ImageDraw
-from float_lib import floating
+from float_lib import floating,seated
+SEAT_MM=float(os.environ.get('SEAT_MM','2'))   # (v181) small parts on a cage body must sink this deep into it (per 1.7 m)
 O=play.TMP
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'));FOCUS=bool(os.environ.get('FOCUS'))
 # things meant to drift inside a see-through body (the goo's bubbles and half-dissolved trophies): not checked
@@ -50,7 +51,7 @@ JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={ite
       qarsul:()=>QS165M.sheet.qarsul(),kheprit:()=>KH165.sheet.kheprit(),skimmer:()=>SK165.sheet.skimmer()};const boss=!!BLD[k];window.BOSS179=boss;if(boss)it.n=k;
     try{if(boss)g=BLD[k]();else{const c=enemyC(k,20,{});g=cr(c)}g.position.set(0,0,0);g.rotation.y=0;sc.add(g)}catch(e){it.err='build error '+String(e).slice(0,200);console.error=ce;return}
     const tick=(ms,mv,sp)=>{if(!boss)for(let t=0;t<ms;t+=16){T+=16;try{animC(g,T,mv,sp||0)}catch(e){it.err='anim error '+String(e).slice(0,200)}}g.position.set(0,g.position.y,0);g.updateMatrixWorld(true)};
-    it.fly=boss||!!(EN[k]&&(EN[k].fly||EN[k].hover));
+    it.fly=boss||!!(EN[k]&&(EN[k].fly||EN[k].hover));it.cage=!!(EN[k]&&EN[k].hum&&window.CG181&&CG181.keys&&CG181.keys[EN[k].hum]);
     try{g.updateMatrixWorld(true);if(poses.includes('rest'))it.poses.rest=geo(g);
       tick(600,false);if(poses.includes('idle'))it.poses.idle=geo(g);
       const bb=new THREE.Box3().setFromObject(g),sz=bb.getSize(new V()),ctr=bb.getCenter(new V());it.h=sz.y;it.sz=sz.toArray();it.lo=bb.min.y;
@@ -99,6 +100,8 @@ def s(pg):
                     lo=V[:,1].min()
                     if not STRICT and it['k'] in GROUND_KNOWN and GROUND_KNOWN[it['k']]<=lo<=.04*h:notes.append('%s idle: known, lowest point %.3f m'%(lab,lo))
                     elif lo<-.03*h or lo>.04*h:fails.append('%s idle: lowest point %.3f m of %.2f m (feet should touch the ground)'%(lab,lo,h))
+                if pn=='rest' and it.get('cage'):
+                    for sz,cc,dep,nt in seated(V,thr,SEAT_MM/1000*max(1,h/1.7),.3*max(1,h/1.7)):fails.append('%s: part (%d tris) at (%.2f, %.2f, %.2f) only touches the body (sunk %.1f mm, want %.1f): seat it'%(lab,nt,cc[0],cc[1],cc[2],max(0,dep)*1000,SEAT_MM*max(1,h/1.7)))
                 for c,n,cc,d,t0 in floating(V,thr,it['k'] in SUSPEND):
                     tg=TGv[t0*3:(t0+n)*3];where=tnames[int(np.bincount(tg).argmax())] if len(tg) else '?'
                     P=PC.setdefault(t0,{'n':n,'cc':cc,'d':0,'poses':[],'w':where,'r':float(np.linalg.norm(V[t0*3:(t0+n)*3]-cc,axis=1).max()) if pn==list(it['poses'])[0] else .02});P['d']=max(P['d'],d);P['poses'].append(pn)

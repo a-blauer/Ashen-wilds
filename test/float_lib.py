@@ -98,3 +98,41 @@ def ray_hits(o,d,T,maxd=.6):
     e1=T[:,1]-T[:,0];e2=T[:,2]-T[:,0];h=np.cross(d,e2);a=(e1*h).sum(1);ok=np.abs(a)>1e-12;f=np.where(ok,1/np.where(ok,a,1),0)
     s_=o-T[:,0];u=f*(s_*h).sum(1);q=np.cross(s_,e1);v=f*(q@d);t=f*(e2*q).sum(1)
     return bool((ok&(u>=0)&(v>=0)&(u+v<=1)&(t>1e-6)&(t<maxd)).any())
+def seated(V,thr,dmin,maxsz):
+    # (v181) small parts touching the body must sink into it, not just touch it (an ear or a horn set on a curved surface touches
+    # at one spot and shows a gap round the rest of its base). For each small piece (size <= maxsz) within thr of the largest
+    # piece (the body), the depth of its deepest vertex inside the body (signed by the nearest body triangle's normal) must be at
+    # least dmin. Pieces that wrap round the body (centroid inside it: bands, cuffs) and pieces hung on something else are skipped.
+    T,lab=components(V);n=lab.max()+1
+    if n<=1:return []
+    sizes=np.bincount(lab);big=int(sizes.argmax())
+    Tb=T[lab==big];nb=np.cross(Tb[:,1]-Tb[:,0],Tb[:,2]-Tb[:,0]);nl=np.linalg.norm(nb,axis=1);ok=nl>1e-12;Tb=Tb[ok];nb=nb[ok]/nl[ok,None]
+    cb=Tb.mean(1);c0=cb.mean(0)
+    if np.mean(np.sum(nb*(cb-c0),1)>0)<.5:nb=-nb
+    tree=cKDTree(cb);out=[]
+    def sd(p):
+        d,idx=tree.query(p,k=8);A,B,C=Tb[idx,0],Tb[idx,1],Tb[idx,2];dd=pt_tri_dist(np.repeat(p[None],len(idx),0),A,B,C);m=int(np.argmin(dd))
+        return dd[m],float(np.dot(p-cb[idx[m]],nb[idx[m]]))
+    # pieces that touch each other form one group (a finger's segments; a belt and the plates hung on it): judged together
+    pcs=[c for c in range(n) if c!=big];PP={c:np.unique(np.round(T[lab==c].reshape(-1,3),5),axis=0) for c in pcs};par={c:c for c in pcs}
+    def f(c):
+        while par[c]!=c:par[c]=par[par[c]];c=par[c]
+        return c
+    allp=np.concatenate([PP[c] for c in pcs]);own=np.concatenate([np.full(len(PP[c]),c) for c in pcs]);kt=cKDTree(allp)
+    for a,b in kt.query_pairs(thr):
+        ca,cb2=own[a],own[b]
+        if ca!=cb2:par[f(ca)]=f(cb2)
+    G={}
+    for c in pcs:G.setdefault(f(c),[]).append(c)
+    for L in G.values():
+        P=np.concatenate([PP[c] for c in L]);sz=float(np.linalg.norm(P.max(0)-P.min(0)))
+        if sz>maxsz:continue
+        cu,cs=sd(P.mean(0))
+        if cs<0:continue
+        best=9.;depth=-9.
+        for p in P:
+            u,s=sd(p);best=min(best,u)
+            if s<0:depth=max(depth,u)
+        if best>thr:continue
+        if depth<dmin:out.append((sz,P.mean(0),depth,int(sum(sizes[c] for c in L))))
+    return out
