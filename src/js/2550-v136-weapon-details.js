@@ -38,7 +38,7 @@ function wpX(k,type,col,r){const W=LGW,steel=col==0x9aa2ae?W.steel:lgCol(W.steel
   else if(type=='orb'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2;k.L('','c',bone,[Math.cos(a)*.06,-.13,Math.sin(a)*.06],[Math.cos(a)*.14,-.02,Math.sin(a)*.14],.008,.006,4);k.L('','c',bone,[Math.cos(a)*.14,-.02,Math.sin(a)*.14],[Math.cos(a)*.06,.12,Math.sin(a)*.06],.006,.002,4)}
     gkChain(k,'',[[0,-.16,.05],[.04,-.24,.04]],.007,W.brass,null)}
   else if(type=='bow'){// feathers and bone charms tied at the limbs, carved rings on the riser
-    [-1,1].forEach(s=>{const y=s*.3*BOW_K,x=-.555+(.555-Math.sqrt(1-Math.pow(.3/.561,2))*.55)*BOW_KX+.016;   // (v176) tied on the limb itself: they hung 9 cm off itgkFeather(k,'',[x-.02,y,0],[.1,-1,.15],.08,.012,s<0?0x1a1a1a:0x8a2a1a,null);k.L('','c',0x2a1e14,[x-.02,y+.01,0],[x-.03,y-.04,.01],.003,.003,3)});
+    [-1,1].forEach(s=>{const y=s*.3*BOW_K,x=-.555+(.555-Math.sqrt(1-Math.pow(.3/.561,2))*.55)*BOW_KX+.016;/* v176: tied on the limb itself (they hung 9 cm off it) */gkFeather(k,'',[x-.02,y,0],[.1,-1,.15],.08,.012,s<0?0x1a1a1a:0x8a2a1a,null);k.L('','c',0x2a1e14,[x-.02,y+.01,0],[x-.03,y-.04,.01],.003,.003,3)});
     for(let i=0;i<3;i++)k.p('','cyl','m',fit,-.553,-.06+i*.06,0,.021,.008,.021)}   // (v176) rings hug the grip
   else if(type=='crossbow'){gkSkull(k,'',0,.14,.0,.7,bone,0,null);[-1,1].forEach(s=>k.p('','cone4','m',W.iron2,s*.08,-.5,0,.01,.05,.01,0,0,-s*Math.PI/2))}
   else if(type=='shield'){// a spiked boss, a skull set over it (Rare+), claw marks across the face

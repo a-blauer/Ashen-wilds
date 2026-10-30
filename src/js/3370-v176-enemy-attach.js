@@ -13,7 +13,7 @@
 //    foes (mdFoeB, which also builds the v113 / v137 humanoids) snap every mdKit against what is built so far.
 // Companions, heroes and townsfolk are not touched. SN176.on=false builds the old models (cache keys differ, so both can be compared).
 // Test: test/v176_enemy_parts.py.
-var SN176={on:true,tol:.003,max:.075,emb:.0025,hum:0,far:[],moved:0,lp:null};
+var SN176={on:true,tol:.0015,max:.075,emb:.002,hum:0,far:[],moved:0,lp:null};
 // triangles (flat xyz, 9 numbers each) → a cell grid for nearest-surface queries
 function sn176Grid(cs){return {cs,T:[],C:new Map(),stamp:null,sid:1}}
 function sn176Key(i,j,k){return ((i+1024)*2048+(j+1024))*2048+(k+1024)}
@@ -90,8 +90,15 @@ function sn176Snap(body,P,tag){if(!SN176.on||!P||!P.length||!body||body.length<9
   SN176.lp={c,n,D};try{return f.apply(this,arguments)}finally{SN176.lp=null}}}
 {const f=dkBake;dkBake=function(P,O,key){const L=SN176.lp;if(L&&key&&/^LP\|/.test(key)){key=key+'|s176';
     if(!(DKBK&&DKBK[key])&&P&&P.length){try{const G=L.D.geo(L.c.cl[0],L.c),pa=G.attributes.position,ix=G.index?G.index.array:null,n=ix?ix.length:pa.count,T=[];
-      for(let i=0;i<n;i++){const j=ix?ix[i]:i;T.push(pa.getX(j),pa.getY(j),pa.getZ(j))}sn176Snap(T,P,L.n)}catch(e){console.warn('v176 snap',L.n,e)}}}
+      for(let i=0;i<n;i++){const j=ix?ix[i]:i;T.push(pa.getX(j),pa.getY(j),pa.getZ(j))}sn176Snap(T,P,L.n);sn176LpW(G,O,P)}catch(e){console.warn('v176 snap',L.n,e)}}}
   return f.call(this,P,O,key)}}
+// creature kits likewise take the weights of the body vertex under each part (dkBake honours p.w since v176)
+function sn176LpW(G,O,P){const pa=G.attributes.position,si=G.attributes.skinIndex,sw=G.attributes.skinWeight;if(!si||!sw)return;const M=new Map(),cs=.04,v=new THREE.Vector3();
+  for(let i=0;i<pa.count;i++){const k=sn176Key(Math.floor(pa.getX(i)/cs),Math.floor(pa.getY(i)/cs),Math.floor(pa.getZ(i)/cs));let A=M.get(k);if(!A)M.set(k,A=[]);A.push(i)}
+  const GC=(a,j,q)=>q==0?a.getX(j):q==1?a.getY(j):q==2?a.getZ(j):a.getW(j);
+  P.forEach(p=>{if(p.w||!p.bn)return;v.setFromMatrixPosition(p.m);let best=.06*.06,hit=-1;const i0=Math.floor(v.x/cs),j0=Math.floor(v.y/cs),k0=Math.floor(v.z/cs);
+    for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=M.get(sn176Key(i,j,k));if(!A)continue;for(const x of A){const dx=pa.getX(x)-v.x,dy=pa.getY(x)-v.y,dz=pa.getZ(x)-v.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=x}}}
+    if(hit<0)return;const w=[];let own=false;for(let q=0;q<4;q++){const x=GC(sw,hit,q);if(x>0){const n=O[GC(si,hit,q)];w.push([n,x]);if(n===p.bn)own=true}}if(own&&w.length>1)p.w=w})}
 // ---------------- humanoid foes: every kit against what is built so far ----------------
 {const f=mdFoeB;mdFoeB=function(key){if(!SN176.on)return f.apply(this,arguments);SN176.hum++;SN176.humK=key;try{return f.apply(this,arguments)}finally{SN176.hum--}}}
 {const f=mdFoeGeo;mdFoeGeo=function(key){return SN176.on?mdGeo('F176|'+key,()=>mdFoeB(key)):f.apply(this,arguments)}}
@@ -100,11 +107,20 @@ function sn176Snap(body,P,tag){if(!SN176.on||!P||!P.length||!body||body.length<9
 function sn176Warp(B){let pl=null;try{if(B.kqPre&&B.kqPre!='none'&&typeof AW_PROP99!='undefined')pl=AW_PROP99.plan(B.bones,B.kqPre)}catch(e){pl=null}
   if(!pl)return null;const W={};pl.names.forEach(n=>{const M=pl.M[n],a=pl.abs[n],N=pl.N[n],m=new THREE.Matrix4().set(M[0],M[1],M[2],0,M[3],M[4],M[5],0,M[6],M[7],M[8],0,0,0,0,1);
     const t=new THREE.Vector3(a[0],a[1],a[2]).applyMatrix4(m);m.setPosition(N[0]-t.x,N[1]-t.y,N[2]-t.z);W[n]=m});return {pl,W}}
-// Parts on the torso bones get the torso's own blend of bone weights at their height (mdTorsoW), so they bend with the skin
-// under them: rigid on one bone, a back plate or a bead lifted off the body whenever the spine bent (attacks, the stance).
-var SN176_TB={pelvis:1,spine:1,chest:1,neck:1};
-function sn176TorsoW(P){P.forEach(p=>{if(p.w||!SN176_TB[p.bn])return;const v=new THREE.Vector3().setFromMatrixPosition(p.m);if(v.y>.4&&v.y<1.06)p.w=mdTorsoW(v.y)})}
-{const f=mdKit;mdKit=function(B,k){if(SN176.hum>0&&k&&k.P&&k.P.length){try{sn176TorsoW(k.P);const X=sn176Warp(B),T=[];
+// Every part takes the bone weights of the skin under it (the nearest body vertex, when that vertex follows the part's own bone
+// at all), so it bends with that skin: rigid on one bone, a back plate, a bead or a shoulder pad lifted off the body whenever
+// the spine bent or the arm swung (attacks, the stance).
+function sn176SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn176Key(Math.floor(x/cs),Math.floor(y/cs),Math.floor(z/cs));
+  ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){const k=key(L.p[v*3],L.p[v*3+1],L.p[v*3+2]);let A=G.get(k);if(!A)G.set(k,A=[]);A.push([L,v])}});
+  P.forEach(p=>{if(p.w||!p.bn)return;const c=new THREE.Vector3().setFromMatrixPosition(p.m),bi=B.O.indexOf(p.bn);if(bi<0)return;let best=.08*.08,hit=null;
+    const i0=Math.floor(c.x/cs),j0=Math.floor(c.y/cs),k0=Math.floor(c.z/cs);
+    for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=G.get(sn176Key(i,j,k));if(!A)continue;
+      for(const [L,v] of A){const dx=L.p[v*3]-c.x,dy=L.p[v*3+1]-c.y,dz=L.p[v*3+2]-c.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=[L,v]}}}
+    if(!hit)return;const [L,v]=hit,w=[];let own=false;for(let j=0;j<4;j++){const x=L.sw[v*4+j];if(x>0){const n=B.O[L.si[v*4+j]];w.push([n,x]);if(n===p.bn)own=true}}
+    if(own&&w.length>1)p.w=w;
+    // a shoulder part over skin that only follows the torso (a pauldron) goes half with the torso, half with the arm
+    else if(!own&&/^a[LR]0$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5]))})}
+{const f=mdKit;mdKit=function(B,k){if(SN176.hum>0&&k&&k.P&&k.P.length){try{sn176SkinW(B,k.P);const X=sn176Warp(B),T=[];
       ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){let x=L.p[v*3],y=L.p[v*3+1],z=L.p[v*3+2];
         if(X){let X0=0,Y0=0,Z0=0,Wt=0;for(let j=0;j<4;j++){const w=L.sw[v*4+j];if(!(w>0))continue;const b=X.pl.idx[L.si[v*4+j]];if(!b)continue;const M=b.M,dx=x-b.a[0],dy=y-b.a[1],dz=z-b.a[2];
             X0+=w*(b.n[0]+M[0]*dx+M[1]*dy+M[2]*dz);Y0+=w*(b.n[1]+M[3]*dx+M[4]*dy+M[5]*dz);Z0+=w*(b.n[2]+M[6]*dx+M[7]*dy+M[8]*dz);Wt+=w}if(Wt>0){x=X0/Wt;y=Y0/Wt;z=Z0/Wt}}

@@ -82,7 +82,9 @@ LPR.Maggot={
     k.p('head','ring','c',dkShade(0xb07870,.9),0,my,mz,.09,.09,.09,Math.PI/2);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,x=Math.cos(a)*.064,y=my+Math.sin(a)*.064;k.L('head','c',0xece4cc,[x,y,mz+.01],[x*.4,my+(y-my)*.4,mz+.045],.011,.002,3)}
     // clusters of tiny black eyes
-    [-1,1].forEach(s=>[[.05,.09,.47],[.065,.08,.5],[.035,.1,.5]].forEach(q=>k.p('head','sph',red?'g':'c',red?0xff2a2a:0x0a0606,s*q[0],my+q[1],q[2],.013)));
+    // (v176) set into the skin of the head (they hovered over it)
+    const top=(x,z)=>{const r=bzMagR(z);return r*.82+.004+r*.96*Math.sqrt(Math.max(0,1-Math.pow(x/(r*1.04),2)))};
+    [-1,1].forEach(s=>[[.05,.47],[.065,.5],[.035,.5]].forEach(q=>k.p('head','sph',red?'g':'c',red?0xff2a2a:0x0a0606,s*q[0],top(q[0],q[1])-.004,q[1],.013)));
     // bristles on every roll, stubby prolegs underneath
     for(let z=-1.36;z<.35;z+=.148){const r=bzMagR(z),bn=wyrmBones(z),b=bn[2]>.5?bn[1]:bn[0],y=r*.82+.004;
       [-1,1].forEach(s=>{k.L(b,'c',dk,[s*r*.95,y+r*.25,z],[s*(r*1.3),y+r*.5+R()*.03,z-.03],.007,.002,3);k.p(b,'sph','c',dkShade(main.getHex(),.62),s*r*.6,.025,z,.035,.025,.04)})}

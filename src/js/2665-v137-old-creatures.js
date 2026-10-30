@@ -20,7 +20,8 @@
     // hooked mandibles either side of the mouth, a slime coat and pale veins along the back
     [-1,1].forEach(s=>{k.L('head','c',0x2a1a10,[s*.07,my,mz-.01],[s*.1,my-.02,mz+.06],.016,.01,4).L('head','c',0x1a0e08,[s*.1,my-.02,mz+.06],[s*.05,my-.035,mz+.1],.01,.002,4)});
     for(let z=-1.3;z<.4;z+=.21){const r=bzMagR(z),bn=wyrmBones(z),b=bn[2]>.5?bn[1]:bn[0],y=r*.82+.004;
-      k.p(b,'sph','g',0xf4f0c0,(z*7%2-1)*r*.4,y+r*.9,z,.012,.008,.012);k.L(b,'c',0xe8d8c0,[-r*.3,y+r*.92,z],[r*.3,y+r*.9,z-.06],.004,.004,3)}
+      const x=(z*7%2-1)*r*.4,on=x=>y+r*.74*Math.sqrt(Math.max(0,1-Math.pow(x/r,2)));   // (v176) on the skin, which dips between the rolls
+      k.p(b,'sph','g',0xf4f0c0,x,on(x),z,.012,.008,.012);k.L(b,'c',0xe8d8c0,[-r*.3,on(r*.3),z],[r*.3,on(r*.3),z-.06],.004,.004,3)}
     // a drip of slime hanging off the mouth
     k.L('head','g',0xe8f0b0,[0,my-.06,mz+.02],[0,.01,mz+.04],.01,.004,3)}}
   if(LPR.Scorpion){const k0=LPR.Scorpion.kit;LPR.Scorpion.kit=function(k,c,C,red){k0.apply(this,arguments);
