@@ -26933,7 +26933,7 @@ n3Def('drowned',{n:'Drowned Thrall',e:'🧟',fam:'Spirit',mt:'p',w:{hp:1.5,pa:1.
   for(let i=0;i<9;i++){const t=i/8,a=-1.2+t*2.6,y=.95-t*.35,p=n3Surf(P,y,a,.016);k.p(n3TB(y),'ring','m',i%2?C.iron:C.rust,p[0],p[1],p[2],.022,.4,.022,0,a,i%2?Math.PI/2:0)}
   // barnacle clusters on the shoulders and back, weed hanging off the arms
   for(let i=0;i<14;i++){const y=.7+n3Nz(i,3,1)*.32,a=Math.PI+(n3Nz(i,1,3)-.5)*3,p=n3Surf(P,y,a,0);k.p(n3TB(y),'cone','c',C.barn,p[0],p[1],p[2],.022,.03,.022,Math.cos(a)*1.4,0,Math.sin(a)*1.4)}
-  [-1,1].forEach(s=>{for(let i=0;i<3;i++){const q=n3ArmAt(P,s,.4+i*.5);k.S(q[3],i%2?C.weed:C.weed2,q[0]+s*.05,q[1],q[2],.03,.2,s*1.5,0,i+3)}});
+  [-1,1].forEach(s=>{for(let i=0;i<3;i++){const q=n3ArmAt(P,s,.4+i*.5);k.S(q[3],i%2?C.weed:C.weed2,q[0]+s*.03,q[1],q[2],.03,.2,s*1.5,0,i+3)}}); // v180: weed rooted in the arm (it lifted off in the idle sway)
   drAnchor(k,'aR2',P.bones.aR2[1]+.01,P.bones.aR2[2]-.06,P.bones.aR2[3]+.02);mdLoin(B,P,C.cloth,0x1a2426);
  },
  bfx(e,a){const p=gY(e.m.position,.8).addScaledVector(a.d,1.5);burst(p,0x5a8a8a,14,1.6,1,.45);burst(p,0x1a2a2a,8,1,.6,.5);n3Shake(e.m.position,.05)}});
@@ -32902,7 +32902,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
     k.p('jaw','sph','c',0xc85a6a,0,.29,.42,.06,.015,.05);
     [-1,1].forEach(s=>{k.p('head','sph','c',K.skin2,s*.13,.4,.37,.07,.06,.07);k.p('head','sph','g',red?0xff2a2a:K.eye,s*.148,.415,.398,.032,.028,.03);k.p('head','box','c',K.dark,s*.156,.417,.426,.006,.024,.006,0,s*.4,0);k.p('head','sph','c',K.skin2,s*.145,.44,.4,.05,.022,.045,.15,0,0);   // (v179: smaller, sunk under a heavy lid)
       k.L('head','c',K.horn,[s*.12,.44,.36],[s*.16,.5,.29],.032,.012,5).L('head','c',K.horn,[s*.16,.5,.29],[s*.18,.52,.24],.012,.002,4);k.L('head','c',K.horn,[s*.17,.43,.33],[s*.21,.46,.28],.016,.002,4);
-      k.p('chest','sph','c',K.gland,s*.17,.4,.22,.06,.04,.1,0,s*.2,0);for(let i=0;i<4;i++)k.p('chest','sph','c',K.dark,s*(.15+i%2*.04),.43,.17+i*.03,.008,.006,.008);
+      k.p('chest','sph','c',K.gland,s*.17,.39,.19,.06,.04,.08,0,s*.2,0);for(let i=0;i<4;i++)k.p('chest','sph','c',K.dark,s*(.15+i%2*.04),.42,.15+i*.025,.008,.006,.008);   // v180: the gland sits back on the chest (it straddled the neck bend and lifted off in the idle sway)
       k.p('jaw','cone4','c',0xece4d0,s*.07,.285,.45,.01,.025,.01)});
     for(let i=0;i<30;i++){const z=-.24+n3Nz(i,1,7)*.58,a=(n3Nz(i,3,9)-.5)*2.8,y=.27+Math.cos(a)*.17,x=Math.sin(a)*.24;k.p(z>.2?'chest':z>-.08?'spine':'pelvis','sph','c',i%3?K.skin2:K.blot,x,y,z,.015+n3Nz(i,5,6)*.02,.012,.015+n3Nz(i,2,6)*.02)}
     // webbed toes

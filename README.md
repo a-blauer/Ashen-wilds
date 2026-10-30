@@ -538,6 +538,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   borrowed parts up to 2 cm in motion, one Drakelet and one Venomcoil evolution piece).
   Run: `SP=Foxlet,Ashwolf SETS=base,trait,var,fuse POSES=idle,walkA,walkB,bite python3 v180_comp_float.py` (`VERBOSE=1` every
   piece, `TIMING=1`, `DUMP=prefix` saves the geometry); the suite runs it as 12 jobs (family × base+fuse / trait+var).
+  Also steadies `v179_enemy_parts.py` (it failed now and then on main): the Mire Croaker's poison glands sit back on the chest
+  (they straddled the neck bend), the Drowned Thrall's arm weed is rooted in the arm, the Web Stalker's pincer gap allowance
+  is 15 mm like the Rimecrawler's (same body; the gap grows with the random size).
 - **Version 164 Cheddar's board (`3235`; owner: "reduce the amount of cheddar quests in each zone to 8 total and award the player with an
   exclusive and extra cool looking cosmetic skin variant for either a playable animal race or a companion or mount if they do all the
   quests in a zone")**: every zone's `CHQD148` list is exactly 8 (3 Easy, 3 Medium, 2 Hard); Kindlelight and Hillside Crest lost menu

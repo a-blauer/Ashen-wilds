@@ -21,7 +21,7 @@
     k.p('jaw','sph','c',0xc85a6a,0,.29,.42,.06,.015,.05);
     [-1,1].forEach(s=>{k.p('head','sph','c',K.skin2,s*.13,.4,.37,.07,.06,.07);k.p('head','sph','g',red?0xff2a2a:K.eye,s*.148,.415,.398,.032,.028,.03);k.p('head','box','c',K.dark,s*.156,.417,.426,.006,.024,.006,0,s*.4,0);k.p('head','sph','c',K.skin2,s*.145,.44,.4,.05,.022,.045,.15,0,0);   // (v179: smaller, sunk under a heavy lid)
       k.L('head','c',K.horn,[s*.12,.44,.36],[s*.16,.5,.29],.032,.012,5).L('head','c',K.horn,[s*.16,.5,.29],[s*.18,.52,.24],.012,.002,4);k.L('head','c',K.horn,[s*.17,.43,.33],[s*.21,.46,.28],.016,.002,4);
-      k.p('chest','sph','c',K.gland,s*.17,.4,.22,.06,.04,.1,0,s*.2,0);for(let i=0;i<4;i++)k.p('chest','sph','c',K.dark,s*(.15+i%2*.04),.43,.17+i*.03,.008,.006,.008);
+      k.p('chest','sph','c',K.gland,s*.17,.39,.19,.06,.04,.08,0,s*.2,0);for(let i=0;i<4;i++)k.p('chest','sph','c',K.dark,s*(.15+i%2*.04),.42,.15+i*.025,.008,.006,.008);   // v180: the gland sits back on the chest (it straddled the neck bend and lifted off in the idle sway)
       k.p('jaw','cone4','c',0xece4d0,s*.07,.285,.45,.01,.025,.01)});
     for(let i=0;i<30;i++){const z=-.24+n3Nz(i,1,7)*.58,a=(n3Nz(i,3,9)-.5)*2.8,y=.27+Math.cos(a)*.17,x=Math.sin(a)*.24;k.p(z>.2?'chest':z>-.08?'spine':'pelvis','sph','c',i%3?K.skin2:K.blot,x,y,z,.015+n3Nz(i,5,6)*.02,.012,.015+n3Nz(i,2,6)*.02)}
     // webbed toes

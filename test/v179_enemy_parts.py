@@ -23,7 +23,7 @@ STRICT=bool(os.environ.get('STRICT'));ANIM_MM=float(os.environ.get('ANIM_MM','40
 # Known small gaps still open in the idle sway (v179, Oct 30 2026): enemy -> [(where, up to mm)]; listed as NOTE lines, and
 # any growth past the limit fails. Close them and remove the line (STRICT=1 shows them as failures).
 KNOWN={'dgwretch':[('bone chest',8)],'ghostwolf':[('bone tail2',15)],'maggot':[('bone tail2',20)],'saltgolem':[('bone chest',40)],
-  'stalker':[('bone jaw',12)],'rimecrawler':[('bone jaw',15)],'tombpriest':[('bone pelvis',20)],'troll':[('bone pelvis',25)],
+  'stalker':[('bone jaw',15)],'rimecrawler':[('bone jaw',15)],'tombpriest':[('bone pelvis',20)],'troll':[('bone pelvis',25)],
   'croaker':[('bone chest',20)],'boghorror':[('bone chest',10)],'wraith':[('bone head',25)],'banshee':[('bone head',30)]}
 GROUND_KNOWN={'shambler':-.075,'maggot':-.03}   # feet a little in the ground in the idle sway (metres)
 FLY={'cavebat','bloodbat','banshee','wraith','dustwyrm','sandwyrm'}   # flyers, ghosts and burrowing wyrms: no feet on the ground

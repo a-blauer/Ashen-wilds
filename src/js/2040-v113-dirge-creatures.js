@@ -23,7 +23,7 @@ n3Def('drowned',{n:'Drowned Thrall',e:'🧟',fam:'Spirit',mt:'p',w:{hp:1.5,pa:1.
   for(let i=0;i<9;i++){const t=i/8,a=-1.2+t*2.6,y=.95-t*.35,p=n3Surf(P,y,a,.016);k.p(n3TB(y),'ring','m',i%2?C.iron:C.rust,p[0],p[1],p[2],.022,.4,.022,0,a,i%2?Math.PI/2:0)}
   // barnacle clusters on the shoulders and back, weed hanging off the arms
   for(let i=0;i<14;i++){const y=.7+n3Nz(i,3,1)*.32,a=Math.PI+(n3Nz(i,1,3)-.5)*3,p=n3Surf(P,y,a,0);k.p(n3TB(y),'cone','c',C.barn,p[0],p[1],p[2],.022,.03,.022,Math.cos(a)*1.4,0,Math.sin(a)*1.4)}
-  [-1,1].forEach(s=>{for(let i=0;i<3;i++){const q=n3ArmAt(P,s,.4+i*.5);k.S(q[3],i%2?C.weed:C.weed2,q[0]+s*.05,q[1],q[2],.03,.2,s*1.5,0,i+3)}});
+  [-1,1].forEach(s=>{for(let i=0;i<3;i++){const q=n3ArmAt(P,s,.4+i*.5);k.S(q[3],i%2?C.weed:C.weed2,q[0]+s*.03,q[1],q[2],.03,.2,s*1.5,0,i+3)}}); // v180: weed rooted in the arm (it lifted off in the idle sway)
   drAnchor(k,'aR2',P.bones.aR2[1]+.01,P.bones.aR2[2]-.06,P.bones.aR2[3]+.02);mdLoin(B,P,C.cloth,0x1a2426);
  },
  bfx(e,a){const p=gY(e.m.position,.8).addScaledVector(a.d,1.5);burst(p,0x5a8a8a,14,1.6,1,.45);burst(p,0x1a2a2a,8,1,.6,.5);n3Shake(e.m.position,.05)}});
