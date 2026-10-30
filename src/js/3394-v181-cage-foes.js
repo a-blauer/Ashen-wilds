@@ -41,9 +41,12 @@ function cgEars(k,M,S,col,y,len,up,back,r,inner){[-1,1].forEach(s=>{const q=S.hp
   if(inner!=null)k.p('head','sph','c',inner,p[0]+s*L*.18,p[1]+L*up*.3,p[2]-L*back*.25,.006*S.hs,L*.3,.014*S.hs,0,0,-s*.7)})}
 // fingers from the knuckles: kind 'open' | 'claw' | 'fist', len, nail colour, claw tip
 function cgFingers(k,S,s,col,kind,len,nail,tip,t){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*(S.hand||1))),L=(len||1)*.08;
-  for(let i=0;i<4;i++){const z=(1.5-i)*.016,p=[kn[0]-s*.004,kn[1],kn[2]+z];if(kind=='fist')a181Digit(k,bn+'2',col,p,[d[0]-s*.45,d[1],d[2]+.05],L*.7,.0095,2,1.15,[0,0,s],0,null,t);
-    else a181Digit(k,bn+'2',col,p,[d[0]-s*.15,d[1],d[2]+z*.6],L*(i==3?.82:1),.0085,3,kind=='claw'?.26:.14,[0,0,s],tip||0,nail,t)}
-  const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',col,[tb[0]-s*.01,tb[1],tb[2]+.026],[d[0]-s*.3,d[1]*.6,.75],L*.62,.009,2,.3,[0,1,0],tip?tip*.6:0,nail,t)}
+  // the hand's frame: u = the back of the hand, f = across the knuckles (thumb side), turned by S.pron like the cage's hand
+  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=mul3(f,s);
+  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c)));
+  for(let i=0;i<4;i++){const z=(1.5-i)*.016,p=P(kn,z,-.004);if(kind=='fist')a181Digit(k,bn+'2',col,p,D(1,-.45,.05),L*.7,.0095,2,1.15,ax,0,null,t);
+    else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6),L*(i==3?.82:1),.0085,3,kind=='claw'?.26:.14,ax,tip||0,nail,t)}
+  const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',col,P(tb,.026,-.01),D(.6,-.3,.75),L*.62,.009,2,.3,mul3(u,-1),tip?tip*.6:0,nail,t)}
 function cgToes(k,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w;for(let i=0;i<5;i++){const tx=A[0]+(i-2)*.018*W,tz=A[2]+.16*L;k.L(l,'c',col,[tx,.018,tz-.02],[tx+(i-2)*.004,.012,tz+.012],.009*W,.007*W,4);if(claw)k.L(l,'c',nail||0x1a1214,[tx+(i-2)*.004,.012,tz+.012],[tx+(i-2)*.006,.004,tz+.012+claw],.006*W,.001,4)}}
 // the torso ring of the cage spec at height y (rx, f, b, z)
 function cgTAt(S,y){const q=cgAt(S.torso,y);return {rx:q[1],f:q[2],b:q[3],z:q[4]||0}}
@@ -112,6 +115,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;d+=.02*cgG(x,y,0,1.598,.009,.014)+.012*cgG(x,y,0,1.616,.007,.012);
     [-1,1].forEach(s=>{d-=.013*cgG(x,y,s*.036,1.629,.016,.01);d+=.007*cgG(x,y,s*.056,1.602,.014,.01);d-=.006*cgG(x,y,s*.047,1.568,.016,.014);d+=.003*cgG(x,y,s*.01,1.587,.006,.004)});
     d+=.008*cgG(x,y,0,1.648,.05,.006);d-=.004*cgG(x,y,0,1.558,.02,.003);d+=.008*cgG(x,y,0,1.538,.016,.012);return d*f};
+  S.pron={'-1':.7};
   cg181Reg('vampm',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0];cgSculpt(M,{head:1},S.sculpt(FACE));
     const ey=S.hp(0,1.629,0)[1],skin=m=>{if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.036)<.02&&Math.abs(m.y-ey)<.012*S.hs)return 0x2a1a22;if(Math.abs(m.y-S.hp(0,1.558,0)[1])<.004&&Math.abs(bx)<.024)return 0x3a1a22}return m.s<-.3?sk2:a181Nz(sk,m,.15,20)};
     cgEmit(B,M,m=>m.part=='torso'||m.part=='leg'||m.part=='foot'?un:skin(m));
@@ -139,6 +143,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     d+=.034*cgG(x,y,0,1.588,.011,.016)+.02*cgG(x,y,0,1.612,.008,.016)-.01*cgG(x,y,0,1.574,.012,.006);   // a long hooked nose
     [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.037,1.63,.017,.012);d+=.01*cgG(x,y,s*.06,1.6,.012,.01);d-=.016*cgG(x,y,s*.05,1.566,.016,.016)});
     d+=.016*cgG(x,y,0,1.652,.05,.007);d-=.005*cgG(x,y,0,1.553,.018,.003);d-=.006*cgG(x,y,0,1.536,.025,.01);return d*f};
+  S.pron={'-1':1.1,'1':1.1};
   cg181Reg('nosferatu',S,function(B,P,k,C){const M=C.M,wy=T[2][0];cgSculpt(M,{head:1},S.sculpt(FACE));
     const ey=S.hp(0,1.63,0)[1],skin=m=>{if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.037)<.022&&Math.abs(m.y-ey)<.015*S.hs)return 0x0a0806}
       const v=n3Sn(m.x,m.y,m.z,22,4);return v>.74?vein:m.s<-.3?sk2:mdSh(sk,1-v*.15)};
@@ -167,6 +172,7 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
 // ===================================================================== Crimson Executioner =====================================================================
 (function(){const S=cgHuman({h:.92,w:1.3,d:1.28,rw:[1.15,1.22,1.4,1.32,1.26,1.26,1.3,1.42],rf:[1.1,1.3,1.8,1.6,1.32,1.2,1.15,1.2],rb:[1.05,1.15,1.15,1.12,1.15,1.15,1.15,1.25],at:1.55,lt:1.45,hs:.96,nw:1.7,legL:.95,foot:1.1,footW:1.3});
   const sk=0x8a7468,sk2=0x6a564c,scar=0x5a2a26,hd=0x22160f,hd2=0x341f14,ap=0x2e1c12,bl=0x2a0808,ir=0x3a3a3e,ir2=0x56565c,lt=0x2a1a10,T=S.torso,J=S.J;
+  S.pron={'-1':.9};
   cg181Reg('executioner',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],wr=J.aR2[1],kn=J.rh1[1];
     cgEmit(B,M,m=>m.part=='leg'||m.part=='foot'?lt:m.s<-.4?sk2:a181Nz(sk,m,.18,16));
     // the hood over the whole head: two eye holes, a crown seam, a drawstring at the throat
@@ -194,6 +200,7 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
   const sk=0x5e7388,sk2=0x485a6e,rune=0x8ae0ff,wh=0xd8e0e8,wh2=0xb0bcc8,pe=0x5a4e40,pe2=0x3e342a,lt=0x2e2218,ir=0x3a3e46,ir2=0x52565e,hn=0xb8ac90,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;d+=.022*cgG(x,y,0,1.594,.016,.014)+.012*cgG(x,y,0,1.614,.011,.012);
     [-1,1].forEach(s=>{d-=.014*cgG(x,y,s*.038,1.629,.017,.01);d+=.008*cgG(x,y,s*.058,1.6,.016,.012);d+=.006*cgG(x,y,s*.016,1.584,.008,.005)});d+=.018*cgG(x,y,0,1.65,.055,.008);return d*f};
+  S.pron={'-1':.9};
   cg181Reg('jotun',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],wr=J.aR2[1],kn=J.rh1[1];cgSculpt(M,{head:1},S.sculpt(FACE));
     const skin=m=>m.s<-.4?sk2:a181Nz(sk,m,.18,16);cgEmit(B,M,m=>m.part=='leg'||m.part=='foot'?lt:skin(m));
     cgEyes(k,M,S,rune,.038,1.629,.95,.002);
@@ -227,6 +234,7 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     d+=.014*cgG(x,y,0,1.598,.022,.012);[-1,1].forEach(s=>d-=.008*cgG(x,y,s*.012,1.592,.006,.005));   // a flat, wide nose with flared nostrils
     [-1,1].forEach(s=>d-=.02*cgG(x,y,s*.036,1.629,.014,.009));d+=.03*cgG(x,y,0,1.65,.06,.009);    // small eyes deep under a heavy brow
     d-=.008*cgG(x,y,0,1.547,.035,.004);return d*f};
+  S.pron={'-1':1.2,'1':1.2};
   cg181Reg('yeti',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],kn=J.rh1[1];cgSculpt(M,{head:1},S.sculpt(FACE));
     const face=m=>m.part=='head'&&m.s>.3&&m.y<S.hp(0,1.67,0)[1]&&Math.abs(m.x)<.08*S.hs*1.1,fur=m=>a181Nz(f1,m,.35,12);
     cgEmit(B,M,m=>face(m)||m.part=='hand'||m.part=='foot'?sk:m.part=='torso'&&m.s>.5&&m.y<J.chest[1]?mdMix(sk,f2,.5):fur(m));
@@ -235,7 +243,8 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     // the coat: overlapping fur layers, each breaking into ragged clumps over the next (head mane, shoulder mantle, chest and
     // back, hips and thighs; upper arms, forearms to the wrist cuffs, shins to the ankles)
     const ch=J.chest[1],sp=J.spine[1],F=(sel,off,len,col,col2,seed)=>cgFur(B,M,sel,{off,len,col,col2,seed,jag:.6}),E=(m,y,a,sd)=>m.y>cgEdge(m,y,a,sd);
-    F(m=>(m.part=='head'&&!face(m))||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1)),.03,.13,f1,f2,1);
+    const brow=S.hp(0,1.668,0)[1];cgFur(B,M,m=>m.part=='head'&&E(m,brow,.015,31),{off:.034,len:.08,col:f1,col2:f2,seed:31,jag:.65,lump:[.25,1.9],freq:34});
+    cgFur(B,M,m=>((m.part=='head'&&!face(m)&&!E(m,brow-.004,.015,31)&&m.s<.55)||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1))),{off:.03,len:.13,col:f1,col2:f2,seed:1,jag:.6,lump:[.25,1.7],freq:30});
     F(m=>((m.part=='torso'||m.part=='neck')&&E(m,ch-.05,.05,2))||(m.part=='arm'&&E(m,J.aR0[1]-.17,.04,12)),.05,.2,f3,f2,2);
     F(m=>m.part=='torso'&&E(m,sp-.07,.05,3)&&!E(m,ch-.02,.05,2),.04,.17,f1,f2,3);
     F(m=>(m.part=='torso'&&!E(m,sp-.05,.05,3))||(m.part=='leg'&&E(m,kn+.03,.04,4)),.04,.17,f1,f2,4);

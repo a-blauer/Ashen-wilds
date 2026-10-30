@@ -92,7 +92,9 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
     // root order: front-low, armpit (inner), back-low, back-mid, back-top, top (outer), front-top, front-mid
     const pts=S.arm.map(q=>{const t=q.t,p=t<=1?lerp3(a0,a1,t):t<=2?lerp3(a1,a2,t-1):add3(a2,mul3(nrm3(sub3(a2,a1)),(t-2)*.2));return p});
     let prev=root;S.arm.forEach((q,i)=>{const c=pts[i],dn=nrm3(sub3(pts[Math.min(i+1,pts.length-1)],i?pts[i-1]:[s*.04+a0[0]*.8,a0[1],a0[2]])),
-      u=nrm3(sub3([s,0,0],mul3(dn,dn[0]*s))),fv=nrm3(cross3(dn,u)),f2=fv[2]<0?mul3(fv,-1):fv;
+      u0=nrm3(sub3([s,0,0],mul3(dn,dn[0]*s))),fv=nrm3(cross3(dn,u0)),f0=fv[2]<0?mul3(fv,-1):fv,
+      // the forearm's twist: the wrist and hand turn by S.pron (the back of the hand toward the front), rising along the forearm
+      tw=((S.pron&&S.pron[s])||0)*Math.max(0,Math.min(1,(q.t-1.3)/.65)),u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f2=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw)));
       const w=q.t<.15?[['chest',.35],[bn+'0',.65]]:q.t<.9?[[bn+'0',1]]:q.t<1.1?[[bn+'0',.5],[bn+'1',.5]]:q.t<1.85?[[bn+'1',1]]:q.t<2.05?[[bn+'1',.4],[bn+'2',.6]]:[[bn+'2',1]];
       // the j order matches the root: j0 front-low(135°) … φ_j = (j−5)·45° from "outer" toward front
       const ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0)),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
@@ -171,7 +173,7 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
     d+=.011*cgG(x,y,0,1.648,.05,.006);                                              // the brow ridge
     d-=.005*cgG(x,y,0,1.558,.022,.0035);d+=.01*cgG(x,y,0,1.538,.018,.012);           // the mouth line, the chin
     return d*f};
-  CG181.base=S;CG181.faceGaunt=FACE;
+  CG181.base=S;CG181.faceGaunt=FACE;S.pron={'-1':1.1};
   cg181Reg('vamp',S,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036;cgSculpt(M,{head:1},FACE);
     const skin=m=>{if(m.part=='head'&&m.s>.3){if(Math.abs(Math.abs(m.x)-EX)<.022&&Math.abs(m.y-EY)<.014)return sock;if(Math.abs(m.y-1.558)<.0045&&Math.abs(m.x)<.026)return lip}
       const v=n3Sn(m.x,m.y,m.z,20,2);return m.s<-.3?mdSh(sk2,1-v*.2):v>.72?mdMix(sk,0x3a2232,.5):mdSh(sk,1-v*.15)};
@@ -180,10 +182,7 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
     [-1,1].forEach(s=>{const p=cgRay(M,[s*EX,EY,.3],[0,0,-1]);if(p)k.p('head','sph','g',0xff2a30,p[0],p[1],p[2]+.001,.009,.006,.005,0,0,s*.25);
       const q=cgRay(M,[s*.3,1.63,0],[-s,0,0]);if(q){k.L('head','c',sk,[q[0]-s*.006,q[1]-.012,q[2]],[q[0]+s*.05,q[1]+.05,q[2]-.05],.016,.002,4);k.L('head','c',sk,[q[0]-s*.006,q[1]-.024,q[2]+.004],[q[0]+s*.045,q[1]+.03,q[2]-.04],.01,.002,4)}
       const f=cgRay(M,[s*.013,1.554,.3],[0,0,-1]);if(f)k.p('head','cone4','c',0xe8e0d0,f[0],f[1]-.01,f[2]-.003,.005,.022,.005,Math.PI)});
-    [-1,1].forEach(s=>{const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08));
-      for(let i=0;i<4;i++){const z=(1.5-i)*.016,p=[kn[0]-s*.004,kn[1],kn[2]+z];a181Digit(k,bn+'2',sk,p,[d[0]-s*.15,d[1],d[2]+z*.6],(i==3?.065:.08)*(s>0?.8:1.15),.0085,3,s>0?.5:.26,[0,0,s],s>0?0:.035,0x1a1214)}
-      const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',sk,[tb[0]-s*.01,tb[1],tb[2]+.026],[d[0]-s*.3,d[1]*.6,.75],.05,.009,2,.3,[0,1,0],.02,0x1a1214);
-      const l=s<0?'lh2':'rh2',A=S.J[l];for(let i=0;i<5;i++){const tx=A[0]+(i-2)*.018,tz=A[2]+.16;k.L(l,'c',sk2,[tx,.018,tz-.02],[tx+(i-2)*.004,.012,tz+.012],.009,.007,4);k.L(l,'c',0x1a1214,[tx+(i-2)*.004,.012,tz+.012],[tx+(i-2)*.006,.004,tz+.03],.006,.001,4)}});
+    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,s>0?'fist':'claw',s>0?.8:1.15,0x1a1214,s>0?0:.035);cgToes(k,S,s,sk2,.018)});
     // lank hair: a shell over the crown and the back of the skull, locks down the nape
     cgShell(B,M,m=>m.part=='head'&&m.y>1.58&&(m.s<.1||m.y>1.672-.022*Math.exp(-(m.x/.022)*(m.x/.022))+(Math.abs(m.x)>.05?-.004:0)),v=>.018*Math.min(1,Math.max(.35,(v[1]-1.56)/.12)),m=>a181Nz(0x120c0e,m,.4,24));
     for(let i=0;i<10;i++){const a=Math.PI*(.62+i*.085)*(i%2?1:-1),o=[Math.sin(a)*.3,1.64+a181H(i,3)*.05,Math.cos(a)*.3],p=cgRay(M,o,nrm3([-o[0],0,-o[2]]));if(!p)continue;
@@ -203,7 +202,7 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
 function cgFur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0;
   M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
   const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
-  const lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,24,seed);return .35+1.3*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
   const groove=v=>n3Sn(v[0]*1.4,v[1]*.35,v[2]*1.4,22,seed)<.42,col=m=>{const c=a181Nz(o.col,m,.3,18,seed);return o.col2!=null&&groove([m.x,m.y,m.z])?o.col2:c};
   cgEmit(B,M,col,{t:o.t,pos,keep:(m,fi)=>pick[fi]});
   // clumps along the lower edge: the rim is walked as loops and cut into runs of 2–4 edges; each run hangs as one wide, solid
