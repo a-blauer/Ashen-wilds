@@ -31596,7 +31596,7 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
     if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
      if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
-      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(.2,.55,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v174: solid only within .2-.55 in front of the hero (it was the last 4-16% of the way: a wall a metre in front of the hero stayed)
+      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(-.1,.15,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v175: solid only from the hero's own depth back (v174: .2-.55 in front, which still hid a hero standing at a wall seen at a slant; before: the last 4-16% of the way)
       float near=t>0.&&fr>1.?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
       if(!gl_FrontFacing&&t>0.&&fr>.4)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
      }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)

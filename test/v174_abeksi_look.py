@@ -22,5 +22,20 @@ def s(pg):
         b=pg.evaluate(BOX,st);a=on.crop(tuple(b));c=off.crop(tuple(b))
         dd=sum(abs(x-y) for x,y in zip(a.tobytes(),c.tobytes()))/max(1,a.size[0]*a.size[1])
         print('VIEW ab%d yaw %.2f hero box'%(i,yaw),b,'window vs none',round(dd,1))
+    # the hero standing right at a house wall, the camera on the wall's far side at a slant (owner, v175: "the diagonal wall covering my character")
+    spots=pg.evaluate("""()=>{const I=INSL[30],rc=new THREE.Raycaster(),V3=THREE.Vector3,M=[];AB152.S.root.traverse(o=>{if(o.isMesh&&!o.isInstancedMesh&&o.material&&o.material.side===2)M.push(o)});
+      const out=[];for(let v=20;v<I.h-20&&out.length<4;v+=7)for(let u=20;u<I.w-20&&out.length<4;u+=7){const x=I.x0+u+.5,z=I.y0+v+.5;if(solid(x,z))continue;const y=GH(x,z)+1.1;
+        for(let a=0;a<16;a++){const yw=a/16*Math.PI*2,dir=new V3(Math.sin(yw),0,Math.cos(yw));rc.set(new V3(x,y,z),dir);rc.far=.9;rc.near=0;const H=rc.intersectObjects(M,false);
+          if(H.length){const w=H[0].distance;out.push({x:x+dir.x*(w-.45),z:z+dir.z*(w-.45),yaw:yw+.6});break}}}
+      return out}""")
+    for i,q in enumerate(spots):
+        pg.evaluate("(q)=>{toPos(q.x,q.z,q.yaw);camYaw=q.yaw;camPitch=.35;camDist=9.5;camDD=null;try{snapCam()}catch(_){}return 1}",q);pg.evaluate(FR,60)
+        p=play.TMP+'/v174_wall%d.png'%i;pg.screenshot(path=p,timeout=600000);on=Image.open(p).convert('L')
+        pg.evaluate("()=>{R157.value.set(-2,-1);N157.value.set(-2,-1);return 1}");pg.evaluate(FR,5)
+        p2=play.TMP+'/v174_wall%d_solid.png'%i;pg.screenshot(path=p2,timeout=600000);off=Image.open(p2).convert('L')
+        pg.evaluate("()=>{const r=window.__rr;R157.value.set(r[0],r[1]);N157.value.set(r[2],r[3]);return 1}")
+        b=pg.evaluate(BOX,st);a=on.crop(tuple(b));c=off.crop(tuple(b))
+        dd=sum(abs(x-y) for x,y in zip(a.tobytes(),c.tobytes()))/max(1,a.size[0]*a.size[1])
+        print('VIEW wall%d'%i,json.dumps(q),'hero box',b,'window vs none',round(dd,1))
     print('DONE')
 play.run(s,w=1000,hh=620)
