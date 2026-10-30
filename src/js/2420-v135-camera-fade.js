@@ -6,7 +6,6 @@
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
-// v169: no dither any more: the see-through pixels are left out here and drawn again as glass by 3350 (one rule for all: 0061).
 var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
@@ -16,14 +15,12 @@ var R157={value:new THREE.Vector2(2.3,5.4)};
 var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
 // small 3D previews share these materials but are drawn elsewhere (icons at the world origin), so there they do nothing
-var FX135ON=GH169.ON;   // v169: the see-through passes (0061, 3350) share it
+var FX135ON={value:0};
 {const f=POST.render;POST.render=function(){FX135ON.value=1;try{return f.apply(this,arguments)}finally{FX135ON.value=0}}}
 function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
+  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
   const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
-  // v169: and the town's plain (unlit) atlas material: its glowing windows and glass stayed solid in a see-through wall. Other plain
-  // materials stay out: backdrops such as the desert vista (3292) lie past the instance's edge on purpose
-  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial||(m.isMeshBasicMaterial&&k0==='txa1'))||m.transparent||m.skinning||m.userData.noFade135)return;
   if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
@@ -33,24 +30,18 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     vF135=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform vec2 uR157,uN157;uniform float uM157;uniform float uF135,uOn135;uniform vec4 uClip;varying vec3 vF135;').replace('void main() {',`void main() {
-    float ghw=0.;
     if(uOn135>.5){
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
-    if(dot(uPl-uCam,uPl-uCam)>.0001){
-     if(uM157>.5){   // v169: the see-through rule shared by every world material (0061): a smooth window round the hero, glass, no dither
-      ghw=gh169W(vF135,uCam,uPl);float t=gh169T(vF135,uCam,uPl);
-      if(!gl_FrontFacing&&t>0.&&t<.9)ghw=1.;   // the inside of a two-sided house the camera stands in (Abeksi): black glass
-      ghw*=smoothstep(-.85,-.55,vF135.y-uPl.y);   // never below the hero's knees: floors, paving and bridges stay
-     }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays; plain materials joined in v169: not there)
-      #ifndef GH169_B135
-      vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
-      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
-      f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));
-      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;
-      #endif
-      }}}
-    `+GH169.GATE);if(m.isMeshBasicMaterial)sh.fragmentShader='#define GH169_B135\n'+sh.fragmentShader;gh169Shader(sh,m,'vF135')};
-  m.customProgramCacheKey=()=>k0+'f135';gh169Flag(m,m.side===THREE.DoubleSide,0,-.85);m.needsUpdate=true}
+    if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
+     if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
+      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);f=mix(f,1.,smoothstep(.84,.96,t));f=mix(f,1.,step(t,0.));f=max(f,uF135);
+      float near=t>0.&&t<.85?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
+      if(!gl_FrontFacing&&t>0.&&t<.9)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
+     }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
+      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);}
+     f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));   // never below the hero's knees: floors, paving and bridges stay
+     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+  m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
   try{drops.forEach(d=>d&&d.g&&S.add(d.g))}catch(_){}try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){const q=MP.rh[k];if(q&&q.m)S.add(q.m);if(q&&q.h)S.add(q.h)}}catch(_){}

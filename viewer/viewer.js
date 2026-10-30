@@ -455,7 +455,7 @@ var KVGFX={mode:'full',pr:null};
 KVGFX.rz=0;KVGFX.rzt=[];{const f=POST.resize;POST.resize=function(){KVGFX.rz++;const now=Date.now();KVGFX.rzt.push(now);while(KVGFX.rzt.length&&now-KVGFX.rzt[0]>10000)KVGFX.rzt.shift();
   try{const v=ren.getDrawingBufferSize(new THREE.Vector2());KVGFX.rzs=v.x+'×'+v.y}catch(_){}return f.apply(this,arguments)}}
 function kvGfx(m){KVGFX.mode=m;if(KVGFX.pr==null)KVGFX.pr=ren.getPixelRatio();
-  GH169.on=m=='full'||m=='plain';POST.on=m=='full'||m=='noglass';
+  if(typeof GH169!='undefined')GH169.on=m=='full'||m=='plain';POST.on=m=='full'||m=='noglass';   // v172: GH169 (v169's glass) is gone; 'No glass' then only turns nothing off
   if(KVGFX.qa==null)KVGFX.qa=QL.auto;QL.auto=m=='safe'?false:KVGFX.qa;   // the game's auto quality would reset the pixel ratio
   const pr=m=='safe'?1:KVGFX.pr;if(ren.getPixelRatio()!==pr){ren.setPixelRatio(pr);try{rs()}catch(_){}}
   document.querySelectorAll('#kvGfx button').forEach(b=>b.classList.toggle('on',b.dataset.g==m));
@@ -467,6 +467,6 @@ function kvGfxInfo(){const L=[],E=x=>String(x).replace(/[&<>]/g,c=>({'&':'&amp;'
     L.push('Canvas '+c.width+'×'+c.height+' · shown '+c.clientWidth+'×'+c.clientHeight+' · ratio '+ren.getPixelRatio()+' (device '+(devicePixelRatio||1)+') · quality '+QL.lv);
     L.push('Float buffers '+(gl.getExtension('EXT_color_buffer_float')||gl.getExtension('EXT_color_buffer_half_float')?'yes':'no')+' · max samples '+(ren.capabilities.maxSamples||0)+' · colour-only copies '+(window.KQ170?KQ170.n:'-'));
     L.push('Buffer rebuilds '+KVGFX.rz+' ('+KVGFX.rzt.filter(t=>Date.now()-t<10000).length+' in the last 10 s, last '+(KVGFX.rzs||'-')+') · retro '+(PSXON?'on':'off')+' '+PSXH+' · GL error '+gl.getError());
-    L.push('Look: '+KVGFX.mode+' · see-through '+(GH169.on?'on':'off')+' · post '+(POST.on?'on':'off'))}catch(e){L.push('info error: '+E(e.message))}
+    L.push('Look: '+KVGFX.mode+' · see-through '+(typeof GH169=='undefined'?'v164 window':GH169.on?'on':'off')+' · post '+(POST.on?'on':'off'))}catch(e){L.push('info error: '+E(e.message))}
   const w=(window.KVLOG||[]).slice(-6);L.push(w.length?'Last warnings:<br>'+w.map(x=>'· '+E(x.slice(0,160))).join('<br>'):'No warnings');
   return L.join('<br>')}

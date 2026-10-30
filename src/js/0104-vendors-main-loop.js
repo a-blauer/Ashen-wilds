@@ -92,6 +92,7 @@ function loop(now){
   compSpells(dt);
   const pt0=camPitch,cdd0=(camDist);
   let pTar=pt0,dTar=cdd0;   // v157: walls never move the camera (no tilt-up, no pull-in); whatever stands between it and the hero is cut away instead (2420, 3190)
+  if(typeof cam172Reach=='function')try{dTar=cam172Reach(pl.position,camYaw,pt0,dTar)}catch(_){}   // v172: at the map's outer edge the camera slides in instead of leaving the map (3360)
   camK+=(pTar-camK)*Math.min(1,dt*(pTar>camK?7:2)+.03);
   camDD=(camDD==null?cdd0:camDD);camDD+=(dTar-camDD)*Math.min(1,dt*(dTar<camDD?10:2.2)+.02);const cdd=camDD,pt=camK,cp=V(pl.position.x+Math.sin(camYaw)*Math.cos(pt)*cdd,pl.position.y+1.1+Math.sin(pt)*cdd,pl.position.z+Math.cos(camYaw)*Math.cos(pt)*cdd),lp=V(pl.position.x,pl.position.y+1.0,pl.position.z);
   {const fl=cam157Floor(pl.position,cp);if(fl!=null&&cp.y<fl)cp.y=fl}   // v157: on gentle ground the camera rides above it, smoothly

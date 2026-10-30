@@ -14,7 +14,7 @@ if(PSXON){
 }
 const POST=(()=>{
   let hf=false;try{hf=!!(ren.extensions.get('EXT_color_buffer_float')||ren.extensions.get('EXT_color_buffer_half_float'))}catch(e){}
-  const w2=ren.capabilities.isWebGL2,opt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:true};   // v169: the stencil marks characters for the see-through passes (3350)
+  const w2=ren.capabilities.isWebGL2,opt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:true};
   const T=(w,h,ms)=>{if(ms&&w2){try{const t=new THREE.WebGLMultisampleRenderTarget(w,h,opt);t.samples=4;return t}catch(e){}}return new THREE.WebGLRenderTarget(w,h,opt)};
   const vs='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',oc=new THREE.OrthographicCamera(-1,1,1,-1,0,1),ps=new THREE.Scene(),fq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),null);fq.frustumCulled=false;ps.add(fq);
   const M=(fs,u)=>new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:fs,uniforms:u,depthTest:false,depthWrite:false});
@@ -35,8 +35,8 @@ const POST=(()=>{
    pass(m,src,dst){fq.material=m;if(src)m.uniforms.t.value=src.texture;ren.setRenderTarget(dst);ren.render(ps,oc)},
    render(){
     ren.info.reset();
-    if(!P.on||!r0){ren.setRenderTarget(null);ren.render(scene,cam);if(P.after)P.after();return}
-    ren.setRenderTarget(r0);ren.clear();ren.render(scene,cam);if(P.after)P.after();   // v169: the see-through passes (3350) draw on top
+    if(!P.on||!r0){ren.setRenderTarget(null);ren.render(scene,cam);return}
+    ren.setRenderTarget(r0);ren.clear();ren.render(scene,cam);
     P.pass(mBright,r0,rb1);
     if(mComp.uniforms.rk.value>0){mRay.uniforms.sun.value.copy(ATM.sunU);P.pass(mRay,rb1,rr)} // god rays: off (rk 0) in the default look
     const qw=1/rb1.width,qh=1/rb1.height;
@@ -164,17 +164,11 @@ function windMat(mat,amp,off){
     #else
     vWP2=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
-    // v169: one see-through rule for everything (0061): plants turn see-through above the hero's waist (grass stays), no dark inside.
-    // The intro's Duskhold shots (uM157 0, 2420) keep the old dithered tube, so its rendered video stays the same.
-    sh.uniforms.uM157w=M157;
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
-    float ghw=0.;
-    if(uM157w>.5)ghw=gh169W(vWP2,uCam,uPl)*smoothstep(-.6,-.3,vWP2.y-uPl.y);
-    else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;varying vec3 vWP2;').replace('void main() {',`void main() {
+    {vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
-     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}
-    `+GH169.GATE);gh169Shader(sh,mat,'vWP2',true)};
-  mat.customProgramCacheKey=()=>'ifx';gh169Flag(mat,0,1,-.6);
+     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
+  mat.customProgramCacheKey=()=>'ifx';
 }
 function buildVI(){
   const chk={};buildTerrain(chk);

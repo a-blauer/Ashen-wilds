@@ -63,16 +63,13 @@ function dqPose(e,n,wind,act){const m=e&&e.m;if(!m)return;const id=(m._dqp=(m._d
 // cutaway: den geometry beyond radius rIn and higher than yMin above the floor dissolves (dithered) on the camera's side
 // whenever the camera is outside the den, so walls never hide the fight (the game's default camera sits low and far back)
 function dqCut(base,A,rIn,yMin){rIn*=DK;yMin*=DKY;const m=base.clone();m.userData.lps=1;const U={value:new THREE.Vector4(A.cx,A.cz,GH(A.cx,A.cz),1)},Q={value:new THREE.Vector2(rIn,yMin)};
-  // v169: the cut walls turn to glass with a dark inside (0061), and so does whatever stands between the camera and the hero
-  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
+  m.onBeforeCompile=sh=>{sh.uniforms.uCam=FADE.cam;sh.uniforms.uCut=U;sh.uniforms.uCutR=Q;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWPc;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWPc=(modelMatrix*vec4(transformed,1.)).xyz;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
-    float ghw=0.;
-    if(uCut.w>.5&&vWPc.y>uCut.z+uCutR.y){vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
-     if(lc>uCutR.x-3.&&lf>uCutR.x){float c=dot(fp/lf,cp/lc);ghw=smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);}
-     ghw=max(ghw,gh169W(vWPc,uCam,uPl));}
-    `+GH169.GATE);gh169Shader(sh,m,'vWPc')};
-  m.customProgramCacheKey=()=>'dqcut'+base.type;gh169Flag(m,1);return m}
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;uniform vec4 uCut;uniform vec2 uCutR;varying vec3 vWPc;').replace('void main() {',`void main() {
+    {vec2 cp=uCam.xz-uCut.xy,fp=vWPc.xz-uCut.xy;float lc=length(cp),lf=length(fp);
+     if(uCut.w>.5&&lc>uCutR.x-3.&&lf>uCutR.x&&vWPc.y>uCut.z+uCutR.y){float c=dot(fp/lf,cp/lc);float f=1.-smoothstep(.15,.5,c)*smoothstep(uCutR.x-3.,uCutR.x+1.,lc);
+       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+  m.customProgramCacheKey=()=>'dqcut'+base.type;return m}
 // static den meshes: one soup per material
 function dqMesh(A,S,mat,shadow){const m=S.mesh(mat);m.castShadow=shadow!==false;m.receiveShadow=true;A.g.add(m);return m}
 // block a band of tiles (the den's walls) except the gate
