@@ -18,8 +18,11 @@
 // at the hero, the floor below and more rock — never black, never the space under the map.
 var ED171={VT:-6,k:.3,cap:9,n:3,k2:.22,cap2:8,M:104,on:true,cur:null,st:{fill:0,ms:0,apron:0,floor:0}};
 // 1. the fill (runs inside 0045's height-map block: only what exists by then — HF, W, H, MAP, INSL, smt, fbm2 — may be used)
-function ed171Fill(){const t0=Date.now(),VT=-6,K=.3,CAP=9,NZ=3,DROP=26;let nf=0;   // ED171 (below) does not exist yet: its numbers are repeated here
-  for(const I of INSL){if(!I)continue;const nx=I.w+1,nz=I.h+1,N=nx*nz,x0=I.x0,y0=I.y0;
+function ed171Fill(){const t0=Date.now(),VT=-6,K=.3,CAP=9,NZ=3,DROP=26;let nf=0,miss=0;   // ED171 (below) does not exist yet: its numbers are repeated here
+  // the special instances (3150: Abeksi, the Ascent, the Sandstorm Run, the Sanctum, the Channel) get their records later: their plans
+  const L=INSL.slice();try{if(typeof sp152Defs=='function')sp152Defs().forEach(D=>{if(!L.some(I=>I&&I.g===D.g))L.push(D)})}catch(_){}
+  window.ED171G=new Set();
+  for(const I of L){if(!I)continue;const nx=I.w+1,nz=I.h+1,N=nx*nz,x0=I.x0,y0=I.y0;
     const HI=(i,j)=>(j+HPD)*HW+i+HPD,hv=new Float32Array(N),st=new Uint8Array(N);   // st: 0 void, 1 land, 2 fill (void reached from the edge)
     for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i,h=HF[HI(x0+i,y0+j)];hv[k]=h;st[k]=h>=VT?1:0}
     // void reached from the rectangle's edge
@@ -29,7 +32,8 @@ function ed171Fill(){const t0=Date.now(),VT=-6,K=.3,CAP=9,NZ=3,DROP=26;let nf=0;
     while(qh<qt){const k=q[qh++],i=k%nx,j=(k/nx)|0;
       if(i>0&&!st[k-1]){st[k-1]=2;q[qt++]=k-1}if(i<nx-1&&!st[k+1]){st[k+1]=2;q[qt++]=k+1}
       if(j>0&&!st[k-nx]){st[k-nx]=2;q[qt++]=k-nx}if(j<nz-1&&!st[k+nx]){st[k+nx]=2;q[qt++]=k+nx}}
-    if(!qt)continue;let land=0;for(let k=0;k<N;k++)if(st[k]===1){land=1;break}if(!land)continue;
+    let land=0;for(let k=0;k<N;k++)if(st[k]===1){land=1;break}if(!land)continue;
+    if(!qt){I.ed171=1;ED171G.add(I.g);continue}   // no void to fill (land to the edge all round): only the apron
     // distance to the nearest land, that land's height and whether you can walk there (two chamfer passes)
     const d=new Float32Array(N),hc=new Float32Array(N),wk=new Uint8Array(N);
     // a ledge: land at the void within 3.5 tiles of walkable ground (rim tiles reach 2.6 past it) and no higher than the land round it
@@ -39,19 +43,22 @@ function ed171Fill(){const t0=Date.now(),VT=-6,K=.3,CAP=9,NZ=3,DROP=26;let nf=0;
       const dw=MAP.DW[Math.min(H-1,y0+j)*W+Math.min(W-1,x0+i)];if(dw==null||dw>=3.5)continue;let mn=1e9;
       for(let dj=-4;dj<=4;dj++)for(let di=-4;di<=4;di++){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k2=jj*nx+ii;if(st[k2]===1&&hv[k2]<mn)mn=hv[k2]}
       wk[k]=hv[k]<mn+2.5?1:0}
-    const rel=(k,k2,c)=>{if(st[k]!==2||st[k2]===0)return;const v=d[k2]+c;if(v<d[k]){d[k]=v;hc[k]=hc[k2];wk[k]=wk[k2]}};
-    for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(i>0)rel(k,k-1,1);if(j>0){rel(k,k-nx,1);if(i>0)rel(k,k-nx-1,1.414);if(i<nx-1)rel(k,k-nx+1,1.414)}}
-    for(let j=nz-1;j>=0;j--)for(let i=nx-1;i>=0;i--){const k=j*nx+i;if(i<nx-1)rel(k,k+1,1);if(j<nz-1){rel(k,k+nx,1);if(i<nx-1)rel(k,k+nx+1,1.414);if(i>0)rel(k,k+nx-1,1.414)}}
+    // spread outward from the land through the fill, breadth first (8 neighbours; every fill point reached, however winding)
+    qh=0;qt=0;for(let k=0;k<N;k++)if(st[k]===1){const i=k%nx,j=(k/nx)|0;if((i>0&&st[k-1]===2)||(i<nx-1&&st[k+1]===2)||(j>0&&st[k-nx]===2)||(j<nz-1&&st[k+nx]===2))q[qt++]=k}
+    const NB=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+    while(qh<qt){const k=q[qh++],i=k%nx,j=(k/nx)|0;
+      for(const [di,dj,c] of NB){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k2=jj*nx+ii;if(st[k2]!==2)continue;const v=d[k]+c;
+        if(d[k2]>=1e8){d[k2]=v;hc[k2]=hc[k];wk[k2]=wk[k];q[qt++]=k2}else if(v<d[k2]-.01){d[k2]=v;hc[k2]=hc[k];wk[k2]=wk[k]}}}
     // where the land you can walk on meets the void (a ledge, a lip: Hilltop Ascent, roads to the edge) the drop stays a drop: the
     // rock lies DROP below it there, rising back slowly; next to a wall it carries on from the wall's top. Smoothed across (land fixed).
     let a=new Float32Array(N),b=new Float32Array(N);for(let k=0;k<N;k++)a[k]=st[k]===2?hc[k]-(wk[k]?DROP:0):hv[k];
-    for(let p=0;p<6;p++){for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(st[k]!==2){b[k]=a[k];continue}let s=0,n=0;
+    for(let p=0;p<4;p++){for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(st[k]!==2){b[k]=a[k];continue}let s=0,n=0;
         for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k2=jj*nx+ii;if(st[k2]===0)continue;s+=a[k2];n++}
         b[k]=n?s/n:a[k]}const t=a;a=b;b=t}
-    for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(st[k]!==2||d[k]>=1e8)continue;const x=x0+i,z=y0+j,dd=d[k],dr=wk[k]?Math.max(0,dd-3):dd;
+    for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(st[k]!==2)continue;if(d[k]>=1e8){miss++;continue}const x=x0+i,z=y0+j,dd=d[k],dr=wk[k]?Math.max(0,dd-3):dd;
       HF[HI(x,z)]=a[k]+Math.min(CAP,dr*K)+NZ*(fbm2(x*.06+31,z*.06+17,3)-.5)*2*smt(1,10,dd);nf++}
-    I.ed171=1}
-  window.ED171F={fill:nf,ms:Date.now()-t0}}
+    I.ed171=1;ED171G.add(I.g)}
+  window.ED171F={fill:nf,miss,ms:Date.now()-t0}}
 // 2. the apron: heights past the rectangle. The rectangle's edge as one loop (perimeter position s), raw and smoothed.
 function ed171Edge(I){if(I._ed171E)return I._ed171E;const w=I.w,h=I.h,P=2*(w+h),raw=new Float32Array(P);
   for(let s=0;s<P;s++){const q=ed171S2P(I,s);raw[s]=GH(q[0],q[1])}
@@ -62,7 +69,8 @@ function ed171P2S(I,x,z){const w=I.w,h=I.h,dx=x-I.x0,dz=z-I.y0;
   if(dz<=0)return Math.max(0,Math.min(w,dx));if(dx>=w)return w+Math.max(0,Math.min(h,dz));if(dz>=h)return w+h+Math.max(0,Math.min(w,w-dx));return 2*w+h+Math.max(0,Math.min(h,h-dz))}
 function ed171Lk(a,P,s){const i=Math.floor(s),f=s-i;return a[((i%P)+P)%P]*(1-f)+a[(((i+1)%P)+P)%P]*f}
 // the height at (x, z) past the rectangle (null inside it)
-function ed171H(I,x,z){if(!I||!I.ed171)return null;const qx=Math.max(I.x0,Math.min(I.x0+I.w,x)),qz=Math.max(I.y0,Math.min(I.y0+I.h,z)),d=Math.hypot(x-qx,z-qz);if(d<=0)return null;
+function ed171Done(I){return !!I&&(!!I.ed171||(typeof ED171G!='undefined'&&ED171G.has(I.g)))}
+function ed171H(I,x,z){if(!ed171Done(I))return null;const qx=Math.max(I.x0,Math.min(I.x0+I.w,x)),qz=Math.max(I.y0,Math.min(I.y0+I.h,z)),d=Math.hypot(x-qx,z-qz);if(d<=0)return null;
   const E=ed171Edge(I),s=ed171P2S(I,qx,qz),b=ed171Lk(E.raw,E.P,s)*(1-smt(0,16,d))+ed171Lk(E.sm,E.P,s)*smt(0,16,d);
   return b+Math.min(ED171.cap2,d*ED171.k2)+ED171.n*(fbm2(x*.05+7,z*.05+3,3)-.5)*2*smt(2,14,d)}
 // the steps out from the edge: 2 tiles to 16, 4 to 48, then 8
@@ -108,7 +116,7 @@ function ed171Floor(I){let mn=1e9;for(let z=I.y0;z<=I.y0+I.h;z+=2)for(let x=I.x0
   const m=new THREE.Mesh(g,mat);m.name='ed171Floor';m.receiveShadow=false;m.castShadow=false;m.userData.cast=false;m.userData.noFade135=1;m.userData.psNo=1;
   ED171.st.floor=idx.length/3;ED171.st.fy=+y.toFixed(2);return m}
 // keep the apron and floor of the instance you are in (built on arrival, the last one freed)
-function ed171Tick(){const k=cvKey(),I=k>=0?INSL[k]:null,on=ED171.on&&!!I&&!!I.ed171;const C=ED171.cur;
+function ed171Tick(){const k=cvKey(),I=k>=0?INSL[k]:null,on=ED171.on&&ed171Done(I);const C=ED171.cur;
   if(C&&(!on||C.k!==k)){[C.a,C.f].forEach(o=>{if(!o)return;scene.remove(o);o.geometry.dispose();if(o.material!==ED171.mat)o.material.dispose()});ED171.cur=null}
   if(!on||ED171.cur)return;
   try{const a=ed171Apron(I),f=ed171Floor(I);ED171.R.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);scene.add(a);scene.add(f);ED171.cur={k,a,f}}

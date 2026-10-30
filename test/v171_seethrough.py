@@ -66,11 +66,11 @@ def s(pg):
       return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)].map(Math.round)}"""
     if NEW:
         # 0. the fill: no void left round any instance's land, reached from its rectangle's edge
-        r=pg.evaluate("""()=>{const o=[];let n=0;for(const I of INSL){if(!I||!I.ed171)continue;n++;let bad=0;
-            for(let i=0;i<=I.w;i++)for(const j of [0,I.h])if(GH(I.x0+i,I.y0+j)<-6)bad++;for(let j=0;j<=I.h;j++)for(const i of [0,I.w])if(GH(I.x0+i,I.y0+j)<-6)bad++;
-            if(bad)o.push('g'+I.g+': '+bad+' edge points still void')}return {n,o,st:window.ED171F}}""")
+        r=pg.evaluate("""()=>{const o=[];let n=0;for(const I of INSL){if(!I||!ed171Done(I))continue;n++;let bad=0;   // void is -35 or lower; a ledge's rock lies 26 under it
+            for(let i=0;i<=I.w;i++)for(const j of [0,I.h])if(GH(I.x0+i,I.y0+j)<-34)bad++;for(let j=0;j<=I.h;j++)for(const i of [0,I.w])if(GH(I.x0+i,I.y0+j)<-34)bad++;
+            if(bad)o.push('g'+I.g+': '+bad+' edge points still void')}if(window.ED171F&&ED171F.miss)o.push(ED171F.miss+' fill points never reached');return {n,o,st:window.ED171F}}""")
         print('fill',json.dumps(r['st']),'instances',r['n'])
-        if r['n']<30:fail('fill: only',r['n'],'instances filled')
+        if r['n']<35:fail('fill: only',r['n'],'instances filled')
         for x in r['o']:fail('fill:',x)
     # 1. a cave wall between the camera and the hero (Glowmire, field II): the ground turns to glass, the hero shows through
     q=pg.evaluate(CAVE,1);pg.wait_for_timeout(2000)
