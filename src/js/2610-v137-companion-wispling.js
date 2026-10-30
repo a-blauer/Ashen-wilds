@@ -55,7 +55,7 @@ LPR.Wispling={
     [-1,1].forEach(s=>{k.p('head','box','c',0x010204,s*.046,1.0,.085,.05,.032,.02,0,s*.3,s*.28);k.p('head','box','g',eye,s*.048,1.0,.097,.034,.012,.006,0,s*.3,s*.28);
       k.p('head','sph','g',mdSh(eye,1.2),s*.052,1.002,.1,.008,.006,.004)});
     // the glowing heart and wispy fingers
-    k.p('chest','ico','g',glow,0,.72,.06,.05);k.L('chest','g',glow,[0,.74,.04],[0,.79,-.16],.008,.004,4); // v173: a soul thread holds the heart to the robe's back
+    k.p('chest','ico','g',glow,0,.72,.06,.05);k.L('chest','g',glow,[0,.74,.04],[0,.79,-.215],.008,.004,4); // v173: a soul thread holds the heart to the robe's back
     // a ghostly forearm out of each bell sleeve (from its wall), a palm and three wispy fingers (they hung in the sleeve's mouth)
     [['fl2',-.225],['fr2',.225]].forEach(f=>{const s=Math.sign(f[1]);k.L(f[0],'g',0xa8dcf8,[s*.214,.645,.072],[f[1],.545,.098],.074,.03,6);k.p(f[0],'sph','g',0xbfeaff,f[1],.54,.1,.036,.03,.038);
       [-1,0,1].forEach(i=>k.L(f[0],'g',0xbfeaff,[f[1]+i*.014,.53,.105],[f[1]+i*.025,.47,.125],.011,.002,4))});

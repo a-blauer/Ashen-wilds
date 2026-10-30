@@ -255,7 +255,7 @@ function cs150WQEvo(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},blk=0x0c0a0e,top=(
   {const h=E.top(0,-.62);if(h)E.pd('oct','g',P.glow,E.add(h.p,h.n,.012),h.n,[.018,.024,.018])}
   if(L>=2){// a row of black spines down each side of the abdomen's crown, gold bands on the four high knees
     [-1,1].forEach(s=>{for(let i=0;i<6;i++){const z=-.38-i*.085,x=s*(.15-Math.abs(i-2.5)*.008),h=E.top(x,z);if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,E.nrm([h.n[0]*.6,1,-.5]),.07+(i%2)*.02),.016,.002,'c',blk,4)}
-      [0,1,2,3].forEach(i=>{const G=CS150.leg('Widowqueen',s,i).P;E.band(v150Lerp(G[0],G[1],.82),[G[1][0]-G[0][0],G[1][1]-G[0][1],G[1][2]-G[0][2]],.003,.006,'m',P.trim,6,{bn:G.k+'0'})})})}
+      [0,1,2,3].forEach(i=>{const LG=CS150.leg('Widowqueen',s,i),G=LG.P;E.band(v150Lerp(G[0],G[1],.82),[G[1][0]-G[0][0],G[1][1]-G[0][1],G[1][2]-G[0][2]],.003,.006,'m',P.trim,6,{bn:LG.k+'0'})})})}
   if(L>=3){// black-steel plates over the cephalothorax, silk strands hanging from the widest part of the abdomen
     [.04,.14,.24].forEach((z,i)=>{const h=E.top(0,z);if(h)E.pd('hem','m',P.metal,E.add(h.p,h.n,-.004),h.n,[.1-i*.012,.026,.06],[0,0,1])});
     [-1,1].forEach(s=>{for(let i=0;i<5;i++){const z=-.4-i*.1,h=E.on([s*2,.69,z],[-s,0,0]);if(!h)continue;const a=E.add(h.p,[s*.004,0,0]),b=E.add(a,[s*.03,-.2-(i%2)*.08,-.03]);
@@ -282,7 +282,7 @@ function cs150HMEvo(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},SAC=CS150.hmSac,wa
     [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i).P,p=v150Lerp(G[0],G[1],.55);E.pd('hem','m',P.metal,E.add(p,[0,.035,0]),[s*.3,1,0],[.05,.03,.06],null,{bn:G.k+'0'})}))}
   if(L>=4){// a crown of horns tipped in gold, gold bands on the legs
     for(let i=0;i<5;i++){const a=(i/4-.5)*2.2,b=[Math.sin(a)*.09,.47,.4+Math.cos(a)*.02];E.horn(b,[Math.sin(a)*.6,1,-.5],[0,0,-.03],.11-Math.abs(i-2)*.015,.016,'c',P.dark,4,hb,P.trim)}
-    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i).P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:G.k+'1'})}))}
+    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const LG=CS150.leg('Hivemother',s,i),G=LG.P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:LG.k+'1'})}))} // v173: on the leg bone (G.k was undefined: the bands rode the hips)
   if(L>=5){// the brood stirs: glowing grubs on the sac, a glowing seam along the top of the sac
     for(let i=0;i<10;i++){const h=sacHit(-.55-(i%5)*.13,.4+i*.27);if(h)E.pd('ico','g',i%2?P.glow:P.glow2,E.add(h.p,h.n,.012),h.n,[.016,.026,.016])}
     let prev=null;for(let j=0;j<8;j++){const h=E.top(0,-.5-j*.1),p=h?E.add(h.p,h.n,.012):null;if(p&&prev)E.L(prev,p,.008,.008,'g',P.glow,3,{vs:1});prev=p}}}
@@ -291,7 +291,7 @@ function lb150Evo(E,L,P){const B=boneP,hb={bn:'head'},nb={bn:'neck'};
   [-1,1].forEach(s=>{const e=B([s*.057,.7,.577]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,hb);if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,hb)});
   {const nk=B([0,.675,.425]),ring=[];for(let i=0;i<10;i++){const a=i/10*6.283;ring.push(E.add(nk,[Math.cos(a)*.036,Math.sin(a)*.042,0]))}
     for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1});
-    EVO100_M.charm(E,E.add(nk,[0,-.044,0]),.08,P.glow,'gem',nb)}
+    EVO100_M.charm(E,E.add(nk,[0,-.04,.012]),.08,P.glow,'gem')}
   if(L>=2){// glowing runes on the robe's flanks, spectral ribbons from the horn tips
     [-1,1].forEach(s=>[.21,.07].forEach(z=>{const h=E.on([s*2,B([0,.6,z])[1],B([0,0,z])[2]],[-s,0,0]);if(h)E.rune(h,[0,0,1],.05,P.glow)}));
     [-1,1].forEach(s=>{const t=B([s*.21,.64,.43]);E.L(t,E.add(t,[s*.02,-.07,-.04]),.012,.002,'g',P.glow2,4,hb)})}

@@ -46,7 +46,7 @@ LPR.Gravewyrm={
       k.p('head','box','c',0x050403,s*.104,.406,.692,.004,.022,.004,0,s*.55,0);
       k.p('head','box','c',ven?dk:bone2,s*.085,.44,.64,.06,.016,.09,.15,s*.45,s*.25);
       // nostrils
-      k.p('head','sph','c',0x0a0908,s*.022,.392,.85,.008,.006,.008);
+      k.p('head','sph','c',0x0a0908,s*.02,.364,.846,.008,.006,.008); // v173: on the snout (they floated 2 cm above it)
       // fangs
       k.p('head','cone4','c',0xf4eee0,s*.05,.312,.79,.012,ven?.085:.06,.012,Math.PI+.15,0,0);
       k.p('head','cone4','c',0xf4eee0,s*.08,.322,.71,.009,.04,.009,Math.PI)});
@@ -76,7 +76,7 @@ LPR.Gravewyrm={
       {const a=H(-.075,.08,-.033),b=H(.075,.08,-.033),m=H(0,.105,-.033);k.L('neck','c',dkr,a,m,.01,.01,3).L('neck','c',dkr,m,b,.01,.01,3)}
       // big head plates, cheek venom glands, heat pits
       [[0,.462,.6,.05,.012,.06],[-.035,.458,.68,.03,.01,.04],[.035,.458,.68,.03,.01,.04],[0,.452,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],q[1],q[2],q[3],q[4],q[5],-.08,0,0));
-      [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.05,.4,.81,.007,.006,.006)});
+      [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.046,.366,.806,.007,.006,.006)});
       // a ridge of keeled scales down the back
       for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.004,z,.022,.014,.03)}
       // a crest of small scales on the head, and a rattle on the tail

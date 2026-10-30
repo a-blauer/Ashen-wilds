@@ -10,7 +10,7 @@ import os,sys,re,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import play
-from float_lib import floating
+from float_lib import floating_fast as floating
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'))
 JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimationFrame=()=>0;
   if(!window._v173){window._v173=1;const tag=(r,key)=>{(Array.isArray(r)?r:[r]).forEach(m=>{if(m&&m.isMesh)m.userData._bk=String(key||'').split('|').slice(0,2).join('|')})};

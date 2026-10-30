@@ -6,7 +6,7 @@ EVO100.D.Boneling={glow:0x6aff9a,ownGlow:1,build(E,L,P){
   [-1,1].forEach(s=>{const e=B([s*.055,.625,.575]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,{bn:'head'});if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,{bn:'head'})});
   const nk=B([0,.56,.38]);const ring=[];for(let i=0;i<10;i++){const a=i/10*6.283;ring.push(E.add(nk,[Math.cos(a)*.03,.012+Math.sin(a)*.042,0]))}
   for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1}); // v173: follows the neck as it bends
-  M.charm(E,E.add(nk,[0,-.034,0]),.08,P.glow,'gem',{bn:'neck'});
+  M.charm(E,E.add(nk,[0,-.03,.012]),.08,P.glow,'gem');
   if(L>=2){// ghostly flame ribbon along the spine, bigger back-swept horns, soul-fire in the ribcage
     for(let i=0;i<6;i++){const p=B([0,.6,.34-i*.1]);E.L(p,E.add(p,[0,.07-i*.004,-.06]),.018,.002,'g',i%2?P.glow:P.glowD,4)}
     [-1,1].forEach(s=>E.horn(B([s*.1,.71,.38]),[s*.3,.5,-1],[0,-.05,-.03],.16,.018,'c',P.boneD,5,{bn:'head'}));

@@ -47,8 +47,8 @@ EVO100.D.Mossfrog={glow:0xb8ff4a,build(E,L,P){
     const lt=E.top(0,.33),b=lt?lt.p[1]-.01:.45; // v173: the lure grows from the head (it was drawn 3 cm above it)
     E.chain([[0,b,.33],[0,b+.08,.36],[0,b+.12,.42],[0,b+.1,.48]],.016,.007,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,b+.08,.49],[0,1,0],.026,null,{bn:'head'});E.pd('ico','g',P.glow2,[0,b+.08,.49],[0,1,0],.014,null,{bn:'head'});
     [0,1,2].forEach(i=>E.L([0,b+.045+i*.025,.35+i*.03],[0,b+.08+i*.025,.33+i*.03],.006,.001,'c',P.boneD,3,{bn:'head'}));
-    [-1,1].forEach(s=>{const c=[s*.12,.42,.34],A=new THREE.Vector3(s*.4,.9,.5).normalize(),U=new THREE.Vector3(1,0,0).sub(A.clone().multiplyScalar(A.x)).normalize(),V2=new THREE.Vector3().crossVectors(A,U),rp=[];
-      for(let k=0;k<10;k++){const a=k/10*6.283;rp.push(E.add(c,U.clone().multiplyScalar(Math.cos(a)).add(V2.clone().multiplyScalar(Math.sin(a))).toArray(),.067))}
+    [-1,1].forEach(s=>{const c=[s*.12,.415,.34],A=new THREE.Vector3(s*.4,.9,.5).normalize(),U=new THREE.Vector3(1,0,0).sub(A.clone().multiplyScalar(A.x)).normalize(),V2=new THREE.Vector3().crossVectors(A,U),rp=[];
+      for(let k=0;k<10;k++){const a=k/10*6.283;rp.push(E.add(c,U.clone().multiplyScalar(Math.cos(a)).add(V2.clone().multiplyScalar(Math.sin(a))).toArray(),.057))}
       for(let k=0;k<10;k++)E.L(rp[k],rp[(k+1)%10],.006,.006,'g',P.glow,4,{bn:'head'})});
     for(let i=-2;i<=2;i++)E.L([i*.04,.226,.36],[i*.05,.14,.375],.016,.002,'c',moss,3,{bn:'jaw'})}
   if(L>=5){// toxic spines along the back with glowing tips

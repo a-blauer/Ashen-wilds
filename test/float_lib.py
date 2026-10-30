@@ -102,3 +102,49 @@ def ray_hits(o,d,T,maxd=.6):
     e1=T[:,1]-T[:,0];e2=T[:,2]-T[:,0];h=np.cross(d,e2);a=(e1*h).sum(1);ok=np.abs(a)>1e-12;f=np.where(ok,1/np.where(ok,a,1),0)
     s_=o-T[:,0];u=f*(s_*h).sum(1);q=np.cross(s_,e1);v=f*(q@d);t=f*(e2*q).sum(1)
     return bool((ok&(u>=0)&(v>=0)&(u+v<=1)&(t>1e-6)&(t<maxd)).any())
+
+def floating_fast(V,thr,root=None):
+    # same rule as floating(), built as a graph: two pieces are joined when they come within thr of each other (or an edge
+    # of one passes through the other); the attached set is everything joined to the root piece. Much faster on models
+    # with hundreds of separate parts (companion kits).
+    T,lab=components(V);n=lab.max()+1
+    if n<=1:return []
+    sizes=np.bincount(lab)
+    if root is not None and root.any():big=int(np.bincount(lab[root],minlength=n).argmax())
+    else:big=int(sizes.argmax())
+    cen=T.mean(1);rad=np.linalg.norm(T-cen[:,None,:],axis=2).max(1);tree=cKDTree(cen);rmax=rad.max()
+    order=np.argsort(lab,kind='stable');starts=np.searchsorted(lab[order],np.arange(n+1))
+    tris_of=lambda c:order[starts[c]:starts[c+1]]
+    Qs=[]
+    for c in range(n):
+        tc=T[tris_of(c)];Q=np.concatenate([tc.reshape(-1,3),((tc+np.roll(tc,1,axis=1))/2).reshape(-1,3),tc.mean(1)]);Qs.append(np.unique(np.round(Q,5),axis=0))
+    adj=[set() for _ in range(n)]
+    for c in range(n):
+        near=tree.query_ball_point(Qs[c],rmax+thr)
+        cand=np.unique(np.fromiter((i for L in near for i in L),dtype=np.int64)) if len(near) else np.zeros(0,np.int64)
+        cand=cand[lab[cand]!=c]
+        for d in np.unique(lab[cand]):
+            if d in adj[c]:continue
+            idx=cand[lab[cand]==d];A,B,C=T[idx,0],T[idx,1],T[idx,2];m=len(idx);Q=Qs[c];step=max(1,400000//m);hit=False
+            for j in range(0,len(Q),step):
+                q=Q[j:j+step];k=len(q)
+                if pt_tri_dist(np.repeat(q,m,0),np.tile(A,(k,1)),np.tile(B,(k,1)),np.tile(C,(k,1))).min()<=thr:hit=True;break
+            if not hit:
+                tc=T[tris_of(c)];E=np.concatenate([tc[:,[0,1]],tc[:,[1,2]],tc[:,[2,0]]]);At=T[idx]
+                for a,b in E:
+                    dd=b-a;L=np.linalg.norm(dd)
+                    if L>1e-9 and ray_hits(a,dd/L,At,L):hit=True;break
+            if hit:adj[c].add(d);adj[d].add(c)
+    seen={big};st=[big]
+    while st:
+        c=st.pop()
+        for d in adj[c]:
+            if d not in seen:seen.add(d);st.append(d)
+    att=np.isin(lab,list(seen));At=T[att];out=[]
+    Dd=[np.array(v,float) for v in ([1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1])]
+    for c in range(n):
+        if c in seen:continue
+        o=Qs[c].mean(0)
+        if all(ray_hits(o,d,At) for d in Dd):continue
+        out.append((c,sizes[c],o,piece_dist(Qs[c],T,tree,att,rmax,thr)))
+    return out

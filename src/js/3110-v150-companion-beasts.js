@@ -212,7 +212,7 @@ function el150Kit(k,c,C,red){const K=el150Cols(C),R=EL150.body,cream=K.cream.get
   // forward-facing almond eyes with slit pupils, dark eye-liner, a pale brow streak
   [-1,1].forEach(s=>{const x=s*.044,y=.637,z=bz150Front(R,Math.abs(x),y,.5,.7);
     k.p('head','sph','c',black,x,y,z-.006,.028,.02,.014,0,s*.35,s*-.25);k.p('head','sph','g',eye,x+s*.002,y,z-.002,.022,.015,.01,0,s*.35,s*-.25);
-    k.p('head','box','c',0x000000,x+s*.004,y,z+.005,.004,.022,.004,0,s*.35,0);k.p('head','sph','g',0xffffff,x-s*.006,y+.007,z+.004,.004,.004,.003);
+    k.p('head','box','c',0x000000,x+s*.004,y,z+.005,.004,.022,.004,0,s*.35,0); // v173: no cartoon sparkle
     k.L('head','c',black,[x+s*.018,y-.012,z-.008],[x+s*.04,y-.035,z-.04],.005,.003,3)});
   // nose leather, split lip, small fangs; the chin on the jaw with a dark mouth
   k.p('head','box','c',0x2a1612,0,.608,.656,.022,.012,.012,-.3,0,0);k.L('head','c',0x2a1410,[0,.598,.658],[0,.575,.648],.004,.004,3);

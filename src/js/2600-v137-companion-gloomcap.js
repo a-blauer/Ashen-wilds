@@ -39,19 +39,19 @@ LPR.Gloomcap={
     const R=(y,rx,f,bk,b,o)=>Object.assign({p:[0,y,0],rx,ryT:f,ryB:bk,b},o||{});
     // the stem: wide soft base, belly in front, narrowing to the cap; the top (the face) rides the head bone
     const st=spore?[R(.03,.12,.115,.115,['pelvis','pelvis',0]),R(.09,.15,.15,.14,['pelvis','pelvis',0]),R(.18,.165,.17,.155,['pelvis','pelvis',0]),R(.3,.155,.16,.145,['pelvis','spine',.4]),
-        R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.45]),R(.67,.112,.122,.108,['chest','head',.85]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0])]
+        R(.42,.14,.145,.13,['spine','spine',0]),R(.52,.13,.135,.122,['spine','chest',.6]),R(.6,.12,.128,.115,['chest','head',.45]),R(.67,.112,.122,.108,['chest','head',.85]),R(.73,.104,.108,.1,['head','head',0]),R(.79,.094,.096,.09,['head','head',0]),R(.84,.086,.088,.084,['head','head',0])]
       :[R(.03,.13,.12,.12,['pelvis','pelvis',0]),R(.08,.175,.17,.16,['pelvis','pelvis',0]),R(.16,.2,.21,.18,['pelvis','pelvis',0]),R(.26,.195,.205,.175,['pelvis','spine',.3]),
-        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.3]),R(.62,.132,.138,.124,['chest','head',.75]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0])];
+        R(.36,.175,.18,.16,['spine','spine',0]),R(.46,.155,.158,.145,['spine','chest',.6]),R(.55,.14,.145,.13,['chest','head',.3]),R(.62,.132,.138,.124,['chest','head',.75]),R(.68,.124,.13,.118,['head','head',0]),R(.73,.114,.118,.11,['head','head',0]),R(.78,.102,.104,.098,['head','head',0]),R(.83,.09,.092,.088,['head','head',0])]; // v173: the stem runs up into the cap (it stopped short of the gill disc)
     const lofts=[{rings:st,seg:16,ref:[0,0,1],capA:1,paint:(o,r,s,cc)=>{o.copy(stalk);if(s<-.3)o.lerp(stalkD,.35);if(Math.abs(Math.sin((cc+s)*7+r.p[1]*30))>.86)o.lerp(stalkD,.4);
         const t=Math.max(0,(.2-r.p[1])*5);if(t>0)o.lerp(dirt,Math.min(.75,t));if(r.p[1]>.5&&s<-.2)o.lerp(capD,.25)}}];
     // the skirt (annulus): a tattered collar hanging under the cap
-    lofts.push({rings:[R(.735,.117,.121,.113,['head','head',0]),R(.715,.14,.144,.134,['head','head',0],{j:.1}),R(.7,.152,.155,.146,['head','head',0],{j:.16})],seg:16,ref:[0,0,1],
+    lofts.push({rings:[R(.735,spore?.106:.117,spore?.11:.121,spore?.102:.113,['head','head',0]),R(.715,.14,.144,.134,['head','head',0],{j:.1}),R(.7,.152,.155,.146,['head','head',0],{j:.16})],seg:16,ref:[0,0,1],
       paint:(o,r,s)=>{o.copy(stalk).multiplyScalar(.92);if(r.p[1]<.71)o.lerp(stalkD,.45)}});
     // the cap: the curled rim, then the dome; a separate underside (gill disc) from the stem to the rim
     const CP=GC137_CAP[sp];lofts.push({rings:CP.map(([y,r],i)=>R(y,r,r,r,['head','head',0],{i,j:i<2?.05:0})),seg:20,ref:[0,0,1],capB:1,
       paint:(o,r,s,cc,i)=>{o.copy(cap);if(i<=1)o.lerp(capD,.4);else if(i==2)o.lerp(capL,.25);if(i>=5)o.lerp(capD,.3);
         if(spore)o.lerp(capD,.45)}});
-    lofts.push({rings:[R(CP[0][0]+.04,.09,.09,.09,['head','head',0]),R(CP[0][0]+.03,.2,.2,.2,['head','head',0]),R(CP[0][0]+.017,CP[0][1]*.82,CP[0][1]*.82,CP[0][1]*.82,['head','head',0]),R(CP[0][0]+.005,CP[0][1]-.004,CP[0][1]-.004,CP[0][1]-.004,['head','head',0])],
+    lofts.push({rings:[R(CP[0][0]+.04,.08,.08,.08,['head','head',0]),R(CP[0][0]+.03,.2,.2,.2,['head','head',0]),R(CP[0][0]+.017,CP[0][1]*.82,CP[0][1]*.82,CP[0][1]*.82,['head','head',0]),R(CP[0][0]+.004,CP[0][1]-.0015,CP[0][1]-.0015,CP[0][1]-.0015,['head','head',0])],
       seg:20,ref:[0,0,1],paint:(o,r)=>{o.copy(gill);if(r.rx>.3)o.lerp(capD,.4)}});
     // stubby root legs ending in splayed feet
     ['hl','hr'].forEach((k,i)=>{const x=i?.085:-.085;lofts.push({rings:[R(.24,.075,.075,.075,['pelvis',k+'0',.5]),R(.15,.072,.072,.072,[k+'0',k+'1',.5]),R(.07,.07,.07,.07,[k+'1',k+'2',.6]),R(.02,.088,.095,.08,[k+'2',k+'2',0])].map(r=>(r.p[0]=x,r)),
@@ -76,12 +76,13 @@ LPR.Gloomcap={
     // the face under the brim (head bone): sockets, glowing eyes, brows, cheeks, the mouth (lower lip on the jaw)
     const fz=y=>y>.7?.122:y>.64?.132:.14;
     [-1,1].forEach(s=>{const y=spore?.66:.675,z=fz(y)-.012;
-      k.p('head','sph','c',soc,s*.052,y,z,.042,.035,.022,0,s*.35,0);k.p('head','sph','g',eye,s*.054,y,z+.012,.03,.024,.01,0,s*.35,0);
-      k.p('head','sph','g',0xffffff,s*.047,y+.008,z+.02,.006,.006,.004);
-      k.p('head','box','c',spore?0x6a5a40:0x5a4234,s*.055,y+.034,z+.006,.05,.012,.02,0,s*.3,s*-.35);
-      k.p('head','sph','c',spore?0xd8b898:0xe0a8a0,s*.088,y-.045,z-.01,.026,.018,.014,0,s*.6,0)});
-    {const y=spore?.6:.61,z=fz(y);k.p('head','box','c',0x140808,0,y,z-.004,.08,.022,.02);for(let i=-3;i<=3;i++)if(i)k.p('head','cone4','c',0xece4cc,i*.0105,y+.006,z+.004,.004,.014,.004,Math.PI);
-      k.p('jaw','box','c',stalk,0,y-.016,z+.002,.086,.014,.022);for(let i=-2;i<=2;i++)k.p('jaw','cone4','c',0xece4cc,i*.013,y-.008,z+.006,.004,.012,.004)}
+      // v173 (owner: not cartoony): deep sockets with small, slanted glowing eyes, a heavy brow (the
+      // big round eyes with white sparkles and pink blush read as a cartoon)
+      k.p('head','sph','c',soc,s*.052,y,z,.042,.032,.022,0,s*.35,s*.18);k.p('head','sph','g',eye,s*.054,y-.002,z+.014,.02,.012,.01,0,s*.35,s*.25);
+      k.p('head','box','c',spore?0x5a4a34:0x4a3428,s*.052,y+.026,z+.008,.06,.016,.024,.25,s*.3,s*-.42);
+      });
+    {const y=spore?.6:.61,z=fz(y);k.p('head','box','c',0x140808,0,y,z-.004,.08,.022,.02);for(let i=-3;i<=3;i++)if(i)k.p('head','cone4','c',Math.abs(i)%2?0xb8aa84:0xa89a74,i*.0105,y+.006,z+.004,.004,.012+((i*7+21)%3)*.004,.004,Math.PI+(i%2?.12:-.1));
+      k.p('jaw','box','c',stalk,0,y-.016,z+.002,.086,.014,.022);for(let i=-2;i<=2;i++)k.p('jaw','cone4','c',i%2?0xb8aa84:0xa89a74,i*.013,y-.008,z+.006,.004,.009+((i*5+10)%3)*.004,.004,i*.08)}
     // nub fingers and root toes
     [['fl2',-.2],['fr2',.2]].forEach(f=>[-1,0,1].forEach(i=>k.L(f[0],'c',0x5a5030,[f[1],.355,.09],[f[1]+i*.02,.31,.11+Math.abs(i)*-.005],.014,.006,4)));
     [['hl2',-.085],['hr2',.085]].forEach(f=>[-1.5,-.5,.5,1.5].forEach(i=>k.L(f[0],'c',0x2a2018,[f[1]+i*.025,.02,.04],[f[1]+i*.045,.006,.12],.02,.005,4)));
@@ -102,7 +103,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sp
   bracket(Math.PI-.6,.34,.06);bracket(Math.PI+.7,.24,.05);
   if(L>=2){// little toadstools sprouting from the cap, glowing spots
     [[.16,.05],[-.14,-.1],[.03,-.21],[-.18,.13]].forEach((q,i)=>{const y=capTop(q[0],q[1]),b=[q[0],y,q[1]],tp=E.add(b,E.nrm([q[0],1,q[1]]),.06+i%2*.02);
-      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,[0,.024,0]),[0,1,0],[.01,.005,.01],null,hb)});
+      E.L(b,tp,.014,.011,'c',stalk,4,hb);E.pd('hem','c',i%2?P.mainD:P.main,tp,E.nrm([q[0],1,q[1]]),[.042,.03,.042],null,hb);E.pd('cyl','c',0xb8a888,E.add(tp,E.nrm([q[0],1,q[1]]),.001),E.nrm([q[0],1,q[1]]),[.04,.003,.04],null,hb);E.pd('sph','c',0xe8dcc0,E.add(tp,E.nrm([q[0],1,q[1]]),.029),[0,1,0],[.01,.005,.01],null,hb)}); // v173: gills under the caps, the spot on the cap
     for(let i=0;i<12;i++){const a=i/12*6.283,r=rim*.7,x=Math.sin(a)*r,z=Math.cos(a)*r;E.pd('sph','g',P.glowD,[x,capTop(x,z)+.004,z],E.nrm([x,.6,z]),[.016,.005,.016],null,hb)}
     bracket(Math.PI*.5+2.8,.44,.05)}
   if(L>=3){// moss and roots hanging from the rim at the back and sides (the face stays clear), root tendrils down the back
@@ -116,5 +117,5 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sp
     E.band([0,.36,0],[0,1,0],.006,.009,'m',P.trim,12)}
   if(L>=5){// the rim glows, a second ring of tiny caps
     for(let i=0;i<20;i++){const a=i/20*6.283,a2=(i+1)/20*6.283,r=rim+.012;E.L([Math.sin(a)*r,rimY+.012,Math.cos(a)*r],[Math.sin(a2)*r,rimY+.012,Math.cos(a2)*r],.01,.01,'g',P.glow,3,hb)}
-    [[.21,-.06],[-.06,.21],[-.2,-.13]].forEach(q=>{const b=[q[0],capTop(q[0],q[1]),q[1]];E.L(b,E.add(b,E.nrm([q[0],1,q[1]]),.035),.008,.006,'c',stalk,4,hb);E.pd('hem','g',P.glowD,E.add(b,E.nrm([q[0],1,q[1]]),.035),E.nrm([q[0],1,q[1]]),[.022,.016,.022],null,hb)})}
+    [[.21,-.06],[-.06,.21],[-.2,-.13]].forEach(q=>{const b=[q[0],capTop(q[0],q[1]),q[1]];E.L(b,E.add(b,E.nrm([q[0],1,q[1]]),.035),.008,.006,'c',stalk,4,hb);E.pd('hem','g',P.glowD,E.add(b,E.nrm([q[0],1,q[1]]),.035),E.nrm([q[0],1,q[1]]),[.022,.016,.022],null,hb);E.pd('cyl','c',0xb8a888,E.add(b,E.nrm([q[0],1,q[1]]),.036),E.nrm([q[0],1,q[1]]),[.021,.002,.021],null,hb)})}
 }};
