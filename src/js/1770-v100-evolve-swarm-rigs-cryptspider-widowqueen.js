@@ -11,13 +11,13 @@ EVO100.D.Cryptspider={glow:0xff3a5a,build(E,L,P){
   if(L>=3){// bone plate armour over the abdomen in rings, a glowing hourglass, a bone mantle on the thorax
     [[-.18,-.28],[-.3,-.42],[-.44,-.56]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.35&&Math.abs(x)<.26&&y>.5,.016,'c',k%2?0x5a5048:0x40383a,{rimCol:P.boneD}));
     E.shell((x,y,z,nx,ny)=>z>.08&&z<.34&&ny>.5&&Math.abs(x)<.13&&y>.47,.014,'c',0x4a4240,{rimCol:P.boneD});
-    const h=E.top(0,-.36);if(h){E.pd('cone4','g',P.glow,E.add(h.p,[0,.03,.03]),[0,0,-1],[.03,.05,.012],[0,1,0]);E.pd('cone4','g',P.glow,E.add(h.p,[0,.03,-.03]),[0,0,1],[.03,.05,.012],[0,1,0])}}
+    const h=E.top(0,-.36);if(h){const c=E.add(h.p,h.n,.015);E.pd('cone4','g',P.glow,E.add(c,[0,0,.03]),[0,0,-1],[.03,.05,.012],[0,1,0],{vs:1});E.pd('cone4','g',P.glow,E.add(c,[0,0,-.03]),[0,0,1],[.03,.05,.012],[0,1,0],{vs:1})}} // v179: the hourglass sits in the bone plate (was 3 cm up, a few mm proud of it)
   if(L>=4){// a crown of curved horns, a glowing egg-sac cluster at the spinnerets, gold-banded legs
     for(let i=-2;i<=2;i++){const h=E.top(i*.04,.38);if(h)E.horn(E.add(h.p,h.n,-.005),[i*.3,1,-.3],[0,0,-.05],.12-Math.abs(i)*.015,.014,'c',P.bone,4,null,P.trim)}
     [[0,.47,-.68],[.03,.45,-.7],[-.03,.45,-.7],[0,.43,-.72]].forEach((q,i)=>E.pd('sph','g',i%2?P.glowD:P.glow,q,[0,1,0],.03,null,{bn:'tail3'}));
     [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const L1=spidLeg(s,i),p=spidLerp(L1.p1,L1.p2,.3);E.band(p,[L1.p2[0]-L1.p1[0],L1.p2[1]-L1.p1[1],L1.p2[2]-L1.p1[2]],.004,.006,'m',P.trim,6,{bn:L1.k+'1'})}))}
   if(L>=5){// spectral webs strung between the horns, venom mist rising from the abdomen
-    for(let i=0;i<4;i++){const h=E.top((i-1.5)*.08,-.3-i%2*.1);if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,[0,.12,-.03]),.025,.002,'g',P.glow2,4,{vs:1})}} // v178: rooted in the abdomen, following it
+    for(let i=0;i<4;i++){const h=E.top((i-1.5)*.08,-.3-i%2*.1);if(h)E.L(E.add(h.p,h.n,-.008),E.add(h.p,[0,.12,-.03]),.025,.002,'g',P.glow2,4,{vs:1})}} // v179: rooted in the abdomen, following it
 }};
 // ---------------- Gloomcap: walking toadstool — glowing gills, bracket fungi, sprouting caps, a root mantle, a spore crown ----------------
 EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P){

@@ -107,15 +107,15 @@ v168_ground.py
 v177_env.py
 v172_edge_cam.py
 FAST=0 kqd_detail.py
-SP=Foxlet,Ashwolf,Emberlynx,Direfang,Skollmaw SETS=base,fuse v178_comp_float.py
-SP=Foxlet,Ashwolf,Emberlynx,Direfang,Skollmaw SETS=trait,var v178_comp_float.py
-SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=base,fuse v178_comp_float.py
-SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=trait,var v178_comp_float.py
-SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=base,fuse v178_comp_float.py
-SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=trait,var v178_comp_float.py
-SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=base,fuse v178_comp_float.py
-SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=trait,var v178_comp_float.py
-SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=base,fuse v178_comp_float.py
-SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=trait,var v178_comp_float.py
-SP=Gloomcap,Cryptspider,Sporelord,Widowqueen,Hivemother SETS=base,fuse v178_comp_float.py
-SP=Gloomcap,Cryptspider,Sporelord,Widowqueen,Hivemother SETS=trait,var v178_comp_float.py
+SP=Foxlet,Ashwolf,Emberlynx,Direfang,Skollmaw SETS=base,fuse v179_comp_float.py
+SP=Foxlet,Ashwolf,Emberlynx,Direfang,Skollmaw SETS=trait,var v179_comp_float.py
+SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=base,fuse v179_comp_float.py
+SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=trait,var v179_comp_float.py
+SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=base,fuse v179_comp_float.py
+SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=trait,var v179_comp_float.py
+SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=base,fuse v179_comp_float.py
+SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=trait,var v179_comp_float.py
+SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=base,fuse v179_comp_float.py
+SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=trait,var v179_comp_float.py
+SP=Gloomcap,Cryptspider,Sporelord,Widowqueen,Hivemother SETS=base,fuse v179_comp_float.py
+SP=Gloomcap,Cryptspider,Sporelord,Widowqueen,Hivemother SETS=trait,var v179_comp_float.py

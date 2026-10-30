@@ -5,7 +5,7 @@ EVO100.D.Boneling={glow:0x6aff9a,ownGlow:1,build(E,L,P){
   // L1: soul-fire wisps rising from the eye sockets, a grave chain collar with a lantern charm
   [-1,1].forEach(s=>{const e=B([s*.055,.625,.575]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,{bn:'head'});if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,{bn:'head'})});
   const nk=B([0,.56,.38]);const ring=[];for(let i=0;i<10;i++){const a=i/10*6.283;ring.push(E.add(nk,[Math.cos(a)*.03,.012+Math.sin(a)*.042,0]))}
-  for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1}); // v178: follows the neck as it bends
+  for(let i=0;i<10;i++)E.pd('ring','m',P.iron,ring[i],E.nrm([ring[(i+1)%10][0]-ring[i][0],ring[(i+1)%10][1]-ring[i][1],0]),[.016,.03,.016],null,{vs:1}); // v179: follows the neck as it bends
   M.charm(E,E.add(nk,[0,-.03,.012]),.08,P.glow,'gem');
   if(L>=2){// ghostly flame ribbon along the spine, bigger back-swept horns, soul-fire in the ribcage
     for(let i=0;i<6;i++){const p=B([0,.6,.34-i*.1]);E.L(p,E.add(p,[0,.07-i*.004,-.06]),.018,.002,'g',i%2?P.glow:P.glowD,4)}
@@ -39,7 +39,7 @@ EVO100.D.Wispling={glow:0x9ff0ff,build(E,L,P){
   lantern('fr2',[.225,.55,.1],P.glow);
   if(L>=2){// a ragged mantle over the shoulders (body shell), ghost chains trailing from the wrists
     E.shell((x,y,z,nx,ny)=>y>.68&&y<.9&&ny>-.25,.016,'c',(x,y,z,i)=>i%2?hood:0x26222c,{rimCol:trim});
-    [-1,1].forEach(s=>lk178EChain(E,'m',P.iron,[s*.222,.6,.082],6,.012,[s*.18,-1,-.57],{bn:s<0?'fl2':'fr2'}))} // v178: links that hold together
+    [-1,1].forEach(s=>lk179EChain(E,'m',P.iron,[s*.222,.6,.082],6,.012,[s*.18,-1,-.57],{bn:s<0?'fl2':'fr2'}))} // v179: links that hold together
   if(L>=3){// a halo of runes over the hood, glowing bands in the cloak tails
     const c=[0,1.22,-.05];for(let i=0;i<14;i++){const a=i/14*6.283,a2=(i+1)/14*6.283,r=.16;E.L(E.add(c,[Math.cos(a)*r,0,Math.sin(a)*r]),E.add(c,[Math.cos(a2)*r,0,Math.sin(a2)*r]),.007,.007,'g',P.glow,3,hb);
       if(i%2==0)E.pd('oct','g',P.glow2,E.add(c,[Math.cos(a)*r,0,Math.sin(a)*r]),[0,1,0],[.012,.024,.012],null,hb)}

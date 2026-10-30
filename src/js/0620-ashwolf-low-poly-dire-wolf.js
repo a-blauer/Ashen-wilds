@@ -84,7 +84,7 @@ LPR.Ashwolf={
     [[.42,.66,'head'],[.35,.645,'neck'],[.28,.64,'neck'],[.2,.64,'chest'],[.12,.625,'chest'],[.03,.6,'chest']].forEach((q,i)=>
       [-1,1].forEach(s=>L(q[2],'c',i%2?back:dark,[s*.025,q[1]-.035,q[0]],[s*.045,q[1]+.012,q[0]-.1],.035,.003,4)));
     // tail shag
-    // v178: placed on the tail as v100 shortened (z ×.8 from the root) and slimmed it (×.72); they hung off its sides
+    // v179: placed on the tail as v100 shortened (z ×.8 from the root) and slimmed it (×.72); they hung off its sides
     const tk=WOLF_TAIL.v100?.72:1,tz=z=>WOLF_TAIL.v100?-.33+(z+.33)*.8:z;
     [['tail1',.43,-.6],['tail1',.4,-.72],['tail2',.39,-.84]].forEach(q=>[-1,1].forEach(s=>L(q[0],'c',dkShade(back,1.2),[s*.05*tk*.8,q[1],tz(q[2])],[s*.09*tk,q[1]-.04,tz(q[2]-.12)],.04*tk,.003,4)));
     // big paws with black claws

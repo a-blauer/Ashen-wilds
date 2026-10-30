@@ -44,7 +44,7 @@ LPR.Boneling={
     // vertebra spikes along the back and down the tail
     for(let i=0;i<9;i++){const z=.36-i*.075,bn=z>.3?'neck':z>.1?'chest':z>-.15?'spine':'pelvis';B(bn,'c',i%2?bone:dkShade(bone,.85),[0,.6,z],.012,.05,.016,-.5,0,0,'cone4')}
     [['tail0',.55,-.4],['tail1',.52,-.55],['tail1',.5,-.68],['tail2',.49,-.8]].forEach(q=>B(q[0],'c',bone,[0,q[1],q[2]],.009,.035,.012,-.6,0,0,'cone4'));
-    // shoulder blades and hip bones; v178: a pelvis plate joins the hips to the spine, ball joints seat the legs in the
+    // shoulder blades and hip bones; v179: a pelvis plate joins the hips to the spine, ball joints seat the legs in the
     // shoulders and hips, and the top of the neck moves with the skull (the legs, hips and skull stood apart from the spine)
     B('pelvis','c',dkShade(bone,.92),[0,.535,-.25],.15,.03,.1,.1,0,0);
     [-1,1].forEach(s=>{B('chest','c',bone,[s*.105,.505,.205],.036,.036,.036,0,0,0,'sph');B('pelvis','c',bone,[s*.1,.515,-.24],.042,.042,.042,0,0,0,'sph')});

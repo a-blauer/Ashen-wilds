@@ -1,6 +1,6 @@
-# v178 close-up pictures of companions. LIST="Species:evo:pose:x,y,z:dist[:tr[:v]];…" (pose idle|walkA|walkB|bite; x,y,z = the
+# v179 close-up pictures of companions. LIST="Species:evo:pose:x,y,z:dist[:tr[:v]];…" (pose idle|walkA|walkB|bite; x,y,z = the
 # point to look at in world metres at the model's scale, '-' = the body centre; dist = camera distance, '-' = whole body).
-# Each entry gives a row of 4 views (front-left, side, back-right, top). TAG=x -> out/v178_<TAG>.jpg
+# Each entry gives a row of 4 views (front-left, side, back-right, top). TAG=x -> out/v179_<TAG>.jpg
 import os,sys,re,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -25,5 +25,5 @@ def s(pg):
     L=[x for x in os.environ.get('LIST','Foxlet:0').split(';') if x]
     r=ev(JS,[L,int(os.environ.get('W','300'))])
     for i in r['info']:print(' ',i)
-    nm='v178_%s.jpg'%os.environ.get('TAG','look');open(O+'/'+nm,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote',nm)
+    nm='v179_%s.jpg'%os.environ.get('TAG','look');open(O+'/'+nm,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote',nm)
 play.run(s,w=900,hh=600)

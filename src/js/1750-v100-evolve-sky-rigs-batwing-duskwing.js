@@ -15,7 +15,7 @@ EVO100.D.Batwing={glow:0xc04aff,wing:{grow:.07},build(E,L,P){
     E.L([0,.47,.5],[0,.53,.47],.012,.002,'c',P.bone,4,{bn:'head'});
     [-1,1].forEach(s=>{E.band([s*.074,.432,.468],[s*.5,0,1],.01,.004,'g',P.glow,7,{bn:'head'});const h=E.on([s*.4,.42,.12],[-s,0,0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],1,-.5]),.08),.02,.002,'c',P.boneD,4)})}
   if(L>=4){// a crescent-moon crown between the ears, a gem on the chest, glowing tail tip
-    const ct=E.top(.067,.36),c=[0,ct?ct.p[1]-.024:.53,.36]; // v178: the crown stands on the head (it rested only on the ears)
+    const ct=E.top(.067,.36),c=[0,ct?ct.p[1]-.024:.53,.36]; // v179: the crown stands on the head (it rested only on the ears)
     for(let i=0;i<8;i++){const a=-1.3+i/7*2.6,a2=-1.3+(i+1)/7*2.6;if(i<7)E.L(E.add(c,[Math.sin(a)*.07,Math.cos(a)*.07,0]),E.add(c,[Math.sin(a2)*.07,Math.cos(a2)*.07,0]),.01-Math.abs(a)*.003,.01-Math.abs(a2)*.003,'m',P.trim,4,{bn:'head'})}
     E.pd('oct','g',P.glow,E.add(c,[0,.07,0]),[0,1,0],[.014,.024,.014],null,{bn:'head'});
     const cp=E.on([0,.3,1],[0,0,-1]);if(cp)E.gem({p:E.add(cp.p,cp.n,.008),n:cp.n},.022,P.glow)}

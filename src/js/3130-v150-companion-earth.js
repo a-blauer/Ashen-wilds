@@ -89,7 +89,7 @@ function er150CragKit(k,C,red){const T=ER150.CR,top=T.top,nz=er150Nz;
     [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x*.97,y+h*.12,z,.025,h,.05,-.2,0,-s*.95)})});
   // serrated rim: stone spikes jutting out and down all round the shell
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2,z=Math.cos(a)*.47-.03,P=er150Prof(T.shell,Math.max(-.48,Math.min(.41,z))),x=Math.sin(a)*P[1];if(Math.abs(Math.sin(a))<.25&&Math.cos(a)>0)continue;
-    const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk178Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v178: on the shell (they stood off its flanks)
+    const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk179Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v179: on the shell (they stood off its flanks)
     k.p('spine','cone4','c',i%2?st2:stone,q[0]+d.x*(h*.5-.018),q[1]+d.y*(h*.5-.018),q[2]+d.z*(h*.5-.018),.03,h,.03,rx,0,rz)}
   // crystal outcrops between the blades (glowing cores, dark shards)
   [[.22,.12,.13],[-.24,-.08,.15],[.18,-.27,.11],[-.14,.22,.09]].forEach(([x,z,h],j)=>{const y=top(x,z);for(let i=0;i<4;i++){const a=i*1.7+j,dx=i?Math.cos(a)*.03:0,dz=i?Math.sin(a)*.03:0,hh=i?h*.6:h,lx=Math.sign(x)*(i?.4:.25)+dx*4,lz=dz*4;
@@ -180,7 +180,7 @@ function er150TitanKit(k,C,red){const T=ER150.TI,top=T.top,Y=T.Y,nz=er150Nz;
     for(let i=0;i<H.length-1;i++)k.L('head','c',i%2?horn2:horn,H[i],H[i+1],.05-i*.01,i==3?.003:.04-i*.01,6);
     for(let i=1;i<4;i++)k.p('head','tor','c',horn2,H[i][0],H[i][1],H[i][2],.05-i*.01,.012,.05-i*.01,0,0,s*(.6+i*.25));
     k.p('jaw','cone4','c',ivory,s*.085,.3,.69,.016,.07,.016,-.25,0,s*.2);
-    for(let i=0;i<4;i++){const x=.02+i*.025,z=.6+i*.03,J=er150Prof(T.jaw,z),y0=J[0]-J[3]*Math.sqrt(Math.max(0,1-(x/J[1])**2))+.008; // v178: rooted in the jaw
+    for(let i=0;i<4;i++){const x=.02+i*.025,z=.6+i*.03,J=er150Prof(T.jaw,z),y0=J[0]-J[3]*Math.sqrt(Math.max(0,1-(x/J[1])**2))+.008; // v179: rooted in the jaw
       k.L('jaw','c',i%2?moss:moss2,[s*x,y0,z],[s*(.025+i*.028),.13+i*.01,z-.01],.016,.004,3)}
     k.p('head','sph','c',dark,s*.03,.33,.79,.01,.008,.008)});
   [[0,.46,.55],[0,.455,.62],[.06,.44,.58],[-.06,.44,.58],[0,.44,.48]].forEach((q,i)=>k.p('head','dod','c',i%2?st2:stone,q[0],q[1],q[2],.04,.022,.04,i,0,0));

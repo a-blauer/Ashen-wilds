@@ -16,7 +16,7 @@ var EVO100_M={
       E.L(E.add(b1,d,-.05*k),E.add(b1,d,.11*k*tipGlow),.05*k,.002,'g',glowCol,5,{bn:T[T.length-1][3][0]});E.L(E.add(b1,d,-.02*k),E.add(b1,[d[0]*.6,d[1]+.6,d[2]*.6],.08*k*tipGlow),.03*k,.001,'g',glowCol,4,{bn:T[T.length-1][3][0]})}
     return rings},
   // dangling charm on a string from point p (on the body), 'tooth' or 'bone' or gem
-  charm(E,p,len,col,kind,o){o=Object.assign({at:p},o); // v178: every piece skinned like the point it hangs from (a tooth skinned to the chest left the string in a bite)
+  charm(E,p,len,col,kind,o){o=Object.assign({at:p},o); // v179: every piece skinned like the point it hangs from (a tooth skinned to the chest left the string in a bite)
     E.L(E.add(p,[0,.012,0]),E.add(p,[0,-len*.55,0]),.004,.004,'c',0x2a2018,3,o);const q=E.add(p,[0,-len*.55,0]);
     if(kind=='gem')return E.pd('oct','g',col,E.add(q,[0,-len*.18,0]),[0,1,0],[len*.18,len*.28,len*.18],null,o);
     if(kind=='bone'){E.L(E.add(q,[-len*.2,-len*.1,0]),E.add(q,[len*.2,-len*.1,0]),len*.06,len*.06,'c',col,4,o);return E}
