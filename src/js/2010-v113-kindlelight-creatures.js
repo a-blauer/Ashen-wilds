@@ -5,9 +5,9 @@
 // Rotwood the forest floor itself gets up and walks: the Lichen, a humanoid of vines, goo and dirt.
 (function(){
 // ===================================================================== Amalgam =====================================================================
-const AG={g1:0x3c8a26,g2:0x1f5214,g3:0x6abd38,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a};
+const AG={g1:0x3e5a28,g2:0x22341a,g3:0x5a7a34,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a};
 n3Def('amalgam',{n:'Amalgam',e:'🟩',fam:'Earth',mt:'p',w:{hp:1.35,pa:1.15,ma:.5,pd:1.05,md:.85},
- hum:{skin:[76,170,48],tunic:0x2a6a1a,cape:[42,106,26],pants:[42,106,26],sc:1.24,wpn:'none'},
+ hum:{skin:[66,92,44],tunic:0x2a4a1a,cape:[42,70,26],pants:[42,70,26],sc:1.24,wpn:'none'},
  moves:['strike','mudslam','clodhurl'],basic:{strike:'am_swat'},
  body(B,P,k){const C=AG;P.build=2;P.belly=.16;P.af=1.4;P.lf=1.3;P.wf=1.04;P.sq=.12;P.head={w:1.22,jaw:1.32,top:.8,fwd:.035};
   Object.assign(P.col,{skin:C.g1,torso:C.g1,sleeve:C.g1,fore:C.g1,hand:C.g2,pants:C.g1,shin:C.g1,boot:C.g2,sole:C.dirt,belt:null,neck:C.g1});

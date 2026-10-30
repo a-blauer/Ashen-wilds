@@ -65,7 +65,7 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
 
 // ---------------- Frost Troll / Troll Rimecaller: hulking, warty, frosted shoulders, shaggy hair on arms and back, bone trophies ----------------
 ['troll','trollsh'].forEach(key=>f137Reg(key,function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.build=2;P.head={w:1.1,jaw:1.2,top:.92};P.af=(P.af||1)*1.1;
-  X.human({hairStyle:4,hair:0xd8e8f0});Object.assign(C,{torso:skin,sleeve:skin,fore:skin,pants:0xc8ccd4,shin:skin,boot:skin,sole:mdSh(skin,.6),belt:X.lt});
+  X.human({hairStyle:4,hair:0xd8e8f0});Object.assign(C,{torso:skin,sleeve:skin,fore:skin,pants:0x5a5e66,shin:skin,boot:skin,sole:mdSh(skin,.6),belt:X.lt});
   P.paint.torso=m=>{const r=n3Nz(m.x,m.y,m.z,4);return r>.9?mdSh(skin,.8):r<.06?mdSh(skin,1.15):skin};X.body();
   X.head({eyes:'glow',glow:0x6ad8ff,brow:mdSh(skin,.55),ears:false,nose:false});mdNose(k,P,mdSh(skin,.92),1.5);mdTusks(k,P,0xe8e0c8,1.3,1.1);mdEars(k,P,skin,.7);
   for(let i=0;i<7;i++)k.p('head','cone4','c',0xd8e8f0,(i-3)*.03,1.25-Math.abs(i-3)*.01,-.03,.022,.14,.022,-.6,0,(i-3)*.18);

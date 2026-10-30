@@ -53,7 +53,7 @@ def piece_dist(Q,T,tree,mask,rmax,thr):
         best=min(best,d)
         if best<=thr:break
     return best
-def floating(V,thr):
+def floating(V,thr,loose_inside=False):
     # grow the attached set from the biggest piece: a piece is attached when it comes within thr of something attached
     T,lab=components(V);n=lab.max()+1
     if n<=1:return []
@@ -76,8 +76,9 @@ def floating(V,thr):
     out=[]
     At=T[att];D=[np.array(v,float) for v in ([1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1])]
     for c in sorted(pend):
-        o=Qs[c].mean(0)
-        if all(ray_hits(o,d,At) for d in D):continue
+        # (v176) every sample point of the piece must be enclosed, not just its centre: a ring round the waist has its centre inside
+        Q=Qs[c];o=Q.mean(0);far=Q[np.argsort(-np.linalg.norm(Q-o,axis=1))[:6]]
+        if all(all(ray_hits(p,d,At) for d in D) for p in ([o] if loose_inside else [o]+list(far))):continue
         out.append((c,sizes[c],o,last[c],int(np.argmax(lab==c))))
     return out
 def crosses(tc,T,tree,mask,rmax):

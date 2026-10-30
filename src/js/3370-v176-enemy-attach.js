@@ -62,7 +62,7 @@ function sn176Snap(body,P,tag){if(!SN176.on||!P||!P.length||!body||body.length<9
   const attach=i=>{if(att[i]!=='in')att[i]=true;parts[i].tri.forEach(t=>sn176Add(G,t[0],t[1],t[2]))};
   const near=(q,r)=>{let best=-1,bp=null,bq=null,bt=-1;for(const s of q.S){const d=sn176Near(G,s,r,o);if(d>=0&&(best<0||d<best)){best=d;bp=s;bq=o.slice();bt=G.lastT}}return best<0?null:{d:best,s:bp,q:bq,t:bt}};
   // hidden inside the body: rays along all six axes from the part's centre meet the body close by (within 12 % of its height)
-  const BT=body,AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&AX.every(d=>sn176Ray(BT,q.c,d,H*.12)))att[i]='in'});
+  const BT=body,AX=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];parts.forEach((q,i)=>{if(!near(q,tol)&&[q.c].concat(q.S.slice(0,8)).every(p=>AX.every(d=>sn176Ray(BT,p,d,H*.12))))att[i]='in'});
   parts.forEach((q,i)=>{if(att[i]==='in')attach(i)});
   if(SN176.dbg)parts.forEach((q,i)=>{const r=near(q,.2);SN176.dbg.push((tag||'')+' '+q.p.bn+' c '+q.c.map(v=>v.toFixed(3)).join(',')+' d '+(r?r.d.toFixed(4)+' q '+r.q.map(v=>v.toFixed(3)).join(','):'-')+(att[i]==='in'?' IN':''))});
   const grow=()=>{let ch=true;while(ch){ch=false;parts.forEach((q,i)=>{if(att[i])return;if(near(q,tol)){attach(i);ch=true}})}};

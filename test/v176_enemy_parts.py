@@ -14,6 +14,9 @@ from PIL import Image,ImageDraw
 from float_lib import floating
 O=play.TMP
 FLOAT_MM=float(os.environ.get('FLOAT_MM','4'));FOCUS=bool(os.environ.get('FOCUS'))
+# things meant to hang inside a see-through body (the goo's bubbles and half-dissolved trophies): only their middle must be enclosed
+SUSPEND={'goo','spitter'}
+FLY={'cavebat','bloodbat','banshee','wraith'}
 JS=r"""(a)=>{const [list,poses,nosheet]=a,V=THREE.Vector3,FW=300,FH=300,out={items:[]};
   if(!window.RT6){const rd=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rd.setSize(FW,FH);const sc=new THREE.Scene();sc.background=new THREE.Color(0x2c3036);
     sc.add(new THREE.HemisphereLight(0xc8d0dc,0x3a3028,.9));const dl=new THREE.DirectionalLight(0xfff0d8,1.1);dl.position.set(2,4,4);sc.add(dl);const d2=new THREE.DirectionalLight(0x8090c0,.55);d2.position.set(-4,1,-2);sc.add(d2);
@@ -81,10 +84,10 @@ def s(pg):
                 if not len(V):continue
                 if not np.isfinite(V).all():fails.append('%s %s: NaN vertex'%(lab,pn));continue
                 V=V.reshape(-1,3)
-                if pn=='idle' and not it['fly']:
+                if pn=='idle' and not (it['fly'] or it['k'] in FLY):
                     lo=V[:,1].min()
                     if lo<-.03*h or lo>.04*h:fails.append('%s idle: lowest point %.3f m of %.2f m (feet should touch the ground)'%(lab,lo,h))
-                for c,n,cc,d,t0 in floating(V,thr):
+                for c,n,cc,d,t0 in floating(V,thr,it['k'] in SUSPEND):
                     tg=TGv[t0*3:(t0+n)*3];where=tnames[int(np.bincount(tg).argmax())] if len(tg) else '?'
                     P=PC.setdefault(t0,{'n':n,'cc':cc,'d':0,'poses':[],'w':where,'r':float(np.linalg.norm(V[t0*3:(t0+n)*3]-cc,axis=1).max()) if pn==list(it['poses'])[0] else .02});P['d']=max(P['d'],d);P['poses'].append(pn)
             if FOCUS and PC:

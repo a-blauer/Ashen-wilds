@@ -6,8 +6,8 @@
 // shared materials (one to three draw calls + weapon). Each type keeps its signature: goblin ears and noses, orc and
 // troll tusks, skeleton bones, the vampires' standing collar (v89 dkHighCollar), naga snake heads and tails, etc.
 function mdD(a,st,M,A,o){return Object.assign({a,st,ti:2,r:0,M,A,G:null,dk:mdSh(M,.6),gem:A,sl:''},o||{})}
-// (v176: the flaps start tucked under the belt band, which sits just over them; they used to hang beside it, off the body)
-function mdLoin(B,P,c,c2,y1,y0){const Y=y0||.6,t0=P.tOff;mdSkirt(B,P,Y+.02,y1||.36,.02,.02,{col:m=>m.y<(y1||.36)+.04?c2||mdSh(c,.75):c,keep:m=>Math.abs(m.c)<.36,n:5});mdTS(B,P,Y-.02,Y+.03,.022,{col:mdSh(c2||c,.8)});P.tOff=Math.max(t0||0,.016)}
+// (v176: the belt band hugs the waist and the flaps start tucked under it, then flare out; band and flaps used to stand 2 cm off the body)
+function mdLoin(B,P,c,c2,y1,y0){const Y=y0||.6,t0=P.tOff;mdSkirt(B,P,Y+.02,y1||.36,.03,.002,{col:m=>m.y<(y1||.36)+.04?c2||mdSh(c,.75):c,keep:m=>Math.abs(m.c)<.36,n:5});mdTS(B,P,Y-.02,Y+.03,.005,{col:mdSh(c2||c,.8),lip:.006});P.tOff=Math.max(t0||0,.016)}
 function mdStrap(B,P,c,sd){mdTS(B,P,.6,.99,(P.tOff||0)+.008,{col:c,keep:m=>Math.abs(m.c+(sd||1)*m.s*.55)<.12})}
 function mdTusks(k,P,c,len,w){const z=mdHeadZ(P,1.07);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*.04*(w||1),1.072+len*.022,z-.004,.014*len*1.4,.05*len,.014*len*1.4,0,0,-s*.2))}
 function mdEars(k,P,c,len,up){const x=mdHeadX(P,1.15);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*(x+.03*len),1.16+(up||0),-.01,.03,.14*len,.018,0,0,-s*(1.25-(up||0)*3)))}
