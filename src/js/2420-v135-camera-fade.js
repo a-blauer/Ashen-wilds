@@ -47,9 +47,12 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
       float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
       #endif
       }
-     f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));   // never below the hero's knees: floors, paving and bridges stay
+     float kn=smoothstep(-.85,-.55,vF135.y-uPl.y);
+     if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v174: only flat surfaces keep it (walls on lower ground were a solid diagonal band)
+     f=mix(1.,f,kn);   // never below the hero's knees: floors, paving and bridges stay
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
   if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v174: windows and plain panes (Abeksi) are cut too
+  m.extensions=Object.assign({},m.extensions,{derivatives:true});   // v174: the knee rule reads the surface's slope (dFdx) on WebGL1 too
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
