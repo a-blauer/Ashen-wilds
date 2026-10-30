@@ -9,10 +9,10 @@
 var SK150={
   // [z, y, half width, above, below, bones, tag]
   body:[[-.44,.645,.035,.035,.035,['pelvis','tail0',.6]],[-.395,.635,.085,.08,.085,['pelvis','tail0',.3]],
-    [-.33,.625,.13,.11,.12,['pelvis','pelvis',0],'hip'],[-.25,.625,.14,.115,.13,['pelvis','pelvis',0],'hip'],
+    [-.33,.625,.148,.11,.16,['pelvis','pelvis',0],'hip'],[-.25,.625,.158,.115,.175,['pelvis','pelvis',0],'hip'],
     [-.15,.635,.112,.105,.095,['pelvis','spine',.5]],[-.05,.645,.1,.1,.085,['spine','spine',0]],
-    [.05,.66,.12,.12,.15,['spine','chest',.5]],[.15,.66,.14,.15,.23,['chest','chest',0],'chest'],
-    [.25,.67,.15,.17,.24,['chest','chest',0],'chest'],[.33,.695,.135,.16,.19,['chest','neck',.5],'neck'],
+    [.05,.66,.125,.12,.15,['spine','chest',.5]],[.15,.66,.152,.15,.23,['chest','chest',0],'chest'],
+    [.25,.67,.162,.17,.24,['chest','chest',0],'chest'],[.33,.695,.135,.16,.19,['chest','neck',.5],'neck'],
     [.41,.72,.12,.13,.14,['neck','neck',0],'neck'],[.48,.74,.105,.11,.11,['neck','head',.5],'neck'],
     [.55,.75,.1,.085,.08,['head','head',0],'hd'],[.62,.745,.086,.068,.064,['head','head',0],'hd'],
     [.69,.725,.062,.046,.046,['head','head',0],'mz'],[.76,.714,.05,.037,.036,['head','head',0],'mz'],
@@ -29,9 +29,11 @@ function sk150Cols(C){const main=lpMain(C,.1);return {main,back:main.clone().mul
   belly:main.clone().lerp(new THREE.Color(0x6a6878),.35),mouth:new THREE.Color(0x3a0a18),nose:new THREE.Color(0x0a090c)}}
 // one leg: a top ring buried in the body, a shoulder / thigh muscle that is part of the body's outline, a lean lower leg, a paw
 function sk181Leg(p,par,front,paint){const a=e137B('Ashwolf',p+'0'),b=e137B('Ashwolf',p+'1'),c=e137B('Ashwolf',p+'2'),s=Math.sign(a[0]),x=v=>s*v;
-  const R=front?[.048,.078,.062,.043,.036,.032]:[.052,.092,.074,.047,.036,.034];
-  return e137Limb([[[x(.085),.71,a[2]-(front?.01:.0)],R[0],[par,p+'0',.15]],[[x(.105),.56,a[2]+(front?.005:.01)],R[1],[par,p+'0',.6]],
-    [[x(.11),.41,(a[2]+b[2])/2],R[2],[p+'0',p+'0',0]],[b,R[3],[p+'0',p+'1',.5]],[e137L(b,c,.5),R[4],[p+'1',p+'1',0]],
+  // v181: above the belly line the leg stays inside the body (its widest part is lower, where it leaves the body), so no
+  // 'cap' of leg stands out from the flank; the body's chest and haunches carry the shoulder and thigh muscle
+  const R=front?[.046,.066,.058,.043,.036,.032]:[.05,.076,.068,.047,.036,.034];
+  return e137Limb([[[x(front?.075:.07),front?.71:.66,a[2]-(front?.01:.0)],R[0],[par,p+'0',.15]],[[x(front?.098:.1),front?.49:.45,a[2]+(front?.005:.01)],R[1],[par,p+'0',.6]],
+    [[x(.108),front?.38:.35,(a[2]+b[2])/2],R[2],[p+'0',p+'0',0]],[b,R[3],[p+'0',p+'1',.5]],[e137L(b,c,.5),R[4],[p+'1',p+'1',0]],
     [c,R[5],[p+'1',p+'2',.5],'ank'],[[c[0],.042,c[2]+.03],.049,[p+'2',p+'2',0],'paw'],[[c[0],.019,c[2]+.09],.03,[p+'2',p+'2',0],'paw']],paint,7)}
 function sk150Geo(C){const K=sk150Cols(C);
   const paint=(o,r,s,cc,i)=>{
@@ -42,7 +44,9 @@ function sk150Geo(C){const K=sk150Cols(C);
     o.copy(K.main);if(s>.45)o.lerp(K.back,.65);
     if(r.k=='hd'||r.k=='mz'){if(s<-.3)o.lerp(K.belly,.4);return}
     if(s<-.5)o.lerp(K.belly,.45)};
-  const lofts=[{rings:bz150Rows(SK150.body),seg:12,capA:1,capB:1,paint},{rings:bz150Rows(SK150.jaw),seg:8,capA:1,capB:1,paint},bz150Tail(SK150.tail,paint,8),
+  // the chest and haunches are squarer underneath (lpGeo sqB), so the legs grow out of the body's underside, not its flank
+  const SQ=[[.25,3],[.15,3],[.05,2.4],[.33,2.3],[-.15,2.4],[-.25,3],[-.33,3]],BR=bz150Rows(SK150.body);BR.forEach(r=>{const q=SQ.find(q=>Math.abs(q[0]-r.z)<1e-6);if(q)r.sqB=q[1]});
+  const lofts=[{rings:BR,seg:12,capA:1,capB:1,paint},{rings:bz150Rows(SK150.jaw),seg:8,capA:1,capB:1,paint},bz150Tail(SK150.tail,paint,8),
     sk181Leg('fl','chest',1,paint),sk181Leg('fr','chest',1,paint),sk181Leg('hl','pelvis',0,paint),sk181Leg('hr','pelvis',0,paint)];
   return lpGeo('SK181|'+C,'Ashwolf',lofts,67)}
 function sk150Kit(k,c,C,red){const K=sk150Cols(C),R=SK150.body,T=SK150.tail,eye=red?0xff2a2a:0xffb84a,ivory=0xd8cfbc,
