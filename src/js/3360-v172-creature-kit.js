@@ -17,8 +17,11 @@
 // evolution looks' rays land on the new body); the other slots become extra skinned meshes on the same skeleton.
 // Every part is placed from a surface point of a loft (B.at), so it sits on the body; CM172.chk=1 makes the builder report
 // parts that float (cm172Check), and the tests fail on them.
-var CM172={on:true,D:{},gc:{},chk:0,tris:{},rep:{},last:{}};
+var CM172={on:true,D:{},gc:{},chk:0,tris:{},rep:{},last:{},smooth:1,tile:.3};
 // ---------------- shared materials ----------------
+function cm172TexMat(kind,slot){const M=cm172Mats(),k=kind+'|'+slot;if(M.tx[k])return M.tx[k];const sm=!!CM172.smooth;
+  const m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:!sm,skinning:true,side:THREE.DoubleSide,map:cm172Tex(kind),roughness:slot=='f'?.92:.88,metalness:0});
+  m.userData.lpsSkip=1;return M.tx[k]=m}
 function cm172Mats(){if(CM172.M&&CM172.M.sm===!!CM172.smooth)return CM172.M;const sm=!!CM172.smooth,f=o=>Object.assign({vertexColors:true,flatShading:!sm,skinning:true},o),M=dkM();
   // flat shading takes its normal from the screen, so every material is two-sided and no part can show its back
   const D=THREE.DoubleSide;CM172.M={k:new THREE.MeshStandardMaterial(f({roughness:.4,metalness:.24,side:D})),   // chitin, scales, horn, shell (glossy)
@@ -27,9 +30,35 @@ function cm172Mats(){if(CM172.M&&CM172.M.sm===!!CM172.smooth)return CM172.M;cons
     m:new THREE.MeshStandardMaterial(f({roughness:.38,metalness:.62,side:D})),        // iron, bronze, gold
     g:new THREE.MeshBasicMaterial({vertexColors:true,skinning:true,side:D}),          // glow (eyes, embers, runes)
     c:sm?new THREE.MeshStandardMaterial(f({roughness:.9,metalness:.04,side:D})):M.c,
-    hide:new THREE.MeshStandardMaterial(f({roughness:.9,metalness:0,side:D})),sm};
+    hide:new THREE.MeshStandardMaterial(f({roughness:.9,metalness:0,side:D})),sm,tx:{}};
+  // the body and the fur clumps carry the painted texture of their kind (cm172TexMat)
   // the smooth look opts out of the world's low-poly pass (0750), which would flatten them again
   if(sm)Object.values(CM172.M).forEach(m=>{if(m&&m.isMaterial)m.userData.lpsSkip=1});return CM172.M}
+// ---------------- painted detail textures (owner, Oct 30 2026: "see how it handles making fur") ----------------
+// Fur, scales and the like are PAINTED into a shared grey texture, not built from triangles: the material multiplies the
+// texture with the vertex colours, so one texture serves every creature and every colour. Tileable; v runs along the body
+// (the fur flows toward +v), u around it. Kinds: fur (overlapping clumps, light tips, dark roots, strands), fine (short fur
+// for faces and legs), scale, chitin, skin.
+function cm172Tex(kind){CM172.tex=CM172.tex||{};if(CM172.tex[kind])return CM172.tex[kind];
+  const S=512,cv=document.createElement('canvas');cv.width=cv.height=S;const x=cv.getContext('2d'),rn=cmRng(kind.length*977+13),g=v=>{const c=Math.round(Math.max(0,Math.min(1,v))*255);return 'rgb('+c+','+c+','+c+')'};
+  const wrap=(f)=>{for(const dx of [-S,0,S])for(const dy of [-S,0,S]){x.save();x.translate(dx,dy);f();x.restore()}};
+  if(kind=='fur'||kind=='fine'){const fine=kind=='fine',cols=fine?10:7,rows=fine?8:5,cw=S/cols,rh=S/rows;
+    // a mid base, then layers of soft clumps: a blurred shadow under each, a gradient body (dark root → light tip), strands
+    x.fillStyle=g(.6);x.fillRect(0,0,S,S);const L=[];
+    for(let r=rows*2-1;r>=0;r--)for(let c=0;c<cols;c++)L.push([c*cw+(r%2?cw/2:0)+(rn()-.5)*cw*.5,r*rh/2+(rn()-.5)*rh*.25,cw*(1+rn()*.45),rh*(1.7+rn()*.7),(rn()-.5)*.3,rn()]);
+    L.forEach(([cx,cy,w,h,tw,k])=>wrap(()=>{x.save();x.translate(cx,cy);x.rotate(tw);
+      const shape=(sc)=>{x.beginPath();x.moveTo(-w*.5*sc,0);x.bezierCurveTo(-w*.55*sc,h*.5,-w*.15,h*.82,w*.06,h);x.bezierCurveTo(w*.18,h*.8,w*.55*sc,h*.5,w*.5*sc,0);x.quadraticCurveTo(0,-h*.15,-w*.5*sc,0)};
+      x.save();x.filter='blur('+(fine?2:4)+'px)';x.translate(w*.06,h*.08);x.fillStyle='rgba(0,0,0,.32)';shape(1);x.fill();x.restore();
+      const gr=x.createLinearGradient(0,0,0,h);gr.addColorStop(0,g(.62+k*.06));gr.addColorStop(.6,g(.84+k*.06));gr.addColorStop(1,g(.97));x.fillStyle=gr;shape(1);x.fill();
+      x.lineCap='round';for(let i=0;i<(fine?4:9);i++){const sx=(rn()-.5)*w*.75,lt=rn()<.55;x.strokeStyle=lt?'rgba(255,255,255,.35)':'rgba(40,40,40,.28)';x.lineWidth=(fine?.8:1.4)+rn()*(fine?.8:1.6);
+        x.beginPath();x.moveTo(sx,h*(.05+rn()*.15));x.quadraticCurveTo(sx*.7+(rn()-.5)*4,h*.55,sx*.25+w*.04,h*(.8+rn()*.18));x.stroke()}
+      x.restore()}))}
+  else if(kind=='scale'||kind=='chitin'){const cols=kind=='scale'?12:6,rows=kind=='scale'?14:7,cw=S/cols,rh=S/rows;x.fillStyle=g(.4);x.fillRect(0,0,S,S);
+    for(let r=rows-1;r>=0;r--)for(let c=0;c<cols;c++){const cx=c*cw+(r%2?cw/2:0),cy=r*rh,w=cw*.98,h=rh*1.5;wrap(()=>{x.save();x.translate(cx,cy);
+      const gr=x.createRadialGradient(0,h*.25,1,0,h*.35,w*.75);gr.addColorStop(0,g(.98));gr.addColorStop(.7,g(.8));gr.addColorStop(1,g(.55));x.fillStyle=gr;
+      x.beginPath();x.moveTo(-w*.5,0);x.quadraticCurveTo(-w*.55,h*.7,0,h);x.quadraticCurveTo(w*.55,h*.7,w*.5,0);x.closePath();x.fill();x.strokeStyle=g(.3);x.lineWidth=1.5;x.stroke();x.restore()})}}
+  else{x.fillStyle=g(.85);x.fillRect(0,0,S,S);for(let i=0;i<1400;i++){x.fillStyle=g(.7+rn()*.3);x.globalAlpha=.25;const r=2+rn()*7;x.beginPath();x.arc(rn()*S,rn()*S,r,0,7);x.fill()}x.globalAlpha=1}
+  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return CM172.tex[kind]=t}
 // ---------------- small helpers ----------------
 var CM_V=THREE.Vector3;
 function cmRng(s){let a=(s|0)||1;return ()=>{a=(a*1664525+1013904223)>>>0;return a/4294967296}}
@@ -87,14 +116,14 @@ function cmCrys(n,sh){return cmLathe('crys|'+n+'|'+sh,[[0,0],[.82,.02],[1,.12],[
 // 'b' bone/teeth/claws, 'f' fur locks/feathers, 'm' metal, 'c' cloth/leather, 'g' glow.
 function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k,i)=>bi[k]=i);
   const B={rig,S,O,bi,sl:{},L:{},parts:[],seed:7,rn:cmRng(7)};
-  B.slot=k=>B.sl[k]||(B.sl[k]={P:[],C:[],SI:[],SW:[],IX:[]});
+  B.slot=k=>B.sl[k]||(B.sl[k]={P:[],C:[],SI:[],SW:[],IX:[],UV:[]});
   B.bp=n=>{const r=S.bones[n];if(!r)throw new Error('cm172: no bone '+n+' in '+rig);return new CM_V(r[1],r[2],r[3])};
   // weights: 'bone' | [boneA, boneB, blend] | {bone:w,...} → [[i,w]x4]
   B.W=w=>{let m={};if(typeof w=='string')m[w]=1;else if(Array.isArray(w)){m[w[0]]=(m[w[0]]||0)+1-(w[2]||0);if(w[2])m[w[1]]=(m[w[1]]||0)+w[2]}else m=w;
     const L=Object.keys(m).filter(k=>m[k]>1e-4).map(k=>{if(bi[k]==null)throw new Error('cm172: no bone '+k+' in '+rig);return [bi[k],m[k]]}).sort((a,b)=>b[1]-a[1]).slice(0,4);
     const s=L.reduce((a,q)=>a+q[1],0)||1;L.forEach(q=>q[1]/=s);while(L.length<4)L.push([0,0]);return L};
   B.wmix=(a,b,k)=>{const m={};a.forEach(([i,w])=>{if(w)m[O[i]]=(m[O[i]]||0)+w*(1-k)});b.forEach(([i,w])=>{if(w)m[O[i]]=(m[O[i]]||0)+w*k});return B.W(m)};
-  B.vert=(sl,p,col,W)=>{const s=B.slot(sl),i=s.P.length/3;s.P.push(p.x,p.y,p.z);const c=cmCol(col);s.C.push(c.r,c.g,c.b);W.forEach(q=>s.SI.push(q[0]));W.forEach(q=>s.SW.push(q[1]));return i};
+  B.vert=(sl,p,col,W,uv)=>{const s=B.slot(sl),i=s.P.length/3;s.P.push(p.x,p.y,p.z);s.UV.push(uv?uv[0]:0,uv?uv[1]:0);const c=cmCol(col);s.C.push(c.r,c.g,c.b);W.forEach(q=>s.SI.push(q[0]));W.forEach(q=>s.SW.push(q[1]));return i};
   // ---- lofts: smooth skinned tubes. rings: {p:[x,y,z], rx, ryT, ryB, b:<weights>, ...}; o: {seg, ref, sub (spline steps between
   //      rings), prof(a,u) radius multiplier (a: 0 = +x side, PI/2 = top), paint(rgbHex, ring, s, c, u) → hex, capA/capB (rounded
   //      ends: number of shrinking rings), name, slot, sq (squareness of the section, 0 round … .4 boxy)}
@@ -111,20 +140,22 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
       const add=[];for(let s=1;s<=n;s++){const t=s/n,k=Math.sqrt(Math.max(0,1-t*t*.98));add.push(Object.assign({},E,{p:E.p.clone().addScaledVector(d,len*t),rx:E.rx*k,ryT:E.ryT*k,ryB:E.ryB*k,cap:1}))}
       if(end)RR.push(...add);else RR.unshift(...add.reverse())};
     cap(o.capA==null?0:o.capA===true?2:o.capA,0);cap(o.capB==null?0:o.capB===true?2:o.capB,1);
-    const N=RR.length,sl=o.slot||'hide',base=B.slot(sl).P.length/3,rec={rings:RR,seg,o,frames:[]};
+    const N=RR.length,sl=o.slot||'hide',base=B.slot(sl).P.length/3,rec={rings:RR,seg,o,frames:[]},tile=o.tile||CM172.tile||.3;
+    // texture: v runs along the loft by arc length (the fur flows toward the end), u around it, repeated to keep the clumps square
+    let av=0,per=0;RR.forEach((r,i)=>{if(i)av+=r.p.distanceTo(RR[i-1].p);r.av=av;per=Math.max(per,Math.PI*(r.rx+(r.ryT+r.ryB)/2))});rec.ru=o.ru||Math.max(1,Math.round(per/tile));
     let prevU=null;
     RR.forEach((r,i)=>{const tg=RR[Math.min(i+1,N-1)].p.clone().sub(RR[Math.max(i-1,0)].p).normalize();
       let ref=ref0.clone();if(Math.abs(ref.dot(tg))>.92)ref=prevU?prevU.clone():new CM_V(0,0,1);
       const U=ref.clone().sub(tg.clone().multiplyScalar(ref.dot(tg))).normalize(),Sd=new CM_V().crossVectors(U,tg);prevU=U;rec.frames.push({tg,U,Sd});
       const u=(i)/(N-1);r.u=u;
-      for(let k=0;k<seg;k++){const a=(o.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?r.ryT:r.ryB,m=o.prof?o.prof(a,u,r):1,sq=o.sq||0;
+      for(let k=0;k<=seg;k++){const a=(o.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?r.ryT:r.ryB,m=o.prof?o.prof(a,u,r):1,sq=o.sq||0;
         const cx=Math.sign(c)*Math.pow(Math.abs(c),1-sq),sy=Math.sign(s)*Math.pow(Math.abs(s),1-sq);
         const p=r.p.clone().addScaledVector(Sd,cx*r.rx*m).addScaledVector(U,sy*ry*m);
-        const col=o.paint?o.paint(r,s,c,u,a):o.col||0x808080;B.vert(sl,p,col,r.W)}});
-    const IX=B.slot(sl).IX;for(let i=0;i<N-1;i++)for(let k=0;k<seg;k++){const a=base+i*seg+k,a1=base+i*seg+(k+1)%seg,b2=a+seg,b3=a1+seg;IX.push(a,a1,b2,b2,a1,b3)}
+        const col=o.paint?o.paint(r,s,c,u,a):o.col||0x808080;B.vert(sl,p,col,r.W,[k/seg*rec.ru,r.av/tile])}});
+    const IX=B.slot(sl).IX,S1=seg+1;for(let i=0;i<N-1;i++)for(let k=0;k<seg;k++){const a=base+i*S1+k,a1=a+1,b2=a+S1,b3=a1+S1;IX.push(a,a1,b2,b2,a1,b3)}
     // close the ends with a fan
-    [[0,-1],[N-1,1]].forEach(([ri,dir])=>{const r=RR[ri],ci=B.vert(sl,r.p,o.paint?o.paint(r,dir,0,r.u,0):o.col||0x808080,r.W),o0=base+ri*seg;
-      for(let k=0;k<seg;k++){const a=o0+k,a1=o0+(k+1)%seg;if(dir>0)IX.push(ci,a,a1);else IX.push(ci,a1,a)}});
+    [[0,-1],[N-1,1]].forEach(([ri,dir])=>{const r=RR[ri],ci=B.vert(sl,r.p,o.paint?o.paint(r,dir,0,r.u,0):o.col||0x808080,r.W,[rec.ru*.5,r.av/tile+dir*.05]),o0=base+ri*S1;
+      for(let k=0;k<seg;k++){const a=o0+k,a1=a+1;if(dir>0)IX.push(ci,a,a1);else IX.push(ci,a1,a)}});
     rec.base=base;rec.sl=sl;if(o.name)B.L[o.name]=rec;B.parts.push({nm:o.name||'loft',sl,v0:base,v1:B.slot(sl).P.length/3,loft:1,root:!!o.root});return rec};
   // ---- a point on a loft's surface: u 0..1 along it, angle a (0 = +x side, PI/2 = top, -PI/2 = underside), off outward
   //      → {p, n (outward normal), t (tangent toward the end), s (side tangent), W (weights)}
@@ -145,7 +176,7 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
     else if(o.rot)M.makeRotationFromEuler(new THREE.Euler(o.rot[0]||0,o.rot[1]||0,o.rot[2]||0,o.ord||'XYZ'));
     const sc=o.s==null?[1,1,1]:Array.isArray(o.s)?o.s:[o.s,o.s,o.s];M.multiply(new THREE.Matrix4().makeScale(sc[0],sc[1],sc[2]));M.setPosition(pp);
     const W=Array.isArray(o.W)&&Array.isArray(o.W[0])?o.W:B.W(o.W||o.b),s=B.slot(sl),v0=s.P.length/3;
-    for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);const l=V.clone();V.applyMatrix4(M);B.vert(sl,V,o.paint?o.paint(l):o.col||0x808080,W);s.IX.push(v0+i)}
+    const UVa=g.attributes.uv;for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);const l=V.clone();V.applyMatrix4(M);B.vert(sl,V,o.paint?o.paint(l):o.col||0x808080,W,UVa?[UVa.getX(i),UVa.getY(i)]:[l.x*.5+.5,.5-l.y*.5]);s.IX.push(v0+i)}
     B.parts.push({nm:o.nm||'part',sl,v0,v1:s.P.length/3,free:!!o.free});return v0};
   // a part standing on a loft's surface: q = B.at(...); its +z along the normal, +y along dir (default: toward the loft end)
   B.on=(sl,g,q,o)=>{o=Object.assign({},o);const sink=o.sink==null?.25:o.sink,sz=Array.isArray(o.s)?o.s[2]:(o.s||1);
@@ -158,6 +189,36 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
     const s=B.slot(sl),v0=s.P.length/3,P=g.attributes.position,V=new CM_V(),W=q.W||B.W(o.b);
     for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);const t=V.z;V.applyMatrix4(M);B.vert(sl,V,o.col2!=null?cmMix(o.col,o.col2,cmSS(.2,1,t)):o.col||0x808080,W);s.IX.push(v0+i)}
     B.parts.push({nm:o.nm||'spike',sl,v0,v1:s.P.length/3});return v0};
+  // ---- a fringe of fur clumps (the reference wolf's method): a row of pointed clumps rooted on the surface along a line of
+  //      surface points, each clump a folded card (raised spine, two flanks) that flows along `flow`, lifted off the surface by
+  //      `lift` (radians), so the silhouette gets big, readable, jagged fur; the painted texture gives the strands.
+  //      pts: B.at(...) points in order; o: {len (number | fn(i,t)), flow (vector | fn(q,i,t)), lift, curl (tip bends back to the
+  //      surface), fold (spine height, × width), jit, col: [root, tip] | fn(i,t) → [root, tip], sink, sl, nm, wid (width factor)}
+  B.fringe=(pts,o)=>{const sl=o.sl||'f',s=B.slot(sl),v0=s.P.length/3,rn=cmRng(o.seed||(B.seed+=11)),n=pts.length-1,tile=o.tile||CM172.tile||.3;
+    for(let i=0;i<n;i++){const t=n>1?i/(n-1):.5,qa=pts[i],qb=pts[i+1],j=1+(o.jit==null?.25:o.jit)*(rn()-.5)*2;
+      const m=qa.p.clone().lerp(qb.p,.5),nn=qa.n.clone().add(qb.n).normalize(),W=B.wmix(qa.W,qb.W,.5),wd=qa.p.distanceTo(qb.p)*(o.wid||1);
+      const L=(typeof o.len=='function'?o.len(i,t):o.len)*j,fl0=typeof o.flow=='function'?o.flow({p:m,n:nn,t:qa.t,s:qa.s},i,t):cmV(o.flow||qa.t);
+      const fl=fl0.clone().sub(nn.clone().multiplyScalar(fl0.dot(nn))).normalize(),lift=(typeof o.lift=='function'?o.lift(i,t):o.lift==null?.35:o.lift)+(rn()-.5)*.15;
+      const D=fl.clone().multiplyScalar(Math.cos(lift)).addScaledVector(nn,Math.sin(lift)).normalize(),sink=(o.sink==null?.006:o.sink);
+      const ex=(qb.p.clone().sub(qa.p)).normalize(),grow=wd*.5*((o.over==null?.25:o.over));
+      const b0=qa.p.clone().addScaledVector(nn,-sink).addScaledVector(ex,-grow),b1=qb.p.clone().addScaledVector(nn,-sink).addScaledVector(ex,grow);
+      const tip=m.clone().addScaledVector(D,L).addScaledVector(nn,-(o.curl==null?.25:o.curl)*L*Math.cos(lift)).addScaledVector(ex,(rn()-.5)*wd*.3);
+      const up=new CM_V().crossVectors(ex,D).normalize();if(up.dot(nn)<0)up.negate();const fold=(o.fold==null?.18:o.fold)*wd;
+      const sL=b0.clone().lerp(tip,.5).addScaledVector(ex,-wd*.08),sR=b1.clone().lerp(tip,.5).addScaledVector(ex,wd*.08),cm=m.clone().lerp(tip,.42).addScaledVector(up,fold);
+      const cc=typeof o.col=='function'?o.col(i,t):o.col||[0x808080,0xb0b0b0],C=k=>cmMix(cc[0],cc[1],k),Wt=W,u0=i*.37%1,uw=wd/tile,vl=L/tile;
+      const V=[[b0,C(0),[u0,0]],[b1,C(0),[u0+uw,0]],[cm,C(.45),[u0+uw*.5,vl*.42]],[sL,C(.55),[u0+uw*.1,vl*.5]],[sR,C(.55),[u0+uw*.9,vl*.5]],[tip,C(1),[u0+uw*.5,vl]]],bi=s.P.length/3;
+      V.forEach(([p,c,uv],k)=>B.vert(sl,p,c,k<2?(k?qb.W:qa.W):Wt,uv));[[0,1,2],[0,2,3],[1,4,2],[3,2,5],[2,4,5]].forEach(f=>s.IX.push(bi+f[0],bi+f[1],bi+f[2]))}
+    B.parts.push({nm:o.nm||'fringe',sl,v0,v1:s.P.length/3});return v0};
+  // a painted stroke lying on the surface (markings: stripes, slashes, scars): pts = [[u, a], ...] on loft `name`, width w
+  //      (tapers to points at both ends, or o.taper = [start, end] factors), colour col (or [start, end]); slot 'f' (textured)
+  B.stroke=(name,pts,w,col,o)=>{o=o||{};const sl=o.sl||'f',s=B.slot(sl),v0=s.P.length/3,Q=pts.map(([u,a])=>B.at(name,u,a,o.off==null?.0015:o.off)),n=Q.length,tp=o.taper||[0,0];
+    const cc=Array.isArray(col)?col:[col,col];
+    Q.forEach((q,i)=>{const t=n>1?i/(n-1):0,d=Q[Math.min(n-1,i+1)].p.clone().sub(Q[Math.max(0,i-1)].p).normalize(),sd=new CM_V().crossVectors(q.n,d).normalize();
+      const k=Math.sin(Math.PI*Math.min(1,Math.max(0,t)))*(1-tp[0]-tp[1])+tp[0]*(1-t)+tp[1]*t,ww=w*(o.prof?o.prof(t):Math.max(.15,Math.pow(Math.max(0,k),.6)));
+      const c=cmMix(cc[0],cc[1],t);B.vert(sl,q.p.clone().addScaledVector(sd,ww*.5),c,q.W,[t,0]);B.vert(sl,q.p.clone().addScaledVector(sd,-ww*.5),c,q.W,[t,.1])});
+    for(let i=0;i<n-1;i++){const a=v0+i*2;s.IX.push(a,a+1,a+2,a+2,a+1,a+3)}B.parts.push({nm:o.nm||'stroke',sl,v0,v1:s.P.length/3});return v0};
+  // a row of surface points on loft `name`: along the angle at fixed u (o.u, o.a0..o.a1) or along u at a fixed angle (o.a, o.u0..o.u1)
+  B.row=(name,o)=>{const n=o.n||6,L=[];for(let i=0;i<=n;i++){const t=i/n;L.push(o.u!=null?B.at(name,o.u,o.a0+(o.a1-o.a0)*t,o.off||0):B.at(name,o.u0+(o.u1-o.u0)*t,typeof o.a=='function'?o.a(t):o.a,o.off||0))}return L};
   // ---- cover a loft with shingled pieces (the Vorraxis scale method): rows along u, n per row around; o: {geo (CM_SH key or geometry),
   //      u0,u1, rows, n, a0,a1 (angle range, default all round), size (length), w (width factor), lift (tip tilt out), back (tips point
   //      toward the loft start), col(a,u,r,k) → hex, skip(a,u,r,k), jit, sl, out (raise), sz(a,u) size factor}
@@ -174,7 +235,7 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
 function cmV(a){return Array.isArray(a)?new CM_V(a[0],a[1],a[2]):a.clone()}
 // ---------------- finishing: slot → skinned BufferGeometry ----------------
 function cm172Geo(s){const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(s.P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(s.C,3));
-  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(s.SI,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(s.SW,4));G.setIndex(s.IX);
+  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(s.SI,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(s.SW,4));G.setAttribute('uv',new THREE.Float32BufferAttribute(s.UV,2));G.setIndex(s.IX);
   if(CM172.smooth)cm172Normals(G,CM172.crease||.9);else G.computeVertexNormals();G.computeBoundingSphere();G.userData.lps=1;return G}
 // smooth normals with creases (the smooth look): each corner averages the faces that meet at the same point (welded by position)
 // and bend less than the crease angle from its own face; sharp edges (claws, plates, teeth) stay sharp. Corners get their own
@@ -184,13 +245,13 @@ function cm172Normals(G,crease){const P=G.attributes.position.array,I=G.index.ar
   for(let f=0;f<nf;f++){a.fromArray(P,I[f*3]*3);b.fromArray(P,I[f*3+1]*3);c.fromArray(P,I[f*3+2]*3);const n=c.clone().sub(b).cross(a.clone().sub(b));const l=n.length();if(l>0)n.multiplyScalar(1/l);
     FN[f*3]=n.x;FN[f*3+1]=n.y;FN[f*3+2]=n.z;const w=l;for(let k=0;k<3;k++){const kk=key(I[f*3+k]);let L=map.get(kk);if(!L)map.set(kk,L=[]);L.push(f)}}
   // a new vertex per (vertex, normal group): split where creases are
-  const NA=[],oldN=P.length/3,remap=new Map(),attrs=['position','color','skinIndex','skinWeight'].map(k=>G.attributes[k]),out=attrs.map(()=>[]),IX=new Uint32Array(I.length);
+  const NA=[],remap=new Map(),attrs=['position','color','skinIndex','skinWeight','uv'].map(k=>G.attributes[k]),out=attrs.map(()=>[]),IX=new Uint32Array(I.length);
   for(let f=0;f<nf;f++)for(let k=0;k<3;k++){const v=I[f*3+k],L=map.get(key(v)),n=new CM_V();
     for(const g of L){const d=FN[g*3]*FN[f*3]+FN[g*3+1]*FN[f*3+1]+FN[g*3+2]*FN[f*3+2];if(d>=cos)n.x+=FN[g*3],n.y+=FN[g*3+1],n.z+=FN[g*3+2]}n.normalize();
     const rk=v+'|'+Math.round(n.x*50)+','+Math.round(n.y*50)+','+Math.round(n.z*50);let ni=remap.get(rk);
     if(ni==null){ni=NA.length/3;remap.set(rk,ni);NA.push(n.x,n.y,n.z);attrs.forEach((A,j)=>{for(let q=0;q<A.itemSize;q++)out[j].push(A.array[v*A.itemSize+q])})}IX[f*3+k]=ni}
   G.setAttribute('position',new THREE.Float32BufferAttribute(out[0],3));G.setAttribute('color',new THREE.Float32BufferAttribute(out[1],3));
-  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(out[2],4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(out[3],4));
+  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(out[2],4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(out[3],4));G.setAttribute('uv',new THREE.Float32BufferAttribute(out[4],2));
   G.setAttribute('normal',new THREE.Float32BufferAttribute(NA,3));G.setIndex(new THREE.BufferAttribute(IX,1));return G}
 // ---------------- the float check: every part must touch the body or a part that does ----------------
 // distance from point p to triangle abc
@@ -224,15 +285,16 @@ function cm172Sp(rig,c){const V=typeof RV137!='undefined'&&RV137.var[rig];if(V){
 function cm172For(rig,c){if(!CM172.on)return null;return CM172.D[rig+'|'+cm172Sp(rig,c)]||null}
 function cm172Build(D,C,c){const red=!!(c&&c.v=='Shadow'),key=D.rig+'|'+D.sp+'|'+C+'|'+(red?1:0)+(CM172.smooth?'|s':'');if(CM172.gc[key])return CM172.last[D.rig]=CM172.gc[key];
   const B=cm172B(D.rig);B.red=red;B.C=C;B.c=c;D.build(B,c||{},C,red);
-  const out={body:cm172Geo(B.slot('hide')),slots:{},head:B.head,back:B.back,up:B.up,horn:B.horn,armor:B.armor,tris:0};
+  const out={D,body:cm172Geo(B.slot('hide')),slots:{},head:B.head,back:B.back,up:B.up,horn:B.horn,armor:B.armor,tris:0};
   for(const k in B.sl)if(k!='hide'&&B.sl[k].IX.length)out.slots[k]=cm172Geo(B.sl[k]);
   [out.body,...Object.values(out.slots)].forEach(g=>out.tris+=g.index.count/3);CM172.tris[D.sp]=out.tris;
   if(CM172.chk){try{CM172.rep[D.sp]=cm172Check(B,CM172.chk>1e-6&&CM172.chk<1?CM172.chk:.004)}catch(e){CM172.rep[D.sp]=[{nm:'check failed '+e,d:-1}]}}
   CM172.last[D.rig]=out;return CM172.gc[key]=out}
 // the extra slot meshes on the body's skeleton (shared materials)
 function cm172Attach(x,out){const body=x.b.children.find(m=>m.isSkinnedMesh&&m.skeleton);if(!body)return;const M=cm172Mats(),L=[];
-  for(const k in out.slots){const m=new THREE.SkinnedMesh(out.slots[k],M[k]||M.c);m.castShadow=k!='g';m.frustumCulled=false;m.userData.cm172=k;L.push(m)}
-  dkBind(body,L);x.cm172=out;if(CM172.smooth){body.material=M.hide;body.userData.lpsSkip=1;L.forEach(m=>m.userData.lpsSkip=1)}}
+  const D=out.D,tk=D&&D.tex||'fur';
+  for(const k in out.slots){const m=new THREE.SkinnedMesh(out.slots[k],k=='f'?cm172TexMat(D&&D.ftex||tk,'f'):(M[k]||M.c));m.castShadow=k!='g';m.frustumCulled=false;m.userData.cm172=k;L.push(m)}
+  dkBind(body,L);x.cm172=out;if(CM172.smooth||out.D){body.material=cm172TexMat(tk,'hide');body.userData.lpsSkip=1;L.forEach(m=>m.userData.lpsSkip=1)}}
 function cm172Install(rig){const old=LPR[rig];if(!old||old.__cm172)return;
   const pick=c=>cm172For(rig,c),cur=()=>CM172.last[rig];
   const N={__cm172:1,old,

@@ -54925,8 +54925,11 @@ function ed171Tick(){const k=cvKey(),I=k>=0?INSL[k]:null,on=ED171.on&&ed171Done(
 // evolution looks' rays land on the new body); the other slots become extra skinned meshes on the same skeleton.
 // Every part is placed from a surface point of a loft (B.at), so it sits on the body; CM172.chk=1 makes the builder report
 // parts that float (cm172Check), and the tests fail on them.
-var CM172={on:true,D:{},gc:{},chk:0,tris:{},rep:{},last:{}};
+var CM172={on:true,D:{},gc:{},chk:0,tris:{},rep:{},last:{},smooth:1,tile:.3};
 // ---------------- shared materials ----------------
+function cm172TexMat(kind,slot){const M=cm172Mats(),k=kind+'|'+slot;if(M.tx[k])return M.tx[k];const sm=!!CM172.smooth;
+  const m=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:!sm,skinning:true,side:THREE.DoubleSide,map:cm172Tex(kind),roughness:slot=='f'?.92:.88,metalness:0});
+  m.userData.lpsSkip=1;return M.tx[k]=m}
 function cm172Mats(){if(CM172.M&&CM172.M.sm===!!CM172.smooth)return CM172.M;const sm=!!CM172.smooth,f=o=>Object.assign({vertexColors:true,flatShading:!sm,skinning:true},o),M=dkM();
   // flat shading takes its normal from the screen, so every material is two-sided and no part can show its back
   const D=THREE.DoubleSide;CM172.M={k:new THREE.MeshStandardMaterial(f({roughness:.4,metalness:.24,side:D})),   // chitin, scales, horn, shell (glossy)
@@ -54935,9 +54938,35 @@ function cm172Mats(){if(CM172.M&&CM172.M.sm===!!CM172.smooth)return CM172.M;cons
     m:new THREE.MeshStandardMaterial(f({roughness:.38,metalness:.62,side:D})),        // iron, bronze, gold
     g:new THREE.MeshBasicMaterial({vertexColors:true,skinning:true,side:D}),          // glow (eyes, embers, runes)
     c:sm?new THREE.MeshStandardMaterial(f({roughness:.9,metalness:.04,side:D})):M.c,
-    hide:new THREE.MeshStandardMaterial(f({roughness:.9,metalness:0,side:D})),sm};
+    hide:new THREE.MeshStandardMaterial(f({roughness:.9,metalness:0,side:D})),sm,tx:{}};
+  // the body and the fur clumps carry the painted texture of their kind (cm172TexMat)
   // the smooth look opts out of the world's low-poly pass (0750), which would flatten them again
   if(sm)Object.values(CM172.M).forEach(m=>{if(m&&m.isMaterial)m.userData.lpsSkip=1});return CM172.M}
+// ---------------- painted detail textures (owner, Oct 30 2026: "see how it handles making fur") ----------------
+// Fur, scales and the like are PAINTED into a shared grey texture, not built from triangles: the material multiplies the
+// texture with the vertex colours, so one texture serves every creature and every colour. Tileable; v runs along the body
+// (the fur flows toward +v), u around it. Kinds: fur (overlapping clumps, light tips, dark roots, strands), fine (short fur
+// for faces and legs), scale, chitin, skin.
+function cm172Tex(kind){CM172.tex=CM172.tex||{};if(CM172.tex[kind])return CM172.tex[kind];
+  const S=512,cv=document.createElement('canvas');cv.width=cv.height=S;const x=cv.getContext('2d'),rn=cmRng(kind.length*977+13),g=v=>{const c=Math.round(Math.max(0,Math.min(1,v))*255);return 'rgb('+c+','+c+','+c+')'};
+  const wrap=(f)=>{for(const dx of [-S,0,S])for(const dy of [-S,0,S]){x.save();x.translate(dx,dy);f();x.restore()}};
+  if(kind=='fur'||kind=='fine'){const fine=kind=='fine',cols=fine?10:7,rows=fine?8:5,cw=S/cols,rh=S/rows;
+    // a mid base, then layers of soft clumps: a blurred shadow under each, a gradient body (dark root → light tip), strands
+    x.fillStyle=g(.6);x.fillRect(0,0,S,S);const L=[];
+    for(let r=rows*2-1;r>=0;r--)for(let c=0;c<cols;c++)L.push([c*cw+(r%2?cw/2:0)+(rn()-.5)*cw*.5,r*rh/2+(rn()-.5)*rh*.25,cw*(1+rn()*.45),rh*(1.7+rn()*.7),(rn()-.5)*.3,rn()]);
+    L.forEach(([cx,cy,w,h,tw,k])=>wrap(()=>{x.save();x.translate(cx,cy);x.rotate(tw);
+      const shape=(sc)=>{x.beginPath();x.moveTo(-w*.5*sc,0);x.bezierCurveTo(-w*.55*sc,h*.5,-w*.15,h*.82,w*.06,h);x.bezierCurveTo(w*.18,h*.8,w*.55*sc,h*.5,w*.5*sc,0);x.quadraticCurveTo(0,-h*.15,-w*.5*sc,0)};
+      x.save();x.filter='blur('+(fine?2:4)+'px)';x.translate(w*.06,h*.08);x.fillStyle='rgba(0,0,0,.32)';shape(1);x.fill();x.restore();
+      const gr=x.createLinearGradient(0,0,0,h);gr.addColorStop(0,g(.62+k*.06));gr.addColorStop(.6,g(.84+k*.06));gr.addColorStop(1,g(.97));x.fillStyle=gr;shape(1);x.fill();
+      x.lineCap='round';for(let i=0;i<(fine?4:9);i++){const sx=(rn()-.5)*w*.75,lt=rn()<.55;x.strokeStyle=lt?'rgba(255,255,255,.35)':'rgba(40,40,40,.28)';x.lineWidth=(fine?.8:1.4)+rn()*(fine?.8:1.6);
+        x.beginPath();x.moveTo(sx,h*(.05+rn()*.15));x.quadraticCurveTo(sx*.7+(rn()-.5)*4,h*.55,sx*.25+w*.04,h*(.8+rn()*.18));x.stroke()}
+      x.restore()}))}
+  else if(kind=='scale'||kind=='chitin'){const cols=kind=='scale'?12:6,rows=kind=='scale'?14:7,cw=S/cols,rh=S/rows;x.fillStyle=g(.4);x.fillRect(0,0,S,S);
+    for(let r=rows-1;r>=0;r--)for(let c=0;c<cols;c++){const cx=c*cw+(r%2?cw/2:0),cy=r*rh,w=cw*.98,h=rh*1.5;wrap(()=>{x.save();x.translate(cx,cy);
+      const gr=x.createRadialGradient(0,h*.25,1,0,h*.35,w*.75);gr.addColorStop(0,g(.98));gr.addColorStop(.7,g(.8));gr.addColorStop(1,g(.55));x.fillStyle=gr;
+      x.beginPath();x.moveTo(-w*.5,0);x.quadraticCurveTo(-w*.55,h*.7,0,h);x.quadraticCurveTo(w*.55,h*.7,w*.5,0);x.closePath();x.fill();x.strokeStyle=g(.3);x.lineWidth=1.5;x.stroke();x.restore()})}}
+  else{x.fillStyle=g(.85);x.fillRect(0,0,S,S);for(let i=0;i<1400;i++){x.fillStyle=g(.7+rn()*.3);x.globalAlpha=.25;const r=2+rn()*7;x.beginPath();x.arc(rn()*S,rn()*S,r,0,7);x.fill()}x.globalAlpha=1}
+  const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return CM172.tex[kind]=t}
 // ---------------- small helpers ----------------
 var CM_V=THREE.Vector3;
 function cmRng(s){let a=(s|0)||1;return ()=>{a=(a*1664525+1013904223)>>>0;return a/4294967296}}
@@ -54995,14 +55024,14 @@ function cmCrys(n,sh){return cmLathe('crys|'+n+'|'+sh,[[0,0],[.82,.02],[1,.12],[
 // 'b' bone/teeth/claws, 'f' fur locks/feathers, 'm' metal, 'c' cloth/leather, 'g' glow.
 function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k,i)=>bi[k]=i);
   const B={rig,S,O,bi,sl:{},L:{},parts:[],seed:7,rn:cmRng(7)};
-  B.slot=k=>B.sl[k]||(B.sl[k]={P:[],C:[],SI:[],SW:[],IX:[]});
+  B.slot=k=>B.sl[k]||(B.sl[k]={P:[],C:[],SI:[],SW:[],IX:[],UV:[]});
   B.bp=n=>{const r=S.bones[n];if(!r)throw new Error('cm172: no bone '+n+' in '+rig);return new CM_V(r[1],r[2],r[3])};
   // weights: 'bone' | [boneA, boneB, blend] | {bone:w,...} → [[i,w]x4]
   B.W=w=>{let m={};if(typeof w=='string')m[w]=1;else if(Array.isArray(w)){m[w[0]]=(m[w[0]]||0)+1-(w[2]||0);if(w[2])m[w[1]]=(m[w[1]]||0)+w[2]}else m=w;
     const L=Object.keys(m).filter(k=>m[k]>1e-4).map(k=>{if(bi[k]==null)throw new Error('cm172: no bone '+k+' in '+rig);return [bi[k],m[k]]}).sort((a,b)=>b[1]-a[1]).slice(0,4);
     const s=L.reduce((a,q)=>a+q[1],0)||1;L.forEach(q=>q[1]/=s);while(L.length<4)L.push([0,0]);return L};
   B.wmix=(a,b,k)=>{const m={};a.forEach(([i,w])=>{if(w)m[O[i]]=(m[O[i]]||0)+w*(1-k)});b.forEach(([i,w])=>{if(w)m[O[i]]=(m[O[i]]||0)+w*k});return B.W(m)};
-  B.vert=(sl,p,col,W)=>{const s=B.slot(sl),i=s.P.length/3;s.P.push(p.x,p.y,p.z);const c=cmCol(col);s.C.push(c.r,c.g,c.b);W.forEach(q=>s.SI.push(q[0]));W.forEach(q=>s.SW.push(q[1]));return i};
+  B.vert=(sl,p,col,W,uv)=>{const s=B.slot(sl),i=s.P.length/3;s.P.push(p.x,p.y,p.z);s.UV.push(uv?uv[0]:0,uv?uv[1]:0);const c=cmCol(col);s.C.push(c.r,c.g,c.b);W.forEach(q=>s.SI.push(q[0]));W.forEach(q=>s.SW.push(q[1]));return i};
   // ---- lofts: smooth skinned tubes. rings: {p:[x,y,z], rx, ryT, ryB, b:<weights>, ...}; o: {seg, ref, sub (spline steps between
   //      rings), prof(a,u) radius multiplier (a: 0 = +x side, PI/2 = top), paint(rgbHex, ring, s, c, u) → hex, capA/capB (rounded
   //      ends: number of shrinking rings), name, slot, sq (squareness of the section, 0 round … .4 boxy)}
@@ -55019,20 +55048,22 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
       const add=[];for(let s=1;s<=n;s++){const t=s/n,k=Math.sqrt(Math.max(0,1-t*t*.98));add.push(Object.assign({},E,{p:E.p.clone().addScaledVector(d,len*t),rx:E.rx*k,ryT:E.ryT*k,ryB:E.ryB*k,cap:1}))}
       if(end)RR.push(...add);else RR.unshift(...add.reverse())};
     cap(o.capA==null?0:o.capA===true?2:o.capA,0);cap(o.capB==null?0:o.capB===true?2:o.capB,1);
-    const N=RR.length,sl=o.slot||'hide',base=B.slot(sl).P.length/3,rec={rings:RR,seg,o,frames:[]};
+    const N=RR.length,sl=o.slot||'hide',base=B.slot(sl).P.length/3,rec={rings:RR,seg,o,frames:[]},tile=o.tile||CM172.tile||.3;
+    // texture: v runs along the loft by arc length (the fur flows toward the end), u around it, repeated to keep the clumps square
+    let av=0,per=0;RR.forEach((r,i)=>{if(i)av+=r.p.distanceTo(RR[i-1].p);r.av=av;per=Math.max(per,Math.PI*(r.rx+(r.ryT+r.ryB)/2))});rec.ru=o.ru||Math.max(1,Math.round(per/tile));
     let prevU=null;
     RR.forEach((r,i)=>{const tg=RR[Math.min(i+1,N-1)].p.clone().sub(RR[Math.max(i-1,0)].p).normalize();
       let ref=ref0.clone();if(Math.abs(ref.dot(tg))>.92)ref=prevU?prevU.clone():new CM_V(0,0,1);
       const U=ref.clone().sub(tg.clone().multiplyScalar(ref.dot(tg))).normalize(),Sd=new CM_V().crossVectors(U,tg);prevU=U;rec.frames.push({tg,U,Sd});
       const u=(i)/(N-1);r.u=u;
-      for(let k=0;k<seg;k++){const a=(o.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?r.ryT:r.ryB,m=o.prof?o.prof(a,u,r):1,sq=o.sq||0;
+      for(let k=0;k<=seg;k++){const a=(o.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?r.ryT:r.ryB,m=o.prof?o.prof(a,u,r):1,sq=o.sq||0;
         const cx=Math.sign(c)*Math.pow(Math.abs(c),1-sq),sy=Math.sign(s)*Math.pow(Math.abs(s),1-sq);
         const p=r.p.clone().addScaledVector(Sd,cx*r.rx*m).addScaledVector(U,sy*ry*m);
-        const col=o.paint?o.paint(r,s,c,u,a):o.col||0x808080;B.vert(sl,p,col,r.W)}});
-    const IX=B.slot(sl).IX;for(let i=0;i<N-1;i++)for(let k=0;k<seg;k++){const a=base+i*seg+k,a1=base+i*seg+(k+1)%seg,b2=a+seg,b3=a1+seg;IX.push(a,a1,b2,b2,a1,b3)}
+        const col=o.paint?o.paint(r,s,c,u,a):o.col||0x808080;B.vert(sl,p,col,r.W,[k/seg*rec.ru,r.av/tile])}});
+    const IX=B.slot(sl).IX,S1=seg+1;for(let i=0;i<N-1;i++)for(let k=0;k<seg;k++){const a=base+i*S1+k,a1=a+1,b2=a+S1,b3=a1+S1;IX.push(a,a1,b2,b2,a1,b3)}
     // close the ends with a fan
-    [[0,-1],[N-1,1]].forEach(([ri,dir])=>{const r=RR[ri],ci=B.vert(sl,r.p,o.paint?o.paint(r,dir,0,r.u,0):o.col||0x808080,r.W),o0=base+ri*seg;
-      for(let k=0;k<seg;k++){const a=o0+k,a1=o0+(k+1)%seg;if(dir>0)IX.push(ci,a,a1);else IX.push(ci,a1,a)}});
+    [[0,-1],[N-1,1]].forEach(([ri,dir])=>{const r=RR[ri],ci=B.vert(sl,r.p,o.paint?o.paint(r,dir,0,r.u,0):o.col||0x808080,r.W,[rec.ru*.5,r.av/tile+dir*.05]),o0=base+ri*S1;
+      for(let k=0;k<seg;k++){const a=o0+k,a1=a+1;if(dir>0)IX.push(ci,a,a1);else IX.push(ci,a1,a)}});
     rec.base=base;rec.sl=sl;if(o.name)B.L[o.name]=rec;B.parts.push({nm:o.name||'loft',sl,v0:base,v1:B.slot(sl).P.length/3,loft:1,root:!!o.root});return rec};
   // ---- a point on a loft's surface: u 0..1 along it, angle a (0 = +x side, PI/2 = top, -PI/2 = underside), off outward
   //      → {p, n (outward normal), t (tangent toward the end), s (side tangent), W (weights)}
@@ -55053,7 +55084,7 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
     else if(o.rot)M.makeRotationFromEuler(new THREE.Euler(o.rot[0]||0,o.rot[1]||0,o.rot[2]||0,o.ord||'XYZ'));
     const sc=o.s==null?[1,1,1]:Array.isArray(o.s)?o.s:[o.s,o.s,o.s];M.multiply(new THREE.Matrix4().makeScale(sc[0],sc[1],sc[2]));M.setPosition(pp);
     const W=Array.isArray(o.W)&&Array.isArray(o.W[0])?o.W:B.W(o.W||o.b),s=B.slot(sl),v0=s.P.length/3;
-    for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);const l=V.clone();V.applyMatrix4(M);B.vert(sl,V,o.paint?o.paint(l):o.col||0x808080,W);s.IX.push(v0+i)}
+    const UVa=g.attributes.uv;for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);const l=V.clone();V.applyMatrix4(M);B.vert(sl,V,o.paint?o.paint(l):o.col||0x808080,W,UVa?[UVa.getX(i),UVa.getY(i)]:[l.x*.5+.5,.5-l.y*.5]);s.IX.push(v0+i)}
     B.parts.push({nm:o.nm||'part',sl,v0,v1:s.P.length/3,free:!!o.free});return v0};
   // a part standing on a loft's surface: q = B.at(...); its +z along the normal, +y along dir (default: toward the loft end)
   B.on=(sl,g,q,o)=>{o=Object.assign({},o);const sink=o.sink==null?.25:o.sink,sz=Array.isArray(o.s)?o.s[2]:(o.s||1);
@@ -55066,6 +55097,36 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
     const s=B.slot(sl),v0=s.P.length/3,P=g.attributes.position,V=new CM_V(),W=q.W||B.W(o.b);
     for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);const t=V.z;V.applyMatrix4(M);B.vert(sl,V,o.col2!=null?cmMix(o.col,o.col2,cmSS(.2,1,t)):o.col||0x808080,W);s.IX.push(v0+i)}
     B.parts.push({nm:o.nm||'spike',sl,v0,v1:s.P.length/3});return v0};
+  // ---- a fringe of fur clumps (the reference wolf's method): a row of pointed clumps rooted on the surface along a line of
+  //      surface points, each clump a folded card (raised spine, two flanks) that flows along `flow`, lifted off the surface by
+  //      `lift` (radians), so the silhouette gets big, readable, jagged fur; the painted texture gives the strands.
+  //      pts: B.at(...) points in order; o: {len (number | fn(i,t)), flow (vector | fn(q,i,t)), lift, curl (tip bends back to the
+  //      surface), fold (spine height, × width), jit, col: [root, tip] | fn(i,t) → [root, tip], sink, sl, nm, wid (width factor)}
+  B.fringe=(pts,o)=>{const sl=o.sl||'f',s=B.slot(sl),v0=s.P.length/3,rn=cmRng(o.seed||(B.seed+=11)),n=pts.length-1,tile=o.tile||CM172.tile||.3;
+    for(let i=0;i<n;i++){const t=n>1?i/(n-1):.5,qa=pts[i],qb=pts[i+1],j=1+(o.jit==null?.25:o.jit)*(rn()-.5)*2;
+      const m=qa.p.clone().lerp(qb.p,.5),nn=qa.n.clone().add(qb.n).normalize(),W=B.wmix(qa.W,qb.W,.5),wd=qa.p.distanceTo(qb.p)*(o.wid||1);
+      const L=(typeof o.len=='function'?o.len(i,t):o.len)*j,fl0=typeof o.flow=='function'?o.flow({p:m,n:nn,t:qa.t,s:qa.s},i,t):cmV(o.flow||qa.t);
+      const fl=fl0.clone().sub(nn.clone().multiplyScalar(fl0.dot(nn))).normalize(),lift=(typeof o.lift=='function'?o.lift(i,t):o.lift==null?.35:o.lift)+(rn()-.5)*.15;
+      const D=fl.clone().multiplyScalar(Math.cos(lift)).addScaledVector(nn,Math.sin(lift)).normalize(),sink=(o.sink==null?.006:o.sink);
+      const ex=(qb.p.clone().sub(qa.p)).normalize(),grow=wd*.5*((o.over==null?.25:o.over));
+      const b0=qa.p.clone().addScaledVector(nn,-sink).addScaledVector(ex,-grow),b1=qb.p.clone().addScaledVector(nn,-sink).addScaledVector(ex,grow);
+      const tip=m.clone().addScaledVector(D,L).addScaledVector(nn,-(o.curl==null?.25:o.curl)*L*Math.cos(lift)).addScaledVector(ex,(rn()-.5)*wd*.3);
+      const up=new CM_V().crossVectors(ex,D).normalize();if(up.dot(nn)<0)up.negate();const fold=(o.fold==null?.18:o.fold)*wd;
+      const sL=b0.clone().lerp(tip,.5).addScaledVector(ex,-wd*.08),sR=b1.clone().lerp(tip,.5).addScaledVector(ex,wd*.08),cm=m.clone().lerp(tip,.42).addScaledVector(up,fold);
+      const cc=typeof o.col=='function'?o.col(i,t):o.col||[0x808080,0xb0b0b0],C=k=>cmMix(cc[0],cc[1],k),Wt=W,u0=i*.37%1,uw=wd/tile,vl=L/tile;
+      const V=[[b0,C(0),[u0,0]],[b1,C(0),[u0+uw,0]],[cm,C(.45),[u0+uw*.5,vl*.42]],[sL,C(.55),[u0+uw*.1,vl*.5]],[sR,C(.55),[u0+uw*.9,vl*.5]],[tip,C(1),[u0+uw*.5,vl]]],bi=s.P.length/3;
+      V.forEach(([p,c,uv],k)=>B.vert(sl,p,c,k<2?(k?qb.W:qa.W):Wt,uv));[[0,1,2],[0,2,3],[1,4,2],[3,2,5],[2,4,5]].forEach(f=>s.IX.push(bi+f[0],bi+f[1],bi+f[2]))}
+    B.parts.push({nm:o.nm||'fringe',sl,v0,v1:s.P.length/3});return v0};
+  // a painted stroke lying on the surface (markings: stripes, slashes, scars): pts = [[u, a], ...] on loft `name`, width w
+  //      (tapers to points at both ends, or o.taper = [start, end] factors), colour col (or [start, end]); slot 'f' (textured)
+  B.stroke=(name,pts,w,col,o)=>{o=o||{};const sl=o.sl||'f',s=B.slot(sl),v0=s.P.length/3,Q=pts.map(([u,a])=>B.at(name,u,a,o.off==null?.0015:o.off)),n=Q.length,tp=o.taper||[0,0];
+    const cc=Array.isArray(col)?col:[col,col];
+    Q.forEach((q,i)=>{const t=n>1?i/(n-1):0,d=Q[Math.min(n-1,i+1)].p.clone().sub(Q[Math.max(0,i-1)].p).normalize(),sd=new CM_V().crossVectors(q.n,d).normalize();
+      const k=Math.sin(Math.PI*Math.min(1,Math.max(0,t)))*(1-tp[0]-tp[1])+tp[0]*(1-t)+tp[1]*t,ww=w*(o.prof?o.prof(t):Math.max(.15,Math.pow(Math.max(0,k),.6)));
+      const c=cmMix(cc[0],cc[1],t);B.vert(sl,q.p.clone().addScaledVector(sd,ww*.5),c,q.W,[t,0]);B.vert(sl,q.p.clone().addScaledVector(sd,-ww*.5),c,q.W,[t,.1])});
+    for(let i=0;i<n-1;i++){const a=v0+i*2;s.IX.push(a,a+1,a+2,a+2,a+1,a+3)}B.parts.push({nm:o.nm||'stroke',sl,v0,v1:s.P.length/3});return v0};
+  // a row of surface points on loft `name`: along the angle at fixed u (o.u, o.a0..o.a1) or along u at a fixed angle (o.a, o.u0..o.u1)
+  B.row=(name,o)=>{const n=o.n||6,L=[];for(let i=0;i<=n;i++){const t=i/n;L.push(o.u!=null?B.at(name,o.u,o.a0+(o.a1-o.a0)*t,o.off||0):B.at(name,o.u0+(o.u1-o.u0)*t,typeof o.a=='function'?o.a(t):o.a,o.off||0))}return L};
   // ---- cover a loft with shingled pieces (the Vorraxis scale method): rows along u, n per row around; o: {geo (CM_SH key or geometry),
   //      u0,u1, rows, n, a0,a1 (angle range, default all round), size (length), w (width factor), lift (tip tilt out), back (tips point
   //      toward the loft start), col(a,u,r,k) → hex, skip(a,u,r,k), jit, sl, out (raise), sz(a,u) size factor}
@@ -55082,7 +55143,7 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
 function cmV(a){return Array.isArray(a)?new CM_V(a[0],a[1],a[2]):a.clone()}
 // ---------------- finishing: slot → skinned BufferGeometry ----------------
 function cm172Geo(s){const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(s.P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(s.C,3));
-  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(s.SI,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(s.SW,4));G.setIndex(s.IX);
+  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(s.SI,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(s.SW,4));G.setAttribute('uv',new THREE.Float32BufferAttribute(s.UV,2));G.setIndex(s.IX);
   if(CM172.smooth)cm172Normals(G,CM172.crease||.9);else G.computeVertexNormals();G.computeBoundingSphere();G.userData.lps=1;return G}
 // smooth normals with creases (the smooth look): each corner averages the faces that meet at the same point (welded by position)
 // and bend less than the crease angle from its own face; sharp edges (claws, plates, teeth) stay sharp. Corners get their own
@@ -55092,13 +55153,13 @@ function cm172Normals(G,crease){const P=G.attributes.position.array,I=G.index.ar
   for(let f=0;f<nf;f++){a.fromArray(P,I[f*3]*3);b.fromArray(P,I[f*3+1]*3);c.fromArray(P,I[f*3+2]*3);const n=c.clone().sub(b).cross(a.clone().sub(b));const l=n.length();if(l>0)n.multiplyScalar(1/l);
     FN[f*3]=n.x;FN[f*3+1]=n.y;FN[f*3+2]=n.z;const w=l;for(let k=0;k<3;k++){const kk=key(I[f*3+k]);let L=map.get(kk);if(!L)map.set(kk,L=[]);L.push(f)}}
   // a new vertex per (vertex, normal group): split where creases are
-  const NA=[],oldN=P.length/3,remap=new Map(),attrs=['position','color','skinIndex','skinWeight'].map(k=>G.attributes[k]),out=attrs.map(()=>[]),IX=new Uint32Array(I.length);
+  const NA=[],remap=new Map(),attrs=['position','color','skinIndex','skinWeight','uv'].map(k=>G.attributes[k]),out=attrs.map(()=>[]),IX=new Uint32Array(I.length);
   for(let f=0;f<nf;f++)for(let k=0;k<3;k++){const v=I[f*3+k],L=map.get(key(v)),n=new CM_V();
     for(const g of L){const d=FN[g*3]*FN[f*3]+FN[g*3+1]*FN[f*3+1]+FN[g*3+2]*FN[f*3+2];if(d>=cos)n.x+=FN[g*3],n.y+=FN[g*3+1],n.z+=FN[g*3+2]}n.normalize();
     const rk=v+'|'+Math.round(n.x*50)+','+Math.round(n.y*50)+','+Math.round(n.z*50);let ni=remap.get(rk);
     if(ni==null){ni=NA.length/3;remap.set(rk,ni);NA.push(n.x,n.y,n.z);attrs.forEach((A,j)=>{for(let q=0;q<A.itemSize;q++)out[j].push(A.array[v*A.itemSize+q])})}IX[f*3+k]=ni}
   G.setAttribute('position',new THREE.Float32BufferAttribute(out[0],3));G.setAttribute('color',new THREE.Float32BufferAttribute(out[1],3));
-  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(out[2],4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(out[3],4));
+  G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(out[2],4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(out[3],4));G.setAttribute('uv',new THREE.Float32BufferAttribute(out[4],2));
   G.setAttribute('normal',new THREE.Float32BufferAttribute(NA,3));G.setIndex(new THREE.BufferAttribute(IX,1));return G}
 // ---------------- the float check: every part must touch the body or a part that does ----------------
 // distance from point p to triangle abc
@@ -55132,15 +55193,16 @@ function cm172Sp(rig,c){const V=typeof RV137!='undefined'&&RV137.var[rig];if(V){
 function cm172For(rig,c){if(!CM172.on)return null;return CM172.D[rig+'|'+cm172Sp(rig,c)]||null}
 function cm172Build(D,C,c){const red=!!(c&&c.v=='Shadow'),key=D.rig+'|'+D.sp+'|'+C+'|'+(red?1:0)+(CM172.smooth?'|s':'');if(CM172.gc[key])return CM172.last[D.rig]=CM172.gc[key];
   const B=cm172B(D.rig);B.red=red;B.C=C;B.c=c;D.build(B,c||{},C,red);
-  const out={body:cm172Geo(B.slot('hide')),slots:{},head:B.head,back:B.back,up:B.up,horn:B.horn,armor:B.armor,tris:0};
+  const out={D,body:cm172Geo(B.slot('hide')),slots:{},head:B.head,back:B.back,up:B.up,horn:B.horn,armor:B.armor,tris:0};
   for(const k in B.sl)if(k!='hide'&&B.sl[k].IX.length)out.slots[k]=cm172Geo(B.sl[k]);
   [out.body,...Object.values(out.slots)].forEach(g=>out.tris+=g.index.count/3);CM172.tris[D.sp]=out.tris;
   if(CM172.chk){try{CM172.rep[D.sp]=cm172Check(B,CM172.chk>1e-6&&CM172.chk<1?CM172.chk:.004)}catch(e){CM172.rep[D.sp]=[{nm:'check failed '+e,d:-1}]}}
   CM172.last[D.rig]=out;return CM172.gc[key]=out}
 // the extra slot meshes on the body's skeleton (shared materials)
 function cm172Attach(x,out){const body=x.b.children.find(m=>m.isSkinnedMesh&&m.skeleton);if(!body)return;const M=cm172Mats(),L=[];
-  for(const k in out.slots){const m=new THREE.SkinnedMesh(out.slots[k],M[k]||M.c);m.castShadow=k!='g';m.frustumCulled=false;m.userData.cm172=k;L.push(m)}
-  dkBind(body,L);x.cm172=out;if(CM172.smooth){body.material=M.hide;body.userData.lpsSkip=1;L.forEach(m=>m.userData.lpsSkip=1)}}
+  const D=out.D,tk=D&&D.tex||'fur';
+  for(const k in out.slots){const m=new THREE.SkinnedMesh(out.slots[k],k=='f'?cm172TexMat(D&&D.ftex||tk,'f'):(M[k]||M.c));m.castShadow=k!='g';m.frustumCulled=false;m.userData.cm172=k;L.push(m)}
+  dkBind(body,L);x.cm172=out;if(CM172.smooth||out.D){body.material=cm172TexMat(tk,'hide');body.userData.lpsSkip=1;L.forEach(m=>m.userData.lpsSkip=1)}}
 function cm172Install(rig){const old=LPR[rig];if(!old||old.__cm172)return;
   const pick=c=>cm172For(rig,c),cur=()=>CM172.last[rig];
   const N={__cm172:1,old,
@@ -55205,40 +55267,45 @@ function cmTeeth(B,pts,o){pts.forEach((q,i)=>{const big=o.fang&&o.fang.indexOf(i
 function cmFur(B,name,o){return B.cover(name,Object.assign({geo:'lock',sl:'f',lift:.32,w:.55,th:.5},o))}
 // ================= v172 Ashwolf, remastered =================
 // Direction from the original (0620): a lean grey dire wolf with a shaggy ruff, dark hackles, a scarred muzzle, yellow eyes
-// and long fangs. Now a serious timber wolf built to the mini-boss standard:
-//  * Anatomy: a deep keel chest reaching the elbows, a tucked waist, strong haunches; withers higher than the rump; a wedge
-//    skull with a sloping stop, wide cheekbones, a narrow muzzle and a lower jaw hinged under the ear (cm172Hinge), lips, a dark
-//    mouth, fangs and a row of teeth; small amber eyes under a heavy brow; upright ears set back.
-//  * Legs: shoulder blade, upper arm, elbow, forearm, wrist and an angled pastern in front; thigh, stifle, gaskin and an angled
-//    hock behind; four-toed paws with knuckles, pads and black claws.
-//  * Fur (shingled locks, the Vorraxis scale method): a heavy mane and hackles, a dark saddle down the back, a cheek ruff,
-//    a pale throat bib, breeches on the haunches and a full brush tail with a charcoal tip.
-//  * Colours from the companion colour: grey with a charcoal saddle and muzzle top, pale underneath and inside the legs.
+// and long fangs ("Cinder…": an ash wolf). Built the way the owner's reference wolf is (Oct 30 2026):
+//  * the fur is PAINTED (cm172Tex 'fur', shared) on a simple, smooth body; the silhouette gets a few big jagged fur clumps
+//    (B.fringe): a mane of spikes over the neck and withers, a cheek ruff, a chest tuft, elbow and haunch tufts, a flame tail;
+//  * bold colour design: a dark slate back fading to a near-white chest, cheeks, belly and legs, and the ash wolf's theme in
+//    ember: smouldering brow and cheek markings, ember socks above white paws, an ember tail tip and an ember streak under the mane;
+//  * anatomy: deep chest, tucked waist, strong haunches; a wedge skull, cheekbones, narrow muzzle, a jaw hinged under the ear
+//    (cm172Hinge), black lips, fangs and a row of teeth, narrow amber eyes under a heavy brow, tall ears with pale inner fur;
+//    jointed legs (elbow, wrist, pastern / stifle, hock) and four-toed paws with dark claws.
 // Bones (SPEC.Ashwolf): pelvis spine chest neck head jaw tail0-3 fl0-2 fr0-2 hl0-2 hr0-2 (fl / hl at -x).
 var AW172={hinge:[0,.668,.62]};
-function aw172Build(B,c,C,red){const K=cm172Pal(C,{mute:.1,back:.52,belly:.42}),eye=red?0xe02818:0xd8a028,nose=0x0c0b0c,gum=0x1e0c0c,tooth=0xe2d8c0,claw=0x121012;
-  const sad=K.back,deep=K.dark,cream=K.belly,ash=cmMix(K.main,0xd0ccc4,.2),side=s=>s>0?0:Math.PI;
-  // ---------------- torso: chest to rump (front → back) ----------------
-  const T=B.loft({name:'torso',seg:12,sub:2,capA:0,capB:2,rings:[
+function aw172Pal(C){const m=cmCol(lpMain(C,.06)),hsl={};m.getHSL(hsl);
+  // the coat: a slate back, the colour on the flanks, a near-white underside; the ember theme accents
+  const back=new THREE.Color().setHSL(hsl.h,Math.min(.35,hsl.s+.1),Math.max(.1,hsl.l*.3)).getHex();
+  return {main:m.getHex(),back,deep:cmShade(back,.6),pale:cmMix(m,0xf4f0ea,.85),cream:cmMix(m,0xf2eee8,.55),
+    emb:0xd8461c,embD:0x7a1a0e,embL:0xff8a3a,nose:0x0d0b0c,gum:0x2a0e10,tooth:0xeee6d2,claw:0x1a1618}}
+function aw172Build(B,c,C,red){const K=aw172Pal(C),eye=red?0xff3020:0xf2c040,side=s=>s>0?0:Math.PI,mix=cmMix,ss=cmSS;
+  // coat colour by height on the body section (s = sin of the angle: 1 top, -1 belly)
+  const coat=s=>{const t=ss(-.45,.6,s);return t>.45?mix(K.main,K.back,ss(.45,1,t)):mix(K.pale,K.main,ss(0,.45,t))};
+  // ---------------- torso: chest to rump ----------------
+  const T=B.loft({name:'torso',seg:16,sub:2,capA:0,capB:2,rings:[
       {p:[0,.585,.42],rx:.105,ryT:.115,ryB:.13,b:['neck','chest',.5]},
-      {p:[0,.565,.32],rx:.148,ryT:.15,ryB:.2,b:'chest'},
-      {p:[0,.545,.18],rx:.155,ryT:.15,ryB:.205,b:'chest'},
-      {p:[0,.53,.04],rx:.138,ryT:.135,ryB:.15,b:['chest','spine',.5]},
-      {p:[0,.525,-.1],rx:.11,ryT:.12,ryB:.092,b:'spine'},
-      {p:[0,.52,-.2],rx:.116,ryT:.12,ryB:.095,b:['spine','pelvis',.5]},
-      {p:[0,.515,-.3],rx:.128,ryT:.125,ryB:.115,b:'pelvis'},
-      {p:[0,.505,-.4],rx:.1,ryT:.1,ryB:.1,b:['pelvis','tail0',.25]}],
+      {p:[0,.568,.32],rx:.15,ryT:.152,ryB:.2,b:'chest'},
+      {p:[0,.548,.18],rx:.156,ryT:.15,ryB:.205,b:'chest'},
+      {p:[0,.532,.04],rx:.138,ryT:.135,ryB:.15,b:['chest','spine',.5]},
+      {p:[0,.526,-.1],rx:.11,ryT:.12,ryB:.092,b:'spine'},
+      {p:[0,.522,-.2],rx:.118,ryT:.121,ryB:.095,b:['spine','pelvis',.5]},
+      {p:[0,.516,-.3],rx:.13,ryT:.126,ryB:.115,b:'pelvis'},
+      {p:[0,.506,-.4],rx:.1,ryT:.1,ryB:.1,b:['pelvis','tail0',.25]}],
     prof:(a,u)=>{const s=Math.sin(a);return 1+.05*Math.max(0,-s)*Math.max(0,1-Math.abs(u-.3)*4)-.03*Math.pow(Math.max(0,s),8)},
-    paint:(r,s,c,u)=>u<.2&&s<-.2?cream:cmCounter(K,s,{t1:.35,t0:-.3})});
+    paint:(r,s,c,u)=>{let h=coat(s);if(u<.25&&s<.1)h=mix(h,K.pale,ss(.25,.05,u));if(s>.9&&u<.35)h=mix(h,K.embD,.45);return h}});
   // ---------------- neck ----------------
-  const N=B.loft({name:'neck',seg:12,sub:2,rings:[
+  const N=B.loft({name:'neck',seg:14,sub:2,rings:[
       {p:[0,.565,.34],rx:.118,ryT:.13,ryB:.15,b:['neck','chest',.6]},
       {p:[0,.62,.46],rx:.098,ryT:.108,ryB:.118,b:'neck'},
       {p:[0,.675,.54],rx:.086,ryT:.092,ryB:.092,b:['neck','head',.5]},
       {p:[0,.71,.585],rx:.078,ryT:.078,ryB:.082,b:'head'}],
-    paint:(r,s)=>s<-.1?cream:cmCounter(K,s,{t1:.2})});
-  // ---------------- head: skull and upper muzzle ----------------
-  const H=B.loft({name:'skull',seg:14,sub:2,capA:1,capB:2,capLen:.6,rings:[
+    paint:(r,s)=>s<.1?K.pale:coat(s)});
+  // ---------------- head: skull and upper muzzle, with the ember markings ----------------
+  const H=B.loft({name:'skull',seg:18,sub:3,capA:1,capB:2,capLen:.6,tile:.22,rings:[
       {p:[0,.722,.53],rx:.072,ryT:.068,ryB:.072,b:'head'},
       {p:[0,.736,.595],rx:.092,ryT:.08,ryB:.076,b:'head'},
       {p:[0,.733,.66],rx:.09,ryT:.068,ryB:.066,b:'head'},
@@ -55247,68 +55314,80 @@ function aw172Build(B,c,C,red){const K=cm172Pal(C,{mute:.1,back:.52,belly:.42}),
       {p:[0,.694,.855],rx:.034,ryT:.035,ryB:.036,b:'head'},
       {p:[0,.69,.9],rx:.026,ryT:.029,ryB:.03,b:'head'}],
     prof:(a,u)=>{const c=Math.abs(Math.cos(a)),s=Math.sin(a);return 1+.09*c*Math.max(0,1-Math.abs(u-.35)*5)*(s<.3?1:.4)}, // cheekbones
-    paint:(r,s,c,u)=>{if(u>.965&&s>-.1)return nose;if(s<-.8&&u>.42)return cmMix(nose,deep,.5);if(u>.4&&s>.35)return cmMix(sad,deep,.3);if(s<-.15)return cream;return cmCounter(K,s,{t1:.3})}});
+    paint:(r,s,c,u)=>{if(u>.965&&s>-.1)return K.nose;if(s<-.78&&u>.42)return mix(K.nose,K.back,.4);
+      let h=s>.55?mix(K.main,K.back,ss(.55,.95,s)*.85):s>-.05?mix(K.pale,K.main,ss(-.05,.55,s)):K.pale;
+      if(u>.55&&s>.2)h=mix(h,K.back,.55);                                                     // dark muzzle bridge
+      return h}});
   // ---------------- lower jaw (hinged under the ear) and the mouth ----------------
   const Jw=B.loft({name:'jaw',seg:10,sub:2,capA:1,capB:2,capLen:.5,rings:[
       {p:[0,.664,.62],rx:.058,ryT:.03,ryB:.032,b:['head','jaw',.5]},
       {p:[0,.658,.7],rx:.042,ryT:.024,ryB:.027,b:'jaw'},
       {p:[0,.658,.79],rx:.031,ryT:.02,ryB:.022,b:'jaw'},
       {p:[0,.662,.86],rx:.022,ryT:.016,ryB:.015,b:'jaw'}],
-    paint:(r,s,c,u)=>s>.8?gum:s>.45?cmMix(nose,deep,.4):cmMix(cream,K.main,.45)});
-  // the mouth cavity between the jaws (dark), half on each so it stretches as the jaw opens
+    paint:(r,s)=>s>.8?K.gum:s>.45?K.nose:K.pale});
   B.loft({name:'mouth',seg:8,sub:1,capA:1,capB:1,rings:[
-      {p:[0,.674,.65],rx:.036,ryT:.008,ryB:.008,b:['head','jaw',.5]},{p:[0,.672,.76],rx:.024,ryT:.007,ryB:.007,b:['head','jaw',.5]},{p:[0,.672,.84],rx:.015,ryT:.006,ryB:.006,b:['head','jaw',.5]}],col:gum});
-  // nose leather
-  B.put('k',cmBlob(3,.06,8),new CM_V(0,.712,.902),{s:[.016,.012,.014],W:B.W('head'),col:nose,nm:'nose'});
-  [-1,1].forEach(s=>{
-    // teeth: a long upper fang near the front with a row behind it; a lower fang on the jaw
-    const up=[.5,.62,.74].map(u=>B.at(H,u,side(s)+s*-.78,-.006));cmTeeth(B,up,{dir:[0,-1,.1],l:.013,r:.005,fang:[2],fl:.036,fr:.009,col:tooth});
-    cmTeeth(B,[B.at(Jw,.78,side(s)+s*.8,-.004)],{dir:[0,1,.15],l:.02,r:.006,col:tooth});
-    // eyes under the brow
-    cmEye(B,B.at(H,.46,side(s)+s*.45,0),{r:.013,col:eye,lid:0x0a0808,brow:cmMix(sad,deep,.3),ba:.45,pr:.3});
-    // cheek ruff: broad locks sweeping back from the cheekbone
-    for(let i=0;i<3;i++){const q=B.at(H,.17+i*.07,side(s)+s*(-.4+i*.3),-.004);B.on('f',CM_SH.lock(),q,{dir:new CM_V(s*.45,-.1,-1).normalize(),s:[.055,.075,.035],tilt:-.12,paint:l=>cmMix(K.main,cmMix(K.main,ash,.5),cmSS(.3,-.9,l.y)),nm:'cheek'})}
-    // ears: upright, set back on the crown, cupped, fur inside
-    const qa=B.at(H,.2,side(s)+s*1.08,-.014),dir=new CM_V(s*.3,1,-.3).normalize(),fz=new CM_V(s*.3,0,1).normalize();
-    B.put('hide',cmG('ear',()=>cmShell([[0,.5],[.5,.35],[.42,0],[.2,-.5],[0,-.95],[-.2,-.5],[-.42,0],[-.5,.35]],.12,0,.18)),qa.p,{ax:{y:dir.clone().negate(),z:fz},s:[.068,.1,.06],W:qa.W,
-      paint:l=>l.y<-.55?deep:cmMix(K.main,sad,.45),nm:'ear'});
-    B.put('f',CM_SH.lock(),qa.p.clone().addScaledVector(dir,.04).addScaledVector(fz,.012),{ax:{y:dir.clone().negate(),z:fz},s:[.036,.055,.03],W:qa.W,col:cmMix(cream,0x6a5a4a,.4),nm:'ear fur'});
+      {p:[0,.674,.65],rx:.036,ryT:.008,ryB:.008,b:['head','jaw',.5]},{p:[0,.672,.76],rx:.024,ryT:.007,ryB:.007,b:['head','jaw',.5]},{p:[0,.672,.84],rx:.015,ryT:.006,ryB:.006,b:['head','jaw',.5]}],col:K.gum});
+  B.put('k',cmBlob(3,.06,8),new CM_V(0,.712,.902),{s:[.017,.013,.015],W:B.W('head'),col:K.nose,nm:'nose'});
+  [-1,1].forEach(s=>{const F=s<0?'fl':'fr',Hh=s<0?'hl':'hr',sd=side(s);
+    // teeth: a row along the lip with a long upper fang; a lower fang
+    cmTeeth(B,[.5,.58,.66,.74].map(u=>B.at(H,u,sd+s*-.8,-.006)),{dir:[0,-1,.1],l:.012,r:.005,fang:[3],fl:.034,fr:.009,col:K.tooth});
+    cmTeeth(B,[B.at(Jw,.78,sd+s*.8,-.004)],{dir:[0,1,.15],l:.02,r:.006,col:K.tooth});
+    // narrow eyes under a heavy brow
+    cmEye(B,B.at(H,.46,sd+s*.45,0),{r:.013,col:eye,lid:0x0a0808,brow:K.back,ba:.5,pr:.28});
+    // ember markings (painted strokes): a slash over the eye sweeping up to the ear, a line under the eye along the cheek, a
+    // short mark on the muzzle bridge
+    const A=a=>sd+s*a;
+    B.stroke(H,[[.6,A(.6)],[.53,A(.7)],[.46,A(.8)],[.39,A(.9)],[.32,A(1.0)],[.25,A(1.08)]],.014,[K.emb,K.embD],{taper:[.35,0],nm:'brow mark'});
+    B.stroke(H,[[.62,A(.2)],[.55,A(.14)],[.48,A(.08)],[.41,A(.02)],[.34,A(-.06)]],.009,[K.emb,K.embD],{nm:'cheek mark'});
+    
+    // ears: tall, set back, the backs dark, pale fur inside
+    const qa=B.at(H,.2,sd+s*1.08,-.014),dir=new CM_V(s*.3,1,-.3).normalize(),fz=new CM_V(s*.3,0,1).normalize();
+    B.put('hide',cmG('ear',()=>cmShell([[0,.5],[.5,.35],[.42,0],[.2,-.5],[0,-.95],[-.2,-.5],[-.42,0],[-.5,.35]],.12,0,.18)),qa.p,{ax:{y:dir.clone().negate(),z:fz},s:[.07,.105,.06],W:qa.W,
+      paint:l=>l.y<-.6?K.deep:K.back,nm:'ear'});
+    const ex=new CM_V().crossVectors(dir,fz).normalize(),ef=[0,1,2,3].map(i=>({p:qa.p.clone().addScaledVector(dir,.012+i*.006).addScaledVector(fz,.016).addScaledVector(ex,(i-1.5)*.012),n:fz,t:dir,s:ex,W:qa.W}));
+    B.fringe(ef,{len:.045,flow:dir,lift:.15,curl:.05,col:[K.cream,K.pale],nm:'ear fur'});
+    // cheek ruff: jagged clumps sweeping back and down from the cheekbones
+    B.fringe(B.row(H,{u:.3,a0:sd+s*.35,a1:sd+s*-1.25,n:4}),{len:i=>.11-i*.01,wid:1.3,flow:new CM_V(s*.3,-.35,-1),lift:.4,col:[K.main,K.pale],nm:'cheek'});
+    B.fringe(B.row(H,{u:.16,a0:sd+s*.6,a1:sd+s*-1.4,n:4}),{len:.12,wid:1.3,flow:new CM_V(s*.4,-.3,-1),lift:.45,col:[K.pale,mix(K.pale,0xffffff,.5)],nm:'cheek2'});
     // ---------------- legs ----------------
-    const fx=.112,hx=.122,inner=(cc)=>cc*s<-.55,F=s<0?'fl':'fr',Hh=s<0?'hl':'hr';
-    cmLeg(B,{side:s,x:fx,name:'fleg'+s,seg:8,sub:1,pts:[
+    const fx=.112,hx=.122,leg=(r,s2,cc,k)=>{const y=r.p.y;let h=cc*s<-.4?K.pale:mix(K.main,K.pale,.35);if(y<.26)h=mix(h,mix(K.emb,K.embD,.3),ss(.26,.12,y)*.85*(1-ss(.1,.07,y)));if(y<.07)h=K.pale;if(y>.42&&k)h=coat(s2*.5+.2);return h};
+    cmLeg(B,{side:s,x:fx,name:'fleg'+s,seg:10,sub:2,pts:[
         [.56,.285,.03,.035,.04,['chest',F+'0',.25],.06],
         [.47,.27,.06,.072,.068,F+'0'],[.37,.255,.05,.058,.06,F+'0'],[.26,.245,.038,.038,.055,[F+'0',F+'1',.5]],
         [.18,.25,.032,.033,.034,F+'1'],[.105,.24,.027,.029,.029,[F+'1',F+'2',.6]],[.055,.252,.026,.027,.025,F+'2']],
-      paint:(r,ss,cc)=>r.p.y<.2&&ss>.4?cmMix(K.main,sad,.55):inner(cc)?cmMix(cream,K.main,.75):cmMix(K.main,sad,.35)});
-    cmPaw(B,{side:s,x:fx,y:.06,z:.275,bone:F+'2',len:.068,wide:.035,h:.024,col:cmMix(K.main,sad,.45),claw});
-    cmLeg(B,{side:s,x:hx,name:'hleg'+s,seg:8,sub:1,pts:[
+      paint:(r,s2,cc)=>leg(r,s2,cc,0)});
+    cmPaw(B,{side:s,x:fx,y:.06,z:.275,bone:F+'2',len:.068,wide:.035,h:.024,col:K.pale,pad:0x2a2224,claw:K.claw});
+    cmLeg(B,{side:s,x:hx,name:'hleg'+s,seg:10,sub:2,pts:[
         [.56,-.3,.035,.045,.05,['pelvis',Hh+'0',.35],.06],[.46,-.27,.07,.098,.096,Hh+'0'],[.35,-.235,.054,.064,.068,Hh+'0'],
         [.265,-.22,.037,.04,.044,[Hh+'0',Hh+'1',.5]],[.19,-.265,.03,.028,.044,Hh+'1'],[.12,-.312,.025,.026,.033,[Hh+'1',Hh+'2',.5]],[.06,-.29,.024,.025,.024,Hh+'2']],
-      paint:(r,ss,cc)=>inner(cc)?cmMix(cream,K.main,.75):r.p.y>.4&&ss<-.3?cmMix(K.main,sad,.3):cmMix(K.main,sad,.35)});
-    cmPaw(B,{side:s,x:hx,y:.055,z:-.262,bone:Hh+'2',len:.066,wide:.033,h:.023,col:cmMix(K.main,sad,.45),claw});
-    // breeches on the haunch
-    cmFur(B,'hleg'+s,{u0:.1,u1:.32,a0:-Math.PI/2-.8,a1:-Math.PI/2+.8,rows:2,n:3,size:.08,w:.9,col:()=>[K.main,cmMix(K.main,ash,.5)],lift:.12});
+      paint:(r,s2,cc)=>leg(r,s2,cc,1)});
+    cmPaw(B,{side:s,x:hx,y:.055,z:-.262,bone:Hh+'2',len:.066,wide:.033,h:.023,col:K.pale,pad:0x2a2224,claw:K.claw});
+    // elbow feathering and the haunch breeches
+    B.fringe(B.row('fleg'+s,{u0:.28,u1:.48,a:-Math.PI/2,n:3}),{len:.09,wid:1.5,flow:new CM_V(0,-1,-.6),lift:.5,col:[K.pale,mix(K.pale,0xffffff,.4)],nm:'elbow'});
+    B.fringe(B.row('hleg'+s,{u0:.12,u1:.4,a:-Math.PI/2+s*-.5,n:4}),{len:.1,wid:1.4,flow:new CM_V(0,-1,-.4),lift:.45,col:[K.main,K.pale],nm:'breeches'});
   });
-  // ---------------- tail: a hanging brush ----------------
-  B.loft({name:'tail',seg:9,sub:2,capA:0,capB:2,rings:[
-      {p:[0,.525,-.41],rx:.042,ryT:.042,ryB:.042,b:['pelvis','tail0',.6]},{p:[0,.49,-.5],rx:.056,ryT:.056,ryB:.056,b:'tail0'},
-      {p:[0,.43,-.61],rx:.064,ryT:.064,ryB:.064,b:['tail0','tail1',.5]},{p:[0,.37,-.72],rx:.064,ryT:.064,ryB:.064,b:'tail1'},
-      {p:[0,.32,-.82],rx:.054,ryT:.054,ryB:.054,b:['tail1','tail2',.5]},{p:[0,.285,-.9],rx:.038,ryT:.038,ryB:.038,b:'tail2'},
+  // ---------------- tail: a full brush ending in an ember flame ----------------
+  const Tl=B.loft({name:'tail',seg:10,sub:2,capA:0,capB:2,rings:[
+      {p:[0,.525,-.41],rx:.042,ryT:.042,ryB:.042,b:['pelvis','tail0',.6]},{p:[0,.49,-.5],rx:.06,ryT:.062,ryB:.06,b:'tail0'},
+      {p:[0,.43,-.61],rx:.07,ryT:.072,ryB:.07,b:['tail0','tail1',.5]},{p:[0,.37,-.72],rx:.07,ryT:.072,ryB:.07,b:'tail1'},
+      {p:[0,.32,-.82],rx:.06,ryT:.062,ryB:.06,b:['tail1','tail2',.5]},{p:[0,.285,-.9],rx:.042,ryT:.044,ryB:.042,b:'tail2'},
       {p:[0,.27,-.95],rx:.02,ryT:.02,ryB:.02,b:['tail2','tail3',.5]}],
-    paint:(r,s,c,u)=>u>.75?deep:s>.2?sad:K.main});
-  cmFur(B,'tail',{u0:.12,u1:.9,rows:6,n:6,size:.12,w:.95,col:(a,u)=>u>.72?[sad,deep]:Math.sin(a)>.3?[sad,cmMix(sad,K.main,.3)]:[K.main,cmMix(K.main,ash,.5)],lift:.12,sz:(a,u)=>1-.35*Math.max(0,u-.6)});
-  // ---------------- fur on the body ----------------
-  // mane and hackles: big locks over the neck and withers, darker on top
-  cmFur(B,'neck',{u0:.05,u1:.8,rows:4,n:7,a0:-Math.PI*.2,a1:Math.PI*1.2,size:.11,w:.95,back:1,col:(a)=>Math.sin(a)>.7?[sad,cmMix(sad,deep,.4)]:Math.sin(a)>.3?[K.main,sad]:[K.main,cmMix(K.main,ash,.5)],lift:.16,sz:(a,u)=>1.15-.3*u});
-  // throat bib: pale locks under the neck pointing down and back
-  cmFur(B,'neck',{u0:.05,u1:.55,rows:2,n:4,a0:-Math.PI/2-.7,a1:-Math.PI/2+.7,size:.085,w:.9,back:1,col:()=>[cmMix(cream,K.main,.55),cmMix(cream,K.main,.35)],lift:.15});
-  // the saddle: rows of dark locks down the back to the waist
-  cmFur(B,'torso',{u0:.04,u1:.5,rows:4,n:5,a0:Math.PI/2-.85,a1:Math.PI/2+.85,size:.09,w:.95,back:1,col:(a,u,r,k)=>Math.abs(a-Math.PI/2)<.35?[sad,cmMix(sad,deep,.3)]:[cmMix(sad,K.main,.5),sad],lift:.08,sz:(a,u)=>1.2-.6*u});
-  // chest ruff
-  cmFur(B,'torso',{u0:.03,u1:.14,rows:2,n:4,a0:-Math.PI/2-1,a1:-Math.PI/2+1,size:.08,w:.9,back:1,col:()=>[cmMix(cream,K.main,.55),cmMix(cream,K.main,.35)],lift:.18});
+    paint:(r,s,c,u)=>u>.62?mix(K.back,K.emb,ss(.62,.9,u)):coat(s*.8+.1)});
+  const tcol=(t,dk)=>t>.62?[mix(K.back,K.emb,ss(.6,.85,t)),mix(K.emb,K.embL,ss(.75,1,t))]:[dk?K.back:K.main,dk?K.main:K.pale];
+  [[Math.PI/2,1],[Math.PI*.15,0],[Math.PI*.85,0],[-Math.PI*.25,0],[-Math.PI*.75,0]].forEach(([a,dk],k)=>
+    B.fringe(B.row(Tl,{u0:.08+k*.02,u1:.97,a,n:7}),{len:(i,t)=>.1+.09*Math.sin(t*Math.PI*.9),wid:1.3,flow:q=>q.t,lift:.35+.1*(k%2),curl:.15,col:(i,t)=>tcol(t,dk),nm:'tail'+k}));
+  // ---------------- the mane: three rows of big spikes over the neck and withers, a dorsal ridge, the chest tuft ----------------
+  const back=q=>q.t.clone().negate().add(new CM_V(0,-.25,0));
+  B.fringe(B.row(N,{u:.82,a0:-.35,a1:Math.PI+.35,n:8}),{len:i=>.13+.05*Math.sin(i/7*Math.PI),wid:1.3,flow:back,lift:.6,col:i=>[K.main,i>1&&i<6?K.back:K.pale],nm:'mane0'});
+  B.fringe(B.row(N,{u:.5,a0:-.25,a1:Math.PI+.25,n:8}),{len:i=>.17+.06*Math.sin(i/7*Math.PI),wid:1.3,flow:back,lift:.6,col:i=>[K.main,i>1&&i<6?K.back:K.pale],nm:'mane1'});
+  B.fringe(B.row(N,{u:.15,a0:-.1,a1:Math.PI+.1,n:7}),{len:i=>.18+.07*Math.sin(i/6*Math.PI),wid:1.3,flow:back,lift:.55,col:i=>[K.main,i>1&&i<5?K.deep:K.main],nm:'mane2'});
+  B.fringe(B.row(T,{u0:.02,u1:.36,a:Math.PI/2,n:6}),{len:(i,t)=>.15-.09*t,flow:q=>q.t,lift:.6,wid:1.6,col:(i,t)=>[K.back,t<.4?K.embD:K.deep],nm:'ridge'});
+  B.fringe(B.row(N,{u0:.05,u1:.6,a:-Math.PI/2,n:4}),{len:.15,flow:new CM_V(0,-1,-.35),lift:.4,wid:2.2,col:[K.pale,0xf8f6f2],nm:'bib'});
+  B.fringe(B.row(T,{u:.06,a0:-Math.PI/2-.9,a1:-Math.PI/2+.9,n:5}),{len:.14,wid:1.4,flow:new CM_V(0,-1,-.5),lift:.35,col:[K.pale,0xf8f6f2],nm:'chest'});
+  B.fringe(B.row(T,{u0:.18,u1:.5,a:-Math.PI/2,n:4}),{len:.08,flow:new CM_V(0,-1,-.3),lift:.35,wid:2.4,col:[K.pale,K.pale],nm:'belly'});
   // ---------------- anchors for traits and variants (bone + model-space point) ----------------
   const pt=(L,u,a,b)=>{const q=B.at(L,u,a,.01);return [b,q.p.x,q.p.y,q.p.z]};
   B.head=pt(H,.25,Math.PI/2,'head');B.back=[pt(N,.5,Math.PI/2,'neck'),pt(T,.1,Math.PI/2,'chest'),pt(T,.25,Math.PI/2,'chest'),pt(T,.45,Math.PI/2,'spine'),pt(T,.6,Math.PI/2,'spine')];
   B.up=.11;B.armor=.19}
-cm172Def('Ashwolf','Ashwolf',{sc:1.16,build:aw172Build,post(x){cm172Hinge(x,'jaw',AW172.hinge,.08)}});
+cm172Def('Ashwolf','Ashwolf',{sc:1.16,tex:'fur',build:aw172Build,post(x){cm172Hinge(x,'jaw',AW172.hinge,.08)}});
 cm172Install('Ashwolf');
