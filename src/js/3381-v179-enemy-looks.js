@@ -1,12 +1,12 @@
-// ================= v178: enemy posture and the plainest foes dressed =================
+// ================= v179: enemy posture and the plainest foes dressed =================
 // Owner: "optimize anatomy, posture and overall style … non-cartoony (dark fantasy), not too simple".
-// * Posture: the older humanoid foes stood bolt upright like mannequins. ST178[hum key] is a stance laid over every pose
+// * Posture: the older humanoid foes stood bolt upright like mannequins. ST179[hum key] is a stance laid over every pose
 //   (idle, walk, attacks), like the v113 creatures' D.stance: a forward lean, the head raised to look ahead, bent knees (the hips
 //   drop by what the bend takes off the leg, so the feet stay on the ground), arms held out from the body. Brutes hunch, ghouls stoop, goblins crouch, soldiers stand ready.
 //   A v113 creature with its own D.stance keeps it.
 // * The Searing Sands cultists (Zealot of the Endless One, Salt Caller) were a bare default body: they now have their own
 //   builders (serpent mask and ritual scars / salt-crusted robes and a hood).
-var ST178={
+var ST179={
   orc:{sx:.2,hx:-.18,lk:.24,rk:.24,az:.1,lz:-.1,ex:-.2,le:-.25},
   troll:{sx:.28,hx:-.26,lk:.27,rk:.27,az:.12,lz:-.12,ax:-.12,lx:-.15,ex:-.3,le:-.35},
   trollsh:{sx:.24,hx:-.22,lk:.20,rk:.20,lz:-.08,le:-.25},
@@ -33,8 +33,8 @@ var ST178={
   dgwretch:{sx:.3,hx:-.26,lk:.27,rk:.27,ax:-.3,lx:-.3,ex:-.5,le:-.5},
   ss165zealot:{sx:.16,hx:-.14,lk:.27,rk:.27,lz:-.1,le:-.4},
   ss165caller:{sx:.1,hx:-.08,lk:.10,rk:.10,lz:-.08,le:-.35}};
-{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{if(g)g.hk178=key}catch(_){}return g}}
-{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const St=g&&g.hk178&&ST178[g.hk178],b=g&&g.h&&g.h.bones;
+{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{if(g)g.hk179=key}catch(_){}return g}}
+{const f=humAnim;humAnim=function(g,now,mv){const r=f.apply(this,arguments);try{const St=g&&g.hk179&&ST179[g.hk179],b=g&&g.h&&g.h.bones;
     if(St&&b&&!(g.n3k&&N3.def[g.n3k]&&N3.def[g.n3k].stance)){for(const c in St){const ch=HACH[c];if(ch&&b[ch[0]])b[ch[0]].rotation[ch[1]]+=St[c]}
       // bent knees: each thigh swings forward half the bend so the shin comes back under the hip, and the hips drop by exactly
       // what the bend shortens the leg, so the feet stay planted
@@ -65,9 +65,9 @@ f137Reg('ss165caller',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,sk=mdSh(dkHe
   for(let i=0;i<9;i++){const a=(i-4)*.2,p=n3Surf(P,.93-Math.abs(i-4)*.014,a,(P.tOff||0)+.012);k.p('chest','oct',i==4?'g':'c',i==4?gl:salt,p[0],p[1],p[2],.012)}});
 
 // ---------------- palettes: dark-fantasy colours; enemies that shared another's body get their own ----------------
-// VAR178[rig] = {'*': changes for every enemy on that body, <enemy key>: that enemy only}. The body builders (2640–2665)
-// register their palette object (VARK178[rig]); it is swapped in while the model builds and the caches get their own keys.
-var VAR178={suf:'',
+// VAR179[rig] = {'*': changes for every enemy on that body, <enemy key>: that enemy only}. The body builders (2640–2665)
+// register their palette object (VARK179[rig]); it is swapped in while the model builds and the caches get their own keys.
+var VAR179={suf:'',
   Croaker:{'*':{skin:0x48523a,skin2:0x30382a,blot:0x1c2216,belly:0x8e8668,horn:0x4a3e2c,gland:0x5e5a34,eye:0xa8802a,lip:0x4a1e1e},
     lurker:{skin:0x3c4836,skin2:0x283024,blot:0x141a10,eye:0x8aa830},
     boghorror:{skin:0x3a3a30,skin2:0x26261e,blot:0x12120c,belly:0x6e6450,eye:0xb84a24,horn:0x2a241c,gland:0x4a3a2a}},
@@ -80,11 +80,11 @@ var VAR178={suf:'',
   Banshee:{wraith:{gown:0x3a4658,gown2:0x1e2632,lace:0x8a96a4,hair:0x6a7480,hair2:0x4a525e,glow:0x7ab8ff}},
   Shambler:{'*':{cap:0x4a2a3a,cap2:0x6a4050}},
   SunScarab:{'*':{sh:0x6a5226,sh2:0x3e2e12,hi:0xb8963a}}};
-{const f=lpRig;lpRig=function(c,n,D){const V=VAR178[n],K=window.VARK178&&VARK178[n],key=c&&c.g&&c.g[0];if(!V||!K)return f.apply(this,arguments);
-  const own=key&&V[key],ov=Object.assign({},V['*']||{},own||{}),old={};for(const q in ov){old[q]=K[q];K[q]=ov[q]}const o=VAR178.suf;VAR178.suf=own?'|v178'+key:'|v178';
-  try{return f.apply(this,arguments)}finally{for(const q in old)K[q]=old[q];VAR178.suf=o}}}
-{const f=lpGeo;lpGeo=function(key){if(VAR178.suf&&key){arguments[0]=key+VAR178.suf}return f.apply(this,arguments)}}
-{const f=dkBake;dkBake=function(P,O,key){if(VAR178.suf&&key&&/^LP\|/.test(key))key+=VAR178.suf;return f.call(this,P,O,key)}}
+{const f=lpRig;lpRig=function(c,n,D){const V=VAR179[n],K=window.VARK179&&VARK179[n],key=c&&c.g&&c.g[0];if(!V||!K)return f.apply(this,arguments);
+  const own=key&&V[key],ov=Object.assign({},V['*']||{},own||{}),old={};for(const q in ov){old[q]=K[q];K[q]=ov[q]}const o=VAR179.suf;VAR179.suf=own?'|v179'+key:'|v179';
+  try{return f.apply(this,arguments)}finally{for(const q in old)K[q]=old[q];VAR179.suf=o}}}
+{const f=lpGeo;lpGeo=function(key){if(VAR179.suf&&key){arguments[0]=key+VAR179.suf}return f.apply(this,arguments)}}
+{const f=dkBake;dkBake=function(P,O,key){if(VAR179.suf&&key&&/^LP\|/.test(key))key+=VAR179.suf;return f.call(this,P,O,key)}}
 
 // ---------------- skeletons: joined up ----------------
 // The skeleton foes (Skeleton Warrior, Bone Archer) had rib hoops that met nothing, feet hanging below the shins and a loincloth
@@ -94,4 +94,4 @@ var VAR178={suf:'',
     mdLoft(B,[.5,.6,.7,.8,.9,1.0,1.05].map((y,i)=>({p:[0,y,-.074],rx:.03,f:.026,b:.03,w:mdTorsoW(y)})),{seg:6,capA:true,capB:true,col:m=>Math.round(m.y*40)%2?bone:bd});
     k.L('chest','c',bone,[0,.95,.104],[0,.77,.112],.016,.012,5);
     [-1,1].forEach(s=>{const l=s<0?'lh2':'rh2',A=P.bones[l];k.p(l,'sph','c',bone,A[1],A[2]+.006,A[3]-.008,.026,.024,.03);k.L(l,'c',bd,[A[1],A[2]+.006,A[3]-.006],[A[1],.045,A[3]-.035],.019,.017,5)});
-    mdKit(B,k)}catch(e){console.warn('v178 skel',e)}return r}}
+    mdKit(B,k)}catch(e){console.warn('v179 skel',e)}return r}}

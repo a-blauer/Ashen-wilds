@@ -3,7 +3,7 @@ function mdChestPre(P,d){P.col.torso=d.M;P.col.sleeve=d.M;P.hasChest=1;if(d.a=='
 function mdChest(B,P,d,cls){const st=d.st,M=d.M,A=d.A,dk=d.dk,G=d.G,k=mdKP(),gl=mdGlowOr(d,A),lt=0x3a2618,ti=d.ti;
   const mail=(o0)=>{const mc=mdMix(M,0x6a6c70,.3),md=mdSh(mc,.78);mdTS(B,P,.43,.99,.012,{col:m=>(Math.round(m.y*48)%2?mc:md),lip:.012});[-1,1].forEach(s=>mdAS(B,P,s,0,o0||3,.01,{col:m=>(Math.round(m.y*48)%2?mc:md)}));
     mdSkirt(B,P,.5,.36,.03,.014,{col:m=>m.y<.385?dk:(Math.round(m.y*48)%2?mc:md),n:4})};
-  const belt=(y,c,bc)=>{mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.003,{col:c||lt,lip:.004});k.p('spine','box','m',bc||A,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.008,.05,.04,.014)};   // v178: belts sit on the cloth (they stood 8 mm off it)
+  const belt=(y,c,bc)=>{mdTS(B,P,y-.022,y+.022,(P.tOff||0)+.003,{col:c||lt,lip:.004});k.p('spine','box','m',bc||A,0,y,mdTorsoAt(P,y).f+(P.tOff||0)+.008,.05,.04,.014)};   // v179: belts sit on the cloth (they stood 8 mm off it)
   const plate=(lv)=>{const pc=M,ps=mdSh(M,1.18);mdTS(B,P,.6,.985,.03,{t:'m',col:m=>m.s>.55&&m.y>.68&&m.y<.95&&lv>1?ps:m.y<.64?dk:pc,lip:.012,lipT:.006});
     if(G)mdTS(B,P,.6,.62,.034,{t:'g',col:G})};
   const pauld=(n,sz,spk,sq)=>[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',x=s*(P.bones[a][1]*1+s*.012*(mdBuildF(P)-1)*3),W=mdBuildF(P);
@@ -45,7 +45,7 @@ function mdChest(B,P,d,cls){const st=d.st,M=d.M,A=d.A,dk=d.dk,G=d.G,k=mdKP(),gl=
   else if(d.a=='light'){
     if(st=='wraps'){mdTS(B,P,.5,.99,.01,{col:m=>Math.round(m.y*26+m.c*2)%2?M:mdSh(M,.8)});[-1,1].forEach(s=>mdAS(B,P,s,3,5,.01,{col:m=>Math.round(m.y*30)%2?M:mdSh(M,.75)}))}
     else if(st=='scale'){mdTS(B,P,.5,.99,.012,{col:m=>(Math.round(m.y*36)+Math.round((m.c+1)*5))%2?M:mdSh(M,.78)});sleeves(mdSh(M,.6),2);belt(.6,A,A)}
-    else if(st=='garb'){shirt(M);sleeves(M,5);mdTS(B,P,.66,.98,.011,{col:mdSh(M,.6),keep:m=>Math.abs(m.c-m.s*.5)<.12||Math.abs(m.c+m.s*.5)<.12});belt(.6,A,mdSh(A,1.2));   // v178: the straps lie on the shirt (.008)
+    else if(st=='garb'){shirt(M);sleeves(M,5);mdTS(B,P,.66,.98,.011,{col:mdSh(M,.6),keep:m=>Math.abs(m.c-m.s*.5)<.12||Math.abs(m.c+m.s*.5)<.12});belt(.6,A,mdSh(A,1.2));   // v179: the straps lie on the shirt (.008)
       mdSkirt(B,P,.6,.42,.02,(P.tOff||0)+.012,{col:mdSh(M,.75),keep:m=>Math.abs(m.c)<.5,n:3})}
     else if(st=='shroud'){shirt(M);sleeves(M,5);belt(.6,mdSh(M,.6),A);coat(mdSh(M,.85),.3,.05,true);mdTS(B,P,.93,1.03,(P.tOff||0)+.02,{col:mdSh(M,.7),lipT:.02});k.p('aR0','hem','m',A,.25,.985,0,.1,.07,.1,0,0,.4)}
     else if(st=='raiment'){shirt(M);sleeves(M,5);belt(.6,A,A);coat(mdSh(M,.85),.26,.07,true);mdTS(B,P,.94,1.06,(P.tOff||0)+.03,{col:m=>m.s<0?mdSh(M,.6):A,lipT:.04,keep:m=>m.s<.55})}

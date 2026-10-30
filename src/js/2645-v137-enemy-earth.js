@@ -3,7 +3,7 @@
 // A horned bog toad: a round squat body, a head as wide as the body with an enormous mouth, pointed horn-like eyelids over
 // gold eyes, swollen poison glands behind them, warty mottled skin, fat folded hind legs and a pale throat.
 (function(){const n='Croaker';if(!LPR[n])return;
-  const K={skin:0x55663a,skin2:0x3a4826,blot:0x2a3418,belly:0xc8c094,horn:0xc8803a,gland:0x8a8a4a,eye:0xe8b830,lip:0x6a2a2a,dark:0x080806};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
+  const K={skin:0x55663a,skin2:0x3a4826,blot:0x2a3418,belly:0xc8c094,horn:0xc8803a,gland:0x8a8a4a,eye:0xe8b830,lip:0x6a2a2a,dark:0x080806};(window.VARK179=window.VARK179||{})[n]=K;   // v179: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),bl=new THREE.Color(K.blot),be=new THREE.Color(K.belly);
     const paint=(o,r,s,cc,i)=>{if(s<-.35&&r.k!='leg'){o.copy(be);if(i%2)o.multiplyScalar(.9);return}o.copy(sk);if((i*3+Math.round(cc*4))%5==0)o.copy(bl);else if(s>.6)o.lerp(sk2,.5);if(r.k=='leg'&&s<0)o.lerp(be,.25)};
     const body=e137Rows([[-.31,.22,.05,.04,.04,['pelvis','pelvis',0]],[-.26,.23,.17,.11,.13,['pelvis','pelvis',0]],[-.16,.25,.24,.16,.19,['pelvis','spine',.5]],[-.03,.265,.265,.18,.2,['spine','spine',0]],
@@ -19,7 +19,7 @@
     // mouth line, tongue, small fangs; eyes on top with horn eyelids; poison glands; warts
     k.L('head','c',K.lip,[-.2,.29,.33],[0,.292,.5],.012,.012,3);k.L('head','c',K.lip,[.2,.29,.33],[0,.292,.5],.012,.012,3);
     k.p('jaw','sph','c',0xc85a6a,0,.29,.42,.06,.015,.05);
-    [-1,1].forEach(s=>{k.p('head','sph','c',K.skin2,s*.13,.4,.37,.07,.06,.07);k.p('head','sph','g',red?0xff2a2a:K.eye,s*.148,.415,.398,.032,.028,.03);k.p('head','box','c',K.dark,s*.156,.417,.426,.006,.024,.006,0,s*.4,0);k.p('head','sph','c',K.skin2,s*.145,.44,.4,.05,.022,.045,.15,0,0);   // (v178: smaller, sunk under a heavy lid)
+    [-1,1].forEach(s=>{k.p('head','sph','c',K.skin2,s*.13,.4,.37,.07,.06,.07);k.p('head','sph','g',red?0xff2a2a:K.eye,s*.148,.415,.398,.032,.028,.03);k.p('head','box','c',K.dark,s*.156,.417,.426,.006,.024,.006,0,s*.4,0);k.p('head','sph','c',K.skin2,s*.145,.44,.4,.05,.022,.045,.15,0,0);   // (v179: smaller, sunk under a heavy lid)
       k.L('head','c',K.horn,[s*.12,.44,.36],[s*.16,.5,.29],.032,.012,5).L('head','c',K.horn,[s*.16,.5,.29],[s*.18,.52,.24],.012,.002,4);k.L('head','c',K.horn,[s*.17,.43,.33],[s*.21,.46,.28],.016,.002,4);
       k.p('chest','sph','c',K.gland,s*.17,.4,.22,.06,.04,.1,0,s*.2,0);for(let i=0;i<4;i++)k.p('chest','sph','c',K.dark,s*(.15+i%2*.04),.43,.17+i*.03,.008,.006,.008);
       k.p('jaw','cone4','c',0xece4d0,s*.07,.285,.45,.01,.025,.01)});
@@ -33,7 +33,7 @@
 // The king of serpents as a heavy armoured lizard: low sprawling stance, a thick tail, rows of stone osteoderms down the
 // back, an orange throat dewlap, a crown of bone horns with a frill membrane between them, and blazing petrifying eyes.
 (function(){const n='Basilisk';if(!LPR[n])return;
-  const K={skin:0x4a5438,skin2:0x2e3622,belly:0xa89a70,stone:0x7a7262,dew:0xc85a2a,horn:0xd8ccb0,frill:0x7a2e22,frill2:0xa8542a,eye:0xffe060,dark:0x080806};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
+  const K={skin:0x4a5438,skin2:0x2e3622,belly:0xa89a70,stone:0x7a7262,dew:0xc85a2a,horn:0xd8ccb0,frill:0x7a2e22,frill2:0xa8542a,eye:0xffe060,dark:0x080806};(window.VARK179=window.VARK179||{})[n]=K;   // v179: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2),be=new THREE.Color(K.belly),st=new THREE.Color(K.stone);
     const paint=(o,r,s,cc,i)=>{if(r.k=='paw')return o.copy(sk2);if(s<-.45){o.copy(be);if(i%2)o.multiplyScalar(.85);return}o.copy(sk);if(s>.55)o.copy(i%2?sk2:sk.clone().lerp(st,.25));else if((i+Math.round(cc*3))%3==0)o.lerp(sk2,.6)};
     const body=e137Rows([[-0.45,0.43,0.096,0.073,0.072,['pelvis','tail0',.6]],[-0.36,0.42,0.147,0.101,0.096,['pelvis','pelvis',0]],[-0.26,0.41,0.186,0.112,0.12,['pelvis','pelvis',0]],[-0.12,0.415,0.198,0.112,0.132,['pelvis','spine',.5]],
@@ -70,7 +70,7 @@
 // An alligator snapping turtle: a flat, ridged shell with three keels of jagged spikes and a serrated rim, a huge triangular
 // head with a hooked beak, a thick tubercled neck, elephantine clawed legs and a long saw-crested tail. Moss and weed hang off it.
 (function(){const n='Snapper';if(!LPR[n])return;
-  const K={shell:0x4e5a3a,shell2:0x353f28,plast:0xb8a878,skin:0x5a5a40,skin2:0x3e3e2a,moss:0x3a4e22,spike:0x2a2a20,beak:0x1a1a14,eye:0xd8a020,dark:0x080806};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
+  const K={shell:0x4e5a3a,shell2:0x353f28,plast:0xb8a878,skin:0x5a5a40,skin2:0x3e3e2a,moss:0x3a4e22,spike:0x2a2a20,beak:0x1a1a14,eye:0xd8a020,dark:0x080806};(window.VARK179=window.VARK179||{})[n]=K;   // v179: per-enemy palettes (3371)
   const SHELL=[[-.5,.24,.12,.05,.05],[-.42,.25,.27,.13,.08],[-.3,.26,.35,.2,.09],[-.15,.27,.39,.24,.1],[0,.27,.4,.25,.1],[.14,.27,.38,.24,.1],[.26,.27,.33,.19,.09],[.34,.27,.24,.11,.08],[.38,.27,.12,.05,.05]];
   function shellAt(z){for(let i=0;i<SHELL.length-1;i++)if(z>=SHELL[i][0]&&z<=SHELL[i+1][0]){const a=SHELL[i],b=SHELL[i+1],t=(z-a[0])/(b[0]-a[0]);return a.map((v,j)=>v+(b[j]-v)*t)}return null}
   LPR[n].geo=function(C,c){const sh=new THREE.Color(K.shell),sh2=new THREE.Color(K.shell2),pl=new THREE.Color(K.plast),sk=new THREE.Color(K.skin),sk2=new THREE.Color(K.skin2);
@@ -110,7 +110,7 @@
 // great curved horn, clubbed antennae, jagged spiny legs (the middle pair swings with the walk) and a glowing sun disc
 // rising from its back.
 (function(){const n='SunScarab';if(!LPR[n])return;
-  const K={sh:0x8a6a2a,sh2:0x5a4218,hi:0xe8c060,leg:0x2a1e10,dark:0x0a0804,sun:0xffc040,eye:0xff8a20};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
+  const K={sh:0x8a6a2a,sh2:0x5a4218,hi:0xe8c060,leg:0x2a1e10,dark:0x0a0804,sun:0xffc040,eye:0xff8a20};(window.VARK179=window.VARK179||{})[n]=K;   // v179: per-enemy palettes (3371)
   LPR[n].geo=function(C,c){const sh=new THREE.Color(K.sh),sh2=new THREE.Color(K.sh2),hi=new THREE.Color(K.hi),lg=new THREE.Color(K.leg);
     const paint=(o,r,s,cc,i)=>{if(r.k=='leg'||r.k=='ank'||r.k=='paw')return o.copy(lg).multiplyScalar(i%2?1:.8);if(s<-.3)return o.copy(sh2).multiplyScalar(.6);
       o.copy(sh);if(s>.75)o.lerp(hi,.55);else if(Math.abs(cc)>.7)o.copy(sh2);if(r.k=='pro'&&s>.4)o.lerp(hi,.25)};
@@ -122,7 +122,7 @@
     return lpGeo('E137|'+n,n,[{rings:ely,seg:14,capA:1,capB:1,paint},{rings:pro,seg:12,capA:1,capB:1,paint},{rings:head,seg:9,capB:1,paint}].concat(legs),87)};
   LPR[n].kit=function(k,c,C,red){
     // seam between the wing cases, sheen lines
-    // (v178: the seam, sheen lines and sun emblem follow the shell's surface; they used to hover over it)
+    // (v179: the seam, sheen lines and sun emblem follow the shell's surface; they used to hover over it)
     const EL=[[-.47,.08,.05],[-.42,.2,.14],[-.32,.27,.2],[-.18,.3,.23],[-.04,.3,.235],[.08,.28,.21],[.14,.22,.14],[.16,.12,.06]],
       top=(x,z)=>{z=Math.max(-.47,Math.min(.16,z));let i=0;while(i<EL.length-2&&z>EL[i+1][0])i++;const a=EL[i],b=EL[i+1],t=(z-a[0])/(b[0]-a[0]),rx=a[1]+(b[1]-a[1])*t,ry=a[2]+(b[2]-a[2])*t;return .3+ry*Math.sqrt(Math.max(0,1-(x/rx)**2))},
       bnZ=z=>z<-.25?'pelvis':'spine',
@@ -138,7 +138,7 @@
     // the great curved horn
     let p=[0,.32,.45],d=[0,.6,.8];for(let i=0;i<5;i++){const q=[p[0]+d[0]*.07,p[1]+d[1]*.07,p[2]+d[2]*.07];k.L('head','c',i>3?K.hi:K.sh2,p,q,.035-i*.006,.03-i*.006,5);p=q;const a=-.32;d=[0,d[1]*Math.cos(a)-d[2]*Math.sin(a),d[1]*Math.sin(a)+d[2]*Math.cos(a)]}
     // the sun disc rising from the back: a glowing ring of rays
-    // (v178) the sun emblem is set into the shell: a gold boss with a glowing amber stone, rays raised on the shell around it
+    // (v179) the sun emblem is set into the shell: a gold boss with a glowing amber stone, rays raised on the shell around it
     {const zc=-.12,y0=top(0,zc);k.p('spine','cyl','c',K.hi,0,y0+.004,zc,.075,.03,.075);k.p('spine','ico','g',K.sun,0,y0+.02,zc,.045,.03,.045);
       for(let i=0;i<12;i++){const a=i/12*Math.PI*2,r1=.085,r2=i%2?.13:.155;onShell(K.hi,Math.sin(a)*r1,Math.sin(a)*r2,zc+Math.cos(a)*r1,zc+Math.cos(a)*r2,i%2?.006:.008,2,-.001)}}
     // spines on the leg shins, hooked feet

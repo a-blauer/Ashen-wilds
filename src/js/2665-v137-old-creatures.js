@@ -20,7 +20,7 @@
     // hooked mandibles either side of the mouth, a slime coat and pale veins along the back
     [-1,1].forEach(s=>{k.L('head','c',0x2a1a10,[s*.07,my,mz-.01],[s*.1,my-.02,mz+.06],.016,.01,4).L('head','c',0x1a0e08,[s*.1,my-.02,mz+.06],[s*.05,my-.035,mz+.1],.01,.002,4)});
     for(let z=-1.3;z<.4;z+=.21){const r=bzMagR(z),bn=wyrmBones(z),b=bn[2]>.5?bn[1]:bn[0],y=r*.82+.004;
-      const x=(z*7%2-1)*r*.4,on=x=>y+r*.74*Math.sqrt(Math.max(0,1-Math.pow(x/r,2)));   // (v178) on the skin, which dips between the rolls
+      const x=(z*7%2-1)*r*.4,on=x=>y+r*.74*Math.sqrt(Math.max(0,1-Math.pow(x/r,2)));   // (v179) on the skin, which dips between the rolls
       k.p(b,'sph','g',0xf4f0c0,x,on(x),z,.012,.008,.012);k.L(b,'c',0xe8d8c0,[-r*.3,on(r*.3),z],[r*.3,on(r*.3),z-.06],.004,.004,3)}
     // a drip of slime hanging off the mouth
     k.L('head','g',0xe8f0b0,[0,my-.06,mz+.02],[0,.01,mz+.04],.01,.004,3)}}
@@ -37,7 +37,7 @@
 // hang to its knees and end in root claws, stumpy legs, a cluster of drooping caps on its head and shoulders, shelf fungi up
 // its back and glowing spore pores.
 (function(){const n='Shambler';SPEC[n]=Object.assign({},SPEC.Gloomcap);
-  const K={bark:0x4a3a2a,bark2:0x2e2418,moss:0x3e4e22,cap:0x6a2a6a,cap2:0x8a4a8a,gill:0x2a1420,glow:0xc8ff6a,spore:0xe0ff9a,dark:0x080604};(window.VARK178=window.VARK178||{})[n]=K;   // v178: per-enemy palettes (3371)
+  const K={bark:0x4a3a2a,bark2:0x2e2418,moss:0x3e4e22,cap:0x6a2a6a,cap2:0x8a4a8a,gill:0x2a1420,glow:0xc8ff6a,spore:0xe0ff9a,dark:0x080604};(window.VARK179=window.VARK179||{})[n]=K;   // v179: per-enemy palettes (3371)
   LPR[n]={head:['head',0,.94,0],up:.08,back:[['chest',0,.7,-.18],['spine',0,.5,-.2],['pelvis',0,.3,-.18]],
     geo(C,c){const b=new THREE.Color(K.bark),b2=new THREE.Color(K.bark2),mo=new THREE.Color(K.moss),ca=new THREE.Color(K.cap);
       const paint=(o,r,s,cc,i)=>{o.copy((Math.round((cc+1)*6)+(i%2))%2?b:b2);if(r.k=='leg'&&r.p[1]<.03)o.copy(b2);if(s<-.5&&r.p[1]>.3&&r.p[1]<.6)o.lerp(mo,.5);if(r.p[1]>.78&&s<-.2)o.lerp(ca,.3)};
@@ -56,14 +56,14 @@
       // drooping caps: a big one on the head, smaller ones on the shoulders
       [[0.03,.87,-.01,.2,.1,-.12,.12,'head'],[-.2,.72,-.02,.11,.06,-.2,-.5,'chest'],[.18,.74,-.05,.085,.05,.3,.6,'chest'],[-.08,.98,-.06,.08,.05,.4,-.3,'head']].forEach(q=>{
         k.p(q[7],'hem','c',K.cap,q[0],q[1],q[2],q[3],q[4],q[3],q[5],0,q[6]);k.p(q[7],'cyl','c',K.gill,q[0],q[1]-.005,q[2],q[3]*.92,.01,q[3]*.92,q[5],0,q[6]);
-        // (v178) spots sit on the tilted cap's surface (they hovered over it)
+        // (v179) spots sit on the tilted cap's surface (they hovered over it)
         const on=(r,a)=>{const v=new THREE.Vector3(Math.sin(a)*r*q[3],Math.sqrt(1-r*r)*q[4]*.97,Math.cos(a)*r*q[3]).applyEuler(new THREE.Euler(q[5],0,q[6]));return [q[0]+v.x,q[1]+v.y,q[2]+v.z]};
         for(let i=0;i<4;i++){const p=on(.5,i*1.7);k.p(q[7],'sph','c',K.cap2,p[0],p[1],p[2],.014,.008,.014)}
         if(q[7]=='head'&&q[3]>.15)for(let i=0;i<5;i++){const p=on(.62,i*1.3);k.p('head','sph','g',K.spore,p[0],p[1],p[2],.012,.006,.012)}});
       // shelf fungi up the back, moss hanging from the arms, root claws
       for(let i=0;i<6;i++){const y=.3+i*.08,s=i%2?1:-1;k.p(y>.5?'chest':y>.38?'spine':'pelvis','hem','c',i%2?0x8a6a4a:0x6a4a3a,s*.08,y,-.21-(y>.5?0:.01),.09,.03,.06,-.3,0,s*.2)}
       [-1,1].forEach(s=>{const f=s<0?'fl':'fr';for(let i=0;i<3;i++)k.L(f+'1','c',K.moss,[s*.33,.42-i*.06,.06],[s*.35,.34-i*.06,.05],.016,.004,3);
-        for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.07,.18+i%2*.02],.014,.003,4)   /* v178: root claws clear of the ground (they dug 7 cm into it in idle) */});
+        for(let i=0;i<4;i++)k.L(f+'2','c',K.bark2,[s*.32+(i-1.5)*.018,.12,.14],[s*.32+(i-1.5)*.03,.07,.18+i%2*.02],.014,.003,4)   /* v179: root claws clear of the ground (they dug 7 cm into it in idle) */});
       }};
   if(EN.shambler)EN.shambler.rig=n;
 })();
