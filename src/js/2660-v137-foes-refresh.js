@@ -69,7 +69,7 @@ f137Reg('ghoul',function(B,P,k,L){const X=f137(B,P,k,L),C=X.C,skin=X.skin;P.af=.
   P.paint.torso=m=>{const r=n3Nz(m.x,m.y,m.z,4);return r>.9?mdSh(skin,.8):r<.06?mdSh(skin,1.15):skin};X.body();
   X.head({eyes:'glow',glow:0x6ad8ff,brow:mdSh(skin,.55),ears:false,nose:false});mdNose(k,P,mdSh(skin,.92),1.5);mdTusks(k,P,0xe8e0c8,1.3,1.1);mdEars(k,P,skin,.7);
   for(let i=0;i<7;i++)k.p('head','cone4','c',0xd8e8f0,(i-3)*.03,1.25-Math.abs(i-3)*.01,-.03,.022,.14,.022,-.6,0,(i-3)*.18);
-  if(key=='troll'){mdLoin(B,P,0xc8ccd4,0x9aa0a8);mdNeck(k,0xd8d0b0,0x8a9aa8,9);[-1,1].forEach(s=>mdAS(B,P,s,4,5,.016,{col:0xd8dce4}))}
+  if(key=='troll'){mdLoin(B,P,0x6a6e72,0x4a4e54);mdNeck(k,0xd8d0b0,0x8a9aa8,9);[-1,1].forEach(s=>mdAS(B,P,s,4,5,.016,{col:0xd8dce4}))}
   else{mdChest(B,P,mdD('cloth','robe',0x26344e,0x9ad8ff));k.p('chest','oct','g',0x9ad8ff,0,.8,mdTorsoAt(P,.8).f+P.tOff+.012,.03,.045,.014);[-1,1].forEach(s=>k.L('head','c',0x8a8270,[s*.08,1.24,-.02],[s*.18,1.36,-.08],.022,.012).L('head','c',0x8a8270,[s*.18,1.36,-.08],[s*.2,1.46,-.04],.012,.002))}
   const hair=0xd8e8f0,frost=0xc8f0ff;
   // warts, frost crust and icicles on the shoulders, white hair down the spine and along the forearms

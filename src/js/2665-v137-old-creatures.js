@@ -36,7 +36,7 @@
 // hang to its knees and end in root claws, stumpy legs, a cluster of drooping caps on its head and shoulders, shelf fungi up
 // its back and glowing spore pores.
 (function(){const n='Shambler';SPEC[n]=Object.assign({},SPEC.Gloomcap);
-  const K={bark:0x4a3a2a,bark2:0x2e2418,moss:0x3e4e22,cap:0x6a2a6a,cap2:0x8a4a8a,gill:0x2a1420,glow:0xc8ff6a,spore:0xe0ff9a,dark:0x080604};
+  const K={bark:0x4a3a2a,bark2:0x2e2418,moss:0x3e4e22,cap:0x6a2a6a,cap2:0x8a4a8a,gill:0x2a1420,glow:0xc8ff6a,spore:0xe0ff9a,dark:0x080604};(window.VARK176=window.VARK176||{})[n]=K;   // v176: per-enemy palettes (3371)
   LPR[n]={head:['head',0,.94,0],up:.08,back:[['chest',0,.7,-.18],['spine',0,.5,-.2],['pelvis',0,.3,-.18]],
     geo(C,c){const b=new THREE.Color(K.bark),b2=new THREE.Color(K.bark2),mo=new THREE.Color(K.moss),ca=new THREE.Color(K.cap);
       const paint=(o,r,s,cc,i)=>{o.copy((Math.round((cc+1)*6)+(i%2))%2?b:b2);if(r.k=='leg'&&r.p[1]<.03)o.copy(b2);if(s<-.5&&r.p[1]>.3&&r.p[1]<.6)o.lerp(mo,.5);if(r.p[1]>.78&&s<-.2)o.lerp(ca,.3)};

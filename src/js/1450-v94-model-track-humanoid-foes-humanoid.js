@@ -6,7 +6,8 @@
 // shared materials (one to three draw calls + weapon). Each type keeps its signature: goblin ears and noses, orc and
 // troll tusks, skeleton bones, the vampires' standing collar (v89 dkHighCollar), naga snake heads and tails, etc.
 function mdD(a,st,M,A,o){return Object.assign({a,st,ti:2,r:0,M,A,G:null,dk:mdSh(M,.6),gem:A,sl:''},o||{})}
-function mdLoin(B,P,c,c2,y1,y0){mdSkirt(B,P,y0||.6,y1||.36,.02,.02,{col:m=>m.y<(y1||.36)+.04?c2||mdSh(c,.75):c,keep:m=>Math.abs(m.c)<.36,n:4});mdTS(B,P,(y0||.6)-.02,(y0||.6)+.03,.016,{col:mdSh(c2||c,.8)})}
+// (v176: the flaps start tucked under the belt band, which sits just over them; they used to hang beside it, off the body)
+function mdLoin(B,P,c,c2,y1,y0){const Y=y0||.6,t0=P.tOff;mdSkirt(B,P,Y+.02,y1||.36,.02,.02,{col:m=>m.y<(y1||.36)+.04?c2||mdSh(c,.75):c,keep:m=>Math.abs(m.c)<.36,n:5});mdTS(B,P,Y-.02,Y+.03,.022,{col:mdSh(c2||c,.8)});P.tOff=Math.max(t0||0,.016)}
 function mdStrap(B,P,c,sd){mdTS(B,P,.6,.99,(P.tOff||0)+.008,{col:c,keep:m=>Math.abs(m.c+(sd||1)*m.s*.55)<.12})}
 function mdTusks(k,P,c,len,w){const z=mdHeadZ(P,1.07);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*.04*(w||1),1.072+len*.022,z-.004,.014*len*1.4,.05*len,.014*len*1.4,0,0,-s*.2))}
 function mdEars(k,P,c,len,up){const x=mdHeadX(P,1.15);[-1,1].forEach(s=>k.p('head','cone4','c',c,s*(x+.03*len),1.16+(up||0),-.01,.03,.14*len,.018,0,0,-s*(1.25-(up||0)*3)))}
@@ -46,7 +47,7 @@ function mdFoeB(key){const L=HUMLOOK[key]||{},B=mdB(HB),skin=mdSh(dkHex(L.skin||
     mdChest(B,P,mdD('light','garb',0x34343c,0x6a2222));mdHelm(B,P,mdD('light','ashcowl',0x2a2a30,0x6a2222));mdBoots(B,P,mdD('medium','trail',0x2a2018,0x4a3020));mdCape(B,P,0x2a1c1e,{len:.5,trim:0x4a1a1a});break;
   case 'brigand':human({face:3,hair:0x3a2414});body();head({});mdChest(B,P,mdD('heavy','hauberk',0x6a6c72,0x8a6a2a));mdTabard(B,P,0x6a1e18,0x3a0e0a);mdHelm(B,P,mdD('heavy','nasal',0x4a4e56,0x6a6c72));
     mdBoots(B,P,mdD('medium','pelt',0x3a2a1c,0x5a4a3a));mdSpikePad(k,P,-1,0x4a4e56,0x8a8e96,2);mdCape(B,P,0x4a1410,{len:.45});break;
-  case 'cultist':human();body();head({eyes:'glow',glow:0xff6a20,noHair:true,headCol:()=>0x120a08});mdChest(B,P,mdD('cloth','robe',0x6a1610,0x2a0a08));mdHelm(B,P,mdD('cloth','linen',0x4a0c0a,0x2a0806));
+  case 'cultist':human();body();head({eyes:'glow',glow:0xff6a20,noHair:true,headCol:()=>0x120a08});mdChest(B,P,mdD('cloth','robe',0x4a100c,0x1e0806));mdHelm(B,P,mdD('cloth','linen',0x380a08,0x1e0604));
     [-1,1].forEach(s=>k.L('head','c',0x2a2420,[s*.08,1.24,-.01],[s*.15,1.33,-.03],.022,.012).L('head','c',0x2a2420,[s*.15,1.33,-.03],[s*.14,1.42,-.06],.012,.002));
     k.p('chest','oct','g',0xff6a20,0,.8,mdTorsoAt(P,.8).f+P.tOff+.012,.03,.045,.014);mdBoots(B,P,mdD('cloth','slipper',0x1a1210,0x2a1a10));break;
   case 'orc':P.build=2;P.wf=1.05;P.head={w:1.1,jaw:1.25,top:.95};human({hair:0x141010,hairStyle:2,eye:0xff3a1a});Object.assign(C,{torso:skin,sleeve:skin,fore:0x4a3420,pants:0x4a3a2a,shin:0x4a3a2a,boot:0x3a2a1c,belt:lt});body();

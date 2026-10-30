@@ -15,11 +15,11 @@ const MODK=Object.keys(MODS);
 // ---------------- overland enemies ----------------
 // hum = humanoid look; rig = creature-rig beast. moves use the telegraphed move system; w = stat weights; fam = material theme
 const HUMLOOK={
- hob:{skin:[96,140,62],tunic:0x5a4a2a,cape:[70,50,30],pants:[60,48,34],sc:.82,head:'goblin',wpn:'club',wcol:0x6a4a2a},
- sling:{skin:[110,150,70],tunic:0x6a5a3a,cape:[90,70,40],pants:[60,52,40],sc:.8,head:'goblinhood',wpn:'sling',wcol:0x6a4a2a},
+ hob:{skin:[94,104,66],tunic:0x5a4a2a,cape:[70,50,30],pants:[60,48,34],sc:.82,head:'goblin',wpn:'club',wcol:0x6a4a2a},
+ sling:{skin:[100,108,70],tunic:0x6a5a3a,cape:[90,70,40],pants:[60,52,40],sc:.8,head:'goblinhood',wpn:'sling',wcol:0x6a4a2a},
  bandit:{skin:[205,165,130],tunic:0x3a3a40,cape:[60,30,30],pants:[40,36,40],sc:.98,head:'mask',wpn:'dagger',wcol:0x9aa0aa},
  brigand:{skin:[200,160,125],tunic:0x6a2a24,cape:[80,24,20],pants:[50,40,36],sc:1.12,head:'helm',wpn:'axe',wcol:0x8a8a92},
- shaman:{skin:[100,150,80],tunic:0x3a5a3a,cape:[60,90,50],pants:[50,60,40],sc:.86,head:'feather',wpn:'staff',wcol:0x7aff9a},
+ shaman:{skin:[88,100,74],tunic:0x3a5a3a,cape:[60,90,50],pants:[50,60,40],sc:.86,head:'feather',wpn:'staff',wcol:0x7aff9a},
  cultist:{skin:[190,150,120],tunic:0x7a1a14,cape:[120,24,16],pants:[50,20,18],sc:1,head:'hoodred',wpn:'staff',wcol:0xff6a2a},
  orc:{skin:[96,110,80],tunic:0x4a3a2a,cape:[60,44,30],pants:[50,40,30],sc:1.28,head:'orc',wpn:'axe',wcol:0x7a7a80},
  skel:{skin:[226,218,196],tunic:0x4a4a52,cape:[60,60,70],pants:[70,70,74],sc:1.02,head:'skull',wpn:'sword',wcol:0xa0a0a8,bone:1},

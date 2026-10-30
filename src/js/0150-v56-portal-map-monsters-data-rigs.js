@@ -45,9 +45,9 @@
 })();
 // ---- humanoid looks (kit designs are in dkNewKit, used by mkHumanoid) ----
 Object.assign(HUMLOOK,{
- nagaw:{skin:[70,120,70],tunic:0x3a4a2a,cape:[60,80,40],pants:[50,60,40],sc:1.05,wpn:'sword',wcol:0x9aa0a8},
- nagaa:{skin:[90,130,60],tunic:0x4a3a22,cape:[70,60,30],pants:[60,50,30],sc:1,wpn:'bow',wcol:0x6a5a40},
- nagas:{skin:[60,100,90],tunic:0x1a3a3a,cape:[30,70,70],pants:[30,50,50],sc:1,wpn:'staff',wcol:0x7affc0},
+ nagaw:{skin:[62,84,60],tunic:0x3a4a2a,cape:[60,80,40],pants:[50,60,40],sc:1.05,wpn:'sword',wcol:0x9aa0a8},
+ nagaa:{skin:[74,88,54],tunic:0x4a3a22,cape:[70,60,30],pants:[60,50,30],sc:1,wpn:'bow',wcol:0x6a5a40},
+ nagas:{skin:[54,80,76],tunic:0x1a3a3a,cape:[30,70,70],pants:[30,50,50],sc:1,wpn:'staff',wcol:0x7affc0},
  troll:{skin:[120,150,170],tunic:0x3a4a5a,cape:[60,70,90],pants:[60,64,72],sc:1.5,wpn:'club',wcol:0x6a4a2a},
  trollsh:{skin:[110,140,170],tunic:0x2a3a5a,cape:[40,60,110],pants:[50,60,80],sc:1.35,wpn:'staff',wcol:0x9ad8ff},
  yeti:{skin:[214,220,228],tunic:0xd8dce4,cape:[200,206,214],pants:[200,206,214],sc:1.55,wpn:'none'},
