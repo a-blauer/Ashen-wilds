@@ -306,5 +306,5 @@ function lb150Evo(E,L,P){const B=boneP,hb={bn:'head'},nb={bn:'neck'};
     {const h=E.top(0,B([0,0,.6])[2]);if(h)E.rune({p:E.add(h.p,h.n,.01),n:h.n},[0,0,1],.035,P.glow,hb)}
     [-1,1].forEach(s=>[[.12,.82,.43],[.24,.72,.345]].forEach(q=>E.pd('ring','m',P.gold,B([s*q[0],q[1],q[2]]),[s*.3,1,0],[.032,.03,.032],null,hb)))}
   if(L>=5){// spectral flames wreathing the ribcage and the legs
-    [-1,1].forEach(s=>{[.2,.06,-.06].forEach(z=>{const p=B([s*.19,.5,z]);E.L(p,E.add(p,[s*.03,.11,-.05]),.022,.002,'g',P.glow,4)});
+    [-1,1].forEach(s=>{[.2,.06,-.06].forEach(z=>{const p=B([s*.172,.5,z]);E.L(p,E.add(p,[s*.03,.11,-.05]),.022,.002,'g',P.glow,4)});
       [[s<0?'fl1':'fr1',.105,.24,.22],[s<0?'hl1':'hr1',.114,.28,-.2]].forEach(q=>{const p=B([s*q[1],q[2],q[3]]);E.L(p,E.add(p,[s*.03,.09,-.04]),.016,.002,'g',P.glow2,4,{bn:q[0]})})})}}

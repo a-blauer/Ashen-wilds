@@ -395,7 +395,7 @@ function pw150Evo(E,L,P){const M=EVO100_M,T=PW150.body,hb={bn:'head'};
     E.pd('cone4','g',P.glow,[0,.6,-1.56],[0,.2,-1],[.016,.13,.06],[0,1,0],{bn:'tail3'})}
   if(L>=3){// obsidian scale armour on the chest and shoulders, glowing seams down the spine
     E.shell((x,y,z,nx,ny,nz)=>z>.12&&z<.36&&ny>-.15&&y>.46&&y<.62,.012,'c',(x,y,z,i)=>i%3?P.dark:P.mainD,{rimCol:P.glowD});
-    [.1,0,-.1,-.2].forEach(z=>{const h=E.top(.03,z);if(h)[-1,1].forEach(s=>E.L(E.add(h.p,[s*.03,-.004,.025]),E.add(h.p,[s*.034,-.006,-.025]),.006,.006,'g',P.glow,3,{vs:1}))})}
+    [.1,0,-.1,-.2].forEach(z=>[-1,1].forEach(s=>{const h=E.top(s*.03,z);if(h)E.L(E.add(h.p,[0,-.003,.025]),E.add(h.p,[0,-.004,-.025]),.006,.006,'g',P.glow,3,{vs:1})}))} // v177: each seam on its own side of the spine (one stood off the hide)
   if(L>=4){// a crown of four thin horns banded in gold, a gem on the brow, molten seams under the belly, a glowing tail blade
     [-1,1].forEach(s=>{E.horn([s*.03,.775,.62],[s*.25,1,-.4],[0,0,-.05],.15,.014,'c',0x2a201c,4,hb,P.trim);E.horn([s*.075,.77,.6],[s*.6,.6,-.6],[0,.02,-.04],.11,.012,'c',0x2a201c,4,hb,P.trim);
       E.pd('ring','m',P.trim,[s*.077,.795,.5],[s*.33,.43,-1],[.022,.03,.022],null,hb)});

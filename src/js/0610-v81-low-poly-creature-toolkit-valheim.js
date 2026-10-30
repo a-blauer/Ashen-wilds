@@ -110,13 +110,13 @@ function lpRig(c,n,D){
     const parts=[],bax=raw=>(bn,geo,col,px,py,pz,sx,sy,sz,rx,rz,basic)=>{if(!S.bones[bn])return;const r=(S.T&&!raw)?S.T([px,py,pz]):[px,py,pz];parts.push({bn:bn,geo:geo,col:col,x:r[0],y:r[1],z:r[2],sx:sx||1,sy:sy||1,sz:sz||1,rx:rx||0,rz:rz||0,basic:basic})};
     Object.assign(x,{ax:bax(),axw:bax(true),axm:(bn,...a)=>{if(!S.bones[bn])return new THREE.Object3D();const m=mkAx(S,bones)(bn,...a);
         // v177: a borrowed part (ears, shells) set on this body: its centre moves onto the nearest surface (they hung up to 45 cm off)
-        try{if(typeof lk177Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk177Near(mesh.geometry,q),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
+        try{if(typeof lk177Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk177Near(mesh.geometry,q,O.indexOf(bn)),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
           if(h.d>half+.01)m.position.set(h.p[0]-r[1],h.p[1]-r[2],h.p[2]-r[3])}}catch(e){}
         return m},
       tex:(st,hex,pal)=>{const t=rigTex({id:'x'+st,st:st,pal:pal},hex);return new THREE.MeshStandardMaterial({map:t.map,normalMap:t.nm,roughness:.9})},
       wing:(bn,s,span,chord,col,col2,type,px,py,pz)=>{if(!S.bones[bn])return new THREE.Group();const grp=mkWing(type,span,chord,col,col2);if(s<0)grp.scale.x=-1;const p=new THREE.Group();p.add(grp);
         const r=S.bones[bn],q=S.T?S.T([s*px,py,pz]):[s*px,py,pz];
-        try{if(typeof lk177Near=='function'){const h=lk177Near(mesh.geometry,q),ax=Math.abs(q[0]);if(h.d>.002&&Math.abs(h.p[0])<ax)q[0]=Math.sign(q[0])*Math.max(ax-.05,Math.abs(h.p[0])-.012)}}catch(e){} // v177: hinge on the body
+        try{if(typeof lk177Near=='function'){const h=lk177Near(mesh.geometry,q);if(h.d>.006)for(let i=0;i<3;i++)q[i]=h.p[i]-h.n[i]*.012}}catch(e){} // v177: a borrowed wing hinges just inside this body (they hung beside or above it)
         p.position.set(q[0]-r[1],q[1]-r[2],q[2]-r[3]);bones[bn].add(p);x.wings.push({p:p,s:s,base:.35,amp:.55});return p}});
     extra.forEach(a=>{try{a[0].sig(x,a[1],c)}catch(e){console.error('lp fuse',n,e)}});
     [false,true].forEach(bs=>{const m=bakeMesh(parts,O,'LPF|'+n+'|'+c.g.join()+'|'+c.cl.join(),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}});

@@ -26,10 +26,13 @@ function lk177EChain(E,t,col,top,n,r,dir,o){const D=new THREE.Vector3(...(dir||[
 
 // Nearest point on a body geometry's rest-pose surface to p: {p:[x,y,z], n:[outward normal], d:distance}. G = an indexed
 // BufferGeometry (an LPR body from lpGeo). Used to set kit parts onto the body they belong to.
-function lk177Near(G,p){const P=G.attributes.position.array,I=G.index?G.index.array:null,n=I?I.length:P.length/3,V=THREE.Vector3,
+// bone (optional): only the surface skinned mostly to that bone index
+function lk177Near(G,p,bone){const P=G.attributes.position.array,I=G.index?G.index.array:null,n=I?I.length:P.length/3,V=THREE.Vector3,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight,
     a=new V(),b=new V(),c=new V(),q=new V(...p),t=new THREE.Triangle(),o=new V();let best=1e9,bp=null,bn=null;
-  for(let i=0;i<n;i+=3){const ia=I?I[i]:i,ib=I?I[i+1]:i+1,ic=I?I[i+2]:i+2;a.fromArray(P,ia*3);b.fromArray(P,ib*3);c.fromArray(P,ic*3);t.set(a,b,c);t.closestPointToPoint(q,o);
+  const mb=v=>{let b=SI.getX(v),w=SW.getX(v);if(SW.getY(v)>w){w=SW.getY(v);b=SI.getY(v)}if(SW.getZ(v)>w){w=SW.getZ(v);b=SI.getZ(v)}return b};
+  for(let i=0;i<n;i+=3){const ia=I?I[i]:i,ib=I?I[i+1]:i+1,ic=I?I[i+2]:i+2;if(bone!=null&&SI&&mb(ia)!==bone)continue;a.fromArray(P,ia*3);b.fromArray(P,ib*3);c.fromArray(P,ic*3);t.set(a,b,c);t.closestPointToPoint(q,o);
     const d=o.distanceToSquared(q);if(d<best){best=d;bp=o.toArray();bn=t.getNormal(new V()).toArray()}}
+  if(!bp)return bone!=null?lk177Near(G,p):{p:p.slice(),n:[0,1,0],d:0};
   // the triangle normal can face in (winding): point it away from the body's centre line
   const out=[bp[0],bp[1]-(G.boundingSphere||(G.computeBoundingSphere(),G.boundingSphere)).center.y,0];if(bn[0]*out[0]+bn[1]*out[1]<0)bn=bn.map(v=>-v);
   return {p:bp,n:bn,d:Math.sqrt(best)}}

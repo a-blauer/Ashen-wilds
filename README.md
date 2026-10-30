@@ -530,6 +530,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Less cartoony (owner): Gloomcap / Sporelord lose the white eye sparkles and pink cheeks (small slanted glowing eyes in deep sockets,
   heavy brows, ragged yellowed teeth), the Mossfrog gets a toad's hooded eyes with horizontal pupils and parotoid glands, the
   Emberlynx loses its eye sparkle. Close-ups: `LIST="Species:evo:pose:x,y,z:dist;…" python3 v177_look.py`.
+  Gaps allowed: 4 mm in idle, 12 mm in the walk and bite frames (`MOVE_MM`: a rigid ornament on bending skin opens a gap for a
+  moment); a short `OK_FLOAT` list in the test names the few remaining small ones with a reason and a size cap (fused companions'
+  borrowed parts up to 2 cm in motion, two Cryptspider evolution gems, one Venomcoil scale line).
   Run: `SP=Foxlet,Ashwolf SETS=base,trait,var,fuse POSES=idle,walkA,walkB,bite python3 v177_comp_float.py` (`VERBOSE=1` every
   piece, `TIMING=1`, `DUMP=prefix` saves the geometry); the suite runs it as 12 jobs (family × base+fuse / trait+var).
 - **Version 164 Cheddar's board (`3235`; owner: "reduce the amount of cheddar quests in each zone to 8 total and award the player with an

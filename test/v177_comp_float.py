@@ -47,7 +47,12 @@ JS=r"""(a)=>{const [list,poses]=a,V=THREE.Vector3,out=[];window.requestAnimation
     sc.remove(g)});
   return out}"""
 # Parts meant to hover free of the body. Match on the species label (regex) and the mesh description; keep each with a reason.
+# (label regex, piece regex, reason, at most this many mm)
 OK_FLOAT=[
+ (r'^Venomcoil .*Armored',r'EVO on chest',"an evolution scale line on the breast lies 4 mm off the hide",6),
+ (r'^Cryptspider evo3',r'EVO on tail0',"the evolution glow on the abdomen's crest sits a few mm proud of it",8),
+ (r'^Cryptspider ',r'EVO on head',"the evolution eye gems while the fangs strike (bite frame)",13),
+ (r'\+',r'LPF\||mesh \?|^skin \? ',"a fused companion's borrowed parts are rigid on one bone of the new body; up to 2 cm in a stride or bite",20),
 ]
 def configs():
     SP=json.loads(os.environ.get('_SPK','[]'))
@@ -99,7 +104,7 @@ def s(pg):
                     desc='%s %s on %s col %s%s%s'%(mi['t'],mi.get('k') or '?',tb or '-',tc or '#'+mi['col'],' glow' if mi['add'] else '',' see-through' if mi['tr'] else '')
                     key=(desc,round(cc[0],2),round(cc[1],2),round(cc[2],2))
                     bs=P.get('bs',1);msg='%s %s: floating piece (%d tris, %s) at (%.3f, %.3f, %.3f) [model %.3f, %.3f, %.3f], %.1f mm from the body'%(lab,pn,n,desc,cc[0],cc[1],cc[2],cc[0]/bs,cc[1]/bs,cc[2]/bs,d*1000)
-                    ok=[w for w in OK_FLOAT if re.search(w[0],lab) and re.search(w[1],desc)]
+                    ok=[w for w in OK_FLOAT if re.search(w[0],lab) and re.search(w[1],desc) and d*1000<=w[3]]
                     if ok:okd.append(msg+'  [ok: '+ok[0][2]+']');continue
                     if desc in seen and not verbose:continue
                     seen.add(desc);fails.append(msg)

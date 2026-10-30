@@ -86,7 +86,7 @@ function er150CragKit(k,C,red){const T=ER150.CR,top=T.top,nz=er150Nz;
   // flank blades in two rows, leaning out
   [-1,1].forEach(s=>{[[.18,.17,.08],[.05,.21,.11],[-.08,.2,.11],[-.21,.18,.09],[-.33,.15,.07]].forEach(([z,x,h],i)=>{const y=top(x,z);
       k.p('spine','cone4','c',i%2?st2:blade,s*x,y+h*.38,z,.03,h,.065,-.3,0,-s*.55)});
-    [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x,y+h*.3,z,.025,h,.05,-.2,0,-s*.95)})});
+    [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x*.97,y+h*.12,z,.025,h,.05,-.2,0,-s*.95)})});
   // serrated rim: stone spikes jutting out and down all round the shell
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2,z=Math.cos(a)*.47-.03,P=er150Prof(T.shell,Math.max(-.48,Math.min(.41,z))),x=Math.sin(a)*P[1];if(Math.abs(Math.sin(a))<.25&&Math.cos(a)>0)continue;
     const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk177Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v177: on the shell (they stood off its flanks)

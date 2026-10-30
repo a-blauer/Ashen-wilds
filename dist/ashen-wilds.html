@@ -7561,13 +7561,13 @@ function lpRig(c,n,D){
     const parts=[],bax=raw=>(bn,geo,col,px,py,pz,sx,sy,sz,rx,rz,basic)=>{if(!S.bones[bn])return;const r=(S.T&&!raw)?S.T([px,py,pz]):[px,py,pz];parts.push({bn:bn,geo:geo,col:col,x:r[0],y:r[1],z:r[2],sx:sx||1,sy:sy||1,sz:sz||1,rx:rx||0,rz:rz||0,basic:basic})};
     Object.assign(x,{ax:bax(),axw:bax(true),axm:(bn,...a)=>{if(!S.bones[bn])return new THREE.Object3D();const m=mkAx(S,bones)(bn,...a);
         // v177: a borrowed part (ears, shells) set on this body: its centre moves onto the nearest surface (they hung up to 45 cm off)
-        try{if(typeof lk177Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk177Near(mesh.geometry,q),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
+        try{if(typeof lk177Near=='function'){const r=S.bones[bn],q=[m.position.x+r[1],m.position.y+r[2],m.position.z+r[3]],h=lk177Near(mesh.geometry,q,O.indexOf(bn)),half=Math.min(m.scale.x,m.scale.y,m.scale.z)*.5;
           if(h.d>half+.01)m.position.set(h.p[0]-r[1],h.p[1]-r[2],h.p[2]-r[3])}}catch(e){}
         return m},
       tex:(st,hex,pal)=>{const t=rigTex({id:'x'+st,st:st,pal:pal},hex);return new THREE.MeshStandardMaterial({map:t.map,normalMap:t.nm,roughness:.9})},
       wing:(bn,s,span,chord,col,col2,type,px,py,pz)=>{if(!S.bones[bn])return new THREE.Group();const grp=mkWing(type,span,chord,col,col2);if(s<0)grp.scale.x=-1;const p=new THREE.Group();p.add(grp);
         const r=S.bones[bn],q=S.T?S.T([s*px,py,pz]):[s*px,py,pz];
-        try{if(typeof lk177Near=='function'){const h=lk177Near(mesh.geometry,q),ax=Math.abs(q[0]);if(h.d>.002&&Math.abs(h.p[0])<ax)q[0]=Math.sign(q[0])*Math.max(ax-.05,Math.abs(h.p[0])-.012)}}catch(e){} // v177: hinge on the body
+        try{if(typeof lk177Near=='function'){const h=lk177Near(mesh.geometry,q);if(h.d>.006)for(let i=0;i<3;i++)q[i]=h.p[i]-h.n[i]*.012}}catch(e){} // v177: a borrowed wing hinges just inside this body (they hung beside or above it)
         p.position.set(q[0]-r[1],q[1]-r[2],q[2]-r[3]);bones[bn].add(p);x.wings.push({p:p,s:s,base:.35,amp:.55});return p}});
     extra.forEach(a=>{try{a[0].sig(x,a[1],c)}catch(e){console.error('lp fuse',n,e)}});
     [false,true].forEach(bs=>{const m=bakeMesh(parts,O,'LPF|'+n+'|'+c.g.join()+'|'+c.cl.join(),bs);if(m){b.add(m);m.updateMatrixWorld(true);m.bind(sk)}});
@@ -19790,7 +19790,7 @@ function evo100Kit(n,L,P,seed){
         pts.push(h?add(h.p,d,off):add(c,d,off+.05))}
       for(let k=0;k<N;k++)E.L(pts[k],pts[(k+1)%N],r,r,t,col,4,Object.assign({vs:1},o));return pts},
     // small glowing rune glyph lying on the surface (three strokes)
-    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,.0015);
+    rune(h,fwd,sz,col,o){const n=h.n,F=V3(fwd).sub(V3(n).multiplyScalar(V3(fwd).dot(V3(n)))).normalize(),X=new THREE.Vector3().crossVectors(V3(n),F),p0=add(h.p,n,0); // v177: the stroke centre on the given point (callers already lift it 3-4 mm; with both it hung off the hide)
       const st=(a,b)=>E.L(add(add(p0,F.toArray(),a[1]*sz),X.toArray(),a[0]*sz),add(add(p0,F.toArray(),b[1]*sz),X.toArray(),b[0]*sz),sz*.09,sz*.09,'g',col||P.glow,3,Object.assign({vs:1},o));
       const k=(R()*3)|0;st([0,-1],[0,1]);if(k==0){st([-.5,.4],[0,1]);st([.5,.4],[0,1])}else if(k==1){st([0,.2],[.6,-.4]);st([0,.2],[-.6,-.4])}else{st([-.55,0],[.55,0]);st([.5,-.8],[0,-1])}return E},
     // gem in a metal setting on the surface
@@ -20015,7 +20015,7 @@ EVO100.D.Gravewyrm={glow:0x8aff4a,build(E,L,P){
   // L1: longer back-swept horns, venom drip on the fangs, glowing scale lines behind the eyes
   [-1,1].forEach(s=>{E.horn([s*.09,.37,.52],[s*.5,.45,-1],[s*.03,-.03,-.03],.18+.03*L,.026,'c',bone,5,null,L>=4?P.trim:boneD);
     {const ft=RV137.cur.Gravewyrm=='Venomcoil'?.27:.282;E.L([s*.05,ft+.008,.793],[s*.05,ft-.03,.797],.006,.002,'g',P.glow,3,{bn:'head'})} // v177: the drip hangs from the fang tip (the v137 head moved the fangs)
-    E.L([s*.125,.335,.55],[s*.14,.33,.44],.006,.006,'g',P.glow,3,{bn:'head'})});
+    E.L([s*.118,.335,.55],[s*.13,.33,.44],.006,.006,'g',P.glow,3,{bn:'head'})});
   if(L>=2){// cobra hood frills on the neck with bony struts, bigger ridge plates
     // cobra hood: two upright membranes flaring from the neck behind the head, ribbed with bone, eye-spots
     [-1,1].forEach(s=>{const base=[s*.04,.34,.36],pts=[[s*.05,.47,.43],[s*.14,.54,.41],[s*.23,.52,.38],[s*.29,.44,.35],[s*.29,.34,.32],[s*.22,.25,.3],[s*.1,.22,.32]];
@@ -33033,7 +33033,7 @@ LPR.Gravewyrm={
       [[0,.6,.05,.012,.06],[-.035,.68,.03,.01,.04],[.035,.68,.03,.01,.04],[0,.74,.04,.01,.035]].forEach(q=>k.p('head','box','c',dk,q[0],hT(q[0],q[1])+.001,q[1],q[2],q[3],q[4],-.08,0,0)); // v177: on the head (they stood up to 3 cm above it)
       [-1,1].forEach(s=>{k.p('head','sph','c',mdSh(main,1.15),s*.11,.37,.6,.045,.04,.07);k.p('head','sph','c',dkr,s*.046,.366,.806,.007,.006,.006)});
       // a ridge of keeled scales down the back
-      for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.009,z,.022,.018,.034)}
+      for(let z=.18,i=0;z>-1.45;z-=.09,i++){const T2=WY137.top(z),bn=wyrmBones(z)[0];k.p(bn,'dod','c',i%2?dk:dkr,T2.x,T2.top-.012,z,.022,.02,.036)}
       // a crest of small scales on the head, and a rattle on the tail
       for(let i=0;i<4;i++)k.p('head','cone4','c',dk,0,.45-i*.006,.62-i*.05,.02,.03,.025,-.5);
       for(let i=0;i<5;i++){const z=-1.56-i*.035,r=.03-i*.004;k.p('tail3','sph','c',i%2?0xc8b890:0xa89870,WY137.curve(z),.04,z,r,r*.8,.022)}}
@@ -43213,7 +43213,7 @@ function pw150Evo(E,L,P){const M=EVO100_M,T=PW150.body,hb={bn:'head'};
     E.pd('cone4','g',P.glow,[0,.6,-1.56],[0,.2,-1],[.016,.13,.06],[0,1,0],{bn:'tail3'})}
   if(L>=3){// obsidian scale armour on the chest and shoulders, glowing seams down the spine
     E.shell((x,y,z,nx,ny,nz)=>z>.12&&z<.36&&ny>-.15&&y>.46&&y<.62,.012,'c',(x,y,z,i)=>i%3?P.dark:P.mainD,{rimCol:P.glowD});
-    [.1,0,-.1,-.2].forEach(z=>{const h=E.top(.03,z);if(h)[-1,1].forEach(s=>E.L(E.add(h.p,[s*.03,-.004,.025]),E.add(h.p,[s*.034,-.006,-.025]),.006,.006,'g',P.glow,3,{vs:1}))})}
+    [.1,0,-.1,-.2].forEach(z=>[-1,1].forEach(s=>{const h=E.top(s*.03,z);if(h)E.L(E.add(h.p,[0,-.003,.025]),E.add(h.p,[0,-.004,-.025]),.006,.006,'g',P.glow,3,{vs:1})}))} // v177: each seam on its own side of the spine (one stood off the hide)
   if(L>=4){// a crown of four thin horns banded in gold, a gem on the brow, molten seams under the belly, a glowing tail blade
     [-1,1].forEach(s=>{E.horn([s*.03,.775,.62],[s*.25,1,-.4],[0,0,-.05],.15,.014,'c',0x2a201c,4,hb,P.trim);E.horn([s*.075,.77,.6],[s*.6,.6,-.6],[0,.02,-.04],.11,.012,'c',0x2a201c,4,hb,P.trim);
       E.pd('ring','m',P.trim,[s*.077,.795,.5],[s*.33,.43,-1],[.022,.03,.022],null,hb)});
@@ -43377,7 +43377,7 @@ function er150CragKit(k,C,red){const T=ER150.CR,top=T.top,nz=er150Nz;
   // flank blades in two rows, leaning out
   [-1,1].forEach(s=>{[[.18,.17,.08],[.05,.21,.11],[-.08,.2,.11],[-.21,.18,.09],[-.33,.15,.07]].forEach(([z,x,h],i)=>{const y=top(x,z);
       k.p('spine','cone4','c',i%2?st2:blade,s*x,y+h*.38,z,.03,h,.065,-.3,0,-s*.55)});
-    [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x,y+h*.3,z,.025,h,.05,-.2,0,-s*.95)})});
+    [[.1,.31,.05],[-.12,.32,.05],[-.3,.27,.04]].forEach(([z,x,h])=>{const y=top(x,z);k.p('spine','cone4','c',st2,s*x*.97,y+h*.12,z,.025,h,.05,-.2,0,-s*.95)})});
   // serrated rim: stone spikes jutting out and down all round the shell
   for(let i=0;i<20;i++){const a=i/20*Math.PI*2,z=Math.cos(a)*.47-.03,P=er150Prof(T.shell,Math.max(-.48,Math.min(.41,z))),x=Math.sin(a)*P[1];if(Math.abs(Math.sin(a))<.25&&Math.cos(a)>0)continue;
     const h=i%2?.07:.1,rx=Math.cos(a)*1.75,rz=-Math.sin(a)*1.75,d=new THREE.Vector3(0,1,0).applyEuler(new THREE.Euler(rx,0,rz)),q=lk177Near(er150CragGeo(C),[x,P[0]+.005,z]).p; // v177: on the shell (they stood off its flanks)
@@ -43923,7 +43923,7 @@ function lb150Evo(E,L,P){const B=boneP,hb={bn:'head'},nb={bn:'neck'};
     {const h=E.top(0,B([0,0,.6])[2]);if(h)E.rune({p:E.add(h.p,h.n,.01),n:h.n},[0,0,1],.035,P.glow,hb)}
     [-1,1].forEach(s=>[[.12,.82,.43],[.24,.72,.345]].forEach(q=>E.pd('ring','m',P.gold,B([s*q[0],q[1],q[2]]),[s*.3,1,0],[.032,.03,.032],null,hb)))}
   if(L>=5){// spectral flames wreathing the ribcage and the legs
-    [-1,1].forEach(s=>{[.2,.06,-.06].forEach(z=>{const p=B([s*.19,.5,z]);E.L(p,E.add(p,[s*.03,.11,-.05]),.022,.002,'g',P.glow,4)});
+    [-1,1].forEach(s=>{[.2,.06,-.06].forEach(z=>{const p=B([s*.172,.5,z]);E.L(p,E.add(p,[s*.03,.11,-.05]),.022,.002,'g',P.glow,4)});
       [[s<0?'fl1':'fr1',.105,.24,.22],[s<0?'hl1':'hr1',.114,.28,-.2]].forEach(q=>{const p=B([s*q[1],q[2],q[3]]);E.L(p,E.add(p,[s*.03,.09,-.04]),.016,.002,'g',P.glow2,4,{bn:q[0]})})})}}
 // ================= v151 Gorthrak the Glacierback — the model, poses and procedural animation =================
 // The mini boss of Burningeye Summit I's main quest (the cave and the fight are in 3152, the moves in 3151). A towering
@@ -54902,10 +54902,13 @@ function lk177EChain(E,t,col,top,n,r,dir,o){const D=new THREE.Vector3(...(dir||[
 
 // Nearest point on a body geometry's rest-pose surface to p: {p:[x,y,z], n:[outward normal], d:distance}. G = an indexed
 // BufferGeometry (an LPR body from lpGeo). Used to set kit parts onto the body they belong to.
-function lk177Near(G,p){const P=G.attributes.position.array,I=G.index?G.index.array:null,n=I?I.length:P.length/3,V=THREE.Vector3,
+// bone (optional): only the surface skinned mostly to that bone index
+function lk177Near(G,p,bone){const P=G.attributes.position.array,I=G.index?G.index.array:null,n=I?I.length:P.length/3,V=THREE.Vector3,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight,
     a=new V(),b=new V(),c=new V(),q=new V(...p),t=new THREE.Triangle(),o=new V();let best=1e9,bp=null,bn=null;
-  for(let i=0;i<n;i+=3){const ia=I?I[i]:i,ib=I?I[i+1]:i+1,ic=I?I[i+2]:i+2;a.fromArray(P,ia*3);b.fromArray(P,ib*3);c.fromArray(P,ic*3);t.set(a,b,c);t.closestPointToPoint(q,o);
+  const mb=v=>{let b=SI.getX(v),w=SW.getX(v);if(SW.getY(v)>w){w=SW.getY(v);b=SI.getY(v)}if(SW.getZ(v)>w){w=SW.getZ(v);b=SI.getZ(v)}return b};
+  for(let i=0;i<n;i+=3){const ia=I?I[i]:i,ib=I?I[i+1]:i+1,ic=I?I[i+2]:i+2;if(bone!=null&&SI&&mb(ia)!==bone)continue;a.fromArray(P,ia*3);b.fromArray(P,ib*3);c.fromArray(P,ic*3);t.set(a,b,c);t.closestPointToPoint(q,o);
     const d=o.distanceToSquared(q);if(d<best){best=d;bp=o.toArray();bn=t.getNormal(new V()).toArray()}}
+  if(!bp)return bone!=null?lk177Near(G,p):{p:p.slice(),n:[0,1,0],d:0};
   // the triangle normal can face in (winding): point it away from the body's centre line
   const out=[bp[0],bp[1]-(G.boundingSphere||(G.computeBoundingSphere(),G.boundingSphere)).center.y,0];if(bn[0]*out[0]+bn[1]*out[1]<0)bn=bn.map(v=>-v);
   return {p:bp,n:bn,d:Math.sqrt(best)}}
