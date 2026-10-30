@@ -219,7 +219,7 @@ function el150Evo(E,L,P){const M=EVO100_M;
     for(let i=0;i<9;i++){const a=-1.2+i/8*2.4,h=E.on([Math.sin(a)*.6,.56+Math.cos(a)*.5,.38],[-Math.sin(a),-Math.cos(a),0]);if(h)E.L(E.add(h.p,h.n,-.01),E.add(h.p,E.nrm([h.n[0],h.n[1]+.4,-1.1]),.14+(i%2)*.05),.032,.002,'g',i%2?P.glow:P.glow2,4)}}}
 // Direfang and Skollmaw: the war-wolf design is ray-placed, so it follows the new bodies; only its jaw tusks sit at a fixed
 // Ashwolf spot (inside these longer heads), so they are left out: Direfang has its sabres, Skollmaw its rows of teeth.
-{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Ashwolf;if(sp!='Direfang'&&sp!='Skollmaw')return b0.apply(this,arguments);
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Ashwolf;if(sp!='Direfang')return b0.apply(this,arguments);   // (v181: Skollmaw has its own look, 3390)
   const l0=E.L,s0=E.shell,eye=sp=='Direfang'?[DF150.body,.695,.62,-.012]:[SK150.body,.625,.62,-.008],old=wolfP([.09,.636,.574]);
   E.L=function(a,b,r1,r2,t,col,seg,o){if(o&&o.bn=='jaw')return E;
     if(o&&o.bn=='head'&&Math.abs(Math.abs(a[0])-old[0])<1e-6&&Math.abs(a[1]-old[1])<1e-6){const s=Math.sign(a[0]),e=bz150S(eye[0],eye[1],s>0?eye[2]:Math.PI-eye[2],eye[3]).p,d=[e[0]-a[0],e[1]-a[1],e[2]-a[2]];
