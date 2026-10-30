@@ -70,3 +70,4 @@ body.kv-on #kvBoot{display:none}
   #kvList{max-height:20vh}
   #kvHint{display:none}
 }
+#kvGfxOut{margin:2px 0 0;font-size:.68rem;word-break:break-word;max-height:22vh;overflow:auto;user-select:text}

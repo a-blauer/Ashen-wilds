@@ -366,6 +366,9 @@ function buildUI(){
     <div class="row"><span class="lbl">View</span><div class="seg" id="kvCam"><button data-c="side">Side</button><button data-c="front">Front</button><button data-c="back">Back</button><button data-c="top">Top</button></div>
       <label class="chk"><input type="checkbox" id="kvLoop"> Loop</label></div>
     <div class="row" id="kvTgtRow"><span class="lbl">Target</span><select id="kvTarget"></select></div>
+    <div class="row"><span class="lbl">Look</span><div class="seg" id="kvGfx"><button data-g="full" class="on">Full</button><button data-g="noglass">No glass</button><button data-g="plain">Plain</button><button data-g="safe">Safe</button></div>
+      <button id="kvGfxI" title="What this device's graphics report">Info</button></div>
+    <div id="kvGfxOut" class="note" hidden></div>
   </footer>`;
   document.body.appendChild(pn);
   const tsel=Q('#kvTarget');['hobgoblin','orc','skeleton','troll','snowwolf','tortoise','goo','yeti'].forEach(k=>{if(EN[k]){const o=document.createElement('option');o.value=k;o.textContent=EN[k].e+' '+EN[k].n;tsel.appendChild(o)}});
@@ -376,6 +379,7 @@ function buildUI(){
   Q('#kvStep').onclick=()=>{if(KVCLK.speed!=0)setSpeed(0);KVCLK.step+=16};
   Q('#kvCam').onclick=e=>{const b=e.target.closest('button');if(b)camPreset(b.dataset.c)};
   Q('#kvLoop').onchange=e=>{KV.loop=e.target.checked};
+  Q('#kvGfx').onclick=e=>{const b=e.target.closest('button');if(b)kvGfx(b.dataset.g)};Q('#kvGfxI').onclick=()=>{const o=Q('#kvGfxOut');o.hidden=!o.hidden;if(!o.hidden)o.innerHTML=kvGfxInfo()};
   Q('#kvList').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;select(KV.mode,b.dataset.k);if(KV.mode=='boss')camPreset('side')};
   Q('#kvDetail').onclick=e=>{const b=e.target.closest('button');if(!b)return;
     if(b.dataset.stage!=null){KV.stage=+b.dataset.stage;select('comp',KV.sel.comp,{stage:KV.stage});return}
@@ -442,3 +446,27 @@ window.KVbossReady=()=>!!(KV.boss&&KV.boss.e&&KV.boss.ready);
 // wait for the game to finish loading
 const wait=()=>{if(typeof hero!='undefined'&&typeof ccBegin=='function'&&document.querySelector('#ccNext'))boot();else setTimeout(wait,100)};wait();
 })();
+
+// ---- Look: drawing options, to find which part of the drawing a device gets wrong (owner, Oct 29 2026: shredded view on a phone) ----
+// Full: the game's normal look. No glass: the see-through wall passes off (GH169.on). Plain: no post-processing (POST.on: the
+// scene draws straight to the screen, no anti-aliased buffer, glow or colour grade). Safe: both, at pixel ratio 1.
+var KVGFX={mode:'full',pr:null};
+// how often the view's buffers are rebuilt (POST.resize: every stage resize and quality change), and the sizes
+KVGFX.rz=0;KVGFX.rzt=[];{const f=POST.resize;POST.resize=function(){KVGFX.rz++;const now=Date.now();KVGFX.rzt.push(now);while(KVGFX.rzt.length&&now-KVGFX.rzt[0]>10000)KVGFX.rzt.shift();
+  try{const v=ren.getDrawingBufferSize(new THREE.Vector2());KVGFX.rzs=v.x+'×'+v.y}catch(_){}return f.apply(this,arguments)}}
+function kvGfx(m){KVGFX.mode=m;if(KVGFX.pr==null)KVGFX.pr=ren.getPixelRatio();
+  GH169.on=m=='full'||m=='plain';POST.on=m=='full'||m=='noglass';
+  if(KVGFX.qa==null)KVGFX.qa=QL.auto;QL.auto=m=='safe'?false:KVGFX.qa;   // the game's auto quality would reset the pixel ratio
+  const pr=m=='safe'?1:KVGFX.pr;if(ren.getPixelRatio()!==pr){ren.setPixelRatio(pr);try{rs()}catch(_){}}
+  document.querySelectorAll('#kvGfx button').forEach(b=>b.classList.toggle('on',b.dataset.g==m));
+  const o=Q('#kvGfxOut');if(o&&!o.hidden)o.innerHTML=kvGfxInfo()}
+function kvGfxInfo(){const L=[],E=x=>String(x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  try{const gl=ren.getContext(),d=gl.getExtension('WEBGL_debug_renderer_info'),c=ren.domElement;
+    L.push('WebGL '+(ren.capabilities.isWebGL2?'2':'1')+(gl.isContextLost()?' · <b>context lost</b>':''));
+    L.push('GPU: '+E(d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)));
+    L.push('Canvas '+c.width+'×'+c.height+' · shown '+c.clientWidth+'×'+c.clientHeight+' · ratio '+ren.getPixelRatio()+' (device '+(devicePixelRatio||1)+') · quality '+QL.lv);
+    L.push('Float buffers '+(gl.getExtension('EXT_color_buffer_float')||gl.getExtension('EXT_color_buffer_half_float')?'yes':'no')+' · max samples '+(ren.capabilities.maxSamples||0)+' · colour-only copies '+(window.KQ170?KQ170.n:'-'));
+    L.push('Buffer rebuilds '+KVGFX.rz+' ('+KVGFX.rzt.filter(t=>Date.now()-t<10000).length+' in the last 10 s, last '+(KVGFX.rzs||'-')+') · retro '+(PSXON?'on':'off')+' '+PSXH+' · GL error '+gl.getError());
+    L.push('Look: '+KVGFX.mode+' · see-through '+(GH169.on?'on':'off')+' · post '+(POST.on?'on':'off'))}catch(e){L.push('info error: '+E(e.message))}
+  const w=(window.KVLOG||[]).slice(-6);L.push(w.length?'Last warnings:<br>'+w.map(x=>'· '+E(x.slice(0,160))).join('<br>'):'No warnings');
+  return L.join('<br>')}

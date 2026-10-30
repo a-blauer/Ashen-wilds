@@ -1529,6 +1529,9 @@ game code on a quiet stage (Hillside Crest I's road; natural spawns off). Four t
 * **Hero**: every class (as its beast), every weapon type (each combo hit, full combo) and all 17 class abilities, base
   form (rank 1) or evolved form (rank 5, v137), cast for real through `cast(0)` with the loadout holding only that ability.
 Speed (1×–⅒×), pause, frame step, camera presets (relative to the boss's facing in the Bosses tab), loop, Play all.
+Look (Oct 29 2026, a phone showed the view shredded): Full / No glass (see-through passes off, `GH169.on`) / Plain (no post-processing,
+`POST.on`) / Safe (both, pixel ratio 1), and Info: WebGL version, GPU name, buffer sizes and the last warnings (`KVLOG`, caught in `pre.js`),
+so the owner can report from a phone which part of the drawing the device gets wrong.
 `viewer/pre.js` runs before the game and puts performance.now / requestAnimationFrame / setTimeout on a virtual clock
 (`KVCLK`); `viewer/viewer.js` runs after it. Build with `./viewer/build_viewer.sh` (the build is committed), check with
 `cd test && python3 kv_viewer.py` (`TABS=comp,mon,boss,hero,abil`, `ONLY=`, `SHOT=1` for contact sheets; in the full suite).
