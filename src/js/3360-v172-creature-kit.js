@@ -146,7 +146,7 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
     cap(o.capA==null?0:o.capA===true?2:o.capA,0);cap(o.capB==null?0:o.capB===true?2:o.capB,1);
     const N=RR.length,sl=o.slot||'hide',base=B.slot(sl).P.length/3,rec={rings:RR,seg,o,frames:[]},tile=o.tile||CM172.tile||.3;
     // texture: v runs along the loft by arc length (the fur flows toward the end), u around it, repeated to keep the clumps square
-    let av=0,per=0;RR.forEach((r,i)=>{if(i)av+=r.p.distanceTo(RR[i-1].p);r.av=av;per=Math.max(per,Math.PI*(r.rx+(r.ryT+r.ryB)/2))});rec.ru=o.ru||Math.max(1,Math.round(per/tile));
+    let av=0,per=0;RR.forEach((r,i)=>{if(i)av+=r.p.distanceTo(RR[i-1].p);r.av=av;r.av0=0;per=Math.max(per,Math.PI*(r.rx+(r.ryT+r.ryB)/2))});rec.ru=o.ru||Math.max(1,Math.round(per/tile));{let la=0,lb=0;RR.forEach(r=>{if(!r.cap)la=r.av});RR.forEach(r=>{r.av0=la});for(let i=0;i<RR.length&&RR[i].cap;i++)RR[i].av0=RR.find(q=>!q.cap).av}
     let prevU=null;
     RR.forEach((r,i)=>{const tg=RR[Math.min(i+1,N-1)].p.clone().sub(RR[Math.max(i-1,0)].p).normalize();
       let ref=ref0.clone();if(Math.abs(ref.dot(tg))>.92)ref=prevU?prevU.clone():new CM_V(0,0,1);
@@ -155,10 +155,12 @@ function cm172B(rig){const S=SPEC[rig],O=Object.keys(S.bones),bi={};O.forEach((k
       for(let k=0;k<=seg;k++){const a=(o.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?r.ryT:r.ryB,m=o.prof?o.prof(a,u,r):1,sq=o.sq||0;
         const cx=Math.sign(c)*Math.pow(Math.abs(c),1-sq),sy=Math.sign(s)*Math.pow(Math.abs(s),1-sq);
         const p=r.p.clone().addScaledVector(Sd,cx*r.rx*m).addScaledVector(U,sy*ry*m);
-        const col=o.paint?o.paint(r,s,c,u,a):o.col||0x808080;B.vert(sl,p,col,r.W,[k/seg*rec.ru,r.av/tile])}});
+        const col=o.paint?o.paint(r,s,c,u,a):o.col||0x808080;
+        // rounded ends are mapped flat (seen from the end) so the texture doesn't pinch into a starburst at the tip
+        const uv=r.cap?[.5*rec.ru+cx*r.rx*m/tile,r.av0/tile+sy*ry*m/tile]:[k/seg*rec.ru,r.av/tile];B.vert(sl,p,col,r.W,uv)}});
     const IX=B.slot(sl).IX,S1=seg+1;for(let i=0;i<N-1;i++)for(let k=0;k<seg;k++){const a=base+i*S1+k,a1=a+1,b2=a+S1,b3=a1+S1;IX.push(a,a1,b2,b2,a1,b3)}
     // close the ends with a fan
-    [[0,-1],[N-1,1]].forEach(([ri,dir])=>{const r=RR[ri],ci=B.vert(sl,r.p,o.paint?o.paint(r,dir,0,r.u,0):o.col||0x808080,r.W,[rec.ru*.5,r.av/tile+dir*.05]),o0=base+ri*S1;
+    [[0,-1],[N-1,1]].forEach(([ri,dir])=>{const r=RR[ri],ci=B.vert(sl,r.p,o.paint?o.paint(r,dir,0,r.u,0):o.col||0x808080,r.W,r.cap?[.5*rec.ru,r.av0/tile]:[rec.ru*.5,r.av/tile+dir*.05]),o0=base+ri*S1;
       for(let k=0;k<seg;k++){const a=o0+k,a1=a+1;if(dir>0)IX.push(ci,a,a1);else IX.push(ci,a1,a)}});
     rec.base=base;rec.sl=sl;if(o.name)B.L[o.name]=rec;B.parts.push({nm:o.name||'loft',sl,v0:base,v1:B.slot(sl).P.length/3,loft:1,root:!!o.root});return rec};
   // ---- a point on a loft's surface: u 0..1 along it, angle a (0 = +x side, PI/2 = top, -PI/2 = underside), off outward

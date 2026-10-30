@@ -41,21 +41,22 @@ function dk172Build(B,c,C,red){const K=dk172Pal(C),eye=red?0xff3020:0xffb030,sd=
       {p:[0,.618,.425],rx:.064,ryT:.066,ryB:.072,b:'neck'},{p:[0,.67,.48],rx:.058,ryT:.06,ryB:.062,b:['neck','head',.5]},{p:[0,.7,.53],rx:.055,ryT:.056,ryB:.058,b:'head'}],
     paint:(r,s,c,u)=>hide(s,u,6)});
   // ---------------- head ----------------
-  const H=B.loft({name:'skull',seg:16,sub:3,capA:1,capB:2,capLen:.5,tile:.16,rings:[
+  const H=B.loft({name:'skull',seg:16,sub:3,capA:1,capB:1,capLen:.3,tile:.16,rings:[
       {p:[0,.702,.5],rx:.062,ryT:.058,ryB:.064,b:'head'},
       {p:[0,.712,.56],rx:.09,ryT:.058,ryB:.066,b:'head'},
       {p:[0,.71,.625],rx:.086,ryT:.05,ryB:.062,b:'head'},
       {p:[0,.698,.695],rx:.06,ryT:.042,ryB:.05,b:'head'},
       {p:[0,.686,.76],rx:.044,ryT:.036,ryB:.042,b:'head'},
       {p:[0,.678,.82],rx:.032,ryT:.03,ryB:.034,b:'head'},
-      {p:[0,.674,.86],rx:.022,ryT:.024,ryB:.026,b:'head'}],
+      {p:[0,.675,.85],rx:.024,ryT:.025,ryB:.027,b:'head'},
+      {p:[0,.672,.88],rx:.014,ryT:.015,ryB:.018,b:'head'}],
     sq:.18,
     prof:(a,u)=>{const c=Math.abs(Math.cos(a)),s=Math.sin(a);return 1+.14*c*Math.max(0,1-Math.abs(u-.36)*5)*(s>.1?1:.3)+.06*Math.pow(Math.max(0,s),6)*Math.max(0,1-Math.abs(u-.7)*3)}, // brow ridges, a ridge down the snout
-    paint:(r,s,c,u)=>{if(u>.95&&s>-.2)return mix(K.back,K.nose,.6);if(s<-.6&&u>.35)return mix(K.nose,K.back,.3);return s<-.2?mix(K.plate,K.main,.5):hide(s,u,1)}});
-  const Jw=B.loft({name:'jaw',seg:10,sub:2,capA:1,capB:2,capLen:.5,tile:.16,rings:[
+    paint:(r,s,c,u)=>{if(s<-.6&&u>.35)return mix(K.nose,K.back,.3);return s<-.2?mix(K.plate,K.main,.5):hide(s,u,1)}});
+  const Jw=B.loft({name:'jaw',seg:10,sub:2,capA:1,capB:1,capLen:.3,tile:.16,rings:[
       {p:[0,.655,.58],rx:.062,ryT:.026,ryB:.032,b:['head','jaw',.5]},{p:[0,.645,.66],rx:.052,ryT:.022,ryB:.029,b:'jaw'},
-      {p:[0,.641,.75],rx:.04,ryT:.019,ryB:.024,b:'jaw'},{p:[0,.644,.82],rx:.028,ryT:.015,ryB:.017,b:'jaw'}],
-    paint:(r,s)=>s>.8?K.gum:s>.4?mix(K.nose,K.back,.3):mix(K.plate,K.main,.3)});
+      {p:[0,.641,.75],rx:.04,ryT:.019,ryB:.024,b:'jaw'},{p:[0,.643,.82],rx:.027,ryT:.015,ryB:.017,b:'jaw'},{p:[0,.648,.86],rx:.016,ryT:.011,ryB:.012,b:'jaw'}],
+    paint:(r,s,c,u)=>s>.8?K.gum:s>.5?mix(K.nose,K.back,.3):s<-.55?mix(K.plate,K.main,.45):hide(s*.6+.25,u,1)});
   B.loft({name:'mouth',seg:8,sub:1,capA:1,capB:1,rings:[
       {p:[0,.662,.61],rx:.036,ryT:.007,ryB:.007,b:['head','jaw',.5]},{p:[0,.66,.72],rx:.025,ryT:.006,ryB:.006,b:['head','jaw',.5]},{p:[0,.66,.8],rx:.015,ryT:.005,ryB:.005,b:['head','jaw',.5]}],col:K.gum});
   // ventral plates: cream scutes from the chin to the tail
@@ -65,8 +66,9 @@ function dk172Build(B,c,C,red){const K=dk172Pal(C),eye=red?0xff3020:0xffb030,sd=
   // Ember Breath: a glow in the throat, seen between the scutes and in the mouth
   B.stroke(N,[[.55,-Math.PI/2],[.75,-Math.PI/2],[.97,-Math.PI/2]],.03,[K.embD,K.emb],{sl:'g',off:-.004,nm:'throat'});
   [-1,1].forEach(s=>{const F=s<0?'fl':'fr',Hh=s<0?'hl':'hr',A=a=>sd(s)+s*a;
-    // nostrils with a faint ember glow, eyes under the brow, teeth
-    B.put('k',cmSph(6,4),B.at(H,.9,A(.6),-.004).p,{s:[.009,.005,.01],W:B.W('head'),col:K.nose,nm:'nostril'});
+    // nostrils: raised ridges on top of the snout with a dark slit, as a reptile's; eyes under the brow; teeth
+    const qn=B.at(H,.86,A(.95),-.003);B.on('hide',cmBlob(17,.04,8),qn,{dir:qn.t,s:[.011,.02,.008],sink:.6,th:1,col:cmMix(K.main,K.back,.5),nm:'nostril ridge'});
+    B.stroke(H,[[.83,A(.92)],[.86,A(.95)],[.89,A(1.0)]],.0045,K.nose,{off:.0025,nm:'nostril'});
     cmEye(B,B.at(H,.4,A(.5),0),{r:.014,col:eye,lid:0x0a0608,brow:K.back,ba:.75,bh:.8,pr:.22,pupil:0x1a0602});
     cmTeeth(B,[.48,.56,.64,.72,.8].map(u=>B.at(H,u,A(-.82),-.005)),{dir:[0,-1,.05],l:.011,r:.0045,fang:[3],fl:.03,fr:.008,col:K.tooth});
     cmTeeth(B,[.45,.62,.8].map(u=>B.at(Jw,u,A(.85),-.004)),{dir:[0,1,.1],l:.01,r:.004,fang:[2],fl:.022,fr:.006,col:K.tooth});
