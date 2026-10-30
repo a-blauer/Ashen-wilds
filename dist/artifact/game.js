@@ -31170,11 +31170,13 @@ var ABX135={p:null,r:0};
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
-var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
+var F135={done:new WeakSet(),t:0,min:0,on:true};   // v173: was .25 (the window never fully cleared)F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
 // now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
-var R157={value:new THREE.Vector2(2.3,5.4)};
+// v173 (owner, Abeksi: the whole screen a murky speckle behind houses): same outer size, but clear right up to 4.7 and only a thin
+// speckled ring (4.7-5.4) marks the window's edge; nothing is left inside it (F135.min 0, was .25: a quarter of every wall stayed)
+var R157={value:new THREE.Vector2(4.7,5.4)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
 var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
