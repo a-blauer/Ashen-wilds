@@ -10,7 +10,7 @@ function cgBones(B,k,S,o){const J=S.J,bone=o.bone,bd=o.bone2||mdSh(o.bone,.72),t
   const H=S.head,skull=H.slice(3).map(q=>({p:[0,q[0],q[4]],rx:q[1]*.95,f:q[2]*.92,b:q[3]*.95,w:[['head',1]]}));mdLoft(B,skull,{seg:16,capA:true,capB:true,col});
   const jaw=H.slice(0,4).map((q,i)=>({p:[0,q[0]+.004,q[4]+.004],rx:q[1]*.86,f:q[2]*.9,b:q[3]*.55,w:[['head',1]]}));mdLoft(B,jaw,{seg:14,capA:true,capB:true,col:bd});
   const fz=y=>{const q=cgAt(H,y);return (q[4]||0)+q[2]*.92};const ey=S.hp(0,1.629,0)[1],nyy=S.hp(0,1.597,0)[1],my=S.hp(0,1.562,0)[1];
-  [-1,1].forEach(s=>{k.p('head','sph2','c',0x080606,s*.036*S.hs,ey,fz(ey)-.012*S.hs,.024*S.hs,.02*S.hs,.02*S.hs);if(o.eye)k.p('head','sph','g',o.eye,s*.036*S.hs,ey,fz(ey)-.006*S.hs,.009*S.hs,.009*S.hs,.006)});
+  [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.034*S.hs,ey,fz(ey)-.014*S.hs,.019*S.hs,.014*S.hs,.016*S.hs,0,0,s*-.25);if(o.eye)k.p('head','sph','g',o.eye,s*.036*S.hs,ey,fz(ey)-.006*S.hs,.009*S.hs,.009*S.hs,.006)});
   k.p('head','cone4','c',0x080606,0,nyy,fz(nyy)-.006,.012*S.hs,.026*S.hs,.008,Math.PI);for(let i=-3;i<=3;i++)k.p('head','box','c',0xe0d8c0,i*.011*S.hs,my,fz(my)-.004,.008*S.hs,.014*S.hs,.008);
   // the column, the ribcage, the sternum, collarbones, shoulder blades
   const sp=y=>{const q=cgAt(T,y);return [0,y,(q[4]||0)-q[3]*.55]},TW=y=>cgTorsoW(S,y),Y0=J.pelvis[1]-.04,Y1=J.neck[1]+.02;
@@ -36,8 +36,8 @@ function cgBonesReg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(ke
 // ---------------- Skeleton Warrior / Bone Archer ----------------
 ['skel','archer'].forEach(key=>{const S=cgHuman({h:1.0,w:.9,d:.85,at:.9,lt:.9,hs:1.0}),J=S.J,T=S.torso,ar=key=='archer';
   cgBonesReg(key,S,function(B,P,k){cgBones(B,k,S,{bone:0xb8ae94,eye:ar?0x7ad8ff:0x6aff9a,soul:ar?0x7ad8ff:0x6aff9a,fist:s=>ar?s<0:s>0});const wy=T[2][0];
-    if(!ar){const H=S.head.slice(9),helm=H.map(q=>({p:[0,q[0],q[4]],rx:q[1]*.95+.016,f:q[2]*.92+.016,b:q[3]*.95+.016,w:[['head',1]]}));mdLoft(B,helm,{seg:16,capB:true,t:'m',col:0x6a4630});
-      k.p('head','box','m',0x5a3a24,0,S.hp(0,1.635,0)[1],S.hp(0,1.635,.105)[2],.016,.06,.012);const a=J.aL0;k.p('aL0','hem','m',0x6a4630,a[0]-.03,a[1]+.03,a[2],.1,.07,.1,0,0,-.4)}
+    if(!ar){const H=S.head.slice(9),helm=H.map(q=>({p:[0,q[0],q[4]],rx:q[1]*.95+.016,f:q[2]*.92+.016,b:q[3]*.95+.016,w:[['head',1]]}));mdLoft(B,helm,{seg:16,capB:true,t:'m',col:m=>m.i<.6?0x3a3c42:0x4a4e56});
+      k.p('head','box','m',0x3a3c42,0,S.hp(0,1.635,0)[1],S.hp(0,1.635,.105)[2],.016,.06,.012);const a=J.aL0;k.p('aL0','hem','m',0x4a4e56,a[0]-.03,a[1]+.03,a[2],.1,.07,.1,0,0,-.4)}
     else{const H=S.head.slice(6),hood=H.map(q=>({p:[0,q[0],q[4]-.01],rx:q[1]+.02,f:q[2]*.6+.02,b:q[3]+.024,w:[['head',1]]}));mdLoft(B,hood,{seg:16,capB:true,col:0x34342c,keep:m=>m.s<.35||m.y>S.hp(0,1.69,0)[1]});
       const qz=cgAt(T,J.chest[1])[4]-cgAt(T,J.chest[1])[3]*.6-.05;k.L('chest','c',0x2a2a24,[.08,J.spine[1],qz],[-.06,T[6][0]+.06,qz-.02],.04,.035,8)}
     // a loincloth rag on a cord
@@ -51,7 +51,7 @@ ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'];cgBoneTube(B,add3(a0,[s*.04,-.04,.03]),add3(a1,[s*.04,.03,.03]),.04,.034,[[A+'0',1]],[[A+'0',1]],bone2);cgBoneTube(B,add3(a1,[s*.03,-.03,.03]),add3(a2,[s*.03,.04,.03]),.036,.03,[[A+'1',1]],[[A+'1',1]],bone2);
       for(let i=0;i<3;i++){const p=add3(a0,[s*(.03+i*.04),.05-i*.03,-.02+i*.03]);k.p(A+'0','sph2','c',i%2?bone:bone2,p[0],p[1],p[2],.05,.055,.055);k.p(A+'0','sph','c',0x080606,p[0]+s*.012,p[1],p[2]+.045,.014,.012,.008)}
       k.p(L+'0','sph2','c',bone2,J[L+'0'][0],J[L+'0'][1]-.1,J[L+'0'][2]+.02,.05,.05,.05)});
-    for(let i=0;i<5;i++){const p=S.hp((i-2)*.03,1.73,-.02);k.L('head','g',fire,p,[p[0]*1.5,p[1]+.06+(i%2)*.03,p[2]-.02],.014,.002,4)}})})();
+    [-1,1].forEach(s=>{const H=S.head,q=cgAt(H,S.hp(0,1.629,0)[1]),z=(q[4]||0)+q[2]*.92-.01;for(let i=0;i<3;i++)k.L('head','g',fire,[s*.034*S.hs,S.hp(0,1.629,0)[1]+.005,z],[s*(.04+i*.012)*S.hs,S.hp(0,1.629,0)[1]+.06+i*.02,z-.03-i*.015],.012-i*.003,.002,4)})})})();   // green fire rising from the sockets
 
 // ---------------- the wrapped dead: Desert Revenant and Tomb Priest ----------------
 function cgWraps(B,M,S,w1,w2,sel,off){cgShell(B,M,sel,off||.008,m=>{const a=Math.atan2(m.x,m.z),b=Math.round((m.y+a*.025)*40);return a181H(b,3)<.12?mdSh(w2,.7):b%2?w1:w2},{rim:.3})}

@@ -129,5 +129,5 @@ ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
     cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,m=>a181Nz(robe,m,.3,14));cgSkirt(B,S,wy-.01,.04,.13,.024,m=>m.y<.14?salt:a181Nz(robe2,m,.25,12),{n:7});
     cgFur(B,M,m=>m.part=='arm'&&Math.abs(m.y-(J.aR2[1]+.06))<.02,{off:.024,len:.04,col:salt,col2:0xc8c0b0,seed:71,jag:.5,lump:[.8,.4]});
     cgHood(B,k,M,S,{col:m=>a181Nz(red,m,.3,16),off:.022,drape:.1,peak:0x3a0c08,ph:.12});
-    [-1,1].forEach(s=>{const a=J[(s<0?'aL':'aR')+'0'];for(let i=0;i<3;i++)k.p(s<0?'aL0':'aR0','oct',i?'c':'g',i?salt:gl,a[0]+s*(.02+i*.03),a[1]+.06+i*.02,a[2]-.02+i*.02,.022-i*.004,.06-i*.012,.022-i*.004,0,0,s*(.4+i*.25))});
+    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A];for(let i=0;i<3;i++){const x=a[0]+s*(i*.025),z=a[2]-.02+i*.02,p=cgRay(M,[x,a[1]+.5,z],[0,-1,0],{arm:1,torso:1});if(p)k.p(A,'oct',i?'c':'g',i?salt:gl,p[0],p[1]+.02,p[2],.022-i*.004,.06-i*.012,.022-i*.004,0,0,s*(.4+i*.25))}});   /* grown out of the shoulder's skin */
     for(let i=0;i<9;i++){const p=cgSurf(M,S,T[6][0]-.03-Math.abs(i-4)*.014,(i-4)*.2,.026);k.p('chest','oct',i==4?'g':'c',i==4?gl:salt,p[0],p[1],p[2],.012)}})})();

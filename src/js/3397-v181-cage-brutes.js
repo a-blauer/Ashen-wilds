@@ -33,7 +33,7 @@ ST179.orc={sx:.2,hx:-.18,lk:.24,rk:.24,az:.1,lz:-.1,ex:-.2,le:-.25};
   cg181Reg(key,S,function(B,P,k,C){const M=cgBruteBody(B,k,C,S,K,{face:cgFaceTroll({nose:1.1}),tusks:.04,ears:.08,fl:1.15,tip:.03,toe:.02}),wy=T[2][0],shy=T[6][0];
     // warts, a white mane down the back of the head and the spine, frost crust and icicles on the shoulders
     for(let i=0;i<16;i++){const y=wy+a181H(i,2)*(shy-wy),a=(a181H(i,7)-.5)*6.2;if(sh&&y<shy-.05)continue;const p=cgSurf(M,S,y,a,0);k.p(y>J.chest[1]-.04?'chest':'spine','sph','c',mdSh(K.sk,.8),p[0],p[1],p[2],.014,.012,.012)}
-    cgFur(B,M,m=>m.part=='head'&&m.s<.3&&m.y>S.hp(0,1.6,0)[1]&&Math.abs(m.x)<.06*S.hs*(m.s<-.5?2:1),{off:.024,len:.16,col:hair,col2:0xa8b8c4,seed:91,jag:.5,lump:[.5,1.2]});
+    cgFur(B,M,m=>m.part=='head'&&(m.s<-.3||m.y>S.hp(0,1.69,0)[1])&&Math.abs(m.x)<.06*S.hs*(m.s<-.5?2:1),{off:.024,len:.16,col:hair,col2:0xa8b8c4,seed:91,jag:.5,lump:[.5,1.2]});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];for(let i=0;i<4;i++)k.p(A+'0','dod','c',i%2?frost:0xe8f8ff,a[0]+s*(.03+i*.02),a[1]+.07-i*.012,a[2]+(i-1.5)*.04,.035,.022,.035,i,0,0);
       for(let i=0;i<3;i++)k.p(A+'0','cone4','g',frost,a[0]+s*(.06+i*.02),a[1]+.01,a[2]+(i-1)*.04,.01,.07,.01,Math.PI)});
     if(!sh){cgSkirt(B,S,wy-.02,J.lh1[1]+.1,.05,.02,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*4)%2?0x6a6e72:0x4a4e54,m,.3,12),{n:5,keep:m=>Math.round(Math.atan2(m.c,m.s)*4)%2==0||m.y>J.lh0[1]-.04});cgBelt(B,M,wy,.02,.024,0x2a2a2e);
@@ -57,17 +57,17 @@ ST179.troll={sx:.32,hx:-.3,lk:.27,rk:.27,az:.12,lz:-.12,ax:-.12,lx:-.15,ex:-.3,l
 ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
 
 // ---------------- Amalgam: a lumpy heap of goo in a man's shape ----------------
-(function(){const S=cgHuman({h:.96,w:1.3,d:1.4,rw:[1.15,1.25,1.45,1.5,1.4,1.35,1.4,1.55],rf:[1.2,1.4,1.9,1.8,1.4,1.2,1.1,1.2],at:1.6,lt:1.45,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.9,foot:1.2,footW:1.4,facePush:BRUTEJAW});
+(function(){const S=cgHuman({h:.94,w:1.4,d:1.5,rw:[1.25,1.35,1.6,1.65,1.5,1.45,1.5,1.7],rf:[1.3,1.6,2.2,2.0,1.5,1.25,1.15,1.3],at:1.85,lt:1.65,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.9,foot:1.2,footW:1.4,facePush:BRUTEJAW});
   const g1=0x425c2c,g2=0x2a3a1c,g3=0x5a7a3a,dirt=0x3a2e1e,glow=0xb4ff3a,T=S.torso,J=S.J;
   cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M;
-    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.02*(n3Sn(x*1.2,y*1.2,z*1.2,9,5)-.45));   // lumps and sags all over
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.045*(n3Sn(x*1.1,y*1.1,z*1.1,7,5)-.45));   // lumps and sags all over
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>n[2]<.1?0:(-.02*cgG(x,y,0,1.56,.05,.012)+.01*cgG(x,y,0,1.6,.06,.03))));
-    cgEmit(B,M,m=>{const nn=n3Sn(m.x,m.y,m.z,11,1);if(nn>.8)return dirt;if(m.part=='head'&&m.s>.5&&Math.abs(m.y-S.hp(0,1.56,0)[1])<.01*S.hs&&Math.abs(m.x)<.06*S.hs)return 0x0a1404;return m.s<-.35||nn<.25?mdMix(g1,g2,.6):nn<.36?g3:g1});
+    cgEmit(B,M,m=>{const nn=n3Sn(m.x,m.y,m.z,7,1);if(m.part=='head'&&m.s>.5&&Math.abs(m.y-S.hp(0,1.56,0)[1])<.01*S.hs&&Math.abs(m.x)<.06*S.hs)return 0x0a1404;return mdMix(mdMix(g1,g3,Math.max(0,.5-nn)*1.4),nn>.6?dirt:g2,Math.max(0,nn-.55)*1.6+(m.s<-.35?.25:0))});
     // three small mismatched eyes sunk in the goo, a sagging maw of crooked teeth, blobs and drips
     [[-.04,1.625,1],[.045,1.64,.8],[0,1.67,.6]].forEach(([x,y,r])=>{const q=S.hp(x,y,0),p=cgRay(M,[q[0],q[1],q[2]+.6],[0,0,-1],{head:1});if(p)k.p('head','sph','g',glow,p[0],p[1],p[2]-.004,.014*r*S.hs,.011*r*S.hs,.008)});
     for(let i=0;i<9;i++){const q=S.hp(-.05+i*.0125,1.566,0),p=cgRay(M,[q[0],q[1],q[2]+.6],[0,0,-1],{head:1});if(p)k.p('head','cone4','c',0xc8c0a0,p[0],p[1],p[2]-.004,.005,.02+((i*5)%3)*.008,.005,Math.PI,0,(i-4)*.06)}
     [[J.chest[1]+.05,Math.PI,.12],[J.spine[1],0,.1],[J.chest[1]-.05,2.4,.08],[J.spine[1]+.05,-2.2,.09]].forEach(([y,a,r])=>{const p=cgSurf(M,S,y,a,-r*.5);k.p(y>J.chest[1]-.04?'chest':'spine','sph2','c',mdMix(g1,g2,.4),p[0],p[1],p[2],r,r*.85,r*.8)});
-    for(let i=0;i<4;i++){const q=S.hp(-.04+i*.027,1.54,0),p=cgRay(M,[q[0],q[1],q[2]+.6],[0,0,-1],{head:1});if(p)k.L('head','c',g2,p,[p[0],p[1]-.05-(i%2)*.03,p[2]+.004],.014,.003,4)}
+    for(let i=0;i<3;i++){const q=S.hp(-.03+i*.03,1.545,0),p=cgRay(M,[q[0],q[1],q[2]+.6],[0,0,-1],{head:1});if(p)k.L('head','c',g2,sub3(p,[0,0,.006]),[p[0],p[1]-.03-(i%2)*.02,p[2]-.004],.016,.006,4)}
     [-1,1].forEach(s=>cgFingers(k,S,s,g2,'claw',.9,dirt,.015))})})();
 ST179.amalgam={sx:.22,hx:-.2,lk:.24,rk:.24,az:.14,lz:-.14,ex:-.3,le:-.3};
 
@@ -79,7 +79,7 @@ ST179.amalgam={sx:.22,hx:-.2,lk:.24,rk:.24,az:.14,lz:-.14,ex:-.3,le:-.3};
     cgEmit(B,M,m=>m.part=='hand'?c3:a181Nz(m.s<-.3?c3:c1,m,.2,16));
     cgEyes(k,M,S,0xff3a1a,.04,1.628,.9,-.002);
     // plate shells: chest and back, belly bands, limb plates — each with a lighter rim
-    cgShell(B,M,m=>m.part=='torso'&&m.y>wy+.02,.024,m=>Math.round(m.y*20+Math.round(Math.atan2(m.x,m.z)*1.5))%2?c2:c1,{rim:.3});cgShell(B,M,m=>m.part=='torso'&&m.y<=wy+.02&&m.y>J.lh0[1]-.03,.02,m=>Math.round(m.y*30)%2?c2:edge,{rim:.3});
+    cgShell(B,M,m=>m.part=='torso'&&m.y>wy+.02,.024,m=>Math.abs(m.x)<.02?edge:Math.round(m.y*16)%2?c2:c1,{rim:.3});cgShell(B,M,m=>m.part=='torso'&&m.y<=wy+.02&&m.y>J.lh0[1]-.03,.02,m=>Math.round(m.y*30)%2?c2:edge,{rim:.3});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a=J[A+'0'];cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y>J[A+'1'][1]+.03,.022,m=>Math.round(m.y*30)%2?c2:c1,{rim:.3});cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.03&&m.y>J[A+'2'][1],.02,c2,{rim:.3});
       cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>J[L+'1'][1]+.04,.022,m=>Math.round(m.y*24)%2?c2:c1,{rim:.3});cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<J[L+'1'][1]-.04&&m.y>J[L+'2'][1]+.02,.02,c2,{rim:.3});
       k.p(A+'0','hem','c',c2,a[0]+s*.05,a[1]+.06,a[2],.15,.09,.15,0,0,s*.45);k.p(A+'0','hem','c',edge,a[0]+s*.06,a[1]+.04,a[2],.135,.06,.135,0,0,s*.75);
