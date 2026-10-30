@@ -102,7 +102,7 @@ function sn178Snap(body,P,tag){if(!SN178.on||!P||!P.length||!body||body.length<9
 function sn178LpW(G,O,P){const pa=G.attributes.position,si=G.attributes.skinIndex,sw=G.attributes.skinWeight;if(!si||!sw)return;const M=new Map(),cs=.04,v=new THREE.Vector3();
   for(let i=0;i<pa.count;i++){const k=sn178Key(Math.floor(pa.getX(i)/cs),Math.floor(pa.getY(i)/cs),Math.floor(pa.getZ(i)/cs));let A=M.get(k);if(!A)M.set(k,A=[]);A.push(i)}
   const GC=(a,j,q)=>q==0?a.getX(j):q==1?a.getY(j):q==2?a.getZ(j):a.getW(j);
-  P.forEach(p=>{if(p.w||!p.bn)return;v.setFromMatrixPosition(p.m);const bb=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);if(bb.getSize(new THREE.Vector3()).length()>.25&&!/^a[LR]0$/.test(p.bn))return;let best=.06*.06,hit=-1;const i0=Math.floor(v.x/cs),j0=Math.floor(v.y/cs),k0=Math.floor(v.z/cs);
+  P.forEach(p=>{if(p.w||!p.bn)return;v.setFromMatrixPosition(p.m);const bb=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);if(bb.getSize(new THREE.Vector3()).length()>.36&&!/^a[LR]0$/.test(p.bn))return;let best=.06*.06,hit=-1;const i0=Math.floor(v.x/cs),j0=Math.floor(v.y/cs),k0=Math.floor(v.z/cs);
     for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=M.get(sn178Key(i,j,k));if(!A)continue;for(const x of A){const dx=pa.getX(x)-v.x,dy=pa.getY(x)-v.y,dz=pa.getZ(x)-v.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=x}}}
     if(hit<0)return;const w=[];let own=false;for(let q=0;q<4;q++){const x=GC(sw,hit,q);if(x>0){const n=O[GC(si,hit,q)];w.push([n,x]);if(n===p.bn)own=true}}if(own&&w.length>1)p.w=w})}
 // ---------------- humanoid foes: every kit against what is built so far ----------------
@@ -120,7 +120,7 @@ function sn178SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn178Key(Math.flo
   ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){const k=key(L.p[v*3],L.p[v*3+1],L.p[v*3+2]);let A=G.get(k);if(!A)G.set(k,A=[]);A.push([L,v])}});
   P.forEach(p=>{if(p.w||!p.bn)return;const c=new THREE.Vector3().setFromMatrixPosition(p.m),bi=B.O.indexOf(p.bn);if(bi<0)return;
     // only small parts lying on the skin (a tail or a limb built of rigid pieces keeps its own bone; shoulder pads may be big)
-    const bb=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);if(bb.getSize(new THREE.Vector3()).length()>.25&&!/^a[LR]0$/.test(p.bn))return;let best=.08*.08,hit=null;
+    const bb=new THREE.Box3().setFromBufferAttribute(p.geo.attributes.position).applyMatrix4(p.m);if(bb.getSize(new THREE.Vector3()).length()>.36&&!/^a[LR]0$/.test(p.bn))return;let best=.08*.08,hit=null;
     const i0=Math.floor(c.x/cs),j0=Math.floor(c.y/cs),k0=Math.floor(c.z/cs);
     for(let i=i0-2;i<=i0+2;i++)for(let j=j0-2;j<=j0+2;j++)for(let k=k0-2;k<=k0+2;k++){const A=G.get(sn178Key(i,j,k));if(!A)continue;
       for(const [L,v] of A){const dx=L.p[v*3]-c.x,dy=L.p[v*3+1]-c.y,dz=L.p[v*3+2]-c.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=[L,v]}}}

@@ -103,7 +103,7 @@ function e137Rib(k,bn,col,x0,y0,z,w,h,r){// one rib arc on both flanks, from the
       k.L('head','c',K.bone2,[s*.05,.64,.47],[s*.08,.68,.42],.016,.004,4)});
     k.p('head','box','c',K.dark,0,.6,.69,.016,.014,.02);
     // spirit fire along the back
-    for(let i=0;i<7;i++){const z=.3-i*.1,bn=z>.12?'chest':z>-.1?'spine':'pelvis';k.L(bn,'g',K.flame,[(i%2-.5)*.03,.53,z],[(i%2-.5)*.05,.62+(i%3)*.02,z-.06],.022,.001,4)}
+    for(let i=0;i<7;i++){const z=.3-i*.1,bn=z>.12?'chest':z>-.1?'spine':'pelvis';k.L(bn,'g',K.flame,[(i%2-.5)*.03,.505,z],   /* v178: base down into the vertebrae */[(i%2-.5)*.05,.62+(i%3)*.02,z-.06],.022,.001,4)}
     // hanging scraps of hide at the ribcage edges, claws
     [-1,1].forEach(s=>{k.L('chest','c',K.hide2,[s*.1,.44,.12],[s*.105,.37,.1],.025,.006,3);k.L('pelvis','c',K.hide2,[s*.09,.42,-.11],[s*.095,.35,-.09],.02,.005,3)});
     ['fl2','fr2','hl2','hr2'].forEach(b=>e137Claws(k,n,b,K.bone2,.03,.007,3))};

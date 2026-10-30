@@ -109,7 +109,7 @@
       k.L(bn,'c',K.tooth,P[4],pt(R0*.42,MZ+.15),.008,.001,4);
       k.p(bn,'hem','c',K.plate,sx*R0*.95,CY+cy*R0*.95,MZ+.03,.07,.025,.06,Math.PI/2,0,-a)});
     // sensory pits instead of eyes
-    [-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('head','sph','c',0x3a2a14,s*R0*.95,CY+.06-i*.05,.4,.012,.012,.01)})};
+    [-1,1].forEach(s=>{for(let i=0;i<3;i++){k.p('head','sph','c',0x3a2a14,s*R0*.95,CY+.06-i*.05,.4,.012,.012,.01);k.P[k.P.length-1].w=[['neck',.86],['head',.14]]}})};   // v178: weighted like the skin there (neck / head blend), so they stay on it in the idle sway
   LPR[n].post=null;
 })();
 
