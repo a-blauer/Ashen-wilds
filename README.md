@@ -675,6 +675,10 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   `BOSSES=1` the Sovereigns and quest bosses in their rest pose; `ONLY=`, `FOCUS=1` close-ups of each loose piece,
   `NOSHEET=1`; sheets `out/v177_en*.jpg`). The floating-piece check is shared in `test/float_lib.py`. Before / after (Oct 30
   2026): 732 loose pieces over the 68 enemies before v177; bosses Argus 91, Hydra 21, Bloated One 20, Rime Wraith 9 before.
+  Still open (listed in the test's `KNOWN` / `GROUND_KNOWN`, NOTE lines): small gaps in the idle sway on 12 creatures (Banshee /
+  Wraith hair strands, Rimeshell Crawler / Web Stalker mandibles, Ghost Wolf and Maggot tail spines, Salt Golem shoulder
+  crystals, Troll / Tomb Priest hip pieces, Croaker / Bog Horror glands, Drowned Wretch chest piece) and the Shambler's /
+  Maggot's feet a few cm into the ground in idle; Hydra has 6 small head pieces in the rest pose (BOSSES=1).
 - **Animal townsfolk (v137, `2800`–`2830`)**: every Duskhold townsperson is a warm-blooded animal.
   * Bodies use the v114 beast engine on the town-folk skeleton `idlNB` + tail bones `tl…`, ear bones `erL`/`erR` and cape bones
     `cp0…cp2` (`fkNB`), so the v93 idle, the v103 work stations, the citizens' walk and held tools work unchanged. `idlNpcBody(o)` →

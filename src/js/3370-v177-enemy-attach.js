@@ -57,7 +57,9 @@ function sn177Part(p){const g=p.geo,pa=g.attributes.position,ix=g.index?g.index.
   for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);V.push([v.x,v.y,v.z])}
   const tri=[],S=V.slice();for(let i=0;i+2<n;i+=3){const a=V[ix?ix[i]:i],b=V[ix?ix[i+1]:i+1],c=V[ix?ix[i+2]:i+2];tri.push([a,b,c]);
     S.push([(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],[(b[0]+c[0])/2,(b[1]+c[1])/2,(b[2]+c[2])/2],[(c[0]+a[0])/2,(c[1]+a[1])/2,(c[2]+a[2])/2])}
-  const c=[0,0,0];V.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});const k=1/Math.max(1,V.length);return {p,tri,S,c:[c[0]*k,c[1]*k,c[2]*k]}}
+  const c=[0,0,0];V.forEach(q=>{c[0]+=q[0];c[1]+=q[1];c[2]+=q[2]});const k=1/Math.max(1,V.length);
+  // big parts: an even spread of at most 96 sample points (the nearest-surface search is the costly step)
+  const Sx=S.length>96?S.filter((_,i)=>i%Math.ceil(S.length/96)==0):S;return {p,tri,S:Sx,c:[c[0]*k,c[1]*k,c[2]*k]}}
 // body: flat triangle list (xyz × 9 per triangle); P: kit parts (their matrices are moved in place); tag: for SN177.far
 function sn177Snap(body,P,tag){if(!SN177.on||!P||!P.length||!body||body.length<9)return 0;
   let y0=1e9,y1=-1e9;for(let i=1;i<body.length;i+=3){y0=Math.min(y0,body[i]);y1=Math.max(y1,body[i])}const H=Math.max(.2,y1-y0),tol=SN177.tol*Math.max(1,H/1.7),max=SN177.max*H,emb=SN177.emb*Math.max(1,H/1.7);
@@ -122,8 +124,9 @@ function sn177SkinW(B,P){const G=new Map(),cs=.04,key=(x,y,z)=>sn177Key(Math.flo
       for(const [L,v] of A){const dx=L.p[v*3]-c.x,dy=L.p[v*3+1]-c.y,dz=L.p[v*3+2]-c.z,d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;hit=[L,v]}}}
     if(!hit)return;const [L,v]=hit,w=[];let own=false;for(let j=0;j<4;j++){const x=L.sw[v*4+j];if(x>0){const n=B.O[L.si[v*4+j]];w.push([n,x]);if(n===p.bn)own=true}}
     if(own&&w.length>1)p.w=w;
-    // a shoulder part over skin that only follows the torso (a pauldron) goes half with the torso, half with the arm
-    else if(!own&&/^a[LR]0$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5]))})}
+    // a shoulder part over skin that only follows the torso (a pauldron), or a hip part over the thigh (a pouch), goes half
+    // with its own bone, half with the skin under it
+    else if(!own&&/^(a[LR]0|pelvis)$/.test(p.bn)&&w.length)p.w=[[p.bn,.5]].concat(w.map(q=>[q[0],q[1]*.5])).slice(0,4)})}
 {const f=mdKit;mdKit=function(B,k){if(SN177.hum>0&&k&&k.P&&k.P.length){try{sn177SkinW(B,k.P);const X=sn177Warp(B),T=[];
       ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;for(let v=0;v<L.p.length/3;v++){let x=L.p[v*3],y=L.p[v*3+1],z=L.p[v*3+2];
         if(X){let X0=0,Y0=0,Z0=0,Wt=0;for(let j=0;j<4;j++){const w=L.sw[v*4+j];if(!(w>0))continue;const b=X.pl.idx[L.si[v*4+j]];if(!b)continue;const M=b.M,dx=x-b.a[0],dy=y-b.a[1],dz=z-b.a[2];
@@ -152,24 +155,32 @@ function sn177Rim(B,R,off,o,end){const i=end?R.length-1:0,j=end?R.length-2:1,r=R
 // (SN177_FREE) are left alone, as is Ssith'ra (its segments are laid out live along the body path).
 // joints whose pieces are meant to float free: Qarsul's ring of whirling debris, the Rime Wraith's Phase II halo
 var SN177_FREE=/^(orbit|halo)/;
+// Every build of the same boss gives the same moves: they are kept per boss (key: its joints and parts) and replayed.
+var SN177_BC=new Map();
 function sn177Boss(R){if(!SN177.on||!R||R.s177||R.no177)return 0;R.s177=1;const root=R.root;root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),M=[];
   root.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||!o.geometry.attributes.position)return;let p=o;while(p&&p!==root){if(!p.visible||SN177_FREE.test(p.name||''))return;p=p.parent}
     const mt=Array.isArray(o.material)?o.material[0]:o.material;if(!mt||mt.blending===THREE.AdditiveBlending||(mt.transparent&&mt.opacity<.6)||mt.visible===false)return;
     if(mt.emissive&&mt.emissive.getHex()>0&&(mt.emissiveIntensity||1)*Math.max(mt.emissive.r,mt.emissive.g,mt.emissive.b)>.35)return;   // a glowing stone or wisp is magic, left where it hangs
     const n=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;M.push({o,n,m:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)})});
-  if(M.length<2)return 0;const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
+  if(M.length<2)return 0;const key=Object.keys(R.J).join(',')+'|'+M.map(q=>q.o.geometry.uuid).join(','),hit=SN177_BC.get(key);
+  if(hit){hit.forEach(([i,x,y,z])=>{const o=M[i].o;o.position.x+=x;o.position.y+=y;o.position.z+=z;o.updateMatrix()});return hit.length}
+  const mx=Math.max(...M.map(q=>q.n)),T=[],P=[],v=new THREE.Vector3();
   M.forEach(q=>{if(q.n>=mx*.3){const g=q.o.geometry,pa=g.attributes.position,ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;for(let i=0;i<n;i++){v.fromBufferAttribute(pa,ix?ix[i]:i).applyMatrix4(q.m);T.push(v.x,v.y,v.z)}}
-    else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone()})});
+    else P.push({geo:q.o.geometry,m:q.m.clone(),bn:q.o.name||'',o:q.o,m0:q.m.clone(),mi:M.indexOf(q)})});
   const mx0=SN177.max;SN177.max=.02;let n=0;try{n=sn177Snap(T,P,'boss')}finally{SN177.max=mx0}
-  P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
-    const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix()});
-  return n}
+  const rec=[];P.forEach(p=>{const a=new THREE.Vector3().setFromMatrixPosition(p.m0),b=new THREE.Vector3().setFromMatrixPosition(p.m);if(a.distanceToSquared(b)<1e-12)return;
+    const d=b.sub(a),pm=new THREE.Matrix4().multiplyMatrices(inv,p.o.parent.matrixWorld),r=new THREE.Matrix3().setFromMatrix4(pm).invert();d.applyMatrix3(r);p.o.position.add(d);p.o.updateMatrix();rec.push([p.mi,d.x,d.y,d.z])});
+  SN177_BC.set(key,rec);return n}
 {const f=svMerge;svMerge=function(R){try{sn177Boss(R)}catch(e){console.warn('v177 boss snap',e)}return f.apply(this,arguments)}}
 if(SVB[3]){const b=SVB[3].build;SVB[3].build=function(R,e){if(R)R.no177=1;return b.apply(this,arguments)}}
 // ---------------- humanoid foes: skirts, coat tails and tabard skirts start on the body ----------------
 // mdSkirt hangs a skirt from the waist at an offset; many outfits gave it 1–2 cm over whatever was worn there, so a flap
 // hung beside the belt touching nothing. For foes the top now sits just over the layer beneath (P.tOff + 2 mm), tucked up 1.5 cm.
-{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(SN177.on&&SN177.hum>0&&P){const t=(P.tOff||0)+.002;if(off>t){off=t;y0+=.015}}return f.call(this,B,P,y0,y1,fl,off,o)}}
+// Its top also takes the waist's own bone blend (mdTorsoW) fading into the thighs, so the proportion pass moves it with the belt.
+{const f=mdSkirt;mdSkirt=function(B,P,y0,y1,fl,off,o){if(SN177.on&&SN177.hum>0&&P){const t=(P.tOff||0)+.002;if(off>t){off=t;y0+=.015}
+    if(!(o&&o.wf)){const Y=y0;o=Object.assign({},o||{},{wf:(x,y)=>{const d=Math.max(0,Math.min(1,(Y-y)/Math.max(.05,Y-.32)))*.9,l=Math.max(0,Math.min(1,.5-x/.16)),W=mdTorsoW(Math.min(Y,Math.max(.44,y))).map(q=>[q[0],q[1]*(1-d)]);
+      if(d>0)W.push(['lh0',d*l],['rh0',d*(1-l)]);return W.filter(q=>q[1]>0).slice(0,4)}})}}
+  return f.call(this,B,P,y0,y1,fl,off,o)}}
 // ---------------- weapons carried by foes (mkWpn kits, 'LW|' cache) ----------------
 // The same snap on a weapon's own parts, grown from its largest piece (a hammer's head was 4 cm off its haft, a staff's gem
 // sat loose in its claws, studs and spikes floated off heads).
