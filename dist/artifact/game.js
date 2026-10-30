@@ -31176,15 +31176,16 @@ var F135={done:new WeakSet(),t:0,min:0,on:true};F135.U={value:F135.min};   // v1
 // now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
 // v173 (owner, Abeksi: the whole screen a murky speckle behind houses): same outer size, but clear right up to 4.7 and only a thin
 // speckled ring (4.7-5.4) marks the window's edge; nothing is left inside it (F135.min 0, was .25: a quarter of every wall stayed)
-var R157={value:new THREE.Vector2(4.7,5.4)};
+// v174 (owner: "a bit too large"; with several buildings in front the hero did not show): 3.7-4.3, a fifth smaller
+var R157={value:new THREE.Vector2(3.7,4.3)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
-var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
+var N157={value:new THREE.Vector2(3.4,4.)},M157={value:1};   // v174: a thinner speckled edge (was 3.4-5)   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
 // small 3D previews share these materials but are drawn elsewhere (icons at the world origin), so there they do nothing
 var FX135ON={value:0};
 {const f=POST.render;POST.render=function(){FX135ON.value=1;try{return f.apply(this,arguments)}finally{FX135ON.value=0}}}
 function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
-  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
+  if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial||m.isMeshBasicMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
   const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
   if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
@@ -31200,13 +31201,19 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
     if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
      if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
-      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);f=mix(f,1.,smoothstep(.84,.96,t));f=mix(f,1.,step(t,0.));f=max(f,uF135);
-      float near=t>0.&&t<.85?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
-      if(!gl_FrontFacing&&t>0.&&t<.9)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
+      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(.2,.55,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v174: solid only within .2-.55 in front of the hero (it was the last 4-16% of the way: a wall a metre in front of the hero stayed)
+      float near=t>0.&&fr>1.?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
+      if(!gl_FrontFacing&&t>0.&&fr>.4)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
      }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
-      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);}
+      #ifdef F135_B
+      f=1.;   // v174: plain (unlit) materials joined; the intro keeps its look
+      #else
+      float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
+      #endif
+      }
      f=mix(1.,f,smoothstep(-.85,-.55,vF135.y-uPl.y));   // never below the hero's knees: floors, paving and bridges stay
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+  if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v174: windows and plain panes (Abeksi) are cut too
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
@@ -46881,10 +46888,10 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
     if(sh.fragmentShader.indexOf('varying vec3 vC135')<0){console.warn('v157: terrain has no vC135');return}
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     if(uOn135>.5&&uOn157>.5){vec3 ab=uPl157-uCam157;float t=dot(vC135-uCam157,ab)/dot(ab,ab);
-     if(t>.0&&t<.95){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
+     float fr=(1.-t)*length(ab);if(t>.0&&fr>.15){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
       vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
       f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      f=mix(f,1.,smoothstep(.86,.95,t));
+      f=mix(f,1.,1.-smoothstep(.2,.55,fr));   // v174: solid only right at the hero (was the last 5-14% of the way)
       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
 var CAM157U={value:1};
