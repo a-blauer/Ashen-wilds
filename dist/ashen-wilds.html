@@ -54860,4 +54860,9 @@ const CAM172V=new THREE.Vector3();
 function cam172Hold(P,c){if(!CAM172.on)return;let I=null;try{const k=cvKey();I=k>=0?INSL[k]:null}catch(_){}
   const y0=P.y+1.1,d=CAM172V.set(c.x-P.x,c.y-y0,c.z-P.z),L=d.length();if(L<CAM172.min)return;d.multiplyScalar(1/L);
   for(let s=1;s<=L;s+=CAM172.step)if(!cam172Ok(P.x+d.x*s,y0+d.y*s,P.z+d.z*s,I)){const r=Math.max(CAM172.min,Math.min(L,s-.7));c.set(P.x+d.x*r,y0+d.y*r,P.z+d.z*r);CAM172.st.hold=(CAM172.st.hold||0)+1;return}}
+// and once more right before the main view is drawn: anything that moved the camera after the main loop's update (an arrival
+// snap, a shake) is held inside the map too (seen on a fast machine: the camera left in the rim's rock past the edge)
+{const f=POST.render;POST.render=function(){try{if(CAM172.on&&!(typeof IC151!='undefined'&&IC151.on)&&typeof pl!='undefined'&&pl){const x=cam.position.x,y=cam.position.y,z=cam.position.z;
+    cam172Hold(pl.position,cam.position);if(cam.position.x!==x||cam.position.y!==y||cam.position.z!==z){cam.lookAt(look);cam.updateMatrixWorld();FADE.cam.value.copy(cam.position)}}}catch(_){}
+  return f.apply(this,arguments)}}
 </script></body></html>
