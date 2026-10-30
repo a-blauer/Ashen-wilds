@@ -39,7 +39,7 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
      if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
       float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(-.1,.15,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v175: solid only from the hero's own depth back (v174: .2-.55 in front, which still hid a hero standing at a wall seen at a slant; before: the last 4-16% of the way)
       float near=t>0.&&fr>1.?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
-      if(!gl_FrontFacing&&t>0.&&fr>.4)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
+      if(!gl_FrontFacing&&t>0.&&fr>.15)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
      }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
       #ifdef F135_B
       f=1.;   // v174: plain (unlit) materials joined; the intro keeps its look
