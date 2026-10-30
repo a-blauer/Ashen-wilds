@@ -47,8 +47,8 @@ const WTR=(()=>{
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){const b=BIOMES[MAP.bio[y][x]],k=(y*W+x)*4,lv=lava?.05:.02,ok=!!b.lava==lava,dp=ok?lv-GHv(x,y):-1;d[k]=Math.max(0,Math.min(1,(dp+.5)/2))*255;const w=b.wat;d[k+1]=w[0];d[k+2]=w[1];d[k+3]=w[2]}
     const t=new THREE.DataTexture(d,W,H,THREE.RGBAFormat);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
     const m=new THREE.ShaderMaterial({transparent:!lava,depthWrite:lava,uniforms:{dm:{value:t},time:{value:0},lava:{value:lava?1:0},fogC:{value:new THREE.Color()},fogD:{value:.02},hor:{value:new THREE.Color()},top:{value:new THREE.Color()},sunDir:{value:new THREE.Vector3()},sunCol:{value:new THREE.Color()},amb:{value:1},WH:{value:new THREE.Vector2(W,H)}},
-    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v176: vW, the real world spot (fog and view were measured from vP)
-    fragmentShader:`varying vec3 vP,vW;//v176uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
+    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v177: vW, the real world spot (fog and view were measured from vP)
+    fragmentShader:`varying vec3 vP,vW;//v177uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
     float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
     float fb(vec2 p){return vn(p)*.5+vn(p*2.03+1.7)*.3+vn(p*4.1+5.2)*.2;}
@@ -67,12 +67,12 @@ const WTR=(()=>{
         float hz=fb(p+vec2(0.,e)+vec2(time*.06,time*.04))+fb((p+vec2(0.,e))*1.7-vec2(time*.05,time*.03))*.6;
         vec3 N=normalize(vec3((h0-hx)*2.2,1.,(h0-hz)*2.2));
         float dp=clamp(d,0.,1.6),k=smoothstep(0.,1.2,dp);
-        vec3 tint=s.gba;   // v176: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
+        vec3 tint=s.gba;   // v177: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
         vec3 shallow=tint*vec3(.8,.84,.82)+vec3(.015,.02,.02),deep=tint*vec3(.3,.32,.34);
         vec3 body=mix(shallow,deep,k)*(.25+.75*amb);
         vec3 R=reflect(-V,N);float ry=max(R.y,0.);vec3 refl=mix(hor,top,pow(ry,.5));
         float sg=pow(max(dot(R,sunDir),0.),220.);refl+=sunCol*sg*3.;refl+=sunCol*pow(max(dot(R,sunDir),0.),12.)*.12;
-        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v176: murkier, the sky mirrored less (ponds read as white holes)
+        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v177: murkier, the sky mirrored less (ponds read as white holes)
         col=mix(body,refl*.72,clamp(fr,0.,1.));
         float fm=fb(vW.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
         float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.62,.66,.64)*(.4+.6*amb),foam*.6);
@@ -87,7 +87,7 @@ const TT=(()=>{const {fin,tr,merge,leaf,bark}=NK,G=THREE;
   const pineTier=(r,hh,sd)=>fin(new G.ConeGeometry(r,hh,7,2),{j:.06,sd,f:(x,y,z)=>{if(y<-hh/2+1e-3)return [x*1.14,y-.07,z*1.14];if(Math.abs(y)<1e-3)return [x*.9,y,z*.9];return [x,y,z]},paint:leaf});
   const PC=[pineTier(.66,.95,1),pineTier(.56,.9,2),pineTier(.45,.85,3),pineTier(.32,.78,4),pineTier(.17,.62,5)];
   const PT=fin(new G.CylinderGeometry(.06,.13,.6,5,2),{j:.02,sd:7,paint:bark});
-  // v176: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
+  // v177: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
   const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,7,3),{j:.025,sd:8,f:(x,y,z)=>{const t=y+.3;return y<-.25?[x*1.35,y,z*1.35]:[x+t*t*.05,y,z]},paint:bark}),
     fin(tr(new G.CylinderGeometry(.024,.045,.34,5),.1,.3,0,0,0,-.75),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.022,.04,.3,5),-.08,.28,.04,.35,0,.8),{j:.01,sd:10,paint:bark}),
     fin(tr(new G.CylinderGeometry(.018,.035,.28,5),.0,.32,-.09,-.7,0,.1),{j:.01,sd:11,paint:bark})]);
@@ -127,7 +127,7 @@ Object.keys(TL).forEach(ty=>{
   const L=TL[ty],P=TT[ty].map(pt=>{const m=inst(pt[0],L.length,true);if(pt[6])m.material=new THREE.MeshBasicMaterial();m.material.vertexColors=!!pt[0].attributes.color;if(pt[9]){m.sway=pt[9];m.off=pt[1]*.9}return m});
   L.forEach((q,i)=>{
     const sc=(ty=='pine'?1.05+Math.random()*.9:ty=='oak'?.95+Math.random()*.7:.85+Math.random()*.6),X=q[0]+(Math.random()-.5)*.35,Z=q[1]+(Math.random()-.5)*.35,tc=q[2].tc,ry=Math.random()*6.28,tl=(Math.random()-.5)*.1,tz=(Math.random()-.5)*.1;
-    // v176: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
+    // v177: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
     // crown slid up or down off its trunk), sunk to the lowest ground round the trunk's foot
     let g0=GH(X,Z);{const r=.35*sc;let lo=g0;for(let a=0;a<8;a++)lo=Math.min(lo,GH(X+Math.cos(a*.785)*r,Z+Math.sin(a*.785)*r));g0-=Math.min(.9*sc,Math.max(0,g0-lo-.03))}
     TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,g0-GH(X+pt[7]*sc,Z)+pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery

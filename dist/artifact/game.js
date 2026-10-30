@@ -710,7 +710,7 @@ const BIOMES=[
  {n:'The Citadel',sp:'Batwing',x:630,y:336,t:5,gnd:[66,58,62],grs:[90,30,36],acc:[96,88,92],frs:[30,24,28],wat:[90,20,30],tree:['dead'],pr:['pillar','pillar','bones'],den:[0,.6,0,0],tc:[0x2a1a1a,0x3a2028,0x4a2a30],amp:.08}
 ];
 if(typeof v112Biomes=='function')v112Biomes(); // v112: one biome per themed field instance (II, III; 1981)
-if(typeof env176Biomes=='function')env176Biomes(); // v176: the zones' ground in a darker, weathered palette (3370)
+if(typeof env177Biomes=='function')env177Biomes(); // v177: the zones' ground in a darker, weathered palette (3370)
 
 const MAP=(()=>{
   let sd=11;const rnd=()=>(sd=sd*16807%2147483647)/2147483647,m=[],bio=[];
@@ -831,7 +831,7 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
     }
     HF[(j+HPD)*HW+i+HPD]=h;
   }
-  if(typeof env176Banks=='function')env176Banks(); // v176: shelving pond banks instead of sheer drops (3370)
+  if(typeof env177Banks=='function')env177Banks(); // v177: shelving pond banks instead of sheer drops (3370)
   if(typeof cs123Terrain=='function')cs123Terrain(); // v123: each camp's own ground shape (2270)
   if(typeof sp152Terrain=='function')sp152Terrain(); // v152: the special instances' heights (3150)
   if(typeof th165Terrain=='function')th165Terrain(); // v165: Mistmere's mountain face (3260)
@@ -1042,11 +1042,14 @@ function windMat(mat,amp,off){
     #else
     vWP2=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;varying vec3 vWP2;').replace('void main() {',`void main() {
-    {vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
+    sh.uniforms.uM157w=M157;ob176Shader(sh);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
+    if(uM157w>.5){float f=1.-ob176Bx(vWP2)*ob176Fr(vWP2,uCam,uPl)*(1.-uObK)*smoothstep(-.6,-.3,vWP2.y-uPl.y);   // v176: a plant in the way is dithered whole (3361); grass stays
+     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}
+    else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  mat.customProgramCacheKey=()=>'ifx';
+  mat.customProgramCacheKey=()=>'ifx';mat.userData.ob176=1;mat.userData.ob176Fl=-.6;
 }
 function buildVI(){
   const chk={};buildTerrain(chk);
@@ -1143,8 +1146,8 @@ const WTR=(()=>{
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){const b=BIOMES[MAP.bio[y][x]],k=(y*W+x)*4,lv=lava?.05:.02,ok=!!b.lava==lava,dp=ok?lv-GHv(x,y):-1;d[k]=Math.max(0,Math.min(1,(dp+.5)/2))*255;const w=b.wat;d[k+1]=w[0];d[k+2]=w[1];d[k+3]=w[2]}
     const t=new THREE.DataTexture(d,W,H,THREE.RGBAFormat);t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
     const m=new THREE.ShaderMaterial({transparent:!lava,depthWrite:lava,uniforms:{dm:{value:t},time:{value:0},lava:{value:lava?1:0},fogC:{value:new THREE.Color()},fogD:{value:.02},hor:{value:new THREE.Color()},top:{value:new THREE.Color()},sunDir:{value:new THREE.Vector3()},sunCol:{value:new THREE.Color()},amb:{value:1},WH:{value:new THREE.Vector2(W,H)}},
-    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v176: vW, the real world spot (fog and view were measured from vP)
-    fragmentShader:`varying vec3 vP,vW;//v176uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
+    vertexShader:'varying vec3 vP,vW;void main(){vP=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}',   // v177: vW, the real world spot (fog and view were measured from vP)
+    fragmentShader:`varying vec3 vP,vW;//v177uniform sampler2D dm;uniform float time,lava,fogD,amb;uniform vec3 fogC,hor,top,sunDir,sunCol;uniform vec2 WH;
     float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y);}
     float fb(vec2 p){return vn(p)*.5+vn(p*2.03+1.7)*.3+vn(p*4.1+5.2)*.2;}
@@ -1163,12 +1166,12 @@ const WTR=(()=>{
         float hz=fb(p+vec2(0.,e)+vec2(time*.06,time*.04))+fb((p+vec2(0.,e))*1.7-vec2(time*.05,time*.03))*.6;
         vec3 N=normalize(vec3((h0-hx)*2.2,1.,(h0-hz)*2.2));
         float dp=clamp(d,0.,1.6),k=smoothstep(0.,1.2,dp);
-        vec3 tint=s.gba;   // v176: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
+        vec3 tint=s.gba;   // v177: the texture is already 0..1 (/255 made every pond's own colour black: only fog and sky showed)
         vec3 shallow=tint*vec3(.8,.84,.82)+vec3(.015,.02,.02),deep=tint*vec3(.3,.32,.34);
         vec3 body=mix(shallow,deep,k)*(.25+.75*amb);
         vec3 R=reflect(-V,N);float ry=max(R.y,0.);vec3 refl=mix(hor,top,pow(ry,.5));
         float sg=pow(max(dot(R,sunDir),0.),220.);refl+=sunCol*sg*3.;refl+=sunCol*pow(max(dot(R,sunDir),0.),12.)*.12;
-        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v176: murkier, the sky mirrored less (ponds read as white holes)
+        float fr=.04+.7*pow(1.-max(dot(V,N),0.),3.5);   // v177: murkier, the sky mirrored less (ponds read as white holes)
         col=mix(body,refl*.72,clamp(fr,0.,1.));
         float fm=fb(vW.xz*2.4+vec2(time*.1,-time*.07)+h0*.8);
         float foam=smoothstep(.34,.0,d+(fm-.5)*.18)*smoothstep(-.03,.02,d);col=mix(col,vec3(.62,.66,.64)*(.4+.6*amb),foam*.6);
@@ -1183,7 +1186,7 @@ const TT=(()=>{const {fin,tr,merge,leaf,bark}=NK,G=THREE;
   const pineTier=(r,hh,sd)=>fin(new G.ConeGeometry(r,hh,7,2),{j:.06,sd,f:(x,y,z)=>{if(y<-hh/2+1e-3)return [x*1.14,y-.07,z*1.14];if(Math.abs(y)<1e-3)return [x*.9,y,z*.9];return [x,y,z]},paint:leaf});
   const PC=[pineTier(.66,.95,1),pineTier(.56,.9,2),pineTier(.45,.85,3),pineTier(.32,.78,4),pineTier(.17,.62,5)];
   const PT=fin(new G.CylinderGeometry(.06,.13,.6,5,2),{j:.02,sd:7,paint:bark});
-  // v176: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
+  // v177: limbs that reach up into the crown, and crowns of uneven clumps (each was one green ball on a stick)
   const OT=merge([fin(new G.CylinderGeometry(.07,.15,.6,7,3),{j:.025,sd:8,f:(x,y,z)=>{const t=y+.3;return y<-.25?[x*1.35,y,z*1.35]:[x+t*t*.05,y,z]},paint:bark}),
     fin(tr(new G.CylinderGeometry(.024,.045,.34,5),.1,.3,0,0,0,-.75),{j:.01,sd:9,paint:bark}),fin(tr(new G.CylinderGeometry(.022,.04,.3,5),-.08,.28,.04,.35,0,.8),{j:.01,sd:10,paint:bark}),
     fin(tr(new G.CylinderGeometry(.018,.035,.28,5),.0,.32,-.09,-.7,0,.1),{j:.01,sd:11,paint:bark})]);
@@ -1223,7 +1226,7 @@ Object.keys(TL).forEach(ty=>{
   const L=TL[ty],P=TT[ty].map(pt=>{const m=inst(pt[0],L.length,true);if(pt[6])m.material=new THREE.MeshBasicMaterial();m.material.vertexColors=!!pt[0].attributes.color;if(pt[9]){m.sway=pt[9];m.off=pt[1]*.9}return m});
   L.forEach((q,i)=>{
     const sc=(ty=='pine'?1.05+Math.random()*.9:ty=='oak'?.95+Math.random()*.7:.85+Math.random()*.6),X=q[0]+(Math.random()-.5)*.35,Z=q[1]+(Math.random()-.5)*.35,tc=q[2].tc,ry=Math.random()*6.28,tl=(Math.random()-.5)*.1,tz=(Math.random()-.5)*.1;
-    // v176: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
+    // v177: every part of a tree stands on its trunk's ground (each part used the ground under its own offset, so on a slope a
     // crown slid up or down off its trunk), sunk to the lowest ground round the trunk's foot
     let g0=GH(X,Z);{const r=.35*sc;let lo=g0;for(let a=0;a<8;a++)lo=Math.min(lo,GH(X+Math.cos(a*.785)*r,Z+Math.sin(a*.785)*r));g0-=Math.min(.9*sc,Math.max(0,g0-lo-.03))}
     TT[ty].forEach((pt,j)=>{d0.rotation.set(tl,ry,tz);put(P[j],i,X+pt[7]*sc,g0-GH(X+pt[7]*sc,Z)+pt[1]*sc,Z,pt[3]*sc,pt[4]*sc,pt[5]*sc,(tc&&tc[pt[8]]!=null)?tc[pt[8]]:pt[2],.14);if(!(typeof sp152NoNode=='function'&&sp152NoNode(q[0],q[1])))regN(q[0],q[1],P[j],i)});   // v153: a level's trees are scenery
@@ -5465,7 +5468,7 @@ var RPORT=[];
 function smallPortal(x,z,col,label){const g=new THREE.Group(),y=GH(x,z);g.position.set(x,y,z);scene.add(g);const st=sm(0x5a5662);
   TQ(g,G_BOX,st,-.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,.9,1.2,0,.36,2.4,.36);TQ(g,G_BOX,st,0,2.5,0,2.3,.3,.42);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(.8,28),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.75,side:THREE.DoubleSide}));disc.position.set(0,1.2,0);disc.scale.y=1.3;g.add(disc);
-  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.12,0,0);return {g,x,z,disc}}   // v176: the name plate rests on the capstone (it hung ~.2 above it)
+  sign(g,[{t:label,f:'700 36px'}],1.8,.36,'#1a1424','#efe6ff',null,0,3.12,0,0);return {g,x,z,disc}}   // v177: the name plate rests on the capstone (it hung ~.2 above it)
 // v106: a Duskhold portal at every instance's entrance; at the end of instances I and II a gateway to the next instance
 INSL.forEach(I=>{if(I.tri)return;const n=I.path[26],e=I.en,dx=n[0]-e[0],dz=n[1]-e[1],L=Math.hypot(dx,dz)||1,x=e[0]-dx/L*5,z=e[1]-dz/L*5;
   const a=smallPortal(x-dz/L*4,z+dx/L*4,0x9a6aff,'🌀 Duskhold');a.g.rotation.y=Math.atan2(dx,dz);a.pi=I.z;a.ig=I.g;a.k='home';RPORT.push(a);
@@ -8860,7 +8863,7 @@ function lpnPortalArch(g){
   const st=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,color:0x6a6672}),G=new THREE.Group(),{fin,tr,merge,stone,hs}=NK;
   const blk=(w,hh,d,x,y,z,ry,sd)=>fin(tr(new THREE.BoxGeometry(w,hh,d,1,1,1),x,y,z,0,ry,0),{j:.07,sd,paint:stone});
   const parts=[];
-  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v176: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
+  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v177: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
     for(let i=0;i<4;i++){const hh=H[i]*k,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
   parts.push(blk(2.5,.34,.5,0,2.5,0,.03,61),blk(.5,.3,.46,0,2.82,0,.6,62));
   // a couple of fallen chunks at the base
@@ -18745,9 +18748,9 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v176: the side twig grows out of its branch (it stood off the other side, in the air) */});
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
-    if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v176: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
+    if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
       p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
     if(o.snow)p.push(F(dome(.3,6),0xf4f8ff,{j:.04},0,2.62,0,0,0,0,[1,.4,1]));return M(p)};
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
@@ -18757,7 +18760,7 @@ function wdDeco(){const T0=performance.now();
     p.push(F(ico(.3,0),c,{j:.05},1.75,.3,0,0,0,0,[1.3,.9,.9]),F(cone(.05,.5,4),c,{},1.9,.65,.18,.5,0,-.6),F(cone(.05,.5,4),c,{},1.9,.65,-.18,-.5,0,-.6));return M(p)};
   const skull=c=>M([F(ico(.22,0),c,{j:.04},0,.18,0,0,0,0,[1.2,.9,1]),F(box(.2,.1,.18),c,{},.2,.08,0),F(cone(.04,.4,4),c,{},-.05,.35,.18,.7,0,.3),F(cone(.04,.4,4),c,{},-.05,.35,-.18,-.7,0,.3),F(cyl(.03,.03,.4,4),c,{},-.3,.04,.1,0,.6,Math.PI/2)]);
   const pillarG=(hex,h,top)=>M([F(cyl(.36,.4,h,7),hex,{j:.05,top,tt:.6,f:(x,y,z)=>y>h-.01?[x,y-((x*7+z*13)%1+1)%1*.4,z]:[x,y,z]},0,h/2,0),F(cyl(.5,.55,.3,7),hex,{j:.04},0,.15,0),F(cyl(.32,.36,.5,7),hex,{j:.06},.9,.25,.3,0,.4,Math.PI/2)]);
-  // v176: a ruined wall laid in courses of dressed blocks (joints, staggered, a broken top) instead of four plain boxes
+  // v177: a ruined wall laid in courses of dressed blocks (joints, staggered, a broken top) instead of four plain boxes
   const wallG=(hex,top,len,hh)=>{const p=[],w=len/4;for(let i=0;i<4;i++){const h0=hh*(.55+((i*37)%10)/22);let y=0,c=0;
       while(y<h0-.06){const bh=Math.min(.34+((i*7+c*3)%4)*.05,h0-y),sh=(c%2?.25:-.05)*w,last=y+bh>=h0-.06;
         for(let k=0;k<2;k++){const x0=-len/2+w*i+sh+k*w*.5,x1=Math.min(-len/2+w*(i+1),x0+w*.5),xa=Math.max(-len/2+w*i,x0);if(x1-xa<.08)continue;
@@ -18789,7 +18792,7 @@ function wdDeco(){const T0=performance.now();
     if(o.broken)p.splice(3,2);return M(p)};
   const mausoleum=(st,roof)=>M([F(box(2.6,.25,3),st,{j:.04},0,.12,0),F(box(2.2,1.9,2.6),st,{j:.06},0,1.2,0),F(cyl(.16,.18,1.9,6),st,{},-.95,1.2,1.4),F(cyl(.16,.18,1.9,6),st,{},.95,1.2,1.4),
     F(box(2.5,.2,3),st,{},0,2.2,0),F(cone(1.85,.9,4),roof,{j:.05},0,2.75,0,0,Math.PI/4,0,[1,1,1.25]),F(box(.9,1.3,.06),0x141218,{lo:1,hi:0},0,.95,1.31),F(cyl(.04,.04,.6,4),0x8a8a90,{},0,3.35,0),F(box(.4,.06,.06),0x8a8a90,{},0,3.5,0)]);
-  // v176: a coffin is coffin-shaped (narrow head, broad shoulders, tapered foot) with a lid knocked askew, not a box
+  // v177: a coffin is coffin-shaped (narrow head, broad shoulders, tapered foot) with a lid knocked askew, not a box
   const coffinG=(L,W,H)=>{const s=new G.Shape([[-W*.62,0],[-W,L*.28],[-W*.7,L],[W*.7,L],[W,L*.28],[W*.62,0]].map(q=>new G.Vector2(q[0],q[1]-L*.5)));const g=new G.ExtrudeGeometry(s,{depth:H,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,H,0);return g};
   const coffin=(w)=>M([F(dome(.5,6),0x3a3026,{j:.06},0,0,0,0,0,0,[1.4,.45,2.2]),F(coffinG(1.6,.31,.2),w,{j:.015},.15,.12,.5,.1,.3,.15),F(coffinG(1.62,.33,.05),dt168Mix(w,0x000000,.25),{j:.01},.22,.33,.42,.16,.42,.1)]);
   const archG=(st,top)=>M([F(box(.9,3.2,1),st,{j:.1,top,tt:.6},-1.7,1.6,0),F(box(.9,3.2,1),st,{j:.1,top,tt:.6},1.7,1.6,0),F(tor(1.7,.5,Math.PI,8),st,{j:.08,top,tt:.6},0,3.0,0,0,0,0,[1,.6,1.2]),F(box(1.2,.5,1.1),st,{j:.1},-1.7,.25,0),F(box(1.2,.5,1.1),st,{j:.1},1.7,.25,0)]);
@@ -18801,7 +18804,7 @@ function wdDeco(){const T0=performance.now();
   const basalt=(c,top)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.05,r=i?.42:0,h=1.4+((i*53)%10)/5;p.push(F(cyl(.24,.26,h,6),c,{j:.02,top,tt:.8},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return M(p)};
   const icicles=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.2,r=i?.2+i*.06:0,h=.4+((i*29)%10)/14;p.push(F(cone(.08,h,4),c,{lo:.8,hi:.5},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
-  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v176: broken blocks among rough chunks
+  const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v177: broken blocks among rough chunks
     for(let i=0;i<6;i++){const a=i*1.7+.4,r=.5+(i%3)*.3;p.push(F(oct(.06+(i%3)*.025),c,{j:.03},Math.cos(a)*r,.02,Math.sin(a)*r,0,i,0,[1,.6,1]))}return M(p)};
   const candles=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cyl(.03,.035,h,5),0xe8dcc0,{lo:.9,hi:.2},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
   const candleGlow=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.9,r=i?.12+i*.04:0,h=.12+((i*23)%10)/50;p.push(F(cone(.025,.07,4),0xffffff,{lo:1,hi:0},Math.cos(a)*r,h+.04,Math.sin(a)*r))}return M(p)};
@@ -18844,7 +18847,7 @@ function wdDeco(){const T0=performance.now();
   def('h_hay',{parts:[hay()],cast:true,col:.6,s:[.9,1.15]});
   def('h_cairn',{parts:[cairn(0x9a9488)],cast:true,s:[.8,1.2]});
   def('h_totem',{parts:[totem(0x6a4a2e,0x3a8a5a,0xc8a040)],cast:true,col:.35,s:[.9,1.1]});
-  // v176: h_bush is a dense, uneven shrub with bare twigs (was three bright green balls)
+  // v177: h_bush is a dense, uneven shrub with bare twigs (was three bright green balls)
   def('h_bush',{parts:[M([F(ico(.42,1),0x3e6a32,{j:.16,lo:.45,hi:.6},0,.34,0,0,0,0,[1.1,.82,1]),F(ico(.33,1),0x48743a,{j:.13,lo:.45,hi:.6},.36,.27,.12,0,1,0,[1,.8,1]),F(ico(.29,1),0x36602c,{j:.12,lo:.45,hi:.6},-.32,.23,-.15,0,2,0,[1,.8,1]),
     F(ico(.22,1),0x4a7038,{j:.1,lo:.5,hi:.6},.06,.58,-.12),twig(.1,.2,.05,.75,.7,.5,0x3a2e22,.025),twig(-.1,.2,-.05,.6,-.8,2.2,0x3a2e22,.02),twig(0,.15,.1,.55,.5,4,0x3a2e22,.02)])],near:true,s:[.8,1.4],sway:.04});
   // Burningeye Summit: a frozen peak under a burning sky
@@ -18893,7 +18896,7 @@ function wdDeco(){const T0=performance.now();
   def('c_column',{parts:[pillarG(0x5a5058,3.2,null)],cast:true,col:.5,s:[.95,1.3]});
   def('c_graves',{parts:[M([grave(0x3e3a42,.15).translate(-.7,0,0),grave(0x46404a,-.1).translate(.7,0,.1)])],cast:true,s:[.9,1.2]});
   def('c_candela',{parts:[candelabra(),{g:candelaGlow(),glow:1}],cast:true,s:[.9,1.1],gt:[0xffc870]});
-  def('c_blood',{parts:[(()=>{const sp=(r,n,sd)=>{const g=disc(r,n),P=g.attributes.position;for(let i=1;i<P.count;i++){const a=Math.atan2(P.getY(i),P.getX(i)),k=.62+.38*Math.abs(Math.sin(a*3+sd))+.22*Math.sin(a*7+sd*2);P.setXY(i,P.getX(i)*k,P.getY(i)*k)}return g};   // v176: a ragged pool with drops, dark
+  def('c_blood',{parts:[(()=>{const sp=(r,n,sd)=>{const g=disc(r,n),P=g.attributes.position;for(let i=1;i<P.count;i++){const a=Math.atan2(P.getY(i),P.getX(i)),k=.62+.38*Math.abs(Math.sin(a*3+sd))+.22*Math.sin(a*7+sd*2);P.setXY(i,P.getX(i)*k,P.getY(i)*k)}return g};   // v177: a ragged pool with drops, dark
     return M([F(sp(1,22,1.3),0x2a0408,{lo:1,hi:0,j:.04,jy:0},0,0,0,-Math.PI/2),F(sp(.16,8,2),0x30050a,{lo:1,hi:0},1.25,.003,.3,-Math.PI/2),F(sp(.1,7,3),0x30050a,{lo:1,hi:0},-.9,.003,1.05,-Math.PI/2),F(sp(.12,7,4),0x2a0408,{lo:1,hi:0},.2,.003,-1.3,-Math.PI/2)])})()],near:true,y:.04,s:[.6,1.4],j:.05});
   def('c_coffin',{parts:[M([F(coffinG(1.8,.36,.33),0x2a1a1a,{j:.015},0,0,0),F(coffinG(1.84,.38,.06),0x3a2222,{j:.01},.1,.36,.15,0,.25,.1),F(box(.04,.05,.5),0x6a5a3a,{},.0,.335,-.3),F(box(.3,.05,.04),0x6a5a3a,{},0,.335,-.4)])],cast:true,s:[.9,1.1]});
   // ---------- where each zone puts them: w = in (walkable, off the road) | edge (walkable near the cliff) | bank (the raised rim, out of reach) | lane (beside the road) | water ----------
@@ -18989,7 +18992,7 @@ function wdDeco(){const T0=performance.now();
   if(ZX&&ZX.post)ZX.post(out,col);
   if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
-  try{if(typeof env176Look=='function')env176Look(T,out)}catch(e){console.warn('v176 look',e)}   // v176: graded and weathered (3370)
+  try{if(typeof env177Look=='function')env177Look(T,out)}catch(e){console.warn('v177 look',e)}   // v177: graded and weathered (3370)
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
 // camp centres for the placement (CAMPS is built later, from the same PMAP.cl)
@@ -19008,8 +19011,8 @@ function wdBuild(){if(!WD)return;const T0=performance.now(),CN=64,mats={},d0=new
     for(const kk in groups[k]){const S=WD.T[kk],L=groups[k][kk];
       S.parts.forEach((p,pi)=>{const m=new THREE.InstancedMesh(p.g,mat(S,pi,p),L.length),col=new Float32Array(L.length*3);
         L.forEach((d,j)=>{const s=d.s,sc=S.sc||[1,1,1],y0=(S.abs!=null?S.abs:H0(d.x,d.z)+S.y*(S.y>.2?1:s));
-          // v176: seated on the slope under the whole base (3370 env176Seat), once per piece
-          const st=d.st176||(d.st176=typeof env176Seat=='function'?env176Seat(S,d,y0):null);
+          // v177: seated on the slope under the whole base (3370 env177Seat), once per piece
+          const st=d.st176||(d.st176=typeof env177Seat=='function'?env177Seat(S,d,y0):null);
           if(st){d0.position.set(st.x,st.y,st.z);d0.quaternion.copy(st.q);d0.scale.set(st.sx,st.sy,st.sz)}else{d0.position.set(d.x,y0,d.z);d0.rotation.set(0,d.ry,0);d0.scale.set(s*sc[0],s*sc[1],s*sc[2])}d0.updateMatrix();m.setMatrixAt(j,d0.matrix);
           const h=((d.x*73.13+d.z*37.7)%1+1)%1,tl=p.glow?(S.gt||S.tint):S.tint;cc.setHex(tl?tl[Math.floor(h*tl.length)%tl.length]:0xffffff);if(!p.glow&&!p.mat){const v=1-S.j/2+S.j*h;cc.multiplyScalar(v)}col.set([cc.r,cc.g,cc.b],j*3)});
         m.instanceColor=new THREE.InstancedBufferAttribute(col,3);m.instanceMatrix.needsUpdate=true;m.frustumCulled=false;m.visible=false;m.castShadow=false;m.receiveShadow=!p.glow&&!p.mat;m.userData.cast=!!S.cast&&!p.glow&&!p.mat;
@@ -25697,7 +25700,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const obelisk=(hex)=>M([F(box(1.1,.5,1.1),hex,{j:.06},0,.25,0),F(cyl(.32,.5,4.2,4),hex,{j:.05},0,2.6,0,0,Math.PI/4,0),F(cone(.34,.7,4),hex,{j:.03},0,5.05,0,0,Math.PI/4,0)]);
   const glyphs=()=>{const p=[];for(let i=0;i<4;i++)p.push(F(box(.1,.22,.05),0xffffff,{lo:1,hi:0},((i%2)-.5)*.2,1.4+i*.75,.36));return M(p)};
   const frozen=()=>M([F(dt168Rock(171,1,.35,1).clone(),0x8ab8d4,{j:.08,lo:.8,hi:.5},0,.95,0,0,.3,0,[.62,1.02,.56]),skull(0xd8d8e0).translate(0,1.3,0)]);
-  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v176: a carved tomb with a plinth, panels and a laid-out effigy
+  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v177: a carved tomb with a plinth, panels and a laid-out effigy
   const bonePile=()=>M([skull(0xd8d0b8),skull(0xc8c0a8).translate(.45,0,.2),skull(0xd0c8b0).translate(-.3,0,-.3),skull(0xc0b8a0).translate(.1,.3,0),F(dome(.9,7),0xb8b098,{j:.2},0,0,0,0,0,0,[1,.35,1]),
     F(cyl(.04,.04,.9,4),0xd8d0b8,{},.6,.15,-.4,0,.5,Math.PI/2),F(cyl(.04,.04,.8,4),0xd8d0b8,{},-.5,.12,.4,0,-.8,Math.PI/2)]);
   const boneSpikes=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.3,r=i?.3+i*.12:0,h=i?1+((i*37)%10)/10:2.2;p.push(F(cone(.1,h,4),0xe0d8c0,{j:.02},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
@@ -25707,7 +25710,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const catapult=()=>M([F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,.6),F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,-.6),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,.6,0,0,.3),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,-.6,0,0,.3),
     F(cyl(.06,.06,1.4,5),0x3a2a1a,{},.2,1.4,0,Math.PI/2,0,0),F(box(2.8,.12,.14),0x6a4a2e,{},-.6,1.8,0,0,0,.6),F(dome(.35,6),0x3a2a1a,{},-1.7,2.4,0,Math.PI),
     F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,-.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,-.72,0,0,0)]);
-  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v176: clipped but leafy, not a green box
+  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v177: clipped but leafy, not a green box
   const topiary=()=>M([F(cyl(.08,.1,.6,5),0x3a2a1a,{},0,.3,0),F(ico(.55,1),0x2a4a2a,{j:.04,lo:.6,hi:.5},0,1.1,0),F(cone(.4,.9,6),0x2e522e,{j:.03},0,1.9,0),F(box(.9,.35,.9),0x5a5258,{j:.03},0,.17,0)]);
   const fountain=()=>M([F(cyl(1.8,1.9,.55,10),0x5a5258,{j:.05},0,.27,0),F(cyl(1.55,1.55,.1,10),0x3a0810,{lo:1,hi:0},0,.5,0),F(cyl(.25,.4,1.6,7),0x5a5258,{j:.03},0,1.2,0),F(cyl(.75,.4,.25,8),0x5a5258,{},0,1.95,0),statueG(0x5a5258,{}).scale(.6,.6,.6).translate(0,2.05,0)]);
   const fountainGlow=()=>F(cyl(1.5,1.5,.04,10),0xffffff,{lo:1,hi:0},0,.56,0);
@@ -25715,7 +25718,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   // ---- Kindlelight II: the Glowmire Hollows ----
   def('k2_gshroom',{parts:[gshroom(0xb8b8a0),glowM(gcap())],cast:true,col:.45,s:[.9,1.6],gt:[0x4affb0,0x7aff6a,0x5ae8ff]});
   def('k2_gshroomB',{parts:[gshroom(0xa8a890),glowM(gcap())],s:[1.4,2.4],gt:[0x4affb0,0x9aff5a,0x5ae8ff]});
-  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v176: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
+  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v177: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
   def('k2_goo',{parts:[glowM(gooPuddle())],near:true,y:.05,s:[.8,1.8],gt:[0x3ad82a,0x5aff3a]});
   def('k2_stalag',{parts:[stalag(0x3a423e,0x4a7a4a)],cast:true,col:.5,s:[.8,1.5]});
   def('k2_pillar',{parts:[pillarR(0x343c38,0x3e6a42,9)],cast:true,col:.95,s:[.9,1.2]});
@@ -29388,7 +29391,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const water=(x,z,rx,rz,col,op)=>{if(gy(x,z)<-.05){take(x,z,Math.max(rx,rz)*.7);return {userData:{Y:.02}}}return pool(x,z,rx,rz,col,false,op)};
   const lily=(x,Y,z,col)=>{const o=putY(Q.disc,S(col||0x3a7a3a),x,Y,z,rr(.25,.45),rr(.25,.45),1,-P2,0,rr(0,6));o.castShadow=false};
   // ---- growth ----
-  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++){const ox=rr(-.45,.45),oz=rr(-.45,.45),h=rr(.7,1.3);put(Q.cyl4,S(col||0x5a7a3a),x+ox,h/2-.08,z+oz,.025,h,.025,rr(-.2,.2),0,rr(-.2,.2))}};   // v176: rooted (short reeds stood ~.1 above the ground)
+  const reeds=(x,z,col,n)=>{n=n||6;for(let i=0;i<n;i++){const ox=rr(-.45,.45),oz=rr(-.45,.45),h=rr(.7,1.3);put(Q.cyl4,S(col||0x5a7a3a),x+ox,h/2-.08,z+oz,.025,h,.025,rr(-.2,.2),0,rr(-.2,.2))}};   // v177: rooted (short reeds stood ~.1 above the ground)
   const shroom=(x,z,k,cap,glow)=>{put(Q.cyl,S(0xd8cdb0),x,k*.6,z,k*.14,k*1.2,k*.14);put(Q.sph,glow?S(cap,{emissive:cap,emissiveIntensity:.6}):S(cap),x,k*1.2,z,k*.6,k*.3,k*.6);[0,1,2].forEach(i=>put(Q.sph,S(0xf0e8d8),x+Math.cos(i*2.1)*k*.34,k*1.4,z+Math.sin(i*2.1)*k*.34,k*.08,k*.05,k*.08));if(k>1)blk(x,z,0)};
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
@@ -29456,7 +29459,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
   const palm=(x,z,h,dead)=>{blk(x,z,0);take(x,z,1);const lx=rr(-.25,.25),lz=rr(-.25,.25);put(Q.tcyl,S(0x6a5038),x+lx*h*.5,h/2,z+lz*h*.5,.16,h,.16,lz,0,-lx);
-    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;const tl=dead?1.15:.35,fr=.75*Math.cos(tl)-.04,fy=Y-.75*Math.sin(tl)+.02;   // v176: each frond grows from the crown (their inner ends stood ~.3 above and beside it)
+    const tx=x+lx*h,tz=z+lz*h,Y=gy(x,z)+h;const tl=dead?1.15:.35,fr=.75*Math.cos(tl)-.04,fy=Y-.75*Math.sin(tl)+.02;   // v177: each frond grows from the crown (their inner ends stood ~.3 above and beside it)
     for(let i=0;i<7;i++){const a=i/7*TAU+rr(-.2,.2);putY(Q.box,S(dead?0x8a6a3a:0x4a7a3a),tx+Math.cos(a)*fr,fy,tz+Math.sin(a)*fr,1.5,.04,.3,0,-a,-tl)}};
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
@@ -29888,7 +29891,7 @@ function v124Edge(c,out){try{const T0=performance.now(),{T,def,F,M,cyl,dod,cone,
     F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},.95,.3,.12,0,1.1,.12,[.72,.46,.62]),F(dod(1),hex,{j:.14,top,tt:.6,lo:.62,hi:.42},-.9,.28,-.1,0,2.2,-.1,[.7,.44,.6])]);
   const stand=(hex,top)=>M([F(dod(1),hex,{j:.13,top,tt:.6,lo:.6,hi:.45},0,.62,0,0,.4,0,[1.15,.9,.95]),F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},1.05,.25,.25,0,2.4,0,[.62,.4,.55]),
     F(dod(1),hex,{j:.12,top,tt:.6,lo:.62,hi:.42},-1.05,.22,-.15,0,.9,0,[.55,.36,.5])]);
-  // v176: a gnarled oak (it was a stick under a green ball): a leaning, flared trunk forking into three limbs, the crown a loose
+  // v177: a gnarled oak (it was a stick under a green ball): a leaning, flared trunk forking into three limbs, the crown a loose
   // mass of uneven clumps hung on the limbs (dark beneath), a dead branch or two poking out
   const oak=(bark,l1,l2)=>{const bend=(x,y,z)=>{const t=Math.max(0,y)/2.6;return [x*(y<.3?1.25-y*.8:1)+t*t*.28,y,z+Math.sin(y*1.3)*.05]};
     const p=[F(cyl(.17,.34,2.5,8),bark,{j:.04,lo:.55,hi:.42,f:bend},0,1.25,0),
@@ -31206,16 +31209,13 @@ var ABX135={p:null,r:0};
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
-var F135={done:new WeakSet(),t:0,min:0,on:true};F135.U={value:F135.min};   // v173: min was .25 (the window never fully cleared)
+var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
 // now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
-// v173 (owner, Abeksi: the whole screen a murky speckle behind houses): same outer size, but clear right up to 4.7 and only a thin
-// speckled ring (4.7-5.4) marks the window's edge; nothing is left inside it (F135.min 0, was .25: a quarter of every wall stayed)
-// v174 (owner: "a bit too large"; with several buildings in front the hero did not show): 3.7-4.3, a fifth smaller
-var R157={value:new THREE.Vector2(3.7,4.3)};
+var R157={value:new THREE.Vector2(2.3,5.4)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
-var N157={value:new THREE.Vector2(3.4,4.)},M157={value:1};   // v174: a thinner speckled edge (was 3.4-5)   // M157 0 = the old v135 tube (the intro)
+var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
 // small 3D previews share these materials but are drawn elsewhere (icons at the world origin), so there they do nothing
 var FX135ON={value:0};
@@ -31225,7 +31225,7 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
   const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
   if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
-  m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;
+  m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;ob176Shader(sh);
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
     #ifdef USE_INSTANCING
     vF135=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;
@@ -31237,22 +31237,23 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
     if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
      if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
-      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(-.1,.15,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v175: solid only from the hero's own depth back (v174: .2-.55 in front, which still hid a hero standing at a wall seen at a slant; before: the last 4-16% of the way)
-      float near=t>0.&&fr>1.?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
-      if(!gl_FrontFacing&&t>0.&&fr>.15)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
+      // v176 (owner: "no window and just objects to go transparent with dithering"): whatever blocks the view (3361's boxes) is dithered
+      // as a whole object in front of the hero, OB176.k of it left; no window, no cut round the camera
+      f=1.-ob176Bx(vF135)*ob176Fr(vF135,uCam,uPl)*(1.-uObK);
+      if(!gl_FrontFacing&&t>0.&&t<.9)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
      }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
       #ifdef F135_B
-      f=1.;   // v174: plain (unlit) materials joined; the intro keeps its look
+      f=1.;   // v176: plain (unlit) materials joined; the intro keeps its look
       #else
       float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
       #endif
       }
      float kn=smoothstep(-.85,-.55,vF135.y-uPl.y);
-     if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v174: only flat surfaces keep it (walls on lower ground were a solid diagonal band)
-     f=mix(1.,f,kn);   // never below the hero's knees: floors, paving and bridges stay
+     if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v176: below the knees only flat surfaces stay (floors, paving, bridges)
+     f=mix(1.,f,kn);
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v174: windows and plain panes (Abeksi) are cut too
-  m.extensions=Object.assign({},m.extensions,{derivatives:true});   // v174: the knee rule reads the surface's slope (dFdx) on WebGL1 too
+  if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v176: windows and plain panes too
+  m.extensions=Object.assign({},m.extensions,{derivatives:true});m.userData.ob176=1;m.userData.ob176Fl=-.85;   // v176: 3361 scans it
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
@@ -46923,14 +46924,13 @@ var CAM157={step:.55,on:true};
 // the ground's material: steep or high terrain pixels inside the window are cut (uses vC135, the world position 2430 adds)
 function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;const ob=m.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);
-    sh.uniforms.uCam157=FADE.cam;sh.uniforms.uPl157=FADE.pl;sh.uniforms.uR157=R157;sh.uniforms.uOn157=CAM157U;
+    sh.uniforms.uCam157=FADE.cam;sh.uniforms.uPl157=FADE.pl;sh.uniforms.uR157=R157;sh.uniforms.uOn157=CAM157U;ob176Shader(sh);
     if(sh.fragmentShader.indexOf('varying vec3 vC135')<0){console.warn('v157: terrain has no vC135');return}
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     if(uOn135>.5&&uOn157>.5){vec3 ab=uPl157-uCam157;float t=dot(vC135-uCam157,ab)/dot(ab,ab);
-     float fr=(1.-t)*length(ab);if(t>.0&&fr>.15){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
+     if(t>.0){float f=1.-uObT*ob176Fr(vC135,uCam157,uPl157)*(1.-uObK);   // v176: no window: the whole ground in front of the hero is dithered while it blocks the view (3361)
       vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
       f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      f=mix(f,1.,1.-smoothstep(.2,.55,fr));   // v174: solid only right at the hero (was the last 5-14% of the way)
       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
 var CAM157U={value:1};
@@ -49162,7 +49162,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     drum(x,z){drum(x,z,pal.wood,1.1)},
     totem(x,z,a){const h=rr(3.2,4.4),sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.7);let y=0;const cs=[pal.wood,pal.acc,pal.woodD,pal.trim];
       for(let i=0;i<4;i++){const hh=h/4,rd=.32-i*.03;TQ(sg,Q.cyl,S(cs[i%4]),0,y+hh/2,0,rd,hh,rd);TQ(sg,Q.box,S(pal.woodD),rd*.85,y+hh*.55,0,.1,hh*.4,rd*1.2);[-1,1].forEach(s=>TQ(sg,Q.box,G(i%2?0xffd060:0x0a0808),rd*.92,y+hh*.62,s*rd*.32,.04,.06,.08));y+=hh}
-      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.3,.04,.9,.18,s*.15,0,0))},   // v176: hung on the pole (they hung .1 off it)
+      TQ(sg,Q.ico,BONE,0,y+.18,0,.3,.28,.3);[-1,1].forEach(s=>TQ(sg,Q.cone,BONE,0,y+.55,s*.36,.07,.8,.07,s*.6,0,0));[-1,1].forEach(s=>TQ(sg,Q.box,S(pk(pal.cloth),{side:THREE.DoubleSide}),0,y-.9,s*.3,.04,.9,.18,s*.15,0,0))},   // v177: hung on the pole (they hung .1 off it)
     altar(x,z,a){const sg=sub(x,z,a,0);TQ(sg,Q.box,STN,0,.45,0,1.8,.9,1);TQ(sg,Q.box,STD,0,.93,0,2,.1,1.15);TQ(sg,Q.box,STD,0,.1,0,2.4,.2,1.5);const d=TQ(sg,Q.disc,G(Lc[0]),0,.99,0,.3,.3,1,-P2,0,0);d.castShadow=false;
       bRect(x,z,a,2.4,1.5);take(x,z,1.5);candles(x,z,6,1.2,pal.lant);halo(x,z,1.8,Lc[0],.14,.05);skull(x+Math.cos(a+P2)*.6,.98,z+Math.sin(a+P2)*.6,.9,pal.bone,a)},
     brazier(x,z){brazier(x,z,pal.fire,1.15)},
@@ -49290,7 +49290,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       else if(fk=='hedge'){const sg=sub(x,z,ga+P2,0);TQ(sg,Q.arc,S(0x1a1416),0,0,0,hw,2.6,1.2,0,P2,0);P.forEach(([px,pz])=>blk(px,pz,0))}
       else{const M=fk=='iron'?MET:fk=='bone'||fk=='ice'?(fk=='ice'?S(0xbfe6ff,{emissive:0x4a90c0,emissiveIntensity:.3}):BONE):WD,H=3.4;P.forEach(([px,pz])=>{blk(px,pz,0);take(px,pz,.5);put(Q.cyl,M,px,H/2,pz,.2,H,.2);put(Q.ico,BONE,px,H+.14,pz,.2,.18,.2)});
         seg(P[0][0],gy(P[0][0],P[0][1])+H-.25,P[0][1],P[1][0],gy(P[1][0],P[1][1])+H-.25,P[1][1],.14,M,Q.cyl);
-        const g0=gy(P[0][0],P[0][1]),g1=gy(P[1][0],P[1][1]);   // v176: the tusks grow out of the lintel (they stood ~.2 above it, in the air)
+        const g0=gy(P[0][0],P[0][1]),g1=gy(P[1][0],P[1][1]);   // v177: the tusks grow out of the lintel (they stood ~.2 above it, in the air)
         [-1,1].forEach(s=>{const c=[x+sx*.9*s,z+sz*.9*s],yb=g0+(g1-g0)*(hw+.9*s)/(2*hw)+H-.25+.06;seg(c[0],yb,c[1],c[0]+Math.cos(ga)*.2+sx*.4*s,yb+.85,c[1]+Math.sin(ga)*.2+sz*.4*s,.05,BONE,Q.cone)})}
       // braziers / torches just inside, a banner outside
       const bi=[-1,1].map(s=>[x-Math.cos(ga)*1.3+sx*(hw+.7)*s,z-Math.sin(ga)*1.3+sz*(hw+.7)*s]);
@@ -54483,46 +54483,214 @@ function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt16
 //   * inside the rock (below the ground there) within CAM172.r2 of the void: the rim's wall at the edge of the map. Deeper inside
 //     the map (a cave's wall) the camera may stand in the rock as before.
 // Duskhold (no instance) uses the same rule: the island's edge is void too.
-var CAM172={on:true,vt:-6,r1:1.2,r2:8,min:2,step:.35,st:{d:0,cut:0}};
+var CAM172={on:true,vt:-6,r1:1.2,r2:8,min:2,minAb:1.2,step:.35,ab:.35,why:'',st:{d:0,cut:0}};   // minAb: a house can come closer (over the shoulder) than the map's edge
 const CAM172A=[0,1,2,3,4,5,6,7].map(i=>[Math.sin(i*Math.PI/4),Math.cos(i*Math.PI/4)]);
 function cam172Void(x,z,r){if(GH(x,z)<CAM172.vt)return true;for(const [a,b] of CAM172A)if(GH(x+a*r,z+b*r)<CAM172.vt)return true;return false}
+// v176 (owner: "with the buildings in the Abeksi city just have them behave like the edge of the map and have the camera get
+// closer to the character"): inside an Abeksi building (its box from the plan, as 3152 builds it, roof included) counts as out of
+// the map too, so the camera slides in instead of going behind a house
+function cam172Ab(x,y,z,I){if(!I||I.g!==30||typeof ab152Plan!='function')return false;const P=ab152Plan(),u=x-I.x0+.5,v=z-I.y0+.5,m=CAM172.ab;
+  for(const B of P.B){if(u>B[0]-m&&u<B[2]+m&&v>B[1]-m&&v<B[3]+m){const s=B[4],st=B[5],H=st=='tower'?2.3*s+.8:st=='hall'?3.4:st=='barn'?3:st=='ruin'?3:2.3*s;if(y<1.6+H+1.2)return true}}
+  return false}
 function cam172Ok(x,y,z,I){
   if(I&&(x<I.x0+.5||z<I.y0+.5||x>I.x0+I.w-.5||z>I.y0+I.h-.5))return false;
+  CAM172.why='';if(cam172Ab(x,y,z,I)){CAM172.why='ab';return false}
   if(cam172Void(x,z,CAM172.r1))return false;
   if(y<GH(x,z)-.05){for(const r of [3,5.5,CAM172.r2])if(cam172Void(x,z,r))return false}
   return true}
 // how far back the camera may go along its line from the hero's chest (P = the hero's feet), at most d
 function cam172Reach(P,yaw,pitch,d){if(!CAM172.on)return d;let I=null;try{const k=cvKey();I=k>=0?INSL[k]:null}catch(_){}
   const ox=Math.sin(yaw)*Math.cos(pitch),oy=Math.sin(pitch),oz=Math.cos(yaw)*Math.cos(pitch),y0=P.y+1.1;
-  for(let s=1;s<=d+.6;s+=CAM172.step){if(!cam172Ok(P.x+ox*s,y0+oy*s,P.z+oz*s,I)){const r=Math.max(CAM172.min,Math.min(d,s-.7));CAM172.st.d=r;CAM172.st.cut++;return r}}
+  for(let s=1;s<=d+.6;s+=CAM172.step){if(!cam172Ok(P.x+ox*s,y0+oy*s,P.z+oz*s,I)){const r=Math.min(d,Math.max(CAM172.why=='ab'?CAM172.minAb:CAM172.min,s-.7));CAM172.st.d=r;CAM172.st.cut++;return r}}
   CAM172.st.d=d;return d}
 // the camera itself trails its target (0104 lerps it there over a few frames): while it catches up (turning toward an edge, zooming
 // out) it must not pass the edge either, so its actual spot is held inside the map too (no lag here)
 const CAM172V=new THREE.Vector3();
 function cam172Hold(P,c){if(!CAM172.on)return;let I=null;try{const k=cvKey();I=k>=0?INSL[k]:null}catch(_){}
-  const y0=P.y+1.1,d=CAM172V.set(c.x-P.x,c.y-y0,c.z-P.z),L=d.length();if(L<CAM172.min)return;d.multiplyScalar(1/L);
-  for(let s=1;s<=L;s+=CAM172.step)if(!cam172Ok(P.x+d.x*s,y0+d.y*s,P.z+d.z*s,I)){const r=Math.max(CAM172.min,Math.min(L,s-.7));c.set(P.x+d.x*r,y0+d.y*r,P.z+d.z*r);CAM172.st.hold=(CAM172.st.hold||0)+1;return}}
+  const y0=P.y+1.1,d=CAM172V.set(c.x-P.x,c.y-y0,c.z-P.z),L=d.length();if(L<CAM172.minAb)return;d.multiplyScalar(1/L);
+  for(let s=1;s<=L;s+=CAM172.step)if(!cam172Ok(P.x+d.x*s,y0+d.y*s,P.z+d.z*s,I)){const r=Math.min(L,Math.max(CAM172.why=='ab'?CAM172.minAb:CAM172.min,s-.7));c.set(P.x+d.x*r,y0+d.y*r,P.z+d.z*r);CAM172.st.hold=(CAM172.st.hold||0)+1;return}}
 // and once more right before the main view is drawn: anything that moved the camera after the main loop's update (an arrival
 // snap, a shake) is held inside the map too (seen on a fast machine: the camera left in the rim's rock past the edge)
 {const f=POST.render;POST.render=function(){try{if(CAM172.on&&!(typeof IC151!='undefined'&&IC151.on)&&typeof pl!='undefined'&&pl){const x=cam.position.x,y=cam.position.y,z=cam.position.z;
     cam172Hold(pl.position,cam.position);if(cam.position.x!==x||cam.position.y!==y||cam.position.z!==z){cam.lookAt(look);cam.updateMatrixWorld();FADE.cam.value.copy(cam.position)}}}catch(_){}
   return f.apply(this,arguments)}}
-// ================= v176 environment pass: scattered scenery sits on the ground =================
+// ================= v176: whatever blocks the view turns see-through as a whole object, dithered (no window) =================
+// Owner (Oct 29 2026): "I want no window and just objects to go transparent with dithering" (and the camera closing in at the map's
+// edge and in front of Abeksi's buildings: 3360). Replaces v157/v164's round window round the hero (2420 scenery, 3190 ground) and
+// the plants' tube (0060): ~11 times a second ob176Scan casts five rays from the camera to the hero (chest, head, knees, both
+// shoulders) against the see-through-capable meshes drawn last frame, and each object a ray meets becomes a box in the shaders
+// (uObBm/uObBM, weight uObBw, up to OB176N): every pixel of it in front of the hero is dithered away to OB176.k (the share left,
+// screen-door, the old dither pattern). "The object": a plain mesh's largest object-sized group (a house = walls + roof), one tree
+// or rock of an instanced set, or the joined piece of a big merged mesh (ob176Acc). The ground has one switch (uObT): when it
+// blocks the view (or the camera is in it) every steep wall of ground in front of the hero is dithered. Boxes fade in and out over
+// OB176.fade s. Floors under the line of sight stay (flat surfaces below the hero's knees, as before).
+var OB176U0=[0,1,2,3,4,5,6,7];
+var OB176={box:[],seen:[],t:0,last:0,under:false,bt:0,fade:.18,big:12,st:{scans:0,ms:0,hits:0,boxes:0},rc:new THREE.Raycaster(),acc:new WeakMap(),err:0};
+OB176.on=true;OB176.k=.35;OB176.U={uObBm:{value:OB176U0.map(()=>new THREE.Vector3())},uObBM:{value:OB176U0.map(()=>new THREE.Vector3())},uObBw:{value:[0,0,0,0,0,0,0,0]},uObT:{value:0},uObK:{value:.35}};
+// GLSL: box weight (soft .3 edge), in front of the hero (from 15 cm in front of the chest), the share kept
+OB176.HEAD=`uniform vec3 uObBm[8],uObBM[8];uniform float uObBw[8],uObT,uObK;
+float ob176Bx(vec3 p){float w=0.;for(int i=0;i<8;i++){if(uObBw[i]>0.){vec3 q=max(uObBm[i]-p,p-uObBM[i]);w=max(w,uObBw[i]*(1.-smoothstep(0.,.3,max(q.x,max(q.y,q.z)))));}}return w;}
+float ob176Fr(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;return smoothstep(-.1,.15,(1.-t)*sqrt(L2));}
+`;
+// give a patched material the uniforms and the GLSL helpers (call inside its onBeforeCompile, before its main is replaced)
+function ob176Shader(sh){for(const k in OB176.U)sh.uniforms[k]=OB176.U[k];sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+OB176.HEAD)}
+// the meshes drawn in the main view whose material can be dithered (userData.ob176); the next scan tests these
+{const ob=THREE.Mesh.prototype.onBeforeRender;THREE.Mesh.prototype.onBeforeRender=function(){if(OB176.live){const M=this.material;let g=false;
+    if(Array.isArray(M)){for(const m of M)if(m&&m.userData.ob176){g=true;break}}else g=!!(M&&M.userData.ob176);
+    if(g&&!this.isSkinnedMesh&&this.userData.ob176F!==OB176.f){this.userData.ob176F=OB176.f;const m0=Array.isArray(M)?M[0]:M;OB176.seen.push(this,m0&&m0.userData.ob176Fl!=null?m0.userData.ob176Fl:null)}}
+  if(ob!==THREE.Object3D.prototype.onBeforeRender)return ob.apply(this,arguments)}}
+{const f=POST.render;POST.render=function(){const io=typeof IC151!='undefined'&&IC151.on;OB176.f=(OB176.f||0)+1;
+  try{if(!io)ob176Tick()}catch(e){if(!OB176.err2){OB176.err2=1;console.warn('v176 tick',e)}}
+  OB176.U.uObK.value=OB176.k;OB176.seen.length=0;OB176.live=!io;try{return f.apply(this,arguments)}finally{OB176.live=false}}}
+var OB176N=8;
+function ob176Ground(x,z){return GH(x,z)}
+const OB176V=[0,1,2,3,4].map(()=>new THREE.Vector3()),OB176D=new THREE.Vector3(),OB176S=new THREE.Vector3(),OB176M=new THREE.Matrix4(),OB176B=new THREE.Box3();
+function ob176Scan(){const B=OB176,C=FADE.cam.value,H=FADE.pl.value,t0=performance.now();B.st.scans++;
+  for(const b of B.box)b.on=0;
+  if(!OB176.on||(typeof IC151!='undefined'&&IC151.on)){B.bt=0;B.under=false;return}
+  const T=OB176V,ab=OB176D.copy(H).sub(C);if(ab.lengthSq()<1e-4){B.bt=0;return}
+  const sd=OB176S.set(ab.z,0,-ab.x);if(sd.lengthSq()>1e-6)sd.normalize();
+  T[0].copy(H);T[1].copy(H).y+=.6;T[2].copy(H).y-=.75;T[3].copy(H).addScaledVector(sd,.38);T[4].copy(H).addScaledVector(sd,-.38);
+  // the ground: inside it, or does it rise above any of the rays?
+  let bt=false;B.under=C.y<ob176Ground(C.x,C.z)-.05;if(B.under)bt=true;
+  for(let i=0;i<5&&!bt;i++){const P=T[i],L=C.distanceTo(P);for(let s=.5;s<L-.4;s+=.4){const f=s/L,x=C.x+(P.x-C.x)*f,y=C.y+(P.y-C.y)*f,z=C.z+(P.z-C.z)*f;if(ob176Ground(x,z)>y+.02){bt=true;break}}}
+  B.bt=bt?1:0;
+  // what was drawn: objects the rays meet
+  const S=B.seen,done=new Set();let hits=0;
+  for(let i=0;i<S.length;i+=2){const o=S[i];if(done.has(o))continue;done.add(o);
+    const s=ob176Sphere(o,OB176Ts);if(!s)continue;if(S[i+1]!=null&&s.top<H.y+S[i+1])continue;
+    // broad: the ball against the segment from the camera to the hero
+    const L2=ab.lengthSq(),u=Math.max(0,Math.min(1,OB176Tw.copy(s.c).sub(C).dot(ab)/L2)),dx=C.x+ab.x*u-s.c.x,dy=C.y+ab.y*u-s.c.y,dz=C.z+ab.z*u-s.c.z;
+    if(dx*dx+dy*dy+dz*dz>(s.r+.9)*(s.r+.9))continue;
+    for(let j=0;j<5;j++){const k=ob176Ray(o,C,T[j]);if(k){hits++;break}}}
+  B.st.hits=hits;B.st.ms=+(performance.now()-t0).toFixed(2)}
+// one ray from the camera to a point on the hero against one object; on a hit its box is switched on (ob176Box). Stops .45 short
+// of the hero (their own gear, held weapons are not scenery) and starts .2 past the lens.
+function ob176Ray(o,C,P){const B=OB176,g=o.geometry;if(!g||!g.attributes.position)return false;
+  const L=C.distanceTo(P);if(L<.8)return false;
+  if(o.isInstancedMesh){const rc=B.rc;rc.set(C,OB176Tv.copy(P).sub(C).normalize());rc.near=.2;rc.far=L-.45;rc.camera=cam;let I=[];
+    try{I=rc.intersectObject(o,false)}catch(_){I=[]}
+    if(!I.length||I[0].instanceId==null)return false;const id=I[0].instanceId;
+    if(!g.boundingBox)g.computeBoundingBox();o.getMatrixAt(id,OB176M);OB176M.premultiply(o.matrixWorld);
+    OB176B.copy(g.boundingBox).applyMatrix4(OB176M);ob176Box(o.uuid+':'+id,OB176B);return true}
+  const nT=(g.index?g.index.count:g.attributes.position.count)/3;
+  if(nT<=3000){const rc=B.rc;rc.set(C,OB176Tv.copy(P).sub(C).normalize());rc.near=.2;rc.far=L-.45;rc.camera=cam;let I=[];
+    try{I=rc.intersectObject(o,false)}catch(_){I=[]}
+    if(!I.length)return false;const ob=ob176Whole(o);ob176Box(ob.k,ob.b);return true}
+  // a big merged mesh: the piece the ray meets
+  const A=ob176Acc(g);if(!A)return false;const inv=OB176M.copy(o.matrixWorld).invert();
+  const a=OB176A0.copy(C).applyMatrix4(inv),e=OB176A1.copy(P).addScaledVector(OB176Tv.copy(C).sub(P).normalize(),.45).applyMatrix4(inv);
+  const tri=ob176AccRay(A,a,e);if(tri<0)return false;
+  const grp=A.tg[tri],bx=A.gb.subarray(grp*6,grp*6+6);OB176B.min.set(bx[0],bx[1],bx[2]);OB176B.max.set(bx[3],bx[4],bx[5]);OB176B.applyMatrix4(o.matrixWorld);
+  ob176Box(o.uuid+'#'+grp,OB176B);return true}
+const OB176A0=new THREE.Vector3(),OB176A1=new THREE.Vector3();
+// the whole object a plain mesh belongs to: climb its parents while the group stays object-sized (static scenery: cached by spot)
+function ob176Whole(o){const u=o.userData,me=o.matrixWorld.elements,f=me[12]*7.1+me[13]*3.3+me[14];if(u.ob176W&&u.ob176W.f===f)return u.ob176W;
+  let best=o,bb=ob176OBox(o,new THREE.Box3(),1e9),a=o;
+  while(a.parent&&a.parent!==scene&&!a.parent.isScene){const p=a.parent,b=ob176OBox(p,new THREE.Box3(),OB176.big);if(!b)break;best=p;bb=b;a=p}
+  return u.ob176W={k:best.uuid,b:bb,f}}
+// a group's box from its meshes' bounding boxes (null as soon as it grows past lim across)
+const OB176Q=new THREE.Box3();
+function ob176OBox(r,out,lim){out.makeEmpty();let ok=true;
+  r.traverse(q=>{if(!ok||!q.isMesh||!q.visible)return;const g=q.geometry;if(!g||!g.attributes||!g.attributes.position)return;if(!g.boundingBox)g.computeBoundingBox();
+    OB176Q.copy(g.boundingBox).applyMatrix4(q.matrixWorld);out.union(OB176Q);
+    if(out.max.x-out.min.x>lim||out.max.z-out.min.z>lim||out.max.y-out.min.y>lim*1.6)ok=false});
+  return ok&&!out.isEmpty()?out:null}
+// switch a box on (a new one takes a free slot, or the faintest one that is off)
+function ob176Box(k,b){const B=OB176;let x=B.box.find(q=>q.k===k);
+  if(!x){if(B.box.length<OB176N)B.box.push(x={k,mn:new THREE.Vector3(),mx:new THREE.Vector3(),w:0,on:0});
+    else{let lo=null;for(const q of B.box)if(!q.on&&(!lo||q.w<lo.w))lo=q;if(!lo)return;x=lo;x.k=k;x.w=0}}
+  x.mn.copy(b.min);x.mx.copy(b.max);x.on=1}
+// each frame (POST.render, 3350): a scan now and then, the fades, the uniforms
+function ob176Tick(){const B=OB176,U=OB176.U,now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(B.last||now))/1000));B.last=now;
+  if(now-B.t>90){B.t=now;try{ob176Scan()}catch(e){if(!B.err){B.err=1;console.warn('v171 scan',e)}}}
+  const k=dt/B.fade;U.uObT.value=Math.max(0,Math.min(1,U.uObT.value+(B.bt?k:-k)));if(B.under)U.uObT.value=1;
+  for(const b of B.box)b.w=Math.max(0,Math.min(1,b.w+(b.on?k:-k)));
+  B.box=B.box.filter(b=>b.w>0||b.on);B.st.boxes=B.box.length;
+  for(let i=0;i<OB176N;i++){const b=B.box[i];if(b){U.uObBm.value[i].copy(b.mn);U.uObBM.value[i].copy(b.mx);U.uObBw.value[i]=b.w}else U.uObBw.value[i]=0}}
+// ---- big merged meshes: the pieces (triangles joined by shared corners, then pieces whose boxes touch) and a grid of triangles ----
+// A: {p positions, ix corner index or null, tg triangle -> group, gb group boxes (6 per group, local), cells, cs cell size, o origin,
+// n grid size}. Built once per geometry, the first time a ray reaches it.
+function ob176Acc(g){let A=OB176.acc.get(g);if(A!==undefined)return A;const t0=performance.now();
+  try{A=ob176AccBuild(g)}catch(e){console.warn('v171 pieces',e);A=null}
+  OB176.acc.set(g,A);if(A)A.ms=+(performance.now()-t0).toFixed(1);return A}
+function ob176AccBuild(g){const P=g.attributes.position.array,ix=g.index?g.index.array:null,nT=(ix?ix.length:P.length/3)/3,nV=P.length/3;
+  const vi=(t,c)=>ix?ix[t*3+c]:t*3+c;
+  // corners at the same spot are one corner
+  const par=new Int32Array(nV);for(let i=0;i<nV;i++)par[i]=i;
+  const fd=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i},un=(a,b)=>{a=fd(a);b=fd(b);if(a!==b)par[a]=b};
+  const wm=new Map();for(let i=0;i<nV;i++){const k=Math.round(P[i*3]*100)*73856093^Math.round(P[i*3+1]*100)*19349663^Math.round(P[i*3+2]*100)*83492791,q=wm.get(k);if(q===undefined)wm.set(k,i);else un(i,q)}
+  for(let t=0;t<nT;t++){un(vi(t,0),vi(t,1));un(vi(t,1),vi(t,2))}
+  // pieces and their boxes
+  const pid=new Map(),pb=[];const tp=new Int32Array(nT);
+  for(let t=0;t<nT;t++){const r=fd(vi(t,0));let k=pid.get(r);if(k===undefined){k=pb.length/6;pid.set(r,k);pb.push(1e9,1e9,1e9,-1e9,-1e9,-1e9)}tp[t]=k;
+    for(let c=0;c<3;c++){const v=vi(t,c)*3;for(let a=0;a<3;a++){const x=P[v+a];if(x<pb[k*6+a])pb[k*6+a]=x;if(x>pb[k*6+3+a])pb[k*6+3+a]=x}}}
+  const nP=pb.length/6,gp=new Int32Array(nP);for(let i=0;i<nP;i++)gp[i]=i;
+  const gf=i=>{while(gp[i]!==i){gp[i]=gp[gp[i]];i=gp[i]}return i};
+  // pieces whose boxes touch (within .2) join, as long as the joined box stays object-sized
+  const gbx=pb.slice(),big=OB176.big,cs0=4,hm=new Map();
+  for(let k=0;k<nP;k++){const b=pb.slice(k*6,k*6+6);if(Math.max(b[3]-b[0],b[5]-b[2])>big)continue;
+    for(let x=Math.floor(b[0]/cs0);x<=Math.floor(b[3]/cs0);x++)for(let z=Math.floor(b[2]/cs0);z<=Math.floor(b[5]/cs0);z++){const h=x*92821+z;let l=hm.get(h);if(!l)hm.set(h,l=[]);
+      for(const j of l){const a=gf(k),c=gf(j);if(a===c)continue;const A=gbx.slice(a*6,a*6+6),Cb=gbx.slice(c*6,c*6+6);
+        if(A[0]>Cb[3]+.2||Cb[0]>A[3]+.2||A[1]>Cb[4]+.2||Cb[1]>A[4]+.2||A[2]>Cb[5]+.2||Cb[2]>A[5]+.2)continue;
+        const U=[Math.min(A[0],Cb[0]),Math.min(A[1],Cb[1]),Math.min(A[2],Cb[2]),Math.max(A[3],Cb[3]),Math.max(A[4],Cb[4]),Math.max(A[5],Cb[5])];
+        if(Math.max(U[3]-U[0],U[5]-U[2])>big||U[4]-U[1]>big*1.6)continue;
+        gp[a]=c;for(let q=0;q<6;q++)gbx[c*6+q]=U[q]}
+      l.push(k)}}
+  const gid=new Map(),gb=[],tg=new Int32Array(nT);
+  for(let t=0;t<nT;t++){const r=gf(tp[t]);let k=gid.get(r);if(k===undefined){k=gb.length/6;gid.set(r,k);for(let q=0;q<6;q++)gb.push(gbx[r*6+q])}tg[t]=k}
+  // a grid of triangles for the rays
+  if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox,ex=Math.max(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z),cs=Math.max(1.5,ex/48),n=Math.ceil(ex/cs)+1;
+  const cells=new Map(),o=[bb.min.x,bb.min.y,bb.min.z],ci=(a,i)=>Math.max(0,Math.min(n-1,Math.floor((a-o[i])/cs)));
+  for(let t=0;t<nT;t++){let a0=1e9,a1=1e9,a2=1e9,b0=-1e9,b1=-1e9,b2=-1e9;for(let c=0;c<3;c++){const v=vi(t,c)*3;a0=Math.min(a0,P[v]);b0=Math.max(b0,P[v]);a1=Math.min(a1,P[v+1]);b1=Math.max(b1,P[v+1]);a2=Math.min(a2,P[v+2]);b2=Math.max(b2,P[v+2])}
+    for(let x=ci(a0,0);x<=ci(b0,0);x++)for(let y=ci(a1,1);y<=ci(b1,1);y++)for(let z=ci(a2,2);z<=ci(b2,2);z++){const h=(x*n+y)*n+z;let l=cells.get(h);if(!l)cells.set(h,l=[]);l.push(t)}}
+  return {P,ix,tg,gb:new Float32Array(gb),cells,cs,o,n,stamp:new Uint32Array(nT),sv:0,nT,nG:gb.length/6}}
+// the first triangle the segment a->e meets (local space), walking the grid's cells in order; -1 for none
+function ob176AccRay(A,a,e){const P=A.P,ix=A.ix,cs=A.cs,o=A.o,n=A.n;A.sv++;const st=A.stamp,sv=A.sv;
+  const d=[e.x-a.x,e.y-a.y,e.z-a.z],L=Math.hypot(d[0],d[1],d[2]);if(L<1e-4)return -1;
+  const steps=Math.ceil(L/(cs*.5))+1,seen=new Set();
+  for(let i=0;i<=steps;i++){const f=i/steps,x=Math.floor((a.x+d[0]*f-o[0])/cs),y=Math.floor((a.y+d[1]*f-o[1])/cs),z=Math.floor((a.z+d[2]*f-o[2])/cs);
+    if(x<0||y<0||z<0||x>=n||y>=n||z>=n)continue;
+    // the cell and its neighbours along the way (a thin ray can cross a cell corner between samples)
+    for(let qx=x-1;qx<=x+1;qx++)for(let qy=y-1;qy<=y+1;qy++)for(let qz=z-1;qz<=z+1;qz++){if(qx<0||qy<0||qz<0||qx>=n||qy>=n||qz>=n)continue;const h=(qx*n+qy)*n+qz;if(seen.has(h))continue;seen.add(h);
+      const l=A.cells.get(h);if(!l)continue;
+      for(const t of l){if(st[t]===sv)continue;st[t]=sv;
+        const i0=(ix?ix[t*3]:t*3)*3,i1=(ix?ix[t*3+1]:t*3+1)*3,i2=(ix?ix[t*3+2]:t*3+2)*3;
+        if(ob176Tri(a,d,P,i0,i1,i2))return t}}}
+  return -1}
+// does the segment a + d*u (0 < u < 1) cross the triangle? (Moller-Trumbore, both sides)
+function ob176Tri(a,d,P,i0,i1,i2){const e1x=P[i1]-P[i0],e1y=P[i1+1]-P[i0+1],e1z=P[i1+2]-P[i0+2],e2x=P[i2]-P[i0],e2y=P[i2+1]-P[i0+1],e2z=P[i2+2]-P[i0+2];
+  const px=d[1]*e2z-d[2]*e2y,py=d[2]*e2x-d[0]*e2z,pz=d[0]*e2y-d[1]*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-9)return false;
+  const iv=1/det,tx=a.x-P[i0],ty=a.y-P[i0+1],tz=a.z-P[i0+2],u=(tx*px+ty*py+tz*pz)*iv;if(u<0||u>1)return false;
+  const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,v=(d[0]*qx+d[1]*qy+d[2]*qz)*iv;if(v<0||u+v>1)return false;
+  const w=(e2x*qx+e2y*qy+e2z*qz)*iv;return w>0&&w<1}
+
+const OB176Ts={c:new THREE.Vector3(),r:0},OB176Tv=new THREE.Vector3(),OB176Tw=new THREE.Vector3();
+// the mesh's bounds in the world (instanced meshes: all instances, cached; top = the highest instance's top, local y)
+function ob176Sphere(o,out){const g=o.geometry;if(!g)return null;
+  if(o.isInstancedMesh){let s=o.userData.ob176S;
+    if(!s||s.n!==o.count){if(!g.boundingSphere)g.computeBoundingSphere();const a=o.instanceMatrix.array,n=o.count,c=new THREE.Vector3(),m=new THREE.Matrix4(),p=new THREE.Vector3();
+      for(let i=0;i<n;i++){c.x+=a[i*16+12];c.y+=a[i*16+13];c.z+=a[i*16+14]}if(n)c.multiplyScalar(1/n);let r=0,top=-1e9;
+      for(let i=0;i<n;i++){m.fromArray(a,i*16);p.copy(g.boundingSphere.center).applyMatrix4(m);const ri=g.boundingSphere.radius*m.getMaxScaleOnAxis();r=Math.max(r,p.distanceTo(c)+ri);top=Math.max(top,p.y+ri)}
+      s=o.userData.ob176S={n,c,r,top}}
+    out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
+  if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
+// ================= v177 environment pass: scattered scenery sits on the ground =================
 // Owner: "check all environment pieces on each instance in each zone ... for unattached pieces or poor quality".
 // The scattered decorations (1680 / 1981 / 2280: WD kinds, instanced per 64x64 chunk in wdBuild) used to stand at the ground height
 // under their centre, so on a slope one side of a rock, log or grave hung in the air (up to metres on the rim banks, and pieces on a
-// cliff lip hung over the drop). wdBuild now asks env176Seat for each piece's place:
+// cliff lip hung over the drop). wdBuild now asks env177Seat for each piece's place:
 //  * low, wide pieces (rocks, ledge stones, logs, dunes, rubble, graves) lean with the slope under them (tall ones stay upright:
-//    trees, pillars, lamps, statues), up to ENV176.tilt;
+//    trees, pillars, lamps, statues), up to ENV177.tilt;
 //  * then the piece sinks until no point of its base is above the ground (the uphill side goes into the ground);
-//  * a piece that would have to sink more than its share (ENV176.sink: a tall piece a third of its height, a low one 45%) stands on
+//  * a piece that would have to sink more than its share (ENV177.sink: a tall piece a third of its height, a low one 45%) stands on
 //    ground too steep for it (a cliff face, a wall lip) and is not drawn (scale 0; gb168Clear hides pieces the same way).
 // Flat patches (goo, blood, salt crust) lie along the slope; mist, webs and pieces at a fixed height (lilies on water) stay as they were.
 // Everything here is a hoisted function: wdBuild runs at load, long before this file.
-var ENV176;   // lazy: wdBuild calls in before this line runs
-function env176(){return ENV176||(ENV176={tilt:.4,tol:.04,sink:[.34,.45],n:0,hid:0})}
+var ENV177;   // lazy: wdBuild calls in before this line runs
+function env177(){return ENV177||(ENV177={tilt:.4,tol:.04,sink:[.34,.45],n:0,hid:0})}
 // the kind's base outline (local vertices at the very bottom), size and how much it leans: cached on the kind
-function env176Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
+function env177Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
   try{if(S.abs==null&&!S.parts.some(p=>p.mat)){const V=[];let mn=1e9,mx=-1e9,x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
     S.parts.forEach(p=>{const P=p.g.attributes.position;for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);V.push(x,y,z);if(y<mn)mn=y;if(y>mx)mx=y;if(x<x0)x0=x;if(x>x1)x1=x;if(z<z0)z0=z;if(z>z1)z1=z}});
     const h=mx-mn,w=Math.max(x1-x0,z1-z0);
@@ -54531,11 +54699,11 @@ function env176Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
       // big outlines thinned to ~48 points (every n-th): enough to find the lowest ground under the base
       let L=lo;if(lo.length>144){const st=Math.ceil(lo.length/144);L=[];for(let i=0;i<lo.length;i+=3*st)L.push(lo[i],lo[i+1],lo[i+2])}
       r={lo:L,h,w,lean,tall:h>w*1.2}}
-    else if(w>.2)r={decal:1,w}}}catch(e){console.warn('v176 kind',S.k,e)}
+    else if(w>.2)r={decal:1,w}}}catch(e){console.warn('v177 kind',S.k,e)}
   return S._e176=r}
 // where piece d stands: {x,y,z,q,sx,sy,sz} (sx 0: not drawn); y0 is its old height (ground at its centre plus the kind's lift)
-function env176Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env176Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
-  if(!K)return o;const E=env176();E.n++;
+function env177Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env177Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
+  if(!K)return o;const E=env177();E.n++;
   if(K.decal||K.lean){const r=Math.max(.6,K.w*.45*s),gx=(GH(d.x+r,d.z)-GH(d.x-r,d.z))/(2*r),gz=(GH(d.x,d.z+r)-GH(d.x,d.z-r))/(2*r),n=new V3(-gx,1,-gz).normalize(),up=new V3(0,1,0);
     let a=Math.acos(Math.min(1,n.y))*(K.decal?1:K.lean);a=Math.min(a,K.decal?.7:E.tilt);if(a>.01){const ax=new V3().crossVectors(up,n).normalize();o.q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,a))}}
   if(K.decal)return o;   // a flat patch (goo, salt crust, blood) lies along the slope at its old height
@@ -54544,16 +54712,16 @@ function env176Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env176Kind(S),V3=THRE
   const sink=Math.max(0,gap-E.tol),lim=K.h*o.sy*E.sink[K.tall?0:1]+.08;
   if(sink>lim){o.sx=o.sy=o.sz=0;E.hid++;return o}
   o.y=y0-sink;return o}
-// ================= v176 environment pass: a darker, weathered palette =================
+// ================= v177 environment pass: a darker, weathered palette =================
 // Owner: "analyze and optimize structure, color and overall style ... non-cartoony (this is a dark fantasy game) or too simple".
 // The zones were painted in candy colours (lime moss, pure white snow and bone, saturated sand and grass). One grade per zone
-// (ENV176Z) is applied once at load: to every scattered decoration's baked vertex colours (env176Look, from wdDeco before the
+// (ENV177Z) is applied once at load: to every scattered decoration's baked vertex colours (env177Look, from wdDeco before the
 // chunks are built: colour pulled toward grey by .sat, lime greens turned toward olive by .olive, bright colours compressed above
-// .knee by .comp, everything times .dark), its instance tints (saturation only), and to the zone's ground colours (env176Biomes,
+// .knee by .comp, everything times .dark), its instance tints (saturation only), and to the zone's ground colours (env177Biomes,
 // from 0045: BIOMES gnd / grs / acc / frs / tree tints). Then weathering is baked into each decoration (dt168Weather, 3345):
 // grime toward the foot, mottling and rain streaks, so props stop reading as flat painted plastic. Glowing parts are left alone.
 // Duskhold is not graded.
-function env176Z(z){return [
+function env177Z(z){return [
   {sat:.78,olive:.25,knee:.42,comp:.55,dark:.95},   // Kindlelight (already a dark bog)
   {sat:.6,olive:.45,knee:.4,comp:.5,dark:.88},      // Hillside Crest: the brightest, most cartoony greens
   {sat:.68,olive:.3,knee:.5,comp:.55,dark:.9},      // Burningeye Summit: snow and ice, not glaring white
@@ -54561,45 +54729,45 @@ function env176Z(z){return [
   {sat:.72,olive:.3,knee:.4,comp:.5,dark:.9},       // The Dirge: bone and stone in murk
   {sat:.82,olive:.3,knee:.4,comp:.55,dark:.92}][z]||null}  // The Citadel
 // grade one colour (0..1 floats) in place: returns [r,g,b]
-function env176Grade(r,g,b,Z){let l=.3*r+.59*g+.11*b;
+function env177Grade(r,g,b,Z){let l=.3*r+.59*g+.11*b;
   if(g>r&&g>b){const k=Math.min(1,(g-Math.max(r,b))*4)*Z.olive;r+=(g-r)*k*.5;b+=(g-b)*k*.15;g-=(g-r)*k*.15}   // lime -> olive / moss
   l=.3*r+.59*g+.11*b;r=l+(r-l)*Z.sat;g=l+(g-l)*Z.sat;b=l+(b-l)*Z.sat;
   if(l>Z.knee){const L=Z.knee+(l-Z.knee)*Z.comp,f=L/l;r*=f;g*=f;b*=f}
   return [r*Z.dark,g*Z.dark,b*Z.dark]}
-function env176Hex(h,Z,satOnly){const c=new THREE.Color(h);let o;if(satOnly){const l=.3*c.r+.59*c.g+.11*c.b;o=[l+(c.r-l)*Z.sat,l+(c.g-l)*Z.sat,l+(c.b-l)*Z.sat]}else o=env176Grade(c.r,c.g,c.b,Z);
+function env177Hex(h,Z,satOnly){const c=new THREE.Color(h);let o;if(satOnly){const l=.3*c.r+.59*c.g+.11*c.b;o=[l+(c.r-l)*Z.sat,l+(c.g-l)*Z.sat,l+(c.b-l)*Z.sat]}else o=env177Grade(c.r,c.g,c.b,Z);
   return c.setRGB(Math.max(0,o[0]),Math.max(0,o[1]),Math.max(0,o[2])).getHex()}
 // the zone a decoration kind belongs to: by its name (k_, k2_ ... c3_), else by where most of its pieces stand
-function env176KindZone(k,list){const m=/^([khbsdc])\d?_/.exec(k);if(m)return 'khbsdc'.indexOf(m[1]);
+function env177KindZone(k,list){const m=/^([khbsdc])\d?_/.exec(k);if(m)return 'khbsdc'.indexOf(m[1]);
   const n=[0,0,0,0,0,0,0];for(const d of list)if(d.k===k){const I=insAt(Math.round(d.x),Math.round(d.z));n[I?I.z:6]++}let b=6;for(let i=0;i<6;i++)if(n[i]>(b<6?n[b]:0))b=i;return b<6?b:-1}
-function env176Look(T,list){const T0=performance.now(),done=new Set();let nk=0;
-  for(const k in T){const S=T[k];if(!S||!S.parts)continue;const z=env176KindZone(k,list),Z=env176Z(z);if(!Z)continue;nk++;
-    if(S.tint)S.tint=S.tint.map(h=>env176Hex(h,Z,true));
+function env177Look(T,list){const T0=performance.now(),done=new Set();let nk=0;
+  for(const k in T){const S=T[k];if(!S||!S.parts)continue;const z=env177KindZone(k,list),Z=env177Z(z);if(!Z)continue;nk++;
+    if(S.tint)S.tint=S.tint.map(h=>env177Hex(h,Z,true));
     S.parts.forEach(p=>{const g=p.g;if(p.glow||p.mat||!g||done.has(g))return;done.add(g);const C=g.attributes.color,P=g.attributes.position;if(!C)return;
       let y0=1e9,y1=-1e9;for(let i=0;i<P.count;i++){const y=P.getY(i);if(y<y0)y0=y;if(y>y1)y1=y}
-      for(let i=0;i<C.count;i++){const o=env176Grade(C.getX(i),C.getY(i),C.getZ(i),Z);C.setXYZ(i,o[0],o[1],o[2])}
+      for(let i=0;i<C.count;i++){const o=env177Grade(C.getX(i),C.getY(i),C.getZ(i),Z);C.setXYZ(i,o[0],o[1],o[2])}
       if(!g.attributes.normal)g.computeVertexNormals();
       try{dt168Weather(g,{y0,g:[Math.min(.7,Math.max(.25,(y1-y0)*.3)),.3],n:.2,s:.2,sd:(k.length*7)%13})}catch(e){}
       C.needsUpdate=true})}
-  env176().look={kinds:nk,ms:Math.round(performance.now()-T0)}}
+  env177().look={kinds:nk,ms:Math.round(performance.now()-T0)}}
 // the zones' ground colours (BIOMES, after v112 added the themed instances' own); Duskhold (biome 0) stays
-function env176Biomes(){try{BIOMES.forEach((b,i)=>{if(!i||b.e176)return;b.e176=1;const z=b.v112!=null?Math.floor(b.v112/PMG):i-1,Z=env176Z(z);if(!Z)return;
-  const G=a=>{const o=env176Grade(a[0]/255,a[1]/255,a[2]/255,Z);return o.map(v=>Math.max(0,Math.min(255,Math.round(v*255))))};
-  ['gnd','grs','acc','frs'].forEach(k=>{if(Array.isArray(b[k]))b[k]=G(b[k])});if(Array.isArray(b.tc))b.tc=b.tc.map(h=>env176Hex(h,Z))})}catch(e){console.warn('v176 biomes',e)}}
+function env177Biomes(){try{BIOMES.forEach((b,i)=>{if(!i||b.e176)return;b.e176=1;const z=b.v112!=null?Math.floor(b.v112/PMG):i-1,Z=env177Z(z);if(!Z)return;
+  const G=a=>{const o=env177Grade(a[0]/255,a[1]/255,a[2]/255,Z);return o.map(v=>Math.max(0,Math.min(255,Math.round(v*255))))};
+  ['gnd','grs','acc','frs'].forEach(k=>{if(Array.isArray(b[k]))b[k]=G(b[k])});if(Array.isArray(b.tc))b.tc=b.tc.map(h=>env177Hex(h,Z))})}catch(e){console.warn('v177 biomes',e)}}
 // ---- the zones' light and grade (0550 ZATM, and each themed instance's own in 1981): the v52 "vivid" grade pushed saturation
 // up to +50% and the bright zones over-exposed, which made every colour read as a cartoon. Boosts are cut to under a third (a
 // zone that is already desaturated keeps its value), over-bright suns and exposure come down, the vignette deepens a little,
 // and the hero's light in the dark zones no longer whites out what stands next to it.
-function env176Atm(a){if(!a||a.e176)return;a.e176=1;const cut=(v,k)=>v>1?1+(v-1)*k:v;
+function env177Atm(a){if(!a||a.e176)return;a.e176=1;const cut=(v,k)=>v>1?1+(v-1)*k:v;
   if(a.sat!=null)a.sat=cut(a.sat,.3);if(a.ex!=null)a.ex=cut(a.ex,.3)*.97;if(a.sun!=null)a.sun=cut(a.sun,.55);if(a.hemi!=null)a.hemi=cut(a.hemi,.6);if(a.vig!=null)a.vig*=1.08;
   // the dark zones' carried light (li 2.2-3.4) burned a wall or rock a step away to pure white: softer, reaching a little further
   if(a.li>1.5){a.li*=.72;if(a.ld)a.ld*=1.15}}
-try{for(let z=0;z<6;z++)env176Atm(ZATM[z]);if(typeof th112=='function')th112().list.forEach(t=>env176Atm(t.a))}catch(e){console.warn('v176 atmosphere',e)}
+try{for(let z=0;z<6;z++)env177Atm(ZATM[z]);if(typeof th112=='function')th112().list.forEach(t=>env177Atm(t.a))}catch(e){console.warn('v177 atmosphere',e)}
 // ---- pond banks (from 0045, right after the heights are made): a water tile was 1.2 below the surface next to land at full
-// height, a one-tile drop that read as a pit with sheer walls. The walkable land within ENV176B.r tiles of water now slopes down
-// to just above the waterline, and the water's first two rings shelve (ENV176B.w) before the deep middle. Rims are left alone.
-function env176Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W*H).fill(99),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~';let n=0;
+// height, a one-tile drop that read as a pit with sheer walls. The walkable land within ENV177B.r tiles of water now slopes down
+// to just above the waterline, and the water's first two rings shelve (ENV177B.w) before the deep middle. Rims are left alone.
+function env177Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W*H).fill(99),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~';let n=0;
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){if(!wet(x,y)||!insAt(x,y))continue;let land=99;
     for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
     const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
-  env176().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v176 banks',e)}}
+  env177().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v177 banks',e)}}

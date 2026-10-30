@@ -1,12 +1,12 @@
-# v176: the zones' scenery sits on the ground and holds together (owner: "check all environment pieces on each instance in each zone
+# v177: the zones' scenery sits on the ground and holds together (owner: "check all environment pieces on each instance in each zone
 # ... for unattached pieces"). Two passes over the whole world (every instance is built at load; lazily built camps and set pieces
 # are made by visiting each instance first):
 #   1. scattered decorations (WD kinds, 1680/1981/2280): FAIL when a kind has a part that touches nothing and hangs above the
-#      ground, or a placed piece has a gap under its base over .12 (env176Seat leans, sinks or hides it: 3370); FAIL when more
+#      ground, or a placed piece has a gap under its base over .12 (env177Seat leans, sinks or hides it: 3370); FAIL when more
 #      than 1600 pieces are hidden (too steep), or any hidden piece stands deep inside walkable ground with a collider.
 #   2. every other scenery object: FAIL for a lit part that touches nothing and hangs more than .12 above the ground (a lintel,
 #      a name plate, tusks, cloth, reeds), apart from the spots in OK below (looked at: attached within the measure's tolerance).
-#   Plus: the grade ran on every kind (ENV176.look), no console errors.
+#   Plus: the grade ran on every kind (ENV177.look), no console errors.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -20,7 +20,7 @@ def s(pg):
     pg.set_default_timeout(2400000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     errs=pg.evaluate("()=>{window.__e176=[];const oe=console.error;console.error=(...a)=>{window.__e176.push(a.map(String).join(' ').slice(0,200));oe(...a)};return 1}")
-    r=pg.evaluate(open(H+'/v176_env_wd.js').read())
+    r=pg.evaluate(open(H+'/v177_env_wd.js').read())
     E=r.get('E') or {};print('seated',E.get('n'),'hidden',E.get('hid'),'look',E.get('look'),'banks',E.get('banks'),flush=True)
     if not E.get('look') or E['look'].get('kinds',0)<150:F('the grade did not run over the decorations (%s)'%E.get('look'))
     if (E.get('hid') or 0)>1600:F('%s pieces hidden as too steep (more than 1600)'%E.get('hid'))
@@ -30,7 +30,7 @@ def s(pg):
     for k,L in r['hid'].items():
         deep=[a for a in L if a[2]<-12]
         if deep:F('%s hidden deep in walkable ground at %s'%(k,deep[:3]))
-    r=pg.evaluate(open(H+'/v176_env_scene.js').read())
+    r=pg.evaluate(open(H+'/v177_env_scene.js').read())
     print('objects',r['nobj'],'skipped',r['skipped'],'visited',len(r['vis']),flush=True)
     for o in r['out']:
         for f in o['fl']:

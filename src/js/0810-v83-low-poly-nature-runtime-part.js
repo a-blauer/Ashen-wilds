@@ -9,7 +9,7 @@ function lpnPortalArch(g){
   const st=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.95,color:0x6a6672}),G=new THREE.Group(),{fin,tr,merge,stone,hs}=NK;
   const blk=(w,hh,d,x,y,z,ry,sd)=>fin(tr(new THREE.BoxGeometry(w,hh,d,1,1,1),x,y,z,0,ry,0),{j:.07,sd,paint:stone});
   const parts=[];
-  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v176: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
+  [-1,1].forEach(s=>{const H=[0,1,2,3].map(i=>.5+hs(i,s,7)*.18),k=2.36/H.reduce((a,b)=>a+b,0);let y=0;   // v177: each stack reaches the lintel exactly (it could stop short, the lintel in the air)
     for(let i=0;i<4;i++){const hh=H[i]*k,w=.5-i*.03+hs(s,i,9)*.08;parts.push(blk(w,hh,w,s*(.9+(hs(i,s,3)-.5)*.06),y+hh/2,0,(hs(i,s,5)-.5)*.5,50+i+s*10));y+=hh}});
   parts.push(blk(2.5,.34,.5,0,2.5,0,.03,61),blk(.5,.3,.46,0,2.82,0,.6,62));
   // a couple of fallen chunks at the base

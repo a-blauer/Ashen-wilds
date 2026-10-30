@@ -1,5 +1,5 @@
-// v176 test: every other scenery object in the zone instances (camps, gateways, set pieces, dens) after visiting each instance:
-// lit parts that touch nothing and hang above the ground. Run by v176_env.py.
+// v177 test: every other scenery object in the zone instances (camps, gateways, set pieces, dens) after visiting each instance:
+// lit parts that touch nothing and hang above the ground. Run by v177_env.py.
 async()=>{
   // every top-level scenery object in the zone instances (not instanced decorations, not characters): parts that touch nothing and hang above the ground
   const out=[],V3=THREE.Vector3,v=new V3(),skipped={skin:0,big:0,town:0};const t0=performance.now();

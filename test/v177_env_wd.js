@@ -1,5 +1,5 @@
-// v176 test: every scattered decoration kind (WD) — parts that touch nothing above the ground — and every placed piece — the gap
-// under its base (lowest point over each spot of its footprint). Run by v176_env.py.
+// v177 test: every scattered decoration kind (WD) — parts that touch nothing above the ground — and every placed piece — the gap
+// under its base (lowest point over each spot of its footprint). Run by v177_env.py.
 async()=>{
   // Audit every WD decoration kind: detached parts in its model, base above 0, and per placed instance the gap under its base.
   const T=WD.T,res={kinds:{},nlist:WD.list.length};
@@ -30,7 +30,7 @@ async()=>{
     for(let j=0;j<m.count;j++){m.getMatrixAt(j,M4);const e=M4.elements;K.n++;if(Math.abs(e[0])+Math.abs(e[1])+Math.abs(e[2])<1e-6){const x=Math.round(e[12]),z=Math.round(e[14]);(res.hid[k]=res.hid[k]||[]).push([x,z,MAP.DW[z*W+x]]);continue}
       let mx=-1e9,mn=1e9;const L=K.low;for(let i=0;i<L.length;i+=3){v.set(L[i],L[i+1],L[i+2]).applyMatrix4(M4);const g=v.y-GH(v.x,v.z);if(g>mx)mx=g;if(g<mn)mn=g}
       const x=Math.round(e[12]),z=Math.round(e[14]);K.gaps.push([+mx.toFixed(2),+mn.toFixed(2),x,z,MAP.DW[z*W+x]])}}
-  res.E=typeof ENV176!='undefined'?ENV176:null;
+  res.E=typeof ENV177!='undefined'?ENV177:null;
   for(const k in res.kinds){const K=res.kinds[k];delete K.low;const g=K.gaps.map(a=>a[0]).sort((a,b)=>a-b);K.gMax=g.length?g[g.length-1]:0;K.gP90=g.length?g[Math.floor(g.length*.9)]:0;K.gMed=g.length?g[Math.floor(g.length*.5)]:0;
     K.nFloat=K.gaps.filter(a=>a[0]>.12).length;K.worst=K.gaps.sort((a,b)=>b[0]-a[0]).slice(0,4);delete K.gaps;delete K.sunk}
   return res}

@@ -171,7 +171,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const obelisk=(hex)=>M([F(box(1.1,.5,1.1),hex,{j:.06},0,.25,0),F(cyl(.32,.5,4.2,4),hex,{j:.05},0,2.6,0,0,Math.PI/4,0),F(cone(.34,.7,4),hex,{j:.03},0,5.05,0,0,Math.PI/4,0)]);
   const glyphs=()=>{const p=[];for(let i=0;i<4;i++)p.push(F(box(.1,.22,.05),0xffffff,{lo:1,hi:0},((i%2)-.5)*.2,1.4+i*.75,.36));return M(p)};
   const frozen=()=>M([F(dt168Rock(171,1,.35,1).clone(),0x8ab8d4,{j:.08,lo:.8,hi:.5},0,.95,0,0,.3,0,[.62,1.02,.56]),skull(0xd8d8e0).translate(0,1.3,0)]);
-  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v176: a carved tomb with a plinth, panels and a laid-out effigy
+  const sarco=(hex)=>M([F(box(1.16,.12,2.36),hex,{j:.02},0,.06,0),F(box(1,.52,2.2),hex,{j:.03},0,.38,0),F(box(1.1,.14,2.3),hex,{j:.03},0,.71,0),F(box(.92,.1,2.1),hex,{j:.02},0,.83,0)].concat([-1,1].map(s=>F(box(.04,.3,1.6),hex,{},s*.51,.38,0)),[F(cyl(.13,.17,1.15,7),hex,{j:.04},0,1,-.15,Math.PI/2,0,0),F(ico(.17,1),hex,{j:.03},0,1.02,.6),F(box(.42,.1,.22),hex,{j:.02},0,.93,-.82)]));   // v177: a carved tomb with a plinth, panels and a laid-out effigy
   const bonePile=()=>M([skull(0xd8d0b8),skull(0xc8c0a8).translate(.45,0,.2),skull(0xd0c8b0).translate(-.3,0,-.3),skull(0xc0b8a0).translate(.1,.3,0),F(dome(.9,7),0xb8b098,{j:.2},0,0,0,0,0,0,[1,.35,1]),
     F(cyl(.04,.04,.9,4),0xd8d0b8,{},.6,.15,-.4,0,.5,Math.PI/2),F(cyl(.04,.04,.8,4),0xd8d0b8,{},-.5,.12,.4,0,-.8,Math.PI/2)]);
   const boneSpikes=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.3,r=i?.3+i*.12:0,h=i?1+((i*37)%10)/10:2.2;p.push(F(cone(.1,h,4),0xe0d8c0,{j:.02},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
@@ -181,7 +181,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const catapult=()=>M([F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,.6),F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,-.6),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,.6,0,0,.3),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,-.6,0,0,.3),
     F(cyl(.06,.06,1.4,5),0x3a2a1a,{},.2,1.4,0,Math.PI/2,0,0),F(box(2.8,.12,.14),0x6a4a2e,{},-.6,1.8,0,0,0,.6),F(dome(.35,6),0x3a2a1a,{},-1.7,2.4,0,Math.PI),
     F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,-.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,-.72,0,0,0)]);
-  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v176: clipped but leafy, not a green box
+  const hedge=()=>M([F(box(2.9,.5,.75),0x1e2a1a,{j:.06,lo:.5,hi:.4},0,.25,0)].concat([-1.05,-.35,.35,1.05].map((x,i)=>F(ico(.62,1),[0x24381f,0x2a4024,0x22341e,0x2c4226][i],{j:.2,lo:.45,hi:.6},x,.72+(i%2)*.06,(i%2-.5)*.06,0,i,0,[1.05,.95,.72]))));   // v177: clipped but leafy, not a green box
   const topiary=()=>M([F(cyl(.08,.1,.6,5),0x3a2a1a,{},0,.3,0),F(ico(.55,1),0x2a4a2a,{j:.04,lo:.6,hi:.5},0,1.1,0),F(cone(.4,.9,6),0x2e522e,{j:.03},0,1.9,0),F(box(.9,.35,.9),0x5a5258,{j:.03},0,.17,0)]);
   const fountain=()=>M([F(cyl(1.8,1.9,.55,10),0x5a5258,{j:.05},0,.27,0),F(cyl(1.55,1.55,.1,10),0x3a0810,{lo:1,hi:0},0,.5,0),F(cyl(.25,.4,1.6,7),0x5a5258,{j:.03},0,1.2,0),F(cyl(.75,.4,.25,8),0x5a5258,{},0,1.95,0),statueG(0x5a5258,{}).scale(.6,.6,.6).translate(0,2.05,0)]);
   const fountainGlow=()=>F(cyl(1.5,1.5,.04,10),0xffffff,{lo:1,hi:0},0,.56,0);
@@ -189,7 +189,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   // ---- Kindlelight II: the Glowmire Hollows ----
   def('k2_gshroom',{parts:[gshroom(0xb8b8a0),glowM(gcap())],cast:true,col:.45,s:[.9,1.6],gt:[0x4affb0,0x7aff6a,0x5ae8ff]});
   def('k2_gshroomB',{parts:[gshroom(0xa8a890),glowM(gcap())],s:[1.4,2.4],gt:[0x4affb0,0x9aff5a,0x5ae8ff]});
-  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v176: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
+  def('k2_shelf',{parts:[M([F(cyl(.13,.24,1.95,7),0x24201c,{j:.05,lo:.55,hi:.4},0,.97,0),F(cyl(.05,.09,.7,5),0x24201c,{},.12,1.75,.05,.3,0,-.35),F(cyl(.22,.3,.18,7),0x1c1a16,{j:.05},0,.05,0)]),glowM(shelf())],   /* v177: a rotten snag the glowing shelves grow on (they hung in the air) */near:true,s:[.9,1.6],gt:[0x6affa0,0xb0ff6a]});
   def('k2_goo',{parts:[glowM(gooPuddle())],near:true,y:.05,s:[.8,1.8],gt:[0x3ad82a,0x5aff3a]});
   def('k2_stalag',{parts:[stalag(0x3a423e,0x4a7a4a)],cast:true,col:.5,s:[.8,1.5]});
   def('k2_pillar',{parts:[pillarR(0x343c38,0x3e6a42,9)],cast:true,col:.95,s:[.9,1.2]});
