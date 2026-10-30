@@ -57037,16 +57037,17 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
 // the ground, swaying as it slithers).
 NAGA181.bones=[['nt0',null,0,.36,-.08],['nt1','nt0',0,.1,-.4],['nt2','nt1',-.13,.086,-.68],['nt3','nt2',.06,.07,-1.0],['nt4','nt3',.15,.051,-1.32]];
 // the reptile head in base head coordinates (the thrall's head space 1.52 … 1.73): [y, half width, front, back, z]
-const NAGAHEAD=[[1.52,.06,.07,.06,.02],[1.535,.066,.11,.064,.03],[1.55,.07,.14,.068,.036],[1.564,.072,.156,.072,.04],[1.578,.072,.158,.076,.04],[1.592,.07,.15,.08,.038],
-  [1.607,.073,.13,.085,.03],[1.622,.078,.11,.09,.02],[1.637,.077,.096,.092,.015],[1.652,.07,.082,.09,.01],[1.664,.058,.062,.078,.004],[1.672,.03,.03,.045,0]];
-function n181Face(x,y,z,n){const ax=Math.abs(x);let d=0;
-  // the mouth: a groove along the jaw from the snout's tip back to its corner (front and sides)
-  if(n[1]>-.6)d-=.006*Math.exp(-Math.pow((y-1.571)/.0035,2))*(z>-.02?1:0);
-  [-1,1].forEach(s=>{d-=.007*cgG(x,y,s*.016,1.597,.005,.004);             // nostril slits near the snout's tip
-    d+=.014*cgG(x,y,s*.05,1.642,.018,.008);                                // scaled brow ridges over the eyes
-    d-=.008*cgG(x,y,s*.06,1.622,.013,.01);                                 // the eye's socket, set to the side
-    d+=.009*cgG(x,y,s*.068,1.556,.02,.014)});                              // the jaw muscles at the back of the jaw
-  d+=.006*cgG(x,y,0,1.66,.012,.02);                                        // a ridge of scales over the skull
+const NAGAHEAD=[[1.52,.058,.064,.06,.018],[1.534,.062,.078,.064,.024],[1.548,.066,.105,.068,.03],[1.56,.067,.14,.07,.036],[1.571,.066,.168,.072,.04],[1.58,.067,.162,.075,.04],
+  [1.592,.07,.138,.08,.036],[1.606,.075,.114,.086,.028],[1.62,.079,.1,.09,.02],[1.635,.078,.092,.092,.014],[1.65,.072,.08,.09,.008],[1.663,.06,.062,.078,.004],[1.672,.032,.032,.046,0]];
+const NAGA_EYE=[.042,1.605];   // base head coordinates of the eyes (x either side, y)
+function n181Face(x,y,z,n){let d=0;
+  // the mouth: a dark slit along the jaw from the snout's tip back to its corner (front and sides)
+  if(n[1]>-.7&&z>-.03)d-=.011*Math.exp(-Math.pow((y-1.5745)/.0042,2));
+  [-1,1].forEach(s=>{d-=.006*cgG(x,y,s*.014,1.588,.005,.004);             // nostril slits on the snout's top, near the tip
+    d+=.012*cgG(x,y,s*.05,1.624,.02,.007);                                 // scaled brow ridges over the eyes
+    d-=.007*cgG(x,y,s*NAGA_EYE[0]*1.2,NAGA_EYE[1],.013,.009);              // the eye's socket under the ridge
+    d+=.008*cgG(x,y,s*.066,1.556,.02,.014)});                              // the jaw muscles at the back of the jaw
+  d+=.005*cgG(x,y,0,1.65,.012,.02);                                        // a ridge of scales over the skull
   return d}
 // the tail: from under the hips down to the ground, then an S-curve trailing behind (model space)
 function n181Path(){const W=(a,b,t)=>t<=0?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]],T=[[0,.66,-.01,.15,W('pelvis','nt0',0)],[0,.54,-.03,.155,W('pelvis','nt0',.15)],[0,.42,-.06,.155,W('pelvis','nt0',.5)],[0,.3,-.1,.15,W('nt0','nt0',0)],
@@ -57061,13 +57062,14 @@ function n181Hood(B,S,col){const R=[[1.47,.085,-.06],[1.52,.15,-.075],[1.57,.2,-
 // a naga: body, head, hood, fingers; returns the smoothed mesh for the gear
 function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n181Face));
   const scale=m=>a181Nz(K.sk,m,.38,13),belly=m=>Math.round((m.y-m.z)*15)%2?K.bel:mdSh(K.bel,.8);
-  cgEmit(B,M,m=>{if(m.part=='head'){if(m.ny<-.35||(m.s>.55&&m.y<S.hp(0,1.571,0)[1]))return mdMix(K.bel,K.sk,.3);return a181Nz(m.y>S.hp(0,1.64,0)[1]?K.sk2:K.sk,m,.35,30)}
+  const my=S.hp(0,1.5745,0)[1];cgEmit(B,M,m=>{if(m.part=='head'){if(Math.abs(m.y-my)<.0045*S.hs&&m.nz>-.3)return 0x140806;if(m.ny<-.35||(m.s>.55&&m.y<my))return mdMix(K.bel,K.sk,.3);return a181Nz(m.y>S.hp(0,1.64,0)[1]?K.sk2:K.sk,m,.35,30)}
     if(m.part=='tail'){if(m.ny<-.35||(m.y>.3&&m.s>.55))return belly(m);if(m.ny>.3&&Math.round(-m.z*7)%2==0)return a181Nz(K.pat,m,.3,9);return scale(m)}
     if(m.part=='torso'&&m.s>.55&&Math.abs(m.x)<.09&&m.y<J.chest[1]+.04)return belly(m);if(m.part=='torso'&&m.s<-.6&&n3Sn(m.x,m.y*2,m.z,7,1)>.55)return K.pat;return scale(m)});
-  // eyes on the sides of the head, burning, with slit pupils; fangs; a forked tongue's tip
-  [-1,1].forEach(s=>{const q=S.hp(s*.06,1.622,0),d=nrm3([s,0,.75]),p=cgRay(M,add3(q,mul3(d,.4)),mul3(d,-1),{head:1});if(!p)return;
-    k.p('head','sph','g',K.eye,p[0]+d[0]*.002,p[1],p[2]+d[2]*.002,.013*S.hs,.009*S.hs,.009*S.hs,0,s*.9,0);k.p('head','box','c',0x050403,p[0]+d[0]*.009,p[1],p[2]+d[2]*.009,.003,.014*S.hs,.003,0,s*.9,0)});
-  [-1,1].forEach(s=>{const q=S.hp(s*.022,1.574,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p)k.p('head','cone4','c',0xe8e0c8,p[0],p[1]-.012,p[2]-.008,.0055,.03,.0055,Math.PI)});
+  // eyes set under the brow ridges, facing forward and out, half sunk into the head, slit pupils; short fangs into the mouth slit
+  [-1,1].forEach(s=>{const q=S.hp(s*NAGA_EYE[0],NAGA_EYE[1],.05),d=nrm3([s*.5,.12,.86]),p=cgRay(M,add3(q,mul3(d,.5)),mul3(d,-1),{head:1});if(!p)return;const r=.013*S.hs,c=sub3(p,mul3(d,r*.4));
+    k.p('head','sph2','c',0x0c0a06,c[0]-d[0]*r*.5,c[1],c[2]-d[2]*r*.5,r*1.25,r*1.0,r*.75,0,Math.atan2(d[0],d[2]),0);
+    k.p('head','sph','g',K.eye,c[0],c[1],c[2],r,r*.8,r,0,Math.atan2(d[0],d[2]),0);k.p('head','box','c',0x050403,c[0]+d[0]*r*.82,c[1],c[2]+d[2]*r*.82,.0025,r*1.5,.0025,0,Math.atan2(d[0],d[2]),0)});
+  [-1,1].forEach(s=>{const q=S.hp(s*.02,1.578,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p)k.p('head','cone4','c',0xe8e0c8,p[0],p[1]-.006*S.hs,p[2]-.006,.004*S.hs,.012*S.hs,.004*S.hs,Math.PI)});
   n181Hood(B,S,m=>{if(m.s>.3){const ex=(Math.abs(m.x)-.13*S.hs)/(.022*S.hs),ey=(m.y-S.hp(0,1.6,0)[1])/(.016*S.hs),e=ex*ex+ey*ey,rim=Math.abs(m.x)>.17*S.hs;return e<1?0x0a0806:e<2.2?mdSh(K.bel,.75):rim?a181Nz(K.sk2,m,.3,12):a181Nz(mdMix(K.sk2,K.bel,.2),m,.3,14)}return a181Nz(K.sk2,m,.35,12)});
   [-1,1].forEach(s=>{cgFingers(k,S,s,K.sk,K.fist&&K.fist(s)?'fist':'claw',1.0,0x14100a,.016)});
   return M}

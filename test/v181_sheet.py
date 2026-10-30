@@ -4,7 +4,7 @@
 import os,sys,base64,io
 from PIL import Image
 import play
-JS=r"""(a)=>{const [list,SZ,HAND]=a,V=THREE.Vector3,out=[];
+JS=r"""(a)=>{const [list,SZ,HAND,HEAD]=a,V=THREE.Vector3,out=[];
   if(!window.RT181){const rd=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});rd.setSize(SZ,SZ);const sc=new THREE.Scene();sc.background=new THREE.Color(0x2c3036);
     sc.add(new THREE.HemisphereLight(0xc8d0dc,0x3a3028,.85));const dl=new THREE.DirectionalLight(0xfff0d8,1.15);dl.position.set(2,4,4);sc.add(dl);const d2=new THREE.DirectionalLight(0x8090c0,.6);d2.position.set(-4,1.5,-2);sc.add(d2);
     const gr=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshLambertMaterial({color:0x3a4234}));gr.rotation.x=-Math.PI/2;sc.add(gr);window.RT181={rd,sc,pc:new THREE.PerspectiveCamera(28,1,.02,200)}}
@@ -21,6 +21,7 @@ JS=r"""(a)=>{const [list,SZ,HAND]=a,V=THREE.Vector3,out=[];
     if(!hp)hp=new V(ctr.x,bb.max.y-sz.y*.12,ctr.z);hp.y+=sz.y*.03;shot([.35,.1,1],'face',hp,sz.y*.13);
     let sp=null;g.traverse(o=>{if(o.isBone&&o.name=='aR0'&&!sp){sp=new V();o.getWorldPosition(sp)}});
     if(sp&&!HAND){shot([.55,.75,.35],'shoulder',sp,sz.y*.14);shot([.2,.5,-.9],'shoulder back',sp,sz.y*.14)}
+    if(HEAD&&hp){const r=sz.y*.07;shot([0,.05,1],'head front',hp,r);shot([1,.05,.15],'head side',hp,r);shot([.7,.3,.7],'head 3/4',hp,r);shot([.3,-.5,1],'head below',hp,r)}
     if(HAND){let hp2=null;g.traverse(o=>{if(o.isBone&&o.name=='aR2'&&!hp2){hp2=new V();o.getWorldPosition(hp2)}});if(hp2){hp2.y-=sz.y*.04;shot([0,.15,1],'hand front',hp2,sz.y*.08);shot([1,.1,0],'hand outside',hp2,sz.y*.08);shot([-1,.2,.15],'hand inside',hp2,sz.y*.08)}}
     tick(260,true,4);shot([.9,.15,.45],'walk');
     tick(400,false);const mv=(EN[k].moves||[])[0];g.ak={n:mv||'bite',ph:1,k:.6};tick(120,false);shot([.9,.2,.5],'attack '+(mv||''));g.ak=null;
@@ -34,7 +35,7 @@ def s(pg):
     keys=[q for q in os.environ.get('ONLY','').split(',') if q];SZ=int(os.environ.get('SZ','360'));out=os.environ.get('OUT','out/v181_sheet')
     rows=[]
     for k in keys:
-        r=ev(JS,[[k],SZ,bool(os.environ.get('HAND'))])
+        r=ev(JS,[[k],SZ,bool(os.environ.get('HAND')),bool(os.environ.get('HEAD'))])
         for it in r:
             if it['err']:print('FAIL %s: %s'%(it['k'],it['err']))
             if it.get('h'):print('%s (%s) height %.2f m, size %s'%(it['k'],it['n'],it['h'],' x '.join('%.2f'%v for v in it['sz'])))
