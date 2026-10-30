@@ -1435,11 +1435,14 @@ function windMat(mat,amp,off){
     #else
     vWP2=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;varying vec3 vWP2;').replace('void main() {',`void main() {
-    {vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
+    sh.uniforms.uM157w=M157;ob176Shader(sh);
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
+    if(uM157w>.5){float f=1.-ob176Bx(vWP2)*ob176Fr(vWP2,uCam,uPl)*(1.-uObK)*smoothstep(-.6,-.3,vWP2.y-uPl.y);   // v176: a plant in the way is dithered whole (3361); grass stays
+     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}
+    else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  mat.customProgramCacheKey=()=>'ifx';
+  mat.customProgramCacheKey=()=>'ifx';mat.userData.ob176=1;mat.userData.ob176Fl=-.6;
 }
 function buildVI(){
   const chk={};buildTerrain(chk);
@@ -8995,7 +8998,7 @@ function lgWpnKit(k,type,col,r){
     k.p('',lgSlab('halbE',[[.3,.27],[.27,0],[.31,-.2],[.285,-.18],[.25,0],[.275,.23]],.03),'m',edge,.02,-1.28,0,1,1,1);
     k.p('','cone4','m',W.iron2,-.11,-1.28,0,.03,.18,.03,0,0,Math.PI/2);k.p('',lgBlade(.08,.03,.04,.03,.24,.012),'m',steel,0,-1.38,0,1,1,1);k.p('','box','m',W.iron,0,-1.33,0,.065,.18,.05);if(gl)k.p('','box','g',gl,.14,-1.28,0,.035,.035,.034,0,0,.78)}
   else if(type=='flail'){haft(.08,-.28,.032,true);for(let i=0;i<4;i++)k.p('','cyl','c',i%2?W.wrap:W.leather,0,.04-i*.04,0,.037,.03,.037,0,i*.4);k.p('','oct','m',W.iron2,0,-.29,0,.04);
-    for(let i=0;i<5;i++)k.p('','ring','m',W.iron,0,-.34-i*.07,0,.028,.6,.028,0,i%2?Math.PI/2:0,Math.PI/2);
+    for(let i=0;i<8;i++)k.p('','ring','m',W.iron,0,-.325-i*.045,0,.028,.6,.028,0,i%2?Math.PI/2:0,Math.PI/2);// v177: links overlap down to the head (were 5, .07 apart: none touched)
     k.p('',lgLump('flb',.1,.12,4),'m',lgCol(W.iron,col==0x9aa2ae?W.iron:col,.3),0,-.76,0,1,1,1);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2,y=i%2?.05:-.05;k.p('','cone4','m',W.iron2,Math.cos(a)*.1,-.76+y,Math.sin(a)*.1,.022,.09,.022,Math.sin(a)*1.57,0,-Math.cos(a)*1.57)}
     k.p('','cone4','m',W.iron2,0,-.88,0,.022,.09,.022,Math.PI);if(gl)k.p('','ring','g',gl,0,-.76,0,.105,.15,.105)}
@@ -17623,9 +17626,10 @@ function mdOutfit(cls){
     warrior:{col:{torso:0x7e3626,sleeve:null,fore:0x5a3a22,pants:0x4a3a2e,shin:0x4a3a2e,boot:0x3e2a1c,belt:0x3a2618},bare:1,cape:0x6e2018,capeLen:.4,boots:{a:'medium',st:'trail',M:0x4a3020,A:0x6a4a2a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>m.s>.85&&m.y>.8?mdSh(0x7e3626,.8):0x7e3626,lip:.008});mdTS(B,P,.93,1.0,.036,{col:m=>Math.round(m.c*7+m.s*2)%2?0x5a4636:0x4a3a2c,lip:.03,lipT:.012});
         [-1,1].forEach(s=>mdAS(B,P,s,4,5,.012,{col:0x5a3a22}));mdBelt(B,P,.6,0x3a2618,0xa88848)}},
-    paladin:{col:{torso:0x8a8e9a,fore:0x6a6e78,pants:0x5a5a66,shin:0x5a5a66,boot:0x3a2e24,belt:0x4a3424},cape:0xd8ccaa,capeTrim:0xc9a24a,boots:{a:'medium',st:'trail',M:0x3a2e24,A:0x5a4a3a},
+    // v177: the paladin wears a charcoal tabard and an oxblood cape (they were cream: tabard + cross read as a first-aid kit)
+    paladin:{col:{torso:0x8a8e9a,fore:0x6a6e78,pants:0x5a5a66,shin:0x5a5a66,boot:0x3a2e24,belt:0x4a3424},cape:0x4a2a2e,capeTrim:0xb08a3a,boots:{a:'medium',st:'trail',M:0x3a2e24,A:0x5a4a3a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.012,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a,lip:.01});[-1,1].forEach(s=>mdAS(B,P,s,0,5,.01,{col:m=>Math.round(m.y*30)%2?0x8a8e9a:0x7a7e8a}))},
-      extra:(B,P,D)=>{if(!(D.chest&&(D.chest.st=='aegis'||D.chest.st=='blood')))mdTabard(B,P,0xe6dcc0,0xc9a24a,0xc9a24a)}},
+      extra:(B,P,D)=>{if(!(D.chest&&(D.chest.st=='aegis'||D.chest.st=='blood')))mdTabard(B,P,0x3a2a2e,0xb08a3a,0xb08a3a)}},
     assassin:{col:{torso:0x3a2c4a,sleeve:0x2e2438,fore:0x241e2a,hand:0x1e1a22,pants:0x26222c,shin:0x2e2836,boot:0x1e1a20,belt:0x6a3a8a},boots:{a:'light',st:'soft',M:0x1e1a20,A:0x6a3a8a},
       base:(B,P)=>{mdTS(B,P,.5,.99,.01,{col:m=>Math.abs(m.c-m.s*.5)<.1&&m.y>.66?0x241e2a:0x3a2c4a});[-1,1].forEach(s=>{mdAS(B,P,s,0,3,.008,{col:0x2e2438});mdAS(B,P,s,4,6,.008,{col:m=>Math.round(m.y*40)%2?0x241e2a:0x302838})});mdBelt(B,P,.6,0x6a3a8a,0x8a8e96)},
       extra:(B,P,D)=>{const sc=D.chest?mdSh(D.chest.A,.85):0x5a3478;if(!D.helm||mdHelmHair(D.helm)!='none'){mdTS(B,P,.93,1.06,(P.tOff||0)+.024,{col:sc,lipT:.012,lip:.01});mdLoft(B,[{p:[-.06,.97,-.15],rx:.035,f:.01,b:.01,w:[['chest',1]]},{p:[-.09,.78,-.18],rx:.04,f:.01,b:.01,w:[['chest',.4],['cp1',.6]]},{p:[-.1,.62,-.2],rx:.034,f:.01,b:.01,w:[['cp1',1]]}],{seg:4,capA:true,capB:true,col:sc})}}},
@@ -31565,16 +31569,13 @@ var ABX135={p:null,r:0};
 // bridges under the line of sight stay solid). Applied once per material to the world's plain opaque lit materials
 // (default shaders and the town's texture atlas shader only, so terrain, water, wind-swayed plants and den cut-away shaders keep their own), never to the hero,
 // companions, monsters or anything skinned. New scenery (chunks, buildings) is picked up every 2 s.
-var F135={done:new WeakSet(),t:0,min:0,on:true};F135.U={value:F135.min};   // v173: min was .25 (the window never fully cleared)
+var F135={done:new WeakSet(),t:0,min:.25,on:true};F135.U={value:F135.min};
 // v157: the see-through window: fully cut inside R157.x, solid from R157.y (world units at the hero's distance; 3190 shares it with the terrain)
 // v164 (owner: "twice as large, a smoother fade in, it's too abrupt"): was 1.35-2.4 (the middle of the edge at 1.9, a 1 unit edge);
 // now the middle of the edge is at 3.85 and the dithered edge is 3.1 units wide, so walls thin out gradually toward the hero
-// v173 (owner, Abeksi: the whole screen a murky speckle behind houses): same outer size, but clear right up to 4.7 and only a thin
-// speckled ring (4.7-5.4) marks the window's edge; nothing is left inside it (F135.min 0, was .25: a quarter of every wall stayed)
-// v174 (owner: "a bit too large"; with several buildings in front the hero did not show): 3.7-4.3, a fifth smaller
-var R157={value:new THREE.Vector2(3.7,4.3)};
+var R157={value:new THREE.Vector2(2.3,5.4)};
 // v157: scenery closer to the camera than N157.x (and in front of the hero) is cut, solid again from N157.y
-var N157={value:new THREE.Vector2(3.4,4.)},M157={value:1};   // v174: a thinner speckled edge (was 3.4-5)   // M157 0 = the old v135 tube (the intro)
+var N157={value:new THREE.Vector2(3.4,5.)},M157={value:1};   // M157 0 = the old v135 tube (the intro)
 // the fade and the instance clip (2430) only act while the main game view is drawn (FX135ON 1); item icons, portraits and the
 // small 3D previews share these materials but are drawn elsewhere (icons at the world origin), so there they do nothing
 var FX135ON={value:0};
@@ -31584,7 +31585,7 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
   const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
   if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
-  m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;
+  m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;ob176Shader(sh);
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
     #ifdef USE_INSTANCING
     vF135=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;
@@ -31596,22 +31597,23 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
     if(vF135.x<uClip.x||vF135.z<uClip.y||vF135.x>uClip.z||vF135.z>uClip.w)discard;   // v135: nothing of a neighbouring instance (2420)
     if(dot(uPl-uCam,uPl-uCam)>.0001){vec3 ab=uPl-uCam;float t=dot(vF135-uCam,ab)/dot(ab,ab),f;
      if(uM157>.5){   // v157: a round window around the hero on screen (the distance is scaled to the hero's depth), not a tube that filled the screen near the camera
-      float d=length(vF135-(uCam+ab*clamp(t,0.,1.)))/max(t,.02);f=smoothstep(uR157.x,uR157.y,d);float fr=(1.-t)*length(ab);f=mix(f,1.,1.-smoothstep(-.1,.15,fr));f=mix(f,1.,step(t,0.));f=max(f,uF135);   // v175: solid only from the hero's own depth back (v174: .2-.55 in front, which still hid a hero standing at a wall seen at a slant; before: the last 4-16% of the way)
-      float near=t>0.&&fr>1.?smoothstep(uN157.x,uN157.y,length(vF135-uCam)):1.;f=min(f,near);   // what stands right in front of the camera is cut fully (no see-through veil over the screen)
-      if(!gl_FrontFacing&&t>0.&&fr>.15)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
+      // v176 (owner: "no window and just objects to go transparent with dithering"): whatever blocks the view (3361's boxes) is dithered
+      // as a whole object in front of the hero, OB176.k of it left; no window, no cut round the camera
+      f=1.-ob176Bx(vF135)*ob176Fr(vF135,uCam,uPl)*(1.-uObK);
+      if(!gl_FrontFacing&&t>0.&&t<.9)f=0.;   // the inside of a two-sided house the camera stands in (Abeksi) is not drawn
      }else{   // the v135 tube, kept for the intro's Duskhold shots (3081 sets uM157 0 while it plays)
       #ifdef F135_B
-      f=1.;   // v174: plain (unlit) materials joined; the intro keeps its look
+      f=1.;   // v176: plain (unlit) materials joined; the intro keeps its look
       #else
       float tc=clamp(t,0.,1.),d=length(vF135-(uCam+ab*tc));f=smoothstep(.7,2.1,d);f=mix(f,1.,smoothstep(.84,.96,tc));f=max(f,.35);
       #endif
       }
      float kn=smoothstep(-.85,-.55,vF135.y-uPl.y);
-     if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v174: only flat surfaces keep it (walls on lower ground were a solid diagonal band)
-     f=mix(1.,f,kn);   // never below the hero's knees: floors, paving and bridges stay
+     if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v176: below the knees only flat surfaces stay (floors, paving, bridges)
+     f=mix(1.,f,kn);
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v174: windows and plain panes (Abeksi) are cut too
-  m.extensions=Object.assign({},m.extensions,{derivatives:true});   // v174: the knee rule reads the surface's slope (dFdx) on WebGL1 too
+  if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v176: windows and plain panes too
+  m.extensions=Object.assign({},m.extensions,{derivatives:true});m.userData.ob176=1;m.userData.ob176Fl=-.85;   // v176: 3361 scans it
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
@@ -31790,7 +31792,9 @@ function unqWpnKit135(k,it,U){const n0=k.P.length;v89WpnKit(k,it);
   let s=U.key.length*977;const Rr=()=>{s=(s*16807)%2147483647;return s/2147483647};
   pts.sort((a,b)=>b.length()-a.length());const pick=[];for(const q of pts){if(pick.every(o=>o.distanceTo(q)>.09))pick.push(q);if(pick.length>=8)break}
   const n1=k.P.length;pick.forEach((p,i)=>UNQ135_ORN[U.z](k,p,i,Rr));const S=new THREE.Vector3(1.5,1.5,1.5);for(let i=n1;i<k.P.length;i++)k.P[i].m.scale(S);
-  k.p('','oct','g',U.gem,0,-.02,.03,.024)}
+  // the gem sits on the grip; on a bow (the frame is off the hand) on the part nearest the grip (v177: it hung in the air)
+  let gp=[0,-.02,.03];{let bd=1e9,bq=null;for(let i=n0;i<n1;i++){V.setFromMatrixPosition(k.P[i].m);const d=V.length();if(d<bd){bd=d;bq=V.clone()}}if(bq&&bd>.1)gp=[bq.x,bq.y,bq.z+.03]}
+  k.p('','oct','g',U.gem,gp[0],gp[1],gp[2],.024)}
 {const f=v89Kit;v89Kit=function(k,it){const U=unqOf135(it);if(!U)return f.apply(this,arguments);try{if(U.sl=='weapon')return unqWpnKit135(k,it,U);return U.kit(k)}catch(e){console.warn('v135 unique kit',e);return f.apply(this,arguments)}}}
 {const f=v89Key;v89Key=function(it){return f.apply(this,arguments)+(it&&it.u?'|u'+it.u:'')}}
 {const f=v89Wpn;v89Wpn=function(it,type){if(!unqOf135(it))return f.apply(this,arguments);const t=itT(it),g=lgGroup('LW89U|'+it.u+'|'+it.tp,k=>v89WpnKit_u135(k,it),.18);g.userData.wt=type||t.wt;return g}}
@@ -32065,9 +32069,12 @@ function gkVial(k,bn,x,y,z,s,glow,T,w){gkW(k.p(bn,'cyl','g',glow,x,y,z,.011*s,.0
 function gkCandle(k,bn,x,y,z,s,w,fl){gkW(k.p(bn,'cyl','c',0xe8e0c8,x,y,z,.01*s,.035*s,.01*s),w);for(let i=0;i<3;i++){const a=i*2.1;gkW(k.p(bn,'box','c',0xf0e8d4,x+Math.sin(a)*.009*s,y-.006*s-i*.004*s,z+Math.cos(a)*.009*s,.004*s,.016*s,.004*s),w)}
   gkW(k.p(bn,'cyl','c',0x1a1410,x,y+.02*s,z,.0015,.006*s,.0015),w);gkW(k.p(bn,'cone4','g',fl||0xffb040,x,y+.03*s,z,.005*s,.016*s,.005*s),w);return k}
 // chain of links along points (each point [x,y,z]); wf(i) → weights or null
-function gkChain(k,bn,pts,r,col,wf){let n=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]),m=Math.max(1,Math.round(L/(r*2.6)));
-    for(let j=0;j<m;j++){const t=(j+.5)/m,p=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],ry=Math.atan2(b[0]-a[0],b[2]-a[2]),rx=Math.atan2(-(b[1]-a[1]),Math.hypot(b[0]-a[0],b[2]-a[2]));
-      k.p(bn,'ring','m',col,p[0],p[1],p[2],r,r*1.6,r,rx+Math.PI/2,ry,(n++%2)*Math.PI/2);if(wf)gkW(k,wf(p))}}return k}
+function gkChain(k,bn,pts,r,col,wf){let n=0;const n0=k.P.length;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]),m=Math.max(1,Math.round(L/(r*1.8)));// v177: links overlap (they were 2.6 r apart, 2.24 r long: none touched)
+    // v177: each link lies along the chain, every other one turned a quarter round it, so neighbours hook through each other and touch
+    // (the old rotation laid every other link flat across the chain, where it touched nothing)
+    const V=THREE.Vector3,D=new V(b[0]-a[0],b[1]-a[1],b[2]-a[2]).normalize(),qd=new THREE.Quaternion().setFromUnitVectors(new V(0,1,0),D),qr=new THREE.Quaternion().setFromAxisAngle(new V(1,0,0),Math.PI/2);
+    for(let j=0;j<m;j++){const t=(j+.5)/m,p=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],qa=new THREE.Quaternion().setFromAxisAngle(new V(0,1,0),(n++%2)*Math.PI/2),q=qd.clone().multiply(qa).multiply(qr);
+      k.P.push({bn,geo:dkG().ring,t:'m',col,m:new THREE.Matrix4().compose(new V(p[0],p[1],p[2]),q,new V(r,r*1.6,r))});if(wf)gkW(k,wf(p))}}if(typeof gf176Group=='function')gf176Group(k,n0);return k}
 // a rolled scroll with end caps (horizontal along x when ry = 0)
 function gkScroll(k,bn,x,y,z,s,T,ry,w){gkW(k.p(bn,'cyl','c',0xe0d4b4,x,y,z,.012*s,.07*s,.012*s,0,ry||0,Math.PI/2),w);[-1,1].forEach(q=>gkW(k.p(bn,'cyl','m',T,x+q*.037*s*Math.cos(ry||0),y,z-q*.037*s*Math.sin(ry||0),.015*s,.006*s,.015*s,0,ry||0,Math.PI/2),w));
   gkW(k.p(bn,'box','c',0x8a1a1a,x,y,z+.012*s,.008*s,.024*s,.003),w);return k}
@@ -32577,12 +32584,13 @@ function hvExtra(X){const {B,P,d,k}=X,cls=hvCls(),M=d.M,T=d.T,G=d.G,lv=d.lv|0,st
     if(lv>=1)[-1,1].forEach(s=>{const a=s<0?'aL0':'aR0',sp=mdArm(P,s)[1].p;for(let i=0;i<2+Math.min(2,lv>>1);i++)gkSpike(k,a,[sp[0]+s*(.04+i*.024),1.02-i*.012,-.04+i*.035],[s*.55,1,-.05],.05+lv*.008,.011,mdSh(T,.8),'m')});
     gkSkull(k,'spine',0,.6,cf(.6)+.032,.85,mdSh(T,1.05),0,tw(.6),'m');
     if(lv>=3&&st!='warlord'){mdFur(X,.92,1.0,0x3a2e24,12)}}
-  else if(cls=='paladin'){const tab=mdSh(mdMix(0xc8bc98,d.A,.1),.82),gold=lv>=2?0xd8b050:T,cream=0xe0d4b4;
+  else if(cls=='paladin'){const tab=mdMix(0x2a2226,d.A,.12),gold=lv>=2?0xd8b050:T,cream=0xe0d4b4;// v177: a dark tabard (it was cream with a red cross: it read as a first-aid kit)
     // the long holy tabard (front and back panels) with an embroidered border and a sun
     // (v137: a narrow tabard, front and back, with a crimson cross — no longer a skirt round the hips)
-    if(!['aegis','blood'].includes(st)){mdTabardO(X,tab,gold,{lo:.2,wd:.12,top:.6,band:.5});
+    if(!['aegis','blood'].includes(st)){mdTabardO(X,tab,mdSh(gold,.8),{lo:.15,wd:.085,top:.6,band:.5});
+      // a gilded sunburst on it (v177; was a red cross)
       const q=mdTorsoAt(P,.6),zf=(q.z||0)+Math.max(.135,q.f)+((P.tOff||0)+.012)*1.15+.006,wf=mdSkW(P,.6);
-      [[0,.44,.022,.14],[0,.47,.08,.022]].forEach(([x,y,w,h])=>{k.p('pelvis','box','c',0x7a1414,x,y,zf,w,h,.004);mdOW(k,wf(0,y))})}
+      k.p('pelvis','oct','m',gold,0,.44,zf,.016,.02,.004);mdOW(k,wf(0,.44));for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('pelvis','cone4','m',mdSh(gold,.85),Math.sin(a)*.026,.44+Math.cos(a)*.026,zf,.005,.024,.002,0,0,-a);mdOW(k,wf(0,.44))}}
     // purity seals: red wax with parchment strips, on the breast and both shoulders
     const seal=(bn,x,y,z,w,ry)=>{k.p(bn,'cyl','c',0x8a1414,x,y,z,.02,.008,.02,Math.PI/2,ry||0,0);if(w)mdOW(k,w);k.p(bn,'oct','c',0x6a0c0c,x,y,z+.005,.01,.01,.003,0,ry||0,0);if(w)mdOW(k,w);
       [-1,1].forEach(q=>{k.p(bn,'box','c',cream,x+q*.008,y-.05,z-.002,.008,.08,.002,0,ry||0,q*.12);if(w)mdOW(k,w)})};
@@ -34742,7 +34750,7 @@ W137.fl_skulls=(k,c)=>{w7Haft(k,.08,-.28,.032,c.woodD,38);for(let i=0;i<4;i++)k.
 W137.fl_halo=(k,c)=>{const G=0xd8b050;w7Haft(k,.08,-.28,.032,0xe8e0d0,39);w7Bands(k,[.06,-.1,-.26],.037,G);k.p('','oct','m',G,0,-.29,0,.04);
   gkChain(k,'',[[0,-.31,0],[0,-.66,0]],.012,G,null);
   k.p('','ico','m',G,0,-.76,0,.1);for(let i=0;i<12;i++){const a=i/12*Math.PI*2,b=(i%3-1)*.5;k.p('','cone4','m',0xf0e0a0,Math.cos(a)*Math.cos(b)*.1,-.76+Math.sin(b)*.1,Math.sin(a)*Math.cos(b)*.1,.016,.07,.016,Math.sin(a)*1.57-b*Math.cos(a),0,-Math.cos(a)*1.57+b*Math.sin(a))}
-  k.p('','ring','g',c.gl||0xfff0b0,0,-.76,0,.17,.12,.17,.4,0,.2);k.p('','oct','g',0xfff8d0,0,-.76,.1,.02)};
+  k.p('','ring','g',c.gl||0xfff0b0,0,-.76,0,.145,.12,.145,.4,0,.2);k.p('','oct','g',0xfff8d0,0,-.76,.1,.02)};
 // ---------------- daggers (grip .06…-.06, blade to ≈ -.47) ----------------
 W137.dg_rat=(k,c)=>{k.p('','cyl','c',0x6a5a48,0,0,0,.022,.13,.022);for(let i=0;i<5;i++)k.p('','cyl','c',i%2?0x8a7a60:0x5a4a38,0,.05-i*.025,0,.026,.014,.026,0,i*.6);k.p('','cone4','c',0xe8e0c8,0,.09,0,.01,.04,.01);
   const P=[[-.025,-.07],[.028,-.07],[.03,-.2],[.022,-.3],[.026,-.34],[.006,-.46],[-.02,-.36],[-.024,-.2]];w7Blade(k,'dgr',P,.012,0x5a544c,0x8a847a,0,0,0,0,.008);
@@ -47282,14 +47290,13 @@ var CAM157={step:.55,on:true};
 // the ground's material: steep or high terrain pixels inside the window are cut (uses vC135, the world position 2430 adds)
 function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;const ob=m.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==THREE.Material.prototype.onBeforeCompile)ob.call(m,sh,rn);
-    sh.uniforms.uCam157=FADE.cam;sh.uniforms.uPl157=FADE.pl;sh.uniforms.uR157=R157;sh.uniforms.uOn157=CAM157U;
+    sh.uniforms.uCam157=FADE.cam;sh.uniforms.uPl157=FADE.pl;sh.uniforms.uR157=R157;sh.uniforms.uOn157=CAM157U;ob176Shader(sh);
     if(sh.fragmentShader.indexOf('varying vec3 vC135')<0){console.warn('v157: terrain has no vC135');return}
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam157,uPl157;uniform vec2 uR157;uniform float uOn157;').replace('void main() {',`void main() {
     if(uOn135>.5&&uOn157>.5){vec3 ab=uPl157-uCam157;float t=dot(vC135-uCam157,ab)/dot(ab,ab);
-     float fr=(1.-t)*length(ab);if(t>.0&&fr>.15){float d=length(vC135-(uCam157+ab*t))/max(t,.02);float f=smoothstep(uR157.x,uR157.y,d);
+     if(t>.0){float f=1.-uObT*ob176Fr(vC135,uCam157,uPl157)*(1.-uObK);   // v176: no window: the whole ground in front of the hero is dithered while it blocks the view (3361)
       vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
       f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      f=mix(f,1.,1.-smoothstep(.2,.55,fr));   // v174: solid only right at the hero (was the last 5-14% of the way)
       float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
   const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
 var CAM157U={value:1};
@@ -54841,28 +54848,618 @@ function dt168Candle(k,x,y,z,h,col){h=h||.22;col=col||0xd0c4a2;const r=.034;dt16
 //   * inside the rock (below the ground there) within CAM172.r2 of the void: the rim's wall at the edge of the map. Deeper inside
 //     the map (a cave's wall) the camera may stand in the rock as before.
 // Duskhold (no instance) uses the same rule: the island's edge is void too.
-var CAM172={on:true,vt:-6,r1:1.2,r2:8,min:2,step:.35,st:{d:0,cut:0}};
+var CAM172={on:true,vt:-6,r1:1.2,r2:8,min:2,minAb:1.2,step:.35,ab:.35,why:'',st:{d:0,cut:0}};   // minAb: a house can come closer (over the shoulder) than the map's edge
 const CAM172A=[0,1,2,3,4,5,6,7].map(i=>[Math.sin(i*Math.PI/4),Math.cos(i*Math.PI/4)]);
 function cam172Void(x,z,r){if(GH(x,z)<CAM172.vt)return true;for(const [a,b] of CAM172A)if(GH(x+a*r,z+b*r)<CAM172.vt)return true;return false}
+// v176 (owner: "with the buildings in the Abeksi city just have them behave like the edge of the map and have the camera get
+// closer to the character"): inside an Abeksi building (its box from the plan, as 3152 builds it, roof included) counts as out of
+// the map too, so the camera slides in instead of going behind a house
+function cam172Ab(x,y,z,I){if(!I||I.g!==30||typeof ab152Plan!='function')return false;const P=ab152Plan(),u=x-I.x0+.5,v=z-I.y0+.5,m=CAM172.ab;
+  for(const B of P.B){if(u>B[0]-m&&u<B[2]+m&&v>B[1]-m&&v<B[3]+m){const s=B[4],st=B[5],H=st=='tower'?2.3*s+.8:st=='hall'?3.4:st=='barn'?3:st=='ruin'?3:2.3*s;if(y<1.6+H+1.2)return true}}
+  return false}
 function cam172Ok(x,y,z,I){
   if(I&&(x<I.x0+.5||z<I.y0+.5||x>I.x0+I.w-.5||z>I.y0+I.h-.5))return false;
+  CAM172.why='';if(cam172Ab(x,y,z,I)){CAM172.why='ab';return false}
   if(cam172Void(x,z,CAM172.r1))return false;
   if(y<GH(x,z)-.05){for(const r of [3,5.5,CAM172.r2])if(cam172Void(x,z,r))return false}
   return true}
 // how far back the camera may go along its line from the hero's chest (P = the hero's feet), at most d
 function cam172Reach(P,yaw,pitch,d){if(!CAM172.on)return d;let I=null;try{const k=cvKey();I=k>=0?INSL[k]:null}catch(_){}
   const ox=Math.sin(yaw)*Math.cos(pitch),oy=Math.sin(pitch),oz=Math.cos(yaw)*Math.cos(pitch),y0=P.y+1.1;
-  for(let s=1;s<=d+.6;s+=CAM172.step){if(!cam172Ok(P.x+ox*s,y0+oy*s,P.z+oz*s,I)){const r=Math.max(CAM172.min,Math.min(d,s-.7));CAM172.st.d=r;CAM172.st.cut++;return r}}
+  for(let s=1;s<=d+.6;s+=CAM172.step){if(!cam172Ok(P.x+ox*s,y0+oy*s,P.z+oz*s,I)){const r=Math.min(d,Math.max(CAM172.why=='ab'?CAM172.minAb:CAM172.min,s-.7));CAM172.st.d=r;CAM172.st.cut++;return r}}
   CAM172.st.d=d;return d}
 // the camera itself trails its target (0104 lerps it there over a few frames): while it catches up (turning toward an edge, zooming
 // out) it must not pass the edge either, so its actual spot is held inside the map too (no lag here)
 const CAM172V=new THREE.Vector3();
 function cam172Hold(P,c){if(!CAM172.on)return;let I=null;try{const k=cvKey();I=k>=0?INSL[k]:null}catch(_){}
-  const y0=P.y+1.1,d=CAM172V.set(c.x-P.x,c.y-y0,c.z-P.z),L=d.length();if(L<CAM172.min)return;d.multiplyScalar(1/L);
-  for(let s=1;s<=L;s+=CAM172.step)if(!cam172Ok(P.x+d.x*s,y0+d.y*s,P.z+d.z*s,I)){const r=Math.max(CAM172.min,Math.min(L,s-.7));c.set(P.x+d.x*r,y0+d.y*r,P.z+d.z*r);CAM172.st.hold=(CAM172.st.hold||0)+1;return}}
+  const y0=P.y+1.1,d=CAM172V.set(c.x-P.x,c.y-y0,c.z-P.z),L=d.length();if(L<CAM172.minAb)return;d.multiplyScalar(1/L);
+  for(let s=1;s<=L;s+=CAM172.step)if(!cam172Ok(P.x+d.x*s,y0+d.y*s,P.z+d.z*s,I)){const r=Math.min(L,Math.max(CAM172.why=='ab'?CAM172.minAb:CAM172.min,s-.7));c.set(P.x+d.x*r,y0+d.y*r,P.z+d.z*r);CAM172.st.hold=(CAM172.st.hold||0)+1;return}}
 // and once more right before the main view is drawn: anything that moved the camera after the main loop's update (an arrival
 // snap, a shake) is held inside the map too (seen on a fast machine: the camera left in the rim's rock past the edge)
 {const f=POST.render;POST.render=function(){try{if(CAM172.on&&!(typeof IC151!='undefined'&&IC151.on)&&typeof pl!='undefined'&&pl){const x=cam.position.x,y=cam.position.y,z=cam.position.z;
     cam172Hold(pl.position,cam.position);if(cam.position.x!==x||cam.position.y!==y||cam.position.z!==z){cam.lookAt(look);cam.updateMatrixWorld();FADE.cam.value.copy(cam.position)}}}catch(_){}
   return f.apply(this,arguments)}}
+// ================= v176: whatever blocks the view turns see-through as a whole object, dithered (no window) =================
+// Owner (Oct 29 2026): "I want no window and just objects to go transparent with dithering" (and the camera closing in at the map's
+// edge and in front of Abeksi's buildings: 3360). Replaces v157/v164's round window round the hero (2420 scenery, 3190 ground) and
+// the plants' tube (0060): ~11 times a second ob176Scan casts five rays from the camera to the hero (chest, head, knees, both
+// shoulders) against the see-through-capable meshes drawn last frame, and each object a ray meets becomes a box in the shaders
+// (uObBm/uObBM, weight uObBw, up to OB176N): every pixel of it in front of the hero is dithered away to OB176.k (the share left,
+// screen-door, the old dither pattern). "The object": a plain mesh's largest object-sized group (a house = walls + roof), one tree
+// or rock of an instanced set, or the joined piece of a big merged mesh (ob176Acc). The ground has one switch (uObT): when it
+// blocks the view (or the camera is in it) every steep wall of ground in front of the hero is dithered. Boxes fade in and out over
+// OB176.fade s. Floors under the line of sight stay (flat surfaces below the hero's knees, as before).
+var OB176U0=[0,1,2,3,4,5,6,7];
+var OB176={box:[],seen:[],t:0,last:0,under:false,bt:0,fade:.18,big:12,st:{scans:0,ms:0,hits:0,boxes:0},rc:new THREE.Raycaster(),acc:new WeakMap(),err:0};
+OB176.on=true;OB176.k=.35;OB176.U={uObBm:{value:OB176U0.map(()=>new THREE.Vector3())},uObBM:{value:OB176U0.map(()=>new THREE.Vector3())},uObBw:{value:[0,0,0,0,0,0,0,0]},uObT:{value:0},uObK:{value:.35}};
+// GLSL: box weight (soft .3 edge), in front of the hero (from 15 cm in front of the chest), the share kept
+OB176.HEAD=`uniform vec3 uObBm[8],uObBM[8];uniform float uObBw[8],uObT,uObK;
+float ob176Bx(vec3 p){float w=0.;for(int i=0;i<8;i++){if(uObBw[i]>0.){vec3 q=max(uObBm[i]-p,p-uObBM[i]);w=max(w,uObBw[i]*(1.-smoothstep(0.,.3,max(q.x,max(q.y,q.z)))));}}return w;}
+float ob176Fr(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;return smoothstep(-.1,.15,(1.-t)*sqrt(L2));}
+`;
+// give a patched material the uniforms and the GLSL helpers (call inside its onBeforeCompile, before its main is replaced)
+function ob176Shader(sh){for(const k in OB176.U)sh.uniforms[k]=OB176.U[k];sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+OB176.HEAD)}
+// the meshes drawn in the main view whose material can be dithered (userData.ob176); the next scan tests these
+{const ob=THREE.Mesh.prototype.onBeforeRender;THREE.Mesh.prototype.onBeforeRender=function(){if(OB176.live){const M=this.material;let g=false;
+    if(Array.isArray(M)){for(const m of M)if(m&&m.userData.ob176){g=true;break}}else g=!!(M&&M.userData.ob176);
+    if(g&&!this.isSkinnedMesh&&this.userData.ob176F!==OB176.f){this.userData.ob176F=OB176.f;const m0=Array.isArray(M)?M[0]:M;OB176.seen.push(this,m0&&m0.userData.ob176Fl!=null?m0.userData.ob176Fl:null)}}
+  if(ob!==THREE.Object3D.prototype.onBeforeRender)return ob.apply(this,arguments)}}
+{const f=POST.render;POST.render=function(){const io=typeof IC151!='undefined'&&IC151.on;OB176.f=(OB176.f||0)+1;
+  try{if(!io)ob176Tick()}catch(e){if(!OB176.err2){OB176.err2=1;console.warn('v176 tick',e)}}
+  OB176.U.uObK.value=OB176.k;OB176.seen.length=0;OB176.live=!io;try{return f.apply(this,arguments)}finally{OB176.live=false}}}
+var OB176N=8;
+function ob176Ground(x,z){return GH(x,z)}
+const OB176V=[0,1,2,3,4].map(()=>new THREE.Vector3()),OB176D=new THREE.Vector3(),OB176S=new THREE.Vector3(),OB176M=new THREE.Matrix4(),OB176B=new THREE.Box3();
+function ob176Scan(){const B=OB176,C=FADE.cam.value,H=FADE.pl.value,t0=performance.now();B.st.scans++;
+  for(const b of B.box)b.on=0;
+  if(!OB176.on||(typeof IC151!='undefined'&&IC151.on)){B.bt=0;B.under=false;return}
+  const T=OB176V,ab=OB176D.copy(H).sub(C);if(ab.lengthSq()<1e-4){B.bt=0;return}
+  const sd=OB176S.set(ab.z,0,-ab.x);if(sd.lengthSq()>1e-6)sd.normalize();
+  T[0].copy(H);T[1].copy(H).y+=.6;T[2].copy(H).y-=.75;T[3].copy(H).addScaledVector(sd,.38);T[4].copy(H).addScaledVector(sd,-.38);
+  // the ground: inside it, or does it rise above any of the rays?
+  let bt=false;B.under=C.y<ob176Ground(C.x,C.z)-.05;if(B.under)bt=true;
+  for(let i=0;i<5&&!bt;i++){const P=T[i],L=C.distanceTo(P);for(let s=.5;s<L-.4;s+=.4){const f=s/L,x=C.x+(P.x-C.x)*f,y=C.y+(P.y-C.y)*f,z=C.z+(P.z-C.z)*f;if(ob176Ground(x,z)>y+.02){bt=true;break}}}
+  B.bt=bt?1:0;
+  // what was drawn: objects the rays meet
+  const S=B.seen,done=new Set();let hits=0;
+  for(let i=0;i<S.length;i+=2){const o=S[i];if(done.has(o))continue;done.add(o);
+    const s=ob176Sphere(o,OB176Ts);if(!s)continue;if(S[i+1]!=null&&s.top<H.y+S[i+1])continue;
+    // broad: the ball against the segment from the camera to the hero
+    const L2=ab.lengthSq(),u=Math.max(0,Math.min(1,OB176Tw.copy(s.c).sub(C).dot(ab)/L2)),dx=C.x+ab.x*u-s.c.x,dy=C.y+ab.y*u-s.c.y,dz=C.z+ab.z*u-s.c.z;
+    if(dx*dx+dy*dy+dz*dz>(s.r+.9)*(s.r+.9))continue;
+    for(let j=0;j<5;j++){const k=ob176Ray(o,C,T[j]);if(k){hits++;break}}}
+  B.st.hits=hits;B.st.ms=+(performance.now()-t0).toFixed(2)}
+// one ray from the camera to a point on the hero against one object; on a hit its box is switched on (ob176Box). Stops .45 short
+// of the hero (their own gear, held weapons are not scenery) and starts .2 past the lens.
+function ob176Ray(o,C,P){const B=OB176,g=o.geometry;if(!g||!g.attributes.position)return false;
+  const L=C.distanceTo(P);if(L<.8)return false;
+  if(o.isInstancedMesh){const rc=B.rc;rc.set(C,OB176Tv.copy(P).sub(C).normalize());rc.near=.2;rc.far=L-.45;rc.camera=cam;let I=[];
+    try{I=rc.intersectObject(o,false)}catch(_){I=[]}
+    if(!I.length||I[0].instanceId==null)return false;const id=I[0].instanceId;
+    if(!g.boundingBox)g.computeBoundingBox();o.getMatrixAt(id,OB176M);OB176M.premultiply(o.matrixWorld);
+    OB176B.copy(g.boundingBox).applyMatrix4(OB176M);ob176Box(o.uuid+':'+id,OB176B);return true}
+  const nT=(g.index?g.index.count:g.attributes.position.count)/3;
+  if(nT<=3000){const rc=B.rc;rc.set(C,OB176Tv.copy(P).sub(C).normalize());rc.near=.2;rc.far=L-.45;rc.camera=cam;let I=[];
+    try{I=rc.intersectObject(o,false)}catch(_){I=[]}
+    if(!I.length)return false;const ob=ob176Whole(o);ob176Box(ob.k,ob.b);return true}
+  // a big merged mesh: the piece the ray meets
+  const A=ob176Acc(g);if(!A)return false;const inv=OB176M.copy(o.matrixWorld).invert();
+  const a=OB176A0.copy(C).applyMatrix4(inv),e=OB176A1.copy(P).addScaledVector(OB176Tv.copy(C).sub(P).normalize(),.45).applyMatrix4(inv);
+  const tri=ob176AccRay(A,a,e);if(tri<0)return false;
+  const grp=A.tg[tri],bx=A.gb.subarray(grp*6,grp*6+6);OB176B.min.set(bx[0],bx[1],bx[2]);OB176B.max.set(bx[3],bx[4],bx[5]);OB176B.applyMatrix4(o.matrixWorld);
+  ob176Box(o.uuid+'#'+grp,OB176B);return true}
+const OB176A0=new THREE.Vector3(),OB176A1=new THREE.Vector3();
+// the whole object a plain mesh belongs to: climb its parents while the group stays object-sized (static scenery: cached by spot)
+function ob176Whole(o){const u=o.userData,me=o.matrixWorld.elements,f=me[12]*7.1+me[13]*3.3+me[14];if(u.ob176W&&u.ob176W.f===f)return u.ob176W;
+  let best=o,bb=ob176OBox(o,new THREE.Box3(),1e9),a=o;
+  while(a.parent&&a.parent!==scene&&!a.parent.isScene){const p=a.parent,b=ob176OBox(p,new THREE.Box3(),OB176.big);if(!b)break;best=p;bb=b;a=p}
+  return u.ob176W={k:best.uuid,b:bb,f}}
+// a group's box from its meshes' bounding boxes (null as soon as it grows past lim across)
+const OB176Q=new THREE.Box3();
+function ob176OBox(r,out,lim){out.makeEmpty();let ok=true;
+  r.traverse(q=>{if(!ok||!q.isMesh||!q.visible)return;const g=q.geometry;if(!g||!g.attributes||!g.attributes.position)return;if(!g.boundingBox)g.computeBoundingBox();
+    OB176Q.copy(g.boundingBox).applyMatrix4(q.matrixWorld);out.union(OB176Q);
+    if(out.max.x-out.min.x>lim||out.max.z-out.min.z>lim||out.max.y-out.min.y>lim*1.6)ok=false});
+  return ok&&!out.isEmpty()?out:null}
+// switch a box on (a new one takes a free slot, or the faintest one that is off)
+function ob176Box(k,b){const B=OB176;let x=B.box.find(q=>q.k===k);
+  if(!x){if(B.box.length<OB176N)B.box.push(x={k,mn:new THREE.Vector3(),mx:new THREE.Vector3(),w:0,on:0});
+    else{let lo=null;for(const q of B.box)if(!q.on&&(!lo||q.w<lo.w))lo=q;if(!lo)return;x=lo;x.k=k;x.w=0}}
+  x.mn.copy(b.min);x.mx.copy(b.max);x.on=1}
+// each frame (POST.render, 3350): a scan now and then, the fades, the uniforms
+function ob176Tick(){const B=OB176,U=OB176.U,now=performance.now(),dt=Math.min(.1,Math.max(0,(now-(B.last||now))/1000));B.last=now;
+  if(now-B.t>90){B.t=now;try{ob176Scan()}catch(e){if(!B.err){B.err=1;console.warn('v171 scan',e)}}}
+  const k=dt/B.fade;U.uObT.value=Math.max(0,Math.min(1,U.uObT.value+(B.bt?k:-k)));if(B.under)U.uObT.value=1;
+  for(const b of B.box)b.w=Math.max(0,Math.min(1,b.w+(b.on?k:-k)));
+  B.box=B.box.filter(b=>b.w>0||b.on);B.st.boxes=B.box.length;
+  for(let i=0;i<OB176N;i++){const b=B.box[i];if(b){U.uObBm.value[i].copy(b.mn);U.uObBM.value[i].copy(b.mx);U.uObBw.value[i]=b.w}else U.uObBw.value[i]=0}}
+// ---- big merged meshes: the pieces (triangles joined by shared corners, then pieces whose boxes touch) and a grid of triangles ----
+// A: {p positions, ix corner index or null, tg triangle -> group, gb group boxes (6 per group, local), cells, cs cell size, o origin,
+// n grid size}. Built once per geometry, the first time a ray reaches it.
+function ob176Acc(g){let A=OB176.acc.get(g);if(A!==undefined)return A;const t0=performance.now();
+  try{A=ob176AccBuild(g)}catch(e){console.warn('v171 pieces',e);A=null}
+  OB176.acc.set(g,A);if(A)A.ms=+(performance.now()-t0).toFixed(1);return A}
+function ob176AccBuild(g){const P=g.attributes.position.array,ix=g.index?g.index.array:null,nT=(ix?ix.length:P.length/3)/3,nV=P.length/3;
+  const vi=(t,c)=>ix?ix[t*3+c]:t*3+c;
+  // corners at the same spot are one corner
+  const par=new Int32Array(nV);for(let i=0;i<nV;i++)par[i]=i;
+  const fd=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i},un=(a,b)=>{a=fd(a);b=fd(b);if(a!==b)par[a]=b};
+  const wm=new Map();for(let i=0;i<nV;i++){const k=Math.round(P[i*3]*100)*73856093^Math.round(P[i*3+1]*100)*19349663^Math.round(P[i*3+2]*100)*83492791,q=wm.get(k);if(q===undefined)wm.set(k,i);else un(i,q)}
+  for(let t=0;t<nT;t++){un(vi(t,0),vi(t,1));un(vi(t,1),vi(t,2))}
+  // pieces and their boxes
+  const pid=new Map(),pb=[];const tp=new Int32Array(nT);
+  for(let t=0;t<nT;t++){const r=fd(vi(t,0));let k=pid.get(r);if(k===undefined){k=pb.length/6;pid.set(r,k);pb.push(1e9,1e9,1e9,-1e9,-1e9,-1e9)}tp[t]=k;
+    for(let c=0;c<3;c++){const v=vi(t,c)*3;for(let a=0;a<3;a++){const x=P[v+a];if(x<pb[k*6+a])pb[k*6+a]=x;if(x>pb[k*6+3+a])pb[k*6+3+a]=x}}}
+  const nP=pb.length/6,gp=new Int32Array(nP);for(let i=0;i<nP;i++)gp[i]=i;
+  const gf=i=>{while(gp[i]!==i){gp[i]=gp[gp[i]];i=gp[i]}return i};
+  // pieces whose boxes touch (within .2) join, as long as the joined box stays object-sized
+  const gbx=pb.slice(),big=OB176.big,cs0=4,hm=new Map();
+  for(let k=0;k<nP;k++){const b=pb.slice(k*6,k*6+6);if(Math.max(b[3]-b[0],b[5]-b[2])>big)continue;
+    for(let x=Math.floor(b[0]/cs0);x<=Math.floor(b[3]/cs0);x++)for(let z=Math.floor(b[2]/cs0);z<=Math.floor(b[5]/cs0);z++){const h=x*92821+z;let l=hm.get(h);if(!l)hm.set(h,l=[]);
+      for(const j of l){const a=gf(k),c=gf(j);if(a===c)continue;const A=gbx.slice(a*6,a*6+6),Cb=gbx.slice(c*6,c*6+6);
+        if(A[0]>Cb[3]+.2||Cb[0]>A[3]+.2||A[1]>Cb[4]+.2||Cb[1]>A[4]+.2||A[2]>Cb[5]+.2||Cb[2]>A[5]+.2)continue;
+        const U=[Math.min(A[0],Cb[0]),Math.min(A[1],Cb[1]),Math.min(A[2],Cb[2]),Math.max(A[3],Cb[3]),Math.max(A[4],Cb[4]),Math.max(A[5],Cb[5])];
+        if(Math.max(U[3]-U[0],U[5]-U[2])>big||U[4]-U[1]>big*1.6)continue;
+        gp[a]=c;for(let q=0;q<6;q++)gbx[c*6+q]=U[q]}
+      l.push(k)}}
+  const gid=new Map(),gb=[],tg=new Int32Array(nT);
+  for(let t=0;t<nT;t++){const r=gf(tp[t]);let k=gid.get(r);if(k===undefined){k=gb.length/6;gid.set(r,k);for(let q=0;q<6;q++)gb.push(gbx[r*6+q])}tg[t]=k}
+  // a grid of triangles for the rays
+  if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox,ex=Math.max(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z),cs=Math.max(1.5,ex/48),n=Math.ceil(ex/cs)+1;
+  const cells=new Map(),o=[bb.min.x,bb.min.y,bb.min.z],ci=(a,i)=>Math.max(0,Math.min(n-1,Math.floor((a-o[i])/cs)));
+  for(let t=0;t<nT;t++){let a0=1e9,a1=1e9,a2=1e9,b0=-1e9,b1=-1e9,b2=-1e9;for(let c=0;c<3;c++){const v=vi(t,c)*3;a0=Math.min(a0,P[v]);b0=Math.max(b0,P[v]);a1=Math.min(a1,P[v+1]);b1=Math.max(b1,P[v+1]);a2=Math.min(a2,P[v+2]);b2=Math.max(b2,P[v+2])}
+    for(let x=ci(a0,0);x<=ci(b0,0);x++)for(let y=ci(a1,1);y<=ci(b1,1);y++)for(let z=ci(a2,2);z<=ci(b2,2);z++){const h=(x*n+y)*n+z;let l=cells.get(h);if(!l)cells.set(h,l=[]);l.push(t)}}
+  return {P,ix,tg,gb:new Float32Array(gb),cells,cs,o,n,stamp:new Uint32Array(nT),sv:0,nT,nG:gb.length/6}}
+// the first triangle the segment a->e meets (local space), walking the grid's cells in order; -1 for none
+function ob176AccRay(A,a,e){const P=A.P,ix=A.ix,cs=A.cs,o=A.o,n=A.n;A.sv++;const st=A.stamp,sv=A.sv;
+  const d=[e.x-a.x,e.y-a.y,e.z-a.z],L=Math.hypot(d[0],d[1],d[2]);if(L<1e-4)return -1;
+  const steps=Math.ceil(L/(cs*.5))+1,seen=new Set();
+  for(let i=0;i<=steps;i++){const f=i/steps,x=Math.floor((a.x+d[0]*f-o[0])/cs),y=Math.floor((a.y+d[1]*f-o[1])/cs),z=Math.floor((a.z+d[2]*f-o[2])/cs);
+    if(x<0||y<0||z<0||x>=n||y>=n||z>=n)continue;
+    // the cell and its neighbours along the way (a thin ray can cross a cell corner between samples)
+    for(let qx=x-1;qx<=x+1;qx++)for(let qy=y-1;qy<=y+1;qy++)for(let qz=z-1;qz<=z+1;qz++){if(qx<0||qy<0||qz<0||qx>=n||qy>=n||qz>=n)continue;const h=(qx*n+qy)*n+qz;if(seen.has(h))continue;seen.add(h);
+      const l=A.cells.get(h);if(!l)continue;
+      for(const t of l){if(st[t]===sv)continue;st[t]=sv;
+        const i0=(ix?ix[t*3]:t*3)*3,i1=(ix?ix[t*3+1]:t*3+1)*3,i2=(ix?ix[t*3+2]:t*3+2)*3;
+        if(ob176Tri(a,d,P,i0,i1,i2))return t}}}
+  return -1}
+// does the segment a + d*u (0 < u < 1) cross the triangle? (Moller-Trumbore, both sides)
+function ob176Tri(a,d,P,i0,i1,i2){const e1x=P[i1]-P[i0],e1y=P[i1+1]-P[i0+1],e1z=P[i1+2]-P[i0+2],e2x=P[i2]-P[i0],e2y=P[i2+1]-P[i0+1],e2z=P[i2+2]-P[i0+2];
+  const px=d[1]*e2z-d[2]*e2y,py=d[2]*e2x-d[0]*e2z,pz=d[0]*e2y-d[1]*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-9)return false;
+  const iv=1/det,tx=a.x-P[i0],ty=a.y-P[i0+1],tz=a.z-P[i0+2],u=(tx*px+ty*py+tz*pz)*iv;if(u<0||u>1)return false;
+  const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,v=(d[0]*qx+d[1]*qy+d[2]*qz)*iv;if(v<0||u+v>1)return false;
+  const w=(e2x*qx+e2y*qy+e2z*qz)*iv;return w>0&&w<1}
+
+const OB176Ts={c:new THREE.Vector3(),r:0},OB176Tv=new THREE.Vector3(),OB176Tw=new THREE.Vector3();
+// the mesh's bounds in the world (instanced meshes: all instances, cached; top = the highest instance's top, local y)
+function ob176Sphere(o,out){const g=o.geometry;if(!g)return null;
+  if(o.isInstancedMesh){let s=o.userData.ob176S;
+    if(!s||s.n!==o.count){if(!g.boundingSphere)g.computeBoundingSphere();const a=o.instanceMatrix.array,n=o.count,c=new THREE.Vector3(),m=new THREE.Matrix4(),p=new THREE.Vector3();
+      for(let i=0;i<n;i++){c.x+=a[i*16+12];c.y+=a[i*16+13];c.z+=a[i*16+14]}if(n)c.multiplyScalar(1/n);let r=0,top=-1e9;
+      for(let i=0;i<n;i++){m.fromArray(a,i*16);p.copy(g.boundingSphere.center).applyMatrix4(m);const ri=g.boundingSphere.radius*m.getMaxScaleOnAxis();r=Math.max(r,p.distanceTo(c)+ri);top=Math.max(top,p.y+ri)}
+      s=o.userData.ob176S={n,c,r,top}}
+    out.c.copy(s.c).applyMatrix4(o.matrixWorld);const k=o.matrixWorld.getMaxScaleOnAxis();out.r=s.r*k;out.top=out.c.y+(s.top-s.c.y)*k;return out}
+  if(!g.boundingSphere)g.computeBoundingSphere();out.c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);out.r=g.boundingSphere.radius*o.matrixWorld.getMaxScaleOnAxis();out.top=out.c.y+out.r;return out}
+// ================= v177: dark-fantasy colour grade for heroes' gear =================
+// Owner (Oct 30 2026): "keep them looking non-cartoony (this is a dark fantasy game)". The armour and weapon palettes had grown
+// bright and toy-like (grass-green robes, royal and sky blue plate, cream tabards, white panels). Every colour a hero's gear is
+// built with now goes through gl176Col while it is built:
+//  * cloth / leather (c): less saturated, no near-white (whites become aged bone or linen), pulled a little towards soot and umber;
+//    coarse weathering patches (a few percent lighter / darker per 6 cm cell) so big panels are not one flat colour.
+//  * metal (m): steel loses most of its tint and gets darker; gold and bronze become antique (deeper, less yellow).
+//  * glow (g) keeps its colour: runes, gems and rarity glows stay the bright accents.
+// Higher tiers keep a little more of their colour (richer dyes, cleaner metal); tier I gear is the grimiest.
+// What is graded: everything built inside a hero model or an armour picture (mdHeroB / mdItemKit) except the animal itself
+// (head, paws, tail, toes, and in the body shell the fur colours), and every weapon / shield kit (v89WpnKit, uniques).
+var GL176={on:0,body:0,ti:0,fur:null,cache:new Map(),
+  // grade strength: 1 = the full grade; tests can set 0 to compare
+  k:1};
+function gl176Col(hex,t,ti,cx,cy,cz){if(t=='g'||!GL176.k)return hex;const key=hex*8+(t=='m'?4:0)+(ti|0);let o=GL176.cache.get(key);
+  if(o==null){const C=new THREE.Color(hex),h={};C.getHSL(h);const tf=Math.max(0,Math.min(4,ti|0))/4;let s=h.s,l=h.l,gr=0;
+    if(t=='m'){const warm=h.h>.04&&h.h<.17&&s>.3;
+      if(warm){s*=.5+.12*tf;l=Math.min(l*.78,.46)}             // antique gold / bronze / copper
+      else{s*=.22+.12*tf;l=Math.min(.05+l*.74,.52)}            // steel and iron: cold, dark, little tint
+      gr=.1-.06*tf}
+    else{s*=.42+.14*tf;if(s>.36)s=.36;l=.04+l*.8;if(l>.44)l=.44+(l-.44)*.35;gr=.16-.1*tf}
+    C.setHSL(h.h,s,l);if(gr>0)C.lerp(GL176.grime||(GL176.grime=new THREE.Color(0x2e2620)),gr);o=C.getHex();GL176.cache.set(key,o)}
+  if(t=='m'||cx==null)return o;
+  // weathering: one value per coarse cell
+  const q=((Math.floor(cx*16)*73856093)^(Math.floor(cy*16)*19349663)^(Math.floor(cz*16)*83492791))>>>0,f=1+(((q%1000)/1000)-.5)*.09;
+  return mdSh(o,f)}
+// the animal's own colours (fur, pads, nose, eyes) are never graded, wherever they are built
+function gl176Fur(L){const S=new Set();try{if(BR.on&&BR.C)for(const k in BR.C){const v=BR.C[k];if(typeof v=='number')S.add(v)}if(L&&L.skin!=null)S.add(mdC(L.skin));if(L&&L.eye!=null)S.add(mdC(L.eye))}catch(e){}return S}
+{const f=mdTri;mdTri=function(B,t,a,b,c,col){if(GL176.on>0&&!GL176.body&&!(GL176.fur&&GL176.fur.has(col)))col=gl176Col(col,t,GL176.ti,(a.x+b.x+c.x)/3,(a.y+b.y+c.y)/3,(a.z+b.z+c.z)/3);return f.call(this,B,t,a,b,c,col)}}
+// builders that make the animal itself: nothing in them is graded
+['mdHead','brPaws','brTail','brToes','brShoulders'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(){GL176.body++;try{return f.apply(this,arguments)}finally{GL176.body--}}});
+// the tier of the piece being built (armour builders get their descriptor)
+['mdHelm','mdChest','mdBoots'].forEach(n=>{const f=window[n];window[n]=function(B,P,d){const o=GL176.ti;GL176.ti=d&&d.ti!=null?d.ti|0:o;try{return f.apply(this,arguments)}finally{GL176.ti=o}}});
+{const f=mdHeroB;mdHeroB=function(cls,L){const o={on:GL176.on,fur:GL176.fur,ti:GL176.ti};GL176.on++;GL176.ti=0;
+  // the fur set is read inside the race wrapper (BR is set there): mdBody is the first builder, so take it there
+  try{return f.apply(this,arguments)}finally{Object.assign(GL176,o)}}}
+{const f=mdBody;mdBody=function(B,P){if(GL176.on)GL176.fur=gl176Fur(P&&P.look);return f.apply(this,arguments)}}
+// late builds (hoods, motifs) keep the tier of the piece that queued them
+{const f=gkLater;gkLater=function(B,fn){const ti=GL176.ti;return f.call(this,B,function(){const o=GL176.ti;GL176.ti=ti;try{return fn.apply(this,arguments)}finally{GL176.ti=o}})}}
+{const f=mdItemKit;mdItemKit=function(k,it){const o={on:GL176.on,ti:GL176.ti,fur:GL176.fur};GL176.on++;try{GL176.ti=itT(it).t|0}catch(e){}try{return f.apply(this,arguments)}finally{Object.assign(GL176,o)}}}
+// weapon and shield kits: grade the parts the outermost builder added
+var GL176_KD=0;
+function gl176Kit(k,n0,ti){for(let i=n0;i<k.P.length;i++){const p=k.P[i];if(p.gl176)continue;p.gl176=1;if(p.t=='g')continue;p.col=gl176Col(mdC(p.col),p.t=='m'?'m':'c',ti)}}
+['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const n0=k.P.length;GL176_KD++;try{return f.apply(this,arguments)}finally{GL176_KD--;if(!GL176_KD)try{gl176Kit(k,n0,itT(it).t|0)}catch(e){}}}});
+// forged, not polished: hero metal is a little rougher (the copper and steel highlights read as plastic)
+{const f=mdMats;mdMats=function(){const M=f.apply(this,arguments);if(M&&M.m&&!M.m.userData.v177){M.m.userData.v177=1;M.m.roughness=.6;M.m.metalness=.55}return M}}
+// ================= v177: armour grows more ornate with every tier =================
+// Owner (Oct 30 2026): "I want all armor and weapons to look very cool and unique. Getting even more elaborate and ornate as you
+// level up." Every helm, chest piece and pair of boots gets a tier layer on top of what it already has (its base shape, the v95
+// trims, the v136 class details and the v137 motif), measured onto what is built, like the v137 motifs:
+//   tier I    plain, worn gear: nothing added
+//   tier II   rivets and stitched straps: the piece looks made, not grown
+//   tier III  raised trim bands, a centre ridge, buckles, bone toggles, small studs on the helm
+//   tier IV   filigree scrollwork, a gem, pauldron flanges and spikes, a crest
+//   tier V    the full regalia: a crown of spikes or a tall collar behind the head, chains between the shoulders, glowing runes
+// Each class reads differently: the Warrior brutal (jagged spikes, iron), the Paladin gothic-holy (fluted blades, gold, a halo of
+// thin spikes), the Assassin sleek (blades, silver filigree, violet sigils), the Ranger a hunter (bone, antler, feathers, green
+// charms), the Mage arcane (gold filigree, a tall collar, rune discs, blue light).
+// All pieces are laid on the measured surface (a7Ring sections, the shoulder tops, the head top), ride the bone (or blended
+// torso weights) of what is under them, and anything left loose is attached by gf176Snap afterwards.
+var O176={on:1,
+  // per class: trim metal by tier, accent cloth / leather, glow
+  cls:{warrior:{T:[0x6a5a4a,0x6e7076,0x7a6a4a,0x8a8e96,0x9a7a4a],acc:0x4a1a14,gl:0xff5a1a,bone:0xc8bca0},
+       paladin:{T:[0x7a6a50,0x9a8a60,0xb08a48,0xc8a050,0xd8b050],acc:0x5a1a1a,gl:0xffd890,bone:0xd8ccb0},
+       assassin:{T:[0x4a4a50,0x6a6a72,0x8a8e98,0xa8aeb8,0xc0c6d0],acc:0x2a1a2e,gl:0xa060ff,bone:0xb8b0a0},
+       ranger:{T:[0x5a4a38,0x6a5a40,0x7a6a48,0x9a7a4a,0xa88850],acc:0x3a2a1a,gl:0x7aff8a,bone:0xd0c4a4},
+       mage:{T:[0x6a5a40,0x8a7a50,0xa88a48,0xc0a050,0xd8b858],acc:0x2a1e3a,gl:0x6ab8ff,bone:0xd0c8b8}}};
+function o176C(d){const cls=BR.on&&BR.R&&BR.R.cls?BR.R.cls:({heavy:'warrior',medium:'ranger',light:'assassin',cloth:'mage'})[d.a]||'warrior',K=O176.cls[cls]||O176.cls.warrior,ti=Math.max(0,Math.min(4,d.ti|0));
+  return {cls,ti,r:d.r|0,T:K.T[ti],T2:mdSh(K.T[ti],.7),acc:K.acc,bone:K.bone,gl:d.G!=null?d.G:(ti>=4||d.r>=3?K.gl:null),dk:0x16120e,steel:0x5a5e66,leather:0x3a2618}}
+// ---------------- measuring, with a cache per build (sections are costly) ----------------
+function o176Sec(B,key,fn){const M=B.__o176||(B.__o176={});return M[key]||(M[key]=fn())}
+function o176TorsoS(B,P,y){y=Math.round(y/.006)*.006;return o176Sec(B,'t'+y.toFixed(3),()=>{const tf=(x,yy,z)=>{const q=mdTorsoAt(P,Math.max(.5,Math.min(1,yy)));return Math.abs(x)<q.rx+.07};return a7Ring(B,y,.012,A7X.torso,tf)})}
+// points over the torso: [y, angle] → surface points (clearance clr)
+function o176Path(B,P,yt,clr){const pts=yt.map(([y,th])=>{const S=o176TorsoS(B,P,y);return S.ok?S.at(th,clr).p:null}).filter(Boolean);
+  // smoothed (ends kept): a line over straps and seams follows the armour's shape, not each bump of it; never pulled inward
+  for(let it=0;it<3;it++)for(let i=1;i<pts.length-1;i++){const a=pts[i-1],b=pts[i],c=pts[i+1],r0=Math.hypot(b[0],b[2]),m=[(a[0]+c[0])/2,(a[2]+c[2])/2],r1=Math.hypot(m[0],m[1]),r=Math.max(r0*.97,(r0+r1)/2),an=Math.atan2(b[0]*.5+m[0]*.5,b[2]*.5+m[1]*.5);
+    pts[i]=[Math.sin(an)*r,b[1],Math.cos(an)*r]}
+  return pts}
+// a filigree scroll on the torso: a spiral from (y0, th0), turning `turns` times, radius r (m), mirrored by s; laid on the one section at
+// its middle (so it is a clean curve), each point at its own height
+function o176Scroll(B,P,y0,th0,r,turns,s,clr){const S=o176TorsoS(B,P,y0);if(!S.ok)return [];const R0=S.at(th0,0).r||.17,pts=[];
+  for(let i=0;i<=22;i++){const t=i/22,rr=r*(1-t*.82),a=t*turns*Math.PI*2,q=S.at(th0+s*rr*Math.cos(a)/R0,clr);pts.push([q.p[0],y0+rr*Math.sin(a),q.p[2]])}return pts}
+function o176Tube(k,bn,pts,r0,r1,col,t,wf,sides){if(pts.length>1){const n0=k.P.length;a7Tube(k,bn,pts,r0,r1,col,t||'m',wf,sides||4);gf176Group(k,n0)}}
+function o176Stud(k,bn,p,n,r,col,t,w){const q=k.p(bn,'oct',t||'m',col,p[0]+n[0]*r*.3,p[1]+n[1]*r*.3,p[2]+n[2]*r*.3,r,r,r*.6,0,Math.atan2(n[0],n[2]),0);if(w)mdOW(k,w);return q}
+// a spike from a surface point p along n (tilted by up)
+function o176Spike(k,bn,p,n,len,r,col,w,t){const tip=[p[0]+n[0]*len,p[1]+n[1]*len,p[2]+n[2]*len];k.L(bn,t||'m',col,[p[0]-n[0]*.004,p[1]-n[1]*.004,p[2]-n[2]*.004],tip,r,r*.06,5);if(w)mdOW(k,w)}
+// ---------------- chest ----------------
+function o176Chest(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKit(),cls=C.cls,a=d.a,W=A7W,T=C.T;
+  const S=y=>o176TorsoS(B,P,y),ring=(y,th0,th1,n,clr)=>{const s=S(y);if(!s.ok)return [];const o=[];for(let i=0;i<=n;i++){const th=th0+(th1-th0)*i/n,q=s.at(th,clr);o.push(q)}return o};
+  const sh=s=>{const t=a7ShTop(B,s);return t?{p:t,bn:s<0?'aL0':'aR0'}:null};
+  const metal=a=='heavy'||a=='light'?'m':'m';
+  // ---- tier II: rivets / stitching rows at the collar and the hem of the piece ----
+  if(a=='heavy'){[.955,.645].forEach((y,j)=>ring(y,-2.9,2.9,18+ti*2,.002).forEach((q,i)=>{if(i%2==j%2||ti>=2)o176Stud(k,'chest',q.p,q.n,.0065,T,'m',W(q.p))}))}
+  else if(a=='medium'||a=='light'){const lt=a=='light'?0x1e1a1e:C.leather;[-1,1].forEach(s=>{const pts=o176Path(B,P,[[.97,s*.55],[.9,s*.3],[.82,s*.05],[.74,-s*.2],[.66,-s*.4]],.006);o176Tube(k,'chest',pts,.0075,.0075,lt,'c',W,4);
+      const q=pts[2];if(q)o176Stud(k,'chest',q,[q[0],0,q[2]].map(v=>v/Math.hypot(q[0],q[2])),.011,T,'m',W(q))})}
+  else{// cloth: an embroidered stole down the front, both sides
+    [-1,1].forEach(s=>{const pts=o176Path(B,P,[[.98,s*.38],[.92,s*.3],[.84,s*.26],[.76,s*.24],[.68,s*.24],[.62,s*.24]],.006);o176Tube(k,'chest',pts,.012,.012,C.acc,'c',W,4);if(ti>=2)o176Tube(k,'chest',pts.map(p=>[p[0],p[1],p[2]+.004]),.004,.004,T,'m',W,4)})}
+  if(ti<2){if(k.P.length)mdKit(B,k);return}
+  // ---- tier III: trim bands and a centre ridge; class marks ----
+  if(a=='heavy'){[.95,.65].forEach(y=>{const R=ring(y,-3.1,3.1,30,.004);o176Tube(k,'chest',R.map(q=>q.p),.0055,.0055,T,'m',W,4)});
+    o176Tube(k,'chest',o176Path(B,P,[[.94,0],[.88,0],[.82,0],[.76,0],[.7,0],[.66,0]],.004),.007,.004,mdSh(T,.9),'m',W,4)}
+  else if(a=='cloth'){// a clasp chain across the chest between two gem clasps
+    const L=o176Path(B,P,[[.93,-.42],[.9,-.2],[.89,0],[.9,.2],[.93,.42]],.012);gkChain(k,'chest',L,.006,T,W);[L[0],L[L.length-1]].forEach(p=>{if(p){o176Stud(k,'chest',p,[p[0],0,p[2]].map(v=>v/Math.hypot(p[0],p[2])),.016,T,'m',W(p));k.p('chest','oct',C.gl?'g':'c',C.gl||C.acc,p[0]*1.04,p[1],p[2]*1.04,.008);mdOW(k,W(p))}})}
+  else if(a=='medium'){// bone toggles and claws along the collar
+    ring(.94,-1.2,1.2,8,.008).forEach((q,i)=>{const p=q.p;if(i%2)k.L('chest','c',C.bone,p,[p[0]+q.n[0]*.01,p[1]-.03,p[2]+q.n[2]*.01],.006,.0008,4);else k.p('chest','cyl','c',C.bone,p[0],p[1],p[2],.006,.026,.006,0,0,Math.PI/2);mdOW(k,W(p))})}
+  else{// light: throwing knives in a bandolier over the right breast
+    const L=o176Path(B,P,[[.95,.5],[.88,.32],[.8,.16],[.72,0]],.01);L.forEach((p,i)=>{if(!i)return;const n=[p[0],0,p[2]],l=Math.hypot(n[0],n[2])||1;a7Put(k,'chest',p,[n[0]/l,0,n[2]/l],[0,1,0],.8,t=>l7Knife(t,1,0x9aa2ae,0x1a1418),W(p))})}
+  if(ti<3){if(k.P.length)mdKit(B,k);return}
+  // ---- tier IV: filigree, a gem at the breast, shoulder flanges ----
+  const fil=cls=='ranger'?C.bone:T,fr=a=='light'?.0028:.0035;
+  [-1,1].forEach(s=>{o176Tube(k,'chest',o176Scroll(B,P,.86,s*.16,.045,1.15,s,.004),fr,fr*.7,fil,cls=='ranger'?'c':'m',W,4);o176Tube(k,'chest',o176Scroll(B,P,.75,s*.2,.035,1.05,-s,.004),fr,fr*.7,fil,cls=='ranger'?'c':'m',W,4)});
+  {const q=S(.84);if(q.ok){const at=q.at(0,.006);a7Put(k,'chest',at.p,at.n,[0,1,0],1,t=>{t.p('','oct','m',T,0,0,.004,.026,.032,.01);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.6),0,0,.011,.013,.017,.008);
+      for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;t.p('','cone4','m',T,Math.cos(a)*.026,Math.sin(a)*.026,.004,.006,.02,.004,0,0,a-Math.PI/2)}},W(at.p))}}
+  [-1,1].forEach(s=>{const q=sh(s);if(!q)return;const w=[[q.bn,1]];
+    if(cls=='warrior')for(let i=0;i<3;i++)o176Spike(k,q.bn,[q.p[0]+s*(.02+i*.02),q.p[1]-i*.012,q.p[2]-.03+i*.03],[s*.45,.9,(i-1)*.15],.05+ti*.01-i*.008,.011,mdSh(T,.85),w);
+    else if(cls=='paladin')for(let i=0;i<5;i++){const a=-.6+i*.3;k.p(q.bn,'cone4','m',i%2?T:mdSh(T,.8),q.p[0]+s*.01,q.p[1]+.03,q.p[2]+Math.sin(a)*.05,.008,.07-Math.abs(i-2)*.012,.016,a*.6,0,-s*.35);mdOW(k,w)}
+    else if(cls=='assassin')for(let i=0;i<3;i++){k.L(q.bn,'m',0x9aa2ae,[q.p[0],q.p[1],q.p[2]-.03+i*.03],[q.p[0]+s*.05,q.p[1]+.03-i*.006,q.p[2]-.05+i*.04],.006,.0006,4);mdOW(k,w)}
+    else if(cls=='ranger'){for(let i=0;i<2;i++){const b=[q.p[0]+s*.01,q.p[1],q.p[2]-.02+i*.04];k.L(q.bn,'c',C.bone,b,[b[0]+s*.03,b[1]+.05,b[2]+(i-.5)*.03],.007,.003,5);k.L(q.bn,'c',C.bone,[b[0]+s*.03,b[1]+.05,b[2]+(i-.5)*.03],[b[0]+s*.055,b[1]+.07,b[2]+(i-.5)*.05],.004,.001,4)}mdOW(k,w)}
+    else{// mage: a rune disc on each shoulder
+      a7Put(k,q.bn,[q.p[0],q.p[1]+.002,q.p[2]],[s*.35,1,0],[0,0,1],1,t=>l7Rune(t,1,C.gl||0x6ab8ff,T),w)}});
+  if(ti<4){if(k.P.length)mdKit(B,k);return}
+  // ---- tier V: the regalia ----
+  const top=S(.975);
+  if(cls=='warrior'&&top.ok){// a crown of jagged spikes round the back of the collar, chains between the pauldrons
+    for(let i=0;i<9;i++){const th=Math.PI+(i-4)*.32,q=top.at(th,.004),len=.06+(4-Math.abs(i-4))*.012;o176Spike(k,'chest',q.p,[q.n[0]*.5,1,q.n[2]*.5].map(v=>v/Math.hypot(q.n[0]*.5,1,q.n[2]*.5)),len,.012,i%2?T:mdSh(T,.7),W(q.p))}}
+  else if(cls=='paladin'&&top.ok){// a gothic halo of thin gilded blades fanning up behind the head
+    for(let i=0;i<11;i++){const th=Math.PI+(i-5)*.26,q=top.at(th,.004),up=1.2,dir=[q.n[0]*.25,up,q.n[2]*.25-.12],l=Math.hypot(...dir);o176Spike(k,'chest',q.p,dir.map(v=>v/l),.09+(5-Math.abs(i-5))*.016,.008,i%2?T:mdSh(T,1.1),W(q.p))}
+    const q=top.at(Math.PI,.01);k.p('chest','ring','m',T,q.p[0],q.p[1]+.12,q.p[2]-.03,.075,.12,.075,Math.PI/2-.25);mdOW(k,W(q.p))}
+  else if(cls=='mage'&&top.ok){// a tall standing collar of tapering plates behind the head
+    for(let i=0;i<7;i++){const th=Math.PI+(i-3)*.36,q=top.at(th,.003),h=.1+(3-Math.abs(i-3))*.025;a7Put(k,'chest',q.p,[q.n[0],0,q.n[2]],[0,1,0],1,t=>{t.p('','cone4','c',C.acc,0,h/2,0,.03,h,.006,0,Math.PI/4,0);t.L('','m',T,[0,0,.006],[0,h*.95,.003],.0035,.001,4)},W(q.p))}}
+  else if(cls=='assassin'&&top.ok){// a high blade collar at the back
+    for(let i=0;i<7;i++){const th=Math.PI+(i-3)*.3,q=top.at(th,.004);o176Spike(k,'chest',q.p,[q.n[0]*.35,1,q.n[2]*.35].map(v=>v/Math.hypot(q.n[0]*.35,1,q.n[2]*.35)),.05+(3-Math.abs(i-3))*.012,.007,0x9aa2ae,W(q.p))}}
+  else if(cls=='ranger'&&top.ok){// a mantle of dark feathers round the back of the shoulders
+    for(let i=0;i<13;i++){const th=Math.PI+(i-6)*.24,q=top.at(th,.006);gkFeather(k,'chest',q.p,[q.n[0]*.6,-1,q.n[2]*.6],.1+(i%3)*.02,.016,i%2?0x2a2622:0x3a3028,W(q.p))}}
+  // chains slung between the shoulders with a medallion (all but the ranger and assassin, who wear charms / a sigil)
+  if(cls=='warrior'||cls=='paladin'||cls=='mage'){const L=o176Path(B,P,[[.96,-.62],[.9,-.42],[.86,-.2],[.845,0],[.86,.2],[.9,.42],[.96,.62]],.016);gkChain(k,'chest',L,.006,T,W)}
+  else if(cls=='assassin'){const q=S(.8);if(q.ok){const at=q.at(-.3,.006);a7Put(k,'chest',at.p,at.n,[0,1,0],1.1,t=>l7Rune(t,1,C.gl||0xa060ff,T),W(at.p))}}
+  else{const L=o176Path(B,P,[[.96,-.5],[.9,-.3],[.86,-.05],[.87,.2],[.92,.45]],.014);o176Tube(k,'chest',L,.003,.003,0x2a1e14,'c',W,3);[1,3].forEach(i=>{const p=L[i];if(p)gkVial(k,'chest',p[0]*1.06,p[1]-.03,p[2]*1.06,1,C.gl||0x7aff8a,T,W(p))})}
+  if(C.gl){// glowing runes along the trims
+    [-1,1].forEach(s=>o176Tube(k,'chest',o176Path(B,P,[[.93,s*.12],[.86,s*.1],[.79,s*.1],[.72,s*.12]],.009),.0022,.0022,C.gl,'g',W,3))}
+  if(k.P.length)mdKit(B,k)}
+// ---------------- helm ----------------
+// the head is measured by rays from the middle of the skull: dir(th, ph) (th = 0 forward, π/2 the hero's right; ph = up from level)
+// hits the outermost surface built there (helm, hood, hat); a hit in an ear is no spot
+function o176HeadTris(B,c){return o176Sec(B,'htri',()=>{const T=[];for(const t in B.L){const L=B.L[t].p;for(let i=0;i+8<L.length;i+=9){const x=(L[i]+L[i+3]+L[i+6])/3-c[0],y=(L[i+1]+L[i+4]+L[i+7])/3-c[1],z=(L[i+2]+L[i+5]+L[i+8])/3-c[2];if(x*x+y*y+z*z<.09)T.push(L.slice(i,i+9))}}return T})}
+function o176HeadAt(B,c,th,ph,clr,ear){const d=[Math.sin(th)*Math.cos(ph),Math.sin(ph),Math.cos(th)*Math.cos(ph)];let best=-1;for(const t of o176HeadTris(B,c)){const h=gf176Ray(c,d,t);if(h>best&&h<.26)best=h}
+  if(best<=0)return null;const p=[c[0]+d[0]*(best+(clr||0)),c[1]+d[1]*(best+(clr||0)),c[2]+d[2]*(best+(clr||0))];if(ear&&ear(p))return null;return {p,n:d}}
+function o176Helm(B,P,d){const C=o176C(d),ti=C.ti;if(ti<1)return;const H=a7Head(B);if(!H)return;const k=dkKit(),cls=C.cls,a=d.a,T=C.T,hw=[['head',1]],D=BR.on&&BR.R;
+  const ear=p=>D&&D.earE&&brEarIn(D,p[0],p[1],p[2],[1.6,1.45,2.6]),c=[0,H.y-.085,H.top[2]+.015],at=(th,ph,clr)=>o176HeadAt(B,c,th,ph,clr,ear);
+  // a line of spots round the head at one elevation (runs broken where an ear is)
+  const band=(ph,th0,th1,n,clr)=>{const R=[];let cur=[];for(let i=0;i<=n;i++){const q=at(th0+(th1-th0)*i/n,ph,clr);if(q)cur.push(q);else{if(cur.length>1)R.push(cur);cur=[]}}if(cur.length>1)R.push(cur);return R};
+  const studs=band(.32,-2.7,2.7,18,.002);studs.forEach(R=>R.forEach((q,i)=>{if(i%2==0||ti>=2)o176Stud(k,'head',q.p,q.n,.0055,T,'m',hw)}));
+  if(ti>=2){band(.42,-2.9,2.9,30,.004).forEach(R=>o176Tube(k,'head',R.map(q=>q.p),.0045,.0045,T,'m',null,4));
+    // a ridge over the crown, front to back
+    if(a=='heavy'||a=='light'){const L=[];for(let i=0;i<=10;i++){const q=at(0,.5+i*.2,.002);if(q)L.push(q.p)}o176Tube(k,'head',L,.006,.004,mdSh(T,.9),'m',null,4)}}
+  if(ti>=3){// filigree at the temples and a brow gem
+    [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=14;i++){const t=i/14,r=.32*(1-t*.8),an=t*2.2*Math.PI,q=at(s*(1.5+r*Math.cos(an)),.2+r*Math.sin(an)*.8,.003);if(q)pts.push(q.p)}o176Tube(k,'head',pts,.003,.002,cls=='ranger'?C.bone:T,cls=='ranger'?'c':'m',null,4)});
+    {const q=at(0,.62,.004);if(q)a7Put(k,'head',q.p,q.n,[0,1,0],.9,t=>{t.p('','oct','m',T,0,0,.004,.02,.026,.008);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.7),0,0,.009,.01,.014,.006)},hw)}
+    // class crest
+    [-1,1].forEach(s=>{const q=at(s*1.65,.55,.002);if(!q)return;const p=q.p,o=[p[0]+s*.004,p[1],p[2]];
+      if(cls=='warrior'){k.L('head','c',C.bone,o,[p[0]+s*.05,p[1]+.035,p[2]-.01],.012,.008,5);k.L('head','c',C.bone,[p[0]+s*.05,p[1]+.035,p[2]-.01],[p[0]+s*.06,p[1]+.1,p[2]+.01],.008,.001,5)}
+      else if(cls=='paladin'){for(let i=0;i<4;i++){k.p('head','cone4','m',i%2?T:mdSh(T,.8),p[0]+s*.008,p[1]+.02+i*.006,p[2]-.01-i*.014,.006,.06-i*.008,.014,-.5-i*.2,0,-s*.5);mdOW(k,hw)}}
+      else if(cls=='ranger'){k.L('head','c',C.bone,o,[p[0]+s*.03,p[1]+.06,p[2]-.02],.008,.005,5);k.L('head','c',C.bone,[p[0]+s*.03,p[1]+.06,p[2]-.02],[p[0]+s*.06,p[1]+.1,p[2]-.05],.005,.001,4);k.L('head','c',C.bone,[p[0]+s*.03,p[1]+.06,p[2]-.02],[p[0]+s*.015,p[1]+.1,p[2]],.004,.001,4)}
+      else if(cls=='assassin'){k.L('head','m',0x9aa2ae,o,[p[0]+s*.03,p[1]+.045,p[2]-.03],.006,.0006,4)}
+      else{k.p('head','oct',C.gl?'g':'m',C.gl||T,p[0],p[1],p[2],.008,.012,.006);mdOW(k,hw)}});
+    if(cls=='assassin')for(let i=0;i<3;i++){const q=at(Math.PI,.9+i*.2,.002);if(q)k.L('head','m',0x9aa2ae,q.p,[q.p[0],q.p[1]+.035,q.p[2]-.025],.006,.0006,4)}}
+  if(ti>=4){// the crown: spikes standing on the band round the back half of the head
+    const n=cls=='warrior'?7:cls=='paladin'?11:9,sp=cls=='warrior'?.36:.26;
+    for(let i=0;i<n;i++){const th=Math.PI+(i-(n-1)/2)*sp,q=at(th,cls=='mage'||cls=='paladin'?.5:.42,.003);if(!q)continue;const len=(cls=='warrior'?.07:.06)+((n-1)/2-Math.abs(i-(n-1)/2))*.012,dir=[q.n[0]*.35,1,q.n[2]*.35],l=Math.hypot(...dir);
+      o176Spike(k,'head',q.p,dir.map(v=>v/l),len,cls=='warrior'?.011:.007,i%2?T:mdSh(T,cls=='paladin'?1.1:.75),null,cls=='ranger'?'c':'m')}
+    if(C.gl&&cls!='warrior'){const q=at(Math.PI,.9,.004);if(q){k.p('head','oct','g',C.gl,q.p[0],q.p[1]+.01,q.p[2],.01,.016,.006);mdOW(k,hw)}}
+    if(cls=='ranger')for(let i=0;i<5;i++){const q=at(Math.PI+(i-2)*.3,.25,.004);if(q)gkFeather(k,'head',q.p,[q.n[0]*.4,-.6,q.n[2]-.4],.09,.014,i%2?0x2a2622:0x4a3a2a,null)}}
+  if(k.P.length)mdKit(B,k)}
+// ---------------- boots ----------------
+function o176Boots(B,P,d,R){const C=o176C(d),ti=C.ti;if(ti<1)return;const k=dkKit(),cls=C.cls,a=d.a,T=C.T;
+  let top=.32;const Lc={'-1':[0,0,0],'1':[0,0,0]};if(R){const p=a7PtsR(B,-1,.6,R);let m=0;for(let i=0;i<p.length;i+=3){m=Math.max(m,p[i+1]);const q=Lc[p[i]<0?'-1':'1'];q[0]+=p[i];q[1]+=p[i+2];q[2]++}if(m>.08)top=m}
+  if(BR.on&&BR.R&&BR.R.key=='raven')top=Math.min(top,.2);
+  [-1,1].forEach(s=>{const q0=Lc[s<0?'-1':'1'],cx=q0[2]?q0[0]/q0[2]:s*.09,cz=q0[2]?q0[1]/q0[2]:.02,side=(x,yy,z)=>s*x>0&&(x-cx)*(x-cx)+(z-cz)*(z-cz)<.0144,bn=s<0?'lh1':'rh1',
+    Sx=(y,h)=>o176Sec(B,'b'+s+y.toFixed(3),()=>R?a7RingP(a7PtsR(B,y-(h||.015),y+(h||.015),R),y,side):a7Ring(B,y,h||.015,s<0?A7X.legL:A7X.legR,side)),nw=p=>a7NearW(B,p),Y=y=>y*top/.32;
+    const cuff=Sx(top-.025);if(!cuff.ok)return;
+    // tier II: studs round the cuff
+    for(let i=0;i<10;i++){const at=cuff.at(i/10*Math.PI*2,.002);if(i%2==0||ti>=2)o176Stud(k,bn,at.p,at.n,.0055,T,'m',nw(at.p))}
+    if(ti>=2){const R2=[];for(let i=0;i<=20;i++)R2.push(cuff.at(i/20*Math.PI*2,.004).p);o176Tube(k,bn,R2,.0045,.0045,T,'m',nw,4);
+      const an=Sx(Y(.07));if(an.ok){const R3=[];for(let i=0;i<=16;i++)R3.push(an.at(i/16*Math.PI*2,.004).p);o176Tube(k,bn,R3,a=='cloth'?.003:.004,a=='cloth'?.003:.004,a=='heavy'?T:C.leather,a=='heavy'?'m':'c',nw,4)}}
+    if(ti>=3){// a shin plate / bone splint with filigree, by class
+      const pts=[];for(let i=0;i<=10;i++){const y=Y(.1)+(top-.05-Y(.1))*i/10,q=Sx(y);if(q.ok)pts.push(q.at(Math.sin(i*1.4)*.25,.005).p)}o176Tube(k,bn,pts,.0035,.0025,cls=='ranger'?C.bone:T,cls=='ranger'?'c':'m',nw,4);
+      const kq=Sx(top-.06);if(kq.ok){const at=kq.at(0,.004);a7Put(k,bn,at.p,at.n,[0,1,0],.8,t=>{t.p('','oct','m',T,0,0,.004,.02,.026,.008);t.p('','oct',C.gl?'g':'m',C.gl||mdSh(C.acc,1.7),0,0,.009,.009,.012,.005)},nw(at.p))}}
+    if(ti>=4){// spikes / blades / claws at the cuff
+      const n=cls=='paladin'?5:3;for(let i=0;i<n;i++){const th=(i-(n-1)/2)*.45,at=cuff.at(th,.003),dir=[at.n[0],.55,at.n[2]],l=Math.hypot(...dir);
+        if(cls=='ranger')k.L(bn,'c',C.bone,at.p,[at.p[0]+at.n[0]*.03,at.p[1]+.03,at.p[2]+at.n[2]*.03],.006,.0008,4),mdOW(k,nw(at.p));else o176Spike(k,bn,at.p,dir.map(v=>v/l),cls=='warrior'?.05:.035,cls=='warrior'?.01:.006,i%2?T:mdSh(T,.8),nw(at.p),'m')}
+      if(cls=='ranger'){for(let i=0;i<8;i++){const at=cuff.at(Math.PI*.4+i*.3,.006);gkFeather(k,bn,at.p,[at.n[0]*.5,-1,at.n[2]*.5],.05,.01,i%2?0x2a2622:0x4a3a2a,nw(at.p))}}}});
+  if(k.P.length)mdKit(B,k)}
+// ---------------- hooks: after the piece (in a hero, after everything: gkLater) ----------------
+{const c=mdChest,h=mdHelm,b=mdBoots,run=(fn,B,P,d,x)=>{if(!O176.on||!d||!MD_ORN||!(BR.on&&BR.R))return;const o=GL176.ti;GL176.ti=d.ti|0;try{gkLater(B,B2=>{try{fn(B2,P,d,x)}catch(e){console.warn('v177 ornate',e)}})}finally{GL176.ti=o}};
+  mdChest=function(B,P,d){const r=c.apply(this,arguments);run(o176Chest,B,P,d);return r};
+  mdHelm=function(B,P,d){const r=h.apply(this,arguments);run(o176Helm,B,P,d);return r};
+  mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;
+    // the class outfit's boots (no item) stay plain
+    if(d&&d.key)run(o176Boots,B,P,d,{n0,n1});return r}}
+// ================= v177: weapons grow more ornate with every tier =================
+// Owner (Oct 30 2026): weapons "very cool and unique ... even more elaborate and ornate as you level up". Every weapon and shield
+// kit (base, v137 and unique) gets a tier layer measured from its own geometry, after it is built and before loose pieces are
+// attached (gf176Kit):
+//   tier I    as forged: nothing added
+//   tier II   a pommel cap and metal bands on the grip / haft; bows: bands round the riser; shields: rim studs
+//   tier III  a collar where the head meets the haft (or langets at the guard), a pommel gem, a dark fuller inlay down blades;
+//             bows: horn-and-blade limb tips; shields: a filigree ring round the boss
+//   tier IV   a crown of spikes on the pommel, filigree curls at the base of the blade / head, a spiked collar
+//   tier V    glowing runes down the blade or haft, a chain with a charm hanging from the pommel; shields: rim spikes
+// The weapon frame is the usual one (grip at the origin, head down -y); measurements: the radius of the kit at each height
+// (its profile), the pommel top, where the head starts, the blade's thickness.
+var W176={on:1,
+  T:[0x5a4a3c,0x6e7076,0x8a6a3a,0xa8aeb8,0xc8a050],gl:{warrior:0xff5a1a,paladin:0xffd890,assassin:0xa060ff,ranger:0x7aff8a,mage:0x6ab8ff}};
+function w176Pts(k){const v=new THREE.Vector3(),P=[];k.P.forEach(p=>{const g=p.geo;if(!g||!g.attributes||!g.attributes.position)return;const pa=g.attributes.position;for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);P.push([v.x,v.y,v.z])}});return P}
+// profile along y: radius (in x/z) of everything near the axis, 1 cm steps
+function w176Prof(P,ax){const R=new Map();P.forEach(p=>{if(Math.abs(p[0])>(ax||.5)||Math.abs(p[2])>(ax||.5))return;const y=Math.round(p[1]*100),r=Math.hypot(p[0],p[2]);const o=R.get(y);if(o==null||r>o)R.set(y,r)});return R}
+function w176Kit(k,it){if(!W176.on)return;const t=itT(it);if(!t)return;const ti=Math.max(0,Math.min(4,t.t|0));if(ti<1)return;const r=it.r|0,cls=t.cls||'warrior',T=W176.T[ti],T2=mdSh(T,.72),
+  gl=r>=3||ti>=4?(W176.gl[cls]||0xffd890):null,wt=t.sl=='offhand'?'shield':String(t.wt||''),P=w176Pts(k);if(P.length<8)return;const n0=k.P.length;
+  const stud=(x,y,z,s,c)=>k.p('','oct','m',c||T,x,y,z,s,s*1.2,s);
+  const spike=(a,dir,len,rad,c)=>{const l=Math.hypot(...dir);k.L('','m',c||T,a,[a[0]+dir[0]/l*len,a[1]+dir[1]/l*len,a[2]+dir[2]/l*len],rad,rad*.06,5)};
+  const ring=(y,rad,th,c)=>k.p('','ring','m',c||T,0,y,0,rad,th||.18,rad);
+  if(wt=='shield'){// the face is the thin axis; studs round the rim, filigree round the boss, spikes at the rim
+    const bb=new THREE.Box3();P.forEach(p=>bb.expandByPoint(new THREE.Vector3(...p)));const sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
+    const ax=sz.x<sz.y&&sz.x<sz.z?0:sz.y<sz.z?1:2,u=(ax+1)%3,v=(ax+2)%3;
+    [-1,1].forEach(face=>{const fz=face>0?bb.max.getComponent(ax):bb.min.getComponent(ax);
+      // rim points: the farthest vertex in each of 16 directions in the face plane
+      const N=ti>=2?16:10;for(let i=0;i<N;i++){const a=i/N*Math.PI*2,du=Math.cos(a),dv=Math.sin(a);let best=null,bd=-1e9;
+        P.forEach(p=>{const d=(p[u]-c.getComponent(u))*du+(p[v]-c.getComponent(v))*dv;if(d>bd){bd=d;best=p}});if(!best)continue;
+        const q=[0,0,0];q[u]=c.getComponent(u)+du*(bd-.025);q[v]=c.getComponent(v)+dv*(bd-.025);
+        // the face height at that spot: the farthest vertex along the face normal near it
+        let h=null;P.forEach(p=>{if(Math.hypot(p[u]-q[u],p[v]-q[v])<.03){const z=p[ax]*face;if(h==null||z>h)h=z}});if(h==null)continue;q[ax]=h*face;
+        const s=[0,0,0];s[ax]=1;const st=k.p('','oct','m',T,q[0],q[1],q[2],.012,.012,.012);
+        if(ti>=4&&face>0&&i%2==0){const a2=[q[0],q[1],q[2]],dir=[0,0,0];dir[u]=du;dir[v]=dv;dir[ax]=.25*face;spike(a2,dir,.06,.012,T2)}}
+      if(ti>=3){// a filigree ring round the centre of the face, and a gem
+        let h=null;P.forEach(p=>{if(Math.hypot(p[u]-c.getComponent(u),p[v]-c.getComponent(v))<.05){const z=p[ax]*face;if(h==null||z>h)h=z}});if(h==null)return;
+        const pts=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,rr=.085+Math.sin(a*6)*.012,q=[0,0,0];q[u]=c.getComponent(u)+Math.cos(a)*rr;q[v]=c.getComponent(v)+Math.sin(a)*rr;
+          let hh=null;P.forEach(p=>{if(Math.hypot(p[u]-q[u],p[v]-q[v])<.025){const z=p[ax]*face;if(hh==null||z>hh)hh=z}});q[ax]=(hh==null?h:hh)*face+face*.002;pts.push(q)}
+        for(let i=0;i<pts.length-1;i++)k.L('','m',T,pts[i],pts[i+1],.004,.004,4);
+        if(face>0){const g=[0,0,0];g[u]=c.getComponent(u);g[v]=c.getComponent(v);g[ax]=h*face+face*.01;k.p('','oct',gl?'g':'m',gl||T,g[0],g[1],g[2],.02,.02,.02)}}});
+    return}
+  if(/bow|sling/.test(wt)){// bows: the riser is where the frame is thickest near y = 0; limb tips are the highest / lowest points
+    let top=null,bot=null;P.forEach(p=>{if(!top||p[1]>top[1])top=p;if(!bot||p[1]<bot[1])bot=p});
+    if(wt=='bow'){let rx=0,rn=0;P.forEach(p=>{if(Math.abs(p[1])<.05&&p[0]<-.3){rx+=p[0];rn++}});rx=rn?rx/rn:-.555;
+      [.07,-.07].forEach(y=>k.p('','cyl','m',T,rx,y,0,.024,.014,.024));
+      if(ti>=3)[top,bot].forEach((q,i)=>{const s=i?-1:1;k.L('','c',0xd8ccb0,q,[q[0]-.02,q[1]+s*.05,q[2]],.01,.002,5);if(ti>=4)spike([q[0]-.005,q[1]-s*.04,q[2]],[-1,s*.4,0],.05,.008,T2)});
+      if(ti>=3){k.p('','box','m',T2,rx-.016,0,0,.008,.12,.03);stud(rx-.022,0,0,.012)}
+      if(ti>=4&&gl)k.p('','oct','g',gl,rx-.03,0,0,.01,.016,.01)}
+    else if(wt=='crossbow'){// the prod's ends and the stock's butt
+      let L=null,R=null;P.forEach(p=>{if(!L||p[0]<L[0])L=p;if(!R||p[0]>R[0])R=p});ring(top[1]-.02,.04,.2);
+      if(ti>=3)[L,R].forEach((q,i)=>{const s=i?1:-1;k.L('','c',0xd8ccb0,q,[q[0]+s*.04,q[1]-.02,q[2]],.01,.002,5)});
+      if(ti>=4)[L,R].forEach((q,i)=>{const s=i?1:-1;spike([q[0]-s*.02,q[1],q[2]],[s,.5,0],.05,.008,T2)});if(ti>=4&&gl)k.p('','oct','g',gl,0,top[1]-.06,.04,.012)}
+    else{if(ti>=2)stud(0,0,0,.02);if(ti>=4&&gl)k.p('','oct','g',gl,0,.02,.02,.01)}
+    return}
+  if(wt=='orb'){// a metal band round the orb and, higher up, a crown of claws round its top
+    let c=[0,0,0],n=0;P.forEach(p=>{c[0]+=p[0];c[1]+=p[1];c[2]+=p[2];n++});c=c.map(x=>x/n);let rad=0;P.forEach(p=>{rad=Math.max(rad,Math.hypot(p[0]-c[0],p[1]-c[1],p[2]-c[2]))});rad=Math.min(rad,.2);
+    let rr=0;P.forEach(p=>{if(Math.abs(p[1]-c[1])<.012)rr=Math.max(rr,Math.hypot(p[0]-c[0],p[2]-c[2]))});if(rr<.02)return;
+    k.p('','ring','m',T,c[0],c[1],c[2],rr*.98,.2,rr*.98);
+    if(ti>=3)for(let i=0;i<6;i++){const a=i/6*Math.PI*2,b=[c[0]+Math.cos(a)*rr*.97,c[1],c[2]+Math.sin(a)*rr*.97];stud(b[0],b[1],b[2],.009)}
+    if(ti>=4){let ty=-1e9;P.forEach(p=>{if(Math.hypot(p[0]-c[0],p[2]-c[2])<rr*.5)ty=Math.max(ty,p[1])});for(let i=0;i<5;i++){const a=i/5*Math.PI*2,b=[c[0]+Math.cos(a)*rr*.95,c[1],c[2]+Math.sin(a)*rr*.95];k.L('','m',T,b,[c[0]+Math.cos(a)*rr*.45,ty+.02,c[2]+Math.sin(a)*rr*.45],.005,.0015,4)}}
+    return}
+  // ---- axial weapons: swords, axes, maces, hammers, flails, halberds, daggers, knives, claws, staves, wands ----
+  const prof=w176Prof(P,.6);let topY=-1e9;P.forEach(p=>{if(Math.abs(p[0])<.05&&Math.abs(p[2])<.05&&p[1]>topY)topY=p[1]});if(topY<-.5)return;
+  const rAt=y=>{let b=0;for(let d=-1;d<=1;d++){const v=prof.get(Math.round(y*100)+d);if(v!=null&&v>b)b=v}return b};
+  // the grip / haft radius: the smallest radius between the top and 12 cm below the origin
+  let hr=1;for(let y=Math.min(topY-.03,.02);y>-.12;y-=.01){const v=rAt(y);if(v>.008&&v<hr)hr=v}if(hr>.08)hr=.03;
+  // the head starts where the profile first grows past 2.2× the haft, going down from the origin
+  let yH=null;for(let y=-.02;y>-1.5;y-=.01){if(rAt(y)>hr*2.2&&rAt(y-.02)>hr*2.2){yH=y;break}}
+  const blade=/gs|dagger|knives|claws/.test(wt);
+  // tier II: a pommel cap and two bands
+  {const rp=rAt(topY-.012);if(rp>.006)ring(topY-.012,rp+.002,.22);
+    if(wt!='claws'){const bands=blade?[Math.min(topY-.05,.05),-.02]:[Math.min(topY-.06,.0),(yH!=null?Math.max(yH+.18,-.5):-.25)];bands.forEach(y=>{const rr=rAt(y);if(rr>.008&&rr<.07)k.p('','cyl','m',T,0,y,0,rr+.004,.016,rr+.004)})}}
+  if(ti<3)return;
+  // tier III: a collar at the head (langets up the haft), a pommel gem, a fuller inlay down blades
+  if(yH!=null&&!blade){const rc=Math.min(rAt(yH+.03),hr*1.8);if(rc>.006&&rc<.08){k.p('','cyl','m',T,0,yH+.025,0,rc+.006,.03,rc+.006);[0,Math.PI/2,Math.PI,Math.PI*1.5].forEach(a=>k.p('','box','m',T2,Math.cos(a)*(rc+.003),yH+.09,Math.sin(a)*(rc+.003),.008,.12,.008,0,-a,0))}}
+  k.p('','oct',gl?'g':'m',gl||T2,0,topY+.008,0,.014,.022,.014);
+  if(blade&&wt!='claws'&&yH!=null){// the blade's thickness at its centre line, 30% of the way down
+    let yb=-1e9;P.forEach(p=>{if(p[1]<yb||yb==-1e9)yb=Math.min(yb==-1e9?0:yb,p[1])});let ymin=0;P.forEach(p=>{if(p[1]<ymin)ymin=p[1]});
+    const y0=yH-.05,y1=yH+(ymin-yH)*.72;let th=0;P.forEach(p=>{if(Math.abs(p[0])<.008&&p[1]<y0&&p[1]>y1)th=Math.max(th,Math.abs(p[2]))});
+    if(th>.002&&th<.03)[-1,1].forEach(s=>k.p('','box','c',0x0e0c0a,0,(y0+y1)/2,s*(th-.0005),.008,Math.abs(y0-y1),.003))}
+  if(ti<4)return;
+  // tier IV: a crown of spikes round the pommel, filigree curls at the base of the head / blade, a spiked collar
+  {const rp=rAt(topY-.02)||.03;for(let i=0;i<6;i++){const a=i/6*Math.PI*2;spike([Math.cos(a)*rp*.8,topY-.015,Math.sin(a)*rp*.8],[Math.cos(a),.9,Math.sin(a)],.035,.006,T)}}
+  if(yH!=null){const yc=blade?yH-.02:yH+.005,rc=blade?(rAt(yc)||.04):Math.min(rAt(yH+.03)||.04,hr*1.8);
+    if(blade){// curls on both faces of the blade's base
+      let th=0;P.forEach(p=>{if(Math.abs(p[0])<.02&&Math.abs(p[1]-(yc-.06))<.02)th=Math.max(th,Math.abs(p[2]))});if(th>0&&th<.04)[-1,1].forEach(f=>[-1,1].forEach(s=>{const pts=[];for(let i=0;i<=14;i++){const tt=i/14,rr=.03*(1-tt*.8),a=tt*Math.PI*2.2;pts.push([s*(.012+rr*Math.cos(a)*.6+tt*.01),yc-.04-rr*Math.sin(a)-tt*.04,f*(th+.0015)])}
+        for(let i=0;i<pts.length-1;i++)k.L('','m',T,pts[i],pts[i+1],.0028,.0022,4)}))}
+    else for(let i=0;i<6;i++){const a=i/6*Math.PI*2+Math.PI/6;spike([Math.cos(a)*(rc+.004),yH+.025,Math.sin(a)*(rc+.004)],[Math.cos(a),-.2,Math.sin(a)],.04,.008,T2)}}
+  // tier V (legendary or tier V): glowing runes and a charm on a chain from the pommel
+  if(gl){let ymin=0;P.forEach(p=>{if(p[1]<ymin)ymin=p[1]});const y0=(yH!=null?yH:-.1)-.06,y1=y0+(ymin-y0)*.6,n=5;
+    for(let i=0;i<n;i++){const y=y0+(y1-y0)*i/(n-1);let th=0;P.forEach(p=>{if(Math.abs(p[0])<.01&&Math.abs(p[1]-y)<.012)th=Math.max(th,Math.abs(p[2]))});if(th<=0||th>.06)continue;[-1,1].forEach(s=>k.p('','box','g',gl,0,y,s*(th+.001),.006,.018,.002,0,0,i%2?.6:-.6))}}
+  {const a=[0,topY-.015,(rAt(topY-.015)||.02)+.002],b=[a[0],a[1]-.06,a[2]+.01];gkChain(k,'',[a,b],.005,T,null);gkSkull(k,'',b[0],b[1]-.018,b[2],.55,cls=='paladin'?0xd8b050:0xd0c4a4,0,null)}}
+// after the weapon is built (inside the outermost kit builder, before gf176Kit attaches loose pieces)
+['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const o=W176.kd|0;W176.kd=o+1;try{return f.apply(this,arguments)}finally{W176.kd=o;if(!o)try{w176Kit(k,it)}catch(e){console.warn('v177 weapon ornate',e)}}}});
+// ================= v177: every piece of gear is attached to something =================
+// Owner (Oct 30 2026): "check all equipment models for unattached pieces". The gear audit (test/v177_gear_audit.py) found pieces
+// hovering off what they should sit on: studs, scratches and seals placed on a formula of the torso instead of the armour actually
+// built there (some float, some are buried inside the plate), weapon blades and censer cages a few cm off their guards, staff
+// crystals hanging in mid-air, serration teeth beside a blade, chain links that do not meet.
+// gf176Snap runs over a finished build and moves each loose piece the shortest way onto what is there:
+//  * pieces = the rigid kit parts (one triangle range each); everything else (the body, lofted shells, cloth) is fixed ground,
+//    and so is every piece reached from it through pieces that touch (a vertex within 5 mm of another surface, or an edge
+//    through it).
+//  * a loose group (pieces touching each other but nothing leading to the ground) is moved along the shortest line to the
+//    nearest attached surface within 8 cm, 1.5 mm into it; nearest groups first, so a group can then hold the next one.
+//    A group buried inside the armour (most rays from its centre hit something) is pushed out through the nearest surface
+//    until it sits on top of it.
+// Used on hero models and armour pictures (after the whole build, hoods and motifs included) and on weapon / shield kits (the
+// ground there is what touches the grip; a shield's ground is its biggest piece). Moving keeps each piece's bone weights.
+// buried = enclosed: rays in 14 directions (turned off the axes, so the bars of a cage do not all line up with them) nearly all hit
+var GF176_DIRS=(()=>{const D=[];[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1],[1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],[-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1]].forEach(d=>{const v=new THREE.Vector3(...d).normalize().applyEuler(new THREE.Euler(.37,.61,.23));D.push([v.x,v.y,v.z])});return D})();
+var GF176={eps:.005,R:.08,ov:.0015,stat:{built:0,moved:0,buried:0,left:0,ms:0},on:1};
+function gf176CP(p,v){// closest point on triangle v (9 numbers) to p → [x,y,z,dist]
+  const ax=v[0],ay=v[1],az=v[2],abx=v[3]-ax,aby=v[4]-ay,abz=v[5]-az,acx=v[6]-ax,acy=v[7]-ay,acz=v[8]-az,apx=p[0]-ax,apy=p[1]-ay,apz=p[2]-az,
+    d1=abx*apx+aby*apy+abz*apz,d2=acx*apx+acy*apy+acz*apz;let qx,qy,qz;
+  if(d1<=0&&d2<=0){qx=ax;qy=ay;qz=az}else{const bpx=p[0]-v[3],bpy=p[1]-v[4],bpz=p[2]-v[5],d3=abx*bpx+aby*bpy+abz*bpz,d4=acx*bpx+acy*bpy+acz*bpz;
+    if(d3>=0&&d4<=d3){qx=v[3];qy=v[4];qz=v[5]}else{const vc=d1*d4-d3*d2;
+      if(vc<=0&&d1>=0&&d3<=0){const w=d1/(d1-d3);qx=ax+abx*w;qy=ay+aby*w;qz=az+abz*w}else{const cpx=p[0]-v[6],cpy=p[1]-v[7],cpz=p[2]-v[8],d5=abx*cpx+aby*cpy+abz*cpz,d6=acx*cpx+acy*cpy+acz*cpz;
+        if(d6>=0&&d5<=d6){qx=v[6];qy=v[7];qz=v[8]}else{const vb=d5*d2-d1*d6;
+          if(vb<=0&&d2>=0&&d6<=0){const w=d2/(d2-d6);qx=ax+acx*w;qy=ay+acy*w;qz=az+acz*w}else{const va=d3*d6-d5*d4;
+            if(va<=0&&(d4-d3)>=0&&(d5-d6)>=0){const w=(d4-d3)/((d4-d3)+(d5-d6));qx=v[3]+(v[6]-v[3])*w;qy=v[4]+(v[7]-v[4])*w;qz=v[5]+(v[8]-v[5])*w}
+            else{const dn=1/(va+vb+vc),vv=vb*dn,ww=vc*dn;qx=ax+abx*vv+acx*ww;qy=ay+aby*vv+acy*ww;qz=az+abz*vv+acz*ww}}}}}}
+  return [qx,qy,qz,Math.hypot(p[0]-qx,p[1]-qy,p[2]-qz)]}
+function gf176Ray(o,d,v){// segment / ray vs triangle: distance along d or -1
+  const e1x=v[3]-v[0],e1y=v[4]-v[1],e1z=v[5]-v[2],e2x=v[6]-v[0],e2y=v[7]-v[1],e2z=v[8]-v[2],px=d[1]*e2z-d[2]*e2y,py=d[2]*e2x-d[0]*e2z,pz=d[0]*e2y-d[1]*e2x,det=e1x*px+e1y*py+e1z*pz;
+  if(Math.abs(det)<1e-12)return -1;const id=1/det,sx=o[0]-v[0],sy=o[1]-v[1],sz=o[2]-v[2],u=(sx*px+sy*py+sz*pz)*id;if(u<0||u>1)return -1;
+  const qx=sy*e1z-sz*e1y,qy=sz*e1x-sx*e1z,qz=sx*e1y-sy*e1x,w=(d[0]*qx+d[1]*qy+d[2]*qz)*id;if(w<0||u+w>1)return -1;return (e2x*qx+e2y*qy+e2z*qz)*id}
+// closest point / ray on a triangle stored at offset o of a flat array
+function gf176CPo(p,T,o){return gf176CP(p,T.subarray?T.subarray(o,o+9):T.slice(o,o+9))}
+// S: {n (triangles), TT: Float64Array n*9 (positions; moved here too), own: Int32Array (piece id, -1 = ground), np, ground: Uint8Array per piece,
+//     move(pid,dx,dy,dz) (moves the source), R (search radius, optional), autoGround}
+function gf176Run(S){const RR=S.R||GF176.R,t0=performance.now(),cs=.025,G=new Map(),eps=GF176.eps,n=S.n,np=S.np,TT=S.TT,own=S.own;
+  const K=(x,y,z)=>((x+1024)*2048+(y+1024))*2048+(z+1024);
+  const add=i=>{const o=i*9;let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;for(let j=0;j<9;j+=3){const X=TT[o+j],Y=TT[o+j+1],Z=TT[o+j+2];if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;if(Z<z0)z0=Z;if(Z>z1)z1=Z}
+    for(let x=Math.floor(x0/cs);x<=Math.floor(x1/cs);x++)for(let y=Math.floor(y0/cs);y<=Math.floor(y1/cs);y++)for(let z=Math.floor(z0/cs);z<=Math.floor(z1/cs);z++){const k=K(x,y,z);let a=G.get(k);if(!a)G.set(k,a=[]);a.push(i)}};
+  for(let i=0;i<n;i++)add(i);
+  const byP=[];for(let i=0;i<n;i++){const o=own[i];if(o>=0)(byP[o]||(byP[o]=[])).push(i)}
+  // each triangle near p (cells within r) once per query
+  const stamp=new Int32Array(n);let st=0;
+  const each=(p,r,fn)=>{st++;const x0=Math.floor((p[0]-r)/cs),x1=Math.floor((p[0]+r)/cs),y0=Math.floor((p[1]-r)/cs),y1=Math.floor((p[1]+r)/cs),z0=Math.floor((p[2]-r)/cs),z1=Math.floor((p[2]+r)/cs);
+    for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++){const a=G.get(K(x,y,z));if(!a)continue;for(let j=0;j<a.length;j++){const i=a[j];if(stamp[i]===st)continue;stamp[i]=st;if(fn(i)===false)return}}};
+  const VC=[];const verts=pid=>{if(VC[pid])return VC[pid];const out=[],sk=new Set();(byP[pid]||[]).forEach(i=>{const o=i*9;for(let j=0;j<9;j+=3){const k=Math.round(TT[o+j]*4000)+','+Math.round(TT[o+j+1]*4000)+','+Math.round(TT[o+j+2]*4000);if(sk.has(k))continue;sk.add(k);out.push([TT[o+j],TT[o+j+1],TT[o+j+2]])}
+    out.push([(TT[o]+TT[o+3]+TT[o+6])/3,(TT[o+1]+TT[o+4]+TT[o+7])/3,(TT[o+2]+TT[o+5]+TT[o+8])/3])});return VC[pid]=out};
+  const cp=(p,i)=>gf176CPo(p,TT,i*9),ray=(o,d,i)=>gf176Ray(o,d,TT.subarray(i*9,i*9+9));
+  // touches of every non-ground piece
+  const L=[];for(let p=0;p<np;p++)L.push(new Set());
+  for(let p=0;p<np;p++){if(S.ground[p]||!byP[p])continue;const acc=L[p];
+    for(const q of verts(p))each(q,eps,i=>{const o=own[i];if(o===p||acc.has(o))return;if(cp(q,i)[3]<=eps)acc.add(o)});
+    if(!acc.size)for(const i of byP[p]){const o9=i*9;for(const [a,b] of [[0,3],[3,6],[6,0]]){const o=[TT[o9+a],TT[o9+a+1],TT[o9+a+2]],d=[TT[o9+b]-o[0],TT[o9+b+1]-o[1],TT[o9+b+2]-o[2]],len=Math.hypot(d[0],d[1],d[2]);if(len<1e-6)continue;
+        const u=[d[0]/len,d[1]/len,d[2]/len],mid=[o[0]+d[0]/2,o[1]+d[1]/2,o[2]+d[2]/2];each(mid,len/2,j=>{const ow=own[j];if(ow===p||acc.has(ow))return;const h=ray(o,u,j);if(h>=0&&h<=len)acc.add(ow)})}}}
+  (S.join||[]).forEach(([a,b])=>{L[a].add(b)});
+  for(let p=0;p<np;p++)L[p].forEach(o=>{if(o>=0)L[o].add(p)});
+  const ok=new Uint8Array(np),q=[];for(let p=0;p<np;p++)if(S.ground[p]||!byP[p]||L[p].has(-1)){ok[p]=1;q.push(p)}
+  const spread=()=>{while(q.length){const c=q.pop();L[c].forEach(o=>{if(o>=0&&!ok[o]){ok[o]=1;q.push(o)}})}};spread();
+  // a kit whose grip holds only a small part of it (bows: the hand is off the frame): the biggest touching group is the ground too
+  if(S.autoGround){let tot=0,got=0;for(let p=0;p<np;p++){const c=(byP[p]||[]).length;tot+=c;if(ok[p])got+=c}
+    if(got<tot*.2){const done=new Uint8Array(np);let big=null,bn=0;for(let p=0;p<np;p++){if(ok[p]||done[p])continue;const g=[p];done[p]=1;for(let j=0;j<g.length;j++)L[g[j]].forEach(o=>{if(o>=0&&!ok[o]&&!done[o]){done[o]=1;g.push(o)}});
+        const c=g.reduce((a,x)=>a+(byP[x]||[]).length,0);if(c>bn){bn=c;big=g}}
+      if(big)big.forEach(p=>{ok[p]=1;q.push(p)});spread()}}
+  // loose groups
+  let groups=[];{const done=new Uint8Array(np);for(let p=0;p<np;p++){if(ok[p]||done[p])continue;const g=[p];done[p]=1;for(let j=0;j<g.length;j++)L[g[j]].forEach(o=>{if(o>=0&&!ok[o]&&!done[o]){done[o]=1;g.push(o)}});groups.push(g)}}
+  if(!groups.length){GF176.stat.ms+=performance.now()-t0;GF176.stat.built++;return}
+  const isOk=i=>{const o=own[i];return o<0||ok[o]};
+  // the nearest attached surface to a group: a sample of its vertices, searched out to 1.2 cm, then 3 cm, then RR
+  const best=g=>{const S2=new Set(g);let V=[];g.forEach(p=>V=V.concat(verts(p)));if(V.length>64){const st2=V.length/64;V=Array.from({length:64},(_,i)=>V[Math.floor(i*st2)])}
+    for(const r of [.012,.03,RR]){let b=null;V.forEach(v=>each(v,r,i=>{const o=own[i];if(S2.has(o)||!isOk(i))return;const c=cp(v,i);if(c[3]<=r&&(!b||c[3]<b.d))b={d:c[3],v,c,i}}));if(b)return b}return null};
+  const place=g=>{const S2=new Set(g),bb=g._b;
+    let cx=0,cy=0,cz=0,nv=0;const V=[];g.forEach(p=>verts(p).forEach(v=>{V.push(v);cx+=v[0];cy+=v[1];cz+=v[2];nv++}));cx/=nv;cy/=nv;cz/=nv;const c=[cx,cy,cz];
+    // buried (enclosed): nearly every ray from its centre meets an attached surface
+    let hits=0,miss=0;for(const d of GF176_DIRS){if(miss>1)break;let hit=false;for(let s=0;s<=12&&!hit;s++){const pp=[cx+d[0]*s*.02,cy+d[1]*s*.02,cz+d[2]*s*.02];
+        each(pp,.012,i=>{if(S2.has(own[i])||!isOk(i))return;const h=ray(c,d,i);if(h>=0&&h<.26){hit=true;return false}})}if(hit)hits++;else miss++}
+    let dx,dy,dz,nb=null,ti=-1;if(hits>=GF176_DIRS.length-1){each(c,RR*1.5,i=>{if(S2.has(own[i])||!isOk(i))return;const r=cp(c,i);if(!nb||r[3]<nb[3]){nb=r;ti=i}});if(!nb||nb[3]<1e-5)nb=null}
+    if(nb){// buried: out through the nearest surface to the centre, until the group sits on it
+      const dir=[(nb[0]-cx)/nb[3],(nb[1]-cy)/nb[3],(nb[2]-cz)/nb[3]];let m=0;V.forEach(v=>{const t=(v[0]-cx)*dir[0]+(v[1]-cy)*dir[1]+(v[2]-cz)*dir[2];if(t<m)m=t});
+      const s=nb[3]-m-GF176.ov;dx=dir[0]*s;dy=dir[1]*s;dz=dir[2]*s;GF176.stat.buried++}
+    else{const d=bb.d,f=(d+GF176.ov)/Math.max(d,1e-6);dx=(bb.c[0]-bb.v[0])*f;dy=(bb.c[1]-bb.v[1])*f;dz=(bb.c[2]-bb.v[2])*f;ti=bb.i}
+    if(GF176.dbg)GF176.dbg.push({g:g.slice(),hits,d:[dx,dy,dz].map(x=>+x.toFixed(4))});
+    g.forEach(p=>{S.move(p,dx,dy,dz,ti);(byP[p]||[]).forEach(i=>{const o=i*9;for(let j=0;j<9;j+=3){TT[o+j]+=dx;TT[o+j+1]+=dy;TT[o+j+2]+=dz}add(i)});VC[p]=null;ok[p]=1});GF176.stat.moved+=g.length};
+  // nearest groups first; groups with nothing in reach are tried again once the others have moved (one may now hold them)
+  for(let pass=0;pass<3&&groups.length;pass++){groups.forEach(g=>g._b=best(g));const go=groups.filter(g=>g._b).sort((a,b)=>a._b.d-b._b.d);groups=groups.filter(g=>!g._b);
+    if(!go.length)break;go.forEach(place)}
+  if(groups.length){GF176.stat.left+=groups.length;if(GF176.dbg)groups.forEach(g=>GF176.dbg.push({left:g.slice()}))}
+  GF176.stat.ms+=performance.now()-t0;GF176.stat.built++}
+// ---------------- hero models and armour pictures ----------------
+// every rigid part merged into a build is recorded: bucket, float range, made by the animal's own builders or not, its size
+{const f=mdKit;mdKit=function(B,k){if(!(GL176.on>0)||!k||!k.P||!GF176.on||GF176.inRec)return f.apply(this,arguments);const R=B.__gf||(B.__gf=[]);
+  for(const p of k.P){const t=p.t=='m'?'m':p.t=='g'?'g':'c',L=B.L[t]||B.L.c,a=L.p.length;f.call(this,B,{P:[p]});const b=L.p.length;if(b<=a)continue;const tt=L===B.L[t]?t:'c',last=R[R.length-1];
+    // the links of one chain / the segments of one tube are one piece (p.gfg)
+    if(p.gfg&&last&&last.g===p.gfg&&last.t===tt&&last.b===a)last.b=b;else R.push({t:tt,a,b,body:GL176.body>0,g:p.gfg||0})}}}
+// hanging cloth panels (tabards, war banners) are one piece each, which may be moved (they are big, but they hang free)
+['mdTabard','mdTabardO'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(X){const B=X&&X.L?X:X&&X.B;if(!B||!B.L||!(GL176.on>0)||!GF176.on||GF176.inRec)return f.apply(this,arguments);
+  const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;GF176.inRec=1;let r;try{r=f.apply(this,arguments)}finally{GF176.inRec=0}const R=B.__gf||(B.__gf=[]),g=++GF176_G;
+  for(const t in B.L){const b=B.L[t].p.length;if(b>n0[t])R.push({t,a:n0[t],b,body:false,g,panel:1})}return r}});
+var GF176_G=0;function gf176Group(k,n0){const g=++GF176_G;for(let i=n0;i<k.P.length;i++)k.P[i].gfg=g;return k}
+function gf176Hero(B,since){const R=B.__gf;if(!R||!R.length)return;const S={n:0,own:null,np:R.length,ground:new Uint8Array(R.length)},refs=[];
+  const owner={};for(const t in B.L)owner[t]=new Int32Array(B.L[t].p.length/9|0).fill(-1);R.forEach((r,i)=>{const ow=owner[r.t];if(ow)for(let x=r.a;x<r.b;x+=9)ow[x/9|0]=i;
+    // the animal's own parts, parts built before `since`, and big parts stay where they are
+    let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;const P=B.L[r.t].p;for(let x=r.a;x<r.b;x+=3){x0=Math.min(x0,P[x]);x1=Math.max(x1,P[x]);y0=Math.min(y0,P[x+1]);y1=Math.max(y1,P[x+1]);z0=Math.min(z0,P[x+2]);z1=Math.max(z1,P[x+2])}
+    r.sz=Math.hypot(x1-x0,y1-y0,z1-z0);if(r.body||(since&&i<since)||(r.panel?(r.sz>.85||x1-x0>.36):r.sz>.2))S.ground[i]=1});
+  S.join=[];R.forEach((r,i)=>{if(r.panel&&i&&R[i-1].g===r.g)S.join.push([i-1,i])});
+  for(const t in B.L){const P=B.L[t].p;for(let x=0;x+8<P.length;x+=9)refs.push([t,x])}
+  S.n=refs.length;S.own=new Int32Array(S.n);S.TT=new Float64Array(S.n*9);refs.forEach((r,i)=>{S.own[i]=owner[r[0]][r[1]/9|0];const P=B.L[r[0]].p;for(let j=0;j<9;j++)S.TT[i*9+j]=P[r[1]+j]});
+  // a small piece takes the bone weights of what it now sits on (so it stays on it when that moves)
+  S.move=(pid,dx,dy,dz,ti)=>{const r=R[pid],L=B.L[r.t],P=L.p;for(let x=r.a;x<r.b;x+=3){P[x]+=dx;P[x+1]+=dy;P[x+2]+=dz}
+    if(ti>=0&&r.sz<=.07&&!r.panel){const q=refs[ti],Lq=B.L[q[0]],v=q[1]/3*4;for(let x=r.a;x<r.b;x+=3){const u=x/3*4;for(let j=0;j<4;j++){L.si[u+j]=Lq.si[v+j];L.sw[u+j]=Lq.sw[v+j]}}}};
+  try{gf176Run(S)}catch(e){console.warn('v177 attach',e)}}
+// a hero: once, after everything (hoods and motifs included) is built
+{const f=mdHeroB;mdHeroB=function(){const o=GF176.inH|0;GF176.inH=o+1;try{const B=f.apply(this,arguments);if(!o&&B&&B.__gf&&GF176.on)gf176Hero(B);return B}finally{GF176.inH=o}}}
+// an armour picture: the piece's parts after the piece is built (the animal under it is ground)
+['mdHelm','mdChest','mdBoots'].forEach(n=>{const f=window[n];window[n]=function(B){if(GF176.inH||!(GL176.on>0)||!GF176.on)return f.apply(this,arguments);const n0=(B.__gf||[]).length,r=f.apply(this,arguments);try{if(B.__gf&&B.__gf.length>n0)gf176Hero(B,n0)}catch(e){console.warn('v177 attach',e)}return r}});
+// ---------------- weapon and shield kits ----------------
+function gf176Kit(k,it){if(!GF176.on||!k||!k.P||!k.P.length)return;const v=new THREE.Vector3(),T=[],own=[];let shield=false,wt='';try{shield=itT(it).sl=='offhand';wt=String(itT(it).wt||'')}catch(e){}
+  k.P.forEach((p,pi)=>{const g=p.geo;if(!g||!g.attributes||!g.attributes.position)return;const pa=g.attributes.position,ix=g.index?g.index.array:null,cnt=ix?ix.length:pa.count,Pp=[];
+    for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(p.m);Pp.push(v.x,v.y,v.z)}
+    for(let i=0;i+2<cnt;i+=3){const a=ix?ix[i]:i,b=ix?ix[i+1]:i+1,c=ix?ix[i+2]:i+2;T.push([Pp[a*3],Pp[a*3+1],Pp[a*3+2],Pp[b*3],Pp[b*3+1],Pp[b*3+2],Pp[c*3],Pp[c*3+1],Pp[c*3+2]]);own.push(pi)}});
+  const np=k.P.length,ground=new Uint8Array(np);
+  if(shield){const cnt=new Array(np).fill(0);own.forEach(o=>cnt[o]++);let b=0;for(let i=1;i<np;i++)if(cnt[i]>cnt[b])b=i;ground[b]=1}
+  else{let bd=1e9,bp=-1;T.forEach((t,i)=>{const d=gf176CP([0,0,0],t)[3];if(d<.03)ground[own[i]]=1;if(d<bd){bd=d;bp=own[i]}});if(bp>=0)ground[bp]=1}
+  const TT=new Float64Array(T.length*9);T.forEach((t,i)=>{for(let j=0;j<9;j++)TT[i*9+j]=t[j]});
+  const S={n:T.length,TT,own:Int32Array.from(own),np,ground,autoGround:!shield&&/bow|sling/.test(wt),R:.12,move:(pid,dx,dy,dz)=>{const p=k.P[pid];p.m=p.m.clone();p.m.elements[12]+=dx;p.m.elements[13]+=dy;p.m.elements[14]+=dz}};
+  try{gf176Run(S)}catch(e){console.warn('v177 attach kit',e)}}
+// the outermost kit builder snaps (a unique's kit calls the base weapon's kit inside it, then adds its ornaments)
+['v89WpnKit','unqWpnKit135'].forEach(n=>{const f=window[n];if(typeof f!='function')return;window[n]=function(k,it){const o=GF176.kd|0;GF176.kd=o+1;try{return f.apply(this,arguments)}finally{GF176.kd=o;if(!o)gf176Kit(k,it)}}});
 </script></body></html>
