@@ -1,4 +1,4 @@
-# floating-piece check shared by v142_folk.py and v176_enemy_parts.py (copied from v142_folk.py)
+# floating-piece check shared by v142_folk.py and v177_enemy_parts.py (copied from v142_folk.py)
 import numpy as np
 from scipy.spatial import cKDTree
 # ---------------- geometry checks ----------------
@@ -76,7 +76,7 @@ def floating(V,thr,loose_inside=False):
     out=[]
     At=T[att];D=[np.array(v,float) for v in ([1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1])]
     for c in sorted(pend):
-        # (v176) every sample point of the piece must be enclosed, not just its centre: a ring round the waist has its centre inside
+        # (v177) every sample point of the piece must be enclosed, not just its centre: a ring round the waist has its centre inside
         Q=Qs[c];o=Q.mean(0);far=Q[np.argsort(-np.linalg.norm(Q-o,axis=1))[:6]]
         if all(all(ray_hits(p,d,At) for d in D) for p in ([o] if loose_inside else [o]+list(far))):continue
         out.append((c,sizes[c],o,last[c],int(np.argmax(lab==c))))

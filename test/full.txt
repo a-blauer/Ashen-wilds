@@ -106,4 +106,4 @@ v168_tiers.py
 v168_ground.py
 v172_edge_cam.py
 FAST=0 kqd_detail.py
-NOSHEET=1 v176_enemy_parts.py
+NOSHEET=1 v177_enemy_parts.py

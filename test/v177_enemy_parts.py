@@ -1,9 +1,9 @@
-# v176: enemy models — no unattached pieces. Builds every enemy (zone rosters, camps, instance rosters and the quest-only
+# v177: enemy models — no unattached pieces. Builds every enemy (zone rosters, camps, instance rosters and the quest-only
 # foes), poses it (rest, idle, two walk phases, an attack) and
 #  * checks (FAIL lines): build errors, NaN, floating pieces (any separate piece of mesh more than FLOAT_MM (scaled with the
 #    model's size) from the rest of the model; glow / effect meshes (additive or see-through basic materials) are skipped),
 #    feet on the ground in idle (walkers only: lowest point within -3..+4 % of the height)
-#  * sheets: out/v176_en<n>.jpg — front, 3/4, side, back, and the attack pose
+#  * sheets: out/v177_en<n>.jpg — front, 3/4, side, back, and the attack pose
 # BOSSES=1: the Sovereigns and quest bosses instead (rest pose: argus,hydra,rimewraith,bloated,vaelric,vorraxis,gorthrak,qarsul,kheprit,skimmer;
 #   not Ssith'ra: its segments are laid out live along its path)
 # ONLY=orc,scarab  NOSHEET=1  POSES=rest,idle  FLOAT_MM=4 (per 1.7 m of height)
@@ -106,7 +106,7 @@ def s(pg):
                     for j,(key,u) in enumerate(ims):
                         im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,((j%4)*W,(j//4)*W))
                         if j%4==0:t=it['k']+' '+key;d.rectangle([0,(j//4)*W,len(t)*7+8,(j//4)*W+16],fill=(0,0,0));d.text((4,(j//4)*W+2),t,fill=(255,255,255))
-                    nm='%s/v176_focus_%s.jpg'%(O,it['k']);sh.save(nm,quality=88);print('wrote',nm,flush=True)
+                    nm='%s/v177_focus_%s.jpg'%(O,it['k']);sh.save(nm,quality=88);print('wrote',nm,flush=True)
             for t0,P in sorted(PC.items()):
                 cc=P['cc']
                 # a held weapon (its own mesh, no bone) off the hand only mid-attack is a grip matter of that swing: noted, not failed
@@ -121,9 +121,9 @@ def s(pg):
             for ri,(lab,shots) in enumerate(ch):
                 for ci,(l,u) in enumerate(shots):
                     im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1])));sh.paste(im,(ci*W,ri*W));t=(lab+' · '+l) if ci==0 else l;d.rectangle([ci*W,ri*W,ci*W+len(t)*7+8,ri*W+16],fill=(0,0,0));d.text((ci*W+4,ri*W+2),t,fill=(255,255,255))
-            nm='%s/v176_%s%d.jpg'%(O,'boss' if os.environ.get('BOSSES') else 'en',si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
+            nm='%s/v177_%s%d.jpg'%(O,'boss' if os.environ.get('BOSSES') else 'en',si//6);sh.save(nm,quality=86);print('wrote',nm,flush=True)
     for f in notes:print('NOTE',f)
     for f in fails:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])
-    print('==== v176_enemy_parts: %d enemies, %d fails'%(len(keys),len(fails)+len(errs[:6])))
+    print('==== v177_enemy_parts: %d enemies, %d fails'%(len(keys),len(fails)+len(errs[:6])))
 play.run(s)

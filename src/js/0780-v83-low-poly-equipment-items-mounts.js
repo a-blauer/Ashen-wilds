@@ -81,7 +81,7 @@ function lgWpnKit(k,type,col,r){
     for(let i=0;i<5;i++)k.p('','dod','c',0x3a2a1a,(R()-.5)*.12,-.35-R()*.3,(R()-.5)*.12,.035);
     for(let i=0;i<9;i++){const a=R()*6.28,y=-.4-R()*.3;k.p('','cone4','m',W.iron2,Math.cos(a)*.09,y,Math.sin(a)*.09,.014,.08,.014,Math.sin(a)*1.4,0,-Math.cos(a)*1.4)}
     k.p('','cyl','m',W.iron,0,-.3,0,.07,.04,.07);k.p('','cyl','c',W.wrap,0,0,0,.036,.12,.036)}
-  else if(type=='hammer'){haft(.08,-.7,.035,true);   /* v176: the haft runs into the head (a 4 cm gap) */[.0,-.18].forEach(q=>k.p('','cyl','m',W.iron,0,q,0,.043,.03,.043));for(let i=0;i<3;i++)k.p('','cyl','c',W.leather,0,.06-i*.03,0,.04,.02,.04);
+  else if(type=='hammer'){haft(.08,-.7,.035,true);   /* v177: the haft runs into the head (a 4 cm gap) */[.0,-.18].forEach(q=>k.p('','cyl','m',W.iron,0,q,0,.043,.03,.043));for(let i=0;i<3;i++)k.p('','cyl','c',W.leather,0,.06-i*.03,0,.04,.02,.04);
     const H=lgCol(W.iron,col==0x9aa2ae?W.iron:col,.25);k.p('','box','m',H,0,-.74,0,.36,.2,.2);[-1,1].forEach(s=>{k.p('','box','m',lgCol(H,0,.25),s*.2,-.74,0,.05,.24,.24);k.p('','box','m',W.iron2,s*.2,-.74,0,.058,.08,.25)});
     k.p('','box','m',fit,0,-.74,0,.16,.22,.215);k.p('','cone4','m',W.iron2,0,-.88,0,.04,.1,.04,Math.PI,Math.PI/4);
     if(gl)[-1,1].forEach(s=>k.p('','box','g',gl,0,-.74,s*.11,.1,.03,.008));else[-1,1].forEach(s=>k.p('','box','c',W.dark,0,-.74,s*.109,.1,.02,.006))}

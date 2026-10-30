@@ -41,7 +41,7 @@ function mdSkirt(B,P,y0,y1,fl,off,o){o=o||{};const q=mdTorsoAt(P,y0),n=o.n||5,R=
 function mdCape(B,P,col,o){o=o||{};const off=(P.tOff||0)+.016,len=o.len||.36,w=o.w||1,ins=mdSh(col,.58),tr=o.trim;
   const at=(y,bn,rx)=>{const q=mdTorsoAt(P,Math.min(.97,y));return {p:[0,y,-(Math.max(q.b,.12)+off+(.97-Math.min(.97,y))*.08)],rx:rx*w,f:.012,b:.012,w:bn}};
   const R=[at(.99,[['chest',.7],['cp0',.3]],.15),at(.86,[['cp0',1]],.19),at(.7,[['cp0',.5],['cp1',.5]],.205),at(.54,[['cp1',.5],['cp2',.5]],.215),at(len,[['cp2',1]],.22)];
-  R[0].p[2]+=.012;if(typeof SN176!='undefined'&&SN176.on&&SN176.hum>0)R[0].p[2]=-(mdTorsoAt(P,.99).b+(P.tOff||0)+.008);   // v176 (foes): the cape is pinned on at the shoulders, not 2–4 cm behind them
+  R[0].p[2]+=.012;if(typeof SN177!='undefined'&&SN177.on&&SN177.hum>0)R[0].p[2]=-(mdTorsoAt(P,.99).b+(P.tOff||0)+.008);   // v177 (foes): the cape is pinned on at the shoulders, not 2–4 cm behind them
   mdLoft(B,R,{seg:6,capA:true,capB:true,col:m=>tr!=null&&m.i>R.length-1.45?tr:m.s>.3?ins:col})}
 function mdKP(){return dkKit()}
 // rarity glow strip (Epic+) or accent strip
