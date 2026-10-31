@@ -52,7 +52,12 @@ function cgEmit(B,M,col,o){o=o||{};const t=o.t||'c',W=new Map(),wOf=i=>{let w=W.
   // a per-vertex shade (o.shade or M.shade from cgShade) is multiplied into the face colour at each corner: baked crease
   // darkening / ridge wear / height light that blends smoothly across the faceted surface, at no triangle cost
   const sh=o.shade||M.shade,pos=o.pos||(i=>M.V[i]),vx=i=>{const p=pos(i);return {x:p[0],y:p[1],z:p[2],w:wOf(i),k:sh?sh[i]:1}};
-  M.F.forEach((f,fi)=>{const m=cgInfo(M,f);if(o.keep&&!o.keep(m,fi))return;const c=mdC(typeof col=='function'?col(m):col),v=f.v.map(vx);mdTri(B,t,v[0],v[1],v[2],c);if(v.length==4)mdTri(B,t,v[0],v[2],v[3],c)})}
+  // o.vcol(m): a colour per corner instead of per face, for hides whose colour should flow (goo, moss, mottled skin) instead
+  // of stepping face by face; m = {x,y,z, nx,ny,nz, s (=nz), c (=nx), part}. col(m) returning null on a face hands it to vcol.
+  const VN=o.vcol?(M.N||cgNormals(M)):null,VC=new Map(),TC=new THREE.Color(),vc=(i,part)=>{const key=i+part;let q=VC.get(key);if(q)return q;const p=pos(i),n=VN[i];
+    TC.setHex(mdC(o.vcol({x:p[0],y:p[1],z:p[2],nx:n[0],ny:n[1],nz:n[2],s:n[2],c:n[0],part})));q=[TC.r,TC.g,TC.b];VC.set(key,q);return q};
+  M.F.forEach((f,fi)=>{const m=cgInfo(M,f);if(o.keep&&!o.keep(m,fi))return;const h=typeof col=='function'?col(m):col,v=f.v.map(vx);
+    if(h==null&&o.vcol)v.forEach((x,j)=>x.rgb=vc(f.v[j],f.part));const c=mdC(h==null?0:h);mdTri(B,t,v[0],v[1],v[2],c);if(v.length==4)mdTri(B,t,v[0],v[2],v[3],c)})}
 // baked shading per vertex of the smoothed body (docs/MODEL_DETAIL_RECIPE.md 2.2): cavity (creases darker, ridges lighter,
 // Blender's "dirty vertex colours" angle, blurred), a height gradient (darker toward the feet) and a top light (down-facing
 // darker). o: cav (strength, 1), blur (2), y0/y1 (feet / top heights), hk (height term .22), dk (down-facing term .14), min (.5)

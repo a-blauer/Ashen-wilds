@@ -6,7 +6,7 @@ function mdBI(B,n){let i=B.bi[n];if(i==null){i=B.O.indexOf(n);if(i<0)throw new E
 function mdW(B,w){const si=[0,0,0,0],sw=[0,0,0,0];let t=0;for(let j=0;j<w.length&&j<4;j++){si[j]=mdBI(B,w[j][0]);sw[j]=w[j][1];t+=w[j][1]}if(t>0)for(let j=0;j<4;j++)sw[j]/=t;else sw[0]=1;return [si,sw]}
 var MD_TC;
 function mdTri(B,t,a,b,c,col){const L=B.L[t]||B.L.c,C=MD_TC||(MD_TC=new THREE.Color());C.setHex(col);
-  for(const v of [a,b,c]){const k=v.k==null?1:v.k;L.p.push(v.x,v.y,v.z);L.c.push(C.r*k,C.g*k,C.b*k);L.si.push(v.w[0][0],v.w[0][1],v.w[0][2],v.w[0][3]);L.sw.push(v.w[1][0],v.w[1][1],v.w[1][2],v.w[1][3])}}
+  for(const v of [a,b,c]){const k=v.k==null?1:v.k,q=v.rgb;L.p.push(v.x,v.y,v.z);L.c.push((q?q[0]:C.r)*k,(q?q[1]:C.g)*k,(q?q[2]:C.b)*k);L.si.push(v.w[0][0],v.w[0][1],v.w[0][2],v.w[0][3]);L.sw.push(v.w[1][0],v.w[1][1],v.w[1][2],v.w[1][3])}}
 // two-bone weight shorthand
 function mdWb(a,b,t){return t<=0||a==b?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]]}
 // Loft: R = rings {p:[x,y,z], rx, f (front / +up-side radius), b (back radius), w:[[bone,w]…], col?}
