@@ -148,7 +148,7 @@ function cs123Merge(g){g.updateMatrixWorld(true);const inv=new THREE.Matrix4().c
     e.geo.forEach(q=>{P.set(q.attributes.position.array,off*3);if(q.attributes.normal)N.set(q.attributes.normal.array,off*3);off+=q.attributes.position.count;q.dispose()});
     const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(P,3));bg.setAttribute('normal',new THREE.BufferAttribute(N,3));bg.computeBoundingSphere();
     let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);
-      for(let i=0;i+2<P2.count;i+=3){const q=Math.sin(P2.getX(i)*12.9898+P2.getY(i)*78.233+P2.getZ(i)*37.719)*43758.5453,v=.8+.32*(q-Math.floor(q));for(let k=0;k<9;k++)cl[i*3+k]=v}
+      for(let i=0;i+2<P2.count;i+=3){const v=ep185Mottle(P2.getX(i),P2.getY(i),P2.getZ(i),P2.getX(i+1),P2.getY(i+1),P2.getZ(i+1),P2.getX(i+2),P2.getY(i+2),P2.getZ(i+2));   /* v185: smooth, not a random shade per face */for(let k=0;k<9;k++)cl[i*3+k]=v}
       bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}
     else m=new THREE.Mesh(bg,mat);
     m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)})}
@@ -248,8 +248,18 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     if(open){TQ(sg,Q.box,S(0x0e0a08),0,.43,0,1.6,.02,.46);TQ(sg,Q.box,M,.2,.08,.72,1.8,.08,.6,0,.25,.1)}else TQ(sg,Q.box,M,0,.46,0,1.86,.08,.66);return sg};
   const sarc=(x,z,a,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);TQ(sg,Q.box,M,0,.45,0,2.1,.9,.9);TQ(sg,Q.box,M,0,.95,0,2.2,.14,1);TQ(sg,Q.box,S(tr||0xd8a830,{metalness:.6,roughness:.4}),0,.62,.46,1.8,.08,.02);
     TQ(sg,Q.sph,M,.8,1.12,0,.22,.16,.22);blk(x,z,1);take(x,z,1.3);return sg};
-  const carcass=(x,z,a,k,col,ribCol)=>{const sg=sub(x,z,a,0),M=S(col||0x5a3a30);blk(x,z,.6*k);take(x,z,1.3*k);TQ(sg,Q.sph,M,0,.32*k,0,1.1*k,.42*k,.6*k);
-    for(let i=0;i<4;i++)TQ(sg,Q.arc,S(ribCol||0xe0d4b8),(i-1.5)*.34*k,.42*k,0,.5*k,.55*k,.5*k,0,P2,0);[-1,1].forEach(s=>TQ(sg,Q.cyl,M,.4*k*s,.15*k,.55*k,.07*k,.7*k,.07*k,P2-.3,0,0));TQ(sg,Q.sph,M,1.15*k,.28*k,0,.35*k,.25*k,.28*k);return sg};
+  // v185: a slain beast lying on its side, opened: ribs rising out of the wound on top, stiff legs, a head with horns, a dark pool under
+  // it (was a sausage with rib hoops round its outside, the same everywhere)
+  const carcass=(x,z,a,k,col,ribCol)=>{const sg=sub(x,z,a,0),c0=col||0x5a3a30,M=S(c0),RB=S(ribCol||0xd8ccb0),WN=S(0x3a0a0c,{roughness:.35}),HF=S(0x2a201a),v=rn();blk(x,z,.6*k);take(x,z,1.3*k);
+    TQ(sg,Q.disc,S(0x2a0608,{roughness:.25}),0,.025,.1*k,1.25*k,.85*k,1,-P2,0,0);
+    TQ(sg,Q.sph,M,0,.3*k,0,1*k,.36*k,.56*k);TQ(sg,Q.sph,M,-.62*k,.26*k,0,.48*k,.3*k,.46*k);
+    TQ(sg,Q.sph,WN,.05*k,.6*k,0,.62*k,.08*k,.3*k);
+    const R=[.24,.3,.33,.32,.27,.2];R.forEach((r,i)=>TQ(sg,Q.arc,RB,(i-2.5)*.17*k+.05*k,.58*k,0,r*k*(.9+v*.2),r*k*1.05,r*k,0,P2,0));
+    [[.48,.62,-.35,.9,.5],[-.5,.58,-.3,.95,.65],[.42,.12,.4,.5,1.45],[-.55,.12,.38,.55,1.35]].forEach(([lx,ly,lz,ll,rx])=>{const p=TQ(sg,Q.cyl,M,lx*k,ly*k+ll*k*.35,lz*k,.06*k,ll*k,.06*k,rx,0,lz<0?-.25:.2);
+      TQ(sg,Q.cone,HF,lx*k,ly*k+ll*k*.75,lz*k-(lz<0?.12:0)*k,.07*k,.14*k,.07*k,rx,0,0)});
+    TQ(sg,Q.sph,M,1.12*k,.3*k,.05*k,.36*k,.24*k,.26*k,0,.2,-.25);TQ(sg,Q.sph,M,1.42*k,.22*k,.1*k,.2*k,.13*k,.15*k,0,.2,-.4);TQ(sg,Q.sph,WN,1.5*k,.2*k,.14*k,.06*k,.05*k,.06*k);
+    [-1,1].forEach(s=>TQ(sg,Q.cone,RB,1.12*k,.5*k,.05*k+s*.14*k,.05*k,.38*k,.05*k,s*.5,0,-.7));
+    TQ(sg,Q.cyl,M,-1.05*k,.2*k,-.05*k,.04*k,.55*k,.04*k,0,0,1.25);return sg};
   // ---- water ----
   // a flat pool sunk to the lowest ground under it (the shore hides its edge); .userData.Y = its height
   const pool=(x,z,rx,rz,col,glow,op,dy)=>{let mn=1e9;[[0,0],[rx*.6,0],[-rx*.6,0],[0,rz*.6],[0,-rz*.6]].forEach(q=>mn=Math.min(mn,gy(x+q[0],z+q[1])));const y=Math.max(mn+(dy==null?.1:dy),.08)-gy(x,z);

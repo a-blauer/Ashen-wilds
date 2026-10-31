@@ -209,7 +209,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   // ================= 2. dwellings =================
   const dw=[];if(big){const L=[];rec.d.forEach(([k,n])=>{for(let i=0;i<n;i++)L.push(k)});
     const n=L.length,a0=rn()*TAU,mid=(ringIn+ringOut)/2+.4;L.forEach((k,i)=>{const big2=k=='hall',rad=big2?3.6:k=='pavilion'||k=='yurt'||k=='snowhut'||k=='stilt'?2.8:k=='burrow'||k=='carcass'||k=='mudnest'?2:k=='tent'||k=='ctent'||k=='hut'?2.5:1.9;
-      const ang=a0+i/Math.max(1,n)*TAU,p=find(Math.max(ringIn,mid-1.6),Math.min(ringOut+1.2,mid+2.2),rad,ang,TAU/Math.max(4,n)*.45)||find(ringIn,ringOut+1,rad);
+      const ang=a0+i/Math.max(1,n)*TAU,oMax=Math.max(ringIn+.5,Math.min(ringOut+1.2,rf-rad-.4)),p=find(Math.max(ringIn,mid-1.6),Math.min(oMax,mid+2.2),rad,ang,TAU/Math.max(4,n)*.45)||find(ringIn,oMax,rad);   // v185: the whole dwelling inside the palisade (tents and halls stood through it)
       if(!p)return;const [x,z]=p,a=face(x,z)+rr(-.25,.25);try{(D[k]||D.ctent)(x,z,a,k=='hall'?Math.min(1,(ringOut-ringIn+3)/6.5):1)}catch(e){console.warn('v164 dwelling',k,e)}dw.push([x,z,a,rad])})}
   // ================= 3. works (wet camps: a boardwalk from the main gate in) =================
   if(C.des&&C.des.wet&&o.gates.length){const a=g0,PL=S(pal.wood),PS=WD;let prev=null;for(let d=rf+2;d>rc*.35;d-=.5){const x=Math.cos(a)*d+Math.sin(d*.3)*.6*Math.sin(a),z=Math.sin(a)*d-Math.sin(d*.3)*.6*Math.cos(a),y=Math.max(gy(x,z),.02)+.2;

@@ -94,4 +94,4 @@ function env177Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W
     for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
     const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
-  env177().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v177 banks',e)}}
+  env177().banks={n,ms:Math.round(performance.now()-T0)};try{if(typeof ep185Ponds=='function')env177().ponds=ep185Ponds()}catch(e){console.warn('v185 ponds',e)}}catch(e){console.warn('v177 banks',e)}}   // v185: round shores (3420)

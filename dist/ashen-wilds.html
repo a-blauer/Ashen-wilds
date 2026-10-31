@@ -4516,7 +4516,7 @@ function buildCamp(C){
   by.forEach((e,mat)=>{let n=0;e.geo.forEach(q=>n+=q.attributes.position.count);const P=new Float32Array(n*3),N=new Float32Array(n*3);let off=0;
     e.geo.forEach(q=>{P.set(q.attributes.position.array,off*3);if(q.attributes.normal)N.set(q.attributes.normal.array,off*3);off+=q.attributes.position.count;q.dispose()});
     const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(P,3));bg.setAttribute('normal',new THREE.BufferAttribute(N,3));bg.computeBoundingSphere();
-    let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);for(let i=0;i+2<P2.count;i+=3){const q=Math.sin(P2.getX(i)*12.9898+P2.getY(i)*78.233+P2.getZ(i)*37.719)*43758.5453,v=.8+.32*(q-Math.floor(q));for(let k=0;k<9;k++)cl[i*3+k]=v}bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}else m=new THREE.Mesh(bg,mat);m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)});
+    let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);for(let i=0;i+2<P2.count;i+=3){const v=ep185Mottle(P2.getX(i),P2.getY(i),P2.getZ(i),P2.getX(i+1),P2.getY(i+1),P2.getZ(i+1),P2.getX(i+2),P2.getY(i+2),P2.getZ(i+2));   /* v185: smooth, not a random shade per face */for(let k=0;k<9;k++)cl[i*3+k]=v}bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}else m=new THREE.Mesh(bg,mat);m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)});
   scene.add(g);C.g=g;
 }
 let campT=0;
@@ -29740,7 +29740,7 @@ function cs123Merge(g){g.updateMatrixWorld(true);const inv=new THREE.Matrix4().c
     e.geo.forEach(q=>{P.set(q.attributes.position.array,off*3);if(q.attributes.normal)N.set(q.attributes.normal.array,off*3);off+=q.attributes.position.count;q.dispose()});
     const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(P,3));bg.setAttribute('normal',new THREE.BufferAttribute(N,3));bg.computeBoundingSphere();
     let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);
-      for(let i=0;i+2<P2.count;i+=3){const q=Math.sin(P2.getX(i)*12.9898+P2.getY(i)*78.233+P2.getZ(i)*37.719)*43758.5453,v=.8+.32*(q-Math.floor(q));for(let k=0;k<9;k++)cl[i*3+k]=v}
+      for(let i=0;i+2<P2.count;i+=3){const v=ep185Mottle(P2.getX(i),P2.getY(i),P2.getZ(i),P2.getX(i+1),P2.getY(i+1),P2.getZ(i+1),P2.getX(i+2),P2.getY(i+2),P2.getZ(i+2));   /* v185: smooth, not a random shade per face */for(let k=0;k<9;k++)cl[i*3+k]=v}
       bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}
     else m=new THREE.Mesh(bg,mat);
     m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)})}
@@ -29840,8 +29840,18 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     if(open){TQ(sg,Q.box,S(0x0e0a08),0,.43,0,1.6,.02,.46);TQ(sg,Q.box,M,.2,.08,.72,1.8,.08,.6,0,.25,.1)}else TQ(sg,Q.box,M,0,.46,0,1.86,.08,.66);return sg};
   const sarc=(x,z,a,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);TQ(sg,Q.box,M,0,.45,0,2.1,.9,.9);TQ(sg,Q.box,M,0,.95,0,2.2,.14,1);TQ(sg,Q.box,S(tr||0xd8a830,{metalness:.6,roughness:.4}),0,.62,.46,1.8,.08,.02);
     TQ(sg,Q.sph,M,.8,1.12,0,.22,.16,.22);blk(x,z,1);take(x,z,1.3);return sg};
-  const carcass=(x,z,a,k,col,ribCol)=>{const sg=sub(x,z,a,0),M=S(col||0x5a3a30);blk(x,z,.6*k);take(x,z,1.3*k);TQ(sg,Q.sph,M,0,.32*k,0,1.1*k,.42*k,.6*k);
-    for(let i=0;i<4;i++)TQ(sg,Q.arc,S(ribCol||0xe0d4b8),(i-1.5)*.34*k,.42*k,0,.5*k,.55*k,.5*k,0,P2,0);[-1,1].forEach(s=>TQ(sg,Q.cyl,M,.4*k*s,.15*k,.55*k,.07*k,.7*k,.07*k,P2-.3,0,0));TQ(sg,Q.sph,M,1.15*k,.28*k,0,.35*k,.25*k,.28*k);return sg};
+  // v185: a slain beast lying on its side, opened: ribs rising out of the wound on top, stiff legs, a head with horns, a dark pool under
+  // it (was a sausage with rib hoops round its outside, the same everywhere)
+  const carcass=(x,z,a,k,col,ribCol)=>{const sg=sub(x,z,a,0),c0=col||0x5a3a30,M=S(c0),RB=S(ribCol||0xd8ccb0),WN=S(0x3a0a0c,{roughness:.35}),HF=S(0x2a201a),v=rn();blk(x,z,.6*k);take(x,z,1.3*k);
+    TQ(sg,Q.disc,S(0x2a0608,{roughness:.25}),0,.025,.1*k,1.25*k,.85*k,1,-P2,0,0);
+    TQ(sg,Q.sph,M,0,.3*k,0,1*k,.36*k,.56*k);TQ(sg,Q.sph,M,-.62*k,.26*k,0,.48*k,.3*k,.46*k);
+    TQ(sg,Q.sph,WN,.05*k,.6*k,0,.62*k,.08*k,.3*k);
+    const R=[.24,.3,.33,.32,.27,.2];R.forEach((r,i)=>TQ(sg,Q.arc,RB,(i-2.5)*.17*k+.05*k,.58*k,0,r*k*(.9+v*.2),r*k*1.05,r*k,0,P2,0));
+    [[.48,.62,-.35,.9,.5],[-.5,.58,-.3,.95,.65],[.42,.12,.4,.5,1.45],[-.55,.12,.38,.55,1.35]].forEach(([lx,ly,lz,ll,rx])=>{const p=TQ(sg,Q.cyl,M,lx*k,ly*k+ll*k*.35,lz*k,.06*k,ll*k,.06*k,rx,0,lz<0?-.25:.2);
+      TQ(sg,Q.cone,HF,lx*k,ly*k+ll*k*.75,lz*k-(lz<0?.12:0)*k,.07*k,.14*k,.07*k,rx,0,0)});
+    TQ(sg,Q.sph,M,1.12*k,.3*k,.05*k,.36*k,.24*k,.26*k,0,.2,-.25);TQ(sg,Q.sph,M,1.42*k,.22*k,.1*k,.2*k,.13*k,.15*k,0,.2,-.4);TQ(sg,Q.sph,WN,1.5*k,.2*k,.14*k,.06*k,.05*k,.06*k);
+    [-1,1].forEach(s=>TQ(sg,Q.cone,RB,1.12*k,.5*k,.05*k+s*.14*k,.05*k,.38*k,.05*k,s*.5,0,-.7));
+    TQ(sg,Q.cyl,M,-1.05*k,.2*k,-.05*k,.04*k,.55*k,.04*k,0,0,1.25);return sg};
   // ---- water ----
   // a flat pool sunk to the lowest ground under it (the shore hides its edge); .userData.Y = its height
   const pool=(x,z,rx,rz,col,glow,op,dy)=>{let mn=1e9;[[0,0],[rx*.6,0],[-rx*.6,0],[0,rz*.6],[0,-rz*.6]].forEach(q=>mn=Math.min(mn,gy(x+q[0],z+q[1])));const y=Math.max(mn+(dy==null?.1:dy),.08)-gy(x,z);
@@ -49678,7 +49688,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   // ================= 2. dwellings =================
   const dw=[];if(big){const L=[];rec.d.forEach(([k,n])=>{for(let i=0;i<n;i++)L.push(k)});
     const n=L.length,a0=rn()*TAU,mid=(ringIn+ringOut)/2+.4;L.forEach((k,i)=>{const big2=k=='hall',rad=big2?3.6:k=='pavilion'||k=='yurt'||k=='snowhut'||k=='stilt'?2.8:k=='burrow'||k=='carcass'||k=='mudnest'?2:k=='tent'||k=='ctent'||k=='hut'?2.5:1.9;
-      const ang=a0+i/Math.max(1,n)*TAU,p=find(Math.max(ringIn,mid-1.6),Math.min(ringOut+1.2,mid+2.2),rad,ang,TAU/Math.max(4,n)*.45)||find(ringIn,ringOut+1,rad);
+      const ang=a0+i/Math.max(1,n)*TAU,oMax=Math.max(ringIn+.5,Math.min(ringOut+1.2,rf-rad-.4)),p=find(Math.max(ringIn,mid-1.6),Math.min(oMax,mid+2.2),rad,ang,TAU/Math.max(4,n)*.45)||find(ringIn,oMax,rad);   // v185: the whole dwelling inside the palisade (tents and halls stood through it)
       if(!p)return;const [x,z]=p,a=face(x,z)+rr(-.25,.25);try{(D[k]||D.ctent)(x,z,a,k=='hall'?Math.min(1,(ringOut-ringIn+3)/6.5):1)}catch(e){console.warn('v164 dwelling',k,e)}dw.push([x,z,a,rad])})}
   // ================= 3. works (wet camps: a boardwalk from the main gate in) =================
   if(C.des&&C.des.wet&&o.gates.length){const a=g0,PL=S(pal.wood),PS=WD;let prev=null;for(let d=rf+2;d>rc*.35;d-=.5){const x=Math.cos(a)*d+Math.sin(d*.3)*.6*Math.sin(a),z=Math.sin(a)*d-Math.sin(d*.3)*.6*Math.cos(a),y=Math.max(gy(x,z),.02)+.2;
@@ -55245,7 +55255,7 @@ function env177Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W
     for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
     const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
-  env177().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v177 banks',e)}}
+  env177().banks={n,ms:Math.round(performance.now()-T0)};try{if(typeof ep185Ponds=='function')env177().ponds=ep185Ponds()}catch(e){console.warn('v185 ponds',e)}}catch(e){console.warn('v177 banks',e)}}   // v185: round shores (3420)
 // ================= v178: dark-fantasy colour grade for heroes' gear =================
 // Owner (Oct 30 2026): "keep them looking non-cartoony (this is a dark fantasy game)". The armour and weapon palettes had grown
 // bright and toy-like (grass-green robes, royal and sky blue plate, cream tabards, white panels). Every colour a hero's gear is
@@ -56706,7 +56716,7 @@ function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=o.hide==null?0x5
   // the poles: up each ridge from below the ground to above the top, crossing there
   for(let i=0;i<n;i++){const c=cor(i),b=[c[0]*R(-sk)*1.02,-sk,c[1]*R(-sk)*1.02],t=[-c[0]*r*.13,h*1.18,-c[1]*r*.13];rod(b,t,.035*r,.026*r,pole,4)}
   // guy ropes from every other pole to a peg
-  if(o.rope!==false)for(let i=0;i<n;i+=2){const c=cor(i),p=[c[0]*R(.55*h)*1.03,.55*h,c[1]*R(.55*h)*1.03],g=[c[0]*r*1.75,-.04,c[1]*r*1.75];rod(p,g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)}
+  if(o.rope!==false)for(let i=0;i<n;i+=2){const c=cor(i),p=[c[0]*R(.55*h)*1.03,.55*h,c[1]*R(.55*h)*1.03],g=[c[0]*r*1.5,-.04,c[1]*r*1.5];rod(p,g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)}
   return EP185T[key]=K.done()}
 function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=o.hide==null?0x5a4632:o.hide,pole=o.pole==null?0x3a2818:o.pole,sk=.3;
   const key='A|'+[L,Wd,H,hide,pole,o.rope===false?0:1].join('|');EP185T=EP185T||{};if(EP185T[key])return EP185T[key];
@@ -56791,4 +56801,19 @@ function ep185Grad(kind){EP185S=EP185S||{m:{}};const k='g|'+kind;if(EP185S.m[k])
     const h=g.createLinearGradient(0,0,64,0);h.addColorStop(0,'rgba(60,46,34,.55)');h.addColorStop(.18,'rgba(0,0,0,0)');h.addColorStop(.82,'rgba(0,0,0,0)');h.addColorStop(1,'rgba(60,46,34,.55)');g.fillStyle=h;g.fillRect(0,0,64,64)}
   else{const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'#020202');r.addColorStop(.55,'#0a0806');r.addColorStop(.85,'#21190f');r.addColorStop(1,'#3a2c1e');g.fillStyle=r;g.fillRect(0,0,64,64)}
   const t=new THREE.CanvasTexture(c);const m=new THREE.MeshBasicMaterial({map:t});m.userData.lps=1;return EP185S.m[k]=m}
+// ---- ponds with round shores (from 3370 env177Banks, at load) ----
+// A pond is a set of water tiles, so its shore (where the ground dips under the water level) followed the tile grid: right
+// angles, ruler-straight 45° sides and a sawtooth of terrain triangles along the bank. The ground within 3 tiles of the water
+// (water and walkable land only, never a wall) is smoothed three times, so the shore line rounds off. Walking is unchanged
+// (water tiles still block), the water's edge moves at most half a tile.
+function ep185Ponds(){const T0=performance.now(),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~',DW=MAP.DW,near=new Uint8Array(W*H);let n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(wet(x,y)&&insAt(x,y))for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const X=x+dx,Y=y+dy;if(X<1||Y<1||X>=W-1||Y>=H-1)continue;const k=Y*W+X;if(!near[k]&&(wet(X,Y)||DW[k]<0)){near[k]=1;n++}}
+  const idx=[];for(let k=0;k<W*H;k++)if(near[k])idx.push(k);const hk=k=>((Math.floor(k/W))+HPD)*HW+(k%W)+HPD,tmp=new Float32Array(idx.length);
+  for(let pass=0;pass<3;pass++){idx.forEach((k,i)=>{const c=hk(k);let s=HF[c]*4,w=4;for(const [dx,dy,q] of [[1,0,2],[-1,0,2],[0,1,2],[0,-1,2],[1,1,1],[1,-1,1],[-1,1,1],[-1,-1,1]]){const kk=k+dy*W+dx;if(!near[kk])continue;s+=HF[c+dy*HW+dx]*q;w+=q}tmp[i]=s/w});
+    idx.forEach((k,i)=>{HF[hk(k)]=tmp[i]})}
+  return {tiles:n,ms:Math.round(performance.now()-T0)}}
+// camp pieces are merged by material and each face got a random shade (.8-1.12): a speckle the eye reads as noise. Now a smooth
+// variation over space at the face's middle (the v183 bake and detail paint add the rest).
+function ep185Mottle(ax,ay,az,bx,by,bz,cx,cy,cz){const x=(ax+bx+cx)/3,y=(ay+by+cy)/3,z=(az+bz+cz)/3;
+  return .93+.07*Math.sin(x*.83+z*.37+1.3)*Math.cos(z*.71-x*.29+.4)+.04*Math.sin(y*1.7+x*.23)}
 </script></body></html>

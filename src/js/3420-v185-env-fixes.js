@@ -60,7 +60,7 @@ function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=o.hide==null?0x5
   // the poles: up each ridge from below the ground to above the top, crossing there
   for(let i=0;i<n;i++){const c=cor(i),b=[c[0]*R(-sk)*1.02,-sk,c[1]*R(-sk)*1.02],t=[-c[0]*r*.13,h*1.18,-c[1]*r*.13];rod(b,t,.035*r,.026*r,pole,4)}
   // guy ropes from every other pole to a peg
-  if(o.rope!==false)for(let i=0;i<n;i+=2){const c=cor(i),p=[c[0]*R(.55*h)*1.03,.55*h,c[1]*R(.55*h)*1.03],g=[c[0]*r*1.75,-.04,c[1]*r*1.75];rod(p,g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)}
+  if(o.rope!==false)for(let i=0;i<n;i+=2){const c=cor(i),p=[c[0]*R(.55*h)*1.03,.55*h,c[1]*R(.55*h)*1.03],g=[c[0]*r*1.5,-.04,c[1]*r*1.5];rod(p,g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)}
   return EP185T[key]=K.done()}
 function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=o.hide==null?0x5a4632:o.hide,pole=o.pole==null?0x3a2818:o.pole,sk=.3;
   const key='A|'+[L,Wd,H,hide,pole,o.rope===false?0:1].join('|');EP185T=EP185T||{};if(EP185T[key])return EP185T[key];
@@ -145,3 +145,18 @@ function ep185Grad(kind){EP185S=EP185S||{m:{}};const k='g|'+kind;if(EP185S.m[k])
     const h=g.createLinearGradient(0,0,64,0);h.addColorStop(0,'rgba(60,46,34,.55)');h.addColorStop(.18,'rgba(0,0,0,0)');h.addColorStop(.82,'rgba(0,0,0,0)');h.addColorStop(1,'rgba(60,46,34,.55)');g.fillStyle=h;g.fillRect(0,0,64,64)}
   else{const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'#020202');r.addColorStop(.55,'#0a0806');r.addColorStop(.85,'#21190f');r.addColorStop(1,'#3a2c1e');g.fillStyle=r;g.fillRect(0,0,64,64)}
   const t=new THREE.CanvasTexture(c);const m=new THREE.MeshBasicMaterial({map:t});m.userData.lps=1;return EP185S.m[k]=m}
+// ---- ponds with round shores (from 3370 env177Banks, at load) ----
+// A pond is a set of water tiles, so its shore (where the ground dips under the water level) followed the tile grid: right
+// angles, ruler-straight 45° sides and a sawtooth of terrain triangles along the bank. The ground within 3 tiles of the water
+// (water and walkable land only, never a wall) is smoothed three times, so the shore line rounds off. Walking is unchanged
+// (water tiles still block), the water's edge moves at most half a tile.
+function ep185Ponds(){const T0=performance.now(),wet=(x,y)=>MAP[y]&&MAP[y][x]=='~',DW=MAP.DW,near=new Uint8Array(W*H);let n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(wet(x,y)&&insAt(x,y))for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const X=x+dx,Y=y+dy;if(X<1||Y<1||X>=W-1||Y>=H-1)continue;const k=Y*W+X;if(!near[k]&&(wet(X,Y)||DW[k]<0)){near[k]=1;n++}}
+  const idx=[];for(let k=0;k<W*H;k++)if(near[k])idx.push(k);const hk=k=>((Math.floor(k/W))+HPD)*HW+(k%W)+HPD,tmp=new Float32Array(idx.length);
+  for(let pass=0;pass<3;pass++){idx.forEach((k,i)=>{const c=hk(k);let s=HF[c]*4,w=4;for(const [dx,dy,q] of [[1,0,2],[-1,0,2],[0,1,2],[0,-1,2],[1,1,1],[1,-1,1],[-1,1,1],[-1,-1,1]]){const kk=k+dy*W+dx;if(!near[kk])continue;s+=HF[c+dy*HW+dx]*q;w+=q}tmp[i]=s/w});
+    idx.forEach((k,i)=>{HF[hk(k)]=tmp[i]})}
+  return {tiles:n,ms:Math.round(performance.now()-T0)}}
+// camp pieces are merged by material and each face got a random shade (.8-1.12): a speckle the eye reads as noise. Now a smooth
+// variation over space at the face's middle (the v183 bake and detail paint add the rest).
+function ep185Mottle(ax,ay,az,bx,by,bz,cx,cy,cz){const x=(ax+bx+cx)/3,y=(ay+by+cy)/3,z=(az+bz+cz)/3;
+  return .93+.07*Math.sin(x*.83+z*.37+1.3)*Math.cos(z*.71-x*.29+.4)+.04*Math.sin(y*1.7+x*.23)}
