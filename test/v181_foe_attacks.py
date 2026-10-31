@@ -7,12 +7,15 @@
 #  * the weapon stays in the fist all through the attack (the point held in the fist on the hand's grip anchor);
 #  * the recovery never takes the weapon's head further toward the target than it was at the hit (no "second blow");
 #  * the weapon (from a third of the way up the handle to the head) never passes through the head (a capsule round the
-#    head bone, radius HEAD_R x the height / 1.7);
+#    head bone, radius HEAD_R x the height / 1.7); in the recovery, its last frames too, it never comes nearer the head
+#    than that (or than the carry grip itself, for a weapon carried by the head);
 #  * WEAPON FACING (owner: a hard rule), every weapon foe, both strike variants (the foe's 1st and 2nd attack): at the hit
 #    the edge (axe / great-axe bit, sword / greatsword / dagger-slash edge, hammer face, halberd blade on the sweep) is within
 #    30 deg of the head's travel and not turned back toward the foe; on thrusts (dagger stab, halberd thrust) the point is
 #    within 30 deg; inside the blow the edge is never over 120 deg off its travel, never faces up on a downward swing, and a
 #    one-sided blade never faces the foe's own body (FAIL lines name the foe, the frame and the angle);
+#  * the weapon inside the fist: the handle tilts at most FIST_TILT (18) deg away from the carry grip and rolls at most
+#    FIST_ROLL (50) deg about its own axis, at every frame (more shows as a weapon angling inside a closed hand);
 #  * the feet stay planted (ankles within a few cm of where they stood), no NaN, the pose returns to the plain stance after;
 #  * one real enemy fight step (mStart / mTick / animC): the system drives the attack and the head lands toward the hero.
 # ONLY=orc,gharial  HEAD_R=.07
@@ -21,6 +24,7 @@ sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP
 HEAD_R=float(os.environ.get('HEAD_R','.07'))
+FIST_TILT=float(os.environ.get('FIST_TILT','18'));FIST_ROLL=float(os.environ.get('FIST_ROLL','50'))   # the weapon inside the closed fist
 FOES=[('brigand','strike'),('orc','strike'),('orc','slam'),('troll','strike'),('hobgoblin','strike'),('skeleton','strike'),('nagaw','strike'),
   ('executioner','strike'),('giant','strike'),('giant','slam'),('jotun','strike'),('vampk','strike'),('hollowknight','strike'),('hollowknight','slam'),
   ('gharial','strike'),('bandit','strike'),('vamp','strike'),('ss165zealot','strike'),
@@ -42,8 +46,8 @@ JS=r"""([k,n,rep2,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
  tl.sort((a,c)=>tOf(a[0],a[1])-tOf(c[0],c[1]));   /* the hit sample in its place in time (the head's travel is measured frame to frame) */
  // the alternate strike: one unmeasured attack first, so this one is the foe's second
  if(rep2){for(const [ph,kk] of tl){g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};step(dt*1000)}g.ak=null;for(let i=0;i<6;i++)step(dt*1000)}
- let maxGrip=0,maxFoot=0,nan=0,res=null,driven=0,hitZ=null,recOver=null,headMin=9,headAt=null,fi=0;const sc=H/1.7;
- let shF=null,bowF=null,wEdge=0,prevTip=null,prevT=0,face=null,maxBack=null,foeFace=null,upDown=null,tn='';const ang=(a,b)=>Math.acos(Math.max(-1,Math.min(1,a.dot(b)/(a.length()*b.length()||1))))*57.2958;
+ let maxGrip=0,maxFoot=0,nan=0,res=null,driven=0,hitZ=null,recOver=null,headMin=9,headAt=null,fi=0,carryHead=null,recHead=[0,9];const sc=H/1.7;
+ let fist={},shF=null,bowF=null,wEdge=0,prevTip=null,prevT=0,face=null,maxBack=null,foeFace=null,upDown=null,tn='';const ang=(a,b)=>Math.acos(Math.max(-1,Math.min(1,a.dot(b)/(a.length()*b.length()||1))))*57.2958;
  const fa0=()=>g._fa;
  for(const [ph,kk] of tl){g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};step(dt*1000);const S=g._fa;if(S&&S.ph>=0)driven=1;
   b.pelvis.traverse(o=>{if(o.isBone&&(isNaN(o.quaternion.x)||isNaN(o.position.x)))nan=1});
@@ -52,7 +56,14 @@ JS=r"""([k,n,rep2,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
     const ap=W.parent.localToWorld(an());maxGrip=Math.max(maxGrip,hp.distanceTo(ap))}
   if(feet0){maxFoot=Math.max(maxFoot,P(b.lh2).distanceTo(feet0[0]),P(b.rh2).distanceTo(feet0[1]))}
   fi++;
-  // weapon facing: the edge (or point) against the head's travel
+  /* the weapon inside the fist: its turn away from the carry grip in the hand's frame, split into the handle's tilt (the
+     handle axis leaving the fist's axis; must stay small, or the weapon visibly angles inside the closed hand) and its roll
+     about its own axis (a round handle turning in the grip) */
+  if(we&&we.W.parent&&!(ph==0&&kk<.02)){const Pq=we.W.quaternion.clone().multiply(we.C.q.clone().invert()),ax=new V(0,1,0).applyQuaternion(we.C.q).normalize();
+    const d=Pq.x*ax.x+Pq.y*ax.y+Pq.z*ax.z,tw=new THREE.Quaternion(ax.x*d,ax.y*d,ax.z*d,Pq.w);if(tw.lengthSq()<1e-12)tw.identity();else tw.normalize();
+    const sw=Pq.clone().multiply(tw.clone().invert()),tilt=2*Math.acos(Math.min(1,Math.abs(sw.w)))*57.2958,roll=2*Math.acos(Math.min(1,Math.abs(tw.w)))*57.2958;
+    if(!fist.t||tilt>fist.t[1])fist.t=[fi,tilt];if(!fist.r||roll>fist.r[1])fist.r=[fi,roll]}
+  /* weapon facing: the edge (or point) against the head's travel */
   if(we&&we.W.parent&&S){const W=we.W,L=W.userData.faLen||.8,tipW=W.localToWorld(new V(0,-L,0)),q=new THREE.Quaternion();W.matrixWorld.decompose(new V(),q,new V());
     wEdge=we.edge||0;const t=tOf(ph,kk),ex=new V(1,0,0).applyQuaternion(q),hdir=new V(0,-1,0).applyQuaternion(q);tn=S.T&&S.T.nm||'';
     if(prevTip&&t>prevT+.004){const v=tipW.clone().sub(prevTip).divideScalar(t-prevT),sp=v.length();
@@ -66,8 +77,12 @@ JS=r"""([k,n,rep2,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
     if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6)hitZ=tipZ;
     if(ph==2&&hitZ!=null&&tipZ>hitZ+.04*sc&&(!recOver||tipZ-hitZ>recOver[1]))recOver=[fi,tipZ-hitZ];
     // the weapon past the fist against a capsule round the head (head bone up 0.16 x scale)
-    if(!(ph==0&&kk<.15)&&!(ph==2&&kk<.15)){const h0=P(b.head),h1=h0.clone().add(new V(0,.16*sc,0)),seg=new THREE.Line3(h0,h1),cp=new V();
-      for(let j=0;j<=6;j++){const y=hd[1]+(-L-hd[1])*(.35+.65*j/6),pt=W.localToWorld(new V(hd[0],y,hd[2]));seg.closestPointToPoint(pt,true,cp);const d=pt.distanceTo(cp)/sc;if(d<headMin){headMin=d;headAt=fi}}}}
+    {const h0=P(b.head),h1=h0.clone().add(new V(0,.16*sc,0)),seg=new THREE.Line3(h0,h1),cp=new V();let dm=9;
+      for(let j=0;j<=6;j++){const y=hd[1]+(-L-hd[1])*(.35+.65*j/6),pt=W.localToWorld(new V(hd[0],y,hd[2]));seg.closestPointToPoint(pt,true,cp);dm=Math.min(dm,pt.distanceTo(cp)/sc)}
+      if(!(ph==0&&kk<.15)&&!(ph==2&&kk<.15)&&dm<headMin){headMin=dm;headAt=fi}
+      /* the whole recovery, its last frames too: never nearer the head than the capsule (or than the carry grip itself, for a
+         weapon carried by the head) */
+      if(ph==0&&carryHead==null)carryHead=dm;if(ph==2&&dm<recHead[1])recHead=[fi,dm]}}
   if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6&&S&&S.shN){const q=new THREE.Quaternion();S.oA[2].matrixWorld.decompose(new V(),q,new V());shF=+S.shN.clone().applyQuaternion(q).z.toFixed(2)}
   if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6&&S&&S.bw&&S.bw.W.parent){const q=new THREE.Quaternion();S.bw.W.matrixWorld.decompose(new V(),q,new V());
     const sx=new V(1,0,0).applyQuaternion(q),ly=new V(0,1,0).applyQuaternion(q);bowF={string:+sx.z.toFixed(2),limb:+Math.abs(ly.y).toFixed(2)}}
@@ -77,7 +92,7 @@ JS=r"""([k,n,rep2,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
     }}
  g.ak=null;for(let i=0;i<20;i++)step(16);
  let back=0;for(const x in rot0)back=Math.max(back,2*Math.acos(Math.min(1,Math.abs(rot0[x].dot(b[x].quaternion)))));
- Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt,face,maxBack,foeFace,upDown,tn,edge:wEdge,bowF,shF});scene.remove(g);return out}"""
+ Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt,carryHead,recHead,face,maxBack,foeFace,upDown,tn,edge:wEdge,bowF,shF,fist,errM:g._fa&&g._fa.errM?g._fa.errM*57.2958:0,errS:g._fa&&g._fa.errS});scene.remove(g);return out}"""
 JS_GAME=r"""()=>{const V=THREE.Vector3,out={err:[]};const p=pl.position;const e=spawnEnemy_base('orc',p.x,p.z+1.6,5,{agg:1});e.m.scale.setScalar(e.m.bs);
  let now=performance.now();const tick=()=>{now+=16;e.m._ie=e;if(e.atk)mTick(e,.016,now);animC(e.m,now,false,0);e.m.updateMatrixWorld(true)};
  for(let i=0;i<10;i++)tick();mStart(e,pl,'strike');let hitTip=null,drv=0,n=0;
@@ -132,6 +147,11 @@ def s(pg):
                 if r['maxBack'] and r['maxBack'][1]>120:fails.append('%s: the edge is backwards in the blow (%.0f deg off the travel, frame %d)'%(tag,r['maxBack'][1],r['maxBack'][0]))
                 if r['upDown']:fails.append('%s: the edge faces up on a downward swing (frame %d) %s'%(tag,r['upDown'][0],r['upDown'][2:]))
             if r['foeFace'] and r['foeFace'][1]<45:fails.append('%s: the blade faces the foe itself (%.0f deg, frame %d)'%(tag,r['foeFace'][1],r['foeFace'][0]))
+        fs=r.get('fist') or {}
+        if fs.get('t'):
+            print('   in the fist: tilt max %.1f deg (frame %d), roll max %.1f deg (frame %d); weapon off its aim at most %.0f deg (s %s)'%(fs['t'][1],fs['t'][0],fs['r'][1],fs['r'][0],r.get('errM',0),r.get('errS')))
+            if fs['t'][1]>FIST_TILT:fails.append('%s: the weapon tilts %.0f deg inside the fist (frame %d; max %d)'%(tag,fs['t'][1],fs['t'][0],FIST_TILT))
+            if fs['r'][1]>FIST_ROLL:fails.append('%s: the handle rolls %.0f deg inside the fist (frame %d; max %d)'%(tag,fs['r'][1],fs['r'][0],FIST_ROLL))
         if r.get('shF') is not None:
             print('   shield face toward the target %.2f'%r['shF'])
             if r['shF']<.5:fails.append('%s: the shield does not face outward toward the target at the hit (%.2f)'%(tag,r['shF']))
@@ -140,6 +160,8 @@ def s(pg):
             if bf['string']>-.3:fails.append('%s: the bow string does not face the archer at the release (%.2f)'%(tag,bf['string']))
             if bf['limb']<.7:fails.append('%s: the bow is not held upright at the release (%.2f)'%(tag,bf['limb']))
         if r['recOver']:fails.append('%s: the recovery takes the weapon head %.2f m further toward the target than at the hit (frame %d): reads as a second blow'%(tag,r['recOver'][1],r['recOver'][0]))
+        if r['recHead'][1]<9:print('   recovery: weapon nearest the head %.3f x scale (frame %d; at the carry %.3f)'%(r['recHead'][1],r['recHead'][0],r['carryHead'] if r['carryHead'] is not None else 9))
+        if r['recHead'][1]<min(HEAD_R,(r['carryHead'] if r['carryHead'] is not None else 9)-.01):fails.append('%s: the recovery brings the weapon through the head (%.3f x scale from it, frame %d)'%(tag,r['recHead'][1],r['recHead'][0]))
         if r['headMin']<HEAD_R:fails.append('%s: the weapon passes through the head (%.3f x scale from the head, frame %s)'%(tag,r['headMin'],r['headAt']))
         if r['maxGrip']>.03*sc+.01:fails.append('%s: the weapon leaves the fist (%.3f m)'%(tag,r['maxGrip']))
         if r['maxFoot']>.035*sc:fails.append('%s: the feet slide (%.3f m)'%(tag,r['maxFoot']))

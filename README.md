@@ -687,8 +687,12 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   body frame), the weapon's direction and edge, the elbow's direction, the body (hip / spine / chest turn, lean, side bend,
   pelvis drop, weight shift) and the off hand (on the haft, a counterbalance, the shield up, the bow held out). `faApply` solves
   it every frame: body first (legs re-solved so the feet stay put), then the arm by two-bone IK with the elbow placed and the
-  wrist rolled together for a natural wrist (`faBest`), the weapon (fixed in the fist at its carry grip) aimed by the hand;
-  what a wrist can't do the weapon makes by pivoting up to 40° about the point held in the fist. Classes (`FA_K`, by hum key):
+  wrist rolled together for a natural wrist (`faBest`), the weapon (fixed in the fist at its carry grip) aimed by the hand.
+  The wrist moves as a real one (owner: no weapon angling inside a closed fist): flex / extend 65° (turns the weapon about its
+  own handle), ulnar 35° / radial 20° (changes the handle-to-forearm angle), forearm turn 100° (`FA_WL`, `faWristClamp`); past
+  that only 15° of tilt and 45° of roll about the round handle are left to the weapon inside the fist (`FA_FIST`). A fist holds
+  its handle roughly across the forearm, so the keys keep the weapon square to the forearm all through the swing and the arm,
+  elbow and body make the blow. Classes (`FA_K`, by hum key):
   one-handed (forehand diagonal / overhead chop, shield up for the skeleton and naga warrior), two-handed (overhead smash /
   big diagonal), halberd (thrust / sweep), dagger (gut thrust / slash), staff cast and rainfire, sling whirl, bow draw, unarmed
   rake / haymaker / hammer-fist (arms alternate), the sand elemental's push. The earlier layers (walk, idle, stance) run with the
@@ -699,10 +703,11 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   draws the hand in before the weapon rises, never reaching further toward the target than at the hit (`S.zHit` clamp).
   Weapon facing is a hard rule (owner): through the blow the striking edge (axe / great-axe bit `+x`, sword / greatsword /
   dagger edges `±x`, hammer faces `±x`, halberd blade `+x`, from `GRIP[type].edge` and checked against the models) leads the
-  head's real travel — the solver prefers it, then the forearm roll and the in-fist pivot, and finally the round handle turns
-  in the fist until it does; outside the blow it may lag but never turns backwards. Thrusts keep the point on the drive.
+  head's real travel — the solver picks the elbow place and forearm turn for it (the keys are authored so the edge can lead
+  with the wrist inside its range); outside the blow it may lag but never turns backwards. Thrusts keep the point on the drive.
   Signature moves keep the older poses. Test `v181_foe_attacks.py` (also: no "second blow" in the recovery, no weapon through
-  the head, edge / point within 30 deg of the travel at the hit, shield face out, bow string toward the archer).
+  the head, nor nearer it in the recovery than at the carry, edge / point within 30 deg of the travel at the hit, shield face
+  out, bow string toward the archer, the weapon in the fist at most 18° tilted and 50° rolled from its carry grip at every frame).
 - **Eleven enemies rebuilt (v181, `3390`–`3392`)**: the owner found the Yeti, Stormborn Jotun, the three naga, both harpies, the
   Vampire Thrall, Blood Knight, Blood Magister, Crimson Executioner and Nosferatu too simple, goofy or badly proportioned.
   * Toolkit (`3390`): `a181TRings(kind)` torso shapes (brute / knight / lean / gaunt) and `a181Torso`; `a181Arm` (deltoid, biceps,
