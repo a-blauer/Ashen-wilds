@@ -13,9 +13,9 @@
 // ---------------- a feather blade for kit parts: along +y (0..1), width x (±.5), thickness z ----------------
 var BD183={G:{}};
 function bd183G(kind){if(BD183.G[kind])return BD183.G[kind];
-  const ST=kind=='lance'?[0,.2,.45,.7,.88,1]:[0,.25,.55,.8,1],P=[],I=[];
-  const wf=t=>{let w=t<.2?.55+.45*t/.2:1;if(kind=='lance'){if(t>.35)w*=Math.max(0,1-(t-.35)/.65)}else{if(t>.62)w*=Math.sqrt(Math.max(0,1-Math.pow((t-.62)/.38,2)))}return w};
-  ST.forEach(t=>{const w=wf(t)*.5,cam=.35*wf(t);P.push(-w,t,-.2*cam, 0,t,1+cam, 0,t,-1+cam*.6, w,t,-.2*cam)});
+  const ST=kind=='contour'?[0,.25,.55,.8,1]:[0,.2,.45,.7,.88,1],P=[],I=[],ridge=kind=='soft'?.08:.35;
+  const wf=t=>{let w=t<.2?.55+.45*t/.2:1;if(kind=='lance'){if(t>.35)w*=Math.max(0,1-(t-.35)/.65)}else if(kind=='soft'){if(t>.45)w*=Math.pow(Math.max(0,1-(t-.45)/.55),.7)}else{if(t>.62)w*=Math.sqrt(Math.max(0,1-Math.pow((t-.62)/.38,2)))}return w};
+  ST.forEach(t=>{const w=wf(t)*.5,cam=ridge*wf(t);P.push(-w,t,-.2*cam, 0,t,1+cam, 0,t,-1+cam*.6, w,t,-.2*cam)});
   for(let i=0;i<ST.length-1;i++){const a=i*4,b=a+4;I.push(a,a+1,b, a+1,b+1,b, a+1,a+3,b+1, a+3,b+3,b+1, a,b,a+2, b,b+2,a+2, a+2,b+2,a+3, a+3,b+2,b+3)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return BD183.G[kind]=g}
 // one feather part: root a, pointing dir, flat side facing nrm; len, half width w; bn = bone name or [[bone,weight],…]
@@ -47,11 +47,11 @@ function bd183Coat(k,T,o){const V=THREE.Vector3;o.zs.forEach((z,r)=>{for(let i=0
 // the front of the breast (faces forward, which the round-the-body rows miss): rows at heights ys, xs across, from z0 forward
 function bd183Bib(k,o){const V=THREE.Vector3;o.ys.forEach((y,r)=>o.xs.forEach((x,i)=>{const xx=x+(r%2?o.dx||0:0),S=bd183Hit(o.G,o.O,[xx,y,o.z0],[xx*1.5,0,1]);if(!S||S.n[2]<.15)return;
     const n=new V(...S.n),want=new V(0,-1,-.15).normalize(),d=want.clone().sub(n.clone().multiplyScalar(want.dot(n))).normalize().addScaledVector(n,o.lift||.12).normalize();
-    bd183F(k,S.w,o.col(r,i),new V(...S.p).addScaledVector(n,-.004).toArray(),d.toArray(),S.n,o.len*(1+.1*Math.sin(r*2.3+i*1.9)),o.w,'contour')}))}
+    bd183F(k,S.w,o.col(r,i),new V(...S.p).addScaledVector(n,-.004).toArray(),d.toArray(),S.n,o.len*(1+.1*Math.sin(r*2.3+i*1.9)),o.w,'soft')}))}
 // eyes: dark socket, round glowing iris and pupil, rounded brow shelf (x side offset, y, z of the eye centre, r iris radius)
 function bd183Eyes(k,s,x,y,z,r,eye,brow,yaw){k.p('head','sph','c',0x080706,s*(x-.004),y,z-.002,r*1.35,r*1.15,r*.7,0,s*yaw,0);
   k.p('head','sph2','g',eye,s*x,y,z,r,r,r*.6,0,s*yaw,0);k.p('head','sph','c',0x050404,s*(x+r*.45),y+.001,z+r*.28,r*.42,r*.42,r*.3,0,s*yaw,0);
-  k.p('head','sph','c',brow,s*(x-.006),y+r*1.15,z+.004,r*1.9,r*.6,r*1.5,.05,s*(yaw-.15),s*.32)}
+  k.p('head','sph','c',brow,s*(x-.012),y+r*.95,z+.002,r*1.55,r*.42,r*1.25,.05,s*(yaw-.15),s*.32)}
 // a static vertex-coloured feather mesh (tails): F = [{a, d, n, len, w, shape, col(t, side, top)}] in the bone's model space
 function bd183Mesh(F){const pos=[],col=[],V=THREE.Vector3,tc=new THREE.Color();
   F.forEach(o=>{const ST=[0,.18,.4,.6,.78,.9,1],R=new V(...o.a),d=new V(...o.d).normalize(),n=new V(...o.n);n.sub(d.clone().multiplyScalar(n.dot(d))).normalize();const lw=new V().crossVectors(d,n).normalize(),th=Math.max(.0025,o.w*.09);
@@ -78,11 +78,11 @@ function bd183Tail(sp,C){const key='T|'+sp+'|'+C;if(BD183.G[key])return BD183.G[
     const L2=Math.hypot(...d),e=[r[0]+d[0]/L2*len*.78,r[1]+d[1]/L2*len*.78+.002,r[2]+d[2]/L2*len*.78];F.push({a:e,d,n:[s*.2,1,0],len:.16,w:.034,shape:'round',col:(t,sd,tp,o)=>o.copy(t>.7?tipC:K.tip),droop:0})});
   // upper tail coverts (over the root), under tail coverts (pale, below)
   for(let i=0;i<7;i++){const u=(i-3)/3,a=u*D.A*.7;F.push({a:[D.up[0]+Math.sin(a)*.03,D.up[1]+.003*(1-Math.abs(u)),D.up[2]],d:[Math.sin(a)*.5,-.12,-1],n:[Math.sin(a)*.3,1,0],len:D.upL,w:D.w*.95,shape:'round',col:(t,sd,tp,o)=>tp?o.copy(K.cov).multiplyScalar(t>.75?.72:.86):o.copy(K.lin),droop:.04})}
-  for(let i=0;i<5;i++){const u=(i-2)/2,a=u*D.A*.6;F.push({a:[D.un[0]+Math.sin(a)*.03,D.un[1],D.un[2]],d:[Math.sin(a)*.5,.05,-1],n:[0,-1,0],len:D.unL,w:D.w*.9,shape:'round',col:(t,sd,tp,o)=>o.copy(K.lin).multiplyScalar(.92+.08*tp),droop:-.03})}
+  for(let i=0;i<5;i++){const u=(i-2)/2,a=u*D.A*.6;F.push({a:[D.un[0]+Math.sin(a)*.03,D.un[1]+.012,D.un[2]],d:[Math.sin(a)*.5,.08,-1],n:[0,-1,0],len:D.unL*.85,w:D.w*.9,shape:'round',col:(t,sd,tp,o)=>o.copy(K.lin).multiplyScalar(.92+.08*tp),droop:-.03})}
   return BD183.G[key]=bd183Mesh(F)}
 function bd183TailOn(x,sp,C,mat){const p=lpPart(x.S,x.bones,'tail0',bd183Tail(sp,C),mat,0,0,0,1,1,1,0,0,0);
   // lpPart places the mesh at the given model point; the geometry is already in model space, so undo the bone offset
-  const r=x.S.bones.tail0;p.position.set(-r[1],-r[2],-r[3]);return p}
+  const r=x.S.bones.tail0;p.position.set(-r[1],-r[2],-r[3]);x.bd183T=p;return p}
 
 // ======================================================================== the kits ========================================================================
 // shared pieces: beak with a cere, talons, coat (breast rows, nape cape), trousers
@@ -97,26 +97,26 @@ function bd183Trousers(k,T,s,o){const b=s<0?"hl0":"hr0",fx=s*(o.x||.075),V=THREE
 // ---------------- Skyhawk ----------------
 function bd183KitSky(k,c,C,red,G,O){
   const T=HWK_BODY,main=lpMain(C,.22),M=main.getHex(),back=dkShade(M,.55),deep=dkShade(M,.35),bel=new THREE.Color(0xd8ccb0),barC=main.clone().multiplyScalar(.5).lerp(new THREE.Color(0x3a3024),.4),
-    pale=bel.clone().multiplyScalar(.9).getHex(),bar=bel.clone().lerp(barC,.32).getHex(),eye=red?0xff2a2a:0xf2b21e,beak=0x2a2420,tip=0x14100e,cere=0xc89a3a,trou=bel.clone().lerp(main,.55).multiplyScalar(.85).getHex();
+    pale=bel.clone().multiplyScalar(.9).getHex(),bar=bel.clone().multiplyScalar(.9).lerp(barC,.16).getHex(),eye=red?0xff2a2a:0xf2b21e,beak=0x2a2420,tip=0x14100e,cere=0xc89a3a,trou=bel.clone().lerp(main,.55).multiplyScalar(.85).getHex();
   [-1,1].forEach(s=>{bd183Eyes(k,s,.07,.893,.432,.019,eye,back,.62);
     bd183Talons(k,s,{toe:0x9a8448,claw:tip});
     bd183Trousers(k,T,s,{rows:3,y0:.47,dy:.045,z0:.0,r:r=>.064-r*.009,len:.09,w:.026,col:(r,i)=>(r+i)%3?trou:dkShade(trou,.8)})});
   // the hooked beak with a cere at its base and nostrils
   k.L('head','c',beak,[0,.872,.48],[0,.865,.56],.032,.018,6).L('head','c',tip,[0,.865,.56],[0,.83,.6],.018,.004,5);
-  k.L('jaw','c',dkShade(beak,1.3),[0,.84,.48],[0,.835,.54],.022,.008,5);
+  k.L('jaw','c',dkShade(beak,1.3),[0,.846,.48],[0,.845,.545],.022,.008,5);
   k.L('head','c',cere,[0,.874,.466],[0,.874,.494],.037,.034,7);[-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.018,.884,.5,.006,.004,.006));
   // a swept nape crest of pointed feathers
   for(let i=-2;i<=2;i++)bd183F(k,'head',Math.abs(i)%2?back:deep,[i*.022,.94-Math.abs(i)*.006,.4],[i*.12,.25,-1],[i*.1,1,.25],.13-Math.abs(i)*.018,.018,'lance');
   // the coat: barred breast rows, a dark nape cape over the wing roots
-  bd183Coat(k,T,{G,O,zs:[.22,.17,.12,.07,.02,-.03,-.08],t0:1.7,t1:2.75,n:4,len:.065,w:.026,down:1.2,lift:.12,col:(r,i)=>r%2?bar:pale});
-  bd183Bib(k,{G,O,ys:[.74,.7,.66,.62,.58,.54],xs:[-.075,-.025,.025,.075],dx:.025,z0:.2,len:.065,w:.027,lift:.12,col:(r,i)=>r%2?bar:pale});
+  bd183Coat(k,T,{G,O,zs:[.22,.17,.12,.07,.02,-.03,-.08],t0:1.7,t1:2.75,n:4,len:.085,w:.021,down:1.2,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?bar:pale});
+  bd183Bib(k,{G,O,ys:[.74,.7,.66,.62,.58,.54],xs:[-.075,-.025,.025,.075],dx:.025,z0:.2,len:.085,w:.022,lift:.035,col:(r,i)=>(r*2+i)%5==1?bar:pale});
   bd183Coat(k,T,{G,O,zs:[.33,.29,.25,.21,.17,.13,.09],t0:0,t1:1.3,n:6,len:.065,w:.026,down:.25,lift:.08,col:(r,i)=>(r+i)%3?M:dkShade(M,.8)});
   // the rump, under the tail
   k.L('tail0','c',back,[0,.565,-.24],[0,.53,-.36],.07,.045,6)}
 // ---------------- Stormtalon ----------------
 function bd183KitSt(k,c,C,red,G,O){
   const T=ST150.body,K=st150Cols(C),main=K.main.getHex(),back=dkShade(main,.5),deep=dkShade(main,.3),eye=red?0xff2a2a:0xf4e46a,glow=0x9ae8ff,steel=0x2a2e34,steelD=0x14161a,claw=0x0a0a0c,scale=0x5a6070,
-    pale=K.pale.getHex(),chev=K.pale.clone().lerp(K.chev,.4).getHex();
+    pale=K.pale.getHex(),chev=K.pale.clone().lerp(K.chev,.18).getHex();
   [-1,1].forEach(s=>{bd183Eyes(k,s,.064,.895,.447,.017,eye,deep,.62);
     // the glowing lightning streak under each eye
     k.L('head','g',glow,[s*.064,.873,.452],[s*.07,.86,.42],.006,.005,3).L('head','g',glow,[s*.07,.86,.42],[s*.07,.862,.39],.005,.004,3).L('head','g',glow,[s*.07,.862,.39],[s*.072,.845,.36],.004,.002,3);
@@ -128,33 +128,38 @@ function bd183KitSt(k,c,C,red,G,O){
   // the lightning crest: zigzag plumes swept back from the crown, glowing tips (kept from v150)
   for(let i=-3;i<=3;i++){const x=i*.016,L=1-Math.abs(i)*.17,p0=[x,.935,.425-Math.abs(i)*.012],p1=[x*1.5,.975+.03*L,.37],p2=[x*1.9,.968+.04*L,.31-.03*L],p3=[x*2.3,1.0+.07*L,.24-.07*L];
     k.L('head','c',Math.abs(i)%2?back:deep,p0,p1,.022,.016,4).L('head','c',Math.abs(i)%2?deep:back,p1,p2,.016,.011,4).L('head','g',glow,p2,p3,.011,.002,4)}
-  bd183Coat(k,T,{G,O,zs:[.23,.18,.13,.08,.03,-.02,-.07],t0:1.7,t1:2.75,n:4,len:.06,w:.024,down:1.2,lift:.12,col:(r,i)=>r%2?chev:pale});
-  bd183Bib(k,{G,O,ys:[.76,.72,.68,.64,.6,.56,.52],xs:[-.06,-.02,.02,.06],dx:.02,z0:.2,len:.06,w:.024,lift:.12,col:(r,i)=>r%2?chev:pale});
+  bd183Coat(k,T,{G,O,zs:[.23,.18,.13,.08,.03,-.02,-.07],t0:1.7,t1:2.75,n:4,len:.08,w:.02,down:1.2,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?chev:pale});
+  bd183Bib(k,{G,O,ys:[.76,.72,.68,.64,.6,.56,.52],xs:[-.06,-.02,.02,.06],dx:.02,z0:.2,len:.08,w:.02,lift:.035,col:(r,i)=>(r*2+i)%5==1?chev:pale});
   bd183Coat(k,T,{G,O,zs:[.35,.31,.27,.23,.19,.15,.11],t0:0,t1:1.3,n:6,len:.06,w:.024,down:.25,lift:.08,col:(r,i)=>(r+i)%3?main:dkShade(main,.8)});
   k.L('tail0','c',back,[0,.565,-.24],[0,.535,-.38],.06,.035,6)}
 // ---------------- Rocsovereign ----------------
 function bd183KitRs(k,c,C,red,G,O){
   const T=RS150.body,K=rs150Cols(C),main=K.main.getHex(),back=K.back.getHex(),dk=K.dk.getHex(),cream=K.cream.getHex(),eye=red?0xff2a2a:0xffb020,ivory=0xd8c088,ivoryD=0xa88a50,tip=0x241c12,gold=0xe8c060,claw=0x16120e;
   [-1,1].forEach(s=>{bd183Eyes(k,s,.09,.902,.455,.021,eye,dk,.6);
-    bd183Talons(k,s,{toe:0xc8a040,claw,g:1.2});
+    bd183Talons(k,s,{toe:0xa88c44,claw,g:1.2});
     // legs feathered down to the ankles: rows of feathers round the thigh and shank
     bd183Trousers(k,T,s,{x:.088,rows:4,y0:.47,dy:.05,z0:.0,r:r=>.1-r*.008,len:.1,w:.032,col:(r,i)=>(r+i)%3?main:back});
     [0,1,2].forEach(r=>{const N=8;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.4,n=[Math.sin(a),0,Math.cos(a)],rr=.07-r*.012;
       bd183F(k,s<0?"hl1":"hr1",(r+i)%2?main:K.cream.clone().lerp(K.main,.5).getHex(),[s*.08+n[0]*rr,.3-r*.05,.018+n[2]*rr],[n[0]*.2,-1,n[2]*.2],n,.08,.026,'contour')}})});
   // the massive hooked beak: ivory-gold, a dark hooked tip; a heavy lower mandible; a cere
   k.L('head','c',ivory,[0,.9,.49],[0,.897,.6],.052,.03,6).L('head','c',ivoryD,[0,.897,.6],[0,.862,.655],.03,.013,6).L('head','c',tip,[0,.862,.655],[0,.812,.662],.013,.002,5);
-  k.L('jaw','c',ivoryD,[0,.85,.5],[0,.845,.6],.036,.012,6);k.L('head','c',0xc8a040,[0,.902,.48],[0,.902,.505],.056,.052,8);
+  k.L('jaw','c',ivoryD,[0,.85,.5],[0,.845,.6],.036,.012,6);k.L('head','c',0xa88c44,[0,.902,.48],[0,.902,.505],.056,.052,8);
   [-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.028,.918,.51,.008,.005,.008));
   // the crown: a fan of stiff upright crest feathers with golden tips, long plumes swept back behind
   for(let i=-3;i<=3;i++){const x=i*.026,b=[x,.962-Math.abs(i)*.006,.4-Math.abs(i)*.012],d=[x*2.6,1,-.3],L=(i%2?.13:.19)-Math.abs(i)*.012;
     bd183F(k,'head',i%2?back:dk,b,d,[0,0,1],L,.022,'lance');const n=dh150N(d);bd183F(k,'head',gold,[b[0]+n[0]*L*.62,b[1]+n[1]*L*.62,b[2]+n[2]*L*.62+.003],d,[0,0,1],L*.36,.014,'lance')}
-  [-1,0,1].forEach(i=>bd183F(k,'head',dk,[i*.03,.95,.35],[i*.25,.35,-1],[i*.2,1,.3],.2,.02,'lance'));
+  [-1,0,1].forEach(i=>bd183F(k,'head',dk,[i*.03,.945,.36],[i*.3,.15,-1],[i*.2,1,.15],.12-.02*Math.abs(i),.026,'lance'));
   // the mantle: long pointed hackles lying down the neck and over the shoulders, a cream breast
   bd183Coat(k,T,{G,O,zs:[.44,.4,.36,.32,.28,.24,.2],t0:0,t1:2.3,n:8,len:.11,w:.028,down:.9,lift:.07,kind:'lance',col:(r,i)=>(r+i)%2?main:back});
-  bd183Bib(k,{G,O,ys:[.78,.73,.68,.63,.58,.53,.48,.43],xs:[-.12,-.06,0,.06,.12],dx:.03,z0:.2,len:.085,w:.034,lift:.12,col:(r,i)=>r%2?K.cream.clone().lerp(K.back,.3).getHex():cream});
-  bd183Coat(k,T,{G,O,zs:[.18,.12,.06,0,-.06,-.12],t0:2.0,t1:2.8,n:4,len:.085,w:.034,down:1.3,lift:.12,col:(r,i)=>r%2?K.cream.clone().lerp(K.back,.35).getHex():cream});
+  bd183Bib(k,{G,O,ys:[.78,.73,.68,.63,.58,.53,.48,.43],xs:[-.12,-.06,0,.06,.12],dx:.03,z0:.2,len:.1,w:.028,lift:.035,col:(r,i)=>(r*2+i)%5==1?K.cream.clone().lerp(K.back,.14).getHex():cream});
+  bd183Coat(k,T,{G,O,zs:[.18,.12,.06,0,-.06,-.12],t0:2.0,t1:2.8,n:4,len:.1,w:.028,down:1.3,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?K.cream.clone().lerp(K.back,.16).getHex():cream});
   bd183Coat(k,T,{G,O,zs:[.15,.11,.07],t0:.1,t1:1.25,n:5,len:.085,w:.032,down:.2,lift:.07,col:(r,i)=>(r+i)%3?main:K.main.clone().multiplyScalar(.8).getHex()});
   k.L('tail0','c',back,[0,.58,-.24],[0,.555,-.38],.085,.05,6)}
+// the Rocsovereign's gold was a flat lemon yellow (cartoony): a deeper, less saturated antique gold, the same for its body,
+// kit and wings (every colour derived from it follows)
+rs150Cols=(f=>function(C){const m=lpMain(C,.25),h={};m.getHSL(h);m.setHSL(h.h,h.s*.78,h.l*.86);
+  return {main:m,back:m.clone().multiplyScalar(.55),dk:m.clone().multiplyScalar(.32).lerp(new THREE.Color(0x2a1e14),.35),
+    cream:new THREE.Color(0xe0d0a8).lerp(m,.25),scale:new THREE.Color(0xb08c3c),ivory:new THREE.Color(0xd8c088)}})(rs150Cols);
 // ---------------- hook them in ----------------
 {const D=LPR.Skyhawk,k0=D.kit;D.kit=function(k,c,C,red){const sp=rv137('Skyhawk',c),F={Skyhawk:bd183KitSky,Stormtalon:bd183KitSt,Rocsovereign:bd183KitRs}[sp];
     if(F){let G=null;try{G=D.geo(C,c)}catch(e){}return F(k,c,C,red,G,Object.keys(SPEC.Skyhawk.bones))}return k0.apply(this,arguments)};

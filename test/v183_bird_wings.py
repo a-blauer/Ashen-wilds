@@ -20,7 +20,7 @@ JS=r"""()=>{const out={fails:[],info:[]},F=s=>out.fails.push(s),V=THREE.Vector3;
         if(v.x>0&&bw183Push(tabs[sp],v.x,v.y,v.z,-.01))bad++}
       const fr=bad/(P.count/3);if(nan)F(sp+': '+nan+' NaN wing vertices');if(fr>.03)F(sp+' evo '+evo+': '+(fr*100).toFixed(1)+'% of the folded wing inside the body');
       out.info.push(sp+' evo '+evo+' fold '+fIdle.toFixed(2)+' inside '+(fr*100).toFixed(1)+'% tris '+P.count/3)}
-    tick(g,900,true,3);const fWalk=B.f;if(fWalk<.3||fWalk>.8)F(sp+': walking fold '+fWalk.toFixed(2)+' (want .3-.8)');
+    tick(g,900,true,1.6);const fWalk=B.f;if(fWalk<.75)F(sp+': wings open while walking (fold '+fWalk.toFixed(2)+', want folded > .75)');
     g.atk=1;tick(g,500,false);const fAtk=B.f;const wg=[];g.b.traverse(o=>{if(o.children&&o.children[0]&&B.W.m.indexOf(o.children[0])>=0)wg.push(o)});
     let flap=0;for(let i=0;i<20;i++){tick(g,32,false);wg.forEach(p=>flap=Math.max(flap,Math.abs(p.rotation.z)))}
     if(fAtk>.05)F(sp+': wings not spread attacking (fold '+fAtk.toFixed(2)+')');if(flap<.05)F(sp+': spread wings do not beat (max shoulder turn '+flap.toFixed(3)+')');
