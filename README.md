@@ -697,8 +697,12 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   inside the last ~25 % of the wind-up (`S.rm`, a smooth time remap; contact still exactly at act k .45) so the blow travels
   over ~5 frames; the weapon lifts out to the side (clear of the head), the follow-through ends low in front, and the recovery
   draws the hand in before the weapon rises, never reaching further toward the target than at the hit (`S.zHit` clamp).
+  Weapon facing is a hard rule (owner): through the blow the striking edge (axe / great-axe bit `+x`, sword / greatsword /
+  dagger edges `±x`, hammer faces `±x`, halberd blade `+x`, from `GRIP[type].edge` and checked against the models) leads the
+  head's real travel — the solver prefers it, then the forearm roll and the in-fist pivot, and finally the round handle turns
+  in the fist until it does; outside the blow it may lag but never turns backwards. Thrusts keep the point on the drive.
   Signature moves keep the older poses. Test `v181_foe_attacks.py` (also: no "second blow" in the recovery, no weapon through
-  the head).
+  the head, edge / point within 30 deg of the travel at the hit, shield face out, bow string toward the archer).
 - **Eleven enemies rebuilt (v181, `3390`–`3392`)**: the owner found the Yeti, Stormborn Jotun, the three naga, both harpies, the
   Vampire Thrall, Blood Knight, Blood Magister, Crimson Executioner and Nosferatu too simple, goofy or badly proportioned.
   * Toolkit (`3390`): `a181TRings(kind)` torso shapes (brute / knight / lean / gaunt) and `a181Torso`; `a181Arm` (deltoid, biceps,

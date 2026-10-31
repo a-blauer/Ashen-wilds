@@ -158,7 +158,8 @@ function faBuild(){
     {s:1.75,H:[-.1,-.45,.3],D:[-.6,-.5,.6],E:[-.4,-1,.2],py:-.38,sy:-.25,cy:-.12,sx:.32,sz:.06,dy:-.12,fz:.13,ad:0},
     {s:2,H:[-.1,-.48,.28],D:[-.55,-.6,.55],py:-.36,sy:-.23,sx:.3,dy:-.12},
     {s:2.25,H:[-.05,-.5,.15],hs:.6,D:[-.45,-.6,.65],E:[0,-.3,1],P:[.6,-.8,-.4],py:-.2,sy:-.12,cy:-.05,sx:.2,dy:-.07,fz:.06},
-    {s:2.55,H:[.05,-.42,.15],hs:.8,D:[.1,.85,.5],E:[0,0,1],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.1,sz:0,dy:-.03,fz:.03},
+    {s:2.42,H:[0,-.45,.15],hs:.7,D:[-.15,.3,.6]},
+    {s:2.65,H:[.05,-.42,.15],hs:.8,D:[.1,.85,.5],E:[0,0,1],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.1,sz:0,dy:-.03,fz:.03},
     Object.assign({},RE,{s:2.85,ow:0}),RE]);
   // ---- dagger: A a quick low thrust from the hip into the gut, B a fast slash from high across; the off hand reaches to grab
   FA_A.dagA=faTrack([Object.assign({},R0,{ew:0}),
@@ -524,7 +525,7 @@ function faBegin(g,S,a){
   const se=faWpn(h,S.side>0?'L':'R');if(K.sh&&se&&se.ty=='shield'){const qb=faWQ(S.oA[2],new THREE.Quaternion()).invert(),mq=faWQ(b.pelvis.parent,new THREE.Quaternion());
     S.shN=new THREE.Vector3(-S.side,0,0).applyQuaternion(mq).applyQuaternion(qb).normalize()}
   // wind-up time warp: heavy foes heave into the coil later, quick ones snap into it and hold; recovery: heavy settle slower
-  const pw=1+hv*.6,pq=1.25-hv*.35;S.sw=k=>k<=0?0:k>=1?1:hv>.5?Math.pow(k,pw):1-Math.pow(1-k,pq);S.sr=x=>x<=0?0:x>=1?1:1-Math.pow(1-x,1.15+hv*.5);
+  const pw=1+hv*.6,pq=1.25-hv*.35;S.sw=k=>k<=0?0:k>=1?1:hv>.5?Math.pow(k,pw):1-Math.pow(1-k,pq);S.sr=x=>x<=0?0:x>=1?1:x+(x*x*(3-2*x)-x)*(.4+.4*hv);   /* an eased recovery: no snap off the follow-through, heavy foes settle slower */
   S.ph=a.ph}
 // ---------------- hooks ----------------
 {const f=humAnim;humAnim=function(g,now,mv){
