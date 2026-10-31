@@ -2,7 +2,8 @@
 #   - the bake ran over the decoration kinds (EP183.kinds >= 150) and over scenery geometry (EP183.geos), no triangles added
 #     (every WD kind's triangle count is the same as before the bake would have it: the bake only changes colours)
 #   - scenery materials opted in (EP183.mats >= 150), the ground (GTX) is in with ENVDET_G
-#   - after drawing, every opted-in material that was drawn has its shared uniforms (uEdT, uEdS, uEdA) on its program
+#   - after drawing, every material whose compiled program has the paint (ENVDET in its cache key) has the shared uniforms
+#     (uEdT, uEdS, uEdA); a material tagged but not drawn yet (off screen) has no such program and is not counted
 #   - no material of a character (a skinned mesh, anything on a bone, or in a group that holds a skinned body: heroes,
 #     monsters, companions, mounts, gear) has ENVDET
 #   - no shader compile errors and no console errors; the scan stays cheap (a light scan under 25 ms here)
@@ -17,7 +18,7 @@ JS=r"""async()=>{const out={zones:[]};const W=ms=>new Promise(r=>setTimeout(r,ms
     for(let i=0;i<4;i++){await W(400);try{rosterTick()}catch(e){}}ep183Scan();
     try{ren.render(scene,cam)}catch(e){out.err=(out.err||'')+String(e).slice(0,200)}
     let n=0,nu=0;scene.traverse(o=>{if(!o.isMesh||!o.visible)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!m||!m.defines||m.defines.ENVDET===undefined)return;
-      const P=ren.properties.get(m);if(!P||!P.uniforms)return;n++;if(!(P.uniforms.uEdT&&P.uniforms.uEdS&&P.uniforms.uEdA))nu++})});
+      const P=ren.properties.get(m);if(!P||!P.currentProgram||!P.uniforms||String(P.currentProgram.cacheKey||'').indexOf('ENVDET')<0)return;n++;if(!(P.uniforms.uEdT&&P.uniforms.uEdS&&P.uniforms.uEdA))nu++})});
     out.zones.push({n:I.n,drawn:n,noUni:nu})}
   for(let i=0;i<9;i++)ep183Scan();
   const bad=[];scene.traverse(o=>{if(!o.isMesh)return;let a=o,ch=o.isSkinnedMesh;while(a&&a!==scene){if(a.isBone||a.children.some(c=>c.isSkinnedMesh))ch=true;a=a.parent}
