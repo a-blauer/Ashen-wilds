@@ -289,54 +289,67 @@ ST179.troll={sx:.5,hx:-.48,lk:.3,rk:.3,az:.06,lz:-.06,ax:-.12,lx:-.14,ex:-.16,le
 // (refine, Oct 31 2026) a giant, not a big man: a huge barrel chest and shoulders, a thick neck, heavy limbs on slightly short
 // legs, the head small for the bulk; storm-blue hide with paler storm-cloud blotches and blue rune tattoos round the upper
 // arms, a fur collar up round the neck into the mane
-// (round 2, owner: "beard doesn't look right"; the hair read as a white hood) a giant's beard that frames the face: a solid mass
-// on the cheeks and jaw (the mouth open, a moustache over it), a broad bib of beard down over the chest, thick tapering locks
-// with a slight twist lying on it, two braids bound with iron rings; white at the face fading to grey at the tips, darker roots.
-// The hair: a cap only over the crown and the back with a receding hairline painted on (no hood edge), locks falling over the
-// ears and down the back.
+// (round 2, owner: "beard doesn't look right"; the hair read as a white hood) a northern giant's beard and hair in iron-grey:
+// the beard a short solid mass on the jaw and chin (its edge fading into painted roots, the cheeks and mouth left bare), a
+// drooping moustache, then one broad shaped mass from under the jaw down over the chest, tapering into two thick braids bound
+// with iron rings, three big overlapping locks with rounded ends lying on it. The hair: painted on the crown behind the circlet
+// (the forehead and temples bare), with shoulder-length locks falling over the ears and down the back (the volume at the back);
+// no cap round the face, no shard fringes.
 (function(){const HD=br_Head([0,1,2,4,6,8,10,12,14],i=>[[1.45,1.1,1.55,.008],[1.22,1.14,1.24,.008],[1.14,1.12,1.14,.006],[1.06,1.06,1.05,.003],[1.02,1.02,1.02,0],[1,1,1,0],[.98,1,1,0],[.95,.96,.98,0],[.9,.9,.92,0]][i]);
   const S=cgHuman({snug:1,h:.97,w:1.36,d:1.22,rw:[1.08,1.14,1.12,1.2,1.36,1.4,1.5,1.62],rf:[1,1.06,1.18,1.28,1.36,1.26,1.14,1.1],rb:[1,1.06,1.1,1.18,1.3,1.34,1.4,1.46],at:1.8,lt:1.62,hs:.86,hw:1.06,hd:1.04,legL:.84,armL:1.04,nw:1.85,neckL:-.01,foot:1.1,footW:1.35,
-      n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.12,big:1.12}),leg:BR_LEG5,facePush:br_Jaw(HD,.012,1.525,1.58)}),
-    K={sk:0x6a7a92,eye:0x6ac8ff},glow=0x6ac8ff,bd=0x8e979f,T=S.torso,J=S.J;
+      n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.12,big:1.12,noFore:1}),leg:BR_LEG5,facePush:br_Jaw(HD,.012,1.525,1.58)}),
+    K={sk:0x6a7a92,eye:0x6ac8ff},glow=0x6ac8ff,bd=0x5c636b,T=S.torso,J=S.J;
   S.grip={'1':br_Grip(S,1,2.34,.09)};   // (round 2) the hammer's handle through the closed fist
   cg181Reg('giant',S,function(B,P,k,C){const wy=T[2][0],ch=J.chest[1];
     const tat=m=>{if(m.part!='arm')return 0;const A=m.x<0?'aL':'aR',y0=(J[A+'0'][1]*.45+J[A+'1'][1]*.55);return br_ss(.012,.004,Math.abs(m.y-y0-.012*Math.sin(Math.atan2(m.z,m.x-J[A+'0'][0])*3)))};
     // the hairline: one smooth curve (base head coordinates): receding at the temples in front, down the sides behind the ears to the nape
-    const HC=S.hp(0,1.62,0),hb=(x,y)=>[x/(S.hs*1.06),(y-S.nb)/S.hs+1.52],lineY=(bx,nz)=>nz>.15?1.676+.007*Math.min(4,(bx/.045)**2):1.655-.115*br_cl((.15-nz)/1.1,0,1),
-      hairT=(x,y,z,nz)=>{const [bx,by]=hb(x,y);return (by-lineY(bx,nz))/.022};
+    const HC=S.hp(0,1.62,0),hb=(x,y)=>[x/(S.hs*1.06),(y-S.nb)/S.hs+1.52],lineY=(bx,nz)=>nz>.2?1.692+.01*Math.min(3,(bx/.05)**2):1.69-.04*br_cl((.2-nz)/1.2,0,1),
+      hairT=(x,y,z,nz)=>{const [bx,by]=hb(x,y);return (by-lineY(bx,nz))/.018},
+      beardE=bx=>{const ax=Math.abs(bx);return ax>.052?1.576:ax<.03?1.545:1.545+(ax-.03)/.022*.031},beardT=(x,y)=>{const [bx,by]=hb(x,y);return (beardE(bx)-by)/.016};
+    const BRc=0x30353b,BLt=0x858d95,bcol=(t,m)=>{const st=m?n3Sn(m.x*1.6,m.y*.35,m.z*1.6,30,9):.5;let c=t<.16?mdMix(BRc,bd,t/.16):mdMix(bd,0x4a5056,br_ss(.55,1,t)*.6);
+      return mdSh(mdMix(c,BLt,br_ss(.55,.85,st)*.3*(t>.1?1:0)),m&&m.s<-.3?.85:1)};
     const hide=br_Hide({base:K.sk,belly:0x8090a8,back:0x4e5c74,blot:0x8a98ae,f:3.5,seed:11,bl:.35,post:(m,c)=>{const t=tat(m);if(t>0)c=mdMix(c,0x3a8ad0,t*.85);
-      if(m.part=='head'){const h=hairT(m.x,m.y,m.z,m.nz);if(h>-.45)c=mdMix(c,0x8494a6,br_ss(-.45,0,h)*.85)}   /* the hair's roots painted just past the cap's edge */
+      if(m.part=='head'){const h=hairT(m.x,m.y,m.z,m.nz);if(h>-.5)c=mdMix(c,bcol(.1+br_cl(h,0,3)*.12,m),br_ss(-.5,.4,h)*.95);   /* the hair painted on the crown behind the circlet */
+        if(m.nz>-.1){const b=beardT(m.x,m.y);if(b>-.5)c=mdMix(c,BRc,br_ss(-.5,.3,b)*.8)}}   /* the beard's roots painted just past its edge */
       if(m.part=='hand'||(m.part=='arm'&&m.y<J.aR2[1]+.02))c=mdMix(c,0x4e5c74,.3);return c}});
     const M=br_Brute(k,C,S,K,{face:b7_FaceHuman({nose:1.4,nw:1.4,brow:1.9,chin:1.2,cheek:1.3}),skin:hide,shade:{cav:1.05},
       // a barrel chest (big pectorals), heavy trapezius behind the neck (below the base of the head)
       sculpt:M=>{cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]>.2)[-1,1].forEach(s=>d+=.022*cgG(x,y,s*.1,ch+.04,.08,.055)*n[2]);if(n[2]<-.2)d+=.028*cgG(x,y,0,T[6][0]+.01,.14,.06)*Math.min(1,(-.2-n[2])*2);return d});
         {const hb=S.hp(0,1.575,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.022*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?.03*cgG(0,y,0,hb,1,.07)*Math.min(1,-n[2]*2):0))}}});
-    const H=S.hs,bw=t=>t<.35?mdWb('head','chest',t/.35*.4):[['head',Math.max(.15,.6-(t-.35)*.7)],['chest',Math.min(.85,.4+(t-.35)*.7)]];
-    // beard colour: darker roots, white, fading to grey toward the tips (t = 0 root … 1 tip), a little darker underneath
-    const bcol=(t,m)=>mdSh(mdMix(t<.18?mdMix(0x474e56,bd,t/.18):bd,0x5c636b,br_ss(.4,1,t)*.8),(m&&m.s<-.3?.86:1)*(.96+.08*Math.sin(t*19+(m?m.c*5:0))));
-    // the beard: ONE solid fur mass from the cheeks and jaw down the throat and over the chest (ragged clumps along its lower
-    // edge), framing the face: the mouth and the middle of the upper lip left open; dark roots, white, greying toward the bottom
-    const by0=J.chest[1]-.03,beard=m=>{if(m.part=='head'){if(m.s<-.12)return false;const [bx,by]=hb(m.x,m.y),ax=Math.abs(bx);if(by>1.6)return false;if(ax<.034&&by>1.566)return false;if(ax<.028&&Math.abs(by-1.556)<.008)return false;return by<1.588-Math.max(0,.05-ax)*.4||ax>.06}
-        if(m.part=='neck')return m.s>-.05;return m.part=='torso'&&m.s>.35&&m.y>by0&&Math.abs(m.x)<.11-(J.chest[1]+.12-m.y)*.3};
-    br_Fur(B,M,beard,{off:.03,len:.12,col:bd,col2:0x7e8892,seed:104,jag:.45,lump:[.6,1.25],vc:m=>{const t=br_cl((S.hp(0,1.6,0)[1]-m.y)/(S.hp(0,1.6,0)[1]-by0+.1),0,1);return bcol(.12+t*.8,m)}});M.b7hide.push(beard);
-    // the moustache: two tapering lofts from under the nose, curving out and down past the corners of the mouth into the beard
-    [-1,1].forEach(s=>{const P=[[.004,1.574],[.022,1.568],[.04,1.556],[.05,1.538],[.054,1.522]].map(([x,y],i)=>{const p=b7_Face(M,S,s*x,y)||S.hp(s*x,y,.09);return add3(p,[0,0,(.006-i*.001)*H])});
-      mdLoft(B,P.map((p,i)=>({p,rx:(.011-i*.0015)*H*(i==4?.4:1),f:(.008-i*.001)*H,b:(.008-i*.001)*H,w:[['head',1]]})),{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.1+m.i*.12,m)})});
-    const c0=b7_Face(M,S,0,1.534)||S.hp(0,1.534,.09);
-    // two braids from the sides of the chin, each bound with an iron ring near its end and a tuft below it
-    [-1,1].forEach(s=>{const R=[],x0=s*.045*H/.86;for(let i=0;i<9;i++){const t=i/8,y=c0[1]-.02-t*.34*H/.86,q=i<2?[x0,y,c0[2]-.004]:cgSurf(M,S,y,s*.3,.115);
-        R.push({p:[x0+s*.004*t,y,q[2]+(i<2?0:.012)],rx:(i%2?.012:.016)*H/.86*(1-t*.35),f:(i%2?.011:.014)*H/.86*(1-t*.35),b:(i%2?.011:.014)*H/.86*(1-t*.35),w:bw(t)})}
-      mdLoft(B,R,{seg:5,ref:[0,0,1],col:m=>bcol(.15+m.i/8*.6,m)});const e=R[8].p,dn=[0,-1,0];
-      k.L('chest','m',0x4a4e56,add3(e,[0,.012,0]),add3(e,[0,-.012,0]),.017*H/.86,.017*H/.86,6);k.P[k.P.length-1].w=bw(1);
-      k.L('chest','c',0x8c98a4,add3(e,[0,-.008,0]),add3(e,mul3(dn,.06)),.014*H/.86,.002,5);k.P[k.P.length-1].w=bw(1)});
-    // the hair: a cap over the crown and the back down to the nape, its thickness fading to nothing at the painted hairline
-    {const cap=m=>m.part=='head'&&hairT(m.x,m.y,m.z,m.nz)>0;ej_Shell(B,M,cap,v=>{const d=nrm3(sub3(v,HC));return .022*br_cl(hairT(v[0],v[1],v[2],d[2]),0,1)},()=>null,
-      {rim:0,vcol:m=>{const a=Math.atan2(m.x,m.z),st=.5+.5*Math.sin(a*26+m.y*30*0),n=n3Sn(m.x*2,m.y*.5,m.z*2,24,5);return mdSh(mdMix(0x6a727c,bd,br_ss(-.2,1.2,hairT(m.x,m.y,m.z,m.nz))),.8+.14*st+.12*n)}});M.b7hide.push(cap)}
-    // a shaggy mane below the cap round the sides and the back: its ragged clumps fall over the ears and down the nape
-    {const mane=m=>{if(m.part!='head'||m.nz>.3)return false;const h=hairT(m.x,m.y,m.z,m.nz);return h>-1.7&&h<2.2};
-      br_Fur(B,M,mane,{off:.03,len:.11,col:bd,col2:0x6e7782,seed:107,jag:.5,lump:[.7,1.1],vc:m=>bcol(.15+br_cl((S.hp(0,1.66,0)[1]-m.y)/.14,0,1)*.6,m)});M.b7hide.push(mane)}
-    cgShell(B,M,m=>m.part=='head'&&Math.abs(m.y-S.hp(0,1.676,0)[1])<.008*S.hs,.03,glow,{t:'g',rim:.5});
-    const mantle=m=>!beard(m)&&((m.part=='torso'&&m.y>J.chest[1]+.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.1));   // a fur collar up round the neck
+    const H=S.hs,K2=H/.86,bw=t=>t<.35?mdWb('head','chest',t/.35*.4):[['head',Math.max(.15,.6-(t-.35)*.7)],['chest',Math.min(.85,.4+(t-.35)*.7)]];
+    // the beard on the face: a short solid mass over the jaw and chin, its thickness fading to nothing at its upper edge
+    {const bsel=m=>m.part=='head'&&m.s>-.1&&beardT(m.x,m.y)>0&&!(Math.abs(hb(m.x,m.y)[0])<.03&&hb(m.x,m.y)[1]>1.548);
+      ej_Shell(B,M,bsel,v=>.017*br_cl(beardT(v[0],v[1])*.7,0,1),()=>null,{rim:0,vcol:m=>bcol(.12+br_cl(beardT(m.x,m.y)*.15,0,.4),m)});M.b7hide.push(bsel)}
+    // the moustache: two thick lofts from under the nose drooping past the corners of the mouth into the beard, rounded ends
+    [-1,1].forEach(s=>{const P=[[.003,1.574],[.02,1.568],[.036,1.556],[.046,1.538],[.05,1.52]].map(([x,y],i)=>{const p=b7_Face(M,S,s*x,y)||S.hp(s*x,y,.09);return add3(p,[0,0,(.004+i*.002)*H])});
+      mdLoft(B,P.map((p,i)=>({p,rx:[.012,.014,.013,.011,.006][i]*H,f:[.009,.01,.01,.009,.005][i]*H,b:.008*H,w:[['head',1]]})),{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.2+m.i*.12,m)})});
+    // the beard's body: one broad shaped mass from under the jaw down over the chest, wide at the jaw and tapering
+    const c0=b7_Face(M,S,0,1.534)||S.hp(0,1.534,.09),fz=(y,z,o)=>{const q=cgSurf(M,S,y,0,o);return Math.max(z,q[2])},
+      BD=[[0,.005,.066,.03],[.12,-.03,.076,.034],[.36,-.09,.074,.032],[.6,-.15,.062,.028],[.82,-.205,.044,.022],[1,-.24,.022,.014]],bib=[];
+    BD.forEach(([t,dy,rx,f],i)=>{const y=c0[1]+dy*K2,z=i==0?c0[2]-.035*K2:fz(y,(bib[i-1]?bib[i-1].p[2]:c0[2])-.012*K2,.05+f*K2);bib.push({p:[0,y,z],rx:rx*K2,f:f*K2,b:f*.8*K2,w:bw(t)})});
+    mdLoft(B,bib,{seg:10,ref:[0,0,1],capB:true,col:m=>bcol(.1+m.i/5*.85,m)});
+    // three big overlapping locks lying on it, with rounded, softly tapering ends (the middle one longest)
+    [[-.036,.8,-1],[.036,.84,1],[0,1,0]].forEach(([x,f,tw])=>{const R=[];for(let i=0;i<5;i++){const t=i/4,b=bib[Math.min(5,1+Math.round(t*f*4))];
+        R.push({p:[(x*(1+t*.3)+tw*.006*Math.sin(t*3))*K2,b.p[1]+.01*K2,b.p[2]+b.f*.75],rx:[.022,.024,.021,.015,.007][i]*K2,f:[.012,.013,.012,.009,.005][i]*K2,b:.008*K2,w:bw(.1+t*f*.8)})}
+      mdLoft(B,R,{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.18+m.i/4*.7,m)})});
+    // the beard ends in two thick braids, each bound with an iron ring, a rounded tuft below it
+    [-1,1].forEach(s=>{const b4=bib[4],R=[];for(let i=0;i<7;i++){const t=i/6,y=b4.p[1]-t*.13*K2;R.push({p:[s*(.02+t*.006)*K2,y,fz(y,b4.p[2]-.006*K2,.05+.02*K2)],rx:(i%2?.014:.017)*K2*(1-t*.3),f:(i%2?.012:.015)*K2*(1-t*.3),b:(i%2?.012:.015)*K2*(1-t*.3),w:bw(1)})}
+      mdLoft(B,R,{seg:6,ref:[0,0,1],col:m=>bcol(.55+m.i/6*.3,m)});const e=R[6].p;
+      k.L('chest','m',0x3a3e44,add3(e,[0,.014,0]),add3(e,[0,-.012,0]),.019*K2,.019*K2,6);k.P[k.P.length-1].w=bw(1);
+      mdLoft(B,[{p:add3(e,[0,-.004,0]),rx:.015*K2,f:.013*K2,b:.013*K2,w:bw(1)},{p:add3(e,[0,-.03*K2,.002]),rx:.016*K2,f:.013*K2,b:.013*K2,w:bw(1)},{p:add3(e,[0,-.055*K2,.004]),rx:.007*K2,f:.006*K2,b:.006*K2,w:bw(1)}],{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.85,m)})});
+    // the hair: shoulder-length locks falling from behind the circlet over the ears and down the back, the volume at the back
+    // (each a broad, flattish loft lying on the head, rooted under the painted hair, a rounded tapering end over the fur collar)
+    [[100,1],[125,1.08],[152,1.2],[180,1.25],[-152,1.2],[-125,1.08],[-100,1]].forEach(([deg,v])=>{const a=deg*Math.PI/180,d=[Math.sin(a),0,Math.cos(a)],
+        q=S.hp(d[0]*.3,1.668,d[2]*.3),p=cgRay(M,[q[0],q[1],q[2]],[-d[0],0,-d[2]],{head:1});if(!p)return;const R=[],L=(.15+.03*v)*K2;
+      for(let i=0;i<5;i++){const t=i/4,out=(.002+.06*t*t*v+.05*t)*K2;R.push({p:add3(p,[d[0]*out,-t*L,d[2]*out]),rx:[.03,.034,.032,.024,.01][i]*K2*v,f:[.008,.013,.015,.012,.006][i]*K2,b:[.008,.01,.011,.009,.005][i]*K2,w:t<.45?[['head',1]]:[['head',1.45-t],['chest',t-.45]]})}
+      mdLoft(B,R,{seg:5,ref:d,capB:true,col:m=>bcol(.14+m.i/4*.7,m)})});
+    // three locks from behind the circlet sweeping back over the crown into the fall at the back (hair, not a bald dome)
+    [-.04,0,.04].forEach((x,li)=>{const R=[];[[.015,1.705],[-.03,1.745],[-.075,1.73],[-.1,1.68],[-.105,1.63]].forEach(([z,y],i)=>{const q=S.hp(x*(1+i*.15),y,z),dir=nrm3(sub3(q,HC)),
+        p=cgRay(M,add3(q,mul3(dir,.3)),mul3(dir,-1),{head:1})||q;R.push({p:add3(p,mul3(dir,.002*K2)),rx:[.026,.032,.032,.03,.02][i]*K2,f:.007*K2,b:.005*K2,w:[['head',1]]})});
+      mdLoft(B,R,{seg:5,ref:[0,1,0],capB:true,col:m=>bcol(.14+m.i/4*.25+li*.04,m)})});
+        cgShell(B,M,m=>m.part=='head'&&Math.abs(m.y-S.hp(0,1.676,0)[1])<.008*S.hs,.03,glow,{t:'g',rim:.5});
+    const under=m=>(m.part=='neck'&&m.s>.25)||(m.part=='torso'&&m.s>.35&&m.y>J.chest[1]-.03&&Math.abs(m.x)<.1),   /* left bare under the beard */
+      mantle=m=>!under(m)&&((m.part=='torso'&&m.y>J.chest[1]+.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.1));   // a fur collar up round the neck
     br_Fur(B,M,mantle,{off:.045,len:.14,col:0x6a5e4e,col2:0x4a4030,seed:102,jag:.55});M.b7hide.push(mantle);
     // three blue runes on the chest, below the beard and the mantle
     [[-.055,0],[0,-.03],[.055,0]].forEach(([x,dy],i)=>{const y=J.chest[1]-.03+dy,p=cgSurf(M,S,y,x*5,-.001);k.p(b7_TB(S,y),'box','g',glow,p[0],p[1],p[2],.014,.11,.006,0,x*5,(i-1)*.5)});
@@ -348,7 +361,7 @@ ST179.troll={sx:.5,hx:-.48,lk:.3,rk:.3,az:.06,lz:-.06,ax:-.12,lx:-.14,ex:-.16,le
       b7_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<by))&&Math.sign(m.x)==s,.026,m=>mdSh(0x3a3026,.85+.25*n3Sn(m.x,m.y,m.z,14,s+5)));
       br_Fur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<by+.03&&m.y>by-.02,{off:.042,len:.06,col:0xd8d4cc,col2:0xb4b0a6,seed:103+s,jag:.45,lump:[.6,.9]})});
     b7_Sh(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,m=>mdSh(0x5a5040,.88+.16*n3Sn(m.x,m.y,m.z,9,2)));
-    cgSkirt(B,S,wy-.02,J.lh1[1]+.06,.06,.022,m=>mdSh(Math.round(Math.atan2(m.c,m.s)*6)%2?0x6a5e4e:0x4a4030,.86+.2*n3Sn(m.x,m.y,m.z,9,3)),{n:5,seg:16});cgBelt(B,M,wy,.024,.03,0x3a2a1a);br_Emit(B,M)})})();
+    cgSkirt(B,S,wy-.02,J.lh1[1]+.06,.06,.022,m=>mdSh(Math.round(Math.atan2(m.c,m.s)*6)%2?0x6a5e4e:0x4a4030,.86+.2*n3Sn(m.x,m.y,m.z,9,3)),{n:5,seg:12});cgBelt(B,M,wy,.024,.03,0x3a2a1a);br_Emit(B,M)})})();
 ST179.giant={sx:.16,hx:-.14,lk:.16,rk:.16,az:.05,lz:-.05,ex:-.22,le:-.26};
 
 // ---------------- Amalgam: a lumpy heap of goo in a man's shape ----------------
