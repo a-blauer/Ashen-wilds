@@ -16740,7 +16740,7 @@ function mdBI(B,n){let i=B.bi[n];if(i==null){i=B.O.indexOf(n);if(i<0)throw new E
 function mdW(B,w){const si=[0,0,0,0],sw=[0,0,0,0];let t=0;for(let j=0;j<w.length&&j<4;j++){si[j]=mdBI(B,w[j][0]);sw[j]=w[j][1];t+=w[j][1]}if(t>0)for(let j=0;j<4;j++)sw[j]/=t;else sw[0]=1;return [si,sw]}
 var MD_TC;
 function mdTri(B,t,a,b,c,col){const L=B.L[t]||B.L.c,C=MD_TC||(MD_TC=new THREE.Color());C.setHex(col);
-  for(const v of [a,b,c]){L.p.push(v.x,v.y,v.z);L.c.push(C.r,C.g,C.b);L.si.push(v.w[0][0],v.w[0][1],v.w[0][2],v.w[0][3]);L.sw.push(v.w[1][0],v.w[1][1],v.w[1][2],v.w[1][3])}}
+  for(const v of [a,b,c]){const k=v.k==null?1:v.k,q=v.rgb;L.p.push(v.x,v.y,v.z);L.c.push((q?q[0]:C.r)*k,(q?q[1]:C.g)*k,(q?q[2]:C.b)*k);L.si.push(v.w[0][0],v.w[0][1],v.w[0][2],v.w[0][3]);L.sw.push(v.w[1][0],v.w[1][1],v.w[1][2],v.w[1][3])}}
 // two-bone weight shorthand
 function mdWb(a,b,t){return t<=0||a==b?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]]}
 // Loft: R = rings {p:[x,y,z], rx, f (front / +up-side radius), b (back radius), w:[[bone,w]…], col?}
@@ -56095,53 +56095,158 @@ Object.keys(NAGA181.keys).forEach(k=>{if(HUMLOOK[k])HUMLOOK[k].sc=(HUMLOOK[k].sc
 // ragged feather mantle, a wild mane, a narrow face with burning eyes and a mouth of jagged teeth; her arms are great ragged
 // wings (a bony leading edge with a hooked claw at the wrist); from the waist down she is bird — feathered hips and thighs,
 // scaled shanks bending at a backward ankle, splayed talons. The skeleton is upright (same bone names as the bird rig, so the
-// walk, bite, Gale Dive and Gale Shriek all still play), with the torso, neck and head at the humanoid heights so the face,
-// eyes and hair use the v181 anatomy toolkit. Harpy (carrion browns) and Storm Harpy (slate, storm-blue streaks) share it.
+// walk, bite, Gale Dive and Gale Shriek all still play), with the torso, neck and head at the humanoid heights.
+// Harpy (carrion browns) and Storm Harpy (slate, storm-blue streaks) share it.
+// (refine, Oct 31 2026) one smoothed cage surface from the head down the body and out into both legs (the v181 cage method,
+// built here on the bird skeleton): the thighs grow out of the hip ring, the shoulders swell into a round deltoid that each wing's
+// bony root sinks into, so neither wings nor legs look stuck on. Feathered wings of real feathers (coverts, secondaries,
+// splayed primaries with dark bars and a pale shaft), not a flat fan. Detail is paint: smooth mottled skin (vcol), baked
+// creases (cgShade), a darker beak-like hooked nose, scaled shanks, feather layers (cgFur) with ragged clumps; talons are
+// tapering lofts ending in black claws.
 var HARPY181={on:true,
   bones:{pelvis:[null,0,.55,-.01],spine:['pelvis',0,.66,0],chest:['spine',0,.84,0],neck:['chest',0,1.0,0],head:['neck',0,1.1,0],jaw:['head',0,1.07,.06],
     tail0:['pelvis',0,.52,-.1],tail1:['tail0',0,.46,-.2],tail2:['tail1',0,.41,-.29],tail3:['tail2',0,.37,-.37],
     hl0:['pelvis',-.085,.55,0],hl1:['hl0',-.09,.36,.09],hl2:['hl1',-.095,.14,-.05],hr0:['pelvis',.085,.55,0],hr1:['hr0',.09,.36,.09],hr2:['hr1',.095,.14,-.05]},
-  pal:{Harpy181:{f:0x33281f,f2:0x241b14,ruff:0x4e4032,sk:0x6e645c,sk2:0x544a44,hair:0x1a1410,leg:0x34302c,claw:0x0c0a08,eye:0xffb020,glow:null},
-       GaleHarpy:{f:0x2c323c,f2:0x1c2028,ruff:0x56606c,sk:0x66707a,sk2:0x4c5660,hair:0x14181e,leg:0x3a3e44,claw:0x0a0a0c,eye:0x8ad8ff,glow:0x8ad8ff}},G:{}};
-function h181Geo(n){if(HARPY181.G[n])return HARPY181.G[n];const K=HARPY181.pal[n],B=mdB(HARPY181.bones),k=dkKit(),P=mdP({bones:HB,col:{skin:K.sk}});
-  const skin=m=>a181Nz(K.sk,m,.3,14),fe=m=>a181Nz(K.f,m,.4,12);
-  // torso: lean, narrow-waisted; feathers from the waist down
-  a181Torso(B,P,a181TRings('lean',{w:.86,d:.9}),m=>m.y<.66?fe(m):skin(m));
-  [-1,1].forEach(s=>{const x=s*.17;mdLoft(B,[{p:[x*.7,.94,0],rx:.06,f:.06,b:.06,w:[['chest',1]]},{p:[x,.95,-.01],rx:.07,f:.06,b:.065,w:[['chest',1]]},{p:[x*1.12,.93,-.02],rx:.05,f:.045,b:.05,w:[['chest',1]]}],{seg:10,capA:true,capB:true,col:skin})});
-  // the head: narrow, hollow-cheeked; eyes burn; a mouth of jagged teeth; a wild mane with quills
-  a181Head(B,P,{w:.88,jaw:.84,chin:.92,gaunt:1,cheek:1.08,len:1.04,crown:1.04},m=>m.s>.5&&m.y>1.13&&m.y<1.165&&Math.abs(m.c)>.08?mdSh(K.sk2,.5):m.s<-.2?K.sk2:K.sk);
-  a181Eyes(k,P,{glow:K.eye,brow:K.sk2,tilt:.3,browTilt:.35,r:.9});a181Nose(k,P,K.sk,{out:.018,len:1.05,w:.85,r:.011});
-  a181Mouth(k,P,{y:1.072,open:.008,col:0x120606,lip:K.sk2,w:.9,fangs:[[-.016,.014],[.016,.014],[-.008,.009,1],[.008,.009,1]]});
-  a181HairCap(B,P,{col:K.hair,col2:mdSh(K.hair,1.4),y1:.8,thick:.016,rag:.9,front:.08});
-  for(let i=0;i<9;i++){const a=Math.PI*(.55+i*.11)*(i%2?1:-1),y=1.2-a181H(i,2)*.08,p=[Math.sin(a)*.07,y,Math.cos(a)*.07];k.L('head','c',i%3?K.f:K.ruff,p,[p[0]*2.8,y-.05-a181H(i,5)*.1,p[2]*2.3-.05],.012,.002,4)}
-  // the feather mantle over the shoulders and breast, the feathered hips (two layers)
-  a181Shag(B,P,.76,.99,.02,K.ruff,K.f,.12);a181Shag(B,P,.5,.66,.03,K.f,K.f2,.16);a181Fringe(B,a181TRingPts(B,P,.58,.05,44),{len:.2,col:K.f2,col2:K.f,closed:true});
-  // bird legs: a feathered thigh, a bare scaled shank, an ankle knob, splayed talons (three forward, one back)
-  [-1,1].forEach(s=>{const l=s<0?'hl':'hr',Hb=HARPY181.bones,a=Hb[l+'0'],b=Hb[l+'1'],c=Hb[l+'2'],A=[a[1],a[2],a[3]],Kn=[b[1],b[2],b[3]],An=[c[1],c[2],c[3]],L=(p,q,t)=>p.map((v,i)=>v+(q[i]-v)*t);
-    const ring=(p,r,w,f)=>({p,rx:r,f:f||r,b:f||r,w});
-    const TH=[ring(L(A,Kn,-.1),.07,[['pelvis',.6],[l+'0',.4]]),ring(L(A,Kn,.3),.085,[[l+'0',1]]),ring(L(A,Kn,.7),.07,[[l+'0',1]]),ring(L(A,Kn,1.05),.045,[[l+'0',.5],[l+'1',.5]])];
-    mdLoft(B,mdDome(TH),{seg:10,capA:true,col:fe});a181Fringe(B,a181RingPts(B,TH[3],.012,16),{len:.08,col:K.f,col2:K.f2,closed:true,cx:TH[3].p[0],cz:TH[3].p[2]});
-    mdLoft(B,[ring(Kn,.034,[[l+'0',.4],[l+'1',.6]]),ring(L(Kn,An,.5),.026,[[l+'1',1]]),ring(L(Kn,An,.92),.024,[[l+'1',.6],[l+'2',.4]]),ring(An,.03,[[l+'2',1]]),ring([An[0],.05,An[2]+.02],.026,[[l+'2',1]]),ring([An[0],.03,An[2]+.04],.03,[[l+'2',1]])],
-      {seg:8,capB:true,col:m=>Math.round(m.y*60)%2?K.leg:mdSh(K.leg,.8)});
-    k.p(l+'2','sph','c',K.leg,An[0],.03,An[2]+.035,.04,.024,.046);
-    [[-.5,.11],[0,.13],[.5,.11],[Math.PI,.07]].forEach(([an,len])=>{const d=[Math.sin(an),0,Math.cos(an)],p=[An[0]+d[0]*.02,.03,An[2]+.04+d[2]*.02],q=[p[0]+d[0]*len*.55,.02,p[2]+d[2]*len*.55],e=[p[0]+d[0]*len,.016,p[2]+d[2]*len];
-      k.L(l+'2','c',K.leg,p,q,.014,.011,5).L(l+'2','c',K.leg,q,e,.011,.008,5);a181Digit(k,l+'2',K.claw,e,[d[0],-.25,d[2]],.05,.008,2,.6,[d[2],0,-d[0]],.012)})});
-  // the tail: a fan of long ragged feathers
-  for(let i=0;i<9;i++){const a=(i-4)*.17,l=.3+.08*Math.cos(a*2)-a181H(i,4)*.06,p0=[Math.sin(a)*.05,.52,-.1],p1=[Math.sin(a)*(.05+l*.6),.46-l*.35,-.1-l*.85];
-    mdLoft(B,[{p:p0,rx:.012,f:.004,b:.004,w:[['tail0',1]]},{p:[(p0[0]+p1[0])/2,(p0[1]+p1[1])/2,(p0[2]+p1[2])/2],rx:.035,f:.005,b:.005,w:[['tail1',1]]},{p:p1,rx:.006,f:.003,b:.003,w:[['tail2',1]]}],{seg:4,ref:[0,1,0],col:i%2?K.f:K.f2})}
-  mdKit(B,k);const G=mdBake(B).c,n3=G.attributes.position.count,I=new (n3>65535?Uint32Array:Uint16Array)(n3);for(let i=0;i<n3;i++)I[i]=i;G.setIndex(new THREE.BufferAttribute(I,1));   // indexed like every creature body (the v84 limb helpers read the index)
-  return HARPY181.G[n]=G}
-function h181Wing(n){const K=HARPY181.pal[n],O=[[0,0,.06],[.2,.05,.09],[.45,.07,.09],[.7,.04,.02],[1.0,0,-.1]];const N=13;
-  for(let i=1;i<=N;i++){const t=i/N,x=1.0-t*.98,z=-.1-Math.sin(t*Math.PI)*.42-t*.12,tip=i%2?.1+a181H(i,3)*.08:0;O.push([x+tip*.15,-.01,z-tip])}
-  O.push([0,0,-.2]);
-  return lpwWing('harpy181'+n,O,[.32,.02,-.12],[[[0,.01,.06],[.45,.08,.09],.03],[[.45,.08,.09],[1.0,.02,-.1],.016],[[.45,.08,.09],[.5,.1,.17],.008]],K.ruff,K.f2,K.sk2,6)}
+  pal:{Harpy181:{f:0x33281f,f2:0x241b14,ruff:0x4e4032,sk:0x6e645c,sk2:0x544a44,hair:0x1a1410,leg:0x34302c,claw:0x0c0a08,eye:0xffb020,glow:null,beak:0x2a2420,bar:0x18120c,pale:0x8a7a62},
+       GaleHarpy:{f:0x2c323c,f2:0x1c2028,ruff:0x56606c,sk:0x66707a,sk2:0x4c5660,hair:0x14181e,leg:0x3a3e44,claw:0x0a0a0c,eye:0x8ad8ff,glow:0x8ad8ff,beak:0x262a30,bar:0x10141a,pale:0x8a96a6}},G:{},E:{}};
+// the body cage (bird bones), model space. Torso rings [y, half width, front, back] bottom → top; the head is the v181 base
+// head (the thrall's skull space) moved down to the harpy's neck, every other profile ring kept
+var NH_DY=-.44;
+function nh_HW(y){return y<=.55?[['pelvis',1]]:y<=.66?mdWb('pelvis','spine',(y-.55)/.11):y<=.84?mdWb('spine','chest',(y-.66)/.18):y<=.95?[['chest',1]]:y<=1.04?mdWb('chest','neck',(y-.95)/.09):y<1.075?mdWb('neck','head',(y-1.04)/.035*.7):[['head',1]]}
+function nh_HBody(B,K){const M=cgMesh(B),N=12,H=6,Q=3;   /* 12 columns: a slender body (24 round after the smoothing step) */
+  // groin, hips, waist, lower ribs, chest, shoulders (the wing roots), shoulder line, neck base
+  const TR=[[.5,.112,.078,.09],[.575,.128,.084,.1],[.665,.09,.06,.072],[.755,.104,.074,.078],[.845,.124,.088,.086],[.915,.142,.08,.088],[.965,.122,.06,.08],[1.0,.066,.054,.062]];
+  const push=(i,j,a)=>{const ca=Math.cos(a),sa=Math.sin(a);let e=0;
+    if((i==5||i==6)&&Math.abs(ca)>.55)e+=(i==5?.03:.022)*Math.pow((Math.abs(ca)-.55)/.45,1.5)*(sa<.3?1:.6);   // round deltoids at the wing roots
+    if(i==4&&sa<-.5&&Math.abs(ca)>.2&&Math.abs(ca)<.75)e+=.01;   // shoulder blades
+    if(i==2&&sa>.5)e-=.008;return e};                              // a sunken belly
+  const tr=TR.map((q,i)=>cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],N,q[1],q[2],q[3],nh_HW(q[0]),{push:(j,a)=>push(i,j,a)}));
+  for(let i=0;i<tr.length-1;i++)cgBand(M,tr[i],tr[i+1],'torso',[0,(TR[i][0]+TR[i+1][0])/2,0]);
+  // bird legs out of the hip ring (cg181Body's leg, j2 seating): feathered thigh, knee, a long bare shank back to the ankle, the
+  // short tarsus down to the foot. The bottom ring splits in two halves with a crotch line
+  const R=tr[0],y0=TR[0][0],q0=TR[0],L=HARPY181.bones,LR=[];
+  const cf=cgVert(M,[0,y0-.03,q0[2]*.5],[['pelvis',1]]),cm=cgVert(M,[0,y0-.04,0],[['pelvis',1]]),cb=cgVert(M,[0,y0-.03,-q0[3]*.5],[['pelvis',1]]);
+  [-1,1].forEach(s=>{const l=s<0?'hl':'hr',P0=L[l+'0'],P1=L[l+'1'],P2=L[l+'2'],h0=[P0[1],P0[2],P0[3]],k1=[P1[1],P1[2],P1[3]],k2=[P2[1],P2[2],P2[3]],ft=[k2[0],.045,k2[2]+.035];
+    const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+N)%N:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
+    // t: 0 hip … 1 knee … 2 ankle … 3 foot
+    const LG=[{t:.12,r:.074,rf:.07,rb:.08},{t:.45,r:.074,rf:.08,rb:.072},{t:1,r:.042},{t:1.22,r:.031},{t:1.92,r:.024},{t:2.08,r:.03},{t:2.95,r:.025}],rows=[];
+    let prev=root;LG.forEach((q,i)=>{const t=q.t,c=t<=1?lerp3(h0,k1,t):t<=2?lerp3(k1,k2,t-1):lerp3(k2,ft,t-2),
+      w=t<.12?[['pelvis',.4],[l+'0',.6]]:t<.9?[[l+'0',1]]:t<1.1?[[l+'0',.5],[l+'1',.5]]:t<1.88?[[l+'1',1]]:t<2.02?[[l+'1',.4],[l+'2',.6]]:[[l+'2',1]];
+      const ring=[];for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
+        let p=[c[0]+s*ca*q.r,c[1],c[2]+sa*rf];if(i<2){const P=M.V[root[j]],b=i?.8:.45;p=lerp3([P[0],P[1]-(i?.5:.3)*LG[0].r,P[2]],p,b)}ring.push(cgVert(M,p,w))}
+      cgBand(M,prev,ring,'leg',c);prev=ring;rows.push(c[1])});
+    cgCap(M,prev,[ft[0],ft[1]-.025,ft[2]],[[l+'2',1]],'leg',[ft[0],ft[1]+.1,ft[2]]);LR.push({s,l,h0,k1,k2,ft,rows})});
+  // neck and head: one ring stack (the base head's profile, every other ring, narrowed for a woman's skull)
+  const HB=CG181.base.head,hd=[0,2,3,5,8,9,11,14].map(i=>HB[i]),NK=[[1.045,.047,.047,.052,.006]];
+  let prev=tr[tr.length-1];NK.concat(hd.map(q=>[q[0]+NH_DY,q[1]*.94,q[2]*.98,q[3]*.98,q[4]||0])).forEach((q,i)=>{const ring=cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],N,q[1],q[2],q[3],nh_HW(q[0]),{});
+    cgBand(M,prev,ring,i<NK.length?'neck':'head',[0,q[0],(q[4]||0)-.01]);prev=ring});
+  const top=HB[14];cgCap(M,prev,[0,top[0]+NH_DY+.012,-.004],[['head',1]],'head',[0,top[0]+NH_DY-.08,0]);
+  cgOrient(M);return {M:cgSub(M),TR,LR}}
+// a tapering loft that ends in a black claw (toes, the wrist claw): pts along it, radii, the claw from ring nc on
+function nh_Claw(B,pts,rr,w,col,claw,nc,ref){mdLoft(B,pts.map((p,i)=>({p,rx:rr[i],f:rr[i]*.85,b:rr[i]*.85,w})),{seg:5,ref:ref||[0,1,0],capB:true,col:m=>m.i>nc-.5?claw:col})}
+// (refine) cgFur (3393) with the colour flowing per corner (vcol): smooth grooves and value, so a fur or feather layer has no
+// stair-stepped per-face blocks ("pixel camouflage"); everything else (shell, ragged clumps, weights) is cgFur's
+function nh_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0;
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
+  const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  const groove=v=>n3Sn(v[0]*1.4,v[1]*.35,v[2]*1.4,22,seed)<.42,col=m=>{const c=a181Nz(o.col,m,.3,18,seed);return o.col2!=null&&groove([m.x,m.y,m.z])?o.col2:c};
+  const sm=v=>{const n=n3Sn(v.x*1.4,v.y*.35,v.z*1.4,22,seed),g=Math.max(0,Math.min(1,(.47-n)/.1));return mdSh(mdMix(o.col,o.col2==null?mdSh(o.col,.75):o.col2,g),.92+.12*n3Sn(v.x,v.y,v.z,18,seed+1))};
+  cgEmit(B,M,()=>null,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol:sm});   /* (nh) the colour flows corner to corner: the darker grooves fade in, no per-face blocks */
+  // clumps along the lower edge: the rim is walked as loops and cut into runs of 2–4 edges; each run hangs as one wide, solid
+  // clump (outer and inner faces fanned to its tip, closed at its two ends), uneven in length
+  const W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;w=[si,sw];W.set(i,w);return w};
+  const vx=(p,i)=>({x:p[0],y:p[1],z:p[2],w:wOf(i)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
+  low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
+    for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,2+Math.floor(a181H(ci,seed,7)*3)),run=loop.slice(i,i+n+1);i+=n;ci++;
+      const h=a181H(ci,seed,3),L=o.len*(1-(o.jag==null?.6:o.jag)*h),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],c=mdC(h<.25&&o.col2!=null?o.col2:mdSh(o.col,.8+a181H(ci,9,seed)*.28)),T=vx(tip,run[Math.floor(run.length/2)]);
+      for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p),T,vx(pos(q),q),c);mdTri(B,t,vx(V[q],q),T,vx(V[p],p),c)}
+      const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f),T,vx(pos(f),f),c);mdTri(B,t,vx(pos(l),l),T,vx(V[l],l),c)}})}
+function h181Geo(n){if(HARPY181.G[n])return HARPY181.G[n];const K=HARPY181.pal[n],B=mdB(HARPY181.bones),k=dkKit(),E=HARPY181.E[n]={};
+  const C=nh_HBody(B,K),M=C.M,cl=(v,a,b)=>Math.max(a,Math.min(b,v)),ss=(a,b,x)=>{const t=cl((x-a)/(b-a),0,1);return t*t*(3-2*t)},hp=(x,y,z)=>[x*.94,y+NH_DY,(z||0)*.98];
+  // the face: the gaunt v181 face (deep sockets, a hard brow, high cheekbones, hollow cheeks), with a longer, hooked, beak-like nose
+  const G=CG181.faceGaunt,FACE=(x,y,z,nn)=>{const by=y-NH_DY,bx=x/.94;let d=G(bx,by,z,nn);if(nn[2]>.1)d+=(.012*cgG(bx,by,0,1.6,.009,.016)+.012*cgG(bx,by,0,1.583,.007,.007)+.007*cgG(bx,by,0,1.54,.016,.01)-.006*cgG(bx,by,0,1.523,.03,.007))*Math.min(1,nn[2]*1.6);return d};
+  cgSculpt(M,{head:1},FACE);
+  // a wild mane over the crown and the back of the skull, as a shell (it bends with the head)
+  const EY=1.629+NH_DY,EX=.036*.94,nose=(x,y)=>Math.abs(x)<.012&&y>1.578+NH_DY&&y<1.61+NH_DY;
+  M.shade=cgShade(M,{y0:0,y1:1.3,hk:.2,cav:1.1});
+  const skin=m=>{const n1=n3Sn(m.x,m.y,m.z,9,4);let c=mdMix(K.sk,K.sk2,cl(.3+(n1-.5)*.9+ss(-.2,-.8,m.nz)*.35,0,1));
+    if(m.part=='head'){const ax=Math.abs(m.x);c=mdMix(c,mdSh(K.sk2,.45),ss(.026,.012,Math.hypot(ax-EX,(m.y-EY)*1.3))*ss(.1,.4,m.nz));   // dark, sunken sockets
+      if(m.nz>.2)c=mdMix(c,K.beak,ss(.016,.006,ax)*ss(1.575+NH_DY,1.592+NH_DY,m.y)*ss(1.625+NH_DY,1.6+NH_DY,m.y))}     // the horn-dark hooked nose
+    if(m.part=='leg'){const sh=ss(.33,.29,m.y);c=mdMix(mdMix(K.f,K.f2,cl(.4+(n1-.5),0,1)),K.leg,sh);if(sh>0)c=mdMix(c,mdSh(K.leg,.7),ss(.02,0,Math.abs(m.y-.36))*.6)}   // feathered thigh, bare shank
+    if(m.part=='torso'){c=mdMix(c,K.sk2,.4);c=mdMix(c,mdMix(K.f,K.f2,n1),ss(.7,.64,m.y))}return c};   /* the bare waist in shadow, feathers below */
+  // crisp: the lips' line, the shank's scutes (rows across its front, every other one darker)
+  const leg=C.LR[0].rows,scute=m=>{if(m.part!='leg'||m.y>.33||m.nz<.25)return null;for(let i=0;i<leg.length-1;i++){const a=leg[i],b=leg[i+1];if((m.y-a)*(m.y-b)<=0){const r=2*i+(Math.abs(m.y-a)>Math.abs(b-a)/2?1:0);return r%2?mdSh(K.leg,1.15):mdSh(K.leg,.92)}}return null};
+  cgEmit(B,M,m=>{if(m.part=='head'&&m.nz>.4&&Math.abs(m.y-(1.558+NH_DY))<.004&&Math.abs(m.x)<.024)return 0x1a0a0a;return scute(m)},{vcol:skin});
+  // hair: a shell over the crown and the back of the head, locks of feathers sweeping back from it
+  cgShell(B,M,m=>(m.part=='head'&&m.y>1.585+NH_DY&&(m.nz<.12+.5*(n3Sn(m.x*2,m.y*2,m.z*2,16,4)-.5)||m.y>1.662+NH_DY+.016*(n3Sn(m.x*3,0,m.z,26,9)-.5)-.024*Math.exp(-(m.x/.02)*(m.x/.02))))||(m.part=='neck'&&m.nz<-.35),v=>(.016+.012*Math.max(0,-v[2]-.02)/.06)*Math.min(1,Math.max(.35,(v[1]-1.5-NH_DY)/.15)),m=>mdSh(K.hair,.9+.15*n3Sn(m.x,m.y,m.z,24,2)));   /* ragged bangs; the mane runs down the nape */
+  for(let i=0;i<11;i++){const a=Math.PI*(.5+i*.05)*(i%2?1:-1),o=[Math.sin(a)*.3,1.17+a181H(i,3)*.08,Math.cos(a)*.3],p=cgRay(M,o,nrm3([-o[0],0,-o[2]]),{head:1});if(!p)continue;
+    const e=[p[0]*2.1,p[1]-.13-a181H(i,5)*.13,p[2]*1.5-.1],r=.03,d=nrm3(sub3(e,p)),root=sub3(p,mul3(d,.02));
+    mdLoft(B,[{p:root,rx:r*.6,f:.004,b:.004,w:[['head',1]]},{p:lerp3(p,e,.3),rx:r,f:.004,b:.004,w:[['head',1]]},{p:lerp3(p,e,.7),rx:r*.7,f:.003,b:.003,w:[['head',.6],['neck',.4]]},{p:e,rx:.002,f:.002,b:.002,w:[['neck',1]]}],
+      {seg:4,ref:nrm3([p[0],0,p[2]]),col:m=>m.i>2?K.bar:m.i>1.4?mdSh(K.f,1.15):i%3?K.hair:K.ruff})}
+  // a ragged crest of feathers from the crown, swept up and back (breaks the round outline of the head)
+  for(let i=0;i<5;i++){const x=(i-2)*.018,z=-.005-Math.abs(i-2)*.012,p=cgRay(M,[x,1.6,z],[0,-1,0],{head:1});if(!p)continue;const e=add3(p,[x*1.6,.07+.03*Math.cos((i-2)*.8)-Math.abs(i-2)*.012,-.13-a181H(i,8)*.04]),d=nrm3(sub3(e,p));
+    mdLoft(B,[{p:sub3(p,mul3(d,.025)),rx:.012,f:.004,b:.004,w:[['head',1]]},{p:lerp3(p,e,.35),rx:.02,f:.004,b:.004,w:[['head',1]]},{p:lerp3(p,e,.75),rx:.013,f:.003,b:.003,w:[['head',1]]},{p:e,rx:.002,f:.002,b:.002,w:[['head',1]]}],
+      {seg:4,ref:[1,0,0],col:m=>m.i>2.2?K.bar:i%2?K.hair:K.ruff})}
+  // the mantle of feathers over the shoulders and the breast, feathered hips and thighs: layers with ragged clumps
+  nh_Fur(B,M,m=>(m.part=='torso'&&m.y>cgEdge(m,.75,.02,3))||m.part=='neck'||(m.part=='head'&&m.y<1.532+NH_DY&&m.nz<.55),   /* up to a ruff under the jaw */{off:.032,len:.15,col:K.ruff,col2:K.f,seed:61,jag:.55,lump:[.6,.7]});
+  nh_Fur(B,M,m=>(m.part=='torso'&&m.y<cgEdge(m,.675,.02,5))||(m.part=='leg'&&m.y>cgEdge(m,.42,.025,7)),{off:.032,len:.15,col:K.f,col2:K.f2,seed:67,jag:.5,lump:[.6,.8]});
+  // talons: three forward, one back, each a loft ending in a hooked black claw, rooted in the foot
+  C.LR.forEach(({s,l,ft})=>{[[-.45,.12],[0,.14],[.45,.12],[Math.PI,.07]].forEach(([an,len],i)=>{const d=[Math.sin(an)*s,0,Math.cos(an)],b=[ft[0],.028,ft[2]],p0=add3(b,mul3(d,.005)),p1=add3(b,[d[0]*len*.45,-.012,d[2]*len*.45]),p2=add3(b,[d[0]*len,-.016,d[2]*len]),
+      c1=add3(p2,[d[0]*.022,-.002,d[2]*.022]),c2=add3(p2,[d[0]*.04,-.022,d[2]*.04]);nh_Claw(B,[sub3(p0,mul3(d,.02)),p0,p1,p2,c1,c2],[.017,.016,.012,.01,.007,.0012],[[l+'2',1]],K.leg,K.claw,3.6)})});
+  // the tail: a fan of long ragged feathers, rooted inside the rump
+  for(let i=0;i<9;i++){const a=(i-4)*.23,l=.26+.06*Math.cos(a*2)-a181H(i,4)*.05,p0=[Math.sin(a)*.04,.53,-.05],p1=[Math.sin(a)*(.05+l*.6),.46-l*.35,-.1-l*.85],pm=lerp3(p0,p1,.45);
+    mdLoft(B,[{p:p0,rx:.01,f:.004,b:.004,w:[['tail0',1]]},{p:pm,rx:.038,f:.005,b:.005,w:[['tail1',1]]},{p:lerp3(p0,p1,.82),rx:.03,f:.004,b:.004,w:[['tail2',1]]},{p:p1,rx:.004,f:.003,b:.003,w:[['tail2',1]]}],
+      {seg:4,ref:[0,1,0],col:m=>m.i>1.6&&m.i<2.2?K.bar:i%2?K.f:K.f2})}
+  // where the kit goes (eyes, the storm streaks): on this surface
+  E.eyes=[-1,1].map(s=>{const p=cgRay(M,[s*EX,EY,.3],[0,0,-1],{head:1});return p||[s*EX,EY,.08]});
+  const onBack=(y,a)=>{const d=[Math.sin(a),0,Math.cos(a)];return cgRay(M,[d[0]*.5,y,d[2]*.5],[-d[0],0,-d[2]],{torso:1})};
+  E.streak=[];for(let i=0;i<5;i++){const s=i%2?1:-1,y=.88-i*.075,p=onBack(y,s*(2.75-i*.04)),q=onBack(y-.05,s*(2.45-i*.04));if(p&&q)E.streak.push([p,q,cgWAt(M,lerp3(p,q,.5))])}
+  // jagged teeth in the mouth line
+  for(let i=0;i<6;i++){const x=(i-2.5)*.0085,p=cgRay(M,[x,1.558+NH_DY,.3],[0,0,-1],{head:1});if(p)k.p('head','cone4','c',0xd8d0b8,p[0],p[1]+(i%2?.003:-.004),p[2]-.003,.0035,(i==0||i==5?.016:.01),.0035,i%2?0:Math.PI)}
+  mdKit(B,k);const Gc=mdBake(B).c,n3=Gc.attributes.position.count,I=new (n3>65535?Uint32Array:Uint16Array)(n3);for(let i=0;i<n3;i++)I[i]=i;Gc.setIndex(new THREE.BufferAttribute(I,1));   // indexed like every creature body (the v84 limb helpers read the index)
+  return HARPY181.G[n]=Gc}
+// ---- the wing: real feathers, for the RIGHT side in its pivot's space (+x out, −z back), mirrored for the left ----
+// a bony arm (rooted inside the shoulder's deltoid) with a hooked claw at the wrist; rows of coverts over it; secondaries hanging
+// from the forearm; primaries splayed from the hand. Each feather: a blade with a raised shaft, dark bars across it, pale shaft,
+// darker toward its tip; ragged lengths. One non-indexed geometry with vertex colours (crisp bars, shaft blended per vertex).
+function nh_Wing(n){const key='nhw'+n;if(LPWG[key])return LPWG[key];const K=HARPY181.pal[n],P=[],Cc=[],T=new THREE.Color(),c3=h=>{T.setHex(h);return [T.r,T.g,T.b]};
+  const tri=(a,b,c,ca,cb,cc)=>{P.push(...a,...b,...c);Cc.push(...ca,...cb,...cc)};
+  const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],sc=(a,f)=>[a[0]*f,a[1]*f,a[2]*f];
+  const cR=c3(K.ruff),cF=c3(K.f),cF2=c3(K.f2),cB=c3(K.bar),cP=c3(K.pale),cS=c3(K.sk2);
+  // a feather from root p along dir d (unit), width axis wv (unit), length L, half width W, its shaft lifted by up
+  const feather=(p,d,wv,L,W,seed,base,tipc,bars)=>{const up=cross3(wv,d),NR=4,rows=[];for(let i=0;i<=NR;i++){const t=i/NR,w=W*(i==0?.25:i==NR?0:Math.sin(Math.min(1,t*1.25)*Math.PI*.5)*(1-.35*t*t)),c=add3(p,mul3(d,L*t));
+      rows.push([add3(c,mul3(wv,-w)),add3(c,mul3(up,W*.12*(1-t))),add3(c,mul3(wv,w))])}
+    for(let i=0;i<NR;i++){const t=(i+.5)/NR,bar=bars&&(i==1||i==3)?.55:1,col=sc(mix(base,tipc,t*t),bar*(.94+a181H(seed,i)*.1)),sh=mix(col,cP,.3),A=rows[i],Bv=rows[i+1];
+      if(i<NR-1){tri(A[0],A[1],Bv[1],col,sh,sh);tri(A[0],Bv[1],Bv[0],col,sh,col);tri(A[1],A[2],Bv[2],sh,col,col);tri(A[1],Bv[2],Bv[1],sh,col,sh)}
+      else{tri(A[0],A[1],Bv[1],col,sh,sh);tri(A[1],A[2],Bv[1],sh,col,sh)}}};
+  // the arm: shoulder (inside the body) → elbow → wrist → hand tip, a 6-sided tapering tube with the feathered colour
+  const AR=[[-.06,0,.0,.05],[.02,.004,.03,.044],[.2,.04,.07,.032],[.4,.06,.08,.024],[.56,.055,.05,.02],[.72,.04,0,.016],[.86,.02,-.05,.011],[1.0,0,-.1,.004]];
+  const ring=(c,r,d)=>{const u=nrm3(cross3(d,[0,1,0])),v=cross3(u,d);return [0,1,2,3,4,5].map(j=>{const a=j*Math.PI/3;return add3(c,add3(mul3(u,Math.cos(a)*r),mul3(v,Math.sin(a)*r*.8)))})};
+  const RR=AR.map((q,i)=>{const a=AR[Math.max(0,i-1)],b=AR[Math.min(AR.length-1,i+1)];return ring([q[0],q[1],q[2]],q[3],nrm3([b[0]-a[0],b[1]-a[1],b[2]-a[2]]))});
+  for(let i=0;i<RR.length-1;i++)for(let j=0;j<6;j++){const a=RR[i][j],b=RR[i][(j+1)%6],c=RR[i+1][(j+1)%6],d=RR[i+1][j],col=mix(cR,cF,i/(RR.length-1)),c2=sc(col,.85);tri(a,c,b,col,c2,col);tri(a,d,c,col,c2,c2)}
+  // the hooked claw at the wrist, pointing forward
+  {const w=[.72,.05,.01],e=[.75,.04,.09],tip=[.735,.02,.115],cc=c3(K.claw);const R0=ring(w,.012,nrm3(sub3(e,w)));for(let j=0;j<6;j++){tri(R0[j],e,R0[(j+1)%6],cc,cc,cc)}tri(e,tip,add3(e,[.006,0,0]),cc,cc,cc);tri(e,add3(e,[-.006,0,0]),tip,cc,cc,cc)}
+  // every feather is rooted inside the arm's tube (AY: the arm's height and depth at x), so none can float off it
+  const AY=x=>{for(let i=0;i<AR.length-1;i++){const a=AR[i],b=AR[i+1];if(x<=b[0]){const t=Math.max(0,(x-a[0])/(b[0]-a[0]));return [a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}}return [0,-.1]};
+  // coverts: two rows of short feathers over the arm, lying back over the roots of the long ones
+  for(let r=0;r<2;r++)for(let i=0;i<7;i++){const x=.03+i*.1+r*.05,[y,z]=AY(x);feather([x,y+.008-r*.002,z-.004],nrm3([.1,-.07+r*.025,-1]),[1,0,0],.11+r*.07,.046,i+r*20,r?cF:cR,mix(cR,cF,.6),false)}
+  // secondaries along the forearm and upper arm (long, ragged, hanging back)
+  for(let i=0;i<10;i++){const x=.02+i*.074,[y,z]=AY(x),L=.36+.08*Math.sin(i*.9)+a181H(i,2)*.07,d=nrm3([.1+i*.03,-.03,-1]);
+    feather([x,y-.004+i*.0012,z-.005],d,nrm3([1,0,d[0]]),L,.064,i+40,cR,cF2,true)}
+  // primaries splayed from the hand, the outer ones longest
+  for(let i=0;i<7;i++){const t=i/6,x=.74+t*.22,[y,z]=AY(x),an=-.5+t*1.45,d=nrm3([Math.sin(an),-.04,-Math.cos(an)]),L=.42+.1*Math.sin(t*2.6)+a181H(i,7)*.06;
+    feather([x,y-.004+.0015*i,z],d,nrm3([-d[2],0,d[0]]),L,.05,i+60,cR,cF2,true)}
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));G.computeVertexNormals();return LPWG[key]=G}
 (function(){if(!HARPY181.on||!LPR.GaleHarpy||!SPEC.GaleHarpy)return;
   ['Harpy181','GaleHarpy'].forEach(n=>{const K=HARPY181.pal[n];
     SPEC[n]=Object.assign({},SPEC.GaleHarpy,{bones:HARPY181.bones,hd:[0,1.2,.04],bk:[['spine',.7,-.12],['chest',.88,-.12],['neck',1.02,-.08]],legs:[['hl',0],['hr',Math.PI]],ex:()=>{},sig:null,dt:null});
     LPR[n]=Object.assign({},LPR.GaleHarpy,{geo:()=>h181Geo(n),
-      kit(k,c,C,red){[-1,1].forEach(s=>k.p('head','sph','g',red?0xff2a2a:K.eye,s*.04,1.148,.1,.012,.007,.006));
-        if(K.glow)for(let i=0;i<5;i++){const s=i%2?1:-1;k.L(i<2?'chest':'pelvis','g',K.glow,[s*(.06+i*.02),.9-i*.08,-.11],[s*(.1+i*.02),.84-i*.08,-.13],.005,.002,3)}},
-      post(x,c,C,mat){lpwPair(x,'chest',h181Wing(n),mat,.17,.95,-.03,.8,.1,.55,.4)}})});
+      // burning eyes in the sockets (placed on the face by h181Geo), storm-blue streaks lying on the Storm Harpy's back
+      kit(k,c,C,red){const E=HARPY181.E[n]||{};(E.eyes||[[-.036,1.189,.08],[.036,1.189,.08]]).forEach((p,i)=>{const s=i?1:-1;k.p('head','sph','g',red?0xff2a2a:K.eye,p[0],p[1],p[2]-.002,.011,.0075,.006,0,0,s*.25)});
+        if(K.glow)(E.streak||[]).forEach(([p,q,w])=>{k.L(p[1]>.75?'chest':'spine','g',K.glow,p,q,.006,.004,3);k.P[k.P.length-1].w=w})},
+      post(x,c,C,mat){lpwPair(x,'chest',nh_Wing(n),mat,.17,.95,-.03,.8,.1,.55,.4)}})});
   if(EN.harpy)EN.harpy.rig='Harpy181';})();
 // ================= v181: cage bodies — one connected, smoothed surface per creature =================
 // Owner (Oct 30 2026): "our humanoid toolkit is bad — the arms don't connect to the body and the shoulders are placed
@@ -56194,8 +56299,27 @@ function cgInfo(M,f){const v=f.v.map(i=>M.V[i]),c=[0,0,0];let nx=0,ny=0,nz=0;for
 // write faces into the md builder (layer t), coloured by col(m); keep(m) selects; P = per-vertex position override (shells)
 function cgEmit(B,M,col,o){o=o||{};const t=o.t||'c',W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=M.V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;
     for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;if(!s)sw[0]=1;w=[si,sw];W.set(i,w);return w};
-  const pos=o.pos||(i=>M.V[i]),vx=i=>{const p=pos(i);return {x:p[0],y:p[1],z:p[2],w:wOf(i)}};
-  M.F.forEach((f,fi)=>{const m=cgInfo(M,f);if(o.keep&&!o.keep(m,fi))return;const c=mdC(typeof col=='function'?col(m):col),v=f.v.map(vx);mdTri(B,t,v[0],v[1],v[2],c);if(v.length==4)mdTri(B,t,v[0],v[2],v[3],c)})}
+  // a per-vertex shade (o.shade or M.shade from cgShade) is multiplied into the face colour at each corner: baked crease
+  // darkening / ridge wear / height light that blends smoothly across the faceted surface, at no triangle cost
+  const sh=o.shade||M.shade,pos=o.pos||(i=>M.V[i]),vx=i=>{const p=pos(i);return {x:p[0],y:p[1],z:p[2],w:wOf(i),k:sh?sh[i]:1}};
+  // o.vcol(m): a colour per corner instead of per face, for hides whose colour should flow (goo, moss, mottled skin) instead
+  // of stepping face by face; m = {x,y,z, nx,ny,nz, s (=nz), c (=nx), part}. col(m) returning null on a face hands it to vcol.
+  const VN=o.vcol?(M.N||cgNormals(M)):null,VC=new Map(),TC=new THREE.Color(),vc=(i,part)=>{const key=i+part;let q=VC.get(key);if(q)return q;const p=pos(i),n=VN[i];
+    TC.setHex(mdC(o.vcol({x:p[0],y:p[1],z:p[2],nx:n[0],ny:n[1],nz:n[2],s:n[2],c:n[0],part})));q=[TC.r,TC.g,TC.b];VC.set(key,q);return q};
+  M.F.forEach((f,fi)=>{const m=cgInfo(M,f);if(o.keep&&!o.keep(m,fi))return;const h=typeof col=='function'?col(m):col,v=f.v.map(vx);
+    if(h==null&&o.vcol)v.forEach((x,j)=>x.rgb=vc(f.v[j],f.part));const c=mdC(h==null?0:h);mdTri(B,t,v[0],v[1],v[2],c);if(v.length==4)mdTri(B,t,v[0],v[2],v[3],c)})}
+// baked shading per vertex of the smoothed body (docs/MODEL_DETAIL_RECIPE.md 2.2): cavity (creases darker, ridges lighter,
+// Blender's "dirty vertex colours" angle, blurred), a height gradient (darker toward the feet) and a top light (down-facing
+// darker). o: cav (strength, 1), blur (2), y0/y1 (feet / top heights), hk (height term .22), dk (down-facing term .14), min (.5)
+function cgShade(M,o){o=o||{};const V=M.V,N=cgNormals(M),nb=V.map(()=>new Set());
+  M.F.forEach(f=>f.v.forEach((a,i)=>{const b=f.v[(i+1)%f.v.length];nb[a].add(b);nb[b].add(a)}));
+  let t=V.map((v,i)=>{let d=[0,0,0];nb[i].forEach(j=>{d=add3(d,nrm3(sub3(V[j],v)))});const l=Math.hypot(d[0],d[1],d[2]);if(l<1e-6)return .5;
+    const c=(N[i][0]*d[0]+N[i][1]*d[1]+N[i][2]*d[2])/l;return Math.acos(Math.max(-1,Math.min(1,c)))/Math.PI});
+  for(let k=0;k<(o.blur==null?2:o.blur);k++)t=t.map((x,i)=>{let s=x;nb[i].forEach(j=>s+=t[j]);return s/(nb[i].size+1)});
+  let y0=o.y0,y1=o.y1;if(y0==null||y1==null){y0=1e9;y1=-1e9;V.forEach(v=>{y0=Math.min(y0,v[1]);y1=Math.max(y1,v[1])})}
+  const cav=o.cav==null?1:o.cav,hk=o.hk==null?.22:o.hk,dk=o.dk==null?.14:o.dk,mn=o.min==null?.5:o.min;
+  return t.map((x,i)=>{const c=x<.5?1-(.5-x)*3.2*cav:1+Math.min(.12,(x-.5)*1.2*cav),h=Math.max(0,Math.min(1,(V[i][1]-y0)/(y1-y0||1))),
+    sm=h*h*(3-2*h);return Math.max(mn,Math.min(1.15,c*(1-hk+hk*sm)*(1-dk+dk*(.5*N[i][1]+.5))))})}
 // smooth vertex normals of a mesh (area weighted)
 function cgNormals(M){const N=M.V.map(()=>[0,0,0]);M.F.forEach(f=>{const v=f.v.map(i=>M.V[i]);let nx=0,ny=0,nz=0;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length];nx+=(a[1]-b[1])*(a[2]+b[2]);ny+=(a[2]-b[2])*(a[0]+b[0]);nz+=(a[0]-b[0])*(a[1]+b[1])}
   f.v.forEach(i=>{N[i][0]+=nx;N[i][1]+=ny;N[i][2]+=nz})});return N.map(n=>{const l=Math.hypot(n[0],n[1],n[2])||1;return [n[0]/l,n[1]/l,n[2]/l]})}
@@ -56235,6 +56359,8 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
     const c1=s>0?[1,0,T16-1]:[H-1,H,H+1];   // the socket's three columns: front, side, back
     const root=[R0[c1[0]],R0[c1[1]],R0[c1[2]],R1[c1[2]],R2[c1[2]],R2[c1[1]],R2[c1[0]],R1[c1[0]]];
     // root order: front-low, armpit (inner), back-low, back-mid, back-top, top (outer), front-top, front-mid
+    // the socket's outward direction (from the torso's axis through the socket's centre)
+    const sc=root.reduce((a,i)=>add3(a,mul3(M.V[i].slice(0,3),1/8)),[0,0,0]),sO=nrm3([sc[0],0,sc[2]-(S.torso[ia+1][4]||0)]);
     const pts=S.arm.map(q=>{const t=q.t,p=t<=1?lerp3(a0,a1,t):t<=2?lerp3(a1,a2,t-1):add3(a2,mul3(nrm3(sub3(a2,a1)),(t-2)*.2));return p});
     let prev=root;S.arm.forEach((q,i)=>{const c=pts[i],dn=nrm3(sub3(pts[Math.min(i+1,pts.length-1)],i?pts[i-1]:[s*.04+a0[0]*.8,a0[1],a0[2]])),
       u0=nrm3(sub3([s,0,0],mul3(dn,dn[0]*s))),fv=nrm3(cross3(dn,u0)),f0=fv[2]<0?mul3(fv,-1):fv,
@@ -56242,8 +56368,13 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
       tw=((S.pron&&S.pron[s])||0)*Math.max(0,Math.min(1,(q.t-1.3)/.65)),u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f2=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw)));
       const w=q.t<.15?[['chest',.35],[bn+'0',.65]]:q.t<.9?[[bn+'0',1]]:q.t<1.1?[[bn+'0',.5],[bn+'1',.5]]:q.t<1.85?[[bn+'1',1]]:q.t<2.05?[[bn+'1',.4],[bn+'2',.6]]:[[bn+'2',1]];
       // the j order matches the root: j0 front-low(135°) … φ_j = (j−5)·45° from "outer" toward front
-      const ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0)),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
-        ring.push(cgVert(M,[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf],w))}
+      // S.armK {'-1','1'}: one arm thicker than the other (non-human creatures needn't be symmetric)
+      const K=(S.armK&&S.armK[s])||1,ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0))*K,rf=(sa>=0?(q.rf||q.r):(q.rb||q.r))*K;
+        let p=[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf];
+        // (S.j2) the shoulder grows out of the body: the first rings start from the socket pushed outward and only then
+        // become the arm, so the arm is seated in the shoulder instead of folding back into a thin neck at the join
+        if(S.j2&&i<2){const P=M.V[root[j]],b=i?.78:.42,o2=(i?.55:.3)*S.arm[0].r;p=lerp3([P[0]+sO[0]*o2,P[1]+sO[1]*o2,P[2]+sO[2]*o2],p,b)}
+        ring.push(cgVert(M,p,w))}
       cgBand(M,prev,ring,'arm',c);prev=ring});
     cgCap(M,prev,add3(pts[pts.length-1],mul3(nrm3(sub3(a2,a1)),.012)),[[bn+'2',1]],'hand',pts[pts.length-2])});
   // a serpent body instead of legs (naga): the bottom ring flows on into the tail rings (S.tail: {p, r, w}), the front of the
@@ -56253,16 +56384,20 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
         ring.push(cgVert(M,[q.p[0]+u[0]*ca*r1+v[0]*sa*r2,q.p[1]+u[1]*ca*r1+v[1]*sa*r2,q.p[2]+u[2]*ca*r1+v[2]*sa*r2],q.w))}
       cgBand(M,prev,ring,'tail',q.p);prev=ring});const L=TL[TL.length-1],P2=TL[TL.length-2];cgCap(M,prev,add3(L.p,mul3(nrm3(sub3(L.p,P2.p)),L.r*.8)),L.w,'tail',P2.p)}
   // legs: the bottom ring split in two halves with a crotch line
-  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=S.tail?0:cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=S.tail?0:cgVert(M,[0,y0-.045,q0[4]||0],[['pelvis',1]]),cb=S.tail?0:cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
+  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=S.tail?0:cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=S.tail?0:cgVert(M,[0,y0-(S.j2?.3*S.leg[0].r+.02:.045),q0[4]||0],[['pelvis',1]]),cb=S.tail?0:cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
   if(!S.tail)[-1,1].forEach(s=>{const l=s<0?'lh':'rh',h0=mdV0(J[l+'0']),k1=mdV0(J[l+'1']),k2=mdV0(J[l+'2']);
     // right half: front (j4) → side (j0) → back (j12): 4,3,2,1,0,15,14,13,12 · left: 4,5,…,12
     const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+T16)%T16:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
     let prev=root;S.leg.forEach((q,i)=>{const t=q.t,c=t<=1?lerp3(h0,k1,t):lerp3(k1,k2,Math.min(1,t-1)),w=t<.12?[['pelvis',.4],[l+'0',.6]]:t<.9?[[l+'0',1]]:t<1.1?[[l+'0',.5],[l+'1',.5]]:t<1.9?[[l+'1',1]]:[[l+'1',.4],[l+'2',.6]];
-      const ring=[];for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);ring.push(cgVert(M,[c[0]+s*ca*(q.r+(ca>0?(q.o||0):0)),c[1],c[2]+sa*rf],w))}
+      const ring=[];for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
+        let p=[c[0]+s*ca*(q.r+(ca>0?(q.o||0):0)),c[1],c[2]+sa*rf];
+        // (S.j2) the thigh grows out of the hip: the first rings start from the hip ring and only then become the leg
+        if(S.j2&&i<2){const P=M.V[root[j]],b=i?.8:.45;p=lerp3([P[0],P[1]-(i?.5:.3)*S.leg[0].r,P[2]],p,b)}
+        ring.push(cgVert(M,p,w))}
       cgBand(M,prev,ring,'leg',c);prev=ring});
     cgCap(M,prev,[k2[0],k2[1]-.02,k2[2]],[[l+'2',1]],'leg',[k2[0],k2[1]+.1,k2[2]]);
     // the foot: a closed cage of its own (heel → toes), overlapping the ankle
-    const F=S.foot,fw=F.w,fr=[];[[-.05,.045,.034,.04],[-.01,.06,.042,.05],[.06,.04,.05,.036],[.12,.026,.052,.022],[.155,.018,.044,.014]].forEach(([z,y,rx,ry],i)=>{
+    const F=S.foot,fw=F.w,fr=[],FR=[[-.05,.045,.034,.04],[-.01,.06,.042,.05],[.06,.04,.05,.036],[.12,.026,.052,.022],[.155,.018,.044,.014]];(F.lite?[FR[0],FR[2],FR[4]]:FR).forEach(([z,y,rx,ry],i)=>{
       fr.push(cgRing(M,[k2[0],y*F.h,k2[2]+z*F.len],[s,0,0],[0,1,0],8,rx*fw,ry*F.h,ry*F.h*.75,[[l+'2',1]],{}))});
     for(let i=0;i<fr.length-1;i++)cgBand(M,fr[i],fr[i+1],'foot',[k2[0],.03,k2[2]+.05]);cgCap(M,fr[0],[k2[0],.045*F.h,k2[2]-.06*F.len],[[l+'2',1]],'foot',[k2[0],.04,k2[2]+.03]);cgCap(M,fr[fr.length-1],[k2[0],.016*F.h,k2[2]+.165*F.len],[[l+'2',1]],'foot',[k2[0],.03,k2[2]+.05])});
   // the top of the torso: neck and head, one ring stack
@@ -56290,6 +56425,79 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
 // Gaunt and hunched: ribs, collarbones and shoulder blades under ash-grey skin; long, thin arms that grow out of the shoulders;
 // a long neck into a narrow skull with deep eye sockets, a hard brow, high cheekbones over hollow cheeks, a long nose and a
 // lipless mouth with fangs. Wears an open, torn crimson coat (shoulders, back, upper arms), ragged breeches, an iron collar.
+// ---------------- (v181 refine) the vampires' own helpers (va_…): shells that replace the skin under them, clean hands, toes ----------------
+// a shell whose rim lies on the skin; the skin under it is not drawn (va_Body draws the rest of the body at the end), so a
+// covered body costs no extra triangles. col(m) colours per face; o.vcol(m) per corner (colour that flows, no blocky patches);
+// the body's baked shade (M.shade) darkens creases on the shell too
+function va_Sh(B,M,sel,off,col,o){o=o||{};const N=M.N||(M.N=cgNormals(M)),pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map();
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1)}});
+  const rim=new Set();cnt.forEach((c,k)=>{if(c==1)k.split('_').forEach(x=>rim.add(+x))});
+  const P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=M.V[i],n=N[i],d=rim.has(i)?0:(typeof off=='function'?off(v):off);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  cgEmit(B,M,col,{t:o.t,pos,vcol:o.vcol,keep:(m,fi)=>pick[fi]});if(!o.show)(M.vaHide||(M.vaHide=[])).push(pick);return pick}
+// a belt: a band of the torso between y−h and y+h pushed out by off, replacing the skin under it
+function va_Belt(B,M,y,h,off,col,t){va_Sh(B,M,m=>m.part=='torso'&&Math.abs(m.y-y)<h,off,col,{t})}
+// the body's skin, leaving out every face a va_Sh shell covers
+function va_Body(B,M,col,vcol){const H=M.vaHide||[];cgEmit(B,M,col,{vcol,keep:(m,fi)=>!H.some(p=>p[fi])})}
+// the hand's frame, turned by S.pron like the cage's hand: d down the hand, u the back of the hand, f across the knuckles
+function va_HF(S,s){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0;
+  return {bn,a2,d,u:add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f:sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw)))}}
+// one digit as a single rounded, tapering loft (no separate knuckle balls and sticks): rooted inside the hand or foot, bending
+// by curl at each joint about ax, the last segment (and a claw beyond it) in the nail colour
+function va_Digit(B,bn,p,dir,ax,len,n,curl,r,col,nail,claw,seg){const W=[[bn,1]],q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(ax[0],ax[1],ax[2]).normalize(),curl),dd=new THREE.Vector3(dir[0],dir[1],dir[2]).normalize(),D=()=>[dd.x,dd.y,dd.z];
+  const R=[{p:sub3(p,mul3(D(),r*1.8)),rx:r*.85,w:W},{p:p.slice(),rx:r,w:W}];let a=p.slice();
+  for(let i=0;i<n;i++){a=add3(a,mul3(D(),len/n));if(i<n-1)dd.applyQuaternion(q);R.push({p:a,rx:r*(1-.32*(i+1)/n),w:W})}
+  if(claw){dd.applyQuaternion(q);a=add3(a,mul3(D(),claw));R.push({p:a,rx:r*.14,w:W})}
+  R.forEach(x=>{x.f=x.rx;x.b=x.rx});const nr=R.length,ni=claw?nr-2:nr-1.55;mdLoft(B,R,{seg:seg||4,ref:ax,capB:true,col:m=>nail!=null&&m.i>ni?nail:col})}
+// a loft with a colour per corner (o.vcol({x,y,z,i,a,c,s}) → hex): rings R {p, rx (across, along ref×tangent), f / b (thickness
+// toward +ref / −ref), w}, o.push(i,a) → extra radius, o.capB closes the end; the colour flows corner to corner
+function va_LoftV(B,R,o){const seg=o.seg||12,n=R.length,rows=[];let U=null;
+  for(let i=0;i<n;i++){const tg=nrm3(sub3(R[Math.min(i+1,n-1)].p,R[Math.max(i-1,0)].p));let u=U||o.ref;u=nrm3(sub3(u,mul3(tg,u[0]*tg[0]+u[1]*tg[1]+u[2]*tg[2])));U=u;const sd=cross3(u,tg),r=R[i],w=mdW(B,r.w),row=[];
+    for(let k=0;k<seg;k++){const a=Math.PI/2+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),e=o.push?o.push(i,a):0,rx=r.rx+e,ry=(s>0?r.f:r.b)+e,p=add3(add3(r.p,mul3(sd,c*rx)),mul3(u,s*ry));
+      const C=new THREE.Color(mdC(o.vcol({x:p[0],y:p[1],z:p[2],i,a,c,s})));row.push({x:p[0],y:p[1],z:p[2],w,rgb:[C.r,C.g,C.b]})}rows.push(row)}
+  for(let i=0;i<n-1;i++)for(let k=0;k<seg;k++){const A=rows[i][k],A1=rows[i][(k+1)%seg],B2=rows[i+1][k],B3=rows[i+1][(k+1)%seg];mdTri(B,'c',A,A1,B2,0);mdTri(B,'c',B2,A1,B3,0)}
+  if(o.capB){const r=rows[n-1],L=R[n-1],cp=add3(L.p,mul3(nrm3(sub3(L.p,R[n-2].p)),Math.min(L.f,L.b)*.6)),mid=r[0].rgb.map((v,j)=>r.reduce((q,x)=>q+x.rgb[j],0)/seg),cv={x:cp[0],y:cp[1],z:cp[2],w:r[0].w,rgb:mid};
+    for(let k=0;k<seg;k++)mdTri(B,'c',cv,r[(k+1)%seg],r[k],0)}}
+// a hand growing out of the cage's palm: o {col, nail, kind 'claw'|'open'|'fist', len, r, claw}. Open and clawed hands get
+// separate rounded, tapering finger lofts; a closed fist is ONE rounded mitten mass curling round the grip (the fingers don't
+// change its outline), a low bumpy knuckle ridge, the finger gaps painted as thin dark lines, and the thumb as its own rounded
+// loft crossing in front of the folded fingers
+function va_Hand(B,S,s,o){const F=va_HF(S,s),bn=F.bn+'2',hs=S.hand||1,kn=add3(F.a2,mul3(F.d,.072*hs)),L=(o.len||1)*.075,r=o.r||.0072,ax=nrm3(cross3(F.u,F.d)),W=[[bn,1]];
+  const P=(b,x,y)=>add3(add3(b,mul3(F.f,x)),mul3(F.u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(F.d,a),mul3(F.u,b)),mul3(F.f,c)));
+  if(o.kind=='fist'){const k=r/.0072*hs,Q=(dd,uu)=>add3(add3(F.a2,mul3(F.d,dd*k)),mul3(F.u,uu*k)),gap=mdSh(o.col,.38),lt=mdSh(o.col,1.08);
+    // the mitten: from inside the palm over the knuckles, folding back toward the palm (+u = the back of the hand)
+    const R=[{p:Q(.05,.001),rx:.031*k,f:.014*k,b:.014*k,w:W},{p:Q(.076,.002),rx:.033*k,f:.017*k,b:.014*k,w:W},{p:Q(.094,-.012),rx:.032*k,f:.015*k,b:.013*k,w:W},
+      {p:Q(.098,-.032),rx:.03*k,f:.013*k,b:.012*k,w:W},{p:Q(.088,-.046),rx:.028*k,f:.011*k,b:.01*k,w:W}];
+    va_LoftV(B,R,{seg:12,ref:F.u,capB:true,push:(i,a)=>i==1&&Math.sin(a)>.3&&![-.5,0,.5].some(q=>Math.abs(Math.cos(a)-q)<.05)?.0028*k:0 /* knuckles: raised between the finger gaps */,
+      vcol:m=>{if(m.i>=2&&[-.5,0,.5].some(q=>Math.abs(m.c-q)<.05))return gap;return m.i==1&&m.s>.3?lt:o.col}});
+    // the thumb, crossing in front of the folded fingers
+    const T=[{p:P(add3(F.a2,mul3(F.d,.03*k)),.02*k,-.004*k),rx:.011*k,f:.011*k,b:.011*k,w:W},{p:P(add3(F.a2,mul3(F.d,.06*k)),.03*k,-.022*k),rx:.0115*k,f:.0105*k,b:.0105*k,w:W},
+      {p:P(add3(F.a2,mul3(F.d,.082*k)),.014*k,-.04*k),rx:.0095*k,f:.009*k,b:.009*k,w:W},{p:P(add3(F.a2,mul3(F.d,.086*k)),-.006*k,-.046*k),rx:.008*k,f:.0075*k,b:.0075*k,w:W}];
+    va_LoftV(B,T,{seg:6,ref:F.u,capB:true,vcol:m=>m.i>2.5?mdSh(o.col,.9):o.col});return}
+  for(let i=0;i<4;i++){const z=(1.5-i)*.0155,l=L*(i==3?.8:i==0?.93:1);va_Digit(B,bn,P(kn,z,-.002),D(1,-.12,z*.6),ax,l,3,o.kind=='claw'?.34:.16,r,o.col,o.nail,o.claw||0)}
+  va_Digit(B,bn,P(add3(F.a2,mul3(F.d,.032)),.02,-.006),D(.6,-.3,.75),nrm3(cross3(F.u,F.f)),L*.6,2,.3,r*1.15,o.col,o.nail,(o.claw||0)*.6)}
+// five lofted toes from the front of the foot (the big toe on the inside), an optional claw on each
+function va_Toes(B,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w,tz=A[2]+.135*L;
+  for(let i=0;i<5;i++){const x=A[0]-s*(2-i)*.017*W,r=(i==0?.0105:.0082-.0005*i)*W;va_Digit(B,l,[x,.021,tz],[-s*(2-i)*.08,-.3,1],[1,0,0],.03-.002*i,1,.35,r,col,claw?nail:null,claw||0,4)}}
+// clamp
+function va_C(v,a,b){return Math.max(a,Math.min(b,v))}
+// the baked shade (cgShade), kept softer on the parts in soft {part: share kept}: a sculpted face is full of small creases at
+// this resolution, and full-strength crease darkening breaks it into dark facets
+function va_Shade(M,o,soft){const sh=cgShade(M,o),pt=new Array(M.V.length);M.F.forEach(f=>f.v.forEach(i=>{if(pt[i]==null)pt[i]=f.part}));
+  return sh.map((v,i)=>{const k=soft&&soft[pt[i]];return k==null?v:1-(1-v)*k})}
+// a head of fewer rings, at the heights (base head coordinates) where the profile turns: throat, jaw, chin, mouth, nose base,
+// cheekbone, below the eyes, eyes, brow, forehead, top (the rings are read off the base head), with the base's jaw
+// angle and hollow cheeks pushed by height instead of by ring number; o.jaw / o.cheek scale them
+var va_HY=[1.52,1.538,1.555,1.572,1.59,1.608,1.626,1.644,1.68,1.73];
+// the full face: every base ring where a feature turns (throat, under the chin, chin, mouth, upper lip, nose base, cheekbone,
+// below the eyes, eye line, brow, above the brow, forehead, crown, top), so a sculpted face's flat facets don't form bands
+var va_HYF=[1.52,1.535,1.548,1.562,1.576,1.59,1.605,1.62,1.634,1.648,1.664,1.682,1.7,1.73];
+function va_Head(HY,hs,o){o=o||{};return {head:HY.map(y=>cgAt(CG181.base.head,y)),facePush:(i,j,a)=>{const y=HY[i],ca=Math.cos(a),sa=Math.sin(a),side=Math.abs(ca);let e=0;
+  if(y<1.545&&sa>-.2&&side>.6)e+=.006*(o.jaw==null?1:o.jaw);if(y>1.56&&y<1.585&&sa>.4&&side>.3&&side<.8)e-=.008*(o.cheek==null?1:o.cheek);return e*(hs||1)}}}
+// a hair shell (as cgHair) that replaces the skin under it
+function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.nape||1.56,0)[1];
+  va_Sh(B,M,m=>{if(m.part!='head'&&!(o.neck&&m.part=='neck'&&m.s<-.2))return false;const by=(m.y-S.nb)/(S.hs*(S.hy||1))+1.52,bx=m.x/S.hs;if(m.y<nape)return false;
+    return m.s<(o.side==null?.1:o.side)||by>line-peak*Math.exp(-(bx/.022)*(bx/.022))+(Math.abs(bx)>.05?-.004:0)},v=>(o.thick||.016)*Math.min(1,Math.max(.35,(v[1]-nape)/(.12*S.hs))),null,
+    {vcol:m=>mdMix(o.col,mdSh(o.col,1.9),va_C(n3Sn(m.x*.4,m.y*3,m.z*.4,30,1)-.2,0,.8))})}
 (function(){const J={pelvis:[0,.98,0],spine:[0,1.1,0],chest:[0,1.27,0],neck:[0,1.44,.01],head:[0,1.53,.02],
     lh0:[-.085,.92,0],lh1:[-.095,.49,.025],lh2:[-.1,.085,0],rh0:[.085,.92,0],rh1:[.095,.49,.025],rh2:[.1,.085,0],
     aL0:[-.175,1.385,-.005],aL1:[-.205,1.1,-.03],aL2:[-.215,.84,.0],aR0:[.175,1.385,-.005],aR1:[.205,1.1,-.03],aR2:[.215,.84,0],
@@ -56315,7 +56523,7 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
     arm:[{t:.06,r:.05,o:.012},{t:.32,r:.042},{t:.62,r:.038,rf:.042},{t:.95,r:.034,rb:.04},{t:1.25,r:.036},{t:1.6,r:.03},{t:1.94,r:.024,rf:.026},{t:2.18,r:.017,rf:.034,rb:.03},{t:2.38,r:.015,rf:.034,rb:.028}],
     leg:[{t:.12,r:.078},{t:.45,r:.07,rf:.074},{t:.8,r:.056},{t:1.0,r:.048,rf:.054},{t:1.22,r:.05,rb:.058},{t:1.55,r:.04},{t:1.88,r:.032},{t:2.0,r:.034}],
     foot:{len:1.05,w:1,h:1}};
-  const sk=0x625860,sk2=0x483e46,sock=0x140c10,lip=0x2a0c12,co=0x4a0c16,co2=0x2e0710,br=0x1e161a,ir=0x3a3434;
+  const sk=0x625860,sk2=0x483e46,skL=0x6c626a,sock=0x140c10,lip=0x2a0c12,co=0x4a0c16,co2=0x2e0710,br=0x1e161a,ir=0x3a3434;
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6),ax=Math.abs(x);let d=0;
     d+=.024*cgG(x,y,0,1.596,.01,.013)+.013*cgG(x,y,0,1.616,.008,.012);            // the nose: a ridge down from the brow to a hooked tip
     [-1,1].forEach(s=>{d-=.017*cgG(x,y,s*.036,1.629,.016,.01);                     // deep eye sockets
@@ -56325,22 +56533,61 @@ function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+
     d-=.005*cgG(x,y,0,1.558,.022,.0035);d+=.01*cgG(x,y,0,1.538,.018,.012);           // the mouth line, the chin
     return d*f};
   CG181.base=S;CG181.faceGaunt=FACE;S.pron={'-1':1.1};
-  cg181Reg('vamp',S,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036;cgSculpt(M,{head:1},FACE);
-    const skin=m=>{if(m.part=='head'&&m.s>.3){if(Math.abs(Math.abs(m.x)-EX)<.022&&Math.abs(m.y-EY)<.014)return sock;if(Math.abs(m.y-1.558)<.0045&&Math.abs(m.x)<.026)return lip}
-      const v=n3Sn(m.x,m.y,m.z,20,2);return m.s<-.3?mdSh(sk2,1-v*.2):v>.72?mdMix(sk,0x3a2232,.5):mdSh(sk,1-v*.15)};
-    cgEmit(B,M,skin);
-    // eyes burning in the sockets, fangs, ears; fingers, toes
+  // (v181 refine) the Thrall's face on its 16-column head: the same features, the cheek hollows, nostril wings and mouth line
+  // wider and shallower, so they are smooth gradients across several faces instead of sharp crease triangles (the gauntness is
+  // carried by painted colour)
+  const FACE_T=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;
+    d+=.024*cgG(x,y,0,1.596,.011,.014)+.013*cgG(x,y,0,1.616,.009,.013);
+    [-1,1].forEach(s=>{d-=.016*cgG(x,y,s*.036,1.629,.018,.012);d+=.007*cgG(x,y,s*.056,1.601,.02,.015);d-=.006*cgG(x,y,s*.048,1.568,.026,.024);d+=.0025*cgG(x,y,s*.011,1.586,.01,.007)});
+    d+=.01*cgG(x,y,0,1.648,.05,.008);d-=.003*cgG(x,y,0,1.558,.026,.006);d+=.009*cgG(x,y,0,1.538,.022,.014);return d*f};
+  // the hairline round the head: a widow's peak in front, high at the temples, over the ears, down to the nape at the back
+  const HLT=[[0,1.69],[.6,1.69],[1.1,1.673],[1.7,1.657],[2.2,1.59],[2.6,1.556],[3.2,1.556]],HL=(x,y,z)=>{const a=Math.abs(Math.atan2(x,z-.01));let h=1.556;
+    for(let i=0;i<HLT.length-1;i++)if(a<=HLT[i+1][0]){const t=(a-HLT[i][0])/(HLT[i+1][0]-HLT[i][0]);h=HLT[i][1]+(HLT[i+1][1]-HLT[i][1])*t*t*(3-2*t);break}
+    return h-.019*Math.exp(-(x/.02)*(x/.02))*(z>0?1:0)},hairC=m=>mdMix(0x120c0e,0x24181e,va_C(n3Sn(m.x*.4,m.y*3,m.z*.4,30,1),0,1));
+  // (v181 refine) the Thrall's own body, built from the base above by cgHuman like every cage foe (the base itself is not
+  // changed): 16 columns round the body, shoulder sockets as tall as the arm with the arms grown out of them and the thighs
+  // out of the hips (sock, j2: the seated limbs), 14 head rings where the face's features turn, one ring less in the forearm, one
+  // less in the thigh and two in the shin, a lighter foot; a little narrower at the waist (gaunt)
+  const T=cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1,{cheek:.5})));
+  T.pron=S.pron;
+  cg181Reg('vamp',T,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036,JJ=T.J,cl=va_C;cgSculpt(M,{head:1},FACE_T);
+    M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:1.75,hk:.26,dk:.1},{head:.08,neck:.3});   /* crease darkening almost off on the face: its darks are painted */   // baked creases, ridges and height light (no triangles)
+    // the skin: smooth ash-grey, cooler and darker on the back; ribs, sternum and a sunken belly as soft painted shadow;
+    // hollow cheeks, bruised under-eyes and dark sockets round the burning eyes
+    const skinV=m=>{const n=n3Sn(m.x,m.y,m.z,7,2);let c=mdMix(skL,0x544858,cl((n-.45)*1.2,0,.35));
+      if(m.nz<-.2)c=mdMix(c,sk2,cl((-m.nz-.2)*1.2,0,.75));
+      if(m.part=='torso'&&m.nz>.2){const f=cl((m.y-1.1)/.04,0,1)*cl((1.31-m.y)/.04,0,1),ph=(((m.y+1.8*m.x*m.x-1.1)/.042)%1+1)%1,rb=Math.exp(-Math.pow((ph-.5)/.17,2));
+        c=mdSh(c,1-.34*rb*f*cl((Math.abs(m.x)-.01)/.02,0,1));
+        if(m.y>1.14&&m.y<1.33)c=mdSh(c,1-.12*Math.exp(-Math.pow(m.x/.009,2)));
+        if(m.y<1.11&&m.y>.99)c=mdSh(c,1-.1*Math.exp(-Math.pow((m.y-1.05)/.03,2)))}
+      if(m.part=='head'||m.part=='neck')[-1,1].forEach(s=>{c=mdMix(c,0x3a2a3a,.24*cgG(m.x,m.y,s*.05,1.57,.02,.018));
+        c=mdMix(c,0x4a2840,.35*cgG(m.x,m.y,s*.04,1.614,.016,.006));if(m.nz>.2)c=mdMix(c,sock,cl(1.3*cgG(m.x,m.y,s*EX,EY,.02,.013),0,1))});
+      if(m.part=='head'||m.part=='neck')c=mdSh(c,1+.45*Math.max(0,-m.ny)+(m.y<1.565?.06:0));   /* the receding chin, the jaw and the throat face down, away from the light: painted paler by how far down they face */
+      if(m.part=='head'){const t=cl((m.y-HL(m.x,m.y,m.z)+.016)/.009,0,1);if(t>0)c=mdMix(c,hairC(m),t*t*(3-2*t))}   /* the hairline: hair painted onto the skin along a smooth curve just below the hair's edge */
+      if(m.part=='hand')c=mdSh(c,.92);return c};
+    // crisp regions: the lip line, breeches with a torn, uneven hem, a belt and an iron buckle, the rest flows (null → skinV)
+    const col=m=>{if(m.part=='head'&&m.s>.3&&Math.abs(m.y-1.558)<.005&&Math.abs(m.x)<.026)return lip;
+      if(m.part=='torso'&&m.y<1.03){if(m.y>.995&&m.s>-.99)return m.s>.8&&Math.abs(m.x)<.016?ir:0x2a1a16;return mdSh(br,m.s<-.3?.85:1)}
+      if(m.part=='leg'&&m.y>.31+.035*Math.sin(Math.atan2(m.x-Math.sign(m.x)*.1,m.z)*3+Math.sign(m.x)))return mdSh(br,m.s<-.3?.85:1);return null};
+    // the open coat (shoulders, back, upper arms), torn at the hem; dark seams, the back and the hem darker
+    va_Sh(B,M,m=>(m.part=='torso'&&m.y>1.0&&!(m.s>.45&&Math.abs(m.x)<.05+(1.42-m.y)*.12)&&!(m.y<1.08&&a181H(Math.round(m.x*40),Math.round(m.z*40))<.5))||(m.part=='arm'&&m.y>1.16&&!(m.y<1.2&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.45)),.014,
+      m=>{let c=m.s<-.4?mdSh(co,.86):co;if(m.y<1.12)c=mdMix(c,co2,.55);if(m.s<-.5&&Math.abs(m.x)<.006)c=co2;if(m.part=='arm'&&m.y<1.22)c=mdMix(c,co2,.4);return c});
+    // lank hair lying close to the skull, swept back: a widow's peak in front, the hairline high at the temples, over the ears
+    // and long at the back down to the nape (the locks hang on from there); thin at the hairline,
+    // fuller over the crown and the back; the shell thins to nothing toward its edge, and the hair is painted onto the skin
+    // just below it along the smooth hairline curve (skinV), so the edge reads as that curve, not as the faces' steps
+    va_Sh(B,M,m=>m.part=='head'&&m.y>HL(m.x,m.y,m.z),v=>(v[2]<0?.014:.008)*va_C((v[1]-HL(v[0],v[1],v[2]))/.025,0,1),null,{vcol:hairC});
+    va_Body(B,M,col,skinV);
+    // eyes burning in the sockets, pointed ears grown from the skull, fangs
     [-1,1].forEach(s=>{const p=cgRay(M,[s*EX,EY,.3],[0,0,-1]);if(p)k.p('head','sph','g',0xff2a30,p[0],p[1],p[2]+.001,.009,.006,.005,0,0,s*.25);
-      const q=cgRay(M,[s*.3,1.63,0],[-s,0,0]);if(q){k.L('head','c',sk,[q[0]-s*.006,q[1]-.012,q[2]],[q[0]+s*.05,q[1]+.05,q[2]-.05],.016,.002,4);k.L('head','c',sk,[q[0]-s*.006,q[1]-.024,q[2]+.004],[q[0]+s*.045,q[1]+.03,q[2]-.04],.01,.002,4)}
       const f=cgRay(M,[s*.013,1.554,.3],[0,0,-1]);if(f)k.p('head','cone4','c',0xe8e0d0,f[0],f[1]-.01,f[2]-.003,.005,.022,.005,Math.PI)});
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,s>0?'fist':'claw',s>0?.8:1.15,0x1a1214,s>0?0:.035);cgToes(k,S,s,sk2,.018)});
-    // lank hair: a shell over the crown and the back of the skull, locks down the nape
-    cgShell(B,M,m=>m.part=='head'&&m.y>1.58&&(m.s<.1||m.y>1.672-.022*Math.exp(-(m.x/.022)*(m.x/.022))+(Math.abs(m.x)>.05?-.004:0)),v=>.018*Math.min(1,Math.max(.35,(v[1]-1.56)/.12)),m=>a181Nz(0x120c0e,m,.4,24));
+    cgEars(k,M,T,sk,1.632,.06,.55,.8,.013,0x4a3440);
+    // long clawed fingers on the left hand, the right one closed round the dagger; toes with small dark nails
+    [-1,1].forEach(s=>{va_Hand(B,T,s,s>0?{col:sk,nail:0x1a1214,kind:'fist',len:.9}:{col:sk,nail:0x1a1214,kind:'claw',len:1.3,claw:.03});va_Toes(B,T,s,sk2,.01,0x1a1214)});
+    // locks of hair down the nape
     for(let i=0;i<10;i++){const a=Math.PI*(.62+i*.085)*(i%2?1:-1),o=[Math.sin(a)*.3,1.64+a181H(i,3)*.05,Math.cos(a)*.3],p=cgRay(M,o,nrm3([-o[0],0,-o[2]]));if(!p)continue;
       const e=[p[0]*1.25,1.47-a181H(i,5)*.05,p[2]*1.2-.02];k.L('head','c',i%2?0x120c0e:0x1e1418,p,[(p[0]+e[0])/2,(p[1]+e[1])/2+.02,(p[2]+e[2])/2],.014,.01,4).L('neck','c',i%2?0x120c0e:0x1e1418,[(p[0]+e[0])/2,(p[1]+e[1])/2+.02,(p[2]+e[2])/2],e,.01,.002,4)}
-    // the open coat (shoulders, back, upper arms), ragged; breeches; an iron collar
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>1.0&&!(m.s>.45&&Math.abs(m.x)<.05+(1.42-m.y)*.12)&&!(m.y<1.08&&a181H(Math.round(m.x*40),Math.round(m.z*40))<.5))||(m.part=='arm'&&m.y>1.16&&!(m.y<1.2&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.45)),.014,m=>a181Nz(co,m,.35,14));
-    cgShell(B,M,m=>(m.part=='leg'&&m.y>.32&&!(m.y<.36&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.5))||(m.part=='torso'&&m.y<1.03),.01,m=>a181Nz(br,m,.3,16));
+    // an iron collar
     const nk=cgRay(M,[0,1.475,.3],[0,0,-1]);mdLoft(B,[{p:[0,1.462,.008],rx:.064,f:.064,b:.066,w:[['neck',1]]},{p:[0,1.49,.012],rx:.062,f:.062,b:.064,w:[['neck',1]]}],{seg:14,t:'m',col:ir});
     if(nk)k.p('neck','tor','m',mdSh(ir,.8),0,1.47,nk[2]+.012,.012,.006,.014,Math.PI/2,0,0)});
 })();
@@ -56403,6 +56650,9 @@ function cgHuman(o){const T=CG181.base,h=o.h||1,w=o.w||1,d=o.d||1,hs=o.hs||1,hy=
   const torso=T.torso.map((q,i)=>[U(q[0]),q[1]*w*rw[i],q[2]*d*rf[i],q[3]*d*rb[i],(q[4]||0)*d]);
   const hb=T.head[0][0],nb=U(hb)+(o.neckL||0),H=y=>nb+(y-hb)*hs*hy,hz=o.hz||0;
   const head=(o.head||T.head).map(q=>[H(q[0]),q[1]*hs*hw,q[2]*hs*hd,q[3]*hs*hd,(q[4]||0)*hs+hz]);
+  // (o.sock) a shoulder socket as tall as the arm is thick: the armpit / mid / shoulder-line rings set round the shoulder joint
+  if(o.sock){const ay=U(T.J.aR0[1]),r0=(o.arm||T.arm)[0].r*(o.at||1)*((o.armR||[])[0]||1)*o.sock;torso[4][0]=Math.max(torso[3][0]+.03,ay-r0);torso[5][0]=ay;torso[6][0]=ay+r0*.8;
+    if(torso[7][0]<torso[6][0]+.03)torso[7][0]=torso[6][0]+.03}
   const ty=T.torso[T.torso.length-1][0],y0=torso[torso.length-1][0],nw=o.nw||1;
   const neck=T.neck.map(q=>{const t=(q[0]-ty)/(hb-ty);return [y0+(nb-y0)*t,q[1]*nw,q[2]*nw,q[3]*nw,(q[4]||0)+hz*t]});
   const J={},TJ=T.J;
@@ -56412,12 +56662,12 @@ function cgHuman(o){const T=CG181.base,h=o.h||1,w=o.w||1,d=o.d||1,hs=o.hs||1,hy=
     J[A+'0']=s0;J[A+'1']=add3(s0,k(a0,a1));J[A+'2']=add3(J[A+'1'],k(a1,a2))});
   ['cp0','cp1','cp2'].forEach(n=>J[n]=[0,U(TJ[n][1]),TJ[n][2]*d]);
   const ar=o.arm||T.arm,lg=o.leg||T.leg;
-  const S={J,armRing:4,torso,neck,head,n:24,
+  const S={J,armRing:4,torso,neck,head,n:o.n||24,j2:!!o.j2,
     push:(i,j,a)=>(o.push||T.push)(i,j,a)*w,
     face:o.facePush||((i,j,a)=>T.face(i,j,a)*hs),
     arm:ar.map((q,i)=>({t:q.t,r:q.r*at*((o.armR||[])[i]||1),rf:q.rf&&q.rf*at*((o.armR||[])[i]||1),rb:q.rb&&q.rb*at*((o.armR||[])[i]||1),o:q.o&&q.o*at})),
     leg:lg.map((q,i)=>({t:q.t,r:q.r*lt*((o.legR||[])[i]||1),rf:q.rf&&q.rf*lt*((o.legR||[])[i]||1),rb:q.rb&&q.rb*lt*((o.legR||[])[i]||1),o:q.o&&q.o*lt})),
-    foot:{len:T.foot.len*(o.foot||1)*Math.sqrt(h),w:(o.footW||1)*Math.sqrt(lt),h:o.footH||1},
+    foot:{len:T.foot.len*(o.foot||1)*Math.sqrt(h),w:(o.footW||1)*Math.sqrt(lt),h:o.footH||1,lite:!!o.footLite},
     // base head coordinates ↔ model space
     hp:(x,y,z)=>[x*hs*hw,nb+(y-hb)*hs*hy,(z||0)*hs*hd+hz],
     sculpt:fn=>(x,y,z,n)=>fn(x/(hs*hw),(y-nb)/(hs*hy)+hb,(z-hz)/(hs*hd),n)*hs,
@@ -56480,88 +56730,124 @@ function cgHair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.n
 function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[i],w:w[i]})),Object.assign({seg:10,col},o||{}))}
 
 // ===================================================================== Blood Knight =====================================================================
-(function(){const S=cgHuman({h:1.06,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],rf:[1,1.05,1.15,1.2,1.25,1.2,1.15,1.1],at:1.32,lt:1.28,hs:.96,legL:1.04,nw:1.25,foot:1.05,footW:1.1});
+// (v181 refine) seated limbs (16 columns, shoulder sockets as tall as the arm, arms and thighs grown out of the body), a
+// light head cage under the closed helm, every plate a shell that replaces the skin under it (plates that meet overlap a little,
+// so no crease shows where they join), the plates shaded by the body's baked creases; armoured fingers lofted out of the gauntlet
+(function(){const S=cgHuman({h:1.06,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],rf:[1,1.05,1.15,1.2,1.25,1.2,1.15,1.1],at:1.32,lt:1.28,hs:.96,legL:1.04,nw:1.25,foot:1.05,footW:1.1,
+    n:16,sock:1,j2:1,footLite:1,head:CG181.base.head.filter((q,i)=>[0,2,4,7,9,11,14].indexOf(i)>=0) /* 7 rings: the face is never seen */,facePush:()=>0,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5) /* all under plate */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
   const pl=0x2a1419,pl2=0x40202a,ed=0x5a262c,gd=0x6e5230,ml=0x26262c,un=0x161012,cl=0x4e0a14,glow=0xff2a30,T=S.torso,J=S.J;
   cg181Reg('vampk',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],ey=J.aR1[1],wr=J.aR2[1],kn=J.rh1[1],an=J.rh2[1];
-    cgEmit(B,M,un);
+    M.shade=cgShade(M,{cav:1,y0:0,y1:sh+.3,hk:.24});
     // cuirass (fluted, a centre ridge, banded lames over the belly, a gilded rim), gorget
-    cgShell(B,M,m=>m.part=='torso'&&m.y>wy-.02,.034,m=>m.y<wy+.03||m.y>sh+.02?gd:m.y<wy+.12?(Math.round(m.y*34)%2?pl:pl2):Math.abs(m.x)<.025&&m.s>0?pl2:Math.round(Math.atan2(m.x,m.z)*7)%2?pl:mdSh(pl,.84),{t:'m'});
-    cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh)||(m.part=='head'&&m.y<S.hp(0,1.535,0)[1]),.05,m=>m.y>S.hp(0,1.5,0)[1]?gd:pl2,{t:'m'});
+    va_Sh(B,M,m=>m.part=='torso'&&m.y>wy-.02&&m.y<sh+.03,.034,m=>m.y<wy+.03||m.y>sh?gd:m.y<wy+.12?(Math.round(m.y*34)%2?pl:pl2):Math.abs(m.x)<.025&&m.s>0?pl2:Math.round(Math.atan2(m.x,m.z)*7)%2?pl:mdSh(pl,.84),{t:'m'});
+    va_Sh(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh)||(m.part=='head'&&m.y<S.hp(0,1.535,0)[1]),.05,m=>m.y>S.hp(0,1.5,0)[1]?gd:pl2,{t:'m'});
     // mail skirt and banded tassets, a belt with a winged buckle
-    cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?0x18181c:ml,{n:5});
-    cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',keep:m=>Math.abs(m.c)>.25||m.s<-.2});
-    cgBelt(B,M,wy-.015,.022,.058,0x1a1012,'m');
+    cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?0x18181c:ml,{n:5,seg:16});
+    cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',seg:16,keep:m=>Math.abs(m.c)>.25||m.s<-.2});
+    va_Belt(B,M,wy-.015,.022,.058,0x1a1012,'m');
     const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','sph','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);[-1,1].forEach(s=>k.p('pelvis','cone4','m',gd,s*.04,bk[1]+.005,bk[2]-.004,.012,.05,.006,0,0,s*1.25));
-    const cz=cgTAt(S,J.chest[1]+.04).f+.042;k.p('chest','oct','g',glow,0,J.chest[1]+.04,cz,.022,.03,.012);[-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('chest','cone4','m',gd,s*(.035+i*.022),J.chest[1]+.05-i*.012,cz-.006-i*.003,.012,.06-i*.012,.005,0,0,s*(1.0+i*.25))});
+    const cz=cgTAt(S,J.chest[1]+.04).f+.036;k.p('chest','oct','g',glow,0,J.chest[1]+.04,cz,.022,.03,.012);[-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('chest','cone4','m',gd,s*(.035+i*.022),J.chest[1]+.05-i*.012,cz-.006-i*.003,.012,.06-i*.012,.005,0,0,s*(1.0+i*.25))});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],L=s<0?'lh':'rh';
-      // pauldrons: three dome lames, a swept fin of blades
-      [[.05,.15,.11,.16,pl],[.0,.14,.09,.15,pl2],[-.05,.13,.075,.135,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));k.p(A+'0','tor','m',gd,a[0]+s*(.03+j*.014),a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*(.42+j*.12))});
+      // pauldrons: two dome lames with gilded rims, a swept fin of blades
+      [[.05,.15,.11,.16,pl],[-.03,.135,.085,.145,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));k.p(A+'0','tor','m',gd,a[0]+s*(.03+j*.014),a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*(.42+j*.12))});
       for(let j=0;j<3;j++)k.p(A+'0','cone4','m',j==1?pl2:pl,a[0]+s*(.03+j*.028),a[1]+.1+j*.015,a[2]-.03-j*.03,.026,.17-j*.035,.009,-.55-j*.12,0,-s*(.3+j*.15));
       // rerebrace, couter, vambrace, gauntlet; cuisse, poleyn, greave, sabaton
-      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
-      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
-      cgShell(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,pl,{t:'m'});cgFingers(k,S,s,pl,'fist',1.1,null,0,'m');
-      const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','sph','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
-      cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn+.05&&m.y<J.lh0[1]-.1,.024,m=>Math.round(m.y*24)%2?pl:pl2,{t:'m'});
+      va_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
+      va_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
+      va_Sh(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr))&&Math.sign(m.x)==s,.012,pl,{t:'m'});va_Hand(B,S,s,{col:pl,nail:pl2,kind:'fist',len:1.1,r:.0095});
+      const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','dod','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
+      va_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn+.05&&m.y<J.lh0[1]-.1,.024,m=>Math.round(m.y*24)%2?pl:pl2,{t:'m'});
       const kq=J[L+'1'];k.p(L+'1','hem','m',pl2,kq[0],kq[1],kq[2]+.075,.075,.055,.06,Math.PI/2,0,0);k.L(L+'1','m',ed,[kq[0],kq[1]+.01,kq[2]+.12],[kq[0],kq[1]+.07,kq[2]+.18],.02,.002,4);
-      cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<kn-.04&&m.y>an-.02,.022,m=>m.y<an+.04?gd:m.s>.6?pl2:pl,{t:'m'});
-      cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.016,pl,{t:'m'});k.L(L+'2','m',pl2,[kq[0],.03,J[L+'2'][2]+.16*S.foot.len],[kq[0],.02,J[L+'2'][2]+.25*S.foot.len],.02,.003,4)});
+      va_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<kn-.04&&m.y>an-.02,.022,m=>m.y<an+.04?gd:m.s>.6?pl2:pl,{t:'m'});
+      va_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<an+.02))&&Math.sign(m.x)==s,.016,pl,{t:'m'});k.L(L+'2','m',pl2,[kq[0],.03,J[L+'2'][2]+.16*S.foot.len],[kq[0],.02,J[L+'2'][2]+.25*S.foot.len],.02,.003,4)});
     // the helm: closed, a T-slit with burning eyes, a crest blade and two horns sweeping back
-    const sy=S.hp(0,1.629,0)[1];cgShell(B,M,m=>m.part=='head',.03,m=>{if(m.s>.55&&Math.abs(m.y-sy)<.009*S.hs&&Math.abs(m.x)<.07)return 0x080404;if(m.s>.7&&Math.abs(m.x)<.012&&m.y<sy&&m.y>S.hp(0,1.55,0)[1])return 0x080404;return m.y>S.hp(0,1.69,0)[1]&&Math.abs(m.x)<.03?pl2:pl},{t:'m',rim:1});
-    [-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','sph','g',glow,p[0],p[1],p[2]+.032,.013,.006,.006)});
+    const sy=S.hp(0,1.629,0)[1];va_Sh(B,M,m=>m.part=='head',.03,m=>{if(m.s>.55&&Math.abs(m.y-sy)<.01*S.hs&&Math.abs(m.x)<.07)return 0x080404;if(m.s>.7&&Math.abs(m.x)<.012&&m.y<sy&&m.y>S.hp(0,1.55,0)[1])return 0x080404;return m.y>S.hp(0,1.69,0)[1]&&Math.abs(m.x)<.03?pl2:pl},{t:'m'});
+    va_Body(B,M,m=>m.part=='head'?0x080404:un);
+    [-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','sph','g',glow,p[0],p[1],p[2]+.034,.014,.0065,.006)});
     const ht=S.hp(0,1.74,0);k.L('head','m',pl2,[0,ht[1],ht[2]+.06],[0,ht[1]+.03,ht[2]-.06],.016,.012,4);k.L('head','m',pl2,[0,ht[1]+.03,ht[2]-.06],[0,ht[1]-.02,ht[2]-.2],.012,.002,4);
     [-1,1].forEach(s=>{const q=S.hp(s*.1,1.68,-.02);let p=[q[0],q[1],q[2]];[[s*.06,.03,-.05],[s*.04,.05,-.06],[s*.01,.06,-.06],[-s*.005,.05,-.05]].forEach((d,j)=>{const n=[p[0]+d[0],p[1]+d[1],p[2]+d[2]];k.L('head','m',j<2?pl:ed,p,n,.028-j*.006,.022-j*.006,5);p=n})});
     cgCape(B,S,{len:.32,w:1.25,col:cl,ins:0x1a0408,trim:gd,rag:.7})});
   ST179.vampk={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};})();
 
 // ===================================================================== Blood Magister =====================================================================
-(function(){const S=cgHuman({h:1.1,w:.96,d:.96,rw:[.95,1,.92,.96,1,1,1.02,1],at:.86,lt:.9,hs:.96,armL:1.03,legL:1.06});
+// (v181 refine) a tall, gaunt aristocrat: seated limbs (16 columns, sock, j2), 10 head rings, the robes and hair shells that
+// replace the skin under them; the face's sockets, bruised under-eyes and hollow cheeks painted as smooth colour on a pale
+// skin; the deep red robes shaded smoothly (no stripes), gold kept for the trims; lofted fingers
+(function(){const S=cgHuman(Object.assign({h:1.1,w:.96,d:.96,rw:[.95,1,.88,.94,1,1,1.02,1],at:.86,lt:.9,hs:.96,armL:1.03,legL:1.06,
+    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i==0||i==1||i==3||i==7) /* under the robes */},va_Head(va_HY,.96)));
   const sk=0x6e646c,sk2=0x544a52,rb=0x560c18,rb2=0x3a0610,un=0x160a0e,gd=0x5a4226,glow=0xff2a3a,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;d+=.02*cgG(x,y,0,1.598,.009,.014)+.012*cgG(x,y,0,1.616,.007,.012);
     [-1,1].forEach(s=>{d-=.013*cgG(x,y,s*.036,1.629,.016,.01);d+=.007*cgG(x,y,s*.056,1.602,.014,.01);d-=.006*cgG(x,y,s*.047,1.568,.016,.014);d+=.003*cgG(x,y,s*.01,1.587,.006,.004)});
     d+=.008*cgG(x,y,0,1.648,.05,.006);d-=.004*cgG(x,y,0,1.558,.02,.003);d+=.008*cgG(x,y,0,1.538,.016,.012);return d*f};
   S.pron={'-1':.7};
-  cg181Reg('vampm',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0];cgSculpt(M,{head:1},S.sculpt(FACE));
-    const ey=S.hp(0,1.629,0)[1],skin=m=>{if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.036)<.02&&Math.abs(m.y-ey)<.012*S.hs)return 0x2a1a22;if(Math.abs(m.y-S.hp(0,1.558,0)[1])<.004&&Math.abs(bx)<.024)return 0x3a1a22}return m.s<-.3?sk2:a181Nz(sk,m,.15,20)};
-    cgEmit(B,M,m=>m.part=='torso'||m.part=='leg'||m.part=='foot'?un:skin(m));
-    cgEyes(k,M,S,glow,.036,1.629);cgTeeth(k,M,S,[[-.013,1.556,.018],[.013,1.556,.018]]);cgEars(k,M,S,sk,1.63,.07,.5,.85,.015);
-    cgHair(B,M,S,{col:0x0c080a,line:1.674,peak:.026,neck:true,thick:.014});
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,s>0?'fist':'open',1.25,0x1a0a10,.02);a181Boot(B,{bones:{lh2:['',...J.lh2],rh2:['',...J.rh2]}},s,{col:0x120a0c,toe:.04})});
+  cg181Reg('vampm',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],cl=va_C,hs=S.hs;cgSculpt(M,{head:1},S.sculpt(FACE));
+    M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:sh+.3,hk:.22},{head:.35,neck:.6});
+    const ey=S.hp(0,1.629,0)[1],my=S.hp(0,1.558,0)[1],
+      skinV=m=>{let c=mdMix(sk,0x5e5460,cl((n3Sn(m.x,m.y,m.z,7,3)-.45)*1.2,0,.5));if(m.nz<-.2)c=mdMix(c,sk2,cl((-m.nz-.2)*1.2,0,.7));
+        if(m.part=='head'||m.part=='neck'){const bx=m.x/hs,by=(m.y-S.nb)/hs+1.52;[-1,1].forEach(s=>{c=mdMix(c,0x463a48,.25*cgG(bx,by,s*.05,1.57,.015,.013));
+          c=mdMix(c,0x4a2a3e,.32*cgG(bx,by,s*.04,1.614,.016,.006));if(m.nz>.2)c=mdMix(c,0x2a1a22,cl(1.2*cgG(bx,by,s*.036,1.629,.02,.012),0,.95))})}return c},
+      col=m=>{if(m.part=='head'&&m.s>.3&&Math.abs(m.y-my)<.005*hs&&Math.abs(m.x/hs)<.024)return 0x3a1a22;return m.part=='torso'||m.part=='leg'||m.part=='foot'?un:null};
+    // the robe over the chest, back and upper arms, open down the front with a gold edge; deep red shaded smoothly
+    const robeV=m=>{const n=n3Sn(m.x*1.4,m.y*.3,m.z*1.4,20,5);return mdMix(rb,rb2,cl(.15+(n-.5)*.9+(m.nz<-.3?.25:0)+(m.y<wy+.05?.2:0),0,.8))};
+    va_Sh(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.3)||(m.part=='arm'&&m.y>J.aR1[1]-.02),.02,m=>Math.abs(Math.atan2(m.x,m.z))<.45&&m.part=='torso'?gd:null,{vcol:robeV});
+    va_Hair(B,M,S,{col:0x0c080a,line:1.674,peak:.026,neck:true,thick:.014});
+    M.vaHide.push(M.F.map(f=>f.part=='foot'));   // the feet are inside the boots
+    va_Body(B,M,col,skinV);
+    cgEyes(k,M,S,glow,.036,1.629);cgTeeth(k,M,S,[[-.013,1.556,.018],[.013,1.556,.018]]);cgEars(k,M,S,sk,1.63,.07,.5,.85,.015,0x5a4048);
+    [-1,1].forEach(s=>{va_Hand(B,S,s,s>0?{col:sk,nail:0x1a0a10,kind:'fist',len:1.05}:{col:sk,nail:0x1a0a10,kind:'open',len:1.35,claw:.02});a181Boot(B,{bones:{lh2:['',...J.lh2],rh2:['',...J.rh2]}},s,{col:0x120a0c,toe:.04})});
     // robes: the under-robe to the floor, the over-robe open down the front, gilded edges, a sash, a blood vial
-    cgSkirt(B,S,wy,.02,.16,.02,m=>m.y<.06?gd:un,{n:8});
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.3)||(m.part=='arm'&&m.y>J.aR1[1]-.02),.02,m=>Math.abs(Math.atan2(m.x,m.z))<.45&&m.part=='torso'?gd:Math.round(m.y*24)%2?rb:mdSh(rb,.9));
-    cgSkirt(B,S,wy,.03,.2,.042,m=>m.y<.07||Math.abs(Math.atan2(m.c,m.s))<.55?gd:Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,{n:8,dz:.06,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.42});
-    cgBelt(B,M,wy-.005,.035,.055,rb2);
+    cgSkirt(B,S,wy,.02,.16,.02,m=>m.y<.06?gd:un,{n:6,seg:18});
+    cgSkirt(B,S,wy,.03,.2,.042,m=>m.y<.07||Math.abs(Math.atan2(m.c,m.s))<.55?gd:Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,{n:7,seg:20,dz:.06,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.42});
+    va_Belt(B,M,wy-.005,.035,.055,rb2);
     const sz=cgSurf(M,S,wy,0,.058)[2];k.p('pelvis','oct','m',gd,0,wy,sz,.03,.035,.014);k.L('pelvis','c',rb2,[.05,wy-.02,sz-.01],[.08,wy-.24,sz-.02],.022,.016,4);
     k.L('pelvis','m',gd,[-.07,wy-.02,sz-.01],[-.08,wy-.08,sz-.004],.004,.004,3);k.p('pelvis','cyl','g',glow,-.08,wy-.11,sz-.004,.014,.05,.014);k.p('pelvis','cyl','m',gd,-.08,wy-.08,sz-.004,.016,.008,.016);
     // bell sleeves from the elbow
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',e=J[A+'1'],w=J[A+'2'],d=sub3(w,e),pt=t=>add3(e,mul3(d,t)),r0=.05*S.h;
-      cgTube(B,[pt(-.05),pt(.4),pt(.85),pt(1.18)],[r0,r0+.025,r0+.06,r0+.085],[[[A+'0',.3],[A+'1',.7]],[[A+'1',1]],[[A+'1',.6],[A+'2',.4]],[[A+'2',1]]],m=>m.i>2.3?gd:rb)});
+      cgTube(B,[pt(-.05),pt(.4),pt(.85),pt(1.18)],[r0,r0+.025,r0+.06,r0+.085],[[[A+'0',.3],[A+'1',.7]],[[A+'1',1]],[[A+'1',.6],[A+'2',.4]],[[A+'2',1]]],m=>m.i>2.3?gd:m.i<.5?rb:mdSh(rb,.88))});
     cgCollar(B,k,S,{top:1.69,w:1.05,col:rb2,ins:0x1a0408,rib:gd});
-    const cz=cgTAt(S,J.chest[1]+.03).f+.024;k.p('chest','oct','g',glow,0,J.chest[1]+.03,cz,.02,.032,.01);for(let i=0;i<7;i++){const a=(i-3)*.16,y=sh-.03-Math.abs(i-3)*.02,q=cgTAt(S,y);k.p('chest','sph','m',gd,Math.sin(a)*(q.rx+.02),y,q.z+Math.cos(a)*(q.f+.026),.009)}});
+    const cz=cgTAt(S,J.chest[1]+.03).f+.024;k.p('chest','oct','g',glow,0,J.chest[1]+.03,cz,.02,.032,.01);for(let i=0;i<7;i++){const a=(i-3)*.16,y=sh-.03-Math.abs(i-3)*.02,q=cgTAt(S,y);k.p('chest','ico','m',gd,Math.sin(a)*(q.rx+.02),y,q.z+Math.cos(a)*(q.f+.026),.009)}});
   ST179.vampm={sx:.08,hx:-.06,lk:.08,rk:.08,lz:-.06,le:-.25};})();
 
 // ===================================================================== Nosferatu =====================================================================
-(function(){const S=cgHuman({h:1.0,w:.9,d:.9,rw:[.9,.95,.82,.88,.94,.94,.96,.92],at:.76,lt:.8,hs:1.04,hy:1.16,hw:.9,armL:1.12,legL:1.03,neckL:.02});
-  const sk=0x5e6058,sk2=0x464a40,vein=0x2e2a28,co=0x14100e,co2=0x221a18,glow=0xff2a20,nail=0x2a2018,T=S.torso,J=S.J;
+// (v181 refine) the most bestial of them: a hunched back (a curve in the spine, below the shoulders), a tall bald skull with
+// bat ears grown out of it, long spidery arms and fingers with long dark nails; seated limbs (16 columns, sock, j2), the coat a
+// shell that replaces the skin under it; the skin painted smoothly (sunken temples and cheeks, a dark mask round the eyes,
+// faint blotches), no blocky patches; 14 head rings where the face's features turn, so its facets don't form bands; clawed toes lofted from the feet
+(function(){const S=cgHuman(Object.assign({h:1.0,w:.88,d:.9,rw:[.9,.95,.78,.86,.94,.94,.96,.92],at:.74,lt:.78,hs:1.04,hy:1.16,hw:.9,armL:1.14,legL:1.03,neckL:.02,
+    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1.04,{cheek:.8})));
+  const sk=0x5e6058,sk2=0x464a40,co=0x14100e,co2=0x221a18,glow=0xff2a20,nail=0x2a2018,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.05)return 0;const f=Math.min(1,n[2]*1.5);let d=0;
-    d+=.034*cgG(x,y,0,1.588,.011,.016)+.02*cgG(x,y,0,1.612,.008,.016)-.01*cgG(x,y,0,1.574,.012,.006);   // a long hooked nose
-    [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.037,1.63,.017,.012);d+=.01*cgG(x,y,s*.06,1.6,.012,.01);d-=.016*cgG(x,y,s*.05,1.566,.016,.016)});
-    d+=.016*cgG(x,y,0,1.652,.05,.007);d-=.005*cgG(x,y,0,1.553,.018,.003);d-=.006*cgG(x,y,0,1.536,.025,.01);return d*f};
+    d+=.034*cgG(x,y,0,1.588,.012,.017)+.02*cgG(x,y,0,1.612,.009,.016)-.008*cgG(x,y,0,1.574,.014,.009);   // a long hooked nose
+    // deep sockets, cheekbones, sunken cheeks (wide, smooth dents: still gaunter than the Thrall's, without sharp creases)
+    [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.037,1.63,.019,.013);d+=.009*cgG(x,y,s*.06,1.6,.017,.013);d-=.012*cgG(x,y,s*.052,1.566,.022,.022);d-=.003*cgG(x,y,s*.03,1.57,.008,.02)});
+    d+=.015*cgG(x,y,0,1.652,.05,.009);d-=.004*cgG(x,y,0,1.553,.022,.005);d-=.005*cgG(x,y,0,1.536,.028,.012);return d*f};
   S.pron={'-1':1.1,'1':1.1};
-  cg181Reg('nosferatu',S,function(B,P,k,C){const M=C.M,wy=T[2][0];cgSculpt(M,{head:1},S.sculpt(FACE));
-    const ey=S.hp(0,1.63,0)[1],skin=m=>{if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.037)<.022&&Math.abs(m.y-ey)<.015*S.hs)return 0x0a0806}
-      const v=n3Sn(m.x,m.y,m.z,22,4);return v>.74?vein:m.s<-.3?sk2:mdSh(sk,1-v*.15)};
-    cgEmit(B,M,m=>m.part=='leg'?co:skin(m));
+  cg181Reg('nosferatu',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],cl=va_C,hs=S.hs;
+    // the hunch: the upper back curves out between the shoulder blades (kept below the shoulder line, so no groove round the neck)
+    cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]<-.1?.075*cgG(x,y,0,(J.chest[1]+sh)/2-.03,.13,.11)*Math.min(1,(-.1-n[2])*1.6):0);
+    // the knuckles of the spine standing out down the hunch (sculpted, so the coat over them shows them too)
+    cgSculpt(M,{torso:1},(x,y,z,n)=>{if(n[2]>-.5)return 0;let d=0;for(let i=0;i<7;i++)d+=cgG(x,y,0,sh-.04-i*.038,.013,.011);return .012*d});
+    cgSculpt(M,{head:1},S.sculpt(FACE));
+    M.shade=va_Shade(M,{cav:1.1,blur:3,y0:0,y1:sh+.35,hk:.26},{head:.1,neck:.35});   /* crease darkening almost off on the face */
+    const ey=S.hp(0,1.63,0)[1],
+      skinV=m=>{const n=n3Sn(m.x,m.y,m.z,6,4),n2=n3Sn(m.x,m.y,m.z,13,7);let c=mdMix(sk,0x6a6c5e,cl((n-.5)*1.2,0,.45));c=mdMix(c,0x4a4438,cl((n2-.66)*3,0,.5));
+        if(m.nz<-.2)c=mdMix(c,sk2,cl((-m.nz-.2)*1.2,0,.75));
+        if(m.part=='torso'&&m.nz>.2){const f=cl((m.y-(wy+.04))/.04,0,1)*cl((sh-.06-m.y)/.04,0,1),ph=(((m.y+1.8*m.x*m.x-wy)/.04)%1+1)%1;c=mdSh(c,1-.26*Math.exp(-Math.pow((ph-.5)/.17,2))*f*cl((Math.abs(m.x)-.01)/.02,0,1))}
+        if(m.part=='head'||m.part=='neck'){const bx=m.x/(hs*.9),by=(m.y-S.nb)/(hs*1.16)+1.52;[-1,1].forEach(s=>{c=mdMix(c,0x3e3a30,.3*cgG(bx,by,s*.052,1.566,.016,.014));c=mdMix(c,0x423c34,.4*cgG(bx,by,s*.075,1.66,.018,.03));
+          if(m.nz>.15)c=mdMix(c,0x0e0a08,cl(1.35*cgG(bx,by,s*.037,1.63,.022,.015),0,1))})}
+        if(m.part=='hand')c=mdSh(c,.9);return c},
+      col=m=>m.part=='leg'?mdSh(co,m.s<-.3?.85:1):m.part=='head'&&m.s>.3&&Math.abs((m.y-S.nb)/(hs*1.16)+1.52-1.553)<.0045&&Math.abs(m.x/hs)<.03?0x1a0e0c:null;
+    // the long coat, open in front (the coat body, a shell replacing the skin; the skirt and a torn standing collar hung from it)
+    va_Sh(B,M,m=>(m.part=='torso'&&m.y>wy-.04&&Math.abs(Math.atan2(m.x,m.z))>.7)||(m.part=='arm'&&m.y>J.aR2[1]+.08),.016,null,{vcol:m=>mdMix(co,co2,cl(.25+(n3Sn(m.x*1.6,m.y*.25,m.z*1.6,22,3)-.5)*1.6,0,.9))});
+    va_Body(B,M,col,skinV);
     cgEyes(k,M,S,glow,.037,1.63,1.15,-.002);cgTeeth(k,M,S,[[-.005,1.553,.03],[.005,1.553,.03],[-.017,1.553,.012],[.017,1.553,.012]]);
-    cgEars(k,M,S,sk,1.64,.17,.75,.55,.03,0x5a3a3a);
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,'claw',1.9,nail,.07);cgToes(k,S,s,sk2,.03,nail)});
-    // ribs and the spine's knuckles, painted by the coat's gap; the long coat, open, shredded at the hem; a torn standing collar
-    for(let i=0;i<8;i++){const y=T[6][0]-i*.06,q=cgTAt(S,y),p=cgRay(M,[0,y,q.z-.4],[0,0,1]);if(p)k.p(n3TB?'chest':'chest','sph','c',sk,p[0],p[1],p[2]-.004,.016,.012,.012)}
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04&&Math.abs(Math.atan2(m.x,m.z))>.7)||(m.part=='arm'&&m.y>J.aR2[1]+.08),.016,m=>Math.round(m.y*26)%3==0?co2:co);
-    cgSkirt(B,S,wy-.02,J.lh1[1]-.25,.16,.035,m=>Math.round(Math.atan2(m.c,m.s)*7)%2?co:co2,{n:8,dz:.1,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.8&&!(m.y<J.lh1[1]-.05&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<(J.lh1[1]-.05-m.y)*3.5)});
-    cgBelt(B,M,wy-.022,.018,.042,0x2a1e16);
-    cgCollar(B,k,S,{top:1.64,w:1.1,col:co,ins:0x2a0a0a,rag:.5,cut:.4})});})();
+    // big bat ears grown out of the skull, swept up and back, a raw pink inside
+    cgEars(k,M,S,sk,1.645,.17,.75,.55,.032,0x5a3a3a);
+    [-1,1].forEach(s=>{va_Hand(B,S,s,{col:sk,nail,kind:'claw',len:1.9,r:.0066,claw:.06});va_Toes(B,S,s,sk2,.026,nail)});
+    cgSkirt(B,S,wy-.02,J.lh1[1]-.25,.16,.035,m=>Math.round(Math.atan2(m.c,m.s)*7)%2?co:co2,{n:7,seg:18,dz:.1,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.8&&!(m.y<J.lh1[1]-.05&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<(J.lh1[1]-.05-m.y)*3.5)});
+    va_Belt(B,M,wy-.022,.018,.042,0x2a1e16);
+    cgCollar(B,k,S,{top:1.64,w:1.1,col:co,ins:0x2a0a0a,rag:.5,cut:.4})});
+})();
 
 // ---------------- fur and fringes on cage bodies ----------------
 // hanging tufts round the body at height y: rays from outside find the surface (or the shell's height), each tuft hangs down
@@ -56575,81 +56861,237 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
     const L=len*(.7+a181H(i,t*30,7)*.6),q=add3(p,mul3(r,o.off||0));k.L(bn,'c',a181H(i,9,t*10)<.35?(col2||col):col,sub3(q,mul3(r,.01)),add3(add3(q,mul3(r,L*.3)),mul3(d,L)),o.r||.026,.003,4)}}
 
 // ===================================================================== Crimson Executioner =====================================================================
-(function(){const S=cgHuman({h:.92,w:1.3,d:1.28,rw:[1.15,1.22,1.4,1.32,1.26,1.26,1.3,1.42],rf:[1.1,1.3,1.8,1.6,1.32,1.2,1.15,1.2],rb:[1.05,1.15,1.15,1.12,1.15,1.15,1.15,1.25],at:1.55,lt:1.45,hs:.96,nw:1.7,legL:.95,foot:1.1,footW:1.3});
-  const sk=0x8a7468,sk2=0x6a564c,scar=0x5a2a26,hd=0x22160f,hd2=0x341f14,ap=0x2e1c12,bl=0x2a0808,ir=0x3a3a3e,ir2=0x56565c,lt=0x2a1a10,T=S.torso,J=S.J;
+// (v181 refine, Oct 31 2026) the Executioner, the Jotun and the Yeti on the lean cage (16 columns, seated shoulders and hips,
+// fewer head and limb rings), with baked shading, smooth colour, clean one-piece fingers and their identities pushed:
+// a massive human headsman, a heavy storm giant of the north, a stooped ape-like beast. Helpers for the three (ej_):
+// the head rings kept from the base head (idx) and the base face push mapped onto them
+function ej_Head(idx){const T=CG181.base;return {head:T.head.filter((q,i)=>idx.indexOf(i)>=0),face:hs=>(i,j,a)=>T.face(idx[i],j,a)*hs}}
+// the arm rings: the base arm without the rings in drop (0 and 1 stay: j2 grows them out of the socket), then the hand as part
+// of the arm's own surface: the palm swelling to the knuckle line and closing (sizes in model space; H.w = half width across
+// the knuckles, H.th = half thickness, H.len = palm length factor); the fingers grow from its knuckle line (ej_Hand)
+function ej_ArmR(at,drop,H,R){const a=at||1,L=H.len||1;return CG181.base.arm.filter((q,i)=>i<7&&drop.indexOf(i)<0).map((q,i)=>R&&R[i]?Object.assign({},q,R[i]):q)
+  .concat([{t:2+.08*L,r:H.th*.86/a,rf:H.w*.84/a,rb:H.w*.8/a},{t:2+.25*L,r:H.th/a,rf:H.w/a,rb:H.w*.94/a},{t:2+.39*L,r:H.th*.78/a,rf:H.w*.9/a,rb:H.w*.84/a}])}
+// fingers and thumb as rounded tapering lofts rooted inside the hand's knuckle line: one smooth piece each (no balls on sticks).
+// The hand's frame is the cage arm's (S.pron turns the back of the hand forward), so the fingers always point out of the hand
+// and curl toward the palm. o: {col, w (half width across the knuckles), r (finger radius), len, curl (per joint), pre (lean
+// toward the palm), fan (spread), kn (knuckle line from the wrist), lift (toward the back of the hand), n, claw (length), nail,
+// thumb (false: none), tcurl, tlen}
+function ej_Hand(B,S,s,o){const A=s<0?'aL':'aR',a1=S.J[A+'1'],a2=S.J[A+'2'],d=nrm3(sub3(a2,a1)),u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,
+    tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d)),W=[[A+'2',1]],
+    rot=(v,k,t)=>{const c=Math.cos(t),si=Math.sin(t),kd=k[0]*v[0]+k[1]*v[1]+k[2]*v[2];return add3(add3(mul3(v,c),mul3(cross3(k,v),si)),mul3(k,kd*(1-c)))},
+    n=o.n||4,r=o.r,col=o.col,nail=o.nail==null?mdSh(col,.55):o.nail,kn=add3(a2,mul3(d,o.kn||.072));
+  const digit=(p0,dir,len,rr,curl,cax,c0)=>{const R=[];let dd=dir,p=sub3(p0,mul3(dir,rr*1.6));R.push({p,rx:rr*.85});R.push({p:p0,rx:rr});p=p0;
+      [.42,.33,.25].forEach((l,j)=>{dd=rot(dd,cax,curl*(j?1:c0));p=add3(p,mul3(dd,len*l));R.push({p,rx:rr*(.9-j*.1)})});
+      if(o.claw){dd=rot(dd,cax,curl*.7);R.push({p:add3(p,mul3(dd,o.claw*.3)),rx:rr*.62,col:nail});R.push({p:add3(p,mul3(rot(dd,cax,curl*.5),o.claw)),rx:.0016,col:nail})}
+      else R.push({p:add3(p,mul3(dd,rr*.6)),rx:rr*.45,col:o.nail!=null?nail:null});
+      R.forEach(q=>{q.f=q.b=q.rx;q.w=W;if(q.col==null)q.col=col});mdLoft(B,R,{seg:5,ref:u,capB:true})};
+  for(let i=0;i<n;i++){const z=n>1?(1-2*i/(n-1))*o.w*.7:0,p=add3(add3(kn,mul3(f,z)),mul3(u,o.lift||0)),dir=nrm3(add3(add3(d,mul3(u,-(o.pre==null?.12:o.pre))),mul3(f,z*(o.fan==null?1.4:o.fan))));
+    digit(p,dir,o.len*(n>3&&i==n-1?.8:i==0?.94:1),r*(n>3&&i==n-1?.86:1),o.curl,ax,o.c0==null?.5:o.c0)}
+  if(o.thumb!==false){const tb=add3(add3(add3(a2,mul3(d,.032)),mul3(f,o.w*.8)),mul3(u,-o.w*.22)),td=nrm3(add3(add3(mul3(d,.62),mul3(u,-.4)),mul3(f,.68)));
+    digit(tb,td,o.len*(o.tlen||.66),r*1.12,o.tcurl==null?.3:o.tcurl,nrm3(cross3(u,f)),1)}}
+// a closed fist: in a fist the fingers don't change the outline, so they are ONE rounded mitten mass that grows from inside the
+// palm, over a knuckle ridge (a little proud) and curls round the grip toward the palm; the finger separations are painted as
+// thin dark lines along it, and the thumb is its own rounded loft crossing in front. o: {col, w (half width across the
+// knuckles), r (half thickness of the fingers), len, turn ([per-step turns toward the palm]), kn, lift, tlen}
+function ej_Fist(B,S,s,o){const A=s<0?'aL':'aR',a1=S.J[A+'1'],a2=S.J[A+'2'],d=nrm3(sub3(a2,a1)),u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,
+    tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d)),Wt=mdW(B,[[A+'2',1]]),
+    rot=(v,k,t)=>{const c=Math.cos(t),si=Math.sin(t),kd=k[0]*v[0]+k[1]*v[1]+k[2]*v[2];return add3(add3(mul3(v,c),mul3(cross3(k,v),si)),mul3(k,kd*(1-c)))},
+    col=o.col,dark=mdSh(col,.42),w=o.w,r=o.r,L=o.len,kn=add3(add3(a2,mul3(d,o.kn||.072)),mul3(u,o.lift||0)),turns=o.turn||[1.05,1.0,1.0,.55],lens=[.42,.33,.25,.0];
+  // the spine of the mitten: from inside the palm, through the knuckles, curling toward the palm (−u) round the grip
+  const SP=[];let p=sub3(kn,mul3(d,.024)),dir=d,th=0;SP.push({p,dir,th});p=kn;SP.push({p,dir,th});
+  turns.forEach((t,i)=>{th+=t;dir=rot(d,ax,th);p=add3(p,mul3(dir,i<3?L*lens[i]:r*.55));SP.push({p,dir,th})});
+  // across the knuckles (t ∈ [-1,1] × w): stations either side of each finger separation (the dark lines), rounded ends
+  const T=[-1,-.54,-.46,-.04,.04,.46,.54,1],sepQ=j=>j==1||j==3||j==5,ht=t=>r*Math.pow(Math.max(.08,1-t*t*.92),.4);
+  const ring=k=>{const q=SP[k],n=rot(u,ax,q.th),out=[];
+    T.forEach(t=>out.push(add3(add3(q.p,mul3(ax,t*w*(k?1:.9))),mul3(n,ht(t)*(k==2?1.08:1)))));   /* the back (knuckle) side */
+    for(let j=T.length-1;j>=0;j--){const t=T[j];out.push(add3(add3(q.p,mul3(ax,t*w*(k?1:.9))),mul3(n,-ht(t)*.9)))}return out};   /* the palm side */
+  const R=SP.map((q,k)=>ring(k)),N=R[0].length,V=x=>({x:x[0],y:x[1],z:x[2],w:Wt}),
+    tri=(a,b,c,ctr,cl)=>{const n=cross3(sub3(b,a),sub3(c,a)),m=mul3(add3(add3(a,b),c),1/3);if(n[0]*(m[0]-ctr[0])+n[1]*(m[1]-ctr[1])+n[2]*(m[2]-ctr[2])<0){const x=b;b=c;c=x}mdTri(B,'c',V(a),V(b),V(c),mdC(cl))};
+  // quad colour: the separation columns dark, the palm side a shade darker
+  const qc=j=>{const top=j<T.length-1,jj=top?j:N-2-j;return (jj>=0&&jj<T.length-1&&sepQ(jj)&&top)||(!top&&jj>=0&&sepQ(jj))?dark:top?col:mdSh(col,.86)};
+  for(let k=0;k<R.length-1;k++){const ctr=SP[k].p,c2=SP[k+1].p,mid=lerp3(ctr,c2,.5);for(let j=0;j<N;j++){const a=R[k][j],b=R[k][(j+1)%N],c=R[k+1][(j+1)%N],e=R[k+1][j],cl=j==T.length-1||j==N-1?col:qc(j);tri(a,b,c,mid,cl);tri(a,c,e,mid,cl)}}
+  [[0,-1],[R.length-1,1]].forEach(([k,sg])=>{const q=SP[k],cp=add3(q.p,mul3(q.dir,sg*r*.35)),ctr=sub3(q.p,mul3(q.dir,sg*r));for(let j=0;j<N;j++)tri(R[k][j],R[k][(j+1)%N],cp,ctr,col)});
+  // the thumb: a rounded loft from the side of the palm, crossing in front of the curled fingers
+  const tb=add3(add3(add3(a2,mul3(d,.03)),mul3(f,w*.85)),mul3(u,-w*.15)),tl=L*(o.tlen||.62),TR=[];let tp=sub3(tb,mul3(d,.012)),td=nrm3(add3(add3(mul3(d,.55),mul3(u,-.75)),mul3(f,-.1)));
+  const k2=nrm3(cross3(td,mul3(f,-1)));TR.push({p:tp,rx:r*.95});tp=tb;TR.push({p:tp,rx:r*1.05});[.45,.35,.2].forEach((l,i)=>{td=rot(td,k2,.6);tp=add3(tp,mul3(td,tl*l));TR.push({p:tp,rx:r*(.98-i*.1)})});
+  TR.push({p:add3(tp,mul3(td,r*.5)),rx:r*.5});TR.forEach(q=>{q.f=q.b=q.rx;q.w=[[A+'2',1]];q.col=col});mdLoft(B,TR,{seg:6,ref:u,capB:true})}
+// cgShell with smooth colour: col(m) returning null hands the face to o.vcol (a colour per corner, as cgEmit); o.rim as cgShell
+function ej_Shell(B,M,sel,off,col,o){o=o||{};const N=M.N||(M.N=cgNormals(M)),pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map();
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1)}});
+  const rim=new Set();M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;if(cnt.get(k)==1){rim.add(a);rim.add(b)}}});
+  const P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=M.V[i],n=N[i],d=(typeof off=='function'?off(v):off)*(rim.has(i)?(o.rim==null?.12:o.rim):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  cgEmit(B,M,col,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol:o.vcol});if(o.hide)(M.ejHide||(M.ejHide=[])).push(sel)}
+// the body's own faces, leaving out what shells registered with hide:1 cover completely (no skin emitted under clothes)
+function ej_Body(B,M,col,o){const H=M.ejHide||[];cgEmit(B,M,col,Object.assign({},o||{},{keep:m=>!H.some(f=>f(m))&&(!o||!o.keep||o.keep(m))}))}
+function ej_cl(v,a,b){return Math.max(a,Math.min(b,v))}
+// cgFur with smooth colour (the same layered shell and ragged clumps): the shell's colour flows corner to corner, light and
+// dark locks running down with the fall of the fur, instead of a colour per face (no "pixel camouflage"); o.hide also keeps
+// the skin under the layer from being emitted (ej_Body); o.lenAt(p) / o.offAt(v) scale the clumps' length and the
+// layer's thickness by where they are
+function ej_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0;
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
+  const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
+  const lowV=new Set();low.forEach(([a,b])=>{lowV.add(a);lowV.add(b)});
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(o.offAt?o.offAt(v):1)*(rim.has(i)?(lowV.has(i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  const c2=o.col2==null?mdSh(o.col,.8):o.col2,vcol=o.vcol||(m=>{const g=n3Sn(m.x*1.4,m.y*.35,m.z*1.4,22,seed),b=n3Sn(m.x,m.y,m.z,6,seed+1);
+    return mdMix(mdSh(o.col,.94+(b-.5)*.16),c2,ej_cl((.5-g)*3.2,0,.85))});
+  cgEmit(B,M,null,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol});if(o.hide)(M.ejHide||(M.ejHide=[])).push(sel);
+  const W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;w=[si,sw];W.set(i,w);return w};
+  const vx=(p,i)=>({x:p[0],y:p[1],z:p[2],w:wOf(i)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
+  low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
+    for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,(o.run||2)+Math.floor(a181H(ci,seed,7)*(o.runV||3))),run=loop.slice(i,i+n+1);i+=n;ci++;
+      const h=a181H(ci,seed,3),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),L=o.len*(1-(o.jag==null?.6:o.jag)*h)*(o.lenAt?o.lenAt(mid):1),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],c=mdC(h<.25?c2:mdSh(o.col,.84+a181H(ci,9,seed)*.2)),T=vx(tip,run[Math.floor(run.length/2)]);
+      for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p),T,vx(pos(q),q),c);mdTri(B,t,vx(V[q],q),T,vx(V[p],p),c)}
+      const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f),T,vx(pos(f),f),c);mdTri(B,t,vx(pos(l),l),T,vx(V[l],l),c)}})}
+// is this face of the arm past the wrist (the palm grown from the arm's own rings)? hands get the hand's colour
+function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return false;const A=m.x<0?'aL':'aR',a1=S.J[A+'1'],a2=S.J[A+'2'],d=nrm3(sub3(a2,a1));return (m.x-a2[0])*d[0]+(m.y-a2[1])*d[1]+(m.z-a2[2])*d[2]>.012}
+// a huge, brutal human headsman: human proportions, massive and imposing (broad shoulders, a thick neck, a barrel chest and a
+// gut, heavy arms with big hands, a small hooded head on top of it all). Leather hood with eye holes and glowing eyes, a
+// blood-soaked apron, shoulder straps, a heavy belt with iron rings, stitched scars, forearm wraps, manacles with a broken
+// link, breeches and heavy boots; dried blood on the hands and forearms
+(function(){const HD=ej_Head([0,3,6,9,12,14]),
+    S=cgHuman({h:.97,w:1.32,d:1.28,rw:[1.15,1.22,1.4,1.34,1.32,1.36,1.44,1.4],rf:[1.1,1.3,1.8,1.6,1.32,1.2,1.15,1.2],rb:[1.05,1.15,1.15,1.12,1.15,1.18,1.2,1.25],at:1.66,lt:1.6,hs:.92,nw:1.7,legL:.95,foot:1.1,footW:1.3,
+      n:16,sock:1,j2:1,footLite:1,head:HD.head,facePush:HD.face(.92),arm:ej_ArmR(1.66,[2,5],{w:.052,th:.025}),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
+  const sk=0x8a7468,sk2=0x6a564c,flush=0x9a6656,scar=0x5a2a26,hd=0x22160f,hd2=0x341f14,ap=0x2e1c12,bl=0x2a0808,bl2=0x4a0e0c,ir=0x3a3a3e,ir2=0x56565c,lt=0x2a1a10,T=S.torso,J=S.J;
   S.pron={'-1':.9};
-  cg181Reg('executioner',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],wr=J.aR2[1],kn=J.rh1[1];
-    cgEmit(B,M,m=>m.part=='leg'||m.part=='foot'?lt:m.s<-.4?sk2:a181Nz(sk,m,.18,16));
-    // the hood over the whole head: two eye holes, a crown seam, a drawstring at the throat
-    const ey=S.hp(0,1.629,0)[1];cgShell(B,M,m=>m.part=='head'||(m.part=='neck'&&m.y>S.J.neck[1]),.016,m=>{const bx=m.x/S.hs;if(m.s>.45&&Math.abs(Math.abs(bx)-.04)<.017&&Math.abs(m.y-ey)<.013*S.hs)return 0x050303;return Math.abs(m.x)<.008&&m.y>ey?hd2:a181Nz(hd,m,.35,18)},{rim:1});
-    cgEyes(k,M,S,0xff6a3a,.04,1.629,.8,.014);const nt=S.hp(0,1.505,0);mdLoft(B,[nt[1]-.01,nt[1]+.01].map(y=>({p:[0,y,nt[2]],rx:.072*S.hs*1.25,f:.075*S.hs*1.25,b:.072*S.hs*1.25,w:[['neck',1]]})),{seg:16,col:0x5a4a32});
-    k.L('neck','c',0x5a4a32,[.02,nt[1],nt[2]+.09],[.03,nt[1]-.08,nt[2]+.1],.006,.004,3);
-    // the apron (chest to knees), straps, the belt with hooks, a cleaver and a chain
-    cgShell(B,M,m=>m.part=='torso'&&m.s>.25&&m.y<sh-.05,.03,m=>n3Sn(m.x,m.y,m.z,11,3)>.68?bl:a181Nz(ap,m,.35,14));
-    cgSkirt(B,S,wy-.02,kn+.06,.06,.06,m=>n3Sn(m.x,m.y,m.z,11,5)>.7?bl:a181Nz(ap,m,.35,14),{n:5,keep:m=>m.s>.35});
-    [-1,1].forEach(s=>{const f=cgTAt(S,sh-.06),b=cgTAt(S,sh-.08);cgTube(B,[[s*.09*S.h,sh-.06,f.z+f.f+.032],[s*.15,sh+.03,0],[s*.08,sh-.1,b.z-b.b-.02]],[.016,.016,.016],[[['chest',1]],[['chest',1]],[['chest',1]]],0x1e120c,{seg:6})});
-    const hy=T[1][0]+.03;cgBelt(B,M,hy,.032,.07,0x1a100a);   // the heavy belt rides on the hips (below the waist's bend), with everything it carries
-    const bf=cgSurf(M,S,hy,0,.074),bR=cgSurf(M,S,hy-.005,Math.PI/2,.074),bL=cgSurf(M,S,hy-.005,-Math.PI/2,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);
-    k.P[k.P.length-1].w=cgWAt(M,sub3(bf,[0,0,.074]));
-    // scars on the back and arms; forearm wraps; manacles with a broken link; breeches, heavy boots
+  cg181Reg('executioner',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],wr=J.aR2[1],kn=J.rh1[1],ch=J.chest[1],WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)};
+    // big masses that show in the outline: a heavy chest, a broad thick back, the gut over the belt
+    cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]>.2)[-1,1].forEach(s=>d+=.016*cgG(x,y,s*.085,ch+.03,.06,.045)*n[2]);if(n[2]<-.2)d+=.018*cgG(x,y,0,ch-.02,.15,.09)*-n[2];return d});
+    M.shade=cgShade(M,{cav:1,y0:0,y1:sh+.2,hk:.26});   // baked creases, ridges and height light
+    // dried blood: smooth stains (and runs down from them) on the hands and forearms, splashes on the chest
+    const blood=m=>{if(m.part!='hand'&&!(m.part=='arm'&&m.y<J.aR1[1])&&!(m.part=='torso'&&m.s>.3))return 0;const n=n3Sn(m.x,m.y,m.z,9,4);
+      return m.part=='torso'?ej_cl((n-.72)*4,0,1)*.7:ej_cl((n-.45)*3,0,1)};
+    const skin=m=>{const n=n3Sn(m.x,m.y,m.z,6,3);let c=mdMix(sk,sk2,ej_cl(.2+(n-.5)*.7+(m.nz<-.35?.3:0),0,1));
+      if(m.ny>.35)c=mdMix(c,flush,ej_cl((m.ny-.35)*.6,0,.22));   // weathered, ruddy tops of the shoulders and arms
+      const b=blood(m);if(b>0)c=mdMix(c,b>.6?bl:bl2,b*.75);return c};
+    // the hood over the whole head: two eye holes, a crown seam, darker lower edge, worn crown
+    const ey=S.hp(0,1.629,0)[1],hood=m=>m.part=='head'||(m.part=='neck'&&m.y>J.neck[1]);
+    ej_Shell(B,M,hood,.016,m=>{const bx=m.x/S.hs;if(m.s>.45&&Math.abs(Math.abs(bx)-.04)<.017&&Math.abs(m.y-ey)<.013*S.hs)return 0x050303;return Math.abs(m.x)<.008&&m.y>ey&&m.s<.9?hd2:null},
+      {rim:0,vcol:m=>{const n=n3Sn(m.x,m.y,m.z,12,2);let c=mdMix(hd,0x140c08,ej_cl(.3+(n-.5)*.8,0,1));if(m.ny>.5)c=mdMix(c,hd2,(m.ny-.5)*.8);return c}});
+    M.ejHide=[m=>hood(m)&&m.y>J.neck[1]+.02];   // the head under the hood is never seen
+    cgEyes(k,M,S,0xff6a3a,.04,1.629,.8,.019);const nt=S.hp(0,1.505,0);mdLoft(B,[nt[1]-.01,nt[1]+.01].map(y=>({p:[0,y,nt[2]],rx:.072*S.hs*1.25,f:.075*S.hs*1.25,b:.072*S.hs*1.25,w:[['neck',1]]})),{seg:12,col:0x5a4a32});
+    k.L('neck','c',0x5a4a32,[.02,nt[1],nt[2]+.09],[.03,nt[1]-.08,nt[2]+.1],.006,.004,3);WS([.02,nt[1],nt[2]+.07]);
+    // the apron (chest to knees): soaked with blood that ran down it, darker toward the hem
+    const apC=m=>{const n=n3Sn(m.x,m.y,m.z,8,3),st=n3Sn(m.x*2.4,m.y*.3,m.z*2.4,16,5);let c=mdMix(ap,0x1c100a,ej_cl(.25+(n-.5)*.6,0,1));
+      const b=Math.max(ej_cl((n-.55)*2.2,0,1),ej_cl((st-.6)*2,0,1)*ej_cl((sh-.1-m.y)*3,0,1));if(b>0)c=mdMix(c,mdMix(bl2,bl,b),b*.8);return c};
+    ej_Shell(B,M,m=>m.part=='torso'&&m.s>.25&&m.y<sh-.05,.03,null,{vcol:apC,rim:0,hide:1});
+    cgSkirt(B,S,wy-.02,kn+.06,.06,.06,m=>{const n=n3Sn(m.x,m.y,m.z,5,3);return mdMix(mdMix(ap,0x1c100a,ej_cl(.25+(n-.5)*.5,0,1)),bl,ej_cl((wy-.05-m.y)*1.6+(n-.5)*.6,0,.7))},{n:5,seg:16,keep:m=>m.s>.35});
+    // the apron's straps over the shoulders: tubes laid on the skin (points found on the body), both ends sunk into it
+    [-1,1].forEach(s=>{const top=cgRay(M,[s*.1,sh+.5,cgTAt(S,sh).z],[0,-1,0],{torso:1,neck:1}),pts=[cgSurf(M,S,sh-.09,s*.42,-.004),cgSurf(M,S,sh-.04,s*.42,.012),top?add3(top,[0,.012,0]):[s*.1,sh+.05,0],cgSurf(M,S,sh-.06,s*(Math.PI-.42),.012),cgSurf(M,S,sh-.16,s*(Math.PI-.42),-.006)];
+      cgTube(B,pts,[.014,.015,.015,.015,.014],pts.map(p=>cgWAt(M,p)),0x1e120c,{seg:5})});
+    // the heavy belt rides on the hips, an iron buckle and two iron rings at the sides
+    const hy=T[1][0]+.03;ej_Shell(B,M,m=>m.part=='torso'&&Math.abs(m.y-hy)<.032,.07,0x1a100a,{rim:0,hide:1});
+    const bf=cgSurf(M,S,hy,0,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);WS(sub3(bf,[0,0,.074]));
+    [-1,1].forEach(s=>{const p=cgSurf(M,S,hy-.02,s*1.25,.07);k.p('pelvis','tor','m',ir,p[0],p[1]-.03,p[2],.022,.022,.007,0,s*1.25,0);WS(sub3(p,mul3([Math.sin(s*1.25),0,Math.cos(s*1.25)],.07)))});
+    // stitched scars on the back and the arm
     [[sh-.06,2.4],[wy+.12,-2.6],[sh-.12,Math.PI]].forEach(([y,a])=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(!p)return;const e=[p[0]+.05,p[1]-.08,p[2]];
-      k.L('chest','c',scar,p,e,.006,.005,3);for(let i=0;i<4;i++){const c=lerp3(p,e,i/3);k.p('chest','box','c',0x1a1010,c[0],c[1],c[2],.016,.003,.003,0,a,.5)}});
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>wr+.03,.012,m=>Math.round(m.y*50)%2?0x3a2a1c:0x2a1e14);
-      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<wr+.035&&m.y>wr-.03,.024,ir,{t:'m'});const w=J[A+'2'];k.p(A+'2','tor','m',ir2,w[0],w[1]+.005,w[2]+.06,.014,.006,.016,Math.PI/2,0,0);
-      cgFingers(k,S,s,sk,s>0?'fist':'open',1,sk2,0);
-      cgShell(B,M,m=>(m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn-.12)||(m.part=='torso'&&m.y<wy),.012,m=>a181Nz(lt,m,.3,16));
-      cgShell(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<kn-.14))&&Math.sign(m.x)==s,.02,m=>m.part=='foot'&&m.y<.03?ir:a181Nz(0x1a120c,m,.3,16))})});})();
+      k.L('chest','c',scar,p,e,.006,.005,3);WS(p);for(let i=0;i<4;i++){const c=lerp3(p,e,i/3);k.p('chest','box','c',0x1a1010,c[0],c[1],c[2],.016,.003,.003,0,a,.5);WS(c)}});
+    // forearm wraps, manacles with a broken link; big hands (the right one a fist round the haft); breeches, heavy boots
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ej_Shell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>wr+.03,.012,m=>Math.round(m.y*50)%2?0x3a2a1c:0x2a1e14,{rim:0,hide:1});
+      ej_Shell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<wr+.035&&m.y>wr-.03,.024,ir,{t:'m',rim:0,hide:1});const w=J[A+'2'];k.p(A+'2','tor','m',ir2,w[0],w[1]+.005,w[2]+.06,.014,.006,.016,Math.PI/2,0,0);
+      const hc=mdMix(sk,bl2,.35);(s>0?ej_Fist:ej_Hand)(B,S,s,s>0?{col:hc,w:.05,r:.0135,len:.072,lift:.012}:{col:hc,w:.052,r:.0125,len:.085,curl:.28,pre:.15});
+      // breeches and boots as one shell (no pinch where they meet): the boot stands farther off, its top a cuff
+      const bt=kn-.13;ej_Shell(B,M,m=>((m.part=='leg'||m.part=='foot')&&Math.sign(m.x)==s)||(m.part=='torso'&&m.y<wy&&Math.sign(m.x||s)==s),v=>v[1]<bt?.022:.012,
+        m=>m.part=='foot'&&m.y<.03?ir:m.part=='foot'||m.y<bt?mdMix(0x1a120c,0x2e2016,ej_cl((m.ny+.3)*.6+(m.y>bt-.03?.25:0),0,1)):null,{rim:0,hide:1,vcol:m=>mdMix(lt,0x1a100a,ej_cl(.3+(n3Sn(m.x,m.y,m.z,9,s+4)-.5)*.6,0,1))})});
+    ej_Body(B,M,null,{vcol:skin})});})();
 
 // ===================================================================== Stormborn Jotun =====================================================================
-(function(){const S=cgHuman({h:.88,w:1.26,d:1.18,rw:[1.1,1.15,1.15,1.2,1.3,1.32,1.42,1.5],rf:[1,1.1,1.25,1.3,1.38,1.28,1.2,1.2],at:1.62,lt:1.5,hs:.95,nw:1.6,foot:1.12,footW:1.35});
-  const sk=0x5e7388,sk2=0x485a6e,rune=0x8ae0ff,wh=0xd8e0e8,wh2=0xb0bcc8,pe=0x5a4e40,pe2=0x3e342a,lt=0x2e2218,ir=0x3a3e46,ir2=0x52565e,hn=0xb8ac90,T=S.torso,J=S.J;
+// a storm giant of the north: giant proportions (a huge barrel chest and shoulders, long thick arms with great hands, heavy
+// legs, a smallish head low between the shoulders), blue-grey skin rimed with frost on everything that faces the sky and
+// pale lightning veins; a great white beard with braids and iron rings, a white mane, a horned iron helm with a nasal and two
+// heavy ridged horns, a wolf-pelt mantle with a ragged fur edge, glowing storm runes, rune-bracers, a leather war-kilt, a
+// studded belt, fur-wrapped boots
+(function(){const HD=ej_Head([0,2,4,6,8,9,11,14]),
+    S=cgHuman({h:.9,w:1.3,d:1.22,rw:[1.1,1.15,1.15,1.22,1.34,1.4,1.5,1.5],rf:[1,1.1,1.25,1.36,1.46,1.32,1.2,1.2],at:1.72,lt:1.58,hs:.9,nw:1.65,armL:1.08,legL:.94,foot:1.15,footW:1.4,
+      n:16,sock:1,j2:1,footLite:1,head:HD.head,facePush:HD.face(.9),arm:ej_ArmR(1.72,[2,5],{w:.062,th:.03,len:1.1},{3:{r:.038}}),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
+  const sk=0x5e7388,sk2=0x485a6e,rime=0xa8c0d4,vein=0x9ad8f0,rune=0x8ae0ff,wh=0xd8e0e8,wh2=0xb0bcc8,pe=0x5a4e40,pe2=0x3e342a,lt=0x2e2218,ir=0x3a3e46,ir2=0x52565e,hn=0xb8ac90,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;d+=.022*cgG(x,y,0,1.594,.016,.014)+.012*cgG(x,y,0,1.614,.011,.012);
     [-1,1].forEach(s=>{d-=.014*cgG(x,y,s*.038,1.629,.017,.01);d+=.008*cgG(x,y,s*.058,1.6,.016,.012);d+=.006*cgG(x,y,s*.016,1.584,.008,.005)});d+=.018*cgG(x,y,0,1.65,.055,.008);return d*f};
   S.pron={'-1':.9};
-  cg181Reg('jotun',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],wr=J.aR2[1],kn=J.rh1[1];cgSculpt(M,{head:1},S.sculpt(FACE));
-    const skin=m=>m.s<-.4?sk2:a181Nz(sk,m,.18,16);cgEmit(B,M,m=>m.part=='leg'||m.part=='foot'?lt:skin(m));
+  cg181Reg('jotun',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],wr=J.aR2[1],kn=J.rh1[1],ch=J.chest[1],WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)};cgSculpt(M,{head:1},S.sculpt(FACE));
+    // the giant's masses: a deep chest, heavy pectorals, a broad back
+    cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]>.2)[-1,1].forEach(s=>d+=.018*cgG(x,y,s*.09,ch+.02,.065,.05)*n[2]);if(n[2]<-.2)d+=.016*cgG(x,y,0,ch,.16,.1)*-n[2];return d});
+    M.shade=cgShade(M,{cav:1,y0:0,y1:sh+.25,hk:.26});
+    // skin: blue-grey, darker on the back, frost rime on what faces up, pale lightning veins; leather breeches
+    const skin=m=>{if(m.part=='leg'||m.part=='foot')return mdMix(lt,0x1e160e,ej_cl(.3+(n3Sn(m.x,m.y,m.z,9,3)-.5)*.7,0,1));const n=n3Sn(m.x,m.y,m.z,6,3);
+      let c=mdMix(sk,sk2,ej_cl(.2+(n-.5)*.7+(m.nz<-.35?.3:0),0,1));if(m.ny>.45&&(m.part=='arm'||Math.abs(m.x)>.14))c=mdMix(c,rime,ej_cl((m.ny-.45)*1.2,0,.4));
+      const v=Math.abs(n3Sn(m.x,m.y*.6,m.z,10,7)-.5);if(v<.035&&m.part!='head')c=mdMix(c,vein,(1-v/.035)*.45);return c};
     cgEyes(k,M,S,rune,.038,1.629,.95,.002);
-    // beard: over the jaw, a broad mass to the chest, two braids with iron rings; the mane
-    const bc=m=>a181Nz(wh,m,.3,26),my=S.hp(0,1.562,0)[1];
-    cgFur(B,M,m=>m.part=='head'&&m.s>-.15&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-my)<.01*S.hs),{off:.016,len:.24,col:wh,col2:wh2,seed:21,jag:.55});
-    [-1,1].forEach(s=>{const p=S.hp(s*.024,1.574,0),r=cgRay(M,[p[0],p[1],p[2]+.4],[0,0,-1]);if(r)k.L('head','c',wh,[r[0]-s*.018,r[1]+.004,r[2]+.006],[r[0]+s*.03,r[1]-.03,r[2]+.012],.011,.006,4)});
+    // beard: over the jaw, a broad mass to the chest, two braids with iron rings; moustache; the mane
+    const bc=m=>a181Nz(wh,m,.22,20),my=S.hp(0,1.562,0)[1];
+    const H=sel=>(M.ejHide=M.ejHide||[]).push(sel),beard=m=>(m.part=='head'&&m.s>-.15&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-my)<.01*S.hs))||(m.part=='neck'&&m.s>.3);
+    // the beard: a solid mass grown from the jaw and chin (thickest at the chin), white with grey locks running down it and
+    // darker toward the roots; over it fewer, thick, tapering locks that sway and overlap; a drooping moustache (the fur,
+    // the beard and the helm hide the skin under them)
+    const b0=S.hp(0,1.585,0)[1],chin=S.hp(0,1.54,0)[1],bmass=v=>.01+.032*Math.exp(-((v[0]/(.055*S.hs))**2))*ej_cl((b0-v[1])/(.05*S.hs),0,1)*(v[2]>S.hp(0,0,0)[2]?1:.3);
+    ej_Shell(B,M,beard,bmass,null,{rim:0,hide:1,vcol:m=>mdMix(mdMix(wh,wh2,ej_cl(.3+(n3Sn(m.x*1.4,m.y*.4,m.z*1.4,24,21)-.5)*1.5,0,1)),0x8a909a,ej_cl((m.y-chin)/(.05*S.hs),0,1)*.5)});
+    [-1.05,-.7,-.35,0,.35,.7,1.05].forEach((a,i)=>{const n=[Math.sin(a),0,Math.cos(a)],side=[Math.cos(a),0,-Math.sin(a)],z0=S.hp(0,0,0)[2],yb=S.hp(0,1.55-Math.abs(a)*.012,0)[1],p=cgRay(M,[n[0]*.4,yb,z0+n[2]*.4],mul3(n,-1),{head:1,neck:1});if(!p)return;
+      const L=(.27-Math.abs(a)*.075)*(1+((i*7)%3-1)*.07),RR=[];
+      for(let j=0;j<6;j++){const t=j/5,q=add3(add3(add3(p,mul3(n,j?.012+.026*Math.sin(t*Math.PI*.8):-.006)),[0,-L*t,0]),mul3(side,.014*Math.sin(t*3.2+i*1.9)));
+        RR.push({p:q,rx:.026*(1-t*.84)+.002,f:.017*(1-t*.8)+.002,b:.017*(1-t*.8)+.002,w:j<2?cgWAt(M,p):j<4?[['neck',.5],['chest',.5]]:[['chest',1]],col:j<2?mdMix(wh2,0x8a909a,.4):j<4?wh:mdMix(wh,wh2,.6)})}
+      mdLoft(B,RR,{seg:5,ref:n,capB:true})});
+    [-1,1].forEach(s=>{const p=S.hp(s*.02,1.574,0),r=cgRay(M,[p[0],p[1],p[2]+.4],[0,0,-1]);if(!r)return;const w=cgWAt(M,r);
+      const RR=[[-s*.012,.004,-.008],[0,0,.006],[s*.02,-.012,.012],[s*.03,-.042,.012],[s*.032,-.062,.008]].map((d,j)=>({p:add3(r,d),rx:[.008,.011,.01,.007,.002][j],w,col:j<2?mdMix(wh,0x8a909a,.35):wh}));RR.forEach(q=>{q.f=q.b=q.rx});mdLoft(B,RR,{seg:5,capB:true})});
     [-1,1].forEach(s=>{const p=S.hp(s*.05,1.545,.07);const q=[p[0]*1.15,p[1]-.13,p[2]+.02],r=[p[0]*1.1,p[1]-.27,p[2]+.0];cgTube(B,[p,q,r],[.017,.015,.006],[[['head',1]],[['neck',1]],[['chest',1]]],bc,{seg:6,capB:true});
-      for(let i=0;i<3;i++){const c=lerp3(p,r,.25+i*.22);k.p(i<1?'neck':'chest','sph','c',wh2,c[0],c[1],c[2],.017,.012,.017)}k.p('chest','tor','m',ir2,q[0],q[1]-.05,q[2],.022,.02,.022)});
-    cgHair(B,M,S,{col:wh,line:1.69,neck:true,thick:.02,side:.15});
-    // horned helm (iron cap with a nasal), heavy curling horns
-    cgShell(B,M,m=>m.part=='head'&&m.y>S.hp(0,1.662,0)[1],.034,m=>Math.round(Math.atan2(m.x,m.z)*4)%2?ir:mdSh(ir,.85),{t:'m',rim:.5});
+      for(let i=0;i<3;i++){const c=lerp3(p,r,.25+i*.22);k.p(i<1?'neck':'chest','oct','c',wh2,c[0],c[1],c[2],.018,.013,.018)}k.p('chest','tor','m',ir2,q[0],q[1]-.05,q[2],.022,.02,.022)});
+    cgHair(B,M,S,{col:wh,line:1.69,neck:true,thick:.02,side:.15,nape:1.505});{const nape=S.hp(0,1.505,0)[1];H(m=>(m.part=='head'||(m.part=='neck'&&m.s<-.2))&&m.y>=nape+.01&&(m.s<.1||(m.y-S.nb)/S.hs+1.52>1.7))}   /* the skin under the mane */
+    // horned helm (iron cap with a nasal); the head under it is never seen
+    const hy0=S.hp(0,1.662,0)[1];cgShell(B,M,m=>m.part=='head'&&m.y>hy0,.034,m=>Math.round(Math.atan2(m.x,m.z)*4)%2?ir:mdSh(ir,.85),{t:'m',rim:.5});H(m=>m.part=='head'&&m.y>hy0+.03);
     const np=S.hp(0,1.64,0),nr=cgRay(M,[0,np[1],np[2]+.4],[0,0,-1]);if(nr)k.p('head','box','m',ir2,0,np[1]-.01,nr[2]+.03,.026,.075,.014);
-    [-1,1].forEach(s=>{const q=S.hp(s*.088,1.68,0);let p=q;[[s*.07,.02,.0],[s*.06,.04,.03],[s*.02,.05,.05],[-s*.01,.04,.05]].forEach((d,j)=>{const n=add3(p,d);k.L('head','c',j<3?hn:mdSh(hn,.8),p,n,.04-j*.009,.031-j*.009,6);p=n})});
-    // the wolf-pelt mantle with a ragged fur edge and the wolf's head on one shoulder; storm runes; rune-bracers
-    cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]-.04)||(m.part=='arm'&&m.y>J.aR0[1]-.12),{off:.05,len:.2,col:pe,col2:pe2,seed:2,jag:.6});
-    [[J.chest[1]+.06,0,.09],[J.chest[1],-.4,.07],[J.chest[1],.4,.07],[J.spine[1]+.06,0,.07],[J.chest[1]+.1,-.62,.05],[J.chest[1]+.1,.62,.05]].forEach(([y,a,l],i)=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(p)k.p(y>J.chest[1]-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.009,l,.003,0,a,i%2?.6:-.6)});
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.05&&m.y>wr+.02,.024,m=>Math.round(m.y*30)%2?ir:ir2,{t:'m'});
-      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'1'][1]+wr)/2)<.012,.03,rune,{t:'g'});cgFingers(k,S,s,sk,s>0?'fist':'open',1.05,sk2,0)});
+    // two heavy curling horns, each one smooth tapering piece grown from inside the helm, with ridges painted round it
+    [-1,1].forEach(s=>{const q=S.hp(s*.088,1.68,0),R=[{p:add3(q,[-s*.03,0,0]),rx:.036}];let p=q;R.push({p,rx:.04});
+      [[s*.07,.02,0],[s*.06,.04,.03],[s*.02,.05,.05],[-s*.01,.04,.05],[-s*.012,.02,.03]].forEach((d,j)=>{p=add3(p,d);R.push({p,rx:[.033,.025,.017,.009,.003][j]})});
+      R.forEach((r,i)=>{r.f=r.b=r.rx;r.w=[['head',1]];r.col=i>=R.length-2?mdSh(hn,.7):i%2?hn:mdSh(hn,.84)});mdLoft(B,R,{seg:6,ref:[0,1,0],capB:true})});
+    // the wolf-pelt mantle with a ragged fur edge over the shoulders and back, open in a V down the chest (the runes show)
+    const mantle=m=>(m.part=='torso'&&m.y>ch-.04&&!(m.s>.55&&Math.abs(m.x)<(sh-m.y)*.7+.02))||(m.part=='neck'&&m.s<=.3)||(m.part=='arm'&&m.y>J.aR0[1]-.12);ej_Fur(B,M,mantle,{off:.05,len:.2,col:pe,col2:pe2,seed:2,jag:.6,hide:1});
+    // storm runes glowing on the bare chest, belly and upper arms
+    [[ch-.01,0,.07],[ch-.04,-.38,.05],[ch-.04,.38,.05],[J.spine[1]+.05,0,.06],[J.spine[1]+.02,-.5,.04],[J.spine[1]+.02,.5,.04]].forEach(([y,a,l],i)=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]),{torso:1});
+      if(p){k.p(y>ch-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.009,l,.003,0,a,i%2?.6:-.6);WS(p)}});
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ej_Shell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.05&&m.y>wr+.02,.024,m=>Math.round(m.y*30)%2?ir:ir2,{t:'m',rim:0,hide:1});
+      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'1'][1]+wr)/2)<.012,.03,rune,{t:'g'});
+      ej_Fist(B,S,s,s>0?{col:mdSh(sk,.92),w:.06,r:.017,len:.088,lift:.014,kn:.08}:{col:mdSh(sk,.92),w:.06,r:.017,len:.095,lift:.012,kn:.08,turn:[.7,.75,.75,.45]})});
     // war-kilt of leather panels, a studded belt, fur-wrapped boots
-    cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),m,.3,10),{n:6,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
-    cgBelt(B,M,wy-.012,.036,.06,0x1e160e);
-    for(let i=0;i<14;i++){const p=cgSurf(M,S,wy-.012,i/14*Math.PI*2,.046);k.p('pelvis','sph','m',ir2,p[0],p[1],p[2],.016,.016,.012)}   /* studs half sunk in the belt */
-    [-1,1].forEach(s=>{cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.03,m=>a181Nz(pe2,m,.35,16));cgFur(B,M,m=>m.part=='leg'&&m.y<kn-.04&&Math.sign(m.x)==s,{off:.035,len:.08,col:pe,col2:pe2,seed:5+s,jag:.5})})});})();
+    cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),{n:6,seg:14,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
+    ej_Shell(B,M,m=>m.part=='torso'&&Math.abs(m.y-(wy-.012))<.036,.06,0x1e160e,{rim:0,hide:1});
+    for(let i=0;i<10;i++){const a=i/10*Math.PI*2,p=cgSurf(M,S,wy-.012,a,.05);k.p('pelvis','oct','m',ir2,p[0],p[1],p[2],.016,.016,.012);WS(sub3(p,[Math.sin(a)*.05,0,Math.cos(a)*.05]))}   /* studs half sunk in the belt */
+    [-1,1].forEach(s=>{ej_Shell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.03,null,{rim:0,hide:1,vcol:m=>mdMix(pe2,0x2a2219,ej_cl(n3Sn(m.x,m.y,m.z,12,s+2)-.3,0,1))});const lg=m=>m.part=='leg'&&m.y<kn-.04&&Math.sign(m.x)==s;ej_Fur(B,M,lg,{off:.035,len:.08,col:pe,col2:pe2,seed:5+s,jag:.5,hide:1})});
+    ej_Body(B,M,null,{vcol:skin})});})();
 
 // ===================================================================== Yeti =====================================================================
-(function(){const S=cgHuman({h:.86,w:1.36,d:1.3,rw:[1.2,1.26,1.26,1.32,1.42,1.46,1.5,1.62],rf:[1.1,1.15,1.35,1.4,1.4,1.3,1.2,1.3],rb:[1.15,1.25,1.25,1.32,1.42,1.48,1.55,1.7],at:1.75,lt:1.62,hs:1.02,hw:1.1,hd:1.05,armL:1.3,legL:.8,nw:1.9,neckL:-.02,foot:1.25,footW:1.45,hz:.03});
+// a beast, not a man in a fur suit: a stooped, ape-like mass (a high hump of shoulder and back, a deep chest and a pot belly,
+// the head low and forward between the shoulders), very long heavy arms with gorilla forearms and big clawed hands that hang
+// to the knees, short thick legs on broad feet. A coat of overlapping shaggy fur layers that break into ragged clumps, dark
+// skin on the face, palms and soles, a jutting muzzle, small pale eyes deep under a heavy brow, fangs, black claws, icicles
+// frozen into the shoulder fur
+(function(){const HD=ej_Head([0,2,4,6,7,8,9,10,12,14]),
+    S=cgHuman({h:.86,w:1.4,d:1.34,rw:[1.18,1.26,1.3,1.4,1.52,1.58,1.64,1.62],rf:[1.1,1.15,1.42,1.46,1.42,1.3,1.2,1.3],rb:[1.15,1.25,1.25,1.36,1.5,1.6,1.68,1.75],at:1.9,lt:1.66,hs:1.02,hw:1.1,hd:1.05,armL:1.42,legL:.72,nw:2.1,neckL:-.03,foot:1.25,footW:1.45,
+      n:16,sock:1,j2:1,footLite:1,head:HD.head,facePush:HD.face(1.02),arm:ej_ArmR(1.9,[2,5],{w:.066,th:.032,len:1.1},{1:{r:.044},3:{r:.04,rb:.044},4:{r:.03,rf:.032}}),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
   const f1=0x9c9e9c,f2=0x84888c,f3=0xb2b4b0,sk=0x30343c,sk2=0x22262c,cl=0x101214,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<0)return 0;const f=Math.min(1,n[2]*1.4+.2);let d=0;
-    d+=.04*cgG(x,y,0,1.56,.045,.03);                                         // the jutting muzzle
-    d+=.014*cgG(x,y,0,1.598,.022,.012);[-1,1].forEach(s=>d-=.008*cgG(x,y,s*.012,1.592,.006,.005));   // a flat, wide nose with flared nostrils
-    [-1,1].forEach(s=>d-=.02*cgG(x,y,s*.036,1.629,.014,.009));d+=.03*cgG(x,y,0,1.65,.06,.009);    // small eyes deep under a heavy brow
-    d-=.008*cgG(x,y,0,1.547,.035,.004);return d*f};
+    d+=.032*cgG(x,y,0,1.566,.038,.024)+.02*cgG(x,y,0,1.536,.032,.012);          // the muzzle pushed out over a heavy, jutting jaw
+    d+=.006*cgG(x,y,0,1.614,.014,.012)+.018*cgG(x,y,0,1.594,.03,.009);           // a low flat bridge and a broad, flat nose
+    [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.034,1.628,.013,.01);d+=.016*cgG(x,y,s*.054,1.6,.016,.014)});   // deep-set sockets, cheek pads
+    d+=.036*cgG(x,y,0,1.652,.065,.011);                                          // a heavy brow ridge overhanging the eyes
+    d-=.009*cgG(x,y,0,1.549,.034,.004);return d*f};
   S.pron={'-1':1.2,'1':1.2};
-  cg181Reg('yeti',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],kn=J.rh1[1];cgSculpt(M,{head:1},S.sculpt(FACE));
-    const face=m=>m.part=='head'&&m.s>.3&&m.y<S.hp(0,1.67,0)[1]&&Math.abs(m.x)<.08*S.hs*1.1,fur=m=>a181Nz(f1,m,.35,12);
-    cgEmit(B,M,m=>face(m)||m.part=='hand'||m.part=='foot'?sk:m.part=='torso'&&m.s>.5&&m.y<J.chest[1]?mdMix(sk,f2,.5):fur(m));
-    cgEyes(k,M,S,0x9ad8ff,.036,1.629,.75,-.004);cgTeeth(k,M,S,[[-.03,1.547,.03,1],[.03,1.547,.03,1],[-.024,1.55,.02],[.024,1.55,.02]],0xd8d0b8);
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,'claw',.9,cl,.035);cgToes(k,S,s,sk,.025,cl)});
+  cg181Reg('yeti',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],kn=J.rh1[1],hy=T[1][0],WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)};cgSculpt(M,{head:1},S.sculpt(FACE));
+    // the ape's masses: a high hump of muscle over the shoulders and upper back (low enough on the back not to ring the
+    // head), a pot belly; the base of the head filled so the shoulders flow up into it (no groove round the neck)
+    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<-.1)d+=.075*cgG(x,y,0,sh-.11,.2,.11)*Math.min(1,(-.1-n[2])*1.6);if(n[2]>0)d+=.035*cgG(x,y,0,hy+.05,.15,.08)*n[2];return d});
+    {const hb=S.hp(0,1.58,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.03*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2))}
+    M.shade=cgShade(M,{cav:1.1,y0:0,y1:sh+.25,hk:.28});
+    const face=m=>m.part=='head'&&m.s>.38&&m.y<S.hp(0,1.664,0)[1]&&Math.abs(m.x)<.07*S.hs*1.1,fur=m=>mdMix(f1,f2,ej_cl(.35+(n3Sn(m.x,m.y,m.z,7,2)-.5)*.9+(m.nz<-.4?.2:0),0,1));
+    const skin=m=>mdMix(sk,sk2,ej_cl(.3+(n3Sn(m.x,m.y,m.z,9,5)-.5)*.6,0,1));
+    cgEyes(k,M,S,0xaee4ff,.034,1.629,1.25,.01);{const n0=k.P.length;cgTeeth(k,M,S,[[-.03,1.547,.03,1],[.03,1.547,.03,1],[-.024,1.55,.02],[.024,1.55,.02]],0xd8d0b8);for(let i=n0;i<k.P.length;i++){const P=k.P[i];P.m.premultiply(new THREE.Matrix4().makeTranslation(0,0,-.0012));const c=new THREE.Vector3().setFromMatrixPosition(P.m);P.w=cgWAt(M,[c.x,c.y,c.z])}}   /* fangs a little deeper in the gums, moving with the skin of the mouth */
+    // big hands: thick fingers grown from the knuckles, curling toward the palm, black claws; clawed toes
+    [-1,1].forEach(s=>{ej_Hand(B,S,s,{col:sk,w:.066,r:.0155,len:.08,curl:.26,c0:0,pre:.15,fan:.3,claw:.034,nail:cl,kn:.074,tlen:.6});cgToes(k,S,s,sk,.025,cl)});
     // the coat: overlapping fur layers, each breaking into ragged clumps over the next (head mane, shoulder mantle, chest and
     // back, hips and thighs; upper arms, forearms to the wrist cuffs, shins to the ankles)
-    const ch=J.chest[1],sp=J.spine[1],F=(sel,off,len,col,col2,seed)=>cgFur(B,M,sel,{off,len,col,col2,seed,jag:.6}),E=(m,y,a,sd)=>m.y>cgEdge(m,y,a,sd);
-    const brow=S.hp(0,1.668,0)[1];cgFur(B,M,m=>m.part=='head'&&E(m,brow,.015,31),{off:.034,len:.08,col:f1,col2:f2,seed:31,jag:.65,lump:[.25,1.9],freq:34});
-    cgFur(B,M,m=>((m.part=='head'&&!face(m)&&!E(m,brow-.004,.015,31)&&m.s<.55)||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1))),{off:.03,len:.13,col:f1,col2:f2,seed:1,jag:.6,lump:[.25,1.7],freq:30});
+    // (every layer also hides the skin under it: no body faces are emitted where fur covers them)
+    const ch=J.chest[1],sp=J.spine[1],FO=(sel,o)=>ej_Fur(B,M,sel,Object.assign({hide:1},o)),F=(sel,off,len,col,col2,seed)=>FO(sel,{off,len,col,col2,seed,jag:.6}),E=(m,y,a,sd)=>m.y>cgEdge(m,y,a,sd);
+    const brow=S.hp(0,1.668,0)[1];FO(m=>m.part=='head'&&E(m,brow,.015,31),{off:.034,len:.08,col:f1,col2:f2,seed:31,jag:.65,lump:[.25,1.9],freq:34,lenAt:p=>{const q=S.hp(0,1.65,0);return p[2]>q[2]+.03&&Math.abs(p[0])<.085*S.hs*1.1?.3:1},offAt:v=>{const q=S.hp(0,1.65,0),fz=ej_cl((v[2]-q[2]-.02)/.05,0,1),fx=ej_cl(1-(Math.abs(v[0])-.05*S.hs*1.1)/.04,0,1);return 1-.8*fz*fx}}   /* thin and short over the brow, so the face shows; full on the crown, sides and back */);
+    FO(m=>((m.part=='head'&&!face(m)&&!E(m,brow-.004,.015,31)&&m.s<.7)||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1))),{off:.03,len:.13,col:f1,col2:f2,seed:1,jag:.6,lump:[.25,1.7],freq:30});
     F(m=>((m.part=='torso'||m.part=='neck')&&E(m,ch-.05,.05,2))||(m.part=='arm'&&E(m,J.aR0[1]-.17,.04,12)),.05,.2,f3,f2,2);
     F(m=>m.part=='torso'&&E(m,sp-.07,.05,3)&&!E(m,ch-.02,.05,2),.04,.17,f1,f2,3);
     F(m=>(m.part=='torso'&&!E(m,sp-.05,.05,3))||(m.part=='leg'&&E(m,kn+.03,.04,4)),.04,.17,f1,f2,4);
@@ -56657,9 +57099,14 @@ function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t)
       F(m=>m.part=='arm'&&side(m)&&!E(m,J.aR0[1]-.15,.04,12)&&E(m,J[A+'1'][1]-.03,.03,5+s),.034,.15,f3,f2,5+s);
       F(m=>m.part=='arm'&&side(m)&&!E(m,J[A+'1'][1]-.01,.03,5+s)&&E(m,J[A+'2'][1]+.04,.02,7+s),.03,.13,f1,f2,7+s);
       F(m=>m.part=='leg'&&side(m)&&!E(m,kn+.05,.04,4)&&E(m,J[L+'2'][1]+.05,.02,9+s),.03,.12,f3,f2,9+s)});
-    // icicles frozen into the shoulder fur, an old scar across the face
-    [[-.18,0],[.16,-.02],[-.06,.03],[.22,-.05]].forEach(([x,dy],i)=>{const y=sh+dy,p=cgRay(M,[x*S.h,y,-.6],[0,0,1]);if(p)k.p('chest','cone4','g',0xbfe6ff,p[0],p[1]-.05,p[2]-.03,.01,.07+i*.01,.01,Math.PI)})});
-  ST179.yeti={sx:.5,hx:-.45,lk:.3,rk:.3,ax:-.2,lx:-.2,az:.18,lz:-.18,ex:-.35,le:-.35};})();
+    // icicles frozen into the shoulder fur
+    [[-.18,0],[.16,-.02],[-.06,.03],[.22,-.05]].forEach(([x,dy],i)=>{const y=sh+dy,p=cgRay(M,[x*S.h,y,-.6],[0,0,1]);if(p){k.p('chest','cone4','g',0xbfe6ff,p[0],p[1]-.05,p[2]-.03,.01,.07+i*.01,.01,Math.PI);WS(p)}})
+    // the skin left bare: face, hands, soles, wrists and ankles
+    // the face painted: a lighter muzzle, dark sockets; the mouth line and nostrils crisp
+    const fb=m=>[m.x/(S.hs*1.1),(m.y-S.nb)/S.hs+1.52],fcol=m=>{const [x,y]=fb(m);let c=mdMix(skin(m),0x767a84,.8*Math.max(cgG(x,y,0,1.575,.03,.02),cgG(x,y,0,1.61,.012,.012),cgG(x,y,-.054,1.6,.016,.014),cgG(x,y,.054,1.6,.016,.014)));
+      return mdMix(c,0x08090c,.85*Math.max(cgG(x,y,-.034,1.628,.014,.011),cgG(x,y,.034,1.628,.014,.011),cgG(x,y,0,1.594,.026,.007)*.8))};
+    ej_Body(B,M,m=>{if(!face(m))return null;const [x,y]=fb(m);return (Math.abs(y-1.549)<.0035&&Math.abs(x)<.032)||Math.hypot(Math.abs(x)-.013,y-1.592)<.0055?0x08080a:null},{vcol:m=>face(m)?fcol(m):ej_isHand(S,m)||m.part=='foot'?skin(m):fur(m)})});
+  ST179.yeti={sx:.58,hx:-.52,lk:.32,rk:.32,ax:-.24,lx:-.24,az:.18,lz:-.18,ex:-.35,le:-.35};})();
 // ================= v181: the naga on cage bodies — one surface from the head to the tail tip, a reptile's head =================
 // Owner: "the face of the naga's to be reptilian — not human structure". The head is its own ring stack (no human skull): a long,
 // flat, tapering snout, a low flat crown, the jaw wide at the back; sculpted with nostril slits at the snout's tip, a lipless
@@ -56686,63 +57133,139 @@ function n181Face(x,y,z,n){let d=0;
 function n181Path(){const W=(a,b,t)=>t<=0?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]],T=[[0,.66,-.01,.15,W('pelvis','nt0',0)],[0,.54,-.03,.155,W('pelvis','nt0',.15)],[0,.42,-.06,.155,W('pelvis','nt0',.5)],[0,.3,-.1,.15,W('nt0','nt0',0)],
   [0,.2,-.17,.142,W('nt0','nt1',.4)],[0,0,-.27,.132,W('nt1','nt1',0)],[0,0,-.4,.125,W('nt1','nt1',0)],[-.07,0,-.53,.118,W('nt1','nt2',.4)],[-.13,0,-.68,.108,W('nt2','nt2',0)],[-.09,0,-.85,.098,W('nt2','nt3',.5)],
   [.06,0,-1.0,.088,W('nt3','nt3',0)],[.14,0,-1.16,.077,W('nt3','nt4',.4)],[.15,0,-1.32,.064,W('nt4','nt4',0)],[.09,0,-1.48,.05,W('nt4','nt4',0)],[0,0,-1.6,.034,W('nt4','nt4',0)],[-.07,0,-1.7,.019,W('nt4','nt4',0)]];
-  return T.map(([x,y,z,r,w])=>({p:[x,y||r*.8,z],r,w}))}
-function n181Spec(){const S=cgHuman({h:.86,w:1.0,d:1.0,rw:[1.12,1.16,.96,1.02,1.1,1.1,1.15,1.1],at:1.1,lt:1,hs:1.0,hw:.95,head:NAGAHEAD,facePush:()=>0});
+  return T.filter((q,i)=>i!=1&&i!=3&&i!=9&&i!=11&&i!=13).map(([x,y,z,r,w])=>({p:[x,y||r*.8,z],r,w}))}   /* (refine) 11 rings: the smoothing step keeps the S-curve round */
+function n181Spec(){const S=cgHuman({h:.86,w:1.0,d:1.0,rw:[1.12,1.16,.96,1.02,1.1,1.1,1.15,1.1],at:1.1,lt:1,hs:1.0,hw:.95,head:NAGAHEAD.filter((q,i)=>i!=1&&i!=9&&i!=11) /* (refine) 10 profile rings */,facePush:()=>0,
+    // (refine) 16 columns, the shoulder socket round the joint and the arm grown out of it (the seated-arm fix; there are no
+    // legs, so j2's hip half does nothing: the bottom ring flows straight on into the tail); arm rings only where they shape it
+    n:16,sock:1,j2:1,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5)});
+  S.neck=S.neck.slice(1);   /* one neck ring: the neck is short behind the hood */
   S.tail=n181Path();S.extra=NAGA181.bones.map(q=>q[0]);S.pron={'-1':.5,'1':.5};return S}
+// ---- (refine) where a point sits along the body: one centre line from the chest down the torso and out along the tail ----
+// nh_Line(S) → {P (points), L (arc length at each), nt (torso ring count)}; nh_Near(F,p) → {s (arc length), k (segment), fr,
+// v (the belly direction there: the front on the torso, the underside on the coils)}
+function nh_Line(S){const T=S.torso,P=[];for(let i=T.length-1;i>=0;i--)P.push([0,T[i][0],T[i][4]||0]);S.tail.forEach(q=>P.push(q.p));const L=[0];
+  for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));return {P,L,nt:T.length}}
+function nh_Near(F,p,k0,k1){const P=F.P;let best=null,bd=1e9;for(let k=(k0||0);k<(k1==null?P.length-1:k1+1);k++){const a=P[k],b=P[k+1],ab=sub3(b,a),l2=ab[0]*ab[0]+ab[1]*ab[1]+ab[2]*ab[2]||1,
+    t=Math.max(0,Math.min(1,((p[0]-a[0])*ab[0]+(p[1]-a[1])*ab[1]+(p[2]-a[2])*ab[2])/l2)),q=add3(a,mul3(ab,t)),d=(p[0]-q[0])**2+(p[1]-q[1])**2+(p[2]-q[2])**2;if(d<bd){bd=d;best={k,fr:t,ab}}}
+  const t=nrm3(best.ab),u=nrm3(sub3([1,0,0],mul3(t,t[0]))),v=cross3(t,u);return {s:F.L[best.k]+(F.L[best.k+1]-F.L[best.k])*best.fr,k:best.k,fr:best.fr,v}}
+// the face row of the torso at height y (each cage band is two rows after the smoothing step): for paint that follows the rows
+function nh_TRow(S,y){const T=S.torso;for(let i=0;i<T.length-1;i++)if(y<T[i+1][0])return 2*i+((y-T[i][0])/(T[i+1][0]-T[i][0])>.5?1:0);return 2*T.length}
+// a shell over the body whose skin is then not emitted (rim on the skin, so it seals); a belt band of torso / tail
+function nh_Sh(B,M,sel,off,col,o){cgShell(B,M,sel,off,col,Object.assign({},o||{},{rim:0}));(M.nhHide||(M.nhHide=[])).push(sel)}
+function nh_Belt(B,M,y,h,off,col,t){nh_Sh(B,M,m=>(m.part=='torso'||m.part=='tail')&&Math.abs(m.y-y)<h,off,col,{t})}
+// a strap lying on the body: control points [y, angle round the body] (rays from outside) or {top:[x,z]} (a ray from above,
+// over the shoulder); each gap gets two more points found the same way, so the strap hugs the skin; half sunk, ends tucked in
+function nh_Strap(B,M,C,r,col){const hit=q=>q.top?cgRay(M,[q.top[0],2.5,q.top[1]],[0,-1,0],{torso:1}):cgRay(M,[Math.sin(q[1])*.7,q[0],Math.cos(q[1])*.7],[-Math.sin(q[1]),0,-Math.cos(q[1])],{torso:1});
+  const Q=[];C.forEach((q,i)=>{Q.push(q);const n=C[i+1];if(n&&!q.top&&!n.top)for(let t=1;t<3;t++)Q.push([q[0]+(n[0]-q[0])*t/3,q[1]+(n[1]-q[1])*t/3])});
+  const P=Q.map(hit).filter(Boolean),N=M.N||(M.N=cgNormals(M)),out=P.map((p,i)=>{let b=-1,bd=1e9;M.V.forEach((v,j)=>{const d=(v[0]-p[0])**2+(v[1]-p[1])**2+(v[2]-p[2])**2;if(d<bd){bd=d;b=j}});return add3(p,mul3(N[b],(i==0||i==P.length-1)?-r*1.2:r*.35))});
+  mdLoft(B,out.map(p=>({p,rx:r*1.4,f:r*.7,b:r*.7,w:cgWAt(M,p)})),{seg:6,col})}
+// a clean clawed hand: four fingers and a thumb, each one tapering loft rooted inside the hand and ending in its own dark claw
+// (no separate segments or balls); kind 'fist' curls them round the grip, 'claw' hooks them a little (frames as cgFingers)
+function nh_Hand(B,S,s,col,kind,len,nail){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),W=[[bn+'2',1]],L=(len||1)*.08;
+  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
+  const rot=(v,a,an)=>{const c=Math.cos(an),sn=Math.sin(an),k=a[0]*v[0]+a[1]*v[1]+a[2]*v[2];return add3(add3(mul3(v,c),mul3(cross3(a,v),sn)),mul3(a,k*(1-c)))},D=(x,y,z)=>nrm3(add3(add3(mul3(d,x),mul3(u,y)),mul3(f,z)));
+  const digit=(p,dir,n,seg,curl,r,tip,axis)=>{const R=[{p:sub3(p,mul3(dir,.014)),rx:r*1.05,f:r*.9,b:r*.9,w:W}];let q=p.slice(),dd=dir.slice();
+    for(let i=0;i<n;i++){R.push({p:q.slice(),rx:r*(1-i*.12),f:r*(1-i*.12)*.85,b:r*(1-i*.12)*.85,w:W});q=add3(q,mul3(dd,seg));dd=rot(dd,axis,curl)}
+    R.push({p:q.slice(),rx:r*.78,f:r*.66,b:r*.66,w:W});const nc=R.length;if(tip){dd=rot(dd,axis,curl*.8);const e=add3(q,mul3(dd,tip));R.push({p:add3(q,mul3(dd,tip*.35)),rx:r*.6,f:r*.5,b:r*.5,w:W});R.push({p:e,rx:r*.08,f:r*.08,b:r*.08,w:W})}
+    mdLoft(B,R,{seg:5,ref:u,capB:true,col:m=>m.i>nc-1.2?nail:col})};
+  const kn=add3(a2,mul3(d,.074));
+  if(kind=='fist'){
+    // (refine) a closed scaly fist round the grip. In a fist the fingers don't change the outline, so the four of them are ONE
+    // rounded mitten mass: a wide loft on an arc about the handle's axis, from inside the palm over the knuckles, down the front
+    // and tucked under toward the palm, with a gently bumpy knuckle ridge (each finger's band swells a little); the finger
+    // separations are painted as thin dark lines (12 sides put a corner on every finger boundary, darkened per corner); small
+    // claw tips peek from the finger ends; the thumb is its own rounded loft crossing in front
+    const W6=(p,r)=>({p,rx:r,f:r,b:r,w:W}),lo=(R,nc)=>mdLoft(B,R,{seg:6,ref:u,capB:true,col:m=>m.i>nc-.5?nail:col});
+    const rho=.02,C0=add3(add3(kn,mul3(d,.004)),mul3(u,-rho-.002)),A=th=>add3(C0,add3(mul3(u,Math.cos(th)*rho),mul3(d,Math.sin(th)*rho))),TG=th=>nrm3(add3(mul3(u,-Math.sin(th)),mul3(d,Math.cos(th))));
+    const L0=B.L.c,v0=L0.p.length/3,MW=(th,t,wd)=>({p:th<-.3?sub3(A(-.3),mul3(d,.012)):A(th),rx:t,f:wd,b:wd,w:W});
+    mdLoft(B,[MW(-.4,.012,.04),MW(-.1,.0125,.042),MW(.45,.013,.043),MW(1.0,.013,.043),MW(1.6,.0125,.042),MW(2.2,.012,.041),MW(2.75,.011,.039),MW(3.1,.008,.035)],{seg:12,ref:f,sq:.3,capB:true,col});
+    for(let i=v0;i<L0.p.length/3;i++){const p=[L0.p[3*i],L0.p[3*i+1],L0.p[3*i+2]],q=sub3(p,C0),qu=q[0]*u[0]+q[1]*u[1]+q[2]*u[2],qd=q[0]*d[0]+q[1]*d[1]+q[2]*d[2],ac=q[0]*f[0]+q[1]*f[1]+q[2]*f[2],
+      rr=Math.hypot(qu,qd),th=Math.atan2(qd,qu),out=Math.max(0,Math.min(1,(rr-rho)/.008));
+      // finger bands swell, most on the knuckle ridge; the boundaries between them (across ±.021, 0) stay low and are painted dark
+      const band=Math.abs(Math.cos(Math.PI*(ac-.0105)/.021)),kn2=Math.exp(-Math.pow((th-.6)/.45,2)),e=out*(.0012+.0028*kn2)*band;
+      if(e&&rr>1e-6){const rd=add3(mul3(u,qu/rr),mul3(d,qd/rr));L0.p[3*i]+=rd[0]*e;L0.p[3*i+1]+=rd[1]*e;L0.p[3*i+2]+=rd[2]*e}
+      const ln=th>.3&&Math.abs(ac)<.03&&[-.021,0,.021].some(b=>Math.abs(ac-b)<.004)?.42:1;if(ln<1)for(let j=0;j<3;j++)L0.c[3*i+j]*=ln}
+    for(let i=0;i<4;i++){const z=(1.5-i)*.021,P=th=>add3(A(th),mul3(f,z));nh_Claw(B,[P(2.8),P(3.05),add3(add3(P(3.05),mul3(TG(3.05),.014)),mul3(u,.003))],[.006,.0055,.0008],W,nail,nail,0)}
+    const t0=add3(add3(add3(a2,mul3(d,.03)),mul3(f,.036)),mul3(u,-.012)),Cf=add3(add3(kn,mul3(d,.041)),mul3(u,-.022)),
+      t1=add3(Cf,mul3(f,.03)),t2=add3(Cf,mul3(f,.012)),t3=add3(add3(Cf,mul3(f,-.004)),mul3(u,-.004)),t4=add3(add3(Cf,mul3(f,-.012)),mul3(u,-.008));
+    lo([W6(sub3(t0,mul3(d,.01)),.013),W6(t0,.0135),W6(lerp3(t0,t1,.55),.0125),W6(t1,.0115),W6(t2,.0105),W6(t3,.007),W6(t4,.001)],4.6);return}
+  for(let i=0;i<4;i++){const z=(1.5-i)*.017,p=add3(add3(kn,mul3(f,z)),mul3(u,-.004));digit(p,D(1,-.15,z*.6),3,L*(i==3?.82:1)/3,kind=='claw'?.3:.16,.0088,.017,ax)}
+  digit(add3(add3(add3(a2,mul3(d,.032)),mul3(f,.026)),mul3(u,-.01)),D(.6,-.3,.75),2,L*.3,.3,.0095,.013,nrm3(cross3(u,f)))}
 // the cobra hood behind the head (base head coordinates: y, half width, z)
 function n181Hood(B,S,col){const R=[[1.47,.085,-.06],[1.52,.15,-.075],[1.57,.2,-.09],[1.62,.21,-.095],[1.665,.175,-.095],[1.695,.1,-.09],[1.712,.025,-.085]].map(([y,r,z])=>{const p=S.hp(0,y,z);return {p,rx:r*S.hs,f:.02,b:.03,w:y<1.53?[['neck',1]]:[['neck',.3],['head',.7]]}});
-  mdLoft(B,R,{seg:18,capB:true,col})}
+  mdLoft(B,R,{seg:14,capB:true,col})}
 // a naga: body, head, hood, fingers; returns the smoothed mesh for the gear
 function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n181Face));
-  const scale=m=>a181Nz(K.sk,m,.38,13),belly=m=>Math.round((m.y-m.z)*15)%2?K.bel:mdSh(K.bel,.8);
-  const my=S.hp(0,1.5745,0)[1];cgEmit(B,M,m=>{if(m.part=='head'){if(Math.abs(m.y-my)<.0045*S.hs&&m.nz>-.3)return 0x140806;if(m.ny<-.35||(m.s>.55&&m.y<my))return mdMix(K.bel,K.sk,.3);return a181Nz(m.y>S.hp(0,1.64,0)[1]?K.sk2:K.sk,m,.35,30)}
-    if(m.part=='tail'){if(m.ny<-.35||(m.y>.3&&m.s>.55))return belly(m);if(m.ny>.3&&Math.round(-m.z*7)%2==0)return a181Nz(K.pat,m,.3,9);return scale(m)}
-    if(m.part=='torso'&&m.s>.55&&Math.abs(m.x)<.09&&m.y<J.chest[1]+.04)return belly(m);if(m.part=='torso'&&m.s<-.6&&n3Sn(m.x,m.y*2,m.z,7,1)>.55)return K.pat;return scale(m)});
+  // (refine) the hide's colour flows corner to corner (vcol): mottled scales darker down the back, dark saddles with pale rims
+  // along the spine and the coils (spaced along the body's own centre line), a pale side line, the belly plates; baked creases
+  const F=nh_Line(S),NT=F.nt,TP=S.tail.map(q=>q.p),Ty=S.torso.map(q=>q[0]),my=S.hp(0,1.5745,0)[1],cy=S.hp(0,1.64,0)[1],chy=J.chest[1]+.04;
+  const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),ss=(a,b,x)=>{const t=cl((x-a)/(b-a),0,1);return t*t*(3-2*t)},hand=mdMix(K.sk,K.sk2,.45);
+  const hide=m=>{const n1=n3Sn(m.x,m.y,m.z,7,3);if(m.part=='head'){let c=mdMix(K.sk,K.sk2,cl(.25+(n1-.5)*.9+ss(cy-.02,cy+.02,m.y)*.5,0,1));return mdMix(c,mdMix(K.bel,K.sk,.3),Math.max(ss(.2,.55,-m.ny),ss(.35,.7,m.nz)*ss(my+.002,my-.006,m.y)))}   /* the throat and the lower jaw pale */
+    if(m.part=='hand')return hand;
+    const q=nh_Near(F,[m.x,m.y,m.z]),b=m.nx*q.v[0]+m.ny*q.v[1]+m.nz*q.v[2];let c=mdMix(K.sk,K.sk2,cl(.2+(n1-.5)*1.1+ss(.2,.9,-b)*.25,0,1));
+    if(m.part=='neck')return mdMix(c,mdMix(K.bel,K.sk,.3),ss(.2,.6,m.nz));   /* a pale throat under the jaw */
+    if(m.part=='arm')return mdMix(c,hand,ss(.1,-.05,m.y-J[(m.x<0?'aL':'aR')+'2'][1]));
+    // dark diamond saddles down the spine (wide on top, narrowing down the flanks), each ringed with pale scales
+    const tr=-b,msk=ss(-.15,.25,tr)*(m.part=='torso'?ss(chy,chy-.12,m.y):1),ph=Math.cos(q.s*2*Math.PI/.26+.7)+.55*(tr-.55),sad=ss(.1,.45,ph)*msk,rim=Math.max(0,ss(-.35,.05,ph)-ss(.1,.45,ph))*msk;
+    c=mdMix(c,mdMix(K.sk,0xd8d0a0,.4),rim*.9);c=mdMix(c,K.pat,sad*.9);
+    const be=m.part=='tail'?ss(.3,.6,b):ss(.35,.65,m.nz)*(1-ss(.06,.1,Math.abs(m.x)))*ss(0,.04,chy-m.y);
+    if(m.part=='tail')c=mdMix(c,mdMix(K.sk,K.bel,.55),ss(.02,.3,b)*(1-be)*.6);return mdMix(c,K.bel,be)};
+  // the belly plates: crisp bands that follow the face rows (each cage band of the tail or torso is two rows after the smoothing
+  // step), every other one darker, so the plates run straight across the belly instead of stepping face by face
+  let FI=-1;const row=m=>{const f=M.F[FI];if(m.part=='tail'){const k=TP.indexOf(f.ref);if(k<0)return -1;return 2*k+(nh_Near(F,[m.x,m.y,m.z],NT-1+k,NT-1+k).fr>.5?1:0)}
+    for(let i=0;i<Ty.length-1;i++)if(m.y<Ty[i+1])return 2*i+((m.y-Ty[i])/(Ty[i+1]-Ty[i])>.5?1:0);return -1};
+  const plate=m=>{if(m.part=='tail'){const q=nh_Near(F,[m.x,m.y,m.z]);if(m.nx*q.v[0]+m.ny*q.v[1]+m.nz*q.v[2]<.6)return null}else if(!(m.part=='torso'&&m.nz>.55&&Math.abs(m.x)<.07&&m.y<chy))return null;
+    const r=row(m);return r<0?null:r%2?mdSh(K.bel,.8):mdSh(K.bel,1.04)};
+  M.shade=cgShade(M,{y0:-.3,y1:S.hp(0,1.67,0)[1],hk:.16,cav:1.05,min:.62});
+  M.nhEmit=()=>{const HD=M.nhHide||[];cgEmit(B,M,m=>{if(m.part=='head')return Math.abs(m.y-my)<.0045*S.hs&&m.nz>-.3?0x140806:null;if(m.part=='tail'||m.part=='torso')return plate(m);return null},{vcol:hide,keep:(m,fi)=>{FI=fi;return !HD.some(f=>f(m))}})};   /* emitted last: no skin under the gear's shells (nh_Sh) */
   // eyes set under the brow ridges, facing forward and out, half sunk into the head, slit pupils; short fangs into the mouth slit
   [-1,1].forEach(s=>{const q=S.hp(s*NAGA_EYE[0],NAGA_EYE[1],.05),d=nrm3([s*.5,.12,.86]),p=cgRay(M,add3(q,mul3(d,.5)),mul3(d,-1),{head:1});if(!p)return;const r=.013*S.hs,c=sub3(p,mul3(d,r*.4));
-    k.p('head','sph2','c',0x0c0a06,c[0]-d[0]*r*.5,c[1],c[2]-d[2]*r*.5,r*1.25,r*1.0,r*.75,0,Math.atan2(d[0],d[2]),0);
+    k.p('head','sph','c',0x0c0a06,c[0]-d[0]*r*.5,c[1],c[2]-d[2]*r*.5,r*1.25,r*1.0,r*.75,0,Math.atan2(d[0],d[2]),0);
     k.p('head','sph','g',K.eye,c[0],c[1],c[2],r,r*.8,r,0,Math.atan2(d[0],d[2]),0);k.p('head','box','c',0x050403,c[0]+d[0]*r*.82,c[1],c[2]+d[2]*r*.82,.0025,r*1.5,.0025,0,Math.atan2(d[0],d[2]),0)});
   [-1,1].forEach(s=>{const q=S.hp(s*.02,1.578,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p)k.p('head','cone4','c',0xe8e0c8,p[0],p[1]-.006*S.hs,p[2]-.006,.004*S.hs,.012*S.hs,.004*S.hs,Math.PI)});
-  n181Hood(B,S,m=>{if(m.s>.3){const ex=(Math.abs(m.x)-.13*S.hs)/(.022*S.hs),ey=(m.y-S.hp(0,1.6,0)[1])/(.016*S.hs),e=ex*ex+ey*ey,rim=Math.abs(m.x)>.17*S.hs;return e<1?0x0a0806:e<2.2?mdSh(K.bel,.75):rim?a181Nz(K.sk2,m,.3,12):a181Nz(mdMix(K.sk2,K.bel,.2),m,.3,14)}return a181Nz(K.sk2,m,.35,12)});
-  [-1,1].forEach(s=>{cgFingers(k,S,s,K.sk,K.fist&&K.fist(s)?'fist':'claw',1.0,0x14100a,.016)});
+  // the hood: its inner face pale down the middle (the throat colour), banded darker toward the rim, plain scaled behind; bands that
+  // follow the loft's columns (no per-face spots that turned into blocks)
+  n181Hood(B,S,m=>{const ax=Math.abs(m.x)/S.hs;if(m.s>.3)return ax<.05?mdMix(K.bel,K.sk,.35):ax<.075?mdSh(K.sk2,.7):ax<.15?mdMix(K.sk,K.bel,.15):mdSh(K.sk2,.85);return mdSh(K.sk2,.95)});
+  [-1,1].forEach(s=>nh_Hand(B,S,s,hand,K.fist&&K.fist(s)?'fist':'claw',1.0,0x14100a));
   return M}
 
 // ---------------- Naga Warrior: bronze scale cuirass, gorget, a heavy pauldron, vambraces, a war-belt with hanging plates ----------------
 (function(){const S=n181Spec(),K={sk:0x3a4a2c,sk2:0x283420,bel:0x8c7c4e,pat:0x1a2214,eye:0xffc020,fist:s=>s>0};const br=0x6a5226,br2=0x4a3818,gd=0x8a7034,lt=0x2e2014,T=S.torso,J=S.J;
   cg181Reg('nagaw',S,function(B,P,k,C){const M=n181Build(B,k,C,S,K),wy=T[2][0],sh=T[6][0];
-    cgShell(B,M,m=>m.part=='torso'&&m.y>wy-.01,.026,m=>m.y<wy+.03||m.y>sh+.02?gd:a181Nz(Math.round(m.y*36+(Math.round(Math.atan2(m.x,m.z)*8)%2)*.5)%2?br:br2,m,.25,12),{t:'m'});
-    cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh),.04,gd,{t:'m'});
+    nh_Sh(B,M,m=>m.part=='torso'&&m.y>wy-.01,.026,m=>m.y<wy+.03||m.y>sh+.02?gd:mdSh(nh_TRow(S,m.y)%2?br:br2,.95+.1*n3Sn(m.x,m.y,m.z,9,2))   /* (refine) lamellar rows that follow the face rows (no blocky steps) */,{t:'m'});
+    nh_Sh(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh),.04,gd,{t:'m'});
     const a=J.aL0;[[.05,.13,.09,.135,br],[.0,.12,.075,.125,br2],[-.045,.11,.06,.115,br]].forEach(([dy,sx,sy,sz,c],j)=>k.p('aL0','hem','m',c,a[0]-(.03+j*.012),a[1]+dy,a[2],sx,sy,sz,0,0,-(.4+j*.12)));
     for(let j=0;j<3;j++)k.L('aL0','m',gd,[a[0]-.07-j*.025,a[1]+.06,a[2]-.03+j*.03],[a[0]-.11-j*.03,a[1]+.15,a[2]-.04+j*.03],.016,.002,4);
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>J[A+'2'][1]+.01,.016,m=>m.y<J[A+'2'][1]+.04?gd:br,{t:'m'})});
-    const by=T[0][0]+.03;cgBelt(B,M,by,.04,.035,lt);const bk=cgSurf(M,S,by,0,.04);k.p('pelvis','oct','m',gd,bk[0],bk[1],bk[2],.03,.035,.012);
-    for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),p=cgSurf(M,S,by-.02,an,.034);k.p('pelvis','box','m',i%2?br:br2,p[0],p[1]-.07,p[2],.07,.15,.012,-.12*Math.cos(an),an,0);k.P[k.P.length-1].noSeat=1}   /* hung from the belt (top tucked into it) */})})();
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';nh_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>J[A+'2'][1]+.01,.016,m=>m.y<J[A+'2'][1]+.04?gd:br,{t:'m'})});
+    const by=T[0][0]+.03;nh_Belt(B,M,by,.04,.035,lt);const bk=cgSurf(M,S,by,0,.04);k.p('pelvis','oct','m',gd,bk[0],bk[1],bk[2],.03,.035,.012);
+    for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),p=cgSurf(M,S,by-.02,an,.034);k.p('pelvis','box','m',i%2?br:br2,p[0],p[1]-.07,p[2],.07,.15,.012,-.12*Math.cos(an),an,0);k.P[k.P.length-1].noSeat=1}   /* hung from the belt (top tucked into it) */M.nhEmit()})})();
 
 // ---------------- Naga Archer: a leather harness, a quiver of red-fletched arrows, a bracer on the bow arm, a hide wrap ----------------
 (function(){const S=n181Spec(),K={sk:0x4a4c2c,sk2:0x34361e,bel:0x9a8a5a,pat:0x22220e,eye:0xffd84a,fist:s=>s<0};const lt=0x4a3422,lt2=0x30200f,fe=0x8a2a1a,T=S.torso,J=S.J;
   cg181Reg('nagaa',S,function(B,P,k,C){const M=n181Build(B,k,C,S,K),sh=T[6][0],by=T[0][0]+.03;
     const sp=(y,a,off)=>{const q=cgTAt(S,y);return [Math.sin(a)*(q.rx+off),y,q.z+Math.cos(a)*((Math.cos(a)>=0?q.f:q.b)+off)]};
-    [-1,1].forEach(s=>{const P1=sp(sh-.01,s*.45,.014),P2=sp((sh+T[2][0])/2,-s*.2,.02),P3=sp(T[2][0]+.02,-s*.75,.016),Q1=sp(sh-.01,Math.PI-s*.45,.014),Q2=sp(T[2][0]+.02,Math.PI+s*.75,.016);
-      cgTube(B,[P1,P2,P3],[.012,.012,.012],[[['chest',1]],[['chest',.5],['spine',.5]],[['spine',1]]],lt,{seg:6});cgTube(B,[Q1,lerp3(Q1,Q2,.5),Q2],[.012,.012,.012],[[['chest',1]],[['chest',.5],['spine',.5]],[['spine',1]]],lt,{seg:6})});
-    const c=sp(J.chest[1]+.05,0,.03);k.p('chest','sph','m',0x8a7a50,c[0],c[1],c[2],.022,.022,.012);
+    // (refine) the harness: two straps, each one piece from the hip up across the chest, over the shoulder and down the back,
+    // lying on the body (every point found on the skin, half sunk into it, bending with it); a buckle where they cross
+    const wy=T[2][0]+.02,my=(sh+T[2][0])/2;[-1,1].forEach(s=>nh_Strap(B,M,[[wy,-s*.75],[my,-s*.1],[sh-.02,s*.5],{top:[s*.1,0]},[sh-.02,Math.PI-s*.5],[my,Math.PI+s*.1],[wy,Math.PI+s*.75]],.011,lt));
+    {const c=cgRay(M,[0,my+.012,.6],[0,0,-1],{torso:1});if(c)k.p('chest','oct','m',0x8a7a50,c[0],c[1],c[2]+.006,.022,.022,.012)}
     const qb=cgTAt(S,J.chest[1]),qz=qb.z-qb.b-.06;k.L('chest','c',lt2,[.1,J.spine[1]-.02,qz],[-.08,sh+.06,qz-.03],.045,.04,8);
     for(let i=0;i<6;i++){const ox=(i%3-1)*.025,oz=(i<3?0:.02);k.L('chest','c',0x5a4a32,[-.08+ox,sh+.04,qz-.03+oz],[-.1+ox,sh+.14,qz-.04+oz],.004,.004,3);k.p('chest','cone4','c',i%2?fe:0xd8d0b8,-.1+ox,sh+.16,qz-.04+oz,.012,.05,.004)}
-    cgShell(B,M,m=>m.part=='arm'&&m.x<0&&m.y<J.aL1[1]-.03&&m.y>J.aL2[1]+.01,.014,m=>Math.round(m.y*40)%2?lt:lt2);
-    cgFur(B,M,m=>m.part=='torso'&&m.y<by+.06,{off:.024,len:.14,col:lt,col2:lt2,seed:41,jag:.55,lump:[.6,.6]});
-    for(let i=0;i<5;i++){const p=sp(by+.05,-.6+i*.3,.034);k.p('pelvis','cone4','c',0xd8d0b8,p[0],p[1]-.02,p[2],.008,.04,.006,Math.PI)}})})();
+    nh_Sh(B,M,m=>m.part=='arm'&&m.x<0&&m.y<J.aL1[1]-.03&&m.y>J.aL2[1]+.01,.014,m=>mdSh(Math.abs(m.y-(J.aL1[1]+J.aL2[1])/2)>.05?lt2:lt,.94+.1*n3Sn(m.x,m.y,m.z,11,3)));   /* a plain bracer, darker cuffs */
+    nh_Fur(B,M,m=>m.part=='torso'&&m.y<by+.06,{off:.024,len:.14,col:lt,col2:lt2,seed:41,jag:.55,lump:[.6,.6]});
+    for(let i=0;i<5;i++){const p=sp(by+.05,-.6+i*.3,.02);k.p('pelvis','cone4','c',0xd8d0b8,p[0],p[1]-.02,p[2],.01,.04,.008,Math.PI)}   /* bone teeth sunk into the hide wrap */M.nhEmit()})})();
 
 // ---------------- Naga Shaman: a fringed shawl, bead and fang necklaces, a sash with long panels, glowing marks, a bone crown ----------------
 (function(){const S=n181Spec(),K={sk:0x2c4844,sk2:0x1e3430,bel:0x8a9a78,pat:0x0e1e1c,eye:0x7affd8,fist:s=>s>0};const cl=0x1e3a3a,cl2=0x122626,gd=0xa88a3a,rune=0x5affc8,bone=0xd8d0b8,T=S.torso,J=S.J;
   cg181Reg('nagas',S,function(B,P,k,C){const M=n181Build(B,k,C,S,K),sh=T[6][0],by=T[0][0]+.03;
     const sp=(y,a,off)=>{const q=cgTAt(S,y);return [Math.sin(a)*(q.rx+off),y,q.z+Math.cos(a)*((Math.cos(a)>=0?q.f:q.b)+off)]};
-    cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]-.03)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.12),{off:.026,len:.12,col:cl,col2:cl2,seed:51,jag:.5,lump:[.6,.7]});
-    for(let j=0;j<2;j++)for(let i=0;i<13;i++){const a=(i-6)*.15,p=sp(J.chest[1]+.02-j*.05-Math.abs(i-6)*.006,a,.034+j*.004);k.p('chest',i%3?'sph':'cone4','c',i%3?(j?gd:0x2a8a7a):bone,p[0],p[1],p[2],i%3?.011:.008,i%3?.011:.035,i%3?.011:.006,i%3?0:Math.PI)}
-    cgBelt(B,M,by,.04,.028,cl2);
+    nh_Fur(B,M,m=>m.part=='torso'&&m.y>J.chest[1]-.03,{off:.026,len:.12,col:cl,col2:cl2,seed:51,jag:.5,lump:[.6,.7]});
+    for(let j=0;j<1;j++)for(let i=0;i<13;i++){const a=(i-6)*.15,p=sp(J.chest[1]+.02-j*.05-Math.abs(i-6)*.006,a,.034+j*.004-.009*Math.abs(i-6)/6);   /* the outer ones sink into the shawl */k.p('chest',i%3?'ico':'cone4','c',i%3?(j?gd:0x2a8a7a):bone,p[0],p[1],p[2],i%3?.011:.008,i%3?.011:.035,i%3?.011:.006,i%3?0:Math.PI)}
+    nh_Belt(B,M,by,.04,.028,cl2);
     [[0,.2],[.5,.17],[-.5,.17],[Math.PI,.2]].forEach(([a,l])=>{const p0=cgSurf(M,S,by-.01,a,-.008),p1=cgSurf(M,S,by-.03,a,.034),d=[Math.sin(a),0,Math.cos(a)];   /* rooted in the body, out through the sash, hanging */
       mdLoft(B,[{p:p0,rx:.06,f:.008,b:.008,w:[['pelvis',1]]},{p:p1,rx:.06,f:.008,b:.008,w:[['pelvis',1]]},{p:add3(p1,add3(mul3(d,.012),[0,-l*.5,0])),rx:.06,f:.008,b:.008,w:[['pelvis',.5],['nt0',.5]]},{p:add3(p1,add3(mul3(d,.024),[0,-l,0])),rx:.06,f:.008,b:.008,w:[['pelvis',.5],['nt0',.5]]}],{seg:6,ref:d,col:m=>m.i>2.6?gd:cl})});
-    [[J.chest[1]+.03,.25],[J.chest[1]+.03,-.25],[J.spine[1]+.03,0],[J.chest[1]+.08,.5],[J.chest[1]+.08,-.5]].forEach(([y,a],i)=>{const p=cgRay(M,add3(sp(y,a,0),[Math.sin(a)*.4,0,Math.cos(a)*.4]),[-Math.sin(a),0,-Math.cos(a)],{torso:1});if(p)k.p(y>J.chest[1]-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.006,.05,.002,0,a,i%2?.7:-.7)});
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'2'][1]+.06&&m.y>J[A+'2'][1]-.01,.014,gd,{t:'m'})});
-    for(let i=0;i<7;i++){const a=(i-3)*.32,q=S.hp(Math.sin(a)*.08,1.66,-.03+Math.cos(a)*.02);k.L('head','c',i%2?bone:gd,q,[q[0]*2,q[1]+.13-Math.abs(i-3)*.025,q[2]-.06],.012,.002,4)}})})();
+    [[J.spine[1]+.05,.42],[J.spine[1]+.05,-.42],[J.spine[1]-.01,.75],[J.spine[1]-.01,-.75],[J.spine[1]+.07,1.15],[J.spine[1]+.07,-1.15]].forEach(([y,a],i)=>{const d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(sp(y,a,0),mul3(d,.4)),mul3(d,-1),{torso:1});if(p){const c=sub3(p,mul3(d,.001));k.p('spine','box','g',rune,c[0],c[1],c[2],.006,.05,.006,0,a,i%2?.7:-.7)}});   /* (refine) glowing marks on the bare flanks below the shawl, sunk into the skin */
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';nh_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'2'][1]+.06&&m.y>J[A+'2'][1]-.01,.014,gd,{t:'m'})});
+    for(let i=0;i<7;i++){const a=(i-3)*.32,q=S.hp(Math.sin(a)*.08,1.66,-.03+Math.cos(a)*.02);k.L('head','c',i%2?bone:gd,q,[q[0]*2,q[1]+.13-Math.abs(i-3)*.025,q[2]-.06],.012,.002,4)}M.nhEmit()})})();
 // no legs: no knee bend (ST179 from 3391 stays: a lean, arms ready)
 // ================= v181: goblins and humans on cage bodies =================
 // Owner: "all enemy models that use the old humanoid structure updated to the new one". Batch 1: Hobgoblin, Slinger, Goblin
@@ -56753,6 +57276,9 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
 // slinger's draped hood and cross strap, the shaman's glowing eyes under its skull, the bandit's black mask and red sash, the
 // brigand's light-grey mail and fur-cuffed boots, the knight's burning visor slit, the zealot's hood, mask and eye patch, the
 // salt caller's spine crystals) and its old height; skin under clothes is no longer drawn (f6_reg), to stay near 15k triangles.
+// Refine pass (Oct 31 2026, the Amalgam standard, fk_ helpers): arms and legs seated in the body, goblins reshaped as goblins
+// (small, crouched, big-headed, long-eared, big hands and feet, wiry) while the humans keep human proportions, baked shading,
+// colour that flows instead of stepping face by face, rounded fingers, a little painted detail; ~5.5–7.5k triangles each.
 
 // ---------------- faces (base head coordinates) ----------------
 function cgFaceHuman(o){o=o||{};const nz=o.nose||1,br=o.brow||1,ch=o.cheek||1;return (x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;
@@ -56768,8 +57294,11 @@ function cgFacePaint(S,m,skin,o){o=o||{};if(m.part=='head'&&m.s>.3){const bx=m.x
   if(Math.abs(m.y-S.hp(0,o.my||1.557,0)[1])<.0042*S.hs&&Math.abs(bx)<(o.mw||.026))return o.lip==null?0x2a1210:o.lip}return null}
 // a hood: a shell over the crown, back and sides of the head, the neck and the shoulders, open round the face; peak = a cone on top
 // (restore pass) o.arm: the drape also runs down over the shoulder caps by that much; o.tip: a limp point hanging off the back
-function cgHood(B,k,M,S,o){const fy=S.hp(0,1.6,0)[1];cgShell(B,M,m=>{if(m.part=='head'){const bx=m.x/S.hs,by=(m.y-fy)/S.hs;return !(m.s>.35&&(bx*bx)/(.065*.065)+(by*by)/(.075*.075)<1)}
-    return m.part=='neck'||(m.part=='torso'&&m.y>S.torso[6][0]-(o.drape||.06))||(o.arm&&m.part=='arm'&&m.y>S.torso[6][0]-o.arm)},o.off||.02,o.col,{rim:.2});
+// (refine) o.top: the opening's upper edge (base head units above y 1.6; the hood then covers the forehead down to it)
+function cgHood(B,k,M,S,o){const fy=S.hp(0,1.6,0)[1],hz0=S.hp(0,1.6,0)[2],OF=o.off||.02,top=o.top==null?1:o.top;fk_shell(B,M,m=>{if(m.part=='head'){const bx=m.x/S.hs,by=(m.y-fy)/S.hs;return !(m.s>.35&&by<top&&(bx*bx)/(.065*.065)+(by*by)/(.075*.075)<1)}
+    return m.part=='neck'||(m.part=='torso'&&m.y>S.torso[6][0]-(o.drape||.06))||(o.arm&&m.part=='arm'&&m.y>S.torso[6][0]-o.arm)},
+    /* (refine) the hood thins out toward the face opening, so its edge lies flush on the face instead of stepping round it */
+    v=>{if(v[2]<hz0)return OF;const bx=v[0]/S.hs,by=(v[1]-fy)/S.hs;if(by>top-.012)return OF;const e=(bx*bx)/(.065*.065)+(by*by)/(.075*.075);return e>2.4?OF:OF*Math.max(.45,Math.min(1,(e-1)/1.4))},o.col,{rim:.2,vcol:o.vcol});
   if(o.peak){const t=S.hp(0,1.735,-.03);k.L('head','c',o.peak,t,[t[0],t[1]+o.ph*S.hs,t[2]-o.ph*.5*S.hs],.05*S.hs,.004,6)}
   if(o.tip!=null){const t=S.hp(0,1.69,-.04);k.L('head','c',o.tip,t,S.hp(0,1.63,-.2),.04*S.hs,.008,6)}}
 // ---------------- restore-pass helpers (f6_) ----------------
@@ -56786,7 +57315,7 @@ function f6_cape(B,S,o){const J=S.J,h=S.h||1,top=S.torso[6][0],len=o.len||.4,w=o
   const at=(y,wt,rx)=>{const q=cgTAt(S,Math.min(top,y));return {p:[0,y,q.z-(q.b+off+Math.max(0,top-y)*.1)],rx:rx*w,f:.014,b:.014,w:wt}};
   const Y=[top+.01,top-.1*h,top-.25*h,top-.4*h,Math.min(top-.46*h,J.cp1[1]-.1*h),Math.min(top-.6*h,J.cp2[1]),len],cw=y=>y>J.cp0[1]-.04?[['chest',.6],['cp0',.4]]:y>J.cp1[1]?mdWb('cp0','cp1',(J.cp0[1]-y)/(J.cp0[1]-J.cp1[1])):y>J.cp2[1]?mdWb('cp1','cp2',(J.cp1[1]-y)/(J.cp1[1]-J.cp2[1])):[['cp2',1]];
   const R=Y.map((y,i)=>at(y,cw(y),.18+i*.022));R[0].p[2]=-(cgTAt(S,top).b+off*.4);
-  mdLoft(B,R,{seg:24,capA:true,col:m=>m.s>.2?ins:(o.hem!=null&&m.i>R.length-1.55?o.hem:o.trim!=null&&m.i<.6?o.trim:Math.round(Math.atan2(m.c,-m.s)*9)%2?col:mdSh(col,.82)),keep:m=>!(m.i>R.length-2.2&&a181H(Math.round(Math.atan2(m.c,m.s)*6),2)<rag*(m.i-(R.length-2.2))*.9)})}
+  mdLoft(B,R,{seg:o.seg||24,capA:true,col:m=>m.s>.2?ins:(o.hem!=null&&m.i>R.length-1.55?o.hem:o.trim!=null&&m.i<.6?o.trim:Math.round(Math.atan2(m.c,-m.s)*9)%2?col:mdSh(col,.82)),keep:m=>!(m.i>R.length-2.2&&a181H(Math.round(Math.atan2(m.c,m.s)*6),2)<rag*(m.i-(R.length-2.2))*.9)})}
 // skin hidden under clothes is not drawn (restore pass: keeps each model near 15k triangles). f6_reg registers a cage foe
 // like cg181Reg; while its builder runs, every shell grown from the body (cgShell, and cgBelt / cgHood / cgHair through it)
 // is noted, and the body's skin (C.f6skin, set by cgGoblinBody / cgHumanBody) is drawn last, leaving out the faces that lie
@@ -56796,151 +57325,230 @@ function f6_keep(M,L){const F=M.F,cov=F.map(f=>{const m=cgInfo(M,f);return L.som
   const keep=F.map((f,i)=>!cov[i]||f.v.some(v=>open[v]));return (m,fi)=>keep[fi]}
 function f6_reg(key,S,fn){cg181Reg(key,S,function(B,P,k,C,S2){const L=[],sh=cgShell;
   cgShell=function(B2,M2,sel,off,col,o){if(M2===C.M&&!(o&&o.rim===1))L.push(sel);return sh.apply(this,arguments)};
-  try{fn(B,P,k,C,S2)}finally{cgShell=sh}cgEmit(B,C.M,C.f6skin,{keep:f6_keep(C.M,L)})})}
+  try{fn(B,P,k,C,S2)}finally{cgShell=sh}if(C.f6hide)L.push.apply(L,C.f6hide);cgEmit(B,C.M,C.f6skin,{keep:f6_keep(C.M,L),vcol:C.f6vcol})})}   /* (refine) C.f6vcol: the skin's colour flows corner to corner */
+// ---------------- refine pass (Oct 31 2026, fk_): the Amalgam standard on every folk foe ----------------
+// limbs seated in the body (cgHuman n:16 / sock / j2: the arm grows out of the shoulder socket, the thigh out of the hip ring),
+// fewer rings where they don't shape the outline (head, arm, leg, foot), baked shading (cgShade: creases darker, ridges lighter,
+// darker toward the feet), colour that flows corner to corner (vcol) instead of stepping face by face, rounded fingers (mdLoft)
+const FK_HI=[0,2,4,6,8,9,11,12,14],FK_HIG=[0,2,3,4,5,6,8,9,11,12,14];   // head rings kept (humans / goblins: more round the nose)
+function fk_body(o,hi){const B=CG181.base,hs=o.hs||1,H=hi||FK_HI;return cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,head:H.map(i=>B.head[i]),
+  facePush:(i,j,a)=>B.face(H[i],j,a)*hs,arm:B.arm.filter((q,i)=>i!=2&&i!=4&&i!=5),leg:B.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},o))}   /* arm: shoulder, upper arm, elbow, wrist, palm, knuckles · leg: hip, thigh, knee, calf, ankle */
+// a shell whose colour flows corner to corner: cgShell (so f6_reg still notes it and hides the skin under it) with o.vcol handed
+// to its cgEmit; col(m) returning null hands the face to vcol, a colour keeps a crisp region
+function fk_shell(B,M,sel,off,col,o){o=o||{};if(!o.vcol)return cgShell(B,M,sel,off,col,o);const e=cgEmit;
+  cgEmit=function(B2,M2,c2,o2){return e(B2,M2,c2,Object.assign({},o2,{vcol:o.vcol}))};try{return cgShell(B,M,sel,off,col||(()=>null),o)}finally{cgEmit=e}}
+// smooth cloth / hide colour for vcol: a little low-frequency value noise, no hue noise
+function fk_nz(c,a,f,sd){return m=>a181Nz(c,m,a==null?.2:a,f||9,sd||0)}
+// the body's baked shading (set after the face sculpt, before anything is emitted)
+// (the face's creases are halved: small sculpted faces turned blotchy at full strength)
+function fk_shade(M,S,o){o=o||{};const sh=cgShade(M,Object.assign({cav:1,y0:0,y1:S.hp(0,1.73,0)[1],hk:.26,dk:.14,min:.5},o)),hd=new Uint8Array(M.V.length),hk=o.head==null?.5:o.head;
+  M.F.forEach(f=>{if(f.part=='head')f.v.forEach(i=>hd[i]=1)});M.shade=sh.map((x,i)=>hd[i]&&x<1&&M.V[i][1]>S.hp(0,1.54,0)[1]?1-(1-x)*hk:x)}
+// fingers as rounded tapering lofts rooted inside the palm (the same paths as cgFingers): kind 'open' | 'claw' | 'fist';
+// o: len, r (finger thickness), nail (claw colour), tip (claw length), t (layer), w (hand width factor)
+// a finger: rounded tapering loft rooted inside the palm, a knuckle ring, each joint a little thicker than the bone between,
+// curling by curl at each joint; o.tip: a claw cone in the nail colour, else a rounded fingertip
+function fk_digit(B,col,p,d,len,r,n,curl,ax,W,o){let a=p.slice(),dir=new THREE.Vector3(...d).normalize();const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax).normalize(),curl),
+    D=()=>[dir.x,dir.y,dir.z],R=[{p:sub3(a,mul3(D(),r*(o.root||1.8))),rx:r*.9},{p:a.slice(),rx:r*1.08}];
+  for(let i=0;i<n;i++){const L=len/n,t=1-.16*i;R.push({p:add3(a,mul3(D(),L*.5)),rx:r*.8*t});a=add3(a,mul3(D(),L));if(i<n-1){R.push({p:a.slice(),rx:r*.92*t});dir.applyQuaternion(q)}}
+  const nS=R.length;
+  if(o.tip){R.push({p:a.slice(),rx:r*.66});R.push({p:add3(a,mul3(D(),o.tip*.3)),rx:r*.5});R.push({p:add3(a,mul3(D(),o.tip)),rx:r*.06})}
+  else{R.push({p:add3(a,mul3(D(),r*.35)),rx:r*.6});R.push({p:add3(a,mul3(D(),r*.7)),rx:r*.3})}
+  R.forEach(q=>{q.f=q.rx*.92;q.b=q.rx*.92;q.w=W});
+  mdLoft(B,R,{seg:o.seg||6,capB:true,t:o.t||'c',col:m=>o.tip&&m.i>nS?(o.nail==null?0x1a1408:o.nail):col})}
+// a closed fist as one mitten: a wide rounded loft (half width hw2 across the knuckles, thickness r) along the curled path of the
+// middle finger (n bones, curl per joint about ax), its width kept across the hand (u = the back of the hand); the three
+// finger separations are painted per corner as dark lines that fade into the skin, past the knuckle ridge
+function fk_mitten(B,col,p,d,len,r,hw2,n,curl,ax,uH,W,t){let a=p.slice(),dir=new THREE.Vector3(...d).normalize();const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax).normalize(),curl),D=()=>[dir.x,dir.y,dir.z];
+  const R=[{p:sub3(a,mul3(D(),r*2.2)),rx:hw2*.9,th:r*.95,ln:0},{p:a.slice(),rx:hw2*1.03,th:r*1.15,ln:.4,kb:1}];
+  for(let i=0;i<n;i++){const L=len/n,k=1-.06*i;R.push({p:add3(a,mul3(D(),L*.5)),rx:hw2*.96*k,th:r*.95*k,ln:1,kb:i?0:.5});a=add3(a,mul3(D(),L));if(i<n-1){R.push({p:a.slice(),rx:hw2*k,th:r*1.05*k,ln:1});dir.applyQuaternion(q)}}
+  R.push({p:add3(a,mul3(D(),r*.45)),rx:hw2*.8,th:r*.7,ln:.6});
+  const seg=24,TC=new THREE.Color(col),w=mdW(B,W),rows=[];let U=null;
+  R.forEach((g,i)=>{const tg=nrm3(sub3(R[Math.min(i+1,R.length-1)].p,R[Math.max(i-1,0)].p));let u=U||uH;u=nrm3(sub3(u,mul3(tg,u[0]*tg[0]+u[1]*tg[1]+u[2]*tg[2])));U=u;const Sd=cross3(u,tg),row=[];
+    for(let k=0;k<seg;k++){const an=Math.PI/2+k/seg*Math.PI*2,c=Math.cos(an),sn=Math.sin(an),dl=Math.min(Math.abs(c-.5),Math.abs(c),Math.abs(c+.5)),sh=1-.45*g.ln*Math.max(0,1-dl/.07)*Math.max(0,Math.min(1,(sn+.35)*3));   /* thin lines, on the back and over the curl (not the hidden palm side) */
+      const th=g.th*(1+(g.kb||0)*.16*Math.max(0,sn)*Math.max(0,1-Math.min(Math.abs(c-.75),Math.abs(c-.25),Math.abs(c+.25),Math.abs(c+.75))/.2));   /* a bumpy knuckle ridge */
+      row.push({x:g.p[0]+Sd[0]*c*g.rx+u[0]*sn*th,y:g.p[1]+Sd[1]*c*g.rx+u[1]*sn*th,z:g.p[2]+Sd[2]*c*g.rx+u[2]*sn*th,w,rgb:[TC.r*sh,TC.g*sh,TC.b*sh]})}rows.push(row)});
+  const cl=mdC(col),T=t||'c';for(let i=0;i<rows.length-1;i++)for(let k=0;k<seg;k++){const A=rows[i][k],A1=rows[i][(k+1)%seg],B2=rows[i+1][k],B3=rows[i+1][(k+1)%seg];mdTri(B,T,A,A1,B2,cl);mdTri(B,T,B2,A1,B3,cl)}
+  const L=rows[rows.length-1],e=R[R.length-1].p,cv={x:e[0]+dir.x*r*.25,y:e[1]+dir.y*r*.25,z:e[2]+dir.z*r*.25,w,rgb:[TC.r,TC.g,TC.b]};for(let k=0;k<seg;k++)mdTri(B,T,cv,L[k],L[(k+1)%seg],cl)}
+function fk_fingers(B,S,s,col,kind,o){o=o||{};const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),hw=o.w||1,kn=add3(a2,mul3(d,.075*hw)),L=(o.len||1)*.08,r=(o.r||.0095)*hw,W=[[bn+'2',1]];
+  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
+  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),oo={t:o.t,nail:o.nail,tip:0};
+  // a fist: the closed fingers don't change the outline, so they are one rounded mitten curled round the grip (fk_mitten) with
+  // the finger separations painted as dark lines; the thumb is its own loft folded over it
+  if(kind=='fist')fk_mitten(B,col,P(add3(a2,mul3(d,.064*hw)),0,-.002*hw),D(1,-.7,.03),L*.6,r*1.08,.0165*hw*1.85,2,1.5,ax,u,W,o.t);
+  const kc=kind=='claw'?add3(a2,mul3(d,.062*hw)):kn;
+  for(let i=0;i<4&&kind!='fist';i++){const z=(1.5-i)*(kind=='claw'?.0178:.0165)*hw,p=P(kc,z,-.004*hw);
+    if(kind=='claw')fk_digit(B,col,p,D(1,-.2,z*1.6/hw),L*[.96,1.04,.97,.8][i],r*(i==3?.9:1),3,.46,ax,W,Object.assign({},oo,{tip:o.tip||0,seg:5,root:2.6}));   /* bony, three-jointed, curving in */
+    else fk_digit(B,col,p,D(1,-.22,z*.7/hw),L*.86*[.96,1.04,.97,.8][i],r*(i==3?.9:1),2,.42,ax,W,Object.assign({},oo,{seg:5}))}
+  if(kind=='fist')fk_digit(B,col,P(add3(a2,mul3(d,.034*hw)),.026*hw,-.008*hw),D(1,-.3,.22),L*.44,r*1.1,2,.6,ax,W,oo);   /* the thumb folded over the curled fingers */
+  else fk_digit(B,col,P(add3(a2,mul3(d,.03*hw)),.026*hw,-.01*hw),D(.6,-.3,.75),L*.62,r*1.05,2,.3,nrm3(cross3(u,f)),W,Object.assign({},oo,{tip:o.tip?o.tip*.6:0}))}
 // a plate harness (the Blood Knight's kit): cuirass, gorget, mail skirt and tassets, belt, pauldrons, arm and leg plates,
 // gauntlets, sabatons; pal {pl, pl2, ed, gd, ml, belt}; o.pauldron 'dome' | 'spiked', o.spikes
 function cgPlate(B,k,M,S,pal,o){o=o||{};const T=S.torso,J=S.J,wy=T[2][0],sh=T[6][0],ey=J.aR1[1],wr=J.aR2[1],kn=J.rh1[1],an=J.rh2[1],{pl,pl2,ed,gd,ml}=pal;
   cgShell(B,M,m=>m.part=='torso'&&m.y>wy-.02,.034,m=>m.y<wy+.03||m.y>sh+.02?gd:m.y<wy+.12?(Math.round(m.y*34)%2?pl:pl2):Math.abs(m.x)<.025&&m.s>0?pl2:Math.round(Math.atan2(m.x,m.z)*7)%2?pl:mdSh(pl,.84),{t:'m'});
   cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh)||(m.part=='head'&&m.y<S.hp(0,1.535,0)[1]),.05,m=>m.y>S.hp(0,1.5,0)[1]?gd:pl2,{t:'m'});
-  cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?mdSh(ml,.7):ml,{n:5});
-  cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',keep:m=>Math.abs(m.c)>.25||m.s<-.2});
-  cgBelt(B,M,wy-.015,.022,.058,pal.belt||0x1a1012,'m');const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','sph','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);
+  cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?mdSh(ml,.7):ml,{n:4,seg:16});
+  cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:4,t:'m',seg:16,keep:m=>Math.abs(m.c)>.25||m.s<-.2});
+  cgBelt(B,M,wy-.015,.022,.058,pal.belt||0x1a1012,'m');const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','dod','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);
   [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],L=s<0?'lh':'rh';
-    [[.05,.15,.11,.16,pl],[.0,.14,.09,.15,pl2],[-.05,.13,.075,.135,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));k.p(A+'0','tor','m',gd,a[0]+s*(.03+j*.014),a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*(.42+j*.12))});
+    [[.05,.15,.11,.16,pl],[.0,.14,.09,.15,pl2],[-.05,.13,.075,.135,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));if(!j)k.p(A+'0','tor','m',gd,a[0]+s*.03,a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*.42)});   /* (refine) one rim, on the top plate (budget) */
     if(o.spikes)for(let j=0;j<3;j++)k.L(A+'0','m',o.spikes,[a[0]+s*(.06+j*.03),a[1]+.08,a[2]-.04+j*.04],[a[0]+s*(.11+j*.03),a[1]+.2,a[2]-.05+j*.04],.022,.002,5);
     cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
     cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
-    cgShell(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,pl,{t:'m'});cgFingers(k,S,s,pl,'fist',1.1,null,0,'m');
-    const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','sph','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
+    cgShell(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,pl,{t:'m'});fk_fingers(B,S,s,pl,'fist',{len:1.1,r:.0092,t:'m'});
+    const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','dod','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
     cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn+.05&&m.y<J.lh0[1]-.1,.024,m=>Math.round(m.y*24)%2?pl:pl2,{t:'m'});
     const kq=J[L+'1'];k.p(L+'1','hem','m',pl2,kq[0],kq[1],kq[2]+.075,.075,.055,.06,Math.PI/2,0,0);k.L(L+'1','m',ed,[kq[0],kq[1]+.01,kq[2]+.12],[kq[0],kq[1]+.07,kq[2]+.18],.02,.002,4);
     cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<kn-.04&&m.y>an-.02,.022,m=>m.y<an+.04?gd:m.s>.6?pl2:pl,{t:'m'});
     cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.016,pl,{t:'m'})})}
 
+// eyes in the sockets (cgEyes with a 36-triangle shape instead of 56) and toes: n big toes with claws (goblins: 3)
+function fk_eyes(k,M,S,col,ex,ey,r,out){[-1,1].forEach(s=>{const q=S.hp(s*ex,ey,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1],{head:1});if(p)k.p('head','dod','g',col,p[0],p[1],p[2]+(out||.001),.009*S.hs*(r||1),.0062*S.hs*(r||1),.005,0,0,s*.25)})}
+function fk_toes(k,S,s,col,claw,n){n=n||3;const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w;for(let i=0;i<n;i++){const o=i-(n-1)/2,tx=A[0]+o*.024*W,tz=A[2]+.155*L,r=(.012-Math.abs(o)*.002)*W;
+  k.L(l,'c',col,[tx,.017,tz-.03],[tx+o*.006,.012,tz+.016],r,r*.8,4);if(claw)k.L(l,'c',0x1a1408,[tx+o*.006,.012,tz+.012],[tx+o*.008,.004,tz+.016+claw],r*.7,.0015,4)}}
 // ===================================================================== goblins =====================================================================
-// (restore pass) the old goblins were stocky: a broad, deep chest, thick arms and legs, a big head on a thick neck, short
-// legs; tusks long and thick. GOB181 now builds that bulk (it used to be a thin, tall body).
-const GOB181=o=>Object.assign({h:.74,w:1.18,d:1.12,rw:[1,1.06,1.02,1.08,1.14,1.14,1.16,1.12],rf:[1,1.04,1.1,1.12,1.12,1.1,1.05,1],at:1.42,lt:1.36,hs:1.18,hw:1.06,armL:1.04,legL:.88,foot:1.15,footW:1.2,nw:1.35},o||{});
-function cgGoblinBody(B,k,C,S,K){const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFaceGoblin()));
-  C.f6skin=m=>cgFacePaint(S,m,K.sk,{sock:0x1a1408})||(m.s<-.4?mdSh(K.sk,.82):a181Nz(K.sk,m,.22,18));   // the skin is drawn by f6_reg, after the clothes
-  cgEyes(k,M,S,K.eye,.038,1.628,K.er||.95,K.eo==null?-.001:K.eo);cgEars(k,M,S,K.sk,1.63,.15,.25,.45,.03,mdSh(K.sk,.7));f6_tusks(k,M,S,0xe0d8b8,.027,.036,.0095);
-  [-1,1].forEach(s=>{cgFingers(k,S,s,K.sk,K.fist&&K.fist(s)?'fist':'claw',1,0x1a1408,.012);cgToes(k,S,s,mdSh(K.sk,.85),.012)});return M}
+// (restore pass) the old goblins were stocky, with long thick tusks. (refine, Oct 31 2026) goblins are not men: small and
+// crouched, a big head with long ears on a thin neck, broad bony shoulders over a pinched waist and a little pot belly, wiry
+// limbs with knobby elbows and knees, long arms ending in big hands, short bowed legs on big flat feet. The kit stays (tusks,
+// hoods, skulls, loincloths, straps, pauldrons).
+// arm rings: shoulder, upper arm, elbow, wrist, palm, knuckles · leg rings: hip, thigh, knee, calf, ankle
+const GOB181=o=>Object.assign({h:.68,w:1.08,d:1.06,rw:[.9,.98,.82,.92,1.08,1.16,1.22,1.02],rf:[1,1.06,1.16,1.1,1.06,1.02,.98,.95],rb:[1,1.08,1,1.04,1.1,1.1,1.06,1],
+  at:1.12,lt:1.1,hs:1.42,hw:1.1,hd:1.06,armL:1.16,legL:.84,foot:1.45,footW:1.4,nw:1.15,
+  armR:[1.05,.88,1.18,.9,1.4,1.45],legR:[1,.86,1.14,.98,1.12]},o||{});
+function cgGoblinBody(B,k,C,S,K){const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFaceGoblin()));fk_shade(M,S);
+  // the hide (drawn by f6_reg, after the clothes): crisp sockets and mouth line; the rest flows corner to corner: a darker back,
+  // a paler belly and throat, soft darker blotches
+  const sk=K.sk,dk=mdSh(mdMix(sk,0x2a3420,.35),.74),pale=mdMix(sk,0xb8b070,.3),bl=mdSh(mdMix(sk,0x4a3a20,.4),.8);
+  C.f6skin=m=>cgFacePaint(S,m,sk,{sock:0x1a1408})||(K.paint&&K.paint(m))||null;
+  C.f6vcol=m=>{let c=mdMix(sk,dk,Math.max(0,Math.min(1,.1-m.s*.8)));if(m.s>.2&&(m.part=='torso'||m.part=='neck'))c=mdMix(c,pale,Math.min(1,(m.s-.2)*1.3)*.6);
+    const n=n3Sn(m.x,m.y,m.z,13,K.sd||5);c=mdMix(c,bl,Math.max(0,Math.min(1,(n-.55)*3))*.45);return m.part=='hand'||m.part=='foot'?mdSh(c,.9):c};
+  fk_eyes(k,M,S,K.eye,.038,1.628,K.er||1.05,K.eo==null?-.001:K.eo);cgEars(k,M,S,sk,1.632,.2,.17,.3,.034,mdSh(sk,.62));f6_tusks(k,M,S,0xe0d8b8,.027,.036,.0095);
+  [-1,1].forEach(s=>{fk_fingers(B,S,s,mdSh(sk,.95),K.fist&&K.fist(s)?'fist':'claw',{w:1.32,len:1.15,r:.0074,nail:0x1a1408,tip:.018});fk_toes(k,S,s,mdSh(sk,.85),.02)});return M}
 // the old goblins' dark hide breeches over the hips, and a loincloth: one flap in front, one behind, over a belt
 function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[1];
-  cgShell(B,M,m=>(m.part=='torso'&&m.y<wy+.01)||(m.part=='leg'&&m.y>J.lh1[1]+.1),.01,m=>a181Nz(pa,m,.3,14));
-  cgSkirt(B,S,wy-.02,J.lh1[1]+.02,.03,.03,m=>a181Nz(m.y<J.lh1[1]+.07?mdSh(lo,.78):lo,m,.25,12),{n:5,keep:m=>Math.abs(m.c)<.42||m.y>hy-.01});
+  fk_shell(B,M,m=>(m.part=='torso'&&m.y<wy+.01)||(m.part=='leg'&&m.y>J.lh1[1]+.1),.01,null,{vcol:fk_nz(pa,.22,10)});
+  cgSkirt(B,S,wy-.02,J.lh1[1]+.02,.03,.03,m=>a181Nz(m.y<J.lh1[1]+.07?mdSh(lo,.78):lo,m,.1,6),{n:5,seg:16,keep:m=>Math.abs(m.c)<.42||m.y>hy-.01});
   f6_belt(B,M,wy-.01,.024,.034,belt,.01)}
 // ---------------- Hobgoblin: a stocky brute with a club: breeches and a loincloth, a shoulder strap, a spiked pauldron, leather bracers, a bone necklace ----------------
-(function(){const S=cgHuman(GOB181()),K={sk:0x56603c,eye:0xffc020,fist:s=>s>0},lt=0x3a2618,lo=0x5a4628,T=S.torso,J=S.J;
+(function(){const S=fk_body(GOB181(),FK_HIG),K={sk:0x56603c,eye:0xffc020,fist:s=>s>0,sd:5,
+    /* (refine) war paint, as paint: three rust-red claw slashes down the chest, a smear across the eyes */
+    paint:m=>{if(m.part=='torso'&&m.s>.4){const T=S.torso,y=(m.y-T[3][0])/(T[6][0]-T[3][0]);if(y>.15&&y<.85&&[-.05,0,.05].some(x=>Math.abs(m.x-x-(y-.5)*.05)<.0075))return 0x6a2414}
+      if(m.part=='head'&&m.s>.3){const by=(m.y-S.nb)/S.hs+1.52;if(Math.abs(by-1.629)<.009&&Math.abs(m.x/S.hs)>.055&&Math.abs(m.x/S.hs)<.085)return 0x5a1e10}return null}},lt=0x3a2618,lo=0x5a4628,T=S.torso,J=S.J;
   f6_reg('hob',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0];
     f6_gobLoin(B,M,S,lo,lt,0x4a3a22);
     // the strap: from the right shoulder down across the chest to the left hip, and over the shoulder down the back
     f6_strap(B,M,S,[[wy+.02,-.75,.012],[(wy+sh)/2,-.1,.012],[sh-.05,.42,.012],[sh+.015,1.2,.014],[sh-.05,Math.PI-.45,.012],[(wy+sh)/2,Math.PI+.15,.012],[wy+.02,Math.PI+.75,.012]],.013,lt);
     const a=J.aL0;k.p('aL0','hem','m',0x4a3a26,a[0]-.03,a[1]+.03,a[2],.12,.09,.12,0,0,-.4);for(let i=0;i<3;i++)k.L('aL0','m',0x8a8a90,[a[0]-.06-i*.028,a[1]+.07,a[2]-.025+i*.028],[a[0]-.1-i*.028,a[1]+.16,a[2]-.025+i*.028],.018,.002,5);
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.03&&m.y>J[A+'2'][1]+.01,.012,m=>Math.round(m.y*50)%2?lt:mdSh(lt,.75))});
-    for(let i=0;i<7;i++){const p=cgSurf(M,S,sh-.035-Math.abs(i-3)*.012,(i-3)*.26,.006);k.p('chest',i%2?'cone4':'sph','c',i%2?0xd8d0b0:0x6a3a2a,p[0],p[1]-.012,p[2],.012,i%2?.04:.012,.01,Math.PI)}})})();
+    for(let i=0;i<7;i++){const p=cgSurf(M,S,sh-.035-Math.abs(i-3)*.012,(i-3)*.26,.006);k.p('chest',i%2?'cone4':'oct','c',i%2?0xd8d0b0:0x6a3a2a,p[0],p[1]-.012,p[2],.012,i%2?.04:.012,.01,Math.PI)}})})();
 // ---------------- Hobgoblin Slinger: a hood that drapes over the shoulders, a cross strap, breeches and a loincloth, a belt pouch of stones ----------------
-(function(){const S=cgHuman(GOB181({h:.72})),K={sk:0x5c6640,eye:0xffc020,fist:s=>s>0},hd=0x5a4630,lo=0x6a5434,lt=0x3a2618,T=S.torso,J=S.J;
+(function(){const S=fk_body(GOB181({h:.66}),FK_HIG),K={sk:0x5c6640,eye:0xffc020,fist:s=>s>0,sd:7},hd=0x5a4630,lo=0x6a5434,lt=0x3a2618,T=S.torso,J=S.J;
   f6_reg('sling',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0];
     f6_gobLoin(B,M,S,lo,0x2a1a10,0x4a3a22);
     // the cross strap: left shoulder to right hip (the sling's), front and back
     f6_strap(B,M,S,[[wy+.02,.75,.012],[(wy+sh)/2,.1,.012],[sh-.05,-.42,.012],[sh+.015,-1.2,.014],[sh-.05,-Math.PI+.45,.012],[(wy+sh)/2,-Math.PI-.15,.012],[wy+.02,-Math.PI-.75,.012]],.012,lt);
     // the hood: open round the face, its cowl draped down over the shoulders and the tops of the arms, a limp point behind
-    cgHood(B,k,M,S,{col:m=>a181Nz(m.part=='head'||m.part=='neck'?hd:mdSh(hd,.9),m,.3,16),off:.02,drape:.09,arm:.07,tip:mdSh(hd,.9)});
+    cgHood(B,k,M,S,{vcol:m=>a181Nz(m.part=='head'||m.part=='neck'?hd:mdSh(hd,.9),m,.2,9),off:.02,drape:.09,arm:.07,tip:mdSh(hd,.9),top:.045});   /* the hood comes down over the forehead to just above the brow */
     const p=cgSurf(M,S,wy-.03,1.4,.04);k.p('pelvis','sph','c',0x4a3420,p[0],p[1],p[2],.045,.055,.042)})})();
 // ---------------- Goblin Shaman: a long robe, a skull worn over the brow (the green eyes glow beneath it), a crest of feathers, bead and fang necklaces ----------------
-(function(){const S=cgHuman(GOB181({h:.8,legL:.92})),K={sk:0x54644a,eye:0x7aff6a,er:1.2,eo:.001,fist:s=>s>0},rb=0x3a5434,rb2=0x2e4628,bone=0xc8bea4,T=S.torso,J=S.J;
+(function(){const S=fk_body(GOB181({h:.74,legL:.88}),FK_HIG),K={sk:0x54644a,eye:0x7aff6a,er:1.25,eo:.001,fist:s=>s>0,sd:9},rb=0x3a5434,rb2=0x2e4628,bone=0xc8bea4,T=S.torso,J=S.J;
   f6_reg('shaman',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0];
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.35)||(m.part=='arm'&&m.y>J.aR2[1]+.04),.016,m=>a181Nz(rb,m,.3,14));
-    cgSkirt(B,S,wy-.02,J.lh2[1]+.1,.1,.024,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,m,.25,12),{n:6,keep:m=>!(m.y<J.lh1[1]-.08&&a181H(Math.round(Math.atan2(m.c,m.s)*9),2)<(J.lh1[1]-.08-m.y)*2)});
+    fk_shell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.35)||(m.part=='arm'&&m.y>J.aR2[1]+.04),.016,null,{vcol:fk_nz(rb,.22,9)});
+    cgSkirt(B,S,wy-.02,J.lh2[1]+.1,.1,.024,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,m,.1,6),{n:6,seg:16,keep:m=>!(m.y<J.lh1[1]-.08&&a181H(Math.round(Math.atan2(m.c,m.s)*9),2)<(J.lh1[1]-.08-m.y)*2)});
     f6_belt(B,M,wy-.01,.024,.03,0x5a4a2a,.016);
     // the skull: a bone cap over the brow and crown (its own dark eye holes above the real ones), the glowing eyes left bare
-    const bx=m=>m.x/(S.hs*1.06),by=m=>(m.y-S.nb)/S.hs+1.52;
+    const bx=m=>m.x/(S.hs*1.1),by=m=>(m.y-S.nb)/S.hs+1.52;
     cgShell(B,M,m=>m.part=='head'&&by(m)>1.645&&m.s>-.25,.012,m=>{const x=bx(m),y=by(m);if(Math.abs(Math.abs(x)-.03)<.014&&Math.abs(y-1.676)<.009)return 0x14100c;
-      if(m.s>.5&&Math.abs(x)<.006&&y>1.651&&y<1.664)return 0x14100c;return Math.abs(x+.012-(y-1.66)*.4)<.003&&y>1.685?0x6a6050:a181Nz(bone,m,.2,30)},{rim:.35});
+      if(m.s>.5&&Math.abs(x)<.006&&y>1.651&&y<1.664)return 0x14100c;return Math.abs(x+.012-(y-1.66)*.4)<.003&&y>1.685?0x6a6050:a181Nz(bone,m,.12,9)},{rim:.35});
     for(let i=0;i<5;i++){const t=S.hp(-.06+i*.03,1.72,-.02);k.L('head','c',[0x8a2a1a,0x2a6a8a,0xc8a02a,0x2a2a2a,0x8a2a1a][i],t,[t[0]*2.2,t[1]+.13*S.hs,t[2]-.05],.02,.003,4)}
-    for(let j=0;j<2;j++)for(let i=0;i<9;i++){const p=cgSurf(M,S,T[6][0]-.02-j*.04-Math.abs(i-4)*.01,(i-4)*.2,.018);k.p('chest',i%2?'cone4':'sph','c',i%2?0xe8e0c8:j?0x2a6a3a:0x8a2a1a,p[0],p[1]-.01,p[2],.01,i%2?.03:.01,.009,Math.PI)}})})();
-ST179.hob={sx:.22,hx:-.2,lk:.27,rk:.27,az:.08,lz:-.1,le:-.25,ex:-.15};ST179.sling={sx:.2,hx:-.18,lk:.27,rk:.27,lz:-.1,le:-.25};ST179.shaman={sx:.22,hx:-.2,lk:.2,rk:.2,lz:-.08,le:-.3};
+    for(let j=0;j<2;j++)for(let i=0;i<9;i++){const p=cgSurf(M,S,T[6][0]-.02-j*.04-Math.abs(i-4)*.01,(i-4)*.2,.018);k.p('chest',i%2?'cone4':'oct','c',i%2?0xe8e0c8:j?0x2a6a3a:0x8a2a1a,p[0],p[1]-.01,p[2],.01,i%2?.03:.01,.009,Math.PI)}})})();
+// (refine) a deeper crouch: bent knees, the back leaning forward, the head raised to look ahead, arms hanging forward
+ST179.hob={sx:.3,hx:-.3,lk:.44,rk:.44,az:.1,lz:-.12,le:-.38,ex:-.2};ST179.sling={sx:.28,hx:-.28,lk:.36,rk:.36,ax:-.18,ex:-.3,az:.06,lz:-.1,le:-.35};   /* the sling held up off the ground */ST179.shaman={sx:.3,hx:-.28,lk:.36,rk:.36,lz:-.08,le:-.35};
 
 // ===================================================================== humans =====================================================================
-function cgHumanBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFaceHuman(o.face)));
-  C.f6skin=m=>(o.paint&&o.paint(m))||cgFacePaint(S,m,K.sk)||(m.s<-.4?mdSh(K.sk,.85):a181Nz(K.sk,m,.15,20));   // the skin is drawn by f6_reg, after the clothes
-  if(o.glow)cgEyes(k,M,S,o.glow,.036,1.629,.9,-.001);else[-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p){k.p('head','sph','c',0xd8d0c4,p[0],p[1],p[2]-.003,.011*S.hs,.007*S.hs,.006);k.p('head','sph','c',K.iris||0x2a1a10,p[0]-s*.001,p[1],p[2]+.002,.005*S.hs,.005*S.hs,.003)}});
+function cgHumanBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFaceHuman(o.face)));fk_shade(M,S);
+  // the skin is drawn by f6_reg, after the clothes: crisp paint (sockets, lips, scars), the rest flowing (a little darker behind)
+  const sk2=mdSh(K.sk,.84);C.f6skin=m=>(o.paint&&o.paint(m))||cgFacePaint(S,m,K.sk)||null;
+  C.f6vcol=m=>{const c=a181Nz(mdMix(K.sk,sk2,Math.max(0,Math.min(1,-m.s*1.1-.15))),m,.08,9);return o.vpaint?o.vpaint(m,c):c};   /* o.vpaint: soft paint (scars) */
+  if(o.glow)fk_eyes(k,M,S,o.glow,.036,1.629,.9,-.001);else[-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p){k.p('head','dod','c',0xd8d0c4,p[0],p[1],p[2]-.003,.011*S.hs,.007*S.hs,.006);k.p('head','ico','c',K.iris||0x2a1a10,p[0]-s*.001,p[1],p[2]+.002,.005*S.hs,.005*S.hs,.003)}});
   if(o.ears!==false)cgEars(k,M,S,mdSh(K.sk,.92),1.625,.05,.15,.6,.02);
-  [-1,1].forEach(s=>{if(!(o.noHands&&o.noHands(s)))cgFingers(k,S,s,K.hand||K.sk,K.fist&&K.fist(s)?'fist':'open',1,mdSh(K.sk,.7),0)});return M}
+  [-1,1].forEach(s=>{if(!(o.noHands&&o.noHands(s)))fk_fingers(B,S,s,K.hand||K.sk,K.fist&&K.fist(s)?'fist':'open',{r:.0074})});return M}
 const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,1.1,1.05],at:1.1,lt:1.05,hs:.96,armL:1.0,legL:1.03},o||{});
 // (restore pass) the old human foes stood about 15–20% shorter than the first cage versions (their heights are matched again
-// with h below); the head keeps its size, so they read sturdier, like the old ones.
+// with h below); the head keeps its size, so they read sturdier, like the old ones. (refine) human proportions kept, now on the
+// seated-limb body (fk_body): arms grow out of the shoulders, thighs out of the hips under the clothes
 // ---------------- Bandit: dark leather garb with crossed straps, a hood, a black cloth mask over the lower face, a red sash, a short ragged cape with a red hem, boots ----------------
-(function(){const S=cgHuman(HUM181({h:.8,w:.98,at:1.02,lt:1.04,hs:.94})),K={sk:0x9a7a62,fist:s=>s>0},lt=0x34343c,lt2=0x26262c,bt=0x2a2018,red=0x6a2222,T=S.torso,J=S.J;
+(function(){const S=fk_body(HUM181({h:.8,w:.98,at:1.02,lt:1.04,hs:.94})),K={sk:0x9a7a62,fist:s=>s>0},lt=0x34343c,lt2=0x26262c,bt=0x2a2018,red=0x6a2222,T=S.torso,J=S.J;
   f6_reg('bandit',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{ears:false}),wy=T[2][0],sh=T[6][0],yc=(wy+sh)/2;
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>J.lh0[1]-.06)||(m.part=='arm'&&m.y>J.aR2[1]+.02),.014,m=>a181Nz(m.part=='arm'?lt2:lt,m,.3,16));
+    fk_shell(B,M,m=>(m.part=='torso'&&m.y>J.lh0[1]-.06)||(m.part=='arm'&&m.y>J.aR2[1]+.02),.014,null,{vcol:m=>a181Nz(m.part=='arm'?lt2:lt,m,.2,9)});
     [-1,1].forEach(s=>f6_strap(B,M,S,[[sh-.03,s*.62,.02],[(sh+yc)/2,s*.3,.02],[yc,0,.02],[(wy+yc)/2,-s*.3,.022],[wy+.02,-s*.6,.02]],.009,mdSh(lt,.55)));
-    cgShell(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,m=>a181Nz(0x2e2a30,m,.3,16));
+    fk_shell(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,null,{vcol:fk_nz(0x2e2a30,.2,9)});
     // boots with a turned-down cuff
-    const bt0=J.rh1[1]-.08;cgShell(B,M,m=>m.part=='foot'||(m.part=='leg'&&m.y<bt0),.02,m=>m.part=='foot'&&m.y<.025?0x1e1610:a181Nz(bt,m,.3,16));
-    cgShell(B,M,m=>m.part=='leg'&&m.y<bt0+.005&&m.y>bt0-.04,.032,m=>a181Nz(0x4a3020,m,.25,16),{rim:.5});
+    const bt0=J.rh1[1]-.08;fk_shell(B,M,m=>m.part=='foot'||(m.part=='leg'&&m.y<bt0),.02,m=>m.part=='foot'&&m.y<.025?0x1e1610:null,{vcol:fk_nz(bt,.18,9)});
+    fk_shell(B,M,m=>m.part=='leg'&&m.y<bt0+.005&&m.y>bt0-.04,.032,null,{rim:.5,vcol:fk_nz(0x4a3020,.15,9)});
     // the hood, and the black cloth mask over the mouth and nose
-    cgHood(B,k,M,S,{col:m=>a181Nz(0x2a2a30,m,.3,16),off:.016,drape:.08});const my=S.hp(0,1.612,0)[1];
-    cgShell(B,M,m=>m.part=='head'&&m.s>-.2&&m.y<my,.012,m=>m.y>my-.006*S.hs?0x2c2c32:a181Nz(0x1c1c20,m,.25,20),{rim:.1});
+    cgHood(B,k,M,S,{vcol:fk_nz(0x2a2a30,.2,9),off:.016,drape:.08});const my=S.hp(0,1.612,0)[1];
+    fk_shell(B,M,m=>m.part=='head'&&m.s>-.2&&m.y<my,.012,m=>m.y>my-.006*S.hs?0x2c2c32:null,{rim:.1,vcol:fk_nz(0x1c1c20,.15,9)});
     // a red sash, its knot and two tails on the left hip; daggers at both hips
-    f6_belt(B,M,wy-.01,.026,.028,m=>a181Nz(red,m,.25,20),.014);const kn=cgSurf(M,S,wy-.012,-.9,.03);k.p('pelvis','sph','c',mdSh(red,.85),kn[0],kn[1],kn[2],.02,.018,.014);
+    f6_belt(B,M,wy-.01,.026,.028,m=>a181Nz(red,m,.1,9),.014);const kn=cgSurf(M,S,wy-.012,-.9,.03);k.p('pelvis','sph','c',mdSh(red,.85),kn[0],kn[1],kn[2],.02,.018,.014);
     [0,1].forEach(i=>k.L('pelvis','c',i?mdSh(red,.8):red,[kn[0],kn[1]-.008,kn[2]],[kn[0]-.012+i*.02,kn[1]-.11+i*.02,kn[2]+.012],.012,.008,4));
     [-1,1].forEach(s=>{const p=cgSurf(M,S,wy-.02,s*1.2,.03);k.L('pelvis','m',0x8a8a92,p,add3(p,[s*.01,-.14,.02]),.008,.002,4)});
-    f6_cape(B,S,{len:J.lh1[1]+.06,w:.9,col:0x2a1c1e,ins:0x160e10,hem:0x4a1a1a,rag:.35})})})();
+    f6_cape(B,S,{len:J.lh1[1]+.06,w:.9,col:0x2a1c1e,ins:0x160e10,hem:0x4a1a1a,rag:.35,seg:16})})})();
 // ---------------- Brigand Captain: a light-grey mail hauberk with short sleeves and a skirt, a red tabard, a nasal helm with cheek guards, a beard,
 // round pauldrons (spiked on the left), leather bracers, brown leather legs, boots with white fur cuffs, a short cape ----------------
-(function(){const S=cgHuman(HUM181({h:.84,w:1.08,d:1.06,at:1.2,lt:1.12})),K={sk:0x9a7258,fist:s=>s>0},ml=0x80828a,ml2=0x74767e,tb=0x6a1e18,tb2=0x3a0e0a,ir=0x6a6c72,ir2=0x4a4e56,T=S.torso,J=S.J;
+(function(){const S=fk_body(HUM181({h:.84,w:1.08,d:1.06,at:1.2,lt:1.12})),K={sk:0x9a7258,fist:s=>s>0},ml=0x80828a,ml2=0x74767e,tb=0x6a1e18,tb2=0x3a0e0a,ir=0x6a6c72,ir2=0x4a4e56,T=S.torso,J=S.J;
   f6_reg('brigand',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0],kn=J.rh1[1];
     // the hauberk: chest and back, short sleeves to above the elbow, and its skirt to mid-thigh with a darker hem
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04)||(m.part=='arm'&&m.y>J.aR1[1]+.04),.016,m=>a181Nz(Math.round(m.y*60)%2?ml:ml2,m,.12,20),{t:'m'});
-    cgSkirt(B,S,wy-.02,kn+.13,.05,.03,m=>m.y<kn+.17?mdSh(ml,.7):Math.round(m.y*60)%2?ml:ml2,{n:5,t:'m'});
+    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR1[1]+.04),.016,m=>a181Nz(Math.round(m.y*60)%2?ml:ml2,m,.12,20),{t:'m'});   /* (refine) and a mail collar round the neck */
+    cgSkirt(B,S,wy-.02,kn+.13,.05,.03,m=>m.y<kn+.17?mdSh(ml,.7):Math.round(m.y*60)%2?ml:ml2,{n:4,t:'m',seg:16});
     // the tabard: front and back panels over the hauberk, hanging to the knees
-    cgShell(B,M,m=>m.part=='torso'&&Math.abs(m.x)<.1&&Math.abs(m.s)>.5&&m.y<sh-.02&&m.y>wy-.04,.03,m=>a181Nz(tb,m,.2,16),{rim:.3});
-    cgSkirt(B,S,wy-.02,kn+.04,.05,.05,m=>m.y<kn+.07?tb2:a181Nz(tb,m,.2,16),{n:5,keep:m=>Math.abs(m.c)<.38});f6_belt(B,M,wy-.01,.026,.042,0x2a1a10,.03);
+    // (refine) the tabard's edges trimmed in dark red (paint)
+    fk_shell(B,M,m=>m.part=='torso'&&Math.abs(m.x)<.1&&Math.abs(m.s)>.5&&m.y<sh-.02&&m.y>wy-.04,.03,m=>Math.abs(m.x)>.072?tb2:null,{rim:.3,vcol:fk_nz(tb,.15,9)});
+    cgSkirt(B,S,wy-.02,kn+.04,.05,.05,m=>m.y<kn+.07?tb2:a181Nz(tb,m,.1,8),{n:4,seg:16,keep:m=>Math.abs(m.c)<.38});f6_belt(B,M,wy-.01,.026,.042,0x2a1a10,.03);
     // the helm: a dome with a brow band, cheek guards down the sides of the face, a nasal bar
     const hb=m=>(m.y-S.nb)/S.hs+1.52;cgShell(B,M,m=>m.part=='head'&&(hb(m)>1.655||(Math.abs(m.x)>.046*S.hs&&m.s>-.35&&m.s<.8&&hb(m)>1.585)),.026,m=>Math.abs(hb(m)-1.662)<.007?ir:a181Nz(ir2,m,.15,20),{t:'m',rim:.4});
     const np=S.hp(0,1.64,0),nr=cgRay(M,[0,np[1],np[2]+.5],[0,0,-1],{head:1});if(nr)k.p('head','box','m',ir,0,np[1]-.012,nr[2]+.026,.022,.07,.012);
     cgFur(B,M,m=>m.part=='head'&&m.s>-.2&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-S.hp(0,1.557,0)[1])<.008*S.hs),{off:.01,len:.05,col:0x3a2414,col2:0x2a180c,seed:61,jag:.5,lump:[.6,.6]});
     // round pauldrons, the left one spiked
-    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A];k.p(A,'hem','m',ir,a[0]+s*.03,a[1]+.03,a[2],.115,.09,.12,0,0,s*.4);k.p(A,'tor','m',ir2,a[0]+s*.03,a[1]+.026,a[2],.115,.012,.12,0,0,s*.4);
+    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A];k.p(A,'hem','m',ir,a[0]+s*.03,a[1]+.03,a[2],.115,.09,.12,0,0,s*.4);
       if(s<0)for(let i=0;i<2;i++)k.L(A,'m',0x9a9ea6,[a[0]-.06-i*.03,a[1]+.07,a[2]-.02+i*.04],[a[0]-.1-i*.03,a[1]+.16,a[2]-.02+i*.04],.018,.002,5)});
     // leather bracers, brown leather legs, boots with white fur cuffs
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.07&&m.y>J[A+'2'][1]+.01,.012,m=>Math.round(m.y*50)%2?0x4a3020:0x3a2618)});
-    cgShell(B,M,m=>(m.part=='leg'&&m.y>kn-.08)||(m.part=='torso'&&m.y<J.lh0[1]-.06),.01,m=>a181Nz(0x4a3426,m,.3,16));
-    [-1,1].forEach(s=>{cgShell(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<kn-.06))&&Math.sign(m.x)==s,.022,m=>m.part=='foot'&&m.y<.025?0x1e1610:a181Nz(0x4a3220,m,.3,16));
+    fk_shell(B,M,m=>(m.part=='leg'&&m.y>kn-.08)||(m.part=='torso'&&m.y<J.lh0[1]-.06),.01,null,{vcol:fk_nz(0x4a3426,.2,9)});
+    [-1,1].forEach(s=>{fk_shell(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<kn-.06))&&Math.sign(m.x)==s,.022,m=>m.part=='foot'&&m.y<.025?0x1e1610:null,{vcol:fk_nz(0x4a3220,.18,9)});
       cgFur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&Math.abs(m.y-(kn-.075))<.028,{off:.032,len:.045,col:0xd8ccb0,col2:0xb4a88c,seed:62+s,jag:.5,lump:[.8,.4]})});
-    f6_cape(B,S,{len:J.lh1[1]+.12,w:1.0,col:0x4a1410,ins:0x200806,rag:.5})})})();
+    f6_cape(B,S,{len:J.lh1[1]+.12,w:1.0,col:0x4a1410,ins:0x200806,rag:.5,seg:12})})})();
 // ---------------- Ember Cultist: a deep red hood with horns, a face lost in shadow (only the eyes burn), a long robe, a glowing sigil ----------------
-(function(){const S=cgHuman(HUM181({h:.9,w:.96,at:.95})),K={sk:0x140c0a,hand:0x8a6a56,fist:s=>s>0},rb=0x4a100c,rb2=0x2a0806,T=S.torso,J=S.J;
+(function(){const S=fk_body(HUM181({h:.9,w:.96,at:.95})),K={sk:0x140c0a,hand:0x8a6a56,fist:s=>s>0},rb=0x4a100c,rb2=0x2a0806,T=S.torso,J=S.J;
   f6_reg('cultist',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{glow:0xff6a20,ears:false}),wy=T[2][0];
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,m=>a181Nz(rb,m,.3,14));cgSkirt(B,S,wy-.01,.03,.14,.024,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,m,.25,12),{n:7});
-    cgHood(B,k,M,S,{col:m=>a181Nz(0x380a08,m,.3,16),off:.022,drape:.12,peak:0x380a08,ph:.06});
+    fk_shell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,null,{vcol:fk_nz(rb,.2,9)});cgSkirt(B,S,wy-.01,.03,.14,.024,m=>mdMix(a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,m,.1,6),0x0c0404,Math.max(0,Math.min(.85,(.32-m.y)*3))),{n:6,seg:16});   /* (refine) the hem charred black */
+    cgHood(B,k,M,S,{vcol:fk_nz(0x380a08,.2,9),off:.022,drape:.12,peak:0x380a08,ph:.06});
     [-1,1].forEach(s=>{const t=S.hp(s*.06,1.7,-.01);let p=t;[[s*.05,.06,-.02],[s*.03,.06,-.04],[0,.05,-.05]].forEach((d,j)=>{const n=add3(p,mul3(d,S.hs));k.L('head','c',0x2a2420,p,n,(.022-j*.006)*S.hs,(.016-j*.006)*S.hs,5);p=n})});
     // the sigil: a burning diamond on the breast, set into the robe (it touches the robe's surface, so it is not seated in the skin)
     f6_belt(B,M,wy-.01,.024,.03,0x1e0806,.016);const g=cgSurf(M,S,J.chest[1]+.03,0,.016),n0=k.P.length;k.p('chest','oct','g',0xff6a20,g[0],g[1],g[2]+.003,.032,.05,.01);k.p('chest','oct','c',0x1e0806,g[0],g[1],g[2]-.001,.044,.066,.01);
     for(let i=n0;i<k.P.length;i++)k.P[i].noSeat=1})})();
 // ---------------- Hollow Knight: black plate, a great helm with a glowing red visor slit and breathing holes, bone horns, a dark cape ----------------
-(function(){const S=cgHuman(HUM181({h:.9,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],at:1.32,lt:1.28,hs:.96,nw:1.25,foot:1.05,footW:1.1})),T=S.torso,J=S.J;
+(function(){const S=fk_body(HUM181({h:.9,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],at:1.32,lt:1.28,hs:.96,nw:1.25,foot:1.05,footW:1.1}),[0,4,6,8,10,12,14]),T=S.torso,J=S.J;   /* (refine) a plain helm: fewer head rings (the head is all helm) */
   const pal={pl:0x24262c,pl2:0x34363e,ed:0x4a4c56,gd:0x5a5e68,ml:0x2a2a30,belt:0x141418};
-  f6_reg('knight',S,function(B,P,k,C){const M=C.M;C.f6skin=0x161618;cgPlate(B,k,M,S,pal);
+  f6_reg('knight',S,function(B,P,k,C){const M=C.M;C.f6skin=0x161618;fk_shade(M,S,{cav:1.2});cgPlate(B,k,M,S,pal);
     // the great helm: the visor slit is part of the helm's own surface, burning red (the glow layer); a band of lighter steel
     // above it, and breathing holes punched in the right cheek plate
     const hb=m=>(m.y-S.nb)/S.hs+1.52,bx=m=>m.x/S.hs,slit=m=>m.s>.42&&Math.abs(hb(m)-1.629)<.0115&&Math.abs(bx(m))<.072;
     const holes=m=>m.s>.45&&[[.03,1.585],[.045,1.585],[.03,1.571],[.045,1.571],[.06,1.578]].some(([x,y])=>Math.abs(bx(m)-x)<.0055&&Math.abs(hb(m)-y)<.0045);
     cgShell(B,M,m=>m.part=='head'&&!slit(m),.03,m=>{if(holes(m))return 0x050404;const y=hb(m);if(m.s>.3&&(Math.abs(y-1.629)<.017))return 0x0e0e10;if(Math.abs(y-1.664)<.007)return pal.gd;return y>1.7&&Math.abs(bx(m))<.03?pal.pl2:pal.pl},{t:'m',rim:1});
     cgShell(B,M,m=>m.part=='head'&&slit(m),.03,m=>Math.abs(hb(m)-1.629)<.006?0xff3a20:0xd01a10,{t:'g',rim:1});
+    C.f6hide=[m=>m.part=='head'];   /* (refine) the helm and the slit cover the whole head: its skin is not drawn */
     [-1,1].forEach(s=>{const q=S.hp(s*.09,1.69,-.01);let p=q;[[s*.04,.05,-.02],[s*.02,.06,-.04],[-s*.005,.05,-.05]].forEach((d,j)=>{const n=add3(p,d);k.L('head','c',0x8a8270,p,n,.026-j*.007,.019-j*.007,5);p=n})});
-    cgCape(B,S,{len:J.lh1[1]-.05,w:1.2,col:0x18141e,ins:0x0c0a10,trim:0x2a1e30,rag:.6})})})();
+    f6_cape(B,S,{len:J.lh1[1]-.05,w:1.2,col:0x18141e,ins:0x0c0a10,trim:0x2a1e30,rag:.6,seg:12})})})();
 ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
 // ---------------- Zealot of the Endless One: a bronze hood draped on the shoulders, a dark mask over the lower face, a patch with a red lens over
 // one eye, a crest of five viper spines and three plumes, a bare scarred torso, a rust kilt, a dagger sheath on the hip, wrapped forearms and shins, bone charms ----------------
-(function(){const S=cgHuman(HUM181({h:.8,w:.96,d:.95,at:1.0,lt:.98})),K={sk:0x664a38,fist:s=>s>0},rust=0x4a1a0e,rust2=0x30100a,wrap=0x6a5e48,bronze=0x4e3e24,T=S.torso,J=S.J;
-  f6_reg('ss165zealot',S,function(B,P,k,C){const sc=mdSh(K.sk,.65),M=cgHumanBody(B,k,C,S,K,{ears:false,paint:m=>{if(m.part!='torso')return null;const a=Math.atan2(m.x,m.z),w=Math.sin(a*2+m.y*13);return Math.abs(w)<.09&&m.y>T[2][0]&&m.y<T[6][0]-.02?sc:null}}),wy=T[2][0];
+(function(){const S=fk_body(HUM181({h:.8,w:.96,d:.95,at:1.0,lt:.98})),K={sk:0x664a38,fist:s=>s>0},rust=0x4a1a0e,rust2=0x30100a,wrap=0x6a5e48,bronze=0x4e3e24,T=S.torso,J=S.J;
+  f6_reg('ss165zealot',S,function(B,P,k,C){const sc=mdSh(K.sk,.65),M=cgHumanBody(B,k,C,S,K,{ears:false,vpaint:(m,c)=>{if(m.part!='torso')return c;const a=Math.atan2(m.x,m.z),w=Math.sin(a*2+m.y*13),e=Math.min(1,Math.max(0,(m.y-T[2][0])*25),Math.max(0,(T[6][0]-.02-m.y)*25));
+      return mdMix(c,sc,Math.max(0,1-Math.abs(w)/.14)*e*.9)}}),wy=T[2][0];   /* (refine) the serpent scars drawn soft, flowing over the skin, not stepped face by face */
     const hb=m=>(m.y-S.nb)/S.hs+1.52;
-    cgHood(B,k,M,S,{col:m=>a181Nz(m.part=='torso'&&m.y<T[6][0]-.04?mdSh(bronze,.82):bronze,m,.25,16),off:.02,drape:.1,arm:.06});
+    cgHood(B,k,M,S,{vcol:m=>a181Nz(m.part=='torso'&&m.y<T[6][0]-.04?mdSh(bronze,.82):bronze,m,.18,9),off:.02,drape:.1,arm:.06});
     // the mask over the mouth and nose, edged in rust
-    cgShell(B,M,m=>m.part=='head'&&m.s>.1&&hb(m)<1.611,.012,m=>hb(m)>1.604?rust2:a181Nz(mdSh(bronze,.55),m,.2,20),{rim:.1});
+    fk_shell(B,M,m=>m.part=='head'&&m.s>.1&&hb(m)<1.611,.012,m=>hb(m)>1.604?rust2:null,{rim:.1,vcol:fk_nz(mdSh(bronze,.55),.15,9)});
     // the eye patch over the left eye: a dark plate, a ring, a red glass lens
     const e=S.hp(.036,1.629,0),ep=cgRay(M,[e[0],e[1],e[2]+.4],[0,0,-1],{head:1});
     if(ep){k.p('head','box','c',0x14100c,ep[0],ep[1],ep[2]+.001,.034*S.hs,.03*S.hs,.012);k.p('head','ring','m',0x6a5a3a,ep[0],ep[1],ep[2]+.006,.016*S.hs,.12,.016*S.hs,Math.PI/2);k.p('head','cyl','g',0xc03020,ep[0],ep[1],ep[2]+.006,.009,.006,.009,Math.PI/2)}
@@ -56949,19 +57557,19 @@ ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
       if(p)k.p('head','cone4','c',rust2,p[0],p[1]+Math.cos(a)*.03,p[2]+Math.sin(a)*.03,.014,.05-Math.abs(i-1.5)*.006,.02,a)}
     for(let i=n0;i<k.P.length;i++)k.P[i].noSeat=1;
     for(let i=0;i<3;i++){const t=S.hp(-.04,1.69,-.06);k.L('head','c',i==1?0xe8e0d0:rust2,t,S.hp(-.09-i*.02,1.76-i*.02,-.15),.012,.002,4)}
-    cgSkirt(B,S,wy-.02,J.rh1[1]+.06,.04,.02,m=>Math.round(Math.atan2(m.c,m.s)*8)%2?rust:rust2,{n:5});f6_belt(B,M,wy-.01,.024,.024,0x2a1a10,0);
+    cgSkirt(B,S,wy-.02,J.rh1[1]+.06,.04,.02,m=>Math.round(Math.atan2(m.c,m.s)*8)%2?rust:rust2,{n:5,seg:16});f6_belt(B,M,wy-.01,.024,.024,0x2a1a10,0);
     // the curved dagger's sheath on the right hip
     const sp=cgSurf(M,S,J.lh0[1]-.03,-1.5,.03);k.p('pelvis','box','c',0x2a1a10,sp[0]-.006,sp[1]-.05,sp[2]+.01,.03,.15,.045,0,0,.25);k.p('pelvis','box','m',0x6a5a3a,sp[0]-.004,sp[1]+.02,sp[2]+.01,.034,.016,.05,0,0,.25);
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.02&&m.y>J[A+'2'][1],.008,m=>Math.round(m.y*60)%2?wrap:mdSh(wrap,.8));
       cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<J[L+'1'][1]-.02&&m.y>J[L+'2'][1]+.02,.008,m=>Math.round(m.y*50)%2?wrap:mdSh(wrap,.8));cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.012,0x3a2618)});
-    for(let i=0;i<7;i++){const p=cgSurf(M,S,T[6][0]-.03-Math.abs(i-3)*.014,(i-3)*.24,.008);k.p('chest',i%2?'cone4':'sph','c',i%2?0xe0d4b4:0x6a2412,p[0],p[1]-.012,p[2],.012,i%2?.04:.012,.01,Math.PI)}})})();
+    for(let i=0;i<7;i++){const p=cgSurf(M,S,T[6][0]-.03-Math.abs(i-3)*.014,(i-3)*.24,.008);k.p('chest',i%2?'cone4':'oct','c',i%2?0xe0d4b4:0x6a2412,p[0],p[1]-.012,p[2],.012,i%2?.04:.012,.01,Math.PI)}})})();
 // ---------------- Salt Caller: a salt-crusted sand robe, a tall blood-red cowl, glowing salt crystals through the shoulders and down the spine ----------------
-(function(){const S=cgHuman(HUM181({h:.9,w:.96,at:.95})),K={sk:0x7a6450,fist:s=>s>0},robe=0x6e6248,robe2=0x5e5238,red=0x4a100c,salt=0xe8e4dc,gl=0x40e0c0,T=S.torso,J=S.J;
+(function(){const S=fk_body(HUM181({h:.9,w:.96,at:.95})),K={sk:0x7a6450,fist:s=>s>0},robe=0x6e6248,robe2=0x5e5238,red=0x4a100c,salt=0xe8e4dc,gl=0x40e0c0,T=S.torso,J=S.J;
   f6_reg('ss165caller',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{glow:gl,ears:false}),wy=T[2][0];
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,m=>a181Nz(robe,m,.3,14));
-    cgSkirt(B,S,wy-.01,.04,.13,.024,m=>m.y<.1?mdMix(salt,0xc8c0b0,.5):m.y<.14?mdMix(robe,salt,.45):a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?robe:robe2,m,.25,12),{n:7});
+    fk_shell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,null,{vcol:fk_nz(robe,.2,9)});
+    cgSkirt(B,S,wy-.01,.04,.13,.024,m=>mdMix(a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?robe:robe2,m,.1,6),mdMix(salt,0xc8c0b0,.4),Math.max(0,Math.min(1,(.3-m.y)*4.5)))   /* (refine) salt crust creeping up from the hem */,{n:6,seg:16});
     cgFur(B,M,m=>m.part=='arm'&&Math.abs(m.y-(J.aR2[1]+.06))<.02,{off:.024,len:.04,col:salt,col2:0xc8c0b0,seed:71,jag:.5,lump:[.8,.4]});
-    cgHood(B,k,M,S,{col:m=>a181Nz(red,m,.3,16),off:.022,drape:.1,peak:0x3a0c08,ph:.15});
+    cgHood(B,k,M,S,{vcol:fk_nz(red,.2,9),off:.022,drape:.1,peak:0x3a0c08,ph:.15});
     [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A];for(let i=0;i<3;i++){const x=a[0]+s*(i*.025),z=a[2]-.02+i*.02,p=cgRay(M,[x,a[1]+.5,z],[0,-1,0],{arm:1,torso:1});if(p)k.p(A,'oct',i?'c':'g',i?salt:gl,p[0],p[1]+.02,p[2],.022-i*.004,.06-i*.012,.022-i*.004,0,0,s*(.4+i*.25))}});   /* grown out of the shoulder's skin */
     // salt crystals breaking through the robe down the spine, leaning out of the back
     for(let i=0;i<4;i++){const y=T[6][0]-.05-i*.075*S.h,p=cgSurf(M,S,y,Math.PI,.01);k.p('chest','oct','c',i%2?0xd8d2c6:salt,p[0],p[1],p[2]-.004,.02-i*.002,.055-i*.005,.02-i*.002,-.55)}
@@ -57014,134 +57622,306 @@ function b7_Spine(k,M,S,y0,n,dy,len,col,col2,r){for(let i=0;i<n;i++){const y=y0-
 // a forearm frame: elbow, wrist, the hand's down direction, outward and forward axes
 function b7_Arm(S,s){const A=s<0?'aL':'aR',a1=S.J[A+'1'],a2=S.J[A+'2'],d=nrm3(sub3(a2,a1)),u=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),f=nrm3(cross3(d,u)),fw=f[2]<0?mul3(f,-1):f;return {A,a1,a2,d,u,f:fw}}
 
+// ---------------- refine helpers (Oct 31 2026, the Amalgam standard) — named br_… ----------------
+// Every brute here now uses the seated-limb cage (n:16 columns, sock: the shoulder socket as tall as the arm, j2: arms and
+// thighs grow out of the body), fewer rings where they don't shape the outline, one hand surface (the arm's rings run on past
+// the wrist into a palm and the fingers grow out of it), baked shading (cgShade) and smooth hide colour (vcol).
+const BR_LEG=CG181.base.leg.filter((q,i)=>i!=2&&i!=6),BR_LEG5=BR_LEG.filter((q,i)=>i!=4);   // hip pair (j2), knee pair, calf, ankle (LEG5: no calf ring, for legs in boots or a robe)
+// a head ring list from the base head rings idx; m(i) → [x, front, back, dz] scales each ring (a jutting jaw, a flaring throat…)
+function br_Head(idx,m){const H=CG181.base.head;return idx.map((j,i)=>{const q=H[j],f=m&&m(i);return f?[q[0],q[1]*f[0],q[2]*f[1],q[3]*f[2],(q[4]||0)+(f[3]||0)]:q.slice()})}
+// the jaw's angle pushed out (facePush) on the rings of a custom head list whose base height lies in y0..y1
+function br_Jaw(list,amt,y0,y1){return (i,j,a)=>{const y=list[i][0],ca=Math.cos(a),sa=Math.sin(a);return y>=y0&&y<=y1&&sa>-.2&&Math.abs(ca)>.5?amt:0}}
+// arm rings: the shoulder pair (j2 grows them out of the socket), biceps, the elbow pair, forearm, wrist, then the palm (t>2:
+// flat, wide front to back) whose end the fingers grow from. o: bi (biceps), big (forearm), pw (palm size), pl (palm length)
+function br_Arm(o){o=o||{};const bi=o.bi||1,b=o.big||1,pw=o.pw||1,pl=o.pl||1;
+  return (o.noFore?a=>a.filter(q=>q.t!=1.25):a=>a)([{t:.06,r:.05,o:.012},{t:.32,r:.042},{t:.62,r:.039*bi,rf:.043*bi},{t:.97,r:.034,rb:.04},{t:1.25,r:.037*b,rf:.04*b},{t:1.94,r:.024,rf:.027},
+    {t:2+.1*pl,r:.019*pw,rf:.033*pw,rb:.03*pw},{t:2+.24*pl,r:.018*pw,rf:.036*pw,rb:.032*pw},{t:2+.34*pl,r:.014*pw,rf:.03*pw,rb:.026*pw}])}
+// fingers grown from the palm's end: rounded tapering lofts in the hand's colour, rooted inside the palm (no ball, no sticks).
+// Open hands curl a little toward the palm (claws: a dark pointed tip); a fist folds the fingers back under the palm round the
+// grip, the thumb across them. o: {col, claw, n, len, r, te (the palm's last ring t), hw (half the palm's width), fist, cl
+// (claw length), tc (fn(ring index, ring count) → colour: whole talons), thumb (false = none)}
+function br_Fingers(B,S,s,o){const F=b7_Arm(S,s),A=F.A,W=[[A+'2',1]],d=F.d,u=F.u,f=F.f,n=o.n||4,L=o.len||.07,r=o.r||.011,hw=o.hw||.03,
+    h=add3(F.a2,mul3(d,((o.te||2.34)-2)*.2-.012)),cl=o.cl||0;
+  const path=o.fist?[[0,0,1],[.42,.06,.98],[.64,.34,.92],[.54,.66,.84],[.3,.8,.74]]:[[0,0,1],[.4,.04,.95],[.75,.15+(o.curl||0)*.1,.85],[1,.32+(o.curl||0)*.3,.66]];
+  if(o.fist)br_Mitten(B,F,W,h,L,r,hw,o.col);else for(let i=0;i<n;i++){const t0=n>1?i/(n-1):.5,off=(t0*2-1)*hw,lf=L*(n>3?[.86,1,.96,.8][i]:n==3?[.9,1,.9][i]:1),P=(t,cu)=>add3(add3(h,mul3(d,t*lf)),add3(mul3(f,off*(1+t*(o.fist?.1:(o.fan==null?.45:o.fan)))),mul3(u,-cu*lf)));
+    const R=path.map(([t,cu,k])=>({p:P(t,cu),rx:r*k,f:r*k*.9,b:r*k*.9,w:W}));
+    if(cl&&!o.fist){const a=R[R.length-1].p,b=R[R.length-2].p,dd=nrm3(sub3(a,b)),e=add3(add3(a,mul3(dd,cl*.7)),mul3(u,-cl*.6));R.push({p:lerp3(a,e,.45),rx:r*.5,f:r*.45,b:r*.45,w:W,cc:1},{p:e,rx:.002,f:.002,b:.002,w:W,cc:1})}
+    const nR=R.length;mdLoft(B,R,{seg:o.fist?6:5,ref:u,capB:true,col:m=>o.tc?o.tc(m.i,nR):cl&&m.i>nR-2.6?(o.claw==null?0x1a1414:o.claw):(i==1||i==2?o.col:mdSh(o.col,.94))})}
+  if(o.thumb===false)return;
+  // (a fist's thumb folds straight down the palm side and across the front of the curled fingers, lying on them)
+  const T0=add3(add3(F.a2,mul3(d,.04)),add3(mul3(f,hw*.85),mul3(u,-.012))),T1=add3(T0,o.fist?add3(add3(mul3(d,.024),mul3(f,.004)),mul3(u,-.03)):add3(add3(mul3(d,.03),mul3(f,.018)),mul3(u,-.016))),
+    T2=add3(T1,o.fist?add3(add3(mul3(d,.008),mul3(f,-.022)),mul3(u,-.022)):add3(add3(mul3(d,.028),mul3(f,.004)),mul3(u,-.018)));
+  const TR=[{p:T0,rx:r*1.15,f:r,b:r,w:W},{p:T1,rx:r*1.05,f:r*.95,b:r*.95,w:W},{p:T2,rx:r*.8,f:r*.75,b:r*.75,w:W}];
+  if(cl&&!o.fist)TR.push({p:add3(T2,add3(mul3(nrm3(sub3(T2,T1)),cl*.6),mul3(u,-cl*.3))),rx:.002,f:.002,b:.002,w:W});
+  mdLoft(B,TR,{seg:5,ref:u,capB:true,col:m=>o.tc?o.tc(m.i+1,TR.length+1):cl&&!o.fist&&m.i>1.4?(o.claw==null?0x1a1414:o.claw):mdSh(o.col,.96)})}
+// a closed fist as ONE rounded mitten mass curling from the palm's end back under it round the grip (the fingers don't change a
+// fist's outline): 12 sides, so ring corners fall exactly on the three lines between four fingers, which are painted dark per
+// corner (soft thin lines); a slightly fuller ring over the knuckles; the tip ring closes to a point tucked under the palm
+function br_Mitten(B,F,W,h,L,r,hw,col){const d=F.d,u=F.u,w=mdW(B,W),C0=new THREE.Color(mdC(col)),rgb=k=>[C0.r*k,C0.g*k,C0.b*k],N=12,
+    P=[[0,0,1,1],[.3,.05,1.04,1.5],[.46,.3,1.04,1.7],[.4,.58,.98,1.6],[.22,.72,.92,1.4],[.1,.72,.3,.4]],T=r*1.6;
+  const pts=P.map(([t,cu])=>add3(add3(h,mul3(d,t*L)),mul3(u,-cu*L-(cu>0?T*.15:0)))),rows=pts.map((c,i)=>{const tg=nrm3(sub3(pts[Math.min(i+1,pts.length-1)],pts[Math.max(i-1,0)])),
+      n=nrm3(sub3(u,mul3(tg,u[0]*tg[0]+u[1]*tg[1]+u[2]*tg[2]))),sd=cross3(n,tg),sc=P[i][2],row=[];
+    for(let k=0;k<N;k++){const a=Math.PI/2+k/N*Math.PI*2,x=Math.cos(a),y=Math.sin(a),p=add3(add3(c,mul3(sd,x*(hw+r)*sc)),mul3(n,y*r*P[i][3]));
+      const g=i>=1&&i<=4&&[-.5,0,.5].some(q=>Math.abs(x-q)<.05)?.55:1;row.push({x:p[0],y:p[1],z:p[2],w,rgb:rgb(g*(y<-.3?.9:1))})}return row});
+  for(let i=0;i<rows.length-1;i++)for(let k=0;k<N;k++){const a=rows[i][k],a1=rows[i][(k+1)%N],b2=rows[i+1][k],b3=rows[i+1][(k+1)%N];mdTri(B,'c',a,a1,b2,0);mdTri(B,'c',b2,a1,b3,0)}}
+// toes grown from the front of the foot: rounded lofts, splayed, each ending in a claw that hooks down to the ground
+function br_Toes(B,S,s,o){const l=s<0?'lh2':'rh2',A=S.J[l],F=S.foot,W=[[l,1]],n=o.n||3,L=o.len||.05,r=o.r||.016,cl=o.cl||.03;
+  for(let i=0;i<n;i++){const e=i-(n-1)/2,x=A[0]+s*0+e*(o.sp||.03)*F.w,z=A[2]+(.135-Math.abs(e)*.014)*F.len,dx=e*(o.spl||.3),lf=L*(1-Math.abs(e)*.12),
+      R=[{p:[x,.03*F.h,z],rx:r,f:r*.8,b:r*.8,w:W},{p:[x+dx*lf*.5,.024*F.h,z+lf*.55],rx:r*.9,f:r*.72,b:r*.72,w:W},{p:[x+dx*lf,.018*F.h,z+lf],rx:r*.72,f:r*.6,b:r*.6,w:W}];
+    if(cl)R.push({p:[x+dx*(lf+cl*.6),.012,z+lf+cl*.5],rx:r*.45,f:r*.4,b:r*.4,w:W},{p:[x+dx*(lf+cl),.002,z+lf+cl*.8],rx:.002,f:.002,b:.002,w:W});
+    mdLoft(B,R,{seg:5,ref:[0,1,0],capB:true,col:m=>cl&&m.i>2.4?(o.claw||0x1a1414):o.col})}}
+// a brute's body: face sculpt, extra sculpt, baked shading; skin colour from vcol (smooth), crisp face paint (sockets, lip)
+// and o.paint; eyes, tusks, ears. The body itself is emitted last by br_Emit (after the shells that hide parts of it).
+function br_Brute(k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.sculpt(o.face));if(o.sculpt)o.sculpt(M);
+  M.shade=cgShade(M,Object.assign({cav:1,y0:0,y1:S.hp(0,1.73,0)[1],hk:.26},o.shade||{}));
+  M.b7col=m=>(o.paint&&o.paint(m))||b7_FacePaint(S,m,K.sk,{sock:mdSh(K.sk,.32),mw:o.mw||.032})||null;M.b7hide=[];M.brv=o.skin;
+  cgEyes(k,M,S,K.eye,o.ex||.038,1.629,o.er||.9,-.002);if(o.tusks)br_Tusks(k.B181,M,S,.034,1.552,o.tusks,o.tr||.012);
+  if(o.ears)cgEars(k,M,S,o.earCol||K.sk,1.625,o.ears,o.eu||.3,o.eb||.5,.024);return M}
+function br_Emit(B,M){const H=M.b7hide||[];cgEmit(B,M,M.b7col,{keep:m=>!H.some(f=>f(m)),vcol:M.brv})}
+// big curved tusks from the lower jaw: a loft rooted inside the lip, yellowed at the root, ivory toward the point
+function br_Tusks(B,M,S,x,y,len,r){[-1,1].forEach(s=>{const p=b7_Face(M,S,s*x,y);if(!p)return;const L=len*S.hs,R=r*S.hs,a=[p[0]-s*.002*S.hs,p[1]-.01*S.hs,p[2]-.012*S.hs],
+    P=t=>[p[0]+s*L*(.08+.14*t),p[1]+L*(.92*t-.08),p[2]+L*(.06+.22*t*t)];
+  mdLoft(B,[{p:a,rx:R*1.05,f:R,b:R,w:[['head',1]]},{p:P(.15),rx:R,f:R*.95,b:R*.95,w:[['head',1]]},{p:P(.55),rx:R*.72,f:R*.7,b:R*.7,w:[['head',1]]},{p:P(1),rx:.0015,f:.0015,b:.0015,w:[['head',1]]}],
+    {seg:5,ref:[0,0,1],col:m=>m.i<1?0xa89a6c:m.i<1.8?0xd0c4a0:0xece4cc})})}
+// the hair cap of cgHair, but drawn instead of the skin under it (no doubled faces)
+function br_Hair(B,M,S,o){const line=o.line||1.672,nape=S.hp(0,o.nape||1.56,0)[1];
+  b7_Sh(B,M,m=>{if(m.part!='head'&&!(o.neck&&m.part=='neck'&&m.s<-.2))return false;const by=(m.y-S.nb)/S.hs+1.52,bx=m.x/S.hs;if(m.y<nape)return false;
+    return m.s<(o.side==null?.1:o.side)||by>line+(Math.abs(bx)>.05?-.004:0)},v=>(o.thick||.016)*Math.min(1,Math.max(.35,(v[1]-nape)/(.12*S.hs))),o.col)}
+// cgFur with the fur's colour flowing smoothly corner to corner (vcol) instead of a per-face noise (no "pixel camouflage"); the
+// darker strand grooves stay crisp. Same shell, clumps and costs as cgFur.
+function br_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0;
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
+  const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  const groove=v=>n3Sn(v[0]*1.4,v[1]*.35,v[2]*1.4,22,seed)<.42,col=m=>o.col2!=null&&groove([m.x,m.y,m.z])?o.col2:null;
+  cgEmit(B,M,col,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol:m=>mdSh(o.col,.84+.24*n3Sn(m.x*1.4,m.y*.5,m.z*1.4,16,seed))});
+  // clumps along the lower edge: the rim is walked as loops and cut into runs of 2–4 edges; each run hangs as one wide, solid
+  // clump (outer and inner faces fanned to its tip, closed at its two ends), uneven in length
+  const W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;w=[si,sw];W.set(i,w);return w};
+  const vx=(p,i)=>({x:p[0],y:p[1],z:p[2],w:wOf(i)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
+  low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
+    for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,2+Math.floor(a181H(ci,seed,7)*3)),run=loop.slice(i,i+n+1);i+=n;ci++;
+      const h=a181H(ci,seed,3),L=o.len*(1-(o.jag==null?.6:o.jag)*h),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],c=mdC(h<.25&&o.col2!=null?o.col2:mdSh(o.col,.8+a181H(ci,9,seed)*.28)),T=vx(tip,run[Math.floor(run.length/2)]);
+      for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p),T,vx(pos(q),q),c);mdTri(B,t,vx(V[q],q),T,vx(V[p],p),c)}
+      const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f),T,vx(pos(f),f),c);mdTri(B,t,vx(pos(l),l),T,vx(V[l],l),c)}})}
+const br_cl=(v,a,b)=>Math.max(a,Math.min(b,v)),br_ss=(a,b,v)=>{const t=br_cl((v-a)/(b-a),0,1);return t*t*(3-2*t)};
+// smooth hide colour: lighter belly and chest, darker back, darker toward the feet, big soft blotches (no per-face noise)
+function br_Hide(o){return m=>{const n=n3Sn(m.x,m.y,m.z,o.f||5,o.seed||3),n2=n3Sn(m.x,m.y,m.z,(o.f||5)*2.6,(o.seed||3)+4);let c=o.base;
+  if(o.belly!=null&&m.part=='torso')c=mdMix(c,o.belly,br_cl(m.nz*1.2-.1,0,1)*(o.bk||.5));
+  if(o.back!=null)c=mdMix(c,o.back,br_cl(-m.nz*1.1-.05,0,1)*(o.dk||.45));
+  if(o.blot!=null)c=mdMix(c,o.blot,br_ss(.52,.78,n)*(o.bl||.45));
+  c=mdSh(c,.94+.1*n2);return o.post?o.post(m,c,n):c}}
+
 // ---------------- Orc Raider ----------------
 // stocky and broad: a big green brawler with a black topknot, red eyes, big tusks, spiked pauldrons, crossed straps, a
 // loincloth over leather trousers, leather bracers, a bone necklace and pelt boots with white fur cuffs
-(function(){const S=cgHuman({h:.9,w:1.26,d:1.18,rw:[1.06,1.12,1.1,1.2,1.3,1.32,1.4,1.48],rf:[1,1.06,1.2,1.28,1.32,1.22,1.14,1.12],at:1.6,lt:1.45,hs:1.08,hw:1.14,hd:1.04,legL:.84,armL:.98,nw:1.55,foot:1.08,footW:1.3,facePush:BRUTEJAW}),
-    K={sk:0x56643e,eye:0xff3a1a,fist:s=>s>0},lt=0x3a2618,pants=0x4a3a2a,T=S.torso,J=S.J;
-  cg181Reg('orc',S,function(B,P,k,C){const wy=T[2][0],sh=T[6][0],hy=T[1][0],kn=J.rh1[1];
-    const M=cgBruteBody(B,k,C,S,K,{tusks:.048,tr:.017,ears:.06,boots:1,er:1.15,face:b7_FaceHuman({nose:1.3,nw:1.6,brow:2.2,chin:1.5,cheek:1.4}),
+// (refine, Oct 31 2026) heavier and more ape-like than a man: a bull neck running straight into a jutting jaw, a low skull under
+// a heavy brow, sloping trapezius, a deep chest over a gut, long thick arms and short legs; a war-paint band across the eyes
+(function(){const HD=br_Head([0,1,2,4,6,8,10,12,14],i=>[[1.55,1.2,1.62,.016],[1.36,1.28,1.42,.016],[1.24,1.26,1.26,.012],[1.12,1.14,1.1,.006],[1.04,1.03,1.04,0],[1,1,1,0],[.97,.98,1,0],[.93,.94,.97,0],[.88,.88,.9,0]][i]);
+  const S=cgHuman({h:.9,w:1.3,d:1.2,rw:[1.06,1.12,1.1,1.22,1.34,1.38,1.46,1.62],rf:[1,1.08,1.26,1.3,1.32,1.22,1.12,1.1],rb:[1,1.08,1.1,1.2,1.3,1.36,1.46,1.62],at:1.7,lt:1.5,hs:1.06,hw:1.14,hd:1.06,hy:.94,legL:.8,armL:1.1,nw:1.95,neckL:-.02,foot:1.08,footW:1.3,
+      n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.1,big:1.12,pw:1.15}),leg:BR_LEG5,facePush:br_Jaw(HD,.016,1.525,1.58)}),
+    K={sk:0x56643e,eye:0xff3a1a},lt=0x3a2618,pants=0x4a3a2a,T=S.torso,J=S.J;
+  cg181Reg('orc',S,function(B,P,k,C){const wy=T[2][0],sh=T[6][0],hy=T[1][0],kn=J.rh1[1],ch=J.chest[1],WS=p=>{k.P[k.P.length-1].w=cgWAt(C.M,p)};
+    const ey=S.hp(0,1.629,0)[1],hide=br_Hide({base:K.sk,belly:0x74804a,back:0x3c4a2c,blot:0x4a5834,f:4.5,seed:5,post:(m,c)=>{
+      // a band of black war paint across the eyes, ragged at its edges
+      if(m.part=='head'&&m.nz>.15){const w=br_ss(.016*S.hs,.008*S.hs,Math.abs(m.y-ey+.004*Math.sin(m.x*90)));if(w>0)c=mdMix(c,0x161812,w*.85)}
+      if(m.part=='hand'||(m.part=='arm'&&m.y<J.aR2[1]+.02))c=mdMix(c,0x3a4428,.3);return c}});
+    const M=br_Brute(k,C,S,K,{tusks:.05,tr:.018,ears:.06,er:1.15,face:b7_FaceHuman({nose:1.3,nw:1.7,brow:2.6,chin:1.9,cheek:1.4,hollow:.006}),skin:hide,
+      // big pectorals over a gut, a heavy hump of trapezius behind the neck (kept below the base of the head)
+      sculpt:M=>cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]>.2){[-1,1].forEach(s=>d+=.02*cgG(x,y,s*.09,ch+.035,.075,.05));d+=.022*cgG(x,y,0,hy+.07,.12,.07)}
+        if(n[2]<-.2)d+=.03*cgG(x,y,0,sh+.01,.13,.06)*Math.min(1,(-.2-n[2])*2);return d*Math.min(1,Math.abs(n[2])*1.4)}),
       paint:m=>m.part=='leg'||m.part=='foot'||(m.part=='torso'&&m.y<hy)?pants:null});
-    // black hair: a cap over the crown and the back of the head, a topknot tied on the crown, its tail falling down the back
-    cgHair(B,M,S,{col:0x141010,line:1.676,thick:.016,side:.02});
+    // black hair: a cap over the crown and the back of the head, a topknot tied on the crown with a bone ring, its tail down the back
+    br_Hair(B,M,S,{col:m=>a181Nz(0x141010,m,.3,24),line:1.676,thick:.016,side:.02});
     {const p=b7_Top(M,S,0,-.035);if(p){const a=[p[0],p[1]-.01,p[2]],b=[p[0],p[1]+.05*S.hs,p[2]-.02*S.hs];k.L('head','c',0x1e1614,a,b,.024*S.hs,.016*S.hs,6);
-      k.p('head','sph','c',0x141010,b[0],b[1],b[2],.026*S.hs,.022*S.hs,.026*S.hs);
-      const c=[b[0],b[1]+.004,b[2]-.03*S.hs],e=[b[0],b[1]-.08*S.hs,b[2]-.09*S.hs],f=[b[0],b[1]-.17*S.hs,b[2]-.1*S.hs];k.L('head','c',0x141010,[b[0],b[1],b[2]-.01],c,.016*S.hs,.016*S.hs,5);k.L('head','c',0x141010,c,e,.016*S.hs,.012*S.hs,5);k.L('head','c',0x1e1614,e,f,.012*S.hs,.003,5)}}
+      k.L('head','c',0xb8ae8c,lerp3(a,b,.5),lerp3(a,b,.72),.0215*S.hs,.0195*S.hs,6);
+      k.p('head','dod','c',0x141010,b[0],b[1],b[2],.026*S.hs,.022*S.hs,.026*S.hs);
+      const c=[b[0],b[1]+.004,b[2]-.03*S.hs],e=[b[0],b[1]-.08*S.hs,b[2]-.09*S.hs],f=[b[0],b[1]-.17*S.hs,b[2]-.1*S.hs];
+      mdLoft(B,[{p:[b[0],b[1],b[2]-.01],rx:.016*S.hs,f:.016*S.hs,b:.016*S.hs,w:[['head',1]]},{p:c,rx:.016*S.hs,f:.016*S.hs,b:.016*S.hs,w:[['head',1]]},{p:e,rx:.013*S.hs,f:.012*S.hs,b:.012*S.hs,w:[['head',1]]},{p:f,rx:.002,f:.002,b:.002,w:[['head',.6],['chest',.4]]}],{seg:5,ref:[0,0,-1],col:m=>m.i<1.3?0x1e1614:0x141010})}}
     // crossed straps over the bare chest and back
     [-1,1].forEach(s=>{const p0=cgSurf(M,S,sh-.02,s*.5,.01),p1=cgSurf(M,S,wy+.02,-s*.6,.02),p2=cgSurf(M,S,sh-.04,Math.PI-s*.5,.01),p3=cgSurf(M,S,wy+.02,Math.PI+s*.6,.02);
-      cgTube(B,[p0,lerp3(p0,p1,.5),p1],[.016,.016,.016],[[['chest',1]],[['spine',.5],['chest',.5]],[['spine',1]]],lt,{seg:6});cgTube(B,[p2,lerp3(p2,p3,.5),p3],[.016,.016,.016],[[['chest',1]],[['spine',.5],['chest',.5]],[['spine',1]]],lt,{seg:6})});
+      cgTube(B,[p0,lerp3(p0,p1,.5),p1],[.016,.016,.016],[[['chest',1]],[['spine',.5],['chest',.5]],[['spine',1]]],lt,{seg:5});cgTube(B,[p2,lerp3(p2,p3,.5),p3],[.016,.016,.016],[[['chest',1]],[['spine',.5],['chest',.5]],[['spine',1]]],lt,{seg:5})});
     // leather trousers, a loincloth (front and back flaps) under a belt
-    b7_Sh(B,M,m=>(m.part=='leg'&&m.y>kn-.1)||(m.part=='torso'&&m.y<hy+.01),.01,m=>a181Nz(pants,m,.25,10));
-    cgSkirt(B,S,wy-.02,kn+.06,.04,.024,m=>m.y<kn+.11?0x2a1d14:a181Nz(pants,m,.25,10),{n:5,keep:m=>Math.abs(m.c)<.4});
+    b7_Sh(B,M,m=>(m.part=='leg'&&m.y>kn-.1)||(m.part=='torso'&&m.y<wy-.004),.01,m=>mdSh(pants,.9+.15*n3Sn(m.x,m.y,m.z,9,2)));
+    cgSkirt(B,S,wy-.02,kn+.06,.04,.024,m=>m.y<kn+.11?0x2a1d14:mdSh(pants,.86+.18*n3Sn(m.x,m.y,m.z,8,1)),{n:5,seg:16,keep:m=>Math.abs(m.c)<.4});
     cgBelt(B,M,wy,.024,.034,lt);{const bk=cgSurf(M,S,wy,0,.036);k.p('pelvis','box','m',0x6a6a70,bk[0],bk[1],bk[2]-.004,.05,.04,.012)}
-    // spiked pauldrons on both shoulders, leather bracers
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];k.p(A+'0','hem','m',0x5a4630,a[0]+s*.03,a[1]+.02,a[2],.125,.09,.125,0,0,s*.4);
+    // spiked pauldrons on both shoulders (a darker rim), leather bracers
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];k.p(A+'0','hem','m',0x5a4630,a[0]+s*.03,a[1]+.02,a[2],.125,.09,.125,0,0,s*.4);k.p(A+'0','hem','m',0x3a2c1c,a[0]+s*.035,a[1]+.008,a[2],.13,.05,.13,0,0,s*.4);
       for(let i=0;i<2;i++)k.L(A+'0','m',0x8a8a90,[a[0]+s*(.05+i*.035),a[1]+.06,a[2]-.025+i*.05],[a[0]+s*(.1+i*.035),a[1]+.18,a[2]-.025+i*.05],.02,.002,5);
       b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.03&&m.y>J[A+'2'][1]+.01,.016,m=>Math.round(m.y*40)%2?0x4a3420:0x5a4430);
+      // hands: the right a fist round the axe, the left open with short thick nails
+      br_Fingers(B,S,s,s>0?{col:mdMix(K.sk,0x3a4428,.3),fist:1,n:4,len:.085,r:.0175,hw:.04}:{col:mdMix(K.sk,0x3a4428,.3),n:4,len:.08,r:.0175,hw:.034,fan:.2,curl:.4,cl:.016,claw:0x2a2418});
       // pelt boots to mid-shin, a thick white fur cuff round the top
       const by=J.rh2[1]+(kn-J.rh2[1])*.5;
-      b7_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<by))&&Math.sign(m.x)==s,.024,m=>a181Nz(0x3a2a1c,m,.3,16));
-      cgFur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<by+.03&&m.y>by-.02,{off:.04,len:.05,col:0xd8d2c2,col2:0xb4ac9a,seed:82+s,jag:.45,lump:[.6,.9]})});
+      b7_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<by))&&Math.sign(m.x)==s,.024,m=>mdSh(0x3a2a1c,.85+.25*n3Sn(m.x,m.y,m.z,14,s+3)));
+      br_Fur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<by+.03&&m.y>by-.02,{off:.04,len:.05,col:0xd8d2c2,col2:0xb4ac9a,seed:82+s,jag:.45,lump:[.6,.9]})});
     // a necklace of fangs and black beads
-    for(let i=0;i<9;i++){const p=cgSurf(M,S,sh-.03-Math.abs(i-4)*.014,(i-4)*.2,.006);k.p('chest',i%2?'cone4':'sph','c',i%2?0xd8d0b0:0x2a2a2a,p[0],p[1]-.012,p[2],.013,i%2?.045:.013,.011,Math.PI)}
-    b7_Body(B,M)})})();
-ST179.orc={sx:.2,hx:-.18,lk:.24,rk:.24,az:.1,lz:-.1,ex:-.2,le:-.25};
+    for(let i=0;i<9;i++){const p=cgSurf(M,S,sh-.03-Math.abs(i-4)*.014,(i-4)*.2,.006);k.p('chest',i%2?'cone4':'oct','c',i%2?0xd8d0b0:0x2a2a2a,p[0],p[1]-.012,p[2],.013,i%2?.045:.014,.011,Math.PI)}
+    br_Emit(B,M)})})();
+ST179.orc={sx:.26,hx:-.24,lk:.26,rk:.26,az:.14,lz:-.14,ex:-.28,le:-.32};
 
 // ---------------- Frost Troll / Troll Rimecaller ----------------
 // hulking and stooped, long thick arms; a fan crest of white spikes on the crown, white hair down the spine and on the
 // forearms, warts, a long nose and big tusks, frost plates and icicles on the shoulders, a string of skulls at the hip.
 // The Troll: grey shorts and loincloth, pale bracers, a bead necklace. The Rimecaller: a frost-trimmed robe, a crystal on the
 // chest, curling horns.
+// (refine, Oct 31 2026) not men: stooped and hunched under a big hump of back, long arms whose big hands hang to the knees,
+// short bowed legs on big clawed feet, the head slung low and forward with a long drooping nose; warts sculpted into the
+// hide (no extra parts), frost rime whitening the shoulders, head and arms where they face the sky
 ['troll','trollsh'].forEach(key=>{const sh=key=='trollsh';
-  const S=cgHuman({h:.86,w:1.34,d:1.22,rw:[1.1,1.18,1.3,1.32,1.36,1.38,1.46,1.56],rf:[1,1.1,1.36,1.38,1.36,1.24,1.15,1.14],rb:[1.05,1.12,1.15,1.26,1.38,1.46,1.55,1.66],
-    at:sh?1.58:1.8,lt:sh?1.4:1.55,hs:1.08,hw:1.08,hd:1.1,armL:sh?1.15:1.26,legL:sh?.9:.84,nw:1.6,foot:1.2,footW:1.35,facePush:BRUTEJAW});
-  const K={sk:sh?0x5c6e82:0x627888,eye:0x6ad8ff,fist:s=>s>0,claw:0x2a2a30},hair=0xd8e8f0,hair2=0xb0c0cc,frost=0xc8f0ff,T=S.torso,J=S.J;
-  cg181Reg(key,S,function(B,P,k,C){const wy=T[2][0],shy=T[6][0],hy=T[1][0],kn=J.rh1[1];
-    const M=cgBruteBody(B,k,C,S,K,{face:cgFaceTroll({nose:1.2}),tusks:.055,tr:.018,ears:.085,fl:1.2,tip:.035,toe:.022,
+  const HD=br_Head(sh?[0,2,4,6,8,10,12,14]:[0,2,4,5,6,8,10,12,14],i=>(sh?[[1.62,1.16,1.8,.012],[1.3,1.24,1.32,.014],[1.12,1.14,1.1,.012],[1.04,1.06,1.03,.008],[1,1.02,1,.004],[.96,1,.98,0],[.9,.92,.95,-.004],[.84,.84,.88,-.006]]:[[1.62,1.16,1.8,.012],[1.3,1.24,1.32,.014],[1.12,1.14,1.1,.012],[1.06,1.08,1.04,.01],[1.02,1.04,1.02,.008],[1,1.02,1,.004],[.96,1,.98,0],[.9,.92,.95,-.004],[.84,.84,.88,-.006]])[i]);
+  const S=cgHuman({h:sh?.9:.9,w:1.34,d:1.24,rw:[1.1,1.16,1.24,1.3,1.38,1.42,1.5,1.26],rf:[1,1.12,1.4,1.4,1.34,1.22,1.1,1.0],rb:[1.05,1.12,1.15,1.3,1.5,1.62,1.68,1.44],
+    at:sh?1.62:1.78,lt:sh?1.42:1.52,hs:1.02,hw:1.02,hd:1.14,hy:1.04,armL:sh?1.4:1.66,legL:sh?.82:.76,nw:2.05,neckL:-.05,foot:1.45,footW:1.45,knee:1.12,
+    n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.05,big:1.15,pw:1.12,pl:1.4,noFore:1}),leg:sh?BR_LEG5:BR_LEG,facePush:br_Jaw(HD,.016,1.525,1.58)});
+  const K={sk:sh?0x5c6e82:0x627888,eye:0x6ad8ff},hair=0xd8e8f0,hair2=0xb0c0cc,frost=0xc8f0ff,T=S.torso,J=S.J;
+  cg181Reg(key,S,function(B,P,k,C){const M0=C.M,wy=T[2][0],shy=T[6][0],hy=T[1][0],kn=J.rh1[1],WS=p=>{k.P[k.P.length-1].w=cgWAt(M0,p)};
+    // warts: soft bumps sculpted into the hide, painted darker (no parts)
+    const WT=[];for(let i=0;i<22;i++){const y=wy+a181H(i,2)*(shy-wy+.04),a=(a181H(i,7)-.5)*6.2;if(sh&&y<shy-.06)continue;WT.push([cgSurf(M0,S,y,a,0),.012+a181H(i,9)*.008])}
+    [-1,1].forEach(s=>{const F=b7_Arm(S,s);for(let i=0;i<3;i++){const q=lerp3(J[F.A+'0'],F.a1,.3+i*.25),p=cgRay(M0,add3(q,[s*.4,.05,(i-1)*.05]),nrm3([-s,-.12,-(i-1)*.12]),{arm:1});if(p)WT.push([p,.011])}});
+    const wart=(x,y,z)=>{let w=0;for(const [p,r] of WT){const d2=((x-p[0])**2+(y-p[1])**2+(z-p[2])**2)/(r*r);if(d2<4)w=Math.max(w,Math.exp(-d2))}return w};
+    const hide=br_Hide({base:K.sk,belly:sh?0x7a8a9a:0x8496a2,back:sh?0x44546a:0x4a5c6c,blot:sh?0x4e6070:0x56685e,f:4,seed:sh?9:7,bl:.5,post:(m,c)=>{
+      const w=wart(m.x,m.y,m.z);if(w>.05)c=mdMix(c,mdSh(K.sk,.62),w*.8);
+      if(m.ny>.55&&m.part!='foot')c=mdMix(c,0xd0e4ee,br_ss(.55,.95,m.ny)*(m.part=='head'?.45:.5));   // frost rime where it faces the sky
+      if(m.part=='hand'||m.part=='foot')c=mdMix(c,mdSh(K.sk,.7),.35);return c}});
+    const M=br_Brute(k,C,S,K,{face:cgFaceTroll({nose:1.7,jaw:1.3}),tusks:.058,tr:.019,ears:.085,earCol:mdSh(K.sk,.9),skin:hide,shade:{cav:1.15},
+      sculpt:M=>{// the hump: a big mass over the shoulder blades and the upper back (below the base of the head); a pot belly
+        cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]<-.05)d+=.075*cgG(x,y,0,shy-.13,.17,.11)*Math.min(1,(-.05-n[2])*1.8);if(n[2]>.2)d+=.03*cgG(x,y,0,hy+.06,.13,.08)*n[2];return d});
+        cgSculpt(M,{torso:1,arm:1,neck:1},(x,y,z,n)=>.009*wart(x,y,z));
+        // fill round the base of the head so the neck and hump flow up into the skull (no groove round it)
+        {const hb=S.hp(0,1.575,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.04*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?.07*cgG(0,y,0,hb,1,.08)*Math.min(1,-n[2]*2):0))}},
       paint:sh?null:m=>(m.part=='leg'&&m.y>kn+.03)||(m.part=='torso'&&m.y<hy)?0x5a5e66:null});
-    // warts
-    for(let i=0;i<16;i++){const y=wy+a181H(i,2)*(shy-wy),a=(a181H(i,7)-.5)*6.2;if(sh&&y<shy-.05)continue;const p=cgSurf(M,S,y,a,0);k.p(b7_TB(S,y),'sph','c',mdSh(K.sk,.8),p[0],p[1],p[2],.015,.013,.013)}
-    // the crest: a fan of white spikes across the crown; white hair down the spine
+    // the crest: a fan of white spikes across the crown; white hair down the spine (over the hump)
     b7_Crest(k,M,S,hair,hair2,7,.11,.022);
-    b7_Spine(k,M,S,shy-.02,7,.065,.11,hair,hair2,.03);
-    // frost plates crusted over the shoulders (seated in the skin), icicles hanging from their edge
+    b7_Spine(k,M,S,shy+.01,7,.065,.11,hair,hair2,.03);
+    // frost plates crusted over the shoulders (seated in the skin, bending with it), icicles hanging from their edge
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];
-      for(let i=0;i<4;i++){const x=a[0]+s*(-.02+i*.03),z=a[2]+(i-1.5)*.04,p=cgRay(M,[x,a[1]+.5,z],[0,-1,0],{arm:1,torso:1});if(!p)continue;
-        k.p(A+'0','dod','c',i%2?frost:0xe8f8ff,p[0],p[1]-.006,p[2],.04,.024,.04,i,i*.6,0)}
-      for(let i=0;i<3;i++){const z=a[2]+(i-1)*.04,p=cgRay(M,[a[0]+s*.5,a[1]-.015,z],[-s,0,0],{arm:1});if(!p)continue;k.L(A+'0','g',frost,[p[0]-s*.008,p[1]+.004,p[2]],[p[0]+s*.004,p[1]-.07-i%2*.02,p[2]],.011,.002,4)}
+      for(let i=sh?1:0;i<4;i++){const x=a[0]+s*(-.04+i*.024),z=a[2]+(i-1.5)*.036,p=cgRay(M,[x,a[1]+.5,z],[0,-1,0],{arm:1,torso:1});if(!p||p[1]<a[1]-.02)continue;
+        const y=p[1]-.008+(sh?.016:0);k.p(A+'0','dod','c',i%2?frost:0xe8f8ff,p[0],y,p[2],.04,.024,.04,i,i*.6,0);WS(p);
+        // an icicle under the plate's outer edge, rooted in the plate and bending with it (kept off the arm's joint)
+        if(i>0){const e=[p[0]+s*.022,y-.004,p[2]+(i-2)*.008];k.L(A+'0','g',frost,[e[0]-s*.012,e[1]+.008,e[2]],[e[0]+s*.002,e[1]-.06-i%2*.02,e[2]],.011,.002,4);WS(p)}}
       const F=b7_Arm(S,s);
       if(!sh){// pale bracers on the forearms, hair tufts above them
         b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<F.a1[1]-(F.a1[1]-F.a2[1])*.45&&m.y>F.a2[1]-.005,.018,m=>Math.round(m.y*36)%3?0xd8dce4:0xb8bcc4);
-        [.12,.3].forEach((t,j)=>cgLimbTufts(k,M,F.a1,F.a2,t,5,.065,hair,hair2,A+'1',{r:.022,parts:{arm:1}}))}
-      else cgLimbTufts(k,M,F.a1,F.a2,.74,4,.06,hair,hair2,A+'1',{r:.018,parts:{arm:1}})});
+        cgLimbTufts(k,M,F.a1,F.a2,.3,6,.07,hair,hair2,A+'1',{r:.024,parts:{arm:1}})}
+      else cgLimbTufts(k,M,F.a1,F.a2,.74,4,.06,hair,hair2,A+'1',{r:.018,parts:{arm:1}});
+      // big hands: four thick fingers with black claws (the right one a fist round the club / staff); big splayed clawed feet
+      const hc=mdMix(K.sk,mdSh(K.sk,.7),.35);
+      br_Fingers(B,S,s,s>0?{col:hc,fist:1,n:4,len:.1,r:.017,hw:.045,te:2.476}:{col:hc,n:4,len:.11,r:.0165,hw:.046,te:2.476,curl:.6,cl:.03,claw:0x2a2a30});
+      br_Toes(B,S,s,{col:mdMix(K.sk,mdSh(K.sk,.7),.35),n:3,len:.055,r:.022,sp:.034,cl:.036,claw:0x2a2a30})});
     // a string of skulls and bones at the hip
     {const y=hy-.01;for(let i=0;i<5;i++){const a=-1.5+i*.26,p=cgSurf(M,S,y-(i%2?.01:0),a,sh?.03:.022),bn='pelvis';
       if(i%2){const q=sh?add3(p,[0,-.02,0]):cgSurf(M,S,y-.02,a,.004);k.p(bn,'box','c',0xd8d0b0,q[0],q[1],q[2],.016,.06,.016,0,a,.3)}
-      else{k.p(bn,'sph','c',0xd8d0b0,p[0],p[1]-.03,p[2],.03,.033,.03);const q=add3(p,[Math.sin(a)*.026,-.03,Math.cos(a)*.026]);[-1,1].forEach(e=>k.p(bn,'sph','c',0x1a1814,q[0]+Math.cos(a)*e*.011,q[1]+.006,q[2]-Math.sin(a)*e*.011,.008,.008,.006))}}
-      const p0=cgSurf(M,S,y+.01,-1.6,0),p1=cgSurf(M,S,y+.01,-.4,0);cgTube(B,[p0,lerp3(p0,p1,.5),p1].map(p=>p),[.006,.006,.006],[[['pelvis',1]],[['pelvis',1]],[['pelvis',1]]],0x3a2a1a,{seg:5})}
+      else{k.p(bn,'dod','c',0xd8d0b0,p[0],p[1]-.03,p[2],.03,.033,.03);const q=add3(p,[Math.sin(a)*.026,-.03,Math.cos(a)*.026]);[-1,1].forEach(e=>k.p(bn,'oct','c',0x1a1814,q[0]+Math.cos(a)*e*.011,q[1]+.006,q[2]-Math.sin(a)*e*.011,.009,.009,.007))}}
+      const p0=cgSurf(M,S,y+.01,-1.6,0),p1=cgSurf(M,S,y+.01,-.4,0);cgTube(B,[p0,lerp3(p0,p1,.5),p1],[.006,.006,.006],[[['pelvis',1]],[['pelvis',1]],[['pelvis',1]]],0x3a2a1a,{seg:4})}
     if(!sh){// grey shorts (painted), a loincloth front and back, a belt, a necklace of bone and beads
-      cgSkirt(B,S,wy-.02,kn+.1,.04,.024,m=>m.y<kn+.15?0x4a4e54:a181Nz(0x6a6e72,m,.25,10),{n:5,keep:m=>Math.abs(m.c)<.4});cgBelt(B,M,wy,.022,.03,0x2a2a2e);
-      for(let i=0;i<9;i++){const p=cgSurf(M,S,shy-.03-Math.abs(i-4)*.014,(i-4)*.2,.006);k.p('chest',i%2?'cone4':'sph','c',i%2?0xd8d0b0:0x8a9aa8,p[0],p[1]-.012,p[2],.013,i%2?.045:.013,.011,Math.PI)}}
+      cgSkirt(B,S,wy-.02,kn+.1,.04,.024,m=>m.y<kn+.15?0x4a4e54:mdSh(0x6a6e72,.86+.18*n3Sn(m.x,m.y,m.z,8,1)),{n:5,seg:16,keep:m=>Math.abs(m.c)<.4});cgBelt(B,M,wy,.022,.03,0x2a2a2e);
+      for(let i=0;i<9;i++){const p=cgSurf(M,S,shy-.03-Math.abs(i-4)*.014,(i-4)*.2,.006);k.p('chest',i%2?'cone4':'oct','c',i%2?0xd8d0b0:0x8a9aa8,p[0],p[1]-.012,p[2],.013,i%2?.045:.014,.011,Math.PI)}}
     else{// the robe: body and sleeves, frost trim at the neck, cuffs and hem; a sash; the crystal on the chest; horns
-      const tr=0x9ad8ff,rb=0x26344e;
-      b7_Sh(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.04),.018,m=>(m.part=='torso'&&m.s>.3&&Math.abs(m.x)<.014)||(m.part=='arm'&&m.y<J.aR2[1]+.075)?tr:a181Nz(rb,m,.25,10));
-      cgSkirt(B,S,wy-.02,J.lh2[1]+.12,.13,.026,m=>m.y<J.lh2[1]+.17?tr:Math.abs(Math.atan2(m.c,m.s))<.12?tr:a181Nz(0x1e2a40,m,.25,10),{n:6});
+      const tr=0x9ad8ff,rb=0x26344e,cuf=J.aR2[1]+.05;
+      b7_Sh(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>cuf),.018,m=>(m.part=='torso'&&m.s>.3&&Math.abs(m.x)<.016)||(m.part=='arm'&&m.y<cuf+.04)?tr:mdSh(rb,.86+.2*n3Sn(m.x,m.y,m.z,7,4)));
+      cgSkirt(B,S,wy-.02,J.lh2[1]+.12,.13,.026,m=>m.y<J.lh2[1]+.17?tr:Math.abs(Math.atan2(m.c,m.s))<.12?tr:mdSh(0x1e2a40,.86+.2*n3Sn(m.x,m.y,m.z,7,6)),{n:6,seg:12});
       cgBelt(B,M,wy,.02,.05,0x1a2238);
       const g=cgSurf(M,S,J.chest[1]+.03,0,.024);k.p('chest','oct','g',tr,g[0],g[1],g[2],.032,.05,.016);[-1,1].forEach(s=>k.p('chest','cone4','g',frost,g[0]+s*.03,g[1]+.005,g[2]-.004,.009,.04,.006,0,0,-s*1.2));
       [-1,1].forEach(s=>{const q=S.hp(s*.075,1.69,-.02);let p=q;[[s*.07,.05,-.03],[s*.04,.07,-.04],[-s*.005,.06,-.03]].forEach((d,j)=>{const n=add3(p,mul3(d,S.hs));k.L('head','c',j<2?0x8a8270:0x6a6250,p,n,(.026-j*.007)*S.hs,(.019-j*.007)*S.hs,5);p=n})})}
-    b7_Body(B,M)})});
-ST179.troll={sx:.32,hx:-.3,lk:.27,rk:.27,az:.12,lz:-.12,ax:-.12,lx:-.15,ex:-.3,le:-.35};ST179.trollsh={sx:.24,hx:-.22,lk:.2,rk:.2,lz:-.08,le:-.25};
+    br_Emit(B,M)})});
+ST179.troll={sx:.5,hx:-.48,lk:.3,rk:.3,az:.14,lz:-.14,ax:-.12,lx:-.14,ex:-.16,le:-.2};ST179.trollsh={sx:.44,hx:-.42,lk:.22,rk:.22,az:.1,lz:-.1,ax:-.08,lx:-.1,ex:-.5,le:-.22};   // the staff hand held higher (the long arm would plant the staff's butt in the ground)
 
 // ---------------- Storm Giant ----------------
 // broad and massive: a white beard and mane, a glowing circlet, blue runes on the bare chest, a fur mantle, rune bracers,
 // a leather kilt and pelt boots with white fur cuffs
-(function(){const S=cgHuman({h:.92,w:1.28,d:1.16,rw:[1.08,1.14,1.12,1.18,1.3,1.32,1.4,1.48],rf:[1,1.06,1.16,1.24,1.3,1.22,1.14,1.12],at:1.66,lt:1.48,hs:.98,legL:.92,nw:1.55,foot:1.1,footW:1.3,facePush:BRUTEJAW}),
-    K={sk:0x6a7a92,eye:0x6ac8ff,fist:s=>s>0},glow=0x6ac8ff,bd=0xc8e0f0,T=S.torso,J=S.J;
-  cg181Reg('giant',S,function(B,P,k,C){const M=cgBruteBody(B,k,C,S,K,{boots:1,face:b7_FaceHuman({nose:1.3,nw:1.4,brow:1.6,chin:1.2,cheek:1.2})}),wy=T[2][0];
-    cgFur(B,M,m=>m.part=='head'&&m.s>-.15&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-S.hp(0,1.557,0)[1])<.008*S.hs),{off:.018,len:.09,col:bd,col2:0xa8b8c8,seed:101,jag:.4,lump:[.6,1.1]});
-    cgHair(B,M,S,{col:bd,line:1.69,neck:true,thick:.018,side:.15});cgShell(B,M,m=>m.part=='head'&&Math.abs(m.y-S.hp(0,1.676,0)[1])<.008*S.hs,.03,glow,{t:'g',rim:.5});
-    cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]+.04)||(m.part=='arm'&&m.y>J.aR0[1]-.1),{off:.045,len:.14,col:0x6a5e4e,col2:0x4a4030,seed:102,jag:.55});
+// (refine, Oct 31 2026) a giant, not a big man: a huge barrel chest and shoulders, a thick neck, heavy limbs on slightly short
+// legs, the head small for the bulk; storm-blue hide with paler storm-cloud blotches and blue rune tattoos round the upper
+// arms, a fur collar up round the neck into the mane, a full beard (a solid mass and three thick locks)
+(function(){const HD=br_Head([0,1,2,4,6,8,10,12,14],i=>[[1.45,1.1,1.55,.008],[1.22,1.14,1.24,.008],[1.14,1.12,1.14,.006],[1.06,1.06,1.05,.003],[1.02,1.02,1.02,0],[1,1,1,0],[.98,1,1,0],[.95,.96,.98,0],[.9,.9,.92,0]][i]);
+  const S=cgHuman({h:.97,w:1.36,d:1.22,rw:[1.08,1.14,1.12,1.2,1.36,1.4,1.5,1.62],rf:[1,1.06,1.18,1.28,1.36,1.26,1.14,1.1],rb:[1,1.06,1.1,1.18,1.3,1.34,1.4,1.46],at:1.8,lt:1.62,hs:.86,hw:1.06,hd:1.04,legL:.84,armL:1.04,nw:1.85,neckL:-.01,foot:1.1,footW:1.35,
+      n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.12,big:1.12}),leg:BR_LEG5,facePush:br_Jaw(HD,.012,1.525,1.58)}),
+    K={sk:0x6a7a92,eye:0x6ac8ff},glow=0x6ac8ff,bd=0xc0d4e2,T=S.torso,J=S.J;
+  cg181Reg('giant',S,function(B,P,k,C){const wy=T[2][0],ch=J.chest[1];
+    const tat=m=>{if(m.part!='arm')return 0;const A=m.x<0?'aL':'aR',y0=(J[A+'0'][1]*.45+J[A+'1'][1]*.55);return br_ss(.012,.004,Math.abs(m.y-y0-.012*Math.sin(Math.atan2(m.z,m.x-J[A+'0'][0])*3)))};
+    const hide=br_Hide({base:K.sk,belly:0x8090a8,back:0x4e5c74,blot:0x8a98ae,f:3.5,seed:11,bl:.35,post:(m,c)=>{const t=tat(m);if(t>0)c=mdMix(c,0x3a8ad0,t*.85);
+      if(m.part=='hand'||(m.part=='arm'&&m.y<J.aR2[1]+.02))c=mdMix(c,0x4e5c74,.3);return c}});
+    const M=br_Brute(k,C,S,K,{face:b7_FaceHuman({nose:1.4,nw:1.4,brow:1.9,chin:1.2,cheek:1.3}),skin:hide,shade:{cav:1.05},
+      // a barrel chest (big pectorals), heavy trapezius behind the neck (below the base of the head)
+      sculpt:M=>{cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]>.2)[-1,1].forEach(s=>d+=.022*cgG(x,y,s*.1,ch+.04,.08,.055)*n[2]);if(n[2]<-.2)d+=.028*cgG(x,y,0,T[6][0]+.01,.14,.06)*Math.min(1,(-.2-n[2])*2);return d});
+        {const hb=S.hp(0,1.575,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.022*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?.03*cgG(0,y,0,hb,1,.07)*Math.min(1,-n[2]*2):0))}}});
+    const my=S.hp(0,1.557,0)[1];
+    const beard=m=>m.part=='head'&&m.s>-.12&&m.y<S.hp(0,1.582,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-my)<.008*S.hs),mantle=m=>(m.part=='torso'&&m.y>J.chest[1]+.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.1);   // a fur collar up round the neck
+    br_Fur(B,M,beard,{off:.022,len:.07,col:bd,col2:0xa8b8c8,seed:104,jag:.3,lump:[.7,1.1]});M.b7hide.push(beard);   // (no skin drawn under the beard and the mantle)
+    // the beard's length: three thick tapering locks from under the chin, overlapping, lying down over the chest (the middle one longest)
+    [[-.03,.74,.9],[.03,.86,.95],[0,1,1]].forEach(([x,f,v])=>{const p=b7_Face(M,S,x,1.548);if(!p)return;const H=S.hs,a=[p[0],p[1],p[2]-.02*H],R=[];
+      [[0,0,0,.03],[.006,-.05,.004,.028],[.014,-.11*f,-.004,.021],[.022,-.17*f,-.016,.012],[.026,-.21*f,-.024,.002]].forEach(([dx,dy,dz,r],i)=>{const t=i/4;
+        R.push({p:[a[0]+Math.sign(x)*dx*H,a[1]+dy*H,a[2]+dz*H],rx:r*H,f:r*H*.9,b:r*H*.9,w:[['head',1-t*.6],['chest',t*.6]]})});
+      mdLoft(B,R,{seg:6,ref:[0,0,1],capB:true,col:m=>mdSh(Math.abs(m.c)>.8?0xa4b6c6:bd,v*(m.s<-.3?.88:1)*(1-m.i*.03))})});
+    br_Hair(B,M,S,{col:m=>mdSh(bd,.9+.12*n3Sn(m.x,m.y,m.z,20,3)),line:1.69,thick:.018,side:.1,nape:1.535});cgShell(B,M,m=>m.part=='head'&&Math.abs(m.y-S.hp(0,1.676,0)[1])<.008*S.hs,.03,glow,{t:'g',rim:.5});
+    br_Fur(B,M,mantle,{off:.045,len:.14,col:0x6a5e4e,col2:0x4a4030,seed:102,jag:.55});M.b7hide.push(mantle);
     // three blue runes on the chest, below the beard and the mantle
     [[-.055,0],[0,-.03],[.055,0]].forEach(([x,dy],i)=>{const y=J.chest[1]-.03+dy,p=cgSurf(M,S,y,x*5,-.001);k.p(b7_TB(S,y),'box','g',glow,p[0],p[1],p[2],.014,.11,.006,0,x*5,(i-1)*.5)});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>J[A+'2'][1]+.02,.022,m=>Math.round(m.y*30)%2?0x5a6070:0x4a5060,{t:'m'});
       cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'1'][1]+J[A+'2'][1])/2)<.012,.028,glow,{t:'g',rim:.79});   // rim on the bracer's surface
+      // big hands: the right a fist round the hammer, the left open
+      const hc=mdMix(K.sk,0x4e5c74,.3);br_Fingers(B,S,s,s>0?{col:hc,fist:1,n:4,len:.09,r:.0175,hw:.04}:{col:hc,n:4,len:.085,r:.019,hw:.036,fan:.2,curl:.35,cl:.012,claw:0x6a7484});
       const by=J.rh2[1]+(J.rh1[1]-J.rh2[1])*.5;
-      b7_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<by))&&Math.sign(m.x)==s,.026,m=>a181Nz(0x3a3026,m,.3,16));
-      cgFur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<by+.03&&m.y>by-.02,{off:.042,len:.06,col:0xd8d4cc,col2:0xb4b0a6,seed:103+s,jag:.45,lump:[.6,.9]})});
-    b7_Sh(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,m=>a181Nz(0x5a5040,m,.25,10));
-    cgSkirt(B,S,wy-.02,J.lh1[1]+.06,.06,.022,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?0x6a5e4e:0x4a4030,m,.3,12),{n:5});cgBelt(B,M,wy,.024,.03,0x3a2a1a);b7_Body(B,M)})})();
-ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
+      b7_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<by))&&Math.sign(m.x)==s,.026,m=>mdSh(0x3a3026,.85+.25*n3Sn(m.x,m.y,m.z,14,s+5)));
+      br_Fur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<by+.03&&m.y>by-.02,{off:.042,len:.06,col:0xd8d4cc,col2:0xb4b0a6,seed:103+s,jag:.45,lump:[.6,.9]})});
+    b7_Sh(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,m=>mdSh(0x5a5040,.88+.16*n3Sn(m.x,m.y,m.z,9,2)));
+    cgSkirt(B,S,wy-.02,J.lh1[1]+.06,.06,.022,m=>mdSh(Math.round(Math.atan2(m.c,m.s)*6)%2?0x6a5e4e:0x4a4030,.86+.2*n3Sn(m.x,m.y,m.z,9,3)),{n:5,seg:16});cgBelt(B,M,wy,.024,.03,0x3a2a1a);br_Emit(B,M)})})();
+ST179.giant={sx:.16,hx:-.14,lk:.16,rk:.16,az:.12,lz:-.12,ex:-.22,le:-.26};
 
 // ---------------- Amalgam: a lumpy heap of goo in a man's shape ----------------
 // mottled brown and green goo full of what it swallowed: clods and stones, a skull and ribs in the belly, twigs and roots,
 // glowing bubbles; a hump over the shoulders, a sagging belly, three mismatched slit-pupilled eyes, a maw of crooked teeth,
 // drips off the chin and arms, lumpy three-fingered fists, feet spread into a dirty puddle
-(function(){const S=cgHuman({h:.9,w:1.42,d:1.5,rw:[1.25,1.35,1.6,1.65,1.5,1.45,1.5,1.7],rf:[1.3,1.6,2.2,2.0,1.5,1.25,1.15,1.3],at:2.1,lt:2.3,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.82,foot:1.25,footW:1.55,facePush:BRUTEJAW});
+// (owner, Oct 31 2026) not a man: its outline should read as a heap of goo pretending to be one — stooped and top-heavy,
+// the head a lump sunk forward into the mass with no neck, a sagging bottom-heavy belly, short thick stumps for legs,
+// long uneven arms (the right one bigger), big low lumps breaking up the outline
+(function(){const S=cgHuman({h:.98,w:1.5,d:1.55,rw:[1.55,1.7,1.85,1.75,1.5,1.4,1.4,1.8],rf:[1.5,2.0,2.6,2.2,1.55,1.3,1.2,1.5],at:2.3,armL:1.22,lt:2.7,legL:.6,hs:1.0,hw:1.3,hy:.72,hd:1.15,hz:.02,nw:3.7,neckL:-.09,foot:1.1,footW:1.8,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
+    // (recipe) fewer rings where they don't shape the outline: a blob head, plain goo limbs
+    head:CG181.base.head.filter((q,i)=>i%2==0).map((q,i,a)=>{const f=1+1.55*Math.pow(1-i/(a.length-1),2);return [q[0],q[1]*f,q[2]*f,q[3]*f,q[4]]}) /* the head swells out of the shoulders like a mound, no neck */,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5&&i<7).concat([{t:2.1,r:.028,rf:.032,rb:.03},{t:2.26,r:.041,rf:.045,rb:.04},{t:2.42,r:.037,rf:.038,rb:.036}]) /* the arm swells into a goo fist */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
+  S.armK={'1':1.18,'-1':.88};[['aR',1.12],['aL',.92]].forEach(([A,f])=>{const a0=S.J[A+'0'];S.J[A+'1']=add3(a0,mul3(sub3(S.J[A+'1'],a0),f));S.J[A+'2']=add3(a0,mul3(sub3(S.J[A+'2'],a0),f))});
   const C0={g1:0x3e5a28,g2:0x22341a,g3:0x5a7a34,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a},T=S.torso,J=S.J;
-  cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
-    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.045*(n3Sn(x*1.1,y*1.1,z*1.1,7,5)-.45));   // lumps and sags all over
-    // a hump of goo over the shoulders and the back, a sagging belly
-    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<0)d+=.1*cgG(x,y,0,sh-.04,.18,.1)*Math.min(1,-n[2]*1.5);if(n[2]>0)d+=.03*cgG(x,y,0,wy-.01,.12,.06)*n[2];return d});
+  cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)},c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.065*(n3Sn(x*.8,y*.8,z*.8,4.5,5)-.45)+.025*(n3Sn(x,y,z,9,2)-.45));   // big low lumps and sags, smaller ones on top
+    // a big hump of goo over the shoulders and the back (higher on the right), a belly sagging over the hips
+    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<-.1)d+=.15*cgG(x-.06,y,0,sh-.13,.2,.12)*Math.min(1,(-.1-n[2])*1.6);if(n[2]>0)d+=.065*cgG(x,y,0,hy+.03,.16,.08)*n[2];return d});
+    // fill round the base of the head so the shoulders flow up into the mound (no groove between the hump and the head)
+    {const hb=S.hp(0,1.58,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.055*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?.05*cgG(0,y,0,hb,1,.07)*Math.min(1,-n[2]*2):0))}
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>n[2]<.1?0:(-.02*cgG(x,y,0,1.56,.05,.012)+.01*cgG(x,y,0,1.6,.06,.03))));
     // smooth mottled colour: green goo blending into darker goo, patches of brown earth, the back and limbs darker
     const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),goo=m=>{const n=n3Sn(m.x,m.y,m.z,11,1),n2=n3Sn(m.x,m.y,m.z,5,3);
       let col=mdMix(c.g1,c.g2,cl(.3+(n2-.5)*1.1+(m.s<-.3?.25:0),0,.85));col=mdMix(col,c.g3,cl((.3-n)*4,0,1)*.55);
-      const e=cl((n-.6)*3.5,0,1);if(e>0)col=mdMix(col,n2>.5?c.dirt:c.dirt2,e);
+      const e=cl((n-.6)*3.5,0,1)*(m.part=='head'?.25:1);if(e>0)col=mdMix(col,n2>.5?c.dirt:c.dirt2,e);
       if(m.part=='hand')col=mdMix(c.g2,col,.3);if((m.part=='leg'&&m.y<J.rh2[1]+.12)||m.part=='foot')col=mdMix(col,c.dirt,.45);return col};
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.5&&Math.abs(m.y-S.hp(0,1.556,0)[1])<.011*S.hs&&Math.abs(m.x)<.065*S.hs)return 0x0a1404;return goo(m)});
+    M.shade=cgShade(M,{cav:1.1,y0:0,y1:sh+.25,hk:.3});   // baked creases, ridges and height light (no triangles)
+    // where the goo runs: drip spots on the belly, chest, shoulders and arms (p on the skin, len of the run below it)
+    const DR=[];[[wy-.02,-.5,.16],[wy-.04,.15,.2],[wy-.01,.55,.13],[sp+.06,-.25,.12],[ch+.02,.75,.14],[ch,-.85,.15],[sh-.1,2.35,.12],[sh-.12,-2.4,.13],[hy+.05,.3,.1],[sp,2.7,.12],[ch,3.6,.14]].forEach(([y,a,len])=>DR.push({p:cgSurf(M,S,y,a,0),len,arm:0}));
+    [-1,1].forEach(s=>{const F=b7_Arm(S,s);[[J[F.A+'0'],F.a1,.55,.1],[J[F.A+'0'],F.a1,.95,.08],[F.a1,F.a2,.45,.09]].forEach(([a,b,t,len])=>{const q=lerp3(a,b,t),dir=nrm3([s,0,.35]),p=cgRay(M,add3(q,mul3(dir,.4)),mul3(dir,-1),{arm:1});if(p)DR.push({p,len,arm:s,dir})})});
+    const run=m=>{for(const d of DR){const dy=d.p[1]-m.y;if(dy<-.012||dy>d.len*1.7)continue;if(d.arm&&m.part!='arm')continue;if(!d.arm&&m.part!='torso')continue;
+      const w=.032*(1-.5*dy/(d.len*1.7)),dx=Math.hypot(m.x-d.p[0],m.z-d.p[2]);if(dx<w)return 1-dx/w}return 0};
+    const earth=m=>{const col=goo(m),n=n3Sn(m.x,m.y,m.z,11,1);let o=col;
+      const e=Math.max(0,Math.min(1,(n-.6)*3.5));if(e>0&&e<.6&&m.part!='head')o=mdMix(o,mdSh(c.dirt2,1.2),.5*Math.sin(e/.6*Math.PI)); // a dried, lighter rim fading round each mud patch
+      const ct=S.hp(0,1.69,0)[1];if(m.part=='head'&&m.ny>.6&&m.y>ct)o=mdMix(o,n>.5?c.dirt2:c.dirt,Math.min(.8,(m.y-ct)*14)); // a crust of earth on the crown only
+      if(m.ny>.45&&m.part!='head')o=mdMix(o,c.g3,Math.min(.35,(m.ny-.45)*.9));                   // wet sheen on the top of the bulges
+      const r=run(m);if(r>0)o=mdMix(o,mdSh(c.g2,.75),.35+.45*r);                                // dark wet runs under the drips
+      return o};
+    cgEmit(B,M,m=>m.part=='head'&&m.s>.5&&Math.abs(m.y-S.hp(0,1.556,0)[1])<.011*S.hs&&Math.abs(m.x)<.065*S.hs?0x0a1404:null,{vcol:earth});   // goo colour flows corner to corner
+    // a goo drip: a tapering strand from inside the skin, ending in a hanging droplet (both take the skin's weights)
+    const drip=(p,len,r,dir)=>{const o=dir?mul3(dir,.012):[0,0,.012],a=sub3(p,mul3(o,1.4)),e=add3(p,[o[0]*.6,-len,o[2]*.6]);k.L('chest','c',c.g2,a,e,r,r*.4,4);WS(p);
+      k.p('chest','oct','c',mdSh(c.g2,1.1),e[0],e[1]-r*.3,e[2],r*.8,r*1.15,r*.8);WS(p)};
+    DR.forEach((d,i)=>drip(d.p,d.len*(.55+(i%3)*.15),.014+(i%2)*.005,d.dir));
     // three mismatched eyes sunk in the goo: a dark socket, the glowing eye, a black slit pupil
     [[-.05,1.629,.026],[.054,1.643,.021],[.002,1.674,.014]].forEach(([x,y,r])=>{const p=b7_Face(M,S,x,y);if(!p)return;const R=r*S.hs;
       k.p('head','sph','c',0x081004,p[0],p[1],p[2]-R*.55,R*1.45,R*1.2,R);k.p('head','sph','g',c.glow,p[0],p[1],p[2]-R*.12,R,R*.82,R*.6);k.p('head','box','c',0x000000,p[0],p[1],p[2]+R*.42,R*.2,R*1.25,R*.14)});
     // the maw: crooked upper teeth, a few lower ones, a sagging lower lip; drips off the chin
     for(let i=0;i<9;i++){const p=b7_Face(M,S,-.06+i*.015,1.566);if(p)k.p('head','cone4','c',0xc8c0a0,p[0],p[1]-.004,p[2]-.006,.0055*S.hs,(.022+((i*5)%3)*.009)*S.hs,.0055*S.hs,Math.PI,0,(i-4)*.06)}
     for(let i=0;i<4;i++){const p=b7_Face(M,S,-.042+i*.028,1.546);if(p)k.p('head','cone4','c',0xb8b090,p[0],p[1]+.004,p[2]-.006,.005*S.hs,.02*S.hs,.005*S.hs,0,0,(i-1.5)*.08)}
-    for(let i=0;i<4;i++){const p=b7_Face(M,S,-.045+i*.03,1.534);if(p)k.L('head','c',c.g2,[p[0],p[1]+.006,p[2]-.012],[p[0]+.004,p[1]-.05-(i%2)*.03,p[2]+.002],.016,.003,4)}
+    for(let i=0;i<4;i++){const p=b7_Face(M,S,-.045+i*.03,1.534);if(!p)continue;const e=[p[0]+.004,p[1]-.06-(i%2)*.04,p[2]+.004];k.L('head','c',c.g2,[p[0],p[1]+.006,p[2]-.012],e,.016,.005,4);k.p('head','ico','c',mdSh(c.g2,1.1),e[0],e[1]-.004,e[2],.011,.015,.011)}
     // goo blobs on the shoulders and the upper arms, clods of earth on the shoulders with a stone
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],p=cgRay(M,[a[0]+s*.02,a[1]+.5,a[2]],[0,-1,0],{arm:1,torso:1});if(!p)return;
-      k.p(A+'0','sph2','c',c.g1,p[0],p[1]-.03,p[2],.1,.075,.1);k.p(A+'0','dod','c',c.dirt,p[0]+s*.04,p[1]+.02,p[2]-.015,.075,.055,.07,.3,0,s*.4);k.p(A+'0','dod','c',0x6a6a5a,p[0]+s*.0,p[1]+.045,p[2]+.04,.03,.028,.03,1,1,0)});
+      k.p(A+'0','dod','c',c.dirt,p[0]+s*.04,p[1]+.02,p[2]-.015,.075,.055,.07,.3,0,s*.4);k.p(A+'0','dod','c',0x6a6a5a,p[0]+s*.0,p[1]+.045,p[2]+.04,.03,.028,.03,1,1,0)});
     // the earth it has swallowed: clods half sunk all over the body
     [[sh-.02,.9,.06],[sh-.02,-.9,.06],[ch,2.6,.08],[sp+.02,3.2,.07],[wy,-2.5,.06],[sp-.02,.5,.05],[ch+.03,.2,.045],[hy+.02,-.3,.05]].forEach(([y,a,r],i)=>{const p=cgSurf(M,S,y,a,-r*.35);
-      k.p(b7_TB(S,y),'dod','c',i%2?c.dirt:c.dirt2,p[0],p[1],p[2],r,r*.8,r*.9,i,i*.7,0)});
+      k.p(b7_TB(S,y),'dod','c',i%2?c.dirt:c.dirt2,p[0],p[1],p[2],r,r*.8,r*.9,i,i*.7,0);WS(p)});
     // a skull and ribs half swallowed in the belly
     {const y=sp+.01,a=.18,p=cgSurf(M,S,y,a,-.035),n=[Math.sin(a),0,Math.cos(a)],ex=[Math.cos(a),0,-Math.sin(a)];k.p('spine','sph','c',c.bone,p[0],p[1],p[2],.07,.066,.066);
       [-1,1].forEach(e=>{const q=add3(add3(p,mul3(n,.056)),add3(mul3(ex,e*.024),[0,.012,0]));k.p('spine','sph','c',0x101008,q[0],q[1],q[2],.019,.019,.014)});
@@ -57150,71 +57930,100 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       for(let i=0;i<4;i++){const a2=-.42+i*.15,q=cgSurf(M,S,sp+.1,a2,-.005),r=cgSurf(M,S,sp+.05,a2+.08,-.005),m=add3(lerp3(q,r,.5),[Math.sin(a2)*.008,0,Math.cos(a2)*.008]);k.L('spine','c',c.bone2,q,m,.009,.008,4);k.L('spine','c',c.bone2,m,r,.008,.006,4)}}
     // twigs and roots poking out every which way (rooted inside the goo), a forked one now and then
     [[sh-.04,.4,[.08,.14,.06]],[ch,2.8,[-.1,.16,-.12]],[sp+.04,3.4,[.1,.12,-.14]],[sp,1.6,[.14,.08,0]],[wy,-1.7,[-.14,.1,.02]],[sh-.02,-2.6,[-.06,.2,-.1]],[hy+.02,2.2,[.1,-.02,-.12]],[ch-.02,-.6,[-.06,.1,.12]]].forEach(([y,a,d],i)=>{
-      const p=cgSurf(M,S,y,a,-.03),bn=b7_TB(S,y),e=add3(p,d);k.L(bn,'c',c.bark,p,e,.013,.004,4);if(i%2){const m=lerp3(p,e,.6);k.L(bn,'c',c.bark,m,add3(m,[.05,.04,-.02]),.007,.002,3)}});
+      const p=cgSurf(M,S,y,a,-.03),bn=b7_TB(S,y),e=add3(p,d);k.L(bn,'c',c.bark,p,e,.013,.004,4);WS(p);if(i%2){const m=lerp3(p,e,.6);k.L(bn,'c',c.bark,m,add3(m,[.05,.04,-.02]),.007,.002,3);WS(p)}});
     [-1,1].forEach(s=>{const F=b7_Arm(S,s),A=F.A,a0=J[A+'0'];
       {const q=lerp3(a0,F.a1,.4),p=cgRay(M,add3(q,[s*.4,0,0]),[-s,0,0],{arm:1});if(p)k.L(A+'0','c',c.bark,add3(p,[-s*.02,0,0]),add3(p,[s*.12,.08,-.08]),.011,.003,4)}
       {const q=lerp3(F.a1,F.a2,.5),p=cgRay(M,add3(q,mul3(F.u,.4)),mul3(F.u,-1),{arm:1});if(p)k.L(A+'1','c',c.bark,sub3(p,mul3(F.u,.02)),add3(p,[s*.1,-.02,.1]),.01,.003,4)}
-      // drips off the arms
-      [[A+'0',a0,F.a1,.55],[A+'0',a0,F.a1,.95],[A+'1',F.a1,F.a2,.45]].forEach(([bn,a,b,t],i)=>{const q=lerp3(a,b,t),dir=nrm3([s,0,.35]),p=cgRay(M,add3(q,mul3(dir,.4)),mul3(dir,-1),{arm:1});if(!p)return;
-        k.L(bn,'c',c.g2,sub3(p,mul3(dir,.016)),add3(p,[s*.008,-.11-i*.02,.008]),.02,.003,4)});
-      // a lumpy goo fist with three stubby fingers
-      const h=add3(F.a2,mul3(F.d,.06));k.p(A+'2','sph','c',c.g2,h[0],h[1],h[2],.075,.07,.075);
-      for(let f=0;f<3;f++){const r=add3(add3(h,mul3(F.f,(f-1)*.035)),mul3(F.d,.04)),e=add3(add3(r,mul3(F.d,.08)),add3(mul3(F.f,(f-1)*.012),mul3(F.u,-.03)));k.L(A+'2','c',c.g1,r,e,.026,.013,5)}
+      // a root hanging from the forearm, forked
+      {const q=lerp3(F.a1,F.a2,.7),p=cgRay(M,add3(q,mul3(F.f,-.4)),F.f,{arm:1});if(p){const e=add3(p,[s*.03,-.16,-.04]),m=lerp3(p,e,.55);k.L(A+'1','c',c.bark,sub3(p,mul3(F.f,-.02)),e,.009,.002,4);WS(p);k.L(A+'1','c',c.bark,m,add3(m,[s*.05,-.06,.02]),.005,.0015,3);WS(p)}}
+      // three stubby goo fingers from the fist (part of the arm's surface): rounded lofts in the hand's own colour, rooted
+      // inside the fist and curling in toward the palm
+      const K=S.armK[s],h=add3(F.a2,mul3(F.d,.06*K)),fc=mdMix(c.g1,c.g2,.45),W=[[A+'2',1]];
+      for(let f=0;f<3;f++){const o=(f-1)*.042*K,P=(t,cu)=>add3(add3(h,mul3(F.d,(t+.02)*K)),add3(mul3(F.f,o*(1+t*.8)),mul3(F.u,-cu*K)));
+        mdLoft(B,[{p:P(.0,0),rx:.03*K,f:.03*K,b:.03*K,w:W},{p:P(.06,.006),rx:.028*K,f:.027*K,b:.027*K,w:W},{p:P(.095,.026),rx:.022*K,f:.021*K,b:.021*K,w:W},{p:P(.108,.048),rx:.015*K,f:.015*K,b:.015*K,w:W}],
+          {seg:6,ref:F.u,capB:true,col:()=>f==1?fc:mdSh(fc,.92)})}
       // feet spread into a dirty puddle
-      const l=s<0?'lh2':'rh2',FT=J[l];k.p(l,'sph','c',c.g2,FT[0],.022,FT[2]+.06*S.foot.len,.12,.036,.16);for(let i=0;i<3;i++)k.p(l,'sph','c',c.dirt,FT[0]+(i-1)*.06,.014,FT[2]+.13+i%2*.04,.032,.013,.032)});
+      const l=s<0?'lh2':'rh2',FT=J[l];k.p(l,'sph','c',c.g2,FT[0],.022,FT[2]+.06*S.foot.len,.12,.036,.16);for(let i=0;i<3;i++)k.p(l,'ico','c',c.dirt,FT[0]+(i-1)*.06,.014,FT[2]+.13+i%2*.04,.032,.013,.032)});
+    // stones and pebbles half sunk in the goo (grey and rust-brown), crumbs of earth on the crown, roots trailing down the back
+    [[ch+.04,-.35,.03],[sp+.03,.95,.024],[wy+.02,2.2,.028],[sh-.05,3.0,.034],[hy+.03,-1.2,.022],[ch-.05,1.9,.02],[sp-.04,-2.4,.026],[wy-.03,.05,.018],[sh-.02,-.3,.02],[hy+.06,3.3,.024]].forEach(([y,a,r],i)=>{
+      const p=cgSurf(M,S,y,a,-r*.4);k.p(b7_TB(S,y),'ico','c',[0x6a6a5a,0x58564c,0x5a4632][i%3],p[0],p[1],p[2],r,r*.8,r*.9,i*.9,i*1.3,i*.4);WS(p)});
+    [-1,1].forEach(s=>{const l=s<0?'lh':'rh',q=lerp3(J[l+'0'],J[l+'1'],.5),p=cgRay(M,[q[0]+s*.4,q[1],q[2]+.1],[-s,0,-.25],{leg:1});if(p){k.p(l+'0','ico','c',0x58564c,p[0],p[1],p[2],.024,.02,.022,s,1,0);WS(p)}});
+    [[-.03,1.73,.02],[.04,1.75,.016],[0,1.78,.018]].forEach(([x,y,r],i)=>{const q=S.hp(x,y,0),p=cgRay(M,[q[0],q[1]+.4,q[2]-.02],[0,-1,0],{head:1});if(p){k.p('head','dod','c',i%2?c.dirt:c.dirt2,p[0],p[1]-r*.3,p[2],r,r*.75,r*.9,i,i,0)}});
+    [[sh-.06,3.0,[.05,-.32,-.08]],[ch-.04,3.5,[-.07,-.28,-.06]]].forEach(([y,a,d])=>{const p=cgSurf(M,S,y,a,-.02),e=add3(p,d),m=lerp3(p,e,.5);k.L('chest','c',c.bark,p,e,.012,.003,4);WS(p);k.L('chest','c',c.bark,m,add3(m,[d[0]*.6,-.1,-.03]),.006,.002,3);WS(p)});
     // glowing bubbles caught in the goo
-    for(let i=0;i<16;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'sph','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r)}})})();
-ST179.amalgam={sx:.22,hx:-.2,lk:.24,rk:.24,az:.14,lz:-.14,ex:-.3,le:-.3};
+    for(let i=0;i<12;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'ico','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r);WS(p)}})})();
+ST179.amalgam={sx:.34,hx:-.36,lk:.3,rk:.3,ax:-.12,lx:-.08,az:.24,lz:-.2,ex:-.35,le:-.22};
 
 // ---------------- Akorror: a chitin-armoured horror ----------------
 // olive-black chitin plates with lighter rims, a horned crest, big glowing green compound eyes, mandibles and huge fangs
 // round a glowing red mouth, spiked pauldrons, a spine ridge, acid glowing in the belly seams, forearm scythes, huge talons,
 // knee spikes, a heavy plated tail with rings and a fang stinger, hooked toe claws
-(function(){const S=cgHuman({h:.86,w:1.26,d:1.18,rw:[1.14,1.22,1.16,1.22,1.32,1.36,1.44,1.54],rf:[1.05,1.1,1.16,1.22,1.3,1.22,1.14,1.12],at:1.8,lt:1.78,hs:1.04,hw:1.12,hd:1.18,hy:.94,legL:.86,armL:1.14,nw:1.6,foot:1.15,footW:1.3,facePush:BRUTEJAW});
-  const c1=0x100f0b,c2=0x211f16,c3=0x060604,edge=0x36341f,acid=0xb8ff3a,acid2=0x5a9a1a,fang=0xe8e0c8,claw=0x2a2430,T=S.torso,J=S.J;
-  const band=(m,f,a,b)=>Math.round(m.y*f)%2?a:b;
-  cg181Reg('akorror',S,function(B,P,k,C){const M=C.M,wy=T[2][0],hy=T[1][0];
+// (refine, Oct 31 2026) a bug-thing, not a man in armour: a broad hunched thorax over a pinched, segmented waist, thin jointed
+// limbs splayed wide (elbows and knees out, scythes forward like a mantis), knobbed joints, rows of spikes on the back,
+// forearms and shins, a scorpion's segmented tail arching up behind; chitin segments with dark seams and pale olive rims
+// painted (baked shading, no extra triangles), talons grown from the hand
+(function(){const HD=br_Head([0,2,4,6,8,10,12,14],i=>[[.9,1.0,.95,.006],[.92,1.04,.98,.006],[.98,1.04,1.0,.004],[1.04,1.02,1.02,0],[1.06,1,1.04,0],[1.02,.98,1.04,0],[.96,.94,1,0],[.86,.84,.92,0]][i]);
+  const AR=[{t:.06,r:.05,o:.01},{t:.32,r:.038},{t:.7,r:.032,rf:.036},{t:.96,r:.03},{t:1.06,r:.036,rb:.046},{t:1.2,r:.028},{t:1.94,r:.02},
+    {t:2.12,r:.019,rf:.031,rb:.027},{t:2.32,r:.013,rf:.025,rb:.022}];
+  const LG=[{t:.12,r:.078},{t:.45,r:.062,rf:.066},{t:.92,r:.046},{t:1.02,r:.054,rf:.064},{t:1.14,r:.044},{t:2.0,r:.03}];
+  const S=cgHuman({h:.9,w:1.2,d:1.14,rw:[1.0,1.1,.6,.84,1.3,1.38,1.48,1.02],rf:[1,1.06,.66,.98,1.34,1.26,1.12,.9],rb:[1,1.1,.7,.94,1.36,1.46,1.56,1.12],at:1.32,lt:1.26,hs:1.04,hw:1.1,hd:1.2,hy:.92,legL:.96,armL:1.24,nw:1.2,foot:1.15,footW:1.05,knee:1.4,
+      n:16,sock:1,j2:1,footLite:1,head:HD,arm:AR,leg:LG});
+  const c1=0x1a1a10,c2=0x2a2a19,c3=0x0a0a06,edge=0x4a4a26,acid=0xb8ff3a,acid2=0x5a9a1a,fang=0xe8e0c8,claw=0x2a2430,T=S.torso,J=S.J;
+  // chitin segments: a dark seam, then a pale olive rim fading into the plate below it (paint does the bevel)
+  // (plate(): the seams only where the surface is upright: on tops they would ring like contour lines)
+  const seg=(y,per,ph)=>{const u=((y/per+(ph||0))%1+1)%1;return u<.12?0:u<.3?1:2},plate=(y,per,ph,a,b)=>{const q=seg(y,per,ph);return q==0?c3:q==1?b:a};
+  cg181Reg('akorror',S,function(B,P,k,C){const M=C.M,wy=T[2][0],hy=T[1][0],sh=T[6][0],WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)};
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.05)return 0;let d=.022*cgG(x,y,0,1.645,.06,.01)-.012*cgG(x,y,0,1.556,.04,.005);[-1,1].forEach(s=>d-=.016*cgG(x,y,s*.04,1.628,.016,.01));return d}));
-    M.b7hide=[];M.b7col=(m=>m.part=='hand'?c3:m.part=='head'?(m.s>.45&&m.y<S.hp(0,1.6,0)[1]?c3:Math.round(m.y*44/S.hs)%3==0?edge:m.s<-.2?c1:c2):m.s<-.3?c3:band(m,20,c1,mdMix(c1,edge,.55)));
-    // plate shells: chest and back, belly bands, limb plates (rims tucked to the skin)
-    b7_Sh(B,M,m=>m.part=='torso'&&m.y>wy+.02,.024,m=>Math.abs(m.x)<.02?edge:band(m,16,c2,c1));b7_Sh(B,M,m=>m.part=='torso'&&m.y<=wy+.02&&m.y>J.lh0[1]-.03,.02,m=>m.s>.4?band(m,30,c2,c3):band(m,30,c2,edge));
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a=J[A+'0'];b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y>J[A+'1'][1]+.03,.022,m=>band(m,30,c2,c1));b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.03&&m.y>J[A+'2'][1],.02,c2);
-      b7_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>J[L+'1'][1]+.04,.022,m=>band(m,24,c2,c1));b7_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<J[L+'1'][1]-.04&&m.y>J[L+'2'][1]+.02,.02,c2);
-      // massive spiked pauldrons
-      k.p(A+'0','hem','c',c2,a[0]+s*.05,a[1]+.05,a[2],.16,.095,.16,0,0,s*.45);k.p(A+'0','hem','c',edge,a[0]+s*.06,a[1]+.03,a[2],.145,.065,.145,0,0,s*.75);
-      for(let i=0;i<3;i++)k.p(A+'0','cone4','c',c3,a[0]+s*(.07+i*.03),a[1]+.14-i*.02,a[2]-.04+i*.04,.026,.15-i*.02,.026,-.3,0,-s*(.4+i*.2));
-      // huge talons on a heavy knuckled hand, a thumb claw
-      const F=b7_Arm(S,s),kn=add3(F.a2,mul3(F.d,.07));k.p(A+'2','sph','c',c2,kn[0],kn[1],kn[2],.062,.06,.068);
-      for(let f=0;f<3;f++){const r=add3(add3(kn,mul3(F.f,(f-1)*.034)),mul3(F.d,.03)),D=nrm3(add3(add3(mul3(F.d,.75),mul3(F.f,.62+(f-1)*.05)),mul3(F.u,(f-1)*.08)));
-        b7_Claw(k,A+'2',f==1?fang:claw,r,D,F.d,.22,.024,.5,4)}
-      b7_Claw(k,A+'2',claw,add3(add3(F.a2,mul3(F.d,.035)),mul3(F.u,-s*0-.03)),nrm3(add3(add3(mul3(F.d,.5),mul3(F.f,.5)),mul3(F.u,-.6))),F.d,.12,.02,.45,3);
-      // a scythe blade growing out of the back of the forearm, curving forward
-      b7_Scythe(k,M,S,s,.3,.05,edge,0x8a8466);
-      // knee spikes, hooked toe claws
-      const K2=J[L+'1'],kp=cgRay(M,[K2[0],K2[1]+.02,K2[2]+.4],[0,0,-1],{leg:1});if(kp)k.L(L+'1','c',edge,[kp[0],kp[1]-.01,kp[2]-.03],[kp[0],kp[1]+.09,kp[2]+.1],.03,.002,4);
-      const FT=J[L+'2'];for(let f=0;f<3;f++){const r=[FT[0]+(f-1)*.04,.035,FT[2]+.13*S.foot.len];b7_Claw(k,L+'2',fang,r,nrm3([(f-1)*.2,-.15,1]),[0,-1,0],.1,.02,.6,3)}});
+    // a keeled thorax: a ridge down the breastbone and the back; the waist stays pinched
+    cgSculpt(M,{torso:1},(x,y,z,n)=>y>wy+.03?.016*Math.exp(-((x/.03)**2))*Math.abs(n[2])*br_ss(wy+.03,wy+.12,y):0);
+    M.shade=cgShade(M,{cav:1.2,y0:0,y1:S.hp(0,1.73,0)[1],hk:.3});
+    M.b7hide=[];M.b7col=(m=>m.part=='hand'?c3:Math.abs(m.ny)>.6?(m.ny>0?c2:c3):m.part=='head'?(m.s>.45&&m.y<S.hp(0,1.6,0)[1]?c3:plate(m.y,.03*S.hs,.3,m.s<-.2?c1:c2,edge)):m.s<-.3?plate(m.y,.05,0,c3,c1):plate(m.y,.05,0,c1,mdMix(c1,edge,.55)));
+    // plate shells: thorax, the segmented waist and belly, limb plates (rims tucked to the skin)
+    b7_Sh(B,M,m=>m.part=='torso'&&m.y>wy+.03,.024,m=>Math.abs(m.x)<.016?edge:Math.abs(m.ny)>.6?c2:plate(m.y,.06,.5,c2,edge));
+    b7_Sh(B,M,m=>m.part=='torso'&&m.y<=wy+.03&&m.y>J.lh0[1]-.03,.02,m=>Math.abs(m.ny)>.6?c1:plate(m.y,.032,.2,m.s>.4?c2:c1,edge));
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a=J[A+'0'];
+      b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y>J[A+'1'][1]+.04,.02,c2);b7_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.05&&m.y>J[A+'2'][1]+.01,.018,c2);   // limb plates plain (seams on their slanted faces would step)
+      b7_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>J[L+'1'][1]+.05,.02,c2);b7_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<J[L+'1'][1]-.05&&m.y>J[L+'2'][1]+.03,.018,c2);
+      // a cluster of carapace spikes on the shoulder, swept back and out (no pauldron: they grow from the chitin)
+      for(let i=0;i<3;i++){const p=cgRay(M,[a[0]+s*(.0+i*.035),a[1]+.5,a[2]-.03+i*.03],[0,-1,0],{arm:1,torso:1});if(!p)continue;k.p(A+'0','cone4','c',i==1?edge:c3,p[0],p[1]-.01,p[2],.03,.17-i*.03,.03,-.55,0,-s*(.35+i*.25));WS(p)}
+      // talons grown from the hand: three long hooked claws, dark chitin at the root paling to bone at the point, and a thumb hook
+      const F=b7_Arm(S,s);br_Fingers(B,S,s,{n:3,len:.16,r:.017,hw:.03,te:2.32,curl:1.1,cl:.05,tc:(i,n)=>i<1.2?c2:i<n-2.2?claw:fang});
+      // a scythe blade growing out of the back of the forearm, curving forward; spikes along the forearm
+      b7_Scythe(k,M,S,s,.38,.05,edge,0x8a8466);
+      for(let i=0;i<2;i++){const q=lerp3(F.a1,F.a2,.25+i*.3),o=nrm3(add3(mul3(F.u,.9),mul3(F.f,-.4))),p=cgRay(M,add3(q,mul3(o,.4)),mul3(o,-1),{arm:1});if(p){k.L(A+'1','c',c3,sub3(p,mul3(o,.012)),add3(add3(p,mul3(o,.07)),mul3(F.d,.03)),.016,.002,4);WS(p)}}
+      // knee spikes, a spur on the shin, hooked toe claws
+      const K2=J[L+'1'],kp=cgRay(M,[K2[0],K2[1]+.02,K2[2]+.4],[0,0,-1],{leg:1});if(kp)k.L(L+'1','c',edge,[kp[0],kp[1]-.01,kp[2]-.03],[kp[0]+s*.02,kp[1]+.11,kp[2]+.1],.03,.002,4);
+      {const q=lerp3(J[L+'1'],J[L+'2'],.45),p=cgRay(M,[q[0]+s*.4,q[1],q[2]-.1],nrm3([-s,0,.25]),{leg:1});if(p){k.L(L+'1','c',c3,[p[0]-s*.012,p[1],p[2]],[p[0]+s*.07,p[1]+.03,p[2]-.03],.016,.002,4);WS(p)}}
+      const FT=J[L+'2'];for(let f=0;f<3;f++){const r=[FT[0]+(f-1)*.036,.032,FT[2]+.11*S.foot.len];b7_Claw(k,L+'2',fang,r,nrm3([(f-1)*.3,0,1]),[0,-1,0],.095,.02,.32,3)}
+      b7_Claw(k,L+'2',claw,[FT[0],.045,FT[2]-.05*S.foot.len],[0,-.1,-1],[0,-1,0],.06,.016,.3,2)});
     // the head: a crest of horns sweeping back, big compound eyes on the sides, mandibles, fangs, a glowing red mouth
-    [-1,0,1].forEach(s=>{let a=S.hp(s*.05,1.69,-.02),d=[s*.25,.5,-.8];for(let j=0;j<4;j++){const b=add3(a,mul3(d,.075*S.hs));k.L('head','c',j<2?c2:edge,a,b,(.032-j*.006)*S.hs,(.026-j*.006)*S.hs,5);a=b;d=[d[0]*1.1,d[1]-.25,d[2]-.1]}});
-    [-1,1].forEach(s=>{const o=S.hp(0,1.636,.02),dir=nrm3([-s*.8,0,-.6]),p=cgRay(M,sub3(o,mul3(dir,.4)),dir,{head:1});if(!p)return;const n=mul3(dir,-1),R=.046*S.hs;
-      const sc=add3(p,mul3(n,-R*.25));k.p('head','sph2','c',c3,sc[0],sc[1],sc[2],R*1.12,R,R*1.12);const gc=add3(p,mul3(n,R*.12));k.p('head','sph2','g',acid,gc[0],gc[1],gc[2],R*.92,R*.84,R*.98);
+    [-1,0,1].forEach(s=>{let a=S.hp(s*.05,1.69,-.02),d=[s*.3,.5,-.8];for(let j=0;j<4;j++){const b=add3(a,mul3(d,.08*S.hs));k.L('head','c',j<2?c2:edge,a,b,(.032-j*.006)*S.hs,(.026-j*.006)*S.hs,5);a=b;d=[d[0]*1.1,d[1]-.25,d[2]-.1]}});
+    [-1,1].forEach(s=>{const o=S.hp(0,1.636,.02),dir=nrm3([-s*.8,0,-.6]),p=cgRay(M,sub3(o,mul3(dir,.4)),dir,{head:1});if(!p)return;const n=mul3(dir,-1),R=.048*S.hs;
+      const sc=add3(p,mul3(n,-R*.25));k.p('head','sph','c',c3,sc[0],sc[1],sc[2],R*1.12,R,R*1.12);const gc=add3(p,mul3(n,R*.12));k.p('head','sph','g',acid,gc[0],gc[1],gc[2],R*.92,R*.84,R*.98);
       for(let i=0;i<2;i++){const q=add3(add3(p,mul3(n,R*.95)),[0,(i-.5)*R*.7,0]);k.p('head','box','c',c3,q[0],q[1],q[2],R*1.3,R*.06,R*.06,0,Math.atan2(n[0],n[2]),0)}});
     {const p=b7_Face(M,S,0,1.556);if(p)k.p('head','box','g',0x8a1a0a,p[0],p[1],p[2]-.004,.07*S.hs,.014*S.hs,.012)}
     [[.03,1.556,.095,.017],[.072,1.565,.06,.013]].forEach(([x,y,len,r])=>[-1,1].forEach(s=>{const p=b7_Face(M,S,s*x,y);if(!p)return;const a=[p[0],p[1]+.006,p[2]-.008];
       k.L('head','c',fang,a,[p[0]+s*len*.12,p[1]-len*S.hs,p[2]+len*.25],r*S.hs,.002,5)}));
     [-1,1].forEach(s=>{const p=b7_Face(M,S,s*.06,1.548);if(!p)return;let a=[p[0]-s*.006,p[1],p[2]-.012],d=[s*.25,-.25,1];for(let i=0;i<4;i++){const L=.05*S.hs,b=add3(a,mul3(nrm3(d),L));
-      k.L('head','c',i<2?c2:fang,a,b,.022*(1-i*.2)*S.hs,(.02*(1-(i+1)*.2)+.003)*S.hs,4);a=b;d=[d[0]-s*.35,d[1]+.05,d[2]-.15]}k.p('head','sph','g',acid,a[0],a[1]-.01,a[2],.008,.014,.008)});
-    // a ridge of spikes down the spine
-    for(let i=0;i<7;i++){const y=T[6][0]-i*.075,p=cgSurf(M,S,y,Math.PI,-.006);k.p(b7_TB(S,y),'cone4','c',i%2?c2:edge,p[0],p[1],p[2],.03,.16-Math.abs(i-2)*.015,.028,-1.05)}
+      k.L('head','c',i<2?c2:fang,a,b,.022*(1-i*.2)*S.hs,(.02*(1-(i+1)*.2)+.003)*S.hs,4);a=b;d=[d[0]-s*.35,d[1]+.05,d[2]-.15]}k.p('head','oct','g',acid,a[0],a[1]-.01,a[2],.009,.015,.009)});
+    // a ridge of big spikes down the back of the thorax, swept back
+    for(let i=0;i<6;i++){const y=sh+.02-i*.06,p=cgSurf(M,S,y,Math.PI,-.006);k.p(b7_TB(S,y),'cone4','c',i%2?c2:edge,p[0],p[1],p[2],.034,.2-Math.abs(i-1.5)*.02,.03,-1.0);WS(p)}
+    [-1,1].forEach(s=>{for(let i=0;i<3;i++){const y=sh-.04-i*.07,p=cgSurf(M,S,y,Math.PI-s*.62,-.006);k.p(b7_TB(S,y),'cone4','c',c3,p[0],p[1],p[2],.024,.11-i*.015,.022,-1.1,0,-s*.5);WS(p)}});
     // acid glowing in the belly seams and in spots on the plates
-    [0,1,2].forEach(i=>{const y=wy-.03+i*.045,p=cgSurf(M,S,y,0,.018);k.p(b7_TB(S,y),'box','g',acid2,p[0],p[1],p[2],.08-i*.012,.007,.008)});
-    [[J.chest[1]+.02,.5],[J.chest[1]-.04,-.6],[wy+.08,.9],[J.chest[1]+.06,-2.6]].forEach(([y,a])=>{const p=cgSurf(M,S,y,a,.02);k.p(b7_TB(S,y),'sph','g',acid,p[0],p[1],p[2],.011,.011,.008)});
-    // a heavy plated tail: segments with rings, spikes along its top, a fang stinger at the end
-    {const t0=cgSurf(M,S,J.lh0[1]+.02,Math.PI,-.03),T2=[t0,add3(t0,[0,-.1,-.2]),add3(t0,[0,-.22,-.4]),add3(t0,[0,-.32,-.6]),add3(t0,[0,-.36,-.78]),add3(t0,[0,-.35,-.92])],RR=[.1,.085,.07,.054,.036,.014];
-      cgTube(B,T2,RR,T2.map(()=>[['pelvis',1]]),m=>Math.round(m.i*2)%2?c1:c2,{seg:10,capB:true});
-      for(let i=1;i<5;i++){const a=T2[i],d=nrm3(sub3(T2[i+1],T2[i-1]));k.p('pelvis','ring','c',edge,a[0],a[1],a[2],RR[i]*1.06,.5,RR[i]*1.06,Math.atan2(d[2],d[1]),0,0);
-        k.p('pelvis','cone4','c',c3,a[0],a[1]+RR[i]*.85,a[2],.022,.1-i*.012,.022,-.6)}
-      const e=T2[5],d=nrm3(sub3(T2[5],T2[4]));k.L('pelvis','c',fang,sub3(e,mul3(d,.03)),add3(e,mul3(nrm3(add3(d,[0,-.15,0])),.15)),.026,.002,5)}
-    b7_Body(B,M)})})();
+    [0,1,2].forEach(i=>{const y=wy-.03+i*.045,p=cgSurf(M,S,y,0,.018);k.p(b7_TB(S,y),'box','g',acid2,p[0],p[1],p[2],.06-i*.01,.007,.008)});
+    [[J.chest[1]+.02,.5],[J.chest[1]-.04,-.6],[wy+.08,.9],[J.chest[1]+.06,-2.6]].forEach(([y,a])=>{const p=cgSurf(M,S,y,a,.02);k.p(b7_TB(S,y),'oct','g',acid,p[0],p[1],p[2],.012,.012,.009)});
+    // a scorpion's tail: plated segments from the base of the back, arching up behind, rings and spikes along its top, a stinger
+    // curling forward with a drop of acid
+    {const t0=cgSurf(M,S,J.lh0[1]+.03,Math.PI,-.04),D=[[0,0,0],[0,-.06,-.17],[0,-.04,-.36],[0,.06,-.52],[0,.24,-.62],[0,.44,-.6],[0,.6,-.5],[0,.68,-.36]],T2=D.map(d=>add3(t0,d)),RR=[.1,.095,.085,.072,.06,.05,.04,.026];
+      cgTube(B,T2,RR,T2.map(()=>[['pelvis',1]]),m=>plate(m.i,1,.08,m.s>.3?c1:c2,edge),{seg:8,capB:true});
+      for(let i=1;i<7;i++){const a=T2[i],d=nrm3(sub3(T2[i+1],T2[i-1])),up=nrm3(cross3(d,[1,0,0])),tp=add3(a,mul3(up,-RR[i]*.8));
+        k.p('pelvis','cone4','c',i%2?c3:edge,tp[0],tp[1],tp[2],.022,.11-i*.008,.022,Math.atan2(-up[2],-up[1])-.25,0,0)}
+      const e=T2[7],d=nrm3(sub3(T2[7],T2[6])),st=add3(e,mul3(nrm3(add3(d,[0,-.9,.6])),.13));k.L('pelvis','c',edge,sub3(e,mul3(d,.02)),lerp3(e,st,.4),.03,.022,5);k.L('pelvis','c',fang,lerp3(e,st,.38),st,.022,.002,5);
+      k.p('pelvis','oct','g',acid,st[0],st[1]-.012,st[2],.008,.014,.008)}
+    br_Emit(B,M)})})();
+// the stance: hunched low over splayed, deeply bent legs, the head thrust forward and up, arms spread wide with the elbows
+// bent so the scythes come forward
+if(typeof N3!='undefined'&&N3.def&&N3.def.akorror)N3.def.akorror.stance={sx:.42,hx:-.4,lk:.24,rk:.24,ax:-.3,lx:-.3,az:.3,lz:-.3,ex:-.65,le:-.65};
 // a claw: segments curling about the axis ax (turning toward −up of the hand), tapering to a point
 function b7_Claw(k,bn,col,p,dir,tgt,len,r,curl,n){let a=p.slice(),d=nrm3(dir);
   for(let i=0;i<n;i++){const L=len/n,b=add3(a,mul3(d,L));k.L(bn,'c',col,a,b,r*(1-i/n),r*(1-(i+1)/n)+.002,4);a=b;d=nrm3(add3(d,mul3(tgt,curl)))}}
@@ -57234,12 +58043,16 @@ function b7_Scythe(k,M,S,s,len,w,col,edge){const F=b7_Arm(S,s),q=lerp3(F.a1,F.a2
 // hooded cloak, quiver and blue eyes; the colossus's femur club, crown, fused skulls, barrel ribs and grave-fire; the priest's
 // nemes, winged scarab and trailing bandages; the ghoul's grey-green skin, tusks, raised ribs and rags; the thrall's anchor,
 // chains, weed hair and slack jaw; the wretch's black hair over its face, gaping jaw, shroud rags and talons.
+// (refine pass, owner Oct 31 2026: "check every angle") the cage bodies' arms and thighs grow out of the shoulder and hip (ud_spec),
+// detail is baked shading and flowing colour instead of triangles, cloth that is a shell hides the skin under it, the ghoul is a
+// crawler and the colossus a hunched heap of fused bones; every one is back under the regular-foe ceiling of 8k triangles.
 function cgBoneTube(B,a,b,r0,r1,w0,w1,col,n){const R=[];n=n||4;for(let i=0;i<=n;i++){const t=i/n,bulge=1+.35*Math.pow(Math.abs(t-.5)*2,4);R.push({p:lerp3(a,b,t),rx:(r0+(r1-r0)*t)*bulge,f:(r0+(r1-r0)*t)*bulge,b:(r0+(r1-r0)*t)*bulge,w:t<.5?w0:w1})}
   mdLoft(B,R,{seg:8,capA:true,capB:true,col})}
 // a part on bone bn with its own axes (X along ax, Y along ay; uniform size sc, or [sx,sy,sz])
 function u8_part(k,bn,geo,t,col,p,ax,ay,sc){const s=Array.isArray(sc)?sc:[sc,sc,sc],x=nrm3(ax),z=nrm3(cross3(x,ay)),y=cross3(z,x),m=new THREE.Matrix4().makeBasis(new THREE.Vector3(...mul3(x,s[0])),new THREE.Vector3(...mul3(y,s[1])),new THREE.Vector3(...mul3(z,s[2])));
   m.setPosition(p[0],p[1],p[2]);k.P.push({bn,geo,t,col,m});return k.P[k.P.length-1]}
-var u8_LINK=null;function u8_link(){return u8_LINK||(u8_LINK=new THREE.TorusGeometry(1,.17,4,8))}
+var u8_LINK=null,ud_RING=null;function ud_ring(){return ud_RING||(ud_RING=new THREE.TorusGeometry(1,.14,3,8))}
+function u8_link(){return u8_LINK||(u8_LINK=new THREE.TorusGeometry(1,.2,3,6))}   // (refine) 36 triangles a link
 // a chain of links through the points (each link sunk into the body or the next link), alternate links turned a quarter
 function u8_chain(k,pts,bnOf,n,r,c1,c2){for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[Math.min(i+1,pts.length-1)],o=pts[Math.max(i-1,0)],d=nrm3(sub3(q,o)),up=n?n(p):[0,1,0],y=i%2?nrm3(cross3(d,up)):up;
   u8_part(k,bnOf(p),u8_link(),'m',i%2?c1:c2,p,d,y,[r*1.35,r,r])}}
@@ -57272,7 +58085,7 @@ function u8_foot(k,S,s,col,th){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S
 // returns {sp(y) column point, sf(y) sternum point, rib(i,s,j) a point on rib i (0 top … 5) side s (j 0 spine … 6 front), TW, py}
 function cgBones(B,k,S,o){const J=S.J,bone=o.bone,bd=o.bone2||mdSh(o.bone,.72),th=o.th||1,cg=o.cage||1,rt=o.rt||1,T=S.torso,H=S.head,col=m=>a181Nz(bone,m,.2,24);
   // the skull: a loft of the head rings, a separate jaw under it; sockets, a nose hole, teeth; eyes glowing in front of the sockets' dark
-  const skull=H.slice(3).map(q=>({p:[0,q[0],q[4]],rx:q[1]*.95,f:q[2]*.92,b:q[3]*.95,w:[['head',1]]}));mdLoft(B,skull,{seg:16,capA:true,capB:true,col});
+  const skull=H.slice(3).map(q=>({p:[0,q[0],q[4]],rx:q[1]*.95,f:q[2]*.92,b:q[3]*.95,w:[['head',1]]}));mdLoft(B,skull,{seg:14,capA:true,capB:true,col});
   const jaw=H.slice(0,4).map(q=>({p:[0,q[0]+.004,q[4]+.004],rx:q[1]*.86,f:q[2]*.9,b:q[3]*.55,w:[['head',1]]}));mdLoft(B,jaw,{seg:14,capA:true,capB:true,col:bd});
   const fz=y=>{const q=cgAt(H,y);return (q[4]||0)+q[2]*.92};const ey=S.hp(0,1.629,0)[1],nyy=S.hp(0,1.597,0)[1],my=S.hp(0,1.562,0)[1];
   [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.034*S.hs,ey,fz(ey)-.014*S.hs,.019*S.hs,.014*S.hs,.016*S.hs,0,0,s*-.25);if(o.eye)k.p('head','sph','g',o.eye,s*.035*S.hs,ey,fz(ey)-.003*S.hs,.012*S.hs,.008*S.hs,.007*S.hs,0,0,s*-.2)});
@@ -57281,12 +58094,12 @@ function cgBones(B,k,S,o){const J=S.J,bone=o.bone,bd=o.bone2||mdSh(o.bone,.72),t
   const sp=y=>{const q=cgAt(T,y);return [0,y,(q[4]||0)-q[3]*.55]},TW=y=>cgTorsoW(S,y),NW=y=>y<=J.neck[1]?TW(y):cgNeckW(S,y),Y0=J.pelvis[1]-.05,Y1=J.neck[1]-.01,hb=[0,H[3][0]+.014,(H[3][4]||0)-.012];
   const cs=[];for(let i=0;i<=10;i++){const y=Y0+(Y1-Y0)*i/10,r=(.024-.004*i/10)*th;cs.push({p:sp(y),rx:r,f:r*.92,b:r*.92,w:TW(y)})}
   const c1=sp(Y1);for(let i=1;i<=4;i++){const p=lerp3(c1,hb,i/4),r=.017*th;cs.push({p,rx:r,f:r,b:r,w:NW(p[1])})}mdLoft(B,cs,{seg:8,capA:true,capB:true,col:bd});
-  for(let i=0;i<11;i++){const y=Y0+(Y1-Y0)*i/10,p=sp(y);k.p(y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis','sph','c',bone,p[0],p[1],p[2]-.016*th,.022*th,.016*th,.02*th)}
-  for(let i=1;i<4;i++){const p=lerp3(c1,hb,i/4);k.p(p[1]>J.head[1]-.02?'head':'neck','sph','c',bone,p[0],p[1],p[2]-.012*th,.016*th,.012*th,.015*th)}
+  for(let i=0;i<11;i++){const y=Y0+(Y1-Y0)*i/10,p=sp(y);k.p(y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis','dod','c',bone,p[0],p[1],p[2]-.016*th,.022*th,.016*th,.02*th)}
+  for(let i=1;i<4;i++){const p=lerp3(c1,hb,i/4);k.p(p[1]>J.head[1]-.02?'head':'neck','dod','c',bone,p[0],p[1],p[2]-.012*th,.016*th,.012*th,.015*th)}
   // the ribs: from the column round the sides; the upper ones close on the sternum
   const r0=J.spine[1]+.04,r1=T[6][0]-.03,sf=y=>{const q=cgAt(T,y);return [0,y,(q[4]||0)+q[2]*.86*cg]},RB=[];
   for(let i=0;i<6;i++){const y=r1-(r1-r0)*i/5,q=cgAt(T,y);RB.push({});[-1,1].forEach(s=>{const pts=[];for(let j=0;j<=6;j++){const a=Math.PI-(Math.PI-.3)*j/6;pts.push([s*Math.sin(a)*q[1]*.92*cg,y-.02*Math.sin(j/6*Math.PI)-j*.006,(q[4]||0)+Math.cos(a)*(Math.cos(a)>0?q[2]:q[3])*.9*cg])}
-    pts[0]=sp(y);const e=pts[6];if(i<4)pts.push([s*.006,e[1]-.004,sf(e[1])[2]]);RB[i][s]=pts;mdLoft(B,pts.map(p=>({p,rx:.011*th*rt,f:.008*th*rt,b:.008*th*rt,w:TW(y)})),{seg:6,capB:true,col})})}
+    pts[0]=sp(y);const e=pts[6];if(i<4)pts.push([s*.006,e[1]-.004,sf(e[1])[2]]);RB[i][s]=pts;mdLoft(B,pts.map(p=>({p,rx:.011*th*rt,f:.008*th*rt,b:.008*th*rt,w:TW(y)})),{seg:5,capB:true,col})})}
   const st0=RB[3][1][7][1]-.012;cgBoneTube(B,sf(r1+.01),sf(st0),.016*th,.013*th,TW(r1),TW(st0),col,3);
   [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];cgBoneTube(B,sf(r1+.015),[a[0]*.9,a[1]+.01,a[2]+.02],.012*th,.014*th,[['chest',1]],[['chest',1]],col,3);
     const sw=.07*(1+(th-1)*.4);k.p('chest','hem','c',bd,s*Math.max(.085*S.h,sw*1.05),J.chest[1]+.03,sp(J.chest[1]+.03)[2]-.012,sw,.012,.09*(1+(th-1)*.4),-Math.PI/2,0,0)});
@@ -57298,7 +58111,9 @@ function cgBones(B,k,S,o){const J=S.J,bone=o.bone,bd=o.bone2||mdSh(o.bone,.72),t
     cgBoneTube(B,add3(l0,[0,.012,0]),[s*pq[1]*.62,py-.01,pz],.016*th,.018*th,[['pelvis',1]],[['pelvis',1]],bd,3);
     cgBoneTube(B,a0,a1,.022*th,.018*th,[[A+'0',1]],[[A+'0',1]],col);k.p(A+'0','sph','c',bone,a0[0],a0[1],a0[2],.032*th);k.p(A+'1','sph','c',bone,a1[0],a1[1],a1[2],.026*th);
     [-.012,.012].forEach(o2=>cgBoneTube(B,add3(a1,[0,0,o2*th]),add3(a2,[0,0,o2*.6*th]),.012*th,.01*th,[[A+'1',1]],[[A+'1',1]],col,3));
-    u8_hand(k,S,s,bone,o.fist&&o.fist(s)?'fist':'claw',bd,th,o.hand||1);
+    if(o.mitt&&o.fist&&o.fist(s)){const rf=o.hand||1,H=ud_hf(S,s),c0=add3(a2,mul3(H.d,.024*Math.sqrt(rf))),pc=sub3(H.kn,mul3(H.d,.012));k.p(A+'2','sph','c',bone,a2[0],a2[1],a2[2],.016*th);k.p(A+'2','sph','c',bone,c0[0],c0[1],c0[2],.017*rf,.017*rf,.017*rf);
+      u8_part(k,A+'2',dkG().sph,'c',bone,pc,H.f,H.d,[.031*rf,.03*Math.sqrt(rf),.0135*rf]);ud_fingers(B,S,s,bone,'fist',1.4,bd,0,rf)}
+    else u8_hand(k,S,s,bone,o.fist&&o.fist(s)?'fist':'claw',bd,th,o.hand||1);
     cgBoneTube(B,add3(l0,[0,.02,0]),l1,.026*th,.02*th,[[L+'0',1]],[[L+'0',1]],col);k.p(L+'0','sph','c',bone,l0[0],l0[1]+.01,l0[2],.034*th);k.p(L+'1','sph','c',bone,l1[0],l1[1],l1[2]+.008,.03*th);
     cgBoneTube(B,l1,add3(l2,[0,.01,0]),.02*th,.016*th,[[L+'1',1]],[[L+'1',1]],col);u8_foot(k,S,s,bone,th)});
   // the soul-light caged in the ribs, resting on the column; wisps rising off it
@@ -57316,6 +58131,67 @@ function u8_boneCape(B,S,R,o){const J=S.J,T=S.torso,top=T[6][0],cg=o.cage||1,bz=
   const cw=y=>y>J.cp0[1]-.04?[['chest',.6],['cp0',.4]]:y>J.cp1[1]?mdWb('cp0','cp1',(J.cp0[1]-y)/(J.cp0[1]-J.cp1[1])):y>J.cp2[1]?mdWb('cp1','cp2',(J.cp1[1]-y)/(J.cp1[1]-J.cp2[1])):[['cp2',1]];
   const Y=[top+.012,top-.1,top-.25,top-.42,J.cp1[1]-.1,J.cp2[1],o.len],RR=[{p:R.sp(top-.02),rx:.018,f:.016,b:.016,w:R.TW(top-.02)}].concat(Y.map((y,i)=>({p:[0,y,bz(y)-Math.max(0,top-y)*.08],rx:(.15+i*.024)*w,f:.012,b:.012,w:cw(y)})));
   const n=RR.length;mdLoft(B,RR,{seg:20,col:m=>m.s>.2?mdSh(o.col,.6):Math.round(Math.atan2(m.c,-m.s)*9)%2?o.col:mdSh(o.col,.82),keep:m=>!(m.i>n-2.2&&a181H(Math.round(Math.atan2(m.c,m.s)*6),2)<.5*(m.i-(n-2.2))*.9)})}
+
+// ---------------- (refine pass, owner Oct 31 2026: the undead brought to the Amalgam standard) ----------------
+// Cage bodies: 16 columns, a shoulder socket as tall as the arm (sock), the arm and thigh grown out of the shoulder and hip (j2:
+// the "seated limbs" fix), 8 head rings, only the limb rings that shape the outline or bend a joint, 3 foot rings. Detail is
+// paint: baked creases and height light (cgShade), colour that flows corner to corner (vcol), cloth that is a colour band.
+// o: the cgHuman options (any of these can be overridden)
+function ud_spec(o){const B=CG181.base;return cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,facePush:ud_FACE,
+  head:B.head.filter((q,i)=>i%2==0),arm:B.arm.filter((q,i)=>i!=2&&i!=5),leg:B.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},o))}
+// the face push for the 8-ring head (jaw angle on the throat / chin rings, hollow cheeks on the upper-lip ring)
+function ud_FACE(i,j,a){const ca=Math.cos(a),sa=Math.sin(a),side=Math.abs(ca);return (i<=1&&sa>-.2&&side>.6?.006:0)-(i==2&&sa>.4&&side>.3&&side<.8?.008:0)}
+// a shell (cloth, wraps, plates) that remembers what it covers: the skin under it is not drawn (ud_body draws the rest), so
+// a covered body costs no extra triangles. o.vcol: a colour per corner (as cgEmit), rim: the rim tuck (0 = on the skin)
+function ud_sh(B,M,sel,off,col,o){o=o||{};const N=M.N||(M.N=cgNormals(M)),pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map();
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1)}});
+  const rim=new Set();M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;if(cnt.get(k)==1){rim.add(a);rim.add(b)}}});
+  const P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=M.V[i],n=N[i],d=(typeof off=='function'?off(v):off)*(rim.has(i)?(o.rim==null?0:o.rim):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  cgEmit(B,M,col,{t:o.t,pos,vcol:o.vcol,keep:(m,fi)=>pick[fi]});if(!o.show)(M.udHide||(M.udHide=[])).push(pick)}
+// the skin: every face no shell covers, plus the covered faces that touch an open one (so no hole can show at a shell's rim)
+function ud_body(B,M,col,o){o=o||{};const H=M.udHide||[],F=M.F,cov=F.map((f,i)=>H.some(p=>p[i])),open=new Uint8Array(M.V.length);F.forEach((f,i)=>{if(!cov[i])f.v.forEach(v=>open[v]=1)});
+  cgEmit(B,M,col,{vcol:o.vcol,keep:(m,fi)=>(!cov[fi]||F[fi].v.some(v=>open[v]))&&(!o.keep||o.keep(m,fi))})}
+const ud_cl=(v,a,b)=>Math.max(a==null?0:a,Math.min(b==null?1:b,v)),ud_ss=(a,b,x)=>{const t=ud_cl((x-a)/(b-a));return t*t*(3-2*t)};
+// a smooth mottle between two colours (object-space noise, never per face): f = frequency, amt = how far toward c2
+function ud_mot(m,c1,c2,f,seed,amt){return mdMix(c1,c2,ud_cl((n3Sn(m.x,m.y,m.z,f,seed)-.35)*1.6)*(amt==null?1:amt))}
+// cloth on a loft (robe, skirt, loincloth): alternate fold columns a shade apart, darker toward the hem (y0) and inside
+function ud_cloth(m,c,y0,y1,nf){const f=Math.round(Math.atan2(m.c,m.s)*(nf||7))%2?1:.86;return mdSh(c,f*(.72+.28*ud_ss(y0,y1,m.y)))}
+// a hand's frame (as cgFingers): d down the hand, u the back of the hand, f across the knuckles (thumb side), kn the knuckles
+function ud_hf(S,s,kd){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,
+  u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw)));return {bn:bn+'2',a2,d,u,f,kn:add3(a2,mul3(d,kd==null?.072:kd))}}
+// v turned by angle a round the unit axis k
+function ud_rot(v,k,a){const c=Math.cos(a),sn=Math.sin(a),dt=k[0]*v[0]+k[1]*v[1]+k[2]*v[2],cr=cross3(k,v);return [v[0]*c+cr[0]*sn+k[0]*dt*(1-c),v[1]*c+cr[1]*sn+k[1]*dt*(1-c),v[2]*c+cr[2]*sn+k[2]*dt*(1-c)]}
+// (refine: clean hands) fingers that grow out of the hand: one rounded, tapering loft per finger in the hand's own colour, rooted
+// inside the palm and curling toward it, a dark claw continuing from the tip; no strings of separate sticks.
+// kind 'claw' | 'fist', len (finger length), nail colour, tip (claw length), rf (thickness)
+function ud_fingers(B,S,s,col,kind,len,nail,tip,rf){rf=rf||1;const H=ud_hf(S,s),{d,u,f,kn}=H,W=[[H.bn,1]],L=(len||1)*.08,ax=nrm3(cross3(u,d)),fist=kind=='fist';
+  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c)));
+  const digit=(p,dir,k,l,r,n,curl,tp)=>{const Rg=[{p:sub3(p,mul3(dir,.016)),rx:r*1.15,f:r*1.15,b:r*1.15,w:W},{p,rx:r,f:r,b:r,w:W}];let a=p,dv=dir;
+    for(let i=0;i<n;i++){a=add3(a,mul3(dv,l/n));dv=ud_rot(dv,k,curl);const q=r*(1-.32*(i+1)/n);Rg.push({p:a,rx:q,f:q,b:q,w:W})}const nr=Rg.length;
+    if(tp){const e=add3(a,mul3(dv,tp)),q=r*.62;Rg.push({p:add3(a,mul3(dv,tp*.3)),rx:q,f:q,b:q,w:W},{p:e,rx:.0012,f:.0012,b:.0012,w:W})}
+    mdLoft(B,Rg,{seg:5,capB:true,col:m=>tp&&m.i>nr-1?nail:col})};
+  if(fist){ud_mitten(B,H,rf,L,col);const t0=P(add3(H.a2,mul3(d,.034)),.026*rf,-.01),t1=add3(t0,mul3(D(.55,-.62,-.18),L*.32)),t2=add3(t1,mul3(D(.12,-.3,-.95),L*.3));
+    mdLoft(B,[{p:sub3(t0,mul3(D(.55,-.62,-.18),.014)),rx:.012*rf,f:.012*rf,b:.012*rf,w:W},{p:t0,rx:.0115*rf,f:.0115*rf,b:.0115*rf,w:W},{p:t1,rx:.0105*rf,f:.0105*rf,b:.0105*rf,w:W},{p:t2,rx:.0085*rf,f:.0085*rf,b:.0085*rf,w:W}],{seg:6,capB:true,col});return}
+  for(let i=0;i<4;i++){const z=(1.5-i)*.016*rf,p=P(kn,z,-.004);digit(p,D(1,-.15,z*.6/rf),ax,L*(i==3?.82:1),.0085*rf,3,.22,tip||0)}
+  digit(P(add3(H.a2,mul3(d,.032)),.024*rf,-.008),D(.6,-.3,.75),nrm3(cross3(u,f)),L*.62,.009*rf,2,.3,(tip||0)*.6)}
+// a closed fist: the four fingers as ONE rounded mass curling from the knuckles round the grip (in a fist they don't change the
+// outline), a slightly bumpy knuckle ridge, the gaps between the fingers painted as dark lines (colour per corner)
+function ud_mitten(B,H,rf,L,col){const {d,u,f,kn}=H,W=mdW(B,[[H.bn,1]]),ax=nrm3(cross3(u,d)),C=new THREE.Color(mdC(col)),X=[-1,-.75,-.5,-.25,0,.25,.5,.75,1],n=3;
+  let p=add3(add3(kn,mul3(u,-.004*rf)),mul3(d,-.018)),dv=nrm3(add3(d,mul3(u,-.45)));const P=[p];p=add3(p,mul3(dv,.018));P.push(p);for(let i=0;i<n;i++){p=add3(p,mul3(dv,L*.72/n));dv=ud_rot(dv,ax,.8);P.push(p)}
+  const RG=P.map((c,i)=>{const t=nrm3(sub3(P[Math.min(i+1,P.length-1)],P[Math.max(i-1,0)])),a=nrm3(sub3(f,mul3(t,f[0]*t[0]+f[1]*t[1]+f[2]*t[2]))),nn=cross3(t,a),hw=.033*rf*(i?1-.1*i/P.length:.5),th=.0115*rf*(i?1-.18*i/P.length:.6),
+      kb=i==1||i==2?.22:0,ring=[];
+    [1,-1].forEach(sd=>(sd>0?X:X.slice(1,-1).reverse()).forEach(x=>{const g=.5+.5*Math.cos(4*Math.PI*(x-.25)),h=th*Math.pow(Math.max(0,1-x*x),.45)*(sd>0?1+kb*g:1),
+      q=add3(add3(c,mul3(a,x*hw)),mul3(nn,sd*h)),line=Math.min(...[-.5,0,.5].map(b=>Math.abs(x-b)))<.01&&i>0?.42:1;ring.push({x:q[0],y:q[1],z:q[2],w:W,rgb:[C.r*line,C.g*line,C.b*line],c})}));return ring});
+  const tri=(a,b,c)=>{const o=a.c,nx=(b.y-a.y)*(c.z-a.z)-(b.z-a.z)*(c.y-a.y),ny=(b.z-a.z)*(c.x-a.x)-(b.x-a.x)*(c.z-a.z),nz=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x),
+      m=[(a.x+b.x+c.x)/3-o[0],(a.y+b.y+c.y)/3-o[1],(a.z+b.z+c.z)/3-o[2]];if(nx*m[0]+ny*m[1]+nz*m[2]<0)mdTri(B,'c',a,c,b,0);else mdTri(B,'c',a,b,c,0)};
+  for(let i=0;i<RG.length-1;i++){const A=RG[i],Bq=RG[i+1],N=A.length;for(let j=0;j<N;j++){const k=(j+1)%N;tri(A[j],A[k],Bq[j]);tri(Bq[j],A[k],Bq[k])}}
+  const E=RG[RG.length-1],t=nrm3(sub3(P[P.length-1],P[P.length-2])),ce=add3(P[P.length-1],mul3(t,.006*rf)),cv={x:ce[0],y:ce[1],z:ce[2],w:W,rgb:[C.r,C.g,C.b],c:P[P.length-1]};
+  for(let j=0;j<E.length;j++){const a=E[j],b=E[(j+1)%E.length],o=a.c,nx=(b.y-a.y)*(cv.z-a.z)-(b.z-a.z)*(cv.y-a.y),ny=(b.z-a.z)*(cv.x-a.x)-(b.x-a.x)*(cv.z-a.z),nz=(b.x-a.x)*(cv.y-a.y)-(b.y-a.y)*(cv.x-a.x);
+    if(nx*t[0]+ny*t[1]+nz*t[2]<0)mdTri(B,'c',a,cv,b,0);else mdTri(B,'c',a,b,cv,0)}}
+// the point a fist closes round (the curled fingers' middle), the shaft passes through it along dir
+function ud_grip(S,s,kd,dep){const H=ud_hf(S,s,kd);return add3(add3(H.kn,mul3(H.d,.022)),mul3(H.u,-(dep||.03)))}
+// the last kit part takes the skin's weights at p (it bends with the skin there instead of riding one bone)
+function ud_ws(k,M,p){k.P[k.P.length-1].w=cgWAt(M,p)}
 
 // ---------------- Skeleton Warrior / Bone Archer ----------------
 ['skel','archer'].forEach(key=>{const ar=key=='archer',S=cgHuman({h:ar?.86:.9,w:.9,d:.85,at:.9,lt:.9,hs:1.0}),J=S.J,T=S.torso,eye=ar?0x7ad8ff:0x6aff9a;
@@ -57343,128 +58219,200 @@ ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
 
 // ---------------- Ossuary Colossus: a giant of heaped bones: doubled limbs, a barrel of ribs with skulls fused in, skulls on the
 // shoulders, a crown of bone spikes, green grave-fire in the chest, a femur club ----------------
-(function(){const S=cgHuman({h:.78,w:1.3,d:1.2,at:1.5,lt:1.4,hs:1.05,armL:1.08}),J=S.J,T=S.torso,bone=0x968c74,bone2=0x6e6652,dark=0x3e3a2e,eye=0x7aff9a,fire=0x5aff7a,iron=0x3a3a38;
-  cgBonesReg('colossus',S,function(B,P,k){const th=2.3,R=cgBones(B,k,S,{bone,bone2,th,cage:1.32,rt:1.45,hand:1.35,eye,fist:s=>s>0});
-    const tb=y=>y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis';
+// (refine) a massive ossuary giant fused out of many dead: hunched under a hump of crossed bones and skulls heaped on its back, a
+// small skull sunk low between huge shoulders, long thick doubled arms hanging to the knees, short thick legs. Cheaper kit (the
+// fused skulls and their sockets were the heaviest shapes) keeps it under the regular-foe ceiling.
+(function(){const S=cgHuman({h:.76,w:1.45,d:1.3,at:1.6,lt:1.5,hs:.92,armL:1.13,legL:.9,neckL:-.03}),J=S.J,T=S.torso,bone=0x968c74,bone2=0x6e6652,dark=0x3e3a2e,eye=0x7aff9a,fire=0x5aff7a,iron=0x3a3a38;
+  cgBonesReg('colossus',S,function(B,P,k){const th=2.3,R=cgBones(B,k,S,{bone,bone2,th,cage:1.32,rt:1.45,hand:1.9,mitt:1,eye,fist:s=>s>0});
+    const tb=y=>y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis',sh=T[6][0],ch=J.chest[1],sp=J.spine[1];
     // limbs doubled up with extra bones lashed alongside
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],l0=J[L+'0'],l1=J[L+'1'],l2=J[L+'2'];
-      cgBoneTube(B,add3(a0,[s*.04,-.05,.03]),add3(a1,[s*.04,.04,.03]),.042,.036,[[A+'0',1]],[[A+'0',1]],bone2);cgBoneTube(B,add3(a1,[s*.035,-.04,.03]),add3(a2,[s*.03,.05,.03]),.038,.032,[[A+'1',1]],[[A+'1',1]],bone2);
-      cgBoneTube(B,add3(l0,[s*.035,-.06,.025]),add3(l1,[s*.035,.06,.025]),.05,.042,[[L+'0',1]],[[L+'0',1]],bone2);cgBoneTube(B,add3(l1,[s*.03,-.06,.025]),add3(l2,[s*.025,.08,.025]),.044,.038,[[L+'1',1]],[[L+'1',1]],bone2);
+      cgBoneTube(B,add3(a0,[s*.04,-.05,.03]),add3(a1,[s*.04,.04,.03]),.042,.036,[[A+'0',1]],[[A+'0',1]],bone2,2);cgBoneTube(B,add3(a1,[s*.035,-.04,.03]),add3(a2,[s*.03,.05,.03]),.038,.032,[[A+'1',1]],[[A+'1',1]],bone2,2);
+      cgBoneTube(B,add3(l0,[s*.035,-.06,.025]),add3(l1,[s*.035,.06,.025]),.05,.042,[[L+'0',1]],[[L+'0',1]],bone2,2);cgBoneTube(B,add3(l1,[s*.03,-.06,.025]),add3(l2,[s*.025,.08,.025]),.044,.038,[[L+'1',1]],[[L+'1',1]],bone2,2);
       // a great skull on each shoulder, eyes burning, a fan of spikes
-      const c=add3(a0,[s*.05,.085,0]);k.p(A+'0','sph2','c',bone,c[0],c[1],c[2],.105,.11,.115);k.p(A+'0','sph2','c',bone2,c[0],c[1]-.075,c[2]+.03,.075,.04,.08);
-      [-1,1].forEach(t=>{k.p(A+'0','sph','c',0x080806,c[0]+t*.038,c[1]+.01,c[2]+.092,.026,.02,.02);k.p(A+'0','sph','g',eye,c[0]+t*.038,c[1]+.01,c[2]+.104,.014,.01,.008)});
+      const c=add3(a0,[s*.05,.085,0]);k.p(A+'0','sph','c',bone,c[0],c[1],c[2],.105,.11,.115);k.p(A+'0','sph','c',bone2,c[0],c[1]-.075,c[2]+.03,.075,.04,.08);
+      [-1,1].forEach(t=>{k.p(A+'0','oct','c',0x080806,c[0]+t*.038,c[1]+.01,c[2]+.096,.026,.022,.022);k.p(A+'0','oct','g',eye,c[0]+t*.038,c[1]+.01,c[2]+.108,.012,.01,.008)});
       for(let i=0;i<4;i++)k.p(A+'0','cone4','c',bone2,c[0]+s*(.02+i*.025),c[1]+.12,c[2]-.06+i*.04,.02,.12,.02,-.3,0,-s*.5)});
-    // skulls fused into the ribs
-    [[0,-1,2],[0,1,4],[1,-1,5],[1,1,2],[2,-1,3],[2,1,5],[3,-1,1],[3,1,3],[4,-1,4],[4,1,1],[5,-1,2],[5,1,4]].forEach(([ri,s,j],n)=>{const p=R.rib(ri,s,j),zc=cgAt(T,p[1])[4]||0,o=nrm3([p[0],0,p[2]-zc]),t=[o[2],0,-o[0]],c=add3(p,mul3(o,.03)),bn=tb(p[1]);
-      k.p(bn,'sph2','c',n%2?bone:bone2,c[0],c[1],c[2],.058,.064,.062);[-1,1].forEach(e=>{const q=add3(add3(c,mul3(o,.05)),add3(mul3(t,e*.02),[0,.012,0]));k.p(bn,'sph','c',0x0a0a08,q[0],q[1],q[2],.013,.012,.012)})});
+    // skulls fused into the ribs (dark sockets, a nose hole)
+    [[0,-1,2],[0,1,4],[1,1,2],[2,-1,3],[2,1,5],[3,1,3],[4,-1,4],[4,1,1],[5,-1,2]].forEach(([ri,s,j],n)=>{const p=R.rib(ri,s,j),zc=cgAt(T,p[1])[4]||0,o=nrm3([p[0],0,p[2]-zc]),t=[o[2],0,-o[0]],c=add3(p,mul3(o,.03)),bn=tb(p[1]);
+      k.p(bn,'dod','c',n%2?bone:bone2,c[0],c[1],c[2],.058,.064,.062);[-1,1].forEach(e=>{const q=add3(add3(c,mul3(o,.052)),add3(mul3(t,e*.02),[0,.012,0]));k.p(bn,'oct','c',0x0a0a08,q[0],q[1],q[2],.015,.013,.013)})});
+    // the hump on its back: long bones heaped crosswise on the spine, knobbed at the ends, three skulls staring backward
+    const bz=(y,o)=>R.sp(y)[2]-.06-o;
+    [[-.2,ch-.14,.16,sh+.04,.05],[.2,ch-.12,-.14,sh+.06,.05],[-.24,ch,.24,ch+.05,.09],[-.12,sp+.02,.1,ch+.12,.08],[.14,sp,-.08,ch+.14,.08],[-.02,ch-.08,.04,sh+.1,.11]].forEach(([x0,y0,x1,y1,o],i)=>{
+      const a=[x0,y0,bz(y0,o*.6)],b=[x1,y1,bz(Math.min(y1,sh),o*.6)],bn=tb((y0+y1)/2);k.L(bn,'c',i%2?bone:bone2,a,b,.034,.028,5);k.p(bn,'oct','c',bone,a[0],a[1],a[2],.05,.042,.046,i,.4,0);k.p(bn,'oct','c',bone,b[0],b[1],b[2],.046,.04,.044,0,i*.6,.4)});
+    [[-.09,ch+.03],[.1,ch-.02],[0,ch-.12]].forEach(([x,y],i)=>{const c=[x,y,bz(y,.13)],bn=tb(y);k.p(bn,'sph','c',i%2?bone2:bone,c[0],c[1],c[2],.07,.076,.07);
+      [-1,1].forEach(e=>k.p(bn,'oct','c',0x0a0a08,c[0]+e*.026,c[1]+.012,c[2]-.06,.018,.016,.014));k.p(bn,'box','c',bone2,c[0],c[1]-.05,c[2]-.03,.06,.022,.04)});
     // a crown of bone spikes
     for(let i=0;i<7;i++){const a=-1.35+i*.45,y=S.hp(0,1.705,0)[1],q=cgAt(S.head,y),bp=[Math.sin(a)*q[1]*.7,y,(q[4]||0)+Math.cos(a)*q[2]*.7];k.p('head','cone4','c',bone2,bp[0],bp[1]+.05,bp[2],.02,.15,.02,-Math.cos(a)*.35,0,Math.sin(a)*.35)}
     // green grave-fire in the chest, burning on the column; green fire licking up out of the sockets
-    {const c=R.sp(J.chest[1]-.02),z=c[2]+.024*th+.09;k.p('chest','oct','g',fire,0,J.chest[1]-.02,z,.1,.14,.085);k.p('chest','sph','g',0x2ae05a,0,J.chest[1]-.04,z,.13,.15,.1)}
+    {const c=R.sp(ch-.02),z=c[2]+.024*th+.09;k.p('chest','oct','g',fire,0,ch-.02,z,.1,.14,.085);k.p('chest','sph','g',0x2ae05a,0,ch-.04,z,.13,.15,.1)}
     [-1,1].forEach(s=>{const H=S.head,y=S.hp(0,1.629,0)[1],q=cgAt(H,y),z=(q[4]||0)+q[2]*.92-.01;for(let i=0;i<3;i++)k.L('head','g',fire,[s*.034*S.hs,y+.005,z],[s*(.04+i*.012)*S.hs,y+.06+i*.02,z-.03-i*.015],.012-i*.003,.002,4)});
     // the club: a giant's thigh bone gripped in the right fist, shards lashed round its head with an iron band
-    {const a1=J.aR1,a2=J.aR2,d=nrm3(sub3(a2,a1)),g=add3(a2,mul3(d,.11)),x=g[0],y=g[1],z=g[2]+.01;k.L('aR2','c',bone,[x,y+.1,z],[x,y-.38,z+.045],.04,.056,7);k.p('aR2','sph2','c',bone,x,y-.43,z+.05,.1,.09,.09);k.p('aR2','sph2','c',bone2,x,y+.12,z,.058,.05,.058);
-      for(let i=0;i<5;i++){const a=i/5*6.283;k.p('aR2','cone4','c',bone2,x+Math.cos(a)*.08,y-.43,z+.05+Math.sin(a)*.08,.022,.14,.022,Math.sin(a)*1.4,0,-Math.cos(a)*1.4)}
-      k.p('aR2','ring','m',iron,x,y-.31,z+.04,.064,.35,.064)}
+    {const H=ud_hf(S,1),g=ud_grip(S,1,null,.05),cd=nrm3(add3(H.f,mul3(H.d,.75))),A=t=>add3(g,mul3(cd,t)),sd=nrm3(cross3(cd,H.u));
+      k.L('aR2','c',bone,A(-.1),A(.36),.036,.054,7);const hd=A(.42),pm=A(-.12);k.p('aR2','dod','c',bone,hd[0],hd[1],hd[2],.1,.09,.09);k.p('aR2','sph','c',bone2,pm[0],pm[1],pm[2],.058,.05,.058);
+      for(let i=0;i<5;i++){const a=i/5*6.283,o=add3(mul3(sd,Math.cos(a)),mul3(H.u,Math.sin(a))),q=add3(hd,mul3(o,.08));u8_part(k,'aR2',dkG().cone4,'c',bone2,q,cd,o,[.022,.14,.022])}
+      u8_part(k,'aR2',dkG().tor,'m',iron,A(.3),sd,cd,[.064,.05,.064])}
     u8_loin(B,S,R,dark,0x2a2a20,.34)})})();
+// the hunch of a giant carrying its heap of bones (the creature's own stance: v113 creatures keep theirs over ST179)
+if(N3.def.colossus)N3.def.colossus.stance={sx:.26,hx:-.24,ax:-.1,lx:-.1,az:.1,lz:-.1,lk:.14,rk:.14};
 
 // ---------------- the wrapped dead: Desert Revenant and Tomb Priest ----------------
-// the bandages are the body's own surface raised band by band (no second skin under them), coloured in light and dark bands
-function cgWraps(M,S,skip){const N=cgNormals(M),pt=new Array(M.V.length);M.F.forEach(f=>f.v.forEach(i=>{if(pt[i]==null)pt[i]=f.part}));
-  M.V.forEach((v,i)=>{if(skip(pt[i],v,N[i]))return;const a=Math.atan2(v[0],v[2]),b=(v[1]+a*.025)*40,fr=b-Math.floor(b),d=.005+.0035*Math.sin(Math.PI*fr);v[0]+=N[i][0]*d;v[1]+=N[i][1]*d;v[2]+=N[i][2]*d});M.N=null}
-function u8_wrapCol(m,w1,w2){const a=Math.atan2(m.x,m.z),b=Math.round((m.y+a*.025)*40);return a181H(b,3)<.12?mdSh(w2,.7):b%2?w1:w2}
-(function(){const S=cgHuman({h:.92,w:.98,d:.96,at:1.02,lt:1.0,hs:.96}),w1=0xb8a47c,w2=0x8a7a58,lap=0x2a3a6a,gd=0xc8a040,T=S.torso,J=S.J;
-  cg181Reg('revenant',S,function(B,P,k,C){const M=C.M,fy=S.hp(0,1.6,0)[1];cgSculpt(M,{head:1},S.sculpt(cgFaceHuman({nose:.7,brow:1.4,hollow:.012})));
-    const face=m=>m.part=='head'&&m.y>=fy&&m.s>=.5;cgWraps(M,S,(p,v,n)=>p=='head'&&v[1]>=fy&&n[2]>=.5);cgEmit(B,M,m=>face(m)?0x5a4a32:u8_wrapCol(m,w1,w2));cgEyes(k,M,S,0xffc040,.036,1.629,.9,.004);
+// (refine) mummified men: human proportions, but withered (thin limbs, a narrow waist, the belly sunk under the ribs, the cheeks
+// drawn in). The wrappings are paint, not raised bands: soft light and dark linen bands winding up the body, grime, darker
+// toward the feet; the creases come from the baked shading. The bare strip of face is dark dried leather with deep sockets.
+// linen at a point: bands winding up the body (a slight spiral), a dark gap between turns, grime blotches, dirtier toward the feet
+function ud_wrap(m,w1,w2,dirt,y0){const a=Math.atan2(m.x,m.z),b=(m.y+a*.02)*24,w=.5+.5*Math.cos(b*6.283),g=n3Sn(m.x,m.y,m.z,7,3);
+  let c=mdMix(mdSh(w2,.8),w1,ud_ss(.08,.7,w));c=mdMix(c,dirt,ud_cl((g-.55)*2.5)*.55);return mdMix(c,mdSh(dirt,.8),ud_ss(y0,0,m.y)*.5)}
+// dried leather with the eye sockets sunk dark (base head coordinates)
+function ud_leather(m,S,c,sock){const bx=m.x/S.hs,ey=S.hp(0,1.629,0)[1],d=Math.hypot((Math.abs(bx)-.036)/.024,(m.y-ey)/(.016*S.hs));return mdMix(mdSh(c,1-.15*n3Sn(m.x,m.y,m.z,30,1)),sock,ud_ss(1.25,.45,d))}
+(function(){const S=ud_spec({h:.92,w:.92,d:.9,rw:[.95,.95,.84,.92,.98,1,1,1],rf:[.95,.95,.74,.88,.96,1,1,1],at:.86,lt:.88,hs:.96}),w1=0xb8a47c,w2=0x8a7a58,dirt=0x4a3c28,lth=0x4e3c26,lap=0x2a3a6a,gd=0xc8a040,T=S.torso,J=S.J;
+  cg181Reg('revenant',S,function(B,P,k,C){const M=C.M,fy=S.hp(0,1.6,0)[1],by=S.hp(0,1.645,0)[1];
+    cgSculpt(M,{head:1},S.sculpt(cgFaceHuman({nose:.7,brow:1.4,hollow:.016})));
+    cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]>.2?-.014*cgG(x,y,0,T[2][0]+.075,.11,.06)*n[2]:0);   // the belly sunk under the ribs
+    M.shade=cgShade(M,{cav:1.25,y0:0,y1:T[7][0]+.25,hk:.28});
+    const face=m=>m.part=='head'&&m.y>=fy&&m.s>=.5;cgEyes(k,M,S,0xffc040,.036,1.629,.9,.004);
     // the nemes: a striped headcloth over the crown with lappets on the chest; a broad gold-and-lapis collar; a robe
-    cgShell(B,M,m=>m.part=='head'&&(m.y>S.hp(0,1.645,0)[1]||m.s<-.1),.02,m=>Math.round(m.y*60)%2?gd:lap,{rim:.15});
+    ud_sh(B,M,m=>m.part=='head'&&(m.y>by||m.s<-.1),.02,m=>Math.round(m.y*60)%2?gd:lap,{rim:.15});
     [-1,1].forEach(s=>{const p=S.hp(s*.085,1.6,-.01);k.p('head','box','c',lap,p[0],p[1]-.08,p[2]+.01,.05,.18,.012,0,0,s*.08)});
-    cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>T[6][0]-.06),.036,m=>Math.round(m.y*50)%2?gd:lap,{t:'m',rim:.1});
-    cgSkirt(B,S,T[2][0]-.02,.06,.1,.026,m=>a181Nz(0x6a5a3a,m,.3,12),{n:7,keep:m=>!(m.y<.2&&a181H(Math.round(Math.atan2(m.c,m.s)*9),4)<.5)});
-    [-1,1].forEach(s=>cgFingers(k,S,s,w2,'claw',1,0x2a2014,.012))})})();
-(function(){const S=cgHuman({h:.97,w:.94,d:.94,at:.9,lt:.95,hs:.96}),w1=0xa8946a,w2=0x6e5e40,dk=0x2e2418,gd=0xc8a040,lap=0x2a4a8a,glow=0xffd060,T=S.torso,J=S.J;
-  cg181Reg('tombpriest',S,function(B,P,k,C){const M=C.M,fy=S.hp(0,1.6,0)[1];cgSculpt(M,{head:1},S.sculpt(cgFaceHuman({nose:.7,brow:1.4,hollow:.014})));
-    const face=m=>m.part=='head'&&m.y>=fy&&m.s>=.5;cgWraps(M,S,(p,v,n)=>p=='head'&&v[1]>=fy&&n[2]>=.5);cgEmit(B,M,m=>face(m)?mdMix(dk,w2,.4):u8_wrapCol(m,w1,w2));cgEyes(k,M,S,0xffb030,.036,1.629,.9,.004);
+    ud_sh(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>T[6][0]-.06),.036,m=>Math.round(m.y*50)%2?gd:lap,{t:'m',rim:.1});
+    cgSkirt(B,S,T[2][0]-.02,.06,.1,.026,m=>ud_cloth(m,0x6a5a3a,.06,T[2][0]),{n:7,seg:16,keep:m=>!(m.y<.2&&a181H(Math.round(Math.atan2(m.c,m.s)*9),4)<.5)});
+    ud_body(B,M,null,{vcol:m=>face(m)?ud_leather(m,S,lth,0x0c0806):ud_wrap(m,w1,w2,dirt,J.rh1[1])});
+    [-1,1].forEach(s=>ud_fingers(B,S,s,w2,s>0?'fist':'claw',1,0x2a2014,s>0?0:.012))})})();
+(function(){const S=ud_spec({h:.97,w:.9,d:.9,rw:[.95,.95,.84,.92,.98,1,1,1],rf:[.95,.95,.74,.88,.96,1,1,1],at:.84,lt:.9,hs:.96}),w1=0xa8946a,w2=0x6e5e40,dirt=0x3e3020,dk=0x2e2418,gd=0xc8a040,lap=0x2a4a8a,glow=0xffd060,T=S.torso,J=S.J;
+  cg181Reg('tombpriest',S,function(B,P,k,C){const M=C.M,fy=S.hp(0,1.6,0)[1];
+    cgSculpt(M,{head:1},S.sculpt(cgFaceHuman({nose:.7,brow:1.4,hollow:.018})));
+    cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]>.2?-.012*cgG(x,y,0,T[2][0]+.075,.11,.06)*n[2]:0);
+    M.shade=cgShade(M,{cav:1.25,y0:0,y1:T[7][0]+.25,hk:.28});
+    const face=m=>m.part=='head'&&m.y>=fy&&m.s>=.5;cgEyes(k,M,S,0xffb030,.036,1.629,.9,.004);
     // the nemes: a striped lapis-and-gold headcloth over the crown and back of the head, flaring behind the ears, lappets
     // falling over the collar to the chest
     const by=S.hp(0,1.645,0)[1],ly=S.hp(0,1.545,0)[1],fl=S.hp(0,1.66,0)[1];
-    cgShell(B,M,m=>m.part=='head'&&(m.y>by||(m.s<.25&&m.y>ly)),v=>{const lo=Math.max(0,Math.min(1,(fl-v[1])/(.1*S.hs)));return .016+.024*lo*Math.min(1,Math.abs(v[0])/(.07*S.hs))},m=>Math.round(m.y*60)%2?gd:lap,{t:'m',rim:.1});
+    ud_sh(B,M,m=>m.part=='head'&&(m.y>by||(m.s<.25&&m.y>ly)),v=>{const lo=Math.max(0,Math.min(1,(fl-v[1])/(.1*S.hs)));return .016+.024*lo*Math.min(1,Math.abs(v[0])/(.07*S.hs))},m=>Math.round(m.y*60)%2?gd:lap,{t:'m',rim:.1});
     const sh=T[6][0];[-1,1].forEach(s=>{const q1=cgTAt(S,sh-.03),q2=cgTAt(S,sh-.15),p0=S.hp(s*.06,1.585,-.03),p1=S.hp(s*.1,1.54,-.01),p2=[s*q1.rx*.52,sh-.02,q1.z+q1.f+.048],p3=[s*q2.rx*.5,sh-.15,q2.z+q2.f+.03];
-      mdLoft(B,[{p:p0,rx:.028,f:.006,b:.006,w:[['head',1]]},{p:p1,rx:.034,f:.006,b:.006,w:[['neck',.5],['head',.5]]},{p:p2,rx:.034,f:.006,b:.006,w:[['chest',1]]},{p:p3,rx:.03,f:.006,b:.006,w:[['chest',1]]}],{seg:8,t:'m',ref:[0,0,1],capB:true,col:m=>Math.round(m.y*60)%2?gd:lap})});
-    cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh-.06),.034,m=>Math.round(m.y*50)%2?gd:lap,{t:'m',rim:.1});
+      mdLoft(B,[{p:p0,rx:.028,f:.006,b:.006,w:[['head',1]]},{p:p1,rx:.034,f:.006,b:.006,w:[['neck',.5],['head',.5]]},{p:p2,rx:.034,f:.006,b:.006,w:[['chest',1]]},{p:p3,rx:.03,f:.006,b:.006,w:[['chest',1]]}],{seg:6,t:'m',ref:[0,0,1],capB:true,col:m=>Math.round(m.y*60)%2?gd:lap})});
+    ud_sh(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh-.06),.034,m=>Math.round(m.y*50)%2?gd:lap,{t:'m',rim:.1});
     // the glowing winged scarab pectoral
     {const c=cgSurf(M,S,J.chest[1]-.03,0,-.004);k.p('chest','sph','m',gd,c[0],c[1],c[2]+.006,.05,.042,.022);k.p('chest','sph','g',glow,c[0],c[1]+.004,c[2]+.024,.026,.022,.01);
       [-1,1].forEach(s=>{k.p('chest','box','m',gd,c[0]+s*.07,c[1]+.012,c[2]-.006,.085,.026,.012,0,-s*.3,s*.35);k.p('chest','box','m',gd,c[0]+s*.06,c[1]-.012,c[2]-.004,.07,.018,.012,0,-s*.28,s*.15);k.p('chest','box','g',glow,c[0]+s*.072,c[1]+.016,c[2]+.002,.06,.008,.006,0,-s*.3,s*.35)})}
     // a kilt of gold and dark linen on a gold belt; loose bandages trailing from the arms and hips
-    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.2,.05,.024,m=>Math.round(Math.atan2(m.c,m.s)*8)%2?mdSh(w2,.8):gd,{n:5,t:'m'});cgBelt(B,M,T[2][0],.022,.03,gd,'m');
+    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.2,.05,.024,m=>Math.round(Math.atan2(m.c,m.s)*8)%2?mdSh(w2,.8):gd,{n:5,t:'m',seg:16});ud_sh(B,M,m=>m.part=='torso'&&Math.abs(m.y-T[2][0])<.022,.03,gd,{t:'m',show:1});
     for(let i=0;i<6;i++){const s=i%2?1:-1,t=.5+i*.25,p=u8_armPt(M,S,s,t,.3);u8_strip(k,M,t<1?(s<0?'aL0':'aR0'):(s<0?'aL1':'aR1'),w2,p,.03,.2+(i%3)*.07,s*1.3,-.08,i)}
     for(let i=0;i<4;i++){const a=Math.PI+(-1+i*.66)*.6,p=cgSurf(M,S,T[1][0]-.02,a,-.008);u8_strip(k,M,'pelvis',w2,p,.04,.34+(i%2)*.12,a,-.05,i+2)}
-    [-1,1].forEach(s=>cgFingers(k,S,s,w2,s>0?'fist':'claw',1,0x2a2014,.01))})})();
+    ud_body(B,M,null,{vcol:m=>face(m)?ud_leather(m,S,mdMix(dk,w2,.35),0x080604):ud_wrap(m,w1,w2,dirt,J.rh1[1])});
+    [-1,1].forEach(s=>ud_fingers(B,S,s,w2,s>0?'fist':'claw',1,0x2a2014,.01))})})();
 ST179.revenant={sx:.12,hx:-.06,lk:.09,rk:.09,lz:-.05,le:-.25};
 
 // ---------------- Grave Ghoul: gaunt and stooped, grey-green, raised ribs, a knuckled spine, tusks, burial rags ----------------
-(function(){const S=cgHuman({h:.76,w:.9,d:.9,rw:[.92,.95,.84,.92,.98,.98,1.02,.98],at:.86,lt:.88,hs:.92,hy:1.06,armL:1.18,facePush:(i,j,a)=>(i<=3&&Math.sin(a)>.2)?.008:0}),sk=0x5e6a5c,sk2=0x444e42,rag=0x4a4636,rag2=0x3a382c,T=S.torso,J=S.J;
-  cg181Reg('ghoul',S,function(B,P,k,C){const M=C.M;cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.1)return 0;let d=-.01*cgG(x,y,0,1.597,.012,.01)+.016*cgG(x,y,0,1.65,.05,.008);[-1,1].forEach(s=>{d-=.02*cgG(x,y,s*.037,1.63,.016,.011);d-=.012*cgG(x,y,s*.05,1.57,.016,.016)});return d}));
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-S.hp(0,1.556,0)[1])<.006*S.hs&&Math.abs(m.x)<.04*S.hs)return 0x1a0a08;if(m.part=='head'&&m.s>.4&&Math.abs(m.x)<.012&&Math.abs(m.y-S.hp(0,1.596,0)[1])<.008)return 0x0a0806;
-      return m.s<-.4?sk2:a181Nz(sk,m,.2,18)});
+// (refine) not a man: an emaciated corpse-eater that crawls. Long thin arms that reach the ground in its crouch, big clawed
+// hands, a narrow wasp waist under a cage of ribs, a hunched back with the spine knuckled through it, a low head thrust forward
+// on a thin neck with a jutting jaw, long splayed feet. Grey-green skin that flows into darker rot and paler stretched skin
+// over the bones (vcol), dried blood round the mouth.
+(function(){const S=ud_spec({h:.8,w:.84,d:.84,rw:[.9,.92,.68,.84,.96,1,1.04,.92],rf:[.9,.9,.58,.8,.95,1,1,.95],at:.72,lt:.78,hs:.94,hd:1.1,armL:1.42,legL:.94,nw:.82,foot:1.18,footW:.95,
+    facePush:(i,j,a)=>(i<=1&&Math.sin(a)>.2?.012:0)+(i<=1&&Math.sin(a)>-.2&&Math.abs(Math.cos(a))>.6?.006:0)}),sk=0x5e6a5c,sk2=0x3e4a3e,pale=0x8a9484,rot=0x34402e,blood=0x2a0c08,rag=0x4a4636,rag2=0x3a382c,bone=0xb8b098,T=S.torso,J=S.J;
+  cg181Reg('ghoul',S,function(B,P,k,C){const M=C.M,sh=T[6][0],ch=J.chest[1],sp=J.spine[1],TB=y=>y>ch-.04?'chest':y>sp?'spine':'pelvis';
+    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.1)return 0;let d=-.01*cgG(x,y,0,1.597,.012,.01)+.016*cgG(x,y,0,1.65,.05,.008);[-1,1].forEach(s=>{d-=.02*cgG(x,y,s*.037,1.63,.016,.011);d-=.014*cgG(x,y,s*.05,1.57,.016,.016)});return d}));
+    // the hunched back (the hump low between the shoulder blades, clear of the head), the sunken belly
+    cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]<-.1)d+=.05*cgG(x,y,0,sh-.1,.12,.09)*Math.min(1,(-.1-n[2])*1.5);if(n[2]>.2)d-=.016*cgG(x,y,0,T[2][0]+.075,.1,.06)*n[2];return d});
+    M.shade=cgShade(M,{cav:1.4,y0:0,y1:sh+.2,hk:.3});
+    const my=S.hp(0,1.556,0)[1],skin=m=>{const n=n3Sn(m.x,m.y,m.z,6,4),n2=n3Sn(m.x,m.y,m.z,15,7);let c=mdMix(sk,sk2,ud_cl((n-.35)*1.4)*.8+(m.s<-.3?.15:0));
+      c=mdMix(c,rot,ud_cl((n2-.62)*3.5)*.65);if(m.part=='hand'||(m.part=='arm'&&m.y<J.aR2[1]+.06))c=mdMix(c,rot,.45);   // filthy hands
+      if(m.ny>.35)c=mdMix(c,pale,ud_cl((m.ny-.35)*.9));                                                                   // stretched pale skin over the bones
+      if(m.part=='head'&&m.s>.3){const dm=Math.hypot(m.x/(.05*S.hs),(m.y-my)/(.03*S.hs));c=mdMix(c,blood,ud_ss(1.3,.4,dm)*.85)}   // dried blood round the mouth
+      return c};
+    ud_body(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.006*S.hs&&Math.abs(m.x)<.04*S.hs)return 0x100604;if(m.part=='head'&&m.s>.4&&Math.abs(m.x)<.012&&Math.abs(m.y-S.hp(0,1.596,0)[1])<.008)return 0x0a0806;return null},{vcol:skin});
     cgEyes(k,M,S,0x9aff6a,.037,1.63,.95,-.004);cgEars(k,M,S,sk,1.63,.08,.4,.6,.02);
     // tusks up from the lower jaw
-    [-1,1].forEach(s=>{const q=S.hp(s*.022,1.552,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','cone4','c',0xc8c0a0,p[0],p[1]+.008*S.hs,p[2]-.002,.008*S.hs,.028*S.hs,.008*S.hs,-.25,0,-s*.12)});
+    [-1,1].forEach(s=>{const q=S.hp(s*.022,1.552,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','cone4','c',0xc8c0a0,p[0],p[1]+.008*S.hs,p[2]-.002,.008*S.hs,.03*S.hs,.008*S.hs,-.25,0,-s*.12)});
     // ribs standing out of the chest, knuckled vertebrae down the hunched back, boils, a stitched wound
-    for(let i=0;i<4;i++){const y=J.chest[1]+.05-i*.05;[-1,1].forEach(s=>{const p=cgSurf(M,S,y,s*.28,-.003),m=cgSurf(M,S,y-.016,s*.72,.002),q=cgSurf(M,S,y-.034,s*1.15,-.003),bn=y>J.chest[1]-.04?'chest':'spine';k.L(bn,'c',0xb8b098,p,m,.008,.008,5).L(bn,'c',0xb8b098,m,q,.008,.007,5)})}
-    for(let i=0;i<8;i++){const y=T[6][0]-i*.06,p=cgSurf(M,S,y,Math.PI,-.004);k.p(y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis','sph','c',0xb8b098,p[0],p[1],p[2],.022,.018,.02)}
-    [[J.chest[1],.6],[J.spine[1],-1.2],[J.chest[1]+.06,2.1],[J.spine[1]-.04,-2.6]].forEach(([y,a])=>{const p=cgSurf(M,S,y,a,-.006);k.p(y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis','sph','c',0x8a9a5a,p[0],p[1],p[2],.022,.02,.018)});
-    {const p=cgSurf(M,S,J.spine[1]+.03,-.4,.0),q=cgSurf(M,S,J.spine[1]-.07,-.18,.0);k.L('spine','c',0x3a1a14,p,q,.005,.005,4);for(let i=0;i<4;i++){const c=lerp3(p,q,(i+.5)/4);k.p('spine','box','c',0x1a1210,c[0],c[1],c[2],.026,.004,.006,0,0,.6)}}
+    for(let i=0;i<4;i++){const y=ch+.05-i*.05;[-1,1].forEach(s=>{const p=cgSurf(M,S,y,s*.28,-.003),m=cgSurf(M,S,y-.016,s*.72,.002),q=cgSurf(M,S,y-.034,s*1.15,-.003),bn=TB(y);k.L(bn,'c',bone,p,m,.008,.008,5).L(bn,'c',bone,m,q,.008,.007,5)})}
+    for(let i=0;i<7;i++){const y=sh-.01-i*.065,p=cgSurf(M,S,y,Math.PI,-.006);k.p(TB(y),'dod','c',i%2?bone:mdSh(bone,.85),p[0],p[1],p[2],.024,.019,.022);ud_ws(k,M,p)}
+    [[ch,.6],[sp,-1.2],[ch+.06,2.1],[sp-.04,-2.6]].forEach(([y,a])=>{const p=cgSurf(M,S,y,a,-.011);k.p(TB(y),'ico','c',0x7a8a50,p[0],p[1],p[2],.02,.018,.016);ud_ws(k,M,p)});
+    {const p=cgSurf(M,S,sp+.03,-.4,-.002),q=cgSurf(M,S,sp-.07,-.18,-.002);k.L('spine','c',0x3a1a14,p,q,.005,.005,4);ud_ws(k,M,lerp3(p,q,.5));for(let i=0;i<4;i++){const c=lerp3(p,q,(i+.5)/4);k.p('spine','box','c',0x1a1210,c[0],c[1],c[2],.026,.004,.008,0,0,.6);ud_ws(k,M,c)}}
     // burial rags: a loincloth, rags hanging from the left shoulder, a rag bound round each forearm
-    cgSkirt(B,S,T[2][0]-.03,J.rh1[1]+.06,.04,.016,m=>a181Nz(0x2e2e28,m,.3,12),{n:5,keep:m=>Math.round(Math.atan2(m.c,m.s)*4)%2==0&&!(m.y<J.rh1[1]+.15&&a181H(Math.round(Math.atan2(m.c,m.s)*9),2)<.4)});cgBelt(B,M,T[2][0]-.02,.015,.018,0x2a2a24);
-    [[T[6][0]+.01,-1.1],[T[6][0]-.01,-.6],[T[6][0]-.07,-1.45]].forEach(([y,a],i)=>{const p=cgSurf(M,S,y,a,-.008);u8_strip(k,M,'chest',i%2?rag:rag2,p,.045,.27+i*.03,a,-.1,i)});
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',y=J[A+'1'][1]*.3+J[A+'2'][1]*.7;cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-y)<.028,.014,m=>a181Nz(rag,m,.35,14),{rim:.15});
-      cgFingers(k,S,s,sk2,'claw',1.3,0x2a2420,.04);cgToes(k,S,s,sk2,.02)})})})();
-ST179.ghoul={sx:.42,hx:-.38,lk:.34,rk:.34,ax:-.35,lx:-.35,ex:-.6,le:-.6};
+    cgSkirt(B,S,T[2][0]-.03,J.rh1[1]+.06,.04,.016,m=>ud_cloth(m,0x2e2e28,J.rh1[1],T[2][0],9),{n:5,seg:16,keep:m=>Math.round(Math.atan2(m.c,m.s)*4)%2==0});cgBelt(B,M,T[2][0]-.02,.03,.016,0x2a2a24);
+    [[sh+.01,-1.1],[sh-.01,-.6],[sh-.07,-1.45]].forEach(([y,a],i)=>{const p=cgSurf(M,S,y,a,-.008);u8_strip(k,M,'chest',i%2?rag:rag2,p,.045,.27+i*.03,a,-.1,i)});
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',y=J[A+'1'][1]*.35+J[A+'2'][1]*.65;ud_sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-y)<.03,.012,null,{rim:.15,vcol:m=>ud_mot(m,rag,rag2,11,2)});
+      ud_fingers(B,S,s,sk2,'claw',1.55,0x2a2420,.05,1.1);cgToes(k,S,s,sk2,.024)})})})();
+// a crawler's crouch: bent far over, the head raised to look ahead, deep-bent knees, the long arms reaching forward to the ground
+ST179.ghoul={sx:.62,hx:-.58,lk:.56,rk:.56,ax:-.5,lx:-.5,az:.1,lz:-.1,ex:-.35,le:-.35};
 
 // ---------------- the drowned: Drowned Thrall (bloated, barnacled, chained, weed) and Drowned Wretch (gaunt, hair over its face) ----------------
-function cgBarnacles(k,M,S,n,seed,col){for(let i=0;i<n;i++){const y=S.torso[1][0]+a181H(i,seed)*(S.torso[6][0]-S.torso[1][0]),a=(a181H(i,seed+3)-.5)*6.2,bn=y>S.J.chest[1]-.04?'chest':y>S.J.spine[1]?'spine':'pelvis';
-  for(let j=0;j<3;j++){const b=a+(j-1)*.12,p=cgSurf(M,S,y+(j%2)*.014,b,-.005);k.p(bn,'cone','c',j%2?col:mdSh(col,.8),p[0],p[1],p[2],.012,.02,.012,Math.cos(b)*.6,0,-Math.sin(b)*.6)}}}
-(function(){const S=cgHuman({h:.84,w:1.3,d:1.32,rw:[1.12,1.2,1.45,1.48,1.32,1.25,1.28,1.38],rf:[1.1,1.3,1.85,1.75,1.38,1.2,1.15,1.2],at:1.55,lt:1.45,hs:.98,hw:1.08,nw:1.6,facePush:BRUTEJAW}),sk=0x4a625c,sk2=0x34463f,rot=0x2a3424,cl=0x2a3436,ir=0x3a3e44,rust=0x6a3a20,weed=0x2a4a2a,weed2=0x4a6a2a,barn=0xb8b0a0,T=S.torso,J=S.J;
+// (refine) the Thrall is a bloated, waterlogged brute: a small head sunk into a swollen neck (the shoulders slope up into it, no shelf), a belly sagging over the belt,
+// swollen forearms, thick short legs; the Wretch is a thin drowned corpse, its black hair plastered over its face. Both have
+// wet skin whose colour flows (vcol): grey-green going blue-grey in the hollows, pale swollen patches, dark rot, a wet sheen on top.
+function cgBarnacles(k,M,S,n,seed,col,o){for(let i=0;i<n;i++){const y=S.torso[1][0]+a181H(i,seed)*(S.torso[6][0]-S.torso[1][0]),a=(a181H(i,seed+3)-.5)*6.2,bn=y>S.J.chest[1]-.04?'chest':y>S.J.spine[1]?'spine':'pelvis';
+  for(let j=0;j<3;j++){const b=a+(j-1)*.12,p=cgSurf(M,S,y+(j%2)*.014,b,-.005+(o?o(y+(j%2)*.014,b):0));k.p(bn,'cone','c',j%2?col:mdSh(col,.8),p[0],p[1],p[2],.012,.02,.012,Math.cos(b)*.6,0,-Math.sin(b)*.6);ud_ws(k,M,p)}}}
+// a strand of wet weed: a thin, slightly flat loft tapering to a point, wavy, its root sunk in the head (dark) and its tip lighter;
+// it falls from p0 along d0, stays outside the head and neck, and lies on the shoulders / back where it reaches them (taking the
+// skin's weights there, so it moves with the body under it)
+function ud_weed(B,M,S,p0,d0,len,r,c,sd){const n=7,st=len/n,hz=S.hp(0,1.6,0)[2],ny=S.J.neck[1],R=[];let p=sub3(p0,mul3(nrm3(d0),.01)),d=nrm3(d0);const side=nrm3(cross3(d,[0,1,0]));
+  for(let i=0;i<=n;i++){let w=[['head',1]];
+    if(i){d=nrm3(add3(add3(mul3(d,.5),[0,-.62,0]),mul3(side,.32*Math.sin(i*1.9+sd))));p=add3(p,mul3(d,i==1?.012:st));
+      if(p[1]>ny-.03){const ax=nrm3([p[0],0,p[2]-hz]),h=cgRay(M,[p[0]+ax[0]*.5,p[1],p[2]+ax[2]*.5],[-ax[0],0,-ax[2]],{head:1,neck:1});
+        if(h&&i>1){const rh=Math.hypot(h[0],h[2]-hz)+.007,rp=Math.hypot(p[0],p[2]-hz);if(rp<rh)p=[ax[0]*rh,p[1],hz+ax[2]*rh]}}
+      const t=cgRay(M,[p[0],p[1]+.5,p[2]],[0,-1,0],{torso:1,arm:1});if(t&&p[1]<t[1]+.02&&p[1]>t[1]-.06){p=[p[0],t[1]+.02,p[2]];w=cgWAt(M,t)}}
+    const q=r*(1-.88*i/n);R.push({p,rx:q,f:q*.62,b:q*.62,w})}
+  mdLoft(B,R,{seg:4,capB:true,col:m=>mdMix(mdSh(c,.42),c,Math.min(1,m.i/4))})}
+// drowned skin at a point: base sk, hollows / back toward sk2, pale swollen patches, dark rot, a wet sheen on the tops
+function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3Sn(m.x,m.y,m.z,12,5);let c=mdMix(sk,sk2,ud_cl((n-.35)*1.3)*.75+(m.s<-.3?.2:0));
+  c=mdMix(c,pale,ud_cl((.42-n2)*3)*(o.pale||.45)*(m.s>-.2?1:.4));c=mdMix(c,rot,ud_cl((n2-.66)*4)*.7);
+  if(m.ny>.4)c=mdMix(c,mdSh(pale,1.1),ud_cl((m.ny-.4)*.6));return c}
+(function(){const S=ud_spec({h:.84,w:1.32,d:1.34,rw:[1.12,1.2,1.5,1.52,1.34,1.25,1.28,1.6],rf:[1.1,1.32,1.95,1.85,1.4,1.2,1.15,1.4],at:1.6,lt:1.45,legL:.92,hs:.9,hw:1.12,nw:1.8,sock:.7,neckL:.025,armR:[1,1,1.04,1.16,1.12,1,1],
+    facePush:(i,j,a)=>(i>=1&&i<=3&&Math.sin(a)>-.2&&Math.abs(Math.cos(a))>.5)?.012:0}),sk=0x4a625c,sk2=0x34464a,pale=0x7a8c84,rot=0x2a3424,cl=0x2a3436,ir=0x3a3e44,rust=0x6a3a20,weed=0x2a4a2a,weed2=0x4a6a2a,barn=0xb8b0a0,T=S.torso,J=S.J;
+  // the swollen neck tapers from the sloping shoulders up into fat jowls under the jaw (no flat shelf, no step under the chin)
+  {const y7=S.torso[7][0],nb=S.head[0][0];S.neck=[[y7+(nb-y7)*.38,.14,.1,.13,.008],[y7+(nb-y7)*.72,.1,.086,.096,.012]];S.head[0]=S.head[0].map((v,i)=>i&&i<4?v*1.5:v);S.head[1]=S.head[1].map((v,i)=>i&&i<4?v*1.2:v)}
   cg181Reg('drowned',S,function(B,P,k,C){const M=C.M,kn=J.rh1[1];
-    const FH=cgFaceHuman({nose:.8,nw:1.4,brow:1.3,hollow:-.006,chin:.8});cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>FH(x,y,z,n)-(n[2]>.1?.012*cgG(x,y,0,1.552,.026,.011):0)));   // a slack, sagging mouth
+    const FH=cgFaceHuman({nose:.8,nw:1.4,brow:1.3,hollow:-.006,chin:.8});cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>FH(x,y,z,n)-(n[2]>.1?.012*cgG(x,y,0,1.552,.026,.011):0)));   /* a slack, sagging mouth */
     cgSculpt(M,{torso:1,arm:1,leg:1},(x,y,z,n)=>.012*(n3Sn(x*1.3,y*1.3,z*1.3,8,3)-.5));
+    cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]>0?.035*cgG(x,y,0,T[1][0]+.06,.18,.07)*n[2]:0);   // the belly sagging over the belt
+    M.shade=cgShade(M,{cav:1.1,y0:0,y1:T[7][0]+.2,hk:.26});
     const my=S.hp(0,1.552,0)[1],pants=m=>m.part=='leg'&&m.y>kn-.1;
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.012*S.hs&&Math.abs(m.x)<.026*S.hs)return 0x0a1210;return cgFacePaint(S,m,sk,{sock:0x101a18})||(n3Sn(m.x,m.y,m.z,10,2)>.72?rot:m.s<-.4?sk2:a181Nz(sk,m,.25,14))},{keep:m=>!pants(m)});
     cgEyes(k,M,S,0xa8fff0,.036,1.629,.9,-.002);cgTeeth(k,M,S,[[-.018,1.563,.01],[-.006,1.564,.013],[.007,1.564,.011],[.019,1.562,.012]],barn);
-    // the rags of a sailor's shirt (sides, back, sleeves), breeches, an iron-studded belt, a loincloth flap
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>T[1][0]&&m.s<.3&&!(a181H(Math.round(m.x*30),Math.round(m.y*30))<.25))||(m.part=='arm'&&m.y>J.aR1[1]),.014,m=>a181Nz(cl,m,.35,14));
-    cgShell(B,M,pants,.012,m=>a181Nz(cl,m,.3,14),{rim:0});cgBelt(B,M,T[2][0]-.02,.02,.03,ir,'m');
-    cgSkirt(B,S,T[2][0]-.03,J.rh1[1]+.1,.04,.03,m=>a181Nz(0x1a2426,m,.3,12),{n:5,keep:m=>Math.abs(m.c)<.4&&!(m.y<J.rh1[1]+.18&&a181H(Math.round(m.c*12),3)<.4)});
-    cgBarnacles(k,M,S,14,3,barn);
-    // strands of seaweed hair from the crown, weed hanging off the shoulders and arms
-    u8_strands(k,M,S,Array.from({length:9},(_,i)=>{const a=-2+i*.5;return [a,1.7,.03,.3+(i%3)*.1,Math.abs(a)<.8?.42:.1,i%2?weed:weed2,i]}));
-    for(let i=0;i<8;i++){const y=T[6][0]-a181H(i,5)*.12,a=Math.PI+(a181H(i,9)-.5)*3.6,p=cgSurf(M,S,y,a,-.008);u8_strip(k,M,y>J.chest[1]-.04?'chest':'spine',i%2?weed:weed2,p,.03,.16+a181H(i,2)*.12,a,-.15,i)}
-    [-1,1].forEach(s=>{for(let i=0;i<3;i++){const t=.4+i*.5,p=u8_armPt(M,S,s,t,0);u8_strip(k,M,t<1?(s<0?'aL0':'aR0'):(s<0?'aL1':'aR1'),i%2?weed:weed2,p,.034,.22,s*1.5,-.05,i+3)}});
+    // the rags of a sailor's shirt: sides, back and sleeves, over the shoulder tops to the neck behind (no shelf of skin rings it), a
+    // ragged, sodden neckline lying flat on the skin, open at the front and torn open on the right; breeches, an iron-studded belt, a loincloth flap
+    const nl=m=>{const a=Math.atan2(m.x,m.z);return Math.abs(a)>(a>0?1.3:.82)+.34*(n3Sn(m.x,m.y*.6,m.z,15,7)-.5)},thk=v=>.014*ud_cl((T[6][0]+.05-v[1])/.07,.2,1);
+    ud_sh(B,M,m=>(m.part=='torso'&&m.y>cgEdge(m,T[1][0]+.05,.04,3)&&(m.s<.3||(m.y>T[6][0]-.03&&nl(m))))||(m.part=='neck'&&m.ny>.45&&nl(m))||(m.part=='arm'&&m.y>cgEdge(m,J.aR1[1]+.02,.03,5)),thk,null,{rim:0,vcol:m=>ud_mot(m,cl,mdSh(cl,.62),8,2)});
+    ud_sh(B,M,pants,.012,null,{vcol:m=>ud_mot(m,mdSh(cl,.9),mdSh(cl,.6),9,4)});cgBelt(B,M,T[2][0]-.02,.02,.03,ir,'m');
+    cgSkirt(B,S,T[2][0]-.03,J.rh1[1]+.1,.04,.03,m=>ud_cloth(m,0x1e2a2c,J.rh1[1],T[2][0],5),{n:5,seg:16,keep:m=>Math.abs(m.c)<.4&&!(m.y<J.rh1[1]+.18&&a181H(Math.round(m.c*12),3)<.4)});
+    // iron cuffs
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ud_sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'2'][1]+.05))<.025,.022,ir,{t:'m',rim:.1})});
+    ud_body(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.012*S.hs&&Math.abs(m.x)<.026*S.hs)return 0x0a1210;return cgFacePaint(S,m,sk,{sock:0x101a18})},{vcol:m=>ud_wet(m,sk,sk2,pale,rot)});
+    const cloth=(y,a)=>y>T[1][0]+.1&&(Math.cos(a)<.25||(y>T[6][0]-.03&&Math.abs(a)>1.4))?thk([0,y,0]):0;cgBarnacles(k,M,S,5,3,barn,cloth);
+    // barnacles crusted along the torn neckline on the shoulder tops (near the neck, clear of the arm sockets)
+    [[-1,.95],[1,1.3],[-1,2.25]].forEach(([q,a0],i)=>{for(let j=0;j<3;j++){const a=q*(a0+j*.1),y=T[6][0]+.012-(j%2)*.012,o=Math.abs(a)>(a>0?1.3:.82)+.17?thk([0,y,0]):0,pt=cgSurf(M,S,y,a,-.005+o);
+      k.p('chest','cone','c',j%2?barn:mdSh(barn,.8),pt[0],pt[1],pt[2],.012,.02,.012,Math.cos(a)*.6,0,-Math.sin(a)*.6);ud_ws(k,M,pt)}});
+    // wet weed hanging from the crown and the sides of the head (two strands across the face, some lying on the shoulders), weed on the arms
+    [[-2.7,1.705,.34,.011,.25],[-1.9,1.69,.42,.012,.1],[-1.25,1.67,.3,.01,.05],[1.1,1.675,.36,.011,.05],[1.95,1.69,.28,.012,.1],[2.9,1.7,.4,.011,.25],
+     [-.28,1.715,.3,.009,.1],[.36,1.71,.21,.008,.1],[-1.5,1.6,.42,.011,0],[1.55,1.61,.38,.011,0],[-2.2,1.63,.36,.01,0],[2.3,1.62,.4,.01,0]].forEach(([a,y,len,r,up],i)=>{
+      const c=S.hp(0,y,0),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(p)ud_weed(B,M,S,p,[d[0],up,d[2]],len,r,i%2?weed:weed2,i*1.7)});
+    [-1,1].forEach(s=>{for(let i=0;i<2;i++){const t=.5+i*.7,p=u8_armPt(M,S,s,t,0,t<1?-.007:.006);u8_strip(k,M,t<1?(s<0?'aL0':'aR0'):(s<0?'aL1':'aR1'),i%2?weed:weed2,p,.034,.22,s*1.5,-.05,i+3)}});
     // an iron and rust chain round the neck and across the body
-    const nk=[];for(let i=0;i<14;i++){const a=i/14*6.283;nk.push(cgSurf(M,S,T[6][0]+.012,a,-.004))}u8_chain(k,nk,()=>'chest',null,.024,ir,rust);
-    const dg=[];for(let i=0;i<10;i++){const t=i/9;dg.push(cgSurf(M,S,T[6][0]-.04-t*(T[6][0]-T[1][0]-.06),-1.0+t*2.1,-.004))}u8_chain(k,dg,p=>p[1]>J.chest[1]-.04?'chest':p[1]>J.spine[1]?'spine':'pelvis',p=>nrm3([p[0],0,p[2]]),.024,ir,rust);
-    // iron cuffs; the anchor held by its shank in the right fist, flukes hanging low
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'2'][1]+.05))<.025,.022,ir,{t:'m',rim:.1});cgFingers(k,S,s,sk2,s>0?'fist':'claw',1.1,0x1a2420,s>0?0:.02);cgToes(k,S,s,sk2,.012)});
-    {const a1=J.aR1,a2=J.aR2,d=nrm3(sub3(a2,a1)),g=add3(a2,mul3(d,.085)),x=g[0],y=g[1],z=g[2]+.012;
-      k.L('aR2','m',ir,[x,y+.07,z],[x,y-.56,z+.03],.032,.032,6);k.p('aR2','ring','m',rust,x,y+.11,z,.066,.55,.066,0,0,Math.PI/2);k.p('aR2','box','m',ir,x,y-.44,z+.025,.055,.045,.27);
-      [-1,1].forEach(s=>{k.L('aR2','m',ir,[x,y-.56,z+.03],[x,y-.42,z+.03+s*.22],.032,.024,5);k.p('aR2','cone4','m',rust,x,y-.39,z+.03+s*.25,.045,.1,.022,s*.6)});k.p('aR2','sph','m',ir,x,y-.56,z+.03,.04)}})})();
-(function(){const S=cgHuman({h:.84,w:.92,d:.9,rw:[.92,.95,.82,.9,.95,.95,.98,.95],at:.86,lt:.88,hs:1.0,armL:1.12}),sk=0x5e6e66,sk2=0x44544e,rib=0x9a9a86,hr=0x0c0e0e,hr2=0x1a1e1c,sh1=0x6a6a5c,sh2=0x4a4a40,weed=0x2a4a2a,T=S.torso,J=S.J;
-  cg181Reg('dgwretch',S,function(B,P,k,C){const M=C.M,my=S.hp(0,1.55,0)[1];
-    const FH=cgFaceHuman({nose:.8,brow:1.3,hollow:.016});cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>FH(x,y,z,n)-(n[2]>.1?.02*cgG(x,y,0,1.548,.024,.016):0)));   // the jaw hangs open
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.35&&Math.abs(m.y-my)<.02*S.hs&&Math.abs(m.x)<.025*S.hs)return 0x040606;return cgFacePaint(S,m,sk,{sock:0x0a1210})||(n3Sn(m.x,m.y,m.z,13,5)>.74?0x3a3a4a:m.s<-.4?sk2:a181Nz(sk,m,.2,16))});
+    const nk=[];for(let i=0;i<7;i++){const a=i/7*6.283;nk.push(cgSurf(M,S,T[6][0]+.012,a,-.004))}u8_chain(k,nk,()=>'chest',null,.028,ir,rust);
+    const dg=[];for(let i=0;i<6;i++){const t=i/5;dg.push(cgSurf(M,S,T[6][0]-.04-t*(T[6][0]-T[1][0]-.06),-1.0+t*2.1,-.004))}u8_chain(k,dg,p=>p[1]>J.chest[1]-.04?'chest':p[1]>J.spine[1]?'spine':'pelvis',p=>nrm3([p[0],0,p[2]]),.028,ir,rust);
+    // the anchor held by its shank in the right fist, flukes hanging low
+    [-1,1].forEach(s=>{ud_fingers(B,S,s,sk2,s>0?'fist':'claw',1.1,0x1a2420,s>0?0:.02,1.25);cgToes(k,S,s,sk2,0)});
+    {const H=ud_hf(S,1),g=ud_grip(S,1,null,.032),cd=nrm3(add3(H.d,mul3(H.f,.42))),sd=nrm3(sub3(H.f,mul3(cd,H.f[0]*cd[0]+H.f[1]*cd[1]+H.f[2]*cd[2]))),A=(t,o)=>add3(add3(g,mul3(cd,t)),mul3(sd,o)),dn=nrm3(cross3(sd,cd));
+      k.L('aR2','m',ir,A(-.08,0),A(.62,0),.026,.032,6);u8_part(k,'aR2',ud_ring(),'m',rust,A(-.125,0),cd,sd,.05);u8_part(k,'aR2',dkG().box,'m',ir,A(.5,0),sd,cd,[.27,.045,.055]);
+      [-1,1].forEach(s=>{k.L('aR2','m',ir,A(.62,0),A(.48,s*.22),.032,.024,5);u8_part(k,'aR2',dkG().cone4,'m',rust,A(.45,s*.25),dn,nrm3(add3(mul3(cd,-1),mul3(sd,s*.6))),[.045,.1,.022])});const c=A(.62,0);k.p('aR2','sph','m',ir,c[0],c[1],c[2],.04)}})})();
+(function(){const S=ud_spec({h:.84,w:.88,d:.86,rw:[.92,.95,.78,.88,.95,.95,.98,.95],rf:[.9,.9,.62,.85,.95,1,1,.98],at:.8,lt:.84,hs:1.0,armL:1.14}),sk=0x5e6e66,sk2=0x44544e,pale=0x8a9a90,rot=0x3a3a4a,rib=0x9a9a86,hr=0x0c0e0e,hr2=0x1a1e1c,sh1=0x6a6a5c,sh2=0x4a4a40,weed=0x2a4a2a,T=S.torso,J=S.J;
+  cg181Reg('dgwretch',S,function(B,P,k,C){const M=C.M,my=S.hp(0,1.55,0)[1],nape=S.hp(0,1.56,0)[1];
+    const FH=cgFaceHuman({nose:.8,brow:1.3,hollow:.016});cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>FH(x,y,z,n)-(n[2]>.1?.02*cgG(x,y,0,1.548,.024,.016):0)));   /* the jaw hangs open */
+    cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]>.2?-.016*cgG(x,y,0,T[2][0]+.075,.1,.06)*n[2]:0);   // the belly sunk under the ribs
+    M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.25,hk:.28});
     cgEyes(k,M,S,0xb8fff0,.036,1.629,.85,-.002);
     // broken teeth in the gaping mouth
     cgTeeth(k,M,S,[[-.02,1.567,.014],[-.009,1.568,.008],[.003,1.568,.016],[.014,1.567,.006],[.022,1.566,.012]],0xb8b098);
     // long black hair: a skullcap and strands plastered down over the face and shoulders
-    cgHair(B,M,S,{col:hr,line:1.672,neck:true,thick:.012});
+    ud_sh(B,M,m=>{if(m.part!='head'&&!(m.part=='neck'&&m.s<-.2))return false;if(m.y<nape)return false;const by=(m.y-S.nb)/S.hs+1.52;return m.s<.1||by>1.672+(Math.abs(m.x/S.hs)>.05?-.004:0)},
+      v=>.012*Math.min(1,Math.max(.35,(v[1]-nape)/(.12*S.hs))),m=>a181Nz(hr,m,.4,24),{rim:.12});
     u8_strands(k,M,S,Array.from({length:16},(_,i)=>{let a=-2.9+i*.36;const fr=Math.abs(a)<.8;if(fr&&Math.abs(a)>.25&&Math.abs(a)<.55)a=Math.sign(a)*.64;return [a,fr?1.675:1.66,fr?.034:.046,fr?.38+(i%3)*.07:.5+(i%4)*.1,fr?.36:.1,i%3?hr:hr2,i]}));
     // the ribs as bars on the chest over the sunken belly
-    for(let i=0;i<5;i++){const y=J.chest[1]+.08-i*.05;for(let j=0;j<7;j++){const a=-1.2+j*.4,p=cgSurf(M,S,y-Math.abs(a)*.02,a,-.004);k.p(y>J.chest[1]-.04?'chest':'spine','box','c',rib,p[0],p[1],p[2],.034,.009,.014,0,a,0)}}
+    for(let i=0;i<4;i++){const y=J.chest[1]+.07-i*.055;for(let j=0;j<5;j++){const a=-1.1+j*.55,p=cgSurf(M,S,y-Math.abs(a)*.02,a,-.004);k.p(y>J.chest[1]-.04?'chest':'spine','box','c',rib,p[0],p[1],p[2],.044,.01,.014,0,a,0)}}
     // a shroud in rags: rags on the shoulders, the shroud's skirt, weed caught on the arms; long black talons
-    cgShell(B,M,m=>(m.part=='torso'&&m.y<T[2][0]+.06)||(m.part=='leg'&&m.y>J.rh1[1]-.05),.012,m=>a181Nz(sh2,m,.35,14));cgSkirt(B,S,T[2][0],J.rh1[1]-.05,.06,.018,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*6)%2?sh1:sh2,m,.3,12),{n:5,keep:m=>!(m.y<J.rh1[1]+.15&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<.45)});
-    for(let i=0;i<8;i++){const a=-2.6+i*.75,p=cgSurf(M,S,T[6][0]-.02,a,-.008);u8_strip(k,M,'chest',i%2?sh1:sh2,p,.07,.26+(i%3)*.08,a,-.12,i)}
-    [-1,1].forEach(s=>{const p=u8_armPt(M,S,s,.7,0);u8_strip(k,M,s<0?'aL0':'aR0',weed,p,.03,.25,s*1.4,-.05,s+3);cgFingers(k,S,s,sk2,'claw',1.15,0x0a0a0a,.085);cgToes(k,S,s,sk2,.014)})})})();
+    ud_sh(B,M,m=>(m.part=='torso'&&m.y<T[2][0]+.06)||(m.part=='leg'&&m.y>J.rh1[1]-.05),.012,null,{rim:.12,vcol:m=>ud_mot(m,sh2,mdSh(sh2,.7),9,6)});cgSkirt(B,S,T[2][0],J.rh1[1]-.05,.06,.018,m=>ud_cloth(m,mdMix(sh1,sh2,.4),J.rh1[1]-.05,T[2][0],6),{n:5,seg:16,keep:m=>!(m.y<J.rh1[1]+.15&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<.45)});
+    ud_body(B,M,m=>{if(m.part=='head'&&m.s>.35&&Math.abs(m.y-my)<.02*S.hs&&Math.abs(m.x)<.025*S.hs)return 0x040606;return cgFacePaint(S,m,sk,{sock:0x0a1210})},{vcol:m=>ud_wet(m,sk,sk2,pale,rot,{pale:.35})});
+    for(let i=0;i<7;i++){const a=-2.6+i*.86,p=cgSurf(M,S,T[6][0]-.02,a,-.008);u8_strip(k,M,'chest',i%2?sh1:sh2,p,.07,.26+(i%3)*.08,a,-.12,i)}
+    [-1,1].forEach(s=>{const p=u8_armPt(M,S,s,.7,0);u8_strip(k,M,s<0?'aL0':'aR0',weed,p,.03,.25,s*1.4,-.05,s+3);ud_fingers(B,S,s,sk2,'claw',1.15,0x0a0a0a,.085);cgToes(k,S,s,sk2,.014)})})})();
 ST179.dgwretch={sx:.3,hx:-.26,lk:.27,rk:.27,ax:-.3,lx:-.3,ex:-.5,le:-.5};
 // ================= v181: the humanoid creatures on cage bodies (batch 4) =================
 // Sand Elemental, Salt Golem, Rampart Gargoyle, Lichen, Akidon, Gharial Reaver, Frost Wendigo — each keeps its look.
@@ -57501,228 +58449,418 @@ function c9_crack(k,M,S,pts,col,r){let prev=null;pts.forEach(([y,a])=>{const p=c
 // a vine / cord along the torso surface through [y, angle] points, off out from the skin, bending with the skin under it
 function c9_vine(B,M,S,pts,r,col,off,o){const P=pts.map(([y,a],i)=>cgSurf(M,S,y,a,typeof off=='function'?off(i):off));cgTube(B,P,P.map(()=>r),P.map(p=>cgWAt(M,p)),col,Object.assign({seg:6},o||{}));return P}
 
+// ---- refine pass (owner, Oct 31 2026: every regular enemy up to the approved Amalgam's standard) ----
+// "Arms and legs barely connected": every body now uses the seated-limb cage (n:16 columns, sock: a shoulder socket as tall as
+// the arm is thick, j2: arms and thighs grow out of the socket and the hip ring). Fewer rings where they don't shape the outline
+// (8 head rings, no straight-taper limb rings). Detail is paint: baked creases and height light (cgShade) and colour that flows
+// corner to corner (vcol) instead of per-face patches. Kit stuck on the skin takes the skin's own weights there (cr_WS). Clean
+// hands: the arm swells into the hand itself; open and clawed hands get rounded tapering finger lofts in the hand's colour, closed
+// fists one rounded mitten mass with painted finger lines and a thumb (cr_mitten). None of these seven
+// is a man, so each outline is pushed toward what it is (proportions, stature, posture, stance).
+const cr_H8=CG181.base.head.filter((q,i)=>i%2==0);
+const cr_LEG=CG181.base.leg.filter((q,i)=>i!=2&&i!=6);
+// the jaw corners on an 8-ring head (c9_JAW was for the 15-ring one)
+const cr_JAW8=(i,j,a)=>{const ca=Math.cos(a),sa=Math.sin(a);return (i>=1&&i<=2&&sa>-.2&&Math.abs(ca)>.5)?.012:0};
+// a head whose lowest rings flare out into the shoulders (no neck): a = how far, pw = how quickly it settles to the head
+function cr_flare(L,a,pw){return L.map((q,i)=>{const f=1+a*Math.pow(1-i/(L.length-1),pw||2);return [q[0],q[1]*f,q[2]*f,q[3]*f,q[4]]})}
+// a squarer torso: the ring corners pushed out (blocky golems)
+const cr_box=amt=>(i,j,a)=>i>=2?amt*Math.pow(Math.abs(Math.sin(2*a)),1.5)*(i>=4?1.25:1):0;
+// the kit part just added takes the skin's weights at p (it moves with the skin there, never floats off a bending joint)
+function cr_WS(k,M,p){k.P[k.P.length-1].w=cgWAt(M,p);return k}
+// fill round the base of a sunk head, so the shoulders flow up into it with no groove (the Amalgam's fix): a round the sides, b behind
+function cr_fill(M,S,a,b){const T=S.torso,hb=S.hp(0,1.58,0)[1],t7=T[T.length-1][0];
+  cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>a*cgG(0,y,0,(t7+hb)/2,1,(hb-t7)*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?b*cgG(0,y,0,hb,1,.07)*Math.min(1,-n[2]*2):0))}
+// a v113 creature's stance (its N3 definition), set from here
+function cr_stance(key,st){try{if(N3.def[key])N3.def[key].stance=st}catch(e){}}
+// distance from a surface point to the nearer wrist (fists / hands painted by it)
+function cr_wrist(m,J){return Math.min(Math.hypot(m.x-J.aL2[0],m.y-J.aL2[1],m.z-J.aL2[2]),Math.hypot(m.x-J.aR2[0],m.y-J.aR2[1],m.z-J.aR2[2]))}
+// clean fingers: rounded tapering lofts rooted inside the hand (the swollen end of the arm), curling toward the palm (curl 0
+// straight … 1 closed), spread across the knuckles; nail = a claw colour (the last segment tapers to a point), thumb = one more
+function cr_fingers(B,S,s,o){const F=b7_Arm(S,s),A=F.A,W=[[A+'2',1]],n=o.n==null?3:o.n,sp=o.spread||.03,cu=o.curl==null?.5:o.curl,at=o.at||.07,h=add3(F.a2,mul3(F.d,at)),N=3;
+  const one=(b,d0,len,r)=>{const pts=[b];let p=b;for(let j=1;j<=N+(o.nail?1:0);j++){const th=cu*1.5*Math.min(1,j/N),dd=nrm3(add3(mul3(d0,Math.cos(th)),mul3(F.u,-Math.sin(th))));p=add3(p,mul3(dd,j>N?len*(o.claw||.4):len/N));pts.push(p)}
+    const rr=[r,r*.94,r*.8,r*.62,r*.1],fl=o.flat||1;mdLoft(B,pts.map((q,j)=>({p:q,rx:rr[j],f:rr[j]*fl,b:rr[j]*fl,w:W})),{seg:o.seg||5,ref:F.u,capB:!o.nail,col:m=>o.nail&&m.i>N?o.nail:o.col})};
+  for(let f=0;f<n;f++){const c=n==1?0:f/(n-1)*2-1;one(add3(h,mul3(F.f,c*sp)),nrm3(add3(F.d,mul3(F.f,c*(o.fan==null?.22:o.fan)))),(o.len||.1)*(1-Math.abs(c)*(o.short==null?.12:o.short)),o.r||.02)}
+  if(o.thumb)one(add3(add3(F.a2,mul3(F.d,at*.45)),mul3(F.f,sp*.7)),nrm3(add3(add3(mul3(F.d,.5),mul3(F.f,.75)),mul3(F.u,-.3))),(o.len||.1)*.62,(o.r||.02)*1.05)}
+// a closed fist as ONE rounded mitten mass curling round the grip (separate curled finger lofts read as stacked rolls up close):
+// a rounded-box section across the knuckles, a slightly bumpy knuckle ridge, the n finger separations painted as thin dark lines
+// (colour per corner), the tip closed; the thumb is added on its own (cr_fingers n:0, thumb:1)
+function cr_mitten(B,S,s,o){const F=b7_Arm(S,s),W=mdW(B,[[F.A+'2',1]]),n=o.n||4,w=o.w||.04,th=o.th||.016,L=o.len||.09,cu=o.curl==null?1:o.curl,N=5,
+    C=new THREE.Color(),rgb=hx=>{C.setHex(mdC(hx));return [C.r,C.g,C.b]},base=rgb(o.col),line=rgb(o.line==null?mdSh(o.col,.4):o.line),xs=[];
+  for(let i=0;i<=2*n;i++)xs.push(1-i/n);const XS=xs.map((x,i)=>[x,1,i]).concat(xs.slice(1,-1).reverse().map((x,i)=>[x,-1,2*n-1-i])),M=XS.length,rows=[];
+  let p=add3(F.a2,mul3(F.d,o.at||.05)),last=null;
+  for(let j=0;j<=N;j++){const t=j/N,a=cu*1.5*t,dd=nrm3(add3(mul3(F.d,Math.cos(a)),mul3(F.u,-Math.sin(a)))),U=nrm3(add3(mul3(F.u,Math.cos(a)),mul3(F.d,Math.sin(a)))),X=nrm3(cross3(U,dd));
+    if(j)p=add3(p,mul3(dd,L/N));last={p,dd};const ww=w*(1-.1*t)*(j?1:.92),tt=th*(1-.15*t)*(j?1:.92);
+    rows.push(XS.map(([x,sg,i])=>{let y=Math.pow(Math.max(0,1-Math.pow(Math.abs(x),4)),.25)*tt*sg;if(j==1&&sg>0)y+=.0045*(Math.cos(x*Math.PI*n+(n%2?0:Math.PI))+1)/2;
+      const q=add3(add3(p,mul3(X,x*ww)),mul3(U,y)),ln=j>0&&i%2==0&&i>0&&i<2*n;return {x:q[0],y:q[1],z:q[2],w:W,rgb:ln?line:base}}))}
+  for(let j=0;j<N;j++)for(let k=0;k<M;k++){const a=rows[j][k],a1=rows[j][(k+1)%M],b2=rows[j+1][k],b3=rows[j+1][(k+1)%M];mdTri(B,'c',a,a1,b2,0);mdTri(B,'c',b2,a1,b3,0)}
+  const e=add3(last.p,mul3(last.dd,th*.5)),cv={x:e[0],y:e[1],z:e[2],w:W,rgb:base},R=rows[N];for(let k=0;k<M;k++)mdTri(B,'c',cv,R[k],R[(k+1)%M],0)}
+// cgFur with colour that flows corner to corner instead of per-face noise (no "pixel camouflage"): one smooth function of position
+// (strands stretched downward, low frequency) and of how far out along a clump a corner is: darker roots, lighter tips. Same
+// shell, clumps and cost as cgFur (3393).
+function cr_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0,c2=o.col2==null?mdSh(o.col,.7):o.col2;
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
+  const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  // the colour at a point p, t = 0 at the roots … 1 at a clump's tip
+  const C=new THREE.Color(),hex=(p,t)=>{const n=n3Sn(p[0]*1.3,p[1]*.35,p[2]*1.3,9,seed);return mdMix(mdMix(c2,o.col,c9_cl(.25+n*.75)),mdSh(o.col,1.18),t*.55)},rgb=(p,t)=>{C.setHex(hex(p,t));return [C.r,C.g,C.b]};
+  cgEmit(B,M,()=>null,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol:m=>hex([m.x,m.y,m.z],.3)});
+  const W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;w=[si,sw];W.set(i,w);return w};
+  const vx=(p,i,t)=>({x:p[0],y:p[1],z:p[2],w:wOf(i),rgb:rgb(p,t)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
+  low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
+    for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,2+Math.floor(a181H(ci,seed,7)*3)),run=loop.slice(i,i+n+1);i+=n;ci++;
+      const h=a181H(ci,seed,3),L=o.len*(1-(o.jag==null?.6:o.jag)*h),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],T=vx(tip,run[Math.floor(run.length/2)],1),Ti=Object.assign({},T,{rgb:rgb(tip,.75)});
+      for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p,.3),T,vx(pos(q),q,.3),0);mdTri(B,t,vx(V[q],q,0),Ti,vx(V[p],p,0),0)}
+      const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f,0),Ti,vx(pos(f),f,.3),0);mdTri(B,t,vx(pos(l),l,.3),Ti,vx(V[l],l,0),0)}})}
+// clean toes: short rounded lofts out of the front of the foot, optional claws
+function cr_toes(B,S,s,o){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,Wd=S.foot.w,W=[[l,1]],n=o.n||3;
+  for(let i=0;i<n;i++){const c=n==1?0:i/(n-1)*2-1,x=A[0]+c*(o.spread||.028)*Wd,z0=A[2]+.11*L,r=(o.r||.016)*Wd,len=(o.len||.07)*(1-Math.abs(c)*.15);
+    const R=[{p:[x,.024,z0],rx:r,f:r*.8,b:r*.8,w:W},{p:[x+c*.008,.018,z0+len*.6],rx:r*.9,f:r*.7,b:r*.7,w:W},{p:[x+c*.012,.012,z0+len],rx:r*.7,f:r*.55,b:r*.55,w:W}];
+    if(o.nail)R.push({p:[x+c*.014,.003,z0+len+(o.claw||.03)],rx:r*.1,f:r*.1,b:r*.1,w:W});mdLoft(B,R,{seg:5,ref:[0,1,0],capB:!o.nail,col:m=>o.nail&&m.i>2?o.nail:o.col})}}
+// cgHuman with the neck kept above the shoulders: a sunk head (negative neckL) under a tall shoulder socket (sock) would run the
+// neck rings downward from the trapezius ring and fold a groove round the base of the head; here the neck is raised just enough
+// to start gap above the trapezius ring, so the shoulders always flow up into the head
+function cr_human(o,gap){const S0=cgHuman(o),t7=S0.torso[S0.torso.length-1][0],need=t7+(gap==null?.025:gap)-S0.nb;if(need>0)o=Object.assign({},o,{neckL:(o.neckL||0)+need});return need>0?cgHuman(o):S0}
+// arm ring lists (× the body's at): a golem's arm (forearm thicker than the upper arm, swelling into a huge fist), a clawed
+// hand (the end flattens into a palm), a root arm, an insect's thin arm, a wendigo's long bony arm
+const cr_GARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.95,r:.036,rb:.04},{t:1.3,r:.042,o:.006},{t:1.75,r:.037},{t:2.0,r:.03},{t:2.16,r:.042,rf:.046,rb:.044},{t:2.36,r:.046,rf:.05,rb:.046},{t:2.54,r:.036,rf:.038,rb:.036}];
+const cr_CARM=[{t:.06,r:.05,o:.012},{t:.32,r:.042},{t:.95,r:.034,rb:.04},{t:1.25,r:.037},{t:1.94,r:.025,rf:.027},{t:2.14,r:.019,rf:.033,rb:.029},{t:2.34,r:.016,rf:.03,rb:.026}];
+const cr_RARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.95,r:.036,rb:.04},{t:1.3,r:.04,o:.006},{t:1.94,r:.029},{t:2.14,r:.028,rf:.035,rb:.032},{t:2.32,r:.024,rf:.031,rb:.028}];
+const cr_KARM=[{t:.06,r:.05,o:.012},{t:.32,r:.04},{t:.95,r:.034,rb:.038},{t:1.25,r:.036},{t:1.94,r:.024},{t:2.14,r:.02,rf:.028,rb:.024},{t:2.3,r:.016,rf:.022,rb:.02}];
+const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,rb:.042},{t:1.25,r:.031},{t:1.94,r:.02},{t:2.12,r:.016,rf:.03,rb:.026},{t:2.3,r:.013,rf:.026,rb:.022}];
+
 // ---------------- Sand Elemental: a chunky golem of packed golden sand and rock plates, glowing seams, a blazing chest gem,
 // boulder shoulders, rock fists, a girdle of stones with shards hanging round the hips, a crown of jagged rock ----------------
-(function(){const S=cgHuman({h:.8,w:1.32,d:1.26,rw:[1.05,1.12,1.1,1.18,1.28,1.3,1.36,1.42],rf:[1,1.05,1.12,1.22,1.3,1.25,1.15,1.1],at:1.95,lt:1.6,hs:1.04,hw:1.08,nw:1.7,armL:1.12,foot:1.15,footW:1.35,facePush:c9_JAW}),
+// (refine) a hulking figure, not a man: massive shoulders and a deep chest over a narrower waist and short column legs, the small
+// head sunk into the shoulders (no neck), forearms thicker than the upper arms swelling into huge rock fists with three stubby
+// fingers; packed sand flows from gold to darker sand, rock showing through, a warm glow round the core
+(function(){const S=cr_human({h:.9,w:1.3,d:1.2,rw:[.95,1.0,.9,1.12,1.4,1.52,1.66,1.25],rf:[1,1.02,.98,1.2,1.36,1.3,1.3,1.65],rb:[1,1.05,1,1.22,1.42,1.5,1.55,1.3],
+    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:1.0,hw:1.16,hy:.88,hd:1.1,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,
+    head:cr_flare(cr_H8,.75),arm:cr_GARM,leg:cr_LEG},0.025),
     s1=0xc8a060,s2=0xa8844a,s3=0xd8b878,rk=0x8a6a3a,gl=0xffa030,T=S.torso,J=S.J;
-  cg181Reg('selem',S,function(B,P,k,C){const M=C.M,ch=J.chest[1],ty=f=>T[2][0]+(T[6][0]-T[2][0])*f;cgRocky(M,.022,1.6,4);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.35,jaw:1.3,brow:1.3})));
-    // packed sand: a smooth blend of the three sand tones, paler toward the shoulders and the head
-    cgEmit(B,M,m=>{const n=n3Sn(m.x,m.y,m.z,7,6),up=c9_cl((m.y-ch+.12)/.3);let c=mdMix(s1,s2,c9_cl((.48-n)*2.6));c=mdMix(c,s3,c9_cl(up*.7+(m.part=='head'?.35:0))*c9_cl((n-.25)*2.5));return mdMix(c,rk,c9_cl((n-.8)*4)*.6)});
+  cg181Reg('selem',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p),ch=J.chest[1],ty=f=>T[2][0]+(T[6][0]-T[2][0])*f;
+    // boulder-sized lumps with a finer grain of packed sand on top
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1,foot:1},(x,y,z,n)=>.034*(n3Sn(x*.8,y*.8,z*.8,4,4)-.45)+.014*(n3Sn(x,y,z,10,4)-.45));
+    cr_fill(M,S,.015,.03);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.35,jaw:1.3,brow:1.5})));
+    M.shade=cgShade(M,{cav:1.2,y0:0,y1:T[7][0]+.15,hk:.3});
+    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02);
+    // packed sand: gold blending into darker sand (darker on the back), paler toward the shoulders, rock showing through, rock
+    // fists, a warm glow on the sand round the core
+    const sand=m=>{const n=n3Sn(m.x,m.y,m.z,7,6),n2=n3Sn(m.x,m.y,m.z,3,2),up=c9_cl((m.y-ch+.1)/.35);
+      let c=mdMix(s1,s2,c9_cl(.45+(n2-.5)*1.4+(m.s<-.3?.2:0)));c=mdMix(c,s3,c9_cl(up*.6+(m.part=='head'?.25:0))*c9_cl((n-.3)*2.2));
+      c=mdMix(c,rk,Math.max(c9_cl((n-.66)*3.2)*.75,c9_cl((.17-cr_wrist(m,J))/.08)*.6));
+      const d=Math.hypot(m.x-gem[0],m.y-gem[1],m.z-gem[2]);return mdMix(c,0xf09a3a,.5*Math.exp(-d*d/.01))};
+    cgEmit(B,M,()=>null,{vcol:sand});
     cgEyes(k,M,S,gl,.04,1.628,1.25,-.004);
     // rock plates on the chest, back and flanks, glowing cracks between them
-    [[.86,-.62,.09,.075],[.86,.62,.09,.075],[.56,-.82,.075,.065],[.56,.82,.075,.065],[.3,-.4,.07,.055],[.3,.4,.07,.055],[.84,Math.PI,.1,.085],[.55,Math.PI-.6,.08,.07],[.55,Math.PI+.6,.08,.07],[.22,Math.PI,.085,.06],[.12,1.55,.06,.055],[.12,-1.55,.06,.055]]
-      .forEach(([f,a,sx,sy],i)=>{const y=ty(f),p=cgSurf(M,S,y,a,-.014);k.p(cgSurfBn(S,y),'dod','c',i%2?rk:mdSh(rk,.86),p[0],p[1],p[2],sx,sy,.045,0,a,0)});
+    [[.86,-.62,.09,.075],[.86,.62,.09,.075],[.56,-.84,.075,.065],[.56,.84,.075,.065],[.84,Math.PI,.1,.085],[.55,Math.PI-.6,.08,.07],[.55,Math.PI+.6,.08,.07],[.24,Math.PI,.085,.06]]
+      .forEach(([f,a,sx,sy],i)=>{const y=ty(f),p=cgSurf(M,S,y,a,-.016);k.p(cgSurfBn(S,y),'dod','c',i%2?rk:mdSh(rk,.86),p[0],p[1],p[2],sx,sy,.045,0,a,0);WS(p)});
     [[[.62,-.3],[.5,-.38],[.4,-.28],[.28,-.18]],[[.62,.3],[.48,.36],[.38,.26],[.24,.2]],[[.7,Math.PI-.25],[.56,Math.PI-.1],[.42,Math.PI-.22],[.3,Math.PI-.08]],[[.66,Math.PI+.3],[.5,Math.PI+.22],[.36,Math.PI+.34]],[[.42,-1.15],[.3,-1.05],[.2,-1.2]],[[.42,1.15],[.3,1.05],[.2,1.2]]]
       .forEach(L=>c9_crack(k,M,S,L.map(([f,a])=>[ty(f),a]),gl,.0065));
     // the blazing gem in the chest, set in a socket of dark rock, cracks running out from it
-    {const y=ty(.66),p=cgSurf(M,S,y,0,-.02);k.p('chest','oct','g',gl,p[0],p[1],p[2]+.004,.075,.095,.05);
-      for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3,q=cgRay(M,[p[0]+Math.cos(a)*.085,p[1]+Math.sin(a)*.095,.8],[0,0,-1],{torso:1});if(q)k.p('chest','dod','c',i%2?rk:mdSh(rk,.75),q[0],q[1],q[2]-.012,.04,.034,.03,0,0,a)}
-      c9_crack(k,M,S,[[y+.1,.0],[y+.16,.12],[ty(.98),.05]],gl,.006)}
-    // boulders on the shoulders and the trapezius
-    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A],p=cgRay(M,[a[0]+s*.02,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p(A,'dod','c',s2,p[0]+s*.015,p[1]+.01,p[2],.12,.1,.115,.3,0,s*.4);
-      k.p(A,'dod','c',rk,p[0]+s*.06,p[1]-.02,p[2]-.05,.07,.06,.065,.5,.4,0);const q=cgSurf(M,S,T[7][0]-.01,s*2.3,-.02);k.p('chest','dod','c',s3,q[0],q[1],q[2],.075,.065,.07,0,s*2.3,0)});
-    // rock armour down the arms, and great rock fists with glowing cracks
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR';[[.35,0],[.7,.6],[1.2,-.2],[1.55,.5],[1.8,-.5]].forEach(([t,an],i)=>{const q=c9_arm(M,J,s,t,an,-.016);k.p(q.bn,'dod','c',t>1?rk:mdSh(rk,.9),q.p[0],q.p[1],q.p[2],.058,.052,.056,t,t,0)});
-      const a1=J[A+'1'],a2=J[A+'2'],d=nrm3(sub3(a2,a1)),fc=add3(a2,mul3(d,.075));k.p(A+'2','dod','c',rk,fc[0],fc[1],fc[2],.095,.1,.095,.4,.3,0);
-      k.p(A+'2','dod','c',s2,fc[0]+s*.04,fc[1]+.03,fc[2]-.035,.06,.055,.06,0,.5,0);
-      c9_keep(k.L(A+'2','g',gl,[fc[0]-.02,fc[1]+.03,fc[2]+.074],[fc[0]+.015,fc[1]-.03,fc[2]+.075],.006,.005,4));c9_keep(k.L(A+'2','g',gl,[fc[0]+s*.075,fc[1]+.02,fc[2]+.01],[fc[0]+s*.074,fc[1]-.04,fc[2]-.012],.006,.005,4))});
-    // a girdle of stones grown into the hips, shards of stone hanging from it all round
-    for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=cgSurf(M,S,T[1][0]+.03+Math.sin(a*3)*.012,a,-.012);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.05+(i%3)*.012)}
-    for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,y=T[1][0]-.01,r=cgSurf(M,S,y,a,-.03),d=[Math.sin(a)*.16,-1,Math.cos(a)*.16],L=.24+a181H(i,7)*.08;
-      k.L('pelvis','c',i%2?s2:rk,r,add3(r,mul3(nrm3(d),L)),.05,.006,4)}
-    // a crown of jagged rock
-    for(let i=0;i<5;i++){const a=(i-2)*.45,q=S.hp(Math.sin(a)*.08,1.715,Math.cos(a)*.03-.015);k.p('head','cone4','c',i%2?rk:s3,q[0],q[1],q[2],.032,.13-Math.abs(i-2)*.025,.032,-.1,0,-a*.6)}
-    [-1,1].forEach(s=>cgToes(k,S,s,s2,0))})})();
+    k.p('chest','oct','g',gl,gem[0],gem[1],gem[2]+.004,.085,.105,.055);
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4,q=cgRay(M,[gem[0]+Math.cos(a)*.1,gem[1]+Math.sin(a)*.11,.9],[0,0,-1],{torso:1});if(q){k.p('chest','dod','c',i%2?rk:mdSh(rk,.75),q[0],q[1],q[2]-.014,.045,.038,.032,0,0,a);WS(q)}}
+    c9_crack(k,M,S,[[gy+.11,.0],[gy+.17,.12],[ty(.98),.05]],gl,.006);
+    // boulders on the shoulders
+    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A],p=cgRay(M,[a[0]+s*.02,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;
+      k.p(A,'dod','c',s2,p[0]+s*.012,p[1]+.004,p[2],.13,.1,.12,.3,0,s*.4);WS(p);k.p(A,'dod','c',rk,p[0]+s*.06,p[1]-.03,p[2]-.06,.075,.06,.065,.5,.4,0);WS(p)});
+    // rock armour down the arms; the fists: a rock plate over the knuckles with glowing cracks, three stubby rock fingers and a thumb
+    [-1,1].forEach(s=>{[[.45,.2],[1.3,.5],[1.72,-.4]].forEach(([t,an],i)=>{const q=c9_arm(M,J,s,t,an,-.02);k.p(q.bn,'dod','c',t>1?rk:mdSh(rk,.9),q.p[0],q.p[1],q.p[2],.065,.055,.06,t,t,0);WS(q.p)});
+      const F=b7_Arm(S,s),fc=add3(F.a2,mul3(F.d,.09)),kp=cgRay(M,add3(fc,mul3(F.u,.4)),mul3(F.u,-1),{arm:1,hand:1});
+      if(kp){const c=sub3(kp,mul3(F.u,.016));k.p(F.A+'2','dod','c',mdSh(rk,.9),c[0],c[1],c[2],.07,.05,.075,.3,.2,0);WS(kp)}
+      [[-.03,.035],[.03,.02]].forEach(([a,b])=>{const q1=cgRay(M,add3(add3(fc,mul3(F.d,a)),mul3(F.f,.4)),mul3(F.f,-1),{arm:1,hand:1}),q2=cgRay(M,add3(add3(fc,mul3(F.d,b)),add3(mul3(F.f,.4),mul3(F.u,.06))),mul3(F.f,-1),{arm:1,hand:1});
+        if(q1&&q2)c9_keep(k.L(F.A+'2','g',gl,add3(q1,mul3(F.f,.002)),add3(q2,mul3(F.f,.002)),.006,.005,4))});
+      cr_mitten(B,S,s,{n:3,w:.075,th:.03,len:.11,curl:.85,col:mdSh(rk,1.05),at:.07});cr_fingers(B,S,s,{n:0,len:.11,r:.034,curl:.8,spread:.05,col:mdSh(rk,1.05),thumb:1,at:.075})});
+    // a girdle of stones grown into the hips, shards of stone hanging from it
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2,p=cgSurf(M,S,T[1][0]+.03+Math.sin(a*3)*.012,a,-.014);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.058+(i%3)*.012);WS(p)}
+    for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2,y=T[1][0]-.01,r=cgSurf(M,S,y,a,-.03),d=[Math.sin(a)*.16,-1,Math.cos(a)*.16],L=.22+a181H(i,7)*.08;
+      k.L('pelvis','c',i%2?s2:rk,r,add3(r,mul3(nrm3(d),L)),.05,.006,4);WS(r)}
+    // a crown of jagged rock rising out of the top of the head
+    for(let i=0;i<4;i++){const x=(i-1.5)*.045,p=b7_Top(M,S,x,-.01);if(p)c9_along(k,'head','cone4','c',i%2?rk:s3,sub3(p,[0,.025,0]),[x*3,1,-.15],.13-Math.abs(i-1.5)*.025,.03)}
+    [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:s2,r:.022,len:.06,spread:.034}))})})();
+ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.22,lz:-.22,ax:-.08,lx:-.08,ex:-.25,le:-.25};
 
 // ---------------- Salt Golem: a hulking block of grey-pink salt, crystal spires from the shoulders and back, crystal-studded fists,
 // a molten core cracked open in the chest ringed by five glowing shards, a dark visor with burning eye slits ----------------
-(function(){const S=cgHuman({h:.86,w:1.62,d:1.46,rw:[1.28,1.32,1.34,1.42,1.55,1.6,1.7,1.85],rf:[1.1,1.2,1.3,1.4,1.5,1.4,1.3,1.3],at:2.2,lt:2.15,hs:1.0,hw:1.12,nw:2.2,neckL:-.04,armL:1.22,legL:.86,foot:1.3,footW:1.75,facePush:c9_JAW}),
+// (refine) a blocky crystalline giant: a squared, top-heavy torso, the visored head sunk between the shoulders, short thick legs,
+// arms hanging low to huge blocky fists; salt crust whitens the tops, the core warms the salt round it
+(function(){const S=cr_human({h:.94,w:1.5,d:1.32,rw:[1.12,1.16,1.12,1.3,1.56,1.7,1.85,1.35],rf:[1.1,1.15,1.38,1.36,1.46,1.4,1.38,1.5],rb:[1.1,1.18,1.3,1.38,1.5,1.6,1.65,1.35],push:cr_box(.022),
+    at:2.3,lt:2.05,hs:.94,hw:1.16,hy:.84,hd:1.1,nw:2.05,neckL:-.06,armL:1.24,legL:.74,foot:1.25,footW:1.7,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,
+    head:cr_flare(cr_H8,.85),arm:cr_GARM,leg:cr_LEG},0.025),
     C9=c9_SG,sa=c9_SG.salt,sa2=c9_SG.salt2,pink=c9_SG.pink,cry=c9_SG.cry,cry2=c9_SG.cry2,core=c9_SG.core,T=S.torso,J=S.J;
-  cg181Reg('saltgolem',S,function(B,P,k,C){const M=C.M;cgRocky(M,.035,1.2,7);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.25,jaw:1.4,brow:1.4})));
+  cg181Reg('saltgolem',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1,foot:1},(x,y,z,n)=>.03*(n3Sn(x*.9,y*.9,z*.9,4,7)-.45)+.02*(n3Sn(x,y,z,8,7)-.45));
+    cr_fill(M,S,.015,.03);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.25,jaw:.5,brow:1.5})));
     const cy=J.chest[1]+.02,ey=S.hp(0,1.628,0)[1];cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]<.3?0:-.05*cgG(x,y,0,cy,.06,.06));   // a cavity in the chest for the core
-    cgEmit(B,M,m=>{if(m.part=='torso'&&m.s>.6&&Math.hypot(m.x,m.y-cy)<.05)return 0x2a1a14;if(m.part=='head'&&m.s>.35&&Math.abs(m.y-ey)<.02*S.hs)return 0x3a2a28;if(m.part=='foot')return sa2;   // the visor band
-      const n=n3Sn(m.x,m.y,m.z,7,8),b=mdMix(sa,pink,.22);return mdMix(mdMix(b,sa2,c9_cl((.42-n)*2.8)),pink,c9_cl((n-.6)*3))});
+    M.shade=cgShade(M,{cav:.85,y0:0,y1:T[7][0]+.15,hk:.3});
+    const cc=cgSurf(M,S,cy,0,-.03);
+    const salt=m=>{const n=n3Sn(m.x,m.y,m.z,6,8),n2=n3Sn(m.x,m.y,m.z,13,3),b=mdMix(sa,pink,.18+.3*c9_cl((n2-.45)*2));let c=mdMix(b,sa2,c9_cl((.44-n)*2.6+(m.s<-.3?.2:0)));
+      c=mdMix(c,cry,c9_cl((m.ny-.5)*2.2)*.4);c=mdMix(c,sa2,c9_cl((.17-cr_wrist(m,J))/.08)*.45);
+      const d=Math.hypot(m.x-cc[0],m.y-cc[1],m.z-cc[2]);return mdMix(c,0xe07a52,.55*Math.exp(-d*d/.008))};
+    // the visor band and the core's cavity stay crisp; the salt flows
+    cgEmit(B,M,m=>{if(m.part=='torso'&&m.s>.6&&Math.hypot(m.x,m.y-cy)<.05)return 0x2a1a14;if(m.part=='head'&&m.s>.35&&Math.abs(m.y-ey)<.02*S.hs)return 0x3a2a28;return null},{vcol:salt});
     [-1,1].forEach(s=>{const q=S.hp(s*.036,1.628,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1],{head:1});if(p)k.p('head','box','g',core,p[0],p[1],p[2]-.003,.032*S.hs,.011,.01,0,s*.25,0)});
     // the core: a molten heart in the cavity, five glowing shards round it
-    const cc=cgSurf(M,S,cy,0,-.03);k.p('chest','ico','g',core,cc[0],cc[1],cc[2],.05);
-    for(let i=0;i<5;i++){const a=i/5*Math.PI*2+Math.PI/2,x=Math.cos(a)*.058,y=cy+Math.sin(a)*.058,p=cgRay(M,[x,y,.8],[0,0,-1],{torso:1});if(p)k.p('chest','oct','g',i%2?core:C9.glow,p[0],p[1],p[2]-.006,.018,.05,.016,0,0,a-Math.PI/2)}
+    k.p('chest','ico','g',core,cc[0],cc[1],cc[2],.052);
+    for(let i=0;i<5;i++){const a=i/5*Math.PI*2+Math.PI/2,x=Math.cos(a)*.06,y=cy+Math.sin(a)*.06,p=cgRay(M,[x,y,.9],[0,0,-1],{torso:1});if(p){k.p('chest','oct','g',i%2?core:C9.glow,p[0],p[1],p[2]-.006,.018,.05,.016,0,0,a-Math.PI/2);WS(p)}}
     // crystal clusters through the back and shoulders
-    const clu=(y,a,n,sz)=>{const p=cgSurf(M,S,y,a,-.014),bn=cgSurfBn(S,y);for(let j=0;j<n;j++){const tl=(a181H(j,y*20,a)-.5)*.9,tl2=(a181H(j,a*7)-.5)*.9;k.p(bn,'oct','c',j%2?cry:cry2,p[0]+Math.sin(a)*.02,p[1]+.03,p[2]+Math.cos(a)*.02,sz*.4,sz*(1+j*.2),sz*.4,tl+Math.cos(a)*-.5,0,tl2+Math.sin(a)*.5)}};
-    [[T[6][0]-.02,Math.PI*.85,4,.09],[T[6][0]-.02,-Math.PI*.85,4,.09],[J.chest[1],Math.PI,5,.1],[J.spine[1]+.05,Math.PI*.9,3,.075],[J.spine[1],-Math.PI*.8,3,.065],[T[6][0],2.1,3,.065],[T[6][0],-2.1,3,.065],[T[1][0]+.03,1.6,3,.05],[T[1][0]+.03,-1.6,3,.05]].forEach(q=>clu(...q));
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];for(let j=0;j<4;j++){const x=a[0]+s*(.03+j*.035),z=a[2]-.04+j*.03,b=cgRay(M,[x,a[1]+.6,z],[0,-1,0],{arm:1,torso:1})||[x,a[1]+.05,z],t=.3+j*.2;c9_along(k,A+'0','oct','c',j%2?cry:cry2,sub3(b,[0,.05,0]),[s*Math.sin(t),Math.cos(t),-.2],.32-j*.04,.04)}
-      const e=J[A+'1'];for(let j=0;j<2;j++)k.p(A+'1','oct','c',cry,e[0]+s*.06,e[1]-.02-j*.05,e[2]-.04,.025,.07,.025,-.4,0,-s*.6);
-      // the fists: blocks of salt with crystal spikes over the knuckles
-      const a1=J[A+'1'],a2=J[A+'2'],d=nrm3(sub3(a2,a1)),fc=add3(a2,mul3(d,.07));k.p(A+'2','dod','c',sa2,fc[0],fc[1],fc[2],.1,.105,.1,.3,.2,0);
-      for(let f=0;f<3;f++){const b=add3(fc,[s*.035,-.045+(f-1)*.0,.0+(f-1)*.045]);c9_along(k,A+'2','oct','c',f==1?cry:cry2,add3(b,[-s*.02,0,0]),[s*.8,-.45,(f-1)*.35],.13-(f==1?0:.025),.022)}
-      c9_along(k,A+'2','oct','c',cry,add3(fc,[0,-.06,.02]),[0,-1,.2],.1,.02)});
-    for(let i=0;i<3;i++){const q=S.hp((i-1)*.04,1.71,-.03);k.p('head','oct','c',cry,q[0],q[1],q[2],.02,.07,.02,-.3,0,(i-1)*.4)}})})();
+    const clu=(y,a,n,sz)=>{const p=cgSurf(M,S,y,a,-.016),bn=cgSurfBn(S,y);for(let j=0;j<n;j++){const tl=(a181H(j,y*20,a)-.5)*.9,tl2=(a181H(j,a*7)-.5)*.9;k.p(bn,'oct','c',j%2?cry:cry2,p[0],p[1]+.01,p[2],sz*.45,sz*(1.2+j*.25),sz*.45,tl+Math.cos(a)*-.5,0,tl2+Math.sin(a)*.5);WS(p)}};
+    [[T[6][0]-.02,Math.PI*.85,4,.1],[T[6][0]-.02,-Math.PI*.85,4,.1],[J.chest[1],Math.PI,5,.11],[J.spine[1]+.05,Math.PI*.9,3,.08],[J.spine[1],-Math.PI*.8,3,.07],[T[6][0],2.1,3,.07],[T[6][0],-2.1,3,.07],[T[1][0]+.03,1.6,3,.055],[T[1][0]+.03,-1.6,3,.055]].forEach(q=>clu(...q));
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'];for(let j=0;j<4;j++){const x=a[0]+s*(j*.025-.01),z=a[2]-.04+j*.03,b=cgRay(M,[x,a[1]+.6,z],[0,-1,0],{arm:1,torso:1}),t=.3+j*.2;if(!b||b[1]<a[1]-.04)continue;   /* only on the top of the shoulder */
+        c9_along(k,A+'0','oct','c',j%2?cry:cry2,sub3(b,[0,.08,0]),[s*Math.sin(t),Math.cos(t),-.2],.37-j*.04,.045);WS(b)}
+      for(let j=0;j<2;j++){const q=c9_arm(M,J,s,1.05+j*.16,-.6,-.045);k.p(A+'1','oct','c',cry,q.p[0],q.p[1],q.p[2],.026,.09,.026,-.4,0,-s*.6);WS(q.p)}
+      // the fists: blocks of salt (the arm's own end) with crystal spikes over the knuckles, three thick fingers and a thumb curled in
+      const F=b7_Arm(S,s),fc=add3(F.a2,mul3(F.d,.09));
+      for(let f=0;f<3;f++){const o=add3(fc,mul3(F.f,(f-1)*.05)),b=cgRay(M,add3(o,mul3(F.u,.4)),mul3(F.u,-1),{arm:1,hand:1});if(b){c9_along(k,A+'2','oct','c',f==1?cry:cry2,sub3(b,mul3(F.u,.05)),add3(mul3(F.u,.85),mul3(F.d,.45)),.15-(f==1?0:.025),.024);WS(b)}}
+      cr_mitten(B,S,s,{n:3,w:.085,th:.034,len:.12,curl:.9,col:sa2,at:.075});cr_fingers(B,S,s,{n:0,len:.12,r:.036,curl:.85,spread:.055,col:sa2,thumb:1,at:.08})});
+    for(let i=0;i<3;i++){const p=b7_Top(M,S,(i-1)*.04,-.02);if(p)c9_along(k,'head','oct','c',cry,sub3(p,[0,.03,0]),[(i-1)*.4,1,-.3],.13,.02)}
+    [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:sa2,r:.022,len:.055,spread:.036}))})})();
+cr_stance('saltgolem',{sx:.2,hx:-.2,lk:.16,rk:.16,az:.24,lz:-.24,ax:-.06,lx:-.06,ex:-.2,le:-.2});
 
 // ---------------- Rampart Gargoyle: a crouched stone demon — great spiky bat wings on four finger bones, curled ram horns, a
 // fanged snout under a heavy brow, red burning eyes, moss in the cracks, a curling tail with a spade ----------------
-(function(){const S=cgHuman({h:.76,w:1.32,d:1.24,rw:[1.0,1.08,1.05,1.14,1.28,1.32,1.4,1.46],rf:[1,1.05,1.1,1.22,1.32,1.25,1.15,1.1],at:1.85,lt:1.75,hs:1.14,hw:1.1,hd:1.14,nw:1.65,armL:1.22,foot:1.1,footW:1.25,facePush:c9_JAW}),
+// (refine) a beast, not a man: a deep chest over a thin waist, hunched; digitigrade legs (the knee forward, the hock raised and set
+// back, the foot a long paw standing on three clawed toes, a spur on the hock); bigger wings; long arms ending in clawed hands
+(function(){const S=cr_human({h:.8,w:1.22,d:1.18,rw:[.88,.92,.74,1.0,1.3,1.38,1.48,1.12],rf:[1,1,.86,1.12,1.32,1.28,1.22,1.3],rb:[1,1,.9,1.1,1.36,1.42,1.42,1.1],
+    at:1.65,lt:1.6,hs:1.12,hw:1.08,hd:1.12,nw:1.75,neckL:-.02,armL:1.3,foot:1.1,footW:1.25,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,head:cr_flare(cr_H8,.35),arm:cr_CARM,
+    leg:[{t:.12,r:.082},{t:.45,r:.074,rf:.08},{t:1.0,r:.05,rf:.058},{t:1.25,r:.05,rb:.06},{t:1.7,r:.04},{t:2.0,r:.036}]},0.03),
     st=c9_GG.st,st2=c9_GG.st2,dk=c9_GG.dark,moss=c9_GG.moss,T=S.torso,J=S.J;
-  cg181Reg('gargoyle',S,function(B,P,k,C){const M=C.M;cgRocky(M,.014,2.2,9);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.8,jaw:1.6,brow:1.6,snout:.026})));
+  // the digitigrade leg: knee forward, hock up and back (the skeleton's rest joints move with it)
+  ['lh','rh'].forEach(L=>{const h0=J[L+'0'];J[L+'1']=[h0[0]*1.06,h0[1]*.56,.085];J[L+'2']=[h0[0]*1.1,.19,-.075]});
+  cg181Reg('gargoyle',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1},(x,y,z,n)=>.016*(n3Sn(x,y,z,5,9)-.45)+.01*(n3Sn(x,y,z,12,9)-.45));
+    cr_fill(M,S,.014,.03);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.8,jaw:1.6,brow:1.6,snout:.026})));
+    M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.2,hk:.28});
     const my=S.hp(0,1.553,0)[1];
     // weathered stone, moss where the rain runs down (fronts and tops), dark cracks
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.005*S.hs&&Math.abs(m.x)<.045*S.hs)return 0x0a0a0c;const n=n3Sn(m.x,m.y,m.z,8,3),n2=n3Sn(m.x,m.y,m.z,17,11);
-      let c=mdMix(st,st2,c9_cl((.48-n)*2.6));c=mdMix(c,dk,c9_cl((n2-.82)*5)*.7);return mdMix(c,moss,(m.ny>.2||m.s>.1?1:.4)*c9_cl((n-.5)*3.2))});
+    const stone=m=>{const n=n3Sn(m.x,m.y,m.z,8,3),n2=n3Sn(m.x,m.y,m.z,17,11);let c=mdMix(st,st2,c9_cl((.48-n)*2.6+(m.s<-.3?.15:0)));c=mdMix(c,dk,c9_cl((n2-.8)*4)*.6);
+      return mdMix(c,moss,(m.ny>.2||m.s>.1?1:.4)*c9_cl((n-.52)*3)*.8)};
+    // the mouth line stays crisp; the default foot is replaced by the paw below
+    cgEmit(B,M,m=>m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.005*S.hs&&Math.abs(m.x)<.045*S.hs?0x0a0a0c:null,{vcol:stone,keep:m=>m.part!='foot'});
     cgEyes(k,M,S,c9_GG.eye,.04,1.628,1.45,-.004);cgEars(k,M,S,st,1.64,.11,.5,.6,.024,st2);
     cgTeeth(k,M,S,[[-.03,1.556,.042,0],[.03,1.556,.042,0],[-.014,1.556,.02,0],[.014,1.556,.02,0],[-.036,1.551,.03,1],[.036,1.551,.03,1]],0xd8d0c0);
     // curled ram horns: six ridged turns out, back, down and forward
     [-1,1].forEach(s=>{const q=S.hp(s*.055,1.705,-.01);let p=add3(q,[-s*.02,-.012,0]),d=[s*.6,.5,-.6];const pts=[p];for(let i=0;i<6;i++){p=add3(p,mul3(d,.07*S.hs));pts.push(p);d=[d[0]-s*.15,d[1]-.35,d[2]+.25]}
-      cgTube(B,pts,pts.map((_,i)=>(.034-i*.0042)*S.hs),pts.map(()=>[['head',1]]),m=>Math.round(m.i*2.2)%2?st2:dk,{seg:8,capB:true})});
+      cgTube(B,pts,pts.map((_,i)=>(.05-i*.0068)*S.hs),pts.map(()=>[['head',1]]),m=>Math.round(m.i*2.2)%2?st2:dk,{seg:7,capB:true})});
     // the wings: an arm from each shoulder blade to a high wrist, four finger bones fanning from it, stone membranes between with a
     // scalloped trailing edge, a spike on every finger tip and a thumb claw
-    [-1,1].forEach(s=>{const r=cgSurf(M,S,J.chest[1]+.05,Math.PI-s*.45,-.035),e=add3(r,[s*.24,.2,-.13]),w=add3(e,[s*.25,.06,-.05]),W=[['chest',1]],
-        tips=[add3(w,[s*.18,.12,-.03]),add3(w,[s*.36,-.08,-.05]),add3(w,[s*.32,-.4,-.05]),add3(w,[s*.16,-.66,-.03])],bp=cgSurf(M,S,J.spine[1]-.03,Math.PI-s*.5,-.02);
-      cgTube(B,[r,lerp3(r,e,.5),e,lerp3(e,w,.5),w],[.042,.036,.032,.028,.026],[W,W,W,W,W],st2,{seg:7});
-      tips.forEach((t,i)=>{cgTube(B,[w,lerp3(w,t,.5),t],[.02,.014,.007],[W,W,W],st2,{seg:5});c9_along(k,'chest','cone4','c',dk,t,sub3(t,w),.07-(i==0?0:.01),.011)});
-      c9_along(k,'chest','cone4','c',dk,w,[s*.1,.5,.6],.08,.014);c9_along(k,'chest','cone4','c',dk,e,[s*.2,.3,-.5],.06,.012);
+    [-1,1].forEach(s=>{const r=cgSurf(M,S,J.chest[1]+.05,Math.PI-s*.45,-.035),e=add3(r,[s*.29,.24,-.16]),w=add3(e,[s*.3,.07,-.06]),W=[['chest',1]],
+        tips=[add3(w,[s*.22,.15,-.04]),add3(w,[s*.44,-.1,-.06]),add3(w,[s*.39,-.48,-.06]),add3(w,[s*.19,-.8,-.04])],bp=cgSurf(M,S,J.spine[1]-.03,Math.PI-s*.5,-.02);
+      cgTube(B,[r,lerp3(r,e,.5),e,lerp3(e,w,.5),w],[.046,.04,.034,.03,.027],[W,W,W,W,W],st2,{seg:6});
+      tips.forEach((t,i)=>{cgTube(B,[w,lerp3(w,t,.5),t],[.021,.015,.007],[W,W,W],st2,{seg:5});c9_along(k,'chest','cone4','c',dk,t,sub3(t,w),.08-(i==0?0:.012),.012)});
+      c9_along(k,'chest','cone4','c',dk,w,[s*.1,.5,.6],.09,.015);c9_along(k,'chest','cone4','c',dk,e,[s*.2,.3,-.5],.07,.013);
       const mw=mdW(B,W),V=p=>({x:p[0],y:p[1],z:p[2],w:mw}),tri=(a,b,c,col)=>{const cc=mdC(col);mdTri(B,'c',V(a),V(b),V(c),cc);mdTri(B,'c',V(c),V(b),V(a),cc)},
         scal=(a,b,c,f)=>lerp3(lerp3(a,b,.5),c,f);
       tri(r,e,w,st2);
       for(let i=0;i<3;i++){const m=scal(tips[i],tips[i+1],w,.28);tri(w,tips[i],m,i%2?dk:mdMix(dk,st2,.4));tri(w,m,tips[i+1],i%2?dk:mdMix(dk,st2,.4))}
       const m3=scal(tips[3],bp,r,.25);tri(r,w,tips[3],dk);tri(r,tips[3],m3,mdMix(dk,st2,.4));tri(r,m3,bp,mdMix(dk,st2,.4))});
     // a curling tail with a spade, spines down the back
-    {const t0=cgSurf(M,S,J.pelvis[1]-.04,Math.PI,-.03),W=[['pelvis',1]],TT=[t0,add3(t0,[0,-.16,-.17]),add3(t0,[.05,-.32,-.3]),add3(t0,[.14,-.42,-.38]),add3(t0,[.26,-.44,-.42]),add3(t0,[.34,-.38,-.44])];
-      cgTube(B,TT,[.06,.048,.038,.028,.018,.008],TT.map(()=>W),st2,{seg:8,capB:true});const e=TT[5];k.p('pelvis','cone4','c',dk,e[0]+.02,e[1]+.02,e[2],.035,.09,.012,0,0,-1)}
-    for(let i=0;i<7;i++){const y=T[6][0]+.02-i*.075,p=cgSurf(M,S,y,Math.PI,-.008);c9_along(k,cgSurfBn(S,y),'cone4','c',dk,p,[0,.45,-1],.085-i*.004,.02)}
-    [-1,1].forEach(s=>{cgFingers(k,S,s,st2,'claw',1.15,c9_GG.claw,.045);cgToes(k,S,s,st2,.035,c9_GG.claw)})})})();
+    {const t0=cgSurf(M,S,J.pelvis[1]-.04,Math.PI,-.05),W=[['pelvis',1]],TT=[t0,add3(t0,[0,-.16,-.19]),add3(t0,[.05,-.32,-.32]),add3(t0,[.14,-.42,-.4]),add3(t0,[.26,-.44,-.44]),add3(t0,[.34,-.38,-.46])];
+      cgTube(B,TT,[.075,.055,.042,.03,.019,.008],TT.map(()=>W),st2,{seg:7,capB:true});const e=TT[5];k.p('pelvis','cone4','c',dk,e[0]+.02,e[1]+.02,e[2],.035,.09,.012,0,0,-1)}
+    for(let i=0;i<7;i++){const y=T[6][0]+.02-i*.075,p=cgSurf(M,S,y,Math.PI,-.01);c9_along(k,cgSurfBn(S,y),'cone4','c',dk,p,[0,.45,-1],.085-i*.004,.02);WS(p)}
+    // clawed hands: four long fingers and a thumb out of the flattened palm, black claws
+    [-1,1].forEach(s=>cr_fingers(B,S,s,{n:4,len:.1,r:.0145,curl:.45,spread:.036,col:st2,nail:c9_GG.claw,thumb:1,at:.045,claw:.45}));
+    // the paws: from inside the shin over the hock, down the long instep to the ball of the foot on the ground, three clawed toes,
+    // a spur on the hock
+    [-1,1].forEach(s=>{const l=s<0?'lh':'rh',K1=J[l+'1'],K2=J[l+'2'],lr=S.leg[S.leg.length-1].r,W2=[[l+'2',1]],ball=[K2[0]*1.03,.036,K2[2]+.21],mid=add3(lerp3(K2,ball,.5),[0,.012,0]);
+      mdLoft(B,[{p:lerp3(K1,K2,.7),rx:lr*.92,f:lr*.92,b:lr*.92,w:[[l+'1',1]]},{p:K2,rx:lr*1.1,f:lr*1.1,b:lr*1.2,w:W2},{p:mid,rx:lr*.85,f:lr*.8,b:lr*.8,w:W2},{p:ball,rx:lr*1.25,f:.036,b:.036,w:W2}],{seg:7,ref:[0,0,1],capB:true,col:st2});
+      [-1,0,1].forEach(c=>{const a=c*.38,b=add3(ball,[c*.028,-.004,.01]),dir=[Math.sin(a),0,Math.cos(a)],e=add3(b,[dir[0]*.075,-.018,dir[2]*.075]);
+        mdLoft(B,[{p:b,rx:.022,f:.018,b:.018,w:W2},{p:lerp3(b,e,.6),rx:.019,f:.015,b:.015,w:W2},{p:e,rx:.014,f:.012,b:.012,w:W2},{p:add3(e,[dir[0]*.035,-.013,dir[2]*.035]),rx:.002,f:.002,b:.002,w:W2}],{seg:5,ref:[0,1,0],col:m=>m.i>2?c9_GG.claw:st2})});
+      c9_along(k,l+'2','cone4','c',c9_GG.claw,add3(K2,[0,-.015,-.03]),[0,-.3,-1],.07,.016)})})})();
+cr_stance('gargoyle',{sx:.34,hx:-.34,lk:.12,rk:.12,ax:-.3,lx:-.3,az:.15,lz:-.15,ex:-.6,le:-.6});
 
 // ---------------- Lichen: a hulking body of soil and moss — a hollow face with eyes and a glowing mouth deep inside, a crown of
 // roots, a mossy beard, a glowing goo heart in a cracked chest, green vines wound round it, a rock and lichen on the right shoulder,
 // a mushroom shelf on the left, tendrils off the forearms, root-bundle feet ----------------
-(function(){const S=cgHuman({h:.77,w:1.24,d:1.16,rw:[1.0,1.06,1.02,1.1,1.2,1.22,1.27,1.32],at:1.55,lt:1.5,hs:1.08,hy:1.06,hw:1.04,nw:1.5,armL:1.14,foot:1.1,footW:1.3}),
+// (refine) a shambling mound, not a man: low and wide, a great mossy hump over the back (heavier on the left), the head a lump
+// sunk forward into it with no neck, stumpy root legs, long uneven arms (the right one bigger and longer) ending in root claws
+(function(){const HY=.8,HW=1.15,S=cr_human({h:.92,w:1.38,d:1.42,rw:[1.3,1.42,1.38,1.42,1.42,1.38,1.4,1.3],rf:[1.3,1.5,1.62,1.58,1.38,1.22,1.25,1.75],rb:[1.3,1.4,1.42,1.62,1.82,1.9,1.9,1.55],
+    at:1.8,lt:2.05,legL:.62,armL:1.28,hs:1.0,hw:HW,hy:HY,hd:1.05,nw:2.5,neckL:-.08,foot:1.1,footW:1.5,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,
+    head:cr_flare(cr_H8,1.2),arm:cr_RARM,leg:cr_LEG},0.025),
     C9=c9_LI,soil=c9_LI.soil,soil2=c9_LI.soil2,moss=c9_LI.moss,moss2=c9_LI.moss2,goo=c9_LI.goo,T=S.torso,J=S.J;
-  cg181Reg('lichen',S,function(B,P,k,C){const M=C.M,ch=J.chest[1];cgRocky(M,.02,1.8,12);cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.2)return 0;let d=.014*cgG(x,y,0,1.662,.06,.008)-.006*cgG(x,y,0,1.592,.03,.006)+.008*cgG(x,y,0,1.61,.012,.012);[-1,1].forEach(s=>d-=.016*cgG(x,y,s*.032,1.635,.018,.014));return d}));
-    const fy=S.hp(0,1.62,0)[1];
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.4){const bx=m.x/S.hs,by=(m.y-S.nb)/S.hs/1.06+1.52;if(Math.hypot((Math.abs(bx)-.032)/.022,(by-1.635)/.017)<1||(Math.abs(bx)<.028&&Math.abs(by-1.592)<.007))return 0x0c0806}const n=n3Sn(m.x,m.y,m.z,7,5),n2=n3Sn(m.x,m.y,m.z,15,9);
-      let c=mdMix(soil,soil2,c9_cl((.42-n)*3));c=mdMix(c,mdMix(moss,moss2,c9_cl((n-.72)*4)),c9_cl((n-.5)*3.5)*(m.part=='head'&&m.y>fy+.03?1:.9));if(m.part=='head'&&m.y>fy+.04)c=mdMix(c,moss,.55);return mdMix(c,C9.lich,c9_cl((n2-.86)*6)*.8)});
-    // eyes glowing deep in the hollow, a glowing slit of a mouth, a ridge of soil for a brow
+  S.armK={'1':1.2,'-1':.88};[['aR',1.1],['aL',.94]].forEach(([A,f])=>{const a0=J[A+'0'];J[A+'1']=add3(a0,mul3(sub3(J[A+'1'],a0),f));J[A+'2']=add3(a0,mul3(sub3(J[A+'2'],a0),f))});
+  cg181Reg('lichen',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p),ch=J.chest[1],sh=T[6][0];
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.05*(n3Sn(x*.8,y*.8,z*.8,4.5,12)-.45)+.02*(n3Sn(x,y,z,9,12)-.45));
+    // the hump of moss and soil over the back (heavier on the left), a sag of soil at the front of the hips
+    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<-.1)d+=.14*cgG(x+.05,y,0,sh-.1,.2,.13)*Math.min(1,(-.1-n[2])*1.6);if(n[2]>0)d+=.04*cgG(x,y,0,T[1][0]+.04,.16,.07)*n[2];return d});
+    cr_fill(M,S,.02,.04);
+    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.2)return 0;let d=.014*cgG(x,y,0,1.662,.06,.008)-.006*cgG(x,y,0,1.592,.03,.006)+.008*cgG(x,y,0,1.61,.012,.012);[-1,1].forEach(s=>d-=.016*cgG(x,y,s*.032,1.635,.018,.014));return d}));
+    M.shade=cgShade(M,{cav:1.25,y0:0,y1:sh+.25,hk:.3});
+    const fy=S.hp(0,1.62,0)[1],furSel=m=>(m.part=='torso'&&m.y>ch-.02&&m.s<-.25)||(m.part=='head'&&m.y>S.hp(0,1.69,0)[1]);
+    // soil blending into moss (moss on the tops and the hump), pale lichen crusts on the hips and flanks, roots darker below
+    const earth=m=>{const n=n3Sn(m.x,m.y,m.z,7,5),n2=n3Sn(m.x,m.y,m.z,15,9),n3=n3Sn(m.x,m.y,m.z,4,3);let c=mdMix(soil,soil2,c9_cl((.42-n)*3+(m.s<-.3?.15:0)));
+      c=mdMix(c,mdMix(moss,moss2,c9_cl((n2-.5)*2.5)),c9_cl((n3-.42)*3+(m.ny>.3?.35:0)+(m.part=='head'&&m.y>fy+.03?.4:0))*.9);
+      c=mdMix(c,C9.lich,c9_cl((n2-.8)*5)*(m.y<ch?.85:.4));if(m.part=='leg'||m.part=='foot')c=mdMix(c,C9.bark,.35);
+      if(m.part=='neck'||(m.part=='torso'&&m.y>T[6][0]&&m.s<.3)||(m.part=='head'&&m.s<.3))c=mdMix(c,mdMix(moss,moss2,c9_cl((n2-.5)*2.5)),.75);return c};   // moss grows over the back of the head into the mantle (no bare collar)
+    // the hollow face: sockets and the mouth deep black (crisp)
+    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.4){const bx=m.x/(S.hs*HW),by=(m.y-S.nb)/(S.hs*HY)+1.52;if(Math.hypot((Math.abs(bx)-.032)/.022,(by-1.635)/.017)<1||(Math.abs(bx)<.028&&Math.abs(by-1.592)<.007))return 0x0c0806}return null},{vcol:earth,keep:m=>m.part!='foot'});
+    // eyes glowing deep in the hollow, a glowing slit of a mouth
     [-1,1].forEach(s=>{const q=S.hp(s*.032,1.635,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p)k.p('head','sph','g',goo,p[0],p[1],p[2]+.002,.015,.012,.009)});
     {const q=S.hp(0,1.592,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p)c9_keep(k.p('head','box','g',0x5ad82a,p[0],p[1],p[2]-.001,.042*S.hs,.008,.01))}
     // a mossy beard hanging from the chin and jaw
-    {const by=S.hp(0,1.575,0)[1];for(let i=0;i<6;i++){const x=(i-2.5)*.016*S.hs,p=cgRay(M,[x,S.hp(0,1.548,0)[1],.6],[0,0,-1],{head:1});if(p)k.L('head','c',i%2?moss:moss2,add3(p,[0,.004,-.012]),add3(p,[x*.3,-.11-(i%3)*.035,.03]),.013,.003,4)}cgFur(B,M,m=>m.part=='head'&&m.s>-.1&&m.y<by&&m.y>S.hp(0,1.525,0)[1],{off:.014,len:.13,col:moss,col2:moss2,seed:123,jag:.45,lump:[.5,1.2]})}
-    cgFur(B,M,m=>(m.part=='torso'&&m.y>ch+.02&&m.s<.3)||(m.part=='head'&&m.y>S.hp(0,1.69,0)[1]),{off:.025,len:.1,col:moss,col2:moss2,seed:121,jag:.55});
+    {const by=S.hp(0,1.575,0)[1];for(let i=0;i<5;i++){const x=(i-2)*.02*S.hs,p=cgRay(M,[x,S.hp(0,1.548,0)[1],.6],[0,0,-1],{head:1});if(p)k.L('head','c',i%2?moss:moss2,add3(p,[0,.004,-.014]),add3(p,[x*.3,-.11-(i%3)*.035,.03]),.014,.003,4)}
+      cr_Fur(B,M,m=>m.part=='head'&&m.s>-.1&&m.z>0&&m.y<by&&m.y>S.hp(0,1.525,0)[1],{off:.014,len:.13,col:moss2,col2:moss,seed:123,jag:.45,lump:[.5,1.2]})}
+    // the moss mantle over the hump and the crown
+    cr_Fur(B,M,furSel,{off:.026,len:.11,col:moss2,col2:moss,seed:121,jag:.55});
     // a crown of gnarled roots
-    for(let i=0;i<7;i++){const an=-1.5+i*.5,q=S.hp(Math.sin(an)*.07,1.72,-.04-Math.cos(an)*.02);let a=q,d=[Math.sin(an)*.4,1,-.3];for(let j=0;j<3;j++){const b=add3(a,mul3(d,.055));k.L('head','c',C9.bark,a,b,.015-j*.004,.011-j*.003,4);a=b;d=[d[0]*1.3,d[1]-.3,d[2]-.2]}}
+    for(let i=0;i<6;i++){const an=-1.4+i*.56,t=b7_Top(M,S,Math.sin(an)*.07,-.04-Math.cos(an)*.02);if(!t)continue;let a=sub3(t,[0,.018,0]),d=[Math.sin(an)*.4,1,-.3];for(let j=0;j<3;j++){const b=add3(a,mul3(d,.055));k.L('head','c',C9.bark,a,b,.016-j*.004,.012-j*.003,4);a=b;d=[d[0]*1.3,d[1]-.3,d[2]-.2]}}
     // a mushroom shelf on the left shoulder, a rock crusted with lichen on the right
-    for(let i=0;i<3;i++){const q=c9_arm(M,J,-1,.08+i*.2,-.35+i*.15,-.022);k.p('aL0','hem','c',i%2?C9.cap:C9.cap2,q.p[0],q.p[1],q.p[2],.08-i*.012,.028,.07,0,0,.25)}
-    {const a=J.aR0,p=cgRay(M,[a[0]+.02,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p('aR0','dod','c',soil2,p[0]+.02,p[1]+.012,p[2],.085,.065,.08,.3,0,-.3);
-      for(let i=0;i<4;i++)k.p('aR0','sph','c',C9.lich,p[0]+.0+i*.022,p[1]+.06-Math.abs(i-1.5)*.01,p[2]-.03+i*.018,.022,.008,.022)}
+    for(let i=0;i<3;i++){const q=c9_arm(M,J,-1,.12+i*.2,-.35+i*.15,-.022);k.p('aL0','hem','c',i%2?C9.cap:C9.cap2,q.p[0],q.p[1],q.p[2],.08-i*.012,.028,.07,0,0,.25);WS(q.p)}
+    {const a=J.aR0,p=cgRay(M,[a[0]+.02,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p('aR0','dod','c',soil2,p[0]+.02,p[1]+.008,p[2],.09,.07,.085,.3,0,-.3);WS(p);
+      for(let i=0;i<3;i++){k.p('aR0','dod','c',C9.lich,p[0]+.0+i*.026,p[1]+.065-Math.abs(i-1)*.012,p[2]-.03+i*.022,.026,.009,.026);WS(p)}}
     // green vines wound round the arms and legs and across the body
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh';[[J[A+'0'],J[A+'1'],J[A+'2'],A,2.2],[J[L+'0'],J[L+'1'],J[L+'2'],L,2.6]].forEach(([p0,p1,p2,bp,turns])=>{const pts=[],W=[],r=bp[0]=='a'?.062*1.2:.085*1.15;
-        for(let i=0;i<=18;i++){const t=i/18,c=t<.5?lerp3(p0,p1,t*2):lerp3(p1,p2,(t-.5)*2),an=t*turns*Math.PI*2,q=[c[0]+Math.cos(an)*.2*s,c[1],c[2]+Math.sin(an)*.2],h0=cgRay(M,q,nrm3(sub3(c,q)),{arm:1,leg:1}),hit=h0&&Math.sign(h0[0])==s&&Math.hypot(h0[0]-c[0],h0[2]-c[2])<.16?h0:null;
-          pts.push(hit?add3(hit,mul3(nrm3(sub3(q,c)),.004)):[c[0]+Math.cos(an)*r*s,c[1],c[2]+Math.sin(an)*r]);W.push(t<.5?[[bp+'0',1]]:[[bp+'1',1]])}
-        cgTube(B,pts,pts.map(()=>.013),W,bp[0]=='a'?C9.vine:C9.vine2,{seg:5})});
+    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh';[[J[A+'0'],J[A+'1'],J[A+'2'],A,2.2],[J[L+'0'],J[L+'1'],J[L+'2'],L,1.6]].forEach(([p0,p1,p2,bp,turns])=>{const pts=[],W=[],r=bp[0]=='a'?.07:.1;
+        for(let i=0;i<=12;i++){const t=.04+i/12*.9,c=t<.5?lerp3(p0,p1,t*2):lerp3(p1,p2,(t-.5)*2),an=t*turns*Math.PI*2,q=[c[0]+Math.cos(an)*.25*s,c[1],c[2]+Math.sin(an)*.25],h0=cgRay(M,q,nrm3(sub3(c,q)),{arm:1,leg:1}),hit=h0&&Math.sign(h0[0])==s&&Math.hypot(h0[0]-c[0],h0[2]-c[2])<.2?h0:null;
+          const p=hit?add3(hit,mul3(nrm3(sub3(q,c)),.004)):[c[0]+Math.cos(an)*r*s,c[1],c[2]+Math.sin(an)*r];pts.push(p);W.push(cgWAt(M,p))}
+        cgTube(B,pts,pts.map(()=>.014),W,bp[0]=='a'?C9.vine:C9.vine2,{seg:4})});
       // tendrils hanging off the forearms
-      for(let i=0;i<3;i++){const q=c9_arm(M,J,s,1.2+i*.25,.4+i*.3,-.006);k.L(A+'1','c',i%2?C9.vine:moss,q.p,add3(q.p,[s*.03,-.18-i*.05,.02]),.013,.003,4)}
-      cgFingers(k,S,s,soil2,'claw',1.1,C9.bark,.03)});
-    {const N=16;c9_vine(B,M,S,Array.from({length:N},(_,i)=>{const t=i/(N-1);return [T[1][0]+.02+(T[6][0]-.04-T[1][0])*t,-2.7+t*5.4]}),.015,C9.vine,.006);
-      c9_vine(B,M,S,Array.from({length:12},(_,i)=>{const t=i/11;return [T[1][0]+.06+(ch-T[1][0])*t,2.4-t*4.2]}),.013,C9.vine2,.006)}
+      for(let i=0;i<2;i++){const q=c9_arm(M,J,s,1.25+i*.3,.4+i*.3,-.008);k.L(A+'1','c',i%2?C9.vine:moss,q.p,add3(q.p,[s*.03,-.18-i*.05,.02]),.014,.003,4);WS(q.p)}
+      // root claws: three long gnarled fingers out of the knotted hand, darker tips
+      cr_fingers(B,S,s,{n:3,len:.14,r:.022,curl:.3,spread:.04,col:C9.bark,nail:mdSh(C9.bark,.65),fan:.3,claw:.5,at:.065})});
+    {const N=12;c9_vine(B,M,S,Array.from({length:N},(_,i)=>{const t=i/(N-1);return [T[1][0]+.03+(T[6][0]-.06-T[1][0])*t,-2.6+t*5.2]}),.016,C9.vine,.006,{seg:4});
+      c9_vine(B,M,S,Array.from({length:9},(_,i)=>{const t=i/8;return [T[1][0]+.06+(ch-T[1][0])*t,2.4-t*4.2]}),.014,C9.vine2,.006,{seg:4})}
     // the glowing goo heart in the cracked chest, glowing cracks round it, goo seeping out of the body
-    {const y=ch-.01,p=cgSurf(M,S,y,.18,-.02);k.p('chest','oct','g',goo,p[0],p[1],p[2]+.006,.06,.075,.045);
+    {const y=ch-.01,p=cgSurf(M,S,y,.18,-.02);k.p('chest','oct','g',goo,p[0],p[1],p[2]+.006,.065,.08,.048);
       [[[y+.05,.0],[y+.1,-.12],[y+.13,-.2]],[[y-.02,.38],[y+.04,.5],[y+.02,.62]],[[y-.06,.1],[y-.12,.04],[y-.18,.12]],[[y-.04,-.1],[y-.08,-.28],[y-.14,-.34]]].forEach(L=>c9_crack(k,M,S,L,0x6ae02a,.006))}
-    for(let i=0;i<5;i++){const y=T[1][0]+.06+i*.07,an=-1.2+a181H(i,2,3)*2.4,p=cgSurf(M,S,y,an,-.006);k.p(cgSurfBn(S,y),'sph','g',goo,p[0],p[1],p[2],.013,.022,.01,0,an,0)}
-    // lichen crusts on the hips
-    for(let i=0;i<6;i++){const an=a181H(i,9,1)*Math.PI*2,y=T[1][0]+a181H(i,1,9)*.08,p=cgSurf(M,S,y,an,-.004);k.p('pelvis','sph','c',C9.lich,p[0],p[1],p[2],.035,.035,.009,0,an,0)}
-    // feet: root bundles gripping the ground
-    [-1,1].forEach(s=>{const l=s<0?'lh2':'rh2',F=J[l],L=S.foot.len;for(let i=0;i<5;i++){const an=-1.1+i*.55;k.L(l,'c',C9.bark,[F[0]+Math.sin(an)*.02,.045,F[2]+.04*L],[F[0]+Math.sin(an)*.15,.006,F[2]+.04*L+Math.cos(an)*.15],.024,.007,4)}
-      k.L(l,'c',C9.bark,[F[0],.04,F[2]-.02],[F[0]+s*.03,.006,F[2]-.13],.022,.007,4)})})})();
+    for(let i=0;i<5;i++){const y=T[1][0]+.06+i*.07,an=-1.2+a181H(i,2,3)*2.4,p=cgSurf(M,S,y,an,-.006);k.p(cgSurfBn(S,y),'ico','g',goo,p[0],p[1],p[2],.014,.024,.011,0,an,0);WS(p)}
+    // feet: the leg ends in a stump of root that spreads into a bundle of roots gripping the ground (instead of a foot)
+    [-1,1].forEach(s=>{const l=s<0?'lh2':'rh2',F=J[l],W=[[l,1]],lr=S.leg[S.leg.length-1].r;
+      mdLoft(B,[{p:[F[0],F[1]+.05,F[2]],rx:lr*.9,f:lr*.9,b:lr*.9,w:W},{p:[F[0],F[1]-.03,F[2]+.01],rx:lr*1.02,f:lr*1.05,b:lr,w:W},{p:[F[0],.022,F[2]+.02],rx:lr*1.12,f:lr*1.15,b:lr*1.05,w:W}],{seg:8,ref:[0,0,1],capB:true,col:C9.bark,wf:(x,y,z)=>cgWAt(M,[x,y,z])});
+      for(let i=0;i<6;i++){const an=i<5?-1.15+i*.575:Math.PI,d=[Math.sin(an),0,Math.cos(an)],a=[F[0]+d[0]*lr*.5,.05,F[2]+.02+d[2]*lr*.5],b=add3(a,[d[0]*(lr+.04),-.03,d[2]*(lr+.04)]),e=add3(a,[d[0]*(lr+.11),-.046,d[2]*(lr+.11)]);
+        cgTube(B,[a,b,e],[.03,.02,.005],[cgWAt(M,a),W,W],i%2?C9.bark:mdSh(C9.bark,.8),{seg:4})}})})})();
+ST179.lichen={sx:.3,hx:-.26,lk:.22,rk:.22,az:.14,lz:-.06,ax:-.18,lx:-.02,ex:-.3,le:-.15};
 
 // ---------------- Akidon: a lean insectoid in olive-black chitin — great faceted compound eyes, hooked mandibles dripping acid,
 // antennae, mantis scythes on the forearms, ridge spikes and shoulder spikes, glowing acid sacs on the belly, a hanging
 // ringed abdomen with a stinger, spurred knees ----------------
-(function(){const S=cgHuman({h:.86,w:.98,d:.95,rw:[1.0,1.0,.92,.98,1.04,1.04,1.08,1.08],at:.94,lt:.94,hs:1.0,hd:1.12,armL:1.12}),c1=c9_AK.c1,c2=c9_AK.c2,c3=c9_AK.c3,ed=c9_AK.edge,acid=c9_AK.acid,acid2=c9_AK.acid2,bone=c9_AK.bone,T=S.torso,J=S.J;
-  cg181Reg('akidon',S,function(B,P,k,C){const M=C.M;cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.05)return 0;let d=.018*cgG(x,y,0,1.645,.06,.01);[-1,1].forEach(s=>d+=.01*cgG(x,y,s*.03,1.6,.016,.02));return d}));
-    const my=S.hp(0,1.556,0)[1];
-    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.45&&Math.abs(m.y-my)<.006*S.hs&&Math.abs(m.x)<.03)return 0x050308;if(m.part=='hand')return c3;const n=n3Sn(m.x,m.y,m.z,14,3);
-      return m.part=='head'?mdMix(m.s<-.2?c1:c2,ed,c9_cl((n-.7)*3)*.6):mdMix(m.s<-.3?c3:c1,c2,c9_cl((n-.5)*2.5)*.45)});
-    // chitin plates: the chest plate, banded belly plates, the wing cases down the back, arm and shin guards
-    cgShell(B,M,m=>m.part=='torso'&&m.y>T[2][0]&&m.s>-.2,.014,m=>Math.abs(m.x)<.01?c3:mdMix(mdMix(c1,c2,.6),ed,c9_cl((n3Sn(m.x,m.y,m.z,16,2)-.6)*2)*.45),{rim:.3});
-    cgShell(B,M,m=>m.part=='torso'&&m.y<=T[2][0]&&m.y>J.lh0[1]-.03,.014,m=>Math.round(m.y*30)%2?c2:c3,{rim:.3});
+// (refine) an insect, not a man: a wasp waist between a rounded thorax and the hips, thin segmented limbs, a small wide head on a
+// thin neck, deeply hunched with the scythes held up; the plates are paint (crisp seams, banded belly) except the wing cases,
+// which stand off the back; the abdomen is one ringed loft
+// an insect's head: narrow at the mandibles, widening to the eyes and the crown (an inverted triangle from the front)
+const cr_IHEAD=cr_H8.map((q,i)=>{const f=[.62,.68,.76,.86,.96,1,1,1][i];return [q[0],q[1]*f,q[2]*(.8+.2*f),q[3]*(.85+.15*f),q[4]]});
+(function(){const S=cgHuman({h:.9,w:.9,d:.9,rw:[.82,.8,.42,.62,1.1,1.16,1.16,.98],rf:[.85,.8,.42,.88,1.26,1.16,1.0,.85],rb:[.9,.85,.48,.8,1.26,1.26,1.18,.95],push:()=>0,
+    at:.8,lt:.82,hs:.95,hw:1.12,hy:.92,hd:1.0,nw:.62,neckL:.035,armL:1.28,legL:1.1,foot:1.0,footW:.8,n:16,sock:1,j2:1,footLite:1,head:cr_IHEAD,facePush:()=>0,arm:cr_KARM,
+    leg:[{t:.12,r:.07},{t:.45,r:.055},{t:1.0,r:.05},{t:1.25,r:.04},{t:1.7,r:.032},{t:2.0,r:.03}]}),c1=c9_AK.c1,c2=c9_AK.c2,c3=c9_AK.c3,ed=c9_AK.edge,acid=c9_AK.acid,acid2=c9_AK.acid2,bone=c9_AK.bone,T=S.torso,J=S.J;
+  cg181Reg('akidon',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
+    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.05)return 0;let d=.018*cgG(x,y,0,1.645,.06,.01);[-1,1].forEach(s=>d+=.01*cgG(x,y,s*.03,1.6,.016,.02));return d}));
+    M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.2,hk:.25});
+    const my=S.hp(0,1.556,0)[1],ky=[J.lh1[1],J.rh1[1]],ay=J.aR1[1];
+    // chitin: dark olive, the plates' rims lighter (paint): seams at the segment joints, a seam down the thorax, a banded belly
+    const chit=m=>{const n=n3Sn(m.x,m.y,m.z,9,3);let c=mdMix(m.s<-.3?c3:c1,c2,c9_cl((n-.4)*2)*.6);if(m.part=='head')c=mdMix(c2,ed,c9_cl((n-.6)*3)*.5);
+      c=mdMix(c,ed,c9_cl((m.ny-.45)*2)*.35);return c};
+    cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.45&&Math.abs(m.y-my)<.006*S.hs&&Math.abs(m.x)<.03)return 0x050308;if(m.part=='hand')return c3;
+      if(m.part=='torso'){if(Math.abs(m.x)<.008&&m.s>.3&&m.y>T[3][0])return c3;if(m.y<T[3][0]&&m.y>T[0][0]&&m.s>-.5)return Math.round(m.y*34)%2?c2:c3;if(Math.abs(m.y-T[3][0])<.012)return c3}
+      if((m.part=='leg'&&Math.abs(m.y-ky[0])<.02)||(m.part=='arm'&&Math.abs(m.y-ay)<.018))return c3;return null},{vcol:chit});
+    // the wing cases down the back (they stand off the body)
     const wc=v=>.04*Math.min(1,Math.max(.3,(v[1]-J.spine[1]+.06)/.2));
-    cgShell(B,M,m=>(m.part=='torso'&&m.s<-.15&&m.y>J.spine[1]-.06)||(m.part=='neck'&&m.s<-.3),wc,m=>Math.abs(m.x)<.006?c3:mdMix(c2,c1,c9_cl((n3Sn(m.x,m.y,m.z,12,4)-.4)*2)),{rim:.15});   /* the wing cases */
-    // great compound eyes on the sides of the head: a dark rim and a glowing faceted dome with dark facet lines
-    [-1,1].forEach(s=>{const q=S.hp(s*.3,1.632,.035),p=cgRay(M,q,[-s,0,0],{head:1});if(!p)return;const o=[s*.8,0,.6];
-      k.p('head','sph2','c',c3,p[0]-s*.006,p[1],p[2],.034,.044,.052,0,s*.5,0);k.p('head','dod','g',acid,p[0]+s*.012,p[1]+.002,p[2]+.004,.031,.042,.048,0,s*.5,0);
-      for(let i=0;i<3;i++)k.p('head','box','c',c3,p[0]+s*.03,p[1]-.022+i*.022,p[2]+.012,.004,.004,.06,0,s*.5,0)});
+    cgShell(B,M,m=>(m.part=='torso'&&m.s<-.15&&m.y>J.spine[1]-.06)||(m.part=='neck'&&m.s<-.3),wc,m=>Math.abs(m.x)<.006?c3:mdMix(c2,c1,c9_cl((n3Sn(m.x,m.y,m.z,12,4)-.4)*2)),{rim:.15});
+    // great compound eyes on the sides of the head: a dark rim and a glowing faceted dome
+    [-1,1].forEach(s=>{const c=S.hp(0,1.632,0),d=nrm3([s*.75,.05,.66]),p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(!p)return;
+      k.p('head','sph','c',c3,p[0]-d[0]*.008,p[1],p[2]-d[2]*.008,.04,.052,.034,0,s*.85,0);k.p('head','dod','g',acid,p[0]+d[0]*.006,p[1]+.002,p[2]+d[2]*.006,.036,.048,.03,0,s*.85,0)});
     // hooked mandibles either side of the mouth, a drop of acid on each tip
     [-1,1].forEach(s=>{const q=S.hp(s*.04,1.556,0),p0=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1],{head:1});if(!p0)return;let a=add3(p0,[0,0,-.01]),d=[s*.25,-.25,1];
       for(let i=0;i<4;i++){const u=nrm3(d),b=add3(a,mul3(u,.03));k.L('head','c',i<2?c2:bone,a,b,.014*(1-i*.2),.014*(1-(i+1)*.2)+.003,4);a=b;d=[d[0]-s*.35,d[1]+.05,d[2]-.15]}
-      k.p('head','sph','g',acid,a[0],a[1]-.012,a[2],.007,.014,.007)});
+      k.p('head','oct','g',acid,a[0],a[1]-.012,a[2],.007,.014,.007)});
     // antennae with acid-lit tips
-    [-1,1].forEach(s=>{const q=S.hp(s*.03,1.7,.02);let a=q,d=[s*.25,.6,.75];for(let i=0;i<5;i++){const b=add3(a,mul3(d,.05*S.hs));k.L('head','c',c2,a,b,.008,.006,3);a=b;d=[d[0]+s*.06,d[1]-.18,d[2]+.05]}k.p('head','sph','g',acid,a[0],a[1],a[2],.009)});
+    [-1,1].forEach(s=>{const q=S.hp(s*.03,1.7,.02);let a=q,d=[s*.25,.6,.75];for(let i=0;i<5;i++){const b=add3(a,mul3(d,.05*S.hs));k.L('head','c',c2,a,b,.008,.006,3);a=b;d=[d[0]+s*.06,d[1]-.18,d[2]+.05]}k.p('head','oct','g',acid,a[0],a[1],a[2],.01,.01,.01)});
     // ridge spikes down the wing cases, shoulder plates with spikes
-    for(let i=0;i<6;i++){const y=T[6][0]-.03-i*.065,o=wc([0,y,0]),p=cgSurf(M,S,y,Math.PI,o-.012);c9_keep(c9_along(k,cgSurfBn(S,y),'cone4','c',ed,p,[0,.5,-1],.085-i*.006,.016))}
-    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A],p=cgRay(M,[a[0]+s*.025,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p(A,'hem','c',c2,p[0],p[1]-.03,p[2],.085,.055,.09,0,0,s*.4);
-      c9_along(k,A,'cone4','c',ed,add3(p,[s*.035,.0,-.01]),[s*.6,1,-.2],.085,.014)});
+    for(let i=0;i<6;i++){const y=T[6][0]-.03-i*.065,o=wc([0,y,0]),p=cgSurf(M,S,y,Math.PI,o-.012);c9_keep(c9_along(k,cgSurfBn(S,y),'cone4','c',ed,p,[0,.5,-1],.085-i*.006,.016));WS(p)}
+    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A],p=cgRay(M,[a[0]+s*.025,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p(A,'hem','c',c2,p[0],p[1]-.03,p[2],.07,.05,.075,0,0,s*.4);WS(p);
+      c9_along(k,A,'cone4','c',ed,add3(p,[s*.03,.0,-.01]),[s*.6,1,-.2],.085,.014);WS(p)});
     // glowing acid sacs down the belly
-    [ .2,.42,.64].forEach((f,i)=>{const y=T[1][0]+(J.chest[1]-T[1][0])*f,p=cgSurf(M,S,y,0,.006);k.p(cgSurfBn(S,y),'sph','g',acid2,p[0],p[1],p[2],.05-i*.008,.022,.014)});
-    // the hanging abdomen (gaster): five segments with acid glowing between them, a stinger at the end
-    {const b0=cgSurf(M,S,J.pelvis[1]-.03,Math.PI,-.04),seg=[];for(let i=0;i<5;i++){const t=i/4,r=(.12-Math.abs(t-.35)*.085);seg.push([add3(b0,[0,-t*.26,-t*.4-.04]),r])}
-      seg.forEach(([c,r],i)=>{k.p('pelvis','sph2','c',i%2?c1:c2,c[0],c[1],c[2],r*1.05,r*.9,r);if(i<4){const n=seg[i+1][0],m=lerp3(c,n,.5),dd=nrm3(sub3(n,c));c9_along(k,'pelvis','ring','g',acid2,sub3(m,mul3(dd,.004)),dd,.01,r*.86,r*.82)}});
-      const e=seg[4][0];c9_along(k,'pelvis','cone4','c',ed,add3(e,[0,-.02,-.04]),[0,-.6,-1],.11,.022)}
+    [.2,.42,.64].forEach((f,i)=>{const y=T[1][0]+(J.chest[1]-T[1][0])*f,p=cgSurf(M,S,y,0,.004);k.p(cgSurfBn(S,y),'ico','g',acid2,p[0],p[1],p[2],.034-i*.005,.02,.012);WS(p)});
+    // the hanging abdomen (gaster): one ringed loft from inside the hips, bulging segments with pinched joints, acid glowing in the
+    // joints, a stinger at the end
+    {const b0=cgSurf(M,S,J.pelvis[1]-.02,Math.PI,-.05),RR=[.07,.105,.088,.122,.1,.118,.094,.1,.078,.05,.016],W=[['pelvis',1]],pts=RR.map((r,i)=>{const t=i/(RR.length-1);return add3(b0,[0,-t*.3-t*t*.06,-t*.44])});
+      mdLoft(B,pts.map((p,i)=>({p,rx:RR[i]*1.05,f:RR[i]*.92,b:RR[i],w:W})),{seg:8,ref:[0,1,0],capB:true,col:m=>{const i=Math.round(m.i);return i%2==0&&i>1&&i<9?c3:(m.s>.3?c2:c1)}});
+      [2,4,6].forEach(i=>{const d=nrm3(sub3(pts[i+1],pts[i-1]));c9_keep(c9_along(k,'pelvis','ring','g',acid2,sub3(pts[i],mul3(d,.004)),d,.012,RR[i]*.98,RR[i]*.95))});
+      const e=pts[RR.length-1];c9_along(k,'pelvis','cone4','c',ed,sub3(e,[0,0,.01]),[0,-.6,-1],.1,.02)}
     // mantis scythes on the forearms: dark chitin blades with pale cutting edges, curving forward and down past the hands
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a1=J[A+'1'],a2=J[A+'2'],ad=nrm3(sub3(a2,a1)),root=lerp3(a1,a2,.55),o=[s,0,0],hit=cgRay(M,add3(root,mul3(o,.3)),mul3(o,-1),{arm:1})||root,
         R=[];let p=add3(hit,[-s*.012,0,0]),d=add3(ad,[0,0,.12]);for(let i=0;i<7;i++){const t=i/6,w=.034*(1-t*.82)+.004;R.push({p:p.slice(),rx:.009*(1-t*.6)+.002,f:w,b:w*.55,w:[[A+'1',1]]});
         p=add3(p,mul3(nrm3(d),.075));const c=Math.cos(-.17),sn=Math.sin(-.17);d=[d[0],d[1]*c-d[2]*sn,d[1]*sn+d[2]*c]}
       mdLoft(B,R,{seg:6,ref:[0,0,1],capB:true,col:m=>m.s>.8?bone:m.s<-.5?c3:c2});
-      cgFingers(k,S,s,c3,'claw',1.2,0x0a080c,.03);
+      // two hooked claws out of the narrow hand
+      cr_fingers(B,S,s,{n:2,len:.075,r:.009,curl:.55,spread:.01,col:c3,nail:0x0a080c,claw:.5,at:.05});
       // a spurred knee
-      const L=s<0?'lh':'rh',K=J[L+'1'],kp=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(kp)c9_along(k,L+'1','cone4','c',ed,add3(kp,[0,0,-.012]),[0,.7,1],.085,.017);
-      cgToes(k,S,s,c3,.025,bone)});
-    [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.03&&m.y>J[A+'2'][1],.016,c2,{rim:.1});cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<J[L+'1'][1]-.04&&m.y>J[L+'2'][1]+.02,.016,c2,{rim:.1})})})})();
+      const L=s<0?'lh':'rh',K=J[L+'1'],kp=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(kp){c9_along(k,L+'1','cone4','c',ed,add3(kp,[0,0,-.012]),[0,.7,1],.085,.017);WS(kp)}
+      cr_toes(B,S,s,{n:2,col:c3,r:.016,len:.05,spread:.03,nail:bone,claw:.025})})})})();
+cr_stance('akidon',{sx:.36,hx:-.32,lk:.2,rk:.2,dy:-.03,ax:-.35,lx:-.35,ex:-.7,le:-.7,az:.08,lz:-.08});
 
 // ---------------- Gharial Reaver: a hulking crocodile-man — a big head with a long toothy snout and a nostril knob, scutes down
 // the back, a pale plated belly, a long heavy tail, a hide harness, a necklace of teeth, a loincloth ----------------
+// (refine) a crocodile, not a man in a mask: a thick neck that merges into the base of the skull, a barrel chest and heavy hips,
+// stooped forward with the snout held level, a heavier tail rooted deep in the hips; the harness and belt are paint
 const GHARIALHEAD=[[1.52,.066,.085,.062,.02],[1.536,.07,.15,.066,.03],[1.55,.07,.22,.07,.04],[1.562,.068,.28,.074,.05],[1.572,.066,.3,.076,.052],[1.582,.068,.28,.08,.05],
   [1.596,.074,.2,.086,.04],[1.61,.08,.14,.09,.03],[1.625,.082,.11,.092,.02],[1.64,.078,.09,.092,.012],[1.654,.066,.068,.08,.006],[1.664,.036,.036,.048,0]];
-(function(){const S=cgHuman({h:.9,w:1.26,d:1.2,rw:[1.05,1.12,1.08,1.14,1.24,1.26,1.3,1.36],rf:[1,1.05,1.15,1.2,1.25,1.2,1.12,1.08],at:1.5,lt:1.45,hs:1.28,hw:1.08,nw:1.7,foot:1.15,footW:1.25,head:GHARIALHEAD,facePush:()=>0}),
+// (refine) 8 rings, the throat ring as wide as the neck so neck and head are one mass
+const cr_GH8=[[1.52,.09,.1,.094,0],[1.55,.078,.22,.084,.03],[1.562,.07,.28,.078,.045],[1.572,.066,.3,.078,.05],[1.582,.068,.28,.082,.048],[1.61,.08,.15,.09,.03],[1.64,.078,.09,.092,.012],[1.664,.04,.04,.05,0]];
+(function(){const S=cr_human({h:.9,w:1.3,d:1.24,rw:[1.12,1.2,1.08,1.16,1.3,1.34,1.4,1.25],rf:[1,1.06,1.12,1.2,1.26,1.2,1.22,1.6],rb:[1.1,1.2,1.15,1.22,1.3,1.32,1.32,1.4],
+    at:1.6,lt:1.55,hs:1.28,hw:1.08,nw:2.4,neckL:-.03,legL:.92,foot:1.2,footW:1.3,head:cr_GH8,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,arm:cr_CARM,leg:cr_LEG},0.03),
     sk=c9_GH.sk,sk2=c9_GH.sk2,bel=c9_GH.belly,sc=c9_GH.scute,T=S.torso,J=S.J;
-  cg181Reg('gharial',S,function(B,P,k,C){const M=C.M;cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{let d=0;if(n[1]>-.7&&z>-.03)d-=.009*Math.exp(-Math.pow((y-1.567)/.004,2));[-1,1].forEach(s=>{d+=.016*cgG(x,y,s*.052,1.634,.017,.009);d-=.005*cgG(x,y,s*.012,1.58,.005,.004)});return d}));
-    const my=S.hp(0,1.567,0)[1];cgEmit(B,M,m=>{if(m.part=='head'){if(Math.abs(m.y-my)<.004*S.hs&&m.nz>-.3)return 0x140806;if(m.ny<-.3)return bel;return mdMix(sk,sk2,c9_cl((n3Sn(m.x,m.y,m.z,22,4)-.45)*2.4))}
-      if(m.part=='torso'&&m.s>.45&&m.y<T[6][0]-.03&&m.y>T[0][0])return Math.round(m.y*30)%2?bel:mdSh(bel,.86);   // the pale belly plates
-      return m.s<-.4?mdMix(sk2,sc,.4):mdMix(sk,sk2,c9_cl((n3Sn(m.x,m.y,m.z,14,4)-.45)*2.4))});
+  cg181Reg('gharial',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
+    cr_fill(M,S,.015,.03);
+    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{let d=0;if(n[1]>-.7&&z>-.03)d-=.009*Math.exp(-Math.pow((y-1.567)/.004,2));[-1,1].forEach(s=>{d+=.016*cgG(x,y,s*.052,1.634,.017,.009);d-=.005*cgG(x,y,s*.012,1.58,.005,.004)});return d}));
+    M.shade=cgShade(M,{cav:1.2,y0:0,y1:T[7][0]+.2,hk:.26});
+    const my=S.hp(0,1.567,0)[1],y0=T[2][0]+.02,y1=T[6][0]+.01,kk=(y1-y0)/.34,wy=T[2][0];
+    // mottled scaly hide (darker on the back), the pale belly plates and the jaw's underside, the harness strap and belt painted on
+    const hide=m=>{const n=n3Sn(m.x,m.y,m.z,14,4),n2=n3Sn(m.x,m.y,m.z,5,2);let c=mdMix(sk,sk2,c9_cl((n-.45)*2.4*.6+(n2-.5)*.8+(m.s<-.3?.3:0)));if(m.s<-.4)c=mdMix(c,sc,.35);return c};
+    cgEmit(B,M,m=>{if(m.part=='head'){if(Math.abs(m.y-my)<.004*S.hs&&m.nz>-.3)return 0x140806;if(m.ny<-.3)return bel;return null}
+      if(m.part=='torso'){if(Math.abs(m.y-wy)<.024)return a181Nz(0x2a1a10,m,.3,18);if(m.y>y0-.02&&Math.abs((m.y-(y0+y1)/2)+kk*m.x)<.026*Math.sqrt(1+kk*kk))return a181Nz(0x3a2414,m,.3,18);
+        if(m.s>.45&&m.y<T[6][0]-.03&&m.y>T[0][0])return Math.round(m.y*30)%2?bel:mdSh(bel,.86)}return null},{vcol:hide});
     // eyes on top of the head, slit pupils
     [-1,1].forEach(s=>{const q=S.hp(s*.052,1.638,.04),d=nrm3([s*.6,.3,.75]),p=cgRay(M,add3(q,mul3(d,.5)),mul3(d,-1),{head:1});if(p){k.p('head','sph','g',c9_GH.eye,p[0],p[1],p[2]-.003,.014,.012,.012);k.p('head','box','c',0x050403,p[0]+d[0]*.01,p[1],p[2]+d[2]*.01,.002,.016,.002)}});
     // teeth all along both jaws (upper ones down, lower ones up), interlocking
-    {const z0=S.hp(0,1.567,.05)[2],z1=S.hp(0,1.567,.29)[2];for(let i=0;i<12;i++){const z=z0+(z1-z0)*i/11;[-1,1].forEach(s=>{const p=cgRay(M,[s*.4,my,z],[-s,0,0],{head:1});if(!p)return;
-      const up=i%2;k.p('head','cone4','c',c9_GH.tooth,p[0]-s*.003,my+(up?.006:-.006),p[2],.0055,.022-(i>9?.006:0),.0055,up?0:Math.PI,0,s*.12)})}
+    {const z0=S.hp(0,1.567,.05)[2],z1=S.hp(0,1.567,.29)[2];for(let i=0;i<11;i++){const z=z0+(z1-z0)*i/10;[-1,1].forEach(s=>{const p=cgRay(M,[s*.4,my,z],[-s,0,0],{head:1});if(!p)return;
+      const up=i%2;k.p('head','cone4','c',c9_GH.tooth,p[0]-s*.003,my+(up?.006:-.006),p[2],.0055,.022-(i>8?.006:0),.0055,up?0:Math.PI,0,s*.12)})}
       // the nostril knob on the snout's tip
       const p=cgRay(M,[0,my+.4,z1-.012],[0,-1,0],{head:1});if(p)k.p('head','sph','c',sk2,p[0],p[1]-.006,p[2],.034,.026,.03)}
     // bony scutes in rows down the back
-    for(let i=0;i<9;i++){const y=T[6][0]-i*.065;[-1,1].forEach(s=>{const p=cgSurf(M,S,y,Math.PI+s*.3,-.006);c9_along(k,cgSurfBn(S,y),'cone4','c',sc,p,[s*.15,.5,-1],.05,.024,.032)})}
-    // the long heavy tail, dragging toward the ground, scutes along its top
-    {const t0=cgSurf(M,S,J.pelvis[1]-.03,Math.PI,-.05),W=[['pelvis',1]],y0=t0[1],TT=[t0,add3(t0,[0,-.16,-.2]),add3(t0,[0,-.32,-.44]),[t0[0]+.04,Math.max(.22,y0-.5),t0[2]-.72],[t0[0]+.1,.14,t0[2]-1.0],[t0[0]+.16,.1,t0[2]-1.26]];
-      cgTube(B,TT,[.12,.105,.085,.062,.038,.012],TT.map(()=>W),m=>m.s<-.3?bel:sk,{seg:10,capB:true,ref:[0,1,0]});
-      for(let i=1;i<5;i++){const r=[.105,.085,.062,.038][i-1];[-1,1].forEach(s=>c9_along(k,'pelvis','cone4','c',sc,add3(TT[i],[s*r*.4,r*.75,0]),[s*.2,1,-.3],.04,.016))}}
-    // a loincloth and belt, a hide harness across the chest, a necklace of teeth
-    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.08,.04,.02,m=>a181Nz(c9_GH.cloth,m,.3,12),{n:5,keep:m=>Math.abs(m.c)<.5});cgBelt(B,M,T[2][0],.022,.03,0x2a1a10);
-    {const y0=T[2][0]+.02,y1=T[6][0]+.01,kk=(y1-y0)/.34;cgShell(B,M,m=>m.part=='torso'&&m.y>y0-.02&&Math.abs((m.y-(y0+y1)/2)+kk*m.x)<.026*Math.sqrt(1+kk*kk),.02,m=>a181Nz(0x2a1a10,m,.3,18),{rim:.3});
-      const b=cgSurf(M,S,(y0+y1)/2,-.12,.018);k.p('chest','tor','m',0x6a6a60,b[0],b[1],b[2],.022,.008,.022,Math.PI/2,0,0)}
-    {const N=13,P2=c9_vine(B,M,S,Array.from({length:N},(_,i)=>{const t=i/(N-1),a=-1.35+t*2.7;return [T[6][0]+.02-.14*(1-Math.pow(a/1.35,2)),a]}),.007,0x5a3a20,i=>i==0||i==N-1?-.012:.004);
-      for(let i=2;i<N-2;i++){const p=P2[i],a=-1.35+i/(N-1)*2.7;k.p(cgSurfBn(S,p[1]),'cone4','c',i==6?c9_GH.bone:c9_GH.tooth,p[0],p[1]-.026,p[2]-.002,.008,.05,.008,Math.PI+.25*Math.cos(a)*0,a,0)}}
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk2,s>0?'fist':'claw',1,0x1a1a10,.02);cgToes(k,S,s,sk2,.022)})})})();
+    for(let i=0;i<8;i++){const y=T[6][0]-i*.07;[-1,1].forEach(s=>{const p=cgSurf(M,S,y,Math.PI+s*.3,-.008);c9_along(k,cgSurfBn(S,y),'cone4','c',sc,p,[s*.15,.5,-1],.05,.024,.032);WS(p)})}
+    // the long heavy tail, rooted deep in the hips, dragging toward the ground, scutes along its top
+    {const t0=cgSurf(M,S,J.pelvis[1]-.03,Math.PI,-.08),W=[['pelvis',1]],ty=t0[1],TT=[t0,add3(t0,[0,-.16,-.22]),add3(t0,[0,-.32,-.46]),[t0[0]+.04,Math.max(.22,ty-.5),t0[2]-.74],[t0[0]+.1,.14,t0[2]-1.02],[t0[0]+.16,.1,t0[2]-1.28]];
+      cgTube(B,TT,[.15,.125,.095,.068,.04,.012],TT.map(()=>W),m=>m.s<-.3?bel:sk,{seg:9,capB:true,ref:[0,1,0]});
+      for(let i=1;i<5;i++){const r=[.125,.095,.068,.04][i-1];[-1,1].forEach(s=>c9_along(k,'pelvis','cone4','c',sc,add3(TT[i],[s*r*.4,r*.75,0]),[s*.2,1,-.3],.04,.016))}}
+    // a loincloth below the painted belt, a buckle on the harness, a necklace of teeth
+    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.08,.04,.02,m=>a181Nz(c9_GH.cloth,m,.3,12),{n:5,keep:m=>Math.abs(m.c)<.5});
+    {const b=cgSurf(M,S,(y0+y1)/2,-.12,.004);k.p('chest','tor','m',0x6a6a60,b[0],b[1],b[2],.022,.008,.022,Math.PI/2,0,0);WS(b)}
+    {const N=13,P2=c9_vine(B,M,S,Array.from({length:N},(_,i)=>{const t=i/(N-1),a=-1.35+t*2.7;return [T[6][0]+.02-.14*(1-Math.pow(a/1.35,2)),a]}),.007,0x5a3a20,i=>i==0||i==N-1?-.012:.004,{seg:4});
+      for(let i=2;i<N-2;i++){const p=P2[i],a=-1.35+i/(N-1)*2.7;k.p(cgSurfBn(S,p[1]),'cone4','c',i==6?c9_GH.bone:c9_GH.tooth,p[0],p[1]-.026,p[2]-.002,.008,.05,.008,Math.PI,a,0);WS(p)}}
+    // hands: the right one a fist round the halberd's haft, the left one clawed
+    cr_mitten(B,S,1,{n:4,w:.042,th:.017,len:.09,curl:1,col:sk2,at:.045});cr_fingers(B,S,1,{n:0,len:.085,r:.0145,curl:1,spread:.033,col:sk2,thumb:1,at:.05});cr_fingers(B,S,-1,{n:4,len:.09,r:.0145,curl:.45,spread:.033,col:sk2,nail:0x1a1a10,thumb:1,at:.05});
+    [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:sk2,r:.019,len:.065,spread:.03,nail:0x1a1a10,claw:.025}))})})();
+cr_stance('gharial',{sx:.3,hx:-.28,lk:.16,rk:.16,az:.12,lz:-.12,ex:-.25,le:-.3});
 
 // ---------------- Frost Wendigo: gaunt and tall, an elk's skull for a head, antlers, a mantle of dark fur, ribs jutting from flayed
 // flanks, bony knees, long claws ----------------
+// (refine) too tall and starved, not a man: a pinched, sunken waist under a narrow ribcage, very long thin limbs with knobbed
+// elbows and knees, arms hanging past the knees to long clawed fingers, a deep stoop with the skull hanging forward, lopsided
 const ELKHEAD=[[1.52,.05,.07,.06,.03],[1.535,.048,.1,.06,.05],[1.55,.046,.14,.062,.07],[1.563,.044,.17,.064,.08],[1.575,.046,.165,.068,.08],[1.59,.052,.14,.074,.07],[1.605,.06,.12,.08,.055],[1.62,.07,.1,.086,.04],[1.636,.074,.088,.09,.03],[1.652,.07,.074,.088,.02],[1.666,.058,.056,.074,.01],[1.676,.03,.03,.04,0]];
-(function(){const S=cgHuman({h:.84,w:.9,d:.88,rw:[.9,.92,.8,.88,.95,.95,.98,.95],at:.8,lt:.84,hs:1.08,head:ELKHEAD,facePush:()=>0,armL:1.22,legL:1.04}),fur=c9_WD.fur,fur2=c9_WD.fur2,sk=c9_WD.skin,bone=c9_WD.bone,bl=c9_WD.blood,T=S.torso,J=S.J;
-  cg181Reg('wendigo',S,function(B,P,k,C){const M=C.M;cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>n[2]<.05?0:.03*cgG(x,y,0,1.575,.03,.03)));
+const cr_ELK8=[0,2,3,5,7,8,10,11].map(i=>ELKHEAD[i]);
+(function(){const S=cgHuman({h:.92,w:.86,d:.84,rw:[.78,.82,.55,.82,1.0,1.04,1.1,.92],rf:[.8,.78,.48,.92,1.02,.95,.88,.82],rb:[.82,.8,.6,.85,1.05,1.1,1.12,.95],
+    at:.7,lt:.72,hs:1.0,head:cr_ELK8,facePush:()=>0,armL:1.5,legL:1.12,nw:.85,neckL:.05,foot:1.15,footW:.85,n:16,sock:1,j2:1,footLite:1,arm:cr_WARM,
+    leg:[{t:.12,r:.075},{t:.45,r:.058},{t:.9,r:.042},{t:1.02,r:.05,rf:.056},{t:1.22,r:.044,rb:.05},{t:1.7,r:.03},{t:2.0,r:.03}]}),fur=c9_WD.fur,fur2=c9_WD.fur2,sk=c9_WD.skin,bone=c9_WD.bone,bl=c9_WD.blood,T=S.torso,J=S.J;
+  cg181Reg('wendigo',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>n[2]<.05?0:.03*cgG(x,y,0,1.575,.03,.03)));
     // jutting ribs: raised ridges round the chest and flanks, sloping down to the sides, the sternum between them
     const ch=J.chest[1],RY=[0,1,2,3,4,5].map(i=>ch+.03-i*.042);
     cgSculpt(M,{torso:1},(x,y,z,n)=>{if(n[2]<-.35||Math.abs(x)<.018)return 0;const yy=y+Math.abs(x)*.45;let d=0;RY.forEach((r,i)=>{d+=.0085*(1-i*.08)*Math.exp(-Math.pow((yy-r)/.0075,2))});return d*Math.min(1,(Math.abs(x)-.018)/.02)});
     // the head is an elk's skull: bone all over, deep black sockets, the nasal cavity, a row of teeth; great branching antlers
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{let d=0;[-1,1].forEach(s=>{d-=.018*cgG(x,y,s*.045,1.625,.014,.012);d+=.008*cgG(x,y,s*.055,1.64,.016,.006)});if(n[2]>.2)d-=.012*cgG(x,y,0,1.578,.012,.02);return d}));
-    const ny=S.hp(0,1.578,0)[1],ey=S.hp(0,1.625,0)[1],rib=m=>{if(m.part!='torso'||m.s<-.35||Math.abs(m.x)<.018)return 0;const yy=m.y+Math.abs(m.x)*.45;let v=0;RY.forEach(r=>v=Math.max(v,Math.exp(-Math.pow((yy-r)/.008,2))));return v};
-    cgEmit(B,M,m=>{if(m.part=='head'){const bx=m.x/S.hs;if(m.nz>.1&&Math.abs(Math.abs(bx)-.045)<.016&&Math.abs(m.y-ey)<.013*S.hs)return 0x080606;if(m.nz>.4&&Math.abs(bx)<.012&&Math.abs(m.y-ny)<.02*S.hs)return 0x080606;return a181Nz(bone,m,.25,22)}
-      const rv=rib(m);if(rv>.35)return mdMix(sk,c9_WD.bone2,c9_cl(rv*1.1));
-      return m.part=='torso'&&Math.abs(m.c)>.75&&m.y<J.chest[1]&&n3Sn(m.x,m.y,m.z,9,2)>.5?bl:m.part=='torso'&&m.s>-.35&&m.y<ch+.05&&m.y>RY[5]-.03?mdSh(sk,.82):a181Nz(sk,m,.2,16)});
+    M.shade=cgShade(M,{cav:1.4,y0:0,y1:T[7][0]+.2,hk:.3});
+    const ny=S.hp(0,1.578,0)[1],ey=S.hp(0,1.625,0)[1],rib=m=>{if(m.part!='torso'||m.s<-.35||Math.abs(m.x)<.018)return 0;const yy=m.y+Math.abs(m.x)*.45;let v=0;RY.forEach(r=>v=Math.max(v,Math.exp(-Math.pow((yy-r)/.008,2))));return v},
+      furSel=m=>(m.part=='torso'&&m.y>J.chest[1]+.03&&m.s<.5)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.12);
+    // grey starved skin, darker on the back and the hands; the ribs pale; flayed raw flanks; the skull's bone flows
+    const skin=m=>{const n=n3Sn(m.x,m.y,m.z,8,2),n2=n3Sn(m.x,m.y,m.z,4,6);if(m.part=='head')return mdMix(bone,c9_WD.bone2,c9_cl((n-.55)*2)*.5);
+      let c=mdMix(sk,mdSh(sk,.72),c9_cl((n2-.45)*1.6+(m.s<-.3?.25:0)));const rv=rib(m);if(rv>.2)c=mdMix(c,c9_WD.bone2,c9_cl(rv*1.1));
+      if(m.part=='torso'&&Math.abs(m.c)>.7&&m.y<J.chest[1])c=mdMix(c,bl,c9_cl((n-.45)*3)*.85);if(m.part=='hand'||cr_wrist(m,J)<.06)c=mdSh(c,.8);return c};
+    cgEmit(B,M,m=>{if(m.part=='head'){const bx=m.x/S.hs;if(m.nz>.1&&Math.abs(Math.abs(bx)-.045)<.016&&Math.abs(m.y-ey)<.013*S.hs)return 0x080606;if(m.nz>.4&&Math.abs(bx)<.012&&Math.abs(m.y-ny)<.02*S.hs)return 0x080606}return null},{vcol:skin,keep:m=>!furSel(m)});
     cgEyes(k,M,S,c9_WD.eye,.045,1.625,.75,-.006);for(let i=0;i<6;i++)cgTeeth(k,M,S,[[(i-2.5)*.008,1.556,.012,0]],0xe8e0d0);
     [-1,1].forEach(s=>{let p=S.hp(s*.05,1.67,-.02),d=[s*.55,.8,-.25];for(let j=0;j<6;j++){const n=add3(p,mul3(d,.085));k.L('head','c',j<2?0xb8b0a0:bone,p,n,.018-j*.0025,.015-j*.0025,5);if(j>=1&&j<=4){const t=add3(n,[s*.03,.07+j*.01,.05-j*.015]);k.L('head','c',bone,n,t,.011-j*.0015,.002,4)}p=n;d=[d[0]*1.08,d[1]-.12,d[2]-.08]}});
-    cgFur(B,M,m=>(m.part=='torso'&&m.y>J.chest[1]+.03&&m.s<.5)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.12),{off:.035,len:.18,col:fur,col2:fur2,seed:131,jag:.6});
-    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.1,.05,.016,m=>a181Nz(fur2,m,.3,12),{n:5,keep:m=>Math.round(Math.atan2(m.c,m.s)*5)%2==0});
+    // the mantle of dark fur over the shoulders and back (the skin under it isn't drawn), a ragged fur kilt
+    cr_Fur(B,M,furSel,{off:.035,len:.18,col:fur,col2:fur2,seed:131,jag:.6});
+    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.1,.05,.016,m=>mdMix(mdSh(fur2,.8),fur,c9_cl((m.y-J.rh1[1]-.1)/(T[2][0]-J.rh1[1]-.1))*.55+.1*n3Sn(m.x,m.y*.3,m.z,6,5)),{n:5,keep:m=>Math.round(Math.atan2(m.c,m.s)*5)%2==0});
     // bony knee caps
-    [-1,1].forEach(s=>{const L=s<0?'lh':'rh',K=J[L+'1'],p=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(p){k.p(L+'1','sph','c',c9_WD.bone2,p[0],p[1]+.004,p[2]-.012,.034,.038,.026);k.p(L+'1','sph','c',bone,p[0],p[1]+.012,p[2]-.004,.022,.02,.016)}});
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,'claw',1.5,c9_WD.claw,.06);cgToes(k,S,s,sk,.03,c9_WD.claw)})})})();
+    [-1,1].forEach(s=>{const L=s<0?'lh':'rh',K=J[L+'1'],p=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(p){k.p(L+'1','sph','c',c9_WD.bone2,p[0],p[1]+.006,p[2]-.012,.03,.036,.024);WS(p)}});
+    // long clawed fingers (four and a thumb) out of the narrow hand, black claws; clawed toes
+    [-1,1].forEach(s=>{cr_fingers(B,S,s,{n:4,len:.17,r:.0095,curl:.35,spread:.024,col:mdSh(sk,.8),nail:c9_WD.claw,fan:.3,thumb:1,claw:.38,at:.045});cr_toes(B,S,s,{n:3,col:mdSh(sk,.8),r:.016,len:.07,spread:.026,nail:c9_WD.claw,claw:.035})})})})();
+cr_stance('wendigo',{sx:.42,hx:-.16,sy:.1,lk:.2,rk:.24,dy:-.035,ax:-.28,lx:-.08,az:.06,lz:-.14,ex:-.2,le:-.55});
