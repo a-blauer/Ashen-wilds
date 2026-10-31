@@ -234,6 +234,48 @@ Good weights let three well-placed rings bend a joint cleanly, so triangles go t
   unique 512² per enemy type (~90 MB) never. Each new cache key is one more shader compile: share one hook and key.
 - Don't call `.toNonIndexed()` on geometry that is already non-indexed (the roster test fails on the warning).
 
+## 4b. Proven on the cage foes (Oct 31 2026 refine of every regular enemy)
+
+These are now **[proven]**. The Amalgam (3397) is the owner-approved reference, and every batch file (3393–3399) uses them.
+
+- **Seated limbs:** turn on `cgHuman({n:16, sock:1, j2:1, footLite:1})`.
+  - The arm's first two rings grow out of a shoulder socket as tall as the arm is thick.
+  - The thigh grows out of the hip ring.
+  - The crotch is deeper.
+  - Keep the first two arm/leg rings plus the elbow and knee rings; drop the rest.
+- **Baked shading and flowing colour:** set `M.shade=cgShade(M,…)` after the sculpts. Use `cgEmit(…,{vcol})` for hides, cloth,
+  fur, stone and goo.
+- **Hiding skin under clothes:** shells that hide the skin under them (`f6_reg`, `b7_Sh`/`b7_Body`, `va_Sh`, `ej_Body`, `ud_sh`,
+  `nh_Sh`) are the biggest triangle saving.
+  - Regular foes landed at 6–8k triangles, weapons included. A staff alone is about 1.1k.
+- **Hands:**
+  - **Open or claw hands:** separate rounded, tapering finger lofts rooted inside the palm, with claw tips.
+  - **Closed or gripping fists:** ONE rounded mitten mass curled round the grip with a slightly bumpy knuckle ridge. Paint the
+    finger gaps as thin dark lines (per-corner colour) and give the thumb its own loft. Separate curled finger lofts read as
+    "stacked planks/rolls" up close.
+  - Helpers: `fk_mitten`, `ej_Fist`, `br_…`, `cr_mitten`, `va_Hand`, `nh_Hand`.
+- **Faces:**
+  - Give the head enough rings where the features turn (brow, eye line, cheekbone, nose, mouth, chin). Cutting to about 10 rings
+    made horizontal facet bands across faces.
+  - Keep `cgShade` crease darkening very soft on the head and neck: 8–35% of the body's strength.
+  - Let painted colour carry sockets and hollows.
+  - Make sculpted dents (cheek hollows, nasolabial folds) wide and shallow. Narrow deep dents turn into dark zigzag triangles.
+- **Hairlines and shell edges:** a shell chosen face by face has a stair-stepped edge. Pick it with one smooth curve, fade the
+  shell's thickness to zero near the rim, and paint the hair colour onto the skin just past the edge (vcol). The visible edge is
+  then the painted curve. See the Thrall in 3393.
+- **Fur:** the shared `cgFur` colours each face with noise, which gives blocky patches. Batches copied it with smooth per-corner
+  colour (`ej_Fur`, `br_Fur`, `nh_Fur`, `cr_Fur`). Make that the default if cgFur itself is ever changed (run the full suite).
+- **Necks:** a wide shoulder top under a narrow neck reads as a shelf, a tyre or a groove round the head. So does a hump higher
+  than the base of the head, or `hz` pushing the head forward. Match the neck, head-base and shoulder widths, fill the base, and
+  check from behind and above.
+- **Strands (hair, weed, beards):** fewer, thicker, tapering, slightly wavy lofts over a solid mass. Flat parallel strips read as
+  bars.
+- **Kit near joints:** kit placed near a moving joint must take the skin weights at its exact spot (`cgWAt`) or move away from the
+  joint. Otherwise it floats in walk/attack.
+- **Stances:** v113 creatures take their stance from `N3.def[key].stance`, which overrides `ST179`. Set it from the model's file.
+- **Parallel tests:** `test/play.py` writes `live.html` to the shared `test/out/` unless `AW_TMP` is set. Give each parallel run its
+  own `AW_TMP`.
+
 ## 5. Checklist for every new or reworked model
 
 1. **Silhouette:** front and side pictures. Every triangle-heavy feature changes the outline; everything else is paint.
