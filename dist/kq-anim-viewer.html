@@ -56403,7 +56403,7 @@ function bd183Eyes(k,s,x,y,z,r,eye,brow,yaw){k.p('head','sph','c',0x080706,s*(x-
 // a static vertex-coloured feather mesh (tails): F = [{a, d, n, len, w, shape, col(t, side, top)}] in the bone's model space
 function bd183Mesh(F){const pos=[],col=[],V=THREE.Vector3,tc=new THREE.Color();
   F.forEach(o=>{const ST=[0,.18,.4,.6,.78,.9,1],R=new V(...o.a),d=new V(...o.d).normalize(),n=new V(...o.n);n.sub(d.clone().multiplyScalar(n.dot(d))).normalize();const lw=new V().crossVectors(d,n).normalize(),th=Math.max(.0025,o.w*.09);
-    const rows=ST.map(t=>{const wf=bw183WF(t,o.shape||'round',1),cam=.12*o.w*wf,c=R.clone().addScaledVector(d,o.len*t).addScaledVector(n,-(o.droop||.03)*o.len*t*t);
+    const rows=ST.map(t=>{const wf=bw183WF(t,o.shape||'round',1),cam=.12*o.w*wf,c=R.clone().addScaledVector(d,o.len*t).addScaledVector(n,-(o.droop!=null?o.droop:.03)*o.len*t*t);
       return [c.clone().addScaledVector(lw,o.w*wf).addScaledVector(n,-cam*.3),c.clone().addScaledVector(n,th*.5+cam),c.clone().addScaledVector(n,-th*.5+cam*.8),c.clone().addScaledVector(lw,-o.w*wf).addScaledVector(n,-cam*.3)]});
     for(let i=0;i<ST.length-1;i++){const a=rows[i],b=rows[i+1],vs=[a[0],a[1],a[2],a[3],b[0],b[1],b[2],b[3]],tm=(ST[i]+ST[i+1])/2;
       [[0,1,4,0,1],[1,5,4,0,1],[1,3,5,1,1],[3,7,5,1,1],[0,6,2,0,0],[0,4,6,0,0],[2,6,3,1,0],[3,6,7,1,0]].forEach(q=>{[q[0],q[1],q[2]].forEach(j=>pos.push(vs[j].x,vs[j].y,vs[j].z));
@@ -56422,8 +56422,12 @@ function bd183Tail(sp,C){const key='T|'+sp+'|'+C;if(BD183.G[key])return BD183.G[
     const r=[D.root[0]+Math.sin(a)*.03,D.root[1]+.004*ctr,D.root[2]],tp=[D.H[0]+Math.sin(a*1.06)*D.R,D.H[1]-.008*Math.abs(u)+.004*ctr,D.H[2]-Math.cos(a*1.06)*D.R];
     const d=[tp[0]-r[0],tp[1]-r[1],tp[2]-r[2]],len=Math.hypot(...d);r[1]+=.0035*ctr*(D.n/2); // the central pair on top
     F.push({a:r,d,n:[Math.sin(a)*.35,1,0],len,w:D.w,shape:'round',col:rect,droop:.02})}
-  if(D.streamers)[-1,1].forEach(s=>{const r=[s*.02,.548,-.34],d=[s*.18,-.06,-1],len=.64;F.push({a:r,d,n:[s*.2,1,0],len,w:.022,shape:'lance',col:(t,sd,tp,o)=>o.copy(t>.8?tipC:t>.62?K.tip:K.fl),droop:0});
-    const L2=Math.hypot(...d),e=[r[0]+d[0]/L2*len*.78,r[1]+d[1]/L2*len*.78+.002,r[2]+d[2]/L2*len*.78];F.push({a:e,d,n:[s*.2,1,0],len:.16,w:.034,shape:'round',col:(t,sd,tp,o)=>o.copy(t>.7?tipC:K.tip),droop:0})});
+  // the streamers' broad ends sit where the v150 design had them (its evolution tip ornaments are built onto that end); the long
+  // shaft runs straight from the rump into each end
+  if(D.streamers)[-1,1].forEach(s=>{const d=[s*.18,-.06,-1],L2=Math.hypot(...d),e=[s*.08,.5,-.78],P=[e[0]+d[0]/L2*.03,e[1]+d[1]/L2*.03,e[2]+d[2]/L2*.03],r=[s*.02,.548,-.34],
+      ds=[P[0]-r[0],P[1]-r[1],P[2]-r[2]];
+    F.push({a:r,d:ds,n:[s*.2,1,0],len:Math.hypot(...ds)+.012,w:.022,shape:'lance',col:(t,sd,tp,o)=>o.copy(t>.8?tipC:t>.62?K.tip:K.fl),droop:0});
+    F.push({a:e,d,n:[s*.2,1,0],len:.14,w:.034,shape:'round',col:(t,sd,tp,o)=>o.copy(t>.7?tipC:K.tip),droop:0})});
   // upper tail coverts (over the root), under tail coverts (pale, below)
   for(let i=0;i<7;i++){const u=(i-3)/3,a=u*D.A*.7;F.push({a:[D.up[0]+Math.sin(a)*.03,D.up[1]+.003*(1-Math.abs(u)),D.up[2]],d:[Math.sin(a)*.5,-.12,-1],n:[Math.sin(a)*.3,1,0],len:D.upL,w:D.w*.95,shape:'round',col:(t,sd,tp,o)=>tp?o.copy(K.cov).multiplyScalar(t>.75?.72:.86):o.copy(K.lin),droop:.04})}
   for(let i=0;i<5;i++){const u=(i-2)/2,a=u*D.A*.6;F.push({a:[D.un[0]+Math.sin(a)*.03,D.un[1]+.012,D.un[2]],d:[Math.sin(a)*.5,.08,-1],n:[0,-1,0],len:D.unL*.85,w:D.w*.9,shape:'round',col:(t,sd,tp,o)=>o.copy(K.lin).multiplyScalar(.92+.08*tp),droop:-.03})}
