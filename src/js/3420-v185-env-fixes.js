@@ -34,7 +34,8 @@ function ep185Geo(){const P=[],C=[];
     g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.lps=1;return g};
   return Object.assign(K,{P,C,tri,quad,both,rod,col,done})}
 var EP185T;
-function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=o.hide==null?0x5a4632:o.hide,pole=o.pole==null?0x3a2818:o.pole,n=o.n||6,sk=.35;
+function ep185Lift(h){const c=new THREE.Color(h),l=.3*c.r+.59*c.g+.11*c.b;if(l<.16)c.lerp(new THREE.Color(0x4a3a2c),Math.min(1,(.16-l)/.16)*.7);return c.getHex()}   // a hide never near-black
+function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=ep185Lift(o.hide==null?0x5a4632:o.hide),pole=o.pole==null?0x3a2818:o.pole,n=o.n||6,sk=.35;
   const key='T|'+[r,h,hide,pole,n,o.rope===false?0:1].join('|');EP185T=EP185T||{};if(EP185T[key])return EP185T[key];
   const K=ep185Geo(),{tri,quad,both,rod,col}=K,hc=col(hide),dk=hc.map(x=>x*.42),mud=hc.map((x,i)=>x*.55+[.05,.04,.03][i]),fl=hc.map(x=>Math.min(1,x*1.12)),flI=hc.map(x=>x*.5),blk=col(0x0c0907),jamb=hc.map(x=>x*.3);
   const ap=[0,h,0],R=y=>r*(h-y)/h;   // the hide's radius at height y (a cone through the pole tops)
@@ -62,7 +63,7 @@ function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=o.hide==null?0x5
   // guy ropes from every other pole to a peg
   if(o.rope!==false)for(let i=0;i<n;i+=2){const c=cor(i),p=[c[0]*R(.55*h)*1.03,.55*h,c[1]*R(.55*h)*1.03],g=[c[0]*r*1.5,-.04,c[1]*r*1.5];rod(p,g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)}
   return EP185T[key]=K.done()}
-function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=o.hide==null?0x5a4632:o.hide,pole=o.pole==null?0x3a2818:o.pole,sk=.3;
+function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=ep185Lift(o.hide==null?0x5a4632:o.hide),pole=o.pole==null?0x3a2818:o.pole,sk=.3;
   const key='A|'+[L,Wd,H,hide,pole,o.rope===false?0:1].join('|');EP185T=EP185T||{};if(EP185T[key])return EP185T[key];
   const K=ep185Geo(),{tri,quad,both,rod,col}=K,hc=col(hide),mud=hc.map((x,i)=>x*.55+[.05,.04,.03][i]),fl=hc.map(x=>Math.min(1,x*1.12)),flI=hc.map(x=>x*.5),blk=col(0x0c0907),jamb=hc.map(x=>x*.3);
   const X=L/2,Wy=y=>Wd*(H-y)/H;   // half-width at height y
@@ -161,3 +162,9 @@ function ep185Ponds(){const T0=performance.now(),wet=(x,y)=>MAP[y]&&MAP[y][x]=='
 // variation over space at the face's middle (the v183 bake and detail paint add the rest).
 function ep185Mottle(ax,ay,az,bx,by,bz,cx,cy,cz){const x=(ax+bx+cx)/3,y=(ay+by+cy)/3,z=(az+bz+cz)/3;
   return .93+.07*Math.sin(x*.83+z*.37+1.3)*Math.cos(z*.71-x*.29+.4)+.04*Math.sin(y*1.7+x*.23)}
+// ---- ground splats with ragged edges (blood, droppings, salt): a perfect disc read as a paper plate ----
+var EP185B;
+function ep185Blob(i){EP185B=EP185B||[];i=((i|0)%5+5)%5;if(EP185B[i])return EP185B[i];const n=18,P=[0,0,0],idx=[];let s=i*97+13;const rnd=()=>(s=s*16807%2147483647)/2147483647;
+  const rr=[];for(let k=0;k<n;k++)rr.push(.62+.5*rnd());for(let k=0;k<n;k++){const r=(rr[k]*2+rr[(k+1)%n]+rr[(k+n-1)%n])/4,a=k/n*6.2832;P.push(Math.cos(a)*r,Math.sin(a)*r,0)}
+  for(let k=0;k<n;k++)idx.push(0,1+k,1+(k+1)%n);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(idx);
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(P.map((v,j)=>j%3==2?null:v*.5+.5).filter(v=>v!==null),2));g.computeVertexNormals();g.userData.lps=1;return EP185B[i]=g}

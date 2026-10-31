@@ -91,8 +91,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       put(Q.cone4,S(pal.acc,{side:THREE.DoubleSide}),px+.25,2*k,pz,.05,.5,.22,0,0,P2)},
     lean(x,z,a,k){leanTo(x,z,a+Math.PI,1.2*(k||1),pal.hide[1]);const fd=1.92*(k||1)+1.7;fire(x+Math.cos(a)*fd,z+Math.sin(a)*fd,pal.fire,.6)},   // v185: the fire in front of the doorway (it burned inside it)
     tomb(x,z,a,k){mausoleum(x,z,a,.85*(k||1),pal.stone,pal.stoneD)},
-    kennel(x,z,a,k){k=k||1;const sg=sub(x,z,a,0);TQ(sg,Q.box,WOOD,0,.5*k,0,1.4*k,1*k,1.1*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.thatch),0,1.2*k,s*.36*k,1.6*k,.08,.85*k,s*.7,0,0));
-      TQ(sg,Q.box,DARK,.71*k,.4*k,0,.04,.62*k,.5*k);bRect(x,z,a,1.4*k,1.1*k);take(x,z,1.2*k);chainPost(x+Math.cos(a)*1.5*k,z+Math.sin(a)*1.5*k,5,a);put(Q.cyl,MET,x+Math.cos(a+.7)*1.3,.06,z+Math.sin(a+.7)*1.3,.26,.12,.26)},
+    kennel(x,z,a,k){k=k||1;const sg=sub(x,z,a,0);TQ(sg,Q.box,WOOD,0,.5*k,0,1.4*k,1*k,1.1*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.thatch),0,1.2*k,s*.3*k,1.6*k,.08,.85*k,s*.7,0,0));   // v185: the roof halves meet at the ridge (a gap)
+      TQ(sg,Q.box,DARK,.71*k,.4*k,0,.04,.62*k,.5*k);bRect(x,z,a,1.4*k,1.1*k);take(x,z,1.2*k);chainPost(x+Math.cos(a+.85)*1.55*k,z+Math.sin(a+.85)*1.55*k,5,a);   /* v185: the tether post beside the door (it stood in it) */put(Q.cyl,MET,x+Math.cos(a+.7)*1.3,.06,z+Math.sin(a+.7)*1.3,.26,.12,.26)},
     burrow(x,z,a,k){k=k||1;mound(x,z,1.9*k,pal.gnd,.5);burrowMouth(x,z,a,k,pal.woodD);bones(x+Math.cos(a)*1.6,z+Math.sin(a)*1.6,3,.5,pal.bone)},
     carcass(x,z,a,k){carcass(x,z,a,1.5*(k||1),0x5a3a30,pal.bone);bones(x+1.4,z-.8,3,.6,pal.bone)},
     cocoon(x,z,a,k){const tips=[];deadTree(x,z,rr(3.2,4.2),pal.woodD,1,tips);tips.slice(0,3).forEach(t=>{putY(Q.sph,S(0xe8e4dc),t[0],t[1]-.7,t[2],.24,.5,.24);seg(t[0],t[1]-.25,t[2],t[0],t[1],t[2],.01,T(0xffffff,.5))})},
@@ -112,7 +112,9 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       halo(x,z,1.2,0xff6a1a,.15,.06);bRect(x,z,a,1.6,1.6);take(x,z,1.6);barrel(x+Math.cos(a+1.6)*1.3,z+Math.sin(a+1.6)*1.3,0x4a3a2a)},
     stores(x,z,a){const n=2+Math.floor(rn()*2);for(let i=0;i<n;i++){const b=a+i*1.4+rr(-.3,.3),d=rr(.4,1);crate(x+Math.cos(b)*d,z+Math.sin(b)*d)}
       if(rn()<.7)barrel(x+Math.cos(a+3)*1.2,z+Math.sin(a+3)*1.2);for(let i=0;i<3;i++)sack(x+rr(-1.2,1.2),z+rr(-1.2,1.2),pk([0x8a7a5a,0x6a5a3a,0x7a6a4a]));
-      put(Q.box,S(pk(pal.hide)),x-Math.cos(a)*1.3,.45,z-Math.sin(a)*1.3,1.6,.04,1.2,0,-a,.9)},
+      // v185: a rolled hide and a stack of folded hides behind the crates (was a flat hide board leant on nothing: a black square at night)
+      {const bx=x-Math.cos(a)*1.25,bz=z-Math.sin(a)*1.25,h1=S(pk(pal.hide)),h2=S(pk(pal.hide));put(Q.cyl,h1,bx,.17,bz,.17,1.1,.17,0,-a,P2);
+       for(let i=0;i<3;i++)put(Q.box,i%2?h1:h2,bx+Math.cos(a+P2)*.75,.05+i*.08,bz+Math.sin(a+P2)*.75,.7-i*.08,.08,.55-i*.06,0,-a+rr(-.15,.15),0)}},
     bedroll(x,z,a){fireRing(x,z,.9);for(let i=0;i<3;i++){const b=a+i*2.1+.4,bx=x+Math.cos(b)*1.55,bz=z+Math.sin(b)*1.55;put(Q.cyl,S(pk(pal.hide)),bx,.12,bz,.34,1.5,.14,0,-b,P2);put(Q.sph,S(pk(pal.cloth)),bx+Math.cos(b)*.75,.16,bz+Math.sin(b)*.75,.22,.14,.3,0,-b,0)}
       sack(x+Math.cos(a+1.1)*2.2,z+Math.sin(a+1.1)*2.2,0x6a5a3a)},
     woodpile(x,z,a){const sg=sub(x,z,a,0);for(let l=0;l<3;l++)for(let i=0;i<3-l;i++)TQ(sg,Q.cyl,S(pal.wood),0,.22+l*.38,(i-(2-l)/2)*.42,.2,1.8,.2,0,0,P2);bRect(x,z,a,1.8,1.3);take(x,z,1.3);
@@ -196,10 +198,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     candles:(x,z)=>candles(x,z,3,.3,pal.lant),shells:(x,z)=>{for(let i=0;i<3;i++)put(Q.hemi,S(0xd8d4c4),x+rr(-.4,.4),0,z+rr(-.4,.4),.14,.1,.14)},snow:(x,z)=>mound(x,z,rr(.5,.9),0xe8f0f8,.35),
     shards:(x,z)=>{for(let i=0;i<3;i++)put(Q.oct,S(pal.caps[0],{emissive:pal.caps[0],emissiveIntensity:.5}),x+rr(-.4,.4),.12,z+rr(-.4,.4),.08,.2,.08,rr(-.4,.4),0,rr(-.4,.4))},
     runes:(x,z)=>{put(Q.dod,STD,x,.12,z,.3,.2,.3);const g2=put(Q.box,G(pal.lant),x,.32,z,.18,.02,.04,0,rr(0,3),0);g2.castShadow=false},husk:(x,z,a)=>husk(x,z,a,.6),chips:(x,z)=>{for(let i=0;i<5;i++)put(Q.box,S(0x8a5a2a),x+rr(-.5,.5),.03,z+rr(-.5,.5),.18,.04,.1,0,rr(0,3),0)},
-    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(Q.disc,S(0xf4f4ee),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(Q.disc,S(0x5a0a10,{roughness:.3}),x,rr(.03,.07),z,rr(.3,.7),rr(.3,.7),1,-P2),
+    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(ep185Blob(Math.floor(rn()*5)),S(0xf4f4ee),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(ep185Blob(Math.floor(rn()*5)),S(0x5a0a10,{roughness:.3}),x,rr(.03,.07),z,rr(.3,.7),rr(.3,.7),1,-P2),
     skulls:(x,z)=>skull(x,-.03,z,1,pal.bone),chains:(x,z)=>{for(let i=0;i<5;i++)put(Q.link,S(0x3a3a3e,{metalness:.7,roughness:.4}),x+i*.18,.05,z,.09,.09,.09,P2,0,i%2?P2:0)},
     petals:(x,z)=>{for(let i=0;i<5;i++)put(Q.oct,S(0xb01020),x+rr(-.5,.5),.03,z+rr(-.5,.5),.06,.02,.06)},rubble:(x,z)=>rubble(x,z,3,.5,pal.stone),pebbles:(x,z)=>{for(let i=0;i<4;i++)put(Q.dod,STD,x+rr(-.5,.5),.05,z+rr(-.5,.5),.12,.08,.1,rr(0,3),rr(0,3),0)},
-    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(Q.disc,S(0xc8c0b0),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),
+    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(ep185Blob(Math.floor(rn()*5)),S(0xc8c0b0),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),
     fungi:(x,z)=>shroom(x,z,rr(.25,.5),pk(pal.caps),true),shields:(x,z,a)=>put(Q.disc,S(pk(pal.cloth)),x,.35,z,.38,.38,1,-.3,-a,0),spearsx:null};
   // ================= 1. the heart: the bonfire (main light) and its seats =================
   const g0=o.gates.length?o.gates[0]:C.ang,ringIn=rc+1,ringOut=big?Math.max(rc+2.5,rf-1.6):rc+2.5;

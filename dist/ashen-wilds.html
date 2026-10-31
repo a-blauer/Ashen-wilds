@@ -29809,7 +29809,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     put(Q.box,S(0x2a2018),x+vx*.4,h-.12,z+vz*.4,.05,.05,.9,0,-a,0);const b=put(Q.pln,S(col,{side:THREE.DoubleSide,emissive:col,emissiveIntensity:.15}),x+vx*.42,h-.75,z+vz*.42,.75,1.15,1,0,-a+P2,0);b.castShadow=false;
     if(trim)put(Q.box,S(trim),x+vx*.42,h-1.36,z+vz*.42,.03,.08,.76,0,-a,0)};
   // v185: the hide tent (3420 ep185Tent: a real doorway, tied-back flaps, poles, ropes; was a cone with a black box half in its wall)
-  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotation.y=-a;m.scale.setScalar(k);g.add(m);return m}; // a = the door
+  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);take(x+Math.cos(a)*1.95*k,z+Math.sin(a)*1.95*k,.75*k);   // v185: + the doorway kept clear
+const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotation.y=-a;m.scale.setScalar(k);g.add(m);return m}; // a = the door
   // v185: the ridge tent (3420 ep185ATent: closed back, a doorway with tied-back flaps in the front; was two slanted boxes, open at
   // both ends, with a black square box in one end)
   const aTent=(x,z,a,col,len,k)=>{k=k||1;len=len||2.6;const sg=sub(x,z,a,0);blk(x,z,1*k);take(x,z,len*.6);
@@ -49579,8 +49580,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       put(Q.cone4,S(pal.acc,{side:THREE.DoubleSide}),px+.25,2*k,pz,.05,.5,.22,0,0,P2)},
     lean(x,z,a,k){leanTo(x,z,a+Math.PI,1.2*(k||1),pal.hide[1]);const fd=1.92*(k||1)+1.7;fire(x+Math.cos(a)*fd,z+Math.sin(a)*fd,pal.fire,.6)},   // v185: the fire in front of the doorway (it burned inside it)
     tomb(x,z,a,k){mausoleum(x,z,a,.85*(k||1),pal.stone,pal.stoneD)},
-    kennel(x,z,a,k){k=k||1;const sg=sub(x,z,a,0);TQ(sg,Q.box,WOOD,0,.5*k,0,1.4*k,1*k,1.1*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.thatch),0,1.2*k,s*.36*k,1.6*k,.08,.85*k,s*.7,0,0));
-      TQ(sg,Q.box,DARK,.71*k,.4*k,0,.04,.62*k,.5*k);bRect(x,z,a,1.4*k,1.1*k);take(x,z,1.2*k);chainPost(x+Math.cos(a)*1.5*k,z+Math.sin(a)*1.5*k,5,a);put(Q.cyl,MET,x+Math.cos(a+.7)*1.3,.06,z+Math.sin(a+.7)*1.3,.26,.12,.26)},
+    kennel(x,z,a,k){k=k||1;const sg=sub(x,z,a,0);TQ(sg,Q.box,WOOD,0,.5*k,0,1.4*k,1*k,1.1*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.thatch),0,1.2*k,s*.3*k,1.6*k,.08,.85*k,s*.7,0,0));   // v185: the roof halves meet at the ridge (a gap)
+      TQ(sg,Q.box,DARK,.71*k,.4*k,0,.04,.62*k,.5*k);bRect(x,z,a,1.4*k,1.1*k);take(x,z,1.2*k);chainPost(x+Math.cos(a+.85)*1.55*k,z+Math.sin(a+.85)*1.55*k,5,a);   /* v185: the tether post beside the door (it stood in it) */put(Q.cyl,MET,x+Math.cos(a+.7)*1.3,.06,z+Math.sin(a+.7)*1.3,.26,.12,.26)},
     burrow(x,z,a,k){k=k||1;mound(x,z,1.9*k,pal.gnd,.5);burrowMouth(x,z,a,k,pal.woodD);bones(x+Math.cos(a)*1.6,z+Math.sin(a)*1.6,3,.5,pal.bone)},
     carcass(x,z,a,k){carcass(x,z,a,1.5*(k||1),0x5a3a30,pal.bone);bones(x+1.4,z-.8,3,.6,pal.bone)},
     cocoon(x,z,a,k){const tips=[];deadTree(x,z,rr(3.2,4.2),pal.woodD,1,tips);tips.slice(0,3).forEach(t=>{putY(Q.sph,S(0xe8e4dc),t[0],t[1]-.7,t[2],.24,.5,.24);seg(t[0],t[1]-.25,t[2],t[0],t[1],t[2],.01,T(0xffffff,.5))})},
@@ -49600,7 +49601,9 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       halo(x,z,1.2,0xff6a1a,.15,.06);bRect(x,z,a,1.6,1.6);take(x,z,1.6);barrel(x+Math.cos(a+1.6)*1.3,z+Math.sin(a+1.6)*1.3,0x4a3a2a)},
     stores(x,z,a){const n=2+Math.floor(rn()*2);for(let i=0;i<n;i++){const b=a+i*1.4+rr(-.3,.3),d=rr(.4,1);crate(x+Math.cos(b)*d,z+Math.sin(b)*d)}
       if(rn()<.7)barrel(x+Math.cos(a+3)*1.2,z+Math.sin(a+3)*1.2);for(let i=0;i<3;i++)sack(x+rr(-1.2,1.2),z+rr(-1.2,1.2),pk([0x8a7a5a,0x6a5a3a,0x7a6a4a]));
-      put(Q.box,S(pk(pal.hide)),x-Math.cos(a)*1.3,.45,z-Math.sin(a)*1.3,1.6,.04,1.2,0,-a,.9)},
+      // v185: a rolled hide and a stack of folded hides behind the crates (was a flat hide board leant on nothing: a black square at night)
+      {const bx=x-Math.cos(a)*1.25,bz=z-Math.sin(a)*1.25,h1=S(pk(pal.hide)),h2=S(pk(pal.hide));put(Q.cyl,h1,bx,.17,bz,.17,1.1,.17,0,-a,P2);
+       for(let i=0;i<3;i++)put(Q.box,i%2?h1:h2,bx+Math.cos(a+P2)*.75,.05+i*.08,bz+Math.sin(a+P2)*.75,.7-i*.08,.08,.55-i*.06,0,-a+rr(-.15,.15),0)}},
     bedroll(x,z,a){fireRing(x,z,.9);for(let i=0;i<3;i++){const b=a+i*2.1+.4,bx=x+Math.cos(b)*1.55,bz=z+Math.sin(b)*1.55;put(Q.cyl,S(pk(pal.hide)),bx,.12,bz,.34,1.5,.14,0,-b,P2);put(Q.sph,S(pk(pal.cloth)),bx+Math.cos(b)*.75,.16,bz+Math.sin(b)*.75,.22,.14,.3,0,-b,0)}
       sack(x+Math.cos(a+1.1)*2.2,z+Math.sin(a+1.1)*2.2,0x6a5a3a)},
     woodpile(x,z,a){const sg=sub(x,z,a,0);for(let l=0;l<3;l++)for(let i=0;i<3-l;i++)TQ(sg,Q.cyl,S(pal.wood),0,.22+l*.38,(i-(2-l)/2)*.42,.2,1.8,.2,0,0,P2);bRect(x,z,a,1.8,1.3);take(x,z,1.3);
@@ -49684,10 +49687,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     candles:(x,z)=>candles(x,z,3,.3,pal.lant),shells:(x,z)=>{for(let i=0;i<3;i++)put(Q.hemi,S(0xd8d4c4),x+rr(-.4,.4),0,z+rr(-.4,.4),.14,.1,.14)},snow:(x,z)=>mound(x,z,rr(.5,.9),0xe8f0f8,.35),
     shards:(x,z)=>{for(let i=0;i<3;i++)put(Q.oct,S(pal.caps[0],{emissive:pal.caps[0],emissiveIntensity:.5}),x+rr(-.4,.4),.12,z+rr(-.4,.4),.08,.2,.08,rr(-.4,.4),0,rr(-.4,.4))},
     runes:(x,z)=>{put(Q.dod,STD,x,.12,z,.3,.2,.3);const g2=put(Q.box,G(pal.lant),x,.32,z,.18,.02,.04,0,rr(0,3),0);g2.castShadow=false},husk:(x,z,a)=>husk(x,z,a,.6),chips:(x,z)=>{for(let i=0;i<5;i++)put(Q.box,S(0x8a5a2a),x+rr(-.5,.5),.03,z+rr(-.5,.5),.18,.04,.1,0,rr(0,3),0)},
-    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(Q.disc,S(0xf4f4ee),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(Q.disc,S(0x5a0a10,{roughness:.3}),x,rr(.03,.07),z,rr(.3,.7),rr(.3,.7),1,-P2),
+    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(ep185Blob(Math.floor(rn()*5)),S(0xf4f4ee),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(ep185Blob(Math.floor(rn()*5)),S(0x5a0a10,{roughness:.3}),x,rr(.03,.07),z,rr(.3,.7),rr(.3,.7),1,-P2),
     skulls:(x,z)=>skull(x,-.03,z,1,pal.bone),chains:(x,z)=>{for(let i=0;i<5;i++)put(Q.link,S(0x3a3a3e,{metalness:.7,roughness:.4}),x+i*.18,.05,z,.09,.09,.09,P2,0,i%2?P2:0)},
     petals:(x,z)=>{for(let i=0;i<5;i++)put(Q.oct,S(0xb01020),x+rr(-.5,.5),.03,z+rr(-.5,.5),.06,.02,.06)},rubble:(x,z)=>rubble(x,z,3,.5,pal.stone),pebbles:(x,z)=>{for(let i=0;i<4;i++)put(Q.dod,STD,x+rr(-.5,.5),.05,z+rr(-.5,.5),.12,.08,.1,rr(0,3),rr(0,3),0)},
-    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(Q.disc,S(0xc8c0b0),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),
+    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(ep185Blob(Math.floor(rn()*5)),S(0xc8c0b0),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),
     fungi:(x,z)=>shroom(x,z,rr(.25,.5),pk(pal.caps),true),shields:(x,z,a)=>put(Q.disc,S(pk(pal.cloth)),x,.35,z,.38,.38,1,-.3,-a,0),spearsx:null};
   // ================= 1. the heart: the bonfire (main light) and its seats =================
   const g0=o.gates.length?o.gates[0]:C.ang,ringIn=rc+1,ringOut=big?Math.max(rc+2.5,rf-1.6):rc+2.5;
@@ -56699,7 +56702,8 @@ function ep185Geo(){const P=[],C=[];
     g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.lps=1;return g};
   return Object.assign(K,{P,C,tri,quad,both,rod,col,done})}
 var EP185T;
-function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=o.hide==null?0x5a4632:o.hide,pole=o.pole==null?0x3a2818:o.pole,n=o.n||6,sk=.35;
+function ep185Lift(h){const c=new THREE.Color(h),l=.3*c.r+.59*c.g+.11*c.b;if(l<.16)c.lerp(new THREE.Color(0x4a3a2c),Math.min(1,(.16-l)/.16)*.7);return c.getHex()}   // a hide never near-black
+function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=ep185Lift(o.hide==null?0x5a4632:o.hide),pole=o.pole==null?0x3a2818:o.pole,n=o.n||6,sk=.35;
   const key='T|'+[r,h,hide,pole,n,o.rope===false?0:1].join('|');EP185T=EP185T||{};if(EP185T[key])return EP185T[key];
   const K=ep185Geo(),{tri,quad,both,rod,col}=K,hc=col(hide),dk=hc.map(x=>x*.42),mud=hc.map((x,i)=>x*.55+[.05,.04,.03][i]),fl=hc.map(x=>Math.min(1,x*1.12)),flI=hc.map(x=>x*.5),blk=col(0x0c0907),jamb=hc.map(x=>x*.3);
   const ap=[0,h,0],R=y=>r*(h-y)/h;   // the hide's radius at height y (a cone through the pole tops)
@@ -56727,7 +56731,7 @@ function ep185Tent(o){o=o||{};const r=o.r||1.25,h=o.h||1.8,hide=o.hide==null?0x5
   // guy ropes from every other pole to a peg
   if(o.rope!==false)for(let i=0;i<n;i+=2){const c=cor(i),p=[c[0]*R(.55*h)*1.03,.55*h,c[1]*R(.55*h)*1.03],g=[c[0]*r*1.5,-.04,c[1]*r*1.5];rod(p,g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)}
   return EP185T[key]=K.done()}
-function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=o.hide==null?0x5a4632:o.hide,pole=o.pole==null?0x3a2818:o.pole,sk=.3;
+function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=ep185Lift(o.hide==null?0x5a4632:o.hide),pole=o.pole==null?0x3a2818:o.pole,sk=.3;
   const key='A|'+[L,Wd,H,hide,pole,o.rope===false?0:1].join('|');EP185T=EP185T||{};if(EP185T[key])return EP185T[key];
   const K=ep185Geo(),{tri,quad,both,rod,col}=K,hc=col(hide),mud=hc.map((x,i)=>x*.55+[.05,.04,.03][i]),fl=hc.map(x=>Math.min(1,x*1.12)),flI=hc.map(x=>x*.5),blk=col(0x0c0907),jamb=hc.map(x=>x*.3);
   const X=L/2,Wy=y=>Wd*(H-y)/H;   // half-width at height y
@@ -56826,4 +56830,10 @@ function ep185Ponds(){const T0=performance.now(),wet=(x,y)=>MAP[y]&&MAP[y][x]=='
 // variation over space at the face's middle (the v183 bake and detail paint add the rest).
 function ep185Mottle(ax,ay,az,bx,by,bz,cx,cy,cz){const x=(ax+bx+cx)/3,y=(ay+by+cy)/3,z=(az+bz+cz)/3;
   return .93+.07*Math.sin(x*.83+z*.37+1.3)*Math.cos(z*.71-x*.29+.4)+.04*Math.sin(y*1.7+x*.23)}
+// ---- ground splats with ragged edges (blood, droppings, salt): a perfect disc read as a paper plate ----
+var EP185B;
+function ep185Blob(i){EP185B=EP185B||[];i=((i|0)%5+5)%5;if(EP185B[i])return EP185B[i];const n=18,P=[0,0,0],idx=[];let s=i*97+13;const rnd=()=>(s=s*16807%2147483647)/2147483647;
+  const rr=[];for(let k=0;k<n;k++)rr.push(.62+.5*rnd());for(let k=0;k<n;k++){const r=(rr[k]*2+rr[(k+1)%n]+rr[(k+n-1)%n])/4,a=k/n*6.2832;P.push(Math.cos(a)*r,Math.sin(a)*r,0)}
+  for(let k=0;k<n;k++)idx.push(0,1+k,1+(k+1)%n);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(idx);
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(P.map((v,j)=>j%3==2?null:v*.5+.5).filter(v=>v!==null),2));g.computeVertexNormals();g.userData.lps=1;return EP185B[i]=g}
 </script></body></html>

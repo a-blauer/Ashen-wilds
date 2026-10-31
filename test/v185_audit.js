@@ -41,8 +41,8 @@ async(opt)=>{opt=opt||{};const W8=ms=>new Promise(r=>setTimeout(r,ms)),re=new Re
     if(I.en)add(I.en[0],I.en[1]);(I.wp||[]).forEach(p=>add(p[0],p[1]));(I.path||[]).forEach((p,i)=>{if(i%12==0)add(p[0],p[1])});
     (typeof CAMPS!='undefined'?CAMPS:[]).forEach(C=>{if(inI(C.x,C.z))add(C.x,C.z)});if(I.ba)add(I.ba[0],I.ba[1]);
     for(let zz=I.y0+20;zz<I.y0+I.h;zz+=40)for(let xx=I.x0+20;xx<I.x0+I.w;xx+=40)if(DW[Math.round(zz)*W+Math.round(xx)]<-1)add(xx,zz);
-    const wdIn=WD.list.filter(d=>inI(d.x,d.z)&&d.st176&&d.st176.sx!==0);
-    for(const [px,pz] of pts){await visit(px,pz);R.visits++;const {G,names}=occ(px,pz,30);
+    const wdIn=WD.list.filter(d=>inI(d.x,d.z)&&!d.h185&&!(d.st176&&d.st176.sx===0));
+    for(const [px,pz] of (opt.light?[]:pts)){await visit(px,pz);R.visits++;const {G,names}=occ(px,pz,30);
       for(const d of wdIn){if(Math.hypot(d.x-px,d.z-pz)>26)continue;const id=d.k+'@'+d.x.toFixed(1)+','+d.z.toFixed(1);if(done.has(id))continue;
         const rc=core(d);if(rc<=.05)continue;const S=T[d.k],sc=S.sc||[1,1,1],h=(S.__h||1)*d.s*sc[1];let hit=new Map();
         for(let zz=d.z-rc;zz<=d.z+rc;zz+=GRID*.9)for(let xx=d.x-rc;xx<=d.x+rc;xx+=GRID*.9){if(Math.hypot(xx-d.x,zz-d.z)>rc)continue;const e=G.get(KEY(xx,zz));if(!e)continue;

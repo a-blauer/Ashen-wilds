@@ -1,7 +1,7 @@
 # v185: measured audit of every instance (v185_audit.js): decorations clipping into other objects or each other, terrain spikes,
 # pits, steps in walkable ground, holes, NaN, dry water tiles, and near-black flat pieces. Prints a summary per instance and
 # FAIL lines over the limits; the whole result goes to out/v185_audit.json.
-#   python3 v185_audit.py [regex on the instance name]
+#   python3 v185_audit.py [regex on the instance name]     LIGHT=1: skip the per-visit clip measure (slow), keep terrain and decoration checks
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -13,7 +13,7 @@ def s(pg):
     pg.set_default_timeout(3600000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     pg.evaluate("()=>{try{CHEAT.god=true}catch(_){}}")
-    r=pg.evaluate(open(H+'/v185_audit.js').read(),{'flt':FLT})
+    r=pg.evaluate(open(H+'/v185_audit.js').read(),{'flt':FLT,'light':bool(os.environ.get('LIGHT'))})
     json.dump(r,open(play.TMP+'/v185_audit.json','w'),indent=1)
     for I in r['inst']:
         t=I['terrain'];print('%-36s visits %2d  clip %3d  wd-wd %3d  spike %d pit %d step %d hole %d nan %d dry-water %d  dark %d'%(I['n'],I['visits'],len(I['clip']),len(I['wdwd']),len(t['spike']),len(t['pit']),len(t['step']),len(t['hole']),len(t['nan']),len(t['wet']),len(I['dark'])),flush=True)

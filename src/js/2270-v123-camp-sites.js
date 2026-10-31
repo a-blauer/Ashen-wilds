@@ -217,7 +217,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     put(Q.box,S(0x2a2018),x+vx*.4,h-.12,z+vz*.4,.05,.05,.9,0,-a,0);const b=put(Q.pln,S(col,{side:THREE.DoubleSide,emissive:col,emissiveIntensity:.15}),x+vx*.42,h-.75,z+vz*.42,.75,1.15,1,0,-a+P2,0);b.castShadow=false;
     if(trim)put(Q.box,S(trim),x+vx*.42,h-1.36,z+vz*.42,.03,.08,.76,0,-a,0)};
   // v185: the hide tent (3420 ep185Tent: a real doorway, tied-back flaps, poles, ropes; was a cone with a black box half in its wall)
-  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotation.y=-a;m.scale.setScalar(k);g.add(m);return m}; // a = the door
+  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);take(x+Math.cos(a)*1.95*k,z+Math.sin(a)*1.95*k,.75*k);   // v185: + the doorway kept clear
+const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotation.y=-a;m.scale.setScalar(k);g.add(m);return m}; // a = the door
   // v185: the ridge tent (3420 ep185ATent: closed back, a doorway with tied-back flaps in the front; was two slanted boxes, open at
   // both ends, with a black square box in one end)
   const aTent=(x,z,a,col,len,k)=>{k=k||1;len=len||2.6;const sg=sub(x,z,a,0);blk(x,z,1*k);take(x,z,len*.6);
