@@ -90,88 +90,123 @@ function cgHair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.n
 function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[i],w:w[i]})),Object.assign({seg:10,col},o||{}))}
 
 // ===================================================================== Blood Knight =====================================================================
-(function(){const S=cgHuman({h:1.06,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],rf:[1,1.05,1.15,1.2,1.25,1.2,1.15,1.1],at:1.32,lt:1.28,hs:.96,legL:1.04,nw:1.25,foot:1.05,footW:1.1});
+// (v181 refine) seated limbs (16 columns, shoulder sockets as tall as the arm, arms and thighs grown out of the body), a
+// light head cage under the closed helm, every plate a shell that replaces the skin under it (plates that meet overlap a little,
+// so no crease shows where they join), the plates shaded by the body's baked creases; armoured fingers lofted out of the gauntlet
+(function(){const S=cgHuman({h:1.06,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],rf:[1,1.05,1.15,1.2,1.25,1.2,1.15,1.1],at:1.32,lt:1.28,hs:.96,legL:1.04,nw:1.25,foot:1.05,footW:1.1,
+    n:16,sock:1,j2:1,footLite:1,head:CG181.base.head.filter((q,i)=>[0,2,4,7,9,11,14].indexOf(i)>=0) /* 7 rings: the face is never seen */,facePush:()=>0,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5) /* all under plate */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
   const pl=0x2a1419,pl2=0x40202a,ed=0x5a262c,gd=0x6e5230,ml=0x26262c,un=0x161012,cl=0x4e0a14,glow=0xff2a30,T=S.torso,J=S.J;
   cg181Reg('vampk',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],ey=J.aR1[1],wr=J.aR2[1],kn=J.rh1[1],an=J.rh2[1];
-    cgEmit(B,M,un);
+    M.shade=cgShade(M,{cav:1,y0:0,y1:sh+.3,hk:.24});
     // cuirass (fluted, a centre ridge, banded lames over the belly, a gilded rim), gorget
-    cgShell(B,M,m=>m.part=='torso'&&m.y>wy-.02,.034,m=>m.y<wy+.03||m.y>sh+.02?gd:m.y<wy+.12?(Math.round(m.y*34)%2?pl:pl2):Math.abs(m.x)<.025&&m.s>0?pl2:Math.round(Math.atan2(m.x,m.z)*7)%2?pl:mdSh(pl,.84),{t:'m'});
-    cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh)||(m.part=='head'&&m.y<S.hp(0,1.535,0)[1]),.05,m=>m.y>S.hp(0,1.5,0)[1]?gd:pl2,{t:'m'});
+    va_Sh(B,M,m=>m.part=='torso'&&m.y>wy-.02&&m.y<sh+.03,.034,m=>m.y<wy+.03||m.y>sh?gd:m.y<wy+.12?(Math.round(m.y*34)%2?pl:pl2):Math.abs(m.x)<.025&&m.s>0?pl2:Math.round(Math.atan2(m.x,m.z)*7)%2?pl:mdSh(pl,.84),{t:'m'});
+    va_Sh(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh)||(m.part=='head'&&m.y<S.hp(0,1.535,0)[1]),.05,m=>m.y>S.hp(0,1.5,0)[1]?gd:pl2,{t:'m'});
     // mail skirt and banded tassets, a belt with a winged buckle
-    cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?0x18181c:ml,{n:5});
-    cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',keep:m=>Math.abs(m.c)>.25||m.s<-.2});
-    cgBelt(B,M,wy-.015,.022,.058,0x1a1012,'m');
+    cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?0x18181c:ml,{n:5,seg:16});
+    cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',seg:16,keep:m=>Math.abs(m.c)>.25||m.s<-.2});
+    va_Belt(B,M,wy-.015,.022,.058,0x1a1012,'m');
     const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','sph','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);[-1,1].forEach(s=>k.p('pelvis','cone4','m',gd,s*.04,bk[1]+.005,bk[2]-.004,.012,.05,.006,0,0,s*1.25));
-    const cz=cgTAt(S,J.chest[1]+.04).f+.042;k.p('chest','oct','g',glow,0,J.chest[1]+.04,cz,.022,.03,.012);[-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('chest','cone4','m',gd,s*(.035+i*.022),J.chest[1]+.05-i*.012,cz-.006-i*.003,.012,.06-i*.012,.005,0,0,s*(1.0+i*.25))});
+    const cz=cgTAt(S,J.chest[1]+.04).f+.036;k.p('chest','oct','g',glow,0,J.chest[1]+.04,cz,.022,.03,.012);[-1,1].forEach(s=>{for(let i=0;i<3;i++)k.p('chest','cone4','m',gd,s*(.035+i*.022),J.chest[1]+.05-i*.012,cz-.006-i*.003,.012,.06-i*.012,.005,0,0,s*(1.0+i*.25))});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],L=s<0?'lh':'rh';
-      // pauldrons: three dome lames, a swept fin of blades
-      [[.05,.15,.11,.16,pl],[.0,.14,.09,.15,pl2],[-.05,.13,.075,.135,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));k.p(A+'0','tor','m',gd,a[0]+s*(.03+j*.014),a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*(.42+j*.12))});
+      // pauldrons: two dome lames with gilded rims, a swept fin of blades
+      [[.05,.15,.11,.16,pl],[-.03,.135,.085,.145,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));k.p(A+'0','tor','m',gd,a[0]+s*(.03+j*.014),a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*(.42+j*.12))});
       for(let j=0;j<3;j++)k.p(A+'0','cone4','m',j==1?pl2:pl,a[0]+s*(.03+j*.028),a[1]+.1+j*.015,a[2]-.03-j*.03,.026,.17-j*.035,.009,-.55-j*.12,0,-s*(.3+j*.15));
       // rerebrace, couter, vambrace, gauntlet; cuisse, poleyn, greave, sabaton
-      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
-      cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
-      cgShell(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,pl,{t:'m'});cgFingers(k,S,s,pl,'fist',1.1,null,0,'m');
-      const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','sph','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
-      cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn+.05&&m.y<J.lh0[1]-.1,.024,m=>Math.round(m.y*24)%2?pl:pl2,{t:'m'});
+      va_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
+      va_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
+      va_Sh(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr))&&Math.sign(m.x)==s,.012,pl,{t:'m'});va_Hand(B,S,s,{col:pl,nail:pl2,kind:'fist',len:1.1,r:.0095});
+      const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','dod','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
+      va_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn+.05&&m.y<J.lh0[1]-.1,.024,m=>Math.round(m.y*24)%2?pl:pl2,{t:'m'});
       const kq=J[L+'1'];k.p(L+'1','hem','m',pl2,kq[0],kq[1],kq[2]+.075,.075,.055,.06,Math.PI/2,0,0);k.L(L+'1','m',ed,[kq[0],kq[1]+.01,kq[2]+.12],[kq[0],kq[1]+.07,kq[2]+.18],.02,.002,4);
-      cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<kn-.04&&m.y>an-.02,.022,m=>m.y<an+.04?gd:m.s>.6?pl2:pl,{t:'m'});
-      cgShell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.016,pl,{t:'m'});k.L(L+'2','m',pl2,[kq[0],.03,J[L+'2'][2]+.16*S.foot.len],[kq[0],.02,J[L+'2'][2]+.25*S.foot.len],.02,.003,4)});
+      va_Sh(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<kn-.04&&m.y>an-.02,.022,m=>m.y<an+.04?gd:m.s>.6?pl2:pl,{t:'m'});
+      va_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<an+.02))&&Math.sign(m.x)==s,.016,pl,{t:'m'});k.L(L+'2','m',pl2,[kq[0],.03,J[L+'2'][2]+.16*S.foot.len],[kq[0],.02,J[L+'2'][2]+.25*S.foot.len],.02,.003,4)});
     // the helm: closed, a T-slit with burning eyes, a crest blade and two horns sweeping back
-    const sy=S.hp(0,1.629,0)[1];cgShell(B,M,m=>m.part=='head',.03,m=>{if(m.s>.55&&Math.abs(m.y-sy)<.009*S.hs&&Math.abs(m.x)<.07)return 0x080404;if(m.s>.7&&Math.abs(m.x)<.012&&m.y<sy&&m.y>S.hp(0,1.55,0)[1])return 0x080404;return m.y>S.hp(0,1.69,0)[1]&&Math.abs(m.x)<.03?pl2:pl},{t:'m',rim:1});
-    [-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','sph','g',glow,p[0],p[1],p[2]+.032,.013,.006,.006)});
+    const sy=S.hp(0,1.629,0)[1];va_Sh(B,M,m=>m.part=='head',.03,m=>{if(m.s>.55&&Math.abs(m.y-sy)<.01*S.hs&&Math.abs(m.x)<.07)return 0x080404;if(m.s>.7&&Math.abs(m.x)<.012&&m.y<sy&&m.y>S.hp(0,1.55,0)[1])return 0x080404;return m.y>S.hp(0,1.69,0)[1]&&Math.abs(m.x)<.03?pl2:pl},{t:'m'});
+    va_Body(B,M,m=>m.part=='head'?0x080404:un);
+    [-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1]);if(p)k.p('head','sph','g',glow,p[0],p[1],p[2]+.034,.014,.0065,.006)});
     const ht=S.hp(0,1.74,0);k.L('head','m',pl2,[0,ht[1],ht[2]+.06],[0,ht[1]+.03,ht[2]-.06],.016,.012,4);k.L('head','m',pl2,[0,ht[1]+.03,ht[2]-.06],[0,ht[1]-.02,ht[2]-.2],.012,.002,4);
     [-1,1].forEach(s=>{const q=S.hp(s*.1,1.68,-.02);let p=[q[0],q[1],q[2]];[[s*.06,.03,-.05],[s*.04,.05,-.06],[s*.01,.06,-.06],[-s*.005,.05,-.05]].forEach((d,j)=>{const n=[p[0]+d[0],p[1]+d[1],p[2]+d[2]];k.L('head','m',j<2?pl:ed,p,n,.028-j*.006,.022-j*.006,5);p=n})});
     cgCape(B,S,{len:.32,w:1.25,col:cl,ins:0x1a0408,trim:gd,rag:.7})});
   ST179.vampk={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};})();
 
 // ===================================================================== Blood Magister =====================================================================
-(function(){const S=cgHuman({h:1.1,w:.96,d:.96,rw:[.95,1,.92,.96,1,1,1.02,1],at:.86,lt:.9,hs:.96,armL:1.03,legL:1.06});
+// (v181 refine) a tall, gaunt aristocrat: seated limbs (16 columns, sock, j2), 10 head rings, the robes and hair shells that
+// replace the skin under them; the face's sockets, bruised under-eyes and hollow cheeks painted as smooth colour on a pale
+// skin; the deep red robes shaded smoothly (no stripes), gold kept for the trims; lofted fingers
+(function(){const S=cgHuman(Object.assign({h:1.1,w:.96,d:.96,rw:[.95,1,.88,.94,1,1,1.02,1],at:.86,lt:.9,hs:.96,armL:1.03,legL:1.06,
+    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i==0||i==1||i==3||i==7) /* under the robes */},va_Head(va_HY,.96)));
   const sk=0x6e646c,sk2=0x544a52,rb=0x560c18,rb2=0x3a0610,un=0x160a0e,gd=0x5a4226,glow=0xff2a3a,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;d+=.02*cgG(x,y,0,1.598,.009,.014)+.012*cgG(x,y,0,1.616,.007,.012);
     [-1,1].forEach(s=>{d-=.013*cgG(x,y,s*.036,1.629,.016,.01);d+=.007*cgG(x,y,s*.056,1.602,.014,.01);d-=.006*cgG(x,y,s*.047,1.568,.016,.014);d+=.003*cgG(x,y,s*.01,1.587,.006,.004)});
     d+=.008*cgG(x,y,0,1.648,.05,.006);d-=.004*cgG(x,y,0,1.558,.02,.003);d+=.008*cgG(x,y,0,1.538,.016,.012);return d*f};
   S.pron={'-1':.7};
-  cg181Reg('vampm',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0];cgSculpt(M,{head:1},S.sculpt(FACE));
-    const ey=S.hp(0,1.629,0)[1],skin=m=>{if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.036)<.02&&Math.abs(m.y-ey)<.012*S.hs)return 0x2a1a22;if(Math.abs(m.y-S.hp(0,1.558,0)[1])<.004&&Math.abs(bx)<.024)return 0x3a1a22}return m.s<-.3?sk2:a181Nz(sk,m,.15,20)};
-    cgEmit(B,M,m=>m.part=='torso'||m.part=='leg'||m.part=='foot'?un:skin(m));
-    cgEyes(k,M,S,glow,.036,1.629);cgTeeth(k,M,S,[[-.013,1.556,.018],[.013,1.556,.018]]);cgEars(k,M,S,sk,1.63,.07,.5,.85,.015);
-    cgHair(B,M,S,{col:0x0c080a,line:1.674,peak:.026,neck:true,thick:.014});
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,s>0?'fist':'open',1.25,0x1a0a10,.02);a181Boot(B,{bones:{lh2:['',...J.lh2],rh2:['',...J.rh2]}},s,{col:0x120a0c,toe:.04})});
+  cg181Reg('vampm',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],cl=va_C,hs=S.hs;cgSculpt(M,{head:1},S.sculpt(FACE));
+    M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:sh+.3,hk:.22},{head:.35,neck:.6});
+    const ey=S.hp(0,1.629,0)[1],my=S.hp(0,1.558,0)[1],
+      skinV=m=>{let c=mdMix(sk,0x5e5460,cl((n3Sn(m.x,m.y,m.z,7,3)-.45)*1.2,0,.5));if(m.nz<-.2)c=mdMix(c,sk2,cl((-m.nz-.2)*1.2,0,.7));
+        if(m.part=='head'||m.part=='neck'){const bx=m.x/hs,by=(m.y-S.nb)/hs+1.52;[-1,1].forEach(s=>{c=mdMix(c,0x463a48,.25*cgG(bx,by,s*.05,1.57,.015,.013));
+          c=mdMix(c,0x4a2a3e,.32*cgG(bx,by,s*.04,1.614,.016,.006));if(m.nz>.2)c=mdMix(c,0x2a1a22,cl(1.2*cgG(bx,by,s*.036,1.629,.02,.012),0,.95))})}return c},
+      col=m=>{if(m.part=='head'&&m.s>.3&&Math.abs(m.y-my)<.005*hs&&Math.abs(m.x/hs)<.024)return 0x3a1a22;return m.part=='torso'||m.part=='leg'||m.part=='foot'?un:null};
+    // the robe over the chest, back and upper arms, open down the front with a gold edge; deep red shaded smoothly
+    const robeV=m=>{const n=n3Sn(m.x*1.4,m.y*.3,m.z*1.4,20,5);return mdMix(rb,rb2,cl(.15+(n-.5)*.9+(m.nz<-.3?.25:0)+(m.y<wy+.05?.2:0),0,.8))};
+    va_Sh(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.3)||(m.part=='arm'&&m.y>J.aR1[1]-.02),.02,m=>Math.abs(Math.atan2(m.x,m.z))<.45&&m.part=='torso'?gd:null,{vcol:robeV});
+    va_Hair(B,M,S,{col:0x0c080a,line:1.674,peak:.026,neck:true,thick:.014});
+    M.vaHide.push(M.F.map(f=>f.part=='foot'));   // the feet are inside the boots
+    va_Body(B,M,col,skinV);
+    cgEyes(k,M,S,glow,.036,1.629);cgTeeth(k,M,S,[[-.013,1.556,.018],[.013,1.556,.018]]);cgEars(k,M,S,sk,1.63,.07,.5,.85,.015,0x5a4048);
+    [-1,1].forEach(s=>{va_Hand(B,S,s,s>0?{col:sk,nail:0x1a0a10,kind:'fist',len:1.05}:{col:sk,nail:0x1a0a10,kind:'open',len:1.35,claw:.02});a181Boot(B,{bones:{lh2:['',...J.lh2],rh2:['',...J.rh2]}},s,{col:0x120a0c,toe:.04})});
     // robes: the under-robe to the floor, the over-robe open down the front, gilded edges, a sash, a blood vial
-    cgSkirt(B,S,wy,.02,.16,.02,m=>m.y<.06?gd:un,{n:8});
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.3)||(m.part=='arm'&&m.y>J.aR1[1]-.02),.02,m=>Math.abs(Math.atan2(m.x,m.z))<.45&&m.part=='torso'?gd:Math.round(m.y*24)%2?rb:mdSh(rb,.9));
-    cgSkirt(B,S,wy,.03,.2,.042,m=>m.y<.07||Math.abs(Math.atan2(m.c,m.s))<.55?gd:Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,{n:8,dz:.06,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.42});
-    cgBelt(B,M,wy-.005,.035,.055,rb2);
+    cgSkirt(B,S,wy,.02,.16,.02,m=>m.y<.06?gd:un,{n:6,seg:18});
+    cgSkirt(B,S,wy,.03,.2,.042,m=>m.y<.07||Math.abs(Math.atan2(m.c,m.s))<.55?gd:Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,{n:7,seg:20,dz:.06,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.42});
+    va_Belt(B,M,wy-.005,.035,.055,rb2);
     const sz=cgSurf(M,S,wy,0,.058)[2];k.p('pelvis','oct','m',gd,0,wy,sz,.03,.035,.014);k.L('pelvis','c',rb2,[.05,wy-.02,sz-.01],[.08,wy-.24,sz-.02],.022,.016,4);
     k.L('pelvis','m',gd,[-.07,wy-.02,sz-.01],[-.08,wy-.08,sz-.004],.004,.004,3);k.p('pelvis','cyl','g',glow,-.08,wy-.11,sz-.004,.014,.05,.014);k.p('pelvis','cyl','m',gd,-.08,wy-.08,sz-.004,.016,.008,.016);
     // bell sleeves from the elbow
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',e=J[A+'1'],w=J[A+'2'],d=sub3(w,e),pt=t=>add3(e,mul3(d,t)),r0=.05*S.h;
-      cgTube(B,[pt(-.05),pt(.4),pt(.85),pt(1.18)],[r0,r0+.025,r0+.06,r0+.085],[[[A+'0',.3],[A+'1',.7]],[[A+'1',1]],[[A+'1',.6],[A+'2',.4]],[[A+'2',1]]],m=>m.i>2.3?gd:rb)});
+      cgTube(B,[pt(-.05),pt(.4),pt(.85),pt(1.18)],[r0,r0+.025,r0+.06,r0+.085],[[[A+'0',.3],[A+'1',.7]],[[A+'1',1]],[[A+'1',.6],[A+'2',.4]],[[A+'2',1]]],m=>m.i>2.3?gd:m.i<.5?rb:mdSh(rb,.88))});
     cgCollar(B,k,S,{top:1.69,w:1.05,col:rb2,ins:0x1a0408,rib:gd});
-    const cz=cgTAt(S,J.chest[1]+.03).f+.024;k.p('chest','oct','g',glow,0,J.chest[1]+.03,cz,.02,.032,.01);for(let i=0;i<7;i++){const a=(i-3)*.16,y=sh-.03-Math.abs(i-3)*.02,q=cgTAt(S,y);k.p('chest','sph','m',gd,Math.sin(a)*(q.rx+.02),y,q.z+Math.cos(a)*(q.f+.026),.009)}});
+    const cz=cgTAt(S,J.chest[1]+.03).f+.024;k.p('chest','oct','g',glow,0,J.chest[1]+.03,cz,.02,.032,.01);for(let i=0;i<7;i++){const a=(i-3)*.16,y=sh-.03-Math.abs(i-3)*.02,q=cgTAt(S,y);k.p('chest','ico','m',gd,Math.sin(a)*(q.rx+.02),y,q.z+Math.cos(a)*(q.f+.026),.009)}});
   ST179.vampm={sx:.08,hx:-.06,lk:.08,rk:.08,lz:-.06,le:-.25};})();
 
 // ===================================================================== Nosferatu =====================================================================
-(function(){const S=cgHuman({h:1.0,w:.9,d:.9,rw:[.9,.95,.82,.88,.94,.94,.96,.92],at:.76,lt:.8,hs:1.04,hy:1.16,hw:.9,armL:1.12,legL:1.03,neckL:.02});
-  const sk=0x5e6058,sk2=0x464a40,vein=0x2e2a28,co=0x14100e,co2=0x221a18,glow=0xff2a20,nail=0x2a2018,T=S.torso,J=S.J;
+// (v181 refine) the most bestial of them: a hunched back (a curve in the spine, below the shoulders), a tall bald skull with
+// bat ears grown out of it, long spidery arms and fingers with long dark nails; seated limbs (16 columns, sock, j2), the coat a
+// shell that replaces the skin under it; the skin painted smoothly (sunken temples and cheeks, a dark mask round the eyes,
+// faint blotches), no blocky patches; clawed toes lofted from the feet
+(function(){const S=cgHuman(Object.assign({h:1.0,w:.88,d:.9,rw:[.9,.95,.78,.86,.94,.94,.96,.92],at:.74,lt:.78,hs:1.04,hy:1.16,hw:.9,armL:1.14,legL:1.03,neckL:.02,
+    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HY,1.04,{cheek:1.4})));
+  const sk=0x5e6058,sk2=0x464a40,co=0x14100e,co2=0x221a18,glow=0xff2a20,nail=0x2a2018,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.05)return 0;const f=Math.min(1,n[2]*1.5);let d=0;
     d+=.034*cgG(x,y,0,1.588,.011,.016)+.02*cgG(x,y,0,1.612,.008,.016)-.01*cgG(x,y,0,1.574,.012,.006);   // a long hooked nose
     [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.037,1.63,.017,.012);d+=.01*cgG(x,y,s*.06,1.6,.012,.01);d-=.016*cgG(x,y,s*.05,1.566,.016,.016)});
     d+=.016*cgG(x,y,0,1.652,.05,.007);d-=.005*cgG(x,y,0,1.553,.018,.003);d-=.006*cgG(x,y,0,1.536,.025,.01);return d*f};
   S.pron={'-1':1.1,'1':1.1};
-  cg181Reg('nosferatu',S,function(B,P,k,C){const M=C.M,wy=T[2][0];cgSculpt(M,{head:1},S.sculpt(FACE));
-    const ey=S.hp(0,1.63,0)[1],skin=m=>{if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-.037)<.022&&Math.abs(m.y-ey)<.015*S.hs)return 0x0a0806}
-      const v=n3Sn(m.x,m.y,m.z,22,4);return v>.74?vein:m.s<-.3?sk2:mdSh(sk,1-v*.15)};
-    cgEmit(B,M,m=>m.part=='leg'?co:skin(m));
+  cg181Reg('nosferatu',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],cl=va_C,hs=S.hs;
+    // the hunch: the upper back curves out between the shoulder blades (kept below the shoulder line, so no groove round the neck)
+    cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]<-.1?.075*cgG(x,y,0,(J.chest[1]+sh)/2-.03,.13,.11)*Math.min(1,(-.1-n[2])*1.6):0);
+    // the knuckles of the spine standing out down the hunch (sculpted, so the coat over them shows them too)
+    cgSculpt(M,{torso:1},(x,y,z,n)=>{if(n[2]>-.5)return 0;let d=0;for(let i=0;i<7;i++)d+=cgG(x,y,0,sh-.04-i*.038,.013,.011);return .012*d});
+    cgSculpt(M,{head:1},S.sculpt(FACE));
+    M.shade=va_Shade(M,{cav:1.1,blur:3,y0:0,y1:sh+.35,hk:.26},{head:.4,neck:.6});
+    const ey=S.hp(0,1.63,0)[1],
+      skinV=m=>{const n=n3Sn(m.x,m.y,m.z,6,4),n2=n3Sn(m.x,m.y,m.z,13,7);let c=mdMix(sk,0x6a6c5e,cl((n-.5)*1.2,0,.45));c=mdMix(c,0x4a4438,cl((n2-.66)*3,0,.5));
+        if(m.nz<-.2)c=mdMix(c,sk2,cl((-m.nz-.2)*1.2,0,.75));
+        if(m.part=='torso'&&m.nz>.2){const f=cl((m.y-(wy+.04))/.04,0,1)*cl((sh-.06-m.y)/.04,0,1),ph=(((m.y+1.8*m.x*m.x-wy)/.04)%1+1)%1;c=mdSh(c,1-.26*Math.exp(-Math.pow((ph-.5)/.17,2))*f*cl((Math.abs(m.x)-.01)/.02,0,1))}
+        if(m.part=='head'||m.part=='neck'){const bx=m.x/(hs*.9),by=(m.y-S.nb)/(hs*1.16)+1.52;[-1,1].forEach(s=>{c=mdMix(c,0x3e3a30,.3*cgG(bx,by,s*.052,1.566,.016,.014));c=mdMix(c,0x423c34,.4*cgG(bx,by,s*.075,1.66,.018,.03));
+          if(m.nz>.15)c=mdMix(c,0x0e0a08,cl(1.35*cgG(bx,by,s*.037,1.63,.022,.015),0,1))})}
+        if(m.part=='hand')c=mdSh(c,.9);return c},
+      col=m=>m.part=='leg'?mdSh(co,m.s<-.3?.85:1):m.part=='head'&&m.s>.3&&Math.abs((m.y-S.nb)/(hs*1.16)+1.52-1.553)<.0045&&Math.abs(m.x/hs)<.03?0x1a0e0c:null;
+    // the long coat, open in front (the coat body, a shell replacing the skin; the skirt and a torn standing collar hung from it)
+    va_Sh(B,M,m=>(m.part=='torso'&&m.y>wy-.04&&Math.abs(Math.atan2(m.x,m.z))>.7)||(m.part=='arm'&&m.y>J.aR2[1]+.08),.016,null,{vcol:m=>mdMix(co,co2,cl(.25+(n3Sn(m.x*1.6,m.y*.25,m.z*1.6,22,3)-.5)*1.6,0,.9))});
+    va_Body(B,M,col,skinV);
     cgEyes(k,M,S,glow,.037,1.63,1.15,-.002);cgTeeth(k,M,S,[[-.005,1.553,.03],[.005,1.553,.03],[-.017,1.553,.012],[.017,1.553,.012]]);
-    cgEars(k,M,S,sk,1.64,.17,.75,.55,.03,0x5a3a3a);
-    [-1,1].forEach(s=>{cgFingers(k,S,s,sk,'claw',1.9,nail,.07);cgToes(k,S,s,sk2,.03,nail)});
-    // ribs and the spine's knuckles, painted by the coat's gap; the long coat, open, shredded at the hem; a torn standing collar
-    for(let i=0;i<8;i++){const y=T[6][0]-i*.06,q=cgTAt(S,y),p=cgRay(M,[0,y,q.z-.4],[0,0,1]);if(p)k.p(n3TB?'chest':'chest','sph','c',sk,p[0],p[1],p[2]-.004,.016,.012,.012)}
-    cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04&&Math.abs(Math.atan2(m.x,m.z))>.7)||(m.part=='arm'&&m.y>J.aR2[1]+.08),.016,m=>Math.round(m.y*26)%3==0?co2:co);
-    cgSkirt(B,S,wy-.02,J.lh1[1]-.25,.16,.035,m=>Math.round(Math.atan2(m.c,m.s)*7)%2?co:co2,{n:8,dz:.1,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.8&&!(m.y<J.lh1[1]-.05&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<(J.lh1[1]-.05-m.y)*3.5)});
-    cgBelt(B,M,wy-.022,.018,.042,0x2a1e16);
-    cgCollar(B,k,S,{top:1.64,w:1.1,col:co,ins:0x2a0a0a,rag:.5,cut:.4})});})();
+    // big bat ears grown out of the skull, swept up and back, a raw pink inside
+    cgEars(k,M,S,sk,1.645,.17,.75,.55,.032,0x5a3a3a);
+    [-1,1].forEach(s=>{va_Hand(B,S,s,{col:sk,nail,kind:'claw',len:1.9,r:.0066,claw:.06});va_Toes(B,S,s,sk2,.026,nail)});
+    cgSkirt(B,S,wy-.02,J.lh1[1]-.25,.16,.035,m=>Math.round(Math.atan2(m.c,m.s)*7)%2?co:co2,{n:7,seg:18,dz:.1,keep:m=>Math.abs(Math.atan2(m.c,m.s))>.8&&!(m.y<J.lh1[1]-.05&&a181H(Math.round(Math.atan2(m.c,m.s)*9),3)<(J.lh1[1]-.05-m.y)*3.5)});
+    va_Belt(B,M,wy-.022,.018,.042,0x2a1e16);
+    cgCollar(B,k,S,{top:1.64,w:1.1,col:co,ins:0x2a0a0a,rag:.5,cut:.4})});
+})();
 
 // ---------------- fur and fringes on cage bodies ----------------
 // hanging tufts round the body at height y: rays from outside find the surface (or the shell's height), each tuft hangs down
