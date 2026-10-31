@@ -30,7 +30,7 @@ var FA_K={
   vamp:{c:'dag',hv:0},bandit:{c:'dag',hv:0},ss165zealot:{c:'dag',hv:.05},
   tombpriest:{c:'staff',hv:.5},trollsh:{c:'staff',hv:.6},cultist:{c:'staff',hv:.4},shaman:{c:'staff',hv:.45},ss165caller:{c:'staff',hv:.4},
   vampm:{c:'staff',hv:.35},nagas:{c:'staff',hv:.4},revenant:{c:'staff',hv:.5},
-  sling:{c:'sling',hv:.1},
+  sling:{c:'sling',hv:.1},archer:{c:'bow',hv:.3},nagaa:{c:'bow',hv:.3},
   selem:{c:'claw',arm:'golem',hv:.6,alt:1},
   ghoul:{c:'claw',arm:'rake',hv:0,alt:1},dgwretch:{c:'claw',arm:'rake',hv:.1,alt:1},nosferatu:{c:'claw',arm:'rake',hv:.2,alt:1},wendigo:{c:'claw',arm:'rake',hv:.15,alt:1},
   akidon:{c:'claw',arm:'rake',hv:.3,alt:1},akorror:{c:'claw',arm:'rake',hv:.2,alt:1},lichen:{c:'claw',arm:'rake',hv:.5,alt:1},gargoyle:{c:'claw',arm:'rake',hv:.5,alt:1},
@@ -89,7 +89,7 @@ function faBuild(){
     RE]);
   // ---- one-handed slam: a leaping overhead chop into the ground (contact at the act's end), the off arm up for balance
   FA_A.oneS=faTrack([R0,
-    {s:.35,H:[.1,-.55,-.25],D:[.1,-.2,-1],E:[0,1,0],P:[.6,-.6,-.5],O:[-.1,-.6,-.2],OP:[-.6,-.7,-.4],sx:.18,dy:-.08,fz:-.02},
+    {s:.35,H:[.05,-.72,.22],D:[.05,.6,.8],E:[0,1,0],P:[.5,-.8,-.4],O:[-.05,-.75,.2],OP:[-.6,-.7,-.4],sx:.18,dy:-.08,fz:-.02},
     {s:.75,H:[0,.82,-.12],D:[.15,.4,-.9],E:[0,1,0],P:[.9,.5,-.3],O:[-.15,.7,.05],OP:[-.9,.4,-.2],py:.12,sy:.06,sx:-.2,sz:-.03,dy:.01,fz:-.04},
     {s:1.05,H:[-.02,.88,-.15],D:[.15,.45,-.88],sx:-.23},
     {s:1.35,H:[-.04,.85,.12],D:[.05,.97,.2],E:[0,.1,1],P:[.9,.3,-.2],O:[-.1,.6,.25],py:.04,sx:-.08,dy:0},
@@ -122,7 +122,7 @@ function faBuild(){
     {s:2.45,H:[.05,-.45,.4],hs:.5,D:[.1,.5,.85],E:[0,1,0],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.15,sz:0,dy:-.04,fz:.04},
     Object.assign({},RE,{s:2.85,ow:0}),RE]);
   FA_A.twoS=faTrack([T0,
-    {s:.35,H:[.15,-.5,-.2],hs:0,D:[.2,-.3,-1],E:[0,1,0],P:[.6,-.6,-.5],OP:[-.6,-.6,-.5],sx:.2,dy:-.1,fz:-.02},
+    {s:.35,H:[.05,-.55,.3],hs:.3,D:[.1,.6,.8],E:[0,1,0],P:[.5,-.8,-.4],OP:[-.5,-.8,-.4],sx:.2,dy:-.1,fz:-.02},
     {s:.75,H:[.08,.85,-.12],D:[.25,.3,-.92],P:[.9,.4,-.3],OP:[-.9,.4,-.3],py:.12,sy:.05,sx:-.22,sz:-.03,dy:.01,fz:-.05},
     {s:1.05,H:[.08,.9,-.15],D:[.25,.35,-.9],sx:-.25},
     {s:1.35,H:[.03,.88,.12],D:[.05,.97,.2],E:[0,.1,1],P:[.9,.2,-.2],OP:[-.9,.2,-.2],py:.04,sx:-.1,dy:0},
@@ -197,6 +197,16 @@ function faBuild(){
       {s:1.4,H:[-.3,-.3,.6],D:[-.2,-.9,.3],py:-.3,sy:-.18,sx:.2,dy:-.05,fz:.09},
       {s:2.2,H:[-.1,-.6,.35],D:[0,-1,0],P:[.4,-.9,-.3],py:-.08,sy:-.04,cy:0,sx:.06,dy:-.02,fz:.03,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},RE);
     FA_A.sling=faTrack(K)}
+  // ---- bow (throw; the arrow leaves at s = 1): raise the bow at the target and turn side-on, nock, draw to the cheek with
+  // the elbow high, a held aim, release (the string hand flicks back past the ear), hold the follow-through, lower
+  FA_A.bow=faTrack([Object.assign({},R0,{H:[0,-.9,.15],ow:0,O:[-.05,-.9,.12]}),
+    {s:.3,H:[-.55,-.02,.72],hs:1,P:[.6,-.6,-.5],O:[.05,-.02,.95],OP:[-.6,-.7,0],ow:1,py:.35,sy:.2,cy:.08,sx:.02,hx:0,dy:-.03},
+    {s:.85,H:[0,.2,.08],hs:.35,P:[1,.3,-.7],O:[.05,.02,.97],py:.5,sy:.3,cy:.12,sx:.04,dy:-.04},
+    {s:1,H:[0,.2,.07],hs:.35,O:[.05,.02,.97]},
+    {s:1.12,H:[.05,.24,-.15],hs:.7,P:[1,.2,-.4],O:[.05,.04,.96],py:.52,sy:.32},
+    {s:1.6,H:[.05,.2,-.12],O:[.05,.02,.95]},
+    {s:2.3,H:[0,-.7,.2],hs:1,P:[.4,-.9,-.3],O:[.0,-.5,.5],OP:[-.5,-.8,-.2],ow:.6,py:.1,sy:.05,cy:0,sx:0,dy:-.01},
+    Object.assign({},R0,{s:3,H:[0,-.9,.15],ow:0,O:[-.05,-.9,.12]})]);
   // ---- unarmed (claws, fists, a fist round a club or anchor); repeats alternate arms where the foe has two
   const U0=Object.assign({},R0,{H:[0,-.9,.15],rw:0,orw:0});
   FA_A.rake=faTrack([U0,
@@ -241,6 +251,7 @@ function faPick(S,n){
   if(c=='dag'){if(n=='strike')return S.n%2?FA_A.dagA:FA_A.dagB}
   if(c=='staff'){if(n=='bolt')return FA_A.cast;if(n=='rainfire')return FA_A.rain}
   if(c=='sling'){if(n=='throw')return FA_A.sling;if(n=='strike')return S.n%2?FA_A.oneB:FA_A.oneA}
+  if(c=='bow'){if(n=='throw')return FA_A.bow}
   if(c=='claw'){if(n=='strike')return FA_A[S.K.arm]||FA_A.rake;if(n=='bolt')return FA_A.castU}
   return null}
 // ---------------- helpers ----------------
@@ -385,6 +396,14 @@ function faApply(g,S,a,now){
       if(ei.lengthSq()>1e-8)op.multiplyScalar(.35).addScaledVector(ei.normalize(),.65).normalize();
       faIK(o0,o1,o2,ot,op,1);
       const lq2=faWQ(o1,new THREE.Quaternion()).invert().multiply(qh),u2o=o2.position.clone().normalize();faClamp(lq2,u2o,1.3,2.6);faTwist(o1,o2,lq2,u2o)}
+    else if(S.bw){
+      // the bow held out at the target in the off fist: limbs upright (top a little forward), string toward the archer
+      ot=mid.clone().addScaledVector(sideW,-P.os*hw).add(toW(P.O,new THREE.Vector3()).multiplyScalar(A));
+      faIK(o0,o1,o2,ot,toW(P.OP,new THREE.Vector3()).normalize(),1);
+      const W=S.bw.W,yw=toW([0,1,.12],new THREE.Vector3()).normalize(),xw=toW([.12,0,-1],new THREE.Vector3()).normalize();
+      const Qw=faFrameQ(new THREE.Vector3(0,1,0),new THREE.Vector3(1,0,0),yw,xw,new THREE.Quaternion()),qh=Qw.multiply(W.quaternion.clone().invert());
+      const q1o=faWQ(o1,new THREE.Quaternion()),u2o=o2.position.clone().normalize(),lq2=q1o.clone().invert().multiply(qh);faClamp(lq2,u2o,1.3,2.2);
+      const k=faSS(P.ow);o2.quaternion.copy(S.base[o2.name]).slerp(lq2,k);o2.updateMatrixWorld(true)}
     else if(S.shN){
       // the shield held up in front of the chest, face toward the target, pushed out a little at the hit
       const push=.12*Math.exp(-Math.pow((s-1.45)/.22,2));ot=mid.clone().addScaledVector(sideW,-hw).add(toW([.2,-.38+push*.3,.45+push],new THREE.Vector3()).multiplyScalar(A));
@@ -394,12 +413,15 @@ function faApply(g,S,a,now){
     else{ot=mid.clone().addScaledVector(sideW,-P.os*hw).add(toW(P.O,new THREE.Vector3()).multiplyScalar(A));
       faIK(o0,o1,o2,ot,toW(P.OP,new THREE.Vector3()).normalize(),1);
       if(P.orw){o2.quaternion.copy(S.base[o2.name]);o2.rotateX(P.orw)}o2.updateMatrixWorld(true)}}
-  // ---- blend every touched bone from the earlier layers' pose by w (the off arm by w·ow) ----
+  // ---- blend every touched bone from the earlier layers' pose by w (the off arm by w·ow; the bow arm blends itself) ----
   const ow=w*Math.min(1,P.ow);
   for(const n in S.base){const bn=b[n];if(!bn)continue;let k=w;if(bn===o0||bn===o1||bn===o2)k=ow;
     if(n=='pelvis'||n=='spine'||n=='chest'||n=='head')continue;   // already scaled by w
     if(S.legs&&/^(lh|rh)/.test(n))k=Math.min(1,w*3);   // solved from the weighted pelvis: planted for most of the blend
+    if(S.bw&&bn===o2)k=w;
     if(k<1)bn.quaternion.copy(S.base[n].clone().slerp(bn.quaternion,k))}
+  // the drawn string and nocked arrow (the bow foes' own helper): drawn from the nock (s .3) to the anchor (.85), loose at s = 1
+  if(S.bw&&g.bowW){g.updateMatrixWorld(true);const dr=s<.3||s>=1?0:faSS((s-.3)/.55)*.97+.03,gr=w*faSS((s-.15)/.15)*faSS((2.2-s)/.3);try{eBowFxSet(g,dr,gr)}catch(e){}}
   S.dirty=1}
 // remember the final pose (for a fade-out when an attack is cut short)
 function faKeep(S,b){if(!S.last)S.last={};for(const n in S.base){(S.last[n]||(S.last[n]=new THREE.Quaternion())).copy(b[n].quaternion)}S.lp=(S.lp||new THREE.Vector3()).copy(b.pelvis.position)}
@@ -419,7 +441,8 @@ function faBegin(g,S,a){
   S.we=faWpn(h,S.side>0?'R':'L');S.wl=0;
   if(S.we){const W=S.we.W;if(W.userData.faLen==null){const bb=new THREE.Box3();W.traverse(o=>{if(o.isMesh&&o.geometry){o.geometry.computeBoundingBox();bb.union(o.geometry.boundingBox)}});W.userData.faLen=Math.max(.2,-bb.min.y);W.userData.faTail=Math.max(0,bb.max.y)}
     S.wl=W.userData.faLen*W.matrixWorld.getMaxScaleOnAxis()}
-  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;
+  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;S.bw=null;
+  if(K.c=='bow'){const e=faWpn(h,'L');if(e&&e.ty=='bow')S.bw=e}
   if((K.c=='two'||K.c=='pole'||(K.c=='staff'&&S.T!==FA_A.rain))&&S.we){const os=S.side>0?'L':'R';S.haft=1;S.ot0=FA_OT[S.we.ty]||0;S.oC=gripCarry(S.we.ty,os).q.clone();
     const gd=h._gripD&&(h._gripD[os]||(h._gripD[S.side>0?'R':'L']&&[-h._gripD[S.side>0?'R':'L'][0],h._gripD[S.side>0?'R':'L'][1],h._gripD[S.side>0?'R':'L'][2]]));
     S.oAn=new THREE.Vector3(GRIP_AN[0]*(os=='L'?-1:1)+(gd?gd[0]:0),GRIP_AN[1]+(gd?gd[1]:0),GRIP_AN[2]+(gd?gd[2]:0))}
