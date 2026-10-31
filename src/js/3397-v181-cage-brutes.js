@@ -151,15 +151,17 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
 // (owner, Oct 31 2026) not a man: its outline should read as a heap of goo pretending to be one — stooped and top-heavy,
 // the head a lump sunk forward into the mass with no neck, a sagging bottom-heavy belly, short thick stumps for legs,
 // long uneven arms (the right one bigger), big low lumps breaking up the outline
-(function(){const S=cgHuman({h:.98,w:1.5,d:1.55,rw:[1.55,1.7,1.85,1.75,1.5,1.4,1.4,1.95],rf:[1.5,2.0,2.6,2.2,1.55,1.3,1.2,1.5],at:2.3,armL:1.22,lt:2.7,legL:.6,hs:1.0,hw:1.3,hy:.72,hd:1.15,hz:.07,nw:3.2,neckL:-.09,foot:1.1,footW:1.8,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
+(function(){const S=cgHuman({h:.98,w:1.5,d:1.55,rw:[1.55,1.7,1.85,1.75,1.5,1.4,1.4,1.8],rf:[1.5,2.0,2.6,2.2,1.55,1.3,1.2,1.5],at:2.3,armL:1.22,lt:2.7,legL:.6,hs:1.0,hw:1.3,hy:.72,hd:1.15,hz:.02,nw:3.7,neckL:-.09,foot:1.1,footW:1.8,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
     // (recipe) fewer rings where they don't shape the outline: a blob head, plain goo limbs
-    head:CG181.base.head.filter((q,i)=>i%2==0).map((q,i,a)=>{const f=1+1.2*Math.pow(1-i/(a.length-1),2);return [q[0],q[1]*f,q[2]*f,q[3]*f,q[4]]}) /* the head swells out of the shoulders like a mound, no neck */,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5&&i<7).concat([{t:2.1,r:.028,rf:.032,rb:.03},{t:2.26,r:.041,rf:.045,rb:.04},{t:2.42,r:.037,rf:.038,rb:.036}]) /* the arm swells into a goo fist */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
+    head:CG181.base.head.filter((q,i)=>i%2==0).map((q,i,a)=>{const f=1+1.55*Math.pow(1-i/(a.length-1),2);return [q[0],q[1]*f,q[2]*f,q[3]*f,q[4]]}) /* the head swells out of the shoulders like a mound, no neck */,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5&&i<7).concat([{t:2.1,r:.028,rf:.032,rb:.03},{t:2.26,r:.041,rf:.045,rb:.04},{t:2.42,r:.037,rf:.038,rb:.036}]) /* the arm swells into a goo fist */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
   S.armK={'1':1.18,'-1':.88};[['aR',1.12],['aL',.92]].forEach(([A,f])=>{const a0=S.J[A+'0'];S.J[A+'1']=add3(a0,mul3(sub3(S.J[A+'1'],a0),f));S.J[A+'2']=add3(a0,mul3(sub3(S.J[A+'2'],a0),f))});
   const C0={g1:0x3e5a28,g2:0x22341a,g3:0x5a7a34,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a},T=S.torso,J=S.J;
   cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)},c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.065*(n3Sn(x*.8,y*.8,z*.8,4.5,5)-.45)+.025*(n3Sn(x,y,z,9,2)-.45));   // big low lumps and sags, smaller ones on top
     // a big hump of goo over the shoulders and the back (higher on the right), a belly sagging over the hips
-    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<.2)d+=.15*cgG(x-.06,y,0,sh-.02,.22,.13)*Math.min(1,(.2-n[2])*1.3);if(n[2]>0)d+=.065*cgG(x,y,0,hy+.03,.16,.08)*n[2];return d});
+    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<-.1)d+=.15*cgG(x-.06,y,0,sh-.13,.2,.12)*Math.min(1,(-.1-n[2])*1.6);if(n[2]>0)d+=.065*cgG(x,y,0,hy+.03,.16,.08)*n[2];return d});
+    // fill round the base of the head so the shoulders flow up into the mound (no groove between the hump and the head)
+    {const hb=S.hp(0,1.58,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.055*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?.05*cgG(0,y,0,hb,1,.07)*Math.min(1,-n[2]*2):0))}
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>n[2]<.1?0:(-.02*cgG(x,y,0,1.56,.05,.012)+.01*cgG(x,y,0,1.6,.06,.03))));
     // smooth mottled colour: green goo blending into darker goo, patches of brown earth, the back and limbs darker
     const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),goo=m=>{const n=n3Sn(m.x,m.y,m.z,11,1),n2=n3Sn(m.x,m.y,m.z,5,3);
@@ -168,7 +170,7 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       if(m.part=='hand')col=mdMix(c.g2,col,.3);if((m.part=='leg'&&m.y<J.rh2[1]+.12)||m.part=='foot')col=mdMix(col,c.dirt,.45);return col};
     M.shade=cgShade(M,{cav:1.1,y0:0,y1:sh+.25,hk:.3});   // baked creases, ridges and height light (no triangles)
     // where the goo runs: drip spots on the belly, chest, shoulders and arms (p on the skin, len of the run below it)
-    const DR=[];[[wy-.02,-.5,.16],[wy-.04,.15,.2],[wy-.01,.55,.13],[sp+.06,-.25,.12],[ch+.02,.75,.14],[ch,-.85,.15],[sh-.03,1.35,.12],[sh-.04,-1.4,.13],[hy+.05,.3,.1],[sp,2.7,.12],[ch,3.6,.14]].forEach(([y,a,len])=>DR.push({p:cgSurf(M,S,y,a,0),len,arm:0}));
+    const DR=[];[[wy-.02,-.5,.16],[wy-.04,.15,.2],[wy-.01,.55,.13],[sp+.06,-.25,.12],[ch+.02,.75,.14],[ch,-.85,.15],[sh-.1,2.35,.12],[sh-.12,-2.4,.13],[hy+.05,.3,.1],[sp,2.7,.12],[ch,3.6,.14]].forEach(([y,a,len])=>DR.push({p:cgSurf(M,S,y,a,0),len,arm:0}));
     [-1,1].forEach(s=>{const F=b7_Arm(S,s);[[J[F.A+'0'],F.a1,.55,.1],[J[F.A+'0'],F.a1,.95,.08],[F.a1,F.a2,.45,.09]].forEach(([a,b,t,len])=>{const q=lerp3(a,b,t),dir=nrm3([s,0,.35]),p=cgRay(M,add3(q,mul3(dir,.4)),mul3(dir,-1),{arm:1});if(p)DR.push({p,len,arm:s,dir})})});
     const run=m=>{for(const d of DR){const dy=d.p[1]-m.y;if(dy<-.012||dy>d.len*1.7)continue;if(d.arm&&m.part!='arm')continue;if(!d.arm&&m.part!='torso')continue;
       const w=.032*(1-.5*dy/(d.len*1.7)),dx=Math.hypot(m.x-d.p[0],m.z-d.p[2]);if(dx<w)return 1-dx/w}return 0};
