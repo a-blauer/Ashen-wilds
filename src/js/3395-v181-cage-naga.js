@@ -60,8 +60,27 @@ function nh_Hand(B,S,s,col,kind,len,nail){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],
     R.push({p:q.slice(),rx:r*.78,f:r*.66,b:r*.66,w:W});const nc=R.length;if(tip){dd=rot(dd,axis,curl*.8);const e=add3(q,mul3(dd,tip));R.push({p:add3(q,mul3(dd,tip*.35)),rx:r*.6,f:r*.5,b:r*.5,w:W});R.push({p:e,rx:r*.08,f:r*.08,b:r*.08,w:W})}
     mdLoft(B,R,{seg:5,ref:u,capB:true,col:m=>m.i>nc-1.2?nail:col})};
   const kn=add3(a2,mul3(d,.074));
-  for(let i=0;i<4;i++){const z=(1.5-i)*.017,p=add3(add3(kn,mul3(f,z)),mul3(u,-.004));
-    if(kind=='fist')digit(p,D(1,-.45,.05),2,L*.36,1.15,.0098,.006,ax);else digit(p,D(1,-.15,z*.6),3,L*(i==3?.82:1)/3,kind=='claw'?.3:.16,.0088,.017,ax)}
+  if(kind=='fist'){
+    // (refine) a closed scaly fist round the grip. In a fist the fingers don't change the outline, so the four of them are ONE
+    // rounded mitten mass: a wide loft on an arc about the handle's axis, from inside the palm over the knuckles, down the front
+    // and tucked under toward the palm, with a gently bumpy knuckle ridge (each finger's band swells a little); the finger
+    // separations are painted as thin dark lines (12 sides put a corner on every finger boundary, darkened per corner); small
+    // claw tips peek from the finger ends; the thumb is its own rounded loft crossing in front
+    const W6=(p,r)=>({p,rx:r,f:r,b:r,w:W}),lo=(R,nc)=>mdLoft(B,R,{seg:6,ref:u,capB:true,col:m=>m.i>nc-.5?nail:col});
+    const rho=.02,C0=add3(add3(kn,mul3(d,.004)),mul3(u,-rho-.002)),A=th=>add3(C0,add3(mul3(u,Math.cos(th)*rho),mul3(d,Math.sin(th)*rho))),TG=th=>nrm3(add3(mul3(u,-Math.sin(th)),mul3(d,Math.cos(th))));
+    const L0=B.L.c,v0=L0.p.length/3,MW=(th,t,wd)=>({p:th<-.3?sub3(A(-.3),mul3(d,.012)):A(th),rx:t,f:wd,b:wd,w:W});
+    mdLoft(B,[MW(-.4,.012,.04),MW(-.1,.0125,.042),MW(.45,.013,.043),MW(1.0,.013,.043),MW(1.6,.0125,.042),MW(2.2,.012,.041),MW(2.75,.011,.039),MW(3.1,.008,.035)],{seg:12,ref:f,sq:.3,capB:true,col});
+    for(let i=v0;i<L0.p.length/3;i++){const p=[L0.p[3*i],L0.p[3*i+1],L0.p[3*i+2]],q=sub3(p,C0),qu=q[0]*u[0]+q[1]*u[1]+q[2]*u[2],qd=q[0]*d[0]+q[1]*d[1]+q[2]*d[2],ac=q[0]*f[0]+q[1]*f[1]+q[2]*f[2],
+      rr=Math.hypot(qu,qd),th=Math.atan2(qd,qu),out=Math.max(0,Math.min(1,(rr-rho)/.008));
+      // finger bands swell, most on the knuckle ridge; the boundaries between them (across ±.021, 0) stay low and are painted dark
+      const band=Math.abs(Math.cos(Math.PI*(ac-.0105)/.021)),kn2=Math.exp(-Math.pow((th-.6)/.45,2)),e=out*(.0012+.0028*kn2)*band;
+      if(e&&rr>1e-6){const rd=add3(mul3(u,qu/rr),mul3(d,qd/rr));L0.p[3*i]+=rd[0]*e;L0.p[3*i+1]+=rd[1]*e;L0.p[3*i+2]+=rd[2]*e}
+      const ln=th>.3&&Math.abs(ac)<.03&&[-.021,0,.021].some(b=>Math.abs(ac-b)<.004)?.42:1;if(ln<1)for(let j=0;j<3;j++)L0.c[3*i+j]*=ln}
+    for(let i=0;i<4;i++){const z=(1.5-i)*.021,P=th=>add3(A(th),mul3(f,z));nh_Claw(B,[P(2.8),P(3.05),add3(add3(P(3.05),mul3(TG(3.05),.014)),mul3(u,.003))],[.006,.0055,.0008],W,nail,nail,0)}
+    const t0=add3(add3(add3(a2,mul3(d,.03)),mul3(f,.036)),mul3(u,-.012)),Cf=add3(add3(kn,mul3(d,.041)),mul3(u,-.022)),
+      t1=add3(Cf,mul3(f,.03)),t2=add3(Cf,mul3(f,.012)),t3=add3(add3(Cf,mul3(f,-.004)),mul3(u,-.004)),t4=add3(add3(Cf,mul3(f,-.012)),mul3(u,-.008));
+    lo([W6(sub3(t0,mul3(d,.01)),.013),W6(t0,.0135),W6(lerp3(t0,t1,.55),.0125),W6(t1,.0115),W6(t2,.0105),W6(t3,.007),W6(t4,.001)],4.6);return}
+  for(let i=0;i<4;i++){const z=(1.5-i)*.017,p=add3(add3(kn,mul3(f,z)),mul3(u,-.004));digit(p,D(1,-.15,z*.6),3,L*(i==3?.82:1)/3,kind=='claw'?.3:.16,.0088,.017,ax)}
   digit(add3(add3(add3(a2,mul3(d,.032)),mul3(f,.026)),mul3(u,-.01)),D(.6,-.3,.75),2,L*.3,.3,.0095,.013,nrm3(cross3(u,f)))}
 // the cobra hood behind the head (base head coordinates: y, half width, z)
 function n181Hood(B,S,col){const R=[[1.47,.085,-.06],[1.52,.15,-.075],[1.57,.2,-.09],[1.62,.21,-.095],[1.665,.175,-.095],[1.695,.1,-.09],[1.712,.025,-.085]].map(([y,r,z])=>{const p=S.hp(0,y,z);return {p,rx:r*S.hs,f:.02,b:.03,w:y<1.53?[['neck',1]]:[['neck',.3],['head',.7]]}});
