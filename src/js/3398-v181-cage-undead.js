@@ -320,14 +320,14 @@ function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3
     M.shade=cgShade(M,{cav:1.1,y0:0,y1:T[7][0]+.2,hk:.26});
     const my=S.hp(0,1.552,0)[1],pants=m=>m.part=='leg'&&m.y>kn-.1;
     cgEyes(k,M,S,0xa8fff0,.036,1.629,.9,-.002);cgTeeth(k,M,S,[[-.018,1.563,.01],[-.006,1.564,.013],[.007,1.564,.011],[.019,1.562,.012]],barn);
-    // the rags of a sailor's shirt (sides, back, sleeves), breeches, an iron-studded belt, a loincloth flap
-    ud_sh(B,M,m=>(m.part=='torso'&&m.y>cgEdge(m,T[1][0]+.05,.04,3)&&m.s<.3)||(m.part=='arm'&&m.y>cgEdge(m,J.aR1[1]+.02,.03,5)),.014,null,{rim:.12,vcol:m=>ud_mot(m,cl,mdSh(cl,.62),8,2)});
+    // the rags of a sailor's shirt (sides, back, over the shoulders to the neck so no shelf of skin rings it, sleeves), breeches, an iron-studded belt, a loincloth flap
+    ud_sh(B,M,m=>(m.part=='torso'&&m.y>cgEdge(m,T[1][0]+.05,.04,3)&&(m.s<.3||m.y>T[6][0]-.03))||(m.part=='neck'&&m.ny>.45)||(m.part=='arm'&&m.y>cgEdge(m,J.aR1[1]+.02,.03,5)),.014,null,{rim:0,vcol:m=>ud_mot(m,cl,mdSh(cl,.62),8,2)});
     ud_sh(B,M,pants,.012,null,{vcol:m=>ud_mot(m,mdSh(cl,.9),mdSh(cl,.6),9,4)});cgBelt(B,M,T[2][0]-.02,.02,.03,ir,'m');
     cgSkirt(B,S,T[2][0]-.03,J.rh1[1]+.1,.04,.03,m=>ud_cloth(m,0x1e2a2c,J.rh1[1],T[2][0],5),{n:5,seg:16,keep:m=>Math.abs(m.c)<.4&&!(m.y<J.rh1[1]+.18&&a181H(Math.round(m.c*12),3)<.4)});
     // iron cuffs
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ud_sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'2'][1]+.05))<.025,.022,ir,{t:'m',rim:.1})});
     ud_body(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.012*S.hs&&Math.abs(m.x)<.026*S.hs)return 0x0a1210;return cgFacePaint(S,m,sk,{sock:0x101a18})},{vcol:m=>ud_wet(m,sk,sk2,pale,rot)});
-    const cloth=(y,a)=>y>T[1][0]+.1&&Math.cos(a)<.25?.014:0;cgBarnacles(k,M,S,7,3,barn,cloth);
+    const cloth=(y,a)=>y>T[1][0]+.1&&(Math.cos(a)<.25||y>T[6][0]-.03)?.014:0;cgBarnacles(k,M,S,7,3,barn,cloth);
     // strands of seaweed hair from the crown, weed hanging off the chest (bare skin, under the chain) and the arms
     u8_strands(k,M,S,Array.from({length:9},(_,i)=>{const a=-2+i*.5;return [a,1.7,.03,.3+(i%3)*.1,Math.abs(a)<.8?.42:.1,i%2?weed:weed2,i]}));
     for(let i=0;i<5;i++){const y=T[6][0]-.05-a181H(i,5)*.08,a=(i-2)*.36+(a181H(i,9)-.5)*.2,p=cgSurf(M,S,y,a,-.008);u8_strip(k,M,y>J.chest[1]-.04?'chest':'spine',i%2?weed:weed2,p,.03,.16+a181H(i,2)*.12,a,-.15,i)}
