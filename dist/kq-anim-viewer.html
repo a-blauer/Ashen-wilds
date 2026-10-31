@@ -56200,7 +56200,9 @@ function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016,V=THREE.Vector3;
 //    brightness. Tuned on pictures of every zone (test/env_look.py, test/wd_sheet.py EP=1).
 // Materials opt in with the ENVDET define (so the program cache keys stay apart) and a chained onBeforeCompile that hands
 // the shared uniforms over (a texture uniform in ShaderLib would be cloned per material: one GPU copy each).
-var EP183={on:true,s:.46,a:1,kg:'0.9',ko:'1.0',u:null,tex:null,scans:0,ms:0,mats:0,geos:0,bakeMs:0,kinds:0};
+// woodRe: the decoration kinds (WD) whose brown parts are wood and get grain; every other kind gets none (decided by what
+// the kind is, not by its colour); scenery outside WD keeps the colour test
+var EP183={woodRe:/tree|log|stump|fallen|snag|palm|pine|oak|root|fence|cart|barrel|coffin|cross|hay|boat|catapult|barricade|stake|tent|banner|totem|crate|ladder|bench|shelf|flag|lamp|brazier/,on:true,s:.46,a:1,kg:'0.9',ko:'1.0',u:null,tex:null,scans:0,ms:0,mats:0,geos:0,bakeMs:0,kinds:0};
 function ep183Hash(x,y,s){let h=(x*374761393+y*668265263+s*1442695041)|0;h=Math.imul(h^(h>>>13),1274126177);return ((h^(h>>>16))>>>0)/4294967296}
 // periodic value noise (period p cells) and the texture
 function ep183VN(x,y,px,py,s){const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),mx=a=>((a%px)+px)%px,my=a=>((a%py)+py)%py;
@@ -56243,6 +56245,9 @@ function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N
  float fol=smoothstep(.02,.13,(c.g-max(c.r,c.b))/mx);
  float warm=smoothstep(.1,.3,(c.r-c.b)/mx);float ice=smoothstep(.04,.18,(c.b-c.r)/mx);   // warm: wood, sandstone; blue-white: ice, crystal, frost
  float wood=warm*(1.-fol)*(1.-smoothstep(.24,.48,lum))*smoothstep(.32,.5,sat);   // bark and wood: darker, more saturated browns than sandstone
+#ifdef ENVDET_NW
+ wood=0.;   // a decoration kind that is not wooden (an arch post of brown stone read as planks)
+#endif
  float stn=(1.-fol)*(1.-wood)*(1.-smoothstep(.38,.62,sat))*(1.-ice);
  float bri=smoothstep(.45,.9,lum);float vrt=1.-abs(nW.y);
  float d=((tB.r-.5)*.24+(tA.r-.5)*.12)*(1.-.65*ice);   // ice and crystal: only a soft brightness variation
@@ -56317,7 +56322,7 @@ function ep183Bake(g,o){if(!g||g.userData.ep183b)return;g.userData.ep183b=1;cons
   C.needsUpdate=true;EP183.geos++;EP183.bakeMs+=performance.now()-T0}
 // the scattered decorations (WD kinds) at load: weathered and graded already (v177), and their base darkening is in the weathering
 function ep183Kinds(){if(typeof WD=='undefined'||!WD||!WD.T)return;const T0=performance.now();
-  for(const k in WD.T){const S=WD.T[k];if(!S||!S.parts)continue;EP183.kinds++;S.parts.forEach(p=>{if(!p.glow&&!p.mat&&p.g)try{ep183Bake(p.g,{ground:false})}catch(e){}})}
+  for(const k in WD.T){const S=WD.T[k];if(!S||!S.parts)continue;EP183.kinds++;const w=EP183.woodRe.test(k);S.parts.forEach(p=>{if(!p.glow&&!p.mat&&p.g){p.g.userData.ep183nw=!w;try{ep183Bake(p.g,{ground:false})}catch(e){}}})}
   EP183.kindMs=Math.round(performance.now()-T0)}
 // ---- the scan: every scenery mesh in the world opts in, anything a character uses stays out ----
 function ep183Scan(){if(!EP183.on||typeof scene=='undefined')return;const T0=performance.now(),cm=new Map(),isC=a=>{let v=cm.get(a);if(v===undefined){v=!!a.isBone||a.children.some(c=>c.isSkinnedMesh);cm.set(a,v)}return v};EP183.scans++;
@@ -56331,7 +56336,7 @@ function ep183Scan(){if(!EP183.on||typeof scene=='undefined')return;const T0=per
     for(const m of ms){if(!m)continue;if(ch){ep183Out(m);continue}if(m.userData.ep183No)continue;
       if(m.userData.ep183===1){if(!m.onBeforeCompile||!m.onBeforeCompile._ep183)ep183Hook(m);continue}
       if(m.userData.ep183===-1||!ep183Ok(m)){m.userData.ep183=-1;continue}
-      ep183Mat(m,EP183.ko)}
+      ep183Mat(m,EP183.ko);if(o.geometry&&o.geometry.userData.ep183nw&&m.defines.ENVDET_NW===undefined){m.defines.ENVDET_NW='';m.needsUpdate=true}}
     if(!ch&&o.geometry&&!o.geometry.userData.ep183b&&o.geometry.attributes.color&&ms.some(m=>m&&m.userData.ep183===1&&m.vertexColors)){
       const bb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox),h=bb.max.y-bb.min.y;
       try{ep183Bake(o.geometry,{ground:Math.abs(bb.min.y)<Math.max(.05,h*.08)})}catch(e){}}});
