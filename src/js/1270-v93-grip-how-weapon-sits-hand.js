@@ -101,7 +101,9 @@ function gripTick(h,now,el,att){
   let dt=0;
   if(now!==undefined){if(now!=null&&S.t!=null)dt=(now-S.t)/1000;
     if(now==null||S.t==null||dt<0||dt>.5){S.w=att?0:1;dt=0}
-    else if(dt>0)S.w=att?Math.max(0,S.w-dt/.045):Math.min(1,S.w+dt/.28);
+    // (v181) cage foes with modelled fists ease into the strike grip over the wind-up (0.2 s) and back (0.35 s): the hero's
+    // 0.045 s turn is hidden inside a fast swing, but a foe holds its coil, so the weapon visibly snapped round
+    else if(dt>0){const tin=h._gripLock?.2:.045,tout=h._gripLock?.35:.28;S.w=att?Math.max(0,S.w-dt/tin):Math.min(1,S.w+dt/tout)}
     // the hero's swings can be as short as 0.1 s: be in the strike grip by the end of the wind-up
     if(h===pl&&HA.cur&&HA.cur.k!=null)S.w=Math.min(S.w,Math.max(0,1-HA.cur.k/.18));
     if(now!=null)S.t=now}
