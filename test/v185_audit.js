@@ -56,7 +56,7 @@ async(opt)=>{opt=opt||{};const W8=ms=>new Promise(r=>setTimeout(r,ms)),re=new Re
     for(let z=I.y0+1;z<I.y0+I.h-1;z++)for(let x=I.x0+1;x<I.x0+I.w-1;x++){const h=GH(x,z);if(!isFinite(h)){R.terrain.nan.push([x,z]);continue}if(h<-20){
         if(walk(x+1,z)&&walk(x-1,z)&&walk(x,z+1)&&walk(x,z-1))R.terrain.hole.push([x,z]);continue}
       const n=[GH(x+1,z),GH(x-1,z),GH(x,z+1),GH(x,z-1)];if(n.some(q=>q<-20))continue;const mn=Math.min(...n),mx=Math.max(...n);
-      if(h-mx>2.2)R.terrain.spike.push([x,z,+(h-mx).toFixed(1)]);if(mn-h>2.2)R.terrain.pit.push([x,z,+(mn-h).toFixed(1)]);
+      if(h-mx>2.2&&walk(x,z)&&walk(x+1,z)&&walk(x-1,z)&&walk(x,z+1)&&walk(x,z-1))R.terrain.spike.push([x,z,+(h-mx).toFixed(1)]);   // in walkable groundif(mn-h>2.2)R.terrain.pit.push([x,z,+(mn-h).toFixed(1)]);
       if(walk(x,z)){for(const [dx,dz] of [[1,0],[0,1]])if(walk(x+dx,z+dz)){const s=Math.abs(GH(x+dx,z+dz)-h);if(s>STEP)R.terrain.step.push([x,z,+s.toFixed(1)])}}
       if(MAP[z][x]==='~'&&h>.35&&walk(x+1,z)+walk(x-1,z)+walk(x,z+1)+walk(x,z-1)<2)R.terrain.wet.push([x,z])}
     // near-black flat unlit pieces (black squares)
@@ -65,4 +65,5 @@ async(opt)=>{opt=opt||{};const W8=ms=>new Promise(r=>setTimeout(r,ms)),re=new Re
       o.geometry.computeBoundingBox();const s=new THREE.Vector3().setFromMatrixScale(o.matrixWorld),bb=o.geometry.boundingBox,sz=[(bb.max.x-bb.min.x)*s.x,(bb.max.y-bb.min.y)*s.y,(bb.max.z-bb.min.z)*s.z].sort((p,q)=>q-p);
       if(sz[1]>.25)R.dark.push({x:+p.x.toFixed(1),z:+p.z.toFixed(1),y:+(p.y-GH(p.x,p.z)).toFixed(2),sz:sz.map(v=>+v.toFixed(2)),root:rootOf(o).name||rootOf(o).type})});
     out.inst.push(R)}
+  out.tidy=typeof EP185TIDY!='undefined'&&EP185TIDY?{overlap:EP185TIDY.overlap,void:EP185TIDY.void,cliff:EP185TIDY.cliff}:null;out.ponds=(typeof ENV177!='undefined'&&ENV177&&ENV177.ponds)||null;
   out.ms=Math.round(performance.now()-out.t0);return out}

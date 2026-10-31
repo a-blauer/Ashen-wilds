@@ -107,6 +107,7 @@ v168_tiers.py
 v168_ground.py
 v177_env.py
 v183_env_paint.py
+LIGHT=1 v185_audit.py
 v172_edge_cam.py
 FAST=0 kqd_detail.py
 SP=Foxlet,Ashwolf,Emberlynx,Direfang,Skollmaw SETS=base,fuse v180_comp_float.py
