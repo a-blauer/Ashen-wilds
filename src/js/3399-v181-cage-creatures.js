@@ -78,6 +78,24 @@ function cr_mitten(B,S,s,o){const F=b7_Arm(S,s),W=mdW(B,[[F.A+'2',1]]),n=o.n||4,
       const q=add3(add3(p,mul3(X,x*ww)),mul3(U,y)),ln=j>0&&i%2==0&&i>0&&i<2*n;return {x:q[0],y:q[1],z:q[2],w:W,rgb:ln?line:base}}))}
   for(let j=0;j<N;j++)for(let k=0;k<M;k++){const a=rows[j][k],a1=rows[j][(k+1)%M],b2=rows[j+1][k],b3=rows[j+1][(k+1)%M];mdTri(B,'c',a,a1,b2,0);mdTri(B,'c',b2,a1,b3,0)}
   const e=add3(last.p,mul3(last.dd,th*.5)),cv={x:e[0],y:e[1],z:e[2],w:W,rgb:base},R=rows[N];for(let k=0;k<M;k++)mdTri(B,'c',cv,R[k],R[(k+1)%M],0)}
+// cgFur with colour that flows corner to corner instead of per-face noise (no "pixel camouflage"): one smooth function of position
+// (strands stretched downward, low frequency) and of how far out along a clump a corner is: darker roots, lighter tips. Same
+// shell, clumps and cost as cgFur (3393).
+function cr_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0,c2=o.col2==null?mdSh(o.col,.7):o.col2;
+  M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
+  const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(low.some(e=>e[0]==i||e[1]==i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  // the colour at a point p, t = 0 at the roots … 1 at a clump's tip
+  const C=new THREE.Color(),hex=(p,t)=>{const n=n3Sn(p[0]*1.3,p[1]*.35,p[2]*1.3,9,seed);return mdMix(mdMix(c2,o.col,c9_cl(.25+n*.75)),mdSh(o.col,1.18),t*.55)},rgb=(p,t)=>{C.setHex(hex(p,t));return [C.r,C.g,C.b]};
+  cgEmit(B,M,()=>null,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol:m=>hex([m.x,m.y,m.z],.3)});
+  const W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;w=[si,sw];W.set(i,w);return w};
+  const vx=(p,i,t)=>({x:p[0],y:p[1],z:p[2],w:wOf(i),rgb:rgb(p,t)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
+  low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
+    for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,2+Math.floor(a181H(ci,seed,7)*3)),run=loop.slice(i,i+n+1);i+=n;ci++;
+      const h=a181H(ci,seed,3),L=o.len*(1-(o.jag==null?.6:o.jag)*h),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],T=vx(tip,run[Math.floor(run.length/2)],1),Ti=Object.assign({},T,{rgb:rgb(tip,.75)});
+      for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p,.3),T,vx(pos(q),q,.3),0);mdTri(B,t,vx(V[q],q,0),Ti,vx(V[p],p,0),0)}
+      const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f,0),Ti,vx(pos(f),f,.3),0);mdTri(B,t,vx(pos(l),l,.3),Ti,vx(V[l],l,0),0)}})}
 // clean toes: short rounded lofts out of the front of the foot, optional claws
 function cr_toes(B,S,s,o){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,Wd=S.foot.w,W=[[l,1]],n=o.n||3;
   for(let i=0;i<n;i++){const c=n==1?0:i/(n-1)*2-1,x=A[0]+c*(o.spread||.028)*Wd,z0=A[2]+.11*L,r=(o.r||.016)*Wd,len=(o.len||.07)*(1-Math.abs(c)*.15);
@@ -195,7 +213,7 @@ cr_stance('saltgolem',{sx:.2,hx:-.2,lk:.16,rk:.16,az:.24,lz:-.24,ax:-.06,lx:-.06
   ['lh','rh'].forEach(L=>{const h0=J[L+'0'];J[L+'1']=[h0[0]*1.06,h0[1]*.56,.085];J[L+'2']=[h0[0]*1.1,.19,-.075]});
   cg181Reg('gargoyle',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1},(x,y,z,n)=>.016*(n3Sn(x,y,z,5,9)-.45)+.01*(n3Sn(x,y,z,12,9)-.45));
-    cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.8,jaw:1.6,brow:1.6,snout:.026})));
+    cr_fill(M,S,.014,.03);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.8,jaw:1.6,brow:1.6,snout:.026})));
     M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.2,hk:.28});
     const my=S.hp(0,1.553,0)[1];
     // weathered stone, moss where the rain runs down (fronts and tops), dark cracks
@@ -265,9 +283,9 @@ cr_stance('gargoyle',{sx:.34,hx:-.34,lk:.12,rk:.12,ax:-.3,lx:-.3,az:.15,lz:-.15,
     {const q=S.hp(0,1.592,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p)c9_keep(k.p('head','box','g',0x5ad82a,p[0],p[1],p[2]-.001,.042*S.hs,.008,.01))}
     // a mossy beard hanging from the chin and jaw
     {const by=S.hp(0,1.575,0)[1];for(let i=0;i<5;i++){const x=(i-2)*.02*S.hs,p=cgRay(M,[x,S.hp(0,1.548,0)[1],.6],[0,0,-1],{head:1});if(p)k.L('head','c',i%2?moss:moss2,add3(p,[0,.004,-.014]),add3(p,[x*.3,-.11-(i%3)*.035,.03]),.014,.003,4)}
-      cgFur(B,M,m=>m.part=='head'&&m.s>-.1&&m.z>0&&m.y<by&&m.y>S.hp(0,1.525,0)[1],{off:.014,len:.13,col:moss,col2:moss2,seed:123,jag:.45,lump:[.5,1.2]})}
+      cr_Fur(B,M,m=>m.part=='head'&&m.s>-.1&&m.z>0&&m.y<by&&m.y>S.hp(0,1.525,0)[1],{off:.014,len:.13,col:moss2,col2:moss,seed:123,jag:.45,lump:[.5,1.2]})}
     // the moss mantle over the hump and the crown
-    cgFur(B,M,furSel,{off:.026,len:.11,col:moss,col2:moss2,seed:121,jag:.55});
+    cr_Fur(B,M,furSel,{off:.026,len:.11,col:moss2,col2:moss,seed:121,jag:.55});
     // a crown of gnarled roots
     for(let i=0;i<6;i++){const an=-1.4+i*.56,t=b7_Top(M,S,Math.sin(an)*.07,-.04-Math.cos(an)*.02);if(!t)continue;let a=sub3(t,[0,.018,0]),d=[Math.sin(an)*.4,1,-.3];for(let j=0;j<3;j++){const b=add3(a,mul3(d,.055));k.L('head','c',C9.bark,a,b,.016-j*.004,.012-j*.003,4);a=b;d=[d[0]*1.3,d[1]-.3,d[2]-.2]}}
     // a mushroom shelf on the left shoulder, a rock crusted with lichen on the right
@@ -423,8 +441,8 @@ const cr_ELK8=[0,2,3,5,7,8,10,11].map(i=>ELKHEAD[i]);
     cgEyes(k,M,S,c9_WD.eye,.045,1.625,.75,-.006);for(let i=0;i<6;i++)cgTeeth(k,M,S,[[(i-2.5)*.008,1.556,.012,0]],0xe8e0d0);
     [-1,1].forEach(s=>{let p=S.hp(s*.05,1.67,-.02),d=[s*.55,.8,-.25];for(let j=0;j<6;j++){const n=add3(p,mul3(d,.085));k.L('head','c',j<2?0xb8b0a0:bone,p,n,.018-j*.0025,.015-j*.0025,5);if(j>=1&&j<=4){const t=add3(n,[s*.03,.07+j*.01,.05-j*.015]);k.L('head','c',bone,n,t,.011-j*.0015,.002,4)}p=n;d=[d[0]*1.08,d[1]-.12,d[2]-.08]}});
     // the mantle of dark fur over the shoulders and back (the skin under it isn't drawn), a ragged fur kilt
-    cgFur(B,M,furSel,{off:.035,len:.18,col:fur,col2:fur2,seed:131,jag:.6});
-    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.1,.05,.016,m=>a181Nz(fur2,m,.3,12),{n:5,keep:m=>Math.round(Math.atan2(m.c,m.s)*5)%2==0});
+    cr_Fur(B,M,furSel,{off:.035,len:.18,col:fur,col2:fur2,seed:131,jag:.6});
+    cgSkirt(B,S,T[2][0]-.02,J.rh1[1]+.1,.05,.016,m=>mdMix(mdSh(fur2,.8),fur,c9_cl((m.y-J.rh1[1]-.1)/(T[2][0]-J.rh1[1]-.1))*.55+.1*n3Sn(m.x,m.y*.3,m.z,6,5)),{n:5,keep:m=>Math.round(Math.atan2(m.c,m.s)*5)%2==0});
     // bony knee caps
     [-1,1].forEach(s=>{const L=s<0?'lh':'rh',K=J[L+'1'],p=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(p){k.p(L+'1','sph','c',c9_WD.bone2,p[0],p[1]+.006,p[2]-.012,.03,.036,.024);WS(p)}});
     // long clawed fingers (four and a thumb) out of the narrow hand, black claws; clawed toes
