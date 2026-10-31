@@ -76,7 +76,9 @@ function cgBones(B,k,S,o){const J=S.J,bone=o.bone,bd=o.bone2||mdSh(o.bone,.72),t
     cgBoneTube(B,add3(l0,[0,.012,0]),[s*pq[1]*.62,py-.01,pz],.016*th,.018*th,[['pelvis',1]],[['pelvis',1]],bd,3);
     cgBoneTube(B,a0,a1,.022*th,.018*th,[[A+'0',1]],[[A+'0',1]],col);k.p(A+'0','sph','c',bone,a0[0],a0[1],a0[2],.032*th);k.p(A+'1','sph','c',bone,a1[0],a1[1],a1[2],.026*th);
     [-.012,.012].forEach(o2=>cgBoneTube(B,add3(a1,[0,0,o2*th]),add3(a2,[0,0,o2*.6*th]),.012*th,.01*th,[[A+'1',1]],[[A+'1',1]],col,3));
-    u8_hand(k,S,s,bone,o.fist&&o.fist(s)?'fist':'claw',bd,th,o.hand||1);
+    if(o.mitt&&o.fist&&o.fist(s)){const rf=o.hand||1,H=ud_hf(S,s),c0=add3(a2,mul3(H.d,.024*Math.sqrt(rf))),pc=sub3(H.kn,mul3(H.d,.012));k.p(A+'2','sph','c',bone,a2[0],a2[1],a2[2],.016*th);k.p(A+'2','sph','c',bone,c0[0],c0[1],c0[2],.017*rf,.017*rf,.017*rf);
+      u8_part(k,A+'2',dkG().sph,'c',bone,pc,H.f,H.d,[.031*rf,.03*Math.sqrt(rf),.0135*rf]);ud_fingers(B,S,s,bone,'fist',1.4,bd,0,rf)}
+    else u8_hand(k,S,s,bone,o.fist&&o.fist(s)?'fist':'claw',bd,th,o.hand||1);
     cgBoneTube(B,add3(l0,[0,.02,0]),l1,.026*th,.02*th,[[L+'0',1]],[[L+'0',1]],col);k.p(L+'0','sph','c',bone,l0[0],l0[1]+.01,l0[2],.034*th);k.p(L+'1','sph','c',bone,l1[0],l1[1],l1[2]+.008,.03*th);
     cgBoneTube(B,l1,add3(l2,[0,.01,0]),.02*th,.016*th,[[L+'1',1]],[[L+'1',1]],col);u8_foot(k,S,s,bone,th)});
   // the soul-light caged in the ribs, resting on the column; wisps rising off it
@@ -133,8 +135,24 @@ function ud_fingers(B,S,s,col,kind,len,nail,tip,rf){rf=rf||1;const H=ud_hf(S,s),
     for(let i=0;i<n;i++){a=add3(a,mul3(dv,l/n));dv=ud_rot(dv,k,curl);const q=r*(1-.32*(i+1)/n);Rg.push({p:a,rx:q,f:q,b:q,w:W})}const nr=Rg.length;
     if(tp){const e=add3(a,mul3(dv,tp)),q=r*.62;Rg.push({p:add3(a,mul3(dv,tp*.3)),rx:q,f:q,b:q,w:W},{p:e,rx:.0012,f:.0012,b:.0012,w:W})}
     mdLoft(B,Rg,{seg:5,capB:true,col:m=>tp&&m.i>nr-1?nail:col})};
-  for(let i=0;i<4;i++){const z=(1.5-i)*.016*rf,p=P(kn,z,-.004);if(fist)digit(p,D(1,-.45,.05),ax,L*.72,.0095*rf,2,1.2,0);else digit(p,D(1,-.15,z*.6/rf),ax,L*(i==3?.82:1),.0085*rf,3,.22,tip||0)}
-  digit(P(add3(H.a2,mul3(d,.032)),.024*rf,-.008),D(.6,-.3,.75),nrm3(cross3(u,f)),L*.62,.009*rf,2,fist?.6:.3,fist?0:(tip||0)*.6)}
+  if(fist){ud_mitten(B,H,rf,L,col);const t0=P(add3(H.a2,mul3(d,.034)),.026*rf,-.01),t1=add3(t0,mul3(D(.55,-.62,-.18),L*.32)),t2=add3(t1,mul3(D(.12,-.3,-.95),L*.3));
+    mdLoft(B,[{p:sub3(t0,mul3(D(.55,-.62,-.18),.014)),rx:.012*rf,f:.012*rf,b:.012*rf,w:W},{p:t0,rx:.0115*rf,f:.0115*rf,b:.0115*rf,w:W},{p:t1,rx:.0105*rf,f:.0105*rf,b:.0105*rf,w:W},{p:t2,rx:.0085*rf,f:.0085*rf,b:.0085*rf,w:W}],{seg:6,capB:true,col});return}
+  for(let i=0;i<4;i++){const z=(1.5-i)*.016*rf,p=P(kn,z,-.004);digit(p,D(1,-.15,z*.6/rf),ax,L*(i==3?.82:1),.0085*rf,3,.22,tip||0)}
+  digit(P(add3(H.a2,mul3(d,.032)),.024*rf,-.008),D(.6,-.3,.75),nrm3(cross3(u,f)),L*.62,.009*rf,2,.3,(tip||0)*.6)}
+// a closed fist: the four fingers as ONE rounded mass curling from the knuckles round the grip (in a fist they don't change the
+// outline), a slightly bumpy knuckle ridge, the gaps between the fingers painted as dark lines (colour per corner)
+function ud_mitten(B,H,rf,L,col){const {d,u,f,kn}=H,W=mdW(B,[[H.bn,1]]),ax=nrm3(cross3(u,d)),C=new THREE.Color(mdC(col)),X=[-1,-.75,-.5,-.25,0,.25,.5,.75,1],n=3;
+  let p=add3(add3(kn,mul3(u,-.004*rf)),mul3(d,-.018)),dv=nrm3(add3(d,mul3(u,-.45)));const P=[p];p=add3(p,mul3(dv,.018));P.push(p);for(let i=0;i<n;i++){p=add3(p,mul3(dv,L*.72/n));dv=ud_rot(dv,ax,.8);P.push(p)}
+  const RG=P.map((c,i)=>{const t=nrm3(sub3(P[Math.min(i+1,P.length-1)],P[Math.max(i-1,0)])),a=nrm3(sub3(f,mul3(t,f[0]*t[0]+f[1]*t[1]+f[2]*t[2]))),nn=cross3(t,a),hw=.033*rf*(i?1-.1*i/P.length:.5),th=.0115*rf*(i?1-.18*i/P.length:.6),
+      kb=i==1||i==2?.22:0,ring=[];
+    [1,-1].forEach(sd=>(sd>0?X:X.slice(1,-1).reverse()).forEach(x=>{const g=.5+.5*Math.cos(4*Math.PI*(x-.25)),h=th*Math.pow(Math.max(0,1-x*x),.45)*(sd>0?1+kb*g:1),
+      q=add3(add3(c,mul3(a,x*hw)),mul3(nn,sd*h)),line=Math.min(...[-.5,0,.5].map(b=>Math.abs(x-b)))<.01&&i>0?.42:1;ring.push({x:q[0],y:q[1],z:q[2],w:W,rgb:[C.r*line,C.g*line,C.b*line],c})}));return ring});
+  const tri=(a,b,c)=>{const o=a.c,nx=(b.y-a.y)*(c.z-a.z)-(b.z-a.z)*(c.y-a.y),ny=(b.z-a.z)*(c.x-a.x)-(b.x-a.x)*(c.z-a.z),nz=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x),
+      m=[(a.x+b.x+c.x)/3-o[0],(a.y+b.y+c.y)/3-o[1],(a.z+b.z+c.z)/3-o[2]];if(nx*m[0]+ny*m[1]+nz*m[2]<0)mdTri(B,'c',a,c,b,0);else mdTri(B,'c',a,b,c,0)};
+  for(let i=0;i<RG.length-1;i++){const A=RG[i],Bq=RG[i+1],N=A.length;for(let j=0;j<N;j++){const k=(j+1)%N;tri(A[j],A[k],Bq[j]);tri(Bq[j],A[k],Bq[k])}}
+  const E=RG[RG.length-1],t=nrm3(sub3(P[P.length-1],P[P.length-2])),ce=add3(P[P.length-1],mul3(t,.006*rf)),cv={x:ce[0],y:ce[1],z:ce[2],w:W,rgb:[C.r,C.g,C.b],c:P[P.length-1]};
+  for(let j=0;j<E.length;j++){const a=E[j],b=E[(j+1)%E.length],o=a.c,nx=(b.y-a.y)*(cv.z-a.z)-(b.z-a.z)*(cv.y-a.y),ny=(b.z-a.z)*(cv.x-a.x)-(b.x-a.x)*(cv.z-a.z),nz=(b.x-a.x)*(cv.y-a.y)-(b.y-a.y)*(cv.x-a.x);
+    if(nx*t[0]+ny*t[1]+nz*t[2]<0)mdTri(B,'c',a,cv,b,0);else mdTri(B,'c',a,b,cv,0)}}
 // the point a fist closes round (the curled fingers' middle), the shaft passes through it along dir
 function ud_grip(S,s,kd,dep){const H=ud_hf(S,s,kd);return add3(add3(H.kn,mul3(H.d,.022)),mul3(H.u,-(dep||.03)))}
 // the last kit part takes the skin's weights at p (it bends with the skin there instead of riding one bone)
@@ -170,7 +188,7 @@ ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
 // small skull sunk low between huge shoulders, long thick doubled arms hanging to the knees, short thick legs. Cheaper kit (the
 // fused skulls and their sockets were the heaviest shapes) keeps it under the regular-foe ceiling.
 (function(){const S=cgHuman({h:.76,w:1.45,d:1.3,at:1.6,lt:1.5,hs:.92,armL:1.13,legL:.9,neckL:-.03}),J=S.J,T=S.torso,bone=0x968c74,bone2=0x6e6652,dark=0x3e3a2e,eye=0x7aff9a,fire=0x5aff7a,iron=0x3a3a38;
-  cgBonesReg('colossus',S,function(B,P,k){const th=2.3,R=cgBones(B,k,S,{bone,bone2,th,cage:1.32,rt:1.45,hand:1.9,eye,fist:s=>s>0});
+  cgBonesReg('colossus',S,function(B,P,k){const th=2.3,R=cgBones(B,k,S,{bone,bone2,th,cage:1.32,rt:1.45,hand:1.9,mitt:1,eye,fist:s=>s>0});
     const tb=y=>y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis',sh=T[6][0],ch=J.chest[1],sp=J.spine[1];
     // limbs doubled up with extra bones lashed alongside
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],l0=J[L+'0'],l1=J[L+'1'],l2=J[L+'2'];
@@ -195,7 +213,7 @@ ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
     {const c=R.sp(ch-.02),z=c[2]+.024*th+.09;k.p('chest','oct','g',fire,0,ch-.02,z,.1,.14,.085);k.p('chest','sph','g',0x2ae05a,0,ch-.04,z,.13,.15,.1)}
     [-1,1].forEach(s=>{const H=S.head,y=S.hp(0,1.629,0)[1],q=cgAt(H,y),z=(q[4]||0)+q[2]*.92-.01;for(let i=0;i<3;i++)k.L('head','g',fire,[s*.034*S.hs,y+.005,z],[s*(.04+i*.012)*S.hs,y+.06+i*.02,z-.03-i*.015],.012-i*.003,.002,4)});
     // the club: a giant's thigh bone gripped in the right fist, shards lashed round its head with an iron band
-    {const H=ud_hf(S,1,.08*Math.sqrt(1.9)),g=ud_grip(S,1,.08*Math.sqrt(1.9),.045),cd=nrm3(add3(H.f,mul3(H.d,.75))),A=t=>add3(g,mul3(cd,t)),sd=nrm3(cross3(cd,H.u));
+    {const H=ud_hf(S,1),g=ud_grip(S,1,null,.05),cd=nrm3(add3(H.f,mul3(H.d,.75))),A=t=>add3(g,mul3(cd,t)),sd=nrm3(cross3(cd,H.u));
       k.L('aR2','c',bone,A(-.1),A(.36),.036,.054,7);const hd=A(.42),pm=A(-.12);k.p('aR2','dod','c',bone,hd[0],hd[1],hd[2],.1,.09,.09);k.p('aR2','sph','c',bone2,pm[0],pm[1],pm[2],.058,.05,.058);
       for(let i=0;i<5;i++){const a=i/5*6.283,o=add3(mul3(sd,Math.cos(a)),mul3(H.u,Math.sin(a))),q=add3(hd,mul3(o,.08));u8_part(k,'aR2',dkG().cone4,'c',bone2,q,cd,o,[.022,.14,.022])}
       u8_part(k,'aR2',dkG().tor,'m',iron,A(.3),sd,cd,[.064,.05,.064])}
