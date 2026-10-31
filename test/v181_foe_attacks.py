@@ -5,13 +5,17 @@
 #    target's chest; near the ground for a slam), the weapon hand in front of the shoulders;
 #  * unarmed: the striking hand in front at a sensible height;  casters / slings: the staff head or hand forward; archers: the bow hand;
 #  * the weapon stays in the fist all through the attack (the point held in the fist on the hand's grip anchor);
+#  * the recovery never takes the weapon's head further toward the target than it was at the hit (no "second blow");
+#  * the weapon (from a third of the way up the handle to the head) never passes through the head (a capsule round the
+#    head bone, radius HEAD_R x the height / 1.7);
 #  * the feet stay planted (ankles within a few cm of where they stood), no NaN, the pose returns to the plain stance after;
 #  * one real enemy fight step (mStart / mTick / animC): the system drives the attack and the head lands toward the hero.
-# ONLY=orc,gharial  SHOT=1 (pictures of the hit moment: out/v181_fa_<key>.jpg)
+# ONLY=orc,gharial  HEAD_R=.07
 import os,sys,json,base64,io
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP
+HEAD_R=float(os.environ.get('HEAD_R','.07'))
 FOES=[('brigand','strike'),('orc','strike'),('orc','slam'),('troll','strike'),('hobgoblin','strike'),('skeleton','strike'),('nagaw','strike'),
   ('executioner','strike'),('giant','strike'),('giant','slam'),('jotun','strike'),('vampk','strike'),('hollowknight','strike'),('hollowknight','slam'),
   ('gharial','strike'),('bandit','strike'),('vamp','strike'),('ss165zealot','strike'),
@@ -21,7 +25,7 @@ FOES=[('brigand','strike'),('orc','strike'),('orc','slam'),('troll','strike'),('
   ('yeti','strike'),('amalgam','strike'),('saltgolem','strike'),('colossus','strike'),('drowned','strike')]
 if os.environ.get('ONLY'):
     keep=os.environ['ONLY'].split(',');FOES=[f for f in FOES if f[0] in keep]
-JS=r"""([k,n,shot])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o.matrixWorld);
+JS=r"""([k,n,shot,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o.matrixWorld);
  const c=enemyC(k,20,{}),g=cr(c);scene.add(g);let T=5000;const step=ms=>{T+=ms;animC(g,T,false,0);g.position.set(0,0,0);g.rotation.y=0;g.updateMatrixWorld(true)};for(let i=0;i<40;i++)step(16);
  const out={k,n,err:[]},b=g.h&&g.h.bones;if(!b){out.err.push('no bones');scene.remove(g);return out}
  const bb=new THREE.Box3().setFromObject(g),H=bb.max.y-bb.min.y;out.H=H;
@@ -29,7 +33,7 @@ JS=r"""([k,n,shot])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o
  const feet0=b.lh2&&!g.h.nt?[P(b.lh2),P(b.rh2)]:null,sh0=P(b.aR0).add(P(b.aL0)).multiplyScalar(.5),chest0=P(b.chest);
  const rot0={};['aR0','aR1','aR2','aL0','aL1','spine','pelvis'].forEach(x=>rot0[x]=b[x].quaternion.clone());
  const dt=1/30,tl=[];for(let t=0;t<M.wind;t+=dt)tl.push([0,t/M.wind]);for(let t=0;t<M.act;t+=dt)tl.push([1,t/M.act]);tl.push(hitPh);for(let t=M.rec;t>0;t-=dt)tl.push([2,t/M.rec]);
- let maxGrip=0,maxFoot=0,nan=0,res=null,driven=0;
+ let maxGrip=0,maxFoot=0,nan=0,res=null,driven=0,hitZ=null,recOver=null,headMin=9,headAt=null,fi=0;const sc=H/1.7;
  const fa0=()=>g._fa;
  for(const [ph,kk] of tl){g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};step(dt*1000);const S=g._fa;if(S&&S.ph>=0)driven=1;
   b.pelvis.traverse(o=>{if(o.isBone&&(isNaN(o.quaternion.x)||isNaN(o.position.x)))nan=1});
@@ -37,13 +41,19 @@ JS=r"""([k,n,shot])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o
   if(we&&we.W.parent){const W=we.W,hd=we.C.hold,hp=W.localToWorld(new V(hd[0],hd[1],hd[2])),gd=g.h._gripD&&g.h._gripD[we.side],an=C=>new V(GRIP_AN[0]+(gd?gd[0]:0),GRIP_AN[1]+(gd?gd[1]:0),GRIP_AN[2]+(gd?gd[2]:0));
     const ap=W.parent.localToWorld(an());maxGrip=Math.max(maxGrip,hp.distanceTo(ap))}
   if(feet0){maxFoot=Math.max(maxFoot,P(b.lh2).distanceTo(feet0[0]),P(b.rh2).distanceTo(feet0[1]))}
+  fi++;if(we&&we.W.parent){const W=we.W,L=W.userData.faLen||.8,hd=we.C.hold,tipZ=W.localToWorld(new V(0,-L,0)).z-P(b.pelvis).z;
+    if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6)hitZ=tipZ;
+    if(ph==2&&hitZ!=null&&tipZ>hitZ+.04*sc&&(!recOver||tipZ-hitZ>recOver[1]))recOver=[fi,tipZ-hitZ];
+    // the weapon past the fist against a capsule round the head (head bone up 0.16 x scale)
+    if(!(ph==0&&kk<.15)&&!(ph==2&&kk<.15)){const h0=P(b.head),h1=h0.clone().add(new V(0,.16*sc,0)),seg=new THREE.Line3(h0,h1),cp=new V();
+      for(let j=0;j<=6;j++){const y=hd[1]+(-L-hd[1])*(.35+.65*j/6),pt=W.localToWorld(new V(hd[0],y,hd[2]));seg.closestPointToPoint(pt,true,cp);const d=pt.distanceTo(cp)/sc;if(d<headMin){headMin=d;headAt=fi}}}}
   if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6){const hb=b[side=='L'?'aL2':'aR2'],hand=P(hb);let tip=null;
     if(we&&we.W.parent){const W=we.W,L=W.userData.faLen||.8;tip=W.localToWorld(new V(0,-L,0))}
     res={off:P(b[side=='L'?'aR2':'aL2']).toArray(),hand:hand.toArray(),tip:tip?tip.toArray():null,sh:P(b.aR0).add(P(b.aL0)).multiplyScalar(.5).toArray(),chest:chest0.toArray(),side,we:we?we.ty:null};
     if(shot){}}}
  g.ak=null;for(let i=0;i<20;i++)step(16);
  let back=0;for(const x in rot0)back=Math.max(back,2*Math.acos(Math.min(1,Math.abs(rot0[x].dot(b[x].quaternion)))));
- Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray()});scene.remove(g);return out}"""
+ Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt});scene.remove(g);return out}"""
 JS_GAME=r"""()=>{const V=THREE.Vector3,out={err:[]};const p=pl.position;const e=spawnEnemy_base('orc',p.x,p.z+1.6,5,{agg:1});e.m.scale.setScalar(e.m.bs);
  let now=performance.now();const tick=()=>{now+=16;e.m._ie=e;if(e.atk)mTick(e,.016,now);animC(e.m,now,false,0);e.m.updateMatrixWorld(true)};
  for(let i=0;i<10;i++)tick();mStart(e,pl,'strike');let hitTip=null,drv=0,n=0;
@@ -56,7 +66,7 @@ def s(pg):
     pg.click('[data-dev=desktop]',timeout=600000);pg.click('[data-c="warrior"]',timeout=600000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     fails=[];notes=[]
     for k,n in FOES:
-        r=ev(JS,[k,n,bool(os.environ.get('SHOT'))])
+        r=ev(JS,[k,n,False,HEAD_R])
         tag='%s %s'%(k,n)
         if r['err']:fails.append('%s: %s'%(tag,r['err']));continue
         if not r['driven']:fails.append('%s: the attack is not driven by the foe-attack system'%tag);continue
@@ -64,7 +74,7 @@ def s(pg):
         H=r['H'];sc=H/1.7;res=r['res']
         if not res:fails.append('%s: no hit-moment sample'%tag);continue
         hand,tip,sh,ch=res['hand'],res['tip'],res['sh'],res['chest']
-        line='%-22s H %.2f hand (%.2f %.2f %.2f) tip %s grip %.3f feet %.3f back %.2f'%(tag,H,hand[0],hand[1],hand[2],'(%.2f %.2f %.2f)'%tuple(tip) if tip else '-',r['maxGrip'],r['maxFoot'],r['back'])
+        line='%-22s H %.2f hand (%.2f %.2f %.2f) tip %s grip %.3f feet %.3f back %.2f head %.3f@%s'%(tag,H,hand[0],hand[1],hand[2],'(%.2f %.2f %.2f)'%tuple(tip) if tip else '-',r['maxGrip'],r['maxFoot'],r['back'],r['headMin'],r['headAt'])
         print(line)
         # the striking point: the weapon's head, or the hand
         pt=tip if tip and n in ('strike','slam') else res['off'] if k in ('bonearcher','nagaa') else hand
@@ -82,6 +92,8 @@ def s(pg):
             # casts and throws: the staff head / hand forward of the shoulders and not below the hips
             if pt[2]<sh[2]+.12*H:fails.append('%s: the cast / throw is not pushed toward the target (z %.2f, shoulders %.2f)'%(tag,pt[2],sh[2]))
             if pt[1]<.35*H:fails.append('%s: the cast / throw hand is low (%.2f m, body %.2f m)'%(tag,pt[1],H))
+        if r['recOver']:fails.append('%s: the recovery takes the weapon head %.2f m further toward the target than at the hit (frame %d): reads as a second blow'%(tag,r['recOver'][1],r['recOver'][0]))
+        if r['headMin']<HEAD_R:fails.append('%s: the weapon passes through the head (%.3f x scale from the head, frame %s)'%(tag,r['headMin'],r['headAt']))
         if r['maxGrip']>.03*sc+.01:fails.append('%s: the weapon leaves the fist (%.3f m)'%(tag,r['maxGrip']))
         if r['maxFoot']>.035*sc:fails.append('%s: the feet slide (%.3f m)'%(tag,r['maxFoot']))
         if r['back']>.25:fails.append('%s: the arms or body do not return to the stance after the attack (%.2f rad)'%(tag,r['back']))

@@ -17,6 +17,9 @@
 // projectiles leave at s = 1 (the act's start); slams and rainfire land at s = 2 (the act's end). Keys are played with a
 // monotone cubic per channel: anticipation (coil, then a held, creeping coil), a fast whip into the hit, follow-through past
 // it, a settle with a little overshoot. Heavier foes heave into the coil later and settle slower; daggers and ghouls snap.
+// (review, Oct 31) Melee downswings begin inside the wind-up (a smooth time remap, S.rm) so the blow is visible over ~5
+// frames; the weapon lifts out to the side, the follow-through ends low in front, and the recovery draws the hand in first
+// (and is clamped never to reach further toward the target than the hit, S.zHit) so it can't read as a second blow.
 // Blend: from the pose the earlier layers made (walk/idle, stance) into this one over the start of the wind-up and back over
 // the end of the recovery; a cancelled attack (stun, death) fades out over 0.15 s. The body group's whole-body tilt and
 // lunge (mTick's m.pose) is left out for the moves driven here: the lean comes from the hips and spine, feet planted.
@@ -67,26 +70,30 @@ function faBuild(){
   const R0={s:0,H:[0,-.85,.25],D:[0,.8,.6],E:[0,0,1],P:[.4,-.9,-.3],O:[-.05,-.9,.12],OP:[-.4,-.9,-.3],hs:1,ow:1,ot:0,py:0,sy:0,cy:0,sx:0,sz:0,dy:0,fz:0,fx:0,ad:0,ah:0};
   const RE=Object.assign({},R0,{s:3});
   // ---- one-handed (axe, club, sword): A forehand diagonal (high on the weapon side → low past the off hip), B overhead chop
+  // (a lift key first takes the weapon up outside the head; the follow-through finishes low in front, across toward the off
+  // hip; the recovery draws the hand in to the body first and lets the weapon rise close in, never further out than the hit)
+  const REC1=[{s:2.3,H:[-.15,-.55,.18],P:[.6,-.8,-.4],py:-.18,sy:-.1,cy:-.04,sx:.18,sz:.03,dy:-.06,fz:.06},
+    {s:2.6,H:[-.05,-.42,.15],D:[-.05,.45,.88],E:[0,1,0],P:[.5,-.9,-.3],py:-.06,sy:-.03,cy:0,sx:.08,sz:0,dy:-.03,fz:.02,O:[-.05,-.85,.1],OP:[-.4,-.9,-.3]},
+    {s:2.85,H:[0,-.65,.2],D:[0,.85,.5]},RE];
   FA_A.oneA=faTrack([R0,
+    {s:.25,H:[.35,-.3,.1],D:[.7,.55,.25],E:[0,1,0],P:[1,-.4,-.3],py:.15,sy:.08,O:[.08,-.55,.4]},
     {s:.55,H:[.25,.35,-.3],D:[.35,.25,-.9],E:[.1,1,0],P:[1,-.2,-.4],py:.35,sy:.2,cy:.1,sx:-.04,sz:-.06,dy:-.02,fz:-.05,O:[.15,-.3,.6],OP:[-.7,-.6,-.2]},
     {s:1,H:[.3,.42,-.36],D:[.35,.35,-.87],py:.42,sy:.25,cy:.12,sx:-.06,sz:-.08,dy:-.03,fz:-.07,O:[.18,-.28,.62]},
     {s:1.22,H:[.2,.4,.15],D:[.25,.75,-.6],E:[-.2,.1,1],P:[1,-.3,-.2],py:.15,sy:.05,cy:0,sx:.05,sz:0,dy:-.04,fz:0,O:[.05,-.5,.3]},
     {s:1.34,H:[.02,.3,.5],D:[-.05,.8,.6],E:[-.4,-.5,.8]},
     {s:1.45,H:[-.3,.05,.62],D:[-.5,-.55,.7],E:[-.5,-.85,.1],P:[.8,-.6,0],py:-.25,sy:-.2,cy:-.1,sx:.25,sz:.06,dy:-.07,fz:.1,O:[-.1,-.7,-.15],OP:[-.6,-.6,-.6],ad:1,ah:1},
-    {s:1.75,H:[-.55,-.5,.5],D:[-.55,-.8,-.2],E:[-.2,-.3,-1],P:[.6,-.8,.1],py:-.4,sy:-.25,cy:-.12,sx:.3,sz:.08,dy:-.09,fz:.12,ad:0,ah:0},
-    {s:2,H:[-.5,-.6,.42],D:[-.45,-.8,-.4],py:-.38,sy:-.22,cy:-.1,sx:.28,dy:-.09,fz:.11},
-    {s:2.3,H:[-.2,-.55,.45],D:[-.2,-.25,1]},{s:2.6,H:[-.1,-.6,.4],D:[-.05,.65,.75],E:[0,1,0],P:[.5,-.9,-.2],py:-.1,sy:-.05,cy:0,sx:.1,sz:0,dy:-.03,fz:.03,O:[-.05,-.85,.1],OP:[-.4,-.9,-.3]},
-    RE]);
+    {s:1.75,H:[-.45,-.45,.5],D:[-.45,-.6,.65],E:[-.3,-.6,-.6],P:[.6,-.8,.1],py:-.38,sy:-.24,cy:-.12,sx:.3,sz:.08,dy:-.09,fz:.12,ad:0,ah:0},
+    {s:2,H:[-.4,-.52,.42],D:[-.4,-.65,.6],py:-.36,sy:-.22,cy:-.1,sx:.28,dy:-.09,fz:.11},
+    ].concat(REC1.map(k=>k.s==2.3?Object.assign({},k,{D:[-.25,-.6,.75]}):k)));
   FA_A.oneB=faTrack([R0,
+    {s:.25,H:[.3,-.15,.12],D:[.65,.6,.2],E:[0,1,0],P:[1,-.3,-.3],py:.08,O:[.08,-.55,.4]},
     {s:.55,H:[0,.62,-.12],D:[.15,.45,-.9],E:[0,1,0],P:[.9,.5,-.4],py:.18,sy:.1,sx:-.1,sz:-.03,dy:-.01,fz:-.05,O:[.15,-.25,.6],OP:[-.7,-.6,-.2]},
     {s:1,H:[-.02,.7,-.15],D:[.15,.5,-.88],py:.2,sy:.12,sx:-.13,sz:-.04,dy:-.02,fz:-.06,O:[.18,-.22,.62]},
     {s:1.22,H:[-.05,.66,.22],D:[.05,.75,-.65],E:[0,.1,1],P:[.9,.3,-.2],py:.05,sy:.02,sx:0,sz:0,dy:-.04,fz:0,O:[.05,-.5,.3]},
     {s:1.34,H:[-.12,.45,.5],D:[0,.75,.65],E:[0,-.5,.5]},
     {s:1.45,H:[-.2,.12,.6],D:[-.15,-.65,.75],E:[0,-1,0],P:[.7,-.6,0],py:-.12,sy:-.08,sx:.32,dy:-.08,fz:.1,O:[-.1,-.7,-.15],OP:[-.6,-.6,-.6],ad:1,ah:1},
-    {s:1.75,H:[-.28,-.5,.55],D:[-.1,-.9,-.35],E:[0,-.4,-1],sx:.36,dy:-.1,fz:.12,ad:0,ah:0},
-    {s:2,H:[-.28,-.58,.5],D:[-.1,-.85,-.5],sx:.34,dy:-.1,fz:.11},
-    {s:2.3,H:[-.2,-.55,.45],D:[0,-.2,1]},{s:2.6,H:[-.1,-.6,.4],D:[0,.7,.7],E:[0,1,0],P:[.5,-.9,-.2],py:-.05,sy:-.03,sx:.1,dy:-.03,fz:.03,O:[-.05,-.85,.1],OP:[-.4,-.9,-.3]},
-    RE]);
+    {s:1.75,H:[-.25,-.45,.55],D:[-.15,-.65,.7],E:[0,-.6,-.6],sx:.36,dy:-.1,fz:.12,ad:0,ah:0},
+    {s:2,H:[-.25,-.52,.5],D:[-.12,-.7,.65],sx:.34,dy:-.1,fz:.11}].concat(REC1.map(k=>k.s==2.3?Object.assign({},k,{D:[-.1,-.6,.78],py:-.06,sy:-.04,cy:0}):k)));
   // ---- one-handed slam: a leaping overhead chop into the ground (contact at the act's end), the off arm up for balance
   FA_A.oneS=faTrack([R0,
     {s:.35,H:[.05,-.72,.22],D:[.05,.6,.8],E:[0,1,0],P:[.5,-.8,-.4],O:[-.05,-.75,.2],OP:[-.6,-.7,-.4],sx:.18,dy:-.08,fz:-.02},
@@ -101,26 +108,27 @@ function faBuild(){
   // ---- two-handed (great axe, hammer, greatsword): A overhead smash, B big diagonal; hands together at the midline, the
   // off fist on the haft (ot: how far along the handle, from the weapon's own handle point)
   const T0=Object.assign({},R0,{ow:1});
+  const REC2=[{s:2.3,H:[.05,-.55,.15],hs:.3,P:[.6,-.8,-.4],OP:[-.6,-.8,-.4],py:-.05,sy:-.03,cy:0,sx:.25,sz:0,dy:-.08,fz:.06},
+    {s:2.6,H:[.1,-.38,.18],hs:.45,D:[.15,.55,.82],E:[0,1,0],py:0,sy:0,sx:.1,dy:-.03,fz:.02},
+    Object.assign({},RE,{s:2.85,ow:0}),RE];
   FA_A.twoA=faTrack([T0,
+    {s:.25,H:[.3,-.1,.2],hs:.4,D:[.6,.65,0],E:[0,1,0],P:[1,-.3,-.3],OP:[-.6,-.6,-.2],py:.12,sy:.05},
     {s:.6,H:[.12,.72,-.15],hs:0,D:[.25,.45,-.85],E:[0,1,0],P:[.9,.4,-.3],OP:[-.9,.3,-.3],py:.25,sy:.12,cy:.05,sx:-.15,sz:-.05,dy:-.03,fz:-.07},
     {s:1,H:[.12,.78,-.18],D:[.25,.5,-.83],py:.28,sy:.14,sx:-.18,sz:-.06,dy:-.04,fz:-.08},
     {s:1.22,H:[.05,.82,.1],D:[.1,.8,-.55],E:[0,.2,1],P:[.9,.2,-.2],py:.1,sy:.03,cy:0,sx:-.02,sz:0,dy:-.04,fz:0},
     {s:1.34,H:[0,.55,.45],D:[0,.8,.6],E:[0,-.6,.6]},
     {s:1.45,H:[0,.2,.62],D:[0,-.6,.8],E:[0,-1,0],P:[.8,-.5,0],OP:[-.8,-.5,0],py:-.05,sy:-.05,sx:.38,dy:-.1,fz:.12,ad:1,ah:1},
-    {s:1.75,H:[0,-.45,.5],D:[0,-.75,.65],E:[0,-.3,-1],sx:.45,dy:-.13,fz:.14,ad:0,ah:0},
-    {s:2,H:[0,-.7,.35],D:[0,-.55,.85],sx:.43,dy:-.13,fz:.13},
-    {s:2.45,H:[.05,-.45,.4],hs:.5,D:[.1,.5,.85],E:[0,1,0],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:0,sy:0,sx:.15,dy:-.04,fz:.04,ow:1},
-    Object.assign({},RE,{s:2.85,ow:0}),RE]);
+    {s:1.75,H:[0,-.45,.5],D:[0,-.7,.7],E:[0,-.3,-1],sx:.45,dy:-.13,fz:.14,ad:0,ah:0},
+    {s:2,H:[0,-.62,.38],D:[0,-.55,.85],sx:.43,dy:-.13,fz:.13}].concat(REC2.map(k=>k.s==2.3?Object.assign({},k,{D:[.05,-.5,.86]}):k)));
   FA_A.twoB=faTrack([T0,
+    {s:.25,H:[.35,-.1,.15],hs:.4,D:[.7,.6,-.05],E:[0,1,0],P:[1,-.3,-.3],OP:[-.6,-.6,-.2],py:.18,sy:.08},
     {s:.6,H:[.45,.55,-.2],hs:0,D:[.6,.35,-.75],E:[.1,1,0],P:[1,.1,-.4],OP:[-.9,0,-.3],py:.4,sy:.22,cy:.1,sx:-.08,sz:-.1,dy:-.04,fz:-.07},
     {s:1,H:[.5,.6,-.25],D:[.6,.4,-.7],py:.48,sy:.26,cy:.12,sx:-.1,sz:-.12,dy:-.05,fz:-.08},
     {s:1.22,H:[.35,.6,.2],D:[.45,.7,-.55],E:[-.3,.1,1],py:.2,sy:.1,cy:.04,sx:0,sz:-.04},
     {s:1.34,H:[.15,.4,.5],D:[.05,.75,.65],E:[-.6,-.5,.4]},
     {s:1.45,H:[-.05,.15,.62],D:[-.4,-.55,.75],E:[-.6,-.8,.1],P:[.8,-.5,0],OP:[-.7,-.6,.1],py:-.25,sy:-.2,cy:-.1,sx:.3,sz:.06,dy:-.1,fz:.12,ad:1,ah:1},
-    {s:1.75,H:[-.35,-.5,.42],D:[-.75,-.6,.3],E:[-.2,-.3,-1],py:-.45,sy:-.28,cy:-.12,sx:.35,sz:.08,dy:-.12,fz:.13,ad:0,ah:0},
-    {s:2,H:[-.38,-.65,.35],D:[-.6,-.5,.6],py:-.42,sy:-.26,sx:.33,dy:-.12},
-    {s:2.45,H:[.05,-.45,.4],hs:.5,D:[.1,.5,.85],E:[0,1,0],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.15,sz:0,dy:-.04,fz:.04},
-    Object.assign({},RE,{s:2.85,ow:0}),RE]);
+    {s:1.75,H:[-.35,-.5,.42],D:[-.6,-.5,.62],E:[-.2,-.3,-1],py:-.45,sy:-.28,cy:-.12,sx:.35,sz:.08,dy:-.12,fz:.13,ad:0,ah:0},
+    {s:2,H:[-.32,-.6,.35],D:[-.5,-.5,.7],py:-.42,sy:-.26,sx:.33,dy:-.12}].concat(REC2.map(k=>k.s==2.3?Object.assign({},k,{H:[0,-.55,.15],D:[-.2,-.5,.84],py:-.15,sy:-.08}):k)));
   FA_A.twoS=faTrack([T0,
     {s:.35,H:[.05,-.55,.3],hs:.3,D:[.1,.6,.8],E:[0,1,0],P:[.5,-.8,-.4],OP:[-.5,-.8,-.4],sx:.2,dy:-.1,fz:-.02},
     {s:.75,H:[.08,.85,-.12],D:[.25,.3,-.92],P:[.9,.4,-.3],OP:[-.9,.4,-.3],py:.12,sy:.05,sx:-.22,sz:-.03,dy:.01,fz:-.05},
@@ -149,7 +157,8 @@ function faBuild(){
     {s:1.45,H:[0,-.4,.25],hs:.6,D:[-.25,-.25,1],E:[-.3,-.9,.1],P:[.8,-.5,0],OP:[-.7,-.6,.1],py:-.2,sy:-.18,cy:-.1,sx:.3,sz:.05,dy:-.1,fz:.12,ad:1},
     {s:1.75,H:[-.1,-.45,.3],D:[-.6,-.5,.6],E:[-.3,-.2,-1],py:-.38,sy:-.25,cy:-.12,sx:.32,sz:.06,dy:-.12,fz:.13,ad:0},
     {s:2,H:[-.1,-.48,.28],D:[-.55,-.6,.55],py:-.36,sy:-.23,sx:.3,dy:-.12},
-    {s:2.45,H:[0,-.45,.3],hs:.7,D:[0,.7,.7],E:[0,0,1],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.12,sz:0,dy:-.04,fz:.04},
+    {s:2.25,H:[-.05,-.5,.15],hs:.6,D:[-.45,-.6,.65],P:[.6,-.8,-.4],py:-.2,sy:-.12,cy:-.05,sx:.2,dy:-.07,fz:.06},
+    {s:2.55,H:[.05,-.42,.15],hs:.8,D:[.1,.85,.5],E:[0,0,1],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.1,sz:0,dy:-.03,fz:.03},
     Object.assign({},RE,{s:2.85,ow:0}),RE]);
   // ---- dagger: A a quick low thrust from the hip into the gut, B a fast slash from high across; the off hand reaches to grab
   FA_A.dagA=faTrack([R0,
@@ -172,8 +181,8 @@ function faBuild(){
   // charge, then thrust the staff head at the target; the off hand rides the staff
   FA_A.cast=faTrack([Object.assign({},R0,{ow:0}),
     {s:.2,ow:1},
-    {s:.5,H:[.05,.1,.05],hs:.4,D:[0,.95,-.3],E:[0,0,1],P:[.8,-.4,-.4],OP:[-.8,-.4,-.3],py:.2,sy:.1,cy:.05,sx:-.08,sz:-.03,hx:-.06,dy:-.02,fz:-.05},
-    {s:.9,H:[.05,.25,0],D:[0,.9,-.4],py:.25,sy:.12,cy:.06,sx:-.12,sz:-.04,hx:-.08,dy:-.03,fz:-.06},
+    {s:.5,H:[.14,.1,.12],hs:.75,D:[.22,.95,-.15],E:[0,0,1],P:[.8,-.4,-.4],OP:[-.8,-.4,-.3],py:.2,sy:.1,cy:.05,sx:-.08,sz:-.03,hx:-.06,dy:-.02,fz:-.05},
+    {s:.9,H:[.14,.25,.06],hs:.75,D:[.22,.9,-.3],py:.25,sy:.12,cy:.06,sx:-.12,sz:-.04,hx:-.08,dy:-.03,fz:-.06},
     {s:1,H:[-.05,.08,.6],D:[0,.45,.9],P:[.7,-.6,-.1],OP:[-.7,-.6,-.1],py:-.15,sy:-.1,cy:-.04,sx:.2,sz:.02,hx:0,dy:-.05,fz:.08},
     {s:1.3,H:[-.05,.04,.65],D:[0,.38,.93],py:-.18,sy:-.12,sx:.22,dy:-.06,fz:.09},
     {s:2,H:[-.02,-.08,.55],D:[0,.55,.83],py:-.1,sy:-.06,sx:.15,dy:-.04,fz:.06},
@@ -189,12 +198,14 @@ function faBuild(){
     {s:2.35,H:[-.05,-.12,.58],D:[0,-.1,1],sx:.24,dy:-.07,fz:.08},
     {s:2.7,H:[0,-.5,.35],D:[0,.9,.4],P:[.5,-.9,-.3],O:[-.05,-.85,.12],OP:[-.4,-.9,-.3],sx:.05,dy:-.01,fz:.01,py:0},
     RE]);
-  // ---- sling (throw; the stone leaves at s = 1): whirl overhead, faster and faster, then an overhand release at the target
-  {const K=[R0,{s:.12,H:[.15,.45,-.05],D:[.6,-.3,.2],E:[0,0,1],P:[1,.2,-.3],py:.15,sy:.08,sx:-.04,O:[.15,-.3,.5],OP:[-.7,-.6,-.2]}];
-    for(let i=1;i<=14;i++){const t=i/14,u=.12+t*.83,th=Math.PI*2*2.5*(t*t*.5+t*.5),r=.28;
-      K.push({s:u,H:[.12+r*Math.cos(th),.62,-.05+r*Math.sin(th)],D:[Math.cos(th),-.35,Math.sin(th)],py:.15+.15*t,sy:.08+.08*t,sx:-.04-.04*t})}
-    K.push({s:1,H:[-.05,.35,.7],D:[0,.25,1],P:[.8,-.3,-.2],py:-.2,sy:-.12,cy:-.05,sx:.15,dy:-.04,fz:.08,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6]},
-      {s:1.4,H:[-.3,-.3,.6],D:[-.2,-.9,.3],py:-.3,sy:-.18,sx:.2,dy:-.05,fz:.09},
+  // ---- sling (throw; the stone leaves at s = 1): whirl in an upright circle beside the body (clear of the head), faster and
+  // faster, then a sidearm release up at the target
+  {const K=[R0,{s:.12,H:[.3,-.1,.1],D:[.2,-.6,.8],E:[0,0,1],P:[1,-.4,-.3],py:.12,sy:.06,sx:-.02,O:[.15,-.3,.5],OP:[-.7,-.6,-.2]}];
+    const th=t=>Math.PI*2*(2.5*(t*t*.5+t*.5))-Math.PI/2;
+    for(let i=1;i<=14;i++){const t=i/14,u=.12+t*.83,a=th(t),r=.16;
+      K.push({s:u,H:[.45,.05+r*Math.sin(a),.05+r*Math.cos(a)],D:[.5,.85*Math.sin(a),.85*Math.cos(a)],P:[1,-.3,-.3],py:.12+.12*t,sy:.06+.06*t,sx:-.02-.04*t})}
+    K.push({s:1,H:[.12,0,.65],D:[0,.5,.87],P:[.8,-.6,-.2],py:-.2,sy:-.12,cy:-.05,sx:.15,dy:-.04,fz:.08,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6]},
+      {s:1.4,H:[-.15,-.15,.6],D:[-.3,-.3,.9],py:-.3,sy:-.18,sx:.2,dy:-.05,fz:.09},
       {s:2.2,H:[-.1,-.6,.35],D:[0,-1,0],P:[.4,-.9,-.3],py:-.08,sy:-.04,cy:0,sx:.06,dy:-.02,fz:.03,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},RE);
     FA_A.sling=faTrack(K)}
   // ---- bow (throw; the arrow leaves at s = 1): raise the bow at the target and turn side-on, nock, draw to the cheek with
@@ -226,11 +237,12 @@ function faBuild(){
     {s:2.25,H:[-.15,-.65,.35],P:[.5,-.9,-.2],py:-.15,sy:-.08,cy:0,sx:.1,sz:0,dy:-.04,fz:.05,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},
     Object.assign({},U0,{s:3})]);
   FA_A.golem=faTrack([U0,
-    {s:.55,H:[.05,.75,-.1],rw:.3,P:[.9,.5,-.3],O:[.12,-.25,.5],OP:[-.7,-.6,-.2],py:.15,sy:.08,sx:-.12,sz:-.04,dy:-.02,fz:-.05},
-    {s:1,H:[.04,.82,-.14],rw:.35,sx:-.15,py:.18,sy:.1,fz:-.06},
-    {s:1.3,H:[-.05,.6,.4],rw:.1,P:[.9,.2,-.2],sx:0},
-    {s:1.45,H:[-.2,-.1,.75],rw:-.3,P:[.5,.6,-.6],py:-.12,sy:-.08,sx:.32,dy:-.1,fz:.1,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6],ah:1},
-    {s:1.75,H:[-.25,-.6,.6],rw:-.35,P:[.4,.3,-.7],sx:.38,dy:-.12,fz:.12,ah:0},
+    {s:.25,H:[.38,-.3,.1],rw:.2,P:[1,-.4,-.3],py:.06},
+    {s:.55,H:[.25,.7,-.1],rw:.2,P:[.9,.5,-.3],O:[.12,-.25,.5],OP:[-.7,-.6,-.2],py:.15,sy:.08,sx:-.12,sz:-.04,dy:-.02,fz:-.05},
+    {s:1,H:[.24,.76,-.14],rw:.25,sx:-.15,py:.18,sy:.1,fz:-.06},
+    {s:1.3,H:[.05,.58,.4],rw:.3,P:[.9,.2,-.2],sx:0},
+    {s:1.45,H:[-.2,-.1,.75],rw:.35,P:[.5,.6,-.6],py:-.12,sy:-.08,sx:.32,dy:-.1,fz:.1,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6],ah:1},
+    {s:1.75,H:[-.25,-.6,.6],rw:.4,P:[.4,.3,-.7],sx:.38,dy:-.12,fz:.12,ah:0},
     {s:2.3,H:[-.12,-.7,.3],rw:0,P:[.5,-.9,-.2],py:-.04,sy:-.02,sx:.12,dy:-.04,fz:.04,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},
     Object.assign({},U0,{s:3})]);
   // ---- unarmed cast (the sand elemental's bolt): both hands drawn in to the chest, then pushed out at the target
@@ -337,7 +349,7 @@ function faMove(g,a){const e=g._ie,n=e&&e.atk&&e.atk.n;return n||a.n}
 function faDrives(g,S,a){if(!FA.on||!a)return false;const n=faMove(g,a);if(!FA_MOVES[n]||a.n!==n)return false;return !!faPick(S,n)}
 // ---------------- the solve ----------------
 function faApply(g,S,a,now){
-  const h=g.h,b=h.bones,T=S.T,s=a.ph==0?S.sw(a.k):a.ph==1?1+a.k:2+S.sr(1-a.k),P=T(s);
+  const h=g.h,b=h.bones,T=S.T,s=a.ph==0?S.sw(a.k):a.ph==1?1+a.k:2+S.sr(1-a.k),sT=S.rm?S.rm(s):s,P=T(sT);
   // blend in over the start of the wind-up, out over the end of the recovery
   const w=faSS(s/.35)*faSS((3-s)/.45);if(w<=1e-4)return;
   const side=S.side,mesh=b.pelvis.parent;
@@ -368,11 +380,18 @@ function faApply(g,S,a,now){
   const we=S.we,u2=m2.position.clone().normalize();
   if(we){const Wq=we.W.quaternion,headH=FA_NY.clone().applyQuaternion(Wq),edH=FA_X.clone().applyQuaternion(Wq),Dw=toW(P.D,new THREE.Vector3()).normalize();
     if(P.ad){const sy=sm.y+(tgt.y-sm.y),y=Math.max(-.85,Math.min(.35,(S.tgY-sy)/(S.wl||1))),y2=Dw.y+(y-Dw.y)*P.ad,hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(1-y2*y2)/hl;Dw.set(Dw.x*k,y2,Dw.z*k)}
+    // the recovery never takes the head further toward the target than it was at the hit (it was read as a second blow)
+    {const fw=toW([0,0,1],new THREE.Vector3()),zh=tgt.clone().sub(faWP(b.pelvis,FA_v[22])).dot(fw);
+      const zt=zh+Dw.dot(fw)*S.wl;   /* the head's reach at the hit, interpolated between the frames either side of s 1.45 */
+      if(sT>=1.45&&S.zHit==null)S.zHit=S.zp&&S.zp[0]<1.45?S.zp[1]+(zt-S.zp[1])*Math.min(1,(1.45-S.zp[0])/Math.max(1e-4,sT-S.zp[0])):zt;
+      S.zp=[sT,zt];
+      if(sT>1.7&&S.zHit!=null&&S.wl>0){const lim=(S.zHit+.02*S.sc-zh)/S.wl,dz=Dw.dot(fw);
+        if(dz>lim){const c=Math.max(-1,Math.min(1,lim)),r=Dw.clone().addScaledVector(fw,-dz),rl=r.length();if(rl>1e-6)Dw.copy(r.multiplyScalar(Math.sqrt(1-c*c)/rl)).addScaledVector(fw,c)}}}
     // never through the ground: the head stays a little above the foe's feet
-    {const fl=S.gy+.04*S.sc,hy=tgt.y;if(hy+Dw.y*S.wl<fl){const y2=Math.max(-1,Math.min(1,(fl-hy)/(S.wl||1))),hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(Math.max(0,1-y2*y2))/hl;Dw.set(Dw.x*k||0,y2,Dw.z*k||Math.sqrt(Math.max(0,1-y2*y2)))}}
+    {const fl=S.gy+.09*S.sc,hy=tgt.y;if(hy+Dw.y*S.wl<fl){const y2=Math.max(-1,Math.min(1,(fl-hy)/(S.wl||1))),hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(Math.max(0,1-y2*y2))/hl;Dw.set(Dw.x*k||0,y2,Dw.z*k||Math.sqrt(Math.max(0,1-y2*y2)))}}
     // any hand orientation with the weapon along Dw: a roll about Dw of this one
     const q0=new THREE.Quaternion().setFromUnitVectors(headH,Dw);
-    const ew=we.edge?P.ew*faSS((s-.85)/.3)*faSS((2.35-s)/.3):0;   // the edge only matters through the blow
+    const ew=we.edge?P.ew*faSS((sT-.85)/.3)*faSS((2.35-sT)/.3):0;   // the edge only matters through the blow
     const Ew=we.edge?toW(P.E,new THREE.Vector3()).normalize():null;
     // choose the roll and where the elbow goes together, for a natural wrist (small bend, moderate forearm turn), the edge
     // leading, and the elbow near the designed direction
@@ -384,6 +403,19 @@ function faApply(g,S,a,now){
     {const qa=faWQ(m2,new THREE.Quaternion()),R=qa.clone().invert().multiply(r.Qh),an=2*Math.acos(Math.min(1,Math.abs(R.w)));
       if(an>.02){if(an>.7)R.copy(new THREE.Quaternion().slerp(R,.7/an));const W=we.W,hd=we.C.hold,h=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z),
         ph=h.clone().applyQuaternion(W.quaternion).add(W.position);W.quaternion.premultiply(R);W.position.copy(ph.sub(h.applyQuaternion(W.quaternion)));W.updateMatrixWorld(true)}}
+    // the same limit on the weapon as it really ended up (wrist limits and the in-fist pivot can leave it a little off the
+    // aim): measured on the head itself, the hit's reach interpolated at s 1.45; past it, the weapon tips up / down about the
+    // fist until it is back inside
+    {const W=we.W,fw=toW([0,0,1],new THREE.Vector3()),pel=faWP(b.pelvis,new THREE.Vector3()),L=W.userData.faLen||.8,hd=we.C.hold;
+      const tipZ=()=>W.localToWorld(new THREE.Vector3(0,-L,0)).sub(pel).dot(fw),z=tipZ();
+      if(sT>=1.45&&S.zHa==null)S.zHa=S.zpa&&S.zpa[0]<1.45?S.zpa[1]+(z-S.zpa[1])*Math.min(1,(1.45-S.zpa[0])/Math.max(1e-4,sT-S.zpa[0])):z;
+      S.zpa=[sT,z];
+      if(sT>1.7&&S.zHa!=null&&z>S.zHa+.015*S.sc){const hp=W.localToWorld(new THREE.Vector3(hd[0],hd[1],hd[2])),tp=W.localToWorld(new THREE.Vector3(0,-L,0)),d=tp.clone().sub(hp),r=d.length();
+        if(r>1e-4){d.multiplyScalar(1/r);const want=Math.max(-1,Math.min(1,(d.dot(fw)*r-(z-S.zHa-.01*S.sc))/r)),th=Math.acos(want)-Math.acos(Math.max(-1,Math.min(1,d.dot(fw))));
+          let n=new THREE.Vector3().crossVectors(fw,d);if(n.lengthSq()<1e-8)n.set(1,0,0);n.normalize();
+          const qa=faWQ(W.parent,new THREE.Quaternion()),Rw=new THREE.Quaternion().setFromAxisAngle(n,Math.min(.8,th));if(d.clone().applyQuaternion(Rw).dot(fw)>d.dot(fw))Rw.setFromAxisAngle(n,-Math.min(.8,th));
+          const Rl=qa.clone().invert().multiply(Rw).multiply(qa),h=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z),ph=h.clone().applyQuaternion(W.quaternion).add(W.position);
+          W.quaternion.premultiply(Rl);W.position.copy(ph.sub(h.applyQuaternion(W.quaternion)));W.updateMatrixWorld(true)}}}
     if(FA.dbg){FA.dbg.s=s;FA.dbg.want=Dw.clone();FA.dbg.head=FA_NY.clone().applyQuaternion(faWQ(we.W,new THREE.Quaternion()));FA.dbg.c=r.c;FA.dbg.sw=r.sw;FA.dbg.tw=r.tw;FA.dbg.ee=r.ee}}
   else{faIK(m0,m1,m2,tgt,pole,1);if(P.rw){const lq=new THREE.Quaternion().setFromAxisAngle(FA_X,P.rw);m2.quaternion.copy(lq);m2.updateMatrixWorld(true)}}
   // ---- off hand ----
@@ -441,7 +473,11 @@ function faBegin(g,S,a){
   S.we=faWpn(h,S.side>0?'R':'L');S.wl=0;
   if(S.we){const W=S.we.W;if(W.userData.faLen==null){const bb=new THREE.Box3();W.traverse(o=>{if(o.isMesh&&o.geometry){o.geometry.computeBoundingBox();bb.union(o.geometry.boundingBox)}});W.userData.faLen=Math.max(.2,-bb.min.y);W.userData.faTail=Math.max(0,bb.max.y)}
     S.wl=W.userData.faLen*W.matrixWorld.getMaxScaleOnAxis()}
-  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;S.bw=null;
+  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;S.bw=null;S.zHit=null;S.zp=null;S.zHa=null;S.zpa=null;
+  // melee strikes: the downswing starts inside the wind-up (at s = a, the last ~20–30 %) and accelerates into the hit at
+  // s 1.45, so the blow travels over ~5 frames instead of 2; brutes start a little earlier, daggers and ghouls later
+  S.rm=null;if(n=='strike'){const a=hv>=.7?.7:hv<=.1?.8:.75,X=[0,a-.25,a,1.45,3],Y=[0,.55,1,1.45,3],M=V100A_mono(X,Y);
+    S.rm=x=>{let i=0;while(i<3&&x>X[i+1])i++;const h2=X[i+1]-X[i],t=Math.max(0,Math.min(1,(x-X[i])/h2)),t2=t*t,t3=t2*t;return (2*t3-3*t2+1)*Y[i]+(t3-2*t2+t)*h2*M[i]+(-2*t3+3*t2)*Y[i+1]+(t3-t2)*h2*M[i+1]}}
   if(K.c=='bow'){const e=faWpn(h,'L');if(e&&e.ty=='bow')S.bw=e}
   if((K.c=='two'||K.c=='pole'||(K.c=='staff'&&S.T!==FA_A.rain))&&S.we){const os=S.side>0?'L':'R';S.haft=1;S.ot0=FA_OT[S.we.ty]||0;S.oC=gripCarry(S.we.ty,os).q.clone();
     const gd=h._gripD&&(h._gripD[os]||(h._gripD[S.side>0?'R':'L']&&[-h._gripD[S.side>0?'R':'L'][0],h._gripD[S.side>0?'R':'L'][1],h._gripD[S.side>0?'R':'L'][2]]));
