@@ -10,6 +10,9 @@ function cgHuman(o){const T=CG181.base,h=o.h||1,w=o.w||1,d=o.d||1,hs=o.hs||1,hy=
   const torso=T.torso.map((q,i)=>[U(q[0]),q[1]*w*rw[i],q[2]*d*rf[i],q[3]*d*rb[i],(q[4]||0)*d]);
   const hb=T.head[0][0],nb=U(hb)+(o.neckL||0),H=y=>nb+(y-hb)*hs*hy,hz=o.hz||0;
   const head=(o.head||T.head).map(q=>[H(q[0]),q[1]*hs*hw,q[2]*hs*hd,q[3]*hs*hd,(q[4]||0)*hs+hz]);
+  // (o.sock) a shoulder socket as tall as the arm is thick: the armpit / mid / shoulder-line rings set round the shoulder joint
+  if(o.sock){const ay=U(T.J.aR0[1]),r0=(o.arm||T.arm)[0].r*(o.at||1)*((o.armR||[])[0]||1)*o.sock;torso[4][0]=Math.max(torso[3][0]+.03,ay-r0);torso[5][0]=ay;torso[6][0]=ay+r0*.8;
+    if(torso[7][0]<torso[6][0]+.03)torso[7][0]=torso[6][0]+.03}
   const ty=T.torso[T.torso.length-1][0],y0=torso[torso.length-1][0],nw=o.nw||1;
   const neck=T.neck.map(q=>{const t=(q[0]-ty)/(hb-ty);return [y0+(nb-y0)*t,q[1]*nw,q[2]*nw,q[3]*nw,(q[4]||0)+hz*t]});
   const J={},TJ=T.J;
@@ -19,12 +22,12 @@ function cgHuman(o){const T=CG181.base,h=o.h||1,w=o.w||1,d=o.d||1,hs=o.hs||1,hy=
     J[A+'0']=s0;J[A+'1']=add3(s0,k(a0,a1));J[A+'2']=add3(J[A+'1'],k(a1,a2))});
   ['cp0','cp1','cp2'].forEach(n=>J[n]=[0,U(TJ[n][1]),TJ[n][2]*d]);
   const ar=o.arm||T.arm,lg=o.leg||T.leg;
-  const S={J,armRing:4,torso,neck,head,n:24,
+  const S={J,armRing:4,torso,neck,head,n:o.n||24,j2:!!o.j2,
     push:(i,j,a)=>(o.push||T.push)(i,j,a)*w,
     face:o.facePush||((i,j,a)=>T.face(i,j,a)*hs),
     arm:ar.map((q,i)=>({t:q.t,r:q.r*at*((o.armR||[])[i]||1),rf:q.rf&&q.rf*at*((o.armR||[])[i]||1),rb:q.rb&&q.rb*at*((o.armR||[])[i]||1),o:q.o&&q.o*at})),
     leg:lg.map((q,i)=>({t:q.t,r:q.r*lt*((o.legR||[])[i]||1),rf:q.rf&&q.rf*lt*((o.legR||[])[i]||1),rb:q.rb&&q.rb*lt*((o.legR||[])[i]||1),o:q.o&&q.o*lt})),
-    foot:{len:T.foot.len*(o.foot||1)*Math.sqrt(h),w:(o.footW||1)*Math.sqrt(lt),h:o.footH||1},
+    foot:{len:T.foot.len*(o.foot||1)*Math.sqrt(h),w:(o.footW||1)*Math.sqrt(lt),h:o.footH||1,lite:!!o.footLite},
     // base head coordinates ↔ model space
     hp:(x,y,z)=>[x*hs*hw,nb+(y-hb)*hs*hy,(z||0)*hs*hd+hz],
     sculpt:fn=>(x,y,z,n)=>fn(x/(hs*hw),(y-nb)/(hs*hy)+hb,(z-hz)/(hs*hd),n)*hs,

@@ -49,8 +49,22 @@ function cgInfo(M,f){const v=f.v.map(i=>M.V[i]),c=[0,0,0];let nx=0,ny=0,nz=0;for
 // write faces into the md builder (layer t), coloured by col(m); keep(m) selects; P = per-vertex position override (shells)
 function cgEmit(B,M,col,o){o=o||{};const t=o.t||'c',W=new Map(),wOf=i=>{let w=W.get(i);if(w)return w;const a=M.V[i],L=[];for(let j=3;j<a.length;j++)if(a[j]>1e-4)L.push([j-3,a[j]]);L.sort((p,q)=>q[1]-p[1]);const si=[0,0,0,0],sw=[0,0,0,0];let s=0;
     for(let j=0;j<4&&j<L.length;j++){si[j]=L[j][0];sw[j]=L[j][1];s+=L[j][1]}for(let j=0;j<4;j++)sw[j]/=s||1;if(!s)sw[0]=1;w=[si,sw];W.set(i,w);return w};
-  const pos=o.pos||(i=>M.V[i]),vx=i=>{const p=pos(i);return {x:p[0],y:p[1],z:p[2],w:wOf(i)}};
+  // a per-vertex shade (o.shade or M.shade from cgShade) is multiplied into the face colour at each corner: baked crease
+  // darkening / ridge wear / height light that blends smoothly across the faceted surface, at no triangle cost
+  const sh=o.shade||M.shade,pos=o.pos||(i=>M.V[i]),vx=i=>{const p=pos(i);return {x:p[0],y:p[1],z:p[2],w:wOf(i),k:sh?sh[i]:1}};
   M.F.forEach((f,fi)=>{const m=cgInfo(M,f);if(o.keep&&!o.keep(m,fi))return;const c=mdC(typeof col=='function'?col(m):col),v=f.v.map(vx);mdTri(B,t,v[0],v[1],v[2],c);if(v.length==4)mdTri(B,t,v[0],v[2],v[3],c)})}
+// baked shading per vertex of the smoothed body (docs/MODEL_DETAIL_RECIPE.md 2.2): cavity (creases darker, ridges lighter,
+// Blender's "dirty vertex colours" angle, blurred), a height gradient (darker toward the feet) and a top light (down-facing
+// darker). o: cav (strength, 1), blur (2), y0/y1 (feet / top heights), hk (height term .22), dk (down-facing term .14), min (.5)
+function cgShade(M,o){o=o||{};const V=M.V,N=cgNormals(M),nb=V.map(()=>new Set());
+  M.F.forEach(f=>f.v.forEach((a,i)=>{const b=f.v[(i+1)%f.v.length];nb[a].add(b);nb[b].add(a)}));
+  let t=V.map((v,i)=>{let d=[0,0,0];nb[i].forEach(j=>{d=add3(d,nrm3(sub3(V[j],v)))});const l=Math.hypot(d[0],d[1],d[2]);if(l<1e-6)return .5;
+    const c=(N[i][0]*d[0]+N[i][1]*d[1]+N[i][2]*d[2])/l;return Math.acos(Math.max(-1,Math.min(1,c)))/Math.PI});
+  for(let k=0;k<(o.blur==null?2:o.blur);k++)t=t.map((x,i)=>{let s=x;nb[i].forEach(j=>s+=t[j]);return s/(nb[i].size+1)});
+  let y0=o.y0,y1=o.y1;if(y0==null||y1==null){y0=1e9;y1=-1e9;V.forEach(v=>{y0=Math.min(y0,v[1]);y1=Math.max(y1,v[1])})}
+  const cav=o.cav==null?1:o.cav,hk=o.hk==null?.22:o.hk,dk=o.dk==null?.14:o.dk,mn=o.min==null?.5:o.min;
+  return t.map((x,i)=>{const c=x<.5?1-(.5-x)*3.2*cav:1+Math.min(.12,(x-.5)*1.2*cav),h=Math.max(0,Math.min(1,(V[i][1]-y0)/(y1-y0||1))),
+    sm=h*h*(3-2*h);return Math.max(mn,Math.min(1.15,c*(1-hk+hk*sm)*(1-dk+dk*(.5*N[i][1]+.5))))})}
 // smooth vertex normals of a mesh (area weighted)
 function cgNormals(M){const N=M.V.map(()=>[0,0,0]);M.F.forEach(f=>{const v=f.v.map(i=>M.V[i]);let nx=0,ny=0,nz=0;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length];nx+=(a[1]-b[1])*(a[2]+b[2]);ny+=(a[2]-b[2])*(a[0]+b[0]);nz+=(a[0]-b[0])*(a[1]+b[1])}
   f.v.forEach(i=>{N[i][0]+=nx;N[i][1]+=ny;N[i][2]+=nz})});return N.map(n=>{const l=Math.hypot(n[0],n[1],n[2])||1;return [n[0]/l,n[1]/l,n[2]/l]})}
@@ -90,6 +104,8 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
     const c1=s>0?[1,0,T16-1]:[H-1,H,H+1];   // the socket's three columns: front, side, back
     const root=[R0[c1[0]],R0[c1[1]],R0[c1[2]],R1[c1[2]],R2[c1[2]],R2[c1[1]],R2[c1[0]],R1[c1[0]]];
     // root order: front-low, armpit (inner), back-low, back-mid, back-top, top (outer), front-top, front-mid
+    // the socket's outward direction (from the torso's axis through the socket's centre)
+    const sc=root.reduce((a,i)=>add3(a,mul3(M.V[i].slice(0,3),1/8)),[0,0,0]),sO=nrm3([sc[0],0,sc[2]-(S.torso[ia+1][4]||0)]);
     const pts=S.arm.map(q=>{const t=q.t,p=t<=1?lerp3(a0,a1,t):t<=2?lerp3(a1,a2,t-1):add3(a2,mul3(nrm3(sub3(a2,a1)),(t-2)*.2));return p});
     let prev=root;S.arm.forEach((q,i)=>{const c=pts[i],dn=nrm3(sub3(pts[Math.min(i+1,pts.length-1)],i?pts[i-1]:[s*.04+a0[0]*.8,a0[1],a0[2]])),
       u0=nrm3(sub3([s,0,0],mul3(dn,dn[0]*s))),fv=nrm3(cross3(dn,u0)),f0=fv[2]<0?mul3(fv,-1):fv,
@@ -98,7 +114,11 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
       const w=q.t<.15?[['chest',.35],[bn+'0',.65]]:q.t<.9?[[bn+'0',1]]:q.t<1.1?[[bn+'0',.5],[bn+'1',.5]]:q.t<1.85?[[bn+'1',1]]:q.t<2.05?[[bn+'1',.4],[bn+'2',.6]]:[[bn+'2',1]];
       // the j order matches the root: j0 front-low(135°) … φ_j = (j−5)·45° from "outer" toward front
       const ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0)),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
-        ring.push(cgVert(M,[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf],w))}
+        let p=[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf];
+        // (S.j2) the shoulder grows out of the body: the first rings start from the socket pushed outward and only then
+        // become the arm, so the arm is seated in the shoulder instead of folding back into a thin neck at the join
+        if(S.j2&&i<2){const P=M.V[root[j]],b=i?.78:.42,o2=(i?.55:.3)*S.arm[0].r;p=lerp3([P[0]+sO[0]*o2,P[1]+sO[1]*o2,P[2]+sO[2]*o2],p,b)}
+        ring.push(cgVert(M,p,w))}
       cgBand(M,prev,ring,'arm',c);prev=ring});
     cgCap(M,prev,add3(pts[pts.length-1],mul3(nrm3(sub3(a2,a1)),.012)),[[bn+'2',1]],'hand',pts[pts.length-2])});
   // a serpent body instead of legs (naga): the bottom ring flows on into the tail rings (S.tail: {p, r, w}), the front of the
@@ -108,16 +128,20 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
         ring.push(cgVert(M,[q.p[0]+u[0]*ca*r1+v[0]*sa*r2,q.p[1]+u[1]*ca*r1+v[1]*sa*r2,q.p[2]+u[2]*ca*r1+v[2]*sa*r2],q.w))}
       cgBand(M,prev,ring,'tail',q.p);prev=ring});const L=TL[TL.length-1],P2=TL[TL.length-2];cgCap(M,prev,add3(L.p,mul3(nrm3(sub3(L.p,P2.p)),L.r*.8)),L.w,'tail',P2.p)}
   // legs: the bottom ring split in two halves with a crotch line
-  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=S.tail?0:cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=S.tail?0:cgVert(M,[0,y0-.045,q0[4]||0],[['pelvis',1]]),cb=S.tail?0:cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
+  const R=tr[0],y0=S.torso[0][0],q0=S.torso[0],cf=S.tail?0:cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=S.tail?0:cgVert(M,[0,y0-(S.j2?.3*S.leg[0].r+.02:.045),q0[4]||0],[['pelvis',1]]),cb=S.tail?0:cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
   if(!S.tail)[-1,1].forEach(s=>{const l=s<0?'lh':'rh',h0=mdV0(J[l+'0']),k1=mdV0(J[l+'1']),k2=mdV0(J[l+'2']);
     // right half: front (j4) → side (j0) → back (j12): 4,3,2,1,0,15,14,13,12 · left: 4,5,…,12
     const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+T16)%T16:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
     let prev=root;S.leg.forEach((q,i)=>{const t=q.t,c=t<=1?lerp3(h0,k1,t):lerp3(k1,k2,Math.min(1,t-1)),w=t<.12?[['pelvis',.4],[l+'0',.6]]:t<.9?[[l+'0',1]]:t<1.1?[[l+'0',.5],[l+'1',.5]]:t<1.9?[[l+'1',1]]:[[l+'1',.4],[l+'2',.6]];
-      const ring=[];for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);ring.push(cgVert(M,[c[0]+s*ca*(q.r+(ca>0?(q.o||0):0)),c[1],c[2]+sa*rf],w))}
+      const ring=[];for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
+        let p=[c[0]+s*ca*(q.r+(ca>0?(q.o||0):0)),c[1],c[2]+sa*rf];
+        // (S.j2) the thigh grows out of the hip: the first rings start from the hip ring and only then become the leg
+        if(S.j2&&i<2){const P=M.V[root[j]],b=i?.8:.45;p=lerp3([P[0],P[1]-(i?.5:.3)*S.leg[0].r,P[2]],p,b)}
+        ring.push(cgVert(M,p,w))}
       cgBand(M,prev,ring,'leg',c);prev=ring});
     cgCap(M,prev,[k2[0],k2[1]-.02,k2[2]],[[l+'2',1]],'leg',[k2[0],k2[1]+.1,k2[2]]);
     // the foot: a closed cage of its own (heel → toes), overlapping the ankle
-    const F=S.foot,fw=F.w,fr=[];[[-.05,.045,.034,.04],[-.01,.06,.042,.05],[.06,.04,.05,.036],[.12,.026,.052,.022],[.155,.018,.044,.014]].forEach(([z,y,rx,ry],i)=>{
+    const F=S.foot,fw=F.w,fr=[],FR=[[-.05,.045,.034,.04],[-.01,.06,.042,.05],[.06,.04,.05,.036],[.12,.026,.052,.022],[.155,.018,.044,.014]];(F.lite?[FR[0],FR[2],FR[4]]:FR).forEach(([z,y,rx,ry],i)=>{
       fr.push(cgRing(M,[k2[0],y*F.h,k2[2]+z*F.len],[s,0,0],[0,1,0],8,rx*fw,ry*F.h,ry*F.h*.75,[[l+'2',1]],{}))});
     for(let i=0;i<fr.length-1;i++)cgBand(M,fr[i],fr[i+1],'foot',[k2[0],.03,k2[2]+.05]);cgCap(M,fr[0],[k2[0],.045*F.h,k2[2]-.06*F.len],[[l+'2',1]],'foot',[k2[0],.04,k2[2]+.03]);cgCap(M,fr[fr.length-1],[k2[0],.016*F.h,k2[2]+.165*F.len],[[l+'2',1]],'foot',[k2[0],.03,k2[2]+.05])});
   // the top of the torso: neck and head, one ring stack

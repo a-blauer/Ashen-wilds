@@ -148,9 +148,11 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
 // mottled brown and green goo full of what it swallowed: clods and stones, a skull and ribs in the belly, twigs and roots,
 // glowing bubbles; a hump over the shoulders, a sagging belly, three mismatched slit-pupilled eyes, a maw of crooked teeth,
 // drips off the chin and arms, lumpy three-fingered fists, feet spread into a dirty puddle
-(function(){const S=cgHuman({h:.9,w:1.42,d:1.5,rw:[1.25,1.35,1.6,1.65,1.5,1.45,1.5,1.7],rf:[1.3,1.6,2.2,2.0,1.5,1.25,1.15,1.3],at:2.1,lt:2.3,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.82,foot:1.25,footW:1.55,facePush:BRUTEJAW});
+(function(){const S=cgHuman({h:.9,w:1.42,d:1.5,rw:[1.25,1.35,1.6,1.65,1.5,1.45,1.5,1.7],rf:[1.3,1.6,2.2,2.0,1.5,1.25,1.15,1.3],at:2.1,lt:2.3,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.82,foot:1.25,footW:1.55,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
+    // (recipe) fewer rings where they don't shape the outline: a blob head, plain goo limbs
+    head:CG181.base.head.filter((q,i)=>i%2==0),arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=8),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
   const C0={g1:0x3e5a28,g2:0x22341a,g3:0x5a7a34,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a},T=S.torso,J=S.J;
-  cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
+  cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)},c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.045*(n3Sn(x*1.1,y*1.1,z*1.1,7,5)-.45));   // lumps and sags all over
     // a hump of goo over the shoulders and the back, a sagging belly
     cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<0)d+=.1*cgG(x,y,0,sh-.04,.18,.1)*Math.min(1,-n[2]*1.5);if(n[2]>0)d+=.03*cgG(x,y,0,wy-.01,.12,.06)*n[2];return d});
@@ -160,6 +162,7 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       let col=mdMix(c.g1,c.g2,cl(.3+(n2-.5)*1.1+(m.s<-.3?.25:0),0,.85));col=mdMix(col,c.g3,cl((.3-n)*4,0,1)*.55);
       const e=cl((n-.6)*3.5,0,1);if(e>0)col=mdMix(col,n2>.5?c.dirt:c.dirt2,e);
       if(m.part=='hand')col=mdMix(c.g2,col,.3);if((m.part=='leg'&&m.y<J.rh2[1]+.12)||m.part=='foot')col=mdMix(col,c.dirt,.45);return col};
+    M.shade=cgShade(M,{cav:1.1,y0:0,y1:sh+.25,hk:.3});   // baked creases, ridges and height light (no triangles)
     cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.5&&Math.abs(m.y-S.hp(0,1.556,0)[1])<.011*S.hs&&Math.abs(m.x)<.065*S.hs)return 0x0a1404;return goo(m)});
     // three mismatched eyes sunk in the goo: a dark socket, the glowing eye, a black slit pupil
     [[-.05,1.629,.026],[.054,1.643,.021],[.002,1.674,.014]].forEach(([x,y,r])=>{const p=b7_Face(M,S,x,y);if(!p)return;const R=r*S.hs;
@@ -170,10 +173,10 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
     for(let i=0;i<4;i++){const p=b7_Face(M,S,-.045+i*.03,1.534);if(p)k.L('head','c',c.g2,[p[0],p[1]+.006,p[2]-.012],[p[0]+.004,p[1]-.05-(i%2)*.03,p[2]+.002],.016,.003,4)}
     // goo blobs on the shoulders and the upper arms, clods of earth on the shoulders with a stone
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],p=cgRay(M,[a[0]+s*.02,a[1]+.5,a[2]],[0,-1,0],{arm:1,torso:1});if(!p)return;
-      k.p(A+'0','sph2','c',c.g1,p[0],p[1]-.03,p[2],.1,.075,.1);k.p(A+'0','dod','c',c.dirt,p[0]+s*.04,p[1]+.02,p[2]-.015,.075,.055,.07,.3,0,s*.4);k.p(A+'0','dod','c',0x6a6a5a,p[0]+s*.0,p[1]+.045,p[2]+.04,.03,.028,.03,1,1,0)});
+      k.p(A+'0','dod','c',c.dirt,p[0]+s*.04,p[1]+.02,p[2]-.015,.075,.055,.07,.3,0,s*.4);k.p(A+'0','dod','c',0x6a6a5a,p[0]+s*.0,p[1]+.045,p[2]+.04,.03,.028,.03,1,1,0)});
     // the earth it has swallowed: clods half sunk all over the body
     [[sh-.02,.9,.06],[sh-.02,-.9,.06],[ch,2.6,.08],[sp+.02,3.2,.07],[wy,-2.5,.06],[sp-.02,.5,.05],[ch+.03,.2,.045],[hy+.02,-.3,.05]].forEach(([y,a,r],i)=>{const p=cgSurf(M,S,y,a,-r*.35);
-      k.p(b7_TB(S,y),'dod','c',i%2?c.dirt:c.dirt2,p[0],p[1],p[2],r,r*.8,r*.9,i,i*.7,0)});
+      k.p(b7_TB(S,y),'dod','c',i%2?c.dirt:c.dirt2,p[0],p[1],p[2],r,r*.8,r*.9,i,i*.7,0);WS(p)});
     // a skull and ribs half swallowed in the belly
     {const y=sp+.01,a=.18,p=cgSurf(M,S,y,a,-.035),n=[Math.sin(a),0,Math.cos(a)],ex=[Math.cos(a),0,-Math.sin(a)];k.p('spine','sph','c',c.bone,p[0],p[1],p[2],.07,.066,.066);
       [-1,1].forEach(e=>{const q=add3(add3(p,mul3(n,.056)),add3(mul3(ex,e*.024),[0,.012,0]));k.p('spine','sph','c',0x101008,q[0],q[1],q[2],.019,.019,.014)});
@@ -182,7 +185,7 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       for(let i=0;i<4;i++){const a2=-.42+i*.15,q=cgSurf(M,S,sp+.1,a2,-.005),r=cgSurf(M,S,sp+.05,a2+.08,-.005),m=add3(lerp3(q,r,.5),[Math.sin(a2)*.008,0,Math.cos(a2)*.008]);k.L('spine','c',c.bone2,q,m,.009,.008,4);k.L('spine','c',c.bone2,m,r,.008,.006,4)}}
     // twigs and roots poking out every which way (rooted inside the goo), a forked one now and then
     [[sh-.04,.4,[.08,.14,.06]],[ch,2.8,[-.1,.16,-.12]],[sp+.04,3.4,[.1,.12,-.14]],[sp,1.6,[.14,.08,0]],[wy,-1.7,[-.14,.1,.02]],[sh-.02,-2.6,[-.06,.2,-.1]],[hy+.02,2.2,[.1,-.02,-.12]],[ch-.02,-.6,[-.06,.1,.12]]].forEach(([y,a,d],i)=>{
-      const p=cgSurf(M,S,y,a,-.03),bn=b7_TB(S,y),e=add3(p,d);k.L(bn,'c',c.bark,p,e,.013,.004,4);if(i%2){const m=lerp3(p,e,.6);k.L(bn,'c',c.bark,m,add3(m,[.05,.04,-.02]),.007,.002,3)}});
+      const p=cgSurf(M,S,y,a,-.03),bn=b7_TB(S,y),e=add3(p,d);k.L(bn,'c',c.bark,p,e,.013,.004,4);WS(p);if(i%2){const m=lerp3(p,e,.6);k.L(bn,'c',c.bark,m,add3(m,[.05,.04,-.02]),.007,.002,3);WS(p)}});
     [-1,1].forEach(s=>{const F=b7_Arm(S,s),A=F.A,a0=J[A+'0'];
       {const q=lerp3(a0,F.a1,.4),p=cgRay(M,add3(q,[s*.4,0,0]),[-s,0,0],{arm:1});if(p)k.L(A+'0','c',c.bark,add3(p,[-s*.02,0,0]),add3(p,[s*.12,.08,-.08]),.011,.003,4)}
       {const q=lerp3(F.a1,F.a2,.5),p=cgRay(M,add3(q,mul3(F.u,.4)),mul3(F.u,-1),{arm:1});if(p)k.L(A+'1','c',c.bark,sub3(p,mul3(F.u,.02)),add3(p,[s*.1,-.02,.1]),.01,.003,4)}
@@ -193,9 +196,9 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       const h=add3(F.a2,mul3(F.d,.06));k.p(A+'2','sph','c',c.g2,h[0],h[1],h[2],.075,.07,.075);
       for(let f=0;f<3;f++){const r=add3(add3(h,mul3(F.f,(f-1)*.035)),mul3(F.d,.04)),e=add3(add3(r,mul3(F.d,.08)),add3(mul3(F.f,(f-1)*.012),mul3(F.u,-.03)));k.L(A+'2','c',c.g1,r,e,.026,.013,5)}
       // feet spread into a dirty puddle
-      const l=s<0?'lh2':'rh2',FT=J[l];k.p(l,'sph','c',c.g2,FT[0],.022,FT[2]+.06*S.foot.len,.12,.036,.16);for(let i=0;i<3;i++)k.p(l,'sph','c',c.dirt,FT[0]+(i-1)*.06,.014,FT[2]+.13+i%2*.04,.032,.013,.032)});
+      const l=s<0?'lh2':'rh2',FT=J[l];k.p(l,'sph','c',c.g2,FT[0],.022,FT[2]+.06*S.foot.len,.12,.036,.16);for(let i=0;i<3;i++)k.p(l,'ico','c',c.dirt,FT[0]+(i-1)*.06,.014,FT[2]+.13+i%2*.04,.032,.013,.032)});
     // glowing bubbles caught in the goo
-    for(let i=0;i<16;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'sph','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r)}})})();
+    for(let i=0;i<16;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'ico','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r);WS(p)}})})();
 ST179.amalgam={sx:.22,hx:-.2,lk:.24,rk:.24,az:.14,lz:-.14,ex:-.3,le:-.3};
 
 // ---------------- Akorror: a chitin-armoured horror ----------------
