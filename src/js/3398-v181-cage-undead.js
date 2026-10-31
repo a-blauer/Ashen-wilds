@@ -307,12 +307,25 @@ ST179.ghoul={sx:.62,hx:-.58,lk:.56,rk:.56,ax:-.5,lx:-.5,az:.1,lz:-.1,ex:-.35,le:
 // wet skin whose colour flows (vcol): grey-green going blue-grey in the hollows, pale swollen patches, dark rot, a wet sheen on top.
 function cgBarnacles(k,M,S,n,seed,col,o){for(let i=0;i<n;i++){const y=S.torso[1][0]+a181H(i,seed)*(S.torso[6][0]-S.torso[1][0]),a=(a181H(i,seed+3)-.5)*6.2,bn=y>S.J.chest[1]-.04?'chest':y>S.J.spine[1]?'spine':'pelvis';
   for(let j=0;j<3;j++){const b=a+(j-1)*.12,p=cgSurf(M,S,y+(j%2)*.014,b,-.005+(o?o(y+(j%2)*.014,b):0));k.p(bn,'cone','c',j%2?col:mdSh(col,.8),p[0],p[1],p[2],.012,.02,.012,Math.cos(b)*.6,0,-Math.sin(b)*.6);ud_ws(k,M,p)}}}
+// a strand of wet weed: a thin, slightly flat loft tapering to a point, wavy, its root sunk in the head (dark) and its tip lighter;
+// it falls from p0 along d0, stays outside the head and neck, and lies on the shoulders / back where it reaches them (taking the
+// skin's weights there, so it moves with the body under it)
+function ud_weed(B,M,S,p0,d0,len,r,c,sd){const n=7,st=len/n,hz=S.hp(0,1.6,0)[2],ny=S.J.neck[1],R=[];let p=sub3(p0,mul3(nrm3(d0),.01)),d=nrm3(d0);const side=nrm3(cross3(d,[0,1,0]));
+  for(let i=0;i<=n;i++){let w=[['head',1]];
+    if(i){d=nrm3(add3(add3(mul3(d,.5),[0,-.62,0]),mul3(side,.32*Math.sin(i*1.9+sd))));p=add3(p,mul3(d,i==1?.012:st));
+      if(p[1]>ny-.03){const ax=nrm3([p[0],0,p[2]-hz]),h=cgRay(M,[p[0]+ax[0]*.5,p[1],p[2]+ax[2]*.5],[-ax[0],0,-ax[2]],{head:1,neck:1});
+        if(h&&i>1){const rh=Math.hypot(h[0],h[2]-hz)+.007,rp=Math.hypot(p[0],p[2]-hz);if(rp<rh)p=[ax[0]*rh,p[1],hz+ax[2]*rh]}}
+      const t=cgRay(M,[p[0],p[1]+.5,p[2]],[0,-1,0],{torso:1,arm:1});if(t&&p[1]<t[1]+.02&&p[1]>t[1]-.06){p=[p[0],t[1]+.02,p[2]];w=cgWAt(M,t)}}
+    const q=r*(1-.88*i/n);R.push({p,rx:q,f:q*.62,b:q*.62,w})}
+  mdLoft(B,R,{seg:4,capB:true,col:m=>mdMix(mdSh(c,.42),c,Math.min(1,m.i/4))})}
 // drowned skin at a point: base sk, hollows / back toward sk2, pale swollen patches, dark rot, a wet sheen on the tops
 function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3Sn(m.x,m.y,m.z,12,5);let c=mdMix(sk,sk2,ud_cl((n-.35)*1.3)*.75+(m.s<-.3?.2:0));
   c=mdMix(c,pale,ud_cl((.42-n2)*3)*(o.pale||.45)*(m.s>-.2?1:.4));c=mdMix(c,rot,ud_cl((n2-.66)*4)*.7);
   if(m.ny>.4)c=mdMix(c,mdSh(pale,1.1),ud_cl((m.ny-.4)*.6));return c}
-(function(){const S=ud_spec({h:.84,w:1.32,d:1.34,rw:[1.12,1.2,1.5,1.52,1.34,1.25,1.28,1.95],rf:[1.1,1.32,1.95,1.85,1.4,1.2,1.15,1.6],at:1.6,lt:1.45,legL:.92,hs:.9,hw:1.12,nw:1.8,armR:[1,1,1.04,1.16,1.12,1,1],
+(function(){const S=ud_spec({h:.84,w:1.32,d:1.34,rw:[1.12,1.2,1.5,1.52,1.34,1.25,1.28,1.6],rf:[1.1,1.32,1.95,1.85,1.4,1.2,1.15,1.4],at:1.6,lt:1.45,legL:.92,hs:.9,hw:1.12,nw:1.8,sock:.7,neckL:.025,armR:[1,1,1.04,1.16,1.12,1,1],
     facePush:(i,j,a)=>(i>=1&&i<=3&&Math.sin(a)>-.2&&Math.abs(Math.cos(a))>.5)?.012:0}),sk=0x4a625c,sk2=0x34464a,pale=0x7a8c84,rot=0x2a3424,cl=0x2a3436,ir=0x3a3e44,rust=0x6a3a20,weed=0x2a4a2a,weed2=0x4a6a2a,barn=0xb8b0a0,T=S.torso,J=S.J;
+  // the swollen neck tapers from the sloping shoulders up into fat jowls under the jaw (no flat shelf, no step under the chin)
+  {const y7=S.torso[7][0],nb=S.head[0][0];S.neck=[[y7+(nb-y7)*.38,.14,.1,.13,.008],[y7+(nb-y7)*.72,.1,.086,.096,.012]];S.head[0]=S.head[0].map((v,i)=>i&&i<4?v*1.5:v);S.head[1]=S.head[1].map((v,i)=>i&&i<4?v*1.2:v)}
   cg181Reg('drowned',S,function(B,P,k,C){const M=C.M,kn=J.rh1[1];
     const FH=cgFaceHuman({nose:.8,nw:1.4,brow:1.3,hollow:-.006,chin:.8});cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>FH(x,y,z,n)-(n[2]>.1?.012*cgG(x,y,0,1.552,.026,.011):0)));   /* a slack, sagging mouth */
     cgSculpt(M,{torso:1,arm:1,leg:1},(x,y,z,n)=>.012*(n3Sn(x*1.3,y*1.3,z*1.3,8,3)-.5));
@@ -320,20 +333,26 @@ function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3
     M.shade=cgShade(M,{cav:1.1,y0:0,y1:T[7][0]+.2,hk:.26});
     const my=S.hp(0,1.552,0)[1],pants=m=>m.part=='leg'&&m.y>kn-.1;
     cgEyes(k,M,S,0xa8fff0,.036,1.629,.9,-.002);cgTeeth(k,M,S,[[-.018,1.563,.01],[-.006,1.564,.013],[.007,1.564,.011],[.019,1.562,.012]],barn);
-    // the rags of a sailor's shirt (sides, back, over the shoulders to the neck so no shelf of skin rings it, sleeves), breeches, an iron-studded belt, a loincloth flap
-    ud_sh(B,M,m=>(m.part=='torso'&&m.y>cgEdge(m,T[1][0]+.05,.04,3)&&(m.s<.3||m.y>T[6][0]-.03))||(m.part=='neck'&&m.ny>.45)||(m.part=='arm'&&m.y>cgEdge(m,J.aR1[1]+.02,.03,5)),.014,null,{rim:0,vcol:m=>ud_mot(m,cl,mdSh(cl,.62),8,2)});
+    // the rags of a sailor's shirt: sides, back and sleeves, over the shoulder tops to the neck behind (no shelf of skin rings it), a
+    // ragged, sodden neckline lying flat on the skin, open at the front and torn open on the right; breeches, an iron-studded belt, a loincloth flap
+    const nl=m=>{const a=Math.atan2(m.x,m.z);return Math.abs(a)>(a>0?1.3:.82)+.34*(n3Sn(m.x,m.y*.6,m.z,15,7)-.5)},thk=v=>.014*ud_cl((T[6][0]+.05-v[1])/.07,.2,1);
+    ud_sh(B,M,m=>(m.part=='torso'&&m.y>cgEdge(m,T[1][0]+.05,.04,3)&&(m.s<.3||(m.y>T[6][0]-.03&&nl(m))))||(m.part=='neck'&&m.ny>.45&&nl(m))||(m.part=='arm'&&m.y>cgEdge(m,J.aR1[1]+.02,.03,5)),thk,null,{rim:0,vcol:m=>ud_mot(m,cl,mdSh(cl,.62),8,2)});
     ud_sh(B,M,pants,.012,null,{vcol:m=>ud_mot(m,mdSh(cl,.9),mdSh(cl,.6),9,4)});cgBelt(B,M,T[2][0]-.02,.02,.03,ir,'m');
     cgSkirt(B,S,T[2][0]-.03,J.rh1[1]+.1,.04,.03,m=>ud_cloth(m,0x1e2a2c,J.rh1[1],T[2][0],5),{n:5,seg:16,keep:m=>Math.abs(m.c)<.4&&!(m.y<J.rh1[1]+.18&&a181H(Math.round(m.c*12),3)<.4)});
     // iron cuffs
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ud_sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'2'][1]+.05))<.025,.022,ir,{t:'m',rim:.1})});
     ud_body(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.012*S.hs&&Math.abs(m.x)<.026*S.hs)return 0x0a1210;return cgFacePaint(S,m,sk,{sock:0x101a18})},{vcol:m=>ud_wet(m,sk,sk2,pale,rot)});
-    const cloth=(y,a)=>y>T[1][0]+.1&&(Math.cos(a)<.25||y>T[6][0]-.03)?.014:0;cgBarnacles(k,M,S,7,3,barn,cloth);
-    // strands of seaweed hair from the crown, weed hanging off the chest (bare skin, under the chain) and the arms
-    u8_strands(k,M,S,Array.from({length:9},(_,i)=>{const a=-2+i*.5;return [a,1.7,.03,.3+(i%3)*.1,Math.abs(a)<.8?.42:.1,i%2?weed:weed2,i]}));
-    for(let i=0;i<5;i++){const y=T[6][0]-.05-a181H(i,5)*.08,a=(i-2)*.36+(a181H(i,9)-.5)*.2,p=cgSurf(M,S,y,a,-.008);u8_strip(k,M,y>J.chest[1]-.04?'chest':'spine',i%2?weed:weed2,p,.03,.16+a181H(i,2)*.12,a,-.15,i)}
+    const cloth=(y,a)=>y>T[1][0]+.1&&(Math.cos(a)<.25||(y>T[6][0]-.03&&Math.abs(a)>1.4))?thk([0,y,0]):0;cgBarnacles(k,M,S,5,3,barn,cloth);
+    // barnacles crusted along the torn neckline on the shoulders
+    [[-1,1.0],[1,1.45],[-1,1.5]].forEach(([q,a0],i)=>{for(let j=0;j<3;j++){const a=q*(a0+j*.1),y=T[6][0]-.02-(j%2)*.014,o=Math.abs(a)>(a>0?1.3:.82)+.17?thk([0,y,0]):0,pt=cgSurf(M,S,y,a,-.005+o);
+      k.p('chest','cone','c',j%2?barn:mdSh(barn,.8),pt[0],pt[1],pt[2],.012,.02,.012,Math.cos(a)*.6,0,-Math.sin(a)*.6);ud_ws(k,M,pt)}});
+    // wet weed hanging from the crown and the sides of the head (two strands across the face, some lying on the shoulders), weed on the arms
+    [[-2.7,1.705,.34,.011,.25],[-1.9,1.69,.42,.012,.1],[-1.25,1.67,.3,.01,.05],[1.1,1.675,.36,.011,.05],[1.95,1.69,.28,.012,.1],[2.9,1.7,.4,.011,.25],
+     [-.28,1.715,.3,.009,.1],[.36,1.71,.21,.008,.1],[-1.5,1.6,.42,.011,0],[1.55,1.61,.38,.011,0],[-2.2,1.63,.36,.01,0],[2.3,1.62,.4,.01,0]].forEach(([a,y,len,r,up],i)=>{
+      const c=S.hp(0,y,0),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(p)ud_weed(B,M,S,p,[d[0],up,d[2]],len,r,i%2?weed:weed2,i*1.7)});
     [-1,1].forEach(s=>{for(let i=0;i<2;i++){const t=.5+i*.7,p=u8_armPt(M,S,s,t,0,t<1?-.007:.006);u8_strip(k,M,t<1?(s<0?'aL0':'aR0'):(s<0?'aL1':'aR1'),i%2?weed:weed2,p,.034,.22,s*1.5,-.05,i+3)}});
     // an iron and rust chain round the neck and across the body
-    const nk=[];for(let i=0;i<9;i++){const a=i/9*6.283;nk.push(cgSurf(M,S,T[6][0]+.012,a,-.004))}u8_chain(k,nk,()=>'chest',null,.028,ir,rust);
+    const nk=[];for(let i=0;i<7;i++){const a=i/7*6.283;nk.push(cgSurf(M,S,T[6][0]+.012,a,-.004))}u8_chain(k,nk,()=>'chest',null,.028,ir,rust);
     const dg=[];for(let i=0;i<6;i++){const t=i/5;dg.push(cgSurf(M,S,T[6][0]-.04-t*(T[6][0]-T[1][0]-.06),-1.0+t*2.1,-.004))}u8_chain(k,dg,p=>p[1]>J.chest[1]-.04?'chest':p[1]>J.spine[1]?'spine':'pelvis',p=>nrm3([p[0],0,p[2]]),.028,ir,rust);
     // the anchor held by its shank in the right fist, flukes hanging low
     [-1,1].forEach(s=>{ud_fingers(B,S,s,sk2,s>0?'fist':'claw',1.1,0x1a2420,s>0?0:.02,1.25);cgToes(k,S,s,sk2,0)});
