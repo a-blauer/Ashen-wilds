@@ -343,8 +343,8 @@ function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ud_sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'2'][1]+.05))<.025,.022,ir,{t:'m',rim:.1})});
     ud_body(B,M,m=>{if(m.part=='head'&&m.s>.4&&Math.abs(m.y-my)<.012*S.hs&&Math.abs(m.x)<.026*S.hs)return 0x0a1210;return cgFacePaint(S,m,sk,{sock:0x101a18})},{vcol:m=>ud_wet(m,sk,sk2,pale,rot)});
     const cloth=(y,a)=>y>T[1][0]+.1&&(Math.cos(a)<.25||(y>T[6][0]-.03&&Math.abs(a)>1.4))?thk([0,y,0]):0;cgBarnacles(k,M,S,5,3,barn,cloth);
-    // barnacles crusted along the torn neckline on the shoulders
-    [[-1,1.0],[1,1.45],[-1,1.5]].forEach(([q,a0],i)=>{for(let j=0;j<3;j++){const a=q*(a0+j*.1),y=T[6][0]-.02-(j%2)*.014,o=Math.abs(a)>(a>0?1.3:.82)+.17?thk([0,y,0]):0,pt=cgSurf(M,S,y,a,-.005+o);
+    // barnacles crusted along the torn neckline on the shoulder tops (near the neck, clear of the arm sockets)
+    [[-1,.95],[1,1.3],[-1,2.25]].forEach(([q,a0],i)=>{for(let j=0;j<3;j++){const a=q*(a0+j*.1),y=T[6][0]+.012-(j%2)*.012,o=Math.abs(a)>(a>0?1.3:.82)+.17?thk([0,y,0]):0,pt=cgSurf(M,S,y,a,-.005+o);
       k.p('chest','cone','c',j%2?barn:mdSh(barn,.8),pt[0],pt[1],pt[2],.012,.02,.012,Math.cos(a)*.6,0,-Math.sin(a)*.6);ud_ws(k,M,pt)}});
     // wet weed hanging from the crown and the sides of the head (two strands across the face, some lying on the shoulders), weed on the arms
     [[-2.7,1.705,.34,.011,.25],[-1.9,1.69,.42,.012,.1],[-1.25,1.67,.3,.01,.05],[1.1,1.675,.36,.011,.05],[1.95,1.69,.28,.012,.1],[2.9,1.7,.4,.011,.25],
