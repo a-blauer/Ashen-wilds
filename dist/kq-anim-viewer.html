@@ -56344,7 +56344,7 @@ function bw183Anim(x,now){const B=x.bw183,g=x.g,G=(g&&g._ga)||{},S=x.spec;const 
   const lv=Math.round(B.f*BW183.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw183Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
   const k=1-B.f;x.wings.forEach(wg=>{if(wg.bw)wg.p.rotation.z*=k})}
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.bw183)try{bw183Anim(x,now)}catch(e){console.error('bw183',e)}return r}}
-// the three birds' post() builds these wings (the harpy and the Gale Roc mount on the base Skyhawk body get them too)
+// the three birds' post() builds these wings (the Gale Roc mount, on the base Skyhawk body, gets them too)
 {const D=LPR.Skyhawk;D.post=function(x,c,C,mat){bw183Wings(x,c,C,mat,rv137('Skyhawk',c))}}
 // ================= v183: the bird companions' details (Skyhawk, Stormtalon, Rocsovereign) =================
 // The rest of the owner's "wings and details" pass (see 3396 for the wings). What changed on the bodies:
@@ -56438,8 +56438,7 @@ function bd183Talons(k,s,o){const f=s<0?'hl2':'hr2',fx=s*.075,g=o.g||1;
   [-1,0,1].forEach(i=>{const e=[fx+i*.05*g,.022,(.115-Math.abs(i)*.026)*g];k.L(f,'c',o.toe,[fx,.026,0],e,.018*g,.014*g,5);
     k.L(f,'c',o.claw,e,[e[0]+i*.007,.03,e[2]+.03*g],.013*g,.008*g,4).L(f,'c',o.claw,[e[0]+i*.007,.03,e[2]+.03*g],[e[0]+i*.009,.0,e[2]+.052*g],.008*g,.002,4)});
   k.L(f,'c',o.toe,[fx,.026,0],[fx,.022,-.075*g],.017*g,.013*g,5).L(f,'c',o.claw,[fx,.022,-.075*g],[fx,.03,-.1*g],.012*g,.007*g,4).L(f,'c',o.claw,[fx,.03,-.1*g],[fx,.0,-.12*g],.007*g,.002,4);
-  // scutes: small plates down the front of the shank
-  for(let j=0;j<4;j++)k.p(s<0?'hl1':'hr1','box','c',dkShade(o.toe,.85),fx,.24-j*.045,.022*g+.004,.03*g,.012,.008,-.15)}
+}
 function bd183Trousers(k,T,s,o){const b=s<0?"hl0":"hr0",fx=s*(o.x||.075),V=THREE.Vector3;
   for(let r=0;r<o.rows;r++){const y=o.y0-r*o.dy,N=9;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.35,n=[Math.sin(a),0,Math.cos(a)];
       bd183F(k,b,o.col(r,i),[fx+n[0]*o.r(r),y,o.z0+n[2]*o.r(r)],[n[0]*.25,-1,n[2]*.25],n,o.len,o.w,'contour')}}}
@@ -56449,7 +56448,7 @@ function bd183KitSky(k,c,C,red,G,O){
     pale=bel.clone().multiplyScalar(.9).getHex(),bar=bel.clone().lerp(barC,.32).getHex(),eye=red?0xff2a2a:0xf2b21e,beak=0x2a2420,tip=0x14100e,cere=0xc89a3a,trou=bel.clone().lerp(main,.55).multiplyScalar(.85).getHex();
   [-1,1].forEach(s=>{bd183Eyes(k,s,.07,.893,.432,.019,eye,back,.62);
     bd183Talons(k,s,{toe:0x9a8448,claw:tip});
-    bd183Trousers(k,T,s,{rows:3,y0:.47,dy:.045,z0:.0,r:r=>.072-r*.008,len:.09,w:.026,col:(r,i)=>(r+i)%3?trou:dkShade(trou,.8)})});
+    bd183Trousers(k,T,s,{rows:3,y0:.47,dy:.045,z0:.0,r:r=>.064-r*.009,len:.09,w:.026,col:(r,i)=>(r+i)%3?trou:dkShade(trou,.8)})});
   // the hooked beak with a cere at its base and nostrils
   k.L('head','c',beak,[0,.872,.48],[0,.865,.56],.032,.018,6).L('head','c',tip,[0,.865,.56],[0,.83,.6],.018,.004,5);
   k.L('jaw','c',dkShade(beak,1.3),[0,.84,.48],[0,.835,.54],.022,.008,5);
@@ -56470,7 +56469,7 @@ function bd183KitSt(k,c,C,red,G,O){
     // the glowing lightning streak under each eye
     k.L('head','g',glow,[s*.064,.873,.452],[s*.07,.86,.42],.006,.005,3).L('head','g',glow,[s*.07,.86,.42],[s*.07,.862,.39],.005,.004,3).L('head','g',glow,[s*.07,.862,.39],[s*.072,.845,.36],.004,.002,3);
     bd183Talons(k,s,{toe:scale,claw,g:1.15});
-    bd183Trousers(k,T,s,{rows:3,y0:.46,dy:.05,z0:.0,r:r=>.082-r*.009,len:.1,w:.028,col:(r,i)=>i%2?back:main})});
+    bd183Trousers(k,T,s,{rows:3,y0:.46,dy:.05,z0:.0,r:r=>.075-r*.009,len:.1,w:.028,col:(r,i)=>i%2?back:main})});
   // a sleek steel beak with a sharp hook, a grey cere
   k.L('head','c',steel,[0,.884,.5],[0,.874,.6],.03,.015,6).L('head','c',steelD,[0,.874,.6],[0,.838,.635],.015,.003,5);
   k.L('jaw','c',dkShade(steel,1.4),[0,.855,.5],[0,.852,.57],.02,.007,5);k.L('head','c',K.cere.getHex(),[0,.885,.486],[0,.885,.512],.033,.03,7);

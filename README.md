@@ -511,7 +511,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (the four square pieces appear as the kingdom grows over their square) (`3076`). Tests: `v148_tools.py`, `v148_edges.py`, `v148_mouse.py`,
   `v148_camps.py`, `v148_outskirts.py`, `v148_cheddar.py` (replaces `v132_cheddar_test.py`), `v148_deco.py`.
 - **Version 183 (owner's request, Oct 30 2026): the bird companions' wings and details.** Skyhawk, Stormtalon and Rocsovereign
-  (and the Harpy / Gale Roc on the base Skyhawk body). *Wings* (`3396`): each was one flat fan of triangles (`lpwWing`) held out
+  (and the Gale Roc mount on the base Skyhawk body). *Wings* (`3396`): each was one flat fan of triangles (`lpwWing`) held out
   sideways, black underneath. Now `bw183Build` makes a wing of feathers: a jointed arm (humerus, forearm, hand) as a flattened tube
   along the leading edge, 10 primaries, 10-12 secondaries, 3 tertials, greater / median / lesser coverts, an alula and pale
   under-coverts; every feather a thin two-sided blade (`bw183WF` width profile: round, pointed, lance, emarginated "fingers"),
@@ -526,8 +526,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   vertex-coloured mesh on tail0; Stormtalon's streamers are long feathers with broad tips); breasts, napes (covering the wing
   roots) and the Rocsovereign's hackle mantle are rows of contour / lance feathers set on the real body surface by rays
   (`bd183Hit`, `bd183Coat`, `bd183Bib` for the front of the breast) and skinned like it; round eyes with an iris, pupil and brow
-  shelf (`bd183Eyes`); a cere at the beak base; crests of feather blades; feathered trousers (Rocsovereign down to the ankles);
-  shank scutes. The evolution cones that stood for feathers (crest plumes, Stormtalon's shoulder mantle, Rocsovereign's back cape,
+  shelf (`bd183Eyes`); a cere at the beak base; crests of feather blades; feathered trousers (Rocsovereign down to the ankles).
+  The evolution cones that stood for feathers (crest plumes, Stormtalon's shoulder mantle, Rocsovereign's back cape,
   Skyhawk's tail streamers) are blades (`bd183EvoSky`, `bd183Swap`). Test `v183_bird_wings.py`; pictures
   `LIST="Skyhawk:0:1:idle;Stormtalon:5:0:idle" VIEWS=34,side,top,front python3 v183_birds.py` (fold 0 spread .. 1 folded).
 - **Version 181 (owner's request, Oct 30 2026): Skollmaw redesigned, step by step with the owner.** Chosen direction: the eclipse

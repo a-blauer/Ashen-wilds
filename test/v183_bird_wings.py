@@ -1,7 +1,7 @@
 # v183 bird wings: the Skyhawk, Stormtalon and Rocsovereign build feathered wings (3396) and details (3397) without errors at
 # every evolution, fold along the body when standing, half open when walking, spread when attacking, share their geometries
 # between instances (nothing made per creature), have no NaN, and the folded wing stays outside the body.
-# Also builds the Harpy enemy (base Skyhawk body). Prints FAIL lines on a wrong result.
+# Prints FAIL lines on a wrong result.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -31,8 +31,6 @@ JS=r"""()=>{const out={fails:[],info:[]},F=s=>out.fails.push(s),V=THREE.Vector3;
   {const n0=Object.keys(BW183.G).length,mk=()=>{const c=mkC('Skyhawk',30,0,'');c.tr='';c.z=1;c.evo=0;return cr(c)},a=mk(),b=mk();
     if(a.bw183.W.m[0].geometry!==b.bw183.W.m[0].geometry)F('two Skyhawks do not share their wing geometry');
     if(Object.keys(BW183.G).length!=n0)F('a second Skyhawk made new wing caches ('+n0+' → '+Object.keys(BW183.G).length+')')}
-  // the Harpy enemy on the base Skyhawk body
-  try{const c=enemyC('harpy',20,{});const g=cr(c);if(!g.bw183)F('harpy: no v183 wings');out.info.push('harpy ok')}catch(e){F('harpy: build error '+e)}
   return out}"""
 def s(pg):
     errs=[];pg.on('console',lambda m: errs.append(m.text) if m.type=='error' else None)

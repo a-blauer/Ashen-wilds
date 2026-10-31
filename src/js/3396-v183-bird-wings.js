@@ -162,5 +162,5 @@ function bw183Anim(x,now){const B=x.bw183,g=x.g,G=(g&&g._ga)||{},S=x.spec;const 
   const lv=Math.round(B.f*BW183.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw183Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
   const k=1-B.f;x.wings.forEach(wg=>{if(wg.bw)wg.p.rotation.z*=k})}
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.bw183)try{bw183Anim(x,now)}catch(e){console.error('bw183',e)}return r}}
-// the three birds' post() builds these wings (the harpy and the Gale Roc mount on the base Skyhawk body get them too)
+// the three birds' post() builds these wings (the Gale Roc mount, on the base Skyhawk body, gets them too)
 {const D=LPR.Skyhawk;D.post=function(x,c,C,mat){bw183Wings(x,c,C,mat,rv137('Skyhawk',c))}}
