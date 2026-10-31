@@ -1,6 +1,6 @@
 # v185: close pictures of every camp (all their structures: tents, huts, palisades, towers ...): eight views from inside the
 # camp looking out at its ring of structures, ~6 m up, no fog.   python3 v185_camps.py [regex on instance name] [TAG]
-#   -> out/survey/<TAG>/camp_<i>_<side>.png + camps_sheet_<n>.jpg; index in out/survey/<TAG>/camps.json
+#   CAMPS=0,6,13: only those camps.  -> out/survey/<TAG>/camp_<i>_<side>.png + camps_sheet_<n>.jpg; index in out/survey/<TAG>/camps.json
 import os,sys,json,re,time
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play,v100_lib as L
@@ -15,7 +15,7 @@ SHOT=r"""([P,k,br])=>{const a=k*.785+.2,R=P.r,dx=Math.sin(a),dz=Math.cos(a),tx=P
 def s(pg):
     L.start(pg);ev=pg.evaluate
     ev("()=>{TOD=.32;document.querySelectorAll('#banner,#glog,#pk').forEach(e=>e.style.display='none');const f=POST.render;POST.render=function(){const u=POST.u.ex,v=u.value;if(window.EXB&&window.EXB!==1)u.value=v*EXB;const r=f.apply(this,arguments);u.value=v;return r}}")
-    plan=ev(PLAN,FLT);print('places',len(plan),flush=True);t0=time.time();idx=[]
+    plan=ev(PLAN,FLT);ONLY=os.environ.get('CAMPS');plan=[p for p in plan if not ONLY or (p['kind']=='camp' and str(p['i']) in ONLY.split(','))];print('places',len(plan),flush=True);t0=time.time();idx=[]
     from PIL import Image,ImageDraw
     for j,P in enumerate(plan):
         fs=[]

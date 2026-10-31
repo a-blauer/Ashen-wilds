@@ -157,7 +157,11 @@ function ep185Ponds(){const T0=performance.now(),wet=(x,y)=>MAP[y]&&MAP[y][x]=='
   const idx=[];for(let k=0;k<W*H;k++)if(near[k])idx.push(k);const hk=k=>((Math.floor(k/W))+HPD)*HW+(k%W)+HPD,tmp=new Float32Array(idx.length);
   for(let pass=0;pass<3;pass++){idx.forEach((k,i)=>{const c=hk(k);let s=HF[c]*4,w=4;for(const [dx,dy,q] of [[1,0,2],[-1,0,2],[0,1,2],[0,-1,2],[1,1,1],[1,-1,1],[-1,1,1],[-1,-1,1]]){const kk=k+dy*W+dx;if(!near[kk])continue;s+=HF[c+dy*HW+dx]*q;w+=q}tmp[i]=s/w});
     idx.forEach((k,i)=>{HF[hk(k)]=tmp[i]})}
-  return {tiles:n,ms:Math.round(performance.now()-T0)}}
+  // and single-tile spikes in walkable ground (a tile 2+ m above all four neighbours, a thin grey cone standing in a meadow) are
+  // brought down to just above the highest neighbour
+  let sp=0;for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const k=y*W+x;if(!(DW[k]<-.5)||wet(x,y)||!insAt(x,y))continue;const c=(y+HPD)*HW+x+HPD,h=HF[c],
+    nb=[HF[c+1],HF[c-1],HF[c+HW],HF[c-HW]],mx=Math.max(...nb);if(h-mx>2&&[k+1,k-1,k+W,k-W].every(q=>DW[q]<-.5)){HF[c]=mx+.3;sp++}}
+  return {tiles:n,spikes:sp,ms:Math.round(performance.now()-T0)}}
 // camp pieces are merged by material and each face got a random shade (.8-1.12): a speckle the eye reads as noise. Now a smooth
 // variation over space at the face's middle (the v183 bake and detail paint add the rest).
 function ep185Mottle(ax,ay,az,bx,by,bz,cx,cy,cz){const x=(ax+bx+cx)/3,y=(ay+by+cy)/3,z=(az+bz+cz)/3;
