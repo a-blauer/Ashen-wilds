@@ -29525,8 +29525,9 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
     TQ(sg,Q.box,M,-.6*k,2.4*k,0,.4*k,3*k,1.8*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,.1*k,1.6*k,.86*k*s,1.4*k,.5*k,.3*k));TQ(sg,Q.cone4,M,-.6*k,4.25*k,0,.6*k,.9*k,.9*k,0,Math.PI/4,0)};
-  const leanTo=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.3*k);take(x,z,2.4*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,0,1.05*k,.72*k*s,3.4*k,.32*k,2.4*k,s*1.0,0,0));
-    TQ(sg,Q.box,S(0x0a0806),0,.6*k,0,3.2*k,1.2*k,.9*k)};
+  // v185: a ridge tent of hide (3420 ep185ATent), its doorway at the end facing -x (the camps put their fire there); was two thick slabs
+  // leaned together, open at both ends, with a black box inside
+  const leanTo=(x,z,a,k,col)=>{const sg=sub(x,z,a,0);blk(x,z,1.3*k);take(x,z,2.4*k);const m=ep185TentMesh(ep185ATent({len:Math.round(3.2*k*20)/20,w:Math.round(1.25*k*20)/20,h:Math.round(1.55*k*20)/20,hide:col}));m.rotation.y=Math.PI;sg.add(m)};
   const icicles=(x,Y,z,n,len,w,a)=>{const nx=-Math.sin(a),nz=Math.cos(a);for(let i=0;i<n;i++){const q=(n>1?i/(n-1)-.5:0)*w,l=len*rr(.45,1);putY(Q.cone,S(0xd8f0ff,{roughness:.2,emissive:0x6ab0d0,emissiveIntensity:.25}),x+nx*q,Y-l/2,z+nz*q,.08,l,.08,Math.PI,0,0)}};
   const ice=(x,z,k,col,gl)=>{if(k>1.2)blk(x,z,.5);else blk(x,z,0);take(x,z,k*.45);return put(Q.oct,S(col||0xbfe6ff,{roughness:.15,metalness:.1,emissive:gl||0x4a90c0,emissiveIntensity:.35}),x,k*.85,z,k*.32,k*1.1,k*.32,rr(-.15,.15),rr(0,3),rr(-.15,.15))};
   const shell=(x,z,k,col,a,ridge)=>{blk(x,z,k*.7);take(x,z,k*1.1);const sg=sub(x,z,a==null?rr(0,TAU):a,-.05);TQ(sg,Q.hemi,S(col),0,0,0,k*1.2,k*.6,k);
@@ -29688,7 +29689,9 @@ function cs123Designs(K){
     scat(10,R*.3,R*.95,.4,(x,z,a)=>{const [u]=[x*Math.cos(AN)+z*Math.sin(AN)];if(u>2)for(let i=0;i<5;i++)put(Q.cyl4,S(0x8a8a4a),x+rr(-.2,.2),.3,z+rr(-.2,.2),.02,.6,.02,.4,0,.4)})},
   // ======================= Burningeye Summit =======================
   '2_0_0':()=>{ // Troll Den: a lean-to of slabs against the crag, a bone pile, a roasting spit, a stone seat
-    leanTo(0,-4,0,1.5,GRAN);bonePile(-3.2,-2.4,1.3,0xd0c8b0);
+    {const sg=sub(0,-4,0,0),M=S(GRAN),k=1.5;blk(0,-4,1.3*k);take(0,-4,2.4*k);   // v185: slabs leaned together, the back closed by a boulder (no black box inside)
+     [-1,1].forEach(s=>TQ(sg,Q.box,M,0,1.05*k,.72*k*s,3.4*k,.32*k,2.4*k,s*1.0,0,0));TQ(sg,Q.dod,M,1.55*k,.75*k,0,.75*k,1.1*k,1.25*k,.3,.5,0);TQ(sg,Q.dod,M,1.9*k,.3*k,.6*k,.5*k,.5*k,.55*k,1,2,0)}
+    bonePile(-3.2,-2.4,1.3,0xd0c8b0);
     fire(0,1.2,0xff7a2a,1.2);[-1,1].forEach(s=>{put(Q.cyl4,S(0x3a2818),s*1.3,.6,1.2,.06,1.3,.06,0,0,s*.2)});put(Q.cyl,S(0x3a2818),0,1.2,1.2,.04,2.8,.04,0,0,P2);put(Q.sph,S(0x7a4a3a),0,1.15,1.2,.8,.35,.32);
     slab(2.6,.8,1.4,.9,1.2,.3,GRAN);slab(2.4,1.5,1.2,1.8,.35,.3,GRAN);
     [-1,1].forEach(s=>{const sg=sub(s*2.2,-1.4,s>0?0:Math.PI,-.2);TQ(sg,Q.arc,S(0xe8e0c8),0,0,0,1.6,2,1.2,P2*0,0,0)});
