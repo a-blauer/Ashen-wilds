@@ -150,7 +150,7 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
 // drips off the chin and arms, lumpy three-fingered fists, feet spread into a dirty puddle
 (function(){const S=cgHuman({h:.9,w:1.42,d:1.5,rw:[1.25,1.35,1.6,1.65,1.5,1.45,1.5,1.7],rf:[1.3,1.6,2.2,2.0,1.5,1.25,1.15,1.3],at:2.1,lt:2.3,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.82,foot:1.25,footW:1.55,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
     // (recipe) fewer rings where they don't shape the outline: a blob head, plain goo limbs
-    head:CG181.base.head.filter((q,i)=>i%2==0),arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=8),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
+    head:CG181.base.head.filter((q,i)=>i%2==0),arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5&&i<7).concat([{t:2.1,r:.028,rf:.032,rb:.03},{t:2.26,r:.041,rf:.045,rb:.04},{t:2.42,r:.037,rf:.038,rb:.036}]) /* the arm swells into a goo fist */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
   const C0={g1:0x3e5a28,g2:0x22341a,g3:0x5a7a34,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a},T=S.torso,J=S.J;
   cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)},c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.045*(n3Sn(x*1.1,y*1.1,z*1.1,7,5)-.45));   // lumps and sags all over
@@ -206,19 +206,22 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       {const q=lerp3(F.a1,F.a2,.5),p=cgRay(M,add3(q,mul3(F.u,.4)),mul3(F.u,-1),{arm:1});if(p)k.L(A+'1','c',c.bark,sub3(p,mul3(F.u,.02)),add3(p,[s*.1,-.02,.1]),.01,.003,4)}
       // a root hanging from the forearm, forked
       {const q=lerp3(F.a1,F.a2,.7),p=cgRay(M,add3(q,mul3(F.f,-.4)),F.f,{arm:1});if(p){const e=add3(p,[s*.03,-.16,-.04]),m=lerp3(p,e,.55);k.L(A+'1','c',c.bark,sub3(p,mul3(F.f,-.02)),e,.009,.002,4);WS(p);k.L(A+'1','c',c.bark,m,add3(m,[s*.05,-.06,.02]),.005,.0015,3);WS(p)}}
-      // a lumpy goo fist with three stubby fingers
-      const h=add3(F.a2,mul3(F.d,.06));k.p(A+'2','sph','c',c.g2,h[0],h[1],h[2],.075,.07,.075);
-      for(let f=0;f<3;f++){const r=add3(add3(h,mul3(F.f,(f-1)*.035)),mul3(F.d,.04)),e=add3(add3(r,mul3(F.d,.08)),add3(mul3(F.f,(f-1)*.012),mul3(F.u,-.03)));k.L(A+'2','c',c.g1,r,e,.026,.013,5)}
+      // three stubby goo fingers from the fist (part of the arm's surface): rounded lofts in the hand's own colour, rooted
+      // inside the fist and curling in toward the palm
+      const h=add3(F.a2,mul3(F.d,.06)),fc=mdMix(c.g1,c.g2,.45),W=[[A+'2',1]];
+      for(let f=0;f<3;f++){const o=(f-1)*.042,P=(t,cu)=>add3(add3(h,mul3(F.d,t+.02)),add3(mul3(F.f,o*(1+t*.8)),mul3(F.u,-cu)));
+        mdLoft(B,[{p:P(.0,0),rx:.03,f:.03,b:.03,w:W},{p:P(.06,.006),rx:.028,f:.027,b:.027,w:W},{p:P(.095,.026),rx:.022,f:.021,b:.021,w:W},{p:P(.108,.048),rx:.015,f:.015,b:.015,w:W}],
+          {seg:6,ref:F.u,capB:true,col:()=>f==1?fc:mdSh(fc,.92)})}
       // feet spread into a dirty puddle
       const l=s<0?'lh2':'rh2',FT=J[l];k.p(l,'sph','c',c.g2,FT[0],.022,FT[2]+.06*S.foot.len,.12,.036,.16);for(let i=0;i<3;i++)k.p(l,'ico','c',c.dirt,FT[0]+(i-1)*.06,.014,FT[2]+.13+i%2*.04,.032,.013,.032)});
     // stones and pebbles half sunk in the goo (grey and rust-brown), crumbs of earth on the crown, roots trailing down the back
     [[ch+.04,-.35,.03],[sp+.03,.95,.024],[wy+.02,2.2,.028],[sh-.05,3.0,.034],[hy+.03,-1.2,.022],[ch-.05,1.9,.02],[sp-.04,-2.4,.026],[wy-.03,.05,.018],[sh-.02,-.3,.02],[hy+.06,3.3,.024]].forEach(([y,a,r],i)=>{
-      const p=cgSurf(M,S,y,a,-r*.4);k.p(b7_TB(S,y),i%3?'ico':'dod','c',[0x6a6a5a,0x58564c,0x5a4632][i%3],p[0],p[1],p[2],r,r*.8,r*.9,i*.9,i*1.3,i*.4);WS(p)});
+      const p=cgSurf(M,S,y,a,-r*.4);k.p(b7_TB(S,y),'ico','c',[0x6a6a5a,0x58564c,0x5a4632][i%3],p[0],p[1],p[2],r,r*.8,r*.9,i*.9,i*1.3,i*.4);WS(p)});
     [-1,1].forEach(s=>{const l=s<0?'lh':'rh',q=lerp3(J[l+'0'],J[l+'1'],.5),p=cgRay(M,[q[0]+s*.4,q[1],q[2]+.1],[-s,0,-.25],{leg:1});if(p){k.p(l+'0','ico','c',0x58564c,p[0],p[1],p[2],.024,.02,.022,s,1,0);WS(p)}});
     [[-.03,1.73,.02],[.04,1.75,.016],[0,1.78,.018]].forEach(([x,y,r],i)=>{const q=S.hp(x,y,0),p=cgRay(M,[q[0],q[1]+.4,q[2]-.02],[0,-1,0],{head:1});if(p){k.p('head','dod','c',i%2?c.dirt:c.dirt2,p[0],p[1]-r*.3,p[2],r,r*.75,r*.9,i,i,0)}});
     [[sh-.06,3.0,[.05,-.32,-.08]],[ch-.04,3.5,[-.07,-.28,-.06]]].forEach(([y,a,d])=>{const p=cgSurf(M,S,y,a,-.02),e=add3(p,d),m=lerp3(p,e,.5);k.L('chest','c',c.bark,p,e,.012,.003,4);WS(p);k.L('chest','c',c.bark,m,add3(m,[d[0]*.6,-.1,-.03]),.006,.002,3);WS(p)});
     // glowing bubbles caught in the goo
-    for(let i=0;i<16;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'ico','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r);WS(p)}})})();
+    for(let i=0;i<12;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'ico','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r);WS(p)}})})();
 ST179.amalgam={sx:.22,hx:-.2,lk:.24,rk:.24,az:.14,lz:-.14,ex:-.3,le:-.3};
 
 // ---------------- Akorror: a chitin-armoured horror ----------------
