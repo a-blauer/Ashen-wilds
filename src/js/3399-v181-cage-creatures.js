@@ -110,32 +110,47 @@ function cr_human(o,gap){const S0=cgHuman(o),t7=S0.torso[S0.torso.length-1][0],n
 const cr_GARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.95,r:.036,rb:.04},{t:1.3,r:.042,o:.006},{t:1.75,r:.037},{t:2.0,r:.03},{t:2.16,r:.042,rf:.046,rb:.044},{t:2.36,r:.046,rf:.05,rb:.046},{t:2.54,r:.036,rf:.038,rb:.036}];
 const cr_CARM=[{t:.06,r:.05,o:.012},{t:.32,r:.042},{t:.95,r:.034,rb:.04},{t:1.25,r:.037},{t:1.94,r:.025,rf:.027},{t:2.14,r:.019,rf:.033,rb:.029},{t:2.34,r:.016,rf:.03,rb:.026}];
 const cr_RARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.95,r:.036,rb:.04},{t:1.3,r:.04,o:.006},{t:1.94,r:.029},{t:2.14,r:.028,rf:.035,rb:.032},{t:2.32,r:.024,rf:.031,rb:.028}];
-const cr_KARM=[{t:.06,r:.05,o:.012},{t:.32,r:.04},{t:.95,r:.034,rb:.038},{t:1.25,r:.036},{t:1.94,r:.024},{t:2.14,r:.02,rf:.028,rb:.024},{t:2.3,r:.016,rf:.022,rb:.02}];
+const cr_KARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.7,r:.036},{t:.95,r:.043,rb:.047},{t:1.15,r:.034},{t:1.5,r:.04,rf:.045},{t:1.94,r:.027},{t:2.14,r:.022,rf:.03,rb:.026},{t:2.3,r:.018,rf:.024,rb:.022}];   /* (round 2) plated segments with knobbed joints */
 const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,rb:.042},{t:1.25,r:.031},{t:1.94,r:.02},{t:2.12,r:.016,rf:.03,rb:.026},{t:2.3,r:.013,rf:.026,rb:.022}];
 
+// (round 2) a blocky, uneven head section for the Sand Elemental: corners pushed out irregularly ring by ring, so the head is a
+// squarish block of rock rather than a smooth dome
+const cr_ROCKHEAD=(i,j,a)=>.018*Math.pow(Math.abs(Math.sin(2*a+.5)),2)+.01*(a181H(j,7)-.5)*Math.min(1,i/3);   /* the same corners all the way up (a block, not stacked strata) */
 // ---------------- Sand Elemental: a chunky golem of packed golden sand and rock plates, glowing seams, a blazing chest gem,
 // boulder shoulders, rock fists, a girdle of stones with shards hanging round the hips, a crown of jagged rock ----------------
 // (refine) a hulking figure, not a man: massive shoulders and a deep chest over a narrower waist and short column legs, the small
 // head sunk into the shoulders (no neck), forearms thicker than the upper arms swelling into huge rock fists with three stubby
 // fingers; packed sand flows from gold to darker sand, rock showing through, a warm glow round the core
 (function(){const S=cr_human({snug:1,h:.9,w:1.3,d:1.2,rw:[.95,1.0,.9,1.12,1.4,1.52,1.66,1.25],rf:[1,1.02,.98,1.2,1.36,1.3,1.3,1.65],rb:[1,1.05,1,1.22,1.42,1.5,1.55,1.3],
-    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:1.0,hw:1.16,hy:.88,hd:1.1,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,
-    head:cr_flare(cr_H8,.75),arm:cr_GARM,leg:cr_LEG},0.025),
+    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:1.0,hw:1.16,hy:.88,hd:1.1,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:cr_ROCKHEAD,n:16,sock:1,j2:1,footLite:1,
+    head:cr_flare(cr_H8,.5).map((q,i)=>[q[0],q[1],q[2]*[.68,.7,.76,.9,1,1,1,1][i],q[3],q[4]]) /* below the glowing slit the rock slopes back into the chest: no muzzle */,arm:cr_GARM,leg:cr_LEG},0.025),
     s1=0xc8a060,s2=0xa8844a,s3=0xd8b878,rk=0x8a6a3a,gl=0xffa030,T=S.torso,J=S.J;
   cg181Reg('selem',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p),ch=J.chest[1],ty=f=>T[2][0]+(T[6][0]-T[2][0])*f;
     // boulder-sized lumps with a finer grain of packed sand on top
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1,foot:1},(x,y,z,n)=>.034*(n3Sn(x*.8,y*.8,z*.8,4,4)-.45)+.014*(n3Sn(x,y,z,10,4)-.45));
-    cr_fill(M,S,.015,.03);cgSculpt(M,{head:1},S.sculpt(c9_face({nose:.35,jaw:1.3,brow:1.5})));
-    M.shade=cgShade(M,{cav:1.2,y0:0,y1:T[7][0]+.15,hk:.3});
-    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02);
+    cr_fill(M,S,.015,.03);
+    // (round 2, owner: "the face doesn't read like a sand elemental") no human face: the head is a rough lump of sandstone, a heavy
+    // overhanging ledge of rock across the front with a deep recess under it where a slit of the core's glow burns, lopsided masses
+    cgSculpt(M,{head:1},(x,y,z,n)=>.042*(n3Sn(x*1.4,y*1.4,z*1.4,3,11)-.45)+.016*(n3Sn(x,y,z,9,13)-.45));
+    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<-.1)return 0;const f=Math.min(1,(n[2]+.1)*1.6);return f*(.022*cgG(x,y,-.03,1.648,.045,.01)+.018*cgG(x,y,.04,1.643,.035,.01)-.016*cgG(x,y,0,1.625,.06,.008))}));   /* an uneven ledge of rock (two masses) over the recess */
+    M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.15,hk:.3});
+    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02),ey=S.hp(0,1.625,0)[1];
     // packed sand: gold blending into darker sand (darker on the back), paler toward the shoulders, rock showing through, rock
     // fists, a warm glow on the sand round the core
     const sand=m=>{const n=n3Sn(m.x,m.y,m.z,7,6),n2=n3Sn(m.x,m.y,m.z,3,2),up=c9_cl((m.y-ch+.1)/.35);
       let c=mdMix(s1,s2,c9_cl(.45+(n2-.5)*1.4+(m.s<-.3?.2:0)));c=mdMix(c,s3,c9_cl(up*.6+(m.part=='head'?.25:0))*c9_cl((n-.3)*2.2));
       c=mdMix(c,rk,Math.max(c9_cl((n-.66)*3.2)*.75,c9_cl((.17-cr_wrist(m,J))/.08)*.6));
+      c=mdMix(c,s3,c9_cl((n3Sn(m.x*2.4,m.y*.25,m.z*2.4,9,8)-.62)*4)*.5);   /* paler streaks of sand streaming down */
+      if(m.part=='head'&&m.nz>.2&&Math.abs(m.y-ey)<.016)c=mdMix(c,0x2a1808,.7*(1-Math.abs(m.y-ey)/.016));   /* the dark recess round the glowing slit */
       const d=Math.hypot(m.x-gem[0],m.y-gem[1],m.z-gem[2]);return mdMix(c,0xf09a3a,.5*Math.exp(-d*d/.01))};
     cgEmit(B,M,()=>null,{vcol:sand});
-    cgEyes(k,M,S,gl,.04,1.628,1.25,-.004);
+    // slabs of rock jutting from the head (a brow block, a temple, a cheek), so it reads as a broken rock formation
+    [[-.03,1.665,.085,.035,.06],[.072,1.622,.05,.06,.055],[-.075,1.6,.045,.05,.05]].forEach(([x,y,sx,sy,sz],i)=>{const q=S.hp(x,y,0),d=nrm3([x*6,.2,1]),p=cgRay(M,add3(q,mul3(d,.4)),mul3(d,-1),{head:1});if(p){const c=sub3(p,mul3(d,.016));k.p('head','dod','c',i%2?rk:mdSh(rk,.85),c[0],c[1],c[2],sx,sy,sz,i*.7,x*8,i*.4)}});
+    // the eyes: one slit of the core's glow burning in the recess under the ledge (two pieces following the curve of the face),
+    // glowing cracks running up from its ends over the head
+    [-1,1].forEach(s=>{const q=S.hp(s*.03,1.625,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(!p)return;k.p('head','box','g',gl,p[0],p[1],p[2]-.002,.034,.0055,.008,0,s*.35,-s*.05);
+      const a=cgRay(M,add3(S.hp(s*.062,1.63,0),[s*.4,0,.25]),nrm3([-s,0,-.6]),{head:1}),b=cgRay(M,add3(S.hp(s*.05,1.69,-.02),[s*.3,.3,.2]),nrm3([-s*.7,-.6,-.4]),{head:1});
+      if(a&&b){const m2=add3(lerp3(a,b,.5),[s*.004,0,0]);c9_keep(k.L('head','g',gl,a,m2,.005,.0045,4));c9_keep(k.L('head','g',gl,m2,b,.0045,.003,4))}});
     // rock plates on the chest, back and flanks, glowing cracks between them
     [[.86,-.62,.09,.075],[.86,.62,.09,.075],[.56,-.84,.075,.065],[.56,.84,.075,.065],[.84,Math.PI,.1,.085],[.55,Math.PI-.6,.08,.07],[.55,Math.PI+.6,.08,.07],[.24,Math.PI,.085,.06]]
       .forEach(([f,a,sx,sy],i)=>{const y=ty(f),p=cgSurf(M,S,y,a,-.016);k.p(cgSurfBn(S,y),'dod','c',i%2?rk:mdSh(rk,.86),p[0],p[1],p[2],sx,sy,.045,0,a,0);WS(p)});
@@ -159,8 +174,8 @@ const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,
     for(let i=0;i<8;i++){const a=i/8*Math.PI*2,p=cgSurf(M,S,T[1][0]+.03+Math.sin(a*3)*.012,a,-.014);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.058+(i%3)*.012);WS(p)}
     for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2,y=T[1][0]-.01,r=cgSurf(M,S,y,a,-.03),d=[Math.sin(a)*.16,-1,Math.cos(a)*.16],L=.22+a181H(i,7)*.08;
       k.L('pelvis','c',i%2?s2:rk,r,add3(r,mul3(nrm3(d),L)),.05,.006,4);WS(r)}
-    // a crown of jagged rock rising out of the top of the head
-    for(let i=0;i<4;i++){const x=(i-1.5)*.045,p=b7_Top(M,S,x,-.01);if(p)c9_along(k,'head','cone4','c',i%2?rk:s3,sub3(p,[0,.025,0]),[x*3,1,-.15],.13-Math.abs(i-1.5)*.025,.03)}
+    // a crown of jagged rock shards breaking out of the top and back of the head, uneven and leaning
+    [[-.06,.0,.1,-.5],[-.03,-.03,.16,-.2],[.005,-.01,.13,.1],[.04,-.04,.18,.35],[.065,.0,.09,.6],[0,-.07,.11,0]].forEach(([x,z,L,lean],i)=>{const p=b7_Top(M,S,x,z);if(p)c9_along(k,'head','cone4','c',i%2?rk:mdMix(rk,s3,.5),sub3(p,[0,.028,0]),[lean,1,-.25-(z<-.05?.6:0)],L,.03+.008*(i%3))});
     [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:s2,r:.022,len:.06,spread:.034}))})})();
 ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.04,lz:-.04,ax:-.08,lx:-.08,ex:-.25,le:-.25};
 
@@ -205,7 +220,7 @@ cr_stance('saltgolem',{sx:.2,hx:-.2,lk:.16,rk:.16,az:.04,lz:-.04,ax:-.06,lx:-.06
 // fanged snout under a heavy brow, red burning eyes, moss in the cracks, a curling tail with a spade ----------------
 // (refine) a beast, not a man: a deep chest over a thin waist, hunched; digitigrade legs (the knee forward, the hock raised and set
 // back, the foot a long paw standing on three clawed toes, a spur on the hock); bigger wings; long arms ending in clawed hands
-(function(){const S=cr_human({h:.8,w:1.22,d:1.18,rw:[.88,.92,.74,1.0,1.3,1.38,1.48,1.12],rf:[1,1,.86,1.12,1.32,1.28,1.22,1.3],rb:[1,1,.9,1.1,1.36,1.42,1.42,1.1],
+(function(){const S=cr_human({snug:1,h:.8,w:1.22,d:1.18,rw:[.88,.92,.74,1.0,1.3,1.38,1.48,1.12],rf:[1,1,.86,1.12,1.32,1.28,1.22,1.3],rb:[1,1,.9,1.1,1.36,1.42,1.42,1.1],
     at:1.65,lt:1.6,hs:1.12,hw:1.08,hd:1.12,nw:1.75,neckL:-.02,armL:1.3,foot:1.1,footW:1.25,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,head:cr_flare(cr_H8,.35),arm:cr_CARM,
     leg:[{t:.12,r:.082},{t:.45,r:.074,rf:.08},{t:1.0,r:.05,rf:.058},{t:1.25,r:.05,rb:.06},{t:1.7,r:.04},{t:2.0,r:.036}]},0.03),
     st=c9_GG.st,st2=c9_GG.st2,dk=c9_GG.dark,moss=c9_GG.moss,T=S.torso,J=S.J;
@@ -251,14 +266,14 @@ cr_stance('saltgolem',{sx:.2,hx:-.2,lk:.16,rk:.16,az:.04,lz:-.04,ax:-.06,lx:-.06
       [-1,0,1].forEach(c=>{const a=c*.38,b=add3(ball,[c*.028,-.004,.01]),dir=[Math.sin(a),0,Math.cos(a)],e=add3(b,[dir[0]*.075,-.018,dir[2]*.075]);
         mdLoft(B,[{p:b,rx:.022,f:.018,b:.018,w:W2},{p:lerp3(b,e,.6),rx:.019,f:.015,b:.015,w:W2},{p:e,rx:.014,f:.012,b:.012,w:W2},{p:add3(e,[dir[0]*.035,-.013,dir[2]*.035]),rx:.002,f:.002,b:.002,w:W2}],{seg:5,ref:[0,1,0],col:m=>m.i>2?c9_GG.claw:st2})});
       c9_along(k,l+'2','cone4','c',c9_GG.claw,add3(K2,[0,-.015,-.03]),[0,-.3,-1],.07,.016)})})})();
-cr_stance('gargoyle',{sx:.34,hx:-.34,lk:.12,rk:.12,ax:-.3,lx:-.3,az:.15,lz:-.15,ex:-.6,le:-.6});
+cr_stance('gargoyle',{sx:.34,hx:-.34,lk:.12,rk:.12,ax:-.3,lx:-.3,az:.05,lz:-.05,ex:-.6,le:-.6});
 
 // ---------------- Lichen: a hulking body of soil and moss — a hollow face with eyes and a glowing mouth deep inside, a crown of
 // roots, a mossy beard, a glowing goo heart in a cracked chest, green vines wound round it, a rock and lichen on the right shoulder,
 // a mushroom shelf on the left, tendrils off the forearms, root-bundle feet ----------------
 // (refine) a shambling mound, not a man: low and wide, a great mossy hump over the back (heavier on the left), the head a lump
 // sunk forward into it with no neck, stumpy root legs, long uneven arms (the right one bigger and longer) ending in root claws
-(function(){const HY=.8,HW=1.15,S=cr_human({h:.92,w:1.38,d:1.42,rw:[1.3,1.42,1.38,1.42,1.42,1.38,1.4,1.3],rf:[1.3,1.5,1.62,1.58,1.38,1.22,1.25,1.75],rb:[1.3,1.4,1.42,1.62,1.82,1.9,1.9,1.55],
+(function(){const HY=.8,HW=1.15,S=cr_human({snug:1.2,h:.92,w:1.38,d:1.42,rw:[1.3,1.42,1.38,1.42,1.42,1.38,1.4,1.3],rf:[1.3,1.5,1.62,1.58,1.38,1.22,1.25,1.75],rb:[1.3,1.4,1.42,1.62,1.82,1.9,1.9,1.55],
     at:1.8,lt:2.05,legL:.62,armL:1.28,hs:1.0,hw:HW,hy:HY,hd:1.05,nw:2.5,neckL:-.08,foot:1.1,footW:1.5,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,
     head:cr_flare(cr_H8,1.2),arm:cr_RARM,leg:cr_LEG},0.025),
     C9=c9_LI,soil=c9_LI.soil,soil2=c9_LI.soil2,moss=c9_LI.moss,moss2=c9_LI.moss2,goo=c9_LI.goo,T=S.torso,J=S.J;
@@ -312,19 +327,21 @@ cr_stance('gargoyle',{sx:.34,hx:-.34,lk:.12,rk:.12,ax:-.3,lx:-.3,az:.15,lz:-.15,
       mdLoft(B,[{p:[F[0],F[1]+.05,F[2]],rx:lr*.9,f:lr*.9,b:lr*.9,w:W},{p:[F[0],F[1]-.03,F[2]+.01],rx:lr*1.02,f:lr*1.05,b:lr,w:W},{p:[F[0],.022,F[2]+.02],rx:lr*1.12,f:lr*1.15,b:lr*1.05,w:W}],{seg:8,ref:[0,0,1],capB:true,col:C9.bark,wf:(x,y,z)=>cgWAt(M,[x,y,z])});
       for(let i=0;i<6;i++){const an=i<5?-1.15+i*.575:Math.PI,d=[Math.sin(an),0,Math.cos(an)],a=[F[0]+d[0]*lr*.5,.05,F[2]+.02+d[2]*lr*.5],b=add3(a,[d[0]*(lr+.04),-.03,d[2]*(lr+.04)]),e=add3(a,[d[0]*(lr+.11),-.046,d[2]*(lr+.11)]);
         cgTube(B,[a,b,e],[.03,.02,.005],[cgWAt(M,a),W,W],i%2?C9.bark:mdSh(C9.bark,.8),{seg:4})}})})})();
-ST179.lichen={sx:.3,hx:-.26,lk:.22,rk:.22,az:.14,lz:-.06,ax:-.18,lx:-.02,ex:-.3,le:-.15};
+ST179.lichen={sx:.3,hx:-.26,lk:.22,rk:.22,az:.05,lz:-.03,ax:-.18,lx:-.02,ex:-.3,le:-.15};
 
 // ---------------- Akidon: a lean insectoid in olive-black chitin — great faceted compound eyes, hooked mandibles dripping acid,
 // antennae, mantis scythes on the forearms, ridge spikes and shoulder spikes, glowing acid sacs on the belly, a hanging
 // ringed abdomen with a stinger, spurred knees ----------------
-// (refine) an insect, not a man: a wasp waist between a rounded thorax and the hips, thin segmented limbs, a small wide head on a
+// (refine) an insect, not a man: a wasp waist between a rounded thorax and the hips, segmented limbs, a small wide head on a
 // thin neck, deeply hunched with the scythes held up; the plates are paint (crisp seams, banded belly) except the wing cases,
 // which stand off the back; the abdomen is one ringed loft
 // an insect's head: narrow at the mandibles, widening to the eyes and the crown (an inverted triangle from the front)
 const cr_IHEAD=cr_H8.map((q,i)=>{const f=[.62,.68,.76,.86,.96,1,1,1][i];return [q[0],q[1]*f,q[2]*(.8+.2*f),q[3]*(.85+.15*f),q[4]]});
-(function(){const S=cgHuman({h:.9,w:.9,d:.9,rw:[.82,.8,.42,.62,1.1,1.16,1.16,.98],rf:[.85,.8,.42,.88,1.26,1.16,1.0,.85],rb:[.9,.85,.48,.8,1.26,1.26,1.18,.95],push:()=>0,
-    at:.8,lt:.82,hs:.95,hw:1.12,hy:.92,hd:1.0,nw:.62,neckL:.035,armL:1.28,legL:1.1,foot:1.0,footW:.8,n:16,sock:1,j2:1,footLite:1,head:cr_IHEAD,facePush:()=>0,arm:cr_KARM,
-    leg:[{t:.12,r:.07},{t:.45,r:.055},{t:1.0,r:.05},{t:1.25,r:.04},{t:1.7,r:.032},{t:2.0,r:.03}]}),c1=c9_AK.c1,c2=c9_AK.c2,c3=c9_AK.c3,ed=c9_AK.edge,acid=c9_AK.acid,acid2=c9_AK.acid2,bone=c9_AK.bone,T=S.torso,J=S.J;
+// (round 2, owner: "too thin") an armoured insect with real mass: a full thorax, a heavier abdomen, thick plated limb segments with
+// knobbed joints (the waist stays narrow)
+(function(){const S=cgHuman({snug:1,h:.9,w:.9,d:.9,rw:[.95,.92,.55,.85,1.3,1.35,1.32,1.05],rf:[.95,.9,.55,1.05,1.45,1.32,1.12,.9],rb:[1.0,.95,.6,.98,1.45,1.45,1.32,1.0],push:()=>0,
+    at:1.12,lt:1.05,hs:1.05,hw:1.12,hy:.92,hd:1.0,nw:.62,neckL:.035,armL:1.28,legL:1.1,foot:1.0,footW:.8,n:16,sock:1,j2:1,footLite:1,head:cr_IHEAD,facePush:()=>0,arm:cr_KARM,
+    leg:[{t:.12,r:.078},{t:.45,r:.07,rf:.076},{t:.85,r:.052},{t:1.0,r:.062,rf:.066},{t:1.18,r:.05},{t:1.5,r:.054,rb:.06},{t:1.88,r:.034},{t:2.0,r:.034}]}),c1=c9_AK.c1,c2=c9_AK.c2,c3=c9_AK.c3,ed=c9_AK.edge,acid=c9_AK.acid,acid2=c9_AK.acid2,bone=c9_AK.bone,T=S.torso,J=S.J;
   cg181Reg('akidon',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.05)return 0;let d=.018*cgG(x,y,0,1.645,.06,.01);[-1,1].forEach(s=>d+=.01*cgG(x,y,s*.03,1.6,.016,.02));return d}));
     M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.2,hk:.25});
@@ -334,9 +351,9 @@ const cr_IHEAD=cr_H8.map((q,i)=>{const f=[.62,.68,.76,.86,.96,1,1,1][i];return [
       c=mdMix(c,ed,c9_cl((m.ny-.45)*2)*.35);return c};
     cgEmit(B,M,m=>{if(m.part=='head'&&m.s>.45&&Math.abs(m.y-my)<.006*S.hs&&Math.abs(m.x)<.03)return 0x050308;if(m.part=='hand')return c3;
       if(m.part=='torso'){if(Math.abs(m.x)<.008&&m.s>.3&&m.y>T[3][0])return c3;if(m.y<T[3][0]&&m.y>T[0][0]&&m.s>-.5)return Math.round(m.y*34)%2?c2:c3;if(Math.abs(m.y-T[3][0])<.012)return c3}
-      if((m.part=='leg'&&Math.abs(m.y-ky[0])<.02)||(m.part=='arm'&&Math.abs(m.y-ay)<.018))return c3;return null},{vcol:chit});
+      if((m.part=='leg'&&Math.abs(Math.abs(m.y-ky[0])-.03)<.008)||(m.part=='arm'&&Math.abs(Math.abs(m.y-ay)-.026)<.007))return c3;return null},{vcol:chit});   /* dark seams either side of the knobbed knees and elbows */
     // the wing cases down the back (they stand off the body)
-    const wc=v=>.04*Math.min(1,Math.max(.3,(v[1]-J.spine[1]+.06)/.2));
+    const wc=v=>.05*Math.min(1,Math.max(.3,(v[1]-J.spine[1]+.06)/.2));
     cgShell(B,M,m=>(m.part=='torso'&&m.s<-.15&&m.y>J.spine[1]-.06)||(m.part=='neck'&&m.s<-.3),wc,m=>Math.abs(m.x)<.006?c3:mdMix(c2,c1,c9_cl((n3Sn(m.x,m.y,m.z,12,4)-.4)*2)),{rim:.15});
     // great compound eyes on the sides of the head: a dark rim and a glowing faceted dome
     [-1,1].forEach(s=>{const c=S.hp(0,1.632,0),d=nrm3([s*.75,.05,.66]),p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(!p)return;
@@ -349,27 +366,27 @@ const cr_IHEAD=cr_H8.map((q,i)=>{const f=[.62,.68,.76,.86,.96,1,1,1][i];return [
     [-1,1].forEach(s=>{const q=S.hp(s*.03,1.7,.02);let a=q,d=[s*.25,.6,.75];for(let i=0;i<5;i++){const b=add3(a,mul3(d,.05*S.hs));k.L('head','c',c2,a,b,.008,.006,3);a=b;d=[d[0]+s*.06,d[1]-.18,d[2]+.05]}k.p('head','oct','g',acid,a[0],a[1],a[2],.01,.01,.01)});
     // ridge spikes down the wing cases, shoulder plates with spikes
     for(let i=0;i<6;i++){const y=T[6][0]-.03-i*.065,o=wc([0,y,0]),p=cgSurf(M,S,y,Math.PI,o-.012);c9_keep(c9_along(k,cgSurfBn(S,y),'cone4','c',ed,p,[0,.5,-1],.085-i*.006,.016));WS(p)}
-    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A],p=cgRay(M,[a[0]+s*.025,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p(A,'hem','c',c2,p[0],p[1]-.03,p[2],.07,.05,.075,0,0,s*.4);WS(p);
+    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A],p=cgRay(M,[a[0]+s*.025,a[1]+.6,a[2]],[0,-1,0],{arm:1,torso:1})||a;k.p(A,'hem','c',c2,p[0],p[1]-.03,p[2],.09,.06,.095,0,0,s*.4);WS(p);
       c9_along(k,A,'cone4','c',ed,add3(p,[s*.03,.0,-.01]),[s*.6,1,-.2],.085,.014);WS(p)});
     // glowing acid sacs down the belly
     [.2,.42,.64].forEach((f,i)=>{const y=T[1][0]+(J.chest[1]-T[1][0])*f,p=cgSurf(M,S,y,0,.004);k.p(cgSurfBn(S,y),'ico','g',acid2,p[0],p[1],p[2],.034-i*.005,.02,.012);WS(p)});
     // the hanging abdomen (gaster): one ringed loft from inside the hips, bulging segments with pinched joints, acid glowing in the
     // joints, a stinger at the end
-    {const b0=cgSurf(M,S,J.pelvis[1]-.02,Math.PI,-.05),RR=[.07,.105,.088,.122,.1,.118,.094,.1,.078,.05,.016],W=[['pelvis',1]],pts=RR.map((r,i)=>{const t=i/(RR.length-1);return add3(b0,[0,-t*.3-t*t*.06,-t*.44])});
+    {const b0=cgSurf(M,S,J.pelvis[1]-.02,Math.PI,-.05),RR=[.07,.105,.088,.122,.1,.118,.094,.1,.078,.05,.016].map(r=>r*1.3),W=[['pelvis',1]],pts=RR.map((r,i)=>{const t=i/(RR.length-1);return add3(b0,[0,-t*.34-t*t*.07,-t*.52])});
       mdLoft(B,pts.map((p,i)=>({p,rx:RR[i]*1.05,f:RR[i]*.92,b:RR[i],w:W})),{seg:8,ref:[0,1,0],capB:true,col:m=>{const i=Math.round(m.i);return i%2==0&&i>1&&i<9?c3:(m.s>.3?c2:c1)}});
       [2,4,6].forEach(i=>{const d=nrm3(sub3(pts[i+1],pts[i-1]));c9_keep(c9_along(k,'pelvis','ring','g',acid2,sub3(pts[i],mul3(d,.004)),d,.012,RR[i]*.98,RR[i]*.95))});
       const e=pts[RR.length-1];c9_along(k,'pelvis','cone4','c',ed,sub3(e,[0,0,.01]),[0,-.6,-1],.1,.02)}
     // mantis scythes on the forearms: dark chitin blades with pale cutting edges, curving forward and down past the hands
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a1=J[A+'1'],a2=J[A+'2'],ad=nrm3(sub3(a2,a1)),root=lerp3(a1,a2,.55),o=[s,0,0],hit=cgRay(M,add3(root,mul3(o,.3)),mul3(o,-1),{arm:1})||root,
-        R=[];let p=add3(hit,[-s*.012,0,0]),d=add3(ad,[0,0,.12]);for(let i=0;i<7;i++){const t=i/6,w=.034*(1-t*.82)+.004;R.push({p:p.slice(),rx:.009*(1-t*.6)+.002,f:w,b:w*.55,w:[[A+'1',1]]});
+        R=[];let p=add3(hit,[-s*.012,0,0]),d=add3(ad,[0,0,.12]);for(let i=0;i<7;i++){const t=i/6,w=.042*(1-t*.82)+.005;R.push({p:p.slice(),rx:.012*(1-t*.6)+.003,f:w,b:w*.55,w:[[A+'1',1]]});
         p=add3(p,mul3(nrm3(d),.075));const c=Math.cos(-.17),sn=Math.sin(-.17);d=[d[0],d[1]*c-d[2]*sn,d[1]*sn+d[2]*c]}
       mdLoft(B,R,{seg:6,ref:[0,0,1],capB:true,col:m=>m.s>.8?bone:m.s<-.5?c3:c2});
       // two hooked claws out of the narrow hand
-      cr_fingers(B,S,s,{n:2,len:.075,r:.009,curl:.55,spread:.01,col:c3,nail:0x0a080c,claw:.5,at:.05});
+      cr_fingers(B,S,s,{n:2,len:.08,r:.012,curl:.55,spread:.013,col:c3,nail:0x0a080c,claw:.5,at:.05});
       // a spurred knee
       const L=s<0?'lh':'rh',K=J[L+'1'],kp=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(kp){c9_along(k,L+'1','cone4','c',ed,add3(kp,[0,0,-.012]),[0,.7,1],.085,.017);WS(kp)}
-      cr_toes(B,S,s,{n:2,col:c3,r:.016,len:.05,spread:.03,nail:bone,claw:.025})})})})();
-cr_stance('akidon',{sx:.36,hx:-.32,lk:.2,rk:.2,dy:-.03,ax:-.35,lx:-.35,ex:-.7,le:-.7,az:.08,lz:-.08});
+      cr_toes(B,S,s,{n:2,col:c3,r:.02,len:.055,spread:.032,nail:bone,claw:.028})})})})();
+cr_stance('akidon',{sx:.36,hx:-.32,lk:.2,rk:.2,dy:-.03,ax:-.35,lx:-.35,ex:-.7,le:-.7,az:.04,lz:-.04});
 
 // ---------------- Gharial Reaver: a hulking crocodile-man — a big head with a long toothy snout and a nostril knob, scutes down
 // the back, a pale plated belly, a long heavy tail, a hide harness, a necklace of teeth, a loincloth ----------------
@@ -377,28 +394,42 @@ cr_stance('akidon',{sx:.36,hx:-.32,lk:.2,rk:.2,dy:-.03,ax:-.35,lx:-.35,ex:-.7,le
 // stooped forward with the snout held level, a heavier tail rooted deep in the hips; the harness and belt are paint
 const GHARIALHEAD=[[1.52,.066,.085,.062,.02],[1.536,.07,.15,.066,.03],[1.55,.07,.22,.07,.04],[1.562,.068,.28,.074,.05],[1.572,.066,.3,.076,.052],[1.582,.068,.28,.08,.05],
   [1.596,.074,.2,.086,.04],[1.61,.08,.14,.09,.03],[1.625,.082,.11,.092,.02],[1.64,.078,.09,.092,.012],[1.654,.066,.068,.08,.006],[1.664,.036,.036,.048,0]];
-// (refine) 8 rings, the throat ring as wide as the neck so neck and head are one mass
-const cr_GH8=[[1.52,.09,.1,.094,0],[1.55,.078,.22,.084,.03],[1.562,.07,.28,.078,.045],[1.572,.066,.3,.078,.05],[1.582,.068,.28,.082,.048],[1.61,.08,.15,.09,.03],[1.64,.078,.09,.092,.012],[1.664,.04,.04,.05,0]];
-(function(){const S=cr_human({h:.9,w:1.3,d:1.24,rw:[1.12,1.2,1.08,1.16,1.3,1.34,1.4,1.25],rf:[1,1.06,1.12,1.2,1.26,1.2,1.22,1.6],rb:[1.1,1.2,1.15,1.22,1.3,1.32,1.32,1.4],
-    at:1.6,lt:1.55,hs:1.28,hw:1.08,nw:2.4,neckL:-.03,legL:.92,foot:1.2,footW:1.3,head:cr_GH8,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,arm:cr_CARM,leg:cr_LEG},0.03),
+// (round 2, owner: "head still too cartoony") a real gharial's head: a heavy, flat, armoured skull (a short muzzle) and out of it a
+// long, very narrow snout ending in the bulbous nasal knob, small deep-set eyes high on the skull under bony brow ridges, scutes on
+// the skull, irregular splayed teeth interlocking along the jaw line, dark mottled hide with a pale underjaw
+const cr_GHS=[[1.52,.09,.1,.094,0],[1.55,.08,.14,.086,.02],[1.562,.075,.16,.082,.03],[1.572,.072,.165,.082,.032],[1.582,.074,.155,.085,.03],[1.61,.084,.12,.09,.02],[1.64,.082,.09,.092,.01],[1.664,.044,.044,.052,0]];
+(function(){const S=cr_human({snug:1,h:.9,w:1.3,d:1.24,rw:[1.12,1.2,1.08,1.16,1.3,1.34,1.4,1.25],rf:[1,1.06,1.12,1.2,1.26,1.2,1.22,1.6],rb:[1.1,1.2,1.15,1.22,1.3,1.32,1.32,1.4],
+    at:1.6,lt:1.55,hs:1.28,hw:1.08,hy:.82,nw:2.4,neckL:-.03,legL:.92,foot:1.2,footW:1.3,head:cr_GHS,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,arm:cr_CARM,leg:cr_LEG},0.03),
     sk=c9_GH.sk,sk2=c9_GH.sk2,bel=c9_GH.belly,sc=c9_GH.scute,T=S.torso,J=S.J;
+  // the right fist's centre (the halberd's haft runs through it): along the hand past the palm, on the palm side
+  S.grip={'1':cgGripAt(S,1,.085,0,-.032)};
   cg181Reg('gharial',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p);
     cr_fill(M,S,.015,.03);
-    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{let d=0;if(n[1]>-.7&&z>-.03)d-=.009*Math.exp(-Math.pow((y-1.567)/.004,2));[-1,1].forEach(s=>{d+=.016*cgG(x,y,s*.052,1.634,.017,.009);d-=.005*cgG(x,y,s*.012,1.58,.005,.004)});return d}));
-    M.shade=cgShade(M,{cav:1.2,y0:0,y1:T[7][0]+.2,hk:.26});
-    const my=S.hp(0,1.567,0)[1],y0=T[2][0]+.02,y1=T[6][0]+.01,kk=(y1-y0)/.34,wy=T[2][0];
-    // mottled scaly hide (darker on the back), the pale belly plates and the jaw's underside, the harness strap and belt painted on
-    const hide=m=>{const n=n3Sn(m.x,m.y,m.z,14,4),n2=n3Sn(m.x,m.y,m.z,5,2);let c=mdMix(sk,sk2,c9_cl((n-.45)*2.4*.6+(n2-.5)*.8+(m.s<-.3?.3:0)));if(m.s<-.4)c=mdMix(c,sc,.35);return c};
-    cgEmit(B,M,m=>{if(m.part=='head'){if(Math.abs(m.y-my)<.004*S.hs&&m.nz>-.3)return 0x140806;if(m.ny<-.3)return bel;return null}
+    // the mouth line round the muzzle, bony brow ridges over deep-set eyes, a ridge along the skull's top edge
+    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{let d=0;if(n[1]>-.7&&z>-.03)d-=.008*Math.exp(-Math.pow((y-1.567)/.004,2));
+      [-1,1].forEach(s=>{d+=.016*cgG(x,y,s*.05,1.65,.024,.008);d-=.009*cgG(x,y,s*.05,1.636,.012,.008);d+=.006*cgG(x,y,s*.072,1.62,.012,.03)});return d}));
+    M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.2,hk:.26});
+    const my=S.hp(0,1.567,0)[1],y0=T[2][0]+.02,y1=T[6][0]+.01,kk=(y1-y0)/.34,wy=T[2][0],EY=[-1,1].map(s=>S.hp(s*.05,1.636,.03));
+    // dark mottled scaly hide (darker on the back), pale belly plates and underjaw, the harness strap and belt painted on
+    const hide=m=>{const n=n3Sn(m.x,m.y,m.z,12,4),n2=n3Sn(m.x,m.y,m.z,4,2);let c=mdMix(mdSh(sk,.85),sk2,c9_cl((n-.45)*1.4+(n2-.5)*.9+(m.s<-.3?.35:0)+(m.part=='head'&&m.ny>.3?.25:0)));if(m.s<-.4)c=mdMix(c,sc,.35);return c};
+    cgEmit(B,M,m=>{if(m.part=='head'){if(Math.abs(m.y-my)<.004*S.hs&&m.nz>-.3)return 0x140806;if(m.ny<-.3)return bel;if(EY.some(e=>Math.hypot(m.x-e[0],m.y-e[1])<.022&&m.nz>-.2))return 0x1e2214;return null}
       if(m.part=='torso'){if(Math.abs(m.y-wy)<.024)return a181Nz(0x2a1a10,m,.3,18);if(m.y>y0-.02&&Math.abs((m.y-(y0+y1)/2)+kk*m.x)<.026*Math.sqrt(1+kk*kk))return a181Nz(0x3a2414,m,.3,18);
         if(m.s>.45&&m.y<T[6][0]-.03&&m.y>T[0][0])return Math.round(m.y*30)%2?bel:mdSh(bel,.86)}return null},{vcol:hide});
-    // eyes on top of the head, slit pupils
-    [-1,1].forEach(s=>{const q=S.hp(s*.052,1.638,.04),d=nrm3([s*.6,.3,.75]),p=cgRay(M,add3(q,mul3(d,.5)),mul3(d,-1),{head:1});if(p){k.p('head','sph','g',c9_GH.eye,p[0],p[1],p[2]-.003,.014,.012,.012);k.p('head','box','c',0x050403,p[0]+d[0]*.01,p[1],p[2]+d[2]*.01,.002,.016,.002)}});
-    // teeth all along both jaws (upper ones down, lower ones up), interlocking
-    {const z0=S.hp(0,1.567,.05)[2],z1=S.hp(0,1.567,.29)[2];for(let i=0;i<11;i++){const z=z0+(z1-z0)*i/10;[-1,1].forEach(s=>{const p=cgRay(M,[s*.4,my,z],[-s,0,0],{head:1});if(!p)return;
-      const up=i%2;k.p('head','cone4','c',c9_GH.tooth,p[0]-s*.003,my+(up?.006:-.006),p[2],.0055,.022-(i>8?.006:0),.0055,up?0:Math.PI,0,s*.12)})}
-      // the nostril knob on the snout's tip
-      const p=cgRay(M,[0,my+.4,z1-.012],[0,-1,0],{head:1});if(p)k.p('head','sph','c',sk2,p[0],p[1]-.006,p[2],.034,.026,.03)}
+    // small eyes deep under the brow ridges, high on the skull: a dull amber eye with a slit pupil
+    [-1,1].forEach(s=>{const q=EY[s<0?0:1],d=nrm3([s*.55,.5,.67]),p=cgRay(M,add3(q,mul3(d,.5)),mul3(d,-1),{head:1});if(p){const e=sub3(p,mul3(d,.004));k.p('head','sph','g',0xb08a18,e[0],e[1],e[2],.0095,.0075,.008);k.p('head','box','c',0x050403,e[0]+d[0]*.007,e[1]+d[1]*.007,e[2]+d[2]*.007,.0016,.011,.0016)}});
+    // the long narrow snout out of the muzzle: one loft (upper and lower jaw closed), the jaw line dark along its sides, a pale
+    // underside, swelling at the tip into the bulbous nasal knob
+    {const fr=cgRay(M,[0,my,.9],[0,0,-1],{head:1}),z0=fr?fr[2]:S.hp(0,1.567,.2)[2],W=[['head',1]],
+        SN=[[-.05,.06,.05,.044],[.02,.044,.036,.033],[.1,.033,.027,.025],[.18,.029,.023,.022],[.245,.028,.022,.021],[.275,.037,.034,.023],[.305,.031,.028,.02],[.322,.012,.01,.008]],
+        rxAt=z=>{for(let i=0;i<SN.length-1;i++){const a=SN[i],b=SN[i+1];if(z-z0<=b[0]){const t=(z-z0-a[0])/(b[0]-a[0]);return a[1]+(b[1]-a[1])*t}}return SN[SN.length-1][1]};
+      mdLoft(B,SN.map(([dz,rx,f,b])=>({p:[0,my,z0+dz],rx,f,b,w:W})),{seg:10,ref:[0,1,0],capB:true,col:m=>m.i>.6&&m.i<5.4&&Math.abs(m.s)<.2?0x140806:m.s<-.35?bel:mdMix(sk,sk2,.35+.45*m.s)});
+      // irregular, splayed teeth along both jaws, interlocking (upper ones down, lower ones up), rooted in the snout
+      for(let i=0;i<13;i++){const z=z0+.005+i*.0195;[-1,1].forEach(s=>{const h=a181H(i,s+3,5),up=(i+(s>0?1:0))%2==0,len=.016+.016*a181H(i,s,9),rx=rxAt(z);
+        c9_along(k,'head','cone4','c',h>.8?c9_GH.bone:c9_GH.tooth,[s*(rx-.005),my+(up?-.003:.003),z],[s*(.35+.35*h),up?1:-1,(h-.5)*.4],len+.005,.0042)})}
+      // two nostrils on the knob
+      [-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.011,my+.03,z0+.286,.006,.004,.007))}
+    // bony scutes over the skull and down the back of the head
+    [[-.032,-.01],[.032,-.01],[-.036,-.045],[.036,-.045],[-.03,-.08],[.03,-.08]].forEach(([x,z])=>{const p=b7_Top(M,S,x,z);if(p)c9_along(k,'head','cone4','c',sc,sub3(p,[0,.008,0]),[x*4,1,-.5],.026,.016)});
     // bony scutes in rows down the back
     for(let i=0;i<8;i++){const y=T[6][0]-i*.07;[-1,1].forEach(s=>{const p=cgSurf(M,S,y,Math.PI+s*.3,-.008);c9_along(k,cgSurfBn(S,y),'cone4','c',sc,p,[s*.15,.5,-1],.05,.024,.032);WS(p)})}
     // the long heavy tail, rooted deep in the hips, dragging toward the ground, scutes along its top
@@ -413,7 +444,7 @@ const cr_GH8=[[1.52,.09,.1,.094,0],[1.55,.078,.22,.084,.03],[1.562,.07,.28,.078,
     // hands: the right one a fist round the halberd's haft, the left one clawed
     cr_mitten(B,S,1,{n:4,w:.042,th:.017,len:.09,curl:1,col:sk2,at:.045});cr_fingers(B,S,1,{n:0,len:.085,r:.0145,curl:1,spread:.033,col:sk2,thumb:1,at:.05});cr_fingers(B,S,-1,{n:4,len:.09,r:.0145,curl:.45,spread:.033,col:sk2,nail:0x1a1a10,thumb:1,at:.05});
     [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:sk2,r:.019,len:.065,spread:.03,nail:0x1a1a10,claw:.025}))})})();
-cr_stance('gharial',{sx:.3,hx:-.28,lk:.16,rk:.16,az:.12,lz:-.12,ex:-.25,le:-.3});
+cr_stance('gharial',{sx:.3,hx:-.28,lk:.16,rk:.16,az:.05,lz:-.05,ex:-.25,le:-.3});
 
 // ---------------- Frost Wendigo: gaunt and tall, an elk's skull for a head, antlers, a mantle of dark fur, ribs jutting from flayed
 // flanks, bony knees, long claws ----------------
@@ -447,4 +478,4 @@ const cr_ELK8=[0,2,3,5,7,8,10,11].map(i=>ELKHEAD[i]);
     [-1,1].forEach(s=>{const L=s<0?'lh':'rh',K=J[L+'1'],p=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(p){k.p(L+'1','sph','c',c9_WD.bone2,p[0],p[1]+.006,p[2]-.012,.03,.036,.024);WS(p)}});
     // long clawed fingers (four and a thumb) out of the narrow hand, black claws; clawed toes
     [-1,1].forEach(s=>{cr_fingers(B,S,s,{n:4,len:.17,r:.0095,curl:.35,spread:.024,col:mdSh(sk,.8),nail:c9_WD.claw,fan:.3,thumb:1,claw:.38,at:.045});cr_toes(B,S,s,{n:3,col:mdSh(sk,.8),r:.016,len:.07,spread:.026,nail:c9_WD.claw,claw:.035})})})})();
-cr_stance('wendigo',{sx:.42,hx:-.16,sy:.1,lk:.2,rk:.24,dy:-.035,ax:-.28,lx:-.08,az:.06,lz:-.14,ex:-.2,le:-.55});
+cr_stance('wendigo',{sx:.42,hx:-.16,sy:.1,lk:.2,rk:.24,dy:-.035,ax:-.28,lx:-.08,az:.05,lz:-.06,ex:-.2,le:-.55});
