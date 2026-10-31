@@ -138,7 +138,7 @@ function bd183KitRs(k,c,C,red,G,O){
   [-1,1].forEach(s=>{bd183Eyes(k,s,.09,.902,.455,.021,eye,dk,.6);
     bd183Talons(k,s,{toe:0xa88c44,claw,g:1.2});
     // legs feathered down to the ankles: rows of feathers round the thigh and shank
-    bd183Trousers(k,T,s,{x:.088,rows:4,y0:.47,dy:.05,z0:.0,r:r=>.1-r*.008,len:.1,w:.032,col:(r,i)=>(r+i)%3?main:back});
+    bd183Trousers(k,T,s,{x:.088,rows:4,y0:.47,dy:.05,z0:.0,r:r=>.084-r*.008,len:.1,w:.032,col:(r,i)=>(r+i)%3?main:back});
     [0,1,2].forEach(r=>{const N=8;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.4,n=[Math.sin(a),0,Math.cos(a)],rr=.07-r*.012;
       bd183F(k,s<0?"hl1":"hr1",(r+i)%2?main:K.cream.clone().lerp(K.main,.5).getHex(),[s*.08+n[0]*rr,.3-r*.05,.018+n[2]*rr],[n[0]*.2,-1,n[2]*.2],n,.08,.026,'contour')}})});
   // the massive hooked beak: ivory-gold, a dark hooked tip; a heavy lower mandible; a cere

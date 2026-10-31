@@ -141,13 +141,23 @@ def floating_fast(V,thr,root=None):
     Qs=[]
     for c in range(n):
         tc=T[tris_of(c)];Q=np.concatenate([tc.reshape(-1,3),((tc+np.roll(tc,1,axis=1))/2).reshape(-1,3),tc.mean(1)]);Qs.append(np.unique(np.round(Q,5),axis=0))
+    # triangles grouped by size, each group searched with its own radius: one big body triangle no longer makes every small
+    # feather look at half the model (same pairs survive the filter below, far fewer are looked at)
+    edges=[0,.006,.015,.035,.08,np.inf];Bk=[]
+    for lo,hi in zip(edges[:-1],edges[1:]):
+        ix=np.nonzero((rad>=lo)&(rad<hi))[0]
+        if len(ix):Bk.append((ix,cKDTree(cen[ix]),float(rad[ix].max())))
     adj=[set() for _ in range(n)]
     for c in range(n):
-        Q=Qs[c];near=tree.query_ball_point(Q,rmax+thr)
-        ln=np.fromiter((len(L) for L in near),dtype=np.int64,count=len(near))
-        if ln.sum()==0:continue
-        pi=np.repeat(np.arange(len(Q)),ln);ti=np.fromiter((i for L in near for i in L),dtype=np.int64,count=int(ln.sum()))
-        m=(lab[ti]!=c);pi,ti=pi[m],ti[m]
+        Q=Qs[c];tq=cKDTree(Q);PI=[];TI=[]
+        for ix,tr,rm in Bk:
+            sm=tq.sparse_distance_matrix(tr,rm+thr,output_type='ndarray')
+            if len(sm):PI.append(sm['i'].astype(np.int64));TI.append(ix[sm['j']])
+        if not PI:continue
+        pi=np.concatenate(PI);ti=np.concatenate(TI)
+        m=(lab[ti]!=c)
+        if adj[c]:m&=~np.isin(lab[ti],np.fromiter(adj[c],dtype=np.int64))  # pieces already joined to this one need no second look
+        pi,ti=pi[m],ti[m]
         m=np.linalg.norm(Q[pi]-cen[ti],axis=1)<=rad[ti]+thr;pi,ti=pi[m],ti[m]
         cands=set(np.unique(lab[ti]).tolist())-adj[c]
         if pi.size:

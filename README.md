@@ -518,8 +518,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   barred, darker tips, its own colour above and below (`bw183Cols`). Species shapes in `BW183.sp` (hawk broad and round, Stormtalon
   long and pointed, Rocsovereign broad with fingered primaries). *Folding*: three key shapes (spread, half, folded along the flank;
   `BW183.pose`) are blended into 11 shared geometries per wing (`bw183Geo`, cached in `BW183.G`; nothing per creature, so nothing to
-  free). The folded wing is pushed just outside the body loft (`bw183Push`). `bw183Anim` (a rigAnim wrapper) folds standing, half
-  opens walking (more running), spreads for attacks (`g.atk`, `g.ak`, `g._lk`, `g.lk`), flight and wing abilities, and scales the
+  free). The folded wing is pushed just outside the body loft (`bw183Push`) and sits low along the flank. `bw183Anim` (a rigAnim
+  wrapper) keeps the wings folded standing and walking (they lift a little when running), spreads them for attacks (`g.atk`, `g.ak`, `g._lk`, `g.lk`), flight and wing abilities, and scales the
   shoulder flap by how open the wing is. `g.bw183.force` fixes the fold (pictures). Evolution: 6% bigger per level, darker covert
   edges (L2), bright flight-feather tips (L3), a trimmed leading edge (L4), tinted bars (L5).
   *Details* (`3397`): tails are fans of 10-14 barred rectrices with pale tips and upper / under tail coverts (`bd183Tail`, a
@@ -527,6 +527,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   roots) and the Rocsovereign's hackle mantle are rows of contour / lance feathers set on the real body surface by rays
   (`bd183Hit`, `bd183Coat`, `bd183Bib` for the front of the breast) and skinned like it; round eyes with an iris, pupil and brow
   shelf (`bd183Eyes`); a cere at the beak base; crests of feather blades; feathered trousers (Rocsovereign down to the ankles).
+  The breast feathers are flat, soft and close in colour (blade kind `'soft'` in `bd183G`), so they read as plumage, not scales.
+  Rocsovereign is antique gold (a `rs150Cols` wrapper), not lemon yellow. The tail fan keeps its width at rest: evolution
+  ornaments sit on it, and narrowing it left them floating (`v180_comp_float.py`).
   The evolution cones that stood for feathers (crest plumes, Stormtalon's shoulder mantle, Rocsovereign's back cape,
   Skyhawk's tail streamers) are blades (`bd183EvoSky`, `bd183Swap`). Test `v183_bird_wings.py`; pictures
   `LIST="Skyhawk:0:1:idle;Stormtalon:5:0:idle" VIEWS=34,side,top,front python3 v183_birds.py` (fold 0 spread .. 1 folded).
@@ -542,7 +545,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
 - **Version 180 (owner's request, Oct 30 2026): companion bodies hold together, less cartoony faces.** `test/v180_comp_float.py`
   builds every companion species at every evolution, with every trait (Horned, Spiked, Armored, Universal, Bulky), the colour
   variants, a rare shiny one and a three-species fusion, and fails on any piece of mesh more than 4 mm from the rest of the model
-  (the townsfolk rule of `v142_folk.py`, sped up as a graph in `comp_float_lib.floating_fast`) in idle, two walk phases and a bite. The
+  (the townsfolk rule of `v142_folk.py`, sped up as a graph in `comp_float_lib.floating_fast`; v183: the neighbour search groups triangles by size, so a bird's ~600 feathers no longer
+  make it look at half the model, about 3x faster with the same answer) in idle, two walk phases and a bite. The
   first run found loose pieces on all 30 species (about 380). Causes and fixes:
   * *Wrong bone / wrong skin*: hanging charms were skinned to the body near where they hung (a tooth to the chest left its cord in a
     bite): every piece of `EVO100_M.charm` and `E.fang` is skinned like the point it hangs from; Widowqueen / Hivemother leg bands read

@@ -160,8 +160,7 @@ function bw183Anim(x,now){const B=x.bw183,g=x.g,G=(g&&g._ga)||{},S=x.spec;const 
   if(B.force!=null)B.f=tgt=B.force;
   B.f+=(tgt-B.f)*(1-Math.exp(-dt*(tgt<B.f?10:5)));if(Math.abs(B.f-tgt)<.002)B.f=tgt;
   const lv=Math.round(B.f*BW183.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw183Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
-  const k=1-B.f;x.wings.forEach(wg=>{if(wg.bw)wg.p.rotation.z*=k});
-  if(x.bd183T)x.bd183T.scale.x=.55+.45*k}  // the tail fan closes narrow at rest, opens when the wings spread
+  const k=1-B.f;x.wings.forEach(wg=>{if(wg.bw)wg.p.rotation.z*=k})}  // (the tail fan keeps its width: evolution ornaments sit on it)
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.bw183)try{bw183Anim(x,now)}catch(e){console.error('bw183',e)}return r}}
 // the three birds' post() builds these wings (the Gale Roc mount, on the base Skyhawk body, gets them too)
 {const D=LPR.Skyhawk;D.post=function(x,c,C,mat){bw183Wings(x,c,C,mat,rv137('Skyhawk',c))}}
