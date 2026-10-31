@@ -213,6 +213,32 @@ function ej_Hand(B,S,s,o){const A=s<0?'aL':'aR',a1=S.J[A+'1'],a2=S.J[A+'2'],d=nr
     digit(p,dir,o.len*(n>3&&i==n-1?.8:i==0?.94:1),r*(n>3&&i==n-1?.86:1),o.curl,ax,o.c0==null?.5:o.c0)}
   if(o.thumb!==false){const tb=add3(add3(add3(a2,mul3(d,.032)),mul3(f,o.w*.8)),mul3(u,-o.w*.22)),td=nrm3(add3(add3(mul3(d,.62),mul3(u,-.4)),mul3(f,.68)));
     digit(tb,td,o.len*(o.tlen||.66),r*1.12,o.tcurl==null?.3:o.tcurl,nrm3(cross3(u,f)),1)}}
+// a closed fist: in a fist the fingers don't change the outline, so they are ONE rounded mitten mass that grows from inside the
+// palm, over a knuckle ridge (a little proud) and curls round the grip toward the palm; the finger separations are painted as
+// thin dark lines along it, and the thumb is its own rounded loft crossing in front. o: {col, w (half width across the
+// knuckles), r (half thickness of the fingers), len, turn ([per-step turns toward the palm]), kn, lift, tlen}
+function ej_Fist(B,S,s,o){const A=s<0?'aL':'aR',a1=S.J[A+'1'],a2=S.J[A+'2'],d=nrm3(sub3(a2,a1)),u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,
+    tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d)),Wt=mdW(B,[[A+'2',1]]),
+    rot=(v,k,t)=>{const c=Math.cos(t),si=Math.sin(t),kd=k[0]*v[0]+k[1]*v[1]+k[2]*v[2];return add3(add3(mul3(v,c),mul3(cross3(k,v),si)),mul3(k,kd*(1-c)))},
+    col=o.col,dark=mdSh(col,.42),w=o.w,r=o.r,L=o.len,kn=add3(add3(a2,mul3(d,o.kn||.072)),mul3(u,o.lift||0)),turns=o.turn||[1.05,1.0,1.0,.55],lens=[.42,.33,.25,.0];
+  // the spine of the mitten: from inside the palm, through the knuckles, curling toward the palm (−u) round the grip
+  const SP=[];let p=sub3(kn,mul3(d,.024)),dir=d,th=0;SP.push({p,dir,th});p=kn;SP.push({p,dir,th});
+  turns.forEach((t,i)=>{th+=t;dir=rot(d,ax,th);p=add3(p,mul3(dir,i<3?L*lens[i]:r*.55));SP.push({p,dir,th})});
+  // across the knuckles (t ∈ [-1,1] × w): stations either side of each finger separation (the dark lines), rounded ends
+  const T=[-1,-.54,-.46,-.04,.04,.46,.54,1],sepQ=j=>j==1||j==3||j==5,ht=t=>r*Math.pow(Math.max(.08,1-t*t*.92),.4);
+  const ring=k=>{const q=SP[k],n=rot(u,ax,q.th),out=[];
+    T.forEach(t=>out.push(add3(add3(q.p,mul3(ax,t*w*(k?1:.9))),mul3(n,ht(t)*(k==2?1.08:1)))));   /* the back (knuckle) side */
+    for(let j=T.length-1;j>=0;j--){const t=T[j];out.push(add3(add3(q.p,mul3(ax,t*w*(k?1:.9))),mul3(n,-ht(t)*.9)))}return out};   /* the palm side */
+  const R=SP.map((q,k)=>ring(k)),N=R[0].length,V=x=>({x:x[0],y:x[1],z:x[2],w:Wt}),
+    tri=(a,b,c,ctr,cl)=>{const n=cross3(sub3(b,a),sub3(c,a)),m=mul3(add3(add3(a,b),c),1/3);if(n[0]*(m[0]-ctr[0])+n[1]*(m[1]-ctr[1])+n[2]*(m[2]-ctr[2])<0){const x=b;b=c;c=x}mdTri(B,'c',V(a),V(b),V(c),mdC(cl))};
+  // quad colour: the separation columns dark, the palm side a shade darker
+  const qc=j=>{const top=j<T.length-1,jj=top?j:N-2-j;return (jj>=0&&jj<T.length-1&&sepQ(jj)&&top)||(!top&&jj>=0&&sepQ(jj))?dark:top?col:mdSh(col,.86)};
+  for(let k=0;k<R.length-1;k++){const ctr=SP[k].p,c2=SP[k+1].p,mid=lerp3(ctr,c2,.5);for(let j=0;j<N;j++){const a=R[k][j],b=R[k][(j+1)%N],c=R[k+1][(j+1)%N],e=R[k+1][j],cl=j==T.length-1||j==N-1?col:qc(j);tri(a,b,c,mid,cl);tri(a,c,e,mid,cl)}}
+  [[0,-1],[R.length-1,1]].forEach(([k,sg])=>{const q=SP[k],cp=add3(q.p,mul3(q.dir,sg*r*.35)),ctr=sub3(q.p,mul3(q.dir,sg*r));for(let j=0;j<N;j++)tri(R[k][j],R[k][(j+1)%N],cp,ctr,col)});
+  // the thumb: a rounded loft from the side of the palm, crossing in front of the curled fingers
+  const tb=add3(add3(add3(a2,mul3(d,.03)),mul3(f,w*.85)),mul3(u,-w*.15)),tl=L*(o.tlen||.62),TR=[];let tp=sub3(tb,mul3(d,.012)),td=nrm3(add3(add3(mul3(d,.55),mul3(u,-.75)),mul3(f,-.1)));
+  const k2=nrm3(cross3(td,mul3(f,-1)));TR.push({p:tp,rx:r*.95});tp=tb;TR.push({p:tp,rx:r*1.05});[.45,.35,.2].forEach((l,i)=>{td=rot(td,k2,.6);tp=add3(tp,mul3(td,tl*l));TR.push({p:tp,rx:r*(.98-i*.1)})});
+  TR.push({p:add3(tp,mul3(td,r*.5)),rx:r*.5});TR.forEach(q=>{q.f=q.b=q.rx;q.w=[[A+'2',1]];q.col=col});mdLoft(B,TR,{seg:6,ref:u,capB:true})}
 // cgShell with smooth colour: col(m) returning null hands the face to o.vcol (a colour per corner, as cgEmit); o.rim as cgShell
 function ej_Shell(B,M,sel,off,col,o){o=o||{};const N=M.N||(M.N=cgNormals(M)),pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map();
   M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1)}});
@@ -224,12 +250,13 @@ function ej_Body(B,M,col,o){const H=M.ejHide||[];cgEmit(B,M,col,Object.assign({}
 function ej_cl(v,a,b){return Math.max(a,Math.min(b,v))}
 // cgFur with smooth colour (the same layered shell and ragged clumps): the shell's colour flows corner to corner, light and
 // dark locks running down with the fall of the fur, instead of a colour per face (no "pixel camouflage"); o.hide also keeps
-// the skin under the layer from being emitted (ej_Body)
+// the skin under the layer from being emitted (ej_Body); o.lenAt(p) / o.offAt(v) scale the clumps' length and the
+// layer's thickness by where they are
 function ej_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=>sel(cgInfo(M,f))),cnt=new Map(),ef=new Map(),seed=o.seed||0;
   M.F.forEach((f,fi)=>{if(!pick[fi])return;const n=f.v.length;for(let i=0;i<n;i++){const a=f.v[i],b=f.v[(i+1)%n],k=a<b?a+'_'+b:b+'_'+a;cnt.set(k,(cnt.get(k)||0)+1);ef.set(k,[fi,a,b])}});
   const rim=new Set(),low=[];cnt.forEach((c,k)=>{if(c!=1)return;const [fi,a,b]=ef.get(k),m=cgInfo(M,M.F[fi]),my=(V[a][1]+V[b][1])/2;rim.add(a);rim.add(b);if(m.y>my+.002)low.push([a,b])});
   const lowV=new Set();low.forEach(([a,b])=>{lowV.add(a);lowV.add(b)});
-  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(rim.has(i)?(lowV.has(i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
+  const lb=o.lump||[.35,1.3],lf=o.freq||24,lump=v=>{const n=n3Sn(v[0]*1.6,v[1]*.3,v[2]*1.6,lf,seed);return lb[0]+lb[1]*n*n},P=new Map(),pos=i=>{let p=P.get(i);if(p)return p;const v=V[i],n=N[i],d=o.off*lump(v)*(o.offAt?o.offAt(v):1)*(rim.has(i)?(lowV.has(i)?1:.1):1);p=[v[0]+n[0]*d,v[1]+n[1]*d,v[2]+n[2]*d];P.set(i,p);return p};
   const c2=o.col2==null?mdSh(o.col,.8):o.col2,vcol=o.vcol||(m=>{const g=n3Sn(m.x*1.4,m.y*.35,m.z*1.4,22,seed),b=n3Sn(m.x,m.y,m.z,6,seed+1);
     return mdMix(mdSh(o.col,.94+(b-.5)*.16),c2,ej_cl((.5-g)*3.2,0,.85))});
   cgEmit(B,M,null,{t:o.t,pos,keep:(m,fi)=>pick[fi],vcol});if(o.hide)(M.ejHide||(M.ejHide=[])).push(sel);
@@ -237,7 +264,7 @@ function ej_Fur(B,M,sel,o){const N=M.N||(M.N=cgNormals(M)),V=M.V,pick=M.F.map(f=
   const vx=(p,i)=>({x:p[0],y:p[1],z:p[2],w:wOf(i)}),t=o.t||'c',nx=new Map();low.forEach(([a,b])=>{nx.set(a,b)});const used=new Set();let ci=0;
   low.forEach(([a0])=>{if(used.has(a0))return;const loop=[];let v=a0;while(v!=null&&!used.has(v)){used.add(v);loop.push(v);v=nx.get(v)}
     for(let i=0;i<loop.length-1;){const n=Math.min(loop.length-1-i,(o.run||2)+Math.floor(a181H(ci,seed,7)*(o.runV||3))),run=loop.slice(i,i+n+1);i+=n;ci++;
-      const h=a181H(ci,seed,3),L=o.len*(1-(o.jag==null?.6:o.jag)*h),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
+      const h=a181H(ci,seed,3),mid=lerp3(pos(run[0]),pos(run[run.length-1]),.5),L=o.len*(1-(o.jag==null?.6:o.jag)*h)*(o.lenAt?o.lenAt(mid):1),nn=nrm3(run.reduce((q,j)=>add3(q,N[j]),[0,0,0]));
       const tip=[mid[0]+nn[0]*L*.35,mid[1]-L,mid[2]+nn[2]*L*.35],c=mdC(h<.25?c2:mdSh(o.col,.84+a181H(ci,9,seed)*.2)),T=vx(tip,run[Math.floor(run.length/2)]);
       for(let j=0;j<run.length-1;j++){const p=run[j],q=run[j+1];mdTri(B,t,vx(pos(p),p),T,vx(pos(q),q),c);mdTri(B,t,vx(V[q],q),T,vx(V[p],p),c)}
       const f=run[0],l=run[run.length-1];mdTri(B,t,vx(V[f],f),T,vx(pos(f),f),c);mdTri(B,t,vx(pos(l),l),T,vx(V[l],l),c)}})}
@@ -287,7 +314,7 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
     // forearm wraps, manacles with a broken link; big hands (the right one a fist round the haft); breeches, heavy boots
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ej_Shell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.04&&m.y>wr+.03,.012,m=>Math.round(m.y*50)%2?0x3a2a1c:0x2a1e14,{rim:0,hide:1});
       ej_Shell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<wr+.035&&m.y>wr-.03,.024,ir,{t:'m',rim:0,hide:1});const w=J[A+'2'];k.p(A+'2','tor','m',ir2,w[0],w[1]+.005,w[2]+.06,.014,.006,.016,Math.PI/2,0,0);
-      const hc=mdMix(sk,bl2,.35);ej_Hand(B,S,s,s>0?{col:hc,w:.052,r:.0125,len:.072,curl:1.15,c0:1.1,pre:0,lift:.012,fan:.3,tcurl:.35,tlen:.6}:{col:hc,w:.052,r:.0125,len:.085,curl:.28,pre:.15});
+      const hc=mdMix(sk,bl2,.35);(s>0?ej_Fist:ej_Hand)(B,S,s,s>0?{col:hc,w:.05,r:.0135,len:.072,lift:.012}:{col:hc,w:.052,r:.0125,len:.085,curl:.28,pre:.15});
       // breeches and boots as one shell (no pinch where they meet): the boot stands farther off, its top a cuff
       const bt=kn-.13;ej_Shell(B,M,m=>((m.part=='leg'||m.part=='foot')&&Math.sign(m.x)==s)||(m.part=='torso'&&m.y<wy&&Math.sign(m.x||s)==s),v=>v[1]<bt?.022:.012,
         m=>m.part=='foot'&&m.y<.03?ir:m.part=='foot'||m.y<bt?mdMix(0x1a120c,0x2e2016,ej_cl((m.ny+.3)*.6+(m.y>bt-.03?.25:0),0,1)):null,{rim:0,hide:1,vcol:m=>mdMix(lt,0x1a100a,ej_cl(.3+(n3Sn(m.x,m.y,m.z,9,s+4)-.5)*.6,0,1))})});
@@ -318,9 +345,18 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
     // beard: over the jaw, a broad mass to the chest, two braids with iron rings; moustache; the mane
     const bc=m=>a181Nz(wh,m,.22,20),my=S.hp(0,1.562,0)[1];
     const H=sel=>(M.ejHide=M.ejHide||[]).push(sel),beard=m=>(m.part=='head'&&m.s>-.15&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-my)<.01*S.hs))||(m.part=='neck'&&m.s>.3);
-    ej_Fur(B,M,beard,{off:.032,len:.28,col:wh,col2:wh2,seed:21,jag:.45,lump:[.5,1.1],run:1,runV:2,hide:1});
-    ej_Fur(B,M,m=>beard(m)&&m.s>.25,{off:.016,len:.2,col:wh2,col2:wh,seed:23,jag:.5,run:1,runV:2});   /* an inner layer: more locks along the same edge */   /* (fur and helm hide the skin under them) */
-    [-1,1].forEach(s=>{const p=S.hp(s*.024,1.574,0),r=cgRay(M,[p[0],p[1],p[2]+.4],[0,0,-1]);if(r){k.L('head','c',wh,[r[0]-s*.016,r[1]+.004,r[2]+.004],[r[0]+s*.024,r[1]-.05,r[2]+.014],.013,.005,4);WS(r)}});
+    // the beard: a solid mass grown from the jaw and chin (thickest at the chin), white with grey locks running down it and
+    // darker toward the roots; over it fewer, thick, tapering locks that sway and overlap; a drooping moustache (the fur,
+    // the beard and the helm hide the skin under them)
+    const b0=S.hp(0,1.585,0)[1],chin=S.hp(0,1.54,0)[1],bmass=v=>.01+.032*Math.exp(-((v[0]/(.055*S.hs))**2))*ej_cl((b0-v[1])/(.05*S.hs),0,1)*(v[2]>S.hp(0,0,0)[2]?1:.3);
+    ej_Shell(B,M,beard,bmass,null,{rim:0,hide:1,vcol:m=>mdMix(mdMix(wh,wh2,ej_cl(.3+(n3Sn(m.x*1.4,m.y*.4,m.z*1.4,24,21)-.5)*1.5,0,1)),0x8a909a,ej_cl((m.y-chin)/(.05*S.hs),0,1)*.5)});
+    [-1.05,-.7,-.35,0,.35,.7,1.05].forEach((a,i)=>{const n=[Math.sin(a),0,Math.cos(a)],side=[Math.cos(a),0,-Math.sin(a)],z0=S.hp(0,0,0)[2],yb=S.hp(0,1.55-Math.abs(a)*.012,0)[1],p=cgRay(M,[n[0]*.4,yb,z0+n[2]*.4],mul3(n,-1),{head:1,neck:1});if(!p)return;
+      const L=(.27-Math.abs(a)*.075)*(1+((i*7)%3-1)*.07),RR=[];
+      for(let j=0;j<6;j++){const t=j/5,q=add3(add3(add3(p,mul3(n,j?.012+.026*Math.sin(t*Math.PI*.8):-.006)),[0,-L*t,0]),mul3(side,.014*Math.sin(t*3.2+i*1.9)));
+        RR.push({p:q,rx:.026*(1-t*.84)+.002,f:.017*(1-t*.8)+.002,b:.017*(1-t*.8)+.002,w:j<2?cgWAt(M,p):j<4?[['neck',.5],['chest',.5]]:[['chest',1]],col:j<2?mdMix(wh2,0x8a909a,.4):j<4?wh:mdMix(wh,wh2,.6)})}
+      mdLoft(B,RR,{seg:5,ref:n,capB:true})});
+    [-1,1].forEach(s=>{const p=S.hp(s*.02,1.574,0),r=cgRay(M,[p[0],p[1],p[2]+.4],[0,0,-1]);if(!r)return;const w=cgWAt(M,r);
+      const RR=[[-s*.012,.004,-.008],[0,0,.006],[s*.02,-.012,.012],[s*.03,-.042,.012],[s*.032,-.062,.008]].map((d,j)=>({p:add3(r,d),rx:[.008,.011,.01,.007,.002][j],w,col:j<2?mdMix(wh,0x8a909a,.35):wh}));RR.forEach(q=>{q.f=q.b=q.rx});mdLoft(B,RR,{seg:5,capB:true})});
     [-1,1].forEach(s=>{const p=S.hp(s*.05,1.545,.07);const q=[p[0]*1.15,p[1]-.13,p[2]+.02],r=[p[0]*1.1,p[1]-.27,p[2]+.0];cgTube(B,[p,q,r],[.017,.015,.006],[[['head',1]],[['neck',1]],[['chest',1]]],bc,{seg:6,capB:true});
       for(let i=0;i<3;i++){const c=lerp3(p,r,.25+i*.22);k.p(i<1?'neck':'chest','oct','c',wh2,c[0],c[1],c[2],.018,.013,.018)}k.p('chest','tor','m',ir2,q[0],q[1]-.05,q[2],.022,.02,.022)});
     cgHair(B,M,S,{col:wh,line:1.69,neck:true,thick:.02,side:.15,nape:1.505});{const nape=S.hp(0,1.505,0)[1];H(m=>(m.part=='head'||(m.part=='neck'&&m.s<-.2))&&m.y>=nape+.01&&(m.s<.1||(m.y-S.nb)/S.hs+1.52>1.7))}   /* the skin under the mane */
@@ -338,7 +374,7 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
       if(p){k.p(y>ch-.04?'chest':'spine','box','g',rune,p[0],p[1],p[2],.009,l,.003,0,a,i%2?.6:-.6);WS(p)}});
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';ej_Shell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.05&&m.y>wr+.02,.024,m=>Math.round(m.y*30)%2?ir:ir2,{t:'m',rim:0,hide:1});
       cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-(J[A+'1'][1]+wr)/2)<.012,.03,rune,{t:'g'});
-      ej_Hand(B,S,s,s>0?{col:mdSh(sk,.92),w:.062,r:.016,len:.088,curl:1.15,c0:1.1,pre:0,lift:.014,fan:.3,tcurl:.35,tlen:.6,kn:.08}:{col:mdSh(sk,.92),w:.062,r:.016,len:.1,curl:.3,pre:.15,kn:.08})});
+      ej_Fist(B,S,s,s>0?{col:mdSh(sk,.92),w:.06,r:.017,len:.088,lift:.014,kn:.08}:{col:mdSh(sk,.92),w:.06,r:.017,len:.095,lift:.012,kn:.08,turn:[.7,.75,.75,.45]})});
     // war-kilt of leather panels, a studded belt, fur-wrapped boots
     cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),{n:6,seg:14,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
     ej_Shell(B,M,m=>m.part=='torso'&&Math.abs(m.y-(wy-.012))<.036,.06,0x1e160e,{rim:0,hide:1});
@@ -357,10 +393,11 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
       n:16,sock:1,j2:1,footLite:1,head:HD.head,facePush:HD.face(1.02),arm:ej_ArmR(1.9,[2,5],{w:.066,th:.032,len:1.1},{1:{r:.044},3:{r:.04,rb:.044},4:{r:.03,rf:.032}}),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
   const f1=0x9c9e9c,f2=0x84888c,f3=0xb2b4b0,sk=0x30343c,sk2=0x22262c,cl=0x101214,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<0)return 0;const f=Math.min(1,n[2]*1.4+.2);let d=0;
-    d+=.04*cgG(x,y,0,1.56,.045,.03);                                         // the jutting muzzle
-    d+=.014*cgG(x,y,0,1.598,.022,.012);[-1,1].forEach(s=>d-=.008*cgG(x,y,s*.012,1.592,.006,.005));   // a flat, wide nose with flared nostrils
-    [-1,1].forEach(s=>d-=.02*cgG(x,y,s*.036,1.629,.014,.009));d+=.03*cgG(x,y,0,1.65,.06,.009);    // small eyes deep under a heavy brow
-    d-=.008*cgG(x,y,0,1.547,.035,.004);return d*f};
+    d+=.032*cgG(x,y,0,1.566,.038,.024)+.02*cgG(x,y,0,1.536,.032,.012);          // the muzzle pushed out over a heavy, jutting jaw
+    d+=.006*cgG(x,y,0,1.614,.014,.012)+.018*cgG(x,y,0,1.594,.03,.009);           // a low flat bridge and a broad, flat nose
+    [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.034,1.628,.013,.01);d+=.016*cgG(x,y,s*.054,1.6,.016,.014)});   // deep-set sockets, cheek pads
+    d+=.036*cgG(x,y,0,1.652,.065,.011);                                          // a heavy brow ridge overhanging the eyes
+    d-=.009*cgG(x,y,0,1.549,.034,.004);return d*f};
   S.pron={'-1':1.2,'1':1.2};
   cg181Reg('yeti',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],kn=J.rh1[1],hy=T[1][0],WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)};cgSculpt(M,{head:1},S.sculpt(FACE));
     // the ape's masses: a high hump of muscle over the shoulders and upper back (low enough on the back not to ring the
@@ -368,17 +405,17 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
     cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<-.1)d+=.075*cgG(x,y,0,sh-.11,.2,.11)*Math.min(1,(-.1-n[2])*1.6);if(n[2]>0)d+=.035*cgG(x,y,0,hy+.05,.15,.08)*n[2];return d});
     {const hb=S.hp(0,1.58,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.03*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2))}
     M.shade=cgShade(M,{cav:1.1,y0:0,y1:sh+.25,hk:.28});
-    const face=m=>m.part=='head'&&m.s>.3&&m.y<S.hp(0,1.67,0)[1]&&Math.abs(m.x)<.08*S.hs*1.1,fur=m=>mdMix(f1,f2,ej_cl(.35+(n3Sn(m.x,m.y,m.z,7,2)-.5)*.9+(m.nz<-.4?.2:0),0,1));
+    const face=m=>m.part=='head'&&m.s>.38&&m.y<S.hp(0,1.664,0)[1]&&Math.abs(m.x)<.07*S.hs*1.1,fur=m=>mdMix(f1,f2,ej_cl(.35+(n3Sn(m.x,m.y,m.z,7,2)-.5)*.9+(m.nz<-.4?.2:0),0,1));
     const skin=m=>mdMix(sk,sk2,ej_cl(.3+(n3Sn(m.x,m.y,m.z,9,5)-.5)*.6,0,1));
-    cgEyes(k,M,S,0x9ad8ff,.036,1.629,.75,-.004);{const n0=k.P.length;cgTeeth(k,M,S,[[-.03,1.547,.03,1],[.03,1.547,.03,1],[-.024,1.55,.02],[.024,1.55,.02]],0xd8d0b8);for(let i=n0;i<k.P.length;i++){const P=k.P[i];P.m.premultiply(new THREE.Matrix4().makeTranslation(0,0,-.0012));const c=new THREE.Vector3().setFromMatrixPosition(P.m);P.w=cgWAt(M,[c.x,c.y,c.z])}}   /* fangs a little deeper in the gums, moving with the skin of the mouth */
+    cgEyes(k,M,S,0xaee4ff,.034,1.629,1.25,.01);{const n0=k.P.length;cgTeeth(k,M,S,[[-.03,1.547,.03,1],[.03,1.547,.03,1],[-.024,1.55,.02],[.024,1.55,.02]],0xd8d0b8);for(let i=n0;i<k.P.length;i++){const P=k.P[i];P.m.premultiply(new THREE.Matrix4().makeTranslation(0,0,-.0012));const c=new THREE.Vector3().setFromMatrixPosition(P.m);P.w=cgWAt(M,[c.x,c.y,c.z])}}   /* fangs a little deeper in the gums, moving with the skin of the mouth */
     // big hands: thick fingers grown from the knuckles, curling toward the palm, black claws; clawed toes
     [-1,1].forEach(s=>{ej_Hand(B,S,s,{col:sk,w:.066,r:.0155,len:.08,curl:.26,c0:0,pre:.15,fan:.3,claw:.034,nail:cl,kn:.074,tlen:.6});cgToes(k,S,s,sk,.025,cl)});
     // the coat: overlapping fur layers, each breaking into ragged clumps over the next (head mane, shoulder mantle, chest and
     // back, hips and thighs; upper arms, forearms to the wrist cuffs, shins to the ankles)
     // (every layer also hides the skin under it: no body faces are emitted where fur covers them)
     const ch=J.chest[1],sp=J.spine[1],FO=(sel,o)=>ej_Fur(B,M,sel,Object.assign({hide:1},o)),F=(sel,off,len,col,col2,seed)=>FO(sel,{off,len,col,col2,seed,jag:.6}),E=(m,y,a,sd)=>m.y>cgEdge(m,y,a,sd);
-    const brow=S.hp(0,1.668,0)[1];FO(m=>m.part=='head'&&E(m,brow,.015,31),{off:.034,len:.08,col:f1,col2:f2,seed:31,jag:.65,lump:[.25,1.9],freq:34});
-    FO(m=>((m.part=='head'&&!face(m)&&!E(m,brow-.004,.015,31)&&m.s<.55)||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1))),{off:.03,len:.13,col:f1,col2:f2,seed:1,jag:.6,lump:[.25,1.7],freq:30});
+    const brow=S.hp(0,1.668,0)[1];FO(m=>m.part=='head'&&E(m,brow,.015,31),{off:.034,len:.08,col:f1,col2:f2,seed:31,jag:.65,lump:[.25,1.9],freq:34,lenAt:p=>{const q=S.hp(0,1.65,0);return p[2]>q[2]+.03&&Math.abs(p[0])<.085*S.hs*1.1?.3:1},offAt:v=>{const q=S.hp(0,1.65,0),fz=ej_cl((v[2]-q[2]-.02)/.05,0,1),fx=ej_cl(1-(Math.abs(v[0])-.05*S.hs*1.1)/.04,0,1);return 1-.8*fz*fx}}   /* thin and short over the brow, so the face shows; full on the crown, sides and back */);
+    FO(m=>((m.part=='head'&&!face(m)&&!E(m,brow-.004,.015,31)&&m.s<.7)||(m.part=='neck'&&E(m,S.J.neck[1]-.02,.03,1))),{off:.03,len:.13,col:f1,col2:f2,seed:1,jag:.6,lump:[.25,1.7],freq:30});
     F(m=>((m.part=='torso'||m.part=='neck')&&E(m,ch-.05,.05,2))||(m.part=='arm'&&E(m,J.aR0[1]-.17,.04,12)),.05,.2,f3,f2,2);
     F(m=>m.part=='torso'&&E(m,sp-.07,.05,3)&&!E(m,ch-.02,.05,2),.04,.17,f1,f2,3);
     F(m=>(m.part=='torso'&&!E(m,sp-.05,.05,3))||(m.part=='leg'&&E(m,kn+.03,.04,4)),.04,.17,f1,f2,4);
@@ -389,5 +426,8 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
     // icicles frozen into the shoulder fur
     [[-.18,0],[.16,-.02],[-.06,.03],[.22,-.05]].forEach(([x,dy],i)=>{const y=sh+dy,p=cgRay(M,[x*S.h,y,-.6],[0,0,1]);if(p){k.p('chest','cone4','g',0xbfe6ff,p[0],p[1]-.05,p[2]-.03,.01,.07+i*.01,.01,Math.PI);WS(p)}})
     // the skin left bare: face, hands, soles, wrists and ankles
-    ej_Body(B,M,null,{vcol:m=>face(m)||ej_isHand(S,m)||m.part=='foot'?skin(m):fur(m)})});
+    // the face painted: a lighter muzzle, dark sockets; the mouth line and nostrils crisp
+    const fb=m=>[m.x/(S.hs*1.1),(m.y-S.nb)/S.hs+1.52],fcol=m=>{const [x,y]=fb(m);let c=mdMix(skin(m),0x767a84,.8*Math.max(cgG(x,y,0,1.575,.03,.02),cgG(x,y,0,1.61,.012,.012),cgG(x,y,-.054,1.6,.016,.014),cgG(x,y,.054,1.6,.016,.014)));
+      return mdMix(c,0x08090c,.85*Math.max(cgG(x,y,-.034,1.628,.014,.011),cgG(x,y,.034,1.628,.014,.011),cgG(x,y,0,1.594,.026,.007)*.8))};
+    ej_Body(B,M,m=>{if(!face(m))return null;const [x,y]=fb(m);return (Math.abs(y-1.549)<.0035&&Math.abs(x)<.032)||Math.hypot(Math.abs(x)-.013,y-1.592)<.0055?0x08080a:null},{vcol:m=>face(m)?fcol(m):ej_isHand(S,m)||m.part=='foot'?skin(m):fur(m)})});
   ST179.yeti={sx:.58,hx:-.52,lk:.32,rk:.32,ax:-.24,lx:-.24,az:.18,lz:-.18,ex:-.35,le:-.35};})();
