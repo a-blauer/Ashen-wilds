@@ -530,6 +530,8 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   The breast feathers are flat, soft and close in colour (blade kind `'soft'` in `bd183G`), so they read as plumage, not scales.
   Rocsovereign is antique gold (a `rs150Cols` wrapper), not lemon yellow. The tail fan keeps its width at rest: evolution
   ornaments sit on it, and narrowing it left them floating (`v180_comp_float.py`).
+  A fused companion's borrowed parts are now skinned like the body point they sit on (`lfSkinAt` in `0850`, `p.bw` in `bakeMesh`):
+  rigid on one bone, an Elderdrake ridge spike on a fused Rocsovereign's breast (skin 60% chest, 40% neck) came 4 cm off in a bite.
   The evolution cones that stood for feathers (crest plumes, Stormtalon's shoulder mantle, Rocsovereign's back cape,
   Skyhawk's tail streamers) are blades (`bd183EvoSky`, `bd183Swap`). Test `v183_bird_wings.py`; pictures
   `LIST="Skyhawk:0:1:idle;Stormtalon:5:0:idle" VIEWS=34,side,top,front python3 v183_birds.py` (fold 0 spread .. 1 folded).
