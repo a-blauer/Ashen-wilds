@@ -51,6 +51,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   const bRect=(x,z,a,L,Wd)=>{const ca=Math.cos(a),sa=Math.sin(a);for(let u=-L/2+.3;u<=L/2-.3+1e-6;u+=.6)for(let v=-Wd/2+.3;v<=Wd/2-.3+1e-6;v+=.6)blk(x+u*ca-v*sa,z+u*sa+v*ca,0)};
   const light=(x,y,z,c,i,d)=>{(CS164.pend||[]).push({x,y,z,c,i,d})};
   // ---------------- dwellings (a = facing: the door looks along a) ----------------
+  // v185: a doorway out of a round wall: a short porch at local +x with a flat front, the dark doorway flush on it, posts and a
+  // lintel (was a black slab stood against the curve, half in the wall and half out: a black square)
+  const porch=(sg,r,w,h,col)=>{const d=.42;TQ(sg,Q.box,col,r-.12+d/2+.06,h/2,0,d+.24,h+.1,w+.24);TQ(sg,Q.box,DARK,r+d+.015,h*.44,0,.02,h*.86,w*.72);
+    [-1,1].forEach(s2=>TQ(sg,Q.box,WD,r+d+.03,h/2,s2*w*.42,.08,h+.1,.08));TQ(sg,Q.box,WD,r+d+.03,h+.04,0,.1,.1,w+.12)};
   const D={
     hall(x,z,a,k){k=k||1;const L=6.4*k,Wd=3.8*k,h=1.7*k,rh=1.5*k,sg=sub(x,z,a,-.15),Rf=S(pal.thatch);
       TQ(sg,Q.box,STD,0,-.12,0,L+.5,.65,Wd+.5);[-1,1].forEach(s=>TQ(sg,Q.box,WOOD,0,h/2+.2,s*Wd/2,L,h,.2));TQ(sg,Q.box,WOOD,-L/2,h/2+.2,0,.2,h,Wd);
@@ -62,11 +66,11 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       TQ(sg,Q.ico,BONE,L/2+.16,2.05*k,0,.2,.18,.2);for(let i=0;i<3;i++)TQ(sg,Q.disc,S(pk(pal.cloth)),(i-1)*L/3.2,1.1*k,Wd/2+.13,.4,.4,1,0,0,0);
       bRect(x,z,a,L+.5,Wd+.5);take(x,z,L*.58)},
     hut(x,z,a,k){k=(k||1)*1.25;const sg=sub(x,z,a,-.1);TQ(sg,Q.cyl,S(pal.hide[1]),0,.66*k,0,1.4*k,1.32*k,1.4*k);TQ(sg,Q.cone,S(pal.thatch),0,1.32*k+.72*k,0,1.9*k,1.5*k,1.9*k);
-      TQ(sg,Q.box,DARK,1.37*k,.52*k,0,.1,.95*k,.62*k);TQ(sg,Q.box,WD,1.42*k,1.05*k,0,.14,.12,.9*k);for(let i=0;i<4;i++)TQ(sg,Q.cyl4,WD,rr(-.15,.15),2.8*k,rr(-.15,.15),.03,.7*k,.03,rr(-.4,.4),0,rr(-.4,.4));
+      porch(sg,1.4*k-.05,.7*k,1.02*k,S(pal.hide[1]));for(let i=0;i<4;i++)TQ(sg,Q.cyl4,WD,rr(-.15,.15),2.8*k,rr(-.15,.15),.03,.7*k,.03,rr(-.4,.4),0,rr(-.4,.4));
       TQ(sg,Q.ico,BONE,0,2.85*k,0,.17,.16,.17);for(let i=0;i<9;i++){const b=i/9*TAU;TQ(sg,Q.dod,STD,Math.cos(b)*1.45*k,.06,Math.sin(b)*1.45*k,.22,.14,.2,rr(0,3),rr(0,3),0)}
       blk(x,z,1.3*k);take(x,z,2*k)},
     yurt(x,z,a,k){k=(k||1)*1.2;const sg=sub(x,z,a,-.1);TQ(sg,Q.cyl,S(pk(pal.hide)),0,.55*k,0,1.7*k,1.1*k,1.7*k);TQ(sg,Q.cone,S(pal.hide[0]),0,1.1*k+.45*k,0,1.85*k,.95*k,1.85*k);
-      if(pal.snow)TQ(sg,Q.hemi,S(0xeef4fa),0,1.35*k,0,1.4*k,.42*k,1.4*k);TQ(sg,Q.box,DARK,1.66*k,.45*k,0,.1,.85*k,.65*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.trim),1.7*k,.5*k,s*.38*k,.1,1*k,.08));
+      if(pal.snow)TQ(sg,Q.hemi,S(0xeef4fa),0,1.35*k,0,1.4*k,.42*k,1.4*k);porch(sg,1.7*k-.05,.74*k,.94*k,S(pal.trim));
       for(let i=0;i<6;i++){const b=i/6*TAU;TQ(sg,Q.box,WD,Math.cos(b)*1.72*k,.6*k,Math.sin(b)*1.72*k,.06,.1,.06*k)}TQ(sg,Q.cyl,MET,-.5*k,1.9*k,0,.09,.8*k,.09);
       for(let i=0;i<4;i++){const b=i/4*TAU+.4;seg(x+Math.cos(a+b)*1.9*k,gy(x,z)+1.3*k,z+Math.sin(a+b)*1.9*k,x+Math.cos(a+b)*2.8*k,gy(x,z),z+Math.sin(a+b)*2.8*k,.018,S(0x8a7a50))}
       blk(x,z,1.5*k);take(x,z,2.4*k)},
@@ -81,8 +85,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       [-1,1].forEach(s=>TQ(sg,Q.box,cl,0,2.55*k,s*.7*k,3.4*k,.05,1.6*k,s*.32,0,0));for(let i=-3;i<=3;i++)[-1,1].forEach(s=>TQ(sg,Q.cone4,cl,i*.48*k,2.12*k,s*1.42*k,.12,.32,.04,Math.PI,0,0));
       TQ(sg,Q.disc,S(pk(pal.cloth)),0,.04,0,1.3*k,1,1.1*k,-P2,0,0);TQ(sg,Q.ring,S(pal.trim),0,.05,0,1.25*k,1.05*k,1,-P2,0,0);for(let i=0;i<3;i++)TQ(sg,Q.sph,S(pk(pal.cloth)),rr(-.8,.8),.12,rr(-.6,.6),.3,.12,.22);
       TQ(sg,Q.box,WD,0,.25,0,.8,.06,.5);[[.2,.1],[-.2,-.05]].forEach(([u,v])=>TQ(sg,Q.cyl,MET,u,.33,v,.06,.1,.06));take(x,z,2.2*k)},
-    ctent(x,z,a,k){k=(k||1)*1.25;tent(x,z,a,pk(pal.hide),1.3*k);const y=gy(x,z);for(let i=0;i<4;i++){const b=a+Math.PI/4+i*P2,ex=x+Math.cos(b)*2.3*k,ez=z+Math.sin(b)*2.3*k;
-        seg(x+Math.cos(b)*.9*k,y+1.6*k,z+Math.sin(b)*.9*k,ex,gy(ex,ez)+.1,ez,.016,S(0x8a7a50));putY(Q.cyl4,WD,ex,gy(ex,ez)+.12,ez,.04,.35,.04)}
+    ctent(x,z,a,k){k=(k||1)*1.25;tent(x,z,a,pk(pal.hide),1.3*k);   // v185: the hide tent has its own ropes and pegs (3420)
       const [bx,bz]=[x+Math.cos(a)*2.1*k,z+Math.sin(a)*2.1*k];put(Q.cyl,S(pk(pal.cloth)),bx,.1,bz,.32,1.4,.2,0,-a,P2)},
     tent(x,z,a,k){k=(k||1)*1.35;aTent(x,z,a+P2,pk(pal.hide),2.6*k,k);const [px,pz]=[x+Math.cos(a+P2)*1.5*k,z+Math.sin(a+P2)*1.5*k];put(Q.cyl4,WD,px,1.1*k,pz,.03,2.2*k,.03);
       put(Q.cone4,S(pal.acc,{side:THREE.DoubleSide}),px+.25,2*k,pz,.05,.5,.22,0,0,P2)},

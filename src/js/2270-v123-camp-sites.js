@@ -215,10 +215,12 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const banner=(x,z,col,h,a,trim)=>{h=h||2.8;a=a==null?rr(0,TAU):a;const vx=-Math.sin(a),vz=Math.cos(a);blk(x,z,0);take(x,z,.35);put(Q.cyl,S(0x2a2018),x,h/2,z,.05,h,.05);
     put(Q.box,S(0x2a2018),x+vx*.4,h-.12,z+vz*.4,.05,.05,.9,0,-a,0);const b=put(Q.pln,S(col,{side:THREE.DoubleSide,emissive:col,emissiveIntensity:.15}),x+vx*.42,h-.75,z+vz*.42,.75,1.15,1,0,-a+P2,0);b.castShadow=false;
     if(trim)put(Q.box,S(trim),x+vx*.42,h-1.36,z+vz*.42,.03,.08,.76,0,-a,0)};
-  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);put(CG.tent,S(col),x,.9*k,z,1.25*k,1.8*k,1.25*k,0,-a+Math.PI/4,0);
-    put(Q.box,S(0x1a1410),x+Math.cos(a)*.6*k,.42*k,z+Math.sin(a)*.6*k,.06,.8*k,.5*k,0,-a,0);put(Q.cyl,S(0x4a3020),x,1.85*k,z,.04,.4*k,.04)}; // a = the door
-  const aTent=(x,z,a,col,len,k)=>{k=k||1;len=len||2.6;const sg=sub(x,z,a,0);blk(x,z,1*k);take(x,z,len*.6);[-1,1].forEach(s=>TQ(sg,Q.box,S(col),0,.62*k,.52*k*s,len,.06,1.45*k,s*.92,0,0));
-    [-1,1].forEach(s=>TQ(sg,Q.cyl,S(0x3a2818),len/2*s,.65*k,0,.04,1.3*k,.04));TQ(sg,Q.cyl,S(0x3a2818),0,1.3*k,0,.035,len+.2,.035,0,0,P2);TQ(sg,Q.box,S(0x120c08),len/2-.05,.42*k,0,.02,.7*k,.7*k);return sg};
+  // v185: the hide tent (3420 ep185Tent: a real doorway, tied-back flaps, poles, ropes; was a cone with a black box half in its wall)
+  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotation.y=-a;m.scale.setScalar(k);g.add(m);return m}; // a = the door
+  // v185: the ridge tent (3420 ep185ATent: closed back, a doorway with tied-back flaps in the front; was two slanted boxes, open at
+  // both ends, with a black square box in one end)
+  const aTent=(x,z,a,col,len,k)=>{k=k||1;len=len||2.6;const sg=sub(x,z,a,0);blk(x,z,1*k);take(x,z,len*.6);
+    sg.add(ep185TentMesh(ep185ATent({len:Math.round(len*20)/20,w:Math.round(k*20)/20,h:Math.round(1.3*k*20)/20,hide:col})));return sg};
   const table=(x,z,a,col)=>{const sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.9);TQ(sg,Q.box,S(col||0x5a4028),0,.72,0,1.5,.08,.8);[-1,1].forEach(s=>[-1,1].forEach(t=>TQ(sg,Q.box,S(col||0x5a4028),.62*s,.36,.32*t,.08,.72,.08)));return sg};
   const rack=(x,z,a,wcol)=>{const sg=sub(x,z,a,0),Wd=S(0x4a3220);blk(x,z,.5);take(x,z,1.1);[-1,1].forEach(s=>TQ(sg,Q.cyl,Wd,0,.6,.8*s,.05,1.2,.05));
     [1.1,.45].forEach(y=>TQ(sg,Q.cyl,Wd,0,y,0,.04,1.7,.04,P2,0,0));for(let i=0;i<4;i++){const q=-.55+i*.37;TQ(sg,Q.cyl,S(0x5a4428),.12,.95,q,.025,1.9,.025,0,0,-.2);TQ(sg,Q.cone,S(wcol||0x9a9aa2,{metalness:.7,roughness:.35}),.31,1.94,q,.05,.3,.05,0,0,-.2)}};
