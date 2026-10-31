@@ -105,11 +105,11 @@ function fk_fingers(B,S,s,col,kind,o){o=o||{};const bn=s<0?'aL':'aR',a1=S.J[bn+'
   const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),oo={t:o.t,nail:o.nail,tip:0};
   // a fist: the closed fingers don't change the outline, so they are one rounded mitten curled round the grip (fk_mitten) with
   // the finger separations painted as dark lines; the thumb is its own loft folded over it
-  if(kind=='fist')fk_mitten(B,col,P(add3(a2,mul3(d,.064*hw)),0,-.002*hw),D(1,-.7,.03),L*.6,r*1.08,.0165*hw*1.85,3,1.05,ax,u,W,o.t);
+  if(kind=='fist')fk_mitten(B,col,P(add3(a2,mul3(d,.064*hw)),0,-.002*hw),D(1,-.7,.03),L*.6,r*1.08,.0165*hw*1.85,2,1.5,ax,u,W,o.t);
   const kc=kind=='claw'?add3(a2,mul3(d,.062*hw)):kn;
   for(let i=0;i<4&&kind!='fist';i++){const z=(1.5-i)*(kind=='claw'?.0178:.0165)*hw,p=P(kc,z,-.004*hw);
     if(kind=='claw')fk_digit(B,col,p,D(1,-.2,z*1.6/hw),L*[.96,1.04,.97,.8][i],r*(i==3?.9:1),3,.46,ax,W,Object.assign({},oo,{tip:o.tip||0,seg:5,root:2.6}));   /* bony, three-jointed, curving in */
-    else fk_digit(B,col,p,D(1,-.22,z*.7/hw),L*.86*[.96,1.04,.97,.8][i],r*(i==3?.9:1),2,.42,ax,W,oo)}
+    else fk_digit(B,col,p,D(1,-.22,z*.7/hw),L*.86*[.96,1.04,.97,.8][i],r*(i==3?.9:1),2,.42,ax,W,Object.assign({},oo,{seg:5}))}
   if(kind=='fist')fk_digit(B,col,P(add3(a2,mul3(d,.034*hw)),.026*hw,-.008*hw),D(1,-.3,.22),L*.44,r*1.1,2,.6,ax,W,oo);   /* the thumb folded over the curled fingers */
   else fk_digit(B,col,P(add3(a2,mul3(d,.03*hw)),.026*hw,-.01*hw),D(.6,-.3,.75),L*.62,r*1.05,2,.3,nrm3(cross3(u,f)),W,Object.assign({},oo,{tip:o.tip?o.tip*.6:0}))}
 // a plate harness (the Blood Knight's kit): cuirass, gorget, mail skirt and tassets, belt, pauldrons, arm and leg plates,
@@ -117,11 +117,11 @@ function fk_fingers(B,S,s,col,kind,o){o=o||{};const bn=s<0?'aL':'aR',a1=S.J[bn+'
 function cgPlate(B,k,M,S,pal,o){o=o||{};const T=S.torso,J=S.J,wy=T[2][0],sh=T[6][0],ey=J.aR1[1],wr=J.aR2[1],kn=J.rh1[1],an=J.rh2[1],{pl,pl2,ed,gd,ml}=pal;
   cgShell(B,M,m=>m.part=='torso'&&m.y>wy-.02,.034,m=>m.y<wy+.03||m.y>sh+.02?gd:m.y<wy+.12?(Math.round(m.y*34)%2?pl:pl2):Math.abs(m.x)<.025&&m.s>0?pl2:Math.round(Math.atan2(m.x,m.z)*7)%2?pl:mdSh(pl,.84),{t:'m'});
   cgShell(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh)||(m.part=='head'&&m.y<S.hp(0,1.535,0)[1]),.05,m=>m.y>S.hp(0,1.5,0)[1]?gd:pl2,{t:'m'});
-  cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?mdSh(ml,.7):ml,{n:5,seg:16});
-  cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:5,t:'m',seg:16,keep:m=>Math.abs(m.c)>.25||m.s<-.2});
-  cgBelt(B,M,wy-.015,.022,.058,pal.belt||0x1a1012,'m');const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','sph','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);
+  cgSkirt(B,S,wy-.04,J.lh0[1]-.24,.05,.03,m=>Math.round(m.y*60)%3==0?mdSh(ml,.7):ml,{n:4,seg:16});
+  cgSkirt(B,S,wy-.04,J.lh0[1]-.15,.05,.052,m=>m.y<J.lh0[1]-.13?gd:Math.round(m.y*30)%2?pl:pl2,{n:4,t:'m',seg:16,keep:m=>Math.abs(m.c)>.25||m.s<-.2});
+  cgBelt(B,M,wy-.015,.022,.058,pal.belt||0x1a1012,'m');const bk=cgSurf(M,S,wy-.015,0,.062);k.p('pelvis','dod','m',gd,bk[0],bk[1],bk[2],.03,.028,.014);
   [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],L=s<0?'lh':'rh';
-    [[.05,.15,.11,.16,pl],[.0,.14,.09,.15,pl2],[-.05,.13,.075,.135,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));k.p(A+'0','tor','m',gd,a[0]+s*(.03+j*.014),a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*(.42+j*.12))});
+    [[.05,.15,.11,.16,pl],[.0,.14,.09,.15,pl2],[-.05,.13,.075,.135,ed]].forEach(([dy,sx,sy,sz,c],j)=>{k.p(A+'0','hem','m',c,a[0]+s*(.03+j*.014),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.12));if(!j)k.p(A+'0','tor','m',gd,a[0]+s*.03,a[1]+dy-.004,a[2],sx,.012,sz,0,0,s*.42)});   /* (refine) one rim, on the top plate (budget) */
     if(o.spikes)for(let j=0;j<3;j++)k.L(A+'0','m',o.spikes,[a[0]+s*(.06+j*.03),a[1]+.08,a[2]-.04+j*.04],[a[0]+s*(.11+j*.03),a[1]+.2,a[2]-.05+j*.04],.022,.002,5);
     cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
     cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
@@ -230,24 +230,24 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
   f6_reg('brigand',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0],kn=J.rh1[1];
     // the hauberk: chest and back, short sleeves to above the elbow, and its skirt to mid-thigh with a darker hem
     cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR1[1]+.04),.016,m=>a181Nz(Math.round(m.y*60)%2?ml:ml2,m,.12,20),{t:'m'});   /* (refine) and a mail collar round the neck */
-    cgSkirt(B,S,wy-.02,kn+.13,.05,.03,m=>m.y<kn+.17?mdSh(ml,.7):Math.round(m.y*60)%2?ml:ml2,{n:5,t:'m',seg:16});
+    cgSkirt(B,S,wy-.02,kn+.13,.05,.03,m=>m.y<kn+.17?mdSh(ml,.7):Math.round(m.y*60)%2?ml:ml2,{n:4,t:'m',seg:16});
     // the tabard: front and back panels over the hauberk, hanging to the knees
     // (refine) the tabard's edges trimmed in dark red (paint)
     fk_shell(B,M,m=>m.part=='torso'&&Math.abs(m.x)<.1&&Math.abs(m.s)>.5&&m.y<sh-.02&&m.y>wy-.04,.03,m=>Math.abs(m.x)>.072?tb2:null,{rim:.3,vcol:fk_nz(tb,.15,9)});
-    cgSkirt(B,S,wy-.02,kn+.04,.05,.05,m=>m.y<kn+.07?tb2:a181Nz(tb,m,.1,8),{n:5,seg:16,keep:m=>Math.abs(m.c)<.38});f6_belt(B,M,wy-.01,.026,.042,0x2a1a10,.03);
+    cgSkirt(B,S,wy-.02,kn+.04,.05,.05,m=>m.y<kn+.07?tb2:a181Nz(tb,m,.1,8),{n:4,seg:16,keep:m=>Math.abs(m.c)<.38});f6_belt(B,M,wy-.01,.026,.042,0x2a1a10,.03);
     // the helm: a dome with a brow band, cheek guards down the sides of the face, a nasal bar
     const hb=m=>(m.y-S.nb)/S.hs+1.52;cgShell(B,M,m=>m.part=='head'&&(hb(m)>1.655||(Math.abs(m.x)>.046*S.hs&&m.s>-.35&&m.s<.8&&hb(m)>1.585)),.026,m=>Math.abs(hb(m)-1.662)<.007?ir:a181Nz(ir2,m,.15,20),{t:'m',rim:.4});
     const np=S.hp(0,1.64,0),nr=cgRay(M,[0,np[1],np[2]+.5],[0,0,-1],{head:1});if(nr)k.p('head','box','m',ir,0,np[1]-.012,nr[2]+.026,.022,.07,.012);
     cgFur(B,M,m=>m.part=='head'&&m.s>-.2&&m.y<S.hp(0,1.585,0)[1]&&!(m.s>.55&&Math.abs(m.x)<.028*S.hs&&Math.abs(m.y-S.hp(0,1.557,0)[1])<.008*S.hs),{off:.01,len:.05,col:0x3a2414,col2:0x2a180c,seed:61,jag:.5,lump:[.6,.6]});
     // round pauldrons, the left one spiked
-    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A];k.p(A,'hem','m',ir,a[0]+s*.03,a[1]+.03,a[2],.115,.09,.12,0,0,s*.4);k.p(A,'tor','m',ir2,a[0]+s*.03,a[1]+.026,a[2],.115,.012,.12,0,0,s*.4);
+    [-1,1].forEach(s=>{const A=s<0?'aL0':'aR0',a=J[A];k.p(A,'hem','m',ir,a[0]+s*.03,a[1]+.03,a[2],.115,.09,.12,0,0,s*.4);
       if(s<0)for(let i=0;i<2;i++)k.L(A,'m',0x9a9ea6,[a[0]-.06-i*.03,a[1]+.07,a[2]-.02+i*.04],[a[0]-.1-i*.03,a[1]+.16,a[2]-.02+i*.04],.018,.002,5)});
     // leather bracers, brown leather legs, boots with white fur cuffs
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR';cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<J[A+'1'][1]-.07&&m.y>J[A+'2'][1]+.01,.012,m=>Math.round(m.y*50)%2?0x4a3020:0x3a2618)});
     fk_shell(B,M,m=>(m.part=='leg'&&m.y>kn-.08)||(m.part=='torso'&&m.y<J.lh0[1]-.06),.01,null,{vcol:fk_nz(0x4a3426,.2,9)});
     [-1,1].forEach(s=>{fk_shell(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<kn-.06))&&Math.sign(m.x)==s,.022,m=>m.part=='foot'&&m.y<.025?0x1e1610:null,{vcol:fk_nz(0x4a3220,.18,9)});
       cgFur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&Math.abs(m.y-(kn-.075))<.028,{off:.032,len:.045,col:0xd8ccb0,col2:0xb4a88c,seed:62+s,jag:.5,lump:[.8,.4]})});
-    f6_cape(B,S,{len:J.lh1[1]+.12,w:1.0,col:0x4a1410,ins:0x200806,rag:.5,seg:16})})})();
+    f6_cape(B,S,{len:J.lh1[1]+.12,w:1.0,col:0x4a1410,ins:0x200806,rag:.5,seg:12})})})();
 // ---------------- Ember Cultist: a deep red hood with horns, a face lost in shadow (only the eyes burn), a long robe, a glowing sigil ----------------
 (function(){const S=fk_body(HUM181({h:.9,w:.96,at:.95})),K={sk:0x140c0a,hand:0x8a6a56,fist:s=>s>0},rb=0x4a100c,rb2=0x2a0806,T=S.torso,J=S.J;
   f6_reg('cultist',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{glow:0xff6a20,ears:false}),wy=T[2][0];
@@ -258,7 +258,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
     f6_belt(B,M,wy-.01,.024,.03,0x1e0806,.016);const g=cgSurf(M,S,J.chest[1]+.03,0,.016),n0=k.P.length;k.p('chest','oct','g',0xff6a20,g[0],g[1],g[2]+.003,.032,.05,.01);k.p('chest','oct','c',0x1e0806,g[0],g[1],g[2]-.001,.044,.066,.01);
     for(let i=n0;i<k.P.length;i++)k.P[i].noSeat=1})})();
 // ---------------- Hollow Knight: black plate, a great helm with a glowing red visor slit and breathing holes, bone horns, a dark cape ----------------
-(function(){const S=fk_body(HUM181({h:.9,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],at:1.32,lt:1.28,hs:.96,nw:1.25,foot:1.05,footW:1.1})),T=S.torso,J=S.J;
+(function(){const S=fk_body(HUM181({h:.9,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],at:1.32,lt:1.28,hs:.96,nw:1.25,foot:1.05,footW:1.1}),[0,4,6,8,10,12,14]),T=S.torso,J=S.J;   /* (refine) a plain helm: fewer head rings (the head is all helm) */
   const pal={pl:0x24262c,pl2:0x34363e,ed:0x4a4c56,gd:0x5a5e68,ml:0x2a2a30,belt:0x141418};
   f6_reg('knight',S,function(B,P,k,C){const M=C.M;C.f6skin=0x161618;fk_shade(M,S,{cav:1.2});cgPlate(B,k,M,S,pal);
     // the great helm: the visor slit is part of the helm's own surface, burning red (the glow layer); a band of lighter steel
@@ -269,7 +269,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
     cgShell(B,M,m=>m.part=='head'&&slit(m),.03,m=>Math.abs(hb(m)-1.629)<.006?0xff3a20:0xd01a10,{t:'g',rim:1});
     C.f6hide=[m=>m.part=='head'];   /* (refine) the helm and the slit cover the whole head: its skin is not drawn */
     [-1,1].forEach(s=>{const q=S.hp(s*.09,1.69,-.01);let p=q;[[s*.04,.05,-.02],[s*.02,.06,-.04],[-s*.005,.05,-.05]].forEach((d,j)=>{const n=add3(p,d);k.L('head','c',0x8a8270,p,n,.026-j*.007,.019-j*.007,5);p=n})});
-    f6_cape(B,S,{len:J.lh1[1]-.05,w:1.2,col:0x18141e,ins:0x0c0a10,trim:0x2a1e30,rag:.6,seg:16})})})();
+    f6_cape(B,S,{len:J.lh1[1]-.05,w:1.2,col:0x18141e,ins:0x0c0a10,trim:0x2a1e30,rag:.6,seg:12})})})();
 ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
 // ---------------- Zealot of the Endless One: a bronze hood draped on the shoulders, a dark mask over the lower face, a patch with a red lens over
 // one eye, a crest of five viper spines and three plumes, a bare scarred torso, a rust kilt, a dagger sheath on the hip, wrapped forearms and shins, bone charms ----------------
