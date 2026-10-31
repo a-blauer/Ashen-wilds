@@ -238,6 +238,9 @@ function va_Shade(M,o,soft){const sh=cgShade(M,o),pt=new Array(M.V.length);M.F.f
 // cheekbone, below the eyes, eyes, brow, forehead, top (the rings are read off the base head), with the base's jaw
 // angle and hollow cheeks pushed by height instead of by ring number; o.jaw / o.cheek scale them
 var va_HY=[1.52,1.538,1.555,1.572,1.59,1.608,1.626,1.644,1.68,1.73];
+// the full face: every base ring where a feature turns (throat, under the chin, chin, mouth, upper lip, nose base, cheekbone,
+// below the eyes, eye line, brow, above the brow, forehead, crown, top), so a sculpted face's flat facets don't form bands
+var va_HYF=[1.52,1.535,1.548,1.562,1.576,1.59,1.605,1.62,1.634,1.648,1.664,1.682,1.7,1.73];
 function va_Head(HY,hs,o){o=o||{};return {head:HY.map(y=>cgAt(CG181.base.head,y)),facePush:(i,j,a)=>{const y=HY[i],ca=Math.cos(a),sa=Math.sin(a),side=Math.abs(ca);let e=0;
   if(y<1.545&&sa>-.2&&side>.6)e+=.006*(o.jaw==null?1:o.jaw);if(y>1.56&&y<1.585&&sa>.4&&side>.3&&side<.8)e-=.008*(o.cheek==null?1:o.cheek);return e*(hs||1)}}}
 // a hair shell (as cgHair) that replaces the skin under it
@@ -282,12 +285,12 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
   CG181.base=S;CG181.faceGaunt=FACE;S.pron={'-1':1.1};
   // (v181 refine) the Thrall's own body, built from the base above by cgHuman like every cage foe (the base itself is not
   // changed): 16 columns round the body, shoulder sockets as tall as the arm with the arms grown out of them and the thighs
-  // out of the hips (sock, j2: the seated limbs), 10 head rings where the profile turns, one ring less in the forearm, one
+  // out of the hips (sock, j2: the seated limbs), 14 head rings where the face's features turn, one ring less in the forearm, one
   // less in the thigh and two in the shin, a lighter foot; a little narrower at the waist (gaunt)
-  const T=cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HY,1)));
+  const T=cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1)));
   T.pron=S.pron;
   cg181Reg('vamp',T,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036,JJ=T.J,cl=va_C;cgSculpt(M,{head:1},FACE);
-    M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:1.75,hk:.26,dk:.1},{head:.35,neck:.4});   // baked creases, ridges and height light (no triangles)
+    M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:1.75,hk:.26,dk:.1},{head:.08,neck:.3});   /* crease darkening almost off on the face: its darks are painted */   // baked creases, ridges and height light (no triangles)
     // the skin: smooth ash-grey, cooler and darker on the back; ribs, sternum and a sunken belly as soft painted shadow;
     // hollow cheeks, bruised under-eyes and dark sockets round the burning eyes
     const skinV=m=>{const n=n3Sn(m.x,m.y,m.z,7,2);let c=mdMix(skL,0x544858,cl((n-.45)*1.2,0,.35));
@@ -296,9 +299,9 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
         c=mdSh(c,1-.34*rb*f*cl((Math.abs(m.x)-.01)/.02,0,1));
         if(m.y>1.14&&m.y<1.33)c=mdSh(c,1-.12*Math.exp(-Math.pow(m.x/.009,2)));
         if(m.y<1.11&&m.y>.99)c=mdSh(c,1-.1*Math.exp(-Math.pow((m.y-1.05)/.03,2)))}
-      if(m.part=='head'||m.part=='neck')[-1,1].forEach(s=>{c=mdMix(c,0x3a2a3a,.25*cgG(m.x,m.y,s*.05,1.57,.015,.013));
+      if(m.part=='head'||m.part=='neck')[-1,1].forEach(s=>{c=mdMix(c,0x3a2a3a,.18*cgG(m.x,m.y,s*.052,1.572,.012,.011));
         c=mdMix(c,0x4a2840,.35*cgG(m.x,m.y,s*.04,1.614,.016,.006));if(m.nz>.2)c=mdMix(c,sock,cl(1.3*cgG(m.x,m.y,s*EX,EY,.02,.013),0,1))});
-      if((m.part=='head'&&m.y<1.565)||m.part=='neck')c=mdSh(c,1.3);   /* the stoop tips the jaw and throat down, away from the light: painted paler */
+      if(m.part=='head'||m.part=='neck')c=mdSh(c,1+.45*Math.max(0,-m.ny)+(m.y<1.565?.06:0));   /* the receding chin, the jaw and the throat face down, away from the light: painted paler by how far down they face */
       if(m.part=='hand')c=mdSh(c,.92);return c};
     // crisp regions: the lip line, breeches with a torn, uneven hem, a belt and an iron buckle, the rest flows (null → skinV)
     const col=m=>{if(m.part=='head'&&m.s>.3&&Math.abs(m.y-1.558)<.005&&Math.abs(m.x)<.026)return lip;
@@ -307,8 +310,11 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
     // the open coat (shoulders, back, upper arms), torn at the hem; dark seams, the back and the hem darker
     va_Sh(B,M,m=>(m.part=='torso'&&m.y>1.0&&!(m.s>.45&&Math.abs(m.x)<.05+(1.42-m.y)*.12)&&!(m.y<1.08&&a181H(Math.round(m.x*40),Math.round(m.z*40))<.5))||(m.part=='arm'&&m.y>1.16&&!(m.y<1.2&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.45)),.014,
       m=>{let c=m.s<-.4?mdSh(co,.86):co;if(m.y<1.12)c=mdMix(c,co2,.55);if(m.s<-.5&&Math.abs(m.x)<.006)c=co2;if(m.part=='arm'&&m.y<1.22)c=mdMix(c,co2,.4);return c});
-    // lank hair: a shell over the crown and the back of the skull
-    va_Sh(B,M,m=>m.part=='head'&&m.y>1.58&&(m.s<.1||m.y>1.672-.022*Math.exp(-(m.x/.022)*(m.x/.022))+(Math.abs(m.x)>.05?-.004:0)),v=>.018*Math.min(1,Math.max(.35,(v[1]-1.56)/.12)),null,{vcol:m=>mdMix(0x120c0e,0x24181e,cl(n3Sn(m.x*.4,m.y*3,m.z*.4,30,1),0,1))});
+    // lank hair lying close to the skull, swept back: a widow's peak in front, the hairline high at the temples, rising toward
+    // the front over the sides, long at the back down to the nape (the locks hang on from there); thin at the hairline,
+    // fuller over the crown and the back
+    va_Sh(B,M,m=>{if(m.part!='head')return false;if(m.s<-.25)return m.y>1.555;if(m.s<.35)return m.y>1.652+(m.s+.25)*.06;return m.y>1.69-.019*Math.exp(-(m.x/.02)*(m.x/.02))},
+      v=>(v[2]<0?.014:.008)*Math.min(1,Math.max(.4,(v[1]-1.55)/.1)),null,{vcol:m=>mdMix(0x120c0e,0x24181e,cl(n3Sn(m.x*.4,m.y*3,m.z*.4,30,1),0,1))});
     va_Body(B,M,col,skinV);
     // eyes burning in the sockets, pointed ears grown from the skull, fangs
     [-1,1].forEach(s=>{const p=cgRay(M,[s*EX,EY,.3],[0,0,-1]);if(p)k.p('head','sph','g',0xff2a30,p[0],p[1],p[2]+.001,.009,.006,.005,0,0,s*.25);

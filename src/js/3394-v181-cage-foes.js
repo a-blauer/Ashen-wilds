@@ -172,9 +172,9 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
 // (v181 refine) the most bestial of them: a hunched back (a curve in the spine, below the shoulders), a tall bald skull with
 // bat ears grown out of it, long spidery arms and fingers with long dark nails; seated limbs (16 columns, sock, j2), the coat a
 // shell that replaces the skin under it; the skin painted smoothly (sunken temples and cheeks, a dark mask round the eyes,
-// faint blotches), no blocky patches; clawed toes lofted from the feet
+// faint blotches), no blocky patches; 14 head rings where the face's features turn, so its facets don't form bands; clawed toes lofted from the feet
 (function(){const S=cgHuman(Object.assign({h:1.0,w:.88,d:.9,rw:[.9,.95,.78,.86,.94,.94,.96,.92],at:.74,lt:.78,hs:1.04,hy:1.16,hw:.9,armL:1.14,legL:1.03,neckL:.02,
-    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HY,1.04,{cheek:1.4})));
+    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1.04,{cheek:1.4})));
   const sk=0x5e6058,sk2=0x464a40,co=0x14100e,co2=0x221a18,glow=0xff2a20,nail=0x2a2018,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.05)return 0;const f=Math.min(1,n[2]*1.5);let d=0;
     d+=.034*cgG(x,y,0,1.588,.011,.016)+.02*cgG(x,y,0,1.612,.008,.016)-.01*cgG(x,y,0,1.574,.012,.006);   // a long hooked nose
@@ -187,7 +187,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     // the knuckles of the spine standing out down the hunch (sculpted, so the coat over them shows them too)
     cgSculpt(M,{torso:1},(x,y,z,n)=>{if(n[2]>-.5)return 0;let d=0;for(let i=0;i<7;i++)d+=cgG(x,y,0,sh-.04-i*.038,.013,.011);return .012*d});
     cgSculpt(M,{head:1},S.sculpt(FACE));
-    M.shade=va_Shade(M,{cav:1.1,blur:3,y0:0,y1:sh+.35,hk:.26},{head:.4,neck:.6});
+    M.shade=va_Shade(M,{cav:1.1,blur:3,y0:0,y1:sh+.35,hk:.26},{head:.1,neck:.35});   /* crease darkening almost off on the face */
     const ey=S.hp(0,1.63,0)[1],
       skinV=m=>{const n=n3Sn(m.x,m.y,m.z,6,4),n2=n3Sn(m.x,m.y,m.z,13,7);let c=mdMix(sk,0x6a6c5e,cl((n-.5)*1.2,0,.45));c=mdMix(c,0x4a4438,cl((n2-.66)*3,0,.5));
         if(m.nz<-.2)c=mdMix(c,sk2,cl((-m.nz-.2)*1.2,0,.75));
