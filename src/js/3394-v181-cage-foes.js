@@ -107,6 +107,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
 (function(){const S=cgHuman({h:1.06,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],rf:[1,1.05,1.15,1.2,1.25,1.2,1.15,1.1],at:1.32,lt:1.28,hs:.96,legL:1.04,nw:1.25,foot:1.05,footW:1.1,
     n:16,sock:1,j2:1,footLite:1,head:CG181.base.head.filter((q,i)=>[0,2,4,7,9,11,14].indexOf(i)>=0) /* 7 rings: the face is never seen */,facePush:()=>0,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5) /* all under plate */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
   const pl=0x2a1419,pl2=0x40202a,ed=0x5a262c,gd=0x6e5230,ml=0x26262c,un=0x161012,cl=0x4e0a14,glow=0xff2a30,T=S.torso,J=S.J;
+  S.grip={'1':add3(va_Grip(S,1,.0095,.004),[0,0,-.008])};   /* the sword's hilt through the right gauntlet's fist (its carry grip sits further in and forward than a dagger's) */
   cg181Reg('vampk',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],ey=J.aR1[1],wr=J.aR2[1],kn=J.rh1[1],an=J.rh2[1];
     M.shade=cgShade(M,{cav:1,y0:0,y1:sh+.3,hk:.24});
     // cuirass (fluted, a centre ridge, banded lames over the belly, a gilded rim), gorget
@@ -138,7 +139,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     const ht=S.hp(0,1.74,0);k.L('head','m',pl2,[0,ht[1],ht[2]+.06],[0,ht[1]+.03,ht[2]-.06],.016,.012,4);k.L('head','m',pl2,[0,ht[1]+.03,ht[2]-.06],[0,ht[1]-.02,ht[2]-.2],.012,.002,4);
     [-1,1].forEach(s=>{const q=S.hp(s*.1,1.68,-.02);let p=[q[0],q[1],q[2]];[[s*.06,.03,-.05],[s*.04,.05,-.06],[s*.01,.06,-.06],[-s*.005,.05,-.05]].forEach((d,j)=>{const n=[p[0]+d[0],p[1]+d[1],p[2]+d[2]];k.L('head','m',j<2?pl:ed,p,n,.028-j*.006,.022-j*.006,5);p=n})});
     cgCape(B,S,{len:.32,w:1.25,col:cl,ins:0x1a0408,trim:gd,rag:.7})});
-  ST179.vampk={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};})();
+  ST179.vampk={sx:.06,hx:-.04,lk:.12,rk:.12,az:.05,lz:-.05,le:-.15};   /* (round 2) arms a little closer: upper arm ≤ 10° */})();
 
 // ===================================================================== Blood Magister =====================================================================
 // (v181 refine) a tall, gaunt aristocrat: seated limbs (16 columns, sock, j2), 10 head rings, the robes and hair shells that
@@ -150,7 +151,7 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
   const FACE=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;d+=.02*cgG(x,y,0,1.598,.009,.014)+.012*cgG(x,y,0,1.616,.007,.012);
     [-1,1].forEach(s=>{d-=.013*cgG(x,y,s*.036,1.629,.016,.01);d+=.007*cgG(x,y,s*.056,1.602,.014,.01);d-=.006*cgG(x,y,s*.047,1.568,.016,.014);d+=.003*cgG(x,y,s*.01,1.587,.006,.004)});
     d+=.008*cgG(x,y,0,1.648,.05,.006);d-=.004*cgG(x,y,0,1.558,.02,.003);d+=.008*cgG(x,y,0,1.538,.016,.012);return d*f};
-  S.pron={'-1':.7};
+  S.pron={'-1':.7};S.grip={'1':add3(va_Grip(S,1,.0072,.012),[0,0,.012])};   /* the staff through the right fist (its carry grip sits further in and back) */
   cg181Reg('vampm',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],cl=va_C,hs=S.hs;cgSculpt(M,{head:1},S.sculpt(FACE));
     M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:sh+.3,hk:.22},{head:.35,neck:.6});
     const ey=S.hp(0,1.629,0)[1],my=S.hp(0,1.558,0)[1],

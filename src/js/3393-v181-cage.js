@@ -231,6 +231,9 @@ function va_Hand(B,S,s,o){const F=va_HF(S,s),bn=F.bn+'2',hs=S.hand||1,kn=add3(F.
     va_LoftV(B,T,{seg:6,ref:F.u,capB:true,vcol:m=>m.i>2.5?mdSh(o.col,.9):o.col});return}
   for(let i=0;i<4;i++){const z=(1.5-i)*.0155,l=L*(i==3?.8:i==0?.93:1);va_Digit(B,bn,P(kn,z,-.002),D(1,-.12,z*.6),ax,l,3,o.kind=='claw'?.34:.16,r,o.col,o.nail,o.claw||0)}
   va_Digit(B,bn,P(add3(F.a2,mul3(F.d,.032)),.02,-.006),D(.6,-.3,.75),nrm3(cross3(F.u,F.f)),L*.6,2,.3,r*1.15,o.col,o.nail,(o.claw||0)*.6)}
+// (round 2) where a va_Hand mitten fist closes round a handle: the hollow between the palm and the curled fingers, under the
+// knuckles, with the thumb crossing over it (an offset from the wrist, model space, for S.grip); r and S.hand as for va_Hand
+function va_Grip(S,s,r,u){const F=va_HF(S,s),k=(r||.0072)/.0072*(S.hand||1);return add3(mul3(F.d,.078*k),mul3(F.u,(u==null?-.024:u)*k))}   /* u: across the palm (− toward the palm), for long hilts that sit further out */
 // five lofted toes from the front of the foot (the big toe on the inside), an optional claw on each
 function va_Toes(B,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w,tz=A[2]+.135*L;
   for(let i=0;i<5;i++){const x=A[0]-s*(2-i)*.017*W,r=(i==0?.0105:.0082-.0005*i)*W;va_Digit(B,l,[x,.021,tz],[-s*(2-i)*.08,-.3,1],[1,0,0],.03-.002*i,1,.35,r,col,claw?nail:null,claw||0,4)}}
@@ -304,8 +307,10 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
   // changed): 16 columns round the body, shoulder sockets as tall as the arm with the arms grown out of them and the thighs
   // out of the hips (sock, j2: the seated limbs), 14 head rings where the face's features turn, one ring less in the forearm, one
   // less in the thigh and two in the shin, a lighter foot; a little narrower at the waist (gaunt)
-  const T=cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1,{cheek:.5})));
-  T.pron=S.pron;
+  const T=cgHuman(Object.assign({snug:1,n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1,{cheek:.5})));
+  T.pron=S.pron;T.grip={'1':va_Grip(T,1)};   /* the dagger through the right fist */
+  // (round 2) arms along the body: snug above, and the stance's outward swing (az / lz .14 / −.16 in 3390) cut to ≤ .06
+  ST179.vamp=Object.assign({},ST179.vamp,{az:.05,lz:-.05});
   cg181Reg('vamp',T,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036,JJ=T.J,cl=va_C;cgSculpt(M,{head:1},FACE_T);
     M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:1.75,hk:.26,dk:.1},{head:.08,neck:.3});   /* crease darkening almost off on the face: its darks are painted */   // baked creases, ridges and height light (no triangles)
     // the skin: smooth ash-grey, cooler and darker on the back; ribs, sternum and a sunken belly as soft painted shadow;
