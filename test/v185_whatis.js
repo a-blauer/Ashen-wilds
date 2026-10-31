@@ -10,7 +10,7 @@ async(opt)=>{const W8=ms=>new Promise(r=>setTimeout(r,ms)),out=[],V=THREE.Vector
     scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.visible&&false)return;const g=o.geometry;if(!g||!g.attributes.position)return;if(!g.boundingSphere)g.computeBoundingSphere();o.updateWorldMatrix(true,false);
       const c=g.boundingSphere.center.clone().applyMatrix4(o.matrixWorld),rad=g.boundingSphere.radius*new V().setFromMatrixScale(o.matrixWorld).length()/1.732;
       if(Math.hypot(c.x-x,c.z-z)>r+rad||rad>80)return;const {r:rt,path}=rootOf(o),m=Array.isArray(o.material)?o.material[0]:o.material;
-      const b=new THREE.Box3().setFromObject(o),sz=b.getSize(new V());
+      if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox.clone().applyMatrix4(o.matrixWorld),sz=b.getSize(new V());
       const key=(rt.name||rt.type)+'|'+(o.name||'')+'|'+(m&&m.type)+'|'+(m&&m.color?m.color.getHexString():'')+'|'+g.type;const e=seen.get(key);
       if(e){e.n++;return}const it={root:rt.name||rt.type,path,name:o.name,geo:g.type,verts:g.attributes.position.count,mat:m&&m.type,col:m&&m.color?'#'+m.color.getHexString():null,vc:!!(m&&m.vertexColors),map:!!(m&&m.map),
         tr:!!(m&&m.transparent),op:m&&m.opacity,at:[+c.x.toFixed(1),+(c.y-GH(c.x,c.z)).toFixed(2),+c.z.toFixed(1)],size:[+sz.x.toFixed(2),+sz.y.toFixed(2),+sz.z.toFixed(2)],ud:Object.keys(o.userData||{}).slice(0,5).join(','),rud:Object.keys(rt.userData||{}).slice(0,6).join(','),n:1};
