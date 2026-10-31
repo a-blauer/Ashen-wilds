@@ -27,7 +27,7 @@ JS=r"""(keys)=>{const V=THREE.Vector3,out={items:[],fails:[]};const F=m=>out.fai
         g.ak={n:EN[k].moves[0],ph:1,k:.6};tick(150,false);chk('attack');g.ak=null}}
       else{tick(300,true);if(!fin())F(k+': non-finite bone in walk');g.ak={n:EN[k].moves[0],ph:1,k:.6};tick(150,false);if(!fin())F(k+': non-finite bone in attack');g.ak=null}
       if(/harpy/.test(k)){const x=g.x||g.userData.x;const hd=wp('head'),pv=wp('pelvis');if(!hd||!pv||hd.y-pv.y<.4*g.scale.y)F(k+': not upright (head '+(hd&&hd.y.toFixed(2))+', hips '+(pv&&pv.y.toFixed(2))+')');
-        let wings=0;g.traverse(o=>{if(o.isMesh&&o.geometry===LPWG['harpy181'+EN[k].rig])wings++});if(wings!=2)F(k+': '+wings+' wings (want 2)');if(k=='harpy'&&EN[k].rig!='Harpy181')F('harpy: rig '+EN[k].rig)}
+        let wings=0;const WG=Object.values(LPWG);g.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&WG.indexOf(o.geometry)>=0)wings++}); /* any wing made by the wing kit (lpwPair) */if(wings!=2)F(k+': '+wings+' wings (want 2)');if(k=='harpy'&&EN[k].rig!='Harpy181')F('harpy: rig '+EN[k].rig)}
     }catch(e){F(k+': anim error '+e)}
     out.items.push(it)});
   // shoulders closed: weld the body and count open edges round the shoulder joints
