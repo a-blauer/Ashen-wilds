@@ -3,7 +3,7 @@
 # hits (melee: act k .45; slam / rainfire: the act's end; bolt / throw: the act's start, when the shot leaves):
 #  * melee weapons: the weapon's head in front of the body (toward the target, +z), at a sensible height (around the
 #    target's chest; near the ground for a slam), the weapon hand in front of the shoulders;
-#  * unarmed: the striking hand in front at a sensible height;  casters / slings: the staff head or hand forward;
+#  * unarmed: the striking hand in front at a sensible height;  casters / slings: the staff head or hand forward; archers: the bow hand;
 #  * the weapon stays in the fist all through the attack (the point held in the fist on the hand's grip anchor);
 #  * the feet stay planted (ankles within a few cm of where they stood), no NaN, the pose returns to the plain stance after;
 #  * one real enemy fight step (mStart / mTick / animC): the system drives the attack and the head lands toward the hero.
@@ -16,7 +16,7 @@ FOES=[('brigand','strike'),('orc','strike'),('orc','slam'),('troll','strike'),('
   ('executioner','strike'),('giant','strike'),('giant','slam'),('jotun','strike'),('vampk','strike'),('hollowknight','strike'),('hollowknight','slam'),
   ('gharial','strike'),('bandit','strike'),('vamp','strike'),('ss165zealot','strike'),
   ('tombpriest','bolt'),('cultist','bolt'),('cultist','rainfire'),('trollsh','bolt'),('shaman','bolt'),('ss165caller','bolt'),('vampm','bolt'),('nagas','bolt'),('revenant','bolt'),
-  ('slinger','throw'),('slinger','strike'),('selem','bolt'),
+  ('slinger','throw'),('bonearcher','throw'),('nagaa','throw'),('slinger','strike'),('selem','bolt'),
   ('ghoul','strike'),('dgwretch','strike'),('nosferatu','strike'),('wendigo','strike'),('akidon','strike'),('akorror','strike'),('lichen','strike'),('gargoyle','strike'),
   ('yeti','strike'),('amalgam','strike'),('saltgolem','strike'),('colossus','strike'),('drowned','strike')]
 if os.environ.get('ONLY'):
@@ -39,7 +39,7 @@ JS=r"""([k,n,shot])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o
   if(feet0){maxFoot=Math.max(maxFoot,P(b.lh2).distanceTo(feet0[0]),P(b.rh2).distanceTo(feet0[1]))}
   if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6){const hb=b[side=='L'?'aL2':'aR2'],hand=P(hb);let tip=null;
     if(we&&we.W.parent){const W=we.W,L=W.userData.faLen||.8;tip=W.localToWorld(new V(0,-L,0))}
-    res={hand:hand.toArray(),tip:tip?tip.toArray():null,sh:P(b.aR0).add(P(b.aL0)).multiplyScalar(.5).toArray(),chest:chest0.toArray(),side,we:we?we.ty:null};
+    res={off:P(b[side=='L'?'aR2':'aL2']).toArray(),hand:hand.toArray(),tip:tip?tip.toArray():null,sh:P(b.aR0).add(P(b.aL0)).multiplyScalar(.5).toArray(),chest:chest0.toArray(),side,we:we?we.ty:null};
     if(shot){}}}
  g.ak=null;for(let i=0;i<20;i++)step(16);
  let back=0;for(const x in rot0)back=Math.max(back,2*Math.acos(Math.min(1,Math.abs(rot0[x].dot(b[x].quaternion)))));
@@ -67,7 +67,7 @@ def s(pg):
         line='%-22s H %.2f hand (%.2f %.2f %.2f) tip %s grip %.3f feet %.3f back %.2f'%(tag,H,hand[0],hand[1],hand[2],'(%.2f %.2f %.2f)'%tuple(tip) if tip else '-',r['maxGrip'],r['maxFoot'],r['back'])
         print(line)
         # the striking point: the weapon's head, or the hand
-        pt=tip if tip and n in ('strike','slam') else hand
+        pt=tip if tip and n in ('strike','slam') else res['off'] if k in ('bonearcher','nagaa') else hand
         if n in ('strike','slam'):
             if pt[2]<ch[2]+.18*H:fails.append('%s: the blow is not in front of the body (z %.2f, chest z %.2f, height %.2f)'%(tag,pt[2],ch[2],H))
             if abs(pt[0])>.55*H+.3:fails.append('%s: the blow lands far out to the side (x %.2f)'%(tag,pt[0]))
