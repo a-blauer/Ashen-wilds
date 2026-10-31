@@ -8,6 +8,11 @@
 #  * the recovery never takes the weapon's head further toward the target than it was at the hit (no "second blow");
 #  * the weapon (from a third of the way up the handle to the head) never passes through the head (a capsule round the
 #    head bone, radius HEAD_R x the height / 1.7);
+#  * WEAPON FACING (owner: a hard rule), every weapon foe, both strike variants (the foe's 1st and 2nd attack): at the hit
+#    the edge (axe / great-axe bit, sword / greatsword / dagger-slash edge, hammer face, halberd blade on the sweep) is within
+#    30 deg of the head's travel and not turned back toward the foe; on thrusts (dagger stab, halberd thrust) the point is
+#    within 30 deg; inside the blow the edge is never over 120 deg off its travel, never faces up on a downward swing, and a
+#    one-sided blade never faces the foe's own body (FAIL lines name the foe, the frame and the angle);
 #  * the feet stay planted (ankles within a few cm of where they stood), no NaN, the pose returns to the plain stance after;
 #  * one real enemy fight step (mStart / mTick / animC): the system drives the attack and the head lands toward the hero.
 # ONLY=orc,gharial  HEAD_R=.07
@@ -25,7 +30,7 @@ FOES=[('brigand','strike'),('orc','strike'),('orc','slam'),('troll','strike'),('
   ('yeti','strike'),('amalgam','strike'),('saltgolem','strike'),('colossus','strike'),('drowned','strike')]
 if os.environ.get('ONLY'):
     keep=os.environ['ONLY'].split(',');FOES=[f for f in FOES if f[0] in keep]
-JS=r"""([k,n,shot,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o.matrixWorld);
+JS=r"""([k,n,rep2,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o.matrixWorld);
  const c=enemyC(k,20,{}),g=cr(c);scene.add(g);let T=5000;const step=ms=>{T+=ms;animC(g,T,false,0);g.position.set(0,0,0);g.rotation.y=0;g.updateMatrixWorld(true)};for(let i=0;i<40;i++)step(16);
  const out={k,n,err:[]},b=g.h&&g.h.bones;if(!b){out.err.push('no bones');scene.remove(g);return out}
  const bb=new THREE.Box3().setFromObject(g),H=bb.max.y-bb.min.y;out.H=H;
@@ -33,7 +38,12 @@ JS=r"""([k,n,shot,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
  const feet0=b.lh2&&!g.h.nt?[P(b.lh2),P(b.rh2)]:null,sh0=P(b.aR0).add(P(b.aL0)).multiplyScalar(.5),chest0=P(b.chest);
  const rot0={};['aR0','aR1','aR2','aL0','aL1','spine','pelvis'].forEach(x=>rot0[x]=b[x].quaternion.clone());
  const dt=1/30,tl=[];for(let t=0;t<M.wind;t+=dt)tl.push([0,t/M.wind]);for(let t=0;t<M.act;t+=dt)tl.push([1,t/M.act]);tl.push(hitPh);for(let t=M.rec;t>0;t-=dt)tl.push([2,t/M.rec]);
+ const tOf=(ph,kk)=>ph==0?kk*M.wind:ph==1?M.wind+kk*M.act:M.wind+M.act+(1-kk)*M.rec;
+ tl.sort((a,c)=>tOf(a[0],a[1])-tOf(c[0],c[1]));   /* the hit sample in its place in time (the head's travel is measured frame to frame) */
+ // the alternate strike: one unmeasured attack first, so this one is the foe's second
+ if(rep2){for(const [ph,kk] of tl){g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};step(dt*1000)}g.ak=null;for(let i=0;i<6;i++)step(dt*1000)}
  let maxGrip=0,maxFoot=0,nan=0,res=null,driven=0,hitZ=null,recOver=null,headMin=9,headAt=null,fi=0;const sc=H/1.7;
+ let wEdge=0,prevTip=null,prevT=0,face=null,maxBack=null,foeFace=null,upDown=null,tn='';const ang=(a,b)=>Math.acos(Math.max(-1,Math.min(1,a.dot(b)/(a.length()*b.length()||1))))*57.2958;
  const fa0=()=>g._fa;
  for(const [ph,kk] of tl){g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};step(dt*1000);const S=g._fa;if(S&&S.ph>=0)driven=1;
   b.pelvis.traverse(o=>{if(o.isBone&&(isNaN(o.quaternion.x)||isNaN(o.position.x)))nan=1});
@@ -41,7 +51,18 @@ JS=r"""([k,n,shot,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
   if(we&&we.W.parent){const W=we.W,hd=we.C.hold,hp=W.localToWorld(new V(hd[0],hd[1],hd[2])),gd=g.h._gripD&&g.h._gripD[we.side],an=C=>new V(GRIP_AN[0]+(gd?gd[0]:0),GRIP_AN[1]+(gd?gd[1]:0),GRIP_AN[2]+(gd?gd[2]:0));
     const ap=W.parent.localToWorld(an());maxGrip=Math.max(maxGrip,hp.distanceTo(ap))}
   if(feet0){maxFoot=Math.max(maxFoot,P(b.lh2).distanceTo(feet0[0]),P(b.rh2).distanceTo(feet0[1]))}
-  fi++;if(we&&we.W.parent){const W=we.W,L=W.userData.faLen||.8,hd=we.C.hold,tipZ=W.localToWorld(new V(0,-L,0)).z-P(b.pelvis).z;
+  fi++;
+  // weapon facing: the edge (or point) against the head's travel
+  if(we&&we.W.parent&&S){const W=we.W,L=W.userData.faLen||.8,tipW=W.localToWorld(new V(0,-L,0)),q=new THREE.Quaternion();W.matrixWorld.decompose(new V(),q,new V());
+    wEdge=we.edge||0;const t=tOf(ph,kk),ex=new V(1,0,0).applyQuaternion(q),hdir=new V(0,-1,0).applyQuaternion(q);tn=S.T&&S.T.nm||'';
+    if(prevTip&&t>prevT){const v=tipW.clone().sub(prevTip).divideScalar(t-prevT),sp=v.length();
+      const e=we.edge==2&&ex.dot(v)<0?ex.clone().negate():ex;const isHit=ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6;
+      if(isHit)face={edgeAng:ang(e,v),edgeFw:e.z,headAng:ang(hdir,v),sp:sp/sc,frame:fi,e:e.toArray().map(x=>+x.toFixed(2)),v:v.clone().normalize().toArray().map(x=>+x.toFixed(2)),d:hdir.toArray().map(x=>+x.toFixed(2))};
+      if(we.edge&&S.hardK>.5&&sp>.8*sc){const a2=ang(e,v);if(!maxBack||a2>maxBack[1])maxBack=[fi,a2]}
+      if(we.edge==1&&!(ph==0&&kk<.15)&&!(ph==2&&kk<.15)){const a3=ang(ex,P(b.chest).sub(tipW));if(!foeFace||a3<foeFace[1])foeFace=[fi,a3]}
+      if(we.edge&&sp>.8*sc&&v.y<-.7*sp&&e.y>.2&&ang(e,v)>80&&!upDown)upDown=[fi,e.y,e.toArray().map(x=>+x.toFixed(2)),v.clone().normalize().toArray().map(x=>+x.toFixed(2)),ph,+kk.toFixed(2),+(S.sT||0).toFixed(2),+(S.hardK||0).toFixed(2),+(sp/sc).toFixed(2)]}
+    prevTip=tipW;prevT=t}
+  if(we&&we.W.parent){const W=we.W,L=W.userData.faLen||.8,hd=we.C.hold,tipZ=W.localToWorld(new V(0,-L,0)).z-P(b.pelvis).z;
     if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6)hitZ=tipZ;
     if(ph==2&&hitZ!=null&&tipZ>hitZ+.04*sc&&(!recOver||tipZ-hitZ>recOver[1]))recOver=[fi,tipZ-hitZ];
     // the weapon past the fist against a capsule round the head (head bone up 0.16 x scale)
@@ -50,10 +71,10 @@ JS=r"""([k,n,shot,hr])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPositio
   if(ph==hitPh[0]&&Math.abs(kk-hitPh[1])<1e-6){const hb=b[side=='L'?'aL2':'aR2'],hand=P(hb);let tip=null;
     if(we&&we.W.parent){const W=we.W,L=W.userData.faLen||.8;tip=W.localToWorld(new V(0,-L,0))}
     res={off:P(b[side=='L'?'aR2':'aL2']).toArray(),hand:hand.toArray(),tip:tip?tip.toArray():null,sh:P(b.aR0).add(P(b.aL0)).multiplyScalar(.5).toArray(),chest:chest0.toArray(),side,we:we?we.ty:null};
-    if(shot){}}}
+    }}
  g.ak=null;for(let i=0;i<20;i++)step(16);
  let back=0;for(const x in rot0)back=Math.max(back,2*Math.acos(Math.min(1,Math.abs(rot0[x].dot(b[x].quaternion)))));
- Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt});scene.remove(g);return out}"""
+ Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt,face,maxBack,foeFace,upDown,tn,edge:wEdge});scene.remove(g);return out}"""
 JS_GAME=r"""()=>{const V=THREE.Vector3,out={err:[]};const p=pl.position;const e=spawnEnemy_base('orc',p.x,p.z+1.6,5,{agg:1});e.m.scale.setScalar(e.m.bs);
  let now=performance.now();const tick=()=>{now+=16;e.m._ie=e;if(e.atk)mTick(e,.016,now);animC(e.m,now,false,0);e.m.updateMatrixWorld(true)};
  for(let i=0;i<10;i++)tick();mStart(e,pl,'strike');let hitTip=null,drv=0,n=0;
@@ -65,9 +86,13 @@ def s(pg):
     ev=pg.evaluate;pg.set_default_timeout(3600000);ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=600000);pg.click('[data-c="warrior"]',timeout=600000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     fails=[];notes=[]
+    RUNS=[]
     for k,n in FOES:
-        r=ev(JS,[k,n,False,HEAD_R])
-        tag='%s %s'%(k,n)
+        RUNS.append((k,n,False))
+        if n=='strike':RUNS.append((k,n,True))
+    for k,n,r2 in RUNS:
+        r=ev(JS,[k,n,r2,HEAD_R])
+        tag='%s %s%s'%(k,n,' (2nd)' if r2 else '')
         if r['err']:fails.append('%s: %s'%(tag,r['err']));continue
         if not r['driven']:fails.append('%s: the attack is not driven by the foe-attack system'%tag);continue
         if r['nan']:fails.append('%s: NaN in a bone'%tag)
@@ -92,6 +117,18 @@ def s(pg):
             # casts and throws: the staff head / hand forward of the shoulders and not below the hips
             if pt[2]<sh[2]+.12*H:fails.append('%s: the cast / throw is not pushed toward the target (z %.2f, shoulders %.2f)'%(tag,pt[2],sh[2]))
             if pt[1]<.35*H:fails.append('%s: the cast / throw hand is low (%.2f m, body %.2f m)'%(tag,pt[1],H))
+        # weapon facing (owner: hard rule). Thrusts (dagger stab, halberd thrust): the point leads; other edged blows: the edge
+        f=r['face'];thrust=r['tn'] in ('dagA','poleA')
+        if f and r['edge']:
+            print('   facing %s: edge %.0f deg, point %.0f deg off the travel at the hit (edge %s travel %s head %s); worst in the blow %s; edge vs own body %s'%(r['tn'],f['edgeAng'],f['headAng'],f['e'],f['v'],f['d'],r['maxBack'],r['foeFace']))
+            if thrust:
+                if f['headAng']>30:fails.append('%s: the point does not lead the thrust at the hit (%.0f deg off the travel, frame %d)'%(tag,f['headAng'],f['frame']))
+            else:
+                if f['edgeAng']>30:fails.append('%s: the edge does not lead at the hit (%.0f deg off the travel, frame %d)'%(tag,f['edgeAng'],f['frame']))
+                if f['edgeFw']<-.35:fails.append('%s: the edge faces back toward the foe at the hit (frame %d)'%(tag,f['frame']))
+                if r['maxBack'] and r['maxBack'][1]>120:fails.append('%s: the edge is backwards in the blow (%.0f deg off the travel, frame %d)'%(tag,r['maxBack'][1],r['maxBack'][0]))
+                if r['upDown']:fails.append('%s: the edge faces up on a downward swing (frame %d) %s'%(tag,r['upDown'][0],r['upDown'][2:]))
+            if r['foeFace'] and r['foeFace'][1]<45:fails.append('%s: the blade faces the foe itself (%.0f deg, frame %d)'%(tag,r['foeFace'][1],r['foeFace'][0]))
         if r['recOver']:fails.append('%s: the recovery takes the weapon head %.2f m further toward the target than at the hit (frame %d): reads as a second blow'%(tag,r['recOver'][1],r['recOver'][0]))
         if r['headMin']<HEAD_R:fails.append('%s: the weapon passes through the head (%.3f x scale from the head, frame %s)'%(tag,r['headMin'],r['headAt']))
         if r['maxGrip']>.03*sc+.01:fails.append('%s: the weapon leaves the fist (%.3f m)'%(tag,r['maxGrip']))
