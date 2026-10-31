@@ -174,12 +174,13 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
 // shell that replaces the skin under it; the skin painted smoothly (sunken temples and cheeks, a dark mask round the eyes,
 // faint blotches), no blocky patches; 14 head rings where the face's features turn, so its facets don't form bands; clawed toes lofted from the feet
 (function(){const S=cgHuman(Object.assign({h:1.0,w:.88,d:.9,rw:[.9,.95,.78,.86,.94,.94,.96,.92],at:.74,lt:.78,hs:1.04,hy:1.16,hw:.9,armL:1.14,legL:1.03,neckL:.02,
-    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1.04,{cheek:1.4})));
+    n:16,sock:1,j2:1,footLite:1,arm:CG181.base.arm.filter((q,i)=>i!=5),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1.04,{cheek:.8})));
   const sk=0x5e6058,sk2=0x464a40,co=0x14100e,co2=0x221a18,glow=0xff2a20,nail=0x2a2018,T=S.torso,J=S.J;
   const FACE=(x,y,z,n)=>{if(n[2]<.05)return 0;const f=Math.min(1,n[2]*1.5);let d=0;
-    d+=.034*cgG(x,y,0,1.588,.011,.016)+.02*cgG(x,y,0,1.612,.008,.016)-.01*cgG(x,y,0,1.574,.012,.006);   // a long hooked nose
-    [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.037,1.63,.017,.012);d+=.01*cgG(x,y,s*.06,1.6,.012,.01);d-=.016*cgG(x,y,s*.05,1.566,.016,.016)});
-    d+=.016*cgG(x,y,0,1.652,.05,.007);d-=.005*cgG(x,y,0,1.553,.018,.003);d-=.006*cgG(x,y,0,1.536,.025,.01);return d*f};
+    d+=.034*cgG(x,y,0,1.588,.012,.017)+.02*cgG(x,y,0,1.612,.009,.016)-.008*cgG(x,y,0,1.574,.014,.009);   // a long hooked nose
+    // deep sockets, cheekbones, sunken cheeks (wide, smooth dents: still gaunter than the Thrall's, without sharp creases)
+    [-1,1].forEach(s=>{d-=.022*cgG(x,y,s*.037,1.63,.019,.013);d+=.009*cgG(x,y,s*.06,1.6,.017,.013);d-=.012*cgG(x,y,s*.052,1.566,.022,.022);d-=.003*cgG(x,y,s*.03,1.57,.008,.02)});
+    d+=.015*cgG(x,y,0,1.652,.05,.009);d-=.004*cgG(x,y,0,1.553,.022,.005);d-=.005*cgG(x,y,0,1.536,.028,.012);return d*f};
   S.pron={'-1':1.1,'1':1.1};
   cg181Reg('nosferatu',S,function(B,P,k,C){const M=C.M,wy=T[2][0],sh=T[6][0],cl=va_C,hs=S.hs;
     // the hunch: the upper back curves out between the shoulder blades (kept below the shoulder line, so no groove round the neck)

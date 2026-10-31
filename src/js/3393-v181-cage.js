@@ -283,13 +283,24 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
     d-=.005*cgG(x,y,0,1.558,.022,.0035);d+=.01*cgG(x,y,0,1.538,.018,.012);           // the mouth line, the chin
     return d*f};
   CG181.base=S;CG181.faceGaunt=FACE;S.pron={'-1':1.1};
+  // (v181 refine) the Thrall's face on its 16-column head: the same features, the cheek hollows, nostril wings and mouth line
+  // wider and shallower, so they are smooth gradients across several faces instead of sharp crease triangles (the gauntness is
+  // carried by painted colour)
+  const FACE_T=(x,y,z,n)=>{if(n[2]<.1)return 0;const f=Math.min(1,n[2]*1.6);let d=0;
+    d+=.024*cgG(x,y,0,1.596,.011,.014)+.013*cgG(x,y,0,1.616,.009,.013);
+    [-1,1].forEach(s=>{d-=.016*cgG(x,y,s*.036,1.629,.018,.012);d+=.007*cgG(x,y,s*.056,1.601,.02,.015);d-=.006*cgG(x,y,s*.048,1.568,.026,.024);d+=.0025*cgG(x,y,s*.011,1.586,.01,.007)});
+    d+=.01*cgG(x,y,0,1.648,.05,.008);d-=.003*cgG(x,y,0,1.558,.026,.006);d+=.009*cgG(x,y,0,1.538,.022,.014);return d*f};
+  // the hairline round the head: a widow's peak in front, high at the temples, over the ears, down to the nape at the back
+  const HLT=[[0,1.69],[.6,1.69],[1.1,1.673],[1.7,1.657],[2.2,1.59],[2.6,1.556],[3.2,1.556]],HL=(x,y,z)=>{const a=Math.abs(Math.atan2(x,z-.01));let h=1.556;
+    for(let i=0;i<HLT.length-1;i++)if(a<=HLT[i+1][0]){const t=(a-HLT[i][0])/(HLT[i+1][0]-HLT[i][0]);h=HLT[i][1]+(HLT[i+1][1]-HLT[i][1])*t*t*(3-2*t);break}
+    return h-.019*Math.exp(-(x/.02)*(x/.02))*(z>0?1:0)},hairC=m=>mdMix(0x120c0e,0x24181e,va_C(n3Sn(m.x*.4,m.y*3,m.z*.4,30,1),0,1));
   // (v181 refine) the Thrall's own body, built from the base above by cgHuman like every cage foe (the base itself is not
   // changed): 16 columns round the body, shoulder sockets as tall as the arm with the arms grown out of them and the thighs
   // out of the hips (sock, j2: the seated limbs), 14 head rings where the face's features turn, one ring less in the forearm, one
   // less in the thigh and two in the shin, a lighter foot; a little narrower at the waist (gaunt)
-  const T=cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1)));
+  const T=cgHuman(Object.assign({n:16,sock:1,j2:1,footLite:1,rw:[1,1,.9,.95,1,1,1,1],arm:S.arm.filter((q,i)=>i!=5),leg:S.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)},va_Head(va_HYF,1,{cheek:.5})));
   T.pron=S.pron;
-  cg181Reg('vamp',T,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036,JJ=T.J,cl=va_C;cgSculpt(M,{head:1},FACE);
+  cg181Reg('vamp',T,function(B,P,k,C){const M=C.M,EY=1.629,EX=.036,JJ=T.J,cl=va_C;cgSculpt(M,{head:1},FACE_T);
     M.shade=va_Shade(M,{cav:1,blur:3,y0:0,y1:1.75,hk:.26,dk:.1},{head:.08,neck:.3});   /* crease darkening almost off on the face: its darks are painted */   // baked creases, ridges and height light (no triangles)
     // the skin: smooth ash-grey, cooler and darker on the back; ribs, sternum and a sunken belly as soft painted shadow;
     // hollow cheeks, bruised under-eyes and dark sockets round the burning eyes
@@ -299,9 +310,10 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
         c=mdSh(c,1-.34*rb*f*cl((Math.abs(m.x)-.01)/.02,0,1));
         if(m.y>1.14&&m.y<1.33)c=mdSh(c,1-.12*Math.exp(-Math.pow(m.x/.009,2)));
         if(m.y<1.11&&m.y>.99)c=mdSh(c,1-.1*Math.exp(-Math.pow((m.y-1.05)/.03,2)))}
-      if(m.part=='head'||m.part=='neck')[-1,1].forEach(s=>{c=mdMix(c,0x3a2a3a,.18*cgG(m.x,m.y,s*.052,1.572,.012,.011));
+      if(m.part=='head'||m.part=='neck')[-1,1].forEach(s=>{c=mdMix(c,0x3a2a3a,.24*cgG(m.x,m.y,s*.05,1.57,.02,.018));
         c=mdMix(c,0x4a2840,.35*cgG(m.x,m.y,s*.04,1.614,.016,.006));if(m.nz>.2)c=mdMix(c,sock,cl(1.3*cgG(m.x,m.y,s*EX,EY,.02,.013),0,1))});
       if(m.part=='head'||m.part=='neck')c=mdSh(c,1+.45*Math.max(0,-m.ny)+(m.y<1.565?.06:0));   /* the receding chin, the jaw and the throat face down, away from the light: painted paler by how far down they face */
+      if(m.part=='head'){const t=cl((m.y-HL(m.x,m.y,m.z)+.016)/.009,0,1);if(t>0)c=mdMix(c,hairC(m),t*t*(3-2*t))}   /* the hairline: hair painted onto the skin along a smooth curve just below the hair's edge */
       if(m.part=='hand')c=mdSh(c,.92);return c};
     // crisp regions: the lip line, breeches with a torn, uneven hem, a belt and an iron buckle, the rest flows (null → skinV)
     const col=m=>{if(m.part=='head'&&m.s>.3&&Math.abs(m.y-1.558)<.005&&Math.abs(m.x)<.026)return lip;
@@ -310,11 +322,11 @@ function va_Hair(B,M,S,o){const line=o.line||1.672,peak=o.peak||0,nape=S.hp(0,o.
     // the open coat (shoulders, back, upper arms), torn at the hem; dark seams, the back and the hem darker
     va_Sh(B,M,m=>(m.part=='torso'&&m.y>1.0&&!(m.s>.45&&Math.abs(m.x)<.05+(1.42-m.y)*.12)&&!(m.y<1.08&&a181H(Math.round(m.x*40),Math.round(m.z*40))<.5))||(m.part=='arm'&&m.y>1.16&&!(m.y<1.2&&a181H(Math.round(m.x*50),Math.round(m.z*50))<.45)),.014,
       m=>{let c=m.s<-.4?mdSh(co,.86):co;if(m.y<1.12)c=mdMix(c,co2,.55);if(m.s<-.5&&Math.abs(m.x)<.006)c=co2;if(m.part=='arm'&&m.y<1.22)c=mdMix(c,co2,.4);return c});
-    // lank hair lying close to the skull, swept back: a widow's peak in front, the hairline high at the temples, rising toward
-    // the front over the sides, long at the back down to the nape (the locks hang on from there); thin at the hairline,
-    // fuller over the crown and the back
-    va_Sh(B,M,m=>{if(m.part!='head')return false;if(m.s<-.25)return m.y>1.555;if(m.s<.35)return m.y>1.652+(m.s+.25)*.06;return m.y>1.69-.019*Math.exp(-(m.x/.02)*(m.x/.02))},
-      v=>(v[2]<0?.014:.008)*Math.min(1,Math.max(.4,(v[1]-1.55)/.1)),null,{vcol:m=>mdMix(0x120c0e,0x24181e,cl(n3Sn(m.x*.4,m.y*3,m.z*.4,30,1),0,1))});
+    // lank hair lying close to the skull, swept back: a widow's peak in front, the hairline high at the temples, over the ears
+    // and long at the back down to the nape (the locks hang on from there); thin at the hairline,
+    // fuller over the crown and the back; the shell thins to nothing toward its edge, and the hair is painted onto the skin
+    // just below it along the smooth hairline curve (skinV), so the edge reads as that curve, not as the faces' steps
+    va_Sh(B,M,m=>m.part=='head'&&m.y>HL(m.x,m.y,m.z),v=>(v[2]<0?.014:.008)*va_C((v[1]-HL(v[0],v[1],v[2]))/.025,0,1),null,{vcol:hairC});
     va_Body(B,M,col,skinV);
     // eyes burning in the sockets, pointed ears grown from the skull, fangs
     [-1,1].forEach(s=>{const p=cgRay(M,[s*EX,EY,.3],[0,0,-1]);if(p)k.p('head','sph','g',0xff2a30,p[0],p[1],p[2]+.001,.009,.006,.005,0,0,s*.25);
