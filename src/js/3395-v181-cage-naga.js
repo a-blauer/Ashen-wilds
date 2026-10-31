@@ -28,7 +28,7 @@ function n181Path(){const W=(a,b,t)=>t<=0?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]],T
 function n181Spec(){const S=cgHuman({h:.86,w:1.0,d:1.0,rw:[1.12,1.16,.96,1.02,1.1,1.1,1.15,1.1],at:1.1,lt:1,hs:1.0,hw:.95,head:NAGAHEAD.filter((q,i)=>i!=1&&i!=9&&i!=11) /* (refine) 10 profile rings */,facePush:()=>0,
     // (refine) 16 columns, the shoulder socket round the joint and the arm grown out of it (the seated-arm fix; there are no
     // legs, so j2's hip half does nothing: the bottom ring flows straight on into the tail); arm rings only where they shape it
-    n:16,sock:1,j2:1,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5)});
+    n:16,sock:1,j2:1,snug:1 /* (round 2) arms resting along the body */,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5)});
   S.neck=S.neck.slice(1);   /* one neck ring: the neck is short behind the hood */
   S.tail=n181Path();S.extra=NAGA181.bones.map(q=>q[0]);S.pron={'-1':.5,'1':.5};return S}
 // ---- (refine) where a point sits along the body: one centre line from the chest down the torso and out along the tail ----
@@ -50,6 +50,11 @@ function nh_Strap(B,M,C,r,col){const hit=q=>q.top?cgRay(M,[q.top[0],2.5,q.top[1]
   const Q=[];C.forEach((q,i)=>{Q.push(q);const n=C[i+1];if(n&&!q.top&&!n.top)for(let t=1;t<3;t++)Q.push([q[0]+(n[0]-q[0])*t/3,q[1]+(n[1]-q[1])*t/3])});
   const P=Q.map(hit).filter(Boolean),N=M.N||(M.N=cgNormals(M)),out=P.map((p,i)=>{let b=-1,bd=1e9;M.V.forEach((v,j)=>{const d=(v[0]-p[0])**2+(v[1]-p[1])**2+(v[2]-p[2])**2;if(d<bd){bd=d;b=j}});return add3(p,mul3(N[b],(i==0||i==P.length-1)?-r*1.2:r*.35))});
   mdLoft(B,out.map(p=>({p,rx:r*1.4,f:r*.7,b:r*.7,w:cgWAt(M,p)})),{seg:6,col})}
+// (round 2) a gripping hand: no forearm twist (the fist's knuckle row then lies across the handle the way the grip system holds
+// it), and S.grip = the centre of the fist round the handle (nh_Hand's fist: the grip axis sits .078 down the hand from the
+// wrist and .022 toward the palm), so the weapon runs through the closed fist in carry and strike
+function nh_Grip(S,K){S.grip={};[-1,1].forEach(s=>{if(!(K.fist&&K.fist(s)))return;S.pron[s]=0;const A=s<0?'aL':'aR',d=nrm3(sub3(S.J[A+'2'],S.J[A+'1'])),u=nrm3(sub3([s,0,0],mul3(d,d[0]*s)));
+  S.grip[s]=add3(mul3(d,.078),mul3(u,-.022))})}
 // a clean clawed hand: four fingers and a thumb, each one tapering loft rooted inside the hand and ending in its own dark claw
 // (no separate segments or balls); kind 'fist' curls them round the grip, 'claw' hooks them a little (frames as cgFingers)
 function nh_Hand(B,S,s,col,kind,len,nail){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),W=[[bn+'2',1]],L=(len||1)*.08;
@@ -121,7 +126,7 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
   return M}
 
 // ---------------- Naga Warrior: bronze scale cuirass, gorget, a heavy pauldron, vambraces, a war-belt with hanging plates ----------------
-(function(){const S=n181Spec(),K={sk:0x3a4a2c,sk2:0x283420,bel:0x8c7c4e,pat:0x1a2214,eye:0xffc020,fist:s=>s>0};const br=0x6a5226,br2=0x4a3818,gd=0x8a7034,lt=0x2e2014,T=S.torso,J=S.J;
+(function(){const S=n181Spec(),K={sk:0x3a4a2c,sk2:0x283420,bel:0x8c7c4e,pat:0x1a2214,eye:0xffc020,fist:s=>true /* sword right, shield grip left */};nh_Grip(S,K);S.grip[1]=add3(S.grip[1],[0,0,.035]);   /* the sword's origin is at its guard: forward so the grip, not the guard, sits in the fist */const br=0x6a5226,br2=0x4a3818,gd=0x8a7034,lt=0x2e2014,T=S.torso,J=S.J;
   cg181Reg('nagaw',S,function(B,P,k,C){const M=n181Build(B,k,C,S,K),wy=T[2][0],sh=T[6][0];
     nh_Sh(B,M,m=>m.part=='torso'&&m.y>wy-.01,.026,m=>m.y<wy+.03||m.y>sh+.02?gd:mdSh(nh_TRow(S,m.y)%2?br:br2,.95+.1*n3Sn(m.x,m.y,m.z,9,2))   /* (refine) lamellar rows that follow the face rows (no blocky steps) */,{t:'m'});
     nh_Sh(B,M,m=>m.part=='neck'||(m.part=='torso'&&m.y>sh),.04,gd,{t:'m'});
@@ -132,7 +137,7 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
     for(let i=0;i<9;i++){const an=-1.3+i*(2.6/8),p=cgSurf(M,S,by-.02,an,.034);k.p('pelvis','box','m',i%2?br:br2,p[0],p[1]-.07,p[2],.07,.15,.012,-.12*Math.cos(an),an,0);k.P[k.P.length-1].noSeat=1}   /* hung from the belt (top tucked into it) */M.nhEmit()})})();
 
 // ---------------- Naga Archer: a leather harness, a quiver of red-fletched arrows, a bracer on the bow arm, a hide wrap ----------------
-(function(){const S=n181Spec(),K={sk:0x4a4c2c,sk2:0x34361e,bel:0x9a8a5a,pat:0x22220e,eye:0xffd84a,fist:s=>s<0};const lt=0x4a3422,lt2=0x30200f,fe=0x8a2a1a,T=S.torso,J=S.J;
+(function(){const S=n181Spec(),K={sk:0x4a4c2c,sk2:0x34361e,bel:0x9a8a5a,pat:0x22220e,eye:0xffd84a,fist:s=>s<0 /* the bow at the riser */};nh_Grip(S,K);const lt=0x4a3422,lt2=0x30200f,fe=0x8a2a1a,T=S.torso,J=S.J;
   cg181Reg('nagaa',S,function(B,P,k,C){const M=n181Build(B,k,C,S,K),sh=T[6][0],by=T[0][0]+.03;
     const sp=(y,a,off)=>{const q=cgTAt(S,y);return [Math.sin(a)*(q.rx+off),y,q.z+Math.cos(a)*((Math.cos(a)>=0?q.f:q.b)+off)]};
     // (refine) the harness: two straps, each one piece from the hip up across the chest, over the shoulder and down the back,
@@ -146,7 +151,7 @@ function n181Build(B,k,C,S,K){const M=C.M,J=S.J;cgSculpt(M,{head:1},S.sculpt(n18
     for(let i=0;i<5;i++){const p=sp(by+.05,-.6+i*.3,.02);k.p('pelvis','cone4','c',0xd8d0b8,p[0],p[1]-.02,p[2],.01,.04,.008,Math.PI)}   /* bone teeth sunk into the hide wrap */M.nhEmit()})})();
 
 // ---------------- Naga Shaman: a fringed shawl, bead and fang necklaces, a sash with long panels, glowing marks, a bone crown ----------------
-(function(){const S=n181Spec(),K={sk:0x2c4844,sk2:0x1e3430,bel:0x8a9a78,pat:0x0e1e1c,eye:0x7affd8,fist:s=>s>0};const cl=0x1e3a3a,cl2=0x122626,gd=0xa88a3a,rune=0x5affc8,bone=0xd8d0b8,T=S.torso,J=S.J;
+(function(){const S=n181Spec(),K={sk:0x2c4844,sk2:0x1e3430,bel:0x8a9a78,pat:0x0e1e1c,eye:0x7affd8,fist:s=>s>0 /* the staff */};nh_Grip(S,K);S.grip[1]=add3(S.grip[1],[.03,0,0]);   /* measured: the staff sat a fist's width inside the fist */const cl=0x1e3a3a,cl2=0x122626,gd=0xa88a3a,rune=0x5affc8,bone=0xd8d0b8,T=S.torso,J=S.J;
   cg181Reg('nagas',S,function(B,P,k,C){const M=n181Build(B,k,C,S,K),sh=T[6][0],by=T[0][0]+.03;
     const sp=(y,a,off)=>{const q=cgTAt(S,y);return [Math.sin(a)*(q.rx+off),y,q.z+Math.cos(a)*((Math.cos(a)>=0?q.f:q.b)+off)]};
     nh_Fur(B,M,m=>m.part=='torso'&&m.y>J.chest[1]-.03,{off:.026,len:.12,col:cl,col2:cl2,seed:51,jag:.5,lump:[.6,.7]});

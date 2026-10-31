@@ -85,5 +85,5 @@ a181Reg('nagas',function(B,P,k,L){const cl=0x1e3a3a,cl2=0x122626,gd=0xa88a3a,run
   for(let i=0;i<7;i++){const a=(i-3)*.32;k.L('head','c',i%2?bone:gd,[Math.sin(a)*.08,1.25,-.07+Math.cos(a)*.02],[Math.sin(a)*.16,1.38-Math.abs(i-3)*.025,-.13],.012,.002,4)}},'v181n');
 
 // no legs: no knee bend in their stance (ST179); a little lean, the arms ready
-ST179.nagaw={sx:.1,hx:-.08,az:.08,lz:-.1,le:-.15};ST179.nagaa={sx:.08,hx:-.06,lz:-.06};ST179.nagas={sx:.08,hx:-.06,lz:-.06,le:-.25};
+ST179.nagaw={sx:.1,hx:-.08,az:.04,lz:-.05,le:-.15};   /* (round 2) small: the arms rest along the body (snug) */ST179.nagaa={sx:.08,hx:-.06,lz:-.06};ST179.nagas={sx:.08,hx:-.06,lz:-.06,le:-.25};
 Object.keys(NAGA181.keys).forEach(k=>{if(HUMLOOK[k])HUMLOOK[k].sc=(HUMLOOK[k].sc||1)*NAGA181.sc});

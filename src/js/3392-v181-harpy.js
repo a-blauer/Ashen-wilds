@@ -116,37 +116,64 @@ function h181Geo(n){if(HARPY181.G[n])return HARPY181.G[n];const K=HARPY181.pal[n
   mdKit(B,k);const Gc=mdBake(B).c,n3=Gc.attributes.position.count,I=new (n3>65535?Uint32Array:Uint16Array)(n3);for(let i=0;i<n3;i++)I[i]=i;Gc.setIndex(new THREE.BufferAttribute(I,1));   // indexed like every creature body (the v84 limb helpers read the index)
   return HARPY181.G[n]=Gc}
 // ---- the wing: real feathers, for the RIGHT side in its pivot's space (+x out, −z back), mirrored for the left ----
-// a bony arm (rooted inside the shoulder's deltoid) with a hooked claw at the wrist; rows of coverts over it; secondaries hanging
-// from the forearm; primaries splayed from the hand. Each feather: a blade with a raised shaft, dark bars across it, pale shaft,
-// darker toward its tip; ragged lengths. One non-indexed geometry with vertex colours (crisp bars, shaft blended per vertex).
-function nh_Wing(n){const key='nhw'+n;if(LPWG[key])return LPWG[key];const K=HARPY181.pal[n],P=[],Cc=[],T=new THREE.Color(),c3=h=>{T.setHex(h);return [T.r,T.g,T.b]};
+// a bony arm (rooted inside the shoulder's deltoid) with a hooked claw at the wrist; rows of coverts overlapping the roots of the
+// flight feathers; secondaries hanging from the forearm; primaries from the hand, longest toward the tip. Each feather: a blade
+// with a raised shaft, dark bars across it, pale shaft, darker toward its tip.
+// (round 2, owner: "the wings look a bit awkward" — they were held stiffly out like boards) the wing is built twice with the
+// same vertices: spread, and FOLDED the way a bird folds it at rest: the upper arm back and up from the shoulder, the forearm up
+// to the bend of the wing just above and behind the shoulder, the hand and the primaries tucked down along the back, every
+// feather fanned closed and hanging flat against the flank (its broad face outward, the outer ones angled back toward the tail),
+// coverts outermost. The folded shape is the geometry's morph target; nh_WingAnim opens and
+// closes it with the creature's state (folded at rest, half open walking, spread to strike or fly, a little folding on each
+// upstroke) while the pivot's flap is scaled by the same openness, so the wing never flaps as a board.
+var NH_WS=.8,NH_WD=.1,NH_WH=[.17,.95,-.03];   // the pivot's sweep, droop and hinge (lpwPair)
+function nh_WingBuild(n,F){const K=HARPY181.pal[n],P=[],Cc=[],T=new THREE.Color(),c3=h=>{T.setHex(h);return [T.r,T.g,T.b]};
   const tri=(a,b,c,ca,cb,cc)=>{P.push(...a,...b,...c);Cc.push(...ca,...cb,...cc)};
   const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],sc=(a,f)=>[a[0]*f,a[1]*f,a[2]*f];
-  const cR=c3(K.ruff),cF=c3(K.f),cF2=c3(K.f2),cB=c3(K.bar),cP=c3(K.pale),cS=c3(K.sk2);
-  // a feather from root p along dir d (unit), width axis wv (unit), length L, half width W, its shaft lifted by up
-  const feather=(p,d,wv,L,W,seed,base,tipc,bars)=>{const up=cross3(wv,d),NR=4,rows=[];for(let i=0;i<=NR;i++){const t=i/NR,w=W*(i==0?.25:i==NR?0:Math.sin(Math.min(1,t*1.25)*Math.PI*.5)*(1-.35*t*t)),c=add3(p,mul3(d,L*t));
+  const cR=c3(K.ruff),cF=c3(K.f),cF2=c3(K.f2),cP=c3(K.pale);
+  // folded parts are designed in model space round the hinge, then taken into the pivot's frame (rest: no flap raise)
+  const cs=Math.cos(NH_WS),sn=Math.sin(NH_WS),cd=Math.cos(NH_WD),sd=Math.sin(NH_WD),toL=v=>{const x=cs*v[0]-sn*v[2],z=sn*v[0]+cs*v[2],y=v[1];return [cd*x-sd*y,sd*x+cd*y,z]};
+  const feather=(p,d,wv,L,W,seed,base,tipc,bars)=>{d=nrm3(d);wv=nrm3(sub3(wv,mul3(d,wv[0]*d[0]+wv[1]*d[1]+wv[2]*d[2])));const up=cross3(wv,d),NR=4,rows=[];for(let i=0;i<=NR;i++){const t=i/NR,w=W*(i==0?.25:i==NR?0:Math.sin(Math.min(1,t*1.25)*Math.PI*.5)*(1-.35*t*t)),c=add3(p,mul3(d,L*t));
       rows.push([add3(c,mul3(wv,-w)),add3(c,mul3(up,W*.12*(1-t))),add3(c,mul3(wv,w))])}
     for(let i=0;i<NR;i++){const t=(i+.5)/NR,bar=bars&&(i==1||i==3)?.55:1,col=sc(mix(base,tipc,t*t),bar*(.94+a181H(seed,i)*.1)),sh=mix(col,cP,.3),A=rows[i],Bv=rows[i+1];
       if(i<NR-1){tri(A[0],A[1],Bv[1],col,sh,sh);tri(A[0],Bv[1],Bv[0],col,sh,col);tri(A[1],A[2],Bv[2],sh,col,col);tri(A[1],Bv[2],Bv[1],sh,col,sh)}
       else{tri(A[0],A[1],Bv[1],col,sh,sh);tri(A[1],A[2],Bv[1],sh,col,sh)}}};
-  // the arm: shoulder (inside the body) → elbow → wrist → hand tip, a 6-sided tapering tube with the feathered colour
+  // the arm: shoulder (inside the body) → elbow → wrist → hand tip, a 6-sided tapering tube; spread (AR, pivot frame) and folded
+  // (AFm, model offsets from the hinge; the first two rings, inside the shoulder, are the same in both)
   const AR=[[-.06,0,.0,.05],[.02,.004,.03,.044],[.2,.04,.07,.032],[.4,.06,.08,.024],[.56,.055,.05,.02],[.72,.04,0,.016],[.86,.02,-.05,.011],[1.0,0,-.1,.004]];
-  const ring=(c,r,d)=>{const u=nrm3(cross3(d,[0,1,0])),v=cross3(u,d);return [0,1,2,3,4,5].map(j=>{const a=j*Math.PI/3;return add3(c,add3(mul3(u,Math.cos(a)*r),mul3(v,Math.sin(a)*r*.8)))})};
-  const RR=AR.map((q,i)=>{const a=AR[Math.max(0,i-1)],b=AR[Math.min(AR.length-1,i+1)];return ring([q[0],q[1],q[2]],q[3],nrm3([b[0]-a[0],b[1]-a[1],b[2]-a[2]]))});
+  const AFm=[null,null,[.05,.06,-.13],[.06,.13,-.19],[.07,.19,-.17],[.08,.225,-.13],[.09,.11,-.18],[.1,-.02,-.22]];
+  const AP=AR.map((q,i)=>F&&AFm[i]?toL(AFm[i]):[q[0],q[1],q[2]]);
+  // a point along the arm at the spread arm's x (both shapes share the parameter), and the model-space direction helper
+  const AT=x=>{for(let i=0;i<AR.length-1;i++){if(x<=AR[i+1][0]){const t=Math.max(0,(x-AR[i][0])/(AR[i+1][0]-AR[i][0]));return lerp3(AP[i],AP[i+1],t)}}return AP[AP.length-1]},D=v=>F?toL(v):v;
+  const ring=(c,r,d)=>{let u=cross3(d,[0,1,0]);if(Math.hypot(...u)<.3)u=cross3(d,[0,0,1]);u=nrm3(u);const v=cross3(u,d);return [0,1,2,3,4,5].map(j=>{const a=j*Math.PI/3;return add3(c,add3(mul3(u,Math.cos(a)*r),mul3(v,Math.sin(a)*r*.8)))})};
+  const RR=AP.map((q,i)=>ring(q,AR[i][3],nrm3(sub3(AP[Math.min(AP.length-1,i+1)],AP[Math.max(0,i-1)]))));
   for(let i=0;i<RR.length-1;i++)for(let j=0;j<6;j++){const a=RR[i][j],b=RR[i][(j+1)%6],c=RR[i+1][(j+1)%6],d=RR[i+1][j],col=mix(cR,cF,i/(RR.length-1)),c2=sc(col,.85);tri(a,c,b,col,c2,col);tri(a,d,c,col,c2,c2)}
-  // the hooked claw at the wrist, pointing forward
-  {const w=[.72,.05,.01],e=[.75,.04,.09],tip=[.735,.02,.115],cc=c3(K.claw);const R0=ring(w,.012,nrm3(sub3(e,w)));for(let j=0;j<6;j++){tri(R0[j],e,R0[(j+1)%6],cc,cc,cc)}tri(e,tip,add3(e,[.006,0,0]),cc,cc,cc);tri(e,add3(e,[-.006,0,0]),tip,cc,cc,cc)}
-  // every feather is rooted inside the arm's tube (AY: the arm's height and depth at x), so none can float off it
-  const AY=x=>{for(let i=0;i<AR.length-1;i++){const a=AR[i],b=AR[i+1];if(x<=b[0]){const t=Math.max(0,(x-a[0])/(b[0]-a[0]));return [a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}}return [0,-.1]};
-  // coverts: two rows of short feathers over the arm, lying back over the roots of the long ones
-  for(let r=0;r<2;r++)for(let i=0;i<7;i++){const x=.03+i*.1+r*.05,[y,z]=AY(x);feather([x,y+.008-r*.002,z-.004],nrm3([.1,-.07+r*.025,-1]),[1,0,0],.11+r*.07,.046,i+r*20,r?cF:cR,mix(cR,cF,.6),false)}
-  // secondaries along the forearm and upper arm (long, ragged, hanging back)
-  for(let i=0;i<10;i++){const x=.02+i*.074,[y,z]=AY(x),L=.36+.08*Math.sin(i*.9)+a181H(i,2)*.07,d=nrm3([.1+i*.03,-.03,-1]);
-    feather([x,y-.004+i*.0012,z-.005],d,nrm3([1,0,d[0]]),L,.064,i+40,cR,cF2,true)}
-  // primaries splayed from the hand, the outer ones longest
-  for(let i=0;i<7;i++){const t=i/6,x=.74+t*.22,[y,z]=AY(x),an=-.5+t*1.45,d=nrm3([Math.sin(an),-.04,-Math.cos(an)]),L=.42+.1*Math.sin(t*2.6)+a181H(i,7)*.06;
-    feather([x,y-.004+.0015*i,z],d,nrm3([-d[2],0,d[0]]),L,.05,i+60,cR,cF2,true)}
-  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));G.computeVertexNormals();return LPWG[key]=G}
+  // the hooked claw at the bend of the wing, pointing forward (folded: forward and up)
+  {const w=add3(AP[5],D([0,.01,.01])),e=add3(w,D(F?[.0,.035,.075]:[.03,-.01,.08])),tip=add3(e,D(F?[-.008,-.02,.02]:[-.015,-.02,.025])),cc=c3(K.claw),sx=D([.006,0,0]);const R0=ring(w,.012,nrm3(sub3(e,w)));for(let j=0;j<6;j++){tri(R0[j],e,R0[(j+1)%6],cc,cc,cc)}tri(e,tip,add3(e,sx),cc,cc,cc);tri(e,sub3(e,sx),tip,cc,cc,cc)}
+  // coverts: two rows over the arm lying over the roots of the long feathers (folded: outermost, hanging)
+  for(let r=0;r<2;r++)for(let i=0;i<7;i++){const x=.03+i*.1+r*.05,a=AT(x);
+    if(F)feather(add3(a,toL([.024+r*.006,.004,0])),toL([.04,-1,-.08]),toL([0,0,1]),.11+r*.07,.046,i+r*20,r?cF:cR,mix(cR,cF,.6),false);
+    else feather(add3(a,[0,.008-r*.002,-.004]),[.1,-.07+r*.025,-1],[1,0,0],.11+r*.07,.046,i+r*20,r?cF:cR,mix(cR,cF,.6),false)}
+  // secondaries along the forearm and upper arm (even, a little ragged)
+  for(let i=0;i<10;i++){const x=.02+i*.074,a=AT(x),L=.37+.025*Math.sin(i*1.7)+a181H(i,2)*.04;
+    if(F)feather(add3(a,toL([.004+.0012*i,-.004,0])),toL([.04,-1,-.05-.025*i]),toL([0,0,1]),L,.064,i+40,cR,cF2,true);
+    else{const d=nrm3([.1+i*.03,-.03,-1]);feather(add3(a,[0,-.004+i*.0012,-.005]),d,[1,0,d[0]],L,.064,i+40,cR,cF2,true)}}
+  // primaries from the hand, longest toward the tip (spread: splayed; folded: closed and tucked down the back, over the secondaries)
+  for(let i=0;i<7;i++){const t=i/6,x=.74+t*.22,a=AT(x),L=.36+.19*Math.sin(t*1.9)+a181H(i,7)*.03,an=-.5+t*1.45;
+    if(F)feather(add3(a,toL([.016+.002*i,0,0])),toL([.05,-1,-.22-.12*t]),toL([0,0,1]),L,.05,i+60,cR,cF2,true);
+    else{const d=nrm3([Math.sin(an),-.04,-Math.cos(an)]);feather(add3(a,[0,-.004+.0015*i,0]),d,[-d[2],0,d[0]],L,.05,i+60,cR,cF2,true)}}
+  return {P,Cc}}
+function nh_Wing(n){const key='nhw'+n;if(LPWG[key])return LPWG[key];const O=nh_WingBuild(n,0),Fo=nh_WingBuild(n,1);
+  const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(O.P,3));G.setAttribute('color',new THREE.Float32BufferAttribute(O.Cc,3));G.computeVertexNormals();
+  G.morphAttributes.position=[new THREE.Float32BufferAttribute(Fo.P,3)];return LPWG[key]=G}
+// the wing material with morph targets (one clone per base material)
+var NH_WM={};function nh_WingMat(m){return NH_WM[m.uuid]||(NH_WM[m.uuid]=Object.assign(m.clone(),{morphTargets:true}))}
+// open / close the wings with the creature's state; the pivot's flap (rigAnim) is scaled by the same openness
+function nh_WingAnim(x,now){const W=x.nhw,g=x.g;if(!W||!g)return;const G=g._ga||{},A=!!(g.atk||g.ak),fly=x.spec&&x.spec.anim=='fly',w=G.w||0,tg=A||fly?1:.1+.5*w;
+  const dt=W.t==null?0:Math.min(.1,Math.max(0,(now-W.t)/1000));W.t=now;W.o=W.o==null?tg:W.o+(tg-W.o)*Math.min(1,dt*(tg>W.o?9:3));
+  const o=Math.max(0,Math.min(1,W.o*(.88+.12*Math.sin((G.wp||0)+1.2))));
+  x.wings.forEach(wg=>{if(!wg.p)return;wg.p.rotation.z*=o;const m=wg.p.children[0];if(m&&m.morphTargetInfluences)m.morphTargetInfluences[0]=1-o})}
+{const f=rigAnim;rigAnim=function(x,now){const r=f.apply(this,arguments);try{if(x&&x.nhw)nh_WingAnim(x,now)}catch(e){}return r}}
 (function(){if(!HARPY181.on||!LPR.GaleHarpy||!SPEC.GaleHarpy)return;
   ['Harpy181','GaleHarpy'].forEach(n=>{const K=HARPY181.pal[n];
     SPEC[n]=Object.assign({},SPEC.GaleHarpy,{bones:HARPY181.bones,hd:[0,1.2,.04],bk:[['spine',.7,-.12],['chest',.88,-.12],['neck',1.02,-.08]],legs:[['hl',0],['hr',Math.PI]],ex:()=>{},sig:null,dt:null});
@@ -154,5 +181,5 @@ function nh_Wing(n){const key='nhw'+n;if(LPWG[key])return LPWG[key];const K=HARP
       // burning eyes in the sockets (placed on the face by h181Geo), storm-blue streaks lying on the Storm Harpy's back
       kit(k,c,C,red){const E=HARPY181.E[n]||{};(E.eyes||[[-.036,1.189,.08],[.036,1.189,.08]]).forEach((p,i)=>{const s=i?1:-1;k.p('head','sph','g',red?0xff2a2a:K.eye,p[0],p[1],p[2]-.002,.011,.0075,.006,0,0,s*.25)});
         if(K.glow)(E.streak||[]).forEach(([p,q,w])=>{k.L(p[1]>.75?'chest':'spine','g',K.glow,p,q,.006,.004,3);k.P[k.P.length-1].w=w})},
-      post(x,c,C,mat){lpwPair(x,'chest',nh_Wing(n),mat,.17,.95,-.03,.8,.1,.55,.4)}})});
+      post(x,c,C,mat){lpwPair(x,'chest',nh_Wing(n),nh_WingMat(mat),NH_WH[0],NH_WH[1],NH_WH[2],NH_WS,NH_WD,.55,.4);x.nhw={};x.wings.forEach(wg=>{const m=wg.p&&wg.p.children[0];if(m)m.frustumCulled=false});try{nh_WingAnim(x,0)}catch(e){}}})});
   if(EN.harpy)EN.harpy.rig='Harpy181';})();
