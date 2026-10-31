@@ -366,7 +366,7 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
     // the heavy belt rides on the hips, an iron buckle and two iron rings at the sides
     const hy=T[1][0]+.03;ej_Shell(B,M,m=>m.part=='torso'&&Math.abs(m.y-hy)<.032,.07,0x1a100a,{rim:0,hide:1});
     const bf=cgSurf(M,S,hy,0,.074);k.p('pelvis','box','m',ir2,bf[0],bf[1],bf[2],.06,.05,.012);WS(sub3(bf,[0,0,.074]));
-    [-1,1].forEach(s=>{const p=cgSurf(M,S,hy-.02,s*1.25,.07);k.p('pelvis','tor','m',ir,p[0],p[1]-.03,p[2],.022,.022,.007,0,s*1.25,0);WS(sub3(p,mul3([Math.sin(s*1.25),0,Math.cos(s*1.25)],.07)))});
+    [-1,1].forEach(s=>{const p=cgSurf(M,S,hy-.02,s*1.25,.07);k.p('pelvis','tor','m',ir,p[0],p[1]-.03,p[2],.022,.022,.007,0,s*1.25,0);{const P=k.P[k.P.length-1];P.w=cgTorsoW(S,p[1]);P.noSeat=1}});
     // stitched scars on the back and the arm
     [[sh-.06,2.4],[wy+.12,-2.6],[sh-.12,Math.PI]].forEach(([y,a])=>{const q=cgTAt(S,y),o=[Math.sin(a)*.6,y,q.z+Math.cos(a)*.6],p=cgRay(M,o,nrm3([-o[0],0,q.z-o[2]]));if(!p)return;const e=[p[0]+.05,p[1]-.08,p[2]];
       k.L('chest','c',scar,p,e,.006,.005,3);WS(p);for(let i=0;i<4;i++){const c=lerp3(p,e,i/3);k.p('chest','box','c',0x1a1010,c[0],c[1],c[2],.016,.003,.003,0,a,.5);WS(c)}});
@@ -439,7 +439,7 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
     // war-kilt of leather panels, a studded belt, fur-wrapped boots
     cgSkirt(B,S,wy-.02,kn+.04,.07,.03,m=>Math.round(Math.atan2(m.c,m.s)*6)%2?lt:mdSh(lt,.85),{n:6,seg:14,keep:m=>Math.round(Math.atan2(m.c,m.s)*6)%3!=0||m.y>J.lh0[1]-.06});
     ej_Shell(B,M,m=>m.part=='torso'&&Math.abs(m.y-(wy-.012))<.036,.06,0x1e160e,{rim:0,hide:1});
-    for(let i=0;i<10;i++){const a=i/10*Math.PI*2,p=cgSurf(M,S,wy-.012,a,.05);k.p('pelvis','oct','m',ir2,p[0],p[1],p[2],.016,.016,.012);WS(sub3(p,[Math.sin(a)*.05,0,Math.cos(a)*.05]))}   /* studs half sunk in the belt */
+    for(let i=0;i<10;i++){const a=i/10*Math.PI*2,p=cgSurf(M,S,wy-.012,a,.05);k.p('pelvis','oct','m',ir2,p[0],p[1],p[2],.016,.016,.012);const P=k.P[k.P.length-1];P.w=cgTorsoW(S,p[1]);P.noSeat=1}   /* studs half sunk in the belt: torso weights, and not re-seated toward the arm hanging beside them */
     [-1,1].forEach(s=>{ej_Shell(B,M,m=>m.part=='foot'&&Math.sign(m.x)==s,.03,null,{rim:0,hide:1,vcol:m=>mdMix(pe2,0x2a2219,ej_cl(n3Sn(m.x,m.y,m.z,12,s+2)-.3,0,1))});const lg=m=>m.part=='leg'&&m.y<kn-.04&&Math.sign(m.x)==s;ej_Fur(B,M,lg,{off:.035,len:.08,col:pe,col2:pe2,seed:5+s,jag:.5,hide:1})});
     ej_Body(B,M,null,{vcol:skin})});})();
 
