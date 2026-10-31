@@ -113,44 +113,56 @@ const cr_RARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.95,r:.036,rb:.04},{t:1.3,
 const cr_KARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.7,r:.036},{t:.95,r:.043,rb:.047},{t:1.15,r:.034},{t:1.5,r:.04,rf:.045},{t:1.94,r:.027},{t:2.14,r:.022,rf:.03,rb:.026},{t:2.3,r:.018,rf:.024,rb:.022}];   /* (round 2) plated segments with knobbed joints */
 const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,rb:.042},{t:1.25,r:.031},{t:1.94,r:.02},{t:2.12,r:.016,rf:.03,rb:.026},{t:2.3,r:.013,rf:.026,rb:.022}];
 
-// (round 2) a blocky, uneven head section for the Sand Elemental: corners pushed out irregularly ring by ring, so the head is a
-// squarish block of rock rather than a smooth dome
-const cr_ROCKHEAD=(i,j,a)=>.018*Math.pow(Math.abs(Math.sin(2*a+.5)),2)+.01*(a181H(j,7)-.5)*Math.min(1,i/3);   /* the same corners all the way up (a block, not stacked strata) */
+// (round 2b) an angular rock as raw faceted geometry (flat facets, no subdivision), colour per corner: sand that is lighter where a
+// corner faces up and out (weathered edges catching the light) and darker toward c0 (the crevices between the pieces, inside the
+// cluster). geo 'dod' | 'box'; p centre, sz half sizes, rot Euler angles; W bone weights
+const cr_RG={};
+function cr_rock(B,geo,p,sz,rot,W,c0,cols){const g=cr_RG[geo]||(cr_RG[geo]=geo=='box'?new THREE.BoxGeometry(2,2,2).toNonIndexed():new THREE.DodecahedronGeometry(1,0)),pa=g.attributes.position,
+    q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rot[0],rot[1],rot[2])),v=new THREE.Vector3(),w=mdW(B,W),C=new THREE.Color(),R=Math.max(sz[0],sz[1],sz[2]);
+  for(let i=0;i<pa.count;i+=3){const V=[0,1,2].map(j=>{v.fromBufferAttribute(pa,i+j);v.set(v.x*sz[0],v.y*sz[1],v.z*sz[2]).applyQuaternion(q);const P=[p[0]+v.x,p[1]+v.y,p[2]+v.z],u=nrm3([v.x,v.y,v.z]),
+      dc=Math.hypot(P[0]-c0[0],P[1]-c0[1],P[2]-c0[2]),inner=c9_cl(1-(dc-R*.4)/(R*1.4)),n=n3Sn(P[0],P[1],P[2],11,17);
+      let c=mdMix(cols[0],cols[1],c9_cl(.35+(n-.5)*1.2));c=mdMix(c,cols[2],c9_cl(u[1]*.9+.1)*.6);c=mdMix(c,cols[3],inner*.75);C.setHex(c);return {x:P[0],y:P[1],z:P[2],w,rgb:[C.r,C.g,C.b]}});
+    mdTri(B,'c',V[0],V[1],V[2],0)}}
 // ---------------- Sand Elemental: a chunky golem of packed golden sand and rock plates, glowing seams, a blazing chest gem,
 // boulder shoulders, rock fists, a girdle of stones with shards hanging round the hips, a crown of jagged rock ----------------
 // (refine) a hulking figure, not a man: massive shoulders and a deep chest over a narrower waist and short column legs, the small
 // head sunk into the shoulders (no neck), forearms thicker than the upper arms swelling into huge rock fists with three stubby
 // fingers; packed sand flows from gold to darker sand, rock showing through, a warm glow round the core
 (function(){const S=cr_human({snug:1,h:.9,w:1.3,d:1.2,rw:[.95,1.0,.9,1.12,1.4,1.52,1.66,1.25],rf:[1,1.02,.98,1.2,1.36,1.3,1.3,1.65],rb:[1,1.05,1,1.22,1.42,1.5,1.55,1.3],
-    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:1.0,hw:1.16,hy:.88,hd:1.1,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:cr_ROCKHEAD,n:16,sock:1,j2:1,footLite:1,
-    head:cr_flare(cr_H8,.5).map((q,i)=>[q[0],q[1],q[2]*[.68,.7,.76,.9,1,1,1,1][i],q[3],q[4]]) /* below the glowing slit the rock slopes back into the chest: no muzzle */,arm:cr_GARM,leg:cr_LEG},0.025),
+    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:.82,hw:1.12,hy:.85,hd:1.05,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,
+    head:cr_flare(cr_H8.filter((q,i)=>i%2==0||i==7),.4) /* (round 2b) a hidden stub (it carries the head bone): the visible head is a cluster of rock pieces */,arm:cr_GARM,leg:cr_LEG},0.025),
     s1=0xc8a060,s2=0xa8844a,s3=0xd8b878,rk=0x8a6a3a,gl=0xffa030,T=S.torso,J=S.J;
   cg181Reg('selem',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p),ch=J.chest[1],ty=f=>T[2][0]+(T[6][0]-T[2][0])*f;
     // boulder-sized lumps with a finer grain of packed sand on top
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1,foot:1},(x,y,z,n)=>.034*(n3Sn(x*.8,y*.8,z*.8,4,4)-.45)+.014*(n3Sn(x,y,z,10,4)-.45));
     cr_fill(M,S,.015,.03);
-    // (round 2, owner: "the face doesn't read like a sand elemental") no human face: the head is a rough lump of sandstone, a heavy
-    // overhanging ledge of rock across the front with a deep recess under it where a slit of the core's glow burns, lopsided masses
-    cgSculpt(M,{head:1},(x,y,z,n)=>.042*(n3Sn(x*1.4,y*1.4,z*1.4,3,11)-.45)+.016*(n3Sn(x,y,z,9,13)-.45));
-    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<-.1)return 0;const f=Math.min(1,(n[2]+.1)*1.6);return f*(.022*cgG(x,y,-.03,1.648,.045,.01)+.018*cgG(x,y,.04,1.643,.035,.01)-.016*cgG(x,y,0,1.625,.06,.008))}));   /* an uneven ledge of rock (two masses) over the recess */
     M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.15,hk:.3});
-    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02),ey=S.hp(0,1.625,0)[1];
+    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02);
     // packed sand: gold blending into darker sand (darker on the back), paler toward the shoulders, rock showing through, rock
     // fists, a warm glow on the sand round the core
     const sand=m=>{const n=n3Sn(m.x,m.y,m.z,7,6),n2=n3Sn(m.x,m.y,m.z,3,2),up=c9_cl((m.y-ch+.1)/.35);
       let c=mdMix(s1,s2,c9_cl(.45+(n2-.5)*1.4+(m.s<-.3?.2:0)));c=mdMix(c,s3,c9_cl(up*.6+(m.part=='head'?.25:0))*c9_cl((n-.3)*2.2));
       c=mdMix(c,rk,Math.max(c9_cl((n-.66)*3.2)*.75,c9_cl((.17-cr_wrist(m,J))/.08)*.6));
       c=mdMix(c,s3,c9_cl((n3Sn(m.x*2.4,m.y*.25,m.z*2.4,9,8)-.62)*4)*.5);   /* paler streaks of sand streaming down */
-      if(m.part=='head'&&m.nz>.2&&Math.abs(m.y-ey)<.016)c=mdMix(c,0x2a1808,.7*(1-Math.abs(m.y-ey)/.016));   /* the dark recess round the glowing slit */
       const d=Math.hypot(m.x-gem[0],m.y-gem[1],m.z-gem[2]);return mdMix(c,0xf09a3a,.5*Math.exp(-d*d/.01))};
-    cgEmit(B,M,()=>null,{vcol:sand});
-    // slabs of rock jutting from the head (a brow block, a temple, a cheek), so it reads as a broken rock formation
-    [[-.03,1.665,.085,.035,.06],[.072,1.622,.05,.06,.055],[-.075,1.6,.045,.05,.05]].forEach(([x,y,sx,sy,sz],i)=>{const q=S.hp(x,y,0),d=nrm3([x*6,.2,1]),p=cgRay(M,add3(q,mul3(d,.4)),mul3(d,-1),{head:1});if(p){const c=sub3(p,mul3(d,.016));k.p('head','dod','c',i%2?rk:mdSh(rk,.85),c[0],c[1],c[2],sx,sy,sz,i*.7,x*8,i*.4)}});
-    // the eyes: one slit of the core's glow burning in the recess under the ledge (two pieces following the curve of the face),
-    // glowing cracks running up from its ends over the head
-    [-1,1].forEach(s=>{const q=S.hp(s*.03,1.625,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(!p)return;k.p('head','box','g',gl,p[0],p[1],p[2]-.002,.034,.0055,.008,0,s*.35,-s*.05);
-      const a=cgRay(M,add3(S.hp(s*.062,1.63,0),[s*.4,0,.25]),nrm3([-s,0,-.6]),{head:1}),b=cgRay(M,add3(S.hp(s*.05,1.69,-.02),[s*.3,.3,.2]),nrm3([-s*.7,-.6,-.4]),{head:1});
-      if(a&&b){const m2=add3(lerp3(a,b,.5),[s*.004,0,0]);c9_keep(k.L('head','g',gl,a,m2,.005,.0045,4));c9_keep(k.L('head','g',gl,m2,b,.0045,.003,4))}});
+    cgEmit(B,M,()=>null,{vcol:sand,keep:m=>m.part!='head'||(m.y<S.nb+.02&&m.nz<-.2)});   /* (round 2b) the head stub isn't drawn, except the back of its lowest band, which closes the top of the neck behind the rocks */
+    // (round 2b, owner: "the face doesn't read like a sand elemental") the head is a cluster of angular rock pieces (flat facets,
+    // slightly rotated, overlapping, all round the small head stub and on the head bone): a skull mass, a back mass, a heavy brow
+    // slab jutting over a dark recess, two uneven cheek slabs, a jaw block sloping back into the chest, a temple block. In the
+    // recess between brow and cheeks the core's glow burns as a slit, with more of it glowing deep inside the gaps.
+    {const hc=S.hp(0,1.625,0),W=[['head',1]],SC=[s1,s2,s3,0x4a3418],R=(geo,o,sz,rot)=>cr_rock(B,geo,add3(hc,o),sz,rot,W,hc,SC);
+      R('dod',[0,0,-.008],[.092,.086,.09],[.3,.5,.2]);R('dod',[-.025,.035,-.048],[.07,.058,.064],[1,.2,.7]);R('box',[.042,.048,-.015],[.045,.03,.05],[.2,.5,-.35]);
+      R('box',[-.004,.042,.066],[.088,.022,.036],[-.35,.08,.07]);R('box',[-.058,-.03,.058],[.036,.034,.03],[.15,-.45,.25]);R('box',[.06,-.022,.056],[.032,.04,.03],[-.1,.5,-.3]);
+      R('dod',[.008,-.075,.03],[.085,.05,.072],[.4,.3,.1]);R('box',[.084,.012,.002],[.026,.046,.046],[0,.3,.15]);R('box',[-.088,.002,-.006],[.026,.044,.048],[.1,-.25,-.12]);
+      R('box',[-.07,-.095,.035],[.05,.034,.045],[.25,.4,.2]);R('box',[.072,-.092,.03],[.046,.036,.048],[-.2,-.35,-.25]);R('dod',[0,-.07,-.06],[.085,.05,.068],[.6,1.1,.3]);
+      R('box',[.005,-.122,.06],[.07,.034,.045],[.15,.2,-.08]);R('dod',[-.095,-.112,-.005],[.05,.036,.06],[.3,.9,.5]);R('dod',[.098,-.11,-.01],[.048,.038,.058],[1.1,.4,.2]);
+      R('dod',[-.055,-.105,-.085],[.055,.038,.05],[.7,.2,1.3]);R('box',[.055,-.1,-.088],[.05,.034,.045],[.2,-.5,.3]);R('dod',[0,-.118,-.105],[.06,.035,.045],[1.4,.6,.1]);   /* rocks all the way round the base of the neck, sunk into the shoulders */
+      for(let i=0;i<7;i++){const a=(i+.5)/7*Math.PI*2;R('dod',[Math.sin(a)*.098,-.078+.008*Math.sin(i*2.1),Math.cos(a)*.094-.012],[.046,.034,.046],[a,a*.7+i,.3*i])}   /* a ring of rocks over the rim of the neck */
+      c9_keep(k.p('head','box','g',gl,hc[0],hc[1]+.011,hc[2]+.084,.056,.0055,.01,0,0,-.04));c9_keep(k.p('head','oct','g',gl,hc[0],hc[1]+.01,hc[2]+.055,.064,.013,.036));
+      // a crown of jagged shards breaking out of the top masses, uneven and leaning; sand streaming down from under the jaw
+      [[-.06,.05,-.03,.1,-.5],[-.03,.07,-.05,.16,-.2],[.005,.07,-.02,.13,.1],[.04,.065,-.03,.18,.35],[.065,.05,0,.09,.6],[-.01,.06,-.085,.11,0]].forEach(([x,y,z,L,lean],i)=>
+        c9_keep(c9_along(k,'head','cone4','c',i%2?rk:mdMix(rk,s3,.5),add3(hc,[x,y,z]),[lean,1,-.25-(z<-.06?.6:0)],L,.03+.008*(i%3))));
+      [[-.03,.02],[.02,.04],[.045,.01]].forEach(([x,z],i)=>c9_keep(c9_along(k,'head','cone4','c',mdMix(s3,s1,.4),add3(hc,[x,-.075,z]),[x*.5,-1,.25],.07+.02*i,.012)))}
     // rock plates on the chest, back and flanks, glowing cracks between them
     [[.86,-.62,.09,.075],[.86,.62,.09,.075],[.56,-.84,.075,.065],[.56,.84,.075,.065],[.84,Math.PI,.1,.085],[.55,Math.PI-.6,.08,.07],[.55,Math.PI+.6,.08,.07],[.24,Math.PI,.085,.06]]
       .forEach(([f,a,sx,sy],i)=>{const y=ty(f),p=cgSurf(M,S,y,a,-.016);k.p(cgSurfBn(S,y),'dod','c',i%2?rk:mdSh(rk,.86),p[0],p[1],p[2],sx,sy,.045,0,a,0);WS(p)});
@@ -174,8 +186,6 @@ const cr_ROCKHEAD=(i,j,a)=>.018*Math.pow(Math.abs(Math.sin(2*a+.5)),2)+.01*(a181
     for(let i=0;i<8;i++){const a=i/8*Math.PI*2,p=cgSurf(M,S,T[1][0]+.03+Math.sin(a*3)*.012,a,-.014);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.058+(i%3)*.012);WS(p)}
     for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2,y=T[1][0]-.01,r=cgSurf(M,S,y,a,-.03),d=[Math.sin(a)*.16,-1,Math.cos(a)*.16],L=.22+a181H(i,7)*.08;
       k.L('pelvis','c',i%2?s2:rk,r,add3(r,mul3(nrm3(d),L)),.05,.006,4);WS(r)}
-    // a crown of jagged rock shards breaking out of the top and back of the head, uneven and leaning
-    [[-.06,.0,.1,-.5],[-.03,-.03,.16,-.2],[.005,-.01,.13,.1],[.04,-.04,.18,.35],[.065,.0,.09,.6],[0,-.07,.11,0]].forEach(([x,z,L,lean],i)=>{const p=b7_Top(M,S,x,z);if(p)c9_along(k,'head','cone4','c',i%2?rk:mdMix(rk,s3,.5),sub3(p,[0,.028,0]),[lean,1,-.25-(z<-.05?.6:0)],L,.03+.008*(i%3))});
     [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:s2,r:.022,len:.06,spread:.034}))})})();
 ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.04,lz:-.04,ax:-.08,lx:-.08,ex:-.25,le:-.25};
 
