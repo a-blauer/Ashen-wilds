@@ -1477,7 +1477,7 @@ function bakeMesh(parts,O,key,basic){
         const a=pa[i*3]*p.sx,b=pa[i*3+1]*p.sy,c=pa[i*3+2]*p.sz,a1=a*cz-b*sz,b1=a*sz+b*cz;
         P.push(a1+p.x,b1*cx-c*sx+p.y,b1*sx+c*cx+p.z);
         const u=na[i*3]/p.sx,w=na[i*3+1]/p.sy,q=na[i*3+2]/p.sz,n1=u*cz-w*sz,m1=u*sz+w*cz,m2=m1*cx-q*sx,n3=m1*sx+q*cx,l=Math.hypot(n1,m2,n3)||1;
-        Nn.push(n1/l,m2/l,n3/l);Cc.push(col.r,col.g,col.b);if(p.bw){for(let j=0;j<4;j++){const e=p.bw[j];SI.push(e?Math.max(0,O.indexOf(e[0])):0);SW.push(e?e[1]:0)}}else{SI.push(bi,0,0,0);SW.push(1,0,0,0)} // v183: p.bw [[bone, weight]..] skins a part like the body under it
+        Nn.push(n1/l,m2/l,n3/l);Cc.push(col.r,col.g,col.b);if(p.bw){for(let j=0;j<4;j++){const e=p.bw[j];SI.push(e?Math.max(0,O.indexOf(e[0])):0);SW.push(e?e[1]:0)}}else{SI.push(bi,0,0,0);SW.push(1,0,0,0)} // v184: p.bw [[bone, weight]..] skins a part like the body under it
       }
       if(ix)for(let i=0;i<ix.length;i++)IX.push(ix[i]+off);else for(let i=0;i<cnt;i++)IX.push(i+off);
       off+=cnt;
@@ -9472,7 +9472,7 @@ function lfNearS(n,x,y,z){const P=lfSurf(n);let b=1e9,k=0;for(let i=0;i<P.length
 function lfBoneAt(n,x,y,z){const sp=(typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n,C=0x808080,G=LPR[n].geo(C,{g:[sp],cl:[C],v:'',tr:'',f:0,z:1}),P=G.attributes.position.array,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight;
   if(!SI)return null;let b=1e9,k=0;for(let i=0;i<P.length;i+=3){const d=(P[i]-x)**2+(P[i+1]-y)**2+(P[i+2]-z)**2;if(d<b){b=d;k=i/3}}
   let bi=SI.getX(k),bw=SW.getX(k);[['getY'],['getZ'],['getW']].forEach(([f])=>{if(SW[f](k)>bw){bw=SW[f](k);bi=SI[f](k)}});return Object.keys(SPEC[n].bones)[bi]||null}
-// v183: the skin weights of the body vertex nearest (x,y,z) as [[bone, weight]..] (null when the body has none): a borrowed fusion
+// v184: the skin weights of the body vertex nearest (x,y,z) as [[bone, weight]..] (null when the body has none): a borrowed fusion
 // part set there moves with the skin under it (rigid on one bone it came 4 cm off a fused Rocsovereign's breast in a bite, where
 // the skin is 60% chest, 40% neck)
 var LFW={};
@@ -55694,7 +55694,7 @@ function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016,V=THREE.Vector3;
     E.L([0,.49,-1.0],[0,.53,-1.12],.03,.002,'g',P.glow,5,{bn:'tail3'});E.L([0,.49,-1.01],[0,.55,-1.09],.018,.001,'g',P.glow2,4,{bn:'tail3'})}}
 {const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf!='Skollmaw')return b0.apply(this,arguments);
   const G=sk181Glow(c,c&&c.v=='Shadow');return sk181Evo(E,L,Object.assign({},P,{glow:G.e,glow2:G.g,glowD:G.d}))}}
-// ================= v183: feathered wings for the bird companions (Skyhawk, Stormtalon, Rocsovereign) =================
+// ================= v184: feathered wings for the bird companions (Skyhawk, Stormtalon, Rocsovereign) =================
 // Owner (Oct 30 2026): "All of our bird companions aren't quite right- specifically their wings and details. Let's clean them
 // up and bring them up to standard with other models."
 // Each wing was one flat fan of triangles from a single hub (lpwWing), always held straight out to the side and black on its
@@ -55704,13 +55704,13 @@ function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016,V=THREE.Vector3;
 // The shape follows the species: Skyhawk a broad rounded hawk wing, Stormtalon a long narrow pointed falcon wing, Rocsovereign
 // a broad eagle wing whose outer primaries spread into "fingers".
 // The wing folds: three key shapes (spread, half-open, folded along the flank) are built for every wing and blended on the
-// CPU into shared geometries at 11 steps (BW183.lv), so instances share them and nothing is made per creature. Standing, the
-// wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw183Push`);
+// CPU into shared geometries at 11 steps (BW184.lv), so instances share them and nothing is made per creature. Standing, the
+// wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw184Push`);
 // walking it stays folded; running lifts it a little; attacking, flying and wing abilities spread it fully
-// (`bw183Anim` after rigAnim, which also scales the shoulder flap down while folded).
+// (`bw184Anim` after rigAnim, which also scales the shoulder flap down while folded).
 // Evolution: the wing grows 6% per level (as before) and gains darker covert edges, bright flight-feather tips and a trimmed
 // leading edge (the old evo100Wing only worked on lpwWing fans).
-var BW183={lv:10,G:{},
+var BW184={lv:10,G:{},
   // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
   sp:{
     Skyhawk:{T:()=>HWK_BODY,zs:.15,arm:[.13,.2,.15],rad:[.03,.024,.016],
@@ -55726,7 +55726,7 @@ var BW183={lv:10,G:{},
   // up N), and how far the folded wing sits out from the shoulder
   pose:{sp:{ph:[.18,-.1,.3],V:[0,-.04,-1],N:[0,1,.12]},fo:{ph:[1.38,-1.6,1.52],V:[-.17,-.1,-1],N:[1,.3,0]}}};
 // colours per species (THREE.Color): cov(erts), covD, fl(ight), bar, tip, und(er), undBar, lin(ing), lead (leading edge)
-function bw183Cols(sp,C){const c=x=>new THREE.Color(x),mul=(a,k)=>a.clone().multiplyScalar(k),mix=(a,b,t)=>a.clone().lerp(b instanceof THREE.Color?b:c(b),t);
+function bw184Cols(sp,C){const c=x=>new THREE.Color(x),mul=(a,k)=>a.clone().multiplyScalar(k),mix=(a,b,t)=>a.clone().lerp(b instanceof THREE.Color?b:c(b),t);
   if(sp=='Stormtalon'){const m=lpMain(C,.2),fl=mix(mul(m,.38),0x14161c,.45);
     return {cov:mul(m,.88),covD:mul(m,.62),fl,bar:mix(fl,0x5a6474,.35),tip:c(0x101216),und:c(0xc8ccd2).lerp(m,.12),undBar:mix(fl,0xc8ccd2,.45),lin:c(0xdfe2e6).lerp(m,.08),lead:c(0xa8b8c8)}}
   if(sp=='Rocsovereign'){const m=rs150Cols(C).main,dk=mix(mul(m,.32),0x2a1e14,.35),cream=c(0xe8d8b0).lerp(m,.25);
@@ -55734,22 +55734,22 @@ function bw183Cols(sp,C){const c=x=>new THREE.Color(x),mul=(a,k)=>a.clone().mult
   const m=lpMain(C,.22),fl=mix(mul(m,.5),0x3a3024,.3),bel=c(0xd8ccb0);
   return {cov:m.clone(),covD:mul(m,.68),fl,bar:mul(fl,.62),tip:mix(mul(m,.25),0x221c18,.5),und:mix(bel,m,.15),undBar:mix(fl,bel,.35),lin:mix(bel,m,.18),lead:mul(m,1.12)}}
 // piecewise-linear lookup in [v0, v(.7), v1]
-function bw183PL(a,u){return u<.7?a[0]+(a[1]-a[0])*u/.7:a[1]+(a[2]-a[1])*(u-.7)/.3}
+function bw184PL(a,u){return u<.7?a[0]+(a[1]-a[0])*u/.7:a[1]+(a[2]-a[1])*(u-.7)/.3}
 // width profile of a blade along its length t (0 root .. 1 tip)
-function bw183WF(t,shape,notch){let w=t<.18?.45+.55*t/.18:1;
+function bw184WF(t,shape,notch){let w=t<.18?.45+.55*t/.18:1;
   if(shape=='point'){if(t>.45)w*=Math.max(0,1-(t-.45)/.55)*.9+.1*(1-t)}
   else if(shape=='lance'){if(t>.3)w*=Math.max(0,1-(t-.3)/.7)}
   else{const te=.7;if(t>te)w*=Math.sqrt(Math.max(0,1-Math.pow((t-te)/(1-te),2)))}
   if(notch<1&&t>.42)w*=notch+(1-notch)*Math.max(0,(.5-t)/.08);  // emarginated outer primaries: the "fingers"
   return w}
 // push a point (model space, right side) out of the body loft T so it clears it by clr; returns the displacement or null
-function bw183Push(T,x,y,z,clr){const z0=T[0][0];let zh=T[T.length-1][0];for(let i=0;i<T.length;i++)if(T[i][6]){zh=T[i][0];break}
+function bw184Push(T,x,y,z,clr){const z0=T[0][0];let zh=T[T.length-1][0];for(let i=0;i<T.length;i++)if(T[i][6]){zh=T[i][0];break}
   if(z<z0||z>zh)return null;const q=dh150At(T,z),dy=y-q.y,h=dy>0?q.a:q.b,u=x/q.w,v=dy/h,r=Math.hypot(u,v);if(r<1e-4)return null;
   const rad=Math.hypot(u*q.w,v*h)/r,rt=1.035+clr/rad;if(r>=rt)return null;const k=rt/r;return [x*k-x,dy*k-dy,0]}
 // ---------------- the wing ----------------
 // builds the three key shapes of the right wing in the shoulder's space: {P:[spread, half, folded] Float32Arrays, C, piv}
-function bw183Build(sp,C,L,P){
-  const D=BW183.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw183Cols(sp,C),sc=1+.06*L;
+function bw184Build(sp,C,L,P){
+  const D=BW184.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw184Cols(sp,C),sc=1+.06*L;
   const q=dh150At(T,D.zs),piv=[q.w*.62,q.y+q.a*.62,D.zs];
   // evolution colours
   if(L>=2){K.covEdge=K.covD.clone().lerp(new THREE.Color(P.dark),.45)}
@@ -55758,7 +55758,7 @@ function bw183Build(sp,C,L,P){
   if(L>=5){K.bar=K.bar.clone().lerp(new THREE.Color(P.glowD),.12)}
   const POS=[[],[],[]],COL=[];
   // pose frames (t 0 spread, .5 half, 1 folded)
-  const B0=BW183.pose.sp,B1=BW183.pose.fo,mkQ=(V,N0)=>{const v=new V3(...V).normalize(),n=new V3(...N0);n.sub(v.clone().multiplyScalar(n.dot(v))).normalize();
+  const B0=BW184.pose.sp,B1=BW184.pose.fo,mkQ=(V,N0)=>{const v=new V3(...V).normalize(),n=new V3(...N0);n.sub(v.clone().multiplyScalar(n.dot(v))).normalize();
       const u=new V3().crossVectors(v,n);return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(u,v,n))};
   const qa=mkQ(B0.V,B0.N),qb=mkQ(B1.V,B1.N);
   const F=[0,.5,1].map(t=>{const Q=qa.clone().slerp(qb,t),U=new V3(1,0,0).applyQuaternion(Q),V=new V3(0,1,0).applyQuaternion(Q),N=new V3(0,0,1).applyQuaternion(Q);
@@ -55776,8 +55776,8 @@ function bw183Build(sp,C,L,P){
   const blade=(g,o)=>{const ST=o.ns==4?[0,.35,.72,1]:o.ns==5?[0,.25,.55,.8,1]:[0,.14,.32,.52,.7,.86,1],len=o.len*sc,w=o.w*sc,th=Math.max(.0025,w*.09);
     let first=true;
     F.forEach((f,k)=>{const G=g(f),R=map(f,G.r[0],G.r[1],G.n*f.lm),d=dir(f,G.th),n=f.N.clone(),lw=new V3().crossVectors(d,n).normalize(),dr=o.droop==null?.05:o.droop;
-      const rows=ST.map(t=>{const wf=bw183WF(t,o.shape,o.notch==null?1:o.notch),cam=.08*w*wf,c=R.clone().addScaledVector(d,len*t).addScaledVector(n,-dr*len*t*t*(1-f.t*.7));
-        const p=bw183Push(T,c.x+piv[0],c.y+piv[1],c.z+piv[2],.008+Math.max(0,G.n)*f.lm);if(p)c.add(new V3(...p));
+      const rows=ST.map(t=>{const wf=bw184WF(t,o.shape,o.notch==null?1:o.notch),cam=.08*w*wf,c=R.clone().addScaledVector(d,len*t).addScaledVector(n,-dr*len*t*t*(1-f.t*.7));
+        const p=bw184Push(T,c.x+piv[0],c.y+piv[1],c.z+piv[2],.008+Math.max(0,G.n)*f.lm);if(p)c.add(new V3(...p));
         return [c.clone().addScaledVector(lw,w*.75*wf).addScaledVector(n,-cam*.3),c.clone().addScaledVector(n,th*.5+cam),c.clone().addScaledVector(n,-th*.5+cam*.8),c.clone().addScaledVector(lw,-w*1.25*wf).addScaledVector(n,-cam*.3)]});
       for(let i=0;i<ST.length-1;i++){const a=rows[i],b=rows[i+1],vs=[a[0],a[1],a[2],a[3],b[0],b[1],b[2],b[3]],tm=(ST[i]+ST[i+1])/2;
         // top: lead, rachis, trail
@@ -55793,7 +55793,7 @@ function bw183Build(sp,C,L,P){
   const lin=(t,side,top)=>top?tc.copy(K.cov).multiplyScalar(.85):tc.copy(K.lin).multiplyScalar(t>.7?.9:1);
   // ---- primaries (0 inner .. nP-1 outer) along the hand ----
   const nP=D.nP,nS=D.nS,lerp=(a,b,t)=>a+(b-a)*t;
-  for(let i=0;i<nP;i++){const u=i/(nP-1),fing=i>=nP-D.pFing,Lp=bw183PL(D.pL,u);
+  for(let i=0;i<nP;i++){const u=i/(nP-1),fing=i>=nP-D.pFing,Lp=bw184PL(D.pL,u);
     blade(f=>{const s=lerp(.06,.9,u),r=[f.W[0]+(f.H[0]-f.W[0])*s,f.W[1]+(f.H[1]-f.W[1])*s];
       const thS=f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),thF=1.53+.008*i,th=lerp(thS,thF,f.t);
       return {r,th,n:.0012*(nP-1-i)}},{len:Lp,w:D.pW*(fing?.92:1),shape:D.pTip,notch:fing?D.notch:1,col:flight(4,i),droop:.06})}
@@ -55808,7 +55808,7 @@ function bw183Build(sp,C,L,P){
   for(let j=0;j<nS;j++){const v=j/(nS-1);blade(f=>{const s=.04+.92*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s],th=lerp(f.ph[1]+1.5+.28*v,1.24+.2*v,f.t),d=[Math.cos(th),Math.sin(th)];
       return {r:[r[0]-d[0]*.012*sc,r[1]-d[1]*.012*sc],th,n:.0065+.0008*j}},{len:D.sL*.46,w:D.sW*.95,shape:'round',ns:5,col:covert(K.cov,j),droop:.02})}
   for(let i=0;i<nP-1;i++){const u=i/(nP-1);blade(f=>{const s=lerp(.06,.9,u),r=[f.W[0]+(f.H[0]-f.W[0])*s,f.W[1]+(f.H[1]-f.W[1])*s],th=lerp(f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),1.53+.008*i,f.t);
-      return {r,th,n:.007+.001*(nP-1-i)}},{len:bw183PL(D.pL,u)*.36,w:D.pW*.9,shape:'round',ns:5,col:covert(K.covD,i),droop:.02})}
+      return {r,th,n:.007+.001*(nP-1-i)}},{len:bw184PL(D.pL,u)*.36,w:D.pW*.9,shape:'round',ns:5,col:covert(K.covD,i),droop:.02})}
   // ---- median coverts ----
   for(let j=0;j<nS;j++){const v=j/(nS-1);blade(f=>{const s=.02+.96*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s],th=lerp(f.ph[1]+1.45+.3*v,1.3+.16*v,f.t);
       return {r,th,n:.011+.0006*j}},{len:D.sL*.28,w:D.sW*.85,shape:'round',ns:4,col:covert(K.cov,j+1),droop:0})}
@@ -55823,7 +55823,7 @@ function bw183Build(sp,C,L,P){
   for(let j=0;j<nS;j+=1){const v=j/(nS-1);blade(f=>{const s=.04+.92*v,r=[f.W[0]+(f.E[0]-f.W[0])*s,f.W[1]+(f.E[1]-f.W[1])*s];return {r,th:lerp(f.ph[1]+1.5+.28*v,1.24+.2*v,f.t),n:-.006}},
       {len:D.sL*.42,w:D.sW,shape:'round',ns:4,col:lin,droop:0})}
   for(let i=0;i<nP-2;i++){const u=i/(nP-1);blade(f=>{const s=lerp(.06,.9,u),r=[f.W[0]+(f.H[0]-f.W[0])*s,f.W[1]+(f.H[1]-f.W[1])*s];
-      return {r,th:lerp(f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),1.53,f.t),n:-.006}},{len:bw183PL(D.pL,u)*.33,w:D.pW,shape:'round',ns:4,col:lin,droop:0})}
+      return {r,th:lerp(f.ph[2]+lerp(D.pFan[0],D.pFan[1],Math.pow(u,.8)),1.53,f.t),n:-.006}},{len:bw184PL(D.pL,u)*.33,w:D.pW,shape:'round',ns:4,col:lin,droop:0})}
   // ---- the arm: a flattened tube along the leading edge (shoulder → elbow → wrist → hand) ----
   {const NR=8;let first=true;F.forEach((f,k)=>{const path=[];const add=(A,B,n)=>{for(let i=0;i<n;i++){const t=i/n;path.push([A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t])}};
       add(f.S,f.E,3);add(f.E,f.W,4);add(f.W,[f.W[0]+(f.H[0]-f.W[0])*.62,f.W[1]+(f.H[1]-f.W[1])*.62],2);path.push([f.W[0]+(f.H[0]-f.W[0])*.62,f.W[1]+(f.H[1]-f.W[1])*.62]);
@@ -55837,64 +55837,64 @@ function bw183Build(sp,C,L,P){
       const e=rings[rings.length-1],ce=e.reduce((a,b)=>a.add(b),new V3()).multiplyScalar(1/NR);for(let s=0;s<NR;s++){const s1=(s+1)%NR,vs=[e[s],e[s1],ce];tri(vs,k,0,1,2);if(first)colTri(tc.copy(K.cov))}
       first=false})}
   return {P:POS.map(a=>new Float32Array(a)),C:new Float32Array(COL),piv}}
-// the shared geometry of a wing at fold level i (0 spread .. BW183.lv folded), made on first use
-function bw183Geo(key,d,i){const G=BW183.G[key]||(BW183.G[key]={d,g:[]});if(G.g[i])return G.g[i];
-  const f=i/BW183.lv,P=G.d.P,o=new Float32Array(P[0].length);let A,B,t;if(f<=.5){A=P[0];B=P[1];t=f*2}else{A=P[1];B=P[2];t=(f-.5)*2}
+// the shared geometry of a wing at fold level i (0 spread .. BW184.lv folded), made on first use
+function bw184Geo(key,d,i){const G=BW184.G[key]||(BW184.G[key]={d,g:[]});if(G.g[i])return G.g[i];
+  const f=i/BW184.lv,P=G.d.P,o=new Float32Array(P[0].length);let A,B,t;if(f<=.5){A=P[0];B=P[1];t=f*2}else{A=P[1];B=P[2];t=(f-.5)*2}
   for(let j=0;j<o.length;j++)o[j]=A[j]+(B[j]-A[j])*t;
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(o,3));g.setAttribute('color',new THREE.BufferAttribute(G.d.C,3));
-  g.computeVertexNormals();g.computeBoundingSphere();g.userData.bw183=1;return G.g[i]=g}
-// hang the pair on the chest; x.bw183 drives the fold
-function bw183Wings(x,c,C,mat,sp){const L=typeof evo100Lv=='function'&&EVO100.D.Skyhawk?evo100Lv(c):0,P=L?evo100Pal(c,'Skyhawk',L):{};
-  const key=sp+'|'+C+'|'+L+'|'+(L?[P.glow,P.trim,P.dark].join(','):''),D=BW183.sp[sp];
-  const d=(BW183.G[key]&&BW183.G[key].d)||bw183Build(sp,C,L,P),g=bw183Geo(key,d,BW183.lv);
-  const W={key,d,lv:BW183.lv,m:[]};x.bw183={f:1,t:0,W};if(x.g)x.g.bw183=x.bw183; // g.bw183.force = a fixed fold (tests, previews)
+  g.computeVertexNormals();g.computeBoundingSphere();g.userData.bw184=1;return G.g[i]=g}
+// hang the pair on the chest; x.bw184 drives the fold
+function bw184Wings(x,c,C,mat,sp){const L=typeof evo100Lv=='function'&&EVO100.D.Skyhawk?evo100Lv(c):0,P=L?evo100Pal(c,'Skyhawk',L):{};
+  const key=sp+'|'+C+'|'+L+'|'+(L?[P.glow,P.trim,P.dark].join(','):''),D=BW184.sp[sp];
+  const d=(BW184.G[key]&&BW184.G[key].d)||bw184Build(sp,C,L,P),g=bw184Geo(key,d,BW184.lv);
+  const W={key,d,lv:BW184.lv,m:[]};x.bw184={f:1,t:0,W};if(x.g)x.g.bw184=x.bw184; // g.bw184.force = a fixed fold (tests, previews)
   [-1,1].forEach(s=>{const p=lpPart(x.S,x.bones,'chest',g,mat,s*d.piv[0],d.piv[1],d.piv[2],s,1,1,0,0,0);W.m.push(p.children[0]);x.wings.push({p,s,base:D.base,amp:D.amp,bw:1})})}
 // after the shared animation: fold toward the creature's state, pick the shared geometry for that fold, scale the flap
-function bw183Anim(x,now){const B=x.bw183,g=x.g,G=(g&&g._ga)||{},S=x.spec;const dt=B.t?Math.min(.1,Math.max(0,(now-B.t)/1000)):0;B.t=now;
+function bw184Anim(x,now){const B=x.bw184,g=x.g,G=(g&&g._ga)||{},S=x.spec;const dt=B.t?Math.min(.1,Math.max(0,(now-B.t)/1000)):0;B.t=now;
   const w=G.w||0,run=typeof gaSS=='function'?gaSS(.8,1.6,G.Fr||0):0,m5=g&&g._m105;
   let tgt=1-w*.3*run;if((g&&(g.atk||g.ak||g._lk!=null||g.lk||g._bo))||S.anim=='fly'||(m5&&m5.M&&m5.M.wing))tgt=0; // attacks (enemy moves g.ak, companion lunges g._lk / g.lk), flight, wing abilities
   if(B.force!=null)B.f=tgt=B.force;
   B.f+=(tgt-B.f)*(1-Math.exp(-dt*(tgt<B.f?10:5)));if(Math.abs(B.f-tgt)<.002)B.f=tgt;
-  const lv=Math.round(B.f*BW183.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw183Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
+  const lv=Math.round(B.f*BW184.lv);if(lv!=B.W.lv){B.W.lv=lv;const geo=bw184Geo(B.W.key,B.W.d,lv);B.W.m.forEach(m=>m.geometry=geo)}
   const k=1-B.f;x.wings.forEach(wg=>{if(wg.bw)wg.p.rotation.z*=k})}  // (the tail fan keeps its width: evolution ornaments sit on it)
-{const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.bw183)try{bw183Anim(x,now)}catch(e){console.error('bw183',e)}return r}}
+{const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.bw184)try{bw184Anim(x,now)}catch(e){console.error('bw184',e)}return r}}
 // the three birds' post() builds these wings (the Gale Roc mount, on the base Skyhawk body, gets them too)
-{const D=LPR.Skyhawk;D.post=function(x,c,C,mat){bw183Wings(x,c,C,mat,rv137('Skyhawk',c))}}
-// ================= v183: the bird companions' details (Skyhawk, Stormtalon, Rocsovereign) =================
+{const D=LPR.Skyhawk;D.post=function(x,c,C,mat){bw184Wings(x,c,C,mat,rv137('Skyhawk',c))}}
+// ================= v184: the bird companions' details (Skyhawk, Stormtalon, Rocsovereign) =================
 // The rest of the owner's "wings and details" pass (see 3396 for the wings). What changed on the bodies:
 //  * Tails: flat boxes with loose white blocks on their ends → a fanned tail of real feathers (12-14 rectrices, the central pair
-//    on top, barred, a pale tip band) with upper and under tail coverts over the rump (`bd183Tail`, a vertex-coloured mesh on tail0).
+//    on top, barred, a pale tip band) with upper and under tail coverts over the rump (`bd184Tail`, a vertex-coloured mesh on tail0).
 //    Stormtalon keeps its two long streamers as feathers with broadened tips.
 //  * The breast "ruff" (white cones that read as teeth) and the Rocsovereign's mantle of pyramids → rows of overlapping contour
-//    feathers and long pointed hackles that lie on the skin and follow it (`bd183Coat`: rows on the body loft, skinned like it).
+//    feathers and long pointed hackles that lie on the skin and follow it (`bd184Coat`: rows on the body loft, skinned like it).
 //  * Nape and shoulders get a cape of small feathers that covers the wing root (scapulars).
 //  * Eyes: flat boxes → a dark socket, a round glowing iris with a pupil, under a rounded brow shelf. A cere at the beak base.
 //  * Crests: cones → feather blades (Skyhawk's swept nape crest, Rocsovereign's crown of stiff gold-tipped feathers and plumes;
 //    Stormtalon's lightning plumes stay).
 //  * Legs: feathered trousers of blades over the thighs (Rocsovereign: feathered down to the ankles).
 // ---------------- a feather blade for kit parts: along +y (0..1), width x (±.5), thickness z ----------------
-var BD183={G:{}};
-function bd183G(kind){if(BD183.G[kind])return BD183.G[kind];
+var BD184={G:{}};
+function bd184G(kind){if(BD184.G[kind])return BD184.G[kind];
   const ST=kind=='contour'?[0,.25,.55,.8,1]:[0,.2,.45,.7,.88,1],P=[],I=[],ridge=kind=='soft'?.08:.35;
   const wf=t=>{let w=t<.2?.55+.45*t/.2:1;if(kind=='lance'){if(t>.35)w*=Math.max(0,1-(t-.35)/.65)}else if(kind=='soft'){if(t>.45)w*=Math.pow(Math.max(0,1-(t-.45)/.55),.7)}else{if(t>.62)w*=Math.sqrt(Math.max(0,1-Math.pow((t-.62)/.38,2)))}return w};
   ST.forEach(t=>{const w=wf(t)*.5,cam=ridge*wf(t);P.push(-w,t,-.2*cam, 0,t,1+cam, 0,t,-1+cam*.6, w,t,-.2*cam)});
   for(let i=0;i<ST.length-1;i++){const a=i*4,b=a+4;I.push(a,a+1,b, a+1,b+1,b, a+1,a+3,b+1, a+3,b+3,b+1, a,b,a+2, b,b+2,a+2, a+2,b+2,a+3, a+3,b+2,b+3)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return BD183.G[kind]=g}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(I);g.computeVertexNormals();return BD184.G[kind]=g}
 // one feather part: root a, pointing dir, flat side facing nrm; len, half width w; bn = bone name or [[bone,weight],…]
-function bd183F(k,bn,col,a,dir,nrm,len,w,kind,th){const V=THREE.Vector3,y=new V(...dir).normalize(),z=new V(...nrm);z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
+function bd184F(k,bn,col,a,dir,nrm,len,w,kind,th){const V=THREE.Vector3,y=new V(...dir).normalize(),z=new V(...nrm);z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
   const x=new V().crossVectors(y,z),m=new THREE.Matrix4().makeBasis(x.multiplyScalar(w*2),y.multiplyScalar(len),z.multiplyScalar(th||Math.max(.002,w*.12)));m.setPosition(new V(...a));
-  const p={bn:Array.isArray(bn)?bn[0][0]:bn,geo:bd183G(kind||'contour'),t:'c',col,m};if(Array.isArray(bn))p.w=bn;k.P.push(p);return p}
+  const p={bn:Array.isArray(bn)?bn[0][0]:bn,geo:bd184G(kind||'contour'),t:'c',col,m};if(Array.isArray(bn))p.w=bn;k.P.push(p);return p}
 // a point on a bird's body loft T (rows [z, y, half width, above, below, bones]) at z, t radians from the top (0 spine, PI belly),
 // side s: {p, n (outward), w (skin weights like the body there)}
-function bd183S(T,z,t,s){const q=dh150At(T,z),ct=Math.cos(t),st=Math.sin(t),h=ct>0?q.a:q.b,p=[s*st*q.w,q.y+ct*h,z],n=new THREE.Vector3(s*st/q.w,ct/h,0).normalize();
+function bd184S(T,z,t,s){const q=dh150At(T,z),ct=Math.cos(t),st=Math.sin(t),h=ct>0?q.a:q.b,p=[s*st*q.w,q.y+ct*h,z],n=new THREE.Vector3(s*st/q.w,ct/h,0).normalize();
   let i=0;for(let j=1;j<T.length;j++)if(Math.abs(T[j][0]-z)<Math.abs(T[i][0]-z))i=j;const b=T[i][5],w=b[2]||0;
   return {p,n:[n.x,n.y,n.z],w:w>0&&b[0]!=b[1]?[[b[0],1-w],[b[1],w]]:[[b[0],1]]}}
 // the body's real surface along the line through p in direction n (outermost hit of a ray coming in from outside):
 // {p, n (outward), w (skin weights of the nearest corner)} or null; G = the body geometry, O = its bone names
-var BD183R=null;
-function bd183Hit(G,O,p,n){BD183R=BD183R||{m:new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide})),rc:new THREE.Raycaster()};
-  const V=THREE.Vector3,m=BD183R.m;m.geometry=G;if(!G.boundingSphere)G.computeBoundingSphere();const N=new V(...n).normalize();
-  BD183R.rc.set(new V(...p).addScaledVector(N,.3),N.clone().negate());const h=BD183R.rc.intersectObject(m,false)[0];if(!h)return null;
+var BD184R=null;
+function bd184Hit(G,O,p,n){BD184R=BD184R||{m:new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide})),rc:new THREE.Raycaster()};
+  const V=THREE.Vector3,m=BD184R.m;m.geometry=G;if(!G.boundingSphere)G.computeBoundingSphere();const N=new V(...n).normalize();
+  BD184R.rc.set(new V(...p).addScaledVector(N,.3),N.clone().negate());const h=BD184R.rc.intersectObject(m,false)[0];if(!h)return null;
   const fn=h.face.normal.clone();if(fn.dot(N)<0)fn.negate();const SI=G.attributes.skinIndex,SW=G.attributes.skinWeight,w=[];
   [h.face.a,h.face.b,h.face.c].sort((a,b)=>new V().fromBufferAttribute(G.attributes.position,a).distanceTo(h.point)-new V().fromBufferAttribute(G.attributes.position,b).distanceTo(h.point)).slice(0,1).forEach(v=>{
     [['getX'],['getY'],['getZ'],['getW']].forEach(([g])=>{const wt=SW[g](v);if(wt>.02)w.push([O[SI[g](v)],wt])})});
@@ -55902,33 +55902,33 @@ function bd183Hit(G,O,p,n){BD183R=BD183R||{m:new THREE.Mesh(new THREE.BufferGeom
 // rows of overlapping feathers on the body: zs (front → back), t range [t0, t1] round the body (0 spine, PI belly), n per half
 // row, pointing along (back, down) mixed by `down`, lifted `lift` off the skin; col(row, i) → colour. o.G / o.O: the body geometry
 // and bone names (each feather is set on the real surface and skinned like it)
-function bd183Coat(k,T,o){const V=THREE.Vector3;o.zs.forEach((z,r)=>{for(let i=0;i<o.n;i++){const u=o.n>1?i/(o.n-1):.5,t=o.t0+(o.t1-o.t0)*u+(r%2?(o.t1-o.t0)/(o.n-1||1)*.5:0);if(t>o.t1+.01)continue;
-    [-1,1].forEach(s=>{if(t<.05&&s<0)return;const S0=bd183S(T,z,t,s),S=(o.G&&bd183Hit(o.G,o.O,S0.p,S0.n))||S0,n=new V(...S.n),want=new V(0,-(o.down||0),-1).normalize(),
+function bd184Coat(k,T,o){const V=THREE.Vector3;o.zs.forEach((z,r)=>{for(let i=0;i<o.n;i++){const u=o.n>1?i/(o.n-1):.5,t=o.t0+(o.t1-o.t0)*u+(r%2?(o.t1-o.t0)/(o.n-1||1)*.5:0);if(t>o.t1+.01)continue;
+    [-1,1].forEach(s=>{if(t<.05&&s<0)return;const S0=bd184S(T,z,t,s),S=(o.G&&bd184Hit(o.G,o.O,S0.p,S0.n))||S0,n=new V(...S.n),want=new V(0,-(o.down||0),-1).normalize(),
         d=want.clone().sub(n.clone().multiplyScalar(want.dot(n))).normalize().addScaledVector(n,o.lift||.12).normalize();
-      const a=new V(...S.p).addScaledVector(n,-(o.sink||.004));bd183F(k,S.w,o.col(r,i,s),a.toArray(),d.toArray(),S.n,o.len*(1+.12*Math.sin(r*3.1+i*1.7)),o.w,o.kind||'contour')})}})}
+      const a=new V(...S.p).addScaledVector(n,-(o.sink||.004));bd184F(k,S.w,o.col(r,i,s),a.toArray(),d.toArray(),S.n,o.len*(1+.12*Math.sin(r*3.1+i*1.7)),o.w,o.kind||'contour')})}})}
 // the front of the breast (faces forward, which the round-the-body rows miss): rows at heights ys, xs across, from z0 forward
-function bd183Bib(k,o){const V=THREE.Vector3;o.ys.forEach((y,r)=>o.xs.forEach((x,i)=>{const xx=x+(r%2?o.dx||0:0),S=bd183Hit(o.G,o.O,[xx,y,o.z0],[xx*1.5,0,1]);if(!S||S.n[2]<.15)return;
+function bd184Bib(k,o){const V=THREE.Vector3;o.ys.forEach((y,r)=>o.xs.forEach((x,i)=>{const xx=x+(r%2?o.dx||0:0),S=bd184Hit(o.G,o.O,[xx,y,o.z0],[xx*1.5,0,1]);if(!S||S.n[2]<.15)return;
     const n=new V(...S.n),want=new V(0,-1,-.15).normalize(),d=want.clone().sub(n.clone().multiplyScalar(want.dot(n))).normalize().addScaledVector(n,o.lift||.12).normalize();
-    bd183F(k,S.w,o.col(r,i),new V(...S.p).addScaledVector(n,-.004).toArray(),d.toArray(),S.n,o.len*(1+.1*Math.sin(r*2.3+i*1.9)),o.w,'soft')}))}
+    bd184F(k,S.w,o.col(r,i),new V(...S.p).addScaledVector(n,-.004).toArray(),d.toArray(),S.n,o.len*(1+.1*Math.sin(r*2.3+i*1.9)),o.w,'soft')}))}
 // eyes: dark socket, round glowing iris and pupil, rounded brow shelf (x side offset, y, z of the eye centre, r iris radius)
-function bd183Eyes(k,s,x,y,z,r,eye,brow,yaw){k.p('head','sph','c',0x080706,s*(x-.004),y,z-.002,r*1.35,r*1.15,r*.7,0,s*yaw,0);
+function bd184Eyes(k,s,x,y,z,r,eye,brow,yaw){k.p('head','sph','c',0x080706,s*(x-.004),y,z-.002,r*1.35,r*1.15,r*.7,0,s*yaw,0);
   k.p('head','sph2','g',eye,s*x,y,z,r,r,r*.6,0,s*yaw,0);k.p('head','sph','c',0x050404,s*(x+r*.45),y+.001,z+r*.28,r*.42,r*.42,r*.3,0,s*yaw,0);
   k.p('head','sph','c',brow,s*(x-.012),y+r*.95,z+.002,r*1.55,r*.42,r*1.25,.05,s*(yaw-.15),s*.32)}
 // a static vertex-coloured feather mesh (tails): F = [{a, d, n, len, w, shape, col(t, side, top)}] in the bone's model space
-function bd183Mesh(F){const pos=[],col=[],V=THREE.Vector3,tc=new THREE.Color();
+function bd184Mesh(F){const pos=[],col=[],V=THREE.Vector3,tc=new THREE.Color();
   F.forEach(o=>{const ST=[0,.18,.4,.6,.78,.9,1],R=new V(...o.a),d=new V(...o.d).normalize(),n=new V(...o.n);n.sub(d.clone().multiplyScalar(n.dot(d))).normalize();const lw=new V().crossVectors(d,n).normalize(),th=Math.max(.0025,o.w*.09);
-    const rows=ST.map(t=>{const wf=bw183WF(t,o.shape||'round',1),cam=.12*o.w*wf,c=R.clone().addScaledVector(d,o.len*t).addScaledVector(n,-(o.droop!=null?o.droop:.03)*o.len*t*t);
+    const rows=ST.map(t=>{const wf=bw184WF(t,o.shape||'round',1),cam=.12*o.w*wf,c=R.clone().addScaledVector(d,o.len*t).addScaledVector(n,-(o.droop!=null?o.droop:.03)*o.len*t*t);
       return [c.clone().addScaledVector(lw,o.w*wf).addScaledVector(n,-cam*.3),c.clone().addScaledVector(n,th*.5+cam),c.clone().addScaledVector(n,-th*.5+cam*.8),c.clone().addScaledVector(lw,-o.w*wf).addScaledVector(n,-cam*.3)]});
     for(let i=0;i<ST.length-1;i++){const a=rows[i],b=rows[i+1],vs=[a[0],a[1],a[2],a[3],b[0],b[1],b[2],b[3]],tm=(ST[i]+ST[i+1])/2;
       [[0,1,4,0,1],[1,5,4,0,1],[1,3,5,1,1],[3,7,5,1,1],[0,6,2,0,0],[0,4,6,0,0],[2,6,3,1,0],[3,6,7,1,0]].forEach(q=>{[q[0],q[1],q[2]].forEach(j=>pos.push(vs[j].x,vs[j].y,vs[j].z));
         o.col(tm,q[3],q[4],tc);for(let j=0;j<3;j++)col.push(tc.r,tc.g,tc.b)})}});
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.computeVertexNormals();g.computeBoundingSphere();return g}
 // the tail fan: rectrices from the rump to tips on an arc (hub H, radius R, half angle A), coverts over and under the root
-var BD183T={
+var BD184T={
   Skyhawk:{n:12,root:[0,.535,-.27],H:[0,.512,-.3],R:.31,A:.34,w:.046,up:[0,.565,-.21],upL:.17,un:[0,.5,-.24],unL:.14,nb:3},
   Stormtalon:{n:10,root:[0,.54,-.33],H:[0,.527,-.5],R:.33,A:.2,w:.038,up:[0,.57,-.27],upL:.17,un:[0,.505,-.3],unL:.13,nb:4,streamers:1},
   Rocsovereign:{n:14,root:[0,.555,-.34],H:[0,.537,-.48],R:.36,A:.5,w:.056,up:[0,.585,-.28],upL:.2,un:[0,.52,-.31],unL:.16,nb:3}};
-function bd183Tail(sp,C){const key='T|'+sp+'|'+C;if(BD183.G[key])return BD183.G[key];const D=BD183T[sp],K=bw183Cols(sp,C),F=[],c=x=>new THREE.Color(x);
+function bd184Tail(sp,C){const key='T|'+sp+'|'+C;if(BD184.G[key])return BD184.G[key];const D=BD184T[sp],K=bw184Cols(sp,C),F=[],c=x=>new THREE.Color(x);
   const top=sp=='Rocsovereign'?K.cov.clone().lerp(K.fl,.35):sp=='Stormtalon'?K.cov.clone().multiplyScalar(.7):K.cov.clone().multiplyScalar(.85),bar=sp=='Rocsovereign'?K.fl.clone():K.fl.clone().multiplyScalar(.8),tipC=sp=='Stormtalon'?c(0xd8dce0):K.lin.clone();
   const rect=(t,side,tp,o)=>{if(!tp){if(t>.9)return o.copy(tipC).multiplyScalar(.9);const b=Math.floor((t-.15)*(D.nb*2+1));return o.copy(t>.15&&b%2?K.undBar:K.und)}
     if(t>.9)return o.copy(tipC);if(t>.74)return o.copy(K.tip);const b=Math.floor((t-.12)*(D.nb*2)/.62);o.copy(t>.12&&b%2?bar:top);if(side)o.multiplyScalar(.92);return o};
@@ -55945,81 +55945,81 @@ function bd183Tail(sp,C){const key='T|'+sp+'|'+C;if(BD183.G[key])return BD183.G[
   // upper tail coverts (over the root), under tail coverts (pale, below)
   for(let i=0;i<7;i++){const u=(i-3)/3,a=u*D.A*.7;F.push({a:[D.up[0]+Math.sin(a)*.03,D.up[1]+.003*(1-Math.abs(u)),D.up[2]],d:[Math.sin(a)*.5,-.12,-1],n:[Math.sin(a)*.3,1,0],len:D.upL,w:D.w*.95,shape:'round',col:(t,sd,tp,o)=>tp?o.copy(K.cov).multiplyScalar(t>.75?.72:.86):o.copy(K.lin),droop:.04})}
   for(let i=0;i<5;i++){const u=(i-2)/2,a=u*D.A*.6;F.push({a:[D.un[0]+Math.sin(a)*.03,D.un[1]+.012,D.un[2]],d:[Math.sin(a)*.5,.08,-1],n:[0,-1,0],len:D.unL*.85,w:D.w*.9,shape:'round',col:(t,sd,tp,o)=>o.copy(K.lin).multiplyScalar(.92+.08*tp),droop:-.03})}
-  return BD183.G[key]=bd183Mesh(F)}
-function bd183TailOn(x,sp,C,mat){const p=lpPart(x.S,x.bones,'tail0',bd183Tail(sp,C),mat,0,0,0,1,1,1,0,0,0);
+  return BD184.G[key]=bd184Mesh(F)}
+function bd184TailOn(x,sp,C,mat){const p=lpPart(x.S,x.bones,'tail0',bd184Tail(sp,C),mat,0,0,0,1,1,1,0,0,0);
   // lpPart places the mesh at the given model point; the geometry is already in model space, so undo the bone offset
-  const r=x.S.bones.tail0;p.position.set(-r[1],-r[2],-r[3]);x.bd183T=p;return p}
+  const r=x.S.bones.tail0;p.position.set(-r[1],-r[2],-r[3]);x.bd184T=p;return p}
 
 // ======================================================================== the kits ========================================================================
 // shared pieces: beak with a cere, talons, coat (breast rows, nape cape), trousers
-function bd183Talons(k,s,o){const f=s<0?'hl2':'hr2',fx=s*.075,g=o.g||1;
+function bd184Talons(k,s,o){const f=s<0?'hl2':'hr2',fx=s*.075,g=o.g||1;
   [-1,0,1].forEach(i=>{const e=[fx+i*.05*g,.022,(.115-Math.abs(i)*.026)*g];k.L(f,'c',o.toe,[fx,.026,0],e,.018*g,.014*g,5);
     k.L(f,'c',o.claw,e,[e[0]+i*.007,.03,e[2]+.03*g],.013*g,.008*g,4).L(f,'c',o.claw,[e[0]+i*.007,.03,e[2]+.03*g],[e[0]+i*.009,.0,e[2]+.052*g],.008*g,.002,4)});
   k.L(f,'c',o.toe,[fx,.026,0],[fx,.022,-.075*g],.017*g,.013*g,5).L(f,'c',o.claw,[fx,.022,-.075*g],[fx,.03,-.1*g],.012*g,.007*g,4).L(f,'c',o.claw,[fx,.03,-.1*g],[fx,.0,-.12*g],.007*g,.002,4);
 }
-function bd183Trousers(k,T,s,o){const b=s<0?"hl0":"hr0",fx=s*(o.x||.075),V=THREE.Vector3;
+function bd184Trousers(k,T,s,o){const b=s<0?"hl0":"hr0",fx=s*(o.x||.075),V=THREE.Vector3;
   for(let r=0;r<o.rows;r++){const y=o.y0-r*o.dy,N=9;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.35,n=[Math.sin(a),0,Math.cos(a)];
-      bd183F(k,b,o.col(r,i),[fx+n[0]*o.r(r),y,o.z0+n[2]*o.r(r)],[n[0]*.25,-1,n[2]*.25],n,o.len,o.w,'contour')}}}
+      bd184F(k,b,o.col(r,i),[fx+n[0]*o.r(r),y,o.z0+n[2]*o.r(r)],[n[0]*.25,-1,n[2]*.25],n,o.len,o.w,'contour')}}}
 // ---------------- Skyhawk ----------------
-function bd183KitSky(k,c,C,red,G,O){
+function bd184KitSky(k,c,C,red,G,O){
   const T=HWK_BODY,main=lpMain(C,.22),M=main.getHex(),back=dkShade(M,.55),deep=dkShade(M,.35),bel=new THREE.Color(0xd8ccb0),barC=main.clone().multiplyScalar(.5).lerp(new THREE.Color(0x3a3024),.4),
     pale=bel.clone().multiplyScalar(.9).getHex(),bar=bel.clone().multiplyScalar(.9).lerp(barC,.16).getHex(),eye=red?0xff2a2a:0xf2b21e,beak=0x2a2420,tip=0x14100e,cere=0xc89a3a,trou=bel.clone().lerp(main,.55).multiplyScalar(.85).getHex();
-  [-1,1].forEach(s=>{bd183Eyes(k,s,.07,.893,.432,.019,eye,back,.62);
-    bd183Talons(k,s,{toe:0x9a8448,claw:tip});
-    bd183Trousers(k,T,s,{rows:3,y0:.47,dy:.045,z0:.0,r:r=>.064-r*.009,len:.09,w:.026,col:(r,i)=>(r+i)%3?trou:dkShade(trou,.8)})});
+  [-1,1].forEach(s=>{bd184Eyes(k,s,.07,.893,.432,.019,eye,back,.62);
+    bd184Talons(k,s,{toe:0x9a8448,claw:tip});
+    bd184Trousers(k,T,s,{rows:3,y0:.47,dy:.045,z0:.0,r:r=>.064-r*.009,len:.09,w:.026,col:(r,i)=>(r+i)%3?trou:dkShade(trou,.8)})});
   // the hooked beak with a cere at its base and nostrils
   k.L('head','c',beak,[0,.872,.48],[0,.865,.56],.032,.018,6).L('head','c',tip,[0,.865,.56],[0,.83,.6],.018,.004,5);
   k.L('jaw','c',dkShade(beak,1.3),[0,.846,.48],[0,.845,.545],.022,.008,5);
   k.L('head','c',cere,[0,.874,.466],[0,.874,.494],.037,.034,7);[-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.018,.884,.5,.006,.004,.006));
   // a swept nape crest of pointed feathers
-  for(let i=-2;i<=2;i++)bd183F(k,'head',Math.abs(i)%2?back:deep,[i*.022,.94-Math.abs(i)*.006,.4],[i*.12,.25,-1],[i*.1,1,.25],.13-Math.abs(i)*.018,.018,'lance');
+  for(let i=-2;i<=2;i++)bd184F(k,'head',Math.abs(i)%2?back:deep,[i*.022,.94-Math.abs(i)*.006,.4],[i*.12,.25,-1],[i*.1,1,.25],.13-Math.abs(i)*.018,.018,'lance');
   // the coat: barred breast rows, a dark nape cape over the wing roots
-  bd183Coat(k,T,{G,O,zs:[.22,.17,.12,.07,.02,-.03,-.08],t0:1.7,t1:2.75,n:4,len:.085,w:.021,down:1.2,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?bar:pale});
-  bd183Bib(k,{G,O,ys:[.74,.7,.66,.62,.58,.54],xs:[-.075,-.025,.025,.075],dx:.025,z0:.2,len:.085,w:.022,lift:.035,col:(r,i)=>(r*2+i)%5==1?bar:pale});
-  bd183Coat(k,T,{G,O,zs:[.33,.29,.25,.21,.17,.13,.09],t0:0,t1:1.3,n:6,len:.065,w:.026,down:.25,lift:.08,col:(r,i)=>(r+i)%3?M:dkShade(M,.8)});
+  bd184Coat(k,T,{G,O,zs:[.22,.17,.12,.07,.02,-.03,-.08],t0:1.7,t1:2.75,n:4,len:.085,w:.021,down:1.2,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?bar:pale});
+  bd184Bib(k,{G,O,ys:[.74,.7,.66,.62,.58,.54],xs:[-.075,-.025,.025,.075],dx:.025,z0:.2,len:.085,w:.022,lift:.035,col:(r,i)=>(r*2+i)%5==1?bar:pale});
+  bd184Coat(k,T,{G,O,zs:[.33,.29,.25,.21,.17,.13,.09],t0:0,t1:1.3,n:6,len:.065,w:.026,down:.25,lift:.08,col:(r,i)=>(r+i)%3?M:dkShade(M,.8)});
   // the rump, under the tail
   k.L('tail0','c',back,[0,.565,-.24],[0,.53,-.36],.07,.045,6)}
 // ---------------- Stormtalon ----------------
-function bd183KitSt(k,c,C,red,G,O){
+function bd184KitSt(k,c,C,red,G,O){
   const T=ST150.body,K=st150Cols(C),main=K.main.getHex(),back=dkShade(main,.5),deep=dkShade(main,.3),eye=red?0xff2a2a:0xf4e46a,glow=0x9ae8ff,steel=0x2a2e34,steelD=0x14161a,claw=0x0a0a0c,scale=0x5a6070,
     pale=K.pale.getHex(),chev=K.pale.clone().lerp(K.chev,.18).getHex();
-  [-1,1].forEach(s=>{bd183Eyes(k,s,.064,.895,.447,.017,eye,deep,.62);
+  [-1,1].forEach(s=>{bd184Eyes(k,s,.064,.895,.447,.017,eye,deep,.62);
     // the glowing lightning streak under each eye
     k.L('head','g',glow,[s*.064,.873,.452],[s*.07,.86,.42],.006,.005,3).L('head','g',glow,[s*.07,.86,.42],[s*.07,.862,.39],.005,.004,3).L('head','g',glow,[s*.07,.862,.39],[s*.072,.845,.36],.004,.002,3);
-    bd183Talons(k,s,{toe:scale,claw,g:1.15});
-    bd183Trousers(k,T,s,{rows:3,y0:.46,dy:.05,z0:.0,r:r=>.075-r*.009,len:.1,w:.028,col:(r,i)=>i%2?back:main})});
+    bd184Talons(k,s,{toe:scale,claw,g:1.15});
+    bd184Trousers(k,T,s,{rows:3,y0:.46,dy:.05,z0:.0,r:r=>.075-r*.009,len:.1,w:.028,col:(r,i)=>i%2?back:main})});
   // a sleek steel beak with a sharp hook, a grey cere
   k.L('head','c',steel,[0,.884,.5],[0,.874,.6],.03,.015,6).L('head','c',steelD,[0,.874,.6],[0,.838,.635],.015,.003,5);
   k.L('jaw','c',dkShade(steel,1.4),[0,.855,.5],[0,.852,.57],.02,.007,5);k.L('head','c',K.cere.getHex(),[0,.885,.486],[0,.885,.512],.033,.03,7);
   // the lightning crest: zigzag plumes swept back from the crown, glowing tips (kept from v150)
   for(let i=-3;i<=3;i++){const x=i*.016,L=1-Math.abs(i)*.17,p0=[x,.935,.425-Math.abs(i)*.012],p1=[x*1.5,.975+.03*L,.37],p2=[x*1.9,.968+.04*L,.31-.03*L],p3=[x*2.3,1.0+.07*L,.24-.07*L];
     k.L('head','c',Math.abs(i)%2?back:deep,p0,p1,.022,.016,4).L('head','c',Math.abs(i)%2?deep:back,p1,p2,.016,.011,4).L('head','g',glow,p2,p3,.011,.002,4)}
-  bd183Coat(k,T,{G,O,zs:[.23,.18,.13,.08,.03,-.02,-.07],t0:1.7,t1:2.75,n:4,len:.08,w:.02,down:1.2,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?chev:pale});
-  bd183Bib(k,{G,O,ys:[.76,.72,.68,.64,.6,.56,.52],xs:[-.06,-.02,.02,.06],dx:.02,z0:.2,len:.08,w:.02,lift:.035,col:(r,i)=>(r*2+i)%5==1?chev:pale});
-  bd183Coat(k,T,{G,O,zs:[.35,.31,.27,.23,.19,.15,.11],t0:0,t1:1.3,n:6,len:.06,w:.024,down:.25,lift:.08,col:(r,i)=>(r+i)%3?main:dkShade(main,.8)});
+  bd184Coat(k,T,{G,O,zs:[.23,.18,.13,.08,.03,-.02,-.07],t0:1.7,t1:2.75,n:4,len:.08,w:.02,down:1.2,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?chev:pale});
+  bd184Bib(k,{G,O,ys:[.76,.72,.68,.64,.6,.56,.52],xs:[-.06,-.02,.02,.06],dx:.02,z0:.2,len:.08,w:.02,lift:.035,col:(r,i)=>(r*2+i)%5==1?chev:pale});
+  bd184Coat(k,T,{G,O,zs:[.35,.31,.27,.23,.19,.15,.11],t0:0,t1:1.3,n:6,len:.06,w:.024,down:.25,lift:.08,col:(r,i)=>(r+i)%3?main:dkShade(main,.8)});
   k.L('tail0','c',back,[0,.565,-.24],[0,.535,-.38],.06,.035,6)}
 // ---------------- Rocsovereign ----------------
-function bd183KitRs(k,c,C,red,G,O){
+function bd184KitRs(k,c,C,red,G,O){
   const T=RS150.body,K=rs150Cols(C),main=K.main.getHex(),back=K.back.getHex(),dk=K.dk.getHex(),cream=K.cream.getHex(),eye=red?0xff2a2a:0xffb020,ivory=0xd8c088,ivoryD=0xa88a50,tip=0x241c12,gold=0xe8c060,claw=0x16120e;
-  [-1,1].forEach(s=>{bd183Eyes(k,s,.09,.902,.455,.021,eye,dk,.6);
-    bd183Talons(k,s,{toe:0xa88c44,claw,g:1.2});
+  [-1,1].forEach(s=>{bd184Eyes(k,s,.09,.902,.455,.021,eye,dk,.6);
+    bd184Talons(k,s,{toe:0xa88c44,claw,g:1.2});
     // legs feathered down to the ankles: rows of feathers round the thigh and shank
-    bd183Trousers(k,T,s,{x:.088,rows:4,y0:.47,dy:.05,z0:.0,r:r=>.084-r*.008,len:.1,w:.032,col:(r,i)=>(r+i)%3?main:back});
+    bd184Trousers(k,T,s,{x:.088,rows:4,y0:.47,dy:.05,z0:.0,r:r=>.084-r*.008,len:.1,w:.032,col:(r,i)=>(r+i)%3?main:back});
     [0,1,2].forEach(r=>{const N=8;for(let i=0;i<N;i++){const a=i/N*Math.PI*2+r*.4,n=[Math.sin(a),0,Math.cos(a)],rr=.07-r*.012;
-      bd183F(k,s<0?"hl1":"hr1",(r+i)%2?main:K.cream.clone().lerp(K.main,.5).getHex(),[s*.08+n[0]*rr,.3-r*.05,.018+n[2]*rr],[n[0]*.2,-1,n[2]*.2],n,.08,.026,'contour')}})});
+      bd184F(k,s<0?"hl1":"hr1",(r+i)%2?main:K.cream.clone().lerp(K.main,.5).getHex(),[s*.08+n[0]*rr,.3-r*.05,.018+n[2]*rr],[n[0]*.2,-1,n[2]*.2],n,.08,.026,'contour')}})});
   // the massive hooked beak: ivory-gold, a dark hooked tip; a heavy lower mandible; a cere
   k.L('head','c',ivory,[0,.9,.49],[0,.897,.6],.052,.03,6).L('head','c',ivoryD,[0,.897,.6],[0,.862,.655],.03,.013,6).L('head','c',tip,[0,.862,.655],[0,.812,.662],.013,.002,5);
   k.L('jaw','c',ivoryD,[0,.85,.5],[0,.845,.6],.036,.012,6);k.L('head','c',0xa88c44,[0,.902,.48],[0,.902,.505],.056,.052,8);
   [-1,1].forEach(s=>k.p('head','sph','c',0x0a0806,s*.028,.918,.51,.008,.005,.008));
   // the crown: a fan of stiff upright crest feathers with golden tips, long plumes swept back behind
   for(let i=-3;i<=3;i++){const x=i*.026,b=[x,.962-Math.abs(i)*.006,.4-Math.abs(i)*.012],d=[x*2.6,1,-.3],L=(i%2?.13:.19)-Math.abs(i)*.012;
-    bd183F(k,'head',i%2?back:dk,b,d,[0,0,1],L,.022,'lance');const n=dh150N(d);bd183F(k,'head',gold,[b[0]+n[0]*L*.62,b[1]+n[1]*L*.62,b[2]+n[2]*L*.62+.003],d,[0,0,1],L*.36,.014,'lance')}
-  [-1,0,1].forEach(i=>bd183F(k,'head',dk,[i*.03,.945,.36],[i*.3,.15,-1],[i*.2,1,.15],.12-.02*Math.abs(i),.026,'lance'));
+    bd184F(k,'head',i%2?back:dk,b,d,[0,0,1],L,.022,'lance');const n=dh150N(d);bd184F(k,'head',gold,[b[0]+n[0]*L*.62,b[1]+n[1]*L*.62,b[2]+n[2]*L*.62+.003],d,[0,0,1],L*.36,.014,'lance')}
+  [-1,0,1].forEach(i=>bd184F(k,'head',dk,[i*.03,.945,.36],[i*.3,.15,-1],[i*.2,1,.15],.12-.02*Math.abs(i),.026,'lance'));
   // the mantle: long pointed hackles lying down the neck and over the shoulders, a cream breast
-  bd183Coat(k,T,{G,O,zs:[.44,.4,.36,.32,.28,.24,.2],t0:0,t1:2.3,n:8,len:.11,w:.028,down:.9,lift:.07,kind:'lance',col:(r,i)=>(r+i)%2?main:back});
-  bd183Bib(k,{G,O,ys:[.78,.73,.68,.63,.58,.53,.48,.43],xs:[-.12,-.06,0,.06,.12],dx:.03,z0:.2,len:.1,w:.028,lift:.035,col:(r,i)=>(r*2+i)%5==1?K.cream.clone().lerp(K.back,.14).getHex():cream});
-  bd183Coat(k,T,{G,O,zs:[.18,.12,.06,0,-.06,-.12],t0:2.0,t1:2.8,n:4,len:.1,w:.028,down:1.3,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?K.cream.clone().lerp(K.back,.16).getHex():cream});
-  bd183Coat(k,T,{G,O,zs:[.15,.11,.07],t0:.1,t1:1.25,n:5,len:.085,w:.032,down:.2,lift:.07,col:(r,i)=>(r+i)%3?main:K.main.clone().multiplyScalar(.8).getHex()});
+  bd184Coat(k,T,{G,O,zs:[.44,.4,.36,.32,.28,.24,.2],t0:0,t1:2.3,n:8,len:.11,w:.028,down:.9,lift:.07,kind:'lance',col:(r,i)=>(r+i)%2?main:back});
+  bd184Bib(k,{G,O,ys:[.78,.73,.68,.63,.58,.53,.48,.43],xs:[-.12,-.06,0,.06,.12],dx:.03,z0:.2,len:.1,w:.028,lift:.035,col:(r,i)=>(r*2+i)%5==1?K.cream.clone().lerp(K.back,.14).getHex():cream});
+  bd184Coat(k,T,{G,O,zs:[.18,.12,.06,0,-.06,-.12],t0:2.0,t1:2.8,n:4,len:.1,w:.028,down:1.3,lift:.035,kind:'soft',col:(r,i)=>(r*2+i)%5==1?K.cream.clone().lerp(K.back,.16).getHex():cream});
+  bd184Coat(k,T,{G,O,zs:[.15,.11,.07],t0:.1,t1:1.25,n:5,len:.085,w:.032,down:.2,lift:.07,col:(r,i)=>(r+i)%3?main:K.main.clone().multiplyScalar(.8).getHex()});
   k.L('tail0','c',back,[0,.58,-.24],[0,.555,-.38],.085,.05,6)}
 // the Rocsovereign's gold was a flat lemon yellow (cartoony): a deeper, less saturated antique gold, the same for its body,
 // kit and wings (every colour derived from it follows)
@@ -56027,25 +56027,25 @@ rs150Cols=(f=>function(C){const m=lpMain(C,.25),h={};m.getHSL(h);m.setHSL(h.h,h.
   return {main:m,back:m.clone().multiplyScalar(.55),dk:m.clone().multiplyScalar(.32).lerp(new THREE.Color(0x2a1e14),.35),
     cream:new THREE.Color(0xe0d0a8).lerp(m,.25),scale:new THREE.Color(0xb08c3c),ivory:new THREE.Color(0xd8c088)}})(rs150Cols);
 // ---------------- hook them in ----------------
-{const D=LPR.Skyhawk,k0=D.kit;D.kit=function(k,c,C,red){const sp=rv137('Skyhawk',c),F={Skyhawk:bd183KitSky,Stormtalon:bd183KitSt,Rocsovereign:bd183KitRs}[sp];
+{const D=LPR.Skyhawk,k0=D.kit;D.kit=function(k,c,C,red){const sp=rv137('Skyhawk',c),F={Skyhawk:bd184KitSky,Stormtalon:bd184KitSt,Rocsovereign:bd184KitRs}[sp];
     if(F){let G=null;try{G=D.geo(C,c)}catch(e){}return F(k,c,C,red,G,Object.keys(SPEC.Skyhawk.bones))}return k0.apply(this,arguments)};
-  const p0=D.post;D.post=function(x,c,C,mat){p0.apply(this,arguments);const sp=rv137('Skyhawk',c);if(BD183T[sp])bd183TailOn(x,sp,C,mat)}}
+  const p0=D.post;D.post=function(x,c,C,mat){p0.apply(this,arguments);const sp=rv137('Skyhawk',c);if(BD184T[sp])bd184TailOn(x,sp,C,mat)}}
 
 // ======================================================================== evolution looks ========================================================================
 // The evolution feathers (crest plumes, shoulder mantles, the Rocsovereign's back cape, the Skyhawk's tail streamers) were
 // tapered cones and rods; they are feather blades now (E.fth). Everything else in the v100 / v150 designs is kept as it was.
-function bd183Fth(E,a,dir,nrm,len,w,t,col,o){return E.pd(bd183G(o&&o.kind||'lance'),t,col,a,dir,[w*2,len,Math.max(.003,w*.24)],nrm,o)}
+function bd184Fth(E,a,dir,nrm,len,w,t,col,o){return E.pd(bd184G(o&&o.kind||'lance'),t,col,a,dir,[w*2,len,Math.max(.003,w*.24)],nrm,o)}
 // Skyhawk (the base design of 1750, with feathers)
-function bd183EvoSky(E,L,P){const M=EVO100_M,hb={bn:'head'};
+function bd184EvoSky(E,L,P){const M=EVO100_M,hb={bn:'head'};
   // L1: a tall swept crest of long plumes, a glowing lightning stripe under each eye, two long tail streamers
   for(let i=-2;i<=2;i++){const a=[i*.024,.925,.4],b=[i*.05,.99+.012*L-Math.abs(i)*.014,.24-Math.abs(i)*.03],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]),len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
-    bd183Fth(E,a,d,[i*.2,1,.4],len,.016,'c',Math.abs(i)%2?P.mainD:P.dark,hb);if(L>=3)bd183Fth(E,E.add(b,d,-.012),d,[i*.2,1,.4],.06,.008,'g',P.glow,hb)}
+    bd184Fth(E,a,d,[i*.2,1,.4],len,.016,'c',Math.abs(i)%2?P.mainD:P.dark,hb);if(L>=3)bd184Fth(E,E.add(b,d,-.012),d,[i*.2,1,.4],.06,.008,'g',P.glow,hb)}
   [-1,1].forEach(s=>{const h=E.on([s*.5,.875,.43],[-s,0,0]);if(h){const o=E.add(h.p,h.n,.003);E.chain([o,E.add(o,[0,-.03,-.022]),E.add(o,[0,-.028,-.035]),E.add(o,[0,-.06,-.05])],.006,.003,'g',P.glow,3,{vs:1})}});
   [-1,1].forEach(s=>{const a=[s*.03,.522,-.5],b=[s*.08,.47,-.95-.05*L],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]),len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
-    bd183Fth(E,a,d,[s*.15,1,0],len,.02,'c',P.mainD,{bn:'tail3'});bd183Fth(E,E.add(a,d,len-.11),d,[s*.15,1,0],.13,.03,'c',P.dark,{bn:'tail3',kind:'contour'})});
+    bd184Fth(E,a,d,[s*.15,1,0],len,.02,'c',P.mainD,{bn:'tail3'});bd184Fth(E,E.add(a,d,len-.11),d,[s*.15,1,0],.13,.03,'c',P.dark,{bn:'tail3',kind:'contour'})});
   if(L>=2){// a feather mantle over the shoulders, bronze talon bands, a bead cord in the crest
     for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=E.on([Math.sin(a)*.5,.8-k*.05,.25+Math.cos(a)*.1-k*.04],[-Math.sin(a),-.2,-.3]);
-      if(h)bd183Fth(E,E.add(h.p,h.n,-.005),E.nrm([h.n[0]*.5,-.3,-1]),h.n,.1-k*.02,.024,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}
+      if(h)bd184Fth(E,E.add(h.p,h.n,-.005),E.nrm([h.n[0]*.5,-.3,-1]),h.n,.1-k*.02,.024,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}
     [-1,1].forEach(s=>{E.band([s*.075,.2,.0],[0,1,0],.004,.009,'m',P.trim,8);E.band([s*.075,.27,.012],[0,1,0],.004,.007,'m',P.trim,8)});
     E.L([0,.96,.3],[0,.89,.21],.003,.003,'c',P.leather,3,hb);[0,1,2].forEach(k=>E.pd('sph',k==1?'g':'c',k==1?P.glow:P.bone,[0,.94-k*.022,.27-k*.02],[0,1,0],.012,null,hb))}
   if(L>=3){// a breastplate with a storm rune, a metal-capped beak
@@ -56055,18 +56055,185 @@ function bd183EvoSky(E,L,P){const M=EVO100_M,hb={bn:'head'};
   if(L>=4){// a sun crown of golden rays above the crest with a storm gem, glowing tail streamer tips
     for(let i=-3;i<=3;i++){const a=i/3*1.25;E.L([0,.95,.36],[Math.sin(a)*.13,.95+Math.cos(a)*.13,.33],.009,.002,'m',P.gold,4,hb)}
     E.pd('oct','g',P.glow,[0,.965,.37],[0,0,1],[.022,.032,.014],null,hb);
-    [-1,1].forEach(s=>{const a=[s*.03,.522,-.5],b=[s*.08,.47,-.95-.05*L],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);bd183Fth(E,E.add(b,d,-.06),d,[s*.15,1,0],.09,.02,'g',P.glow,{bn:'tail3',kind:'contour'})})}
+    [-1,1].forEach(s=>{const a=[s*.03,.522,-.5],b=[s*.08,.47,-.95-.05*L],d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);bd184Fth(E,E.add(b,d,-.06),d,[s*.15,1,0],.09,.02,'g',P.glow,{bn:'tail3',kind:'contour'})})}
   if(L>=5){// lightning arcs crackling around the wing roots
     [-1,1].forEach(s=>{const sh=E.on([s*.5,.74,.14],[-s,-.3,0]),b=sh?E.add(sh.p,sh.n,-.004):[s*.15,.64,.14];E.chain([b,E.add(b,[s*.05,.06,-.02]),E.add(b,[s*.03,.1,-.06]),E.add(b,[s*.08,.15,-.08])],.008,.003,'g',P.glow2,3,{at:b})})}}
 // the outward direction from a bird body's centre line at point a (table T)
-function bd183Out(T,a){const q=dh150At(T,a[2]),n=[a[0],(a[1]-q.y)*.7,0],l=Math.hypot(n[0],n[1])||1;return [n[0]/l,n[1]/l,0]}
+function bd184Out(T,a){const q=dh150At(T,a[2]),n=[a[0],(a[1]-q.y)*.7,0],l=Math.hypot(n[0],n[1])||1;return [n[0]/l,n[1]/l,0]}
 // swap the tapered cones of size (r1, r2) made by an evolution design for feather blades along the same lines
-function bd183Swap(f,T,r1s,r2s,kind,wk,flat){return function(E){const L0=E.L;
+function bd184Swap(f,T,r1s,r2s,kind,wk,flat){return function(E){const L0=E.L;
   E.L=function(a,b,r1,r2,t,col,seg,o){if(Math.abs(r1-r1s)<1e-6&&Math.abs(r2-r2s)<1e-6){let d=E.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);const len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
       if(flat)d=E.nrm([d[0]*flat,d[1]*flat,d[2]]);
-      return bd183Fth(E,a,d,bd183Out(T,a),len,r1*wk,t,col,Object.assign({kind,vs:1},o||{}))}return L0.apply(this,arguments)};
+      return bd184Fth(E,a,d,bd184Out(T,a),len,r1*wk,t,col,Object.assign({kind,vs:1},o||{}))}return L0.apply(this,arguments)};
   try{return f.apply(this,arguments)}finally{E.L=L0}}}
 // Stormtalon: the v150 design with a feathered shoulder mantle (L2); Rocsovereign: with a feathered back cape (L2)
-st150Evo=bd183Swap(st150Evo,ST150.body,.028,.002,'contour',.85);
-rs150Evo=bd183Swap(rs150Evo,RS150.body,.034,.003,'lance',.9,.3); // the cape lies along the back (hanging down it poked out under the folded wings)
-{const D=EVO100.D.Skyhawk,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Skyhawk;if(!sp||sp=='Skyhawk')return bd183EvoSky(E,L,P,c);return b0.apply(this,arguments)}}
+st150Evo=bd184Swap(st150Evo,ST150.body,.028,.002,'contour',.85);
+rs150Evo=bd184Swap(rs150Evo,RS150.body,.034,.003,'lance',.9,.3); // the cape lies along the back (hanging down it poked out under the folded wings)
+{const D=EVO100.D.Skyhawk,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Skyhawk;if(!sp||sp=='Skyhawk')return bd184EvoSky(E,L,P,c);return b0.apply(this,arguments)}}
+// ================= v183: the world painted, not built (owner, Oct 30 2026) =================
+// "Use that new knowledge [docs/MODEL_DETAIL_RECIPE.md, the creature session's method: detail from colour, shading and
+// textures instead of triangles] to revise our maps and environments, all trees, rocks and everything else on every instance
+// on every zone." No triangle is added; the low-poly faceted look stays. Two layers, both on scenery only (never on heroes,
+// monsters, companions, mounts or gear: anything skinned, on a bone, or in a group that holds a skinned body is left alone):
+//
+// 1. Baked shading (ep183Bake): once per geometry, into its vertex colours (free while playing). Per welded corner:
+//    cavity (creases darker, ridges and corners lighter: edge wear), the inside of a mass darker (the heart of a tree crown,
+//    under an overhang), the base darker where it meets the ground, faces turned down darker and a little cooler, faces
+//    turned up a touch warmer. Colour changes follow the form, never random per face.
+// 2. One shared detail texture (ep183Tex: 256² RGBA, made in code at load: R fBm, G cell edges, B a tone per cell, A
+//    streaks), projected in each object's own space (one plane per flat face) (it sticks to the object), its pattern chosen from the surface's
+//    colour: stone (grey, sandstone, brick) gets a few thin cracks (short straight runs of the cell edges, sparse; none on
+//    near-white stone, snow or ice), a tone per stone, pitting and lichen on its tops; bark and wood (dark warm) grain streaks up its upright faces; foliage
+//    (green) soft blotches and lit tops (a cell pattern read as scales on pines: none on foliage); everything a little
+//    mottling. The ground (ENVDET_G) gets only mottling on flat ground, and on slopes and cliffs strata along the level
+//    lines (stepped bands; long cracks read as worms there: none). It replaces the world-space grime of 0060 (GR) on these materials, with the same average
+//    brightness. Tuned on pictures of every zone (test/env_look.py, test/wd_sheet.py EP=1).
+// Materials opt in with the ENVDET define (so the program cache keys stay apart) and a chained onBeforeCompile that hands
+// the shared uniforms over (a texture uniform in ShaderLib would be cloned per material: one GPU copy each).
+// woodRe: the decoration kinds (WD) whose brown parts are wood and get grain; every other kind gets none (decided by what
+// the kind is, not by its colour); scenery outside WD keeps the colour test
+var EP183={woodRe:/tree|log|stump|fallen|snag|palm|pine|oak|root|fence|cart|barrel|coffin|cross|hay|boat|catapult|barricade|stake|tent|banner|totem|crate|ladder|bench|shelf|flag|lamp|brazier/,on:true,s:.46,a:1,kg:'0.9',ko:'1.0',u:null,tex:null,scans:0,ms:0,mats:0,geos:0,bakeMs:0,kinds:0};
+function ep183Hash(x,y,s){let h=(x*374761393+y*668265263+s*1442695041)|0;h=Math.imul(h^(h>>>13),1274126177);return ((h^(h>>>16))>>>0)/4294967296}
+// periodic value noise (period p cells) and the texture
+function ep183VN(x,y,px,py,s){const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),mx=a=>((a%px)+px)%px,my=a=>((a%py)+py)%py;
+  const a=ep183Hash(mx(xi),my(yi),s),b=ep183Hash(mx(xi+1),my(yi),s),c=ep183Hash(mx(xi),my(yi+1),s),d=ep183Hash(mx(xi+1),my(yi+1),s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N*N*4),R=new Float32Array(N*N),Gc=new Float32Array(N*N),Bc=new Float32Array(N*N),A=new Float32Array(N*N);
+  const C=7,pts=[];for(let j=0;j<C;j++)for(let i=0;i<C;i++)pts.push([i+.15+.7*ep183Hash(i,j,91),j+.15+.7*ep183Hash(i,j,92)]);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const k=y*N+x,u=x/N,v=y/N;
+    let f=0,am=.5,tot=0;for(let o=0;o<5;o++){const p=4<<o;f+=ep183VN(u*p,v*p,p,p,o+1)*am;tot+=am;am*=.55}R[k]=f/tot;
+    // cells: distance to the nearest and the second nearest point (wrapped), and the nearest cell's id
+    const cx=u*C,cy=v*C,ix=Math.floor(cx),iy=Math.floor(cy);let f1=9,f2=9,id=0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const gx=ix+dx,gy=iy+dy,wx=((gx%C)+C)%C,wy=((gy%C)+C)%C,P=pts[wy*C+wx],px=P[0]+(gx-wx),py=P[1]+(gy-wy),d=Math.hypot(px-cx,py-cy);
+      if(d<f1){f2=f1;f1=d;id=wy*C+wx}else if(d<f2)f2=d}
+    Gc[k]=Math.min(1,(f2-f1)*1.6);Bc[k]=ep183Hash(id,id*7+3,93)*.75+.25*ep183VN(u*16,v*16,16,16,9);
+    // streaks: fine across (u), long along (v)
+    let s=0;am=.6;tot=0;for(let o=0;o<3;o++){const px=32<<o,py=2<<o;s+=ep183VN(u*px,v*py,px,py,20+o)*am;tot+=am;am*=.5}A[k]=s/tot}
+  const st=a=>{let lo=1,hi=0;for(const x of a){if(x<lo)lo=x;if(x>hi)hi=x}const r=1/Math.max(1e-4,hi-lo);for(let i=0;i<a.length;i++)a[i]=(a[i]-lo)*r};st(R);st(A);st(Bc);
+  for(let k=0;k<N*N;k++){D[k*4]=R[k]*255;D[k*4+1]=Gc[k]*255;D[k*4+2]=Bc[k]*255;D[k*4+3]=A[k]*255}
+  const t=new THREE.DataTexture(D,N,N,THREE.RGBAFormat);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps=true;try{t.anisotropy=Math.min(4,ren.capabilities.getMaxAnisotropy()||1)}catch(e){}t.needsUpdate=true;return EP183.tex=t}
+// ---- the shader (ShaderLib text, only compiled in where ENVDET is defined) ----
+(function(){
+  const VD='\n#ifdef ENVDET\nvarying vec3 vEdP,vEdW;\n#endif\n',
+    VC=`
+#ifdef ENVDET
+{vec4 ep=vec4(transformed,1.);
+#ifdef USE_INSTANCING
+ ep=instanceMatrix*ep;
+#endif
+ vEdW=(modelMatrix*ep).xyz;vEdP=ep.xyz*vec3(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz),length(modelMatrix[2].xyz));}
+#endif
+`,FD='\n#ifdef ENVDET\nvarying vec3 vEdP,vEdW;uniform sampler2D uEdT;uniform float uEdS,uEdA;\n#endif\n',
+    FC=`
+#ifdef ENVDET
+{vec3 eP=vEdP*uEdS;vec3 nP=abs(cross(dFdx(vEdP),dFdy(vEdP)));
+ // flat faces: one projection per face, the plane the face looks along most (a triplanar blend costs three reads per layer
+ // and only matters on smooth surfaces); v runs up the object on upright faces, so streaks and grain run up them
+ float px=step(nP.y,nP.x)*step(nP.z,nP.x),py=(1.-px)*step(nP.z,nP.y);
+ #define EDUV(q) mix(mix((q).xy,(q).xz,py),(q).zy,px)
+ vec3 nW=normalize(cross(dFdx(vEdW),dFdy(vEdW)));if(dot(nW,cameraPosition-vEdW)<0.)nW=-nW;
+ vec4 tA=texture2D(uEdT,EDUV(eP));
+ vec3 e2=eP*.43+vec3(.31,.17,.53);
+ vec4 tB=texture2D(uEdT,EDUV(e2));
+ vec3 c=diffuseColor.rgb;float mx=max(c.r,max(c.g,c.b))+.002,mn=min(c.r,min(c.g,c.b)),sat=(mx-mn)/mx,lum=dot(c,vec3(.3,.59,.11));
+ float fol=smoothstep(.02,.13,(c.g-max(c.r,c.b))/mx);
+ float warm=smoothstep(.1,.3,(c.r-c.b)/mx);float ice=smoothstep(.04,.18,(c.b-c.r)/mx);   // warm: wood, sandstone; blue-white: ice, crystal, frost
+ float wood=warm*(1.-fol)*(1.-smoothstep(.24,.48,lum))*smoothstep(.32,.5,sat);   // bark and wood: darker, more saturated browns than sandstone
+#ifdef ENVDET_NW
+ wood=0.;   // a decoration kind that is not wooden (an arch post of brown stone read as planks)
+#endif
+ float stn=(1.-fol)*(1.-wood)*(1.-smoothstep(.38,.62,sat))*(1.-ice);
+ float bri=smoothstep(.45,.9,lum);float vrt=1.-abs(nW.y);
+ float d=((tB.r-.5)*.24+(tA.r-.5)*.12)*(1.-.65*ice);   // ice and crystal: only a soft brightness variation
+#ifndef ENVDET_G
+ // cracks: thin pieces of the cell edges (straight runs, sharp turns), only where a sparse mask lets them through; none on
+ // near-white stone, snow and ice (they read as veins there), and the stone's own tone and pitting softer on bright stone
+ float ck=(1.-smoothstep(.012,.04,tB.g))*smoothstep(.52,.66,tA.r*.5+tB.b*.5)*(1.-smoothstep(.62,.95,lum));
+ d+=stn*(-ck*.42+((tB.b-.5)*.13+(tA.r-.5)*.2)*(1.-.55*bri));
+ float lic=stn*smoothstep(.15,.7,nW.y)*smoothstep(.5,.64,tB.r*.7+tA.r*.3)*(1.-smoothstep(.28,.55,lum))*(1.-warm);   // lichen on the tops of grey stones (never pale or warm desert stone)
+ diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.86,.96,.62),lic*.8*uEdA);
+ d+=wood*(tA.a-.5)*1.5*(.3+.7*vrt);
+ d+=fol*((tA.r-.5)*.3+nW.y*.1);   // foliage: soft blotches and lit tops (a cell pattern read as scales: no cells here)
+#else
+ vec3 e3=vEdP*uEdS*.11+vec3(.7,.2,.4);
+ vec4 tC=texture2D(uEdT,EDUV(e3));
+ float sl=smoothstep(.3,.65,vrt),hz=dot(vEdP.xz,vec2(.7,.7))*uEdS;
+ // strata: bands of rock along the level lines, uneven in spacing and thickness (two scales mixed), with a harder edge so
+ // they read as ledges; softer up close (they read as stripes there) and on pale rock and snow
+ float yb=vEdP.y*uEdS;float sa=smoothstep(.4,.6,texture2D(uEdT,vec2(yb*.55,hz*.012+.37)).r*.6+texture2D(uEdT,vec2(yb*.19+.5,hz*.007+.81)).r*.4);
+ float sk=smoothstep(4.,26.,length(cameraPosition-vEdW))*.7+.3;
+ d=(tC.r-.5)*.38+(tB.r-.5)*.14+fol*(tA.r-.5)*.12;
+  d+=sl*(1.-fol)*((sa-.5)*.32*sk*(1.-.8*bri)+(tC.b-.5)*.08+(tA.r-.5)*.12);   // (long cracks on cliffs read as worms: none)
+#endif
+ diffuseColor.rgb*=.93*clamp(1.+d*uEdA*ENVDET_K,.45,1.4);}
+#endif
+`,GR='\n{float n1=psxN(vPsxW*2.3),n2=psxN(vPsxW*.55+7.);diffuseColor.rgb*=.78+.3*n1+.16*(n2-.5);}\n';
+  ['standard','physical','lambert','phong'].forEach(k=>{const L=THREE.ShaderLib[k];if(!L||L.ep183)return;L.ep183=1;
+    L.vertexShader=VD+L.vertexShader.replace('#include <project_vertex>','#include <project_vertex>'+VC);
+    let f=L.fragmentShader;if(f.indexOf(GR)>=0)f=f.replace(GR,'\n#ifndef ENVDET'+GR+'#endif\n');
+    L.fragmentShader=FD+f.replace('#include <color_fragment>','#include <color_fragment>'+FC)})})();
+// ---- materials: opt in (scenery) or stay out for good (anything a character uses) ----
+function ep183Uni(){if(!EP183.u)EP183.u={t:{value:ep183Tex()},s:{value:EP183.s},a:{value:EP183.a}};return EP183.u}
+function ep183Hook(m){const P=THREE.Material.prototype;if(m.onBeforeCompile&&m.onBeforeCompile._ep183)return;
+  const prev=m.onBeforeCompile,ck=m.customProgramCacheKey,U=ep183Uni();
+  const f=function(sh,r){if(prev&&prev!==P.onBeforeCompile)prev.call(this,sh,r);sh.uniforms.uEdT=U.t;sh.uniforms.uEdS=U.s;sh.uniforms.uEdA=U.a};f._ep183=1;
+  const pk=ck&&ck!==P.customProgramCacheKey&&!ck._ep183?()=>ck.call(m):()=>(prev?String(prev):'');const nk=()=>pk()+'|ep183';nk._ep183=1;
+  m.onBeforeCompile=f;m.customProgramCacheKey=nk;m.needsUpdate=true}
+function ep183Mat(m,K){if(!m||m.userData.ep183No)return;if(!m.defines)m.defines={};
+  if(m.defines.ENVDET===undefined||m.defines.ENVDET_K!==K){m.defines.ENVDET='';m.defines.ENVDET_K=K;m.needsUpdate=true;if(!m.userData.ep183)EP183.mats++}
+  m.extensions=Object.assign(m.extensions||{},{derivatives:true});m.userData.ep183=1;ep183Hook(m)}
+function ep183Out(m){if(!m||m.userData.ep183No)return;m.userData.ep183No=1;
+  if(m.defines&&m.defines.ENVDET!==undefined){delete m.defines.ENVDET;delete m.defines.ENVDET_K;m.needsUpdate=true;EP183.mats--}}
+function ep183Ok(m){return !!m&&(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial)&&!m.skinning&&!(m.transparent&&m.opacity<.98)&&!m.userData.lpsSkip}
+// ---- baked shading: once per geometry ----
+function ep183Bake(g,o){if(!g||g.userData.ep183b)return;g.userData.ep183b=1;const P=g.attributes.position,C=g.attributes.color;
+  if(!P||!C||C.itemSize<3||P.count<24||P.count>2e5)return;const T0=performance.now(),n=P.count,I=g.index?g.index.array:null,nt=I?I.length/3:n/3;
+  let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;for(let i=0;i<n;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;if(z<z0)z0=z;if(z>z1)z1=z}
+  const H=y1-y0,Sz=Math.max(x1-x0,H,z1-z0,1e-3),q=2e4/Sz,mp=new Map(),id=new Int32Array(n);let m=0;const VX=[];
+  for(let i=0;i<n;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),k=Math.round(x*q)+'_'+Math.round(y*q)+'_'+Math.round(z*q);let w=mp.get(k);if(w===undefined){w=m++;mp.set(k,w);VX.push(x,y,z)}id[i]=w}
+  const NN=new Float32Array(m*3),nb=Array.from({length:m},()=>[]),cr=(a,b)=>{const L=nb[a];if(L.indexOf(b)<0)L.push(b)};
+  for(let t=0;t<nt;t++){const a=I?I[t*3]:t*3,b=I?I[t*3+1]:t*3+1,c=I?I[t*3+2]:t*3+2,A=id[a],B=id[b],Cc=id[c];if(A===B||B===Cc||A===Cc)continue;
+    const ux=VX[B*3]-VX[A*3],uy=VX[B*3+1]-VX[A*3+1],uz=VX[B*3+2]-VX[A*3+2],vx=VX[Cc*3]-VX[A*3],vy=VX[Cc*3+1]-VX[A*3+1],vz=VX[Cc*3+2]-VX[A*3+2];
+    const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;for(const w of [A,B,Cc]){NN[w*3]+=nx;NN[w*3+1]+=ny;NN[w*3+2]+=nz}
+    cr(A,B);cr(B,A);cr(B,Cc);cr(Cc,B);cr(A,Cc);cr(Cc,A)}
+  let tv=new Float32Array(m),mean=0;
+  for(let w=0;w<m;w++){let l=Math.hypot(NN[w*3],NN[w*3+1],NN[w*3+2])||1;NN[w*3]/=l;NN[w*3+1]/=l;NN[w*3+2]/=l;
+    let dx=0,dy=0,dz=0;for(const j of nb[w]){const ex=VX[j*3]-VX[w*3],ey=VX[j*3+1]-VX[w*3+1],ez=VX[j*3+2]-VX[w*3+2],el=Math.hypot(ex,ey,ez)||1;dx+=ex/el;dy+=ey/el;dz+=ez/el}
+    const dl=Math.hypot(dx,dy,dz);tv[w]=dl<1e-5?.5:Math.acos(Math.max(-1,Math.min(1,(NN[w*3]*dx+NN[w*3+1]*dy+NN[w*3+2]*dz)/dl)))/Math.PI}
+  for(let k=0;k<2;k++){const t2=new Float32Array(m);for(let w=0;w<m;w++){let s=tv[w];for(const j of nb[w])s+=tv[j];t2[w]=s/(nb[w].length+1)}tv=t2}
+  for(let w=0;w<m;w++)mean+=tv[w];mean/=Math.max(1,m);
+  const cx=(x0+x1)/2,cy=(y0+y1)/2,cz=(z0+z1)/2,hx=Math.max(1e-3,(x1-x0)/2),hy=Math.max(1e-3,H/2),hz=Math.max(1e-3,(z1-z0)/2),hg=Math.min(.6,Math.max(.12,H*.22)),
+    sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},K=o||{},kc=K.cav==null?1:K.cav;
+  const F=new Float32Array(m*3);
+  for(let w=0;w<m;w++){const x=VX[w*3],y=VX[w*3+1],z=VX[w*3+2],ny=NN[w*3+1];
+    let f=1+Math.max(-.3,Math.min(.14,(tv[w]-mean)*1.5))*kc;                                         // crease darker, ridge lighter
+    f*=.8+.2*sm(.2,.9,Math.hypot((x-cx)/hx,(y-cy)/hy,(z-cz)/hz));                                    // heart of the mass darker
+    if(K.ground)f*=.7+.3*sm(0,hg,y-y0);                                                             // where it meets the ground
+    f*=.8+.24*sm(-.75,.55,ny);                                                                     // turned down: darker
+    const dn=sm(.15,-.75,ny)*.55,up=sm(.35,1,ny);                                                   // ... and cooler; turned up: warmer
+    F[w*3]=f*(1-.13*dn)*(1+.035*up);F[w*3+1]=f*(1-.06*dn)*(1+.015*up);F[w*3+2]=f*(1+.1*dn)*(1-.03*up)}
+  for(let i=0;i<n;i++){const w=id[i];C.setXYZ(i,C.getX(i)*F[w*3],C.getY(i)*F[w*3+1],C.getZ(i)*F[w*3+2])}
+  C.needsUpdate=true;EP183.geos++;EP183.bakeMs+=performance.now()-T0}
+// the scattered decorations (WD kinds) at load: weathered and graded already (v177), and their base darkening is in the weathering
+function ep183Kinds(){if(typeof WD=='undefined'||!WD||!WD.T)return;const T0=performance.now();
+  for(const k in WD.T){const S=WD.T[k];if(!S||!S.parts)continue;EP183.kinds++;const w=EP183.woodRe.test(k);S.parts.forEach(p=>{if(!p.glow&&!p.mat&&p.g){p.g.userData.ep183nw=!w;try{ep183Bake(p.g,{ground:false})}catch(e){}}})}
+  EP183.kindMs=Math.round(performance.now()-T0)}
+// ---- the scan: every scenery mesh in the world opts in, anything a character uses stays out ----
+function ep183Scan(){if(!EP183.on||typeof scene=='undefined')return;const T0=performance.now(),cm=new Map(),isC=a=>{let v=cm.get(a);if(v===undefined){v=!!a.isBone||a.children.some(c=>c.isSkinnedMesh);cm.set(a,v)}return v};EP183.scans++;
+  if(typeof GTX!='undefined'&&GTX.list)GTX.list.forEach(T=>{const m=T.mat;if(m&&!m.userData.ep183){ep183Mat(m,EP183.kg);m.defines.ENVDET_G=''}});
+  const full=EP183.scans%8===1;   // a mesh seen before is looked at again in full every 8th scan (~12 s): it may have joined a character since
+  scene.traverse(o=>{if(!o.isMesh||!o.material)return;
+    if(!full&&o._ep183===o.material){const m=o.material;if(m.userData&&m.userData.ep183===1&&!(m.onBeforeCompile&&m.onBeforeCompile._ep183))ep183Hook(m);return}
+    o._ep183=o.material;
+    let ch=!!o.isSkinnedMesh;if(!ch){let a=o.parent;while(a&&a!==scene){if(isC(a)){ch=true;break}a=a.parent}}
+    const ms=Array.isArray(o.material)?o.material:[o.material];
+    for(const m of ms){if(!m)continue;if(ch){ep183Out(m);continue}if(m.userData.ep183No)continue;
+      if(m.userData.ep183===1){if(!m.onBeforeCompile||!m.onBeforeCompile._ep183)ep183Hook(m);continue}
+      if(m.userData.ep183===-1||!ep183Ok(m)){m.userData.ep183=-1;continue}
+      ep183Mat(m,EP183.ko);if(o.geometry&&o.geometry.userData.ep183nw&&m.defines.ENVDET_NW===undefined){m.defines.ENVDET_NW='';m.needsUpdate=true}}
+    if(!ch&&o.geometry&&!o.geometry.userData.ep183b&&o.geometry.attributes.color&&ms.some(m=>m&&m.userData.ep183===1&&m.vertexColors)){
+      const bb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox),h=bb.max.y-bb.min.y;
+      try{ep183Bake(o.geometry,{ground:Math.abs(bb.min.y)<Math.max(.05,h*.08)})}catch(e){}}});
+  EP183.ms=Math.round((performance.now()-T0)*10)/10}
+try{ep183Uni();ep183Kinds();ep183Scan()}catch(e){console.warn('v183 env paint',e)}
+setInterval(()=>{try{ep183Scan()}catch(e){}},2500);

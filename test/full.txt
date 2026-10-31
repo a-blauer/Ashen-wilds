@@ -106,6 +106,7 @@ v167_combat.py
 v168_tiers.py
 v168_ground.py
 v177_env.py
+v183_env_paint.py
 v172_edge_cam.py
 FAST=0 kqd_detail.py
 SP=Foxlet,Ashwolf,Emberlynx,Direfang,Skollmaw SETS=base,fuse v180_comp_float.py
@@ -114,7 +115,7 @@ SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=base,fuse v180_comp_float
 SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=trait,var v180_comp_float.py
 SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=base,fuse v180_comp_float.py
 SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=trait,var v180_comp_float.py
-v183_bird_wings.py
+v184_bird_wings.py
 SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=base,fuse v180_comp_float.py
 SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=trait,var v180_comp_float.py
 SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=base,fuse v180_comp_float.py

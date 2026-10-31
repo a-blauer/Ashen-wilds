@@ -23,7 +23,7 @@ function lfNearS(n,x,y,z){const P=lfSurf(n);let b=1e9,k=0;for(let i=0;i<P.length
 function lfBoneAt(n,x,y,z){const sp=(typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n,C=0x808080,G=LPR[n].geo(C,{g:[sp],cl:[C],v:'',tr:'',f:0,z:1}),P=G.attributes.position.array,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight;
   if(!SI)return null;let b=1e9,k=0;for(let i=0;i<P.length;i+=3){const d=(P[i]-x)**2+(P[i+1]-y)**2+(P[i+2]-z)**2;if(d<b){b=d;k=i/3}}
   let bi=SI.getX(k),bw=SW.getX(k);[['getY'],['getZ'],['getW']].forEach(([f])=>{if(SW[f](k)>bw){bw=SW[f](k);bi=SI[f](k)}});return Object.keys(SPEC[n].bones)[bi]||null}
-// v183: the skin weights of the body vertex nearest (x,y,z) as [[bone, weight]..] (null when the body has none): a borrowed fusion
+// v184: the skin weights of the body vertex nearest (x,y,z) as [[bone, weight]..] (null when the body has none): a borrowed fusion
 // part set there moves with the skin under it (rigid on one bone it came 4 cm off a fused Rocsovereign's breast in a bite, where
 // the skin is 60% chest, 40% neck)
 var LFW={};

@@ -183,7 +183,7 @@ function bakeMesh(parts,O,key,basic){
         const a=pa[i*3]*p.sx,b=pa[i*3+1]*p.sy,c=pa[i*3+2]*p.sz,a1=a*cz-b*sz,b1=a*sz+b*cz;
         P.push(a1+p.x,b1*cx-c*sx+p.y,b1*sx+c*cx+p.z);
         const u=na[i*3]/p.sx,w=na[i*3+1]/p.sy,q=na[i*3+2]/p.sz,n1=u*cz-w*sz,m1=u*sz+w*cz,m2=m1*cx-q*sx,n3=m1*sx+q*cx,l=Math.hypot(n1,m2,n3)||1;
-        Nn.push(n1/l,m2/l,n3/l);Cc.push(col.r,col.g,col.b);if(p.bw){for(let j=0;j<4;j++){const e=p.bw[j];SI.push(e?Math.max(0,O.indexOf(e[0])):0);SW.push(e?e[1]:0)}}else{SI.push(bi,0,0,0);SW.push(1,0,0,0)} // v183: p.bw [[bone, weight]..] skins a part like the body under it
+        Nn.push(n1/l,m2/l,n3/l);Cc.push(col.r,col.g,col.b);if(p.bw){for(let j=0;j<4;j++){const e=p.bw[j];SI.push(e?Math.max(0,O.indexOf(e[0])):0);SW.push(e?e[1]:0)}}else{SI.push(bi,0,0,0);SW.push(1,0,0,0)} // v184: p.bw [[bone, weight]..] skins a part like the body under it
       }
       if(ix)for(let i=0;i<ix.length;i++)IX.push(ix[i]+off);else for(let i=0;i<cnt;i++)IX.push(i+off);
       off+=cnt;

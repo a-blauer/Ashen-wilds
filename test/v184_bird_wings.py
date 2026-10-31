@@ -1,4 +1,4 @@
-# v183 bird wings: the Skyhawk, Stormtalon and Rocsovereign build feathered wings (3396) and details (3397) without errors at
+# v184 bird wings: the Skyhawk, Stormtalon and Rocsovereign build feathered wings (3396) and details (3397) without errors at
 # every evolution, fold along the body when standing, half open when walking, spread when attacking, share their geometries
 # between instances (nothing made per creature), have no NaN, and the folded wing stays outside the body.
 # Prints FAIL lines on a wrong result.
@@ -11,13 +11,13 @@ JS=r"""()=>{const out={fails:[],info:[]},F=s=>out.fails.push(s),V=THREE.Vector3;
   ['Skyhawk','Stormtalon','Rocsovereign'].forEach(sp=>[0,1,3].forEach(evo=>{let g;
     try{const c=mkC(sp,30,0,'');c.tr='';c.z=1;c.evo=evo;g=cr(c)}catch(e){F(sp+' evo '+evo+': build error '+e);return}
     scene.add(g);g.position.set(0,0,0);g.rotation.set(0,0,0);
-    const B=g.bw183;if(!B){F(sp+' evo '+evo+': no v183 wings');scene.remove(g);return}
+    const B=g.bw184;if(!B){F(sp+' evo '+evo+': no v184 wings');scene.remove(g);return}
     if(B.W.m.length!=2)F(sp+': '+B.W.m.length+' wing meshes (want 2)');
     tick(g,700,false);const fIdle=B.f;if(fIdle<.95)F(sp+' evo '+evo+': wings not folded standing (fold '+fIdle.toFixed(2)+')');
     // the folded wing stays outside the body loft (at most 3% of its vertices more than 1 cm inside)
     {const m=B.W.m[1],P=m.geometry.attributes.position,v=new V();let bad=0,nan=0;const k=g.bs||1;
       for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);if(!isFinite(v.x+v.y+v.z)){nan++;continue}v.applyMatrix4(m.matrixWorld).multiplyScalar(1/k);
-        if(v.x>0&&bw183Push(tabs[sp],v.x,v.y,v.z,-.01))bad++}
+        if(v.x>0&&bw184Push(tabs[sp],v.x,v.y,v.z,-.01))bad++}
       const fr=bad/(P.count/3);if(nan)F(sp+': '+nan+' NaN wing vertices');if(fr>.03)F(sp+' evo '+evo+': '+(fr*100).toFixed(1)+'% of the folded wing inside the body');
       out.info.push(sp+' evo '+evo+' fold '+fIdle.toFixed(2)+' inside '+(fr*100).toFixed(1)+'% tris '+P.count/3)}
     tick(g,900,true,1.6);const fWalk=B.f;if(fWalk<.75)F(sp+': wings open while walking (fold '+fWalk.toFixed(2)+', want folded > .75)');
@@ -28,9 +28,9 @@ JS=r"""()=>{const out={fails:[],info:[]},F=s=>out.fails.push(s),V=THREE.Vector3;
     out.info.push(sp+' evo '+evo+' walk '+fWalk.toFixed(2)+' attack '+fAtk.toFixed(2)+' beat '+flap.toFixed(2));
     scene.remove(g)}));
   // shared geometries: a second Skyhawk uses the same wing geometry objects and adds no cache entries
-  {const n0=Object.keys(BW183.G).length,mk=()=>{const c=mkC('Skyhawk',30,0,'');c.tr='';c.z=1;c.evo=0;return cr(c)},a=mk(),b=mk();
-    if(a.bw183.W.m[0].geometry!==b.bw183.W.m[0].geometry)F('two Skyhawks do not share their wing geometry');
-    if(Object.keys(BW183.G).length!=n0)F('a second Skyhawk made new wing caches ('+n0+' → '+Object.keys(BW183.G).length+')')}
+  {const n0=Object.keys(BW184.G).length,mk=()=>{const c=mkC('Skyhawk',30,0,'');c.tr='';c.z=1;c.evo=0;return cr(c)},a=mk(),b=mk();
+    if(a.bw184.W.m[0].geometry!==b.bw184.W.m[0].geometry)F('two Skyhawks do not share their wing geometry');
+    if(Object.keys(BW184.G).length!=n0)F('a second Skyhawk made new wing caches ('+n0+' → '+Object.keys(BW184.G).length+')')}
   return out}"""
 def s(pg):
     errs=[];pg.on('console',lambda m: errs.append(m.text) if m.type=='error' else None)
@@ -38,7 +38,7 @@ def s(pg):
     r=pg.evaluate(JS)
     for i in r['info']:print(' ',i)
     for e in errs:
-        if 'bw183' in e or 'bd183' in e or 'low-poly rig failed' in e or 'evo100' in e:r['fails'].append('console error: '+e[:200])
+        if 'bw184' in e or 'bd184' in e or 'low-poly rig failed' in e or 'evo100' in e:r['fails'].append('console error: '+e[:200])
     for f in r['fails']:print('FAIL',f)
-    print('v183 bird wings:','FAIL' if r['fails'] else 'PASS',len(r['fails']),'problems')
+    print('v184 bird wings:','FAIL' if r['fails'] else 'PASS',len(r['fails']),'problems')
 play.run(s,w=900,hh=600)
