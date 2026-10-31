@@ -29,7 +29,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     tent,aTent,table,rack,dummy,drum,cauldron,sack,skull,skullPole,bones,bonePile,ribcage,femur,grave,coffin,carcass,reeds,shroom,crystals,deadTree,log,stump,web,cocoon,eggs,nest,
     hole,mound,figure,cage,chainPost,roseBush,catapult,mausoleum,palm,leanTo,ice,shell,meatRack,antlers,husk,burrowMouth,steam,ladder,Q}=K;
   const TAU=6.2832,P2=Math.PI/2,r=o.r,rc=o.rc,rf=o.rf,fk=rec.f,DW=MAP.DW,big=r>=rc+5,Lc=rec.l&&rec.l.length?rec.l:[pal.fire];
-  const WOOD=S(pal.wood),WD=S(pal.woodD),BONE=S(pal.bone),STN=S(pal.stone),STD=S(pal.stoneD),MET=S(pal.metal,{metalness:.6,roughness:.45}),DARK=G(0x080606);
+  const WOOD=S(pal.wood),WD=S(pal.woodD),BONE=S(pal.bone),STN=S(pal.stone),STD=S(pal.stoneD),MET=S(pal.metal,{metalness:.6,roughness:.45}),DARK=ep185Grad('door');   // v185: doorways with depth (was flat black)
   // world checks in camp space
   const tile=(x,z)=>{const X=Math.round(C.x+x),Z=Math.round(C.z+z);return MAP[Z]&&MAP[Z][X]};
   const ground=(x,z,m)=>{const X=Math.round(C.x+x),Z=Math.round(C.z+z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='~'||insAt(X,Z)!==I)return false;return DW[Z*W+X]<-(m==null?.6:m)};

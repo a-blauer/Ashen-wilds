@@ -172,7 +172,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const keep=o=>{o.userData.keep=1;o.castShadow=false;return o};
   const anim=(o,k,a,sp)=>{keep(o);CS123.an.push({C,o,k,a:a||.2,sp:sp||1,y0:o.position.y,x0:o.position.x,z0:o.position.z,ph:rn()*TAU,s0:o.scale.clone()});return o};
   const flame=(x,y,z,col,k,inner)=>{k=k||1;const f1=put(Q.cone,G(col||0xff7a1a),x,y+.2*k,z,.2*k,.55*k,.2*k),f2=put(Q.cone,G(inner||0xffd36a),x,y+.14*k,z,.1*k,.32*k,.1*k);f1.castShadow=f2.castShadow=false;CFL.push(f1,f2);return f1};
-  const halo=(x,z,r,col,op,y)=>{const o=put(Q.disc,T(col,op||.2),x,y||.05,z,r,r,1,-P2);o.castShadow=false;return o};
+  const halo=(x,z,r,col,op,y)=>{const o=put(Q.disc,ep185Soft(col,op||.2),x,y||.05,z,r,r,1,-P2);o.castShadow=false;return o};   // v185: a soft pool of light (was a flat disc with a hard edge)
   // ground decals that follow the terrain (r0..r1 ring, wobbly edge)
   const patch=(x,z,r0,r1,col,op,lift,lob)=>{const geo=new THREE.RingGeometry(r0,r1,22,3),P=geo.attributes.position,sd=rn()*6;
     for(let k=0;k<P.count;k++){const px=P.getX(k),py=P.getY(k),an=Math.atan2(py,px),w=1+.14*Math.sin(an*(lob||5)+sd)+.07*Math.sin(an*11+sd*2),wx=x+px*w,wz=z-py*w;P.setXYZ(k,wx,GH(C.x+wx,C.z+wz)+(lift||.04),wz)}
@@ -321,7 +321,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     TQ(sg,Q.cyl,S(0x3a2a1a),0,1.05*k,0,.24*k,3.6*k,.24*k,0,0,P2);TQ(sg,Q.cone,S(0x3a3a40,{metalness:.7}),1.95*k,1.05*k,0,.3*k,.5*k,.3*k,0,0,-P2);
     [-1,1].forEach(s=>TQ(sg,Q.box,S(0x5a4a38),0,2.05*k,.45*k*s,2.8*k,.08*k,1.05*k,s*.55,0,0))};
   const mausoleum=(x,z,a,k,col,roof)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.6*k);take(x,z,2.4*k);TQ(sg,Q.box,M,0,.12*k,0,3.4*k,.36*k,3*k);TQ(sg,Q.box,M,-.2*k,1.3*k,0,2.6*k,2.2*k,2.4*k);
-    [-1,1].forEach(s=>TQ(sg,Q.box,S(roof||col),-.2*k,2.72*k,.68*k*s,2.9*k,.14*k,1.65*k,s*.6,0,0));TQ(sg,Q.box,S(0x0a0808),1.11*k,1*k,0,.04,1.5*k,.9*k);
+    [-1,1].forEach(s=>TQ(sg,Q.box,S(roof||col),-.2*k,2.72*k,.68*k*s,2.9*k,.14*k,1.65*k,s*.6,0,0));TQ(sg,Q.box,ep185Grad('door'),1.11*k,1*k,0,.04,1.5*k,.9*k);
     [-1,1].forEach(s=>TQ(sg,Q.cyl,M,1.28*k,1.2*k,.95*k*s,.15*k,2.1*k,.15*k));TQ(sg,Q.box,M,1.24*k,2.35*k,0,.42*k,.3*k,2.3*k);TQ(sg,Q.cone4,M,-.2*k,3.55*k,0,.12*k,.6*k,.12*k);return sg};
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
@@ -348,7 +348,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const scarab=(x,z,a,k,col,gl)=>{const sg=sub(x,z,a,0),M=S(col,{metalness:.5,roughness:.4});blk(x,z,k>1?.6*k:0);take(x,z,.8*k);TQ(sg,Q.box,S(0xb8945a),0,.15*k,0,1.6*k,.3*k,1.2*k);
     TQ(sg,Q.hemi,M,-.1*k,.3*k,0,.7*k,.5*k,.55*k);TQ(sg,Q.sph,M,.55*k,.45*k,0,.22*k,.18*k,.26*k);TQ(sg,Q.box,M,-.1*k,.55*k,0,.9*k,.02,.02);[-1,1].forEach(s=>[-.3,0,.3].forEach(q=>TQ(sg,Q.box,M,q*k,.3*k,.6*k*s,.06*k,.06*k,.3*k,s*.4,0,0)));
     if(gl){const o=TQ(sg,Q.sph,G(gl),.73*k,.5*k,0,.06*k,.06*k,.06*k);o.castShadow=false}};
-  const burrowMouth=(x,z,a,k,col)=>{const sg=sub(x,z,a,-.3*k);TQ(sg,Q.arc,S(col),0,0,0,1.1*k,1.2*k,2.6*k,0,P2,0);const d=TQ(sg,Q.disc,G(0x040302),-.15*k,.05,0,1*k,1*k,1,0,-P2,0);d.castShadow=false;take(x,z,1.3*k);blk(x-Math.cos(a)*.4,z-Math.sin(a)*.4,.6*k)};
+  const burrowMouth=(x,z,a,k,col)=>{const sg=sub(x,z,a,-.3*k);TQ(sg,Q.arc,S(col),0,0,0,1.1*k,1.2*k,2.6*k,0,P2,0);const d=TQ(sg,Q.disc,ep185Grad('hole'),-.15*k,.05,0,1*k,1*k,1,0,-P2,0);d.castShadow=false;take(x,z,1.3*k);blk(x-Math.cos(a)*.4,z-Math.sin(a)*.4,.6*k)};
   const steam=(x,z,col,k)=>{const o=put(Q.cone,T(col||0xb0ffa0,.18),x,1.1*(k||1),z,.4*(k||1),2.2*(k||1),.4*(k||1),Math.PI,0,0);anim(o,'puff',.25,.8)};
   const wisp=(x,y,z,col,k)=>{k=k||1;const sg=new THREE.Group();sg.position.set(x,gy(x,z)+y,z);TQ(sg,Q.sph,G(col),0,0,0,.09*k,.09*k,.09*k);TQ(sg,Q.sph,T(col,.22),0,0,0,.24*k,.24*k,.24*k);g.add(sg);anim(sg,'bob',.35,rr(.6,1.2));return sg};
   const ladder=(x,z,a,h,col)=>{const sg=sub(x,z,a,0),M=S(col||0x4a3220);take(x,z,.7);[-1,1].forEach(s=>TQ(sg,Q.box,M,.4,h/2,.28*s,.07,h,.07,0,0,-.35));for(let i=1;i<h/.4;i++){const y=i*.4*Math.cos(.35);TQ(sg,Q.box,M,.4+Math.tan(.35)*(y-h/2),y,0,.05,.05,.56)}};   // v177: rungs follow the rails' lean (they leaned the other way, off the ladder)
@@ -488,7 +488,7 @@ function cs123Designs(K){
     out(9,.76,(x,z)=>{rock(x,z,rr(.9,1.5),0x7a7a6a,.55);for(let i=0;i<4;i++)put(Q.hemi,S(0xd8d4c4),x+rr(-.5,.5),.35,z+rr(-.5,.5),.12,.1,.12)});
     scat(6,1,R*.8,.4,(x,z)=>reeds(x,z,0x2a4a3a,4))},
   '1_2_2':()=>{ // Cliffside Lair: a cave mouth in the cliff face, fallen boulders below, a kill at the entrance
-    const [cx,cz]=A(R*.16,0),a=AN+Math.PI,sg=sub(cx,cz,a,0);TQ(sg,Q.arc,S(0x5a5a52),.2,0,0,1.9,2.2,2.6,0,P2,0);const d=TQ(sg,Q.disc,G(0x050404),.6,.6,0,1.7,1.9,1,0,-P2,0);d.castShadow=false;blk(cx,cz,1.4);take(cx,cz,2.6);
+    const [cx,cz]=A(R*.16,0),a=AN+Math.PI,sg=sub(cx,cz,a,0);TQ(sg,Q.arc,S(0x5a5a52),.2,0,0,1.9,2.2,2.6,0,P2,0);const d=TQ(sg,Q.disc,ep185Grad('hole'),.6,.6,0,1.7,1.9,1,0,-P2,0);d.castShadow=false;blk(cx,cz,1.4);take(cx,cz,2.6);
     [-1,1].forEach(s=>{const [x,z]=A(R*.2,s*2.6);rock(x,z,rr(1.6,2.2),0x6a6a60)});
     const [kx,kz]=A(-R*.1,1.2);carcass(kx,kz,AN+1,1.1,0x6a5a48);bones(kx-1,kz+.6,4,.6);
     scat(6,R*.2,R*.8,1,(x,z)=>{const [u]=[x*Math.cos(AN)+z*Math.sin(AN)];if(u<0)rock(x,z,rr(.8,1.6),0x6a6a60)});
@@ -503,7 +503,7 @@ function cs123Designs(K){
     [-1,1].forEach(s=>{const sg=sub(s*2.2,-1.4,s>0?0:Math.PI,-.2);TQ(sg,Q.arc,S(0xe8e0c8),0,0,0,1.6,2,1.2,P2*0,0,0)});
     out(6,.82,(x,z)=>rock(x,z,rr(1,1.8),0x5a5e6a));edge(4,(x,z)=>bones(x,z,4,.6))},
   '2_0_1':()=>{ // Yeti Cave: a snowbound cave mouth hung with icicles, drifts, a frozen kill
-    const sg=sub(0,-3.4,P2,0);TQ(sg,Q.hemi,S(0x6a6e78),0,-.3,0,2.6,2.4,2.8);TQ(sg,Q.hemi,S(SNOW),0,1.4,0,2.2,.9,2.4);const d=TQ(sg,Q.disc,G(0x040406),2.55,.6,0,1.25,1.4,1,0,P2,0);d.castShadow=false;blk(0,-3.4,2);take(0,-3.4,2.8);
+    const sg=sub(0,-3.4,P2,0);TQ(sg,Q.hemi,S(0x6a6e78),0,-.3,0,2.6,2.4,2.8);TQ(sg,Q.hemi,S(SNOW),0,1.4,0,2.2,.9,2.4);const d=TQ(sg,Q.disc,ep185Grad('hole'),2.55,.6,0,1.25,1.4,1,0,P2,0);d.castShadow=false;blk(0,-3.4,2);take(0,-3.4,2.8);
     icicles(-1.1,gy(0,-1)+2.1,-1,7,.9,2.2,0);
     out(7,.7,(x,z)=>mound(x,z,rr(.9,1.5),SNOW,.4));carcass(...A(-R*.3,R*.25),AN,1,0x8a9aa8,0xe8f0f8);
     edge(5,(x,z)=>ice(x,z,rr(.6,1.1)));scat(3,R*.3,R*.7,.6,(x,z)=>bones(x,z,3,.5,0xe8ecf0))},
@@ -591,7 +591,7 @@ function cs123Designs(K){
   // ======================= The Dirge =======================
   '4_0_0':()=>{ // Open Crypt: a stone doorway with a stair down into the earth, coffins dragged out
     {const sg=sub(0,4.3,-P2,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.4,1.2*s,.6,2.8,.6));TQ(sg,Q.box,S(GST),0,2.95,0,.8,.5,3.2);TQ(sg,Q.cone4,S(DST),0,3.6,0,.9,.8,1.6,0,Math.PI/4,0);
-      const d=TQ(sg,Q.disc,G(0x040404),-.2,1.2,0,.9,1.2,1,0,-P2,0);d.castShadow=false;blk(-1.2,4.3,0);blk(1.2,4.3,0);take(0,4.3,1.6)}
+      const d=TQ(sg,Q.disc,ep185Grad('hole'),-.2,1.2,0,.9,1.2,1,0,-P2,0);d.castShadow=false;blk(-1.2,4.3,0);blk(1.2,4.3,0);take(0,4.3,1.6)}
     for(let i=0;i<5;i++){const z=3.2-i*.85;put(Q.box,S(DST),0,-.12-i*.04,z,2,.25,.8)}
     out(4,.5,(x,z,a)=>coffin(x,z,a+rr(-.5,.5),0x3a2a20,true));out(9,.78,(x,z,a)=>grave(x,z,a+Math.PI,0x8a8a86));
     [-1,1].forEach(s=>candles(s*1.4,3.2,4,.3,0x9ad8ff));edge(2,(x,z)=>deadTree(x,z,rr(2.8,3.6),0x2a2a30))},
@@ -623,7 +623,7 @@ function cs123Designs(K){
     {const a=AN+3/6*TAU+.52,x=Math.cos(a)*R*.88,z=Math.sin(a)*R*.88,sg=sub(x,z,a,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.4,1.5*s,.8,2.8,.8));for(let q=-1.1;q<=1.1;q+=.28)TQ(sg,Q.cyl4,S(IRON,{metalness:.6}),0,1.1,q,.03,2.2,.03,0,0,q>0?.15:0);TQ(sg,Q.box,S(IRON,{metalness:.6}),0,2.1,0,.08,.08,2.4)}
     out(4,.6,(x,z)=>{chainPost(x,z,7);bones(x+.6,z+.4,3,.4)});for(let i=0;i<2;i++){const p=spot(R*.3,R*.6,.6);if(p)crate(p[0],p[1])}},
   '4_2_0':()=>{ // Colossus Barrow: a barrow mound over a colossus, its bones breaking through, standing stones round it
-    {const [x,z]=A(R*.48,0),sg=sub(x,z,AN,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.3,1.1*s,.7,2.6,.7));TQ(sg,Q.box,S(GST),0,2.75,0,1,.5,3.2);const d=TQ(sg,Q.disc,G(0x040404),-.3,1,0,.8,1.1,1,0,-P2,0);d.castShadow=false;blk(x,z,1);take(x,z,1.8)}
+    {const [x,z]=A(R*.48,0),sg=sub(x,z,AN,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.3,1.1*s,.7,2.6,.7));TQ(sg,Q.box,S(GST),0,2.75,0,1,.5,3.2);const d=TQ(sg,Q.disc,ep185Grad('hole'),-.3,1,0,.8,1.1,1,0,-P2,0);d.castShadow=false;blk(x,z,1);take(x,z,1.8)}
     femur(...A(-R*.1,R*.2),AN+.6,5,0xd8d4c4,-.3);bigSkull(...A(-R*.45,-R*.35),AN+2.4,2.2,0xd8d4c4,false,-.7);
     for(let i=0;i<4;i++){const [x,z]=A(rr(-R*.3,R*.2),(i<2?-1:1)*R*.48),sg=sub(x,z,AN+P2,-.6);TQ(sg,Q.arc,S(0xd8d4c4),0,0,0,1.8,2.6,1.8,0,P2,0)}
     out(7,.88,(x,z,a)=>slab(x,z,.9,rr(2.4,3.4),.5,a+P2,DST,rr(-.06,.06)));edge(3,(x,z,a)=>grave(x,z,a,0x6a6e70,1))},

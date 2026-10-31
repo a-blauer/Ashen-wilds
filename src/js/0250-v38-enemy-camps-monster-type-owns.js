@@ -104,7 +104,7 @@ function buildCamp(C){
   const fire=(dx,dz,col)=>{ring(7,.55,(x,z)=>put(G_SPH,S(0x5a5650),dx+x,.08,dz+z,.16,.12,.16));
     put(G_CYL,S(0x4a3020),dx,.12,dz,.07,.8,.07,Math.PI/2,.5,0);put(G_CYL,S(0x4a3020),dx,.12,dz,.07,.8,.07,Math.PI/2,-.6,0);
     const f1=put(G_CONE,glowM(col||0xff7a1a),dx,.42,dz,.26,.62,.26),f2=put(G_CONE,glowM(0xffd36a),dx,.34,dz,.14,.38,.14);f1.castShadow=f2.castShadow=false;CFL.push(f1,f2);
-    const gl=put(CG.disc,tm(col||0xff9a3a,.22),dx,.04,dz,1.6,1.6,1,-Math.PI/2);gl.castShadow=false};
+    const gl=put(CG.disc,ep185Soft(col||0xff9a3a,.22),dx,.04,dz,1.6,1.6,1,-Math.PI/2);gl.castShadow=false};   // v185: soft (was a hard-edged disc)
   const tent=(dx,dz,ry,col,sz)=>{sz=sz||1;blk(dx,dz,.95*sz);const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(dx,gy(dx,dz),dz);m.rotation.y=ry-Math.PI/2;m.scale.setScalar(sz);g.add(m)};   // v185: the hide tent (3420)
   const box=(dx,dz,fn)=>{const bg=new THREE.Group();bg.position.set(dx,gy(dx,dz),dz);fn(bg);g.add(bg);(C.boxes=C.boxes||[]).push({g:bg,x:C.x+dx,z:C.z+dz,b:0})};
   const crate=(dx,dz,ry)=>box(dx,dz,bg=>{const k=rr(.5,.68),r0=ry||rr(0,1.5);TQ(bg,G_BOX,S(0x7a5530),0,k/2,0,k,k,k,0,r0);TQ(bg,G_BOX,S(0x4a3220),0,k/2,0,k*1.03,k*.12,k*1.03,0,r0);TQ(bg,G_BOX,S(0x4a3220),0,k/2,0,k*.12,k*1.03,k*1.03,0,r0)});

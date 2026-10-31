@@ -102,7 +102,8 @@ function ep185KindInfo(S){if(S.__e185)return S.__e185;let x0=1e9,x1=-1e9,y0=1e9,
   const sc=S.sc||[1,1,1],w=Math.min(x1-x0,z1-z0)*Math.min(sc[0],sc[2]),W2=Math.max(x1-x0,z1-z0)*Math.max(sc[0],sc[2]),h=(y1-y0)*sc[1],
     tree=/tree|pine|oak|palm|snag|spire|stalag|pillar|column|col$|obelisk|lamp|banner|totem|cross|stake|candela|brazier|statue|angel|spike|flag|gshroom/.test(S.k),
     solid=!glow&&!S.near&&!S.flat&&h>.25&&isFinite(h)&&!(S.parts||[]).some(p=>p.mat),core=tree?Math.min(.34,Math.max(.12,w*.16)):w*.34;
-  return S.__e185={solid,core:Math.max(.1,core),h,w:W2,tall:h>W2*1.2&&h>1.2,tree}}
+  const rocky=/spire|stalag|column|pillar|col$|rock|crys|ice|salt|obelisk/.test(S.k);   // rock grown from rock: may lean into a cliff
+  return S.__e185={solid,core:Math.max(.1,core),h,w:W2,tall:h>W2*1.2&&h>1.2&&!rocky,tree}}
 function ep185Tidy(T,L,col){const R=EP185TIDY={n:L.length,overlap:0,void:0,cliff:0,ms:0,list:[]},t0=performance.now(),G=new Map(),C=4,key=(x,z)=>Math.floor(x/C)+','+Math.floor(z/C);
   const hide=(d,why)=>{d.h185=why;R[why]++;if(R.list.length<400)R.list.push([why,d.k,+d.x.toFixed(1),+d.z.toFixed(1)]);if(d.col&&d.tl&&col)d.tl.forEach(k=>col.delete(k))};
   const cand=[];for(const d of L){const S=T[d.k];if(!S||S.abs!=null)continue;const K=ep185KindInfo(S);
@@ -130,3 +131,17 @@ function ep185Snow(g,y0,ny){const P=g.attributes.position,C=g.attributes.color;i
   for(let i=0;i+2<P.count;i+=3){a.fromBufferAttribute(P,i);b.fromBufferAttribute(P,i+1);c.fromBufferAttribute(P,i+2);const cy=(a.y+b.y+c.y)/3,n=b.clone().sub(a).cross(c.clone().sub(a)).normalize();
     if(cy>y0&&n.y>ny){const t=Math.min(1,(n.y-ny)/(1-ny)*1.6);for(let j=0;j<3;j++){const r=C.getX(i+j),gg=C.getY(i+j),bb=C.getZ(i+j);C.setXYZ(i+j,r+(.93-r)*t,gg+(.95-gg)*t,bb+(1-bb)*t)}}}
   C.needsUpdate=true;return g}
+// ---- soft light pools (camp halos, fire glows): a radial fade instead of a flat disc with a hard edge ----
+var EP185S;
+function ep185Soft(col,op){EP185S=EP185S||{m:{}};const k=col+'|'+op;if(EP185S.m[k])return EP185S.m[k];
+  if(!EP185S.t){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);
+    r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.6)');r.addColorStop(.7,'rgba(255,255,255,.18)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);EP185S.t=new THREE.CanvasTexture(c)}
+  const m=new THREE.MeshBasicMaterial({color:col,map:EP185S.t,transparent:true,opacity:Math.min(1,op*1.7),depthWrite:false,side:THREE.DoubleSide});m.userData.lps=1;return EP185S.m[k]=m}
+// ---- doorways and holes: dark with depth instead of a flat pure-black panel ----
+// A doorway: near-black at the top, the floor inside faintly lit at the bottom, the jambs a shade lighter at the sides. A hole or a
+// burrow mouth: black in the middle fading to dark earth at the rim. Unlit (they are openings, not surfaces); one material each.
+function ep185Grad(kind){EP185S=EP185S||{m:{}};const k='g|'+kind;if(EP185S.m[k])return EP185S.m[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
+  if(kind==='door'){const v=g.createLinearGradient(0,0,0,64);v.addColorStop(0,'#050404');v.addColorStop(.55,'#0b0907');v.addColorStop(1,'#2a2119');g.fillStyle=v;g.fillRect(0,0,64,64);
+    const h=g.createLinearGradient(0,0,64,0);h.addColorStop(0,'rgba(60,46,34,.55)');h.addColorStop(.18,'rgba(0,0,0,0)');h.addColorStop(.82,'rgba(0,0,0,0)');h.addColorStop(1,'rgba(60,46,34,.55)');g.fillStyle=h;g.fillRect(0,0,64,64)}
+  else{const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'#020202');r.addColorStop(.55,'#0a0806');r.addColorStop(.85,'#21190f');r.addColorStop(1,'#3a2c1e');g.fillStyle=r;g.fillRect(0,0,64,64)}
+  const t=new THREE.CanvasTexture(c);const m=new THREE.MeshBasicMaterial({map:t});m.userData.lps=1;return EP185S.m[k]=m}
