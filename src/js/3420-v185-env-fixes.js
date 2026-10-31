@@ -105,7 +105,7 @@ function ep185KindInfo(S){if(S.__e185)return S.__e185;let x0=1e9,x1=-1e9,y0=1e9,
     tree=/tree|pine|oak|palm|snag|spire|stalag|pillar|column|col$|obelisk|lamp|banner|totem|cross|stake|candela|brazier|statue|angel|spike|flag|gshroom/.test(S.k),
     solid=!glow&&!S.near&&!S.flat&&h>.25&&isFinite(h)&&!(S.parts||[]).some(p=>p.mat),core=tree?Math.min(.34,Math.max(.12,w*.16)):w*.34;
   const rocky=/spire|stalag|column|pillar|col$|rock|crys|ice|salt|obelisk/.test(S.k);   // rock grown from rock: may lean into a cliff
-  return S.__e185={solid,core:Math.max(.1,core),h,w:W2,tall:h>W2*1.2&&h>1.2&&!rocky,tree}}
+  return S.__e185={solid,core:Math.max(.1,core),h,w:W2,tall:h>W2*1.2&&h>1.2&&!rocky,tree,low:!tree&&h<W2*.3&&h<.9}}   // low: a mound in the ground (drift, ripple): things may stand on it
 function ep185Tidy(T,L,col){const R=EP185TIDY={n:L.length,overlap:0,void:0,cliff:0,ms:0,list:[]},t0=performance.now(),G=new Map(),C=4,key=(x,z)=>Math.floor(x/C)+','+Math.floor(z/C);
   const hide=(d,why)=>{d.h185=why;R[why]++;if(R.list.length<400)R.list.push([why,d.k,+d.x.toFixed(1),+d.z.toFixed(1)]);if(d.col&&d.tl&&col)d.tl.forEach(k=>col.delete(k))};
   const cand=[];for(const d of L){const S=T[d.k];if(!S||S.abs!=null)continue;const K=ep185KindInfo(S);
@@ -116,6 +116,7 @@ function ep185Tidy(T,L,col){const R=EP185TIDY={n:L.length,overlap:0,void:0,cliff
       // a tall piece: the ground rising into its crown (it stands against a cliff face) or falling away under it (a cliff lip)
       if(K.tall){const rc=Math.max(.6,K.w*.38*d.s);let up=-1e9,dn=1e9;for(let i=0;i<8;i++){const a=i*.785,g=GH(d.x+Math.cos(a)*rc,d.z+Math.sin(a)*rc);if(g>up)up=g;if(g<dn)dn=g}
         if(up-g0>Math.max(1.1,K.h*d.s*.4)||g0-dn>Math.max(1.4,K.h*d.s*.45)){hide(d,'cliff');continue}}
+      if(K.low&&!d.col)continue;
       cand.push([d,K.core*d.s,(d.col?100:0)+K.core*d.s*(K.tree?.6:1)+K.h*d.s*.05])}}
   cand.sort((a,b)=>b[2]-a[2]);
   for(const [d,r] of cand){let hit=null;const gx=Math.floor(d.x/C),gz=Math.floor(d.z/C);
@@ -172,3 +173,15 @@ function ep185Blob(i){EP185B=EP185B||[];i=((i|0)%5+5)%5;if(EP185B[i])return EP18
   const rr=[];for(let k=0;k<n;k++)rr.push(.62+.5*rnd());for(let k=0;k<n;k++){const r=(rr[k]*2+rr[(k+1)%n]+rr[(k+n-1)%n])/4,a=k/n*6.2832;P.push(Math.cos(a)*r,Math.sin(a)*r,0)}
   for(let k=0;k<n;k++)idx.push(0,1+k,1+(k+1)%n);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setIndex(idx);
   g.setAttribute('uv',new THREE.Float32BufferAttribute(P.map((v,j)=>j%3==2?null:v*.5+.5).filter(v=>v!==null),2));g.computeVertexNormals();g.userData.lps=1;return EP185B[i]=g}
+// ---- one draw per soft light pool / doorway material in a camp (the v185 materials carry a texture, which the camp merges skip:
+//      a Kindlelight camp's glow pools went from 1 draw to 95). Static ground pieces only (nothing here is animated).
+function ep185MergeTex(g){if(!g||!EP185S)return 0;const mats=new Set(Object.values(EP185S.m)),by=new Map();g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert();
+  g.traverse(o=>{if(!o.isMesh||o.userData.keep||o.userData.box||Array.isArray(o.material)||!mats.has(o.material)||o.visible===false)return;const a=o.geometry.attributes;if(!a.position||!a.uv||!a.normal)return;
+    (by.get(o.material)||by.set(o.material,[]).get(o.material)).push(o)});
+  let n=0;by.forEach((L,mat)=>{if(L.length<2)return;const P=[],N=[],U=[],m=new THREE.Matrix4(),nm=new THREE.Matrix3();
+    L.forEach(o=>{const s=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();m.multiplyMatrices(inv,o.matrixWorld);s.applyMatrix4(m);
+      P.push(...s.attributes.position.array);N.push(...s.attributes.normal.array);U.push(...s.attributes.uv.array);o.parent.remove(o);n++});
+    const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.Float32BufferAttribute(P,3));bg.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));bg.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));bg.computeBoundingSphere();
+    const me=new THREE.Mesh(bg,mat);me.castShadow=false;me.receiveShadow=!mat.transparent;me.matrixAutoUpdate=false;me.updateMatrix();g.add(me)});
+  return n}
+{const f=buildCamp;buildCamp=function(C){const had=C&&C.g;const r=f.apply(this,arguments);if(C&&C.g&&!had)try{ep185MergeTex(C.g)}catch(e){console.warn('v185 merge',e)}return r}}

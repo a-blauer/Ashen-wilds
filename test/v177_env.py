@@ -37,8 +37,8 @@ def s(pg):
     for o in r['out']:
         for f in o['fl']:
             if f['gap']<=.12 or max(f['sz'])<.25:continue   # tiny bits (wisp cores, spores, pebbles) are not what reads as floating
-            if max(f['sz'])<.6:print('NOTE %s: a small part (%s) %.2f above the ground at %s'%(o['ins'],sz,f['gap'],f['at']));continue
             sz=tuple(round(v,1) for v in f['sz'])
+            if max(f['sz'])<.6:print('NOTE %s: a small part (%s) %.2f above the ground at %s'%(o['ins'],sz,f['gap'],f['at']));continue
             if any(o['ins']==a and sz==b for a,b in OK):continue
             if any(o['ins']==a and abs(f['at'][0]-x)<r and abs(f['at'][2]-z)<r for a,x,z,r in OKAT):continue
             F('%s: a part hangs %.2f above the ground, touching nothing (size %s at %s, object at %s)'%(o['ins'],f['gap'],sz,f['at'],o['pos']))
