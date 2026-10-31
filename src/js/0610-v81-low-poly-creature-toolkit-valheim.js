@@ -21,7 +21,9 @@ function lpGeo(key,n,lofts,seed){
       const tg=pts[Math.min(i+1,pts.length-1)].clone().sub(pts[Math.max(i-1,0)]).normalize(),U=ref.clone().sub(tg.clone().multiplyScalar(ref.dot(tg))).normalize(),Sd=new V().crossVectors(U,tg);
       for(let k=0;k<seg;k++){
         const a=Math.PI/2+(L.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?(r.ryT==null?r.rx:r.ryT):(r.ryB==null?r.rx:r.ryB),j=r.j?1+(R()-.5)*r.j:1;
-        P.push(pts[i].x+(Sd.x*c*r.rx+U.x*s*ry)*j,pts[i].y+(Sd.y*c*r.rx+U.y*s*ry)*j,pts[i].z+(Sd.z*c*r.rx+U.z*s*ry)*j);
+        // v181: r.sqB (optional, e.g. 3) squares off the lower half of a ring (a superellipse): fuller low flanks for legs to grow from
+        const q2=s<0&&r.sqB?2/r.sqB:0,cq=q2?Math.sign(c)*Math.abs(c)**q2:c,sq=q2?-(Math.abs(s)**q2):s;
+        P.push(pts[i].x+(Sd.x*cq*r.rx+U.x*sq*ry)*j,pts[i].y+(Sd.y*cq*r.rx+U.y*sq*ry)*j,pts[i].z+(Sd.z*cq*r.rx+U.z*sq*ry)*j);
         L.paint(tmp,r,s,c,i);tmp.multiplyScalar(.9+R()*.15);Cc.push(tmp.r,tmp.g,tmp.b);
         SI.push(bi(r.b[0]),bi(r.b[1]),0,0);SW.push(1-(r.b[2]||0),r.b[2]||0,0,0);
       }

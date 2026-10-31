@@ -114,7 +114,7 @@ SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=base,fuse v180_comp_float
 SP=Stoneshell,Mossfrog,Cragback,Bogmaw,Titanshell SETS=trait,var v180_comp_float.py
 SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=base,fuse v180_comp_float.py
 SP=Batwing,Skyhawk,Duskwing,Stormtalon,Rocsovereign SETS=trait,var v180_comp_float.py
-v181_bird_wings.py
+v183_bird_wings.py
 SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=base,fuse v180_comp_float.py
 SP=Drakelet,Gravewyrm,Pyrewing,Venomcoil,Elderdrake SETS=trait,var v180_comp_float.py
 SP=Wispling,Boneling,Lumenwisp,Lichbone,Soulwarden SETS=base,fuse v180_comp_float.py
