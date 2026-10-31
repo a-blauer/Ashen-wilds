@@ -80,7 +80,7 @@ function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N
  d+=stn*(-ck*.42+((tB.b-.5)*.13+(tA.r-.5)*.2)*(1.-.55*bri));
  float lic=stn*smoothstep(.15,.7,nW.y)*smoothstep(.5,.64,tB.r*.7+tA.r*.3)*(1.-smoothstep(.28,.55,lum))*(1.-warm);   // lichen on the tops of grey stones (never pale or warm desert stone)
  diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.86,.96,.62),lic*.8*uEdA);
- d+=wood*(tA.a-.5)*1.5*(.3+.7*vrt);
+ d+=wood*(tA.a-.5)*1.5*vrt*vrt;   // v185: upright faces only (brown mud and earth lie flat)
  d+=fol*((tA.r-.5)*.3+nW.y*.1);   // foliage: soft blotches and lit tops (a cell pattern read as scales: no cells here)
 #else
  vec3 e3=vEdP*uEdS*.11+vec3(.7,.2,.4);

@@ -53,8 +53,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   // ---------------- dwellings (a = facing: the door looks along a) ----------------
   // v185: a doorway out of a round wall: a short porch at local +x with a flat front, the dark doorway flush on it, posts and a
   // lintel (was a black slab stood against the curve, half in the wall and half out: a black square)
-  const porch=(sg,r,w,h,col)=>{const d=.42;TQ(sg,Q.box,col,r-.12+d/2+.06,h/2,0,d+.24,h+.1,w+.24);TQ(sg,Q.box,DARK,r+d+.015,h*.44,0,.02,h*.86,w*.72);
-    [-1,1].forEach(s2=>TQ(sg,Q.box,WD,r+d+.03,h/2,s2*w*.42,.08,h+.1,.08));TQ(sg,Q.box,WD,r+d+.03,h+.04,0,.1,.1,w+.12)};
+  const porch=(sg,r,w,h,col)=>{const d=.42;TQ(sg,Q.box,col,r-.12+d/2+.06,h/2,0,d+.24,h+.1,w+.24);TQ(sg,Q.box,DARK,r+d+.07,h*.44,0,.02,h*.86,w*.72);
+    [-1,1].forEach(s2=>TQ(sg,Q.box,WD,r+d+.09,h/2,s2*w*.42,.08,h+.1,.08));TQ(sg,Q.box,WD,r+d+.09,h+.04,0,.1,.1,w+.12)};
   const D={
     hall(x,z,a,k){k=k||1;const L=6.4*k,Wd=3.8*k,h=1.7*k,rh=1.5*k,sg=sub(x,z,a,-.15),Rf=S(pal.thatch);
       TQ(sg,Q.box,STD,0,-.12,0,L+.5,.65,Wd+.5);[-1,1].forEach(s=>TQ(sg,Q.box,WOOD,0,h/2+.2,s*Wd/2,L,h,.2));TQ(sg,Q.box,WOOD,-L/2,h/2+.2,0,.2,h,Wd);
@@ -70,7 +70,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       TQ(sg,Q.ico,BONE,0,2.85*k,0,.17,.16,.17);for(let i=0;i<9;i++){const b=i/9*TAU;TQ(sg,Q.dod,STD,Math.cos(b)*1.45*k,.06,Math.sin(b)*1.45*k,.22,.14,.2,rr(0,3),rr(0,3),0)}
       blk(x,z,1.3*k);take(x,z,2*k)},
     yurt(x,z,a,k){k=(k||1)*1.2;const sg=sub(x,z,a,-.1);TQ(sg,Q.cyl,S(pk(pal.hide)),0,.55*k,0,1.7*k,1.1*k,1.7*k);TQ(sg,Q.cone,S(pal.hide[0]),0,1.1*k+.45*k,0,1.85*k,.95*k,1.85*k);
-      if(pal.snow)TQ(sg,Q.hemi,S(0xeef4fa),0,1.35*k,0,1.4*k,.42*k,1.4*k);porch(sg,1.7*k-.05,.74*k,.94*k,S(pal.trim));
+      if(pal.snow)TQ(sg,Q.hemi,S(0xeef4fa),0,1.35*k,0,1.4*k,.42*k,1.4*k);porch(sg,1.7*k-.05,.74*k,.94*k,S(pal.hide[0]));
       for(let i=0;i<6;i++){const b=i/6*TAU;TQ(sg,Q.box,WD,Math.cos(b)*1.72*k,.6*k,Math.sin(b)*1.72*k,.06,.1,.06*k)}TQ(sg,Q.cyl,MET,-.5*k,1.9*k,0,.09,.8*k,.09);
       for(let i=0;i<4;i++){const b=i/4*TAU+.4;seg(x+Math.cos(a+b)*1.9*k,gy(x,z)+1.3*k,z+Math.sin(a+b)*1.9*k,x+Math.cos(a+b)*2.8*k,gy(x,z),z+Math.sin(a+b)*2.8*k,.018,S(0x8a7a50))}
       blk(x,z,1.5*k);take(x,z,2.4*k)},
@@ -89,7 +89,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       const [bx,bz]=[x+Math.cos(a)*2.1*k,z+Math.sin(a)*2.1*k];put(Q.cyl,S(pk(pal.cloth)),bx,.1,bz,.32,1.4,.2,0,-a,P2)},
     tent(x,z,a,k){k=(k||1)*1.35;aTent(x,z,a+P2,pk(pal.hide),2.6*k,k);const [px,pz]=[x+Math.cos(a+P2)*1.5*k,z+Math.sin(a+P2)*1.5*k];put(Q.cyl4,WD,px,1.1*k,pz,.03,2.2*k,.03);
       put(Q.cone4,S(pal.acc,{side:THREE.DoubleSide}),px+.25,2*k,pz,.05,.5,.22,0,0,P2)},
-    lean(x,z,a,k){leanTo(x,z,a+Math.PI,1.2*(k||1),pal.hide[1]);fire(x+Math.cos(a)*2.4,z+Math.sin(a)*2.4,pal.fire,.6)},
+    lean(x,z,a,k){leanTo(x,z,a+Math.PI,1.2*(k||1),pal.hide[1]);const fd=1.92*(k||1)+1.7;fire(x+Math.cos(a)*fd,z+Math.sin(a)*fd,pal.fire,.6)},   // v185: the fire in front of the doorway (it burned inside it)
     tomb(x,z,a,k){mausoleum(x,z,a,.85*(k||1),pal.stone,pal.stoneD)},
     kennel(x,z,a,k){k=k||1;const sg=sub(x,z,a,0);TQ(sg,Q.box,WOOD,0,.5*k,0,1.4*k,1*k,1.1*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.thatch),0,1.2*k,s*.36*k,1.6*k,.08,.85*k,s*.7,0,0));
       TQ(sg,Q.box,DARK,.71*k,.4*k,0,.04,.62*k,.5*k);bRect(x,z,a,1.4*k,1.1*k);take(x,z,1.2*k);chainPost(x+Math.cos(a)*1.5*k,z+Math.sin(a)*1.5*k,5,a);put(Q.cyl,MET,x+Math.cos(a+.7)*1.3,.06,z+Math.sin(a+.7)*1.3,.26,.12,.26)},
@@ -196,10 +196,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     candles:(x,z)=>candles(x,z,3,.3,pal.lant),shells:(x,z)=>{for(let i=0;i<3;i++)put(Q.hemi,S(0xd8d4c4),x+rr(-.4,.4),0,z+rr(-.4,.4),.14,.1,.14)},snow:(x,z)=>mound(x,z,rr(.5,.9),0xe8f0f8,.35),
     shards:(x,z)=>{for(let i=0;i<3;i++)put(Q.oct,S(pal.caps[0],{emissive:pal.caps[0],emissiveIntensity:.5}),x+rr(-.4,.4),.12,z+rr(-.4,.4),.08,.2,.08,rr(-.4,.4),0,rr(-.4,.4))},
     runes:(x,z)=>{put(Q.dod,STD,x,.12,z,.3,.2,.3);const g2=put(Q.box,G(pal.lant),x,.32,z,.18,.02,.04,0,rr(0,3),0);g2.castShadow=false},husk:(x,z,a)=>husk(x,z,a,.6),chips:(x,z)=>{for(let i=0;i<5;i++)put(Q.box,S(0x8a5a2a),x+rr(-.5,.5),.03,z+rr(-.5,.5),.18,.04,.1,0,rr(0,3),0)},
-    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(Q.disc,S(0xf4f4ee),x,.04,z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(Q.disc,S(0x5a0a10,{roughness:.3}),x,.04,z,rr(.3,.7),rr(.3,.7),1,-P2),
+    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(Q.disc,S(0xf4f4ee),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(Q.disc,S(0x5a0a10,{roughness:.3}),x,rr(.03,.07),z,rr(.3,.7),rr(.3,.7),1,-P2),
     skulls:(x,z)=>skull(x,-.03,z,1,pal.bone),chains:(x,z)=>{for(let i=0;i<5;i++)put(Q.link,S(0x3a3a3e,{metalness:.7,roughness:.4}),x+i*.18,.05,z,.09,.09,.09,P2,0,i%2?P2:0)},
     petals:(x,z)=>{for(let i=0;i<5;i++)put(Q.oct,S(0xb01020),x+rr(-.5,.5),.03,z+rr(-.5,.5),.06,.02,.06)},rubble:(x,z)=>rubble(x,z,3,.5,pal.stone),pebbles:(x,z)=>{for(let i=0;i<4;i++)put(Q.dod,STD,x+rr(-.5,.5),.05,z+rr(-.5,.5),.12,.08,.1,rr(0,3),rr(0,3),0)},
-    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(Q.disc,S(0xc8c0b0),x,.04,z,rr(.4,.8),rr(.4,.8),1,-P2),
+    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(Q.disc,S(0xc8c0b0),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),
     fungi:(x,z)=>shroom(x,z,rr(.25,.5),pk(pal.caps),true),shields:(x,z,a)=>put(Q.disc,S(pk(pal.cloth)),x,.35,z,.38,.38,1,-.3,-a,0),spearsx:null};
   // ================= 1. the heart: the bonfire (main light) and its seats =================
   const g0=o.gates.length?o.gates[0]:C.ang,ringIn=rc+1,ringOut=big?Math.max(rc+2.5,rf-1.6):rc+2.5;

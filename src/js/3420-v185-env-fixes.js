@@ -82,7 +82,8 @@ function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=o.h
   // ridge pole and crossed poles at both ends
   rod([-X-.22,H*1.02,0],[X+.22,H*1.02,0],.032,.032,pole,5);
   [-1,1].forEach(e=>[-1,1].forEach(s=>rod([e*(X+.03),-sk,s*Wy(-sk)*1.02],[e*(X+.06),H*1.22,-s*Wd*.2],.03,.024,pole,4)));
-  if(o.rope!==false)[-1,1].forEach(e=>{const g=[e*(X+1.1),-.04,0];rod([e*(X+.2),H*1.02,0],g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)});
+  if(o.rope!==false)[-1].forEach(e=>{const g=[e*(X+1.1),-.04,0];   // the back only: no rope across the doorway
+rod([e*(X+.2),H*1.02,0],g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)});
   return EP185T[key]=K.done()}
 var EP185M;
 function ep185Mat(){if(!EP185M){EP185M=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});EP185M.userData.lps=1}return EP185M}

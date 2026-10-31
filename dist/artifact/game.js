@@ -29396,7 +29396,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
       put(Q.box,S(col),px,h/2-.3,pz,sl+.04,h+.6,th,0,-a,0);if(cren)put(Q.box,S(col),px,h+.12,pz,sl*.45,.44,th*1.05,0,-a,0)}}; // a = along the wall
   const rubble=(x,z,n,r,col)=>{for(let i=0;i<n;i++){const k=rr(.18,.5);put(Q.box,S(col),x+rr(-r,r),k*.25,z+rr(-r,r),k*rr(.8,1.4),k*rr(.5,1),k,rr(-.4,.4),rr(0,3),rr(-.4,.4))}};
   const obelisk=(x,z,h,col,gl,a)=>{blk(x,z,0);take(x,z,.6);a=a==null?rr(0,6):a;put(CG.tent,S(col),x,h/2,z,.55,h,.55,0,-a+Math.PI/4,0);
-    if(gl){const r=put(Q.box,G(gl),x+Math.cos(a)*.25,h*.45,z+Math.sin(a)*.25,.03,h*.45,.1,0,-a,0);r.castShadow=false}};
+    // v185: the rune lies on the face (it stood upright 2-12 cm off the sloping face: a floating square)
+    if(gl){const ap=.389,y=h*.36,d=ap*(1-y/h)+.012,th=Math.atan2(ap,h);const r=put(Q.box,G(gl),x+Math.cos(a)*d,y,z+Math.sin(a)*d,.02,h*.3,.1,0,-a,th);r.castShadow=false}};
   const runes=(x,z,r,col,n)=>{n=n||5;[1,.62].forEach(k=>{const o=put(Q.ring,G(col),x,.06,z,r*k,r*k,1,-P2);o.castShadow=false});
     for(let i=0;i<n;i++){const a=i/n*TAU,b=(i+2)/n*TAU,x1=Math.cos(a)*r*.62,z1=Math.sin(a)*r*.62,x2=Math.cos(b)*r*.62,z2=Math.sin(b)*r*.62,l=Math.hypot(x2-x1,z2-z1);
       const ln=put(Q.box,G(col),x+(x1+x2)/2,.06,z+(z1+z2)/2,l,.012,.06,0,-Math.atan2(z2-z1,x2-x1),0);ln.castShadow=false}};
@@ -29475,8 +29476,16 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     if(tips)tips.push(...T2)};
   const log=(x,z,a,len,rad,col,sink)=>{take(x,z,len*.45);const o=put(Q.cyl,S(col||0x3a3026),x,rad*.8-(sink||0),z,rad,len,rad,0,-a,P2);const nx=Math.cos(a),nz=Math.sin(a);for(let q=-len/2+.4;q<len/2;q+=.9)blk(x+nx*q,z+nz*q,0);return o};
   const stump=(x,z,col,h,k)=>{k=k||1;blk(x,z,0);h=h||rr(1,2.2);put(Q.tcyl,S(col||0x3a3026),x,h/2,z,.24*k,h,.28*k);put(Q.cyl4,S(col||0x3a3026),x+.3*k,h*.75,z,.06,1*k,.06,0,0,-.9);put(Q.cyl4,S(col||0x3a3026),x-.25*k,h*.6,z+.1,.05,.8*k,.05,.3,0,.8)};
-  const web=(x,z,a,k,col)=>{const c=col||0xf0f0f0,ry=-a+P2,w=put(Q.ring,T(c,.4),x,1.4*k,z,1.3*k,1.3*k,1,0,ry,0);w.castShadow=false;for(let i=0;i<4;i++){const s2=put(Q.box,T(c,.35),x,1.4*k,z,.015,2.6*k,.015,0,ry,i*.785);s2.castShadow=false}
-    const w2=put(Q.ring,T(c,.35),x,1.4*k,z,.6*k,.6*k,1,0,ry,0);w2.castShadow=false};
+  // v185: a web strung between two dead stakes: spokes and rings of thread round a hub, tied to the stakes and the ground (was a flat
+  // ring with four bars standing upright in mid-air, tied to nothing)
+  const web=(x,z,a,k,col)=>{const c=col||0xf0f0f0,TM=T(c,.45),PM=S(0x3a3028),ux=-Math.sin(a),uz=Math.cos(a),V3=THREE.Vector3,Y0=gy(x,z);
+    const P=(u,y)=>new V3(x+ux*u,Y0+y,z+uz*u),seg2=(p,q,r,m)=>{const d=new V3().subVectors(q,p),L=d.length()||.01,o=new THREE.Mesh(Q.cyl4,m);o.position.copy(p).add(q).multiplyScalar(.5);
+      o.quaternion.setFromUnitVectors(new V3(0,1,0),d.normalize());o.scale.set(r,L,r);o.castShadow=false;g.add(o);return o};
+    const S1=1.55*k,H=2.7*k,t1=P(-S1-.25*k,H),t2=P(S1+.2*k,H*.92);seg2(P(-S1,-.25),t1,.05,PM);seg2(P(S1,-.25),t2,.045,PM);blk(x+ux*(-S1),z+uz*(-S1),0);blk(x+ux*S1,z+uz*S1,0);take(x,z,1.6*k);
+    const Cn=P(0,1.35*k),R=1.05*k,N=8,ring=f=>{const L=[];for(let i=0;i<N;i++){const t=i/N*TAU+.2,rr2=R*f*(1+.12*Math.sin(i*2.3));L.push(new V3(x+ux*Math.cos(t)*rr2,Cn.y+Math.sin(t)*rr2,z+uz*Math.cos(t)*rr2))}return L};
+    const O=ring(1),M1=ring(.66),M2=ring(.34);O.forEach((p,i)=>{seg2(Cn,p,.011,TM);[M1,M2].forEach(L=>seg2(L[i],L[(i+1)%N],.009,TM));seg2(p,O[(i+1)%N],.011,TM)});
+    let li=0,ri=0;O.forEach((p,i)=>{if(p.distanceTo(t1)<O[li].distanceTo(t1))li=i;if(p.distanceTo(t2)<O[ri].distanceTo(t2))ri=i});seg2(O[li],t1,.012,TM);seg2(O[ri],t2,.012,TM);
+    let lo=0;O.forEach((p,i)=>{if(p.y<O[lo].y)lo=i});seg2(O[lo],P(.3*k,0),.012,TM);seg2(O[(lo+N-1)%N],P(-.9*k,0),.012,TM)};
   const cocoon=(x,z,h,col)=>{put(Q.sph,S(col||0xe8e4dc),x,h,z,.25,.48,.25);const o=put(Q.cyl4,T(0xffffff,.5),x,h+.9,z,.01,1.4,.01);o.castShadow=false};
   const egg=(x,z,k,col,glow)=>put(Q.sph,glow?S(col,{emissive:col,emissiveIntensity:.65,roughness:.4}):S(col),x,k*.8,z,k*.6,k*.85,k*.6,rr(-.2,.2),0,rr(-.2,.2));
   const eggs=(x,z,n,k,col,glow)=>{take(x,z,k*1.3);for(let i=0;i<n;i++){const a=rn()*TAU,d=rr(0,k*1.1);egg(x+Math.cos(a)*d,z+Math.sin(a)*d,k*rr(.55,1),col,glow)}};
@@ -49137,8 +49146,8 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
   // ---------------- dwellings (a = facing: the door looks along a) ----------------
   // v185: a doorway out of a round wall: a short porch at local +x with a flat front, the dark doorway flush on it, posts and a
   // lintel (was a black slab stood against the curve, half in the wall and half out: a black square)
-  const porch=(sg,r,w,h,col)=>{const d=.42;TQ(sg,Q.box,col,r-.12+d/2+.06,h/2,0,d+.24,h+.1,w+.24);TQ(sg,Q.box,DARK,r+d+.015,h*.44,0,.02,h*.86,w*.72);
-    [-1,1].forEach(s2=>TQ(sg,Q.box,WD,r+d+.03,h/2,s2*w*.42,.08,h+.1,.08));TQ(sg,Q.box,WD,r+d+.03,h+.04,0,.1,.1,w+.12)};
+  const porch=(sg,r,w,h,col)=>{const d=.42;TQ(sg,Q.box,col,r-.12+d/2+.06,h/2,0,d+.24,h+.1,w+.24);TQ(sg,Q.box,DARK,r+d+.07,h*.44,0,.02,h*.86,w*.72);
+    [-1,1].forEach(s2=>TQ(sg,Q.box,WD,r+d+.09,h/2,s2*w*.42,.08,h+.1,.08));TQ(sg,Q.box,WD,r+d+.09,h+.04,0,.1,.1,w+.12)};
   const D={
     hall(x,z,a,k){k=k||1;const L=6.4*k,Wd=3.8*k,h=1.7*k,rh=1.5*k,sg=sub(x,z,a,-.15),Rf=S(pal.thatch);
       TQ(sg,Q.box,STD,0,-.12,0,L+.5,.65,Wd+.5);[-1,1].forEach(s=>TQ(sg,Q.box,WOOD,0,h/2+.2,s*Wd/2,L,h,.2));TQ(sg,Q.box,WOOD,-L/2,h/2+.2,0,.2,h,Wd);
@@ -49154,7 +49163,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       TQ(sg,Q.ico,BONE,0,2.85*k,0,.17,.16,.17);for(let i=0;i<9;i++){const b=i/9*TAU;TQ(sg,Q.dod,STD,Math.cos(b)*1.45*k,.06,Math.sin(b)*1.45*k,.22,.14,.2,rr(0,3),rr(0,3),0)}
       blk(x,z,1.3*k);take(x,z,2*k)},
     yurt(x,z,a,k){k=(k||1)*1.2;const sg=sub(x,z,a,-.1);TQ(sg,Q.cyl,S(pk(pal.hide)),0,.55*k,0,1.7*k,1.1*k,1.7*k);TQ(sg,Q.cone,S(pal.hide[0]),0,1.1*k+.45*k,0,1.85*k,.95*k,1.85*k);
-      if(pal.snow)TQ(sg,Q.hemi,S(0xeef4fa),0,1.35*k,0,1.4*k,.42*k,1.4*k);porch(sg,1.7*k-.05,.74*k,.94*k,S(pal.trim));
+      if(pal.snow)TQ(sg,Q.hemi,S(0xeef4fa),0,1.35*k,0,1.4*k,.42*k,1.4*k);porch(sg,1.7*k-.05,.74*k,.94*k,S(pal.hide[0]));
       for(let i=0;i<6;i++){const b=i/6*TAU;TQ(sg,Q.box,WD,Math.cos(b)*1.72*k,.6*k,Math.sin(b)*1.72*k,.06,.1,.06*k)}TQ(sg,Q.cyl,MET,-.5*k,1.9*k,0,.09,.8*k,.09);
       for(let i=0;i<4;i++){const b=i/4*TAU+.4;seg(x+Math.cos(a+b)*1.9*k,gy(x,z)+1.3*k,z+Math.sin(a+b)*1.9*k,x+Math.cos(a+b)*2.8*k,gy(x,z),z+Math.sin(a+b)*2.8*k,.018,S(0x8a7a50))}
       blk(x,z,1.5*k);take(x,z,2.4*k)},
@@ -49173,7 +49182,7 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
       const [bx,bz]=[x+Math.cos(a)*2.1*k,z+Math.sin(a)*2.1*k];put(Q.cyl,S(pk(pal.cloth)),bx,.1,bz,.32,1.4,.2,0,-a,P2)},
     tent(x,z,a,k){k=(k||1)*1.35;aTent(x,z,a+P2,pk(pal.hide),2.6*k,k);const [px,pz]=[x+Math.cos(a+P2)*1.5*k,z+Math.sin(a+P2)*1.5*k];put(Q.cyl4,WD,px,1.1*k,pz,.03,2.2*k,.03);
       put(Q.cone4,S(pal.acc,{side:THREE.DoubleSide}),px+.25,2*k,pz,.05,.5,.22,0,0,P2)},
-    lean(x,z,a,k){leanTo(x,z,a+Math.PI,1.2*(k||1),pal.hide[1]);fire(x+Math.cos(a)*2.4,z+Math.sin(a)*2.4,pal.fire,.6)},
+    lean(x,z,a,k){leanTo(x,z,a+Math.PI,1.2*(k||1),pal.hide[1]);const fd=1.92*(k||1)+1.7;fire(x+Math.cos(a)*fd,z+Math.sin(a)*fd,pal.fire,.6)},   // v185: the fire in front of the doorway (it burned inside it)
     tomb(x,z,a,k){mausoleum(x,z,a,.85*(k||1),pal.stone,pal.stoneD)},
     kennel(x,z,a,k){k=k||1;const sg=sub(x,z,a,0);TQ(sg,Q.box,WOOD,0,.5*k,0,1.4*k,1*k,1.1*k);[-1,1].forEach(s=>TQ(sg,Q.box,S(pal.thatch),0,1.2*k,s*.36*k,1.6*k,.08,.85*k,s*.7,0,0));
       TQ(sg,Q.box,DARK,.71*k,.4*k,0,.04,.62*k,.5*k);bRect(x,z,a,1.4*k,1.1*k);take(x,z,1.2*k);chainPost(x+Math.cos(a)*1.5*k,z+Math.sin(a)*1.5*k,5,a);put(Q.cyl,MET,x+Math.cos(a+.7)*1.3,.06,z+Math.sin(a+.7)*1.3,.26,.12,.26)},
@@ -49280,10 +49289,10 @@ function cs164Dress(C,K){const o=C.site,I=INSL[C.ig];if(!o||!I)return;const rec=
     candles:(x,z)=>candles(x,z,3,.3,pal.lant),shells:(x,z)=>{for(let i=0;i<3;i++)put(Q.hemi,S(0xd8d4c4),x+rr(-.4,.4),0,z+rr(-.4,.4),.14,.1,.14)},snow:(x,z)=>mound(x,z,rr(.5,.9),0xe8f0f8,.35),
     shards:(x,z)=>{for(let i=0;i<3;i++)put(Q.oct,S(pal.caps[0],{emissive:pal.caps[0],emissiveIntensity:.5}),x+rr(-.4,.4),.12,z+rr(-.4,.4),.08,.2,.08,rr(-.4,.4),0,rr(-.4,.4))},
     runes:(x,z)=>{put(Q.dod,STD,x,.12,z,.3,.2,.3);const g2=put(Q.box,G(pal.lant),x,.32,z,.18,.02,.04,0,rr(0,3),0);g2.castShadow=false},husk:(x,z,a)=>husk(x,z,a,.6),chips:(x,z)=>{for(let i=0;i<5;i++)put(Q.box,S(0x8a5a2a),x+rr(-.5,.5),.03,z+rr(-.5,.5),.18,.04,.1,0,rr(0,3),0)},
-    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(Q.disc,S(0xf4f4ee),x,.04,z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(Q.disc,S(0x5a0a10,{roughness:.3}),x,.04,z,rr(.3,.7),rr(.3,.7),1,-P2),
+    moss:(x,z)=>put(Q.hemi,S(0x5a7a3a),x,0,z,rr(.4,.8),.12,rr(.4,.8)),salt:(x,z)=>put(Q.disc,S(0xf4f4ee),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),blood:(x,z)=>put(Q.disc,S(0x5a0a10,{roughness:.3}),x,rr(.03,.07),z,rr(.3,.7),rr(.3,.7),1,-P2),
     skulls:(x,z)=>skull(x,-.03,z,1,pal.bone),chains:(x,z)=>{for(let i=0;i<5;i++)put(Q.link,S(0x3a3a3e,{metalness:.7,roughness:.4}),x+i*.18,.05,z,.09,.09,.09,P2,0,i%2?P2:0)},
     petals:(x,z)=>{for(let i=0;i<5;i++)put(Q.oct,S(0xb01020),x+rr(-.5,.5),.03,z+rr(-.5,.5),.06,.02,.06)},rubble:(x,z)=>rubble(x,z,3,.5,pal.stone),pebbles:(x,z)=>{for(let i=0;i<4;i++)put(Q.dod,STD,x+rr(-.5,.5),.05,z+rr(-.5,.5),.12,.08,.1,rr(0,3),rr(0,3),0)},
-    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(Q.disc,S(0xc8c0b0),x,.04,z,rr(.4,.8),rr(.4,.8),1,-P2),
+    feathers:(x,z)=>{const f=put(Q.pln,S(pk([0x5a6a8a,0x8a9ab0]),{side:THREE.DoubleSide}),x,.05,z,.12,.5,1,-P2,0,rr(0,6));f.castShadow=false},guano:(x,z)=>put(Q.disc,S(0xc8c0b0),x,rr(.03,.07),z,rr(.4,.8),rr(.4,.8),1,-P2),
     fungi:(x,z)=>shroom(x,z,rr(.25,.5),pk(pal.caps),true),shields:(x,z,a)=>put(Q.disc,S(pk(pal.cloth)),x,.35,z,.38,.38,1,-.3,-a,0),spearsx:null};
   // ================= 1. the heart: the bonfire (main light) and its seats =================
   const g0=o.gates.length?o.gates[0]:C.ang,ringIn=rc+1,ringOut=big?Math.max(rc+2.5,rf-1.6):rc+2.5;
@@ -56174,7 +56183,7 @@ function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N
  d+=stn*(-ck*.42+((tB.b-.5)*.13+(tA.r-.5)*.2)*(1.-.55*bri));
  float lic=stn*smoothstep(.15,.7,nW.y)*smoothstep(.5,.64,tB.r*.7+tA.r*.3)*(1.-smoothstep(.28,.55,lum))*(1.-warm);   // lichen on the tops of grey stones (never pale or warm desert stone)
  diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.86,.96,.62),lic*.8*uEdA);
- d+=wood*(tA.a-.5)*1.5*(.3+.7*vrt);
+ d+=wood*(tA.a-.5)*1.5*vrt*vrt;   // v185: upright faces only (brown mud and earth lie flat)
  d+=fol*((tA.r-.5)*.3+nW.y*.1);   // foliage: soft blotches and lit tops (a cell pattern read as scales: no cells here)
 #else
  vec3 e3=vEdP*uEdS*.11+vec3(.7,.2,.4);
@@ -56343,7 +56352,8 @@ function ep185ATent(o){o=o||{};const L=o.len||2.6,Wd=o.w||1,H=o.h||1.35,hide=o.h
   // ridge pole and crossed poles at both ends
   rod([-X-.22,H*1.02,0],[X+.22,H*1.02,0],.032,.032,pole,5);
   [-1,1].forEach(e=>[-1,1].forEach(s=>rod([e*(X+.03),-sk,s*Wy(-sk)*1.02],[e*(X+.06),H*1.22,-s*Wd*.2],.03,.024,pole,4)));
-  if(o.rope!==false)[-1,1].forEach(e=>{const g=[e*(X+1.1),-.04,0];rod([e*(X+.2),H*1.02,0],g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)});
+  if(o.rope!==false)[-1].forEach(e=>{const g=[e*(X+1.1),-.04,0];   // the back only: no rope across the doorway
+rod([e*(X+.2),H*1.02,0],g,.011,.011,0x6a5a42,3);rod([g[0],-.3,g[2]],[g[0],.16,g[2]],.03,.02,pole,4)});
   return EP185T[key]=K.done()}
 var EP185M;
 function ep185Mat(){if(!EP185M){EP185M=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});EP185M.userData.lps=1}return EP185M}

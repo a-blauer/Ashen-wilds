@@ -199,7 +199,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
       put(Q.box,S(col),px,h/2-.3,pz,sl+.04,h+.6,th,0,-a,0);if(cren)put(Q.box,S(col),px,h+.12,pz,sl*.45,.44,th*1.05,0,-a,0)}}; // a = along the wall
   const rubble=(x,z,n,r,col)=>{for(let i=0;i<n;i++){const k=rr(.18,.5);put(Q.box,S(col),x+rr(-r,r),k*.25,z+rr(-r,r),k*rr(.8,1.4),k*rr(.5,1),k,rr(-.4,.4),rr(0,3),rr(-.4,.4))}};
   const obelisk=(x,z,h,col,gl,a)=>{blk(x,z,0);take(x,z,.6);a=a==null?rr(0,6):a;put(CG.tent,S(col),x,h/2,z,.55,h,.55,0,-a+Math.PI/4,0);
-    if(gl){const r=put(Q.box,G(gl),x+Math.cos(a)*.25,h*.45,z+Math.sin(a)*.25,.03,h*.45,.1,0,-a,0);r.castShadow=false}};
+    // v185: the rune lies on the face (it stood upright 2-12 cm off the sloping face: a floating square)
+    if(gl){const ap=.389,y=h*.36,d=ap*(1-y/h)+.012,th=Math.atan2(ap,h);const r=put(Q.box,G(gl),x+Math.cos(a)*d,y,z+Math.sin(a)*d,.02,h*.3,.1,0,-a,th);r.castShadow=false}};
   const runes=(x,z,r,col,n)=>{n=n||5;[1,.62].forEach(k=>{const o=put(Q.ring,G(col),x,.06,z,r*k,r*k,1,-P2);o.castShadow=false});
     for(let i=0;i<n;i++){const a=i/n*TAU,b=(i+2)/n*TAU,x1=Math.cos(a)*r*.62,z1=Math.sin(a)*r*.62,x2=Math.cos(b)*r*.62,z2=Math.sin(b)*r*.62,l=Math.hypot(x2-x1,z2-z1);
       const ln=put(Q.box,G(col),x+(x1+x2)/2,.06,z+(z1+z2)/2,l,.012,.06,0,-Math.atan2(z2-z1,x2-x1),0);ln.castShadow=false}};
@@ -278,8 +279,16 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     if(tips)tips.push(...T2)};
   const log=(x,z,a,len,rad,col,sink)=>{take(x,z,len*.45);const o=put(Q.cyl,S(col||0x3a3026),x,rad*.8-(sink||0),z,rad,len,rad,0,-a,P2);const nx=Math.cos(a),nz=Math.sin(a);for(let q=-len/2+.4;q<len/2;q+=.9)blk(x+nx*q,z+nz*q,0);return o};
   const stump=(x,z,col,h,k)=>{k=k||1;blk(x,z,0);h=h||rr(1,2.2);put(Q.tcyl,S(col||0x3a3026),x,h/2,z,.24*k,h,.28*k);put(Q.cyl4,S(col||0x3a3026),x+.3*k,h*.75,z,.06,1*k,.06,0,0,-.9);put(Q.cyl4,S(col||0x3a3026),x-.25*k,h*.6,z+.1,.05,.8*k,.05,.3,0,.8)};
-  const web=(x,z,a,k,col)=>{const c=col||0xf0f0f0,ry=-a+P2,w=put(Q.ring,T(c,.4),x,1.4*k,z,1.3*k,1.3*k,1,0,ry,0);w.castShadow=false;for(let i=0;i<4;i++){const s2=put(Q.box,T(c,.35),x,1.4*k,z,.015,2.6*k,.015,0,ry,i*.785);s2.castShadow=false}
-    const w2=put(Q.ring,T(c,.35),x,1.4*k,z,.6*k,.6*k,1,0,ry,0);w2.castShadow=false};
+  // v185: a web strung between two dead stakes: spokes and rings of thread round a hub, tied to the stakes and the ground (was a flat
+  // ring with four bars standing upright in mid-air, tied to nothing)
+  const web=(x,z,a,k,col)=>{const c=col||0xf0f0f0,TM=T(c,.45),PM=S(0x3a3028),ux=-Math.sin(a),uz=Math.cos(a),V3=THREE.Vector3,Y0=gy(x,z);
+    const P=(u,y)=>new V3(x+ux*u,Y0+y,z+uz*u),seg2=(p,q,r,m)=>{const d=new V3().subVectors(q,p),L=d.length()||.01,o=new THREE.Mesh(Q.cyl4,m);o.position.copy(p).add(q).multiplyScalar(.5);
+      o.quaternion.setFromUnitVectors(new V3(0,1,0),d.normalize());o.scale.set(r,L,r);o.castShadow=false;g.add(o);return o};
+    const S1=1.55*k,H=2.7*k,t1=P(-S1-.25*k,H),t2=P(S1+.2*k,H*.92);seg2(P(-S1,-.25),t1,.05,PM);seg2(P(S1,-.25),t2,.045,PM);blk(x+ux*(-S1),z+uz*(-S1),0);blk(x+ux*S1,z+uz*S1,0);take(x,z,1.6*k);
+    const Cn=P(0,1.35*k),R=1.05*k,N=8,ring=f=>{const L=[];for(let i=0;i<N;i++){const t=i/N*TAU+.2,rr2=R*f*(1+.12*Math.sin(i*2.3));L.push(new V3(x+ux*Math.cos(t)*rr2,Cn.y+Math.sin(t)*rr2,z+uz*Math.cos(t)*rr2))}return L};
+    const O=ring(1),M1=ring(.66),M2=ring(.34);O.forEach((p,i)=>{seg2(Cn,p,.011,TM);[M1,M2].forEach(L=>seg2(L[i],L[(i+1)%N],.009,TM));seg2(p,O[(i+1)%N],.011,TM)});
+    let li=0,ri=0;O.forEach((p,i)=>{if(p.distanceTo(t1)<O[li].distanceTo(t1))li=i;if(p.distanceTo(t2)<O[ri].distanceTo(t2))ri=i});seg2(O[li],t1,.012,TM);seg2(O[ri],t2,.012,TM);
+    let lo=0;O.forEach((p,i)=>{if(p.y<O[lo].y)lo=i});seg2(O[lo],P(.3*k,0),.012,TM);seg2(O[(lo+N-1)%N],P(-.9*k,0),.012,TM)};
   const cocoon=(x,z,h,col)=>{put(Q.sph,S(col||0xe8e4dc),x,h,z,.25,.48,.25);const o=put(Q.cyl4,T(0xffffff,.5),x,h+.9,z,.01,1.4,.01);o.castShadow=false};
   const egg=(x,z,k,col,glow)=>put(Q.sph,glow?S(col,{emissive:col,emissiveIntensity:.65,roughness:.4}):S(col),x,k*.8,z,k*.6,k*.85,k*.6,rr(-.2,.2),0,rr(-.2,.2));
   const eggs=(x,z,n,k,col,glow)=>{take(x,z,k*1.3);for(let i=0;i<n;i++){const a=rn()*TAU,d=rr(0,k*1.1);egg(x+Math.cos(a)*d,z+Math.sin(a)*d,k*rr(.55,1),col,glow)}};
