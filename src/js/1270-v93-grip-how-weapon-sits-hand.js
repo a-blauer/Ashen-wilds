@@ -43,6 +43,7 @@ var GRIP={
 };
 // the forearm's pitch in the idle pose (animHero: upper arm ax −.2 + elbow ex −.3 on the right, le −.25 on the left)
 var GRIP_B={R:-.5,L:-.25},GRIP_AN=[0,-.035,.015];
+var GRIP_LQ=new THREE.Quaternion(),GRIP_LD=new THREE.Quaternion(),GRIP_LI=new THREE.Quaternion(),GRIP_LOCKMAX=1.05;   // v181 locked grip: the hand turns at most ~60°
 // strike grips (the pre-v93 placement in refreshGear / zzA_arsenal / mkHumanoid)
 function gripStrikeOf(ty,side){
   if(ty=='bow')return {r:[0,GRIP_H,0],p:[-.05,-.02,.05],hold:[-.555,0,0]};
@@ -123,7 +124,21 @@ function gripTick(h,now,el,att){
       W.quaternion.copy(GRIP_Q).slerp(C.q,w);W.position.copy(ps).lerp(pc,w)}
     // v181: a foe whose fist is not the hero's size moves the grip to its own fist centre (h._gripD[side] = the offset from the
     // standard anchor GRIP_AN, in the hand bone's frame; set from the cage body's S.grip)
-    {const gd=h._gripD&&h._gripD[e.side];if(gd){W.position.x+=gd[0];W.position.y+=gd[1];W.position.z+=gd[2]}}
+    {const gd=h._gripD&&h._gripD[e.side];
+      if(h._gripLock&&W.parent){
+        // v181 locked grip (cage foes, whose closed fists are modelled round the carry grip): the weapon never moves inside
+        // the fist — it stays at the carry grip — and the HAND turns instead: the hand bone takes the rotation the strike grip
+        // asked of the weapon (D = Q·Fq⁻¹), at most GRIP_LOCKMAX, so the wrist bends naturally and the weapon stays in the fist
+        // through every animation. The last frame's turn is undone first (the hand bone is not reset by the animations).
+        const bn=W.parent,Q=GRIP_LQ.copy(W.quaternion),D=GRIP_LD.copy(Q).multiply(GRIP_LI.copy(C.q).invert());
+        const ang=2*Math.acos(Math.min(1,Math.abs(D.w)));if(ang>GRIP_LOCKMAX)D.copy(GRIP_LI.identity().slerp(D,GRIP_LOCKMAX/ang));
+        const pv=e._lockD;if(pv)bn.quaternion.multiply(GRIP_LI.copy(pv).invert());bn.quaternion.multiply(D);e._lockD=(pv||new THREE.Quaternion()).copy(D);
+        // whatever turn the wrist can't give, the weapon makes about the point held in the fist (its hold point stays at the
+        // fist's anchor), so the held point never leaves the hand — a bow still stands upright to shoot
+        const R=W.quaternion.copy(GRIP_LI.copy(D).invert().multiply(Q)),an2=C.an||GRIP_AN,hd=C.hold;
+        GRIP_V.set(hd[0]*sx,hd[1]*W.scale.y,hd[2]*W.scale.z).applyQuaternion(R);
+        W.position.set(an2[0]-GRIP_V.x+(gd?gd[0]:0),an2[1]-GRIP_V.y+(gd?gd[1]:0),an2[2]-GRIP_V.z+(gd?gd[2]:0))}
+      else if(gd){W.position.x+=gd[0];W.position.y+=gd[1];W.position.z+=gd[2]}}
     if(e.chain)gripChain(e,dt,w);
     if(e.side=='L')elL=Math.min(elL,C.el||0);else elR=Math.min(elR,C.el||0)}
   if(el&&b){if(elR&&b.aR1)b.aR1.rotation.x+=elR*w;if(elL&&b.aL1)b.aL1.rotation.x+=elL*w}}

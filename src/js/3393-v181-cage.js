@@ -172,7 +172,7 @@ function cg181Plan(name,J){const S=AW_PROP99,names=Object.keys(HB),abs={},N={},M
 // round the handle instead of the handle running through the wrist. cgGripAt(S,s,along,fwd,out) gives a typical value.
 function cgGripAt(S,s,along,fwd,out){const A=s<0?'aL':'aR',d=nrm3(sub3(S.J[A+'2'],S.J[A+'1']));return add3(mul3(d,along),[s*(out||0),0,fwd||0])}
 {const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{const S=CG181.S&&CG181.S[key];if(S&&S.grip&&g&&g.h){const D={};
-    [['1','R'],['-1','L']].forEach(([s,side])=>{const q=S.grip[s];if(q)D[side]=[q[0]-GRIP_AN[0],q[1]-GRIP_AN[1],q[2]-GRIP_AN[2]]});g.h._gripD=D;try{gripTick(g.h,null,false)}catch(_){}}}catch(e){console.warn('cg grip',e)}return g}}
+    [['1','R'],['-1','L']].forEach(([s,side])=>{const q=S.grip[s];if(q)D[side]=[q[0]-GRIP_AN[0],q[1]-GRIP_AN[1],q[2]-GRIP_AN[2]]});g.h._gripD=D;g.h._gripLock=1;try{gripTick(g.h,null,false)}catch(_){}}}catch(e){console.warn('cg grip',e)}return g}}
 function cg181Reg(key,S,fn){(CG181.S||(CG181.S={}))[key]=S;const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;k.B181=B;fn(B,P,k,C,S);cgSeat(k,C.M,0)},pn);(CG181.keys||(CG181.keys={}))[key]=1}
 // ring helpers for specs: where on the torso / head a point is
 function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+1];if(y<=b[0]){const t=Math.max(0,(y-a[0])/(b[0]-a[0]));return a.map((v,j)=>v+(b[j]-v)*t)}}return list[list.length-1]}
