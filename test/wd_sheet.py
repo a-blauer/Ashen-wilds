@@ -1,5 +1,6 @@
 # Model sheets of the scattered decorations (WD kinds, 1680 / 1981 / 2280 ...): every kind drawn alone on a grey floor, from two sides.
 #   python3 wd_sheet.py [filter-regex] [TAG]   -> out/env/wd_<TAG>_<n>.png (24 kinds per sheet)
+#   EP=1: with the v183 detail paint (3410 ep183Mat) on the kinds' materials; PFX=<name> instead of wd_ in the file names
 import os,sys,json,base64,io,re
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -13,7 +14,7 @@ JS=r"""async([flt])=>{const re=new RegExp(flt),ks=Object.keys(WD.T).filter(k=>re
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x6a6660,roughness:1}));fl.rotation.x=-Math.PI/2;S.add(fl);
   const C=new THREE.PerspectiveCamera(35,480/300,.05,200);
   for(const k of ks){const T=WD.T[k],g=new THREE.Group();T.parts.forEach(p=>{let m;if(p.glow)m=new THREE.MeshBasicMaterial({vertexColors:true});else if(p.mat)m=new THREE.MeshBasicMaterial({color:0xaaaaaa,transparent:true,opacity:.4});
-      else m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});if(T.tint&&!p.glow&&m.color)m.color.setHex(T.tint[0]);g.add(new THREE.Mesh(p.g,m))});
+      else{m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});if(window.EPON)ep183Mat(m,EP183.ko)}if(T.tint&&!p.glow&&m.color)m.color.setHex(T.tint[0]);g.add(new THREE.Mesh(p.g,m))});
     const sc=T.sc||[1,1,1];g.scale.set(sc[0],sc[1],sc[2]);g.position.y=T.abs!=null?0:T.y;S.add(g);g.updateMatrixWorld(true);
     const b=new THREE.Box3().setFromObject(g),c=b.getCenter(new THREE.Vector3()),r=Math.max(.5,b.getSize(new THREE.Vector3()).length()/2);const imgs=[];
     for(const a of [.7,3.6]){C.position.set(c.x+Math.sin(a)*r*2.6,c.y+r*1.1,c.z+Math.cos(a)*r*2.6);C.lookAt(c);R.render(S,C);imgs.push(cv.toDataURL('image/png'))}
@@ -23,6 +24,7 @@ JS=r"""async([flt])=>{const re=new RegExp(flt),ks=Object.keys(WD.T).filter(k=>re
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2000)
+    if os.environ.get('EP'):pg.evaluate('()=>{window.EPON=1}')
     r=pg.evaluate(JS,[FLT]);print(len(r),'kinds')
     per=24;cols=4
     for si in range(0,len(r),per):
@@ -31,5 +33,5 @@ def s(pg):
             for j,u in enumerate(q['imgs']):
                 im=Image.open(io.BytesIO(base64.b64decode(u.split(',')[1]))).resize((240,150));sh.paste(im,((i%cols)*480+j*240,(i//cols)*150))
             ImageDraw.Draw(sh).text(((i%cols)*480+4,(i//cols)*150+3),'%s  %dt  x%d'%(q['k'],q['tr'],q['n']),fill=(255,255,0))
-        p=OUT+'/wd_%s_%d.png'%(TAG,si//per);sh.save(p);print(p)
+        p=OUT+'/'+os.environ.get('PFX','wd')+'_%s_%d.png'%(TAG,si//per);sh.save(p);print(p)
 play.run(s)

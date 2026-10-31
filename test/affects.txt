@@ -81,3 +81,5 @@ camp-sites|2270|tiers: v168_tiers.py v123_camps.py v164_camps.py
 # v179: every enemy model has no loose pieces (snap 3380, looks / stance / palettes 3381) and the bodies they are built from
 3380|3381|v179|float_lib|enemy|enemies|foes|monster|old-creatures|0120-|0150-|0610-|0780-|1410-|1420-|1450-|1460-|0010-|200[0-9]-|20[1-5]0-|2035-|26[4-6]\d-|3283|3315: v179_enemy_parts.py v137_enemies.py v113_roster.py
 3370|env-pass|1680|1981|2270|2280|3242|0810|0510|v177: v177_env.py v168_ground.py v124_edge_test.py v164_camps.py v123_camps.py
+# v183: scenery painted (baked shading + one shared detail texture on scenery materials only, 3410)
+3410|env-paint|v183: v183_env_paint.py v177_env.py v168_ground.py v137_enemies.py v179_enemy_parts.py
