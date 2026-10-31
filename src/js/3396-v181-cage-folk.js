@@ -25,10 +25,11 @@ function cgFacePaint(S,m,skin,o){o=o||{};if(m.part=='head'&&m.s>.3){const bx=m.x
   if(Math.abs(m.y-S.hp(0,o.my||1.557,0)[1])<.0042*S.hs&&Math.abs(bx)<(o.mw||.026))return o.lip==null?0x2a1210:o.lip}return null}
 // a hood: a shell over the crown, back and sides of the head, the neck and the shoulders, open round the face; peak = a cone on top
 // (restore pass) o.arm: the drape also runs down over the shoulder caps by that much; o.tip: a limp point hanging off the back
-function cgHood(B,k,M,S,o){const fy=S.hp(0,1.6,0)[1],hz0=S.hp(0,1.6,0)[2],OF=o.off||.02;fk_shell(B,M,m=>{if(m.part=='head'){const bx=m.x/S.hs,by=(m.y-fy)/S.hs;return !(m.s>.35&&(bx*bx)/(.065*.065)+(by*by)/(.075*.075)<1)}
+// (refine) o.top: the opening's upper edge (base head units above y 1.6; the hood then covers the forehead down to it)
+function cgHood(B,k,M,S,o){const fy=S.hp(0,1.6,0)[1],hz0=S.hp(0,1.6,0)[2],OF=o.off||.02,top=o.top==null?1:o.top;fk_shell(B,M,m=>{if(m.part=='head'){const bx=m.x/S.hs,by=(m.y-fy)/S.hs;return !(m.s>.35&&by<top&&(bx*bx)/(.065*.065)+(by*by)/(.075*.075)<1)}
     return m.part=='neck'||(m.part=='torso'&&m.y>S.torso[6][0]-(o.drape||.06))||(o.arm&&m.part=='arm'&&m.y>S.torso[6][0]-o.arm)},
     /* (refine) the hood thins out toward the face opening, so its edge lies flush on the face instead of stepping round it */
-    v=>{if(v[2]<hz0)return OF;const bx=v[0]/S.hs,by=(v[1]-fy)/S.hs,e=(bx*bx)/(.065*.065)+(by*by)/(.075*.075);return e>2.4?OF:OF*Math.max(.45,Math.min(1,(e-1)/1.4))},o.col,{rim:.2,vcol:o.vcol});
+    v=>{if(v[2]<hz0)return OF;const bx=v[0]/S.hs,by=(v[1]-fy)/S.hs;if(by>top-.012)return OF;const e=(bx*bx)/(.065*.065)+(by*by)/(.075*.075);return e>2.4?OF:OF*Math.max(.45,Math.min(1,(e-1)/1.4))},o.col,{rim:.2,vcol:o.vcol});
   if(o.peak){const t=S.hp(0,1.735,-.03);k.L('head','c',o.peak,t,[t[0],t[1]+o.ph*S.hs,t[2]-o.ph*.5*S.hs],.05*S.hs,.004,6)}
   if(o.tip!=null){const t=S.hp(0,1.69,-.04);k.L('head','c',o.tip,t,S.hp(0,1.63,-.2),.04*S.hs,.008,6)}}
 // ---------------- restore-pass helpers (f6_) ----------------
@@ -75,17 +76,42 @@ function fk_shade(M,S,o){o=o||{};const sh=cgShade(M,Object.assign({cav:1,y0:0,y1
   M.F.forEach(f=>{if(f.part=='head')f.v.forEach(i=>hd[i]=1)});M.shade=sh.map((x,i)=>hd[i]&&x<1&&M.V[i][1]>S.hp(0,1.54,0)[1]?1-(1-x)*hk:x)}
 // fingers as rounded tapering lofts rooted inside the palm (the same paths as cgFingers): kind 'open' | 'claw' | 'fist';
 // o: len, r (finger thickness), nail (claw colour), tip (claw length), t (layer), w (hand width factor)
-function fk_digit(B,col,p,d,len,r,n,curl,ax,W,o){let a=p.slice(),dir=new THREE.Vector3(...d).normalize();const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax).normalize(),curl);
-  const pts=[sub3(a,[dir.x*r*1.6,dir.y*r*1.6,dir.z*r*1.6]),a.slice()];for(let i=0;i<n;i++){a=add3(a,[dir.x*len/n,dir.y*len/n,dir.z*len/n]);pts.push(a);dir.applyQuaternion(q)}
-  const R=pts.map((p,i)=>{const t=Math.max(0,i-1)/n,rr=r*(1-.32*t);return {p,rx:rr,f:rr*.9,b:rr*.9,w:W}});
-  if(o.tip){R[R.length-1].rx*=.9;R.push({p:add3(a,[dir.x*o.tip,dir.y*o.tip,dir.z*o.tip]),rx:r*.12,f:r*.12,b:r*.12,w:W})}else R.push({p:add3(a,[dir.x*r*.55,dir.y*r*.55,dir.z*r*.55]),rx:r*.45,f:r*.4,b:r*.4,w:W});
-  const nI=R.length-1;mdLoft(B,R,{seg:5,capB:true,t:o.t||'c',col:m=>o.tip&&m.i>nI-1?(o.nail==null?0x1a1408:o.nail):col})}
+// a finger: rounded tapering loft rooted inside the palm, a knuckle ring, each joint a little thicker than the bone between,
+// curling by curl at each joint; o.tip: a claw cone in the nail colour, else a rounded fingertip
+function fk_digit(B,col,p,d,len,r,n,curl,ax,W,o){let a=p.slice(),dir=new THREE.Vector3(...d).normalize();const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax).normalize(),curl),
+    D=()=>[dir.x,dir.y,dir.z],R=[{p:sub3(a,mul3(D(),r*(o.root||1.8))),rx:r*.9},{p:a.slice(),rx:r*1.08}];
+  for(let i=0;i<n;i++){const L=len/n,t=1-.16*i;R.push({p:add3(a,mul3(D(),L*.5)),rx:r*.8*t});a=add3(a,mul3(D(),L));if(i<n-1){R.push({p:a.slice(),rx:r*.92*t});dir.applyQuaternion(q)}}
+  const nS=R.length;
+  if(o.tip){R.push({p:a.slice(),rx:r*.66});R.push({p:add3(a,mul3(D(),o.tip*.3)),rx:r*.5});R.push({p:add3(a,mul3(D(),o.tip)),rx:r*.06})}
+  else{R.push({p:add3(a,mul3(D(),r*.35)),rx:r*.6});R.push({p:add3(a,mul3(D(),r*.7)),rx:r*.3})}
+  R.forEach(q=>{q.f=q.rx*.92;q.b=q.rx*.92;q.w=W});
+  mdLoft(B,R,{seg:o.seg||6,capB:true,t:o.t||'c',col:m=>o.tip&&m.i>nS?(o.nail==null?0x1a1408:o.nail):col})}
+// a closed fist as one mitten: a wide rounded loft (half width hw2 across the knuckles, thickness r) along the curled path of the
+// middle finger (n bones, curl per joint about ax), its width kept across the hand (u = the back of the hand); the three
+// finger separations are painted per corner as dark lines that fade into the skin, past the knuckle ridge
+function fk_mitten(B,col,p,d,len,r,hw2,n,curl,ax,uH,W,t){let a=p.slice(),dir=new THREE.Vector3(...d).normalize();const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax).normalize(),curl),D=()=>[dir.x,dir.y,dir.z];
+  const R=[{p:sub3(a,mul3(D(),r*2.2)),rx:hw2*.9,th:r*.95,ln:0},{p:a.slice(),rx:hw2*1.03,th:r*1.15,ln:.4,kb:1}];
+  for(let i=0;i<n;i++){const L=len/n,k=1-.06*i;R.push({p:add3(a,mul3(D(),L*.5)),rx:hw2*.96*k,th:r*.95*k,ln:1,kb:i?0:.5});a=add3(a,mul3(D(),L));if(i<n-1){R.push({p:a.slice(),rx:hw2*k,th:r*1.05*k,ln:1});dir.applyQuaternion(q)}}
+  R.push({p:add3(a,mul3(D(),r*.45)),rx:hw2*.8,th:r*.7,ln:.6});
+  const seg=24,TC=new THREE.Color(col),w=mdW(B,W),rows=[];let U=null;
+  R.forEach((g,i)=>{const tg=nrm3(sub3(R[Math.min(i+1,R.length-1)].p,R[Math.max(i-1,0)].p));let u=U||uH;u=nrm3(sub3(u,mul3(tg,u[0]*tg[0]+u[1]*tg[1]+u[2]*tg[2])));U=u;const Sd=cross3(u,tg),row=[];
+    for(let k=0;k<seg;k++){const an=Math.PI/2+k/seg*Math.PI*2,c=Math.cos(an),sn=Math.sin(an),dl=Math.min(Math.abs(c-.5),Math.abs(c),Math.abs(c+.5)),sh=1-.45*g.ln*Math.max(0,1-dl/.07)*Math.max(0,Math.min(1,(sn+.35)*3));   /* thin lines, on the back and over the curl (not the hidden palm side) */
+      const th=g.th*(1+(g.kb||0)*.16*Math.max(0,sn)*Math.max(0,1-Math.min(Math.abs(c-.75),Math.abs(c-.25),Math.abs(c+.25),Math.abs(c+.75))/.2));   /* a bumpy knuckle ridge */
+      row.push({x:g.p[0]+Sd[0]*c*g.rx+u[0]*sn*th,y:g.p[1]+Sd[1]*c*g.rx+u[1]*sn*th,z:g.p[2]+Sd[2]*c*g.rx+u[2]*sn*th,w,rgb:[TC.r*sh,TC.g*sh,TC.b*sh]})}rows.push(row)});
+  const cl=mdC(col),T=t||'c';for(let i=0;i<rows.length-1;i++)for(let k=0;k<seg;k++){const A=rows[i][k],A1=rows[i][(k+1)%seg],B2=rows[i+1][k],B3=rows[i+1][(k+1)%seg];mdTri(B,T,A,A1,B2,cl);mdTri(B,T,B2,A1,B3,cl)}
+  const L=rows[rows.length-1],e=R[R.length-1].p,cv={x:e[0]+dir.x*r*.25,y:e[1]+dir.y*r*.25,z:e[2]+dir.z*r*.25,w,rgb:[TC.r,TC.g,TC.b]};for(let k=0;k<seg;k++)mdTri(B,T,cv,L[k],L[(k+1)%seg],cl)}
 function fk_fingers(B,S,s,col,kind,o){o=o||{};const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),hw=o.w||1,kn=add3(a2,mul3(d,.075*hw)),L=(o.len||1)*.08,r=(o.r||.0095)*hw,W=[[bn+'2',1]];
   const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
   const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),oo={t:o.t,nail:o.nail,tip:0};
-  for(let i=0;i<4;i++){const z=(1.5-i)*.0165*hw,p=P(kn,z,-.004*hw);if(kind=='fist')fk_digit(B,col,p,D(1,-.5,.05),L*.7,r*.88,2,1.4,ax,W,oo);
-    else fk_digit(B,col,p,D(1,-.22,z*(kind=='claw'?1.6:.7)/hw),L*(kind=='claw'?1:.86)*[.96,1.04,.97,.8][i],r*(i==3?.9:1),2,kind=='claw'?.5:.42,ax,W,Object.assign({},oo,{tip:o.tip||0}))}
-  fk_digit(B,col,P(add3(a2,mul3(d,.03*hw)),.026*hw,-.01*hw),D(.6,-.3,.75),L*.62,r*1.05,2,.3,nrm3(cross3(u,f)),W,Object.assign({},oo,{tip:o.tip?o.tip*.6:0}))}
+  // a fist: the closed fingers don't change the outline, so they are one rounded mitten curled round the grip (fk_mitten) with
+  // the finger separations painted as dark lines; the thumb is its own loft folded over it
+  if(kind=='fist')fk_mitten(B,col,P(add3(a2,mul3(d,.064*hw)),0,-.002*hw),D(1,-.7,.03),L*.6,r*1.08,.0165*hw*1.85,3,1.05,ax,u,W,o.t);
+  const kc=kind=='claw'?add3(a2,mul3(d,.062*hw)):kn;
+  for(let i=0;i<4&&kind!='fist';i++){const z=(1.5-i)*(kind=='claw'?.0178:.0165)*hw,p=P(kc,z,-.004*hw);
+    if(kind=='claw')fk_digit(B,col,p,D(1,-.2,z*1.6/hw),L*[.96,1.04,.97,.8][i],r*(i==3?.9:1),3,.46,ax,W,Object.assign({},oo,{tip:o.tip||0,seg:5,root:2.6}));   /* bony, three-jointed, curving in */
+    else fk_digit(B,col,p,D(1,-.22,z*.7/hw),L*.86*[.96,1.04,.97,.8][i],r*(i==3?.9:1),2,.42,ax,W,oo)}
+  if(kind=='fist')fk_digit(B,col,P(add3(a2,mul3(d,.034*hw)),.026*hw,-.008*hw),D(1,-.3,.22),L*.44,r*1.1,2,.6,ax,W,oo);   /* the thumb folded over the curled fingers */
+  else fk_digit(B,col,P(add3(a2,mul3(d,.03*hw)),.026*hw,-.01*hw),D(.6,-.3,.75),L*.62,r*1.05,2,.3,nrm3(cross3(u,f)),W,Object.assign({},oo,{tip:o.tip?o.tip*.6:0}))}
 // a plate harness (the Blood Knight's kit): cuirass, gorget, mail skirt and tassets, belt, pauldrons, arm and leg plates,
 // gauntlets, sabatons; pal {pl, pl2, ed, gd, ml, belt}; o.pauldron 'dome' | 'spiked', o.spikes
 function cgPlate(B,k,M,S,pal,o){o=o||{};const T=S.torso,J=S.J,wy=T[2][0],sh=T[6][0],ey=J.aR1[1],wr=J.aR2[1],kn=J.rh1[1],an=J.rh2[1],{pl,pl2,ed,gd,ml}=pal;
@@ -99,7 +125,7 @@ function cgPlate(B,k,M,S,pal,o){o=o||{};const T=S.torso,J=S.J,wy=T[2][0],sh=T[6]
     if(o.spikes)for(let j=0;j<3;j++)k.L(A+'0','m',o.spikes,[a[0]+s*(.06+j*.03),a[1]+.08,a[2]-.04+j*.04],[a[0]+s*(.11+j*.03),a[1]+.2,a[2]-.05+j*.04],.022,.002,5);
     cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.08&&m.y>ey+.035,.022,m=>Math.round(m.y*28)%2?pl:pl2,{t:'m'});
     cgShell(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.022,m=>m.y<wr+.02?gd:pl,{t:'m'});
-    cgShell(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,pl,{t:'m'});fk_fingers(B,S,s,pl,'fist',{len:1.1,r:.011,t:'m'});
+    cgShell(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,pl,{t:'m'});fk_fingers(B,S,s,pl,'fist',{len:1.1,r:.0092,t:'m'});
     const e=J[A+'1'],eb=e[2]-.06;k.p(A+'1','dod','m',pl2,e[0],e[1],eb,.05,.05,.04);k.L(A+'1','m',ed,[e[0],e[1],eb-.02],[e[0]+s*.02,e[1]+.03,eb-.09],.02,.002,4);
     cgShell(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y>kn+.05&&m.y<J.lh0[1]-.1,.024,m=>Math.round(m.y*24)%2?pl:pl2,{t:'m'});
     const kq=J[L+'1'];k.p(L+'1','hem','m',pl2,kq[0],kq[1],kq[2]+.075,.075,.055,.06,Math.PI/2,0,0);k.L(L+'1','m',ed,[kq[0],kq[1]+.01,kq[2]+.12],[kq[0],kq[1]+.07,kq[2]+.18],.02,.002,4);
@@ -127,7 +153,7 @@ function cgGoblinBody(B,k,C,S,K){const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFace
   C.f6vcol=m=>{let c=mdMix(sk,dk,Math.max(0,Math.min(1,.1-m.s*.8)));if(m.s>.2&&(m.part=='torso'||m.part=='neck'))c=mdMix(c,pale,Math.min(1,(m.s-.2)*1.3)*.6);
     const n=n3Sn(m.x,m.y,m.z,13,K.sd||5);c=mdMix(c,bl,Math.max(0,Math.min(1,(n-.55)*3))*.45);return m.part=='hand'||m.part=='foot'?mdSh(c,.9):c};
   fk_eyes(k,M,S,K.eye,.038,1.628,K.er||1.05,K.eo==null?-.001:K.eo);cgEars(k,M,S,sk,1.632,.2,.17,.3,.034,mdSh(sk,.62));f6_tusks(k,M,S,0xe0d8b8,.027,.036,.0095);
-  [-1,1].forEach(s=>{fk_fingers(B,S,s,mdSh(sk,.95),K.fist&&K.fist(s)?'fist':'claw',{w:1.32,len:1.12,nail:0x1a1408,tip:.016});fk_toes(k,S,s,mdSh(sk,.85),.02)});return M}
+  [-1,1].forEach(s=>{fk_fingers(B,S,s,mdSh(sk,.95),K.fist&&K.fist(s)?'fist':'claw',{w:1.32,len:1.15,r:.0074,nail:0x1a1408,tip:.018});fk_toes(k,S,s,mdSh(sk,.85),.02)});return M}
 // the old goblins' dark hide breeches over the hips, and a loincloth: one flap in front, one behind, over a belt
 function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[1];
   fk_shell(B,M,m=>(m.part=='torso'&&m.y<wy+.01)||(m.part=='leg'&&m.y>J.lh1[1]+.1),.01,null,{vcol:fk_nz(pa,.22,10)});
@@ -152,7 +178,7 @@ function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[
     // the cross strap: left shoulder to right hip (the sling's), front and back
     f6_strap(B,M,S,[[wy+.02,.75,.012],[(wy+sh)/2,.1,.012],[sh-.05,-.42,.012],[sh+.015,-1.2,.014],[sh-.05,-Math.PI+.45,.012],[(wy+sh)/2,-Math.PI-.15,.012],[wy+.02,-Math.PI-.75,.012]],.012,lt);
     // the hood: open round the face, its cowl draped down over the shoulders and the tops of the arms, a limp point behind
-    cgHood(B,k,M,S,{vcol:m=>a181Nz(m.part=='head'||m.part=='neck'?hd:mdSh(hd,.9),m,.2,9),off:.02,drape:.09,arm:.07,tip:mdSh(hd,.9)});
+    cgHood(B,k,M,S,{vcol:m=>a181Nz(m.part=='head'||m.part=='neck'?hd:mdSh(hd,.9),m,.2,9),off:.02,drape:.09,arm:.07,tip:mdSh(hd,.9),top:.045});   /* the hood comes down over the forehead to just above the brow */
     const p=cgSurf(M,S,wy-.03,1.4,.04);k.p('pelvis','sph','c',0x4a3420,p[0],p[1],p[2],.045,.055,.042)})})();
 // ---------------- Goblin Shaman: a long robe, a skull worn over the brow (the green eyes glow beneath it), a crest of feathers, bead and fang necklaces ----------------
 (function(){const S=fk_body(GOB181({h:.74,legL:.88}),FK_HIG),K={sk:0x54644a,eye:0x7aff6a,er:1.25,eo:.001,fist:s=>s>0,sd:9},rb=0x3a5434,rb2=0x2e4628,bone=0xc8bea4,T=S.torso,J=S.J;
@@ -176,7 +202,7 @@ function cgHumanBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.scul
   C.f6vcol=m=>{const c=a181Nz(mdMix(K.sk,sk2,Math.max(0,Math.min(1,-m.s*1.1-.15))),m,.08,9);return o.vpaint?o.vpaint(m,c):c};   /* o.vpaint: soft paint (scars) */
   if(o.glow)fk_eyes(k,M,S,o.glow,.036,1.629,.9,-.001);else[-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p){k.p('head','dod','c',0xd8d0c4,p[0],p[1],p[2]-.003,.011*S.hs,.007*S.hs,.006);k.p('head','ico','c',K.iris||0x2a1a10,p[0]-s*.001,p[1],p[2]+.002,.005*S.hs,.005*S.hs,.003)}});
   if(o.ears!==false)cgEars(k,M,S,mdSh(K.sk,.92),1.625,.05,.15,.6,.02);
-  [-1,1].forEach(s=>{if(!(o.noHands&&o.noHands(s)))fk_fingers(B,S,s,K.hand||K.sk,K.fist&&K.fist(s)?'fist':'open',{r:.0088})});return M}
+  [-1,1].forEach(s=>{if(!(o.noHands&&o.noHands(s)))fk_fingers(B,S,s,K.hand||K.sk,K.fist&&K.fist(s)?'fist':'open',{r:.0074})});return M}
 const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,1.1,1.05],at:1.1,lt:1.05,hs:.96,armL:1.0,legL:1.03},o||{});
 // (restore pass) the old human foes stood about 15–20% shorter than the first cage versions (their heights are matched again
 // with h below); the head keeps its size, so they read sturdier, like the old ones. (refine) human proportions kept, now on the
