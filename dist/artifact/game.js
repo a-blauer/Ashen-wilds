@@ -55745,27 +55745,30 @@ function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N
  vec4 tB=texture2D(uEdT,e2.zy)*wt.x+texture2D(uEdT,e2.xz)*wt.y+texture2D(uEdT,e2.xy)*wt.z;
  vec3 c=diffuseColor.rgb;float mx=max(c.r,max(c.g,c.b))+.002,mn=min(c.r,min(c.g,c.b)),sat=(mx-mn)/mx,lum=dot(c,vec3(.3,.59,.11));
  float fol=smoothstep(.02,.13,(c.g-max(c.r,c.b))/mx);
- float wood=smoothstep(.1,.3,(c.r-c.b)/mx)*(1.-fol)*(1.-smoothstep(.14,.34,lum));
- float stn=(1.-fol)*(1.-wood)*(1.-smoothstep(.38,.62,sat));
+ float warm=smoothstep(.1,.3,(c.r-c.b)/mx);float ice=smoothstep(.04,.18,(c.b-c.r)/mx);   // warm: wood, sandstone; blue-white: ice, crystal, frost
+ float wood=warm*(1.-fol)*(1.-smoothstep(.24,.48,lum))*smoothstep(.32,.5,sat);   // bark and wood: darker, more saturated browns than sandstone
+ float stn=(1.-fol)*(1.-wood)*(1.-smoothstep(.38,.62,sat))*(1.-ice);
  float bri=smoothstep(.45,.9,lum);float vrt=1.-abs(nW.y);
- float d=(tB.r-.5)*.24+(tA.r-.5)*.12;
+ float d=((tB.r-.5)*.24+(tA.r-.5)*.12)*(1.-.65*ice);   // ice and crystal: only a soft brightness variation
 #ifndef ENVDET_G
  // cracks: thin pieces of the cell edges (straight runs, sharp turns), only where a sparse mask lets them through; none on
  // near-white stone, snow and ice (they read as veins there), and the stone's own tone and pitting softer on bright stone
- float ice=smoothstep(.04,.18,(c.b-c.r)/mx);   // blue-white: ice, crystal, frost
- float ck=(1.-smoothstep(.012,.04,tB.g))*smoothstep(.52,.66,tA.r*.5+tB.b*.5)*(1.-smoothstep(.62,.95,lum))*(1.-ice);
+ float ck=(1.-smoothstep(.012,.04,tB.g))*smoothstep(.52,.66,tA.r*.5+tB.b*.5)*(1.-smoothstep(.62,.95,lum));
  d+=stn*(-ck*.42+((tB.b-.5)*.13+(tA.r-.5)*.2)*(1.-.55*bri));
- float lic=stn*smoothstep(.15,.7,nW.y)*smoothstep(.5,.64,tB.r*.7+tA.r*.3)*(1.-bri);   // lichen and grime on the tops of stones
+ float lic=stn*smoothstep(.15,.7,nW.y)*smoothstep(.5,.64,tB.r*.7+tA.r*.3)*(1.-smoothstep(.28,.55,lum))*(1.-warm);   // lichen on the tops of grey stones (never pale or warm desert stone)
  diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.86,.96,.62),lic*.8*uEdA);
- d+=wood*(tA.a-.5)*.9*(.3+.7*vrt);
+ d+=wood*(tA.a-.5)*1.5*(.3+.7*vrt);
  d+=fol*((tA.r-.5)*.3+nW.y*.1);   // foliage: soft blotches and lit tops (a cell pattern read as scales: no cells here)
 #else
  vec3 e3=vEdP*uEdS*.11+vec3(.7,.2,.4);
  vec4 tC=texture2D(uEdT,e3.zy)*wt.x+texture2D(uEdT,e3.xz)*wt.y+texture2D(uEdT,e3.xy)*wt.z;
  float sl=smoothstep(.3,.65,vrt),hz=dot(vEdP.xz,vec2(.7,.7))*uEdS;
- float sa=smoothstep(.3,.7,texture2D(uEdT,vec2(vEdP.y*uEdS*.55,hz*.012+.37)).r);   // strata: stepped bands of rock along the level lines
+ // strata: bands of rock along the level lines, uneven in spacing and thickness (two scales mixed), with a harder edge so
+ // they read as ledges; softer up close (they read as stripes there) and on pale rock and snow
+ float yb=vEdP.y*uEdS;float sa=smoothstep(.4,.6,texture2D(uEdT,vec2(yb*.55,hz*.012+.37)).r*.6+texture2D(uEdT,vec2(yb*.19+.5,hz*.007+.81)).r*.4);
+ float sk=smoothstep(4.,26.,length(cameraPosition-vEdW))*.7+.3;
  d=(tC.r-.5)*.38+(tB.r-.5)*.14+fol*(tA.r-.5)*.12;
- d+=sl*(1.-fol)*((sa-.5)*.42*(1.-.5*bri)+(tC.b-.5)*.08+(tA.r-.5)*.12);   // (long cracks on cliffs read as worms: none)
+  d+=sl*(1.-fol)*((sa-.5)*.32*sk*(1.-.8*bri)+(tC.b-.5)*.08+(tA.r-.5)*.12);   // (long cracks on cliffs read as worms: none)
 #endif
  diffuseColor.rgb*=.93*clamp(1.+d*uEdA*ENVDET_K,.45,1.4);}
 #endif
