@@ -100,6 +100,15 @@ function fk_mitten(B,col,p,d,len,r,hw2,n,curl,ax,uH,W,t){let a=p.slice(),dir=new
       row.push({x:g.p[0]+Sd[0]*c*g.rx+u[0]*sn*th,y:g.p[1]+Sd[1]*c*g.rx+u[1]*sn*th,z:g.p[2]+Sd[2]*c*g.rx+u[2]*sn*th,w,rgb:[TC.r*sh,TC.g*sh,TC.b*sh]})}rows.push(row)});
   const cl=mdC(col),T=t||'c';for(let i=0;i<rows.length-1;i++)for(let k=0;k<seg;k++){const A=rows[i][k],A1=rows[i][(k+1)%seg],B2=rows[i+1][k],B3=rows[i+1][(k+1)%seg];mdTri(B,T,A,A1,B2,cl);mdTri(B,T,B2,A1,B3,cl)}
   const L=rows[rows.length-1],e=R[R.length-1].p,cv={x:e[0]+dir.x*r*.25,y:e[1]+dir.y*r*.25,z:e[2]+dir.z*r*.25,w,rgb:[TC.r,TC.g,TC.b]};for(let k=0;k<seg;k++)mdTri(B,T,cv,L[k],L[(k+1)%seg],cl)}
+// (round 2) where the closed fist's grip is: the centre of the mitten's curl (the circle through its knuckle, its middle joint
+// and its tip), as an offset from the wrist joint in model space, rest pose: the value for S.grip, so the weapon handle runs
+// through the fist with the knuckles round it and the thumb over it. o: w (hand width factor), len (finger length) as fk_fingers
+function fk_gripOf(S,s,o){o=o||{};const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),hw=o.w||1,L=(o.len||1)*.08,l=L*.6/2;
+  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
+  const A=add3(add3(a2,mul3(d,.064*hw)),mul3(u,-.002*hw)),dir=new THREE.Vector3(...nrm3(add3(add3(d,mul3(u,-.7)),mul3(f,.03)))),Bp=add3(A,[dir.x*l,dir.y*l,dir.z*l]);
+  dir.applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax),1.5));const C=add3(Bp,[dir.x*l,dir.y*l,dir.z*l]);
+  const a=sub3(A,C),b=sub3(Bp,C),n=cross3(a,b),nn=n[0]*n[0]+n[1]*n[1]+n[2]*n[2],aa=a[0]*a[0]+a[1]*a[1]+a[2]*a[2],bb=b[0]*b[0]+b[1]*b[1]+b[2]*b[2];
+  const cc=add3(C,mul3(cross3(sub3(mul3(b,aa),mul3(a,bb)),n),1/(2*nn)));return sub3(cc,a2)}
 function fk_fingers(B,S,s,col,kind,o){o=o||{};const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),hw=o.w||1,kn=add3(a2,mul3(d,.075*hw)),L=(o.len||1)*.08,r=(o.r||.0095)*hw,W=[[bn+'2',1]];
   const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
   const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),oo={t:o.t,nail:o.nail,tip:0};
@@ -142,7 +151,7 @@ function fk_toes(k,S,s,col,claw,n){n=n||3;const l=s<0?'lh2':'rh2',A=S.J[l],L=S.f
 // limbs with knobby elbows and knees, long arms ending in big hands, short bowed legs on big flat feet. The kit stays (tusks,
 // hoods, skulls, loincloths, straps, pauldrons).
 // arm rings: shoulder, upper arm, elbow, wrist, palm, knuckles · leg rings: hip, thigh, knee, calf, ankle
-const GOB181=o=>Object.assign({h:.68,w:1.08,d:1.06,rw:[.9,.98,.82,.92,1.08,1.16,1.22,1.02],rf:[1,1.06,1.16,1.1,1.06,1.02,.98,.95],rb:[1,1.08,1,1.04,1.1,1.1,1.06,1],
+const GOB181=o=>Object.assign({snug:1.8,h:.68,w:1.08,d:1.06,rw:[.9,.98,.82,.92,1.08,1.16,1.22,1.02],rf:[1,1.06,1.16,1.1,1.06,1.02,.98,.95],rb:[1,1.08,1,1.04,1.1,1.1,1.06,1],
   at:1.12,lt:1.1,hs:1.42,hw:1.1,hd:1.06,armL:1.16,legL:.84,foot:1.45,footW:1.4,nw:1.15,
   armR:[1.05,.88,1.18,.9,1.4,1.45],legR:[1,.86,1.14,.98,1.12]},o||{});
 function cgGoblinBody(B,k,C,S,K){const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFaceGoblin()));fk_shade(M,S);
@@ -164,6 +173,7 @@ function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[
     /* (refine) war paint, as paint: three rust-red claw slashes down the chest, a smear across the eyes */
     paint:m=>{if(m.part=='torso'&&m.s>.4){const T=S.torso,y=(m.y-T[3][0])/(T[6][0]-T[3][0]);if(y>.15&&y<.85&&[-.05,0,.05].some(x=>Math.abs(m.x-x-(y-.5)*.05)<.0075))return 0x6a2414}
       if(m.part=='head'&&m.s>.3){const by=(m.y-S.nb)/S.hs+1.52;if(Math.abs(by-1.629)<.009&&Math.abs(m.x/S.hs)>.055&&Math.abs(m.x/S.hs)<.085)return 0x5a1e10}return null}},lt=0x3a2618,lo=0x5a4628,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{w:1.32,len:1.15})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('hob',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0];
     f6_gobLoin(B,M,S,lo,lt,0x4a3a22);
     // the strap: from the right shoulder down across the chest to the left hip, and over the shoulder down the back
@@ -173,6 +183,7 @@ function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[
     for(let i=0;i<7;i++){const p=cgSurf(M,S,sh-.035-Math.abs(i-3)*.012,(i-3)*.26,.006);k.p('chest',i%2?'cone4':'oct','c',i%2?0xd8d0b0:0x6a3a2a,p[0],p[1]-.012,p[2],.012,i%2?.04:.012,.01,Math.PI)}})})();
 // ---------------- Hobgoblin Slinger: a hood that drapes over the shoulders, a cross strap, breeches and a loincloth, a belt pouch of stones ----------------
 (function(){const S=fk_body(GOB181({h:.66}),FK_HIG),K={sk:0x5c6640,eye:0xffc020,fist:s=>s>0,sd:7},hd=0x5a4630,lo=0x6a5434,lt=0x3a2618,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{w:1.32,len:1.15})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('sling',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0];
     f6_gobLoin(B,M,S,lo,0x2a1a10,0x4a3a22);
     // the cross strap: left shoulder to right hip (the sling's), front and back
@@ -182,6 +193,7 @@ function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[
     const p=cgSurf(M,S,wy-.03,1.4,.04);k.p('pelvis','sph','c',0x4a3420,p[0],p[1],p[2],.045,.055,.042)})})();
 // ---------------- Goblin Shaman: a long robe, a skull worn over the brow (the green eyes glow beneath it), a crest of feathers, bead and fang necklaces ----------------
 (function(){const S=fk_body(GOB181({h:.74,legL:.88}),FK_HIG),K={sk:0x54644a,eye:0x7aff6a,er:1.25,eo:.001,fist:s=>s>0,sd:9},rb=0x3a5434,rb2=0x2e4628,bone=0xc8bea4,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{w:1.32,len:1.15})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('shaman',S,function(B,P,k,C){const M=cgGoblinBody(B,k,C,S,K),wy=T[2][0];
     fk_shell(B,M,m=>(m.part=='torso'&&m.y>wy-.03&&Math.abs(Math.atan2(m.x,m.z))>.35)||(m.part=='arm'&&m.y>J.aR2[1]+.04),.016,null,{vcol:fk_nz(rb,.22,9)});
     cgSkirt(B,S,wy-.02,J.lh2[1]+.1,.1,.024,m=>a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,m,.1,6),{n:6,seg:16,keep:m=>!(m.y<J.lh1[1]-.08&&a181H(Math.round(Math.atan2(m.c,m.s)*9),2)<(J.lh1[1]-.08-m.y)*2)});
@@ -193,7 +205,7 @@ function f6_gobLoin(B,M,S,lo,belt,pa){const T=S.torso,J=S.J,wy=T[2][0],hy=J.lh0[
     for(let i=0;i<5;i++){const t=S.hp(-.06+i*.03,1.72,-.02);k.L('head','c',[0x8a2a1a,0x2a6a8a,0xc8a02a,0x2a2a2a,0x8a2a1a][i],t,[t[0]*2.2,t[1]+.13*S.hs,t[2]-.05],.02,.003,4)}
     for(let j=0;j<2;j++)for(let i=0;i<9;i++){const p=cgSurf(M,S,T[6][0]-.02-j*.04-Math.abs(i-4)*.01,(i-4)*.2,.018);k.p('chest',i%2?'cone4':'oct','c',i%2?0xe8e0c8:j?0x2a6a3a:0x8a2a1a,p[0],p[1]-.01,p[2],.01,i%2?.03:.01,.009,Math.PI)}})})();
 // (refine) a deeper crouch: bent knees, the back leaning forward, the head raised to look ahead, arms hanging forward
-ST179.hob={sx:.3,hx:-.3,lk:.44,rk:.44,az:.1,lz:-.12,le:-.38,ex:-.2};ST179.sling={sx:.28,hx:-.28,lk:.36,rk:.36,ax:-.18,ex:-.3,az:.06,lz:-.1,le:-.35};   /* the sling held up off the ground */ST179.shaman={sx:.3,hx:-.28,lk:.36,rk:.36,lz:-.08,le:-.35};
+ST179.hob={sx:.3,hx:-.3,lk:.44,rk:.44,az:.06,lz:-.06,le:-.38,ex:-.2};ST179.sling={sx:.28,hx:-.28,lk:.36,rk:.36,ax:-.28,ex:-.5,az:.05,lz:-.05,le:-.35};   /* the sling held up off the ground */ST179.shaman={sx:.3,hx:-.28,lk:.36,rk:.36,lz:-.05,le:-.35};
 
 // ===================================================================== humans =====================================================================
 function cgHumanBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.sculpt(cgFaceHuman(o.face)));fk_shade(M,S);
@@ -203,12 +215,13 @@ function cgHumanBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.scul
   if(o.glow)fk_eyes(k,M,S,o.glow,.036,1.629,.9,-.001);else[-1,1].forEach(s=>{const q=S.hp(s*.036,1.629,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(p){k.p('head','dod','c',0xd8d0c4,p[0],p[1],p[2]-.003,.011*S.hs,.007*S.hs,.006);k.p('head','ico','c',K.iris||0x2a1a10,p[0]-s*.001,p[1],p[2]+.002,.005*S.hs,.005*S.hs,.003)}});
   if(o.ears!==false)cgEars(k,M,S,mdSh(K.sk,.92),1.625,.05,.15,.6,.02);
   [-1,1].forEach(s=>{if(!(o.noHands&&o.noHands(s)))fk_fingers(B,S,s,K.hand||K.sk,K.fist&&K.fist(s)?'fist':'open',{r:.0074})});return M}
-const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,1.1,1.05],at:1.1,lt:1.05,hs:.96,armL:1.0,legL:1.03},o||{});
+const HUM181=o=>Object.assign({snug:1.6,h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,1.1,1.05],at:1.1,lt:1.05,hs:.96,armL:1.0,legL:1.03},o||{});
 // (restore pass) the old human foes stood about 15–20% shorter than the first cage versions (their heights are matched again
 // with h below); the head keeps its size, so they read sturdier, like the old ones. (refine) human proportions kept, now on the
 // seated-limb body (fk_body): arms grow out of the shoulders, thighs out of the hips under the clothes
 // ---------------- Bandit: dark leather garb with crossed straps, a hood, a black cloth mask over the lower face, a red sash, a short ragged cape with a red hem, boots ----------------
 (function(){const S=fk_body(HUM181({h:.8,w:.98,at:1.02,lt:1.04,hs:.94})),K={sk:0x9a7a62,fist:s=>s>0},lt=0x34343c,lt2=0x26262c,bt=0x2a2018,red=0x6a2222,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('bandit',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{ears:false}),wy=T[2][0],sh=T[6][0],yc=(wy+sh)/2;
     fk_shell(B,M,m=>(m.part=='torso'&&m.y>J.lh0[1]-.06)||(m.part=='arm'&&m.y>J.aR2[1]+.02),.014,null,{vcol:m=>a181Nz(m.part=='arm'?lt2:lt,m,.2,9)});
     [-1,1].forEach(s=>f6_strap(B,M,S,[[sh-.03,s*.62,.02],[(sh+yc)/2,s*.3,.02],[yc,0,.02],[(wy+yc)/2,-s*.3,.022],[wy+.02,-s*.6,.02]],.009,mdSh(lt,.55)));
@@ -227,6 +240,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
 // ---------------- Brigand Captain: a light-grey mail hauberk with short sleeves and a skirt, a red tabard, a nasal helm with cheek guards, a beard,
 // round pauldrons (spiked on the left), leather bracers, brown leather legs, boots with white fur cuffs, a short cape ----------------
 (function(){const S=fk_body(HUM181({h:.84,w:1.08,d:1.06,at:1.2,lt:1.12})),K={sk:0x9a7258,fist:s=>s>0},ml=0x80828a,ml2=0x74767e,tb=0x6a1e18,tb2=0x3a0e0a,ir=0x6a6c72,ir2=0x4a4e56,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('brigand',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K),wy=T[2][0],sh=T[6][0],kn=J.rh1[1];
     // the hauberk: chest and back, short sleeves to above the elbow, and its skirt to mid-thigh with a darker hem
     cgShell(B,M,m=>(m.part=='torso'&&m.y>wy-.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR1[1]+.04),.016,m=>a181Nz(Math.round(m.y*60)%2?ml:ml2,m,.12,20),{t:'m'});   /* (refine) and a mail collar round the neck */
@@ -250,6 +264,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
     f6_cape(B,S,{len:J.lh1[1]+.12,w:1.0,col:0x4a1410,ins:0x200806,rag:.5,seg:12})})})();
 // ---------------- Ember Cultist: a deep red hood with horns, a face lost in shadow (only the eyes burn), a long robe, a glowing sigil ----------------
 (function(){const S=fk_body(HUM181({h:.9,w:.96,at:.95})),K={sk:0x140c0a,hand:0x8a6a56,fist:s=>s>0},rb=0x4a100c,rb2=0x2a0806,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('cultist',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{glow:0xff6a20,ears:false}),wy=T[2][0];
     fk_shell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,null,{vcol:fk_nz(rb,.2,9)});cgSkirt(B,S,wy-.01,.03,.14,.024,m=>mdMix(a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?rb:rb2,m,.1,6),0x0c0404,Math.max(0,Math.min(.85,(.32-m.y)*3))),{n:6,seg:16});   /* (refine) the hem charred black */
     cgHood(B,k,M,S,{vcol:fk_nz(0x380a08,.2,9),off:.022,drape:.12,peak:0x380a08,ph:.06});
@@ -260,6 +275,7 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
 // ---------------- Hollow Knight: black plate, a great helm with a glowing red visor slit and breathing holes, bone horns, a dark cape ----------------
 (function(){const S=fk_body(HUM181({h:.9,w:1.1,d:1.08,rw:[1.12,1.18,1.12,1.16,1.22,1.22,1.28,1.3],at:1.32,lt:1.28,hs:.96,nw:1.25,foot:1.05,footW:1.1}),[0,4,6,8,10,12,14]),T=S.torso,J=S.J;   /* (refine) a plain helm: fewer head rings (the head is all helm) */
   const pal={pl:0x24262c,pl2:0x34363e,ed:0x4a4c56,gd:0x5a5e68,ml:0x2a2a30,belt:0x141418};
+  S.grip={'1':fk_gripOf(S,1,{len:1.1})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('knight',S,function(B,P,k,C){const M=C.M;C.f6skin=0x161618;fk_shade(M,S,{cav:1.2});cgPlate(B,k,M,S,pal);
     // the great helm: the visor slit is part of the helm's own surface, burning red (the glow layer); a band of lighter steel
     // above it, and breathing holes punched in the right cheek plate
@@ -270,10 +286,14 @@ const HUM181=o=>Object.assign({h:1.02,w:1.02,d:1.02,rw:[1,1.05,1,1.02,1.08,1.08,
     C.f6hide=[m=>m.part=='head'];   /* (refine) the helm and the slit cover the whole head: its skin is not drawn */
     [-1,1].forEach(s=>{const q=S.hp(s*.09,1.69,-.01);let p=q;[[s*.04,.05,-.02],[s*.02,.06,-.04],[-s*.005,.05,-.05]].forEach((d,j)=>{const n=add3(p,d);k.L('head','c',0x8a8270,p,n,.026-j*.007,.019-j*.007,5);p=n})});
     f6_cape(B,S,{len:J.lh1[1]-.05,w:1.2,col:0x18141e,ins:0x0c0a10,trim:0x2a1e30,rag:.6,seg:12})})})();
-ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
+ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.04,lz:-.05,le:-.15};
+// (round 2) arms that rest along the body: every folk foe is built snug (HUM181 / GOB181), so the stances hold the arms out
+// only a little (az / lz ≤ .06); the zealot's and the salt caller's stances (3381) are narrowed here
+ST179.ss165zealot=Object.assign({},ST179.ss165zealot,{lz:-.05});ST179.ss165caller=Object.assign({},ST179.ss165caller,{lz:-.05});
 // ---------------- Zealot of the Endless One: a bronze hood draped on the shoulders, a dark mask over the lower face, a patch with a red lens over
 // one eye, a crest of five viper spines and three plumes, a bare scarred torso, a rust kilt, a dagger sheath on the hip, wrapped forearms and shins, bone charms ----------------
 (function(){const S=fk_body(HUM181({h:.8,w:.96,d:.95,at:1.0,lt:.98})),K={sk:0x664a38,fist:s=>s>0},rust=0x4a1a0e,rust2=0x30100a,wrap=0x6a5e48,bronze=0x4e3e24,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('ss165zealot',S,function(B,P,k,C){const sc=mdSh(K.sk,.65),M=cgHumanBody(B,k,C,S,K,{ears:false,vpaint:(m,c)=>{if(m.part!='torso')return c;const a=Math.atan2(m.x,m.z),w=Math.sin(a*2+m.y*13),e=Math.min(1,Math.max(0,(m.y-T[2][0])*25),Math.max(0,(T[6][0]-.02-m.y)*25));
       return mdMix(c,sc,Math.max(0,1-Math.abs(w)/.14)*e*.9)}}),wy=T[2][0];   /* (refine) the serpent scars drawn soft, flowing over the skin, not stepped face by face */
     const hb=m=>(m.y-S.nb)/S.hs+1.52;
@@ -296,6 +316,7 @@ ST179.knight={sx:.06,hx:-.04,lk:.12,rk:.12,az:.06,lz:-.08,le:-.15};
     for(let i=0;i<7;i++){const p=cgSurf(M,S,T[6][0]-.03-Math.abs(i-3)*.014,(i-3)*.24,.008);k.p('chest',i%2?'cone4':'oct','c',i%2?0xe0d4b4:0x6a2412,p[0],p[1]-.012,p[2],.012,i%2?.04:.012,.01,Math.PI)}})})();
 // ---------------- Salt Caller: a salt-crusted sand robe, a tall blood-red cowl, glowing salt crystals through the shoulders and down the spine ----------------
 (function(){const S=fk_body(HUM181({h:.9,w:.96,at:.95})),K={sk:0x7a6450,fist:s=>s>0},robe=0x6e6248,robe2=0x5e5238,red=0x4a100c,salt=0xe8e4dc,gl=0x40e0c0,T=S.torso,J=S.J;
+  S.grip={'1':fk_gripOf(S,1,{})};   /* (round 2) the weapon's handle through the closed fist */
   f6_reg('ss165caller',S,function(B,P,k,C){const M=cgHumanBody(B,k,C,S,K,{glow:gl,ears:false}),wy=T[2][0];
     fk_shell(B,M,m=>(m.part=='torso'&&m.y>wy-.03)||(m.part=='arm'&&m.y>J.aR2[1]+.03),.016,null,{vcol:fk_nz(robe,.2,9)});
     cgSkirt(B,S,wy-.01,.04,.13,.024,m=>mdMix(a181Nz(Math.round(Math.atan2(m.c,m.s)*8)%2?robe:robe2,m,.1,6),mdMix(salt,0xc8c0b0,.4),Math.max(0,Math.min(1,(.3-m.y)*4.5)))   /* (refine) salt crust creeping up from the hem */,{n:6,seg:16});
