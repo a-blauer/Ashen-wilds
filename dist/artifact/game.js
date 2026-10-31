@@ -55695,7 +55695,7 @@ function sk181Evo(E,L,P){const M=EVO100_M,blk=0x141016,V=THREE.Vector3;
 //    under an overhang), the base darker where it meets the ground, faces turned down darker and a little cooler, faces
 //    turned up a touch warmer. Colour changes follow the form, never random per face.
 // 2. One shared detail texture (ep183Tex: 256² RGBA, made in code at load: R fBm, G cell edges, B a tone per cell, A
-//    streaks), drawn triplanar in each object's own space (it sticks to the object), its pattern chosen from the surface's
+//    streaks), projected in each object's own space (one plane per flat face) (it sticks to the object), its pattern chosen from the surface's
 //    colour: stone (grey, sandstone, brick) gets a few thin cracks (short straight runs of the cell edges, sparse; none on
 //    near-white stone, snow or ice), a tone per stone, pitting and lichen on its tops; bark and wood (dark warm) grain streaks up its upright faces; foliage
 //    (green) soft blotches and lit tops (a cell pattern read as scales on pines: none on foliage); everything a little
@@ -55740,11 +55740,15 @@ function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N
 `,FD='\n#ifdef ENVDET\nvarying vec3 vEdP,vEdW;uniform sampler2D uEdT;uniform float uEdS,uEdA;\n#endif\n',
     FC=`
 #ifdef ENVDET
-{vec3 eP=vEdP*uEdS;vec3 nP=normalize(cross(dFdx(vEdP),dFdy(vEdP)));vec3 wt=pow(abs(nP),vec3(4.));wt/=dot(wt,vec3(1.));
+{vec3 eP=vEdP*uEdS;vec3 nP=abs(cross(dFdx(vEdP),dFdy(vEdP)));
+ // flat faces: one projection per face, the plane the face looks along most (a triplanar blend costs three reads per layer
+ // and only matters on smooth surfaces); v runs up the object on upright faces, so streaks and grain run up them
+ float px=step(nP.y,nP.x)*step(nP.z,nP.x),py=(1.-px)*step(nP.z,nP.y);
+ #define EDUV(q) mix(mix((q).xy,(q).xz,py),(q).zy,px)
  vec3 nW=normalize(cross(dFdx(vEdW),dFdy(vEdW)));if(dot(nW,cameraPosition-vEdW)<0.)nW=-nW;
- vec4 tA=texture2D(uEdT,eP.zy)*wt.x+texture2D(uEdT,eP.xz)*wt.y+texture2D(uEdT,eP.xy)*wt.z;
+ vec4 tA=texture2D(uEdT,EDUV(eP));
  vec3 e2=eP*.43+vec3(.31,.17,.53);
- vec4 tB=texture2D(uEdT,e2.zy)*wt.x+texture2D(uEdT,e2.xz)*wt.y+texture2D(uEdT,e2.xy)*wt.z;
+ vec4 tB=texture2D(uEdT,EDUV(e2));
  vec3 c=diffuseColor.rgb;float mx=max(c.r,max(c.g,c.b))+.002,mn=min(c.r,min(c.g,c.b)),sat=(mx-mn)/mx,lum=dot(c,vec3(.3,.59,.11));
  float fol=smoothstep(.02,.13,(c.g-max(c.r,c.b))/mx);
  float warm=smoothstep(.1,.3,(c.r-c.b)/mx);float ice=smoothstep(.04,.18,(c.b-c.r)/mx);   // warm: wood, sandstone; blue-white: ice, crystal, frost
@@ -55766,7 +55770,7 @@ function ep183Tex(){if(EP183.tex)return EP183.tex;const N=256,D=new Uint8Array(N
  d+=fol*((tA.r-.5)*.3+nW.y*.1);   // foliage: soft blotches and lit tops (a cell pattern read as scales: no cells here)
 #else
  vec3 e3=vEdP*uEdS*.11+vec3(.7,.2,.4);
- vec4 tC=texture2D(uEdT,e3.zy)*wt.x+texture2D(uEdT,e3.xz)*wt.y+texture2D(uEdT,e3.xy)*wt.z;
+ vec4 tC=texture2D(uEdT,EDUV(e3));
  float sl=smoothstep(.3,.65,vrt),hz=dot(vEdP.xz,vec2(.7,.7))*uEdS;
  // strata: bands of rock along the level lines, uneven in spacing and thickness (two scales mixed), with a harder edge so
  // they read as ledges; softer up close (they read as stripes there) and on pale rock and snow
