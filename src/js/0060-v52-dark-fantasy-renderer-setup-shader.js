@@ -103,7 +103,9 @@ function buildTerrain(chk){
     vec4 tC=texture2D(map,vUv),tF=texture2D(map,vec2((fc.x-uGO.x+.5)/uWH.x,1.-(fc.y-uGO.y+.5)/uWH.y));float pav=step(tC.a,.995);
     vec4 texelColor=mapTexelToLinear(mix(tF,tC,pav));diffuseColor.rgb*=texelColor.rgb;
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
-     vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
+     // v185: on steep faces the noise runs in the face's own plane (along it and up it): xz noise stood still up a cliff and drew vertical stripes
+     vec2 tg=normalize(vec2(-fn.z,fn.x)+vec2(1e-4,0.)),qf=vec2(dot(vWP.xz,tg),vWP.y*1.2);float stp=smoothstep(.35,.62,sl);
+     vec2 q=mix(mix(fc,vWP.xz,pav),qf,stp);float fh=mix(hs3(fc*1.731+.37),hs3(floor(qf*.8)*1.731+.37),stp);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
      float n1=fb3(q*.8),n2=fb3(q*3.1);
      float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.9+.2*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
      float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);

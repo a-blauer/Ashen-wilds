@@ -1376,7 +1376,9 @@ function buildTerrain(chk){
     vec4 tC=texture2D(map,vUv),tF=texture2D(map,vec2((fc.x-uGO.x+.5)/uWH.x,1.-(fc.y-uGO.y+.5)/uWH.y));float pav=step(tC.a,.995);
     vec4 texelColor=mapTexelToLinear(mix(tF,tC,pav));diffuseColor.rgb*=texelColor.rgb;
     {vec3 fn=normalize(cross(dFdx(vWP),dFdy(vWP)));if(fn.y<0.)fn=-fn;float sl=1.-clamp(fn.y,0.,1.);
-     vec2 q=mix(fc,vWP.xz,pav);float fh=hs3(fc*1.731+.37);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
+     // v185: on steep faces the noise runs in the face's own plane (along it and up it): xz noise stood still up a cliff and drew vertical stripes
+     vec2 tg=normalize(vec2(-fn.z,fn.x)+vec2(1e-4,0.)),qf=vec2(dot(vWP.xz,tg),vWP.y*1.2);float stp=smoothstep(.35,.62,sl);
+     vec2 q=mix(mix(fc,vWP.xz,pav),qf,stp);float fh=mix(hs3(fc*1.731+.37),hs3(floor(qf*.8)*1.731+.37),stp);float yc=vWP.y-dot(fn.xz,fc-vWP.xz)/max(fn.y,.2);
      float n1=fb3(q*.8),n2=fb3(q*3.1);
      float sand=smoothstep(.05,.13,tF.r-tF.g)*(1.-pav);vec3 rock=mix(vec3(.36,.33,.31),tF.rgb*vec3(.78,.62,.5),.35+.4*sand)*(.72+.5*n2)*(.9+.2*fh);float rm=smoothstep(.15,.34,sl+(n1-.5)*.16);
      float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);
@@ -19199,7 +19201,7 @@ function wdDeco(){const T0=performance.now();
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
     if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
       p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
-    if(o.snow)p.push(F(dome(.3,6),0xf4f8ff,{j:.04},0,2.62,0,0,0,0,[1,.4,1]));return M(p)};
+    if(o.snow){p.push(F(dome(.1,6),0xf4f8ff,{j:.01},0,2.6,0,0,0,0,[1,.7,1]));return ep185Snow(M(p),.9,.55)}return M(p)};   // v185: snow painted on the tops of the branches (was a 60 cm snowball on a 18 cm trunk)
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
   const logG=(bark,moss)=>M([F(cyl(.28,.32,2.6,7),bark,{j:.05,top:moss,tt:.6},0,.26,0,0,0,Math.PI/2),F(disc(.27,7),0x8a6a48,{lo:1,hi:0},1.31,.26,0,0,Math.PI/2),F(cyl(.08,.1,.5,4),bark,{},.4,.5,.1,.6,0,.4)]);
@@ -19249,7 +19251,7 @@ function wdDeco(){const T0=performance.now();
     F(box(1.4,.06,.06),0x5a3e26,{},1.5,.65,.2,0,.2,.3),F(dome(.9,7),0xd2a868,{j:.1},-.4,0,.1,0,0,0,[1.6,.5,1.2])]);
   const mesa=(c,b)=>{const p=[];for(let i=0;i<4;i++){const r=1.3-i*.22;p.push(F(cyl(r*.92,r,.75,7),i%2?c:b,{j:.15,jy:.3},((i*7)%3-1)*.08,.375+i*.72,0))}return M(p)};
   const basalt=(c,top)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.05,r=i?.42:0,h=1.4+((i*53)%10)/5;p.push(F(cyl(.24,.26,h,6),c,{j:.02,top,tt:.8},Math.cos(a)*r,h/2,Math.sin(a)*r))}return M(p)};
-  const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return M(p)};
+  const crystals=(c)=>{const p=[];for(let i=0;i<6;i++){const a=i*1.1,r=i?.32+i*.05:0,h=i?.9+((i*31)%10)/10:2.2;p.push(F(oct(.25),c,{j:.04,lo:.8,hi:.5},Math.cos(a)*r,h*.45,Math.sin(a)*r,Math.cos(a)*.35*(i?1:0),0,Math.sin(a)*.35*(i?1:0),[1,h*1.6,1]))}return ep185Facet(M(p))};   // v185: facets shaded in the colours (unlit, they read as flat paper)
   const icicles=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.2,r=i?.2+i*.06:0,h=.4+((i*29)%10)/14;p.push(F(cone(.08,h,4),c,{lo:.8,hi:.5},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
   const rubble=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i*2.5,r=i?.3+i*.15:0,s=.18+((i*17)%6)/20;p.push(i%2?F(dod(1),c,{j:.12},Math.cos(a)*r,s*.35,Math.sin(a)*r,0,a,0,[s*.75,s*.45,s*.6]):F(box(s*1.4,s,s),c,{j:.07},Math.cos(a)*r,s/2-.03,Math.sin(a)*r,0,a,(i%4?.12:0)))}   // v177: broken blocks among rough chunks
     for(let i=0;i<6;i++){const a=i*1.7+.4,r=.5+(i%3)*.3;p.push(F(oct(.06+(i%3)*.025),c,{j:.03},Math.cos(a)*r,.02,Math.sin(a)*r,0,i,0,[1,.6,1]))}return M(p)};
@@ -19439,6 +19441,7 @@ function wdDeco(){const T0=performance.now();
   if(ZX&&ZX.post)ZX.post(out,col);
   if(typeof v124Edge=='function')v124Edge(KIT,out); // v124: the clean edge line (2270)
   Object.keys(T).forEach(k=>stats.kinds[k]=out.filter(d=>d.k==k).length);
+  try{if(typeof ep185Tidy=='function')ep185Tidy(T,out,col)}catch(e){console.warn('v185 tidy',e)}   // v185: no piece inside another, over the void or against a cliff (3420)
   try{if(typeof env177Look=='function')env177Look(T,out)}catch(e){console.warn('v177 look',e)}   // v177: graded and weathered (3370)
   stats.ms=Math.round(performance.now()-T0);WD={list:out,T,stats,webT,mistT,ms:[]};WDCOL=[...col];
 }
@@ -55174,6 +55177,7 @@ function env177Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
   return S._e176=r}
 // where piece d stands: {x,y,z,q,sx,sy,sz} (sx 0: not drawn); y0 is its old height (ground at its centre plus the kind's lift)
 function env177Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env177Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
+  if(d.h185){o.sx=o.sy=o.sz=0;return o}   // v185: tidied away (3420 ep185Tidy)
   if(!K)return o;const E=env177();E.n++;
   if(K.decal||K.lean){const r=Math.max(.6,K.w*.45*s),gx=(GH(d.x+r,d.z)-GH(d.x-r,d.z))/(2*r),gz=(GH(d.x,d.z+r)-GH(d.x,d.z-r))/(2*r),n=new V3(-gx,1,-gz).normalize(),up=new V3(0,1,0);
     let a=Math.acos(Math.min(1,n.y))*(K.decal?1:K.lean);a=Math.min(a,K.decal?.7:E.tilt);if(a>.01){const ax=new V3().crossVectors(up,n).normalize();o.q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,a))}}
@@ -56730,4 +56734,46 @@ var EP185M;
 function ep185Mat(){if(!EP185M){EP185M=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});EP185M.userData.lps=1}return EP185M}
 // a tent mesh placed like the old ones: door toward (cos a, sin a) on the ground at (x,z) in a camp's frame (2270 / 0250 / 3242)
 function ep185TentMesh(geo){const m=new THREE.Mesh(geo,ep185Mat());m.castShadow=true;m.receiveShadow=true;m.userData.keep=1;return m}
+// ---- the scattered decorations tidied once at load (ep185Tidy, from 1680 wdGen before the grade) ----
+// Pieces without a collider (rubble, loose rocks, logs, bank pines, dead trees, bones ...) were placed without looking at each
+// other or at the pieces with colliders, so rubble lay through tents, a log through a boulder, pines through pines. And a piece
+// could stand over the void past a cliff edge, or stand upright against a cliff face with its crown in the rock. Each piece now
+// gets a solid core (a tree's trunk, a rock's middle); walking from the most important (collider pieces, then the biggest) down,
+// a piece whose core lies inside one already kept is hidden; so is a piece over the void, a tall piece with the ground rising
+// into its crown or falling away under it. Hidden = drawn at scale 0 (env177Seat); a hidden piece with a collider gives its tiles
+// back. Stats in EP185TIDY.
+var EP185TIDY;
+function ep185KindInfo(S){if(S.__e185)return S.__e185;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9,glow=true;
+  (S.parts||[]).forEach(p=>{if(p.mat)return;if(!p.glow)glow=false;const P=p.g&&p.g.attributes.position;if(!P)return;for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;if(z<z0)z0=z;if(z>z1)z1=z}});
+  const sc=S.sc||[1,1,1],w=Math.min(x1-x0,z1-z0)*Math.min(sc[0],sc[2]),W2=Math.max(x1-x0,z1-z0)*Math.max(sc[0],sc[2]),h=(y1-y0)*sc[1],
+    tree=/tree|pine|oak|palm|snag|spire|stalag|pillar|column|col$|obelisk|lamp|banner|totem|cross|stake|candela|brazier|statue|angel|spike|flag|gshroom/.test(S.k),
+    solid=!glow&&!S.near&&!S.flat&&h>.25&&isFinite(h)&&!(S.parts||[]).some(p=>p.mat),core=tree?Math.min(.34,Math.max(.12,w*.16)):w*.34;
+  return S.__e185={solid,core:Math.max(.1,core),h,w:W2,tall:h>W2*1.2&&h>1.2,tree}}
+function ep185Tidy(T,L,col){const R=EP185TIDY={n:L.length,overlap:0,void:0,cliff:0,ms:0,list:[]},t0=performance.now(),G=new Map(),C=4,key=(x,z)=>Math.floor(x/C)+','+Math.floor(z/C);
+  const hide=(d,why)=>{d.h185=why;R[why]++;if(R.list.length<400)R.list.push([why,d.k,+d.x.toFixed(1),+d.z.toFixed(1)]);if(d.col&&d.tl&&col)d.tl.forEach(k=>col.delete(k))};
+  const cand=[];for(const d of L){const S=T[d.k];if(!S||S.abs!=null)continue;const K=ep185KindInfo(S);
+    // over the void: nothing under its middle, or (a solid piece) under one side of its core
+    const g0=GH(d.x,d.z);if(!(g0>-4)){hide(d,'void');continue}
+    if(K.solid){const r=Math.max(.3,K.core*d.s);let lo=1e9,hi=-1e9;for(let i=0;i<8;i++){const a=i*.785,g=GH(d.x+Math.cos(a)*r,d.z+Math.sin(a)*r);if(g<lo)lo=g;if(g>hi)hi=g}
+      if(!(lo>-4)){hide(d,'void');continue}
+      // a tall piece: the ground rising into its crown (it stands against a cliff face) or falling away under it (a cliff lip)
+      if(K.tall){const rc=Math.max(.6,K.w*.38*d.s);let up=-1e9,dn=1e9;for(let i=0;i<8;i++){const a=i*.785,g=GH(d.x+Math.cos(a)*rc,d.z+Math.sin(a)*rc);if(g>up)up=g;if(g<dn)dn=g}
+        if(up-g0>Math.max(1.1,K.h*d.s*.4)||g0-dn>Math.max(1.4,K.h*d.s*.45)){hide(d,'cliff');continue}}
+      cand.push([d,K.core*d.s,(d.col?100:0)+K.core*d.s*(K.tree?.6:1)+K.h*d.s*.05])}}
+  cand.sort((a,b)=>b[2]-a[2]);
+  for(const [d,r] of cand){let hit=null;const gx=Math.floor(d.x/C),gz=Math.floor(d.z/C);
+    for(let j=gz-1;j<=gz+1&&!hit;j++)for(let i=gx-1;i<=gx+1&&!hit;i++){const B=G.get(i+','+j);if(B)for(const q of B)if(Math.hypot(q[0].x-d.x,q[0].z-d.z)<(q[1]+r)*.85){hit=q;break}}
+    if(hit&&!d.col){hide(d,'overlap');continue}
+    const k=key(d.x,d.z);let B=G.get(k);if(!B)G.set(k,B=[]);B.push([d,r])}
+  R.ms=Math.round(performance.now()-t0);return R}
+// ---- paint helpers for models (hoisted: decorations are built at load) ----
+// ep185Facet: an unlit (glowing) model has no shading, so its faces read as flat paper: shade each face by its own facing
+// (a light from above and in front), in its colours. ep185Snow: snow on everything turned up, above a height, in the colours.
+function ep185Facet(g,lo,hi){lo=lo==null?.5:lo;hi=hi==null?1.08:hi;const P=g.attributes.position,C=g.attributes.color;if(!C)return g;const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),L=new THREE.Vector3(.35,.85,.4).normalize();
+  for(let i=0;i+2<P.count;i+=3){a.fromBufferAttribute(P,i);b.fromBufferAttribute(P,i+1);c.fromBufferAttribute(P,i+2);const n=b.sub(a).cross(c.sub(a)).normalize(),k=lo+(hi-lo)*(.5+.5*n.dot(L));
+    for(let j=0;j<3;j++)C.setXYZ(i+j,C.getX(i+j)*k,C.getY(i+j)*k,C.getZ(i+j)*k)}C.needsUpdate=true;return g}
+function ep185Snow(g,y0,ny){const P=g.attributes.position,C=g.attributes.color;if(!C)return g;const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+  for(let i=0;i+2<P.count;i+=3){a.fromBufferAttribute(P,i);b.fromBufferAttribute(P,i+1);c.fromBufferAttribute(P,i+2);const cy=(a.y+b.y+c.y)/3,n=b.clone().sub(a).cross(c.clone().sub(a)).normalize();
+    if(cy>y0&&n.y>ny){const t=Math.min(1,(n.y-ny)/(1-ny)*1.6);for(let j=0;j<3;j++){const r=C.getX(i+j),gg=C.getY(i+j),bb=C.getZ(i+j);C.setXYZ(i+j,r+(.93-r)*t,gg+(.95-gg)*t,bb+(1-bb)*t)}}}
+  C.needsUpdate=true;return g}
 </script></body></html>
