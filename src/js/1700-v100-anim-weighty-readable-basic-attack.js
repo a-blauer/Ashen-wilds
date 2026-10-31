@@ -102,6 +102,9 @@ var V100A_HUMOFF={lx:1,ly:1,lz:1,le:1,lw:1,lq:1};
     if(T){const P=T(V100A_humK(ph,k)),o=g&&g._v100o||(g?(g._v100o={}):{});const two=/^(gs|ga|hal)/.test(L[0]);
       for(const c in P){if(!two&&V100A_HUMOFF[c]){o[c]=ATK_REST[c]+(c=='lx'?-.5:c=='le'?-.9:c=='lz'?-.2:0);continue}o[c]=P[c]}
       // the rest pose of the hero tracks is the hero's arm rest; foes add these as offsets from ATK_REST like the v85 poses
+      // (v181) the hero tracks start already at full coil (the hero blends into them elsewhere): a foe eases from its rest
+      // pose into the coil over the first three quarters of the wind-up instead of jumping into it on the first frame
+      if(ph==0){const e=ATK_E.out(Math.min(1,k/.75));for(const c in o){const r0=ATK_REST[c]||0;o[c]=r0+(o[c]-r0)*e}}
       if(ph==0&&k>.72){const tr=(k-.72)/.28;o.ax+=Math.sin(now/32)*.05*tr;o.lx+=Math.sin(now/37)*.035*tr;o.sx+=Math.sin(now/45)*.018*tr}
       return o}}}catch(e){}
   return f.apply(this,arguments)}}
