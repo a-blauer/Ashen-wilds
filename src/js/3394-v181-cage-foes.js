@@ -22,7 +22,18 @@ function cgHuman(o){const T=CG181.base,h=o.h||1,w=o.w||1,d=o.d||1,hs=o.hs||1,hy=
     J[A+'0']=s0;J[A+'1']=add3(s0,k(a0,a1));J[A+'2']=add3(J[A+'1'],k(a1,a2))});
   ['cp0','cp1','cp2'].forEach(n=>J[n]=[0,U(TJ[n][1]),TJ[n][2]*d]);
   const ar=o.arm||T.arm,lg=o.leg||T.leg;
-  const S={J,armRing:4,torso,neck,head,n:o.n||24,j2:!!o.j2,
+  // (o.snug) arms that hang against the body instead of out from it: the shoulder joint sits a little inside the shoulder line
+  // by the arm's thickness, the elbow just clears the widest part of the torso beside the upper arm, the wrist just clears the
+  // hips — so a thick-armed, wide-bodied foe's arms rest along its sides (the "arms too far from the body" fix). Keep the
+  // stance's az / lz small (≤ .06) with it. o.snug can be a number (>1 lets the arms hang a little further out).
+  if(o.snug){const at=o.at||1,sn=+o.snug||1,rU=ar[0].r*at*((o.armR||[])[0]||1),rM=(ar[Math.min(2,ar.length-1)].r)*at,rF=(ar[Math.min(5,ar.length-1)].r)*at,
+      half=y=>{const q=cgAt(torso,y);return q[1]},maxHalf=(y0,y1)=>{let m=0;for(let i=0;i<=8;i++)m=Math.max(m,half(y0+(y1-y0)*i/8));return m};
+    ['L','R'].forEach(c=>{const s=c=='L'?-1:1,A='a'+c,a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'];
+      const x0=half(a0[1])+rU*.3;
+      const x1=Math.max(x0-.03,maxHalf(a1[1],a0[1]-rU)+rM*.7*sn);
+      const x2=Math.max(x1-.02,maxHalf(Math.max(a2[1],torso[0][0]),a1[1])+rF*.75*sn);
+      J[A+'0']=[s*x0,a0[1],a0[2]];J[A+'1']=[s*x1,a1[1],a1[2]];J[A+'2']=[s*x2,a2[1],a2[2]]})}
+  const S={J,armRing:4,torso,neck,head,n:o.n||24,j2:!!o.j2,at:o.at||1,
     push:(i,j,a)=>(o.push||T.push)(i,j,a)*w,
     face:o.facePush||((i,j,a)=>T.face(i,j,a)*hs),
     arm:ar.map((q,i)=>({t:q.t,r:q.r*at*((o.armR||[])[i]||1),rf:q.rf&&q.rf*at*((o.armR||[])[i]||1),rb:q.rb&&q.rb*at*((o.armR||[])[i]||1),o:q.o&&q.o*at})),
@@ -311,7 +322,7 @@ function ej_isHand(S,m){if(m.part=='hand')return true;if(m.part!='arm')return fa
 // blood-soaked apron, shoulder straps, a heavy belt with iron rings, stitched scars, forearm wraps, manacles with a broken
 // link, breeches and heavy boots; dried blood on the hands and forearms
 (function(){const HD=ej_Head([0,3,6,9,12,14]),
-    S=cgHuman({h:.97,w:1.32,d:1.28,rw:[1.15,1.22,1.4,1.34,1.32,1.36,1.44,1.4],rf:[1.1,1.3,1.8,1.6,1.32,1.2,1.15,1.2],rb:[1.05,1.15,1.15,1.12,1.15,1.18,1.2,1.25],at:1.66,lt:1.6,hs:.92,nw:1.7,legL:.95,foot:1.1,footW:1.3,
+    S=cgHuman({snug:1,h:.97,w:1.32,d:1.28,rw:[1.15,1.22,1.4,1.34,1.32,1.36,1.44,1.4],rf:[1.1,1.3,1.8,1.6,1.32,1.2,1.15,1.2],rb:[1.05,1.15,1.15,1.12,1.15,1.18,1.2,1.25],at:1.66,lt:1.6,hs:.92,nw:1.7,legL:.95,foot:1.1,footW:1.3,
       n:16,sock:1,j2:1,footLite:1,head:HD.head,facePush:HD.face(.92),arm:ej_ArmR(1.66,[2,5],{w:.052,th:.025}),leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=5&&i!=6)});
   const sk=0x8a7468,sk2=0x6a564c,flush=0x9a6656,scar=0x5a2a26,hd=0x22160f,hd2=0x341f14,ap=0x2e1c12,bl=0x2a0808,bl2=0x4a0e0c,ir=0x3a3a3e,ir2=0x56565c,lt=0x2a1a10,T=S.torso,J=S.J;
   S.pron={'-1':.9};

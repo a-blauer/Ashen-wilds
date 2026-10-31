@@ -118,7 +118,7 @@ const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,
 // (refine) a hulking figure, not a man: massive shoulders and a deep chest over a narrower waist and short column legs, the small
 // head sunk into the shoulders (no neck), forearms thicker than the upper arms swelling into huge rock fists with three stubby
 // fingers; packed sand flows from gold to darker sand, rock showing through, a warm glow round the core
-(function(){const S=cr_human({h:.9,w:1.3,d:1.2,rw:[.95,1.0,.9,1.12,1.4,1.52,1.66,1.25],rf:[1,1.02,.98,1.2,1.36,1.3,1.3,1.65],rb:[1,1.05,1,1.22,1.42,1.5,1.55,1.3],
+(function(){const S=cr_human({snug:1,h:.9,w:1.3,d:1.2,rw:[.95,1.0,.9,1.12,1.4,1.52,1.66,1.25],rf:[1,1.02,.98,1.2,1.36,1.3,1.3,1.65],rb:[1,1.05,1,1.22,1.42,1.5,1.55,1.3],
     at:2.05,lt:1.7,armL:1.2,legL:.8,hs:1.0,hw:1.16,hy:.88,hd:1.1,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,
     head:cr_flare(cr_H8,.75),arm:cr_GARM,leg:cr_LEG},0.025),
     s1=0xc8a060,s2=0xa8844a,s3=0xd8b878,rk=0x8a6a3a,gl=0xffa030,T=S.torso,J=S.J;
@@ -162,13 +162,13 @@ const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,
     // a crown of jagged rock rising out of the top of the head
     for(let i=0;i<4;i++){const x=(i-1.5)*.045,p=b7_Top(M,S,x,-.01);if(p)c9_along(k,'head','cone4','c',i%2?rk:s3,sub3(p,[0,.025,0]),[x*3,1,-.15],.13-Math.abs(i-1.5)*.025,.03)}
     [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:s2,r:.022,len:.06,spread:.034}))})})();
-ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.22,lz:-.22,ax:-.08,lx:-.08,ex:-.25,le:-.25};
+ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.04,lz:-.04,ax:-.08,lx:-.08,ex:-.25,le:-.25};
 
 // ---------------- Salt Golem: a hulking block of grey-pink salt, crystal spires from the shoulders and back, crystal-studded fists,
 // a molten core cracked open in the chest ringed by five glowing shards, a dark visor with burning eye slits ----------------
 // (refine) a blocky crystalline giant: a squared, top-heavy torso, the visored head sunk between the shoulders, short thick legs,
 // arms hanging low to huge blocky fists; salt crust whitens the tops, the core warms the salt round it
-(function(){const S=cr_human({h:.94,w:1.5,d:1.32,rw:[1.12,1.16,1.12,1.3,1.56,1.7,1.85,1.35],rf:[1.1,1.15,1.38,1.36,1.46,1.4,1.38,1.5],rb:[1.1,1.18,1.3,1.38,1.5,1.6,1.65,1.35],push:cr_box(.022),
+(function(){const S=cr_human({snug:1,h:.94,w:1.5,d:1.32,rw:[1.12,1.16,1.12,1.3,1.56,1.7,1.85,1.35],rf:[1.1,1.15,1.38,1.36,1.46,1.4,1.38,1.5],rb:[1.1,1.18,1.3,1.38,1.5,1.6,1.65,1.35],push:cr_box(.022),
     at:2.3,lt:2.05,hs:.94,hw:1.16,hy:.84,hd:1.1,nw:2.05,neckL:-.06,armL:1.24,legL:.74,foot:1.25,footW:1.7,facePush:cr_JAW8,n:16,sock:1,j2:1,footLite:1,
     head:cr_flare(cr_H8,.85),arm:cr_GARM,leg:cr_LEG},0.025),
     C9=c9_SG,sa=c9_SG.salt,sa2=c9_SG.salt2,pink=c9_SG.pink,cry=c9_SG.cry,cry2=c9_SG.cry2,core=c9_SG.core,T=S.torso,J=S.J;
@@ -199,7 +199,7 @@ ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.22,lz:-.22,ax:-.08,lx:-.08,ex:-.25,le
       cr_mitten(B,S,s,{n:3,w:.085,th:.034,len:.12,curl:.9,col:sa2,at:.075});cr_fingers(B,S,s,{n:0,len:.12,r:.036,curl:.85,spread:.055,col:sa2,thumb:1,at:.08})});
     for(let i=0;i<3;i++){const p=b7_Top(M,S,(i-1)*.04,-.02);if(p)c9_along(k,'head','oct','c',cry,sub3(p,[0,.03,0]),[(i-1)*.4,1,-.3],.13,.02)}
     [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:sa2,r:.022,len:.055,spread:.036}))})})();
-cr_stance('saltgolem',{sx:.2,hx:-.2,lk:.16,rk:.16,az:.24,lz:-.24,ax:-.06,lx:-.06,ex:-.2,le:-.2});
+cr_stance('saltgolem',{sx:.2,hx:-.2,lk:.16,rk:.16,az:.04,lz:-.04,ax:-.06,lx:-.06,ex:-.2,le:-.2});
 
 // ---------------- Rampart Gargoyle: a crouched stone demon — great spiky bat wings on four finger bones, curled ram horns, a
 // fanged snout under a heavy brow, red burning eyes, moss in the cracks, a curling tail with a spade ----------------

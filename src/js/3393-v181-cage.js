@@ -167,7 +167,13 @@ function nrm3(a){const l=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/l,a[1]/l,a[2
 function cg181Plan(name,J){const S=AW_PROP99,names=Object.keys(HB),abs={},N={},M={},id=[1,0,0,0,1,0,0,0,1];names.forEach(n=>{abs[n]=[HB[n][1],HB[n][2],HB[n][3]];N[n]=(J[n]||abs[n]).slice();M[n]=id});
   let m=S.plans.get(HB);if(!m){m={};S.plans.set(HB,m)}m[name]={names,abs,N,M,idx:names.map(n=>({a:abs[n],n:N[n],M:M[n]})),lift:0,hip:N.pelvis[1]};return m[name]}
 // a cage foe: the body builder gets (B, P, k, C) with C = the smoothed body; registered like the a181 foes
-function cg181Reg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;k.B181=B;fn(B,P,k,C,S);cgSeat(k,C.M,0)},pn);(CG181.keys||(CG181.keys={}))[key]=1}
+// S.grip {'1':[x,y,z],'-1':[…]}: where the centre of each gripping fist is, as an offset from the wrist joint (model space, rest
+// pose). The weapon is then held through that point instead of the hero-sized anchor GRIP_AN (1270), so a big fist closes
+// round the handle instead of the handle running through the wrist. cgGripAt(S,s,along,fwd,out) gives a typical value.
+function cgGripAt(S,s,along,fwd,out){const A=s<0?'aL':'aR',d=nrm3(sub3(S.J[A+'2'],S.J[A+'1']));return add3(mul3(d,along),[s*(out||0),0,fwd||0])}
+{const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{const S=CG181.S&&CG181.S[key];if(S&&S.grip&&g&&g.h){const D={};
+    [['1','R'],['-1','L']].forEach(([s,side])=>{const q=S.grip[s];if(q)D[side]=[q[0]-GRIP_AN[0],q[1]-GRIP_AN[1],q[2]-GRIP_AN[2]]});g.h._gripD=D;try{gripTick(g.h,null,false)}catch(_){}}}catch(e){console.warn('cg grip',e)}return g}}
+function cg181Reg(key,S,fn){(CG181.S||(CG181.S={}))[key]=S;const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;k.B181=B;fn(B,P,k,C,S);cgSeat(k,C.M,0)},pn);(CG181.keys||(CG181.keys={}))[key]=1}
 // ring helpers for specs: where on the torso / head a point is
 function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+1];if(y<=b[0]){const t=Math.max(0,(y-a[0])/(b[0]-a[0]));return a.map((v,j)=>v+(b[j]-v)*t)}}return list[list.length-1]}
 

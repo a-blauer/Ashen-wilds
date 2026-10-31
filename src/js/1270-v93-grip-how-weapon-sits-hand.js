@@ -121,6 +121,9 @@ function gripTick(h,now,el,att){
       GRIP_Q.copy(e.S.q).multiply(gripQ(0,e.edge?e.psi:0,0));
       const ps=e.S.hold?new THREE.Vector3(e.S.hold[0]*sx,e.S.hold[1],e.S.hold[2]).applyQuaternion(e.S.q).negate().add(GRIP_V.set(...e.S.p)):GRIP_V.set(...e.S.p);
       W.quaternion.copy(GRIP_Q).slerp(C.q,w);W.position.copy(ps).lerp(pc,w)}
+    // v181: a foe whose fist is not the hero's size moves the grip to its own fist centre (h._gripD[side] = the offset from the
+    // standard anchor GRIP_AN, in the hand bone's frame; set from the cage body's S.grip)
+    {const gd=h._gripD&&h._gripD[e.side];if(gd){W.position.x+=gd[0];W.position.y+=gd[1];W.position.z+=gd[2]}}
     if(e.chain)gripChain(e,dt,w);
     if(e.side=='L')elL=Math.min(elL,C.el||0);else elR=Math.min(elR,C.el||0)}
   if(el&&b){if(elR&&b.aR1)b.aR1.rotation.x+=elR*w;if(elL&&b.aL1)b.aL1.rotation.x+=elL*w}}
