@@ -148,19 +148,23 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
 // mottled brown and green goo full of what it swallowed: clods and stones, a skull and ribs in the belly, twigs and roots,
 // glowing bubbles; a hump over the shoulders, a sagging belly, three mismatched slit-pupilled eyes, a maw of crooked teeth,
 // drips off the chin and arms, lumpy three-fingered fists, feet spread into a dirty puddle
-(function(){const S=cgHuman({h:.9,w:1.42,d:1.5,rw:[1.25,1.35,1.6,1.65,1.5,1.45,1.5,1.7],rf:[1.3,1.6,2.2,2.0,1.5,1.25,1.15,1.3],at:2.1,lt:2.3,hs:1.12,hw:1.2,hy:.82,hd:1.1,nw:1.9,neckL:-.03,legL:.82,foot:1.25,footW:1.55,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
+// (owner, Oct 31 2026) not a man: its outline should read as a heap of goo pretending to be one — stooped and top-heavy,
+// the head a lump sunk forward into the mass with no neck, a sagging bottom-heavy belly, short thick stumps for legs,
+// long uneven arms (the right one bigger), big low lumps breaking up the outline
+(function(){const S=cgHuman({h:.98,w:1.5,d:1.55,rw:[1.55,1.7,1.85,1.75,1.5,1.4,1.4,1.95],rf:[1.5,2.0,2.6,2.2,1.55,1.3,1.2,1.5],at:2.3,armL:1.22,lt:2.7,legL:.6,hs:1.0,hw:1.3,hy:.72,hd:1.15,hz:.07,nw:3.2,neckL:-.09,foot:1.1,footW:1.8,facePush:BRUTEJAW,n:16,sock:1,j2:1,footLite:1,
     // (recipe) fewer rings where they don't shape the outline: a blob head, plain goo limbs
-    head:CG181.base.head.filter((q,i)=>i%2==0),arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5&&i<7).concat([{t:2.1,r:.028,rf:.032,rb:.03},{t:2.26,r:.041,rf:.045,rb:.04},{t:2.42,r:.037,rf:.038,rb:.036}]) /* the arm swells into a goo fist */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
+    head:CG181.base.head.filter((q,i)=>i%2==0).map((q,i,a)=>{const f=1+1.2*Math.pow(1-i/(a.length-1),2);return [q[0],q[1]*f,q[2]*f,q[3]*f,q[4]]}) /* the head swells out of the shoulders like a mound, no neck */,arm:CG181.base.arm.filter((q,i)=>i!=2&&i!=5&&i<7).concat([{t:2.1,r:.028,rf:.032,rb:.03},{t:2.26,r:.041,rf:.045,rb:.04},{t:2.42,r:.037,rf:.038,rb:.036}]) /* the arm swells into a goo fist */,leg:CG181.base.leg.filter((q,i)=>i!=2&&i!=6)});
+  S.armK={'1':1.18,'-1':.88};[['aR',1.12],['aL',.92]].forEach(([A,f])=>{const a0=S.J[A+'0'];S.J[A+'1']=add3(a0,mul3(sub3(S.J[A+'1'],a0),f));S.J[A+'2']=add3(a0,mul3(sub3(S.J[A+'2'],a0),f))});
   const C0={g1:0x3e5a28,g2:0x22341a,g3:0x5a7a34,dirt:0x4e3a26,dirt2:0x6a5236,glow:0xc8ff5a,bone:0xb8ae8c,bone2:0x8a8068,bark:0x3a2a1a},T=S.torso,J=S.J;
   cg181Reg('amalgam',S,function(B,P,k,C){const M=C.M,WS=p=>{k.P[k.P.length-1].w=cgWAt(M,p)},c=C0,sh=T[6][0],wy=T[2][0],hy=T[1][0],ch=J.chest[1],sp=J.spine[1];
-    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.045*(n3Sn(x*1.1,y*1.1,z*1.1,7,5)-.45));   // lumps and sags all over
-    // a hump of goo over the shoulders and the back, a sagging belly
-    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<0)d+=.1*cgG(x,y,0,sh-.04,.18,.1)*Math.min(1,-n[2]*1.5);if(n[2]>0)d+=.03*cgG(x,y,0,wy-.01,.12,.06)*n[2];return d});
+    cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1},(x,y,z,n)=>.065*(n3Sn(x*.8,y*.8,z*.8,4.5,5)-.45)+.025*(n3Sn(x,y,z,9,2)-.45));   // big low lumps and sags, smaller ones on top
+    // a big hump of goo over the shoulders and the back (higher on the right), a belly sagging over the hips
+    cgSculpt(M,{torso:1,neck:1},(x,y,z,n)=>{let d=0;if(n[2]<.2)d+=.15*cgG(x-.06,y,0,sh-.02,.22,.13)*Math.min(1,(.2-n[2])*1.3);if(n[2]>0)d+=.065*cgG(x,y,0,hy+.03,.16,.08)*n[2];return d});
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>n[2]<.1?0:(-.02*cgG(x,y,0,1.56,.05,.012)+.01*cgG(x,y,0,1.6,.06,.03))));
     // smooth mottled colour: green goo blending into darker goo, patches of brown earth, the back and limbs darker
     const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),goo=m=>{const n=n3Sn(m.x,m.y,m.z,11,1),n2=n3Sn(m.x,m.y,m.z,5,3);
       let col=mdMix(c.g1,c.g2,cl(.3+(n2-.5)*1.1+(m.s<-.3?.25:0),0,.85));col=mdMix(col,c.g3,cl((.3-n)*4,0,1)*.55);
-      const e=cl((n-.6)*3.5,0,1);if(e>0)col=mdMix(col,n2>.5?c.dirt:c.dirt2,e);
+      const e=cl((n-.6)*3.5,0,1)*(m.part=='head'?.25:1);if(e>0)col=mdMix(col,n2>.5?c.dirt:c.dirt2,e);
       if(m.part=='hand')col=mdMix(c.g2,col,.3);if((m.part=='leg'&&m.y<J.rh2[1]+.12)||m.part=='foot')col=mdMix(col,c.dirt,.45);return col};
     M.shade=cgShade(M,{cav:1.1,y0:0,y1:sh+.25,hk:.3});   // baked creases, ridges and height light (no triangles)
     // where the goo runs: drip spots on the belly, chest, shoulders and arms (p on the skin, len of the run below it)
@@ -169,8 +173,8 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
     const run=m=>{for(const d of DR){const dy=d.p[1]-m.y;if(dy<-.012||dy>d.len*1.7)continue;if(d.arm&&m.part!='arm')continue;if(!d.arm&&m.part!='torso')continue;
       const w=.032*(1-.5*dy/(d.len*1.7)),dx=Math.hypot(m.x-d.p[0],m.z-d.p[2]);if(dx<w)return 1-dx/w}return 0};
     const earth=m=>{const col=goo(m),n=n3Sn(m.x,m.y,m.z,11,1);let o=col;
-      const e=Math.max(0,Math.min(1,(n-.6)*3.5));if(e>0&&e<.6)o=mdMix(o,mdSh(c.dirt2,1.2),.5*Math.sin(e/.6*Math.PI)); // a dried, lighter rim fading round each mud patch
-      if(m.part=='head'&&m.ny>.5)o=mdMix(o,n>.5?c.dirt2:c.dirt,.55+.3*Math.min(1,(m.ny-.5)*3)); // a crust of earth on the head
+      const e=Math.max(0,Math.min(1,(n-.6)*3.5));if(e>0&&e<.6&&m.part!='head')o=mdMix(o,mdSh(c.dirt2,1.2),.5*Math.sin(e/.6*Math.PI)); // a dried, lighter rim fading round each mud patch
+      const ct=S.hp(0,1.69,0)[1];if(m.part=='head'&&m.ny>.6&&m.y>ct)o=mdMix(o,n>.5?c.dirt2:c.dirt,Math.min(.8,(m.y-ct)*14)); // a crust of earth on the crown only
       if(m.ny>.45&&m.part!='head')o=mdMix(o,c.g3,Math.min(.35,(m.ny-.45)*.9));                   // wet sheen on the top of the bulges
       const r=run(m);if(r>0)o=mdMix(o,mdSh(c.g2,.75),.35+.45*r);                                // dark wet runs under the drips
       return o};
@@ -208,9 +212,9 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
       {const q=lerp3(F.a1,F.a2,.7),p=cgRay(M,add3(q,mul3(F.f,-.4)),F.f,{arm:1});if(p){const e=add3(p,[s*.03,-.16,-.04]),m=lerp3(p,e,.55);k.L(A+'1','c',c.bark,sub3(p,mul3(F.f,-.02)),e,.009,.002,4);WS(p);k.L(A+'1','c',c.bark,m,add3(m,[s*.05,-.06,.02]),.005,.0015,3);WS(p)}}
       // three stubby goo fingers from the fist (part of the arm's surface): rounded lofts in the hand's own colour, rooted
       // inside the fist and curling in toward the palm
-      const h=add3(F.a2,mul3(F.d,.06)),fc=mdMix(c.g1,c.g2,.45),W=[[A+'2',1]];
-      for(let f=0;f<3;f++){const o=(f-1)*.042,P=(t,cu)=>add3(add3(h,mul3(F.d,t+.02)),add3(mul3(F.f,o*(1+t*.8)),mul3(F.u,-cu)));
-        mdLoft(B,[{p:P(.0,0),rx:.03,f:.03,b:.03,w:W},{p:P(.06,.006),rx:.028,f:.027,b:.027,w:W},{p:P(.095,.026),rx:.022,f:.021,b:.021,w:W},{p:P(.108,.048),rx:.015,f:.015,b:.015,w:W}],
+      const K=S.armK[s],h=add3(F.a2,mul3(F.d,.06*K)),fc=mdMix(c.g1,c.g2,.45),W=[[A+'2',1]];
+      for(let f=0;f<3;f++){const o=(f-1)*.042*K,P=(t,cu)=>add3(add3(h,mul3(F.d,(t+.02)*K)),add3(mul3(F.f,o*(1+t*.8)),mul3(F.u,-cu*K)));
+        mdLoft(B,[{p:P(.0,0),rx:.03*K,f:.03*K,b:.03*K,w:W},{p:P(.06,.006),rx:.028*K,f:.027*K,b:.027*K,w:W},{p:P(.095,.026),rx:.022*K,f:.021*K,b:.021*K,w:W},{p:P(.108,.048),rx:.015*K,f:.015*K,b:.015*K,w:W}],
           {seg:6,ref:F.u,capB:true,col:()=>f==1?fc:mdSh(fc,.92)})}
       // feet spread into a dirty puddle
       const l=s<0?'lh2':'rh2',FT=J[l];k.p(l,'sph','c',c.g2,FT[0],.022,FT[2]+.06*S.foot.len,.12,.036,.16);for(let i=0;i<3;i++)k.p(l,'ico','c',c.dirt,FT[0]+(i-1)*.06,.014,FT[2]+.13+i%2*.04,.032,.013,.032)});
@@ -222,7 +226,7 @@ ST179.giant={sx:.12,hx:-.1,lk:.14,rk:.14,lz:-.1,le:-.2};
     [[sh-.06,3.0,[.05,-.32,-.08]],[ch-.04,3.5,[-.07,-.28,-.06]]].forEach(([y,a,d])=>{const p=cgSurf(M,S,y,a,-.02),e=add3(p,d),m=lerp3(p,e,.5);k.L('chest','c',c.bark,p,e,.012,.003,4);WS(p);k.L('chest','c',c.bark,m,add3(m,[d[0]*.6,-.1,-.03]),.006,.002,3);WS(p)});
     // glowing bubbles caught in the goo
     for(let i=0;i<12;i++){const y=hy+a181H(i,1,2)*(sh-hy),a=a181H(i,3,4)*6.283,r=.012+a181H(i,5,6)*.016,p=cgSurf(M,S,y,a,-r*.35);k.p(b7_TB(S,y),'ico','g',i%3?c.glow:0xf0ffb0,p[0],p[1],p[2],r,r,r);WS(p)}})})();
-ST179.amalgam={sx:.22,hx:-.2,lk:.24,rk:.24,az:.14,lz:-.14,ex:-.3,le:-.3};
+ST179.amalgam={sx:.34,hx:-.36,lk:.3,rk:.3,ax:-.12,lx:-.08,az:.24,lz:-.2,ex:-.35,le:-.22};
 
 // ---------------- Akorror: a chitin-armoured horror ----------------
 // olive-black chitin plates with lighter rims, a horned crest, big glowing green compound eyes, mandibles and huge fangs

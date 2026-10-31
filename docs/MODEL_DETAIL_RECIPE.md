@@ -12,6 +12,22 @@ Read first: `src/js/3393-v181-cage.js` (cage bodies: `cg181Body`, `cgSub`, `cgEm
 `1400-v94-model-track-clean-low-poly.js` + `1410-v94-mdb.js` (`mdMats`, `mdTri`, `mdBake`, `mdGeo`), `3235-v164-cheddar-skins.js`
 (`skn164Patch`, a shader that sticks to the body) and the top of `0060-v52-dark-fantasy-renderer-setup-shader.js` (world-space grime).
 
+## 0. Identity before the human template (owner, Oct 31 2026)
+
+Enemies built on the humanoid / cage kit **do not have to keep a human outline.** If a creature is not human, change its
+proportions, stature, posture, symmetry and anything else needed so its identity reads at a glance, from the silhouette alone.
+The kit is a skeleton and a surface, not a body plan.
+
+- Ask first: *what is it?* (a heap of goo, a stone golem, an insect, a corpse, a beast) and sketch its outline in words.
+- Tools on the cage body: `cgHuman` options (h, w/d, rw/rf per torso ring, at/lt limb thickness, armL/legL, hs/hw/hy/hd/hz head
+  size and forward shift, nw/neckL to sink or remove the neck, a custom `head` ring list, e.g. one that flares into the
+  shoulders), `S.armK` (one arm thicker than the other), moving joints in `S.J` after `cgHuman` (uneven arm lengths), big
+  low-frequency `cgSculpt` masses (humps, sags), and the stance `ST179[key]` (stoop, head, arm spread, knees).
+- Example: the Amalgam (3397) is a stooped, top-heavy heap with the head swelling out of the shoulders like a mound (no neck),
+  a belly sagging over stumpy legs, long uneven arms (the right one bigger) and big lumps breaking the outline.
+- Humans (bandits, cultists, knights) keep human proportions; humanoid monsters (orcs, trolls, ghouls) push them as far as
+  their identity asks.
+
 ## 1. The core rule and the triangle budget
 
 **Geometry is for the outline and for bending. Everything inside the outline is paint.**

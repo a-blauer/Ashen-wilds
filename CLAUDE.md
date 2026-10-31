@@ -7,6 +7,8 @@
 - **Modelling any enemy, boss, folk or creature (owner's request, Oct 31 2026):** follow `docs/MODEL_DETAIL_RECIPE.md`. Detail
   comes from colour, shading, textures and good skin weights, not more triangles: geometry only for the outline and bending
   joints, everything inside the outline is paint. Keep the low-poly, faceted, dark-fantasy look and its triangle budgets.
+  Non-human enemies built on the humanoid kit do NOT keep a human outline: change proportions, stature, posture and symmetry
+  so the creature's identity reads from its silhouette (recipe section 0).
 - **Testing (owner's request, Oct 25 2026): use GitHub Actions again.** The repo is public now, so Actions minutes are free and
   every test runs as its own parallel job — far faster than this 2-core machine. Commit, then run `tools/ci.sh` (in the background):
   it pushes HEAD to a `ci/<branch>` branch, waits, prints one PASS / FAIL line per test and saves the summary to

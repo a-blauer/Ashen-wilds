@@ -118,7 +118,8 @@ function cg181Body(B,S){const M=cgMesh(B),J=S.J,TW=y=>cgTorsoW(S,y),T16=S.n||24,
       tw=((S.pron&&S.pron[s])||0)*Math.max(0,Math.min(1,(q.t-1.3)/.65)),u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f2=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw)));
       const w=q.t<.15?[['chest',.35],[bn+'0',.65]]:q.t<.9?[[bn+'0',1]]:q.t<1.1?[[bn+'0',.5],[bn+'1',.5]]:q.t<1.85?[[bn+'1',1]]:q.t<2.05?[[bn+'1',.4],[bn+'2',.6]]:[[bn+'2',1]];
       // the j order matches the root: j0 front-low(135°) … φ_j = (j−5)·45° from "outer" toward front
-      const ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0)),rf=sa>=0?(q.rf||q.r):(q.rb||q.r);
+      // S.armK {'-1','1'}: one arm thicker than the other (non-human creatures needn't be symmetric)
+      const K=(S.armK&&S.armK[s])||1,ring=[];for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=(q.r+(ca>0?(q.o||0)*ca:0))*K,rf=(sa>=0?(q.rf||q.r):(q.rb||q.r))*K;
         let p=[c[0]+u[0]*ca*ro+f2[0]*sa*rf,c[1]+u[1]*ca*ro+f2[1]*sa*rf,c[2]+u[2]*ca*ro+f2[2]*sa*rf];
         // (S.j2) the shoulder grows out of the body: the first rings start from the socket pushed outward and only then
         // become the arm, so the arm is seated in the shoulder instead of folding back into a thin neck at the join
