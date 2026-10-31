@@ -86,7 +86,7 @@ function cgBones(B,k,S,o){const J=S.J,bone=o.bone,bd=o.bone2||mdSh(o.bone,.72),t
     if(o.wisps)for(let i=0;i<3;i++)k.L('chest','g',o.soul,[0,J.chest[1]+r*.5,z],[(i-1)*.05,J.chest[1]+.13+(i%2)*.02,z+.015],.007,.0015,4)}
   return {sp,sf,TW,NW,py,pq,rib:(i,s,j)=>RB[i][s][Math.min(j,RB[i][s].length-1)],r0,r1}}
 // bones are not a cage body: register with the cage skeleton's joints (plan) and build them in that space
-function cgBonesReg(key,S,fn){const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';fn(B,P,k,S)},pn)}
+function cgBonesReg(key,S,fn){(CG181.S||(CG181.S={}))[key]=S;const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';fn(B,P,k,S)},pn)}
 // a loincloth on a cord round the pelvis bowl (it starts just inside the bowl's rim, so it hangs from it)
 function u8_loin(B,S,R,c1,c2,len){const py=R.py,q=R.pq,z=q[4]||0;mdLoft(B,[{p:[0,py+.004,z],rx:q[1]*.78,f:q[2]*.52,b:q[3]*.72,w:[['pelvis',1]]},{p:[0,py-.04,z],rx:q[1]*.92,f:q[2]*.66,b:q[3]*.85,w:[['pelvis',1]]},
   {p:[0,py-.12,z+.004],rx:q[1]*1.0,f:q[2]*.78,b:q[3]*.95,w:[['pelvis',.6],['lh0',.2],['rh0',.2]]},{p:[0,py-len,z+.01],rx:q[1]*1.05,f:q[2]*.85,b:q[3]*1.0,w:[['pelvis',.5],['lh0',.25],['rh0',.25]]}],
@@ -180,38 +180,47 @@ function ud_ws(k,M,p){k.P[k.P.length-1].w=cgWAt(M,p)}
       k.L('chest','c',0x2a2a24,add3(qb,[.03,-.02,.03]),add3(qb,[.07,-.3,-.03]),.035,.012,3)}
     // the archer's strung arms are as the warrior's; both get the knee-bent ready stance (ST179)
   })});
-ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
+ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};
+// (round 2) where the sword (right) and the bow's riser (left, the archer) sit: inside the bone fists (u8_hand's curled fingers)
+['skel','archer'].forEach(k=>{const S=CG181.S&&CG181.S[k];if(!S)return;S.grip=k=='archer'?{'-1':sub3(ud_grip(S,-1,.08,.03),S.J.aL2)}:{'1':sub3(ud_grip(S,1,.08,.03),S.J.aR2)}});ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
 
 // ---------------- Ossuary Colossus: a giant of heaped bones: doubled limbs, a barrel of ribs with skulls fused in, skulls on the
 // shoulders, a crown of bone spikes, green grave-fire in the chest, a femur club ----------------
 // (refine) a massive ossuary giant fused out of many dead: hunched under a hump of crossed bones and skulls heaped on its back, a
 // small skull sunk low between huge shoulders, long thick doubled arms hanging to the knees, short thick legs. Cheaper kit (the
 // fused skulls and their sockets were the heaviest shapes) keeps it under the regular-foe ceiling.
-(function(){const S=cgHuman({h:.76,w:1.45,d:1.3,at:1.6,lt:1.5,hs:.92,armL:1.13,legL:.9,neckL:-.03}),J=S.J,T=S.torso,bone=0x968c74,bone2=0x6e6652,dark=0x3e3a2e,eye=0x7aff9a,fire=0x5aff7a,iron=0x3a3a38;
-  cgBonesReg('colossus',S,function(B,P,k){const th=2.3,R=cgBones(B,k,S,{bone,bone2,th,cage:1.32,rt:1.45,hand:1.9,mitt:1,eye,fist:s=>s>0});
+(function(){const S=cgHuman({h:.84,w:1.2,d:1.28,at:1.5,lt:1.45,hs:.92,armL:1.12,legL:.92,neckL:-.03}),J=S.J,T=S.torso,bone=0x968c74,bone2=0x6e6652,dark=0x3e3a2e,eye=0x7aff9a,fire=0x5aff7a,iron=0x3a3a38;
+  cgBonesReg('colossus',S,function(B,P,k){const th=2.3,R=cgBones(B,k,S,{bone,bone2,th,cage:1.22,rt:1.4,hand:1.8,mitt:1,eye,fist:s=>true});
     const tb=y=>y>J.chest[1]-.04?'chest':y>J.spine[1]?'spine':'pelvis',sh=T[6][0],ch=J.chest[1],sp=J.spine[1];
     // limbs doubled up with extra bones lashed alongside
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',L=s<0?'lh':'rh',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],l0=J[L+'0'],l1=J[L+'1'],l2=J[L+'2'];
-      cgBoneTube(B,add3(a0,[s*.04,-.05,.03]),add3(a1,[s*.04,.04,.03]),.042,.036,[[A+'0',1]],[[A+'0',1]],bone2,2);cgBoneTube(B,add3(a1,[s*.035,-.04,.03]),add3(a2,[s*.03,.05,.03]),.038,.032,[[A+'1',1]],[[A+'1',1]],bone2,2);
+      cgBoneTube(B,add3(a0,[s*.012,-.05,-.035]),add3(a1,[s*.012,.04,-.035]),.04,.034,[[A+'0',1]],[[A+'0',1]],bone2,2);cgBoneTube(B,add3(a1,[s*.012,-.04,-.032]),add3(a2,[s*.01,.05,-.03]),.036,.03,[[A+'1',1]],[[A+'1',1]],bone2,2);
       cgBoneTube(B,add3(l0,[s*.035,-.06,.025]),add3(l1,[s*.035,.06,.025]),.05,.042,[[L+'0',1]],[[L+'0',1]],bone2,2);cgBoneTube(B,add3(l1,[s*.03,-.06,.025]),add3(l2,[s*.025,.08,.025]),.044,.038,[[L+'1',1]],[[L+'1',1]],bone2,2);
       // a great skull on each shoulder, eyes burning, a fan of spikes
-      const c=add3(a0,[s*.05,.085,0]);k.p(A+'0','sph','c',bone,c[0],c[1],c[2],.105,.11,.115);k.p(A+'0','sph','c',bone2,c[0],c[1]-.075,c[2]+.03,.075,.04,.08);
-      [-1,1].forEach(t=>{k.p(A+'0','oct','c',0x080806,c[0]+t*.038,c[1]+.01,c[2]+.096,.026,.022,.022);k.p(A+'0','oct','g',eye,c[0]+t*.038,c[1]+.01,c[2]+.108,.012,.01,.008)});
-      for(let i=0;i<4;i++)k.p(A+'0','cone4','c',bone2,c[0]+s*(.02+i*.025),c[1]+.12,c[2]-.06+i*.04,.02,.12,.02,-.3,0,-s*.5)});
+      const c=add3(a0,[s*.005,.095,-.012]);k.p(A+'0','sph','c',bone,c[0],c[1],c[2],.088,.094,.1);k.p(A+'0','sph','c',bone2,c[0],c[1]-.064,c[2]+.026,.064,.034,.068);
+      [-1,1].forEach(t=>{k.p(A+'0','oct','c',0x080806,c[0]+t*.032,c[1]+.01,c[2]+.083,.022,.019,.019);k.p(A+'0','oct','g',eye,c[0]+t*.032,c[1]+.01,c[2]+.093,.01,.009,.007)});
+      for(let i=0;i<2;i++)k.p(A+'0','cone4','c',bone2,c[0]+s*(.01+i*.03),c[1]+.1,c[2]-.05+i*.045,.018,.11,.018,-.3,0,-s*.35)});
     // skulls fused into the ribs (dark sockets, a nose hole)
-    [[0,-1,2],[0,1,4],[1,1,2],[2,-1,3],[2,1,5],[3,1,3],[4,-1,4],[4,1,1],[5,-1,2]].forEach(([ri,s,j],n)=>{const p=R.rib(ri,s,j),zc=cgAt(T,p[1])[4]||0,o=nrm3([p[0],0,p[2]-zc]),t=[o[2],0,-o[0]],c=add3(p,mul3(o,.03)),bn=tb(p[1]);
+    [[0,-1,2],[1,1,3],[2,-1,4],[3,1,2],[5,1,4]].forEach(([ri,s,j],n)=>{const p=R.rib(ri,s,j),zc=cgAt(T,p[1])[4]||0,o=nrm3([p[0],0,p[2]-zc]),t=[o[2],0,-o[0]],c=add3(p,mul3(o,.03)),bn=tb(p[1]);
       k.p(bn,'dod','c',n%2?bone:bone2,c[0],c[1],c[2],.058,.064,.062);[-1,1].forEach(e=>{const q=add3(add3(c,mul3(o,.052)),add3(mul3(t,e*.02),[0,.012,0]));k.p(bn,'oct','c',0x0a0a08,q[0],q[1],q[2],.015,.013,.013)})});
     // the hump on its back: long bones heaped crosswise on the spine, knobbed at the ends, three skulls staring backward
     const bz=(y,o)=>R.sp(y)[2]-.06-o;
-    [[-.2,ch-.14,.16,sh+.04,.05],[.2,ch-.12,-.14,sh+.06,.05],[-.24,ch,.24,ch+.05,.09],[-.12,sp+.02,.1,ch+.12,.08],[.14,sp,-.08,ch+.14,.08],[-.02,ch-.08,.04,sh+.1,.11]].forEach(([x0,y0,x1,y1,o],i)=>{
+    [[-.15,ch-.14,.12,sh+.06,.06],[.15,ch-.12,-.1,sh+.08,.06],[-.17,ch,.17,ch+.05,.1],[-.09,sp+.02,.08,ch+.12,.09],[.1,sp,-.06,ch+.14,.09],[-.02,ch-.08,.03,sh+.12,.13]].forEach(([x0,y0,x1,y1,o],i)=>{
       const a=[x0,y0,bz(y0,o*.6)],b=[x1,y1,bz(Math.min(y1,sh),o*.6)],bn=tb((y0+y1)/2);k.L(bn,'c',i%2?bone:bone2,a,b,.034,.028,5);k.p(bn,'oct','c',bone,a[0],a[1],a[2],.05,.042,.046,i,.4,0);k.p(bn,'oct','c',bone,b[0],b[1],b[2],.046,.04,.044,0,i*.6,.4)});
-    [[-.09,ch+.03],[.1,ch-.02],[0,ch-.12]].forEach(([x,y],i)=>{const c=[x,y,bz(y,.13)],bn=tb(y);k.p(bn,'sph','c',i%2?bone2:bone,c[0],c[1],c[2],.07,.076,.07);
+    [[-.07,ch+.03],[.06,ch-.1]].forEach(([x,y],i)=>{const c=[x,y,bz(y,.15)],bn=tb(y);k.p(bn,'sph','c',i%2?bone2:bone,c[0],c[1],c[2],.07,.076,.07);
       [-1,1].forEach(e=>k.p(bn,'oct','c',0x0a0a08,c[0]+e*.026,c[1]+.012,c[2]-.06,.018,.016,.014));k.p(bn,'box','c',bone2,c[0],c[1]-.05,c[2]-.03,.06,.022,.04)});
-    // a crown of bone spikes
-    for(let i=0;i<7;i++){const a=-1.35+i*.45,y=S.hp(0,1.705,0)[1],q=cgAt(S.head,y),bp=[Math.sin(a)*q[1]*.7,y,(q[4]||0)+Math.cos(a)*q[2]*.7];k.p('head','cone4','c',bone2,bp[0],bp[1]+.05,bp[2],.02,.15,.02,-Math.cos(a)*.35,0,Math.sin(a)*.35)}
+    // (round 2) a crown of bones: a circlet of bone round the brow, three small skulls and vertebrae set in it, and long uneven
+    // bone spikes rising from it, each knobbed at the tip like a finger bone
+    {const y=S.hp(0,1.69,0)[1],q=cgAt(S.head,y),z0=q[4]||0,at=a=>[Math.sin(a)*(q[1]+.012),y-.006*Math.cos(a),z0+Math.cos(a)*((Math.cos(a)>0?q[2]:q[3])+.012)],CR=[];
+      for(let i=0;i<=12;i++)CR.push({p:at(i/12*6.283),rx:.013,f:.011,b:.011,w:[['head',1]]});mdLoft(B,CR,{seg:4,col:m=>Math.round(m.i)%2?bone:bone2});
+      [0,-1.15,1.15].forEach((a,i)=>{const c=at(a),o=[Math.sin(a),0,Math.cos(a)],sc=i?.026:.032;k.p('head','dod','c',bone,c[0]+o[0]*.012,c[1]+.004,c[2]+o[2]*.012,sc,sc*1.05,sc);
+        [-1,1].forEach(e=>{const t=[o[2],0,-o[0]],p=add3(add3(c,mul3(o,.012+sc*.86)),add3(mul3(t,e*sc*.38),[0,sc*.2,0]));k.p('head','oct','c',0x0a0a08,p[0],p[1],p[2],sc*.3,sc*.28,sc*.2)})});
+      [-.6,.6,-1.75,1.75,3.14].forEach((a,i)=>{const c=at(a);k.p('head','oct','c',bone2,c[0],c[1]+.006,c[2],.018,.016,.018,a,0,.3)});
+      [[-.5,.2,.15],[.5,.17,.13],[-1.5,.15,.22],[1.6,.16,.2],[-2.3,.12,.32],[2.2,.13,.3],[0,.12,-.1]].forEach(([a,len,lean],i)=>{const c=at(a),o=[Math.sin(a),0,Math.cos(a)],
+        e=add3(c,[o[0]*len*(.25+lean),len*(1-lean*.5),o[2]*len*(.25+lean)]);k.L('head','c',i%2?bone:bone2,c,e,.011,.008,5);k.p('head','dod','c',bone,e[0],e[1],e[2],.013,.015,.013,i,i*.5,0)})}
     // green grave-fire in the chest, burning on the column; green fire licking up out of the sockets
     {const c=R.sp(ch-.02),z=c[2]+.024*th+.09;k.p('chest','oct','g',fire,0,ch-.02,z,.1,.14,.085);k.p('chest','sph','g',0x2ae05a,0,ch-.04,z,.13,.15,.1)}
-    [-1,1].forEach(s=>{const H=S.head,y=S.hp(0,1.629,0)[1],q=cgAt(H,y),z=(q[4]||0)+q[2]*.92-.01;for(let i=0;i<3;i++)k.L('head','g',fire,[s*.034*S.hs,y+.005,z],[s*(.04+i*.012)*S.hs,y+.06+i*.02,z-.03-i*.015],.012-i*.003,.002,4)});
+    [-1,1].forEach(s=>{const H=S.head,y=S.hp(0,1.629,0)[1],q=cgAt(H,y),z=(q[4]||0)+q[2]*.92-.01;for(let i=0;i<2;i++)k.L('head','g',fire,[s*.034*S.hs,y+.005,z],[s*(.04+i*.012)*S.hs,y+.06+i*.02,z-.03-i*.015],.012-i*.003,.002,4)});
     // the club: a giant's thigh bone gripped in the right fist, shards lashed round its head with an iron band
     {const H=ud_hf(S,1),g=ud_grip(S,1,null,.05),cd=nrm3(add3(H.f,mul3(H.d,.75))),A=t=>add3(g,mul3(cd,t)),sd=nrm3(cross3(cd,H.u));
       k.L('aR2','c',bone,A(-.1),A(.36),.036,.054,7);const hd=A(.42),pm=A(-.12);k.p('aR2','dod','c',bone,hd[0],hd[1],hd[2],.1,.09,.09);k.p('aR2','sph','c',bone2,pm[0],pm[1],pm[2],.058,.05,.058);
@@ -219,7 +228,7 @@ ST179.skel={sx:.1,hx:.06,lk:.1,rk:.1};ST179.archer={sx:.1,hx:.06,lk:.1,rk:.1};
       u8_part(k,'aR2',dkG().tor,'m',iron,A(.3),sd,cd,[.064,.05,.064])}
     u8_loin(B,S,R,dark,0x2a2a20,.34)})})();
 // the hunch of a giant carrying its heap of bones (the creature's own stance: v113 creatures keep theirs over ST179)
-if(N3.def.colossus)N3.def.colossus.stance={sx:.26,hx:-.24,ax:-.1,lx:-.1,az:.1,lz:-.1,lk:.14,rk:.14};
+if(N3.def.colossus)N3.def.colossus.stance={sx:.3,hx:-.28,ax:-.12,lx:-.12,az:.04,lz:-.04,lk:.14,rk:.14};
 
 // ---------------- the wrapped dead: Desert Revenant and Tomb Priest ----------------
 // (refine) mummified men: human proportions, but withered (thin limbs, a narrow waist, the belly sunk under the ribs, the cheeks
@@ -231,6 +240,7 @@ function ud_wrap(m,w1,w2,dirt,y0){const a=Math.atan2(m.x,m.z),b=(m.y+a*.02)*24,w
 // dried leather with the eye sockets sunk dark (base head coordinates)
 function ud_leather(m,S,c,sock){const bx=m.x/S.hs,ey=S.hp(0,1.629,0)[1],d=Math.hypot((Math.abs(bx)-.036)/.024,(m.y-ey)/(.016*S.hs));return mdMix(mdSh(c,1-.15*n3Sn(m.x,m.y,m.z,30,1)),sock,ud_ss(1.25,.45,d))}
 (function(){const S=ud_spec({h:.92,w:.92,d:.9,rw:[.95,.95,.84,.92,.98,1,1,1],rf:[.95,.95,.74,.88,.96,1,1,1],at:.86,lt:.88,hs:.96}),w1=0xb8a47c,w2=0x8a7a58,dirt=0x4a3c28,lth=0x4e3c26,lap=0x2a3a6a,gd=0xc8a040,T=S.torso,J=S.J;
+  S.grip={'1':sub3(ud_grip(S,1),S.J.aR2)};   /* (round 2) the staff through the closed fist */
   cg181Reg('revenant',S,function(B,P,k,C){const M=C.M,fy=S.hp(0,1.6,0)[1],by=S.hp(0,1.645,0)[1];
     cgSculpt(M,{head:1},S.sculpt(cgFaceHuman({nose:.7,brow:1.4,hollow:.016})));
     cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]>.2?-.014*cgG(x,y,0,T[2][0]+.075,.11,.06)*n[2]:0);   // the belly sunk under the ribs
@@ -244,6 +254,7 @@ function ud_leather(m,S,c,sock){const bx=m.x/S.hs,ey=S.hp(0,1.629,0)[1],d=Math.h
     ud_body(B,M,null,{vcol:m=>face(m)?ud_leather(m,S,lth,0x0c0806):ud_wrap(m,w1,w2,dirt,J.rh1[1])});
     [-1,1].forEach(s=>ud_fingers(B,S,s,w2,s>0?'fist':'claw',1,0x2a2014,s>0?0:.012))})})();
 (function(){const S=ud_spec({h:.97,w:.9,d:.9,rw:[.95,.95,.84,.92,.98,1,1,1],rf:[.95,.95,.74,.88,.96,1,1,1],at:.84,lt:.9,hs:.96}),w1=0xa8946a,w2=0x6e5e40,dirt=0x3e3020,dk=0x2e2418,gd=0xc8a040,lap=0x2a4a8a,glow=0xffd060,T=S.torso,J=S.J;
+  S.grip={'1':sub3(ud_grip(S,1),S.J.aR2)};   /* (round 2) the staff through the closed fist */
   cg181Reg('tombpriest',S,function(B,P,k,C){const M=C.M,fy=S.hp(0,1.6,0)[1];
     cgSculpt(M,{head:1},S.sculpt(cgFaceHuman({nose:.7,brow:1.4,hollow:.018})));
     cgSculpt(M,{torso:1},(x,y,z,n)=>n[2]>.2?-.012*cgG(x,y,0,T[2][0]+.075,.11,.06)*n[2]:0);
@@ -272,7 +283,7 @@ ST179.revenant={sx:.12,hx:-.06,lk:.09,rk:.09,lz:-.05,le:-.25};
 // hands, a narrow wasp waist under a cage of ribs, a hunched back with the spine knuckled through it, a low head thrust forward
 // on a thin neck with a jutting jaw, long splayed feet. Grey-green skin that flows into darker rot and paler stretched skin
 // over the bones (vcol), dried blood round the mouth.
-(function(){const S=ud_spec({h:.8,w:.84,d:.84,rw:[.9,.92,.68,.84,.96,1,1.04,.92],rf:[.9,.9,.58,.8,.95,1,1,.95],at:.72,lt:.78,hs:.94,hd:1.1,armL:1.42,legL:.94,nw:.82,foot:1.18,footW:.95,
+(function(){const S=ud_spec({snug:1.3,h:.8,w:.84,d:.84,rw:[.9,.92,.68,.84,.96,1,1.04,.92],rf:[.9,.9,.58,.8,.95,1,1,.95],at:.72,lt:.78,hs:.94,hd:1.1,armL:1.42,legL:.94,nw:.82,foot:1.18,footW:.95,
     facePush:(i,j,a)=>(i<=1&&Math.sin(a)>.2?.012:0)+(i<=1&&Math.sin(a)>-.2&&Math.abs(Math.cos(a))>.6?.006:0)}),sk=0x5e6a5c,sk2=0x3e4a3e,pale=0x8a9484,rot=0x34402e,blood=0x2a0c08,rag=0x4a4636,rag2=0x3a382c,bone=0xb8b098,T=S.torso,J=S.J;
   cg181Reg('ghoul',S,function(B,P,k,C){const M=C.M,sh=T[6][0],ch=J.chest[1],sp=J.spine[1],TB=y=>y>ch-.04?'chest':y>sp?'spine':'pelvis';
     cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<.1)return 0;let d=-.01*cgG(x,y,0,1.597,.012,.01)+.016*cgG(x,y,0,1.65,.05,.008);[-1,1].forEach(s=>{d-=.02*cgG(x,y,s*.037,1.63,.016,.011);d-=.014*cgG(x,y,s*.05,1.57,.016,.016)});return d}));
@@ -299,7 +310,7 @@ ST179.revenant={sx:.12,hx:-.06,lk:.09,rk:.09,lz:-.05,le:-.25};
     [-1,1].forEach(s=>{const A=s<0?'aL':'aR',y=J[A+'1'][1]*.35+J[A+'2'][1]*.65;ud_sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&Math.abs(m.y-y)<.03,.012,null,{rim:.15,vcol:m=>ud_mot(m,rag,rag2,11,2)});
       ud_fingers(B,S,s,sk2,'claw',1.55,0x2a2420,.05,1.1);cgToes(k,S,s,sk2,.024)})})})();
 // a crawler's crouch: bent far over, the head raised to look ahead, deep-bent knees, the long arms reaching forward to the ground
-ST179.ghoul={sx:.62,hx:-.58,lk:.56,rk:.56,ax:-.5,lx:-.5,az:.1,lz:-.1,ex:-.35,le:-.35};
+ST179.ghoul={sx:.62,hx:-.58,lk:.56,rk:.56,ax:-.5,lx:-.5,az:.03,lz:-.03,ex:-.35,le:-.35};   /* (round 2) snug arms, small outward stance */
 
 // ---------------- the drowned: Drowned Thrall (bloated, barnacled, chained, weed) and Drowned Wretch (gaunt, hair over its face) ----------------
 // (refine) the Thrall is a bloated, waterlogged brute: a small head sunk into a swollen neck (the shoulders slope up into it, no shelf), a belly sagging over the belt,
@@ -318,6 +329,17 @@ function ud_weed(B,M,S,p0,d0,len,r,c,sd){const n=7,st=len/n,hz=S.hp(0,1.6,0)[2],
       const t=cgRay(M,[p[0],p[1]+.5,p[2]],[0,-1,0],{torso:1,arm:1});if(t&&p[1]<t[1]+.02&&p[1]>t[1]-.06){p=[p[0],t[1]+.02,p[2]];w=cgWAt(M,t)}}
     const q=r*(1-.88*i/n);R.push({p,rx:q,f:q*.62,b:q*.62,w})}
   mdLoft(B,R,{seg:4,capB:true,col:m=>mdMix(mdSh(c,.42),c,Math.min(1,m.i/4))})}
+// (round 2) a strand of hair hanging from the scalp: a flat, tapering loft rooted under the skullcap, kept a few mm outside the
+// head, the neck and the chest at every point (rays against the body, so it lies over the face instead of through it), weighted
+// to the head and, as it falls past the chin, more and more to the chest. o: {len, r (half width), gap (mm off the skin), wave}
+function ud_hairS(B,M,S,p0,d0,o,c,c2,sd){const n=8,st=o.len/n,hz=S.hp(0,1.6,0)[2],ny=S.J.neck[1],ch=S.J.chest[1],gap=o.gap||.006,R=[],T=S.torso;let p=sub3(p0,mul3(nrm3(d0),.012)),d=nrm3(d0);
+  const side=nrm3(cross3([0,1,0],[d0[0],0,d0[2]])),out=(q,parts,cz)=>{const ax=nrm3([q[0],0,q[2]-cz]),h=cgRay(M,[q[0]+ax[0]*.6,q[1],q[2]+ax[2]*.6],[-ax[0],0,-ax[2]],parts);
+    if(!h)return q;const rh=Math.hypot(h[0],h[2]-cz)+gap,rp=Math.hypot(q[0],q[2]-cz);return rp<rh?[ax[0]*rh,q[1],cz+ax[2]*rh]:q};
+  for(let i=0;i<=n;i++){if(i){d=nrm3(add3(add3(mul3(d,.35),[0,-.8,0]),mul3(side,(o.wave||.12)*Math.sin(i*1.7+sd))));p=add3(p,mul3(d,i==1?.014:st));
+      if(i>1){if(p[1]>ny-.04)p=out(p,{head:1,neck:1},hz);else p=out(p,{torso:1,neck:1},cgTAt(S,p[1]).z);
+        const t=cgRay(M,[p[0],p[1]+.5,p[2]],[0,-1,0],{torso:1,arm:1});if(t&&p[1]<t[1]+gap&&p[1]>t[1]-.06)p=[p[0],t[1]+gap,p[2]]}}
+    const k=ud_cl((S.hp(0,1.54,0)[1]-p[1])/.25,0,.7),q=o.r*(1-.8*i/n);R.push({p,rx:q,f:q*.4,b:q*.4,w:k>0?mdWb('head','chest',k):[['head',1]]})}
+  mdLoft(B,R,{seg:4,capB:true,ref:[d0[0],0,d0[2]],col:m=>mdMix(c,c2,ud_cl((m.i-3)/5))})}
 // drowned skin at a point: base sk, hollows / back toward sk2, pale swollen patches, dark rot, a wet sheen on the tops
 function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3Sn(m.x,m.y,m.z,12,5);let c=mdMix(sk,sk2,ud_cl((n-.35)*1.3)*.75+(m.s<-.3?.2:0));
   c=mdMix(c,pale,ud_cl((.42-n2)*3)*(o.pale||.45)*(m.s>-.2?1:.4));c=mdMix(c,rot,ud_cl((n2-.66)*4)*.7);
@@ -367,10 +389,14 @@ function ud_wet(m,sk,sk2,pale,rot,o){o=o||{};const n=n3Sn(m.x,m.y,m.z,5,2),n2=n3
     cgEyes(k,M,S,0xb8fff0,.036,1.629,.85,-.002);
     // broken teeth in the gaping mouth
     cgTeeth(k,M,S,[[-.02,1.567,.014],[-.009,1.568,.008],[.003,1.568,.016],[.014,1.567,.006],[.022,1.566,.012]],0xb8b098);
-    // long black hair: a skullcap and strands plastered down over the face and shoulders
+    // long black hair: a skullcap and strands hanging over the face (in front of it, parted at the eyes) and down to the chest
     ud_sh(B,M,m=>{if(m.part!='head'&&!(m.part=='neck'&&m.s<-.2))return false;if(m.y<nape)return false;const by=(m.y-S.nb)/S.hs+1.52;return m.s<.1||by>1.672+(Math.abs(m.x/S.hs)>.05?-.004:0)},
       v=>.012*Math.min(1,Math.max(.35,(v[1]-nape)/(.12*S.hs))),m=>a181Nz(hr,m,.4,24),{rim:.12});
-    u8_strands(k,M,S,Array.from({length:16},(_,i)=>{let a=-2.9+i*.36;const fr=Math.abs(a)<.8;if(fr&&Math.abs(a)>.25&&Math.abs(a)<.55)a=Math.sign(a)*.64;return [a,fr?1.675:1.66,fr?.034:.046,fr?.38+(i%3)*.07:.5+(i%4)*.1,fr?.36:.1,i%3?hr:hr2,i]}));
+    // (round 2) twelve strands from under the skullcap: two down the middle between the eyes, two over each cheek (the glowing eyes
+    // show through the parting), the rest down the sides and back; every point kept a few mm outside the face, neck and chest
+    [[-.13,1.675,.44,.013],[.12,1.675,.5,.012],[-.82,1.668,.46,.014],[.78,1.668,.4,.014],[-1.05,1.66,.52,.015],[1.1,1.66,.48,.015],
+     [-1.6,1.66,.54,.017],[1.65,1.66,.5,.017],[-2.2,1.66,.5,.018],[2.25,1.66,.55,.018],[-2.8,1.66,.46,.018],[2.95,1.66,.5,.018]].forEach(([a,y,len,r],i)=>{
+      const c=S.hp(0,y,0),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(p)ud_hairS(B,M,S,p,[d[0],.25,d[2]],{len,r,gap:.006,wave:.1},i%3?hr:hr2,mdMix(hr2,0x2a3432,.5),i*1.3)});
     // the ribs as bars on the chest over the sunken belly
     for(let i=0;i<4;i++){const y=J.chest[1]+.07-i*.055;for(let j=0;j<5;j++){const a=-1.1+j*.55,p=cgSurf(M,S,y-Math.abs(a)*.02,a,-.004);k.p(y>J.chest[1]-.04?'chest':'spine','box','c',rib,p[0],p[1],p[2],.044,.01,.014,0,a,0)}}
     // a shroud in rags: rags on the shoulders, the shroud's skirt, weed caught on the arms; long black talons
