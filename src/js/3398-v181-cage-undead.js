@@ -34,14 +34,22 @@ function u8_armPt(M,S,s,t,a,dep){const A=s<0?'aL':'aR',J=S.J,c=t<=1?lerp3(J[A+'0
 // strands from the crown (base head coordinates): [angle round the head (0 front), base y, width, length, outward tilt, colour, seed]
 function u8_strands(k,M,S,L){L.forEach(([a,y,w,len,tl,col,sd])=>{const c=S.hp(0,y,0),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(!p)return;
   const r=sub3(p,mul3(d,.007)),t=dkKit();t.S('head',col,r[0],r[1],r[2],w,len,a,-tl,sd);u8_bake(k.B181,t)})}
-// hand bones: a wrist knob, the carpals, metacarpals out to each finger's root (the frame of cgFingers), the fingers, a thumb
+// hand bones: a wrist knob, the carpals, metacarpals out to each finger's root (the frame of cgFingers), the fingers, a thumb;
+// (attack review) a gripping hand is a closed bony fist curled round the grip centre G, where S.grip puts the handle
 function u8_hand(k,S,s,col,kind,nail,th,rf,tip){rf=rf||1;const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*Math.sqrt(rf))),L=.08*Math.sqrt(rf);
   const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
-  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),c0=add3(a2,mul3(d,.024*Math.sqrt(rf)));
+  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),c0=add3(a2,mul3(d,.024*Math.sqrt(rf))),G=add3(add3(kn,mul3(d,.022)),mul3(u,-.03)),rho=.034*Math.sqrt(rf);   /* G: the fist's grip centre (= S.grip, ud_grip(S,s,.08,.03)) */
   k.p(bn+'2','sph','c',col,a2[0],a2[1],a2[2],.016*th);k.p(bn+'2','sph','c',col,c0[0],c0[1],c0[2],.017*rf,.017*rf,.017*rf);
   for(let i=0;i<4;i++){const z=(1.5-i)*.016*rf,p=P(kn,z,-.004);k.L(bn+'2','c',col,P(c0,z*.4,-.002),p,.0062*rf,.0058*rf,5);
-    if(kind=='fist')a181Digit(k,bn+'2',col,p,D(1,-.45,.05),L*.7,.0095*rf,2,1.15,ax,0,null);else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6/rf),L*(i==3?.82:1),.0085*rf,3,kind=='claw'?.26:.14,ax,tip||0,nail)}
-  const tb=P(add3(a2,mul3(d,.03)),.026*rf,-.01);k.L(bn+'2','c',col,P(c0,.008*rf,-.004),tb,.007*rf,.0065*rf,5);a181Digit(k,bn+'2',col,tb,D(.6,-.3,.75),L*.62,.009*rf,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail)}
+    if(kind=='fist'){/* a closed bony fist: the three phalanges curl round the grip centre G (the handle runs along f through it),
+      the proximal ones across the front of the grip, the next ones curling under it, tightening as they go; knobbed joints */
+      const Q=(th,f2)=>{const a=th*Math.PI/180;return add3(add3(G,mul3(f,z)),add3(mul3(d,rho*f2*Math.cos(a)),mul3(u,rho*f2*Math.sin(a))))},J4=[[130,1],[45,.9],[-35,.8],[-95,.72]].slice(0,i==3?3:4).map(([t,f2])=>Q(t,f2));
+      J4[0]=p;for(let j=0;j<J4.length-1;j++){k.L(bn+'2','c',col,J4[j],J4[j+1],.0088*rf*(1-j*.12),.0078*rf*(1-j*.12),5);if(j)k.p(bn+'2','oct','c',col,J4[j][0],J4[j][1],J4[j][2],.0095*rf)}}
+    else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6/rf),L*(i==3?.82:1),.0085*rf,3,kind=='claw'?.26:.14,ax,tip||0,nail)}
+  const tb=P(add3(a2,mul3(d,.03)),.026*rf,-.01);k.L(bn+'2','c',col,P(c0,.008*rf,-.004),tb,.007*rf,.0065*rf,5);
+  if(kind=='fist'){/* the thumb bones cross over the curled fingers on the far side of the grip */const T1=add3(add3(G,mul3(f,.03*rf)),add3(mul3(d,.3*rho),mul3(u,-.95*rho))),T2=add3(add3(G,mul3(f,.004)),add3(mul3(d,.74*rho),mul3(u,-.74*rho)));
+    k.L(bn+'2','c',col,tb,T1,.009*rf,.008*rf,5);k.p(bn+'2','oct','c',col,T1[0],T1[1],T1[2],.0095*rf);k.L(bn+'2','c',col,T1,T2,.008*rf,.0062*rf,5);return}
+  a181Digit(k,bn+'2',col,tb,D(.6,-.3,.75),L*.62,.009*rf,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail)}
 // foot bones: the ankle knob, a heel, the arch, five metatarsals out to the toes
 function u8_foot(k,S,s,col,th){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w,r=Math.sqrt(th),hl=[A[0],.026*r,A[2]-.025],mid=[A[0],.03*r,A[2]+.07*L];
   k.p(l,'sph','c',col,A[0],A[1],A[2],.024*th);k.L(l,'c',col,A,hl,.017*th,.02*r,6);k.p(l,'sph','c',col,hl[0],hl[1],hl[2],.024*r,.024*r,.03*r);k.L(l,'c',col,A,mid,.018*th,.016*r,6);
