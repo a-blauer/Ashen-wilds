@@ -4,6 +4,9 @@
 - **New bosses and mini bosses:** follow `docs/BOSS_RECIPE.md` (the Vorraxis standard, v144: the owner's favourite fight). Read it and
   the three Vorraxis files (3031–3033) before designing or building any boss fight. Reuse the method and the standard, never
   Vorraxis's ooze theme: each boss gets its own theme, look, moves and mechanics.
+- **Modelling any enemy, boss, folk or creature (owner's request, Oct 31 2026):** follow `docs/MODEL_DETAIL_RECIPE.md`. Detail
+  comes from colour, shading, textures and good skin weights, not more triangles: geometry only for the outline and bending
+  joints, everything inside the outline is paint. Keep the low-poly, faceted, dark-fantasy look and its triangle budgets.
 - **Testing (owner's request, Oct 25 2026): use GitHub Actions again.** The repo is public now, so Actions minutes are free and
   every test runs as its own parallel job — far faster than this 2-core machine. Commit, then run `tools/ci.sh` (in the background):
   it pushes HEAD to a `ci/<branch>` branch, waits, prints one PASS / FAIL line per test and saves the summary to
