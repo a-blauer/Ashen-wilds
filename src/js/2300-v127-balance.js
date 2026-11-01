@@ -35,7 +35,7 @@ Object.assign(KQR_TUNE,{
   'Intimidating Shout':2.4,  // was 1.6: the debuff is the point, but the hit was negligible
   'Wild Hunt':.16,           // was .1
   // ranged classes rely on their area abilities in a crowd (a melee weapon cleaves the crowd around you; a bow does not)
-  'Explosive Arrow':1.05,'Barrage':1.2,'Rain of Arrows':.75,'Multishot':.7,'Explosive Trap':1.0,   // were .72/.57/.24/.56/.6
+  'Explosive Arrow':1.05,'Ballista Bolt':1.2,'Rain of Arrows':.75,'Multishot':.7,'Explosive Trap':1.0,   // were .72/.57/.24/.56/.6
   'Meteor':.6,'Wall of Fire':.55,'Blizzard':.4,'Frost Nova':1.25                                // were .45/.45/.3/1
 });
 // class knobs (v90 KQR_CLS, added to the hero's stats). Mage: −.36+.008·level → −.04+.008·level, which gives back what the

@@ -2,7 +2,7 @@
 #  · every one of the 85 class abilities has an evolution (name, description, a real change: mods / post / run)
 #  · the Evolve button only works at rank 5 and with enough ability points; it costs AP (apSpent), survives save + load,
 #    "Reset abilities" removes it and refunds the points; the Abilities window shows the evolution box
-#  · evolved casts really change the mechanic: more projectiles (Fan of Knives, Multishot, Fireball, Barrage, Shuriken,
+#  · evolved casts really change the mechanic: more projectiles (Fan of Knives, Multishot, Fireball, Shuriken,
 #    Arcane Missiles), bigger radius (Frost Nova reaches an enemy the normal one can't), more chain jumps, 25% more damage
 #  · every evolved ability of every class casts in the world with no errors, and leaves nothing behind in the scene
 #  · the ability preview plays the evolved form; sheets of four frames per evolved ability → out/v137_evolve_<cls>.jpg
@@ -89,9 +89,12 @@ def s(pg):
         def cmp(cls,n,sec=2.5,foes=None):
             ev("(c)=>SETCLS(c)",cls)
             a=ev("async([n,s,f])=>await CASTN(n,false,s,f)",[n,sec,foes]);b=ev("async([n,s,f])=>await CASTN(n,true,s,f)",[n,sec,foes]);return a,b
-        for cls,n,lo in [('assassin','Fan of Knives',18),('ranger','Multishot',9),('mage','Fireball',3),('ranger','Barrage',15),('assassin','Shuriken Volley',7),('mage','Arcane Missiles',7)]:
+        for cls,n,lo in [('assassin','Fan of Knives',18),('ranger','Multishot',9),('mage','Fireball',3),('assassin','Shuriken Volley',7),('mage','Arcane Missiles',7)]:
             a,b=cmp(cls,n,1.2)
             chk('%s: evolved form fires more projectiles (%d → %d, want ≥%d)'%(n,a['nl'],b['nl'],lo),b['did'] and b['nl']>=lo and b['nl']>a['nl'],(a,b))
+        # Ballista Bolt (v186, was Barrage): one bolt through a line; the evolved bolt flies 24 tiles (the normal one 16)
+        a,b=cmp('ranger','Ballista Bolt',1.6,[[0,4],[0,20]])
+        chk('Ballista Bolt: the bolt pierces the line, the evolved one reaches an enemy 20 tiles away (hits %s → %s)'%(a['hits'],b['hits']),a['did'] and a['hits'][0]>20 and a['hits'][1]<=20 and b['hits'][0]>20 and b['hits'][1]>20,(a,b))
         a,b=cmp('mage','Frost Nova',1.2,[[0,4.3]])
         chk('Frost Nova: the evolved nova reaches an enemy 4.3 tiles away, the normal one does not',a['n']==0 and b['n']==1,(a,b))
         ring=[[0,3]]+[[round(2.2*__import__('math').cos(k*.7),2),round(3+2.2*__import__('math').sin(k*.7),2)] for k in range(1,9)]

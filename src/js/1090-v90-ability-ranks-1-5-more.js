@@ -30,7 +30,7 @@ var KQR_TUNE={
  'Bull Rush':1.5,'Intimidating Shout':1.6,'Skull Splitter':.49,'Whirlwind':.4,'Earthshatter':.94,'Chain Hook':1.47,'Execute':.81,
  'Holy Smite':1.6,'Shield Bash':1.11,'Judgment':1.39,'Hammer of Light':.9,'Beacon of Light':1.16,"Crusader's Charge":1.6,'Sanctuary':1.38,'Divine Intervention':1.6,"Heaven's Wrath":1.11,
  'Shadow Rush':.44,'Eviscerate':.42,'Smoke Bomb':.93,'Venom Flask':.55,'Shuriken Volley':.34,'Shadow Clone':.35,'Death Mark':.74,'Phantom Strike':.53,'Caltrops':.79,'Garrote':.59,'Thousand Cuts':.8,'Envenom':1,'Eclipse':.36,
- 'Multishot':.56,'Disengage':1.21,'Hawk Dive':.9,'Piercing Arrow':.75,'Explosive Arrow':.72,'Call of the Wild':.22,'Rain of Arrows':.24,'Barrage':.57,'Explosive Trap':.6,'Rapid Fire':.27,'Stampede':.6,'Aimed Shot':.53,'Wild Hunt':.1,
+ 'Multishot':.56,'Disengage':1.21,'Hawk Dive':.9,'Piercing Arrow':.75,'Explosive Arrow':.72,'Call of the Wild':.22,'Rain of Arrows':.24,'Ballista Bolt':.57,'Explosive Trap':.6,'Rapid Fire':.27,'Stampede':.6,'Aimed Shot':.53,'Wild Hunt':.1,
  'Fireball':.75,'Arcane Missiles':.45,"Dragon's Breath":.55,'Chain Lightning':.77,'Blizzard':.3,'Frozen Orb':1.04,'Meteor':.45,'Disintegrate':.46,'Wall of Fire':.45,'Singularity':.43,'Comet Storm':.81};
 // abilities whose hits got much smaller come back a little sooner
 var KQR_CD={'Whirlwind':11,'Shadow Clone':18,'Eclipse':24,'Venom Flask':10,'Rain of Arrows':10,'Rapid Fire':10,'Explosive Trap':8,'Aimed Shot':13,'Call of the Wild':18,'Wild Hunt':30,

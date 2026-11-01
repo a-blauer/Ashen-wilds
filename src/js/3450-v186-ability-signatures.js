@@ -427,7 +427,7 @@ var SG_POSE={'Skull Splitter':'sgChop',Execute:'sgGuillo','Shield Bash':'sgBash'
   Aegis:'sgShieldUp','Divine Barrier':'sgWard','Mana Shield':'sgWard','Blessed Hammers':'sgWard','Lay on Hands':'sgPray','Divine Intervention':'sgPray',Consecration:'sgPlant','War Banner':'sgPlant',
   'Beacon of Light':'sgPlant','Seal of Light':'sgSeal','Poison Blades':'sgCoat','Shadow Dance':'sgDance',Vanish:'sgCloak','Smoke Bomb':'sgDrop',Envenom:'sgClench','Hawk Dive':'sgHawk',
   'Entangling Roots':'sgGround',"Dragon's Breath":'sgBreath',"Hunter’s Focus":'sgFocus',Earthshatter:'sgQuake',Cleave:'sgSweep','Seismic Rupture':'sgQuake','Death Mark':'point',
-  Multishot:'bow',Barrage:'bow','Shuriken Volley':'throw','Snare Trap':'sgDrop'};
+  Multishot:'bow','Ballista Bolt':'bow','Shuriken Volley':'throw','Snare Trap':'sgDrop'};
 var SG_LEGS={sgChop:1,sgGuillo:1,sgBash:1,sgSmite:1,sgRip:1,sgKneel:1,sgTackle:1,sgCrusade:1,sgBrace:1,sgStone:1,sgPlant:1,sgDrop:1,sgGround:1,sgQuake:1,sgSweep:1,sgBreath:1,sgPray:1};
 (function(){const A=[SKB,typeof SKX!='undefined'?SKX:{},KQN];A.forEach(T=>Object.keys(T).forEach(c=>(T[c]||[]).forEach(s=>{const p=SG_POSE[s.n];if(p)s.pose=p})))})();
 {const f=kqsPoseT;kqsPoseT=function(p){const m=SGP[p];if(m&&m[0])return m;return f.apply(this,arguments)}}
