@@ -60914,6 +60914,9 @@ var EVO186={on:true};
   E.shell=function(sel,off,t,col,o){if(col===P.dark)col=dk2;else if(typeof col=='function'){const f0=col,smp=[];for(let i=0;i<6;i++)smp.push(f0(.05,.4,.05,i));
       if(smp.some(v=>v!==smp[0])&&f0(.05,.4,.05,0)===f0(-.1,.3,-.2,0)){const m=new THREE.Color(0);smp.forEach(v=>m.add(new THREE.Color(v===P.dark?dk2:v)));col=m.multiplyScalar(1/6).getHex()}
       else col=function(){const v=f0.apply(this,arguments);return v===P.dark?dk2:v}}
+    // a shell never spreads onto the legs (with the seated legs, a belly or flank selection caught the tops of the thighs and
+    // left islands of plates a few mm off them)
+    const sel0=sel;sel=function(x,y,z){if(!sel0.apply(this,arguments))return false;return !onLeg({p:[x,y,z]})};
     return sh0.call(E,sel,off,t,col,o)};
   return E}}
 {const ch=EVO100_M.charm;EVO100_M.charm=function(E){return EVO186.on?E:ch.apply(this,arguments)}}
