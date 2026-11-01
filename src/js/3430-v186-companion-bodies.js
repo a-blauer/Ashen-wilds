@@ -16,8 +16,8 @@ var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
   // optional [s, l, tint, amount]: first a pull toward an earthy tint (the candy hue itself)
   // (the colours are linear and go through ACES, so a linear saturation of .4 still reads strongly on screen)
-  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.45,.42],Gloomcap:[.22,.34,0x4a3430,.35],Sporelord:[.24,.34,0x34402e,.3],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.2,.34,0x3a3040,.3],
-    Pyrewing:[.4,.38],Venomcoil:[.24,.3,0x3a3a24,.3],Gravewyrm:[.3,.4],Hivemother:[.38,.36],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
+  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.42,.4,0x6a3a1e,.25],Gloomcap:[.22,.34,0x4a3430,.35],Sporelord:[.24,.34,0x34402e,.3],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.2,.34,0x3a3040,.3],
+    Pyrewing:[.4,.38],Venomcoil:[.24,.3,0x3a3a24,.3],Gravewyrm:[.3,.4],Hivemother:[.5,.4],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
     Rocsovereign:[.36,.44],Batwing:[.25,.36],Duskwing:[.26,.36]}};
 var LP186H={},LP186T={};
 function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
@@ -131,7 +131,7 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
       else if(lp186IsFeather(g)){for(let i=0;i<n;i++){const t=Math.max(0,Math.min(1,pa.getY(i))),k=.74+.32*t;C.setXYZ(off+i,C.getX(off+i)*k,C.getY(off+i)*k,C.getZ(off+i)*k)}}
       off+=n});C.needsUpdate=true}catch(e){}}
 {const f=dkBake;dkBake=function(P,O,key){if(key&&/^LP\|/.test(key)&&LP186.on){const n=key.split('|')[1];if(lp186Comp('LP|',n)){const fresh=!(DKBK&&DKBK[key]);
-    if(fresh){const GR=lp186Grade(n),c=new THREE.Color();P=P.map(p=>{if(p.t!=='c'||p.col==null)return p;c.set(p.col);lp186GradeC(c,GR);return Object.assign({},p,{col:c.getHex()})});P=lp186Smooth(P)}
+    if(fresh){const GR=lp186Grade(n),c=new THREE.Color();P=P.map(p=>{if(p.t!=='c'||p.col==null)return p;c.set(p.col);c.getHSL(LP186H);if(LP186H.s>.75&&LP186H.l>.42)return p;lp186GradeC(c,GR);return Object.assign({},p,{col:c.getHex()})});P=lp186Smooth(P)}
     const r=f.call(this,P,O,key);if(fresh)lp186TaperShade(r,P);return r}}return f.call(this,P,O,key)}}
 // ---------------- evolution looks: fewer, more cohesive pieces (owner: "reduce visual clutter from traits and evolution
 // accessories - make them more cohesive") ----------------
@@ -173,3 +173,18 @@ var EVO186={on:true};
 {const f=lpwWing;lpwWing=function(key,outline,hub,sticks,cA,cB,cS,bands){if(!LP186.on||!LP186.cur||!lp186Comp('LP|',LP186.cur))return f.apply(this,arguments);
   const g=lp186Grade(LP186.cur),gr=c=>c==null?c:lp186GradeC(new THREE.Color(c),g).getHex();
   return f.call(this,key+'|g186',outline,hub,sticks,gr(cA),gr(cB),gr(cS),bands)}}
+// Body and wing materials of companions (copies, the shared lpMat stays for enemies):
+//  * the body is smooth-shaded: with ~4x the faces, flat shading turned every long loft band into a light / dark stripe
+//    (reviewer: "melon stripes"); the outline stays faceted and the kit parts keep their flat facets;
+//  * a membrane wing lets a little light through (a thin skin seen from below read as a black slab)
+var LP186M=new Map();
+function lp186Mat(m,kind){const k=m.uuid+'|'+kind;let q=LP186M.get(k);if(q)return q;q=m.clone();
+  if(kind=='body'){q.flatShading=false}
+  else{const ob=q.onBeforeCompile;q.onBeforeCompile=function(sh,r){if(ob)ob.call(this,sh,r);sh.fragmentShader=sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n totalEmissiveRadiance+=diffuseColor.rgb*.32;')};
+    q.customProgramCacheKey=()=>'lp186wing'}
+  q.needsUpdate=true;LP186M.set(k,q);return q}
+{const f=lpRig;lpRig=function(c,n,D){const g=f.apply(this,arguments);if(!g||!LP186.on||!lp186Comp('LP|',n))return g;
+  try{const W=(typeof LPWG!='undefined'?Object.values(LPWG):[]).concat(typeof EVO100!='undefined'&&EVO100.wing?Object.values(EVO100.wing):[]);g.traverse(o=>{if(!o.isMesh||!o.material||Array.isArray(o.material))return;
+      if(o.isSkinnedMesh&&o.parent===g.b&&o.material.vertexColors&&o.material.flatShading&&!o.userData.evo100&&o.geometry&&o.geometry.index&&LP186.stat[Object.keys(LPG).find(k=>LPG[k]===o.geometry)]!=null){o.material=lp186Mat(o.material,'body')}
+      else if(!o.isSkinnedMesh&&W.indexOf(o.geometry)>=0)o.material=lp186Mat(o.material,'wing')})}catch(e){console.error('lp186 mat',e)}
+  return g}}

@@ -29,3 +29,6 @@ function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(c
   // crackle: short sparks jumping off the lance along its length, and a flash where it lands
   for(let i=0;i<Math.min(10,Math.ceil(L*1.2));i++){const q=a.clone().lerp(b,Math.random());evxPuff(q,{col:i%2?c2:0xffffff,add:1,geo:'tet',r0:.06,r1:0,life:.25+Math.random()*.2,op:1,v:[(Math.random()-.5)*5,(Math.random()-.2)*4,(Math.random()-.5)*5],g:6,drag:1.5,spin:14,fin:.02})}
   fx186Flash(b,c2,Math.min(2.2,.7+(w||.12)*6),(ms||300)*.7)}}catch(_){}return r}}
+// an evolved cast's lightning: a second, thicker forked bolt in the class's second colour that lingers (the evolved lance
+// alone was as thin as the standard bolt)
+{const f=bolt;bolt=function(a,b,col){const r=f.apply(this,arguments);try{const E=typeof EV137!='undefined'&&EV137.cur;if(E&&!EV137.busy&&a&&b&&evxLimit('b186',70))fx186Bolt(a,b,ev186C2(evxCol(col)),1.8,440)}catch(_){}return r}}

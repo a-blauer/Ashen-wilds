@@ -43,7 +43,7 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
     k.p('head','sph2','c',lid,s*.13,.36,.36,.05,.042,.05);
     k.p('head','sph2','g',new THREE.Color(eye).multiplyScalar(.75).getHex(),s*.142,.364,.383,.028,.022,.018,0,s*.5,0);
     k.p('head','box','c',0x050505,s*.147,.364,.398,.022,.006,.006,0,s*.5,0);
-    k.p('head','box','c',dk,s*.128,.392,.368,.066,.018,.05,.14,s*.3,s*.3);
+    k.p('head','sph','c',dk,s*.128,.388,.364,.05,.016,.04,.14,s*.3,s*.3);
     // the parotoid gland behind each eye: a long low swelling with a few pores
     k.p('head','sph','c',gl,s*.16,.355,.27,.05,.03,.08,0,s*.25,s*.3);
     [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
@@ -69,7 +69,7 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
 {const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
   const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
   [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
-  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.006,'c',moss,{rimCol:mossD});
+  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.003,'c',moss,{rimCol:moss});
   if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
   }
   if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;
@@ -93,7 +93,7 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
     if(r.k=='hd'){if(s<-.15)o.lerp(K.cream,.75);if(r.z>.55&&s<.3)o.lerp(K.cream,.4);return}
     if(s<-.4){o.lerp(K.cream,.7);return}
     // soft painted spots: more on the haunches, fewer toward the belly and the shoulders
-    const n=sn(p,30,11),w=.55+.25*Math.max(0,-r.p[2]*2.5)-.2*Math.max(0,-s);if(n>.86-w*.18)o.lerp(K.spot,.5*Math.min(1,(n-(.86-w*.18))*6))};
+    const n=sn(p,30,11),w=.55+.25*Math.max(0,-r.p[2]*2.5)-.2*Math.max(0,-s);if(n>.8-w*.18)o.lerp(K.spot,.62*Math.min(1,(n-(.8-w*.18))*6))};
   const lofts=[{rings:bz150Rows(EL150.body),seg:10,capA:1,capB:1,paint},{rings:bz150Rows(EL150.jaw),seg:7,capA:1,capB:1,paint},bz150Tail(EL150.tail,paint,7)]
     .concat(bz150Legs('Foxlet',[.054,.036,.028,.048],[.068,.04,.029,.048],paint,{toe:.07,foot:.03,seg:7}));
   return lpGeo('EL186|'+C,'Foxlet',lofts,73)}
@@ -177,3 +177,27 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   const p0=k.p;let n=0;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='spine'&&t=='c'&&(geo=='dod'||geo=='ico')&&sx>=.04&&sx<=.08&&Math.abs(sy-sx*.75)<.002){if((n++)%2)return k;
       return p0.call(k,bn,geo,t,col,x,y-sx*.12,z,sx*1.25,sx*.32,sz*1.25,0,ry||0,0)}return p0.apply(k,arguments)};
   try{return k0.apply(this,arguments)}finally{k.p=p0}}}
+
+// ===================================================================== fixes from the fresh-agent review (v186) =====================================================================
+// Widowqueen L3: the white silk strands with beads hanging under the abdomen (dangles) are gone; the steel plates are matte dark
+{const f=cs150WQEvo;cs150WQEvo=function(E,L,P){const L0=E.L,pd0=E.pd;
+  E.L=function(a,b,r1,r2,t,col){if(col===0xd8d4cc)return E;return L0.apply(E,arguments)};
+  E.pd=function(geo,t,col){if(col===0xe8e4dc)return E;if(geo=='hem'&&t=='m'&&col===P.metal){const a=Array.prototype.slice.call(arguments);a[1]='c';a[2]=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.4).getHex();return pd0.apply(E,a)}return pd0.apply(E,arguments)};
+  try{return f.apply(this,arguments)}finally{E.L=L0;E.pd=pd0}}}
+// Ashwolf / Direfang war wolf: one armour (the shoulder lames and the brow helm); no saddle or chest plates, no leather
+// bracers or bands on the legs, no glowing war-paint strokes
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L;
+  E.shell=function(sel,off,t,col){if(t=='c'&&col===P.leather)return 0;if(t=='m'){m++;if((m>=4&&m<=6)||m==8)return 0}return sh0.apply(E,arguments)};
+  E.band=function(){return []};
+  E.L=function(a,b,r1,r2,t){if(t=='g'&&r1===.008&&r2===.003)return E;return L0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0}}}
+// the spirits' L2 mantle (an opaque dark slab on the see-through ghost) is gone; the hood carries the evolution look
+{const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.shell=s0}}}
+// Foxlet's extra tails fan wider (they passed through each other and the rump)
+{const t0=EVO100_M.tail;EVO100_M.tail=function(E,T,root,a,up,k,cB,cT,tg,gc){return t0.call(this,E,T,root,a*1.45,up+.06,k,cB,cT,tg,gc)}}
+// Gloomcap L4: three spore stalks instead of five (a pincushion)
+{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){let n=0;const L0=E.L,pd0=E.pd;
+  E.L=function(a,b,r1,r2,t,col,seg,o){if(r1===.014&&r2===.008&&t=='c'&&o&&o.bn=='head'){n++;if(n==2||n==4)return E.__skip=1,E}E.__skip=0;return L0.apply(E,arguments)};
+  E.pd=function(geo,t){if(E.__skip&&geo=='sph'&&t=='g'){E.__skip=0;return E}return pd0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.L=L0;E.pd=pd0;delete E.__skip}}}

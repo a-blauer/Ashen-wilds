@@ -11,7 +11,7 @@
 var FX186={tex:{},fl:[],fi:0,dot:null};
 function fx186Tex(k){if(FX186.tex[k])return FX186.tex[k];const S=k=='beam'?64:128,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d'),C=S/2;
   if(k=='ring'){// transparent middle, a glow rising to a sharp bright rim at .94, a quick fall outside
-    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.55,'rgba(255,255,255,.05)');gr.addColorStop(.8,'rgba(255,255,255,.35)');
+    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.55,'rgba(255,255,255,.02)');gr.addColorStop(.8,'rgba(255,255,255,.2)');
     gr.addColorStop(.92,'rgba(255,255,255,1)');gr.addColorStop(.96,'rgba(255,255,255,.7)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
   else if(k=='zone'){// a lingering field: a faint fill, a soft inner swirl of rays, a bright rim
     const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,.08)');gr.addColorStop(.7,'rgba(255,255,255,.12)');gr.addColorStop(.88,'rgba(255,255,255,.45)');
@@ -69,7 +69,7 @@ function ring(pos,col,r,ms){G_RING=G_RING||(()=>{const g=new THREE.PlaneGeometry
   tw(ms,k=>{const ez=1-Math.pow(1-k,2.6),rr=.45+(R1-.45)*ez;m.scale.setScalar(rr);m.material.opacity=Math.pow(1-k,1.4);
     const k2=Math.max(0,(k-.12)/.88);e.scale.setScalar(.82);e.material.opacity=k2>0?.9*(1-k2):0;
     d.scale.setScalar(.7);d.material.opacity=.55*Math.max(0,1-k/.38);
-    if(w){const rw=rr*.96;w.scale.set(rw,Math.min(1.1,.25+R1*.12)*(1-k*.8),rw);w.material.opacity=.45*Math.pow(1-k,1.6)}},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose();if(w){scene.remove(w);w.material.dispose()}});
+    if(w){const rw=rr*.96;w.scale.set(rw,Math.min(.8,.2+R1*.08)*(1-k*.8),rw);w.material.opacity=.3*Math.pow(1-k,2)}},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose();if(w){scene.remove(w);w.material.dispose()}});
 }
 // the crescent's colour: dark at the inner edge, bright at the outer, the trailing end fading
 function arc(pos,d,col,r,ms){
@@ -88,18 +88,20 @@ function fx186Ribbon(P,w,pos,uv){// two crossed strips per segment (horizontal +
   for(let i=0;i<P.length-1;i++){const A=P[i],B=P[i+1],dx=B.x-A.x,dz=B.z-A.z,l=Math.hypot(dx,dz)||1,sx=-dz/l*w,sz=dx/l*w;
     [[sx,0,sz],[0,w,0]].forEach(o=>{const a0=[A.x-o[0],A.y-o[1],A.z-o[2]],a1=[A.x+o[0],A.y+o[1],A.z+o[2]],b0=[B.x-o[0],B.y-o[1],B.z-o[2]],b1=[B.x+o[0],B.y+o[1],B.z+o[2]];
       pos.push(...a0,...a1,...b1,...a0,...b1,...b0);uv.push(0,0,0,1,1,1,0,0,1,1,1,0)})}}
-function bolt(a,b,col){
+function bolt(a,b,col){fx186Bolt(a,b,col,1,300)}
+// the lightning itself (not relayed or wrapped: bolt() is the public one); wk = width factor, ms = life
+function fx186Bolt(a,b,col,wk,ms){wk=wk||1;ms=ms||300;
   const L=a.distanceTo(b),n=Math.max(6,Math.min(16,Math.round(L*2.2))),amp=Math.min(.9,.25+L*.08),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.75);
   const geo=new THREE.BufferGeometry(),gc=new THREE.BufferGeometry(),mG=fx186Mat(col,fx186Tex('beam'),.9),mC=fx186Mat(c2,fx186Tex('beam'),1),o=new THREE.Group();
-  const mk=()=>{const P=fx186Path(a,b,n,amp),pos=[],uv=[],pc=[],uc=[];fx186Ribbon(P,.2,pos,uv);fx186Ribbon(P,.055,pc,uc);
+  const mk=()=>{const P=fx186Path(a,b,n,amp),pos=[],uv=[],pc=[],uc=[];fx186Ribbon(P,.2*wk,pos,uv);fx186Ribbon(P,.055*wk,pc,uc);
     // one or two forks from the middle
     for(let f=0;f<(L>3?2:1);f++){const i=1+((Math.random()*(P.length-2))|0),s=P[i],e=s.clone().add(new THREE.Vector3((Math.random()-.5)*1.6,(Math.random()-.3)*.8,(Math.random()-.5)*1.6).multiplyScalar(Math.min(1.4,.4+L*.12)));
-      const F=fx186Path(s,e,4,.35);fx186Ribbon(F,.11,pos,uv);fx186Ribbon(F,.03,pc,uc)}
+      const F=fx186Path(s,e,4,.35);fx186Ribbon(F,.11*wk,pos,uv);fx186Ribbon(F,.03*wk,pc,uc)}
     // re-strikes write into the same buffers (a replaced attribute would leave its GPU buffer behind)
     const put=(G,k,A,n)=>{const q=G.attributes[k];if(q&&q.array.length==A.length){q.array.set(A);q.needsUpdate=true}else G.setAttribute(k,new THREE.Float32BufferAttribute(A,n))};
     put(geo,'position',pos,3);put(geo,'uv',uv,2);put(gc,'position',pc,3);put(gc,'uv',uc,2)};
   mk();const g1=new THREE.Mesh(geo,mG),g2=new THREE.Mesh(gc,mC);g1.frustumCulled=g2.frustumCulled=false;g1.userData.lpsSkip=g2.userData.lpsSkip=1;g1.renderOrder=g2.renderOrder=33;o.add(g1,g2);scene.add(o);
   try{burst(b,col,5,1.6,1.4,.35)}catch(_){}
-  let st=0;tw(300,k=>{const s=k<.33?0:k<.66?1:2;if(s!=st){st=s;mk()}const f=(1-k)*(s==st?.75+.25*Math.random():1);mG.opacity=.9*f;mC.opacity=f},()=>{scene.remove(o);geo.dispose();gc.dispose();mG.dispose();mC.dispose()});
+  let st=0;tw(ms,k=>{const s=k<.33?0:k<.66?1:2;if(s!=st){st=s;mk()}const f=(1-k)*(s==st?.75+.25*Math.random():1);mG.opacity=.9*f;mC.opacity=f},()=>{scene.remove(o);geo.dispose();gc.dispose();mG.dispose();mC.dispose()});
 }
 
