@@ -46,7 +46,7 @@ function an186Seat(lofts){if(!AN186.on)return lofts;const T=an186Trunk(lofts);if
 var BK186={};
 function bk186Geo(L,w,h,d){const key=[L,w,h,d].map(v=>Math.round(v*1000)).join('_');if(BK186[key])return BK186[key];
   const N=9,M=8,P=[],I=[];
-  for(let i=0;i<=N;i++){const t=i/N,z=L*t*(1-.18*Math.max(0,t-.6)/.4),drop=t>.45?-d*Math.pow((t-.45)/.55,1.4):0,sw=w*(1-.86*Math.pow(t,1.15))+.002,sh=h*(1-.7*t)+.002,yc=drop+h*.15*(1-t);
+  for(let i=0;i<=N;i++){const t=i/N,z=L*t*(1-.12*Math.max(0,t-.6)/.4),drop=t>.55?-d*Math.pow((t-.55)/.45,1.8):0,sw=w*(1-.8*Math.pow(t,1.1))+.002,sh=h*(1-.76*t)+.002,yc=drop+h*.08*(1-t);
     for(let j=0;j<M;j++){const a=j/M*Math.PI*2,c=Math.cos(a),s=Math.sin(a),top=s>0;
       // keel on top (a ridge), flatter underside
       const y=top?s*sh*(1-.25*Math.abs(c))+sh*.12*(1-Math.abs(c)):s*sh*.45;P.push(c*sw,yc+y,z)}}
@@ -64,7 +64,7 @@ function bk186Geo(L,w,h,d){const key=[L,w,h,d].map(v=>Math.round(v*1000)).join('
 function bk186Wrap(fn,B){return function(k,c,C,red,G,O){const L0=k.L;let up=null,lo=null;
   k.L=function(bn,t,col,a,b){if((bn=='head'||bn=='jaw')&&!a[0]&&!b[0]&&a[2]>B.z0&&b[2]>a[2]){if(bn=='head'){if(up==null)up=col}else if(lo==null)lo=col;return k}return L0.apply(k,arguments)};
   let r;try{r=fn.apply(this,arguments)}finally{k.L=L0}
-  if(up!=null){k.p('head',bk186Geo(B.L,B.w,B.h,B.d),'c',up,0,B.y,B.z,1,1,1);k.p('jaw',bk186Geo(B.L*.6,B.w*.74,B.h*.42,B.d*.12),'c',lo==null?dkShade(up,1.3):lo,0,B.y-B.h*.8,B.z+.004,1,1,1)}
+  if(up!=null){k.p('head',bk186Geo(B.L,B.w,B.h,B.d),'c',up,0,B.y,B.z,1,1,1);k.p('jaw',bk186Geo(B.L*.52,B.w*.7,B.h*.36,0),'c',lo==null?dkShade(up,1.3):lo,0,B.y-B.h*.62,B.z+.002,1,1,1)}
   return r}}
 if(AN186.on&&typeof bd184KitSky=='function'){
   bd184KitSky=bk186Wrap(bd184KitSky,{z0:.47,L:.1,w:.034,h:.042,d:.046,y:.872,z:.474});
