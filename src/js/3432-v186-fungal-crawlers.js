@@ -94,7 +94,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const bz=z=>({bn:z>.26?'head':z>
     E.pd('cyl','g',P.glowD,[0,.293,.336],[0,1,-.12],[.12,.004,.095],null,{bn:'head'})}
   if(L>=4){if(!spore){// a crown of luminous caps round the great cap
       for(let i=0;i<5;i++){const a=i/5*6.283+.3,x=.05+Math.cos(a)*.16,z=-.04+Math.sin(a)*.12,t=E.top(x,z);if(!t)continue;const cp=E.add(t.p,t.n,.03);
-        const o=bz(z);E.L(E.add(t.p,t.n,-.01),cp,.01,.008,'c',K.stalk.getHex(),5,o);E.pd('hem','g',P.glow,E.add(cp,t.n,-.004),t.n,[.028,.016,.028],null,o)}}
+        const o=bz(z);E.pd('hem','g',P.glow,E.add(t.p,t.n,-.006),t.n,[.026,.018,.026],null,o)}}
     else{// the cordyceps clubs glow; two more stalks
       const T=FC186.B.Sporelord,top=(x,z)=>{let i=0;while(i<T.length-2&&z>T[i+1][0])i++;const A=T[i],Bq=T[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(Bq[0]-A[0]))),y=A[1]+(Bq[1]-A[1])*t,w=A[2]+(Bq[2]-A[2])*t,h=A[3]+(Bq[3]-A[3])*t;
         return y+h*Math.sqrt(Math.max(0,1-(x/w)**2))},bnz=z=>z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis';

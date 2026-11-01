@@ -61259,7 +61259,7 @@ EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const bz=z=>({bn:z>.26?'head':z>
     E.pd('cyl','g',P.glowD,[0,.293,.336],[0,1,-.12],[.12,.004,.095],null,{bn:'head'})}
   if(L>=4){if(!spore){// a crown of luminous caps round the great cap
       for(let i=0;i<5;i++){const a=i/5*6.283+.3,x=.05+Math.cos(a)*.16,z=-.04+Math.sin(a)*.12,t=E.top(x,z);if(!t)continue;const cp=E.add(t.p,t.n,.03);
-        const o=bz(z);E.L(E.add(t.p,t.n,-.01),cp,.01,.008,'c',K.stalk.getHex(),5,o);E.pd('hem','g',P.glow,E.add(cp,t.n,-.004),t.n,[.028,.016,.028],null,o)}}
+        const o=bz(z);E.pd('hem','g',P.glow,E.add(t.p,t.n,-.006),t.n,[.026,.018,.026],null,o)}}
     else{// the cordyceps clubs glow; two more stalks
       const T=FC186.B.Sporelord,top=(x,z)=>{let i=0;while(i<T.length-2&&z>T[i+1][0])i++;const A=T[i],Bq=T[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(Bq[0]-A[0]))),y=A[1]+(Bq[1]-A[1])*t,w=A[2]+(Bq[2]-A[2])*t,h=A[3]+(Bq[3]-A[3])*t;
         return y+h*Math.sqrt(Math.max(0,1-(x/w)**2))},bnz=z=>z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis';
@@ -61424,7 +61424,7 @@ er150TitanEvo=function(E,L,P){const T=ER150.TI,top=T.top,sb={bn:'spine'},hb={bn:
     E.pd('oct','g',P.glow2,[q[0]+.01,sy+.06,q[1]-.01],[0,1,0],[.022,.09,.022],null,sb)}
   if(L>=5){// glowing horn tips and crystal on the tail club
     [-1,1].forEach(s=>E.pd('oct','g',P.glow,[s*.3,.6,.57],[s*-.1,.5,.6],[.012,.026,.012],null,hb));
-    for(let i=0;i<10;i++){const a=i/10*6.283+.3,h=E.on([Math.sin(a)*.9,.36,Math.cos(a)*1-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.3&&h.p[1]<.45)E.pd('oct','g',i%2?P.glow:P.glowD,E.add(h.p,h.n,.004),E.nrm([h.n[0],.8,h.n[2]]),[.012,.04,.012],null,sb)}}};
+    for(let i=0;i<10;i++){const a=i/10*6.283+.3,h=E.on([Math.sin(a)*.9,.36,Math.cos(a)*1-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.3&&h.p[1]<.45)E.pd('oct','g',i%2?P.glow:P.glowD,E.add(h.p,h.n,-.01),E.nrm([h.n[0],.8,h.n[2]]),[.012,.04,.012],null,sb)}}};
 // ---------------------------------------------------------------- Hivemother ----------------------------------------------------------------
 var HM186={on:true,
   // abdomen [z, y, rx, ryT, ryB] back to front, then the waist, carapace and head
@@ -61473,7 +61473,7 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
   [[0,1],[1,2],[0,3],[2,0]].forEach(([i,j])=>{const A=HM186.br[i],B=HM186.br[j];let pr=null;for(let s=0;s<=4;s++){const t=s/4,z=A[0]+(B[0]-A[0])*t,a=A[1]+(B[1]-A[1])*t+Math.sin(t*9+i)*.1,p=v150Surf(AB,z,a,.003);
     if(pr&&s>0&&s<4)k.L(tb,'g',eggD,pr,p,.006,.006,3);pr=p}});
   // a ridge of hooked spines down the top of the abdomen, raised plates along its flanks
-  for(let j=0;j<5;j++){const z=-.3-j*.13,p=v150Surf(AB,z,Math.PI/2,-.01);k.p(tb,'cone4','c',j%2?blk:gl,p[0],p[1]+.035,p[2],.022,.08-Math.abs(j-2)*.01,.03,-.7,0,0)}
+  for(let j=0;j<5;j++){const z=-.3-j*.13,p=v150Surf(AB,z,Math.PI/2,-.01);k.p(tb,'cone4','c',j%2?blk:gl,p[0],p[1]+.018,p[2],.022,.08-Math.abs(j-2)*.01,.03,-.7,0,0)}
   [-1,1].forEach(s=>[-.36,-.56,-.76].forEach((z,i)=>{const a=s>0?.25:Math.PI-.25,p=v150Surf(AB,z,a,-.004),r=hm186Rot(hm186N(a));k.p(tb,'dod','c',i%2?blk:gl,p[0],p[1],p[2],.08,.018,.07,r[0],r[1],r[2])}));
   // the stinger: a curved black hook from the tip of the abdomen, a dark red point
   {const S=[[0,.64,-1.0],[0,.62,-1.08],[0,.56,-1.14],[0,.47,-1.16],[0,.39,-1.12]];k.L(tb,'c',blk,S[0],S[1],.045,.034,6).L(tb,'c',gl,S[1],S[2],.034,.024,6).L(tb,'c',blk,S[2],S[3],.024,.014,5).L(tb,'c',un,S[3],S[4],.014,.002,5)}
