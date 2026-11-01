@@ -2060,10 +2060,10 @@ function ui(){$('pty').innerHTML=party.map((c,i)=>card(c,i,i==0)).join('');$('fu
 var FX186={tex:{},fl:[],fi:0,dot:null};
 function fx186Tex(k){if(FX186.tex[k])return FX186.tex[k];const S=k=='beam'?64:128,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d'),C=S/2;
   if(k=='ring'){// transparent middle, a glow rising to a sharp bright rim at .94, a quick fall outside
-    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.55,'rgba(255,255,255,.05)');gr.addColorStop(.8,'rgba(255,255,255,.35)');
+    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.55,'rgba(255,255,255,.02)');gr.addColorStop(.8,'rgba(255,255,255,.2)');
     gr.addColorStop(.92,'rgba(255,255,255,1)');gr.addColorStop(.96,'rgba(255,255,255,.7)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
   else if(k=='zone'){// a lingering field: a faint fill, a soft inner swirl of rays, a bright rim
-    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,.18)');gr.addColorStop(.7,'rgba(255,255,255,.22)');gr.addColorStop(.88,'rgba(255,255,255,.55)');
+    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,.08)');gr.addColorStop(.7,'rgba(255,255,255,.12)');gr.addColorStop(.88,'rgba(255,255,255,.45)');
     gr.addColorStop(.95,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S);
     g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=2;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;g.beginPath();g.arc(C,C,C*(.3+.08*(i%3)),a,a+.7);g.stroke()}}
   else if(k=='thin'){const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.86,'rgba(255,255,255,0)');gr.addColorStop(.93,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
@@ -2118,7 +2118,7 @@ function ring(pos,col,r,ms){G_RING=G_RING||(()=>{const g=new THREE.PlaneGeometry
   tw(ms,k=>{const ez=1-Math.pow(1-k,2.6),rr=.45+(R1-.45)*ez;m.scale.setScalar(rr);m.material.opacity=Math.pow(1-k,1.4);
     const k2=Math.max(0,(k-.12)/.88);e.scale.setScalar(.82);e.material.opacity=k2>0?.9*(1-k2):0;
     d.scale.setScalar(.7);d.material.opacity=.55*Math.max(0,1-k/.38);
-    if(w){const rw=rr*.96;w.scale.set(rw,Math.min(1.1,.25+R1*.12)*(1-k*.8),rw);w.material.opacity=.45*Math.pow(1-k,1.6)}},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose();if(w){scene.remove(w);w.material.dispose()}});
+    if(w){const rw=rr*.96;w.scale.set(rw,Math.min(.8,.2+R1*.08)*(1-k*.8),rw);w.material.opacity=.3*Math.pow(1-k,2)}},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose();if(w){scene.remove(w);w.material.dispose()}});
 }
 // the crescent's colour: dark at the inner edge, bright at the outer, the trailing end fading
 function arc(pos,d,col,r,ms){
@@ -2137,19 +2137,21 @@ function fx186Ribbon(P,w,pos,uv){// two crossed strips per segment (horizontal +
   for(let i=0;i<P.length-1;i++){const A=P[i],B=P[i+1],dx=B.x-A.x,dz=B.z-A.z,l=Math.hypot(dx,dz)||1,sx=-dz/l*w,sz=dx/l*w;
     [[sx,0,sz],[0,w,0]].forEach(o=>{const a0=[A.x-o[0],A.y-o[1],A.z-o[2]],a1=[A.x+o[0],A.y+o[1],A.z+o[2]],b0=[B.x-o[0],B.y-o[1],B.z-o[2]],b1=[B.x+o[0],B.y+o[1],B.z+o[2]];
       pos.push(...a0,...a1,...b1,...a0,...b1,...b0);uv.push(0,0,0,1,1,1,0,0,1,1,1,0)})}}
-function bolt(a,b,col){
+function bolt(a,b,col){fx186Bolt(a,b,col,1,300)}
+// the lightning itself (not relayed or wrapped: bolt() is the public one); wk = width factor, ms = life
+function fx186Bolt(a,b,col,wk,ms){wk=wk||1;ms=ms||300;
   const L=a.distanceTo(b),n=Math.max(6,Math.min(16,Math.round(L*2.2))),amp=Math.min(.9,.25+L*.08),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.75);
   const geo=new THREE.BufferGeometry(),gc=new THREE.BufferGeometry(),mG=fx186Mat(col,fx186Tex('beam'),.9),mC=fx186Mat(c2,fx186Tex('beam'),1),o=new THREE.Group();
-  const mk=()=>{const P=fx186Path(a,b,n,amp),pos=[],uv=[],pc=[],uc=[];fx186Ribbon(P,.2,pos,uv);fx186Ribbon(P,.055,pc,uc);
+  const mk=()=>{const P=fx186Path(a,b,n,amp),pos=[],uv=[],pc=[],uc=[];fx186Ribbon(P,.2*wk,pos,uv);fx186Ribbon(P,.055*wk,pc,uc);
     // one or two forks from the middle
     for(let f=0;f<(L>3?2:1);f++){const i=1+((Math.random()*(P.length-2))|0),s=P[i],e=s.clone().add(new THREE.Vector3((Math.random()-.5)*1.6,(Math.random()-.3)*.8,(Math.random()-.5)*1.6).multiplyScalar(Math.min(1.4,.4+L*.12)));
-      const F=fx186Path(s,e,4,.35);fx186Ribbon(F,.11,pos,uv);fx186Ribbon(F,.03,pc,uc)}
+      const F=fx186Path(s,e,4,.35);fx186Ribbon(F,.11*wk,pos,uv);fx186Ribbon(F,.03*wk,pc,uc)}
     // re-strikes write into the same buffers (a replaced attribute would leave its GPU buffer behind)
     const put=(G,k,A,n)=>{const q=G.attributes[k];if(q&&q.array.length==A.length){q.array.set(A);q.needsUpdate=true}else G.setAttribute(k,new THREE.Float32BufferAttribute(A,n))};
     put(geo,'position',pos,3);put(geo,'uv',uv,2);put(gc,'position',pc,3);put(gc,'uv',uc,2)};
   mk();const g1=new THREE.Mesh(geo,mG),g2=new THREE.Mesh(gc,mC);g1.frustumCulled=g2.frustumCulled=false;g1.userData.lpsSkip=g2.userData.lpsSkip=1;g1.renderOrder=g2.renderOrder=33;o.add(g1,g2);scene.add(o);
   try{burst(b,col,5,1.6,1.4,.35)}catch(_){}
-  let st=0;tw(300,k=>{const s=k<.33?0:k<.66?1:2;if(s!=st){st=s;mk()}const f=(1-k)*(s==st?.75+.25*Math.random():1);mG.opacity=.9*f;mC.opacity=f},()=>{scene.remove(o);geo.dispose();gc.dispose();mG.dispose();mC.dispose()});
+  let st=0;tw(ms,k=>{const s=k<.33?0:k<.66?1:2;if(s!=st){st=s;mk()}const f=(1-k)*(s==st?.75+.25*Math.random():1);mG.opacity=.9*f;mC.opacity=f},()=>{scene.remove(o);geo.dispose();gc.dispose();mG.dispose();mC.dispose()});
 }
 
 // ---------- Combat ----------
@@ -2874,7 +2876,7 @@ function heroTick(dt,now){
   hero.dc=Math.min(s.dash,(hero.dc==null?s.dash:hero.dc)+dt/(2.8*(1-Math.min(.6,s.dashR))));
   if(hero.sh>0&&now>hero.shT)hero.sh=0;
   hero.buffs=hero.buffs.filter(b=>b.t>now);
-  if(hero.chan){const c=hero.chan;c.t-=dt;c.tick-=dt;pl.rotation.y+=dt*18;if(c.tick<=0){c.tick=.3;area(pl.position,c.R,c.raw,{mt:c.mt,col:c.sk.col},null,0);burst(gY(pl.position,.8),c.sk.col,10,c.R*1.2,.6,.3)}if(c.t<=0){hero.chan=null;pl.sw=0}}
+  if(hero.chan){const c=hero.chan;c.t-=dt;c.tick-=dt;pl.rotation.y+=dt*18;if(c.tick<=0){c.tick=.3;area(pl.position,c.R,c.raw,{mt:c.mt,col:c.sk.col},null,0);burst(gY(pl.position,.8),c.sk.col,10,c.R*1.2,.6,.3);try{const a=pl.rotation.y;arc(pl.position,V(Math.sin(a),0,Math.cos(a)),c.sk.col,c.R*.9,280)}catch(_){}}if(c.t<=0){hero.chan=null;pl.sw=0}}
   for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;z.ti-=dt;if(z.follow)z.p.copy(pl.position);if(z.mesh){z.mesh.position.copy(gY(z.p,.14));z.mesh.rotation.z+=dt*.35;const f=Math.min(1,z.t/.4);if(f<1&&z.mesh.material)z.mesh.material.opacity=.62*Math.max(0,f)}
     if(z.ti<=0&&z.n>0){z.ti=z.iv;z.n--;if(z.cc)enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,z.p)<z.R)compHit(z.cc,e,z.mm,z.fx)});else area(z.p,z.R,z.raw,{mt:z.mt,col:z.col,proc:false},null,0);for(let k=0;k<6;k++){const a=Math.random()*6.28,r=Math.random()*z.R;burst(gY(V(z.p.x+Math.cos(a)*r,0,z.p.z+Math.sin(a)*r),.3+Math.random()*1.5),z.col,1,.3,-1.5,.4)}}
     if(z.n<=0||z.t<=0){if(z.mesh){scene.remove(z.mesh);z.mesh.geometry.dispose();if(z.mesh.material&&z.mesh.material.dispose)z.mesh.material.dispose()}zones.splice(i,1)}}
@@ -60756,13 +60758,14 @@ function ep185MergeTex(g){if(!g||!EP185S)return 0;const mats=new Set(Object.valu
 var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
+  // optional [s, l, tint, amount]: first a pull toward an earthy tint (the candy hue itself)
   // (the colours are linear and go through ACES, so a linear saturation of .4 still reads strongly on screen)
-  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.45,.42],Gloomcap:[.24,.36],Sporelord:[.26,.36],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.22,.36],
-    Pyrewing:[.4,.38],Venomcoil:[.25,.32],Gravewyrm:[.3,.4],Hivemother:[.38,.36],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
+  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.42,.4,0x6a3a1e,.25],Gloomcap:[.22,.34,0x4a3430,.35],Sporelord:[.24,.34,0x34402e,.3],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.2,.34,0x3a3040,.3],
+    Pyrewing:[.4,.38],Venomcoil:[.24,.3,0x3a3a24,.3],Gravewyrm:[.3,.4],Hivemother:[.5,.4],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
     Rocsovereign:[.36,.44],Batwing:[.25,.36],Duskwing:[.26,.36]}};
-var LP186H={};
+var LP186H={},LP186T={};
 function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
-function lp186GradeC(c,g){c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
+function lp186GradeC(c,g){if(g[2]!=null)c.lerp(LP186T[g[2]]||(LP186T[g[2]]=new THREE.Color(g[2])),g[3]||.3);c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
 function lp186Grade(n){const sp=lp186Sp(n);return LP186.grade[sp]||LP186.grade[n]||LP186.grade.def}
 function lp186Comp(key,n){if(!LP186.on||!key||/^E137/.test(key))return false;
   if(!LP186.rigs){try{LP186.rigs=new Set(SPK.map(s=>rigOf(s)))}catch(e){return false}}return LP186.rigs.has(n)}
@@ -60872,7 +60875,7 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
       else if(lp186IsFeather(g)){for(let i=0;i<n;i++){const t=Math.max(0,Math.min(1,pa.getY(i))),k=.74+.32*t;C.setXYZ(off+i,C.getX(off+i)*k,C.getY(off+i)*k,C.getZ(off+i)*k)}}
       off+=n});C.needsUpdate=true}catch(e){}}
 {const f=dkBake;dkBake=function(P,O,key){if(key&&/^LP\|/.test(key)&&LP186.on){const n=key.split('|')[1];if(lp186Comp('LP|',n)){const fresh=!(DKBK&&DKBK[key]);
-    if(fresh){const GR=lp186Grade(n),c=new THREE.Color();P=P.map(p=>{if(p.t!=='c'||p.col==null)return p;c.set(p.col);lp186GradeC(c,GR);return Object.assign({},p,{col:c.getHex()})});P=lp186Smooth(P)}
+    if(fresh){const GR=lp186Grade(n),c=new THREE.Color();P=P.map(p=>{if(p.t!=='c'||p.col==null)return p;c.set(p.col);c.getHSL(LP186H);if(LP186H.s>.75&&LP186H.l>.42)return p;lp186GradeC(c,GR);return Object.assign({},p,{col:c.getHex()})});P=lp186Smooth(P)}
     const r=f.call(this,P,O,key);if(fresh)lp186TaperShade(r,P);return r}}return f.call(this,P,O,key)}}
 // ---------------- evolution looks: fewer, more cohesive pieces (owner: "reduce visual clutter from traits and evolution
 // accessories - make them more cohesive") ----------------
@@ -60914,6 +60917,21 @@ var EVO186={on:true};
 {const f=lpwWing;lpwWing=function(key,outline,hub,sticks,cA,cB,cS,bands){if(!LP186.on||!LP186.cur||!lp186Comp('LP|',LP186.cur))return f.apply(this,arguments);
   const g=lp186Grade(LP186.cur),gr=c=>c==null?c:lp186GradeC(new THREE.Color(c),g).getHex();
   return f.call(this,key+'|g186',outline,hub,sticks,gr(cA),gr(cB),gr(cS),bands)}}
+// Body and wing materials of companions (copies, the shared lpMat stays for enemies):
+//  * the body is smooth-shaded: with ~4x the faces, flat shading turned every long loft band into a light / dark stripe
+//    (reviewer: "melon stripes"); the outline stays faceted and the kit parts keep their flat facets;
+//  * a membrane wing lets a little light through (a thin skin seen from below read as a black slab)
+var LP186M=new Map();
+function lp186Mat(m,kind){const k=m.uuid+'|'+kind;let q=LP186M.get(k);if(q)return q;q=m.clone();
+  if(kind=='body'){q.flatShading=false}
+  else{const ob=q.onBeforeCompile;q.onBeforeCompile=function(sh,r){if(ob)ob.call(this,sh,r);sh.fragmentShader=sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n totalEmissiveRadiance+=diffuseColor.rgb*.32;')};
+    q.customProgramCacheKey=()=>'lp186wing'}
+  q.needsUpdate=true;LP186M.set(k,q);return q}
+{const f=lpRig;lpRig=function(c,n,D){const g=f.apply(this,arguments);if(!g||!LP186.on||!lp186Comp('LP|',n))return g;
+  try{const W=(typeof LPWG!='undefined'?Object.values(LPWG):[]).concat(typeof EVO100!='undefined'&&EVO100.wing?Object.values(EVO100.wing):[]);g.traverse(o=>{if(!o.isMesh||!o.material||Array.isArray(o.material))return;
+      if(o.isSkinnedMesh&&o.parent===g.b&&o.material.vertexColors&&o.material.flatShading&&!o.userData.evo100&&o.geometry&&o.geometry.index&&LP186.stat[Object.keys(LPG).find(k=>LPG[k]===o.geometry)]!=null){o.material=lp186Mat(o.material,'body')}
+      else if(!o.isSkinnedMesh&&W.indexOf(o.geometry)>=0)o.material=lp186Mat(o.material,'wing')})}catch(e){console.error('lp186 mat',e)}
+  return g}}
 // ================= v186: companions that looked cartoony, remodelled (owner, Nov 1 2026) =================
 // Owner: "I'd also like to remodel companions that look too cartoony or childish." Same skeletons, bones, animations,
 // evolution designs and gameplay; new bodies and painted detail (docs/MODEL_DETAIL_RECIPE.md: colour follows form, smooth
@@ -60959,7 +60977,7 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
     k.p('head','sph2','c',lid,s*.13,.36,.36,.05,.042,.05);
     k.p('head','sph2','g',new THREE.Color(eye).multiplyScalar(.75).getHex(),s*.142,.364,.383,.028,.022,.018,0,s*.5,0);
     k.p('head','box','c',0x050505,s*.147,.364,.398,.022,.006,.006,0,s*.5,0);
-    k.p('head','box','c',dk,s*.128,.392,.368,.066,.018,.05,.14,s*.3,s*.3);
+    k.p('head','sph','c',dk,s*.128,.388,.364,.05,.016,.04,.14,s*.3,s*.3);
     // the parotoid gland behind each eye: a long low swelling with a few pores
     k.p('head','sph','c',gl,s*.16,.355,.27,.05,.03,.08,0,s*.25,s*.3);
     [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
@@ -60985,7 +61003,7 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
 {const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
   const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
   [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
-  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.006,'c',moss,{rimCol:mossD});
+  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.003,'c',moss,{rimCol:moss});
   if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
   }
   if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;
@@ -61009,7 +61027,7 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
     if(r.k=='hd'){if(s<-.15)o.lerp(K.cream,.75);if(r.z>.55&&s<.3)o.lerp(K.cream,.4);return}
     if(s<-.4){o.lerp(K.cream,.7);return}
     // soft painted spots: more on the haunches, fewer toward the belly and the shoulders
-    const n=sn(p,30,11),w=.55+.25*Math.max(0,-r.p[2]*2.5)-.2*Math.max(0,-s);if(n>.86-w*.18)o.lerp(K.spot,.5*Math.min(1,(n-(.86-w*.18))*6))};
+    const n=sn(p,30,11),w=.55+.25*Math.max(0,-r.p[2]*2.5)-.2*Math.max(0,-s);if(n>.8-w*.18)o.lerp(K.spot,.62*Math.min(1,(n-(.8-w*.18))*6))};
   const lofts=[{rings:bz150Rows(EL150.body),seg:10,capA:1,capB:1,paint},{rings:bz150Rows(EL150.jaw),seg:7,capA:1,capB:1,paint},bz150Tail(EL150.tail,paint,7)]
     .concat(bz150Legs('Foxlet',[.054,.036,.028,.048],[.068,.04,.029,.048],paint,{toe:.07,foot:.03,seg:7}));
   return lpGeo('EL186|'+C,'Foxlet',lofts,73)}
@@ -61093,6 +61111,30 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   const p0=k.p;let n=0;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='spine'&&t=='c'&&(geo=='dod'||geo=='ico')&&sx>=.04&&sx<=.08&&Math.abs(sy-sx*.75)<.002){if((n++)%2)return k;
       return p0.call(k,bn,geo,t,col,x,y-sx*.12,z,sx*1.25,sx*.32,sz*1.25,0,ry||0,0)}return p0.apply(k,arguments)};
   try{return k0.apply(this,arguments)}finally{k.p=p0}}}
+
+// ===================================================================== fixes from the fresh-agent review (v186) =====================================================================
+// Widowqueen L3: the white silk strands with beads hanging under the abdomen (dangles) are gone; the steel plates are matte dark
+{const f=cs150WQEvo;cs150WQEvo=function(E,L,P){const L0=E.L,pd0=E.pd;
+  E.L=function(a,b,r1,r2,t,col){if(col===0xd8d4cc)return E;return L0.apply(E,arguments)};
+  E.pd=function(geo,t,col){if(col===0xe8e4dc)return E;if(geo=='hem'&&t=='m'&&col===P.metal){const a=Array.prototype.slice.call(arguments);a[1]='c';a[2]=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.4).getHex();return pd0.apply(E,a)}return pd0.apply(E,arguments)};
+  try{return f.apply(this,arguments)}finally{E.L=L0;E.pd=pd0}}}
+// Ashwolf / Direfang war wolf: one armour (the shoulder lames and the brow helm); no saddle or chest plates, no leather
+// bracers or bands on the legs, no glowing war-paint strokes
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L;
+  E.shell=function(sel,off,t,col){if(t=='c'&&col===P.leather)return 0;if(t=='m'){m++;if((m>=4&&m<=6)||m==8)return 0}return sh0.apply(E,arguments)};
+  E.band=function(){return []};
+  E.L=function(a,b,r1,r2,t){if(t=='g'&&r1===.008&&r2===.003)return E;return L0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0}}}
+// the spirits' L2 mantle (an opaque dark slab on the see-through ghost) is gone; the hood carries the evolution look
+{const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.shell=s0}}}
+// Foxlet's extra tails fan wider (they passed through each other and the rump)
+{const t0=EVO100_M.tail;EVO100_M.tail=function(E,T,root,a,up,k,cB,cT,tg,gc){return t0.call(this,E,T,root,a*1.45,up+.06,k,cB,cT,tg,gc)}}
+// Gloomcap L4: three spore stalks instead of five (a pincushion)
+{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){let n=0;const L0=E.L,pd0=E.pd;
+  E.L=function(a,b,r1,r2,t,col,seg,o){if(r1===.014&&r2===.008&&t=='c'&&o&&o.bn=='head'){n++;if(n==2||n==4)return E.__skip=1,E}E.__skip=0;return L0.apply(E,arguments)};
+  E.pd=function(geo,t){if(E.__skip&&geo=='sph'&&t=='g'){E.__skip=0;return E}return pd0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.L=L0;E.pd=pd0;delete E.__skip}}}
 // ================= v186: evolved spells stay a step above the (now richer) standard ones =================
 // Owner (Nov 1 2026): "improve the visual effects on all of our character spells and abilities significantly (evolved spells
 // should still look even cooler than standard spell)". The standard shapes were rebuilt in 0107 (burst, ring, arc, bolt) and
@@ -61124,3 +61166,6 @@ function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(c
   // crackle: short sparks jumping off the lance along its length, and a flash where it lands
   for(let i=0;i<Math.min(10,Math.ceil(L*1.2));i++){const q=a.clone().lerp(b,Math.random());evxPuff(q,{col:i%2?c2:0xffffff,add:1,geo:'tet',r0:.06,r1:0,life:.25+Math.random()*.2,op:1,v:[(Math.random()-.5)*5,(Math.random()-.2)*4,(Math.random()-.5)*5],g:6,drag:1.5,spin:14,fin:.02})}
   fx186Flash(b,c2,Math.min(2.2,.7+(w||.12)*6),(ms||300)*.7)}}catch(_){}return r}}
+// an evolved cast's lightning: a second, thicker forked bolt in the class's second colour that lingers (the evolved lance
+// alone was as thin as the standard bolt)
+{const f=bolt;bolt=function(a,b,col){const r=f.apply(this,arguments);try{const E=typeof EV137!='undefined'&&EV137.cur;if(E&&!EV137.busy&&a&&b&&evxLimit('b186',70))fx186Bolt(a,b,ev186C2(evxCol(col)),1.8,440)}catch(_){}return r}}
