@@ -708,6 +708,13 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Signature moves keep the older poses. Test `v181_foe_attacks.py` (also: no "second blow" in the recovery, no weapon through
   the head, nor nearer it in the recovery than at the carry, edge / point within 30 deg of the travel at the hit, shield face
   out, bow string toward the archer, the weapon in the fist at most 18° tilted and 50° rolled from its carry grip at every frame).
+  No jumps (owner, Nov 2026: weapons flipped round in the hand before the swing): the forearm turn is tracked continuously
+  (it wrapped past 180° and flipped the hand), the edge window ramps in once the head moves toward the target (the blade is
+  turned for the downswing during the coil), a two-edged blade picks its side once per swing, each frame starts from the last
+  frame's hand, and `FA_RATE` caps per 1/30 s the aim, the hand's turn and the blade's spin about its handle. The test checks
+  every game tick (FPS=60 too): weapon turn <= 40° (70° in the blow's 3 fastest ticks), spin <= 25°, no back-and-forth.
+  Off hand on a two-handed haft (`faOffQ`): from the body's side of the shaft, palm mirroring the weapon hand's, knuckles out;
+  tested for the staff casts (FAIL) and the two-handed melee grips (WARN).
 - **Eleven enemies rebuilt (v181, `3390`–`3392`)**: the owner found the Yeti, Stormborn Jotun, the three naga, both harpies, the
   Vampire Thrall, Blood Knight, Blood Magister, Crimson Executioner and Nosferatu too simple, goofy or badly proportioned.
   * Toolkit (`3390`): `a181TRings(kind)` torso shapes (brute / knight / lean / gaunt) and `a181Torso`; `a181Arm` (deltoid, biceps,
