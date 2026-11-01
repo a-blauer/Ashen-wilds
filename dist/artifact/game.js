@@ -15835,6 +15835,7 @@ var GRIP={
 };
 // the forearm's pitch in the idle pose (animHero: upper arm ax −.2 + elbow ex −.3 on the right, le −.25 on the left)
 var GRIP_B={R:-.5,L:-.25},GRIP_AN=[0,-.035,.015];
+var GRIP_LQ=new THREE.Quaternion(),GRIP_LD=new THREE.Quaternion(),GRIP_LI=new THREE.Quaternion(),GRIP_LOCKMAX=1.05;   // v181 locked grip: the hand turns at most ~60°
 // strike grips (the pre-v93 placement in refreshGear / zzA_arsenal / mkHumanoid)
 function gripStrikeOf(ty,side){
   if(ty=='bow')return {r:[0,GRIP_H,0],p:[-.05,-.02,.05],hold:[-.555,0,0]};
@@ -15892,7 +15893,9 @@ function gripTick(h,now,el,att){
   let dt=0;
   if(now!==undefined){if(now!=null&&S.t!=null)dt=(now-S.t)/1000;
     if(now==null||S.t==null||dt<0||dt>.5){S.w=att?0:1;dt=0}
-    else if(dt>0)S.w=att?Math.max(0,S.w-dt/.045):Math.min(1,S.w+dt/.28);
+    // (v181) cage foes with modelled fists ease into the strike grip over the wind-up (0.2 s) and back (0.35 s): the hero's
+    // 0.045 s turn is hidden inside a fast swing, but a foe holds its coil, so the weapon visibly snapped round
+    else if(dt>0){const tin=h._gripLock?.2:.045,tout=h._gripLock?.35:.28;S.w=att?Math.max(0,S.w-dt/tin):Math.min(1,S.w+dt/tout)}
     // the hero's swings can be as short as 0.1 s: be in the strike grip by the end of the wind-up
     if(h===pl&&HA.cur&&HA.cur.k!=null)S.w=Math.min(S.w,Math.max(0,1-HA.cur.k/.18));
     if(now!=null)S.t=now}
@@ -15915,7 +15918,21 @@ function gripTick(h,now,el,att){
       W.quaternion.copy(GRIP_Q).slerp(C.q,w);W.position.copy(ps).lerp(pc,w)}
     // v181: a foe whose fist is not the hero's size moves the grip to its own fist centre (h._gripD[side] = the offset from the
     // standard anchor GRIP_AN, in the hand bone's frame; set from the cage body's S.grip)
-    {const gd=h._gripD&&h._gripD[e.side];if(gd){W.position.x+=gd[0];W.position.y+=gd[1];W.position.z+=gd[2]}}
+    {const gd=h._gripD&&h._gripD[e.side];
+      if(h._gripLock&&W.parent){
+        // v181 locked grip (cage foes, whose closed fists are modelled round the carry grip): the weapon never moves inside
+        // the fist — it stays at the carry grip — and the HAND turns instead: the hand bone takes the rotation the strike grip
+        // asked of the weapon (D = Q·Fq⁻¹), at most GRIP_LOCKMAX, so the wrist bends naturally and the weapon stays in the fist
+        // through every animation. The last frame's turn is undone first (the hand bone is not reset by the animations).
+        const bn=W.parent,Q=GRIP_LQ.copy(W.quaternion),D=GRIP_LD.copy(Q).multiply(GRIP_LI.copy(C.q).invert());
+        const ang=2*Math.acos(Math.min(1,Math.abs(D.w)));if(ang>GRIP_LOCKMAX)D.copy(GRIP_LI.identity().slerp(D,GRIP_LOCKMAX/ang));
+        const pv=e._lockD;if(pv)bn.quaternion.multiply(GRIP_LI.copy(pv).invert());bn.quaternion.multiply(D);e._lockD=(pv||new THREE.Quaternion()).copy(D);
+        // whatever turn the wrist can't give, the weapon makes about the point held in the fist (its hold point stays at the
+        // fist's anchor), so the held point never leaves the hand — a bow still stands upright to shoot
+        const R=W.quaternion.copy(GRIP_LI.copy(D).invert().multiply(Q)),an2=C.an||GRIP_AN,hd=C.hold;
+        GRIP_V.set(hd[0]*sx,hd[1]*W.scale.y,hd[2]*W.scale.z).applyQuaternion(R);
+        W.position.set(an2[0]-GRIP_V.x+(gd?gd[0]:0),an2[1]-GRIP_V.y+(gd?gd[1]:0),an2[2]-GRIP_V.z+(gd?gd[2]:0))}
+      else if(gd){W.position.x+=gd[0];W.position.y+=gd[1];W.position.z+=gd[2]}}
     if(e.chain)gripChain(e,dt,w);
     if(e.side=='L')elL=Math.min(elL,C.el||0);else elR=Math.min(elR,C.el||0)}
   if(el&&b){if(elR&&b.aR1)b.aR1.rotation.x+=elR*w;if(elL&&b.aL1)b.aL1.rotation.x+=elL*w}}
@@ -19236,6 +19253,9 @@ var V100A_HUMOFF={lx:1,ly:1,lz:1,le:1,lw:1,lq:1};
     if(T){const P=T(V100A_humK(ph,k)),o=g&&g._v100o||(g?(g._v100o={}):{});const two=/^(gs|ga|hal)/.test(L[0]);
       for(const c in P){if(!two&&V100A_HUMOFF[c]){o[c]=ATK_REST[c]+(c=='lx'?-.5:c=='le'?-.9:c=='lz'?-.2:0);continue}o[c]=P[c]}
       // the rest pose of the hero tracks is the hero's arm rest; foes add these as offsets from ATK_REST like the v85 poses
+      // (v181) the hero tracks start already at full coil (the hero blends into them elsewhere): a foe eases from its rest
+      // pose into the coil over the first three quarters of the wind-up instead of jumping into it on the first frame
+      if(ph==0){const e=ATK_E.out(Math.min(1,k/.75));for(const c in o){const r0=ATK_REST[c]||0;o[c]=r0+(o[c]-r0)*e}}
       if(ph==0&&k>.72){const tr=(k-.72)/.28;o.ax+=Math.sin(now/32)*.05*tr;o.lx+=Math.sin(now/37)*.035*tr;o.sx+=Math.sin(now/45)*.018*tr}
       return o}}}catch(e){}
   return f.apply(this,arguments)}}
@@ -56452,7 +56472,7 @@ function cg181Plan(name,J){const S=AW_PROP99,names=Object.keys(HB),abs={},N={},M
 // round the handle instead of the handle running through the wrist. cgGripAt(S,s,along,fwd,out) gives a typical value.
 function cgGripAt(S,s,along,fwd,out){const A=s<0?'aL':'aR',d=nrm3(sub3(S.J[A+'2'],S.J[A+'1']));return add3(mul3(d,along),[s*(out||0),0,fwd||0])}
 {const f=mkHumanoid;mkHumanoid=function(key){const g=f.apply(this,arguments);try{const S=CG181.S&&CG181.S[key];if(S&&S.grip&&g&&g.h){const D={};
-    [['1','R'],['-1','L']].forEach(([s,side])=>{const q=S.grip[s];if(q)D[side]=[q[0]-GRIP_AN[0],q[1]-GRIP_AN[1],q[2]-GRIP_AN[2]]});g.h._gripD=D;try{gripTick(g.h,null,false)}catch(_){}}}catch(e){console.warn('cg grip',e)}return g}}
+    [['1','R'],['-1','L']].forEach(([s,side])=>{const q=S.grip[s];if(q)D[side]=[q[0]-GRIP_AN[0],q[1]-GRIP_AN[1],q[2]-GRIP_AN[2]]});g.h._gripD=D;g.h._gripLock=1;try{gripTick(g.h,null,false)}catch(_){}}}catch(e){console.warn('cg grip',e)}return g}}
 function cg181Reg(key,S,fn){(CG181.S||(CG181.S={}))[key]=S;const pn='cg181_'+key;cg181Plan(pn,S.J);a181Reg(key,function(B,P,k,L){B.kqPre='none';if(S.extra)S.extra.forEach(n=>{if(B.O.indexOf(n)<0)B.O.push(n)});const C=cg181Body(B,S);P.cg=C;k.B181=B;fn(B,P,k,C,S);cgSeat(k,C.M,0)},pn);(CG181.keys||(CG181.keys={}))[key]=1}
 // ring helpers for specs: where on the torso / head a point is
 function cgAt(list,y){for(let i=0;i<list.length-1;i++){const a=list[i],b=list[i+1];if(y<=b[0]){const t=Math.max(0,(y-a[0])/(b[0]-a[0]));return a.map((v,j)=>v+(b[j]-v)*t)}}return list[list.length-1]}
@@ -57958,54 +57978,67 @@ ST179.troll={sx:.5,hx:-.48,lk:.3,rk:.3,az:.06,lz:-.06,ax:-.12,lx:-.14,ex:-.16,le
 // (refine, Oct 31 2026) a giant, not a big man: a huge barrel chest and shoulders, a thick neck, heavy limbs on slightly short
 // legs, the head small for the bulk; storm-blue hide with paler storm-cloud blotches and blue rune tattoos round the upper
 // arms, a fur collar up round the neck into the mane
-// (round 2, owner: "beard doesn't look right"; the hair read as a white hood) a giant's beard that frames the face: a solid mass
-// on the cheeks and jaw (the mouth open, a moustache over it), a broad bib of beard down over the chest, thick tapering locks
-// with a slight twist lying on it, two braids bound with iron rings; white at the face fading to grey at the tips, darker roots.
-// The hair: a cap only over the crown and the back with a receding hairline painted on (no hood edge), locks falling over the
-// ears and down the back.
+// (round 2, owner: "beard doesn't look right"; the hair read as a white hood) a northern giant's beard and hair in iron-grey:
+// the beard a short solid mass on the jaw and chin (its edge fading into painted roots, the cheeks and mouth left bare), a
+// drooping moustache, then one broad shaped mass from under the jaw down over the chest, tapering into two thick braids bound
+// with iron rings, three big overlapping locks with rounded ends lying on it. The hair: painted on the crown behind the circlet
+// (the forehead and temples bare), with shoulder-length locks falling over the ears and down the back (the volume at the back);
+// no cap round the face, no shard fringes.
 (function(){const HD=br_Head([0,1,2,4,6,8,10,12,14],i=>[[1.45,1.1,1.55,.008],[1.22,1.14,1.24,.008],[1.14,1.12,1.14,.006],[1.06,1.06,1.05,.003],[1.02,1.02,1.02,0],[1,1,1,0],[.98,1,1,0],[.95,.96,.98,0],[.9,.9,.92,0]][i]);
   const S=cgHuman({snug:1,h:.97,w:1.36,d:1.22,rw:[1.08,1.14,1.12,1.2,1.36,1.4,1.5,1.62],rf:[1,1.06,1.18,1.28,1.36,1.26,1.14,1.1],rb:[1,1.06,1.1,1.18,1.3,1.34,1.4,1.46],at:1.8,lt:1.62,hs:.86,hw:1.06,hd:1.04,legL:.84,armL:1.04,nw:1.85,neckL:-.01,foot:1.1,footW:1.35,
-      n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.12,big:1.12}),leg:BR_LEG5,facePush:br_Jaw(HD,.012,1.525,1.58)}),
-    K={sk:0x6a7a92,eye:0x6ac8ff},glow=0x6ac8ff,bd=0x8e979f,T=S.torso,J=S.J;
+      n:16,sock:1,j2:1,footLite:1,head:HD,arm:br_Arm({bi:1.12,big:1.12,noFore:1}),leg:BR_LEG5,facePush:br_Jaw(HD,.012,1.525,1.58)}),
+    K={sk:0x6a7a92,eye:0x6ac8ff},glow=0x6ac8ff,bd=0x5c636b,T=S.torso,J=S.J;
   S.grip={'1':br_Grip(S,1,2.34,.09)};   // (round 2) the hammer's handle through the closed fist
   cg181Reg('giant',S,function(B,P,k,C){const wy=T[2][0],ch=J.chest[1];
     const tat=m=>{if(m.part!='arm')return 0;const A=m.x<0?'aL':'aR',y0=(J[A+'0'][1]*.45+J[A+'1'][1]*.55);return br_ss(.012,.004,Math.abs(m.y-y0-.012*Math.sin(Math.atan2(m.z,m.x-J[A+'0'][0])*3)))};
     // the hairline: one smooth curve (base head coordinates): receding at the temples in front, down the sides behind the ears to the nape
-    const HC=S.hp(0,1.62,0),hb=(x,y)=>[x/(S.hs*1.06),(y-S.nb)/S.hs+1.52],lineY=(bx,nz)=>nz>.15?1.676+.007*Math.min(4,(bx/.045)**2):1.655-.115*br_cl((.15-nz)/1.1,0,1),
-      hairT=(x,y,z,nz)=>{const [bx,by]=hb(x,y);return (by-lineY(bx,nz))/.022};
+    const HC=S.hp(0,1.62,0),hb=(x,y)=>[x/(S.hs*1.06),(y-S.nb)/S.hs+1.52],lineY=(bx,nz)=>nz>.2?1.692+.01*Math.min(3,(bx/.05)**2):1.69-.04*br_cl((.2-nz)/1.2,0,1),
+      hairT=(x,y,z,nz)=>{const [bx,by]=hb(x,y);return (by-lineY(bx,nz))/.018},
+      beardE=bx=>{const ax=Math.abs(bx);return ax>.052?1.576:ax<.03?1.545:1.545+(ax-.03)/.022*.031},beardT=(x,y)=>{const [bx,by]=hb(x,y);return (beardE(bx)-by)/.016};
+    const BRc=0x30353b,BLt=0x858d95,bcol=(t,m)=>{const st=m?n3Sn(m.x*1.6,m.y*.35,m.z*1.6,30,9):.5;let c=t<.16?mdMix(BRc,bd,t/.16):mdMix(bd,0x4a5056,br_ss(.55,1,t)*.6);
+      return mdSh(mdMix(c,BLt,br_ss(.55,.85,st)*.3*(t>.1?1:0)),m&&m.s<-.3?.85:1)};
     const hide=br_Hide({base:K.sk,belly:0x8090a8,back:0x4e5c74,blot:0x8a98ae,f:3.5,seed:11,bl:.35,post:(m,c)=>{const t=tat(m);if(t>0)c=mdMix(c,0x3a8ad0,t*.85);
-      if(m.part=='head'){const h=hairT(m.x,m.y,m.z,m.nz);if(h>-.45)c=mdMix(c,0x8494a6,br_ss(-.45,0,h)*.85)}   /* the hair's roots painted just past the cap's edge */
+      if(m.part=='head'){const h=hairT(m.x,m.y,m.z,m.nz);if(h>-.5)c=mdMix(c,bcol(.1+br_cl(h,0,3)*.12,m),br_ss(-.5,.4,h)*.95);   /* the hair painted on the crown behind the circlet */
+        if(m.nz>-.1){const b=beardT(m.x,m.y);if(b>-.5)c=mdMix(c,BRc,br_ss(-.5,.3,b)*.8)}}   /* the beard's roots painted just past its edge */
       if(m.part=='hand'||(m.part=='arm'&&m.y<J.aR2[1]+.02))c=mdMix(c,0x4e5c74,.3);return c}});
     const M=br_Brute(k,C,S,K,{face:b7_FaceHuman({nose:1.4,nw:1.4,brow:1.9,chin:1.2,cheek:1.3}),skin:hide,shade:{cav:1.05},
       // a barrel chest (big pectorals), heavy trapezius behind the neck (below the base of the head)
       sculpt:M=>{cgSculpt(M,{torso:1},(x,y,z,n)=>{let d=0;if(n[2]>.2)[-1,1].forEach(s=>d+=.022*cgG(x,y,s*.1,ch+.04,.08,.055)*n[2]);if(n[2]<-.2)d+=.028*cgG(x,y,0,T[6][0]+.01,.14,.06)*Math.min(1,(-.2-n[2])*2);return d});
         {const hb=S.hp(0,1.575,0)[1];cgSculpt(M,{neck:1,head:1,torso:1},(x,y,z,n)=>.022*cgG(0,y,0,(T[7][0]+hb)/2,1,(hb-T[7][0])*.75+.02)*Math.max(0,1-Math.abs(n[1])*1.2)+(n[2]<0?.03*cgG(0,y,0,hb,1,.07)*Math.min(1,-n[2]*2):0))}}});
-    const H=S.hs,bw=t=>t<.35?mdWb('head','chest',t/.35*.4):[['head',Math.max(.15,.6-(t-.35)*.7)],['chest',Math.min(.85,.4+(t-.35)*.7)]];
-    // beard colour: darker roots, white, fading to grey toward the tips (t = 0 root … 1 tip), a little darker underneath
-    const bcol=(t,m)=>mdSh(mdMix(t<.18?mdMix(0x474e56,bd,t/.18):bd,0x5c636b,br_ss(.4,1,t)*.8),(m&&m.s<-.3?.86:1)*(.96+.08*Math.sin(t*19+(m?m.c*5:0))));
-    // the beard: ONE solid fur mass from the cheeks and jaw down the throat and over the chest (ragged clumps along its lower
-    // edge), framing the face: the mouth and the middle of the upper lip left open; dark roots, white, greying toward the bottom
-    const by0=J.chest[1]-.03,beard=m=>{if(m.part=='head'){if(m.s<-.12)return false;const [bx,by]=hb(m.x,m.y),ax=Math.abs(bx);if(by>1.6)return false;if(ax<.034&&by>1.566)return false;if(ax<.028&&Math.abs(by-1.556)<.008)return false;return by<1.588-Math.max(0,.05-ax)*.4||ax>.06}
-        if(m.part=='neck')return m.s>-.05;return m.part=='torso'&&m.s>.35&&m.y>by0&&Math.abs(m.x)<.11-(J.chest[1]+.12-m.y)*.3};
-    br_Fur(B,M,beard,{off:.03,len:.12,col:bd,col2:0x7e8892,seed:104,jag:.45,lump:[.6,1.25],vc:m=>{const t=br_cl((S.hp(0,1.6,0)[1]-m.y)/(S.hp(0,1.6,0)[1]-by0+.1),0,1);return bcol(.12+t*.8,m)}});M.b7hide.push(beard);
-    // the moustache: two tapering lofts from under the nose, curving out and down past the corners of the mouth into the beard
-    [-1,1].forEach(s=>{const P=[[.004,1.574],[.022,1.568],[.04,1.556],[.05,1.538],[.054,1.522]].map(([x,y],i)=>{const p=b7_Face(M,S,s*x,y)||S.hp(s*x,y,.09);return add3(p,[0,0,(.006-i*.001)*H])});
-      mdLoft(B,P.map((p,i)=>({p,rx:(.011-i*.0015)*H*(i==4?.4:1),f:(.008-i*.001)*H,b:(.008-i*.001)*H,w:[['head',1]]})),{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.1+m.i*.12,m)})});
-    const c0=b7_Face(M,S,0,1.534)||S.hp(0,1.534,.09);
-    // two braids from the sides of the chin, each bound with an iron ring near its end and a tuft below it
-    [-1,1].forEach(s=>{const R=[],x0=s*.045*H/.86;for(let i=0;i<9;i++){const t=i/8,y=c0[1]-.02-t*.34*H/.86,q=i<2?[x0,y,c0[2]-.004]:cgSurf(M,S,y,s*.3,.115);
-        R.push({p:[x0+s*.004*t,y,q[2]+(i<2?0:.012)],rx:(i%2?.012:.016)*H/.86*(1-t*.35),f:(i%2?.011:.014)*H/.86*(1-t*.35),b:(i%2?.011:.014)*H/.86*(1-t*.35),w:bw(t)})}
-      mdLoft(B,R,{seg:5,ref:[0,0,1],col:m=>bcol(.15+m.i/8*.6,m)});const e=R[8].p,dn=[0,-1,0];
-      k.L('chest','m',0x4a4e56,add3(e,[0,.012,0]),add3(e,[0,-.012,0]),.017*H/.86,.017*H/.86,6);k.P[k.P.length-1].w=bw(1);
-      k.L('chest','c',0x8c98a4,add3(e,[0,-.008,0]),add3(e,mul3(dn,.06)),.014*H/.86,.002,5);k.P[k.P.length-1].w=bw(1)});
-    // the hair: a cap over the crown and the back down to the nape, its thickness fading to nothing at the painted hairline
-    {const cap=m=>m.part=='head'&&hairT(m.x,m.y,m.z,m.nz)>0;ej_Shell(B,M,cap,v=>{const d=nrm3(sub3(v,HC));return .022*br_cl(hairT(v[0],v[1],v[2],d[2]),0,1)},()=>null,
-      {rim:0,vcol:m=>{const a=Math.atan2(m.x,m.z),st=.5+.5*Math.sin(a*26+m.y*30*0),n=n3Sn(m.x*2,m.y*.5,m.z*2,24,5);return mdSh(mdMix(0x6a727c,bd,br_ss(-.2,1.2,hairT(m.x,m.y,m.z,m.nz))),.8+.14*st+.12*n)}});M.b7hide.push(cap)}
-    // a shaggy mane below the cap round the sides and the back: its ragged clumps fall over the ears and down the nape
-    {const mane=m=>{if(m.part!='head'||m.nz>.3)return false;const h=hairT(m.x,m.y,m.z,m.nz);return h>-1.7&&h<2.2};
-      br_Fur(B,M,mane,{off:.03,len:.11,col:bd,col2:0x6e7782,seed:107,jag:.5,lump:[.7,1.1],vc:m=>bcol(.15+br_cl((S.hp(0,1.66,0)[1]-m.y)/.14,0,1)*.6,m)});M.b7hide.push(mane)}
-    cgShell(B,M,m=>m.part=='head'&&Math.abs(m.y-S.hp(0,1.676,0)[1])<.008*S.hs,.03,glow,{t:'g',rim:.5});
-    const mantle=m=>!beard(m)&&((m.part=='torso'&&m.y>J.chest[1]+.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.1));   // a fur collar up round the neck
+    const H=S.hs,K2=H/.86,bw=t=>t<.35?mdWb('head','chest',t/.35*.4):[['head',Math.max(.15,.6-(t-.35)*.7)],['chest',Math.min(.85,.4+(t-.35)*.7)]];
+    // the beard on the face: a short solid mass over the jaw and chin, its thickness fading to nothing at its upper edge
+    {const bsel=m=>m.part=='head'&&m.s>-.1&&beardT(m.x,m.y)>0&&!(Math.abs(hb(m.x,m.y)[0])<.03&&hb(m.x,m.y)[1]>1.548);
+      ej_Shell(B,M,bsel,v=>.017*br_cl(beardT(v[0],v[1])*.7,0,1),()=>null,{rim:0,vcol:m=>bcol(.12+br_cl(beardT(m.x,m.y)*.15,0,.4),m)});M.b7hide.push(bsel)}
+    // the moustache: two thick lofts from under the nose drooping past the corners of the mouth into the beard, rounded ends
+    [-1,1].forEach(s=>{const P=[[.003,1.574],[.02,1.568],[.036,1.556],[.046,1.538],[.05,1.52]].map(([x,y],i)=>{const p=b7_Face(M,S,s*x,y)||S.hp(s*x,y,.09);return add3(p,[0,0,(.004+i*.002)*H])});
+      mdLoft(B,P.map((p,i)=>({p,rx:[.012,.014,.013,.011,.006][i]*H,f:[.009,.01,.01,.009,.005][i]*H,b:.008*H,w:[['head',1]]})),{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.2+m.i*.12,m)})});
+    // the beard's body: one broad shaped mass from under the jaw down over the chest, wide at the jaw and tapering
+    const c0=b7_Face(M,S,0,1.534)||S.hp(0,1.534,.09),fz=(y,z,o)=>{const q=cgSurf(M,S,y,0,o);return Math.max(z,q[2])},
+      BD=[[0,.005,.066,.03],[.12,-.03,.076,.034],[.36,-.09,.074,.032],[.6,-.15,.062,.028],[.82,-.205,.044,.022],[1,-.24,.022,.014]],bib=[];
+    BD.forEach(([t,dy,rx,f],i)=>{const y=c0[1]+dy*K2,z=i==0?c0[2]-.035*K2:fz(y,(bib[i-1]?bib[i-1].p[2]:c0[2])-.012*K2,.05+f*K2);bib.push({p:[0,y,z],rx:rx*K2,f:f*K2,b:f*.8*K2,w:bw(t)})});
+    mdLoft(B,bib,{seg:10,ref:[0,0,1],capB:true,col:m=>bcol(.1+m.i/5*.85,m)});
+    // three big overlapping locks lying on it, with rounded, softly tapering ends (the middle one longest)
+    [[-.036,.8,-1],[.036,.84,1],[0,1,0]].forEach(([x,f,tw])=>{const R=[];for(let i=0;i<5;i++){const t=i/4,b=bib[Math.min(5,1+Math.round(t*f*4))];
+        R.push({p:[(x*(1+t*.3)+tw*.006*Math.sin(t*3))*K2,b.p[1]+.01*K2,b.p[2]+b.f*.75],rx:[.022,.024,.021,.015,.007][i]*K2,f:[.012,.013,.012,.009,.005][i]*K2,b:.008*K2,w:bw(.1+t*f*.8)})}
+      mdLoft(B,R,{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.18+m.i/4*.7,m)})});
+    // the beard ends in two thick braids, each bound with an iron ring, a rounded tuft below it
+    [-1,1].forEach(s=>{const b4=bib[4],R=[];for(let i=0;i<7;i++){const t=i/6,y=b4.p[1]-t*.13*K2;R.push({p:[s*(.02+t*.006)*K2,y,fz(y,b4.p[2]-.006*K2,.05+.02*K2)],rx:(i%2?.014:.017)*K2*(1-t*.3),f:(i%2?.012:.015)*K2*(1-t*.3),b:(i%2?.012:.015)*K2*(1-t*.3),w:bw(1)})}
+      mdLoft(B,R,{seg:6,ref:[0,0,1],col:m=>bcol(.55+m.i/6*.3,m)});const e=R[6].p;
+      k.L('chest','m',0x3a3e44,add3(e,[0,.014,0]),add3(e,[0,-.012,0]),.019*K2,.019*K2,6);k.P[k.P.length-1].w=bw(1);
+      mdLoft(B,[{p:add3(e,[0,-.004,0]),rx:.015*K2,f:.013*K2,b:.013*K2,w:bw(1)},{p:add3(e,[0,-.03*K2,.002]),rx:.016*K2,f:.013*K2,b:.013*K2,w:bw(1)},{p:add3(e,[0,-.055*K2,.004]),rx:.007*K2,f:.006*K2,b:.006*K2,w:bw(1)}],{seg:6,ref:[0,0,1],capB:true,col:m=>bcol(.85,m)})});
+    // the hair: shoulder-length locks falling from behind the circlet over the ears and down the back, the volume at the back
+    // (each a broad, flattish loft lying on the head, rooted under the painted hair, a rounded tapering end over the fur collar)
+    [[100,1],[125,1.08],[152,1.2],[180,1.25],[-152,1.2],[-125,1.08],[-100,1]].forEach(([deg,v])=>{const a=deg*Math.PI/180,d=[Math.sin(a),0,Math.cos(a)],
+        q=S.hp(d[0]*.3,1.668,d[2]*.3),p=cgRay(M,[q[0],q[1],q[2]],[-d[0],0,-d[2]],{head:1});if(!p)return;const R=[],L=(.15+.03*v)*K2;
+      for(let i=0;i<5;i++){const t=i/4,out=(.002+.06*t*t*v+.05*t)*K2;R.push({p:add3(p,[d[0]*out,-t*L,d[2]*out]),rx:[.03,.034,.032,.024,.01][i]*K2*v,f:[.008,.013,.015,.012,.006][i]*K2,b:[.008,.01,.011,.009,.005][i]*K2,w:t<.45?[['head',1]]:[['head',1.45-t],['chest',t-.45]]})}
+      mdLoft(B,R,{seg:5,ref:d,capB:true,col:m=>bcol(.14+m.i/4*.7,m)})});
+    // three locks from behind the circlet sweeping back over the crown into the fall at the back (hair, not a bald dome)
+    [-.04,0,.04].forEach((x,li)=>{const R=[];[[.015,1.705],[-.03,1.745],[-.075,1.73],[-.1,1.68],[-.105,1.63]].forEach(([z,y],i)=>{const q=S.hp(x*(1+i*.15),y,z),dir=nrm3(sub3(q,HC)),
+        p=cgRay(M,add3(q,mul3(dir,.3)),mul3(dir,-1),{head:1})||q;R.push({p:add3(p,mul3(dir,.002*K2)),rx:[.026,.032,.032,.03,.02][i]*K2,f:.007*K2,b:.005*K2,w:[['head',1]]})});
+      mdLoft(B,R,{seg:5,ref:[0,1,0],capB:true,col:m=>bcol(.14+m.i/4*.25+li*.04,m)})});
+        cgShell(B,M,m=>m.part=='head'&&Math.abs(m.y-S.hp(0,1.676,0)[1])<.008*S.hs,.03,glow,{t:'g',rim:.5});
+    const under=m=>(m.part=='neck'&&m.s>.25)||(m.part=='torso'&&m.s>.35&&m.y>J.chest[1]-.03&&Math.abs(m.x)<.1),   /* left bare under the beard */
+      mantle=m=>!under(m)&&((m.part=='torso'&&m.y>J.chest[1]+.04)||m.part=='neck'||(m.part=='arm'&&m.y>J.aR0[1]-.1));   // a fur collar up round the neck
     br_Fur(B,M,mantle,{off:.045,len:.14,col:0x6a5e4e,col2:0x4a4030,seed:102,jag:.55});M.b7hide.push(mantle);
     // three blue runes on the chest, below the beard and the mantle
     [[-.055,0],[0,-.03],[.055,0]].forEach(([x,dy],i)=>{const y=J.chest[1]-.03+dy,p=cgSurf(M,S,y,x*5,-.001);k.p(b7_TB(S,y),'box','g',glow,p[0],p[1],p[2],.014,.11,.006,0,x*5,(i-1)*.5)});
@@ -58017,7 +58050,7 @@ ST179.troll={sx:.5,hx:-.48,lk:.3,rk:.3,az:.06,lz:-.06,ax:-.12,lx:-.14,ex:-.16,le
       b7_Sh(B,M,m=>(m.part=='foot'||(m.part=='leg'&&m.y<by))&&Math.sign(m.x)==s,.026,m=>mdSh(0x3a3026,.85+.25*n3Sn(m.x,m.y,m.z,14,s+5)));
       br_Fur(B,M,m=>m.part=='leg'&&Math.sign(m.x)==s&&m.y<by+.03&&m.y>by-.02,{off:.042,len:.06,col:0xd8d4cc,col2:0xb4b0a6,seed:103+s,jag:.45,lump:[.6,.9]})});
     b7_Sh(B,M,m=>m.part=='leg'&&m.y>J.rh1[1]-.1,.01,m=>mdSh(0x5a5040,.88+.16*n3Sn(m.x,m.y,m.z,9,2)));
-    cgSkirt(B,S,wy-.02,J.lh1[1]+.06,.06,.022,m=>mdSh(Math.round(Math.atan2(m.c,m.s)*6)%2?0x6a5e4e:0x4a4030,.86+.2*n3Sn(m.x,m.y,m.z,9,3)),{n:5,seg:16});cgBelt(B,M,wy,.024,.03,0x3a2a1a);br_Emit(B,M)})})();
+    cgSkirt(B,S,wy-.02,J.lh1[1]+.06,.06,.022,m=>mdSh(Math.round(Math.atan2(m.c,m.s)*6)%2?0x6a5e4e:0x4a4030,.86+.2*n3Sn(m.x,m.y,m.z,9,3)),{n:5,seg:12});cgBelt(B,M,wy,.024,.03,0x3a2a1a);br_Emit(B,M)})})();
 ST179.giant={sx:.16,hx:-.14,lk:.16,rk:.16,az:.05,lz:-.05,ex:-.22,le:-.26};
 
 // ---------------- Amalgam: a lumpy heap of goo in a man's shape ----------------
@@ -58221,14 +58254,22 @@ function u8_armPt(M,S,s,t,a,dep){const A=s<0?'aL':'aR',J=S.J,c=t<=1?lerp3(J[A+'0
 // strands from the crown (base head coordinates): [angle round the head (0 front), base y, width, length, outward tilt, colour, seed]
 function u8_strands(k,M,S,L){L.forEach(([a,y,w,len,tl,col,sd])=>{const c=S.hp(0,y,0),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(!p)return;
   const r=sub3(p,mul3(d,.007)),t=dkKit();t.S('head',col,r[0],r[1],r[2],w,len,a,-tl,sd);u8_bake(k.B181,t)})}
-// hand bones: a wrist knob, the carpals, metacarpals out to each finger's root (the frame of cgFingers), the fingers, a thumb
+// hand bones: a wrist knob, the carpals, metacarpals out to each finger's root (the frame of cgFingers), the fingers, a thumb;
+// (attack review) a gripping hand is a closed bony fist curled round the grip centre G, where S.grip puts the handle
 function u8_hand(k,S,s,col,kind,nail,th,rf,tip){rf=rf||1;const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*Math.sqrt(rf))),L=.08*Math.sqrt(rf);
   const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));
-  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),c0=add3(a2,mul3(d,.024*Math.sqrt(rf)));
+  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c))),c0=add3(a2,mul3(d,.024*Math.sqrt(rf))),G=add3(add3(kn,mul3(d,.022)),mul3(u,-.03)),rho=.034*Math.sqrt(rf);   /* G: the fist's grip centre (= S.grip, ud_grip(S,s,.08,.03)) */
   k.p(bn+'2','sph','c',col,a2[0],a2[1],a2[2],.016*th);k.p(bn+'2','sph','c',col,c0[0],c0[1],c0[2],.017*rf,.017*rf,.017*rf);
   for(let i=0;i<4;i++){const z=(1.5-i)*.016*rf,p=P(kn,z,-.004);k.L(bn+'2','c',col,P(c0,z*.4,-.002),p,.0062*rf,.0058*rf,5);
-    if(kind=='fist')a181Digit(k,bn+'2',col,p,D(1,-.45,.05),L*.7,.0095*rf,2,1.15,ax,0,null);else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6/rf),L*(i==3?.82:1),.0085*rf,3,kind=='claw'?.26:.14,ax,tip||0,nail)}
-  const tb=P(add3(a2,mul3(d,.03)),.026*rf,-.01);k.L(bn+'2','c',col,P(c0,.008*rf,-.004),tb,.007*rf,.0065*rf,5);a181Digit(k,bn+'2',col,tb,D(.6,-.3,.75),L*.62,.009*rf,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail)}
+    if(kind=='fist'){/* a closed bony fist: the three phalanges curl round the grip centre G (the handle runs along f through it),
+      the proximal ones across the front of the grip, the next ones curling under it, tightening as they go; knobbed joints */
+      const Q=(th,f2)=>{const a=th*Math.PI/180;return add3(add3(G,mul3(f,z)),add3(mul3(d,rho*f2*Math.cos(a)),mul3(u,rho*f2*Math.sin(a))))},J4=[[130,1],[45,.9],[-35,.8],[-95,.72]].slice(0,i==3?3:4).map(([t,f2])=>Q(t,f2));
+      J4[0]=p;for(let j=0;j<J4.length-1;j++){k.L(bn+'2','c',col,J4[j],J4[j+1],.0088*rf*(1-j*.12),.0078*rf*(1-j*.12),5);if(j)k.p(bn+'2','oct','c',col,J4[j][0],J4[j][1],J4[j][2],.0095*rf)}}
+    else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6/rf),L*(i==3?.82:1),.0085*rf,3,kind=='claw'?.26:.14,ax,tip||0,nail)}
+  const tb=P(add3(a2,mul3(d,.03)),.026*rf,-.01);k.L(bn+'2','c',col,P(c0,.008*rf,-.004),tb,.007*rf,.0065*rf,5);
+  if(kind=='fist'){/* the thumb bones cross over the curled fingers on the far side of the grip */const T1=add3(add3(G,mul3(f,.03*rf)),add3(mul3(d,.3*rho),mul3(u,-.95*rho))),T2=add3(add3(G,mul3(f,.004)),add3(mul3(d,.74*rho),mul3(u,-.74*rho)));
+    k.L(bn+'2','c',col,tb,T1,.009*rf,.008*rf,5);k.p(bn+'2','oct','c',col,T1[0],T1[1],T1[2],.0095*rf);k.L(bn+'2','c',col,T1,T2,.008*rf,.0062*rf,5);return}
+  a181Digit(k,bn+'2',col,tb,D(.6,-.3,.75),L*.62,.009*rf,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail)}
 // foot bones: the ankle knob, a heel, the arch, five metatarsals out to the toes
 function u8_foot(k,S,s,col,th){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w,r=Math.sqrt(th),hl=[A[0],.026*r,A[2]-.025],mid=[A[0],.03*r,A[2]+.07*L];
   k.p(l,'sph','c',col,A[0],A[1],A[2],.024*th);k.L(l,'c',col,A,hl,.017*th,.02*r,6);k.p(l,'sph','c',col,hl[0],hl[1],hl[2],.024*r,.024*r,.03*r);k.L(l,'c',col,A,mid,.018*th,.016*r,6);
@@ -58707,44 +58748,56 @@ const cr_RARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.95,r:.036,rb:.04},{t:1.3,
 const cr_KARM=[{t:.06,r:.05,o:.012},{t:.32,r:.044},{t:.7,r:.036},{t:.95,r:.043,rb:.047},{t:1.15,r:.034},{t:1.5,r:.04,rf:.045},{t:1.94,r:.027},{t:2.14,r:.022,rf:.03,rb:.026},{t:2.3,r:.018,rf:.024,rb:.022}];   /* (round 2) plated segments with knobbed joints */
 const cr_WARM=[{t:.06,r:.05,o:.012},{t:.32,r:.038},{t:.88,r:.03},{t:1.02,r:.037,rb:.042},{t:1.25,r:.031},{t:1.94,r:.02},{t:2.12,r:.016,rf:.03,rb:.026},{t:2.3,r:.013,rf:.026,rb:.022}];
 
-// (round 2) a blocky, uneven head section for the Sand Elemental: corners pushed out irregularly ring by ring, so the head is a
-// squarish block of rock rather than a smooth dome
-const cr_ROCKHEAD=(i,j,a)=>.018*Math.pow(Math.abs(Math.sin(2*a+.5)),2)+.01*(a181H(j,7)-.5)*Math.min(1,i/3);   /* the same corners all the way up (a block, not stacked strata) */
+// (round 2b) an angular rock as raw faceted geometry (flat facets, no subdivision), colour per corner: sand that is lighter where a
+// corner faces up and out (weathered edges catching the light) and darker toward c0 (the crevices between the pieces, inside the
+// cluster). geo 'dod' | 'box'; p centre, sz half sizes, rot Euler angles; W bone weights
+const cr_RG={};
+function cr_rock(B,geo,p,sz,rot,W,c0,cols){const g=cr_RG[geo]||(cr_RG[geo]=geo=='box'?new THREE.BoxGeometry(2,2,2).toNonIndexed():new THREE.DodecahedronGeometry(1,0)),pa=g.attributes.position,
+    q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rot[0],rot[1],rot[2])),v=new THREE.Vector3(),w=mdW(B,W),C=new THREE.Color(),R=Math.max(sz[0],sz[1],sz[2]);
+  for(let i=0;i<pa.count;i+=3){const V=[0,1,2].map(j=>{v.fromBufferAttribute(pa,i+j);v.set(v.x*sz[0],v.y*sz[1],v.z*sz[2]).applyQuaternion(q);const P=[p[0]+v.x,p[1]+v.y,p[2]+v.z],u=nrm3([v.x,v.y,v.z]),
+      dc=Math.hypot(P[0]-c0[0],P[1]-c0[1],P[2]-c0[2]),inner=c9_cl(1-(dc-R*.4)/(R*1.4)),n=n3Sn(P[0],P[1],P[2],11,17);
+      let c=mdMix(cols[0],cols[1],c9_cl(.35+(n-.5)*1.2));c=mdMix(c,cols[2],c9_cl(u[1]*.9+.1)*.6);c=mdMix(c,cols[3],inner*.75);C.setHex(c);return {x:P[0],y:P[1],z:P[2],w,rgb:[C.r,C.g,C.b]}});
+    mdTri(B,'c',V[0],V[1],V[2],0)}}
 // ---------------- Sand Elemental: a chunky golem of packed golden sand and rock plates, glowing seams, a blazing chest gem,
 // boulder shoulders, rock fists, a girdle of stones with shards hanging round the hips, a crown of jagged rock ----------------
 // (refine) a hulking figure, not a man: massive shoulders and a deep chest over a narrower waist and short column legs, the small
 // head sunk into the shoulders (no neck), forearms thicker than the upper arms swelling into huge rock fists with three stubby
 // fingers; packed sand flows from gold to darker sand, rock showing through, a warm glow round the core
 (function(){const S=cr_human({snug:1,h:.9,w:1.3,d:1.2,rw:[.95,1.0,.9,1.12,1.4,1.52,1.66,1.25],rf:[1,1.02,.98,1.2,1.36,1.3,1.3,1.65],rb:[1,1.05,1,1.22,1.42,1.5,1.55,1.3],
-    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:1.0,hw:1.16,hy:.88,hd:1.1,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:cr_ROCKHEAD,n:16,sock:1,j2:1,footLite:1,
-    head:cr_flare(cr_H8,.5).map((q,i)=>[q[0],q[1],q[2]*[.68,.7,.76,.9,1,1,1,1][i],q[3],q[4]]) /* below the glowing slit the rock slopes back into the chest: no muzzle */,arm:cr_GARM,leg:cr_LEG},0.025),
+    at:2.05,lt:1.7,armL:1.2,legL:.8,hs:.82,hw:1.12,hy:.85,hd:1.05,nw:2.1,neckL:-.04,foot:1.1,footW:1.4,facePush:()=>0,n:16,sock:1,j2:1,footLite:1,
+    head:cr_flare(cr_H8.filter((q,i)=>i%2==0||i==7),.4) /* (round 2b) a hidden stub (it carries the head bone): the visible head is a cluster of rock pieces */,arm:cr_GARM,leg:cr_LEG},0.025),
     s1=0xc8a060,s2=0xa8844a,s3=0xd8b878,rk=0x8a6a3a,gl=0xffa030,T=S.torso,J=S.J;
   cg181Reg('selem',S,function(B,P,k,C){const M=C.M,WS=p=>cr_WS(k,M,p),ch=J.chest[1],ty=f=>T[2][0]+(T[6][0]-T[2][0])*f;
     // boulder-sized lumps with a finer grain of packed sand on top
     cgSculpt(M,{head:1,torso:1,arm:1,leg:1,neck:1,hand:1,foot:1},(x,y,z,n)=>.034*(n3Sn(x*.8,y*.8,z*.8,4,4)-.45)+.014*(n3Sn(x,y,z,10,4)-.45));
     cr_fill(M,S,.015,.03);
-    // (round 2, owner: "the face doesn't read like a sand elemental") no human face: the head is a rough lump of sandstone, a heavy
-    // overhanging ledge of rock across the front with a deep recess under it where a slit of the core's glow burns, lopsided masses
-    cgSculpt(M,{head:1},(x,y,z,n)=>.042*(n3Sn(x*1.4,y*1.4,z*1.4,3,11)-.45)+.016*(n3Sn(x,y,z,9,13)-.45));
-    cgSculpt(M,{head:1},S.sculpt((x,y,z,n)=>{if(n[2]<-.1)return 0;const f=Math.min(1,(n[2]+.1)*1.6);return f*(.022*cgG(x,y,-.03,1.648,.045,.01)+.018*cgG(x,y,.04,1.643,.035,.01)-.016*cgG(x,y,0,1.625,.06,.008))}));   /* an uneven ledge of rock (two masses) over the recess */
     M.shade=cgShade(M,{cav:1.3,y0:0,y1:T[7][0]+.15,hk:.3});
-    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02),ey=S.hp(0,1.625,0)[1];
+    const gy=ty(.66),gem=cgSurf(M,S,gy,0,-.02);
     // packed sand: gold blending into darker sand (darker on the back), paler toward the shoulders, rock showing through, rock
     // fists, a warm glow on the sand round the core
     const sand=m=>{const n=n3Sn(m.x,m.y,m.z,7,6),n2=n3Sn(m.x,m.y,m.z,3,2),up=c9_cl((m.y-ch+.1)/.35);
       let c=mdMix(s1,s2,c9_cl(.45+(n2-.5)*1.4+(m.s<-.3?.2:0)));c=mdMix(c,s3,c9_cl(up*.6+(m.part=='head'?.25:0))*c9_cl((n-.3)*2.2));
       c=mdMix(c,rk,Math.max(c9_cl((n-.66)*3.2)*.75,c9_cl((.17-cr_wrist(m,J))/.08)*.6));
       c=mdMix(c,s3,c9_cl((n3Sn(m.x*2.4,m.y*.25,m.z*2.4,9,8)-.62)*4)*.5);   /* paler streaks of sand streaming down */
-      if(m.part=='head'&&m.nz>.2&&Math.abs(m.y-ey)<.016)c=mdMix(c,0x2a1808,.7*(1-Math.abs(m.y-ey)/.016));   /* the dark recess round the glowing slit */
       const d=Math.hypot(m.x-gem[0],m.y-gem[1],m.z-gem[2]);return mdMix(c,0xf09a3a,.5*Math.exp(-d*d/.01))};
-    cgEmit(B,M,()=>null,{vcol:sand});
-    // slabs of rock jutting from the head (a brow block, a temple, a cheek), so it reads as a broken rock formation
-    [[-.03,1.665,.085,.035,.06],[.072,1.622,.05,.06,.055],[-.075,1.6,.045,.05,.05]].forEach(([x,y,sx,sy,sz],i)=>{const q=S.hp(x,y,0),d=nrm3([x*6,.2,1]),p=cgRay(M,add3(q,mul3(d,.4)),mul3(d,-1),{head:1});if(p){const c=sub3(p,mul3(d,.016));k.p('head','dod','c',i%2?rk:mdSh(rk,.85),c[0],c[1],c[2],sx,sy,sz,i*.7,x*8,i*.4)}});
-    // the eyes: one slit of the core's glow burning in the recess under the ledge (two pieces following the curve of the face),
-    // glowing cracks running up from its ends over the head
-    [-1,1].forEach(s=>{const q=S.hp(s*.03,1.625,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});if(!p)return;k.p('head','box','g',gl,p[0],p[1],p[2]-.002,.034,.0055,.008,0,s*.35,-s*.05);
-      const a=cgRay(M,add3(S.hp(s*.062,1.63,0),[s*.4,0,.25]),nrm3([-s,0,-.6]),{head:1}),b=cgRay(M,add3(S.hp(s*.05,1.69,-.02),[s*.3,.3,.2]),nrm3([-s*.7,-.6,-.4]),{head:1});
-      if(a&&b){const m2=add3(lerp3(a,b,.5),[s*.004,0,0]);c9_keep(k.L('head','g',gl,a,m2,.005,.0045,4));c9_keep(k.L('head','g',gl,m2,b,.0045,.003,4))}});
+    cgEmit(B,M,()=>null,{vcol:sand,keep:m=>m.part!='head'||(m.y<S.nb+.02&&m.nz<-.2)});   /* (round 2b) the head stub isn't drawn, except the back of its lowest band, which closes the top of the neck behind the rocks */
+    // (round 2b, owner: "the face doesn't read like a sand elemental") the head is a cluster of angular rock pieces (flat facets,
+    // slightly rotated, overlapping, all round the small head stub and on the head bone): a skull mass, a back mass, a heavy brow
+    // slab jutting over a dark recess, two uneven cheek slabs, a jaw block sloping back into the chest, a temple block. In the
+    // recess between brow and cheeks the core's glow burns as a slit, with more of it glowing deep inside the gaps.
+    {const hc=S.hp(0,1.625,0),W=[['head',1]],SC=[s1,s2,s3,0x4a3418],R=(geo,o,sz,rot)=>cr_rock(B,geo,add3(hc,o),sz,rot,W,hc,SC);
+      R('dod',[0,0,-.008],[.092,.086,.09],[.3,.5,.2]);R('dod',[-.025,.035,-.048],[.07,.058,.064],[1,.2,.7]);R('box',[.042,.048,-.015],[.045,.03,.05],[.2,.5,-.35]);
+      R('box',[-.004,.042,.066],[.088,.022,.036],[-.35,.08,.07]);R('box',[-.058,-.03,.058],[.036,.034,.03],[.15,-.45,.25]);R('box',[.06,-.022,.056],[.032,.04,.03],[-.1,.5,-.3]);
+      R('dod',[.008,-.075,.03],[.085,.05,.072],[.4,.3,.1]);R('box',[.084,.012,.002],[.026,.046,.046],[0,.3,.15]);R('box',[-.088,.002,-.006],[.026,.044,.048],[.1,-.25,-.12]);
+      R('box',[-.07,-.095,.035],[.05,.034,.045],[.25,.4,.2]);R('box',[.072,-.092,.03],[.046,.036,.048],[-.2,-.35,-.25]);R('dod',[0,-.07,-.06],[.085,.05,.068],[.6,1.1,.3]);
+      R('box',[.005,-.122,.06],[.07,.034,.045],[.15,.2,-.08]);R('dod',[-.095,-.112,-.005],[.05,.036,.06],[.3,.9,.5]);R('dod',[.098,-.11,-.01],[.048,.038,.058],[1.1,.4,.2]);
+      R('dod',[-.055,-.105,-.085],[.055,.038,.05],[.7,.2,1.3]);R('box',[.055,-.1,-.088],[.05,.034,.045],[.2,-.5,.3]);R('dod',[0,-.118,-.105],[.06,.035,.045],[1.4,.6,.1]);   /* rocks all the way round the base of the neck, sunk into the shoulders */
+      for(let i=0;i<7;i++){const a=(i+.5)/7*Math.PI*2;R('dod',[Math.sin(a)*.098,-.078+.008*Math.sin(i*2.1),Math.cos(a)*.094-.012],[.046,.034,.046],[a,a*.7+i,.3*i])}   /* a ring of rocks over the rim of the neck */
+      c9_keep(k.p('head','box','g',gl,hc[0],hc[1]+.011,hc[2]+.084,.056,.0055,.01,0,0,-.04));c9_keep(k.p('head','oct','g',gl,hc[0],hc[1]+.01,hc[2]+.055,.064,.013,.036));
+      // a crown of jagged shards breaking out of the top masses, uneven and leaning; sand streaming down from under the jaw
+      [[-.06,.05,-.03,.1,-.5],[-.03,.07,-.05,.16,-.2],[.005,.07,-.02,.13,.1],[.04,.065,-.03,.18,.35],[.065,.05,0,.09,.6],[-.01,.06,-.085,.11,0]].forEach(([x,y,z,L,lean],i)=>
+        c9_keep(c9_along(k,'head','cone4','c',i%2?rk:mdMix(rk,s3,.5),add3(hc,[x,y,z]),[lean,1,-.25-(z<-.06?.6:0)],L,.03+.008*(i%3))));
+      [[-.03,.02],[.02,.04],[.045,.01]].forEach(([x,z],i)=>c9_keep(c9_along(k,'head','cone4','c',mdMix(s3,s1,.4),add3(hc,[x,-.075,z]),[x*.5,-1,.25],.07+.02*i,.012)))}
     // rock plates on the chest, back and flanks, glowing cracks between them
     [[.86,-.62,.09,.075],[.86,.62,.09,.075],[.56,-.84,.075,.065],[.56,.84,.075,.065],[.84,Math.PI,.1,.085],[.55,Math.PI-.6,.08,.07],[.55,Math.PI+.6,.08,.07],[.24,Math.PI,.085,.06]]
       .forEach(([f,a,sx,sy],i)=>{const y=ty(f),p=cgSurf(M,S,y,a,-.016);k.p(cgSurfBn(S,y),'dod','c',i%2?rk:mdSh(rk,.86),p[0],p[1],p[2],sx,sy,.045,0,a,0);WS(p)});
@@ -58768,8 +58821,6 @@ const cr_ROCKHEAD=(i,j,a)=>.018*Math.pow(Math.abs(Math.sin(2*a+.5)),2)+.01*(a181
     for(let i=0;i<8;i++){const a=i/8*Math.PI*2,p=cgSurf(M,S,T[1][0]+.03+Math.sin(a*3)*.012,a,-.014);k.p('pelvis','dod','c',i%3?s2:rk,p[0],p[1],p[2],.058+(i%3)*.012);WS(p)}
     for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2,y=T[1][0]-.01,r=cgSurf(M,S,y,a,-.03),d=[Math.sin(a)*.16,-1,Math.cos(a)*.16],L=.22+a181H(i,7)*.08;
       k.L('pelvis','c',i%2?s2:rk,r,add3(r,mul3(nrm3(d),L)),.05,.006,4);WS(r)}
-    // a crown of jagged rock shards breaking out of the top and back of the head, uneven and leaning
-    [[-.06,.0,.1,-.5],[-.03,-.03,.16,-.2],[.005,-.01,.13,.1],[.04,-.04,.18,.35],[.065,.0,.09,.6],[0,-.07,.11,0]].forEach(([x,z,L,lean],i)=>{const p=b7_Top(M,S,x,z);if(p)c9_along(k,'head','cone4','c',i%2?rk:mdMix(rk,s3,.5),sub3(p,[0,.028,0]),[lean,1,-.25-(z<-.05?.6:0)],L,.03+.008*(i%3))});
     [-1,1].forEach(s=>cr_toes(B,S,s,{n:3,col:s2,r:.022,len:.06,spread:.034}))})})();
 ST179.selem={sx:.2,hx:-.22,lk:.2,rk:.2,az:.04,lz:-.04,ax:-.08,lx:-.08,ex:-.25,le:-.25};
 
@@ -59073,3 +59124,685 @@ const cr_ELK8=[0,2,3,5,7,8,10,11].map(i=>ELKHEAD[i]);
     // long clawed fingers (four and a thumb) out of the narrow hand, black claws; clawed toes
     [-1,1].forEach(s=>{cr_fingers(B,S,s,{n:4,len:.17,r:.0095,curl:.35,spread:.024,col:mdSh(sk,.8),nail:c9_WD.claw,fan:.3,thumb:1,claw:.38,at:.045});cr_toes(B,S,s,{n:3,col:mdSh(sk,.8),r:.016,len:.07,spread:.026,nail:c9_WD.claw,claw:.035})})})})();
 cr_stance('wendigo',{sx:.42,hx:-.16,sy:.1,lk:.2,rk:.24,dy:-.035,ax:-.28,lx:-.08,az:.05,lz:-.06,ex:-.2,le:-.55});
+// ================= v181: foe attacks — every humanoid foe's blows solved on its own skeleton =================
+// Owner: "does the weapon actually swing during the attack and does the attack look natural and fluid? … This is a big
+// problem if it's not right." The foes played the hero's baked swing tracks (joint angles made for the hero's body and its
+// one-handed grip), so on other proportions, stoops, two-handed weapons and polearms the blow did not land on the target:
+// the orc's axe ended raised out to the side, the gharial's halberd barely moved, the off hand flailed by the head.
+//
+// Now each attack is described by WHERE THINGS GO, and solved every frame on the foe's own skeleton:
+//   * the weapon hand's path (relative to the shoulders, in arm lengths, in the body's frame: +x toward the weapon arm,
+//     +y up, +z toward the target), the elbow's direction, the weapon's direction (the blade or head lags behind the hand in
+//     the wind-up and whips through at the hit) and which way its edge faces (the edge leads);
+//   * the body: hips turning before the shoulders, chest twist, lean into the blow, side bend, pelvis drop and weight shift
+//     (the legs are solved so the feet stay exactly where they stood);
+//   * the off hand: on the haft of a two-hander, polearm or casting staff, a counterbalance for one-handers, the shield up.
+// Two-bone IK puts the arm there (elbow toward its pole, a real hinge), and the hand turns so the weapon — which never moves
+// inside the fist (the carry grip) — points where the description says, within what a wrist can do (flex / extend 65°,
+// ulnar 35°, radial 20°, forearm turn 100°; at most 15° of tilt and 45° of roll left to the weapon in the fist, FA_FIST).
+// Timeline (gameplay unchanged): s = 0→1 wind-up, 1→2 act, 2→3 recovery. Melee contact at s = 1.45 (the game's act k .45);
+// projectiles leave at s = 1 (the act's start); slams and rainfire land at s = 2 (the act's end). Keys are played with a
+// monotone cubic per channel: anticipation (coil, then a held, creeping coil), a fast whip into the hit, follow-through past
+// it, a settle with a little overshoot. Heavier foes heave into the coil later and settle slower; daggers and ghouls snap.
+// (review, Oct 31) Melee downswings begin inside the wind-up (a smooth time remap, S.rm) so the blow is visible over ~5
+// frames; the weapon lifts out to the side, the follow-through ends low in front, and the recovery draws the hand in first
+// (and is clamped never to reach further toward the target than the hit, S.zHit) so it can't read as a second blow.
+// Blend: from the pose the earlier layers made (walk/idle, stance) into this one over the start of the wind-up and back over
+// the end of the recovery; a cancelled attack (stun, death) fades out over 0.15 s. The body group's whole-body tilt and
+// lunge (mTick's m.pose) is left out for the moves driven here: the lean comes from the hips and spine, feet planted.
+// Regular humanoid foes only (FA_K); Sovereigns, the abeksi actors and every other model are untouched.
+var FA={on:true};
+// hum key -> c: class, hv: heaviness 0 (quick) … 1 (slow and heavy), sh: carries a shield, arm: unarmed style
+var FA_K={
+  brigand:{c:'one',hv:.3},orc:{c:'one',hv:.55},troll:{c:'one',hv:.85},hob:{c:'one',hv:.35},skel:{c:'one',hv:.2,sh:1},nagaw:{c:'one',hv:.4,sh:1},
+  executioner:{c:'two',hv:.8},giant:{c:'two',hv:1},jotun:{c:'two',hv:1},vampk:{c:'two',hv:.55},knight:{c:'two',hv:.6},
+  gharial:{c:'pole',hv:.6},
+  vamp:{c:'dag',hv:0},bandit:{c:'dag',hv:0},ss165zealot:{c:'dag',hv:.05},
+  tombpriest:{c:'staff',hv:.5},trollsh:{c:'staff',hv:.6},cultist:{c:'staff',hv:.4},shaman:{c:'staff',hv:.45},ss165caller:{c:'staff',hv:.4},
+  vampm:{c:'staff',hv:.35},nagas:{c:'staff',hv:.4},revenant:{c:'staff',hv:.5},
+  sling:{c:'sling',hv:.1},archer:{c:'bow',hv:.3},nagaa:{c:'bow',hv:.3},
+  selem:{c:'claw',arm:'golem',hv:.6,alt:1},
+  ghoul:{c:'claw',arm:'rake',hv:0,alt:1},dgwretch:{c:'claw',arm:'rake',hv:.1,alt:1},nosferatu:{c:'claw',arm:'rake',hv:.2,alt:1},wendigo:{c:'claw',arm:'rake',hv:.15,alt:1},
+  akidon:{c:'claw',arm:'rake',hv:.3,alt:1},akorror:{c:'claw',arm:'rake',hv:.2,alt:1},lichen:{c:'claw',arm:'rake',hv:.5,alt:1},gargoyle:{c:'claw',arm:'rake',hv:.5,alt:1},
+  yeti:{c:'claw',arm:'brute',hv:.8,alt:1},amalgam:{c:'claw',arm:'brute',hv:.9,alt:1},
+  saltgolem:{c:'claw',arm:'golem',hv:1,alt:1},colossus:{c:'claw',arm:'golem',hv:1},drowned:{c:'claw',arm:'golem',hv:.7}
+};
+// where the off fist holds a two-handed handle (weapon units from the weapon's own handle point; − = toward the head)
+var FA_OT={gs:.17,ga:-.27,hammer:-.27,halberd:-.75,staff:.32};
+// the moves this file animates (others keep the older poses); the real move name is read from the enemy (signature moves
+// reuse these animation names with other timings)
+var FA_MOVES={strike:1,slam:1,bolt:1,rainfire:1,throw:1};
+// ---------------- tracks: keys -> channels -> monotone cubic ----------------
+// key fields: s; H hand [x,y,z] (arm lengths from the shoulder line: hs=1 at the weapon shoulder, 0 at the midline);
+// D weapon direction; E edge facing; P elbow pole; O off hand (from the off shoulder), OP its elbow pole; ow off-hand weight;
+// ot haft point (weapon units along the handle) for two-handed grips; oc the off fist slid along the haft toward the weapon
+// hand (0 = its own grip, 1 = most of the way; a two-hander's coil); rw / orw wrist flex (unarmed); body: py hip yaw,
+// sy spine yaw, cy chest yaw (+ = toward the weapon side), sx lean forward, sz side bend (+ = toward the weapon side), hx head
+// pitch, dy pelvis drop and fz / fx weight shift forward / sideways (leg lengths).
+var FA_CH={H:3,D:3,E:3,P:3,O:3,OP:3,hs:1,os:1,ow:1,ot:1,rw:1,orw:1,py:1,sy:1,cy:1,sx:1,sz:1,hx:1,dy:1,fz:1,fx:1,ad:1,ah:1,ew:1,oc:1};
+var FA_DEF={H:[0,-.9,.2],D:[0,.8,.6],E:[0,0,1],P:[.4,-.9,-.3],O:[-.05,-.9,.12],OP:[-.4,-.9,-.3],hs:1,os:1,ow:1,ot:0,rw:0,orw:0,py:0,sy:0,cy:0,sx:0,sz:0,hx:0,dy:0,fz:0,fx:0,ad:0,ah:0,ew:1,oc:0};
+function faTrack(keys,o){
+  o=o||{};const K=[],cur=Object.assign({},FA_DEF,o.def||{});
+  keys.forEach(k=>{for(const c in k)if(c!='s')cur[c]=k[c];const q={s:k.s};for(const c in FA_CH)q[c]=Array.isArray(cur[c])?cur[c].slice():cur[c];K.push(q)});
+  const T=K.map(k=>k.s),C=[];
+  /* an impact key (o.brk: a slam's landing): every channel arrives at full speed and stops dead there, instead of easing
+     into it (the hammer struck the ground already at rest). Incoming tangent 1.5 x the segment's slope, outgoing 0. */
+  const BK=(o.brk||[]).map(x=>T.indexOf(x)).filter(i=>i>0&&i<T.length-1);
+  for(const c in FA_CH){const n=FA_CH[c];for(let j=0;j<n;j++){const Y=K.map(k=>n>1?k[c][j]:k[c]),M=V100A_mono(T,Y),MI=Array.from(M),MO=Array.from(M);
+    BK.forEach(i=>{const sl=(Y[i]-Y[i-1])/((T[i]-T[i-1])||1e-6);MI[i]=1.5*sl;MO[i]=0;if(Math.abs(MO[i-1])>2.5*Math.abs(sl))MO[i-1]=2.5*sl});
+    C.push({c,j,n,Y,MI,MO})}}
+  const out={};for(const c in FA_CH)out[c]=FA_CH[c]>1?[0,0,0]:0;
+  const f=function(s){const n=T.length;let x=Math.max(T[0],Math.min(T[n-1],s)),i=0;while(i<n-2&&x>T[i+1])i++;
+    const h=(T[i+1]-T[i])||1e-6,t=(x-T[i])/h,t2=t*t,t3=t2*t,a=2*t3-3*t2+1,b=(t3-2*t2+t)*h,c2=-2*t3+3*t2,d=(t3-t2)*h;
+    for(let m=0;m<C.length;m++){const q=C[m],v=a*q.Y[i]+b*q.MO[i]+c2*q.Y[i+1]+d*q.MI[i+1];if(q.n>1)out[q.c][q.j]=v;else out[q.c]=v}
+    return out};
+  f.keys=K;f.o=o;return f}
+// ---------------- the attacks ----------------
+var FA_A={};
+function faBuild(){
+  const R0={s:0,H:[0,-.85,.25],D:[0,.8,.6],E:[0,0,1],P:[.4,-.9,-.3],O:[-.05,-.9,.12],OP:[-.4,-.9,-.3],hs:1,ow:1,ot:0,py:0,sy:0,cy:0,sx:0,sz:0,dy:0,fz:0,fx:0,ad:0,ah:0};
+  const RE=Object.assign({},R0,{s:3});
+  // ---- one-handed (axe, club, sword): A forehand diagonal (high on the weapon side → low past the off hip), B overhead chop
+  // (a lift key first takes the weapon up outside the head; the follow-through finishes low in front, across toward the off
+  // hip; the recovery draws the hand in to the body first and lets the weapon rise close in, never further out than the hit)
+  const REC1=[{s:2.3,H:[-.15,-.55,.18],E:[0,-.3,1],P:[.6,-.8,-.4],py:-.18,sy:-.1,cy:-.04,sx:.18,sz:.03,dy:-.06,fz:.06},
+    {s:2.6,H:[-.05,-.42,.15],D:[-.05,.45,.88],E:[0,0,1],P:[.5,-.9,-.3],py:-.06,sy:-.03,cy:0,sx:.08,sz:0,dy:-.03,fz:.02,O:[-.05,-.85,.1],OP:[-.4,-.9,-.3]},
+    {s:2.85,H:[0,-.65,.2],D:[0,.85,.5]},RE];
+  FA_A.oneA=faTrack([R0,
+    {s:.25,H:[.35,-.3,.1],D:[.7,.55,.25],E:[0,1,0],P:[1,-.4,-.3],py:.15,sy:.08,O:[.08,-.55,.4]},
+    {s:.55,H:[.25,.35,-.3],D:[.4,-.3,-.85],E:[0,1,0],P:[1,.3,-.4],py:.35,sy:.2,cy:.1,sx:-.04,sz:-.06,dy:-.02,fz:-.05,O:[.15,-.3,.6],OP:[-.7,-.6,-.2]},
+    {s:1,H:[.3,.42,-.36],D:[.4,-.35,-.83],py:.42,sy:.25,cy:.12,sx:-.06,sz:-.08,dy:-.03,fz:-.07,O:[.18,-.28,.62]},
+    {s:1.18,H:[.2,.45,.15],D:[.25,.4,-.88],E:[0,1,0],P:[1,-.1,-.4],py:.15,sy:.05,cy:0,sx:.05,sz:0,dy:-.04,fz:0,O:[.05,-.5,.3]},
+    {s:1.30,H:[-.05,.25,.6],D:[.08,.97,-.2],E:[-.4,-.3,.9],P:[.9,-.3,-.4],py:-.15,sy:-.12,cy:-.06,sx:.2,sz:.04,dy:-.05,fz:.08},
+    {s:1.45,H:[-.3,-.25,.7],D:[-.35,.5,.8],E:[-.5,-.85,.1],P:[.8,-.6,-.1],py:-.25,sy:-.2,cy:-.1,sx:.25,sz:.06,dy:-.07,fz:.1,O:[-.1,-.7,-.15],OP:[-.6,-.6,-.6],ad:0,ah:0},
+    {s:1.75,H:[-.45,-.55,.58],D:[-.4,.2,.9],E:[-.2,-1,.15],P:[.7,-.7,-.2],py:-.38,sy:-.24,cy:-.12,sx:.3,sz:.08,dy:-.09,fz:.12},
+    {s:2,H:[-.42,-.65,.5],D:[-.35,0,.94],py:-.36,sy:-.22,cy:-.1,sx:.28,dy:-.09,fz:.11},
+    ].concat(REC1.map(k=>k.s==2.3?Object.assign({},k,{D:[-.15,.5,.85]}):k)));
+  FA_A.oneB=faTrack([R0,
+    {s:.25,H:[.3,-.15,.12],D:[.65,.6,.2],E:[0,1,0],P:[1,-.3,-.3],py:.08,O:[.08,-.55,.4]},
+    {s:.55,H:[0,.62,-.12],D:[.15,-.4,-.9],E:[0,1,0],P:[.9,.5,-.4],py:.18,sy:.1,sx:-.1,sz:-.03,dy:-.01,fz:-.05,O:[.15,-.25,.6],OP:[-.7,-.6,-.2]},
+    {s:1,H:[-.02,.7,-.15],D:[.15,-.45,-.88],py:.2,sy:.12,sx:-.13,sz:-.04,dy:-.02,fz:-.06,O:[.18,-.22,.62]},
+    {s:1.18,H:[-.05,.66,.22],D:[.05,.4,-.92],E:[0,1,0],P:[.9,.1,-.4],py:.05,sy:.02,sx:0,sz:0,dy:-.04,fz:0,O:[.05,-.5,.3]},
+    {s:1.30,H:[-.15,.25,.6],D:[0,.97,-.2],E:[0,-.3,1],P:[.8,-.3,-.5],py:-.08,sy:-.05,sx:.28,dy:-.06,fz:.09},
+    {s:1.45,H:[-.2,-.25,.7],D:[-.1,.48,.87],E:[0,-1,0],P:[.8,-.6,-.1],py:-.12,sy:-.08,sx:.32,dy:-.08,fz:.1,O:[-.1,-.7,-.15],OP:[-.6,-.6,-.6],ad:0,ah:0},
+    {s:1.75,H:[-.25,-.55,.62],D:[-.1,.25,1],E:[0,-1,.15],P:[.7,-.7,-.2],sx:.36,dy:-.1,fz:.12},
+    {s:2,H:[-.25,-.65,.52],D:[-.1,.02,1],sx:.34,dy:-.1,fz:.11}].concat(REC1.map(k=>k.s==2.3?Object.assign({},k,{D:[-.05,.5,.85],py:-.06,sy:-.04,cy:0}):k)));
+  // ---- one-handed slam: a leaping overhead chop into the ground (contact at the act's end), the off arm up for balance
+  FA_A.oneS=faTrack([R0,
+    {s:.35,H:[.05,-.72,.22],D:[.05,.6,.8],E:[0,-.3,1],P:[.5,-.8,-.4],O:[-.05,-.75,.2],OP:[-.6,-.7,-.4],sx:.18,dy:-.08,fz:-.02},
+    {s:.75,H:[0,.82,-.12],D:[.15,.4,-.9],E:[0,1,0],P:[.9,.5,-.3],O:[-.15,.7,.05],OP:[-.9,.4,-.2],py:.12,sy:.06,sx:-.2,sz:-.03,dy:.01,fz:-.04},
+    {s:1.05,H:[-.02,.88,-.15],D:[.15,.45,-.88],sx:-.23},
+    /* (the arc follows the fist's own geometry, the handle across the forearm: over the top the head hangs behind, then it
+       stands up over a forward-reaching forearm, angles down onto the target over a lowering one, and lands level in front
+       of hands pulled down and in, forearms hanging, elbows forward; the slam's earlier keys pointed the handle along the
+       forearm, which no wrist can, and the blade spun in the hand all the way down) */
+    {s:1.35,H:[-.02,.8,.12],D:[.12,.4,-.9],E:[0,1,0],P:[.9,.1,-.4],O:[-.1,.6,.25],py:.04,sx:-.08,dy:0},
+    {s:1.6,H:[-.1,.32,.58],D:[0,.97,-.2],E:[0,-.3,1],P:[.8,-.3,-.5],O:[-.05,.1,.45],sx:.2,dy:-.05,fz:.04},
+    {s:1.82,H:[-.12,-.2,.62],D:[-.05,.55,.83],E:[0,-1,.2],P:[.75,-.5,-.2],sx:.4,dy:-.12,fz:.07},
+    {s:2,H:[-.12,-.74,.34],D:[-.05,-.2,1],E:[0,-1,0],P:[.6,.1,.8],O:[.05,-.75,.45],OP:[-.6,-.6,-.3],py:-.08,sx:.55,dy:-.2,fz:.1,ah:1},
+    {s:2.25,H:[-.12,-.76,.33],D:[-.05,-.3,1],sx:.52,dy:-.19},
+    {s:2.6,H:[-.1,-.55,.45],D:[0,.5,.85],E:[0,0,1],P:[.5,-.9,-.2],O:[-.05,-.8,.15],OP:[-.4,-.9,-.3],py:-.03,sx:.18,dy:-.06,fz:.03,ah:0},
+    RE],{hw:[1.2,2.0],hwf:.02,hit:2,brk:[2]});
+  // ---- two-handed (great axe, hammer, greatsword): A overhead smash, B big diagonal; hands together at the midline, the
+  // off fist on the haft (ot: how far along the handle, from the weapon's own handle point)
+  const T0=Object.assign({},R0,{ow:1});
+  const REC2=[{s:2.3,H:[.05,-.55,.15],hs:.3,E:[0,-.3,1],P:[.6,-.8,-.4],OP:[-.6,-.8,-.4],py:-.05,sy:-.03,cy:0,sx:.25,sz:0,dy:-.08,fz:.06},
+    {s:2.6,H:[.1,-.38,.18],hs:.45,D:[.15,.55,.82],E:[0,0,1],py:0,sy:0,sx:.1,dy:-.03,fz:.02},
+    Object.assign({},RE,{s:2.85,ow:0}),RE];
+  FA_A.twoA=faTrack([T0,
+    {s:.25,H:[.3,-.1,.2],hs:.4,D:[.6,.65,0],E:[0,1,0],P:[1,-.3,-.3],OP:[-.6,-.6,-.2],py:.12,sy:.05},
+    {s:.6,H:[.12,.72,-.15],hs:0,D:[.25,-.35,-.9],E:[0,1,0],P:[.9,.4,-.3],OP:[-.9,.4,-.3],oc:1,py:.25,sy:.12,cy:.05,sx:-.15,sz:-.05,dy:-.03,fz:-.07},
+    {s:1,H:[.12,.78,-.18],D:[.25,-.4,-.88],py:.28,sy:.14,sx:-.18,sz:-.06,dy:-.04,fz:-.08},
+    {s:1.18,H:[.05,.8,.1],D:[.08,.4,-.91],E:[0,1,0],P:[.9,.1,-.4],OP:[-.9,.1,-.4],oc:.6,py:.1,sy:.03,cy:0,sx:-.02,sz:0,dy:-.04,fz:0},
+    {s:1.30,H:[0,.3,.6],D:[0,.97,-.2],E:[0,-.3,1],P:[.8,-.3,-.5],OP:[-.8,-.3,-.5],oc:0,py:-.03,sx:.32,dy:-.08,fz:.1},
+    {s:1.45,H:[0,-.25,.7],D:[0,.5,.86],E:[0,-1,0],P:[.8,-.6,-.1],OP:[-.8,-.6,-.1],py:-.05,sy:-.05,sx:.38,dy:-.1,fz:.12,ad:0,ah:0},
+    {s:1.75,H:[0,-.55,.6],D:[0,.2,1],E:[0,-1,.2],P:[.7,-.7,-.2],OP:[-.7,-.7,-.2],sx:.45,dy:-.13,fz:.14},
+    {s:2,H:[0,-.68,.5],D:[0,-.05,1],sx:.43,dy:-.13,fz:.13}].concat(REC2.map(k=>k.s==2.3?Object.assign({},k,{D:[.05,.5,.85]}):k)));
+  FA_A.twoB=faTrack([T0,
+    {s:.25,H:[.35,-.1,.15],hs:.4,D:[.7,.6,-.05],E:[0,1,0],P:[1,-.3,-.3],OP:[-.6,-.6,-.2],py:.18,sy:.08},
+    {s:.6,H:[.32,.58,-.2],hs:0,D:[.5,-.3,-.8],E:[.1,1,0],P:[1,.3,-.4],OP:[-.9,.2,-.3],oc:1,py:.4,sy:.22,cy:.1,sx:-.08,sz:-.1,dy:-.04,fz:-.07},
+    {s:1,H:[.35,.62,-.24],D:[.5,-.35,-.78],py:.48,sy:.26,cy:.12,sx:-.1,sz:-.12,dy:-.05,fz:-.08},
+    {s:1.18,H:[.35,.6,.2],D:[.3,.4,-.87],E:[0,1,0],P:[1,-.1,-.4],OP:[-.8,-.1,-.4],oc:.6,py:.2,sy:.1,cy:.04,sx:0,sz:-.04},
+    {s:1.30,H:[.12,.3,.6],D:[.1,.97,-.2],E:[-.6,-.3,.7],P:[.8,-.3,-.5],OP:[-.8,-.3,-.5],oc:0,py:-.15,sy:-.12,sx:.24,dy:-.07,fz:.1},
+    {s:1.45,H:[-.05,-.25,.7],D:[-.3,.5,.8],E:[-.6,-.8,.1],P:[.8,-.6,-.1],OP:[-.8,-.6,-.1],py:-.25,sy:-.2,cy:-.1,sx:.3,sz:.06,dy:-.1,fz:.12,ad:0,ah:0},
+    {s:1.75,H:[-.3,-.52,.5],D:[-.4,.2,.9],E:[-.3,-1,.2],P:[.7,-.7,-.2],OP:[-.7,-.7,-.2],oc:1,py:-.45,sy:-.28,cy:-.12,sx:.35,sz:.08,dy:-.12,fz:.13},
+    {s:2,H:[-.28,-.62,.44],D:[-.35,0,.94],py:-.42,sy:-.26,sx:.33,dy:-.12}].concat(REC2.map(k=>k.s==2.3?Object.assign({},k,{H:[0,-.55,.15],D:[-.15,.5,.85],py:-.15,sy:-.08,oc:.3}):
+      /* (the hands come back out to the weapon side before the blade stands up: it rose in front of the face) */k.s==2.6?Object.assign({},k,{H:[.2,-.45,.16],hs:.8,D:[.3,.5,.81]}):k)));
+  FA_A.twoS=faTrack([T0,
+    {s:.35,H:[.05,-.55,.3],hs:.3,D:[.1,.6,.8],E:[0,-.3,1],P:[.5,-.8,-.4],OP:[-.5,-.8,-.4],sx:.2,dy:-.1,fz:-.02},
+    {s:.75,H:[.08,.85,-.12],D:[.25,.3,-.92],P:[.9,.4,-.3],OP:[-.9,.4,-.3],oc:1,py:.12,sy:.05,sx:-.22,sz:-.03,dy:.01,fz:-.05},
+    {s:1.05,H:[.08,.9,-.15],D:[.25,.35,-.9],sx:-.25},
+    /* (the same arc as the one-handed slam: the head behind over the top, standing up, angled down, landing level) */
+    {s:1.35,H:[.05,.82,.1],D:[.08,.4,-.91],E:[0,1,0],P:[.9,.1,-.4],OP:[-.9,.1,-.4],oc:.6,py:.04,sx:-.1,dy:0},
+    {s:1.6,H:[0,.35,.58],D:[0,.97,-.2],E:[0,-.3,1],P:[.8,-.3,-.5],OP:[-.8,-.3,-.5],oc:0,sx:.2,dy:-.05,fz:.04},
+    {s:1.82,H:[0,-.2,.62],D:[0,.55,.83],E:[0,-1,.2],P:[.8,-.5,-.2],OP:[-.8,-.5,-.2],oc:.5,sx:.42,dy:-.14,fz:.08},
+    {s:2,H:[0,-.72,.34],D:[0,-.2,1],E:[0,-1,0],P:[.6,.1,.8],OP:[-.6,.1,.8],oc:1,py:-.04,sx:.58,dy:-.22,fz:.1,ah:1},
+    {s:2.25,H:[0,-.74,.33],D:[0,-.3,1],sx:.55,dy:-.21},
+    /* (the hands come back out to the weapon side before the blade stands up: it rose in front of the face) */
+    {s:2.6,H:[.2,-.45,.2],hs:.8,D:[.3,.5,.81],E:[0,0,1],P:[.5,-.9,-.2],OP:[-.5,-.9,-.2],oc:.3,py:0,sx:.2,dy:-.07,fz:.03,ah:0},
+    Object.assign({},RE,{s:2.88,ow:0}),RE],{hw:[1.2,2.0],hwf:.02,hit:2,brk:[2]});
+  // ---- polearm (halberd): A thrust (rear hand drives from the hip, spike at the target), B sweeping chop with the axe blade
+  FA_A.poleA=faTrack([T0,
+    /* (the front hand slides down the shaft as the halberd is brought round from the carry, then back up for the drive) */
+    {s:.25,oc:.8},{s:.4,ew:0,oc:.8},{s:.6,oc:.3,H:[.15,-.5,-.15],hs:.6,D:[-.06,.05,1],E:[0,1,0],ad:1,P:[.6,-.8,-.4],OP:[-.6,-.8,0],py:.4,sy:.2,cy:.05,sx:.05,sz:-.04,dy:-.05,fz:-.08},
+    {s:1,H:[.18,-.5,-.22],oc:0,py:.45,sy:.22,sx:.06,dy:-.06,fz:-.1},
+    {s:1.3,H:[.08,-.46,.05],py:.1,sy:.05,sx:.14,dy:-.07,fz:.04},
+    {s:1.45,H:[0,-.43,.24],D:[-.06,.05,1],py:-.3,sy:-.18,cy:-.06,sx:.26,sz:.03,dy:-.1,fz:.2,ad:1},
+    {s:1.75,H:[-.02,-.43,.27],D:[-.06,.03,1],py:-.32,sy:-.19,sx:.27,dy:-.1,fz:.21,ad:0},
+    {s:2,H:[0,-.45,.2],py:-.24,sy:-.12,sx:.2,dy:-.08,fz:.15},
+    {s:2.45,H:[.1,-.47,.05],hs:.8,D:[0,.45,.9],ew:1,py:0,sy:0,cy:0,sx:.06,sz:0,dy:-.03,fz:.03},
+    Object.assign({},RE,{s:2.85,ow:0}),RE]);
+  FA_A.poleB=faTrack([T0,
+    {s:.6,H:[.25,.2,-.12],hs:.5,D:[.35,.7,-.6],E:[.1,.5,.8],P:[1,-.1,-.4],OP:[-.8,-.5,-.2],py:.4,sy:.2,cy:.1,sx:-.08,sz:-.06,dy:-.03,fz:-.06},
+    {s:1,H:[.28,.3,-.2],D:[.35,.8,-.5],py:.46,sy:.24,cy:.12,sx:-.1,sz:-.08,dy:-.04,fz:-.08},
+    {s:1.25,H:[.2,.2,.25],D:[.15,.95,.3],E:[-.3,0,1],py:.2,sy:.1,cy:.04,sx:0,sz:-.02},
+    {s:1.35,H:[0,-.32,.27],hs:.6,oc:.5,D:[.05,.45,.9],py:-.15,sy:-.12,cy:-.06,sx:.28,sz:.04,dy:-.09,fz:.11,E:[-.3,-.8,.4]},
+    {s:1.45,H:[0,-.42,.25],hs:.6,oc:.8,D:[-.1,-.22,1],E:[-.1,-1,0],P:[.8,-.5,0],OP:[-.7,-.6,.1],py:-.2,sy:-.18,cy:-.1,sx:.3,sz:.05,dy:-.1,fz:.12,ad:1},
+    {s:1.75,H:[-.05,-.46,.28],D:[-.3,-.5,.8],E:[-.2,-1,.2],py:-.38,sy:-.25,cy:-.12,sx:.32,sz:.06,dy:-.12,fz:.13,ad:0},
+    {s:2,H:[-.05,-.48,.26],D:[-.3,-.55,.78],py:-.36,sy:-.23,sx:.3,dy:-.12},
+    {s:2.25,H:[-.04,-.5,.15],hs:.6,oc:.6,D:[-.22,-.45,.86],E:[0,-.3,1],P:[.6,-.8,-.4],py:-.2,sy:-.12,cy:-.05,sx:.2,dy:-.07,fz:.06},
+    {s:2.42,H:[-.03,-.5,.17],hs:.7,D:[-.15,.2,.97]},
+    {s:2.65,H:[-.01,-.62,.2],hs:.8,oc:0,D:[-.05,.7,.7],E:[0,0,1],P:[.6,-.8,-.2],OP:[-.6,-.8,-.2],py:-.05,sy:-.03,cy:0,sx:.1,sz:0,dy:-.03,fz:.03},
+    Object.assign({},RE,{s:2.85,ow:0}),RE]);
+  // ---- dagger: A a quick low thrust from the hip into the gut, B a fast slash from high across; the off hand reaches to grab
+  FA_A.dagA=faTrack([Object.assign({},R0,{ew:0}),
+    {s:.45,H:[.08,-.5,-.25],D:[-.2,.35,1],E:[0,1,0],ad:0,ah:1,P:[.5,-.7,-.6],O:[.15,-.3,.55],OP:[-.7,-.6,-.2],py:.3,sy:.2,cy:.08,sx:.12,sz:-.04,dy:-.05,fz:-.05},
+    {s:1,H:[.1,-.48,-.3],D:[-.2,.35,1],py:.34,sy:.22,cy:.1,sx:.14,dy:-.06,fz:-.06,O:[.18,-.28,.58]},
+    {s:1.25,H:[0,-.4,.3],D:[-.2,.35,1]},
+    {s:1.45,H:[-.15,-.25,.85],D:[-.2,.35,1],P:[.6,-.7,-.2],py:-.35,sy:-.2,cy:-.08,sx:.25,sz:.04,dy:-.08,fz:.14,O:[-.1,-.65,-.15],OP:[-.6,-.6,-.6],ah:1},
+    {s:1.75,H:[-.17,-.27,.88],D:[-.2,.3,1],py:-.38,sy:-.22,sx:.27,dy:-.09,fz:.15,ah:0,ad:0},
+    {s:2.1,H:[-.05,-.45,.45],D:[0,.4,1],py:-.15,sy:-.08,cy:0,sx:.12,dy:-.05,fz:.05,O:[-.05,-.8,.1],OP:[-.4,-.9,-.3]},
+    RE]);
+  /* (the slash keeps the blade across the forearm, as a fist holds it: back over the shoulder in the coil, standing up over
+     the forward-reaching forearm as it sweeps across, the edge leading; it pointed along the forearm before, past the wrist) */
+  FA_A.dagB=faTrack([R0,
+    {s:.45,H:[.25,.3,-.1],D:[.45,.25,-.85],E:[-.8,.5,-.1],P:[1,-.1,-.4],O:[.15,-.3,.55],OP:[-.7,-.6,-.2],py:.32,sy:.2,cy:.1,sx:.06,sz:-.06,dy:-.04,fz:-.05},
+    {s:1,H:[.28,.34,-.14],D:[.45,.28,-.85],py:.36,sy:.22,cy:.12,sx:.05,dy:-.05,fz:-.06,ah:1},
+    {s:1.3,H:[.15,-.05,.62],D:[.3,.8,.5],E:[-.8,-.3,.4],py:-.15,sy:-.1,sx:.18,fz:.1},
+    {s:1.45,H:[-.25,-.15,.7],D:[-.15,.75,.65],E:[-.9,-.3,0],P:[.8,-.5,0],py:-.3,sy:-.2,cy:-.1,sx:.22,sz:.05,dy:-.07,fz:.12,O:[-.1,-.65,-.15],OP:[-.6,-.6,-.6],ah:1,ad:0},
+    {s:1.75,H:[-.5,-.4,.5],D:[-.55,.55,.6],E:[-.4,-1,.1],py:-.42,sy:-.26,cy:-.12,sx:.26,dy:-.08,fz:.13,ah:0},
+    {s:2.1,H:[-.2,-.5,.4],D:[-.1,.3,1],E:[0,0,1],py:-.15,sy:-.08,cy:0,sx:.1,sz:0,dy:-.04,fz:.05,O:[-.05,-.8,.1],OP:[-.4,-.9,-.3]},
+    RE]);
+  // ---- staff cast (bolt; the bolt leaves at the act's start, s = 1): raise and gather with both hands on the staff, a held
+  // charge, then thrust the staff head at the target; the off hand rides the staff
+  FA_A.cast=faTrack([Object.assign({},R0,{ow:0}),
+    {s:.2,ow:1},
+    {s:.5,H:[.14,.1,.14],hs:.62,D:[.25,.95,-.1],E:[0,0,1],P:[.8,-.4,-.4],OP:[-.8,-.4,-.3],py:.2,sy:.1,cy:.05,sx:-.08,sz:-.03,hx:-.06,dy:-.02,fz:-.05},
+    {s:.74,H:[.14,.25,.09],hs:.62,D:[.22,.9,-.3],py:.25,sy:.12,cy:.06,sx:-.12,sz:-.04,hx:-.08,dy:-.03,fz:-.06},
+    {s:1,H:[-.05,.05,.62],D:[0,.75,.66],P:[.7,-.6,-.1],OP:[-.7,-.6,-.1],py:-.15,sy:-.1,cy:-.04,sx:.2,sz:.02,hx:0,dy:-.05,fz:.08},
+    {s:1.3,H:[-.05,.02,.6],D:[0,.78,.62],py:-.18,sy:-.12,sx:.22,dy:-.06,fz:.09},
+    {s:2,H:[-.02,-.1,.48],D:[0,.85,.52],py:-.1,sy:-.06,sx:.15,dy:-.04,fz:.06,ow:.8},
+    /* the off hand lets go of the staff as it comes down */{s:2.2,ow:.4},
+    {s:2.5,H:[0,-.5,.35],hs:.8,D:[0,.9,.4],P:[.5,-.9,-.3],OP:[-.5,-.9,-.3],py:0,sy:0,cy:0,sx:.04,sz:0,dy:-.01,fz:.01,ow:.2},
+    Object.assign({},RE,{s:2.8,ow:0}),Object.assign({},RE,{ow:0})]);
+  // ---- rainfire (casters; the fire lands at the act's end, s = 2): the staff raised high overhead, the off hand open and
+  // lifted, a long gathering call, then staff and hand drive down toward the target
+  FA_A.rain=faTrack([Object.assign({},R0,{ow:1}),
+    {s:.5,H:[0,.7,.05],hs:.2,D:[0,1,.1],E:[0,0,1],P:[.9,.2,-.3],O:[-.1,.72,.15],OP:[-.9,.2,-.3],sx:-.1,hx:-.15,dy:0,py:.05},
+    {s:1,H:[0,.82,0],D:[0,1,-.05],sx:-.16,hx:-.2,O:[-.12,.8,.1]},
+    {s:1.5,H:[0,.65,.3],D:[0,.9,.4],sx:-.05,hx:-.1,O:[-.1,.6,.35]},
+    {s:2,H:[-.05,-.1,.6],D:[0,-.15,1],P:[.7,-.6,0],O:[-.1,-.25,.62],OP:[-.7,-.6,0],sx:.25,hx:0,dy:-.07,fz:.08,py:-.1},
+    {s:2.35,H:[-.05,-.12,.56],D:[0,-.16,1],sx:.24,dy:-.07,fz:.08},
+    {s:2.7,H:[0,-.5,.35],D:[0,.9,.4],P:[.5,-.9,-.3],O:[-.05,-.85,.12],OP:[-.4,-.9,-.3],sx:.05,dy:-.01,fz:.01,py:0},
+    RE]);
+  // ---- sling (throw; the stone leaves at s = 1): whirl in an upright circle beside the body (clear of the head), faster and
+  // faster, then a sidearm release up at the target
+  {const K=[R0,{s:.12,H:[.3,-.1,.1],D:[.2,-.6,.8],E:[0,0,1],P:[1,-.4,-.3],py:.12,sy:.06,sx:-.02,O:[.15,-.3,.5],OP:[-.7,-.6,-.2]}];
+    const th=t=>Math.PI*2*(2.5*(t*t*.5+t*.5))-Math.PI/2;
+    for(let i=1;i<=14;i++){const t=i/14,u=.12+t*.83,a=th(t),r=.16;
+      K.push({s:u,H:[.45,.05+r*Math.sin(a),.05+r*Math.cos(a)],D:[.5,.85*Math.sin(a),.85*Math.cos(a)],P:[1,-.3,-.3],py:.12+.12*t,sy:.06+.06*t,sx:-.02-.04*t})}
+    K.push({s:1,H:[.12,0,.65],D:[0,.5,.87],P:[.8,-.6,-.2],py:-.2,sy:-.12,cy:-.05,sx:.15,dy:-.04,fz:.08,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6]},
+      {s:1.4,H:[-.15,-.15,.6],D:[-.3,-.3,.9],py:-.3,sy:-.18,sx:.2,dy:-.05,fz:.09},
+      {s:2.2,H:[-.1,-.6,.35],D:[0,-1,0],P:[.4,-.9,-.3],py:-.08,sy:-.04,cy:0,sx:.06,dy:-.02,fz:.03,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},RE);
+    FA_A.sling=faTrack(K)}
+  // ---- bow (throw; the arrow leaves at s = 1): raise the bow at the target and turn side-on, nock, draw to the cheek with
+  // the elbow high, a held aim, release (the string hand flicks back past the ear), hold the follow-through, lower
+  FA_A.bow=faTrack([Object.assign({},R0,{H:[0,-.9,.15],ow:0,O:[-.05,-.9,.12]}),
+    {s:.3,H:[-.55,-.02,.72],hs:1,P:[.6,-.6,-.5],O:[.05,-.02,.95],OP:[-.6,-.7,0],ow:1,py:.35,sy:.2,cy:.08,sx:.02,hx:0,dy:-.03},
+    {s:.85,H:[0,.2,.08],hs:.35,P:[1,.3,-.7],O:[.05,.02,.97],py:.5,sy:.3,cy:.12,sx:.04,dy:-.04},
+    {s:1,H:[0,.2,.07],hs:.35,O:[.05,.02,.97]},
+    {s:1.12,H:[.05,.24,-.15],hs:.7,P:[1,.2,-.4],O:[.05,.04,.96],py:.52,sy:.32},
+    {s:1.6,H:[.05,.2,-.12],O:[.05,.02,.95]},
+    {s:2.3,H:[0,-.7,.2],hs:1,P:[.4,-.9,-.3],O:[.0,-.5,.5],OP:[-.5,-.8,-.2],ow:.6,py:.1,sy:.05,cy:0,sx:0,dy:-.01},
+    Object.assign({},R0,{s:3,H:[0,-.9,.15],ow:0,O:[-.05,-.9,.12]})]);
+  // ---- unarmed (claws, fists, a fist round a club or anchor); repeats alternate arms where the foe has two
+  const U0=Object.assign({},R0,{H:[0,-.9,.15],rw:0,orw:0});
+  FA_A.rake=faTrack([U0,
+    {s:.45,H:[.3,.35,-.15],rw:.7,P:[1,.2,-.4],O:[.1,-.4,.45],OP:[-.7,-.6,-.2],py:.35,sy:.2,cy:.1,sx:.1,sz:-.05,dy:-.05,fz:-.05},
+    {s:1,H:[.33,.4,-.2],rw:.8,py:.4,sy:.22,cy:.12,sx:.12,dy:-.06,fz:-.06},
+    {s:1.3,H:[.1,.25,.45],rw:.4},
+    {s:1.45,H:[-.35,-.1,.8],rw:-.45,P:[.8,-.5,.1],py:-.3,sy:-.2,cy:-.1,sx:.3,sz:.05,dy:-.08,fz:.12,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6],ah:1},
+    {s:1.75,H:[-.6,-.55,.45],rw:-.55,py:-.45,sy:-.26,cy:-.12,sx:.35,dy:-.09,fz:.13,ah:0},
+    {s:2.2,H:[-.2,-.7,.3],rw:-.1,P:[.5,-.9,-.2],py:-.15,sy:-.08,cy:0,sx:.12,sz:0,dy:-.04,fz:.05,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},
+    Object.assign({},U0,{s:3})]);
+  FA_A.brute=faTrack([U0,
+    {s:.5,H:[.35,-.05,-.4],rw:.2,P:[.6,-.3,-1],O:[.15,-.2,.5],OP:[-.8,-.5,-.2],py:.45,sy:.3,cy:.15,sx:.05,sz:-.06,dy:-.04,fz:-.08},
+    {s:1,H:[.38,-.02,-.45],py:.5,sy:.32,cy:.16,sx:.06,dy:-.05,fz:-.09},
+    {s:1.3,H:[.15,0,.4],P:[1,.1,-.4]},
+    {s:1.45,H:[-.3,0,.8],rw:0,P:[1,.2,-.1],py:-.35,sy:-.25,cy:-.1,sx:.2,sz:.05,dy:-.08,fz:.12,O:[-.05,-.55,-.1],OP:[-.6,-.6,-.6],ah:1},
+    {s:1.75,H:[-.55,-.15,.55],py:-.5,sy:-.3,cy:-.12,sx:.25,dy:-.09,fz:.13,ah:0},
+    {s:2.25,H:[-.15,-.65,.35],P:[.5,-.9,-.2],py:-.15,sy:-.08,cy:0,sx:.1,sz:0,dy:-.04,fz:.05,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},
+    Object.assign({},U0,{s:3})]);
+  FA_A.golem=faTrack([U0,
+    {s:.25,H:[.38,-.3,.1],rw:.2,P:[1,-.4,-.3],py:.06},
+    {s:.55,H:[.25,.7,-.1],rw:.2,P:[.9,.5,-.3],O:[.12,-.25,.5],OP:[-.7,-.6,-.2],py:.15,sy:.08,sx:-.12,sz:-.04,dy:-.02,fz:-.05},
+    {s:1,H:[.24,.76,-.14],rw:.25,sx:-.15,py:.18,sy:.1,fz:-.06},
+    {s:1.3,H:[.05,.58,.4],rw:.3,P:[.9,.2,-.2],sx:0},
+    {s:1.45,H:[-.2,-.1,.75],rw:.35,P:[.5,.6,-.6],py:-.12,sy:-.08,sx:.32,dy:-.1,fz:.1,O:[-.1,-.6,-.1],OP:[-.6,-.6,-.6],ah:1},
+    {s:1.75,H:[-.25,-.6,.6],rw:.4,P:[.4,.3,-.7],sx:.38,dy:-.12,fz:.12,ah:0},
+    {s:2.3,H:[-.12,-.7,.3],rw:0,P:[.5,-.9,-.2],py:-.04,sy:-.02,sx:.12,dy:-.04,fz:.04,O:[-.05,-.85,.12],OP:[-.4,-.9,-.3]},
+    Object.assign({},U0,{s:3})]);
+  // ---- unarmed cast (the sand elemental's bolt): both hands drawn in to the chest, then pushed out at the target
+  FA_A.castU=faTrack([Object.assign({},U0,{O:[-.05,-.9,.15]}),
+    {s:.5,H:[-.05,-.25,.2],hs:.6,rw:.6,P:[.8,-.6,-.4],O:[.05,-.25,.2],os:.6,orw:.6,OP:[-.8,-.6,-.4],sx:-.08,dy:-.03,fz:-.05,hx:-.05},
+    {s:.95,H:[-.05,-.2,.15],rw:.7,O:[.05,-.2,.15],orw:.7,sx:-.12,fz:-.06},
+    {s:1.05,H:[-.15,-.05,.78],rw:-.5,P:[.7,-.6,0],O:[.15,-.05,.78],orw:-.5,OP:[-.7,-.6,0],sx:.2,dy:-.06,fz:.1,hx:0},
+    {s:1.5,H:[-.15,-.08,.75],sx:.2},
+    {s:2.3,H:[0,-.7,.3],hs:1,rw:0,P:[.5,-.9,-.2],O:[-.05,-.85,.12],os:1,orw:0,OP:[-.4,-.9,-.3],sx:.04,dy:-.01,fz:.01},
+    Object.assign({},U0,{s:3})]);
+}
+// (track names, for the tests)
+function faNames(){for(const k in FA_A)FA_A[k].nm=k}
+// which track plays: class, move, the foe's attack count (repeats alternate)
+function faPick(S,n){
+  const c=S.K.c;
+  if(c=='one'){if(n=='strike')return S.n%2?FA_A.oneB:FA_A.oneA;if(n=='slam')return FA_A.oneS}
+  if(c=='two'){if(n=='strike')return S.n%3==2?FA_A.twoB:FA_A.twoA;if(n=='slam'||n=='rainfire')return FA_A.twoS}
+  if(c=='pole'){if(n=='strike')return S.n%2?FA_A.poleA:FA_A.poleB}
+  if(c=='dag'){if(n=='strike')return S.n%2?FA_A.dagA:FA_A.dagB}
+  if(c=='staff'){if(n=='bolt')return FA_A.cast;if(n=='rainfire')return FA_A.rain}
+  if(c=='sling'){if(n=='throw')return FA_A.sling;if(n=='strike')return S.n%2?FA_A.oneB:FA_A.oneA}
+  if(c=='bow'){if(n=='throw')return FA_A.bow}
+  if(c=='claw'){if(n=='strike')return FA_A[S.K.arm]||FA_A.rake;if(n=='bolt')return FA_A.castU}
+  return null}
+// ---------------- helpers ----------------
+var FA_v=[],FA_q=[];for(let i=0;i<24;i++){FA_v.push(new THREE.Vector3());FA_q.push(new THREE.Quaternion())}
+var FA_M1=new THREE.Matrix4(),FA_M2=new THREE.Matrix4(),FA_SC=new THREE.Vector3(),FA_X=new THREE.Vector3(1,0,0),FA_NY=new THREE.Vector3(0,-1,0);
+const faSS=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
+function faWP(o,v){return v.setFromMatrixPosition(o.matrixWorld)}
+function faWQ(o,q){o.matrixWorld.decompose(FA_SC,q,FA_SC);return q}
+// set a bone's local rotation so its world rotation is Qw (parent's matrixWorld must be current); updates its subtree
+function faSetW(bn,Qw){const pq=faWQ(bn.parent,FA_q[20]);bn.quaternion.copy(pq.invert().multiply(Qw));bn.updateMatrixWorld(true)}
+// rotation taking local frame (ya, za) to world frame (yw, zw)
+function faFrameQ(ya,za,yw,zw,q){const xa=FA_v[16].crossVectors(ya,za).normalize(),za2=FA_v[17].crossVectors(xa,ya),xw=FA_v[18].crossVectors(yw,zw).normalize(),zw2=FA_v[19].crossVectors(xw,yw);
+  FA_M1.makeBasis(xw,yw,zw2);FA_M2.makeBasis(xa,ya,za2).transpose();FA_M1.multiply(FA_M2);return q.setFromRotationMatrix(FA_M1)}
+// two-bone IK: b2's origin to world point T, the middle joint toward world direction pole; bz = +1 (arm: the forearm folds
+// toward the upper arm's local +z) or −1 (leg: the shin folds toward −z). Sets b0 and b1 (local), matrices updated.
+function faIK(b0,b1,b2,T,pole,bz){
+  const S=faWP(b0,FA_v[0]),E=faWP(b1,FA_v[1]),W=faWP(b2,FA_v[2]),l1=S.distanceTo(E),l2=E.distanceTo(W);
+  const n=FA_v[3].subVectors(T,S);let d=n.length();if(d<1e-6||l1<1e-6||l2<1e-6)return;n.multiplyScalar(1/d);
+  d=Math.max(Math.abs(l1-l2)+1e-3,Math.min((l1+l2)*.9995,d));
+  const a=(l1*l1-l2*l2+d*d)/(2*d),hh=Math.sqrt(Math.max(0,l1*l1-a*a));
+  const pp=FA_v[4].copy(pole).addScaledVector(n,-pole.dot(n));if(pp.lengthSq()<1e-9){pp.set(0,0,1).addScaledVector(n,-n.z);if(pp.lengthSq()<1e-9)pp.set(1,0,0)}pp.normalize();
+  const Eg=FA_v[5].copy(S).addScaledVector(n,a).addScaledVector(pp,hh),U=FA_v[6].subVectors(Eg,S).normalize(),Tg=FA_v[7].copy(S).addScaledVector(n,d),F=FA_v[8].subVectors(Tg,Eg).normalize();
+  /* the bend's direction: the forearm folds back toward the line, i.e. away from the pole; a little of −pole is added so a
+     nearly straight limb keeps the same roll (it fell back to +pole below a threshold and the forearm flipped over) */
+  const bd=FA_v[9].copy(F).addScaledVector(U,-F.dot(U)).addScaledVector(FA_v[13].copy(pp).addScaledVector(U,-pp.dot(U)),-.02);if(bd.lengthSq()<1e-12)bd.copy(pp).negate();bd.normalize();
+  const u1=FA_v[10].copy(b1.position).normalize(),za=FA_v[11].set(0,0,bz).addScaledVector(u1,-u1.z*bz).normalize();
+  faSetW(b0,faFrameQ(u1,za,U,bd,FA_q[0]));
+  // the lower bone: its child's rest direction onto the forearm / shin direction
+  const q0=faWQ(b0,FA_q[1]).invert(),Fl=FA_v[12].copy(F).applyQuaternion(q0),u2=FA_v[13].copy(b2.position).normalize();
+  b1.quaternion.setFromUnitVectors(u2,Fl);b1.updateMatrixWorld(true)}
+// limit a local rotation: twist about axis (unit) to mt, the rest (swing) to ms
+function faClamp(q,ax,ms,mt){const d=q.x*ax.x+q.y*ax.y+q.z*ax.z,tw=FA_q[21].set(ax.x*d,ax.y*d,ax.z*d,q.w);if(tw.lengthSq()<1e-9)tw.identity();else tw.normalize();
+  const sw=FA_q[22].copy(q).multiply(FA_q[23].copy(tw).invert());
+  const lim=(r,m)=>{if(r.w<0){r.x=-r.x;r.y=-r.y;r.z=-r.z;r.w=-r.w}const an=2*Math.acos(Math.min(1,r.w));if(an>m)r.copy(FA_q[23].identity().slerp(r,m/an))};
+  lim(sw,ms);lim(tw,mt);return q.copy(sw).multiply(tw)}
+// put a hand's local rotation lq on b2, with half its twist about the forearm's axis u2 taken by the forearm b1 itself
+// (pronation turns the whole forearm, not just the wrist)
+function faTwist(b1,b2,lq,u2){const d=lq.x*u2.x+lq.y*u2.y+lq.z*u2.z,tw=FA_q[21].set(u2.x*d,u2.y*d,u2.z*d,lq.w);if(tw.lengthSq()<1e-9)tw.identity();else tw.normalize();
+  if(tw.w<0){tw.x=-tw.x;tw.y=-tw.y;tw.z=-tw.z;tw.w=-tw.w}const th=FA_q[22].identity().slerp(tw,.5);
+  b1.quaternion.multiply(th);b1.updateMatrixWorld(true);b2.quaternion.copy(th.invert().multiply(lq));b2.updateMatrixWorld(true)}
+// The wrist, as a real one moves (owner: the weapon must never visibly angle inside a closed fist). A local hand rotation
+// splits into the forearm's turn about its own axis (pronation, shared with the forearm by faTwist) and the wrist's bend:
+// about the axis along the handle (flexion / extension, which turns the weapon about its own handle) and about the axis
+// across it (radial / ulnar deviation, which changes the angle between handle and forearm). hH = the handle's axis in the
+// hand's frame (the carry grip). Limits: flex / extend 65°, ulnar 35°, radial 20°, pronation 100°. Past them only a little
+// is left to the weapon in the fist: 15° of tilt and 45° of roll about the round handle (FA_FIST).
+var FA_WL={flex:1.13,uln:.61,rad:.35,tw:1.75},FA_FIST={tilt:.26,roll:.785};
+// most a weapon may turn per 1/30 s (radians): aim d (ds in the strike's few fastest frames), roll about the handle r, the
+// elbow's place on its circle p, the weapon inside the fist f
+var FA_RATE={free:0,d:.5,ds:1.16,r:.35,p:.5,f:.08,s:.36};
+// (the forearm turn is kept continuous from frame to frame, ref = last frame's: read in (-180°, 180°] it wrapped from -181° to
+// +179°, and the clamp then turned the hand over by 200° in one frame)
+function faWristParts(lq,u2,hH,o,ref){const d=lq.x*u2.x+lq.y*u2.y+lq.z*u2.z;let tw=2*Math.atan2(d,lq.w);if(tw>Math.PI)tw-=2*Math.PI;if(tw<-Math.PI)tw+=2*Math.PI;
+  if(ref!=null&&isFinite(ref))tw+=2*Math.PI*Math.round((ref-tw)/(2*Math.PI));
+  const tq=FA_q[21].setFromAxisAngle(u2,tw),sq=FA_q[22].copy(lq).multiply(FA_q[23].copy(tq).invert());if(sq.w<0){sq.x=-sq.x;sq.y=-sq.y;sq.z=-sq.z;sq.w=-sq.w}
+  const sa=2*Math.acos(Math.min(1,sq.w)),sn=Math.sqrt(Math.max(0,1-sq.w*sq.w)),k=sn>1e-6?sa/sn:2;
+  const f=o.f||(o.f=hH.clone().addScaledVector(u2,-hH.dot(u2)).normalize()),dv=o.dv||(o.dv=new THREE.Vector3().crossVectors(u2,f));
+  /* + deviation turns the weapon's head away from the elbow (ulnar, as in a chop) */
+  if(o.sg==null){o.sg=1;const hd=hH.clone().negate(),t=hd.clone().applyAxisAngle(dv,.1);if(t.dot(u2)<hd.dot(u2))o.sg=-1}
+  o.tw=tw;o.flex=(sq.x*f.x+sq.y*f.y+sq.z*f.z)*k;o.dev=(sq.x*dv.x+sq.y*dv.y+sq.z*dv.z)*k*o.sg;return o}
+function faWristClamp(lq,u2,hH,o){faWristParts(lq,u2,hH,o,o.tw);const fl=Math.max(-FA_WL.flex,Math.min(FA_WL.flex,o.flex)),dv=Math.max(-FA_WL.rad,Math.min(FA_WL.uln,o.dev)),tw=Math.max(-FA_WL.tw,Math.min(FA_WL.tw,o.tw));
+  const v=o.f.clone().multiplyScalar(fl).addScaledVector(o.dv,dv*o.sg),an=v.length(),sq=an>1e-9?new THREE.Quaternion().setFromAxisAngle(v.multiplyScalar(1/an),an):new THREE.Quaternion();
+  return lq.copy(sq).multiply(new THREE.Quaternion().setFromAxisAngle(u2,tw))}
+// search the elbow's place on its circle (φ) and the hand's roll about the weapon axis together. Returns {pole, Qh}.
+// q0·(roll about Dw) = candidate hand rotation. Cost: past the wrist's limits (heavily past what the fist may take), a mild
+// pull toward a neutral wrist, the edge off its direction (weight ew; inside the edge window only rolls near the edge's are
+// tried), the elbow away from the designed pole, and change from last frame.
+var FA_BQ=[new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion()],FA_BV=[];for(let i=0;i<12;i++)FA_BV.push(new THREE.Vector3());
+function faBest(b0,b1,b2,T,poleD,q0,Dw,edH,Ew,ew,eSg,prev,hH,hard,lim,twRef,home){
+  const V=FA_BV,Q=FA_BQ,S=faWP(b0,V[0]),l1=S.distanceTo(faWP(b1,V[1])),l2=faWP(b1,V[1]).distanceTo(faWP(b2,V[2]));
+  const n=V[3].subVectors(T,S);let d=n.length();n.multiplyScalar(1/(d||1));d=Math.max(Math.abs(l1-l2)+1e-3,Math.min((l1+l2)*.9995,d));
+  const a=(l1*l1-l2*l2+d*d)/(2*d),hh=Math.sqrt(Math.max(0,l1*l1-a*a)),C=V[4].copy(S).addScaledVector(n,a),Tg=V[5].copy(S).addScaledVector(n,d);
+  const e1=V[6].copy(poleD).addScaledVector(n,-poleD.dot(n));if(e1.lengthSq()<1e-9){e1.set(0,0,1).addScaledVector(n,-n.z);if(e1.lengthSq()<1e-9)e1.set(1,0,0)}e1.normalize();
+  const e2=V[7].crossVectors(n,e1);
+  const u1=b1.position.clone().normalize(),za=new THREE.Vector3(0,0,1).addScaledVector(u1,-u1.z).normalize(),u2=b2.position.clone().normalize();
+  const E=V[8],U=V[9],F=V[10],bd=V[11],R0=Q[1],q1l=Q[2],Q1=Q[3],Qh=Q[4],tmpQ=new THREE.Quaternion(),tmpQ2v=new THREE.Vector3(),Fl=new THREE.Vector3(),ed=new THREE.Vector3(),wo={};
+  let best=null;
+  /* last frame's elbow, found on this frame's circle (the pole moves with the keys: "the same elbow" is a place, not an angle) */
+  if(prev&&prev.E){const v=prev.E.clone().sub(C);prev={ph:Math.atan2(v.dot(e2),v.dot(e1)),ro:0}}
+  const evalAt=(ph,ro,far)=>{
+    E.copy(C).addScaledVector(e1,hh*Math.cos(ph)).addScaledVector(e2,hh*Math.sin(ph));U.subVectors(E,S).normalize();F.subVectors(Tg,E).normalize();
+    bd.copy(F).addScaledVector(U,-F.dot(U));{const pc=tmpQ2v.copy(e1).multiplyScalar(Math.cos(ph)).addScaledVector(e2,Math.sin(ph));bd.addScaledVector(pc.addScaledVector(U,-pc.dot(U)),-.02)}if(bd.lengthSq()<1e-12)bd.copy(e1).multiplyScalar(-Math.cos(ph)).addScaledVector(e2,-Math.sin(ph));bd.normalize();
+    faFrameQ(u1,za,U,bd,R0);Fl.copy(F).applyQuaternion(tmpQ.copy(R0).invert());q1l.setFromUnitVectors(u2,Fl);Q1.copy(R0).multiply(q1l);
+    Qh.setFromAxisAngle(Dw,ro).multiply(q0);const lq=tmpQ.copy(Q1).invert().multiply(Qh);faWristParts(lq,u2,hH,wo,twRef);
+    const exF=Math.max(0,Math.abs(wo.flex)-FA_WL.flex),exD=Math.max(0,wo.dev-FA_WL.uln,-wo.dev-FA_WL.rad),exT=Math.max(0,Math.abs(wo.tw)-FA_WL.tw),tilt=Math.hypot(exD,exT);
+    let c=60*Math.pow(Math.max(0,tilt-FA_FIST.tilt*.8),2)+60*Math.pow(Math.max(0,exF-FA_FIST.roll*.8),2)+3*tilt*tilt+1.5*exF*exF
+      +.15*wo.flex*wo.flex+.4*wo.dev*wo.dev+.12*wo.tw*wo.tw+(1-Math.cos(ph))*.35
+      +(home&&home.k>0?home.k*(Math.pow(wo.tw-home.tw,2)+Math.pow(wo.flex-home.flex,2)+Math.pow(wo.dev-home.dev,2)+2*(1-Math.cos(ph))):0);
+    let ee=0;if(Ew&&ew>0){ed.copy(edH).applyQuaternion(Qh);ed.addScaledVector(Dw,-ed.dot(Dw));const el=ed.length();if(el>1e-6){const cs=eSg?eSg*ed.dot(Ew)/el:Math.abs(ed.dot(Ew)/el);ee=Math.acos(Math.max(-1,Math.min(1,cs)))}c+=ee*ee*(hard?6:.8*ew)}
+    // keep close to last frame's choice (no flicker between two equally good solutions). The change is costed per second, not
+    // per frame (divided by the frame's length, fk = 1 at 30 fps): at 60 fps the same motion takes the same path
+    if(prev){const dp=Math.atan2(Math.sin(ph-prev.ph),Math.cos(ph-prev.ph)),dr=Math.atan2(Math.sin(ro-prev.ro),Math.cos(ro-prev.ro)),ik=1/((lim&&lim.fk)||1);c+=far?(lim.fs?.6*(dp*dp+dr*dr)*ik:2+.4*(dp*dp+dr*dr)*ik):(dp*dp+dr*dr)*(lim?1:.6)*ik}
+    if(!best||c<best.c)best={c,ph,ro,ee,tilt,exF};};
+  // rolls to try: from last frame's hand (q0 = it, carried to the new aim) no further than lim allows; the first frame all
+  // round. The edge's own roll is tried too (within the limit).
+  if(lim&&prev){const ns=8;let aE=null;
+    if(Ew&&ew>0){ed.copy(edH).applyQuaternion(q0);ed.addScaledVector(Dw,-ed.dot(Dw));const t=Ew.clone().addScaledVector(Dw,-Ew.dot(Dw)).multiplyScalar(eSg||1);
+      if(ed.lengthSq()>1e-8&&t.lengthSq()>1e-8){ed.normalize();t.normalize();if(!eSg&&ed.dot(t)<0)t.negate();aE=Math.atan2(new THREE.Vector3().crossVectors(ed,t).dot(Dw),ed.dot(t));aE=Math.max(-lim.ro,Math.min(lim.ro,aE))}}
+    for(let i=-ns;i<=ns;i++)for(let j=-ns;j<=ns;j++)evalAt(prev.ph+lim.ph*i/ns,lim.ro*j/ns);
+    if(aE!=null)for(let i=-ns;i<=ns;i++)evalAt(prev.ph+lim.ph*i/ns,aE);
+    /* a far better pose elsewhere (the near one ran out of wrist) may still be taken: the change costs, and the hand's own
+       turn limit spreads it over frames */
+    /* (only inside the blow: in the slow parts of the move a swap shows as the hand turning back and forth) */
+    if(!lim.nf)for(let i=0;i<16;i++)for(let j=0;j<12;j++)evalAt((i-8)*Math.PI/8,j*Math.PI/6-Math.PI,1)}
+  else{for(let i=0;i<16;i++)for(let j=0;j<12;j++)evalAt((i-8)*Math.PI/8,j*Math.PI/6);
+    const p0=best.ph,r0=best.ro;for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)if(i||j)evalAt(p0+i*Math.PI/40,r0+j*Math.PI/40)}
+  const pole=new THREE.Vector3().copy(e1).multiplyScalar(Math.cos(best.ph)).addScaledVector(e2,Math.sin(best.ph));
+  return {pole,Qh:new THREE.Quaternion().setFromAxisAngle(Dw,best.ro).multiply(q0),c:best.c,ee:best.ee,ph:best.ph,ro:best.ro,tilt:best.tilt}}
+// the off fist's world turn on a two-handed haft (see the off hand in faApply): handle axis as in its own carry grip, palm
+// normal (the hand's +z, where the grip anchor sits) = the weapon hand's palm mirrored across the body, leaning toward the
+// weapon side and away from the body (from the chest out to the grip, square to the handle: up behind the head the hand is
+// under the handle, in front of the chest behind it)
+function faOffQ(S,we,Ww,toW,m2,pw,bc){const ya=new THREE.Vector3(0,1,0).applyQuaternion(Ww).normalize(),hO=new THREE.Vector3(0,1,0).applyQuaternion(S.oC).normalize(),
+    pL=new THREE.Vector3(0,0,1).addScaledVector(hO,-hO.z).normalize();
+  const mq=faWQ(m2,new THREE.Quaternion()),pm=new THREE.Vector3(0,0,1).applyQuaternion(mq),bq=faWQ(S.mA[0].parent,new THREE.Quaternion()),bi=bq.clone().invert();
+  const pb=pm.applyQuaternion(bi);pb.x=-pb.x;const aw=pw.clone().sub(bc);aw.addScaledVector(ya,-aw.dot(ya));if(aw.lengthSq()>1e-8)aw.normalize();/* (mostly from the body out to the shaft: the hand stays on the body's side of it, palm on the shaft) */const want=pb.applyQuaternion(bq).multiplyScalar(S.K.c=='staff'?1:.4).add(toW([S.K.c=='staff'?.5:.2,0,0],new THREE.Vector3())).addScaledVector(aw,S.K.c=='staff'?.5:1.1);want.addScaledVector(ya,-want.dot(ya));
+  if(want.lengthSq()<1e-6)want.copy(toW([1,0,0],new THREE.Vector3())).addScaledVector(ya,-ya.dot(toW([1,0,0],new THREE.Vector3())));
+  /* (followed on game time, 40 ms: the weapon hand's palm can turn over quickly as a staff is swung from the gather into
+     the thrust, and the off fist flipped round the shaft in a frame) */
+  want.normalize();if(S.oW&&S.dt>0){want.lerp(S.oW,Math.exp(-S.dt/.04));want.addScaledVector(ya,-want.dot(ya));if(want.lengthSq()<1e-6)want.copy(S.oW)}S.oW=want.clone().normalize();
+  return faFrameQ(hO,pL,ya,want.normalize(),new THREE.Quaternion()).clone()}
+// turn the weapon in the fist by Rp from its carry grip, keeping the point held in the fist where it is
+function faSetFist(we,Rp){const W=we.W,hd=we.C.hold,h=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z),ph=h.clone().applyQuaternion(W.quaternion).add(W.position);
+  W.quaternion.copy(Rp).multiply(we.C.q);W.position.copy(ph.sub(h.applyQuaternion(W.quaternion)));W.updateMatrixWorld(true)}
+// the weapon a hand holds (grip registry entry)
+function faWpn(h,side){const S=h._grip;if(!S||!S.L)return null;for(const e of S.L)if(e.side==side&&e.W&&e.W.parent)return e;return null}
+// ---------------- per foe state ----------------
+var FA_BN=['pelvis','spine','chest','neck','head','aR0','aR1','aR2','aL0','aL1','aL2','lh0','lh1','lh2','rh0','rh1','rh2'];
+function faState(g){
+  if(g._fa!==undefined)return g._fa;g._fa=null;
+  const h=g.h,b=h&&h.bones,key=g.hk179,K=key&&FA_K[key];
+  if(!K||!b||!b.aR0||!b.aL0||!b.spine||g._bo)return null;
+  if(!FA_A.oneA){faBuild();faNames()}
+  const S={K,key,n:0,ph:-1,base:{},last:null,fo:0,dirty:0,legs:!!(b.lh0&&b.lh1&&b.lh2&&b.rh0&&b.rh1&&b.rh2&&!h.nt)};
+  FA_BN.forEach(n=>{if(b[n])S.base[n]=new THREE.Quaternion()});S.py0=0;
+  return g._fa=S}
+// (the Euler values are kept exactly: the idle layer recognises its own last write by exact value, and a quaternion round
+// trip would make it add its fidget again every frame)
+function faSnap(S,b){if(!S.be)S.be={};for(const n in S.base){const r=b[n].rotation;S.base[n].copy(b[n].quaternion);(S.be[n]||(S.be[n]=[0,0,0])).splice(0,3,r.x,r.y,r.z)}S.pp=(S.pp||new THREE.Vector3()).copy(b.pelvis.position)}
+function faRestore(S,b){for(const n in S.base){const e=S.be[n];b[n].rotation.set(e[0],e[1],e[2])}b.pelvis.position.copy(S.pp)}
+// the move a foe is really doing (signature moves borrow these animation names with other timings)
+function faMove(g,a){const e=g._ie,n=e&&e.atk&&e.atk.n;return n||a.n}
+function faDrives(g,S,a){if(!FA.on||!a)return false;const n=faMove(g,a);if(!FA_MOVES[n]||a.n!==n)return false;return !!faPick(S,n)}
+// ---------------- the solve ----------------
+function faApply(g,S,a,now){
+  const h=g.h,b=h.bones,T=S.T,s=a.ph==0?S.sw(a.k):a.ph==1?1+a.k:2+S.sr(1-a.k),sT=S.rm?S.rm(s):s;
+  // WEAPON FACING (owner: a hard rule). The edge follows its keys all through the swing; once the downswing moves toward
+  // the target (the track's edge window, T.o.hw) it is turned onto the head's travel along the track. A two-edged blade
+  // picks its side once per swing. NOTHING JUMPS (owner: "the weapons flip around in the hand right before the swing"):
+  // the weapon's aim turns at most FA_RATE.d (FA_RATE.ds in the strike) and its roll about the handle FA_RATE.r per 1/30 s,
+  // the elbow FA_RATE.p, the weapon inside the fist FA_RATE.f, and each frame starts from the last frame's hand (carried
+  // along to the new aim), so the solver can never swap to another solution from one frame to the next.
+  let lead=null;const hwin=T.o.hw||[1.02,1.75],hwf=T.o.hwf||.35;let hardK=S.we&&S.we.edge?faSS((sT-hwin[0]+.25)/.25)*faSS((hwin[1]+hwf-sT)/hwf):0;
+  const pos=t=>{const Q=T(t),dn=Math.hypot(Q.D[0],Q.D[1],Q.D[2])||1;return new THREE.Vector3(Q.hs*S.hwU+Q.H[0]+Q.D[0]/dn*S.wlU,Q.H[1]+Q.D[1]/dn*S.wlU,Q.H[2]+Q.D[2]/dn*S.wlU)};
+  // through the coil the blade is already turned the way the downswing will need it (the edge on the coming travel,
+  // carried back to the weapon's present direction), so the edge is in place when the window opens — no turn-over then
+  let prep=null,kp=0;if(S.we&&S.we.edge&&sT>.35&&sT<hwin[0]+.15){const su=hwin[0]+.15,v=pos(su+.03).sub(pos(su-.03)),Qa=T(su),Qn=T(sT),da=new THREE.Vector3(Qa.D[0],Qa.D[1],Qa.D[2]).normalize(),dn=new THREE.Vector3(Qn.D[0],Qn.D[1],Qn.D[2]).normalize();
+    v.addScaledVector(da,-v.dot(da));if(v.length()>.02){v.normalize().applyQuaternion(new THREE.Quaternion().setFromUnitVectors(da,dn));v.addScaledVector(dn,-v.dot(dn));if(v.lengthSq()>1e-4){prep=v.normalize();kp=faSS((sT-.35)/.3)}}}
+  if(hardK>0){
+    const v=pos(sT+.03).sub(pos(sT-.03)),Q=T(sT),d=new THREE.Vector3(Q.D[0],Q.D[1],Q.D[2]).normalize();v.addScaledVector(d,-v.dot(d));if(v.length()>.02)lead=v.normalize();
+    /* only once the head moves toward the target (in the coil it follows the keys): by the track and by the real head's own
+       last move (a head still finishing its coil, behind its keys, is not yet leading with anything); once on, it stays on */
+    if(!S.hkOn){hardK*=lead?faSS((lead.z+.25)/.4):0;if(S.tv){const fz=new THREE.Vector3(0,0,1).applyQuaternion(faWQ(b.pelvis.parent,new THREE.Quaternion()));hardK*=faSS((S.tv.dot(fz)+.25)/.4)}}if(hardK>.5)S.hkOn=1}
+  const P=T(sT);S.sT=sT;S.hardK=hardK;
+  // the blow's few fastest frames (a strike's downswing to just past the hit, a slam's to its landing): the turn limits open up.
+  // The arm may swap to its other way of holding the weapon (forearm turned the other way round) only early in them, while the
+  // weapon is still high and moving fast, never in the last frames into the hit (it turned the blade over at the contact)
+  const th0=S.tHit!=null?S.tHit:S.mv=='strike'?1.45:1,inF=sT>th0-.35&&sT<th0+.15;
+  // blend in over the start of the wind-up, out over the end of the recovery
+  const w=faSS(s/.35)*faSS((3-s)/.8);if(w<=1e-4)return;
+  const side=S.side,mesh=b.pelvis.parent;
+  g.updateMatrixWorld(true);
+  // the stance's own weapon hand and elbow (the earlier layers' pose): the end of the recovery comes back to exactly these,
+  // so the blend back has nothing left to turn (it spun the weapon round its handle in the last frames)
+  const hb=faSS((sT-2.12)/.75),qHb=hb>0?faWQ(S.mA[2],new THREE.Quaternion()):null,eHb=hb>0?faWP(S.mA[1],new THREE.Vector3()).sub(faWP(S.mA[0],new THREE.Vector3())):null;
+  const mq=faWQ(mesh,FA_q[2]).clone(),toW=(arr,v)=>v.set(arr[0]*side,arr[1],arr[2]).applyQuaternion(mq);
+  // feet where the earlier layers put them
+  let fL,fR,qL,qR;if(S.legs){fL=faWP(b.lh2,new THREE.Vector3());fR=faWP(b.rh2,new THREE.Vector3());qL=faWQ(b.lh2,new THREE.Quaternion());qR=faWQ(b.rh2,new THREE.Quaternion())}
+  // ---- body ----
+  const am=S.am;
+  b.pelvis.rotation.y+=P.py*side*w*am;b.spine.rotation.y+=P.sy*side*w*am;if(b.chest)b.chest.rotation.y+=P.cy*side*w*am;
+  b.spine.rotation.x+=P.sx*w*am;b.spine.rotation.z-=P.sz*side*w*am;
+  if(b.head){b.head.rotation.y-=(P.py+P.sy+P.cy)*side*w*am*.7;b.head.rotation.x+=(-P.sx*.6+P.hx)*w*am}
+  if(S.legs){const LL=S.LL;b.pelvis.position.y+=P.dy*LL*w*am;b.pelvis.position.z+=P.fz*LL*w*am;b.pelvis.position.x+=P.fx*side*LL*w*am}
+  b.pelvis.updateMatrixWorld(true);
+  if(S.legs){const pole=toW([0,0,1],FA_v[14]).clone();
+    [[b.lh0,b.lh1,b.lh2,fL,qL,-1],[b.rh0,b.rh1,b.rh2,fR,qR,1]].forEach(([b0,b1,b2,f,q,sd])=>{
+      const pl=pole.clone().add(toW([.15*sd*side,0,0],FA_v[15]));faIK(b0,b1,b2,f,pl,-1);faSetW(b2,q)})}
+  // ---- arms ----
+  const m0=S.mA[0],m1=S.mA[1],m2=S.mA[2],o0=S.oA[0],o1=S.oA[1],o2=S.oA[2];
+  const sm=faWP(m0,FA_v[20]).clone(),so=faWP(o0,FA_v[21]).clone(),mid=sm.clone().add(so).multiplyScalar(.5),hw=sm.distanceTo(so)/2,A=S.U;
+  const sideW=toW([1,0,0],new THREE.Vector3());
+  // hand target, with the hit raised or lowered toward the target's chest (ad = how much this key aims)
+  // (at the hit the hand goes to where the weapon's head lands on the target's chest: hand a little above, head angled down;
+  // a slam's hand goes as low as puts the head, at its keyed angle, on the ground in front, whatever the arm and weapon size)
+  const H=P.H.slice();if(P.ah){if(S.slm){/* (a slam: the whole downswing shifted by what the landing key needs, so the hand keeps its
+    speed into the ground) */const want=(S.gy+.14*S.sc-S.slm[1]*S.wl-mid.y)/A;H[1]+=P.ah*Math.max(-.45,Math.min(.4,want-S.slm[0]))}
+    else{const want=(S.tgY+.12*S.wl-mid.y)/A;H[1]+=P.ah*Math.max(-.45,Math.min(.4,want-(S.ahH!=null?S.ahH:H[1])))}}
+  const tgt=mid.clone().addScaledVector(sideW,P.hs*hw).add(toW(H,new THREE.Vector3()).multiplyScalar(A));
+  /* never quite out of reach: a locked-straight arm has no elbow to turn on, and the solver's choice of how the forearm is
+     turned then jumped from frame to frame (the slam's landing) */
+  {const sh=faWP(m0,FA_v[22]),dv=FA_v[23].subVectors(tgt,sh),dl=dv.length(),mx=.95*S.A;if(dl>mx)tgt.copy(sh).addScaledVector(dv,mx/dl)}
+  const pole=toW(P.P,new THREE.Vector3()).normalize();
+  // hand: aim the weapon (head along D, edge toward E), or a natural wrist with flex rw
+  const we=S.we,u2=m2.position.clone().normalize();
+  if(we){const Wq=we.W.quaternion,headH=FA_NY.clone().applyQuaternion(Wq),edH=FA_X.clone().applyQuaternion(Wq),Dw=toW(P.D,new THREE.Vector3()).normalize();
+    /* the swing starts from where the weapon really is (a sling hangs, a staff stands): the aim eases from the carry's own
+       direction to the keys over the first part of the wind-up */
+    if(!S.D0){const d=FA_NY.clone().applyQuaternion(faWQ(we.W,new THREE.Quaternion()));S.D0=d}if(sT<.4)Dw.lerp(S.D0,1-faSS(sT/.4)).normalize();
+    if(P.ad){const sy=sm.y+(tgt.y-sm.y),y=Math.max(-.85,Math.min(.35,(S.tgY-sy)/(S.wl||1))),y2=Dw.y+(y-Dw.y)*P.ad,hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(1-y2*y2)/hl;Dw.set(Dw.x*k,y2,Dw.z*k)}
+    /* a slam's weapon rests where it struck (it trailed its aim a little at the impact and crept on after it, against the
+       recovery's reach limit: it rocked back and forth on the ground), then lifts with the recovery */
+    if(T.o.brk&&S.Dimp&&S.tHit!=null&&sT>S.tHit){const k=1-faSS((sT-S.tHit-.12)/.25);if(k>0)Dw.lerp(S.Dimp,k).normalize()}
+    const fk=Math.max(.25,Math.min(3,(S.dt||1/30)*30));
+    // the aim turns no faster than FA_RATE allows (the clamps below still hold)
+    if(S.Dp){const lim=(inF?FA_RATE.ds:FA_RATE.d)*fk,c=Math.max(-1,Math.min(1,S.Dp.dot(Dw))),an=Math.acos(c);
+      if(an>lim){const ax=new THREE.Vector3().crossVectors(S.Dp,Dw);if(ax.lengthSq()<1e-10)ax.set(0,1,0).cross(S.Dp);if(ax.lengthSq()<1e-10)ax.set(1,0,0);Dw.copy(S.Dp).applyAxisAngle(ax.normalize(),lim).normalize()}}
+    // the recovery never takes the head further toward the target than it was at the hit (it was read as a second blow)
+    {const fw=toW([0,0,1],new THREE.Vector3()),zh=tgt.clone().sub(faWP(b.pelvis,FA_v[22])).dot(fw);
+      const zt=zh+Dw.dot(fw)*S.wl;   /* the head's reach at the hit, interpolated between the frames either side of s 1.45 */
+      const th=S.tHit;if(th!=null&&sT>=th&&S.zHit==null)S.zHit=S.zp&&S.zp[0]<th?S.zp[1]+(zt-S.zp[1])*Math.min(1,(th-S.zp[0])/Math.max(1e-4,sT-S.zp[0])):zt;
+      S.zp=[sT,zt];
+      /* (eased in: the follow-through may reach on past the hit, the allowance shrinking smoothly to nothing by the recovery;
+         a clamp switched on all at once lifted the weapon back up mid-follow-through, read as a flicker) */
+      if(th!=null&&sT>th&&S.zHit!=null&&S.wl>0){const ex=th>1.9?0:.6*S.wl*(1-faSS((sT-th-.05)/(1.86-th-.05))),zL=(S.zHitA!=null?Math.min(S.zHit,S.zHitA):S.zHit)+.02*S.sc+ex,dz=Dw.dot(fw);S.zL=zL;let lim=(zL-zh)/S.wl;
+        /* the hand draws back first (no lift of the weapon against its swing: that read as a flicker), the weapon turns up
+           only for the rest */
+        if(dz>lim&&th<1.9){const mv=Math.min((dz-lim)*S.wl,.25*S.A*faSS((1.95-sT)/.15));tgt.addScaledVector(fw,-mv);lim+=mv/S.wl}
+        if(dz>lim){const c=Math.max(-1,Math.min(1,lim)),r=Dw.clone().addScaledVector(fw,-dz),rl=r.length();if(rl>1e-6)Dw.copy(r.multiplyScalar(Math.sqrt(1-c*c)/rl)).addScaledVector(fw,c)}}}
+    // never through the ground: the head stays a little above the foe's feet
+    {const fl=S.gy+.09*S.sc,hy=tgt.y;if(hy+Dw.y*S.wl<fl){const y2=Math.max(-1,Math.min(1,(fl-hy)/(S.wl||1))),hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(Math.max(0,1-y2*y2))/hl;Dw.set(Dw.x*k||0,y2,Dw.z*k||Math.sqrt(Math.max(0,1-y2*y2)))}}
+    // any hand orientation with the weapon along Dw: a roll about Dw of this one
+    const q0=S.Dp&&S.Qp?new THREE.Quaternion().setFromUnitVectors(S.Dp,Dw).multiply(S.Qp):new THREE.Quaternion().setFromUnitVectors(headH,Dw);
+    S.Dp=Dw.clone();
+    const Eb=new THREE.Vector3(P.E[0],P.E[1],P.E[2]).normalize();if(prep&&kp>0)Eb.lerp(prep,kp*(1-hardK)).normalize();if(lead)Eb.lerp(lead,hardK).normalize();
+    let ew=we.edge?P.ew*Math.max(hardK,faSS(sT/.3)*faSS((2.35-sT)/.3),1.3*kp*(1-hardK)):0;
+    let Ew=we.edge?toW([Eb.x,Eb.y,Eb.z],new THREE.Vector3()).normalize():null;
+    /* a two-edged blade picks its side once, as the downswing starts (before that either edge will do) */if(we.edge==2&&hardK>0&&!S.eSg){const e0=edH.clone().applyQuaternion(q0);S.eSg=e0.dot(Ew)<0?-1:1}const eSg=we.edge==2?(S.eSg||0):1;
+    const hH=S.hH||(S.hH=new THREE.Vector3(0,1,0).applyQuaternion(we.C.q).normalize());
+    // choose the roll and where the elbow goes together: a natural wrist first, the edge leading, the elbow near its pole
+    const r=faBest(m0,m1,m2,tgt,pole,q0,Dw,edH,Ew,ew,eSg,S.bp,hH,!!(we.edge&&hardK>.5&&P.ew>0),S.bp?{ro:(inF?2.5:1)*FA_RATE.r*fk,ph:(inF?2:1)*FA_RATE.p*fk,fs:(inF&&sT<th0-.12)||FA_RATE.free,fk,nf:sT<hwin[0]-.3||sT>th0+.2}:null,S.bp&&S.wo?S.wo.tw:null,S.wh?{tw:S.wh.tw,flex:S.wh.flex,dev:S.wh.dev,k:3*faSS((sT-2.15)/.35)}:null);S.Qp=r.Qh.clone();
+    if(hb>0){r.Qh.slerp(qHb,hb);const n=tgt.clone().sub(faWP(m0,new THREE.Vector3())).normalize(),pb=eHb.clone().addScaledVector(n,-eHb.dot(n));if(pb.lengthSq()>1e-8)r.pole.lerp(pb.normalize(),hb).normalize();S.Qp=r.Qh.clone()}
+    faIK(m0,m1,m2,tgt,r.pole,1);S.bp={E:faWP(m1,new THREE.Vector3()),ph:r.ph};
+    const q1=faWQ(m1,FA_q[3]),lq=q1.clone().invert().multiply(r.Qh);faWristClamp(lq,u2,hH,S.wo||(S.wo={}));if(!S.wh){S.wh={tw:S.wo.tw,flex:S.wo.flex,dev:S.wo.dev};}if(FA.dbg){const o=S.wo;FA.dbg.wp=[o.flex,o.dev,o.tw].map(x=>+(x*57.3).toFixed(0));FA.dbg.rt=+(r.tilt*57.3).toFixed(0);FA.dbg.fa=+(Math.acos(Math.max(-1,Math.min(1,faWP(m2,new THREE.Vector3()).sub(faWP(m1,new THREE.Vector3())).normalize().dot(Dw))))*57.3).toFixed(0);FA.dbg.carry=+(Math.acos(Math.max(-1,Math.min(1,-hH.dot(u2))))*57.3).toFixed(0)}faTwist(m1,m2,lq,u2);
+    const hHw=q=>(S.hH||new THREE.Vector3(0,1,0)).clone().applyQuaternion(q).normalize();
+    // and the hand itself never turns faster than that (a key the wrist can't reach makes the weapon lag, never jump)
+    {const qa=faWQ(m2,new THREE.Quaternion());if(S.Hp){let ch=0;
+      /* its turn about the weapon's handle (what spins the blade) is held to FA_RATE.s */
+      {const d=qa.clone().multiply(S.Hp.clone().invert()),ax=hHw(qa);let sp=2*Math.atan2(d.x*ax.x+d.y*ax.y+d.z*ax.z,d.w);if(sp>Math.PI)sp-=2*Math.PI;if(sp<-Math.PI)sp+=2*Math.PI;
+        const ls=FA_RATE.s*(inF?1:.85)*fk;if(Math.abs(sp)>ls){qa.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,-(sp-Math.sign(sp)*ls)));ch=1}}
+      const an=2*Math.acos(Math.min(1,Math.abs(S.Hp.dot(qa)))),lim=(inF?FA_RATE.ds:FA_RATE.d)*fk;
+      if(an>lim){const tq=qa.clone();qa.copy(S.Hp).slerp(tq,lim/an);ch|=2}
+      /* outside the blow the hand follows its solved turn through a short smoothing (35 ms, on game time): two nearly equal
+         solutions no longer make it turn back and forth from frame to frame */
+      if(S.dt>0&&!(we.edge?sT>hwin[0]-.3&&sT<th0+.25:sT>th0-.15&&sT<th0+.15)){const tq=qa.clone();qa.copy(S.Hp).slerp(tq,1-Math.exp(-S.dt/.035));ch|=4}
+if(ch)faSetW(m2,qa)}S.Hq0=S.Hp;S.Hp=qa.clone()}
+    // the little the wrist can't give, the weapon makes inside the fist: never more than FA_FIST (15° of tilt, 45° of roll
+    // about the round handle), so it never visibly angles in the closed hand
+    {const W=we.W,qa=faWQ(m2,new THREE.Quaternion()),R=qa.clone().invert().multiply(r.Qh),d=R.x*hH.x+R.y*hH.y+R.z*hH.z;let ro=2*Math.atan2(d,R.w);if(ro>Math.PI)ro-=2*Math.PI;if(ro<-Math.PI)ro+=2*Math.PI;
+      const tq=new THREE.Quaternion().setFromAxisAngle(hH,Math.max(-FA_FIST.roll,Math.min(FA_FIST.roll,ro))),sq=R.clone().multiply(new THREE.Quaternion().setFromAxisAngle(hH,ro).invert());
+      if(sq.w<0){sq.x=-sq.x;sq.y=-sq.y;sq.z=-sq.z;sq.w=-sq.w}const ta=2*Math.acos(Math.min(1,sq.w));if(ta>FA_FIST.tilt)sq.copy(new THREE.Quaternion().slerp(sq,FA_FIST.tilt/ta));
+      const Rp=sq.multiply(tq);if(S.Rf){const an=2*Math.acos(Math.min(1,Math.abs(S.Rf.dot(Rp)))),lim=FA_RATE.f*(inF?4:1)*fk;if(an>lim){const tR=Rp.clone();Rp.copy(S.Rf).slerp(tR,lim/an)}}
+      S.Rf=Rp.clone();/* (blended in and out with the pose, w) */faSetFist(we,new THREE.Quaternion().slerp(Rp,w));
+      {const tp=W.localToWorld(new THREE.Vector3(0,-(W.userData.faLen||.8),0));if(S.tp){const dv=tp.clone().sub(S.tp);if(dv.length()>.004*S.sc)S.tv=dv.normalize()}S.tp=tp}
+      if(T.o.brk&&S.tHit!=null&&sT>=S.tHit&&!S.Dimp)S.Dimp=FA_NY.clone().applyQuaternion(faWQ(W,new THREE.Quaternion()));
+      /* the head's real reach at the hit (the weapon may trail its aim a little): the recovery is held to the smaller one */
+      {const th=S.tHit,fw=toW([0,0,1],new THREE.Vector3()),z=W.localToWorld(new THREE.Vector3(0,-(W.userData.faLen||.8),0)).sub(faWP(b.pelvis,new THREE.Vector3())).dot(fw);
+        /* and if the real head (trailing its aim) is still further out than that, the hand turns it back this frame */
+        if(th!=null&&sT>th+.02&&S.zL!=null&&z>S.zL){const hp=faWP(m2,new THREE.Vector3()),tp=W.localToWorld(new THREE.Vector3(0,-(W.userData.faLen||.8),0)),v=tp.sub(hp),vp=v.clone().addScaledVector(fw,-v.dot(fw)),ax=new THREE.Vector3().crossVectors(v,fw);
+          const bud=S.Hq0&&sT<2?(inF?FA_RATE.ds:FA_RATE.d)*fk-2*Math.acos(Math.min(1,Math.abs(S.Hq0.dot(faWQ(m2,new THREE.Quaternion()))))):.22;
+          if(ax.lengthSq()>1e-10&&bud>0){const th2=Math.min(.22,.1*fk,bud,(z-S.zL)/Math.max(.05*S.wl,vp.length()));faSetW(m2,faWQ(m2,new THREE.Quaternion()).premultiply(new THREE.Quaternion().setFromAxisAngle(ax.normalize(),-th2)));S.Hp=faWQ(m2,new THREE.Quaternion())}}
+        if(th!=null&&sT>=th&&S.zHitA==null)S.zHitA=S.zpA&&S.zpA[0]<th?S.zpA[1]+(z-S.zpA[1])*Math.min(1,(th-S.zpA[0])/Math.max(1e-4,sT-S.zpA[0])):z;S.zpA=[sT,z]}
+      // how far the weapon ended from its aim (diagnostic for authoring: a key the arm can't reach shows here)
+      const got=FA_NY.clone().applyQuaternion(faWQ(W,new THREE.Quaternion())),err=Math.acos(Math.max(-1,Math.min(1,got.dot(Dw))));if(w>.5&&err>(S.errM||0)){S.errM=err;S.errS=sT}}
+    if(FA.dbg){FA.dbg.s=s;FA.dbg.want=Dw.clone();FA.dbg.head=FA_NY.clone().applyQuaternion(faWQ(we.W,new THREE.Quaternion()));FA.dbg.c=r.c;FA.dbg.sw=r.sw;FA.dbg.tw=r.tw;FA.dbg.ee=r.ee}}
+  else{faIK(m0,m1,m2,tgt,pole,1);if(P.rw){const lq=new THREE.Quaternion().setFromAxisAngle(FA_X,P.rw);m2.quaternion.copy(lq);m2.updateMatrixWorld(true)}}
+  // ---- off hand ----
+  if(P.ow>1e-3){let ot=null;
+    if(S.haft&&we){
+      // on the haft: the off fist round the handle at weapon point ot, closing on it from the near side (owner: the off hand
+      // gripped the staff from the far side, its forearm across the chest). The handle runs through the fist as in the off
+      // hand's own carry (thumb toward the same end); the palm faces the way the weapon hand's palm does, mirrored across
+      // the body (both hands on the body's side of the shaft, palms away from the body, knuckles out, as on a quarterstaff)
+      // (the grip slides along the handle, up to 0.3 weapon units, if the off arm can't reach its point)
+      const Ww=faWQ(we.W,new THREE.Quaternion()),oL=faWP(o0,FA_v[22]).distanceTo(faWP(o1,FA_v[23]))+faWP(o1,FA_v[22]).distanceTo(faWP(o2,FA_v[23]));
+      let pw=null,bc=1e9;for(let k=-6;k<=6;k++){const p2=we.W.localToWorld(new THREE.Vector3(0,S.ot0*(1-.6*Math.max(0,Math.min(1,P.oc)))+P.ot+k*.05,0)),c=10*Math.max(0,p2.distanceTo(so)-.97*oL)+Math.abs(k)*.05*.02;if(c<bc){bc=c;pw=p2}}
+      const qh=faOffQ(S,we,Ww,toW,m2,pw,faWP(S.mA[0].parent,new THREE.Vector3()));
+      const an=S.oAn.clone().multiplyScalar(o2.matrixWorld.getMaxScaleOnAxis()).applyQuaternion(qh);ot=pw.sub(an);
+      const op=toW(P.OP,new THREE.Vector3()).normalize(),l2o=faWP(o1,FA_v[22]).distanceTo(faWP(o2,FA_v[23])),ei=ot.clone().addScaledVector(o2.position.clone().normalize().applyQuaternion(qh),-l2o).sub(so);
+      if(ei.lengthSq()>1e-8){const ke=S.K.c=="staff"?.65:.9;op.multiplyScalar(1-ke).addScaledVector(ei.normalize(),ke).normalize()}
+      /* and the elbow kept on the shoulder's side of the shaft, so the forearm comes to the grip from there, never across */
+      {const ya=new THREE.Vector3(0,1,0).applyQuaternion(Ww).normalize(),aw=so.clone().sub(pw);aw.addScaledVector(ya,-aw.dot(ya));if(aw.lengthSq()>1e-8)op.addScaledVector(aw.normalize(),.15).normalize()}
+      /* (if the wrist can't turn the whole way, the fist's grip point lands elsewhere: the wrist is moved so the grip point
+         is on the shaft for the turn the hand really has, and the arm solved again) */
+      const u2o=o2.position.clone().normalize(),anL=S.oAn.clone().multiplyScalar(o2.matrixWorld.getMaxScaleOnAxis()),gp=ot.clone().add(an);let lq2=null;ot=ot.clone();
+      for(let it=0;it<3;it++){faIK(o0,o1,o2,ot,op,1);const q1o=faWQ(o1,new THREE.Quaternion());lq2=q1o.clone().invert().multiply(qh);faClamp(lq2,u2o,1.3,2.6);
+        const qr=q1o.multiply(lq2),miss=gp.clone().sub(faWP(o2,new THREE.Vector3()).add(anL.clone().applyQuaternion(qr)));if(miss.length()<.002*S.sc)break;ot.add(miss)}
+      faTwist(o1,o2,lq2,u2o)}
+    else if(S.bw){
+      // the bow held out at the target in the off fist: limbs upright (top a little forward), string toward the archer
+      ot=mid.clone().addScaledVector(sideW,-P.os*hw).add(toW(P.O,new THREE.Vector3()).multiplyScalar(A));
+      faIK(o0,o1,o2,ot,toW(P.OP,new THREE.Vector3()).normalize(),1);
+      const W=S.bw.W,yw=toW([0,1,.12],new THREE.Vector3()).normalize(),xw=toW([.12,0,-1],new THREE.Vector3()).normalize();
+      const Qw=faFrameQ(new THREE.Vector3(0,1,0),new THREE.Vector3(1,0,0),yw,xw,new THREE.Quaternion()),qh=Qw.multiply(W.quaternion.clone().invert());
+      const q1o=faWQ(o1,new THREE.Quaternion()),u2o=o2.position.clone().normalize(),lq2=q1o.clone().invert().multiply(qh);faClamp(lq2,u2o,1.3,2.2);
+      const k=faSS(P.ow);o2.quaternion.copy(S.base[o2.name]).slerp(lq2,k);o2.updateMatrixWorld(true)}
+    else if(S.shN){
+      // the shield held up in front of the chest, face toward the target, pushed out a little at the hit
+      const push=.12*Math.exp(-Math.pow((s-1.45)/.22,2));ot=mid.clone().addScaledVector(sideW,-hw).add(toW([.2,-.38+push*.3,.45+push],new THREE.Vector3()).multiplyScalar(A));
+      faIK(o0,o1,o2,ot,toW([-.8,-.6,-.15],new THREE.Vector3()).normalize(),1);
+      const q1o=faWQ(o1,new THREE.Quaternion()),nc=S.shN.clone().applyQuaternion(q1o),nd=toW([-.25,.1,1],new THREE.Vector3()).normalize();
+      const qh=new THREE.Quaternion().setFromUnitVectors(nc,nd).multiply(q1o),lq2=q1o.invert().multiply(qh);faClamp(lq2,o2.position.clone().normalize(),1.3,1.6);o2.quaternion.copy(lq2);o2.updateMatrixWorld(true)}
+    else{ot=mid.clone().addScaledVector(sideW,-P.os*hw).add(toW(P.O,new THREE.Vector3()).multiplyScalar(A));
+      faIK(o0,o1,o2,ot,toW(P.OP,new THREE.Vector3()).normalize(),1);
+      if(P.orw){o2.quaternion.copy(S.base[o2.name]);o2.rotateX(P.orw)}o2.updateMatrixWorld(true)}}
+  // ---- blend every touched bone from the earlier layers' pose by w (the off arm by w·ow; the bow arm blends itself) ----
+  /* (on a haft the fist holds on fully until it really lets go, then leaves it: a fist 5 % of the way to its rest pose was
+     already off the shaft while still "holding" it) */
+  const ow=w*Math.min(1,P.ow),owk=S.haft&&we?w*faSS((Math.min(1,P.ow)-.3)/.62):ow;S.owE=ow;
+  for(const n in S.base){const bn=b[n];if(!bn)continue;let k=w;if(bn===o0||bn===o1||bn===o2)k=owk;
+    if(n=='pelvis'||n=='spine'||n=='chest'||n=='head')continue;   // already scaled by w
+    if(S.legs&&/^(lh|rh)/.test(n))k=Math.min(1,w*3);   // solved from the weighted pelvis: planted for most of the blend
+    if(S.bw&&bn===o2)k=w;
+    if(k<1)bn.quaternion.copy(S.base[n].clone().slerp(bn.quaternion,k))}
+  // the drawn string and nocked arrow (the bow foes' own helper): drawn from the nock (s .3) to the anchor (.85), loose at s = 1
+  // the weapon's spin about its own handle in the world, on the final (blended) pose: at most FA_RATE.s per 1/30 s, made up
+  // by the round handle turning in the fist (within FA_FIST.roll) — the hand's turn can't flip the blade over in one frame
+  if(we&&we.W.parent){g.updateMatrixWorld(true);const W=we.W,hH=S.hH,fk=Math.max(.25,Math.min(3,(S.dt||1/30)*30)),qw=faWQ(W,new THREE.Quaternion());
+    if(S.Wq&&hH){const d=qw.clone().multiply(S.Wq.clone().invert()),ax=new THREE.Vector3(0,1,0).applyQuaternion(qw);let sp=2*Math.atan2(d.x*ax.x+d.y*ax.y+d.z*ax.z,d.w);if(sp>Math.PI)sp-=2*Math.PI;if(sp<-Math.PI)sp+=2*Math.PI;
+      const lm=FA_RATE.s*fk;if(Math.abs(sp)>lm){const Rp=W.quaternion.clone().multiply(we.C.q.clone().invert());let rc=2*Math.atan2(Rp.x*hH.x+Rp.y*hH.y+Rp.z*hH.z,Rp.w);if(rc>Math.PI)rc-=2*Math.PI;if(rc<-Math.PI)rc+=2*Math.PI;
+        const dl=Math.max(-FA_FIST.roll,Math.min(FA_FIST.roll,rc-(sp-Math.sign(sp)*lm)))-rc;Rp.multiply(new THREE.Quaternion().setFromAxisAngle(hH,dl));faSetFist(we,Rp);S.Rf=Rp.clone();qw.copy(faWQ(W,new THREE.Quaternion()))}}
+    S.Wq=qw}
+  if(S.bw&&g.bowW){g.updateMatrixWorld(true);const dr=s<.3||s>=1?0:faSS((s-.3)/.55)*.97+.03,gr=w*faSS((s-.15)/.15)*faSS((2.2-s)/.3);try{eBowFxSet(g,dr,gr)}catch(e){}}
+  S.dirty=1}
+// remember the final pose (for a fade-out when an attack is cut short)
+function faKeep(S,b){if(!S.last)S.last={};for(const n in S.base){(S.last[n]||(S.last[n]=new THREE.Quaternion())).copy(b[n].quaternion)}S.lp=(S.lp||new THREE.Vector3()).copy(b.pelvis.position)}
+function faFade(S,b,dt){S.fo=Math.max(0,S.fo-dt/.15);const k=faSS(S.fo);for(const n in S.last)b[n].quaternion.slerp(S.last[n],k);b.pelvis.position.lerp(S.lp,k);S.dirty=1}
+// set up a new attack: track, side, sizes
+function faBegin(g,S,a){
+  const h=g.h,b=h.bones,n=faMove(g,a);S.n++;S.T=faPick(S,n);S.mv=n;S.side=S.K.alt&&n=='strike'&&S.n%2==0?-1:1;
+  const R=['aR0','aR1','aR2'].map(x=>b[x]),L=['aL0','aL1','aL2'].map(x=>b[x]);S.mA=S.side>0?R:L;S.oA=S.side>0?L:R;
+  g.updateMatrixWorld(true);
+  const p=k=>faWP(k,new THREE.Vector3());S.A=p(S.mA[0]).distanceTo(p(S.mA[1]))+p(S.mA[1]).distanceTo(p(S.mA[2]));
+  // the size the swing is drawn at: the arm's length, but no more than 1.6 torsos (a troll's or amalgam's very long arms
+  // would otherwise sweep huge arcs)
+  S.U=Math.min(S.A,1.6*Math.max(.05,p(S.mA[0]).y-p(b.pelvis).y));
+  S.LL=S.legs?b.lh1.position.length()+b.lh2.position.length():0;
+  S.hwU=p(S.mA[0]).distanceTo(p(S.oA[0]))/2/S.U;
+  // the target's chest height (the hero stands ~1.8 tall), in world units above the foe's feet
+  const g0=g.getWorldPosition(new THREE.Vector3());S.tgY=g0.y+1.15;S.gy=g0.y;S.sc=g.bs||1;
+  S.we=faWpn(h,S.side>0?'R':'L');S.wl=0;
+  if(S.we){const W=S.we.W;if(W.userData.faLen==null){const bb=new THREE.Box3();W.traverse(o=>{if(o.isMesh&&o.geometry){o.geometry.computeBoundingBox();bb.union(o.geometry.boundingBox)}});W.userData.faLen=Math.max(.2,-bb.min.y);W.userData.faTail=Math.max(0,bb.max.y)}
+    S.wl=W.userData.faLen*W.matrixWorld.getMaxScaleOnAxis()}
+  S.wlU=S.wl/S.U;
+  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;S.bw=null;S.zHit=null;S.zp=null;S.bp=null;S.eSg=0;S.Dp=null;S.Qp=null;S.Rf=null;S.Hp=null;S.Hq0=null;S.Wq=null;S.wh=null;S.zHitA=null;S.zpA=null;S.zL=null;S.D0=null;S.hkOn=0;S.oW=null;S.Dimp=null;S.tp=null;S.tv=null;S.errM=0;S.errS=null;S.hH=null;S.wo=null;S.tHit=S.T&&S.T.o.hit!=null?S.T.o.hit:n=='strike'?1.45:n=='bolt'?1:n=='rainfire'?2:null;
+  // melee strikes: the downswing starts inside the wind-up (at s = a, the last ~20–30 %) and accelerates into the hit at
+  // s 1.45, so the blow travels over ~5 frames instead of 2; brutes start a little earlier, daggers and ghouls later
+  /* a slam's landing key: the hand's height and the weapon's slope there (the hand is placed so the head lands on the ground) */
+  /* a strike's hit key: the hand's height there (the blow is shifted up or down by what the hit needs, its shape kept) */
+  S.ahH=null;if(S.T&&n=='strike'&&S.tHit!=null){const Q=S.T(S.tHit);if(Q.ah>.5)S.ahH=Q.H[1]}
+  S.slm=null;if(S.T&&S.T.o.hit>1.9){const Q=S.T(S.T.o.hit),dn=Math.hypot(Q.D[0],Q.D[1],Q.D[2])||1;S.slm=[Q.H[1],Q.D[1]/dn]}
+  S.rm=null;if(n=='strike'){const a=hv>=.7?.7:hv<=.1?.8:.75,X=[0,a-.25,a,1.45,3],Y=[0,.55,1,1.45,3],M=V100A_mono(X,Y);
+    S.rm=x=>{let i=0;while(i<3&&x>X[i+1])i++;const h2=X[i+1]-X[i],t=Math.max(0,Math.min(1,(x-X[i])/h2)),t2=t*t,t3=t2*t;return (2*t3-3*t2+1)*Y[i]+(t3-2*t2+t)*h2*M[i]+(-2*t3+3*t2)*Y[i+1]+(t3-t2)*h2*M[i+1]}}
+  if(K.c=='bow'){const e=faWpn(h,'L');if(e&&e.ty=='bow')S.bw=e}
+  if((K.c=='two'||K.c=='pole'||(K.c=='staff'&&S.T!==FA_A.rain))&&S.we){const os=S.side>0?'L':'R';S.haft=1;S.ot0=FA_OT[S.we.ty]||0;S.oC=gripCarry(S.we.ty,os).q.clone();
+    const gd=h._gripD&&(h._gripD[os]||(h._gripD[S.side>0?'R':'L']&&[-h._gripD[S.side>0?'R':'L'][0],h._gripD[S.side>0?'R':'L'][1],h._gripD[S.side>0?'R':'L'][2]]));
+    S.oAn=new THREE.Vector3(GRIP_AN[0]*(os=='L'?-1:1)+(gd?gd[0]:0),GRIP_AN[1]+(gd?gd[1]:0),GRIP_AN[2]+(gd?gd[2]:0))}
+  // a shield on the off arm: which way its face points in the hand's frame (it faces out from the body when carried)
+  const se=faWpn(h,S.side>0?'L':'R');if(K.sh&&se&&se.ty=='shield'){const qb=faWQ(S.oA[2],new THREE.Quaternion()).invert(),mq=faWQ(b.pelvis.parent,new THREE.Quaternion());
+    S.shN=new THREE.Vector3(-S.side,0,0).applyQuaternion(mq).applyQuaternion(qb).normalize()}
+  // wind-up time warp: heavy foes heave into the coil later, quick ones snap into it and hold; recovery: heavy settle slower
+  const pw=1+hv*.6,pq=1.25-hv*.35;S.sw=k=>k<=0?0:k>=1?1:hv>.5?Math.pow(k,pw):1-Math.pow(1-k,pq);S.sr=x=>x<=0?0:x>=1?1:x+(x*x*(3-2*x)-x)*(.4+.4*hv);   /* an eased recovery: no snap off the follow-through, heavy foes settle slower */
+  S.ph=a.ph}
+// ---------------- hooks ----------------
+{const f=humAnim;humAnim=function(g,now,mv){
+  let S=null;try{S=g&&g.h&&faState(g)}catch(e){S=null}
+  if(!S)return f.apply(this,arguments);
+  const b=g.h.bones,a=g.ak;
+  try{if(S.dirty){faRestore(S,b);S.dirty=0}}catch(e){}
+  let drive=false;try{drive=faDrives(g,S,a)}catch(e){drive=false}
+  // the earlier layers make the plain walk/idle/stance pose (no attack): this file adds the attack on top
+  if(drive)g.ak=null;
+  let r;try{r=f.apply(this,arguments)}finally{if(drive){g.ak=a;g.h.sw=true}}
+  try{const dt=S.t0==null?0:Math.min(.1,Math.max(0,(now-S.t0)/1000));S.t0=now;
+    faSnap(S,b);
+    if(drive){if(S.ph<0||(a.ph==0&&S.ph!=0))faBegin(g,S,a);S.ph=a.ph;S.dt=dt;faApply(g,S,a,now);faKeep(S,b);S.fo=1}
+    else{S.ph=-1;if(S.fo>0&&S.last)faFade(S,b,dt)}}
+  catch(e){if(!FA.err){FA.err=1;console.warn('foe attack',e)}}
+  return r}}
+// mTick tilts and lunges the whole body group (m.pose); for the attacks driven here the body does that itself, feet planted
+{const f=animC;animC=function(g,now,mv,sp){const r=f.apply(this,arguments);
+  try{const S=g&&g._fa;if(S&&S.ph>=0&&g.b&&g.ak){const x=g.flT?(now-g.flT)/260:2,fl=x>=0&&x<1?Math.pow(1-x,2):0;g.b.rotation.x=-.45*fl;g.b.position.z=-.18*fl}}catch(e){}
+  return r}}
