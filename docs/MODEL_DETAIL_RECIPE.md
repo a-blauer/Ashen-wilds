@@ -281,21 +281,28 @@ These are now **[proven]**. The Amalgam (3397) is the owner-approved reference, 
 Companions are not on the cage kit; they are `lpGeo` lofts (0610). `lp186Geo` (3430) rebuilds every companion loft (never an
 enemy: keys `E137…` are skipped) with the recipe:
 
-- **Smoother outline and bends:** two Catmull-Rom rings between each pair (never thinner than the straight line between them),
-  twice the sides on 6–10 sided lofts, up to 4 bones per ring (the neighbours' weights blended). A leg loft is seated by a ring sunk
-  into the body and ends in a sole ring (paw kits were set against the old end cap).
+- **Keep the facets (owner, round 2: "too smooth now and don't match the low poly look of our game"):** no extra rings
+  (`LP186.split=0`), no extra sides (`LP186.sides=1`), flat shading (`LP186.smooth=0`). The first pass doubled both and smooth-
+  shaded the body; it read as clay. Detail comes from paint and the kit, never from a denser loft.
+- **Legs set into the body (`3433`):** a leg loft is seated by a ring sunk into the body and ends in a sole ring. Its top ring is
+  also pulled in under the trunk's flank (it stuck out of the side like a box) and the trunk's lower half goes fuller over the
+  legs (a superellipse) so the leg grows out from underneath.
 - **Paint is the original design, blended:** each new vertex takes the colours the paint function gives at the original rings and
   sides, interpolated. Paint that hashes the ring index (`nz(i,…)`) would otherwise smear into stripes.
-- **Smooth body shading:** with ~4× the faces, flat shading made every long loft band a light / dark stripe. Companion bodies use a
-  smooth-shaded copy of their material; kit parts keep their facets. Membrane wings get a little transmitted light.
 - **Baked value:** top light × height, a cool shift in the shadows, no random speckle. Cavity is off (`LP186.cav`): on lofts it only
   found the ring kinks and drew bands.
 - **Palette grade** (`LP186.grade[species]` = [saturation, lightness, optional earthy tint, amount]): colours are linear and go through
   ACES, so a linear saturation of .4 still reads strong. Bright saturated accents on the kit's 'c' layer are left alone.
 - **Fur and feathers:** tapered tufts and feather blades are darker at the root; neighbouring blades of similar colour are blended
   toward their local mean (checkerboards of alternating feathers read as tiles).
-- **Evolution looks (`EVO186`):** no dangling charms, ≤ 2 runes from look 3, no leg cuffs, one gem, ≤ 16 glowing strokes, one-colour
-  shells (an `i%2` colour function is averaged), the gear palette pulled toward the body, no gold crown spikes.
+- **Evolution looks (`EVO186`):** no dangling charms, ≤ 4 runes (never on legs), no leg cuffs, ≤ 2 gems, ≤ 26 glowing strokes,
+  one-colour shells (an `i%2` colour function is averaged), no shells on legs, the gear palette pulled toward the body, no gold
+  crown spikes. Round 2: the first pass cut too much and the companions lost their identity; keep each one's signature pieces.
+- **One-piece parts:** a beak is one keeled, hooked mandible that darkens toward the point (`bk186Geo`), never two or three round
+  tubes joined at an angle. The same goes for horns, claws and fangs that should read as one solid piece.
+- **Eyes must show:** an eye sits proud of the head (a frog's on a turret), never sunk inside a lid shape; check it from the side.
+- **Kit geometry winding:** a hand-built `BufferGeometry` must wind its triangles counter-clockwise seen from outside, or the
+  part is culled and vanishes (the first one-piece beaks did).
 
 ## 5. Checklist for every new or reworked model
 
