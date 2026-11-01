@@ -61146,11 +61146,12 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   try{return f.apply(this,arguments)}finally{E.L=L0;E.pd=pd0}}}
 // Ashwolf / Direfang war wolf: one armour (the shoulder lames and the brow helm); no saddle or chest plates, no leather
 // bracers or bands on the legs, no glowing war-paint strokes
-{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L;
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L,gm0=E.gem;
+  E.gem=function(h){if(h&&h.p&&h.p[1]<.62)return E;return gm0.apply(E,arguments)};   // round 2: the chest gem (its plate is gone) floated
   E.shell=function(sel,off,t,col){if(t=='c'&&col===P.leather)return 0;if(t=='m'){m++;if((m>=4&&m<=6)||m==8)return 0}return sh0.apply(E,arguments)};
   E.band=function(){return []};
   E.L=function(a,b,r1,r2,t){if(t=='g'&&r1===.008&&r2===.003)return E;return L0.apply(E,arguments)};
-  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0}}}
+  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0;E.gem=gm0}}}
 // the spirits' L2 mantle (an opaque dark slab on the see-through ghost) is gone; the hood carries the evolution look
 {const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};const pd1=E.pd;
   E.pd=function(geo,t,col,pos,dir,sc,fwd,o){if(geo=='ico'&&t=='g'&&o&&o.bn=='chest')return E;return pd1.apply(E,arguments)};   // the soul motes sat on that mantle
@@ -61247,18 +61248,18 @@ LPR.Gloomcap={head:['head',0,.33,.33],up:.07,
   back:[['pelvis',0,.42,-.18],['spine',0,.46,0],['chest',0,.44,.14]],
   geo(C,c){return fc186Geo(C,c)},kit(k,c,C,red){return fc186Kit(k,c,C,red)}};
 // evolution: one theme, the growth spreads and starts to glow
-EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sporelord'?'Sporelord':'Gloomcap',spore=sp=='Sporelord',K=FC186.cols(P.C,sp);
+EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const bz=z=>({bn:z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis'}),sp=RV137.cur.Gloomcap=='Sporelord'?'Sporelord':'Gloomcap',spore=sp=='Sporelord',K=FC186.cols(P.C,sp);
   // L1: glowing gills along each flank (small lit slits in the gill line)
   [-1,1].forEach(s=>[.12,0,-.12,-.22].slice(0,L>=2?4:3).forEach(z=>{const h=E.on([s*.6,.24,z],[-s,0,0]);if(h)E.pd('box','g',P.glowD,E.add(h.p,h.n,-.002),h.n,[.004,.03,.012],[0,0,1])}));
   if(L>=2){// more growth: a cluster of small caps with lit gills on the rear of the back
     [[-.06,-.18],[.03,-.24],[.1,-.2]].forEach((q,i)=>{const t=E.top(q[0],q[1]);if(!t)return;const r=.035-i*.004,cp=E.add(t.p,t.n,.02);
-      E.L(E.add(t.p,t.n,-.01),cp,r*.3,r*.25,'c',K.stalk.getHex(),5);E.pd('cyl','g',P.glowD,E.add(cp,t.n,-.002),t.n,[r*.9,.004,r*.9]);E.pd('hem','c',K.cap.getHex(),cp,t.n,[r,r*.5,r])})}
+      const o=bz(q[1]);E.L(E.add(t.p,t.n,-.01),cp,r*.3,r*.25,'c',K.stalk.getHex(),5,o);E.pd('cyl','g',P.glowD,E.add(cp,t.n,-.004),t.n,[r*.9,.004,r*.9],null,o);E.pd('hem','c',K.cap.getHex(),E.add(cp,t.n,-.003),t.n,[r,r*.5,r],null,o)})}
   if(L>=3){// mycelium threads hanging from the body's lower edge, the brim's gills lit
     [-1,1].forEach(s=>[.1,-.05,-.2].forEach(z=>{const h=E.on([s*.6,.19,z],[-s,.2,0]);if(h)E.L(E.add(h.p,h.n,-.004),E.add(h.p,[s*.01,-.07,-.01]),.005,.002,'c',K.fleshD.getHex(),3,{vs:1})}));
     E.pd('cyl','g',P.glowD,[0,.293,.336],[0,1,-.12],[.12,.004,.095],null,{bn:'head'})}
   if(L>=4){if(!spore){// a crown of luminous caps round the great cap
       for(let i=0;i<5;i++){const a=i/5*6.283+.3,x=.05+Math.cos(a)*.16,z=-.04+Math.sin(a)*.12,t=E.top(x,z);if(!t)continue;const cp=E.add(t.p,t.n,.03);
-        E.L(E.add(t.p,t.n,-.01),cp,.01,.008,'c',K.stalk.getHex(),5);E.pd('hem','g',P.glow,cp,t.n,[.028,.016,.028])}}
+        const o=bz(z);E.L(E.add(t.p,t.n,-.01),cp,.01,.008,'c',K.stalk.getHex(),5,o);E.pd('hem','g',P.glow,E.add(cp,t.n,-.004),t.n,[.028,.016,.028],null,o)}}
     else{// the cordyceps clubs glow; two more stalks
       const T=FC186.B.Sporelord,top=(x,z)=>{let i=0;while(i<T.length-2&&z>T[i+1][0])i++;const A=T[i],Bq=T[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(Bq[0]-A[0]))),y=A[1]+(Bq[1]-A[1])*t,w=A[2]+(Bq[2]-A[2])*t,h=A[3]+(Bq[3]-A[3])*t;
         return y+h*Math.sqrt(Math.max(0,1-(x/w)**2))},bnz=z=>z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis';
@@ -61299,8 +61300,8 @@ function an186Seat(lofts){if(!AN186.on)return lofts;const T=an186Trunk(lofts);if
 {const f=lpGeo;lpGeo=function(key,n,lofts,seed){try{if(lp186Comp(key,n)&&!LPG[key]&&!LPG[key+'|lo'])lofts=an186Seat(lofts)}catch(e){console.error('an186 seat',e)}return f.call(this,key,n,lofts,seed)}}
 // ---------------- Direfang: a leaner frame ----------------
 {const f=lpGeo;lpGeo=function(key,n,lofts,seed){if(!AN186.on||!/^DF150\|/.test(key))return f.apply(this,arguments);
-  const L2=lofts.map((L,i)=>{const leg=lp186IsLeg(L);return Object.assign({},L,{rings:L.rings.map(r=>{const z=r.p[2],chest=z>-.05&&z<.42,k=leg?.8:chest?.8:.86;
-    return Object.assign({},r,{rx:r.rx*k,ryT:r.ryT==null?r.ryT:r.ryT*(leg?.86:chest?.9:.94),ryB:r.ryB==null?r.ryB:r.ryB*(leg?.86:chest?.88:.94)})})})});
+  const L2=lofts.map((L,i)=>{const leg=lp186IsLeg(L);return Object.assign({},L,{rings:L.rings.map(r=>{const z=r.p[2],chest=z>-.05&&z<.42,k=leg?.8:z>=.46?1:z>=.42?.9:chest?.8:.86;
+    return Object.assign({},r,{rx:r.rx*k,ryT:r.ryT==null?r.ryT:r.ryT*(leg?.86:z>=.42?1:chest?.9:.94),ryB:r.ryB==null?r.ryB:r.ryB*(leg?.86:z>=.42?1:chest?.88:.94)})})})});
   return f.call(this,key+'|lean',n,L2,seed)}}
 {const f=df150Kit;df150Kit=function(k,c,C,red){const p0=k.p,L0=k.L;
   // the mane tufts and the shoulder pieces follow the narrower chest (pulled in toward the centre line by the same factor)
@@ -61346,7 +61347,7 @@ function an186Bones(k,bone,dark,o){const P=boneP,B=(bn,col,p,sx,sy,sz,rx,ry,rz,g
   const V=o.lich?[[.4,.675,'neck'],[.34,.68,'neck'],[.28,.678,'chest']]:[[.42,.585,'neck'],[.38,.58,'neck'],[.33,.575,'neck'],[.28,.57,'chest']];
   V.forEach((q,i)=>{const bn=q[2],y=q[1];B(bn,i%2?bone:bD,[0,y,q[0]],.028,.024,.018,0,0,0,'cyl');B(bn,bD,[0,y+.02,q[0]-.005],.008,.02,.012,-.4,0,0,'cone4')});
   if(!o.lich)[[.15,.565,'chest'],[.08,.562,'chest'],[.01,.56,'spine'],[-.06,.557,'spine'],[-.13,.555,'pelvis']].forEach((q,i)=>B(q[2],i%2?bone:bD,[0,q[1],q[0]],.03,.02,.02,Math.PI/2,0,0,'cyl'));
-  [[-.33,.535,'tail0'],[-.4,.525,'tail0'],[-.47,.515,'tail1'],[-.54,.505,'tail1'],[-.62,.495,'tail1'],[-.7,.485,'tail2'],[-.78,.478,'tail2'],[-.86,.474,'tail3']]
+  [[-.33,.535,'tail0'],[-.4,.525,'tail0'],[-.47,.515,'tail1'],[-.54,.505,'tail1'],[-.62,.495,'tail1'],[-.7,.485,'tail2']]
     .forEach((q,i)=>{if(o.lich&&q[0]<-.62)return;const r=.026-i*.002;B(q[2],i%2?bone:bD,[0,q[1],q[0]],r,r*.8,.014,Math.PI/2,0,0,'cyl')});
   // knobbed joint ends on every leg bone (the ends of each shaft), and a second, thinner forearm bone
   [-1,1].forEach(s=>{const F=s<0?'fl':'fr',H=s<0?'hl':'hr';
@@ -61423,7 +61424,7 @@ er150TitanEvo=function(E,L,P){const T=ER150.TI,top=T.top,sb={bn:'spine'},hb={bn:
     E.pd('oct','g',P.glow2,[q[0]+.01,sy+.06,q[1]-.01],[0,1,0],[.022,.09,.022],null,sb)}
   if(L>=5){// glowing horn tips and crystal on the tail club
     [-1,1].forEach(s=>E.pd('oct','g',P.glow,[s*.3,.6,.57],[s*-.1,.5,.6],[.012,.026,.012],null,hb));
-    for(let i=0;i<4;i++){const a=i/4*6.283+.4;E.pd('oct','g',i%2?P.glow:P.glowD,[Math.cos(a)*.06,.215+Math.sin(a)*.05,-.75],[Math.cos(a),Math.sin(a),-.3],[.012,.04,.012],null,{bn:'tail3'})}}};
+    for(let i=0;i<10;i++){const a=i/10*6.283+.3,h=E.on([Math.sin(a)*.9,.36,Math.cos(a)*1-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.3&&h.p[1]<.45)E.pd('oct','g',i%2?P.glow:P.glowD,E.add(h.p,h.n,.004),E.nrm([h.n[0],.8,h.n[2]]),[.012,.04,.012],null,sb)}}};
 // ---------------------------------------------------------------- Hivemother ----------------------------------------------------------------
 var HM186={on:true,
   // abdomen [z, y, rx, ryT, ryB] back to front, then the waist, carapace and head
@@ -61477,14 +61478,14 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
   // the stinger: a curved black hook from the tip of the abdomen, a dark red point
   {const S=[[0,.64,-1.0],[0,.62,-1.08],[0,.56,-1.14],[0,.47,-1.16],[0,.39,-1.12]];k.L(tb,'c',blk,S[0],S[1],.045,.034,6).L(tb,'c',gl,S[1],S[2],.034,.024,6).L(tb,'c',blk,S[2],S[3],.024,.014,5).L(tb,'c',un,S[3],S[4],.014,.002,5)}
   // hatchlings clinging to her back
-  [[-.62,1.5,1],[-.8,2.35,-1],[-.46,.75,1],[-.88,.95,-1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],.01);hm186Hatch(k,tb,p,hm186N(q[1]),q[2],n%2?blk:0x1a1410,eye)});
+  [[-.62,1.5,1],[-.8,2.35,-1],[-.46,.75,1],[-.88,.95,-1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],-.016);hm186Hatch(k,tb,p,hm186N(q[1]),q[2],n%2?blk:0x1a1410,eye)});
   // the carapace: a ridge of short spines, a crest of three long backward spines behind the eyes
   [.25,.17,.09,.02].forEach((z,i)=>k.p(z>.1?'chest':'spine','cone4','c',i%2?blk:gl,0,.53-Math.abs(z-.16)*.25,z,.014,.05,.018,-.6,0,0));
   [-1,0,1].forEach(s=>{const b=[s*.035,.485,.37],m=[s*.07,.58,.3],t=[s*.09,.63,.21];k.L('head','c',blk,b,m,.018-Math.abs(s)*.003,.01,4);k.L('head','c',gl,m,t,.01,.002,4)});
   // eyes: two large, six small, amber, in a dark brow
-  k.p('head','box','c',blk,0,.47,.42,.12,.022,.06,-.3,0,0);
-  [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.03,.452,.465,.019);k.p('head','sph','g',eye,s*.032,.454,.473,.012);
-    [[.062,.446,.448,.009],[.074,.432,.43,.008],[.018,.468,.455,.008],[.052,.466,.44,.007]].forEach(q=>k.p('head','sph','g',eye,s*q[0],q[1],q[2],q[3]));
+  k.p('head','box','c',blk,0,.478,.405,.1,.02,.05,-.3,0,0);
+  [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.026,.462,.43,.018);k.p('head','sph','g',eye,s*.028,.465,.438,.012);
+    [[.05,.456,.415,.009],[.062,.443,.4,.008],[.016,.472,.418,.008],[.042,.468,.403,.007]].forEach(q=>k.p('head','sph','g',eye,s*q[0],q[1],q[2],q[3]));
     // chelicerae with long curved pale fangs (jaw bone: they flare when biting), thin pedipalps
     k.L('jaw','c',blk,[s*.026,.41,.46],[s*.032,.36,.49],.024,.018,5);k.L('jaw','c',0xd8c8a8,[s*.032,.36,.49],[s*.026,.31,.5],.012,.007,4);k.L('jaw','c',0xd8c8a8,[s*.026,.31,.5],[s*.012,.29,.48],.007,.001,4);
     k.L('head','c',blk,[s*.05,.41,.44],[s*.09,.39,.52],.012,.01,5);k.L('head','c',un,[s*.09,.39,.52],[s*.1,.35,.55],.011,.01,5);k.L('head','c',blk,[s*.1,.35,.55],[s*.098,.29,.57],.01,.003,5);
@@ -61495,17 +61496,17 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
   [-1,1].forEach(s=>k.L(tb,'c',un,[s*.025,.58,-.98],[s*.03,.55,-1.02],.016,.005,4))};
 // her evolution: the brood ripens (L1 venom on the fangs and the stinger; L2 two more breaks open and the seams brighten;
 // L3 her crest and spurs burn at the tips; L4 more hatchlings, glowing; L5 the whole brood blazes, a glowing seam down her back)
-cs150HMEvo=function(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},tb={bn:'tail0'},AB=HM186.ab;
+cs150HMEvo=function(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},tb={bn:'tail0'},AB=HM186.ab,hit=(z,a)=>E.on(v150Surf(AB,z,a,.4),[-Math.cos(a),-Math.sin(a),0]);
   [-1,1].forEach(s=>E.pd('sph','g',P.glow,[s*.012,.29,.48],[0,1,0],[.008,.014,.008],null,jb));E.pd('sph','g',P.glow,[0,.385,-1.11],[0,1,0],[.012,.02,.012],null,tb);
-  if(L>=2){HM186.br.slice(4).forEach(q=>{const p=v150Surf(AB,q[0],q[1],-.006),n=hm186N(q[1]);[[0,0,.03],[.03,.02,.024],[-.03,-.015,.024]].forEach(([u,v,r],i)=>
-      E.pd('sph','g',i%2?P.glowD:P.glow,[p[0]-n[1]*u,p[1]+n[0]*u,p[2]+v],n,[r,r*.9,r],null,tb))});
-    HM186.br.slice(0,4).forEach(q=>{const p=v150Surf(AB,q[0],q[1],-.004);E.pd('sph','g',P.glow2,p,hm186N(q[1]),[.024,.02,.024],null,tb)})}
+  if(L>=2){HM186.br.slice(4).forEach(q=>{const h=hit(q[0],q[1]);if(!h)return;const n=h.n;[[0,0,.032],[.034,.02,.026],[-.034,-.015,.026]].forEach(([u,v,r],i)=>{const t1=E.nrm([-n[1],n[0],0]);
+      E.pd('sph','g',i%2?P.glowD:P.glow,[h.p[0]+t1[0]*u-n[0]*.006,h.p[1]+t1[1]*u-n[1]*.006,h.p[2]+v],n,[r,r*.9,r],null,tb)})});
+    HM186.br.slice(0,4).forEach(q=>{const h=hit(q[0],q[1]);if(h)E.pd('sph','g',P.glow2,E.add(h.p,h.n,-.006),h.n,[.03,.024,.03],null,tb)})}
   if(L>=3){[-1,0,1].forEach(s=>E.pd('oct','g',P.glow,[s*.09,.63,.21],[s*.3,.5,-.9],[.008,.022,.008],null,hb));
     [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i),P1=G.P[1];E.pd('oct','g',P.glowD,[P1[0]+s*.015,P1[1]+.08,P1[2]-.02],[0,1,0],[.006,.016,.006],null,{bn:G.k+'0'})}))}
-  if(L>=4)[[-.52,1.9,-1],[-.7,1.2,1],[-.38,1.6,1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],.012),nn=hm186N(q[1]),f=q[2];
-    E.pd('sph','c',P.dark,[p[0]+nn[0]*.012,p[1]+nn[1]*.012,p[2]-f*.018],nn,[.024,.02,.03],null,tb);E.pd('sph','g',P.glow,[p[0]+nn[0]*.02,p[1]+nn[1]*.02,p[2]+f*.02],nn,[.008,.008,.008],null,tb)});
-  if(L>=5){let pr=null;for(let j=0;j<8;j++){const p=v150Surf(AB,-.22-j*.1,Math.PI/2,.008);if(pr)E.L(pr,p,.008,.008,'g',j%2?P.glow:P.glow2,3,tb);pr=p}
-    for(let i=0;i<8;i++){const z=-.4-(i%4)*.13,a=i<4?.15:Math.PI-.15,p=v150Surf(AB,z,a,-.004);E.pd('sph','g',i%2?P.glow:P.glowD,p,hm186N(a),[.018,.014,.018],null,tb)}}};
+  if(L>=4)[[-.52,1.9,-1],[-.7,1.2,1],[-.38,1.6,1]].forEach((q,n)=>{const h=hit(q[0],q[1]);if(!h)return;const nn=h.n,p=h.p,f=q[2];
+    E.pd('sph','c',P.dark,[p[0]+nn[0]*.008,p[1]+nn[1]*.008,p[2]-f*.012],nn,[.024,.02,.03],null,tb);E.pd('sph','g',P.glow,[p[0]+nn[0]*.012,p[1]+nn[1]*.012,p[2]+f*.016],nn,[.009,.009,.009],null,tb)});
+  if(L>=5){let pr=null;for(let j=0;j<8;j++){const h=E.top(0,-.22-j*.1),p=h?E.add(h.p,h.n,.004):null;if(p&&pr)E.L(pr,p,.008,.008,'g',j%2?P.glow:P.glow2,3,{vs:1});pr=p}
+    for(let i=0;i<8;i++){const h=hit(-.4-(i%4)*.13,i<4?.15:Math.PI-.15);if(h)E.pd('sph','g',i%2?P.glow:P.glowD,E.add(h.p,h.n,-.004),h.n,[.018,.014,.018],null,tb)}}};
 // lpExtras (traits) read her new back line and head
 V150_EX.Hivemother={back:[['tail0',0,.86,-.72],['tail0',0,.89,-.58],['tail0',0,.85,-.44],['chest',0,.53,.15]],head:['head',0,.48,.41],up:.1};
 if(typeof EVO100!='undefined'&&EVO100.surf){delete EVO100.surf.Cryptspider;delete EVO100.surf.Stoneshell}

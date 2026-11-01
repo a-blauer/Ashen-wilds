@@ -61,7 +61,7 @@ er150TitanEvo=function(E,L,P){const T=ER150.TI,top=T.top,sb={bn:'spine'},hb={bn:
     E.pd('oct','g',P.glow2,[q[0]+.01,sy+.06,q[1]-.01],[0,1,0],[.022,.09,.022],null,sb)}
   if(L>=5){// glowing horn tips and crystal on the tail club
     [-1,1].forEach(s=>E.pd('oct','g',P.glow,[s*.3,.6,.57],[s*-.1,.5,.6],[.012,.026,.012],null,hb));
-    for(let i=0;i<4;i++){const a=i/4*6.283+.4;E.pd('oct','g',i%2?P.glow:P.glowD,[Math.cos(a)*.06,.215+Math.sin(a)*.05,-.75],[Math.cos(a),Math.sin(a),-.3],[.012,.04,.012],null,{bn:'tail3'})}}};
+    for(let i=0;i<10;i++){const a=i/10*6.283+.3,h=E.on([Math.sin(a)*.9,.36,Math.cos(a)*1-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.3&&h.p[1]<.45)E.pd('oct','g',i%2?P.glow:P.glowD,E.add(h.p,h.n,.004),E.nrm([h.n[0],.8,h.n[2]]),[.012,.04,.012],null,sb)}}};
 // ---------------------------------------------------------------- Hivemother ----------------------------------------------------------------
 var HM186={on:true,
   // abdomen [z, y, rx, ryT, ryB] back to front, then the waist, carapace and head
@@ -115,14 +115,14 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
   // the stinger: a curved black hook from the tip of the abdomen, a dark red point
   {const S=[[0,.64,-1.0],[0,.62,-1.08],[0,.56,-1.14],[0,.47,-1.16],[0,.39,-1.12]];k.L(tb,'c',blk,S[0],S[1],.045,.034,6).L(tb,'c',gl,S[1],S[2],.034,.024,6).L(tb,'c',blk,S[2],S[3],.024,.014,5).L(tb,'c',un,S[3],S[4],.014,.002,5)}
   // hatchlings clinging to her back
-  [[-.62,1.5,1],[-.8,2.35,-1],[-.46,.75,1],[-.88,.95,-1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],.01);hm186Hatch(k,tb,p,hm186N(q[1]),q[2],n%2?blk:0x1a1410,eye)});
+  [[-.62,1.5,1],[-.8,2.35,-1],[-.46,.75,1],[-.88,.95,-1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],-.016);hm186Hatch(k,tb,p,hm186N(q[1]),q[2],n%2?blk:0x1a1410,eye)});
   // the carapace: a ridge of short spines, a crest of three long backward spines behind the eyes
   [.25,.17,.09,.02].forEach((z,i)=>k.p(z>.1?'chest':'spine','cone4','c',i%2?blk:gl,0,.53-Math.abs(z-.16)*.25,z,.014,.05,.018,-.6,0,0));
   [-1,0,1].forEach(s=>{const b=[s*.035,.485,.37],m=[s*.07,.58,.3],t=[s*.09,.63,.21];k.L('head','c',blk,b,m,.018-Math.abs(s)*.003,.01,4);k.L('head','c',gl,m,t,.01,.002,4)});
   // eyes: two large, six small, amber, in a dark brow
-  k.p('head','box','c',blk,0,.47,.42,.12,.022,.06,-.3,0,0);
-  [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.03,.452,.465,.019);k.p('head','sph','g',eye,s*.032,.454,.473,.012);
-    [[.062,.446,.448,.009],[.074,.432,.43,.008],[.018,.468,.455,.008],[.052,.466,.44,.007]].forEach(q=>k.p('head','sph','g',eye,s*q[0],q[1],q[2],q[3]));
+  k.p('head','box','c',blk,0,.478,.405,.1,.02,.05,-.3,0,0);
+  [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.026,.462,.43,.018);k.p('head','sph','g',eye,s*.028,.465,.438,.012);
+    [[.05,.456,.415,.009],[.062,.443,.4,.008],[.016,.472,.418,.008],[.042,.468,.403,.007]].forEach(q=>k.p('head','sph','g',eye,s*q[0],q[1],q[2],q[3]));
     // chelicerae with long curved pale fangs (jaw bone: they flare when biting), thin pedipalps
     k.L('jaw','c',blk,[s*.026,.41,.46],[s*.032,.36,.49],.024,.018,5);k.L('jaw','c',0xd8c8a8,[s*.032,.36,.49],[s*.026,.31,.5],.012,.007,4);k.L('jaw','c',0xd8c8a8,[s*.026,.31,.5],[s*.012,.29,.48],.007,.001,4);
     k.L('head','c',blk,[s*.05,.41,.44],[s*.09,.39,.52],.012,.01,5);k.L('head','c',un,[s*.09,.39,.52],[s*.1,.35,.55],.011,.01,5);k.L('head','c',blk,[s*.1,.35,.55],[s*.098,.29,.57],.01,.003,5);
@@ -133,17 +133,17 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
   [-1,1].forEach(s=>k.L(tb,'c',un,[s*.025,.58,-.98],[s*.03,.55,-1.02],.016,.005,4))};
 // her evolution: the brood ripens (L1 venom on the fangs and the stinger; L2 two more breaks open and the seams brighten;
 // L3 her crest and spurs burn at the tips; L4 more hatchlings, glowing; L5 the whole brood blazes, a glowing seam down her back)
-cs150HMEvo=function(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},tb={bn:'tail0'},AB=HM186.ab;
+cs150HMEvo=function(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},tb={bn:'tail0'},AB=HM186.ab,hit=(z,a)=>E.on(v150Surf(AB,z,a,.4),[-Math.cos(a),-Math.sin(a),0]);
   [-1,1].forEach(s=>E.pd('sph','g',P.glow,[s*.012,.29,.48],[0,1,0],[.008,.014,.008],null,jb));E.pd('sph','g',P.glow,[0,.385,-1.11],[0,1,0],[.012,.02,.012],null,tb);
-  if(L>=2){HM186.br.slice(4).forEach(q=>{const p=v150Surf(AB,q[0],q[1],-.006),n=hm186N(q[1]);[[0,0,.03],[.03,.02,.024],[-.03,-.015,.024]].forEach(([u,v,r],i)=>
-      E.pd('sph','g',i%2?P.glowD:P.glow,[p[0]-n[1]*u,p[1]+n[0]*u,p[2]+v],n,[r,r*.9,r],null,tb))});
-    HM186.br.slice(0,4).forEach(q=>{const p=v150Surf(AB,q[0],q[1],-.004);E.pd('sph','g',P.glow2,p,hm186N(q[1]),[.024,.02,.024],null,tb)})}
+  if(L>=2){HM186.br.slice(4).forEach(q=>{const h=hit(q[0],q[1]);if(!h)return;const n=h.n;[[0,0,.032],[.034,.02,.026],[-.034,-.015,.026]].forEach(([u,v,r],i)=>{const t1=E.nrm([-n[1],n[0],0]);
+      E.pd('sph','g',i%2?P.glowD:P.glow,[h.p[0]+t1[0]*u-n[0]*.006,h.p[1]+t1[1]*u-n[1]*.006,h.p[2]+v],n,[r,r*.9,r],null,tb)})});
+    HM186.br.slice(0,4).forEach(q=>{const h=hit(q[0],q[1]);if(h)E.pd('sph','g',P.glow2,E.add(h.p,h.n,-.006),h.n,[.03,.024,.03],null,tb)})}
   if(L>=3){[-1,0,1].forEach(s=>E.pd('oct','g',P.glow,[s*.09,.63,.21],[s*.3,.5,-.9],[.008,.022,.008],null,hb));
     [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i),P1=G.P[1];E.pd('oct','g',P.glowD,[P1[0]+s*.015,P1[1]+.08,P1[2]-.02],[0,1,0],[.006,.016,.006],null,{bn:G.k+'0'})}))}
-  if(L>=4)[[-.52,1.9,-1],[-.7,1.2,1],[-.38,1.6,1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],.012),nn=hm186N(q[1]),f=q[2];
-    E.pd('sph','c',P.dark,[p[0]+nn[0]*.012,p[1]+nn[1]*.012,p[2]-f*.018],nn,[.024,.02,.03],null,tb);E.pd('sph','g',P.glow,[p[0]+nn[0]*.02,p[1]+nn[1]*.02,p[2]+f*.02],nn,[.008,.008,.008],null,tb)});
-  if(L>=5){let pr=null;for(let j=0;j<8;j++){const p=v150Surf(AB,-.22-j*.1,Math.PI/2,.008);if(pr)E.L(pr,p,.008,.008,'g',j%2?P.glow:P.glow2,3,tb);pr=p}
-    for(let i=0;i<8;i++){const z=-.4-(i%4)*.13,a=i<4?.15:Math.PI-.15,p=v150Surf(AB,z,a,-.004);E.pd('sph','g',i%2?P.glow:P.glowD,p,hm186N(a),[.018,.014,.018],null,tb)}}};
+  if(L>=4)[[-.52,1.9,-1],[-.7,1.2,1],[-.38,1.6,1]].forEach((q,n)=>{const h=hit(q[0],q[1]);if(!h)return;const nn=h.n,p=h.p,f=q[2];
+    E.pd('sph','c',P.dark,[p[0]+nn[0]*.008,p[1]+nn[1]*.008,p[2]-f*.012],nn,[.024,.02,.03],null,tb);E.pd('sph','g',P.glow,[p[0]+nn[0]*.012,p[1]+nn[1]*.012,p[2]+f*.016],nn,[.009,.009,.009],null,tb)});
+  if(L>=5){let pr=null;for(let j=0;j<8;j++){const h=E.top(0,-.22-j*.1),p=h?E.add(h.p,h.n,.004):null;if(p&&pr)E.L(pr,p,.008,.008,'g',j%2?P.glow:P.glow2,3,{vs:1});pr=p}
+    for(let i=0;i<8;i++){const h=hit(-.4-(i%4)*.13,i<4?.15:Math.PI-.15);if(h)E.pd('sph','g',i%2?P.glow:P.glowD,E.add(h.p,h.n,-.004),h.n,[.018,.014,.018],null,tb)}}};
 // lpExtras (traits) read her new back line and head
 V150_EX.Hivemother={back:[['tail0',0,.86,-.72],['tail0',0,.89,-.58],['tail0',0,.85,-.44],['chest',0,.53,.15]],head:['head',0,.48,.41],up:.1};
 if(typeof EVO100!='undefined'&&EVO100.surf){delete EVO100.surf.Cryptspider;delete EVO100.surf.Stoneshell}

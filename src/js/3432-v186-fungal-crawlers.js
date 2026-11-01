@@ -83,18 +83,18 @@ LPR.Gloomcap={head:['head',0,.33,.33],up:.07,
   back:[['pelvis',0,.42,-.18],['spine',0,.46,0],['chest',0,.44,.14]],
   geo(C,c){return fc186Geo(C,c)},kit(k,c,C,red){return fc186Kit(k,c,C,red)}};
 // evolution: one theme, the growth spreads and starts to glow
-EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const sp=RV137.cur.Gloomcap=='Sporelord'?'Sporelord':'Gloomcap',spore=sp=='Sporelord',K=FC186.cols(P.C,sp);
+EVO100.D.Gloomcap={glow:0xb8ff6a,build(E,L,P,c){const bz=z=>({bn:z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis'}),sp=RV137.cur.Gloomcap=='Sporelord'?'Sporelord':'Gloomcap',spore=sp=='Sporelord',K=FC186.cols(P.C,sp);
   // L1: glowing gills along each flank (small lit slits in the gill line)
   [-1,1].forEach(s=>[.12,0,-.12,-.22].slice(0,L>=2?4:3).forEach(z=>{const h=E.on([s*.6,.24,z],[-s,0,0]);if(h)E.pd('box','g',P.glowD,E.add(h.p,h.n,-.002),h.n,[.004,.03,.012],[0,0,1])}));
   if(L>=2){// more growth: a cluster of small caps with lit gills on the rear of the back
     [[-.06,-.18],[.03,-.24],[.1,-.2]].forEach((q,i)=>{const t=E.top(q[0],q[1]);if(!t)return;const r=.035-i*.004,cp=E.add(t.p,t.n,.02);
-      E.L(E.add(t.p,t.n,-.01),cp,r*.3,r*.25,'c',K.stalk.getHex(),5);E.pd('cyl','g',P.glowD,E.add(cp,t.n,-.002),t.n,[r*.9,.004,r*.9]);E.pd('hem','c',K.cap.getHex(),cp,t.n,[r,r*.5,r])})}
+      const o=bz(q[1]);E.L(E.add(t.p,t.n,-.01),cp,r*.3,r*.25,'c',K.stalk.getHex(),5,o);E.pd('cyl','g',P.glowD,E.add(cp,t.n,-.004),t.n,[r*.9,.004,r*.9],null,o);E.pd('hem','c',K.cap.getHex(),E.add(cp,t.n,-.003),t.n,[r,r*.5,r],null,o)})}
   if(L>=3){// mycelium threads hanging from the body's lower edge, the brim's gills lit
     [-1,1].forEach(s=>[.1,-.05,-.2].forEach(z=>{const h=E.on([s*.6,.19,z],[-s,.2,0]);if(h)E.L(E.add(h.p,h.n,-.004),E.add(h.p,[s*.01,-.07,-.01]),.005,.002,'c',K.fleshD.getHex(),3,{vs:1})}));
     E.pd('cyl','g',P.glowD,[0,.293,.336],[0,1,-.12],[.12,.004,.095],null,{bn:'head'})}
   if(L>=4){if(!spore){// a crown of luminous caps round the great cap
       for(let i=0;i<5;i++){const a=i/5*6.283+.3,x=.05+Math.cos(a)*.16,z=-.04+Math.sin(a)*.12,t=E.top(x,z);if(!t)continue;const cp=E.add(t.p,t.n,.03);
-        E.L(E.add(t.p,t.n,-.01),cp,.01,.008,'c',K.stalk.getHex(),5);E.pd('hem','g',P.glow,cp,t.n,[.028,.016,.028])}}
+        const o=bz(z);E.L(E.add(t.p,t.n,-.01),cp,.01,.008,'c',K.stalk.getHex(),5,o);E.pd('hem','g',P.glow,E.add(cp,t.n,-.004),t.n,[.028,.016,.028],null,o)}}
     else{// the cordyceps clubs glow; two more stalks
       const T=FC186.B.Sporelord,top=(x,z)=>{let i=0;while(i<T.length-2&&z>T[i+1][0])i++;const A=T[i],Bq=T[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(Bq[0]-A[0]))),y=A[1]+(Bq[1]-A[1])*t,w=A[2]+(Bq[2]-A[2])*t,h=A[3]+(Bq[3]-A[3])*t;
         return y+h*Math.sqrt(Math.max(0,1-(x/w)**2))},bnz=z=>z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis';

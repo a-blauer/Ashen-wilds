@@ -31,8 +31,8 @@ function an186Seat(lofts){if(!AN186.on)return lofts;const T=an186Trunk(lofts);if
 {const f=lpGeo;lpGeo=function(key,n,lofts,seed){try{if(lp186Comp(key,n)&&!LPG[key]&&!LPG[key+'|lo'])lofts=an186Seat(lofts)}catch(e){console.error('an186 seat',e)}return f.call(this,key,n,lofts,seed)}}
 // ---------------- Direfang: a leaner frame ----------------
 {const f=lpGeo;lpGeo=function(key,n,lofts,seed){if(!AN186.on||!/^DF150\|/.test(key))return f.apply(this,arguments);
-  const L2=lofts.map((L,i)=>{const leg=lp186IsLeg(L);return Object.assign({},L,{rings:L.rings.map(r=>{const z=r.p[2],chest=z>-.05&&z<.42,k=leg?.8:chest?.8:.86;
-    return Object.assign({},r,{rx:r.rx*k,ryT:r.ryT==null?r.ryT:r.ryT*(leg?.86:chest?.9:.94),ryB:r.ryB==null?r.ryB:r.ryB*(leg?.86:chest?.88:.94)})})})});
+  const L2=lofts.map((L,i)=>{const leg=lp186IsLeg(L);return Object.assign({},L,{rings:L.rings.map(r=>{const z=r.p[2],chest=z>-.05&&z<.42,k=leg?.8:z>=.46?1:z>=.42?.9:chest?.8:.86;
+    return Object.assign({},r,{rx:r.rx*k,ryT:r.ryT==null?r.ryT:r.ryT*(leg?.86:z>=.42?1:chest?.9:.94),ryB:r.ryB==null?r.ryB:r.ryB*(leg?.86:z>=.42?1:chest?.88:.94)})})})});
   return f.call(this,key+'|lean',n,L2,seed)}}
 {const f=df150Kit;df150Kit=function(k,c,C,red){const p0=k.p,L0=k.L;
   // the mane tufts and the shoulder pieces follow the narrower chest (pulled in toward the centre line by the same factor)
@@ -78,7 +78,7 @@ function an186Bones(k,bone,dark,o){const P=boneP,B=(bn,col,p,sx,sy,sz,rx,ry,rz,g
   const V=o.lich?[[.4,.675,'neck'],[.34,.68,'neck'],[.28,.678,'chest']]:[[.42,.585,'neck'],[.38,.58,'neck'],[.33,.575,'neck'],[.28,.57,'chest']];
   V.forEach((q,i)=>{const bn=q[2],y=q[1];B(bn,i%2?bone:bD,[0,y,q[0]],.028,.024,.018,0,0,0,'cyl');B(bn,bD,[0,y+.02,q[0]-.005],.008,.02,.012,-.4,0,0,'cone4')});
   if(!o.lich)[[.15,.565,'chest'],[.08,.562,'chest'],[.01,.56,'spine'],[-.06,.557,'spine'],[-.13,.555,'pelvis']].forEach((q,i)=>B(q[2],i%2?bone:bD,[0,q[1],q[0]],.03,.02,.02,Math.PI/2,0,0,'cyl'));
-  [[-.33,.535,'tail0'],[-.4,.525,'tail0'],[-.47,.515,'tail1'],[-.54,.505,'tail1'],[-.62,.495,'tail1'],[-.7,.485,'tail2'],[-.78,.478,'tail2'],[-.86,.474,'tail3']]
+  [[-.33,.535,'tail0'],[-.4,.525,'tail0'],[-.47,.515,'tail1'],[-.54,.505,'tail1'],[-.62,.495,'tail1'],[-.7,.485,'tail2']]
     .forEach((q,i)=>{if(o.lich&&q[0]<-.62)return;const r=.026-i*.002;B(q[2],i%2?bone:bD,[0,q[1],q[0]],r,r*.8,.014,Math.PI/2,0,0,'cyl')});
   // knobbed joint ends on every leg bone (the ends of each shaft), and a second, thinner forearm bone
   [-1,1].forEach(s=>{const F=s<0?'fl':'fr',H=s<0?'hl':'hr';

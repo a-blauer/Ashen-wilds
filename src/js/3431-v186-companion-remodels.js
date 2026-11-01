@@ -195,11 +195,12 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   try{return f.apply(this,arguments)}finally{E.L=L0;E.pd=pd0}}}
 // Ashwolf / Direfang war wolf: one armour (the shoulder lames and the brow helm); no saddle or chest plates, no leather
 // bracers or bands on the legs, no glowing war-paint strokes
-{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L;
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L,gm0=E.gem;
+  E.gem=function(h){if(h&&h.p&&h.p[1]<.62)return E;return gm0.apply(E,arguments)};   // round 2: the chest gem (its plate is gone) floated
   E.shell=function(sel,off,t,col){if(t=='c'&&col===P.leather)return 0;if(t=='m'){m++;if((m>=4&&m<=6)||m==8)return 0}return sh0.apply(E,arguments)};
   E.band=function(){return []};
   E.L=function(a,b,r1,r2,t){if(t=='g'&&r1===.008&&r2===.003)return E;return L0.apply(E,arguments)};
-  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0}}}
+  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0;E.gem=gm0}}}
 // the spirits' L2 mantle (an opaque dark slab on the see-through ghost) is gone; the hood carries the evolution look
 {const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};const pd1=E.pd;
   E.pd=function(geo,t,col,pos,dir,sc,fwd,o){if(geo=='ico'&&t=='g'&&o&&o.bn=='chest')return E;return pd1.apply(E,arguments)};   // the soul motes sat on that mantle
