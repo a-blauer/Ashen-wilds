@@ -276,6 +276,27 @@ These are now **[proven]**. The Amalgam (3397) is the owner-approved reference, 
 - **Parallel tests:** `test/play.py` writes `live.html` to the shared `test/out/` unless `AW_TMP` is set. Give each parallel run its
   own `AW_TMP`.
 
+## 4c. Companions (v186, Nov 1 2026): the loft bodies upgraded in place
+
+Companions are not on the cage kit; they are `lpGeo` lofts (0610). `lp186Geo` (3430) rebuilds every companion loft (never an
+enemy: keys `E137…` are skipped) with the recipe:
+
+- **Smoother outline and bends:** two Catmull-Rom rings between each pair (never thinner than the straight line between them),
+  twice the sides on 6–10 sided lofts, up to 4 bones per ring (the neighbours' weights blended). A leg loft is seated by a ring sunk
+  into the body and ends in a sole ring (paw kits were set against the old end cap).
+- **Paint is the original design, blended:** each new vertex takes the colours the paint function gives at the original rings and
+  sides, interpolated. Paint that hashes the ring index (`nz(i,…)`) would otherwise smear into stripes.
+- **Smooth body shading:** with ~4× the faces, flat shading made every long loft band a light / dark stripe. Companion bodies use a
+  smooth-shaded copy of their material; kit parts keep their facets. Membrane wings get a little transmitted light.
+- **Baked value:** top light × height, a cool shift in the shadows, no random speckle. Cavity is off (`LP186.cav`): on lofts it only
+  found the ring kinks and drew bands.
+- **Palette grade** (`LP186.grade[species]` = [saturation, lightness, optional earthy tint, amount]): colours are linear and go through
+  ACES, so a linear saturation of .4 still reads strong. Bright saturated accents on the kit's 'c' layer are left alone.
+- **Fur and feathers:** tapered tufts and feather blades are darker at the root; neighbouring blades of similar colour are blended
+  toward their local mean (checkerboards of alternating feathers read as tiles).
+- **Evolution looks (`EVO186`):** no dangling charms, ≤ 2 runes from look 3, no leg cuffs, one gem, ≤ 16 glowing strokes, one-colour
+  shells (an `i%2` colour function is averaged), the gear palette pulled toward the body, no gold crown spikes.
+
 ## 5. Checklist for every new or reworked model
 
 1. **Silhouette:** front and side pictures. Every triangle-heavy feature changes the outline; everything else is paint.
