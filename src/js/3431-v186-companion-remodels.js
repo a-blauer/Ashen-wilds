@@ -39,15 +39,24 @@ function mf186Geo(C){const K=MF186.cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd
     paint:(o,r,sn2,c)=>{const p=rm186Pt(r,sn2,c);o.copy(K.skin);if(sn(p,15,5)>.62)o.lerp(K.blot,.6);if(r.p[1]<.06)o.multiplyScalar(.82)}}))),41)}
 function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.skin.clone().multiplyScalar(.72).getHex(),lid=K.skin.clone().multiplyScalar(.88).getHex(),gl=K.gland.getHex(),eye=red?0xff2a2a:0xc8a030;
   [-1,1].forEach(s=>{
-    // small hooded eyes high on the skull, a horizontal pupil, a heavy lid
-    k.p('head','sph2','c',lid,s*.13,.36,.36,.05,.042,.05);
-    k.p('head','sph2','g',new THREE.Color(eye).multiplyScalar(.75).getHex(),s*.142,.364,.383,.028,.022,.018,0,s*.5,0);
-    k.p('head','box','c',0x050505,s*.147,.364,.398,.022,.006,.006,0,s*.5,0);
-    k.p('head','sph','c',dk,s*.128,.388,.364,.05,.016,.04,.14,s*.3,s*.3);
+    // v186b: big bulging eyes raised on turrets high on the skull (owner: "his eyes arent even showing"): a skin turret, a
+    // glowing gold eyeball out the side and front, a black horizontal pupil, a heavy dark lid over the top; a round
+    // eardrum behind each eye and a nostril on the snout
+    k.p('head','sph2','c',lid,s*.13,.35,.36,.06,.04,.058);
+    k.p('head','sph','c',red?0x8a2a1a:0xa8822a,s*.15,.384,.378,.05,.046,.048);
+    k.p('head','sph','c',0x050505,s*.183,.388,.41,.024,.011,.008,0,s*Math.PI/4,0);
+    k.p('head','sph','g',new THREE.Color(eye).multiplyScalar(.6).getHex(),s*.176,.404,.41,.006,.005,.004,0,s*Math.PI/4,0);
+    k.p('head','sph','c',dk,s*.14,.416,.37,.056,.022,.054,.12,s*.3,s*.2);
+    k.p('head','sph','c',dkShade(dk,.8),s*.215,.33,.31,.032,.032,.008,0,s*1.25,0);
+    k.p('head','sph','c',0x0a0c08,s*.035,.31,.462,.009,.006,.008);
     // the parotoid gland behind each eye: a long low swelling with a few pores
     k.p('head','sph','c',gl,s*.16,.355,.27,.05,.03,.08,0,s*.25,s*.3);
     [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
-    k.p('head','box','c',0x0a0c08,s*.035,.28,.47,.01,.006,.008)});
+    // a dorsolateral fold: a low ridge from behind the eye along the back
+    k.L('chest','c',dk,[s*.13,.4,.27],[s*.15,.43,.1],.022,.02,5);k.L('spine','c',dk,[s*.15,.43,.1],[s*.13,.415,-.1],.02,.014,5)});
+  // moss: low flat clumps of dark green on the back (lumps, not chips)
+  [[.04,.464,.06,.05],[-.07,.458,-.04,.045],[.08,.425,-.14,.04],[-.03,.45,.17,.035],[.15,.436,.02,.03]].forEach((q,i)=>{const bn=q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis';
+    [[0,0,1],[.6,.4,.7],[-.5,.5,.6],[.2,-.6,.65]].forEach((o,j)=>{const r=q[3]*.42*o[2];k.p(bn,'ico','c',(i+j)%2?0x2a3618:0x3a4a22,q[0]+o[0]*q[3]*.7,q[1]-.004*j,q[2]+o[1]*q[3]*.7,r,r*.55,r,0,i+j,0)})});
   // the mouth seam: a dark line round the snout where the jaw meets it
   for(let i=-3;i<=3;i++){const a=i/3*1.05,x=Math.sin(a)*.18,z=.405+Math.cos(a)*.062;k.p('head','box','c',0x140c0a,x,.245,z,.058,.006,.008,0,a,0)}
   // low warts the colour of the skin over the back and flanks (lumps, not chips)

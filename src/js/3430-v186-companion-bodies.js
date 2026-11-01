@@ -11,7 +11,7 @@
 //  * baked shading instead of random speckle (recipe 2.1/2.2): top light, darker toward the feet and underneath, cool in
 //    the shadows, crease / ridge from the welded surface (cavity), no per-vertex noise.
 // Paint functions still get the ORIGINAL ring index (their stripes and spots stay where they were designed).
-var LP186={on:true,cav:0,lo:false,rigs:null,split:2,sides:2,seat:1,stat:{},
+var LP186={on:true,cav:0,lo:false,rigs:null,split:0,sides:1,smooth:0,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
   // optional [s, l, tint, amount]: first a pull toward an earthy tint (the candy hue itself)
@@ -114,7 +114,7 @@ function lp186Geo(key,n,lofts,seed){
 // wild creatures of a companion species (enemies: c.en) roam in dozens per zone: they get a lighter body (one ring in
 // between, the original sides) under their own cache key, flat-shaded like the other enemies (recipe §1 budgets)
 {const f=lpGeo;lpGeo=function(key,n,lofts,seed){if(!lp186Comp(key,n))return f.apply(this,arguments);
-  if(LP186.lo){key=key+'|lo';if(LPG[key])return LPG[key];const s0=LP186.split,d0=LP186.sides;LP186.split=1;LP186.sides=1;try{return LPG[key]=lp186Geo(key,n,lofts,seed)}catch(e){console.error('lp186',key,e);return f.apply(this,arguments)}finally{LP186.split=s0;LP186.sides=d0}}
+  if(LP186.lo){key=key+'|lo';if(LPG[key])return LPG[key];const s0=LP186.split,d0=LP186.sides;LP186.split=0;LP186.sides=1;try{return LPG[key]=lp186Geo(key,n,lofts,seed)}catch(e){console.error('lp186',key,e);return f.apply(this,arguments)}finally{LP186.split=s0;LP186.sides=d0}}
   if(LPG[key])return LPG[key];
   try{return LPG[key]=lp186Geo(key,n,lofts,seed)}catch(e){console.error('lp186',key,e);return f.apply(this,arguments)}}}
 // the painted kit (eyes, warts, teeth, horns, ears: the 'c' layer of LP| bakes) gets the same grade; glow and metal keep theirs.
@@ -153,14 +153,14 @@ var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
   const run={rune:0,gem:0,glow:0},rune=E.rune,gem=E.gem,band=E.band,push0=E.p,pd0=E.pd,L0=E.L;
   const onLeg=h=>{try{const k=evo100Skin(E.S,h.p);const b=E.S.O[k[4]>=k[5]?k[0]:k[1]]||'';return /^(fl|fr|hl|hr)\d/.test(b)}catch(e){return false}};
-  E.rune=function(h,fwd,sz,col,o){if(L<3||run.rune>=2||!h||onLeg(h))return E;run.rune++;return rune.call(E,h,fwd,sz*.9,col==null||col===P.glow?P.glowD:col,o)};
-  E.gem=function(h,sz,col,o){if(run.gem>=1)return E;run.gem++;return gem.apply(E,arguments)};
+  E.rune=function(h,fwd,sz,col,o){if(run.rune>=4||!h||onLeg(h))return E;run.rune++;return rune.apply(E,arguments)};
+  E.gem=function(h,sz,col,o){if(run.gem>=2)return E;run.gem++;return gem.apply(E,arguments)};
   E.band=function(c,axis,off,r,t,col,N,o){if(r<=.009&&c&&c[1]<.3&&Math.abs(axis[1])>.6)return [];return band.apply(E,arguments)};
   // glow is the accent (recipe: under ~5% of the surface): after 14 glowing pieces the rest are drawn in the dark body colour
   const dimG=new THREE.Color(P.glowD).lerp(new THREE.Color(P.mainD),.6).getHex();
   // (only strokes and flames, E.L, count: set marks such as an eclipse ring or a gem keep their glow)
   const fix=(k,cap)=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
-      if(cap&&q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>16){q.t='c';q.col=dimG}}}return r};
+      if(cap&&q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>26){q.t='c';q.col=dimG}}}return r};
   E.p=fix(push0);E.L=fix(L0,1);
   // gold crown spikes (rows of small gold cones on brows and helms) are gone
   {const pdf=fix(pd0);E.pd=function(geo,t,col){if(geo=='cone4'&&t=='m'&&col===P.gold)return E;return pdf.apply(E,arguments)}}
@@ -200,7 +200,7 @@ function lp186Mat(m,kind){const k=m.uuid+'|'+kind;let q=LP186M.get(k);if(q)retur
   q.needsUpdate=true;LP186M.set(k,q);return q}
 {const f=lpRig;lpRig=function(c,n,D){const g=f.apply(this,arguments);if(!g||!LP186.on||!lp186Comp('LP|',n)||(c&&c.en))return g;
   try{const W=(typeof LPWG!='undefined'?Object.values(LPWG):[]).concat(typeof EVO100!='undefined'&&EVO100.wing?Object.values(EVO100.wing):[]);g.traverse(o=>{if(!o.isMesh||!o.material||Array.isArray(o.material))return;
-      if(o.isSkinnedMesh&&o.parent===g.b&&o.material.vertexColors&&o.material.flatShading&&!o.userData.evo100&&o.geometry&&o.geometry.index&&LP186.stat[Object.keys(LPG).find(k=>LPG[k]===o.geometry)]!=null){o.material=lp186Mat(o.material,'body')}
+      if(LP186.smooth&&o.isSkinnedMesh&&o.parent===g.b&&o.material.vertexColors&&o.material.flatShading&&!o.userData.evo100&&o.geometry&&o.geometry.index&&LP186.stat[Object.keys(LPG).find(k=>LPG[k]===o.geometry)]!=null){o.material=lp186Mat(o.material,'body')}
       else if(!o.isSkinnedMesh&&W.indexOf(o.geometry)>=0)o.material=lp186Mat(o.material,'wing')})}catch(e){console.error('lp186 mat',e)}
   return g}}
 // the evolution rays always use the full body (one surface per rig, shared by companions and wild elites)
