@@ -23,7 +23,7 @@ function mf186Geo(C){const K=MF186.cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd
     if(r.k=='snout'&&s<.2){o.lerp(K.mouth,.25)}
     if(s>.3)o.lerp(K.back,(s-.3)*.9);
     // blotches on the back and flanks (smooth, follow the body), the flank stripe, the belly
-    const b=sn(p,13,3);if(s>-.2&&b>.6)o.lerp(K.blot,Math.min(1,(b-.6)*4)*.8);
+    const b=sn(p,11,3);if(s>-.2&&b>.52)o.lerp(K.blot,Math.min(1,(b-.52)*5)*.75);
     if(s>-.15&&s<.12&&r.p[2]<.3&&r.p[2]>-.22)o.lerp(K.stripe,.55*(1-Math.abs(s+.02)/.14));
     if(s<-.3){const t=Math.min(1,(-.3-s)*3);o.lerp(K.belly,t*.85);if(sn(p,24,7)>.65)o.lerp(K.blot,.25*t)}};
   const body={rings:MF186.body.map(q=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],b:q[5],k:q[6]||'b'})),seg:10,capA:1,capB:1,paint};
@@ -69,10 +69,9 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
 {const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
   const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
   [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
-  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.008,'c',(x,y,z)=>n3Sn(x,y,z,18,4)>.5?moss:mossD,{rimCol:mossD});
+  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.006,'c',moss,{rimCol:mossD});
   if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
-    [-1,1].forEach(s=>{const pts=[];[.22,.12,.02,-.08,-.17].forEach(z=>{const h=E.on([s*.6,.29,z],[-s,0,0]);if(h)pts.push(E.add(h.p,h.n,.002))});
-      for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.004,.004,'g',P.glowD,3,{vs:1})})}
+  }
   if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;
     E.chain([[0,b,.3],[0,b+.07,.33],[0,b+.1,.39],[0,b+.08,.44]],.012,.006,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,b+.06,.45],[0,1,0],.022,null,{bn:'head'})}
   if(L>=5)[.12,.0,-.12].forEach(z=>{const t=E.top(0,z);if(t)E.L(E.add(t.p,t.n,-.006),E.add(t.p,E.nrm([0,1,-.6]),.055),.012,.002,'g',P.glow2,4)})}}
@@ -171,3 +170,11 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
 {const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);const pd0=E.pd;
   E.pd=function(geo,t,col){if(geo=='cone4'&&t=='m'&&(col===P.trim||col===P.gold))return E;return pd0.apply(E,arguments)};
   try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}
+
+// ===================================================================== Stoneshell =====================================================================
+// The eleven boulders set into the shell stood out as round chips (polka dots of stone); they are now six low slabs in the
+// shell's own stone, sunk flush, so the shell reads as one weathered carapace with a few raised plates; moss and crystals stay.
+{const B=LPR.Stoneshell,k0=B.kit;B.kit=function(k,c,C,red){if((RV137.cur.Stoneshell||'Stoneshell')!='Stoneshell')return k0.apply(this,arguments);
+  const p0=k.p;let n=0;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='spine'&&t=='c'&&(geo=='dod'||geo=='ico')&&sx>=.04&&sx<=.08&&Math.abs(sy-sx*.75)<.002){if((n++)%2)return k;
+      return p0.call(k,bn,geo,t,col,x,y-sx*.12,z,sx*1.25,sx*.32,sz*1.25,0,ry||0,0)}return p0.apply(k,arguments)};
+  try{return k0.apply(this,arguments)}finally{k.p=p0}}}
