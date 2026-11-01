@@ -172,7 +172,7 @@ function faBuild(){
     {s:2.1,H:[-.05,-.45,.45],D:[0,.4,1],py:-.15,sy:-.08,cy:0,sx:.12,dy:-.05,fz:.05,O:[-.05,-.8,.1],OP:[-.4,-.9,-.3]},
     RE]);
   FA_A.dagB=faTrack([R0,
-    {s:.45,H:[.25,.3,-.1],D:[.4,.6,-.6],E:[.2,1,0],P:[1,-.1,-.4],O:[.15,-.3,.55],OP:[-.7,-.6,-.2],py:.32,sy:.2,cy:.1,sx:.06,sz:-.06,dy:-.04,fz:-.05},
+    {s:.45,H:[.25,.3,-.1],D:[.4,.6,-.6],E:[-.8,.5,-.1],P:[1,-.1,-.4],O:[.15,-.3,.55],OP:[-.7,-.6,-.2],py:.32,sy:.2,cy:.1,sx:.06,sz:-.06,dy:-.04,fz:-.05},
     {s:1,H:[.28,.34,-.14],D:[.4,.65,-.6],py:.36,sy:.22,cy:.12,sx:.05,dy:-.05,fz:-.06},
     {s:1.3,H:[.15,-.08,.62],D:[.15,.15,.98],E:[-.8,-.3,.4],py:-.15,sy:-.1,sx:.18,fz:.1},
     {s:1.45,H:[-.25,-.15,.7],D:[0,.05,1],E:[-.9,-.3,0],P:[.8,-.5,0],py:-.3,sy:-.2,cy:-.1,sx:.22,sz:.05,dy:-.07,fz:.12,O:[-.1,-.65,-.15],OP:[-.6,-.6,-.6],ah:1,ad:.45},
@@ -313,14 +313,20 @@ function faTwist(b1,b2,lq,u2){const d=lq.x*u2.x+lq.y*u2.y+lq.z*u2.z,tw=FA_q[21].
 // hand's frame (the carry grip). Limits: flex / extend 65°, ulnar 35°, radial 20°, pronation 100°. Past them only a little
 // is left to the weapon in the fist: 15° of tilt and 45° of roll about the round handle (FA_FIST).
 var FA_WL={flex:1.13,uln:.61,rad:.35,tw:1.75},FA_FIST={tilt:.26,roll:.785};
-function faWristParts(lq,u2,hH,o){const d=lq.x*u2.x+lq.y*u2.y+lq.z*u2.z;let tw=2*Math.atan2(d,lq.w);if(tw>Math.PI)tw-=2*Math.PI;if(tw<-Math.PI)tw+=2*Math.PI;
+// most a weapon may turn per 1/30 s (radians): aim d (ds in the strike's few fastest frames), roll about the handle r, the
+// elbow's place on its circle p, the weapon inside the fist f
+var FA_RATE={free:1,d:.5,ds:1.16,r:.35,p:.5,f:.08,s:.36};
+// (the forearm turn is kept continuous from frame to frame, ref = last frame's: read in (-180°, 180°] it wrapped from -181° to
+// +179°, and the clamp then turned the hand over by 200° in one frame)
+function faWristParts(lq,u2,hH,o,ref){const d=lq.x*u2.x+lq.y*u2.y+lq.z*u2.z;let tw=2*Math.atan2(d,lq.w);if(tw>Math.PI)tw-=2*Math.PI;if(tw<-Math.PI)tw+=2*Math.PI;
+  if(ref!=null&&isFinite(ref))tw+=2*Math.PI*Math.round((ref-tw)/(2*Math.PI));
   const tq=FA_q[21].setFromAxisAngle(u2,tw),sq=FA_q[22].copy(lq).multiply(FA_q[23].copy(tq).invert());if(sq.w<0){sq.x=-sq.x;sq.y=-sq.y;sq.z=-sq.z;sq.w=-sq.w}
   const sa=2*Math.acos(Math.min(1,sq.w)),sn=Math.sqrt(Math.max(0,1-sq.w*sq.w)),k=sn>1e-6?sa/sn:2;
   const f=o.f||(o.f=hH.clone().addScaledVector(u2,-hH.dot(u2)).normalize()),dv=o.dv||(o.dv=new THREE.Vector3().crossVectors(u2,f));
   /* + deviation turns the weapon's head away from the elbow (ulnar, as in a chop) */
   if(o.sg==null){o.sg=1;const hd=hH.clone().negate(),t=hd.clone().applyAxisAngle(dv,.1);if(t.dot(u2)<hd.dot(u2))o.sg=-1}
   o.tw=tw;o.flex=(sq.x*f.x+sq.y*f.y+sq.z*f.z)*k;o.dev=(sq.x*dv.x+sq.y*dv.y+sq.z*dv.z)*k*o.sg;return o}
-function faWristClamp(lq,u2,hH,o){faWristParts(lq,u2,hH,o);const fl=Math.max(-FA_WL.flex,Math.min(FA_WL.flex,o.flex)),dv=Math.max(-FA_WL.rad,Math.min(FA_WL.uln,o.dev)),tw=Math.max(-FA_WL.tw,Math.min(FA_WL.tw,o.tw));
+function faWristClamp(lq,u2,hH,o){faWristParts(lq,u2,hH,o,o.tw);const fl=Math.max(-FA_WL.flex,Math.min(FA_WL.flex,o.flex)),dv=Math.max(-FA_WL.rad,Math.min(FA_WL.uln,o.dev)),tw=Math.max(-FA_WL.tw,Math.min(FA_WL.tw,o.tw));
   const v=o.f.clone().multiplyScalar(fl).addScaledVector(o.dv,dv*o.sg),an=v.length(),sq=an>1e-9?new THREE.Quaternion().setFromAxisAngle(v.multiplyScalar(1/an),an):new THREE.Quaternion();
   return lq.copy(sq).multiply(new THREE.Quaternion().setFromAxisAngle(u2,tw))}
 // search the elbow's place on its circle (φ) and the hand's roll about the weapon axis together. Returns {pole, Qh}.
@@ -328,7 +334,7 @@ function faWristClamp(lq,u2,hH,o){faWristParts(lq,u2,hH,o);const fl=Math.max(-FA
 // pull toward a neutral wrist, the edge off its direction (weight ew; inside the edge window only rolls near the edge's are
 // tried), the elbow away from the designed pole, and change from last frame.
 var FA_BQ=[new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion()],FA_BV=[];for(let i=0;i<12;i++)FA_BV.push(new THREE.Vector3());
-function faBest(b0,b1,b2,T,poleD,q0,Dw,edH,Ew,ew,edge,prev,hH,hard){
+function faBest(b0,b1,b2,T,poleD,q0,Dw,edH,Ew,ew,eSg,prev,hH,hard,lim,twRef,home){
   const V=FA_BV,Q=FA_BQ,S=faWP(b0,V[0]),l1=S.distanceTo(faWP(b1,V[1])),l2=faWP(b1,V[1]).distanceTo(faWP(b2,V[2]));
   const n=V[3].subVectors(T,S);let d=n.length();n.multiplyScalar(1/(d||1));d=Math.max(Math.abs(l1-l2)+1e-3,Math.min((l1+l2)*.9995,d));
   const a=(l1*l1-l2*l2+d*d)/(2*d),hh=Math.sqrt(Math.max(0,l1*l1-a*a)),C=V[4].copy(S).addScaledVector(n,a),Tg=V[5].copy(S).addScaledVector(n,d);
@@ -337,28 +343,38 @@ function faBest(b0,b1,b2,T,poleD,q0,Dw,edH,Ew,ew,edge,prev,hH,hard){
   const u1=b1.position.clone().normalize(),za=new THREE.Vector3(0,0,1).addScaledVector(u1,-u1.z).normalize(),u2=b2.position.clone().normalize();
   const E=V[8],U=V[9],F=V[10],bd=V[11],R0=Q[1],q1l=Q[2],Q1=Q[3],Qh=Q[4],tmpQ=new THREE.Quaternion(),Fl=new THREE.Vector3(),ed=new THREE.Vector3(),wo={};
   let best=null;
-  const evalAt=(ph,ro)=>{
+  /* last frame's elbow, found on this frame's circle (the pole moves with the keys: "the same elbow" is a place, not an angle) */
+  if(prev&&prev.E){const v=prev.E.clone().sub(C);prev={ph:Math.atan2(v.dot(e2),v.dot(e1)),ro:0}}
+  const evalAt=(ph,ro,far)=>{
     E.copy(C).addScaledVector(e1,hh*Math.cos(ph)).addScaledVector(e2,hh*Math.sin(ph));U.subVectors(E,S).normalize();F.subVectors(Tg,E).normalize();
     bd.copy(F).addScaledVector(U,-F.dot(U));if(bd.lengthSq()<1e-6)bd.copy(e1).multiplyScalar(Math.cos(ph)).addScaledVector(e2,Math.sin(ph));bd.normalize();
     faFrameQ(u1,za,U,bd,R0);Fl.copy(F).applyQuaternion(tmpQ.copy(R0).invert());q1l.setFromUnitVectors(u2,Fl);Q1.copy(R0).multiply(q1l);
-    Qh.setFromAxisAngle(Dw,ro).multiply(q0);const lq=tmpQ.copy(Q1).invert().multiply(Qh);faWristParts(lq,u2,hH,wo);
+    Qh.setFromAxisAngle(Dw,ro).multiply(q0);const lq=tmpQ.copy(Q1).invert().multiply(Qh);faWristParts(lq,u2,hH,wo,twRef);
     const exF=Math.max(0,Math.abs(wo.flex)-FA_WL.flex),exD=Math.max(0,wo.dev-FA_WL.uln,-wo.dev-FA_WL.rad),exT=Math.max(0,Math.abs(wo.tw)-FA_WL.tw),tilt=Math.hypot(exD,exT);
     let c=60*Math.pow(Math.max(0,tilt-FA_FIST.tilt*.8),2)+60*Math.pow(Math.max(0,exF-FA_FIST.roll*.8),2)+3*tilt*tilt+1.5*exF*exF
-      +.15*wo.flex*wo.flex+.4*wo.dev*wo.dev+.12*wo.tw*wo.tw+(1-Math.cos(ph))*.35;
-    let ee=0;if(Ew&&ew>0){ed.copy(edH).applyQuaternion(Qh);ed.addScaledVector(Dw,-ed.dot(Dw));const el=ed.length();if(el>1e-6){let cs=ed.dot(Ew)/el;if(edge==2)cs=Math.abs(cs);ee=Math.acos(Math.max(-1,Math.min(1,cs)))}c+=ee*ee*(hard?6:.8*ew)}
+      +.15*wo.flex*wo.flex+.4*wo.dev*wo.dev+.12*wo.tw*wo.tw+(1-Math.cos(ph))*.35
+      +(home&&home.k>0?home.k*(Math.pow(wo.tw-home.tw,2)+Math.pow(wo.flex-home.flex,2)+Math.pow(wo.dev-home.dev,2)+2*(1-Math.cos(ph))):0);
+    let ee=0;if(Ew&&ew>0){ed.copy(edH).applyQuaternion(Qh);ed.addScaledVector(Dw,-ed.dot(Dw));const el=ed.length();if(el>1e-6){const cs=eSg?eSg*ed.dot(Ew)/el:Math.abs(ed.dot(Ew)/el);ee=Math.acos(Math.max(-1,Math.min(1,cs)))}c+=ee*ee*(hard?6:.8*ew)}
     // keep close to last frame's choice (no flicker between two equally good solutions)
-    if(prev){const dp=Math.atan2(Math.sin(ph-prev.ph),Math.cos(ph-prev.ph)),dr=Math.atan2(Math.sin(ro-prev.ro),Math.cos(ro-prev.ro));c+=(dp*dp+dr*dr)*.6}
+    if(prev){const dp=Math.atan2(Math.sin(ph-prev.ph),Math.cos(ph-prev.ph)),dr=Math.atan2(Math.sin(ro-prev.ro),Math.cos(ro-prev.ro));c+=far?(lim.fs?.6*(dp*dp+dr*dr):2+.4*(dp*dp+dr*dr)):(dp*dp+dr*dr)*(lim?1:.6)}
     if(!best||c<best.c)best={c,ph,ro,ee,tilt,exF};};
-  // rolls to try: all round, or (inside the edge window) those that put the edge within ~25° of its direction
-  let rolls=[];if(hard&&Ew){ed.copy(edH).applyQuaternion(q0);ed.addScaledVector(Dw,-ed.dot(Dw));const t=Ew.clone().addScaledVector(Dw,-Ew.dot(Dw));
-    if(ed.lengthSq()>1e-8&&t.lengthSq()>1e-8){ed.normalize();t.normalize();const aE=Math.atan2(new THREE.Vector3().crossVectors(ed,t).dot(Dw),ed.dot(t));
-      for(const base of edge==2?[aE,aE+Math.PI]:[aE])for(const k of [-.42,-.21,0,.21,.42])rolls.push(base+k)}}
-  if(!rolls.length)for(let j=0;j<12;j++)rolls.push(j*Math.PI/6);
-  for(let i=0;i<16;i++)for(const ro of rolls)evalAt((i-8)*Math.PI/8,ro);
-  if(prev)evalAt(prev.ph,prev.ro);
-  const p0=best.ph,r0=best.ro;for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)if(i||j)evalAt(p0+i*Math.PI/40,r0+j*Math.PI/40*(hard?.5:1));
+  // rolls to try: from last frame's hand (q0 = it, carried to the new aim) no further than lim allows; the first frame all
+  // round. The edge's own roll is tried too (within the limit).
+  if(lim&&prev){const ns=8;let aE=null;
+    if(Ew&&ew>0){ed.copy(edH).applyQuaternion(q0);ed.addScaledVector(Dw,-ed.dot(Dw));const t=Ew.clone().addScaledVector(Dw,-Ew.dot(Dw)).multiplyScalar(eSg||1);
+      if(ed.lengthSq()>1e-8&&t.lengthSq()>1e-8){ed.normalize();t.normalize();if(!eSg&&ed.dot(t)<0)t.negate();aE=Math.atan2(new THREE.Vector3().crossVectors(ed,t).dot(Dw),ed.dot(t));aE=Math.max(-lim.ro,Math.min(lim.ro,aE))}}
+    for(let i=-ns;i<=ns;i++)for(let j=-ns;j<=ns;j++)evalAt(prev.ph+lim.ph*i/ns,lim.ro*j/ns);
+    if(aE!=null)for(let i=-ns;i<=ns;i++)evalAt(prev.ph+lim.ph*i/ns,aE);
+    /* a far better pose elsewhere (the near one ran out of wrist) may still be taken: the change costs, and the hand's own
+       turn limit spreads it over frames */
+    for(let i=0;i<16;i++)for(let j=0;j<12;j++)evalAt((i-8)*Math.PI/8,j*Math.PI/6-Math.PI,1)}
+  else{for(let i=0;i<16;i++)for(let j=0;j<12;j++)evalAt((i-8)*Math.PI/8,j*Math.PI/6);
+    const p0=best.ph,r0=best.ro;for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)if(i||j)evalAt(p0+i*Math.PI/40,r0+j*Math.PI/40)}
   const pole=new THREE.Vector3().copy(e1).multiplyScalar(Math.cos(best.ph)).addScaledVector(e2,Math.sin(best.ph));
   return {pole,Qh:new THREE.Quaternion().setFromAxisAngle(Dw,best.ro).multiply(q0),c:best.c,ee:best.ee,ph:best.ph,ro:best.ro,tilt:best.tilt}}
+// turn the weapon in the fist by Rp from its carry grip, keeping the point held in the fist where it is
+function faSetFist(we,Rp){const W=we.W,hd=we.C.hold,h=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z),ph=h.clone().applyQuaternion(W.quaternion).add(W.position);
+  W.quaternion.copy(Rp).multiply(we.C.q);W.position.copy(ph.sub(h.applyQuaternion(W.quaternion)));W.updateMatrixWorld(true)}
 // the weapon a hand holds (grip registry entry)
 function faWpn(h,side){const S=h._grip;if(!S||!S.L)return null;for(const e of S.L)if(e.side==side&&e.W&&e.W.parent)return e;return null}
 // ---------------- per foe state ----------------
@@ -381,19 +397,31 @@ function faDrives(g,S,a){if(!FA.on||!a)return false;const n=faMove(g,a);if(!FA_M
 // ---------------- the solve ----------------
 function faApply(g,S,a,now){
   const h=g.h,b=h.bones,T=S.T,s=a.ph==0?S.sw(a.k):a.ph==1?1+a.k:2+S.sr(1-a.k),sT=S.rm?S.rm(s):s;
-  // WEAPON FACING (owner: a hard rule). Through the downswing and the hit (the track's edge window, T.o.hw) the striking edge
-  // leads along the head's own path: the direction of travel is the head's real travel (last frame's actual head to where
-  // this frame puts it), and the solver turns the edge to it with the elbow's place and the forearm's turn, inside the
-  // wrist's range (the keys are authored so it can: the weapon square to the forearm). Outside the window the edge follows
-  // the keys (lagging, never backwards).
-  let lead=null;const hwin=T.o.hw||[1.02,1.75],hwf=T.o.hwf||.12,hardK=S.we&&S.we.edge?faSS((sT-hwin[0]+.08)/.08)*faSS((hwin[1]+hwf-sT)/hwf):0;
-  if(hardK>0){const pos=t=>{const Q=T(t),dn=Math.hypot(Q.D[0],Q.D[1],Q.D[2])||1;return new THREE.Vector3(Q.hs*S.hwU+Q.H[0]+Q.D[0]/dn*S.wlU,Q.H[1]+Q.D[1]/dn*S.wlU,Q.H[2]+Q.D[2]/dn*S.wlU)};
-    const v=pos(sT+.03).sub(pos(sT-.03)),Q=T(sT),d=new THREE.Vector3(Q.D[0],Q.D[1],Q.D[2]).normalize();v.addScaledVector(d,-v.dot(d));if(v.length()>.02)lead=v.normalize()}
+  // WEAPON FACING (owner: a hard rule). The edge follows its keys all through the swing; once the downswing moves toward
+  // the target (the track's edge window, T.o.hw) it is turned onto the head's travel along the track. A two-edged blade
+  // picks its side once per swing. NOTHING JUMPS (owner: "the weapons flip around in the hand right before the swing"):
+  // the weapon's aim turns at most FA_RATE.d (FA_RATE.ds in the strike) and its roll about the handle FA_RATE.r per 1/30 s,
+  // the elbow FA_RATE.p, the weapon inside the fist FA_RATE.f, and each frame starts from the last frame's hand (carried
+  // along to the new aim), so the solver can never swap to another solution from one frame to the next.
+  let lead=null;const hwin=T.o.hw||[1.02,1.75],hwf=T.o.hwf||.35;let hardK=S.we&&S.we.edge?faSS((sT-hwin[0]+.25)/.25)*faSS((hwin[1]+hwf-sT)/hwf):0;
+  const pos=t=>{const Q=T(t),dn=Math.hypot(Q.D[0],Q.D[1],Q.D[2])||1;return new THREE.Vector3(Q.hs*S.hwU+Q.H[0]+Q.D[0]/dn*S.wlU,Q.H[1]+Q.D[1]/dn*S.wlU,Q.H[2]+Q.D[2]/dn*S.wlU)};
+  // through the coil the blade is already turned the way the downswing will need it (the edge on the coming travel,
+  // carried back to the weapon's present direction), so the edge is in place when the window opens — no turn-over then
+  let prep=null,kp=0;if(S.we&&S.we.edge&&sT>.35&&sT<hwin[0]+.15){const su=hwin[0]+.15,v=pos(su+.03).sub(pos(su-.03)),Qa=T(su),Qn=T(sT),da=new THREE.Vector3(Qa.D[0],Qa.D[1],Qa.D[2]).normalize(),dn=new THREE.Vector3(Qn.D[0],Qn.D[1],Qn.D[2]).normalize();
+    v.addScaledVector(da,-v.dot(da));if(v.length()>.02){v.normalize().applyQuaternion(new THREE.Quaternion().setFromUnitVectors(da,dn));v.addScaledVector(dn,-v.dot(dn));if(v.lengthSq()>1e-4){prep=v.normalize();kp=faSS((sT-.35)/.3)}}}
+  if(hardK>0){
+    const v=pos(sT+.03).sub(pos(sT-.03)),Q=T(sT),d=new THREE.Vector3(Q.D[0],Q.D[1],Q.D[2]).normalize();v.addScaledVector(d,-v.dot(d));if(v.length()>.02)lead=v.normalize();
+    /* only once the head moves toward the target (in the coil it follows the keys); once on, it stays on to the window's end */if(!S.hkOn)hardK*=lead?faSS((lead.z+.25)/.4):0;if(hardK>.5)S.hkOn=1}
   const P=T(sT);S.sT=sT;S.hardK=hardK;
+  // the blow's few fastest frames (a strike's downswing to just past the hit, a slam's to its landing): the turn limits open up
+  const th0=S.tHit!=null?S.tHit:S.mv=='strike'?1.45:1,inF=sT>th0-.35&&sT<th0+.15;
   // blend in over the start of the wind-up, out over the end of the recovery
-  const w=faSS(s/.35)*faSS((3-s)/.45);if(w<=1e-4)return;
+  const w=faSS(s/.35)*faSS((3-s)/.8);if(w<=1e-4)return;
   const side=S.side,mesh=b.pelvis.parent;
   g.updateMatrixWorld(true);
+  // the stance's own weapon hand and elbow (the earlier layers' pose): the end of the recovery comes back to exactly these,
+  // so the blend back has nothing left to turn (it spun the weapon round its handle in the last frames)
+  const hb=faSS((sT-2.0)/.85),qHb=hb>0?faWQ(S.mA[2],new THREE.Quaternion()):null,eHb=hb>0?faWP(S.mA[1],new THREE.Vector3()).sub(faWP(S.mA[0],new THREE.Vector3())):null;
   const mq=faWQ(mesh,FA_q[2]).clone(),toW=(arr,v)=>v.set(arr[0]*side,arr[1],arr[2]).applyQuaternion(mq);
   // feet where the earlier layers put them
   let fL,fR,qL,qR;if(S.legs){fL=faWP(b.lh2,new THREE.Vector3());fR=faWP(b.rh2,new THREE.Vector3());qL=faWQ(b.lh2,new THREE.Quaternion());qR=faWQ(b.rh2,new THREE.Quaternion())}
@@ -419,47 +447,58 @@ function faApply(g,S,a,now){
   // hand: aim the weapon (head along D, edge toward E), or a natural wrist with flex rw
   const we=S.we,u2=m2.position.clone().normalize();
   if(we){const Wq=we.W.quaternion,headH=FA_NY.clone().applyQuaternion(Wq),edH=FA_X.clone().applyQuaternion(Wq),Dw=toW(P.D,new THREE.Vector3()).normalize();
+    /* the swing starts from where the weapon really is (a sling hangs, a staff stands): the aim eases from the carry's own
+       direction to the keys over the first part of the wind-up */
+    if(!S.D0){const d=FA_NY.clone().applyQuaternion(faWQ(we.W,new THREE.Quaternion()));S.D0=d}if(sT<.4)Dw.lerp(S.D0,1-faSS(sT/.4)).normalize();
     if(P.ad){const sy=sm.y+(tgt.y-sm.y),y=Math.max(-.85,Math.min(.35,(S.tgY-sy)/(S.wl||1))),y2=Dw.y+(y-Dw.y)*P.ad,hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(1-y2*y2)/hl;Dw.set(Dw.x*k,y2,Dw.z*k)}
+    const fk=Math.max(.25,Math.min(3,(S.dt||1/30)*30));
+    // the aim turns no faster than FA_RATE allows (the clamps below still hold)
+    if(S.Dp){const lim=(inF?FA_RATE.ds:FA_RATE.d)*fk,c=Math.max(-1,Math.min(1,S.Dp.dot(Dw))),an=Math.acos(c);
+      if(an>lim){const ax=new THREE.Vector3().crossVectors(S.Dp,Dw);if(ax.lengthSq()<1e-10)ax.set(0,1,0).cross(S.Dp);if(ax.lengthSq()<1e-10)ax.set(1,0,0);Dw.copy(S.Dp).applyAxisAngle(ax.normalize(),lim).normalize()}}
     // the recovery never takes the head further toward the target than it was at the hit (it was read as a second blow)
     {const fw=toW([0,0,1],new THREE.Vector3()),zh=tgt.clone().sub(faWP(b.pelvis,FA_v[22])).dot(fw);
       const zt=zh+Dw.dot(fw)*S.wl;   /* the head's reach at the hit, interpolated between the frames either side of s 1.45 */
       const th=S.tHit;if(th!=null&&sT>=th&&S.zHit==null)S.zHit=S.zp&&S.zp[0]<th?S.zp[1]+(zt-S.zp[1])*Math.min(1,(th-S.zp[0])/Math.max(1e-4,sT-S.zp[0])):zt;
       S.zp=[sT,zt];
-      if(th!=null&&sT>th+(th>1.9?.04:.25)&&S.zHit!=null&&S.wl>0){const lim=(S.zHit+.02*S.sc-zh)/S.wl,dz=Dw.dot(fw);
+      /* (eased in: the follow-through may reach on past the hit, the allowance shrinking smoothly to nothing by the recovery;
+         a clamp switched on all at once lifted the weapon back up mid-follow-through, read as a flicker) */
+      if(th!=null&&sT>th&&S.zHit!=null&&S.wl>0){const ex=th>1.9?0:.6*S.wl*(1-faSS((sT-th-.05)/(1.98-th-.05))),lim=((S.zHitA!=null?Math.min(S.zHit,S.zHitA):S.zHit)+.02*S.sc+ex-zh)/S.wl,dz=Dw.dot(fw);
         if(dz>lim){const c=Math.max(-1,Math.min(1,lim)),r=Dw.clone().addScaledVector(fw,-dz),rl=r.length();if(rl>1e-6)Dw.copy(r.multiplyScalar(Math.sqrt(1-c*c)/rl)).addScaledVector(fw,c)}}}
     // never through the ground: the head stays a little above the foe's feet
     {const fl=S.gy+.09*S.sc,hy=tgt.y;if(hy+Dw.y*S.wl<fl){const y2=Math.max(-1,Math.min(1,(fl-hy)/(S.wl||1))),hl=Math.hypot(Dw.x,Dw.z)||1,k=Math.sqrt(Math.max(0,1-y2*y2))/hl;Dw.set(Dw.x*k||0,y2,Dw.z*k||Math.sqrt(Math.max(0,1-y2*y2)))}}
     // any hand orientation with the weapon along Dw: a roll about Dw of this one
-    const q0=new THREE.Quaternion().setFromUnitVectors(headH,Dw);
-    // the head's real travel this frame (last frame's head to where this frame puts it, in the body frame) beats the track's
-    // own estimate (the aim at the target's chest bends the path near the hit)
-    {const mi=mesh.matrixWorld.clone().invert(),hp=tgt.clone().addScaledVector(Dw,S.wl).applyMatrix4(mi);
-      if(S.hP&&S.hT!=null&&sT>S.hT){const v=hp.clone().sub(S.hP),dl=new THREE.Vector3().copy(Dw).transformDirection(mi);v.addScaledVector(dl,-v.dot(dl));
-        if(v.length()>.015*S.wl){/* body frame -> main-side frame (x flips for the left arm) */const vb=v.normalize();lead=new THREE.Vector3(vb.x*side,vb.y,vb.z)}}
-      S.hP=hp;S.hT=sT}
-    // inside the edge window the edge's direction is the head's real travel: last frame's actual head to where this frame
-    // puts it
-    {const mi=mesh.matrixWorld.clone().invert(),hp=tgt.clone().addScaledVector(Dw,S.wl).applyMatrix4(mi);
-      if(hardK>0&&S.tP&&S.tPs!=null&&sT>S.tPs){const v=hp.clone().sub(S.tP),dl=Dw.clone().transformDirection(mi);v.addScaledVector(dl,-v.dot(dl));
-        if(v.length()>.01*S.wl){const vb=v.normalize();lead=new THREE.Vector3(vb.x*side,vb.y,vb.z)}}}
-    const Eb=new THREE.Vector3(P.E[0],P.E[1],P.E[2]).normalize();if(lead)Eb.lerp(lead,hardK).normalize();
-    const ew=we.edge?P.ew*Math.max(hardK,faSS((sT-.85)/.3)*faSS((2.35-sT)/.3)):0;
-    const Ew=we.edge?toW([Eb.x,Eb.y,Eb.z],new THREE.Vector3()).normalize():null;
+    const q0=S.Dp&&S.Qp?new THREE.Quaternion().setFromUnitVectors(S.Dp,Dw).multiply(S.Qp):new THREE.Quaternion().setFromUnitVectors(headH,Dw);
+    S.Dp=Dw.clone();
+    const Eb=new THREE.Vector3(P.E[0],P.E[1],P.E[2]).normalize();if(prep&&kp>0)Eb.lerp(prep,kp*(1-hardK)).normalize();if(lead)Eb.lerp(lead,hardK).normalize();
+    let ew=we.edge?P.ew*Math.max(hardK,faSS(sT/.3)*faSS((2.35-sT)/.3),1.3*kp*(1-hardK)):0;
+    let Ew=we.edge?toW([Eb.x,Eb.y,Eb.z],new THREE.Vector3()).normalize():null;
+    /* a two-edged blade picks its side once, as the downswing starts (before that either edge will do) */if(we.edge==2&&hardK>0&&!S.eSg){const e0=edH.clone().applyQuaternion(q0);S.eSg=e0.dot(Ew)<0?-1:1}const eSg=we.edge==2?(S.eSg||0):1;
     const hH=S.hH||(S.hH=new THREE.Vector3(0,1,0).applyQuaternion(we.C.q).normalize());
     // choose the roll and where the elbow goes together: a natural wrist first, the edge leading, the elbow near its pole
-    const r=faBest(m0,m1,m2,tgt,pole,q0,Dw,edH,Ew,ew,we.edge,S.bp,hH,!!(we.edge&&hardK>.5&&P.ew>0));S.bp={ph:r.ph,ro:r.ro};
-    faIK(m0,m1,m2,tgt,r.pole,1);
-    const q1=faWQ(m1,FA_q[3]),lq=q1.clone().invert().multiply(r.Qh);faWristClamp(lq,u2,hH,S.wo||(S.wo={}));if(FA.dbg){const o=S.wo;FA.dbg.wp=[o.flex,o.dev,o.tw].map(x=>+(x*57.3).toFixed(0));FA.dbg.rt=+(r.tilt*57.3).toFixed(0);FA.dbg.fa=+(Math.acos(Math.max(-1,Math.min(1,faWP(m2,new THREE.Vector3()).sub(faWP(m1,new THREE.Vector3())).normalize().dot(Dw))))*57.3).toFixed(0);FA.dbg.carry=+(Math.acos(Math.max(-1,Math.min(1,-hH.dot(u2))))*57.3).toFixed(0)}faTwist(m1,m2,lq,u2);
+    const r=faBest(m0,m1,m2,tgt,pole,q0,Dw,edH,Ew,ew,eSg,S.bp,hH,!!(we.edge&&hardK>.5&&P.ew>0),S.bp?{ro:(inF?2.5:1)*FA_RATE.r*fk,ph:(inF?2:1)*FA_RATE.p*fk,fs:inF||FA_RATE.free}:null,S.bp&&S.wo?S.wo.tw:null,S.wh?{tw:S.wh.tw,flex:S.wh.flex,dev:S.wh.dev,k:3*faSS((sT-2.15)/.35)}:null);S.Qp=r.Qh.clone();
+    if(hb>0){r.Qh.slerp(qHb,hb);const n=tgt.clone().sub(faWP(m0,new THREE.Vector3())).normalize(),pb=eHb.clone().addScaledVector(n,-eHb.dot(n));if(pb.lengthSq()>1e-8)r.pole.lerp(pb.normalize(),hb).normalize();S.Qp=r.Qh.clone()}
+    faIK(m0,m1,m2,tgt,r.pole,1);S.bp={E:faWP(m1,new THREE.Vector3()),ph:r.ph};
+    const q1=faWQ(m1,FA_q[3]),lq=q1.clone().invert().multiply(r.Qh);faWristClamp(lq,u2,hH,S.wo||(S.wo={}));if(!S.wh){S.wh={tw:S.wo.tw,flex:S.wo.flex,dev:S.wo.dev};}if(FA.dbg){const o=S.wo;FA.dbg.wp=[o.flex,o.dev,o.tw].map(x=>+(x*57.3).toFixed(0));FA.dbg.rt=+(r.tilt*57.3).toFixed(0);FA.dbg.fa=+(Math.acos(Math.max(-1,Math.min(1,faWP(m2,new THREE.Vector3()).sub(faWP(m1,new THREE.Vector3())).normalize().dot(Dw))))*57.3).toFixed(0);FA.dbg.carry=+(Math.acos(Math.max(-1,Math.min(1,-hH.dot(u2))))*57.3).toFixed(0)}faTwist(m1,m2,lq,u2);
+    const hHw=q=>(S.hH||new THREE.Vector3(0,1,0)).clone().applyQuaternion(q).normalize();
+    // and the hand itself never turns faster than that (a key the wrist can't reach makes the weapon lag, never jump)
+    {const qa=faWQ(m2,new THREE.Quaternion());if(S.Hp){let ch=0;
+      /* its turn about the weapon's handle (what spins the blade) is held to FA_RATE.s */
+      {const d=qa.clone().multiply(S.Hp.clone().invert()),ax=hHw(qa);let sp=2*Math.atan2(d.x*ax.x+d.y*ax.y+d.z*ax.z,d.w);if(sp>Math.PI)sp-=2*Math.PI;if(sp<-Math.PI)sp+=2*Math.PI;
+        const ls=FA_RATE.s*(inF?1:.85)*fk;if(Math.abs(sp)>ls){qa.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,-(sp-Math.sign(sp)*ls)));ch=1}}
+      const an=2*Math.acos(Math.min(1,Math.abs(S.Hp.dot(qa)))),lim=(inF?FA_RATE.ds:FA_RATE.d)*fk;
+      if(an>lim){const tq=qa.clone();qa.copy(S.Hp).slerp(tq,lim/an);ch=1}if(ch)faSetW(m2,qa)}S.Hp=qa.clone()}
     // the little the wrist can't give, the weapon makes inside the fist: never more than FA_FIST (15° of tilt, 45° of roll
     // about the round handle), so it never visibly angles in the closed hand
     {const W=we.W,qa=faWQ(m2,new THREE.Quaternion()),R=qa.clone().invert().multiply(r.Qh),d=R.x*hH.x+R.y*hH.y+R.z*hH.z;let ro=2*Math.atan2(d,R.w);if(ro>Math.PI)ro-=2*Math.PI;if(ro<-Math.PI)ro+=2*Math.PI;
       const tq=new THREE.Quaternion().setFromAxisAngle(hH,Math.max(-FA_FIST.roll,Math.min(FA_FIST.roll,ro))),sq=R.clone().multiply(new THREE.Quaternion().setFromAxisAngle(hH,ro).invert());
       if(sq.w<0){sq.x=-sq.x;sq.y=-sq.y;sq.z=-sq.z;sq.w=-sq.w}const ta=2*Math.acos(Math.min(1,sq.w));if(ta>FA_FIST.tilt)sq.copy(new THREE.Quaternion().slerp(sq,FA_FIST.tilt/ta));
-      const Rp=sq.multiply(tq),hd=we.C.hold,h=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z),ph=h.clone().applyQuaternion(W.quaternion).add(W.position);
-      W.quaternion.copy(Rp).multiply(we.C.q);W.position.copy(ph.sub(h.applyQuaternion(W.quaternion)));W.updateMatrixWorld(true);
+      const Rp=sq.multiply(tq);if(S.Rf){const an=2*Math.acos(Math.min(1,Math.abs(S.Rf.dot(Rp)))),lim=FA_RATE.f*(inF?4:1)*fk;if(an>lim){const tR=Rp.clone();Rp.copy(S.Rf).slerp(tR,lim/an)}}
+      S.Rf=Rp.clone();/* (blended in and out with the pose, w) */faSetFist(we,new THREE.Quaternion().slerp(Rp,w));
+      /* the head's real reach at the hit (the weapon may trail its aim a little): the recovery is held to the smaller one */
+      {const th=S.tHit,fw=toW([0,0,1],new THREE.Vector3()),z=W.localToWorld(new THREE.Vector3(0,-(W.userData.faLen||.8),0)).sub(faWP(b.pelvis,new THREE.Vector3())).dot(fw);
+        if(th!=null&&sT>=th&&S.zHitA==null)S.zHitA=S.zpA&&S.zpA[0]<th?S.zpA[1]+(z-S.zpA[1])*Math.min(1,(th-S.zpA[0])/Math.max(1e-4,sT-S.zpA[0])):z;S.zpA=[sT,z]}
       // how far the weapon ended from its aim (diagnostic for authoring: a key the arm can't reach shows here)
       const got=FA_NY.clone().applyQuaternion(faWQ(W,new THREE.Quaternion())),err=Math.acos(Math.max(-1,Math.min(1,got.dot(Dw))));if(w>.5&&err>(S.errM||0)){S.errM=err;S.errS=sT}}
-    {const W=we.W,L=W.userData.faLen||.8;S.tP=W.localToWorld(new THREE.Vector3(0,-L,0)).applyMatrix4(mesh.matrixWorld.clone().invert());S.tPs=sT}
     if(FA.dbg){FA.dbg.s=s;FA.dbg.want=Dw.clone();FA.dbg.head=FA_NY.clone().applyQuaternion(faWQ(we.W,new THREE.Quaternion()));FA.dbg.c=r.c;FA.dbg.sw=r.sw;FA.dbg.tw=r.tw;FA.dbg.ee=r.ee}}
   else{faIK(m0,m1,m2,tgt,pole,1);if(P.rw){const lq=new THREE.Quaternion().setFromAxisAngle(FA_X,P.rw);m2.quaternion.copy(lq);m2.updateMatrixWorld(true)}}
   // ---- off hand ----
@@ -497,6 +536,13 @@ function faApply(g,S,a,now){
     if(S.bw&&bn===o2)k=w;
     if(k<1)bn.quaternion.copy(S.base[n].clone().slerp(bn.quaternion,k))}
   // the drawn string and nocked arrow (the bow foes' own helper): drawn from the nock (s .3) to the anchor (.85), loose at s = 1
+  // the weapon's spin about its own handle in the world, on the final (blended) pose: at most FA_RATE.s per 1/30 s, made up
+  // by the round handle turning in the fist (within FA_FIST.roll) — the hand's turn can't flip the blade over in one frame
+  if(we&&we.W.parent){g.updateMatrixWorld(true);const W=we.W,hH=S.hH,fk=Math.max(.25,Math.min(3,(S.dt||1/30)*30)),qw=faWQ(W,new THREE.Quaternion());
+    if(S.Wq&&hH){const d=qw.clone().multiply(S.Wq.clone().invert()),ax=new THREE.Vector3(0,1,0).applyQuaternion(qw);let sp=2*Math.atan2(d.x*ax.x+d.y*ax.y+d.z*ax.z,d.w);if(sp>Math.PI)sp-=2*Math.PI;if(sp<-Math.PI)sp+=2*Math.PI;
+      const lm=FA_RATE.s*fk;if(Math.abs(sp)>lm){const Rp=W.quaternion.clone().multiply(we.C.q.clone().invert());let rc=2*Math.atan2(Rp.x*hH.x+Rp.y*hH.y+Rp.z*hH.z,Rp.w);if(rc>Math.PI)rc-=2*Math.PI;if(rc<-Math.PI)rc+=2*Math.PI;
+        const dl=Math.max(-FA_FIST.roll,Math.min(FA_FIST.roll,rc-(sp-Math.sign(sp)*lm)))-rc;Rp.multiply(new THREE.Quaternion().setFromAxisAngle(hH,dl));faSetFist(we,Rp);S.Rf=Rp.clone();qw.copy(faWQ(W,new THREE.Quaternion()))}}
+    S.Wq=qw}
   if(S.bw&&g.bowW){g.updateMatrixWorld(true);const dr=s<.3||s>=1?0:faSS((s-.3)/.55)*.97+.03,gr=w*faSS((s-.15)/.15)*faSS((2.2-s)/.3);try{eBowFxSet(g,dr,gr)}catch(e){}}
   S.dirty=1}
 // remember the final pose (for a fade-out when an attack is cut short)
@@ -519,7 +565,7 @@ function faBegin(g,S,a){
   if(S.we){const W=S.we.W;if(W.userData.faLen==null){const bb=new THREE.Box3();W.traverse(o=>{if(o.isMesh&&o.geometry){o.geometry.computeBoundingBox();bb.union(o.geometry.boundingBox)}});W.userData.faLen=Math.max(.2,-bb.min.y);W.userData.faTail=Math.max(0,bb.max.y)}
     S.wl=W.userData.faLen*W.matrixWorld.getMaxScaleOnAxis()}
   S.wlU=S.wl/S.U;
-  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;S.bw=null;S.zHit=null;S.zp=null;S.hP=null;S.hT=null;S.bp=null;S.tP=null;S.tPs=null;S.errM=0;S.errS=null;S.hH=null;S.wo=null;S.tHit=S.T&&S.T.o.hit!=null?S.T.o.hit:n=='strike'?1.45:null;
+  const K=S.K,hv=K.hv||0;S.am=1;S.haft=0;S.shN=null;S.bw=null;S.zHit=null;S.zp=null;S.bp=null;S.eSg=0;S.Dp=null;S.Qp=null;S.Rf=null;S.Hp=null;S.Wq=null;S.wh=null;S.zHitA=null;S.zpA=null;S.D0=null;S.hkOn=0;S.errM=0;S.errS=null;S.hH=null;S.wo=null;S.tHit=S.T&&S.T.o.hit!=null?S.T.o.hit:n=='strike'?1.45:null;
   // melee strikes: the downswing starts inside the wind-up (at s = a, the last ~20–30 %) and accelerates into the hit at
   // s 1.45, so the blow travels over ~5 frames instead of 2; brutes start a little earlier, daggers and ghouls later
   S.rm=null;if(n=='strike'){const a=hv>=.7?.7:hv<=.1?.8:.75,X=[0,a-.25,a,1.45,3],Y=[0,.55,1,1.45,3],M=V100A_mono(X,Y);
@@ -546,7 +592,7 @@ function faBegin(g,S,a){
   let r;try{r=f.apply(this,arguments)}finally{if(drive){g.ak=a;g.h.sw=true}}
   try{const dt=S.t0==null?0:Math.min(.1,Math.max(0,(now-S.t0)/1000));S.t0=now;
     faSnap(S,b);
-    if(drive){if(S.ph<0||(a.ph==0&&S.ph!=0))faBegin(g,S,a);S.ph=a.ph;faApply(g,S,a,now);faKeep(S,b);S.fo=1}
+    if(drive){if(S.ph<0||(a.ph==0&&S.ph!=0))faBegin(g,S,a);S.ph=a.ph;S.dt=dt;faApply(g,S,a,now);faKeep(S,b);S.fo=1}
     else{S.ph=-1;if(S.fo>0&&S.last)faFade(S,b,dt)}}
   catch(e){if(!FA.err){FA.err=1;console.warn('foe attack',e)}}
   return r}}
