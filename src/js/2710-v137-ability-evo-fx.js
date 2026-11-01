@@ -95,7 +95,8 @@ function ev137Fall(p,col,kind,ms){if(!p)return;ms=ms||520;col=evxCol(col);const 
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('soft'),color:col,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));glow.userData.lpsSkip=1;glow.scale.setScalar(2.4);glow.position.y=1;w.add(glow);
   w.rotation.set(tilt,yaw,0);scene.add(w);const s0=new THREE.Vector3(b.x-Math.sin(yaw)*h*tilt,b.y+h,b.z-Math.cos(yaw)*h*tilt);let pt=0;
   tw(ms,k=>{const e=k*k*(1.3-.3*k);w.position.lerpVectors(s0,b,Math.min(1,e));if(kind=='comet'||kind=='star')w.rotation.y+=.25;pt++;if(pt%2==0)evxPuff(w.position.clone().add(new THREE.Vector3(0,1,0)),{spr:1,col,r0:.6,r1:0,life:.35,op:.8,fin:.02})},
-   ()=>{ev137Shock(b,col,3.2,520);ev137Flare(evxGY(b,1),col,2.2,320);ev137Shards(b,col,7,1.4,1.1,700);
+   ()=>{ev137Shock(b,col,3.2,520);ev137Flare(evxGY(b,1),col,2.2,320);try{sgSparks(evxGY(b,.4),col,12,5,2.2,null,6.3,6,.4);sgDust(b,6,2)}catch(_){} // v186: sparks and dust (no crystal spikes)
+
     if(kind=='comet'||kind=='star'){evxRm(w);return}const m=[];w.traverse(q=>{if(q.material&&q.material.opacity!=null)m.push([q.material,q.material.opacity])});
     tw(650,k=>{w.position.y=b.y-k*.4+(k>.6?(k-.6)*4:0);m.forEach(([q,o])=>q.opacity=o*(k<.5?1:1-(k-.5)/.5))},()=>evxRm(w))})}
 function ev137Crescent(p,d,col,L,ms){if(!p||!d)return;L=L||7;ms=ms||420;col=evxCol(col);const g=new THREE.Group(),geo=evxG('cres',()=>{const q=new THREE.RingGeometry(.75,1.15,28,1,-1.15,2.3);q.rotateX(-Math.PI/2);return q});
