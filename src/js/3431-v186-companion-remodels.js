@@ -134,11 +134,10 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   try{return f.apply(this,arguments)}finally{k.p=p0}}}
 
 // ===================================================================== Skyhawk evolution =====================================================================
-// The two tail streamers ran half a metre past the tail on thin shafts and read as antennae; they are now two short outer
-// tail feathers, a little longer than the fan, and the bead cord in the crest is gone.
+// The two tail streamers ran half a metre past the tail on thin shafts and read as antennae (and still did when shortened):
+// they are gone, the tail fan carries the look; the bead cord in the crest is gone too.
 {const f=bd184EvoSky;bd184EvoSky=function(E,L,P,c){const pd0=E.pd,L0=E.L;
-  E.pd=function(geo,t,col,pos,dir,s,fwd,o){if(o&&o.bn=='tail3'&&Array.isArray(s)&&s[1]>.2){s=[s[0],s[1]*.42,s[2]];pos=E.add(pos,dir,.02)}
-    else if(o&&o.bn=='tail3'&&Array.isArray(s)){pos=E.add(pos,dir,-.26)}
+  E.pd=function(geo,t,col,pos,dir,s,fwd,o){if(o&&o.bn=='tail3')return E;
     if(o&&o.bn=='head'&&geo=='sph'&&Array.isArray(dir)&&s===.012)return E;return pd0.call(E,geo,t,col,pos,dir,s,fwd,o)};
   E.L=function(a,b,r1,r2,t,col,seg,o){if(o&&o.bn=='head'&&col===P.leather)return E;return L0.apply(E,arguments)};
   try{return f.apply(this,arguments)}finally{E.pd=pd0;E.L=L0}}}

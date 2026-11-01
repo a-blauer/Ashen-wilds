@@ -15,7 +15,7 @@ var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
   grade:{def:[.5,.56],Gloomcap:[.34,.4],Sporelord:[.36,.4],Mossfrog:[.4,.42],Bogmaw:[.4,.4],Drakelet:[.4,.42],Venomcoil:[.38,.4],Pyrewing:[.5,.45],Gravewyrm:[.42,.46],
-    Hivemother:[.5,.42],Lumenwisp:[.3,.62],Foxlet:[.62,.5],Emberlynx:[.55,.48],Skyhawk:[.45,.5],Stormtalon:[.45,.5]}};
+    Hivemother:[.5,.42],Lumenwisp:[.3,.62],Foxlet:[.62,.5],Emberlynx:[.55,.48],Skyhawk:[.34,.46],Stormtalon:[.36,.44],Rocsovereign:[.42,.46],Batwing:[.3,.4],Duskwing:[.32,.4]}};
 var LP186H={};
 function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
 function lp186GradeC(c,g){c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
@@ -116,10 +116,10 @@ function lp186Geo(key,n,lofts,seed){
 function lp186IsFeather(g){try{return typeof BD184!='undefined'&&BD184.G&&Object.values(BD184.G).indexOf(g)>=0}catch(e){return false}}
 function lp186IsTuft(g){const pr=g&&g.parameters;return !!(pr&&pr.radiusBottom!=null&&pr.height>0&&pr.radiusBottom>pr.radiusTop*2.5&&pr.height>pr.radiusBottom*2)}
 function lp186Smooth(P){const Q=P.filter(p=>p.t==='c'&&p.col!=null&&(lp186IsFeather(p.geo)||lp186IsTuft(p.geo)));if(Q.length<4)return P;
-  const C=Q.map(p=>new THREE.Color(p.col)),X=Q.map(p=>[p.m.elements[12],p.m.elements[13],p.m.elements[14]]),out=new Map(),R2=.07*.07;
+  const C=Q.map(p=>new THREE.Color(p.col)),X=Q.map(p=>[p.m.elements[12],p.m.elements[13],p.m.elements[14]]),out=new Map(),R2=.085*.085;
   Q.forEach((p,i)=>{let r=0,g=0,b=0,w=0;for(let j=0;j<Q.length;j++){const dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1],dz=X[i][2]-X[j][2];if(dx*dx+dy*dy+dz*dz>R2)continue;
       const dc=Math.abs(C[i].r-C[j].r)+Math.abs(C[i].g-C[j].g)+Math.abs(C[i].b-C[j].b);if(dc>.55)continue;r+=C[j].r;g+=C[j].g;b+=C[j].b;w++}
-    if(w>1){const c=C[i].clone().lerp(new THREE.Color(r/w,g/w,b/w),.4);out.set(p,c.getHex())}});
+    if(w>1){const c=C[i].clone().lerp(new THREE.Color(r/w,g/w,b/w),.6);out.set(p,c.getHex())}});
   return P.map(p=>out.has(p)?Object.assign({},p,{col:out.get(p)}):p)}
 function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material===M.c);if(!m)return;const G=m.geometry;if(G.userData.lp186)return;G.userData.lp186=1;
     const C=G.attributes.color;let off=0;P.filter(p=>p.t==='c').forEach(p=>{const g=p.geo,pa=g.attributes.position,n=pa.count,pr=g.parameters;
@@ -162,3 +162,6 @@ var EVO186={on:true};
 // one palette for the gear: iron and leather lean toward the creature's own dark colour, gold trim only on the last looks
 {const f=evo100Pal;evo100Pal=function(c,n,L){const P=f.apply(this,arguments);if(!EVO186.on)return P;const mix=(a,b,t)=>new THREE.Color(a).lerp(new THREE.Color(b),t).getHex();
   P.metal=mix(P.metal,P.mainD,.3);P.iron=mix(P.iron,P.mainD,.35);P.leather=mix(P.leather,P.mainD,.35);if(L<4)P.trim=mix(P.trim,P.metal,.45);P.bone=mix(P.bone,0x8a8070,.25);return P}}
+// the bird wings and tail fans are built from bw184Cols outside the kit bake: the same grade
+{const f=bw184Cols;bw184Cols=function(sp,C){const K=f.apply(this,arguments);if(!LP186.on)return K;const g=LP186.grade[sp]||LP186.grade.def,o={};
+  for(const k in K){const v=K[k];o[k]=v&&v.isColor?lp186GradeC(v.clone(),g):v}return o}}
