@@ -166,3 +166,8 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
 {const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){const pd0=E.pd;
   E.pd=function(geo,t,col,pos,dir,s){if(t=='g'&&((geo=='sph'&&Array.isArray(s)&&s[1]<=.006)||(geo=='ico'&&s===.014)))return E;return pd0.apply(E,arguments)};
   try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}
+// Ashwolf / Direfang war-wolf evolution: the metal spike studs on the saddle plates and the gold crown spikes on the helm are
+// gone (with the ruff, hackles, spikes of the trait and the horns, the back bristled with points from every side)
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);const pd0=E.pd;
+  E.pd=function(geo,t,col){if(geo=='cone4'&&t=='m'&&(col===P.trim||col===P.gold))return E;return pd0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}

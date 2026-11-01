@@ -11,7 +11,7 @@
 //  * baked shading instead of random speckle (recipe 2.1/2.2): top light, darker toward the feet and underneath, cool in
 //    the shadows, crease / ridge from the welded surface (cavity), no per-vertex noise.
 // Paint functions still get the ORIGINAL ring index (their stripes and spots stay where they were designed).
-var LP186={on:true,rigs:null,split:2,sides:2,seat:1,stat:{},
+var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
   grade:{def:[.5,.56],Gloomcap:[.34,.4],Sporelord:[.36,.4],Mossfrog:[.4,.42],Bogmaw:[.4,.4],Drakelet:[.4,.42],Venomcoil:[.38,.4],Pyrewing:[.5,.45],Gravewyrm:[.42,.46],
@@ -96,7 +96,7 @@ function lp186Geo(key,n,lofts,seed){
   // baked shading: value = top light x height x cavity, a cool shift into the shadows (all kept inside .5..1.1)
   const N=G.attributes.normal.array,nv=P.length/3;let y0=1e9,y1=-1e9;for(let i=0;i<nv;i++){y0=Math.min(y0,P[i*3+1]);y1=Math.max(y1,P[i*3+1])}
   const GR=lp186Grade(n);for(let i=0;i<nv;i++){tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]);lp186GradeC(tmp,GR);Cc[i*3]=tmp.r;Cc[i*3+1]=tmp.g;Cc[i*3+2]=tmp.b}
-  const H=Math.max(.05,y1-y0),cav=lp186Cavity(P,IX),cool=new THREE.Color(0x3a4258),warm=new THREE.Color(0xffe2c0);
+  const H=Math.max(.05,y1-y0),cav=LP186.cav?lp186Cavity(P,IX):new Float32Array(nv).fill(1),cool=new THREE.Color(0x3a4258),warm=new THREE.Color(0xffe2c0);
   for(let i=0;i<nv;i++){const ny=N[i*3+1],h=Math.max(0,Math.min(1,(P[i*3+1]-y0)/H)),hs=h*h*(3-2*h);
     let f=(.84+.2*(.5*ny+.5))*(.74+.26*Math.min(1,hs*1.6))*cav[i];f=Math.max(.5,Math.min(1.12,f));
     tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]).multiplyScalar(f);
