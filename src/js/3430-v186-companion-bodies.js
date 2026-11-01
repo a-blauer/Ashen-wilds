@@ -14,13 +14,14 @@
 var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
+  // optional [s, l, tint, amount]: first a pull toward an earthy tint (the candy hue itself)
   // (the colours are linear and go through ACES, so a linear saturation of .4 still reads strongly on screen)
-  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.45,.42],Gloomcap:[.24,.36],Sporelord:[.26,.36],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.22,.36],
-    Pyrewing:[.4,.38],Venomcoil:[.25,.32],Gravewyrm:[.3,.4],Hivemother:[.38,.36],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
+  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.45,.42],Gloomcap:[.22,.34,0x4a3430,.35],Sporelord:[.24,.34,0x34402e,.3],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.2,.34,0x3a3040,.3],
+    Pyrewing:[.4,.38],Venomcoil:[.24,.3,0x3a3a24,.3],Gravewyrm:[.3,.4],Hivemother:[.38,.36],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
     Rocsovereign:[.36,.44],Batwing:[.25,.36],Duskwing:[.26,.36]}};
-var LP186H={};
+var LP186H={},LP186T={};
 function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
-function lp186GradeC(c,g){c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
+function lp186GradeC(c,g){if(g[2]!=null)c.lerp(LP186T[g[2]]||(LP186T[g[2]]=new THREE.Color(g[2])),g[3]||.3);c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
 function lp186Grade(n){const sp=lp186Sp(n);return LP186.grade[sp]||LP186.grade[n]||LP186.grade.def}
 function lp186Comp(key,n){if(!LP186.on||!key||/^E137/.test(key))return false;
   if(!LP186.rigs){try{LP186.rigs=new Set(SPK.map(s=>rigOf(s)))}catch(e){return false}}return LP186.rigs.has(n)}
